@@ -18,8 +18,6 @@ delivers the least solution of an affine fixed-point equation.
 namespace NetworkCalculus
 
 open scoped Computability
-
-variable {α : Type*} [CompleteDioid α]
 ```
 
 # The Kleene star
@@ -38,11 +36,13 @@ is the indexed least upper bound `⨆`.
 
 ```lean
 /-- The Kleene star `a★ = ⊕_{i ≥ 0} aⁱ`. -/
-noncomputable def kstar (a : α) : α :=
+noncomputable def kstar {α : Type*} [CompleteDioid α]
+    (a : α) : α :=
   ⨆ i : ℕ, a ^ i
 
 /-- The strict closure `a⁺ = ⊕_{i ≥ 1} aⁱ`. -/
-noncomputable def kplus (a : α) : α :=
+noncomputable def kplus {α : Type*} [CompleteDioid α]
+    (a : α) : α :=
   ⨆ i : ℕ, a ^ (i + 1)
 ```
 
@@ -53,7 +53,8 @@ direction uses $`e \preceq a^{\star}` (the $`i = 0` term) and
 $`a^+ \preceq a^{\star}` (a sub-sum), recalling $`\oplus = \sqcup`.
 
 ```lean
-theorem kstar_eq_one_add_kplus (a : α) :
+theorem kstar_eq_one_add_kplus
+    {α : Type*} [CompleteDioid α] (a : α) :
     kstar a = 1 + kplus a := by
   rw [add_eq_sup]
   apply le_antisymm
@@ -75,7 +76,8 @@ arbitrary sum (lower semi-continuity),
 $`a \otimes \bigoplus_i a^i = \bigoplus_i a \otimes a^i = \bigoplus_i a^{i+1}`.
 
 ```lean
-theorem kplus_eq_mul_kstar (a : α) :
+theorem kplus_eq_mul_kstar
+    {α : Type*} [CompleteDioid α] (a : α) :
     kplus a = a * kstar a := by
   rw [kstar, CompleteDioid.mul_iSup]
   refine iSup_congr fun i => ?_
@@ -88,7 +90,8 @@ each power is monotone, $`a \preceq b \Rightarrow a^i \preceq b^i`,
 proved by induction on $`i`; the star is then a monotone sum.
 
 ```lean
-theorem pow_le_pow' {a b : α} (h : a ≤ b) :
+theorem pow_le_pow' {α : Type*} [CompleteDioid α]
+    {a b : α} (h : a ≤ b) :
     ∀ i, a ^ i ≤ b ^ i
   | 0 => by simp
   | (i+1) => by
@@ -97,7 +100,8 @@ theorem pow_le_pow' {a b : α} (h : a ≤ b) :
         (Dioid.mul_le_mul_right' (pow_le_pow' h i) a)
         (Dioid.mul_le_mul_left' h _)
 
-theorem kstar_mono {a b : α} (h : a ≤ b) :
+theorem kstar_mono {α : Type*} [CompleteDioid α]
+    {a b : α} (h : a ≤ b) :
     kstar a ≤ kstar b :=
   iSup_mono fun i => pow_le_pow' h i
 ```
@@ -108,20 +112,25 @@ a^{\star}`. Likewise $`e \preceq a^{\star}` and each power is below
 the star.
 
 ```lean
-theorem le_kplus (a : α) : a ≤ kplus a :=
+theorem le_kplus {α : Type*} [CompleteDioid α]
+    (a : α) : a ≤ kplus a :=
   le_iSup_of_le 0 (by simp)
 
-theorem kplus_le_kstar (a : α) :
+theorem kplus_le_kstar {α : Type*} [CompleteDioid α]
+    (a : α) :
     kplus a ≤ kstar a :=
   iSup_le fun i => le_iSup (fun j => a ^ j) (i + 1)
 
-theorem one_le_kstar (a : α) : 1 ≤ kstar a :=
+theorem one_le_kstar {α : Type*} [CompleteDioid α]
+    (a : α) : 1 ≤ kstar a :=
   le_iSup_of_le 0 (by simp)
 
-theorem le_kstar (a : α) : a ≤ kstar a :=
+theorem le_kstar {α : Type*} [CompleteDioid α]
+    (a : α) : a ≤ kstar a :=
   (le_kplus a).trans (kplus_le_kstar a)
 
-theorem pow_le_kstar (a : α) (i : ℕ) :
+theorem pow_le_kstar {α : Type*} [CompleteDioid α]
+    (a : α) (i : ℕ) :
     a ^ i ≤ kstar a :=
   le_iSup (fun j => a ^ j) i
 ```
@@ -133,7 +142,8 @@ power below $`a^{\star}`; conversely $`e \preceq a^{\star}` gives the
 reverse bound.
 
 ```lean
-theorem kstar_mul_kstar (a : α) :
+theorem kstar_mul_kstar
+    {α : Type*} [CompleteDioid α] (a : α) :
     kstar a * kstar a = kstar a := by
   rw [kstar, CompleteDioid.iSup_mul]
   apply le_antisymm
@@ -156,7 +166,8 @@ each power $`(a^{\star})^i \preceq a^{\star}` by induction, using
 multiplicative idempotence.
 
 ```lean
-theorem kstar_idem (a : α) :
+theorem kstar_idem {α : Type*} [CompleteDioid α]
+    (a : α) :
     kstar (kstar a) = kstar a := by
   apply le_antisymm
   · rw [kstar]
@@ -181,7 +192,8 @@ $`a^+ \preceq a^{\star}` after commuting) and
 $`a^{\star} \otimes e = a^{\star}`.
 
 ```lean
-theorem add_one_kstar (a : α) :
+theorem add_one_kstar {α : Type*} [CompleteDioid α]
+    (a : α) :
     kstar (a + 1) = kstar a := by
   apply le_antisymm
   · rw [kstar]
@@ -214,10 +226,12 @@ Two small order helpers make each summand a lower bound of a sum
 (recall $`\oplus = \sqcup`):
 
 ```lean
-theorem self_le_add (c d : α) : d ≤ c + d := by
+theorem self_le_add {α : Type*} [CompleteDioid α]
+    (c d : α) : d ≤ c + d := by
   rw [add_eq_sup]; exact le_sup_right
 
-theorem le_add_self' (c d : α) : c ≤ c + d := by
+theorem le_add_self' {α : Type*} [CompleteDioid α]
+    (c d : α) : c ≤ c + d := by
   rw [add_eq_sup]; exact le_sup_left
 ```
 
@@ -229,7 +243,8 @@ $`a^+ \otimes b \oplus b = (e \oplus a^+) \otimes b = a^{\star} \otimes b`
 by distributivity and $`a^{\star} = e \oplus a^+`.
 
 ```lean
-theorem kstar_mul_is_solution (a b : α) :
+theorem kstar_mul_is_solution
+    {α : Type*} [CompleteDioid α] (a b : α) :
     a * (kstar a * b) + b = kstar a * b := by
   rw [← mul_assoc, ← kplus_eq_mul_kstar,
     kstar_eq_one_add_kplus, add_mul, one_mul,
@@ -245,7 +260,8 @@ over the star sum,
 $`a^{\star} \otimes b = \bigl(\bigoplus_k a^k\bigr) \otimes b = \bigoplus_k a^k \otimes b \preceq x`.
 
 ```lean
-theorem kstar_mul_le_of_solution {a b x : α}
+theorem kstar_mul_le_of_solution
+    {α : Type*} [CompleteDioid α] {a b x : α}
     (h : a * x + b = x) : kstar a * b ≤ x := by
   have hb : b ≤ x :=
     (self_le_add (a * x) b).trans_eq h

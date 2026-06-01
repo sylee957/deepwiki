@@ -53,12 +53,13 @@ The two derived monotonicity facts:
 
 ```lean
 namespace Carrier
-variable {M : Type*} [Carrier M]
 
-theorem top_add' (a : M) : ⊤ + a = ⊤ := by
+theorem top_add' {M : Type*} [Carrier M] (a : M) :
+    ⊤ + a = ⊤ := by
   rw [add_comm]; exact add_top' a
 
-theorem add_le_add_right' {a b : M}
+theorem add_le_add_right' {M : Type*} [Carrier M]
+    {a b : M}
     (h : a ≤ b) (c : M) : a + c ≤ b + c := by
   rw [add_comm a, add_comm b]
   exact add_le_add_left' h c
@@ -109,13 +110,12 @@ noncomputable instance instLattice
     {M : Type*} [Lattice M] : Lattice (D M) :=
   Equiv.lattice toDualEquiv
 
-variable {M : Type*} [Carrier M]
-
 /-- The canonical (reversed) order on `D M`. -/
-theorem le_def (a b : D M) :
+theorem le_def {M : Type*} [Carrier M] (a b : D M) :
     a ≤ b ↔ b.toDual ≤ a.toDual := Iff.rfl
 
-instance instOrderBot : OrderBot (D M) where
+instance instOrderBot {M : Type*} [Carrier M] :
+    OrderBot (D M) where
   bot := D.ofDual ⊤
   bot_le _ := (le_def _ _).mpr le_top
 ```
@@ -126,20 +126,21 @@ $`\oplus = \min`, $`\otimes = {+}`, $`\mathbf{0} = \top`, $`\mathbf{1} = 0`, plu
 
 ```lean
 /-- The dioid sum `⊕ = min`. -/
-def add (a b : D M) : D M :=
+def add {M : Type*} [Carrier M] (a b : D M) : D M :=
   D.ofDual (min a.toDual b.toDual)
 /-- The dioid product `⊗ = +`. -/
-def mul (a b : D M) : D M :=
+def mul {M : Type*} [Carrier M] (a b : D M) : D M :=
   D.ofDual (a.toDual + b.toDual)
 /-- The additive neutral `𝟘 = ⊤`. -/
-def zero : D M := D.ofDual ⊤
+def zero {M : Type*} [Carrier M] : D M := D.ofDual ⊤
 /-- The multiplicative neutral `𝟙 = 0`. -/
-def one : D M := D.ofDual 0
+def one {M : Type*} [Carrier M] : D M := D.ofDual 0
 /-- Idempotent scalar action. -/
-def nsmul (n : ℕ) (a : D M) : D M :=
+def nsmul {M : Type*} [Carrier M] (n : ℕ) (a : D M) :
+    D M :=
   D.ofDual (if n = 0 then ⊤ else a.toDual)
 /-- The collapsed natural-number cast. -/
-def natCast (n : ℕ) : D M :=
+def natCast {M : Type*} [Carrier M] (n : ℕ) : D M :=
   D.ofDual (if n = 0 then ⊤ else (0 : M))
 ```
 
@@ -150,26 +151,32 @@ for $`+`; the `nsmul`/`natCast` recursions collapse by idempotency of
 $`\min`.
 
 ```lean
-theorem add_assoc' (a b c : D M) :
+theorem add_assoc' {M : Type*} [Carrier M]
+    (a b c : D M) :
     add (add a b) c = add a (add b c) :=
   toDual_injective (min_assoc _ _ _)
 
-theorem add_comm' (a b : D M) :
+theorem add_comm' {M : Type*} [Carrier M]
+    (a b : D M) :
     add a b = add b a :=
   toDual_injective (min_comm _ _)
 
-theorem zero_add' (a : D M) : add zero a = a :=
+theorem zero_add' {M : Type*} [Carrier M]
+    (a : D M) : add zero a = a :=
   toDual_injective (min_eq_right le_top)
 
-theorem add_zero' (a : D M) : add a zero = a :=
+theorem add_zero' {M : Type*} [Carrier M]
+    (a : D M) : add a zero = a :=
   toDual_injective (min_eq_left le_top)
 
-theorem nsmul_zero' (a : D M) : nsmul 0 a = zero := by
+theorem nsmul_zero' {M : Type*} [Carrier M]
+    (a : D M) : nsmul 0 a = zero := by
   show D.ofDual (if (0 : ℕ) = 0 then ⊤ else _)
      = D.ofDual ⊤
   rw [if_pos rfl]
 
-theorem nsmul_succ' (n : ℕ) (a : D M) :
+theorem nsmul_succ' {M : Type*} [Carrier M]
+    (n : ℕ) (a : D M) :
     nsmul (n + 1) a = add (nsmul n a) a := by
   apply toDual_injective
   show (if n + 1 = 0 then ⊤ else a.toDual)
@@ -180,33 +187,42 @@ theorem nsmul_succ' (n : ℕ) (a : D M) :
     exact (min_eq_right le_top).symm
   · rw [if_neg h.ne']; exact (min_self _).symm
 
-theorem mul_assoc' (a b c : D M) :
+theorem mul_assoc' {M : Type*} [Carrier M]
+    (a b c : D M) :
     mul (mul a b) c = mul a (mul b c) :=
   toDual_injective (add_assoc _ _ _)
 
-theorem mul_comm' (a b : D M) :
+theorem mul_comm' {M : Type*} [Carrier M]
+    (a b : D M) :
     mul a b = mul b a :=
   toDual_injective (add_comm _ _)
 
-theorem one_mul' (a : D M) : mul one a = a :=
+theorem one_mul' {M : Type*} [Carrier M]
+    (a : D M) : mul one a = a :=
   toDual_injective (zero_add a.toDual)
 
-theorem mul_one' (a : D M) : mul a one = a :=
+theorem mul_one' {M : Type*} [Carrier M]
+    (a : D M) : mul a one = a :=
   toDual_injective (add_zero a.toDual)
 
-theorem zero_mul' (a : D M) : mul zero a = zero :=
+theorem zero_mul' {M : Type*} [Carrier M]
+    (a : D M) : mul zero a = zero :=
   toDual_injective (Carrier.top_add' a.toDual)
 
-theorem mul_zero' (a : D M) : mul a zero = zero :=
+theorem mul_zero' {M : Type*} [Carrier M]
+    (a : D M) : mul a zero = zero :=
   toDual_injective (Carrier.add_top' a.toDual)
 
-theorem natCast_zero' : (natCast 0 : D M) = zero := by
+theorem natCast_zero' {M : Type*} [Carrier M] :
+    (natCast 0 : D M) = zero := by
   show D.ofDual (if (0 : ℕ) = 0 then ⊤ else (0 : M))
      = D.ofDual ⊤
   rw [if_pos rfl]
 
-theorem natCast_succ' (n : ℕ) :
-    (natCast (n + 1) : D M) = add (natCast n) one := by
+theorem natCast_succ' {M : Type*} [Carrier M]
+    (n : ℕ) :
+    (natCast (n + 1) : D M)
+      = add (natCast n) one := by
   apply toDual_injective
   show (if n + 1 = 0 then ⊤ else (0 : M))
      = min (if n = 0 then ⊤ else (0 : M)) (0 : M)
@@ -221,14 +237,16 @@ Distributivity of $`\otimes = {+}` over $`\oplus = \min` follows from monotonici
 addition:
 
 ```lean
-theorem left_distrib' (a b c : D M) :
+theorem left_distrib' {M : Type*} [Carrier M]
+    (a b c : D M) :
     mul a (add b c) = add (mul a b) (mul a c) :=
   toDual_injective <|
     (Monotone.map_min
       (f := fun x : M => a.toDual + x)
       fun _ _ h => Carrier.add_le_add_left' h _)
 
-theorem right_distrib' (a b c : D M) :
+theorem right_distrib' {M : Type*} [Carrier M]
+    (a b c : D M) :
     mul (add a b) c = add (mul a c) (mul b c) :=
   toDual_injective <|
     (Monotone.map_min
@@ -239,7 +257,8 @@ theorem right_distrib' (a b c : D M) :
 The `CommSemiring` instance is a flat assembly of these laws:
 
 ```lean
-noncomputable instance commSemiring :
+noncomputable instance commSemiring
+    {M : Type*} [Carrier M] :
     CommSemiring (D M) where
   add := add
   add_assoc := add_assoc'
@@ -269,12 +288,15 @@ The transported join $`\sqcup` equals $`\oplus = \min`, so the dioid sum is the
 lattice join. This delivers the (min,plus) _dioid_ on `D M`:
 
 ```lean
-theorem sup_eq_add (a b : D M) : a ⊔ b = add a b := rfl
+theorem sup_eq_add {M : Type*} [Carrier M]
+    (a b : D M) : a ⊔ b = add a b := rfl
 
-theorem add_eq_sup' (a b : D M) : add a b = a ⊔ b :=
+theorem add_eq_sup' {M : Type*} [Carrier M]
+    (a b : D M) : add a b = a ⊔ b :=
   (sup_eq_add a b).symm
 
-noncomputable instance dioid : Dioid (D M) :=
+noncomputable instance dioid {M : Type*} [Carrier M] :
+    Dioid (D M) :=
   { commSemiring,
     (inferInstance : Lattice (D M)),
     (inferInstance : OrderBot (D M)) with
@@ -298,9 +320,9 @@ class CompleteCarrier (M : Type*) extends
     (a + sInf s) = ⨅ b ∈ s, a + b
 
 namespace CompleteCarrier
-variable {M : Type*} [CompleteCarrier M]
 
-theorem add_iInf' {ι : Sort*} (a : M) (f : ι → M) :
+theorem add_iInf' {M : Type*} [CompleteCarrier M]
+    {ι : Sort*} (a : M) (f : ι → M) :
     (a + ⨅ i, f i) = ⨅ i, a + f i := by
   rw [iInf, add_sInf', iInf_range]
 
@@ -313,26 +335,24 @@ it into the numeric bounded infimum:
 ```lean
 namespace D
 
-variable {M : Type*}
-
-theorem toDual_sSup_bdd [CompleteLattice M]
+theorem toDual_sSup_bdd {M : Type*} [CompleteLattice M]
     (s : Set (D M)) :
     (sSup s).toDual = ⨅ a ∈ s, (a : D M).toDual := by
   show (toDualEquiv.symm
       (⨆ a ∈ s, toDualEquiv a)).toDual = _
   rfl
 
-theorem toDual_iSup_eq [CompleteLattice M]
+theorem toDual_iSup_eq {M : Type*} [CompleteLattice M]
     {ι : Sort*} (g : ι → D M) :
     (⨆ i, g i).toDual = ⨅ i, (g i).toDual := by
   rw [iSup, toDual_sSup_bdd, iInf_range]
 
-theorem toDual_sSup_eq [CompleteLattice M]
+theorem toDual_sSup_eq {M : Type*} [CompleteLattice M]
     (s : Set (D M)) :
     (sSup s).toDual = ⨅ b : s, (b : D M).toDual := by
   rw [toDual_sSup_bdd, iInf_subtype]
 
-theorem toDual_biSup_eq [CompleteLattice M]
+theorem toDual_biSup_eq {M : Type*} [CompleteLattice M]
     (s : Set (D M)) (f : D M → D M) :
     (⨆ b ∈ s, f b).toDual
       = ⨅ b : s, (f (b : D M)).toDual := by
@@ -346,7 +366,8 @@ guiding unification:
 
 ```lean
 noncomputable instance completeDioid
-    [CompleteCarrier M] : CompleteDioid (D M) :=
+    {M : Type*} [CompleteCarrier M] :
+    CompleteDioid (D M) :=
   { dioid,
     (inferInstance : CompleteLattice (D M)) with
     mul_sSup := fun a s => toDual_injective (by
@@ -569,26 +590,31 @@ structure SubCompleteDioid (α : Type*)
 
 namespace SubCompleteDioid
 
-variable {α : Type*} [CompleteDioid α]
-  (S : SubCompleteDioid α)
-
 /-- The carrier as a subtype. -/
-def Sub : Type _ := {a : α // a ∈ S.carrier}
+def Sub {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) : Type _ :=
+  {a : α // a ∈ S.carrier}
 
 /-- The underlying element of `α`. -/
-def val (x : S.Sub) : α := x.1
+def val {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x : S.Sub) : α := x.1
 
-theorem property (x : S.Sub) :
+theorem property {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x : S.Sub) :
     x.val ∈ S.carrier := x.2
 
-@[ext] theorem ext {x y : S.Sub}
+@[ext] theorem ext {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) {x y : S.Sub}
     (h : x.val = y.val) : x = y := Subtype.ext h
 
 /-- Package a carrier element as a sub-dioid one. -/
-def pack (a : α) (ha : a ∈ S.carrier) : S.Sub :=
+def pack {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α)
+    (a : α) (ha : a ∈ S.carrier) : S.Sub :=
   ⟨a, ha⟩
 
-@[simp] theorem val_pack (a : α)
+@[simp] theorem val_pack {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (a : α)
     (ha : a ∈ S.carrier) :
     (S.pack a ha).val = a := rfl
 ```
@@ -597,19 +623,21 @@ Closure under `n • _` and `↑n` is _derived_ by induction from the sum
 and the neutrals:
 
 ```lean
-theorem nsmul_mem (n : ℕ) {a : α}
+theorem nsmul_mem {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (n : ℕ) {a : α}
     (ha : a ∈ S.carrier) : n • a ∈ S.carrier := by
   induction n with
   | zero => rw [zero_nsmul]; exact S.zero_mem
   | succ k ih => rw [succ_nsmul]; exact S.add_mem ih ha
 
-theorem natCast_mem (n : ℕ) :
+theorem natCast_mem {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (n : ℕ) :
     ((n : ℕ) : α) ∈ S.carrier := by
   cases n with
   | zero => rw [Nat.cast_zero]; exact S.zero_mem
   | succ k =>
     rw [Nat.cast_succ]
-    exact S.add_mem (natCast_mem k) S.one_mem
+    exact S.add_mem (natCast_mem S k) S.one_mem
 ```
 
 The supremum is the ambient `sSup` restricted to the carrier; it is
@@ -617,21 +645,27 @@ still the least upper bound, so `completeLatticeOfSup` produces the
 complete lattice. Its top is `sSup carrier` — the _adjusted top_.
 
 ```lean
-instance instPartialOrder : PartialOrder S.Sub :=
+instance instPartialOrder {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) : PartialOrder S.Sub :=
   Subtype.partialOrder _
 
-theorem le_def (x y : S.Sub) :
+theorem le_def {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x y : S.Sub) :
     x ≤ y ↔ x.val ≤ y.val := Iff.rfl
 
-noncomputable instance instSupSet : SupSet S.Sub :=
+noncomputable instance instSupSet
+    {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) : SupSet S.Sub :=
   ⟨fun T => S.pack (sSup (S.val '' T))
     (S.sSup_mem fun a ha => by
       obtain ⟨x, _, rfl⟩ := ha; exact x.property)⟩
 
-@[simp] theorem val_sSup (T : Set S.Sub) :
+@[simp] theorem val_sSup {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (T : Set S.Sub) :
     (sSup T).val = sSup (S.val '' T) := rfl
 
-theorem isLUB_sSup (T : Set S.Sub) :
+theorem isLUB_sSup {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (T : Set S.Sub) :
     IsLUB T (sSup T) := by
   constructor
   · intro x hx
@@ -643,7 +677,9 @@ theorem isLUB_sSup (T : Set S.Sub) :
     rintro f ⟨x, hx, rfl⟩
     exact hb hx
 
-noncomputable instance instCompleteLattice :
+noncomputable instance instCompleteLattice
+    {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) :
     CompleteLattice S.Sub :=
   completeLatticeOfSup S.Sub S.isLUB_sSup
 ```
@@ -653,7 +689,8 @@ whole carrier, _not_ the ambient `⊤`. The join restricts to the
 ambient join.
 
 ```lean
-theorem val_top :
+theorem val_top {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) :
     (⊤ : S.Sub).val = sSup S.carrier := by
   show (sSup (Set.univ : Set S.Sub)).val
      = sSup S.carrier
@@ -664,13 +701,15 @@ theorem val_top :
   · intro a ha
     exact ⟨S.pack a ha, Set.mem_univ _, rfl⟩
 
-theorem val_sup (x y : S.Sub) :
+theorem val_sup {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x y : S.Sub) :
     (x ⊔ y).val = x.val ⊔ y.val := by
   show (sSup ({x, y} : Set S.Sub)).val
      = x.val ⊔ y.val
   rw [val_sSup, Set.image_pair, sSup_pair]; rfl
 
-theorem val_biSup {ι : Sort*}
+theorem val_biSup {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) {ι : Sort*}
     (f : ι → S.Sub) (p : ι → Prop) :
     (⨆ i, ⨆ (_ : p i), f i).val
       = ⨆ i, ⨆ (_ : p i), (f i).val := by
@@ -686,31 +725,51 @@ Each operation is the ambient one applied through `val`, kept in the
 carrier by the closure fields:
 
 ```lean
-noncomputable instance instZero : Zero S.Sub :=
+noncomputable instance instZero {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    Zero S.Sub :=
   ⟨S.pack 0 S.zero_mem⟩
-noncomputable instance instOne : One S.Sub :=
+noncomputable instance instOne {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    One S.Sub :=
   ⟨S.pack 1 S.one_mem⟩
-noncomputable instance instAdd : Add S.Sub :=
+noncomputable instance instAdd {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    Add S.Sub :=
   ⟨fun x y => S.pack (x.val + y.val)
     (S.add_mem x.property y.property)⟩
-noncomputable instance instMul : Mul S.Sub :=
+noncomputable instance instMul {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    Mul S.Sub :=
   ⟨fun x y => S.pack (x.val * y.val)
     (S.mul_mem x.property y.property)⟩
-noncomputable instance instSMul : SMul ℕ S.Sub :=
+noncomputable instance instSMul {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    SMul ℕ S.Sub :=
   ⟨fun n x => S.pack (n • x.val)
     (S.nsmul_mem n x.property)⟩
-noncomputable instance instNatCast : NatCast S.Sub :=
+noncomputable instance instNatCast {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    NatCast S.Sub :=
   ⟨fun n => S.pack (n : α) (S.natCast_mem n)⟩
 
-@[simp] theorem val_zero : (0 : S.Sub).val = 0 := rfl
-@[simp] theorem val_one : (1 : S.Sub).val = 1 := rfl
-@[simp] theorem val_add (x y : S.Sub) :
+@[simp] theorem val_zero {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) :
+    (0 : S.Sub).val = 0 := rfl
+@[simp] theorem val_one {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) :
+    (1 : S.Sub).val = 1 := rfl
+@[simp] theorem val_add {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x y : S.Sub) :
     (x + y).val = x.val + y.val := rfl
-@[simp] theorem val_mul (x y : S.Sub) :
+@[simp] theorem val_mul {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x y : S.Sub) :
     (x * y).val = x.val * y.val := rfl
-@[simp] theorem val_nsmul (n : ℕ) (x : S.Sub) :
+@[simp] theorem val_nsmul {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (n : ℕ) (x : S.Sub) :
     (n • x).val = n • x.val := rfl
-@[simp] theorem val_natCast (n : ℕ) :
+@[simp] theorem val_natCast {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) (n : ℕ) :
     (NatCast.natCast n : S.Sub).val = (n : α) := rfl
 ```
 
@@ -718,7 +777,8 @@ The semiring, dioid and complete-dioid structures then project the
 ambient laws through `val`:
 
 ```lean
-noncomputable instance instCommSemiring :
+noncomputable instance instCommSemiring {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
     CommSemiring S.Sub where
   add_assoc a b c := S.ext <| by
     rw [val_add, val_add, val_add, val_add, add_assoc]
@@ -758,15 +818,21 @@ noncomputable instance instCommSemiring :
     rw [val_mul, val_add, val_add, val_mul, val_mul,
       right_distrib]
 
-theorem add_eq_sup' (x y : S.Sub) : x + y = x ⊔ y :=
+theorem add_eq_sup' {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α) (x y : S.Sub) :
+    x + y = x ⊔ y :=
   S.ext (by rw [val_add, val_sup, add_eq_sup])
 
-noncomputable instance instDioid : Dioid S.Sub :=
+noncomputable instance instDioid {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
+    Dioid S.Sub :=
   { instCommSemiring S,
     (instCompleteLattice S : CompleteLattice S.Sub)
     with add_eq_sup := S.add_eq_sup' }
 
-theorem mul_sSup' (a : S.Sub) (T : Set S.Sub) :
+theorem mul_sSup' {α : Type*} [CompleteDioid α]
+    (S : SubCompleteDioid α)
+    (a : S.Sub) (T : Set S.Sub) :
     a * sSup T = ⨆ b ∈ T, a * b := by
   apply S.ext
   rw [val_mul, val_sSup,
@@ -775,7 +841,8 @@ theorem mul_sSup' (a : S.Sub) (T : Set S.Sub) :
   exact iSup_congr fun b =>
     iSup_congr fun _ => (val_mul S a b).symm
 
-noncomputable instance instCompleteDioid :
+noncomputable instance instCompleteDioid {α : Type*}
+    [CompleteDioid α] (S : SubCompleteDioid α) :
     CompleteDioid S.Sub :=
   { instDioid S,
     (instCompleteLattice S : CompleteLattice S.Sub)

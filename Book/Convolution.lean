@@ -28,17 +28,18 @@ the decompositions of $`t`.
 ```lean
 section Generic
 
-variable {T : Type*} [AddCommMonoid T]
-  {α : Type*} [CompleteDioid α]
-
 /-- The (min,plus) convolution. -/
-noncomputable def conv (f g : T → α) : T → α :=
+noncomputable def conv {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) : T → α :=
   fun t => ⨆ p : {p : T × T // p.1 + p.2 = t},
     f p.val.1 * g p.val.2
 
 @[inherit_doc] scoped infixl:70 " ∗ " => conv
 
-theorem conv_apply (f g : T → α) (t : T) :
+theorem conv_apply {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) (t : T) :
     (f ∗ g) t = ⨆ p : {p : T × T // p.1 + p.2 = t},
       f p.val.1 * g p.val.2 := rfl
 ```
@@ -49,12 +50,16 @@ every decomposition gives a lower bound (`conv_ge`), and it is below any
 common upper bound (`conv_le`).
 
 ```lean
-theorem conv_ge (f g : T → α) {t u s : T}
+theorem conv_ge {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) {t u s : T}
     (h : u + s = t) : f u * g s ≤ (f ∗ g) t :=
   le_iSup (fun p : {p : T × T // p.1 + p.2 = t} =>
     f p.val.1 * g p.val.2) ⟨(u, s), h⟩
 
-theorem conv_le (f g : T → α) {t : T} {b : α}
+theorem conv_le {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) {t : T} {b : α}
     (h : ∀ u s, u + s = t → f u * g s ≤ b) :
     (f ∗ g) t ≤ b :=
   iSup_le fun p => h p.val.1 p.val.2 p.property
@@ -69,16 +74,15 @@ arbitrary complete dioid.
 
 ```lean
 section Generic
-
-variable {T : Type*} [AddCommMonoid T]
-  {α : Type*} [CompleteDioid α]
 ```
 
 _Commutativity_ $`f \ast g = g \ast f` (reindex decompositions
 $`(u,s) \mapsto (s,u)` and use commutativity of $`\otimes`):
 
 ```lean
-theorem conv_comm (f g : T → α) : f ∗ g = g ∗ f := by
+theorem conv_comm {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) : f ∗ g = g ∗ f := by
   funext t
   apply le_antisymm
   · exact conv_le f g fun u s h => by
@@ -95,7 +99,8 @@ where $`\oplus = \sqcup` (for $`\overline{R}_{\min}`, the pointwise minimum
 $`\wedge`), from binary distributivity of $`\otimes` over $`\sqcup`:
 
 ```lean
-theorem conv_sup (f g h : T → α) :
+theorem conv_sup {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α] (f g h : T → α) :
     (f ∗ fun x => g x ⊔ h x)
       = fun t => (f ∗ g) t ⊔ (f ∗ h) t := by
   funext t
@@ -109,7 +114,9 @@ _Addition by a constant_ $`(f \ast g) \otimes K = f \ast (g \otimes K)`
 (the $`{+}\,K` is multiplication by the constant $`K \in \alpha`):
 
 ```lean
-theorem conv_mul_const (f g : T → α) (K : α) :
+theorem conv_mul_const {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g : T → α) (K : α) :
     (fun t => (f ∗ g) t * K)
       = f ∗ (fun s => g s * K) := by
   funext t
@@ -124,7 +131,9 @@ $$`\bigsqcup_{u+v+w=t} f(u) \otimes g(v) \otimes h(w);`
 we bound each by the other via the symmetric ternary lower bounds.
 
 ```lean
-theorem conv_conv_ge (f g h : T → α) {t u v w : T}
+theorem conv_conv_ge {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g h : T → α) {t u v w : T}
     (e : u + v + w = t) :
     f u * g v * h w ≤ ((f ∗ g) ∗ h) t :=
   le_trans
@@ -132,7 +141,9 @@ theorem conv_conv_ge (f g h : T → α) {t u v w : T}
       (conv_ge f g (u := u) (s := v) rfl) _)
     (conv_ge (f ∗ g) h (u := u + v) (s := w) e)
 
-theorem le_conv_conv (f g h : T → α) {t u v w : T}
+theorem le_conv_conv {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α]
+    (f g h : T → α) {t u v w : T}
     (e : u + (v + w) = t) :
     f u * (g v * h w) ≤ (f ∗ (g ∗ h)) t :=
   le_trans
@@ -140,7 +151,8 @@ theorem le_conv_conv (f g h : T → α) {t u v w : T}
       (conv_ge g h (u := v) (s := w) rfl) _)
     (conv_ge f (g ∗ h) (u := u) (s := v + w) e)
 
-theorem conv_assoc (f g h : T → α) :
+theorem conv_assoc {T : Type*} [AddCommMonoid T]
+    {α : Type*} [CompleteDioid α] (f g h : T → α) :
     (f ∗ g) ∗ h = f ∗ (g ∗ h) := by
   funext t
   apply le_antisymm

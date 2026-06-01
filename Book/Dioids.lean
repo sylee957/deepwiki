@@ -48,8 +48,6 @@ abbrev ofCommSemiring {α : Type*} [CommSemiring α]
     (add_idem : ∀ a : α, a + a = a) : Dioid α :=
   { IdemSemiring.ofSemiring add_idem with
     mul_comm := mul_comm }
-
-variable {α : Type*} [Dioid α]
 ```
 
 # The canonical order
@@ -57,7 +55,8 @@ Idempotency of $`\oplus` induces the _canonical order_ $`a \preceq b \;:\Leftrig
 The order is _derived_ from the algebra, not supplied independently:
 
 ```lean
-theorem le_iff_add_eq_right {a b : α} :
+theorem le_iff_add_eq_right
+    {α : Type*} [Dioid α] {a b : α} :
     a ≤ b ↔ a + b = b :=
   add_eq_right_iff_le.symm
 ```
@@ -70,7 +69,8 @@ from the semiring laws.
 _Reflexivity_, from idempotency $`a \oplus a = a`:
 
 ```lean
-theorem le_refl' (a : α) : a ≤ a :=
+theorem le_refl' {α : Type*} [Dioid α] (a : α) :
+    a ≤ a :=
   le_iff_add_eq_right.mpr (add_idem a)
 ```
 
@@ -78,7 +78,7 @@ _Transitivity_, via
 $$`a \oplus c = a \oplus (b \oplus c) = (a \oplus b) \oplus c = b \oplus c = c`
 
 ```lean
-theorem le_trans' {a b c : α}
+theorem le_trans' {α : Type*} [Dioid α] {a b c : α}
     (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
   rw [le_iff_add_eq_right] at hab hbc ⊢
   calc a + c = a + (b + c) := by rw [hbc]
@@ -90,7 +90,7 @@ theorem le_trans' {a b c : α}
 _Antisymmetry_: if $`a \preceq b` and $`b \preceq a` then $`a \oplus b = a = b`.
 
 ```lean
-theorem le_antisymm' {a b : α}
+theorem le_antisymm' {α : Type*} [Dioid α] {a b : α}
     (hab : a ≤ b) (hba : b ≤ a) : a = b := by
   rw [le_iff_add_eq_right] at hab hba
   rw [← hab, add_comm, hba]
@@ -100,7 +100,8 @@ _Isotony of the sum_ $`\oplus`: if $`a \preceq b` then $`a \oplus c \preceq b \o
 $`(a \oplus c) \oplus (b \oplus c) = (a \oplus b) \oplus (c \oplus c) = b \oplus c`.
 
 ```lean
-theorem add_le_add_right' {a b : α}
+theorem add_le_add_right'
+    {α : Type*} [Dioid α] {a b : α}
     (h : a ≤ b) (c : α) : a + c ≤ b + c := by
   rw [le_iff_add_eq_right] at h ⊢
   calc (a + c) + (b + c)
@@ -111,7 +112,8 @@ theorem add_le_add_right' {a b : α}
 The left-handed form follows by commutativity:
 
 ```lean
-theorem add_le_add_left' {a b : α}
+theorem add_le_add_left'
+    {α : Type*} [Dioid α] {a b : α}
     (h : a ≤ b) (c : α) : c + a ≤ c + b := by
   rw [add_comm c, add_comm c]
   exact add_le_add_right' h c
@@ -121,7 +123,8 @@ _Isotony of the product_ $`\otimes`: if $`a \preceq b` then $`a \otimes c \prece
 $`(a \otimes c) \oplus (b \otimes c) = (a \oplus b) \otimes c = b \otimes c`.
 
 ```lean
-theorem mul_le_mul_right' {a b : α}
+theorem mul_le_mul_right'
+    {α : Type*} [Dioid α] {a b : α}
     (h : a ≤ b) (c : α) : a * c ≤ b * c := by
   rw [le_iff_add_eq_right] at h ⊢
   rw [← add_mul, h]
@@ -130,7 +133,8 @@ theorem mul_le_mul_right' {a b : α}
 And the left form, since $`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b`:
 
 ```lean
-theorem mul_le_mul_left' {a b : α}
+theorem mul_le_mul_left'
+    {α : Type*} [Dioid α] {a b : α}
     (h : a ≤ b) (c : α) : c * a ≤ c * b := by
   rw [le_iff_add_eq_right] at h ⊢
   rw [← mul_add, h]
@@ -165,9 +169,8 @@ commutativity of $`\otimes`, so it need not be a separate axiom:
 ```lean
 namespace CompleteDioid
 
-variable {α : Type*} [CompleteDioid α]
-
-theorem sSup_mul (a : α) (s : Set α) :
+theorem sSup_mul {α : Type*} [CompleteDioid α]
+    (a : α) (s : Set α) :
     sSup s * a = ⨆ b ∈ s, b * a := by
   rw [mul_comm, mul_sSup]; simp_rw [mul_comm a]
 ```
@@ -176,11 +179,13 @@ The indexed forms `mul_iSup`/`iSup_mul` follow from `mul_sSup`/
 `sSup_mul`:
 
 ```lean
-theorem mul_iSup {ι : Sort*} (a : α) (g : ι → α) :
+theorem mul_iSup {α : Type*} [CompleteDioid α]
+    {ι : Sort*} (a : α) (g : ι → α) :
     a * ⨆ i, g i = ⨆ i, a * g i := by
   rw [← sSup_range, mul_sSup, iSup_range]
 
-theorem iSup_mul {ι : Sort*} (g : ι → α) (a : α) :
+theorem iSup_mul {α : Type*} [CompleteDioid α]
+    {ι : Sort*} (g : ι → α) (a : α) :
     (⨆ i, g i) * a = ⨆ i, g i * a := by
   rw [← sSup_range, sSup_mul, iSup_range]
 ```
@@ -188,7 +193,8 @@ theorem iSup_mul {ι : Sort*} (g : ι → α) (a : α) :
 The binary special cases distribute $`\otimes` over $`\oplus = \sqcup`:
 
 ```lean
-theorem mul_sup (a b c : α) :
+theorem mul_sup {α : Type*} [CompleteDioid α]
+    (a b c : α) :
     a * (b ⊔ c) = a * b ⊔ a * c := by
   have h1 : (⨆ i : Bool, cond i b c) = b ⊔ c := by
     simp [iSup_bool_eq]
@@ -198,7 +204,8 @@ theorem mul_sup (a b c : α) :
     simp [iSup_bool_eq]
   rw [← h1, mul_iSup, h2]
 
-theorem sup_mul (a b c : α) :
+theorem sup_mul {α : Type*} [CompleteDioid α]
+    (a b c : α) :
     (b ⊔ c) * a = b * a ⊔ c * a := by
   have h1 : (⨆ i : Bool, cond i b c) = b ⊔ c := by
     simp [iSup_bool_eq]
