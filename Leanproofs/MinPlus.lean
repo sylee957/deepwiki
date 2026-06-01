@@ -7,6 +7,7 @@ import Leanproofs.MinPlus.RbarInstance
 import Leanproofs.MinPlus.Convolution
 import Leanproofs.MinPlus.FunctionDioid
 import Leanproofs.MinPlus.FunctionClasses
+import Leanproofs.MinPlus.FunctionClassDioids
 
 /-!
 # Chapter 2 — The (min,plus) Functions Semi-ring
@@ -23,5 +24,7 @@ Umbrella module for the formalization of Chapter 2 of Bouillard, Boyer and Le Co
 * `Leanproofs.MinPlus.Convolution` — the (min,plus) functions `F` and convolution (Def. 2.6–2.7);
 * `Leanproofs.MinPlus.FunctionDioid` — `(F, ∧, ∗)` is a complete commutative dioid (Prop. 2.3);
 * `Leanproofs.MinPlus.FunctionClasses` — the subsets `F⁺, F₀, F↑, F↑₀` (Def. 2.8) and their
-  stability under `∧`/`∗` (Lemma 2.3).
+  stability under `∧`/`∗` (Lemma 2.3);
+* `Leanproofs.MinPlus.FunctionClassDioids` — `F⁺` and `F↑` are complete dioids with the adjusted
+  top `const0` (the constant-`0` function), and `F₀`, `F↑₀` are not dioids (they lack `ε`).
 -/
