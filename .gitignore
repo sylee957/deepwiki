@@ -3,5 +3,8 @@
 /build/
 /lake-packages/
 
+# Verso book output
+/_out/
+
 # Editor
 .DS_Store

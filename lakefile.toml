@@ -11,5 +11,17 @@ name = "«doc-gen4»"
 git = "https://github.com/leanprover/doc-gen4"
 rev = "v4.30.0"
 
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "v4.30.0"
+
 [[lean_lib]]
 name = "Leanproofs"
+
+[[lean_lib]]
+name = "Book"
+
+[[lean_exe]]
+name = "generate-book"
+root = "Main"
