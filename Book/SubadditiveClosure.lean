@@ -79,8 +79,8 @@ theorem kstar_eq_one_add_kplus (a : α) :
 
 Factoring $`a` out of the strict closure gives
 $`a^+ = a \otimes a^{\star}`: since $`\otimes` distributes over the
-arbitrary sum (lower semi-continuity), $`a \otimes \bigoplus_i a^i =
-\bigoplus_i a \otimes a^i = \bigoplus_i a^{i+1}`.
+arbitrary sum (lower semi-continuity),
+$`a \otimes \bigoplus_i a^i = \bigoplus_i a \otimes a^i = \bigoplus_i a^{i+1}`.
 
 ```lean
 theorem kplus_eq_mul_kstar (a : α) :
@@ -187,9 +187,10 @@ theorem kstar_idem (a : α) :
 Adjoining the unit to $`a` leaves the star unchanged,
 $`(a \oplus e)^{\star} = a^{\star}`. One direction is monotonicity,
 since $`a \preceq a \oplus e`; the other bounds each power
-$`(a \oplus e)^i \preceq a^{\star}` by induction, using $`a^{\star}
-\otimes a \preceq a^{\star}` (which is $`a^+ \preceq a^{\star}` after
-commuting) and $`a^{\star} \otimes e = a^{\star}`.
+$`(a \oplus e)^i \preceq a^{\star}` by induction, using
+$`a^{\star} \otimes a \preceq a^{\star}` (which is
+$`a^+ \preceq a^{\star}` after commuting) and
+$`a^{\star} \otimes e = a^{\star}`.
 
 ```lean
 theorem add_one_kstar (a : α) :
@@ -237,10 +238,11 @@ theorem le_add_self' (c d : α) : c ≤ c + d := by
 ```
 
 First, $`a^{\star} \otimes b` _is_ a solution. Computing the
-right-hand side: $`a \otimes (a^{\star} \otimes b) = (a \otimes
-a^{\star}) \otimes b = a^+ \otimes b`, and then $`a^+ \otimes b \oplus
-b = (e \oplus a^+) \otimes b = a^{\star} \otimes b` by distributivity
-and $`a^{\star} = e \oplus a^+`.
+right-hand side:
+$`a \otimes (a^{\star} \otimes b) = (a \otimes a^{\star}) \otimes b = a^+ \otimes b`,
+and then
+$`a^+ \otimes b \oplus b = (e \oplus a^+) \otimes b = a^{\star} \otimes b`
+by distributivity and $`a^{\star} = e \oplus a^+`.
 
 ```lean
 theorem kstar_mul_is_solution (a b : α) :
@@ -250,13 +252,13 @@ theorem kstar_mul_is_solution (a b : α) :
     add_comm (kplus a * b) b]
 ```
 
-Second, it is the _least_ solution: any $`x` with $`x = a \otimes x
-\oplus b` dominates $`a^{\star} \otimes b`. From the equation,
-$`b \preceq x` and $`a \otimes x \preceq x`, so by induction
+Second, it is the _least_ solution: any $`x` with
+$`x = a \otimes x \oplus b` dominates $`a^{\star} \otimes b`. From the
+equation, $`b \preceq x` and $`a \otimes x \preceq x`, so by induction
 $`a^k \otimes b \preceq x` for every $`k` (apply $`a \otimes -` and
 descend through $`a \otimes x \preceq x`). Distributing the product
-over the star sum, $`a^{\star} \otimes b = \bigl(\bigoplus_k a^k\bigr)
-\otimes b = \bigoplus_k a^k \otimes b \preceq x`.
+over the star sum,
+$`a^{\star} \otimes b = \bigl(\bigoplus_k a^k\bigr) \otimes b = \bigoplus_k a^k \otimes b \preceq x`.
 
 ```lean
 theorem kstar_mul_le_of_solution {a b x : α}
