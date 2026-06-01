@@ -92,6 +92,22 @@ structure Semiring extends AddCommMonoid, MulMonoid where
   otimes_eps : ∀ a, otimes a eps = eps
 ```
 
+For readability we attach tagged infixes to a semi-ring: in a semi-ring
+$`R`, write `a +[R] b` for $`a \oplus b` and `a *[R] b` for
+$`a \otimes b`. The tag records which semi-ring's operation is meant,
+since the operation is a field of the value $`R` rather than resolved
+by type class.
+
+```lean
+abbrev Semiring.add (R : Semiring) (a b : R.D) : R.D :=
+  R.oplus a b
+abbrev Semiring.mul (R : Semiring) (a b : R.D) : R.D :=
+  R.otimes a b
+
+notation:65 a:65 " +[" R "] " b:66 => Semiring.add R a b
+notation:70 a:70 " *[" R "] " b:71 => Semiring.mul R a b
+```
+
 *Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
 
 ```lean
@@ -111,10 +127,10 @@ structure Dioid extends CommSemiring where
 ```lean
 theorem quaternary_distrib (R : Semiring)
     (a b c d : R.D) :
-    R.otimes (R.oplus a b) (R.oplus c d)
-      = R.oplus (R.oplus (R.oplus
-          (R.otimes a c) (R.otimes b c))
-          (R.otimes a d)) (R.otimes b d) := by
+    (a +[R] b) *[R] (c +[R] d)
+      = a *[R] c +[R] b *[R] c
+        +[R] a *[R] d +[R] b *[R] d := by
+  simp only [Semiring.add, Semiring.mul]
   have hexp :
       R.otimes (R.oplus a b) (R.oplus c d)
         = R.oplus (R.oplus (R.otimes a c) (R.otimes a d))
