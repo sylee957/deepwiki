@@ -6,6 +6,8 @@ import Book.Convolution
 import Book.FunctionClasses
 import Book.SubadditiveClosure
 import Book.SubadditiveFunctions
+import Book.SubadditiveClosureOp
+import Book.ConvolutionMinimum
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -37,3 +39,7 @@ declarations.
 {include 1 Book.SubadditiveClosure}
 
 {include 1 Book.SubadditiveFunctions}
+
+{include 1 Book.SubadditiveClosureOp}
+
+{include 1 Book.ConvolutionMinimum}

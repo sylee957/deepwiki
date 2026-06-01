@@ -1,5 +1,5 @@
 name = "leanproofs"
-defaultTargets = ["Leanproofs"]
+defaultTargets = ["Book", "generate-book"]
 
 [[require]]
 name = "mathlib"
@@ -15,9 +15,6 @@ rev = "v4.30.0"
 name = "verso"
 git = "https://github.com/leanprover/verso"
 rev = "v4.30.0"
-
-[[lean_lib]]
-name = "Leanproofs"
 
 [[lean_lib]]
 name = "Book"

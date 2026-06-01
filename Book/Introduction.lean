@@ -38,6 +38,12 @@ The chapters cover:
 - _Sub-additive functions_ — the predicate $`f(s+t) \le f(s) + f(t)` in the
   natural numeric order, and its stability under the pointwise numeric sum
   of functions and under the convolution $`\ast`.
+- _The sub-additive closure_ — the closure $`f^{\ast}` as the Kleene star of
+  $`f` in the function dioid, and a sign constraint on sub-additive functions
+  with $`f(0) < 0`.
+- _The convolution attains its minimum_ — for nondecreasing, left-continuous
+  real functions the convolution is an attained minimum, via lower
+  semi-continuity on a compact interval.
 
 Throughout, the notation maps to Lean as $`\oplus = {+}` (the dioid sum, the
 lattice join), $`\otimes = {*}` (the product), $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and the canonical
