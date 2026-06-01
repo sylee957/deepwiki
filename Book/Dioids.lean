@@ -28,32 +28,31 @@ type-class resolution and hence no inheritance diamond — a value of a
 layer is passed explicitly. The interface the rest of the book actually
 builds on is the Mathlib-backed `IdemDioid` defined afterwards.
 
-*Definition:* a _sum signature_ on a carrier $`D` is a binary
-$`\oplus : D \times D \to D` with a neutral $`\varepsilon`.
+*Definition:* a _sum signature_ on a carrier $`T` is a binary
+$`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
 
 ```lean
 namespace Algebra
 
-structure Oplus where
-  D : Type*
-  oplus : D → D → D
-  eps : D
+structure Oplus (T : Type*) where
+  oplus : T → T → T
+  eps : T
 ```
 
-*Definition:* a _product signature_ on $`D` is a binary
-$`\otimes : D \times D \to D` with a neutral $`e`.
+*Definition:* a _product signature_ on $`T` is a binary
+$`\otimes : T \times T \to T` with a neutral $`e`.
 
 ```lean
-structure Otimes extends Oplus where
-  otimes : D → D → D
-  one : D
+structure Otimes (T : Type*) extends Oplus T where
+  otimes : T → T → T
+  one : T
 ```
 
-*Definition:* $`(D, \oplus, \varepsilon)` is a _monoid_:
+*Definition:* $`(T, \oplus, \varepsilon)` is a _monoid_:
 $$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
 
 ```lean
-structure AddMonoid extends Oplus where
+structure AddMonoid (T : Type*) extends Oplus T where
   oplus_assoc : ∀ a b c,
     oplus (oplus a b) c = oplus a (oplus b c)
   eps_oplus : ∀ a, oplus eps a = a
@@ -63,15 +62,16 @@ structure AddMonoid extends Oplus where
 *Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
 
 ```lean
-structure AddCommMonoid extends AddMonoid where
+structure AddCommMonoid (T : Type*) extends
+    AddMonoid T where
   oplus_comm : ∀ a b, oplus a b = oplus b a
 ```
 
-*Definition:* $`(D, \otimes, e)` is a _monoid_:
+*Definition:* $`(T, \otimes, e)` is a _monoid_:
 $$`(a \otimes b) \otimes c = a \otimes (b \otimes c), \quad e \otimes a = a, \quad a \otimes e = a.`
 
 ```lean
-structure MulMonoid extends Otimes where
+structure MulMonoid (T : Type*) extends Otimes T where
   otimes_assoc : ∀ a b c,
     otimes (otimes a b) c = otimes a (otimes b c)
   one_otimes : ∀ a, otimes one a = a
@@ -83,7 +83,8 @@ $$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus 
 $$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
 
 ```lean
-structure Semiring extends AddCommMonoid, MulMonoid where
+structure Semiring (T : Type*) extends
+    AddCommMonoid T, MulMonoid T where
   left_distrib : ∀ a b c,
     otimes a (oplus b c) = oplus (otimes a b) (otimes a c)
   right_distrib : ∀ a b c,
@@ -93,16 +94,16 @@ structure Semiring extends AddCommMonoid, MulMonoid where
 ```
 
 For readability we attach tagged infixes to a semi-ring: in a semi-ring
-$`R`, write `a +[R] b` for $`a \oplus b` and `a *[R] b` for
+$`R` on $`T`, write `a +[R] b` for $`a \oplus b` and `a *[R] b` for
 $`a \otimes b`. The tag records which semi-ring's operation is meant,
 since the operation is a field of the value $`R` rather than resolved
 by type class.
 
 ```lean
-abbrev Semiring.add (R : Semiring) (a b : R.D) : R.D :=
-  R.oplus a b
-abbrev Semiring.mul (R : Semiring) (a b : R.D) : R.D :=
-  R.otimes a b
+abbrev Semiring.add {T : Type*} (R : Semiring T)
+    (a b : T) : T := R.oplus a b
+abbrev Semiring.mul {T : Type*} (R : Semiring T)
+    (a b : T) : T := R.otimes a b
 
 notation:65 a:65 " +[" R "] " b:66 => Semiring.add R a b
 notation:70 a:70 " *[" R "] " b:71 => Semiring.mul R a b
@@ -111,22 +112,24 @@ notation:70 a:70 " *[" R "] " b:71 => Semiring.mul R a b
 *Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
 
 ```lean
-structure CommSemiring extends Semiring where
+structure CommSemiring (T : Type*) extends
+    Semiring T where
   otimes_comm : ∀ a b, otimes a b = otimes b a
 ```
 
 *Definition:* a _dioid_ is a commutative semi-ring whose sum is idempotent, $`a \oplus a = a`.
 
 ```lean
-structure Dioid extends CommSemiring where
+structure Dioid (T : Type*) extends
+    CommSemiring T where
   oplus_idem : ∀ a, oplus a a = a
 ```
 
 *Theorem:* $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`
 
 ```lean
-theorem quaternary_distrib (R : Semiring)
-    (a b c d : R.D) :
+theorem quaternary_distrib {T : Type*} (R : Semiring T)
+    (a b c d : T) :
     (a +[R] b) *[R] (c +[R] d)
       = a *[R] c +[R] b *[R] c
         +[R] a *[R] d +[R] b *[R] d := by
