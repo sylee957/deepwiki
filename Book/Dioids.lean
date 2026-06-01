@@ -255,6 +255,86 @@ theorem Dioid.mul_le_mul_left {T : Type*}
   show R.oplus (R.otimes c a) (R.otimes c b)
     = R.otimes c b
   rw [← R.left_distrib, h]
+```
+
+## A complete dioid from scratch
+
+A dioid is _complete_ when every subset of the carrier has a least
+upper bound for the canonical order $`\preceq`, and the product is
+_lower semi-continuous_: it commutes with these suprema. We bundle the
+supremum $`\bigsqcup` as a field `sSup`, the two laws making it a least
+upper bound, and lower semi-continuity
+$$`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b.`
+
+*Definition:* a _complete dioid_ adds $`\bigsqcup : \mathcal{P}(T) \to T` with
+$$`a \in s \Rightarrow a \preceq \textstyle\bigsqcup s, \qquad (\forall a \in s,\ a \preceq b) \Rightarrow \textstyle\bigsqcup s \preceq b,`
+$$`a \otimes \textstyle\bigsqcup s = \textstyle\bigsqcup\,\{\,a \otimes b \mid b \in s\,\}.`
+
+```lean
+structure CompleteDioid (T : Type*) extends
+    Dioid T where
+  sSup : Set T → T
+  le_sSup : ∀ (s : Set T) (a : T), a ∈ s →
+    toDioid.le a (sSup s)
+  sSup_le : ∀ (s : Set T) (b : T),
+    (∀ a ∈ s, toDioid.le a b) → toDioid.le (sSup s) b
+  mul_sSup : ∀ (a : T) (s : Set T),
+    otimes a (sSup s)
+      = sSup ((fun b => otimes a b) '' s)
+```
+
+Lower semi-continuity holds on the right as well, by commutativity of
+the product.
+
+*Theorem:* $`\Bigl(\bigsqcup_{b \in s} b\Bigr) \otimes a = \bigsqcup_{b \in s} b \otimes a`
+
+```lean
+theorem CompleteDioid.sSup_mul {T : Type*}
+    (R : CompleteDioid T) (a : T) (s : Set T) :
+    R.otimes (R.sSup s) a
+      = R.sSup ((fun b => R.otimes b a) '' s) := by
+  rw [R.otimes_comm, R.mul_sSup]
+  congr 1
+  ext x
+  simp only [Set.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    exact ⟨y, hy, R.otimes_comm y a⟩
+  · rintro ⟨y, hy, rfl⟩
+    exact ⟨y, hy, R.otimes_comm a y⟩
+```
+
+The binary join is the supremum of a two-element set, and the product
+distributes over it — the finite shadow of lower semi-continuity.
+
+*Definition:* $`a \sqcup b := \bigsqcup \{a, b\}`
+
+```lean
+def CompleteDioid.sup {T : Type*}
+    (R : CompleteDioid T) (a b : T) : T :=
+  R.sSup {a, b}
+```
+
+*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)`
+
+```lean
+theorem CompleteDioid.mul_sup {T : Type*}
+    (R : CompleteDioid T) (a b c : T) :
+    R.otimes a (R.sup b c)
+      = R.sup (R.otimes a b) (R.otimes a c) := by
+  unfold CompleteDioid.sup
+  rw [R.mul_sSup]
+  congr 1
+  ext x
+  simp only [Set.mem_image, Set.mem_insert_iff,
+    Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨y, (rfl | rfl), rfl⟩
+    · exact Or.inl rfl
+    · exact Or.inr rfl
+  · rintro (rfl | rfl)
+    · exact ⟨b, Or.inl rfl, rfl⟩
+    · exact ⟨c, Or.inr rfl, rfl⟩
 
 end Algebra
 ```
