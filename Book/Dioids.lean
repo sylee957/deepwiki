@@ -26,26 +26,30 @@ definitions — a monoid, then a commutative idempotent monoid, then a
 semi-ring, then a dioid — and only afterwards _link_ the result to
 Mathlib so its order theory and lemmas become available.
 
-In Lean code we write the dioid sum $`\oplus` as `⊞`, the product
-$`\otimes` as `⊠`, the additive neutral $`\mathbf{0}` as `ε`, and the
-multiplicative neutral $`\mathbf{1}` as `e` (the symbol `⊕` is reserved
-by Lean for the disjoint-union type, so we use the boxed variant). The
-additive and multiplicative operators live in separate carrier classes
-so a single type can host both.
+In Lean code we write the dioid sum $`\oplus` as `⊕`, the product
+$`\otimes` as `⊗`, the additive neutral $`\mathbf{0}` as `ε`, and the
+multiplicative neutral $`\mathbf{1}` as `e`. The additive and
+multiplicative operators live in separate carrier classes so a single
+type can host both.
 
-The notations `⊞ ⊠ ε e` are _scoped_ (under `DioidNotation`), so the
-common names `e`/`ε` stay free in the rest of the development; we open
-the scope only for this chapter's tower.
+The notations `⊕ ⊗ ε e` are _scoped_ (under `DioidNotation`), so they
+stay confined to this chapter — the names `e`/`ε` remain free elsewhere,
+and the symbol `⊕` (which Lean otherwise reads as the disjoint-union
+type `Sum`) only takes its dioid meaning where the scope is open. The
+sum notation is given high priority so the elaborator prefers it over
+`Sum`; where a nested `a ⊕ b` sits in an equation with no surrounding
+`⊗` to fix its type, the left-hand side is ascribed `: D` to keep the
+elaborator from drifting toward the `Sum` reading.
 
 ```lean
-/-- The additive operator `⊞` and its neutral `ε`. -/
+/-- The additive operator `⊕` and its neutral `ε`. -/
 class OplusNeutral (D : Type*) where
   /-- The dioid sum. -/
   oplus : D → D → D
   /-- The dioid zero. -/
   eps : D
 
-/-- The multiplicative operator `⊠` and its neutral `e`. -/
+/-- The multiplicative operator `⊗` and its neutral `e`. -/
 class OtimesNeutral (D : Type*) where
   /-- The dioid product. -/
   otimes : D → D → D
@@ -53,9 +57,10 @@ class OtimesNeutral (D : Type*) where
   one : D
 
 namespace DioidNotation
-scoped infixl:65 " ⊞ " => OplusNeutral.oplus
+scoped infixl:65 (priority := high) " ⊕ " =>
+  OplusNeutral.oplus
 scoped notation "ε" => OplusNeutral.eps
-scoped infixl:70 " ⊠ " => OtimesNeutral.otimes
+scoped infixl:70 " ⊗ " => OtimesNeutral.otimes
 scoped notation "e" => OtimesNeutral.one
 end DioidNotation
 
@@ -66,35 +71,36 @@ A _monoid_ $`(D, \oplus, \varepsilon)`: $`\oplus` is associative with a
 two-sided neutral $`\varepsilon`.
 
 ```lean
-/-- `(D, ⊞)` is a monoid with neutral `ε`. -/
+/-- `(D, ⊕)` is a monoid with neutral `ε`. -/
 class AddMonoidT (D : Type*) extends OplusNeutral D where
-  oplus_assoc : ∀ a b c : D, (a ⊞ b) ⊞ c = a ⊞ (b ⊞ c)
-  eps_oplus : ∀ a : D, ε ⊞ a = a
-  oplus_eps : ∀ a : D, a ⊞ ε = a
+  oplus_assoc :
+    ∀ a b c : D, ((a ⊕ b) ⊕ c : D) = a ⊕ (b ⊕ c)
+  eps_oplus : ∀ a : D, (ε ⊕ a : D) = a
+  oplus_eps : ∀ a : D, (a ⊕ ε : D) = a
 ```
 
 A _commutative_ monoid, then an _idempotent_ one
 ($`a \oplus a = a`):
 
 ```lean
-/-- `(D, ⊞)` is a commutative monoid. -/
+/-- `(D, ⊕)` is a commutative monoid. -/
 class AddCommMonoidT (D : Type*) extends AddMonoidT D where
-  oplus_comm : ∀ a b : D, a ⊞ b = b ⊞ a
+  oplus_comm : ∀ a b : D, (a ⊕ b : D) = b ⊕ a
 
-/-- `(D, ⊞)` is an idempotent commutative monoid. -/
+/-- `(D, ⊕)` is an idempotent commutative monoid. -/
 class AddIdemCommMonoidT (D : Type*) extends
     AddCommMonoidT D where
-  oplus_idem : ∀ a : D, a ⊞ a = a
+  oplus_idem : ∀ a : D, (a ⊕ a : D) = a
 ```
 
 The multiplicative monoid $`(D, \otimes, e)`:
 
 ```lean
-/-- `(D, ⊠)` is a monoid with neutral `e`. -/
+/-- `(D, ⊗)` is a monoid with neutral `e`. -/
 class MulMonoidT (D : Type*) extends OtimesNeutral D where
-  otimes_assoc : ∀ a b c : D, (a ⊠ b) ⊠ c = a ⊠ (b ⊠ c)
-  one_otimes : ∀ a : D, e ⊠ a = a
-  otimes_one : ∀ a : D, a ⊠ e = a
+  otimes_assoc : ∀ a b c : D, (a ⊗ b) ⊗ c = a ⊗ (b ⊗ c)
+  one_otimes : ∀ a : D, e ⊗ a = a
+  otimes_one : ∀ a : D, a ⊗ e = a
 ```
 
 A _semi-ring_ $`(D, \oplus, \otimes)`: an idempotent commutative additive
@@ -107,15 +113,15 @@ _dioid_ adds commutativity of $`\otimes`.
 class SemiringT (D : Type*) extends
     AddIdemCommMonoidT D, MulMonoidT D where
   left_distrib :
-    ∀ a b c : D, a ⊠ (b ⊞ c) = (a ⊠ b) ⊞ (a ⊠ c)
+    ∀ a b c : D, a ⊗ (b ⊕ c) = (a ⊗ b) ⊕ (a ⊗ c)
   right_distrib :
-    ∀ a b c : D, (a ⊞ b) ⊠ c = (a ⊠ c) ⊞ (b ⊠ c)
-  eps_otimes : ∀ a : D, ε ⊠ a = ε
-  otimes_eps : ∀ a : D, a ⊠ ε = ε
+    ∀ a b c : D, (a ⊕ b) ⊗ c = (a ⊗ c) ⊕ (b ⊗ c)
+  eps_otimes : ∀ a : D, ε ⊗ a = ε
+  otimes_eps : ∀ a : D, a ⊗ ε = ε
 
 /-- A dioid: a semi-ring with commutative product. -/
 class DioidT (D : Type*) extends SemiringT D where
-  otimes_comm : ∀ a b : D, a ⊠ b = b ⊠ a
+  otimes_comm : ∀ a b : D, a ⊗ b = b ⊗ a
 ```
 
 The combined distributivity over a binary sum on each side gives the
@@ -124,16 +130,16 @@ quaternary form $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \o
 ```lean
 theorem quaternary_distrib {D : Type*} [SemiringT D]
     (a b c d : D) :
-    (a ⊞ b) ⊠ (c ⊞ d)
-      = (a ⊠ c) ⊞ (b ⊠ c) ⊞ (a ⊠ d) ⊞ (b ⊠ d) := by
-  set p := a ⊠ c; set q := b ⊠ c
-  set r := a ⊠ d; set s := b ⊠ d
-  have hexp : (a ⊞ b) ⊠ (c ⊞ d) = (p ⊞ r) ⊞ (q ⊞ s) := by
+    (a ⊕ b) ⊗ (c ⊕ d)
+      = (a ⊗ c) ⊕ (b ⊗ c) ⊕ (a ⊗ d) ⊕ (b ⊗ d) := by
+  set p := a ⊗ c; set q := b ⊗ c
+  set r := a ⊗ d; set s := b ⊗ d
+  have hexp : (a ⊕ b) ⊗ (c ⊕ d) = (p ⊕ r) ⊕ (q ⊕ s) := by
     rw [SemiringT.right_distrib, SemiringT.left_distrib,
       SemiringT.left_distrib]
   rw [hexp, AddMonoidT.oplus_assoc p q r,
-    AddMonoidT.oplus_assoc p (q ⊞ r) s,
-    AddMonoidT.oplus_assoc p r (q ⊞ s)]
+    AddMonoidT.oplus_assoc p (q ⊕ r) s,
+    AddMonoidT.oplus_assoc p r (q ⊕ s)]
   congr 1
   rw [AddCommMonoidT.oplus_comm q r,
     AddMonoidT.oplus_assoc r q s]
@@ -147,10 +153,10 @@ $`e \mapsto 1`. The scalar action `n • a` is given in closed form so it
 needs no pre-existing `Add`/`Zero` instance during assembly.
 
 ```lean
-/-- `n • a = a ⊞ ⋯ ⊞ a` (`n` times). -/
+/-- `n • a = a ⊕ ⋯ ⊕ a` (`n` times). -/
 def nsmulT {D : Type*} [OplusNeutral D] : ℕ → D → D
   | 0, _ => ε
-  | (n + 1), a => nsmulT n a ⊞ a
+  | (n + 1), a => nsmulT n a ⊕ a
 
 /-- A `DioidT` is a Mathlib `CommSemiring`. -/
 @[reducible] def DioidT.toCommSemiring (D : Type*)
@@ -188,7 +194,7 @@ introduced.
 /-- A dioid carrying its canonical order as data. -/
 class OrderedDioid (D : Type*) extends
     DioidT D, Lattice D, OrderBot D where
-  add_eq_sup : ∀ a b : D, a ⊞ b = a ⊔ b
+  add_eq_sup : ∀ a b : D, (a ⊕ b : D) = a ⊔ b
 
 /-- The Mathlib `IdemCommSemiring` of an `OrderedDioid`,
 supplied with the carried order (not a derived one). -/
