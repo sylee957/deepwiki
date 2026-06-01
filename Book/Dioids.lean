@@ -21,66 +21,61 @@ open scoped Computability
 
 # A dioid, defined from scratch
 
-*Definition:* the sum $`\oplus : D \times D \to D` with neutral $`\varepsilon`.
+The tower below is a self-contained illustration: each layer is a
+_bundled structure_ carrying its carrier, operations, and axioms as
+fields, with each layer extending the previous one. There is no
+type-class resolution and hence no inheritance diamond — a value of a
+layer is passed explicitly. The interface the rest of the book actually
+builds on is the Mathlib-backed `IdemDioid` defined afterwards.
+
+*Definition:* a _sum signature_ on a carrier $`D` is a binary
+$`\oplus : D \times D \to D` with a neutral $`\varepsilon`.
 
 ```lean
 namespace Algebra
 
-class Oplus (D : Type*) where
+structure Oplus where
+  D : Type*
   oplus : D → D → D
   eps : D
 ```
 
-*Definition:* the product $`\otimes : D \times D \to D` with neutral $`e`.
+*Definition:* a _product signature_ on $`D` is a binary
+$`\otimes : D \times D \to D` with a neutral $`e`.
 
 ```lean
-class Otimes (D : Type*) where
+structure Otimes extends Oplus where
   otimes : D → D → D
   one : D
-```
-
-We attach local infixes `+ₒ`, `*ₒ` for the two operations.
-
-```lean
-section
-local infixl:65 " +ₒ " => Oplus.oplus
-local infixl:70 " *ₒ " => Otimes.otimes
 ```
 
 *Definition:* $`(D, \oplus, \varepsilon)` is a _monoid_:
 $$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
 
 ```lean
-class AddMonoid (D : Type*) extends Oplus D where
-  oplus_assoc : ∀ a b c : D, (a +ₒ b) +ₒ c = a +ₒ (b +ₒ c)
-  eps_oplus : ∀ a : D, Oplus.eps +ₒ a = a
-  oplus_eps : ∀ a : D, a +ₒ Oplus.eps = a
+structure AddMonoid extends Oplus where
+  oplus_assoc : ∀ a b c,
+    oplus (oplus a b) c = oplus a (oplus b c)
+  eps_oplus : ∀ a, oplus eps a = a
+  oplus_eps : ∀ a, oplus a eps = a
 ```
 
 *Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
 
 ```lean
-class AddCommMonoid (D : Type*) extends AddMonoid D where
-  oplus_comm : ∀ a b : D, a +ₒ b = b +ₒ a
-```
-
-*Definition:* an _idempotent_ commutative monoid adds $`a \oplus a = a`.
-
-```lean
-class AddIdemCommMonoid (D : Type*) extends
-    AddCommMonoid D where
-  oplus_idem : ∀ a : D, a +ₒ a = a
+structure AddCommMonoid extends AddMonoid where
+  oplus_comm : ∀ a b, oplus a b = oplus b a
 ```
 
 *Definition:* $`(D, \otimes, e)` is a _monoid_:
 $$`(a \otimes b) \otimes c = a \otimes (b \otimes c), \quad e \otimes a = a, \quad a \otimes e = a.`
 
 ```lean
-class MulMonoid (D : Type*) extends Otimes D where
-  otimes_assoc :
-    ∀ a b c : D, (a *ₒ b) *ₒ c = a *ₒ (b *ₒ c)
-  one_otimes : ∀ a : D, Otimes.one *ₒ a = a
-  otimes_one : ∀ a : D, a *ₒ Otimes.one = a
+structure MulMonoid extends Otimes where
+  otimes_assoc : ∀ a b c,
+    otimes (otimes a b) c = otimes a (otimes b c)
+  one_otimes : ∀ a, otimes one a = a
+  otimes_one : ∀ a, otimes a one = a
 ```
 
 *Definition:* a _semi-ring_ is a commutative $`\oplus`-monoid and a $`\otimes`-monoid with
@@ -88,51 +83,50 @@ $$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus 
 $$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
 
 ```lean
-class Semiring (D : Type*) extends
-    AddCommMonoid D, MulMonoid D where
-  left_distrib :
-    ∀ a b c : D, a *ₒ (b +ₒ c) = a *ₒ b +ₒ a *ₒ c
-  right_distrib :
-    ∀ a b c : D, (a +ₒ b) *ₒ c = a *ₒ c +ₒ b *ₒ c
-  eps_otimes : ∀ a : D, Oplus.eps *ₒ a = Oplus.eps
-  otimes_eps : ∀ a : D, a *ₒ Oplus.eps = Oplus.eps
+structure Semiring extends AddCommMonoid, MulMonoid where
+  left_distrib : ∀ a b c,
+    otimes a (oplus b c) = oplus (otimes a b) (otimes a c)
+  right_distrib : ∀ a b c,
+    otimes (oplus a b) c = oplus (otimes a c) (otimes b c)
+  eps_otimes : ∀ a, otimes eps a = eps
+  otimes_eps : ∀ a, otimes a eps = eps
 ```
 
 *Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
 
 ```lean
-class CommSemiring (D : Type*) extends Semiring D where
-  otimes_comm : ∀ a b : D, a *ₒ b = b *ₒ a
+structure CommSemiring extends Semiring where
+  otimes_comm : ∀ a b, otimes a b = otimes b a
 ```
 
 *Definition:* a _dioid_ is a commutative semi-ring whose sum is idempotent, $`a \oplus a = a`.
 
 ```lean
-class Dioid (D : Type*) extends
-    CommSemiring D, AddIdemCommMonoid D
+structure Dioid extends CommSemiring where
+  oplus_idem : ∀ a, oplus a a = a
 ```
 
 *Theorem:* $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`
 
 ```lean
-theorem quaternary_distrib {D : Type*} [Semiring D]
-    (a b c d : D) :
-    (a +ₒ b) *ₒ (c +ₒ d)
-      = a *ₒ c +ₒ b *ₒ c +ₒ a *ₒ d +ₒ b *ₒ d := by
-  set p := a *ₒ c; set q := b *ₒ c
-  set r := a *ₒ d; set s := b *ₒ d
+theorem quaternary_distrib (R : Semiring)
+    (a b c d : R.D) :
+    R.otimes (R.oplus a b) (R.oplus c d)
+      = R.oplus (R.oplus (R.oplus
+          (R.otimes a c) (R.otimes b c))
+          (R.otimes a d)) (R.otimes b d) := by
   have hexp :
-      (a +ₒ b) *ₒ (c +ₒ d) = (p +ₒ r) +ₒ (q +ₒ s) := by
-    rw [Semiring.right_distrib, Semiring.left_distrib,
-      Semiring.left_distrib]
-  rw [hexp, AddMonoid.oplus_assoc p q r,
-    AddMonoid.oplus_assoc p (q +ₒ r) s,
-    AddMonoid.oplus_assoc p r (q +ₒ s)]
+      R.otimes (R.oplus a b) (R.oplus c d)
+        = R.oplus (R.oplus (R.otimes a c) (R.otimes a d))
+            (R.oplus (R.otimes b c) (R.otimes b d)) := by
+    rw [R.right_distrib, R.left_distrib, R.left_distrib]
+  rw [hexp]
+  set p := R.otimes a c; set q := R.otimes b c
+  set r := R.otimes a d; set s := R.otimes b d
+  rw [R.oplus_assoc p q r, R.oplus_assoc p (R.oplus q r) s,
+    R.oplus_assoc p r (R.oplus q s)]
   congr 1
-  rw [AddCommMonoid.oplus_comm q r,
-    AddMonoid.oplus_assoc r q s]
-
-end
+  rw [R.oplus_comm q r, R.oplus_assoc r q s]
 
 end Algebra
 ```
