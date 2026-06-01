@@ -70,6 +70,8 @@ theorem kstar_eq_one_add_kplus
         le_iSup (fun j => a ^ j) (i + 1)
 ```
 
+*Proof.* By antisymmetry, splitting the $`i=0` term: $`\bigsqcup_i a^i = a^0 \sqcup \bigsqcup_{n} a^{n+1} = e \sqcup a^+`. $`\quad\blacksquare`
+
 Factoring $`a` out of the strict closure gives
 $`a^+ = a \otimes a^{\star}`: since $`\otimes` distributes over the
 arbitrary sum (lower semi-continuity),
@@ -83,6 +85,8 @@ theorem kplus_eq_mul_kstar
   refine iSup_congr fun i => ?_
   rw [← pow_succ']
 ```
+
+*Proof.* By lower semi-continuity and $`a \otimes a^i = a^{i+1}`: $`a \otimes \bigoplus_i a^i = \bigoplus_i a^{i+1} = a^+`. $`\quad\blacksquare`
 
 # Properties
 The star is _monotone_ for the canonical order. The key step is that
@@ -99,12 +103,18 @@ theorem pow_le_pow' {α : Type*} [CompleteDioid α]
       exact le_trans
         (Dioid.mul_le_mul_right' (pow_le_pow' h i) a)
         (Dioid.mul_le_mul_left' h _)
+```
 
+*Proof.* Induction on $`i`: $`a^0 = e = b^0`; and $`a^{n+1} = a^n \otimes a \preceq b^n \otimes a \preceq b^n \otimes b = b^{n+1}` (isotony, induction hypothesis, $`a \preceq b`). $`\quad\blacksquare`
+
+```lean
 theorem kstar_mono {α : Type*} [CompleteDioid α]
     {a b : α} (h : a ≤ b) :
     kstar a ≤ kstar b :=
   iSup_mono fun i => pow_le_pow' h i
 ```
+
+*Proof.* Termwise from `pow_le_pow'`: $`\bigoplus_i a^i \preceq \bigoplus_i b^i`. $`\quad\blacksquare`
 
 Two sub-sum bounds: $`a \preceq a^+` (the $`i = 1` term) and
 $`a^+ \preceq a^{\star}` (more terms), so $`a \preceq a^+ \preceq
@@ -115,25 +125,43 @@ the star.
 theorem le_kplus {α : Type*} [CompleteDioid α]
     (a : α) : a ≤ kplus a :=
   le_iSup_of_le 0 (by simp)
+```
 
+*Proof.* $`a = a^{0+1}` is the $`i=0` term of $`a^+`, so $`a \preceq a^+`. $`\quad\blacksquare`
+
+```lean
 theorem kplus_le_kstar {α : Type*} [CompleteDioid α]
     (a : α) :
     kplus a ≤ kstar a :=
   iSup_le fun i => le_iSup (fun j => a ^ j) (i + 1)
+```
 
+*Proof.* Each $`a^{i+1}` is a term of $`a^{\star} = \bigoplus_j a^j`, so $`a^+ \preceq a^{\star}`. $`\quad\blacksquare`
+
+```lean
 theorem one_le_kstar {α : Type*} [CompleteDioid α]
     (a : α) : 1 ≤ kstar a :=
   le_iSup_of_le 0 (by simp)
+```
 
+*Proof.* $`e = a^0` is the $`i=0` term of $`a^{\star}`, so $`e \preceq a^{\star}`. $`\quad\blacksquare`
+
+```lean
 theorem le_kstar {α : Type*} [CompleteDioid α]
     (a : α) : a ≤ kstar a :=
   (le_kplus a).trans (kplus_le_kstar a)
+```
 
+*Proof.* $`a \preceq a^+ \preceq a^{\star}` (`le_kplus`, `kplus_le_kstar`). $`\quad\blacksquare`
+
+```lean
 theorem pow_le_kstar {α : Type*} [CompleteDioid α]
     (a : α) (i : ℕ) :
     a ^ i ≤ kstar a :=
   le_iSup (fun j => a ^ j) i
 ```
+
+*Proof.* $`a^i` is the $`i`-th term of $`a^{\star} = \bigoplus_j a^j`. $`\quad\blacksquare`
 
 The star is _multiplicatively idempotent_,
 $`a^{\star} \otimes a^{\star} = a^{\star}`: distributing the product
@@ -159,6 +187,8 @@ theorem kstar_mul_kstar
           Dioid.mul_le_mul_left' (one_le_kstar a) _
 ```
 
+*Proof.* Distribute over both sums. $`\preceq`: $`a^i \otimes a^j = a^{i+j} \preceq a^{\star}` (`pow_le_kstar`). $`\succeq`: $`a^i = a^i \otimes e \preceq a^i \otimes a^{\star}` (`one_le_kstar`). $`\quad\blacksquare`
+
 The star is a _closure operator_: applying it twice changes nothing,
 $`(a^{\star})^{\star} = a^{\star}`. The $`\ge` direction is
 $`a^{\star} \preceq (a^{\star})^{\star}`; the $`\le` direction bounds
@@ -182,6 +212,8 @@ theorem kstar_idem {α : Type*} [CompleteDioid α]
           _ = kstar a := kstar_mul_kstar a
   · exact le_kstar (kstar a)
 ```
+
+*Proof.* By antisymmetry. $`\succeq`: $`a^{\star} \preceq (a^{\star})^{\star}` (`le_kstar`). $`\preceq`: by induction $`(a^{\star})^{i} \preceq a^{\star}`, using $`(a^{\star})^{n+1} = (a^{\star})^n \otimes a^{\star} \preceq a^{\star} \otimes a^{\star} = a^{\star}` (`kstar_mul_kstar`). $`\quad\blacksquare`
 
 Adjoining the unit to $`a` leaves the star unchanged,
 $`(a \oplus e)^{\star} = a^{\star}`. One direction is monotonicity,
@@ -215,6 +247,8 @@ theorem add_one_kstar {α : Type*} [CompleteDioid α]
   · refine kstar_mono ?_
     rw [add_eq_sup]; exact le_sup_left
 ```
+
+*Proof.* By antisymmetry. $`\succeq`: $`a \preceq a \oplus e` gives $`a^{\star} \preceq (a \oplus e)^{\star}` (`kstar_mono`). $`\preceq`: by induction $`(a\oplus e)^{i} \preceq a^{\star}`, using $`(a\oplus e)^{n+1} \preceq a^{\star}\otimes(a\oplus e) = a^{\star}\otimes a \oplus a^{\star} \preceq a^{\star}` (since $`a^{\star}\otimes a = a^+ \preceq a^{\star}`). $`\quad\blacksquare`
 
 # The Kleene star theorem
 The central result is that $`a^{\star} \otimes b` is the _least_
@@ -252,6 +286,8 @@ theorem kstar_mul_is_solution
     add_comm (kplus a * b) b]
 ```
 
+*Proof.* $`a \otimes (a^{\star}\otimes b) \oplus b = a^+\otimes b \oplus b = (e \oplus a^+)\otimes b = a^{\star}\otimes b` (`kplus_eq_mul_kstar`, `kstar_eq_one_add_kplus`, distributivity). $`\quad\blacksquare`
+
 Second, it is the _least_ solution: any $`x` with
 $`x = a \otimes x \oplus b` dominates $`a^{\star} \otimes b`. From the
 equation, $`b \preceq x` and $`a \otimes x \preceq x`, so by induction
@@ -282,6 +318,8 @@ theorem kstar_mul_le_of_solution
 
 end NetworkCalculus
 ```
+
+*Proof.* From $`a \otimes x \oplus b = x`: $`b \preceq x` and $`a \otimes x \preceq x`. Induction gives $`a^k \otimes b \preceq x` (since $`a^{n+1}\otimes b = a\otimes(a^n\otimes b) \preceq a\otimes x \preceq x`). Then $`a^{\star}\otimes b = \bigoplus_k a^k\otimes b \preceq x`. $`\quad\blacksquare`
 
 Together these say $`a^{\star} \otimes b` solves $`x = a \otimes x
 \oplus b` and lies below every solution: it is the least fixed point.

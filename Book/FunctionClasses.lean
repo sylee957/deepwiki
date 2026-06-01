@@ -81,18 +81,26 @@ private theorem conv_apply_nonneg {f g : FunDioid}
           by gcongr <;> [exact hf u; exact hg s]
 ```
 
+*Proof.* By `conv_le`, each term is $`\ge 0`: $`0 = 0 + 0 \le f(u) + g(s)` from $`f, g \ge 0`. $`\quad\blacksquare`
+
 Each predicate is preserved by both `∧` and `∗`. Non-negativity:
 
 ```lean
 theorem IsNonneg.inf {f g : FunDioid}
     (hf : IsNonneg f) (hg : IsNonneg g) :
     IsNonneg (f + g) := fun t => le_min (hf t) (hg t)
+```
 
+*Proof.* $`0 \le \min(f(t), g(t))` from $`0 \le f(t)`, $`0 \le g(t)` (`le_min`). $`\quad\blacksquare`
+
+```lean
 theorem IsNonneg.conv {f g : FunDioid}
     (hf : IsNonneg f) (hg : IsNonneg g) :
     IsNonneg (f * g) :=
   fun t => conv_apply_nonneg hf hg t
 ```
+
+*Proof.* `conv_apply_nonneg`: $`0 \le ((f \ast g)(t))_{\mathrm{dual}}`. $`\quad\blacksquare`
 
 Vanishing at zero:
 
@@ -102,7 +110,11 @@ theorem IsZeroAtZero.inf {f g : FunDioid}
     IsZeroAtZero (f + g) := by
   show min (f.toFun 0).toDual (g.toFun 0).toDual = 0
   rw [hf, hg, min_self]
+```
 
+*Proof.* $`\min(f(0), g(0)) = \min(0, 0) = 0`. $`\quad\blacksquare`
+
+```lean
 theorem IsZeroAtZero.conv {f g : FunDioid}
     (hf : IsZeroAtZero f) (hg : IsZeroAtZero g)
     (hfn : IsNonneg f) (hgn : IsNonneg g) :
@@ -116,6 +128,8 @@ theorem IsZeroAtZero.conv {f g : FunDioid}
     rwa [hf, hg, add_zero] at h2
   · exact conv_apply_nonneg hfn hgn 0
 ```
+
+*Proof.* $`\le`: term $`0+0` gives $`(f\ast g)(0) \le f(0)+g(0) = 0`. $`\ge`: `conv_apply_nonneg`. $`\quad\blacksquare`
 
 Non-decreasing-ness. For $`\wedge` it is pointwise; for $`\ast`, given a
 decomposition $`u + s = y`, the values $`u' = x - \min(s, x)` and
@@ -131,7 +145,11 @@ theorem IsNondecr.inf {f g : FunDioid}
   show min (f.toFun x).toDual (g.toFun x).toDual
      ≤ min (f.toFun y).toDual (g.toFun y).toDual
   exact min_le_min (hf x y hxy) (hg x y hxy)
+```
 
+*Proof.* $`\min(f(x), g(x)) \le \min(f(y), g(y))` from $`f(x) \le f(y)`, $`g(x) \le g(y)` (`min_le_min`). $`\quad\blacksquare`
+
+```lean
 theorem IsNondecr.conv {f g : FunDioid}
     (hf : IsNondecr f) (hg : IsNondecr g) :
     IsNondecr (f * g) := by
@@ -162,6 +180,9 @@ theorem IsNondecr.conv {f g : FunDioid}
   · exact hf _ u hu'u
   · exact hg s' s hs's
 ```
+
+*Proof.* For $`x \le y` and any decomposition $`u + s = y`, set $`s' = \min(s,x)`, $`u' = x - s'`. Then $`u' + s' = x`, $`u' \le u`, $`s' \le s`, so by `conv_ge` and monotonicity:
+$$`(f \ast g)(x) \le f(u') + g(s') \le f(u) + g(s). \quad\blacksquare`
 
 The four subsets are stable under both operations:
 
@@ -202,6 +223,8 @@ theorem FnondecrZero.conv_mem {f g : FunDioid}
     Fnondecr.conv_mem hf.2 hg.2⟩
 ```
 
+*Proof.* Each class is a conjunction of basic predicates; stability is the corresponding predicate lemmas paired: $`\mathcal{F}^+` uses `IsNonneg.{inf,conv}`; $`\mathcal{F}_0` adds `IsZeroAtZero.{inf,conv}`; $`\mathcal{F}^\uparrow` adds `IsNondecr.{inf,conv}`; $`\mathcal{F}^\uparrow_0 = \mathcal{F}_0 \cap \mathcal{F}^\uparrow` pairs the two. $`\quad\blacksquare`
+
 # `F⁺` and `F↑` are complete dioids
 A consequence of the stability results and completeness of
 $`R^+_{\min}` is that $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are
@@ -225,7 +248,11 @@ theorem const0_isNonneg : IsNonneg const0 :=
 
 theorem const0_isNondecr : IsNondecr const0 :=
   fun _ _ _ => le_rfl
+```
 
+*Proof.* The value is constant $`0`, so both $`0 \le 0` (non-negativity) and $`0 \le 0` (monotonicity) hold by reflexivity. $`\quad\blacksquare`
+
+```lean
 theorem isNonneg_iff_le_const0 {f : FunDioid} :
     IsNonneg f ↔ f ≤ const0 := Iff.rfl
 
@@ -259,7 +286,11 @@ theorem Fplus.sSup_mem {T : Set FunDioid}
   isNonneg_iff_le_const0.mpr
     (sSup_le fun f hf =>
       isNonneg_iff_le_const0.mp (hT f hf))
+```
 
+*Proof.* $`\sup T \in \mathcal{F}^+ \iff \sup T \preceq \mathtt{const0} \iff \forall f \in T,\ f \preceq \mathtt{const0}` (`sSup_le`), which is the hypothesis. $`\quad\blacksquare`
+
+```lean
 theorem Fnondecr.sSup_mem {T : Set FunDioid}
     (hT : ∀ f ∈ T, f ∈ Fnondecr) :
     sSup T ∈ Fnondecr := by
@@ -271,6 +302,8 @@ theorem Fnondecr.sSup_mem {T : Set FunDioid}
     exact iInf_mono fun f =>
       (hT (f : FunDioid) f.2).2 x y hxy
 ```
+
+*Proof.* Non-negativity as above. Monotonicity: the dioid sup is numerically the pointwise infimum, $`((\sup T)(t))_{\mathrm{dual}} = \inf_{f \in T} (f(t))_{\mathrm{dual}}`, monotone in $`t` by `iInf_mono` since each $`f` is. $`\quad\blacksquare`
 
 The neutrals lie in both classes:
 
@@ -303,6 +336,8 @@ theorem one_mem_Fnondecr :
         (zero_le' (a := x)))]
   · rw [if_neg hy]; exact le_top⟩
 ```
+
+*Proof.* $`\varepsilon \equiv +\infty = \top`, so $`0 \le \top` and $`\top \le \top` (`le_top`): non-negative, non-decreasing. $`e` has value $`0` at $`0` and $`+\infty` else: non-negative ($`0 \le 0`, $`0 \le \top`), and non-decreasing since $`x \le y = 0 \Rightarrow x = 0` and otherwise the codomain value is $`\top`. $`\quad\blacksquare`
 
 Both $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are then
 `SubCompleteDioid FunDioid`: the closure data feeds the generic builder
@@ -356,7 +391,11 @@ theorem top_eq_const0 :
     show SfPlus.carrier = Set.Iic const0 from
       Fplus_eq_Iic]
   exact csSup_Iic
+```
 
+*Proof.* $`(\top).\mathtt{val} = \sup \mathcal{F}^+ = \sup(\mathrm{Iic}\,\mathtt{const0}) = \mathtt{const0}` (`val_top`, `Fplus_eq_Iic`, `csSup_Iic`). $`\quad\blacksquare`
+
+```lean
 noncomputable example :
     CompleteDioid FPlus := inferInstance
 
@@ -391,7 +430,11 @@ theorem top_eq_const0 :
   refine le_antisymm
     (sSup_le fun f hf => hf.1) (le_sSup ?_)
   exact ⟨const0_isNonneg, const0_isNondecr⟩
+```
 
+*Proof.* $`(\top).\mathtt{val} = \sup \mathcal{F}^\uparrow = \mathtt{const0}` by antisymmetry: $`\le` since every $`f \in \mathcal{F}^\uparrow` has $`f \preceq \mathtt{const0}` (`sSup_le`); $`\ge` since $`\mathtt{const0} \in \mathcal{F}^\uparrow` (`le_sSup`). $`\quad\blacksquare`
+
+```lean
 noncomputable example :
     CompleteDioid FNondecr := inferInstance
 
@@ -412,11 +455,19 @@ theorem eps_not_zeroAtZero :
   intro h
   have : (⊤ : Rbar) = 0 := h
   simp at this
+```
 
+*Proof.* $`\varepsilon(0) = +\infty = \top \ne 0`. $`\quad\blacksquare`
+
+```lean
 theorem eps_not_mem_Fzero :
     (0 : FunDioid) ∉ Fzero :=
   fun h => eps_not_zeroAtZero h.2
+```
 
+*Proof.* $`\mathcal{F}_0`-membership would force $`\varepsilon(0) = 0`, contradicting `eps_not_zeroAtZero`. $`\quad\blacksquare`
+
+```lean
 theorem eps_not_mem_FnondecrZero :
     (0 : FunDioid) ∉ FnondecrZero :=
   fun h => eps_not_zeroAtZero h.1.2
@@ -425,6 +476,8 @@ end FunDioid
 
 end NetworkCalculus
 ```
+
+*Proof.* $`\mathcal{F}^\uparrow_0 \subseteq \mathcal{F}_0` would force $`\varepsilon(0) = 0`, contradicting `eps_not_zeroAtZero`. $`\quad\blacksquare`
 
 This is why $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow`, which _do_
 contain $`\varepsilon`, are the complete dioids.

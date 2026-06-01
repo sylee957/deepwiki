@@ -57,7 +57,11 @@ namespace Carrier
 theorem top_add' {M : Type*} [Carrier M] (a : M) :
     ⊤ + a = ⊤ := by
   rw [add_comm]; exact add_top' a
+```
 
+*Proof.* $`\top + a = a + \top = \top` (commutativity, `add_top'`). $`\quad\blacksquare`
+
+```lean
 theorem add_le_add_right' {M : Type*} [Carrier M]
     {a b : M}
     (h : a ≤ b) (c : M) : a + c ≤ b + c := by
@@ -66,6 +70,8 @@ theorem add_le_add_right' {M : Type*} [Carrier M]
 
 end Carrier
 ```
+
+*Proof.* From $`a \le b`: $`a + c = c + a \le c + b = b + c` (commutativity, `add_le_add_left'`). $`\quad\blacksquare`
 
 The newtype `MinPlus.Dual M` wraps the underlying `M` and inherits _none_
 of its algebra except the transported order; the dioid product $`\otimes` is
@@ -155,26 +161,46 @@ theorem add_assoc' {M : Type*} [Carrier M]
     (a b c : Dual M) :
     add (add a b) c = add a (add b c) :=
   toDual_injective (min_assoc _ _ _)
+```
 
+*Proof.* Transport `min_assoc`: $`\min(\min(a,b),c) = \min(a,\min(b,c))`. $`\quad\blacksquare`
+
+```lean
 theorem add_comm' {M : Type*} [Carrier M]
     (a b : Dual M) :
     add a b = add b a :=
   toDual_injective (min_comm _ _)
+```
 
+*Proof.* Transport `min_comm`: $`\min(a,b) = \min(b,a)`. $`\quad\blacksquare`
+
+```lean
 theorem zero_add' {M : Type*} [Carrier M]
     (a : Dual M) : add zero a = a :=
   toDual_injective (min_eq_right le_top)
+```
 
+*Proof.* $`\mathbf{0} = \top` and $`a \le \top`, so $`\min(\top, a) = a` (`min_eq_right`). $`\quad\blacksquare`
+
+```lean
 theorem add_zero' {M : Type*} [Carrier M]
     (a : Dual M) : add a zero = a :=
   toDual_injective (min_eq_left le_top)
+```
 
+*Proof.* $`\min(a, \top) = a` (`min_eq_left`, $`a \le \top`). $`\quad\blacksquare`
+
+```lean
 theorem nsmul_zero' {M : Type*} [Carrier M]
     (a : Dual M) : nsmul 0 a = zero := by
   show Dual.ofDual (if (0 : ℕ) = 0 then ⊤ else _)
      = Dual.ofDual ⊤
   rw [if_pos rfl]
+```
 
+*Proof.* The guard $`0 = 0` selects $`\top = \mathbf{0}`. $`\quad\blacksquare`
+
+```lean
 theorem nsmul_succ' {M : Type*} [Carrier M]
     (n : ℕ) (a : Dual M) :
     nsmul (n + 1) a = add (nsmul n a) a := by
@@ -186,39 +212,71 @@ theorem nsmul_succ' {M : Type*} [Carrier M]
   · subst h; rw [if_pos rfl]
     exact (min_eq_right le_top).symm
   · rw [if_neg h.ne']; exact (min_self _).symm
+```
 
+*Proof.* Since $`n+1 \ne 0`, LHS $`= a`; and $`\min(\top, a) = a` ($`n = 0`) or $`\min(a, a) = a` ($`n > 0`). $`\quad\blacksquare`
+
+```lean
 theorem mul_assoc' {M : Type*} [Carrier M]
     (a b c : Dual M) :
     mul (mul a b) c = mul a (mul b c) :=
   toDual_injective (add_assoc _ _ _)
+```
 
+*Proof.* Transport `add_assoc`: $`(a+b)+c = a+(b+c)`. $`\quad\blacksquare`
+
+```lean
 theorem mul_comm' {M : Type*} [Carrier M]
     (a b : Dual M) :
     mul a b = mul b a :=
   toDual_injective (add_comm _ _)
+```
 
+*Proof.* Transport `add_comm`: $`a + b = b + a`. $`\quad\blacksquare`
+
+```lean
 theorem one_mul' {M : Type*} [Carrier M]
     (a : Dual M) : mul one a = a :=
   toDual_injective (zero_add a.toDual)
+```
 
+*Proof.* $`\mathbf{1} = 0`, so $`0 + a = a` (`zero_add`). $`\quad\blacksquare`
+
+```lean
 theorem mul_one' {M : Type*} [Carrier M]
     (a : Dual M) : mul a one = a :=
   toDual_injective (add_zero a.toDual)
+```
 
+*Proof.* $`a + 0 = a` (`add_zero`). $`\quad\blacksquare`
+
+```lean
 theorem zero_mul' {M : Type*} [Carrier M]
     (a : Dual M) : mul zero a = zero :=
   toDual_injective (Carrier.top_add' a.toDual)
+```
 
+*Proof.* $`\mathbf{0} = \top` absorbs: $`\top + a = \top` (`top_add'`). $`\quad\blacksquare`
+
+```lean
 theorem mul_zero' {M : Type*} [Carrier M]
     (a : Dual M) : mul a zero = zero :=
   toDual_injective (Carrier.add_top' a.toDual)
+```
 
+*Proof.* $`a + \top = \top` (`add_top'`). $`\quad\blacksquare`
+
+```lean
 theorem natCast_zero' {M : Type*} [Carrier M] :
     (natCast 0 : Dual M) = zero := by
   show Dual.ofDual (if (0 : ℕ) = 0 then ⊤ else (0 : M))
      = Dual.ofDual ⊤
   rw [if_pos rfl]
+```
 
+*Proof.* The guard $`0 = 0` selects $`\top = \mathbf{0}`. $`\quad\blacksquare`
+
+```lean
 theorem natCast_succ' {M : Type*} [Carrier M]
     (n : ℕ) :
     (natCast (n + 1) : Dual M)
@@ -233,6 +291,8 @@ theorem natCast_succ' {M : Type*} [Carrier M]
   · rw [if_neg h.ne']; exact (min_self _).symm
 ```
 
+*Proof.* Since $`n+1 \ne 0`, LHS $`= 0`; and $`\min(\top, 0) = 0` ($`n = 0`) or $`\min(0, 0) = 0` ($`n > 0`). $`\quad\blacksquare`
+
 Distributivity of $`\otimes = {+}` over $`\oplus = \min` follows from monotonicity of
 addition:
 
@@ -244,7 +304,12 @@ theorem left_distrib' {M : Type*} [Carrier M]
     (Monotone.map_min
       (f := fun x : M => a.toDual + x)
       fun _ _ h => Carrier.add_le_add_left' h _)
+```
 
+*Proof.* $`x \mapsto a + x` is monotone, so commutes with $`\min` (`Monotone.map_min`):
+$$`a + \min(b, c) = \min(a + b,\, a + c). \quad\blacksquare`
+
+```lean
 theorem right_distrib' {M : Type*} [Carrier M]
     (a b c : Dual M) :
     mul (add a b) c = add (mul a c) (mul b c) :=
@@ -253,6 +318,9 @@ theorem right_distrib' {M : Type*} [Carrier M]
       (f := fun x : M => x + c.toDual)
       fun _ _ h => Carrier.add_le_add_right' h _)
 ```
+
+*Proof.* $`x \mapsto x + c` is monotone, so commutes with $`\min`:
+$$`\min(a, b) + c = \min(a + c,\, b + c). \quad\blacksquare`
 
 The `CommSemiring` instance is a flat assembly of these laws:
 
@@ -328,6 +396,9 @@ theorem add_iInf' {M : Type*} [CompleteCarrier M]
 
 end CompleteCarrier
 ```
+
+*Proof.* The range form of `add_sInf'`:
+$$`a + \bigwedge_i f(i) = a + \inf(\operatorname{ran} f) = \bigwedge_i (a + f(i)). \quad\blacksquare`
 
 Transporting the bounded supremum on `Dual M` through the order dual turns
 it into the numeric bounded infimum:
@@ -489,6 +560,8 @@ theorem shift_eq (r : ℝ) (x : Rbar) :
       rw [← WithTop.coe_add, ← WithBot.coe_add]
 ```
 
+*Proof.* Case split on $`x`: at $`\top`, $`r + \top = \top`; at $`\bot`, $`r + (-\infty) = -\infty` (`WithBot.add_bot`); at finite $`s`, $`\mathtt{shift}\,r\,(s) = r + s` (`OrderIso.addLeft_apply`). In all cases $`\mathtt{shift}\,r\,(x) = r + x`. $`\quad\blacksquare`
+
 The heart of the construction is _lower semi-continuity of $`+`_:
 addition distributes over an arbitrary infimum, true precisely because
 $`+\infty = \top` is absorbing. The finite case uses the shift order-isomorphism
@@ -537,6 +610,8 @@ theorem add_iInf {ι : Sort*} (a : Rbar) (f : ι → Rbar) :
 
 end Rbar
 ```
+
+*Proof.* By antisymmetry. $`\le` is monotonicity of $`+`. For $`\ge` (index nonempty), case on $`a`: at $`\top`, both sides $`= \top`; at finite $`r`, the shift iso preserves infima, $`r + \bigwedge_i f(i) = \bigwedge_i (r + f(i))` (`OrderIso.map_iInf`, `shift_eq`); at $`\bot = -\infty`, either all $`f(i) = \top` (both sides $`\top`) or some $`f(j) \ne \top` gives $`\bot + f(j) = \bot`, so $`\bigwedge_i(a + f(i)) \le \bot = a + \bigwedge_i f(i)`. The absorbing $`+\infty = \top` is what makes it work. $`\quad\blacksquare`
 
 `WithTop (WithBot ℝ)` is therefore a complete (min,plus) carrier, and
 $`\overline{R}_{\min}` is the dioid carried by it under the reversed order:
@@ -678,7 +753,11 @@ theorem isLUB_sSup {α : Type*} [CompleteDioid α]
     refine sSup_le ?_
     rintro f ⟨x, hx, rfl⟩
     exact hb hx
+```
 
+*Proof.* $`\sup T` packs the ambient $`\sup(\mathtt{val}\,T)`. Upper bound: $`x.\mathtt{val} \le \sup(\mathtt{val}\,T)` (`le_sSup`). Least: any bound $`b` has $`b.\mathtt{val} \ge \sup(\mathtt{val}\,T)` (`sSup_le`). $`\quad\blacksquare`
+
+```lean
 noncomputable instance instCompleteLattice
     {α : Type*} [CompleteDioid α]
     (S : SubCompleteDioid α) :
@@ -702,14 +781,22 @@ theorem val_top {α : Type*} [CompleteDioid α]
   · rintro a ⟨x, _, rfl⟩; exact x.property
   · intro a ha
     exact ⟨S.pack a ha, Set.mem_univ _, rfl⟩
+```
 
+*Proof.* $`(\top).\mathtt{val} = \sup(\mathtt{val}\,\mathtt{univ})` (`val_sSup`), and $`\mathtt{val}\,\mathtt{univ} = \mathtt{carrier}` by double inclusion (`property`; `pack`). $`\quad\blacksquare`
+
+```lean
 theorem val_sup {α : Type*} [CompleteDioid α]
     (S : SubCompleteDioid α) (x y : S.Sub) :
     (x ⊔ y).val = x.val ⊔ y.val := by
   show (sSup ({x, y} : Set S.Sub)).val
      = x.val ⊔ y.val
   rw [val_sSup, Set.image_pair, sSup_pair]; rfl
+```
 
+*Proof.* $`(x \sqcup y).\mathtt{val} = \sup\{x.\mathtt{val}, y.\mathtt{val}\} = x.\mathtt{val} \sqcup y.\mathtt{val}` (`val_sSup`, `Set.image_pair`, `sSup_pair`). $`\quad\blacksquare`
+
+```lean
 theorem val_biSup {α : Type*} [CompleteDioid α]
     (S : SubCompleteDioid α) {ι : Sort*}
     (f : ι → S.Sub) (p : ι → Prop) :
@@ -722,6 +809,9 @@ theorem val_biSup {α : Type*} [CompleteDioid α]
     val_sSup, ← Set.range_comp, sSup_range]
   rfl
 ```
+
+*Proof.* Rewrite as a subtype-indexed $`\sup` over the range (`iSup_subtype'`, `sSup_range`), push `val` through (`val_sSup`, `Set.range_comp`):
+$$`\Big(\bigsqcup_{p\,i} f(i)\Big).\mathtt{val} = \bigsqcup_{p\,i} (f(i)).\mathtt{val}. \quad\blacksquare`
 
 Each operation is the ambient one applied through `val`, kept in the
 carrier by the closure fields:
@@ -824,7 +914,11 @@ theorem add_eq_sup' {α : Type*} [CompleteDioid α]
     (S : SubCompleteDioid α) (x y : S.Sub) :
     x + y = x ⊔ y :=
   S.ext (by rw [val_add, val_sup, add_eq_sup])
+```
 
+*Proof.* On values: $`(x+y).\mathtt{val} = x.\mathtt{val} + y.\mathtt{val} = x.\mathtt{val} \sqcup y.\mathtt{val} = (x \sqcup y).\mathtt{val}` (`add_eq_sup`). $`\quad\blacksquare`
+
+```lean
 noncomputable instance instDioid {α : Type*}
     [CompleteDioid α] (S : SubCompleteDioid α) :
     Dioid S.Sub :=
@@ -842,7 +936,12 @@ theorem mul_sSup' {α : Type*} [CompleteDioid α]
     iSup_image, S.val_biSup]
   exact iSup_congr fun b =>
     iSup_congr fun _ => (val_mul S a b).symm
+```
 
+*Proof.* On values, the ambient `mul_sSup` distributes over $`\sup(\mathtt{val}\,T)`; re-index over $`T` (`iSup_image`) and pull `val` back (`val_biSup`):
+$$`a.\mathtt{val} * \sup(\mathtt{val}\,T) = \Big(\bigsqcup_{b \in T} a * b\Big).\mathtt{val}. \quad\blacksquare`
+
+```lean
 noncomputable instance instCompleteDioid {α : Type*}
     [CompleteDioid α] (S : SubCompleteDioid α) :
     CompleteDioid S.Sub :=

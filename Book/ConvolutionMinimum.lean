@@ -42,6 +42,8 @@ theorem lsc_of_monotone_leftCont
     exact hy.trans_le (hmono hx')
 ```
 
+*Proof.* Fix $`y < f(x)`. Split the neighbourhood filter into $`\le x` and $`\ge x`: on the left, left-continuity gives $`f(x') \to f(x) > y` eventually; on the right, monotonicity gives $`f(x') \ge f(x) > y`. $`\quad\blacksquare`
+
 Dually, a nonincreasing, right-continuous function is lower
 semi-continuous — the two one-sided arguments swap roles.
 
@@ -58,6 +60,8 @@ theorem lsc_of_antitone_rightCont
   · exact (hright x).tendsto.eventually
       (eventually_gt_nhds hy)
 ```
+
+*Proof.* Mirror of the monotone case: on the left, antitonicity gives $`f(x') \ge f(x) > y`; on the right, right-continuity gives $`f(x') \to f(x) > y` eventually. $`\quad\blacksquare`
 
 # The convolution attains its minimum
 
@@ -111,6 +115,10 @@ theorem convolution_isMinOn
   refine ⟨s₀, hs₀_mem, ?_⟩
   intro s hs
   exact (isMinOn_iff.mp hs₀_min) s hs
+```
 
+*Proof.* The objective $`h(s) = f(s) + g(t-s)` is lower semi-continuous: $`f` by `lsc_of_monotone_leftCont`, and $`s \mapsto g(t-s)` by `lsc_of_antitone_rightCont` (it is antitone and right-continuous, being $`g` precomposed with the decreasing shift $`s \mapsto t - s`); a sum of lsc functions is lsc. On the nonempty ($`0 \le t`) compact $`[0,t]`, an lsc function attains its infimum, giving the minimizer $`s_0`. $`\quad\blacksquare`
+
+```lean
 end NetworkCalculus
 ```
