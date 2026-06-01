@@ -60,15 +60,14 @@ $`a \oplus a = a`.
 
 ```lean
 /-- `(D, ⊕, ε)` is a monoid. -/
-class AddMonoid (D : Type*) extends _root_.AddMonoid D
+class SumMonoid (D : Type*) extends AddMonoid D
 
 /-- `(D, ⊕)` is a commutative monoid. -/
-class AddCommMonoid (D : Type*) extends
-    _root_.AddCommMonoid D
+class SumCommMonoid (D : Type*) extends AddCommMonoid D
 
 /-- `(D, ⊕)` is an idempotent commutative monoid. -/
-class AddIdemCommMonoid (D : Type*) extends
-    _root_.AddCommMonoid D where
+class SumIdemCommMonoid (D : Type*) extends
+    AddCommMonoid D where
   oplus_idem : ∀ a : D, (a ⊕ a : D) = a
 ```
 
@@ -78,23 +77,23 @@ requires associativity of $`\oplus` and a two-sided neutral $`\varepsilon`;
 the commutative monoid adds $`a \oplus b = b \oplus a`.
 
 ```lean
-namespace AddMonoid
-variable {D : Type*} [AddMonoid D]
+namespace SumMonoid
+variable {D : Type*} [SumMonoid D]
 
 theorem oplus_assoc (a b c : D) :
     ((a ⊕ b) ⊕ c : D) = a ⊕ (b ⊕ c) := add_assoc a b c
 theorem eps_oplus (a : D) : (ε ⊕ a : D) = a := zero_add a
 theorem oplus_eps (a : D) : (a ⊕ ε : D) = a := add_zero a
 
-end AddMonoid
+end SumMonoid
 
-namespace AddCommMonoid
-variable {D : Type*} [AddCommMonoid D]
+namespace SumCommMonoid
+variable {D : Type*} [SumCommMonoid D]
 
 theorem oplus_comm (a b : D) : (a ⊕ b : D) = b ⊕ a :=
   add_comm a b
 
-end AddCommMonoid
+end SumCommMonoid
 ```
 
 The multiplicative monoid $`(D, \otimes, e)` is Mathlib's `Monoid`; its
