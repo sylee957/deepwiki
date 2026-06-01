@@ -54,14 +54,14 @@ abbrev ofCommSemiring {α : Type*} [CommSemiring α]
 Idempotency of $`\oplus` induces the _canonical order_ $`a \preceq b \;:\Leftrightarrow\; a \oplus b = b`.
 The order is _derived_ from the algebra, not supplied independently:
 
+*Theorem:* $`a \preceq b \iff a \oplus b = b`
+
 ```lean
 theorem le_iff_add_eq_right
     {α : Type*} [Dioid α] {a b : α} :
     a ≤ b ↔ a + b = b :=
   add_eq_right_iff_le.symm
 ```
-
-*Proof.* Definitional: $`a \preceq b :\Leftrightarrow a \oplus b = b`. $`\quad\blacksquare`
 
 # Order relation and isotony
 The canonical relation is a partial order, and both operations are
@@ -70,16 +70,18 @@ from the semiring laws.
 
 _Reflexivity_, from idempotency $`a \oplus a = a`:
 
+*Theorem:* $`a \preceq a`
+
 ```lean
 theorem le_refl' {α : Type*} [Dioid α] (a : α) :
     a ≤ a :=
   le_iff_add_eq_right.mpr (add_idem a)
 ```
 
-*Proof.* $`a \preceq a \Leftrightarrow a \oplus a = a` (idempotency). $`\quad\blacksquare`
-
 _Transitivity_, via
 $$`a \oplus c = a \oplus (b \oplus c) = (a \oplus b) \oplus c = b \oplus c = c`
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c`
 
 ```lean
 theorem le_trans' {α : Type*} [Dioid α] {a b c : α}
@@ -91,10 +93,9 @@ theorem le_trans' {α : Type*} [Dioid α] {a b c : α}
     _ = c := hbc
 ```
 
-*Proof.* From $`a \oplus b = b`, $`b \oplus c = c`:
-$$`a \oplus c = a \oplus (b \oplus c) = (a \oplus b) \oplus c = b \oplus c = c. \quad\blacksquare`
-
 _Antisymmetry_: if $`a \preceq b` and $`b \preceq a` then $`a \oplus b = a = b`.
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b`
 
 ```lean
 theorem le_antisymm' {α : Type*} [Dioid α] {a b : α}
@@ -103,11 +104,10 @@ theorem le_antisymm' {α : Type*} [Dioid α] {a b : α}
   rw [← hab, add_comm, hba]
 ```
 
-*Proof.* From $`a \oplus b = b`, $`b \oplus a = a`:
-$$`b = a \oplus b = b \oplus a = a. \quad\blacksquare`
-
 _Isotony of the sum_ $`\oplus`: if $`a \preceq b` then $`a \oplus c \preceq b \oplus c`, since
 $`(a \oplus c) \oplus (b \oplus c) = (a \oplus b) \oplus (c \oplus c) = b \oplus c`.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
 
 ```lean
 theorem add_le_add_right'
@@ -119,10 +119,9 @@ theorem add_le_add_right'
     _ = b + c := by rw [h, add_idem]
 ```
 
-*Proof.* From $`a \oplus b = b`, with $`c \oplus c = c`:
-$$`(a \oplus c) \oplus (b \oplus c) = (a \oplus b) \oplus (c \oplus c) = b \oplus c. \quad\blacksquare`
+The left-handed form follows by commutativity:
 
-The left-handed form $`a \preceq b \Rightarrow c \oplus a \preceq c \oplus b` follows by commutativity:
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
 
 ```lean
 theorem add_le_add_left'
@@ -132,10 +131,10 @@ theorem add_le_add_left'
   exact add_le_add_right' h c
 ```
 
-*Proof.* $`c \oplus a = a \oplus c \preceq b \oplus c = c \oplus b` by commutativity and the right form. $`\quad\blacksquare`
-
 _Isotony of the product_ $`\otimes`: if $`a \preceq b` then $`a \otimes c \preceq b \otimes c`, since
 $`(a \otimes c) \oplus (b \otimes c) = (a \oplus b) \otimes c = b \otimes c`.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c`
 
 ```lean
 theorem mul_le_mul_right'
@@ -145,10 +144,9 @@ theorem mul_le_mul_right'
   rw [← add_mul, h]
 ```
 
-*Proof.* From $`a \oplus b = b`, by right-distributivity:
-$$`(a \otimes c) \oplus (b \otimes c) = (a \oplus b) \otimes c = b \otimes c. \quad\blacksquare`
+And the left form, by commutativity:
 
-And the left form $`a \preceq b \Rightarrow c \otimes a \preceq c \otimes b`, since $`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b`:
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
 
 ```lean
 theorem mul_le_mul_left'
@@ -157,9 +155,6 @@ theorem mul_le_mul_left'
   rw [le_iff_add_eq_right] at h ⊢
   rw [← mul_add, h]
 ```
-
-*Proof.* From $`a \oplus b = b`, by left-distributivity:
-$$`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b. \quad\blacksquare`
 
 ```lean
 end Dioid
@@ -189,6 +184,8 @@ The single distributivity field, stated over an arbitrary set on the
 left, is `mul_sSup`. Right distributivity is _derived_ from it and
 commutativity of $`\otimes`, so it need not be a separate axiom:
 
+*Theorem:* $`\Bigl(\bigsqcup_{b \in s} b\Bigr) \otimes a = \bigsqcup_{b \in s} b \otimes a`
+
 ```lean
 namespace CompleteDioid
 
@@ -198,11 +195,10 @@ theorem sSup_mul {α : Type*} [CompleteDioid α]
   rw [mul_comm, mul_sSup]; simp_rw [mul_comm a]
 ```
 
-*Proof.* By commutativity and `mul_sSup`:
-$$`\Bigl(\bigsqcup_{b \in s} b\Bigr) \otimes a = a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b = \bigsqcup_{b \in s} b \otimes a. \quad\blacksquare`
-
 The indexed forms `mul_iSup`/`iSup_mul` follow from `mul_sSup`/
 `sSup_mul`:
+
+*Theorem:* $`a \otimes \bigsqcup_i g(i) = \bigsqcup_i a \otimes g(i)` and $`\Bigl(\bigsqcup_i g(i)\Bigr) \otimes a = \bigsqcup_i g(i) \otimes a`
 
 ```lean
 theorem mul_iSup {α : Type*} [CompleteDioid α]
@@ -216,10 +212,9 @@ theorem iSup_mul {α : Type*} [CompleteDioid α]
   rw [← sSup_range, sSup_mul, iSup_range]
 ```
 
-*Proof.* Writing $`\bigsqcup_i g(i) = \bigsqcup\,(\operatorname{ran} g)` and applying `mul_sSup` (resp. `sSup_mul`):
-$$`a \otimes \bigsqcup_i g(i) = \bigsqcup_i a \otimes g(i), \qquad \Bigl(\bigsqcup_i g(i)\Bigr) \otimes a = \bigsqcup_i g(i) \otimes a. \quad\blacksquare`
-
 The binary special cases distribute $`\otimes` over $`\oplus = \sqcup`:
+
+*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)` and $`(b \sqcup c) \otimes a = (b \otimes a) \sqcup (c \otimes a)`
 
 ```lean
 theorem mul_sup {α : Type*} [CompleteDioid α]
@@ -246,9 +241,6 @@ theorem sup_mul {α : Type*} [CompleteDioid α]
 
 end CompleteDioid
 ```
-
-*Proof.* A binary join is a supremum over $`\{0,1\}`; by `mul_iSup` (resp. `iSup_mul`):
-$$`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c), \qquad (b \sqcup c) \otimes a = (b \otimes a) \sqcup (c \otimes a). \quad\blacksquare`
 
 Isotony needs no completeness; it is available here
 through the `Dioid` superclass.

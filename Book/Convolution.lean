@@ -49,6 +49,8 @@ $$`(f \ast g)(t) = \bigsqcup_{u+s=t} f(u) \otimes g(s) :`
 every decomposition gives a lower bound (`conv_ge`), and it is below any
 common upper bound (`conv_le`).
 
+*Theorem:* $`u + s = t \;\Rightarrow\; f(u) \otimes g(s) \preceq (f \ast g)(t)`
+
 ```lean
 theorem conv_ge {T : Type*} [AddCommMonoid T]
     {α : Type*} [CompleteDioid α]
@@ -58,7 +60,7 @@ theorem conv_ge {T : Type*} [AddCommMonoid T]
     f p.val.1 * g p.val.2) ⟨(u, s), h⟩
 ```
 
-*Proof.* $`f(u) \otimes g(s)` is the term at index $`\langle(u,s),h\rangle`, so $`f(u)\otimes g(s) \preceq (f \ast g)(t)` (`le_iSup`). $`\quad\blacksquare`
+*Theorem:* $`\bigl(\forall u\,s,\; u+s=t \Rightarrow f(u) \otimes g(s) \preceq b\bigr) \;\Rightarrow\; (f \ast g)(t) \preceq b`
 
 ```lean
 theorem conv_le {T : Type*} [AddCommMonoid T]
@@ -71,8 +73,6 @@ theorem conv_le {T : Type*} [AddCommMonoid T]
 end Generic
 ```
 
-*Proof.* If $`b` bounds every term $`f(u)\otimes g(s)` ($`u+s=t`), it bounds their join $`(f \ast g)(t)` (`iSup_le`). $`\quad\blacksquare`
-
 # Properties of the convolution
 Commutativity, associativity, distributivity over the dioid sum $`\oplus`,
 and addition by a constant — all in the dioid order $`\preceq`, over an
@@ -82,8 +82,10 @@ arbitrary complete dioid.
 section Generic
 ```
 
-_Commutativity_ $`f \ast g = g \ast f` (reindex decompositions
+_Commutativity_ (reindex decompositions
 $`(u,s) \mapsto (s,u)` and use commutativity of $`\otimes`):
+
+*Theorem:* $`f \ast g = g \ast f`
 
 ```lean
 theorem conv_comm {T : Type*} [AddCommMonoid T]
@@ -99,12 +101,11 @@ theorem conv_comm {T : Type*} [AddCommMonoid T]
       exact conv_ge f g (by rw [add_comm]; exact h)
 ```
 
-*Proof.* Reindex $`(u,s) \mapsto (s,u)` and use $`\otimes` commutative: each term $`f(u)\otimes g(s) = g(s)\otimes f(u)` matches a term of $`g \ast f`, so the two joins are equal by antisymmetry. $`\quad\blacksquare`
+_Distributivity over the dioid sum_, where $`\oplus = \sqcup` (for
+$`\overline{R}_{\min}`, the pointwise minimum $`\wedge`), from binary
+distributivity of $`\otimes` over $`\sqcup`:
 
-_Distributivity over the dioid sum_
-$$`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h),`
-where $`\oplus = \sqcup` (for $`\overline{R}_{\min}`, the pointwise minimum
-$`\wedge`), from binary distributivity of $`\otimes` over $`\sqcup`:
+*Theorem:* $`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h)`
 
 ```lean
 theorem conv_sup {T : Type*} [AddCommMonoid T]
@@ -118,11 +119,10 @@ theorem conv_sup {T : Type*} [AddCommMonoid T]
   exact CompleteDioid.mul_sup _ _ _
 ```
 
-*Proof.* Pull the join out of the indexed sup (`iSup_sup_eq`), then termwise `mul_sup`:
-$$`\bigsqcup_{p} f(p_1) \otimes (g(p_2) \sqcup h(p_2)) = \bigsqcup_{p} \bigl(f(p_1)\otimes g(p_2)\bigr) \sqcup \bigl(f(p_1)\otimes h(p_2)\bigr) = (f \ast g)(t) \sqcup (f \ast h)(t). \quad\blacksquare`
+_Addition by a constant_ (the $`{+}\,K` is multiplication by the
+constant $`K \in \alpha`):
 
-_Addition by a constant_ $`(f \ast g) \otimes K = f \ast (g \otimes K)`
-(the $`{+}\,K` is multiplication by the constant $`K \in \alpha`):
+*Theorem:* $`(f \ast g) \otimes K = f \ast (g \otimes K)`
 
 ```lean
 theorem conv_mul_const {T : Type*} [AddCommMonoid T]
@@ -136,13 +136,12 @@ theorem conv_mul_const {T : Type*} [AddCommMonoid T]
   rw [mul_assoc]
 ```
 
-*Proof.* By `iSup_mul` and termwise `mul_assoc`:
-$$`(f \ast g)(t) \otimes K = \bigsqcup_{p} \bigl(f(p_1)\otimes g(p_2)\bigr)\otimes K = \bigsqcup_{p} f(p_1)\otimes\bigl(g(p_2)\otimes K\bigr) = \bigl(f \ast (g\otimes K)\bigr)(t). \quad\blacksquare`
-
 _Associativity_: both $`(f \ast g) \ast h` and $`f \ast (g \ast h)` equal
 the ternary convolution
 $$`\bigsqcup_{u+v+w=t} f(u) \otimes g(v) \otimes h(w);`
 we bound each by the other via the symmetric ternary lower bounds.
+
+*Theorem:* $`u+v+w = t \;\Rightarrow\; f(u) \otimes g(v) \otimes h(w) \preceq ((f \ast g) \ast h)(t)`
 
 ```lean
 theorem conv_conv_ge {T : Type*} [AddCommMonoid T]
@@ -156,8 +155,7 @@ theorem conv_conv_ge {T : Type*} [AddCommMonoid T]
     (conv_ge (f ∗ g) h (u := u + v) (s := w) e)
 ```
 
-*Proof.* For $`u+v+w=t`, chaining two `conv_ge` bounds (isotony of $`\otimes`):
-$$`f(u)\otimes g(v)\otimes h(w) \preceq (f\ast g)(u{+}v)\otimes h(w) \preceq ((f\ast g)\ast h)(t). \quad\blacksquare`
+*Theorem:* $`u+(v+w) = t \;\Rightarrow\; f(u) \otimes (g(v) \otimes h(w)) \preceq (f \ast (g \ast h))(t)`
 
 ```lean
 theorem le_conv_conv {T : Type*} [AddCommMonoid T]
@@ -171,8 +169,7 @@ theorem le_conv_conv {T : Type*} [AddCommMonoid T]
     (conv_ge f (g ∗ h) (u := u) (s := v + w) e)
 ```
 
-*Proof.* Mirror of `conv_conv_ge`, for $`u+(v+w)=t`:
-$$`f(u)\otimes(g(v)\otimes h(w)) \preceq f(u)\otimes(g\ast h)(v{+}w) \preceq (f\ast(g\ast h))(t). \quad\blacksquare`
+*Theorem:* $`(f \ast g) \ast h = f \ast (g \ast h)`
 
 ```lean
 theorem conv_assoc {T : Type*} [AddCommMonoid T]
@@ -204,8 +201,6 @@ theorem conv_assoc {T : Type*} [AddCommMonoid T]
 end Generic
 ```
 
-*Proof.* Both sides equal the ternary sup $`\bigsqcup_{u+v+w=t} f(u)\otimes g(v)\otimes h(w)`: the $`\preceq` direction bounds each term of $`(f\ast g)\ast h` via `le_conv_conv`, the $`\succeq` direction bounds each term of $`f\ast(g\ast h)` via `conv_conv_ge` (expanding the inner convolution by `iSup_mul`/`mul_iSup` and regrouping with `mul_assoc`). $`\quad\blacksquare`
-
 # The (min,plus) functions
 $`\mathcal{F}` is the set of functions from the non-negative reals
 $`\mathbb{R}^+ = \mathbb{R}_{\ge 0}` into the complete (min,plus) dioid
@@ -216,8 +211,9 @@ abbrev F := ℝ≥0 → RbarMin
 ```
 
 The $`0 \le s \le t` form re-indexes the convolution via
-truncated subtraction on `ℝ≥0`, giving
-$$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s):`
+truncated subtraction on `ℝ≥0`.
+
+*Theorem:* $`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s)`
 
 ```lean
 theorem conv_eq_sub (f g : F) (t : ℝ≥0) :
@@ -237,15 +233,14 @@ theorem conv_eq_sub (f g : F) (t : ℝ≥0) :
       ⟨(t - s, s), tsub_add_cancel_of_le hs⟩ le_rfl
 ```
 
-*Proof.* The maps $`\langle(u,s),u+s=t\rangle \mapsto s` and $`s \le t \mapsto (t-s,s)` are mutually inverse reindexings preserving each term ($`t-s = u`, $`(t-s)+s=t`), so the two suprema coincide:
-$$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s)\otimes g(s). \quad\blacksquare`
-
 # Bounds at zero
 These bounds are stated in the _natural_ (numeric) order, which on
 $`\overline{R}_{\min}` is the reverse of the dioid order $`\preceq`; we
 express it directly on the underlying numeric values via `.toDual`. If
 $`f(0) \le 0` then $`f \ast g \le g` pointwise (the decomposition
 $`t = 0 + t` gives $`(f \ast g)(t) \le f(0) + g(t) \le g(t)`):
+
+*Theorem:* $`f(0) \le 0 \;\Rightarrow\; (f \ast g)(t) \le g(t)` (natural order)
 
 ```lean
 theorem conv_le_right_of_apply_zero_le {f g : F}
@@ -258,12 +253,11 @@ theorem conv_le_right_of_apply_zero_le {f g : F}
     _ = (g t).toDual := zero_add _
 ```
 
-*Proof.* Decomposition $`t = 0 + t` (`conv_ge`), then $`f(0) \le 0`:
-$$`(f \ast g)(t) \le f(0) + g(t) \le 0 + g(t) = g(t). \quad\blacksquare`
-
 If $`f(0) = 0` and $`g(0) = 0` then $`f \ast g \le f \wedge g`
 pointwise: the decomposition $`t = t + 0` bounds it by $`f(t)`, and
 $`t = 0 + t` by $`g(t)`.
+
+*Theorem:* $`f(0) = 0 \;\wedge\; g(0) = 0 \;\Rightarrow\; (f \ast g)(t) \le \min(f(t), g(t))` (natural order)
 
 ```lean
 theorem conv_le_inf_of_apply_zero {f g : F}
@@ -284,15 +278,14 @@ theorem conv_le_inf_of_apply_zero {f g : F}
       _ = (g t).toDual := by rw [hf, zero_add]
 ```
 
-*Proof.* $`\le \min` via two decompositions: $`t = t + 0` with $`g(0)=0` gives $`\le f(t)`; $`t = 0 + t` with $`f(0)=0` gives $`\le g(t)`. $`\quad\blacksquare`
-
 # The function dioid
 Equipping $`\mathcal{F}` with the pointwise minimum $`\oplus = \wedge` and
 the convolution $`\otimes = \ast` gives a _complete commutative dioid_. The
 single piece of completeness content is lower semi-continuity of
 $`\ast`: convolution distributes over an arbitrary _pointwise_ supremum
-of functions in $`\mathcal{F}`, that is
-$$`f \ast \bigsqcup_i g_i = \bigsqcup_i (f \ast g_i).`
+of functions in $`\mathcal{F}`.
+
+*Theorem:* $`f \ast \bigsqcup_i g_i = \bigsqcup_i (f \ast g_i)`
 
 ```lean
 theorem conv_iSup {ι : Sort*} (f : F) (g : ι → F) :
@@ -313,9 +306,6 @@ theorem conv_iSup {ι : Sort*} (f : F) (g : ι → F) :
           refine iSup_congr fun i => ?_
           rw [conv_apply]
 ```
-
-*Proof.* Expand at $`t`, pull the inner join out by `mul_iSup`, then swap the two suprema (`iSup_comm`):
-$$`\bigl(f \ast \textstyle\bigsqcup_i g_i\bigr)(t) = \bigsqcup_{p}\bigsqcup_i f(p_1)\otimes g_i(p_2) = \bigsqcup_i\bigsqcup_{p} f(p_1)\otimes g_i(p_2) = \bigsqcup_i (f \ast g_i)(t). \quad\blacksquare`
 
 Since the bare function space already carries a pointwise product, the
 construction wraps `F` in the newtype `FunDioid`, whose only
@@ -389,13 +379,15 @@ $`\overline{R}_{\min}`; $`\otimes = \ast` carries its monoid laws from
 `conv_assoc`/`conv_comm`; $`\mathbf{0} = \varepsilon` is neutral for
 $`\wedge` and absorbing for $`\ast`.
 
+*Theorem:* $`(a \oplus b) \oplus c = a \oplus (b \oplus c)`
+
 ```lean
 theorem add_assoc' (a b c : FunDioid) :
     add (add a b) c = add a (add b c) :=
   toFun_injective (funext fun _ => add_assoc _ _ _)
 ```
 
-*Proof.* Pointwise `add_assoc` in $`\overline{R}_{\min}`: $`(a(t)+b(t))+c(t) = a(t)+(b(t)+c(t))`. $`\quad\blacksquare`
+*Theorem:* $`a \oplus b = b \oplus a`
 
 ```lean
 theorem add_comm' (a b : FunDioid) :
@@ -403,21 +395,21 @@ theorem add_comm' (a b : FunDioid) :
   toFun_injective (funext fun _ => add_comm _ _)
 ```
 
-*Proof.* Pointwise `add_comm`: $`a(t)+b(t) = b(t)+a(t)`. $`\quad\blacksquare`
+*Theorem:* $`\mathbf{0} \oplus a = a`
 
 ```lean
 theorem zero_add' (a : FunDioid) : add zero a = a :=
   toFun_injective (funext fun _ => zero_add _)
 ```
 
-*Proof.* $`\mathbf{0} = \varepsilon` is the constant $`0_{\overline{R}_{\min}}`: $`0 + a(t) = a(t)`. $`\quad\blacksquare`
+*Theorem:* $`a \oplus \mathbf{0} = a`
 
 ```lean
 theorem add_zero' (a : FunDioid) : add a zero = a :=
   toFun_injective (funext fun _ => add_zero _)
 ```
 
-*Proof.* Pointwise $`a(t) + 0 = a(t)`. $`\quad\blacksquare`
+*Theorem:* $`0 \bullet a = \mathbf{0}`
 
 ```lean
 theorem nsmul_zero' (a : FunDioid) :
@@ -428,7 +420,7 @@ theorem nsmul_zero' (a : FunDioid) :
   rw [if_pos rfl]
 ```
 
-*Proof.* The guard $`0 = 0` selects the constant $`\mathbf{0} = \varepsilon`. $`\quad\blacksquare`
+*Theorem:* $`(n+1) \bullet a = (n \bullet a) \oplus a`
 
 ```lean
 theorem nsmul_succ' (n : ℕ) (a : FunDioid) :
@@ -446,7 +438,7 @@ theorem nsmul_succ' (n : ℕ) (a : FunDioid) :
   · rw [if_neg h.ne']; exact (add_idem _).symm
 ```
 
-*Proof.* LHS $`= a`; RHS pointwise $`0 + a(t) = a(t)` ($`n=0`) or $`a(t)+a(t) = a(t)` ($`n > 0`, `add_idem`). $`\quad\blacksquare`
+*Theorem:* $`(a \otimes b) \otimes c = a \otimes (b \otimes c)`
 
 ```lean
 theorem mul_assoc' (a b c : FunDioid) :
@@ -454,7 +446,7 @@ theorem mul_assoc' (a b c : FunDioid) :
   toFun_injective (conv_assoc _ _ _)
 ```
 
-*Proof.* `conv_assoc`: $`(a \ast b) \ast c = a \ast (b \ast c)`. $`\quad\blacksquare`
+*Theorem:* $`a \otimes b = b \otimes a`
 
 ```lean
 theorem mul_comm' (a b : FunDioid) :
@@ -462,7 +454,7 @@ theorem mul_comm' (a b : FunDioid) :
   toFun_injective (conv_comm _ _)
 ```
 
-*Proof.* `conv_comm`: $`a \ast b = b \ast a`. $`\quad\blacksquare`
+*Theorem:* $`\mathbf{1} \otimes a = a`
 
 ```lean
 theorem one_mul' (a : FunDioid) : mul one a = a := by
@@ -487,14 +479,14 @@ theorem one_mul' (a : FunDioid) : mul one a = a := by
     rw [e, one_mul] at this; exact this
 ```
 
-*Proof.* $`e(0) = 1`, $`e(u) = \bot` for $`u \ne 0`. $`\preceq`: each term is $`a(t)` ($`u=0`) or $`\bot` ($`u\ne0`). $`\succeq`: the $`0+t` term gives $`e(0)\otimes a(t) = a(t)`. $`\quad\blacksquare`
+*Theorem:* $`a \otimes \mathbf{1} = a`
 
 ```lean
 theorem mul_one' (a : FunDioid) : mul a one = a := by
   rw [mul_comm']; exact one_mul' a
 ```
 
-*Proof.* $`a \otimes \mathbf{1} = \mathbf{1} \otimes a = a` (`mul_comm'`, `one_mul'`). $`\quad\blacksquare`
+*Theorem:* $`\mathbf{0} \otimes a = \mathbf{0}`
 
 ```lean
 theorem zero_mul' (a : FunDioid) :
@@ -511,7 +503,7 @@ theorem zero_mul' (a : FunDioid) :
     exact bot_le
 ```
 
-*Proof.* $`\varepsilon(u) = 0 = \bot` absorbs: every term is $`0 \otimes a(s) = 0`, and $`\bot \preceq` anything gives $`\succeq`. $`\quad\blacksquare`
+*Theorem:* $`a \otimes \mathbf{0} = \mathbf{0}`
 
 ```lean
 theorem mul_zero' (a : FunDioid) :
@@ -519,7 +511,7 @@ theorem mul_zero' (a : FunDioid) :
   rw [mul_comm']; exact zero_mul' a
 ```
 
-*Proof.* $`a \otimes \mathbf{0} = \mathbf{0} \otimes a = \mathbf{0}` (`mul_comm'`, `zero_mul'`). $`\quad\blacksquare`
+*Theorem:* $`(0 : \mathbb{N}) = \mathbf{0}`
 
 ```lean
 theorem natCast_zero' : (natCast 0 : FunDioid) = zero := by
@@ -530,7 +522,7 @@ theorem natCast_zero' : (natCast 0 : FunDioid) = zero := by
   rw [if_pos rfl]
 ```
 
-*Proof.* The guard $`0 = 0` selects the constant $`\mathbf{0} = \varepsilon`. $`\quad\blacksquare`
+*Theorem:* $`(n+1 : \mathbb{N}) = (n : \mathbb{N}) \oplus \mathbf{1}`
 
 ```lean
 theorem natCast_succ' (n : ℕ) :
@@ -558,11 +550,11 @@ theorem natCast_succ' (n : ℕ) :
   · rw [if_neg h.ne']; exact (add_idem _).symm
 ```
 
-*Proof.* LHS $`= e`; RHS pointwise $`0 + e(t) = e(t)` ($`n=0`) or $`e(t)+e(t) = e(t)` ($`n > 0`, `add_idem`). $`\quad\blacksquare`
-
 Distributivity of $`\otimes = \ast` over $`\oplus = \wedge` is `conv_sup`
 (the dioid sum is the pointwise $`\overline{R}_{\min}` sum $`= \sqcup`);
 the right form follows by commutativity:
+
+*Theorem:* $`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c)`
 
 ```lean
 theorem left_distrib' (a b c : FunDioid) :
@@ -576,7 +568,7 @@ theorem left_distrib' (a b c : FunDioid) :
   exact conv_sup a.toFun b.toFun c.toFun
 ```
 
-*Proof.* The sum $`\oplus = \wedge` is the pointwise join (`add_eq_sup`), so the claim is `conv_sup`: $`a \ast (b \oplus c) = (a\ast b) \oplus (a\ast c)`. $`\quad\blacksquare`
+*Theorem:* $`(a \oplus b) \otimes c = (a \otimes c) \oplus (b \otimes c)`
 
 ```lean
 theorem right_distrib' (a b c : FunDioid) :
@@ -584,8 +576,6 @@ theorem right_distrib' (a b c : FunDioid) :
   rw [mul_comm', left_distrib',
     mul_comm' a c, mul_comm' b c]
 ```
-
-*Proof.* By `mul_comm'` and `left_distrib'`: $`(a\oplus b)\otimes c = c\otimes(a\oplus b) = (a\otimes c)\oplus(b\otimes c)`. $`\quad\blacksquare`
 
 The `CommSemiring`, `Dioid` and `CompleteDioid` structures assemble
 these. The transported join is the pointwise $`\overline{R}_{\min}` join,
@@ -616,7 +606,11 @@ noncomputable instance commSemiring :
   natCast_succ := natCast_succ'
   left_distrib := left_distrib'
   right_distrib := right_distrib'
+```
 
+*Theorem:* $`a \oplus b = a \sqcup b`
+
+```lean
 theorem add_eq_sup' (a b : FunDioid) :
     a + b = a ⊔ b := by
   apply toFun_injective
@@ -627,8 +621,6 @@ theorem add_eq_sup' (a b : FunDioid) :
   rw [add_eq_sup]
   rfl
 ```
-
-*Proof.* Pointwise, the join is $`a(t) \sqcup b(t)`, equal to $`a(t) + b(t)` in $`\overline{R}_{\min}` (`add_eq_sup`). $`\quad\blacksquare`
 
 ```lean
 noncomputable instance dioid : Dioid FunDioid :=
@@ -681,13 +673,15 @@ The isotony of $`\wedge` and $`\ast` is a direct consequence
 of the dioid order relation — the generic dioid isotony specialized to
 `FunDioid`:
 
+*Theorem:* $`f \preceq g \;\Rightarrow\; f \oplus k \preceq g \oplus k`
+
 ```lean
 theorem inf_le_inf_left' {f g : FunDioid}
     (h : f ≤ g) (k : FunDioid) : f + k ≤ g + k :=
   Dioid.add_le_add_right' h k
 ```
 
-*Proof.* Generic dioid isotony of $`\oplus`: $`f \preceq g \Rightarrow f \oplus k \preceq g \oplus k` (`Dioid.add_le_add_right'`). $`\quad\blacksquare`
+*Theorem:* $`f \preceq g \;\Rightarrow\; f \otimes k \preceq g \otimes k`
 
 ```lean
 theorem conv_le_conv_right {f g : FunDioid}
@@ -698,5 +692,3 @@ end FunDioid
 
 end NetworkCalculus
 ```
-
-*Proof.* Generic dioid isotony of $`\otimes`: $`f \preceq g \Rightarrow f \otimes k \preceq g \otimes k` (`Dioid.mul_le_mul_right'`). $`\quad\blacksquare`

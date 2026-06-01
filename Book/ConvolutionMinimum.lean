@@ -24,9 +24,9 @@ open Set Filter Topology
 
 A nondecreasing, left-continuous function $`\mathbb{R} \to \mathbb{R}` is
 lower semi-continuous. Left-continuity is expressed as continuity within
-$`(-\infty, x]` at each $`x`: on the left of $`x` it gives
-$`f(x') \to f(x) > y`, and on the right monotonicity gives
-$`f(x') \ge f(x) > y`.
+$`(-\infty, x]` at each $`x`.
+
+*Theorem:* $`f` monotone $`\wedge\; f` left-continuous $`\Rightarrow\; f` lower semi-continuous
 
 ```lean
 theorem lsc_of_monotone_leftCont
@@ -42,10 +42,10 @@ theorem lsc_of_monotone_leftCont
     exact hy.trans_le (hmono hx')
 ```
 
-*Proof.* Fix $`y < f(x)`. Split the neighbourhood filter into $`\le x` and $`\ge x`: on the left, left-continuity gives $`f(x') \to f(x) > y` eventually; on the right, monotonicity gives $`f(x') \ge f(x) > y`. $`\quad\blacksquare`
-
 Dually, a nonincreasing, right-continuous function is lower
 semi-continuous — the two one-sided arguments swap roles.
+
+*Theorem:* $`f` antitone $`\wedge\; f` right-continuous $`\Rightarrow\; f` lower semi-continuous
 
 ```lean
 theorem lsc_of_antitone_rightCont
@@ -61,8 +61,6 @@ theorem lsc_of_antitone_rightCont
       (eventually_gt_nhds hy)
 ```
 
-*Proof.* Mirror of the monotone case: on the left, antitonicity gives $`f(x') \ge f(x) > y`; on the right, right-continuity gives $`f(x') \to f(x) > y` eventually. $`\quad\blacksquare`
-
 # The convolution attains its minimum
 
 If $`f` and $`g` are nondecreasing and left-continuous, the objective
@@ -72,6 +70,8 @@ right-continuous (precompose $`g` with the continuous decreasing shift
 $`s \mapsto t - s`), hence lower semi-continuous too; their sum then is.
 On the nonempty compact set $`[0, t]` a lower semi-continuous function
 attains its infimum, giving the minimizer $`s_0`.
+
+*Theorem:* for $`f, g` nondecreasing and left-continuous and $`0 \le t`, there is $`s_0 \in [0, t]` with $`f(s_0) + g(t - s_0) \le f(s) + g(t - s)` for all $`s \in [0, t]`
 
 ```lean
 theorem convolution_isMinOn
@@ -116,8 +116,6 @@ theorem convolution_isMinOn
   intro s hs
   exact (isMinOn_iff.mp hs₀_min) s hs
 ```
-
-*Proof.* The objective $`h(s) = f(s) + g(t-s)` is lower semi-continuous: $`f` by `lsc_of_monotone_leftCont`, and $`s \mapsto g(t-s)` by `lsc_of_antitone_rightCont` (it is antitone and right-continuous, being $`g` precomposed with the decreasing shift $`s \mapsto t - s`); a sum of lsc functions is lsc. On the nonempty ($`0 \le t`) compact $`[0,t]`, an lsc function attains its infimum, giving the minimizer $`s_0`. $`\quad\blacksquare`
 
 ```lean
 end NetworkCalculus

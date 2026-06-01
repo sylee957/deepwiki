@@ -63,11 +63,9 @@ noncomputable def padd (f g : F) : F :=
 ```
 
 The pointwise numeric sum of two sub-additive functions is again
-sub-additive. Unfolding `padd` on `.toDual`, the goal becomes
-$`f(s+t) + g(s+t) \le (f(s) + f(t)) + (g(s) + g(t))`; bounding each
-summand by sub-additivity and commuting the four terms finishes it. The
-carrier $`\overline{R}` is not a ring, so the rearrangement uses
-`add_add_add_comm` rather than `ring`.
+sub-additive.
+
+*Theorem:* $`f, g` sub-additive $`\Rightarrow\; \mathtt{padd}\,f\,g` sub-additive
 
 ```lean
 theorem padd_subadditive {f g : F}
@@ -85,9 +83,6 @@ theorem padd_subadditive {f g : F}
         + ((f t).toDual + (g t).toDual) :=
         add_add_add_comm _ _ _ _
 ```
-
-*Proof.* Add the two sub-additivity bounds and reorder (`add_add_add_comm`):
-$$`f(s{+}t) + g(s{+}t) \le (f(s)+f(t)) + (g(s)+g(t)) = (f(s)+g(s)) + (f(t)+g(t)). \quad\blacksquare`
 
 # Stability under the convolution
 The convolution of two sub-additive functions is sub-additive. The
@@ -112,7 +107,9 @@ $`(f \ast g)(s+t)` via the decomposition $`(u+w) + (v+z) = s+t`.
 
 The first ingredient is the dioid form of sub-additivity: numeric
 $`f(s+t) \le f(s) + f(t)` is, on the reversed order, the dioid bound
-$`f(s) \otimes f(t) \preceq f(s+t)`.
+below.
+
+*Theorem:* $`f(s) \otimes f(t) \preceq f(s+t)`
 
 ```lean
 theorem subadditive_mul_le {f : F}
@@ -121,11 +118,9 @@ theorem subadditive_mul_le {f : F}
   (MinPlus.Dual.le_def _ _).mpr (hf s t)
 ```
 
-*Proof.* The numeric bound $`f(s+t) \le f(s)+f(t)`, read on the reversed order (`le_def`), is the dioid bound $`f(s) \otimes f(t) \preceq f(s+t)`. $`\quad\blacksquare`
+The single-pair bound: for decompositions $`s = u + v` and $`t = w + z`.
 
-The single-pair bound: for decompositions $`s = u + v` and
-$`t = w + z`, the term $`(f(u) \otimes g(v)) \otimes (f(w) \otimes g(z))`
-lies below $`(f \ast g)(s+t)`.
+*Theorem:* $`u+v = s \;\wedge\; w+z = t \;\Rightarrow\; (f(u) \otimes g(v)) \otimes (f(w) \otimes g(z)) \preceq (f \ast g)(s+t)`
 
 ```lean
 theorem conv_term_le {f g : F}
@@ -146,12 +141,11 @@ theorem conv_term_le {f g : F}
     _ ≤ (f ∗ g) (s + t) := conv_ge f g hdec
 ```
 
-*Proof.* Regroup, apply sub-additivity to each pair, then `conv_ge` on $`(u+w)+(v+z)=s+t`:
-$$`(f(u)\otimes g(v))\otimes(f(w)\otimes g(z)) = (f(u)\otimes f(w))\otimes(g(v)\otimes g(z)) \preceq f(u{+}w)\otimes g(v{+}z) \preceq (f\ast g)(s{+}t). \quad\blacksquare`
-
 Expanding the product of the two convolution values over all pairs of
 decompositions and applying the single-pair bound term by term gives
 the dioid inequality.
+
+*Theorem:* $`(f \ast g)(s) \otimes (f \ast g)(t) \preceq (f \ast g)(s+t)`
 
 ```lean
 theorem conv_mul_conv_le {f g : F}
@@ -168,12 +162,10 @@ theorem conv_mul_conv_le {f g : F}
   exact conv_term_le hf hg huv hwz
 ```
 
-*Proof.* Expand both convolutions and distribute the product over the two suprema (`iSup_mul`, `mul_iSup`); each resulting pair-term is bounded by `conv_term_le`. $`\quad\blacksquare`
+Converting the dioid inequality back to the natural order yields
+sub-additivity of the convolution.
 
-Converting the dioid inequality back to the natural order — through
-`MinPlus.Dual.le_def` and the identity
-$`(a \otimes b).\mathtt{toDual} = a.\mathtt{toDual} + b.\mathtt{toDual}`
-— yields sub-additivity of the convolution.
+*Theorem:* $`f, g` sub-additive $`\Rightarrow\; f \ast g` sub-additive
 
 ```lean
 theorem conv_subadditive {f g : F}
@@ -184,12 +176,12 @@ theorem conv_subadditive {f g : F}
     (conv_mul_conv_le hf hg s t)
 ```
 
-*Proof.* The dioid bound `conv_mul_conv_le`, $`(f\ast g)(s)\otimes(f\ast g)(t) \preceq (f\ast g)(s{+}t)`, read back on the natural order (`le_def`). $`\quad\blacksquare`
-
 # Adding a non-negative constant
 A constant function $`t \mapsto k` is sub-additive precisely when its
 value is non-negative: the defining inequality reduces to
 $`k \le k + k`, equivalent to $`0 \le k`.
+
+*Theorem:* $`0 \le k \;\Rightarrow\; (t \mapsto k)` sub-additive
 
 ```lean
 theorem const_subadditive {k : RbarMin}
@@ -201,12 +193,10 @@ theorem const_subadditive {k : RbarMin}
     _ ≤ k.toDual + k.toDual := by gcongr
 ```
 
-*Proof.* The condition is $`k \le k + k`, which holds since $`k = 0 + k \le k + k` when $`0 \le k`. $`\quad\blacksquare`
-
 Adding such a non-negative constant to a sub-additive function keeps it
-sub-additive: this is stability under the pointwise numeric sum, with
-the second summand a non-negative constant. Modelling $`f + k` as
-`padd f (fun _ => k)` makes it an immediate corollary.
+sub-additive.
+
+*Theorem:* $`f` sub-additive $`\wedge\; 0 \le k \;\Rightarrow\; \mathtt{padd}\,f\,(t \mapsto k)` sub-additive
 
 ```lean
 theorem padd_const_subadditive {f : F} {k : RbarMin}
@@ -216,8 +206,6 @@ theorem padd_const_subadditive {f : F} {k : RbarMin}
 
 end NetworkCalculus
 ```
-
-*Proof.* `padd_subadditive` applied to $`f` and the constant $`k` (sub-additive by `const_subadditive`, $`0 \le k`). $`\quad\blacksquare`
 
 These two stability results — under the pointwise numeric sum and under
 the convolution — together with the constant corollary, are the

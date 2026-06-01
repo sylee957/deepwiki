@@ -72,8 +72,10 @@ generic fact about the star specializes to it by rewriting with
 level of `FunDioid`.
 
 The split $`a^{\star} = e \oplus a^+` becomes, for the closure, the
-identity $`f^{\ast} = e \wedge f^+` in the function dioid, where $`f^+`
-is the strict closure $`\bigwedge_{i \ge 1} f^i`.
+identity in the function dioid, where $`f^+` is the strict closure
+$`\bigwedge_{i \ge 1} f^i`.
+
+*Theorem:* $`f^{\ast} = e \wedge f^+`
 
 ```lean
 theorem subClosure_eq_one_add_kplus (f : F) :
@@ -82,11 +84,10 @@ theorem subClosure_eq_one_add_kplus (f : F) :
   rw [subClosure_ofFun, kstar_eq_one_add_kplus]
 ```
 
-*Proof.* `subClosure_ofFun` then `kstar_eq_one_add_kplus`: $`f^{\ast} = e \oplus f^+`. $`\quad\blacksquare`
-
 The closure is _monotone_ for the dioid order: a smaller function has a
-smaller closure. This is `kstar_mono` transported through the
-`FunDioid.ofFun` wrapper.
+smaller closure.
+
+*Theorem:* $`f \preceq g \;\Rightarrow\; f^{\ast} \preceq g^{\ast}`
 
 ```lean
 theorem subClosure_mono {f g : F}
@@ -97,11 +98,10 @@ theorem subClosure_mono {f g : F}
   exact kstar_mono h
 ```
 
-*Proof.* `kstar_mono` transported through `subClosure_ofFun`: $`f \preceq g \Rightarrow f^{\ast} \preceq g^{\ast}`. $`\quad\blacksquare`
-
 The closure is _idempotent_, a closure operator in the
-order-theoretic sense: applying it twice gives nothing new,
-$`(f^{\ast})^{\ast} = f^{\ast}`. This is `kstar_idem`.
+order-theoretic sense: applying it twice gives nothing new.
+
+*Theorem:* $`(f^{\ast})^{\ast} = f^{\ast}`
 
 ```lean
 theorem subClosure_idem (f : F) :
@@ -110,10 +110,9 @@ theorem subClosure_idem (f : F) :
     kstar_idem, subClosure_eq]
 ```
 
-*Proof.* `kstar_idem` through the wrapper: $`(f^{\ast})^{\ast} = f^{\ast}`. $`\quad\blacksquare`
+Adjoining the neutral leaves the closure unchanged.
 
-Adjoining the neutral leaves the closure unchanged,
-$`(f \wedge e)^{\ast} = f^{\ast}`. This is `add_one_kstar`.
+*Theorem:* $`(f \wedge e)^{\ast} = f^{\ast}`
 
 ```lean
 theorem subClosure_add_one (f : F) :
@@ -123,13 +122,11 @@ theorem subClosure_add_one (f : F) :
     FunDioid.ofFun_toFun, add_one_kstar]
 ```
 
-*Proof.* `add_one_kstar` through the wrapper: $`(f \wedge e)^{\ast} = f^{\ast}`. $`\quad\blacksquare`
-
 Finally, the Kleene star theorem specializes: for any $`b`, the function
 $`f^{\ast} \ast b` is the _least_ solution of the affine fixed-point
-equation $`x = f \ast x \wedge b`. Phrased in the function dioid it is
-`kstar_mul_is_solution` together with `kstar_mul_le_of_solution`, applied
-to `FunDioid.ofFun f`.
+equation $`x = f \ast x \wedge b`.
+
+*Theorem:* $`f \ast (f^{\ast} \ast b) \wedge b = f^{\ast} \ast b`
 
 ```lean
 theorem subClosure_mul_is_solution (f : F) (b : FunDioid) :
@@ -138,7 +135,7 @@ theorem subClosure_mul_is_solution (f : F) (b : FunDioid) :
   kstar_mul_is_solution (FunDioid.ofFun f) b
 ```
 
-*Proof.* `kstar_mul_is_solution` at $`a = \mathtt{ofFun}\,f`: $`f^{\ast}\ast b` solves $`x = f \ast x \wedge b`. $`\quad\blacksquare`
+*Theorem:* $`f \ast x \wedge b = x \;\Rightarrow\; f^{\ast} \ast b \preceq x`
 
 ```lean
 theorem subClosure_mul_least (f : F) {b x : FunDioid}
@@ -146,8 +143,6 @@ theorem subClosure_mul_least (f : F) {b x : FunDioid}
     kstar (FunDioid.ofFun f) * b ≤ x :=
   kstar_mul_le_of_solution h
 ```
-
-*Proof.* `kstar_mul_le_of_solution` at $`a = \mathtt{ofFun}\,f`: any solution $`x` dominates $`f^{\ast}\ast b`. $`\quad\blacksquare`
 
 Reading these back through `subClosure_ofFun`, the function
 $`f^{\ast} \ast b` (which is `(FunDioid.ofFun (subClosure f) * b)`)
@@ -175,10 +170,9 @@ open scoped Computability NNReal
 ```
 
 The core arithmetic fact lives in $`\overline{R}` alone: a value below
-$`0` that is at most its own double must be $`-\infty`. A finite real
-$`r < 0` cannot satisfy $`r \le r + r`, since that would force
-$`0 \le r`; the top $`+\infty` is not below $`0`; so only the bottom
-remains.
+$`0` that is at most its own double must be $`-\infty`.
+
+*Theorem:* $`x < 0 \;\wedge\; x \le x + x \;\Rightarrow\; x = -\infty` (in $`\overline{R}`)
 
 ```lean
 private theorem rbar_lt_zero_self_le_add {x : Rbar}
@@ -198,11 +192,10 @@ private theorem rbar_lt_zero_self_le_add {x : Rbar}
       exact h0 hlt
 ```
 
-*Proof.* Case on $`x`: $`\top \not< 0`; $`\bot` gives the claim; finite $`r` with $`r \le r + r` forces $`0 \le r`, contradicting $`r < 0`. So $`x = \bot`. $`\quad\blacksquare`
+Sub-additivity at $`(0, 0)` reads $`f(0) \le f(0) + f(0)`. Combined with
+$`f(0) < 0`, the arithmetic fact gives $`f(0) = -\infty`.
 
-Sub-additivity at $`(0, 0)` reads $`f(0) \le f(0) + f(0)`, since
-$`0 + 0 = 0`. Combined with $`f(0) < 0`, the arithmetic fact gives
-$`f(0) = -\infty`.
+*Theorem:* $`f` sub-additive $`\wedge\; f(0) < 0 \;\Rightarrow\; f(0) = -\infty`
 
 ```lean
 theorem subadditive_apply_zero_neg {f : F}
@@ -215,15 +208,11 @@ theorem subadditive_apply_zero_neg {f : F}
   exact rbar_lt_zero_self_le_add h hsub
 ```
 
-*Proof.* Sub-additivity at $`(0,0)` gives $`f(0) \le f(0)+f(0)`; with $`f(0) < 0`, `rbar_lt_zero_self_le_add` forces $`f(0) = -\infty`. $`\quad\blacksquare`
-
 For a point $`t`, sub-additivity at $`(t, 0)` gives
-$`f(t) \le f(t) + f(0) = f(t) + (-\infty)`. Adding $`-\infty` collapses
-every value to an infinity: if $`f(t) = +\infty` it stays $`+\infty`
-(the top is absorbing in $`\overline{R}`), and otherwise the sum is
-$`-\infty`. A _finite_ value $`r` would then have to satisfy
-$`r \le -\infty`, impossible; so $`f(t)` is forced to be $`-\infty` or
-$`+\infty`.
+$`f(t) \le f(t) + f(0) = f(t) + (-\infty)`, collapsing $`f(t)` to an
+infinity.
+
+*Theorem:* $`f` sub-additive $`\wedge\; f(0) < 0 \;\wedge\; 0 < t \;\Rightarrow\; f(t) = -\infty \;\vee\; f(t) = +\infty`
 
 ```lean
 theorem subadditive_apply_pos {f : F}
@@ -250,8 +239,6 @@ theorem subadditive_apply_pos {f : F}
         ← WithTop.coe_add, WithBot.add_bot] at hsub
       exact absurd hsub (by simp)
 ```
-
-*Proof.* With $`f(0) = -\infty`, sub-additivity at $`(t,0)` gives $`f(t) \le f(t) + (-\infty)`. If $`f(t) = +\infty` it stays $`+\infty`; otherwise the sum is $`-\infty`, and a finite $`f(t)` cannot satisfy $`f(t) \le -\infty`. So $`f(t) \in \{-\infty, +\infty\}`. $`\quad\blacksquare`
 
 ```lean
 end NetworkCalculus
