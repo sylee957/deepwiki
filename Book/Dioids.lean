@@ -21,7 +21,7 @@ open scoped Computability
 
 # A dioid, defined from scratch
 
-*Definition:* the operations $`\oplus : D \times D \to D` with neutral $`\varepsilon`, and $`\otimes : D \times D \to D` with neutral $`e` (local infixes `+ₒ`, `*ₒ`).
+*Definition:* the sum $`\oplus : D \times D \to D` with neutral $`\varepsilon`.
 
 ```lean
 namespace Algebra
@@ -29,11 +29,19 @@ namespace Algebra
 class Oplus (D : Type*) where
   oplus : D → D → D
   eps : D
+```
 
+*Definition:* the product $`\otimes : D \times D \to D` with neutral $`e`.
+
+```lean
 class Otimes (D : Type*) where
   otimes : D → D → D
   one : D
+```
 
+We attach local infixes `+ₒ`, `*ₒ` for the two operations.
+
+```lean
 section
 local infixl:65 " +ₒ " => Oplus.oplus
 local infixl:70 " *ₒ " => Otimes.otimes
@@ -42,17 +50,23 @@ local infixl:70 " *ₒ " => Otimes.otimes
 *Definition:* $`(D, \oplus, \varepsilon)` is a _monoid_:
 $$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
 
-*Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`; an _idempotent_ commutative monoid adds $`a \oplus a = a`.
-
 ```lean
 class SumMonoid (D : Type*) extends Oplus D where
   oplus_assoc : ∀ a b c : D, (a +ₒ b) +ₒ c = a +ₒ (b +ₒ c)
   eps_oplus : ∀ a : D, Oplus.eps +ₒ a = a
   oplus_eps : ∀ a : D, a +ₒ Oplus.eps = a
+```
 
+*Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
+
+```lean
 class SumCommMonoid (D : Type*) extends SumMonoid D where
   oplus_comm : ∀ a b : D, a +ₒ b = b +ₒ a
+```
 
+*Definition:* an _idempotent_ commutative monoid adds $`a \oplus a = a`.
+
+```lean
 class SumIdemCommMonoid (D : Type*) extends
     SumCommMonoid D where
   oplus_idem : ∀ a : D, a +ₒ a = a
@@ -73,8 +87,6 @@ class MulMonoid (D : Type*) extends Otimes D where
 $$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus b) \otimes c = (a \otimes c) \oplus (b \otimes c),`
 $$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
 
-*Definition:* a _dioid_ is a semi-ring with $`a \otimes b = b \otimes a`.
-
 ```lean
 class Semiring (D : Type*) extends
     SumIdemCommMonoid D, MulMonoid D where
@@ -84,7 +96,11 @@ class Semiring (D : Type*) extends
     ∀ a b c : D, (a +ₒ b) *ₒ c = a *ₒ c +ₒ b *ₒ c
   eps_otimes : ∀ a : D, Oplus.eps *ₒ a = Oplus.eps
   otimes_eps : ∀ a : D, a *ₒ Oplus.eps = Oplus.eps
+```
 
+*Definition:* a _dioid_ is a semi-ring with $`a \otimes b = b \otimes a`.
+
+```lean
 class Dioid (D : Type*) extends Semiring D where
   otimes_comm : ∀ a b : D, a *ₒ b = b *ₒ a
 ```
@@ -247,21 +263,25 @@ theorem sSup_mul {α : Type*} [CompleteDioid α]
   rw [mul_comm, mul_sSup]; simp_rw [mul_comm a]
 ```
 
-*Theorem:* $`a \otimes \bigsqcup_i g(i) = \bigsqcup_i a \otimes g(i)` and $`\Bigl(\bigsqcup_i g(i)\Bigr) \otimes a = \bigsqcup_i g(i) \otimes a`
+*Theorem:* $`a \otimes \bigsqcup_i g(i) = \bigsqcup_i a \otimes g(i)`
 
 ```lean
 theorem mul_iSup {α : Type*} [CompleteDioid α]
     {ι : Sort*} (a : α) (g : ι → α) :
     a * ⨆ i, g i = ⨆ i, a * g i := by
   rw [← sSup_range, mul_sSup, iSup_range]
+```
 
+*Theorem:* $`\Bigl(\bigsqcup_i g(i)\Bigr) \otimes a = \bigsqcup_i g(i) \otimes a`
+
+```lean
 theorem iSup_mul {α : Type*} [CompleteDioid α]
     {ι : Sort*} (g : ι → α) (a : α) :
     (⨆ i, g i) * a = ⨆ i, g i * a := by
   rw [← sSup_range, sSup_mul, iSup_range]
 ```
 
-*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)` and $`(b \sqcup c) \otimes a = (b \otimes a) \sqcup (c \otimes a)`
+*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)`
 
 ```lean
 theorem mul_sup {α : Type*} [CompleteDioid α]
@@ -274,7 +294,11 @@ theorem mul_sup {α : Type*} [CompleteDioid α]
         = a * b ⊔ a * c := by
     simp [iSup_bool_eq]
   rw [← h1, mul_iSup, h2]
+```
 
+*Theorem:* $`(b \sqcup c) \otimes a = (b \otimes a) \sqcup (c \otimes a)`
+
+```lean
 theorem sup_mul {α : Type*} [CompleteDioid α]
     (a b c : α) :
     (b ⊔ c) * a = b * a ⊔ c * a := by
