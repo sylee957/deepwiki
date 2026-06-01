@@ -6,13 +6,15 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) convolution and the function dioid" =>
+%%%
+number := false
+%%%
 
-This chapter formalizes the (min,plus) convolution (Definitions
-2.6–2.7), its algebraic properties (Lemmas 2.1–2.2), and the resulting
-function dioid (Proposition 2.3). The convolution `∗` is defined
-generically over a complete dioid `α`; all of Lemma 2.1 holds at that
-generality, and the book's setting `F = ℝ⁺ → R̄min` is the
-specialization.
+This chapter formalizes the (min,plus) convolution, its algebraic
+properties, and the resulting function dioid. The convolution $`\ast` is
+defined generically over a complete dioid `α`; all of its core
+properties hold at that generality, and the setting $`\mathcal{F} = \mathbb{R}^+ \to \overline{R}_{\min}` is
+the specialization.
 
 ```lean
 namespace NetworkCalculus
@@ -21,12 +23,15 @@ open scoped Computability NNReal
 ```
 
 # The generic convolution
+%%%
+number := false
+%%%
 
 The convolution is defined over an arbitrary additive index monoid `T`
 valued in an arbitrary complete dioid `α`. In the dioid interface the
-sum `⊕` is `⨆` and the product `⊗` is `*`, so the book's
-`inf_{u+s=t} (f u + g s)` becomes a least upper bound of products over
-the decompositions of `t`.
+sum $`\oplus` is $`\bigsqcup` and the product $`\otimes` is $`{*}`, so
+$`\inf_{u+s=t} (f(u) + g(s))` becomes a least upper bound of products over
+the decompositions of $`t`.
 
 ```lean
 section Generic
@@ -34,7 +39,7 @@ section Generic
 variable {T : Type*} [AddCommMonoid T]
   {α : Type*} [CompleteDioid α]
 
-/-- Definition 2.7 — the (min,plus) convolution. -/
+/-- The (min,plus) convolution. -/
 noncomputable def conv (f g : T → α) : T → α :=
   fun t => ⨆ p : {p : T × T // p.1 + p.2 = t},
     f p.val.1 * g p.val.2
@@ -46,9 +51,10 @@ theorem conv_apply (f g : T → α) (t : T) :
       f p.val.1 * g p.val.2 := rfl
 ```
 
-The convolution is characterized as the least upper bound of the
-decomposition values: every decomposition gives a lower bound
-(`conv_ge`), and it is below any common upper bound (`conv_le`).
+The convolution is the least upper bound of the decomposition values,
+$$`(f \ast g)(t) = \bigsqcup_{u+s=t} f(u) \otimes g(s) :`
+every decomposition gives a lower bound (`conv_ge`), and it is below any
+common upper bound (`conv_le`).
 
 ```lean
 theorem conv_ge (f g : T → α) {t u s : T}
@@ -64,10 +70,13 @@ theorem conv_le (f g : T → α) {t : T} {b : α}
 end Generic
 ```
 
-# Lemma 2.1: properties of the convolution
+# Properties of the convolution
+%%%
+number := false
+%%%
 
-Commutativity, associativity, distributivity over the dioid sum `⊕`,
-and addition by a constant — all in the dioid order `≼`, over an
+Commutativity, associativity, distributivity over the dioid sum $`\oplus`,
+and addition by a constant — all in the dioid order $`\preceq`, over an
 arbitrary complete dioid.
 
 ```lean
@@ -77,8 +86,8 @@ variable {T : Type*} [AddCommMonoid T]
   {α : Type*} [CompleteDioid α]
 ```
 
-_Commutativity_ `f ∗ g = g ∗ f` (reindex decompositions `(u,s) ↦ (s,u)`
-and use commutativity of `⊗`):
+_Commutativity_ $`f \ast g = g \ast f` (reindex decompositions
+$`(u,s) \mapsto (s,u)` and use commutativity of $`\otimes`):
 
 ```lean
 theorem conv_comm (f g : T → α) : f ∗ g = g ∗ f := by
@@ -93,8 +102,9 @@ theorem conv_comm (f g : T → α) : f ∗ g = g ∗ f := by
 ```
 
 _Distributivity over the dioid sum_
-`f ∗ (g ⊕ h) = (f ∗ g) ⊕ (f ∗ h)`, where `⊕ = ⊔` (for `R̄min`, the
-pointwise minimum `∧`), from binary distributivity of `⊗` over `⊔`:
+$$`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h),`
+where $`\oplus = \sqcup` (for $`\overline{R}_{\min}`, the pointwise minimum
+$`\wedge`), from binary distributivity of $`\otimes` over $`\sqcup`:
 
 ```lean
 theorem conv_sup (f g h : T → α) :
@@ -107,8 +117,8 @@ theorem conv_sup (f g h : T → α) :
   exact CompleteDioid.mul_sup _ _ _
 ```
 
-_Addition by a constant_ `(f ∗ g) ⊗ K = f ∗ (g ⊗ K)` (the book's `+ K`
-is multiplication by the constant `K ∈ α`):
+_Addition by a constant_ $`(f \ast g) \otimes K = f \ast (g \otimes K)`
+(the $`{+}\,K` is multiplication by the constant $`K \in \alpha`):
 
 ```lean
 theorem conv_mul_const (f g : T → α) (K : α) :
@@ -120,9 +130,10 @@ theorem conv_mul_const (f g : T → α) (K : α) :
   rw [mul_assoc]
 ```
 
-_Associativity_: both `(f ∗ g) ∗ h` and `f ∗ (g ∗ h)` equal the ternary
-convolution `⨆_{u+v+w=t} f u ⊗ g v ⊗ h w`; we bound each by the other
-via the symmetric ternary lower bounds.
+_Associativity_: both $`(f \ast g) \ast h` and $`f \ast (g \ast h)` equal
+the ternary convolution
+$$`\bigsqcup_{u+v+w=t} f(u) \otimes g(v) \otimes h(w);`
+we bound each by the other via the symmetric ternary lower bounds.
 
 ```lean
 theorem conv_conv_ge (f g h : T → α) {t u v w : T}
@@ -169,16 +180,20 @@ theorem conv_assoc (f g h : T → α) :
 end Generic
 ```
 
-# Definition 2.6: the (min,plus) functions
+# The (min,plus) functions
+%%%
+number := false
+%%%
 
-`F` is the set of functions from the non-negative reals `ℝ⁺ = ℝ≥0` into
-the complete (min,plus) dioid `R̄min`:
+$`\mathcal{F}` is the set of functions from the non-negative reals
+$`\mathbb{R}^+ = \mathbb{R}_{\ge 0}` into the complete (min,plus) dioid
+$`\overline{R}_{\min}`:
 
 ```lean
 abbrev F := ℝ≥0 → RbarMin
 ```
 
-The book's `0 ≤ s ≤ t` form `[2.2]` re-indexes the convolution via
+The $`0 \le s \le t` form re-indexes the convolution via
 truncated subtraction on `ℝ≥0`:
 
 ```lean
@@ -199,13 +214,16 @@ theorem conv_eq_sub (f g : F) (t : ℝ≥0) :
       ⟨(t - s, s), tsub_add_cancel_of_le hs⟩ le_rfl
 ```
 
-# Lemma 2.2
+# Bounds at zero
+%%%
+number := false
+%%%
 
-The book states Lemma 2.2 in the _natural_ (numeric) order, which on
-`R̄min` is the reverse of the dioid order `≼`; we express it directly
-on the underlying numeric values via `.toDual`. If `f(0) ≤ 0` then
-`f ∗ g ≤ g` pointwise (the decomposition `t = 0 + t` gives
-`(f ∗ g)(t) ≤ f(0) + g(t) ≤ g(t)`):
+These bounds are stated in the _natural_ (numeric) order, which on
+$`\overline{R}_{\min}` is the reverse of the dioid order $`\preceq`; we
+express it directly on the underlying numeric values via `.toDual`. If
+$`f(0) \le 0` then $`f \ast g \le g` pointwise (the decomposition
+$`t = 0 + t` gives $`(f \ast g)(t) \le f(0) + g(t) \le g(t)`):
 
 ```lean
 theorem conv_le_right_of_apply_zero_le {f g : F}
@@ -218,9 +236,9 @@ theorem conv_le_right_of_apply_zero_le {f g : F}
     _ = (g t).toDual := zero_add _
 ```
 
-If `f(0) = 0` and `g(0) = 0` then `f ∗ g ≤ f ∧ g` pointwise: the
-decomposition `t = t + 0` bounds it by `f(t)`, and `t = 0 + t` by
-`g(t)`.
+If $`f(0) = 0` and $`g(0) = 0` then $`f \ast g \le f \wedge g`
+pointwise: the decomposition $`t = t + 0` bounds it by $`f(t)`, and
+$`t = 0 + t` by $`g(t)`.
 
 ```lean
 theorem conv_le_inf_of_apply_zero {f g : F}
@@ -241,12 +259,16 @@ theorem conv_le_inf_of_apply_zero {f g : F}
       _ = (g t).toDual := by rw [hf, zero_add]
 ```
 
-# Proposition 2.3: the function dioid
+# The function dioid
+%%%
+number := false
+%%%
 
-Equipping `F` with the pointwise minimum `⊕ = ∧` and the convolution
-`⊗ = ∗` gives a _complete commutative dioid_. The single piece of
-completeness content is lower semi-continuity of `∗`: convolution
-distributes over an arbitrary _pointwise_ supremum of functions in `F`.
+Equipping $`\mathcal{F}` with the pointwise minimum $`\oplus = \wedge` and
+the convolution $`\otimes = \ast` gives a _complete commutative dioid_. The
+single piece of completeness content is lower semi-continuity of
+$`\ast`: convolution distributes over an arbitrary _pointwise_ supremum
+of functions in $`\mathcal{F}`.
 
 ```lean
 theorem conv_iSup {ι : Sort*} (f : F) (g : ι → F) :
@@ -271,7 +293,8 @@ theorem conv_iSup {ι : Sort*} (f : F) (g : ι → F) :
 Since the bare function space already carries a pointwise product, the
 construction wraps `F` in the newtype `FunDioid`, whose only
 multiplication is convolution. The complete lattice is transported
-pointwise from `F`, whose join `⊔` is precisely the dioid sum `∧`.
+pointwise from `F`, whose join $`\sqcup` is precisely the dioid sum
+$`\wedge`.
 
 ```lean
 structure FunDioid where ofFun ::
@@ -301,8 +324,9 @@ theorem le_def (a b : FunDioid) :
     a ≤ b ↔ a.toFun ≤ b.toFun := Iff.rfl
 ```
 
-The dioid operations: `⊕ = ∧` (pointwise `R̄min` sum), `⊗ = ∗`
-(convolution), `𝟘 = ε`, `𝟙 = e`, plus the idempotent `nsmul`/`natCast`.
+The dioid operations: $`\oplus = \wedge` (pointwise $`\overline{R}_{\min}`
+sum), $`\otimes = \ast` (convolution), $`\mathbf{0} = \varepsilon`,
+$`\mathbf{1} = e`, plus the idempotent `nsmul`/`natCast`.
 
 ```lean
 /-- The dioid sum `⊕ = ∧`. -/
@@ -333,9 +357,10 @@ noncomputable def natCast (n : ℕ) : FunDioid :=
           else (0 : RbarMin)))
 ```
 
-The semiring laws: `⊕ = ∧` carries its laws pointwise from `R̄min`;
-`⊗ = ∗` carries its monoid laws from `conv_assoc`/`conv_comm`; `𝟘 = ε`
-is neutral for `∧` and absorbing for `∗`.
+The semiring laws: $`\oplus = \wedge` carries its laws pointwise from
+$`\overline{R}_{\min}`; $`\otimes = \ast` carries its monoid laws from
+`conv_assoc`/`conv_comm`; $`\mathbf{0} = \varepsilon` is neutral for
+$`\wedge` and absorbing for $`\ast`.
 
 ```lean
 theorem add_assoc' (a b c : FunDioid) :
@@ -454,9 +479,9 @@ theorem natCast_succ' (n : ℕ) :
   · rw [if_neg h.ne']; exact (add_idem _).symm
 ```
 
-Distributivity of `⊗ = ∗` over `⊕ = ∧` is `conv_sup` (the dioid sum is
-the pointwise `R̄min` sum `= ⊔`); the right form follows by
-commutativity:
+Distributivity of $`\otimes = \ast` over $`\oplus = \wedge` is `conv_sup`
+(the dioid sum is the pointwise $`\overline{R}_{\min}` sum $`= \sqcup`);
+the right form follows by commutativity:
 
 ```lean
 theorem left_distrib' (a b c : FunDioid) :
@@ -476,8 +501,8 @@ theorem right_distrib' (a b c : FunDioid) :
 ```
 
 The `CommSemiring`, `Dioid` and `CompleteDioid` structures assemble
-these. The transported join is the pointwise `R̄min` join, which equals
-the dioid sum `∧`:
+these. The transported join is the pointwise $`\overline{R}_{\min}` join,
+which equals the dioid sum $`\wedge`:
 
 ```lean
 noncomputable instance commSemiring :
@@ -521,9 +546,10 @@ noncomputable instance dioid : Dioid FunDioid :=
     add_eq_sup := add_eq_sup' }
 ```
 
-Completeness: the product `⊗ = ∗` distributes over an arbitrary dioid
-sum `⨆`. The transported `sSup` on `FunDioid` is the pointwise `R̄min`
-supremum, so this is `conv_iSup` transported through the equivalence.
+Completeness: the product $`\otimes = \ast` distributes over an arbitrary
+dioid sum $`\bigsqcup`. The transported `sSup` on `FunDioid` is the
+pointwise $`\overline{R}_{\min}` supremum, so this is `conv_iSup`
+transported through the equivalence.
 
 ```lean
 theorem mul_toFun (a b : FunDioid) :
@@ -559,11 +585,14 @@ noncomputable example :
     CompleteDioid FunDioid := inferInstance
 ```
 
-# Isotony \[2.4\]
+# Isotony
+%%%
+number := false
+%%%
 
-The isotony of `∧` and `∗` is, as the book notes, a direct consequence
-of Theorem 2.1 — the generic dioid isotony specialized to `FunDioid`.
-It is recorded under the book's names:
+The isotony of $`\wedge` and $`\ast` is a direct consequence
+of the dioid order relation — the generic dioid isotony specialized to
+`FunDioid`:
 
 ```lean
 theorem inf_le_inf_left' {f g : FunDioid}

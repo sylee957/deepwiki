@@ -16,19 +16,25 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) scalar dioids" =>
+%%%
+number := false
+%%%
 
 The scalar carriers of network calculus are obtained by _reversing_ the
-numeric order. In a dioid the sum `⊕` is the lattice join and the
-neutral `𝟘` is the least element; choosing `⊕ = min` and `𝟘 = +∞`
-forces the canonical order `a ≼ b :⟺ min a b = b ⟺ b ≤ a` to be the
-_reverse_ of the numeric order, with `+∞` as the bottom and the product
-`⊗` ordinary addition with unit `𝟙 = 0`. This chapter exhibits three
+numeric order. In a dioid the sum $`\oplus` is the lattice join and the
+neutral $`\mathbf{0}` is the least element; choosing $`\oplus = \min` and $`\mathbf{0} = +\infty`
+forces the canonical order $`a \preceq b \;:\Leftrightarrow\; \min(a, b) = b \iff b \le a` to be the
+_reverse_ of the numeric order, with $`+\infty` as the bottom and the product
+$`\otimes` ordinary addition with unit $`\mathbf{1} = 0`. This chapter exhibits three
 concrete carriers as dioid instances.
 
 # A reusable builder
+%%%
+number := false
+%%%
 
 All three carriers are the order-dual of a linearly ordered additive
-monoid with a top, equipped with `⊕ = min` and `⊗ = +`. That shared
+monoid with a top, equipped with $`\oplus = \min` and $`\otimes = {+}`. That shared
 construction is factored once. The class `MinPlus.Carrier` packages the
 data for the _dioid_ layer: a `LinearOrder` with `OrderTop` and an
 `AddCommMonoid` whose top is absorbing and whose addition is monotone.
@@ -69,10 +75,10 @@ end Carrier
 ```
 
 The newtype `MinPlus.D M` wraps the underlying `M` and inherits _none_
-of its algebra except the transported order; the dioid product `⊗` is
+of its algebra except the transported order; the dioid product $`\otimes` is
 the only multiplication on it. The order on `D M` is the reverse of the
-numeric order: `a ≼ b ↔ b.toDual ≤ a.toDual`, so `⊕ = min` is the join
-and `𝟘 = ⊤` is the bottom.
+numeric order: `a ≤ b ↔ b.toDual ≤ a.toDual`, so $`\oplus = \min` is the join
+and $`\mathbf{0} = \top` is the bottom.
 
 ```lean
 structure D (M : Type*) where ofDual ::
@@ -99,7 +105,7 @@ theorem toDual_injective {M : Type*} :
 ```
 
 The order/lattice on `D M` is transported from `Mᵒᵈ` through the
-equivalence: its join `⊔ = min` and its bottom `⊥ = ⊤`.
+equivalence: its join $`\sqcup = \min` and its bottom $`\bot = \top`.
 
 ```lean
 noncomputable instance instCompleteLattice
@@ -123,8 +129,11 @@ instance instOrderBot : OrderBot (D M) where
 ```
 
 # The dioid operations
+%%%
+number := false
+%%%
 
-`⊕ = min`, `⊗ = +`, `𝟘 = ⊤`, `𝟙 = 0`, plus the idempotent
+$`\oplus = \min`, $`\otimes = {+}`, $`\mathbf{0} = \top`, $`\mathbf{1} = 0`, plus the idempotent
 `nsmul`/`natCast`.
 
 ```lean
@@ -146,11 +155,11 @@ def natCast (n : ℕ) : D M :=
   D.ofDual (if n = 0 then ⊤ else (0 : M))
 ```
 
-Each semiring law is a named theorem about these operations. `⊕ = min`
-carries its commutative-monoid laws from `min` on `M`; `⊗ = +` carries
-its monoid laws from `+`; `𝟘 = ⊤` is neutral for `min` and absorbing
-for `+`; the `nsmul`/`natCast` recursions collapse by idempotency of
-`min`.
+Each semiring law is a named theorem about these operations. $`\oplus = \min`
+carries its commutative-monoid laws from $`\min` on `M`; $`\otimes = {+}` carries
+its monoid laws from $`+`; $`\mathbf{0} = \top` is neutral for $`\min` and absorbing
+for $`+`; the `nsmul`/`natCast` recursions collapse by idempotency of
+$`\min`.
 
 ```lean
 theorem add_assoc' (a b c : D M) :
@@ -220,7 +229,7 @@ theorem natCast_succ' (n : ℕ) :
   · rw [if_neg h.ne']; exact (min_self _).symm
 ```
 
-Distributivity of `⊗ = +` over `⊕ = min` follows from monotonicity of
+Distributivity of $`\otimes = {+}` over $`\oplus = \min` follows from monotonicity of
 addition:
 
 ```lean
@@ -268,7 +277,7 @@ noncomputable instance commSemiring :
   right_distrib := right_distrib'
 ```
 
-The transported join `⊔` equals `⊕ = min`, so the dioid sum is the
+The transported join $`\sqcup` equals $`\oplus = \min`, so the dioid sum is the
 lattice join. This delivers the (min,plus) _dioid_ on `D M`:
 
 ```lean
@@ -287,9 +296,12 @@ end D
 ```
 
 # The complete dioid carrier
+%%%
+number := false
+%%%
 
 `MinPlus.CompleteCarrier` adds a complete order and lower
-semi-continuity of `+`: addition distributes over arbitrary numeric
+semi-continuity of $`+`: addition distributes over arbitrary numeric
 infima (`add_sInf'`). The field is phrased over a `Set M` so the class
 stays in `M`'s single universe; the indexed `add_iInf'` form is derived.
 
@@ -365,10 +377,13 @@ end D
 end MinPlus
 ```
 
-# Theorem 2.2: `Rmin = ℝ ∪ {+∞}` is a dioid
+# `Rmin = ℝ ∪ {+∞}` is a dioid
+%%%
+number := false
+%%%
 
-`WithTop ℝ` is a (min,plus) dioid carrier: `+∞ = ⊤` is absorbing for
-`+`, and addition is monotone.
+`WithTop ℝ` is a (min,plus) dioid carrier: $`+\infty = \top` is absorbing for
+$`+`, and addition is monotone.
 
 ```lean
 noncomputable instance : MinPlus.Carrier (WithTop ℝ) where
@@ -377,7 +392,7 @@ noncomputable instance : MinPlus.Carrier (WithTop ℝ) where
 ```
 
 `Rmin` is then the (min,plus) dioid carried by `WithTop ℝ` under the
-reversed order, with `⊕ = min`, `𝟘 = +∞ = ⊥`, `⊗ = +`, `𝟙 = 0`:
+reversed order, with $`\oplus = \min`, $`\mathbf{0} = +\infty = \bot`, $`\otimes = {+}`, $`\mathbf{1} = 0`:
 
 ```lean
 abbrev Rmin := MinPlus.D (WithTop ℝ)
@@ -387,7 +402,7 @@ noncomputable example : Dioid Rmin := inferInstance
 
 It is the _non-complete_ layer: an idempotent commutative semiring with
 the canonical order, but not a complete dioid. Indeed `WithTop ℝ` is not
-a complete lattice (`ℝ` is unbounded below), and adjoining `−∞` to fix
+a complete lattice ($`\mathbb{R}` is unbounded below), and adjoining $`-\infty` to fix
 that would break lower semi-continuity. The canonical dioid order is
 literally the reverse of the numeric order:
 
@@ -396,12 +411,15 @@ example (a b : Rmin) :
     a ≤ b ↔ b.toDual ≤ a.toDual := Iff.rfl
 ```
 
-# Proposition 2.2: `R⁺min = ℝ≥0 ∪ {+∞}` is complete
+# `R⁺min = ℝ≥0 ∪ {+∞}` is complete
+%%%
+number := false
+%%%
 
-The book's canonical _complete_ (min,plus) dioid is `R⁺min`, carried by
-Mathlib's `ℝ≥0∞ = ENNReal`. This carrier is the sweet spot: it is a
-complete lattice (`0 = ⊥`, `+∞ = ⊤`) and is `−∞`-free, so `𝟘 = +∞`
-stays absorbing and there are no `(+∞) + (−∞)` indeterminate forms. The
+The canonical _complete_ (min,plus) dioid is $`R^+_{\min}`, carried by
+Mathlib's `ENNReal` ($`\overline{\mathbb{R}}_{\ge 0}`). This carrier is the sweet spot: it is a
+complete lattice ($`0 = \bot`, $`+\infty = \top`) and is $`-\infty`-free, so $`\mathbf{0} = +\infty`
+stays absorbing and there are no $`(+\infty) + (-\infty)` indeterminate forms. The
 single concrete input is `ENNReal.add_iInf`, the lower-semicontinuity
 field.
 
@@ -425,20 +443,23 @@ example (a b : RplusMin) :
     a ≤ b ↔ b.toDual ≤ a.toDual := Iff.rfl
 ```
 
-# Proposition 2.1: `R̄min = ℝ ∪ {±∞}` is complete
+# `R̄min = ℝ ∪ {±∞}` is complete
+%%%
+number := false
+%%%
 
-The book first makes `Rmin` a dioid, then _completes_ it by adjoining a
-top `⊤ = −∞`, giving `R̄min`. The decisive convention is
+We first make `Rmin` a dioid, then _complete_ it by adjoining a
+top $`\top = -\infty`, giving $`\overline{R}_{\min}`. The decisive convention is
 
-`(+∞) + (−∞) = +∞`, i.e. `ε + ⊤ = ε`,
+$$`(+\infty) + (-\infty) = +\infty, \quad\text{i.e.}\quad \varepsilon + \top = \varepsilon,`
 
-so that the dioid zero `ε = +∞` stays _absorbing_ for the product
-`⊗ = +`. Mathlib's `WithTop (WithBot ℝ)` realizes exactly this: its
-outer `⊤` is absorbing for `+`, including `⊥ + ⊤ = ⊤`. Mapping to the
-book, the outer `⊤ = +∞` is the dioid zero `ε`, the inner `⊥ = −∞` is
-the dioid top, and `⊗` is the `WithTop`/`WithBot` addition. This is
-_not_ Mathlib's `EReal`, whose opposite convention `(+∞) + (−∞) = −∞`
-would make `ε` non-absorbing and break the dioid.
+so that the dioid zero $`\varepsilon = +\infty` stays _absorbing_ for the product
+$`\otimes = {+}`. Mathlib's `WithTop (WithBot ℝ)` realizes exactly this: its
+outer $`\top` is absorbing for $`+`, including $`\bot + \top = \top`. Here the
+outer $`\top = +\infty` is the dioid zero $`\varepsilon`, the inner $`\bot = -\infty` is
+the dioid top, and $`\otimes` is the `WithTop`/`WithBot` addition. This is
+_not_ Mathlib's `EReal`, whose opposite convention $`(+\infty) + (-\infty) = -\infty`
+would make $`\varepsilon` non-absorbing and break the dioid.
 
 ```lean
 abbrev Rbar := WithTop (WithBot ℝ)
@@ -473,10 +494,10 @@ theorem shift_eq (r : ℝ) (x : Rbar) :
       rw [← WithTop.coe_add, ← WithBot.coe_add]
 ```
 
-The heart of Proposition 2.1 is _lower semi-continuity of `+`_:
+The heart of the construction is _lower semi-continuity of $`+`_:
 addition distributes over an arbitrary infimum, true precisely because
-`+∞ = ⊤` is absorbing. The finite case uses the shift order-isomorphism
-(which preserves infima); the `±∞` and empty-index cases are handled by
+$`+\infty = \top` is absorbing. The finite case uses the shift order-isomorphism
+(which preserves infima); the $`\pm\infty` and empty-index cases are handled by
 the absorbing top.
 
 ```lean
@@ -523,7 +544,7 @@ end Rbar
 ```
 
 `WithTop (WithBot ℝ)` is therefore a complete (min,plus) carrier, and
-`R̄min` is the dioid carried by it under the reversed order:
+$`\overline{R}_{\min}` is the dioid carried by it under the reversed order:
 
 ```lean
 noncomputable instance :
@@ -537,8 +558,8 @@ noncomputable instance :
 abbrev RbarMin := MinPlus.D Rbar
 ```
 
-By Proposition 2.1, `R̄min` is a complete commutative dioid with zero
-`ε = +∞`, unit `e = 0`, and top `⊤ = −∞`:
+$`\overline{R}_{\min}` is therefore a complete commutative dioid with zero
+$`\varepsilon = +\infty`, unit $`e = 0`, and top $`\top = -\infty`:
 
 ```lean
 noncomputable example :
@@ -549,8 +570,11 @@ example (a b : RbarMin) :
 ```
 
 # A sub-complete-dioid builder
+%%%
+number := false
+%%%
 
-Two function classes of the next chapter — `F⁺` and `F↑` — are both
+Two function classes of the next chapter — $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` — are both
 _sub-complete-dioids_ of an ambient complete dioid: subsets closed
 under the dioid operations and under arbitrary dioid sums `sSup`, on
 which the restricted structure is again a complete commutative dioid.

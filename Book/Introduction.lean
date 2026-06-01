@@ -4,31 +4,35 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Introduction" =>
+%%%
+number := false
+%%%
 
-This document accompanies a Lean 4 + Mathlib formalization of §2.1 of
-Bouillard, Boyer and Le Corronc, _Deterministic Network Calculus_. The
-mathematical setting is the algebra of _dioids_ (idempotent semirings)
-and the _(min,plus)_ algebra underlying network calculus.
+This is a Lean 4 + Mathlib formalization of the algebra of _(min,plus)_
+dioids. The mathematical setting is the theory of _dioids_ (idempotent
+semirings) and the complete (min,plus) dioids of functions that underlie
+deterministic network calculus.
 
-Every definition, lemma and proposition of §2.1 is stated and proved in
-Lean, in the `NetworkCalculus` namespace. Each chapter here pairs the
-book's narrative with the corresponding Lean declarations inline, as
-elaborated code blocks whose bodies _are_ the real formalization, so
-the rendered statements reflect exactly what was proved. The book is
-its own source of truth: it compiles as part of building the book.
+Every definition, lemma and proposition is stated and proved in Lean, in
+the `NetworkCalculus` namespace. Each chapter pairs the narrative with the
+corresponding Lean declarations inline, as elaborated code blocks whose
+bodies _are_ the real formalization, so the rendered statements reflect
+exactly what was proved. This document is its own source of truth: it
+compiles as part of building it.
 
 The chapters cover:
 
-- _Dioids and complete dioids_ — Definition 2.5, the canonical order,
-  Theorem 2.1 (order relation and isotony), and the complete dioid with
-  lower semi-continuity.
-- _The (min,plus) scalar dioids_ — the carriers `Rmin`, `R⁺min` and
-  `R̄min` (Theorem 2.2, Propositions 2.1–2.2).
-- _The (min,plus) convolution and the function dioid_ — Definitions
-  2.6–2.7, Lemmas 2.1–2.2, and Proposition 2.3.
-- _Main subsets of functions_ — Definition 2.8, Lemma 2.3, and why
-  `F⁺`/`F↑` are complete dioids while `F₀`/`F↑₀` are not.
+- _Dioids and complete dioids_ — the definition of a dioid, the canonical
+  order, the order relation and isotony, and the complete dioid with lower
+  semi-continuity.
+- _The (min,plus) scalar dioids_ — the carriers $`R_{\min}`, $`R^+_{\min}` and $`\overline{R}_{\min}`.
+- _The (min,plus) convolution and the function dioid_ — the (min,plus)
+  functions, the convolution, its algebraic properties, and the function
+  dioid.
+- _Main subsets of functions_ — the non-negative, zero-at-zero and
+  non-decreasing function classes, their stability, and why $`\mathcal{F}^+`/$`\mathcal{F}^\uparrow` are
+  complete dioids while $`\mathcal{F}_0`/$`\mathcal{F}^\uparrow_0` are not.
 
-Throughout, the book's notation maps to Lean as `⊕ = +` (the dioid sum,
-the lattice join), `⊗ = *` (the product), `𝟘 = 0`, `𝟙 = 1`, and the
-canonical order `≼` as `≤`.
+Throughout, the notation maps to Lean as $`\oplus = {+}` (the dioid sum, the
+lattice join), $`\otimes = {*}` (the product), $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and the canonical
+order $`\preceq` as $`\le`.

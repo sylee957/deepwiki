@@ -6,11 +6,13 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Dioids and complete dioids" =>
+%%%
+number := false
+%%%
 
-This chapter formalizes §2.1.1 of Bouillard, Boyer and Le Corronc:
-the algebra of _dioids_, the _canonical order_ they induce, the order
-properties and isotony of Theorem 2.1, and the _complete dioid_ that
-adds completeness and lower semi-continuity.
+This chapter formalizes the algebra of _dioids_, the _canonical order_
+they induce, the order properties and isotony, and the _complete dioid_
+that adds completeness and lower semi-continuity.
 
 All declarations live in the `NetworkCalculus` namespace.
 
@@ -21,12 +23,15 @@ open scoped Computability
 -- `add_eq_sup : a + b = a ⊔ b`
 ```
 
-# Definition 2.5: the dioid
+# The dioid
+%%%
+number := false
+%%%
 
-A _dioid_ is a semiring `(D, ⊕, ⊗, 𝟘, 𝟙)` whose sum `⊕` is
-_idempotent_, `a ⊕ a = a`. We work in the commutative case. Mathlib's
+A _dioid_ is a semiring $`(D, \oplus, \otimes, \mathbf{0}, \mathbf{1})` whose sum $`\oplus` is
+_idempotent_, $`a \oplus a = a`. We work in the commutative case. Mathlib's
 `IdemCommSemiring` is exactly an idempotent commutative semiring whose
-order is _defined_ by `a ≤ b ↔ a + b = b`, with `a + b = a ⊔ b`. So a
+order is _defined_ by $`a \le b \iff a + b = b`, with $`a + b = a \sqcup b`. So a
 dioid is precisely an `IdemCommSemiring`: the algebra comes first, the
 order is derived from it.
 
@@ -34,15 +39,15 @@ order is derived from it.
 abbrev Dioid (α : Type*) := IdemCommSemiring α
 ```
 
-The book's notation maps to Lean as `⊕ = +`, `⊗ = *`, `𝟘 = 0`,
-`𝟙 = 1`, and the canonical order `≼` as `≤`.
+The notation maps to Lean as $`\oplus = {+}`, $`\otimes = {*}`, $`\mathbf{0} = 0`,
+$`\mathbf{1} = 1`, and the canonical order $`\preceq` as $`\le`.
 
 We can build a dioid from the algebra alone: given a commutative
 semiring whose sum is idempotent, this manufactures the entire
 structure with the order _derived_, not supplied, via Mathlib's
 `IdemSemiring.ofSemiring`. An instance constructed this way _cannot_
-invent an unrelated order: `≼`, `⊔`, `⊥` are forced to be
-`a ⊕ b = b`, `⊕`, `𝟘`.
+invent an unrelated order: $`\preceq`, $`\sqcup`, $`\bot` are forced to be
+$`a \oplus b = b`, $`\oplus`, $`\mathbf{0}`.
 
 ```lean
 namespace Dioid
@@ -56,8 +61,11 @@ variable {α : Type*} [Dioid α]
 ```
 
 # The canonical order
+%%%
+number := false
+%%%
 
-Idempotency of `⊕` induces the _canonical order_ `a ≼ b :⟺ a ⊕ b = b`.
+Idempotency of $`\oplus` induces the _canonical order_ $`a \preceq b \;:\Leftrightarrow\; a \oplus b = b`.
 The order is _derived_ from the algebra, not supplied independently:
 
 ```lean
@@ -66,21 +74,24 @@ theorem le_iff_add_eq_right {a b : α} :
   add_eq_right_iff_le.symm
 ```
 
-# Theorem 2.1: order relation and isotony
+# Order relation and isotony
+%%%
+number := false
+%%%
 
 The canonical relation is a partial order, and both operations are
 isotone with respect to it. Each part is restated and proved directly
 from the semiring laws.
 
-_Reflexivity_, from idempotency `a ⊕ a = a`:
+_Reflexivity_, from idempotency $`a \oplus a = a`:
 
 ```lean
 theorem le_refl' (a : α) : a ≤ a :=
   le_iff_add_eq_right.mpr (add_idem a)
 ```
 
-_Transitivity_, following the book
-`a ⊕ c = a ⊕ (b ⊕ c) = (a ⊕ b) ⊕ c = b ⊕ c = c`:
+_Transitivity_, via
+$$`a \oplus c = a \oplus (b \oplus c) = (a \oplus b) \oplus c = b \oplus c = c`
 
 ```lean
 theorem le_trans' {a b c : α}
@@ -92,7 +103,7 @@ theorem le_trans' {a b c : α}
     _ = c := hbc
 ```
 
-_Antisymmetry_: if `a ≼ b` and `b ≼ a` then `a ⊕ b = a = b`.
+_Antisymmetry_: if $`a \preceq b` and $`b \preceq a` then $`a \oplus b = a = b`.
 
 ```lean
 theorem le_antisymm' {a b : α}
@@ -101,8 +112,8 @@ theorem le_antisymm' {a b : α}
   rw [← hab, add_comm, hba]
 ```
 
-_Isotony of the sum_ `⊕`: if `a ≼ b` then `a ⊕ c ≼ b ⊕ c`, since
-`(a ⊕ c) ⊕ (b ⊕ c) = (a ⊕ b) ⊕ (c ⊕ c) = b ⊕ c`.
+_Isotony of the sum_ $`\oplus`: if $`a \preceq b` then $`a \oplus c \preceq b \oplus c`, since
+$`(a \oplus c) \oplus (b \oplus c) = (a \oplus b) \oplus (c \oplus c) = b \oplus c`.
 
 ```lean
 theorem add_le_add_right' {a b : α}
@@ -122,8 +133,8 @@ theorem add_le_add_left' {a b : α}
   exact add_le_add_right' h c
 ```
 
-_Isotony of the product_ `⊗`: if `a ≼ b` then `a ⊗ c ≼ b ⊗ c`, since
-`(a ⊗ c) ⊕ (b ⊗ c) = (a ⊕ b) ⊗ c = b ⊗ c`.
+_Isotony of the product_ $`\otimes`: if $`a \preceq b` then $`a \otimes c \preceq b \otimes c`, since
+$`(a \otimes c) \oplus (b \otimes c) = (a \oplus b) \otimes c = b \otimes c`.
 
 ```lean
 theorem mul_le_mul_right' {a b : α}
@@ -132,7 +143,7 @@ theorem mul_le_mul_right' {a b : α}
   rw [← add_mul, h]
 ```
 
-And the left form, since `(c ⊗ a) ⊕ (c ⊗ b) = c ⊗ (a ⊕ b) = c ⊗ b`:
+And the left form, since $`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b`:
 
 ```lean
 theorem mul_le_mul_left' {a b : α}
@@ -144,11 +155,14 @@ end Dioid
 ```
 
 # The complete dioid
+%%%
+number := false
+%%%
 
 A _complete dioid_ is a dioid that is moreover a complete lattice for
-the canonical order, and whose product `⊗` is _lower semi-continuous_:
-it distributes over _arbitrary_ sums `⊕` on both sides. This is the
-boxed identity `Rₐ(⊕ x) = ⊕ Rₐ(x)` of §2.3.1. The class extends both
+the canonical order, and whose product $`\otimes` is _lower semi-continuous_:
+it distributes over _arbitrary_ sums $`\oplus` on both sides. This is the
+identity $`R_a\bigl(\bigoplus x\bigr) = \bigoplus R_a(x)`. The class extends both
 the idempotent commutative semiring and a `CompleteLattice`, sharing
 the same canonical order. Distributivity is stated over an arbitrary
 `Set` to stay in `α`'s universe; the indexed `⨆` forms are derived.
@@ -157,7 +171,7 @@ the same canonical order. Distributivity is stated over an arbitrary
 class CompleteDioid (α : Type*) extends
     IdemCommSemiring α, CompleteLattice α where
   /-- `⊗` distributes over arbitrary `⊕`
-  (lower semi-continuity, §2.3.1). Stated on the
+  (lower semi-continuity). Stated on the
   left; the right version follows by commutativity
   of `⊗`. -/
   mul_sSup : ∀ (a : α) (s : Set α),
@@ -166,7 +180,7 @@ class CompleteDioid (α : Type*) extends
 
 The single distributivity field, stated over an arbitrary set on the
 left, is `mul_sSup`. Right distributivity is _derived_ from it and
-commutativity of `⊗`, so it need not be a separate axiom:
+commutativity of $`\otimes`, so it need not be a separate axiom:
 
 ```lean
 namespace CompleteDioid
@@ -191,7 +205,7 @@ theorem iSup_mul {ι : Sort*} (g : ι → α) (a : α) :
   rw [← sSup_range, sSup_mul, iSup_range]
 ```
 
-The binary special cases distribute `⊗` over `⊕ = ⊔`:
+The binary special cases distribute $`\otimes` over $`\oplus = \sqcup`:
 
 ```lean
 theorem mul_sup (a b c : α) :
@@ -217,7 +231,7 @@ theorem sup_mul (a b c : α) :
 end CompleteDioid
 ```
 
-Isotony (Theorem 2.1) needs no completeness; it is available here
+Isotony needs no completeness; it is available here
 through the `Dioid` superclass.
 
 ```lean

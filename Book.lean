@@ -10,16 +10,17 @@ open Verso.Genre.Manual.InlineLean
 
 set_option pp.rawOnError true
 
-#doc (Manual) "Deterministic Network Calculus in Lean" =>
+#doc (Manual) "The (min,plus) Dioids in Lean" =>
 
 %%%
+number := false
 authors := ["S.Y. Lee"]
 %%%
 
-A mechanized companion to Chapter 2 of Bouillard, Boyer and Le Corronc,
-*Deterministic Network Calculus*. Each definition, lemma and proposition of the
-(min,plus) algebra is stated and proved in Lean 4 with Mathlib; this book pairs
-the book's narrative with the corresponding Lean declarations.
+A mechanized development of the _(min,plus)_ algebra. Each definition, lemma and
+proposition of the (min,plus) algebra is stated and proved in Lean 4 with
+Mathlib; this document pairs the narrative with the corresponding Lean
+declarations.
 
 {include 1 Book.Introduction}
 

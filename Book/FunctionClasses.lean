@@ -5,12 +5,16 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Main subsets of functions" =>
+%%%
+number := false
+%%%
 
 Network calculus restricts attention to special classes of (min,plus)
-functions. This chapter formalizes Definition 2.8 (the four subsets),
-Lemma 2.3 (their stability under `∧` and `∗`), and the consequences:
-`F⁺` and `F↑` are complete dioids with the constant-`0` function as
-top, while `F₀` and `F↑₀` are not dioids.
+functions. This chapter formalizes the four subsets, their stability
+under $`\wedge` and $`\ast`, and the consequences: $`\mathcal{F}^+` and
+$`\mathcal{F}^\uparrow` are complete dioids with the constant-$`0`
+function as top, while $`\mathcal{F}_0` and $`\mathcal{F}^\uparrow_0` are
+not dioids.
 
 ```lean
 namespace NetworkCalculus
@@ -20,11 +24,15 @@ open scoped Computability NNReal
 namespace FunDioid
 ```
 
-# Definition 2.8: the predicates and subsets
+# The predicates and subsets
+%%%
+number := false
+%%%
 
 The defining predicates are stated on the underlying numeric values
-(via `.toDual` in `R̄min`), since _non-negative_ and _non-decreasing_
-refer to the natural order on values, not the dioid order.
+(via `.toDual` in $`\overline{R}_{\min}`), since _non-negative_ and
+_non-decreasing_ refer to the natural order on values, not the dioid
+order.
 
 ```lean
 /-- Non-negative: each value is `≥ 0` numerically. -/
@@ -41,9 +49,10 @@ def IsNondecr (f : FunDioid) : Prop :=
     (f.toFun x).toDual ≤ (f.toFun y).toDual
 ```
 
-The four subsets of `FunDioid` are `F⁺` (non-negative), `F₀`
-(non-negative with `f(0) = 0`), `F↑` (non-negative non-decreasing),
-and `F↑₀ = F₀ ∩ F↑`:
+The four subsets of `FunDioid` are $`\mathcal{F}^+` (non-negative),
+$`\mathcal{F}_0` (non-negative with $`f(0) = 0`), $`\mathcal{F}^\uparrow`
+(non-negative non-decreasing), and
+$`\mathcal{F}^\uparrow_0 = \mathcal{F}_0 \cap \mathcal{F}^\uparrow`:
 
 ```lean
 /-- `F⁺`: the non-negative functions. -/
@@ -61,11 +70,14 @@ def Fnondecr : Set FunDioid :=
 def FnondecrZero : Set FunDioid := Fzero ∩ Fnondecr
 ```
 
-# Lemma 2.3: stability under `∧` and `∗`
+# Stability under `∧` and `∗`
+%%%
+number := false
+%%%
 
 The dioid sum `f + g` is the pointwise minimum of the values, and the
 product `f * g` is the convolution. A convenient lower bound: a
-convolution value is `≥ 0` once both factors are.
+convolution value is $`\ge 0` once both factors are.
 
 ```lean
 private theorem conv_apply_nonneg {f g : FunDioid}
@@ -117,10 +129,11 @@ theorem IsZeroAtZero.conv {f g : FunDioid}
   · exact conv_apply_nonneg hfn hgn 0
 ```
 
-Non-decreasing-ness. For `∧` it is pointwise; for `∗`, given a
-decomposition `u + s = y`, the values `u' = x - min s x` and
-`s' = min s x` give a decomposition of `x` with `u' ≤ u`, `s' ≤ s`, so
-monotonicity bounds `(f ∗ g)(x)` below `f(u) + g(s)`.
+Non-decreasing-ness. For $`\wedge` it is pointwise; for $`\ast`, given a
+decomposition $`u + s = y`, the values $`u' = x - \min(s, x)` and
+$`s' = \min(s, x)` give a decomposition of $`x` with $`u' \le u`,
+$`s' \le s`, so monotonicity bounds $`(f \ast g)(x)` below
+$`f(u) + g(s)`.
 
 ```lean
 theorem IsNondecr.inf {f g : FunDioid}
@@ -202,11 +215,15 @@ theorem FnondecrZero.conv_mem {f g : FunDioid}
 ```
 
 # `F⁺` and `F↑` are complete dioids
+%%%
+number := false
+%%%
 
-A consequence of Lemma 2.3 and completeness of `R⁺min` is that `F⁺`
-and `F↑` are complete dioids. The book flags that the top element
-differs from the ambient `FunDioid` top `⊤ : t ↦ −∞` (which is not
-non-negative): it is the constant-`0` function `const0`.
+A consequence of the stability results and completeness of
+$`R^+_{\min}` is that $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are
+complete dioids. The top element differs from the ambient `FunDioid` top
+$`\top : t \mapsto -\infty` (which is not non-negative): it is the
+constant-$`0` function `const0`.
 
 ```lean
 /-- The constant function equal to numeric `0`. -/
@@ -227,8 +244,9 @@ theorem Fplus_eq_Iic : Fplus = Set.Iic const0 := rfl
 ```
 
 The numeric value of an arbitrary dioid supremum is the pointwise
-numeric _infimum_ (the dioid `sSup` is the pointwise `R̄min`
-supremum, whose `.toDual` is the numeric infimum):
+numeric _infimum_ (the dioid `sSup` is the pointwise
+$`\overline{R}_{\min}` supremum, whose `.toDual` is the numeric
+infimum):
 
 ```lean
 theorem sSup_toFun_toDual (T : Set FunDioid)
@@ -243,8 +261,8 @@ theorem sSup_toFun_toDual (T : Set FunDioid)
 ```
 
 Each class is closed under arbitrary dioid sums: `const0` is an upper
-bound, and for `F↑` the pointwise infimum of non-decreasing functions
-is non-decreasing:
+bound, and for $`\mathcal{F}^\uparrow` the pointwise infimum of
+non-decreasing functions is non-decreasing:
 
 ```lean
 theorem Fplus.sSup_mem {T : Set FunDioid}
@@ -297,9 +315,10 @@ theorem one_mem_Fnondecr :
   · rw [if_neg hy]; exact le_top⟩
 ```
 
-Both `F⁺` and `F↑` are then `SubCompleteDioid FunDioid`: the closure
-data feeds the generic builder of the previous chapter, supplying the
-complete dioid structure with the adjusted top `sSup carrier`.
+Both $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are then
+`SubCompleteDioid FunDioid`: the closure data feeds the generic builder
+of the previous chapter, supplying the complete dioid structure with the
+adjusted top `sSup carrier`.
 
 ```lean
 noncomputable def SfPlus : SubCompleteDioid FunDioid where
@@ -322,9 +341,9 @@ noncomputable def SfNondecr :
 end FunDioid
 ```
 
-The carrier of `F⁺` as a complete dioid is the subtype of non-negative
-functions. Its top is the constant-`0` function — the subtle point the
-book flags, since it is _not_ the ambient `FunDioid` top:
+The carrier of $`\mathcal{F}^+` as a complete dioid is the subtype of
+non-negative functions. Its top is the constant-$`0` function — a
+subtle point, since it is _not_ the ambient `FunDioid` top:
 
 ```lean
 open FunDioid in
@@ -355,9 +374,10 @@ noncomputable example :
 end FPlus
 ```
 
-The carrier of `F↑` is the subtype of non-negative non-decreasing
-functions. Unlike `F⁺` it is not an order-interval, but it has the
-same adjusted top `const0` (its greatest element):
+The carrier of $`\mathcal{F}^\uparrow` is the subtype of non-negative
+non-decreasing functions. Unlike $`\mathcal{F}^+` it is not an
+order-interval, but it has the same adjusted top `const0` (its greatest
+element):
 
 ```lean
 open FunDioid in
@@ -390,10 +410,14 @@ end FNondecr
 ```
 
 # `F₀` and `F↑₀` are not dioids
+%%%
+number := false
+%%%
 
-A dioid must contain its zero `𝟘 = ε : t ↦ +∞`. But `ε(0) = +∞ ≠ 0`,
-whereas every element of `F₀` and `F↑₀` satisfies `f(0) = 0`. So `ε`
-is not a member of either set, and neither is a dioid:
+A dioid must contain its zero $`\mathbf{0} = \varepsilon : t \mapsto +\infty`.
+But $`\varepsilon(0) = +\infty \ne 0`, whereas every element of
+$`\mathcal{F}_0` and $`\mathcal{F}^\uparrow_0` satisfies $`f(0) = 0`.
+So $`\varepsilon` is not a member of either set, and neither is a dioid:
 
 ```lean
 namespace FunDioid
@@ -417,5 +441,5 @@ end FunDioid
 end NetworkCalculus
 ```
 
-This is why the book singles out `F⁺` and `F↑`, which _do_ contain
-`ε`, as the complete dioids.
+This is why $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow`, which _do_
+contain $`\varepsilon`, are the complete dioids.
