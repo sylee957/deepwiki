@@ -67,22 +67,22 @@ theorem add_le_add_right' {M : Type*} [Carrier M]
 end Carrier
 ```
 
-The newtype `MinPlus.D M` wraps the underlying `M` and inherits _none_
+The newtype `MinPlus.Dual M` wraps the underlying `M` and inherits _none_
 of its algebra except the transported order; the dioid product $`\otimes` is
-the only multiplication on it. The order on `D M` is the reverse of the
+the only multiplication on it. The order on `Dual M` is the reverse of the
 numeric order: `a ≤ b ↔ b.toDual ≤ a.toDual`, so $`\oplus = \min` is the join
 and $`\mathbf{0} = \top` is the bottom.
 
 ```lean
-structure D (M : Type*) where ofDual ::
+structure Dual (M : Type*) where ofDual ::
   /-- The underlying element of `M` (reversed
   order). -/
   toDual : M
 
-namespace D
+namespace Dual
 
-/-- The defining equivalence `D M ≃ Mᵒᵈ`. -/
-def toDualEquiv {M : Type*} : D M ≃ Mᵒᵈ :=
+/-- The defining equivalence `Dual M ≃ Mᵒᵈ`. -/
+def toDualEquiv {M : Type*} : Dual M ≃ Mᵒᵈ :=
   ⟨fun x => OrderDual.toDual x.toDual,
    fun y => ⟨OrderDual.ofDual y⟩,
    fun ⟨_⟩ => rfl, fun _ => rfl⟩
@@ -92,31 +92,31 @@ theorem toDual_injective {M : Type*} :
   fun a b h => by cases a; cases b; cases h; rfl
 
 @[simp] theorem ofDual_toDual {M : Type*}
-    (a : D M) : D.ofDual a.toDual = a := rfl
+    (a : Dual M) : Dual.ofDual a.toDual = a := rfl
 @[simp] theorem toDual_ofDual {M : Type*}
-    (a : M) : (D.ofDual a).toDual = a := rfl
+    (a : M) : (Dual.ofDual a).toDual = a := rfl
 ```
 
-The order/lattice on `D M` is transported from `Mᵒᵈ` through the
+The order/lattice on `Dual M` is transported from `Mᵒᵈ` through the
 equivalence: its join $`\sqcup = \min` and its bottom $`\bot = \top`.
 
 ```lean
 noncomputable instance instCompleteLattice
     {M : Type*} [CompleteLattice M] :
-    CompleteLattice (D M) :=
+    CompleteLattice (Dual M) :=
   Equiv.completeLattice toDualEquiv
 
 noncomputable instance instLattice
-    {M : Type*} [Lattice M] : Lattice (D M) :=
+    {M : Type*} [Lattice M] : Lattice (Dual M) :=
   Equiv.lattice toDualEquiv
 
-/-- The canonical (reversed) order on `D M`. -/
-theorem le_def {M : Type*} [Carrier M] (a b : D M) :
+/-- The canonical (reversed) order on `Dual M`. -/
+theorem le_def {M : Type*} [Carrier M] (a b : Dual M) :
     a ≤ b ↔ b.toDual ≤ a.toDual := Iff.rfl
 
 instance instOrderBot {M : Type*} [Carrier M] :
-    OrderBot (D M) where
-  bot := D.ofDual ⊤
+    OrderBot (Dual M) where
+  bot := Dual.ofDual ⊤
   bot_le _ := (le_def _ _).mpr le_top
 ```
 
@@ -126,22 +126,22 @@ $`\oplus = \min`, $`\otimes = {+}`, $`\mathbf{0} = \top`, $`\mathbf{1} = 0`, plu
 
 ```lean
 /-- The dioid sum `⊕ = min`. -/
-def add {M : Type*} [Carrier M] (a b : D M) : D M :=
-  D.ofDual (min a.toDual b.toDual)
+def add {M : Type*} [Carrier M] (a b : Dual M) : Dual M :=
+  Dual.ofDual (min a.toDual b.toDual)
 /-- The dioid product `⊗ = +`. -/
-def mul {M : Type*} [Carrier M] (a b : D M) : D M :=
-  D.ofDual (a.toDual + b.toDual)
+def mul {M : Type*} [Carrier M] (a b : Dual M) : Dual M :=
+  Dual.ofDual (a.toDual + b.toDual)
 /-- The additive neutral `𝟘 = ⊤`. -/
-def zero {M : Type*} [Carrier M] : D M := D.ofDual ⊤
+def zero {M : Type*} [Carrier M] : Dual M := Dual.ofDual ⊤
 /-- The multiplicative neutral `𝟙 = 0`. -/
-def one {M : Type*} [Carrier M] : D M := D.ofDual 0
+def one {M : Type*} [Carrier M] : Dual M := Dual.ofDual 0
 /-- Idempotent scalar action. -/
-def nsmul {M : Type*} [Carrier M] (n : ℕ) (a : D M) :
-    D M :=
-  D.ofDual (if n = 0 then ⊤ else a.toDual)
+def nsmul {M : Type*} [Carrier M] (n : ℕ) (a : Dual M) :
+    Dual M :=
+  Dual.ofDual (if n = 0 then ⊤ else a.toDual)
 /-- The collapsed natural-number cast. -/
-def natCast {M : Type*} [Carrier M] (n : ℕ) : D M :=
-  D.ofDual (if n = 0 then ⊤ else (0 : M))
+def natCast {M : Type*} [Carrier M] (n : ℕ) : Dual M :=
+  Dual.ofDual (if n = 0 then ⊤ else (0 : M))
 ```
 
 Each semiring law is a named theorem about these operations. $`\oplus = \min`
@@ -152,31 +152,31 @@ $`\min`.
 
 ```lean
 theorem add_assoc' {M : Type*} [Carrier M]
-    (a b c : D M) :
+    (a b c : Dual M) :
     add (add a b) c = add a (add b c) :=
   toDual_injective (min_assoc _ _ _)
 
 theorem add_comm' {M : Type*} [Carrier M]
-    (a b : D M) :
+    (a b : Dual M) :
     add a b = add b a :=
   toDual_injective (min_comm _ _)
 
 theorem zero_add' {M : Type*} [Carrier M]
-    (a : D M) : add zero a = a :=
+    (a : Dual M) : add zero a = a :=
   toDual_injective (min_eq_right le_top)
 
 theorem add_zero' {M : Type*} [Carrier M]
-    (a : D M) : add a zero = a :=
+    (a : Dual M) : add a zero = a :=
   toDual_injective (min_eq_left le_top)
 
 theorem nsmul_zero' {M : Type*} [Carrier M]
-    (a : D M) : nsmul 0 a = zero := by
-  show D.ofDual (if (0 : ℕ) = 0 then ⊤ else _)
-     = D.ofDual ⊤
+    (a : Dual M) : nsmul 0 a = zero := by
+  show Dual.ofDual (if (0 : ℕ) = 0 then ⊤ else _)
+     = Dual.ofDual ⊤
   rw [if_pos rfl]
 
 theorem nsmul_succ' {M : Type*} [Carrier M]
-    (n : ℕ) (a : D M) :
+    (n : ℕ) (a : Dual M) :
     nsmul (n + 1) a = add (nsmul n a) a := by
   apply toDual_injective
   show (if n + 1 = 0 then ⊤ else a.toDual)
@@ -188,40 +188,40 @@ theorem nsmul_succ' {M : Type*} [Carrier M]
   · rw [if_neg h.ne']; exact (min_self _).symm
 
 theorem mul_assoc' {M : Type*} [Carrier M]
-    (a b c : D M) :
+    (a b c : Dual M) :
     mul (mul a b) c = mul a (mul b c) :=
   toDual_injective (add_assoc _ _ _)
 
 theorem mul_comm' {M : Type*} [Carrier M]
-    (a b : D M) :
+    (a b : Dual M) :
     mul a b = mul b a :=
   toDual_injective (add_comm _ _)
 
 theorem one_mul' {M : Type*} [Carrier M]
-    (a : D M) : mul one a = a :=
+    (a : Dual M) : mul one a = a :=
   toDual_injective (zero_add a.toDual)
 
 theorem mul_one' {M : Type*} [Carrier M]
-    (a : D M) : mul a one = a :=
+    (a : Dual M) : mul a one = a :=
   toDual_injective (add_zero a.toDual)
 
 theorem zero_mul' {M : Type*} [Carrier M]
-    (a : D M) : mul zero a = zero :=
+    (a : Dual M) : mul zero a = zero :=
   toDual_injective (Carrier.top_add' a.toDual)
 
 theorem mul_zero' {M : Type*} [Carrier M]
-    (a : D M) : mul a zero = zero :=
+    (a : Dual M) : mul a zero = zero :=
   toDual_injective (Carrier.add_top' a.toDual)
 
 theorem natCast_zero' {M : Type*} [Carrier M] :
-    (natCast 0 : D M) = zero := by
-  show D.ofDual (if (0 : ℕ) = 0 then ⊤ else (0 : M))
-     = D.ofDual ⊤
+    (natCast 0 : Dual M) = zero := by
+  show Dual.ofDual (if (0 : ℕ) = 0 then ⊤ else (0 : M))
+     = Dual.ofDual ⊤
   rw [if_pos rfl]
 
 theorem natCast_succ' {M : Type*} [Carrier M]
     (n : ℕ) :
-    (natCast (n + 1) : D M)
+    (natCast (n + 1) : Dual M)
       = add (natCast n) one := by
   apply toDual_injective
   show (if n + 1 = 0 then ⊤ else (0 : M))
@@ -238,7 +238,7 @@ addition:
 
 ```lean
 theorem left_distrib' {M : Type*} [Carrier M]
-    (a b c : D M) :
+    (a b c : Dual M) :
     mul a (add b c) = add (mul a b) (mul a c) :=
   toDual_injective <|
     (Monotone.map_min
@@ -246,7 +246,7 @@ theorem left_distrib' {M : Type*} [Carrier M]
       fun _ _ h => Carrier.add_le_add_left' h _)
 
 theorem right_distrib' {M : Type*} [Carrier M]
-    (a b c : D M) :
+    (a b c : Dual M) :
     mul (add a b) c = add (mul a c) (mul b c) :=
   toDual_injective <|
     (Monotone.map_min
@@ -259,7 +259,7 @@ The `CommSemiring` instance is a flat assembly of these laws:
 ```lean
 noncomputable instance commSemiring
     {M : Type*} [Carrier M] :
-    CommSemiring (D M) where
+    CommSemiring (Dual M) where
   add := add
   add_assoc := add_assoc'
   add_comm := add_comm'
@@ -285,24 +285,24 @@ noncomputable instance commSemiring
 ```
 
 The transported join $`\sqcup` equals $`\oplus = \min`, so the dioid sum is the
-lattice join. This delivers the (min,plus) _dioid_ on `D M`:
+lattice join. This delivers the (min,plus) _dioid_ on `Dual M`:
 
 ```lean
 theorem sup_eq_add {M : Type*} [Carrier M]
-    (a b : D M) : a ⊔ b = add a b := rfl
+    (a b : Dual M) : a ⊔ b = add a b := rfl
 
 theorem add_eq_sup' {M : Type*} [Carrier M]
-    (a b : D M) : add a b = a ⊔ b :=
+    (a b : Dual M) : add a b = a ⊔ b :=
   (sup_eq_add a b).symm
 
 noncomputable instance dioid {M : Type*} [Carrier M] :
-    Dioid (D M) :=
+    Dioid (Dual M) :=
   { commSemiring,
-    (inferInstance : Lattice (D M)),
-    (inferInstance : OrderBot (D M)) with
+    (inferInstance : Lattice (Dual M)),
+    (inferInstance : OrderBot (Dual M)) with
     add_eq_sup := add_eq_sup' }
 
-end D
+end Dual
 ```
 
 # The complete dioid carrier
@@ -329,33 +329,33 @@ theorem add_iInf' {M : Type*} [CompleteCarrier M]
 end CompleteCarrier
 ```
 
-Transporting the bounded supremum on `D M` through the order dual turns
+Transporting the bounded supremum on `Dual M` through the order dual turns
 it into the numeric bounded infimum:
 
 ```lean
-namespace D
+namespace Dual
 
 theorem toDual_sSup_bdd {M : Type*} [CompleteLattice M]
-    (s : Set (D M)) :
-    (sSup s).toDual = ⨅ a ∈ s, (a : D M).toDual := by
+    (s : Set (Dual M)) :
+    (sSup s).toDual = ⨅ a ∈ s, (a : Dual M).toDual := by
   show (toDualEquiv.symm
       (⨆ a ∈ s, toDualEquiv a)).toDual = _
   rfl
 
 theorem toDual_iSup_eq {M : Type*} [CompleteLattice M]
-    {ι : Sort*} (g : ι → D M) :
+    {ι : Sort*} (g : ι → Dual M) :
     (⨆ i, g i).toDual = ⨅ i, (g i).toDual := by
   rw [iSup, toDual_sSup_bdd, iInf_range]
 
 theorem toDual_sSup_eq {M : Type*} [CompleteLattice M]
-    (s : Set (D M)) :
-    (sSup s).toDual = ⨅ b : s, (b : D M).toDual := by
+    (s : Set (Dual M)) :
+    (sSup s).toDual = ⨅ b : s, (b : Dual M).toDual := by
   rw [toDual_sSup_bdd, iInf_subtype]
 
 theorem toDual_biSup_eq {M : Type*} [CompleteLattice M]
-    (s : Set (D M)) (f : D M → D M) :
+    (s : Set (Dual M)) (f : Dual M → Dual M) :
     (⨆ b ∈ s, f b).toDual
-      = ⨅ b : s, (f (b : D M)).toDual := by
+      = ⨅ b : s, (f (b : Dual M)).toDual := by
   rw [iSup_subtype']; exact toDual_iSup_eq _
 ```
 
@@ -367,9 +367,9 @@ guiding unification:
 ```lean
 noncomputable instance completeDioid
     {M : Type*} [CompleteCarrier M] :
-    CompleteDioid (D M) :=
+    CompleteDioid (Dual M) :=
   { dioid,
-    (inferInstance : CompleteLattice (D M)) with
+    (inferInstance : CompleteLattice (Dual M)) with
     mul_sSup := fun a s => toDual_injective (by
       show a.toDual + (sSup s).toDual
          = (⨆ b ∈ s, a * b).toDual
@@ -377,7 +377,7 @@ noncomputable instance completeDioid
         CompleteCarrier.add_iInf']
       rfl) }
 
-end D
+end Dual
 
 end MinPlus
 ```
@@ -396,7 +396,7 @@ noncomputable instance : MinPlus.Carrier (WithTop ℝ) where
 reversed order, with $`\oplus = \min`, $`\mathbf{0} = +\infty = \bot`, $`\otimes = {+}`, $`\mathbf{1} = 0`:
 
 ```lean
-abbrev Rmin := MinPlus.D (WithTop ℝ)
+abbrev Rmin := MinPlus.Dual (WithTop ℝ)
 
 noncomputable example : Dioid Rmin := inferInstance
 ```
@@ -431,7 +431,7 @@ noncomputable instance :
     exact iInf_congr fun _ => ENNReal.add_iInf
 
 open scoped ENNReal in
-abbrev RplusMin := MinPlus.D ℝ≥0∞
+abbrev RplusMin := MinPlus.Dual ℝ≥0∞
 
 noncomputable example :
     CompleteDioid RplusMin := inferInstance
@@ -548,7 +548,7 @@ noncomputable instance :
     rw [sInf_eq_iInf, Rbar.add_iInf]
     exact iInf_congr fun _ => Rbar.add_iInf _ _
 
-abbrev RbarMin := MinPlus.D Rbar
+abbrev RbarMin := MinPlus.Dual Rbar
 ```
 
 $`\overline{R}_{\min}` is therefore a complete commutative dioid with zero

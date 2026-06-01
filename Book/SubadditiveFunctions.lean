@@ -59,7 +59,7 @@ read in the natural order, _not_ the dioid sum $`\wedge`. We name it
 ```lean
 /-- Pointwise numeric sum `(f + g)(t) = f(t) + g(t)`. -/
 noncomputable def padd (f g : F) : F :=
-  fun t => MinPlus.D.ofDual ((f t).toDual + (g t).toDual)
+  fun t => MinPlus.Dual.ofDual ((f t).toDual + (g t).toDual)
 ```
 
 The pointwise numeric sum of two sub-additive functions is again
@@ -115,7 +115,7 @@ $`f(s) \otimes f(t) \preceq f(s+t)`.
 theorem subadditive_mul_le {f : F}
     (hf : IsSubadditive f) (s t : ℝ≥0) :
     f s * f t ≤ f (s + t) :=
-  (MinPlus.D.le_def _ _).mpr (hf s t)
+  (MinPlus.Dual.le_def _ _).mpr (hf s t)
 ```
 
 The single-pair bound: for decompositions $`s = u + v` and
@@ -161,7 +161,7 @@ theorem conv_mul_conv_le {f g : F}
 ```
 
 Converting the dioid inequality back to the natural order — through
-`MinPlus.D.le_def` and the identity
+`MinPlus.Dual.le_def` and the identity
 $`(a \otimes b).\mathtt{toDual} = a.\mathtt{toDual} + b.\mathtt{toDual}`
 — yields sub-additivity of the convolution.
 
@@ -170,7 +170,7 @@ theorem conv_subadditive {f g : F}
     (hf : IsSubadditive f) (hg : IsSubadditive g) :
     IsSubadditive (f ∗ g) := by
   intro s t
-  exact (MinPlus.D.le_def _ _).mp
+  exact (MinPlus.Dual.le_def _ _).mp
     (conv_mul_conv_le hf hg s t)
 ```
 

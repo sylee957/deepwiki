@@ -72,7 +72,7 @@ private theorem conv_apply_nonneg {f g : FunDioid}
     (hf : IsNonneg f) (hg : IsNonneg g) (t : ℝ≥0) :
     (0 : Rbar) ≤ ((f.toFun ∗ g.toFun) t).toDual :=
   conv_le f.toFun g.toFun
-    (b := MinPlus.D.ofDual (0 : Rbar))
+    (b := MinPlus.Dual.ofDual (0 : Rbar))
     fun u s _ => by
       show (0 : Rbar)
         ≤ (f.toFun u).toDual + (g.toFun s).toDual
@@ -213,7 +213,7 @@ constant-$`0` function `const0`.
 /-- The constant function equal to numeric `0`. -/
 noncomputable def const0 : FunDioid :=
   FunDioid.ofFun
-    (fun _ => MinPlus.D.ofDual (0 : Rbar))
+    (fun _ => MinPlus.Dual.ofDual (0 : Rbar))
 
 theorem const0_isNonneg : IsNonneg const0 :=
   fun _ => le_rfl
@@ -240,7 +240,7 @@ theorem sSup_toFun_toDual (T : Set FunDioid)
   rw [toFun_sSup,
     ← iSup_subtype'' T (fun a : FunDioid => a.toFun),
     iSup_apply]
-  exact MinPlus.D.toDual_iSup_eq
+  exact MinPlus.Dual.toDual_iSup_eq
     (fun a : T => (a : FunDioid).toFun t)
 ```
 
