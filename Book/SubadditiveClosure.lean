@@ -222,8 +222,9 @@ solution of the affine fixed-point equation
 
 $$`x = a \otimes x \oplus b.`
 
-Two small order helpers make each summand a lower bound of a sum
-(recall $`\oplus = \sqcup`):
+Two small order helpers make each summand a lower bound of a sum,
+$`d \preceq c \oplus d` and $`c \preceq c \oplus d` (recall
+$`\oplus = \sqcup`):
 
 ```lean
 theorem self_le_add {α : Type*} [CompleteDioid α]

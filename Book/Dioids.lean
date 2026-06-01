@@ -109,7 +109,7 @@ theorem add_le_add_right'
     _ = b + c := by rw [h, add_idem]
 ```
 
-The left-handed form follows by commutativity:
+The left-handed form $`a \preceq b \Rightarrow c \oplus a \preceq c \oplus b` follows by commutativity:
 
 ```lean
 theorem add_le_add_left'
@@ -130,7 +130,7 @@ theorem mul_le_mul_right'
   rw [← add_mul, h]
 ```
 
-And the left form, since $`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b`:
+And the left form $`a \preceq b \Rightarrow c \otimes a \preceq c \otimes b`, since $`(c \otimes a) \oplus (c \otimes b) = c \otimes (a \oplus b) = c \otimes b`:
 
 ```lean
 theorem mul_le_mul_left'

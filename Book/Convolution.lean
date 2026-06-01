@@ -190,7 +190,8 @@ abbrev F := ℝ≥0 → RbarMin
 ```
 
 The $`0 \le s \le t` form re-indexes the convolution via
-truncated subtraction on `ℝ≥0`:
+truncated subtraction on `ℝ≥0`, giving
+$$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s):`
 
 ```lean
 theorem conv_eq_sub (f g : F) (t : ℝ≥0) :
@@ -256,7 +257,8 @@ Equipping $`\mathcal{F}` with the pointwise minimum $`\oplus = \wedge` and
 the convolution $`\otimes = \ast` gives a _complete commutative dioid_. The
 single piece of completeness content is lower semi-continuity of
 $`\ast`: convolution distributes over an arbitrary _pointwise_ supremum
-of functions in $`\mathcal{F}`.
+of functions in $`\mathcal{F}`, that is
+$$`f \ast \bigsqcup_i g_i = \bigsqcup_i (f \ast g_i).`
 
 ```lean
 theorem conv_iSup {ι : Sort*} (f : F) (g : ι → F) :

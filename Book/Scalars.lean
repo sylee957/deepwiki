@@ -49,7 +49,7 @@ class Carrier (M : Type*) extends
     ∀ {a b : M}, a ≤ b → ∀ c : M, c + a ≤ c + b
 ```
 
-The two derived monotonicity facts:
+The two derived monotonicity facts — $`\top` is also absorbing on the left, $`\top + a = \top`, and addition is monotone on the right, $`a \le b \Rightarrow a + c \le b + c`:
 
 ```lean
 namespace Carrier
@@ -309,7 +309,7 @@ end Dual
 `MinPlus.CompleteCarrier` adds a complete order and lower
 semi-continuity of $`+`: addition distributes over arbitrary numeric
 infima (`add_sInf'`). The field is phrased over a `Set M` so the class
-stays in `M`'s single universe; the indexed `add_iInf'` form is derived.
+stays in `M`'s single universe; the indexed form $`a + \bigwedge_i f(i) = \bigwedge_i (a + f(i))` (`add_iInf'`) is derived.
 
 ```lean
 class CompleteCarrier (M : Type*) extends
@@ -453,6 +453,8 @@ outer $`\top = +\infty` is the dioid zero $`\varepsilon`, the inner $`\bot = -\i
 the dioid top, and $`\otimes` is the `WithTop`/`WithBot` addition. This is
 _not_ Mathlib's `EReal`, whose opposite convention $`(+\infty) + (-\infty) = -\infty`
 would make $`\varepsilon` non-absorbing and break the dioid.
+
+The shift order-isomorphism `shift r` translates by a fixed real $`r`, and `shift_eq` identifies it with left addition, $`\mathtt{shift}\,r\,(x) = r + x`:
 
 ```lean
 abbrev Rbar := WithTop (WithBot ℝ)

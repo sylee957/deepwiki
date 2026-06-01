@@ -207,7 +207,12 @@ A consequence of the stability results and completeness of
 $`R^+_{\min}` is that $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are
 complete dioids. The top element differs from the ambient `FunDioid` top
 $`\top : t \mapsto -\infty` (which is not non-negative): it is the
-constant-$`0` function `const0`.
+constant-$`0` function `const0`. It is itself non-negative and
+non-decreasing (`const0_isNonneg`, `const0_isNondecr`), and being
+non-negative is exactly lying below it in the dioid order,
+$`\mathtt{IsNonneg}(f) \iff f \preceq \mathtt{const0}`, so that
+$`\mathcal{F}^+ = \{\, f \mid f \preceq \mathtt{const0} \,\}` is the
+order-interval below `const0` (`isNonneg_iff_le_const0`, `Fplus_eq_Iic`):
 
 ```lean
 /-- The constant function equal to numeric `0`. -/
