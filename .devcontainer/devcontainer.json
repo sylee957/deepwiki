@@ -1,0 +1,25 @@
+{
+  "name": "Lean 4 + Mathlib",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "leanprover.lean4"
+      ],
+      "settings": {
+        "lean4.toolchainPath": "/home/vscode/.elan"
+      }
+    }
+  },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.elan/bin:${containerEnv:PATH}"
+  },
+  "remoteUser": "vscode",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb"
+  },
+  "postCreateCommand": "elan toolchain install $(cat lean-toolchain) && lake exe cache get && lake build"
+}
