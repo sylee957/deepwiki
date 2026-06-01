@@ -6,7 +6,8 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "leanprover.lean4"
+        "leanprover.lean4",
+        "anthropic.claude-code"
       ],
       "settings": {
         "lean4.toolchainPath": "/home/vscode/.elan"
@@ -17,9 +18,12 @@
     "PATH": "/home/vscode/.elan/bin:${containerEnv:PATH}"
   },
   "remoteUser": "vscode",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ],
   "hostRequirements": {
     "cpus": 4,
-    "memory": "8gb"
+    "memory": "6gb"
   },
   "postCreateCommand": "elan toolchain install $(cat lean-toolchain) && lake exe cache get && lake build"
 }
