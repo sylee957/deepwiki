@@ -19,190 +19,129 @@ open scoped Computability
 -- `add_eq_sup : a + b = a ⊔ b`
 ```
 
-# A dioid as a layered class over Mathlib
-We present the dioid as the classical layered hierarchy — a monoid, then
-a commutative idempotent monoid, then a semi-ring, then a dioid — but we
-build each layer by _forgetful inheritance_: our class `extends` the
-corresponding Mathlib class and adds only its genuinely new content.
-This is the idiomatic way to relate a richer notion to a poorer one in
-Mathlib (a bridge `instance` the other way would risk order/algebra
-_diamonds_, which the library specifically warns against).
+# A dioid, defined from scratch
+We build the dioid bottom-up from its own operations and axioms — a
+monoid, then a commutative idempotent monoid, then a semi-ring, then a
+dioid. This is a _self-contained_ presentation of the algebra: the
+operations are genuinely ours and the axioms are stated explicitly,
+independent of Mathlib's hierarchy.
 
-In Lean code we write the dioid sum $`\oplus` as `⊕`, the product
-$`\otimes` as `⊗`, the additive neutral $`\mathbf{0}` as `ε`, and the
-multiplicative neutral $`\mathbf{1}` as `e`. Because we inherit, these
-are exactly Mathlib's `+`, `*`, `0`, `1`.
-
-The notations are _scoped_ (under `DioidNotation`) so they stay confined
-to this chapter; `⊕` (which Lean otherwise reads as the disjoint-union
-type `Sum`) is given high priority so the elaborator prefers the dioid
-reading, and a nested `a ⊕ b` in an equation is ascribed `: D` where no
-`⊗` is present to fix its type. The whole tower lives in the `Algebra`
-sub-namespace so the class names do not shadow Mathlib's.
+The two operations live in their own carrier classes — `Oplus` carrying
+the sum $`\oplus` and its neutral $`\varepsilon`, `Otimes` carrying the
+product $`\otimes` and its unit $`e` — so a single type can host both.
+For readability we attach the lightweight _local_ infixes `+ₒ` and `*ₒ`
+to those operations (free symbols, so no clash and no special handling);
+they are confined to this section.
 
 ```lean
 namespace Algebra
 
-namespace DioidNotation
-scoped infixl:65 (priority := high) " ⊕ " => HAdd.hAdd
-scoped notation "ε" => (0 : _)
-scoped infixl:70 " ⊗ " => HMul.hMul
-scoped notation "e" => (1 : _)
-end DioidNotation
+/-- The dioid sum and its neutral. -/
+class Oplus (D : Type*) where
+  /-- The dioid sum `⊕`. -/
+  oplus : D → D → D
+  /-- The dioid zero `ε`. -/
+  eps : D
 
-open scoped DioidNotation
+/-- The dioid product and its neutral. -/
+class Otimes (D : Type*) where
+  /-- The dioid product `⊗`. -/
+  otimes : D → D → D
+  /-- The dioid unit `e`. -/
+  one : D
+
+section
+local infixl:65 " +ₒ " => Oplus.oplus
+local infixl:70 " *ₒ " => Otimes.otimes
 ```
 
-A _monoid_ $`(D, \oplus, \varepsilon)` and its _commutative_ variant are
-Mathlib's `AddMonoid`/`AddCommMonoid` seen through the dioid notation;
-the _idempotent_ commutative monoid adds the one new axiom
-$`a \oplus a = a`.
+A _monoid_ $`(D, \oplus, \varepsilon)`: $`\oplus` associative with a
+two-sided neutral. Its commutative and idempotent variants add
+$`a \oplus b = b \oplus a` and $`a \oplus a = a`.
 
 ```lean
-/-- `(D, ⊕, ε)` is a monoid. -/
-class SumMonoid (D : Type*) extends AddMonoid D
+/-- `(D, ⊕)` is a monoid with neutral `ε`. -/
+class SumMonoid (D : Type*) extends Oplus D where
+  oplus_assoc : ∀ a b c : D, (a +ₒ b) +ₒ c = a +ₒ (b +ₒ c)
+  eps_oplus : ∀ a : D, Oplus.eps +ₒ a = a
+  oplus_eps : ∀ a : D, a +ₒ Oplus.eps = a
 
 /-- `(D, ⊕)` is a commutative monoid. -/
-class SumCommMonoid (D : Type*) extends AddCommMonoid D
+class SumCommMonoid (D : Type*) extends SumMonoid D where
+  oplus_comm : ∀ a b : D, a +ₒ b = b +ₒ a
 
 /-- `(D, ⊕)` is an idempotent commutative monoid. -/
 class SumIdemCommMonoid (D : Type*) extends
-    AddCommMonoid D where
-  oplus_idem : ∀ a : D, (a ⊕ a : D) = a
+    SumCommMonoid D where
+  oplus_idem : ∀ a : D, a +ₒ a = a
 ```
 
-Inheritance hides the axioms, so we restate each as a named theorem —
-its proof exhibits it as the inherited Mathlib law. The additive monoid
-requires associativity of $`\oplus` and a two-sided neutral $`\varepsilon`;
-the commutative monoid adds $`a \oplus b = b \oplus a`.
+The multiplicative monoid $`(D, \otimes, e)`:
 
 ```lean
-namespace SumMonoid
-variable {D : Type*} [SumMonoid D]
-
-theorem oplus_assoc (a b c : D) :
-    ((a ⊕ b) ⊕ c : D) = a ⊕ (b ⊕ c) := add_assoc a b c
-theorem eps_oplus (a : D) : (ε ⊕ a : D) = a := zero_add a
-theorem oplus_eps (a : D) : (a ⊕ ε : D) = a := add_zero a
-
-end SumMonoid
-
-namespace SumCommMonoid
-variable {D : Type*} [SumCommMonoid D]
-
-theorem oplus_comm (a b : D) : (a ⊕ b : D) = b ⊕ a :=
-  add_comm a b
-
-end SumCommMonoid
+/-- `(D, ⊗)` is a monoid with neutral `e`. -/
+class MulMonoid (D : Type*) extends Otimes D where
+  otimes_assoc :
+    ∀ a b c : D, (a *ₒ b) *ₒ c = a *ₒ (b *ₒ c)
+  one_otimes : ∀ a : D, Otimes.one *ₒ a = a
+  otimes_one : ∀ a : D, a *ₒ Otimes.one = a
 ```
 
-The multiplicative monoid $`(D, \otimes, e)` is Mathlib's `Monoid`; its
-axioms are associativity of $`\otimes` and a two-sided neutral $`e`.
+A _semi-ring_ $`(D, \oplus, \otimes)`: an idempotent commutative additive
+monoid and a multiplicative monoid, with $`\otimes` distributing over
+$`\oplus` on both sides and $`\varepsilon` absorbing for $`\otimes`. A
+_dioid_ adds commutativity of $`\otimes`.
 
 ```lean
-/-- `(D, ⊗, e)` is a monoid. -/
-class MulMonoid (D : Type*) extends Monoid D
+/-- A semi-ring: distributive, with `ε` absorbing. -/
+class Semiring (D : Type*) extends
+    SumIdemCommMonoid D, MulMonoid D where
+  left_distrib :
+    ∀ a b c : D, a *ₒ (b +ₒ c) = a *ₒ b +ₒ a *ₒ c
+  right_distrib :
+    ∀ a b c : D, (a +ₒ b) *ₒ c = a *ₒ c +ₒ b *ₒ c
+  eps_otimes : ∀ a : D, Oplus.eps *ₒ a = Oplus.eps
+  otimes_eps : ∀ a : D, a *ₒ Oplus.eps = Oplus.eps
 
-namespace MulMonoid
-variable {D : Type*} [MulMonoid D]
-
-theorem otimes_assoc (a b c : D) :
-    a ⊗ b ⊗ c = a ⊗ (b ⊗ c) := mul_assoc a b c
-theorem one_otimes (a : D) : e ⊗ a = a := one_mul a
-theorem otimes_one (a : D) : a ⊗ e = a := mul_one a
-
-end MulMonoid
-```
-
-A _semi-ring_ $`(D, \oplus, \otimes)` is a commutative semiring with
-idempotent addition — distributivity and the absorbing $`\varepsilon`
-come from Mathlib's `CommSemiring`; we add only idempotency. A _dioid_
-is then exactly an _idempotent commutative semiring_, which Mathlib has
-as `IdemCommSemiring` (it also bundles the canonical order, derived from
-idempotency). So our `Dioid` simply extends it.
-
-```lean
-/-- A semi-ring: commutative semiring, idempotent `⊕`. -/
-class Semiring (D : Type*) extends CommSemiring D where
-  oplus_idem : ∀ a : D, (a ⊕ a : D) = a
-
-/-- A dioid: an idempotent commutative semiring. -/
-class Dioid (D : Type*) extends IdemCommSemiring D
-```
-
-The semi-ring axioms beyond the two monoids are the two distributivity
-laws and the absorbing $`\varepsilon`; the dioid adds commutativity of
-$`\otimes` and inherits additive idempotency. Again each is restated as a
-theorem.
-
-```lean
-namespace Semiring
-variable {D : Type*} [Semiring D]
-
-theorem otimes_oplus (a b c : D) :
-    a ⊗ (b ⊕ c) = a ⊗ b ⊕ a ⊗ c := mul_add a b c
-theorem oplus_otimes (a b c : D) :
-    (a ⊕ b) ⊗ c = a ⊗ c ⊕ b ⊗ c := add_mul a b c
-theorem eps_otimes (a : D) : (ε ⊗ a : D) = ε := zero_mul a
-theorem otimes_eps (a : D) : (a ⊗ ε : D) = ε := mul_zero a
-
-end Semiring
-
-namespace Dioid
-variable {D : Type*} [Dioid D]
-
-theorem otimes_comm (a b : D) : a ⊗ b = b ⊗ a :=
-  mul_comm a b
-theorem oplus_idem (a : D) : (a ⊕ a : D) = a := add_idem a
-
-end Dioid
-```
-
-Because each layer inherits from Mathlib, a `Dioid` _is_ a Mathlib
-`IdemCommSemiring` (and hence a `CommSemiring`) automatically, with no
-manual bridge — the linkage is the inheritance itself.
-
-```lean
-instance instIdemCommSemiring (D : Type*) [Dioid D] :
-    IdemCommSemiring D :=
-  ‹Dioid D›.toIdemCommSemiring
-
-instance instCommSemiring (D : Type*) [Semiring D] :
-    CommSemiring D :=
-  ‹Semiring D›.toCommSemiring
+/-- A dioid: a semi-ring with commutative product. -/
+class Dioid (D : Type*) extends Semiring D where
+  otimes_comm : ∀ a b : D, a *ₒ b = b *ₒ a
 ```
 
 The combined distributivity gives the quaternary form
-$`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`,
-now a direct consequence of Mathlib's ring lemmas:
+$`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`:
 
 ```lean
-theorem quaternary_distrib {D : Type*} [Dioid D]
+theorem quaternary_distrib {D : Type*} [Semiring D]
     (a b c d : D) :
-    (a ⊕ b) ⊗ (c ⊕ d)
-      = (a ⊗ c) ⊕ (b ⊗ c) ⊕ (a ⊗ d) ⊕ (b ⊗ d) := by
-  rw [mul_add, add_mul, add_mul]
-  ac_rfl
-```
+    (a +ₒ b) *ₒ (c +ₒ d)
+      = a *ₒ c +ₒ b *ₒ c +ₒ a *ₒ d +ₒ b *ₒ d := by
+  set p := a *ₒ c; set q := b *ₒ c
+  set r := a *ₒ d; set s := b *ₒ d
+  have hexp :
+      (a +ₒ b) *ₒ (c +ₒ d) = (p +ₒ r) +ₒ (q +ₒ s) := by
+    rw [Semiring.right_distrib, Semiring.left_distrib,
+      Semiring.left_distrib]
+  rw [hexp, SumMonoid.oplus_assoc p q r,
+    SumMonoid.oplus_assoc p (q +ₒ r) s,
+    SumMonoid.oplus_assoc p r (q +ₒ s)]
+  congr 1
+  rw [SumCommMonoid.oplus_comm q r,
+    SumMonoid.oplus_assoc r q s]
 
-The canonical order is bundled in the inherited `IdemCommSemiring`, so a
-dioid is already an ordered structure; `OrderedDioid` is kept as a name
-for it.
-
-```lean
-/-- A dioid is already ordered (order inherited). -/
-abbrev OrderedDioid (D : Type*) := Dioid D
+end
 
 end Algebra
 ```
 
 # The Mathlib interface `IdemDioid`
-Downstream, we work through Mathlib's `IdemCommSemiring`, which is
-exactly an idempotent commutative semiring whose order is _defined_ by
-$`a \le b \iff a + b = b`, with $`a + b = a \sqcup b`. Our `OrderedDioid`
-bridges to it, so a dioid is — once linked — precisely an
-`IdemCommSemiring`. We name that interface `IdemDioid`; the carriers of
-later chapters target it.
+The tower above defines the dioid axioms in their own right. For the
+formal development of the rest of the book we work through Mathlib's
+`IdemCommSemiring`, which _is_ an idempotent commutative semiring — the
+same notion — but comes with the order theory, lattice structure, and
+lemma library already in place: its order is _defined_ by
+$`a \le b \iff a + b = b`, with $`a + b = a \sqcup b`. We name that
+interface `IdemDioid`; the carriers of later chapters target it.
 
 ```lean
 abbrev IdemDioid (α : Type*) := IdemCommSemiring α
