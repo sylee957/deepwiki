@@ -41,7 +41,13 @@ sum notation is given high priority so the elaborator prefers it over
 `⊗` to fix its type, the left-hand side is ascribed `: D` to keep the
 elaborator from drifting toward the `Sum` reading.
 
+The whole tower lives in the `Algebra` sub-namespace, so our class names
+(`AddMonoid`, `Semiring`, `Dioid`, …) do not shadow Mathlib's identically
+named classes elsewhere in the development.
+
 ```lean
+namespace Algebra
+
 /-- The additive operator `⊕` and its neutral `ε`. -/
 class OplusNeutral (D : Type*) where
   /-- The dioid sum. -/
@@ -72,7 +78,7 @@ two-sided neutral $`\varepsilon`.
 
 ```lean
 /-- `(D, ⊕)` is a monoid with neutral `ε`. -/
-class AddMonoidT (D : Type*) extends OplusNeutral D where
+class AddMonoid (D : Type*) extends OplusNeutral D where
   oplus_assoc :
     ∀ a b c : D, ((a ⊕ b) ⊕ c : D) = a ⊕ (b ⊕ c)
   eps_oplus : ∀ a : D, (ε ⊕ a : D) = a
@@ -84,12 +90,12 @@ A _commutative_ monoid, then an _idempotent_ one
 
 ```lean
 /-- `(D, ⊕)` is a commutative monoid. -/
-class AddCommMonoidT (D : Type*) extends AddMonoidT D where
+class AddCommMonoid (D : Type*) extends AddMonoid D where
   oplus_comm : ∀ a b : D, (a ⊕ b : D) = b ⊕ a
 
 /-- `(D, ⊕)` is an idempotent commutative monoid. -/
-class AddIdemCommMonoidT (D : Type*) extends
-    AddCommMonoidT D where
+class AddIdemCommMonoid (D : Type*) extends
+    AddCommMonoid D where
   oplus_idem : ∀ a : D, (a ⊕ a : D) = a
 ```
 
@@ -97,7 +103,7 @@ The multiplicative monoid $`(D, \otimes, e)`:
 
 ```lean
 /-- `(D, ⊗)` is a monoid with neutral `e`. -/
-class MulMonoidT (D : Type*) extends OtimesNeutral D where
+class MulMonoid (D : Type*) extends OtimesNeutral D where
   otimes_assoc : ∀ a b c : D, (a ⊗ b) ⊗ c = a ⊗ (b ⊗ c)
   one_otimes : ∀ a : D, e ⊗ a = a
   otimes_one : ∀ a : D, a ⊗ e = a
@@ -110,8 +116,8 @@ _dioid_ adds commutativity of $`\otimes`.
 
 ```lean
 /-- A semi-ring: distributive, with `ε` absorbing. -/
-class SemiringT (D : Type*) extends
-    AddIdemCommMonoidT D, MulMonoidT D where
+class Semiring (D : Type*) extends
+    AddIdemCommMonoid D, MulMonoid D where
   left_distrib :
     ∀ a b c : D, a ⊗ (b ⊕ c) = (a ⊗ b) ⊕ (a ⊗ c)
   right_distrib :
@@ -120,7 +126,7 @@ class SemiringT (D : Type*) extends
   otimes_eps : ∀ a : D, a ⊗ ε = ε
 
 /-- A dioid: a semi-ring with commutative product. -/
-class DioidT (D : Type*) extends SemiringT D where
+class Dioid (D : Type*) extends Semiring D where
   otimes_comm : ∀ a b : D, a ⊗ b = b ⊗ a
 ```
 
@@ -128,26 +134,26 @@ The combined distributivity over a binary sum on each side gives the
 quaternary form $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`:
 
 ```lean
-theorem quaternary_distrib {D : Type*} [SemiringT D]
+theorem quaternary_distrib {D : Type*} [Semiring D]
     (a b c d : D) :
     (a ⊕ b) ⊗ (c ⊕ d)
       = (a ⊗ c) ⊕ (b ⊗ c) ⊕ (a ⊗ d) ⊕ (b ⊗ d) := by
   set p := a ⊗ c; set q := b ⊗ c
   set r := a ⊗ d; set s := b ⊗ d
   have hexp : (a ⊕ b) ⊗ (c ⊕ d) = (p ⊕ r) ⊕ (q ⊕ s) := by
-    rw [SemiringT.right_distrib, SemiringT.left_distrib,
-      SemiringT.left_distrib]
-  rw [hexp, AddMonoidT.oplus_assoc p q r,
-    AddMonoidT.oplus_assoc p (q ⊕ r) s,
-    AddMonoidT.oplus_assoc p r (q ⊕ s)]
+    rw [Semiring.right_distrib, Semiring.left_distrib,
+      Semiring.left_distrib]
+  rw [hexp, AddMonoid.oplus_assoc p q r,
+    AddMonoid.oplus_assoc p (q ⊕ r) s,
+    AddMonoid.oplus_assoc p r (q ⊕ s)]
   congr 1
-  rw [AddCommMonoidT.oplus_comm q r,
-    AddMonoidT.oplus_assoc r q s]
+  rw [AddCommMonoid.oplus_comm q r,
+    AddMonoid.oplus_assoc r q s]
 ```
 
 # Linking to Mathlib
-We now connect our `DioidT` to Mathlib. First, the pure-algebra bridge:
-a `DioidT` is a Mathlib `CommSemiring`, mapping
+We now connect our `Dioid` to Mathlib. First, the pure-algebra bridge:
+a `Dioid` is a Mathlib `CommSemiring`, mapping
 $`\oplus \mapsto {+}`, $`\otimes \mapsto {*}`, $`\varepsilon \mapsto 0`,
 $`e \mapsto 1`. The scalar action `n • a` is given in closed form so it
 needs no pre-existing `Add`/`Zero` instance during assembly.
@@ -158,28 +164,28 @@ def nsmulT {D : Type*} [OplusNeutral D] : ℕ → D → D
   | 0, _ => ε
   | (n + 1), a => nsmulT n a ⊕ a
 
-/-- A `DioidT` is a Mathlib `CommSemiring`. -/
-@[reducible] def DioidT.toCommSemiring (D : Type*)
-    [DioidT D] : CommSemiring D where
+/-- A `Dioid` is a Mathlib `CommSemiring`. -/
+@[reducible] def Dioid.toCommSemiring (D : Type*)
+    [Dioid D] : CommSemiring D where
   add := OplusNeutral.oplus
-  add_assoc := AddMonoidT.oplus_assoc
+  add_assoc := AddMonoid.oplus_assoc
   zero := OplusNeutral.eps
-  zero_add := AddMonoidT.eps_oplus
-  add_zero := AddMonoidT.oplus_eps
-  add_comm := AddCommMonoidT.oplus_comm
+  zero_add := AddMonoid.eps_oplus
+  add_zero := AddMonoid.oplus_eps
+  add_comm := AddCommMonoid.oplus_comm
   nsmul := nsmulT
   nsmul_zero _ := rfl
   nsmul_succ _ _ := rfl
   mul := OtimesNeutral.otimes
-  mul_assoc := MulMonoidT.otimes_assoc
+  mul_assoc := MulMonoid.otimes_assoc
   one := OtimesNeutral.one
-  one_mul := MulMonoidT.one_otimes
-  mul_one := MulMonoidT.otimes_one
-  mul_comm := DioidT.otimes_comm
-  left_distrib := SemiringT.left_distrib
-  right_distrib := SemiringT.right_distrib
-  zero_mul := SemiringT.eps_otimes
-  mul_zero := SemiringT.otimes_eps
+  one_mul := MulMonoid.one_otimes
+  mul_one := MulMonoid.otimes_one
+  mul_comm := Dioid.otimes_comm
+  left_distrib := Semiring.left_distrib
+  right_distrib := Semiring.right_distrib
+  zero_mul := Semiring.eps_otimes
+  mul_zero := Semiring.otimes_eps
 ```
 
 A dioid's _canonical order_ is $`a \preceq b :\Leftrightarrow a \oplus b = b`. The carriers of later chapters need a _specific_ order
@@ -193,7 +199,7 @@ introduced.
 ```lean
 /-- A dioid carrying its canonical order as data. -/
 class OrderedDioid (D : Type*) extends
-    DioidT D, Lattice D, OrderBot D where
+    Dioid D, Lattice D, OrderBot D where
   add_eq_sup : ∀ a b : D, (a ⊕ b : D) = a ⊔ b
 
 /-- The Mathlib `IdemCommSemiring` of an `OrderedDioid`,
@@ -201,28 +207,30 @@ supplied with the carried order (not a derived one). -/
 @[reducible]
 noncomputable def OrderedDioid.toIdemCommSemiring
     (D : Type*) [OrderedDioid D] : IdemCommSemiring D :=
-  { DioidT.toCommSemiring D,
+  { Dioid.toCommSemiring D,
     (inferInstance : Lattice D),
     (inferInstance : OrderBot D) with
     add_eq_sup := OrderedDioid.add_eq_sup }
+
+end Algebra
 ```
 
-# The dioid
+# The Mathlib interface `IdemDioid`
 Downstream, we work through Mathlib's `IdemCommSemiring`, which is
 exactly an idempotent commutative semiring whose order is _defined_ by
 $`a \le b \iff a + b = b`, with $`a + b = a \sqcup b`. Our `OrderedDioid`
 bridges to it, so a dioid is — once linked — precisely an
-`IdemCommSemiring`, and the carriers of later chapters target this
-interface.
+`IdemCommSemiring`. We name that interface `IdemDioid`; the carriers of
+later chapters target it.
 
 ```lean
-abbrev Dioid (α : Type*) := IdemCommSemiring α
+abbrev IdemDioid (α : Type*) := IdemCommSemiring α
 ```
 
 The notation maps to Lean as $`\oplus = {+}`, $`\otimes = {*}`, $`\mathbf{0} = 0`,
 $`\mathbf{1} = 1`, and the canonical order $`\preceq` as $`\le`.
 
-We can build a dioid from the algebra alone: given a commutative
+We can build the interface from the algebra alone: given a commutative
 semiring whose sum is idempotent, this manufactures the entire
 structure with the order _derived_, not supplied, via Mathlib's
 `IdemSemiring.ofSemiring`. An instance constructed this way _cannot_
@@ -230,23 +238,30 @@ invent an unrelated order: $`\preceq`, $`\sqcup`, $`\bot` are forced to be
 $`a \oplus b = b`, $`\oplus`, $`\mathbf{0}`.
 
 ```lean
-namespace Dioid
+namespace IdemDioid
 
 abbrev ofCommSemiring {α : Type*} [CommSemiring α]
-    (add_idem : ∀ a : α, a + a = a) : Dioid α :=
+    (add_idem : ∀ a : α, a + a = a) : IdemDioid α :=
   { IdemSemiring.ofSemiring add_idem with
     mul_comm := mul_comm }
+
+end IdemDioid
 ```
 
 # The canonical order
 Idempotency of $`\oplus` induces the _canonical order_ $`a \preceq b \;:\Leftrightarrow\; a \oplus b = b`.
-The order is _derived_ from the algebra, not supplied independently:
+The order is _derived_ from the algebra, not supplied independently. The
+order/isotony lemmas below are collected in the `Dioid` namespace (so
+later chapters reach them as `Dioid.mul_le_mul_right'`, etc.) and are
+stated for the `IdemDioid` interface.
 
 *Theorem:* $`a \preceq b \iff a \oplus b = b`
 
 ```lean
+namespace Dioid
+
 theorem le_iff_add_eq_right
-    {α : Type*} [Dioid α] {a b : α} :
+    {α : Type*} [IdemDioid α] {a b : α} :
     a ≤ b ↔ a + b = b :=
   add_eq_right_iff_le.symm
 ```
@@ -261,7 +276,7 @@ _Reflexivity_, from idempotency $`a \oplus a = a`:
 *Theorem:* $`a \preceq a`
 
 ```lean
-theorem le_refl' {α : Type*} [Dioid α] (a : α) :
+theorem le_refl' {α : Type*} [IdemDioid α] (a : α) :
     a ≤ a :=
   le_iff_add_eq_right.mpr (add_idem a)
 ```
@@ -272,7 +287,7 @@ $$`a \oplus c = a \oplus (b \oplus c) = (a \oplus b) \oplus c = b \oplus c = c`
 *Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c`
 
 ```lean
-theorem le_trans' {α : Type*} [Dioid α] {a b c : α}
+theorem le_trans' {α : Type*} [IdemDioid α] {a b c : α}
     (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
   rw [le_iff_add_eq_right] at hab hbc ⊢
   calc a + c = a + (b + c) := by rw [hbc]
@@ -286,7 +301,7 @@ _Antisymmetry_: if $`a \preceq b` and $`b \preceq a` then $`a \oplus b = a = b`.
 *Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b`
 
 ```lean
-theorem le_antisymm' {α : Type*} [Dioid α] {a b : α}
+theorem le_antisymm' {α : Type*} [IdemDioid α] {a b : α}
     (hab : a ≤ b) (hba : b ≤ a) : a = b := by
   rw [le_iff_add_eq_right] at hab hba
   rw [← hab, add_comm, hba]
@@ -299,7 +314,7 @@ $`(a \oplus c) \oplus (b \oplus c) = (a \oplus b) \oplus (c \oplus c) = b \oplus
 
 ```lean
 theorem add_le_add_right'
-    {α : Type*} [Dioid α] {a b : α}
+    {α : Type*} [IdemDioid α] {a b : α}
     (h : a ≤ b) (c : α) : a + c ≤ b + c := by
   rw [le_iff_add_eq_right] at h ⊢
   calc (a + c) + (b + c)
@@ -313,7 +328,7 @@ The left-handed form follows by commutativity:
 
 ```lean
 theorem add_le_add_left'
-    {α : Type*} [Dioid α] {a b : α}
+    {α : Type*} [IdemDioid α] {a b : α}
     (h : a ≤ b) (c : α) : c + a ≤ c + b := by
   rw [add_comm c, add_comm c]
   exact add_le_add_right' h c
@@ -326,7 +341,7 @@ $`(a \otimes c) \oplus (b \otimes c) = (a \oplus b) \otimes c = b \otimes c`.
 
 ```lean
 theorem mul_le_mul_right'
-    {α : Type*} [Dioid α] {a b : α}
+    {α : Type*} [IdemDioid α] {a b : α}
     (h : a ≤ b) (c : α) : a * c ≤ b * c := by
   rw [le_iff_add_eq_right] at h ⊢
   rw [← add_mul, h]
@@ -338,7 +353,7 @@ And the left form, by commutativity:
 
 ```lean
 theorem mul_le_mul_left'
-    {α : Type*} [Dioid α] {a b : α}
+    {α : Type*} [IdemDioid α] {a b : α}
     (h : a ≤ b) (c : α) : c * a ≤ c * b := by
   rw [le_iff_add_eq_right] at h ⊢
   rw [← mul_add, h]

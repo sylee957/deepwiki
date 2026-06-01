@@ -623,7 +623,7 @@ theorem add_eq_sup' (a b : FunDioid) :
 ```
 
 ```lean
-noncomputable instance dioid : Dioid FunDioid :=
+noncomputable instance dioid : IdemDioid FunDioid :=
   { commSemiring,
     (inferInstance : CompleteLattice FunDioid) with
     add_eq_sup := add_eq_sup' }

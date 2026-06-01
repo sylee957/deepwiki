@@ -362,7 +362,7 @@ theorem add_eq_sup' {M : Type*} [Carrier M]
   (sup_eq_add a b).symm
 
 noncomputable instance dioid {M : Type*} [Carrier M] :
-    Dioid (Dual M) :=
+    IdemDioid (Dual M) :=
   { commSemiring,
     (inferInstance : Lattice (Dual M)),
     (inferInstance : OrderBot (Dual M)) with
@@ -466,7 +466,7 @@ reversed order, with $`\oplus = \min`, $`\mathbf{0} = +\infty = \bot`, $`\otimes
 ```lean
 abbrev Rmin := MinPlus.Dual (WithTop ℝ)
 
-noncomputable example : Dioid Rmin := inferInstance
+noncomputable example : IdemDioid Rmin := inferInstance
 ```
 
 It is the _non-complete_ layer: an idempotent commutative semiring with
@@ -919,7 +919,7 @@ theorem add_eq_sup' {α : Type*} [CompleteDioid α]
 ```lean
 noncomputable instance instDioid {α : Type*}
     [CompleteDioid α] (S : SubCompleteDioid α) :
-    Dioid S.Sub :=
+    IdemDioid S.Sub :=
   { instCommSemiring S,
     (instCompleteLattice S : CompleteLattice S.Sub)
     with add_eq_sup := S.add_eq_sup' }
