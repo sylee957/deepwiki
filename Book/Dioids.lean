@@ -146,6 +146,115 @@ theorem quaternary_distrib {T : Type*} (R : Semiring T)
     R.oplus_assoc p r (R.oplus q s)]
   congr 1
   rw [R.oplus_comm q r, R.oplus_assoc r q s]
+```
+
+## The canonical order on a dioid
+
+Every dioid carries a _canonical order_ read off from its sum: $`a` is
+below $`b` exactly when adding $`a` to $`b` changes nothing. We write it
+`a ≼[R] b`, tagged by the dioid $`R` whose order is meant.
+
+*Definition:* $`a \preceq b \iff a \oplus b = b`
+
+```lean
+def Dioid.le {T : Type*} (R : Dioid T) (a b : T) :
+    Prop := R.oplus a b = b
+
+notation:50 a:50 " ≼[" R "] " b:51 => Dioid.le R a b
+```
+
+Reflexivity is exactly idempotency of the sum: $`a \oplus a = a`.
+
+*Theorem:* $`a \preceq a`
+
+```lean
+theorem Dioid.le_refl {T : Type*} (R : Dioid T)
+    (a : T) : a ≼[R] a :=
+  R.oplus_idem a
+```
+
+Transitivity uses associativity to merge the two witnessing equations.
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c`
+
+```lean
+theorem Dioid.le_trans {T : Type*} (R : Dioid T)
+    {a b c : T} (hab : a ≼[R] b) (hbc : b ≼[R] c) :
+    a ≼[R] c := by
+  show R.oplus a c = c
+  calc R.oplus a c
+      = R.oplus a (R.oplus b c) := by rw [hbc]
+    _ = R.oplus (R.oplus a b) c := by
+        rw [R.oplus_assoc]
+    _ = R.oplus b c := by rw [hab]
+    _ = c := hbc
+```
+
+Antisymmetry uses commutativity: the two equations exhibit $`a` and
+$`b` as the same sum.
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b`
+
+```lean
+theorem Dioid.le_antisymm {T : Type*} (R : Dioid T)
+    {a b : T} (hab : a ≼[R] b) (hba : b ≼[R] a) :
+    a = b := by
+  have h1 : R.oplus a b = b := hab
+  have h2 : R.oplus b a = a := hba
+  rw [← h1, R.oplus_comm, h2]
+```
+
+The sum is _isotone_ in each argument: a smaller summand gives a
+smaller sum.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
+
+```lean
+theorem Dioid.add_le_add_right {T : Type*}
+    (R : Dioid T) {a b : T} (h : a ≼[R] b) (c : T) :
+    (R.oplus a c) ≼[R] (R.oplus b c) := by
+  show R.oplus (R.oplus a c) (R.oplus b c)
+    = R.oplus b c
+  calc R.oplus (R.oplus a c) (R.oplus b c)
+      = R.oplus (R.oplus a b) (R.oplus c c) := by
+        rw [R.oplus_assoc, ← R.oplus_assoc c b c,
+          R.oplus_comm c b, R.oplus_assoc b c c,
+          ← R.oplus_assoc a b (R.oplus c c)]
+    _ = R.oplus b c := by rw [h, R.oplus_idem]
+```
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
+
+```lean
+theorem Dioid.add_le_add_left {T : Type*}
+    (R : Dioid T) {a b : T} (h : a ≼[R] b) (c : T) :
+    (R.oplus c a) ≼[R] (R.oplus c b) := by
+  rw [R.oplus_comm c a, R.oplus_comm c b]
+  exact Dioid.add_le_add_right R h c
+```
+
+The product is isotone in each argument, by distributivity.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c`
+
+```lean
+theorem Dioid.mul_le_mul_right {T : Type*}
+    (R : Dioid T) {a b : T} (h : a ≼[R] b) (c : T) :
+    (R.otimes a c) ≼[R] (R.otimes b c) := by
+  show R.oplus (R.otimes a c) (R.otimes b c)
+    = R.otimes b c
+  rw [← R.right_distrib, h]
+```
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
+
+```lean
+theorem Dioid.mul_le_mul_left {T : Type*}
+    (R : Dioid T) {a b : T} (h : a ≼[R] b) (c : T) :
+    (R.otimes c a) ≼[R] (R.otimes c b) := by
+  show R.oplus (R.otimes c a) (R.otimes c b)
+    = R.otimes c b
+  rw [← R.left_distrib, h]
 
 end Algebra
 ```
