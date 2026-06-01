@@ -72,11 +72,47 @@ class AddIdemCommMonoid (D : Type*) extends
   oplus_idem : ∀ a : D, (a ⊕ a : D) = a
 ```
 
-The multiplicative monoid $`(D, \otimes, e)` is Mathlib's `Monoid`:
+Inheritance hides the axioms, so we restate each as a named theorem —
+its proof exhibits it as the inherited Mathlib law. The additive monoid
+requires associativity of $`\oplus` and a two-sided neutral $`\varepsilon`;
+the commutative monoid adds $`a \oplus b = b \oplus a`.
+
+```lean
+namespace AddMonoid
+variable {D : Type*} [AddMonoid D]
+
+theorem oplus_assoc (a b c : D) :
+    ((a ⊕ b) ⊕ c : D) = a ⊕ (b ⊕ c) := add_assoc a b c
+theorem eps_oplus (a : D) : (ε ⊕ a : D) = a := zero_add a
+theorem oplus_eps (a : D) : (a ⊕ ε : D) = a := add_zero a
+
+end AddMonoid
+
+namespace AddCommMonoid
+variable {D : Type*} [AddCommMonoid D]
+
+theorem oplus_comm (a b : D) : (a ⊕ b : D) = b ⊕ a :=
+  add_comm a b
+
+end AddCommMonoid
+```
+
+The multiplicative monoid $`(D, \otimes, e)` is Mathlib's `Monoid`; its
+axioms are associativity of $`\otimes` and a two-sided neutral $`e`.
 
 ```lean
 /-- `(D, ⊗, e)` is a monoid. -/
 class MulMonoid (D : Type*) extends Monoid D
+
+namespace MulMonoid
+variable {D : Type*} [MulMonoid D]
+
+theorem otimes_assoc (a b c : D) :
+    a ⊗ b ⊗ c = a ⊗ (b ⊗ c) := mul_assoc a b c
+theorem one_otimes (a : D) : e ⊗ a = a := one_mul a
+theorem otimes_one (a : D) : a ⊗ e = a := mul_one a
+
+end MulMonoid
 ```
 
 A _semi-ring_ $`(D, \oplus, \otimes)` is a commutative semiring with
@@ -93,6 +129,34 @@ class Semiring (D : Type*) extends CommSemiring D where
 
 /-- A dioid: an idempotent commutative semiring. -/
 class Dioid (D : Type*) extends IdemCommSemiring D
+```
+
+The semi-ring axioms beyond the two monoids are the two distributivity
+laws and the absorbing $`\varepsilon`; the dioid adds commutativity of
+$`\otimes` and inherits additive idempotency. Again each is restated as a
+theorem.
+
+```lean
+namespace Semiring
+variable {D : Type*} [Semiring D]
+
+theorem otimes_oplus (a b c : D) :
+    a ⊗ (b ⊕ c) = a ⊗ b ⊕ a ⊗ c := mul_add a b c
+theorem oplus_otimes (a b c : D) :
+    (a ⊕ b) ⊗ c = a ⊗ c ⊕ b ⊗ c := add_mul a b c
+theorem eps_otimes (a : D) : (ε ⊗ a : D) = ε := zero_mul a
+theorem otimes_eps (a : D) : (a ⊗ ε : D) = ε := mul_zero a
+
+end Semiring
+
+namespace Dioid
+variable {D : Type*} [Dioid D]
+
+theorem otimes_comm (a b : D) : a ⊗ b = b ⊗ a :=
+  mul_comm a b
+theorem oplus_idem (a : D) : (a ⊕ a : D) = a := add_idem a
+
+end Dioid
 ```
 
 Because each layer inherits from Mathlib, a `Dioid` _is_ a Mathlib
