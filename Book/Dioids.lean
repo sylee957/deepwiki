@@ -22,11 +22,11 @@ open scoped Computability
 # A dioid, defined from scratch
 
 The tower below is a self-contained illustration: each layer is a
-_bundled structure_ carrying its carrier, operations, and axioms as
-fields, with each layer extending the previous one. There is no
-type-class resolution and hence no inheritance diamond — a value of a
-layer is passed explicitly. The interface the rest of the book actually
-builds on is the Mathlib-backed `IdemDioid` defined afterwards.
+_bundled structure_ over a carrier $`T`, carrying the operations and
+axioms as fields, with each layer extending the previous one. There is
+no type-class resolution and hence no inheritance diamond — a value of
+a layer is passed explicitly. The interface the rest of the book
+actually builds on is `IdemDioid`, defined afterwards.
 
 *Definition:* a _sum signature_ on a carrier $`T` is a binary
 $`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
@@ -150,15 +150,23 @@ theorem quaternary_distrib {T : Type*} (R : Semiring T)
 end Algebra
 ```
 
-# The Mathlib interface `IdemDioid`
+# The working interface `IdemDioid`
 
-*Definition:* `IdemDioid α` $`:=` Mathlib's `IdemCommSemiring α` (idempotent commutative semiring), with $`\oplus = {+}`, $`\otimes = {*}`, $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and order $`a \preceq b \iff a + b = b`, $`a + b = a \sqcup b`. The carriers of later chapters target it.
+The from-scratch tower above fixes the meaning of a dioid; for the rest
+of the book we work with it through a single type class, `IdemDioid`,
+so that carriers can be registered as instances and the algebraic
+notation $`+`, $`*`, $`0`, $`1`, $`\sqcup` is available directly. It is
+the dioid as an _idempotent commutative semiring_: a commutative
+semiring whose sum is idempotent, with the canonical order
+$`a \preceq b \iff a + b = b` and $`a + b = a \sqcup b`.
+
+*Definition:* `IdemDioid α` is the type class of idempotent commutative semirings on $`\alpha`, with $`\oplus = {+}`, $`\otimes = {*}`, $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and order $`a \preceq b \iff a + b = b`. The carriers of later chapters target it.
 
 ```lean
 abbrev IdemDioid (α : Type*) := IdemCommSemiring α
 ```
 
-*Definition:* `ofCommSemiring` builds an `IdemDioid` from a commutative semiring with idempotent sum, deriving the order via `IdemSemiring.ofSemiring`.
+*Definition:* `ofCommSemiring` builds an `IdemDioid` from a commutative semiring whose sum is idempotent, deriving the canonical order from idempotency.
 
 ```lean
 namespace IdemDioid
