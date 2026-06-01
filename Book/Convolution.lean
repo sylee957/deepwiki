@@ -6,10 +6,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) convolution and the function dioid" =>
-%%%
-number := false
-%%%
-
 This chapter formalizes the (min,plus) convolution, its algebraic
 properties, and the resulting function dioid. The convolution $`\ast` is
 defined generically over a complete dioid `α`; all of its core
@@ -23,10 +19,6 @@ open scoped Computability NNReal
 ```
 
 # The generic convolution
-%%%
-number := false
-%%%
-
 The convolution is defined over an arbitrary additive index monoid `T`
 valued in an arbitrary complete dioid `α`. In the dioid interface the
 sum $`\oplus` is $`\bigsqcup` and the product $`\otimes` is $`{*}`, so
@@ -71,10 +63,6 @@ end Generic
 ```
 
 # Properties of the convolution
-%%%
-number := false
-%%%
-
 Commutativity, associativity, distributivity over the dioid sum $`\oplus`,
 and addition by a constant — all in the dioid order $`\preceq`, over an
 arbitrary complete dioid.
@@ -181,10 +169,6 @@ end Generic
 ```
 
 # The (min,plus) functions
-%%%
-number := false
-%%%
-
 $`\mathcal{F}` is the set of functions from the non-negative reals
 $`\mathbb{R}^+ = \mathbb{R}_{\ge 0}` into the complete (min,plus) dioid
 $`\overline{R}_{\min}`:
@@ -215,10 +199,6 @@ theorem conv_eq_sub (f g : F) (t : ℝ≥0) :
 ```
 
 # Bounds at zero
-%%%
-number := false
-%%%
-
 These bounds are stated in the _natural_ (numeric) order, which on
 $`\overline{R}_{\min}` is the reverse of the dioid order $`\preceq`; we
 express it directly on the underlying numeric values via `.toDual`. If
@@ -260,10 +240,6 @@ theorem conv_le_inf_of_apply_zero {f g : F}
 ```
 
 # The function dioid
-%%%
-number := false
-%%%
-
 Equipping $`\mathcal{F}` with the pointwise minimum $`\oplus = \wedge` and
 the convolution $`\otimes = \ast` gives a _complete commutative dioid_. The
 single piece of completeness content is lower semi-continuity of
@@ -586,10 +562,6 @@ noncomputable example :
 ```
 
 # Isotony
-%%%
-number := false
-%%%
-
 The isotony of $`\wedge` and $`\ast` is a direct consequence
 of the dioid order relation — the generic dioid isotony specialized to
 `FunDioid`:

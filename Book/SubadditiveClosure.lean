@@ -5,10 +5,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Sub-additive closure" =>
-%%%
-number := false
-%%%
-
 In a complete dioid the _sub-additive closure_, or _Kleene star_, of an
 element collects all of its powers into a single sum. Working over an
 arbitrary complete dioid `α`, with $`\oplus = {+}` the dioid sum
@@ -27,10 +23,6 @@ variable {α : Type*} [CompleteDioid α]
 ```
 
 # The Kleene star
-%%%
-number := false
-%%%
-
 The _Kleene star_ $`a^{\star}` is the sum of all non-negative powers of
 $`a`, where $`a^0 = e = \mathbf{1}` and $`a^{i+1} = a \otimes a^i`:
 
@@ -91,10 +83,6 @@ theorem kplus_eq_mul_kstar (a : α) :
 ```
 
 # Properties
-%%%
-number := false
-%%%
-
 The star is _monotone_ for the canonical order. The key step is that
 each power is monotone, $`a \preceq b \Rightarrow a^i \preceq b^i`,
 proved by induction on $`i`; the star is then a monotone sum.
@@ -217,10 +205,6 @@ theorem add_one_kstar (a : α) :
 ```
 
 # The Kleene star theorem
-%%%
-number := false
-%%%
-
 The central result is that $`a^{\star} \otimes b` is the _least_
 solution of the affine fixed-point equation
 

@@ -7,10 +7,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The convolution attains its minimum" =>
-%%%
-number := false
-%%%
-
 For real-valued, nondecreasing, left-continuous functions on $`\mathbb{R}`,
 the (min,plus) convolution
 $$`(f \ast g)(t) = \inf_{0 \le s \le t} \bigl(f(s) + g(t - s)\bigr)`

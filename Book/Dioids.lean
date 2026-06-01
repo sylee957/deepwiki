@@ -6,10 +6,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Dioids and complete dioids" =>
-%%%
-number := false
-%%%
-
 This chapter formalizes the algebra of _dioids_, the _canonical order_
 they induce, the order properties and isotony, and the _complete dioid_
 that adds completeness and lower semi-continuity.
@@ -24,10 +20,6 @@ open scoped Computability
 ```
 
 # The dioid
-%%%
-number := false
-%%%
-
 A _dioid_ is a semiring $`(D, \oplus, \otimes, \mathbf{0}, \mathbf{1})` whose sum $`\oplus` is
 _idempotent_, $`a \oplus a = a`. We work in the commutative case. Mathlib's
 `IdemCommSemiring` is exactly an idempotent commutative semiring whose
@@ -61,10 +53,6 @@ variable {α : Type*} [Dioid α]
 ```
 
 # The canonical order
-%%%
-number := false
-%%%
-
 Idempotency of $`\oplus` induces the _canonical order_ $`a \preceq b \;:\Leftrightarrow\; a \oplus b = b`.
 The order is _derived_ from the algebra, not supplied independently:
 
@@ -75,10 +63,6 @@ theorem le_iff_add_eq_right {a b : α} :
 ```
 
 # Order relation and isotony
-%%%
-number := false
-%%%
-
 The canonical relation is a partial order, and both operations are
 isotone with respect to it. Each part is restated and proved directly
 from the semiring laws.
@@ -155,10 +139,6 @@ end Dioid
 ```
 
 # The complete dioid
-%%%
-number := false
-%%%
-
 A _complete dioid_ is a dioid that is moreover a complete lattice for
 the canonical order, and whose product $`\otimes` is _lower semi-continuous_:
 it distributes over _arbitrary_ sums $`\oplus` on both sides. This is the

@@ -5,10 +5,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The sub-additive closure" =>
-%%%
-number := false
-%%%
-
 The _sub-additive closure_ of a (min,plus) function $`f` collects all of
 its convolution powers into a single pointwise infimum. This is exactly
 the Kleene star read inside the function dioid
@@ -26,10 +22,6 @@ open scoped Computability NNReal
 ```
 
 # The sub-additive closure operator
-%%%
-number := false
-%%%
-
 The convolution powers of $`f` are $`f^0 = e`, the neutral for $`\ast`,
 and $`f^{i+1} = f \ast f^i`. The _sub-additive closure_ is the pointwise
 infimum of all of them,
@@ -74,10 +66,6 @@ theorem subClosure_ofFun (f : F) :
 ```
 
 # Inherited Kleene-star properties
-%%%
-number := false
-%%%
-
 Because $`f^{\ast}` is literally `kstar (FunDioid.ofFun f)`, every
 generic fact about the star specializes to it by rewriting with
 `subClosure_ofFun`. We record the ones that read most cleanly at the
@@ -158,10 +146,6 @@ end NetworkCalculus
 ```
 
 # The sign constraint for a strictly negative value at zero
-%%%
-number := false
-%%%
-
 A sub-additive function is sharply constrained once it takes a strictly
 negative value at the origin. The natural numeric value at the origin is
 $`f(0) = (f\,0).\mathtt{toDual}` living in $`\overline{R} = \mathbb{R}

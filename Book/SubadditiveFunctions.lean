@@ -5,10 +5,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Sub-additive functions" =>
-%%%
-number := false
-%%%
-
 A (min,plus) function is _sub-additive_ when its value on a sum is no
 larger than the sum of its values. This chapter formalizes that
 predicate and proves its two stability properties: sub-additivity is
@@ -26,10 +22,6 @@ open scoped Computability NNReal
 ```
 
 # The sub-additivity predicate
-%%%
-number := false
-%%%
-
 A function $`f \in \mathcal{F}` is _sub-additive_ when
 $`f(s + t) \le f(s) + f(t)` for all $`s, t \ge 0`, where $`\le` and
 $`+` are the natural numeric order and numeric addition. Recording this
@@ -59,10 +51,6 @@ sharp contrast with the stability under the pointwise numeric sum and
 under the convolution proved below.
 
 # Stability under the pointwise numeric sum
-%%%
-number := false
-%%%
-
 The _pointwise numeric sum_ of two functions adds their underlying
 numeric values point by point; it is the function-space addition $`+`
 read in the natural order, _not_ the dioid sum $`\wedge`. We name it
@@ -99,10 +87,6 @@ theorem padd_subadditive {f g : F}
 ```
 
 # Stability under the convolution
-%%%
-number := false
-%%%
-
 The convolution of two sub-additive functions is sub-additive. The
 cleanest route works in the _dioid_ order. Because the natural order is
 the reverse of $`\preceq` and numeric addition is the dioid product
@@ -191,10 +175,6 @@ theorem conv_subadditive {f g : F}
 ```
 
 # Adding a non-negative constant
-%%%
-number := false
-%%%
-
 A constant function $`t \mapsto k` is sub-additive precisely when its
 value is non-negative: the defining inequality reduces to
 $`k \le k + k`, equivalent to $`0 \le k`.

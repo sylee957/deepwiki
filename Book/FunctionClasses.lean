@@ -5,10 +5,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Main subsets of functions" =>
-%%%
-number := false
-%%%
-
 Network calculus restricts attention to special classes of (min,plus)
 functions. This chapter formalizes the four subsets, their stability
 under $`\wedge` and $`\ast`, and the consequences: $`\mathcal{F}^+` and
@@ -25,10 +21,6 @@ namespace FunDioid
 ```
 
 # The predicates and subsets
-%%%
-number := false
-%%%
-
 The defining predicates are stated on the underlying numeric values
 (via `.toDual` in $`\overline{R}_{\min}`), since _non-negative_ and
 _non-decreasing_ refer to the natural order on values, not the dioid
@@ -71,10 +63,6 @@ def FnondecrZero : Set FunDioid := Fzero ∩ Fnondecr
 ```
 
 # Stability under `∧` and `∗`
-%%%
-number := false
-%%%
-
 The dioid sum `f + g` is the pointwise minimum of the values, and the
 product `f * g` is the convolution. A convenient lower bound: a
 convolution value is $`\ge 0` once both factors are.
@@ -215,10 +203,6 @@ theorem FnondecrZero.conv_mem {f g : FunDioid}
 ```
 
 # `F⁺` and `F↑` are complete dioids
-%%%
-number := false
-%%%
-
 A consequence of the stability results and completeness of
 $`R^+_{\min}` is that $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` are
 complete dioids. The top element differs from the ambient `FunDioid` top
@@ -410,10 +394,6 @@ end FNondecr
 ```
 
 # `F₀` and `F↑₀` are not dioids
-%%%
-number := false
-%%%
-
 A dioid must contain its zero $`\mathbf{0} = \varepsilon : t \mapsto +\infty`.
 But $`\varepsilon(0) = +\infty \ne 0`, whereas every element of
 $`\mathcal{F}_0` and $`\mathcal{F}^\uparrow_0` satisfies $`f(0) = 0`.

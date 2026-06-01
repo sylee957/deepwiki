@@ -4,10 +4,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Introduction" =>
-%%%
-number := false
-%%%
-
 This is a Lean 4 + Mathlib formalization of the algebra of _(min,plus)_
 dioids. The mathematical setting is the theory of _dioids_ (idempotent
 semirings) and the complete (min,plus) dioids of functions that underlie

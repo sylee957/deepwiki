@@ -17,7 +17,6 @@ set_option pp.rawOnError true
 #doc (Manual) "The (min,plus) Dioids in Lean" =>
 
 %%%
-number := false
 authors := ["S.Y. Lee"]
 %%%
 

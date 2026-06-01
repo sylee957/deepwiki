@@ -16,10 +16,6 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) scalar dioids" =>
-%%%
-number := false
-%%%
-
 The scalar carriers of network calculus are obtained by _reversing_ the
 numeric order. In a dioid the sum $`\oplus` is the lattice join and the
 neutral $`\mathbf{0}` is the least element; choosing $`\oplus = \min` and $`\mathbf{0} = +\infty`
@@ -29,10 +25,6 @@ $`\otimes` ordinary addition with unit $`\mathbf{1} = 0`. This chapter exhibits 
 concrete carriers as dioid instances.
 
 # A reusable builder
-%%%
-number := false
-%%%
-
 All three carriers are the order-dual of a linearly ordered additive
 monoid with a top, equipped with $`\oplus = \min` and $`\otimes = {+}`. That shared
 construction is factored once. The class `MinPlus.Carrier` packages the
@@ -129,10 +121,6 @@ instance instOrderBot : OrderBot (D M) where
 ```
 
 # The dioid operations
-%%%
-number := false
-%%%
-
 $`\oplus = \min`, $`\otimes = {+}`, $`\mathbf{0} = \top`, $`\mathbf{1} = 0`, plus the idempotent
 `nsmul`/`natCast`.
 
@@ -296,10 +284,6 @@ end D
 ```
 
 # The complete dioid carrier
-%%%
-number := false
-%%%
-
 `MinPlus.CompleteCarrier` adds a complete order and lower
 semi-continuity of $`+`: addition distributes over arbitrary numeric
 infima (`add_sInf'`). The field is phrased over a `Set M` so the class
@@ -378,10 +362,6 @@ end MinPlus
 ```
 
 # `Rmin = ℝ ∪ {+∞}` is a dioid
-%%%
-number := false
-%%%
-
 `WithTop ℝ` is a (min,plus) dioid carrier: $`+\infty = \top` is absorbing for
 $`+`, and addition is monotone.
 
@@ -412,10 +392,6 @@ example (a b : Rmin) :
 ```
 
 # `R⁺min = ℝ≥0 ∪ {+∞}` is complete
-%%%
-number := false
-%%%
-
 The canonical _complete_ (min,plus) dioid is $`R^+_{\min}`, carried by
 Mathlib's `ENNReal` ($`\overline{\mathbb{R}}_{\ge 0}`). This carrier is the sweet spot: it is a
 complete lattice ($`0 = \bot`, $`+\infty = \top`) and is $`-\infty`-free, so $`\mathbf{0} = +\infty`
@@ -444,10 +420,6 @@ example (a b : RplusMin) :
 ```
 
 # `R̄min = ℝ ∪ {±∞}` is complete
-%%%
-number := false
-%%%
-
 We first make `Rmin` a dioid, then _complete_ it by adjoining a
 top $`\top = -\infty`, giving $`\overline{R}_{\min}`. The decisive convention is
 
@@ -570,10 +542,6 @@ example (a b : RbarMin) :
 ```
 
 # A sub-complete-dioid builder
-%%%
-number := false
-%%%
-
 Two function classes of the next chapter — $`\mathcal{F}^+` and $`\mathcal{F}^\uparrow` — are both
 _sub-complete-dioids_ of an ambient complete dioid: subsets closed
 under the dioid operations and under arbitrary dioid sums `sSup`, on
