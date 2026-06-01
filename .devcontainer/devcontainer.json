@@ -1,7 +1,10 @@
 {
   "name": "Lean 4 + Mathlib",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    // Build context = repo root so the Dockerfile can `COPY lean-toolchain`
+    // (single source of truth for the Lean version, baked into the image).
+    "context": ".."
   },
   "customizations": {
     "vscode": {
@@ -19,11 +22,16 @@
   },
   "remoteUser": "vscode",
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    // Build tree on a Docker volume (ext4/overlay): the host bind mount of the
+    // workspace is a `fakeowner` FS that does not honor POSIX fcntl locks, which
+    // breaks SQLite-based tooling such as doc-gen4 ("locking protocol, error 15").
+    // A volume also speeds up Lake's many-small-file writes vs. the macOS bind mount.
+    "source=leanproofs-lake,target=/workspaces/leanproofs/.lake,type=volume"
   ],
   "hostRequirements": {
     "cpus": 4,
-    "memory": "6gb"
+    "memory": "16gb"
   },
-  "postCreateCommand": "elan toolchain install $(cat lean-toolchain) && lake exe cache get && lake build"
+  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/leanproofs/.lake && lake exe cache get && lake build"
 }

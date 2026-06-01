@@ -1,0 +1,5 @@
+# Docker build context for the devcontainer image (build.context = repo root).
+# The Dockerfile only needs `lean-toolchain`, so exclude everything else —
+# crucially the multi-GB `.lake/` build tree — to keep the context tiny.
+*
+!lean-toolchain
