@@ -1,5 +1,5 @@
 name = "leanproofs"
-defaultTargets = ["leanproofs"]
+defaultTargets = ["Leanproofs"]
 
 [[require]]
 name = "mathlib"
