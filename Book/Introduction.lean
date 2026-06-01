@@ -32,6 +32,9 @@ The chapters cover:
 - _Main subsets of functions_ — the non-negative, zero-at-zero and
   non-decreasing function classes, their stability, and why $`\mathcal{F}^+`/$`\mathcal{F}^\uparrow` are
   complete dioids while $`\mathcal{F}_0`/$`\mathcal{F}^\uparrow_0` are not.
+- _Sub-additive closure_ — the Kleene star $`a^{\star} = \bigoplus_{i \ge 0} a^i` and its
+  strict variant $`a^+`, their algebraic identities, monotonicity, and the
+  Kleene star theorem: $`a^{\star} \otimes b` is the least solution of $`x = a \otimes x \oplus b`.
 
 Throughout, the notation maps to Lean as $`\oplus = {+}` (the dioid sum, the
 lattice join), $`\otimes = {*}` (the product), $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and the canonical
