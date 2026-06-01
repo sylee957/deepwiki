@@ -51,7 +51,7 @@ local infixl:70 " *ₒ " => Otimes.otimes
 $$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
 
 ```lean
-class SumMonoid (D : Type*) extends Oplus D where
+class AddMonoid (D : Type*) extends Oplus D where
   oplus_assoc : ∀ a b c : D, (a +ₒ b) +ₒ c = a +ₒ (b +ₒ c)
   eps_oplus : ∀ a : D, Oplus.eps +ₒ a = a
   oplus_eps : ∀ a : D, a +ₒ Oplus.eps = a
@@ -60,15 +60,15 @@ class SumMonoid (D : Type*) extends Oplus D where
 *Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
 
 ```lean
-class SumCommMonoid (D : Type*) extends SumMonoid D where
+class AddCommMonoid (D : Type*) extends AddMonoid D where
   oplus_comm : ∀ a b : D, a +ₒ b = b +ₒ a
 ```
 
 *Definition:* an _idempotent_ commutative monoid adds $`a \oplus a = a`.
 
 ```lean
-class SumIdemCommMonoid (D : Type*) extends
-    SumCommMonoid D where
+class AddIdemCommMonoid (D : Type*) extends
+    AddCommMonoid D where
   oplus_idem : ∀ a : D, a +ₒ a = a
 ```
 
@@ -83,13 +83,13 @@ class MulMonoid (D : Type*) extends Otimes D where
   otimes_one : ∀ a : D, a *ₒ Otimes.one = a
 ```
 
-*Definition:* a _semi-ring_ is an idempotent commutative $`\oplus`-monoid and a $`\otimes`-monoid with
+*Definition:* a _semi-ring_ is a commutative $`\oplus`-monoid and a $`\otimes`-monoid with
 $$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus b) \otimes c = (a \otimes c) \oplus (b \otimes c),`
 $$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
 
 ```lean
 class Semiring (D : Type*) extends
-    SumIdemCommMonoid D, MulMonoid D where
+    AddCommMonoid D, MulMonoid D where
   left_distrib :
     ∀ a b c : D, a *ₒ (b +ₒ c) = a *ₒ b +ₒ a *ₒ c
   right_distrib :
@@ -98,11 +98,18 @@ class Semiring (D : Type*) extends
   otimes_eps : ∀ a : D, a *ₒ Oplus.eps = Oplus.eps
 ```
 
-*Definition:* a _dioid_ is a semi-ring with $`a \otimes b = b \otimes a`.
+*Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
 
 ```lean
-class Dioid (D : Type*) extends Semiring D where
+class CommSemiring (D : Type*) extends Semiring D where
   otimes_comm : ∀ a b : D, a *ₒ b = b *ₒ a
+```
+
+*Definition:* a _dioid_ is a commutative semi-ring whose sum is idempotent, $`a \oplus a = a`.
+
+```lean
+class Dioid (D : Type*) extends
+    CommSemiring D, AddIdemCommMonoid D
 ```
 
 *Theorem:* $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`
@@ -118,12 +125,12 @@ theorem quaternary_distrib {D : Type*} [Semiring D]
       (a +ₒ b) *ₒ (c +ₒ d) = (p +ₒ r) +ₒ (q +ₒ s) := by
     rw [Semiring.right_distrib, Semiring.left_distrib,
       Semiring.left_distrib]
-  rw [hexp, SumMonoid.oplus_assoc p q r,
-    SumMonoid.oplus_assoc p (q +ₒ r) s,
-    SumMonoid.oplus_assoc p r (q +ₒ s)]
+  rw [hexp, AddMonoid.oplus_assoc p q r,
+    AddMonoid.oplus_assoc p (q +ₒ r) s,
+    AddMonoid.oplus_assoc p r (q +ₒ s)]
   congr 1
-  rw [SumCommMonoid.oplus_comm q r,
-    SumMonoid.oplus_assoc r q s]
+  rw [AddCommMonoid.oplus_comm q r,
+    AddMonoid.oplus_assoc r q s]
 
 end
 
