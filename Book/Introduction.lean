@@ -35,6 +35,9 @@ The chapters cover:
 - _Sub-additive closure_ — the Kleene star $`a^{\star} = \bigoplus_{i \ge 0} a^i` and its
   strict variant $`a^+`, their algebraic identities, monotonicity, and the
   Kleene star theorem: $`a^{\star} \otimes b` is the least solution of $`x = a \otimes x \oplus b`.
+- _Sub-additive functions_ — the predicate $`f(s+t) \le f(s) + f(t)` in the
+  natural numeric order, and its stability under the pointwise numeric sum
+  of functions and under the convolution $`\ast`.
 
 Throughout, the notation maps to Lean as $`\oplus = {+}` (the dioid sum, the
 lattice join), $`\otimes = {*}` (the product), $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and the canonical

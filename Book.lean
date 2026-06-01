@@ -5,6 +5,7 @@ import Book.Scalars
 import Book.Convolution
 import Book.FunctionClasses
 import Book.SubadditiveClosure
+import Book.SubadditiveFunctions
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -34,3 +35,5 @@ declarations.
 {include 1 Book.FunctionClasses}
 
 {include 1 Book.SubadditiveClosure}
+
+{include 1 Book.SubadditiveFunctions}
