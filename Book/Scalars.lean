@@ -96,6 +96,51 @@ instance : Algebra.Dioid Rmin where
   otimes_eps a := congrArg ofR (add_top _)
   otimes_comm a b := congrArg ofR (add_comm _ _)
   oplus_idem a := congrArg ofR (min_self _)
+```
+
+The underlying value is a coercion `Rmin → WithTop ℝ`, and the dioid
+operations push through it to numeric `min`/`+`. With these cast lemmas
+a goal about `Rmin` reduces to one about `WithTop ℝ`.
+
+```lean
+open scoped Algebra
+open Algebra
+
+@[coe] def coe (a : Rmin) : WithTop ℝ := a.toR
+instance : Coe Rmin (WithTop ℝ) := ⟨coe⟩
+
+@[ext] theorem ext {a b : Rmin}
+    (h : (a : WithTop ℝ) = b) : a = b := by
+  cases a; cases b; exact congrArg ofR h
+
+@[simp, norm_cast] theorem coe_oplus (a b : Rmin) :
+    ((a ⊕ₒ b : Rmin) : WithTop ℝ)
+      = min (a : WithTop ℝ) b := rfl
+@[simp, norm_cast] theorem coe_otimes (a b : Rmin) :
+    ((a ⊗ₒ b : Rmin) : WithTop ℝ)
+      = (a : WithTop ℝ) + b := rfl
+@[simp, norm_cast] theorem coe_eps :
+    ((εₒ : Rmin) : WithTop ℝ) = ⊤ := by
+  show (εₒ : Rmin).toR = ⊤; rfl
+@[simp, norm_cast] theorem coe_one :
+    ((eₒ : Rmin) : WithTop ℝ) = 0 := by
+  show (eₒ : Rmin).toR = 0; rfl
+
+end Rmin
+```
+
+With the cast lemmas, a fact about $`\overline{\mathbb{R}}` reduces to
+its numeric content on `WithTop ℝ` by `push_cast`: distributivity of
+$`\otimes` over $`\oplus`, for instance, becomes the numeric
+`add_min`.
+
+```lean
+namespace Rmin
+open Algebra
+
+example (a b c : Rmin) :
+    a ⊗ₒ (b ⊕ₒ c) = (a ⊗ₒ b) ⊕ₒ (a ⊗ₒ c) := by
+  apply ext; push_cast; exact add_min _ _ _
 
 end Rmin
 ```
