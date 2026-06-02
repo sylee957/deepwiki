@@ -367,6 +367,40 @@ noncomputable instance dioid {M : Type*} [Carrier M] :
     (inferInstance : Lattice (Dual M)),
     (inferInstance : OrderBot (Dual M)) with
     add_eq_sup := add_eq_sup' }
+```
+
+The same data is also a dioid in the sense of the from-scratch tower:
+the operations $`\oplus = \min`, $`\otimes = {+}`, the neutrals
+$`\varepsilon = +\infty`, $`e = 0`, and the axioms already proved above
+assemble directly into an `Algebra.Dioid`. The only fact not yet on
+hand is idempotency $`a \oplus a = a`, which is $`\min(a, a) = a`.
+
+*Theorem:* $`a \oplus a = a`
+
+```lean
+theorem add_idem' {M : Type*} [Carrier M]
+    (a : Dual M) : add a a = a :=
+  toDual_injective (min_self _)
+
+instance algDioid {M : Type*} [Carrier M] :
+    Algebra.Dioid (Dual M) where
+  oplus := add
+  eps := zero
+  otimes := mul
+  one := one
+  oplus_assoc := add_assoc'
+  eps_oplus := zero_add'
+  oplus_eps := add_zero'
+  oplus_comm := add_comm'
+  otimes_assoc := mul_assoc'
+  one_otimes := one_mul'
+  otimes_one := mul_one'
+  left_distrib := left_distrib'
+  right_distrib := right_distrib'
+  eps_otimes := zero_mul'
+  otimes_eps := mul_zero'
+  otimes_comm := mul_comm'
+  oplus_idem := add_idem'
 
 end Dual
 ```
@@ -461,12 +495,13 @@ noncomputable instance : MinPlus.Carrier (WithTop ℝ) where
 ```
 
 `Rmin` is then the (min,plus) dioid carried by `WithTop ℝ` under the
-reversed order, with $`\oplus = \min`, $`\mathbf{0} = +\infty = \bot`, $`\otimes = {+}`, $`\mathbf{1} = 0`:
+reversed order, with $`\oplus = \min`, $`\mathbf{0} = +\infty = \bot`, $`\otimes = {+}`, $`\mathbf{1} = 0`. It is a dioid in the sense of the from-scratch tower:
 
 ```lean
 abbrev Rmin := MinPlus.Dual (WithTop ℝ)
 
-noncomputable example : IdemDioid Rmin := inferInstance
+noncomputable example : Algebra.Dioid Rmin :=
+  inferInstance
 ```
 
 It is the _non-complete_ layer: an idempotent commutative semiring with
