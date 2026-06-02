@@ -46,6 +46,8 @@ class Otimes (T : Type*) where
 
 scoped infixl:65 " ⊕ₒ " => Oplus.oplus
 scoped infixl:70 " ⊗ₒ " => Otimes.otimes
+scoped notation "εₒ" => Oplus.eps
+scoped notation "eₒ" => Otimes.one
 ```
 
 *Definition:* a _product signature_ on $`T` is a binary
@@ -58,8 +60,8 @@ $$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a
 class AddMonoid (T : Type*) extends Oplus T where
   oplus_assoc : ∀ a b c : T,
     (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c)
-  eps_oplus : ∀ a : T, Oplus.eps ⊕ₒ a = a
-  oplus_eps : ∀ a : T, a ⊕ₒ Oplus.eps = a
+  eps_oplus : ∀ a : T, εₒ ⊕ₒ a = a
+  oplus_eps : ∀ a : T, a ⊕ₒ εₒ = a
 ```
 
 *Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
@@ -76,8 +78,8 @@ $$`(a \otimes b) \otimes c = a \otimes (b \otimes c), \quad e \otimes a = a, \qu
 class MulMonoid (T : Type*) extends Otimes T where
   otimes_assoc : ∀ a b c : T,
     (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c)
-  one_otimes : ∀ a : T, Otimes.one ⊗ₒ a = a
-  otimes_one : ∀ a : T, a ⊗ₒ Otimes.one = a
+  one_otimes : ∀ a : T, eₒ ⊗ₒ a = a
+  otimes_one : ∀ a : T, a ⊗ₒ eₒ = a
 ```
 
 *Definition:* a _semi-ring_ is a commutative $`\oplus`-monoid and a $`\otimes`-monoid with
@@ -91,8 +93,8 @@ class Semiring (T : Type*) extends
     a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c
   right_distrib : ∀ a b c : T,
     (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c
-  eps_otimes : ∀ a : T, Oplus.eps ⊗ₒ a = Oplus.eps
-  otimes_eps : ∀ a : T, a ⊗ₒ Oplus.eps = Oplus.eps
+  eps_otimes : ∀ a : T, εₒ ⊗ₒ a = εₒ
+  otimes_eps : ∀ a : T, a ⊗ₒ εₒ = εₒ
 ```
 
 *Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
@@ -354,11 +356,11 @@ $`\top` by $`\varepsilon` on either side collapses to $`\varepsilon`.
 
 ```lean
 theorem eps_otimes_top {T : Type*} [CompleteDioid T] :
-    Oplus.eps ⊗ₒ ⊤ₒ[T] = Oplus.eps :=
+    εₒ ⊗ₒ ⊤ₒ[T] = εₒ :=
   Semiring.eps_otimes (top T)
 
 theorem top_otimes_eps {T : Type*} [CompleteDioid T] :
-    ⊤ₒ[T] ⊗ₒ Oplus.eps = Oplus.eps :=
+    ⊤ₒ[T] ⊗ₒ εₒ = εₒ :=
   Semiring.otimes_eps (top T)
 
 end Algebra
