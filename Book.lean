@@ -6,6 +6,7 @@ import Book.Order
 import Book.CompleteDioids
 import Book.Scalars
 import Book.Convolution
+import Book.Shapers
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -36,3 +37,5 @@ declarations.
 {include 1 Book.Scalars}
 
 {include 1 Book.Convolution}
+
+{include 1 Book.Shapers}
