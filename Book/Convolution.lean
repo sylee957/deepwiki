@@ -16,7 +16,7 @@ chapter defines both and records the basic facts about the convolution.
 namespace NetworkCalculus
 
 open Algebra
-open scoped Classical NNReal
+open scoped Classical NNReal Algebra.Bridge
 ```
 
 # The (min,plus) functions
@@ -151,8 +151,8 @@ theorem oplus_le (a b c : T)
 
 theorem oplus_le_oplus {a b c d : T}
     (h1 : a ≼ₒ c) (h2 : b ≼ₒ d) : a ⊕ₒ b ≼ₒ c ⊕ₒ d :=
-  oplus_le _ _ _ (le_trans h1 (le_oplus_left c d))
-    (le_trans h2 (le_oplus_right c d))
+  oplus_le _ _ _ (_root_.le_trans h1 (le_oplus_left c d))
+    (_root_.le_trans h2 (le_oplus_right c d))
 
 end Join
 
@@ -168,7 +168,7 @@ distributivity of $`\otimes` over $`\oplus` in the scalar dioid.
 theorem conv_distrib (f g h : F) :
     conv f (pmin g h) = pmin (conv f g) (conv f h) := by
   funext t
-  apply Algebra.le_antisymm
+  apply _root_.le_antisymm
   · rw [conv_apply]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
@@ -187,14 +187,14 @@ theorem conv_distrib (f g h : F) :
       refine CompleteDioid.sSup_le _ _ ?_
       rintro x ⟨u, s, hus, rfl⟩
       rw [conv_apply]
-      refine le_trans ?_ (CompleteDioid.le_sSup _
+      refine _root_.le_trans ?_ (CompleteDioid.le_sSup _
         (f u ⊗ₒ (pmin g h s)) ⟨u, s, hus, rfl⟩)
       exact mul_le_mul_left (le_oplus_left _ _) _
     · rw [conv_apply]
       refine CompleteDioid.sSup_le _ _ ?_
       rintro x ⟨u, s, hus, rfl⟩
       rw [conv_apply]
-      refine le_trans ?_ (CompleteDioid.le_sSup _
+      refine _root_.le_trans ?_ (CompleteDioid.le_sSup _
         (f u ⊗ₒ (pmin g h s)) ⟨u, s, hus, rfl⟩)
       exact mul_le_mul_left (le_oplus_right _ _) _
 ```
@@ -218,7 +218,7 @@ noncomputable def triple (f g h : F) (t : ℝ≥0) : RbarMin :=
 ```lean
 theorem conv_conv_eq_triple (f g h : F) (t : ℝ≥0) :
     conv (conv f g) h t = triple f g h t := by
-  apply Algebra.le_antisymm
+  apply _root_.le_antisymm
   · rw [conv_apply]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨w, z, hwz, rfl⟩
@@ -231,7 +231,7 @@ theorem conv_conv_eq_triple (f g h : F) (t : ℝ≥0) :
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, v, z, hsum, rfl⟩
     rw [conv_apply]
-    refine le_trans ?_ (CompleteDioid.le_sSup _
+    refine _root_.le_trans ?_ (CompleteDioid.le_sSup _
       ((conv f g (u+v)) ⊗ₒ h z) ⟨u+v, z, hsum, rfl⟩)
     refine mul_le_mul_right ?_ _
     rw [conv_apply]
@@ -243,7 +243,7 @@ theorem conv_conv_eq_triple (f g h : F) (t : ℝ≥0) :
 ```lean
 theorem conv_conv_eq_triple' (f g h : F) (t : ℝ≥0) :
     conv f (conv g h) t = triple f g h t := by
-  apply Algebra.le_antisymm
+  apply _root_.le_antisymm
   · rw [conv_apply]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, p, hup, rfl⟩
@@ -257,7 +257,7 @@ theorem conv_conv_eq_triple' (f g h : F) (t : ℝ≥0) :
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, v, z, hsum, rfl⟩
     rw [conv_apply]
-    refine le_trans ?_ (CompleteDioid.le_sSup _
+    refine _root_.le_trans ?_ (CompleteDioid.le_sSup _
       (f u ⊗ₒ (conv g h (v+z)))
       ⟨u, v+z, by rw [← add_assoc]; exact hsum, rfl⟩)
     rw [MulMonoid.otimes_assoc]

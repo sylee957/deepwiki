@@ -22,6 +22,8 @@ the tower started in the previous chapter.
 namespace NetworkCalculus
 
 namespace Algebra
+
+open scoped Bridge
 ```
 
 # Completing the tower
@@ -70,9 +72,9 @@ $$`a \otimes \textstyle\bigsqcup s = \textstyle\bigsqcup\,\{\,a \otimes b \mid b
 class CompleteDioid (T : Type*) extends Dioid T where
   sSup : Set T → T
   le_sSup : ∀ (s : Set T) (a : T), a ∈ s →
-    le a (sSup s)
+    a ≼ₒ sSup s
   sSup_le : ∀ (s : Set T) (b : T),
-    (∀ a ∈ s, le a b) → le (sSup s) b
+    (∀ a ∈ s, a ≼ₒ b) → sSup s ≼ₒ b
   mul_sSup : ∀ (a : T) (s : Set T),
     a ⊗ₒ sSup s = sSup ((fun b => a ⊗ₒ b) '' s)
 ```
@@ -199,7 +201,7 @@ upper-bound facts to idempotency pins $`\bigsqcup\{a, b\} = a \oplus b`.
 ```lean
 theorem sSup_pair {T : Type*} [CompleteDioid T]
     (a b : T) : CompleteDioid.sSup {a, b} = a ⊕ₒ b := by
-  apply le_antisymm
+  apply _root_.le_antisymm
   · refine CompleteDioid.sSup_le _ _ ?_
     intro x hx
     rcases hx with hx | hx

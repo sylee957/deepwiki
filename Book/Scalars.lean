@@ -23,6 +23,8 @@ reverse of the usual numeric order.
 
 ```lean
 namespace NetworkCalculus
+
+open scoped Algebra.Bridge
 ```
 
 # A concrete dioid: the reals with infinity
@@ -107,8 +109,8 @@ $`\overline{\mathbb{R}}` with no further work.
 
 ```lean
 example (a : Rmin) :
-    Algebra.le a a :=
-  Algebra.le_refl a
+    a ≼ₒ a :=
+  le_rfl
 ```
 
 # A complete dioid: the extended reals
@@ -274,8 +276,8 @@ The dioid order on the wrapper is the reverse of the numeric order.
 
 ```lean
 theorem le_iff (a b : RbarMin) :
-    Algebra.le a b ↔ b.toB ≤ a.toB := by
-  have h1 : Algebra.le a b
+    a ≼ₒ b ↔ b.toB ≤ a.toB := by
+  have h1 : a ≼ₒ b
       ↔ (⟨min a.toB b.toB⟩ : RbarMin) = b := Iff.rfl
   rw [h1]
   constructor
@@ -395,8 +397,8 @@ instance : Algebra.Dioid RplusMin where
 
 ```lean
 theorem le_iff (a b : RplusMin) :
-    Algebra.le a b ↔ b.toE ≤ a.toE := by
-  have h1 : Algebra.le a b
+    a ≼ₒ b ↔ b.toE ≤ a.toE := by
+  have h1 : a ≼ₒ b
       ↔ (⟨min a.toE b.toE⟩ : RplusMin) = b := Iff.rfl
   rw [h1]
   constructor
