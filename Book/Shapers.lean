@@ -1,5 +1,6 @@
 import VersoManual
 import Book.LeftContinuity
+import Book.SubadditiveClosure
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -234,42 +235,10 @@ theorem server_subset_shaperServer_iff
 
 # Shaping closure
 
-The convolution unit `convUnit` — the impulse, $`e` at time `0` and
-$`\varepsilon` elsewhere — is the multiplicative unit of the function
-dioid, established with its two identity laws `convUnit_left` and
-`convUnit_right` when that dioid was assembled. The closure built here
-reuses it directly.
-
-The closure is the dioid supremum of all convolution powers. Since the
-dioid supremum is numeric infimum in the min-plus model, this is the
-usual min-plus star construction.
-
-*Definition:* convolution powers and closure
-
-```lean
-noncomputable def convPow (sigma : F) : ℕ → F
-  | 0 => convUnit
-  | n + 1 => conv (convPow sigma n) sigma
-
-noncomputable def subadditiveClosure (sigma : F) : F :=
-  fun t =>
-    CompleteDioid.iSup
-      (fun n : ℕ => convPow sigma n t)
-
-scoped notation:max sigma:90 "⋆" =>
-  subadditiveClosure sigma
-```
-
-The first nontrivial power is the original function.
-
-*Theorem:* $`\sigma^{\ast 1} = \sigma`
-
-```lean
-theorem convPow_one (sigma : F) :
-    convPow sigma 1 = sigma := by
-  change conv convUnit sigma = sigma
-  exact convUnit_left sigma
-```
+The _sub-additive closure_ $`\sigma^{\star}`, its convolution powers
+`convPow`, and the Kleene-star theory were developed in the chapter
+`The sub-additive closure`. Here we relate the closure to the shaper
+constructions through the natural order and the arrival-curve kernel.
 
 The closure is below the original curve in the natural order because
 the original curve is one of the powers.
