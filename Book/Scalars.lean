@@ -5,6 +5,8 @@ import Mathlib.Data.Real.Archimedean
 import Mathlib.Algebra.Order.Ring.WithTop
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Order.Hom.WithTopBot
+import Mathlib.Data.ENNReal.Operations
+import Mathlib.Data.ENNReal.Inv
 import Mathlib.Tactic.GCongr
 import Mathlib.Tactic.Push
 
@@ -13,8 +15,9 @@ open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) scalar dioids" =>
 The abstract dioid tower is realized by concrete number systems. This
-chapter exhibits two: the reals with $`+\infty`, a dioid, and the
-extended reals with $`\pm\infty`, a complete dioid. Both take
+chapter exhibits three: the reals with $`+\infty`, a dioid; the
+extended reals with $`\pm\infty`, a complete dioid; and the
+_non-negative_ reals with $`+\infty`, also a complete dioid. All take
 $`\oplus = \min`, $`\otimes = {+}`, with the canonical order the
 reverse of the usual numeric order.
 
@@ -316,6 +319,123 @@ So $`\overline{\mathbb{R}}` realizes the _complete_ dioid: every set
 has a dioid supremum (its numeric infimum), and the product is lower
 semi-continuous. The top element $`\top = \bigsqcup_x x` and its
 absorbing laws, and the whole order theory, follow from the tower.
+
+# A complete dioid: the non-negative reals
+
+The non-negative extended reals $`\overline{\mathbb{R}}_{\ge 0}
+= \mathbb{R}_{\ge 0} \cup \{+\infty\}` are the cleanest complete
+(min,plus) carrier. Being bounded below by $`0`, they form a complete
+lattice with $`0 = \bot` and $`+\infty = \top` and no $`-\infty`, so
+$`+\infty = \varepsilon` stays absorbing and there are no
+$`(+\infty) + (-\infty)` indeterminacies. We use Mathlib's
+$`\mathbb{R}_{\ge 0}^{\infty}` (`ℝ≥0∞`), whose lower semi-continuity of
+$`+` is available off the shelf.
+
+```lean
+open scoped ENNReal
+```
+
+The two distributive facts and lower semi-continuity, on `ℝ≥0∞`.
+
+*Theorem:* $`a + \min(b, c) = \min(a + b, a + c)`, $`\min(a, b) + c = \min(a + c, b + c)`, and $`a + \bigwedge_i f(i) = \bigwedge_i (a + f(i))`
+
+```lean
+namespace RplusX
+
+theorem add_min (a b c : ℝ≥0∞) :
+    a + min b c = min (a + b) (a + c) := by
+  rcases le_total b c with h | h
+  · rw [min_eq_left h, min_eq_left (by gcongr)]
+  · rw [min_eq_right h, min_eq_right (by gcongr)]
+
+theorem min_add (a b c : ℝ≥0∞) :
+    min a b + c = min (a + c) (b + c) := by
+  rw [add_comm, add_min, add_comm a c, add_comm b c]
+
+theorem add_iInf {ι : Sort*} (a : ℝ≥0∞) (f : ι → ℝ≥0∞) :
+    a + ⨅ i, f i = ⨅ i, a + f i := ENNReal.add_iInf
+
+end RplusX
+```
+
+*Definition:* the carrier $`\overline{\mathbb{R}}_{\ge 0} = \mathbb{R}_{\ge 0} \cup \{+\infty\}`
+
+```lean
+structure RplusMin where ofE ::
+  toE : ℝ≥0∞
+
+namespace RplusMin
+
+instance : Algebra.Dioid RplusMin where
+  oplus a b := ⟨min a.toE b.toE⟩
+  eps := ⟨⊤⟩
+  otimes a b := ⟨a.toE + b.toE⟩
+  one := ⟨0⟩
+  oplus_assoc a b c := congrArg ofE (min_assoc _ _ _)
+  eps_oplus a := congrArg ofE (min_eq_right le_top)
+  oplus_eps a := congrArg ofE (min_eq_left le_top)
+  oplus_comm a b := congrArg ofE (min_comm _ _)
+  otimes_assoc a b c :=
+    congrArg ofE (add_assoc _ _ _)
+  one_otimes a := congrArg ofE (zero_add _)
+  otimes_one a := congrArg ofE (add_zero _)
+  left_distrib a b c :=
+    congrArg ofE (RplusX.add_min _ _ _)
+  right_distrib a b c :=
+    congrArg ofE (RplusX.min_add _ _ _)
+  eps_otimes a :=
+    congrArg ofE (by simp : (⊤ : ℝ≥0∞) + a.toE = ⊤)
+  otimes_eps a :=
+    congrArg ofE (by simp : a.toE + (⊤ : ℝ≥0∞) = ⊤)
+  otimes_comm a b := congrArg ofE (add_comm _ _)
+  oplus_idem a := congrArg ofE (min_self _)
+```
+
+*Theorem:* $`a \preceq b \iff b.\mathtt{toE} \le a.\mathtt{toE}`
+
+```lean
+theorem le_iff (a b : RplusMin) :
+    Algebra.le a b ↔ b.toE ≤ a.toE := by
+  have h1 : Algebra.le a b
+      ↔ (⟨min a.toE b.toE⟩ : RplusMin) = b := Iff.rfl
+  rw [h1]
+  constructor
+  · intro h
+    have : min a.toE b.toE = b.toE := congrArg toE h
+    rw [← this]; exact min_le_left _ _
+  · intro h; exact congrArg ofE (min_eq_right h)
+```
+
+*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \inf\,\{\,x.\mathtt{toE} \mid x \in s\,\}`
+
+```lean
+noncomputable instance :
+    Algebra.CompleteDioid RplusMin where
+  sSup s := ⟨sInf (RplusMin.toE '' s)⟩
+  le_sSup s a ha :=
+    (le_iff _ _).mpr (sInf_le ⟨a, ha, rfl⟩)
+  sSup_le s b hb := (le_iff _ _).mpr (le_sInf (by
+    rintro x ⟨y, hy, rfl⟩
+    exact (le_iff _ _).mp (hb y hy)))
+  mul_sSup a s := by
+    have key : a.toE + sInf (toE '' s)
+        = sInf (toE '' ((fun b =>
+            (⟨a.toE + b.toE⟩ : RplusMin)) '' s)) := by
+      rw [Set.image_image]
+      show a.toE + sInf (toE '' s)
+         = sInf ((fun b => a.toE + b.toE) '' s)
+      rw [sInf_image, sInf_image, RplusX.add_iInf]
+      refine iInf_congr fun b => ?_
+      rw [RplusX.add_iInf]
+    exact congrArg ofE key
+
+end RplusMin
+```
+
+Of the three carriers, $`\overline{\mathbb{R}}_{\ge 0}` is the
+canonical complete (min,plus) dioid: complete and free of the sign
+pathologies, with lower semi-continuity inherited directly from
+$`\mathbb{R}_{\ge 0}^{\infty}`.
 
 ```lean
 end NetworkCalculus
