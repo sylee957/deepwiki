@@ -57,21 +57,35 @@ elements; it is `Mathlib`'s `sSup`, and we derive it together with its
 two least-upper-bound laws, matching the `sSup` API the order and
 convolution proofs use.
 
+*Definition:* $`\bigsqcup s = \bigsqcup_{x \in s} x`
+
 ```lean
 namespace CompleteDioid
 
 def sSup {T : Type*} [CompleteDioid T] (s : Set T) : T :=
   CompleteDioid.iSup (fun x : s => x.val)
+```
 
+*Theorem:* $`a \in s \Rightarrow a \preceq \bigsqcup s`
+
+```lean
 theorem le_sSup {T : Type*} [CompleteDioid T]
     (s : Set T) (a : T) (h : a ∈ s) : a ≼ₒ sSup s :=
   CompleteDioid.le_iSup (fun x : s => x.val) ⟨a, h⟩
+```
 
+*Theorem:* $`(\forall a \in s,\ a \preceq b) \Rightarrow \bigsqcup s \preceq b`
+
+```lean
 theorem sSup_le {T : Type*} [CompleteDioid T]
     (s : Set T) (b : T) (h : ∀ a ∈ s, a ≼ₒ b) :
     sSup s ≼ₒ b :=
   CompleteDioid.iSup_le _ b (fun x => h x.val x.2)
+```
 
+*Theorem:* $`a \otimes \bigsqcup s \preceq \bigsqcup\,\{\,a \otimes b \mid b \in s\,\}`
+
+```lean
 theorem mul_sSup_le {T : Type*} [CompleteDioid T]
     (a : T) (s : Set T) :
     a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s) := by
