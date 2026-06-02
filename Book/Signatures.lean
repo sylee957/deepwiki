@@ -77,8 +77,7 @@ namespace Bridge
 
 scoped instance instAddMonoid
     {T : Type*} [AddMonoid T] : _root_.AddMonoid T where
-  toAdd := AddMonoid.toOplus.toAddZero.toAdd
-  toZero := AddMonoid.toOplus.toAddZero.toZero
+  toAddZero := AddMonoid.toOplus.toAddZero
   add_assoc := AddMonoid.oplus_assoc
   zero_add := AddMonoid.eps_oplus
   add_zero := AddMonoid.oplus_eps
@@ -108,8 +107,7 @@ namespace Bridge
 
 scoped instance instMulMonoid
     {T : Type*} [MulMonoid T] : _root_.Monoid T where
-  toMul := MulMonoid.toOtimes.toMulOne.toMul
-  toOne := MulMonoid.toOtimes.toMulOne.toOne
+  toMulOne := MulMonoid.toOtimes.toMulOne
   mul_assoc := MulMonoid.otimes_assoc
   one_mul := MulMonoid.one_otimes
   mul_one := MulMonoid.otimes_one
