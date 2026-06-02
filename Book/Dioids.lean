@@ -2,6 +2,7 @@ import VersoManual
 import Book.Signatures
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Insert
+import Mathlib.Order.ConditionallyCompleteLattice.Basic
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -76,6 +77,31 @@ class CompleteDioid (T : Type*) extends Dioid T where
     (∀ a ∈ s, a ≼ₒ b) → sSup s ≼ₒ b
   mul_sSup : ∀ (a : T) (s : Set T),
     a ⊗ₒ sSup s = sSup ((fun b => a ⊗ₒ b) '' s)
+```
+
+The supremum and its two least-upper-bound laws are exactly a
+`Mathlib` `CompleteSemilatticeSup`: the `sSup` is `Mathlib`'s `⨆`, and
+`le_sSup`/`sSup_le` package into `IsLUB`. A `scoped` bridge records
+this, reusing the partial order from the dioid, so `Mathlib`'s
+supremum API applies once `open scoped …Bridge`.
+
+```lean
+namespace Bridge
+
+scoped instance instSupSet
+    {T : Type*} [CompleteDioid T] : SupSet T where
+  sSup := CompleteDioid.sSup
+
+scoped instance instCompleteSemilatticeSup
+    {T : Type*} [CompleteDioid T] :
+    CompleteSemilatticeSup T where
+  toPartialOrder := instPartialOrder
+  toSupSet := instSupSet
+  isLUB_sSup s :=
+    ⟨fun a ha => CompleteDioid.le_sSup s a ha,
+     fun b hb => CompleteDioid.sSup_le s b hb⟩
+
+end Bridge
 ```
 
 Lower semi-continuity holds on the right as well, by commutativity of
