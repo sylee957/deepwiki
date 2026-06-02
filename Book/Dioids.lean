@@ -438,16 +438,6 @@ structure Rmin where ofR ::
 namespace Rmin
 ```
 
-Two wrapped values are equal when their underlying numeric values are.
-
-*Theorem:* $`a.\mathtt{toR} = b.\mathtt{toR} \;\Rightarrow\; a = b`
-
-```lean
-@[ext] theorem ext {a b : Rmin}
-    (h : a.toR = b.toR) : a = b := by
-  cases a; cases b; simp_all
-```
-
 Two arithmetic facts on `WithTop ℝ` carry the distributive laws:
 addition distributes over the minimum on each side, because addition is
 monotone.
@@ -479,19 +469,21 @@ instance : Algebra.Dioid Rmin where
   eps := ⟨⊤⟩
   otimes a b := ⟨a.toR + b.toR⟩
   one := ⟨0⟩
-  oplus_assoc a b c := by ext; exact min_assoc _ _ _
-  eps_oplus a := by ext; exact min_eq_right le_top
-  oplus_eps a := by ext; exact min_eq_left le_top
-  oplus_comm a b := by ext; exact min_comm _ _
-  otimes_assoc a b c := by ext; exact add_assoc _ _ _
-  one_otimes a := by ext; exact zero_add _
-  otimes_one a := by ext; exact add_zero _
-  left_distrib a b c := by ext; exact add_min _ _ _
-  right_distrib a b c := by ext; exact min_add _ _ _
-  eps_otimes a := by ext; exact top_add _
-  otimes_eps a := by ext; exact add_top _
-  otimes_comm a b := by ext; exact add_comm _ _
-  oplus_idem a := by ext; exact min_self _
+  oplus_assoc a b c :=
+    congrArg ofR (min_assoc _ _ _)
+  eps_oplus a := congrArg ofR (min_eq_right le_top)
+  oplus_eps a := congrArg ofR (min_eq_left le_top)
+  oplus_comm a b := congrArg ofR (min_comm _ _)
+  otimes_assoc a b c :=
+    congrArg ofR (add_assoc _ _ _)
+  one_otimes a := congrArg ofR (zero_add _)
+  otimes_one a := congrArg ofR (add_zero _)
+  left_distrib a b c := congrArg ofR (add_min _ _ _)
+  right_distrib a b c := congrArg ofR (min_add _ _ _)
+  eps_otimes a := congrArg ofR (top_add _)
+  otimes_eps a := congrArg ofR (add_top _)
+  otimes_comm a b := congrArg ofR (add_comm _ _)
+  oplus_idem a := congrArg ofR (min_self _)
 
 end Rmin
 ```
