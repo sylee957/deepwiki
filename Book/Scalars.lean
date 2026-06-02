@@ -151,14 +151,14 @@ example (a b c : Rmin) :
 
 ```lean
 example (a : Rmin) :
-    (⟨⊤⟩ : Rmin) ∧[Rmin] a = a := zero_add a
+    ⟨⊤⟩ ∧[Rmin] a = a := zero_add a
 ```
 
 *Theorem:* $`a \wedge {+\infty} = a`
 
 ```lean
 example (a : Rmin) :
-    a ∧[Rmin] (⟨⊤⟩ : Rmin) = a := add_zero a
+    a ∧[Rmin] ⟨⊤⟩ = a := add_zero a
 ```
 
 *Theorem:* $`a \wedge b = b \wedge a`
@@ -181,14 +181,14 @@ example (a b c : Rmin) :
 
 ```lean
 example (a : Rmin) :
-    (⟨0⟩ : Rmin) +[Rmin] a = a := one_mul a
+    ⟨0⟩ +[Rmin] a = a := one_mul a
 ```
 
 *Theorem:* $`a + 0 = a`
 
 ```lean
 example (a : Rmin) :
-    a +[Rmin] (⟨0⟩ : Rmin) = a := mul_one a
+    a +[Rmin] ⟨0⟩ = a := mul_one a
 ```
 
 *Theorem:* $`a + (b \wedge c) = (a + b) \wedge (a + c)`
@@ -213,14 +213,14 @@ example (a b c : Rmin) :
 
 ```lean
 example (a : Rmin) :
-    (⟨⊤⟩ : Rmin) +[Rmin] a = ⟨⊤⟩ := zero_mul a
+    ⟨⊤⟩ +[Rmin] a = ⟨⊤⟩ := zero_mul a
 ```
 
 *Theorem:* $`a + {+\infty} = {+\infty}`
 
 ```lean
 example (a : Rmin) :
-    a +[Rmin] (⟨⊤⟩ : Rmin) = ⟨⊤⟩ := mul_zero a
+    a +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
 ```
 
 *Theorem:* $`a + b = b + a`
