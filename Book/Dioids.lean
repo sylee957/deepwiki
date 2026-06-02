@@ -57,32 +57,64 @@ example {T : Type*} [Semiring T]
 
 ## A complete dioid from scratch
 
-A dioid is _complete_ when every subset of the carrier has a least
-upper bound for the canonical order $`\preceq`, and the product is
-_lower semi-continuous_: it commutes with these suprema. We add the
-supremum $`\bigsqcup` as a field `sSup`, the two laws making it a least
-upper bound, and lower semi-continuity
-$$`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b.`
+A dioid is _complete_ when every _indexed family_ has a least upper
+bound for the canonical order $`\preceq`, and the product is _lower
+semi-continuous_: it commutes with these suprema. We take the supremum
+$`\bigsqcup_i f(i)` over a family $`f : \iota \to T` as the field
+`iSup`, with the two least-upper-bound laws and lower semi-continuity.
 
-*Definition:* a _complete dioid_ adds $`\bigsqcup : \mathcal{P}(T) \to T` with
-$$`a \in s \Rightarrow a \preceq \textstyle\bigsqcup s, \qquad (\forall a \in s,\ a \preceq b) \Rightarrow \textstyle\bigsqcup s \preceq b,`
-$$`a \otimes \textstyle\bigsqcup s = \textstyle\bigsqcup\,\{\,a \otimes b \mid b \in s\,\}.`
+*Definition:* a _complete dioid_ adds $`\bigsqcup : (\iota \to T) \to T` with
+$$`f(i) \preceq \textstyle\bigsqcup_j f(j), \qquad (\forall i,\ f(i) \preceq b) \Rightarrow \textstyle\bigsqcup_i f(i) \preceq b,`
+$$`a \otimes \textstyle\bigsqcup_i f(i) \preceq \textstyle\bigsqcup_i a \otimes f(i).`
 
-Lower semi-continuity is stated as a single inequality `mul_sSup_le`:
+Lower semi-continuity is stated as a single inequality `mul_iSup_le`:
 the product is _below_ the supremum of the products. The reverse
-inequality is free — each $`a \otimes b` is below $`a \otimes
-\bigsqcup s` by isotony, so their supremum is too — so the full
+inequality is free — each $`a \otimes f(i)` is below $`a \otimes
+\bigsqcup f` by isotony, so their supremum is too — so the full
 equality is a theorem, not an axiom.
 
 ```lean
-class CompleteDioid (T : Type*) extends Dioid T where
-  sSup : Set T → T
-  le_sSup : ∀ (s : Set T) (a : T), a ∈ s →
-    a ≼ₒ sSup s
-  sSup_le : ∀ (s : Set T) (b : T),
-    (∀ a ∈ s, a ≼ₒ b) → sSup s ≼ₒ b
-  mul_sSup_le : ∀ (a : T) (s : Set T),
-    a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s)
+class CompleteDioid (T : Type u) extends Dioid T where
+  iSup : {ι : Type u} → (ι → T) → T
+  le_iSup : ∀ {ι : Type u} (f : ι → T) (i : ι),
+    f i ≼ₒ iSup f
+  iSup_le : ∀ {ι : Type u} (f : ι → T) (b : T),
+    (∀ i, f i ≼ₒ b) → iSup f ≼ₒ b
+  mul_iSup_le : ∀ {ι : Type u} (a : T) (f : ι → T),
+    a ⊗ₒ iSup f ≼ₒ iSup (fun i => a ⊗ₒ f i)
+```
+
+The supremum is taken over an _indexed family_ $`\bigsqcup_i f(i)`.
+The supremum of a _set_ is the special case indexing by the set's own
+elements; it is `Mathlib`'s `sSup`, and we derive it together with its
+two least-upper-bound laws, matching the `sSup` API the order and
+convolution proofs use.
+
+```lean
+namespace CompleteDioid
+
+def sSup {T : Type*} [CompleteDioid T] (s : Set T) : T :=
+  CompleteDioid.iSup (fun x : s => x.val)
+
+theorem le_sSup {T : Type*} [CompleteDioid T]
+    (s : Set T) (a : T) (h : a ∈ s) : a ≼ₒ sSup s :=
+  CompleteDioid.le_iSup (fun x : s => x.val) ⟨a, h⟩
+
+theorem sSup_le {T : Type*} [CompleteDioid T]
+    (s : Set T) (b : T) (h : ∀ a ∈ s, a ≼ₒ b) :
+    sSup s ≼ₒ b :=
+  CompleteDioid.iSup_le _ b (fun x => h x.val x.2)
+
+theorem mul_sSup_le {T : Type*} [CompleteDioid T]
+    (a : T) (s : Set T) :
+    a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s) := by
+  refine le_trans
+    (CompleteDioid.mul_iSup_le a (fun x : s => x.val)) ?_
+  apply CompleteDioid.iSup_le
+  intro x
+  exact CompleteDioid.le_sSup _ _ ⟨x.val, x.2, rfl⟩
+
+end CompleteDioid
 ```
 
 The supremum and its two least-upper-bound laws are exactly a

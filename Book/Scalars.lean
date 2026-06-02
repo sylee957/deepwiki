@@ -364,23 +364,16 @@ greatest-lower-bound, and lower semi-continuity is `RbarX.add_iInf`.
 ```lean
 noncomputable instance :
     Algebra.CompleteDioid RbarMin where
-  sSup s := ⟨sInf (RbarMin.toB '' s)⟩
-  le_sSup s a ha :=
-    (le_iff _ _).mpr (sInf_le ⟨a, ha, rfl⟩)
-  sSup_le s b hb := (le_iff _ _).mpr (le_sInf (by
-    rintro x ⟨y, hy, rfl⟩
-    exact (le_iff _ _).mp (hb y hy)))
-  mul_sSup_le a s := by
-    have key : a.toB + sInf (toB '' s)
-        = sInf (toB '' ((fun b =>
-            (⟨a.toB + b.toB⟩ : RbarMin)) '' s)) := by
-      rw [Set.image_image]
-      show a.toB + sInf (toB '' s)
-         = sInf ((fun b => a.toB + b.toB) '' s)
-      rw [sInf_image, sInf_image, RbarX.add_iInf]
-      refine iInf_congr fun b => ?_
-      rw [RbarX.add_iInf]
-    exact (congrArg ofB key).le
+  iSup f := ⟨⨅ i, (f i).toB⟩
+  le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
+  iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
+    intro i
+    exact (le_iff _ _).mp (hb i)))
+  mul_iSup_le a f := by
+    refine le_of_eq (congrArg ofB ?_)
+    show a.toB + ⨅ i, (f i).toB
+       = ⨅ i, (a.toB + (f i).toB)
+    exact RbarX.add_iInf _ _
 
 end RbarMin
 ```
@@ -481,23 +474,16 @@ theorem le_iff (a b : RplusMin) :
 ```lean
 noncomputable instance :
     Algebra.CompleteDioid RplusMin where
-  sSup s := ⟨sInf (RplusMin.toE '' s)⟩
-  le_sSup s a ha :=
-    (le_iff _ _).mpr (sInf_le ⟨a, ha, rfl⟩)
-  sSup_le s b hb := (le_iff _ _).mpr (le_sInf (by
-    rintro x ⟨y, hy, rfl⟩
-    exact (le_iff _ _).mp (hb y hy)))
-  mul_sSup_le a s := by
-    have key : a.toE + sInf (toE '' s)
-        = sInf (toE '' ((fun b =>
-            (⟨a.toE + b.toE⟩ : RplusMin)) '' s)) := by
-      rw [Set.image_image]
-      show a.toE + sInf (toE '' s)
-         = sInf ((fun b => a.toE + b.toE) '' s)
-      rw [sInf_image, sInf_image, RplusX.add_iInf]
-      refine iInf_congr fun b => ?_
-      rw [RplusX.add_iInf]
-    exact (congrArg ofE key).le
+  iSup f := ⟨⨅ i, (f i).toE⟩
+  le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
+  iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
+    intro i
+    exact (le_iff _ _).mp (hb i)))
+  mul_iSup_le a f := by
+    refine le_of_eq (congrArg ofE ?_)
+    show a.toE + ⨅ i, (f i).toE
+       = ⨅ i, (a.toE + (f i).toE)
+    exact RplusX.add_iInf _ _
 
 end RplusMin
 ```
