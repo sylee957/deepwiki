@@ -1,6 +1,7 @@
 import VersoManual
 import Book.Introduction
 import Book.Dioids
+import Book.Scalars
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -21,3 +22,5 @@ declarations.
 {include 1 Book.Introduction}
 
 {include 1 Book.Dioids}
+
+{include 1 Book.Scalars}
