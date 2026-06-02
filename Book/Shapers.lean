@@ -427,6 +427,147 @@ example {C : Type*} [CumulativeClass C]
   IsShaper.of_natLe hS h
 ```
 
+# The greedy shaper
+
+A _shaper_ constrains its output to allow `sigma` as an arrival curve.
+A _greedy_ shaper does more: it shapes the output as tightly as
+possible, fixing it to be exactly the convolution of the input with
+`sigma`. Each output is then `sigma`-constrained by construction, and
+the shaper is _greedy_ in that it delays the input no more than
+forced.
+
+The curve `sigma` of a greedy shaper is required to be _sub-additive_
+and _left-continuous_, exactly as in the classical definition.
+Sub-additivity — in dioid form, $`\sigma(u) \otimes \sigma(s) \preceq
+\sigma(u + s)` — is what makes the output `sigma`-shaped;
+left-continuity keeps the shaped output a well-defined cumulative
+function. We bundle the two into a _validity_ predicate and require it
+of the curve in the greedy-shaper definitions themselves: the notion
+is defined only for valid `sigma`.
+
+*Definition:* dioid sub-additivity of a curve, $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)`
+
+```lean
+def IsSubadditiveF (sigma : F) : Prop :=
+  ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
+```
+
+*Definition:* a valid shaper curve is sub-additive and left-continuous
+
+```lean
+structure IsShaperCurve (sigma : F) : Prop where
+  subadditive : IsSubadditiveF sigma
+  leftContinuous : IsLeftContinuous (numFn sigma)
+```
+
+A server is a `sigma`-greedy shaper when every admissible pair has
+output exactly the convolution of the input with `sigma`. The curve is
+carried with its validity proof.
+
+*Definition:* $`S \text{ is a } \sigma\text{-greedy shaper} \iff \forall (A, D) \in S,\ D = A \ast \sigma`
+
+```lean
+def IsGreedyShaper {C : Type*} [CumulativeClass C]
+    (S : Server C) (sigma : F)
+    (_hσ : IsShaperCurve sigma) : Prop :=
+  ∀ p ∈ S, (↑p.2 : F) = conv (↑p.1) sigma
+```
+
+The greedy shaper itself is the set of all such pairs, again over a
+valid curve.
+
+*Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \in \mathcal{C} \times \mathcal{C} \mid D = A \ast \sigma\,\}`
+
+```lean
+def greedyShaper (C : Type*) [CumulativeClass C]
+    (sigma : F) (_hσ : IsShaperCurve sigma) :
+    Server C :=
+  { p | (↑p.2 : F) = conv (↑p.1) sigma }
+
+theorem mem_greedyShaper_iff
+    {C : Type*} [CumulativeClass C]
+    {sigma : F} {hσ : IsShaperCurve sigma}
+    {p : C × C} :
+    p ∈ greedyShaper C sigma hσ ↔
+      (↑p.2 : F) = conv (↑p.1) sigma :=
+  Iff.rfl
+
+theorem isGreedyShaper_greedyShaper
+    (C : Type*) [CumulativeClass C] (sigma : F)
+    (hσ : IsShaperCurve sigma) :
+    IsGreedyShaper (greedyShaper C sigma hσ) sigma hσ :=
+  fun _ hp => hp
+```
+
+A `sigma`-greedy shaper is in particular a server set whose every
+member equals its own convolution; the greedy shaper is the largest
+such set.
+
+*Theorem:* $`S \text{ greedy} \iff S \subseteq S_{\mathrm{gsh}}(\sigma)`
+
+```lean
+theorem isGreedyShaper_iff_subset
+    {C : Type*} [CumulativeClass C]
+    {S : Server C} {sigma : F}
+    {hσ : IsShaperCurve sigma} :
+    IsGreedyShaper S sigma hσ ↔
+      S ⊆ greedyShaper C sigma hσ :=
+  Iff.rfl
+```
+
+A sub-additive curve allows itself as an arrival curve: the kernel
+inequality $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)` is
+exactly the condition for $`\sigma` to allow $`\sigma`.
+
+*Theorem:* a sub-additive curve allows itself
+
+```lean
+theorem allowsArrivalCurve_self_of_subadd
+    {sigma : F} (hsub : IsSubadditiveF sigma) :
+    AllowsArrivalCurve sigma sigma := by
+  rw [allowsArrivalCurve_iff_kernel]
+  intro u s t hus
+  rw [← hus]
+  exact hsub u s
+```
+
+The point of the construction is that the output is `sigma`-shaped.
+Under sub-additivity the convolution `A ∗ sigma` allows `sigma`:
+shifting the constraint through associativity and monotonicity,
+$`A \ast \sigma \le_n A \ast (\sigma \ast \sigma) = (A \ast \sigma) \ast \sigma`.
+
+*Theorem:* if $`\sigma` is sub-additive then $`A \ast \sigma` allows $`\sigma`
+
+```lean
+theorem allowsArrivalCurve_conv_of_subadd
+    (A : F) {sigma : F} (hsub : IsSubadditiveF sigma) :
+    AllowsArrivalCurve (conv A sigma) sigma := by
+  have h : conv A sigma ≤ₙ conv A (conv sigma sigma) :=
+    conv_natLe_right A
+      (allowsArrivalCurve_self_of_subadd hsub)
+  rw [← conv_assoc] at h
+  exact h
+```
+
+Hence every output of a greedy shaper is a `sigma`-shaper output: the
+curve's sub-additivity, carried in its validity proof, makes the
+greedy shaper refine the largest `sigma`-shaper.
+
+*Theorem:* a greedy shaper is a $`\sigma`-shaper
+
+```lean
+theorem IsGreedyShaper.isShaper
+    {C : Type*} [CumulativeClass C]
+    {S : Server C} {sigma : F}
+    {hσ : IsShaperCurve sigma}
+    (hS : IsGreedyShaper S sigma hσ) :
+    IsShaper S sigma := by
+  intro p hp
+  rw [hS p hp]
+  exact allowsArrivalCurve_conv_of_subadd
+    (↑p.1) hσ.subadditive
+```
+
 ```lean
 end NetworkCalculus
 ```
