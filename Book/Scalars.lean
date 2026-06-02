@@ -237,23 +237,32 @@ example (a : Rmin) :
     a ∧[Rmin] a = a := add_idem a
 ```
 
-The behaviour with $`+\infty`: the minimum with infinity returns the
-finite value, while numeric addition with infinity absorbs.
+When both inputs are finite reals the results are again finite reals —
+the operations stay inside $`\mathbb{R}`.
 
-*Theorem:* $`a \wedge b \wedge (+\infty) = a \wedge b`
+*Theorem:* $`x \wedge y = \min(x, y) \in \mathbb{R}`
 
 ```lean
-example (a b : Rmin) :
-    a ∧[Rmin] b ∧[Rmin] ⟨⊤⟩ = a ∧[Rmin] b :=
-  add_zero (a ∧[Rmin] b)
+example (x y : ℝ) :
+    (⟨x⟩ : Rmin) ∧[Rmin] ⟨y⟩ = ⟨min x y⟩ := rfl
 ```
 
-*Theorem:* $`a + b + (+\infty) = {+\infty}` ($`+\infty` absorbing for $`+`)
+*Theorem:* $`x + y \in \mathbb{R}` (result is a finite real)
 
 ```lean
-example (a b : Rmin) :
-    a +[Rmin] b +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ :=
-  mul_zero (a +[Rmin] b)
+example (x y : ℝ) :
+    ∃ z : ℝ,
+      (⟨x⟩ : Rmin) +[Rmin] ⟨y⟩ = ⟨(z : WithTop ℝ)⟩ :=
+  ⟨x + y, rfl⟩
+```
+
+When one input is $`+\infty`, numeric addition absorbs.
+
+*Theorem:* $`x + (+\infty) = {+\infty}`
+
+```lean
+example (x : ℝ) :
+    (⟨x⟩ : Rmin) +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ := mul_zero _
 ```
 
 ```lean
