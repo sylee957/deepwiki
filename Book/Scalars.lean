@@ -81,76 +81,68 @@ commutativity of $`\min` and $`+`, the neutrals $`+\infty` and $`0`,
 the two distributive laws, that $`+\infty` is absorbing for $`+`, and
 idempotency $`\min(a, a) = a`.
 
-*Definition:* the operations: $`\oplus = \min` with neutral $`+\infty`, and $`\otimes = {+}` with unit $`0`
+Each axiom is a fact about `WithTop ℝ`, lifted through the wrapper by
+`ext`: the monoid laws from `min` and `+`, the distributive laws from
+`add_min`/`min_add`, absorption of $`+\infty`, and idempotency of
+$`\min`. The operations use the $`\uparrow` coercion to the underlying
+value.
 
-```lean
-instance : Algebra.Oplus Rmin where
-  add a b := ⟨min ↑a ↑b⟩
-  zero := ⟨⊤⟩
-
-instance : Algebra.Otimes Rmin where
-  mul a b := ⟨↑a + ↑b⟩
-  one := ⟨0⟩
-```
-
-Each law is now a fact about `WithTop ℝ`, lifted through the wrapper by
-`ext`: the $`\oplus`-monoid laws from `min`, the $`\otimes`-monoid laws
-from `+`, the distributive laws from `add_min`/`min_add`, absorption of
-$`+\infty`, and idempotency of $`\min`.
-
-```lean
-theorem oplus_assoc (a b c : Rmin) :
-    (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c) :=
-  ext (min_assoc _ _ _)
-theorem eps_oplus (a : Rmin) : εₒ ⊕ₒ a = a :=
-  ext (min_eq_right le_top)
-theorem oplus_eps (a : Rmin) : a ⊕ₒ εₒ = a :=
-  ext (min_eq_left le_top)
-theorem oplus_comm (a b : Rmin) : a ⊕ₒ b = b ⊕ₒ a :=
-  ext (min_comm _ _)
-theorem otimes_assoc (a b c : Rmin) :
-    (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c) :=
-  ext (add_assoc _ _ _)
-theorem one_otimes (a : Rmin) : eₒ ⊗ₒ a = a :=
-  ext (zero_add _)
-theorem otimes_one (a : Rmin) : a ⊗ₒ eₒ = a :=
-  ext (add_zero _)
-theorem left_distrib (a b c : Rmin) :
-    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c :=
-  ext (add_min _ _ _)
-theorem right_distrib (a b c : Rmin) :
-    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c :=
-  ext (min_add _ _ _)
-theorem eps_otimes (a : Rmin) : εₒ ⊗ₒ a = εₒ :=
-  ext (top_add _)
-theorem otimes_eps (a : Rmin) : a ⊗ₒ εₒ = εₒ :=
-  ext (add_top _)
-theorem otimes_comm (a b : Rmin) : a ⊗ₒ b = b ⊗ₒ a :=
-  ext (add_comm _ _)
-theorem oplus_idem (a : Rmin) : a ⊕ₒ a = a :=
-  ext (min_self _)
-```
-
-These assemble into the dioid: the operations come from the instances
-above, the laws from the theorems just proved.
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
 instance : Algebra.Dioid Rmin where
-  toOplus := inferInstance
-  toOtimes := inferInstance
-  oplus_assoc := oplus_assoc
-  eps_oplus := eps_oplus
-  oplus_eps := oplus_eps
-  oplus_comm := oplus_comm
-  otimes_assoc := otimes_assoc
-  one_otimes := one_otimes
-  otimes_one := otimes_one
-  left_distrib := left_distrib
-  right_distrib := right_distrib
-  eps_otimes := eps_otimes
-  otimes_eps := otimes_eps
-  otimes_comm := otimes_comm
-  oplus_idem := oplus_idem
+  add a b := ⟨min ↑a ↑b⟩
+  zero := ⟨⊤⟩
+  mul a b := ⟨↑a + ↑b⟩
+  one := ⟨0⟩
+  oplus_assoc _ _ _ := ext (min_assoc _ _ _)
+  eps_oplus _ := ext (min_eq_right le_top)
+  oplus_eps _ := ext (min_eq_left le_top)
+  oplus_comm _ _ := ext (min_comm _ _)
+  otimes_assoc _ _ _ := ext (add_assoc _ _ _)
+  one_otimes _ := ext (zero_add _)
+  otimes_one _ := ext (add_zero _)
+  left_distrib _ _ _ := ext (add_min _ _ _)
+  right_distrib _ _ _ := ext (min_add _ _ _)
+  eps_otimes _ := ext (top_add _)
+  otimes_eps _ := ext (add_top _)
+  otimes_comm _ _ := ext (add_comm _ _)
+  oplus_idem _ := ext (min_self _)
+
+end Rmin
+```
+
+The dioid axioms, recovered as facts about $`\overline{\mathbb{R}}`:
+
+```lean
+namespace Rmin
+open Algebra
+
+example (a b c : Rmin) : (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c) :=
+  ext (min_assoc _ _ _)
+example (a : Rmin) : ⟨⊤⟩ ⊕ₒ a = a :=
+  ext (min_eq_right le_top)
+example (a : Rmin) : a ⊕ₒ ⟨⊤⟩ = a :=
+  ext (min_eq_left le_top)
+example (a b : Rmin) : a ⊕ₒ b = b ⊕ₒ a := ext (min_comm _ _)
+example (a b c : Rmin) : (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c) :=
+  ext (add_assoc _ _ _)
+example (a : Rmin) : ⟨0⟩ ⊗ₒ a = a :=
+  ext (zero_add _)
+example (a : Rmin) : a ⊗ₒ ⟨0⟩ = a :=
+  ext (add_zero _)
+example (a b c : Rmin) :
+    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c :=
+  ext (add_min _ _ _)
+example (a b c : Rmin) :
+    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c :=
+  ext (min_add _ _ _)
+example (a : Rmin) :
+    ⟨⊤⟩ ⊗ₒ a = ⟨⊤⟩ := ext (top_add _)
+example (a : Rmin) :
+    a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := ext (add_top _)
+example (a b : Rmin) : a ⊗ₒ b = b ⊗ₒ a := ext (add_comm _ _)
+example (a : Rmin) : a ⊕ₒ a = a := ext (min_self _)
 
 end Rmin
 ```
