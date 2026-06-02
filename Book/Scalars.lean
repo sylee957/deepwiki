@@ -315,66 +315,69 @@ structure RbarMin where ofB ::
 
 namespace RbarMin
 
+instance : Coe RbarMin Rb := ⟨toB⟩
+
+@[ext] theorem ext {a b : RbarMin}
+    (h : (a : Rb) = b) : a = b := by
+  cases a; cases b; exact congrArg ofB h
+
 instance : Algebra.Dioid RbarMin where
-  add := fun ⟨a⟩ ⟨b⟩ => ⟨min a b⟩
+  add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
-  mul := fun ⟨a⟩ ⟨b⟩ => ⟨a + b⟩
+  mul a b := ⟨↑a + ↑b⟩
   one := ⟨0⟩
-  oplus_assoc a b c := congrArg ofB (min_assoc _ _ _)
-  eps_oplus a := congrArg ofB (min_eq_right le_top)
-  oplus_eps a := congrArg ofB (min_eq_left le_top)
-  oplus_comm a b := congrArg ofB (min_comm _ _)
-  otimes_assoc a b c :=
-    congrArg ofB (add_assoc _ _ _)
-  one_otimes a := congrArg ofB (zero_add _)
-  otimes_one a := congrArg ofB (add_zero _)
-  left_distrib a b c :=
-    congrArg ofB (RbarX.add_min _ _ _)
-  right_distrib a b c :=
-    congrArg ofB (RbarX.min_add _ _ _)
+  oplus_assoc _ _ _ := ext (min_assoc _ _ _)
+  eps_oplus _ := ext (min_eq_right le_top)
+  oplus_eps _ := ext (min_eq_left le_top)
+  oplus_comm _ _ := ext (min_comm _ _)
+  otimes_assoc _ _ _ := ext (add_assoc _ _ _)
+  one_otimes _ := ext (zero_add _)
+  otimes_one _ := ext (add_zero _)
+  left_distrib _ _ _ := ext (RbarX.add_min _ _ _)
+  right_distrib _ _ _ := ext (RbarX.min_add _ _ _)
   eps_otimes a :=
-    congrArg ofB (by simp : (⊤ : Rb) + a.toB = ⊤)
+    ext (show (⊤ : Rb) + ↑a = ⊤ by simp)
   otimes_eps a :=
-    congrArg ofB (by simp : a.toB + (⊤ : Rb) = ⊤)
-  otimes_comm a b := congrArg ofB (add_comm _ _)
-  oplus_idem a := congrArg ofB (min_self _)
+    ext (show (↑a : Rb) + ⊤ = ⊤ by simp)
+  otimes_comm _ _ := ext (add_comm _ _)
+  oplus_idem _ := ext (min_self _)
 ```
 
 The dioid order on the wrapper is the reverse of the numeric order.
 
-*Theorem:* $`a \preceq b \iff b.\mathtt{toB} \le a.\mathtt{toB}`
+*Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
 theorem le_iff (a b : RbarMin) :
-    a ≼ₒ b ↔ b.toB ≤ a.toB := by
+    a ≼ₒ b ↔ (b : Rb) ≤ a := by
   have h1 : a ≼ₒ b
-      ↔ (⟨min a.toB b.toB⟩ : RbarMin) = b := Iff.rfl
+      ↔ (⟨min ↑a ↑b⟩ : RbarMin) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
-    have : min a.toB b.toB = b.toB := congrArg toB h
+    have : min (↑a : Rb) ↑b = ↑b := congrArg toB h
     rw [← this]; exact min_le_left _ _
-  · intro h; exact congrArg ofB (min_eq_right h)
+  · intro h; exact ext (min_eq_right h)
 ```
 
 The dioid supremum is the numeric infimum of the underlying values.
 Membership and least-upper-bound for $`\preceq` reduce to the numeric
 greatest-lower-bound, and lower semi-continuity is `RbarX.add_iInf`.
 
-*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \inf\,\{\,x.\mathtt{toB} \mid x \in s\,\}`
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \inf\,\{\,\uparrow x \mid x \in s\,\}`
 
 ```lean
 noncomputable instance :
     Algebra.CompleteDioid RbarMin where
-  iSup f := ⟨⨅ i, (f i).toB⟩
+  iSup f := ⟨⨅ i, ↑(f i)⟩
   le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
     intro i
     exact (le_iff _ _).mp (hb i)))
   mul_iSup a f := by
-    refine congrArg ofB ?_
-    show a.toB + ⨅ i, (f i).toB
-       = ⨅ i, (a.toB + (f i).toB)
+    refine ext ?_
+    show (↑a : Rb) + ⨅ i, ↑(f i)
+       = ⨅ i, ((↑a : Rb) + ↑(f i))
     exact RbarX.add_iInf _ _
 
 end RbarMin
@@ -431,60 +434,63 @@ structure RplusMin where ofE ::
 
 namespace RplusMin
 
+instance : Coe RplusMin ℝ≥0∞ := ⟨toE⟩
+
+@[ext] theorem ext {a b : RplusMin}
+    (h : (a : ℝ≥0∞) = b) : a = b := by
+  cases a; cases b; exact congrArg ofE h
+
 instance : Algebra.Dioid RplusMin where
-  add := fun ⟨a⟩ ⟨b⟩ => ⟨min a b⟩
+  add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
-  mul := fun ⟨a⟩ ⟨b⟩ => ⟨a + b⟩
+  mul a b := ⟨↑a + ↑b⟩
   one := ⟨0⟩
-  oplus_assoc a b c := congrArg ofE (min_assoc _ _ _)
-  eps_oplus a := congrArg ofE (min_eq_right le_top)
-  oplus_eps a := congrArg ofE (min_eq_left le_top)
-  oplus_comm a b := congrArg ofE (min_comm _ _)
-  otimes_assoc a b c :=
-    congrArg ofE (add_assoc _ _ _)
-  one_otimes a := congrArg ofE (zero_add _)
-  otimes_one a := congrArg ofE (add_zero _)
-  left_distrib a b c :=
-    congrArg ofE (RplusX.add_min _ _ _)
-  right_distrib a b c :=
-    congrArg ofE (RplusX.min_add _ _ _)
+  oplus_assoc _ _ _ := ext (min_assoc _ _ _)
+  eps_oplus _ := ext (min_eq_right le_top)
+  oplus_eps _ := ext (min_eq_left le_top)
+  oplus_comm _ _ := ext (min_comm _ _)
+  otimes_assoc _ _ _ := ext (add_assoc _ _ _)
+  one_otimes _ := ext (zero_add _)
+  otimes_one _ := ext (add_zero _)
+  left_distrib _ _ _ := ext (RplusX.add_min _ _ _)
+  right_distrib _ _ _ := ext (RplusX.min_add _ _ _)
   eps_otimes a :=
-    congrArg ofE (by simp : (⊤ : ℝ≥0∞) + a.toE = ⊤)
+    ext (show (⊤ : ℝ≥0∞) + ↑a = ⊤ by simp)
   otimes_eps a :=
-    congrArg ofE (by simp : a.toE + (⊤ : ℝ≥0∞) = ⊤)
-  otimes_comm a b := congrArg ofE (add_comm _ _)
-  oplus_idem a := congrArg ofE (min_self _)
+    ext (show (↑a : ℝ≥0∞) + ⊤ = ⊤ by simp)
+  otimes_comm _ _ := ext (add_comm _ _)
+  oplus_idem _ := ext (min_self _)
 ```
 
-*Theorem:* $`a \preceq b \iff b.\mathtt{toE} \le a.\mathtt{toE}`
+*Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
 theorem le_iff (a b : RplusMin) :
-    a ≼ₒ b ↔ b.toE ≤ a.toE := by
+    a ≼ₒ b ↔ (b : ℝ≥0∞) ≤ a := by
   have h1 : a ≼ₒ b
-      ↔ (⟨min a.toE b.toE⟩ : RplusMin) = b := Iff.rfl
+      ↔ (⟨min ↑a ↑b⟩ : RplusMin) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
-    have : min a.toE b.toE = b.toE := congrArg toE h
+    have : min (↑a : ℝ≥0∞) ↑b = ↑b := congrArg toE h
     rw [← this]; exact min_le_left _ _
-  · intro h; exact congrArg ofE (min_eq_right h)
+  · intro h; exact ext (min_eq_right h)
 ```
 
-*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \inf\,\{\,x.\mathtt{toE} \mid x \in s\,\}`
+*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \inf\,\{\,\uparrow x \mid x \in s\,\}`
 
 ```lean
 noncomputable instance :
     Algebra.CompleteDioid RplusMin where
-  iSup f := ⟨⨅ i, (f i).toE⟩
+  iSup f := ⟨⨅ i, ↑(f i)⟩
   le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
     intro i
     exact (le_iff _ _).mp (hb i)))
   mul_iSup a f := by
-    refine congrArg ofE ?_
-    show a.toE + ⨅ i, (f i).toE
-       = ⨅ i, (a.toE + (f i).toE)
+    refine ext ?_
+    show (↑a : ℝ≥0∞) + ⨅ i, ↑(f i)
+       = ⨅ i, ((↑a : ℝ≥0∞) + ↑(f i))
     exact RplusX.add_iInf _ _
 
 end RplusMin
