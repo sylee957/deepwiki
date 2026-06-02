@@ -307,6 +307,59 @@ theorem mul_sup {T : Type*} [CompleteDioid T]
   · rintro (rfl | rfl)
     · exact ⟨b, Or.inl rfl, rfl⟩
     · exact ⟨c, Or.inr rfl, rfl⟩
+```
+
+## The top element
+
+A complete dioid has a _greatest element_ $`\top`, the sum of all the
+elements of the carrier:
+$$`\top = \bigsqcup_{x} x.`
+We take it as the supremum of the universal set, written `⊤ₒ[T]`.
+
+*Definition:* $`\top = \bigsqcup_{x \in T} x`
+
+```lean
+def top (T : Type*) [CompleteDioid T] : T :=
+  CompleteDioid.sSup Set.univ
+
+scoped notation:max "⊤ₒ[" T "]" => top T
+```
+
+Being the supremum of everything, $`\top` lies above every element.
+
+*Theorem:* $`a \preceq \top`
+
+```lean
+theorem le_top {T : Type*} [CompleteDioid T] (a : T) :
+    a ≼ₒ ⊤ₒ[T] :=
+  CompleteDioid.le_sSup Set.univ a (Set.mem_univ a)
+```
+
+Hence $`\top` is _absorbing for the sum_: adding anything to it changes
+nothing.
+
+*Theorem:* $`\top \oplus a = \top`
+
+```lean
+theorem top_oplus {T : Type*} [CompleteDioid T] (a : T) :
+    ⊤ₒ[T] ⊕ₒ a = ⊤ₒ[T] := by
+  have h : a ⊕ₒ ⊤ₒ[T] = ⊤ₒ[T] := le_top a
+  rw [AddCommMonoid.oplus_comm, h]
+```
+
+Since the zero $`\varepsilon` is absorbing for the product, multiplying
+$`\top` by $`\varepsilon` on either side collapses to $`\varepsilon`.
+
+*Theorem:* $`\varepsilon \otimes \top = \top \otimes \varepsilon = \varepsilon`
+
+```lean
+theorem eps_otimes_top {T : Type*} [CompleteDioid T] :
+    Oplus.eps ⊗ₒ ⊤ₒ[T] = Oplus.eps :=
+  Semiring.eps_otimes (top T)
+
+theorem top_otimes_eps {T : Type*} [CompleteDioid T] :
+    ⊤ₒ[T] ⊗ₒ Oplus.eps = Oplus.eps :=
+  Semiring.otimes_eps (top T)
 
 end Algebra
 ```
