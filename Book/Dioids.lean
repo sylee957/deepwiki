@@ -36,10 +36,10 @@ diamond arises.
 *Theorem:* $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`
 
 ```lean
-theorem quaternary_distrib {T : Type*} [Semiring T]
+example {T : Type*} [Semiring T]
     (a b c d : T) :
     (a ⊕ₒ b) ⊗ₒ (c ⊕ₒ d)
-      = a ⊗ₒ c ⊕ₒ b ⊗ₒ c ⊕ₒ a ⊗ₒ d ⊕ₒ b ⊗ₒ d := by
+      = (a ⊗ₒ c) ⊕ₒ (b ⊗ₒ c) ⊕ₒ (a ⊗ₒ d) ⊕ₒ (b ⊗ₒ d) := by
   have hexp : (a ⊕ₒ b) ⊗ₒ (c ⊕ₒ d)
       = (a ⊗ₒ c ⊕ₒ a ⊗ₒ d) ⊕ₒ (b ⊗ₒ c ⊕ₒ b ⊗ₒ d) := by
     rw [right_distrib, left_distrib, left_distrib]
