@@ -42,8 +42,8 @@ theorem quaternary_distrib {T : Type*} [Semiring T]
       = a ⊗ₒ c ⊕ₒ b ⊗ₒ c ⊕ₒ a ⊗ₒ d ⊕ₒ b ⊗ₒ d := by
   have hexp : (a ⊕ₒ b) ⊗ₒ (c ⊕ₒ d)
       = (a ⊗ₒ c ⊕ₒ a ⊗ₒ d) ⊕ₒ (b ⊗ₒ c ⊕ₒ b ⊗ₒ d) := by
-    rw [Semiring.right_distrib, Semiring.left_distrib,
-      Semiring.left_distrib]
+    rw [_root_.right_distrib, _root_.left_distrib,
+      _root_.left_distrib]
   rw [hexp,
     add_assoc (a ⊗ₒ c) (b ⊗ₒ c) (a ⊗ₒ d),
     add_assoc (a ⊗ₒ c)
@@ -177,11 +177,11 @@ $`\top` by $`\varepsilon` on either side collapses to $`\varepsilon`.
 ```lean
 theorem eps_otimes_top {T : Type*} [CompleteDioid T] :
     εₒ ⊗ₒ ⊤ₒ[T] = εₒ :=
-  Semiring.eps_otimes (top T)
+  zero_mul (top T)
 
 theorem top_otimes_eps {T : Type*} [CompleteDioid T] :
     ⊤ₒ[T] ⊗ₒ εₒ = εₒ :=
-  Semiring.otimes_eps (top T)
+  mul_zero (top T)
 ```
 
 ## The two orders agree

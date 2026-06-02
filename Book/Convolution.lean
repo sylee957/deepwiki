@@ -174,7 +174,7 @@ theorem conv_distrib (f g h : F) :
     rintro x ⟨u, s, hus, rfl⟩
     have hd : f u ⊗ₒ (pmin g h s)
         = (f u ⊗ₒ g s) ⊕ₒ (f u ⊗ₒ h s) :=
-      Algebra.Semiring.left_distrib (f u) (g s) (h s)
+      _root_.left_distrib (f u) (g s) (h s)
     show f u ⊗ₒ (pmin g h s) ≼ₒ _
     rw [hd]
     refine oplus_le_oplus ?_ ?_
