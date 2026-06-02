@@ -31,40 +31,28 @@ $`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
 ```lean
 namespace Algebra
 
-class Oplus (T : Type*) where
-  oplus : T → T → T
-  eps : T
+class Oplus (T : Type*) extends AddZero T
 
-class Otimes (T : Type*) where
-  otimes : T → T → T
-  one : T
+class Otimes (T : Type*) extends MulOne T
 
-scoped infixl:65 " ⊕ₒ " => Oplus.oplus
-scoped infixl:70 " ⊗ₒ " => Otimes.otimes
-scoped notation "εₒ" => Oplus.eps
-scoped notation "eₒ" => Otimes.one
+scoped notation:65 a:65 " ⊕ₒ " b:66 =>
+  @HAdd.hAdd _ _ _
+    (@instHAdd _ Oplus.toAddZero.toAdd) a b
+scoped notation:max "εₒ" =>
+  @Zero.zero _ Oplus.toAddZero.toZero
+scoped notation:70 a:70 " ⊗ₒ " b:71 =>
+  @HMul.hMul _ _ _
+    (@instHMul _ Otimes.toMulOne.toMul) a b
+scoped notation:max "eₒ" =>
+  @One.one _ Otimes.toMulOne.toOne
 ```
 
-Each signature already carries `Mathlib`'s lawless `Add`/`Zero` and
-`Mul`/`One`: $`\oplus, \varepsilon` are the addition and its neutral,
-$`\otimes, e` the multiplication and its unit. So $`\oplus = {+}` and
-$`\otimes = {*}` definitionally from the start; the monoid bridges
-below only add the laws.
-
-```lean
-namespace Bridge
-
-scoped instance instAdd {T : Type*} [Oplus T] :
-    Add T where add := Oplus.oplus
-scoped instance instZero {T : Type*} [Oplus T] :
-    Zero T where zero := Oplus.eps
-scoped instance instMul {T : Type*} [Otimes T] :
-    Mul T where mul := Otimes.otimes
-scoped instance instOne {T : Type*} [Otimes T] :
-    One T where one := Otimes.one
-
-end Bridge
-```
+Each signature bundles `Mathlib`'s lawless `Add`/`Zero` (`AddZero`) and
+`Mul`/`One` (`MulOne`), so $`\oplus, \varepsilon` are literally the
+addition and its neutral and $`\otimes, e` the multiplication and its
+unit. The glyphs $`\oplus, \varepsilon, \otimes, e` are notation for
+$`+, 0, *, 1`, restricted to carriers of the signatures; the monoid
+bridges below only add the laws.
 
 *Definition:* a _product signature_ on $`T` is a binary
 $`\otimes : T \times T \to T` with a neutral $`e`.
@@ -89,13 +77,12 @@ namespace Bridge
 
 scoped instance instAddMonoid
     {T : Type*} [AddMonoid T] : _root_.AddMonoid T where
-  toAdd := instAdd
-  toZero := instZero
+  toAdd := AddMonoid.toOplus.toAddZero.toAdd
+  toZero := AddMonoid.toOplus.toAddZero.toZero
   add_assoc := AddMonoid.oplus_assoc
   zero_add := AddMonoid.eps_oplus
   add_zero := AddMonoid.oplus_eps
-  nsmul n a :=
-    n.rec Oplus.eps (fun _ acc => Oplus.oplus acc a)
+  nsmul n a := n.rec 0 (fun _ acc => acc + a)
 
 end Bridge
 ```
@@ -121,13 +108,12 @@ namespace Bridge
 
 scoped instance instMulMonoid
     {T : Type*} [MulMonoid T] : _root_.Monoid T where
-  toMul := instMul
-  toOne := instOne
+  toMul := MulMonoid.toOtimes.toMulOne.toMul
+  toOne := MulMonoid.toOtimes.toMulOne.toOne
   mul_assoc := MulMonoid.otimes_assoc
   one_mul := MulMonoid.one_otimes
   mul_one := MulMonoid.otimes_one
-  npow n a :=
-    n.rec Otimes.one (fun _ acc => Otimes.otimes acc a)
+  npow n a := n.rec 1 (fun _ acc => acc * a)
 
 end Bridge
 ```

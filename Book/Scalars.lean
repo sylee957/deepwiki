@@ -77,9 +77,9 @@ idempotency $`\min(a, a) = a`.
 
 ```lean
 instance : Algebra.Dioid Rmin where
-  oplus a b := ⟨min a.toR b.toR⟩
-  eps := ⟨⊤⟩
-  otimes a b := ⟨a.toR + b.toR⟩
+  add a b := ⟨min a.toR b.toR⟩
+  zero := ⟨⊤⟩
+  mul a b := ⟨a.toR + b.toR⟩
   one := ⟨0⟩
   oplus_assoc a b c :=
     congrArg ofR (min_assoc _ _ _)
@@ -246,9 +246,9 @@ structure RbarMin where ofB ::
 namespace RbarMin
 
 instance : Algebra.Dioid RbarMin where
-  oplus a b := ⟨min a.toB b.toB⟩
-  eps := ⟨⊤⟩
-  otimes a b := ⟨a.toB + b.toB⟩
+  add a b := ⟨min a.toB b.toB⟩
+  zero := ⟨⊤⟩
+  mul a b := ⟨a.toB + b.toB⟩
   one := ⟨0⟩
   oplus_assoc a b c := congrArg ofB (min_assoc _ _ _)
   eps_oplus a := congrArg ofB (min_eq_right le_top)
@@ -369,9 +369,9 @@ structure RplusMin where ofE ::
 namespace RplusMin
 
 instance : Algebra.Dioid RplusMin where
-  oplus a b := ⟨min a.toE b.toE⟩
-  eps := ⟨⊤⟩
-  otimes a b := ⟨a.toE + b.toE⟩
+  add a b := ⟨min a.toE b.toE⟩
+  zero := ⟨⊤⟩
+  mul a b := ⟨a.toE + b.toE⟩
   one := ⟨0⟩
   oplus_assoc a b c := congrArg ofE (min_assoc _ _ _)
   eps_oplus a := congrArg ofE (min_eq_right le_top)
