@@ -88,15 +88,15 @@ theorem sSup_mul {T : Type*} [CompleteDioid T]
     (a : T) (s : Set T) :
     (CompleteDioid.sSup s) ⊗ₒ a
       = CompleteDioid.sSup ((fun b => b ⊗ₒ a) '' s) := by
-  rw [CommSemiring.otimes_comm, CompleteDioid.mul_sSup]
+  rw [mul_comm, CompleteDioid.mul_sSup]
   congr 1
   ext x
   simp only [Set.mem_image]
   constructor
   · rintro ⟨y, hy, rfl⟩
-    exact ⟨y, hy, CommSemiring.otimes_comm y a⟩
+    exact ⟨y, hy, mul_comm y a⟩
   · rintro ⟨y, hy, rfl⟩
-    exact ⟨y, hy, CommSemiring.otimes_comm a y⟩
+    exact ⟨y, hy, mul_comm a y⟩
 ```
 
 The binary join is the supremum of a two-element set, and the product

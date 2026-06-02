@@ -109,11 +109,10 @@ theorem conv_comm (f g : F) : conv f g = conv g f := by
   ext x
   constructor
   · rintro ⟨u, s, hus, rfl⟩
-    exact ⟨s, u, by rw [add_comm]; exact hus,
-      CommSemiring.otimes_comm _ _⟩
+    exact ⟨s, u, by rw [add_comm]; exact hus, mul_comm _ _⟩
   · rintro ⟨u, s, hus, rfl⟩
     exact ⟨s, u, by rw [add_comm]; exact hus,
-      CommSemiring.otimes_comm _ _⟩
+      mul_comm _ _⟩
 ```
 
 # Properties of the convolution
