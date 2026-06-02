@@ -136,35 +136,127 @@ The dioid axioms, recovered as facts about $`\overline{\mathbb{R}}`:
 ```lean
 namespace Rmin
 open Algebra
+```
 
+*Theorem:* $`(a \wedge b) \wedge c = a \wedge (b \wedge c)`
+
+```lean
 example (a b c : Rmin) :
     (a ∧[Rmin] b) ∧[Rmin] c
       = a ∧[Rmin] (b ∧[Rmin] c) :=
   add_assoc a b c
-example (a : Rmin) : ⟨⊤⟩ ∧[Rmin] a = a := zero_add a
-example (a : Rmin) : a ∧[Rmin] ⟨⊤⟩ = a := add_zero a
-example (a b : Rmin) : a ∧[Rmin] b = b ∧[Rmin] a :=
-  add_comm a b
+```
+
+*Theorem:* $`{+\infty} \wedge a = a`
+
+```lean
+example (a : Rmin) :
+    (⟨⊤⟩ : Rmin) ∧[Rmin] a = a := zero_add a
+```
+
+*Theorem:* $`a \wedge {+\infty} = a`
+
+```lean
+example (a : Rmin) :
+    a ∧[Rmin] (⟨⊤⟩ : Rmin) = a := add_zero a
+```
+
+*Theorem:* $`a \wedge b = b \wedge a`
+
+```lean
+example (a b : Rmin) :
+    a ∧[Rmin] b = b ∧[Rmin] a := add_comm a b
+```
+
+*Theorem:* $`(a + b) + c = a + (b + c)`
+
+```lean
 example (a b c : Rmin) :
     (a +[Rmin] b) +[Rmin] c
       = a +[Rmin] (b +[Rmin] c) :=
   mul_assoc a b c
-example (a : Rmin) : ⟨0⟩ +[Rmin] a = a := one_mul a
-example (a : Rmin) : a +[Rmin] ⟨0⟩ = a := mul_one a
+```
+
+*Theorem:* $`0 + a = a`
+
+```lean
+example (a : Rmin) :
+    (⟨0⟩ : Rmin) +[Rmin] a = a := one_mul a
+```
+
+*Theorem:* $`a + 0 = a`
+
+```lean
+example (a : Rmin) :
+    a +[Rmin] (⟨0⟩ : Rmin) = a := mul_one a
+```
+
+*Theorem:* $`a + (b \wedge c) = (a + b) \wedge (a + c)`
+
+```lean
 example (a b c : Rmin) :
     a +[Rmin] (b ∧[Rmin] c)
       = a +[Rmin] b ∧[Rmin] a +[Rmin] c :=
   mul_add a b c
+```
+
+*Theorem:* $`(a \wedge b) + c = (a + c) \wedge (b + c)`
+
+```lean
 example (a b c : Rmin) :
     (a ∧[Rmin] b) +[Rmin] c
       = a +[Rmin] c ∧[Rmin] b +[Rmin] c :=
   add_mul a b c
-example (a : Rmin) : ⟨⊤⟩ +[Rmin] a = ⟨⊤⟩ := zero_mul a
-example (a : Rmin) : a +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
-example (a b : Rmin) : a +[Rmin] b = b +[Rmin] a :=
-  mul_comm a b
-example (a : Rmin) : a ∧[Rmin] a = a := add_idem a
+```
 
+*Theorem:* $`{+\infty} + a = {+\infty}`
+
+```lean
+example (a : Rmin) :
+    (⟨⊤⟩ : Rmin) +[Rmin] a = ⟨⊤⟩ := zero_mul a
+```
+
+*Theorem:* $`a + {+\infty} = {+\infty}`
+
+```lean
+example (a : Rmin) :
+    a +[Rmin] (⟨⊤⟩ : Rmin) = ⟨⊤⟩ := mul_zero a
+```
+
+*Theorem:* $`a + b = b + a`
+
+```lean
+example (a b : Rmin) :
+    a +[Rmin] b = b +[Rmin] a := mul_comm a b
+```
+
+*Theorem:* $`a \wedge a = a`
+
+```lean
+example (a : Rmin) :
+    a ∧[Rmin] a = a := add_idem a
+```
+
+The behaviour with $`+\infty`: the minimum with infinity returns the
+finite value, while numeric addition with infinity absorbs.
+
+*Theorem:* $`a \wedge b \wedge (+\infty) = a \wedge b`
+
+```lean
+example (a b : Rmin) :
+    a ∧[Rmin] b ∧[Rmin] ⟨⊤⟩ = a ∧[Rmin] b :=
+  add_zero (a ∧[Rmin] b)
+```
+
+*Theorem:* $`a + b + (+\infty) = {+\infty}` ($`+\infty` absorbing for $`+`)
+
+```lean
+example (a b : Rmin) :
+    a +[Rmin] b +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ :=
+  mul_zero (a +[Rmin] b)
+```
+
+```lean
 end Rmin
 ```
 
