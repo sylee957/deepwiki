@@ -346,7 +346,6 @@ theorem add_le_add_left {T : Type*} [Dioid T] {a b : T}
 ```lean
 theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (a ⊗ₒ c) ≼ₒ (b ⊗ₒ c) := by
-  show a * c ≤ b * c
   gcongr
 ```
 
@@ -355,7 +354,6 @@ theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
 ```lean
 theorem mul_le_mul_left {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (c ⊗ₒ a) ≼ₒ (c ⊗ₒ b) := by
-  show c * a ≤ c * b
   gcongr
 ```
 
