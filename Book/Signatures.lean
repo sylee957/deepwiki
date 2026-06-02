@@ -45,6 +45,27 @@ scoped notation "εₒ" => Oplus.eps
 scoped notation "eₒ" => Otimes.one
 ```
 
+Each signature already carries `Mathlib`'s lawless `Add`/`Zero` and
+`Mul`/`One`: $`\oplus, \varepsilon` are the addition and its neutral,
+$`\otimes, e` the multiplication and its unit. So $`\oplus = {+}` and
+$`\otimes = {*}` definitionally from the start; the monoid bridges
+below only add the laws.
+
+```lean
+namespace Bridge
+
+scoped instance instAdd {T : Type*} [Oplus T] :
+    Add T where add := Oplus.oplus
+scoped instance instZero {T : Type*} [Oplus T] :
+    Zero T where zero := Oplus.eps
+scoped instance instMul {T : Type*} [Otimes T] :
+    Mul T where mul := Otimes.otimes
+scoped instance instOne {T : Type*} [Otimes T] :
+    One T where one := Otimes.one
+
+end Bridge
+```
+
 *Definition:* a _product signature_ on $`T` is a binary
 $`\otimes : T \times T \to T` with a neutral $`e`.
 
@@ -68,8 +89,8 @@ namespace Bridge
 
 scoped instance instAddMonoid
     {T : Type*} [AddMonoid T] : _root_.AddMonoid T where
-  add := Oplus.oplus
-  zero := Oplus.eps
+  toAdd := instAdd
+  toZero := instZero
   add_assoc := AddMonoid.oplus_assoc
   zero_add := AddMonoid.eps_oplus
   add_zero := AddMonoid.oplus_eps
@@ -100,8 +121,8 @@ namespace Bridge
 
 scoped instance instMulMonoid
     {T : Type*} [MulMonoid T] : _root_.Monoid T where
-  mul := Otimes.otimes
-  one := Otimes.one
+  toMul := instMul
+  toOne := instOne
   mul_assoc := MulMonoid.otimes_assoc
   one_mul := MulMonoid.one_otimes
   mul_one := MulMonoid.otimes_one
