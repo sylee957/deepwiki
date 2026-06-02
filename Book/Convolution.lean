@@ -135,17 +135,17 @@ open Algebra
 
 theorem le_oplus_left (a b : T) : a ≼ₒ a ⊕ₒ b := by
   show a ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-  rw [← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+  rw [← add_assoc, Dioid.oplus_idem]
 
 theorem le_oplus_right (a b : T) : b ≼ₒ a ⊕ₒ b := by
   show b ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-  rw [AddCommMonoid.oplus_comm a b,
-    ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+  rw [add_comm a b,
+    ← add_assoc, Dioid.oplus_idem]
 
 theorem oplus_le (a b c : T)
     (ha : a ≼ₒ c) (hb : b ≼ₒ c) : a ⊕ₒ b ≼ₒ c := by
   show (a ⊕ₒ b) ⊕ₒ c = c
-  rw [AddMonoid.oplus_assoc]
+  rw [add_assoc]
   show a ⊕ₒ (b ⊕ₒ c) = c
   rw [(by exact hb : b ⊕ₒ c = c)]; exact ha
 
@@ -252,7 +252,7 @@ theorem conv_conv_eq_triple' (f g h : F) (t : ℝ≥0) :
     rintro y ⟨q, ⟨v, z, hvz, rfl⟩, rfl⟩
     refine CompleteDioid.le_sSup _ _ ⟨u, v, z, ?_, ?_⟩
     · rw [add_assoc, hvz]; exact hup
-    · exact (MulMonoid.otimes_assoc (f u) (g v) (h z)).symm
+    · exact (mul_assoc (f u) (g v) (h z)).symm
   · rw [triple]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, v, z, hsum, rfl⟩
@@ -260,7 +260,7 @@ theorem conv_conv_eq_triple' (f g h : F) (t : ℝ≥0) :
     refine _root_.le_trans ?_ (CompleteDioid.le_sSup _
       (f u ⊗ₒ (conv g h (v+z)))
       ⟨u, v+z, by rw [← add_assoc]; exact hsum, rfl⟩)
-    rw [MulMonoid.otimes_assoc]
+    rw [mul_assoc]
     refine mul_le_mul_left ?_ _
     rw [conv_apply]
     exact CompleteDioid.le_sSup _ _ ⟨v, z, rfl, rfl⟩
@@ -301,12 +301,12 @@ theorem conv_add_const (f g : F) (K : RbarMin) :
     exact ⟨u, s, hus, by
       show (f u ⊗ₒ g s) ⊗ₒ K = f u ⊗ₒ (addConst g K s)
       rw [show addConst g K s = g s ⊗ₒ K from rfl,
-        MulMonoid.otimes_assoc]⟩
+        mul_assoc]⟩
   · rintro ⟨u, s, hus, rfl⟩
     refine ⟨f u ⊗ₒ g s, ⟨u, s, hus, rfl⟩, ?_⟩
     show (f u ⊗ₒ g s) ⊗ₒ K = f u ⊗ₒ (addConst g K s)
     rw [show addConst g K s = g s ⊗ₒ K from rfl,
-      MulMonoid.otimes_assoc]
+      mul_assoc]
 ```
 
 With commutativity, associativity, distributivity over the minimum,

@@ -245,9 +245,9 @@ scoped instance instPartialOrder
   le_refl a := Dioid.oplus_idem a
   le_trans a b c (hab : a ≼ₒ b) (hbc : b ≼ₒ c) := by
     show a ⊕ₒ c = c
-    rw [← hbc, ← AddMonoid.oplus_assoc, hab]
+    rw [← hbc, ← add_assoc, hab]
   le_antisymm a b (hab : a ≼ₒ b) (hba : b ≼ₒ a) := by
-    rw [← hab, AddCommMonoid.oplus_comm, hba]
+    rw [← hab, add_comm, hba]
 
 end Bridge
 ```
@@ -298,21 +298,20 @@ scoped instance instSemilatticeSup
   sup a b := a ⊕ₒ b
   le_sup_left a b := by
     show a ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-    rw [← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+    rw [← add_assoc, Dioid.oplus_idem]
   le_sup_right a b := by
     show b ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-    rw [AddCommMonoid.oplus_comm a b,
-        ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+    rw [add_comm a b, ← add_assoc, Dioid.oplus_idem]
   sup_le a b c hac hbc := by
     show (a ⊕ₒ b) ⊕ₒ c = c
-    rw [AddMonoid.oplus_assoc,
+    rw [add_assoc,
         (show b ⊕ₒ c = c from hbc),
         (show a ⊕ₒ c = c from hac)]
 
 scoped instance instOrderBot
     {T : Type*} [Dioid T] : OrderBot T where
   bot := εₒ
-  bot_le a := AddMonoid.eps_oplus a
+  bot_le a := zero_add a
 
 scoped instance instIdemCommSemiring
     {T : Type*} [Dioid T] : IdemCommSemiring T where

@@ -45,14 +45,14 @@ theorem quaternary_distrib {T : Type*} [Semiring T]
     rw [Semiring.right_distrib, Semiring.left_distrib,
       Semiring.left_distrib]
   rw [hexp,
-    AddMonoid.oplus_assoc (a ⊗ₒ c) (b ⊗ₒ c) (a ⊗ₒ d),
-    AddMonoid.oplus_assoc (a ⊗ₒ c)
+    add_assoc (a ⊗ₒ c) (b ⊗ₒ c) (a ⊗ₒ d),
+    add_assoc (a ⊗ₒ c)
       (b ⊗ₒ c ⊕ₒ a ⊗ₒ d) (b ⊗ₒ d),
-    AddMonoid.oplus_assoc (a ⊗ₒ c) (a ⊗ₒ d)
+    add_assoc (a ⊗ₒ c) (a ⊗ₒ d)
       (b ⊗ₒ c ⊕ₒ b ⊗ₒ d)]
   congr 1
-  rw [AddCommMonoid.oplus_comm (b ⊗ₒ c) (a ⊗ₒ d),
-    AddMonoid.oplus_assoc (a ⊗ₒ d) (b ⊗ₒ c) (b ⊗ₒ d)]
+  rw [add_comm (b ⊗ₒ c) (a ⊗ₒ d),
+    add_assoc (a ⊗ₒ d) (b ⊗ₒ c) (b ⊗ₒ d)]
 ```
 
 ## A complete dioid from scratch
@@ -166,7 +166,7 @@ nothing.
 theorem top_oplus {T : Type*} [CompleteDioid T] (a : T) :
     ⊤ₒ[T] ⊕ₒ a = ⊤ₒ[T] := by
   have h : a ⊕ₒ ⊤ₒ[T] = ⊤ₒ[T] := le_top a
-  rw [AddCommMonoid.oplus_comm, h]
+  rw [add_comm, h]
 ```
 
 Since the zero $`\varepsilon` is absorbing for the product, multiplying
@@ -206,18 +206,18 @@ theorem sSup_pair {T : Type*} [CompleteDioid T]
     intro x hx
     rcases hx with hx | hx
     · show x ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-      rw [hx, ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+      rw [hx, ← add_assoc, Dioid.oplus_idem]
     · rw [Set.mem_singleton_iff] at hx
       show x ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
-      rw [hx, AddCommMonoid.oplus_comm a b,
-        ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+      rw [hx, add_comm a b,
+        ← add_assoc, Dioid.oplus_idem]
   · have ha := CompleteDioid.le_sSup ({a, b} : Set T) a
       (by simp)
     have hb := CompleteDioid.le_sSup ({a, b} : Set T) b
       (by simp)
     show (a ⊕ₒ b) ⊕ₒ CompleteDioid.sSup {a, b}
       = CompleteDioid.sSup {a, b}
-    rw [AddMonoid.oplus_assoc, hb, ha]
+    rw [add_assoc, hb, ha]
 ```
 
 Hence the lattice order — $`\bigsqcup\{a, b\} = b` — is exactly the
