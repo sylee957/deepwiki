@@ -369,8 +369,8 @@ noncomputable instance :
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
     intro i
     exact (le_iff _ _).mp (hb i)))
-  mul_iSup_le a f := by
-    refine le_of_eq (congrArg ofB ?_)
+  mul_iSup a f := by
+    refine congrArg ofB ?_
     show a.toB + ⨅ i, (f i).toB
        = ⨅ i, (a.toB + (f i).toB)
     exact RbarX.add_iInf _ _
@@ -479,8 +479,8 @@ noncomputable instance :
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
     intro i
     exact (le_iff _ _).mp (hb i)))
-  mul_iSup_le a f := by
-    refine le_of_eq (congrArg ofE ?_)
+  mul_iSup a f := by
+    refine congrArg ofE ?_
     show a.toE + ⨅ i, (f i).toE
        = ⨅ i, (a.toE + (f i).toE)
     exact RplusX.add_iInf _ _

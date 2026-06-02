@@ -32,13 +32,10 @@ $`\bigsqcup_i f(i)` over a family $`f : \iota \to T` as the field
 
 *Definition:* a _complete dioid_ adds $`\bigsqcup : (\iota \to T) \to T` with
 $$`f(i) \preceq \textstyle\bigsqcup_j f(j), \qquad (\forall i,\ f(i) \preceq b) \Rightarrow \textstyle\bigsqcup_i f(i) \preceq b,`
-$$`a \otimes \textstyle\bigsqcup_i f(i) \preceq \textstyle\bigsqcup_i a \otimes f(i).`
+$$`a \otimes \textstyle\bigsqcup_i f(i) = \textstyle\bigsqcup_i a \otimes f(i).`
 
-Lower semi-continuity is stated as a single inequality `mul_iSup_le`:
-the product is _below_ the supremum of the products. The reverse
-inequality is free — each $`a \otimes f(i)` is below $`a \otimes
-\bigsqcup f` by isotony, so their supremum is too — so the full
-equality is a theorem, not an axiom.
+Lower semi-continuity is the equality `mul_iSup`: the product commutes
+with the supremum of a family.
 
 ```lean
 class CompleteDioid (T : Type u) extends Dioid T where
@@ -47,8 +44,8 @@ class CompleteDioid (T : Type u) extends Dioid T where
     f i ≼ₒ iSup f
   iSup_le : ∀ {ι : Type u} (f : ι → T) (b : T),
     (∀ i, f i ≼ₒ b) → iSup f ≼ₒ b
-  mul_iSup_le : ∀ {ι : Type u} (a : T) (f : ι → T),
-    a ⊗ₒ iSup f ≼ₒ iSup (fun i => a ⊗ₒ f i)
+  mul_iSup : ∀ {ι : Type u} (a : T) (f : ι → T),
+    a ⊗ₒ iSup f = iSup (fun i => a ⊗ₒ f i)
 ```
 
 The supremum is taken over an _indexed family_ $`\bigsqcup_i f(i)`.
@@ -89,8 +86,9 @@ theorem sSup_le {T : Type*} [CompleteDioid T]
 theorem mul_sSup_le {T : Type*} [CompleteDioid T]
     (a : T) (s : Set T) :
     a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s) := by
-  refine le_trans
-    (CompleteDioid.mul_iSup_le a (fun x : s => x.val)) ?_
+  rw [show a ⊗ₒ sSup s
+      = CompleteDioid.iSup (fun x : s => a ⊗ₒ x.val) from
+    CompleteDioid.mul_iSup a _]
   apply CompleteDioid.iSup_le
   intro x
   exact CompleteDioid.le_sSup _ _ ⟨x.val, x.2, rfl⟩
@@ -133,9 +131,8 @@ example {T : Type*} [CompleteDioid T] (s : Set T) :
     IsLUB s (CompleteDioid.sSup s) := isLUB_sSup s
 ```
 
-The full lower-semi-continuity _equality_ now follows: the axiom gives
-one inequality, and the other is free from the least-upper-bound laws
-and isotony of the product.
+Lower semi-continuity in _set_ form follows, transferring the
+indexed-family equality to a supremum over a set.
 
 *Theorem:* $`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b`
 
