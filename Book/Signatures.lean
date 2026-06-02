@@ -323,6 +323,41 @@ scoped instance instIdemCommSemiring
 end Bridge
 ```
 
+The join laws are then `Mathlib`'s, recovered as facts about the dioid
+sum: each summand is below the sum, and the sum is the least common
+upper bound.
+
+*Theorem:* $`a \preceq a \oplus b`
+
+```lean
+example {T : Type*} [Dioid T] (a b : T) :
+    a ≼ₒ a ⊕ₒ b := le_sup_left
+```
+
+*Theorem:* $`b \preceq a \oplus b`
+
+```lean
+example {T : Type*} [Dioid T] (a b : T) :
+    b ≼ₒ a ⊕ₒ b := le_sup_right
+```
+
+*Theorem:* $`a \preceq c \;\wedge\; b \preceq c \;\Rightarrow\; a \oplus b \preceq c`
+
+```lean
+example {T : Type*} [Dioid T] {a b c : T}
+    (hac : a ≼ₒ c) (hbc : b ≼ₒ c) :
+    a ⊕ₒ b ≼ₒ c := sup_le hac hbc
+```
+
+The sum neutral $`\varepsilon` is the least element $`\bot`: it lies
+below everything, since $`\varepsilon \oplus a = a`.
+
+*Theorem:* $`\varepsilon \preceq a`
+
+```lean
+example {T : Type*} [Dioid T] (a : T) : εₒ ≼ₒ a := bot_le
+```
+
 # Isotony
 
 *Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
