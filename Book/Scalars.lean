@@ -112,37 +112,58 @@ instance : Algebra.Dioid Rmin where
 end Rmin
 ```
 
+In the _(min,plus)_ reading the dioid sum is the minimum and the dioid
+product is numeric addition. We offer carrier-tagged `scoped` notation
+spelling that out — `∧[Rmin]` for the sum, `+[Rmin]` for the product —
+so it reads as min-plus without clashing with the bare `+` (which on a
+dioid already denotes the sum). It is dormant until
+`open scoped NetworkCalculus.Rmin`.
+
+```lean
+namespace Rmin
+open Algebra
+
+scoped notation:65 a:65 " ∧[Rmin] " b:66 =>
+  (a ⊕ₒ b : Rmin)
+scoped notation:70 a:70 " +[Rmin] " b:71 =>
+  (a ⊗ₒ b : Rmin)
+
+end Rmin
+```
+
 The dioid axioms, recovered as facts about $`\overline{\mathbb{R}}`:
 
 ```lean
 namespace Rmin
 open Algebra
 
-example (a b c : Rmin) : (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c) :=
-  ext (min_assoc _ _ _)
-example (a : Rmin) : ⟨⊤⟩ ⊕ₒ a = a :=
-  ext (min_eq_right le_top)
-example (a : Rmin) : a ⊕ₒ ⟨⊤⟩ = a :=
-  ext (min_eq_left le_top)
-example (a b : Rmin) : a ⊕ₒ b = b ⊕ₒ a := ext (min_comm _ _)
-example (a b c : Rmin) : (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c) :=
-  ext (add_assoc _ _ _)
-example (a : Rmin) : ⟨0⟩ ⊗ₒ a = a :=
-  ext (zero_add _)
-example (a : Rmin) : a ⊗ₒ ⟨0⟩ = a :=
-  ext (add_zero _)
 example (a b c : Rmin) :
-    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c :=
-  ext (add_min _ _ _)
+    (a ∧[Rmin] b) ∧[Rmin] c
+      = a ∧[Rmin] (b ∧[Rmin] c) :=
+  add_assoc a b c
+example (a : Rmin) : ⟨⊤⟩ ∧[Rmin] a = a := zero_add a
+example (a : Rmin) : a ∧[Rmin] ⟨⊤⟩ = a := add_zero a
+example (a b : Rmin) : a ∧[Rmin] b = b ∧[Rmin] a :=
+  add_comm a b
 example (a b c : Rmin) :
-    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c :=
-  ext (min_add _ _ _)
-example (a : Rmin) :
-    ⟨⊤⟩ ⊗ₒ a = ⟨⊤⟩ := ext (top_add _)
-example (a : Rmin) :
-    a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := ext (add_top _)
-example (a b : Rmin) : a ⊗ₒ b = b ⊗ₒ a := ext (add_comm _ _)
-example (a : Rmin) : a ⊕ₒ a = a := ext (min_self _)
+    (a +[Rmin] b) +[Rmin] c
+      = a +[Rmin] (b +[Rmin] c) :=
+  mul_assoc a b c
+example (a : Rmin) : ⟨0⟩ +[Rmin] a = a := one_mul a
+example (a : Rmin) : a +[Rmin] ⟨0⟩ = a := mul_one a
+example (a b c : Rmin) :
+    a +[Rmin] (b ∧[Rmin] c)
+      = a +[Rmin] b ∧[Rmin] a +[Rmin] c :=
+  mul_add a b c
+example (a b c : Rmin) :
+    (a ∧[Rmin] b) +[Rmin] c
+      = a +[Rmin] c ∧[Rmin] b +[Rmin] c :=
+  add_mul a b c
+example (a : Rmin) : ⟨⊤⟩ +[Rmin] a = ⟨⊤⟩ := zero_mul a
+example (a : Rmin) : a +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
+example (a b : Rmin) : a +[Rmin] b = b +[Rmin] a :=
+  mul_comm a b
+example (a : Rmin) : a ∧[Rmin] a = a := add_idem a
 
 end Rmin
 ```
