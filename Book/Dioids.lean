@@ -42,8 +42,7 @@ theorem quaternary_distrib {T : Type*} [Semiring T]
       = a ⊗ₒ c ⊕ₒ b ⊗ₒ c ⊕ₒ a ⊗ₒ d ⊕ₒ b ⊗ₒ d := by
   have hexp : (a ⊕ₒ b) ⊗ₒ (c ⊕ₒ d)
       = (a ⊗ₒ c ⊕ₒ a ⊗ₒ d) ⊕ₒ (b ⊗ₒ c ⊕ₒ b ⊗ₒ d) := by
-    rw [_root_.right_distrib, _root_.left_distrib,
-      _root_.left_distrib]
+    rw [right_distrib, left_distrib, left_distrib]
   rw [hexp,
     add_assoc (a ⊗ₒ c) (b ⊗ₒ c) (a ⊗ₒ d),
     add_assoc (a ⊗ₒ c)
@@ -201,7 +200,7 @@ upper-bound facts to idempotency pins $`\bigsqcup\{a, b\} = a \oplus b`.
 ```lean
 theorem sSup_pair {T : Type*} [CompleteDioid T]
     (a b : T) : CompleteDioid.sSup {a, b} = a ⊕ₒ b := by
-  apply _root_.le_antisymm
+  apply le_antisymm
   · refine CompleteDioid.sSup_le _ _ ?_
     intro x hx
     rcases hx with hx | hx
