@@ -320,9 +320,6 @@ end Bridge
 
 # Isotony
 
-The sum is _isotone_ in each argument: a smaller summand gives a
-smaller sum.
-
 *Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
 
 ```lean
