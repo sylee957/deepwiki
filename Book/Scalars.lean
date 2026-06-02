@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Dioids
+import Book.CompleteDioids
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Archimedean
 import Mathlib.Algebra.Order.Ring.WithTop

@@ -2,6 +2,8 @@ import VersoManual
 import Book.Introduction
 import Book.Signatures
 import Book.Dioids
+import Book.Order
+import Book.CompleteDioids
 import Book.Scalars
 import Book.Convolution
 
@@ -26,6 +28,10 @@ declarations.
 {include 1 Book.Signatures}
 
 {include 1 Book.Dioids}
+
+{include 1 Book.Order}
+
+{include 1 Book.CompleteDioids}
 
 {include 1 Book.Scalars}
 
