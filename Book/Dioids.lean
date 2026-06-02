@@ -362,6 +362,54 @@ theorem eps_otimes_top {T : Type*} [CompleteDioid T] :
 theorem top_otimes_eps {T : Type*} [CompleteDioid T] :
     ⊤ₒ[T] ⊗ₒ εₒ = εₒ :=
   Semiring.otimes_eps (top T)
+```
+
+## The two orders agree
+
+A complete dioid now carries _two_ ways to compare elements. The
+_algebraic_ order $`\preceq` comes from the sum, $`a \preceq b \iff a
+\oplus b = b`. The _lattice_ order comes from the supremum: $`a` is
+below $`b` when the least upper bound of $`\{a, b\}` is $`b`. These must
+coincide for the structure to be consistent, and they do — a direct
+consequence of the least-upper-bound laws.
+
+First, the supremum of a pair _is_ the binary sum: adjoining the two
+upper-bound facts to idempotency pins $`\bigsqcup\{a, b\} = a \oplus b`.
+
+*Theorem:* $`\bigsqcup \{a, b\} = a \oplus b`
+
+```lean
+theorem sSup_pair {T : Type*} [CompleteDioid T]
+    (a b : T) : CompleteDioid.sSup {a, b} = a ⊕ₒ b := by
+  apply le_antisymm
+  · refine CompleteDioid.sSup_le _ _ ?_
+    intro x hx
+    rcases hx with hx | hx
+    · show x ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
+      rw [hx, ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+    · rw [Set.mem_singleton_iff] at hx
+      show x ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
+      rw [hx, AddCommMonoid.oplus_comm a b,
+        ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+  · have ha := CompleteDioid.le_sSup ({a, b} : Set T) a
+      (by simp)
+    have hb := CompleteDioid.le_sSup ({a, b} : Set T) b
+      (by simp)
+    show (a ⊕ₒ b) ⊕ₒ CompleteDioid.sSup {a, b}
+      = CompleteDioid.sSup {a, b}
+    rw [AddMonoid.oplus_assoc, hb, ha]
+```
+
+Hence the lattice order — $`\bigsqcup\{a, b\} = b` — is exactly the
+algebraic order $`a \preceq b`.
+
+*Theorem:* $`a \preceq b \iff \bigsqcup \{a, b\} = b`
+
+```lean
+theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
+    {a b : T} :
+    a ≼ₒ b ↔ CompleteDioid.sSup {a, b} = b := by
+  rw [sSup_pair]; rfl
 
 end Algebra
 ```
