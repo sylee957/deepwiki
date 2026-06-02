@@ -370,7 +370,7 @@ noncomputable instance :
   sSup_le s b hb := (le_iff _ _).mpr (le_sInf (by
     rintro x ⟨y, hy, rfl⟩
     exact (le_iff _ _).mp (hb y hy)))
-  mul_sSup a s := by
+  mul_sSup_le a s := by
     have key : a.toB + sInf (toB '' s)
         = sInf (toB '' ((fun b =>
             (⟨a.toB + b.toB⟩ : RbarMin)) '' s)) := by
@@ -380,7 +380,7 @@ noncomputable instance :
       rw [sInf_image, sInf_image, RbarX.add_iInf]
       refine iInf_congr fun b => ?_
       rw [RbarX.add_iInf]
-    exact congrArg ofB key
+    exact (congrArg ofB key).le
 
 end RbarMin
 ```
@@ -487,7 +487,7 @@ noncomputable instance :
   sSup_le s b hb := (le_iff _ _).mpr (le_sInf (by
     rintro x ⟨y, hy, rfl⟩
     exact (le_iff _ _).mp (hb y hy)))
-  mul_sSup a s := by
+  mul_sSup_le a s := by
     have key : a.toE + sInf (toE '' s)
         = sInf (toE '' ((fun b =>
             (⟨a.toE + b.toE⟩ : RplusMin)) '' s)) := by
@@ -497,7 +497,7 @@ noncomputable instance :
       rw [sInf_image, sInf_image, RplusX.add_iInf]
       refine iInf_congr fun b => ?_
       rw [RplusX.add_iInf]
-    exact congrArg ofE key
+    exact (congrArg ofE key).le
 
 end RplusMin
 ```

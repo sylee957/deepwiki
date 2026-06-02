@@ -68,6 +68,12 @@ $$`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b.`
 $$`a \in s \Rightarrow a \preceq \textstyle\bigsqcup s, \qquad (\forall a \in s,\ a \preceq b) \Rightarrow \textstyle\bigsqcup s \preceq b,`
 $$`a \otimes \textstyle\bigsqcup s = \textstyle\bigsqcup\,\{\,a \otimes b \mid b \in s\,\}.`
 
+Lower semi-continuity is stated as a single inequality `mul_sSup_le`:
+the product is _below_ the supremum of the products. The reverse
+inequality is free — each $`a \otimes b` is below $`a \otimes
+\bigsqcup s` by isotony, so their supremum is too — so the full
+equality is a theorem, not an axiom.
+
 ```lean
 class CompleteDioid (T : Type*) extends Dioid T where
   sSup : Set T → T
@@ -75,8 +81,8 @@ class CompleteDioid (T : Type*) extends Dioid T where
     a ≼ₒ sSup s
   sSup_le : ∀ (s : Set T) (b : T),
     (∀ a ∈ s, a ≼ₒ b) → sSup s ≼ₒ b
-  mul_sSup : ∀ (a : T) (s : Set T),
-    a ⊗ₒ sSup s = sSup ((fun b => a ⊗ₒ b) '' s)
+  mul_sSup_le : ∀ (a : T) (s : Set T),
+    a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s)
 ```
 
 The supremum and its two least-upper-bound laws are exactly a
@@ -102,6 +108,24 @@ scoped instance instCompleteSemilatticeSup
      fun b hb => CompleteDioid.sSup_le s b hb⟩
 
 end Bridge
+```
+
+The full lower-semi-continuity _equality_ now follows: the axiom gives
+one inequality, and the other is free from the least-upper-bound laws
+and isotony of the product.
+
+*Theorem:* $`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b`
+
+```lean
+theorem CompleteDioid.mul_sSup {T : Type*}
+    [CompleteDioid T] (a : T) (s : Set T) :
+    a ⊗ₒ CompleteDioid.sSup s
+      = CompleteDioid.sSup ((fun b => a ⊗ₒ b) '' s) := by
+  apply le_antisymm
+  · exact CompleteDioid.mul_sSup_le a s
+  · refine CompleteDioid.sSup_le _ _ ?_
+    rintro x ⟨b, hb, rfl⟩
+    exact mul_le_mul_left (CompleteDioid.le_sSup s b hb) a
 ```
 
 Lower semi-continuity holds on the right as well, by commutativity of
