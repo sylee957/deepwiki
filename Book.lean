@@ -1,5 +1,6 @@
 import VersoManual
 import Book.Introduction
+import Book.Signatures
 import Book.Dioids
 import Book.Scalars
 import Book.Convolution
@@ -21,6 +22,8 @@ Mathlib; this document pairs the narrative with the corresponding Lean
 declarations.
 
 {include 1 Book.Introduction}
+
+{include 1 Book.Signatures}
 
 {include 1 Book.Dioids}
 

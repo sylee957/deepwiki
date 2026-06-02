@@ -1,4 +1,5 @@
 import VersoManual
+import Book.Signatures
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Insert
 
@@ -6,108 +7,29 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Dioids and complete dioids" =>
-This chapter formalizes the algebra of _dioids_ from scratch: the
-operations and their laws as a tower of type classes, the _canonical
-order_ they induce, the order properties and isotony, the _complete
-dioid_ that adds completeness and lower semi-continuity, and its top
-element. The concrete number-system models that realize the tower are
-built in the next chapter.
+Building on the operation signatures and the additive monoid of the
+previous chapter, this chapter completes the algebra of _dioids_: the
+remaining layers of the type-class tower, the _canonical order_ they
+induce, the order properties and isotony, the _complete dioid_ that
+adds completeness and lower semi-continuity, and its top element. The
+concrete number-system models that realize the tower are built in the
+next chapter.
 
-All declarations live in the `NetworkCalculus` namespace.
+All declarations continue in the `NetworkCalculus` namespace, extending
+the tower started in the previous chapter.
 
 ```lean
 namespace NetworkCalculus
-```
 
-# A dioid, defined from scratch
-
-The tower is built as a chain of _type classes_ over a carrier $`T`.
-The operations are recovered by instance resolution, so the glyphs
-$`\oplus` and $`\otimes` need no tag — we write them `⊕ₒ` and `⊗ₒ`.
-Each layer extends the previous one, and the idempotency that
-distinguishes a dioid is added as a single field on top of a
-commutative semi-ring, so no inheritance diamond arises.
-
-*Definition:* a _sum signature_ on a carrier $`T` is a binary
-$`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
-
-```lean
 namespace Algebra
-
-class Oplus (T : Type*) where
-  oplus : T → T → T
-  eps : T
-
-class Otimes (T : Type*) where
-  otimes : T → T → T
-  one : T
-
-scoped infixl:65 " ⊕ₒ " => Oplus.oplus
-scoped infixl:70 " ⊗ₒ " => Otimes.otimes
-scoped notation "εₒ" => Oplus.eps
-scoped notation "eₒ" => Otimes.one
 ```
 
-*Definition:* a _product signature_ on $`T` is a binary
-$`\otimes : T \times T \to T` with a neutral $`e`.
+# Completing the tower
 
-*Definition:* $`(T, \oplus, \varepsilon)` is a _monoid_:
-$$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
-
-```lean
-class AddMonoid (T : Type*) extends Oplus T where
-  oplus_assoc : ∀ a b c : T,
-    (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c)
-  eps_oplus : ∀ a : T, εₒ ⊕ₒ a = a
-  oplus_eps : ∀ a : T, a ⊕ₒ εₒ = a
-```
-
-*Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
-
-```lean
-class AddCommMonoid (T : Type*) extends AddMonoid T where
-  oplus_comm : ∀ a b : T, a ⊕ₒ b = b ⊕ₒ a
-```
-
-*Definition:* $`(T, \otimes, e)` is a _monoid_:
-$$`(a \otimes b) \otimes c = a \otimes (b \otimes c), \quad e \otimes a = a, \quad a \otimes e = a.`
-
-```lean
-class MulMonoid (T : Type*) extends Otimes T where
-  otimes_assoc : ∀ a b c : T,
-    (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c)
-  one_otimes : ∀ a : T, eₒ ⊗ₒ a = a
-  otimes_one : ∀ a : T, a ⊗ₒ eₒ = a
-```
-
-*Definition:* a _semi-ring_ is a commutative $`\oplus`-monoid and a $`\otimes`-monoid with
-$$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus b) \otimes c = (a \otimes c) \oplus (b \otimes c),`
-$$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
-
-```lean
-class Semiring (T : Type*) extends
-    AddCommMonoid T, MulMonoid T where
-  left_distrib : ∀ a b c : T,
-    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c
-  right_distrib : ∀ a b c : T,
-    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c
-  eps_otimes : ∀ a : T, εₒ ⊗ₒ a = εₒ
-  otimes_eps : ∀ a : T, a ⊗ₒ εₒ = εₒ
-```
-
-*Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
-
-```lean
-class CommSemiring (T : Type*) extends Semiring T where
-  otimes_comm : ∀ a b : T, a ⊗ₒ b = b ⊗ₒ a
-```
-
-*Definition:* a _dioid_ is a commutative semi-ring whose sum is idempotent, $`a \oplus a = a`.
-
-```lean
-class Dioid (T : Type*) extends CommSemiring T where
-  oplus_idem : ∀ a : T, a ⊕ₒ a = a
-```
+On top of the signatures, monoids, and semi-rings of the previous
+chapter, the idempotency that distinguishes a dioid is added as a
+single field on top of a commutative semi-ring, so no inheritance
+diamond arises.
 
 *Theorem:* $`(a \oplus b) \otimes (c \oplus d) = (a \otimes c) \oplus (b \otimes c) \oplus (a \otimes d) \oplus (b \otimes d)`
 
@@ -129,108 +51,6 @@ theorem quaternary_distrib {T : Type*} [Semiring T]
   congr 1
   rw [AddCommMonoid.oplus_comm (b ⊗ₒ c) (a ⊗ₒ d),
     AddMonoid.oplus_assoc (a ⊗ₒ d) (b ⊗ₒ c) (b ⊗ₒ d)]
-```
-
-## The canonical order on a dioid
-
-Every dioid carries a _canonical order_ read off from its sum: $`a` is
-below $`b` exactly when adding $`a` to $`b` changes nothing. We write it
-`a ≼ₒ b`; the dioid is recovered by instance resolution.
-
-*Definition:* $`a \preceq b \iff a \oplus b = b`
-
-```lean
-def le {T : Type*} [Dioid T] (a b : T) : Prop :=
-  a ⊕ₒ b = b
-
-scoped infix:50 " ≼ₒ " => le
-```
-
-Reflexivity is exactly idempotency of the sum: $`a \oplus a = a`.
-
-*Theorem:* $`a \preceq a`
-
-```lean
-theorem le_refl {T : Type*} [Dioid T] (a : T) :
-    a ≼ₒ a :=
-  Dioid.oplus_idem a
-```
-
-Transitivity uses associativity to merge the two witnessing equations.
-
-*Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c`
-
-```lean
-theorem le_trans {T : Type*} [Dioid T] {a b c : T}
-    (hab : a ≼ₒ b) (hbc : b ≼ₒ c) : a ≼ₒ c := by
-  show a ⊕ₒ c = c
-  calc a ⊕ₒ c
-      = a ⊕ₒ (b ⊕ₒ c) := by rw [hbc]
-    _ = (a ⊕ₒ b) ⊕ₒ c := by
-        rw [AddMonoid.oplus_assoc]
-    _ = b ⊕ₒ c := by rw [hab]
-    _ = c := hbc
-```
-
-Antisymmetry uses commutativity: the two equations exhibit $`a` and
-$`b` as the same sum.
-
-*Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b`
-
-```lean
-theorem le_antisymm {T : Type*} [Dioid T] {a b : T}
-    (hab : a ≼ₒ b) (hba : b ≼ₒ a) : a = b := by
-  have h1 : a ⊕ₒ b = b := hab
-  rw [← h1, AddCommMonoid.oplus_comm, hba]
-```
-
-The sum is _isotone_ in each argument: a smaller summand gives a
-smaller sum.
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
-
-```lean
-theorem add_le_add_right {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (a ⊕ₒ c) ≼ₒ (b ⊕ₒ c) := by
-  show (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c) = b ⊕ₒ c
-  calc (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c)
-      = (a ⊕ₒ b) ⊕ₒ (c ⊕ₒ c) := by
-        rw [AddMonoid.oplus_assoc,
-          ← AddMonoid.oplus_assoc c b c,
-          AddCommMonoid.oplus_comm c b,
-          AddMonoid.oplus_assoc b c c,
-          ← AddMonoid.oplus_assoc a b (c ⊕ₒ c)]
-    _ = b ⊕ₒ c := by rw [h, Dioid.oplus_idem]
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
-
-```lean
-theorem add_le_add_left {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (c ⊕ₒ a) ≼ₒ (c ⊕ₒ b) := by
-  rw [AddCommMonoid.oplus_comm c a,
-    AddCommMonoid.oplus_comm c b]
-  exact add_le_add_right h c
-```
-
-The product is isotone in each argument, by distributivity.
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c`
-
-```lean
-theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (a ⊗ₒ c) ≼ₒ (b ⊗ₒ c) := by
-  show (a ⊗ₒ c) ⊕ₒ (b ⊗ₒ c) = b ⊗ₒ c
-  rw [← Semiring.right_distrib, h]
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
-
-```lean
-theorem mul_le_mul_left {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (c ⊗ₒ a) ≼ₒ (c ⊗ₒ b) := by
-  show (c ⊗ₒ a) ⊕ₒ (c ⊗ₒ b) = c ⊗ₒ b
-  rw [← Semiring.left_distrib, h]
 ```
 
 ## A complete dioid from scratch
@@ -408,7 +228,9 @@ theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
     {a b : T} :
     a ≼ₒ b ↔ CompleteDioid.sSup {a, b} = b := by
   rw [sSup_pair]; rfl
+```
 
+```lean
 end Algebra
 ```
 

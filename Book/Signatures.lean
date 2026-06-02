@@ -1,0 +1,378 @@
+import VersoManual
+import Mathlib.Algebra.Ring.Defs
+import Mathlib.Tactic.Abel
+import Mathlib.Algebra.Order.Kleene
+
+open Verso.Genre Manual
+open Verso.Genre.Manual.InlineLean
+
+#doc (Manual) "Signatures and the additive monoid" =>
+The dioid tower begins with the bare _operation signatures_ — a sum
+$`\oplus` and a product $`\otimes`, each with a neutral — and the first
+algebraic layer over them, the additive monoid. This chapter isolates
+that foundation: the signatures, the $`\oplus`-monoid, and the _bridge_
+that exhibits it as one of `Mathlib`'s additive monoids.
+
+All declarations live in the `NetworkCalculus` namespace.
+
+```lean
+namespace NetworkCalculus
+```
+
+# Operation signatures
+
+The tower is built as a chain of _type classes_ over a carrier $`T`.
+The operations are recovered by instance resolution, so the glyphs
+$`\oplus` and $`\otimes` need no tag — we write them `⊕ₒ` and `⊗ₒ`.
+
+*Definition:* a _sum signature_ on a carrier $`T` is a binary
+$`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
+
+```lean
+namespace Algebra
+
+class Oplus (T : Type*) where
+  oplus : T → T → T
+  eps : T
+
+class Otimes (T : Type*) where
+  otimes : T → T → T
+  one : T
+
+scoped infixl:65 " ⊕ₒ " => Oplus.oplus
+scoped infixl:70 " ⊗ₒ " => Otimes.otimes
+scoped notation "εₒ" => Oplus.eps
+scoped notation "eₒ" => Otimes.one
+```
+
+*Definition:* a _product signature_ on $`T` is a binary
+$`\otimes : T \times T \to T` with a neutral $`e`.
+
+# The monoid
+
+## The additive monoid
+
+*Definition:* $`(T, \oplus, \varepsilon)` is a _monoid_:
+$$`(a \oplus b) \oplus c = a \oplus (b \oplus c), \quad \varepsilon \oplus a = a, \quad a \oplus \varepsilon = a.`
+
+```lean
+class AddMonoid (T : Type*) extends Oplus T where
+  oplus_assoc : ∀ a b c : T,
+    (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c)
+  eps_oplus : ∀ a : T, εₒ ⊕ₒ a = a
+  oplus_eps : ∀ a : T, a ⊕ₒ εₒ = a
+```
+
+```lean
+namespace Bridge
+
+scoped instance instAddMonoid
+    {T : Type*} [AddMonoid T] : _root_.AddMonoid T where
+  add := Oplus.oplus
+  zero := Oplus.eps
+  add_assoc := AddMonoid.oplus_assoc
+  zero_add := AddMonoid.eps_oplus
+  add_zero := AddMonoid.oplus_eps
+  nsmul n a :=
+    n.rec Oplus.eps (fun _ acc => Oplus.oplus acc a)
+
+end Bridge
+```
+
+## The multiplicative monoid
+
+The product carries the same monoid structure, over the $`\otimes`
+signature with neutral $`e`.
+
+*Definition:* $`(T, \otimes, e)` is a _monoid_:
+$$`(a \otimes b) \otimes c = a \otimes (b \otimes c), \quad e \otimes a = a, \quad a \otimes e = a.`
+
+```lean
+class MulMonoid (T : Type*) extends Otimes T where
+  otimes_assoc : ∀ a b c : T,
+    (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c)
+  one_otimes : ∀ a : T, eₒ ⊗ₒ a = a
+  otimes_one : ∀ a : T, a ⊗ₒ eₒ = a
+```
+
+```lean
+namespace Bridge
+
+scoped instance instMulMonoid
+    {T : Type*} [MulMonoid T] : _root_.Monoid T where
+  mul := Otimes.otimes
+  one := Otimes.one
+  mul_assoc := MulMonoid.otimes_assoc
+  one_mul := MulMonoid.one_otimes
+  mul_one := MulMonoid.otimes_one
+  npow n a :=
+    n.rec Otimes.one (fun _ acc => Otimes.otimes acc a)
+
+end Bridge
+```
+
+# The commutative monoid
+
+*Definition:* a _commutative_ monoid adds $`a \oplus b = b \oplus a`.
+
+```lean
+class AddCommMonoid (T : Type*) extends AddMonoid T where
+  oplus_comm : ∀ a b : T, a ⊕ₒ b = b ⊕ₒ a
+```
+
+```lean
+namespace Bridge
+
+scoped instance instAddCommMonoid
+    {T : Type*} [AddCommMonoid T] :
+    _root_.AddCommMonoid T where
+  toAddMonoid := instAddMonoid
+  add_comm := AddCommMonoid.oplus_comm
+
+end Bridge
+```
+
+# The semi-ring
+
+*Definition:* a _semi-ring_ is a commutative $`\oplus`-monoid and a $`\otimes`-monoid with
+$$`a \otimes (b \oplus c) = (a \otimes b) \oplus (a \otimes c), \quad (a \oplus b) \otimes c = (a \otimes c) \oplus (b \otimes c),`
+$$`\varepsilon \otimes a = \varepsilon, \quad a \otimes \varepsilon = \varepsilon.`
+
+```lean
+class Semiring (T : Type*) extends
+    AddCommMonoid T, MulMonoid T where
+  left_distrib : ∀ a b c : T,
+    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c
+  right_distrib : ∀ a b c : T,
+    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c
+  eps_otimes : ∀ a : T, εₒ ⊗ₒ a = εₒ
+  otimes_eps : ∀ a : T, a ⊗ₒ εₒ = εₒ
+```
+
+```lean
+namespace Bridge
+
+scoped instance instSemiring
+    {T : Type*} [Semiring T] : _root_.Semiring T where
+  toAddCommMonoid := instAddCommMonoid
+  toMonoid := instMulMonoid
+  left_distrib := Semiring.left_distrib
+  right_distrib := Semiring.right_distrib
+  zero_mul := Semiring.eps_otimes
+  mul_zero := Semiring.otimes_eps
+
+end Bridge
+```
+
+# The commutative semi-ring
+
+*Definition:* a _commutative semi-ring_ adds $`a \otimes b = b \otimes a`.
+
+```lean
+class CommSemiring (T : Type*) extends Semiring T where
+  otimes_comm : ∀ a b : T, a ⊗ₒ b = b ⊗ₒ a
+```
+
+```lean
+namespace Bridge
+
+scoped instance instCommSemiring
+    {T : Type*} [CommSemiring T] :
+    _root_.CommSemiring T where
+  toSemiring := instSemiring
+  mul_comm := CommSemiring.otimes_comm
+
+scoped instance instMulCommMonoid
+    {T : Type*} [CommSemiring T] :
+    _root_.CommMonoid T where
+  toMonoid := instMulMonoid
+  mul_comm := CommSemiring.otimes_comm
+
+end Bridge
+```
+
+# The dioid
+
+*Definition:* a _dioid_ is a commutative semi-ring whose sum is idempotent, $`a \oplus a = a`.
+
+```lean
+class Dioid (T : Type*) extends CommSemiring T where
+  oplus_idem : ∀ a : T, a ⊕ₒ a = a
+```
+
+## The canonical order
+
+Every dioid carries a _canonical order_ read off from its sum: $`a` is
+below $`b` exactly when adding $`a` to $`b` changes nothing. We write it
+`a ≼ₒ b`; the dioid is recovered by instance resolution.
+
+*Definition:* $`a \preceq b \iff a \oplus b = b`
+
+```lean
+def le {T : Type*} [Dioid T] (a b : T) : Prop :=
+  a ⊕ₒ b = b
+
+scoped infix:50 " ≼ₒ " => le
+```
+
+## Proving the order laws
+
+Reflexivity is exactly idempotency of the sum: $`a \oplus a = a`.
+
+*Theorem:* $`a \preceq a`
+
+```lean
+theorem le_refl {T : Type*} [Dioid T] (a : T) :
+    a ≼ₒ a :=
+  Dioid.oplus_idem a
+```
+
+```lean
+namespace Bridge
+
+theorem oplus_eq_add {T : Type*} [Dioid T] (a b : T) :
+    a ⊕ₒ b = a + b := rfl
+
+theorem otimes_eq_mul {T : Type*} [Dioid T] (a b : T) :
+    a ⊗ₒ b = a * b := rfl
+
+end Bridge
+
+open scoped Bridge
+open Bridge (oplus_eq_add otimes_eq_mul)
+```
+
+Transitivity merges the two witnessing equations by associativity of
+the sum, now `Mathlib`'s `add_assoc`.
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c`
+
+```lean
+theorem le_trans {T : Type*} [Dioid T] {a b c : T}
+    (hab : a ≼ₒ b) (hbc : b ≼ₒ c) : a ≼ₒ c := by
+  simp only [le, oplus_eq_add] at hab hbc ⊢
+  rw [← hbc, ← add_assoc, hab]
+```
+
+Antisymmetry uses commutativity: the two equations exhibit $`a` and
+$`b` as the same sum.
+
+*Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b`
+
+```lean
+theorem le_antisymm {T : Type*} [Dioid T] {a b : T}
+    (hab : a ≼ₒ b) (hba : b ≼ₒ a) : a = b := by
+  simp only [le, oplus_eq_add] at hab hba
+  rw [← hab, add_comm, hba]
+```
+
+# A dioid is an idempotent commutative semi-ring
+
+The order laws assemble into `Mathlib`'s order hierarchy, and through
+it the dioid becomes one of `Mathlib`'s _idempotent commutative
+semi-rings_ — the structure whose addition is the lattice join. The
+three order proofs give a partial order; the sum is its binary join,
+$`a \sqcup b = a \oplus b`, with the least-upper-bound laws following
+from idempotency; and the sum neutral $`\varepsilon` is the least
+element $`\bot`. The final instance then needs only that addition
+agrees with the join, which holds by reflexivity.
+
+```lean
+namespace Bridge
+
+scoped instance instPartialOrder
+    {T : Type*} [Dioid T] : PartialOrder T where
+  le := le
+  le_refl := le_refl
+  le_trans := fun _ _ _ => le_trans
+  le_antisymm := fun _ _ h1 h2 => le_antisymm h1 h2
+
+scoped instance instSemilatticeSup
+    {T : Type*} [Dioid T] : SemilatticeSup T where
+  sup a b := a ⊕ₒ b
+  le_sup_left a b := by
+    show a ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
+    rw [← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+  le_sup_right a b := by
+    show b ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
+    rw [AddCommMonoid.oplus_comm a b,
+        ← AddMonoid.oplus_assoc, Dioid.oplus_idem]
+  sup_le a b c hac hbc := by
+    show (a ⊕ₒ b) ⊕ₒ c = c
+    rw [AddMonoid.oplus_assoc,
+        (show b ⊕ₒ c = c from hbc),
+        (show a ⊕ₒ c = c from hac)]
+
+scoped instance instOrderBot
+    {T : Type*} [Dioid T] : OrderBot T where
+  bot := εₒ
+  bot_le a := AddMonoid.eps_oplus a
+
+scoped instance instIdemCommSemiring
+    {T : Type*} [Dioid T] : IdemCommSemiring T where
+  toCommSemiring := instCommSemiring
+  toSemilatticeSup := instSemilatticeSup
+  toOrderBot := instOrderBot
+  add_eq_sup _ _ := rfl
+
+end Bridge
+```
+
+# Isotony
+
+The sum is _isotone_ in each argument: a smaller summand gives a
+smaller sum.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c`
+
+```lean
+theorem add_le_add_right {T : Type*} [Dioid T] {a b : T}
+    (h : a ≼ₒ b) (c : T) : (a ⊕ₒ c) ≼ₒ (b ⊕ₒ c) := by
+  show (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c) = b ⊕ₒ c
+  calc (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c)
+      = (a ⊕ₒ b) ⊕ₒ (c ⊕ₒ c) := by
+        rw [AddMonoid.oplus_assoc,
+          ← AddMonoid.oplus_assoc c b c,
+          AddCommMonoid.oplus_comm c b,
+          AddMonoid.oplus_assoc b c c,
+          ← AddMonoid.oplus_assoc a b (c ⊕ₒ c)]
+    _ = b ⊕ₒ c := by rw [h, Dioid.oplus_idem]
+```
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
+
+```lean
+theorem add_le_add_left {T : Type*} [Dioid T] {a b : T}
+    (h : a ≼ₒ b) (c : T) : (c ⊕ₒ a) ≼ₒ (c ⊕ₒ b) := by
+  rw [AddCommMonoid.oplus_comm c a,
+    AddCommMonoid.oplus_comm c b]
+  exact add_le_add_right h c
+```
+
+The product is isotone in each argument, by distributivity.
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c`
+
+```lean
+theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
+    (h : a ≼ₒ b) (c : T) : (a ⊗ₒ c) ≼ₒ (b ⊗ₒ c) := by
+  show (a ⊗ₒ c) ⊕ₒ (b ⊗ₒ c) = b ⊗ₒ c
+  rw [← Semiring.right_distrib, h]
+```
+
+*Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
+
+```lean
+theorem mul_le_mul_left {T : Type*} [Dioid T] {a b : T}
+    (h : a ≼ₒ b) (c : T) : (c ⊗ₒ a) ≼ₒ (c ⊗ₒ b) := by
+  show (c ⊗ₒ a) ⊕ₒ (c ⊗ₒ b) = c ⊗ₒ b
+  rw [← Semiring.left_distrib, h]
+```
+
+```lean
+end Algebra
+```
+
+```lean
+end NetworkCalculus
+```
