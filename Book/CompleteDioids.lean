@@ -123,6 +123,16 @@ scoped instance instCompleteSemilatticeSup
 end Bridge
 ```
 
+With the bridge open, $`\bigsqcup s` is `Mathlib`'s least upper bound
+of $`s`.
+
+*Theorem:* $`\bigsqcup s` is the least upper bound of $`s`
+
+```lean
+example {T : Type*} [CompleteDioid T] (s : Set T) :
+    IsLUB s (CompleteDioid.sSup s) := isLUB_sSup s
+```
+
 The full lower-semi-continuity _equality_ now follows: the axiom gives
 one inequality, and the other is free from the least-upper-bound laws
 and isotony of the product.
