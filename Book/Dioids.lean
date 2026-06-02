@@ -1,6 +1,9 @@
 import VersoManual
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Insert
+import Mathlib.Data.Real.Basic
+import Mathlib.Algebra.Order.Ring.WithTop
+import Mathlib.Tactic.GCongr
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -10,7 +13,8 @@ This chapter formalizes the algebra of _dioids_ from scratch: the
 operations and their laws as a tower of type classes, the _canonical
 order_ they induce, the order properties and isotony, the _complete
 dioid_ that adds completeness and lower semi-continuity, and its top
-element.
+element. It closes with a concrete model — the reals with infinity
+under $`(\min, +)` — realizing the tower.
 
 All declarations live in the `NetworkCalculus` namespace.
 
@@ -409,6 +413,92 @@ theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
   rw [sSup_pair]; rfl
 
 end Algebra
+```
+
+# A concrete dioid: the reals with infinity
+
+The abstract tower is realized by the _(min,plus)_ algebra on
+$`\overline{\mathbb{R}} = \mathbb{R} \cup \{+\infty\}`. The dioid sum is
+the numeric _minimum_, the product is numeric _addition_, the sum
+neutral is $`+\infty` (absorbing for $`\min`, since $`\min(+\infty, a)
+= a` forces nothing larger), and the product neutral is $`0`. The
+canonical order $`a \preceq b \iff \min(a, b) = b` is then the _reverse_
+of the usual numeric order.
+
+We carry the numeric value in `WithTop ℝ` (with $`+\infty = \top`) under
+a one-field wrapper, so the dioid operations are attached freshly rather
+than colliding with any numeric algebra on `WithTop ℝ`.
+
+*Definition:* the carrier $`\overline{\mathbb{R}} = \mathbb{R} \cup \{+\infty\}`
+
+```lean
+structure Rmin where ofR ::
+  toR : WithTop ℝ
+
+namespace Rmin
+
+@[ext] theorem ext {a b : Rmin}
+    (h : a.toR = b.toR) : a = b := by
+  cases a; cases b; simp_all
+```
+
+Two arithmetic facts on `WithTop ℝ` carry the distributive laws:
+addition distributes over the minimum on each side, because addition is
+monotone.
+
+*Theorem:* $`a + \min(b, c) = \min(a + b, a + c)`
+
+```lean
+theorem add_min (a b c : WithTop ℝ) :
+    a + min b c = min (a + b) (a + c) := by
+  rcases le_total b c with h | h
+  · rw [min_eq_left h, min_eq_left (by gcongr)]
+  · rw [min_eq_right h, min_eq_right (by gcongr)]
+
+theorem min_add (a b c : WithTop ℝ) :
+    min a b + c = min (a + c) (b + c) := by
+  rw [add_comm, add_min, add_comm a c, add_comm b c]
+```
+
+Each dioid axiom is now a fact about `WithTop ℝ`: associativity and
+commutativity of $`\min` and $`+`, the neutrals $`+\infty` and $`0`,
+the two distributive laws, that $`+\infty` is absorbing for $`+`, and
+idempotency $`\min(a, a) = a`.
+
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
+
+```lean
+instance : Algebra.Dioid Rmin where
+  oplus a b := ⟨min a.toR b.toR⟩
+  eps := ⟨⊤⟩
+  otimes a b := ⟨a.toR + b.toR⟩
+  one := ⟨0⟩
+  oplus_assoc a b c := by ext; exact min_assoc _ _ _
+  eps_oplus a := by ext; exact min_eq_right le_top
+  oplus_eps a := by ext; exact min_eq_left le_top
+  oplus_comm a b := by ext; exact min_comm _ _
+  otimes_assoc a b c := by ext; exact add_assoc _ _ _
+  one_otimes a := by ext; exact zero_add _
+  otimes_one a := by ext; exact add_zero _
+  left_distrib a b c := by ext; exact add_min _ _ _
+  right_distrib a b c := by ext; exact min_add _ _ _
+  eps_otimes a := by ext; exact top_add _
+  otimes_eps a := by ext; exact add_top _
+  otimes_comm a b := by ext; exact add_comm _ _
+  oplus_idem a := by ext; exact min_self _
+
+end Rmin
+```
+
+Because the instance is found by resolution, every result of the tower
+— the order $`\preceq`, its reflexivity, transitivity, antisymmetry,
+and the isotony of $`\oplus` and $`\otimes` — now holds for
+$`\overline{\mathbb{R}}` with no further work.
+
+```lean
+example (a : Rmin) :
+    Algebra.le a a :=
+  Algebra.le_refl a
 ```
 
 ```lean
