@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Convolution
+import Book.LeftContinuity
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean

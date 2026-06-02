@@ -6,6 +6,7 @@ import Book.Order
 import Book.CompleteDioids
 import Book.Scalars
 import Book.Convolution
+import Book.LeftContinuity
 import Book.Shapers
 
 open Verso.Genre Manual
@@ -37,5 +38,7 @@ declarations.
 {include 1 Book.Scalars}
 
 {include 1 Book.Convolution}
+
+{include 1 Book.LeftContinuity}
 
 {include 1 Book.Shapers}
