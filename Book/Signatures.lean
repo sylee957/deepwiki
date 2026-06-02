@@ -327,37 +327,26 @@ smaller sum.
 
 ```lean
 theorem add_le_add_right {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (a ⊕ₒ c) ≼ₒ (b ⊕ₒ c) := by
-  show (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c) = b ⊕ₒ c
-  calc (a ⊕ₒ c) ⊕ₒ (b ⊕ₒ c)
-      = (a ⊕ₒ b) ⊕ₒ (c ⊕ₒ c) := by
-        rw [AddMonoid.oplus_assoc,
-          ← AddMonoid.oplus_assoc c b c,
-          AddCommMonoid.oplus_comm c b,
-          AddMonoid.oplus_assoc b c c,
-          ← AddMonoid.oplus_assoc a b (c ⊕ₒ c)]
-    _ = b ⊕ₒ c := by rw [h, Dioid.oplus_idem]
+    (h : a ≼ₒ b) (c : T) : (a ⊕ₒ c) ≼ₒ (b ⊕ₒ c) :=
+  sup_le_sup_right h c
 ```
 
 *Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
 
 ```lean
 theorem add_le_add_left {T : Type*} [Dioid T] {a b : T}
-    (h : a ≼ₒ b) (c : T) : (c ⊕ₒ a) ≼ₒ (c ⊕ₒ b) := by
-  rw [AddCommMonoid.oplus_comm c a,
-    AddCommMonoid.oplus_comm c b]
-  exact add_le_add_right h c
+    (h : a ≼ₒ b) (c : T) : (c ⊕ₒ a) ≼ₒ (c ⊕ₒ b) :=
+  sup_le_sup_left h c
 ```
-
-The product is isotone in each argument, by distributivity.
 
 *Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c`
 
 ```lean
 theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (a ⊗ₒ c) ≼ₒ (b ⊗ₒ c) := by
-  show (a ⊗ₒ c) ⊕ₒ (b ⊗ₒ c) = b ⊗ₒ c
-  rw [← Semiring.right_distrib, h]
+  show a * c ≤ b * c
+  gcongr
+  exact h
 ```
 
 *Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
@@ -365,8 +354,9 @@ theorem mul_le_mul_right {T : Type*} [Dioid T] {a b : T}
 ```lean
 theorem mul_le_mul_left {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (c ⊗ₒ a) ≼ₒ (c ⊗ₒ b) := by
-  show (c ⊗ₒ a) ⊕ₒ (c ⊗ₒ b) = c ⊗ₒ b
-  rw [← Semiring.left_distrib, h]
+  show c * a ≤ c * b
+  gcongr
+  exact h
 ```
 
 ```lean
