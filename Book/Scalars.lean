@@ -48,6 +48,14 @@ structure Rmin where ofR ::
   toR : WithTop ℝ
 
 namespace Rmin
+
+open Algebra
+
+instance : Coe Rmin (WithTop ℝ) := ⟨toR⟩
+
+@[ext] theorem ext {a b : Rmin}
+    (h : (a : WithTop ℝ) = b) : a = b := by
+  cases a; cases b; exact congrArg ofR h
 ```
 
 Two arithmetic facts on `WithTop ℝ` carry the distributive laws:
@@ -73,74 +81,76 @@ commutativity of $`\min` and $`+`, the neutrals $`+\infty` and $`0`,
 the two distributive laws, that $`+\infty` is absorbing for $`+`, and
 idempotency $`\min(a, a) = a`.
 
-*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
+*Definition:* the operations: $`\oplus = \min` with neutral $`+\infty`, and $`\otimes = {+}` with unit $`0`
+
+```lean
+instance : Algebra.Oplus Rmin where
+  add a b := ⟨min ↑a ↑b⟩
+  zero := ⟨⊤⟩
+
+instance : Algebra.Otimes Rmin where
+  mul a b := ⟨↑a + ↑b⟩
+  one := ⟨0⟩
+```
+
+Each law is now a fact about `WithTop ℝ`, lifted through the wrapper by
+`ext`: the $`\oplus`-monoid laws from `min`, the $`\otimes`-monoid laws
+from `+`, the distributive laws from `add_min`/`min_add`, absorption of
+$`+\infty`, and idempotency of $`\min`.
+
+```lean
+theorem oplus_assoc (a b c : Rmin) :
+    (a ⊕ₒ b) ⊕ₒ c = a ⊕ₒ (b ⊕ₒ c) :=
+  ext (min_assoc _ _ _)
+theorem eps_oplus (a : Rmin) : εₒ ⊕ₒ a = a :=
+  ext (min_eq_right le_top)
+theorem oplus_eps (a : Rmin) : a ⊕ₒ εₒ = a :=
+  ext (min_eq_left le_top)
+theorem oplus_comm (a b : Rmin) : a ⊕ₒ b = b ⊕ₒ a :=
+  ext (min_comm _ _)
+theorem otimes_assoc (a b c : Rmin) :
+    (a ⊗ₒ b) ⊗ₒ c = a ⊗ₒ (b ⊗ₒ c) :=
+  ext (add_assoc _ _ _)
+theorem one_otimes (a : Rmin) : eₒ ⊗ₒ a = a :=
+  ext (zero_add _)
+theorem otimes_one (a : Rmin) : a ⊗ₒ eₒ = a :=
+  ext (add_zero _)
+theorem left_distrib (a b c : Rmin) :
+    a ⊗ₒ (b ⊕ₒ c) = a ⊗ₒ b ⊕ₒ a ⊗ₒ c :=
+  ext (add_min _ _ _)
+theorem right_distrib (a b c : Rmin) :
+    (a ⊕ₒ b) ⊗ₒ c = a ⊗ₒ c ⊕ₒ b ⊗ₒ c :=
+  ext (min_add _ _ _)
+theorem eps_otimes (a : Rmin) : εₒ ⊗ₒ a = εₒ :=
+  ext (top_add _)
+theorem otimes_eps (a : Rmin) : a ⊗ₒ εₒ = εₒ :=
+  ext (add_top _)
+theorem otimes_comm (a b : Rmin) : a ⊗ₒ b = b ⊗ₒ a :=
+  ext (add_comm _ _)
+theorem oplus_idem (a : Rmin) : a ⊕ₒ a = a :=
+  ext (min_self _)
+```
+
+These assemble into the dioid: the operations come from the instances
+above, the laws from the theorems just proved.
 
 ```lean
 instance : Algebra.Dioid Rmin where
-  add a b := ⟨min a.toR b.toR⟩
-  zero := ⟨⊤⟩
-  mul a b := ⟨a.toR + b.toR⟩
-  one := ⟨0⟩
-  oplus_assoc a b c :=
-    congrArg ofR (min_assoc _ _ _)
-  eps_oplus a := congrArg ofR (min_eq_right le_top)
-  oplus_eps a := congrArg ofR (min_eq_left le_top)
-  oplus_comm a b := congrArg ofR (min_comm _ _)
-  otimes_assoc a b c :=
-    congrArg ofR (add_assoc _ _ _)
-  one_otimes a := congrArg ofR (zero_add _)
-  otimes_one a := congrArg ofR (add_zero _)
-  left_distrib a b c := congrArg ofR (add_min _ _ _)
-  right_distrib a b c := congrArg ofR (min_add _ _ _)
-  eps_otimes a := congrArg ofR (top_add _)
-  otimes_eps a := congrArg ofR (add_top _)
-  otimes_comm a b := congrArg ofR (add_comm _ _)
-  oplus_idem a := congrArg ofR (min_self _)
-```
-
-The underlying value is a coercion `Rmin → WithTop ℝ`, and the dioid
-operations push through it to numeric `min`/`+`. With these cast lemmas
-a goal about `Rmin` reduces to one about `WithTop ℝ`.
-
-```lean
-open scoped Algebra
-open Algebra
-
-@[coe] def coe (a : Rmin) : WithTop ℝ := a.toR
-instance : Coe Rmin (WithTop ℝ) := ⟨coe⟩
-
-@[ext] theorem ext {a b : Rmin}
-    (h : (a : WithTop ℝ) = b) : a = b := by
-  cases a; cases b; exact congrArg ofR h
-
-@[simp, norm_cast] theorem coe_oplus (a b : Rmin) :
-    ((a ⊕ₒ b : Rmin) : WithTop ℝ)
-      = min (a : WithTop ℝ) b := rfl
-@[simp, norm_cast] theorem coe_otimes (a b : Rmin) :
-    ((a ⊗ₒ b : Rmin) : WithTop ℝ)
-      = (a : WithTop ℝ) + b := rfl
-@[simp, norm_cast] theorem coe_eps :
-    ((εₒ : Rmin) : WithTop ℝ) = ⊤ := by
-  show (εₒ : Rmin).toR = ⊤; rfl
-@[simp, norm_cast] theorem coe_one :
-    ((eₒ : Rmin) : WithTop ℝ) = 0 := by
-  show (eₒ : Rmin).toR = 0; rfl
-
-end Rmin
-```
-
-With the cast lemmas, a fact about $`\overline{\mathbb{R}}` reduces to
-its numeric content on `WithTop ℝ` by `push_cast`: distributivity of
-$`\otimes` over $`\oplus`, for instance, becomes the numeric
-`add_min`.
-
-```lean
-namespace Rmin
-open Algebra
-
-example (a b c : Rmin) :
-    a ⊗ₒ (b ⊕ₒ c) = (a ⊗ₒ b) ⊕ₒ (a ⊗ₒ c) := by
-  apply ext; push_cast; exact add_min _ _ _
+  toOplus := inferInstance
+  toOtimes := inferInstance
+  oplus_assoc := oplus_assoc
+  eps_oplus := eps_oplus
+  oplus_eps := oplus_eps
+  oplus_comm := oplus_comm
+  otimes_assoc := otimes_assoc
+  one_otimes := one_otimes
+  otimes_one := otimes_one
+  left_distrib := left_distrib
+  right_distrib := right_distrib
+  eps_otimes := eps_otimes
+  otimes_eps := otimes_eps
+  otimes_comm := otimes_comm
+  oplus_idem := oplus_idem
 
 end Rmin
 ```
@@ -291,9 +301,9 @@ structure RbarMin where ofB ::
 namespace RbarMin
 
 instance : Algebra.Dioid RbarMin where
-  add a b := ⟨min a.toB b.toB⟩
+  add := fun ⟨a⟩ ⟨b⟩ => ⟨min a b⟩
   zero := ⟨⊤⟩
-  mul a b := ⟨a.toB + b.toB⟩
+  mul := fun ⟨a⟩ ⟨b⟩ => ⟨a + b⟩
   one := ⟨0⟩
   oplus_assoc a b c := congrArg ofB (min_assoc _ _ _)
   eps_oplus a := congrArg ofB (min_eq_right le_top)
@@ -414,9 +424,9 @@ structure RplusMin where ofE ::
 namespace RplusMin
 
 instance : Algebra.Dioid RplusMin where
-  add a b := ⟨min a.toE b.toE⟩
+  add := fun ⟨a⟩ ⟨b⟩ => ⟨min a b⟩
   zero := ⟨⊤⟩
-  mul a b := ⟨a.toE + b.toE⟩
+  mul := fun ⟨a⟩ ⟨b⟩ => ⟨a + b⟩
   one := ⟨0⟩
   oplus_assoc a b c := congrArg ofE (min_assoc _ _ _)
   eps_oplus a := congrArg ofE (min_eq_right le_top)
