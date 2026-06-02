@@ -1,34 +1,31 @@
 import VersoManual
-import Mathlib.Algebra.Order.Kleene
-import Mathlib.Order.CompleteLattice.Lemmas
+import Mathlib.Data.Set.Image
+import Mathlib.Data.Set.Insert
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Dioids and complete dioids" =>
-This chapter formalizes the algebra of _dioids_, the _canonical order_
-they induce, the order properties and isotony, and the _complete dioid_
-that adds completeness and lower semi-continuity.
+This chapter formalizes the algebra of _dioids_ from scratch: the
+operations and their laws as a tower of type classes, the _canonical
+order_ they induce, the order properties and isotony, the _complete
+dioid_ that adds completeness and lower semi-continuity, and its top
+element.
 
 All declarations live in the `NetworkCalculus` namespace.
 
 ```lean
 namespace NetworkCalculus
-
-open scoped Computability
--- `add_eq_sup : a + b = a ⊔ b`
 ```
 
 # A dioid, defined from scratch
 
-The tower below is a self-contained illustration built as a chain of
-_type classes_ over a carrier $`T`. The operations are recovered by
-instance resolution, so the glyphs $`\oplus` and $`\otimes` need no
-tag — we write them `⊕ₒ` and `⊗ₒ`. Each layer extends the previous
-one, and the idempotency that distinguishes a dioid is added as a
-single field on top of a commutative semi-ring, so no inheritance
-diamond arises. The interface the rest of the book actually builds on
-is `IdemDioid`, defined afterwards.
+The tower is built as a chain of _type classes_ over a carrier $`T`.
+The operations are recovered by instance resolution, so the glyphs
+$`\oplus` and $`\otimes` need no tag — we write them `⊕ₒ` and `⊗ₒ`.
+Each layer extends the previous one, and the idempotency that
+distinguishes a dioid is added as a single field on top of a
+commutative semi-ring, so no inheritance diamond arises.
 
 *Definition:* a _sum signature_ on a carrier $`T` is a binary
 $`\oplus : T \times T \to T` with a neutral $`\varepsilon`.
@@ -122,15 +119,15 @@ theorem quaternary_distrib {T : Type*} [Semiring T]
       = (a ⊗ₒ c ⊕ₒ a ⊗ₒ d) ⊕ₒ (b ⊗ₒ c ⊕ₒ b ⊗ₒ d) := by
     rw [Semiring.right_distrib, Semiring.left_distrib,
       Semiring.left_distrib]
-  rw [hexp]
-  set p := a ⊗ₒ c; set q := b ⊗ₒ c
-  set r := a ⊗ₒ d; set s := b ⊗ₒ d
-  rw [AddMonoid.oplus_assoc p q r,
-    AddMonoid.oplus_assoc p (q ⊕ₒ r) s,
-    AddMonoid.oplus_assoc p r (q ⊕ₒ s)]
+  rw [hexp,
+    AddMonoid.oplus_assoc (a ⊗ₒ c) (b ⊗ₒ c) (a ⊗ₒ d),
+    AddMonoid.oplus_assoc (a ⊗ₒ c)
+      (b ⊗ₒ c ⊕ₒ a ⊗ₒ d) (b ⊗ₒ d),
+    AddMonoid.oplus_assoc (a ⊗ₒ c) (a ⊗ₒ d)
+      (b ⊗ₒ c ⊕ₒ b ⊗ₒ d)]
   congr 1
-  rw [AddCommMonoid.oplus_comm q r,
-    AddMonoid.oplus_assoc r q s]
+  rw [AddCommMonoid.oplus_comm (b ⊗ₒ c) (a ⊗ₒ d),
+    AddMonoid.oplus_assoc (a ⊗ₒ d) (b ⊗ₒ c) (b ⊗ₒ d)]
 ```
 
 ## The canonical order on a dioid
@@ -412,197 +409,6 @@ theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
   rw [sSup_pair]; rfl
 
 end Algebra
-```
-
-# The working interface `IdemDioid`
-
-The from-scratch tower above fixes the meaning of a dioid; for the rest
-of the book we work with it through a single type class, `IdemDioid`,
-so that carriers can be registered as instances and the algebraic
-notation $`+`, $`*`, $`0`, $`1`, $`\sqcup` is available directly. It is
-the dioid as an _idempotent commutative semiring_: a commutative
-semiring whose sum is idempotent, with the canonical order
-$`a \preceq b \iff a + b = b` and $`a + b = a \sqcup b`.
-
-*Definition:* `IdemDioid α` is the type class of idempotent commutative semirings on $`\alpha`, with $`\oplus = {+}`, $`\otimes = {*}`, $`\mathbf{0} = 0`, $`\mathbf{1} = 1`, and order $`a \preceq b \iff a + b = b`. The carriers of later chapters target it.
-
-```lean
-abbrev IdemDioid (α : Type*) := IdemCommSemiring α
-```
-
-*Definition:* `ofCommSemiring` builds an `IdemDioid` from a commutative semiring whose sum is idempotent, deriving the canonical order from idempotency.
-
-```lean
-namespace IdemDioid
-
-abbrev ofCommSemiring {α : Type*} [CommSemiring α]
-    (add_idem : ∀ a : α, a + a = a) : IdemDioid α :=
-  { IdemSemiring.ofSemiring add_idem with
-    mul_comm := mul_comm }
-
-end IdemDioid
-```
-
-# The canonical order
-
-*Theorem:* $`a \preceq b \iff a \oplus b = b`
-
-```lean
-namespace Dioid
-
-theorem le_iff_add_eq_right
-    {α : Type*} [IdemDioid α] {a b : α} :
-    a ≤ b ↔ a + b = b :=
-  add_eq_right_iff_le.symm
-```
-
-# Order relation and isotony
-
-*Theorem:* $`a \preceq a` (reflexivity)
-
-```lean
-theorem le_refl' {α : Type*} [IdemDioid α] (a : α) :
-    a ≤ a :=
-  le_iff_add_eq_right.mpr (add_idem a)
-```
-
-*Theorem:* $`a \preceq b \;\wedge\; b \preceq c \;\Rightarrow\; a \preceq c` (transitivity)
-
-```lean
-theorem le_trans' {α : Type*} [IdemDioid α] {a b c : α}
-    (hab : a ≤ b) (hbc : b ≤ c) : a ≤ c := by
-  rw [le_iff_add_eq_right] at hab hbc ⊢
-  calc a + c = a + (b + c) := by rw [hbc]
-    _ = (a + b) + c := by rw [add_assoc]
-    _ = b + c := by rw [hab]
-    _ = c := hbc
-```
-
-*Theorem:* $`a \preceq b \;\wedge\; b \preceq a \;\Rightarrow\; a = b` (antisymmetry)
-
-```lean
-theorem le_antisymm' {α : Type*} [IdemDioid α] {a b : α}
-    (hab : a ≤ b) (hba : b ≤ a) : a = b := by
-  rw [le_iff_add_eq_right] at hab hba
-  rw [← hab, add_comm, hba]
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; a \oplus c \preceq b \oplus c` (isotony of $`\oplus`)
-
-```lean
-theorem add_le_add_right'
-    {α : Type*} [IdemDioid α] {a b : α}
-    (h : a ≤ b) (c : α) : a + c ≤ b + c := by
-  rw [le_iff_add_eq_right] at h ⊢
-  calc (a + c) + (b + c)
-      = (a + b) + (c + c) := by ac_rfl
-    _ = b + c := by rw [h, add_idem]
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; c \oplus a \preceq c \oplus b`
-
-```lean
-theorem add_le_add_left'
-    {α : Type*} [IdemDioid α] {a b : α}
-    (h : a ≤ b) (c : α) : c + a ≤ c + b := by
-  rw [add_comm c, add_comm c]
-  exact add_le_add_right' h c
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; a \otimes c \preceq b \otimes c` (isotony of $`\otimes`)
-
-```lean
-theorem mul_le_mul_right'
-    {α : Type*} [IdemDioid α] {a b : α}
-    (h : a ≤ b) (c : α) : a * c ≤ b * c := by
-  rw [le_iff_add_eq_right] at h ⊢
-  rw [← add_mul, h]
-```
-
-*Theorem:* $`a \preceq b \;\Rightarrow\; c \otimes a \preceq c \otimes b`
-
-```lean
-theorem mul_le_mul_left'
-    {α : Type*} [IdemDioid α] {a b : α}
-    (h : a ≤ b) (c : α) : c * a ≤ c * b := by
-  rw [le_iff_add_eq_right] at h ⊢
-  rw [← mul_add, h]
-```
-
-```lean
-end Dioid
-```
-
-# The complete dioid
-
-*Definition:* a _complete dioid_ is an idempotent commutative semiring that is a complete lattice for $`\preceq`, with $`\otimes` lower semi-continuous: $`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b`.
-
-```lean
-class CompleteDioid (α : Type*) extends
-    IdemCommSemiring α, CompleteLattice α where
-  mul_sSup : ∀ (a : α) (s : Set α),
-    a * sSup s = ⨆ b ∈ s, a * b
-```
-
-*Theorem:* $`\Bigl(\bigsqcup_{b \in s} b\Bigr) \otimes a = \bigsqcup_{b \in s} b \otimes a`
-
-```lean
-namespace CompleteDioid
-
-theorem sSup_mul {α : Type*} [CompleteDioid α]
-    (a : α) (s : Set α) :
-    sSup s * a = ⨆ b ∈ s, b * a := by
-  rw [mul_comm, mul_sSup]; simp_rw [mul_comm a]
-```
-
-*Theorem:* $`a \otimes \bigsqcup_i g(i) = \bigsqcup_i a \otimes g(i)`
-
-```lean
-theorem mul_iSup {α : Type*} [CompleteDioid α]
-    {ι : Sort*} (a : α) (g : ι → α) :
-    a * ⨆ i, g i = ⨆ i, a * g i := by
-  rw [← sSup_range, mul_sSup, iSup_range]
-```
-
-*Theorem:* $`\Bigl(\bigsqcup_i g(i)\Bigr) \otimes a = \bigsqcup_i g(i) \otimes a`
-
-```lean
-theorem iSup_mul {α : Type*} [CompleteDioid α]
-    {ι : Sort*} (g : ι → α) (a : α) :
-    (⨆ i, g i) * a = ⨆ i, g i * a := by
-  rw [← sSup_range, sSup_mul, iSup_range]
-```
-
-*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)`
-
-```lean
-theorem mul_sup {α : Type*} [CompleteDioid α]
-    (a b c : α) :
-    a * (b ⊔ c) = a * b ⊔ a * c := by
-  have h1 : (⨆ i : Bool, cond i b c) = b ⊔ c := by
-    simp [iSup_bool_eq]
-  have h2 :
-      (⨆ i : Bool, a * cond i b c)
-        = a * b ⊔ a * c := by
-    simp [iSup_bool_eq]
-  rw [← h1, mul_iSup, h2]
-```
-
-*Theorem:* $`(b \sqcup c) \otimes a = (b \otimes a) \sqcup (c \otimes a)`
-
-```lean
-theorem sup_mul {α : Type*} [CompleteDioid α]
-    (a b c : α) :
-    (b ⊔ c) * a = b * a ⊔ c * a := by
-  have h1 : (⨆ i : Bool, cond i b c) = b ⊔ c := by
-    simp [iSup_bool_eq]
-  have h2 :
-      (⨆ i : Bool, cond i b c * a)
-        = b * a ⊔ c * a := by
-    simp [iSup_bool_eq]
-  rw [← h1, iSup_mul, h2]
-
-end CompleteDioid
 ```
 
 ```lean
