@@ -436,7 +436,13 @@ structure Rmin where ofR ::
   toR : WithTop ℝ
 
 namespace Rmin
+```
 
+Two wrapped values are equal when their underlying numeric values are.
+
+*Theorem:* $`a.\mathtt{toR} = b.\mathtt{toR} \;\Rightarrow\; a = b`
+
+```lean
 @[ext] theorem ext {a b : Rmin}
     (h : a.toR = b.toR) : a = b := by
   cases a; cases b; simp_all
