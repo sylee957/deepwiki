@@ -495,6 +495,8 @@ Because the instance is found by resolution, every result of the tower
 and the isotony of $`\oplus` and $`\otimes` — now holds for
 $`\overline{\mathbb{R}}` with no further work.
 
+*Theorem:* $`a \preceq a` on $`\overline{\mathbb{R}}`
+
 ```lean
 example (a : Rmin) :
     Algebra.le a a :=
