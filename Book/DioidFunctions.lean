@@ -4,16 +4,16 @@ import Book.Scalars
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
-#doc (Manual) "The (min,plus) convolution and the function dioid" =>
-The functions of network calculus map the non-negative reals into a
-complete (min,plus) dioid. For cumulative functions, the concrete
-carrier is $`\overline{\mathbb{R}}_{\ge 0}`: ordinary non-negative
-functions embed into this carrier, while $`+\infty` supplies the
-neutral needed by the min-plus sum. The sum is the pointwise minimum,
-and the product is the _(min,plus) convolution_, the adaptation of the
-classical convolution $`\int_x f(x)\,g(t-x)\,dx` to the $`(\min, +)`
-setting. This chapter defines both and records the basic facts about
-the convolution.
+#doc (Manual) "The dioid of functions into a complete dioid" =>
+Functions $`\mathbb{R}^{+} \to T` from the non-negative reals into any
+complete dioid $`T` themselves form a complete dioid. The sum is the
+pointwise dioid sum, and the product is the _convolution_ — the
+adaptation of the classical convolution $`\int_x f(x)\,g(t-x)\,dx` to
+the dioid setting, with $`\bigsqcup` for $`\int` and $`\otimes` for the
+multiplication. This chapter builds that function dioid generically
+over $`T` and records the basic facts about the convolution; the
+concrete carriers $`T` it is later applied to are the scalar dioids of
+the previous chapter.
 
 ```lean
 namespace VerifiedWiki
@@ -25,22 +25,14 @@ open scoped Classical NNReal Algebra.Bridge
 # The function dioid
 
 A function dioid maps the non-negative reals $`\mathbb{R}^{+}` into
-some complete dioid. We work over the bare function type
+some complete dioid $`T`. We work over the bare function type
 $`\mathbb{R}^{+} \to T` directly, equipping it with the convolution
-algebra below rather than wrapping it in a name. The concrete min-plus
-functions used in this book are the specialization to
-$`\overline{\mathbb{R}}_{\ge 0}` (`RplusMin`), written $`\mathcal{F}`.
+algebra below rather than wrapping it in a name.
 
-*Definition:* the concrete function space $`\mathcal{F} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}`
+The dioid sum is the _pointwise sum_: the functions inherit
+$`\oplus` from $`T` pointwise.
 
-```lean
-abbrev F := ℝ≥0 → RplusMin
-```
-
-The dioid sum is the _pointwise minimum_: the functions inherit
-$`\oplus = \wedge` from $`\overline{\mathbb{R}}_{\ge 0}` pointwise.
-
-*Definition:* $`(f \wedge g)(t) = f(t) \oplus g(t)`
+*Definition:* $`(f \oplus g)(t) = f(t) \oplus g(t)`
 
 ```lean
 def pmin {T : Type*} [CompleteDioid T]
@@ -50,14 +42,11 @@ def pmin {T : Type*} [CompleteDioid T]
 
 # The convolution
 
-The _(min,plus) convolution_ $`f \ast g` is the dioid product on
-$`\mathcal{F}`. Its value at $`t` is the dioid sum — the infimum, since
-the order is reversed — over all ways of splitting $`t` into a sum
-$`u + s`, of the product $`f(u) \otimes g(s)`:
-$$`(f \ast g)(t) = \bigwedge_{u + s = t} f(u) \otimes g(s).`
-We take the dioid supremum $`\bigsqcup` over the set of these products;
-on $`\overline{\mathbb{R}}_{\ge 0}` that supremum is exactly the numeric
-infimum.
+The _convolution_ $`f \ast g` is the dioid product on the function
+space. Its value at $`t` is the dioid sum over all ways of splitting
+$`t` into a sum $`u + s`, of the product $`f(u) \otimes g(s)`:
+$$`(f \ast g)(t) = \bigsqcup_{u + s = t} f(u) \otimes g(s).`
+We take the dioid supremum $`\bigsqcup` over the set of these products.
 
 *Definition:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
 
@@ -81,7 +70,7 @@ theorem conv_apply {T : Type*} [CompleteDioid T]
 The decomposition $`u + s = t` of a non-negative real is the same as a
 single $`s \le t` with $`u = t - s`. So the convolution has the
 equivalent _single-variable_ form
-$$`(f \ast g)(t) = \bigwedge_{0 \le s \le t} f(t - s) \otimes g(s).`
+$$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s).`
 
 *Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(t - s) \otimes g(s) \mid s \le t \,\}`
 
@@ -107,9 +96,9 @@ theorem conv_eq_sub {T : Type*} [CompleteDioid T]
 
 # Commutativity
 
-Because the product $`\otimes` on $`\overline{\mathbb{R}}_{\ge 0}` is
-commutative and the decomposition $`u + s = t` is symmetric under
-swapping the two parts, the convolution is commutative.
+Because the product $`\otimes` on $`T` is commutative and the
+decomposition $`u + s = t` is symmetric under swapping the two parts,
+the convolution is commutative.
 
 *Theorem:* $`f \ast g = g \ast f`
 
@@ -131,11 +120,11 @@ theorem conv_comm {T : Type*} [CompleteDioid T]
 # Properties of the convolution
 
 The convolution is commutative, associative, and distributes over the
-pointwise minimum; it also commutes with adding a constant. Together
-these make $`(\mathcal{F}, \wedge, \ast)` a dioid in its own right — the
-_function dioid_ — built on top of the scalar dioid
-$`\overline{\mathbb{R}}_{\ge 0}`. The proofs rest on a few facts about
-the dioid sum as a join, which we record first.
+pointwise sum; it also commutes with adding a constant. Together these
+make $`(\mathbb{R}^{+} \to T, \oplus, \ast)` a complete dioid in its
+own right — the _function dioid_ — built on top of the scalar dioid
+$`T`. The proofs rest on a few facts about the dioid sum as a join,
+which we record first.
 
 The dioid sum is the binary _join_ for $`\preceq`: each summand is below
 the sum, and the sum is the least common upper bound.
@@ -171,10 +160,10 @@ end Join
 open Algebra
 ```
 
-Distributivity of the convolution over the pointwise minimum, by the
+Distributivity of the convolution over the pointwise sum, by the
 distributivity of $`\otimes` over $`\oplus` in the scalar dioid.
 
-*Theorem:* $`f \ast (g \wedge h) = (f \ast g) \wedge (f \ast h)`
+*Theorem:* $`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h)`
 
 ```lean
 theorem conv_distrib {T : Type*} [CompleteDioid T]
@@ -335,12 +324,12 @@ theorem conv_add_const {T : Type*}
 
 The lemmas above are the dioid laws for the convolution; assembling
 them — together with the pointwise structure of the sum — exhibits the
-function space $`\mathcal{F}` as a complete dioid in its own right. We
-build that instance explicitly: a function type carries a stray
-pointwise product from `Mathlib`, and the dioid product must instead be
-the convolution.
+function space $`\mathbb{R}^{+} \to T` as a complete dioid in its own
+right. We build that instance explicitly: a function type carries a
+stray pointwise product from `Mathlib`, and the dioid product must
+instead be the convolution.
 
-The dioid sum is the pointwise minimum `pmin`; its laws are those of
+The dioid sum is the pointwise sum `pmin`; its laws are those of
 $`T` applied at each point. The unit for the sum is the constant
 $`\varepsilon` function.
 
@@ -423,7 +412,7 @@ theorem convZero_right {T : Type*} [CompleteDioid T]
 Right-distributivity is the mirror of `conv_distrib`, obtained by
 commuting the convolution.
 
-*Theorem:* $`(g \wedge h) \ast f = (g \ast f) \wedge (h \ast f)`
+*Theorem:* $`(g \oplus h) \ast f = (g \ast f) \oplus (h \ast f)`
 
 ```lean
 theorem conv_distrib_right {T : Type*}
@@ -450,7 +439,7 @@ gives the instance. The sum, product, and unit are `pmin`, `conv`, and
 the impulse; the dioid laws are the theorems above, applied pointwise
 where the structure is pointwise.
 
-*Definition:* $`(\mathcal{F}, \wedge, \ast)` is an `Algebra.CompleteDioid`
+*Definition:* $`(\mathbb{R}^{+} \to T, \oplus, \ast)` is an `Algebra.CompleteDioid`
 
 ```lean
 noncomputable instance funCompleteDioid

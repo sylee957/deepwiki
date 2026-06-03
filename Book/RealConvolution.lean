@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Convolution
+import Book.NaturalOrder
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
 open Verso.Genre Manual

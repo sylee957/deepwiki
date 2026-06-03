@@ -1,16 +1,17 @@
 import VersoManual
-import Book.Convolution
+import Book.DioidFunctions
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The natural order" =>
-The functions of network calculus are compared in the _natural_ order:
-the ordinary pointwise numeric order on their values. On the function
-dioid `F` this is the _reverse_ of the dioid order — for `(min,plus)`
-the dioid order is the reversed numeric order — so the two must be kept
-apart. This short chapter records the natural order `≤ₙ`, its
-agreement with the reversed dioid order, and that it is a preorder.
+The cumulative functions of network calculus are the concrete
+specialization of the function dioid to the _(min,plus)_ carrier
+$`\overline{\mathbb{R}}_{\ge 0}` (`RplusMin`): ordinary non-negative
+functions embed into this carrier, while $`+\infty` supplies the
+neutral needed by the min-plus sum. We write this function space
+$`\mathcal{F}` (`F`) and fix it here, as the carrier for the rest of
+the development.
 
 ```lean
 namespace VerifiedWiki
@@ -18,6 +19,21 @@ namespace VerifiedWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
+
+# The function space of cumulative functions
+
+*Definition:* the concrete function space $`\mathcal{F} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}`
+
+```lean
+abbrev F := ℝ≥0 → RplusMin
+```
+
+These functions are compared in the _natural_ order: the ordinary
+pointwise numeric order on their values. On $`\mathcal{F}` this is the
+_reverse_ of the dioid order — for _(min,plus)_ the dioid order is the
+reversed numeric order — so the two must be kept apart. The rest of
+this chapter records the natural order `≤ₙ`, its agreement with the
+reversed dioid order, and that it is a preorder.
 
 # The natural order
 
