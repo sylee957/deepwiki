@@ -43,13 +43,13 @@ theorem conv_natLe_right (D : F) {sigma sigma' : F}
     ((natLe_iff sigma sigma').mp h s) (D u)
 ```
 
-# Min-plus minimal service curves
+# The real infimal convolution
 
-A _minimal service curve_ bounds a server's output from _below_. We
-work with the convolution directly on the _real_ curves: the _infimal
-convolution_ $`(A \ast \beta)(t) = \inf_{u + s = t}\,(A(u) + \beta(s))`
-on $`\mathbb{R}_{\ge 0}`-valued functions. The infimum is over the
-splits of `t`, which form a nonempty set (the split $`t + 0`), so it is
+The service curves below compare a server's output to a convolution of
+real curves: the _infimal convolution_
+$`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))` on
+$`\mathbb{R}_{\ge 0}`-valued functions. The infimum ranges over the
+splits of `t`, a nonempty set (the split $`t + 0`), so it is
 well-defined in $`\mathbb{R}_{\ge 0}`.
 
 *Definition:* the real infimal convolution $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`
@@ -66,45 +66,8 @@ noncomputable def infConvR (g h : ℝ≥0 → ℝ≥0) :
       g p.1.1 + h p.1.2
 ```
 
-A server `S` offers the min-plus minimal service curve `beta` when
-every output is at least the convolution of its input with `beta`,
-$`D \ge A \ast \beta`, stated directly on the real values.
-
-*Definition:* `S` offers the min-plus service curve `beta`
-
-```lean
-def OffersService (S : Server) (beta : ℝ≥0 → ℝ≥0) :
-    Prop :=
-  ∀ p ∈ S, infConvR p.1.toFun beta ≤ p.2.toFun
-```
-
-A _min-plus server_ bundles a server with the guarantee that it offers
-`beta` — the service constraint becomes part of the type, alongside
-causality and left-totality. A `MinPlusServer beta` _is_ a server (it
-extends `Server`) offering `beta` by construction.
-
-*Definition:* a min-plus server offering `beta`
-
-```lean
-structure MinPlusServer (beta : ℝ≥0 → ℝ≥0)
-    extends Server where
-  service : ∀ A D : Curve, (A, D) ∈ rel →
-    infConvR A.toFun beta ≤ D.toFun
-```
-
-The underlying server of a min-plus server indeed offers `beta`.
-
-*Theorem:* a `MinPlusServer beta` offers `beta`
-
-```lean
-theorem MinPlusServer.offersService
-    {beta : ℝ≥0 → ℝ≥0} (M : MinPlusServer beta) :
-    OffersService M.toServer beta :=
-  fun p hp => M.service p.1 p.2 hp
-```
-
-The infimal convolution is _isotone_ in the curve: a larger service
-curve gives a larger convolution, hence a stronger guarantee.
+The infimal convolution is _isotone_ in each curve: raising a curve
+raises the convolution.
 
 *Theorem:* $`\beta \le \beta' \implies A \ast \beta \le A \ast \beta'`
 
@@ -119,6 +82,34 @@ theorem infConvR_mono_right (A : ℝ≥0 → ℝ≥0)
   exact h p.1.2
 ```
 
+# Min-plus minimal service curves
+
+A _minimal service curve_ bounds a server's output from _below_: the
+server `S` offers the min-plus minimal service curve `beta` when every
+output is at least the convolution of its input with `beta`,
+$`D \ge A \ast \beta`, stated directly on the real values.
+
+*Definition:* `S` offers the min-plus service curve `beta`
+
+```lean
+def OffersMinPlusService (S : Server) (beta : ℝ≥0 → ℝ≥0) :
+    Prop :=
+  ∀ A D : Curve, (A, D) ∈ S →
+    infConvR A.toFun beta ≤ D.toFun
+```
+
+A server `S` _is_ a min-plus server for `beta` when it offers `beta` —
+the server (causal and left-total by construction) together with the
+service guarantee. We take this as a predicate on a `Server`.
+
+*Definition:* `S` is a min-plus server for `beta`
+
+```lean
+def IsMinPlusServer (S : Server) (beta : ℝ≥0 → ℝ≥0) :
+    Prop :=
+  OffersMinPlusService S beta
+```
+
 Monotony of the service guarantee: if `S` offers the larger `beta'`, it
 also offers any smaller `beta`. Since `beta ≤ beta'` gives
 $`A \ast \beta \le A \ast \beta' \le D`, the smaller curve is still a
@@ -127,29 +118,39 @@ valid lower bound.
 *Theorem:* $`\beta \le \beta' \;\wedge\; S \text{ offers } \beta' \implies S \text{ offers } \beta`
 
 ```lean
-theorem OffersService.mono
+theorem OffersMinPlusService.mono
     {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
-    (h : beta ≤ beta') (hS : OffersService S beta') :
-    OffersService S beta :=
-  fun p hp =>
-    le_trans (infConvR_mono_right p.1.toFun h) (hS p hp)
+    (h : beta ≤ beta') (hS : OffersMinPlusService S beta') :
+    OffersMinPlusService S beta :=
+  fun A D hp =>
+    le_trans (infConvR_mono_right A.toFun h) (hS A D hp)
 ```
 
-Every server offers the _zero_ service curve $`\beta_0 = 0`: then
-$`(A \ast \beta_0)(t) \le A(0) + 0 = 0` (using $`A(0) = 0`), so it lies
-below every output. This is the weakest possible guarantee.
+The weakest service curve is the constant $`\beta_0 = 0`.
 
-*Theorem:* every server offers the zero service curve $`\beta_0 = 0`
+*Definition:* the zero service curve $`\beta_0(t) = 0`
 
 ```lean
-theorem offersService_zero (S : Server) :
-    OffersService S (fun _ => 0) := by
-  intro p _ t
+def β₀ : ℝ≥0 → ℝ≥0 := fun _ => 0
+```
+
+Every server offers $`\beta_0`: then $`(A \ast \beta_0)(t) \le A(0) + 0
+= 0` (using $`A(0) = 0`), so it lies below every output. This is the
+weakest possible guarantee.
+
+*Theorem:* every server offers the zero service curve $`\beta_0`
+
+```lean
+theorem offersMinPlusService_β₀ (S : Server) :
+    OffersMinPlusService S β₀ := by
+  intro A D _ t
   unfold infConvR
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
-  show p.1.toFun 0 + 0 ≤ p.2.toFun t
-  rw [p.1.zero]; simp
+  show A.toFun 0 + β₀ t ≤ D.toFun t
+  rw [A.zero]
+  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D.toFun t
+  simp
 ```
 
 # Arrival curves
