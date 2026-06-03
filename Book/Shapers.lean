@@ -99,20 +99,33 @@ The largest causal server satisfying the shaper constraint is the set
 of all pairs whose output is below the input and whose output allows
 `sigma` as an arrival curve.
 
-*Definition:* the largest `sigma`-shaper server
+*Definition:* the largest `sigma`-shaper relation and server
+
+The shaper _relation_ is the set of all causal pairs whose output
+allows `sigma`. It carries the causality proof on its own; assembling
+it into a `Server` additionally needs left-totality, supplied as a
+hypothesis `htot` — exactly the obligation that the curve class be
+closed under the shaping construction.
 
 ```lean
-def shaperServer (sigma : F) : Server where
-  rel := { p | (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
+def shaperRel (sigma : F) : Set (Curve × Curve) :=
+  { p | (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
       AllowsArrivalCurve (↑p.2 : F) sigma }
-  causal := fun _A _D hp => hp.1
 
-theorem mem_shaperServer_iff
+theorem mem_shaperRel_iff
     {sigma : F} {p : Curve × Curve} :
-    p ∈ shaperServer sigma ↔
+    p ∈ shaperRel sigma ↔
       (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
         AllowsArrivalCurve (↑p.2 : F) sigma :=
   Iff.rfl
+
+def shaperServer (sigma : F)
+    (htot : ∀ A : Curve, ∃ D : Curve,
+      (A, D) ∈ shaperRel sigma) :
+    Server where
+  rel := shaperRel sigma
+  causal := fun _A _D hp => hp.1
+  leftTotal A := htot A
 ```
 
 A server lies inside the largest `sigma`-shaper exactly when it is a
@@ -122,9 +135,9 @@ causal by construction.
 *Theorem:* $`S \subseteq S_{\mathrm{sh}}(\sigma) \iff S` is a $`\sigma`-shaper
 
 ```lean
-theorem subset_shaperServer_iff
+theorem subset_shaperRel_iff
     {S : Server} {sigma : F} :
-    (∀ p ∈ S, p ∈ shaperServer sigma) ↔
+    (∀ p ∈ S, p ∈ shaperRel sigma) ↔
       IsShaper S sigma := by
   constructor
   · intro h p hp
@@ -246,10 +259,9 @@ closure.
 *Theorem:* $`S_{\mathrm{sh}}(\sigma) = S_{\mathrm{sh}}(\sigma^\star)`
 
 ```lean
-theorem shaperServer_closure
+theorem shaperRel_closure
     (sigma : F) :
-    (shaperServer sigma).rel =
-      (shaperServer sigma⋆).rel := by
+    shaperRel sigma = shaperRel sigma⋆ := by
   ext p
   constructor
   · intro hp
@@ -271,9 +283,8 @@ theorem IsShaper.closure
 
 example
     (sigma : F) :
-    (shaperServer sigma).rel =
-      (shaperServer sigma⋆).rel :=
-  shaperServer_closure sigma
+    shaperRel sigma = shaperRel sigma⋆ :=
+  shaperRel_closure sigma
 
 example
     {S : Server} {sigma : F}
@@ -298,11 +309,10 @@ theorem IsShaper.of_natLe
   exact NatLe.trans (hS p hp)
     (conv_natLe_right (↑p.2 : F) h)
 
-theorem shaperServer_mono
+theorem shaperRel_mono
     {sigma sigma' : F}
     (h : sigma ≤ₙ sigma') :
-    (shaperServer sigma).rel ⊆
-      (shaperServer sigma').rel := by
+    shaperRel sigma ⊆ shaperRel sigma' := by
   intro p hp
   exact ⟨hp.1,
     NatLe.trans hp.2
@@ -311,9 +321,8 @@ theorem shaperServer_mono
 example
     {sigma sigma' : F}
     (h : sigma ≤ₙ sigma') :
-    (shaperServer sigma).rel ⊆
-      (shaperServer sigma').rel :=
-  shaperServer_mono h
+    shaperRel sigma ⊆ shaperRel sigma' :=
+  shaperRel_mono h
 
 example
     {S : Server} {sigma sigma' : F}
@@ -374,43 +383,46 @@ theorem conv_natLe_self_of_zeroAtOrigin
   exact le_of_eq (MulMonoid.otimes_one (A t)).symm
 ```
 
-The greedy shaper is the set of all greedy pairs. It is a server — its
-causality field discharged by the lemma above — precisely because the
-curve is null at the origin, which is therefore required to form it.
+The greedy _relation_ is the set of all pairs whose departure is the
+convolution of the arrival with `sigma`. It is causal when `sigma` is
+null at the origin (by the lemma above); assembling it into a `Server`
+additionally needs left-totality, supplied as a hypothesis `htot`.
 
 *Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \mid D = A \ast \sigma\,\}`
 
 ```lean
+def greedyRel (sigma : F) : Set (Curve × Curve) :=
+  { p | (↑p.2 : F) = conv (↑p.1 : F) sigma }
+
+theorem mem_greedyRel_iff
+    {sigma : F} {p : Curve × Curve} :
+    p ∈ greedyRel sigma ↔
+      (↑p.2 : F) = conv (↑p.1 : F) sigma :=
+  Iff.rfl
+
 def greedyShaper
-    (sigma : F) (h0 : sigma 0 = eₒ) : Server where
-  rel := { p | (↑p.2 : F) = conv (↑p.1 : F) sigma }
+    (sigma : F) (h0 : sigma 0 = eₒ)
+    (htot : ∀ A : Curve, ∃ D : Curve,
+      (A, D) ∈ greedyRel sigma) :
+    Server where
+  rel := greedyRel sigma
   causal A D hp := by
     show (↑D : F) ≤ₙ (↑A : F)
     rw [(hp : (↑D : F) = conv (↑A : F) sigma)]
     exact conv_natLe_self_of_zeroAtOrigin (↑A) sigma h0
-
-theorem mem_greedyShaper_iff
-    {sigma : F} {h0 : sigma 0 = eₒ} {p : Curve × Curve} :
-    p ∈ greedyShaper sigma h0 ↔
-      (↑p.2 : F) = conv (↑p.1 : F) sigma :=
-  Iff.rfl
-
-theorem isGreedyShaper_greedyShaper
-    (sigma : F) (h0 : sigma 0 = eₒ) :
-    IsGreedyShaper (greedyShaper sigma h0) sigma :=
-  fun _ hp => hp
+  leftTotal A := htot A
 ```
 
 A `sigma`-greedy shaper is a server whose every member equals its own
-convolution; the greedy shaper is the largest such set.
+convolution; the greedy relation is the largest such set.
 
 *Theorem:* $`S \text{ greedy} \iff S \subseteq S_{\mathrm{gsh}}(\sigma)`
 
 ```lean
 theorem isGreedyShaper_iff_subset
-    {S : Server} {sigma : F} {h0 : sigma 0 = eₒ} :
+    {S : Server} {sigma : F} :
     IsGreedyShaper S sigma ↔
-      ∀ p ∈ S, p ∈ greedyShaper sigma h0 :=
+      ∀ p ∈ S, p ∈ greedyRel sigma :=
   Iff.rfl
 ```
 

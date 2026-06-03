@@ -73,18 +73,22 @@ being a server. Left-totality is stated separately.
 
 *Definition:* a server is a causal input-output relation on curves
 
-A `Server` bundles the input-output relation with the _causality_
-proof: for every arrival `A` and departure `D` it relates, the
-departure lies below the arrival, $`D \le_n A`. Causality is thus part
-of being a server, not a separate predicate — a `Server` is causal by
-construction. The pair components are named: `A` is the arrival, `D`
-the departure.
+A `Server` bundles the input-output relation with two proofs, matching
+the classical definition of a server as a _left-total causal_ relation:
+
+- _causality_ — for every arrival `A` and departure `D` it relates, the
+  departure lies below the arrival, $`D \le_n A`;
+- _left-totality_ — every arrival `A` has at least one departure.
+
+Both are thus part of being a server, not separate predicates. The pair
+components are named: `A` is the arrival, `D` the departure.
 
 ```lean
 structure Server where
   rel : Set (Curve × Curve)
   causal : ∀ A D : Curve,
     (A, D) ∈ rel → (↑D : F) ≤ₙ (↑A : F)
+  leftTotal : ∀ A : Curve, ∃ D : Curve, (A, D) ∈ rel
 
 instance : Membership (Curve × Curve) Server where
   mem S p := p ∈ S.rel
@@ -94,13 +98,6 @@ def Serves (S : Server) (A D : Curve) : Prop :=
 
 scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
   Serves S A D
-
-theorem causal_of_serves (S : Server) {A D : Curve}
-    (h : A ⟶[S] D) : (↑D : F) ≤ₙ (↑A : F) :=
-  S.causal A D h
-
-def IsLeftTotalServer (S : Server) : Prop :=
-  ∀ A : Curve, ∃ D : Curve, A ⟶[S] D
 ```
 
 ```lean
