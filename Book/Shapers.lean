@@ -70,6 +70,43 @@ The natural order `≤ₙ` — the pointwise numeric order on `F`, reverse of
 the dioid order — was developed in the chapter `The natural order`; we
 reuse `≤ₙ`, `natLe_iff`, and `NatLe.trans` here.
 
+A server is a set of admissible input-output pairs of cumulative
+functions, _bundled with_ its causality proof: every pair has its
+departure below its arrival, `D ≤ A`. Causality is thus intrinsic to
+being a server. Left-totality is stated separately.
+
+*Definition:* a server is a causal input-output relation on curves
+
+A `Server` bundles the input-output relation with the _causality_
+proof: every admissible pair has its departure below its arrival,
+$`D \le_n A`. Causality is thus part of being a server, not a separate
+predicate — a `Server` is causal by construction.
+
+```lean
+structure Server where
+  rel : Set (Curve × Curve)
+  causal : ∀ p ∈ rel, (↑p.2 : F) ≤ₙ (↑p.1 : F)
+
+instance : Membership (Curve × Curve) Server where
+  mem S p := p ∈ S.rel
+
+def Serves (S : Server) (A D : Curve) : Prop :=
+  (A, D) ∈ S
+
+scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
+  Serves S A D
+
+theorem causal_of_mem (S : Server)
+    {p : Curve × Curve} (hp : p ∈ S) :
+    (↑p.2 : F) ≤ₙ (↑p.1 : F) :=
+  S.causal p hp
+
+def IsLeftTotalServer (S : Server) : Prop :=
+  ∀ A : Curve, ∃ D : Curve, A ⟶[S] D
+```
+
+# Arrival curves
+
 An output cumulative function allows `sigma` as an arrival curve when
 it lies below its convolution with `sigma`.
 
@@ -133,41 +170,14 @@ theorem conv_natLe_right (D : F) {sigma sigma' : F}
     ((natLe_iff sigma sigma').mp h s) (D u)
 ```
 
-A server is a set of admissible input-output pairs of cumulative
-functions, _bundled with_ its causality proof: every pair has its
-departure below its arrival, `D ≤ A`. Causality is thus intrinsic to
-being a server. Left-totality and the shaper condition are stated
-separately.
+# Shapers
 
-*Definition:* servers and sigma-shapers
+A _shaper_ is a server whose every output allows `sigma` as an arrival
+curve.
 
-A `Server` bundles the input-output relation with the _causality_
-proof: every admissible pair has its departure below its arrival,
-$`D \le_n A`. Causality is thus part of being a server, not a separate
-predicate — a `Server` is causal by construction.
+*Definition:* `S` is a `sigma`-shaper
 
 ```lean
-structure Server where
-  rel : Set (Curve × Curve)
-  causal : ∀ p ∈ rel, (↑p.2 : F) ≤ₙ (↑p.1 : F)
-
-instance : Membership (Curve × Curve) Server where
-  mem S p := p ∈ S.rel
-
-def Serves (S : Server) (A D : Curve) : Prop :=
-  (A, D) ∈ S
-
-scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
-  Serves S A D
-
-theorem causal_of_mem (S : Server)
-    {p : Curve × Curve} (hp : p ∈ S) :
-    (↑p.2 : F) ≤ₙ (↑p.1 : F) :=
-  S.causal p hp
-
-def IsLeftTotalServer (S : Server) : Prop :=
-  ∀ A : Curve, ∃ D : Curve, A ⟶[S] D
-
 def IsShaper (S : Server) (sigma : F) : Prop :=
   ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : F) sigma
 ```
