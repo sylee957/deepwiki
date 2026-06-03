@@ -13,13 +13,16 @@ import Mathlib.Tactic.Push
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
-#doc (Manual) "The (min,plus) scalar dioids" =>
+#doc (Manual) "The (min,plus) and (max,plus) scalar dioids" =>
 The abstract dioid tower is realized by concrete number systems. This
-chapter exhibits three: the reals with $`+\infty`, a dioid; the
-extended reals with $`\pm\infty`, a complete dioid; and the
-_non-negative_ reals with $`+\infty`, also a complete dioid. All take
+chapter exhibits four. Three are _(min,plus)_, taking
 $`\oplus = \min`, $`\otimes = {+}`, with the canonical order the
-reverse of the usual numeric order.
+_reverse_ of the usual numeric order: the reals with $`+\infty`, a
+dioid; the extended reals with $`\pm\infty`, a complete dioid; and the
+_non-negative_ reals with $`+\infty`, also a complete dioid. The fourth
+is the order-_dual_ _(max,plus)_ complete dioid on the non-negative
+reals with $`\pm\infty`, taking $`\oplus = \max`, $`\otimes = {+}`,
+with the canonical order _agreeing_ with the numeric one.
 
 ```lean
 namespace VerifiedWiki
@@ -45,13 +48,22 @@ $`\varepsilon = +\infty`, and product neutral $`e = 0`:
   = \mathbb{R}_{\ge 0} \cup \{+\infty\}`, carried by `ℝ≥0∞` — the
   cleanest complete dioid, bounded below by $`0`.
 
+A fourth carrier realizes the order-_dual_ _(max,plus)_ algebra, with
+$`\oplus = \max`, $`\otimes = {+}`, sum neutral
+$`\varepsilon = -\infty`, and product neutral $`e = 0`:
+
+- the _non-negative reals with_ $`\pm\infty`, carried by `WithBot ℝ≥0∞`
+  (so $`-\infty = \bot`) — a complete dioid whose canonical order
+  _agrees_ with the numeric one.
+
 Each numeric value is carried under a one-field wrapper, so the dioid
 operations are attached freshly rather than colliding with any numeric
-algebra already on the underlying type. The canonical order
-$`a \preceq b \iff \min(a, b) = b` is, on each, the _reverse_ of the
-usual numeric order.
+algebra already on the underlying type. For the _(min,plus)_ carriers
+the canonical order $`a \preceq b \iff \min(a, b) = b` is the _reverse_
+of the usual numeric order; for the _(max,plus)_ carrier
+$`a \preceq b \iff \max(a, b) = b` _agrees_ with it.
 
-*Definition:* the three carriers, each wrapping its number system
+*Definition:* the four carriers, each wrapping its number system
 
 ```lean
 structure Rmin where ofR ::
@@ -62,6 +74,9 @@ structure RbarMin where ofB ::
 
 structure RplusMin where ofE ::
   toE : ℝ≥0∞
+
+structure RplusMax where ofW ::
+  toW : WithBot ℝ≥0∞
 ```
 
 Each wrapper gets a coercion to its underlying value and an
@@ -88,6 +103,13 @@ instance : Coe RplusMin ℝ≥0∞ := ⟨toE⟩
     (h : (a : ℝ≥0∞) = b) : a = b := by
   cases a; cases b; exact congrArg ofE h
 end RplusMin
+
+namespace RplusMax
+instance : Coe RplusMax (WithBot ℝ≥0∞) := ⟨toW⟩
+@[ext] theorem ext {a b : RplusMax}
+    (h : (a : WithBot ℝ≥0∞) = b) : a = b := by
+  cases a; cases b; exact congrArg ofW h
+end RplusMax
 ```
 
 # The reals with infinity
@@ -651,6 +673,201 @@ example (a : RplusMin) :
 
 end RplusMin
 ```
+
+# The non-negative reals (max,plus)
+
+The order-_dual_ carrier realizes the _(max,plus)_ algebra: the dioid
+sum is the numeric _maximum_, the product is numeric _addition_, the
+sum neutral is $`-\infty` (identity of $`\max` and absorbing for
+$`+`), and the product neutral is $`0`. The carrier `RplusMax` wraps
+`WithBot ℝ≥0∞` so that $`-\infty = \bot` is the dioid zero. Unlike the
+_(min,plus)_ carriers, the dioid order _agrees_ with the numeric one,
+so the dioid supremum is the numeric supremum.
+
+## The carrier and its dioid
+
+The crux, as for _(min,plus)_, is _lower semi-continuity_: addition
+distributes over an arbitrary supremum. We prove it through a bridge to
+$`\mathbb{R}_{\ge 0}^{\infty}`, where `ENNReal.add_iSup` is available:
+a non-$`\bot` supremum over `WithBot ℝ≥0∞` is the coercion of the
+supremum of the under-values (reading $`\bot` as $`0`).
+
+```lean
+namespace MaxX
+
+theorem coe_unbotD_eq {x : WithBot ℝ≥0∞} (h : x ≠ ⊥) :
+    ((x.unbotD 0 : ℝ≥0∞) : WithBot ℝ≥0∞) = x := by
+  obtain ⟨d, rfl⟩ := (WithBot.ne_bot_iff_exists).mp h
+  rw [WithBot.unbotD_coe]
+
+theorem bridge {ι : Sort*} (f : ι → WithBot ℝ≥0∞)
+    (j : ι) (hj : f j ≠ ⊥) :
+    (⨆ i, f i)
+      = ((⨆ i, (f i).unbotD 0 : ℝ≥0∞)
+          : WithBot ℝ≥0∞) := by
+  have : Nonempty ι := ⟨j⟩
+  rw [WithBot.coe_iSup (OrderTop.bddAbove
+    (Set.range fun i => (f i).unbotD 0))]
+  refine le_antisymm (iSup_le fun i => ?_)
+    (iSup_le fun i => ?_)
+  · rcases eq_or_ne (f i) ⊥ with h0 | h0
+    · exact h0 ▸ bot_le
+    · exact le_iSup_of_le i (by rw [coe_unbotD_eq h0])
+  · rcases eq_or_ne (f i) ⊥ with h0 | h0
+    · rw [h0]; refine le_iSup_of_le j ?_
+      obtain ⟨d, hd⟩ := (WithBot.ne_bot_iff_exists).mp hj
+      rw [← hd, WithBot.unbotD_bot, WithBot.coe_le_coe]
+      exact bot_le
+    · exact le_iSup_of_le i (by rw [coe_unbotD_eq h0])
+```
+
+*Theorem:* $`a + \bigsqcup_i f(i) = \bigsqcup_i (a + f(i))`
+
+```lean
+theorem add_iSup {ι : Sort*} (a : WithBot ℝ≥0∞)
+    (f : ι → WithBot ℝ≥0∞) :
+    a + ⨆ i, f i = ⨆ i, a + f i := by
+  rcases isEmpty_or_nonempty ι with hι | hι
+  · simp
+  · induction a using WithBot.recBotCoe with
+    | bot => simp
+    | coe e =>
+      by_cases hb : ∃ j, f j ≠ ⊥
+      · obtain ⟨j, hj⟩ := hb
+        have hgj : (e : WithBot ℝ≥0∞) + f j ≠ ⊥ := by
+          obtain ⟨d, hd⟩ :=
+            (WithBot.ne_bot_iff_exists).mp hj
+          rw [← hd, ← WithBot.coe_add]
+          exact WithBot.coe_ne_bot
+        have hv : ∀ i,
+            ((e : WithBot ℝ≥0∞) + f i).unbotD 0
+            = if f i = ⊥ then 0
+              else e + (f i).unbotD 0 := by
+          intro i
+          rcases eq_or_ne (f i) ⊥ with h0 | h0
+          · simp [h0]
+          · obtain ⟨d, hd⟩ :=
+              (WithBot.ne_bot_iff_exists).mp h0
+            simp [← hd, ← WithBot.coe_add]
+        rw [bridge f j hj,
+          bridge (fun i => (e : WithBot ℝ≥0∞) + f i)
+            j hgj,
+          ← WithBot.coe_add, ENNReal.add_iSup]
+        congr 1
+        refine le_antisymm (iSup_le fun i => ?_)
+          (iSup_le fun i => ?_)
+        · rcases eq_or_ne (f i) ⊥ with h0 | h0
+          · refine le_iSup_of_le j ?_
+            rw [hv j, if_neg hj, h0,
+              WithBot.unbotD_bot, add_zero]
+            exact le_self_add
+          · exact le_iSup_of_le i
+              (by rw [hv i, if_neg h0])
+        · rw [hv i]
+          rcases eq_or_ne (f i) ⊥ with h0 | h0
+          · simp [h0]
+          · rw [if_neg h0]
+            exact le_iSup_of_le i (le_refl _)
+      · push Not at hb; simp [hb]
+```
+
+The two distributive facts about $`\max` and $`+`, mirroring those for
+$`\min` on _(min,plus)_.
+
+*Theorem:* $`a + \max(b, c) = \max(a + b, a + c)` and $`\max(a, b) + c = \max(a + c, b + c)`
+
+```lean
+theorem add_max (a b c : WithBot ℝ≥0∞) :
+    a + max b c = max (a + b) (a + c) := by
+  rcases le_total b c with h | h
+  · rw [max_eq_right h, max_eq_right (by gcongr)]
+  · rw [max_eq_left h, max_eq_left (by gcongr)]
+
+theorem max_add (a b c : WithBot ℝ≥0∞) :
+    max a b + c = max (a + c) (b + c) := by
+  rw [add_comm, add_max, add_comm a c, add_comm b c]
+
+end MaxX
+```
+
+Each axiom is a fact about `WithBot ℝ≥0∞`, lifted through the wrapper
+by `ext`: the monoid laws from `max` and `+`, the distributive laws
+from `MaxX.add_max`/`MaxX.max_add`, absorption of $`-\infty`, and
+idempotency of $`\max`.
+
+*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.Dioid` with $`\oplus = \max`, $`\otimes = {+}`, $`\varepsilon = -\infty`, $`e = 0`
+
+```lean
+namespace RplusMax
+
+instance : Algebra.Dioid RplusMax where
+  add a b := ⟨max ↑a ↑b⟩
+  zero := ⟨⊥⟩
+  mul a b := ⟨↑a + ↑b⟩
+  one := ⟨0⟩
+  oplus_assoc _ _ _ := ext (max_assoc _ _ _)
+  eps_oplus _ := ext (max_eq_right bot_le)
+  oplus_eps _ := ext (max_eq_left bot_le)
+  oplus_comm _ _ := ext (max_comm _ _)
+  otimes_assoc _ _ _ := ext (add_assoc _ _ _)
+  one_otimes _ := ext (zero_add _)
+  otimes_one _ := ext (add_zero _)
+  left_distrib _ _ _ := ext (MaxX.add_max _ _ _)
+  right_distrib _ _ _ := ext (MaxX.max_add _ _ _)
+  eps_otimes _ := ext (WithBot.bot_add _)
+  otimes_eps _ := ext (WithBot.add_bot _)
+  otimes_comm _ _ := ext (add_comm _ _)
+  oplus_idem _ := ext (max_self _)
+```
+
+## The canonical order
+
+Dual to the _(min,plus)_ carriers, the dioid order agrees with the
+numeric order.
+
+*Theorem:* $`a \preceq b \iff \uparrow a \le \uparrow b`
+
+```lean
+theorem le_iff (a b : RplusMax) :
+    a ≼ₒ b ↔ (a : WithBot ℝ≥0∞) ≤ b := by
+  have h1 : a ≼ₒ b
+      ↔ (⟨max ↑a ↑b⟩ : RplusMax) = b := Iff.rfl
+  rw [h1]
+  constructor
+  · intro h
+    have : max (↑a : WithBot ℝ≥0∞) ↑b = ↑b :=
+      congrArg toW h
+    rw [← this]; exact le_max_left _ _
+  · intro h; exact ext (max_eq_right h)
+```
+
+The dioid supremum is the numeric supremum of the underlying values,
+and lower semi-continuity is `MaxX.add_iSup`.
+
+*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \sup\,\{\,\uparrow x \mid x \in s\,\}`
+
+```lean
+noncomputable instance :
+    Algebra.CompleteDioid RplusMax where
+  iSup f := ⟨⨆ i, ↑(f i)⟩
+  le_iSup f i :=
+    (le_iff _ _).mpr
+      (le_iSup (fun i => (f i : WithBot ℝ≥0∞)) i)
+  iSup_le f b hb := (le_iff _ _).mpr (iSup_le (by
+    intro i; exact (le_iff _ _).mp (hb i)))
+  mul_iSup a f := by
+    refine ext ?_
+    show (↑a : WithBot ℝ≥0∞) + ⨆ i, ↑(f i)
+       = ⨆ i, ((↑a : WithBot ℝ≥0∞) + ↑(f i))
+    exact MaxX.add_iSup _ _
+
+end RplusMax
+```
+
+So `RplusMax` realizes the _(max,plus)_ complete dioid, the order-dual
+of `RplusMin`: $`\max` in place of $`\min`, $`-\infty` in place of
+$`+\infty` for $`\varepsilon`, and the dioid supremum the numeric
+supremum.
 
 ```lean
 end VerifiedWiki
