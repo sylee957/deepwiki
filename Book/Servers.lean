@@ -25,8 +25,8 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 The ambient function dioid is `Fmin`. Cumulative functions — the arrivals
 and departures of a server — are honest real curves
 $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `Fmin` when the
-convolution is needed. They are compared in the natural order `≤ₙ` of
-the previous chapter, the pointwise numeric order on `Fmin`.
+convolution is needed. They are compared in the ordinary pointwise
+numeric order, which is the _reverse_ of the dioid order on `Fmin`.
 
 A _cumulative function_ — the arrival or departure of a server — is a
 real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` carrying the
@@ -79,21 +79,24 @@ theorem Curve.le_def {D A : Curve} :
   Iff.rfl
 ```
 
-The pointwise curve order is exactly the natural order `≤ₙ` of the
-coerced dioid functions, so the two are interchangeable wherever the
-convolution-based statements need the dioid form.
+The pointwise curve order is the _reverse_ of the dioid order on the
+coerced dioid functions: $`D \le A` (numerically) is exactly
+$`\uparrow\!A \preceq \uparrow\!D` in $`\mathcal{F}_{\min}`. So the two
+are interchangeable wherever the convolution-based statements need the
+dioid form.
 
-*Theorem:* $`D \le A \iff \uparrow\!D \le_n \uparrow\!A`
+*Theorem:* $`D \le A \iff \uparrow\!A \preceq \uparrow\!D`
 
 ```lean
-theorem Curve.le_iff_natLe {D A : Curve} :
-    D ≤ A ↔ (↑D : Fmin) ≤ₙ (↑A : Fmin) := by
+theorem Curve.le_iff_conv {D A : Curve} :
+    D ≤ A ↔ (↑A : Fmin) ≤ (↑D : Fmin) := by
   constructor
   · intro h t
+    refine (RplusMin.le_iff _ _).mpr ?_
     show ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞)
     exact_mod_cast h t
   · intro h t
-    have ht := h t
+    have ht := (RplusMin.le_iff _ _).mp (h t)
     show D.toFun t ≤ A.toFun t
     have : ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞) := ht
     exact_mod_cast this

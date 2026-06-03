@@ -17,10 +17,10 @@ $`\mathcal{F}_{\min}` carries the _infimal convolution_; and the dual
 _(max,plus)_ carrier (`RplusMax`), whose function dioid
 $`\mathcal{F}_{\max}` carries the _super-convolution_. Both convolutions
 are the dioid product `conv` of the generic chapter, read back into
-$`\mathbb{R}_{\ge 0}`. We name the two function dioids, fix the natural
-order used to compare cumulative functions, define the embeddings, and
-prove that each real operator equals the expected $`\bigsqcap` /
-$`\bigsqcup` over the splits of $`t`.
+$`\mathbb{R}_{\ge 0}`. We name the two function dioids, note that the
+natural order on cumulative functions is the reversed dioid order,
+define the embeddings, and prove that each real operator equals the
+expected $`\bigsqcap` / $`\bigsqcup` over the splits of $`t`.
 
 ```lean
 namespace VerifiedWiki
@@ -51,52 +51,16 @@ abbrev Fmax := ℝ≥0 → RplusMax
 # The natural order
 
 Cumulative functions are compared in the _natural_ order: the ordinary
-pointwise numeric order on their values. On $`\mathcal{F}_{\min}` this is the
-_reverse_ of the dioid order — for _(min,plus)_ the dioid order is the
-reversed numeric order — so the two must be kept apart. The relation
-`NatLe f g` looks through the `RplusMin` wrapper to the underlying
-$`\overline{\mathbb{R}}_{\ge 0}^\infty` values.
-
-*Definition:* $`f \le_n g \iff \forall t,\ f(t) \le g(t)` numerically
-
-```lean
-def NatLe (f g : Fmin) : Prop :=
-  ∀ t, (f t : ℝ≥0∞) ≤ g t
-
-scoped notation:50 f:51 " ≤ₙ " g:51 => NatLe f g
-```
-
-The natural order is the opposite of the dioid order on each value:
-$`f \le_n g` exactly when $`g(t) \preceq f(t)` for every `t`.
-
-*Theorem:* $`f \le_n g \iff \forall t,\ g(t) \preceq f(t)`
-
-```lean
-theorem natLe_iff (f g : Fmin) :
-    f ≤ₙ g ↔ ∀ t, g t ≼ₒ f t := by
-  constructor
-  · intro h t
-    exact (RplusMin.le_iff (g t) (f t)).mpr (h t)
-  · intro h t
-    exact (RplusMin.le_iff (g t) (f t)).mp (h t)
-```
-
-It is reflexive and transitive — a preorder.
-
-*Theorem:* $`f \le_n f`
-
-```lean
-theorem NatLe.refl (f : Fmin) : f ≤ₙ f :=
-  fun _ => le_rfl
-```
-
-*Theorem:* $`f \le_n g \land g \le_n h \implies f \le_n h`
-
-```lean
-theorem NatLe.trans {f g h : Fmin}
-    (hfg : f ≤ₙ g) (hgh : g ≤ₙ h) : f ≤ₙ h :=
-  fun t => le_trans (hfg t) (hgh t)
-```
+pointwise numeric order on their values. On $`\mathcal{F}_{\min}` this is
+the _reverse_ of the dioid order — for _(min,plus)_ the dioid order is
+the reversed numeric order. So no separate relation is needed: the
+numeric comparison $`\forall t,\ f(t) \le g(t)` is exactly the dioid
+inequality $`g \preceq f` — the built-in pointwise $`\le` on
+$`\mathcal{F}_{\min}`, with the operands reversed, value-by-value the
+`RplusMin.le_iff` of the scalar chapter. Statements that read naturally
+as "$`f` is numerically below $`g`" are therefore written $`g \preceq
+f`, and the convolution-based results stay in the dioid order
+throughout.
 
 # A supremum-absorption lemma
 

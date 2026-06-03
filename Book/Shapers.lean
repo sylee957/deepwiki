@@ -25,13 +25,12 @@ The convolution is isotone in each argument: increasing a curve can
 only increase the convolution. This is the one fact about the
 convolution that the service- and arrival-curve results share.
 
-*Theorem:* $`\sigma \le_n \sigma' \implies D \ast \sigma \le_n D \ast \sigma'`
+*Theorem:* $`\sigma \preceq \sigma' \implies D \ast \sigma \preceq D \ast \sigma'` pointwise
 
 ```lean
-theorem conv_natLe_right (D : Fmin) {sigma sigma' : Fmin}
-    (h : sigma ≤ₙ sigma') :
-    conv D sigma ≤ₙ conv D sigma' := by
-  rw [natLe_iff]
+theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
+    (h : sigma ≤ sigma') :
+    conv D sigma ≤ conv D sigma' := by
   intro t
   rw [conv_apply]
   refine CompleteDioid.sSup_le _ _ ?_
@@ -40,8 +39,7 @@ theorem conv_natLe_right (D : Fmin) {sigma sigma' : Fmin}
   refine le_trans ?_
     (CompleteDioid.le_sSup _ _
       ⟨u, s, hus, rfl⟩)
-  exact mul_le_mul_left
-    ((natLe_iff sigma sigma').mp h s) (D u)
+  exact mul_le_mul_left (h s) (D u)
 ```
 
 # Min-plus minimal service curves
@@ -609,7 +607,7 @@ it lies below its convolution with `sigma`.
 
 ```lean
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
-  D ≤ₙ conv D sigma
+  conv D sigma ≤ D
 ```
 
 The defining inequality is equivalent to a kernel inequality for every
@@ -625,18 +623,14 @@ theorem allowsArrivalCurve_iff_kernel
         D u ⊗ₒ sigma s ≼ₒ D t := by
   constructor
   · intro h u s t hus
-    have hc : conv D sigma t ≼ₒ D t :=
-      (natLe_iff D (conv D sigma)).mp h t
+    have hc : conv D sigma t ≼ₒ D t := h t
     have hterm :
         D u ⊗ₒ sigma s ≼ₒ conv D sigma t := by
       rw [conv_apply]
       exact CompleteDioid.le_sSup _ _
         ⟨u, s, hus, rfl⟩
     exact le_trans hterm hc
-  · intro h
-    unfold AllowsArrivalCurve
-    rw [natLe_iff]
-    intro t
+  · intro h t
     rw [conv_apply]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
@@ -713,27 +707,23 @@ The _sub-additive closure_ $`\sigma^{\star}`, its convolution powers
 `The sub-additive closure`. Here we relate the closure to the shaper
 constructions through the natural order and the arrival-curve kernel.
 
-The closure is below the original curve in the natural order because
-the original curve is one of the powers.
+The original curve is below its closure in the dioid order because the
+curve is one of the powers.
 
-*Theorem:* $`\sigma^\star \le_n \sigma`
+*Theorem:* $`\sigma \preceq \sigma^\star` pointwise
 
 ```lean
-theorem subadditiveClosure_natLe_self
-    (sigma : Fmin) : sigma⋆ ≤ₙ sigma := by
+theorem self_le_subadditiveClosure
+    (sigma : Fmin) : sigma ≤ sigma⋆ := by
   intro t
-  have h :
-      sigma t ≼ₒ subadditiveClosure sigma t := by
-    dsimp [subadditiveClosure]
-    have h1 :
-        convPow sigma 1 t ≼ₒ
-          CompleteDioid.iSup
-            (fun n : ℕ => convPow sigma n t) :=
-      CompleteDioid.le_iSup
-        (fun n : ℕ => convPow sigma n t) 1
-    simpa [convPow_one] using h1
-  exact (RplusMin.le_iff (sigma t)
-    (subadditiveClosure sigma t)).mp h
+  dsimp [subadditiveClosure]
+  have h1 :
+      convPow sigma 1 t ≼ₒ
+        CompleteDioid.iSup
+          (fun n : ℕ => convPow sigma n t) :=
+    CompleteDioid.le_iSup
+      (fun n : ℕ => convPow sigma n t) 1
+  simpa [convPow_one] using h1
 ```
 
 The kernel inequality propagates along every convolution power.
@@ -798,9 +788,9 @@ theorem allowsArrivalCurve_closure_iff
       AllowsArrivalCurve D sigma := by
   constructor
   · intro h
-    exact NatLe.trans h
-      (conv_natLe_right D
-        (subadditiveClosure_natLe_self sigma))
+    exact le_trans
+      (conv_mono_right D
+        (self_le_subadditiveClosure sigma)) h
   · intro h
     rw [allowsArrivalCurve_iff_kernel]
     intro u s t hus
@@ -856,40 +846,44 @@ example
 Larger arrival curves preserve the shaper property, and their largest
 servers contain the smaller-curve largest server.
 
-*Theorem:* if $`\sigma \le_n \sigma'`, then $`S_{\mathrm{sh}}(\sigma) \subseteq S_{\mathrm{sh}}(\sigma')`
+A larger arrival curve in the natural order is $`\sigma' \preceq \sigma`
+in the dioid order. Then a $`\sigma`-shaper is also a
+$`\sigma'`-shaper, and the largest servers nest.
+
+*Theorem:* if $`\sigma' \preceq \sigma`, then $`S_{\mathrm{sh}}(\sigma) \subseteq S_{\mathrm{sh}}(\sigma')`
 
 ```lean
-theorem IsShaper.of_natLe
+theorem IsShaper.of_le
     {S : Server}
     {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
-    (h : sigma ≤ₙ sigma') :
+    (h : sigma' ≤ sigma) :
     IsShaper S sigma' := by
   intro p hp
-  exact NatLe.trans (hS p hp)
-    (conv_natLe_right (↑p.2 : Fmin) h)
+  exact le_trans
+    (conv_mono_right (↑p.2 : Fmin) h) (hS p hp)
 
 theorem shaperRel_mono
     {sigma sigma' : Fmin}
-    (h : sigma ≤ₙ sigma') :
+    (h : sigma' ≤ sigma) :
     shaperRel sigma ⊆ shaperRel sigma' := by
   intro p hp
   exact ⟨hp.1,
-    NatLe.trans hp.2
-      (conv_natLe_right (↑p.2 : Fmin) h)⟩
+    le_trans
+      (conv_mono_right (↑p.2 : Fmin) h) hp.2⟩
 
 example
     {sigma sigma' : Fmin}
-    (h : sigma ≤ₙ sigma') :
+    (h : sigma' ≤ sigma) :
     shaperRel sigma ⊆ shaperRel sigma' :=
   shaperRel_mono h
 
 example
     {S : Server} {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
-    (h : sigma ≤ₙ sigma') :
+    (h : sigma' ≤ sigma) :
     IsShaper S sigma' :=
-  IsShaper.of_natLe hS h
+  IsShaper.of_le hS h
 ```
 
 # The greedy shaper
@@ -920,20 +914,24 @@ def IsGreedyShaper
 ```
 
 To form the greedy shaper _as a server_, its output must be causal —
-the departure below the arrival, $`A \ast \sigma \le_n A`. This holds
+the departure below the arrival, $`A \ast \sigma \preceq A`. This holds
 exactly when `sigma` is null at the origin: the split $`t = t + 0`
 contributes the term $`A(t) \otimes \sigma(0) = A(t)`, so the
 convolution never exceeds `A`. Sub-additivity and left-continuity are
 not needed for causality; nullity at the origin is.
 
-*Theorem:* if $`\sigma(0) = e` then $`A \ast \sigma \le_n A`
+The causal inequality is the dioid statement $`A \preceq A \ast \sigma`,
+which is numerically $`A \ast \sigma \le A` (the dioid order is the
+reversed numeric order).
+
+*Theorem:* if $`\sigma(0) = e` then $`A \preceq A \ast \sigma`
 
 ```lean
-theorem conv_natLe_self_of_zeroAtOrigin
+theorem self_le_conv_of_zeroAtOrigin
     (A sigma : Fmin) (h0 : sigma 0 = eₒ) :
-    conv A sigma ≤ₙ A := by
-  rw [natLe_iff]
+    A ≤ conv A sigma := by
   intro t
+  show A t ≼ₒ conv A sigma t
   rw [conv_apply]
   refine le_trans ?_
     (CompleteDioid.le_sSup _ _
@@ -967,9 +965,9 @@ def greedyShaper
     Server where
   rel := greedyRel sigma
   causal A D hp := by
-    rw [Curve.le_iff_natLe]
+    rw [Curve.le_iff_conv]
     rw [(hp : (↑D : Fmin) = conv (↑A : Fmin) sigma)]
-    exact conv_natLe_self_of_zeroAtOrigin (↑A) sigma h0
+    exact self_le_conv_of_zeroAtOrigin (↑A) sigma h0
   leftTotal A := htot A
 ```
 
@@ -1014,7 +1012,7 @@ theorem allowsArrivalCurve_self_of_subadd
 The point of the construction is that the output is `sigma`-shaped.
 Under sub-additivity the convolution `A ∗ sigma` allows `sigma`:
 shifting the constraint through associativity and monotonicity,
-$`A \ast \sigma \le_n A \ast (\sigma \ast \sigma) = (A \ast \sigma) \ast \sigma`.
+$`(A \ast \sigma) \ast \sigma = A \ast (\sigma \ast \sigma) \preceq A \ast \sigma`.
 
 *Theorem:* if $`\sigma` is sub-additive then $`A \ast \sigma` allows $`\sigma`
 
@@ -1023,10 +1021,11 @@ theorem allowsArrivalCurve_conv_of_subadd
     (A : Fmin) {sigma : Fmin}
     (hsub : IsSubadditiveF sigma) :
     AllowsArrivalCurve (conv A sigma) sigma := by
-  have h : conv A sigma ≤ₙ conv A (conv sigma sigma) :=
-    conv_natLe_right A
+  have h : conv A (conv sigma sigma) ≤ conv A sigma :=
+    conv_mono_right A
       (allowsArrivalCurve_self_of_subadd hsub)
-  rw [← conv_assoc] at h
+  show conv (conv A sigma) sigma ≤ conv A sigma
+  rw [conv_assoc]
   exact h
 ```
 
