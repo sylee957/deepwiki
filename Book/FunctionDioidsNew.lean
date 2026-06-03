@@ -338,35 +338,35 @@ The unit (impulse) and zero (constant $`+\infty`) are non-negative and
 non-decreasing; with the stability lemmas this gives the five closure
 conditions.
 
-*Definition:* $`\mathcal{F}^{+}` as a sub-complete-dioid of $`\mathcal{F}`
+*Definition:* $`\mathcal{F}^{+}` is a sub-complete-dioid
 
 ```lean
-def FPlus : SubCompleteDioid FminBar where
-  carrier := {f | isFPlusF f}
-  add_mem' ha hb := fun t => le_min (ha t) (hb t)
-  mul_mem' {a b} ha hb := fun t => by
+theorem isSubCompleteDioid_isFPlusF :
+    IsSubCompleteDioid isFPlusF where
+  add ha hb := fun t => le_min (ha t) (hb t)
+  mul {a b} ha hb := fun t => by
     show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
     rw [mul_toB]; exact (isFPlus.conv ha hb) t
-  eps_mem' := fun _ => le_top
-  one_mem' := fun t => by
+  eps := fun _ => le_top
+  one := fun t => by
     show (0 : WithTop (WithBot ℝ))
         ≤ ((convUnit t : RbarMin)).toB
     rcases eq_or_ne t 0 with h | h
     · rw [convUnit, if_pos h]; exact le_rfl
     · rw [convUnit, if_neg h]; exact le_top
-  iSup_mem' F hF := fun t => le_iInf (fun i => hF i t)
+  iSup F hF := fun t => le_iInf (fun i => hF i t)
 ```
 
-*Definition:* $`\mathcal{F}^{\uparrow}` as a sub-complete-dioid of $`\mathcal{F}`
+*Definition:* $`\mathcal{F}^{\uparrow}` is a sub-complete-dioid
 
 ```lean
-def FNondecr : SubCompleteDioid FminBar where
-  carrier := {f | isFNondecrF f}
-  add_mem' ha hb :=
+theorem isSubCompleteDioid_isFNondecrF :
+    IsSubCompleteDioid isFNondecrF where
+  add ha hb :=
     ⟨fun t => le_min (ha.1 t) (hb.1 t),
       fun x y hxy =>
         min_le_min (ha.2 x y hxy) (hb.2 x y hxy)⟩
-  mul_mem' {a b} ha hb := by
+  mul {a b} ha hb := by
     have h : isFNondecr
         (minConvBar (fun t => (a t).toB)
           (fun t => (b t).toB)) := isFNondecr.conv ha hb
@@ -375,8 +375,8 @@ def FNondecr : SubCompleteDioid FminBar where
       rw [mul_toB]; exact h.1 t
     · show ((a ⊗ₒ b) x).toB ≤ ((a ⊗ₒ b) y).toB
       rw [mul_toB, mul_toB]; exact h.2 x y hxy
-  eps_mem' := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
-  one_mem' := by
+  eps := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
+  one := by
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ))
           ≤ ((convUnit t : RbarMin)).toB
@@ -394,32 +394,32 @@ def FNondecr : SubCompleteDioid FminBar where
       · have hy : y ≠ 0 := by
           rintro rfl; exact hx (le_zero_iff.mp hxy)
         rw [convUnit, if_neg hx, convUnit, if_neg hy]
-  iSup_mem' F hF :=
+  iSup F hF :=
     ⟨fun t => le_iInf (fun i => (hF i).1 t),
       fun x y hxy =>
         le_iInf (fun i =>
           (iInf_le _ i).trans ((hF i).2 x y hxy))⟩
 ```
 
-Being sub-complete-dioids, $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
-carry complete-dioid structures by instance resolution — no further
-work.
+The builder turns each into a complete dioid.
 
-*Theorem:* $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}` are complete dioids
+*Definition:* the complete dioids $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
 
 ```lean
-noncomputable example : CompleteDioid FPlus :=
-  inferInstance
-noncomputable example : CompleteDioid FNondecr :=
-  inferInstance
+noncomputable instance :
+    CompleteDioid {f : FminBar // isFPlusF f} :=
+  isSubCompleteDioid_isFPlusF.toCompleteDioid
+
+noncomputable instance :
+    CompleteDioid {f : FminBar // isFNondecrF f} :=
+  isSubCompleteDioid_isFNondecrF.toCompleteDioid
 ```
 
 By contrast $`\mathcal{F}_0` and $`\mathcal{F}_0^{\uparrow}` are _not_
-dioids: the closure field `eps_mem'` would require the dioid zero
+dioids: the closure condition `eps` would require the dioid zero
 $`\varepsilon = +\infty` (the constant function) to be null at the
-origin, but $`+\infty \ne 0`. They cannot be assembled as a
-`SubCompleteDioid`, faithfully reflecting that these sets lack the
-neutral.
+origin, but $`+\infty \ne 0`. The sub-complete-dioid builder does not
+apply, faithfully reflecting that these sets lack the neutral.
 
 ```lean
 end VerifiedWiki
