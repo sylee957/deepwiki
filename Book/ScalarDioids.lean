@@ -63,7 +63,7 @@ the canonical order $`a \preceq b \iff \min(a, b) = b` is the _reverse_
 of the usual numeric order; for the _(max,plus)_ carrier
 $`a \preceq b \iff \max(a, b) = b` _agrees_ with it.
 
-*Definition:* the four carriers, each wrapping its number system
+*Definition:* the five carriers, each wrapping its number system
 
 ```lean
 structure Rmin where ofR ::
@@ -77,6 +77,9 @@ structure RplusMin where ofE ::
 
 structure RplusMax where ofW ::
   toW : WithBot ℝ≥0∞
+
+structure RbarMax where ofC ::
+  toC : WithBot (WithTop ℝ)
 ```
 
 Each wrapper gets a coercion to its underlying value and an
@@ -110,6 +113,13 @@ instance : Coe RplusMax (WithBot ℝ≥0∞) := ⟨toW⟩
     (h : (a : WithBot ℝ≥0∞) = b) : a = b := by
   cases a; cases b; exact congrArg ofW h
 end RplusMax
+
+namespace RbarMax
+instance : Coe RbarMax (WithBot (WithTop ℝ)) := ⟨toC⟩
+@[ext] theorem ext {a b : RbarMax}
+    (h : (a : WithBot (WithTop ℝ)) = b) : a = b := by
+  cases a; cases b; exact congrArg ofC h
+end RbarMax
 ```
 
 # The reals with infinity
@@ -868,6 +878,203 @@ So `RplusMax` realizes the _(max,plus)_ complete dioid, the order-dual
 of `RplusMin`: $`\max` in place of $`\min`, $`-\infty` in place of
 $`+\infty` for $`\varepsilon`, and the dioid supremum the numeric
 supremum.
+
+# The extended reals (max,plus)
+
+The order-dual of `RbarMin` on the _same_ extended reals
+$`\mathbb{R} \cup \{\pm\infty\}`: a _complete (max,plus) dioid_ with
+$`\oplus = \max`, $`\otimes = {+}`, sum neutral
+$`\varepsilon = -\infty`, and product neutral $`e = 0`. The carrier is
+`WithBot (WithTop ℝ)`, so $`-\infty = \bot` and $`+\infty = \top`, with
+the _bottom-absorbing_ addition $`(-\infty) + (+\infty) = -\infty` —
+which keeps $`-\infty = \varepsilon` absorbing for $`\otimes`. It is the
+mirror image of `RbarMin` under $`x \mapsto -x`, and together they give
+symmetric min-plus and max-plus dioids on one carrier.
+
+## The carrier and its dioid
+
+The crux is again _lower semi-continuity_, now of $`+` over an arbitrary
+_supremum_; the proof mirrors `RbarMin`'s, translating by a shift and
+reducing to the finite, $`-\infty`, and $`+\infty` cases.
+
+*Definition:* the shift $`x \mapsto r + x`, an order isomorphism
+
+```lean
+namespace RbarMaxX
+
+noncomputable def shift (r : ℝ) :
+    WithBot (WithTop ℝ) ≃o WithBot (WithTop ℝ) :=
+  ((OrderIso.addLeft r).withTopCongr).withBotCongr
+```
+
+*Theorem:* $`\mathtt{shift}\,r\,(x) = r + x`
+
+```lean
+theorem shift_eq (r : ℝ) (x : WithBot (WithTop ℝ)) :
+    shift r x
+      = (((r : WithTop ℝ) : WithBot (WithTop ℝ)))
+        + x := by
+  induction x using WithBot.recBotCoe with
+  | bot => simp [shift]
+  | coe d =>
+    induction d using WithTop.recTopCoe with
+    | top =>
+      simp only [shift, OrderIso.withBotCongr_apply,
+        WithBot.map_coe, OrderIso.withTopCongr_apply,
+        WithTop.map_top]
+      rw [show ((⊤ : WithTop ℝ)
+            : WithBot (WithTop ℝ))
+          = ((↑r : WithTop ℝ)
+              : WithBot (WithTop ℝ))
+            + ((⊤ : WithTop ℝ)
+                : WithBot (WithTop ℝ)) from ?_]
+      · rfl
+      · rw [← WithBot.coe_add, WithTop.add_top]
+    | coe s =>
+      simp only [shift, OrderIso.withBotCongr_apply,
+        WithBot.map_coe, OrderIso.withTopCongr_apply,
+        WithTop.map_coe, OrderIso.addLeft_apply]
+      rw [← WithBot.coe_add, ← WithTop.coe_add]
+```
+
+*Theorem:* $`a + \bigvee_i f(i) = \bigvee_i (a + f(i))`
+
+```lean
+theorem add_iSup {ι : Sort*} (a : WithBot (WithTop ℝ))
+    (f : ι → WithBot (WithTop ℝ)) :
+    (a + ⨆ i, f i) = ⨆ i, a + f i := by
+  refine le_antisymm ?_
+    (iSup_le fun i => by gcongr; exact le_iSup _ i)
+  rcases isEmpty_or_nonempty ι with hι | hι
+  · simp
+  · induction a using WithBot.recBotCoe with
+    | bot => simp
+    | coe b =>
+      induction b using WithTop.recTopCoe with
+      | coe r =>
+        have hmap : (shift r) (⨆ i, f i)
+            = ⨆ i, (shift r) (f i) :=
+          OrderIso.map_iSup _ _
+        simp only [shift_eq] at hmap
+        exact hmap.le
+      | top =>
+        by_cases hbot : (⨆ i, f i) = ⊥
+        · have hall : ∀ i, f i = ⊥ := fun i =>
+            le_bot_iff.mp (hbot ▸ le_iSup f i)
+          simp only [hall, WithBot.add_bot,
+            ciSup_const, le_refl]
+        · obtain ⟨c, hc⟩ :=
+            Option.ne_none_iff_exists'.mp hbot
+          rw [show (⨆ i, f i)
+              = (c : WithBot (WithTop ℝ)) from hc,
+            ← WithBot.coe_add]
+          have hex : ∃ j, f j ≠ ⊥ := by
+            by_contra h; push Not at h
+            exact hbot (by simp [h])
+          obtain ⟨j, hj⟩ := hex
+          rw [show ((⊤ : WithTop ℝ) + c : WithTop ℝ)
+              = ⊤ from WithTop.top_add c]
+          refine le_iSup_of_le j ?_
+          obtain ⟨d, hd⟩ :=
+            Option.ne_none_iff_exists'.mp hj
+          rw [show f j
+              = (d : WithBot (WithTop ℝ)) from hd,
+            ← WithBot.coe_add, WithTop.top_add]
+```
+
+The two distributive facts about $`\max` and $`+`, mirroring the
+$`\min` ones.
+
+*Theorem:* $`a + \max(b, c) = \max(a + b, a + c)` and $`\max(a, b) + c = \max(a + c, b + c)`
+
+```lean
+theorem add_max (a b c : WithBot (WithTop ℝ)) :
+    a + max b c = max (a + b) (a + c) := by
+  rcases le_total b c with h | h
+  · rw [max_eq_right h, max_eq_right (by gcongr)]
+  · rw [max_eq_left h, max_eq_left (by gcongr)]
+
+theorem max_add (a b c : WithBot (WithTop ℝ)) :
+    max a b + c = max (a + c) (b + c) := by
+  rw [add_comm, add_max, add_comm a c, add_comm b c]
+
+end RbarMaxX
+```
+
+The complete (max,plus) carrier `RbarMax` wraps `WithBot (WithTop ℝ)`,
+with the dioid sum the numeric maximum and the product numeric
+addition.
+
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \max`, $`\otimes = {+}`, $`\varepsilon = -\infty`, $`e = 0`
+
+```lean
+namespace RbarMax
+
+instance : Algebra.Dioid RbarMax where
+  add a b := ⟨max ↑a ↑b⟩
+  zero := ⟨⊥⟩
+  mul a b := ⟨↑a + ↑b⟩
+  one := ⟨0⟩
+  oplus_assoc _ _ _ := ext (max_assoc _ _ _)
+  eps_oplus _ := ext (max_eq_right bot_le)
+  oplus_eps _ := ext (max_eq_left bot_le)
+  oplus_comm _ _ := ext (max_comm _ _)
+  otimes_assoc _ _ _ := ext (add_assoc _ _ _)
+  one_otimes _ := ext (zero_add _)
+  otimes_one _ := ext (add_zero _)
+  left_distrib _ _ _ := ext (RbarMaxX.add_max _ _ _)
+  right_distrib _ _ _ := ext (RbarMaxX.max_add _ _ _)
+  eps_otimes _ := ext (WithBot.bot_add _)
+  otimes_eps _ := ext (WithBot.add_bot _)
+  otimes_comm _ _ := ext (add_comm _ _)
+  oplus_idem _ := ext (max_self _)
+```
+
+## The canonical order
+
+Dual to `RbarMin`, the dioid order agrees with the numeric order.
+
+*Theorem:* $`a \preceq b \iff \uparrow a \le \uparrow b`
+
+```lean
+theorem le_iff (a b : RbarMax) :
+    a ≼ₒ b ↔ (a : WithBot (WithTop ℝ)) ≤ b := by
+  have h1 : a ≼ₒ b
+      ↔ (⟨max ↑a ↑b⟩ : RbarMax) = b := Iff.rfl
+  rw [h1]
+  constructor
+  · intro h
+    have : max (↑a : WithBot (WithTop ℝ)) ↑b = ↑b :=
+      congrArg toC h
+    rw [← this]; exact le_max_left _ _
+  · intro h; exact ext (max_eq_right h)
+```
+
+The dioid supremum is the numeric supremum of the underlying values,
+and lower semi-continuity is `RbarMaxX.add_iSup`.
+
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \sup\,\{\,\uparrow x \mid x \in s\,\}`
+
+```lean
+noncomputable instance :
+    Algebra.CompleteDioid RbarMax where
+  iSup f := ⟨⨆ i, ↑(f i)⟩
+  le_iSup f i :=
+    (le_iff _ _).mpr
+      (le_iSup (fun i => (f i : WithBot (WithTop ℝ))) i)
+  iSup_le f b hb := (le_iff _ _).mpr (iSup_le (by
+    intro i; exact (le_iff _ _).mp (hb i)))
+  mul_iSup a f := by
+    refine ext ?_
+    show (↑a : WithBot (WithTop ℝ)) + ⨆ i, ↑(f i)
+       = ⨆ i, ((↑a : WithBot (WithTop ℝ)) + ↑(f i))
+    exact RbarMaxX.add_iSup _ _
+
+end RbarMax
+```
+
+So `RbarMax` realizes the _(max,plus)_ complete dioid on
+$`\mathbb{R} \cup \{\pm\infty\}`, the exact order-dual of `RbarMin`.
 
 ```lean
 end VerifiedWiki

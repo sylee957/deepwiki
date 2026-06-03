@@ -117,6 +117,73 @@ theorem conv_coe
   exact conv_coe_toB f g t
 ```
 
+# The dual (max,plus) convolution
+
+The construction dualizes verbatim to the _(max,plus)_ side, on the
+same extended reals but through the order-dual carrier `RbarMax`
+(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is the numeric
+_supremum_, over all splits $`u + s = t`, of $`f(u) + g(s)`; the
+function class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
+\overline{\mathbb{R}}_{\max}`, and the dioid product again computes it.
+
+*Definition:* $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))`
+
+```lean
+noncomputable def maxConvBar
+    (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
+    ℝ≥0 → WithBot (WithTop ℝ) :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      f p.1.1 + g p.1.2
+
+abbrev FmaxBar := ℝ≥0 → RbarMax
+
+instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
+  ⟨fun f t => ⟨f t⟩⟩
+```
+
+*Theorem:* $`(\uparrow\!f \mathbin{\overline{\ast}} \uparrow\!g)(t)` unwraps to $`(f \mathbin{\overline{\ast}} g)(t)`
+
+```lean
+theorem conv_coe_toC
+    (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
+    ((conv (↑f) (↑g) t : RbarMax)
+        : WithBot (WithTop ℝ))
+      = maxConvBar f g t := by
+  apply le_antisymm
+  · rw [conv_apply, ← RbarMax.le_iff]
+    refine CompleteDioid.sSup_le _ _ ?_
+    rintro x ⟨u, s, hus, rfl⟩
+    rw [RbarMax.le_iff]
+    exact le_iSup_of_le ⟨(u, s), hus⟩ (le_refl _)
+  · refine iSup_le ?_
+    rintro ⟨⟨u, s⟩, hus⟩
+    have hle := CompleteDioid.le_sSup _ _
+      (show ((↑f : FmaxBar) u ⊗ₒ (↑g : FmaxBar) s)
+          ∈ {x | ∃ u s, u + s = t
+              ∧ x = (↑f : FmaxBar) u ⊗ₒ (↑g : FmaxBar) s}
+        from ⟨u, s, hus, rfl⟩)
+    rw [← conv_apply] at hle
+    exact (RbarMax.le_iff _ _).mp hle
+```
+
+*Theorem:* $`\uparrow\!f \mathbin{\overline{\ast}} \uparrow\!g = \uparrow\!(f \mathbin{\overline{\ast}} g)`
+
+```lean
+theorem conv_coeMax
+    (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
+    conv (↑f : FmaxBar) (↑g : FmaxBar)
+      = (↑(maxConvBar f g) : FmaxBar) := by
+  funext t
+  apply RbarMax.ext
+  exact conv_coe_toC f g t
+```
+
+The min-plus and max-plus convolutions are now symmetric: both on the
+extended reals $`\mathbb{R} \cup \{\pm\infty\}`, one the numeric
+infimum and the other the supremum over the same splits, each the dioid
+product in its respective complete dioid (`RbarMin`, `RbarMax`).
+
 # Subsets of the function class
 
 Network calculus restricts to four subsets of real functions, defined
