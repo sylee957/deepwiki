@@ -25,9 +25,72 @@ reverse of the usual numeric order.
 namespace VerifiedWiki
 
 open scoped Algebra.Bridge
+open scoped ENNReal NNReal Classical
 ```
 
-# A concrete dioid: the reals with infinity
+# The carriers
+
+Three concrete number systems realize the _(min,plus)_ tower, each
+taking $`\oplus = \min`, $`\otimes = {+}`, sum neutral
+$`\varepsilon = +\infty`, and product neutral $`e = 0`:
+
+- the _reals with infinity_ $`\overline{\mathbb{R}}
+  = \mathbb{R} \cup \{+\infty\}`, carried by `WithTop ℝ` — a dioid, but
+  not complete (unbounded below);
+- the _extended reals_ $`\overline{\mathbb{R}}
+  = \mathbb{R} \cup \{\pm\infty\}`, carried by `WithTop (WithBot ℝ)`
+  with the top-absorbing addition $`(+\infty) + (-\infty) = +\infty` — a
+  complete dioid;
+- the _non-negative reals_ $`\overline{\mathbb{R}}_{\ge 0}
+  = \mathbb{R}_{\ge 0} \cup \{+\infty\}`, carried by `ℝ≥0∞` — the
+  cleanest complete dioid, bounded below by $`0`.
+
+Each numeric value is carried under a one-field wrapper, so the dioid
+operations are attached freshly rather than colliding with any numeric
+algebra already on the underlying type. The canonical order
+$`a \preceq b \iff \min(a, b) = b` is, on each, the _reverse_ of the
+usual numeric order.
+
+*Definition:* the three carriers, each wrapping its number system
+
+```lean
+structure Rmin where ofR ::
+  toR : WithTop ℝ
+
+structure RbarMin where ofB ::
+  toB : WithTop (WithBot ℝ)
+
+structure RplusMin where ofE ::
+  toE : ℝ≥0∞
+```
+
+Each wrapper gets a coercion to its underlying value and an
+extensionality lemma lifting equality through it.
+
+```lean
+namespace Rmin
+instance : Coe Rmin (WithTop ℝ) := ⟨toR⟩
+@[ext] theorem ext {a b : Rmin}
+    (h : (a : WithTop ℝ) = b) : a = b := by
+  cases a; cases b; exact congrArg ofR h
+end Rmin
+
+namespace RbarMin
+instance : Coe RbarMin (WithTop (WithBot ℝ)) := ⟨toB⟩
+@[ext] theorem ext {a b : RbarMin}
+    (h : (a : WithTop (WithBot ℝ)) = b) : a = b := by
+  cases a; cases b; exact congrArg ofB h
+end RbarMin
+
+namespace RplusMin
+instance : Coe RplusMin ℝ≥0∞ := ⟨toE⟩
+@[ext] theorem ext {a b : RplusMin}
+    (h : (a : ℝ≥0∞) = b) : a = b := by
+  cases a; cases b; exact congrArg ofE h
+end RplusMin
+```
+
+# The reals with infinity
 
 The abstract tower is realized by the _(min,plus)_ algebra on
 $`\overline{\mathbb{R}} = \mathbb{R} \cup \{+\infty\}`. The dioid sum is
@@ -37,34 +100,21 @@ neutral is $`+\infty` (absorbing for $`\min`, since $`\min(+\infty, a)
 canonical order $`a \preceq b \iff \min(a, b) = b` is then the _reverse_
 of the usual numeric order.
 
-We carry the numeric value in `WithTop ℝ` (with $`+\infty = \top`) under
-a one-field wrapper, so the dioid operations are attached freshly rather
-than colliding with any numeric algebra on `WithTop ℝ`.
+The carrier `Rmin` wraps `WithTop ℝ` (with $`+\infty = \top`), so the
+dioid operations are attached freshly rather than colliding with any
+numeric algebra on `WithTop ℝ`.
 
-*Definition:* the carrier $`\overline{\mathbb{R}} = \mathbb{R} \cup \{+\infty\}`
-
-```lean
-structure Rmin where ofR ::
-  toR : WithTop ℝ
-
-namespace Rmin
-
-open Algebra
-
-instance : Coe Rmin (WithTop ℝ) := ⟨toR⟩
-
-@[ext] theorem ext {a b : Rmin}
-    (h : (a : WithTop ℝ) = b) : a = b := by
-  cases a; cases b; exact congrArg ofR h
-```
+## The carrier and its dioid
 
 Two arithmetic facts on `WithTop ℝ` carry the distributive laws:
 addition distributes over the minimum on each side, because addition is
 monotone.
 
-*Theorem:* $`a + \min(b, c) = \min(a + b, a + c)`
+*Theorem:* $`a + \min(b, c) = \min(a + b, a + c)` and $`\min(a, b) + c = \min(a + c, b + c)`
 
 ```lean
+namespace RminX
+
 theorem add_min (a b c : WithTop ℝ) :
     a + min b c = min (a + b) (a + c) := by
   rcases le_total b c with h | h
@@ -74,22 +124,22 @@ theorem add_min (a b c : WithTop ℝ) :
 theorem min_add (a b c : WithTop ℝ) :
     min a b + c = min (a + c) (b + c) := by
   rw [add_comm, add_min, add_comm a c, add_comm b c]
+
+end RminX
 ```
 
-Each dioid axiom is now a fact about `WithTop ℝ`: associativity and
-commutativity of $`\min` and $`+`, the neutrals $`+\infty` and $`0`,
-the two distributive laws, that $`+\infty` is absorbing for $`+`, and
-idempotency $`\min(a, a) = a`.
-
-Each axiom is a fact about `WithTop ℝ`, lifted through the wrapper by
-`ext`: the monoid laws from `min` and `+`, the distributive laws from
-`add_min`/`min_add`, absorption of $`+\infty`, and idempotency of
-$`\min`. The operations use the $`\uparrow` coercion to the underlying
-value.
+Each dioid axiom is a fact about `WithTop ℝ`, lifted through the wrapper
+by `ext`: the monoid laws from `min` and `+`, the distributive laws from
+`RminX.add_min`/`RminX.min_add`, absorption of $`+\infty`, and
+idempotency of $`\min`. The operations use the $`\uparrow` coercion to
+the underlying value.
 
 *Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
+namespace Rmin
+open Algebra
+
 instance : Algebra.Dioid Rmin where
   add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
@@ -102,34 +152,44 @@ instance : Algebra.Dioid Rmin where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (add_min _ _ _)
-  right_distrib _ _ _ := ext (min_add _ _ _)
-  eps_otimes _ := ext (top_add _)
-  otimes_eps _ := ext (add_top _)
+  left_distrib _ _ _ := ext (RminX.add_min _ _ _)
+  right_distrib _ _ _ := ext (RminX.min_add _ _ _)
+  eps_otimes _ := ext (WithTop.top_add _)
+  otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
   oplus_idem _ := ext (min_self _)
 
 end Rmin
 ```
 
-In the _(min,plus)_ reading the dioid sum is the minimum and the dioid
-product is numeric addition. We offer carrier-tagged `scoped` notation
-spelling that out — `∧[Rmin]` for the sum, `+[Rmin]` for the product —
-so it reads as min-plus without clashing with the bare `+` (which on a
-dioid already denotes the sum). It is dormant until
-`open scoped VerifiedWiki.Rmin`.
+## The canonical order
+
+The dioid order on the wrapper is the reverse of the numeric order.
+
+*Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
 namespace Rmin
-open Algebra
 
-scoped notation:65 a:65 " ∧[Rmin] " b:66 =>
-  (a ⊕ₒ b : Rmin)
-scoped notation:70 a:70 " +[Rmin] " b:71 =>
-  (a ⊗ₒ b : Rmin)
+theorem le_iff (a b : Rmin) :
+    a ≼ₒ b ↔ (b : WithTop ℝ) ≤ a := by
+  have h1 : a ≼ₒ b
+      ↔ (⟨min ↑a ↑b⟩ : Rmin) = b := Iff.rfl
+  rw [h1]
+  constructor
+  · intro h
+    have : min (↑a : WithTop ℝ) ↑b = ↑b :=
+      congrArg toR h
+    rw [← this]; exact min_le_left _ _
+  · intro h; exact ext (min_eq_right h)
 
 end Rmin
 ```
+
+## Worked arithmetic
+
+In the _(min,plus)_ reading the dioid sum $`\oplus` is the minimum and
+the dioid product $`\otimes` is numeric addition.
 
 The four essential arithmetic cases of $`\overline{\mathbb{R}}`:
 
@@ -142,7 +202,7 @@ open Algebra
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨x⟩ : Rmin) ∧[Rmin] ⟨y⟩ = ⟨z⟩ :=
+    ∃ z : ℝ, (⟨x⟩ : Rmin) ⊕ₒ ⟨y⟩ = ⟨z⟩ :=
   ⟨min x y, rfl⟩
 ```
 
@@ -150,14 +210,14 @@ example (x y : ℝ) :
 
 ```lean
 example (a : Rmin) :
-    a ∧[Rmin] ⟨⊤⟩ = a := add_zero a
+    a ⊕ₒ ⟨⊤⟩ = a := add_zero a
 ```
 
 *Theorem:* finite $`+` finite stays in $`\mathbb{R}`
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨x⟩ : Rmin) +[Rmin] ⟨y⟩ = ⟨z⟩ :=
+    ∃ z : ℝ, (⟨x⟩ : Rmin) ⊗ₒ ⟨y⟩ = ⟨z⟩ :=
   ⟨x + y, rfl⟩
 ```
 
@@ -165,7 +225,7 @@ example (x y : ℝ) :
 
 ```lean
 example (a : Rmin) :
-    a +[Rmin] ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
+    a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
 
 end Rmin
 ```
@@ -183,7 +243,7 @@ example (a : Rmin) :
   le_rfl
 ```
 
-# A complete dioid: the extended reals
+# The extended reals
 
 The carrier $`\overline{\mathbb{R}} = \mathbb{R} \cup \{+\infty\}` is
 _not_ complete: it is unbounded below, so a set of reals decreasing
@@ -195,14 +255,11 @@ top-absorbing addition $`(+\infty) + (-\infty) = +\infty` — which keeps
 $`+\infty = \varepsilon` absorbing for $`\otimes` — they carry a
 _complete_ (min,plus) dioid.
 
-We use `WithTop (WithBot ℝ)` for the carrier, so that $`+\infty = \top`
-and $`-\infty = \bot`, with the top-absorbing addition built in.
+The carrier `RbarMin` wraps `WithTop (WithBot ℝ)`, so that
+$`+\infty = \top` and $`-\infty = \bot`, with the top-absorbing
+addition built in.
 
-```lean
-open scoped Classical
-
-abbrev Rb := WithTop (WithBot ℝ)
-```
+## The carrier and its dioid
 
 The crux is _lower semi-continuity_ of $`+`: addition distributes over
 an arbitrary infimum. The proof translates by a fixed real through an
@@ -214,15 +271,18 @@ finite, $`-\infty`, and $`+\infty` cases.
 ```lean
 namespace RbarX
 
-noncomputable def shift (r : ℝ) : Rb ≃o Rb :=
+noncomputable def shift (r : ℝ) :
+    WithTop (WithBot ℝ) ≃o WithTop (WithBot ℝ) :=
   ((OrderIso.addLeft r).withBotCongr).withTopCongr
 ```
 
 *Theorem:* $`\mathtt{shift}\,r\,(x) = r + x`
 
 ```lean
-theorem shift_eq (r : ℝ) (x : Rb) :
-    shift r x = (((r : WithBot ℝ) : Rb)) + x := by
+theorem shift_eq (r : ℝ) (x : WithTop (WithBot ℝ)) :
+    shift r x
+      = (((r : WithBot ℝ) : WithTop (WithBot ℝ)))
+        + x := by
   induction x using WithTop.recTopCoe with
   | top => simp [shift]
   | coe d =>
@@ -231,9 +291,12 @@ theorem shift_eq (r : ℝ) (x : Rb) :
       simp only [shift, OrderIso.withTopCongr_apply,
         WithTop.map_coe, OrderIso.withBotCongr_apply,
         WithBot.map_bot]
-      rw [show ((⊥ : WithBot ℝ) : Rb)
-          = ((↑r : WithBot ℝ) : Rb)
-            + ((⊥ : WithBot ℝ) : Rb) from ?_]
+      rw [show ((⊥ : WithBot ℝ)
+            : WithTop (WithBot ℝ))
+          = ((↑r : WithBot ℝ)
+              : WithTop (WithBot ℝ))
+            + ((⊥ : WithBot ℝ)
+                : WithTop (WithBot ℝ)) from ?_]
       · rfl
       · rw [← WithTop.coe_add, WithBot.add_bot]
     | coe s =>
@@ -246,7 +309,8 @@ theorem shift_eq (r : ℝ) (x : Rb) :
 *Theorem:* $`a + \bigwedge_i f(i) = \bigwedge_i (a + f(i))`
 
 ```lean
-theorem add_iInf {ι : Sort*} (a : Rb) (f : ι → Rb) :
+theorem add_iInf {ι : Sort*} (a : WithTop (WithBot ℝ))
+    (f : ι → WithTop (WithBot ℝ)) :
     (a + ⨅ i, f i) = ⨅ i, a + f i := by
   refine le_antisymm
     (le_iInf fun i => by gcongr; exact iInf_le _ i) ?_
@@ -270,7 +334,8 @@ theorem add_iInf {ι : Sort*} (a : Rb) (f : ι → Rb) :
             ciInf_const, le_refl]
         · obtain ⟨c, hc⟩ :=
             Option.ne_none_iff_exists'.mp htop
-          rw [show (⨅ i, f i) = (c : Rb) from hc,
+          rw [show (⨅ i, f i)
+              = (c : WithTop (WithBot ℝ)) from hc,
             ← WithTop.coe_add]
           have hex : ∃ j, f j ≠ ⊤ := by
             by_contra h; push Not at h
@@ -281,7 +346,8 @@ theorem add_iInf {ι : Sort*} (a : Rb) (f : ι → Rb) :
           refine iInf_le_of_le j ?_
           obtain ⟨d, hd⟩ :=
             Option.ne_none_iff_exists'.mp hj
-          rw [show f j = (d : Rb) from hd,
+          rw [show f j
+              = (d : WithTop (WithBot ℝ)) from hd,
             ← WithTop.coe_add, WithBot.bot_add]
 ```
 
@@ -291,35 +357,26 @@ distributive laws, as before.
 *Theorem:* $`a + \min(b, c) = \min(a + b, a + c)` and $`\min(a, b) + c = \min(a + c, b + c)`
 
 ```lean
-theorem add_min (a b c : Rb) :
+theorem add_min (a b c : WithTop (WithBot ℝ)) :
     a + min b c = min (a + b) (a + c) := by
   rcases le_total b c with h | h
   · rw [min_eq_left h, min_eq_left (by gcongr)]
   · rw [min_eq_right h, min_eq_right (by gcongr)]
 
-theorem min_add (a b c : Rb) :
+theorem min_add (a b c : WithTop (WithBot ℝ)) :
     min a b + c = min (a + c) (b + c) := by
   rw [add_comm, add_min, add_comm a c, add_comm b c]
 
 end RbarX
 ```
 
-The complete (min,plus) carrier wraps `Rb`, with the dioid sum the
-numeric minimum and the product numeric addition.
+The complete (min,plus) carrier `RbarMin` wraps `WithTop (WithBot ℝ)`,
+with the dioid sum the numeric minimum and the product numeric addition.
 
-*Definition:* the carrier $`\overline{\mathbb{R}} = \mathbb{R} \cup \{\pm\infty\}`
+*Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
-structure RbarMin where ofB ::
-  toB : Rb
-
 namespace RbarMin
-
-instance : Coe RbarMin Rb := ⟨toB⟩
-
-@[ext] theorem ext {a b : RbarMin}
-    (h : (a : Rb) = b) : a = b := by
-  cases a; cases b; exact congrArg ofB h
 
 instance : Algebra.Dioid RbarMin where
   add a b := ⟨min ↑a ↑b⟩
@@ -335,13 +392,13 @@ instance : Algebra.Dioid RbarMin where
   otimes_one _ := ext (add_zero _)
   left_distrib _ _ _ := ext (RbarX.add_min _ _ _)
   right_distrib _ _ _ := ext (RbarX.min_add _ _ _)
-  eps_otimes a :=
-    ext (show (⊤ : Rb) + ↑a = ⊤ by simp)
-  otimes_eps a :=
-    ext (show (↑a : Rb) + ⊤ = ⊤ by simp)
+  eps_otimes _ := ext (WithTop.top_add _)
+  otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
   oplus_idem _ := ext (min_self _)
 ```
+
+## The canonical order
 
 The dioid order on the wrapper is the reverse of the numeric order.
 
@@ -349,13 +406,14 @@ The dioid order on the wrapper is the reverse of the numeric order.
 
 ```lean
 theorem le_iff (a b : RbarMin) :
-    a ≼ₒ b ↔ (b : Rb) ≤ a := by
+    a ≼ₒ b ↔ (b : WithTop (WithBot ℝ)) ≤ a := by
   have h1 : a ≼ₒ b
       ↔ (⟨min ↑a ↑b⟩ : RbarMin) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
-    have : min (↑a : Rb) ↑b = ↑b := congrArg toB h
+    have : min (↑a : WithTop (WithBot ℝ)) ↑b = ↑b :=
+      congrArg toB h
     rw [← this]; exact min_le_left _ _
   · intro h; exact ext (min_eq_right h)
 ```
@@ -376,8 +434,8 @@ noncomputable instance :
     exact (le_iff _ _).mp (hb i)))
   mul_iSup a f := by
     refine ext ?_
-    show (↑a : Rb) + ⨅ i, ↑(f i)
-       = ⨅ i, ((↑a : Rb) + ↑(f i))
+    show (↑a : WithTop (WithBot ℝ)) + ⨅ i, ↑(f i)
+       = ⨅ i, ((↑a : WithTop (WithBot ℝ)) + ↑(f i))
     exact RbarX.add_iInf _ _
 
 end RbarMin
@@ -388,20 +446,70 @@ has a dioid supremum (its numeric infimum), and the product is lower
 semi-continuous. The top element $`\top = \bigsqcup_x x` and its
 absorbing laws, and the whole order theory, follow from the tower.
 
-# A complete dioid: the non-negative reals
+## Worked arithmetic
+
+The four essential arithmetic cases of
+$`\overline{\mathbb{R}} = \mathbb{R} \cup \{\pm\infty\}`:
+
+```lean
+namespace RbarMin
+open Algebra
+```
+
+*Theorem:* finite $`\wedge` finite stays in $`\mathbb{R}`
+
+```lean
+example (x y : ℝ) :
+    ∃ z : ℝ, (⟨↑↑x⟩ : RbarMin) ⊕ₒ ⟨↑↑y⟩
+      = ⟨↑↑z⟩ :=
+  ⟨min x y, by
+    refine ext ?_
+    show min (↑↑x : WithTop (WithBot ℝ)) ↑↑y
+        = ↑↑(min x y)
+    rw [WithBot.coe_min, WithTop.coe_min]⟩
+```
+
+*Theorem:* $`a \wedge {+\infty} = a`
+
+```lean
+example (a : RbarMin) :
+    a ⊕ₒ ⟨⊤⟩ = a := add_zero a
+```
+
+*Theorem:* finite $`+` finite stays in $`\mathbb{R}`
+
+```lean
+example (x y : ℝ) :
+    ∃ z : ℝ, (⟨↑↑x⟩ : RbarMin) ⊗ₒ ⟨↑↑y⟩
+      = ⟨↑↑z⟩ :=
+  ⟨x + y, by
+    refine ext ?_
+    show (↑↑x : WithTop (WithBot ℝ)) + ↑↑y
+        = ↑↑(x + y)
+    rw [WithBot.coe_add, WithTop.coe_add]⟩
+```
+
+*Theorem:* $`a + {+\infty} = {+\infty}` ($`+\infty` absorbing)
+
+```lean
+example (a : RbarMin) :
+    a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
+
+end RbarMin
+```
+
+# The non-negative reals
 
 The non-negative extended reals $`\overline{\mathbb{R}}_{\ge 0}
 = \mathbb{R}_{\ge 0} \cup \{+\infty\}` are the cleanest complete
 (min,plus) carrier. Being bounded below by $`0`, they form a complete
 lattice with $`0 = \bot` and $`+\infty = \top` and no $`-\infty`, so
 $`+\infty = \varepsilon` stays absorbing and there are no
-$`(+\infty) + (-\infty)` indeterminacies. We use Mathlib's
-$`\mathbb{R}_{\ge 0}^{\infty}` (`ℝ≥0∞`), whose lower semi-continuity of
-$`+` is available off the shelf.
+$`(+\infty) + (-\infty)` indeterminacies. The carrier `RplusMin` wraps
+Mathlib's $`\mathbb{R}_{\ge 0}^{\infty}` (`ℝ≥0∞`), whose lower
+semi-continuity of $`+` is available off the shelf.
 
-```lean
-open scoped ENNReal
-```
+## The carrier and its dioid
 
 The two distributive facts and lower semi-continuity, on `ℝ≥0∞`.
 
@@ -426,19 +534,10 @@ theorem add_iInf {ι : Sort*} (a : ℝ≥0∞) (f : ι → ℝ≥0∞) :
 end RplusX
 ```
 
-*Definition:* the carrier $`\overline{\mathbb{R}}_{\ge 0} = \mathbb{R}_{\ge 0} \cup \{+\infty\}`
+*Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
-structure RplusMin where ofE ::
-  toE : ℝ≥0∞
-
 namespace RplusMin
-
-instance : Coe RplusMin ℝ≥0∞ := ⟨toE⟩
-
-@[ext] theorem ext {a b : RplusMin}
-    (h : (a : ℝ≥0∞) = b) : a = b := by
-  cases a; cases b; exact congrArg ofE h
 
 instance : Algebra.Dioid RplusMin where
   add a b := ⟨min ↑a ↑b⟩
@@ -454,13 +553,15 @@ instance : Algebra.Dioid RplusMin where
   otimes_one _ := ext (add_zero _)
   left_distrib _ _ _ := ext (RplusX.add_min _ _ _)
   right_distrib _ _ _ := ext (RplusX.min_add _ _ _)
-  eps_otimes a :=
-    ext (show (⊤ : ℝ≥0∞) + ↑a = ⊤ by simp)
-  otimes_eps a :=
-    ext (show (↑a : ℝ≥0∞) + ⊤ = ⊤ by simp)
+  eps_otimes _ := ext (WithTop.top_add _)
+  otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
   oplus_idem _ := ext (min_self _)
 ```
+
+## The canonical order
+
+The dioid order on the wrapper is the reverse of the numeric order.
 
 *Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
@@ -500,6 +601,56 @@ Of the three carriers, $`\overline{\mathbb{R}}_{\ge 0}` is the
 canonical complete (min,plus) dioid: complete and free of the sign
 pathologies, with lower semi-continuity inherited directly from
 $`\mathbb{R}_{\ge 0}^{\infty}`.
+
+## Worked arithmetic
+
+The four essential arithmetic cases of
+$`\overline{\mathbb{R}}_{\ge 0} = \mathbb{R}_{\ge 0} \cup \{+\infty\}`:
+
+```lean
+namespace RplusMin
+open Algebra
+```
+
+*Theorem:* finite $`\wedge` finite stays in $`\mathbb{R}_{\ge 0}`
+
+```lean
+example (x y : ℝ≥0) :
+    ∃ z : ℝ≥0, (⟨↑x⟩ : RplusMin) ⊕ₒ ⟨↑y⟩
+      = ⟨↑z⟩ :=
+  ⟨min x y, by
+    refine ext ?_
+    show min (↑x : ℝ≥0∞) ↑y = ↑(min x y)
+    rw [ENNReal.coe_min]⟩
+```
+
+*Theorem:* $`a \wedge {+\infty} = a`
+
+```lean
+example (a : RplusMin) :
+    a ⊕ₒ ⟨⊤⟩ = a := add_zero a
+```
+
+*Theorem:* finite $`+` finite stays in $`\mathbb{R}_{\ge 0}`
+
+```lean
+example (x y : ℝ≥0) :
+    ∃ z : ℝ≥0, (⟨↑x⟩ : RplusMin) ⊗ₒ ⟨↑y⟩
+      = ⟨↑z⟩ :=
+  ⟨x + y, by
+    refine ext ?_
+    show (↑x : ℝ≥0∞) + ↑y = ↑(x + y)
+    rw [ENNReal.coe_add]⟩
+```
+
+*Theorem:* $`a + {+\infty} = {+\infty}` ($`+\infty` absorbing)
+
+```lean
+example (a : RplusMin) :
+    a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
+
+end RplusMin
+```
 
 ```lean
 end VerifiedWiki
