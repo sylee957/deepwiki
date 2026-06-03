@@ -31,13 +31,24 @@ needed. Do not resurrect it — if those files reappear untracked, they are stal
 Commands:
 - Build one chapter: `lake build Book.<Chapter>` (e.g. `Book.Dioids`).
 - Build everything: `lake build`.
-- Render the book to HTML: `rm -rf _out && lake exe generate-book`
-  (writes `_out/html-multi/`; `_out/` is gitignored). **Always `rm -rf _out`
-  first** — the renderer writes alongside stale output and creates `index 2.html`
-  duplicates otherwise.
+- Render the book to HTML: **`./render.sh`** (or `./render.sh --watch` to
+  re-render on changes to `Book/`, `Book.lean`, `Main.lean`). Writes
+  `_out/html-multi/`; `_out/` is gitignored. It renders to a staging dir
+  (`lake exe generate-book --output _out/.staging`) and then **atomically
+  swaps** the result into `_out/html-multi` with `mv` — so a running
+  `python3 -m http.server` keeps serving and picks up the new files on its
+  next request; nothing is killed. It also sweeps any stray `html-multi N`
+  from past bad runs and fails loudly if the staged render lacks
+  `index.html`.
+- **Do not** run the raw `rm -rf _out && lake exe generate-book`: the
+  renderer writes *alongside* any locked output (an `http.server`, or a
+  shell whose cwd is inside `_out/html-multi`, pins it), producing a
+  duplicate `html-multi 2/` — and `index.html` ends up inside *that*, so
+  the main dir looks broken. Rendering to a separate staging dir avoids
+  the lock entirely; that's the whole point of `render.sh`.
 - Serve for viewing (Verso needs HTTP, not `file://`, for code hovers):
-  `cd _out/html-multi && python3 -m http.server 8000`. Kill a stale server with
-  `lsof -nP -iTCP:8000 -sTCP:LISTEN -t | xargs -r kill`.
+  `cd _out/html-multi && python3 -m http.server 8000`. With `render.sh`'s
+  atomic swap you can leave this running across renders.
 
 ## Chapter structure (`Book/`)
 
