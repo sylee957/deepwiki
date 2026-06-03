@@ -301,6 +301,102 @@ theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
   rw [sSup_pair]; rfl
 ```
 
+# Residuation
+
+In a field every nonzero element has an inverse, so division is the
+inverse of multiplication. A dioid has no inverses — but a complete
+dioid has suprema, and that is enough to define the _greatest solution_
+of an inequality. The right-multiplication map $`R_a : x \mapsto x
+\otimes a` is lower semi-continuous (`sSup_mul`), so it is _residuated_:
+its _residual_ $`R_a^{\sharp}` sends $`b` to the greatest $`x` with
+$`x \otimes a \preceq b`. We write that greatest solution $`b \oslash
+a`, the _residuation_ (or _right-quotient_) of $`b` by $`a`.
+
+*Definition:* $`b \oslash a = \bigsqcup\,\{\, x \mid x \otimes a \preceq b \,\}`
+
+```lean
+def resid {T : Type*} [CompleteDioid T] (b a : T) : T :=
+  CompleteDioid.sSup { x | x ⊗ₒ a ≼ₒ b }
+
+scoped notation:70 b:70 " ⊘ₒ " a:71 => resid b a
+```
+
+The residuation is itself a solution: $`(b \oslash a) \otimes a \preceq
+b`. Pushing $`\otimes a` through the supremum (right lower
+semi-continuity), each term $`x \otimes a` with $`x` in the set is
+$`\preceq b` by construction, so their supremum is too.
+
+*Theorem:* $`(b \oslash a) \otimes a \preceq b`
+
+```lean
+theorem resid_mul_le {T : Type*} [CompleteDioid T]
+    (b a : T) : (b ⊘ₒ a) ⊗ₒ a ≼ₒ b := by
+  rw [resid, sSup_mul]
+  refine CompleteDioid.sSup_le _ _ ?_
+  rintro y ⟨x, hx, rfl⟩
+  exact hx
+```
+
+It is moreover the _greatest_ solution: the central equivalence is the
+Galois connection $`x \otimes a \preceq b \iff x \preceq b \oslash a`.
+Left to right is membership in the defining set; right to left raises
+$`x \otimes a` to $`(b \oslash a) \otimes a` by isotony, then applies
+`resid_mul_le`.
+
+*Theorem:* $`x \otimes a \preceq b \iff x \preceq b \oslash a`
+
+```lean
+theorem mul_le_iff_le_resid {T : Type*}
+    [CompleteDioid T] (x a b : T) :
+    x ⊗ₒ a ≼ₒ b ↔ x ≼ₒ b ⊘ₒ a := by
+  constructor
+  · intro h
+    exact CompleteDioid.le_sSup _ x h
+  · intro h
+    exact le_trans (mul_le_mul_right h a)
+      (resid_mul_le b a)
+```
+
+The other round-trip is the residual after the map: $`x \preceq (x
+\otimes a) \oslash a`. It is the right-to-left direction applied to
+$`x \otimes a \preceq x \otimes a`.
+
+*Theorem:* $`x \preceq (x \otimes a) \oslash a`
+
+```lean
+theorem le_resid_mul {T : Type*} [CompleteDioid T]
+    (x a : T) : x ≼ₒ (x ⊗ₒ a) ⊘ₒ a :=
+  (mul_le_iff_le_resid x a (x ⊗ₒ a)).mp (le_refl _)
+```
+
+Residuation is _isotone_ in the dividend: a larger $`b` admits more
+solutions, so a larger quotient.
+
+*Theorem:* $`b \preceq b' \implies b \oslash a \preceq b' \oslash a`
+
+```lean
+theorem resid_mono {T : Type*} [CompleteDioid T]
+    {b b' : T} (a : T) (h : b ≼ₒ b') :
+    b ⊘ₒ a ≼ₒ b' ⊘ₒ a := by
+  rw [← mul_le_iff_le_resid]
+  exact le_trans (resid_mul_le b a) h
+```
+
+Residuation is _antitone_ in the divisor: a larger $`a` makes $`x
+\otimes a` larger, so fewer $`x` solve the inequality, so a smaller
+quotient.
+
+*Theorem:* $`a \preceq a' \implies b \oslash a' \preceq b \oslash a`
+
+```lean
+theorem resid_antitone {T : Type*} [CompleteDioid T]
+    (b : T) {a a' : T} (h : a ≼ₒ a') :
+    b ⊘ₒ a' ≼ₒ b ⊘ₒ a := by
+  rw [← mul_le_iff_le_resid]
+  exact le_trans (mul_le_mul_left h (b ⊘ₒ a'))
+    (resid_mul_le b a')
+```
+
 ```lean
 end Algebra
 ```
