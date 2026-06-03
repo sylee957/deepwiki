@@ -13,10 +13,11 @@ network calculus and presents the real convolution operators it yields.
 Cumulative functions $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` embed into
 two complete dioids: the _(min,plus)_ carrier
 $`\overline{\mathbb{R}}_{\ge 0}` (`RplusMin`), whose function dioid
-$`\mathcal{F}_{\min}` carries the _infimal convolution_; and the dual
-_(max,plus)_ carrier (`RplusMax`), whose function dioid
-$`\mathcal{F}_{\max}` carries the _super-convolution_. Both convolutions
-are the dioid product `conv` of the generic chapter, read back into
+$`\mathcal{F}_{\min}` carries the _(min,plus) convolution_; and the
+dual _(max,plus)_ carrier (`RplusMax`), whose function dioid
+$`\mathcal{F}_{\max}` carries the _(max,plus) convolution_. Both
+convolutions are the dioid product `conv` of the generic chapter, read
+back into
 $`\mathbb{R}_{\ge 0}`. We name the two function dioids, define the
 embeddings, and prove that each real operator equals the expected
 $`\inf` / $`\sup` over the splits of $`t`.
@@ -51,7 +52,8 @@ abbrev Fmax := ℝ≥0 → RplusMax
 
 A constant added to a conditionally-complete supremum is absorbed into
 a bound: if $`c + f(i) \le y` for every `i`, then $`c + \bigsqcup_i f(i)
-\le y`. This is the workhorse for the super-convolution bounds below.
+\le y`. This is the workhorse for the (max,plus) convolution bounds
+below.
 
 *Theorem:* $`(\forall i,\ c + f(i) \le y) \implies c + \bigsqcup_i f(i) \le y`
 
@@ -97,10 +99,11 @@ instance splitNonempty (t : ℝ≥0) :
   ⟨⟨(t, 0), by simp⟩⟩
 ```
 
-# The infimal convolution
+# The (min,plus) convolution
 
-The _infimal convolution_ $`g \ast h` is the _(min,plus)_ convolution of
-the embedded curves, read back into $`\mathbb{R}_{\ge 0}`. Because the
+The _(min,plus) convolution_ $`g \ast h` (the _infimal convolution_) is
+the dioid product of the embedded curves, read back into
+$`\mathbb{R}_{\ge 0}`. Because the
 product on $`\overline{\mathbb{R}}_{\ge 0}` is numeric addition and the
 dioid supremum is the numeric infimum, the convolution at `t` is finite
 (the split $`t + 0` gives $`g(t) + h(0)`), so the projection is exact.
@@ -108,7 +111,7 @@ dioid supremum is the numeric infimum, the convolution at `t` is finite
 *Definition:* $`(g \ast h)(t) = \big((\mathrm{emb}\,g \ast \mathrm{emb}\,h)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
-noncomputable def infConvR (g h : ℝ≥0 → ℝ≥0) :
+noncomputable def minConv (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMin g) (embMin h) t
@@ -158,49 +161,50 @@ theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     push_cast; rfl
 ```
 
-Projecting back, the infimal convolution is the expected real infimum.
+Projecting back, the (min,plus) convolution is the expected real
+infimum.
 
 *Theorem:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))`
 
 ```lean
-theorem infConvR_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    infConvR g h t
+theorem minConv_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    minConv g h t
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (g p.1.1 + h p.1.2) := by
-  rw [infConvR, conv_embMin_toE,
+  rw [minConv, conv_embMin_toE,
     ← ENNReal.coe_iInf
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2),
     ENNReal.toNNReal_coe]
 ```
 
-The infimal convolution is _isotone_ in each curve: raising a curve
+The (min,plus) convolution is _isotone_ in each curve: raising a curve
 raises the convolution.
 
 *Theorem:* $`\beta \le \beta' \implies A \ast \beta \le A \ast \beta'`
 
 ```lean
-theorem infConvR_mono_right (A : ℝ≥0 → ℝ≥0)
+theorem minConv_mono_right (A : ℝ≥0 → ℝ≥0)
     {beta beta' : ℝ≥0 → ℝ≥0} (h : beta ≤ beta') :
-    infConvR A beta ≤ infConvR A beta' := by
+    minConv A beta ≤ minConv A beta' := by
   intro t
-  rw [infConvR_eq, infConvR_eq]
+  rw [minConv_eq, minConv_eq]
   refine ciInf_mono (OrderBot.bddBelow _) (fun p => ?_)
   gcongr
   exact h p.1.2
 ```
 
-# The super-convolution
+# The (max,plus) convolution
 
-The _super-convolution_ $`\beta \mathbin{\overline{\ast}} \beta` is the _(max,plus)_
-convolution of `beta` with itself, read back into
-$`\mathbb{R}_{\ge 0}`. It is the supremal mirror of the infimal
-convolution, over the same splits.
+The _(max,plus) convolution_ $`\beta \mathbin{\overline{\ast}} \beta`
+(the _super-convolution_) is the dioid product of `beta` with itself,
+read back into $`\mathbb{R}_{\ge 0}`. It is the supremal mirror of the
+(min,plus) convolution, over the same splits.
 
 *Definition:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = \big((\mathrm{emb}_{\max}\beta \ast \mathrm{emb}_{\max}\beta)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
-noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
+noncomputable def maxConv (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMax beta) (embMax beta) t
@@ -255,16 +259,17 @@ theorem conv_embMax_toW (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     rw [embMax_mul]; push_cast; rfl
 ```
 
-Projecting back, the super-convolution is the expected real supremum,
+Projecting back, the (max,plus) convolution is the expected real
+supremum,
 provided the values are bounded so the supremum is finite.
 
 *Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` when finite
 
 ```lean
-theorem superConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
+theorem maxConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
-    ((superConv beta t : ℝ≥0) : ℝ≥0∞)
+    ((maxConv beta t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   have hcoe : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
@@ -274,11 +279,12 @@ theorem superConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
-  rw [superConv, conv_embMax_toW, hcoe]
+  rw [maxConv, conv_embMax_toW, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
 ```
 
-The super-convolution obeys an _unconditional_ upper bound: if every
+The (max,plus) convolution obeys an _unconditional_ upper bound: if
+every
 split term is below `c`, so is the result. No finiteness is needed —
 when the dioid supremum is $`+\infty` the projection floors to `0`,
 which is below `c` anyway, and otherwise the bound is the genuine
@@ -287,11 +293,11 @@ supremum's. This is the bound the strict-service proofs use.
 *Theorem:* $`(\forall a + b = t,\ \beta(a) + \beta(b) \le c) \implies (\beta \mathbin{\overline{\ast}} \beta)(t) \le c`
 
 ```lean
-theorem superConv_le (beta : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
+theorem maxConv_le (beta : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
     (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       beta p.1.1 + beta p.1.2 ≤ c) :
-    superConv beta t ≤ c := by
-  rw [superConv, conv_embMax_toW]
+    maxConv beta t ≤ c := by
+  rw [maxConv, conv_embMax_toW]
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         (((beta p.1.1 + beta p.1.2 : ℝ≥0)
@@ -316,29 +322,29 @@ strict-service-curve proofs invoke, with `c` a departure value.
 *Theorem:* $`(\forall a + b = t,\ c + \beta(a) + \beta(b) \le y) \implies c + (\beta \mathbin{\overline{\ast}} \beta)(t) \le y`
 
 ```lean
-theorem add_superConv_le
+theorem add_maxConv_le
     (beta : ℝ≥0 → ℝ≥0) (t c y : ℝ≥0)
     (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       c + (beta p.1.1 + beta p.1.2) ≤ y) :
-    c + superConv beta t ≤ y := by
+    c + maxConv beta t ≤ y := by
   have hcy : c ≤ y :=
     le_trans le_self_add (h ⟨(t, 0), by simp⟩)
-  have hsup : superConv beta t ≤ y - c :=
-    superConv_le beta t (y - c)
+  have hsup : maxConv beta t ≤ y - c :=
+    maxConv_le beta t (y - c)
       (fun p => le_tsub_of_add_le_left (h p))
-  calc c + superConv beta t ≤ c + (y - c) := by gcongr
+  calc c + maxConv beta t ≤ c + (y - c) := by gcongr
     _ = y := add_tsub_cancel_of_le hcy
 ```
 
-# Super-convolution as a conjugated infimal convolution
+# The (max,plus) convolution as a conjugated (min,plus) convolution
 
 The _(max,plus)_ computation is not a separate world: it is the
-_(min,plus)_ infimal convolution _conjugated by negation_. The
+_(min,plus)_ convolution _conjugated by negation_. The
 order-reversing involution $`x \mapsto -x` is the isomorphism between
 the two dioids, turning $`\max` into $`\min` and a sum into the
 negated sum. Concretely, over the reals,
 $$`\sup_{a + b = t}\big(\beta(a) + \beta(b)\big) = -\inf_{a + b = t}\big((-\beta(a)) + (-\beta(b))\big),`
-the right-hand infimum being an infimal convolution of $`-\beta`. We
+the right-hand infimum being a (min,plus) convolution of $`-\beta`. We
 record this duality as one theorem; the standalone _(max,plus)_ dioid
 is kept as the computational engine, while this lemma is the honest
 statement of _why_ it is the right one. The supremal conjugation
@@ -364,33 +370,33 @@ theorem neg_ciInf_neg {ι : Type} [Nonempty ι]
 *Theorem:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = -\inf_{a + b = t} ((-\beta(a)) + (-\beta(b)))`, when finite
 
 ```lean
-theorem superConv_eq_neg_iInf
+theorem maxConv_eq_neg_iInf
     (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≠ ⊤) :
-    ((superConv beta t : ℝ≥0) : ℝ)
+    ((maxConv beta t : ℝ≥0) : ℝ)
       = - ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (- ((beta p.1.1 : ℝ) + (beta p.1.2 : ℝ))) := by
-  have hsc : ((superConv beta t : ℝ≥0) : ℝ≥0∞)
+  have hsc : ((maxConv beta t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) :=
-    superConv_coe beta t hfin
+    maxConv_coe beta t hfin
   have hbN : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         (beta p.1.1 + beta p.1.2 : ℝ≥0))) := by
-    refine ⟨superConv beta t, ?_⟩
+    refine ⟨maxConv beta t, ?_⟩
     rintro _ ⟨p, rfl⟩
     have hle :
         ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)
-        ≤ ((superConv beta t : ℝ≥0) : ℝ≥0∞) := by
+        ≤ ((maxConv beta t : ℝ≥0) : ℝ≥0∞) := by
       rw [hsc]
       exact le_iSup
         (fun q : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
           ((beta q.1.1 + beta q.1.2 : ℝ≥0)
             : ℝ≥0∞)) p
     exact_mod_cast hle
-  have hr : superConv beta t
+  have hr : maxConv beta t
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (beta p.1.1 + beta p.1.2) := by
     rw [← ENNReal.coe_iSup hbN] at hsc
@@ -404,7 +410,7 @@ theorem superConv_eq_neg_iInf
     exact_mod_cast hc ⟨p, rfl⟩
   simp only [← NNReal.coe_add]
   rw [← neg_ciInf_neg _ hbR,
-    show (((superConv beta t : ℝ≥0)) : ℝ)
+    show (((maxConv beta t : ℝ≥0)) : ℝ)
         = ((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (beta p.1.1 + beta p.1.2) : ℝ≥0) : ℝ)
         from congrArg _ hr,

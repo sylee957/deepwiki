@@ -123,18 +123,18 @@ theorem exists_isMinOn_splitMap_of_curves
 
 # Monotonicity of the convolution
 
-For the record, the infimal convolution `infConv` of two monotone
+For the record, the (min,plus) convolution `minConvE` of two monotone
 functions is monotone — a fact independent of attainment, used
 wherever the convolution is treated as a cumulative function.
 
 *Theorem:* $`g \ast h` is monotone when $`g, h` are
 
 ```lean
-theorem infConv_mono (g h : ℝ≥0 → ℝ≥0∞)
+theorem minConvE_mono (g h : ℝ≥0 → ℝ≥0∞)
     (hg : Monotone g) (hh : Monotone h) :
-    Monotone (infConv g h) := by
+    Monotone (minConvE g h) := by
   intro a b hab
-  unfold infConv
+  unfold minConvE
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, (hus : u + s = b)⟩
   by_cases hua : u ≤ a
