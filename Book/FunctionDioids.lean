@@ -417,6 +417,75 @@ theorem maxConv_eq_neg_iInf
     NNReal.coe_iSup]
 ```
 
+# The real convolutions, self-contained
+
+The operators above are _defined_ by computing in a dioid and projecting
+back. For a reader who wants the real convolutions on their own terms,
+here are the direct definitions on $`\mathbb{R}_{\ge 0}`: the _(min,plus)
+convolution_ as a numeric infimum and the _(max,plus) convolution_ as a
+numeric supremum, over the splits of $`t`. We then bridge each to its
+dioid-backed counterpart.
+
+*Definition:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))`, directly on $`\mathbb{R}_{\ge 0}`
+
+```lean
+noncomputable def minConvR (g h : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t =>
+    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      (g p.1.1 + h p.1.2)
+```
+
+The direct definition agrees with the dioid-backed `minConv`: this is
+exactly `minConv_eq`, read as an equality of functions.
+
+*Theorem:* $`g \ast h = \mathrm{minConv}(g, h)`
+
+```lean
+theorem minConvR_eq_minConv (g h : ℝ≥0 → ℝ≥0) :
+    minConvR g h = minConv g h := by
+  funext t
+  rw [minConvR, minConv_eq]
+```
+
+The _(max,plus)_ convolution is the dual numeric supremum. Over
+$`\mathbb{R}_{\ge 0}` an unbounded supremum is not finite, so this
+direct form floors to $`0` there; the dioid-backed `maxConv`, valued in
+$`\mathbb{R}_{\ge 0} \cup \{\pm\infty\}`, is the canonical operator, and
+the two agree wherever the supremum is finite.
+
+*Definition:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = \sup_{a + b = t} (\beta(a) + \beta(b))`, directly on $`\mathbb{R}_{\ge 0}`
+
+```lean
+noncomputable def maxConvR (beta : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      (beta p.1.1 + beta p.1.2)
+```
+
+When the supremum is finite, the direct definition agrees with the
+dioid-backed `maxConv`.
+
+*Theorem:* $`\beta \mathbin{\overline{\ast}} \beta = \mathrm{maxConv}\,\beta` at $`t`, when finite
+
+```lean
+theorem maxConvR_eq_maxConv (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
+    (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+        ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
+    maxConvR beta t = maxConv beta t := by
+  have hbdd : BddAbove (Set.range
+      (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
+        beta p.1.1 + beta p.1.2)) := by
+    by_contra hub
+    exact hfin (ENNReal.iSup_coe_eq_top.mpr hub)
+  have h : ((maxConvR beta t : ℝ≥0) : ℝ≥0∞)
+      = ((maxConv beta t : ℝ≥0) : ℝ≥0∞) := by
+    rw [maxConvR, ENNReal.coe_iSup hbdd,
+      maxConv_coe _ _ hfin]
+  exact_mod_cast h
+```
+
 ```lean
 end VerifiedWiki
 ```
