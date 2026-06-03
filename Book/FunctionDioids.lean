@@ -19,7 +19,7 @@ $`\mathcal{F}_{\max}` carries the _super-convolution_. Both convolutions
 are the dioid product `conv` of the generic chapter, read back into
 $`\mathbb{R}_{\ge 0}`. We name the two function dioids, define the
 embeddings, and prove that each real operator equals the expected
-$`\bigsqcap` / $`\bigsqcup` over the splits of $`t`.
+$`\inf` / $`\sup` over the splits of $`t`.
 
 ```lean
 namespace VerifiedWiki
@@ -88,7 +88,7 @@ def embMax (g : ℝ≥0 → ℝ≥0) : Fmax :=
 ```
 
 Every split of `t` into $`u + s` is a nonempty set — the split
-$`t + 0` — so the convolution's $`\bigsqcap` / $`\bigsqcup` is over a
+$`t + 0` — so the convolution's $`\inf` / $`\sup` is over a
 nonempty index.
 
 ```lean
@@ -130,7 +130,7 @@ The dioid convolution unfolds to the numeric infimum over the splits:
 the dioid supremum is the numeric infimum, and the product $`\otimes` is
 numeric $`+`.
 
-*Theorem:* $`\uparrow(g \ast h)(t) = \bigsqcap_{u + s = t} (g(u) + h(s))` in $`\mathbb{R}_{\ge 0}^{\infty}`
+*Theorem:* $`\uparrow(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))` in $`\mathbb{R}_{\ge 0}^{\infty}`
 
 ```lean
 theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
@@ -160,7 +160,7 @@ theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
 
 Projecting back, the infimal convolution is the expected real infimum.
 
-*Theorem:* $`(g \ast h)(t) = \bigsqcap_{u + s = t} (g(u) + h(s))`
+*Theorem:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))`
 
 ```lean
 theorem infConvR_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
