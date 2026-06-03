@@ -320,7 +320,20 @@ def isFPlusF (f : FminBar) : Prop :=
 
 def isFNondecrF (f : FminBar) : Prop :=
   isFNondecr (fun t => (f t).toB)
+```
 
+The classes are the subtypes of $`\mathcal{F}` cut out by these
+predicates.
+
+*Definition:* $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}` as subtypes
+
+```lean
+abbrev FPlus := {f : FminBar // isFPlusF f}
+
+abbrev FNondecr := {f : FminBar // isFNondecrF f}
+```
+
+```lean
 theorem coe_toB (a : FminBar) :
     (↑(fun t => (a t).toB) : FminBar) = a := by
   funext t; apply RbarMin.ext; rfl
@@ -406,12 +419,10 @@ The builder turns each into a complete dioid.
 *Definition:* the complete dioids $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
 
 ```lean
-noncomputable instance :
-    CompleteDioid {f : FminBar // isFPlusF f} :=
+noncomputable instance : CompleteDioid FPlus :=
   isSubCompleteDioid_isFPlusF.toCompleteDioid
 
-noncomputable instance :
-    CompleteDioid {f : FminBar // isFNondecrF f} :=
+noncomputable instance : CompleteDioid FNondecr :=
   isSubCompleteDioid_isFNondecrF.toCompleteDioid
 ```
 
