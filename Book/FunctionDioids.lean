@@ -48,6 +48,54 @@ abbrev Fmin := ℝ≥0 → RplusMin
 abbrev Fmax := ℝ≥0 → RplusMax
 ```
 
+# The (min,plus) convolution on the function class
+
+The _(min,plus) convolution_ $`f \ast g` of two functions of
+$`\mathcal{F}_{\min}` is their dioid product — the generic convolution
+`conv` of the previous chapter, specialized to the carrier `RplusMin`.
+Its value at $`t` is the dioid sum, over all splits $`u + s = t`, of
+the product $`f(u) \otimes g(s)`; since on
+$`\overline{\mathbb{R}}_{\ge 0}` the dioid sum is the numeric infimum
+and the product is numeric addition, this is the familiar infimal
+convolution
+$$`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s)).`
+No new definition is needed; `conv` already _is_ this convolution on
+$`\mathcal{F}_{\min}`.
+
+*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}` on $`\mathcal{F}_{\min}`
+
+```lean
+example (f g : Fmin) (t : ℝ≥0) :
+    conv f g t
+      = CompleteDioid.sSup
+          { x | ∃ u s, u + s = t ∧ x = f u ⊗ₒ g s } :=
+  conv_apply f g t
+```
+
+The decomposition $`u + s = t` is the single variable $`s \le t` with
+$`u = t - s`, giving the equivalent _single-variable_ form.
+
+*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(t - s) \otimes g(s) \mid s \le t \,\}`
+
+```lean
+example (f g : Fmin) (t : ℝ≥0) :
+    conv f g t
+      = CompleteDioid.sSup
+          { x | ∃ s : ℝ≥0,
+              s ≤ t ∧ x = f (t - s) ⊗ₒ g s } :=
+  conv_eq_sub f g t
+```
+
+The unit for the convolution is the impulse `convUnit`; it is a
+two-sided identity on $`\mathcal{F}_{\min}`.
+
+*Theorem:* $`\delta_0 \ast f = f`
+
+```lean
+example (f : Fmin) : conv convUnit f = f :=
+  convUnit_left f
+```
+
 # A supremum-absorption lemma
 
 A constant added to a conditionally-complete supremum is absorbed into
