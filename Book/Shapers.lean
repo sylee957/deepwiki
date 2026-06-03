@@ -581,6 +581,127 @@ theorem offersStrictService_ndClosure_iff
   · exact offersStrictService_ndClosure beta
 ```
 
+# The super-additive closure of a strict service curve
+
+The other closure of Proposition 5.6, point 2 is the _super-additive
+closure_ $`\bar\beta^{*}`. It is built from the _super-convolution_
+$`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`,
+iterated to a fixed point. The first step already upgrades for free:
+each split $`a + b = t - s` gives the interior point $`r = s + a`, where
+concatenation supplies the two-term bound, and the supremum over splits
+is absorbed.
+
+*Definition:* the super-convolution $`\beta \boxplus \beta`
+
+```lean
+noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun τ =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = τ},
+      beta p.1.1 + beta p.1.2
+```
+
+*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \boxplus \beta`
+
+```lean
+theorem offersStrictService_superConv
+    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hβ : OffersStrictService beta S) :
+    OffersStrictService (superConv beta) S := by
+  intro A D hp s t hst hbl
+  show D s + superConv beta (t - s) ≤ D t
+  unfold superConv
+  refine add_ciSup_le _ _ _ (fun q => ?_)
+  obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
+  have hsum : s + (a + b) = t := by
+    rw [hab, add_tsub_cancel_of_le hst]
+  have hsa : s + a ≤ t :=
+    le_trans (by gcongr; exact le_self_add) hsum.le
+  have hrs : (s + a) - s = a := by
+    rw [add_comm]; exact add_tsub_cancel_right a s
+  have htr : t - (s + a) = b := by
+    rw [← hsum,
+      show s + (a + b) = (s + a) + b by ring,
+      add_tsub_cancel_left]
+  have hcc :=
+    strict_concat beta hβ A D hp le_self_add hsa hbl
+  rw [hrs, htr] at hcc
+  exact hcc
+```
+
+The super-additive closure is the supremum of all finite iterates of
+the super-convolution; $`\beta^{(0)} = \beta` and $`\beta^{(n+1)} =
+\beta^{(n)} \boxplus \beta^{(n)}`.
+
+*Definition:* the iterates $`\beta^{(n)}` and the closure $`\bar\beta^{*} = \sup_n \beta^{(n)}`
+
+```lean
+noncomputable def superPow (beta : ℝ≥0 → ℝ≥0) :
+    ℕ → (ℝ≥0 → ℝ≥0)
+  | 0 => beta
+  | n + 1 => superConv (superPow beta n)
+
+noncomputable def saClosure (beta : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t => ⨆ n : ℕ, superPow beta n t
+```
+
+Offering `beta` is preserved by every iterate, by induction on the
+two-step upgrade; the supremum over `n` is then absorbed, so a server
+offering `beta` offers the whole super-additive closure.
+
+*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta^{(n)}` and $`S \text{ offers } \bar\beta^{*}`
+
+```lean
+theorem offers_superPow (beta : ℝ≥0 → ℝ≥0)
+    {S : Server} (hβ : OffersStrictService beta S)
+    (n : ℕ) :
+    OffersStrictService (superPow beta n) S := by
+  induction n with
+  | zero => exact hβ
+  | succ n ih => exact offersStrictService_superConv _ ih
+
+theorem offersStrictService_saClosure
+    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hβ : OffersStrictService beta S) :
+    OffersStrictService (saClosure beta) S := by
+  intro A D hp s t hst hbl
+  show D s + saClosure beta (t - s) ≤ D t
+  unfold saClosure
+  refine add_ciSup_le _ _ _ (fun n => ?_)
+  exact offers_superPow beta hβ n A D hp s t hst hbl
+```
+
+The reverse inclusion is monotony: `beta` is the $`n = 0` iterate, so
+it lies below $`\bar\beta^{*}`, and offering $`\bar\beta^{*}` offers
+`beta`. As with the non-decreasing closure, this needs the iterates
+bounded on each initial point, giving the equality
+$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\bar\beta^{*})`.
+
+*Theorem:* $`\beta \le \bar\beta^{*}`, and $`S \text{ offers } \beta \iff S \text{ offers } \bar\beta^{*}`
+
+```lean
+theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
+    (hbdd : ∀ t,
+      BddAbove (Set.range (fun n => superPow beta n t)))
+    (t : ℝ≥0) : beta t ≤ saClosure beta t := by
+  unfold saClosure
+  exact le_ciSup (hbdd t) 0
+
+theorem offersStrictService_saClosure_iff
+    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hbdd : ∀ t,
+      BddAbove (Set.range (fun n => superPow beta n t))) :
+    OffersStrictService (saClosure beta) S ↔
+      OffersStrictService beta S := by
+  constructor
+  · intro h A D hp s t hst hbl
+    exact le_trans
+      (by gcongr; exact le_saClosure beta hbdd (t - s))
+      (h A D hp s t hst hbl)
+  · exact offersStrictService_saClosure beta
+```
+
 # Arrival curves
 
 An output cumulative function allows `sigma` as an arrival curve when
