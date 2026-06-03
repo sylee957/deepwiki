@@ -299,6 +299,128 @@ theorem isF0Nondecr.conv
   ⟨hf.1.conv hg.1, hf.2.conv hg.2⟩
 ```
 
+# F⁺ and F↑ are complete dioids
+
+By the stability lemmas, $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
+are sub-complete-dioids of $`\mathcal{F}`: closed under the dioid sum
+$`\oplus` (the pointwise minimum), the product $`\otimes` (the
+convolution), the neutrals — the zero $`\varepsilon = +\infty` (the
+constant $`+\infty` function, which is non-negative and non-decreasing)
+and the unit $`e` (the impulse) — and arbitrary suprema. The generic
+sub-complete-dioid builder then equips each with a complete dioid
+structure.
+
+We read the predicates onto $`\mathcal{F}` through the `RbarMin`
+wrapper, and record two bridges: $`\mathcal{F}` is the lift of its own
+underlying values, and the dioid product unwraps to `minConvBar`.
+
+```lean
+def isFPlusF (f : FminBar) : Prop :=
+  isFPlus (fun t => (f t).toB)
+
+def isFNondecrF (f : FminBar) : Prop :=
+  isFNondecr (fun t => (f t).toB)
+
+theorem coe_toB (a : FminBar) :
+    (↑(fun t => (a t).toB) : FminBar) = a := by
+  funext t; apply RbarMin.ext; rfl
+
+theorem mul_toB (a b : FminBar) (t : ℝ≥0) :
+    ((a ⊗ₒ b) t).toB
+      = minConvBar (fun t => (a t).toB)
+          (fun t => (b t).toB) t := by
+  show ((conv a b t : RbarMin) : WithTop (WithBot ℝ)) = _
+  rw [← coe_toB a, ← coe_toB b]
+  exact conv_coe_toB _ _ t
+```
+
+The unit (impulse) and zero (constant $`+\infty`) are non-negative and
+non-decreasing; with the stability lemmas this gives the five closure
+conditions.
+
+*Definition:* $`\mathcal{F}^{+}` is a sub-complete-dioid
+
+```lean
+theorem isSubCompleteDioid_isFPlusF :
+    IsSubCompleteDioid isFPlusF where
+  add ha hb := fun t => le_min (ha t) (hb t)
+  mul {a b} ha hb := fun t => by
+    show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
+    rw [mul_toB]; exact (isFPlus.conv ha hb) t
+  eps := fun _ => le_top
+  one := fun t => by
+    show (0 : WithTop (WithBot ℝ))
+        ≤ ((convUnit t : RbarMin)).toB
+    rcases eq_or_ne t 0 with h | h
+    · rw [convUnit, if_pos h]; exact le_rfl
+    · rw [convUnit, if_neg h]; exact le_top
+  iSup F hF := fun t => le_iInf (fun i => hF i t)
+```
+
+*Definition:* $`\mathcal{F}^{\uparrow}` is a sub-complete-dioid
+
+```lean
+theorem isSubCompleteDioid_isFNondecrF :
+    IsSubCompleteDioid isFNondecrF where
+  add ha hb :=
+    ⟨fun t => le_min (ha.1 t) (hb.1 t),
+      fun x y hxy =>
+        min_le_min (ha.2 x y hxy) (hb.2 x y hxy)⟩
+  mul {a b} ha hb := by
+    have h : isFNondecr
+        (minConvBar (fun t => (a t).toB)
+          (fun t => (b t).toB)) := isFNondecr.conv ha hb
+    refine ⟨fun t => ?_, fun x y hxy => ?_⟩
+    · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
+      rw [mul_toB]; exact h.1 t
+    · show ((a ⊗ₒ b) x).toB ≤ ((a ⊗ₒ b) y).toB
+      rw [mul_toB, mul_toB]; exact h.2 x y hxy
+  eps := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
+  one := by
+    refine ⟨fun t => ?_, fun x y hxy => ?_⟩
+    · show (0 : WithTop (WithBot ℝ))
+          ≤ ((convUnit t : RbarMin)).toB
+      rcases eq_or_ne t 0 with h | h
+      · rw [convUnit, if_pos h]; exact le_rfl
+      · rw [convUnit, if_neg h]; exact le_top
+    · show ((convUnit x : RbarMin)).toB
+          ≤ ((convUnit y : RbarMin)).toB
+      rcases eq_or_ne x 0 with hx | hx
+      · rw [convUnit, if_pos hx]
+        show (0 : WithTop (WithBot ℝ)) ≤ _
+        rcases eq_or_ne y 0 with hy | hy
+        · rw [convUnit, if_pos hy]; exact le_rfl
+        · rw [convUnit, if_neg hy]; exact le_top
+      · have hy : y ≠ 0 := by
+          rintro rfl; exact hx (le_zero_iff.mp hxy)
+        rw [convUnit, if_neg hx, convUnit, if_neg hy]
+  iSup F hF :=
+    ⟨fun t => le_iInf (fun i => (hF i).1 t),
+      fun x y hxy =>
+        le_iInf (fun i =>
+          (iInf_le _ i).trans ((hF i).2 x y hxy))⟩
+```
+
+The builder turns each into a complete dioid.
+
+*Definition:* the complete dioids $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
+
+```lean
+noncomputable instance :
+    CompleteDioid {f : FminBar // isFPlusF f} :=
+  isSubCompleteDioid_isFPlusF.toCompleteDioid
+
+noncomputable instance :
+    CompleteDioid {f : FminBar // isFNondecrF f} :=
+  isSubCompleteDioid_isFNondecrF.toCompleteDioid
+```
+
+By contrast $`\mathcal{F}_0` and $`\mathcal{F}_0^{\uparrow}` are _not_
+dioids: the closure condition `eps` would require the dioid zero
+$`\varepsilon = +\infty` (the constant function) to be null at the
+origin, but $`+\infty \ne 0`. The sub-complete-dioid builder does not
+apply, faithfully reflecting that these sets lack the neutral.
+
 ```lean
 end VerifiedWiki
 ```
