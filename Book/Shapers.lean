@@ -18,6 +18,128 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
+# Convolution monotonicity
+
+The convolution is isotone in each argument: increasing a curve can
+only increase the convolution. This is the one fact about the
+convolution that the service- and arrival-curve results share.
+
+*Theorem:* $`\sigma \le_n \sigma' \implies D \ast \sigma \le_n D \ast \sigma'`
+
+```lean
+theorem conv_natLe_right (D : F) {sigma sigma' : F}
+    (h : sigma ≤ₙ sigma') :
+    conv D sigma ≤ₙ conv D sigma' := by
+  rw [natLe_iff]
+  intro t
+  rw [conv_apply]
+  refine CompleteDioid.sSup_le _ _ ?_
+  rintro x ⟨u, s, hus, rfl⟩
+  rw [conv_apply]
+  refine le_trans ?_
+    (CompleteDioid.le_sSup _ _
+      ⟨u, s, hus, rfl⟩)
+  exact mul_le_mul_left
+    ((natLe_iff sigma sigma').mp h s) (D u)
+```
+
+# Min-plus minimal service curves
+
+A _minimal service curve_ bounds a server's output from _below_: the
+server `S` offers the min-plus minimal service curve `beta` when every
+output is at least the convolution of its input with `beta`,
+$`D \ge A \ast \beta`. In the natural order this is $`A \ast \beta \le_n D`.
+
+*Definition:* `S` offers the min-plus service curve `beta`
+
+```lean
+def OffersService (S : Server) (beta : F) : Prop :=
+  ∀ p ∈ S, conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F)
+```
+
+The largest server offering `beta` is the set of all causal pairs whose
+output is at least the convolution — pairs with
+$`A \ge D \ge A \ast \beta`. Causality ($`A \ge D`, the first conjunct)
+and the service bound make up the relation.
+
+*Definition:* $`S_{\mathrm{mp}}(\beta) = \{\,(A, D) \mid A \ge D \ge A \ast \beta\,\}`
+
+```lean
+def serviceRel (beta : F) : Set (Curve × Curve) :=
+  { p | p.2 ≤ p.1 ∧
+      conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F) }
+
+theorem mem_serviceRel_iff
+    {beta : F} {p : Curve × Curve} :
+    p ∈ serviceRel beta ↔
+      p.2 ≤ p.1 ∧
+        conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F) :=
+  Iff.rfl
+```
+
+A server lies inside the largest `beta`-service server exactly when it
+offers `beta` — the causality conjunct is automatic, since a server is
+causal by construction.
+
+*Theorem:* $`S \subseteq S_{\mathrm{mp}}(\beta) \iff S` offers $`\beta`
+
+```lean
+theorem subset_serviceRel_iff
+    {S : Server} {beta : F} :
+    (∀ p ∈ S, p ∈ serviceRel beta) ↔
+      OffersService S beta := by
+  constructor
+  · intro h p hp
+    exact (h p hp).2
+  · intro h p hp
+    exact ⟨S.causal p.1 p.2 hp, h p hp⟩
+```
+
+Monotony: a larger service curve is a stronger guarantee, so it carves
+out a smaller server. With `beta' ≤ₙ beta` (numerically
+$`\beta \ge \beta'`), every output bounded below by $`A \ast \beta` is
+also bounded below by $`A \ast \beta'`, by isotony of the convolution.
+
+*Theorem:* $`\beta \ge \beta' \implies S_{\mathrm{mp}}(\beta) \subseteq S_{\mathrm{mp}}(\beta')`
+
+```lean
+theorem serviceRel_mono
+    {beta beta' : F} (h : beta' ≤ₙ beta) :
+    serviceRel beta ⊆ serviceRel beta' := by
+  intro p hp
+  exact ⟨hp.1,
+    NatLe.trans (conv_natLe_right (↑p.1 : F) h) hp.2⟩
+```
+
+Every server offers the _zero_ service curve $`\beta_0`, the constant
+$`0` (the dioid top): then $`A \ast \beta_0 = \beta_0 = 0`, and every
+output, being non-negative, exceeds it. This is the weakest possible
+guarantee.
+
+*Definition:* the zero service curve $`\beta_0(t) = 0`
+
+```lean
+noncomputable def serviceZero : F :=
+  fun _ => ⊤ₒ[RplusMin]
+
+theorem offersService_serviceZero (S : Server) :
+    OffersService S serviceZero := by
+  intro p _
+  rw [natLe_iff]
+  intro t
+  rw [conv_apply]
+  refine le_trans ?_
+    (CompleteDioid.le_sSup _ _
+      ⟨0, t, by rw [zero_add], rfl⟩)
+  show (⟨(p.2.toFun t : ℝ≥0∞)⟩ : RplusMin) ≼ₒ
+      (⟨(p.1.toFun 0 : ℝ≥0∞)⟩ : RplusMin) ⊗ₒ serviceZero t
+  have hA0 :
+      (⟨(p.1.toFun 0 : ℝ≥0∞)⟩ : RplusMin) = eₒ := by
+    rw [p.1.zero]; rfl
+  rw [hA0, Algebra.MulMonoid.one_otimes]
+  exact Algebra.le_top _
+```
+
 # Arrival curves
 
 An output cumulative function allows `sigma` as an arrival curve when
@@ -59,28 +181,6 @@ theorem allowsArrivalCurve_iff_kernel
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
     exact h u s t hus
-```
-
-Monotonicity is stated in the natural order: increasing the arrival
-curve can only increase the convolution.
-
-*Theorem:* $`\sigma \le_n \sigma' \implies D \ast \sigma \le_n D \ast \sigma'`
-
-```lean
-theorem conv_natLe_right (D : F) {sigma sigma' : F}
-    (h : sigma ≤ₙ sigma') :
-    conv D sigma ≤ₙ conv D sigma' := by
-  rw [natLe_iff]
-  intro t
-  rw [conv_apply]
-  refine CompleteDioid.sSup_le _ _ ?_
-  rintro x ⟨u, s, hus, rfl⟩
-  rw [conv_apply]
-  refine le_trans ?_
-    (CompleteDioid.le_sSup _ _
-      ⟨u, s, hus, rfl⟩)
-  exact mul_le_mul_left
-    ((natLe_iff sigma sigma').mp h s) (D u)
 ```
 
 # Shapers
@@ -483,104 +583,6 @@ theorem IsGreedyShaper.isShaper
   intro p hp
   rw [hS p hp]
   exact allowsArrivalCurve_conv_of_subadd (↑p.1) hsub
-```
-
-# Min-plus minimal service curves
-
-Dual to an arrival curve, a _minimal service curve_ bounds a server's
-output from _below_: the server `S` offers the min-plus minimal service
-curve `beta` when every output is at least the convolution of its input
-with `beta`, $`D \ge A \ast \beta`. In the natural order this is
-$`A \ast \beta \le_n D`.
-
-*Definition:* `S` offers the min-plus service curve `beta`
-
-```lean
-def OffersService (S : Server) (beta : F) : Prop :=
-  ∀ p ∈ S, conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F)
-```
-
-The largest server offering `beta` is the set of all causal pairs whose
-output is at least the convolution — pairs with
-$`A \ge D \ge A \ast \beta`. Causality ($`A \ge D`, the first conjunct)
-and the service bound make up the relation.
-
-*Definition:* $`S_{\mathrm{mp}}(\beta) = \{\,(A, D) \mid A \ge D \ge A \ast \beta\,\}`
-
-```lean
-def serviceRel (beta : F) : Set (Curve × Curve) :=
-  { p | p.2 ≤ p.1 ∧
-      conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F) }
-
-theorem mem_serviceRel_iff
-    {beta : F} {p : Curve × Curve} :
-    p ∈ serviceRel beta ↔
-      p.2 ≤ p.1 ∧
-        conv (↑p.1 : F) beta ≤ₙ (↑p.2 : F) :=
-  Iff.rfl
-```
-
-A server lies inside the largest `beta`-service server exactly when it
-offers `beta` — the causality conjunct is automatic, since a server is
-causal by construction.
-
-*Theorem:* $`S \subseteq S_{\mathrm{mp}}(\beta) \iff S` offers $`\beta`
-
-```lean
-theorem subset_serviceRel_iff
-    {S : Server} {beta : F} :
-    (∀ p ∈ S, p ∈ serviceRel beta) ↔
-      OffersService S beta := by
-  constructor
-  · intro h p hp
-    exact (h p hp).2
-  · intro h p hp
-    exact ⟨S.causal p.1 p.2 hp, h p hp⟩
-```
-
-Monotony: a larger service curve is a stronger guarantee, so it carves
-out a smaller server. With `beta' ≤ₙ beta` (numerically
-$`\beta \ge \beta'`), every output bounded below by $`A \ast \beta` is
-also bounded below by $`A \ast \beta'`, by isotony of the convolution.
-
-*Theorem:* $`\beta \ge \beta' \implies S_{\mathrm{mp}}(\beta) \subseteq S_{\mathrm{mp}}(\beta')`
-
-```lean
-theorem serviceRel_mono
-    {beta beta' : F} (h : beta' ≤ₙ beta) :
-    serviceRel beta ⊆ serviceRel beta' := by
-  intro p hp
-  exact ⟨hp.1,
-    NatLe.trans (conv_natLe_right (↑p.1 : F) h) hp.2⟩
-```
-
-Every server offers the _zero_ service curve $`\beta_0`, the constant
-$`0` (the dioid top): then $`A \ast \beta_0 = \beta_0 = 0`, and every
-output, being non-negative, exceeds it. This is the weakest possible
-guarantee.
-
-*Definition:* the zero service curve $`\beta_0(t) = 0`
-
-```lean
-noncomputable def serviceZero : F :=
-  fun _ => ⊤ₒ[RplusMin]
-
-theorem offersService_serviceZero (S : Server) :
-    OffersService S serviceZero := by
-  intro p _
-  rw [natLe_iff]
-  intro t
-  rw [conv_apply]
-  refine le_trans ?_
-    (CompleteDioid.le_sSup _ _
-      ⟨0, t, by rw [zero_add], rfl⟩)
-  show (⟨(p.2.toFun t : ℝ≥0∞)⟩ : RplusMin) ≼ₒ
-      (⟨(p.1.toFun 0 : ℝ≥0∞)⟩ : RplusMin) ⊗ₒ serviceZero t
-  have hA0 :
-      (⟨(p.1.toFun 0 : ℝ≥0∞)⟩ : RplusMin) = eₒ := by
-    rw [p.1.zero]; rfl
-  rw [hA0, Algebra.MulMonoid.one_otimes]
-  exact Algebra.le_top _
 ```
 
 ```lean
