@@ -493,12 +493,12 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     _ ≤ D t := b2
 ```
 
-Iterating concatenation across a split gives the _super-convolution_
-$`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`,
-a curve at least as large as `beta`. We first record that a constant is
-absorbed into a supremum bound.
-
-*Definition:* the super-convolution $`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`
+The closure of interest (Proposition 5.6, point 2) is the
+_non-decreasing closure_ $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
+— the least non-decreasing curve above `beta`. The point is that a
+strict service curve can always be replaced by its non-decreasing
+closure for free: $`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
+We first record that a constant is absorbed into a supremum bound.
 
 ```lean
 theorem add_ciSup_le {ι : Type} [Nonempty ι]
@@ -510,46 +510,75 @@ theorem add_ciSup_le {ι : Type} [Nonempty ι]
     ciSup_le (fun i => le_tsub_of_add_le_left (h i))
   calc c + ⨆ i, f i ≤ c + (y - c) := by gcongr
     _ = y := add_tsub_cancel_of_le hcy
+```
 
-noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
+*Definition:* the non-decreasing closure $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
+
+```lean
+noncomputable def ndClosure (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
-  fun τ =>
-    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = τ},
-      beta p.1.1 + beta p.1.2
+  fun t => ⨆ u : {u : ℝ≥0 // u ≤ t}, beta u
+
+instance subLeNonempty (t : ℝ≥0) :
+    Nonempty {u : ℝ≥0 // u ≤ t} :=
+  ⟨⟨0, by positivity⟩⟩
 ```
 
 The closure upgrade: a server offering the strict service curve `beta`
-automatically offers the larger super-convolution. Each split
-$`a + b = t - s` corresponds to the interior point $`r = s + a`, where
-concatenation supplies the two-term bound; the supremum over splits is
-absorbed by the previous lemma.
+automatically offers its non-decreasing closure. For each $`u \le t-s`,
+the sub-period $`(s, s+u]` is backlogged, so $`D(s) + \beta(u) \le
+D(s+u) \le D(t)`; taking the supremum over `u` absorbs into the bound.
 
-*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \boxplus \beta`
+*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta_{\uparrow}`
 
 ```lean
-theorem offersStrictService_superConv
+theorem offersStrictService_ndClosure
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
-    OffersStrictService (superConv beta) S := by
+    OffersStrictService (ndClosure beta) S := by
   intro A D hp s t hst hbl
-  show D s + superConv beta (t - s) ≤ D t
-  unfold superConv
+  show D s + ndClosure beta (t - s) ≤ D t
+  unfold ndClosure
   refine add_ciSup_le _ _ _ (fun q => ?_)
-  obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
-  have hsum : s + (a + b) = t := by
-    rw [hab, add_tsub_cancel_of_le hst]
-  have hsa : s + a ≤ t :=
-    le_trans (by gcongr; exact le_self_add) hsum.le
-  have hrs : (s + a) - s = a := by
-    rw [add_comm]; exact add_tsub_cancel_right a s
-  have htr : t - (s + a) = b := by
-    rw [← hsum,
-      show s + (a + b) = (s + a) + b by ring,
-      add_tsub_cancel_left]
-  have hcc :=
-    strict_concat beta hβ A D hp le_self_add hsa hbl
-  rw [hrs, htr] at hcc
-  exact hcc
+  obtain ⟨u, (hu : u ≤ t - s)⟩ := q
+  have hsu : s + u ≤ t := by
+    have : s + u ≤ s + (t - s) := by gcongr
+    rwa [add_tsub_cancel_of_le hst] at this
+  have hb := hβ A D hp s (s + u) le_self_add
+    (hbl.subset (Set.Ioc_subset_Ioc_right hsu))
+  rw [show (s + u) - s = u by
+      rw [add_comm]; exact add_tsub_cancel_right u s] at hb
+  exact le_trans hb (D.mono hsu)
+```
+
+The reverse inclusion is monotony: `beta` lies below its closure (it is
+the $`u = t` term), so offering $`\beta_{\uparrow}` offers `beta`. This
+needs `beta` bounded on each initial interval, so that the supremum is
+genuine. Together the two give the equality
+$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
+
+*Theorem:* $`\beta \le \beta_{\uparrow}`, and $`S \text{ offers } \beta \iff S \text{ offers } \beta_{\uparrow}`
+
+```lean
+theorem le_ndClosure (beta : ℝ≥0 → ℝ≥0)
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun u : {u // u ≤ t} => beta u.1)))
+    (t : ℝ≥0) : beta t ≤ ndClosure beta t := by
+  unfold ndClosure
+  exact le_ciSup (hbdd t) (⟨t, le_refl t⟩ : {u // u ≤ t})
+
+theorem offersStrictService_ndClosure_iff
+    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
+    OffersStrictService (ndClosure beta) S ↔
+      OffersStrictService beta S := by
+  constructor
+  · intro h A D hp s t hst hbl
+    exact le_trans
+      (by gcongr; exact le_ndClosure beta hbdd (t - s))
+      (h A D hp s t hst hbl)
+  · exact offersStrictService_ndClosure beta
 ```
 
 # Arrival curves
