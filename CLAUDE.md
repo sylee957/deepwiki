@@ -114,6 +114,13 @@ All declarations live in `namespace VerifiedWiki`.
   prose label only when the statement has no clean formula (a predicate like "is
   piecewise continuous"). The label states *what* is proved; surrounding prose explains
   *why*/*how*.
+- **One declaration per labelled block** — present theorems one at a time, interleaved
+  with their LaTeX, rather than bundling several in a single ` ```lean ` block under one
+  label. A two-sided law (`δ₀ ∗ f = f` *and* `f ∗ δ₀ = f`) becomes two labels/blocks, not
+  one `X and Y` label. Exceptions: a long `instance`/`def` whose fields are the theorems,
+  and a `section`/`variable`/`end` whose helper lemmas may each get their own block within
+  the section (Verso elaborates all blocks of a chapter in one continuous Lean context, so
+  `variable`/`open` persist across the prose between blocks).
 - Treat ALL linter warnings (line-length, markup-emph, multi-line-math) as errors;
   the build must be warning-free and `sorry`-free.
 

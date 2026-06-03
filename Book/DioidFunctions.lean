@@ -55,7 +55,13 @@ noncomputable def conv {T : Type*}
     (f g : ℝ≥0 → T) : ℝ≥0 → T := fun t =>
   CompleteDioid.sSup
     { x | ∃ u s : ℝ≥0, u + s = t ∧ x = f u ⊗ₒ g s }
+```
 
+The defining equation, as a rewrite lemma.
+
+*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
+
+```lean
 theorem conv_apply {T : Type*} [CompleteDioid T]
     (f g : ℝ≥0 → T) (t : ℝ≥0) :
     conv f g t
@@ -106,30 +112,53 @@ at each point, discharged inline in the instance. The convolution laws
 need real proofs, recorded here.
 
 The proofs rest on the dioid sum being the binary _join_ for
-$`\preceq`: each summand is below the sum, and the sum is the least
-common upper bound.
+$`\preceq`: each summand is below the sum, the sum is the least common
+upper bound, and the join is monotone. We record those four facts
+first.
 
 ```lean
 section Join
 variable {T : Type*} [Algebra.CompleteDioid T]
 open Algebra
+```
 
+Each summand is below the sum.
+
+*Theorem:* $`a \preceq a \oplus b`
+
+```lean
 theorem le_oplus_left (a b : T) : a ≼ₒ a ⊕ₒ b := by
   show a ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
   rw [← add_assoc, Dioid.oplus_idem]
+```
 
+*Theorem:* $`b \preceq a \oplus b`
+
+```lean
 theorem le_oplus_right (a b : T) : b ≼ₒ a ⊕ₒ b := by
   show b ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
   rw [add_comm a b,
     ← add_assoc, Dioid.oplus_idem]
+```
 
+The sum is the least common upper bound.
+
+*Theorem:* $`a \preceq c \land b \preceq c \implies a \oplus b \preceq c`
+
+```lean
 theorem oplus_le (a b c : T)
     (ha : a ≼ₒ c) (hb : b ≼ₒ c) : a ⊕ₒ b ≼ₒ c := by
   show (a ⊕ₒ b) ⊕ₒ c = c
   rw [add_assoc]
   show a ⊕ₒ (b ⊕ₒ c) = c
   rw [(by exact hb : b ⊕ₒ c = c)]; exact ha
+```
 
+The join is monotone in both arguments.
+
+*Theorem:* $`a \preceq c \land b \preceq d \implies a \oplus b \preceq c \oplus d`
+
+```lean
 theorem oplus_le_oplus {a b c d : T}
     (h1 : a ≼ₒ c) (h2 : b ≼ₒ d) : a ⊕ₒ b ≼ₒ c ⊕ₒ d :=
   oplus_le _ _ _ (le_trans h1 (le_oplus_left c d))
@@ -246,9 +275,9 @@ theorem conv_comm {T : Type*} [CompleteDioid T]
 
 The impulse is a two-sided _identity_ for the convolution
 (`one_otimes`, `otimes_one`). The left identity is proved directly from
-the definition; the right identity follows by commutativity.
+the definition.
 
-*Theorem:* $`\delta_0 \ast f = f` and $`f \ast \delta_0 = f`
+*Theorem:* $`\delta_0 \ast f = f`
 
 ```lean
 theorem convUnit_left {T : Type*} [CompleteDioid T]
@@ -270,7 +299,13 @@ theorem convUnit_left {T : Type*} [CompleteDioid T]
       ⟨0, t, by rw [zero_add], ?_⟩
     rw [convUnit, if_pos rfl]
     exact (MulMonoid.one_otimes (f t)).symm
+```
 
+The right identity follows by commutativity.
+
+*Theorem:* $`f \ast \delta_0 = f`
+
+```lean
 theorem convUnit_right {T : Type*} [CompleteDioid T]
     (f : ℝ≥0 → T) : conv f convUnit = f := by
   rw [conv_comm, convUnit_left]
@@ -334,9 +369,10 @@ theorem conv_distrib_right {T : Type*}
 The sum-neutral $`\varepsilon` is _absorbing_ for the convolution
 (`eps_otimes`, `otimes_eps`): convolving with the constant
 $`\varepsilon` collapses to $`\varepsilon`, since $`\varepsilon` is
-absorbing for $`\otimes` and least for $`\preceq`.
+absorbing for $`\otimes` and least for $`\preceq`. The left case is
+proved directly.
 
-*Theorem:* $`\varepsilon_{\mathcal{F}} \ast f = \varepsilon_{\mathcal{F}}` and $`f \ast \varepsilon_{\mathcal{F}} = \varepsilon_{\mathcal{F}}`
+*Theorem:* $`\varepsilon_{\mathcal{F}} \ast f = \varepsilon_{\mathcal{F}}`
 
 ```lean
 theorem convZero_left {T : Type*} [CompleteDioid T]
@@ -351,7 +387,13 @@ theorem convZero_left {T : Type*} [CompleteDioid T]
       Semiring.eps_otimes]
     exact bot_le
   · exact bot_le
+```
 
+The right case follows by commutativity.
+
+*Theorem:* $`f \ast \varepsilon_{\mathcal{F}} = \varepsilon_{\mathcal{F}}`
+
+```lean
 theorem convZero_right {T : Type*} [CompleteDioid T]
     (f : ℝ≥0 → T) :
     conv f convZero = convZero := by
@@ -505,9 +547,9 @@ theorem conv_add_const {T : Type*}
 The convolution is _isotone_ in each factor: this is just the isotony
 of the dioid product over $`\preceq`, read through `conv` — raising
 either factor raises the convolution. No special argument is needed; it
-is `mul_le_mul_left` / `mul_le_mul_right`.
+is `mul_le_mul_left` / `mul_le_mul_right`. Raising the right factor:
 
-*Theorem:* $`g \preceq g' \implies f \ast g \preceq f \ast g'` and $`f \preceq f' \implies f \ast g \preceq f' \ast g`
+*Theorem:* $`g \preceq g' \implies f \ast g \preceq f \ast g'`
 
 ```lean
 theorem conv_le_conv_right {T : Type*}
@@ -515,7 +557,13 @@ theorem conv_le_conv_right {T : Type*}
     {g g' : ℝ≥0 → T} (h : g ≼ₒ g') :
     conv f g ≼ₒ conv f g' :=
   mul_le_mul_left h f
+```
 
+Raising the left factor:
+
+*Theorem:* $`f \preceq f' \implies f \ast g \preceq f' \ast g`
+
+```lean
 theorem conv_le_conv_left {T : Type*}
     [CompleteDioid T] {f f' : ℝ≥0 → T}
     (h : f ≼ₒ f') (g : ℝ≥0 → T) :
