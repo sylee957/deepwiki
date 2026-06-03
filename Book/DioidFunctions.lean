@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Scalars
+import Book.ScalarDioids
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
