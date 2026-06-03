@@ -9,6 +9,7 @@ import Book.Convolution
 import Book.Subadditivity
 import Book.SubadditiveClosure
 import Book.LeftContinuity
+import Book.PiecewiseContinuous
 import Book.ConvolutionMinimum
 import Book.Shapers
 
@@ -47,6 +48,8 @@ declarations.
 {include 1 Book.SubadditiveClosure}
 
 {include 1 Book.LeftContinuity}
+
+{include 1 Book.PiecewiseContinuous}
 
 {include 1 Book.ConvolutionMinimum}
 

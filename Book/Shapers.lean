@@ -1,6 +1,7 @@
 import VersoManual
 import Book.LeftContinuity
 import Book.SubadditiveClosure
+import Book.PiecewiseContinuous
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -29,25 +30,41 @@ wrapper.
 
 *Definition:* cumulative functions as real curves, and their natural order
 
-A _cumulative function_ — the arrival or departure of a server — is an
-honest real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. We name the
-type `Curve`. Its values are non-negative reals, so it is automatically
-finite; the network-calculus regularity — monotone, left-continuous,
-zero at the origin — is carried as explicit hypotheses on the results
-that need it, rather than bundled into the carrier.
+A _cumulative function_ — the arrival or departure of a server — is a
+real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` carrying the
+network-calculus regularity: it is non-decreasing, null at the origin,
+piecewise continuous, and left-continuous. We bundle the underlying
+function with these four axioms into the type `Curve`, the
+formalization of the curve set $`\mathcal{C}`.
+
+Piecewise continuity — the discontinuities being locally finite — was
+developed in the chapter `Piecewise continuity`; we reuse
+`IsPiecewiseContinuous` here.
+
+*Definition:* the curve set $`\mathcal{C}` — non-decreasing, null, piecewise- and left-continuous
 
 ```lean
-abbrev Curve := ℝ≥0 → ℝ≥0
+structure Curve where
+  toFun : ℝ≥0 → ℝ≥0
+  mono : Monotone toFun
+  zero : toFun 0 = 0
+  pwc : IsPiecewiseContinuous toFun
+  leftCont :
+    IsLeftContinuous (fun s => (toFun s : ℝ≥0∞))
 ```
 
-A curve coerces into the function dioid `F` by wrapping each value into
-`RplusMin`; this is how the convolution-based statements reach it.
+A curve applies as its underlying function, and coerces into the
+function dioid `F` by wrapping each value into `RplusMin`; this is how
+the convolution-based statements reach it.
 
-*Definition:* a real curve as a dioid function
+*Definition:* a curve as a function and as a dioid function
 
 ```lean
+instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
+  coe := Curve.toFun
+
 instance : Coe Curve F where
-  coe := fun A t => ⟨(A t : ℝ≥0∞)⟩
+  coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
 
 def IsFiniteFunction (f : F) : Prop :=
   ∀ t, (f t : ℝ≥0∞) ≠ ⊤
@@ -55,7 +72,7 @@ def IsFiniteFunction (f : F) : Prop :=
 theorem curve_finite (A : Curve) :
     IsFiniteFunction (↑A : F) := by
   intro t
-  show ((A t : ℝ≥0∞)) ≠ ⊤
+  show ((A.toFun t : ℝ≥0∞)) ≠ ⊤
   simp
 ```
 
