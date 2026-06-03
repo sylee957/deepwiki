@@ -74,12 +74,8 @@ finite result of a dioid convolution projects back to
 $`\mathbb{R}_{\ge 0}`. For _(min,plus)_ the embedding is into
 $`\mathcal{F}_{\min}` (reading off the underlying
 $`\mathbb{R}_{\ge 0}^{\infty}`); for _(max,plus)_ it is into
-$`\mathcal{F}_{\max}`, projecting through `WithBot ℝ≥0∞`. We abbreviate
-that underlying _(max,plus)_ type.
-
-```lean
-abbrev Rp := WithBot ℝ≥0∞
-```
+$`\mathcal{F}_{\max}`, projecting through its underlying
+`WithBot ℝ≥0∞`.
 
 *Definition:* the _(min,plus)_ and _(max,plus)_ embeddings of a real curve
 
@@ -88,7 +84,7 @@ def embMin (g : ℝ≥0 → ℝ≥0) : Fmin :=
   fun t => ⟨(g t : ℝ≥0∞)⟩
 
 def embMax (g : ℝ≥0 → ℝ≥0) : Fmax :=
-  fun t => ⟨((g t : ℝ≥0∞) : Rp)⟩
+  fun t => ⟨((g t : ℝ≥0∞) : WithBot ℝ≥0∞)⟩
 ```
 
 Every split of `t` into $`u + s` is a nonempty set — the split
@@ -218,9 +214,10 @@ values.
 
 ```lean
 theorem embMax_mul (beta : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
-    ((embMax beta a ⊗ₒ embMax beta b : RplusMax) : Rp)
-      = (((beta a : ℝ≥0∞) : Rp))
-        + (((beta b : ℝ≥0∞) : Rp)) := rfl
+    ((embMax beta a ⊗ₒ embMax beta b : RplusMax)
+        : WithBot ℝ≥0∞)
+      = (((beta a : ℝ≥0∞) : WithBot ℝ≥0∞))
+        + (((beta b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
 ```
 
 The dioid convolution unfolds to the supremum of $`\beta(a) + \beta(b)`
@@ -231,29 +228,30 @@ over the splits.
 ```lean
 theorem conv_embMax_toW (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     ((conv (embMax beta) (embMax beta) t : RplusMax)
-        : Rp)
+        : WithBot ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (((beta p.1.1 + beta p.1.2 : ℝ≥0)
-            : ℝ≥0∞) : Rp) := by
+            : ℝ≥0∞) : WithBot ℝ≥0∞) := by
   rw [conv_apply]
   show (⨆ x : {x : RplusMax //
         ∃ u s, u + s = t ∧
           x = embMax beta u ⊗ₒ embMax beta s},
-        (x.val : Rp)) = _
+        (x.val : WithBot ℝ≥0∞)) = _
   apply le_antisymm
   · refine iSup_le (fun x => ?_)
     obtain ⟨u, s, hus, hx⟩ := x.2
     refine le_iSup_of_le ⟨(u, s), hus⟩ ?_
-    rw [show (x.val : Rp)
-          = ((embMax beta u ⊗ₒ embMax beta s : RplusMax)
-              : Rp) from congrArg _ hx, embMax_mul]
+    rw [show (x.val : WithBot ℝ≥0∞)
+          = ((embMax beta u ⊗ₒ embMax beta s
+                : RplusMax) : WithBot ℝ≥0∞)
+            from congrArg _ hx, embMax_mul]
     push_cast; rfl
   · refine iSup_le (fun p => ?_)
     refine le_iSup_of_le
       ⟨embMax beta p.1.1 ⊗ₒ embMax beta p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
     show _ ≤ ((embMax beta p.1.1 ⊗ₒ embMax beta p.1.2
-        : RplusMax) : Rp)
+        : RplusMax) : WithBot ℝ≥0∞)
     rw [embMax_mul]; push_cast; rfl
 ```
 
@@ -270,10 +268,11 @@ theorem superConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   have hcoe : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        (((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) : Rp))
+        (((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)
+          : WithBot ℝ≥0∞))
       = (((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
-          : ℝ≥0∞) : Rp) :=
+          : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
   rw [superConv, conv_embMax_toW, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
@@ -296,10 +295,10 @@ theorem superConv_le (beta : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         (((beta p.1.1 + beta p.1.2 : ℝ≥0)
-          : ℝ≥0∞) : Rp))
+          : ℝ≥0∞) : WithBot ℝ≥0∞))
       = (((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
-          : ℝ≥0∞) : Rp) :=
+          : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
   rw [hcoe, WithBot.unbotD_coe]
   have hb : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
