@@ -1,108 +1,21 @@
 import VersoManual
-import Book.LeftContinuity
+import Book.Servers
 import Book.SubadditiveClosure
-import Book.PiecewiseContinuous
-import Book.NaturalOrder
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Shapers" =>
-A shaper is a server whose output is constrained by an arrival
-curve. In the concrete min-plus setting, cumulative functions use the
-ordinary numeric order on their values, while the scalar dioid order is
-the reverse order. This chapter keeps that distinction explicit.
+A _shaper_ is a server whose output is constrained by an arrival
+curve. Building on the curves and servers of the previous chapter, this
+chapter defines arrival curves, the shaper servers that enforce them,
+the sub-additive closure's effect, and the greedy shaper.
 
 ```lean
 namespace NetworkCalculus
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
-```
-
-# Cumulative functions and servers
-
-The ambient function dioid is `F`. Cumulative functions — the arrivals
-and departures of a server — are honest real curves
-$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `F` when the
-convolution is needed. They are compared in the natural order `≤ₙ` of
-the previous chapter, the pointwise numeric order on `F`.
-
-*Definition:* cumulative functions as real curves, and their natural order
-
-A _cumulative function_ — the arrival or departure of a server — is a
-real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` carrying the
-network-calculus regularity: it is non-decreasing, null at the origin,
-piecewise continuous, and left-continuous. We bundle the underlying
-function with these four axioms into the type `Curve`, the
-formalization of the curve set $`\mathcal{C}`.
-
-Piecewise continuity — the discontinuities being locally finite — was
-developed in the chapter `Piecewise continuity`; we reuse
-`IsPiecewiseContinuous` here.
-
-*Definition:* the curve set $`\mathcal{C}` — non-decreasing, null, piecewise- and left-continuous
-
-```lean
-structure Curve where
-  toFun : ℝ≥0 → ℝ≥0
-  mono : Monotone toFun
-  zero : toFun 0 = 0
-  pwc : IsPiecewiseContinuous toFun
-  leftCont : IsLeftContinuousReal toFun
-```
-
-A curve applies as its underlying function, and coerces into the
-function dioid `F` by wrapping each value into `RplusMin`; this is how
-the convolution-based statements reach it.
-
-*Definition:* a curve as a function and as a dioid function
-
-```lean
-instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
-  coe := Curve.toFun
-
-instance : Coe Curve F where
-  coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
-```
-
-The natural order `≤ₙ` — the pointwise numeric order on `F`, reverse of
-the dioid order — was developed in the chapter `The natural order`; we
-reuse `≤ₙ`, `natLe_iff`, and `NatLe.trans` here.
-
-A server is a set of admissible input-output pairs of cumulative
-functions, _bundled with_ its causality proof: every pair has its
-departure below its arrival, `D ≤ A`. Causality is thus intrinsic to
-being a server. Left-totality is stated separately.
-
-*Definition:* a server is a causal input-output relation on curves
-
-A `Server` bundles the input-output relation with the _causality_
-proof: every admissible pair has its departure below its arrival,
-$`D \le_n A`. Causality is thus part of being a server, not a separate
-predicate — a `Server` is causal by construction.
-
-```lean
-structure Server where
-  rel : Set (Curve × Curve)
-  causal : ∀ p ∈ rel, (↑p.2 : F) ≤ₙ (↑p.1 : F)
-
-instance : Membership (Curve × Curve) Server where
-  mem S p := p ∈ S.rel
-
-def Serves (S : Server) (A D : Curve) : Prop :=
-  (A, D) ∈ S
-
-scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
-  Serves S A D
-
-theorem causal_of_mem (S : Server)
-    {p : Curve × Curve} (hp : p ∈ S) :
-    (↑p.2 : F) ≤ₙ (↑p.1 : F) :=
-  S.causal p hp
-
-def IsLeftTotalServer (S : Server) : Prop :=
-  ∀ A : Curve, ∃ D : Curve, A ⟶[S] D
 ```
 
 # Arrival curves
@@ -192,7 +105,7 @@ of all pairs whose output is below the input and whose output allows
 def shaperServer (sigma : F) : Server where
   rel := { p | (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
       AllowsArrivalCurve (↑p.2 : F) sigma }
-  causal p hp := hp.1
+  causal := fun _A _D hp => hp.1
 
 theorem mem_shaperServer_iff
     {sigma : F} {p : Curve × Curve} :
@@ -217,7 +130,7 @@ theorem subset_shaperServer_iff
   · intro h p hp
     exact (h p hp).2
   · intro h p hp
-    exact ⟨causal_of_mem S hp, h p hp⟩
+    exact ⟨S.causal p.1 p.2 hp, h p hp⟩
 ```
 
 # Shaping closure
@@ -471,10 +384,10 @@ curve is null at the origin, which is therefore required to form it.
 def greedyShaper
     (sigma : F) (h0 : sigma 0 = eₒ) : Server where
   rel := { p | (↑p.2 : F) = conv (↑p.1 : F) sigma }
-  causal p hp := by
-    show (↑p.2 : F) ≤ₙ (↑p.1 : F)
-    rw [(hp : (↑p.2 : F) = conv (↑p.1 : F) sigma)]
-    exact conv_natLe_self_of_zeroAtOrigin (↑p.1) sigma h0
+  causal A D hp := by
+    show (↑D : F) ≤ₙ (↑A : F)
+    rw [(hp : (↑D : F) = conv (↑A : F) sigma)]
+    exact conv_natLe_self_of_zeroAtOrigin (↑A) sigma h0
 
 theorem mem_greedyShaper_iff
     {sigma : F} {h0 : sigma 0 = eₒ} {p : Curve × Curve} :
