@@ -514,6 +514,27 @@ noncomputable instance funCompleteDioid
         (CompleteDioid.le_iSup (fun i => F i s) i) _
 ```
 
+Now that the convolution is the dioid product, its _isotony_ is just
+the isotony of the product over the dioid order $`\preceq`: raising
+either factor raises the convolution. No special argument is needed —
+it is `mul_le_mul_left` / `mul_le_mul_right` read through `conv`.
+
+*Theorem:* $`g \preceq g' \implies f \ast g \preceq f \ast g'` and $`f \preceq f' \implies f \ast g \preceq f' \ast g`
+
+```lean
+theorem conv_le_conv_right {T : Type*}
+    [CompleteDioid T] (f : ℝ≥0 → T)
+    {g g' : ℝ≥0 → T} (h : g ≼ₒ g') :
+    conv f g ≼ₒ conv f g' :=
+  mul_le_mul_left h f
+
+theorem conv_le_conv_left {T : Type*}
+    [CompleteDioid T] {f f' : ℝ≥0 → T}
+    (h : f ≼ₒ f') (g : ℝ≥0 → T) :
+    conv f g ≼ₒ conv f' g :=
+  mul_le_mul_right h g
+```
+
 ```lean
 end NetworkCalculus
 ```
