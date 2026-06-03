@@ -6,6 +6,7 @@ import Book.Order
 import Book.CompleteDioids
 import Book.Scalars
 import Book.Convolution
+import Book.NaturalOrder
 import Book.Subadditivity
 import Book.SubadditiveClosure
 import Book.LeftContinuity
@@ -42,6 +43,8 @@ declarations.
 {include 1 Book.Scalars}
 
 {include 1 Book.Convolution}
+
+{include 1 Book.NaturalOrder}
 
 {include 1 Book.Subadditivity}
 

@@ -365,6 +365,37 @@ theorem isLeftContinuous_iff_leftLim
     exact ⟨fun h _ => h, fun h => h ht⟩
 ```
 
+# Real-valued left-continuity
+
+The curves of network calculus are real-valued,
+$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, and `ℝ≥0` carries its own
+order topology. For them left-continuity is `Mathlib`'s
+`ContinuousWithinAt` on the left ray, stated directly on the real
+function — no detour through $`\overline{\mathbb{R}}_{\ge 0}^\infty`.
+
+*Definition:* $`g : \mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` is left-continuous
+
+```lean
+def IsLeftContinuousReal (g : ℝ≥0 → ℝ≥0) : Prop :=
+  ∀ t : ℝ≥0, ContinuousWithinAt g (Iio t) t
+```
+
+A continuous function — and in particular a constant — is
+left-continuous.
+
+*Theorem:* continuous and constant real functions are left-continuous
+
+```lean
+theorem isLeftContinuousReal_of_continuous
+    (g : ℝ≥0 → ℝ≥0) (hg : Continuous g) :
+    IsLeftContinuousReal g :=
+  fun _ => hg.continuousWithinAt
+
+theorem isLeftContinuousReal_const (c : ℝ≥0) :
+    IsLeftContinuousReal (fun _ => c) :=
+  fun _ => continuousWithinAt_const
+```
+
 # Cumulative functions
 
 A cumulative function `f : F` is left-continuous when its values are —

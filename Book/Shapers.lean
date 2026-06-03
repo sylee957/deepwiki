@@ -2,6 +2,7 @@ import VersoManual
 import Book.LeftContinuity
 import Book.SubadditiveClosure
 import Book.PiecewiseContinuous
+import Book.NaturalOrder
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -24,9 +25,8 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 The ambient function dioid is `F`. Cumulative functions — the arrivals
 and departures of a server — are honest real curves
 $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `F` when the
-convolution is needed. The relation `NatLe f g` is the ordinary
-pointwise numeric order, obtained by looking through the `RplusMin`
-wrapper.
+convolution is needed. They are compared in the natural order `≤ₙ` of
+the previous chapter, the pointwise numeric order on `F`.
 
 *Definition:* cumulative functions as real curves, and their natural order
 
@@ -49,8 +49,7 @@ structure Curve where
   mono : Monotone toFun
   zero : toFun 0 = 0
   pwc : IsPiecewiseContinuous toFun
-  leftCont :
-    IsLeftContinuous (fun s => (toFun s : ℝ≥0∞))
+  leftCont : IsLeftContinuousReal toFun
 ```
 
 A curve applies as its underlying function, and coerces into the
@@ -65,48 +64,11 @@ instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
 
 instance : Coe Curve F where
   coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
-
-def IsFiniteFunction (f : F) : Prop :=
-  ∀ t, (f t : ℝ≥0∞) ≠ ⊤
-
-theorem curve_finite (A : Curve) :
-    IsFiniteFunction (↑A : F) := by
-  intro t
-  show ((A.toFun t : ℝ≥0∞)) ≠ ⊤
-  simp
 ```
 
-The natural-order relation `NatLe f g` is the ordinary pointwise
-numeric order on `F`, obtained by looking through the `RplusMin`
-wrapper.
-
-```lean
-def NatLe (f g : F) : Prop :=
-  ∀ t, (f t : ℝ≥0∞) ≤ g t
-
-scoped notation:50 f:51 " ≤ₙ " g:51 => NatLe f g
-```
-
-The natural order is the opposite of the dioid order on each value.
-
-*Theorem:* $`f \le_n g \iff \forall t,\ g(t) \preceq f(t)`, with $`\le_n` reflexive and transitive
-
-```lean
-theorem natLe_iff (f g : F) :
-    f ≤ₙ g ↔ ∀ t, g t ≼ₒ f t := by
-  constructor
-  · intro h t
-    exact (RplusMin.le_iff (g t) (f t)).mpr (h t)
-  · intro h t
-    exact (RplusMin.le_iff (g t) (f t)).mp (h t)
-
-theorem NatLe.refl (f : F) : f ≤ₙ f :=
-  fun _ => le_rfl
-
-theorem NatLe.trans {f g h : F}
-    (hfg : f ≤ₙ g) (hgh : g ≤ₙ h) : f ≤ₙ h :=
-  fun t => le_trans (hfg t) (hgh t)
-```
+The natural order `≤ₙ` — the pointwise numeric order on `F`, reverse of
+the dioid order — was developed in the chapter `The natural order`; we
+reuse `≤ₙ`, `natLe_iff`, and `NatLe.trans` here.
 
 An output cumulative function allows `sigma` as an arrival curve when
 it lies below its convolution with `sigma`.
