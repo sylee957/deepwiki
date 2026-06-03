@@ -354,6 +354,204 @@ theorem start_const_of_backlogged (A D : Curve)
     ⟨hst, A_start_eq_D_start A D hc t'⟩
 ```
 
+# Strict service curves
+
+The _strict_ minimal service curve is the second main service notion.
+It demands the service bound on _every backlogged period_: over a
+backlogged $`(s, t]`, the departure grows by at least $`\beta(t - s)`.
+
+*Definition:* `S` offers a strict service curve `beta` — $`\forall (s,t] \text{ backlogged},\ D(t) - D(s) \ge \beta(t - s)`
+
+```lean
+def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
+    (S : Server) : Prop :=
+  ∀ A D : Curve, (A, D) ∈ S →
+    ∀ s t, s ≤ t →
+      IsBacklogged A D (Set.Ioc s t) →
+        D s + beta (t - s) ≤ D t
+```
+
+The largest server offering a strict service curve `beta` is the set
+of causal pairs meeting the bound on every backlogged period.
+
+*Definition:* $`S_{\mathrm{strict}}(\beta) = \{\,(A, D) \mid A \ge D,\ \forall (s,t] \text{ backlogged},\ D(t) - D(s) \ge \beta(t-s)\,\}`
+
+```lean
+def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
+    Set (Curve × Curve) :=
+  { p | p.2 ≤ p.1 ∧
+      ∀ s t, s ≤ t →
+        IsBacklogged p.1 p.2 (Set.Ioc s t) →
+          p.2 s + beta (t - s) ≤ p.2 t }
+
+theorem subset_strictServiceRel_iff
+    {S : Server} {beta : ℝ≥0 → ℝ≥0} :
+    (∀ p ∈ S, p ∈ strictServiceRel beta) ↔
+      OffersStrictService beta S := by
+  constructor
+  · intro h A D hp
+    exact (h (A, D) hp).2
+  · intro h p hp
+    exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
+```
+
+The zero curve $`\beta_0 = 0` is a strict service curve for every
+server (departures are non-decreasing).
+
+*Theorem:* every server offers the strict service curve $`\beta_0`
+
+```lean
+theorem offersStrictService_β₀ (S : Server) :
+    OffersStrictService β₀ S := by
+  intro A D _ s t hst _
+  show D s + β₀ (t - s) ≤ D t
+  show D s + (0 : ℝ≥0) ≤ D t
+  rw [add_zero]
+  exact D.mono hst
+```
+
+Monotony (the analogue of Proposition 5.6, point 3): a smaller strict
+service curve is offered by at least as many servers.
+
+*Theorem:* $`\beta' \le \beta \implies S_{\mathrm{strict}}(\beta) \subseteq S_{\mathrm{strict}}(\beta')`
+
+```lean
+theorem strictServiceRel_mono
+    {beta beta' : ℝ≥0 → ℝ≥0} (h : beta' ≤ beta) :
+    strictServiceRel beta ⊆ strictServiceRel beta' := by
+  intro p hp
+  refine ⟨hp.1, fun s t hst hbl => ?_⟩
+  refine le_trans ?_ (hp.2 s t hst hbl)
+  gcongr
+  exact h _
+```
+
+The join (Proposition 5.6, point 1): offering two strict service
+curves means offering their pointwise maximum.
+
+*Theorem:* $`S \text{ offers } \beta \text{ and } \beta' \implies S \text{ offers } \beta \vee \beta'`
+
+```lean
+theorem offersStrictService_sup
+    {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
+    (h : OffersStrictService beta S)
+    (h' : OffersStrictService beta' S) :
+    OffersStrictService
+      (fun u => max (beta u) (beta' u)) S := by
+  intro A D hp s t hst hbl
+  show D s + max (beta (t-s)) (beta' (t-s)) ≤ D t
+  rcases le_total (beta (t-s)) (beta' (t-s)) with hle | hle
+  · rw [max_eq_right hle]; exact h' A D hp s t hst hbl
+  · rw [max_eq_left hle]; exact h A D hp s t hst hbl
+```
+
+The output bound (equation 5.13): from $`(\mathrm{Start}\,t, t]` being
+a backlogged period and $`A(\mathrm{Start}\,t) = D(\mathrm{Start}\,t)`,
+the departure satisfies $`D(t) \ge A(\mathrm{Start}\,t) + \beta(t - \mathrm{Start}\,t)`.
+
+*Theorem:* $`D(t) \ge A(\mathrm{Start}\,t) + \beta(t - \mathrm{Start}\,t)`
+
+```lean
+theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
+    (A D : Curve) (hp : (A, D) ∈ strictServiceRel beta)
+    (t : ℝ≥0) :
+    A (Start A D t) + beta (t - Start A D t) ≤ D t := by
+  have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
+  have hbl := isBacklogged_Ioc_start A D hc t
+  have hbound := hp.2 (Start A D t) t (start_le A D t) hbl
+  rw [A_start_eq_D_start A D hc t]
+  exact hbound
+```
+
+# The strict service curve and its closure
+
+Strict service curves carry a closure phenomenon (Proposition 5.6,
+point 2): a strict service curve can be replaced by a _larger_ one, for
+free. The mechanism is _concatenation_ — a backlogged period splits at
+any interior point into two backlogged sub-periods, and the two service
+bounds compose.
+
+*Theorem:* concatenation — $`D(s) + \bigl(\beta(r - s) + \beta(t - r)\bigr) \le D(t)` over a backlogged $`(s,t]`
+
+```lean
+theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hβ : OffersStrictService beta S)
+    (A D : Curve) (hp : (A, D) ∈ S)
+    {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
+    (hbl : IsBacklogged A D (Set.Ioc s t)) :
+    D s + (beta (r - s) + beta (t - r)) ≤ D t := by
+  have b1 : D s + beta (r - s) ≤ D r :=
+    hβ A D hp s r hsr
+      (hbl.subset (Set.Ioc_subset_Ioc_right hrt))
+  have b2 : D r + beta (t - r) ≤ D t :=
+    hβ A D hp r t hrt
+      (hbl.subset (Set.Ioc_subset_Ioc_left hsr))
+  calc D s + (beta (r - s) + beta (t - r))
+      = (D s + beta (r - s)) + beta (t - r) := by
+        ring
+    _ ≤ D r + beta (t - r) := by gcongr
+    _ ≤ D t := b2
+```
+
+Iterating concatenation across a split gives the _super-convolution_
+$`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`,
+a curve at least as large as `beta`. We first record that a constant is
+absorbed into a supremum bound.
+
+*Definition:* the super-convolution $`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`
+
+```lean
+theorem add_ciSup_le {ι : Type} [Nonempty ι]
+    (c y : ℝ≥0) (f : ι → ℝ≥0)
+    (h : ∀ i, c + f i ≤ y) : c + ⨆ i, f i ≤ y := by
+  have hcy : c ≤ y :=
+    le_trans le_self_add (h (Classical.arbitrary ι))
+  have hsup : ⨆ i, f i ≤ y - c :=
+    ciSup_le (fun i => le_tsub_of_add_le_left (h i))
+  calc c + ⨆ i, f i ≤ c + (y - c) := by gcongr
+    _ = y := add_tsub_cancel_of_le hcy
+
+noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun τ =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = τ},
+      beta p.1.1 + beta p.1.2
+```
+
+The closure upgrade: a server offering the strict service curve `beta`
+automatically offers the larger super-convolution. Each split
+$`a + b = t - s` corresponds to the interior point $`r = s + a`, where
+concatenation supplies the two-term bound; the supremum over splits is
+absorbed by the previous lemma.
+
+*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \boxplus \beta`
+
+```lean
+theorem offersStrictService_superConv
+    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (hβ : OffersStrictService beta S) :
+    OffersStrictService (superConv beta) S := by
+  intro A D hp s t hst hbl
+  show D s + superConv beta (t - s) ≤ D t
+  unfold superConv
+  refine add_ciSup_le _ _ _ (fun q => ?_)
+  obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
+  have hsum : s + (a + b) = t := by
+    rw [hab, add_tsub_cancel_of_le hst]
+  have hsa : s + a ≤ t :=
+    le_trans (by gcongr; exact le_self_add) hsum.le
+  have hrs : (s + a) - s = a := by
+    rw [add_comm]; exact add_tsub_cancel_right a s
+  have htr : t - (s + a) = b := by
+    rw [← hsum,
+      show s + (a + b) = (s + a) + b by ring,
+      add_tsub_cancel_left]
+  have hcc :=
+    strict_concat beta hβ A D hp le_self_add hsa hbl
+  rw [hrs, htr] at hcc
+  exact hcc
+```
+
 # Arrival curves
 
 An output cumulative function allows `sigma` as an arrival curve when
