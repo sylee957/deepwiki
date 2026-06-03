@@ -117,6 +117,188 @@ theorem conv_coe
   exact conv_coe_toB f g t
 ```
 
+# Subsets of the function class
+
+Network calculus restricts to four subsets of real functions, defined
+by _natural-order_ conditions on the values (non-negativity, nullity at
+the origin, non-decrease). We state them as predicates on
+$`\mathbb{R}^{+} \to \mathbb{R} \cup \{\pm\infty\}`.
+
+$`\mathcal{F}^{+}` is the non-negative functions.
+
+*Definition:* $`f \in \mathcal{F}^{+} \iff \forall t,\ 0 \le f(t)`
+
+```lean
+def isFPlus (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+  ∀ t, 0 ≤ f t
+```
+
+$`\mathcal{F}_0` is the non-negative functions null at the origin.
+
+*Definition:* $`f \in \mathcal{F}_0 \iff f \in \mathcal{F}^{+} \land f(0) = 0`
+
+```lean
+def isF0 (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+  isFPlus f ∧ f 0 = 0
+```
+
+$`\mathcal{F}^{\uparrow}` is the non-negative, non-decreasing functions.
+
+*Definition:* $`f \in \mathcal{F}^{\uparrow} \iff f \in \mathcal{F}^{+} \land (\forall x \le y,\ f(x) \le f(y))`
+
+```lean
+def isFNondecr (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+  isFPlus f ∧ ∀ x y, x ≤ y → f x ≤ f y
+```
+
+$`\mathcal{F}_0^{\uparrow}` is their intersection: non-negative,
+non-decreasing, null at the origin.
+
+*Definition:* $`\mathcal{F}_0^{\uparrow} = \mathcal{F}_0 \cap \mathcal{F}^{\uparrow}`
+
+```lean
+def isF0Nondecr (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+  isF0 f ∧ isFNondecr f
+```
+
+## Stability under the minimum
+
+The pointwise minimum of two functions of each class stays in that
+class: the bound $`0 \le \cdot`, nullity at the origin, and
+monotonicity all pass through `min`.
+
+*Theorem:* $`\mathcal{F}^{+}` is stable under $`\min`
+
+```lean
+theorem isFPlus.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isFPlus f) (hg : isFPlus g) :
+    isFPlus (fun t => min (f t) (g t)) :=
+  fun t => le_min (hf t) (hg t)
+```
+
+*Theorem:* $`\mathcal{F}_0` is stable under $`\min`
+
+```lean
+theorem isF0.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isF0 f) (hg : isF0 g) :
+    isF0 (fun t => min (f t) (g t)) :=
+  ⟨hf.1.min hg.1, by
+    show Min.min (f 0) (g 0) = 0
+    rw [hf.2, hg.2, min_self]⟩
+```
+
+*Theorem:* $`\mathcal{F}^{\uparrow}` is stable under $`\min`
+
+```lean
+theorem isFNondecr.min
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isFNondecr f) (hg : isFNondecr g) :
+    isFNondecr (fun t => min (f t) (g t)) :=
+  ⟨hf.1.min hg.1, fun x y hxy =>
+    min_le_min (hf.2 x y hxy) (hg.2 x y hxy)⟩
+```
+
+*Theorem:* $`\mathcal{F}_0^{\uparrow}` is stable under $`\min`
+
+```lean
+theorem isF0Nondecr.min
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isF0Nondecr f) (hg : isF0Nondecr g) :
+    isF0Nondecr (fun t => min (f t) (g t)) :=
+  ⟨hf.1.min hg.1, hf.2.min hg.2⟩
+```
+
+## Stability under the convolution
+
+The same classes are stable under the (min,plus) convolution
+`minConvBar`. Non-negativity passes through because every split-sum
+$`f(u) + g(s)` is non-negative, hence so is their infimum. Nullity at
+the origin holds because the only split of $`0` is $`0 + 0`.
+Monotonicity is the inf-convolution of non-decreasing functions: a
+split of the larger argument is reduced to a split of the smaller one
+by lowering one coordinate.
+
+*Theorem:* $`\mathcal{F}^{+}` is stable under the convolution
+
+```lean
+theorem isFPlus.conv
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isFPlus f) (hg : isFPlus g) :
+    isFPlus (minConvBar f g) := by
+  intro t
+  rw [minConvBar]
+  refine le_iInf ?_
+  rintro ⟨⟨u, s⟩, _⟩
+  calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
+    _ ≤ f u + g s := by gcongr; exacts [hf u, hg s]
+```
+
+*Theorem:* $`\mathcal{F}_0` is stable under the convolution
+
+```lean
+theorem isF0.conv
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isF0 f) (hg : isF0 g) :
+    isF0 (minConvBar f g) :=
+  ⟨hf.1.conv hg.1, by
+    rw [minConvBar]
+    apply le_antisymm
+    · exact iInf_le_of_le ⟨(0, 0), by simp⟩ (by
+        simp [hf.2, hg.2])
+    · refine le_iInf ?_
+      rintro ⟨⟨u, s⟩, (hus : u + s = 0)⟩
+      obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
+      simp [hf.2, hg.2]⟩
+```
+
+The monotonicity of the convolution: pushing a split of $`y` down to a
+split of $`x \le y` by lowering the first coordinate to $`\min(u, x)`.
+
+*Theorem:* $`f, g` non-decreasing $`\implies f \ast g` non-decreasing
+
+```lean
+theorem minConvBar_mono
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : ∀ x y, x ≤ y → f x ≤ f y)
+    (hg : ∀ x y, x ≤ y → g x ≤ g y)
+    {x y : ℝ≥0} (hxy : x ≤ y) :
+    minConvBar f g x ≤ minConvBar f g y := by
+  rw [minConvBar, minConvBar]
+  refine le_iInf ?_
+  rintro ⟨⟨u, s⟩, (hus : u + s = y)⟩
+  refine iInf_le_of_le ⟨(min u x, x - min u x), by
+    rw [add_tsub_cancel_of_le (min_le_right u x)]⟩ ?_
+  have hs : x - min u x ≤ s := by
+    rw [tsub_le_iff_right]
+    rcases le_total u x with h | h
+    · rw [min_eq_left h, add_comm, hus]; exact hxy
+    · rw [min_eq_right h]; exact le_add_self
+  gcongr
+  · exact hf _ _ (min_le_left u x)
+  · exact hg _ _ hs
+```
+
+*Theorem:* $`\mathcal{F}^{\uparrow}` is stable under the convolution
+
+```lean
+theorem isFNondecr.conv
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isFNondecr f) (hg : isFNondecr g) :
+    isFNondecr (minConvBar f g) :=
+  ⟨hf.1.conv hg.1,
+    fun _ _ hxy => minConvBar_mono hf.2 hg.2 hxy⟩
+```
+
+*Theorem:* $`\mathcal{F}_0^{\uparrow}` is stable under the convolution
+
+```lean
+theorem isF0Nondecr.conv
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isF0Nondecr f) (hg : isF0Nondecr g) :
+    isF0Nondecr (minConvBar f g) :=
+  ⟨hf.1.conv hg.1, hf.2.conv hg.2⟩
+```
+
 ```lean
 end VerifiedWiki
 ```
