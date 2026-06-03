@@ -9,6 +9,7 @@ import Book.Convolution
 import Book.Subadditivity
 import Book.SubadditiveClosure
 import Book.LeftContinuity
+import Book.ConvolutionMinimum
 import Book.Shapers
 
 open Verso.Genre Manual
@@ -46,5 +47,7 @@ declarations.
 {include 1 Book.SubadditiveClosure}
 
 {include 1 Book.LeftContinuity}
+
+{include 1 Book.ConvolutionMinimum}
 
 {include 1 Book.Shapers}
