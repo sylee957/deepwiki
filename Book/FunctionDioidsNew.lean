@@ -60,13 +60,13 @@ abbrev FminBar := ℝ≥0 → RbarMin
 
 A real function lifts into $`\mathcal{F}` value by value, wrapping each
 extended-real value in the dioid newtype. The lift uses no arithmetic,
-only the wrapper.
+only the wrapper, so we take it as a coercion $`\uparrow`.
 
-*Definition:* the dioid function induced by a real function
+*Definition:* the coercion of a real function into $`\mathcal{F}`
 
 ```lean
-def toFbar (f : ℝ≥0 → WithTop (WithBot ℝ)) : FminBar :=
-  fun t => ⟨f t⟩
+instance : Coe (ℝ≥0 → WithTop (WithBot ℝ)) FminBar :=
+  ⟨fun f t => ⟨f t⟩⟩
 ```
 
 # The two convolutions coincide
@@ -77,21 +77,21 @@ $`\otimes` is the numeric sum (the top-absorbing addition), and the
 dioid supremum $`\bigsqcup` is the numeric infimum, both over the same
 splits.
 
-*Theorem:* $`(\mathrm{toFbar}\,f \ast \mathrm{toFbar}\,g)(t)` unwraps to $`(f \ast g)(t)`
+*Theorem:* $`(\uparrow\!f \ast \uparrow\!g)(t)` unwraps to $`(f \ast g)(t)`
 
 ```lean
-theorem conv_toFbar_toB
+theorem conv_coe_toB
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
-    ((conv (toFbar f) (toFbar g) t : RbarMin)
+    ((conv (↑f) (↑g) t : RbarMin)
         : WithTop (WithBot ℝ))
       = minConvBar f g t := by
   apply le_antisymm
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, hus⟩
     have hle := CompleteDioid.le_sSup _ _
-      (show (toFbar f u ⊗ₒ toFbar g s)
+      (show ((↑f : FminBar) u ⊗ₒ (↑g : FminBar) s)
           ∈ {x | ∃ u s, u + s = t
-              ∧ x = toFbar f u ⊗ₒ toFbar g s}
+              ∧ x = (↑f : FminBar) u ⊗ₒ (↑g : FminBar) s}
         from ⟨u, s, hus, rfl⟩)
     rw [← conv_apply] at hle
     exact (RbarMin.le_iff _ _).mp hle
@@ -105,16 +105,16 @@ theorem conv_toFbar_toB
 At the level of functions, the dioid convolution of lifted curves is the
 lift of the real (min,plus) convolution.
 
-*Theorem:* $`\mathrm{toFbar}\,f \ast \mathrm{toFbar}\,g = \mathrm{toFbar}\,(f \ast g)`
+*Theorem:* $`\uparrow\!f \ast \uparrow\!g = \uparrow\!(f \ast g)`
 
 ```lean
-theorem conv_toFbar
+theorem conv_coe
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
-    conv (toFbar f) (toFbar g)
-      = toFbar (minConvBar f g) := by
+    conv (↑f : FminBar) (↑g : FminBar)
+      = (↑(minConvBar f g) : FminBar) := by
   funext t
   apply RbarMin.ext
-  exact conv_toFbar_toB f g t
+  exact conv_coe_toB f g t
 ```
 
 ```lean
