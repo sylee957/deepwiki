@@ -151,7 +151,7 @@ weakest possible guarantee.
 theorem offersMinPlusService_β₀ (S : Server) :
     OffersMinPlusService β₀ S := by
   intro A D _ t
-  unfold infConvR
+  rw [infConvR_eq]
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
   show A 0 + β₀ t ≤ D t
@@ -533,8 +533,7 @@ theorem offersStrictService_superConv
     OffersStrictService (superConv beta) S := by
   intro A D hp s t hst hbl
   show D s + superConv beta (t - s) ≤ D t
-  unfold superConv
-  refine add_ciSup_le _ _ _ (fun q => ?_)
+  refine add_superConv_le _ _ _ _ (fun q => ?_)
   obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
   have hsum : s + (a + b) = t := by
     rw [hab, add_tsub_cancel_of_le hst]
