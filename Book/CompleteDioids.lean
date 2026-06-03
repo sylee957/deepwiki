@@ -15,7 +15,7 @@ semi-continuity as an equality, and develops the top element and the
 agreement of the algebraic and lattice orders.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 namespace Algebra
 
@@ -306,5 +306,5 @@ end Algebra
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

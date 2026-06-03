@@ -13,7 +13,7 @@ apart. This short chapter records the natural order `≤ₙ`, its
 agreement with the reversed dioid order, and that it is a preorder.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -58,5 +58,5 @@ theorem NatLe.trans {f g h : F}
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

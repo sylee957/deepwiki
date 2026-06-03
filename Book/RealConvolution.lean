@@ -18,7 +18,7 @@ the splits of $`t`. The non-decreasing and super-additive _closures_
 they generate close the chapter.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -624,5 +624,5 @@ theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

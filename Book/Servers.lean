@@ -14,7 +14,7 @@ causal input-output relation between curves. This chapter defines both;
 the arrival-curve and shaper constructions build on them.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -135,5 +135,5 @@ scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

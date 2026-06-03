@@ -25,7 +25,7 @@ equivalent. The definition holds for an _arbitrary_ `g`, including ones
 that take the value $`+\infty`; no monotonicity is assumed.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra Topology Filter Set
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -415,5 +415,5 @@ def IsLeftContinuousF (f : F) : Prop :=
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

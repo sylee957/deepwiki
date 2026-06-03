@@ -4,19 +4,20 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Introduction" =>
-This is a Lean 4 + Mathlib formalization of the algebra of _(min,plus)_
-dioids. The mathematical setting is the theory of _dioids_ (idempotent
-semirings) and the complete (min,plus) dioids of functions that underlie
-deterministic network calculus.
+This is a wiki of _autoformalized_ mathematics: AI-generated articles
+whose mathematical content is mechanized in Lean 4 with Mathlib. Each
+topic is developed as a self-contained article — prose interleaved with
+the actual Lean declarations — and every definition, lemma and
+proposition is stated and proved, in the `VerifiedWiki` namespace. The
+code blocks are elaborated as the document is built, so their bodies
+_are_ the real formalization and the rendered statements reflect exactly
+what was proved. The document is its own source of truth: it compiles as
+part of building it.
 
-Every definition, lemma and proposition is stated and proved in Lean, in
-the `NetworkCalculus` namespace. Each chapter pairs the narrative with the
-corresponding Lean declarations inline, as elaborated code blocks whose
-bodies _are_ the real formalization, so the rendered statements reflect
-exactly what was proved. This document is its own source of truth: it
-compiles as part of building it.
-
-The chapters cover:
+The first entry is the algebra of _(min,plus)_ dioids. The mathematical
+setting is the theory of _dioids_ (idempotent semirings) and the complete
+(min,plus) dioids of functions that underlie deterministic network
+calculus. Its chapters cover:
 
 - _Dioids and complete dioids_ — the definition of a dioid, the canonical
   order, the order relation and isotony, and the complete dioid with lower

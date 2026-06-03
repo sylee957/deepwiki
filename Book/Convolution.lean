@@ -16,7 +16,7 @@ setting. This chapter defines both and records the basic facts about
 the convolution.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra
 open scoped Classical NNReal Algebra.Bridge
@@ -536,5 +536,5 @@ theorem conv_le_conv_left {T : Type*}
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

@@ -15,7 +15,7 @@ and its basic closure facts; it feeds the curve class of the shaper
 chapters.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Topology Set
 open scoped Classical NNReal ENNReal
@@ -81,5 +81,5 @@ theorem isPiecewiseContinuous_id :
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

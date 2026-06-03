@@ -14,10 +14,10 @@ additive and multiplicative monoids and the commutative monoid, each
 paired with a _bridge_ exhibiting it as the corresponding `Mathlib`
 structure. The semi-ring and dioid layers continue in the next chapter.
 
-All declarations live in the `NetworkCalculus` namespace.
+All declarations live in the `VerifiedWiki` namespace.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 ```
 
 # Operation signatures
@@ -143,5 +143,5 @@ end Algebra
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

@@ -4,8 +4,11 @@ Guidance for working in this repository.
 
 ## What this project is
 
-A Lean 4 + Mathlib formalization of the **(min,plus) dioid algebra** (the algebra
-behind deterministic network calculus), authored as a **Verso "Manual"-genre book**.
+**The Autoformalization Wiki** — an AI-generated wiki of autoformalized
+mathematics, authored as a **Verso "Manual"-genre book** (lake package
+`verified-wiki`). The first entry is a Lean 4 + Mathlib formalization of the
+**(min,plus) dioid algebra** (the algebra behind deterministic network calculus);
+further topics are added as additional chapters/articles.
 
 The defining architectural decision: **the Verso book is the single source of
 truth.** The real `def`/`theorem`/`instance` declarations live *inside* the
@@ -44,7 +47,7 @@ order resolves. Order: `Introduction`, `Dioids`, `Scalars`, `Convolution`,
 `FunctionClasses`, `SubadditiveClosure`, `SubadditiveFunctions`,
 `SubadditiveClosureOp`, `ConvolutionMinimum`.
 
-All declarations live in `namespace NetworkCalculus`.
+All declarations live in `namespace VerifiedWiki`.
 
 ## The mathematics (orientation — get this right or proofs invert)
 

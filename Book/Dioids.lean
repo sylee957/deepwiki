@@ -15,7 +15,7 @@ structure. The order a dioid induces, and complete dioids, follow in
 the next chapters.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 namespace Algebra
 
@@ -116,5 +116,5 @@ end Algebra
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

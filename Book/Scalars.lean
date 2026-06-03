@@ -22,7 +22,7 @@ $`\oplus = \min`, $`\otimes = {+}`, with the canonical order the
 reverse of the usual numeric order.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open scoped Algebra.Bridge
 ```
@@ -117,7 +117,7 @@ product is numeric addition. We offer carrier-tagged `scoped` notation
 spelling that out — `∧[Rmin]` for the sum, `+[Rmin]` for the product —
 so it reads as min-plus without clashing with the bare `+` (which on a
 dioid already denotes the sum). It is dormant until
-`open scoped NetworkCalculus.Rmin`.
+`open scoped VerifiedWiki.Rmin`.
 
 ```lean
 namespace Rmin
@@ -502,5 +502,5 @@ pathologies, with lower semi-continuity inherited directly from
 $`\mathbb{R}_{\ge 0}^{\infty}`.
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

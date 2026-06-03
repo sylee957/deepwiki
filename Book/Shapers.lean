@@ -13,7 +13,7 @@ chapter defines arrival curves, the shaper servers that enforce them,
 the sub-additive closure's effect, and the greedy shaper.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra Set Topology Filter
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -1046,5 +1046,5 @@ theorem IsGreedyShaper.isShaper
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

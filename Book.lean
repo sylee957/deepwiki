@@ -21,16 +21,21 @@ open Verso.Genre.Manual.InlineLean
 
 set_option pp.rawOnError true
 
-#doc (Manual) "The (min,plus) Dioids in Lean" =>
+#doc (Manual) "The Autoformalization Wiki" =>
 
 %%%
 authors := ["S.Y. Lee"]
 %%%
 
-A mechanized development of the _(min,plus)_ algebra. Each definition, lemma and
-proposition of the (min,plus) algebra is stated and proved in Lean 4 with
-Mathlib; this document pairs the narrative with the corresponding Lean
-declarations.
+An AI-generated wiki of _autoformalized_ mathematics: each topic is developed as
+a self-contained article whose definitions, lemmas and propositions are stated
+and proved in Lean 4 with Mathlib, with the narrative and the machine-checked
+Lean declarations interleaved. The rendered statements are exactly what was
+proved — the document compiles as part of building it.
+
+The first entry is the algebra of _(min,plus)_ dioids, the theory behind
+deterministic network calculus; the chapters below develop it from the abstract
+dioid through to shapers and service curves.
 
 {include 1 Book.Introduction}
 

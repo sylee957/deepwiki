@@ -18,7 +18,7 @@ the dioid convolution `conv` of the previous chapters, viewed through
 the `RplusMin` newtype — so the two definitions coincide.
 
 ```lean
-namespace NetworkCalculus
+namespace VerifiedWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -154,5 +154,5 @@ theorem conv_self_toF_of_subadditive
 ```
 
 ```lean
-end NetworkCalculus
+end VerifiedWiki
 ```

@@ -1,4 +1,4 @@
-name = "leanproofs"
+name = "verified-wiki"
 defaultTargets = ["Book", "generate-book"]
 
 [[require]]
