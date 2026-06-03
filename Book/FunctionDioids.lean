@@ -17,10 +17,9 @@ $`\mathcal{F}_{\min}` carries the _infimal convolution_; and the dual
 _(max,plus)_ carrier (`RplusMax`), whose function dioid
 $`\mathcal{F}_{\max}` carries the _super-convolution_. Both convolutions
 are the dioid product `conv` of the generic chapter, read back into
-$`\mathbb{R}_{\ge 0}`. We name the two function dioids, note that the
-natural order on cumulative functions is the reversed dioid order,
-define the embeddings, and prove that each real operator equals the
-expected $`\bigsqcap` / $`\bigsqcup` over the splits of $`t`.
+$`\mathbb{R}_{\ge 0}`. We name the two function dioids, define the
+embeddings, and prove that each real operator equals the expected
+$`\bigsqcap` / $`\bigsqcup` over the splits of $`t`.
 
 ```lean
 namespace VerifiedWiki
@@ -47,20 +46,6 @@ abbrev Fmin := ℝ≥0 → RplusMin
 ```lean
 abbrev Fmax := ℝ≥0 → RplusMax
 ```
-
-# The natural order
-
-Cumulative functions are compared in the _natural_ order: the ordinary
-pointwise numeric order on their values. On $`\mathcal{F}_{\min}` this is
-the _reverse_ of the dioid order — for _(min,plus)_ the dioid order is
-the reversed numeric order. So no separate relation is needed: the
-numeric comparison $`\forall t,\ f(t) \le g(t)` is exactly the dioid
-inequality $`g \preceq f` — the built-in pointwise $`\le` on
-$`\mathcal{F}_{\min}`, with the operands reversed, value-by-value the
-`RplusMin.le_iff` of the scalar chapter. Statements that read naturally
-as "$`f` is numerically below $`g`" are therefore written $`g \preceq
-f`, and the convolution-based results stay in the dioid order
-throughout.
 
 # A supremum-absorption lemma
 
