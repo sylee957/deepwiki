@@ -1,6 +1,7 @@
 import VersoManual
 import Book.Servers
 import Book.SubadditiveClosure
+import Book.RealConvolution
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -41,45 +42,6 @@ theorem conv_natLe_right (D : F) {sigma sigma' : F}
       ⟨u, s, hus, rfl⟩)
   exact mul_le_mul_left
     ((natLe_iff sigma sigma').mp h s) (D u)
-```
-
-# The real infimal convolution
-
-The service curves below compare a server's output to a convolution of
-real curves: the _infimal convolution_
-$`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))` on
-$`\mathbb{R}_{\ge 0}`-valued functions. The infimum ranges over the
-splits of `t`, a nonempty set (the split $`t + 0`), so it is
-well-defined in $`\mathbb{R}_{\ge 0}`.
-
-*Definition:* the real infimal convolution $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`
-
-```lean
-instance splitNonempty (t : ℝ≥0) :
-    Nonempty {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} :=
-  ⟨⟨(t, 0), by simp⟩⟩
-
-noncomputable def infConvR (g h : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun t =>
-    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2
-```
-
-The infimal convolution is _isotone_ in each curve: raising a curve
-raises the convolution.
-
-*Theorem:* $`\beta \le \beta' \implies A \ast \beta \le A \ast \beta'`
-
-```lean
-theorem infConvR_mono_right (A : ℝ≥0 → ℝ≥0)
-    {beta beta' : ℝ≥0 → ℝ≥0} (h : beta ≤ beta') :
-    infConvR A beta ≤ infConvR A beta' := by
-  intro t
-  unfold infConvR
-  refine ciInf_mono (OrderBot.bddBelow _) (fun p => ?_)
-  gcongr
-  exact h p.1.2
 ```
 
 # Min-plus minimal service curves
@@ -495,34 +457,12 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
 
 The closure of interest (Proposition 5.6, point 2) is the
 _non-decreasing closure_ $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
-— the least non-decreasing curve above `beta`. The point is that a
-strict service curve can always be replaced by its non-decreasing
-closure for free: $`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
-We first record that a constant is absorbed into a supremum bound.
-
-```lean
-theorem add_ciSup_le {ι : Type} [Nonempty ι]
-    (c y : ℝ≥0) (f : ι → ℝ≥0)
-    (h : ∀ i, c + f i ≤ y) : c + ⨆ i, f i ≤ y := by
-  have hcy : c ≤ y :=
-    le_trans le_self_add (h (Classical.arbitrary ι))
-  have hsup : ⨆ i, f i ≤ y - c :=
-    ciSup_le (fun i => le_tsub_of_add_le_left (h i))
-  calc c + ⨆ i, f i ≤ c + (y - c) := by gcongr
-    _ = y := add_tsub_cancel_of_le hcy
-```
-
-*Definition:* the non-decreasing closure $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
-
-```lean
-noncomputable def ndClosure (beta : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun t => ⨆ u : {u : ℝ≥0 // u ≤ t}, beta u
-
-instance subLeNonempty (t : ℝ≥0) :
-    Nonempty {u : ℝ≥0 // u ≤ t} :=
-  ⟨⟨0, by positivity⟩⟩
-```
+of the chapter `Real convolutions of curves` — the least non-decreasing
+curve above `beta`. The point is that a strict service curve can always
+be replaced by its non-decreasing closure for free:
+$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
+The supremum-absorption lemma `add_ciSup_le` from that chapter is the
+workhorse.
 
 The closure upgrade: a server offering the strict service curve `beta`
 automatically offers its non-decreasing closure. For each $`u \le t-s`,
@@ -557,16 +497,9 @@ needs `beta` bounded on each initial interval, so that the supremum is
 genuine. Together the two give the equality
 $`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
 
-*Theorem:* $`\beta \le \beta_{\uparrow}`, and $`S \text{ offers } \beta \iff S \text{ offers } \beta_{\uparrow}`
+*Theorem:* $`S \text{ offers } \beta \iff S \text{ offers } \beta_{\uparrow}`
 
 ```lean
-theorem le_ndClosure (beta : ℝ≥0 → ℝ≥0)
-    (hbdd : ∀ t, BddAbove
-      (Set.range (fun u : {u // u ≤ t} => beta u.1)))
-    (t : ℝ≥0) : beta t ≤ ndClosure beta t := by
-  unfold ndClosure
-  exact le_ciSup (hbdd t) (⟨t, le_refl t⟩ : {u // u ≤ t})
-
 theorem offersStrictService_ndClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
@@ -584,22 +517,12 @@ theorem offersStrictService_ndClosure_iff
 # The super-additive closure of a strict service curve
 
 The other closure of Proposition 5.6, point 2 is the _super-additive
-closure_ $`\bar\beta^{*}`. It is built from the _super-convolution_
-$`(\beta \boxplus \beta)(\tau) = \sup_{a + b = \tau}\,(\beta(a) + \beta(b))`,
-iterated to a fixed point. The first step already upgrades for free:
-each split $`a + b = t - s` gives the interior point $`r = s + a`, where
+closure_ $`\bar\beta^{*}`, built from the _super-convolution_ `superConv`
+and its iterates `superPow` — both from the chapter `Real convolutions
+of curves`. The first step already upgrades for free: each split
+$`a + b = t - s` gives the interior point $`r = s + a`, where
 concatenation supplies the two-term bound, and the supremum over splits
 is absorbed.
-
-*Definition:* the super-convolution $`\beta \boxplus \beta`
-
-```lean
-noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun τ =>
-    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = τ},
-      beta p.1.1 + beta p.1.2
-```
 
 *Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \boxplus \beta`
 
@@ -627,23 +550,6 @@ theorem offersStrictService_superConv
     strict_concat beta hβ A D hp le_self_add hsa hbl
   rw [hrs, htr] at hcc
   exact hcc
-```
-
-The super-additive closure is the supremum of all finite iterates of
-the super-convolution; $`\beta^{(0)} = \beta` and $`\beta^{(n+1)} =
-\beta^{(n)} \boxplus \beta^{(n)}`.
-
-*Definition:* the iterates $`\beta^{(n)}` and the closure $`\bar\beta^{*} = \sup_n \beta^{(n)}`
-
-```lean
-noncomputable def superPow (beta : ℝ≥0 → ℝ≥0) :
-    ℕ → (ℝ≥0 → ℝ≥0)
-  | 0 => beta
-  | n + 1 => superConv (superPow beta n)
-
-noncomputable def saClosure (beta : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun t => ⨆ n : ℕ, superPow beta n t
 ```
 
 Offering `beta` is preserved by every iterate, by induction on the
@@ -678,16 +584,9 @@ it lies below $`\bar\beta^{*}`, and offering $`\bar\beta^{*}` offers
 bounded on each initial point, giving the equality
 $`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\bar\beta^{*})`.
 
-*Theorem:* $`\beta \le \bar\beta^{*}`, and $`S \text{ offers } \beta \iff S \text{ offers } \bar\beta^{*}`
+*Theorem:* $`S \text{ offers } \beta \iff S \text{ offers } \bar\beta^{*}`
 
 ```lean
-theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
-    (hbdd : ∀ t,
-      BddAbove (Set.range (fun n => superPow beta n t)))
-    (t : ℝ≥0) : beta t ≤ saClosure beta t := by
-  unfold saClosure
-  exact le_ciSup (hbdd t) 0
-
 theorem offersStrictService_saClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t,

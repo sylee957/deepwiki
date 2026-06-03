@@ -13,6 +13,7 @@ import Book.LeftContinuity
 import Book.PiecewiseContinuous
 import Book.ConvolutionMinimum
 import Book.Servers
+import Book.RealConvolution
 import Book.Shapers
 
 open Verso.Genre Manual
@@ -58,5 +59,7 @@ declarations.
 {include 1 Book.ConvolutionMinimum}
 
 {include 1 Book.Servers}
+
+{include 1 Book.RealConvolution}
 
 {include 1 Book.Shapers}
