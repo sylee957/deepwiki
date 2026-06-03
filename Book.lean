@@ -6,7 +6,7 @@ import Book.Order
 import Book.CompleteDioids
 import Book.ScalarDioids
 import Book.DioidFunctions
-import Book.NaturalOrder
+import Book.FunctionDioids
 import Book.Subadditivity
 import Book.SubadditiveClosure
 import Book.LeftContinuity
@@ -51,7 +51,7 @@ dioid through to shapers and service curves.
 
 {include 1 Book.DioidFunctions}
 
-{include 1 Book.NaturalOrder}
+{include 1 Book.FunctionDioids}
 
 {include 1 Book.Subadditivity}
 

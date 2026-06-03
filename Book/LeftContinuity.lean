@@ -1,5 +1,5 @@
 import VersoManual
-import Book.NaturalOrder
+import Book.FunctionDioids
 import Mathlib.Topology.Order.Monotone
 import Mathlib.Topology.Order.DenselyOrdered
 import Mathlib.Topology.Order.LeftRightNhds

@@ -1,7 +1,7 @@
 import VersoManual
 import Book.LeftContinuity
 import Book.PiecewiseContinuous
-import Book.NaturalOrder
+import Book.FunctionDioids
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean

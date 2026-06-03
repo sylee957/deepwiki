@@ -44,7 +44,7 @@ Commands:
 Chapters are `import`ed and `{include 1 ...}`d in dependency order from `Book.lean`;
 each chapter `import`s the previous one so the global ` ```lean `-block elaboration
 order resolves. Order: `Introduction`, `Signatures`, `Dioids`, `Order`,
-`CompleteDioids`, `ScalarDioids`, `DioidFunctions`, `NaturalOrder`,
+`CompleteDioids`, `ScalarDioids`, `DioidFunctions`, `FunctionDioids`,
 `Subadditivity`, `SubadditiveClosure`, `LeftContinuity`,
 `PiecewiseContinuous`, `ConvolutionMinimum`, `Servers`, `RealConvolution`,
 `Shapers` (the live list is `Book.lean`).
