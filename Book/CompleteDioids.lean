@@ -465,6 +465,48 @@ the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
     exact CompleteDioid.mul_iSup a.1 (fun i => (f i).1))
 ```
 
+The structure is _compatible_ with the ambient one: the operations on
+$`\{x \mid P(x)\}` are the operations of $`T` restricted, so the first
+projection $`\uparrow` is a complete-dioid homomorphism — it commutes
+with the sum, the product, both neutrals, and arbitrary suprema. Each
+equation holds by definition.
+
+*Theorem:* $`\uparrow` preserves the operations: $`\uparrow(a \oplus b) = \uparrow a \oplus \uparrow b`, $`\uparrow(a \otimes b) = \uparrow a \otimes \uparrow b`, $`\uparrow\varepsilon = \varepsilon`, $`\uparrow e = e`, $`\uparrow\bigsqcup_i f_i = \bigsqcup_i \uparrow f_i`
+
+```lean
+namespace IsSubCompleteDioid
+variable {T : Type u} [CompleteDioid T] {P : T → Prop}
+    (h : IsSubCompleteDioid P)
+
+theorem coe_add (a b : {x // P x}) :
+    letI := h.toCompleteDioid
+    ((a ⊕ₒ b : {x // P x}) : T) = (a : T) ⊕ₒ (b : T) :=
+  rfl
+
+theorem coe_mul (a b : {x // P x}) :
+    letI := h.toCompleteDioid
+    ((a ⊗ₒ b : {x // P x}) : T) = (a : T) ⊗ₒ (b : T) :=
+  rfl
+
+theorem coe_eps :
+    letI := h.toCompleteDioid
+    ((εₒ : {x // P x}) : T) = εₒ :=
+  rfl
+
+theorem coe_one :
+    letI := h.toCompleteDioid
+    ((eₒ : {x // P x}) : T) = eₒ :=
+  rfl
+
+theorem coe_iSup {ι : Type u} (f : ι → {x // P x}) :
+    letI := h.toCompleteDioid
+    ((CompleteDioid.iSup f : {x // P x}) : T)
+      = CompleteDioid.iSup (fun i => (f i : T)) :=
+  rfl
+
+end IsSubCompleteDioid
+```
+
 ```lean
 end Algebra
 ```
