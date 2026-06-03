@@ -107,6 +107,13 @@ All declarations live in `namespace VerifiedWiki`.
 - Lean identifiers naming real declarations stay as inline `` `code` ``; use math only
   for genuine notation. The document is **self-contained**: no references to external
   source texts/authors or external numbering (e.g. "Definition 2.5", "§2.1").
+- Each declaration is introduced by an italic label line — `*Definition:*`, `*Theorem:*`,
+  or `*Example:*` — immediately before its ` ```lean ` block. The label carries a **brief
+  inline-LaTeX visual of the statement** (`` $`...` ``), not a prose paraphrase, whenever
+  one reads naturally — e.g. `` *Theorem:* $`f \ast g = g \ast f` ``. Fall back to a short
+  prose label only when the statement has no clean formula (a predicate like "is
+  piecewise continuous"). The label states *what* is proved; surrounding prose explains
+  *why*/*how*.
 - Treat ALL linter warnings (line-length, markup-emph, multi-line-math) as errors;
   the build must be warning-free and `sorry`-free.
 

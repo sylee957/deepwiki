@@ -146,7 +146,7 @@ all triple decompositions $`u + v + z = t`, of the product
 $`f(u) \otimes g(v) \otimes h(z)`; the two associations of that product
 agree by associativity of $`\otimes`.
 
-*Definition:* the triple-decomposition value
+*Definition:* $`\mathrm{triple}(f, g, h)(t) = \bigsqcup_{u + v + z = t} (f(u) \otimes g(v)) \otimes h(z)`
 
 ```lean
 noncomputable def triple {T : Type*} [CompleteDioid T]
