@@ -28,7 +28,7 @@ convolution that the service- and arrival-curve results share.
 *Theorem:* $`\sigma \le_n \sigma' \implies D \ast \sigma \le_n D \ast \sigma'`
 
 ```lean
-theorem conv_natLe_right (D : F) {sigma sigma' : F}
+theorem conv_natLe_right (D : Fmin) {sigma sigma' : Fmin}
     (h : sigma ≤ₙ sigma') :
     conv D sigma ≤ₙ conv D sigma' := by
   rw [natLe_iff]
@@ -608,7 +608,7 @@ it lies below its convolution with `sigma`.
 *Definition:* `D` allows `sigma` as an arrival curve
 
 ```lean
-def AllowsArrivalCurve (D sigma : F) : Prop :=
+def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
   D ≤ₙ conv D sigma
 ```
 
@@ -619,7 +619,7 @@ split `u + s = t`. This form is the workhorse for the closure result.
 
 ```lean
 theorem allowsArrivalCurve_iff_kernel
-    (D sigma : F) :
+    (D sigma : Fmin) :
     AllowsArrivalCurve D sigma ↔
       ∀ u s t, u + s = t →
         D u ⊗ₒ sigma s ≼ₒ D t := by
@@ -651,8 +651,8 @@ curve.
 *Definition:* `S` is a `sigma`-shaper
 
 ```lean
-def IsShaper (S : Server) (sigma : F) : Prop :=
-  ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : F) sigma
+def IsShaper (S : Server) (sigma : Fmin) : Prop :=
+  ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : Fmin) sigma
 ```
 
 The largest causal server satisfying the shaper constraint is the set
@@ -668,18 +668,18 @@ hypothesis `htot` — exactly the obligation that the curve class be
 closed under the shaping construction.
 
 ```lean
-def shaperRel (sigma : F) : Set (Curve × Curve) :=
+def shaperRel (sigma : Fmin) : Set (Curve × Curve) :=
   { p | p.2 ≤ p.1 ∧
-      AllowsArrivalCurve (↑p.2 : F) sigma }
+      AllowsArrivalCurve (↑p.2 : Fmin) sigma }
 
 theorem mem_shaperRel_iff
-    {sigma : F} {p : Curve × Curve} :
+    {sigma : Fmin} {p : Curve × Curve} :
     p ∈ shaperRel sigma ↔
       p.2 ≤ p.1 ∧
-        AllowsArrivalCurve (↑p.2 : F) sigma :=
+        AllowsArrivalCurve (↑p.2 : Fmin) sigma :=
   Iff.rfl
 
-def shaperServer (sigma : F)
+def shaperServer (sigma : Fmin)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ shaperRel sigma) :
     Server where
@@ -696,7 +696,7 @@ causal by construction.
 
 ```lean
 theorem subset_shaperRel_iff
-    {S : Server} {sigma : F} :
+    {S : Server} {sigma : Fmin} :
     (∀ p ∈ S, p ∈ shaperRel sigma) ↔
       IsShaper S sigma := by
   constructor
@@ -720,7 +720,7 @@ the original curve is one of the powers.
 
 ```lean
 theorem subadditiveClosure_natLe_self
-    (sigma : F) : sigma⋆ ≤ₙ sigma := by
+    (sigma : Fmin) : sigma⋆ ≤ₙ sigma := by
   intro t
   have h :
       sigma t ≼ₒ subadditiveClosure sigma t := by
@@ -741,7 +741,7 @@ The kernel inequality propagates along every convolution power.
 *Theorem:* if $`D` allows $`\sigma`, then $`\forall\, u+s=t,\ D(u) \otimes \sigma^{\ast n}(s) \preceq D(t)`
 
 ```lean
-theorem kernel_convUnit (D : F) :
+theorem kernel_convUnit (D : Fmin) :
     ∀ u s t, u + s = t →
       D u ⊗ₒ convUnit s ≼ₒ D t := by
   intro u s t hus
@@ -756,7 +756,7 @@ theorem kernel_convUnit (D : F) :
     exact bot_le
 
 theorem kernel_convPow_of_allows
-    {D sigma : F}
+    {D sigma : Fmin}
     (hD : AllowsArrivalCurve D sigma) :
     ∀ n u s t, u + s = t →
       D u ⊗ₒ convPow sigma n s ≼ₒ D t := by
@@ -793,7 +793,7 @@ Therefore allowing `sigma` and allowing its closure are equivalent.
 
 ```lean
 theorem allowsArrivalCurve_closure_iff
-    (D sigma : F) :
+    (D sigma : Fmin) :
     AllowsArrivalCurve D sigma⋆ ↔
       AllowsArrivalCurve D sigma := by
   constructor
@@ -820,34 +820,34 @@ closure.
 
 ```lean
 theorem shaperRel_closure
-    (sigma : F) :
+    (sigma : Fmin) :
     shaperRel sigma = shaperRel sigma⋆ := by
   ext p
   constructor
   · intro hp
     exact ⟨hp.1,
       (allowsArrivalCurve_closure_iff
-        (↑p.2 : F) sigma).2 hp.2⟩
+        (↑p.2 : Fmin) sigma).2 hp.2⟩
   · intro hp
     exact ⟨hp.1,
       (allowsArrivalCurve_closure_iff
-        (↑p.2 : F) sigma).1 hp.2⟩
+        (↑p.2 : Fmin) sigma).1 hp.2⟩
 
 theorem IsShaper.closure
-    {S : Server} {sigma : F}
+    {S : Server} {sigma : Fmin}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ := by
   intro p hp
   exact (allowsArrivalCurve_closure_iff
-    (↑p.2 : F) sigma).2 (hS p hp)
+    (↑p.2 : Fmin) sigma).2 (hS p hp)
 
 example
-    (sigma : F) :
+    (sigma : Fmin) :
     shaperRel sigma = shaperRel sigma⋆ :=
   shaperRel_closure sigma
 
 example
-    {S : Server} {sigma : F}
+    {S : Server} {sigma : Fmin}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ :=
   IsShaper.closure hS
@@ -861,31 +861,31 @@ servers contain the smaller-curve largest server.
 ```lean
 theorem IsShaper.of_natLe
     {S : Server}
-    {sigma sigma' : F}
+    {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
     (h : sigma ≤ₙ sigma') :
     IsShaper S sigma' := by
   intro p hp
   exact NatLe.trans (hS p hp)
-    (conv_natLe_right (↑p.2 : F) h)
+    (conv_natLe_right (↑p.2 : Fmin) h)
 
 theorem shaperRel_mono
-    {sigma sigma' : F}
+    {sigma sigma' : Fmin}
     (h : sigma ≤ₙ sigma') :
     shaperRel sigma ⊆ shaperRel sigma' := by
   intro p hp
   exact ⟨hp.1,
     NatLe.trans hp.2
-      (conv_natLe_right (↑p.2 : F) h)⟩
+      (conv_natLe_right (↑p.2 : Fmin) h)⟩
 
 example
-    {sigma sigma' : F}
+    {sigma sigma' : Fmin}
     (h : sigma ≤ₙ sigma') :
     shaperRel sigma ⊆ shaperRel sigma' :=
   shaperRel_mono h
 
 example
-    {S : Server} {sigma sigma' : F}
+    {S : Server} {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
     (h : sigma ≤ₙ sigma') :
     IsShaper S sigma' :=
@@ -915,8 +915,8 @@ output exactly the convolution of the input with `sigma`.
 
 ```lean
 def IsGreedyShaper
-    (S : Server) (sigma : F) : Prop :=
-  ∀ p ∈ S, (↑p.2 : F) = conv (↑p.1 : F) sigma
+    (S : Server) (sigma : Fmin) : Prop :=
+  ∀ p ∈ S, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
 ```
 
 To form the greedy shaper _as a server_, its output must be causal —
@@ -930,7 +930,7 @@ not needed for causality; nullity at the origin is.
 
 ```lean
 theorem conv_natLe_self_of_zeroAtOrigin
-    (A sigma : F) (h0 : sigma 0 = eₒ) :
+    (A sigma : Fmin) (h0 : sigma 0 = eₒ) :
     conv A sigma ≤ₙ A := by
   rw [natLe_iff]
   intro t
@@ -951,24 +951,24 @@ additionally needs left-totality, supplied as a hypothesis `htot`.
 *Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \mid D = A \ast \sigma\,\}`
 
 ```lean
-def greedyRel (sigma : F) : Set (Curve × Curve) :=
-  { p | (↑p.2 : F) = conv (↑p.1 : F) sigma }
+def greedyRel (sigma : Fmin) : Set (Curve × Curve) :=
+  { p | (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma }
 
 theorem mem_greedyRel_iff
-    {sigma : F} {p : Curve × Curve} :
+    {sigma : Fmin} {p : Curve × Curve} :
     p ∈ greedyRel sigma ↔
-      (↑p.2 : F) = conv (↑p.1 : F) sigma :=
+      (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma :=
   Iff.rfl
 
 def greedyShaper
-    (sigma : F) (h0 : sigma 0 = eₒ)
+    (sigma : Fmin) (h0 : sigma 0 = eₒ)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ greedyRel sigma) :
     Server where
   rel := greedyRel sigma
   causal A D hp := by
     rw [Curve.le_iff_natLe]
-    rw [(hp : (↑D : F) = conv (↑A : F) sigma)]
+    rw [(hp : (↑D : Fmin) = conv (↑A : Fmin) sigma)]
     exact conv_natLe_self_of_zeroAtOrigin (↑A) sigma h0
   leftTotal A := htot A
 ```
@@ -980,7 +980,7 @@ convolution; the greedy relation is the largest such set.
 
 ```lean
 theorem isGreedyShaper_iff_subset
-    {S : Server} {sigma : F} :
+    {S : Server} {sigma : Fmin} :
     IsGreedyShaper S sigma ↔
       ∀ p ∈ S, p ∈ greedyRel sigma :=
   Iff.rfl
@@ -995,7 +995,7 @@ exactly the condition for $`\sigma` to allow $`\sigma`.
 *Definition:* dioid sub-additivity of a curve, $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)`
 
 ```lean
-def IsSubadditiveF (sigma : F) : Prop :=
+def IsSubadditiveF (sigma : Fmin) : Prop :=
   ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
 ```
 
@@ -1003,7 +1003,7 @@ def IsSubadditiveF (sigma : F) : Prop :=
 
 ```lean
 theorem allowsArrivalCurve_self_of_subadd
-    {sigma : F} (hsub : IsSubadditiveF sigma) :
+    {sigma : Fmin} (hsub : IsSubadditiveF sigma) :
     AllowsArrivalCurve sigma sigma := by
   rw [allowsArrivalCurve_iff_kernel]
   intro u s t hus
@@ -1020,7 +1020,8 @@ $`A \ast \sigma \le_n A \ast (\sigma \ast \sigma) = (A \ast \sigma) \ast \sigma`
 
 ```lean
 theorem allowsArrivalCurve_conv_of_subadd
-    (A : F) {sigma : F} (hsub : IsSubadditiveF sigma) :
+    (A : Fmin) {sigma : Fmin}
+    (hsub : IsSubadditiveF sigma) :
     AllowsArrivalCurve (conv A sigma) sigma := by
   have h : conv A sigma ≤ₙ conv A (conv sigma sigma) :=
     conv_natLe_right A
@@ -1036,7 +1037,7 @@ Hence every output of a greedy shaper over a sub-additive curve is a
 
 ```lean
 theorem IsGreedyShaper.isShaper
-    {S : Server} {sigma : F}
+    {S : Server} {sigma : Fmin}
     (hsub : IsSubadditiveF sigma)
     (hS : IsGreedyShaper S sigma) :
     IsShaper S sigma := by

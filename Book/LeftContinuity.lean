@@ -16,7 +16,7 @@ outputs well-defined. Left-continuity is a property of the _values_
 alone, not of the dioid structure, so we state it on functions
 $`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty` valued in
 the extended non-negative reals — where `Mathlib`'s order topology
-lives. A cumulative function `f : F` is covered through its values
+lives. A cumulative function `f : Fmin` is covered through its values
 $`s \mapsto (f\,s)`.
 
 We define left-continuity in the elementary $`\varepsilon`–$`\delta`
@@ -398,7 +398,7 @@ theorem isLeftContinuousReal_const (c : ℝ≥0) :
 
 # Cumulative functions
 
-A cumulative function `f : F` is left-continuous when its values are —
+A cumulative function `f : Fmin` is left-continuous when its values are —
 that is, when the numeric reading $`s \mapsto (f\,s)` into
 $`\overline{\mathbb{R}}_{\ge 0}^\infty` is. This specializes the
 definition to the dioid function space, requiring no separate
@@ -407,10 +407,10 @@ development.
 *Definition:* the numeric reading of a cumulative function
 
 ```lean
-noncomputable def numFn (f : F) : ℝ≥0 → ℝ≥0∞ :=
+noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
   fun s => (f s : ℝ≥0∞)
 
-def IsLeftContinuousF (f : F) : Prop :=
+def IsLeftContinuousF (f : Fmin) : Prop :=
   IsLeftContinuous (numFn f)
 ```
 

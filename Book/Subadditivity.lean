@@ -87,7 +87,7 @@ theorem infConv_self_of_subadditive
 The infimal convolution `infConv` on real functions is the _same
 operation_ as the dioid convolution `conv` of the previous chapters,
 viewed through the `RplusMin` newtype. Wrapping a real function by
-$`s \mapsto \langle g(s)\rangle` embeds it into `F`; we show that
+$`s \mapsto \langle g(s)\rangle` embeds it into `Fmin`; we show that
 wrapping, convolving with `conv`, and unwrapping reproduces `infConv`.
 This is the content that makes the two definitions interchangeable —
 the dioid sum $`\bigsqcup` on $`\overline{\mathbb{R}}_{\ge 0}` is
@@ -96,7 +96,7 @@ exactly the numeric infimum over the splits.
 *Definition:* the dioid function induced by a real function
 
 ```lean
-def toF (g : ℝ≥0 → ℝ≥0∞) : F := fun s => ⟨g s⟩
+def toF (g : ℝ≥0 → ℝ≥0∞) : Fmin := fun s => ⟨g s⟩
 ```
 
 Unwrapping the dioid convolution of induced functions gives the

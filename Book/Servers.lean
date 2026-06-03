@@ -22,11 +22,11 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 # Cumulative functions
 
-The ambient function dioid is `F`. Cumulative functions — the arrivals
+The ambient function dioid is `Fmin`. Cumulative functions — the arrivals
 and departures of a server — are honest real curves
-$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `F` when the
+$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `Fmin` when the
 convolution is needed. They are compared in the natural order `≤ₙ` of
-the previous chapter, the pointwise numeric order on `F`.
+the previous chapter, the pointwise numeric order on `Fmin`.
 
 A _cumulative function_ — the arrival or departure of a server — is a
 real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` carrying the
@@ -51,7 +51,7 @@ structure Curve where
 ```
 
 A curve applies as its underlying function, and coerces into the
-function dioid `F` by wrapping each value into `RplusMin`; this is how
+function dioid `Fmin` by wrapping each value into `RplusMin`; this is how
 the convolution-based statements reach it.
 
 *Definition:* a curve as a function and as a dioid function
@@ -60,7 +60,7 @@ the convolution-based statements reach it.
 instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
   coe := Curve.toFun
 
-instance : Coe Curve F where
+instance : Coe Curve Fmin where
   coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
 ```
 
@@ -87,7 +87,7 @@ convolution-based statements need the dioid form.
 
 ```lean
 theorem Curve.le_iff_natLe {D A : Curve} :
-    D ≤ A ↔ (↑D : F) ≤ₙ (↑A : F) := by
+    D ≤ A ↔ (↑D : Fmin) ≤ₙ (↑A : Fmin) := by
   constructor
   · intro h t
     show ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞)

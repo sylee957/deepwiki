@@ -13,7 +13,7 @@ network calculus and presents the real convolution operators it yields.
 Cumulative functions $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` embed into
 two complete dioids: the _(min,plus)_ carrier
 $`\overline{\mathbb{R}}_{\ge 0}` (`RplusMin`), whose function dioid
-$`\mathcal{F}` carries the _infimal convolution_; and the dual
+$`\mathcal{F}_{\min}` carries the _infimal convolution_; and the dual
 _(max,plus)_ carrier (`RplusMax`), whose function dioid
 $`\mathcal{F}_{\max}` carries the _super-convolution_. Both convolutions
 are the dioid product `conv` of the generic chapter, read back into
@@ -32,14 +32,14 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 # The two function dioids
 
 Each is the generic function dioid `funCompleteDioid` instantiated at a
-scalar carrier: $`\mathcal{F}` at `RplusMin`, $`\mathcal{F}_{\max}` at
-`RplusMax`. The min-plus space $`\mathcal{F}` is the carrier for the
-rest of the development.
+scalar carrier: $`\mathcal{F}_{\min}` at `RplusMin`, $`\mathcal{F}_{\max}`
+at `RplusMax`. The min-plus space $`\mathcal{F}_{\min}` is the carrier
+for the rest of the development.
 
-*Definition:* the _(min,plus)_ function space $`\mathcal{F} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}`
+*Definition:* the _(min,plus)_ function space $`\mathcal{F}_{\min} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}`
 
 ```lean
-abbrev F := ℝ≥0 → RplusMin
+abbrev Fmin := ℝ≥0 → RplusMin
 ```
 
 *Definition:* the _(max,plus)_ function space $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^{\pm}`
@@ -51,7 +51,7 @@ abbrev Fmax := ℝ≥0 → RplusMax
 # The natural order
 
 Cumulative functions are compared in the _natural_ order: the ordinary
-pointwise numeric order on their values. On $`\mathcal{F}` this is the
+pointwise numeric order on their values. On $`\mathcal{F}_{\min}` this is the
 _reverse_ of the dioid order — for _(min,plus)_ the dioid order is the
 reversed numeric order — so the two must be kept apart. The relation
 `NatLe f g` looks through the `RplusMin` wrapper to the underlying
@@ -60,7 +60,7 @@ $`\overline{\mathbb{R}}_{\ge 0}^\infty` values.
 *Definition:* $`f \le_n g \iff \forall t,\ f(t) \le g(t)` numerically
 
 ```lean
-def NatLe (f g : F) : Prop :=
+def NatLe (f g : Fmin) : Prop :=
   ∀ t, (f t : ℝ≥0∞) ≤ g t
 
 scoped notation:50 f:51 " ≤ₙ " g:51 => NatLe f g
@@ -72,7 +72,7 @@ $`f \le_n g` exactly when $`g(t) \preceq f(t)` for every `t`.
 *Theorem:* $`f \le_n g \iff \forall t,\ g(t) \preceq f(t)`
 
 ```lean
-theorem natLe_iff (f g : F) :
+theorem natLe_iff (f g : Fmin) :
     f ≤ₙ g ↔ ∀ t, g t ≼ₒ f t := by
   constructor
   · intro h t
@@ -86,14 +86,14 @@ It is reflexive and transitive — a preorder.
 *Theorem:* $`f \le_n f`
 
 ```lean
-theorem NatLe.refl (f : F) : f ≤ₙ f :=
+theorem NatLe.refl (f : Fmin) : f ≤ₙ f :=
   fun _ => le_rfl
 ```
 
 *Theorem:* $`f \le_n g \land g \le_n h \implies f \le_n h`
 
 ```lean
-theorem NatLe.trans {f g h : F}
+theorem NatLe.trans {f g h : Fmin}
     (hfg : f ≤ₙ g) (hgh : g ≤ₙ h) : f ≤ₙ h :=
   fun t => le_trans (hfg t) (hgh t)
 ```
@@ -123,7 +123,7 @@ theorem add_ciSup_le {ι : Type} [Nonempty ι]
 A real curve embeds into either dioid by wrapping each value; the
 finite result of a dioid convolution projects back to
 $`\mathbb{R}_{\ge 0}`. For _(min,plus)_ the embedding is into
-$`\mathcal{F}` (reading off the underlying
+$`\mathcal{F}_{\min}` (reading off the underlying
 $`\mathbb{R}_{\ge 0}^{\infty}`); for _(max,plus)_ it is into
 $`\mathcal{F}_{\max}`, projecting through `WithBot ℝ≥0∞`. We abbreviate
 that underlying _(max,plus)_ type.
@@ -135,7 +135,7 @@ abbrev Rp := WithBot ℝ≥0∞
 *Definition:* the _(min,plus)_ and _(max,plus)_ embeddings of a real curve
 
 ```lean
-def embMin (g : ℝ≥0 → ℝ≥0) : F :=
+def embMin (g : ℝ≥0 → ℝ≥0) : Fmin :=
   fun t => ⟨(g t : ℝ≥0∞)⟩
 
 def embMax (g : ℝ≥0 → ℝ≥0) : Fmax :=
