@@ -6,11 +6,19 @@ open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "The (min,plus) function dioid" =>
 The functions of network calculus map the non-negative reals into the
-complete _(min,plus)_ dioid $`\overline{\mathbb{R}}_{\min}` of extended
-reals $`\mathbb{R} \cup \{\pm\infty\}`. This is the function class
-$`\mathcal{F}` on which the _(min,plus) convolution_ lives, presented
-here directly as the dioid product of the generic chapter, specialized
-to that carrier.
+extended reals $`\mathbb{R} \cup \{\pm\infty\}`. We give the _(min,plus)
+convolution_ first as a direct numeric infimum on those real functions,
+then lift them into the complete _(min,plus)_ dioid
+$`\overline{\mathbb{R}}_{\min}` (`RbarMin`) and check that the dioid
+product `conv` of the generic chapter computes exactly the same thing.
+
+The carrier of the extended reals is `WithTop (WithBot ℝ)`, with the
+_top-absorbing_ addition $`(+\infty) + (-\infty) = +\infty` — the
+addition the (min,plus) dioid needs, so that $`+\infty` (the dioid zero)
+stays absorbing for the product. (This is _not_ `EReal`, whose addition
+takes $`(+\infty) + (-\infty) = -\infty`; the value-by-value lift would
+be unaffected, but the convolution's sum would then disagree with the
+dioid product.)
 
 ```lean
 namespace VerifiedWiki
@@ -19,12 +27,28 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
-# The function class
+# The (min,plus) convolution on real functions
 
-$`\mathcal{F}` is the set of functions from the non-negative reals
-$`\mathbb{R}^{+}` into the complete _(min,plus)_ dioid
-$`\overline{\mathbb{R}}_{\min} = \mathbb{R} \cup \{\pm\infty\}`
-(`RbarMin`). We work over the bare function type directly; it is a
+A real function is an $`f : \mathbb{R}^{+} \to \mathbb{R} \cup
+\{\pm\infty\}`. Their _(min,plus) convolution_ is the numeric infimum,
+over all splits $`u + s = t`, of $`f(u) + g(s)`.
+
+*Definition:* $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))`
+
+```lean
+noncomputable def minConvBar
+    (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
+    ℝ≥0 → WithTop (WithBot ℝ) :=
+  fun t =>
+    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      f p.1.1 + g p.1.2
+```
+
+# The function dioid
+
+$`\mathcal{F}` is the set of those functions read into the complete
+_(min,plus)_ dioid $`\overline{\mathbb{R}}_{\min}` (`RbarMin`), the
+newtype wrapping `WithTop (WithBot ℝ)` with the dioid algebra. It is a
 complete dioid in its own right by the generic `funCompleteDioid`
 instance.
 
@@ -34,40 +58,63 @@ instance.
 abbrev FminBar := ℝ≥0 → RbarMin
 ```
 
-# The (min,plus) convolution
+A real function lifts into $`\mathcal{F}` value by value, wrapping each
+extended-real value in the dioid newtype. The lift uses no arithmetic,
+only the wrapper.
 
-The _(min,plus) convolution_ $`f \ast g` of two functions of
-$`\mathcal{F}` is their dioid product — the generic convolution `conv`,
-specialized to the carrier `RbarMin`. Its value at $`t` is the dioid
-sum, over all splits $`u + s = t`, of the product $`f(u) \otimes g(s)`.
-On $`\overline{\mathbb{R}}_{\min}` the dioid sum is the numeric infimum
-and the product is numeric addition, so this is the infimal convolution
-$$`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s)).`
-No new definition is needed; `conv` already _is_ this convolution on
-$`\mathcal{F}`.
-
-*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
+*Definition:* the dioid function induced by a real function
 
 ```lean
-example (f g : FminBar) (t : ℝ≥0) :
-    conv f g t
-      = CompleteDioid.sSup
-          { x | ∃ u s, u + s = t ∧ x = f u ⊗ₒ g s } :=
-  conv_apply f g t
+def toFbar (f : ℝ≥0 → WithTop (WithBot ℝ)) : FminBar :=
+  fun t => ⟨f t⟩
 ```
 
-The decomposition $`u + s = t` is the single variable $`s \le t` with
-$`u = t - s`, giving the equivalent _single-variable_ form.
+# The two convolutions coincide
 
-*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(t - s) \otimes g(s) \mid s \le t \,\}`
+Unwrapping the dioid convolution of lifted functions gives the
+real (min,plus) convolution, value by value: the dioid product
+$`\otimes` is the numeric sum (the top-absorbing addition), and the
+dioid supremum $`\bigsqcup` is the numeric infimum, both over the same
+splits.
+
+*Theorem:* $`(\mathrm{toFbar}\,f \ast \mathrm{toFbar}\,g)(t)` unwraps to $`(f \ast g)(t)`
 
 ```lean
-example (f g : FminBar) (t : ℝ≥0) :
-    conv f g t
-      = CompleteDioid.sSup
-          { x | ∃ s : ℝ≥0,
-              s ≤ t ∧ x = f (t - s) ⊗ₒ g s } :=
-  conv_eq_sub f g t
+theorem conv_toFbar_toB
+    (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
+    ((conv (toFbar f) (toFbar g) t : RbarMin)
+        : WithTop (WithBot ℝ))
+      = minConvBar f g t := by
+  apply le_antisymm
+  · refine le_iInf ?_
+    rintro ⟨⟨u, s⟩, hus⟩
+    have hle := CompleteDioid.le_sSup _ _
+      (show (toFbar f u ⊗ₒ toFbar g s)
+          ∈ {x | ∃ u s, u + s = t
+              ∧ x = toFbar f u ⊗ₒ toFbar g s}
+        from ⟨u, s, hus, rfl⟩)
+    rw [← conv_apply] at hle
+    exact (RbarMin.le_iff _ _).mp hle
+  · rw [conv_apply, ← RbarMin.le_iff]
+    refine CompleteDioid.sSup_le _ _ ?_
+    rintro x ⟨u, s, hus, rfl⟩
+    rw [RbarMin.le_iff]
+    exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
+```
+
+At the level of functions, the dioid convolution of lifted curves is the
+lift of the real (min,plus) convolution.
+
+*Theorem:* $`\mathrm{toFbar}\,f \ast \mathrm{toFbar}\,g = \mathrm{toFbar}\,(f \ast g)`
+
+```lean
+theorem conv_toFbar
+    (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
+    conv (toFbar f) (toFbar g)
+      = toFbar (minConvBar f g) := by
+  funext t
+  apply RbarMin.ext
+  exact conv_toFbar_toB f g t
 ```
 
 ```lean
