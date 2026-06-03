@@ -64,6 +64,41 @@ instance : Coe Curve F where
   coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
 ```
 
+Curves are compared in the ordinary _pointwise_ order on their real
+values — directly on $`\mathbb{R}_{\ge 0}`, with no detour through the
+dioid. This is the `≤` used to state causality.
+
+*Definition:* the pointwise order on curves, $`D \le A \iff \forall t,\ D(t) \le A(t)`
+
+```lean
+instance : LE Curve where
+  le D A := ∀ t, D.toFun t ≤ A.toFun t
+
+theorem Curve.le_def {D A : Curve} :
+    D ≤ A ↔ ∀ t, D.toFun t ≤ A.toFun t :=
+  Iff.rfl
+```
+
+The pointwise curve order is exactly the natural order `≤ₙ` of the
+coerced dioid functions, so the two are interchangeable wherever the
+convolution-based statements need the dioid form.
+
+*Theorem:* $`D \le A \iff \uparrow\!D \le_n \uparrow\!A`
+
+```lean
+theorem Curve.le_iff_natLe {D A : Curve} :
+    D ≤ A ↔ (↑D : F) ≤ₙ (↑A : F) := by
+  constructor
+  · intro h t
+    show ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞)
+    exact_mod_cast h t
+  · intro h t
+    have ht := h t
+    show D.toFun t ≤ A.toFun t
+    have : ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞) := ht
+    exact_mod_cast this
+```
+
 # Servers
 
 A server is a set of admissible input-output pairs of cumulative
@@ -86,8 +121,7 @@ components are named: `A` is the arrival, `D` the departure.
 ```lean
 structure Server where
   rel : Set (Curve × Curve)
-  causal : ∀ A D : Curve,
-    (A, D) ∈ rel → (↑D : F) ≤ₙ (↑A : F)
+  causal : ∀ A D : Curve, (A, D) ∈ rel → D ≤ A
   leftTotal : ∀ A : Curve, ∃ D : Curve, (A, D) ∈ rel
 
 instance : Membership (Curve × Curve) Server where
