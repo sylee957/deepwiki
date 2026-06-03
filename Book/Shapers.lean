@@ -92,7 +92,7 @@ $`D \ge A \ast \beta`, stated directly on the real values.
 *Definition:* `S` offers the min-plus service curve `beta`
 
 ```lean
-def OffersMinPlusService (S : Server) (beta : ℝ≥0 → ℝ≥0) :
+def OffersMinPlusService (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
   ∀ A D : Curve, (A, D) ∈ S → infConvR A beta ≤ D
 ```
@@ -104,9 +104,9 @@ service guarantee. We take this as a predicate on a `Server`.
 *Definition:* `S` is a min-plus server for `beta`
 
 ```lean
-def IsMinPlusServer (S : Server) (beta : ℝ≥0 → ℝ≥0) :
+def IsMinPlusServer (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
-  OffersMinPlusService S beta
+  OffersMinPlusService beta S
 ```
 
 The _largest_ min-plus server for `beta` is the set of all causal pairs
@@ -147,7 +147,7 @@ server is causal by construction.
 theorem subset_minPlusServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
     (∀ p ∈ S, p ∈ minPlusServiceRel beta) ↔
-      OffersMinPlusService S beta := by
+      OffersMinPlusService beta S := by
   constructor
   · intro h A D hp
     exact (h (A, D) hp).2
@@ -165,8 +165,8 @@ valid lower bound.
 ```lean
 theorem OffersMinPlusService.mono
     {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
-    (h : beta ≤ beta') (hS : OffersMinPlusService S beta') :
-    OffersMinPlusService S beta :=
+    (h : beta ≤ beta') (hS : OffersMinPlusService beta' S) :
+    OffersMinPlusService beta S :=
   fun A D hp =>
     le_trans (infConvR_mono_right A h) (hS A D hp)
 ```
@@ -187,7 +187,7 @@ weakest possible guarantee.
 
 ```lean
 theorem offersMinPlusService_β₀ (S : Server) :
-    OffersMinPlusService S β₀ := by
+    OffersMinPlusService β₀ S := by
   intro A D _ t
   unfold infConvR
   refine le_trans
