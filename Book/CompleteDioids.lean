@@ -427,7 +427,8 @@ the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
 *Definition:* the inherited `CompleteDioid` on $`\{x \mid P(x)\}`
 
 ```lean
-noncomputable def IsSubCompleteDioid.toCompleteDioid
+@[reducible] noncomputable def
+    IsSubCompleteDioid.toCompleteDioid
     {T : Type u} [CompleteDioid T] {P : T → Prop}
     (h : IsSubCompleteDioid P) :
     CompleteDioid {x : T // P x} where
