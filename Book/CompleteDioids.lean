@@ -408,34 +408,65 @@ from the ambient dioid through the first projection, since the
 operations act on the underlying values. We package the five closure
 conditions and build the instance.
 
-*Definition:* the closure conditions making $`\{x \mid P(x)\}` a sub-complete-dioid
+As with `Mathlib`'s `Subsemiring`, we bundle the substructure as a
+_set_ together with its closure proofs: a `SubCompleteDioid` is a subset
+of the carrier closed under the sum, the product, the two neutrals, and
+arbitrary suprema.
+
+*Definition:* a sub-complete-dioid: a subset closed under the operations
 
 ```lean
-structure IsSubCompleteDioid {T : Type u}
-    [CompleteDioid T] (P : T → Prop) : Prop where
-  add : ∀ {a b}, P a → P b → P (a ⊕ₒ b)
-  mul : ∀ {a b}, P a → P b → P (a ⊗ₒ b)
-  eps : P εₒ
-  one : P eₒ
-  iSup : ∀ {ι : Type u} (f : ι → T),
-    (∀ i, P (f i)) → P (CompleteDioid.iSup f)
+structure SubCompleteDioid (T : Type u)
+    [CompleteDioid T] where
+  carrier : Set T
+  add_mem' : ∀ {a b}, a ∈ carrier → b ∈ carrier →
+    a ⊕ₒ b ∈ carrier
+  mul_mem' : ∀ {a b}, a ∈ carrier → b ∈ carrier →
+    a ⊗ₒ b ∈ carrier
+  eps_mem' : εₒ ∈ carrier
+  one_mem' : eₒ ∈ carrier
+  iSup_mem' : ∀ {ι : Type u} (f : ι → T),
+    (∀ i, f i ∈ carrier) →
+    CompleteDioid.iSup f ∈ carrier
 ```
 
-The operations on the subtype act on the underlying values, carrying
-the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
-
-*Definition:* the inherited `CompleteDioid` on $`\{x \mid P(x)\}`
+An element of `T` is a _member_ of a substructure when it lies in the
+carrier, and the substructure coerces to a _type_ — its members paired
+with their membership proof.
 
 ```lean
-@[reducible] noncomputable def
-    IsSubCompleteDioid.toCompleteDioid
-    {T : Type u} [CompleteDioid T] {P : T → Prop}
-    (h : IsSubCompleteDioid P) :
-    CompleteDioid {x : T // P x} where
-  add a b := ⟨a.1 ⊕ₒ b.1, h.add a.2 b.2⟩
-  zero := ⟨εₒ, h.eps⟩
-  mul a b := ⟨a.1 ⊗ₒ b.1, h.mul a.2 b.2⟩
-  one := ⟨eₒ, h.one⟩
+namespace SubCompleteDioid
+variable {T : Type u} [CompleteDioid T]
+
+instance : Membership T (SubCompleteDioid T) :=
+  ⟨fun S a => a ∈ S.carrier⟩
+
+instance : CoeSort (SubCompleteDioid T) (Type u) :=
+  ⟨fun S => {a : T // a ∈ S.carrier}⟩
+
+theorem add_mem (S : SubCompleteDioid T) {a b : T}
+    (ha : a ∈ S) (hb : b ∈ S) : a ⊕ₒ b ∈ S :=
+  S.add_mem' ha hb
+
+theorem mul_mem (S : SubCompleteDioid T) {a b : T}
+    (ha : a ∈ S) (hb : b ∈ S) : a ⊗ₒ b ∈ S :=
+  S.mul_mem' ha hb
+```
+
+The operations on the substructure act on the underlying values,
+carrying the closure proofs; the laws are those of $`T` lifted by
+`Subtype.ext`. This gives the inherited complete dioid, found by
+instance resolution on the coercion-to-type $`\uparrow S`.
+
+*Definition:* the inherited `CompleteDioid` on $`\uparrow S`
+
+```lean
+noncomputable instance (S : SubCompleteDioid T) :
+    CompleteDioid S where
+  add a b := ⟨a.1 ⊕ₒ b.1, S.add_mem' a.2 b.2⟩
+  zero := ⟨εₒ, S.eps_mem'⟩
+  mul a b := ⟨a.1 ⊗ₒ b.1, S.mul_mem' a.2 b.2⟩
+  one := ⟨eₒ, S.one_mem'⟩
   oplus_assoc _ _ _ := Subtype.ext (add_assoc _ _ _)
   eps_oplus _ := Subtype.ext (zero_add _)
   oplus_eps _ := Subtype.ext (add_zero _)
@@ -450,7 +481,7 @@ the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
   otimes_comm _ _ := Subtype.ext (mul_comm _ _)
   oplus_idem _ := Subtype.ext (Dioid.oplus_idem _)
   iSup f := ⟨CompleteDioid.iSup (fun i => (f i).1),
-    h.iSup _ (fun i => (f i).2)⟩
+    S.iSup_mem' _ (fun i => (f i).2)⟩
   le_iSup f i := Subtype.ext (by
     show (f i).1 ⊕ₒ CompleteDioid.iSup _
         = CompleteDioid.iSup _
@@ -465,46 +496,38 @@ the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
     exact CompleteDioid.mul_iSup a.1 (fun i => (f i).1))
 ```
 
-The structure is _compatible_ with the ambient one: the operations on
-$`\{x \mid P(x)\}` are the operations of $`T` restricted, so the first
-projection $`\uparrow` is a complete-dioid homomorphism — it commutes
-with the sum, the product, both neutrals, and arbitrary suprema. Each
-equation holds by definition.
+The substructure is _compatible_ with the ambient one: its operations
+are those of $`T` restricted, so the inclusion $`\uparrow S \to T` is a
+complete-dioid homomorphism — it commutes with the sum, the product,
+both neutrals, and arbitrary suprema. Each equation holds by
+definition.
 
-*Theorem:* $`\uparrow` preserves the operations: $`\uparrow(a \oplus b) = \uparrow a \oplus \uparrow b`, $`\uparrow(a \otimes b) = \uparrow a \otimes \uparrow b`, $`\uparrow\varepsilon = \varepsilon`, $`\uparrow e = e`, $`\uparrow\bigsqcup_i f_i = \bigsqcup_i \uparrow f_i`
+*Theorem:* the inclusion preserves the operations
 
 ```lean
-namespace IsSubCompleteDioid
-variable {T : Type u} [CompleteDioid T] {P : T → Prop}
-    (h : IsSubCompleteDioid P)
-
-theorem coe_add (a b : {x // P x}) :
-    letI := h.toCompleteDioid
-    ((a ⊕ₒ b : {x // P x}) : T) = (a : T) ⊕ₒ (b : T) :=
+theorem coe_add (S : SubCompleteDioid T) (a b : S) :
+    ((a ⊕ₒ b : S) : T) = (a : T) ⊕ₒ (b : T) :=
   rfl
 
-theorem coe_mul (a b : {x // P x}) :
-    letI := h.toCompleteDioid
-    ((a ⊗ₒ b : {x // P x}) : T) = (a : T) ⊗ₒ (b : T) :=
+theorem coe_mul (S : SubCompleteDioid T) (a b : S) :
+    ((a ⊗ₒ b : S) : T) = (a : T) ⊗ₒ (b : T) :=
   rfl
 
-theorem coe_eps :
-    letI := h.toCompleteDioid
-    ((εₒ : {x // P x}) : T) = εₒ :=
+theorem coe_eps (S : SubCompleteDioid T) :
+    ((εₒ : S) : T) = εₒ :=
   rfl
 
-theorem coe_one :
-    letI := h.toCompleteDioid
-    ((eₒ : {x // P x}) : T) = eₒ :=
+theorem coe_one (S : SubCompleteDioid T) :
+    ((eₒ : S) : T) = eₒ :=
   rfl
 
-theorem coe_iSup {ι : Type u} (f : ι → {x // P x}) :
-    letI := h.toCompleteDioid
-    ((CompleteDioid.iSup f : {x // P x}) : T)
+theorem coe_iSup (S : SubCompleteDioid T)
+    {ι : Type u} (f : ι → S) :
+    ((CompleteDioid.iSup f : S) : T)
       = CompleteDioid.iSup (fun i => (f i : T)) :=
   rfl
 
-end IsSubCompleteDioid
+end SubCompleteDioid
 ```
 
 ```lean
