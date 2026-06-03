@@ -94,8 +94,7 @@ $`D \ge A \ast \beta`, stated directly on the real values.
 ```lean
 def OffersMinPlusService (S : Server) (beta : ℝ≥0 → ℝ≥0) :
     Prop :=
-  ∀ A D : Curve, (A, D) ∈ S →
-    infConvR A.toFun beta ≤ D.toFun
+  ∀ A D : Curve, (A, D) ∈ S → infConvR A beta ≤ D
 ```
 
 A server `S` _is_ a min-plus server for `beta` when it offers `beta` —
@@ -108,6 +107,52 @@ service guarantee. We take this as a predicate on a `Server`.
 def IsMinPlusServer (S : Server) (beta : ℝ≥0 → ℝ≥0) :
     Prop :=
   OffersMinPlusService S beta
+```
+
+The _largest_ min-plus server for `beta` is the set of all causal pairs
+meeting the service bound — pairs with $`A \ge D \ge A \ast \beta`.
+Causality ($`D \le A`, the first conjunct) and the service bound make
+up the relation; assembling it into a `Server` needs left-totality,
+supplied as `htot`.
+
+*Definition:* $`S_{\mathrm{mp}}(\beta) = \{\,(A, D) \mid A \ge D \ge A \ast \beta\,\}`
+
+```lean
+def minPlusServiceRel (beta : ℝ≥0 → ℝ≥0) :
+    Set (Curve × Curve) :=
+  { p | p.2 ≤ p.1 ∧ infConvR p.1 beta ≤ p.2 }
+
+theorem mem_minPlusServiceRel_iff
+    {beta : ℝ≥0 → ℝ≥0} {p : Curve × Curve} :
+    p ∈ minPlusServiceRel beta ↔
+      p.2 ≤ p.1 ∧ infConvR p.1 beta ≤ p.2 :=
+  Iff.rfl
+
+def minPlusServer (beta : ℝ≥0 → ℝ≥0)
+    (htot : ∀ A : Curve, ∃ D : Curve,
+      (A, D) ∈ minPlusServiceRel beta) :
+    Server where
+  rel := minPlusServiceRel beta
+  causal _A _D hp := hp.1
+  leftTotal A := htot A
+```
+
+A server lies inside the largest min-plus server for `beta` exactly
+when it offers `beta` — the causality conjunct is automatic, since a
+server is causal by construction.
+
+*Theorem:* $`S \subseteq S_{\mathrm{mp}}(\beta) \iff S` offers $`\beta`
+
+```lean
+theorem subset_minPlusServiceRel_iff
+    {S : Server} {beta : ℝ≥0 → ℝ≥0} :
+    (∀ p ∈ S, p ∈ minPlusServiceRel beta) ↔
+      OffersMinPlusService S beta := by
+  constructor
+  · intro h A D hp
+    exact (h (A, D) hp).2
+  · intro h p hp
+    exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
 ```
 
 Monotony of the service guarantee: if `S` offers the larger `beta'`, it
@@ -123,7 +168,7 @@ theorem OffersMinPlusService.mono
     (h : beta ≤ beta') (hS : OffersMinPlusService S beta') :
     OffersMinPlusService S beta :=
   fun A D hp =>
-    le_trans (infConvR_mono_right A.toFun h) (hS A D hp)
+    le_trans (infConvR_mono_right A h) (hS A D hp)
 ```
 
 The weakest service curve is the constant $`\beta_0 = 0`.
@@ -147,9 +192,9 @@ theorem offersMinPlusService_β₀ (S : Server) :
   unfold infConvR
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
-  show A.toFun 0 + β₀ t ≤ D.toFun t
+  show A 0 + β₀ t ≤ D t
   rw [A.zero]
-  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D.toFun t
+  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D t
   simp
 ```
 
