@@ -62,7 +62,8 @@ and $`\beta^{(n+1)} = \beta^{(n)} \mathbin{\overline{\ast}} \beta^{(n)}`.
 noncomputable def maxConvPow (beta : ℝ≥0 → ℝ≥0) :
     ℕ → (ℝ≥0 → ℝ≥0)
   | 0 => beta
-  | n + 1 => maxConv (maxConvPow beta n)
+  | n + 1 =>
+      maxConv (maxConvPow beta n) (maxConvPow beta n)
 
 noncomputable def saClosure (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=

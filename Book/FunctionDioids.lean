@@ -196,65 +196,68 @@ theorem minConv_mono_right (A : ℝ≥0 → ℝ≥0)
 
 # The (max,plus) convolution
 
-The _(max,plus) convolution_ $`\beta \mathbin{\overline{\ast}} \beta`
-(the _super-convolution_) is the dioid product of `beta` with itself,
-read back into $`\mathbb{R}_{\ge 0}`. It is the supremal mirror of the
-(min,plus) convolution, over the same splits.
+The _(max,plus) convolution_ $`\beta \mathbin{\overline{\ast}} \gamma`
+is the dioid product of the two embedded curves, read back into
+$`\mathbb{R}_{\ge 0}`. It is the supremal mirror of the (min,plus)
+convolution, over the same splits; convolving a curve with itself,
+$`\beta \mathbin{\overline{\ast}} \beta` (the _super-convolution_),
+generates the super-additive closure.
 
-*Definition:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = \big((\mathrm{emb}_{\max}\beta \ast \mathrm{emb}_{\max}\beta)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
+*Definition:* $`(\beta \mathbin{\overline{\ast}} \gamma)(t) = \big((\mathrm{emb}_{\max}\beta \ast \mathrm{emb}_{\max}\gamma)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
-noncomputable def maxConv (beta : ℝ≥0 → ℝ≥0) :
+noncomputable def maxConv (beta gamma : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
-    (conv (embMax beta) (embMax beta) t
+    (conv (embMax beta) (embMax gamma) t
       : RplusMax).toW.unbotD 0 |>.toNNReal
 ```
 
 The underlying value of the dioid product is the sum of the embedded
 values.
 
-*Theorem:* $`\uparrow(\mathrm{emb}_{\max}\beta(a) \otimes \mathrm{emb}_{\max}\beta(b)) = \beta(a) + \beta(b)`
+*Theorem:* $`\uparrow(\mathrm{emb}_{\max}\beta(a) \otimes \mathrm{emb}_{\max}\gamma(b)) = \beta(a) + \gamma(b)`
 
 ```lean
-theorem embMax_mul (beta : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
-    ((embMax beta a ⊗ₒ embMax beta b : RplusMax)
+theorem embMax_mul (beta gamma : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
+    ((embMax beta a ⊗ₒ embMax gamma b : RplusMax)
         : WithBot ℝ≥0∞)
       = (((beta a : ℝ≥0∞) : WithBot ℝ≥0∞))
-        + (((beta b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
+        + (((gamma b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
 ```
 
-The dioid convolution unfolds to the supremum of $`\beta(a) + \beta(b)`
-over the splits.
+The dioid convolution unfolds to the supremum of
+$`\beta(a) + \gamma(b)` over the splits.
 
-*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` in `WithBot ℝ≥0∞`
+*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \gamma)(t) = \bigsqcup_{a + b = t} (\beta(a) + \gamma(b))` in `WithBot ℝ≥0∞`
 
 ```lean
-theorem conv_embMax_toW (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    ((conv (embMax beta) (embMax beta) t : RplusMax)
+theorem conv_embMax_toW (beta gamma : ℝ≥0 → ℝ≥0)
+    (t : ℝ≥0) :
+    ((conv (embMax beta) (embMax gamma) t : RplusMax)
         : WithBot ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-          (((beta p.1.1 + beta p.1.2 : ℝ≥0)
+          (((beta p.1.1 + gamma p.1.2 : ℝ≥0)
             : ℝ≥0∞) : WithBot ℝ≥0∞) := by
   rw [conv_apply]
   show (⨆ x : {x : RplusMax //
         ∃ u s, u + s = t ∧
-          x = embMax beta u ⊗ₒ embMax beta s},
+          x = embMax beta u ⊗ₒ embMax gamma s},
         (x.val : WithBot ℝ≥0∞)) = _
   apply le_antisymm
   · refine iSup_le (fun x => ?_)
     obtain ⟨u, s, hus, hx⟩ := x.2
     refine le_iSup_of_le ⟨(u, s), hus⟩ ?_
     rw [show (x.val : WithBot ℝ≥0∞)
-          = ((embMax beta u ⊗ₒ embMax beta s
+          = ((embMax beta u ⊗ₒ embMax gamma s
                 : RplusMax) : WithBot ℝ≥0∞)
             from congrArg _ hx, embMax_mul]
     push_cast; rfl
   · refine iSup_le (fun p => ?_)
     refine le_iSup_of_le
-      ⟨embMax beta p.1.1 ⊗ₒ embMax beta p.1.2,
+      ⟨embMax beta p.1.1 ⊗ₒ embMax gamma p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
-    show _ ≤ ((embMax beta p.1.1 ⊗ₒ embMax beta p.1.2
+    show _ ≤ ((embMax beta p.1.1 ⊗ₒ embMax gamma p.1.2
         : RplusMax) : WithBot ℝ≥0∞)
     rw [embMax_mul]; push_cast; rfl
 ```
@@ -263,20 +266,20 @@ Projecting back, the (max,plus) convolution is the expected real
 supremum,
 provided the values are bounded so the supremum is finite.
 
-*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` when finite
+*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \gamma)(t) = \bigsqcup_{a + b = t} (\beta(a) + \gamma(b))` when finite
 
 ```lean
-theorem maxConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
+theorem maxConv_coe (beta gamma : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
-    ((maxConv beta t : ℝ≥0) : ℝ≥0∞)
+        ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
+    ((maxConv beta gamma t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-          ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) := by
+          ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   have hcoe : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        (((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)
+        (((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞)
           : WithBot ℝ≥0∞))
       = (((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-          ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
+          ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
   rw [maxConv, conv_embMax_toW, hcoe]
@@ -290,25 +293,25 @@ when the dioid supremum is $`+\infty` the projection floors to `0`,
 which is below `c` anyway, and otherwise the bound is the genuine
 supremum's. This is the bound the strict-service proofs use.
 
-*Theorem:* $`(\forall a + b = t,\ \beta(a) + \beta(b) \le c) \implies (\beta \mathbin{\overline{\ast}} \beta)(t) \le c`
+*Theorem:* $`(\forall a + b = t,\ \beta(a) + \gamma(b) \le c) \implies (\beta \mathbin{\overline{\ast}} \gamma)(t) \le c`
 
 ```lean
-theorem maxConv_le (beta : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
+theorem maxConv_le (beta gamma : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
     (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      beta p.1.1 + beta p.1.2 ≤ c) :
-    maxConv beta t ≤ c := by
+      beta p.1.1 + gamma p.1.2 ≤ c) :
+    maxConv beta gamma t ≤ c := by
   rw [maxConv, conv_embMax_toW]
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        (((beta p.1.1 + beta p.1.2 : ℝ≥0)
+        (((beta p.1.1 + gamma p.1.2 : ℝ≥0)
           : ℝ≥0∞) : WithBot ℝ≥0∞))
       = (((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-          ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
+          ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
   rw [hcoe, WithBot.unbotD_coe]
   have hb : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
+        ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≤ (c : ℝ≥0∞) :=
     iSup_le (fun p => by exact_mod_cast h p)
   have := ENNReal.toNNReal_mono (by simp) hb
@@ -326,13 +329,13 @@ theorem add_maxConv_le
     (beta : ℝ≥0 → ℝ≥0) (t c y : ℝ≥0)
     (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       c + (beta p.1.1 + beta p.1.2) ≤ y) :
-    c + maxConv beta t ≤ y := by
+    c + maxConv beta beta t ≤ y := by
   have hcy : c ≤ y :=
     le_trans le_self_add (h ⟨(t, 0), by simp⟩)
-  have hsup : maxConv beta t ≤ y - c :=
-    maxConv_le beta t (y - c)
+  have hsup : maxConv beta beta t ≤ y - c :=
+    maxConv_le beta beta t (y - c)
       (fun p => le_tsub_of_add_le_left (h p))
-  calc c + maxConv beta t ≤ c + (y - c) := by gcongr
+  calc c + maxConv beta beta t ≤ c + (y - c) := by gcongr
     _ = y := add_tsub_cancel_of_le hcy
 ```
 
@@ -375,28 +378,28 @@ theorem maxConv_eq_neg_iInf
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≠ ⊤) :
-    ((maxConv beta t : ℝ≥0) : ℝ)
+    ((maxConv beta beta t : ℝ≥0) : ℝ)
       = - ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (- ((beta p.1.1 : ℝ) + (beta p.1.2 : ℝ))) := by
-  have hsc : ((maxConv beta t : ℝ≥0) : ℝ≥0∞)
+  have hsc : ((maxConv beta beta t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞) :=
-    maxConv_coe beta t hfin
+    maxConv_coe beta beta t hfin
   have hbN : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         (beta p.1.1 + beta p.1.2 : ℝ≥0))) := by
-    refine ⟨maxConv beta t, ?_⟩
+    refine ⟨maxConv beta beta t, ?_⟩
     rintro _ ⟨p, rfl⟩
     have hle :
         ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)
-        ≤ ((maxConv beta t : ℝ≥0) : ℝ≥0∞) := by
+        ≤ ((maxConv beta beta t : ℝ≥0) : ℝ≥0∞) := by
       rw [hsc]
       exact le_iSup
         (fun q : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
           ((beta q.1.1 + beta q.1.2 : ℝ≥0)
             : ℝ≥0∞)) p
     exact_mod_cast hle
-  have hr : maxConv beta t
+  have hr : maxConv beta beta t
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (beta p.1.1 + beta p.1.2) := by
     rw [← ENNReal.coe_iSup hbN] at hsc
@@ -410,7 +413,7 @@ theorem maxConv_eq_neg_iInf
     exact_mod_cast hc ⟨p, rfl⟩
   simp only [← NNReal.coe_add]
   rw [← neg_ciInf_neg _ hbR,
-    show (((maxConv beta t : ℝ≥0)) : ℝ)
+    show (((maxConv beta beta t : ℝ≥0)) : ℝ)
         = ((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (beta p.1.1 + beta p.1.2) : ℝ≥0) : ℝ)
         from congrArg _ hr,
@@ -454,35 +457,37 @@ direct form floors to $`0` there; the dioid-backed `maxConv`, valued in
 $`\mathbb{R}_{\ge 0} \cup \{\pm\infty\}`, is the canonical operator, and
 the two agree wherever the supremum is finite.
 
-*Definition:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = \sup_{a + b = t} (\beta(a) + \beta(b))`, directly on $`\mathbb{R}_{\ge 0}`
+*Definition:* $`(\beta \mathbin{\overline{\ast}} \gamma)(t) = \sup_{a + b = t} (\beta(a) + \gamma(b))`, directly on $`\mathbb{R}_{\ge 0}`
 
 ```lean
-noncomputable def maxConvR (beta : ℝ≥0 → ℝ≥0) :
+noncomputable def maxConvR (beta gamma : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      (beta p.1.1 + beta p.1.2)
+      (beta p.1.1 + gamma p.1.2)
 ```
 
 When the supremum is finite, the direct definition agrees with the
 dioid-backed `maxConv`.
 
-*Theorem:* $`\beta \mathbin{\overline{\ast}} \beta = \mathrm{maxConv}\,\beta` at $`t`, when finite
+*Theorem:* $`\beta \mathbin{\overline{\ast}} \gamma = \mathrm{maxConv}(\beta, \gamma)` at $`t`, when finite
 
 ```lean
-theorem maxConvR_eq_maxConv (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
+theorem maxConvR_eq_maxConv
+    (beta gamma : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        ((beta p.1.1 + beta p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
-    maxConvR beta t = maxConv beta t := by
+        ((beta p.1.1 + gamma p.1.2 : ℝ≥0) : ℝ≥0∞))
+        ≠ ⊤) :
+    maxConvR beta gamma t = maxConv beta gamma t := by
   have hbdd : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
-        beta p.1.1 + beta p.1.2)) := by
+        beta p.1.1 + gamma p.1.2)) := by
     by_contra hub
     exact hfin (ENNReal.iSup_coe_eq_top.mpr hub)
-  have h : ((maxConvR beta t : ℝ≥0) : ℝ≥0∞)
-      = ((maxConv beta t : ℝ≥0) : ℝ≥0∞) := by
+  have h : ((maxConvR beta gamma t : ℝ≥0) : ℝ≥0∞)
+      = ((maxConv beta gamma t : ℝ≥0) : ℝ≥0∞) := by
     rw [maxConvR, ENNReal.coe_iSup hbdd,
-      maxConv_coe _ _ hfin]
+      maxConv_coe _ _ _ hfin]
   exact_mod_cast h
 ```
 

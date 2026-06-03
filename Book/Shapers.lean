@@ -527,9 +527,9 @@ is absorbed.
 theorem offersStrictService_maxConv
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
-    OffersStrictService (maxConv beta) S := by
+    OffersStrictService (maxConv beta beta) S := by
   intro A D hp s t hst hbl
-  show D s + maxConv beta (t - s) ≤ D t
+  show D s + maxConv beta beta (t - s) ≤ D t
   refine add_maxConv_le _ _ _ _ (fun q => ?_)
   obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
   have hsum : s + (a + b) = t := by
