@@ -522,7 +522,7 @@ $`a + b = t - s` gives the interior point $`r = s + a`, where
 concatenation supplies the two-term bound, and the supremum over splits
 is absorbed.
 
-*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \boxplus \beta`
+*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \mathbin{\overline{\ast}} \beta`
 
 ```lean
 theorem offersStrictService_superConv

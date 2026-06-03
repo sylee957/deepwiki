@@ -192,12 +192,12 @@ theorem infConvR_mono_right (A : ℝ≥0 → ℝ≥0)
 
 # The super-convolution
 
-The _super-convolution_ $`\beta \boxplus \beta` is the _(max,plus)_
+The _super-convolution_ $`\beta \mathbin{\overline{\ast}} \beta` is the _(max,plus)_
 convolution of `beta` with itself, read back into
 $`\mathbb{R}_{\ge 0}`. It is the supremal mirror of the infimal
 convolution, over the same splits.
 
-*Definition:* $`(\beta \boxplus \beta)(t) = \big((\mathrm{emb}_{\max}\beta \ast \mathrm{emb}_{\max}\beta)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
+*Definition:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = \big((\mathrm{emb}_{\max}\beta \ast \mathrm{emb}_{\max}\beta)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
 noncomputable def superConv (beta : ℝ≥0 → ℝ≥0) :
@@ -223,7 +223,7 @@ theorem embMax_mul (beta : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
 The dioid convolution unfolds to the supremum of $`\beta(a) + \beta(b)`
 over the splits.
 
-*Theorem:* $`\uparrow(\beta \boxplus \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` in `WithBot ℝ≥0∞`
+*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` in `WithBot ℝ≥0∞`
 
 ```lean
 theorem conv_embMax_toW (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
@@ -258,7 +258,7 @@ theorem conv_embMax_toW (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
 Projecting back, the super-convolution is the expected real supremum,
 provided the values are bounded so the supremum is finite.
 
-*Theorem:* $`\uparrow(\beta \boxplus \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` when finite
+*Theorem:* $`\uparrow(\beta \mathbin{\overline{\ast}} \beta)(t) = \bigsqcup_{a + b = t} (\beta(a) + \beta(b))` when finite
 
 ```lean
 theorem superConv_coe (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
@@ -284,7 +284,7 @@ when the dioid supremum is $`+\infty` the projection floors to `0`,
 which is below `c` anyway, and otherwise the bound is the genuine
 supremum's. This is the bound the strict-service proofs use.
 
-*Theorem:* $`(\forall a + b = t,\ \beta(a) + \beta(b) \le c) \implies (\beta \boxplus \beta)(t) \le c`
+*Theorem:* $`(\forall a + b = t,\ \beta(a) + \beta(b) \le c) \implies (\beta \mathbin{\overline{\ast}} \beta)(t) \le c`
 
 ```lean
 theorem superConv_le (beta : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
@@ -313,7 +313,7 @@ Adding a constant absorbs into that bound, exactly as the supremum
 absorption lemma did for an explicit $`\bigsqcup`: this is the shape the
 strict-service-curve proofs invoke, with `c` a departure value.
 
-*Theorem:* $`(\forall a + b = t,\ c + \beta(a) + \beta(b) \le y) \implies c + (\beta \boxplus \beta)(t) \le y`
+*Theorem:* $`(\forall a + b = t,\ c + \beta(a) + \beta(b) \le y) \implies c + (\beta \mathbin{\overline{\ast}} \beta)(t) \le y`
 
 ```lean
 theorem add_superConv_le
@@ -361,7 +361,7 @@ theorem neg_ciInf_neg {ι : Type} [Nonempty ι]
     rw [le_neg, neg_neg]; exact le_ciSup hbdd i
 ```
 
-*Theorem:* $`(\beta \boxplus \beta)(t) = -\inf_{a + b = t} ((-\beta(a)) + (-\beta(b)))`, when finite
+*Theorem:* $`(\beta \mathbin{\overline{\ast}} \beta)(t) = -\inf_{a + b = t} ((-\beta(a)) + (-\beta(b)))`, when finite
 
 ```lean
 theorem superConv_eq_neg_iInf

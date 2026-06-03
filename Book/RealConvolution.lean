@@ -53,7 +53,7 @@ theorem le_ndClosure (beta : ℝ≥0 → ℝ≥0)
 
 The _super-additive closure_ $`\bar\beta^{*}` is the supremum of all
 finite iterates of the super-convolution: $`\beta^{(0)} = \beta` and
-$`\beta^{(n+1)} = \beta^{(n)} \boxplus \beta^{(n)}`.
+$`\beta^{(n+1)} = \beta^{(n)} \mathbin{\overline{\ast}} \beta^{(n)}`.
 
 *Definition:* the iterates $`\beta^{(n)}` and the closure $`\bar\beta^{*} = \sup_n \beta^{(n)}`
 
