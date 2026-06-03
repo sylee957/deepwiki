@@ -11,7 +11,7 @@ open Verso.Genre.Manual.InlineLean
 #doc (Manual) "The convolution attains its minimum" =>
 The $`(\min, +)` convolution is an _infimum_ over a continuum of
 splits,
-$$`(g \boxast h)(t) = \inf_{0 \le u \le t}\,\bigl(g(u) + h(t - u)\bigr),`
+$$`(g \ast h)(t) = \inf_{0 \le u \le t}\,\bigl(g(u) + h(t - u)\bigr),`
 so a priori it need not be _attained_ at any single split. For the
 cumulative functions of network calculus — monotone and
 left-continuous — it is: the minimum is reached. The argument is the
@@ -127,7 +127,7 @@ For the record, the infimal convolution `infConv` of two monotone
 functions is monotone — a fact independent of attainment, used
 wherever the convolution is treated as a cumulative function.
 
-*Theorem:* $`g \boxast h` is monotone when $`g, h` are
+*Theorem:* $`g \ast h` is monotone when $`g, h` are
 
 ```lean
 theorem infConv_mono (g h : ℝ≥0 → ℝ≥0∞)

@@ -10,7 +10,7 @@ $`g(u + s) \le g(u) + g(s)`. This is a property of the _values_ alone,
 so — like left-continuity — we state it on plain functions
 $`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty`, with the
 ordinary numeric order and addition. Over these we form the _infimal
-convolution_ $`(g \boxast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`, the
+convolution_ $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`, the
 classical $`(\min, +)` convolution on real functions, and prove the
 fundamental fact: a sub-additive curve null at the origin is its own
 infimal self-convolution. We then show this infimal convolution _is_
@@ -39,7 +39,7 @@ def IsSubadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
 The _infimal convolution_ is the numeric infimum, over all splits
 $`u + s = t`, of $`g(u) + h(s)`. We index by the splits of `t`.
 
-*Definition:* $`(g \boxast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`
+*Definition:* $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`
 
 ```lean
 noncomputable def infConv (g h : ℝ≥0 → ℝ≥0∞) :
@@ -63,7 +63,7 @@ the infimum:
 
 Together they give equality.
 
-*Theorem:* if $`g` is sub-additive and $`g(0) = 0` then $`g \boxast g = g`
+*Theorem:* if $`g` is sub-additive and $`g(0) = 0` then $`g \ast g = g`
 
 ```lean
 theorem infConv_self_of_subadditive
@@ -104,7 +104,7 @@ infimal convolution, value by value. Each split-term matches: the
 dioid product $`\otimes` is the numeric sum, and the dioid supremum
 $`\bigsqcup` is the numeric infimum, both over the same splits.
 
-*Theorem:* $`(\text{toF}\,g \ast \text{toF}\,h)(t)` unwraps to $`(g \boxast h)(t)`
+*Theorem:* $`(\text{toF}\,g \ast \text{toF}\,h)(t)` unwraps to $`(g \ast h)(t)`
 
 ```lean
 theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
@@ -130,7 +130,7 @@ theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
 At the level of functions, the dioid convolution of induced curves is
 the induced infimal convolution.
 
-*Theorem:* $`\text{toF}\,g \ast \text{toF}\,h = \text{toF}\,(g \boxast h)`
+*Theorem:* $`\text{toF}\,g \ast \text{toF}\,h = \text{toF}\,(g \ast h)`
 
 ```lean
 theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
