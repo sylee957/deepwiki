@@ -20,45 +20,50 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 # Cumulative functions and servers
 
-The ambient function dioid is `F`. A concrete class of cumulative
-functions is represented by a type whose values coerce into `F`; this
-leaves room to add non-decreasingness, nullity at the origin, or
-continuity assumptions as fields of specialized structures later. The
-relation `NatLe f g` is the ordinary pointwise numeric order, obtained
-by looking through the `RplusMin` wrapper.
+The ambient function dioid is `F`. Cumulative functions — the arrivals
+and departures of a server — are honest real curves
+$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, coerced into `F` when the
+convolution is needed. The relation `NatLe f g` is the ordinary
+pointwise numeric order, obtained by looking through the `RplusMin`
+wrapper.
 
-*Definition:* cumulative-function classes and their natural order
+*Definition:* cumulative functions as real curves, and their natural order
+
+A _cumulative function_ — the arrival or departure of a server — is an
+honest real curve $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. We name the
+type `Curve`. Its values are non-negative reals, so it is automatically
+finite; the network-calculus regularity — monotone, left-continuous,
+zero at the origin — is carried as explicit hypotheses on the results
+that need it, rather than bundled into the carrier.
 
 ```lean
-class CumulativeClass (C : Type*) where
-  toF : C → F
+abbrev Curve := ℝ≥0 → ℝ≥0
+```
 
-instance {C : Type*} [CumulativeClass C] : CoeOut C F where
-  coe := CumulativeClass.toF
+A curve coerces into the function dioid `F` by wrapping each value into
+`RplusMin`; this is how the convolution-based statements reach it.
+
+*Definition:* a real curve as a dioid function
+
+```lean
+instance : Coe Curve F where
+  coe := fun A t => ⟨(A t : ℝ≥0∞)⟩
 
 def IsFiniteFunction (f : F) : Prop :=
   ∀ t, (f t : ℝ≥0∞) ≠ ⊤
 
-structure FiniteCumulativeFunction where
-  toF : F
-  finite : IsFiniteFunction toF
+theorem curve_finite (A : Curve) :
+    IsFiniteFunction (↑A : F) := by
+  intro t
+  show ((A t : ℝ≥0∞)) ≠ ⊤
+  simp
+```
 
-instance : CumulativeClass FiniteCumulativeFunction where
-  toF := FiniteCumulativeFunction.toF
+The natural-order relation `NatLe f g` is the ordinary pointwise
+numeric order on `F`, obtained by looking through the `RplusMin`
+wrapper.
 
-def ofNNRealFunction
-    (f : ℝ≥0 → ℝ≥0) :
-    FiniteCumulativeFunction where
-  toF := fun t => ⟨(f t : ℝ≥0∞)⟩
-  finite := by
-    intro t
-    simp
-
-theorem ofNNRealFunction_finite
-    (f : ℝ≥0 → ℝ≥0) :
-    IsFiniteFunction (↑(ofNNRealFunction f) : F) :=
-  (ofNNRealFunction f).finite
-
+```lean
 def NatLe (f g : F) : Prop :=
   ∀ t, (f t : ℝ≥0∞) ≤ g t
 
@@ -149,38 +154,42 @@ theorem conv_natLe_right (D : F) {sigma sigma' : F}
     ((natLe_iff sigma sigma').mp h s) (D u)
 ```
 
-A server relation is a set of admissible input-output pairs inside a
-chosen cumulative-function class. It is a server in the book's sense
-when it is left-total and causal. Causality is the constraint `D ≤ A`;
-the shaper condition is the output-arrival constraint.
+A server is a set of admissible input-output pairs of cumulative
+functions, _bundled with_ its causality proof: every pair has its
+departure below its arrival, `D ≤ A`. Causality is thus intrinsic to
+being a server. Left-totality and the shaper condition are stated
+separately.
 
 *Definition:* servers and sigma-shapers
 
-```lean
-abbrev Server (C : Type*) [CumulativeClass C] :=
-  Set (C × C)
+A `Server` bundles the input-output relation with the _causality_
+proof: every admissible pair has its departure below its arrival,
+$`D \le_n A`. Causality is thus part of being a server, not a separate
+predicate — a `Server` is causal by construction.
 
-def Serves {C : Type*} [CumulativeClass C]
-    (S : Server C) (A D : C) : Prop :=
+```lean
+structure Server where
+  rel : Set (Curve × Curve)
+  causal : ∀ p ∈ rel, (↑p.2 : F) ≤ₙ (↑p.1 : F)
+
+instance : Membership (Curve × Curve) Server where
+  mem S p := p ∈ S.rel
+
+def Serves (S : Server) (A D : Curve) : Prop :=
   (A, D) ∈ S
 
 scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
   Serves S A D
 
-def IsLeftTotalServer {C : Type*}
-    [CumulativeClass C] (S : Server C) : Prop :=
-  ∀ A : C, ∃ D : C, A ⟶[S] D
+theorem causal_of_mem (S : Server)
+    {p : Curve × Curve} (hp : p ∈ S) :
+    (↑p.2 : F) ≤ₙ (↑p.1 : F) :=
+  S.causal p hp
 
-def IsCausalServer {C : Type*}
-    [CumulativeClass C] (S : Server C) : Prop :=
-  ∀ p ∈ S, (↑p.2 : F) ≤ₙ (↑p.1 : F)
+def IsLeftTotalServer (S : Server) : Prop :=
+  ∀ A : Curve, ∃ D : Curve, A ⟶[S] D
 
-def IsServer {C : Type*}
-    [CumulativeClass C] (S : Server C) : Prop :=
-  IsLeftTotalServer S ∧ IsCausalServer S
-
-def IsShaper {C : Type*} [CumulativeClass C]
-    (S : Server C) (sigma : F) : Prop :=
+def IsShaper (S : Server) (sigma : F) : Prop :=
   ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : F) sigma
 ```
 
@@ -191,46 +200,35 @@ of all pairs whose output is below the input and whose output allows
 *Definition:* the largest `sigma`-shaper server
 
 ```lean
-def shaperServer (C : Type*) [CumulativeClass C]
-    (sigma : F) : Server C :=
-  { p | (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
+def shaperServer (sigma : F) : Server where
+  rel := { p | (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
       AllowsArrivalCurve (↑p.2 : F) sigma }
+  causal p hp := hp.1
 
 theorem mem_shaperServer_iff
-    {C : Type*} [CumulativeClass C]
-    {sigma : F} {p : C × C} :
-    p ∈ shaperServer C sigma ↔
+    {sigma : F} {p : Curve × Curve} :
+    p ∈ shaperServer sigma ↔
       (↑p.2 : F) ≤ₙ (↑p.1 : F) ∧
         AllowsArrivalCurve (↑p.2 : F) sigma :=
   Iff.rfl
+```
 
+A server lies inside the largest `sigma`-shaper exactly when it is a
+`sigma`-shaper — the causality conjunct is automatic, since a server is
+causal by construction.
+
+*Theorem:* $`S \subseteq S_{\mathrm{sh}}(\sigma) \iff S` is a $`\sigma`-shaper
+
+```lean
 theorem subset_shaperServer_iff
-    {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F} :
-    S ⊆ shaperServer C sigma ↔
-      IsCausalServer S ∧ IsShaper S sigma := by
-  constructor
-  · intro h
-    constructor
-    · intro p hp
-      exact (h hp).1
-    · intro p hp
-      exact (h hp).2
-  · rintro ⟨hcausal, hshape⟩ p hp
-    exact ⟨hcausal p hp, hshape p hp⟩
-
-theorem server_subset_shaperServer_iff
-    {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F}
-    (hS : IsServer S) :
-    S ⊆ shaperServer C sigma ↔
+    {S : Server} {sigma : F} :
+    (∀ p ∈ S, p ∈ shaperServer sigma) ↔
       IsShaper S sigma := by
   constructor
   · intro h p hp
-    exact (h hp).2
-  · intro h
-    exact (subset_shaperServer_iff).2
-      ⟨hS.2, h⟩
+    exact (h p hp).2
+  · intro h p hp
+    exact ⟨causal_of_mem S hp, h p hp⟩
 ```
 
 # Shaping closure
@@ -347,10 +345,9 @@ closure.
 
 ```lean
 theorem shaperServer_closure
-    (C : Type*) [CumulativeClass C]
     (sigma : F) :
-    shaperServer C sigma =
-      shaperServer C sigma⋆ := by
+    (shaperServer sigma).rel =
+      (shaperServer sigma⋆).rel := by
   ext p
   constructor
   · intro hp
@@ -363,22 +360,21 @@ theorem shaperServer_closure
         (↑p.2 : F) sigma).1 hp.2⟩
 
 theorem IsShaper.closure
-    {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F}
+    {S : Server} {sigma : F}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ := by
   intro p hp
   exact (allowsArrivalCurve_closure_iff
     (↑p.2 : F) sigma).2 (hS p hp)
 
-example (C : Type*) [CumulativeClass C]
+example
     (sigma : F) :
-    shaperServer C sigma =
-      shaperServer C sigma⋆ :=
-  shaperServer_closure C sigma
+    (shaperServer sigma).rel =
+      (shaperServer sigma⋆).rel :=
+  shaperServer_closure sigma
 
-example {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F}
+example
+    {S : Server} {sigma : F}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ :=
   IsShaper.closure hS
@@ -391,8 +387,7 @@ servers contain the smaller-curve largest server.
 
 ```lean
 theorem IsShaper.of_natLe
-    {C : Type*} [CumulativeClass C]
-    {S : Server C}
+    {S : Server}
     {sigma sigma' : F}
     (hS : IsShaper S sigma)
     (h : sigma ≤ₙ sigma') :
@@ -402,25 +397,24 @@ theorem IsShaper.of_natLe
     (conv_natLe_right (↑p.2 : F) h)
 
 theorem shaperServer_mono
-    {C : Type*} [CumulativeClass C]
     {sigma sigma' : F}
     (h : sigma ≤ₙ sigma') :
-    shaperServer C sigma ⊆
-      shaperServer C sigma' := by
+    (shaperServer sigma).rel ⊆
+      (shaperServer sigma').rel := by
   intro p hp
   exact ⟨hp.1,
     NatLe.trans hp.2
       (conv_natLe_right (↑p.2 : F) h)⟩
 
-example {C : Type*} [CumulativeClass C]
+example
     {sigma sigma' : F}
     (h : sigma ≤ₙ sigma') :
-    shaperServer C sigma ⊆
-      shaperServer C sigma' :=
+    (shaperServer sigma).rel ⊆
+      (shaperServer sigma').rel :=
   shaperServer_mono h
 
-example {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma sigma' : F}
+example
+    {S : Server} {sigma sigma' : F}
     (hS : IsShaper S sigma)
     (h : sigma ≤ₙ sigma') :
     IsShaper S sigma' :=
@@ -436,14 +430,93 @@ possible, fixing it to be exactly the convolution of the input with
 the shaper is _greedy_ in that it delays the input no more than
 forced.
 
-The curve `sigma` of a greedy shaper is required to be _sub-additive_
-and _left-continuous_, exactly as in the classical definition.
-Sub-additivity — in dioid form, $`\sigma(u) \otimes \sigma(s) \preceq
-\sigma(u + s)` — is what makes the output `sigma`-shaped;
-left-continuity keeps the shaped output a well-defined cumulative
-function. We bundle the two into a _validity_ predicate and require it
-of the curve in the greedy-shaper definitions themselves: the notion
-is defined only for valid `sigma`.
+The relation itself places no constraint on `sigma`: a server is a
+`sigma`-greedy shaper when every admissible pair has output exactly the
+convolution of the input with `sigma`. The regularity of `sigma` —
+sub-additivity, left-continuity, nullity at the origin — enters only
+where it is needed: to make the greedy shaper a well-defined _server_
+(its output causal and a valid cumulative function).
+
+A server is a `sigma`-greedy shaper when every admissible pair has
+output exactly the convolution of the input with `sigma`.
+
+*Definition:* $`S \text{ is a } \sigma\text{-greedy shaper} \iff \forall (A, D) \in S,\ D = A \ast \sigma`
+
+```lean
+def IsGreedyShaper
+    (S : Server) (sigma : F) : Prop :=
+  ∀ p ∈ S, (↑p.2 : F) = conv (↑p.1 : F) sigma
+```
+
+To form the greedy shaper _as a server_, its output must be causal —
+the departure below the arrival, $`A \ast \sigma \le_n A`. This holds
+exactly when `sigma` is null at the origin: the split $`t = t + 0`
+contributes the term $`A(t) \otimes \sigma(0) = A(t)`, so the
+convolution never exceeds `A`. Sub-additivity and left-continuity are
+not needed for causality; nullity at the origin is.
+
+*Theorem:* if $`\sigma(0) = e` then $`A \ast \sigma \le_n A`
+
+```lean
+theorem conv_natLe_self_of_zeroAtOrigin
+    (A sigma : F) (h0 : sigma 0 = eₒ) :
+    conv A sigma ≤ₙ A := by
+  rw [natLe_iff]
+  intro t
+  rw [conv_apply]
+  refine le_trans ?_
+    (CompleteDioid.le_sSup _ _
+      ⟨t, 0, add_zero t, rfl⟩)
+  show A t ≼ₒ A t ⊗ₒ sigma 0
+  rw [h0]
+  exact le_of_eq (MulMonoid.otimes_one (A t)).symm
+```
+
+The greedy shaper is the set of all greedy pairs. It is a server — its
+causality field discharged by the lemma above — precisely because the
+curve is null at the origin, which is therefore required to form it.
+
+*Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \mid D = A \ast \sigma\,\}`
+
+```lean
+def greedyShaper
+    (sigma : F) (h0 : sigma 0 = eₒ) : Server where
+  rel := { p | (↑p.2 : F) = conv (↑p.1 : F) sigma }
+  causal p hp := by
+    show (↑p.2 : F) ≤ₙ (↑p.1 : F)
+    rw [(hp : (↑p.2 : F) = conv (↑p.1 : F) sigma)]
+    exact conv_natLe_self_of_zeroAtOrigin (↑p.1) sigma h0
+
+theorem mem_greedyShaper_iff
+    {sigma : F} {h0 : sigma 0 = eₒ} {p : Curve × Curve} :
+    p ∈ greedyShaper sigma h0 ↔
+      (↑p.2 : F) = conv (↑p.1 : F) sigma :=
+  Iff.rfl
+
+theorem isGreedyShaper_greedyShaper
+    (sigma : F) (h0 : sigma 0 = eₒ) :
+    IsGreedyShaper (greedyShaper sigma h0) sigma :=
+  fun _ hp => hp
+```
+
+A `sigma`-greedy shaper is a server whose every member equals its own
+convolution; the greedy shaper is the largest such set.
+
+*Theorem:* $`S \text{ greedy} \iff S \subseteq S_{\mathrm{gsh}}(\sigma)`
+
+```lean
+theorem isGreedyShaper_iff_subset
+    {S : Server} {sigma : F} {h0 : sigma 0 = eₒ} :
+    IsGreedyShaper S sigma ↔
+      ∀ p ∈ S, p ∈ greedyShaper sigma h0 :=
+  Iff.rfl
+```
+
+# The greedy shaper is a sigma-shaper
+
+A sub-additive curve allows itself as an arrival curve: the kernel
+inequality $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)` is
+exactly the condition for $`\sigma` to allow $`\sigma`.
 
 *Definition:* dioid sub-additivity of a curve, $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)`
 
@@ -451,73 +524,6 @@ is defined only for valid `sigma`.
 def IsSubadditiveF (sigma : F) : Prop :=
   ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
 ```
-
-*Definition:* a valid shaper curve is sub-additive and left-continuous
-
-```lean
-structure IsShaperCurve (sigma : F) : Prop where
-  subadditive : IsSubadditiveF sigma
-  leftContinuous : IsLeftContinuous (numFn sigma)
-```
-
-A server is a `sigma`-greedy shaper when every admissible pair has
-output exactly the convolution of the input with `sigma`. The curve is
-carried with its validity proof.
-
-*Definition:* $`S \text{ is a } \sigma\text{-greedy shaper} \iff \forall (A, D) \in S,\ D = A \ast \sigma`
-
-```lean
-def IsGreedyShaper {C : Type*} [CumulativeClass C]
-    (S : Server C) (sigma : F)
-    (_hσ : IsShaperCurve sigma) : Prop :=
-  ∀ p ∈ S, (↑p.2 : F) = conv (↑p.1) sigma
-```
-
-The greedy shaper itself is the set of all such pairs, again over a
-valid curve.
-
-*Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \in \mathcal{C} \times \mathcal{C} \mid D = A \ast \sigma\,\}`
-
-```lean
-def greedyShaper (C : Type*) [CumulativeClass C]
-    (sigma : F) (_hσ : IsShaperCurve sigma) :
-    Server C :=
-  { p | (↑p.2 : F) = conv (↑p.1) sigma }
-
-theorem mem_greedyShaper_iff
-    {C : Type*} [CumulativeClass C]
-    {sigma : F} {hσ : IsShaperCurve sigma}
-    {p : C × C} :
-    p ∈ greedyShaper C sigma hσ ↔
-      (↑p.2 : F) = conv (↑p.1) sigma :=
-  Iff.rfl
-
-theorem isGreedyShaper_greedyShaper
-    (C : Type*) [CumulativeClass C] (sigma : F)
-    (hσ : IsShaperCurve sigma) :
-    IsGreedyShaper (greedyShaper C sigma hσ) sigma hσ :=
-  fun _ hp => hp
-```
-
-A `sigma`-greedy shaper is in particular a server set whose every
-member equals its own convolution; the greedy shaper is the largest
-such set.
-
-*Theorem:* $`S \text{ greedy} \iff S \subseteq S_{\mathrm{gsh}}(\sigma)`
-
-```lean
-theorem isGreedyShaper_iff_subset
-    {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F}
-    {hσ : IsShaperCurve sigma} :
-    IsGreedyShaper S sigma hσ ↔
-      S ⊆ greedyShaper C sigma hσ :=
-  Iff.rfl
-```
-
-A sub-additive curve allows itself as an arrival curve: the kernel
-inequality $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)` is
-exactly the condition for $`\sigma` to allow $`\sigma`.
 
 *Theorem:* a sub-additive curve allows itself
 
@@ -549,23 +555,20 @@ theorem allowsArrivalCurve_conv_of_subadd
   exact h
 ```
 
-Hence every output of a greedy shaper is a `sigma`-shaper output: the
-curve's sub-additivity, carried in its validity proof, makes the
-greedy shaper refine the largest `sigma`-shaper.
+Hence every output of a greedy shaper over a sub-additive curve is a
+`sigma`-shaper output.
 
-*Theorem:* a greedy shaper is a $`\sigma`-shaper
+*Theorem:* a greedy shaper over a sub-additive curve is a $`\sigma`-shaper
 
 ```lean
 theorem IsGreedyShaper.isShaper
-    {C : Type*} [CumulativeClass C]
-    {S : Server C} {sigma : F}
-    {hσ : IsShaperCurve sigma}
-    (hS : IsGreedyShaper S sigma hσ) :
+    {S : Server} {sigma : F}
+    (hsub : IsSubadditiveF sigma)
+    (hS : IsGreedyShaper S sigma) :
     IsShaper S sigma := by
   intro p hp
   rw [hS p hp]
-  exact allowsArrivalCurve_conv_of_subadd
-    (↑p.1) hσ.subadditive
+  exact allowsArrivalCurve_conv_of_subadd (↑p.1) hsub
 ```
 
 ```lean
