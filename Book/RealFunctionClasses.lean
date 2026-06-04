@@ -1536,6 +1536,415 @@ theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
     (tokenBucket_inf_subadd r b r' b')
 ```
 
+# Catalog of deconvolutions
+
+Deconvolution turns the catalog around. The _uncapped_ affine curve
+$`\hat\gamma_{r,b}(t) = r\,t + b` — the token-bucket _without_ the
+$`\delta_0` cap at the origin — is the natural shape for these
+quotients, and recovers the token-bucket by re-imposing the cap:
+$`\hat\gamma_{r,b} \wedge \delta_0 = \gamma_{r,b}`.
+
+*Definition:* $`\hat\gamma_{r,b}(t) = r\,t + b`
+
+```lean
+noncomputable def affine (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+  fun t => (r:ℝ≥0∞) * t + b
+```
+
+Capping the uncapped affine with the burst delay $`\delta_0` is the
+token-bucket — definitionally.
+
+*Theorem:* $`\hat\gamma_{r,b} \wedge \delta_0 = \gamma_{r,b}`
+
+```lean
+theorem affine_inf_delay0 (r b : ℝ≥0) :
+    affine r b ⊓ delay 0 = tokenBucket r b := rfl
+```
+
+Three bridge identities relating the named curves to the affine and
+rate forms — used to specialise the master deconvolution below. The
+uncapped affine with zero burst is the rate; the rate-latency with
+zero latency is the rate; and the token-bucket with zero burst is the
+rate (its $`\delta_0` cap is invisible because $`r\cdot 0 = 0`).
+
+*Theorem:* $`\hat\gamma_{r,0} = \lambda_r`
+
+```lean
+theorem affine_zero (r : ℝ≥0) : affine r 0 = rate r := by
+  funext t
+  simp only [affine, rate, ENNReal.coe_zero, add_zero]
+```
+
+*Theorem:* $`\beta_{R,0} = \lambda_R`
+
+```lean
+theorem rateLatency_zero (R : ℝ≥0) :
+    rateLatency R 0 = rate R := by
+  funext t; simp only [rateLatency, rate, tsub_zero]
+```
+
+*Theorem:* $`\gamma_{R,0} = \lambda_R`
+
+```lean
+theorem tokenBucket_zero_rate (R : ℝ≥0) :
+    tokenBucket R 0 = rate R := by
+  funext t
+  rcases eq_or_ne t 0 with ht | ht
+  · subst ht; rw [tokenBucket_zero_eq]; simp [rate]
+  · rw [tokenBucket_apply_pos R 0 t ht]; simp [rate]
+```
+
+The token-bucket is non-decreasing — both its affine part and its cap
+are — which is what the delay-shift quotient needs.
+
+*Theorem:* $`\gamma_{r,b}` is non-decreasing
+
+```lean
+theorem tokenBucket_mono (r b : ℝ≥0) :
+    Monotone (tokenBucket r b) := by
+  intro a c hac
+  simp only [tokenBucket, Pi.inf_apply]
+  exact min_le_min (by gcongr) (delay_mono 0 hac)
+```
+
+## Deconvolutions by a pure delay
+
+Deconvolving by a pure delay is a forward time-shift, so each quotient
+by $`\delta_d` is the curve evaluated at $`t + d`. For two delays this
+subtracts the delays (when $`d' \le d`, so the shift stays a delay).
+
+*Theorem:* $`\delta_d \oslash \delta_{d'} = \delta_{d - d'}` for $`d' \le d`
+
+```lean
+theorem deconv_delay_delay (d d' : ℝ≥0) (h : d' ≤ d) :
+    minDeconvE (delay d) (delay d') = delay (d - d') := by
+  rw [deconv_delay (delay d) (delay_mono d) d']
+  funext t
+  show (if t + d' ≤ d then (0:ℝ≥0∞) else ⊤)
+      = delay (d - d') t
+  simp only [delay]; congr 1; rw [le_tsub_iff_right h]
+```
+
+The rate shifts to an uncapped affine: the delay-shift of $`\lambda_R`
+adds the burst $`R\,d`.
+
+*Theorem:* $`\lambda_R \oslash \delta_d = \hat\gamma_{R, R d}`
+
+```lean
+theorem deconv_rate_delay (R d : ℝ≥0) :
+    minDeconvE (rate R) (delay d) = affine R (R * d) := by
+  rw [deconv_delay (rate R) (rate_mono R) d]
+  funext t; simp only [rate, affine]; push_cast; ring
+```
+
+The token-bucket shifts to an uncapped affine with the burst grown by
+$`r\,d`. This needs $`0 < d`: at $`d = 0` the quotient is the
+token-bucket itself, which is _capped_ at the origin and so differs
+from the uncapped affine there.
+
+*Theorem:* $`\gamma_{r,b} \oslash \delta_d = \hat\gamma_{r, b + r d}` for $`0 < d`
+
+```lean
+theorem deconv_tokenBucket_delay (r b d : ℝ≥0)
+    (hd : 0 < d) :
+    minDeconvE (tokenBucket r b) (delay d)
+      = affine r (b + r * d) := by
+  rw [deconv_delay (tokenBucket r b)
+    (tokenBucket_mono r b) d]
+  funext t
+  have htd : t + d ≠ 0 := by positivity
+  rw [tokenBucket_apply_pos r b (t + d) htd]
+  simp only [affine]; push_cast; ring
+```
+
+## Deconvolutions by a rate and a rate-latency
+
+The remaining quotients are the master identity and its
+specialisations. The engine is a one-sided affine bound: shifting an
+uncapped affine forward by $`u` is dominated by re-burst-ing it and
+adding the rate-latency service $`\beta_{R,T}` of any faster server.
+
+*Theorem:* $`\hat\gamma_{r,b}(t + u) \le \hat\gamma_{r, b + r T}(t) + \beta_{R,T}(u)` for $`r \le R`
+
+```lean
+theorem affine_shift_bound (r b R T t u : ℝ≥0)
+    (h : r ≤ R) :
+    affine r b (t + u)
+      ≤ affine r (b + r*T) t + rateLatency R T u := by
+  simp only [affine, rateLatency]
+  have key : (r*(t+u)+b : ℝ≥0)
+      ≤ (r*t+(b+r*T)) + R*(u-T) := by
+    rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub_def]
+    rcases le_total u T with hu | hu
+    · rw [max_eq_right (by
+        have := NNReal.coe_le_coe.mpr hu; linarith)]
+      nlinarith [mul_le_mul_of_nonneg_left
+        (NNReal.coe_le_coe.mpr hu) r.coe_nonneg]
+    · rw [max_eq_left (by
+        have := NNReal.coe_le_coe.mpr hu; linarith)]
+      nlinarith [mul_le_mul_of_nonneg_right
+        (sub_nonneg.mpr (NNReal.coe_le_coe.mpr h))
+        (sub_nonneg.mpr (NNReal.coe_le_coe.mpr hu))]
+  calc (r:ℝ≥0∞)*(t+u)+b
+        = ((r*(t+u)+b : ℝ≥0):ℝ≥0∞) := by push_cast; ring
+    _ ≤ (((r*t+(b+r*T)) + R*(u-T) : ℝ≥0):ℝ≥0∞) := by
+        exact_mod_cast key
+    _ = ((r:ℝ≥0∞)*t+(b+r*T)) + (R:ℝ≥0∞)*(u-T) := by
+        push_cast; ring
+```
+
+The token-bucket lies below its uncapped affine part everywhere.
+
+*Theorem:* $`\gamma_{r,b}(t) \le \hat\gamma_{r,b}(t)`
+
+```lean
+theorem tokenBucket_le_affine (r b t : ℝ≥0) :
+    tokenBucket r b t ≤ affine r b t := by
+  simp only [tokenBucket, Pi.inf_apply, affine]
+  exact min_le_left _ _
+```
+
+The master identity: deconvolving a token-bucket by a _faster_
+rate-latency server gives the uncapped affine with burst grown by
+$`r\,T`. The upper bound is the affine shift bound; the lower bound is
+attained at the split $`s = T`, where the rate-latency vanishes. The
+hypothesis $`0 < T` is genuine — at $`T = 0` the lower bound would have
+to be attained only as a non-attained supremum at the origin, which is
+the separate rate identity below.
+
+*Theorem:* $`\gamma_{r,b} \oslash \beta_{R,T} = \hat\gamma_{r, b + r T}` for $`r \le R`, $`0 < T`
+
+```lean
+theorem deconv_tokenBucket_rateLatency
+    (r b R T : ℝ≥0) (h : r ≤ R) (hT : 0 < T) :
+    minDeconvE (tokenBucket r b) (rateLatency R T)
+      = affine r (b + r*T) := by
+  funext t
+  apply le_antisymm
+  · unfold minDeconvE; refine iSup_le (fun u => ?_)
+    refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
+    exact le_trans (tokenBucket_le_affine r b (t+u))
+      (affine_shift_bound r b R T t u h)
+  · unfold minDeconvE; refine le_iSup_of_le T ?_
+    have htT : t + T ≠ 0 := by positivity
+    rw [tokenBucket_apply_pos r b (t+T) htT]
+    have hbeta : rateLatency R T T = 0 := by
+      simp only [rateLatency, tsub_self]; simp
+    rw [hbeta, tsub_zero]
+    simp only [affine]; push_cast; ring_nf; rfl
+```
+
+When the server is _slower_ than the burst rate ($`R < r`) the quotient
+diverges: the deconvolution is $`+\infty` everywhere. The lower bound
+$`(r - R)(u - T) \le \gamma_{r,b}(t+u) - \beta_{R,T}(u)` grows without
+bound in $`u`, so the supremum is $`\top`.
+
+*Theorem:* $`(r - R)(u - T) \le \gamma_{r,b}(t+u) - \beta_{R,T}(u)` for $`R \le r`, $`T \le u`
+
+```lean
+theorem deconv_term_lb (r b R T t u : ℝ≥0)
+    (hRr : R ≤ r) (hu : T ≤ u) (htu : t + u ≠ 0) :
+    ((((r-R)*(u-T) : ℝ≥0)):ℝ≥0∞)
+      ≤ tokenBucket r b (t+u) - rateLatency R T u := by
+  rw [tokenBucket_apply_pos r b (t+u) htu]
+  have hβ : rateLatency R T u
+      = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
+    simp only [rateLatency]; push_cast; ring
+  rw [hβ]
+  apply ENNReal.le_sub_of_add_le_right ENNReal.coe_ne_top
+  rw [← ENNReal.coe_mul, ← ENNReal.coe_add,
+      ← ENNReal.coe_add, ENNReal.coe_le_coe,
+      ← NNReal.coe_le_coe]
+  push_cast [NNReal.coe_sub_def]
+  have hT : (↑T:ℝ) ≤ ↑u := NNReal.coe_le_coe.mpr hu
+  have hR : (↑R:ℝ) ≤ ↑r := NNReal.coe_le_coe.mpr hRr
+  rw [max_eq_left (show (0:ℝ) ≤ ↑u - ↑T by linarith),
+      max_eq_left (show (0:ℝ) ≤ ↑r - ↑R by linarith)]
+  nlinarith [r.coe_nonneg, b.coe_nonneg,
+    mul_nonneg r.coe_nonneg t.coe_nonneg,
+    mul_nonneg r.coe_nonneg T.coe_nonneg]
+```
+
+A linear function with positive slope has unbounded supremum.
+
+*Theorem:* $`\sup_s c\,s = +\infty` for $`0 < c`
+
+```lean
+theorem iSup_coe_mul_eq_top (c : ℝ≥0) (hc : 0 < c) :
+    (⨆ s : ℝ≥0, ((c * s : ℝ≥0):ℝ≥0∞)) = ⊤ := by
+  rw [iSup_eq_top]; intro M hM
+  lift M to ℝ≥0 using hM.ne with M'
+  refine ⟨(M'/c) + 1, ?_⟩
+  rw [ENNReal.coe_lt_coe,
+    show c * (M'/c + 1) = (M'/c)*c + c by ring,
+    div_mul_cancel₀ M' hc.ne']
+  exact lt_add_of_le_of_pos le_rfl hc
+```
+
+*Theorem:* $`\gamma_{r,b} \oslash \beta_{R,T} = +\infty` for $`R < r`
+
+```lean
+theorem deconv_tokenBucket_rateLatency_top
+    (r b R T : ℝ≥0) (hRr : R < r) :
+    minDeconvE (tokenBucket r b) (rateLatency R T)
+      = fun _ => (⊤:ℝ≥0∞) := by
+  funext t
+  rw [eq_top_iff]
+  have hpos : 0 < r - R := tsub_pos_of_lt hRr
+  rw [← iSup_coe_mul_eq_top (r - R) hpos]
+  refine iSup_le ?_
+  intro w
+  refine le_iSup_of_le (T + w) ?_
+  by_cases htu : t + (T + w) = 0
+  · have hw : w = 0 := by
+      have h2 : w ≤ t + (T + w) :=
+        le_add_self.trans
+          (by rw [add_comm]; exact le_add_self)
+      simpa [htu] using h2
+    simp [hw]
+  · have hu : T ≤ T + w := le_self_add
+    have hlb := deconv_term_lb r b R T t (T + w)
+      hRr.le hu htu
+    refine le_trans ?_ hlb
+    rw [ENNReal.coe_le_coe]
+    have he : (T + w) - T = w := by simp
+    rw [he]
+```
+
+Specialising the master to $`T = 0` would lose the $`0 < T`
+hypothesis, so the rate quotient is proved directly. Its lower bound at
+the origin is a genuine non-attained supremum: the split-terms
+$`b - (R - r)\,s` approach the burst $`b` from below as $`s \to 0`, so
+the supremum is $`b` even though no single split attains it.
+
+*Theorem:* $`b \le \sup_s\,(\gamma_{r,b}(s) - \lambda_R(s))` for $`r \le R`
+
+```lean
+theorem deconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
+    (b:ℝ≥0∞)
+      ≤ ⨆ s : ℝ≥0, tokenBucket r b s - rate R s := by
+  rw [le_iSup_iff]
+  intro c hc
+  by_contra hbc
+  rw [not_le] at hbc
+  lift c to ℝ≥0 using hbc.ne_top with c'
+  rw [ENNReal.coe_lt_coe] at hbc
+  rcases eq_or_lt_of_le h with hRr | hRr
+  · subst hRr
+    have h1 := hc 1
+    rw [tokenBucket_apply_pos r b 1 one_ne_zero,
+      rate] at h1
+    simp only [ENNReal.coe_one, mul_one] at h1
+    rw [ENNReal.add_sub_cancel_left
+      ENNReal.coe_ne_top] at h1
+    exact absurd (ENNReal.coe_le_coe.mp h1)
+      (not_le.mpr hbc)
+  · set d := R - r with hd
+    have hdpos : 0 < d := tsub_pos_of_lt hRr
+    have hgpos : 0 < b - c' := tsub_pos_of_lt hbc
+    set s := (b - c') / (2 * d) with hs
+    have hsne : s ≠ 0 := by rw [hs]; positivity
+    have hcs := hc s
+    rw [tokenBucket_apply_pos r b s hsne, rate] at hcs
+    have hRcoe : (R:ℝ≥0∞) * s
+        = ((R * s : ℝ≥0) : ℝ≥0∞) := by
+      rw [ENNReal.coe_mul]
+    have hrcoe : (r:ℝ≥0∞) * s + b
+        = ((r * s + b : ℝ≥0):ℝ≥0∞) := by
+      rw [ENNReal.coe_add, ENNReal.coe_mul]
+    rw [hRcoe, hrcoe, ← ENNReal.coe_sub,
+      ENNReal.coe_le_coe] at hcs
+    apply absurd hcs
+    rw [not_le, ← NNReal.coe_lt_coe]
+    push_cast [NNReal.coe_sub_def]
+    have hcr : (c':ℝ) < b := by exact_mod_cast hbc
+    have hdr : (0:ℝ) < d := by exact_mod_cast hdpos
+    have hds : (d:ℝ) * s = ((b:ℝ) - c')/2 := by
+      rw [hs]
+      push_cast [NNReal.coe_sub_def,
+        max_eq_left (by linarith : (0:ℝ) ≤ ↑b - ↑c')]
+      field_simp
+    have hRrd : (R:ℝ) = (r:ℝ) + d := by
+      have he : ((R - r : ℝ≥0):ℝ) = (R:ℝ) - r :=
+        NNReal.coe_sub h
+      rw [hd]; rw [he]; ring
+    have hexp : (R:ℝ) * s = r * s + d * s := by
+      rw [hRrd]; ring
+    have hval : (↑r * ↑s + ↑b - ↑R * ↑s : ℝ)
+        = (↑b + ↑c')/2 := by
+      rw [hexp,
+        show (↑r*↑s+↑b-(↑r*↑s+↑d*↑s):ℝ)
+          = ↑b - ↑d*↑s by ring, hds]
+      ring
+    rw [max_eq_left (by
+      rw [hval]
+      linarith [c'.coe_nonneg, b.coe_nonneg]), hval]
+    linarith
+```
+
+The affine shift bound at $`T = 0` is the upper bound for the rate
+quotient.
+
+*Theorem:* $`\hat\gamma_{r,b}(t + u) \le \hat\gamma_{r,b}(t) + \lambda_R(u)` for $`r \le R`
+
+```lean
+theorem affine_shift_bound0 (r b R t u : ℝ≥0)
+    (h : r ≤ R) :
+    affine r b (t + u) ≤ affine r b t + rate R u := by
+  simp only [affine, rate]
+  have key : (r*(t+u)+b : ℝ≥0) ≤ (r*t+b) + R*u := by
+    rw [← NNReal.coe_le_coe]; push_cast
+    nlinarith [mul_le_mul_of_nonneg_right
+      (NNReal.coe_le_coe.mpr h) u.coe_nonneg]
+  calc (r:ℝ≥0∞)*(t+u)+b
+        = ((r*(t+u)+b : ℝ≥0):ℝ≥0∞) := by push_cast; ring
+    _ ≤ (((r*t+b) + R*u : ℝ≥0):ℝ≥0∞) := by
+        exact_mod_cast key
+    _ = ((r:ℝ≥0∞)*t+b) + (R:ℝ≥0∞)*u := by
+        push_cast; ring
+```
+
+The token-bucket deconvolved by a _faster_ rate is the uncapped
+affine: off the origin the split $`s = 0` attains it; at the origin the
+supremum equals the burst as above.
+
+*Theorem:* $`\gamma_{r,b} \oslash \lambda_R = \hat\gamma_{r,b}` for $`r \le R`
+
+```lean
+theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
+    (h : r ≤ R) :
+    minDeconvE (tokenBucket r b) (rate R) = affine r b := by
+  funext t
+  apply le_antisymm
+  · unfold minDeconvE; refine iSup_le (fun u => ?_)
+    refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
+    exact le_trans (tokenBucket_le_affine r b (t+u))
+      (affine_shift_bound0 r b R t u h)
+  · rcases eq_or_ne t 0 with ht | ht
+    · subst ht
+      simp only [affine, ENNReal.coe_zero, mul_zero,
+        zero_add]
+      unfold minDeconvE; simp only [zero_add]
+      exact deconv_origin_lb r b R h
+    · unfold minDeconvE; refine le_iSup_of_le 0 ?_
+      rw [add_zero, tokenBucket_apply_pos r b t ht]
+      simp only [rate, ENNReal.coe_zero, mul_zero,
+        tsub_zero, affine, le_refl]
+```
+
+Finally the rate-by-rate quotient: a slower rate deconvolved by a
+faster one is unchanged. It is the token-bucket identity at zero burst.
+
+*Theorem:* $`\lambda_R \oslash \lambda_{R'} = \lambda_R` for $`R \le R'`
+
+```lean
+theorem deconv_rate_rate (R R' : ℝ≥0) (h : R ≤ R') :
+    minDeconvE (rate R) (rate R') = rate R := by
+  conv_lhs => rw [← tokenBucket_zero_rate R]
+  rw [deconv_tokenBucket_rate R 0 R' h, affine_zero]
+```
+
 ```lean
 end DeepWiki
 ```
