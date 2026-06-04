@@ -142,6 +142,17 @@ noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
       g p.1.1 + h p.1.2
 ```
 
+The _(min,plus) deconvolution_ (the dual quotient) is the numeric
+supremum, over all forward shifts $`s`, of $`g(t + s) - h(s)`.
+
+*Definition:* $`(g \oslash h)(t) = \sup_{s}\,(g(t + s) - h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
+
+```lean
+noncomputable def minDeconvE (g h : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t => ⨆ s : ℝ≥0, g (t + s) - h s
+```
+
 # The extended-real function dioid
 
 $`\mathcal{F}` is the set of those functions read into the complete

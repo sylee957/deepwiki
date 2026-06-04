@@ -1162,20 +1162,13 @@ theorem conv_delay_posPart (f : ℝ≥0 → ℝ≥0∞) (t d : ℝ≥0) :
   rw [tsub_eq_toNNReal_max]
 ```
 
-Deconvolution is the dual _(min,plus)_ quotient, the numeric supremum
-over forward shifts of $`f(t + s) - \delta_d(s)`. It shifts _backward_
-by $`d`: $`(f \oslash \delta_d)(t) = f(t + d)`. Where $`s \le d` the
-delay is $`0`, leaving $`f(t + s) \le f(t + d)`; where $`s > d` the
-delay is $`+\infty`, and the truncated difference floors to $`0`. The
-$`s = d` term attains $`f(t + d)`.
-
-*Definition:* the _(min,plus)_ deconvolution $`(f \oslash g)(t) = \sup_{s}\,(f(t + s) - g(s))`
-
-```lean
-noncomputable def minDeconvE (f g : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  fun t => ⨆ s : ℝ≥0, f (t + s) - g s
-```
+Deconvolution is the dual _(min,plus)_ quotient `minDeconvE` (the
+function-dioids chapter), the numeric supremum over forward shifts of
+$`f(t + s) - \delta_d(s)`. It shifts _backward_ by $`d`:
+$`(f \oslash \delta_d)(t) = f(t + d)`. Where $`s \le d` the delay is
+$`0`, leaving $`f(t + s) \le f(t + d)`; where $`s > d` the delay is
+$`+\infty`, and the truncated difference floors to $`0`. The $`s = d`
+term attains $`f(t + d)`.
 
 *Theorem:* $`f \oslash \delta_d = f(\,\cdot + d\,)`
 
