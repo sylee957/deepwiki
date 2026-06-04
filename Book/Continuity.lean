@@ -480,6 +480,40 @@ theorem isPiecewiseContinuous_id :
   isPiecewiseContinuous_of_continuous _ continuous_id
 ```
 
+# Piecewise continuity for extended-real curves
+
+Some curves take the value $`+\infty` (a blocking delay, a saturating
+test function), so live in $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge
+0}` rather than $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. We mirror the
+discontinuity set and piecewise-continuity notion for these, valued in
+`ℝ≥0∞`; the definitions and the continuous-implies-pwc fact are
+identical in form.
+
+*Definition:* the discontinuity set of an $`\overline{\mathbb{R}}_{\ge 0}`-valued curve
+
+```lean
+def discontSetTop (g : ℝ≥0 → ℝ≥0∞) : Set ℝ≥0 :=
+  { t | ¬ ContinuousAt g t }
+```
+
+*Definition:* an $`\overline{\mathbb{R}}_{\ge 0}`-valued $`g` is piecewise continuous
+
+```lean
+def IsPwcTop (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ T : ℝ≥0, (discontSetTop g ∩ Set.Icc 0 T).Finite
+```
+
+*Theorem:* a continuous $`\overline{\mathbb{R}}_{\ge 0}`-valued curve is piecewise continuous
+
+```lean
+theorem pwcTop_of_continuous (g : ℝ≥0 → ℝ≥0∞)
+    (hg : Continuous g) : IsPwcTop g := by
+  intro T
+  have : discontSetTop g = ∅ := by
+    ext t; simp [discontSetTop, hg.continuousAt]
+  simp [this]
+```
+
 ```lean
 end DeepWiki
 ```

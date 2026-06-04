@@ -153,42 +153,13 @@ theorem test_zero_eq (T : ℝ≥0) : test T 0 = 0 := by
   simp [test]
 ```
 
-# Piecewise continuity
-
-A curve is _piecewise continuous_ when its discontinuities are locally
-finite: only finitely many lie in any bounded initial interval
-$`[0, T]`. We state this for `ℝ≥0∞`-valued functions, mirroring the
-$`\mathbb{R}_{\ge 0}`-valued notion of the piecewise-continuity chapter.
-
-*Definition:* the discontinuity set of an $`\overline{\mathbb{R}}_{\ge 0}`-valued curve
-
-```lean
-def discontSetTop (g : ℝ≥0 → ℝ≥0∞) : Set ℝ≥0 :=
-  { t | ¬ ContinuousAt g t }
-```
-
-*Definition:* $`g` is piecewise continuous when each $`[0, T]` holds finitely many jumps
-
-```lean
-def IsPwcTop (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ T : ℝ≥0, (discontSetTop g ∩ Set.Icc 0 T).Finite
-```
-
-A continuous curve has an empty discontinuity set, so it is piecewise
-continuous a fortiori.
-
-*Theorem:* a continuous curve is piecewise continuous
-
-```lean
-theorem pwcTop_of_continuous (g : ℝ≥0 → ℝ≥0∞)
-    (hg : Continuous g) : IsPwcTop g := by
-  intro T
-  have : discontSetTop g = ∅ := by
-    ext t; simp [discontSetTop, hg.continuousAt]
-  simp [this]
-```
-
 # Continuity of the rate and rate-latency
+
+We now record the analytic regularity of the curves. Piecewise
+continuity and left-continuity were developed in the chapter
+`Continuity`; we reuse its $`\overline{\mathbb{R}}_{\ge 0}`-valued
+notions `IsPwcTop` (piecewise continuity) and `IsLeftContinuousTop`
+(left-continuity) here.
 
 The guaranteed rate and the rate-latency are genuinely continuous: each
 is a constant multiple of a continuous $`\overline{\mathbb{R}}_{\ge 0}`-
