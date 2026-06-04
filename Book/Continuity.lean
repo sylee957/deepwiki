@@ -120,6 +120,37 @@ theorem rightCont_of_continuous {X : Type*}
   fun t => hg.continuousAt.continuousWithinAt
 ```
 
+The two one-sided notions are not merely consequences of continuity —
+together they _characterize_ it. Continuity at a point splits into
+approach from below and approach from above, so a function continuous on
+every left ray and every right ray is continuous everywhere, and
+conversely. At the origin this still holds: the left ray is empty, so
+left-continuity adds nothing there, and right-continuity at $`0` is
+exactly continuity at $`0` (there is nothing to the left to approach
+from).
+
+*Theorem:* $`g` is continuous iff it is both left- and right-continuous
+
+```lean
+theorem continuous_iff_left_right
+    {X : Type*} [TopologicalSpace X] (g : ℝ≥0 → X) :
+    Continuous g ↔
+      IsLeftContinuous g ∧ IsRightContinuous g := by
+  rw [continuous_iff_continuousAt]
+  unfold IsLeftContinuous IsRightContinuous
+  constructor
+  · intro h
+    exact ⟨fun t =>
+        (continuousAt_iff_continuous_left'_right'.mp
+          (h t)).1,
+      fun t =>
+        (continuousAt_iff_continuous_left'_right'.mp
+          (h t)).2⟩
+  · rintro ⟨hl, hr⟩ t
+    exact continuousAt_iff_continuous_left'_right'.mpr
+      ⟨hl t, hr t⟩
+```
+
 # The epsilon-delta form
 
 The classical restatement is the elementary $`\varepsilon`–$`\delta`
