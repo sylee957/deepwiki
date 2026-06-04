@@ -1,6 +1,6 @@
 import VersoManual
 import Book.Servers
-import Book.SubadditiveClosure
+import Book.Closures
 import Book.RealConvolution
 
 open Verso.Genre Manual

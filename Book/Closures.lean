@@ -1,10 +1,11 @@
 import VersoManual
 import Book.FunctionDioids
+import Book.Additivity
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
-#doc (Manual) "The sub-additive closure" =>
+#doc (Manual) "Closures" =>
 The _sub-additive closure_ of a curve `σ` is its Kleene star in the
 function dioid: the dioid sum of all convolution powers,
 $$`\sigma^{\star} = \bigsqcup_{n \ge 0} \sigma^{(n)}, \qquad \sigma^{(0)} = \delta_0,\ \ \sigma^{(n+1)} = \sigma^{(n)} \ast \sigma.`
@@ -13,7 +14,9 @@ $`\overline{\mathbb{R}}_{\ge 0}`, this is the familiar $`(\min, +)`
 star $`\sigma^{\star} = \inf_n \sigma^{(n)}`. This chapter builds it and
 develops its Kleene-star theory: the closure lies below `σ`, the powers
 add under convolution, and the closure is _idempotent_ — a fixed point
-of self-convolution, hence itself sub-additive.
+of self-convolution, hence itself sub-additive. We then read the same
+closure back onto the bare extended-real values, through the coincidence
+of the dioid product with the numeric `(min,plus)` convolution.
 
 ```lean
 namespace DeepWiki
@@ -189,6 +192,91 @@ theorem closure_subadditive (sigma : Fmin) (u s : ℝ≥0) :
     exact CompleteDioid.le_sSup _ _ ⟨u, s, rfl, rfl⟩
   rwa [closure_idem sigma] at hterm
 ```
+
+# The sub-additive closure on the extended reals
+
+The dioid closure above lives on `Fmin`. Read back onto the bare
+extended-real values $`\overline{\mathbb{R}}_{\ge 0}` (`ℝ≥0∞`), it is
+the _(min,plus)_ closure of a numeric curve $`g`: unwrap the dioid
+closure of the lifted curve $`\uparrow\!g` (here `toF g`). Every
+property transports through the lift `toF`, whose product coincides with
+the numeric convolution `minConvE` (the chapter `Additivity`).
+
+*Definition:* the numeric sub-additive closure $`g^{\star}` on $`\overline{\mathbb{R}}_{\ge 0}`
+
+```lean
+noncomputable def subadditiveClosureE
+    (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ≥0∞ :=
+  fun t => (subadditiveClosure (toF g) t).toVal
+```
+
+Lifting the numeric closure recovers the dioid closure — the bridge
+that carries the theory across.
+
+*Theorem:* $`\uparrow\!(g^{\star}) = (\uparrow\!g)^{\star}`
+
+```lean
+theorem toF_subadditiveClosureE (g : ℝ≥0 → ℝ≥0∞) :
+    toF (subadditiveClosureE g)
+      = subadditiveClosure (toF g) := by
+  funext t; apply MinPlusNN.ext; rfl
+```
+
+The closure lies below the curve — the numeric reading of "the dioid
+closure dominates `σ`" (the dioid order is the reverse of the numeric
+one). It is the power-one term.
+
+*Theorem:* $`g^{\star} \le g`
+
+```lean
+theorem subadditiveClosureE_le (g : ℝ≥0 → ℝ≥0∞)
+    (t : ℝ≥0) : subadditiveClosureE g t ≤ g t := by
+  have h := convPow_le_closure (toF g) 1 t
+  rw [convPow_one, MinPlusNN.le_iff] at h
+  exact h
+```
+
+The closure is a fixed point of (min,plus) self-convolution —
+idempotence, transported through `conv_toF`.
+
+*Theorem:* $`g^{\star} \ast g^{\star} = g^{\star}`
+
+```lean
+theorem subadditiveClosureE_idem (g : ℝ≥0 → ℝ≥0∞) :
+    minConvE (subadditiveClosureE g)
+        (subadditiveClosureE g)
+      = subadditiveClosureE g := by
+  have h := closure_idem (toF g)
+  rw [← toF_subadditiveClosureE, conv_toF] at h
+  funext t
+  exact congrArg MinPlusNN.toVal (congrFun h t)
+```
+
+Hence the closure is itself sub-additive.
+
+*Theorem:* $`g^{\star}` is sub-additive
+
+```lean
+theorem subadditiveClosureE_subadditive
+    (g : ℝ≥0 → ℝ≥0∞) :
+    IsSubadditive (subadditiveClosureE g) := by
+  intro u s
+  have h := closure_subadditive (toF g) u s
+  rw [MinPlusNN.le_iff] at h
+  calc subadditiveClosureE g (u + s)
+      = (subadditiveClosure (toF g) (u + s)).toVal := rfl
+    _ ≤ (subadditiveClosure (toF g) u
+          ⊗ₒ subadditiveClosure (toF g) s).toVal := h
+    _ = subadditiveClosureE g u
+          + subadditiveClosureE g s := rfl
+```
+
+The _super-additive_ closure has no counterpart here: the (max,plus)
+convolution on $`\overline{\mathbb{R}}_{\ge 0}` has no identity element
+(a curve decreasing from a positive value at the origin would force the
+would-be unit to be negative, impossible on $`\mathbb{R}_{\ge 0}`), so
+there is no Kleene star to take. Its proper home is the order-dual
+carrier with a $`-\infty` bottom.
 
 ```lean
 end DeepWiki
