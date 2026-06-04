@@ -109,6 +109,18 @@ theorem continuousWithinAt_Iio_zero (g : ℝ≥0 → ℝ≥0∞) :
   exact tendsto_bot
 ```
 
+A continuous function is left-continuous a fortiori: continuity at a
+point restricts to continuity within any set, in particular the left
+ray.
+
+*Theorem:* a continuous function is left-continuous
+
+```lean
+theorem leftCont_of_continuous (g : ℝ≥0 → ℝ≥0∞)
+    (hg : Continuous g) : IsLeftContinuousTop g :=
+  fun t => hg.continuousAt.continuousWithinAt
+```
+
 # Equivalence of the two definitions
 
 We prove the $`\varepsilon`–$`\delta` definition equals the topological

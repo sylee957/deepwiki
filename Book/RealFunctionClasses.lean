@@ -420,17 +420,10 @@ theorem staircase_pwc (P h : ℝ≥0) (J : ℝ)
 # Left-continuity
 
 `Mathlib`-left-continuity asks that a curve be continuous from the left
-at every time. The continuous curves are left-continuous a fortiori; the
-step and staircase curves jump _upward to the right_, so the left limit
-agrees with the value, and they too are left-continuous.
-
-*Theorem:* a continuous curve is left-continuous
-
-```lean
-theorem leftCont_of_continuous (g : ℝ≥0 → ℝ≥0∞)
-    (hg : Continuous g) : IsLeftContinuousTop g :=
-  fun t => hg.continuousAt.continuousWithinAt
-```
+at every time. The continuous curves are left-continuous a fortiori (by
+`leftCont_of_continuous` from the `Continuity` chapter); the step and
+staircase curves jump _upward to the right_, so the left limit agrees
+with the value, and they too are left-continuous.
 
 *Theorem:* $`\lambda_R` is left-continuous
 
