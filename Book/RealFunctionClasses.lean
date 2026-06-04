@@ -1214,7 +1214,8 @@ f(t + d)` from sub-additivity and monotonicity of `f`.
 theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    IsSubadditive (delay 0 ⊓ fun t => f (t + d)) := by
+    IsSubadditive (delay 0 ⊓ minDeconvE f (delay d)) := by
+  rw [deconv_delay f hmono d]
   intro u s
   simp only [Pi.inf_apply]
   rcases eq_or_ne u 0 with hu | hu
@@ -1246,8 +1247,10 @@ theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
 *Theorem:* $`(\delta_0 \wedge (f \oslash \delta_d))(0) = 0`
 
 ```lean
-theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
-    (delay 0 ⊓ fun t => f (t + d)) 0 = 0 := by
+theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
+    (hmono : Monotone f) (d : ℝ≥0) :
+    (delay 0 ⊓ minDeconvE f (delay d)) 0 = 0 := by
+  rw [deconv_delay f hmono d]
   show min (delay 0 0) (f (0 + d)) = 0
   rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; simp
 ```
@@ -1283,12 +1286,11 @@ theorem deconv_delay_closure (f : ℝ≥0 → ℝ≥0∞)
     (d : ℝ≥0) :
     subadditiveClosureE (minDeconvE f (delay d))
       = delay 0 ⊓ minDeconvE f (delay d) := by
-  rw [deconv_delay f hmono d]
-  set h : ℝ≥0 → ℝ≥0∞ := fun t => f (t + d) with hh
+  set h : ℝ≥0 → ℝ≥0∞ := minDeconvE f (delay d) with hh
   set g : ℝ≥0 → ℝ≥0∞ := delay 0 ⊓ h with hg
   have hgsub : IsSubadditive g :=
     gdelay_subadd f hsub hmono d
-  have hg0 : g 0 = 0 := gdelay_zero f d
+  have hg0 : g 0 = 0 := gdelay_zero f hmono d
   have hgh : ∀ t, g t ≤ h t :=
     fun t => min_le_right _ _
   funext t
