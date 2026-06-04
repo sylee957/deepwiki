@@ -1,4 +1,4 @@
-name = "verified-wiki"
+name = "deepwiki"
 defaultTargets = ["Book", "generate-book"]
 
 [[require]]

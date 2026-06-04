@@ -1,6 +1,5 @@
 import VersoManual
-import Book.LeftContinuity
-import Book.PiecewiseContinuous
+import Book.Continuity
 import Book.FunctionDioids
 
 open Verso.Genre Manual

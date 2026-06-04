@@ -1,6 +1,6 @@
 import VersoManual
 import Book.Subadditivity
-import Book.LeftContinuity
+import Book.Continuity
 import Mathlib.Topology.Semicontinuity.Basic
 import Mathlib.Topology.Order.LeftRight
 import Mathlib.Topology.Instances.NNReal.Lemmas

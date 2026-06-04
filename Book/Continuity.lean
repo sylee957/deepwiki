@@ -3,26 +3,33 @@ import Book.FunctionDioids
 import Mathlib.Topology.Order.Monotone
 import Mathlib.Topology.Order.DenselyOrdered
 import Mathlib.Topology.Order.LeftRightNhds
+import Mathlib.Topology.Order.LeftRight
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
-#doc (Manual) "Left-continuity" =>
-The cumulative functions of network calculus are usually taken
-_left-continuous_, the regularity that keeps shaped and convolved
-outputs well-defined. Left-continuity is a property of the _values_
-alone, not of the dioid structure, so we state it on functions
-$`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty` valued in
-the extended non-negative reals — where `Mathlib`'s order topology
-lives. A cumulative function `f : Fmin` is covered through its values
-$`s \mapsto (f\,s)`.
+#doc (Manual) "Continuity" =>
+The cumulative functions of network calculus carry two regularity
+notions, both properties of the _values_ alone (not of the dioid
+structure), stated on functions valued in the non-negative reals —
+where `Mathlib`'s order topology lives.
 
-We define left-continuity in the elementary $`\varepsilon`–$`\delta`
-form, recall `Mathlib`'s topological notion, and prove the two
-equivalent. The definition holds for an _arbitrary_ `g`, including ones
-that take the value $`+\infty`; no monotonicity is assumed.
+First, _left-continuity_: the regularity that keeps shaped and convolved
+outputs well-defined. We state it on
+$`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty`, define it
+in the elementary $`\varepsilon`–$`\delta` form, recall `Mathlib`'s
+topological notion, and prove the two equivalent; the definition holds
+for an _arbitrary_ `g`, including ones taking $`+\infty`, with no
+monotonicity assumed. A cumulative function `f : Fmin` is covered
+through its values $`s \mapsto (f\,s)`.
+
+Second, _piecewise continuity_: continuous except at isolated jumps,
+made precise as _locally finite_ discontinuities — on every bounded
+initial interval $`[0, T]` only finitely many. We record it on real
+functions $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` with its basic
+closure facts; it feeds the curve class of the shaper chapters.
 
 ```lean
 namespace DeepWiki
@@ -412,6 +419,65 @@ noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
 
 def IsLeftContinuousF (f : Fmin) : Prop :=
   IsLeftContinuous (numFn f)
+```
+
+# The discontinuity set
+
+We turn to _piecewise continuity_. The _discontinuity set_ of a function
+collects the points at which it fails to be continuous.
+
+*Definition:* the discontinuity set $`\{\,t \mid g \text{ not continuous at } t\,\}`
+
+```lean
+def discontSet (g : ℝ≥0 → ℝ≥0) : Set ℝ≥0 :=
+  { t | ¬ ContinuousAt g t }
+```
+
+# Piecewise continuity
+
+A function is _piecewise continuous_ when its discontinuities are
+locally finite: only finitely many lie in any bounded initial interval
+$`[0, T]`. Equivalently, the jumps do not accumulate.
+
+*Definition:* $`g` is piecewise continuous when each $`[0, T]` holds finitely many jumps
+
+```lean
+def IsPiecewiseContinuous (g : ℝ≥0 → ℝ≥0) : Prop :=
+  ∀ T : ℝ≥0, (discontSet g ∩ Set.Icc 0 T).Finite
+```
+
+# Continuous functions are piecewise continuous
+
+A continuous function has an empty discontinuity set, so trivially
+finitely many jumps on every interval.
+
+*Theorem:* a continuous function is piecewise continuous
+
+```lean
+theorem isPiecewiseContinuous_of_continuous
+    (g : ℝ≥0 → ℝ≥0) (hg : Continuous g) :
+    IsPiecewiseContinuous g := by
+  intro T
+  have hempty : discontSet g = ∅ := by
+    ext t
+    simp [discontSet, hg.continuousAt]
+  rw [hempty, Set.empty_inter]
+  exact Set.finite_empty
+```
+
+In particular constant functions and the identity are piecewise
+continuous.
+
+*Theorem:* constant functions and the identity are piecewise continuous
+
+```lean
+theorem isPiecewiseContinuous_const (c : ℝ≥0) :
+    IsPiecewiseContinuous (fun _ => c) :=
+  isPiecewiseContinuous_of_continuous _ continuous_const
+
+theorem isPiecewiseContinuous_id :
+    IsPiecewiseContinuous (id : ℝ≥0 → ℝ≥0) :=
+  isPiecewiseContinuous_of_continuous _ continuous_id
 ```
 
 ```lean

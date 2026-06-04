@@ -1,7 +1,6 @@
 import VersoManual
 import Book.Subadditivity
-import Book.LeftContinuity
-import Book.PiecewiseContinuous
+import Book.Continuity
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
