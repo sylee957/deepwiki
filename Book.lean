@@ -25,7 +25,7 @@ set_option pp.rawOnError true
 #doc (Manual) "DeepWiki" =>
 
 %%%
-authors := ["S.Y. Lee"]
+authors := ["Sangyub Lee", "Claude (Anthropic)"]
 %%%
 
 _DeepWiki_ is an AI-generated wiki of _autoformalized_ mathematics: each topic is
