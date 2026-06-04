@@ -2153,19 +2153,23 @@ positivity on a window $`(0, \delta)` are developed in the continuity
 chapter (`pos_near_zero_of_rightLimitPos`).
 
 This is the faithful second statement: a positive right limit at the
-origin already pins the deviation to $`d`. The lower bound is taken at
-a small time $`s = \min(\varepsilon, \delta/2)` inside the positivity
-window, so the same $`\varepsilon \to 0` argument applies.
+origin already pins the deviation to $`d`. The hypothesis is the
+value-level $`f(0^+) > 0` — a right-convergence to $`L = f(0^+)` with
+$`0 < f(0^+)`. The lower bound is taken at a small time
+$`s = \min(\varepsilon, \delta/2)` inside the positivity window, so the
+same $`\varepsilon \to 0` argument applies.
 
 *Theorem:* $`hDev(f, \delta_d) = d` when $`f(0^+) > 0`
 
 ```lean
 theorem hDev_delay_eq_of_rightLimitPos
-    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
-    (h : RightLimitPos f) : hDev f (delay d) = d := by
+    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) (L : ℝ≥0∞)
+    (hL : Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L))
+    (hpos : 0 < rightLimit f 0) :
+    hDev f (delay d) = d := by
   apply le_antisymm (hDev_delay_le f d)
   obtain ⟨δ, hδ, hpos⟩ :=
-    pos_near_zero_of_rightLimitPos f h
+    pos_near_zero_of_rightLimit_pos f L hL hpos
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   set s : ℝ≥0 := min ε (δ / 2) with hs
@@ -2198,12 +2202,12 @@ The token-bucket has right limit $`b` at the origin: off the origin it
 agrees with the continuous affine $`r\,t + b`, which tends to $`b` as
 $`t \to 0^+`. So a positive burst $`b` gives a positive right limit.
 
-*Theorem:* $`\gamma_{r,b}(0^+) > 0` when $`0 < b`
+*Theorem:* $`\gamma_{r,b}` converges from the right to $`b` at the origin
 
 ```lean
-theorem tokenBucket_rightLimitPos (r b : ℝ≥0)
-    (hb : 0 < b) : RightLimitPos (tokenBucket r b) := by
-  refine ⟨(b:ℝ≥0∞), by exact_mod_cast hb, ?_⟩
+theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
+    Tendsto (tokenBucket r b) (𝓝[>] (0:ℝ≥0))
+      (𝓝 (b:ℝ≥0∞)) := by
   have heq : (𝓝[>] (0:ℝ≥0)).EventuallyEq
       (tokenBucket r b)
       (fun t => ((r*t + b : ℝ≥0):ℝ≥0∞)) := by
@@ -2222,10 +2226,21 @@ theorem tokenBucket_rightLimitPos (r b : ℝ≥0)
   exact hcont.mono_left nhdsWithin_le_nhds
 ```
 
+So the right limit of the token-bucket at the origin is the burst $`b`.
+
+*Theorem:* $`\gamma_{r,b}(0^+) = b`
+
+```lean
+theorem tokenBucket_rightLimit (r b : ℝ≥0) :
+    rightLimit (tokenBucket r b) 0 = (b:ℝ≥0∞) :=
+  rightLimit_eq_of_tendsto (tokenBucket r b) 0 b
+    (tokenBucket_tendsto_right r b)
+```
+
 The token-bucket has a positive burst right limit, so its horizontal
 deviation against a pure delay is exactly the delay — independent of
-$`r` and $`b`. This needs $`0 < b`: with $`b = 0` the curve starts at
-the origin and the right-limit hypothesis fails.
+$`r` and $`b`. This needs $`0 < b`: with $`b = 0` the right limit is
+$`0` and the positivity hypothesis fails.
 
 *Theorem:* $`hDev(\gamma_{r,b}, \delta_d) = d` for $`0 < b`
 
@@ -2234,7 +2249,8 @@ theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
     hDev (tokenBucket r b) (delay d) = d :=
   hDev_delay_eq_of_rightLimitPos (tokenBucket r b) d
-    (tokenBucket_rightLimitPos r b hb)
+    (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
+    (by rw [tokenBucket_rightLimit]; exact_mod_cast hb)
 ```
 
 The vertical deviation against a delay is the deconvolution at the

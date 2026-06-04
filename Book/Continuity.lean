@@ -292,6 +292,70 @@ where
     ⟨fun h => h ht, fun h _ => h⟩
 ```
 
+# One-sided limits
+
+Left-continuity was phrased as a convergence; the limit it converges to
+is a value worth naming. The _left limit_ and _right limit_ of $`g` at
+$`t` are the limits along the approach filters $`𝓝[<] t` and $`𝓝[>] t`
+— the times just below and just above $`t`. We take them as `Mathlib`'s
+`limUnder`: the genuine limit when one exists, and an unspecified value
+otherwise (so the value is only meaningful paired with a convergence
+fact, exactly as the classical "$`g(t^-)`'' / "$`g(t^+)`'' notation is).
+
+*Definition:* the left limit $`g(t^-)`
+
+```lean
+noncomputable def leftLimit
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
+  limUnder (𝓝[<] t) g
+```
+
+*Definition:* the right limit $`g(t^+)`
+
+```lean
+noncomputable def rightLimit
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
+  limUnder (𝓝[>] t) g
+```
+
+The right-approach filter at the origin is nontrivial — there are
+always times just above $`0` — so a right limit there is genuinely
+pinned by any convergence.
+
+```lean
+instance : (𝓝[>] (0:ℝ≥0)).NeBot := nhdsGT_neBot 0
+```
+
+When $`g` is left-continuous at $`t` and the left-approach filter is
+nontrivial (i.e. $`t > 0`), the left limit _is_ the value: the limit
+`limUnder` converges to is $`g(t)`. This is the value-level reading of
+left-continuity, $`g(t^-) = g(t)`.
+
+*Theorem:* $`g(t^-) = g(t)` when $`g` is left-continuous at $`t > 0`
+
+```lean
+theorem leftLimit_eq_of_leftContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (hlc : ContinuousWithinAt g (Iio t) t)
+    [(𝓝[<] t).NeBot] :
+    leftLimit g t = g t :=
+  hlc.tendsto.limUnder_eq
+```
+
+Dually, a convergence from the right pins the right limit to the value
+it converges to.
+
+*Theorem:* $`g(t^+) = L` when $`g` tends to $`L` from the right
+
+```lean
+theorem rightLimit_eq_of_tendsto
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞)
+    (h : Tendsto g (𝓝[>] t) (𝓝 L))
+    [(𝓝[>] t).NeBot] :
+    rightLimit g t = L :=
+  h.limUnder_eq
+```
+
 # Cumulative functions
 
 A cumulative function `f : Fmin` is left-continuous when its values are —
@@ -367,33 +431,32 @@ theorem isPiecewiseContinuous_of_continuous
 
 # A positive right limit at the origin
 
-A regularity used by the deviation results: a function has a _positive
-right limit_ at the origin when it tends to a strictly positive value
-along the times approaching $`0` from above. This is the precise reading
-of the informal $`f(0^+) > 0`.
-
-*Definition:* $`f(0^+) > 0` — $`f` has a positive right limit at the origin
-
-```lean
-def RightLimitPos (f : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∃ L : ℝ≥0∞, 0 < L ∧
-    Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L)
-```
+A regularity used by the deviation results: the informal $`f(0^+) > 0`
+means the function converges from the right at the origin to a value
+that is strictly positive — i.e. $`f` tends to its right limit
+$`f(0^+)` along $`𝓝[>] 0` and $`0 < f(0^+)`. Stated this way the
+positivity is a plain inequality on the named value `rightLimit f 0`,
+with the convergence carried explicitly (the right limit value alone is
+not meaningful without it).
 
 A positive right limit forces $`f` to be positive on a whole
-right-neighbourhood of the origin: eventually $`f` exceeds half its
-limit, which gives an explicit threshold $`\delta`.
+right-neighbourhood of the origin: eventually $`f` exceeds its limit's
+lower neighbourhood, which gives an explicit threshold $`\delta`.
 
 *Theorem:* $`f(0^+) > 0` makes $`f` positive on some $`(0, \delta)`
 
 ```lean
-theorem pos_near_zero_of_rightLimitPos
-    (f : ℝ≥0 → ℝ≥0∞) (h : RightLimitPos f) :
+theorem pos_near_zero_of_rightLimit_pos
+    (f : ℝ≥0 → ℝ≥0∞) (L : ℝ≥0∞)
+    (hL : Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L))
+    (hpos : 0 < rightLimit f 0) :
     ∃ δ : ℝ≥0, 0 < δ ∧
       ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t := by
-  obtain ⟨L, hL, hlim⟩ := h
+  have hLeq : rightLimit f 0 = L :=
+    rightLimit_eq_of_tendsto f 0 L hL
+  rw [hLeq] at hpos
   have hev : ∀ᶠ t in 𝓝[>] (0:ℝ≥0), 0 < f t :=
-    hlim.eventually (eventually_gt_nhds hL)
+    hL.eventually (eventually_gt_nhds hpos)
   rw [eventually_nhdsWithin_iff,
     Metric.eventually_nhds_iff] at hev
   obtain ⟨δ, hδ, hball⟩ := hev
