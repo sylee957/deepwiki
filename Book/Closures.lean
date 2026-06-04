@@ -34,14 +34,10 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 The Kleene-star theory is purely dioidal: it uses only the convolution,
 its associativity, and the unit. So we develop it _generically_ over any
-function dioid $`\mathbb{R}^{+} \to T` (`T` a complete dioid), then read
-it on the two carriers of interest — the (min,plus) `Fmin` for the
-_sub-additive_ closure, and its order-dual (max,plus) `Fmax` for the
-_super-additive_ closure.
-
-```lean
-variable {T : Type} [CompleteDioid T]
-```
+function dioid $`\mathbb{R}^{+} \to T` (`T` a complete dioid, supplied
+inline at each declaration), then read it on the two carriers of
+interest — the (min,plus) `Fmin` for the _sub-additive_ closure, and its
+order-dual (max,plus) `Fmax` for the _super-additive_ closure.
 
 The convolution unit `convUnit` — the impulse, $`e` at time `0` and
 $`\varepsilon` elsewhere — is the multiplicative unit of the function
@@ -52,12 +48,13 @@ all powers.
 *Definition:* convolution powers $`\sigma^{(n)}` and the closure $`\sigma^{\star}`
 
 ```lean
-noncomputable def convPow (sigma : ℝ≥0 → T) :
-    ℕ → (ℝ≥0 → T)
+noncomputable def convPow {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) : ℕ → (ℝ≥0 → T)
   | 0 => convUnit
   | n + 1 => conv (convPow sigma n) sigma
 
 noncomputable def subadditiveClosure
+    {T : Type} [CompleteDioid T]
     (sigma : ℝ≥0 → T) : ℝ≥0 → T :=
   fun t =>
     CompleteDioid.iSup
@@ -72,7 +69,8 @@ The first power is the curve itself.
 *Theorem:* $`\sigma^{(1)} = \sigma`
 
 ```lean
-theorem convPow_one (sigma : ℝ≥0 → T) :
+theorem convPow_one {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) :
     convPow sigma 1 = sigma := by
   change conv convUnit sigma = sigma
   exact convUnit_left sigma
@@ -86,7 +84,7 @@ closure in the dioid order.
 *Theorem:* $`\sigma^{(k)} \preceq \sigma^{\star}` pointwise
 
 ```lean
-theorem convPow_le_closure
+theorem convPow_le_closure {T : Type} [CompleteDioid T]
     (sigma : ℝ≥0 → T) (k : ℕ) (t : ℝ≥0) :
     convPow sigma k t ≼ₒ subadditiveClosure sigma t :=
   CompleteDioid.le_iSup
@@ -101,7 +99,8 @@ associativity of the convolution and the unit law.
 *Theorem:* $`\sigma^{(m)} \ast \sigma^{(n)} = \sigma^{(m+n)}`
 
 ```lean
-theorem convPow_add (sigma : ℝ≥0 → T) (m n : ℕ) :
+theorem convPow_add {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) (m n : ℕ) :
     conv (convPow sigma m) (convPow sigma n)
       = convPow sigma (m + n) := by
   induction n with
@@ -125,7 +124,7 @@ forming $`\sigma^{(m+n)}(u + s)`, which is below the closure.
 *Theorem:* $`\sigma^{(m)}(u) \otimes \sigma^{(n)}(s) \preceq \sigma^{\star}(u + s)`
 
 ```lean
-theorem convPow_term_le_closure
+theorem convPow_term_le_closure {T : Type} [CompleteDioid T]
     (sigma : ℝ≥0 → T) (m n : ℕ) (u s : ℝ≥0) :
     convPow sigma m u ⊗ₒ convPow sigma n s
       ≼ₒ subadditiveClosure sigma (u + s) := by
@@ -148,7 +147,8 @@ $`u + 0` split with $`\sigma^{\star}(0) \succeq e`.
 *Theorem:* $`\sigma^{\star} \ast \sigma^{\star} = \sigma^{\star}`
 
 ```lean
-theorem closure_idem (sigma : ℝ≥0 → T) :
+theorem closure_idem {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) :
     conv (subadditiveClosure sigma)
         (subadditiveClosure sigma)
       = subadditiveClosure sigma := by
@@ -196,7 +196,8 @@ $`\sigma^{\star}(u) \otimes \sigma^{\star}(s)`.
 *Theorem:* the closure is sub-additive, $`\sigma^{\star}(u) \otimes \sigma^{\star}(s) \preceq \sigma^{\star}(u + s)`
 
 ```lean
-theorem closure_subadditive (sigma : ℝ≥0 → T) (u s : ℝ≥0) :
+theorem closure_subadditive {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) (u s : ℝ≥0) :
     subadditiveClosure sigma u
         ⊗ₒ subadditiveClosure sigma s
       ≼ₒ subadditiveClosure sigma (u + s) := by
