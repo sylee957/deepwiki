@@ -80,7 +80,7 @@ splits.
 *Theorem:* $`(\uparrow\!f \ast \uparrow\!g)(t)` unwraps to $`(f \ast g)(t)`
 
 ```lean
-theorem conv_coe_toB
+theorem conv_coe_min
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : RbarMin)
         : WithTop (WithBot ℝ))
@@ -114,7 +114,7 @@ theorem conv_coe
       = (↑(minConvBar f g) : FminBar) := by
   funext t
   apply RbarMin.ext
-  exact conv_coe_toB f g t
+  exact conv_coe_min f g t
 ```
 
 # The dual (max,plus) convolution
@@ -145,7 +145,7 @@ instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
 *Theorem:* $`(\uparrow\!f \mathbin{\overline{\ast}} \uparrow\!g)(t)` unwraps to $`(f \mathbin{\overline{\ast}} g)(t)`
 
 ```lean
-theorem conv_coe_toC
+theorem conv_coe_max
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : RbarMax)
         : WithBot (WithTop ℝ))
@@ -176,7 +176,7 @@ theorem conv_coeMax
       = (↑(maxConvBar f g) : FmaxBar) := by
   funext t
   apply RbarMax.ext
-  exact conv_coe_toC f g t
+  exact conv_coe_max f g t
 ```
 
 The min-plus and max-plus convolutions are now symmetric: both on the
@@ -353,26 +353,26 @@ composite.
 
 ```lean
 abbrev FPlus :=
-  {f : FminBar // isNonneg (fun t => (f t).toB)}
+  {f : FminBar // isNonneg (fun t => (f t).toVal)}
 
 abbrev FNondecr :=
   {f : FminBar //
-    isNonneg (fun t => (f t).toB)
-      ∧ isNondecr (fun t => (f t).toB)}
+    isNonneg (fun t => (f t).toVal)
+      ∧ isNondecr (fun t => (f t).toVal)}
 ```
 
 ```lean
-theorem coe_toB (a : FminBar) :
-    (↑(fun t => (a t).toB) : FminBar) = a := by
+theorem coe_toVal (a : FminBar) :
+    (↑(fun t => (a t).toVal) : FminBar) = a := by
   funext t; apply RbarMin.ext; rfl
 
-theorem mul_toB (a b : FminBar) (t : ℝ≥0) :
-    ((a ⊗ₒ b) t).toB
-      = minConvBar (fun t => (a t).toB)
-          (fun t => (b t).toB) t := by
+theorem mul_toVal (a b : FminBar) (t : ℝ≥0) :
+    ((a ⊗ₒ b) t).toVal
+      = minConvBar (fun t => (a t).toVal)
+          (fun t => (b t).toVal) t := by
   show ((conv a b t : RbarMin) : WithTop (WithBot ℝ)) = _
-  rw [← coe_toB a, ← coe_toB b]
-  exact conv_coe_toB _ _ t
+  rw [← coe_toVal a, ← coe_toVal b]
+  exact conv_coe_min _ _ t
 ```
 
 The unit (impulse) and zero (constant $`+\infty`) are non-negative and
@@ -384,16 +384,16 @@ conditions.
 ```lean
 theorem isSubCompleteDioid_FPlus :
     IsSubCompleteDioid
-      (fun f : FminBar => isNonneg (fun t => (f t).toB))
+      (fun f : FminBar => isNonneg (fun t => (f t).toVal))
       where
   add ha hb := fun t => le_min (ha t) (hb t)
   mul {a b} ha hb := fun t => by
-    show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
-    rw [mul_toB]; exact (isNonneg.conv ha hb) t
+    show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
+    rw [mul_toVal]; exact (isNonneg.conv ha hb) t
   eps := fun _ => le_top
   one := fun t => by
     show (0 : WithTop (WithBot ℝ))
-        ≤ ((convUnit t : RbarMin)).toB
+        ≤ ((convUnit t : RbarMin)).toVal
     rcases eq_or_ne t 0 with h | h
     · rw [convUnit, if_pos h]; exact le_rfl
     · rw [convUnit, if_neg h]; exact le_top
@@ -406,8 +406,8 @@ theorem isSubCompleteDioid_FPlus :
 theorem isSubCompleteDioid_FNondecr :
     IsSubCompleteDioid
       (fun f : FminBar =>
-        isNonneg (fun t => (f t).toB)
-          ∧ isNondecr (fun t => (f t).toB))
+        isNonneg (fun t => (f t).toVal)
+          ∧ isNondecr (fun t => (f t).toVal))
       where
   add ha hb :=
     ⟨fun t => le_min (ha.1 t) (hb.1 t),
@@ -417,20 +417,20 @@ theorem isSubCompleteDioid_FNondecr :
     have hn := isNonneg.conv ha.1 hb.1
     have hm := isNondecr.conv ha.2 hb.2
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
-    · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
-      rw [mul_toB]; exact hn t
-    · show ((a ⊗ₒ b) x).toB ≤ ((a ⊗ₒ b) y).toB
-      rw [mul_toB, mul_toB]; exact hm x y hxy
+    · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
+      rw [mul_toVal]; exact hn t
+    · show ((a ⊗ₒ b) x).toVal ≤ ((a ⊗ₒ b) y).toVal
+      rw [mul_toVal, mul_toVal]; exact hm x y hxy
   eps := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
   one := by
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ))
-          ≤ ((convUnit t : RbarMin)).toB
+          ≤ ((convUnit t : RbarMin)).toVal
       rcases eq_or_ne t 0 with h | h
       · rw [convUnit, if_pos h]; exact le_rfl
       · rw [convUnit, if_neg h]; exact le_top
-    · show ((convUnit x : RbarMin)).toB
-          ≤ ((convUnit y : RbarMin)).toB
+    · show ((convUnit x : RbarMin)).toVal
+          ≤ ((convUnit y : RbarMin)).toVal
       rcases eq_or_ne x 0 with hx | hx
       · rw [convUnit, if_pos hx]
         show (0 : WithTop (WithBot ℝ)) ≤ _

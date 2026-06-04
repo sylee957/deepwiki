@@ -163,7 +163,7 @@ noncomputable def minConv (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMin g) (embMin h) t
-      : RplusMin).toE.toNNReal
+      : RplusMin).toVal.toNNReal
 ```
 
 The underlying $`\mathbb{R}_{\ge 0}^{\infty}` value of the dioid product
@@ -258,7 +258,7 @@ noncomputable def maxConv (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMax g) (embMax h) t
-      : RplusMax).toW.unbotD 0 |>.toNNReal
+      : RplusMax).toVal.unbotD 0 |>.toNNReal
 ```
 
 The underlying value of the dioid product is the sum of the embedded

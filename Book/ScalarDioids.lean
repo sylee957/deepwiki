@@ -66,20 +66,20 @@ $`a \preceq b \iff \max(a, b) = b` _agrees_ with it.
 *Definition:* the five carriers, each wrapping its number system
 
 ```lean
-structure Rmin where ofR ::
-  toR : WithTop ℝ
+structure Rmin where ofVal ::
+  toVal : WithTop ℝ
 
-structure RbarMin where ofB ::
-  toB : WithTop (WithBot ℝ)
+structure RbarMin where ofVal ::
+  toVal : WithTop (WithBot ℝ)
 
-structure RplusMin where ofE ::
-  toE : ℝ≥0∞
+structure RplusMin where ofVal ::
+  toVal : ℝ≥0∞
 
-structure RplusMax where ofW ::
-  toW : WithBot ℝ≥0∞
+structure RplusMax where ofVal ::
+  toVal : WithBot ℝ≥0∞
 
-structure RbarMax where ofC ::
-  toC : WithBot (WithTop ℝ)
+structure RbarMax where ofVal ::
+  toVal : WithBot (WithTop ℝ)
 ```
 
 Each wrapper gets a coercion to its underlying value and an
@@ -87,38 +87,38 @@ extensionality lemma lifting equality through it.
 
 ```lean
 namespace Rmin
-instance : Coe Rmin (WithTop ℝ) := ⟨toR⟩
+instance : Coe Rmin (WithTop ℝ) := ⟨toVal⟩
 @[ext] theorem ext {a b : Rmin}
     (h : (a : WithTop ℝ) = b) : a = b := by
-  cases a; cases b; exact congrArg ofR h
+  cases a; cases b; exact congrArg ofVal h
 end Rmin
 
 namespace RbarMin
-instance : Coe RbarMin (WithTop (WithBot ℝ)) := ⟨toB⟩
+instance : Coe RbarMin (WithTop (WithBot ℝ)) := ⟨toVal⟩
 @[ext] theorem ext {a b : RbarMin}
     (h : (a : WithTop (WithBot ℝ)) = b) : a = b := by
-  cases a; cases b; exact congrArg ofB h
+  cases a; cases b; exact congrArg ofVal h
 end RbarMin
 
 namespace RplusMin
-instance : Coe RplusMin ℝ≥0∞ := ⟨toE⟩
+instance : Coe RplusMin ℝ≥0∞ := ⟨toVal⟩
 @[ext] theorem ext {a b : RplusMin}
     (h : (a : ℝ≥0∞) = b) : a = b := by
-  cases a; cases b; exact congrArg ofE h
+  cases a; cases b; exact congrArg ofVal h
 end RplusMin
 
 namespace RplusMax
-instance : Coe RplusMax (WithBot ℝ≥0∞) := ⟨toW⟩
+instance : Coe RplusMax (WithBot ℝ≥0∞) := ⟨toVal⟩
 @[ext] theorem ext {a b : RplusMax}
     (h : (a : WithBot ℝ≥0∞) = b) : a = b := by
-  cases a; cases b; exact congrArg ofW h
+  cases a; cases b; exact congrArg ofVal h
 end RplusMax
 
 namespace RbarMax
-instance : Coe RbarMax (WithBot (WithTop ℝ)) := ⟨toC⟩
+instance : Coe RbarMax (WithBot (WithTop ℝ)) := ⟨toVal⟩
 @[ext] theorem ext {a b : RbarMax}
     (h : (a : WithBot (WithTop ℝ)) = b) : a = b := by
-  cases a; cases b; exact congrArg ofC h
+  cases a; cases b; exact congrArg ofVal h
 end RbarMax
 ```
 
@@ -211,7 +211,7 @@ theorem le_iff (a b : Rmin) :
   constructor
   · intro h
     have : min (↑a : WithTop ℝ) ↑b = ↑b :=
-      congrArg toR h
+      congrArg toVal h
     rw [← this]; exact min_le_left _ _
   · intro h; exact ext (min_eq_right h)
 
@@ -445,7 +445,7 @@ theorem le_iff (a b : RbarMin) :
   constructor
   · intro h
     have : min (↑a : WithTop (WithBot ℝ)) ↑b = ↑b :=
-      congrArg toB h
+      congrArg toVal h
     rw [← this]; exact min_le_left _ _
   · intro h; exact ext (min_eq_right h)
 ```
@@ -605,7 +605,7 @@ theorem le_iff (a b : RplusMin) :
   rw [h1]
   constructor
   · intro h
-    have : min (↑a : ℝ≥0∞) ↑b = ↑b := congrArg toE h
+    have : min (↑a : ℝ≥0∞) ↑b = ↑b := congrArg toVal h
     rw [← this]; exact min_le_left _ _
   · intro h; exact ext (min_eq_right h)
 ```
@@ -846,7 +846,7 @@ theorem le_iff (a b : RplusMax) :
   constructor
   · intro h
     have : max (↑a : WithBot ℝ≥0∞) ↑b = ↑b :=
-      congrArg toW h
+      congrArg toVal h
     rw [← this]; exact le_max_left _ _
   · intro h; exact ext (max_eq_right h)
 ```
@@ -1045,7 +1045,7 @@ theorem le_iff (a b : RbarMax) :
   constructor
   · intro h
     have : max (↑a : WithBot (WithTop ℝ)) ↑b = ↑b :=
-      congrArg toC h
+      congrArg toVal h
     rw [← this]; exact le_max_left _ _
   · intro h; exact ext (max_eq_right h)
 ```
