@@ -1087,6 +1087,84 @@ theorem staircase_closure_super (P h : ℝ≥0)
     (staircase_zero_eq P h J) t
 ```
 
+# Convolution and deconvolution by pure delays
+
+For a non-decreasing curve `f`, convolving or deconvolving by a pure
+delay $`\delta_d` is just a _time-shift_. Convolution shifts forward by
+$`d` (clamped at the origin): $`(f \ast \delta_d)(t) = f([t - d]^{+})`.
+The split $`u + s = t` with $`s \le d` contributes $`f(u)` (the delay is
+$`0` there) with $`u = t - s \ge t - d`, so monotonicity makes
+$`f(t - d)` the least; splits with $`s > d` give $`+\infty`.
+
+*Theorem:* $`f \ast \delta_d = f([\,\cdot - d\,]^{+})`
+
+```lean
+theorem conv_delay (f : ℝ≥0 → ℝ≥0∞)
+    (hf : Monotone f) (d : ℝ≥0) :
+    minConvE f (delay d) = fun t => f (t - d) := by
+  funext t
+  unfold minConvE
+  apply le_antisymm
+  · rcases le_or_gt t d with ht | ht
+    · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
+      simp only
+      rw [show delay d t = 0 by simp [delay, ht], add_zero,
+        tsub_eq_zero_of_le ht]
+    · refine iInf_le_of_le ⟨(t - d, d), by
+        rw [tsub_add_cancel_of_le (le_of_lt ht)]⟩ ?_
+      simp only
+      rw [show delay d d = 0 by simp [delay], add_zero]
+  · refine le_iInf ?_
+    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
+    simp only
+    rcases le_or_gt s d with hs | hs
+    · rw [show delay d s = 0 by simp [delay, hs], add_zero]
+      apply hf
+      have : u = t - s := by
+        rw [← hus, add_tsub_cancel_right]
+      rw [this]
+      exact tsub_le_tsub_left hs t
+    · rw [show delay d s = ⊤ by
+        simp [delay, not_le.mpr hs]]
+      simp
+```
+
+Deconvolution is the dual _(min,plus)_ quotient, the numeric supremum
+over forward shifts of $`f(t + s) - \delta_d(s)`. It shifts _backward_
+by $`d`: $`(f \oslash \delta_d)(t) = f(t + d)`. Where $`s \le d` the
+delay is $`0`, leaving $`f(t + s) \le f(t + d)`; where $`s > d` the
+delay is $`+\infty`, and the truncated difference floors to $`0`. The
+$`s = d` term attains $`f(t + d)`.
+
+*Definition:* the _(min,plus)_ deconvolution $`(f \oslash g)(t) = \sup_{s}\,(f(t + s) - g(s))`
+
+```lean
+noncomputable def minDeconvE (f g : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t => ⨆ s : ℝ≥0, f (t + s) - g s
+```
+
+*Theorem:* $`f \oslash \delta_d = f(\,\cdot + d\,)`
+
+```lean
+theorem deconv_delay (f : ℝ≥0 → ℝ≥0∞)
+    (hf : Monotone f) (d : ℝ≥0) :
+    minDeconvE f (delay d) = fun t => f (t + d) := by
+  funext t
+  unfold minDeconvE
+  apply le_antisymm
+  · refine iSup_le ?_
+    intro s
+    rcases le_or_gt s d with hs | hs
+    · rw [show delay d s = 0 by simp [delay, hs], tsub_zero]
+      exact hf (by gcongr)
+    · rw [show delay d s = ⊤ by
+        simp [delay, not_le.mpr hs]]
+      simp
+  · refine le_iSup_of_le d ?_
+    rw [show delay d d = 0 by simp [delay], tsub_zero]
+```
+
 ```lean
 end DeepWiki
 ```
