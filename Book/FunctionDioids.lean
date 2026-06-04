@@ -117,6 +117,31 @@ noncomputable def maxConvR (g h : ℝ≥0 → ℝ≥0) :
       (g p.1.1 + h p.1.2)
 ```
 
+On the _extended_ non-negative reals $`\overline{\mathbb{R}}_{\ge 0}`
+(`ℝ≥0∞`) the same two operators are `minConvE` and `maxConvE`; these are
+the forms the sub-/super-additivity fixed-point results of the
+`Additivity` chapter are stated over.
+
+*Definition:* $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
+
+```lean
+noncomputable def minConvE (g h : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t =>
+    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      g p.1.1 + h p.1.2
+```
+
+*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u + s = t}\,(g(u) + h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
+
+```lean
+noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      g p.1.1 + h p.1.2
+```
+
 # The extended-real function dioid
 
 $`\mathcal{F}` is the set of those functions read into the complete

@@ -46,31 +46,10 @@ def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
   ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
 ```
 
-The _(min,plus) convolution_ is the numeric infimum, over all splits
-$`u + s = t`, of $`g(u) + h(s)`. We index by the splits of `t`.
-
-*Definition:* $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`
-
-```lean
-noncomputable def minConvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  fun t =>
-    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2
-```
-
-The dual _(max,plus) convolution_ takes the numeric _supremum_ over the
-same splits.
-
-*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u + s = t}\,(g(u) + h(s))`
-
-```lean
-noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  fun t =>
-    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2
-```
+The fixed-point results below are stated in terms of the _(min,plus)
+convolution_ `minConvE` and its dual `maxConvE` — the numeric infimum
+and supremum over the splits $`u + s = t` — both defined in the
+function-dioids chapter (`Convolutions of numeric functions`).
 
 # The fundamental fixed-point result
 
