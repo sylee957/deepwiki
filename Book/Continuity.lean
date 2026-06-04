@@ -18,16 +18,16 @@ where `Mathlib`'s order topology lives.
 
 First, _one-sided continuity_ — left and right, treated symmetrically.
 Left-continuity is the regularity that keeps shaped and convolved
-outputs well-defined; right-continuity is its mirror. We state each on
-$`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty`, define it
-in the elementary $`\varepsilon`–$`\delta` form, recall `Mathlib`'s
-topological notion, and prove the two equivalent; the definitions hold
-for an _arbitrary_ `g`, including ones taking $`+\infty`, with no
-monotonicity assumed. The only difference between the two sides is the
-window — a left window $`(\delta, t)` versus a right window
-$`(t, \delta)` — and the behaviour at the origin: the left window is
-empty there, so left-continuity is vacuous, whereas the right window
-never is. A cumulative function `f : Fmin` is covered through its values
+outputs well-defined; right-continuity is its mirror. We take
+`Mathlib`'s topological notion as the base definition, give the
+elementary $`\varepsilon`–$`\delta` form as the classical restatement,
+and prove the two equivalent on each side; the definitions hold for an
+_arbitrary_ `g`, including ones taking $`+\infty`, with no monotonicity
+assumed. The only difference between the two sides is the window — a
+left window $`(\delta, t)` versus a right window $`(t, \delta)` — and
+the behaviour at the origin: the left window is empty there, so
+left-continuity is vacuous, whereas the right window never is. A
+cumulative function `f : Fmin` is covered through its values
 $`s \mapsto (f\,s)`.
 
 Second, _piecewise continuity_: continuous except at isolated jumps,
@@ -43,83 +43,20 @@ open Algebra Topology Filter Set
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
-# The epsilon-delta definitions
+# One-sided continuity
 
-A value `g t` may be finite or $`+\infty`, and one-sided continuity at
-`t` splits along that distinction, on a one-sided window — an open
-interval of times just before `t` (for the left) or just after (for the
-right). Where `g t` is _finite_, on a small enough window the values are
-_finite_ and stay $`\varepsilon`-close to `g t`; the finiteness is part
-of the clause, so a stray $`+\infty` adjacent to `t` correctly breaks it
-rather than being read as a real number. Where `g t` is $`+\infty`, the
-values must _diverge_ to $`+\infty`: every finite threshold `M` is
-eventually exceeded. The finite clause reads the values through `ℝ` via
-`toReal`.
-
-*Definition:* the real reading $`s \mapsto g(s)` into $`\mathbb{R}`
-
-```lean
-noncomputable def realOf (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ :=
-  fun s => (g s).toReal
-```
-
-Left-continuity uses the left window $`(\delta, t)`.
-
-*Definition:* $`g` is left-continuous, by cases on $`g(t)`
-
-```lean
-def IsLeftContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ t : ℝ≥0, 0 < t →
-    (g t ≠ ⊤ →
-      ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
-    (g t = ⊤ →
-      ∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        (M : ℝ≥0∞) < g s)
-```
-
-The origin is excluded: there is nothing strictly before it, so the
-condition constrains only `t > 0`.
-
-Right-continuity is the mirror, on the right window $`(t, \delta)`. No
-positivity guard is needed — the right window is nonempty at every time,
-including the origin.
-
-*Definition:* $`g` is right-continuous, by cases on $`g(t)`
-
-```lean
-def IsRightContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ t : ℝ≥0,
-    (g t ≠ ⊤ →
-      ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
-    (g t = ⊤ →
-      ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        (M : ℝ≥0∞) < g s)
-```
-
-# Mathlib's topological one-sided continuity
-
-`Mathlib` expresses left-continuity directly through limits: `g` is
-continuous from the left at `t` when it tends to `g t` along the filter
-`𝓝[<] t` of times approaching `t` from below — that is,
-`ContinuousWithinAt g (Iio t) t` on the left ray $`(-\infty, t) = `\
-`Iio t`. This single limit condition needs no case split: the
-neighborhoods of `g t` already know how to be close to a finite value
-or to $`+\infty`. We take it, at every time, as the reference notion —
-no positivity guard is needed: at the origin the left ray
-$`(-\infty, 0)` is empty, so the approach filter is trivial and
-continuity from the left holds vacuously.
-
-*Definition:* $`g` is `Mathlib`-left-continuous when it is `ContinuousWithinAt` on $`(-\infty, t)`
-
-This is the canonical notion of left-continuity, and it depends only on
-the codomain's topology — so we state it generically over any codomain
-$`X` carrying a topology, covering both the extended-real curves
+The base definition is `Mathlib`'s topological one: `g` is continuous
+from the left at `t` when it tends to `g t` along the filter `𝓝[<] t` of
+times approaching `t` from below — that is, `ContinuousWithinAt g
+(Iio t) t` on the left ray $`(-\infty, t) = ` `Iio t`. This single limit
+condition needs no case split: the neighborhoods of `g t` already know
+how to be close to a finite value or to $`+\infty`. It depends only on
+the codomain's topology, so we state it generically over any codomain
+$`X` carrying a topology — covering both the extended-real curves
 $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty` and the
-real-valued curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. (The
-$`\varepsilon`–$`\delta` form above is `ℝ≥0∞`-specific; the equivalence
-below relates the two _there_.)
+real-valued curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`.
+
+*Definition:* $`g` is left-continuous when it is `ContinuousWithinAt` on $`(-\infty, t)`
 
 ```lean
 def IsLeftContinuous {X : Type*} [TopologicalSpace X]
@@ -128,7 +65,9 @@ def IsLeftContinuous {X : Type*} [TopologicalSpace X]
 ```
 
 At the origin the condition is automatic: the left ray is empty, so the
-approach filter `𝓝[<] 0` is `⊥` and every function tends along it.
+approach filter `𝓝[<] 0` is `⊥` and every function tends along it. No
+positivity guard is therefore needed — left-continuity holds vacuously
+at $`0`.
 
 *Theorem:* every `g` is left-continuous at the origin
 
@@ -181,13 +120,69 @@ theorem rightCont_of_continuous {X : Type*}
   fun t => hg.continuousAt.continuousWithinAt
 ```
 
-# Equivalence of the two definitions
+# The epsilon-delta form
+
+The classical restatement is the elementary $`\varepsilon`–$`\delta`
+form, specific to $`\overline{\mathbb{R}}_{\ge 0}^\infty`. One-sided
+continuity at `t` splits by cases on `g t`, on a one-sided window — an
+open interval of times just before `t` (for the left) or just after (for
+the right). Where `g t` is _finite_, on a small enough window the values
+are _finite_ and stay $`\varepsilon`-close to `g t`; the finiteness is
+part of the clause, so a stray $`+\infty` adjacent to `t` correctly
+breaks it rather than being read as a real number. Where `g t` is
+$`+\infty`, the values must _diverge_ to $`+\infty`: every finite
+threshold `M` is eventually exceeded. The finite clause reads the values
+through `ℝ` via `toReal`.
+
+*Definition:* the real reading $`s \mapsto g(s)` into $`\mathbb{R}`
+
+```lean
+noncomputable def realOf (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ :=
+  fun s => (g s).toReal
+```
+
+Left-continuity uses the left window $`(\delta, t)`.
+
+*Definition:* $`g` is left-continuous (ε–δ), by cases on $`g(t)`
+
+```lean
+def IsLeftContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ t : ℝ≥0, 0 < t →
+    (g t ≠ ⊤ →
+      ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
+    (g t = ⊤ →
+      ∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+        (M : ℝ≥0∞) < g s)
+```
+
+The origin is excluded: there is nothing strictly before it, so the
+condition constrains only `t > 0`.
+
+Right-continuity is the mirror, on the right window $`(t, \delta)`. No
+positivity guard is needed — the right window is nonempty at every time,
+including the origin.
+
+*Definition:* $`g` is right-continuous (ε–δ), by cases on $`g(t)`
+
+```lean
+def IsRightContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ t : ℝ≥0,
+    (g t ≠ ⊤ →
+      ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
+    (g t = ⊤ →
+      ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        (M : ℝ≥0∞) < g s)
+```
+
+# Left-continuity: the two forms agree
 
 We prove the $`\varepsilon`–$`\delta` definition equals the topological
 one, one case at a time on the left-window basis
 $`\{(\delta, t) \mid \delta < t\}` of `𝓝[<] t`. Both directions hold
 for an arbitrary `g`. The right side, proved in the same shape on the
-right-window basis of `𝓝[>] t`, follows afterwards.
+right-window basis of `𝓝[>] t`, follows in the next section.
 
 The auxiliary form drops the finiteness conjunct, expressing only the
 $`\varepsilon`-closeness of the _real_ reading.
@@ -342,6 +337,8 @@ where
       {P : Prop} : (0 < t → P) ↔ P :=
     ⟨fun h => h ht, fun h _ => h⟩
 ```
+
+# Right-continuity: the two forms agree
 
 The right side mirrors all of this on the right-window basis
 $`\{(t, \delta) \mid t < \delta\}` of `𝓝[>] t`, supplied directly (no
@@ -562,99 +559,15 @@ theorem rightLimit_eq_of_rightContinuous
   hrc.tendsto.limUnder_eq
 ```
 
-# Cumulative functions
-
-A cumulative function `f : Fmin` is one-sided continuous when its values
-are — that is, when the numeric reading $`s \mapsto (f\,s)` into
-$`\overline{\mathbb{R}}_{\ge 0}^\infty` is. This specializes the
-definitions to the dioid function space, requiring no separate
-development.
-
-*Definition:* the numeric reading of a cumulative function
-
-```lean
-noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
-  fun s => (f s : ℝ≥0∞)
-```
-
-*Definition:* a cumulative function is left-continuous via its values
-
-```lean
-def IsLeftContinuousF (f : Fmin) : Prop :=
-  IsLeftContinuousED (numFn f)
-```
-
-*Definition:* a cumulative function is right-continuous via its values
-
-```lean
-def IsRightContinuousF (f : Fmin) : Prop :=
-  IsRightContinuousED (numFn f)
-```
-
-# The discontinuity set
-
-We turn to _piecewise continuity_. The notion depends only on the
-_topology_ of the codomain, so we state it once, generically over any
-codomain $`X` carrying a topology — this covers both the real-valued
-curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` and the extended-real
-curves $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}` (some curves
-take the value $`+\infty`: a blocking delay, a saturating test function).
-The codomain $`X` is any type carrying a topology, supplied inline at
-each declaration.
-
-The _discontinuity set_ of a function collects the points at which it
-fails to be continuous.
-
-*Definition:* the discontinuity set $`\{\,t \mid g \text{ not continuous at } t\,\}`
-
-```lean
-def discontSet {X : Type*} [TopologicalSpace X]
-    (g : ℝ≥0 → X) : Set ℝ≥0 :=
-  { t | ¬ ContinuousAt g t }
-```
-
-# Piecewise continuity
-
-A function is _piecewise continuous_ when its discontinuity set is
-locally finite: only finitely many discontinuities lie in any bounded
-initial interval $`[0, T]`. Equivalently, the jumps do not accumulate.
-
-*Definition:* $`g` is piecewise continuous when each $`[0, T]` holds finitely many jumps
-
-```lean
-def IsPiecewiseContinuous {X : Type*} [TopologicalSpace X]
-    (g : ℝ≥0 → X) : Prop :=
-  ∀ T : ℝ≥0, (discontSet g ∩ Set.Icc 0 T).Finite
-```
-
-A continuous function has an empty discontinuity set, so trivially
-finitely many jumps on every interval — one proof, valid for every
-codomain.
-
-*Theorem:* a continuous function is piecewise continuous
-
-```lean
-theorem isPiecewiseContinuous_of_continuous
-    {X : Type*} [TopologicalSpace X]
-    (g : ℝ≥0 → X) (hg : Continuous g) :
-    IsPiecewiseContinuous g := by
-  intro T
-  have hempty : discontSet g = ∅ := by
-    ext t
-    simp [discontSet, hg.continuousAt]
-  rw [hempty, Set.empty_inter]
-  exact Set.finite_empty
-```
-
 # A positive right limit at the origin
 
-A regularity used by the deviation results: the informal $`f(0^+) > 0`
-means the function converges from the right at the origin to a value
-that is strictly positive — i.e. $`f` tends to its right limit
-$`f(0^+)` along $`𝓝[>] 0` and $`0 < f(0^+)`. Stated this way the
-positivity is a plain inequality on the named value `rightLimit f 0`,
-with the convergence carried explicitly (the right limit value alone is
-not meaningful without it).
+A regularity used by the deviation results, naming a use of the right
+limit just introduced: the informal $`f(0^+) > 0` means the function
+converges from the right at the origin to a value that is strictly
+positive — i.e. $`f` tends to its right limit $`f(0^+)` along $`𝓝[>] 0`
+and $`0 < f(0^+)`. Stated this way the positivity is a plain inequality
+on the named value `rightLimit f 0`, with the convergence carried
+explicitly (the right limit value alone is not meaningful without it).
 
 A positive right limit forces $`f` to be positive on a whole
 right-neighbourhood of the origin: eventually $`f` exceeds its limit's
@@ -685,6 +598,88 @@ theorem pos_near_zero_of_rightLimit_pos
       abs_of_nonneg t.coe_nonneg]
     exact_mod_cast htδ
   · exact ht
+```
+
+# Cumulative functions
+
+A cumulative function `f : Fmin` is one-sided continuous when its values
+are — that is, when the numeric reading $`s \mapsto (f\,s)` into
+$`\overline{\mathbb{R}}_{\ge 0}^\infty` is. This specializes the
+definitions to the dioid function space, requiring no separate
+development.
+
+*Definition:* the numeric reading of a cumulative function
+
+```lean
+noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
+  fun s => (f s : ℝ≥0∞)
+```
+
+*Definition:* a cumulative function is left-continuous via its values
+
+```lean
+def IsLeftContinuousF (f : Fmin) : Prop :=
+  IsLeftContinuousED (numFn f)
+```
+
+*Definition:* a cumulative function is right-continuous via its values
+
+```lean
+def IsRightContinuousF (f : Fmin) : Prop :=
+  IsRightContinuousED (numFn f)
+```
+
+# Piecewise continuity
+
+We turn to _piecewise continuity_. The notion depends only on the
+_topology_ of the codomain, so we state it once, generically over any
+codomain $`X` carrying a topology — this covers both the real-valued
+curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` and the extended-real
+curves $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}` (some curves
+take the value $`+\infty`: a blocking delay, a saturating test function).
+The codomain $`X` is any type carrying a topology, supplied inline at
+each declaration.
+
+The _discontinuity set_ of a function collects the points at which it
+fails to be continuous — the raw material for the notion.
+
+*Definition:* the discontinuity set $`\{\,t \mid g \text{ not continuous at } t\,\}`
+
+```lean
+def discontSet {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Set ℝ≥0 :=
+  { t | ¬ ContinuousAt g t }
+```
+
+A function is _piecewise continuous_ when its discontinuity set is
+locally finite: only finitely many discontinuities lie in any bounded
+initial interval $`[0, T]`. Equivalently, the jumps do not accumulate.
+
+*Definition:* $`g` is piecewise continuous when each $`[0, T]` holds finitely many jumps
+
+```lean
+def IsPiecewiseContinuous {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Prop :=
+  ∀ T : ℝ≥0, (discontSet g ∩ Set.Icc 0 T).Finite
+```
+
+A continuous function has an empty discontinuity set, so trivially
+finitely many jumps on every interval — one proof, valid for every
+codomain.
+
+*Theorem:* a continuous function is piecewise continuous
+
+```lean
+theorem isPiecewiseContinuous_of_continuous
+    {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) (hg : Continuous g) :
+    IsPiecewiseContinuous g := by
+  intro T
+  have hempty : discontSet g = ∅ := by
+    ext t
+    simp [discontSet, hg.continuousAt]
+  rw [hempty, Set.empty_inter]
+  exact Set.finite_empty
 ```
 
 ```lean
