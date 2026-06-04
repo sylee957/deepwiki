@@ -547,20 +547,21 @@ instance instNeBotNhdsGT (t : ℝ≥0) :
     (𝓝[>] t).NeBot := nhdsGT_neBot t
 ```
 
-When $`g` is left-continuous at $`t` and the left-approach filter is
+When $`g` is left-continuous and the left-approach filter at $`t` is
 nontrivial (i.e. $`t > 0`), the left limit _is_ the value: the limit
 `limUnder` converges to is $`g(t)`. This is the value-level reading of
-left-continuity, $`g(t^-) = g(t)`.
+left-continuity, $`g(t^-) = g(t)`. We phrase it against the named
+`IsLeftContinuous` predicate, applied at $`t`.
 
-*Theorem:* $`g(t^-) = g(t)` when $`g` is left-continuous at $`t > 0`
+*Theorem:* $`g(t^-) = g(t)` when $`g` is left-continuous, at $`t > 0`
 
 ```lean
 theorem leftLimit_eq_of_leftContinuous
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (hlc : ContinuousWithinAt g (Iio t) t)
+    (hlc : IsLeftContinuous g)
     [(𝓝[<] t).NeBot] :
     leftLimit g t = g t :=
-  hlc.tendsto.limUnder_eq
+  (hlc t).tendsto.limUnder_eq
 ```
 
 Dually, a convergence from the right pins the right limit to the value
@@ -576,18 +577,18 @@ theorem rightLimit_eq_of_tendsto
   h.limUnder_eq
 ```
 
-In particular, right-continuity (below) gives the value-level reading
-$`g(t^+) = g(t)` at every time — no positivity guard, the right filter
-being always nontrivial.
+In particular, against the named `IsRightContinuous` predicate this
+gives the value-level reading $`g(t^+) = g(t)` at every time — no
+positivity guard, the right filter being always nontrivial.
 
-*Theorem:* $`g(t^+) = g(t)` when $`g` is right-continuous at $`t`
+*Theorem:* $`g(t^+) = g(t)` when $`g` is right-continuous
 
 ```lean
 theorem rightLimit_eq_of_rightContinuous
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (hrc : ContinuousWithinAt g (Ioi t) t) :
+    (hrc : IsRightContinuous g) :
     rightLimit g t = g t :=
-  hrc.tendsto.limUnder_eq
+  (hrc t).tendsto.limUnder_eq
 ```
 
 # A positive right limit at the origin
