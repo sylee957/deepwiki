@@ -22,17 +22,17 @@ open Verso.Genre.Manual.InlineLean
 
 set_option pp.rawOnError true
 
-#doc (Manual) "The Autoformalization Wiki" =>
+#doc (Manual) "DeepWiki" =>
 
 %%%
 authors := ["S.Y. Lee"]
 %%%
 
-An AI-generated wiki of _autoformalized_ mathematics: each topic is developed as
-a self-contained article whose definitions, lemmas and propositions are stated
-and proved in Lean 4 with Mathlib, with the narrative and the machine-checked
-Lean declarations interleaved. The rendered statements are exactly what was
-proved — the document compiles as part of building it.
+_DeepWiki_ is an AI-generated wiki of _autoformalized_ mathematics: each topic is
+developed as a self-contained article whose definitions, lemmas and propositions
+are stated and proved in Lean 4 with Mathlib, with the narrative and the
+machine-checked Lean declarations interleaved. The rendered statements are
+exactly what was proved — the document compiles as part of building it.
 
 The first entry is the algebra of _(min,plus)_ dioids, the theory behind
 deterministic network calculus; the chapters below develop it from the abstract
