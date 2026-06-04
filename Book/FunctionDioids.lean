@@ -12,9 +12,9 @@ network calculus and presents the real convolution operators it yields.
 
 Cumulative functions $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` embed into
 two complete dioids: the _(min,plus)_ carrier
-$`\overline{\mathbb{R}}_{\ge 0}` (`RplusMin`), whose function dioid
+$`\overline{\mathbb{R}}_{\ge 0}` (`MinPlusNN`), whose function dioid
 $`\mathcal{F}_{\min}` carries the _(min,plus) convolution_; and the
-dual _(max,plus)_ carrier (`RplusMax`), whose function dioid
+dual _(max,plus)_ carrier (`MaxPlusNN`), whose function dioid
 $`\mathcal{F}_{\max}` carries the _(max,plus) convolution_. Both
 convolutions are the dioid product `conv` of the generic chapter, read
 back into
@@ -32,27 +32,27 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 # The two function dioids
 
 Each is the generic function dioid `funCompleteDioid` instantiated at a
-scalar carrier: $`\mathcal{F}_{\min}` at `RplusMin`, $`\mathcal{F}_{\max}`
-at `RplusMax`. The min-plus space $`\mathcal{F}_{\min}` is the carrier
+scalar carrier: $`\mathcal{F}_{\min}` at `MinPlusNN`, $`\mathcal{F}_{\max}`
+at `MaxPlusNN`. The min-plus space $`\mathcal{F}_{\min}` is the carrier
 for the rest of the development.
 
 *Definition:* the _(min,plus)_ function space $`\mathcal{F}_{\min} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}`
 
 ```lean
-abbrev Fmin := ℝ≥0 → RplusMin
+abbrev Fmin := ℝ≥0 → MinPlusNN
 ```
 
 *Definition:* the _(max,plus)_ function space $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^{\pm}`
 
 ```lean
-abbrev Fmax := ℝ≥0 → RplusMax
+abbrev Fmax := ℝ≥0 → MaxPlusNN
 ```
 
 # The (min,plus) convolution on the function class
 
 The _(min,plus) convolution_ $`f \ast g` of two functions of
 $`\mathcal{F}_{\min}` is their dioid product — the generic convolution
-`conv` of the previous chapter, specialized to the carrier `RplusMin`.
+`conv` of the previous chapter, specialized to the carrier `MinPlusNN`.
 Its value at $`t` is the dioid sum, over all splits $`u + s = t`, of
 the product $`f(u) \otimes g(s)`; since on
 $`\overline{\mathbb{R}}_{\ge 0}` the dioid sum is the numeric infimum
@@ -163,7 +163,7 @@ noncomputable def minConv (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMin g) (embMin h) t
-      : RplusMin).toVal.toNNReal
+      : MinPlusNN).toVal.toNNReal
 ```
 
 The underlying $`\mathbb{R}_{\ge 0}^{\infty}` value of the dioid product
@@ -173,7 +173,7 @@ is the sum of the embedded values.
 
 ```lean
 theorem embMin_mul (g h : ℝ≥0 → ℝ≥0) (u s : ℝ≥0) :
-    ((embMin g u ⊗ₒ embMin h s : RplusMin) : ℝ≥0∞)
+    ((embMin g u ⊗ₒ embMin h s : MinPlusNN) : ℝ≥0∞)
       = (g u : ℝ≥0∞) + (h s : ℝ≥0∞) := rfl
 ```
 
@@ -185,11 +185,11 @@ numeric $`+`.
 
 ```lean
 theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    ((conv (embMin g) (embMin h) t : RplusMin) : ℝ≥0∞)
+    ((conv (embMin g) (embMin h) t : MinPlusNN) : ℝ≥0∞)
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   rw [conv_apply]
-  show (⨅ x : {x : RplusMin //
+  show (⨅ x : {x : MinPlusNN //
         ∃ u s, u + s = t ∧ x = embMin g u ⊗ₒ embMin h s},
         (x.val : ℝ≥0∞)) = _
   apply le_antisymm
@@ -197,14 +197,14 @@ theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     refine iInf_le_of_le
       ⟨embMin g p.1.1 ⊗ₒ embMin h p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
-    show ((embMin g p.1.1 ⊗ₒ embMin h p.1.2 : RplusMin)
+    show ((embMin g p.1.1 ⊗ₒ embMin h p.1.2 : MinPlusNN)
         : ℝ≥0∞) ≤ _
     rw [embMin_mul]; push_cast; rfl
   · refine le_iInf (fun x => ?_)
     obtain ⟨u, s, hus, hx⟩ := x.2
     refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
     rw [show (x.val : ℝ≥0∞)
-          = ((embMin g u ⊗ₒ embMin h s : RplusMin)
+          = ((embMin g u ⊗ₒ embMin h s : MinPlusNN)
               : ℝ≥0∞) from congrArg _ hx, embMin_mul]
     push_cast; rfl
 ```
@@ -258,7 +258,7 @@ noncomputable def maxConv (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMax g) (embMax h) t
-      : RplusMax).toVal.unbotD 0 |>.toNNReal
+      : MaxPlusNN).toVal.unbotD 0 |>.toNNReal
 ```
 
 The underlying value of the dioid product is the sum of the embedded
@@ -268,7 +268,7 @@ values.
 
 ```lean
 theorem embMax_mul (g h : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
-    ((embMax g a ⊗ₒ embMax h b : RplusMax)
+    ((embMax g a ⊗ₒ embMax h b : MaxPlusNN)
         : WithBot ℝ≥0∞)
       = (((g a : ℝ≥0∞) : WithBot ℝ≥0∞))
         + (((h b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
@@ -282,13 +282,13 @@ $`g(a) + h(b)` over the splits.
 ```lean
 theorem conv_embMax_toW (g h : ℝ≥0 → ℝ≥0)
     (t : ℝ≥0) :
-    ((conv (embMax g) (embMax h) t : RplusMax)
+    ((conv (embMax g) (embMax h) t : MaxPlusNN)
         : WithBot ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (((g p.1.1 + h p.1.2 : ℝ≥0)
             : ℝ≥0∞) : WithBot ℝ≥0∞) := by
   rw [conv_apply]
-  show (⨆ x : {x : RplusMax //
+  show (⨆ x : {x : MaxPlusNN //
         ∃ u s, u + s = t ∧
           x = embMax g u ⊗ₒ embMax h s},
         (x.val : WithBot ℝ≥0∞)) = _
@@ -298,7 +298,7 @@ theorem conv_embMax_toW (g h : ℝ≥0 → ℝ≥0)
     refine le_iSup_of_le ⟨(u, s), hus⟩ ?_
     rw [show (x.val : WithBot ℝ≥0∞)
           = ((embMax g u ⊗ₒ embMax h s
-                : RplusMax) : WithBot ℝ≥0∞)
+                : MaxPlusNN) : WithBot ℝ≥0∞)
             from congrArg _ hx, embMax_mul]
     push_cast; rfl
   · refine iSup_le (fun p => ?_)
@@ -306,7 +306,7 @@ theorem conv_embMax_toW (g h : ℝ≥0 → ℝ≥0)
       ⟨embMax g p.1.1 ⊗ₒ embMax h p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
     show _ ≤ ((embMax g p.1.1 ⊗ₒ embMax h p.1.2
-        : RplusMax) : WithBot ℝ≥0∞)
+        : MaxPlusNN) : WithBot ℝ≥0∞)
     rw [embMax_mul]; push_cast; rfl
 ```
 

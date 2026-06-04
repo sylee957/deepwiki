@@ -15,7 +15,7 @@ classical $`(\min, +)` convolution on real functions, and prove the
 fundamental fact: a sub-additive curve null at the origin is its own
 self-convolution. We then show this (min,plus) convolution _is_ the
 dioid convolution `conv` of the previous chapters, viewed through the
-`RplusMin` newtype — so the two definitions coincide.
+`MinPlusNN` newtype — so the two definitions coincide.
 
 ```lean
 namespace VerifiedWiki
@@ -86,7 +86,7 @@ theorem minConvE_self_of_subadditive
 
 The (min,plus) convolution `minConvE` on real functions is the _same
 operation_ as the dioid convolution `conv` of the previous chapters,
-viewed through the `RplusMin` newtype. Wrapping a real function by
+viewed through the `MinPlusNN` newtype. Wrapping a real function by
 $`s \mapsto \langle g(s)\rangle` embeds it into `Fmin`; we show that
 wrapping, convolving with `conv`, and unwrapping reproduces `minConvE`.
 This is the content that makes the two definitions interchangeable —
@@ -108,7 +108,7 @@ $`\bigsqcup` is the numeric infimum, both over the same splits.
 
 ```lean
 theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    ((conv (toF g) (toF h) t : RplusMin) : ℝ≥0∞)
+    ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
       = minConvE g h t := by
   apply le_antisymm
   · refine le_iInf ?_
@@ -119,11 +119,11 @@ theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
               ∧ x = toF g u ⊗ₒ toF h s}
         from ⟨u, s, hus, rfl⟩)
     rw [← conv_apply] at hle
-    exact (RplusMin.le_iff _ _).mp hle
-  · rw [conv_apply, ← RplusMin.le_iff]
+    exact (MinPlusNN.le_iff _ _).mp hle
+  · rw [conv_apply, ← MinPlusNN.le_iff]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
-    rw [RplusMin.le_iff]
+    rw [MinPlusNN.le_iff]
     exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
 ```
 
@@ -136,7 +136,7 @@ the induced (min,plus) convolution.
 theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
     conv (toF g) (toF h) = toF (minConvE g h) := by
   funext t
-  apply RplusMin.ext
+  apply MinPlusNN.ext
   exact conv_toF_toE g h t
 ```
 

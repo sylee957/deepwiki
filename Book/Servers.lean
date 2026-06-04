@@ -51,7 +51,7 @@ structure Curve where
 ```
 
 A curve applies as its underlying function, and coerces into the
-function dioid `Fmin` by wrapping each value into `RplusMin`; this is how
+function dioid `Fmin` by wrapping each value into `MinPlusNN`; this is how
 the convolution-based statements reach it.
 
 *Definition:* a curve as a function and as a dioid function
@@ -92,11 +92,11 @@ theorem Curve.le_iff_conv {D A : Curve} :
     D ≤ A ↔ (↑A : Fmin) ≤ (↑D : Fmin) := by
   constructor
   · intro h t
-    refine (RplusMin.le_iff _ _).mpr ?_
+    refine (MinPlusNN.le_iff _ _).mpr ?_
     show ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞)
     exact_mod_cast h t
   · intro h t
-    have ht := (RplusMin.le_iff _ _).mp (h t)
+    have ht := (MinPlusNN.le_iff _ _).mp (h t)
     show D.toFun t ≤ A.toFun t
     have : ((D.toFun t : ℝ≥0∞)) ≤ (A.toFun t : ℝ≥0∞) := ht
     exact_mod_cast this

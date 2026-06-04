@@ -9,7 +9,7 @@ The functions of network calculus map the non-negative reals into the
 extended reals $`\mathbb{R} \cup \{\pm\infty\}`. We give the _(min,plus)
 convolution_ first as a direct numeric infimum on those real functions,
 then lift them into the complete _(min,plus)_ dioid
-$`\overline{\mathbb{R}}_{\min}` (`RbarMin`) and check that the dioid
+$`\overline{\mathbb{R}}_{\min}` (`MinPlusExt`) and check that the dioid
 product `conv` of the generic chapter computes exactly the same thing.
 
 The carrier of the extended reals is `WithTop (WithBot ℝ)`, with the
@@ -47,7 +47,7 @@ noncomputable def minConvBar
 # The function dioid
 
 $`\mathcal{F}` is the set of those functions read into the complete
-_(min,plus)_ dioid $`\overline{\mathbb{R}}_{\min}` (`RbarMin`), the
+_(min,plus)_ dioid $`\overline{\mathbb{R}}_{\min}` (`MinPlusExt`), the
 newtype wrapping `WithTop (WithBot ℝ)` with the dioid algebra. It is a
 complete dioid in its own right by the generic `funCompleteDioid`
 instance.
@@ -55,7 +55,7 @@ instance.
 *Definition:* $`\mathcal{F} = \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\min}`
 
 ```lean
-abbrev FminBar := ℝ≥0 → RbarMin
+abbrev FminBar := ℝ≥0 → MinPlusExt
 ```
 
 A real function lifts into $`\mathcal{F}` value by value, wrapping each
@@ -82,7 +82,7 @@ splits.
 ```lean
 theorem conv_coe_min
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
-    ((conv (↑f) (↑g) t : RbarMin)
+    ((conv (↑f) (↑g) t : MinPlusExt)
         : WithTop (WithBot ℝ))
       = minConvBar f g t := by
   apply le_antisymm
@@ -94,11 +94,11 @@ theorem conv_coe_min
               ∧ x = (↑f : FminBar) u ⊗ₒ (↑g : FminBar) s}
         from ⟨u, s, hus, rfl⟩)
     rw [← conv_apply] at hle
-    exact (RbarMin.le_iff _ _).mp hle
-  · rw [conv_apply, ← RbarMin.le_iff]
+    exact (MinPlusExt.le_iff _ _).mp hle
+  · rw [conv_apply, ← MinPlusExt.le_iff]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
-    rw [RbarMin.le_iff]
+    rw [MinPlusExt.le_iff]
     exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
 ```
 
@@ -113,14 +113,14 @@ theorem conv_coe
     conv (↑f : FminBar) (↑g : FminBar)
       = (↑(minConvBar f g) : FminBar) := by
   funext t
-  apply RbarMin.ext
+  apply MinPlusExt.ext
   exact conv_coe_min f g t
 ```
 
 # The dual (max,plus) convolution
 
 The construction dualizes verbatim to the _(max,plus)_ side, on the
-same extended reals but through the order-dual carrier `RbarMax`
+same extended reals but through the order-dual carrier `MaxPlusExt`
 (`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is the numeric
 _supremum_, over all splits $`u + s = t`, of $`f(u) + g(s)`; the
 function class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
@@ -136,7 +136,7 @@ noncomputable def maxConvBar
     ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       f p.1.1 + g p.1.2
 
-abbrev FmaxBar := ℝ≥0 → RbarMax
+abbrev FmaxBar := ℝ≥0 → MaxPlusExt
 
 instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
   ⟨fun f t => ⟨f t⟩⟩
@@ -147,14 +147,14 @@ instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
 ```lean
 theorem conv_coe_max
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
-    ((conv (↑f) (↑g) t : RbarMax)
+    ((conv (↑f) (↑g) t : MaxPlusExt)
         : WithBot (WithTop ℝ))
       = maxConvBar f g t := by
   apply le_antisymm
-  · rw [conv_apply, ← RbarMax.le_iff]
+  · rw [conv_apply, ← MaxPlusExt.le_iff]
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
-    rw [RbarMax.le_iff]
+    rw [MaxPlusExt.le_iff]
     exact le_iSup_of_le ⟨(u, s), hus⟩ (le_refl _)
   · refine iSup_le ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -164,7 +164,7 @@ theorem conv_coe_max
               ∧ x = (↑f : FmaxBar) u ⊗ₒ (↑g : FmaxBar) s}
         from ⟨u, s, hus, rfl⟩)
     rw [← conv_apply] at hle
-    exact (RbarMax.le_iff _ _).mp hle
+    exact (MaxPlusExt.le_iff _ _).mp hle
 ```
 
 *Theorem:* $`\uparrow\!f \mathbin{\overline{\ast}} \uparrow\!g = \uparrow\!(f \mathbin{\overline{\ast}} g)`
@@ -175,14 +175,14 @@ theorem conv_coeMax
     conv (↑f : FmaxBar) (↑g : FmaxBar)
       = (↑(maxConvBar f g) : FmaxBar) := by
   funext t
-  apply RbarMax.ext
+  apply MaxPlusExt.ext
   exact conv_coe_max f g t
 ```
 
 The min-plus and max-plus convolutions are now symmetric: both on the
 extended reals $`\mathbb{R} \cup \{\pm\infty\}`, one the numeric
 infimum and the other the supremum over the same splits, each the dioid
-product in its respective complete dioid (`RbarMin`, `RbarMax`).
+product in its respective complete dioid (`MinPlusExt`, `MaxPlusExt`).
 
 # Subsets of the function class
 
@@ -338,7 +338,7 @@ and the unit $`e` (the impulse) — and arbitrary suprema. The generic
 sub-complete-dioid builder then equips each with a complete dioid
 structure.
 
-We read the atoms onto $`\mathcal{F}` through the `RbarMin` wrapper —
+We read the atoms onto $`\mathcal{F}` through the `MinPlusExt` wrapper —
 applying each property to the underlying values $`t \mapsto (f\,t)`
 — and record two bridges: $`\mathcal{F}` is the lift of its own
 underlying values, and the dioid product unwraps to `minConvBar`.
@@ -364,13 +364,13 @@ abbrev FNondecr :=
 ```lean
 theorem coe_toVal (a : FminBar) :
     (↑(fun t => (a t).toVal) : FminBar) = a := by
-  funext t; apply RbarMin.ext; rfl
+  funext t; apply MinPlusExt.ext; rfl
 
 theorem mul_toVal (a b : FminBar) (t : ℝ≥0) :
     ((a ⊗ₒ b) t).toVal
       = minConvBar (fun t => (a t).toVal)
           (fun t => (b t).toVal) t := by
-  show ((conv a b t : RbarMin) : WithTop (WithBot ℝ)) = _
+  show ((conv a b t : MinPlusExt) : WithTop (WithBot ℝ)) = _
   rw [← coe_toVal a, ← coe_toVal b]
   exact conv_coe_min _ _ t
 ```
@@ -393,7 +393,7 @@ theorem isSubCompleteDioid_FPlus :
   eps := fun _ => le_top
   one := fun t => by
     show (0 : WithTop (WithBot ℝ))
-        ≤ ((convUnit t : RbarMin)).toVal
+        ≤ ((convUnit t : MinPlusExt)).toVal
     rcases eq_or_ne t 0 with h | h
     · rw [convUnit, if_pos h]; exact le_rfl
     · rw [convUnit, if_neg h]; exact le_top
@@ -425,12 +425,12 @@ theorem isSubCompleteDioid_FNondecr :
   one := by
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ))
-          ≤ ((convUnit t : RbarMin)).toVal
+          ≤ ((convUnit t : MinPlusExt)).toVal
       rcases eq_or_ne t 0 with h | h
       · rw [convUnit, if_pos h]; exact le_rfl
       · rw [convUnit, if_neg h]; exact le_top
-    · show ((convUnit x : RbarMin)).toVal
-          ≤ ((convUnit y : RbarMin)).toVal
+    · show ((convUnit x : MinPlusExt)).toVal
+          ≤ ((convUnit y : MinPlusExt)).toVal
       rcases eq_or_ne x 0 with hx | hx
       · rw [convUnit, if_pos hx]
         show (0 : WithTop (WithBot ℝ)) ≤ _

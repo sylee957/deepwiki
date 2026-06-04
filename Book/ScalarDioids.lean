@@ -66,19 +66,19 @@ $`a \preceq b \iff \max(a, b) = b` _agrees_ with it.
 *Definition:* the five carriers, each wrapping its number system
 
 ```lean
-structure Rmin where ofVal ::
+structure MinPlus where ofVal ::
   toVal : WithTop ℝ
 
-structure RbarMin where ofVal ::
+structure MinPlusExt where ofVal ::
   toVal : WithTop (WithBot ℝ)
 
-structure RplusMin where ofVal ::
+structure MinPlusNN where ofVal ::
   toVal : ℝ≥0∞
 
-structure RplusMax where ofVal ::
+structure MaxPlusNN where ofVal ::
   toVal : WithBot ℝ≥0∞
 
-structure RbarMax where ofVal ::
+structure MaxPlusExt where ofVal ::
   toVal : WithBot (WithTop ℝ)
 ```
 
@@ -86,40 +86,40 @@ Each wrapper gets a coercion to its underlying value and an
 extensionality lemma lifting equality through it.
 
 ```lean
-namespace Rmin
-instance : Coe Rmin (WithTop ℝ) := ⟨toVal⟩
-@[ext] theorem ext {a b : Rmin}
+namespace MinPlus
+instance : Coe MinPlus (WithTop ℝ) := ⟨toVal⟩
+@[ext] theorem ext {a b : MinPlus}
     (h : (a : WithTop ℝ) = b) : a = b := by
   cases a; cases b; exact congrArg ofVal h
-end Rmin
+end MinPlus
 
-namespace RbarMin
-instance : Coe RbarMin (WithTop (WithBot ℝ)) := ⟨toVal⟩
-@[ext] theorem ext {a b : RbarMin}
+namespace MinPlusExt
+instance : Coe MinPlusExt (WithTop (WithBot ℝ)) := ⟨toVal⟩
+@[ext] theorem ext {a b : MinPlusExt}
     (h : (a : WithTop (WithBot ℝ)) = b) : a = b := by
   cases a; cases b; exact congrArg ofVal h
-end RbarMin
+end MinPlusExt
 
-namespace RplusMin
-instance : Coe RplusMin ℝ≥0∞ := ⟨toVal⟩
-@[ext] theorem ext {a b : RplusMin}
+namespace MinPlusNN
+instance : Coe MinPlusNN ℝ≥0∞ := ⟨toVal⟩
+@[ext] theorem ext {a b : MinPlusNN}
     (h : (a : ℝ≥0∞) = b) : a = b := by
   cases a; cases b; exact congrArg ofVal h
-end RplusMin
+end MinPlusNN
 
-namespace RplusMax
-instance : Coe RplusMax (WithBot ℝ≥0∞) := ⟨toVal⟩
-@[ext] theorem ext {a b : RplusMax}
+namespace MaxPlusNN
+instance : Coe MaxPlusNN (WithBot ℝ≥0∞) := ⟨toVal⟩
+@[ext] theorem ext {a b : MaxPlusNN}
     (h : (a : WithBot ℝ≥0∞) = b) : a = b := by
   cases a; cases b; exact congrArg ofVal h
-end RplusMax
+end MaxPlusNN
 
-namespace RbarMax
-instance : Coe RbarMax (WithBot (WithTop ℝ)) := ⟨toVal⟩
-@[ext] theorem ext {a b : RbarMax}
+namespace MaxPlusExt
+instance : Coe MaxPlusExt (WithBot (WithTop ℝ)) := ⟨toVal⟩
+@[ext] theorem ext {a b : MaxPlusExt}
     (h : (a : WithBot (WithTop ℝ)) = b) : a = b := by
   cases a; cases b; exact congrArg ofVal h
-end RbarMax
+end MaxPlusExt
 ```
 
 # The reals with infinity
@@ -132,7 +132,7 @@ neutral is $`+\infty` (absorbing for $`\min`, since $`\min(+\infty, a)
 canonical order $`a \preceq b \iff \min(a, b) = b` is then the _reverse_
 of the usual numeric order.
 
-The carrier `Rmin` wraps `WithTop ℝ` (with $`+\infty = \top`), so the
+The carrier `MinPlus` wraps `WithTop ℝ` (with $`+\infty = \top`), so the
 dioid operations are attached freshly rather than colliding with any
 numeric algebra on `WithTop ℝ`.
 
@@ -145,7 +145,7 @@ monotone.
 *Theorem:* $`a + \min(b, c) = \min(a + b, a + c)` and $`\min(a, b) + c = \min(a + c, b + c)`
 
 ```lean
-namespace RminX
+namespace MinPlusAux
 
 theorem add_min (a b c : WithTop ℝ) :
     a + min b c = min (a + b) (a + c) := by
@@ -157,22 +157,22 @@ theorem min_add (a b c : WithTop ℝ) :
     min a b + c = min (a + c) (b + c) := by
   rw [add_comm, add_min, add_comm a c, add_comm b c]
 
-end RminX
+end MinPlusAux
 ```
 
 Each dioid axiom is a fact about `WithTop ℝ`, lifted through the wrapper
 by `ext`: the monoid laws from `min` and `+`, the distributive laws from
-`RminX.add_min`/`RminX.min_add`, absorption of $`+\infty`, and
+`MinPlusAux.add_min`/`MinPlusAux.min_add`, absorption of $`+\infty`, and
 idempotency of $`\min`. The operations use the $`\uparrow` coercion to
 the underlying value.
 
 *Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
-namespace Rmin
+namespace MinPlus
 open Algebra
 
-instance : Algebra.Dioid Rmin where
+instance : Algebra.Dioid MinPlus where
   add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
   mul a b := ⟨↑a + ↑b⟩
@@ -184,14 +184,14 @@ instance : Algebra.Dioid Rmin where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (RminX.add_min _ _ _)
-  right_distrib _ _ _ := ext (RminX.min_add _ _ _)
+  left_distrib _ _ _ := ext (MinPlusAux.add_min _ _ _)
+  right_distrib _ _ _ := ext (MinPlusAux.min_add _ _ _)
   eps_otimes _ := ext (WithTop.top_add _)
   otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
   oplus_idem _ := ext (min_self _)
 
-end Rmin
+end MinPlus
 ```
 
 ## The canonical order
@@ -201,12 +201,12 @@ The dioid order on the wrapper is the reverse of the numeric order.
 *Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
-namespace Rmin
+namespace MinPlus
 
-theorem le_iff (a b : Rmin) :
+theorem le_iff (a b : MinPlus) :
     a ≼ₒ b ↔ (b : WithTop ℝ) ≤ a := by
   have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : Rmin) = b := Iff.rfl
+      ↔ (⟨min ↑a ↑b⟩ : MinPlus) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
@@ -215,7 +215,7 @@ theorem le_iff (a b : Rmin) :
     rw [← this]; exact min_le_left _ _
   · intro h; exact ext (min_eq_right h)
 
-end Rmin
+end MinPlus
 ```
 
 ## Worked arithmetic
@@ -226,7 +226,7 @@ the dioid product $`\otimes` is numeric addition.
 The four essential arithmetic cases of $`\overline{\mathbb{R}}`:
 
 ```lean
-namespace Rmin
+namespace MinPlus
 open Algebra
 ```
 
@@ -234,14 +234,14 @@ open Algebra
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨x⟩ : Rmin) ⊕ₒ ⟨y⟩ = ⟨z⟩ :=
+    ∃ z : ℝ, (⟨x⟩ : MinPlus) ⊕ₒ ⟨y⟩ = ⟨z⟩ :=
   ⟨min x y, rfl⟩
 ```
 
 *Theorem:* $`a \wedge {+\infty} = a`
 
 ```lean
-example (a : Rmin) :
+example (a : MinPlus) :
     a ⊕ₒ ⟨⊤⟩ = a := add_zero a
 ```
 
@@ -249,17 +249,17 @@ example (a : Rmin) :
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨x⟩ : Rmin) ⊗ₒ ⟨y⟩ = ⟨z⟩ :=
+    ∃ z : ℝ, (⟨x⟩ : MinPlus) ⊗ₒ ⟨y⟩ = ⟨z⟩ :=
   ⟨x + y, rfl⟩
 ```
 
 *Theorem:* $`a + {+\infty} = {+\infty}` ($`+\infty` absorbing)
 
 ```lean
-example (a : Rmin) :
+example (a : MinPlus) :
     a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
 
-end Rmin
+end MinPlus
 ```
 
 Because the instance is found by resolution, every result of the tower
@@ -270,7 +270,7 @@ $`\overline{\mathbb{R}}` with no further work.
 *Theorem:* $`a \preceq a` on $`\overline{\mathbb{R}}`
 
 ```lean
-example (a : Rmin) :
+example (a : MinPlus) :
     a ≼ₒ a :=
   le_rfl
 ```
@@ -287,7 +287,7 @@ top-absorbing addition $`(+\infty) + (-\infty) = +\infty` — which keeps
 $`+\infty = \varepsilon` absorbing for $`\otimes` — they carry a
 _complete_ (min,plus) dioid.
 
-The carrier `RbarMin` wraps `WithTop (WithBot ℝ)`, so that
+The carrier `MinPlusExt` wraps `WithTop (WithBot ℝ)`, so that
 $`+\infty = \top` and $`-\infty = \bot`, with the top-absorbing
 addition built in.
 
@@ -402,15 +402,15 @@ theorem min_add (a b c : WithTop (WithBot ℝ)) :
 end RbarX
 ```
 
-The complete (min,plus) carrier `RbarMin` wraps `WithTop (WithBot ℝ)`,
+The complete (min,plus) carrier `MinPlusExt` wraps `WithTop (WithBot ℝ)`,
 with the dioid sum the numeric minimum and the product numeric addition.
 
 *Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
-namespace RbarMin
+namespace MinPlusExt
 
-instance : Algebra.Dioid RbarMin where
+instance : Algebra.Dioid MinPlusExt where
   add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
   mul a b := ⟨↑a + ↑b⟩
@@ -437,10 +437,10 @@ The dioid order on the wrapper is the reverse of the numeric order.
 *Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
-theorem le_iff (a b : RbarMin) :
+theorem le_iff (a b : MinPlusExt) :
     a ≼ₒ b ↔ (b : WithTop (WithBot ℝ)) ≤ a := by
   have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : RbarMin) = b := Iff.rfl
+      ↔ (⟨min ↑a ↑b⟩ : MinPlusExt) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
@@ -458,7 +458,7 @@ greatest-lower-bound, and lower semi-continuity is `RbarX.add_iInf`.
 
 ```lean
 noncomputable instance :
-    Algebra.CompleteDioid RbarMin where
+    Algebra.CompleteDioid MinPlusExt where
   iSup f := ⟨⨅ i, ↑(f i)⟩
   le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
@@ -470,7 +470,7 @@ noncomputable instance :
        = ⨅ i, ((↑a : WithTop (WithBot ℝ)) + ↑(f i))
     exact RbarX.add_iInf _ _
 
-end RbarMin
+end MinPlusExt
 ```
 
 So $`\overline{\mathbb{R}}` realizes the _complete_ dioid: every set
@@ -484,7 +484,7 @@ The four essential arithmetic cases of
 $`\overline{\mathbb{R}} = \mathbb{R} \cup \{\pm\infty\}`:
 
 ```lean
-namespace RbarMin
+namespace MinPlusExt
 open Algebra
 ```
 
@@ -492,7 +492,7 @@ open Algebra
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨↑↑x⟩ : RbarMin) ⊕ₒ ⟨↑↑y⟩
+    ∃ z : ℝ, (⟨↑↑x⟩ : MinPlusExt) ⊕ₒ ⟨↑↑y⟩
       = ⟨↑↑z⟩ :=
   ⟨min x y, by
     refine ext ?_
@@ -504,7 +504,7 @@ example (x y : ℝ) :
 *Theorem:* $`a \wedge {+\infty} = a`
 
 ```lean
-example (a : RbarMin) :
+example (a : MinPlusExt) :
     a ⊕ₒ ⟨⊤⟩ = a := add_zero a
 ```
 
@@ -512,7 +512,7 @@ example (a : RbarMin) :
 
 ```lean
 example (x y : ℝ) :
-    ∃ z : ℝ, (⟨↑↑x⟩ : RbarMin) ⊗ₒ ⟨↑↑y⟩
+    ∃ z : ℝ, (⟨↑↑x⟩ : MinPlusExt) ⊗ₒ ⟨↑↑y⟩
       = ⟨↑↑z⟩ :=
   ⟨x + y, by
     refine ext ?_
@@ -524,10 +524,10 @@ example (x y : ℝ) :
 *Theorem:* $`a + {+\infty} = {+\infty}` ($`+\infty` absorbing)
 
 ```lean
-example (a : RbarMin) :
+example (a : MinPlusExt) :
     a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
 
-end RbarMin
+end MinPlusExt
 ```
 
 # The non-negative reals
@@ -537,7 +537,7 @@ The non-negative extended reals $`\overline{\mathbb{R}}_{\ge 0}
 (min,plus) carrier. Being bounded below by $`0`, they form a complete
 lattice with $`0 = \bot` and $`+\infty = \top` and no $`-\infty`, so
 $`+\infty = \varepsilon` stays absorbing and there are no
-$`(+\infty) + (-\infty)` indeterminacies. The carrier `RplusMin` wraps
+$`(+\infty) + (-\infty)` indeterminacies. The carrier `MinPlusNN` wraps
 Mathlib's $`\mathbb{R}_{\ge 0}^{\infty}` (`ℝ≥0∞`), whose lower
 semi-continuity of $`+` is available off the shelf.
 
@@ -569,9 +569,9 @@ end RplusX
 *Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.Dioid` with $`\oplus = \min`, $`\otimes = {+}`, $`\varepsilon = +\infty`, $`e = 0`
 
 ```lean
-namespace RplusMin
+namespace MinPlusNN
 
-instance : Algebra.Dioid RplusMin where
+instance : Algebra.Dioid MinPlusNN where
   add a b := ⟨min ↑a ↑b⟩
   zero := ⟨⊤⟩
   mul a b := ⟨↑a + ↑b⟩
@@ -598,10 +598,10 @@ The dioid order on the wrapper is the reverse of the numeric order.
 *Theorem:* $`a \preceq b \iff \uparrow b \le \uparrow a`
 
 ```lean
-theorem le_iff (a b : RplusMin) :
+theorem le_iff (a b : MinPlusNN) :
     a ≼ₒ b ↔ (b : ℝ≥0∞) ≤ a := by
   have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : RplusMin) = b := Iff.rfl
+      ↔ (⟨min ↑a ↑b⟩ : MinPlusNN) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
@@ -614,7 +614,7 @@ theorem le_iff (a b : RplusMin) :
 
 ```lean
 noncomputable instance :
-    Algebra.CompleteDioid RplusMin where
+    Algebra.CompleteDioid MinPlusNN where
   iSup f := ⟨⨅ i, ↑(f i)⟩
   le_iSup f i := (le_iff _ _).mpr (iInf_le _ i)
   iSup_le f b hb := (le_iff _ _).mpr (le_iInf (by
@@ -626,7 +626,7 @@ noncomputable instance :
        = ⨅ i, ((↑a : ℝ≥0∞) + ↑(f i))
     exact RplusX.add_iInf _ _
 
-end RplusMin
+end MinPlusNN
 ```
 
 Of the three carriers, $`\overline{\mathbb{R}}_{\ge 0}` is the
@@ -640,7 +640,7 @@ The four essential arithmetic cases of
 $`\overline{\mathbb{R}}_{\ge 0} = \mathbb{R}_{\ge 0} \cup \{+\infty\}`:
 
 ```lean
-namespace RplusMin
+namespace MinPlusNN
 open Algebra
 ```
 
@@ -648,7 +648,7 @@ open Algebra
 
 ```lean
 example (x y : ℝ≥0) :
-    ∃ z : ℝ≥0, (⟨↑x⟩ : RplusMin) ⊕ₒ ⟨↑y⟩
+    ∃ z : ℝ≥0, (⟨↑x⟩ : MinPlusNN) ⊕ₒ ⟨↑y⟩
       = ⟨↑z⟩ :=
   ⟨min x y, by
     refine ext ?_
@@ -659,7 +659,7 @@ example (x y : ℝ≥0) :
 *Theorem:* $`a \wedge {+\infty} = a`
 
 ```lean
-example (a : RplusMin) :
+example (a : MinPlusNN) :
     a ⊕ₒ ⟨⊤⟩ = a := add_zero a
 ```
 
@@ -667,7 +667,7 @@ example (a : RplusMin) :
 
 ```lean
 example (x y : ℝ≥0) :
-    ∃ z : ℝ≥0, (⟨↑x⟩ : RplusMin) ⊗ₒ ⟨↑y⟩
+    ∃ z : ℝ≥0, (⟨↑x⟩ : MinPlusNN) ⊗ₒ ⟨↑y⟩
       = ⟨↑z⟩ :=
   ⟨x + y, by
     refine ext ?_
@@ -678,10 +678,10 @@ example (x y : ℝ≥0) :
 *Theorem:* $`a + {+\infty} = {+\infty}` ($`+\infty` absorbing)
 
 ```lean
-example (a : RplusMin) :
+example (a : MinPlusNN) :
     a ⊗ₒ ⟨⊤⟩ = ⟨⊤⟩ := mul_zero a
 
-end RplusMin
+end MinPlusNN
 ```
 
 # The non-negative reals (max,plus)
@@ -689,7 +689,7 @@ end RplusMin
 The order-_dual_ carrier realizes the _(max,plus)_ algebra: the dioid
 sum is the numeric _maximum_, the product is numeric _addition_, the
 sum neutral is $`-\infty` (identity of $`\max` and absorbing for
-$`+`), and the product neutral is $`0`. The carrier `RplusMax` wraps
+$`+`), and the product neutral is $`0`. The carrier `MaxPlusNN` wraps
 `WithBot ℝ≥0∞` so that $`-\infty = \bot` is the dioid zero. Unlike the
 _(min,plus)_ carriers, the dioid order _agrees_ with the numeric one,
 so the dioid supremum is the numeric supremum.
@@ -808,9 +808,9 @@ idempotency of $`\max`.
 *Definition:* $`\overline{\mathbb{R}}_{\ge 0}` is an `Algebra.Dioid` with $`\oplus = \max`, $`\otimes = {+}`, $`\varepsilon = -\infty`, $`e = 0`
 
 ```lean
-namespace RplusMax
+namespace MaxPlusNN
 
-instance : Algebra.Dioid RplusMax where
+instance : Algebra.Dioid MaxPlusNN where
   add a b := ⟨max ↑a ↑b⟩
   zero := ⟨⊥⟩
   mul a b := ⟨↑a + ↑b⟩
@@ -838,10 +838,10 @@ numeric order.
 *Theorem:* $`a \preceq b \iff \uparrow a \le \uparrow b`
 
 ```lean
-theorem le_iff (a b : RplusMax) :
+theorem le_iff (a b : MaxPlusNN) :
     a ≼ₒ b ↔ (a : WithBot ℝ≥0∞) ≤ b := by
   have h1 : a ≼ₒ b
-      ↔ (⟨max ↑a ↑b⟩ : RplusMax) = b := Iff.rfl
+      ↔ (⟨max ↑a ↑b⟩ : MaxPlusNN) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
@@ -858,7 +858,7 @@ and lower semi-continuity is `MaxX.add_iSup`.
 
 ```lean
 noncomputable instance :
-    Algebra.CompleteDioid RplusMax where
+    Algebra.CompleteDioid MaxPlusNN where
   iSup f := ⟨⨆ i, ↑(f i)⟩
   le_iSup f i :=
     (le_iff _ _).mpr
@@ -871,36 +871,36 @@ noncomputable instance :
        = ⨆ i, ((↑a : WithBot ℝ≥0∞) + ↑(f i))
     exact MaxX.add_iSup _ _
 
-end RplusMax
+end MaxPlusNN
 ```
 
-So `RplusMax` realizes the _(max,plus)_ complete dioid, the order-dual
-of `RplusMin`: $`\max` in place of $`\min`, $`-\infty` in place of
+So `MaxPlusNN` realizes the _(max,plus)_ complete dioid, the order-dual
+of `MinPlusNN`: $`\max` in place of $`\min`, $`-\infty` in place of
 $`+\infty` for $`\varepsilon`, and the dioid supremum the numeric
 supremum.
 
 # The extended reals (max,plus)
 
-The order-dual of `RbarMin` on the _same_ extended reals
+The order-dual of `MinPlusExt` on the _same_ extended reals
 $`\mathbb{R} \cup \{\pm\infty\}`: a _complete (max,plus) dioid_ with
 $`\oplus = \max`, $`\otimes = {+}`, sum neutral
 $`\varepsilon = -\infty`, and product neutral $`e = 0`. The carrier is
 `WithBot (WithTop ℝ)`, so $`-\infty = \bot` and $`+\infty = \top`, with
 the _bottom-absorbing_ addition $`(-\infty) + (+\infty) = -\infty` —
 which keeps $`-\infty = \varepsilon` absorbing for $`\otimes`. It is the
-mirror image of `RbarMin` under $`x \mapsto -x`, and together they give
+mirror image of `MinPlusExt` under $`x \mapsto -x`, and together they give
 symmetric min-plus and max-plus dioids on one carrier.
 
 ## The carrier and its dioid
 
 The crux is again _lower semi-continuity_, now of $`+` over an arbitrary
-_supremum_; the proof mirrors `RbarMin`'s, translating by a shift and
+_supremum_; the proof mirrors `MinPlusExt`'s, translating by a shift and
 reducing to the finite, $`-\infty`, and $`+\infty` cases.
 
 *Definition:* the shift $`x \mapsto r + x`, an order isomorphism
 
 ```lean
-namespace RbarMaxX
+namespace MaxPlusExtAux
 
 noncomputable def shift (r : ℝ) :
     WithBot (WithTop ℝ) ≃o WithBot (WithTop ℝ) :=
@@ -998,19 +998,19 @@ theorem max_add (a b c : WithBot (WithTop ℝ)) :
     max a b + c = max (a + c) (b + c) := by
   rw [add_comm, add_max, add_comm a c, add_comm b c]
 
-end RbarMaxX
+end MaxPlusExtAux
 ```
 
-The complete (max,plus) carrier `RbarMax` wraps `WithBot (WithTop ℝ)`,
+The complete (max,plus) carrier `MaxPlusExt` wraps `WithBot (WithTop ℝ)`,
 with the dioid sum the numeric maximum and the product numeric
 addition.
 
 *Definition:* $`\overline{\mathbb{R}}` is an `Algebra.Dioid` with $`\oplus = \max`, $`\otimes = {+}`, $`\varepsilon = -\infty`, $`e = 0`
 
 ```lean
-namespace RbarMax
+namespace MaxPlusExt
 
-instance : Algebra.Dioid RbarMax where
+instance : Algebra.Dioid MaxPlusExt where
   add a b := ⟨max ↑a ↑b⟩
   zero := ⟨⊥⟩
   mul a b := ⟨↑a + ↑b⟩
@@ -1022,8 +1022,8 @@ instance : Algebra.Dioid RbarMax where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (RbarMaxX.add_max _ _ _)
-  right_distrib _ _ _ := ext (RbarMaxX.max_add _ _ _)
+  left_distrib _ _ _ := ext (MaxPlusExtAux.add_max _ _ _)
+  right_distrib _ _ _ := ext (MaxPlusExtAux.max_add _ _ _)
   eps_otimes _ := ext (WithBot.bot_add _)
   otimes_eps _ := ext (WithBot.add_bot _)
   otimes_comm _ _ := ext (add_comm _ _)
@@ -1032,15 +1032,15 @@ instance : Algebra.Dioid RbarMax where
 
 ## The canonical order
 
-Dual to `RbarMin`, the dioid order agrees with the numeric order.
+Dual to `MinPlusExt`, the dioid order agrees with the numeric order.
 
 *Theorem:* $`a \preceq b \iff \uparrow a \le \uparrow b`
 
 ```lean
-theorem le_iff (a b : RbarMax) :
+theorem le_iff (a b : MaxPlusExt) :
     a ≼ₒ b ↔ (a : WithBot (WithTop ℝ)) ≤ b := by
   have h1 : a ≼ₒ b
-      ↔ (⟨max ↑a ↑b⟩ : RbarMax) = b := Iff.rfl
+      ↔ (⟨max ↑a ↑b⟩ : MaxPlusExt) = b := Iff.rfl
   rw [h1]
   constructor
   · intro h
@@ -1051,13 +1051,13 @@ theorem le_iff (a b : RbarMax) :
 ```
 
 The dioid supremum is the numeric supremum of the underlying values,
-and lower semi-continuity is `RbarMaxX.add_iSup`.
+and lower semi-continuity is `MaxPlusExtAux.add_iSup`.
 
 *Definition:* $`\overline{\mathbb{R}}` is an `Algebra.CompleteDioid` with $`\bigsqcup s = \sup\,\{\,\uparrow x \mid x \in s\,\}`
 
 ```lean
 noncomputable instance :
-    Algebra.CompleteDioid RbarMax where
+    Algebra.CompleteDioid MaxPlusExt where
   iSup f := ⟨⨆ i, ↑(f i)⟩
   le_iSup f i :=
     (le_iff _ _).mpr
@@ -1068,13 +1068,13 @@ noncomputable instance :
     refine ext ?_
     show (↑a : WithBot (WithTop ℝ)) + ⨆ i, ↑(f i)
        = ⨆ i, ((↑a : WithBot (WithTop ℝ)) + ↑(f i))
-    exact RbarMaxX.add_iSup _ _
+    exact MaxPlusExtAux.add_iSup _ _
 
-end RbarMax
+end MaxPlusExt
 ```
 
-So `RbarMax` realizes the _(max,plus)_ complete dioid on
-$`\mathbb{R} \cup \{\pm\infty\}`, the exact order-dual of `RbarMin`.
+So `MaxPlusExt` realizes the _(max,plus)_ complete dioid on
+$`\mathbb{R} \cup \{\pm\infty\}`, the exact order-dual of `MinPlusExt`.
 
 ```lean
 end VerifiedWiki
