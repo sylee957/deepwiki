@@ -59,6 +59,19 @@ noncomputable def minConvE (g h : ℝ≥0 → ℝ≥0∞) :
       g p.1.1 + h p.1.2
 ```
 
+The dual _(max,plus) convolution_ takes the numeric _supremum_ over the
+same splits.
+
+*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u + s = t}\,(g(u) + h(s))`
+
+```lean
+noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      g p.1.1 + h p.1.2
+```
+
 # The fundamental fixed-point result
 
 A sub-additive curve null at the origin is a _fixed point_ of
@@ -90,6 +103,29 @@ theorem minConvE_self_of_subadditive
     simp only
     calc g t = g (u + s) := by rw [hus]
       _ ≤ g u + g s := hsub u s
+```
+
+Dually, a super-additive curve null at the origin is a fixed point of
+(max,plus) self-convolution: the supremum lies above the split
+$`0 + t`, and super-additivity makes every split-term lie below
+$`g(t)`.
+
+*Theorem:* if $`g` is super-additive and $`g(0) = 0` then $`g \mathbin{\overline{\ast}} g = g`
+
+```lean
+theorem maxConvE_self_of_superadditive
+    (g : ℝ≥0 → ℝ≥0∞)
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
+    maxConvE g g = g := by
+  funext t
+  unfold maxConvE
+  apply le_antisymm
+  · refine iSup_le ?_
+    rintro ⟨⟨u, s⟩, hus⟩
+    simp only
+    calc g u + g s ≤ g (u + s) := hsup u s
+      _ = g t := by rw [hus]
+  · exact le_iSup_of_le ⟨(0, t), by simp⟩ (by simp [h0])
 ```
 
 # The two convolutions agree

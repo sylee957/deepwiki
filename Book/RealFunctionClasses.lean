@@ -960,36 +960,11 @@ closure $`(\cdot)^{\overline{\star}}` fixing the super-additive ones —
 reduce, for a curve null at the origin, to its being a fixed point of
 self-convolution: a sub-additive curve null at $`0` satisfies
 $`f \ast f = f` (the (min,plus) self-convolution, `minConvE`), and dually
-a super-additive curve null at $`0` satisfies the (max,plus)
-self-convolution fixed point. We record the (max,plus) dual of the
-sub-additive fixed-point lemma, then read off each curve's closure.
-
-*Definition:* the _(max,plus)_ convolution $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u+s=t} (g(u)+h(s))`
-
-```lean
-noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  fun t => ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2
-```
-
-*Theorem:* a super-additive curve null at $`0` is a $`\overline{\ast}`-fixed point
-
-```lean
-theorem maxConvE_self_of_superadditive
-    (g : ℝ≥0 → ℝ≥0∞)
-    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
-    maxConvE g g = g := by
-  funext t
-  unfold maxConvE
-  apply le_antisymm
-  · refine iSup_le ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    simp only
-    calc g u + g s ≤ g (u + s) := hsup u s
-      _ = g t := by rw [hus]
-  · exact le_iSup_of_le ⟨(0, t), by simp⟩ (by simp [h0])
-```
+a super-additive curve null at $`0` satisfies
+$`f \mathbin{\overline{\ast}} f = f` (the (max,plus) self-convolution,
+`maxConvE`). Both fixed-point facts — `minConvE_self_of_subadditive` and
+`maxConvE_self_of_superadditive` — were established in the `Additivity`
+chapter; here we read off each curve's closure.
 
 The sub-additive curves (token-bucket, sub-additive staircase, and the
 test $`\mathbb{1}_{>0}`) are their own sub-additive closures.
