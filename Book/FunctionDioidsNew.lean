@@ -338,28 +338,27 @@ and the unit $`e` (the impulse) — and arbitrary suprema. The generic
 sub-complete-dioid builder then equips each with a complete dioid
 structure.
 
-We read the predicates onto $`\mathcal{F}` through the `RbarMin`
-wrapper, and record two bridges: $`\mathcal{F}` is the lift of its own
+We read the atoms onto $`\mathcal{F}` through the `RbarMin` wrapper —
+applying each property to the underlying values $`t \mapsto (f\,t)`
+— and record two bridges: $`\mathcal{F}` is the lift of its own
 underlying values, and the dioid product unwraps to `minConvBar`.
 
-```lean
-def isFPlusF (f : FminBar) : Prop :=
-  isNonneg (fun t => (f t).toB)
-
-def isFNondecrF (f : FminBar) : Prop :=
-  isNonneg (fun t => (f t).toB)
-    ∧ isNondecr (fun t => (f t).toB)
-```
-
-The classes are the subtypes of $`\mathcal{F}` cut out by these
-predicates.
+The classes are the subtypes of $`\mathcal{F}` cut out directly by the
+atoms: $`\mathcal{F}^{+}` by non-negativity alone, and
+$`\mathcal{F}^{\uparrow}` by the _conjunction_ of non-negativity and
+monotonicity — written inline as the carving predicate, no named
+composite.
 
 *Definition:* $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}` as subtypes
 
 ```lean
-abbrev FPlus := {f : FminBar // isFPlusF f}
+abbrev FPlus :=
+  {f : FminBar // isNonneg (fun t => (f t).toB)}
 
-abbrev FNondecr := {f : FminBar // isFNondecrF f}
+abbrev FNondecr :=
+  {f : FminBar //
+    isNonneg (fun t => (f t).toB)
+      ∧ isNondecr (fun t => (f t).toB)}
 ```
 
 ```lean
@@ -383,8 +382,10 @@ conditions.
 *Definition:* $`\mathcal{F}^{+}` is a sub-complete-dioid
 
 ```lean
-theorem isSubCompleteDioid_isFPlusF :
-    IsSubCompleteDioid isFPlusF where
+theorem isSubCompleteDioid_FPlus :
+    IsSubCompleteDioid
+      (fun f : FminBar => isNonneg (fun t => (f t).toB))
+      where
   add ha hb := fun t => le_min (ha t) (hb t)
   mul {a b} ha hb := fun t => by
     show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toB
@@ -402,8 +403,12 @@ theorem isSubCompleteDioid_isFPlusF :
 *Definition:* $`\mathcal{F}^{\uparrow}` is a sub-complete-dioid
 
 ```lean
-theorem isSubCompleteDioid_isFNondecrF :
-    IsSubCompleteDioid isFNondecrF where
+theorem isSubCompleteDioid_FNondecr :
+    IsSubCompleteDioid
+      (fun f : FminBar =>
+        isNonneg (fun t => (f t).toB)
+          ∧ isNondecr (fun t => (f t).toB))
+      where
   add ha hb :=
     ⟨fun t => le_min (ha.1 t) (hb.1 t),
       fun x y hxy =>
@@ -448,10 +453,10 @@ The builder turns each into a complete dioid.
 
 ```lean
 noncomputable instance : CompleteDioid FPlus :=
-  isSubCompleteDioid_isFPlusF.toCompleteDioid
+  isSubCompleteDioid_FPlus.toCompleteDioid
 
 noncomputable instance : CompleteDioid FNondecr :=
-  isSubCompleteDioid_isFNondecrF.toCompleteDioid
+  isSubCompleteDioid_FNondecr.toCompleteDioid
 ```
 
 By contrast $`\mathcal{F}_0` and $`\mathcal{F}_0^{\uparrow}` are _not_
