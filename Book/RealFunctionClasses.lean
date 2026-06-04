@@ -987,79 +987,104 @@ theorem staircase_closure (P h : ℝ≥0) (hP : (0:ℝ) < P)
 ```
 
 The super-additive closure lives on the dual carrier `WithBot ℝ≥0∞`, so
-we read each super-additive curve there through the lift `embW` (wrap
-each $`\overline{\mathbb{R}}_{\ge 0}` value with $`\bot = -\infty` added
-below). The super-additive curves — pure delay, rate, rate-latency, and
-the super-additive staircase — are then their own super-additive
-closures.
+we read each super-additive curve there by adding a $`\bot = -\infty`
+below — the coercion $`\overline{\mathbb{R}}_{\ge 0} \hookrightarrow
+\overline{\mathbb{R}}_{\ge 0} \cup \{-\infty\}`. We register it on whole
+curves, so $`\uparrow\!g` lifts $`g : \mathbb{R}^{+} \to
+\overline{\mathbb{R}}_{\ge 0}`.
 
-*Definition:* the lift of an $`\overline{\mathbb{R}}_{\ge 0}` curve to `WithBot ℝ≥0∞`
+*Definition:* the coercion of a curve into `WithBot ℝ≥0∞`
 
 ```lean
-def embW (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
-  fun t => ((g t : ℝ≥0∞) : WithBot ℝ≥0∞)
+instance : Coe (ℝ≥0 → ℝ≥0∞) (ℝ≥0 → WithBot ℝ≥0∞) :=
+  ⟨fun g t => ((g t : ℝ≥0∞) : WithBot ℝ≥0∞)⟩
 ```
 
-A super-additive curve null at the origin, so lifted, is its own
-super-additive closure.
+A super-additive curve null at the origin is its own super-additive
+closure, in the lifted carrier.
 
 *Theorem:* a super-additive curve null at $`0` satisfies $`(\uparrow\!g)^{\overline{\star}} = \uparrow\!g`
 
 ```lean
-theorem superadditiveClosure_embW_eq_self
+theorem superadditiveClosure_coe_eq_self
     (g : ℝ≥0 → ℝ≥0∞)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
-    superadditiveClosure (embW g) = embW g := by
+    superadditiveClosure (↑g)
+      = (↑g : ℝ≥0 → WithBot ℝ≥0∞) := by
   apply superadditiveClosure_eq_self
   · intro u s
-    show embW g u + embW g s ≤ embW g (u + s)
-    simp only [embW]
+    show ((g u : ℝ≥0∞) : WithBot ℝ≥0∞)
+        + ((g s : ℝ≥0∞) : WithBot ℝ≥0∞)
+      ≤ ((g (u + s) : ℝ≥0∞) : WithBot ℝ≥0∞)
     rw [← WithBot.coe_add]
     exact_mod_cast hsup u s
-  · show embW g 0 = 0
-    simp only [embW]; rw [h0]; rfl
+  · show ((g 0 : ℝ≥0∞) : WithBot ℝ≥0∞) = 0
+    rw [h0]; rfl
 ```
+
+Projecting the closure back to $`\overline{\mathbb{R}}_{\ge 0}` (the
+values are never $`-\infty`, so the projection is faithful) recovers the
+curve: the closure identity holds for the _disembedded_ function too.
+
+*Theorem:* the disembedded super-additive closure of a super-additive curve is itself
+
+```lean
+theorem superadditiveClosure_unbotD_eq
+    (g : ℝ≥0 → ℝ≥0∞)
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0)
+    (t : ℝ≥0) :
+    (superadditiveClosure (↑g) t).unbotD 0 = g t := by
+  rw [superadditiveClosure_coe_eq_self g hsup h0]
+  show (((g t : ℝ≥0∞) : WithBot ℝ≥0∞)).unbotD 0 = g t
+  rw [WithBot.unbotD_coe]
+```
+
+The super-additive curves — pure delay, rate, rate-latency, and the
+super-additive staircase — are then their own super-additive closures.
+We state each in the disembedded form, back on
+$`\overline{\mathbb{R}}_{\ge 0}`.
 
 *Theorem:* $`(\delta_d)^{\overline{\star}} = \delta_d`
 
 ```lean
-theorem delay_closure (d : ℝ≥0) :
-    superadditiveClosure (embW (delay d))
-      = embW (delay d) :=
-  superadditiveClosure_embW_eq_self _
-    (delay_superadditive d) (delay_zero_eq d)
+theorem delay_closure (d : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(delay d)) t).unbotD 0
+      = delay d t :=
+  superadditiveClosure_unbotD_eq _
+    (delay_superadditive d) (delay_zero_eq d) t
 ```
 
 *Theorem:* $`(\lambda_R)^{\overline{\star}} = \lambda_R`
 
 ```lean
-theorem rate_closure (R : ℝ≥0) :
-    superadditiveClosure (embW (rate R)) = embW (rate R) :=
-  superadditiveClosure_embW_eq_self _
-    (rate_superadditive R) (rate_zero_eq R)
+theorem rate_closure (R : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(rate R)) t).unbotD 0
+      = rate R t :=
+  superadditiveClosure_unbotD_eq _
+    (rate_superadditive R) (rate_zero_eq R) t
 ```
 
 *Theorem:* $`(\beta_{R,T})^{\overline{\star}} = \beta_{R,T}`
 
 ```lean
-theorem rateLatency_closure (R T : ℝ≥0) :
-    superadditiveClosure (embW (rateLatency R T))
-      = embW (rateLatency R T) :=
-  superadditiveClosure_embW_eq_self _
+theorem rateLatency_closure (R T : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(rateLatency R T)) t).unbotD 0
+      = rateLatency R T t :=
+  superadditiveClosure_unbotD_eq _
     (rateLatency_superadditive R T)
-    (rateLatency_zero_eq R T)
+    (rateLatency_zero_eq R T) t
 ```
 
 *Theorem:* $`(\nu_{P,h,J})^{\overline{\star}} = \nu_{P,h,J}` for $`J < -P`
 
 ```lean
 theorem staircase_closure_super (P h : ℝ≥0)
-    (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) :
-    superadditiveClosure (embW (staircase P h J))
-      = embW (staircase P h J) :=
-  superadditiveClosure_embW_eq_self _
+    (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) (t : ℝ≥0) :
+    (superadditiveClosure (↑(staircase P h J)) t).unbotD 0
+      = staircase P h J t :=
+  superadditiveClosure_unbotD_eq _
     (staircase_superadditive P h hP J hJ)
-    (staircase_zero_eq P h J)
+    (staircase_zero_eq P h J) t
 ```
 
 ```lean
