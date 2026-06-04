@@ -2042,6 +2042,110 @@ theorem vDev_eq_deconv_zero (f g : ℝ≥0 → ℝ≥0∞) :
   simp only [zero_add]
 ```
 
+## Horizontal deviation against a pure delay
+
+The horizontal deviation of any curve against a pure delay $`\delta_d`
+is bounded by $`d`, and equals $`d` exactly when the curve is positive
+off the origin. Both halves rest on the shape of $`\delta_d`: it is
+$`0` up to $`d` and $`+\infty` beyond.
+
+Past $`d` the delay is $`+\infty`, which dominates any value — so any
+shift carrying the argument beyond $`d` is admissible.
+
+*Theorem:* $`\delta_d(t + u) = +\infty` when $`d < t + u`
+
+```lean
+theorem delay_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
+    delay d (t + u) = ⊤ := by
+  simp only [delay, if_neg (not_le.mpr h)]
+```
+
+At each time the deviation against $`\delta_d` is at most $`d`: every
+shift $`d + \varepsilon` carries $`t + (d + \varepsilon)` past $`d`,
+where $`\delta_d` is $`+\infty` and so dominates $`f(t)`; that shift is
+admissible, so the infimum is at most $`d + \varepsilon`, hence at most
+$`d`.
+
+*Theorem:* $`hDev(f, \delta_d, t) \le d`
+
+```lean
+theorem hDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
+    hDevAt f (delay d) t ≤ d := by
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε _
+  have hadm : f t ≤ delay d (t + (d + ε)) := by
+    rw [delay_top_of_gt d t (d + ε) (by
+      calc d < d + ε := by simpa using hε
+        _ ≤ t + (d + ε) := le_add_self)]
+    exact le_top
+  unfold hDevAt
+  refine iInf_le_of_le ⟨d + ε, hadm⟩ ?_
+  push_cast; rfl
+```
+
+The horizontal deviation, as the supremum over time, inherits the
+bound. This is the first statement.
+
+*Theorem:* $`hDev(f, \delta_d) \le d`
+
+```lean
+theorem hDev_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
+    hDev f (delay d) ≤ d := by
+  unfold hDev
+  exact iSup_le (fun t => hDevAt_delay_le f d t)
+```
+
+For the lower bound, suppose $`f(t) > 0`. Below $`d` the delay is
+$`0`, so a shift with $`t + d' < d` would force $`f(t) \le 0`,
+impossible. Hence every admissible shift has $`d' \ge d - t`, and the
+deviation at $`t` is at least $`d - t`.
+
+*Theorem:* $`d - t \le hDev(f, \delta_d, t)` when $`f(t) > 0`
+
+```lean
+theorem hDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
+    (hft : 0 < f t) :
+    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAt f (delay d) t := by
+  unfold hDevAt
+  refine le_iInf ?_
+  rintro ⟨d', hd'⟩
+  by_contra hlt
+  rw [not_le] at hlt
+  have hd'r : d' < d - t := by exact_mod_cast hlt
+  have htd : t + d' < d := by
+    rwa [lt_tsub_iff_left] at hd'r
+  have h0 : delay d (t + d') = 0 := by
+    simp only [delay, if_pos htd.le]
+  rw [h0] at hd'
+  exact absurd (le_antisymm hd' bot_le) hft.ne'
+```
+
+When $`f` is positive everywhere off the origin the deviation is
+_exactly_ $`d`. This is the second statement, and we prove the slightly
+stronger form the lower bound actually gives: it suffices that
+$`f(t) > 0` for all $`t > 0` (rather than only at the right limit
+$`f(0^+) > 0`). Taking the deviation at the small time $`\varepsilon`
+gives $`hDev \ge d - \varepsilon`, and letting $`\varepsilon \to 0`
+closes the gap to the upper bound.
+
+*Theorem:* $`hDev(f, \delta_d) = d` when $`f(t) > 0` for all $`t > 0`
+
+```lean
+theorem hDev_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
+    (hf : ∀ t : ℝ≥0, 0 < t → 0 < f t) :
+    hDev f (delay d) = d := by
+  apply le_antisymm (hDev_delay_le f d)
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε _
+  have ht : (0:ℝ≥0) < ε := hε
+  have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDev f (delay d) := by
+    refine le_trans (hDevAt_delay_ge f d ε (hf ε ht)) ?_
+    unfold hDev; exact le_iSup _ ε
+  calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε := by
+        rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
+    _ ≤ hDev f (delay d) + ε := by gcongr
+```
+
 ```lean
 end DeepWiki
 ```
