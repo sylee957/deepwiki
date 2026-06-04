@@ -1,6 +1,7 @@
 import VersoManual
 import Book.Additivity
 import Book.Continuity
+import Book.Closures
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -954,17 +955,10 @@ theorem staircase_superadditive (P h : ℝ≥0)
 
 # The closures
 
-The source's closure identities — the sub-additive closure
-$`(\cdot)^{\star}` fixing the sub-additive curves and the super-additive
-closure $`(\cdot)^{\overline{\star}}` fixing the super-additive ones —
-reduce, for a curve null at the origin, to its being a fixed point of
-self-convolution: a sub-additive curve null at $`0` satisfies
-$`f \ast f = f` (the (min,plus) self-convolution, `minConvE`), and dually
-a super-additive curve null at $`0` satisfies
-$`f \mathbin{\overline{\ast}} f = f` (the (max,plus) self-convolution,
-`maxConvE`). Both fixed-point facts — `minConvE_self_of_subadditive` and
-`maxConvE_self_of_superadditive` — were established in the `Additivity`
-chapter; here we read off each curve's closure.
+Each curve, being sub- or super-additive and null at the origin, is its
+own closure (the `Closures` chapter: a sub-additive curve null at $`0`
+equals its sub-additive closure $`g^{\star}`, and dually a super-additive
+curve its super-additive closure $`g^{\overline{\star}}`).
 
 The sub-additive curves (token-bucket, sub-additive staircase, and the
 test $`\mathbb{1}_{>0}`) are their own sub-additive closures.
@@ -973,10 +967,11 @@ test $`\mathbb{1}_{>0}`) are their own sub-additive closures.
 
 ```lean
 theorem tokenBucket_closure (r b : ℝ≥0) :
-    minConvE (tokenBucket r b) (tokenBucket r b)
+    subadditiveClosureE (tokenBucket r b)
       = tokenBucket r b :=
-  minConvE_self_of_subadditive _
-    (tokenBucket_subadditive r b) (tokenBucket_zero_eq r b)
+  subadditiveClosureE_eq_self _
+    (tokenBucket_subadditive r b)
+    (tokenBucket_zero_eq r b)
 ```
 
 *Theorem:* $`(\nu_{P,h,J})^{\star} = \nu_{P,h,J}` for $`J \ge 0`
@@ -984,22 +979,54 @@ theorem tokenBucket_closure (r b : ℝ≥0) :
 ```lean
 theorem staircase_closure (P h : ℝ≥0) (hP : (0:ℝ) < P)
     (J : ℝ) (hJ : 0 ≤ J) :
-    minConvE (staircase P h J) (staircase P h J)
+    subadditiveClosureE (staircase P h J)
       = staircase P h J :=
-  minConvE_self_of_subadditive _
+  subadditiveClosureE_eq_self _
     (staircase_subadditive P h hP J hJ)
     (staircase_zero_eq P h J)
 ```
 
-The super-additive curves (pure delay, rate, rate-latency, and the
-super-additive staircase) are their own super-additive closures.
+The super-additive closure lives on the dual carrier `WithBot ℝ≥0∞`, so
+we read each super-additive curve there through the lift `embW` (wrap
+each $`\overline{\mathbb{R}}_{\ge 0}` value with $`\bot = -\infty` added
+below). The super-additive curves — pure delay, rate, rate-latency, and
+the super-additive staircase — are then their own super-additive
+closures.
+
+*Definition:* the lift of an $`\overline{\mathbb{R}}_{\ge 0}` curve to `WithBot ℝ≥0∞`
+
+```lean
+def embW (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
+  fun t => ((g t : ℝ≥0∞) : WithBot ℝ≥0∞)
+```
+
+A super-additive curve null at the origin, so lifted, is its own
+super-additive closure.
+
+*Theorem:* a super-additive curve null at $`0` satisfies $`(\uparrow\!g)^{\overline{\star}} = \uparrow\!g`
+
+```lean
+theorem superadditiveClosure_embW_eq_self
+    (g : ℝ≥0 → ℝ≥0∞)
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
+    superadditiveClosure (embW g) = embW g := by
+  apply superadditiveClosure_eq_self
+  · intro u s
+    show embW g u + embW g s ≤ embW g (u + s)
+    simp only [embW]
+    rw [← WithBot.coe_add]
+    exact_mod_cast hsup u s
+  · show embW g 0 = 0
+    simp only [embW]; rw [h0]; rfl
+```
 
 *Theorem:* $`(\delta_d)^{\overline{\star}} = \delta_d`
 
 ```lean
 theorem delay_closure (d : ℝ≥0) :
-    maxConvE (delay d) (delay d) = delay d :=
-  maxConvE_self_of_superadditive _
+    superadditiveClosure (embW (delay d))
+      = embW (delay d) :=
+  superadditiveClosure_embW_eq_self _
     (delay_superadditive d) (delay_zero_eq d)
 ```
 
@@ -1007,8 +1034,8 @@ theorem delay_closure (d : ℝ≥0) :
 
 ```lean
 theorem rate_closure (R : ℝ≥0) :
-    maxConvE (rate R) (rate R) = rate R :=
-  maxConvE_self_of_superadditive _
+    superadditiveClosure (embW (rate R)) = embW (rate R) :=
+  superadditiveClosure_embW_eq_self _
     (rate_superadditive R) (rate_zero_eq R)
 ```
 
@@ -1016,9 +1043,9 @@ theorem rate_closure (R : ℝ≥0) :
 
 ```lean
 theorem rateLatency_closure (R T : ℝ≥0) :
-    maxConvE (rateLatency R T) (rateLatency R T)
-      = rateLatency R T :=
-  maxConvE_self_of_superadditive _
+    superadditiveClosure (embW (rateLatency R T))
+      = embW (rateLatency R T) :=
+  superadditiveClosure_embW_eq_self _
     (rateLatency_superadditive R T)
     (rateLatency_zero_eq R T)
 ```
@@ -1028,9 +1055,9 @@ theorem rateLatency_closure (R T : ℝ≥0) :
 ```lean
 theorem staircase_closure_super (P h : ℝ≥0)
     (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) :
-    maxConvE (staircase P h J) (staircase P h J)
-      = staircase P h J :=
-  maxConvE_self_of_superadditive _
+    superadditiveClosure (embW (staircase P h J))
+      = embW (staircase P h J) :=
+  superadditiveClosure_embW_eq_self _
     (staircase_superadditive P h hP J hJ)
     (staircase_zero_eq P h J)
 ```

@@ -211,6 +211,53 @@ theorem closure_subadditive {T : Type} [CompleteDioid T]
   rwa [closure_idem sigma] at hterm
 ```
 
+# A closed curve is its own closure
+
+The converse direction is the one the named curves need: a curve that is
+_already closed_ — a fixed point of self-convolution dominating the unit
+— equals its own Kleene-star closure. Every power then collapses onto
+`σ` (by induction, using $`\sigma \ast \sigma = \sigma`), so the supremum
+of the powers is `σ` itself.
+
+*Theorem:* every power of a self-convolution fixed point lies below it
+
+```lean
+theorem convPow_le_self {T : Type} [CompleteDioid T]
+    (sigma : ℝ≥0 → T) (hidem : conv sigma sigma = sigma)
+    (hunit : ∀ t, convUnit (T := T) t ≼ₒ sigma t)
+    (n : ℕ) (t : ℝ≥0) :
+    convPow sigma n t ≼ₒ sigma t := by
+  induction n generalizing t with
+  | zero => exact hunit t
+  | succ k ih =>
+      show conv (convPow sigma k) sigma t ≼ₒ sigma t
+      rw [conv_apply]
+      refine CompleteDioid.sSup_le _ _ ?_
+      rintro x ⟨u, s, hus, rfl⟩
+      calc convPow sigma k u ⊗ₒ sigma s
+          ≼ₒ sigma u ⊗ₒ sigma s := mul_le_mul_right (ih u) _
+        _ ≼ₒ conv sigma sigma t := by
+            rw [conv_apply, ← hus]
+            exact CompleteDioid.le_sSup _ _ ⟨u, s, rfl, rfl⟩
+        _ = sigma t := by rw [hidem]
+```
+
+*Theorem:* a self-convolution fixed point above the unit equals its closure
+
+```lean
+theorem subadditiveClosure_eq_self {T : Type}
+    [CompleteDioid T] (sigma : ℝ≥0 → T)
+    (hidem : conv sigma sigma = sigma)
+    (hunit : ∀ t, convUnit (T := T) t ≼ₒ sigma t) :
+    subadditiveClosure sigma = sigma := by
+  funext t
+  apply le_antisymm
+  · exact CompleteDioid.iSup_le _ _
+      (fun n => convPow_le_self sigma hidem hunit n t)
+  · have := convPow_le_closure sigma 1 t
+    rwa [convPow_one] at this
+```
+
 # The sub-additive closure on the extended reals
 
 The dioid closure above lives on `Fmin`. Read back onto the bare
@@ -287,6 +334,36 @@ theorem subadditiveClosureE_subadditive
           ⊗ₒ subadditiveClosure (toF g) s).toVal := h
     _ = subadditiveClosureE g u
           + subadditiveClosureE g s := rfl
+```
+
+Conversely, a curve that is _already_ sub-additive and null at the
+origin is its own closure — the closure operator fixes exactly the
+sub-additive curves. The lift `toF g` is then a self-convolution fixed
+point (by `minConvE_self_of_subadditive`) above the unit, so the general
+lemma applies.
+
+*Theorem:* if $`g` is sub-additive and $`g(0) = 0` then $`g^{\star} = g`
+
+```lean
+theorem subadditiveClosureE_eq_self (g : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive g) (h0 : g 0 = 0) :
+    subadditiveClosureE g = g := by
+  have hidem : conv (toF g) (toF g) = toF g := by
+    rw [conv_toF, minConvE_self_of_subadditive g hsub h0]
+  have hunit : ∀ t,
+      convUnit (T := MinPlusNN) t ≼ₒ toF g t := by
+    intro t
+    rcases eq_or_ne t 0 with ht | ht
+    · subst ht
+      rw [convUnit, if_pos rfl, MinPlusNN.le_iff]
+      show (toF g 0).toVal ≤ (eₒ : MinPlusNN).toVal
+      simp [toF, h0]
+    · rw [convUnit, if_neg ht]; exact OrderBot.bot_le _
+  have hself :=
+    subadditiveClosure_eq_self (toF g) hidem hunit
+  funext t
+  show (subadditiveClosure (toF g) t).toVal = g t
+  rw [hself]; rfl
 ```
 
 # The super-additive closure on the dual carrier
@@ -375,6 +452,75 @@ theorem superadditiveClosure_superadditive
   have h := closure_subadditive (toFmax g) u s
   rw [MaxPlusNN.le_iff] at h
   exact h
+```
+
+And conversely a curve that is already super-additive and null at the
+origin is its own super-additive closure. Super-additivity here is the
+`WithBot ℝ≥0∞`-valued analogue.
+
+*Definition:* $`g` is super-additive (on `WithBot ℝ≥0∞`)
+
+```lean
+def IsSuperadditiveW (g : ℝ≥0 → WithBot ℝ≥0∞) : Prop :=
+  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
+```
+
+A super-additive curve null at the origin is a fixed point of (max,plus)
+self-convolution: every split-term $`g(u) + g(s)` lies below $`g(u + s)`
+by super-additivity, and the $`0 + t` split attains $`g(t)` using
+$`g(0) = 0`.
+
+*Theorem:* if $`g` is super-additive and $`g(0) = 0` then $`\uparrow\!g` is a $`\overline{\ast}`-fixed point
+
+```lean
+theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
+    (hsup : IsSuperadditiveW g) (h0 : g 0 = 0) :
+    conv (toFmax g) (toFmax g) = toFmax g := by
+  funext t
+  apply MaxPlusNN.ext
+  show ((conv (toFmax g) (toFmax g) t : MaxPlusNN)
+      : WithBot ℝ≥0∞) = g t
+  rw [conv_apply]
+  apply le_antisymm
+  · rw [← MaxPlusNN.le_iff]
+    refine CompleteDioid.sSup_le _ _ ?_
+    rintro x ⟨u, s, hus, rfl⟩
+    rw [MaxPlusNN.le_iff]
+    show g u + g s ≤ g t
+    rw [← hus]; exact hsup u s
+  · rw [← MaxPlusNN.le_iff]
+    refine le_trans ?_
+      (CompleteDioid.le_sSup _ _ ⟨0, t, zero_add t, rfl⟩)
+    rw [MaxPlusNN.le_iff]
+    show g t ≤ g 0 + g t
+    rw [h0, zero_add]
+```
+
+*Theorem:* if $`g` is super-additive and $`g(0) = 0` then $`g^{\overline{\star}} = g`
+
+```lean
+theorem superadditiveClosure_eq_self
+    (g : ℝ≥0 → WithBot ℝ≥0∞)
+    (hsup : IsSuperadditiveW g) (h0 : g 0 = 0) :
+    superadditiveClosure g = g := by
+  have hidem := conv_toFmax_self g hsup h0
+  have hunit : ∀ t,
+      convUnit (T := MaxPlusNN) t ≼ₒ toFmax g t := by
+    intro t
+    rcases eq_or_ne t 0 with ht | ht
+    · subst ht
+      rw [convUnit, if_pos rfl, MaxPlusNN.le_iff]
+      show (eₒ : MaxPlusNN).toVal ≤ (toFmax g 0).toVal
+      show (eₒ : MaxPlusNN).toVal ≤ g 0
+      rw [h0]
+      show (eₒ : MaxPlusNN).toVal ≤ (0 : WithBot ℝ≥0∞)
+      rfl
+    · rw [convUnit, if_neg ht]; exact OrderBot.bot_le _
+  have hself :=
+    subadditiveClosure_eq_self (toFmax g) hidem hunit
+  funext t
+  show (subadditiveClosure (toFmax g) t).toVal = g t
+  rw [hself]; rfl
 ```
 
 ```lean
