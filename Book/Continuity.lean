@@ -423,39 +423,50 @@ def IsLeftContinuousF (f : Fmin) : Prop :=
 
 # The discontinuity set
 
-We turn to _piecewise continuity_. The _discontinuity set_ of a function
-collects the points at which it fails to be continuous.
+We turn to _piecewise continuity_. The notion depends only on the
+_topology_ of the codomain, so we state it once, generically over any
+codomain $`X` carrying a topology — this covers both the real-valued
+curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` and the extended-real
+curves $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}` (some curves
+take the value $`+\infty`: a blocking delay, a saturating test function).
+The codomain $`X` is any type carrying a topology, supplied inline at
+each declaration.
+
+The _discontinuity set_ of a function collects the points at which it
+fails to be continuous.
 
 *Definition:* the discontinuity set $`\{\,t \mid g \text{ not continuous at } t\,\}`
 
 ```lean
-def discontSet (g : ℝ≥0 → ℝ≥0) : Set ℝ≥0 :=
+def discontSet {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Set ℝ≥0 :=
   { t | ¬ ContinuousAt g t }
 ```
 
 # Piecewise continuity
 
-A function is _piecewise continuous_ when its discontinuities are
-locally finite: only finitely many lie in any bounded initial interval
-$`[0, T]`. Equivalently, the jumps do not accumulate.
+A function is _piecewise continuous_ when its discontinuity set is
+locally finite: only finitely many discontinuities lie in any bounded
+initial interval $`[0, T]`. Equivalently, the jumps do not accumulate.
 
 *Definition:* $`g` is piecewise continuous when each $`[0, T]` holds finitely many jumps
 
 ```lean
-def IsPiecewiseContinuous (g : ℝ≥0 → ℝ≥0) : Prop :=
+def IsPiecewiseContinuous {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Prop :=
   ∀ T : ℝ≥0, (discontSet g ∩ Set.Icc 0 T).Finite
 ```
 
-# Continuous functions are piecewise continuous
-
 A continuous function has an empty discontinuity set, so trivially
-finitely many jumps on every interval.
+finitely many jumps on every interval — one proof, valid for every
+codomain.
 
 *Theorem:* a continuous function is piecewise continuous
 
 ```lean
 theorem isPiecewiseContinuous_of_continuous
-    (g : ℝ≥0 → ℝ≥0) (hg : Continuous g) :
+    {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) (hg : Continuous g) :
     IsPiecewiseContinuous g := by
   intro T
   have hempty : discontSet g = ∅ := by
@@ -478,40 +489,6 @@ theorem isPiecewiseContinuous_const (c : ℝ≥0) :
 theorem isPiecewiseContinuous_id :
     IsPiecewiseContinuous (id : ℝ≥0 → ℝ≥0) :=
   isPiecewiseContinuous_of_continuous _ continuous_id
-```
-
-# Piecewise continuity for extended-real curves
-
-Some curves take the value $`+\infty` (a blocking delay, a saturating
-test function), so live in $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge
-0}` rather than $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. We mirror the
-discontinuity set and piecewise-continuity notion for these, valued in
-`ℝ≥0∞`; the definitions and the continuous-implies-pwc fact are
-identical in form.
-
-*Definition:* the discontinuity set of an $`\overline{\mathbb{R}}_{\ge 0}`-valued curve
-
-```lean
-def discontSetTop (g : ℝ≥0 → ℝ≥0∞) : Set ℝ≥0 :=
-  { t | ¬ ContinuousAt g t }
-```
-
-*Definition:* an $`\overline{\mathbb{R}}_{\ge 0}`-valued $`g` is piecewise continuous
-
-```lean
-def IsPwcTop (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ T : ℝ≥0, (discontSetTop g ∩ Set.Icc 0 T).Finite
-```
-
-*Theorem:* a continuous $`\overline{\mathbb{R}}_{\ge 0}`-valued curve is piecewise continuous
-
-```lean
-theorem pwcTop_of_continuous (g : ℝ≥0 → ℝ≥0∞)
-    (hg : Continuous g) : IsPwcTop g := by
-  intro T
-  have : discontSetTop g = ∅ := by
-    ext t; simp [discontSetTop, hg.continuousAt]
-  simp [this]
 ```
 
 ```lean

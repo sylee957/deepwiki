@@ -158,7 +158,7 @@ theorem test_zero_eq (T : ℝ≥0) : test T 0 = 0 := by
 We now record the analytic regularity of the curves. Piecewise
 continuity and left-continuity were developed in the chapter
 `Continuity`; we reuse its $`\overline{\mathbb{R}}_{\ge 0}`-valued
-notions `IsPwcTop` (piecewise continuity) and `IsLeftContinuousTop`
+notions `IsPiecewiseContinuous` (piecewise continuity) and `IsLeftContinuousTop`
 (left-continuity) here.
 
 The guaranteed rate and the rate-latency are genuinely continuous: each
@@ -187,16 +187,18 @@ Hence both are piecewise continuous.
 *Theorem:* $`\lambda_R` is piecewise continuous
 
 ```lean
-theorem rate_pwc (R : ℝ≥0) : IsPwcTop (rate R) :=
-  pwcTop_of_continuous _ (rate_continuous R)
+theorem rate_pwc (R : ℝ≥0) :
+    IsPiecewiseContinuous (rate R) :=
+  isPiecewiseContinuous_of_continuous _ (rate_continuous R)
 ```
 
 *Theorem:* $`\beta_{R,T}` is piecewise continuous
 
 ```lean
 theorem rateLatency_pwc (R T : ℝ≥0) :
-    IsPwcTop (rateLatency R T) :=
-  pwcTop_of_continuous _ (rateLatency_continuous R T)
+    IsPiecewiseContinuous (rateLatency R T) :=
+  isPiecewiseContinuous_of_continuous _
+    (rateLatency_continuous R T)
 ```
 
 # Piecewise continuity of the step curves
@@ -222,7 +224,8 @@ theorem delay_continuousAt (d t : ℝ≥0) (h : t ≠ d) :
 *Theorem:* $`\delta_d` is piecewise continuous
 
 ```lean
-theorem delay_pwc (d : ℝ≥0) : IsPwcTop (delay d) := by
+theorem delay_pwc (d : ℝ≥0) :
+    IsPiecewiseContinuous (delay d) := by
   intro T
   apply Set.Finite.subset (Set.finite_singleton d)
   rintro t ⟨ht, _⟩
@@ -249,7 +252,8 @@ theorem test_continuousAt (T t : ℝ≥0) (h : t ≠ T) :
 *Theorem:* $`\mathbb{1}_{>T}` is piecewise continuous
 
 ```lean
-theorem test_pwc (T : ℝ≥0) : IsPwcTop (test T) := by
+theorem test_pwc (T : ℝ≥0) :
+    IsPiecewiseContinuous (test T) := by
   intro S
   apply Set.Finite.subset (Set.finite_singleton T)
   rintro t ⟨ht, _⟩
@@ -278,7 +282,7 @@ theorem tokenBucket_continuousAt (r b t : ℝ≥0)
 
 ```lean
 theorem tokenBucket_pwc (r b : ℝ≥0) :
-    IsPwcTop (tokenBucket r b) := by
+    IsPiecewiseContinuous (tokenBucket r b) := by
   intro T
   apply Set.Finite.subset (Set.finite_singleton 0)
   rintro t ⟨ht, _⟩
@@ -395,7 +399,8 @@ theorem staircase_continuousAt (P h : ℝ≥0) (J : ℝ)
 
 ```lean
 theorem staircase_pwc (P h : ℝ≥0) (J : ℝ)
-    (hP : (0:ℝ) < P) : IsPwcTop (staircase P h J) := by
+    (hP : (0:ℝ) < P) :
+    IsPiecewiseContinuous (staircase P h J) := by
   intro T
   apply Set.Finite.subset
     (((jumpset_finite P J hP T).union
