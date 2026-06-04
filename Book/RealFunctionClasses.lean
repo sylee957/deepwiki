@@ -1130,6 +1130,38 @@ theorem conv_delay (f : ℝ≥0 → ℝ≥0∞)
       simp
 ```
 
+The argument $`t - d` above is the _truncated_ subtraction on
+$`\mathbb{R}_{\ge 0}` — it never goes below $`0` — so it is exactly the
+non-negative part $`[t - d]^{+}`. Read into $`\mathbb{R}`, it is the
+clamp $`\max(t - d, 0)`; hence `conv_delay`'s right-hand side $`f(t - d)`
+genuinely computes $`f([t - d]^{+})`.
+
+*Theorem:* $`\uparrow(t - d) = \max(t - d, 0)` — truncated subtraction is the non-negative part
+
+```lean
+theorem tsub_eq_posPart (t d : ℝ≥0) :
+    ((t - d : ℝ≥0) : ℝ) = max ((t : ℝ) - d) 0 :=
+  NNReal.coe_sub_def
+```
+
+*Theorem:* $`t - d = \lfloor \max(t - d, 0) \rfloor` as a non-negative real
+
+```lean
+theorem tsub_eq_toNNReal_max (t d : ℝ≥0) :
+    (t - d) = (max ((t : ℝ) - d) 0).toNNReal := by
+  apply NNReal.coe_injective
+  rw [tsub_eq_posPart,
+    Real.coe_toNNReal _ (le_max_right _ _)]
+```
+
+*Theorem:* $`f(t - d) = f([t - d]^{+})`
+
+```lean
+theorem conv_delay_posPart (f : ℝ≥0 → ℝ≥0∞) (t d : ℝ≥0) :
+    f (t - d) = f ((max ((t : ℝ) - d) 0).toNNReal) := by
+  rw [tsub_eq_toNNReal_max]
+```
+
 Deconvolution is the dual _(min,plus)_ quotient, the numeric supremum
 over forward shifts of $`f(t + s) - \delta_d(s)`. It shifts _backward_
 by $`d`: $`(f \oslash \delta_d)(t) = f(t + d)`. Where $`s \le d` the
