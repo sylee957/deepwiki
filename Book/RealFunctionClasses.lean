@@ -1,4 +1,5 @@
 import VersoManual
+import Book.Subadditivity
 import Book.LeftContinuity
 import Book.PiecewiseContinuous
 
@@ -581,6 +582,442 @@ theorem test_zero_eq_tokenBucket :
   · subst h; simp [test, tokenBucket, delay]
   · have ht : ¬ t ≤ 0 := by simpa using h
     simp [test, tokenBucket, delay, ht]
+```
+
+# Sub- and super-additivity
+
+A curve is _sub-additive_ when splitting its argument never helps —
+$`f(u + s) \le f(u) + f(s)` — and _super-additive_ in the reverse
+sense. The sub-additivity chapter defines `IsSubadditive`; we record the
+dual.
+
+*Definition:* $`f` is super-additive, $`f(u) + f(s) \le f(u + s)`
+
+```lean
+def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
+```
+
+The guaranteed rate is _additive_ — both sub- and super-additive —
+since $`R(u + s) = R\,u + R\,s`.
+
+*Theorem:* $`\lambda_R` is sub-additive
+
+```lean
+theorem rate_subadditive (R : ℝ≥0) :
+    IsSubadditive (rate R) := by
+  intro u s; simp only [rate]; push_cast; rw [mul_add]
+```
+
+*Theorem:* $`\lambda_R` is super-additive
+
+```lean
+theorem rate_superadditive (R : ℝ≥0) :
+    IsSuperadditive (rate R) := by
+  intro u s; simp only [rate]; push_cast; rw [mul_add]
+```
+
+The pure delay is super-additive: if $`u + s \le d` then both arguments
+are $`\le d` and all three values are $`0`; otherwise the right-hand
+side is $`+\infty`.
+
+*Theorem:* $`\delta_d` is super-additive
+
+```lean
+theorem delay_superadditive (d : ℝ≥0) :
+    IsSuperadditive (delay d) := by
+  intro u s
+  simp only [delay]
+  rcases le_or_gt (u + s) d with h | h
+  · rw [if_pos h, if_pos (le_trans le_self_add h),
+      if_pos (le_trans le_add_self h)]; simp
+  · rw [if_neg (not_le.mpr h)]; exact le_top
+```
+
+The rate-latency is super-additive: the truncated subtractions satisfy
+$`[u - T]^{+} + [s - T]^{+} \le [u + s - T]^{+}` (subtracting $`T` once
+on the right loses less than subtracting it from each part), and scaling
+by $`R` preserves this.
+
+*Theorem:* $`[u - T]^{+} + [s - T]^{+} \le [(u + s) - T]^{+}`
+
+```lean
+theorem tsub_add_tsub_le_tsub (u s T : ℝ≥0) :
+    (u - T) + (s - T) ≤ (u + s) - T := by
+  rcases le_or_gt u T with hu | hu
+  · rw [tsub_eq_zero_of_le hu, zero_add]
+    exact tsub_le_tsub_right le_add_self T
+  · rcases le_or_gt s T with hs | hs
+    · rw [tsub_eq_zero_of_le hs, add_zero]
+      exact tsub_le_tsub_right le_self_add T
+    · rw [tsub_add_tsub_comm (le_of_lt hu) (le_of_lt hs)]
+      exact tsub_le_tsub_left le_add_self _
+```
+
+*Theorem:* $`\beta_{R,T}` is super-additive
+
+```lean
+theorem rateLatency_superadditive (R T : ℝ≥0) :
+    IsSuperadditive (rateLatency R T) := by
+  intro u s
+  simp only [rateLatency]
+  rw [← ENNReal.coe_mul, ← ENNReal.coe_mul,
+    ← ENNReal.coe_mul, ← ENNReal.coe_add,
+    ENNReal.coe_le_coe, ← mul_add]
+  exact mul_le_mul_left' (tsub_add_tsub_le_tsub u s T) R
+```
+
+The token-bucket is sub-additive. If either argument is $`0` the curve
+there is $`0` and the inequality is the identity on the other; with both
+positive the cap $`\delta_0` is $`+\infty`, so the value is the affine
+part, and $`r(u + s) + b \le (r\,u + b) + (r\,s + b)` because $`b \ge 0`.
+
+*Theorem:* $`\gamma_{r,b}` is sub-additive
+
+```lean
+theorem tokenBucket_subadditive (r b : ℝ≥0) :
+    IsSubadditive (tokenBucket r b) := by
+  intro u s
+  rcases eq_or_ne u 0 with hu | hu
+  · subst hu; rw [zero_add, tokenBucket_zero_eq, zero_add]
+  · rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      rw [add_zero, tokenBucket_zero_eq, add_zero]
+    · have hu0 : ¬ u ≤ 0 := by simpa using hu
+      have hs0 : ¬ s ≤ 0 := by simpa using hs
+      have hus0 : ¬ (u + s) ≤ 0 := by
+        rw [nonpos_iff_eq_zero, add_eq_zero]
+        rintro ⟨h1, _⟩; exact hu h1
+      simp only [tokenBucket, delay, if_neg hu0,
+        if_neg hs0, if_neg hus0, min_top_right]
+      push_cast [mul_add]
+      calc (r:ℝ≥0∞)*u + r*s + b
+          ≤ (r*u + r*s + b) + b := le_self_add
+        _ = (r*u + b) + (r*s + b) := by ring
+```
+
+The test function $`\mathbb{1}_{>T}` is, in general, _neither_ sub- nor
+super-additive — the one exception being $`\mathbb{1}_{>0}`, which by the
+relation $`\mathbb{1}_{>0} = \gamma_{0,1}` inherits the token-bucket's
+sub-additivity.
+
+*Theorem:* $`\mathbb{1}_{>0}` is sub-additive
+
+```lean
+theorem test_zero_subadditive :
+    IsSubadditive (test (0 : ℝ≥0)) := by
+  rw [test_zero_eq_tokenBucket]
+  exact tokenBucket_subadditive 0 1
+```
+
+# Sub-additivity of the staircase
+
+The staircase is sub-additive when the phase $`J \ge 0`. The heart is a
+sub-additivity of the step count: since $`(u + s + J)/P \le (u + J)/P +
+(s + J)/P` when $`J \ge 0`, the ceiling — itself sub-additive — gives
+$`\lceil (u + s + J)/P \rceil \le \lceil (u + J)/P \rceil + \lceil (s +
+J)/P \rceil`.
+
+*Theorem:* the step count is sub-additive for $`J \ge 0`
+
+```lean
+theorem staircase_ceil_sub (P : ℝ≥0) (hP : (0:ℝ) < P)
+    (J : ℝ) (hJ : 0 ≤ J) (u s : ℝ≥0) :
+    ⌈((u:ℝ)+(s:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+J)/P⌉ + ⌈((s:ℝ)+J)/P⌉ := by
+  calc ⌈((u:ℝ)+(s:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+J)/P + ((s:ℝ)+J)/P⌉ := by
+        apply Int.ceil_mono
+        rw [← add_div, div_le_div_iff_of_pos_right hP]
+        linarith
+    _ ≤ ⌈((u:ℝ)+J)/P⌉ + ⌈((s:ℝ)+J)/P⌉ :=
+        Int.ceil_add_le _ _
+```
+
+Scaling by $`h \ge 0` and clamping by $`[\cdot]^{+}` preserves the
+inequality at the level of values.
+
+*Theorem:* the clamped staircase value is sub-additive
+
+```lean
+theorem staircase_val_sub (P h : ℝ≥0) (hP : (0:ℝ) < P)
+    (J : ℝ) (hJ : 0 ≤ J) (u s : ℝ≥0) :
+    ENNReal.ofReal
+        (max ((h:ℝ) * (⌈((u:ℝ)+(s:ℝ)+J)/P⌉:ℝ)) 0)
+      ≤ ENNReal.ofReal
+          (max ((h:ℝ)*(⌈((u:ℝ)+J)/P⌉:ℝ)) 0)
+        + ENNReal.ofReal
+          (max ((h:ℝ)*(⌈((s:ℝ)+J)/P⌉:ℝ)) 0) := by
+  rw [← ENNReal.ofReal_add (le_max_right _ _)
+    (le_max_right _ _)]
+  apply ENNReal.ofReal_le_ofReal
+  have hkey := staircase_ceil_sub P hP J hJ u s
+  rcases le_or_gt ((h:ℝ) * (⌈((u:ℝ)+(s:ℝ)+J)/P⌉:ℝ)) 0
+    with h0 | h0
+  · rw [max_eq_right h0]
+    exact add_nonneg (le_max_right _ _) (le_max_right _ _)
+  · rw [max_eq_left (le_of_lt h0)]
+    calc (h:ℝ) * (⌈((u:ℝ)+(s:ℝ)+J)/P⌉:ℝ)
+        ≤ (h:ℝ) * ((⌈((u:ℝ)+J)/P⌉:ℝ)
+            + (⌈((s:ℝ)+J)/P⌉:ℝ)) := by
+          apply mul_le_mul_of_nonneg_left _ h.coe_nonneg
+          exact_mod_cast hkey
+      _ = (h:ℝ)*(⌈((u:ℝ)+J)/P⌉:ℝ)
+          + (h:ℝ)*(⌈((s:ℝ)+J)/P⌉:ℝ) := by ring
+      _ ≤ max ((h:ℝ)*(⌈((u:ℝ)+J)/P⌉:ℝ)) 0
+          + max ((h:ℝ)*(⌈((s:ℝ)+J)/P⌉:ℝ)) 0 :=
+          add_le_add (le_max_left _ _) (le_max_left _ _)
+```
+
+Away from the origin the $`\delta_0` cap is $`+\infty` and the staircase
+is its clamped value, so sub-additivity of the value lifts to the curve.
+
+*Theorem:* $`\nu_{P,h,J}` is sub-additive for $`J \ge 0`, $`P > 0`
+
+```lean
+theorem staircase_subadditive (P h : ℝ≥0)
+    (hP : (0:ℝ) < P) (J : ℝ) (hJ : 0 ≤ J) :
+    IsSubadditive (staircase P h J) := by
+  intro u s
+  rcases eq_or_ne u 0 with hu | hu
+  · subst hu; rw [zero_add, staircase_zero_eq, zero_add]
+  · rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      rw [add_zero, staircase_zero_eq, add_zero]
+    · have hu0 : ¬ u ≤ 0 := by simpa using hu
+      have hs0 : ¬ s ≤ 0 := by simpa using hs
+      have hus0 : ¬ (u + s) ≤ 0 := by
+        rw [nonpos_iff_eq_zero, add_eq_zero]
+        rintro ⟨h1, _⟩; exact hu h1
+      simp only [staircase, delay, if_neg hu0,
+        if_neg hs0, if_neg hus0, min_top_right]
+      push_cast
+      exact staircase_val_sub P h hP J hJ u s
+```
+
+# Super-additivity of the staircase
+
+The staircase is _super_-additive when $`J < -P`. The step count is then
+super-additive: from $`J/P < -1` one gets $`(u + J)/P + (s + J)/P \le
+(u + s + J)/P - 1`, and combining the ceiling bound
+$`\lceil a \rceil + \lceil b \rceil \le \lceil a + b \rceil + 1` with
+$`\lceil c - 1 \rceil = \lceil c \rceil - 1` yields
+$`\lceil (u + J)/P \rceil + \lceil (s + J)/P \rceil \le
+\lceil (u + s + J)/P \rceil`.
+
+*Theorem:* $`\lceil a \rceil + \lceil b \rceil \le \lceil a + b \rceil + 1`
+
+```lean
+theorem ceil_add_le_ceil_succ (x y : ℝ) :
+    ⌈x⌉ + ⌈y⌉ ≤ ⌈x + y⌉ + 1 := by
+  have hx := Int.ceil_lt_add_one x
+  have hy := Int.ceil_lt_add_one y
+  have hxy := Int.le_ceil (x + y)
+  have hi : ⌈x⌉ + ⌈y⌉ < ⌈x+y⌉ + 2 := by
+    have : (⌈x⌉:ℝ) + ⌈y⌉ < ⌈x+y⌉ + 2 := by linarith
+    exact_mod_cast this
+  omega
+```
+
+*Theorem:* the step count is super-additive for $`J < -P`
+
+```lean
+theorem staircase_ceil_super (P : ℝ≥0) (hP : (0:ℝ) < P)
+    (J : ℝ) (hJ : J < -P) (u s : ℝ≥0) :
+    ⌈((u:ℝ)+J)/P⌉ + ⌈((s:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ := by
+  have hPne : (P:ℝ) ≠ 0 := ne_of_gt hP
+  have hab : ((u:ℝ)+J)/P + ((s:ℝ)+J)/P
+      ≤ ((u:ℝ)+(s:ℝ)+J)/P - 1 := by
+    rw [← add_div, le_sub_iff_add_le,
+      div_add' _ _ _ hPne,
+      div_le_div_iff_of_pos_right hP]
+    nlinarith [hJ]
+  have h1 := ceil_add_le_ceil_succ
+    (((u:ℝ)+J)/P) (((s:ℝ)+J)/P)
+  have h2 : ⌈((u:ℝ)+J)/P + ((s:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P - 1⌉ := Int.ceil_mono hab
+  have h3 : ⌈((u:ℝ)+(s:ℝ)+J)/P - 1⌉
+      = ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ - 1 := by
+    rw [show ((u:ℝ)+(s:ℝ)+J)/P - 1
+        = ((u:ℝ)+(s:ℝ)+J)/P + ((-1 : ℤ) : ℝ) by
+      push_cast; ring, Int.ceil_add_intCast]; ring
+  omega
+```
+
+The clamp interacts with super-additivity through a small integer fact:
+if $`n, m \le k` and $`n + m \le k`, then the clamped values satisfy
+$`[h\,n]^{+} + [h\,m]^{+} \le [h\,k]^{+}`. The pairwise bounds
+$`n \le k`, $`m \le k` (from ceiling monotonicity) are essential — they
+rescue the case where one of $`n, m` is negative.
+
+*Theorem:* the clamped values are super-additive under the integer bounds
+
+```lean
+theorem clamp_super (h : ℝ) (hh : 0 ≤ h) (n m k : ℤ)
+    (hn : n ≤ k) (hm : m ≤ k) (hnm : n + m ≤ k) :
+    max (h * n) 0 + max (h * m) 0 ≤ max (h * k) 0 := by
+  rcases le_or_gt (h*(n:ℝ)) 0 with hN | hN
+  · rw [max_eq_right hN, zero_add]
+    rcases le_or_gt (h*(m:ℝ)) 0 with hM | hM
+    · rw [max_eq_right hM]; exact le_max_right _ _
+    · rw [max_eq_left (le_of_lt hM)]
+      apply le_max_of_le_left
+      have : (m:ℝ) ≤ k := by exact_mod_cast hm
+      nlinarith [hh, this]
+  · rcases le_or_gt (h*(m:ℝ)) 0 with hM | hM
+    · rw [max_eq_left (le_of_lt hN), max_eq_right hM,
+        add_zero]
+      apply le_max_of_le_left
+      have : (n:ℝ) ≤ k := by exact_mod_cast hn
+      nlinarith [hh, this]
+    · rw [max_eq_left (le_of_lt hN),
+        max_eq_left (le_of_lt hM)]
+      apply le_max_of_le_left
+      have : (n:ℝ) + m ≤ k := by exact_mod_cast hnm
+      nlinarith [hh, this]
+```
+
+*Theorem:* $`\nu_{P,h,J}` is super-additive for $`J < -P`, $`P > 0`
+
+```lean
+theorem staircase_superadditive (P h : ℝ≥0)
+    (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) :
+    IsSuperadditive (staircase P h J) := by
+  intro u s
+  rcases eq_or_ne u 0 with hu | hu
+  · subst hu; rw [zero_add, staircase_zero_eq, zero_add]
+  · rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      rw [add_zero, staircase_zero_eq, add_zero]
+    · have hu0 : ¬ u ≤ 0 := by simpa using hu
+      have hs0 : ¬ s ≤ 0 := by simpa using hs
+      have hus0 : ¬ (u + s) ≤ 0 := by
+        rw [nonpos_iff_eq_zero, add_eq_zero]
+        rintro ⟨h1, _⟩; exact hu h1
+      simp only [staircase, delay, if_neg hu0,
+        if_neg hs0, if_neg hus0, min_top_right]
+      rw [← ENNReal.ofReal_add (le_max_right _ _)
+        (le_max_right _ _)]
+      apply ENNReal.ofReal_le_ofReal
+      have hnk : ⌈((u:ℝ)+J)/P⌉
+          ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
+        Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
+          (by linarith [s.coe_nonneg]))
+      have hmk : ⌈((s:ℝ)+J)/P⌉
+          ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
+        Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
+          (by linarith [u.coe_nonneg]))
+      exact clamp_super (h:ℝ) h.coe_nonneg _ _ _ hnk hmk
+        (staircase_ceil_super P hP J hJ u s)
+```
+
+# The closures
+
+The source's closure identities — the sub-additive closure
+$`(\cdot)^{\star}` fixing the sub-additive curves and the super-additive
+closure $`(\cdot)^{\overline{\star}}` fixing the super-additive ones —
+reduce, for a curve null at the origin, to its being a fixed point of
+self-convolution: a sub-additive curve null at $`0` satisfies
+$`f \ast f = f` (the (min,plus) self-convolution, `minConvE`), and dually
+a super-additive curve null at $`0` satisfies the (max,plus)
+self-convolution fixed point. We record the (max,plus) dual of the
+sub-additive fixed-point lemma, then read off each curve's closure.
+
+*Definition:* the _(max,plus)_ convolution $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u+s=t} (g(u)+h(s))`
+
+```lean
+noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t => ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      g p.1.1 + h p.1.2
+```
+
+*Theorem:* a super-additive curve null at $`0` is a $`\overline{\ast}`-fixed point
+
+```lean
+theorem maxConvE_self_of_superadditive
+    (g : ℝ≥0 → ℝ≥0∞)
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
+    maxConvE g g = g := by
+  funext t
+  unfold maxConvE
+  apply le_antisymm
+  · refine iSup_le ?_
+    rintro ⟨⟨u, s⟩, hus⟩
+    simp only
+    calc g u + g s ≤ g (u + s) := hsup u s
+      _ = g t := by rw [hus]
+  · exact le_iSup_of_le ⟨(0, t), by simp⟩ (by simp [h0])
+```
+
+The sub-additive curves (token-bucket, sub-additive staircase, and the
+test $`\mathbb{1}_{>0}`) are their own sub-additive closures.
+
+*Theorem:* $`(\gamma_{r,b})^{\star} = \gamma_{r,b}`
+
+```lean
+theorem tokenBucket_closure (r b : ℝ≥0) :
+    minConvE (tokenBucket r b) (tokenBucket r b)
+      = tokenBucket r b :=
+  minConvE_self_of_subadditive _
+    (tokenBucket_subadditive r b) (tokenBucket_zero_eq r b)
+```
+
+*Theorem:* $`(\nu_{P,h,J})^{\star} = \nu_{P,h,J}` for $`J \ge 0`
+
+```lean
+theorem staircase_closure (P h : ℝ≥0) (hP : (0:ℝ) < P)
+    (J : ℝ) (hJ : 0 ≤ J) :
+    minConvE (staircase P h J) (staircase P h J)
+      = staircase P h J :=
+  minConvE_self_of_subadditive _
+    (staircase_subadditive P h hP J hJ)
+    (staircase_zero_eq P h J)
+```
+
+The super-additive curves (pure delay, rate, rate-latency, and the
+super-additive staircase) are their own super-additive closures.
+
+*Theorem:* $`(\delta_d)^{\overline{\star}} = \delta_d`
+
+```lean
+theorem delay_closure (d : ℝ≥0) :
+    maxConvE (delay d) (delay d) = delay d :=
+  maxConvE_self_of_superadditive _
+    (delay_superadditive d) (delay_zero_eq d)
+```
+
+*Theorem:* $`(\lambda_R)^{\overline{\star}} = \lambda_R`
+
+```lean
+theorem rate_closure (R : ℝ≥0) :
+    maxConvE (rate R) (rate R) = rate R :=
+  maxConvE_self_of_superadditive _
+    (rate_superadditive R) (rate_zero_eq R)
+```
+
+*Theorem:* $`(\beta_{R,T})^{\overline{\star}} = \beta_{R,T}`
+
+```lean
+theorem rateLatency_closure (R T : ℝ≥0) :
+    maxConvE (rateLatency R T) (rateLatency R T)
+      = rateLatency R T :=
+  maxConvE_self_of_superadditive _
+    (rateLatency_superadditive R T)
+    (rateLatency_zero_eq R T)
+```
+
+*Theorem:* $`(\nu_{P,h,J})^{\overline{\star}} = \nu_{P,h,J}` for $`J < -P`
+
+```lean
+theorem staircase_closure_super (P h : ℝ≥0)
+    (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) :
+    maxConvE (staircase P h J) (staircase P h J)
+      = staircase P h J :=
+  maxConvE_self_of_superadditive _
+    (staircase_superadditive P h hP J hJ)
+    (staircase_zero_eq P h J)
 ```
 
 ```lean
