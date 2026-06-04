@@ -131,6 +131,31 @@ theorem leftCont_of_continuous {X : Type*}
   fun t => hg.continuousAt.continuousWithinAt
 ```
 
+The mirror notion is _right-continuity_: continuity from above, tending
+to $`g t` along the right ray $`(t, \infty) = ` `Ioi t`. Unlike the left
+side it carries no special behaviour at the origin — the right ray is
+never empty — so the condition is a genuine constraint at every time.
+
+*Definition:* $`g` is right-continuous when it is `ContinuousWithinAt` on $`(t, \infty)`
+
+```lean
+def IsRightContinuous {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Prop :=
+  ∀ t : ℝ≥0, ContinuousWithinAt g (Ioi t) t
+```
+
+A continuous function is right-continuous a fortiori, by the same
+restriction argument.
+
+*Theorem:* a continuous function is right-continuous
+
+```lean
+theorem rightCont_of_continuous {X : Type*}
+    [TopologicalSpace X] (g : ℝ≥0 → X)
+    (hg : Continuous g) : IsRightContinuous g :=
+  fun t => hg.continuousAt.continuousWithinAt
+```
+
 # Equivalence of the two definitions
 
 We prove the $`\varepsilon`–$`\delta` definition equals the topological
@@ -318,12 +343,15 @@ noncomputable def rightLimit
   limUnder (𝓝[>] t) g
 ```
 
-The right-approach filter at the origin is nontrivial — there are
-always times just above $`0` — so a right limit there is genuinely
-pinned by any convergence.
+The right-approach filter is nontrivial at _every_ time — there are
+always times just above any $`t`, the non-negative reals having no
+greatest element — so a right limit is genuinely pinned by any
+convergence, with no positivity guard (in contrast to the left side,
+empty at the origin).
 
 ```lean
-instance : (𝓝[>] (0:ℝ≥0)).NeBot := nhdsGT_neBot 0
+instance instNeBotNhdsGT (t : ℝ≥0) :
+    (𝓝[>] t).NeBot := nhdsGT_neBot t
 ```
 
 When $`g` is left-continuous at $`t` and the left-approach filter is
@@ -350,10 +378,23 @@ it converges to.
 ```lean
 theorem rightLimit_eq_of_tendsto
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞)
-    (h : Tendsto g (𝓝[>] t) (𝓝 L))
-    [(𝓝[>] t).NeBot] :
+    (h : Tendsto g (𝓝[>] t) (𝓝 L)) :
     rightLimit g t = L :=
   h.limUnder_eq
+```
+
+In particular, right-continuity (below) gives the value-level reading
+$`g(t^+) = g(t)` at every time — no positivity guard, the right filter
+being always nontrivial.
+
+*Theorem:* $`g(t^+) = g(t)` when $`g` is right-continuous at $`t`
+
+```lean
+theorem rightLimit_eq_of_rightContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (hrc : ContinuousWithinAt g (Ioi t) t) :
+    rightLimit g t = g t :=
+  hrc.tendsto.limUnder_eq
 ```
 
 # Cumulative functions
