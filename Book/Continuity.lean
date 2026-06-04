@@ -16,14 +16,19 @@ notions, both properties of the _values_ alone (not of the dioid
 structure), stated on functions valued in the non-negative reals —
 where `Mathlib`'s order topology lives.
 
-First, _left-continuity_: the regularity that keeps shaped and convolved
-outputs well-defined. We state it on
+First, _one-sided continuity_ — left and right, treated symmetrically.
+Left-continuity is the regularity that keeps shaped and convolved
+outputs well-defined; right-continuity is its mirror. We state each on
 $`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty`, define it
 in the elementary $`\varepsilon`–$`\delta` form, recall `Mathlib`'s
-topological notion, and prove the two equivalent; the definition holds
+topological notion, and prove the two equivalent; the definitions hold
 for an _arbitrary_ `g`, including ones taking $`+\infty`, with no
-monotonicity assumed. A cumulative function `f : Fmin` is covered
-through its values $`s \mapsto (f\,s)`.
+monotonicity assumed. The only difference between the two sides is the
+window — a left window $`(\delta, t)` versus a right window
+$`(t, \delta)` — and the behaviour at the origin: the left window is
+empty there, so left-continuity is vacuous, whereas the right window
+never is. A cumulative function `f : Fmin` is covered through its values
+$`s \mapsto (f\,s)`.
 
 Second, _piecewise continuity_: continuous except at isolated jumps,
 made precise as _locally finite_ discontinuities — on every bounded
@@ -38,17 +43,18 @@ open Algebra Topology Filter Set
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
-# The epsilon-delta definition
+# The epsilon-delta definitions
 
-A value `g t` may be finite or $`+\infty`, and left-continuity at `t`
-splits along that distinction, on a left window — an open interval
-$`(\delta, t)` of times just before `t`. Where `g t` is _finite_, on a
-small enough left window the values are _finite_ and stay
-$`\varepsilon`-close to `g t`; the finiteness is part of the clause, so
-a stray $`+\infty` just before `t` correctly breaks it rather than
-being read as a real number. Where `g t` is $`+\infty`, the values must
-_diverge_ to $`+\infty`: every finite threshold `M` is eventually
-exceeded. The finite clause reads the values through `ℝ` via `toReal`.
+A value `g t` may be finite or $`+\infty`, and one-sided continuity at
+`t` splits along that distinction, on a one-sided window — an open
+interval of times just before `t` (for the left) or just after (for the
+right). Where `g t` is _finite_, on a small enough window the values are
+_finite_ and stay $`\varepsilon`-close to `g t`; the finiteness is part
+of the clause, so a stray $`+\infty` adjacent to `t` correctly breaks it
+rather than being read as a real number. Where `g t` is $`+\infty`, the
+values must _diverge_ to $`+\infty`: every finite threshold `M` is
+eventually exceeded. The finite clause reads the values through `ℝ` via
+`toReal`.
 
 *Definition:* the real reading $`s \mapsto g(s)` into $`\mathbb{R}`
 
@@ -56,6 +62,8 @@ exceeded. The finite clause reads the values through `ℝ` via `toReal`.
 noncomputable def realOf (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ :=
   fun s => (g s).toReal
 ```
+
+Left-continuity uses the left window $`(\delta, t)`.
 
 *Definition:* $`g` is left-continuous, by cases on $`g(t)`
 
@@ -73,7 +81,24 @@ def IsLeftContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
 The origin is excluded: there is nothing strictly before it, so the
 condition constrains only `t > 0`.
 
-# Mathlib's topological left-continuity
+Right-continuity is the mirror, on the right window $`(t, \delta)`. No
+positivity guard is needed — the right window is nonempty at every time,
+including the origin.
+
+*Definition:* $`g` is right-continuous, by cases on $`g(t)`
+
+```lean
+def IsRightContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ t : ℝ≥0,
+    (g t ≠ ⊤ →
+      ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
+    (g t = ⊤ →
+      ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        (M : ℝ≥0∞) < g s)
+```
+
+# Mathlib's topological one-sided continuity
 
 `Mathlib` expresses left-continuity directly through limits: `g` is
 continuous from the left at `t` when it tends to `g t` along the filter
@@ -161,7 +186,8 @@ theorem rightCont_of_continuous {X : Type*}
 We prove the $`\varepsilon`–$`\delta` definition equals the topological
 one, one case at a time on the left-window basis
 $`\{(\delta, t) \mid \delta < t\}` of `𝓝[<] t`. Both directions hold
-for an arbitrary `g`.
+for an arbitrary `g`. The right side, proved in the same shape on the
+right-window basis of `𝓝[>] t`, follows afterwards.
 
 The auxiliary form drops the finiteness conjunct, expressing only the
 $`\varepsilon`-closeness of the _real_ reading.
@@ -317,6 +343,145 @@ where
     ⟨fun h => h ht, fun h _ => h⟩
 ```
 
+The right side mirrors all of this on the right-window basis
+$`\{(t, \delta) \mid t < \delta\}` of `𝓝[>] t`, supplied directly (no
+$`\exists\, x > t` witness is needed — the non-negative reals have no
+greatest element). First the bare closeness clause.
+
+*Theorem:* the bare $`\varepsilon`-closeness clause is right-continuity of the real reading
+
+```lean
+theorem real_close_iff_right
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        |realOf g s - realOf g t| < ε)
+      ↔ ContinuousWithinAt (realOf g) (Ioi t) t := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  unfold ContinuousWithinAt
+  rw [hbasis.tendsto_iff Metric.nhds_basis_ball]
+  constructor
+  · intro h ε hε
+    obtain ⟨δ, hδt, hδ⟩ := h ε hε
+    refine ⟨δ, hδt, fun s hs => ?_⟩
+    rw [Metric.mem_ball, Real.dist_eq]
+    exact hδ s hs
+  · intro h ε hε
+    obtain ⟨δ, hδt, hδ⟩ := h ε hε
+    refine ⟨δ, hδt, fun s hs => ?_⟩
+    have := hδ s hs
+    rwa [Metric.mem_ball, Real.dist_eq] at this
+```
+
+The finite case, mirrored. The window-intersection step takes the
+$`\min` of the two thresholds (the right side shrinks the window from
+above, where the left side took the $`\max`).
+
+*Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is right-continuity
+
+```lean
+theorem finite_ed_iff_right
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hfin : g t ≠ ⊤) :
+    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
+      ↔ ContinuousWithinAt g (Ioi t) t := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  constructor
+  · intro h
+    have hreal :
+        ContinuousWithinAt (realOf g) (Ioi t) t := by
+      rw [← real_close_iff_right g t]
+      intro ε hε
+      obtain ⟨δ, hδt, hδ⟩ := h ε hε
+      exact ⟨δ, hδt, fun s hs => (hδ s hs).2⟩
+    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
+      rw [hbasis.eventually_iff]
+      obtain ⟨δ, hδt, hδ⟩ := h 1 one_pos
+      exact ⟨δ, hδt, fun s hs => (hδ s hs).1⟩
+    have hcoe : ContinuousAt ENNReal.ofReal (realOf g t) :=
+      ENNReal.continuous_ofReal.continuousAt
+    have hgcont := hcoe.comp_continuousWithinAt hreal
+    refine hgcont.congr_of_eventuallyEq ?_ ?_
+    · filter_upwards [hfin_ev] with s hs
+      show g s = ENNReal.ofReal (realOf g s)
+      rw [realOf, ENNReal.ofReal_toReal hs]
+    · show g t = ENNReal.ofReal (realOf g t)
+      rw [realOf, ENNReal.ofReal_toReal hfin]
+  · intro h
+    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
+      have hmem : Iio (⊤ : ℝ≥0∞) ∈ 𝓝 (g t) :=
+        Iio_mem_nhds hfin.lt_top
+      filter_upwards [h hmem] with s hs
+        using (Set.mem_Iio.mp hs).ne
+    have hreal :
+        ContinuousWithinAt (realOf g) (Ioi t) t := by
+      have hto : ContinuousAt ENNReal.toReal (g t) :=
+        ENNReal.continuousAt_toReal hfin
+      exact hto.comp_continuousWithinAt h
+    rw [← real_close_iff_right g t] at hreal
+    intro ε hε
+    obtain ⟨δ₁, hδ₁t, hδ₁⟩ := hreal ε hε
+    rw [hbasis.eventually_iff] at hfin_ev
+    obtain ⟨δ₂, hδ₂t, hδ₂⟩ := hfin_ev
+    refine ⟨min δ₁ δ₂, lt_min hδ₁t hδ₂t, fun s hs => ?_⟩
+    have hs1 : s ∈ Ioo t δ₁ :=
+      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_left _ _)⟩
+    have hs2 : s ∈ Ioo t δ₂ :=
+      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_right _ _)⟩
+    exact ⟨hδ₂ hs2, hδ₁ s hs1⟩
+```
+
+The infinite case, mirrored.
+
+*Theorem:* the infinite divergence clause is right-continuity at $`t`
+
+```lean
+theorem infinite_ed_iff_right
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hinf : g t = ⊤) :
+    (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        (M : ℝ≥0∞) < g s)
+      ↔ ContinuousWithinAt g (Ioi t) t := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  unfold ContinuousWithinAt
+  rw [hinf, ENNReal.tendsto_nhds_top_iff_nnreal]
+  constructor
+  · intro h M
+    obtain ⟨δ, hδt, hδ⟩ := h M
+    rw [hbasis.eventually_iff]
+    exact ⟨δ, hδt, fun s hs => hδ s hs⟩
+  · intro h M
+    have hM := h M
+    rw [hbasis.eventually_iff] at hM
+    obtain ⟨δ, hδt, hδ⟩ := hM
+    exact ⟨δ, hδt, fun s hs => hδ hs⟩
+```
+
+Combining the two cases gives the right-side equivalence at every time.
+There is no origin case split — the right condition is uniform across
+all $`t`.
+
+*Theorem:* the $`\varepsilon`–$`\delta` and topological right-continuity agree
+
+```lean
+theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
+    IsRightContinuousED g ↔ IsRightContinuous g := by
+  unfold IsRightContinuousED IsRightContinuous
+  refine forall_congr' fun t => ?_
+  by_cases hfin : g t = ⊤
+  · rw [infinite_ed_iff_right g t hfin]
+    constructor
+    · rintro ⟨-, h⟩; exact h hfin
+    · intro h
+      exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
+  · rw [finite_ed_iff_right g t hfin]
+    constructor
+    · rintro ⟨h, -⟩; exact h hfin
+    · intro h
+      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+```
+
 # One-sided limits
 
 Left-continuity was phrased as a convergence; the limit it converges to
@@ -399,10 +564,10 @@ theorem rightLimit_eq_of_rightContinuous
 
 # Cumulative functions
 
-A cumulative function `f : Fmin` is left-continuous when its values are —
-that is, when the numeric reading $`s \mapsto (f\,s)` into
+A cumulative function `f : Fmin` is one-sided continuous when its values
+are — that is, when the numeric reading $`s \mapsto (f\,s)` into
 $`\overline{\mathbb{R}}_{\ge 0}^\infty` is. This specializes the
-definition to the dioid function space, requiring no separate
+definitions to the dioid function space, requiring no separate
 development.
 
 *Definition:* the numeric reading of a cumulative function
@@ -410,9 +575,20 @@ development.
 ```lean
 noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
   fun s => (f s : ℝ≥0∞)
+```
 
+*Definition:* a cumulative function is left-continuous via its values
+
+```lean
 def IsLeftContinuousF (f : Fmin) : Prop :=
   IsLeftContinuousED (numFn f)
+```
+
+*Definition:* a cumulative function is right-continuous via its values
+
+```lean
+def IsRightContinuousF (f : Fmin) : Prop :=
+  IsRightContinuousED (numFn f)
 ```
 
 # The discontinuity set
