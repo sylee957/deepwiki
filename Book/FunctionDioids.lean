@@ -41,13 +41,29 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
-# The (min,plus) convolution on real functions
+# Convolutions of numeric functions
+
+We collect, in one place, the _direct_ convolution operators on numeric
+functions — defined as a numeric infimum or supremum over the splits
+$`u + s = t`, with no recourse to a dioid. There are two number-system
+views, each in a (min,plus) and a (max,plus) flavour:
+
+- on the _extended reals_ $`\mathbb{R} \cup \{\pm\infty\}` — `minConvBar`
+  (infimum) and `maxConvBar` (supremum);
+- on the _non-negative reals_ $`\mathbb{R}_{\ge 0}` — `minConvR`
+  (infimum) and `maxConvR` (supremum).
+
+Each is later shown to _coincide_ with the corresponding dioid product
+`conv` (the extended-real pair, in the sections that follow) or with its
+dioid-backed projection (the $`\mathbb{R}_{\ge 0}` pair, at the end of
+the chapter). The definitions are gathered here; the coincidence proofs
+stay beside the dioid material they bridge to.
 
 A real function is an $`f : \mathbb{R}^{+} \to \mathbb{R} \cup
-\{\pm\infty\}`. Their _(min,plus) convolution_ is the numeric infimum,
+\{\pm\infty\}`. Its _(min,plus) convolution_ is the numeric infimum,
 over all splits $`u + s = t`, of $`f(u) + g(s)`.
 
-*Definition:* $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))`
+*Definition:* $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))` on $`\mathbb{R} \cup \{\pm\infty\}`
 
 ```lean
 noncomputable def minConvBar
@@ -56,6 +72,49 @@ noncomputable def minConvBar
   fun t =>
     ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       f p.1.1 + g p.1.2
+```
+
+The dual _(max,plus) convolution_ on the extended reals is the numeric
+supremum over the same splits, on the order-dual carrier.
+
+*Definition:* $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))` on $`\mathbb{R} \cup \{\pm\infty\}`
+
+```lean
+noncomputable def maxConvBar
+    (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
+    ℝ≥0 → WithBot (WithTop ℝ) :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      f p.1.1 + g p.1.2
+```
+
+On the _non-negative reals_ $`\mathbb{R}_{\ge 0}` the same two operators
+read directly off the curve values. The (min,plus) one is the numeric
+infimum.
+
+*Definition:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))` on $`\mathbb{R}_{\ge 0}`
+
+```lean
+noncomputable def minConvR (g h : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t =>
+    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      (g p.1.1 + h p.1.2)
+```
+
+The (max,plus) one is the numeric supremum. Over $`\mathbb{R}_{\ge 0}`
+an unbounded supremum is not finite, so this direct form floors to $`0`
+there; the dioid-backed `maxConv` defined later is the canonical
+operator, and the two agree wherever the supremum is finite.
+
+*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{a + b = t} (g(a) + h(b))` on $`\mathbb{R}_{\ge 0}`
+
+```lean
+noncomputable def maxConvR (g h : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t =>
+    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      (g p.1.1 + h p.1.2)
 ```
 
 # The extended-real function dioid
@@ -135,21 +194,14 @@ theorem conv_coe
 
 The construction dualizes verbatim to the _(max,plus)_ side, on the
 same extended reals but through the order-dual carrier `MaxPlusExt`
-(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is the numeric
-_supremum_, over all splits $`u + s = t`, of $`f(u) + g(s)`; the
-function class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
+(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ `maxConvBar` is
+the numeric _supremum_ over the splits (defined above); the function
+class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
 \overline{\mathbb{R}}_{\max}`, and the dioid product again computes it.
 
-*Definition:* $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))`
+*Definition:* the _(max,plus)_ function space and the lift of a real function
 
 ```lean
-noncomputable def maxConvBar
-    (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
-    ℝ≥0 → WithBot (WithTop ℝ) :=
-  fun t =>
-    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      f p.1.1 + g p.1.2
-
 abbrev FmaxBar := ℝ≥0 → MaxPlusExt
 
 instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
@@ -918,24 +970,13 @@ theorem maxConv_eq_neg_iInf
     NNReal.coe_iSup]
 ```
 
-# The real convolutions, self-contained
+# The real convolutions bridge to the dioid-backed operators
 
-The operators above are _defined_ by computing in a dioid and projecting
-back. For a reader who wants the real convolutions on their own terms,
-here are the direct definitions on $`\mathbb{R}_{\ge 0}`: the _(min,plus)
-convolution_ as a numeric infimum and the _(max,plus) convolution_ as a
-numeric supremum, over the splits of $`t`. We then bridge each to its
-dioid-backed counterpart.
-
-*Definition:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))`, directly on $`\mathbb{R}_{\ge 0}`
-
-```lean
-noncomputable def minConvR (g h : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun t =>
-    ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      (g p.1.1 + h p.1.2)
-```
+The dioid-backed `minConv` / `maxConv` are _defined_ by computing in a
+dioid and projecting back. The direct numeric operators `minConvR` /
+`maxConvR` on $`\mathbb{R}_{\ge 0}` (collected at the start of the
+chapter) are the same convolutions on their own terms; here we bridge
+each to its dioid-backed counterpart.
 
 The direct definition agrees with the dioid-backed `minConv`: this is
 exactly `minConv_eq`, read as an equality of functions.
@@ -949,23 +990,7 @@ theorem minConvR_eq_minConv (g h : ℝ≥0 → ℝ≥0) :
   rw [minConvR, minConv_eq]
 ```
 
-The _(max,plus)_ convolution is the dual numeric supremum. Over
-$`\mathbb{R}_{\ge 0}` an unbounded supremum is not finite, so this
-direct form floors to $`0` there; the dioid-backed `maxConv`, valued in
-$`\mathbb{R}_{\ge 0} \cup \{\pm\infty\}`, is the canonical operator, and
-the two agree wherever the supremum is finite.
-
-*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{a + b = t} (g(a) + h(b))`, directly on $`\mathbb{R}_{\ge 0}`
-
-```lean
-noncomputable def maxConvR (g h : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  fun t =>
-    ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      (g p.1.1 + h p.1.2)
-```
-
-When the supremum is finite, the direct definition agrees with the
+When the supremum is finite, the direct `maxConvR` agrees with the
 dioid-backed `maxConv`.
 
 *Theorem:* $`g \mathbin{\overline{\ast}} h = \mathrm{maxConv}(g, h)` at $`t`, when finite
