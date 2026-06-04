@@ -123,6 +123,106 @@ noncomputable def test (T : ℝ≥0) : FminBar :=
   fun t => if t ≤ T then emb 0 else emb 1
 ```
 
+# Relations among the usual functions
+
+The named curves are not independent: several coincide at special
+parameter values, recovering the dioid neutrals and collapsing one
+family onto another. We record these identities.
+
+The pure delay at the origin _is_ the dioid unit $`e` (the convolution
+unit $`\delta_0`): both are $`0` at $`t = 0` and $`+\infty` elsewhere.
+(The companion fact $`\delta_d = \varepsilon` for $`d < 0` — the delay
+collapsing to the dioid zero — is vacuous here: our domain takes
+$`d \in \mathbb{R}^{+}`, so $`d < 0` does not occur.)
+
+*Theorem:* $`\delta_0 = e`
+
+```lean
+theorem delay_zero : delay (0 : ℝ≥0) = convUnit := by
+  funext t
+  rcases eq_or_ne t 0 with h | h
+  · subst h
+    rw [delay, convUnit, if_pos le_rfl, if_pos rfl]
+    apply MinPlusExt.ext; rfl
+  · have ht : ¬ t ≤ 0 := by simpa using h
+    rw [delay, convUnit, if_neg ht, if_neg h]
+    apply MinPlusExt.ext; rfl
+```
+
+The guaranteed rate is the rate-latency with _zero latency_: with
+$`T = 0` the clamp $`[t - 0]^{+} = t` is inert on $`\mathbb{R}^{+}`, so
+$`\beta_{R,0} = \lambda_R`.
+
+*Theorem:* $`\lambda_R = \beta_{R,0}`
+
+```lean
+theorem rate_eq_rateLatency_zero (R : ℝ≥0) :
+    rate R = rateLatency R 0 := by
+  funext t
+  rw [rate, rateLatency]
+  apply MinPlusExt.ext
+  show _ = _
+  congr 1
+  rw [NNReal.coe_zero, sub_zero,
+    max_eq_left t.coe_nonneg]
+```
+
+The guaranteed rate is also the token-bucket with _zero burst_: with
+$`b = 0` the affine part is $`R\,t`, and the cap by $`\delta_0` only
+forces the value at $`t = 0` down to $`0` — which $`R\,t` already is.
+
+*Theorem:* $`\lambda_R = \gamma_{R,0}`
+
+```lean
+theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
+    rate R = tokenBucket R 0 := by
+  funext t
+  rw [rate, tokenBucket]
+  apply MinPlusExt.ext
+  rcases eq_or_ne t 0 with h | h
+  · subst h
+    rw [delay, if_pos le_rfl]
+    show (emb (R * 0)).toVal
+        = min (emb (R*0+0)).toVal (emb 0).toVal
+    unfold emb; norm_num
+  · have ht : ¬ t ≤ 0 := by simpa using h
+    rw [delay, if_neg ht]
+    show (emb (R * t)).toVal
+        = min (emb (R*t+0)).toVal pinf.toVal
+    unfold emb pinf; rw [add_zero, min_top_right]
+```
+
+The test function $`\mathbb{1}_{>0}` is the token-bucket with zero rate
+and unit burst: $`\gamma_{0,1}(t) = 1 \wedge \delta_0(t)`, which is $`0`
+at the origin and $`1` afterwards.
+
+*Theorem:* $`\mathbb{1}_{>0} = \gamma_{0,1}`
+
+```lean
+theorem test_zero_eq_tokenBucket :
+    test (0 : ℝ≥0) = tokenBucket 0 1 := by
+  funext t
+  rw [test, tokenBucket]
+  apply MinPlusExt.ext
+  rcases eq_or_ne t 0 with h | h
+  · subst h
+    rw [if_pos le_rfl, delay, if_pos le_rfl]
+    show (emb 0).toVal
+        = min (emb (0*0+1)).toVal (emb 0).toVal
+    unfold emb; norm_num
+  · have ht : ¬ t ≤ 0 := by simpa using h
+    rw [if_neg ht, delay, if_neg ht]
+    show (emb 1).toVal
+        = min (emb (0*t+1)).toVal pinf.toVal
+    unfold emb pinf; norm_num [min_top_right]
+```
+
+Finally, the staircase $`\nu_{P,h,J}` is written $`\nu_{P,h}` when the
+phase $`J` is null; unlike the other parameters $`J` ranges over all of
+$`\mathbb{R}`, a positive value shifting the curve left and a negative
+value shifting it right. This is a notational convention, not a
+separate identity.
+
 ```lean
 end VerifiedWiki
 ```
