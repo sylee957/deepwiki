@@ -70,13 +70,14 @@ noncomputable def rateLatency (R T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 
 The _token-bucket_ $`\gamma_{r,b}` is the affine curve $`r\,t + b`
 capped below by the pure delay at the origin, so that
-$`\gamma_{r,b}(0) = 0`. The cap is the numeric minimum $`\wedge`.
+$`\gamma_{r,b}(0) = 0`. The cap is the pointwise minimum $`\wedge` of two
+functions — `Mathlib`'s $`\inf` ($`\sqcap`) on the function type.
 
-*Definition:* $`\gamma_{r,b}(t) = (r\,t + b) \wedge \delta_0(t)`
+*Definition:* $`\gamma_{r,b} = (r\,(\cdot) + b) \wedge \delta_0`
 
 ```lean
 noncomputable def tokenBucket (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
-  fun t => min ((r : ℝ≥0∞) * t + b) (delay 0 t)
+  (fun t => (r : ℝ≥0∞) * t + b) ⊓ delay 0
 ```
 
 The _staircase_ $`\nu_{P,h,J}` rises in steps of height $`h` every
@@ -615,7 +616,8 @@ theorem rate_eq_rateLatency_zero (R : ℝ≥0) :
 theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
     rate R = tokenBucket R 0 := by
   funext t
-  simp only [rate, tokenBucket, ENNReal.coe_zero, add_zero]
+  simp only [rate, tokenBucket, Pi.inf_apply,
+    ENNReal.coe_zero, add_zero]
   rcases eq_or_ne t 0 with h | h
   · subst h; simp [delay]
   · have ht : ¬ t ≤ 0 := by simpa using h
@@ -730,8 +732,8 @@ theorem tokenBucket_subadditive (r b : ℝ≥0) :
       have hus0 : ¬ (u + s) ≤ 0 := by
         rw [nonpos_iff_eq_zero, add_eq_zero]
         rintro ⟨h1, _⟩; exact hu h1
-      simp only [tokenBucket, delay, if_neg hu0,
-        if_neg hs0, if_neg hus0, min_top_right]
+      simp only [tokenBucket, Pi.inf_apply, delay,
+        if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
       push_cast [mul_add]
       calc (r:ℝ≥0∞)*u + r*s + b
           ≤ (r*u + r*s + b) + b := le_self_add
