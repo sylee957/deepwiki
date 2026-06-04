@@ -1933,6 +1933,21 @@ theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
         tsub_zero, affine, le_refl]
 ```
 
+The other branch: a token-bucket deconvolved by a _slower_ rate
+($`R < r`) diverges. It is the master divergence at zero latency,
+since $`\beta_{R,0} = \lambda_R`.
+
+*Theorem:* $`\gamma_{r,b} \oslash \lambda_R = +\infty` for $`R < r`
+
+```lean
+theorem deconv_tokenBucket_rate_top (r b R : ℝ≥0)
+    (hRr : R < r) :
+    minDeconvE (tokenBucket r b) (rate R)
+      = fun _ => (⊤:ℝ≥0∞) := by
+  rw [← rateLatency_zero R]
+  exact deconv_tokenBucket_rateLatency_top r b R 0 hRr
+```
+
 Finally the rate-by-rate quotient: a slower rate deconvolved by a
 faster one is unchanged. It is the token-bucket identity at zero burst.
 
@@ -1943,6 +1958,19 @@ theorem deconv_rate_rate (R R' : ℝ≥0) (h : R ≤ R') :
     minDeconvE (rate R) (rate R') = rate R := by
   conv_lhs => rw [← tokenBucket_zero_rate R]
   rw [deconv_tokenBucket_rate R 0 R' h, affine_zero]
+```
+
+And when the divisor rate is _slower_ ($`R' < R`) the quotient
+diverges — the previous divergence at zero burst.
+
+*Theorem:* $`\lambda_R \oslash \lambda_{R'} = +\infty` for $`R' < R`
+
+```lean
+theorem deconv_rate_rate_top (R R' : ℝ≥0) (h : R' < R) :
+    minDeconvE (rate R) (rate R')
+      = fun _ => (⊤:ℝ≥0∞) := by
+  conv_lhs => rw [← tokenBucket_zero_rate R]
+  exact deconv_tokenBucket_rate_top R 0 R' h
 ```
 
 ```lean
