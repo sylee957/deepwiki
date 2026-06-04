@@ -1973,6 +1973,75 @@ theorem deconv_rate_rate_top (R R' : ℝ≥0) (h : R' < R) :
   exact deconv_tokenBucket_rate_top R 0 R' h
 ```
 
+# Horizontal and vertical deviations
+
+Two scalar measures compare an arrival curve $`f` against a service
+curve $`g`. The _horizontal deviation_ measures delay; the _vertical
+deviation_ measures backlog. Both are the worst case over time.
+
+The _horizontal deviation at_ $`t` is the smallest forward shift $`d`
+that lets $`g` catch up to $`f(t)`: the infimum of those delays for
+which $`f(t) \le g(t + d)`. We take it over the subtype of admissible
+delays in $`\overline{\mathbb{R}}_{\ge 0}^\infty`. When $`g` never
+catches up the admissible set is empty, and — since the infimum of the
+empty set is the top element — the deviation is $`+\infty`, exactly the
+intended "unbounded delay".
+
+*Definition:* $`hDev(f, g, t) = \inf\,\{\, d \mid f(t) \le g(t + d)\,\}`
+
+```lean
+noncomputable def hDevAt (f g : ℝ≥0 → ℝ≥0∞)
+    (t : ℝ≥0) : ℝ≥0∞ :=
+  ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞)
+```
+
+When no delay suffices, the admissible subtype is empty and the
+infimum is the top element $`+\infty`.
+
+*Theorem:* $`hDev(f, g, t) = +\infty` when no $`d` satisfies $`f(t) \le g(t + d)`
+
+```lean
+theorem hDevAt_eq_top (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (h : ∀ d : ℝ≥0, ¬ f t ≤ g (t + d)) :
+    hDevAt f g t = ⊤ := by
+  unfold hDevAt
+  rw [iInf_eq_top]
+  rintro ⟨d, hd⟩
+  exact absurd hd (h d)
+```
+
+The _horizontal deviation_ is the worst of these over all times.
+
+*Definition:* $`hDev(f, g) = \sup_{t \ge 0} hDev(f, g, t)`
+
+```lean
+noncomputable def hDev (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
+  ⨆ t : ℝ≥0, hDevAt f g t
+```
+
+The _vertical deviation_ is the worst gap $`f(t) - g(t)` over all
+times.
+
+*Definition:* $`vDev(f, g) = \sup_{t \ge 0}\,(f(t) - g(t))`
+
+```lean
+noncomputable def vDev (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
+  ⨆ t : ℝ≥0, f t - g t
+```
+
+The vertical deviation is the deconvolution at the origin: at $`t = 0`
+the deconvolution $`(f \oslash g)(0) = \sup_s\,(f(s) - g(s))` is
+exactly the vertical-deviation supremum.
+
+*Theorem:* $`vDev(f, g) = (f \oslash g)(0)`
+
+```lean
+theorem vDev_eq_deconv_zero (f g : ℝ≥0 → ℝ≥0∞) :
+    vDev f g = minDeconvE f g 0 := by
+  unfold vDev minDeconvE
+  simp only [zero_add]
+```
+
 ```lean
 end DeepWiki
 ```
