@@ -24,7 +24,8 @@ the rate and rate-latency are in fact continuous.
 ```lean
 namespace DeepWiki
 
-open scoped Classical NNReal ENNReal
+open Algebra
+open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 ```
 
@@ -1163,6 +1164,126 @@ theorem deconv_delay (f : ℝ≥0 → ℝ≥0∞)
       simp
   · refine le_iSup_of_le d ?_
     rw [show delay d d = 0 by simp [delay], tsub_zero]
+```
+
+# The closure of a deconvolution by a pure delay
+
+For a _sub-additive_ non-decreasing `f`, the sub-additive closure of the
+deconvolution $`f \oslash \delta_d` is the deconvolution itself capped by
+$`\delta_0`: $`(f \oslash \delta_d)^{\star} = \delta_0 \wedge
+(f \oslash \delta_d)`. The capped curve $`g = \delta_0 \wedge
+(f \oslash \delta_d)` is sub-additive and null at the origin, so it is
+its own closure; and it sits between the two lowest convolution powers
+of $`f \oslash \delta_d` (the unit $`\delta_0` and $`f \oslash \delta_d`
+itself), pinning the closure to it.
+
+The capped curve is sub-additive: off the origin both arguments give
+$`+\infty` for $`\delta_0`, leaving $`f(s + t + d) \le f(s + d) +
+f(t + d)` from sub-additivity and monotonicity of `f`.
+
+*Theorem:* $`\delta_0 \wedge (f \oslash \delta_d)` is sub-additive
+
+```lean
+theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive f) (hmono : Monotone f)
+    (d : ℝ≥0) :
+    IsSubadditive
+      (fun t => min (delay 0 t) (f (t + d))) := by
+  intro u s
+  simp only
+  rcases eq_or_ne u 0 with hu | hu
+  · subst hu
+    have : min (delay 0 0) (f (0 + d)) = 0 := by
+      rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; simp
+    rw [this, zero_add, zero_add]
+  · rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      have : min (delay 0 0) (f (0 + d)) = 0 := by
+        rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; simp
+      rw [this, add_zero, add_zero]
+    · have hu0 : ¬ u ≤ 0 := by simpa using hu
+      have hs0 : ¬ s ≤ 0 := by simpa using hs
+      have hus0 : ¬ (u + s) ≤ 0 := by
+        rw [nonpos_iff_eq_zero, add_eq_zero]
+        rintro ⟨h1, _⟩; exact hu h1
+      rw [show delay 0 u = ⊤ by simp [delay, hu0],
+          show delay 0 s = ⊤ by simp [delay, hs0],
+          show delay 0 (u + s) = ⊤ by simp [delay, hus0],
+          min_top_left, min_top_left, min_top_left]
+      have harg : u + s + d ≤ (u + d) + (s + d) := by
+        have : (u + d) + (s + d) = u + s + (d + d) := by
+          ring
+        rw [this]; gcongr; exact le_add_right (le_refl d)
+      exact le_trans (hmono harg) (hsub (u + d) (s + d))
+```
+
+*Theorem:* $`(\delta_0 \wedge (f \oslash \delta_d))(0) = 0`
+
+```lean
+theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
+    (fun t => min (delay 0 t) (f (t + d))) 0 = 0 := by
+  show min (delay 0 0) (f (0 + d)) = 0
+  rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; simp
+```
+
+The pure delay $`\delta_0` lifts to the convolution unit `convUnit` of
+the function dioid — the impulse — which is the $`n = 0` power, so the
+closure lies below it.
+
+*Theorem:* $`\uparrow\!\delta_0 = e` (the dioid unit)
+
+```lean
+theorem toF_delay0 :
+    toF (delay 0) = (convUnit : ℝ≥0 → MinPlusNN) := by
+  funext t
+  rcases eq_or_ne t 0 with ht | ht
+  · subst ht
+    rw [convUnit, if_pos rfl]
+    apply MinPlusNN.ext
+    show delay 0 0 = ((eₒ : MinPlusNN) : ℝ≥0∞)
+    rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; rfl
+  · rw [convUnit, if_neg ht]
+    apply MinPlusNN.ext
+    show delay 0 t = ((εₒ : MinPlusNN) : ℝ≥0∞)
+    rw [show delay 0 t = ⊤ by
+      simp [delay, (by simpa using ht : ¬ t ≤ 0)]]; rfl
+```
+
+*Theorem:* $`(f \oslash \delta_d)^{\star} = \delta_0 \wedge (f \oslash \delta_d)`
+
+```lean
+theorem deconv_delay_closure (f : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive f) (hmono : Monotone f)
+    (d : ℝ≥0) :
+    subadditiveClosureE (minDeconvE f (delay d))
+      = fun t =>
+        min (delay 0 t) (minDeconvE f (delay d) t) := by
+  rw [deconv_delay f hmono d]
+  set h : ℝ≥0 → ℝ≥0∞ := fun t => f (t + d) with hh
+  set g : ℝ≥0 → ℝ≥0∞ :=
+    fun t => min (delay 0 t) (h t) with hg
+  have hgsub : IsSubadditive g :=
+    gdelay_subadd f hsub hmono d
+  have hg0 : g 0 = 0 := gdelay_zero f d
+  have hgh : ∀ t, g t ≤ h t := fun t => min_le_right _ _
+  funext t
+  apply le_antisymm
+  · refine le_min ?_ (subadditiveClosureE_le h t)
+    rw [show subadditiveClosureE h t
+        = (subadditiveClosure (toF h) t).toVal from rfl,
+      ← MinPlusNN.le_iff]
+    -- goal: toF (delay 0) t ≼ₒ subadditiveClosure (toF h) t
+    have hu : (toF (delay 0)) t ≼ₒ
+        subadditiveClosure (toF h) t := by
+      rw [congrFun toF_delay0 t]
+      have := convPow_le_closure (toF h) 0 t
+      simpa [convPow] using this
+    exact hu
+  · have hgeq := subadditiveClosureE_eq_self g hgsub hg0
+    calc g t = subadditiveClosureE g t :=
+          (congrFun hgeq t).symm
+      _ ≤ subadditiveClosureE h t :=
+          subadditiveClosureE_mono g h hgh t
 ```
 
 ```lean

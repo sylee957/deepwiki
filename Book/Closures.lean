@@ -258,6 +258,44 @@ theorem subadditiveClosure_eq_self {T : Type}
     rwa [convPow_one] at this
 ```
 
+# Monotonicity of the closure
+
+The closure is _monotone_ in its argument: a larger curve has a larger
+closure. Each power is monotone in the curve (the convolution is), so
+the supremum of the powers is too.
+
+*Theorem:* $`\sigma \preceq \tau` pointwise $`\Rightarrow \sigma^{(n)} \preceq \tau^{(n)}`
+
+```lean
+theorem convPow_mono {T : Type} [CompleteDioid T]
+    (sigma tau : ℝ≥0 → T)
+    (h : ∀ r, sigma r ≼ₒ tau r) (n : ℕ) (t : ℝ≥0) :
+    convPow sigma n t ≼ₒ convPow tau n t := by
+  induction n generalizing t with
+  | zero => exact le_refl _
+  | succ k ih =>
+      show conv (convPow sigma k) sigma t
+          ≼ₒ conv (convPow tau k) tau t
+      rw [conv_apply, conv_apply]
+      refine CompleteDioid.sSup_le _ _ ?_
+      rintro x ⟨u, s, hus, rfl⟩
+      exact le_trans (mul_le_mul' (ih u) (h s))
+        (CompleteDioid.le_sSup _ _ ⟨u, s, hus, rfl⟩)
+```
+
+*Theorem:* $`\sigma \preceq \tau \Rightarrow \sigma^{\star} \preceq \tau^{\star}`
+
+```lean
+theorem subadditiveClosure_mono {T : Type}
+    [CompleteDioid T] (sigma tau : ℝ≥0 → T)
+    (h : ∀ r, sigma r ≼ₒ tau r) (t : ℝ≥0) :
+    subadditiveClosure sigma t
+      ≼ₒ subadditiveClosure tau t :=
+  CompleteDioid.iSup_le _ _ (fun n =>
+    le_trans (convPow_mono sigma tau h n t)
+      (convPow_le_closure tau n t))
+```
+
 # The sub-additive closure on the extended reals
 
 The dioid closure above lives on `Fmin`. Read back onto the bare
@@ -364,6 +402,23 @@ theorem subadditiveClosureE_eq_self (g : ℝ≥0 → ℝ≥0∞)
   funext t
   show (subadditiveClosure (toF g) t).toVal = g t
   rw [hself]; rfl
+```
+
+The numeric closure is monotone too (the dioid closure is, and the
+`MinPlusNN` order reverses the numeric one, hence the lift swaps the
+inequality before applying `subadditiveClosure_mono`).
+
+*Theorem:* $`g \le h \Rightarrow g^{\star} \le h^{\star}`
+
+```lean
+theorem subadditiveClosureE_mono (g h : ℝ≥0 → ℝ≥0∞)
+    (hgh : ∀ t, g t ≤ h t) (t : ℝ≥0) :
+    subadditiveClosureE g t ≤ subadditiveClosureE h t := by
+  show (subadditiveClosure (toF g) t).toVal
+      ≤ (subadditiveClosure (toF h) t).toVal
+  rw [← MinPlusNN.le_iff]
+  refine subadditiveClosure_mono (toF h) (toF g) ?_ t
+  intro r; rw [MinPlusNN.le_iff]; exact hgh r
 ```
 
 # The super-additive closure on the dual carrier
