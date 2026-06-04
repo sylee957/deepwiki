@@ -2121,12 +2121,12 @@ theorem hDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
 ```
 
 When $`f` is positive everywhere off the origin the deviation is
-_exactly_ $`d`. This is the second statement, and we prove the slightly
-stronger form the lower bound actually gives: it suffices that
-$`f(t) > 0` for all $`t > 0` (rather than only at the right limit
-$`f(0^+) > 0`). Taking the deviation at the small time $`\varepsilon`
-gives $`hDev \ge d - \varepsilon`, and letting $`\varepsilon \to 0`
-closes the gap to the upper bound.
+_exactly_ $`d`. We first prove this stronger pointwise form — it
+suffices that $`f(t) > 0` for all $`t > 0` — which is the engine; the
+faithful right-limit statement follows from it below. Taking the
+deviation at the small time $`\varepsilon` gives
+$`hDev \ge d - \varepsilon`, and letting $`\varepsilon \to 0` closes
+the gap to the upper bound.
 
 *Theorem:* $`hDev(f, \delta_d) = d` when $`f(t) > 0` for all $`t > 0`
 
@@ -2144,6 +2144,180 @@ theorem hDev_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
   calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
     _ ≤ hDev f (delay d) + ε := by gcongr
+```
+
+The statement as usually given asks only for the _right limit_
+$`f(0^+) > 0`, weaker than positivity at every $`t > 0`. We capture it
+as a positive limit of $`f` along the right-neighbourhood filter of the
+origin.
+
+*Definition:* $`f(0^+) > 0` — $`f` has a positive right limit at the origin
+
+```lean
+def RightLimitPos (f : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∃ L : ℝ≥0∞, 0 < L ∧
+    Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L)
+```
+
+A positive right limit forces $`f` to be positive on a whole
+right-neighbourhood of the origin: eventually $`f` exceeds half its
+limit, which gives an explicit threshold $`\delta`.
+
+*Theorem:* $`f(0^+) > 0` makes $`f` positive on some $`(0, \delta)`
+
+```lean
+theorem pos_near_zero_of_rightLimitPos
+    (f : ℝ≥0 → ℝ≥0∞) (h : RightLimitPos f) :
+    ∃ δ : ℝ≥0, 0 < δ ∧
+      ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t := by
+  obtain ⟨L, hL, hlim⟩ := h
+  have hev : ∀ᶠ t in 𝓝[>] (0:ℝ≥0), 0 < f t :=
+    hlim.eventually (eventually_gt_nhds hL)
+  rw [eventually_nhdsWithin_iff,
+    Metric.eventually_nhds_iff] at hev
+  obtain ⟨δ, hδ, hball⟩ := hev
+  refine ⟨⟨δ, hδ.le⟩, by exact_mod_cast hδ, ?_⟩
+  intro t ht htδ
+  apply hball (y := t)
+  · rw [NNReal.dist_eq]
+    simp only [NNReal.coe_zero, sub_zero,
+      abs_of_nonneg t.coe_nonneg]
+    exact_mod_cast htδ
+  · exact ht
+```
+
+This is the faithful second statement: a positive right limit at the
+origin already pins the deviation to $`d`. The lower bound is taken at
+a small time $`s = \min(\varepsilon, \delta/2)` inside the positivity
+window, so the same $`\varepsilon \to 0` argument applies.
+
+*Theorem:* $`hDev(f, \delta_d) = d` when $`f(0^+) > 0`
+
+```lean
+theorem hDev_delay_eq_of_rightLimitPos
+    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
+    (h : RightLimitPos f) : hDev f (delay d) = d := by
+  apply le_antisymm (hDev_delay_le f d)
+  obtain ⟨δ, hδ, hpos⟩ :=
+    pos_near_zero_of_rightLimitPos f h
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε _
+  set s : ℝ≥0 := min ε (δ / 2) with hs
+  have hs_pos : 0 < s := lt_min hε (by positivity)
+  have hs_ltδ : s < δ :=
+    lt_of_le_of_lt (min_le_right _ _)
+      (NNReal.half_lt_self hδ.ne')
+  have hs_le_ε : (s:ℝ≥0∞) ≤ ε := by
+    exact_mod_cast min_le_left _ _
+  have hlb : ((d - s : ℝ≥0):ℝ≥0∞)
+      ≤ hDev f (delay d) := by
+    refine le_trans
+      (hDevAt_delay_ge f d s (hpos s hs_pos hs_ltδ)) ?_
+    unfold hDev; exact le_iSup _ s
+  calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s := by
+        rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
+    _ ≤ hDev f (delay d) + ε := add_le_add hlb hs_le_ε
+```
+
+# Catalog of deviations
+
+The deviations of the named curves follow from the two engines above:
+the horizontal deviation against a delay (the previous section) and the
+identity $`vDev(f, g) = (f \oslash g)(0)` composed with the
+deconvolution catalog. The vertical deviations are immediate corollaries
+of that identity; the horizontal one against a delay needs the
+token-bucket's positive right limit.
+
+The token-bucket has right limit $`b` at the origin: off the origin it
+agrees with the continuous affine $`r\,t + b`, which tends to $`b` as
+$`t \to 0^+`. So a positive burst $`b` gives a positive right limit.
+
+*Theorem:* $`\gamma_{r,b}(0^+) > 0` when $`0 < b`
+
+```lean
+theorem tokenBucket_rightLimitPos (r b : ℝ≥0)
+    (hb : 0 < b) : RightLimitPos (tokenBucket r b) := by
+  refine ⟨(b:ℝ≥0∞), by exact_mod_cast hb, ?_⟩
+  have heq : (𝓝[>] (0:ℝ≥0)).EventuallyEq
+      (tokenBucket r b)
+      (fun t => ((r*t + b : ℝ≥0):ℝ≥0∞)) := by
+    filter_upwards [self_mem_nhdsWithin] with t ht
+    rw [tokenBucket_apply_pos r b t
+      (Set.mem_Ioi.mp ht).ne']
+    push_cast; ring
+  rw [tendsto_congr' heq]
+  have hcont : Tendsto
+      (fun t : ℝ≥0 => ((r*t + b : ℝ≥0):ℝ≥0∞))
+      (𝓝 (0:ℝ≥0)) (𝓝 ((r*0 + b : ℝ≥0):ℝ≥0∞)) := by
+    apply (ENNReal.continuous_coe.tendsto _).comp
+    exact (continuous_const.mul continuous_id).add
+      continuous_const |>.tendsto 0
+  simp only [mul_zero, zero_add] at hcont
+  exact hcont.mono_left nhdsWithin_le_nhds
+```
+
+The token-bucket has a positive burst right limit, so its horizontal
+deviation against a pure delay is exactly the delay — independent of
+$`r` and $`b`. This needs $`0 < b`: with $`b = 0` the curve starts at
+the origin and the right-limit hypothesis fails.
+
+*Theorem:* $`hDev(\gamma_{r,b}, \delta_d) = d` for $`0 < b`
+
+```lean
+theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
+    (hb : 0 < b) :
+    hDev (tokenBucket r b) (delay d) = d :=
+  hDev_delay_eq_of_rightLimitPos (tokenBucket r b) d
+    (tokenBucket_rightLimitPos r b hb)
+```
+
+The vertical deviation against a delay is the deconvolution at the
+origin: $`(\gamma_{r,b} \oslash \delta_d)(0) = \hat\gamma_{r,b+rd}(0)
+= r\,d + b`. This needs $`0 < d` (the underlying deconvolution
+identity does).
+
+*Theorem:* $`vDev(\gamma_{r,b}, \delta_d) = r\,d + b` for $`0 < d`
+
+```lean
+theorem vDev_tokenBucket_delay (r b d : ℝ≥0)
+    (hd : 0 < d) :
+    vDev (tokenBucket r b) (delay d)
+      = (r*d + b : ℝ≥0) := by
+  rw [vDev_eq_deconv_zero,
+    deconv_tokenBucket_delay r b d hd]
+  simp only [affine, ENNReal.coe_zero, mul_zero,
+    zero_add]
+  push_cast; ring
+```
+
+Likewise against a rate-latency, when the server is fast enough: the
+deconvolution at the origin is $`\hat\gamma_{r, b + rT}(0) = r\,T + b`.
+
+*Theorem:* $`vDev(\gamma_{r,b}, \beta_{R,T}) = r\,T + b` for $`r \le R`, $`0 < T`
+
+```lean
+theorem vDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
+    (h : r ≤ R) (hT : 0 < T) :
+    vDev (tokenBucket r b) (rateLatency R T)
+      = (r*T + b : ℝ≥0) := by
+  rw [vDev_eq_deconv_zero,
+    deconv_tokenBucket_rateLatency r b R T h hT]
+  simp only [affine, ENNReal.coe_zero, mul_zero,
+    zero_add]
+  push_cast; ring
+```
+
+When the server is too slow the backlog is unbounded: the
+deconvolution diverges, so the vertical deviation is $`+\infty`.
+
+*Theorem:* $`vDev(\gamma_{r,b}, \beta_{R,T}) = +\infty` for $`R < r`
+
+```lean
+theorem vDev_tokenBucket_rateLatency_top
+    (r b R T : ℝ≥0) (hRr : R < r) :
+    vDev (tokenBucket r b) (rateLatency R T) = ⊤ := by
+  rw [vDev_eq_deconv_zero,
+    deconv_tokenBucket_rateLatency_top r b R T hRr]
 ```
 
 ```lean
