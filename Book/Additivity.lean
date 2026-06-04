@@ -4,10 +4,11 @@ import Book.FunctionDioids
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
-#doc (Manual) "Sub-additivity" =>
+#doc (Manual) "Additivity" =>
 A function is _sub-additive_ when splitting its argument never helps:
-$`g(u + s) \le g(u) + g(s)`. This is a property of the _values_ alone,
-so — like left-continuity — we state it on plain functions
+$`g(u + s) \le g(u) + g(s)`; it is _super-additive_ in the reverse
+sense. These are properties of the _values_ alone, so — like
+left-continuity — we state them on plain functions
 $`g : \mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty`, with the
 ordinary numeric order and addition. Over these we form the _(min,plus)
 convolution_ $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))`, the
@@ -24,7 +25,7 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 ```
 
-# Sub-additive real functions
+# Sub- and super-additive real functions
 
 Everything here is on the bare value type $`\overline{\mathbb{R}}_{\ge
 0}^\infty`, with numeric $`+` and $`\le`.
@@ -34,6 +35,15 @@ Everything here is on the bare value type $`\overline{\mathbb{R}}_{\ge
 ```lean
 def IsSubadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
   ∀ u s : ℝ≥0, g (u + s) ≤ g u + g s
+```
+
+The dual notion reverses the inequality.
+
+*Definition:* $`g` is super-additive when $`g(u) + g(s) \le g(u + s)`
+
+```lean
+def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
 ```
 
 The _(min,plus) convolution_ is the numeric infimum, over all splits

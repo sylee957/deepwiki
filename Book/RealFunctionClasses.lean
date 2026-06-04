@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Subadditivity
+import Book.Additivity
 import Book.Continuity
 
 open Verso.Genre Manual
@@ -634,17 +634,9 @@ theorem test_zero_eq_tokenBucket :
 
 # Sub- and super-additivity
 
-A curve is _sub-additive_ when splitting its argument never helps —
-$`f(u + s) \le f(u) + f(s)` — and _super-additive_ in the reverse
-sense. The sub-additivity chapter defines `IsSubadditive`; we record the
-dual.
-
-*Definition:* $`f` is super-additive, $`f(u) + f(s) \le f(u + s)`
-
-```lean
-def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
-```
+We now establish the sub/super-additivity of each curve, reusing the
+`IsSubadditive` and `IsSuperadditive` predicates from the `Additivity`
+chapter.
 
 The guaranteed rate is _additive_ — both sub- and super-additive —
 since $`R(u + s) = R\,u + R\,s`.

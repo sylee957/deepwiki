@@ -1,5 +1,5 @@
 import VersoManual
-import Book.Subadditivity
+import Book.Additivity
 import Book.Continuity
 import Mathlib.Topology.Semicontinuity.Basic
 import Mathlib.Topology.Order.LeftRight

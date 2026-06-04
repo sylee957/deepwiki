@@ -7,7 +7,7 @@ import Book.CompleteDioids
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids
-import Book.Subadditivity
+import Book.Additivity
 import Book.SubadditiveClosure
 import Book.Continuity
 import Book.RealFunctionClasses
@@ -53,7 +53,7 @@ dioid through to shapers and service curves.
 
 {include 1 Book.FunctionDioids}
 
-{include 1 Book.Subadditivity}
+{include 1 Book.Additivity}
 
 {include 1 Book.SubadditiveClosure}
 
