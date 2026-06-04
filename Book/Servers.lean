@@ -46,7 +46,7 @@ structure Curve where
   mono : Monotone toFun
   zero : toFun 0 = 0
   pwc : IsPiecewiseContinuous toFun
-  leftCont : IsLeftContinuousReal toFun
+  leftCont : IsLeftContinuous toFun
 ```
 
 A curve applies as its underlying function, and coerces into the

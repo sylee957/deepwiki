@@ -34,14 +34,14 @@ A monotone function that is left-continuous is lower semicontinuous:
 splitting a neighbourhood of `t` into its left and right parts, the
 left part tends to `g(t)` by left-continuity, and on the right the
 values only increase by monotonicity, so they stay above any threshold
-below `g(t)`. We use the topological form `IsLeftContinuousTop`.
+below `g(t)`. We use the topological form `IsLeftContinuous`.
 
 *Theorem:* a monotone, left-continuous function is lower semicontinuous
 
 ```lean
 theorem lowerSemicontinuous_of_mono_leftCont
     (g : ℝ≥0 → ℝ≥0∞) (hmono : Monotone g)
-    (hlc : IsLeftContinuousTop g) :
+    (hlc : IsLeftContinuous g) :
     LowerSemicontinuous g := by
   intro t y hy
   rw [← nhdsLT_sup_nhdsGE t, eventually_sup]
@@ -112,8 +112,8 @@ infimum over the splits is a genuine minimum.
 theorem exists_isMinOn_splitMap_of_curves
     (g h : ℝ≥0 → ℝ≥0∞)
     (hgm : Monotone g) (hhm : Monotone h)
-    (hgc : IsLeftContinuousTop g)
-    (hhc : IsLeftContinuousTop h) (t : ℝ≥0) :
+    (hgc : IsLeftContinuous g)
+    (hhc : IsLeftContinuous h) (t : ℝ≥0) :
     ∃ u ∈ Set.Icc (0 : ℝ≥0) t,
       IsMinOn (splitMap g h t) (Set.Icc 0 t) u :=
   exists_isMinOn_splitMap g h

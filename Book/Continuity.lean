@@ -60,7 +60,7 @@ noncomputable def realOf (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ :=
 *Definition:* $`g` is left-continuous, by cases on $`g(t)`
 
 ```lean
-def IsLeftContinuous (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+def IsLeftContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
   ∀ t : ℝ≥0, 0 < t →
     (g t ≠ ⊤ →
       ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
@@ -88,8 +88,17 @@ continuity from the left holds vacuously.
 
 *Definition:* $`g` is `Mathlib`-left-continuous when it is `ContinuousWithinAt` on $`(-\infty, t)`
 
+This is the canonical notion of left-continuity, and it depends only on
+the codomain's topology — so we state it generically over any codomain
+$`X` carrying a topology, covering both the extended-real curves
+$`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty` and the
+real-valued curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`. (The
+$`\varepsilon`–$`\delta` form above is `ℝ≥0∞`-specific; the equivalence
+below relates the two _there_.)
+
 ```lean
-def IsLeftContinuousTop (g : ℝ≥0 → ℝ≥0∞) : Prop :=
+def IsLeftContinuous {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) : Prop :=
   ∀ t : ℝ≥0, ContinuousWithinAt g (Iio t) t
 ```
 
@@ -116,8 +125,9 @@ ray.
 *Theorem:* a continuous function is left-continuous
 
 ```lean
-theorem leftCont_of_continuous (g : ℝ≥0 → ℝ≥0∞)
-    (hg : Continuous g) : IsLeftContinuousTop g :=
+theorem leftCont_of_continuous {X : Type*}
+    [TopologicalSpace X] (g : ℝ≥0 → X)
+    (hg : Continuous g) : IsLeftContinuous g :=
   fun t => hg.continuousAt.continuousWithinAt
 ```
 
@@ -255,9 +265,9 @@ the topological one agree at every positive time, for every `g`.
 *Theorem:* the $`\varepsilon`–$`\delta` and topological definitions agree
 
 ```lean
-theorem isLeftContinuous_iff_top (g : ℝ≥0 → ℝ≥0∞) :
-    IsLeftContinuous g ↔ IsLeftContinuousTop g := by
-  unfold IsLeftContinuous IsLeftContinuousTop
+theorem isLeftContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
+    IsLeftContinuousED g ↔ IsLeftContinuous g := by
+  unfold IsLeftContinuousED IsLeftContinuous
   refine forall_congr' fun t => ?_
   rcases eq_zero_or_pos t with h0 | ht
   · -- at the origin: LHS vacuous, RHS automatic
@@ -289,9 +299,9 @@ continuous within any set.
 *Theorem:* every constant function is left-continuous
 
 ```lean
-theorem isLeftContinuous_const (c : ℝ≥0∞) :
-    IsLeftContinuous (fun _ => c) :=
-  (isLeftContinuous_iff_top _).mpr
+theorem isLeftContinuousED_const (c : ℝ≥0∞) :
+    IsLeftContinuousED (fun _ => c) :=
+  (isLeftContinuousED_iff _).mpr
     (fun _ => continuousWithinAt_const)
 ```
 
@@ -370,11 +380,11 @@ every positive time.
 *Theorem:* for monotone $`g`, $`g` is left-continuous $`\iff g(t) = g(t^-)` for all $`t > 0`
 
 ```lean
-theorem isLeftContinuous_iff_leftLim
+theorem isLeftContinuousED_iff_leftLim
     (g : ℝ≥0 → ℝ≥0∞) (hmono : Monotone g) :
-    IsLeftContinuous g ↔
+    IsLeftContinuousED g ↔
       ∀ t : ℝ≥0, 0 < t → g t = leftLim g t := by
-  rw [isLeftContinuous_iff_top g]
+  rw [isLeftContinuousED_iff g]
   refine forall_congr' fun t => ?_
   rcases eq_zero_or_pos t with h0 | ht
   · subst h0
@@ -384,34 +394,18 @@ theorem isLeftContinuous_iff_leftLim
     exact ⟨fun h _ => h, fun h => h ht⟩
 ```
 
-# Real-valued left-continuity
+# A constant is left-continuous
 
-The curves of network calculus are real-valued,
-$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`, and `ℝ≥0` carries its own
-order topology. For them left-continuity is `Mathlib`'s
-`ContinuousWithinAt` on the left ray, stated directly on the real
-function — no detour through $`\overline{\mathbb{R}}_{\ge 0}^\infty`.
+A constant function is left-continuous (a special case of the
+continuous one). This holds for any codomain, real-valued curves
+$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` included.
 
-*Definition:* $`g : \mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` is left-continuous
+*Theorem:* a constant function is left-continuous
 
 ```lean
-def IsLeftContinuousReal (g : ℝ≥0 → ℝ≥0) : Prop :=
-  ∀ t : ℝ≥0, ContinuousWithinAt g (Iio t) t
-```
-
-A continuous function — and in particular a constant — is
-left-continuous.
-
-*Theorem:* continuous and constant real functions are left-continuous
-
-```lean
-theorem isLeftContinuousReal_of_continuous
-    (g : ℝ≥0 → ℝ≥0) (hg : Continuous g) :
-    IsLeftContinuousReal g :=
-  fun _ => hg.continuousWithinAt
-
-theorem isLeftContinuousReal_const (c : ℝ≥0) :
-    IsLeftContinuousReal (fun _ => c) :=
+theorem isLeftContinuous_const {X : Type*}
+    [TopologicalSpace X] (c : X) :
+    IsLeftContinuous (fun _ : ℝ≥0 => c) :=
   fun _ => continuousWithinAt_const
 ```
 
@@ -430,7 +424,7 @@ noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
   fun s => (f s : ℝ≥0∞)
 
 def IsLeftContinuousF (f : Fmin) : Prop :=
-  IsLeftContinuous (numFn f)
+  IsLeftContinuousED (numFn f)
 ```
 
 # The discontinuity set

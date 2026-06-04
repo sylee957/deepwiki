@@ -158,7 +158,7 @@ theorem test_zero_eq (T : ℝ≥0) : test T 0 = 0 := by
 We now record the analytic regularity of the curves. Piecewise
 continuity and left-continuity were developed in the chapter
 `Continuity`; we reuse its $`\overline{\mathbb{R}}_{\ge 0}`-valued
-notions `IsPiecewiseContinuous` (piecewise continuity) and `IsLeftContinuousTop`
+notions `IsPiecewiseContinuous` (piecewise continuity) and `IsLeftContinuous`
 (left-continuity) here.
 
 The guaranteed rate and the rate-latency are genuinely continuous: each
@@ -429,7 +429,7 @@ with the value, and they too are left-continuous.
 
 ```lean
 theorem rate_leftCont (R : ℝ≥0) :
-    IsLeftContinuousTop (rate R) :=
+    IsLeftContinuous (rate R) :=
   leftCont_of_continuous _ (rate_continuous R)
 ```
 
@@ -437,7 +437,7 @@ theorem rate_leftCont (R : ℝ≥0) :
 
 ```lean
 theorem rateLatency_leftCont (R T : ℝ≥0) :
-    IsLeftContinuousTop (rateLatency R T) :=
+    IsLeftContinuous (rateLatency R T) :=
   leftCont_of_continuous _ (rateLatency_continuous R T)
 ```
 
@@ -449,7 +449,7 @@ on which it is constantly $`+\infty`.
 
 ```lean
 theorem delay_leftCont (d : ℝ≥0) :
-    IsLeftContinuousTop (delay d) := by
+    IsLeftContinuous (delay d) := by
   intro t
   rcases le_or_gt t d with h | h
   · refine ContinuousWithinAt.congr
@@ -473,7 +473,7 @@ upper value $`1` in place of $`+\infty`.
 
 ```lean
 theorem test_leftCont (T : ℝ≥0) :
-    IsLeftContinuousTop (test T) := by
+    IsLeftContinuous (test T) := by
   intro t
   rcases le_or_gt t T with h | h
   · refine ContinuousWithinAt.congr
@@ -498,7 +498,7 @@ left-continuous.
 
 ```lean
 theorem tokenBucket_leftCont (r b : ℝ≥0) :
-    IsLeftContinuousTop (tokenBucket r b) := by
+    IsLeftContinuous (tokenBucket r b) := by
   intro t
   refine Filter.Tendsto.min ?_ (delay_leftCont 0 t)
   have h1 : ContinuousWithinAt
