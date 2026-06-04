@@ -292,34 +292,6 @@ where
     ⟨fun h => h ht, fun h _ => h⟩
 ```
 
-Through this agreement, the continuity facts are `Mathlib`'s. A
-constant function is left-continuous, since a constant map is
-continuous within any set.
-
-*Theorem:* every constant function is left-continuous
-
-```lean
-theorem isLeftContinuousED_const (c : ℝ≥0∞) :
-    IsLeftContinuousED (fun _ => c) :=
-  (isLeftContinuousED_iff _).mpr
-    (fun _ => continuousWithinAt_const)
-```
-
-# A constant is left-continuous
-
-A constant function is left-continuous (a special case of the
-continuous one). This holds for any codomain, real-valued curves
-$`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}` included.
-
-*Theorem:* a constant function is left-continuous
-
-```lean
-theorem isLeftContinuous_const {X : Type*}
-    [TopologicalSpace X] (c : X) :
-    IsLeftContinuous (fun _ : ℝ≥0 => c) :=
-  fun _ => continuousWithinAt_const
-```
-
 # Cumulative functions
 
 A cumulative function `f : Fmin` is left-continuous when its values are —
@@ -391,21 +363,6 @@ theorem isPiecewiseContinuous_of_continuous
     simp [discontSet, hg.continuousAt]
   rw [hempty, Set.empty_inter]
   exact Set.finite_empty
-```
-
-In particular constant functions and the identity are piecewise
-continuous.
-
-*Theorem:* constant functions and the identity are piecewise continuous
-
-```lean
-theorem isPiecewiseContinuous_const (c : ℝ≥0) :
-    IsPiecewiseContinuous (fun _ => c) :=
-  isPiecewiseContinuous_of_continuous _ continuous_const
-
-theorem isPiecewiseContinuous_id :
-    IsPiecewiseContinuous (id : ℝ≥0 → ℝ≥0) :=
-  isPiecewiseContinuous_of_continuous _ continuous_id
 ```
 
 ```lean
