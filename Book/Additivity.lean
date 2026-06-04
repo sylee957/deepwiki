@@ -165,6 +165,75 @@ theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
   exact conv_toF_toE g h t
 ```
 
+# The numeric convolution inherits the dioid laws
+
+Because the lift `toF` is _injective_ and carries `minConvE` to the
+dioid product `conv`, the numeric convolution inherits the dioid's
+commutative-monoid laws — commutativity and associativity — for free,
+without re-deriving them from the nested infima.
+
+*Theorem:* the lift `toF` is injective
+
+```lean
+theorem toF_inj {g h : ℝ≥0 → ℝ≥0∞}
+    (H : toF g = toF h) : g = h := by
+  funext t
+  exact congrArg MinPlusNN.toVal (congrFun H t)
+```
+
+*Theorem:* $`g \ast h = h \ast g`
+
+```lean
+theorem minConvE_comm (g h : ℝ≥0 → ℝ≥0∞) :
+    minConvE g h = minConvE h g := by
+  apply toF_inj
+  rw [← conv_toF, ← conv_toF, conv_comm]
+```
+
+*Theorem:* $`(f \ast g) \ast h = f \ast (g \ast h)`
+
+```lean
+theorem minConvE_assoc (f g h : ℝ≥0 → ℝ≥0∞) :
+    minConvE (minConvE f g) h
+      = minConvE f (minConvE g h) := by
+  apply toF_inj
+  rw [← conv_toF, ← conv_toF, ← conv_toF, ← conv_toF,
+    conv_assoc]
+```
+
+When the pointwise minimum of two curves is itself sub-additive, the
+convolution of two curves null at the origin _collapses to that
+minimum_: every split-term dominates the minimum (by sub-additivity),
+and the minimum is attained at the degenerate splits $`t + 0` and
+$`0 + t` (using the null values). This is the engine behind the
+token-bucket catalog identity, and it sidesteps the closure detour.
+
+*Theorem:* $`f \ast g = f \wedge g` when $`f \wedge g` is sub-additive and $`f(0) = g(0) = 0`
+
+```lean
+theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
+    (hf0 : f 0 = 0) (hg0 : g 0 = 0)
+    (hinf : IsSubadditive (f ⊓ g)) :
+    minConvE f g = f ⊓ g := by
+  funext t
+  apply le_antisymm
+  · refine le_min ?_ ?_
+    · unfold minConvE
+      refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
+      simp only; rw [hg0, add_zero]
+    · unfold minConvE
+      refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
+      simp only; rw [hf0, zero_add]
+  · unfold minConvE
+    refine le_iInf ?_
+    rintro ⟨⟨u, s⟩, (huv : u + s = t)⟩
+    simp only
+    calc (f ⊓ g) t = (f ⊓ g) (u + s) := by rw [huv]
+      _ ≤ (f ⊓ g) u + (f ⊓ g) s := hinf u s
+      _ ≤ f u + g s :=
+          add_le_add (min_le_left _ _) (min_le_right _ _)
+```
+
 The dioid self-convolution fixed point is now a corollary of the real
 one: rewrite `conv` to `minConvE` and apply the fundamental result.
 

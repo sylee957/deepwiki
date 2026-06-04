@@ -1313,6 +1313,229 @@ theorem deconv_delay_closure (f : ℝ≥0 → ℝ≥0∞)
           subadditiveClosureE_mono g h hgh t
 ```
 
+# Catalog of convolutions
+
+The named curves convolve into one another by simple parameter
+arithmetic. Several of the identities are time-shifts (built on the
+delay results), one is an infimum of linear functions, one is purely
+compositional, and the last collapses to a pointwise minimum.
+
+The delay and rate are non-decreasing — needed to apply the delay
+time-shift results.
+
+*Theorem:* $`\delta_d` is non-decreasing
+
+```lean
+theorem delay_mono (d : ℝ≥0) : Monotone (delay d) := by
+  intro a b hab
+  simp only [delay]
+  split
+  · exact bot_le
+  · split
+    · rename_i h1 h2; exact absurd (le_trans hab h2) h1
+    · exact le_refl _
+```
+
+*Theorem:* $`\lambda_R` is non-decreasing
+
+```lean
+theorem rate_mono (R : ℝ≥0) : Monotone (rate R) := by
+  intro a b hab; simp only [rate]; gcongr
+```
+
+Convolving two pure delays adds their delays: it is the delay-shift of a
+delay.
+
+*Theorem:* $`\delta_d \ast \delta_{d'} = \delta_{d + d'}`
+
+```lean
+theorem conv_delay_delay (d d' : ℝ≥0) :
+    minConvE (delay d) (delay d') = delay (d + d') := by
+  rw [conv_delay (delay d) (delay_mono d) d']
+  funext t
+  simp only [delay]
+  rcases le_or_gt t (d + d') with ht | ht
+  · rw [if_pos ht, if_pos (tsub_le_iff_right.mpr ht)]
+  · rw [if_neg (not_le.mpr ht),
+      if_neg (fun h =>
+        absurd (tsub_le_iff_right.mp h) (not_le.mpr ht))]
+```
+
+The rate-latency is the delay-shift of the rate: $`\beta_{R,T} =
+\delta_T \ast \lambda_R`.
+
+*Theorem:* $`\beta_{R,T} = \delta_T \ast \lambda_R`
+
+```lean
+theorem rateLatency_eq_conv (R T : ℝ≥0) :
+    rateLatency R T = minConvE (delay T) (rate R) := by
+  rw [minConvE_comm, conv_delay (rate R) (rate_mono R) T]
+  funext t
+  simp only [rate, rateLatency]
+```
+
+Convolving two rates takes the slower slope: the infimum of the two
+linear functions over the splits is the line of minimal slope.
+
+*Theorem:* $`\lambda_R \ast \lambda_{R'} = \lambda_{R \wedge R'}`
+
+```lean
+theorem conv_rate_rate (R R' : ℝ≥0) :
+    minConvE (rate R) (rate R') = rate (R ⊓ R') := by
+  funext t
+  unfold minConvE rate
+  apply le_antisymm
+  · rcases le_total R R' with h | h
+    · refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
+      simp only; rw [min_eq_left h]; simp
+    · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
+      simp only; rw [min_eq_right h]; simp
+  · refine le_iInf ?_
+    rintro ⟨⟨u, v⟩, (huv : u + v = t)⟩
+    simp only
+    rw [← huv]
+    calc ((R ⊓ R' : ℝ≥0):ℝ≥0∞) * (u + v)
+        = (R ⊓ R') * u + (R ⊓ R') * v := by rw [mul_add]
+      _ ≤ R * u + R' * v := by
+          gcongr
+          · exact_mod_cast min_le_left R R'
+          · exact_mod_cast min_le_right R R'
+```
+
+Convolving two rate-latencies combines both: the slopes meet (minimum)
+and the latencies add. This is pure regrouping from the previous three —
+$`\beta = \delta \ast \lambda`, then associativity/commutativity gather
+the delays and the rates.
+
+*Theorem:* $`\beta_{R,T} \ast \beta_{R',T'} = \beta_{R \wedge R',\ T + T'}`
+
+```lean
+theorem conv_rateLatency_rateLatency (R R' T T' : ℝ≥0) :
+    minConvE (rateLatency R T) (rateLatency R' T')
+      = rateLatency (R ⊓ R') (T + T') := by
+  rw [rateLatency_eq_conv R T, rateLatency_eq_conv R' T']
+  rw [minConvE_assoc, ← minConvE_assoc (rate R),
+      minConvE_comm (rate R) (delay T'),
+      minConvE_assoc (delay T'), ← minConvE_assoc (delay T),
+      conv_delay_delay, conv_rate_rate,
+      rateLatency_eq_conv (R ⊓ R') (T + T')]
+```
+
+Convolving two token-buckets gives their pointwise minimum. By the
+catalog engine `minConvE_eq_inf_of_subadd`, this reduces to showing the
+minimum $`\gamma_{r,b} \wedge \gamma_{r',b'}` is sub-additive — which,
+off the origin, is an affine-minimum inequality.
+
+A four-way combinator: if $`\min(A, B)` is below each $`a_i + c_j`, it is
+below $`\min(a_1, a_2) + \min(c_1, c_2)` (the achieved minimum is one of
+the four sums).
+
+*Theorem:* $`\min(A,B) \le \min(a_1, a_2) + \min(c_1, c_2)` from the four corner bounds
+
+```lean
+theorem min_le_min_add_min {A B a1 a2 c1 c2 : ℝ≥0∞}
+    (h11 : min A B ≤ a1 + c1) (h12 : min A B ≤ a1 + c2)
+    (h21 : min A B ≤ a2 + c1) (h22 : min A B ≤ a2 + c2) :
+    min A B ≤ min a1 a2 + min c1 c2 := by
+  rcases le_total a1 a2 with ha | ha <;>
+    rcases le_total c1 c2 with hc | hc <;>
+    [ (rw [min_eq_left ha, min_eq_left hc]; exact h11);
+      (rw [min_eq_left ha, min_eq_right hc]; exact h12);
+      (rw [min_eq_right ha, min_eq_left hc]; exact h21);
+      (rw [min_eq_right ha, min_eq_right hc];
+        exact h22) ]
+```
+
+*Theorem:* the affine minimum is sub-additive
+
+```lean
+theorem affine_min_subadd (r b r' b' s t : ℝ≥0) :
+    min (((r*(s+t)+b : ℝ≥0)):ℝ≥0∞)
+        (((r'*(s+t)+b' : ℝ≥0)):ℝ≥0∞)
+      ≤ min (((r*s+b:ℝ≥0)):ℝ≥0∞) (((r'*s+b':ℝ≥0)):ℝ≥0∞)
+        + min (((r*t+b:ℝ≥0)):ℝ≥0∞)
+            (((r'*t+b':ℝ≥0)):ℝ≥0∞) := by
+  have cle : ∀ {a x y : ℝ≥0}, (a:ℝ) ≤ (x:ℝ) + (y:ℝ) →
+      ((a:ℝ≥0):ℝ≥0∞) ≤ ((x:ℝ≥0):ℝ≥0∞) + ((y:ℝ≥0):ℝ≥0∞) := by
+    intro a x y h
+    rw [← ENNReal.coe_add, ENNReal.coe_le_coe]
+    exact_mod_cast h
+  refine min_le_min_add_min ?_ ?_ ?_ ?_
+  · exact le_trans (min_le_left _ _)
+      (cle (by push_cast; nlinarith [b.coe_nonneg]))
+  · rcases le_total r r' with h | h
+    · exact le_trans (min_le_left _ _) (cle (by
+        push_cast; nlinarith [b.coe_nonneg, b'.coe_nonneg,
+          t.coe_nonneg, NNReal.coe_le_coe.mpr h]))
+    · exact le_trans (min_le_right _ _) (cle (by
+        push_cast; nlinarith [b.coe_nonneg, b'.coe_nonneg,
+          s.coe_nonneg, NNReal.coe_le_coe.mpr h]))
+  · rcases le_total r r' with h | h
+    · exact le_trans (min_le_left _ _) (cle (by
+        push_cast; nlinarith [b.coe_nonneg, b'.coe_nonneg,
+          s.coe_nonneg, NNReal.coe_le_coe.mpr h]))
+    · exact le_trans (min_le_right _ _) (cle (by
+        push_cast; nlinarith [b.coe_nonneg, b'.coe_nonneg,
+          t.coe_nonneg, NNReal.coe_le_coe.mpr h]))
+  · exact le_trans (min_le_right _ _)
+      (cle (by push_cast; nlinarith [b'.coe_nonneg]))
+```
+
+Off the origin the token-bucket is its affine part (the $`\delta_0` cap
+is $`+\infty`), so the minimum of two token-buckets is the affine
+minimum, which is sub-additive; at the origin both vanish.
+
+*Theorem:* $`\gamma_{r,b}` at $`t \ne 0` is $`r\,t + b`
+
+```lean
+theorem tokenBucket_apply_pos (r b t : ℝ≥0)
+    (ht : t ≠ 0) :
+    tokenBucket r b t = (r:ℝ≥0∞) * t + b := by
+  have h0 : ¬ t ≤ 0 := by simpa using ht
+  simp only [tokenBucket, Pi.inf_apply, delay, if_neg h0,
+    min_top_right]
+```
+
+*Theorem:* $`\gamma_{r,b} \wedge \gamma_{r',b'}` is sub-additive
+
+```lean
+theorem tokenBucket_inf_subadd (r b r' b' : ℝ≥0) :
+    IsSubadditive
+      (tokenBucket r b ⊓ tokenBucket r' b') := by
+  intro u s
+  simp only [Pi.inf_apply]
+  rcases eq_or_ne u 0 with hu | hu
+  · subst hu
+    rw [tokenBucket_zero_eq, tokenBucket_zero_eq, min_self,
+      zero_add, zero_add]
+  · rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      rw [tokenBucket_zero_eq, tokenBucket_zero_eq,
+        min_self, add_zero, add_zero]
+    · have hus : (u + s) ≠ 0 := by
+        rw [← pos_iff_ne_zero] at hu ⊢; positivity
+      rw [tokenBucket_apply_pos r b u hu,
+          tokenBucket_apply_pos r' b' u hu,
+          tokenBucket_apply_pos r b s hs,
+          tokenBucket_apply_pos r' b' s hs,
+          tokenBucket_apply_pos r b (u + s) hus,
+          tokenBucket_apply_pos r' b' (u + s) hus]
+      have key := affine_min_subadd r b r' b' u s
+      push_cast at key
+      convert key using 2
+```
+
+*Theorem:* $`\gamma_{r,b} \ast \gamma_{r',b'} = \gamma_{r,b} \wedge \gamma_{r',b'}`
+
+```lean
+theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
+    minConvE (tokenBucket r b) (tokenBucket r' b')
+      = tokenBucket r b ⊓ tokenBucket r' b' :=
+  minConvE_eq_inf_of_subadd _ _
+    (tokenBucket_zero_eq r b) (tokenBucket_zero_eq r' b')
+    (tokenBucket_inf_subadd r b r' b')
+```
+
 ```lean
 end DeepWiki
 ```
