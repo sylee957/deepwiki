@@ -365,6 +365,48 @@ theorem isPiecewiseContinuous_of_continuous
   exact Set.finite_empty
 ```
 
+# A positive right limit at the origin
+
+A regularity used by the deviation results: a function has a _positive
+right limit_ at the origin when it tends to a strictly positive value
+along the times approaching $`0` from above. This is the precise reading
+of the informal $`f(0^+) > 0`.
+
+*Definition:* $`f(0^+) > 0` — $`f` has a positive right limit at the origin
+
+```lean
+def RightLimitPos (f : ℝ≥0 → ℝ≥0∞) : Prop :=
+  ∃ L : ℝ≥0∞, 0 < L ∧
+    Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L)
+```
+
+A positive right limit forces $`f` to be positive on a whole
+right-neighbourhood of the origin: eventually $`f` exceeds half its
+limit, which gives an explicit threshold $`\delta`.
+
+*Theorem:* $`f(0^+) > 0` makes $`f` positive on some $`(0, \delta)`
+
+```lean
+theorem pos_near_zero_of_rightLimitPos
+    (f : ℝ≥0 → ℝ≥0∞) (h : RightLimitPos f) :
+    ∃ δ : ℝ≥0, 0 < δ ∧
+      ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t := by
+  obtain ⟨L, hL, hlim⟩ := h
+  have hev : ∀ᶠ t in 𝓝[>] (0:ℝ≥0), 0 < f t :=
+    hlim.eventually (eventually_gt_nhds hL)
+  rw [eventually_nhdsWithin_iff,
+    Metric.eventually_nhds_iff] at hev
+  obtain ⟨δ, hδ, hball⟩ := hev
+  refine ⟨⟨δ, hδ.le⟩, by exact_mod_cast hδ, ?_⟩
+  intro t ht htδ
+  apply hball (y := t)
+  · rw [NNReal.dist_eq]
+    simp only [NNReal.coe_zero, sub_zero,
+      abs_of_nonneg t.coe_nonneg]
+    exact_mod_cast htδ
+  · exact ht
+```
+
 ```lean
 end DeepWiki
 ```
