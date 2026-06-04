@@ -508,6 +508,86 @@ theorem tokenBucket_leftCont (r b : ℝ≥0) :
   exact h1.add continuousWithinAt_const
 ```
 
+The staircase is left-continuous too (for $`P > 0`). Its step count
+$`\lceil (t + J)/P \rceil` is _constant just to the left_ of every time
+— on the window $`((n-1)P - J,\ t]` with $`n = \lceil (t + J)/P \rceil`
+— so the clamped value is eventually constant along $`\mathcal{N}[<] t`,
+hence left-continuous; the minimum with the left-continuous $`\delta_0`
+is then left-continuous.
+
+*Theorem:* the step count is constant just to the left of $`t`
+
+```lean
+theorem stepCount_eventuallyEq_left (P : ℝ≥0)
+    (hP : (0:ℝ) < P) (J : ℝ) (t : ℝ≥0) (ht : 0 < t) :
+    ∀ᶠ s in (𝓝[Iio t] t : Filter ℝ≥0),
+      (fun u : ℝ≥0 =>
+        ⌈((u:ℝ)+J)/P⌉ = ⌈((t:ℝ)+J)/P⌉) s := by
+  set n := ⌈((t:ℝ)+J)/P⌉ with hn
+  have hPne : (P:ℝ) ≠ 0 := ne_of_gt hP
+  have hLlt : ((n:ℝ)-1)*P - J < (t:ℝ) := by
+    have h1 : ((t:ℝ)+J)/P > (n:ℝ) - 1 := by
+      have := Int.ceil_lt_add_one (((t:ℝ)+J)/P)
+      rw [← hn] at this; linarith
+    rw [gt_iff_lt, lt_div_iff₀ hP] at h1; nlinarith
+  set L : ℝ≥0 := (((n:ℝ)-1)*P - J).toNNReal with hL
+  have hLco : (L:ℝ) = max (((n:ℝ)-1)*P - J) 0 := by
+    rw [hL, Real.coe_toNNReal']
+  have hLt : L < t := by
+    rw [← NNReal.coe_lt_coe, hLco]
+    exact max_lt hLlt (by exact_mod_cast ht)
+  filter_upwards [Ioo_mem_nhdsLT hLt] with s hs
+  have hLs : (L:ℝ) < (s:ℝ) := by exact_mod_cast hs.1
+  have hsR : (s:ℝ) ≤ (t:ℝ) :=
+    le_of_lt (by exact_mod_cast hs.2)
+  have hsL : ((n:ℝ)-1)*P - J < (s:ℝ) := by
+    have : ((n:ℝ)-1)*P - J ≤ (L:ℝ) := by
+      rw [hLco]; exact le_max_left _ _
+    linarith
+  show ⌈((s:ℝ)+J)/P⌉ = n
+  rw [Int.ceil_eq_iff]
+  refine ⟨?_, ?_⟩
+  · rw [lt_div_iff₀ hP]; nlinarith
+  · rw [div_le_iff₀ hP]
+    have hn_le : ((t:ℝ)+J)/P ≤ (n:ℝ) := by
+      rw [hn]; exact Int.le_ceil _
+    rw [div_le_iff₀ hP] at hn_le; nlinarith
+```
+
+*Theorem:* the staircase value is left-continuous
+
+```lean
+theorem staircase_val_leftCont (P h : ℝ≥0)
+    (hP : (0:ℝ) < P) (J : ℝ) (t : ℝ≥0) :
+    ContinuousWithinAt
+      (fun s : ℝ≥0 => ENNReal.ofReal
+        (max ((h:ℝ) * (⌈((s:ℝ)+J)/P⌉:ℝ)) 0)) (Iio t) t := by
+  rcases eq_zero_or_pos t with h0 | ht
+  · subst h0
+    have : 𝓝[Iio (0:ℝ≥0)] 0 = ⊥ := by
+      rw [show Iio (0:ℝ≥0) = ∅ by simp, nhdsWithin_empty]
+    unfold ContinuousWithinAt; rw [this]; exact tendsto_bot
+  · refine continuousWithinAt_const.congr_of_eventuallyEq
+      ?_ rfl
+    filter_upwards
+      [stepCount_eventuallyEq_left P hP J t ht] with s hs
+    show ENNReal.ofReal
+        (max ((h:ℝ)*(⌈((s:ℝ)+J)/P⌉:ℝ)) 0)
+      = ENNReal.ofReal
+        (max ((h:ℝ)*(⌈((t:ℝ)+J)/P⌉:ℝ)) 0)
+    rw [hs]
+```
+
+*Theorem:* $`\nu_{P,h,J}` is left-continuous for $`P > 0`
+
+```lean
+theorem staircase_leftCont (P h : ℝ≥0) (hP : (0:ℝ) < P)
+    (J : ℝ) : IsLeftContinuous (staircase P h J) := by
+  intro t
+  exact Filter.Tendsto.min
+    (staircase_val_leftCont P h hP J t) (delay_leftCont 0 t)
+```
+
 # Relations among the usual functions
 
 Several curves coincide at special parameter values. The guaranteed rate
