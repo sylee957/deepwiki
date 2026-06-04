@@ -7,11 +7,11 @@ import Book.CompleteDioids
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids
-import Book.RealFunctionClasses
 import Book.Subadditivity
 import Book.SubadditiveClosure
 import Book.LeftContinuity
 import Book.PiecewiseContinuous
+import Book.RealFunctionClasses
 import Book.ConvolutionMinimum
 import Book.Servers
 import Book.RealConvolution
@@ -54,8 +54,6 @@ dioid through to shapers and service curves.
 
 {include 1 Book.FunctionDioids}
 
-{include 1 Book.RealFunctionClasses}
-
 {include 1 Book.Subadditivity}
 
 {include 1 Book.SubadditiveClosure}
@@ -63,6 +61,8 @@ dioid through to shapers and service curves.
 {include 1 Book.LeftContinuity}
 
 {include 1 Book.PiecewiseContinuous}
+
+{include 1 Book.RealFunctionClasses}
 
 {include 1 Book.ConvolutionMinimum}
 
