@@ -547,20 +547,22 @@ instance instNeBotNhdsGT (t : ℝ≥0) :
     (𝓝[>] t).NeBot := nhdsGT_neBot t
 ```
 
-When $`g` is left-continuous and the left-approach filter at $`t` is
-nontrivial (i.e. $`t > 0`), the left limit _is_ the value: the limit
-`limUnder` converges to is $`g(t)`. This is the value-level reading of
-left-continuity, $`g(t^-) = g(t)`. We phrase it against the named
-`IsLeftContinuous` predicate, applied at $`t`.
+When $`g` is left-continuous and $`t > 0`, the left limit _is_ the
+value: the positivity makes the left-approach filter nontrivial, so the
+limit `limUnder` converges to is $`g(t)`. This is the value-level
+reading of left-continuity, $`g(t^-) = g(t)`. We phrase it against the
+named `IsLeftContinuous` predicate, applied at $`t`, with $`0 < t` as an
+ordinary hypothesis.
 
 *Theorem:* $`g(t^-) = g(t)` when $`g` is left-continuous, at $`t > 0`
 
 ```lean
 theorem leftLimit_eq_of_leftContinuous
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (hlc : IsLeftContinuous g)
-    [(𝓝[<] t).NeBot] :
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
+    (hlc : IsLeftContinuous g) :
     leftLimit g t = g t :=
+  have : (𝓝[<] t).NeBot :=
+    nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
   (hlc t).tendsto.limUnder_eq
 ```
 
