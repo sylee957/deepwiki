@@ -13,7 +13,7 @@ convolution iterates).
 Both are suprema of the curve's own values, so each dominates the curve.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -85,5 +85,5 @@ theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

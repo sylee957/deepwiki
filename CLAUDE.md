@@ -4,9 +4,9 @@ Guidance for working in this repository.
 
 ## What this project is
 
-**The Autoformalization Wiki** — an AI-generated wiki of autoformalized
-mathematics, authored as a **Verso "Manual"-genre book** (lake package
-`verified-wiki`). The first entry is a Lean 4 + Mathlib formalization of the
+**DeepWiki** — an AI-generated wiki of autoformalized mathematics, authored as a
+**Verso "Manual"-genre book** (lake package `verified-wiki`; the displayed book
+title is "DeepWiki"). The first entry is a Lean 4 + Mathlib formalization of the
 **(min,plus) dioid algebra** (the algebra behind deterministic network calculus);
 further topics are added as additional chapters/articles.
 
@@ -53,14 +53,14 @@ Commands:
 ## Chapter structure (`Book/`)
 
 Chapters are `import`ed and `{include 1 ...}`d in dependency order from `Book.lean`;
-each chapter `import`s the previous one so the global ` ```lean `-block elaboration
+each chapter `import`s an earlier one so the global ` ```lean `-block elaboration
 order resolves. Order: `Introduction`, `Signatures`, `Dioids`, `Order`,
 `CompleteDioids`, `ScalarDioids`, `DioidFunctions`, `FunctionDioids`,
 `Subadditivity`, `SubadditiveClosure`, `LeftContinuity`,
-`PiecewiseContinuous`, `ConvolutionMinimum`, `Servers`, `RealConvolution`,
-`Shapers` (the live list is `Book.lean`).
+`PiecewiseContinuous`, `RealFunctionClasses`, `ConvolutionMinimum`, `Servers`,
+`RealConvolution`, `Shapers` (the live list is `Book.lean`).
 
-All declarations live in `namespace VerifiedWiki`.
+All declarations live in `namespace DeepWiki`.
 
 ## The mathematics (orientation — get this right or proofs invert)
 
@@ -69,18 +69,22 @@ All declarations live in `namespace VerifiedWiki`.
 - `CompleteDioid` adds a `CompleteLattice` + lower semi-continuity
   `mul_sSup : a * sSup s = ⨆ b ∈ s, a * b`.
 - **Carriers are order-duals.** For (min,plus), the dioid order is the *reverse* of
-  the numeric order (so `⊕ = min`, `𝟘 = +∞ = ⊥`). The carrier is a **newtype**
-  `MinPlus.D M` wrapping `M`, NOT a transparent `Mᵒᵈ` synonym — see gotcha below.
-  A value `v : RbarMin` has underlying numeric value `v.toDual`.
+  the numeric order (so `⊕ = min`, `𝟘 = +∞ = ⊥`). Each carrier is a one-field
+  **`structure`** wrapping its numeric type, NOT a transparent `Mᵒᵈ` synonym — see
+  gotcha below. A value `v` has underlying numeric value `v.toVal`; the constructor
+  is `ofVal` (uniform across all five carriers).
 - The **natural (numeric) order is the reverse of the dioid order.** "Non-negative",
   "non-decreasing", "sub-additive `f(s+t) ≤ f(s)+f(t)`" are *natural*-order notions,
-  stated on `.toDual` values with numeric `+`. The *dioid* order (`≤` on the
-  newtype) is what isotony / Kleene-star / convolution-as-product use.
-- Carriers: `Rmin = (WithTop ℝ)` dual (dioid, `R∪{+∞}`); `RplusMin = ℝ≥0∞` dual
-  (complete dioid); `RbarMin = WithTop (WithBot ℝ)` dual (complete dioid, `R∪{±∞}`).
-- The convolution `conv` (notation `∗`) is generic over `CompleteDioid`; the
-  function dioid `FunDioid` and the function classes `FPlus`/`FNondecr` are newtypes
-  / subtypes built by `MinPlus.SubCompleteDioid`.
+  stated on `.toVal` values with numeric `+`. The *dioid* order (`≤` on the newtype)
+  is what isotony / Kleene-star / convolution-as-product use.
+- Carriers (newtypes in `Book/ScalarDioids.lean`, sense + number-system names):
+  `MinPlus` over `WithTop ℝ` (dioid, `R∪{+∞}`); `MinPlusNN` over `ℝ≥0∞` (complete);
+  `MinPlusExt` over `WithTop (WithBot ℝ)` (complete, `R∪{±∞}`); plus the (max,plus)
+  duals `MaxPlusNN` over `WithBot ℝ≥0∞` and `MaxPlusExt` over `WithBot (WithTop ℝ)`.
+- The convolution `conv` (notation `∗`) is generic over `CompleteDioid`; the function
+  dioid (`Book/FunctionDioids.lean`) and the function classes `FPlus`/`FNondecr` are
+  subtypes built by `IsSubCompleteDioid.toCompleteDioid` (the sub-complete-dioid
+  builder in `Book/CompleteDioids.lean`).
 
 ## Hard-won gotchas (read before editing)
 
@@ -88,10 +92,10 @@ All declarations live in `namespace VerifiedWiki`.
    *all* of `M`'s instances — including a stray `Mul` from carriers like `ℝ≥0∞` /
    `WithTop (WithBot ℝ)` that have native numeric multiplication. That stray `*` is
    NOT the dioid product and silently wins instance resolution. The fix throughout is
-   to wrap carriers in a one-field **`structure`** (`MinPlus.D`, `FunDioid`, ...) that
-   inherits nothing, transport the lattice from `Mᵒᵈ` via `Equiv.completeLattice`, and
-   attach the dioid algebra explicitly. Same for the function space (`Pi.commSemiring`
-   has the wrong, pointwise `*`).
+   to wrap carriers in a one-field **`structure`** (`MinPlus`, `MinPlusExt`, … each
+   with `ofVal ::`/`toVal`) that inherits nothing, and attach the lattice + dioid
+   algebra explicitly. Same for the function space (`Pi.commSemiring` has the wrong,
+   pointwise `*`).
 
 2. **`R̄min` needs `WithTop (WithBot ℝ)`, NOT `EReal`.** They are defeq types but have
    *different* addition: the book's convention is `(+∞)+(−∞) = +∞` (so `𝟘 = +∞` stays
@@ -142,8 +146,12 @@ All declarations live in `namespace VerifiedWiki`.
 - Verify before claiming done: build the affected chapter, then `lake build`, and for
   theorems re-state each with its expected type (an `example`) to confirm signatures
   match the math — don't trust that "it compiled" means "it says the right thing".
-- Work happens on a feature branch (currently `minplus-chapter2`), not `main`.
+- Work happens on a feature branch (currently `scalars-uniformize-carriers`), not
+  `main`. Commit or push only when asked.
 - The repo is on macOS (`darwin`); `nm` shows Mach-O symbols. doc-gen4 needs
-  `DOCGEN_SRC=file lake build Book:docs` (no git remote → its GitHub source-link facet
-  fails otherwise), and a clean native `MD4Lean` build (cross-platform `.lake`
-  contamination caused a link failure once).
+  `DOCGEN_SRC=file lake build Book:docs`, and a clean native `MD4Lean` build
+  (cross-platform `.lake` contamination caused a link failure once).
+- Publishing: a GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the
+  book and deploys the rendered `_out/html-multi` to GitHub Pages on push to `main`.
+  CI uses `lake exe cache get` for Mathlib's prebuilt oleans so only `Book/*.lean`
+  recompiles.

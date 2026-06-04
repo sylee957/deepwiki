@@ -18,7 +18,7 @@ to the dioid setting, with $`\bigsqcup` for $`\int` and $`\otimes` for
 the multiplication.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal Algebra.Bridge
@@ -572,5 +572,5 @@ theorem conv_le_conv_left {T : Type*}
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

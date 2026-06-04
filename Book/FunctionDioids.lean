@@ -35,7 +35,7 @@ be unaffected, but the convolution's sum would then disagree with the
 dioid product.)
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -1015,5 +1015,5 @@ theorem maxConvR_eq_maxConv
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

@@ -18,7 +18,7 @@ dioid convolution `conv` of the previous chapters, viewed through the
 `MinPlusNN` newtype — so the two definitions coincide.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -154,5 +154,5 @@ theorem conv_self_toF_of_subadditive
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

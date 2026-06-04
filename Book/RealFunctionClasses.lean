@@ -22,7 +22,7 @@ are piecewise continuous and left-continuous and null at the origin, and
 the rate and rate-latency are in fact continuous.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
 open Set Topology Filter
@@ -1021,5 +1021,5 @@ theorem staircase_closure_super (P h : ℝ≥0)
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

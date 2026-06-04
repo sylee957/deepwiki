@@ -8,7 +8,7 @@ This is a wiki of _autoformalized_ mathematics: AI-generated articles
 whose mathematical content is mechanized in Lean 4 with Mathlib. Each
 topic is developed as a self-contained article — prose interleaved with
 the actual Lean declarations — and every definition, lemma and
-proposition is stated and proved, in the `VerifiedWiki` namespace. The
+proposition is stated and proved, in the `DeepWiki` namespace. The
 code blocks are elaborated as the document is built, so their bodies
 _are_ the real formalization and the rendered statements reflect exactly
 what was proved. The document is its own source of truth: it compiles as

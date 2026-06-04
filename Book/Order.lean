@@ -13,7 +13,7 @@ dioid as one of `Mathlib`'s idempotent commutative semi-rings — and
 proves isotony of the two operations.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 namespace Algebra
 ```
@@ -210,5 +210,5 @@ end Algebra
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

@@ -22,7 +22,7 @@ _compact_ interval $`[0, t]`, where a lower-semicontinuous function
 attains its infimum.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Topology Filter Set
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -153,5 +153,5 @@ theorem minConvE_mono (g h : ℝ≥0 → ℝ≥0∞)
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

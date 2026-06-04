@@ -25,7 +25,7 @@ reals with $`\pm\infty`, taking $`\oplus = \max`, $`\otimes = {+}`,
 with the canonical order _agreeing_ with the numeric one.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open scoped Algebra.Bridge
 open scoped ENNReal NNReal Classical
@@ -1077,5 +1077,5 @@ So `MaxPlusExt` realizes the _(max,plus)_ complete dioid on
 $`\mathbb{R} \cup \{\pm\infty\}`, the exact order-dual of `MinPlusExt`.
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```

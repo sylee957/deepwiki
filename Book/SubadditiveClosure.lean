@@ -16,7 +16,7 @@ add under convolution, and the closure is _idempotent_ — a fixed point
 of self-convolution, hence itself sub-additive.
 
 ```lean
-namespace VerifiedWiki
+namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
@@ -191,5 +191,5 @@ theorem closure_subadditive (sigma : Fmin) (u s : ℝ≥0) :
 ```
 
 ```lean
-end VerifiedWiki
+end DeepWiki
 ```
