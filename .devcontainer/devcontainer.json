@@ -27,11 +27,11 @@
     // workspace is a `fakeowner` FS that does not honor POSIX fcntl locks, which
     // breaks SQLite-based tooling such as doc-gen4 ("locking protocol, error 15").
     // A volume also speeds up Lake's many-small-file writes vs. the macOS bind mount.
-    "source=leanproofs-lake,target=/workspaces/leanproofs/.lake,type=volume"
+    "source=deepwiki-lake,target=/workspaces/deepwiki/.lake,type=volume"
   ],
   "hostRequirements": {
     "cpus": 4,
     "memory": "16gb"
   },
-  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/leanproofs/.lake && lake exe cache get && lake build"
+  "postCreateCommand": "sudo chown -R vscode:vscode /workspaces/deepwiki/.lake && lake exe cache get && lake build"
 }
