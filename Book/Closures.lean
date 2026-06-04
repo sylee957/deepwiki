@@ -6,17 +6,22 @@ open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Closures" =>
-The _sub-additive closure_ of a curve `σ` is its Kleene star in the
-function dioid: the dioid sum of all convolution powers,
+The _closure_ of a curve `σ` is its Kleene star in a function dioid: the
+dioid sum of all convolution powers,
 $$`\sigma^{\star} = \bigsqcup_{n \ge 0} \sigma^{(n)}, \qquad \sigma^{(0)} = \delta_0,\ \ \sigma^{(n+1)} = \sigma^{(n)} \ast \sigma.`
-Since the dioid sum is the numeric infimum on
-$`\overline{\mathbb{R}}_{\ge 0}`, this is the familiar $`(\min, +)`
-star $`\sigma^{\star} = \inf_n \sigma^{(n)}`. This chapter builds it and
-develops its Kleene-star theory: the closure lies below `σ`, the powers
-add under convolution, and the closure is _idempotent_ — a fixed point
-of self-convolution, hence itself sub-additive. We then read the same
-closure back onto the bare extended-real values, through the coincidence
-of the dioid product with the numeric `(min,plus)` convolution.
+The Kleene-star theory is purely dioidal, so we develop it once,
+generically: the closure relates to `σ`, the powers add under
+convolution, and the closure is _idempotent_ — a fixed point of
+self-convolution.
+
+Read on the (min,plus) dioid this is the _sub-additive closure_ (the
+dioid sum is the numeric infimum, so $`\sigma^{\star} = \inf_n
+\sigma^{(n)}`, and idempotence makes it sub-additive); read on the
+order-dual (max,plus) dioid it is the _super-additive closure_. We then
+unwrap each onto the bare values — the (min,plus) closure onto
+$`\overline{\mathbb{R}}_{\ge 0}` and the (max,plus) closure onto
+`WithBot ℝ≥0∞` — through the coincidence of the dioid product with the
+numeric convolution.
 
 ```lean
 namespace DeepWiki
@@ -27,6 +32,17 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 # Convolution powers and the closure
 
+The Kleene-star theory is purely dioidal: it uses only the convolution,
+its associativity, and the unit. So we develop it _generically_ over any
+function dioid $`\mathbb{R}^{+} \to T` (`T` a complete dioid), then read
+it on the two carriers of interest — the (min,plus) `Fmin` for the
+_sub-additive_ closure, and its order-dual (max,plus) `Fmax` for the
+_super-additive_ closure.
+
+```lean
+variable {T : Type} [CompleteDioid T]
+```
+
 The convolution unit `convUnit` — the impulse, $`e` at time `0` and
 $`\varepsilon` elsewhere — is the multiplicative unit of the function
 dioid. The $`n`-th convolution power iterates the convolution against
@@ -36,12 +52,13 @@ all powers.
 *Definition:* convolution powers $`\sigma^{(n)}` and the closure $`\sigma^{\star}`
 
 ```lean
-noncomputable def convPow (sigma : Fmin) : ℕ → Fmin
+noncomputable def convPow (sigma : ℝ≥0 → T) :
+    ℕ → (ℝ≥0 → T)
   | 0 => convUnit
   | n + 1 => conv (convPow sigma n) sigma
 
 noncomputable def subadditiveClosure
-    (sigma : Fmin) : Fmin :=
+    (sigma : ℝ≥0 → T) : ℝ≥0 → T :=
   fun t =>
     CompleteDioid.iSup
       (fun n : ℕ => convPow sigma n t)
@@ -55,7 +72,7 @@ The first power is the curve itself.
 *Theorem:* $`\sigma^{(1)} = \sigma`
 
 ```lean
-theorem convPow_one (sigma : Fmin) :
+theorem convPow_one (sigma : ℝ≥0 → T) :
     convPow sigma 1 = sigma := by
   change conv convUnit sigma = sigma
   exact convUnit_left sigma
@@ -70,7 +87,7 @@ closure in the dioid order.
 
 ```lean
 theorem convPow_le_closure
-    (sigma : Fmin) (k : ℕ) (t : ℝ≥0) :
+    (sigma : ℝ≥0 → T) (k : ℕ) (t : ℝ≥0) :
     convPow sigma k t ≼ₒ subadditiveClosure sigma t :=
   CompleteDioid.le_iSup
     (fun n : ℕ => convPow sigma n t) k
@@ -84,7 +101,7 @@ associativity of the convolution and the unit law.
 *Theorem:* $`\sigma^{(m)} \ast \sigma^{(n)} = \sigma^{(m+n)}`
 
 ```lean
-theorem convPow_add (sigma : Fmin) (m n : ℕ) :
+theorem convPow_add (sigma : ℝ≥0 → T) (m n : ℕ) :
     conv (convPow sigma m) (convPow sigma n)
       = convPow sigma (m + n) := by
   induction n with
@@ -109,7 +126,7 @@ forming $`\sigma^{(m+n)}(u + s)`, which is below the closure.
 
 ```lean
 theorem convPow_term_le_closure
-    (sigma : Fmin) (m n : ℕ) (u s : ℝ≥0) :
+    (sigma : ℝ≥0 → T) (m n : ℕ) (u s : ℝ≥0) :
     convPow sigma m u ⊗ₒ convPow sigma n s
       ≼ₒ subadditiveClosure sigma (u + s) := by
   refine le_trans ?_
@@ -131,7 +148,7 @@ $`u + 0` split with $`\sigma^{\star}(0) \succeq e`.
 *Theorem:* $`\sigma^{\star} \ast \sigma^{\star} = \sigma^{\star}`
 
 ```lean
-theorem closure_idem (sigma : Fmin) :
+theorem closure_idem (sigma : ℝ≥0 → T) :
     conv (subadditiveClosure sigma)
         (subadditiveClosure sigma)
       = subadditiveClosure sigma := by
@@ -179,7 +196,7 @@ $`\sigma^{\star}(u) \otimes \sigma^{\star}(s)`.
 *Theorem:* the closure is sub-additive, $`\sigma^{\star}(u) \otimes \sigma^{\star}(s) \preceq \sigma^{\star}(u + s)`
 
 ```lean
-theorem closure_subadditive (sigma : Fmin) (u s : ℝ≥0) :
+theorem closure_subadditive (sigma : ℝ≥0 → T) (u s : ℝ≥0) :
     subadditiveClosure sigma u
         ⊗ₒ subadditiveClosure sigma s
       ≼ₒ subadditiveClosure sigma (u + s) := by
@@ -271,12 +288,93 @@ theorem subadditiveClosureE_subadditive
           + subadditiveClosureE g s := rfl
 ```
 
-The _super-additive_ closure has no counterpart here: the (max,plus)
-convolution on $`\overline{\mathbb{R}}_{\ge 0}` has no identity element
-(a curve decreasing from a positive value at the origin would force the
-would-be unit to be negative, impossible on $`\mathbb{R}_{\ge 0}`), so
-there is no Kleene star to take. Its proper home is the order-dual
-carrier with a $`-\infty` bottom.
+# The super-additive closure on the dual carrier
+
+The _super-additive_ closure is the same Kleene star, read on the
+order-_dual_ (max,plus) function dioid `Fmax` — values in
+`WithBot ℝ≥0∞`, where the dioid zero is $`-\infty = \bot` (the (max,plus)
+convolution's identity). On the bare (min,plus) extended reals
+$`\overline{\mathbb{R}}_{\ge 0}` there is no such closure, because the
+(max,plus) convolution there has no identity (a curve decreasing from a
+positive value at the origin would force the would-be unit below $`0`);
+the $`-\infty` bottom of `WithBot ℝ≥0∞` is exactly what supplies it.
+
+Because the generic Kleene-star theory above already applies to `Fmax`,
+the super-additive closure is just `subadditiveClosure` instantiated
+there, read back onto the values; the dual carrier's canonical order
+_agrees_ with the numeric one, so the same theorem now reads as
+_super_-additivity.
+
+*Definition:* the lift of a `WithBot ℝ≥0∞`-valued curve into `Fmax`
+
+```lean
+def toFmax (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
+  fun s => ⟨g s⟩
+```
+
+*Definition:* the super-additive closure $`g^{\overline{\star}}` on the dual carrier
+
+```lean
+noncomputable def superadditiveClosure
+    (g : ℝ≥0 → WithBot ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
+  fun t => (subadditiveClosure (toFmax g) t).toVal
+```
+
+Lifting recovers the dioid closure, the bridge that carries the theory.
+
+*Theorem:* $`\uparrow\!(g^{\overline{\star}}) = (\uparrow\!g)^{\star}` in `Fmax`
+
+```lean
+theorem toFmax_superadditiveClosure
+    (g : ℝ≥0 → WithBot ℝ≥0∞) :
+    toFmax (superadditiveClosure g)
+      = subadditiveClosure (toFmax g) := by
+  funext t; apply MaxPlusNN.ext; rfl
+```
+
+The closure lies _above_ the curve — the numeric reading of "the dioid
+closure dominates `σ`", now in the dual order, which agrees with the
+numeric one.
+
+*Theorem:* $`g \le g^{\overline{\star}}`
+
+```lean
+theorem le_superadditiveClosure
+    (g : ℝ≥0 → WithBot ℝ≥0∞) (t : ℝ≥0) :
+    g t ≤ superadditiveClosure g t := by
+  have h := convPow_le_closure (toFmax g) 1 t
+  rw [convPow_one, MaxPlusNN.le_iff] at h
+  exact h
+```
+
+It is a fixed point of (max,plus) self-convolution — idempotence,
+instantiated at `Fmax`.
+
+*Theorem:* $`g^{\overline{\star}} \mathbin{\overline{\ast}} g^{\overline{\star}} = g^{\overline{\star}}` in `Fmax`
+
+```lean
+theorem superadditiveClosure_idem
+    (g : ℝ≥0 → WithBot ℝ≥0∞) :
+    conv (subadditiveClosure (toFmax g))
+        (subadditiveClosure (toFmax g))
+      = subadditiveClosure (toFmax g) :=
+  closure_idem (toFmax g)
+```
+
+Hence the closure is super-additive — `closure_subadditive` at `Fmax`,
+whose dual order makes it the reverse inequality on the values.
+
+*Theorem:* $`g^{\overline{\star}}` is super-additive
+
+```lean
+theorem superadditiveClosure_superadditive
+    (g : ℝ≥0 → WithBot ℝ≥0∞) (u s : ℝ≥0) :
+    superadditiveClosure g u + superadditiveClosure g s
+      ≤ superadditiveClosure g (u + s) := by
+  have h := closure_subadditive (toFmax g) u s
+  rw [MaxPlusNN.le_iff] at h
+  exact h
+```
 
 ```lean
 end DeepWiki
