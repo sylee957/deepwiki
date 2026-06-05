@@ -25,13 +25,15 @@ def siteDescription : String :=
   "deterministic network calculus."
 
 /-- Anti-flash theme bootstrap: runs synchronously in `<head>`, before first
-paint, setting `data-theme` on `<html>` from a saved choice or the OS
-preference. Without this the page would flash light before the toggle script
-runs. -/
+paint. The saved choice is one of `'light'`, `'dark'`, or `'system'` (default
+when nothing is saved). In `'system'` mode the effective theme follows the OS
+`prefers-color-scheme`. We set `data-theme="dark"` on `<html>` exactly when the
+effective theme is dark, so the inversion CSS keys on a single attribute. -/
 def themeInitScript : String :=
   "(function(){try{" ++
-    "var s=localStorage.getItem('deepwiki-theme');" ++
-    "var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;" ++
+    "var s=localStorage.getItem('deepwiki-theme')||'system';" ++
+    "var sysDark=matchMedia('(prefers-color-scheme: dark)').matches;" ++
+    "var d=s==='dark'||(s==='system'&&sysDark);" ++
     "if(d)document.documentElement.setAttribute('data-theme','dark');" ++
   "}catch(e){}})();"
 
@@ -40,8 +42,9 @@ each of Verso's many colours individually (variables, hardcoded rules, code
 highlighting, KaTeX), we invert the entire document and rotate the hue back so
 blues stay blue — the classic robust dark mode. KaTeX math renders as HTML
 here (no images/SVG), so it inverts cleanly along with the text; there is no
-media to counter-invert. The toggle button is inverted a second time so it
-keeps its own colours. -/
+media to counter-invert. The toggle button sits in the inverted document, so
+it is given explicit colours per theme (it is _not_ counter-inverted, so that
+it reads as a dark control in dark mode). -/
 def darkModeCss : String :=
   "html[data-theme=\"dark\"]{" ++
     "background:#fff;" ++
@@ -50,31 +53,45 @@ def darkModeCss : String :=
   -- code-block panels read better with a touch less contrast once inverted
   "html[data-theme=\"dark\"] .hl.lean.block{" ++
     "background:#f2f2f2;}" ++
-  -- the floating toggle button: invert again to cancel the page inversion
+  -- the floating toggle button (base = light-mode appearance)
   "#deepwiki-theme-toggle{position:fixed;right:1rem;bottom:1rem;" ++
     "z-index:1000;width:2.6rem;height:2.6rem;border-radius:50%;" ++
     "border:1px solid #8888;background:#fff;color:#222;cursor:pointer;" ++
     "font-size:1.2rem;line-height:1;box-shadow:0 1px 5px #0003;}" ++
+  -- in dark mode the page is inverted, so these CSS colours are pre-inverted:
+  -- a light background becomes a dark button on screen, and a dark glyph
+  -- becomes a light glyph — a dark control with a legible light icon
   "html[data-theme=\"dark\"] #deepwiki-theme-toggle{" ++
-    "filter:invert(1) hue-rotate(180deg);}"
+    "background:#dcdcdc;color:#333;border-color:#999;}"
 
-/-- The toggle button's behaviour: flip `data-theme` on `<html>`, persist the
-choice, and swap the glyph. Wired up on `DOMContentLoaded`. -/
+/-- The toggle button cycles the saved choice `system → light → dark → system`,
+persists it, re-applies the effective theme (consulting the OS in `'system'`
+mode), and swaps the glyph to show the _current selection_ (🖥/☀/☾). A live
+`matchMedia` listener keeps the page in sync with the OS while in `'system'`
+mode. -/
 def themeToggleScript : String :=
-  "(function(){function setGlyph(b){" ++
-    "b.textContent=document.documentElement.getAttribute('data-theme')" ++
-    "==='dark'?'☀':'☾';}" ++
+  "(function(){" ++
+  "var mq=matchMedia('(prefers-color-scheme: dark)');" ++
+  "function pref(){return localStorage.getItem('deepwiki-theme')||'system';}" ++
+  "function apply(){" ++
+    "var p=pref();" ++
+    "var dark=p==='dark'||(p==='system'&&mq.matches);" ++
+    "if(dark)document.documentElement.setAttribute('data-theme','dark');" ++
+    "else document.documentElement.removeAttribute('data-theme');}" ++
+  "function glyph(){var p=pref();" ++
+    "return p==='system'?'🖥':p==='dark'?'☾':'☀';}" ++
   "function init(){var b=document.createElement('button');" ++
     "b.id='deepwiki-theme-toggle';" ++
-    "b.setAttribute('aria-label','Toggle dark mode');" ++
-    "setGlyph(b);" ++
+    "b.setAttribute('aria-label','Theme: system / light / dark');" ++
+    "function refresh(){b.textContent=glyph();" ++
+      "b.title='Theme: '+pref();}" ++
+    "refresh();" ++
     "b.addEventListener('click',function(){" ++
-      "var dark=document.documentElement.getAttribute('data-theme')==='dark';" ++
-      "if(dark){document.documentElement.removeAttribute('data-theme');" ++
-        "localStorage.setItem('deepwiki-theme','light');}" ++
-      "else{document.documentElement.setAttribute('data-theme','dark');" ++
-        "localStorage.setItem('deepwiki-theme','dark');}" ++
-      "setGlyph(b);});" ++
+      "var p=pref();" ++
+      "var next=p==='system'?'light':p==='light'?'dark':'system';" ++
+      "localStorage.setItem('deepwiki-theme',next);" ++
+      "apply();refresh();});" ++
+    "mq.addEventListener('change',function(){apply();refresh();});" ++
     "document.body.appendChild(b);}" ++
   "if(document.readyState!=='loading')init();" ++
   "else document.addEventListener('DOMContentLoaded',init);})();"
