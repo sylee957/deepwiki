@@ -2147,29 +2147,23 @@ theorem hDev_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
 ```
 
 The statement as usually given asks only for the _right limit_
-$`f(0^+) > 0`, weaker than positivity at every $`t > 0`. The
-right-limit notion `RightLimitPos` and the fact that it forces
-positivity on a window $`(0, \delta)` are developed in the continuity
-chapter (`pos_near_zero_of_rightLimitPos`).
+$`f(0^+) > 0`, weaker than positivity at every $`t > 0`. Both readings
+go through the same engine: any positivity _window_ $`(0, \delta)` pins
+the deviation to $`d`. We extract that engine once — the lower bound is
+taken at a small time $`s = \min(\varepsilon, \delta/2)` inside the
+window, so the same $`\varepsilon \to 0` argument as the pointwise form
+applies.
 
-This is the faithful second statement: a positive right limit at the
-origin already pins the deviation to $`d`. The hypothesis is the
-value-level $`f(0^+) > 0` — a right-convergence to $`L = f(0^+)` with
-$`0 < f(0^+)`. The lower bound is taken at a small time
-$`s = \min(\varepsilon, \delta/2)` inside the positivity window, so the
-same $`\varepsilon \to 0` argument applies.
-
-*Theorem:* $`hDev(f, \delta_d) = d` when $`f(0^+) > 0`
+*Theorem:* $`hDev(f, \delta_d) = d` given a positivity window $`(0, \delta)`
 
 ```lean
-theorem hDev_delay_eq_of_rightLimitPos
-    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) (L : ℝ≥0∞)
-    (hL : Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L))
-    (hpos : 0 < rightLimit f 0) :
+theorem hDev_delay_eq_of_pos_window
+    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
+    (hw : ∃ δ : ℝ≥0, 0 < δ ∧
+      ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t) :
     hDev f (delay d) = d := by
   apply le_antisymm (hDev_delay_le f d)
-  obtain ⟨δ, hδ, hpos⟩ :=
-    pos_near_zero_of_rightLimit_pos f L hL hpos
+  obtain ⟨δ, hδ, hpw⟩ := hw
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   set s : ℝ≥0 := min ε (δ / 2) with hs
@@ -2182,11 +2176,33 @@ theorem hDev_delay_eq_of_rightLimitPos
   have hlb : ((d - s : ℝ≥0):ℝ≥0∞)
       ≤ hDev f (delay d) := by
     refine le_trans
-      (hDevAt_delay_ge f d s (hpos s hs_pos hs_ltδ)) ?_
+      (hDevAt_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
     unfold hDev; exact le_iSup _ s
   calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
     _ ≤ hDev f (delay d) + ε := add_le_add hlb hs_le_ε
+```
+
+The cleanest sufficient condition is right-continuity at the origin
+together with a positive value there: a right-continuous $`f` tends to
+$`f(0)` from the right, so $`0 < f(0)` gives the positivity window. Note
+this does _not_ cover the token-bucket, which is capped to $`0` at the
+origin and so jumps there — that case is handled separately below,
+through its right _limit_ rather than its value.
+
+*Theorem:* $`hDev(f, \delta_d) = d` when $`f` is right-continuous with $`0 < f(0)`
+
+```lean
+theorem hDev_delay_eq_of_rightCont
+    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
+    (hrc : IsRightContinuous f) (h0 : 0 < f 0) :
+    hDev f (delay d) = d := by
+  have hL : Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 (f 0)) :=
+    (hrc 0).tendsto
+  have hpos : 0 < rightLimit f 0 := by
+    rw [rightLimit_eq_of_tendsto f 0 (f 0) hL]; exact h0
+  exact hDev_delay_eq_of_pos_window f d
+    (pos_near_zero_of_rightLimit_pos f (f 0) hL hpos)
 ```
 
 # Catalog of deviations
@@ -2239,18 +2255,23 @@ theorem tokenBucket_rightLimit (r b : ℝ≥0) :
 
 The token-bucket has a positive burst right limit, so its horizontal
 deviation against a pure delay is exactly the delay — independent of
-$`r` and $`b`. This needs $`0 < b`: with $`b = 0` the right limit is
-$`0` and the positivity hypothesis fails.
+$`r` and $`b`. The token-bucket is _not_ right-continuous at the origin
+(it is capped to $`0` there but jumps up to $`b`), so this goes through
+the positivity-window engine directly, fed by the right _limit_ $`b`
+rather than the value. It needs $`0 < b`: with $`b = 0` the right limit
+is $`0` and no positivity window exists.
 
 *Theorem:* $`hDev(\gamma_{r,b}, \delta_d) = d` for $`0 < b`
 
 ```lean
 theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
-    hDev (tokenBucket r b) (delay d) = d :=
-  hDev_delay_eq_of_rightLimitPos (tokenBucket r b) d
-    (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
-    (by rw [tokenBucket_rightLimit]; exact_mod_cast hb)
+    hDev (tokenBucket r b) (delay d) = d := by
+  have hpos : 0 < rightLimit (tokenBucket r b) 0 := by
+    rw [tokenBucket_rightLimit]; exact_mod_cast hb
+  exact hDev_delay_eq_of_pos_window (tokenBucket r b) d
+    (pos_near_zero_of_rightLimit_pos (tokenBucket r b)
+      (b:ℝ≥0∞) (tokenBucket_tendsto_right r b) hpos)
 ```
 
 The vertical deviation against a delay is the deconvolution at the
