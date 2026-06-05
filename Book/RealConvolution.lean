@@ -6,7 +6,7 @@ open Verso.Genre.Manual.InlineLean
 
 #doc (Manual) "Closures of real curves" =>
 The (max,plus) convolution of the previous chapter _generates_ two
-closures of a real curve: the _non-decreasing closure_, the least
+closures of a real curve: the _non-decreasing closure_ $`\beta \mathbin{\overline{\ast}} 0`, the least
 monotone curve above it, and the _super-additive closure_, the least
 super-additive curve above it (the supremum of all finite (max,plus)
 convolution iterates).
@@ -48,6 +48,76 @@ theorem le_ndClosure (beta : ℝ≥0 → ℝ≥0)
     (t : ℝ≥0) : beta t ≤ ndClosure beta t := by
   unfold ndClosure
   exact le_ciSup (hbdd t) (⟨t, le_refl t⟩ : {u // u ≤ t})
+```
+
+The closure is exactly the _(max,plus) convolution with the zero
+curve_, $`\beta_{\uparrow} = \beta \mathbin{\overline{\ast}} 0`: a split
+$`u + s = t` contributes $`\beta(u) + 0 = \beta(u)`, so ranging over the
+splits of $`t` is ranging over all $`u \le t`. This is the algebraic
+face of the closure — the same supremum, _generated_ by the (max,plus)
+convolution rather than written out by hand. The two index sets carry
+the identical range, so the equality needs no boundedness hypothesis:
+where the supremum is infinite both sides floor to $`0` alike.
+
+*Theorem:* $`\beta_{\uparrow} = \beta \mathbin{\overline{\ast}} 0`
+
+```lean
+theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
+    ndClosure beta = maxConvR beta 0 := by
+  funext t
+  have hrange :
+      Set.range
+          (fun u : {u : ℝ≥0 // u ≤ t} => beta u.1)
+        = Set.range
+          (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
+            beta p.1.1) := by
+    ext x
+    constructor
+    · rintro ⟨⟨u, hu⟩, rfl⟩
+      exact ⟨⟨(u, t - u),
+        add_tsub_cancel_of_le hu⟩, rfl⟩
+    · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
+      exact ⟨⟨u, hus ▸ le_self_add⟩, rfl⟩
+  unfold ndClosure maxConvR
+  simp only [Pi.zero_apply, add_zero]
+  exact congrArg sSup hrange
+```
+
+The closure is itself non-decreasing — this is what makes it the _least
+monotone curve above_ `beta`, and not merely some upper bound. Raising
+the argument widens the initial interval $`\{u \le t\}` over which the
+supremum is taken, so the supremum can only grow (bounding the values
+on each interval keeps the suprema genuine).
+
+*Theorem:* $`\beta_{\uparrow}` is non-decreasing
+
+```lean
+theorem ndClosure_mono (beta : ℝ≥0 → ℝ≥0)
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
+    Monotone (ndClosure beta) := by
+  intro x y hxy
+  unfold ndClosure
+  refine ciSup_le (fun u => ?_)
+  exact le_ciSup (hbdd y) ⟨u.1, u.2.trans hxy⟩
+```
+
+The textbook also pairs this with the _non-negative closure_
+$`[\beta]^{+} = \beta \vee 0` and their composite, the non-negative
+non-decreasing closure
+$`[\beta]_{\uparrow}^{+} = [\beta_{\uparrow}]^{+}`. Here the curves are
+valued in $`\mathbb{R}_{\ge 0}` — non-negative by construction — so
+$`\beta \vee 0` is just $`\beta`, the non-negative closure adds nothing,
+and the composite collapses to $`\beta_{\uparrow}`. We record the one
+fact that makes this so.
+
+*Theorem:* $`\beta \vee 0 = \beta`
+
+```lean
+theorem sup_zero_eq_self (beta : ℝ≥0 → ℝ≥0) :
+    (fun t => beta t ⊔ 0) = beta := by
+  funext t
+  exact sup_eq_left.mpr zero_le'
 ```
 
 # The super-additive closure
