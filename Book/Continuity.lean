@@ -324,7 +324,7 @@ at every time, so in particular it has a right limit there.
 ```lean
 theorem hasRightLimit_of_rightContinuous
     (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
-    (t : ℝ≥0) : HasRightLimit g t :=
+    (t : ℝ≥0) : ∃ L, TendstoRight g t L :=
   ⟨g t, (hrc t).tendsto⟩
 ```
 

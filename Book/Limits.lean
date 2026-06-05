@@ -55,27 +55,14 @@ def TendstoRight
 ```
 
 A one-sided limit _exists_ when the function converges to some value on
-that side. This is the primitive on which continuity (next chapter) is
-built — continuity will be the case where the limit equals $`g(t)`.
-
-*Definition:* $`g` has a left limit at $`t`
-
-```lean
-def HasLeftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
-  ∃ L : ℝ≥0∞, TendstoLeft g t L
-```
-
-*Definition:* $`g` has a right limit at $`t`
-
-```lean
-def HasRightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
-  ∃ L : ℝ≥0∞, TendstoRight g t L
-```
+that side — written directly as the existential $`\exists L,`
+`TendstoLeft g t L` (and the right analogue), with no separate predicate.
+This is the primitive on which continuity (next chapter) is built —
+continuity will be the case where the limit equals $`g(t)`.
 
 The rest of the chapter develops these: an elementary
-$`\varepsilon`–$`\delta` characterization of one-sided convergence, the
-limit _value_ a convergent function approaches, and the
-$`\varepsilon`–$`\delta` reading of existence.
+$`\varepsilon`–$`\delta` characterization of one-sided convergence and
+its quantified existence reading.
 
 # Convergence to a value: the epsilon-delta form
 
@@ -406,10 +393,12 @@ theorem tendstoRightED_iff
 # Existence of one-sided limits
 
 We work with limit _existence_ directly, as an existential over the
-convergence value, rather than naming a possibly-undefined limit value:
-a fact about "the limit" is stated as "there is an $`L` the function
-converges to, and $`L` has the property". This sidesteps the need for a
-junk value when no limit exists.
+convergence value — $`\exists L,` `TendstoRight g t L` — rather than
+naming a possibly-undefined limit value: a fact about "the limit" is
+stated as "there is an $`L` the function converges to, and $`L` has the
+property". This sidesteps the need for a junk value when no limit exists,
+and its $`\varepsilon`–$`\delta` reading is just the convergence
+equivalences above quantified over the target.
 
 The right-approach filter is nontrivial at _every_ time — there are
 always times just above any $`t`, the non-negative reals having no
@@ -418,37 +407,6 @@ greatest element — so the limit value, where it exists, is unique.
 ```lean
 instance instNeBotNhdsGT (t : ℝ≥0) :
     (𝓝[>] t).NeBot := nhdsGT_neBot t
-```
-
-Existence of a one-sided limit has its own $`\varepsilon`–$`\delta`
-reading: a limit exists exactly when, for _some_ target $`L`, the
-function converges to $`L` in the elementary form. This is the
-convergence equivalence quantified over the target.
-
-*Theorem:* a left limit exists iff some target is approached in the ε–δ sense, at $`t > 0`
-
-```lean
-theorem hasLeftLimit_iff_ed
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
-    HasLeftLimit g t ↔ ∃ L, TendstoLeftED g t L := by
-  unfold HasLeftLimit
-  exact ⟨fun ⟨L, hL⟩ =>
-      ⟨L, (tendstoLeftED_iff g t ht L).mpr hL⟩,
-    fun ⟨L, hL⟩ =>
-      ⟨L, (tendstoLeftED_iff g t ht L).mp hL⟩⟩
-```
-
-*Theorem:* a right limit exists iff some target is approached in the ε–δ sense
-
-```lean
-theorem hasRightLimit_iff_ed
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    HasRightLimit g t ↔ ∃ L, TendstoRightED g t L := by
-  unfold HasRightLimit
-  exact ⟨fun ⟨L, hL⟩ =>
-      ⟨L, (tendstoRightED_iff g t L).mpr hL⟩,
-    fun ⟨L, hL⟩ =>
-      ⟨L, (tendstoRightED_iff g t L).mp hL⟩⟩
 ```
 
 ```lean
