@@ -313,21 +313,6 @@ theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
       exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
 ```
 
-# Continuity as a one-sided limit
-
-Continuity gives limit _existence_ — and with the limit equal to the
-value. A right-continuous function converges to $`g(t)` from the right
-at every time, so in particular it has a right limit there.
-
-*Theorem:* a right-continuous function has a right limit everywhere
-
-```lean
-theorem hasRightLimit_of_rightContinuous
-    (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
-    (t : ℝ≥0) : ∃ L, TendstoRight g t L :=
-  ⟨g t, (hrc t).tendsto⟩
-```
-
 # A positive right limit at the origin
 
 A regularity used by the deviation results: the informal $`f(0^+) > 0`
