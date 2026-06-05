@@ -465,6 +465,91 @@ theorem isNondecr.conv
   · exact hg _ _ hs
 ```
 
+# The non-decreasing closure
+
+A function need not be non-decreasing, but it has a canonical
+_non-decreasing closure_ $`f^{\uparrow}`: the least non-decreasing
+function lying above $`f`. Its value at $`t` is the supremum of $`f`
+over the whole initial segment up to $`t` — running the supremum over
+all earlier arguments forces monotonicity while keeping the function
+as low as possible. On the domain $`\mathbb{R}^{+}` the lower bound
+$`0 \le s` is automatic, so the segment is $`\{s : s \le t\}`, the
+order-ideal $`\mathrm{Iic}\,t`.
+
+*Definition:* $`f^{\uparrow}(t) = \sup_{0 \le s \le t} f(s)`
+
+```lean
+noncomputable def fUp
+    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+    ℝ≥0 → WithTop (WithBot ℝ) :=
+  fun t => ⨆ s ∈ Set.Iic t, f s
+```
+
+The closure dominates the original function: $`t` itself lies in its
+own initial segment, so $`f(t)` is one of the values entering the
+supremum, hence below it.
+
+*Theorem:* $`f \le f^{\uparrow}`
+
+```lean
+theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
+    (t : ℝ≥0) : f t ≤ fUp f t := by
+  exact le_iSup₂ (f := fun s _ => f s) t
+    (Set.mem_Iic.mpr le_rfl)
+```
+
+The closure is non-decreasing: a larger argument $`y \ge x` has a
+wider initial segment $`\mathrm{Iic}\,x \subseteq \mathrm{Iic}\,y`, so
+its supremum can only grow. Each value $`f(s)` from the smaller
+segment ($`s \le x \le y`) already appears among those of the larger,
+hence sits below the larger supremum.
+
+*Theorem:* $`f^{\uparrow}` is non-decreasing
+
+```lean
+theorem fUp_isNondecr
+    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+    isNondecr (fUp f) := by
+  intro x y hxy
+  unfold fUp
+  refine iSup₂_le fun s hs => ?_
+  exact le_iSup₂ (f := fun s _ => f s) s
+    (Set.mem_Iic.mpr ((Set.mem_Iic.mp hs).trans hxy))
+```
+
+The closure is the _least_ such function: any non-decreasing $`g`
+above $`f` already dominates it. For each $`s \le t` we have
+$`f(s) \le g(s) \le g(t)` — the first step because $`g \ge f`, the
+second because $`g` is non-decreasing — so $`g(t)` is an upper bound
+of the values defining $`f^{\uparrow}(t)`, whence
+$`f^{\uparrow}(t) \le g(t)`.
+
+*Theorem:* $`g \in \mathcal{F}^{\uparrow},\ g \ge f \implies g \ge f^{\uparrow}`
+
+```lean
+theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hg : isNondecr g) (hfg : ∀ t, f t ≤ g t)
+    (t : ℝ≥0) : fUp f t ≤ g t := by
+  unfold fUp
+  refine iSup₂_le fun s hs => ?_
+  exact (hfg s).trans (hg s t (Set.mem_Iic.mp hs))
+```
+
+Together these say $`f^{\uparrow}` is the least non-decreasing
+function above $`f`. When $`f` is itself non-negative, the closure
+stays non-negative — $`0 \le f(t) \le f^{\uparrow}(t)` — so a curve of
+$`\mathcal{F}^{+}` has its closure back in
+$`\mathcal{F}^{\uparrow}`.
+
+*Theorem:* $`f \in \mathcal{F}^{+} \implies f^{\uparrow} \in \mathcal{F}^{+}`
+
+```lean
+theorem fUp_isNonneg
+    {f : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isNonneg f) : isNonneg (fUp f) :=
+  fun t => (hf t).trans (le_fUp f t)
+```
+
 # F⁺ and F↑ are complete dioids
 
 By the stability lemmas, $`\mathcal{F}^{+}` and $`\mathcal{F}^{\uparrow}`
