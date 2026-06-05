@@ -31,6 +31,52 @@ open Topology Filter Set
 open scoped Classical NNReal ENNReal
 ```
 
+# One-sided convergence and limit existence
+
+The headline notions. _One-sided convergence_ is `Mathlib`'s `Tendsto`
+along the one-sided approach filters $`𝓝[<] t` (times just below $`t`)
+and $`𝓝[>] t` (just above) — we name them so the chapter speaks one
+vocabulary rather than spelling out the filter each time.
+
+*Definition:* $`g` converges to $`L` from the left
+
+```lean
+def TendstoLeft
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
+  Tendsto g (𝓝[<] t) (𝓝 L)
+```
+
+*Definition:* $`g` converges to $`L` from the right
+
+```lean
+def TendstoRight
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
+  Tendsto g (𝓝[>] t) (𝓝 L)
+```
+
+A one-sided limit _exists_ when the function converges to some value on
+that side. This is the primitive on which continuity (next chapter) is
+built — continuity will be the case where the limit equals $`g(t)`.
+
+*Definition:* $`g` has a left limit at $`t`
+
+```lean
+def HasLeftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  ∃ L : ℝ≥0∞, TendstoLeft g t L
+```
+
+*Definition:* $`g` has a right limit at $`t`
+
+```lean
+def HasRightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  ∃ L : ℝ≥0∞, TendstoRight g t L
+```
+
+The rest of the chapter develops these: an elementary
+$`\varepsilon`–$`\delta` characterization of one-sided convergence, the
+limit _value_ a convergent function approaches, and the
+$`\varepsilon`–$`\delta` reading of existence.
+
 # Convergence to a value: the epsilon-delta form
 
 The elementary form of one-sided convergence splits by cases on the
@@ -116,7 +162,8 @@ theorem finite_tendstoLeftED_iff
     (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
-      ↔ Tendsto g (𝓝[<] t) (𝓝 L) := by
+      ↔ TendstoLeft g t L := by
+  unfold TendstoLeft
   have hbasis : (𝓝[<] t).HasBasis (· < t) (Ioo · t) :=
     nhdsLT_basis_of_exists_lt ⟨0, ht⟩
   constructor
@@ -176,7 +223,8 @@ theorem infinite_tendstoLeftED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
     (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         (M : ℝ≥0∞) < g s)
-      ↔ Tendsto g (𝓝[<] t) (𝓝 ⊤) := by
+      ↔ TendstoLeft g t ⊤ := by
+  unfold TendstoLeft
   have hbasis : (𝓝[<] t).HasBasis (· < t) (Ioo · t) :=
     nhdsLT_basis_of_exists_lt ⟨0, ht⟩
   rw [ENNReal.tendsto_nhds_top_iff_nnreal]
@@ -201,7 +249,7 @@ from the left is exactly `Tendsto` to $`L`.
 theorem tendstoLeftED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
     (L : ℝ≥0∞) :
-    TendstoLeftED g t L ↔ Tendsto g (𝓝[<] t) (𝓝 L) := by
+    TendstoLeftED g t L ↔ TendstoLeft g t L := by
   unfold TendstoLeftED
   by_cases hfin : L = ⊤
   · subst hfin
@@ -255,7 +303,8 @@ theorem finite_tendstoRightED_iff
     (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
-      ↔ Tendsto g (𝓝[>] t) (𝓝 L) := by
+      ↔ TendstoRight g t L := by
+  unfold TendstoRight
   have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
     nhdsGT_basis t
   constructor
@@ -314,7 +363,8 @@ theorem infinite_tendstoRightED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         (M : ℝ≥0∞) < g s)
-      ↔ Tendsto g (𝓝[>] t) (𝓝 ⊤) := by
+      ↔ TendstoRight g t ⊤ := by
+  unfold TendstoRight
   have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
     nhdsGT_basis t
   rw [ENNReal.tendsto_nhds_top_iff_nnreal]
@@ -337,7 +387,7 @@ Combining, on the right.
 ```lean
 theorem tendstoRightED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) :
-    TendstoRightED g t L ↔ Tendsto g (𝓝[>] t) (𝓝 L) := by
+    TendstoRightED g t L ↔ TendstoRight g t L := by
   unfold TendstoRightED
   by_cases hfin : L = ⊤
   · subst hfin
@@ -397,42 +447,25 @@ converges to.
 ```lean
 theorem rightLimit_eq_of_tendsto
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞)
-    (h : Tendsto g (𝓝[>] t) (𝓝 L)) :
+    (h : TendstoRight g t L) :
     rightLimit g t = L :=
   h.limUnder_eq
 ```
 
 # Existence of one-sided limits
 
-The `limUnder` value is only meaningful when a limit actually exists, so
-we name that existence as a predicate. A function _has a left limit_ at
-$`t` when it converges to some value along the left-approach filter, and
-_has a right limit_ analogously.
-
-*Definition:* $`g` has a left limit at $`t`
-
-```lean
-def HasLeftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
-  ∃ L : ℝ≥0∞, Tendsto g (𝓝[<] t) (𝓝 L)
-```
-
-*Definition:* $`g` has a right limit at $`t`
-
-```lean
-def HasRightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
-  ∃ L : ℝ≥0∞, Tendsto g (𝓝[>] t) (𝓝 L)
-```
-
-When the limit exists, the named value `rightLimit g t` _is_ the value
-it converges to — the existential witness is pinned by uniqueness, the
-right filter being always nontrivial.
+The `limUnder` value is only meaningful when a limit actually exists —
+the existence predicates `HasLeftLimit` / `HasRightLimit` from the start
+of the chapter. When a limit exists, the named value `rightLimit g t`
+_is_ the value it converges to: the existential witness is pinned by
+uniqueness, the right filter being always nontrivial.
 
 *Theorem:* $`g` tends to $`g(t^+)` from the right when the limit exists
 
 ```lean
 theorem tendsto_rightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
     (h : HasRightLimit g t) :
-    Tendsto g (𝓝[>] t) (𝓝 (rightLimit g t)) := by
+    TendstoRight g t (rightLimit g t) := by
   obtain ⟨L, hL⟩ := h
   rwa [rightLimit_eq_of_tendsto g t L hL]
 ```
@@ -445,7 +478,7 @@ $`t > 0`.
 ```lean
 theorem tendsto_leftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
     (ht : 0 < t) (h : HasLeftLimit g t) :
-    Tendsto g (𝓝[<] t) (𝓝 (leftLimit g t)) := by
+    TendstoLeft g t (leftLimit g t) := by
   obtain ⟨L, hL⟩ := h
   haveI : (𝓝[<] t).NeBot :=
     nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
