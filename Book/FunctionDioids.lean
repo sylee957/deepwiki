@@ -361,6 +361,42 @@ theorem isNondecr.min
   fun x y hxy => min_le_min (hf x y hxy) (hg x y hxy)
 ```
 
+## Stability under the pointwise sum
+
+The classes are also closed under the ordinary _pointwise numeric
+sum_ $`(f + g)(t) = f(t) + g(t)`. This is the top-absorbing addition
+of $`\overline{\mathbb{R}}`, _not_ the dioid sum $`\oplus` (which is
+the minimum); it plays no part in the sub-dioid builder below, but
+$`\mathcal{F}^{\uparrow}` is stable under it all the same. Both atoms
+pass through: a sum of non-negative values is non-negative, and the
+sum of two non-decreasing functions is non-decreasing.
+
+*Theorem:* non-negativity is stable under the pointwise sum
+
+```lean
+theorem isNonneg.add
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isNonneg f) (hg : isNonneg g) :
+    isNonneg (fun t => f t + g t) := by
+  intro t
+  calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
+    _ ≤ f t + g t := by gcongr; exacts [hf t, hg t]
+```
+
+*Theorem:* non-decrease is stable under the pointwise sum
+
+```lean
+theorem isNondecr.add
+    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : isNondecr f) (hg : isNondecr g) :
+    isNondecr (fun t => f t + g t) := by
+  intro x y hxy
+  show f x + g x ≤ f y + g y
+  gcongr
+  · exact hf x y hxy
+  · exact hg x y hxy
+```
+
 ## Stability under the convolution
 
 Each atom is likewise stable under the (min,plus) convolution

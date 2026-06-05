@@ -211,6 +211,49 @@ theorem closure_subadditive {T : Type} [CompleteDioid T]
   rwa [closure_idem sigma] at hterm
 ```
 
+# A sub-complete-dioid is closed under the closure
+
+The closure is assembled entirely from sub-complete-dioid operations:
+the zeroth power is the unit $`e`, each next power convolves by `σ`
+(the product), and the closure is the supremum of the powers. So any
+subset cut out as a sub-complete-dioid — closed under the unit, the
+product, and arbitrary suprema — is closed under the Kleene star too.
+We prove this generically; reading it on $`\mathcal{F}^{\uparrow}`
+gives that the sub-additive closure of a non-negative, non-decreasing
+curve is again non-negative and non-decreasing.
+
+*Theorem:* a sub-complete-dioid is closed under the closure
+
+```lean
+theorem Algebra.IsSubCompleteDioid.closure {T : Type}
+    [CompleteDioid T] {P : (ℝ≥0 → T) → Prop}
+    (h : IsSubCompleteDioid P) {sigma : ℝ≥0 → T}
+    (hs : P sigma) : P (subadditiveClosure sigma) := by
+  have hpow : ∀ n, P (convPow sigma n) := by
+    intro n
+    induction n with
+    | zero => exact h.one
+    | succ n ih => exact h.mul ih hs
+  exact h.iSup (fun n => convPow sigma n) hpow
+```
+
+Reading this on $`\mathcal{F}^{\uparrow}` (the sub-complete-dioid
+carved by non-negativity and non-decrease) gives the closure entry of
+the table: $`f \in \mathcal{F}^{\uparrow} \implies f^{\star} \in
+\mathcal{F}^{\uparrow}`.
+
+*Theorem:* $`\mathcal{F}^{\uparrow}` is closed under the closure
+
+```lean
+theorem closure_mem_FNondecr (a : FminBar)
+    (hn : isNonneg (fun t => (a t).toVal))
+    (hm : isNondecr (fun t => (a t).toVal)) :
+    isNonneg (fun t => (subadditiveClosure a t).toVal)
+      ∧ isNondecr
+          (fun t => (subadditiveClosure a t).toVal) :=
+  isSubCompleteDioid_FNondecr.closure ⟨hn, hm⟩
+```
+
 # A closed curve is its own closure
 
 The converse direction is the one the named curves need: a curve that is

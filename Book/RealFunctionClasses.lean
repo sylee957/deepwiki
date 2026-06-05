@@ -1193,6 +1193,27 @@ theorem deconv_delay (f : ℝ≥0 → ℝ≥0∞)
     rw [show delay d d = 0 by simp [delay], tsub_zero]
 ```
 
+The deconvolution carries the non-decrease of its left argument across,
+whatever the right argument: shifting both numerator terms forward by
+the same amount keeps each $`f(x + s)` below $`f(y + s)`, and the
+truncated difference and the supremum are both monotone. This is the
+deconvolution entry of the $`\mathcal{F}^{\uparrow}` table — the
+non-negativity entry is automatic, since values live in
+$`\overline{\mathbb{R}}_{\ge 0}`, where every element is non-negative.
+
+*Theorem:* $`g` non-decreasing $`\implies g \oslash h` non-decreasing
+
+```lean
+theorem minDeconvE_mono (g h : ℝ≥0 → ℝ≥0∞)
+    (hg : Monotone g) : Monotone (minDeconvE g h) := by
+  intro x y hxy
+  unfold minDeconvE
+  refine iSup_le (fun s => ?_)
+  refine le_iSup_of_le s ?_
+  have hxs : x + s ≤ y + s := by gcongr
+  exact tsub_le_tsub_right (hg hxs) (h s)
+```
+
 # The closure of a deconvolution by a pure delay
 
 For a _sub-additive_ non-decreasing `f`, the sub-additive closure of the
