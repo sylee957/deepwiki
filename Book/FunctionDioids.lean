@@ -272,7 +272,7 @@ theorem conv_coe_max
 *Theorem:* $`\uparrow\!f \mathbin{\overline{\ast}} \uparrow\!g = \uparrow\!(f \mathbin{\overline{\ast}} g)`
 
 ```lean
-theorem conv_coeMax
+theorem conv_coe_max'
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
     conv (↑f : FmaxBar) (↑g : FmaxBar)
       = (↑(maxConvBar f g) : FmaxBar) := by
@@ -302,14 +302,14 @@ it by conjunction.
 *Definition:* $`f` is non-negative: $`\forall t,\ 0 \le f(t)`
 
 ```lean
-def isNonneg (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+def IsNonneg (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
   ∀ t, 0 ≤ f t
 ```
 
 *Definition:* $`f` is null at the origin: $`f(0) = 0`
 
 ```lean
-def isNullAtOrigin (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+def IsNullAtOrigin (f : ℝ≥0 → WithTop (WithBot ℝ)) :
     Prop :=
   f 0 = 0
 ```
@@ -317,14 +317,14 @@ def isNullAtOrigin (f : ℝ≥0 → WithTop (WithBot ℝ)) :
 *Definition:* $`f` is non-decreasing: $`\forall x \le y,\ f(x) \le f(y)`
 
 ```lean
-def isNondecr (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+def IsNondecr (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
   ∀ x y, x ≤ y → f x ≤ f y
 ```
 
 The textbook classes are conjunctions of these atoms:
-$`\mathcal{F}^{+}` is `isNonneg`; $`\mathcal{F}_0` is
-`isNonneg ∧ isNullAtOrigin`; $`\mathcal{F}^{\uparrow}` is
-`isNonneg ∧ isNondecr`; and $`\mathcal{F}_0^{\uparrow}` is all three.
+$`\mathcal{F}^{+}` is `IsNonneg`; $`\mathcal{F}_0` is
+`IsNonneg ∧ IsNullAtOrigin`; $`\mathcal{F}^{\uparrow}` is
+`IsNonneg ∧ IsNondecr`; and $`\mathcal{F}_0^{\uparrow}` is all three.
 
 ## Stability under the minimum
 
@@ -334,19 +334,19 @@ being a conjunction of atoms, then inherits stability by conjunction.
 *Theorem:* non-negativity is stable under $`\min`
 
 ```lean
-theorem isNonneg.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNonneg f) (hg : isNonneg g) :
-    isNonneg (fun t => min (f t) (g t)) :=
+theorem IsNonneg.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : IsNonneg f) (hg : IsNonneg g) :
+    IsNonneg (fun t => min (f t) (g t)) :=
   fun t => le_min (hf t) (hg t)
 ```
 
 *Theorem:* nullity at the origin is stable under $`\min`
 
 ```lean
-theorem isNullAtOrigin.min
+theorem IsNullAtOrigin.min
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNullAtOrigin f) (hg : isNullAtOrigin g) :
-    isNullAtOrigin (fun t => min (f t) (g t)) := by
+    (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
+    IsNullAtOrigin (fun t => min (f t) (g t)) := by
   show Min.min (f 0) (g 0) = 0
   rw [hf, hg, min_self]
 ```
@@ -354,10 +354,10 @@ theorem isNullAtOrigin.min
 *Theorem:* non-decrease is stable under $`\min`
 
 ```lean
-theorem isNondecr.min
+theorem IsNondecr.min
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNondecr f) (hg : isNondecr g) :
-    isNondecr (fun t => min (f t) (g t)) :=
+    (hf : IsNondecr f) (hg : IsNondecr g) :
+    IsNondecr (fun t => min (f t) (g t)) :=
   fun x y hxy => min_le_min (hf x y hxy) (hg x y hxy)
 ```
 
@@ -371,10 +371,10 @@ the origin holds because the only split of $`0` is $`0 + 0`.
 *Theorem:* non-negativity is stable under the convolution
 
 ```lean
-theorem isNonneg.conv
+theorem IsNonneg.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNonneg f) (hg : isNonneg g) :
-    isNonneg (minConvBar f g) := by
+    (hf : IsNonneg f) (hg : IsNonneg g) :
+    IsNonneg (minConvBar f g) := by
   intro t
   rw [minConvBar]
   refine le_iInf ?_
@@ -386,19 +386,19 @@ theorem isNonneg.conv
 *Theorem:* nullity at the origin is stable under the convolution
 
 ```lean
-theorem isNullAtOrigin.conv
+theorem IsNullAtOrigin.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNullAtOrigin f) (hg : isNullAtOrigin g) :
-    isNullAtOrigin (minConvBar f g) := by
+    (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
+    IsNullAtOrigin (minConvBar f g) := by
   show minConvBar f g 0 = 0
   rw [minConvBar]
   apply le_antisymm
   · exact iInf_le_of_le ⟨(0, 0), by simp⟩ (by
-      simp [isNullAtOrigin] at hf hg; simp [hf, hg])
+      simp [IsNullAtOrigin] at hf hg; simp [hf, hg])
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, (hus : u + s = 0)⟩
     obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
-    simp [isNullAtOrigin] at hf hg; simp [hf, hg]
+    simp [IsNullAtOrigin] at hf hg; simp [hf, hg]
 ```
 
 Non-decrease is the inf-convolution of non-decreasing functions: a
@@ -408,10 +408,10 @@ by lowering the first coordinate to $`\min(u, x)`.
 *Theorem:* non-decrease is stable under the convolution
 
 ```lean
-theorem isNondecr.conv
+theorem IsNondecr.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNondecr f) (hg : isNondecr g) :
-    isNondecr (minConvBar f g) := by
+    (hf : IsNondecr f) (hg : IsNondecr g) :
+    IsNondecr (minConvBar f g) := by
   intro x y hxy
   rw [minConvBar, minConvBar]
   refine le_iInf ?_
@@ -455,12 +455,12 @@ composite.
 
 ```lean
 abbrev FPlus :=
-  {f : FminBar // isNonneg (fun t => (f t).toVal)}
+  {f : FminBar // IsNonneg (fun t => (f t).toVal)}
 
 abbrev FNondecr :=
   {f : FminBar //
-    isNonneg (fun t => (f t).toVal)
-      ∧ isNondecr (fun t => (f t).toVal)}
+    IsNonneg (fun t => (f t).toVal)
+      ∧ IsNondecr (fun t => (f t).toVal)}
 ```
 
 ```lean
@@ -486,12 +486,12 @@ conditions.
 ```lean
 theorem isSubCompleteDioid_FPlus :
     IsSubCompleteDioid
-      (fun f : FminBar => isNonneg (fun t => (f t).toVal))
+      (fun f : FminBar => IsNonneg (fun t => (f t).toVal))
       where
   add ha hb := fun t => le_min (ha t) (hb t)
   mul {a b} ha hb := fun t => by
     show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
-    rw [mul_toVal]; exact (isNonneg.conv ha hb) t
+    rw [mul_toVal]; exact (IsNonneg.conv ha hb) t
   eps := fun _ => le_top
   one := fun t => by
     show (0 : WithTop (WithBot ℝ))
@@ -508,16 +508,16 @@ theorem isSubCompleteDioid_FPlus :
 theorem isSubCompleteDioid_FNondecr :
     IsSubCompleteDioid
       (fun f : FminBar =>
-        isNonneg (fun t => (f t).toVal)
-          ∧ isNondecr (fun t => (f t).toVal))
+        IsNonneg (fun t => (f t).toVal)
+          ∧ IsNondecr (fun t => (f t).toVal))
       where
   add ha hb :=
     ⟨fun t => le_min (ha.1 t) (hb.1 t),
       fun x y hxy =>
         min_le_min (ha.2 x y hxy) (hb.2 x y hxy)⟩
   mul {a b} ha hb := by
-    have hn := isNonneg.conv ha.1 hb.1
-    have hm := isNondecr.conv ha.2 hb.2
+    have hn := IsNonneg.conv ha.1 hb.1
+    have hm := IsNondecr.conv ha.2 hb.2
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
       rw [mul_toVal]; exact hn t
