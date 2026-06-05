@@ -313,6 +313,54 @@ theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
       exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
 ```
 
+# Continuity as convergence to the value
+
+The whole point of one-sided continuity, in the convergence vocabulary
+of the Limits chapter: $`g` is continuous from a side at $`t` exactly
+when it converges _to its own value_ $`g(t)` from that side. Both
+statements are definitional — `IsLeftContinuous` at $`t` is literally
+`TendstoLeft g t (g t)`, and likewise on the right — so the equivalences
+are `rfl`. We record both, symmetrically.
+
+*Theorem:* left-continuity at $`t` is convergence to $`g(t)` from the left
+
+```lean
+theorem tendstoLeft_value_iff_leftContinuousAt
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    TendstoLeft g t (g t)
+      ↔ ContinuousWithinAt g (Iio t) t := Iff.rfl
+```
+
+*Theorem:* right-continuity at $`t` is convergence to $`g(t)` from the right
+
+```lean
+theorem tendstoRight_value_iff_rightContinuousAt
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    TendstoRight g t (g t)
+      ↔ ContinuousWithinAt g (Ioi t) t := Iff.rfl
+```
+
+Globally: a left-continuous function converges to its value from the
+left at every time, and a right-continuous one from the right.
+
+*Theorem:* $`g` left-continuous $`\Rightarrow` it converges to $`g(t)` from the left
+
+```lean
+theorem tendstoLeft_value_of_leftContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (hlc : IsLeftContinuous g)
+    (t : ℝ≥0) : TendstoLeft g t (g t) :=
+  (hlc t).tendsto
+```
+
+*Theorem:* $`g` right-continuous $`\Rightarrow` it converges to $`g(t)` from the right
+
+```lean
+theorem tendstoRight_value_of_rightContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
+    (t : ℝ≥0) : TendstoRight g t (g t) :=
+  (hrc t).tendsto
+```
+
 # A positive right limit at the origin
 
 A regularity used by the deviation results: the informal $`f(0^+) > 0`
