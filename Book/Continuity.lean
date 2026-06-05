@@ -207,18 +207,49 @@ def IsRightContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
         (M : ℝ≥0∞) < g s)
 ```
 
-# Left-continuity: the two forms agree
+The same shape, with the target value left _free_ as $`L` rather than
+fixed at $`g(t)`, expresses $`\varepsilon`–$`\delta` _convergence to_
+$`L` from one side. This is the building block for both one-sided
+continuity (take $`L = g(t)`) and the existence of one-sided limits
+(quantify over $`L`).
 
-We prove the $`\varepsilon`–$`\delta` definition equals the topological
-one, one case at a time on the left-window basis
-$`\{(\delta, t) \mid \delta < t\}` of `𝓝[<] t`. Both directions hold
-for an arbitrary `g`. The right side, proved in the same shape on the
-right-window basis of `𝓝[>] t`, follows in the next section.
+*Definition:* $`g` converges to $`L` from the left (ε–δ)
 
-The auxiliary form drops the finiteness conjunct, expressing only the
-$`\varepsilon`-closeness of the _real_ reading.
+```lean
+def TendstoLeftED
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
+  (L ≠ ⊤ →
+    ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+      g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε) ∧
+  (L = ⊤ →
+    ∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+      (M : ℝ≥0∞) < g s)
+```
 
-*Theorem:* the bare $`\varepsilon`-closeness clause is left-continuity of the real reading
+*Definition:* $`g` converges to $`L` from the right (ε–δ)
+
+```lean
+def TendstoRightED
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
+  (L ≠ ⊤ →
+    ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+      g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε) ∧
+  (L = ⊤ →
+    ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+      (M : ℝ≥0∞) < g s)
+```
+
+# Convergence to a value: the epsilon-delta form
+
+Before specialising to continuity, we relate the $`\varepsilon`–$`\delta`
+convergence-to-$`L` clauses to `Mathlib`'s `Tendsto` along the one-sided
+filters. The proofs are the same case analysis used for continuity, but
+with the free target $`L`; the continuity equivalences below then drop
+out as the case $`L = g(t)`. We first record the bare closeness
+reductions (no finiteness conjunct) on each side, then the finite and
+infinite cases, then combine.
+
+*Theorem:* the bare $`\varepsilon`-closeness clause is left-convergence of the real reading
 
 ```lean
 theorem real_close_iff
@@ -243,57 +274,55 @@ theorem real_close_iff
     rwa [Metric.mem_ball, Real.dist_eq] at this
 ```
 
-In the _finite_ case, the full clause — finiteness together with
-closeness — is exactly left-continuity at `t`. The forward direction
-rebuilds `g` as $`\uparrow\!(\cdot)` of its real reading on a window
-where the values are finite; the backward direction reads off
-finiteness from convergence to a finite value (the values eventually
-avoid $`+\infty`) and closeness from continuity of `toReal`.
+The finite-target left case: convergence to a finite $`L` in the
+$`\varepsilon`–$`\delta` form is `Tendsto` to $`L` from the left.
 
-*Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is left-continuity
+*Theorem:* finite-target left convergence agrees with `Tendsto`
 
 ```lean
-theorem finite_ed_iff
+theorem finite_tendstoLeftED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
-    (hfin : g t ≠ ⊤) :
+    (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ ContinuousWithinAt g (Iio t) t := by
+        g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
+      ↔ Tendsto g (𝓝[<] t) (𝓝 L) := by
   have hbasis : (𝓝[<] t).HasBasis (· < t) (Ioo · t) :=
     nhdsLT_basis_of_exists_lt ⟨0, ht⟩
   constructor
   · intro h
     have hreal :
-        ContinuousWithinAt (realOf g) (Iio t) t := by
-      rw [← real_close_iff g t ht]
+        Tendsto (realOf g) (𝓝[<] t) (𝓝 L.toReal) := by
+      rw [hbasis.tendsto_iff Metric.nhds_basis_ball]
       intro ε hε
       obtain ⟨δ, hδt, hδ⟩ := h ε hε
-      exact ⟨δ, hδt, fun s hs => (hδ s hs).2⟩
+      exact ⟨δ, hδt, fun s hs => by
+        rw [Metric.mem_ball, Real.dist_eq]
+        exact (hδ s hs).2⟩
     have hfin_ev : ∀ᶠ s in 𝓝[<] t, g s ≠ ⊤ := by
       rw [hbasis.eventually_iff]
       obtain ⟨δ, hδt, hδ⟩ := h 1 one_pos
       exact ⟨δ, hδt, fun s hs => (hδ s hs).1⟩
-    have hcoe : ContinuousAt ENNReal.ofReal (realOf g t) :=
+    have hcoe :
+        ContinuousAt ENNReal.ofReal L.toReal :=
       ENNReal.continuous_ofReal.continuousAt
-    have hgcont := hcoe.comp_continuousWithinAt hreal
-    refine hgcont.congr_of_eventuallyEq ?_ ?_
-    · filter_upwards [hfin_ev] with s hs
-      show g s = ENNReal.ofReal (realOf g s)
-      rw [realOf, ENNReal.ofReal_toReal hs]
-    · show g t = ENNReal.ofReal (realOf g t)
-      rw [realOf, ENNReal.ofReal_toReal hfin]
+    have := hcoe.tendsto.comp hreal
+    rw [ENNReal.ofReal_toReal hLfin] at this
+    refine this.congr' ?_
+    filter_upwards [hfin_ev] with s hs
+    show ENNReal.ofReal (realOf g s) = g s
+    rw [realOf, ENNReal.ofReal_toReal hs]
   · intro h
     have hfin_ev : ∀ᶠ s in 𝓝[<] t, g s ≠ ⊤ := by
-      have hmem : Iio (⊤ : ℝ≥0∞) ∈ 𝓝 (g t) :=
-        Iio_mem_nhds hfin.lt_top
+      have hmem : Iio (⊤ : ℝ≥0∞) ∈ 𝓝 L :=
+        Iio_mem_nhds hLfin.lt_top
       filter_upwards [h hmem] with s hs
         using (Set.mem_Iio.mp hs).ne
     have hreal :
-        ContinuousWithinAt (realOf g) (Iio t) t := by
-      have hto : ContinuousAt ENNReal.toReal (g t) :=
-        ENNReal.continuousAt_toReal hfin
-      exact hto.comp_continuousWithinAt h
-    rw [← real_close_iff g t ht] at hreal
+        Tendsto (realOf g) (𝓝[<] t) (𝓝 L.toReal) := by
+      have hto : ContinuousAt ENNReal.toReal L :=
+        ENNReal.continuousAt_toReal hLfin
+      exact hto.tendsto.comp h
+    rw [hbasis.tendsto_iff Metric.nhds_basis_ball] at hreal
     intro ε hε
     obtain ⟨δ₁, hδ₁t, hδ₁⟩ := hreal ε hε
     rw [hbasis.eventually_iff] at hfin_ev
@@ -306,24 +335,20 @@ theorem finite_ed_iff
     exact ⟨hδ₂ hs2, hδ₁ s hs1⟩
 ```
 
-In the _infinite_ case, left-continuity is divergence to $`+\infty`:
-`Mathlib`'s characterization of the neighborhoods of $`\top` says the
-values tend to $`\top` exactly when every threshold is eventually
-exceeded, which on the left-window basis is the divergence clause.
+The infinite-target left case: divergence to $`+\infty` is `Tendsto` to
+$`\top`.
 
-*Theorem:* the infinite divergence clause is left-continuity at $`t`
+*Theorem:* infinite-target left convergence agrees with `Tendsto`
 
 ```lean
-theorem infinite_ed_iff
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
-    (hinf : g t = ⊤) :
+theorem infinite_tendstoLeftED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
     (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         (M : ℝ≥0∞) < g s)
-      ↔ ContinuousWithinAt g (Iio t) t := by
+      ↔ Tendsto g (𝓝[<] t) (𝓝 ⊤) := by
   have hbasis : (𝓝[<] t).HasBasis (· < t) (Ioo · t) :=
     nhdsLT_basis_of_exists_lt ⟨0, ht⟩
-  unfold ContinuousWithinAt
-  rw [hinf, ENNReal.tendsto_nhds_top_iff_nnreal]
+  rw [ENNReal.tendsto_nhds_top_iff_nnreal]
   constructor
   · intro h M
     obtain ⟨δ, hδt, hδ⟩ := h M
@@ -334,6 +359,201 @@ theorem infinite_ed_iff
     rw [hbasis.eventually_iff] at hM
     obtain ⟨δ, hδt, hδ⟩ := hM
     exact ⟨δ, hδt, fun s hs => hδ hs⟩
+```
+
+Combining the two cases, $`\varepsilon`–$`\delta` convergence to $`L`
+from the left is exactly `Tendsto` to $`L`.
+
+*Theorem:* $`g` converges to $`L` from the left iff it `Tendsto` to $`L`
+
+```lean
+theorem tendstoLeftED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
+    (L : ℝ≥0∞) :
+    TendstoLeftED g t L ↔ Tendsto g (𝓝[<] t) (𝓝 L) := by
+  unfold TendstoLeftED
+  by_cases hfin : L = ⊤
+  · subst hfin
+    rw [← infinite_tendstoLeftED_iff g t ht]
+    constructor
+    · rintro ⟨-, h⟩; exact h rfl
+    · intro h
+      exact ⟨fun hne => absurd rfl hne, fun _ => h⟩
+  · rw [← finite_tendstoLeftED_iff g t ht L hfin]
+    constructor
+    · rintro ⟨h, -⟩; exact h hfin
+    · intro h
+      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+```
+
+The right side, on the right-window basis of $`𝓝[>] t` (nontrivial at
+every time, so no positivity guard). First the bare closeness reduction.
+
+*Theorem:* the bare $`\varepsilon`-closeness clause is right-convergence of the real reading
+
+```lean
+theorem real_close_iff_right
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        |realOf g s - realOf g t| < ε)
+      ↔ ContinuousWithinAt (realOf g) (Ioi t) t := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  unfold ContinuousWithinAt
+  rw [hbasis.tendsto_iff Metric.nhds_basis_ball]
+  constructor
+  · intro h ε hε
+    obtain ⟨δ, hδt, hδ⟩ := h ε hε
+    refine ⟨δ, hδt, fun s hs => ?_⟩
+    rw [Metric.mem_ball, Real.dist_eq]
+    exact hδ s hs
+  · intro h ε hε
+    obtain ⟨δ, hδt, hδ⟩ := h ε hε
+    refine ⟨δ, hδt, fun s hs => ?_⟩
+    have := hδ s hs
+    rwa [Metric.mem_ball, Real.dist_eq] at this
+```
+
+The finite-target right case.
+
+*Theorem:* finite-target right convergence agrees with `Tendsto`
+
+```lean
+theorem finite_tendstoRightED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
+    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
+      ↔ Tendsto g (𝓝[>] t) (𝓝 L) := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  constructor
+  · intro h
+    have hreal :
+        Tendsto (realOf g) (𝓝[>] t) (𝓝 L.toReal) := by
+      rw [hbasis.tendsto_iff Metric.nhds_basis_ball]
+      intro ε hε
+      obtain ⟨δ, hδt, hδ⟩ := h ε hε
+      exact ⟨δ, hδt, fun s hs => by
+        rw [Metric.mem_ball, Real.dist_eq]
+        exact (hδ s hs).2⟩
+    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
+      rw [hbasis.eventually_iff]
+      obtain ⟨δ, hδt, hδ⟩ := h 1 one_pos
+      exact ⟨δ, hδt, fun s hs => (hδ s hs).1⟩
+    have hcoe :
+        ContinuousAt ENNReal.ofReal L.toReal :=
+      ENNReal.continuous_ofReal.continuousAt
+    have := hcoe.tendsto.comp hreal
+    rw [ENNReal.ofReal_toReal hLfin] at this
+    refine this.congr' ?_
+    filter_upwards [hfin_ev] with s hs
+    show ENNReal.ofReal (realOf g s) = g s
+    rw [realOf, ENNReal.ofReal_toReal hs]
+  · intro h
+    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
+      have hmem : Iio (⊤ : ℝ≥0∞) ∈ 𝓝 L :=
+        Iio_mem_nhds hLfin.lt_top
+      filter_upwards [h hmem] with s hs
+        using (Set.mem_Iio.mp hs).ne
+    have hreal :
+        Tendsto (realOf g) (𝓝[>] t) (𝓝 L.toReal) := by
+      have hto : ContinuousAt ENNReal.toReal L :=
+        ENNReal.continuousAt_toReal hLfin
+      exact hto.tendsto.comp h
+    rw [hbasis.tendsto_iff Metric.nhds_basis_ball] at hreal
+    intro ε hε
+    obtain ⟨δ₁, hδ₁t, hδ₁⟩ := hreal ε hε
+    rw [hbasis.eventually_iff] at hfin_ev
+    obtain ⟨δ₂, hδ₂t, hδ₂⟩ := hfin_ev
+    refine ⟨min δ₁ δ₂, lt_min hδ₁t hδ₂t, fun s hs => ?_⟩
+    have hs1 : s ∈ Ioo t δ₁ :=
+      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_left _ _)⟩
+    have hs2 : s ∈ Ioo t δ₂ :=
+      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_right _ _)⟩
+    exact ⟨hδ₂ hs2, hδ₁ s hs1⟩
+```
+
+The infinite-target right case.
+
+*Theorem:* infinite-target right convergence agrees with `Tendsto`
+
+```lean
+theorem infinite_tendstoRightED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+        (M : ℝ≥0∞) < g s)
+      ↔ Tendsto g (𝓝[>] t) (𝓝 ⊤) := by
+  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
+    nhdsGT_basis t
+  rw [ENNReal.tendsto_nhds_top_iff_nnreal]
+  constructor
+  · intro h M
+    obtain ⟨δ, hδt, hδ⟩ := h M
+    rw [hbasis.eventually_iff]
+    exact ⟨δ, hδt, fun s hs => hδ s hs⟩
+  · intro h M
+    have hM := h M
+    rw [hbasis.eventually_iff] at hM
+    obtain ⟨δ, hδt, hδ⟩ := hM
+    exact ⟨δ, hδt, fun s hs => hδ hs⟩
+```
+
+Combining, on the right.
+
+*Theorem:* $`g` converges to $`L` from the right iff it `Tendsto` to $`L`
+
+```lean
+theorem tendstoRightED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) :
+    TendstoRightED g t L ↔ Tendsto g (𝓝[>] t) (𝓝 L) := by
+  unfold TendstoRightED
+  by_cases hfin : L = ⊤
+  · subst hfin
+    rw [← infinite_tendstoRightED_iff g t]
+    constructor
+    · rintro ⟨-, h⟩; exact h rfl
+    · intro h
+      exact ⟨fun hne => absurd rfl hne, fun _ => h⟩
+  · rw [← finite_tendstoRightED_iff g t L hfin]
+    constructor
+    · rintro ⟨h, -⟩; exact h hfin
+    · intro h
+      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+```
+
+# Left-continuity: the two forms agree
+
+The $`\varepsilon`–$`\delta` definition of left-continuity equals the
+topological one. Both cases are now corollaries of the convergence
+equivalences above, specialised to the target $`L = g(t)`: there the
+clauses of `IsLeftContinuousED` become $`\varepsilon`–$`\delta`
+convergence to $`g(t)`, which is `ContinuousWithinAt g (Iio t) t` by
+definition.
+
+*Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is left-continuity
+
+```lean
+theorem finite_ed_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
+    (hfin : g t ≠ ⊤) :
+    (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
+      ↔ ContinuousWithinAt g (Iio t) t :=
+  finite_tendstoLeftED_iff g t ht (g t) hfin
+```
+
+*Theorem:* the infinite divergence clause is left-continuity at $`t`
+
+```lean
+theorem infinite_ed_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
+    (hinf : g t = ⊤) :
+    (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+        (M : ℝ≥0∞) < g s)
+      ↔ ContinuousWithinAt g (Iio t) t := by
+  have := infinite_tendstoLeftED_iff g t ht
+  rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
 ```
 
 Combining the two cases, the $`\varepsilon`–$`\delta` definition and
@@ -371,39 +591,9 @@ where
 
 # Right-continuity: the two forms agree
 
-The right side mirrors all of this on the right-window basis
-$`\{(t, \delta) \mid t < \delta\}` of `𝓝[>] t`, supplied directly (no
-$`\exists\, x > t` witness is needed — the non-negative reals have no
-greatest element). First the bare closeness clause.
-
-*Theorem:* the bare $`\varepsilon`-closeness clause is right-continuity of the real reading
-
-```lean
-theorem real_close_iff_right
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        |realOf g s - realOf g t| < ε)
-      ↔ ContinuousWithinAt (realOf g) (Ioi t) t := by
-  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
-    nhdsGT_basis t
-  unfold ContinuousWithinAt
-  rw [hbasis.tendsto_iff Metric.nhds_basis_ball]
-  constructor
-  · intro h ε hε
-    obtain ⟨δ, hδt, hδ⟩ := h ε hε
-    refine ⟨δ, hδt, fun s hs => ?_⟩
-    rw [Metric.mem_ball, Real.dist_eq]
-    exact hδ s hs
-  · intro h ε hε
-    obtain ⟨δ, hδt, hδ⟩ := h ε hε
-    refine ⟨δ, hδt, fun s hs => ?_⟩
-    have := hδ s hs
-    rwa [Metric.mem_ball, Real.dist_eq] at this
-```
-
-The finite case, mirrored. The window-intersection step takes the
-$`\min` of the two thresholds (the right side shrinks the window from
-above, where the left side took the $`\max`).
+The right side is the same specialisation to $`L = g(t)`, on the right
+window. No positivity guard is needed, the right filter being nontrivial
+at every time.
 
 *Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is right-continuity
 
@@ -412,55 +602,9 @@ theorem finite_ed_iff_right
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hfin : g t ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ ContinuousWithinAt g (Ioi t) t := by
-  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
-    nhdsGT_basis t
-  constructor
-  · intro h
-    have hreal :
-        ContinuousWithinAt (realOf g) (Ioi t) t := by
-      rw [← real_close_iff_right g t]
-      intro ε hε
-      obtain ⟨δ, hδt, hδ⟩ := h ε hε
-      exact ⟨δ, hδt, fun s hs => (hδ s hs).2⟩
-    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
-      rw [hbasis.eventually_iff]
-      obtain ⟨δ, hδt, hδ⟩ := h 1 one_pos
-      exact ⟨δ, hδt, fun s hs => (hδ s hs).1⟩
-    have hcoe : ContinuousAt ENNReal.ofReal (realOf g t) :=
-      ENNReal.continuous_ofReal.continuousAt
-    have hgcont := hcoe.comp_continuousWithinAt hreal
-    refine hgcont.congr_of_eventuallyEq ?_ ?_
-    · filter_upwards [hfin_ev] with s hs
-      show g s = ENNReal.ofReal (realOf g s)
-      rw [realOf, ENNReal.ofReal_toReal hs]
-    · show g t = ENNReal.ofReal (realOf g t)
-      rw [realOf, ENNReal.ofReal_toReal hfin]
-  · intro h
-    have hfin_ev : ∀ᶠ s in 𝓝[>] t, g s ≠ ⊤ := by
-      have hmem : Iio (⊤ : ℝ≥0∞) ∈ 𝓝 (g t) :=
-        Iio_mem_nhds hfin.lt_top
-      filter_upwards [h hmem] with s hs
-        using (Set.mem_Iio.mp hs).ne
-    have hreal :
-        ContinuousWithinAt (realOf g) (Ioi t) t := by
-      have hto : ContinuousAt ENNReal.toReal (g t) :=
-        ENNReal.continuousAt_toReal hfin
-      exact hto.comp_continuousWithinAt h
-    rw [← real_close_iff_right g t] at hreal
-    intro ε hε
-    obtain ⟨δ₁, hδ₁t, hδ₁⟩ := hreal ε hε
-    rw [hbasis.eventually_iff] at hfin_ev
-    obtain ⟨δ₂, hδ₂t, hδ₂⟩ := hfin_ev
-    refine ⟨min δ₁ δ₂, lt_min hδ₁t hδ₂t, fun s hs => ?_⟩
-    have hs1 : s ∈ Ioo t δ₁ :=
-      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_left _ _)⟩
-    have hs2 : s ∈ Ioo t δ₂ :=
-      ⟨hs.1, lt_of_lt_of_le hs.2 (min_le_right _ _)⟩
-    exact ⟨hδ₂ hs2, hδ₁ s hs1⟩
+      ↔ ContinuousWithinAt g (Ioi t) t :=
+  finite_tendstoRightED_iff g t (g t) hfin
 ```
-
-The infinite case, mirrored.
 
 *Theorem:* the infinite divergence clause is right-continuity at $`t`
 
@@ -470,20 +614,8 @@ theorem infinite_ed_iff_right
     (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         (M : ℝ≥0∞) < g s)
       ↔ ContinuousWithinAt g (Ioi t) t := by
-  have hbasis : (𝓝[>] t).HasBasis (t < ·) (Ioo t ·) :=
-    nhdsGT_basis t
-  unfold ContinuousWithinAt
-  rw [hinf, ENNReal.tendsto_nhds_top_iff_nnreal]
-  constructor
-  · intro h M
-    obtain ⟨δ, hδt, hδ⟩ := h M
-    rw [hbasis.eventually_iff]
-    exact ⟨δ, hδt, fun s hs => hδ s hs⟩
-  · intro h M
-    have hM := h M
-    rw [hbasis.eventually_iff] at hM
-    obtain ⟨δ, hδt, hδ⟩ := hM
-    exact ⟨δ, hδt, fun s hs => hδ hs⟩
+  have := infinite_tendstoRightED_iff g t
+  rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
 ```
 
 Combining the two cases gives the right-side equivalence at every time.
@@ -655,6 +787,37 @@ theorem hasRightLimit_of_rightContinuous
     (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
     (t : ℝ≥0) : HasRightLimit g t :=
   ⟨g t, (hrc t).tendsto⟩
+```
+
+Existence of a one-sided limit has its own $`\varepsilon`–$`\delta`
+reading: a limit exists exactly when, for _some_ target $`L`, the
+function converges to $`L` in the elementary form. This is the
+convergence equivalence quantified over the target.
+
+*Theorem:* a left limit exists iff some target is approached in the ε–δ sense, at $`t > 0`
+
+```lean
+theorem hasLeftLimit_iff_ed
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
+    HasLeftLimit g t ↔ ∃ L, TendstoLeftED g t L := by
+  unfold HasLeftLimit
+  exact ⟨fun ⟨L, hL⟩ =>
+      ⟨L, (tendstoLeftED_iff g t ht L).mpr hL⟩,
+    fun ⟨L, hL⟩ =>
+      ⟨L, (tendstoLeftED_iff g t ht L).mp hL⟩⟩
+```
+
+*Theorem:* a right limit exists iff some target is approached in the ε–δ sense
+
+```lean
+theorem hasRightLimit_iff_ed
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    HasRightLimit g t ↔ ∃ L, TendstoRightED g t L := by
+  unfold HasRightLimit
+  exact ⟨fun ⟨L, hL⟩ =>
+      ⟨L, (tendstoRightED_iff g t L).mpr hL⟩,
+    fun ⟨L, hL⟩ =>
+      ⟨L, (tendstoRightED_iff g t L).mp hL⟩⟩
 ```
 
 # A positive right limit at the origin
