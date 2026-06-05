@@ -331,6 +331,62 @@ theorem tendstoRight_value_of_rightContinuous
   (hrc t).tendsto
 ```
 
+# Continuity versus the existence of a limit
+
+It is tempting to expect "the one-sided limit exists everywhere" to be
+equivalent to one-sided continuity, but that is _false_: a jump function
+has both one-sided limits at every point yet is discontinuous, because
+the limit need not _equal the value_. The correct characterization makes
+that explicit — continuity at $`t` is the existence of a one-sided limit
+together with its agreeing with $`g(t)`.
+
+*Theorem:* $`g` is left-continuous at $`t` iff a left limit exists and equals $`g(t)`
+
+```lean
+theorem leftContinuousAt_iff_limit_eq_value
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    IsLeftContinuousAt g t
+      ↔ ∃ L, TendstoLeft g t L ∧ L = g t := by
+  constructor
+  · intro h; exact ⟨g t, h, rfl⟩
+  · rintro ⟨L, hL, rfl⟩; exact hL
+```
+
+*Theorem:* $`g` is right-continuous at $`t` iff a right limit exists and equals $`g(t)`
+
+```lean
+theorem rightContinuousAt_iff_limit_eq_value
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    IsRightContinuousAt g t
+      ↔ ∃ L, TendstoRight g t L ∧ L = g t := by
+  constructor
+  · intro h; exact ⟨g t, h, rfl⟩
+  · rintro ⟨L, hL, rfl⟩; exact hL
+```
+
+One direction is unconditional and dropping the value constraint: a
+one-sided continuous function has a one-sided limit at every time (the
+value itself witnesses it). The converse — existence everywhere implying
+continuity — is the false implication above.
+
+*Theorem:* $`g` left-continuous $`\Rightarrow` a left limit exists everywhere
+
+```lean
+theorem hasLeftLimit_of_leftContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (h : IsLeftContinuous g)
+    (t : ℝ≥0) : ∃ L, TendstoLeft g t L :=
+  ⟨g t, h t⟩
+```
+
+*Theorem:* $`g` right-continuous $`\Rightarrow` a right limit exists everywhere
+
+```lean
+theorem hasRightLimit_of_rightContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (h : IsRightContinuous g)
+    (t : ℝ≥0) : ∃ L, TendstoRight g t L :=
+  ⟨g t, h t⟩
+```
+
 # A positive right limit at the origin
 
 A regularity used by the deviation results: the informal $`f(0^+) > 0`
