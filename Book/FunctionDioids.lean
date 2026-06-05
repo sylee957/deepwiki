@@ -473,48 +473,81 @@ function lying above $`f`. Its value at $`t` is the supremum of $`f`
 over the whole initial segment up to $`t` — running the supremum over
 all earlier arguments forces monotonicity while keeping the function
 as low as possible. On the domain $`\mathbb{R}^{+}` the lower bound
-$`0 \le s` is automatic, so the segment is $`\{s : s \le t\}`, the
-order-ideal $`\mathrm{Iic}\,t`.
+$`0 \le s` is automatic, so the segment is the order-ideal
+$`\{s : s \le t\}`.
 
-*Definition:* $`f^{\uparrow}(t) = \sup_{0 \le s \le t} f(s)`
+This construction is _carrier-agnostic_: it asks only that the values
+live in a lattice where the supremum over each initial segment exists.
+We develop it once, generically, over any conditionally-complete
+lattice $`T`, then read it on the two carriers the book uses — the
+extended reals here, and $`\mathbb{R}_{\ge 0}` in the chapter on real
+curves. The closure indexes the supremum by the order-ideal
+$`\{s : s \le t\}`, written as a subtype; that subtype is always
+inhabited (it contains $`0`), so the supremum is over a nonempty set.
+
+*Definition:* $`0 \in \{s : s \le t\}`, so the index is nonempty
 
 ```lean
-noncomputable def fUp
-    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    ℝ≥0 → WithTop (WithBot ℝ) :=
-  fun t => ⨆ s ∈ Set.Iic t, f s
+instance subLeNonempty (t : ℝ≥0) :
+    Nonempty {s : ℝ≥0 // s ≤ t} :=
+  ⟨⟨0, by positivity⟩⟩
+```
+
+*Definition:* $`f^{\uparrow}(t) = \sup_{0 \le s \le t} f(s)`, over any $`T`
+
+```lean
+noncomputable def closureUp {T : Type*}
+    [ConditionallyCompleteLattice T]
+    (f : ℝ≥0 → T) : ℝ≥0 → T :=
+  fun t => ⨆ s : {s : ℝ≥0 // s ≤ t}, f s
+```
+
+Over a merely _conditionally_-complete lattice the supremum is genuine
+only when the values are bounded on each initial segment. We name that
+hypothesis; on a _complete_ lattice (such as the extended reals below)
+it holds for free.
+
+*Definition:* $`f` is bounded above on each initial segment
+
+```lean
+def ClosureBddAbove {T : Type*} [Preorder T]
+    (f : ℝ≥0 → T) : Prop :=
+  ∀ t, BddAbove
+    (Set.range (fun s : {s : ℝ≥0 // s ≤ t} => f s))
 ```
 
 The closure dominates the original function: $`t` itself lies in its
 own initial segment, so $`f(t)` is one of the values entering the
-supremum, hence below it.
+supremum, hence below it (the bound keeps the supremum genuine).
 
 *Theorem:* $`f \le f^{\uparrow}`
 
 ```lean
-theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
-    (t : ℝ≥0) : f t ≤ fUp f t := by
-  exact le_iSup₂ (f := fun s _ => f s) t
-    (Set.mem_Iic.mpr le_rfl)
+theorem le_closureUp {T : Type*}
+    [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
+    (hbdd : ClosureBddAbove f) (t : ℝ≥0) :
+    f t ≤ closureUp f t := by
+  unfold closureUp
+  exact le_ciSup (hbdd t)
+    (⟨t, le_refl t⟩ : {s // s ≤ t})
 ```
 
 The closure is non-decreasing: a larger argument $`y \ge x` has a
-wider initial segment $`\mathrm{Iic}\,x \subseteq \mathrm{Iic}\,y`, so
-its supremum can only grow. Each value $`f(s)` from the smaller
-segment ($`s \le x \le y`) already appears among those of the larger,
-hence sits below the larger supremum.
+wider initial segment, so its supremum can only grow. Each value
+$`f(s)` from the smaller segment ($`s \le x \le y`) already appears
+among those of the larger, hence sits below the larger supremum.
 
 *Theorem:* $`f^{\uparrow}` is non-decreasing
 
 ```lean
-theorem fUp_isNondecr
-    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    IsNondecr (fUp f) := by
+theorem closureUp_mono {T : Type*}
+    [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
+    (hbdd : ClosureBddAbove f) :
+    Monotone (closureUp f) := by
   intro x y hxy
-  unfold fUp
-  refine iSup₂_le fun s hs => ?_
-  exact le_iSup₂ (f := fun s _ => f s) s
-    (Set.mem_Iic.mpr ((Set.mem_Iic.mp hs).trans hxy))
+  unfold closureUp
+  refine ciSup_le (fun s => ?_)
+  exact le_ciSup (hbdd y) ⟨s.1, s.2.trans hxy⟩
 ```
 
 The closure is the _least_ such function: any non-decreasing $`g`
@@ -522,24 +555,75 @@ above $`f` already dominates it. For each $`s \le t` we have
 $`f(s) \le g(s) \le g(t)` — the first step because $`g \ge f`, the
 second because $`g` is non-decreasing — so $`g(t)` is an upper bound
 of the values defining $`f^{\uparrow}(t)`, whence
-$`f^{\uparrow}(t) \le g(t)`.
+$`f^{\uparrow}(t) \le g(t)`. (No boundedness is needed here: $`g(t)`
+itself is the witnessing bound.)
+
+*Theorem:* $`g` non-decreasing, $`g \ge f \implies g \ge f^{\uparrow}`
+
+```lean
+theorem closureUp_le {T : Type*}
+    [ConditionallyCompleteLattice T]
+    {f g : ℝ≥0 → T} (hg : Monotone g)
+    (hfg : ∀ t, f t ≤ g t) (t : ℝ≥0) :
+    closureUp f t ≤ g t := by
+  unfold closureUp
+  refine ciSup_le (fun s => ?_)
+  exact (hfg s.1).trans (hg s.2)
+```
+
+On the _extended reals_ $`\mathbb{R} \cup \{\pm\infty\}` the lattice is
+_complete_, so the boundedness hypothesis is vacuous and the closure
+is unconditional. We read the generic construction there as $`f^{\uparrow}`.
+
+*Definition:* the non-decreasing closure $`f^{\uparrow}` on $`\overline{\mathbb{R}}`
+
+```lean
+noncomputable abbrev fUp
+    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+    ℝ≥0 → WithTop (WithBot ℝ) :=
+  closureUp f
+```
+
+On a complete lattice every set is bounded above, so the boundedness
+hypothesis is discharged once and reused.
+
+*Theorem:* on $`\overline{\mathbb{R}}` the closure is unconditionally bounded
+
+```lean
+theorem fUp_bdd (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+    ClosureBddAbove f :=
+  fun t => OrderTop.bddAbove _
+```
+
+*Theorem:* $`f \le f^{\uparrow}`
+
+```lean
+theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
+    (t : ℝ≥0) : f t ≤ fUp f t :=
+  le_closureUp f (fUp_bdd f) t
+```
+
+*Theorem:* $`f^{\uparrow}` is non-decreasing
+
+```lean
+theorem fUp_isNondecr
+    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+    IsNondecr (fUp f) :=
+  fun x y hxy => closureUp_mono f (fUp_bdd f) hxy
+```
 
 *Theorem:* $`g \in \mathcal{F}^{\uparrow},\ g \ge f \implies g \ge f^{\uparrow}`
 
 ```lean
 theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hg : IsNondecr g) (hfg : ∀ t, f t ≤ g t)
-    (t : ℝ≥0) : fUp f t ≤ g t := by
-  unfold fUp
-  refine iSup₂_le fun s hs => ?_
-  exact (hfg s).trans (hg s t (Set.mem_Iic.mp hs))
+    (t : ℝ≥0) : fUp f t ≤ g t :=
+  closureUp_le (fun _ _ h => hg _ _ h) hfg t
 ```
 
-Together these say $`f^{\uparrow}` is the least non-decreasing
-function above $`f`. When $`f` is itself non-negative, the closure
-stays non-negative — $`0 \le f(t) \le f^{\uparrow}(t)` — so a curve of
-$`\mathcal{F}^{+}` has its closure back in
-$`\mathcal{F}^{\uparrow}`.
+When $`f` is itself non-negative, the closure stays non-negative —
+$`0 \le f(t) \le f^{\uparrow}(t)` — so a curve of $`\mathcal{F}^{+}`
+has its closure back in $`\mathcal{F}^{\uparrow}`.
 
 *Theorem:* $`f \in \mathcal{F}^{+} \implies f^{\uparrow} \in \mathcal{F}^{+}`
 
