@@ -593,6 +593,70 @@ theorem rightLimit_eq_of_rightContinuous
   (hrc t).tendsto.limUnder_eq
 ```
 
+# Existence of one-sided limits
+
+The `limUnder` value is only meaningful when a limit actually exists, so
+we name that existence as a predicate. A function _has a left limit_ at
+$`t` when it converges to some value along the left-approach filter, and
+_has a right limit_ analogously. This is strictly weaker than one-sided
+continuity: continuity requires the limit to equal $`g(t)`, whereas mere
+existence allows a jump (the limit may differ from the value).
+
+*Definition:* $`g` has a left limit at $`t`
+
+```lean
+def HasLeftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  ∃ L : ℝ≥0∞, Tendsto g (𝓝[<] t) (𝓝 L)
+```
+
+*Definition:* $`g` has a right limit at $`t`
+
+```lean
+def HasRightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  ∃ L : ℝ≥0∞, Tendsto g (𝓝[>] t) (𝓝 L)
+```
+
+When the limit exists, the named value `rightLimit g t` _is_ the value
+it converges to — the existential witness is pinned by uniqueness, the
+right filter being always nontrivial.
+
+*Theorem:* $`g` tends to $`g(t^+)` from the right when the limit exists
+
+```lean
+theorem tendsto_rightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (h : HasRightLimit g t) :
+    Tendsto g (𝓝[>] t) (𝓝 (rightLimit g t)) := by
+  obtain ⟨L, hL⟩ := h
+  rwa [rightLimit_eq_of_tendsto g t L hL]
+```
+
+On the left the same holds where the left filter is nontrivial, i.e. at
+$`t > 0`.
+
+*Theorem:* $`g` tends to $`g(t^-)` from the left when the limit exists, at $`t > 0`
+
+```lean
+theorem tendsto_leftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+    (ht : 0 < t) (h : HasLeftLimit g t) :
+    Tendsto g (𝓝[<] t) (𝓝 (leftLimit g t)) := by
+  obtain ⟨L, hL⟩ := h
+  haveI : (𝓝[<] t).NeBot :=
+    nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
+  rwa [show leftLimit g t = L from hL.limUnder_eq]
+```
+
+Right-continuity is the stronger condition: it gives existence (with the
+limit equal to the value) at every time.
+
+*Theorem:* a right-continuous function has a right limit everywhere
+
+```lean
+theorem hasRightLimit_of_rightContinuous
+    (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
+    (t : ℝ≥0) : HasRightLimit g t :=
+  ⟨g t, (hrc t).tendsto⟩
+```
+
 # A positive right limit at the origin
 
 A regularity used by the deviation results, naming a use of the right
