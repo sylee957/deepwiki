@@ -24,8 +24,64 @@ def siteDescription : String :=
   "and Mathlib. First entry: the (min,plus) dioid algebra behind " ++
   "deterministic network calculus."
 
-/-- Site-wide `<head>` elements: description, author, and social-card metadata.
-These are identical on every page (Verso applies `extraHead` globally). -/
+/-- Anti-flash theme bootstrap: runs synchronously in `<head>`, before first
+paint, setting `data-theme` on `<html>` from a saved choice or the OS
+preference. Without this the page would flash light before the toggle script
+runs. -/
+def themeInitScript : String :=
+  "(function(){try{" ++
+    "var s=localStorage.getItem('deepwiki-theme');" ++
+    "var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;" ++
+    "if(d)document.documentElement.setAttribute('data-theme','dark');" ++
+  "}catch(e){}})();"
+
+/-- Dark-theme CSS via whole-page colour inversion. Rather than re-theming
+each of Verso's many colours individually (variables, hardcoded rules, code
+highlighting, KaTeX), we invert the entire document and rotate the hue back so
+blues stay blue — the classic robust dark mode. KaTeX math renders as HTML
+here (no images/SVG), so it inverts cleanly along with the text; there is no
+media to counter-invert. The toggle button is inverted a second time so it
+keeps its own colours. -/
+def darkModeCss : String :=
+  "html[data-theme=\"dark\"]{" ++
+    "background:#fff;" ++
+    "filter:invert(1) hue-rotate(180deg);" ++
+  "}" ++
+  -- code-block panels read better with a touch less contrast once inverted
+  "html[data-theme=\"dark\"] .hl.lean.block{" ++
+    "background:#f2f2f2;}" ++
+  -- the floating toggle button: invert again to cancel the page inversion
+  "#deepwiki-theme-toggle{position:fixed;right:1rem;bottom:1rem;" ++
+    "z-index:1000;width:2.6rem;height:2.6rem;border-radius:50%;" ++
+    "border:1px solid #8888;background:#fff;color:#222;cursor:pointer;" ++
+    "font-size:1.2rem;line-height:1;box-shadow:0 1px 5px #0003;}" ++
+  "html[data-theme=\"dark\"] #deepwiki-theme-toggle{" ++
+    "filter:invert(1) hue-rotate(180deg);}"
+
+/-- The toggle button's behaviour: flip `data-theme` on `<html>`, persist the
+choice, and swap the glyph. Wired up on `DOMContentLoaded`. -/
+def themeToggleScript : String :=
+  "(function(){function setGlyph(b){" ++
+    "b.textContent=document.documentElement.getAttribute('data-theme')" ++
+    "==='dark'?'☀':'☾';}" ++
+  "function init(){var b=document.createElement('button');" ++
+    "b.id='deepwiki-theme-toggle';" ++
+    "b.setAttribute('aria-label','Toggle dark mode');" ++
+    "setGlyph(b);" ++
+    "b.addEventListener('click',function(){" ++
+      "var dark=document.documentElement.getAttribute('data-theme')==='dark';" ++
+      "if(dark){document.documentElement.removeAttribute('data-theme');" ++
+        "localStorage.setItem('deepwiki-theme','light');}" ++
+      "else{document.documentElement.setAttribute('data-theme','dark');" ++
+        "localStorage.setItem('deepwiki-theme','dark');}" ++
+      "setGlyph(b);});" ++
+    "document.body.appendChild(b);}" ++
+  "if(document.readyState!=='loading')init();" ++
+  "else document.addEventListener('DOMContentLoaded',init);})();"
+
+/-- Site-wide `<head>` elements: description, author, social-card metadata, and
+the dark-mode theme (anti-flash bootstrap, CSS, and toggle script). These are
+identical on every page (Verso applies `extraHead` globally). -/
 def extraHead : Array Html := #[
   {{ <meta name="description" content={{siteDescription}} /> }},
   {{ <meta name="author" content="Sangyub Lee" /> }},
@@ -39,7 +95,11 @@ def extraHead : Array Html := #[
   -- Twitter card
   {{ <meta name="twitter:card" content="summary" /> }},
   {{ <meta name="twitter:title" content="DeepWiki" /> }},
-  {{ <meta name="twitter:description" content={{siteDescription}} /> }}
+  {{ <meta name="twitter:description" content={{siteDescription}} /> }},
+  -- Dark mode: bootstrap (anti-flash) + theme CSS + toggle wiring
+  {{ <script>{{Html.text false themeInitScript}}</script> }},
+  {{ <style>{{Html.text false darkModeCss}}</style> }},
+  {{ <script>{{Html.text false themeToggleScript}}</script> }}
 ]
 
 /-- robots.txt: allow everything, point crawlers at the sitemap. -/
