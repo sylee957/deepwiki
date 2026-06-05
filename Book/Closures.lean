@@ -246,10 +246,10 @@ the table: $`f \in \mathcal{F}^{\uparrow} \implies f^{\star} \in
 
 ```lean
 theorem closure_mem_FNondecr (a : FminBar)
-    (hn : isNonneg (fun t => (a t).toVal))
-    (hm : isNondecr (fun t => (a t).toVal)) :
-    isNonneg (fun t => (subadditiveClosure a t).toVal)
-      ∧ isNondecr
+    (hn : IsNonneg (fun t => (a t).toVal))
+    (hm : IsNondecr (fun t => (a t).toVal)) :
+    IsNonneg (fun t => (subadditiveClosure a t).toVal)
+      ∧ IsNondecr
           (fun t => (subadditiveClosure a t).toVal) :=
   isSubCompleteDioid_FNondecr.closure ⟨hn, hm⟩
 ```

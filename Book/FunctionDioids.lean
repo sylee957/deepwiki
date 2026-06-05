@@ -374,10 +374,10 @@ sum of two non-decreasing functions is non-decreasing.
 *Theorem:* non-negativity is stable under the pointwise sum
 
 ```lean
-theorem isNonneg.add
+theorem IsNonneg.add
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNonneg f) (hg : isNonneg g) :
-    isNonneg (fun t => f t + g t) := by
+    (hf : IsNonneg f) (hg : IsNonneg g) :
+    IsNonneg (fun t => f t + g t) := by
   intro t
   calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
     _ ≤ f t + g t := by gcongr; exacts [hf t, hg t]
@@ -386,10 +386,10 @@ theorem isNonneg.add
 *Theorem:* non-decrease is stable under the pointwise sum
 
 ```lean
-theorem isNondecr.add
+theorem IsNondecr.add
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNondecr f) (hg : isNondecr g) :
-    isNondecr (fun t => f t + g t) := by
+    (hf : IsNondecr f) (hg : IsNondecr g) :
+    IsNondecr (fun t => f t + g t) := by
   intro x y hxy
   show f x + g x ≤ f y + g y
   gcongr
@@ -509,7 +509,7 @@ hence sits below the larger supremum.
 ```lean
 theorem fUp_isNondecr
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    isNondecr (fUp f) := by
+    IsNondecr (fUp f) := by
   intro x y hxy
   unfold fUp
   refine iSup₂_le fun s hs => ?_
@@ -528,7 +528,7 @@ $`f^{\uparrow}(t) \le g(t)`.
 
 ```lean
 theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hg : isNondecr g) (hfg : ∀ t, f t ≤ g t)
+    (hg : IsNondecr g) (hfg : ∀ t, f t ≤ g t)
     (t : ℝ≥0) : fUp f t ≤ g t := by
   unfold fUp
   refine iSup₂_le fun s hs => ?_
@@ -546,7 +546,7 @@ $`\mathcal{F}^{\uparrow}`.
 ```lean
 theorem fUp_isNonneg
     {f : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : isNonneg f) : isNonneg (fUp f) :=
+    (hf : IsNonneg f) : IsNonneg (fUp f) :=
   fun t => (hf t).trans (le_fUp f t)
 ```
 
