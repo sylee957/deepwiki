@@ -53,12 +53,22 @@ $`X` carrying a topology — covering both the extended-real curves
 $`\mathbb{R}^{+} \to \overline{\mathbb{R}}_{\ge 0}^\infty` and the
 real-valued curves $`\mathbb{R}^{+} \to \mathbb{R}_{\ge 0}`.
 
-*Definition:* $`g` is left-continuous when it is `ContinuousWithinAt` on $`(-\infty, t)`
+*Definition:* $`g` is left-continuous at $`t` when it is `ContinuousWithinAt` on $`(-\infty, t)`
+
+```lean
+def IsLeftContinuousAt {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) (t : ℝ≥0) : Prop :=
+  ContinuousWithinAt g (Iio t) t
+```
+
+The function is _left-continuous_ when this holds at every time.
+
+*Definition:* $`g` is left-continuous when it is left-continuous at every $`t`
 
 ```lean
 def IsLeftContinuous {X : Type*} [TopologicalSpace X]
     (g : ℝ≥0 → X) : Prop :=
-  ∀ t : ℝ≥0, ContinuousWithinAt g (Iio t) t
+  ∀ t : ℝ≥0, IsLeftContinuousAt g t
 ```
 
 At the origin the condition is automatic: the left ray is empty, so the
@@ -69,12 +79,12 @@ at $`0`.
 *Theorem:* every `g` is left-continuous at the origin
 
 ```lean
-theorem continuousWithinAt_Iio_zero (g : ℝ≥0 → ℝ≥0∞) :
-    ContinuousWithinAt g (Iio 0) 0 := by
+theorem isLeftContinuousAt_zero (g : ℝ≥0 → ℝ≥0∞) :
+    IsLeftContinuousAt g 0 := by
   have hbot : 𝓝[Iio (0 : ℝ≥0)] 0 = ⊥ := by
     rw [show Set.Iio (0 : ℝ≥0) = ∅ by simp,
       nhdsWithin_empty]
-  unfold ContinuousWithinAt
+  unfold IsLeftContinuousAt ContinuousWithinAt
   rw [hbot]
   exact tendsto_bot
 ```
@@ -97,12 +107,22 @@ to $`g t` along the right ray $`(t, \infty) = ` `Ioi t`. Unlike the left
 side it carries no special behaviour at the origin — the right ray is
 never empty — so the condition is a genuine constraint at every time.
 
-*Definition:* $`g` is right-continuous when it is `ContinuousWithinAt` on $`(t, \infty)`
+*Definition:* $`g` is right-continuous at $`t` when it is `ContinuousWithinAt` on $`(t, \infty)`
+
+```lean
+def IsRightContinuousAt {X : Type*} [TopologicalSpace X]
+    (g : ℝ≥0 → X) (t : ℝ≥0) : Prop :=
+  ContinuousWithinAt g (Ioi t) t
+```
+
+The function is _right-continuous_ when this holds at every time.
+
+*Definition:* $`g` is right-continuous when it is right-continuous at every $`t`
 
 ```lean
 def IsRightContinuous {X : Type*} [TopologicalSpace X]
     (g : ℝ≥0 → X) : Prop :=
-  ∀ t : ℝ≥0, ContinuousWithinAt g (Ioi t) t
+  ∀ t : ℝ≥0, IsRightContinuousAt g t
 ```
 
 A continuous function is right-continuous a fortiori, by the same
@@ -135,6 +155,7 @@ theorem continuous_iff_left_right
       IsLeftContinuous g ∧ IsRightContinuous g := by
   rw [continuous_iff_continuousAt]
   unfold IsLeftContinuous IsRightContinuous
+    IsLeftContinuousAt IsRightContinuousAt
   constructor
   · intro h
     exact ⟨fun t =>
@@ -200,7 +221,7 @@ topological one. Both cases are corollaries of the convergence
 equivalences of the Limits chapter, specialised to the target
 $`L = g(t)`: there the clauses of `IsLeftContinuousED` become
 $`\varepsilon`–$`\delta` convergence to $`g(t)`, which is
-`ContinuousWithinAt g (Iio t) t` by definition.
+`IsLeftContinuousAt g t` by definition.
 
 *Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is left-continuity
 
@@ -210,7 +231,7 @@ theorem finite_ed_iff
     (hfin : g t ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ ContinuousWithinAt g (Iio t) t :=
+      ↔ IsLeftContinuousAt g t :=
   finite_tendstoLeftED_iff g t ht (g t) hfin
 ```
 
@@ -222,7 +243,7 @@ theorem infinite_ed_iff
     (hinf : g t = ⊤) :
     (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         (M : ℝ≥0∞) < g s)
-      ↔ ContinuousWithinAt g (Iio t) t := by
+      ↔ IsLeftContinuousAt g t := by
   have := infinite_tendstoLeftED_iff g t ht
   rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
 ```
@@ -241,7 +262,7 @@ theorem isLeftContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
   · -- at the origin: LHS vacuous, RHS automatic
     subst h0
     simp only [lt_irrefl, false_implies, true_iff]
-    exact continuousWithinAt_Iio_zero g
+    exact isLeftContinuousAt_zero g
   · rw [forall_congr_pos ht]
     by_cases hfin : g t = ⊤
     · rw [infinite_ed_iff g t ht hfin]
@@ -273,7 +294,7 @@ theorem finite_ed_iff_right
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hfin : g t ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ ContinuousWithinAt g (Ioi t) t :=
+      ↔ IsRightContinuousAt g t :=
   finite_tendstoRightED_iff g t (g t) hfin
 ```
 
@@ -284,7 +305,7 @@ theorem infinite_ed_iff_right
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hinf : g t = ⊤) :
     (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         (M : ℝ≥0∞) < g s)
-      ↔ ContinuousWithinAt g (Ioi t) t := by
+      ↔ IsRightContinuousAt g t := by
   have := infinite_tendstoRightED_iff g t
   rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
 ```
@@ -318,7 +339,7 @@ theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
 The whole point of one-sided continuity, in the convergence vocabulary
 of the Limits chapter: $`g` is continuous from a side at $`t` exactly
 when it converges _to its own value_ $`g(t)` from that side. Both
-statements are definitional — `IsLeftContinuous` at $`t` is literally
+statements are definitional — `IsLeftContinuousAt g t` is literally
 `TendstoLeft g t (g t)`, and likewise on the right — so the equivalences
 are `rfl`. We record both, symmetrically.
 
@@ -328,7 +349,7 @@ are `rfl`. We record both, symmetrically.
 theorem tendstoLeft_value_iff_leftContinuousAt
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     TendstoLeft g t (g t)
-      ↔ ContinuousWithinAt g (Iio t) t := Iff.rfl
+      ↔ IsLeftContinuousAt g t := Iff.rfl
 ```
 
 *Theorem:* right-continuity at $`t` is convergence to $`g(t)` from the right
@@ -337,7 +358,7 @@ theorem tendstoLeft_value_iff_leftContinuousAt
 theorem tendstoRight_value_iff_rightContinuousAt
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     TendstoRight g t (g t)
-      ↔ ContinuousWithinAt g (Ioi t) t := Iff.rfl
+      ↔ IsRightContinuousAt g t := Iff.rfl
 ```
 
 Globally: a left-continuous function converges to its value from the
