@@ -2183,30 +2183,27 @@ theorem hDev_delay_eq_of_pos_window
     _ ≤ hDev f (delay d) + ε := add_le_add hlb hs_le_ε
 ```
 
-The faithful hypothesis is exactly $`f(0^+) > 0`: the right _limit_
-exists and is positive (`HasRightLimit f 0` with $`0 < \,`
-`rightLimit f 0`). Existence pins $`f` to its right limit along
-$`𝓝[>] 0`, and positivity of that limit yields the window — no
-assumption that the limit equals $`f(0)`, so a jump at the origin is
-allowed. This is the form the token-bucket needs.
+The faithful hypothesis is exactly $`f(0^+) > 0`: a value $`L` to which
+$`f` converges from the right at the origin, with $`0 < L`. The
+convergence yields the positivity window — no assumption that $`L` equals
+$`f(0)`, so a jump at the origin is allowed. This is the form the
+token-bucket needs.
 
 *Theorem:* $`hDev(f, \delta_d) = d` when $`f(0^+) > 0`
 
 ```lean
 theorem hDev_delay_eq_of_rightLimit_pos
-    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
-    (h : HasRightLimit f 0)
-    (hpos : 0 < rightLimit f 0) :
+    (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) (L : ℝ≥0∞)
+    (hL : TendstoRight f 0 L) (hL0 : 0 < L) :
     hDev f (delay d) = d :=
   hDev_delay_eq_of_pos_window f d
-    (pos_near_zero_of_rightLimit_pos f (rightLimit f 0)
-      (tendsto_rightLimit f 0 h) hpos)
+    (pos_near_zero_of_rightLimit_pos f L hL hL0)
 ```
 
 Right-continuity with a positive value at the origin is the clean
-special case: it gives existence of the right limit, equal to $`f(0)`,
-so $`0 < f(0)` supplies the positivity. (The token-bucket is _not_ of
-this form — it is capped to $`0` at the origin and jumps — so it uses
+special case: it converges from the right to $`f(0)`, so $`0 < f(0)`
+supplies both the witness and the positivity. (The token-bucket is _not_
+of this form — it is capped to $`0` at the origin and jumps — so it uses
 the right-limit statement above directly.)
 
 *Theorem:* $`hDev(f, \delta_d) = d` when $`f` is right-continuous with $`0 < f(0)`
@@ -2215,10 +2212,9 @@ the right-limit statement above directly.)
 theorem hDev_delay_eq_of_rightCont
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hrc : IsRightContinuous f) (h0 : 0 < f 0) :
-    hDev f (delay d) = d := by
-  refine hDev_delay_eq_of_rightLimit_pos f d
-    (hasRightLimit_of_rightContinuous f hrc 0) ?_
-  rw [rightLimit_eq_of_rightContinuous f 0 hrc]; exact h0
+    hDev f (delay d) = d :=
+  hDev_delay_eq_of_rightLimit_pos f d (f 0)
+    (hrc 0).tendsto h0
 ```
 
 # Catalog of deviations
@@ -2258,34 +2254,23 @@ theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
   exact hcont.mono_left nhdsWithin_le_nhds
 ```
 
-So the right limit of the token-bucket at the origin is the burst $`b`.
-
-*Theorem:* $`\gamma_{r,b}(0^+) = b`
-
-```lean
-theorem tokenBucket_rightLimit (r b : ℝ≥0) :
-    rightLimit (tokenBucket r b) 0 = (b:ℝ≥0∞) :=
-  rightLimit_eq_of_tendsto (tokenBucket r b) 0 b
-    (tokenBucket_tendsto_right r b)
-```
-
 The token-bucket has a positive burst right limit, so its horizontal
 deviation against a pure delay is exactly the delay — independent of
 $`r` and $`b`. The token-bucket is _not_ right-continuous at the origin
 (it is capped to $`0` there but jumps up to $`b`), so it uses the right
-_limit_ statement: it has a right limit $`b` at the origin, positive
-when $`0 < b`. (With $`b = 0` the right limit is $`0` and the statement
-does not apply.)
+_limit_ statement: it converges from the right to $`b` at the origin,
+positive when $`0 < b`. (With $`b = 0` the limit is $`0` and the
+statement does not apply.)
 
 *Theorem:* $`hDev(\gamma_{r,b}, \delta_d) = d` for $`0 < b`
 
 ```lean
 theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
-    hDev (tokenBucket r b) (delay d) = d := by
-  refine hDev_delay_eq_of_rightLimit_pos (tokenBucket r b)
-    d ⟨b, tokenBucket_tendsto_right r b⟩ ?_
-  rw [tokenBucket_rightLimit]; exact_mod_cast hb
+    hDev (tokenBucket r b) (delay d) = d :=
+  hDev_delay_eq_of_rightLimit_pos (tokenBucket r b) d
+    (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
+    (by exact_mod_cast hb)
 ```
 
 The vertical deviation against a delay is the deconvolution at the

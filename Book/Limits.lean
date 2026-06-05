@@ -403,86 +403,21 @@ theorem tendstoRightED_iff
       exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
 ```
 
-# The limit value
+# Existence of one-sided limits
 
-When a one-sided limit exists it is a single value, worth naming. The
-_left limit_ and _right limit_ of $`g` at $`t` are the limits along the
-approach filters $`𝓝[<] t` and $`𝓝[>] t`. We take them as `Mathlib`'s
-`limUnder`: the genuine limit when one exists, and an unspecified value
-otherwise (so the value is only meaningful paired with a convergence
-fact, exactly as the classical "$`g(t^-)`'' / "$`g(t^+)`'' notation is).
-
-*Definition:* the left limit $`g(t^-)`
-
-```lean
-noncomputable def leftLimit
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
-  limUnder (𝓝[<] t) g
-```
-
-*Definition:* the right limit $`g(t^+)`
-
-```lean
-noncomputable def rightLimit
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
-  limUnder (𝓝[>] t) g
-```
+We work with limit _existence_ directly, as an existential over the
+convergence value, rather than naming a possibly-undefined limit value:
+a fact about "the limit" is stated as "there is an $`L` the function
+converges to, and $`L` has the property". This sidesteps the need for a
+junk value when no limit exists.
 
 The right-approach filter is nontrivial at _every_ time — there are
 always times just above any $`t`, the non-negative reals having no
-greatest element — so a right limit is genuinely pinned by any
-convergence, with no positivity guard (in contrast to the left side,
-empty at the origin).
+greatest element — so the limit value, where it exists, is unique.
 
 ```lean
 instance instNeBotNhdsGT (t : ℝ≥0) :
     (𝓝[>] t).NeBot := nhdsGT_neBot t
-```
-
-A convergence from the right pins the right limit to the value it
-converges to.
-
-*Theorem:* $`g(t^+) = L` when $`g` tends to $`L` from the right
-
-```lean
-theorem rightLimit_eq_of_tendsto
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞)
-    (h : TendstoRight g t L) :
-    rightLimit g t = L :=
-  h.limUnder_eq
-```
-
-# Existence of one-sided limits
-
-The `limUnder` value is only meaningful when a limit actually exists —
-the existence predicates `HasLeftLimit` / `HasRightLimit` from the start
-of the chapter. When a limit exists, the named value `rightLimit g t`
-_is_ the value it converges to: the existential witness is pinned by
-uniqueness, the right filter being always nontrivial.
-
-*Theorem:* $`g` tends to $`g(t^+)` from the right when the limit exists
-
-```lean
-theorem tendsto_rightLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (h : HasRightLimit g t) :
-    TendstoRight g t (rightLimit g t) := by
-  obtain ⟨L, hL⟩ := h
-  rwa [rightLimit_eq_of_tendsto g t L hL]
-```
-
-On the left the same holds where the left filter is nontrivial, i.e. at
-$`t > 0`.
-
-*Theorem:* $`g` tends to $`g(t^-)` from the left when the limit exists, at $`t > 0`
-
-```lean
-theorem tendsto_leftLimit (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (ht : 0 < t) (h : HasLeftLimit g t) :
-    TendstoLeft g t (leftLimit g t) := by
-  obtain ⟨L, hL⟩ := h
-  haveI : (𝓝[<] t).NeBot :=
-    nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
-  rwa [show leftLimit g t = L from hL.limUnder_eq]
 ```
 
 Existence of a one-sided limit has its own $`\varepsilon`–$`\delta`

@@ -315,43 +315,9 @@ theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
 
 # Continuity as a one-sided limit
 
-The named limit values of the previous chapter now read off continuity
-directly: at a point of one-sided continuity, the one-sided limit _is_
-the value, $`g(t^-) = g(t)` and $`g(t^+) = g(t)`. This is the precise
-sense in which continuity is "the limit equals the value".
-
-When $`g` is left-continuous and $`t > 0`, the positivity makes the
-left-approach filter nontrivial, so the value `limUnder` converges to is
-$`g(t)`.
-
-*Theorem:* $`g(t^-) = g(t)` when $`g` is left-continuous, at $`t > 0`
-
-```lean
-theorem leftLimit_eq_of_leftContinuous
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
-    (hlc : IsLeftContinuous g) :
-    leftLimit g t = g t :=
-  have : (𝓝[<] t).NeBot :=
-    nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
-  (hlc t).tendsto.limUnder_eq
-```
-
-Right-continuity gives the value-level reading at every time — no
-positivity guard, the right filter being always nontrivial.
-
-*Theorem:* $`g(t^+) = g(t)` when $`g` is right-continuous
-
-```lean
-theorem rightLimit_eq_of_rightContinuous
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
-    (hrc : IsRightContinuous g) :
-    rightLimit g t = g t :=
-  (hrc t).tendsto.limUnder_eq
-```
-
-Right-continuity is strictly stronger than the mere existence of a right
-limit: it gives existence, with the limit equal to the value, at every
-time.
+Continuity gives limit _existence_ — and with the limit equal to the
+value. A right-continuous function converges to $`g(t)` from the right
+at every time, so in particular it has a right limit there.
 
 *Theorem:* a right-continuous function has a right limit everywhere
 
@@ -366,30 +332,26 @@ theorem hasRightLimit_of_rightContinuous
 
 A regularity used by the deviation results: the informal $`f(0^+) > 0`
 means the function converges from the right at the origin to a value
-that is strictly positive — i.e. $`f` tends to its right limit
-$`f(0^+)` along $`𝓝[>] 0` and $`0 < f(0^+)`. Stated this way the
-positivity is a plain inequality on the named value `rightLimit f 0`,
-with the convergence carried explicitly (the right limit value alone is
-not meaningful without it).
+that is strictly positive — there is an $`L` with $`f` tending to $`L`
+along $`𝓝[>] 0` and $`0 < L`. Phrased as an existential over the
+convergence value, it carries the convergence with it and needs no named
+limit value.
 
 A positive right limit forces $`f` to be positive on a whole
-right-neighbourhood of the origin: eventually $`f` exceeds its limit's
-lower neighbourhood, which gives an explicit threshold $`\delta`.
+right-neighbourhood of the origin: eventually $`f` exceeds $`L`'s lower
+neighbourhood, which gives an explicit threshold $`\delta`.
 
 *Theorem:* $`f(0^+) > 0` makes $`f` positive on some $`(0, \delta)`
 
 ```lean
 theorem pos_near_zero_of_rightLimit_pos
     (f : ℝ≥0 → ℝ≥0∞) (L : ℝ≥0∞)
-    (hL : Tendsto f (𝓝[>] (0:ℝ≥0)) (𝓝 L))
-    (hpos : 0 < rightLimit f 0) :
+    (hL : TendstoRight f 0 L) (hL0 : 0 < L) :
     ∃ δ : ℝ≥0, 0 < δ ∧
       ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t := by
-  have hLeq : rightLimit f 0 = L :=
-    rightLimit_eq_of_tendsto f 0 L hL
-  rw [hLeq] at hpos
+  unfold TendstoRight at hL
   have hev : ∀ᶠ t in 𝓝[>] (0:ℝ≥0), 0 < f t :=
-    hL.eventually (eventually_gt_nhds hpos)
+    hL.eventually (eventually_gt_nhds hL0)
   rw [eventually_nhdsWithin_iff,
     Metric.eventually_nhds_iff] at hev
   obtain ⟨δ, hδ, hball⟩ := hev
