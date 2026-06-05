@@ -2273,6 +2273,244 @@ theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
     (by exact_mod_cast hb)
 ```
 
+## Horizontal deviation against a rate-latency
+
+The horizontal deviation of a token-bucket against a rate-latency
+$`\beta_{R,T}` is $`T + b/R` when the server is fast enough
+($`r \le R`), and $`+\infty` when it is too slow ($`R < r`). This one is
+a _direct_ horizontal-deviation computation (not a corollary of the
+deconvolution catalog): the admissible delays at time $`t` are those $`d`
+with $`\gamma_{r,b}(t) \le \beta_{R,T}(t + d)`, i.e. (off the origin)
+$`r\,t + b \le R\,[t + d - T]^{+}`. We need $`0 < R` (for $`b/R`) and
+$`0 < b` (with $`b = 0` and $`r = 0` the curve is flat and the deviation
+is $`0`, not $`T`).
+
+The admissibility condition, read on the numeric values: off the origin
+$`\gamma_{r,b}(t) \le \beta_{R,T}(t+d)` is $`r\,t + b \le R\,((t+d) - T)`.
+
+*Theorem:* $`\beta`-admissibility unfolds to a numeric inequality
+
+```lean
+theorem rateLatency_coe' (R T u : ℝ≥0) :
+    rateLatency R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
+  simp only [rateLatency]; push_cast; ring
+
+theorem beta_admissible_imp
+    (r b R T t d : ℝ≥0) (ht : t ≠ 0)
+    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    (r*t+b : ℝ≥0) ≤ R*((t+d)-T) := by
+  rw [tokenBucket_apply_pos r b t ht, rateLatency_coe',
+    show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
+      by push_cast; ring,
+    ENNReal.coe_le_coe] at h
+  exact h
+```
+
+For the upper bound, the fixed shift $`d^\* = T + b/R` is admissible at
+_every_ time when $`r \le R`: it makes $`R((t+d^\*)-T) = R\,t + b \ge
+r\,t + b`. So the deviation is at most $`T + b/R`.
+
+*Theorem:* $`d^\* = T + b/R` is admissible at every $`t`
+
+```lean
+theorem dstar_admissible (r b R T t : ℝ≥0)
+    (hR : 0 < R) (hrR : r ≤ R) :
+    tokenBucket r b t
+      ≤ rateLatency R T (t + (T + b/R)) := by
+  rcases eq_or_ne t 0 with ht | ht
+  · subst ht; rw [tokenBucket_zero_eq]; exact bot_le
+  · rw [tokenBucket_apply_pos r b t ht, rateLatency_coe',
+      show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
+        by push_cast; ring, ENNReal.coe_le_coe]
+    have hkey : (t + (T + b/R)) - T = t + b/R := by
+      rw [show t + (T + b/R) = (t + b/R) + T by ring,
+        add_tsub_cancel_right]
+    rw [hkey]
+    have hRbR : R * (b/R) = b := by
+      rw [mul_div_assoc', mul_comm, mul_div_assoc,
+        div_self hR.ne', mul_one]
+    calc (r*t+b : ℝ≥0) ≤ R*t + b := by gcongr
+      _ = R*(t + b/R) := by rw [mul_add, hRbR]
+
+theorem hDev_tokenBucket_rateLatency_le
+    (r b R T : ℝ≥0) (hR : 0 < R) (hrR : r ≤ R) :
+    hDev (tokenBucket r b) (rateLatency R T)
+      ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
+  unfold hDev
+  refine iSup_le (fun t => ?_)
+  unfold hDevAt
+  exact iInf_le_of_le
+    ⟨T + b/R, dstar_admissible r b R T t hR hrR⟩
+    (le_refl _)
+```
+
+For the lower bound, every admissible $`d` at $`t` satisfies
+$`R\,T + b \le R\,d + (R - r)\,t` (rearranging the admissibility
+inequality; positivity of $`b` rules out the degenerate branch where the
+shifted argument falls below $`T`).
+
+*Theorem:* admissible $`d` obeys $`R\,T + b \le R\,d + (R - r)\,t`
+
+```lean
+theorem dlb (r b R T t d : ℝ≥0) (hb : 0 < b)
+    (ht : t ≠ 0)
+    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    R*T + b ≤ R*d + (R - r)*t := by
+  have hreal := beta_admissible_imp r b R T t d ht h
+  rw [← NNReal.coe_le_coe] at hreal ⊢
+  push_cast [NNReal.coe_sub_def] at hreal ⊢
+  have htt : (0:ℝ) ≤ t := by positivity
+  have hbb : (0:ℝ) < b := by exact_mod_cast hb
+  have hmrt : (R-r:ℝ)*t ≤ max ((R:ℝ)-r) 0 * t := by
+    rcases le_total ((R:ℝ)-r) 0 with hle|hle
+    · rw [max_eq_right hle]; nlinarith
+    · rw [max_eq_left hle]
+  rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
+  · rw [max_eq_right hle] at hreal
+    nlinarith [hreal,
+      mul_nonneg htt (by positivity : (0:ℝ) ≤ r)]
+  · rw [max_eq_left hle] at hreal
+    nlinarith [hreal, hmrt]
+```
+
+Dividing by $`R`, the deviation at $`t` is at least
+$`(T + b/R) - ((R-r)/R)\,t`.
+
+*Theorem:* $`(T + b/R) - ((R-r)/R)\,t \le hDev(\gamma_{r,b}, \beta_{R,T}, t)`
+
+```lean
+theorem hDevAt_rateLatency_ge (r b R T t : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (ht : t ≠ 0) :
+    (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
+      ≤ hDevAt (tokenBucket r b) (rateLatency R T) t := by
+  unfold hDevAt
+  refine le_iInf ?_
+  rintro ⟨d, hd⟩
+  rw [ENNReal.coe_le_coe, tsub_le_iff_right]
+  have hbnd := dlb r b R T t d hb ht hd
+  rw [← NNReal.coe_le_coe] at hbnd ⊢
+  push_cast [NNReal.coe_sub_def] at hbnd ⊢
+  have hRpos : (0:ℝ) < R := by exact_mod_cast hR
+  refine le_of_mul_le_mul_right ?_ hRpos
+  have e1 : ((T:ℝ) + b/R) * R = R*T + b := by
+    field_simp
+  have e2 : ((d:ℝ) + max ((R:ℝ)-r) 0 / R * t) * R
+      = R*d + max ((R:ℝ)-r) 0 * t := by field_simp
+  rw [e1, e2]; linarith [hbnd]
+```
+
+As $`t \to 0^{+}` the lower bound approaches $`T + b/R`, so the
+supremum reaches it: for every $`\varepsilon`, a small enough time
+witnesses $`hDev \ge (T + b/R) - \varepsilon`.
+
+*Theorem:* $`T + b/R \le hDev(\gamma_{r,b}, \beta_{R,T})`
+
+```lean
+theorem hDev_tokenBucket_rateLatency_ge
+    (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b) :
+    ((T + b/R : ℝ≥0):ℝ≥0∞)
+      ≤ hDev (tokenBucket r b) (rateLatency R T) := by
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε _
+  set c : ℝ≥0 := (R-r)/R with hc
+  set s : ℝ≥0 := ε / (c + 1) with hs
+  have hsne : s ≠ 0 := by rw [hs]; positivity
+  have h1 : (((T + b/R) - c*s : ℝ≥0):ℝ≥0∞)
+      ≤ hDev (tokenBucket r b) (rateLatency R T) := by
+    refine le_trans
+      (hDevAt_rateLatency_ge r b R T s hR hb hsne) ?_
+    unfold hDev; exact le_iSup _ s
+  have hcs_le : ((c*s : ℝ≥0):ℝ≥0∞) ≤ (ε:ℝ≥0∞) := by
+    rw [ENNReal.coe_le_coe, ← NNReal.coe_le_coe]
+    rw [hs]; push_cast
+    have hd : (0:ℝ) < (c:ℝ) + 1 := by positivity
+    rw [mul_div_assoc', div_le_iff₀ hd]
+    nlinarith [c.coe_nonneg, ε.coe_nonneg]
+  calc ((T + b/R : ℝ≥0):ℝ≥0∞)
+      ≤ (((T+b/R) - c*s : ℝ≥0):ℝ≥0∞) + (c*s : ℝ≥0) := by
+        rw [← ENNReal.coe_add]
+        exact_mod_cast le_tsub_add
+    _ ≤ hDev (tokenBucket r b) (rateLatency R T) + ε :=
+        add_le_add h1 hcs_le
+```
+
+Combining the bounds gives the main identity for the fast-server case.
+
+*Theorem:* $`hDev(\gamma_{r,b}, \beta_{R,T}) = T + b/R` for $`r \le R`
+
+```lean
+theorem hDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
+    hDev (tokenBucket r b) (rateLatency R T)
+      = ((T + b/R : ℝ≥0):ℝ≥0∞) :=
+  le_antisymm
+    (hDev_tokenBucket_rateLatency_le r b R T hR hrR)
+    (hDev_tokenBucket_rateLatency_ge r b R T hR hb)
+```
+
+When the server is too slow ($`R < r`), the admissible delays grow with
+$`t`: every admissible $`d` obeys $`(r - R)\,t \le R\,d`, so the
+deviation at $`t` is at least $`((r-R)/R)\,t`, whose supremum is
+$`+\infty`.
+
+*Theorem:* admissible $`d` obeys $`(r - R)\,t \le R\,d` when $`R < r`
+
+```lean
+theorem dlb_top (r b R T t d : ℝ≥0) (hR : 0 < R)
+    (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0)
+    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    (r - R)*t ≤ R*d := by
+  have hreal := beta_admissible_imp r b R T t d ht h
+  rw [← NNReal.coe_le_coe] at hreal ⊢
+  push_cast [NNReal.coe_sub_def] at hreal ⊢
+  have hRpos : (0:ℝ) < R := by exact_mod_cast hR
+  have hbb : (0:ℝ) < b := by exact_mod_cast hb
+  have hRr' : (R:ℝ) < r := by exact_mod_cast hRr
+  rw [max_eq_left (by linarith : (0:ℝ) ≤ (r:ℝ)-R)]
+  rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
+  · rw [max_eq_right hle] at hreal
+    nlinarith [hreal,
+      mul_nonneg hRpos.le (by positivity:(0:ℝ)≤t)]
+  · rw [max_eq_left hle] at hreal
+    nlinarith [hreal, T.coe_nonneg, hbb,
+      mul_nonneg hRpos.le T.coe_nonneg]
+
+theorem hDevAt_rateLatency_ge_top (r b R T t : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0) :
+    ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
+      ≤ hDevAt (tokenBucket r b) (rateLatency R T) t := by
+  unfold hDevAt
+  refine le_iInf ?_
+  rintro ⟨d, hd⟩
+  rw [ENNReal.coe_le_coe]
+  have hbnd := dlb_top r b R T t d hR hb hRr ht hd
+  show ((r-R)/R)*t ≤ d
+  rw [div_mul_eq_mul_div, div_le_iff₀ hR, mul_comm d R]
+  exact hbnd
+```
+
+*Theorem:* $`hDev(\gamma_{r,b}, \beta_{R,T}) = +\infty` for $`R < r`
+
+```lean
+theorem hDev_tokenBucket_rateLatency_top
+    (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b)
+    (hRr : R < r) :
+    hDev (tokenBucket r b) (rateLatency R T) = ⊤ := by
+  have hc : 0 < (r - R)/R := by
+    have : 0 < r - R := tsub_pos_of_lt hRr
+    positivity
+  rw [eq_top_iff, ← iSup_coe_mul_eq_top ((r-R)/R) hc]
+  refine iSup_le (fun s => ?_)
+  rcases eq_or_ne s 0 with hs | hs
+  · subst hs; simp
+  · refine le_trans
+      (hDevAt_rateLatency_ge_top r b R T s hR hb hRr hs)
+      ?_
+    exact le_iSup
+      (fun t => hDevAt (tokenBucket r b)
+        (rateLatency R T) t) s
+```
+
 The vertical deviation against a delay is the deconvolution at the
 origin: $`(\gamma_{r,b} \oslash \delta_d)(0) = \hat\gamma_{r,b+rd}(0)
 = r\,d + b`. This needs $`0 < d` (the underlying deconvolution
