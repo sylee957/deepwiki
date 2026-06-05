@@ -179,155 +179,104 @@ values stay $`\varepsilon`-close (and finite), where it is $`+\infty`
 they diverge. The finite clause reads the values through $`\mathbb{R}`
 via the `realOf` reading from the Limits chapter.
 
+These are _pointwise_ predicates at a time $`t`, by cases on $`g(t)`.
 Left-continuity uses the left window $`(\delta, t)`.
 
-*Definition:* $`g` is left-continuous (ε–δ), by cases on $`g(t)`
+*Definition:* $`g` is left-continuous (ε–δ) at $`t`, by cases on $`g(t)`
 
 ```lean
-def IsLeftContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ t : ℝ≥0, 0 < t →
-    (g t ≠ ⊤ →
-      ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
-    (g t = ⊤ →
-      ∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        (M : ℝ≥0∞) < g s)
+def IsLeftContinuousAtED
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  (g t ≠ ⊤ →
+    ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+      g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
+  (g t = ⊤ →
+    ∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
+      (M : ℝ≥0∞) < g s)
 ```
 
-The origin is excluded: there is nothing strictly before it, so the
-condition constrains only `t > 0`.
+Right-continuity is the mirror, on the right window $`(t, \delta)`.
 
-Right-continuity is the mirror, on the right window $`(t, \delta)`. No
-positivity guard is needed — the right window is nonempty at every time,
-including the origin.
-
-*Definition:* $`g` is right-continuous (ε–δ), by cases on $`g(t)`
+*Definition:* $`g` is right-continuous (ε–δ) at $`t`, by cases on $`g(t)`
 
 ```lean
-def IsRightContinuousED (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ t : ℝ≥0,
-    (g t ≠ ⊤ →
-      ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
-    (g t = ⊤ →
-      ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        (M : ℝ≥0∞) < g s)
+def IsRightContinuousAtED
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
+  (g t ≠ ⊤ →
+    ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+      g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε) ∧
+  (g t = ⊤ →
+    ∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
+      (M : ℝ≥0∞) < g s)
 ```
 
 # Left-continuity: the two forms agree
 
 The $`\varepsilon`–$`\delta` definition of left-continuity equals the
-topological one. Both cases are corollaries of the convergence
-equivalences of the Limits chapter, specialised to the target
-$`L = g(t)`: there the clauses of `IsLeftContinuousED` become
-$`\varepsilon`–$`\delta` convergence to $`g(t)`, which is
-`IsLeftContinuousAt g t` by definition.
+topological one — pointwise, at each $`t`. The clauses of
+`IsLeftContinuousAtED` are, by cases on $`g(t)`, exactly the
+finite/infinite convergence-to-$`g(t)` characterizations of the Limits
+chapter, and convergence to $`g(t)` from the left _is_
+`IsLeftContinuousAt g t`. The left window $`(\delta, t)` is empty at the
+origin, so the equivalence carries a $`0 < t` hypothesis (at $`t = 0`
+the ε–δ clause has no admissible $`\delta`, while left-continuity holds
+vacuously).
 
-*Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is left-continuity
-
-```lean
-theorem finite_ed_iff
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
-    (hfin : g t ≠ ⊤) :
-    (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ IsLeftContinuousAt g t :=
-  finite_tendstoLeftED_iff g t ht (g t) hfin
-```
-
-*Theorem:* the infinite divergence clause is left-continuity at $`t`
+*Theorem:* the $`\varepsilon`–$`\delta` and topological left-continuity agree, at $`t > 0`
 
 ```lean
-theorem infinite_ed_iff
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
-    (hinf : g t = ⊤) :
-    (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
-        (M : ℝ≥0∞) < g s)
-      ↔ IsLeftContinuousAt g t := by
-  have := infinite_tendstoLeftED_iff g t ht
-  rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
-```
-
-Combining the two cases, the $`\varepsilon`–$`\delta` definition and
-the topological one agree at every positive time, for every `g`.
-
-*Theorem:* the $`\varepsilon`–$`\delta` and topological definitions agree
-
-```lean
-theorem isLeftContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
-    IsLeftContinuousED g ↔ IsLeftContinuous g := by
-  unfold IsLeftContinuousED IsLeftContinuous
-  refine forall_congr' fun t => ?_
-  rcases eq_zero_or_pos t with h0 | ht
-  · -- at the origin: LHS vacuous, RHS automatic
-    subst h0
-    simp only [lt_irrefl, false_implies, true_iff]
-    exact isLeftContinuousAt_zero g
-  · rw [forall_congr_pos ht]
-    by_cases hfin : g t = ⊤
-    · rw [infinite_ed_iff g t ht hfin]
-      constructor
-      · rintro ⟨-, h⟩; exact h hfin
-      · intro h
-        exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
-    · rw [finite_ed_iff g t ht hfin]
-      constructor
-      · rintro ⟨h, -⟩; exact h hfin
-      · intro h
-        exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
-where
-  forall_congr_pos {t : ℝ≥0} (ht : 0 < t)
-      {P : Prop} : (0 < t → P) ↔ P :=
-    ⟨fun h => h ht, fun h _ => h⟩
-```
-
-# Right-continuity: the two forms agree
-
-The right side is the same specialisation to $`L = g(t)`, on the right
-window. No positivity guard is needed, the right filter being nontrivial
-at every time.
-
-*Theorem:* at a finite point, the finite $`\varepsilon`–$`\delta` clause is right-continuity
-
-```lean
-theorem finite_ed_iff_right
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hfin : g t ≠ ⊤) :
-    (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        g s ≠ ⊤ ∧ |realOf g s - realOf g t| < ε)
-      ↔ IsRightContinuousAt g t :=
-  finite_tendstoRightED_iff g t (g t) hfin
-```
-
-*Theorem:* the infinite divergence clause is right-continuity at $`t`
-
-```lean
-theorem infinite_ed_iff_right
-    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (hinf : g t = ⊤) :
-    (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
-        (M : ℝ≥0∞) < g s)
-      ↔ IsRightContinuousAt g t := by
-  have := infinite_tendstoRightED_iff g t
-  rwa [show (⊤ : ℝ≥0∞) = g t from hinf.symm] at this
-```
-
-Combining the two cases gives the right-side equivalence at every time.
-There is no origin case split — the right condition is uniform across
-all $`t`.
-
-*Theorem:* the $`\varepsilon`–$`\delta` and topological right-continuity agree
-
-```lean
-theorem isRightContinuousED_iff (g : ℝ≥0 → ℝ≥0∞) :
-    IsRightContinuousED g ↔ IsRightContinuous g := by
-  unfold IsRightContinuousED IsRightContinuous
-  refine forall_congr' fun t => ?_
+theorem isLeftContinuousAtED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
+    IsLeftContinuousAtED g t ↔ IsLeftContinuousAt g t := by
+  unfold IsLeftContinuousAtED IsLeftContinuousAt
   by_cases hfin : g t = ⊤
-  · rw [infinite_ed_iff_right g t hfin]
+  · have hinf := infinite_tendstoLeftED_iff g t ht
+    rw [show (⊤ : ℝ≥0∞) = g t from hfin.symm,
+      show TendstoLeft g t (g t)
+        = ContinuousWithinAt g (Iio t) t from rfl] at hinf
+    rw [← hinf]
     constructor
     · rintro ⟨-, h⟩; exact h hfin
     · intro h
       exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
-  · rw [finite_ed_iff_right g t hfin]
+  · have hf := finite_tendstoLeftED_iff g t ht (g t) hfin
+    rw [show TendstoLeft g t (g t)
+        = ContinuousWithinAt g (Iio t) t from rfl] at hf
+    rw [← hf]
+    constructor
+    · rintro ⟨h, -⟩; exact h hfin
+    · intro h
+      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+```
+
+# Right-continuity: the two forms agree
+
+The right side is the same, on the right window $`(t, \delta)`. No
+positivity guard is needed — the right window is nonempty at every time,
+so the equivalence is unconditional.
+
+*Theorem:* the $`\varepsilon`–$`\delta` and topological right-continuity agree
+
+```lean
+theorem isRightContinuousAtED_iff
+    (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    IsRightContinuousAtED g t
+      ↔ IsRightContinuousAt g t := by
+  unfold IsRightContinuousAtED IsRightContinuousAt
+  by_cases hfin : g t = ⊤
+  · have hinf := infinite_tendstoRightED_iff g t
+    rw [show (⊤ : ℝ≥0∞) = g t from hfin.symm,
+      show TendstoRight g t (g t)
+        = ContinuousWithinAt g (Ioi t) t from rfl] at hinf
+    rw [← hinf]
+    constructor
+    · rintro ⟨-, h⟩; exact h hfin
+    · intro h
+      exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
+  · have hf := finite_tendstoRightED_iff g t (g t) hfin
+    rw [show TendstoRight g t (g t)
+        = ContinuousWithinAt g (Ioi t) t from rfl] at hf
+    rw [← hf]
     constructor
     · rintro ⟨h, -⟩; exact h hfin
     · intro h
@@ -438,14 +387,14 @@ noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
 
 ```lean
 def IsLeftContinuousF (f : Fmin) : Prop :=
-  IsLeftContinuousED (numFn f)
+  ∀ t : ℝ≥0, IsLeftContinuousAt (numFn f) t
 ```
 
 *Definition:* a cumulative function is right-continuous via its values
 
 ```lean
 def IsRightContinuousF (f : Fmin) : Prop :=
-  IsRightContinuousED (numFn f)
+  ∀ t : ℝ≥0, IsRightContinuousAt (numFn f) t
 ```
 
 # Piecewise continuity
