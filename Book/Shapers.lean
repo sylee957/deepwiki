@@ -136,7 +136,7 @@ The weakest service curve is the constant $`\beta_0 = 0`.
 *Definition:* the zero service curve $`\beta_0(t) = 0`
 
 ```lean
-def β₀ : ℝ≥0 → ℝ≥0 := fun _ => 0
+def betaZero : ℝ≥0 → ℝ≥0 := fun _ => 0
 ```
 
 Every server offers $`\beta_0`: then $`(A \ast \beta_0)(t) \le A(0) + 0
@@ -146,13 +146,13 @@ weakest possible guarantee.
 *Theorem:* every server offers the zero service curve $`\beta_0`
 
 ```lean
-theorem offersMinPlusService_β₀ (S : Server) :
-    OffersMinPlusService β₀ S := by
+theorem offersMinPlusService_betaZero (S : Server) :
+    OffersMinPlusService betaZero S := by
   intro A D _ t
   rw [minConv_eq]
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
-  show A 0 + β₀ t ≤ D t
+  show A 0 + betaZero t ≤ D t
   rw [A.zero]
   show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D t
   simp
@@ -361,10 +361,10 @@ server (departures are non-decreasing).
 *Theorem:* every server offers the strict service curve $`\beta_0`
 
 ```lean
-theorem offersStrictService_β₀ (S : Server) :
-    OffersStrictService β₀ S := by
+theorem offersStrictService_betaZero (S : Server) :
+    OffersStrictService betaZero S := by
   intro A D _ s t hst _
-  show D s + β₀ (t - s) ≤ D t
+  show D s + betaZero (t - s) ≤ D t
   show D s + (0 : ℝ≥0) ≤ D t
   rw [add_zero]
   exact D.mono hst

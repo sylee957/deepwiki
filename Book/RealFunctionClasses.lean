@@ -2011,7 +2011,7 @@ intended "unbounded delay".
 *Definition:* $`hDev(f, g, t) = \inf\,\{\, d \mid f(t) \le g(t + d)\,\}`
 
 ```lean
-noncomputable def hDevAt (f g : ℝ≥0 → ℝ≥0∞)
+noncomputable def horizDevAt (f g : ℝ≥0 → ℝ≥0∞)
     (t : ℝ≥0) : ℝ≥0∞ :=
   ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞)
 ```
@@ -2022,10 +2022,10 @@ infimum is the top element $`+\infty`.
 *Theorem:* $`hDev(f, g, t) = +\infty` when no $`d` satisfies $`f(t) \le g(t + d)`
 
 ```lean
-theorem hDevAt_eq_top (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
+theorem horizDevAt_eq_top (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
     (h : ∀ d : ℝ≥0, ¬ f t ≤ g (t + d)) :
-    hDevAt f g t = ⊤ := by
-  unfold hDevAt
+    horizDevAt f g t = ⊤ := by
+  unfold horizDevAt
   rw [iInf_eq_top]
   rintro ⟨d, hd⟩
   exact absurd hd (h d)
@@ -2037,7 +2037,7 @@ The _horizontal deviation_ is the worst of these over all times.
 
 ```lean
 noncomputable def hDev (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
-  ⨆ t : ℝ≥0, hDevAt f g t
+  ⨆ t : ℝ≥0, horizDevAt f g t
 ```
 
 The _vertical deviation_ is the worst gap $`f(t) - g(t)` over all
@@ -2090,8 +2090,8 @@ $`d`.
 *Theorem:* $`hDev(f, \delta_d, t) \le d`
 
 ```lean
-theorem hDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
-    hDevAt f (delay d) t ≤ d := by
+theorem horizDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
+    horizDevAt f (delay d) t ≤ d := by
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   have hadm : f t ≤ delay d (t + (d + ε)) := by
@@ -2099,7 +2099,7 @@ theorem hDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
       calc d < d + ε := by simpa using hε
         _ ≤ t + (d + ε) := le_add_self)]
     exact le_top
-  unfold hDevAt
+  unfold horizDevAt
   refine iInf_le_of_le ⟨d + ε, hadm⟩ ?_
   push_cast; rfl
 ```
@@ -2113,7 +2113,7 @@ bound. This is the first statement.
 theorem hDev_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     hDev f (delay d) ≤ d := by
   unfold hDev
-  exact iSup_le (fun t => hDevAt_delay_le f d t)
+  exact iSup_le (fun t => horizDevAt_delay_le f d t)
 ```
 
 For the lower bound, suppose $`f(t) > 0`. Below $`d` the delay is
@@ -2124,10 +2124,10 @@ deviation at $`t` is at least $`d - t`.
 *Theorem:* $`d - t \le hDev(f, \delta_d, t)` when $`f(t) > 0`
 
 ```lean
-theorem hDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
+theorem horizDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
     (hft : 0 < f t) :
-    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAt f (delay d) t := by
-  unfold hDevAt
+    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ horizDevAt f (delay d) t := by
+  unfold horizDevAt
   refine le_iInf ?_
   rintro ⟨d', hd'⟩
   by_contra hlt
@@ -2160,7 +2160,7 @@ theorem hDev_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
   intro ε hε _
   have ht : (0:ℝ≥0) < ε := hε
   have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDev f (delay d) := by
-    refine le_trans (hDevAt_delay_ge f d ε (hf ε ht)) ?_
+    refine le_trans (horizDevAt_delay_ge f d ε (hf ε ht)) ?_
     unfold hDev; exact le_iSup _ ε
   calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
@@ -2197,7 +2197,7 @@ theorem hDev_delay_eq_of_pos_window
   have hlb : ((d - s : ℝ≥0):ℝ≥0∞)
       ≤ hDev f (delay d) := by
     refine le_trans
-      (hDevAt_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
+      (horizDevAt_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
     unfold hDev; exact le_iSup _ s
   calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
@@ -2359,7 +2359,7 @@ theorem hDev_tokenBucket_rateLatency_le
       ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
   unfold hDev
   refine iSup_le (fun t => ?_)
-  unfold hDevAt
+  unfold horizDevAt
   exact iInf_le_of_le
     ⟨T + b/R, dstar_admissible r b R T t hR hrR⟩
     (le_refl _)
@@ -2400,11 +2400,12 @@ $`(T + b/R) - ((R-r)/R)\,t`.
 *Theorem:* $`(T + b/R) - ((R-r)/R)\,t \le hDev(\gamma_{r,b}, \beta_{R,T}, t)`
 
 ```lean
-theorem hDevAt_rateLatency_ge (r b R T t : ℝ≥0)
+theorem horizDevAt_rateLatency_ge (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (ht : t ≠ 0) :
     (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAt (tokenBucket r b) (rateLatency R T) t := by
-  unfold hDevAt
+      ≤ horizDevAt (tokenBucket r b)
+          (rateLatency R T) t := by
+  unfold horizDevAt
   refine le_iInf ?_
   rintro ⟨d, hd⟩
   rw [ENNReal.coe_le_coe, tsub_le_iff_right]
@@ -2439,7 +2440,7 @@ theorem hDev_tokenBucket_rateLatency_ge
   have h1 : (((T + b/R) - c*s : ℝ≥0):ℝ≥0∞)
       ≤ hDev (tokenBucket r b) (rateLatency R T) := by
     refine le_trans
-      (hDevAt_rateLatency_ge r b R T s hR hb hsne) ?_
+      (horizDevAt_rateLatency_ge r b R T s hR hb hsne) ?_
     unfold hDev; exact le_iSup _ s
   have hcs_le : ((c*s : ℝ≥0):ℝ≥0∞) ≤ (ε:ℝ≥0∞) := by
     rw [ENNReal.coe_le_coe, ← NNReal.coe_le_coe]
@@ -2496,11 +2497,12 @@ theorem dlb_top (r b R T t d : ℝ≥0) (hR : 0 < R)
     nlinarith [hreal, T.coe_nonneg, hbb,
       mul_nonneg hRpos.le T.coe_nonneg]
 
-theorem hDevAt_rateLatency_ge_top (r b R T t : ℝ≥0)
+theorem horizDevAt_rateLatency_ge_top (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0) :
     ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAt (tokenBucket r b) (rateLatency R T) t := by
-  unfold hDevAt
+      ≤ horizDevAt (tokenBucket r b)
+          (rateLatency R T) t := by
+  unfold horizDevAt
   refine le_iInf ?_
   rintro ⟨d, hd⟩
   rw [ENNReal.coe_le_coe]
@@ -2525,10 +2527,10 @@ theorem hDev_tokenBucket_rateLatency_top
   rcases eq_or_ne s 0 with hs | hs
   · subst hs; simp
   · refine le_trans
-      (hDevAt_rateLatency_ge_top r b R T s hR hb hRr hs)
+      (horizDevAt_rateLatency_ge_top r b R T s hR hb hRr hs)
       ?_
     exact le_iSup
-      (fun t => hDevAt (tokenBucket r b)
+      (fun t => horizDevAt (tokenBucket r b)
         (rateLatency R T) t) s
 ```
 
