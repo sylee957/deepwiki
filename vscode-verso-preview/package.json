@@ -1,0 +1,91 @@
+{
+  "name": "verso-preview",
+  "displayName": "Verso Preview",
+  "description": "Live, theme-matched preview of Verso (Lean 4 book) documents with LSP-backed hovers and go-to-definition.",
+  "version": "0.2.0",
+  "publisher": "deepwiki-local",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "versoPreview.show",
+        "title": "Open Preview to the Side",
+        "category": "Verso",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "versoPreview.back",
+        "title": "Back",
+        "category": "Verso",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "versoPreview.forward",
+        "title": "Forward",
+        "category": "Verso",
+        "icon": "$(arrow-right)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "versoPreview.show",
+          "when": "resourceExtname == .lean",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "versoPreview.show",
+          "when": "resourceExtname == .lean"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "versoPreview.show",
+        "key": "ctrl+k v",
+        "mac": "cmd+k v",
+        "when": "resourceExtname == .lean"
+      },
+      {
+        "command": "versoPreview.back",
+        "key": "alt+left",
+        "when": "activeWebviewPanelId == versoPreview"
+      },
+      {
+        "command": "versoPreview.forward",
+        "key": "alt+right",
+        "when": "activeWebviewPanelId == versoPreview"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/vscode": "^1.75.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "marked": "^12.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  }
+}

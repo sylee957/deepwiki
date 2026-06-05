@@ -1,0 +1,145 @@
+:root { color-scheme: light dark; }
+body {
+  font-family: var(--vscode-font-family, -apple-system, system-ui, sans-serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--vscode-foreground, #ddd);
+  background: var(--vscode-editor-background, #1e1e1e);
+  margin: 0;
+}
+/* Fixed history bar across the top. */
+.histbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  background: var(--vscode-editorGroupHeader-tabsBackground, #252526);
+  border-bottom: 1px solid var(--vscode-panel-border, #3a3a3a);
+  z-index: 1100;
+}
+.navbtn {
+  font: 14px/1 var(--vscode-font-family, sans-serif);
+  color: var(--vscode-foreground, #ddd);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  width: 26px; height: 24px;
+  cursor: pointer;
+}
+.navbtn:hover:not(:disabled) { background: var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.2)); }
+.navbtn:disabled { opacity: 0.35; cursor: default; }
+.histtitle {
+  margin-left: 8px;
+  font: 12px var(--vscode-font-family, sans-serif);
+  color: var(--vscode-descriptionForeground, #9aa);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.doc {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 58px 32px 96px; /* top clears the fixed history bar */
+}
+h1, h2, h3, h4 { line-height: 1.25; font-weight: 650; margin: 1.4em 0 0.5em; }
+h1 { font-size: 1.9em; border-bottom: 1px solid var(--vscode-panel-border, #444); padding-bottom: 0.2em; }
+h2 { font-size: 1.45em; }
+h3 { font-size: 1.2em; }
+.doc-title { font-size: 2.2em; margin-top: 0.2em; }
+p { margin: 0.7em 0; }
+ul { margin: 0.6em 0; padding-left: 1.4em; }
+li { margin: 0.25em 0; }
+em { font-style: italic; }
+strong { font-weight: 700; }
+code.inline {
+  font-family: var(--vscode-editor-font-family, "SF Mono", Menlo, monospace);
+  font-size: 0.9em;
+  background: var(--vscode-textCodeBlock-background, rgba(127,127,127,0.18));
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+pre.lean {
+  font-family: var(--vscode-editor-font-family, "SF Mono", Menlo, monospace);
+  font-size: 0.86em;
+  line-height: 1.45;
+  background: var(--vscode-textCodeBlock-background, rgba(127,127,127,0.12));
+  border: 1px solid var(--vscode-panel-border, #3a3a3a);
+  border-left: 3px solid #7aa2f7;
+  border-radius: 6px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0.9em 0;
+}
+/* Code lines are LSP-queryable; cursor signals interactivity. */
+.cline { cursor: pointer; }
+.label-line { color: var(--vscode-descriptionForeground, #9aa); }
+.meta-block {
+  font-size: 0.85em; opacity: 0.7; font-style: italic; white-space: pre-wrap;
+  border-left: 2px solid var(--vscode-panel-border, #555);
+  padding-left: 10px; margin: 0.6em 0;
+}
+.katex-display { margin: 0.8em 0; overflow-x: auto; overflow-y: hidden; }
+.render-error { color: #f77; font-family: monospace; font-size: 0.85em; }
+.parse-error {
+  color: var(--vscode-errorForeground, #f77);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  padding: 16px;
+}
+blockquote {
+  border-left: 3px solid var(--vscode-panel-border, #555);
+  margin: 0.8em 0; padding-left: 12px; opacity: 0.9;
+}
+.doclink { color: var(--vscode-textLink-foreground, #4daafc); }
+
+/* Lean code coloring from LSP semantic tokens (theme-aware). */
+.k  { color: var(--vscode-symbolIcon-keywordForeground, #c586c0); }
+.fn { color: var(--vscode-symbolIcon-functionForeground, #dcdcaa); }
+.pr { color: var(--vscode-symbolIcon-propertyForeground, #9cdcfe); }
+.va { color: var(--vscode-symbolIcon-variableForeground, #9cdcfe); }
+.t  { color: var(--vscode-symbolIcon-classForeground, #4ec9b0); }
+.ns { color: var(--vscode-symbolIcon-namespaceForeground, #4ec9b0); }
+.op { color: var(--vscode-symbolIcon-operatorForeground, #d4d4d4); }
+.c  { color: var(--vscode-editorLineNumber-foreground, #6a9955); font-style: italic; }
+.s  { color: var(--vscode-debugTokenExpression-string, #ce9178); }
+.n  { color: var(--vscode-debugTokenExpression-number, #b5cea8); }
+.sorry { color: var(--vscode-editorError-foreground, #f77); }
+
+/* Indicator: highlight the run under the cursor (where the LSP will query). */
+.hover-mark {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(122,162,247,0.20);
+  border-bottom: 1px solid #7aa2f7;
+  border-radius: 2px;
+  z-index: 900;
+}
+
+/* Theme-matched tooltip. */
+.tip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 560px;
+  max-height: 360px;
+  overflow: auto;
+  background: var(--vscode-editorHoverWidget-background, #252526);
+  color: var(--vscode-editorHoverWidget-foreground, #ccc);
+  border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.85em;
+  line-height: 1.45;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.tip pre, .tip code {
+  font-family: var(--vscode-editor-font-family, monospace);
+  white-space: pre-wrap;
+  background: var(--vscode-textCodeBlock-background, rgba(127,127,127,0.15));
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+.tip pre { padding: 6px 8px; margin: 4px 0; }
+.tip .loading { opacity: 0.6; font-style: italic; }
