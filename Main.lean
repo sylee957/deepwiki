@@ -37,32 +37,72 @@ def themeInitScript : String :=
     "if(d)document.documentElement.setAttribute('data-theme','dark');" ++
   "}catch(e){}})();"
 
-/-- Dark-theme CSS via whole-page colour inversion. Rather than re-theming
-each of Verso's many colours individually (variables, hardcoded rules, code
-highlighting, KaTeX), we invert the entire document and rotate the hue back so
-blues stay blue — the classic robust dark mode. KaTeX math renders as HTML
-here (no images/SVG), so it inverts cleanly along with the text; there is no
-media to counter-invert. The toggle button sits in the inverted document, so
-it is given explicit colours per theme (it is _not_ counter-inverted, so that
-it reads as a dark control in dark mode). -/
+/-- Dark theme: a VS Code "Dark High Contrast"–style neon palette, keyed on
+`html[data-theme="dark"]`. We theme Verso's colour variables directly so the
+Lean syntax highlighting gets a deliberate magenta-keyword / cyan-identifier /
+gold-binder palette on a near-black background, with cyan neon accents and
+glows on headings, links, the ToC, the header rule, and code-block borders. On
+the near-black background any element not explicitly themed stays dark rather
+than glaring, so coverage gaps are benign. -/
 def darkModeCss : String :=
+  -- Verso colour variables
   "html[data-theme=\"dark\"]{" ++
-    "background:#fff;" ++
-    "filter:invert(1) hue-rotate(180deg);" ++
+    "--verso-text-color:#e6f1ff;" ++
+    "--verso-code-color:#d4d4d4;" ++
+    "--verso-structure-color:#e6f1ff;" ++
+    "--verso-selected-color:#163a5f;" ++
+    "--verso-info-color:#9cdcfe;" ++
+    "--verso-warning-color:#dcdcaa;" ++
+    "--verso-error-color:#ff5f87;" ++
+    "--verso-toc-background-color:#000;" ++
+    "--verso-toc-text-color:#c8d3e0;" ++
+    "--verso-burger-toc-hidden-color:#4ec9ff;" ++
+    "--verso-burger-toc-hidden-shadow-color:#000;" ++
+    "--verso-burger-toc-visible-shadow-color:#000;" ++
+    "--verso-code-keyword-color:#ff7ad9;" ++
+    "--verso-code-const-color:#4ec9ff;" ++
+    "--verso-code-var-color:#dcdcaa;" ++
   "}" ++
-  -- code-block panels read better with a touch less contrast once inverted
-  "html[data-theme=\"dark\"] .hl.lean.block{" ++
-    "background:#f2f2f2;}" ++
-  -- the floating toggle button (base = light-mode appearance)
+  "html[data-theme=\"dark\"] body," ++
+  "html[data-theme=\"dark\"] main{" ++
+    "background:#08080c;color:#e6f1ff;}" ++
+  "html[data-theme=\"dark\"] .header{" ++
+    "background:#000;box-shadow:0 1px 0 #4ec9ff,0 2px 12px #4ec9ff55;}" ++
+  "html[data-theme=\"dark\"] .header-title{" ++
+    "color:#4ec9ff;text-shadow:0 0 8px #4ec9ff88;}" ++
+  "html[data-theme=\"dark\"] .toc-bottom-link{color:#4ec9ff;}" ++
+  "html[data-theme=\"dark\"] #toc{" ++
+    "background:#000;border-right:1px solid #4ec9ff33;}" ++
+  "html[data-theme=\"dark\"] #toc a{color:#c8d3e0;}" ++
+  "html[data-theme=\"dark\"] #toc a:hover{" ++
+    "color:#4ec9ff;text-shadow:0 0 6px #4ec9ff99;}" ++
+  "html[data-theme=\"dark\"] #toc .split-toc " ++
+    "label.toggle-split-toc::before{background-color:#4ec9ff;}" ++
+  "html[data-theme=\"dark\"] h1," ++
+  "html[data-theme=\"dark\"] h2," ++
+  "html[data-theme=\"dark\"] h3{" ++
+    "color:#e6f1ff;text-shadow:0 0 10px #4ec9ff44;}" ++
+  "html[data-theme=\"dark\"] main a{color:#4ec9ff;}" ++
+  "html[data-theme=\"dark\"] main a:hover{" ++
+    "text-shadow:0 0 6px #4ec9ff99;}" ++
+  "html[data-theme=\"dark\"] .hl.lean.block," ++
+  "html[data-theme=\"dark\"] pre," ++
+  "html[data-theme=\"dark\"] code{" ++
+    "background:#000;color:#d4d4d4;" ++
+    "border:1px solid #4ec9ff44;border-radius:6px;" ++
+    "box-shadow:0 0 14px #4ec9ff22;}" ++
+  "html[data-theme=\"dark\"] .hl.lean .keyword.token{" ++
+    "color:#ff7ad9;text-shadow:0 0 6px #ff7ad955;}" ++
+  "html[data-theme=\"dark\"] .hl.lean .unknown.token{color:#9cdcfe;}" ++
+  "html[data-theme=\"dark\"] .tippy-box{" ++
+    "background:#0d0d12;color:#d4d4d4;border:1px solid #4ec9ff55;}" ++
   "#deepwiki-theme-toggle{position:fixed;right:1rem;bottom:1rem;" ++
     "z-index:1000;width:2.6rem;height:2.6rem;border-radius:50%;" ++
     "border:1px solid #8888;background:#fff;color:#222;cursor:pointer;" ++
     "font-size:1.2rem;line-height:1;box-shadow:0 1px 5px #0003;}" ++
-  -- in dark mode the page is inverted, so these CSS colours are pre-inverted:
-  -- a light background becomes a dark button on screen, and a dark glyph
-  -- becomes a light glyph — a dark control with a legible light icon
   "html[data-theme=\"dark\"] #deepwiki-theme-toggle{" ++
-    "background:#dcdcdc;color:#333;border-color:#999;}"
+    "background:#0d0d12;color:#4ec9ff;border-color:#4ec9ff;" ++
+    "box-shadow:0 0 10px #4ec9ff66;}"
 
 /-- The toggle button cycles the saved choice `system → light → dark → system`,
 persists it, re-applies the effective theme (consulting the OS in `'system'`
