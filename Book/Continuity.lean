@@ -79,7 +79,8 @@ at $`0`.
 *Theorem:* every `g` is left-continuous at the origin
 
 ```lean
-theorem isLeftContinuousAt_zero (g : ℝ≥0 → ℝ≥0∞) :
+theorem isLeftContinuousAt_zero {X : Type*}
+    [TopologicalSpace X] (g : ℝ≥0 → X) :
     IsLeftContinuousAt g 0 := by
   have hbot : 𝓝[Iio (0 : ℝ≥0)] 0 = ⊥ := by
     rw [show Set.Iio (0 : ℝ≥0) = ∅ by simp,

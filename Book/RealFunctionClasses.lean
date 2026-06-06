@@ -1204,7 +1204,12 @@ $`\overline{\mathbb{R}}_{\ge 0}`, where every element is non-negative.
 *Theorem:* $`g` non-decreasing $`\implies g \oslash h` non-decreasing
 
 ```lean
-theorem minDeconvE_mono (g h : ℝ≥0 → ℝ≥0∞)
+theorem minDeconvE_mono {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CovariantClass D D (·+·) (·≤·)]
+    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
+    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
+    (g h : D → T)
     (hg : Monotone g) : Monotone (deconv g h) := by
   intro x y hxy
   unfold deconv
@@ -2049,8 +2054,9 @@ times.
 *Definition:* $`vDev(f, g) = \sup_{t \ge 0}\,(f(t) - g(t))`
 
 ```lean
-noncomputable def vDev (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
-  ⨆ t : ℝ≥0, f t - g t
+noncomputable def vDev {D T : Type*} [SupSet T] [Sub T]
+    (f g : D → T) : T :=
+  ⨆ t : D, f t - g t
 ```
 
 The vertical deviation is the deconvolution at the origin: at $`t = 0`
@@ -2060,7 +2066,9 @@ exactly the vertical-deviation supremum.
 *Theorem:* $`vDev(f, g) = (f \oslash g)(0)`
 
 ```lean
-theorem vDev_eq_deconv_zero (f g : ℝ≥0 → ℝ≥0∞) :
+theorem vDev_eq_deconv_zero {D T : Type*}
+    [_root_.AddZeroClass D] [SupSet T] [Sub T]
+    (f g : D → T) :
     vDev f g = deconv f g 0 := by
   unfold vDev deconv
   simp only [zero_add]

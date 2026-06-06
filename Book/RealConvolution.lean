@@ -85,7 +85,7 @@ fact that makes this so.
 *Theorem:* $`\beta \vee 0 = \beta`
 
 ```lean
-theorem sup_zero_eq_self (beta : ℝ≥0 → ℝ≥0) :
+theorem sup_zero_eq_self {D : Type*} (beta : D → ℝ≥0) :
     (fun t => beta t ⊔ 0) = beta := by
   funext t
   exact sup_eq_left.mpr zero_le'

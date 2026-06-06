@@ -859,8 +859,9 @@ $`t + 0` — so the convolution's $`\inf` / $`\sup` is over a
 nonempty index.
 
 ```lean
-instance splitNonempty (t : ℝ≥0) :
-    Nonempty {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} :=
+instance splitNonempty {D : Type*} [AddZeroClass D]
+    (t : D) :
+    Nonempty {p : D × D // p.1 + p.2 = t} :=
   ⟨⟨(t, 0), by simp⟩⟩
 ```
 
@@ -1122,7 +1123,11 @@ $`\sup g = -\inf(-g)` holds for any family bounded above.
 
 ```lean
 theorem neg_ciInf_neg {ι : Type} [Nonempty ι]
-    (g : ι → ℝ) (hbdd : BddAbove (Set.range g)) :
+    {T : Type*} [_root_.LinearOrder T]
+    [_root_.AddCommGroup T]
+    [ConditionallyCompleteLattice T]
+    [CovariantClass T T (·+·) (·≤·)]
+    (g : ι → T) (hbdd : BddAbove (Set.range g)) :
     (⨆ i, g i) = - ⨅ i, - g i := by
   have hbb : BddBelow (Set.range (fun i => - g i)) := by
     obtain ⟨c, hc⟩ := hbdd

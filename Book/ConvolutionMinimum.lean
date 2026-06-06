@@ -62,8 +62,8 @@ semicontinuous functions is lower semicontinuous.
 *Definition:* the split-map $`u \mapsto g(u) + h(t - u)`
 
 ```lean
-noncomputable def splitMap
-    (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+noncomputable def splitMap {D T : Type*} [Sub D]
+    [_root_.Add T] (g h : D → T) (t : D) : D → T :=
   fun u => g u + h (t - u)
 ```
 
@@ -130,7 +130,12 @@ wherever the convolution is treated as a cumulative function.
 *Theorem:* $`g \ast h` is monotone when $`g, h` are
 
 ```lean
-theorem minConvE_mono (g h : ℝ≥0 → ℝ≥0∞)
+theorem minConvE_mono {D T : Type*}
+    [_root_.AddCommMonoid D] [LinearOrder D]
+    [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
+    [AddLeftReflectLE D]
+    [_root_.AddCommMonoid T] [CompleteLattice T]
+    [IsOrderedAddMonoid T] (g h : D → T)
     (hg : Monotone g) (hh : Monotone h) :
     Monotone (minConv g h) := by
   intro a b hab
@@ -149,7 +154,7 @@ theorem minConvE_mono (g h : ℝ≥0 → ℝ≥0∞)
     show g a + h 0 ≤ g u + h s
     gcongr
     · exact hg (not_le.mp hua).le
-    · exact hh bot_le
+    · exact hh zero_le
 ```
 
 ```lean
