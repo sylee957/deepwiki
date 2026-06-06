@@ -54,7 +54,7 @@ $`D \ge A \ast \beta`, stated directly on the real values.
 ```lean
 def OffersMinPlusService (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
-  ∀ A D : Curve, (A, D) ∈ S → minConv A beta ≤ D
+  ∀ A D : Curve, (A, D) ∈ S → minConvProj A beta ≤ D
 ```
 
 A server `S` _is_ a min-plus server for `beta` when it offers `beta` —
@@ -80,12 +80,12 @@ supplied as `htot`.
 ```lean
 def minPlusServiceRel (beta : ℝ≥0 → ℝ≥0) :
     Set (Curve × Curve) :=
-  { p | p.2 ≤ p.1 ∧ minConv p.1 beta ≤ p.2 }
+  { p | p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 }
 
 theorem mem_minPlusServiceRel_iff
     {beta : ℝ≥0 → ℝ≥0} {p : Curve × Curve} :
     p ∈ minPlusServiceRel beta ↔
-      p.2 ≤ p.1 ∧ minConv p.1 beta ≤ p.2 :=
+      p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 :=
   Iff.rfl
 
 def minPlusServer (beta : ℝ≥0 → ℝ≥0)
@@ -128,7 +128,7 @@ theorem OffersMinPlusService.mono
     (h : beta ≤ beta') (hS : OffersMinPlusService beta' S) :
     OffersMinPlusService beta S :=
   fun A D hp =>
-    le_trans (minConv_mono_right A h) (hS A D hp)
+    le_trans (minConvProj_mono_right A h) (hS A D hp)
 ```
 
 The weakest service curve is the constant $`\beta_0 = 0`.
@@ -149,7 +149,7 @@ weakest possible guarantee.
 theorem offersMinPlusService_betaZero (S : Server) :
     OffersMinPlusService betaZero S := by
   intro A D _ t
-  rw [minConv_eq]
+  rw [minConvProj_eq]
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
   show A 0 + betaZero t ≤ D t
@@ -515,8 +515,8 @@ theorem offersStrictService_ndClosure_iff
 # The super-additive closure of a strict service curve
 
 The other closure is the _super-additive closure_ $`\bar\beta^{*}`,
-built from the _(max,plus) convolution_ `maxConv` and its iterates
-`maxConvPow`. The first step already upgrades for free: each split
+built from the _(max,plus) convolution_ `maxConvProj` and its iterates
+`maxConvProjPow`. The first step already upgrades for free: each split
 $`a + b = t - s` gives the interior point $`r = s + a`, where
 concatenation supplies the two-term bound, and the supremum over splits
 is absorbed.
@@ -524,13 +524,13 @@ is absorbed.
 *Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \mathbin{\overline{\ast}} \beta`
 
 ```lean
-theorem offersStrictService_maxConv
+theorem offersStrictService_maxConvProj
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
-    OffersStrictService (maxConv beta beta) S := by
+    OffersStrictService (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
-  show D s + maxConv beta beta (t - s) ≤ D t
-  refine add_maxConv_le _ _ _ _ (fun q => ?_)
+  show D s + maxConvProj beta beta (t - s) ≤ D t
+  refine add_maxConvProj_le _ _ _ _ (fun q => ?_)
   obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
   have hsum : s + (a + b) = t := by
     rw [hab, add_tsub_cancel_of_le hst]
@@ -555,13 +555,13 @@ offering `beta` offers the whole super-additive closure.
 *Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta^{(n)}` and $`S \text{ offers } \bar\beta^{*}`
 
 ```lean
-theorem offers_maxConvPow (beta : ℝ≥0 → ℝ≥0)
+theorem offers_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
     {S : Server} (hβ : OffersStrictService beta S)
     (n : ℕ) :
-    OffersStrictService (maxConvPow beta n) S := by
+    OffersStrictService (maxConvProjPow beta n) S := by
   induction n with
   | zero => exact hβ
-  | succ n ih => exact offersStrictService_maxConv _ ih
+  | succ n ih => exact offersStrictService_maxConvProj _ ih
 
 theorem offersStrictService_saClosure
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
@@ -571,7 +571,7 @@ theorem offersStrictService_saClosure
   show D s + saClosure beta (t - s) ≤ D t
   unfold saClosure
   refine add_ciSup_le _ _ _ (fun n => ?_)
-  exact offers_maxConvPow beta hβ n A D hp s t hst hbl
+  exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
 ```
 
 The reverse inclusion is monotony: `beta` is the $`n = 0` iterate, so
@@ -585,8 +585,8 @@ $`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\bar\beta^{*})`.
 ```lean
 theorem offersStrictService_saClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
-    (hbdd : ∀ t,
-      BddAbove (Set.range (fun n => maxConvPow beta n t))) :
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun n => maxConvProjPow beta n t))) :
     OffersStrictService (saClosure beta) S ↔
       OffersStrictService beta S := by
   constructor

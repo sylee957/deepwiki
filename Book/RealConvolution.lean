@@ -46,8 +46,8 @@ where the supremum is infinite both sides floor to $`0` alike.
 *Theorem:* $`\beta_{\uparrow} = \beta \mathbin{\overline{\ast}} 0`
 
 ```lean
-theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
-    ndClosure beta = maxConvGen beta 0 := by
+theorem ndClosure_eq_maxConv (beta : ℝ≥0 → ℝ≥0) :
+    ndClosure beta = maxConv beta 0 := by
   funext t
   have hrange :
       Set.range
@@ -62,7 +62,7 @@ theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
         add_tsub_cancel_of_le hu⟩, rfl⟩
     · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
       exact ⟨⟨u, hus ▸ le_self_add⟩, rfl⟩
-  unfold ndClosure maxConvGen
+  unfold ndClosure maxConv
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 ```
@@ -100,15 +100,16 @@ and $`\beta^{(n+1)} = \beta^{(n)} \mathbin{\overline{\ast}} \beta^{(n)}`.
 *Definition:* the iterates $`\beta^{(n)}` and the closure $`\bar\beta^{*} = \sup_n \beta^{(n)}`
 
 ```lean
-noncomputable def maxConvPow (beta : ℝ≥0 → ℝ≥0) :
+noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
     ℕ → (ℝ≥0 → ℝ≥0)
   | 0 => beta
   | n + 1 =>
-      maxConv (maxConvPow beta n) (maxConvPow beta n)
+      maxConvProj (maxConvProjPow beta n)
+        (maxConvProjPow beta n)
 
 noncomputable def saClosure (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
-  fun t => ⨆ n : ℕ, maxConvPow beta n t
+  fun t => ⨆ n : ℕ, maxConvProjPow beta n t
 ```
 
 The closure dominates the curve (it is the $`n = 0` iterate), provided
@@ -118,8 +119,8 @@ the iterates are bounded at each point.
 
 ```lean
 theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
-    (hbdd : ∀ t,
-      BddAbove (Set.range (fun n => maxConvPow beta n t)))
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun n => maxConvProjPow beta n t)))
     (t : ℝ≥0) : beta t ≤ saClosure beta t := by
   unfold saClosure
   exact le_ciSup (hbdd t) 0

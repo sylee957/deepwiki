@@ -22,7 +22,7 @@ are then cut out as sub-complete-dioids.
 Then the _non-negative reals_ $`\mathbb{R}_{\ge 0}`: cumulative
 functions embed into the carriers $`\overline{\mathbb{R}}_{\ge 0}`
 (`MinPlusNN`) and its (max,plus) dual (`MaxPlusNN`), and the real
-convolution operators `minConv` / `maxConv` are read back from the
+convolution operators `minConvProj` / `maxConvProj` are read back from the
 dioid product, each shown to equal the expected $`\inf` / $`\sup` over
 the splits of $`t`.
 
@@ -62,12 +62,12 @@ $`\mathbb{R}_{\ge 0}`, and the extended non-negative reals
 $`\overline{\mathbb{R}}_{\ge 0}` (`ℝ≥0∞`). No separate definition is
 needed per carrier: a theorem about, say, the $`\overline{\mathbb{R}}_{\ge 0}`
 convolution simply types its arguments as $`g, h : \mathbb{R}^{+} \to
-\overline{\mathbb{R}}_{\ge 0}`, and `minConvGen g h` _is_ that operator.
+\overline{\mathbb{R}}_{\ge 0}`, and `minConv g h` _is_ that operator.
 
 *Definition:* the _(min,plus) convolution_ $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\inf`
 
 ```lean
-noncomputable def minConvGen
+noncomputable def minConv
     {D T : Type*} [Add D] [Add T] [InfSet T]
     (f g : D → T) : D → T :=
   fun t =>
@@ -78,7 +78,7 @@ noncomputable def minConvGen
 *Definition:* the _(max,plus) convolution_ $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\sup`
 
 ```lean
-noncomputable def maxConvGen
+noncomputable def maxConv
     {D T : Type*} [Add D] [Add T] [SupSet T]
     (f g : D → T) : D → T :=
   fun t =>
@@ -88,7 +88,7 @@ noncomputable def maxConvGen
 
 A caveat for the (max,plus) supremum over the _non-negative reals_
 $`\mathbb{R}_{\ge 0}`: an unbounded supremum is not finite there, so the
-direct `maxConvGen` floors to $`0`; the dioid-backed `maxConv` defined
+direct `maxConv` floors to $`0`; the dioid-backed `maxConvProj` defined
 later is the canonical operator over that carrier, and the two agree
 wherever the supremum is finite.
 
@@ -100,7 +100,7 @@ the shift) and a codomain carrying a subtraction and a supremum.
 *Definition:* the _deconvolution_ $`(g \oslash h)(t) = \sup_{s}\,(g(t + s) - h(s))` over any codomain with $`-` and $`\sup`
 
 ```lean
-noncomputable def deconvGen
+noncomputable def deconv
     {D T : Type*} [Add D] [Sub T] [SupSet T]
     (g h : D → T) : D → T :=
   fun t => ⨆ s : D, g (t + s) - h s
@@ -146,7 +146,7 @@ theorem conv_coe_min
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MinPlusExt)
         : WithTop (WithBot ℝ))
-      = minConvGen f g t := by
+      = minConv f g t := by
   apply le_antisymm
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -173,7 +173,7 @@ lift of the real (min,plus) convolution.
 theorem conv_coe
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
     conv (↑f : FminBar) (↑g : FminBar)
-      = (↑(minConvGen f g) : FminBar) := by
+      = (↑(minConv f g) : FminBar) := by
   funext t
   apply MinPlusExt.ext
   exact conv_coe_min f g t
@@ -183,7 +183,7 @@ theorem conv_coe
 
 The construction dualizes verbatim to the _(max,plus)_ side, on the
 same extended reals but through the order-dual carrier `MaxPlusExt`
-(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is `maxConvGen`
+(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is `maxConv`
 at this carrier — the numeric _supremum_ over the splits; the function
 class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
 \overline{\mathbb{R}}_{\max}`, and the dioid product again computes it.
@@ -204,7 +204,7 @@ theorem conv_coe_max
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MaxPlusExt)
         : WithBot (WithTop ℝ))
-      = maxConvGen f g t := by
+      = maxConv f g t := by
   apply le_antisymm
   · rw [conv_apply, ← MaxPlusExt.le_iff]
     refine CompleteDioid.sSup_le _ _ ?_
@@ -228,7 +228,7 @@ theorem conv_coe_max
 theorem conv_coe_max'
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
     conv (↑f : FmaxBar) (↑g : FmaxBar)
-      = (↑(maxConvGen f g) : FmaxBar) := by
+      = (↑(maxConv f g) : FmaxBar) := by
   funext t
   apply MaxPlusExt.ext
   exact conv_coe_max f g t
@@ -353,7 +353,7 @@ theorem IsNondecr.add
 ## Stability under the convolution
 
 Each atom is likewise stable under the (min,plus) convolution
-`minConvGen`. Non-negativity passes through because every split-sum
+`minConv`. Non-negativity passes through because every split-sum
 $`f(u) + g(s)` is non-negative, hence so is their infimum. Nullity at
 the origin holds because the only split of $`0` is $`0 + 0`.
 
@@ -363,9 +363,9 @@ the origin holds because the only split of $`0` is $`0 + 0`.
 theorem IsNonneg.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNonneg f) (hg : IsNonneg g) :
-    IsNonneg (minConvGen f g) := by
+    IsNonneg (minConv f g) := by
   intro t
-  simp only [minConvGen]
+  simp only [minConv]
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, _⟩
   calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
@@ -378,9 +378,9 @@ theorem IsNonneg.conv
 theorem IsNullAtOrigin.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
-    IsNullAtOrigin (minConvGen f g) := by
-  show minConvGen f g 0 = 0
-  simp only [minConvGen]
+    IsNullAtOrigin (minConv f g) := by
+  show minConv f g 0 = 0
+  simp only [minConv]
   apply le_antisymm
   · exact iInf_le_of_le ⟨(0, 0), by simp⟩ (by
       simp [IsNullAtOrigin] at hf hg; simp [hf, hg])
@@ -400,9 +400,9 @@ by lowering the first coordinate to $`\min(u, x)`.
 theorem IsNondecr.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNondecr f) (hg : IsNondecr g) :
-    IsNondecr (minConvGen f g) := by
+    IsNondecr (minConv f g) := by
   intro x y hxy
-  simp only [minConvGen]
+  simp only [minConv]
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, (hus : u + s = y)⟩
   refine iInf_le_of_le
@@ -601,7 +601,7 @@ structure.
 We read the atoms onto $`\mathcal{F}` through the `MinPlusExt` wrapper —
 applying each property to the underlying values $`t \mapsto (f\,t)`
 — and record two bridges: $`\mathcal{F}` is the lift of its own
-underlying values, and the dioid product unwraps to `minConvGen`.
+underlying values, and the dioid product unwraps to `minConv`.
 
 The classes are the subtypes of $`\mathcal{F}` cut out directly by the
 atoms: $`\mathcal{F}^{+}` by non-negativity alone, and
@@ -628,7 +628,7 @@ theorem coe_toVal (a : FminBar) :
 
 theorem mul_toVal (a b : FminBar) (t : ℝ≥0) :
     ((a ⊗ₒ b) t).toVal
-      = minConvGen (fun t => (a t).toVal)
+      = minConv (fun t => (a t).toVal)
           (fun t => (b t).toVal) t := by
   show ((conv a b t : MinPlusExt) : WithTop (WithBot ℝ)) = _
   rw [← coe_toVal a, ← coe_toVal b]
@@ -855,7 +855,7 @@ dioid supremum is the numeric infimum, the convolution at `t` is finite
 *Definition:* $`(g \ast h)(t) = \big((\mathrm{emb}\,g \ast \mathrm{emb}\,h)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
-noncomputable def minConv (g h : ℝ≥0 → ℝ≥0) :
+noncomputable def minConvProj (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMin g) (embMin h) t
@@ -911,11 +911,11 @@ infimum.
 *Theorem:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))`
 
 ```lean
-theorem minConv_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    minConv g h t
+theorem minConvProj_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    minConvProj g h t
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (g p.1.1 + h p.1.2) := by
-  rw [minConv, conv_embMin_toE,
+  rw [minConvProj, conv_embMin_toE,
     ← ENNReal.coe_iInf
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2),
@@ -928,11 +928,11 @@ raises the convolution.
 *Theorem:* $`g \le g' \implies A \ast g \le A \ast g'`
 
 ```lean
-theorem minConv_mono_right (A : ℝ≥0 → ℝ≥0)
+theorem minConvProj_mono_right (A : ℝ≥0 → ℝ≥0)
     {g g' : ℝ≥0 → ℝ≥0} (h : g ≤ g') :
-    minConv A g ≤ minConv A g' := by
+    minConvProj A g ≤ minConvProj A g' := by
   intro t
-  rw [minConv_eq, minConv_eq]
+  rw [minConvProj_eq, minConvProj_eq]
   refine ciInf_mono (OrderBot.bddBelow _) (fun p => ?_)
   gcongr
   exact h p.1.2
@@ -950,7 +950,7 @@ generates the super-additive closure.
 *Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \big((\mathrm{emb}_{\max}g \ast \mathrm{emb}_{\max}h)(t)\big)\!\downarrow_{\mathbb{R}_{\ge 0}}`
 
 ```lean
-noncomputable def maxConv (g h : ℝ≥0 → ℝ≥0) :
+noncomputable def maxConvProj (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
     (conv (embMax g) (embMax h) t
@@ -1013,10 +1013,10 @@ provided the values are bounded so the supremum is finite.
 *Theorem:* $`\uparrow(g \mathbin{\overline{\ast}} h)(t) = \bigsqcup_{a + b = t} (g(a) + h(b))` when finite
 
 ```lean
-theorem maxConv_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
+theorem maxConvProj_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤) :
-    ((maxConv g h t : ℝ≥0) : ℝ≥0∞)
+    ((maxConvProj g h t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   have hcoe : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
@@ -1026,7 +1026,7 @@ theorem maxConv_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
-  rw [maxConv, conv_embMax_toW, hcoe]
+  rw [maxConvProj, conv_embMax_toW, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
 ```
 
@@ -1040,11 +1040,11 @@ supremum's. This is the bound the strict-service proofs use.
 *Theorem:* $`(\forall a + b = t,\ g(a) + h(b) \le c) \implies (g \mathbin{\overline{\ast}} h)(t) \le c`
 
 ```lean
-theorem maxConv_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
+theorem maxConvProj_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
     (hsplit : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       g p.1.1 + h p.1.2 ≤ c) :
-    maxConv g h t ≤ c := by
-  rw [maxConv, conv_embMax_toW]
+    maxConvProj g h t ≤ c := by
+  rw [maxConvProj, conv_embMax_toW]
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         (((g p.1.1 + h p.1.2 : ℝ≥0)
@@ -1069,17 +1069,17 @@ strict-service-curve proofs invoke, with `c` a departure value.
 *Theorem:* $`(\forall a + b = t,\ c + g(a) + g(b) \le y) \implies c + (g \mathbin{\overline{\ast}} g)(t) \le y`
 
 ```lean
-theorem add_maxConv_le
+theorem add_maxConvProj_le
     (g : ℝ≥0 → ℝ≥0) (t c y : ℝ≥0)
     (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       c + (g p.1.1 + g p.1.2) ≤ y) :
-    c + maxConv g g t ≤ y := by
+    c + maxConvProj g g t ≤ y := by
   have hcy : c ≤ y :=
     le_trans le_self_add (h ⟨(t, 0), by simp⟩)
-  have hsup : maxConv g g t ≤ y - c :=
-    maxConv_le g g t (y - c)
+  have hsup : maxConvProj g g t ≤ y - c :=
+    maxConvProj_le g g t (y - c)
       (fun p => le_tsub_of_add_le_left (h p))
-  calc c + maxConv g g t ≤ c + (y - c) := by gcongr
+  calc c + maxConvProj g g t ≤ c + (y - c) := by gcongr
     _ = y := add_tsub_cancel_of_le hcy
 ```
 
@@ -1117,33 +1117,33 @@ theorem neg_ciInf_neg {ι : Type} [Nonempty ι]
 *Theorem:* $`(g \mathbin{\overline{\ast}} g)(t) = -\inf_{a + b = t} ((-g(a)) + (-g(b)))`, when finite
 
 ```lean
-theorem maxConv_eq_neg_iInf
+theorem maxConvProj_eq_neg_iInf
     (g : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((g p.1.1 + g p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≠ ⊤) :
-    ((maxConv g g t : ℝ≥0) : ℝ)
+    ((maxConvProj g g t : ℝ≥0) : ℝ)
       = - ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (- ((g p.1.1 : ℝ) + (g p.1.2 : ℝ))) := by
-  have hsc : ((maxConv g g t : ℝ≥0) : ℝ≥0∞)
+  have hsc : ((maxConvProj g g t : ℝ≥0) : ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + g p.1.2 : ℝ≥0) : ℝ≥0∞) :=
-    maxConv_coe g g t hfin
+    maxConvProj_coe g g t hfin
   have hbN : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         (g p.1.1 + g p.1.2 : ℝ≥0))) := by
-    refine ⟨maxConv g g t, ?_⟩
+    refine ⟨maxConvProj g g t, ?_⟩
     rintro _ ⟨p, rfl⟩
     have hle :
         ((g p.1.1 + g p.1.2 : ℝ≥0) : ℝ≥0∞)
-        ≤ ((maxConv g g t : ℝ≥0) : ℝ≥0∞) := by
+        ≤ ((maxConvProj g g t : ℝ≥0) : ℝ≥0∞) := by
       rw [hsc]
       exact le_iSup
         (fun q : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
           ((g q.1.1 + g q.1.2 : ℝ≥0)
             : ℝ≥0∞)) p
     exact_mod_cast hle
-  have hr : maxConv g g t
+  have hr : maxConvProj g g t
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (g p.1.1 + g p.1.2) := by
     rw [← ENNReal.coe_iSup hbN] at hsc
@@ -1157,7 +1157,7 @@ theorem maxConv_eq_neg_iInf
     exact_mod_cast hc ⟨p, rfl⟩
   simp only [← NNReal.coe_add]
   rw [← neg_ciInf_neg _ hbR,
-    show (((maxConv g g t : ℝ≥0)) : ℝ)
+    show (((maxConvProj g g t : ℝ≥0)) : ℝ)
         = ((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (g p.1.1 + g p.1.2) : ℝ≥0) : ℝ)
         from congrArg _ hr,
@@ -1166,44 +1166,44 @@ theorem maxConv_eq_neg_iInf
 
 # The real convolutions bridge to the dioid-backed operators
 
-The dioid-backed `minConv` / `maxConv` are _defined_ by computing in a
-dioid and projecting back. The direct numeric operators `minConvGen` /
-`maxConvGen` on $`\mathbb{R}_{\ge 0}` are the same convolutions on their
+The dioid-backed `minConvProj` / `maxConvProj` are _defined_ by computing in a
+dioid and projecting back. The direct numeric operators `minConv` /
+`maxConv` on $`\mathbb{R}_{\ge 0}` are the same convolutions on their
 own terms; here we bridge each to its dioid-backed counterpart.
 
-The direct definition agrees with the dioid-backed `minConv`: this is
-exactly `minConv_eq`, read as an equality of functions.
+The direct definition agrees with the dioid-backed `minConvProj`: this is
+exactly `minConvProj_eq`, read as an equality of functions.
 
-*Theorem:* $`g \ast h = \mathrm{minConv}(g, h)`
+*Theorem:* $`g \ast h = \mathrm{minConvProj}(g, h)`
 
 ```lean
-theorem minConvR_eq_minConv (g h : ℝ≥0 → ℝ≥0) :
-    minConvGen g h = minConv g h := by
+theorem minConv_eq_minConvProj (g h : ℝ≥0 → ℝ≥0) :
+    minConv g h = minConvProj g h := by
   funext t
-  rw [minConvGen, minConv_eq]
+  rw [minConv, minConvProj_eq]
 ```
 
-When the supremum is finite, the direct `maxConvGen` agrees with the
-dioid-backed `maxConv`.
+When the supremum is finite, the direct `maxConv` agrees with the
+dioid-backed `maxConvProj`.
 
-*Theorem:* $`g \mathbin{\overline{\ast}} h = \mathrm{maxConv}(g, h)` at $`t`, when finite
+*Theorem:* $`g \mathbin{\overline{\ast}} h = \mathrm{maxConvProj}(g, h)` at $`t`, when finite
 
 ```lean
-theorem maxConvR_eq_maxConv
+theorem maxConv_eq_maxConvProj
     (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≠ ⊤) :
-    maxConvGen g h t = maxConv g h t := by
+    maxConv g h t = maxConvProj g h t := by
   have hbdd : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2)) := by
     by_contra hub
     exact hfin (ENNReal.iSup_coe_eq_top.mpr hub)
-  have h : ((maxConvGen g h t : ℝ≥0) : ℝ≥0∞)
-      = ((maxConv g h t : ℝ≥0) : ℝ≥0∞) := by
-    rw [maxConvGen, ENNReal.coe_iSup hbdd,
-      maxConv_coe _ _ _ hfin]
+  have h : ((maxConv g h t : ℝ≥0) : ℝ≥0∞)
+      = ((maxConvProj g h t : ℝ≥0) : ℝ≥0∞) := by
+    rw [maxConv, ENNReal.coe_iSup hbdd,
+      maxConvProj_coe _ _ _ hfin]
   exact_mod_cast h
 ```
 
