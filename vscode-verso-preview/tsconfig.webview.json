@@ -1,0 +1,10 @@
+{
+  // Webview code: runs in a sandboxed browser iframe. DOM globals from the lib;
+  // React types arrive via imports. No Node types — there is no `process` here.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["src/webview/**/*", "src/doc.ts", "src/types.ts"]
+}

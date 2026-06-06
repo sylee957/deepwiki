@@ -3,8 +3,8 @@
 // omits keywords — they come from the grammar). The two layers are merged:
 // grammar tokens give the base coloring, LSP semantic tokens refine identifiers.
 
-import * as path from "path";
-import * as fs from "fs";
+import * as path from "node:path";
+import * as fs from "node:fs";
 import * as oniguruma from "vscode-oniguruma";
 import * as vsctm from "vscode-textmate";
 import type { SemTok } from "./types";

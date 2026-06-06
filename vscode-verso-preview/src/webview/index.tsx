@@ -39,8 +39,8 @@ function App() {
   const toc = useMemo(() => buildToc(blocks), [blocks]);
 
   const tokenRef = useRef(0);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout>>();
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // The token currently shown/queried: line, start col, and end col (exclusive).
   const pendingRef = useRef<{ line: number; col: number; end: number }>({
     line: -1,
@@ -76,6 +76,13 @@ function App() {
         }
         tokensRef.current = byLine;
         setTokens(byLine);
+      } else if (msg.type === "colors") {
+        // Apply configured token colors as CSS custom properties (--tok-*);
+        // the stylesheet's hex values remain the fallback for unset keys.
+        const root = document.documentElement.style;
+        for (const [key, val] of Object.entries(msg.colors)) {
+          root.setProperty(`--tok-${key}`, val);
+        }
       } else if (msg.type === "error") {
         setError(msg.message);
         setBlocks([]);

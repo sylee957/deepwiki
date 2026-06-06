@@ -19,6 +19,13 @@ export interface ErrorMsg {
   message: string;
 }
 
+/** Host → webview: user-configured code token colors (token type → CSS color).
+ * Applied as CSS custom properties; missing keys fall back to the CSS default. */
+export interface ColorsMsg {
+  type: "colors";
+  colors: Record<string, string>;
+}
+
 /** One decoded semantic token: a colored span on a source line. */
 export interface SemTok {
   line: number; // 0-based source line
@@ -44,7 +51,12 @@ export interface HoverResultMsg {
   token: number;
 }
 
-export type HostToWebview = RenderMsg | HoverResultMsg | ErrorMsg | TokensMsg;
+export type HostToWebview =
+  | RenderMsg
+  | HoverResultMsg
+  | ErrorMsg
+  | TokensMsg
+  | ColorsMsg;
 
 /** Webview → host: query a hover at a source position. */
 export interface HoverReqMsg {

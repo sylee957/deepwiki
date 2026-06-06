@@ -1,0 +1,11 @@
+{
+  // Extension-host code: runs in VSCode's Node.js extension host. Node globals
+  // (process, path, fs, …) come from @types/node; the editor API from
+  // @types/vscode. No DOM here.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "types": ["node", "vscode"]
+  },
+  "include": ["src/*.ts"]
+}

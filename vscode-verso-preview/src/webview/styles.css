@@ -142,17 +142,20 @@ blockquote {
 .doclink { color: var(--vscode-textLink-foreground, #4daafc); }
 
 /* Lean code coloring from LSP semantic tokens (theme-aware). */
-.k  { color: var(--vscode-symbolIcon-keywordForeground, #c586c0); }
-.fn { color: var(--vscode-symbolIcon-functionForeground, #dcdcaa); }
-.pr { color: var(--vscode-symbolIcon-propertyForeground, #9cdcfe); }
-.va { color: var(--vscode-symbolIcon-variableForeground, #9cdcfe); }
-.t  { color: var(--vscode-symbolIcon-classForeground, #4ec9b0); }
-.ns { color: var(--vscode-symbolIcon-namespaceForeground, #4ec9b0); }
-.op { color: var(--vscode-symbolIcon-operatorForeground, #d4d4d4); }
-.c  { color: var(--vscode-editorLineNumber-foreground, #6a9955); font-style: italic; }
-.s  { color: var(--vscode-debugTokenExpression-string, #ce9178); }
-.n  { color: var(--vscode-debugTokenExpression-number, #b5cea8); }
-.sorry { color: var(--vscode-editorError-foreground, #f77); }
+/* Token colors. Defaults match VSCode's Dark+ theme; each is overridable via a
+   `versoPreview.colors.<type>` setting, which the host pushes as a CSS custom
+   property (--tok-*) on :root. The hex here is the fallback when unset. */
+.k  { color: var(--tok-keyword, #569CD6); }   /* def, theorem, fun, by, … */
+.fn { color: var(--tok-function, #DCDCAA); }  /* function / decl names */
+.pr { color: var(--tok-property, #9CDCFE); }  /* property */
+.va { color: var(--tok-variable, #9CDCFE); }  /* variable */
+.t  { color: var(--tok-type, #4EC9B0); }      /* type */
+.ns { color: var(--tok-namespace, #4EC9B0); } /* namespace */
+.op { color: var(--tok-operator, #D4D4D4); }  /* operator */
+.c  { color: var(--tok-comment, #6A9955); font-style: italic; } /* comment */
+.s  { color: var(--tok-string, #CE9178); }    /* string */
+.n  { color: var(--tok-number, #B5CEA8); }    /* number */
+.sorry { color: var(--tok-sorryLike, #F44747); } /* sorry-like */
 
 /* Indicator: highlight the run under the cursor (where the LSP will query). */
 .hover-mark {

@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
-import { execFile } from "child_process";
+import * as path from "node:path";
+import * as os from "node:os";
+import * as fs from "node:fs";
+import { execFile } from "node:child_process";
 import { marked } from "marked";
 import { tokenizeGrammar } from "./textmate";
 import type { WebviewToHost, HostToWebview } from "./types";
@@ -92,6 +92,13 @@ export function activate(context: vscode.ExtensionContext) {
       },
     })
   );
+
+  // Re-send colors live when the user edits versoPreview.colors.* settings.
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (panel && e.affectsConfiguration("versoPreview.colors")) sendColors();
+    })
+  );
 }
 
 // A renderable Verso doc: a lean4 file with a `#doc (…)` header near the top.
@@ -171,6 +178,33 @@ function scheduleUpdate(document: vscode.TextDocument) {
 
 function post(msg: HostToWebview) {
   panel?.webview.postMessage(msg);
+}
+
+// The token types that have a `versoPreview.colors.<type>` setting.
+const COLOR_KEYS = [
+  "keyword",
+  "function",
+  "type",
+  "namespace",
+  "variable",
+  "property",
+  "operator",
+  "string",
+  "number",
+  "comment",
+  "sorryLike",
+];
+
+// Read the user's configured code colors and send them to the webview, which
+// applies them as CSS custom properties (defaults live in the stylesheet).
+function sendColors() {
+  const cfg = vscode.workspace.getConfiguration("versoPreview.colors");
+  const colors: Record<string, string> = {};
+  for (const key of COLOR_KEYS) {
+    const v = cfg.get<string>(key);
+    if (typeof v === "string" && v.trim()) colors[key] = v.trim();
+  }
+  post({ type: "colors", colors });
 }
 
 // The #doc title if present, else the filename — used in the history bar.
@@ -365,6 +399,7 @@ async function handleMessage(msg: WebviewToHost) {
   // listening. Re-send the current content so it never sits empty due to a
   // message sent before the listener was attached.
   if (msg.type === "ready") {
+    sendColors(); // apply configured colors before first paint
     const doc = trackedDoc ?? vscode.window.activeTextEditor?.document;
     if (doc && isVersoDoc(doc)) {
       // Re-send content without mutating history: a reload/restore shouldn't
