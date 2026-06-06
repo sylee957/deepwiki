@@ -446,34 +446,37 @@ _non-decreasing closure_ $`f^{\uparrow}`: the least non-decreasing
 function lying above $`f`. Its value at $`t` is the supremum of $`f`
 over the whole initial segment up to $`t` — running the supremum over
 all earlier arguments forces monotonicity while keeping the function
-as low as possible. On the domain $`\mathbb{R}^{+}` the lower bound
-$`0 \le s` is automatic, so the segment is the order-ideal
-$`\{s : s \le t\}`.
+as low as possible. The segment is the order-ideal $`\{s : s \le t\}`.
 
-This construction is _carrier-agnostic_: it asks only that the values
-live in a lattice where the supremum over each initial segment exists.
-We develop it once, generically, over any conditionally-complete
-lattice $`T`, then read it on the two carriers the book uses — the
-extended reals here, and $`\mathbb{R}_{\ge 0}` in the chapter on real
-curves. The closure indexes the supremum by the order-ideal
-$`\{s : s \le t\}`, written as a subtype; that subtype is always
-inhabited (it contains $`0`), so the supremum is over a nonempty set.
+This construction is _agnostic to both ends_: the domain need only be
+an ordered type with a least element $`\bot` (so the initial segments
+are nonempty), and the values need only live in a lattice where the
+supremum over each segment exists. We develop it once, generically,
+over any preorder-with-bottom domain and conditionally-complete-lattice
+codomain, then read it on the carriers the book uses — the extended
+reals here, and $`\mathbb{R}_{\ge 0}` (with domain $`\mathbb{R}^{+}`)
+in the chapter on real curves. The closure indexes the supremum by the
+order-ideal $`\{s : s \le t\}`, written as a subtype; that subtype is
+always inhabited (it contains $`\bot`), so the supremum is over a
+nonempty set.
 
-*Definition:* $`0 \in \{s : s \le t\}`, so the index is nonempty
+*Definition:* $`\bot \in \{s : s \le t\}`, so the index is nonempty
 
 ```lean
-instance subLeNonempty (t : ℝ≥0) :
-    Nonempty {s : ℝ≥0 // s ≤ t} :=
-  ⟨⟨0, by positivity⟩⟩
+instance subLeNonempty {D : Type*} [Preorder D]
+    [OrderBot D] (t : D) :
+    Nonempty {s : D // s ≤ t} :=
+  ⟨⟨⊥, bot_le⟩⟩
 ```
 
-*Definition:* $`f^{\uparrow}(t) = \sup_{0 \le s \le t} f(s)`, over any $`T`
+*Definition:* $`f^{\uparrow}(t) = \sup_{s \le t} f(s)`, over any domain $`D` and codomain $`T`
 
 ```lean
-noncomputable def ndClosure {T : Type*}
+noncomputable def ndClosure {D T : Type*}
+    [Preorder D] [OrderBot D]
     [ConditionallyCompleteLattice T]
-    (f : ℝ≥0 → T) : ℝ≥0 → T :=
-  fun t => ⨆ s : {s : ℝ≥0 // s ≤ t}, f s
+    (f : D → T) : D → T :=
+  fun t => ⨆ s : {s : D // s ≤ t}, f s
 ```
 
 Over a merely _conditionally_-complete lattice the supremum is genuine
@@ -484,10 +487,10 @@ it holds for free.
 *Definition:* $`f` is bounded above on each initial segment
 
 ```lean
-def ClosureBddAbove {T : Type*} [Preorder T]
-    (f : ℝ≥0 → T) : Prop :=
+def ClosureBddAbove {D T : Type*} [Preorder D]
+    [Preorder T] (f : D → T) : Prop :=
   ∀ t, BddAbove
-    (Set.range (fun s : {s : ℝ≥0 // s ≤ t} => f s))
+    (Set.range (fun s : {s : D // s ≤ t} => f s))
 ```
 
 The closure dominates the original function: $`t` itself lies in its
@@ -497,9 +500,10 @@ supremum, hence below it (the bound keeps the supremum genuine).
 *Theorem:* $`f \le f^{\uparrow}`
 
 ```lean
-theorem le_ndClosure {T : Type*}
-    [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
-    (hbdd : ClosureBddAbove f) (t : ℝ≥0) :
+theorem le_ndClosure {D T : Type*}
+    [Preorder D] [OrderBot D]
+    [ConditionallyCompleteLattice T] (f : D → T)
+    (hbdd : ClosureBddAbove f) (t : D) :
     f t ≤ ndClosure f t := by
   unfold ndClosure
   exact le_ciSup (hbdd t)
@@ -514,8 +518,9 @@ among those of the larger, hence sits below the larger supremum.
 *Theorem:* $`f^{\uparrow}` is non-decreasing
 
 ```lean
-theorem ndClosure_mono {T : Type*}
-    [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
+theorem ndClosure_mono {D T : Type*}
+    [Preorder D] [OrderBot D]
+    [ConditionallyCompleteLattice T] (f : D → T)
     (hbdd : ClosureBddAbove f) :
     Monotone (ndClosure f) := by
   intro x y hxy
@@ -535,10 +540,11 @@ itself is the witnessing bound.)
 *Theorem:* $`g` non-decreasing, $`g \ge f \implies g \ge f^{\uparrow}`
 
 ```lean
-theorem ndClosure_le {T : Type*}
+theorem ndClosure_le {D T : Type*}
+    [Preorder D] [OrderBot D]
     [ConditionallyCompleteLattice T]
-    {f g : ℝ≥0 → T} (hg : Monotone g)
-    (hfg : ∀ t, f t ≤ g t) (t : ℝ≥0) :
+    {f g : D → T} (hg : Monotone g)
+    (hfg : ∀ t, f t ≤ g t) (t : D) :
     ndClosure f t ≤ g t := by
   unfold ndClosure
   refine ciSup_le (fun s => ?_)
