@@ -37,8 +37,8 @@ $`\oplus` from $`T` pointwise.
 *Definition:* $`(f \oplus g)(t) = f(t) \oplus g(t)`
 
 ```lean
-def psum {T : Type*} [CompleteDioid T]
-    (f g : ℝ≥0 → T) : ℝ≥0 → T :=
+def psum {D T : Type*} [CompleteDioid T]
+    (f g : D → T) : D → T :=
   fun t => f t ⊕ₒ g t
 ```
 
@@ -50,11 +50,11 @@ $$`(f \ast g)(t) = \bigsqcup_{u + s = t} f(u) \otimes g(s).`
 *Definition:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
 
 ```lean
-noncomputable def conv {T : Type*}
+noncomputable def conv {D T : Type*} [Add D]
     [CompleteDioid T]
-    (f g : ℝ≥0 → T) : ℝ≥0 → T := fun t =>
+    (f g : D → T) : D → T := fun t =>
   CompleteDioid.sSup
-    { x | ∃ u s : ℝ≥0, u + s = t ∧ x = f u ⊗ₒ g s }
+    { x | ∃ u s : D, u + s = t ∧ x = f u ⊗ₒ g s }
 ```
 
 The defining equation, as a rewrite lemma.
@@ -62,8 +62,8 @@ The defining equation, as a rewrite lemma.
 *Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
 
 ```lean
-theorem conv_apply {T : Type*} [CompleteDioid T]
-    (f g : ℝ≥0 → T) (t : ℝ≥0) :
+theorem conv_apply {D T : Type*} [Add D] [CompleteDioid T]
+    (f g : D → T) (t : D) :
     conv f g t
       = CompleteDioid.sSup
           { x | ∃ u s, u + s = t ∧ x = f u ⊗ₒ g s } :=
@@ -75,8 +75,8 @@ The neutral for the sum is the constant $`\varepsilon` function.
 *Definition:* the sum-neutral $`\varepsilon_{\mathcal{F}}(t) = \varepsilon`
 
 ```lean
-def convZero {T : Type*} [CompleteDioid T] :
-    ℝ≥0 → T := fun _ => εₒ
+def convZero {D T : Type*} [CompleteDioid T] :
+    D → T := fun _ => εₒ
 ```
 
 The neutral for the convolution is the _impulse_: $`e` at time $`0`,
@@ -85,8 +85,8 @@ and $`\varepsilon` elsewhere.
 *Definition:* the convolution unit $`\delta_0(t) = e` if $`t = 0`, else $`\varepsilon`
 
 ```lean
-noncomputable def convUnit {T : Type*}
-    [CompleteDioid T] : ℝ≥0 → T :=
+noncomputable def convUnit {D T : Type*} [Zero D]
+    [CompleteDioid T] : D → T :=
   fun t => if t = 0 then eₒ else εₒ
 ```
 
@@ -96,9 +96,9 @@ dioid supremum.
 *Definition:* $`\bigl(\bigsqcup_i f_i\bigr)(t) = \bigsqcup_i f_i(t)`
 
 ```lean
-noncomputable def funSup {T : Type u}
+noncomputable def funSup {D : Type u} {T : Type u}
     [CompleteDioid T] {ι : Type u}
-    (F : ι → ℝ≥0 → T) : ℝ≥0 → T :=
+    (F : ι → D → T) : D → T :=
   fun t => CompleteDioid.iSup (fun i => F i t)
 ```
 
@@ -178,19 +178,20 @@ agree by associativity of $`\otimes`.
 *Definition:* $`\mathrm{triple}(f, g, h)(t) = \bigsqcup_{u + v + z = t} (f(u) \otimes g(v)) \otimes h(z)`
 
 ```lean
-noncomputable def triple {T : Type*} [CompleteDioid T]
-    (f g h : ℝ≥0 → T) (t : ℝ≥0) : T :=
+noncomputable def triple {D T : Type*} [Add D]
+    [CompleteDioid T]
+    (f g h : D → T) (t : D) : T :=
   CompleteDioid.sSup
-    { x | ∃ u v z : ℝ≥0,
+    { x | ∃ u v z : D,
         u + v + z = t ∧ x = (f u ⊗ₒ g v) ⊗ₒ h z }
 ```
 
 *Theorem:* $`((f \ast g) \ast h)(t) = \bigsqcup_{u+v+z=t} f(u) \otimes g(v) \otimes h(z)`
 
 ```lean
-theorem conv_conv_eq_triple {T : Type*}
-    [CompleteDioid T]
-    (f g h : ℝ≥0 → T) (t : ℝ≥0) :
+theorem conv_conv_eq_triple {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f g h : D → T) (t : D) :
     conv (conv f g) h t = triple f g h t := by
   apply le_antisymm
   · rw [conv_apply]
@@ -215,9 +216,9 @@ theorem conv_conv_eq_triple {T : Type*}
 *Theorem:* $`(f \ast (g \ast h))(t) = \bigsqcup_{u+v+z=t} f(u) \otimes g(v) \otimes h(z)`
 
 ```lean
-theorem conv_conv_eq_triple' {T : Type*}
-    [CompleteDioid T]
-    (f g h : ℝ≥0 → T) (t : ℝ≥0) :
+theorem conv_conv_eq_triple' {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f g h : D → T) (t : D) :
     conv f (conv g h) t = triple f g h t := by
   apply le_antisymm
   · rw [conv_apply]
@@ -245,8 +246,9 @@ theorem conv_conv_eq_triple' {T : Type*}
 *Theorem:* $`(f \ast g) \ast h = f \ast (g \ast h)`
 
 ```lean
-theorem conv_assoc {T : Type*} [CompleteDioid T]
-    (f g h : ℝ≥0 → T) :
+theorem conv_assoc {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f g h : D → T) :
     conv (conv f g) h = conv f (conv g h) := by
   funext t
   rw [conv_conv_eq_triple, conv_conv_eq_triple']
@@ -259,8 +261,9 @@ symmetric under swapping the two parts.
 *Theorem:* $`f \ast g = g \ast f`
 
 ```lean
-theorem conv_comm {T : Type*} [CompleteDioid T]
-    (f g : ℝ≥0 → T) : conv f g = conv g f := by
+theorem conv_comm {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f g : D → T) : conv f g = conv g f := by
   funext t
   show CompleteDioid.sSup _ = CompleteDioid.sSup _
   congr 1
@@ -280,8 +283,9 @@ the definition.
 *Theorem:* $`\delta_0 \ast f = f`
 
 ```lean
-theorem convUnit_left {T : Type*} [CompleteDioid T]
-    (f : ℝ≥0 → T) : conv convUnit f = f := by
+theorem convUnit_left {D T : Type*} [AddZeroClass D]
+    [CompleteDioid T]
+    (f : D → T) : conv convUnit f = f := by
   funext t
   apply le_antisymm
   · rw [conv_apply]
@@ -306,8 +310,9 @@ The right identity follows by commutativity.
 *Theorem:* $`f \ast \delta_0 = f`
 
 ```lean
-theorem convUnit_right {T : Type*} [CompleteDioid T]
-    (f : ℝ≥0 → T) : conv f convUnit = f := by
+theorem convUnit_right {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f : D → T) : conv f convUnit = f := by
   rw [conv_comm, convUnit_left]
 ```
 
@@ -318,8 +323,9 @@ the scalar dioid.
 *Theorem:* $`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h)`
 
 ```lean
-theorem conv_distrib {T : Type*} [CompleteDioid T]
-    (f g h : ℝ≥0 → T) :
+theorem conv_distrib {D T : Type*} [Add D]
+    [CompleteDioid T]
+    (f g h : D → T) :
     conv f (psum g h) = psum (conv f g) (conv f h) := by
   funext t
   apply le_antisymm
@@ -359,8 +365,9 @@ commuting the convolution.
 *Theorem:* $`(g \oplus h) \ast f = (g \ast f) \oplus (h \ast f)`
 
 ```lean
-theorem conv_distrib_right {T : Type*}
-    [CompleteDioid T] (f g h : ℝ≥0 → T) :
+theorem conv_distrib_right {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f g h : D → T) :
     conv (psum g h) f = psum (conv g f) (conv h f) := by
   rw [conv_comm, conv_distrib, conv_comm g f,
     conv_comm h f]
@@ -375,8 +382,9 @@ proved directly.
 *Theorem:* $`\varepsilon_{\mathcal{F}} \ast f = \varepsilon_{\mathcal{F}}`
 
 ```lean
-theorem convZero_left {T : Type*} [CompleteDioid T]
-    (f : ℝ≥0 → T) :
+theorem convZero_left {D T : Type*} [Add D]
+    [CompleteDioid T]
+    (f : D → T) :
     conv convZero f = convZero := by
   funext t
   apply le_antisymm
@@ -394,8 +402,9 @@ The right case follows by commutativity.
 *Theorem:* $`f \ast \varepsilon_{\mathcal{F}} = \varepsilon_{\mathcal{F}}`
 
 ```lean
-theorem convZero_right {T : Type*} [CompleteDioid T]
-    (f : ℝ≥0 → T) :
+theorem convZero_right {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteDioid T]
+    (f : D → T) :
     conv f convZero = convZero := by
   rw [conv_comm, convZero_left]
 ```
@@ -415,8 +424,9 @@ dioid product must instead be the convolution.
 
 ```lean
 noncomputable instance funCompleteDioid
+    {D : Type u} [_root_.AddCommMonoid D]
     {T : Type u} [CompleteDioid T] :
-    CompleteDioid (ℝ≥0 → T) where
+    CompleteDioid (D → T) where
   add := psum
   zero := convZero
   mul := conv
@@ -488,11 +498,14 @@ $$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s).`
 *Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(t - s) \otimes g(s) \mid s \le t \,\}`
 
 ```lean
-theorem conv_eq_sub {T : Type*} [CompleteDioid T]
-    (f g : ℝ≥0 → T) (t : ℝ≥0) :
+theorem conv_eq_sub {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
+    [AddLeftReflectLE D] [CompleteDioid T]
+    (f g : D → T) (t : D) :
     conv f g t
       = CompleteDioid.sSup
-          { x | ∃ s : ℝ≥0,
+          { x | ∃ s : D,
               s ≤ t ∧ x = f (t - s) ⊗ₒ g s } := by
   show CompleteDioid.sSup _ = CompleteDioid.sSup _
   congr 1
@@ -501,7 +514,8 @@ theorem conv_eq_sub {T : Type*} [CompleteDioid T]
   · rintro ⟨u, s, hus, rfl⟩
     refine ⟨s, ?_, ?_⟩
     · rw [← hus]; exact le_add_self
-    · rw [show t - s = u by rw [← hus]; simp]
+    · rw [show t - s = u by
+        rw [← hus, add_tsub_cancel_right]]
   · rintro ⟨s, hst, rfl⟩
     refine ⟨t - s, s, ?_, rfl⟩
     rw [tsub_add_cancel_of_le hst]
@@ -514,17 +528,17 @@ product $`\otimes`); it slides through the convolution.
 *Definition:* $`(f + K)(t) = f(t) \otimes K`
 
 ```lean
-def addConst {T : Type*} [CompleteDioid T]
-    (f : ℝ≥0 → T) (K : T) : ℝ≥0 → T :=
+def addConst {D T : Type*} [CompleteDioid T]
+    (f : D → T) (K : T) : D → T :=
   fun t => f t ⊗ₒ K
 ```
 
 *Theorem:* $`(f \ast g) + K = f \ast (g + K)`
 
 ```lean
-theorem conv_add_const {T : Type*}
+theorem conv_add_const {D T : Type*} [Add D]
     [CompleteDioid T]
-    (f g : ℝ≥0 → T) (K : T) :
+    (f g : D → T) (K : T) :
     addConst (conv f g) K = conv f (addConst g K) := by
   funext t
   show (conv f g t) ⊗ₒ K = _
@@ -552,9 +566,10 @@ is `mul_le_mul_left` / `mul_le_mul_right`. Raising the right factor:
 *Theorem:* $`g \preceq g' \implies f \ast g \preceq f \ast g'`
 
 ```lean
-theorem conv_le_conv_right {T : Type*}
-    [CompleteDioid T] (f : ℝ≥0 → T)
-    {g g' : ℝ≥0 → T} (h : g ≼ₒ g') :
+theorem conv_le_conv_right {D : Type u}
+    [_root_.AddCommMonoid D] {T : Type u}
+    [CompleteDioid T] (f : D → T)
+    {g g' : D → T} (h : g ≼ₒ g') :
     conv f g ≼ₒ conv f g' :=
   mul_le_mul_left h f
 ```
@@ -564,9 +579,10 @@ Raising the left factor:
 *Theorem:* $`f \preceq f' \implies f \ast g \preceq f' \ast g`
 
 ```lean
-theorem conv_le_conv_left {T : Type*}
-    [CompleteDioid T] {f f' : ℝ≥0 → T}
-    (h : f ≼ₒ f') (g : ℝ≥0 → T) :
+theorem conv_le_conv_left {D : Type u}
+    [_root_.AddCommMonoid D] {T : Type u}
+    [CompleteDioid T] {f f' : D → T}
+    (h : f ≼ₒ f') (g : D → T) :
     conv f g ≼ₒ conv f' g :=
   mul_le_mul_right h g
 ```

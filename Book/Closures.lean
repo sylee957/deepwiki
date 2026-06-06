@@ -48,14 +48,17 @@ all powers.
 *Definition:* convolution powers $`\sigma^{(n)}` and the closure $`\sigma^{\star}`
 
 ```lean
-noncomputable def convPow {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) : ℕ → (ℝ≥0 → T)
+noncomputable def convPow {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) : ℕ → (D → T)
   | 0 => convUnit
   | n + 1 => conv (convPow sigma n) sigma
 
 noncomputable def subadditiveClosure
+    {D : Type} [_root_.AddCommMonoid D]
     {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) : ℝ≥0 → T :=
+    (sigma : D → T) : D → T :=
   fun t =>
     CompleteDioid.iSup
       (fun n : ℕ => convPow sigma n t)
@@ -69,8 +72,9 @@ The first power is the curve itself.
 *Theorem:* $`\sigma^{(1)} = \sigma`
 
 ```lean
-theorem convPow_one {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) :
+theorem convPow_one {D : Type} [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) :
     convPow sigma 1 = sigma := by
   change conv convUnit sigma = sigma
   exact convUnit_left sigma
@@ -84,8 +88,10 @@ closure in the dioid order.
 *Theorem:* $`\sigma^{(k)} \preceq \sigma^{\star}` pointwise
 
 ```lean
-theorem convPow_le_closure {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) (k : ℕ) (t : ℝ≥0) :
+theorem convPow_le_closure {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) (k : ℕ) (t : D) :
     convPow sigma k t ≼ₒ subadditiveClosure sigma t :=
   CompleteDioid.le_iSup
     (fun n : ℕ => convPow sigma n t) k
@@ -99,8 +105,9 @@ associativity of the convolution and the unit law.
 *Theorem:* $`\sigma^{(m)} \ast \sigma^{(n)} = \sigma^{(m+n)}`
 
 ```lean
-theorem convPow_add {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) (m n : ℕ) :
+theorem convPow_add {D : Type} [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) (m n : ℕ) :
     conv (convPow sigma m) (convPow sigma n)
       = convPow sigma (m + n) := by
   induction n with
@@ -124,8 +131,10 @@ forming $`\sigma^{(m+n)}(u + s)`, which is below the closure.
 *Theorem:* $`\sigma^{(m)}(u) \otimes \sigma^{(n)}(s) \preceq \sigma^{\star}(u + s)`
 
 ```lean
-theorem convPow_term_le_closure {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) (m n : ℕ) (u s : ℝ≥0) :
+theorem convPow_term_le_closure {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) (m n : ℕ) (u s : D) :
     convPow sigma m u ⊗ₒ convPow sigma n s
       ≼ₒ subadditiveClosure sigma (u + s) := by
   refine le_trans ?_
@@ -147,8 +156,9 @@ $`u + 0` split with $`\sigma^{\star}(0) \succeq e`.
 *Theorem:* $`\sigma^{\star} \ast \sigma^{\star} = \sigma^{\star}`
 
 ```lean
-theorem closure_idem {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) :
+theorem closure_idem {D : Type} [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) :
     conv (subadditiveClosure sigma)
         (subadditiveClosure sigma)
       = subadditiveClosure sigma := by
@@ -196,8 +206,10 @@ $`\sigma^{\star}(u) \otimes \sigma^{\star}(s)`.
 *Theorem:* the closure is sub-additive, $`\sigma^{\star}(u) \otimes \sigma^{\star}(s) \preceq \sigma^{\star}(u + s)`
 
 ```lean
-theorem closure_subadditive {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) (u s : ℝ≥0) :
+theorem closure_subadditive {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) (u s : D) :
     subadditiveClosure sigma u
         ⊗ₒ subadditiveClosure sigma s
       ≼ₒ subadditiveClosure sigma (u + s) := by
@@ -225,9 +237,10 @@ curve is again non-negative and non-decreasing.
 *Theorem:* a sub-complete-dioid is closed under the closure
 
 ```lean
-theorem Algebra.IsSubCompleteDioid.closure {T : Type}
-    [CompleteDioid T] {P : (ℝ≥0 → T) → Prop}
-    (h : IsSubCompleteDioid P) {sigma : ℝ≥0 → T}
+theorem Algebra.IsSubCompleteDioid.closure {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T] {P : (D → T) → Prop}
+    (h : IsSubCompleteDioid P) {sigma : D → T}
     (hs : P sigma) : P (subadditiveClosure sigma) := by
   have hpow : ∀ n, P (convPow sigma n) := by
     intro n
@@ -265,10 +278,11 @@ of the powers is `σ` itself.
 *Theorem:* every power of a self-convolution fixed point lies below it
 
 ```lean
-theorem convPow_le_self {T : Type} [CompleteDioid T]
-    (sigma : ℝ≥0 → T) (hidem : conv sigma sigma = sigma)
+theorem convPow_le_self {D : Type} [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma : D → T) (hidem : conv sigma sigma = sigma)
     (hunit : ∀ t, convUnit (T := T) t ≼ₒ sigma t)
-    (n : ℕ) (t : ℝ≥0) :
+    (n : ℕ) (t : D) :
     convPow sigma n t ≼ₒ sigma t := by
   induction n generalizing t with
   | zero => exact hunit t
@@ -288,8 +302,9 @@ theorem convPow_le_self {T : Type} [CompleteDioid T]
 *Theorem:* a self-convolution fixed point above the unit equals its closure
 
 ```lean
-theorem subadditiveClosure_eq_self {T : Type}
-    [CompleteDioid T] (sigma : ℝ≥0 → T)
+theorem subadditiveClosure_eq_self {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T] (sigma : D → T)
     (hidem : conv sigma sigma = sigma)
     (hunit : ∀ t, convUnit (T := T) t ≼ₒ sigma t) :
     subadditiveClosure sigma = sigma := by
@@ -310,9 +325,10 @@ the supremum of the powers is too.
 *Theorem:* $`\sigma \preceq \tau` pointwise $`\Rightarrow \sigma^{(n)} \preceq \tau^{(n)}`
 
 ```lean
-theorem convPow_mono {T : Type} [CompleteDioid T]
-    (sigma tau : ℝ≥0 → T)
-    (h : ∀ r, sigma r ≼ₒ tau r) (n : ℕ) (t : ℝ≥0) :
+theorem convPow_mono {D : Type} [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T]
+    (sigma tau : D → T)
+    (h : ∀ r, sigma r ≼ₒ tau r) (n : ℕ) (t : D) :
     convPow sigma n t ≼ₒ convPow tau n t := by
   induction n generalizing t with
   | zero => exact le_refl _
@@ -329,9 +345,10 @@ theorem convPow_mono {T : Type} [CompleteDioid T]
 *Theorem:* $`\sigma \preceq \tau \Rightarrow \sigma^{\star} \preceq \tau^{\star}`
 
 ```lean
-theorem subadditiveClosure_mono {T : Type}
-    [CompleteDioid T] (sigma tau : ℝ≥0 → T)
-    (h : ∀ r, sigma r ≼ₒ tau r) (t : ℝ≥0) :
+theorem subadditiveClosure_mono {D : Type}
+    [_root_.AddCommMonoid D]
+    {T : Type} [CompleteDioid T] (sigma tau : D → T)
+    (h : ∀ r, sigma r ≼ₒ tau r) (t : D) :
     subadditiveClosure sigma t
       ≼ₒ subadditiveClosure tau t :=
   CompleteDioid.iSup_le _ _ (fun n =>
