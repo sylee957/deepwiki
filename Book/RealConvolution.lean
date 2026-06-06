@@ -23,35 +23,16 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 The _non-decreasing closure_ $`\beta_{\uparrow}(t) = \sup_{u \le t}
 \beta(u)` is the least non-decreasing curve above `beta`. It is the
-generic closure `closureUp` of the function-dioid chapter, read on the
+generic closure `ndClosure` of the function-dioid chapter, read on the
 carrier $`\mathbb{R}_{\ge 0}`: the same supremum over the initial
 segment $`\{u \le t\}`, only now the values are real. Unlike the
 extended reals, $`\mathbb{R}_{\ge 0}` is _conditionally_ complete, so
 the suprema are genuine only where the curve is bounded on each
-initial interval — every theorem below carries that hypothesis,
-exactly the generic `ClosureBddAbove`.
-
-*Definition:* the non-decreasing closure $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
-
-```lean
-noncomputable def ndClosure (beta : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  closureUp beta
-```
-
-The closure dominates the curve (it is the $`u = t` term), provided the
-values are bounded on each initial interval so the supremum is genuine.
-This is the generic domination lemma `le_closureUp`, read here.
-
-*Theorem:* $`\beta \le \beta_{\uparrow}`
-
-```lean
-theorem le_ndClosure (beta : ℝ≥0 → ℝ≥0)
-    (hbdd : ∀ t, BddAbove
-      (Set.range (fun u : {u // u ≤ t} => beta u.1)))
-    (t : ℝ≥0) : beta t ≤ ndClosure beta t :=
-  le_closureUp beta hbdd t
-```
+initial interval — every theorem here carries that hypothesis,
+exactly the generic `ClosureBddAbove`. The generic `le_ndClosure`,
+`ndClosure_mono`, and `ndClosure_le` instantiate directly at
+$`\mathbb{R}_{\ge 0}`, so the only real-curve-specific fact to record
+is the algebraic one below.
 
 The closure is exactly the _(max,plus) convolution with the zero
 curve_, $`\beta_{\uparrow} = \beta \mathbin{\overline{\ast}} 0`: a split
@@ -81,7 +62,7 @@ theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
         add_tsub_cancel_of_le hu⟩, rfl⟩
     · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
       exact ⟨⟨u, hus ▸ le_self_add⟩, rfl⟩
-  unfold ndClosure closureUp maxConvR
+  unfold ndClosure maxConvR
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 ```
@@ -89,19 +70,8 @@ theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
 The closure is itself non-decreasing — this is what makes it the _least
 monotone curve above_ `beta`, and not merely some upper bound. Raising
 the argument widens the initial interval $`\{u \le t\}` over which the
-supremum is taken, so the supremum can only grow (bounding the values
-on each interval keeps the suprema genuine). Again this is the generic
-`closureUp_mono`, read on $`\mathbb{R}_{\ge 0}`.
-
-*Theorem:* $`\beta_{\uparrow}` is non-decreasing
-
-```lean
-theorem ndClosure_mono (beta : ℝ≥0 → ℝ≥0)
-    (hbdd : ∀ t, BddAbove
-      (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
-    Monotone (ndClosure beta) :=
-  closureUp_mono beta hbdd
-```
+supremum is taken, so the supremum can only grow. This is exactly the
+generic `ndClosure_mono`, read on $`\mathbb{R}_{\ge 0}`.
 
 The textbook also pairs this with the _non-negative closure_
 $`[\beta]^{+} = \beta \vee 0` and their composite, the non-negative

@@ -496,7 +496,7 @@ instance subLeNonempty (t : ℝ≥0) :
 *Definition:* $`f^{\uparrow}(t) = \sup_{0 \le s \le t} f(s)`, over any $`T`
 
 ```lean
-noncomputable def closureUp {T : Type*}
+noncomputable def ndClosure {T : Type*}
     [ConditionallyCompleteLattice T]
     (f : ℝ≥0 → T) : ℝ≥0 → T :=
   fun t => ⨆ s : {s : ℝ≥0 // s ≤ t}, f s
@@ -523,11 +523,11 @@ supremum, hence below it (the bound keeps the supremum genuine).
 *Theorem:* $`f \le f^{\uparrow}`
 
 ```lean
-theorem le_closureUp {T : Type*}
+theorem le_ndClosure {T : Type*}
     [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
     (hbdd : ClosureBddAbove f) (t : ℝ≥0) :
-    f t ≤ closureUp f t := by
-  unfold closureUp
+    f t ≤ ndClosure f t := by
+  unfold ndClosure
   exact le_ciSup (hbdd t)
     (⟨t, le_refl t⟩ : {s // s ≤ t})
 ```
@@ -540,12 +540,12 @@ among those of the larger, hence sits below the larger supremum.
 *Theorem:* $`f^{\uparrow}` is non-decreasing
 
 ```lean
-theorem closureUp_mono {T : Type*}
+theorem ndClosure_mono {T : Type*}
     [ConditionallyCompleteLattice T] (f : ℝ≥0 → T)
     (hbdd : ClosureBddAbove f) :
-    Monotone (closureUp f) := by
+    Monotone (ndClosure f) := by
   intro x y hxy
-  unfold closureUp
+  unfold ndClosure
   refine ciSup_le (fun s => ?_)
   exact le_ciSup (hbdd y) ⟨s.1, s.2.trans hxy⟩
 ```
@@ -561,12 +561,12 @@ itself is the witnessing bound.)
 *Theorem:* $`g` non-decreasing, $`g \ge f \implies g \ge f^{\uparrow}`
 
 ```lean
-theorem closureUp_le {T : Type*}
+theorem ndClosure_le {T : Type*}
     [ConditionallyCompleteLattice T]
     {f g : ℝ≥0 → T} (hg : Monotone g)
     (hfg : ∀ t, f t ≤ g t) (t : ℝ≥0) :
-    closureUp f t ≤ g t := by
-  unfold closureUp
+    ndClosure f t ≤ g t := by
+  unfold ndClosure
   refine ciSup_le (fun s => ?_)
   exact (hfg s.1).trans (hg s.2)
 ```
@@ -581,7 +581,7 @@ is unconditional. We read the generic construction there as $`f^{\uparrow}`.
 noncomputable abbrev fUp
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :
     ℝ≥0 → WithTop (WithBot ℝ) :=
-  closureUp f
+  ndClosure f
 ```
 
 On a complete lattice every set is bounded above, so the boundedness
@@ -600,7 +600,7 @@ theorem fUp_bdd (f : ℝ≥0 → WithTop (WithBot ℝ)) :
 ```lean
 theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
     (t : ℝ≥0) : f t ≤ fUp f t :=
-  le_closureUp f (fUp_bdd f) t
+  le_ndClosure f (fUp_bdd f) t
 ```
 
 *Theorem:* $`f^{\uparrow}` is non-decreasing
@@ -609,7 +609,7 @@ theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
 theorem fUp_isNondecr
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :
     IsNondecr (fUp f) :=
-  fun x y hxy => closureUp_mono f (fUp_bdd f) hxy
+  fun x y hxy => ndClosure_mono f (fUp_bdd f) hxy
 ```
 
 *Theorem:* $`g \in \mathcal{F}^{\uparrow},\ g \ge f \implies g \ge f^{\uparrow}`
@@ -618,7 +618,7 @@ theorem fUp_isNondecr
 theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hg : IsNondecr g) (hfg : ∀ t, f t ≤ g t)
     (t : ℝ≥0) : fUp f t ≤ g t :=
-  closureUp_le (fun _ _ h => hg _ _ h) hfg t
+  ndClosure_le (fun _ _ h => hg _ _ h) hfg t
 ```
 
 When $`f` is itself non-negative, the closure stays non-negative —
