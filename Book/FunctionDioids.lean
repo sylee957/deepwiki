@@ -43,32 +43,28 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 # Convolutions of numeric functions
 
-We collect, in one place, the _direct_ convolution operators on numeric
-functions — defined as a numeric infimum or supremum over the splits
-$`u + s = t`, with no recourse to a dioid. There are two number-system
-views, each in a (min,plus) and a (max,plus) flavour:
+We define the _direct_ convolution operators on numeric functions — a
+numeric infimum or supremum over the splits $`u + s = t`, with no
+recourse to a dioid. The key observation is that every such operator
+has the _same shape_: aggregate the codomain sum $`f(u) + g(s)` over
+all splits $`u + s = t` of the argument. They differ only in the
+codomain $`T` and in whether the aggregation is an infimum or a
+supremum. We therefore define the shape _once_, generic over an
+arbitrary domain with an addition (to form the splits) and a codomain
+carrying both an addition (to combine the two values) and an infimum —
+and dually a supremum.
 
-- on the _extended reals_ $`\mathbb{R} \cup \{\pm\infty\}` — `minConvBar`
-  (infimum) and `maxConvBar` (supremum);
-- on the _non-negative reals_ $`\mathbb{R}_{\ge 0}` — `minConvR`
-  (infimum) and `maxConvR` (supremum).
+Specialising the codomain then recovers each concrete convolution: the
+domain is always the cumulative-curve time axis $`\mathbb{R}_{\ge 0}`,
+and the codomain ranges over the scalar carriers — the extended reals
+$`\mathbb{R} \cup \{\pm\infty\}`, the non-negative reals
+$`\mathbb{R}_{\ge 0}`, and the extended non-negative reals
+$`\overline{\mathbb{R}}_{\ge 0}` (`ℝ≥0∞`). No separate definition is
+needed per carrier: a theorem about, say, the $`\overline{\mathbb{R}}_{\ge 0}`
+convolution simply types its arguments as $`g, h : \mathbb{R}^{+} \to
+\overline{\mathbb{R}}_{\ge 0}`, and `minConvGen g h` _is_ that operator.
 
-Each is later shown to _coincide_ with the corresponding dioid product
-`conv` (the extended-real pair, in the sections that follow) or with its
-dioid-backed projection (the $`\mathbb{R}_{\ge 0}` pair, at the end of
-the chapter). The definitions are gathered here; the coincidence proofs
-stay beside the dioid material they bridge to.
-
-Every one of these operators is the _same shape_: aggregate the
-codomain sum $`f(u) + g(s)` over all splits $`u + s = t` of the
-argument. They differ only in the codomain $`T` and in whether the
-aggregation is an infimum or a supremum. We therefore define the shape
-_once_, generic over an arbitrary domain with an addition (to form the
-splits) and a codomain carrying both an addition (to combine the two
-values) and an infimum — and dually a supremum. Each named operator
-below is then this generic convolution at a chosen $`T`.
-
-*Definition:* the generic _(min,plus) convolution_ $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\inf`
+*Definition:* the _(min,plus) convolution_ $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\inf`
 
 ```lean
 noncomputable def minConvGen
@@ -79,7 +75,7 @@ noncomputable def minConvGen
       f p.1.1 + g p.1.2
 ```
 
-*Definition:* the generic _(max,plus) convolution_ $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\sup`
+*Definition:* the _(max,plus) convolution_ $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))` over any codomain with $`\sup`
 
 ```lean
 noncomputable def maxConvGen
@@ -90,101 +86,24 @@ noncomputable def maxConvGen
       f p.1.1 + g p.1.2
 ```
 
-A real function is an $`f : \mathbb{R}^{+} \to \mathbb{R} \cup
-\{\pm\infty\}`. Its _(min,plus) convolution_ is `minConvGen` at the
-extended-real codomain: the numeric infimum, over all splits
-$`u + s = t`, of $`f(u) + g(s)`.
+A caveat for the (max,plus) supremum over the _non-negative reals_
+$`\mathbb{R}_{\ge 0}`: an unbounded supremum is not finite there, so the
+direct `maxConvGen` floors to $`0`; the dioid-backed `maxConv` defined
+later is the canonical operator over that carrier, and the two agree
+wherever the supremum is finite.
 
-*Definition:* $`(f \ast g)(t) = \inf_{u + s = t}\,(f(u) + g(s))` on $`\mathbb{R} \cup \{\pm\infty\}`
+The _deconvolution_ (the dual quotient) has its own generic shape: a
+supremum, over all forward shifts $`s`, of the codomain _difference_
+$`g(t + s) - h(s)`. It abstracts over a domain with an addition (to form
+the shift) and a codomain carrying a subtraction and a supremum.
 
-```lean
-noncomputable def minConvBar
-    (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
-    ℝ≥0 → WithTop (WithBot ℝ) :=
-  minConvGen f g
-```
-
-The dual _(max,plus) convolution_ on the extended reals is `maxConvGen`
-on the order-dual carrier: the numeric supremum over the same splits.
-
-*Definition:* $`(f \mathbin{\overline{\ast}} g)(t) = \sup_{u + s = t}\,(f(u) + g(s))` on $`\mathbb{R} \cup \{\pm\infty\}`
-
-```lean
-noncomputable def maxConvBar
-    (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
-    ℝ≥0 → WithBot (WithTop ℝ) :=
-  maxConvGen f g
-```
-
-On the _non-negative reals_ $`\mathbb{R}_{\ge 0}` the same two operators
-read directly off the curve values. The (min,plus) one is the numeric
-infimum.
-
-*Definition:* $`(g \ast h)(t) = \inf_{u + s = t} (g(u) + h(s))` on $`\mathbb{R}_{\ge 0}`
-
-```lean
-noncomputable def minConvR (g h : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  minConvGen g h
-```
-
-The (max,plus) one is the numeric supremum. Over $`\mathbb{R}_{\ge 0}`
-an unbounded supremum is not finite, so this direct form floors to $`0`
-there; the dioid-backed `maxConv` defined later is the canonical
-operator, and the two agree wherever the supremum is finite.
-
-*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{a + b = t} (g(a) + h(b))` on $`\mathbb{R}_{\ge 0}`
-
-```lean
-noncomputable def maxConvR (g h : ℝ≥0 → ℝ≥0) :
-    ℝ≥0 → ℝ≥0 :=
-  maxConvGen g h
-```
-
-On the _extended_ non-negative reals $`\overline{\mathbb{R}}_{\ge 0}`
-(`ℝ≥0∞`) the same two operators are `minConvE` and `maxConvE`; these are
-the forms the sub-/super-additivity fixed-point results of the
-`Additivity` chapter are stated over.
-
-*Definition:* $`(g \ast h)(t) = \inf_{u + s = t}\,(g(u) + h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
-
-```lean
-noncomputable def minConvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  minConvGen g h
-```
-
-*Definition:* $`(g \mathbin{\overline{\ast}} h)(t) = \sup_{u + s = t}\,(g(u) + h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
-
-```lean
-noncomputable def maxConvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  maxConvGen g h
-```
-
-The _(min,plus) deconvolution_ (the dual quotient) has its own generic
-shape: a supremum, over all forward shifts $`s`, of the codomain
-_difference_ $`g(t + s) - h(s)`. It abstracts over a domain with an
-addition (to form the shift) and a codomain carrying a subtraction and
-a supremum.
-
-*Definition:* the generic _deconvolution_ $`(g \oslash h)(t) = \sup_{s}\,(g(t + s) - h(s))` over any codomain with $`-` and $`\sup`
+*Definition:* the _deconvolution_ $`(g \oslash h)(t) = \sup_{s}\,(g(t + s) - h(s))` over any codomain with $`-` and $`\sup`
 
 ```lean
 noncomputable def deconvGen
     {D T : Type*} [Add D] [Sub T] [SupSet T]
     (g h : D → T) : D → T :=
   fun t => ⨆ s : D, g (t + s) - h s
-```
-
-The extended-real deconvolution is this shape at $`\overline{\mathbb{R}}_{\ge 0}`.
-
-*Definition:* $`(g \oslash h)(t) = \sup_{s}\,(g(t + s) - h(s))` on $`\overline{\mathbb{R}}_{\ge 0}`
-
-```lean
-noncomputable def minDeconvE (g h : ℝ≥0 → ℝ≥0∞) :
-    ℝ≥0 → ℝ≥0∞ :=
-  deconvGen g h
 ```
 
 # The extended-real function dioid
@@ -227,7 +146,7 @@ theorem conv_coe_min
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MinPlusExt)
         : WithTop (WithBot ℝ))
-      = minConvBar f g t := by
+      = minConvGen f g t := by
   apply le_antisymm
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -254,7 +173,7 @@ lift of the real (min,plus) convolution.
 theorem conv_coe
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
     conv (↑f : FminBar) (↑g : FminBar)
-      = (↑(minConvBar f g) : FminBar) := by
+      = (↑(minConvGen f g) : FminBar) := by
   funext t
   apply MinPlusExt.ext
   exact conv_coe_min f g t
@@ -264,8 +183,8 @@ theorem conv_coe
 
 The construction dualizes verbatim to the _(max,plus)_ side, on the
 same extended reals but through the order-dual carrier `MaxPlusExt`
-(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ `maxConvBar` is
-the numeric _supremum_ over the splits (defined above); the function
+(`WithBot (WithTop ℝ)`). The _(max,plus) convolution_ is `maxConvGen`
+at this carrier — the numeric _supremum_ over the splits; the function
 class is $`\mathcal{F}_{\max} = \mathbb{R}^{+} \to
 \overline{\mathbb{R}}_{\max}`, and the dioid product again computes it.
 
@@ -285,7 +204,7 @@ theorem conv_coe_max
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MaxPlusExt)
         : WithBot (WithTop ℝ))
-      = maxConvBar f g t := by
+      = maxConvGen f g t := by
   apply le_antisymm
   · rw [conv_apply, ← MaxPlusExt.le_iff]
     refine CompleteDioid.sSup_le _ _ ?_
@@ -309,7 +228,7 @@ theorem conv_coe_max
 theorem conv_coe_max'
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
     conv (↑f : FmaxBar) (↑g : FmaxBar)
-      = (↑(maxConvBar f g) : FmaxBar) := by
+      = (↑(maxConvGen f g) : FmaxBar) := by
   funext t
   apply MaxPlusExt.ext
   exact conv_coe_max f g t
@@ -434,7 +353,7 @@ theorem IsNondecr.add
 ## Stability under the convolution
 
 Each atom is likewise stable under the (min,plus) convolution
-`minConvBar`. Non-negativity passes through because every split-sum
+`minConvGen`. Non-negativity passes through because every split-sum
 $`f(u) + g(s)` is non-negative, hence so is their infimum. Nullity at
 the origin holds because the only split of $`0` is $`0 + 0`.
 
@@ -444,9 +363,9 @@ the origin holds because the only split of $`0` is $`0 + 0`.
 theorem IsNonneg.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNonneg f) (hg : IsNonneg g) :
-    IsNonneg (minConvBar f g) := by
+    IsNonneg (minConvGen f g) := by
   intro t
-  simp only [minConvBar, minConvGen]
+  simp only [minConvGen]
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, _⟩
   calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
@@ -459,9 +378,9 @@ theorem IsNonneg.conv
 theorem IsNullAtOrigin.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
-    IsNullAtOrigin (minConvBar f g) := by
-  show minConvBar f g 0 = 0
-  simp only [minConvBar, minConvGen]
+    IsNullAtOrigin (minConvGen f g) := by
+  show minConvGen f g 0 = 0
+  simp only [minConvGen]
   apply le_antisymm
   · exact iInf_le_of_le ⟨(0, 0), by simp⟩ (by
       simp [IsNullAtOrigin] at hf hg; simp [hf, hg])
@@ -481,9 +400,9 @@ by lowering the first coordinate to $`\min(u, x)`.
 theorem IsNondecr.conv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hf : IsNondecr f) (hg : IsNondecr g) :
-    IsNondecr (minConvBar f g) := by
+    IsNondecr (minConvGen f g) := by
   intro x y hxy
-  simp only [minConvBar, minConvGen]
+  simp only [minConvGen]
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, (hus : u + s = y)⟩
   refine iInf_le_of_le
@@ -682,7 +601,7 @@ structure.
 We read the atoms onto $`\mathcal{F}` through the `MinPlusExt` wrapper —
 applying each property to the underlying values $`t \mapsto (f\,t)`
 — and record two bridges: $`\mathcal{F}` is the lift of its own
-underlying values, and the dioid product unwraps to `minConvBar`.
+underlying values, and the dioid product unwraps to `minConvGen`.
 
 The classes are the subtypes of $`\mathcal{F}` cut out directly by the
 atoms: $`\mathcal{F}^{+}` by non-negativity alone, and
@@ -709,7 +628,7 @@ theorem coe_toVal (a : FminBar) :
 
 theorem mul_toVal (a b : FminBar) (t : ℝ≥0) :
     ((a ⊗ₒ b) t).toVal
-      = minConvBar (fun t => (a t).toVal)
+      = minConvGen (fun t => (a t).toVal)
           (fun t => (b t).toVal) t := by
   show ((conv a b t : MinPlusExt) : WithTop (WithBot ℝ)) = _
   rw [← coe_toVal a, ← coe_toVal b]
@@ -1248,10 +1167,9 @@ theorem maxConv_eq_neg_iInf
 # The real convolutions bridge to the dioid-backed operators
 
 The dioid-backed `minConv` / `maxConv` are _defined_ by computing in a
-dioid and projecting back. The direct numeric operators `minConvR` /
-`maxConvR` on $`\mathbb{R}_{\ge 0}` (collected at the start of the
-chapter) are the same convolutions on their own terms; here we bridge
-each to its dioid-backed counterpart.
+dioid and projecting back. The direct numeric operators `minConvGen` /
+`maxConvGen` on $`\mathbb{R}_{\ge 0}` are the same convolutions on their
+own terms; here we bridge each to its dioid-backed counterpart.
 
 The direct definition agrees with the dioid-backed `minConv`: this is
 exactly `minConv_eq`, read as an equality of functions.
@@ -1260,12 +1178,12 @@ exactly `minConv_eq`, read as an equality of functions.
 
 ```lean
 theorem minConvR_eq_minConv (g h : ℝ≥0 → ℝ≥0) :
-    minConvR g h = minConv g h := by
+    minConvGen g h = minConv g h := by
   funext t
-  rw [minConvR, minConvGen, minConv_eq]
+  rw [minConvGen, minConv_eq]
 ```
 
-When the supremum is finite, the direct `maxConvR` agrees with the
+When the supremum is finite, the direct `maxConvGen` agrees with the
 dioid-backed `maxConv`.
 
 *Theorem:* $`g \mathbin{\overline{\ast}} h = \mathrm{maxConv}(g, h)` at $`t`, when finite
@@ -1276,15 +1194,15 @@ theorem maxConvR_eq_maxConv
     (hfin : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≠ ⊤) :
-    maxConvR g h t = maxConv g h t := by
+    maxConvGen g h t = maxConv g h t := by
   have hbdd : BddAbove (Set.range
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2)) := by
     by_contra hub
     exact hfin (ENNReal.iSup_coe_eq_top.mpr hub)
-  have h : ((maxConvR g h t : ℝ≥0) : ℝ≥0∞)
+  have h : ((maxConvGen g h t : ℝ≥0) : ℝ≥0∞)
       = ((maxConv g h t : ℝ≥0) : ℝ≥0∞) := by
-    rw [maxConvR, maxConvGen, ENNReal.coe_iSup hbdd,
+    rw [maxConvGen, ENNReal.coe_iSup hbdd,
       maxConv_coe _ _ _ hfin]
   exact_mod_cast h
 ```

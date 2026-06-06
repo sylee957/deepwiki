@@ -346,7 +346,7 @@ extended-real values $`\overline{\mathbb{R}}_{\ge 0}` (`ℝ≥0∞`), it is
 the _(min,plus)_ closure of a numeric curve $`g`: unwrap the dioid
 closure of the lifted curve $`\uparrow\!g` (here `toF g`). Every
 property transports through the lift `toF`, whose product coincides with
-the numeric convolution `minConvE` (the chapter `Additivity`).
+the numeric convolution `minConvGen` (the chapter `Additivity`).
 
 *Definition:* the numeric sub-additive closure $`g^{\star}` on $`\overline{\mathbb{R}}_{\ge 0}`
 
@@ -389,7 +389,7 @@ idempotence, transported through `conv_toF`.
 
 ```lean
 theorem subadditiveClosureE_idem (g : ℝ≥0 → ℝ≥0∞) :
-    minConvE (subadditiveClosureE g)
+    minConvGen (subadditiveClosureE g)
         (subadditiveClosureE g)
       = subadditiveClosureE g := by
   have h := closure_idem (toF g)

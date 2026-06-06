@@ -47,7 +47,7 @@ def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
 ```
 
 The fixed-point results below are stated in terms of the _(min,plus)
-convolution_ `minConvE` and its dual `maxConvE` — the numeric infimum
+convolution_ `minConvGen` and its dual `maxConvGen` — the numeric infimum
 and supremum over the splits $`u + s = t` — both defined in the
 function-dioids chapter (`Convolutions of numeric functions`).
 
@@ -71,9 +71,9 @@ Together they give equality.
 theorem minConvE_self_of_subadditive
     (g : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
-    minConvE g g = g := by
+    minConvGen g g = g := by
   funext t
-  unfold minConvE minConvGen
+  unfold minConvGen
   apply le_antisymm
   · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
     simp [h0]
@@ -95,9 +95,9 @@ $`g(t)`.
 theorem maxConvE_self_of_superadditive
     (g : ℝ≥0 → ℝ≥0∞)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
-    maxConvE g g = g := by
+    maxConvGen g g = g := by
   funext t
-  unfold maxConvE maxConvGen
+  unfold maxConvGen
   apply le_antisymm
   · refine iSup_le ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -109,11 +109,11 @@ theorem maxConvE_self_of_superadditive
 
 # The two convolutions agree
 
-The (min,plus) convolution `minConvE` on real functions is the _same
+The (min,plus) convolution `minConvGen` on real functions is the _same
 operation_ as the dioid convolution `conv` of the previous chapters,
 viewed through the `MinPlusNN` newtype. Wrapping a real function by
 $`s \mapsto \langle g(s)\rangle` embeds it into `Fmin`; we show that
-wrapping, convolving with `conv`, and unwrapping reproduces `minConvE`.
+wrapping, convolving with `conv`, and unwrapping reproduces `minConvGen`.
 This is the content that makes the two definitions interchangeable —
 the dioid sum $`\bigsqcup` on $`\overline{\mathbb{R}}_{\ge 0}` is
 exactly the numeric infimum over the splits.
@@ -134,7 +134,7 @@ $`\bigsqcup` is the numeric infimum, both over the same splits.
 ```lean
 theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
-      = minConvE g h t := by
+      = minConvGen g h t := by
   apply le_antisymm
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -159,7 +159,7 @@ the induced (min,plus) convolution.
 
 ```lean
 theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
-    conv (toF g) (toF h) = toF (minConvE g h) := by
+    conv (toF g) (toF h) = toF (minConvGen g h) := by
   funext t
   apply MinPlusNN.ext
   exact conv_toF_toE g h t
@@ -167,7 +167,7 @@ theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
 
 # The numeric convolution inherits the dioid laws
 
-Because the lift `toF` is _injective_ and carries `minConvE` to the
+Because the lift `toF` is _injective_ and carries `minConvGen` to the
 dioid product `conv`, the numeric convolution inherits the dioid's
 commutative-monoid laws — commutativity and associativity — for free,
 without re-deriving them from the nested infima.
@@ -185,7 +185,7 @@ theorem toF_inj {g h : ℝ≥0 → ℝ≥0∞}
 
 ```lean
 theorem minConvE_comm (g h : ℝ≥0 → ℝ≥0∞) :
-    minConvE g h = minConvE h g := by
+    minConvGen g h = minConvGen h g := by
   apply toF_inj
   rw [← conv_toF, ← conv_toF, conv_comm]
 ```
@@ -194,8 +194,8 @@ theorem minConvE_comm (g h : ℝ≥0 → ℝ≥0∞) :
 
 ```lean
 theorem minConvE_assoc (f g h : ℝ≥0 → ℝ≥0∞) :
-    minConvE (minConvE f g) h
-      = minConvE f (minConvE g h) := by
+    minConvGen (minConvGen f g) h
+      = minConvGen f (minConvGen g h) := by
   apply toF_inj
   rw [← conv_toF, ← conv_toF, ← conv_toF, ← conv_toF,
     conv_assoc]
@@ -214,17 +214,17 @@ token-bucket catalog identity, and it sidesteps the closure detour.
 theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
     (hf0 : f 0 = 0) (hg0 : g 0 = 0)
     (hinf : IsSubadditive (f ⊓ g)) :
-    minConvE f g = f ⊓ g := by
+    minConvGen f g = f ⊓ g := by
   funext t
   apply le_antisymm
   · refine le_min ?_ ?_
-    · unfold minConvE minConvGen
+    · unfold minConvGen
       refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
       simp only; rw [hg0, add_zero]
-    · unfold minConvE minConvGen
+    · unfold minConvGen
       refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
       simp only; rw [hf0, zero_add]
-  · unfold minConvE minConvGen
+  · unfold minConvGen
     refine le_iInf ?_
     rintro ⟨⟨u, s⟩, (huv : u + s = t)⟩
     simp only
@@ -235,7 +235,7 @@ theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
 ```
 
 The dioid self-convolution fixed point is now a corollary of the real
-one: rewrite `conv` to `minConvE` and apply the fundamental result.
+one: rewrite `conv` to `minConvGen` and apply the fundamental result.
 
 *Theorem:* a sub-additive real `g` null at the origin induces $`\sigma` with $`\sigma \ast \sigma = \sigma`
 

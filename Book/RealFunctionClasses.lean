@@ -1104,9 +1104,9 @@ $`f(t - d)` the least; splits with $`s > d` give $`+\infty`.
 ```lean
 theorem conv_delay (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
-    minConvE f (delay d) = fun t => f (t - d) := by
+    minConvGen f (delay d) = fun t => f (t - d) := by
   funext t
-  unfold minConvE minConvGen
+  unfold minConvGen
   apply le_antisymm
   · rcases le_or_gt t d with ht | ht
     · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
@@ -1164,7 +1164,7 @@ theorem conv_delay_posPart (f : ℝ≥0 → ℝ≥0∞) (t d : ℝ≥0) :
   rw [tsub_eq_toNNReal_max]
 ```
 
-Deconvolution is the dual _(min,plus)_ quotient `minDeconvE` (the
+Deconvolution is the dual _(min,plus)_ quotient `deconvGen` (the
 function-dioids chapter), the numeric supremum over forward shifts of
 $`f(t + s) - \delta_d(s)`. It shifts _backward_ by $`d`:
 $`(f \oslash \delta_d)(t) = f(t + d)`. Where $`s \le d` the delay is
@@ -1177,9 +1177,9 @@ term attains $`f(t + d)`.
 ```lean
 theorem deconv_delay (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
-    minDeconvE f (delay d) = fun t => f (t + d) := by
+    deconvGen f (delay d) = fun t => f (t + d) := by
   funext t
-  unfold minDeconvE deconvGen
+  unfold deconvGen
   apply le_antisymm
   · refine iSup_le ?_
     intro s
@@ -1205,9 +1205,9 @@ $`\overline{\mathbb{R}}_{\ge 0}`, where every element is non-negative.
 
 ```lean
 theorem minDeconvE_mono (g h : ℝ≥0 → ℝ≥0∞)
-    (hg : Monotone g) : Monotone (minDeconvE g h) := by
+    (hg : Monotone g) : Monotone (deconvGen g h) := by
   intro x y hxy
-  unfold minDeconvE deconvGen
+  unfold deconvGen
   refine iSup_le (fun s => ?_)
   refine le_iSup_of_le s ?_
   have hxs : x + s ≤ y + s := by gcongr
@@ -1235,7 +1235,7 @@ f(t + d)` from sub-additivity and monotonicity of `f`.
 theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    IsSubadditive (delay 0 ⊓ minDeconvE f (delay d)) := by
+    IsSubadditive (delay 0 ⊓ deconvGen f (delay d)) := by
   rw [deconv_delay f hmono d]
   intro u s
   simp only [Pi.inf_apply]
@@ -1270,7 +1270,7 @@ theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
 ```lean
 theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
     (hmono : Monotone f) (d : ℝ≥0) :
-    (delay 0 ⊓ minDeconvE f (delay d)) 0 = 0 := by
+    (delay 0 ⊓ deconvGen f (delay d)) 0 = 0 := by
   rw [deconv_delay f hmono d]
   show min (delay 0 0) (f (0 + d)) = 0
   rw [show delay 0 0 = (0:ℝ≥0∞) by simp [delay]]; simp
@@ -1305,9 +1305,9 @@ theorem toF_delay0 :
 theorem deconv_delay_closure (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    subadditiveClosureE (minDeconvE f (delay d))
-      = delay 0 ⊓ minDeconvE f (delay d) := by
-  set h : ℝ≥0 → ℝ≥0∞ := minDeconvE f (delay d) with hh
+    subadditiveClosureE (deconvGen f (delay d))
+      = delay 0 ⊓ deconvGen f (delay d) := by
+  set h : ℝ≥0 → ℝ≥0∞ := deconvGen f (delay d) with hh
   set g : ℝ≥0 → ℝ≥0∞ := delay 0 ⊓ h with hg
   have hgsub : IsSubadditive g :=
     gdelay_subadd f hsub hmono d
@@ -1371,7 +1371,7 @@ delay.
 
 ```lean
 theorem conv_delay_delay (d d' : ℝ≥0) :
-    minConvE (delay d) (delay d') = delay (d + d') := by
+    minConvGen (delay d) (delay d') = delay (d + d') := by
   rw [conv_delay (delay d) (delay_mono d) d']
   funext t
   simp only [delay]
@@ -1389,7 +1389,7 @@ The rate-latency is the delay-shift of the rate: $`\beta_{R,T} =
 
 ```lean
 theorem rateLatency_eq_conv (R T : ℝ≥0) :
-    rateLatency R T = minConvE (delay T) (rate R) := by
+    rateLatency R T = minConvGen (delay T) (rate R) := by
   rw [minConvE_comm, conv_delay (rate R) (rate_mono R) T]
   funext t
   simp only [rate, rateLatency]
@@ -1402,9 +1402,9 @@ linear functions over the splits is the line of minimal slope.
 
 ```lean
 theorem conv_rate_rate (R R' : ℝ≥0) :
-    minConvE (rate R) (rate R') = rate (R ⊓ R') := by
+    minConvGen (rate R) (rate R') = rate (R ⊓ R') := by
   funext t
-  unfold minConvE minConvGen rate
+  unfold minConvGen rate
   apply le_antisymm
   · rcases le_total R R' with h | h
     · refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
@@ -1432,7 +1432,7 @@ the delays and the rates.
 
 ```lean
 theorem conv_rateLatency_rateLatency (R R' T T' : ℝ≥0) :
-    minConvE (rateLatency R T) (rateLatency R' T')
+    minConvGen (rateLatency R T) (rateLatency R' T')
       = rateLatency (R ⊓ R') (T + T') := by
   rw [rateLatency_eq_conv R T, rateLatency_eq_conv R' T']
   rw [minConvE_assoc, ← minConvE_assoc (rate R),
@@ -1550,7 +1550,7 @@ theorem tokenBucket_inf_subadd (r b r' b' : ℝ≥0) :
 
 ```lean
 theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
-    minConvE (tokenBucket r b) (tokenBucket r' b')
+    minConvGen (tokenBucket r b) (tokenBucket r' b')
       = tokenBucket r b ⊓ tokenBucket r' b' :=
   minConvE_eq_inf_of_subadd _ _
     (tokenBucket_zero_eq r b) (tokenBucket_zero_eq r' b')
@@ -1638,7 +1638,7 @@ subtracts the delays (when $`d' \le d`, so the shift stays a delay).
 
 ```lean
 theorem deconv_delay_delay (d d' : ℝ≥0) (h : d' ≤ d) :
-    minDeconvE (delay d) (delay d') = delay (d - d') := by
+    deconvGen (delay d) (delay d') = delay (d - d') := by
   rw [deconv_delay (delay d) (delay_mono d) d']
   funext t
   show (if t + d' ≤ d then (0:ℝ≥0∞) else ⊤)
@@ -1653,7 +1653,7 @@ adds the burst $`R\,d`.
 
 ```lean
 theorem deconv_rate_delay (R d : ℝ≥0) :
-    minDeconvE (rate R) (delay d) = affine R (R * d) := by
+    deconvGen (rate R) (delay d) = affine R (R * d) := by
   rw [deconv_delay (rate R) (rate_mono R) d]
   funext t; simp only [rate, affine]; push_cast; ring
 ```
@@ -1668,7 +1668,7 @@ from the uncapped affine there.
 ```lean
 theorem deconv_tokenBucket_delay (r b d : ℝ≥0)
     (hd : 0 < d) :
-    minDeconvE (tokenBucket r b) (delay d)
+    deconvGen (tokenBucket r b) (delay d)
       = affine r (b + r * d) := by
   rw [deconv_delay (tokenBucket r b)
     (tokenBucket_mono r b) d]
@@ -1739,16 +1739,16 @@ the separate rate identity below.
 ```lean
 theorem deconv_tokenBucket_rateLatency
     (r b R T : ℝ≥0) (h : r ≤ R) (hT : 0 < T) :
-    minDeconvE (tokenBucket r b) (rateLatency R T)
+    deconvGen (tokenBucket r b) (rateLatency R T)
       = affine r (b + r*T) := by
   funext t
   apply le_antisymm
-  · unfold minDeconvE deconvGen
+  · unfold deconvGen
     refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
     exact le_trans (tokenBucket_le_affine r b (t+u))
       (affine_shift_bound r b R T t u h)
-  · unfold minDeconvE deconvGen
+  · unfold deconvGen
     refine le_iSup_of_le T ?_
     have htT : t + T ≠ 0 := by positivity
     rw [tokenBucket_apply_pos r b (t+T) htT]
@@ -1810,7 +1810,7 @@ theorem iSup_coe_mul_eq_top (c : ℝ≥0) (hc : 0 < c) :
 ```lean
 theorem deconv_tokenBucket_rateLatency_top
     (r b R T : ℝ≥0) (hRr : R < r) :
-    minDeconvE (tokenBucket r b) (rateLatency R T)
+    deconvGen (tokenBucket r b) (rateLatency R T)
       = fun _ => (⊤:ℝ≥0∞) := by
   funext t
   rw [eq_top_iff]
@@ -1937,10 +1937,10 @@ supremum equals the burst as above.
 ```lean
 theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
     (h : r ≤ R) :
-    minDeconvE (tokenBucket r b) (rate R) = affine r b := by
+    deconvGen (tokenBucket r b) (rate R) = affine r b := by
   funext t
   apply le_antisymm
-  · unfold minDeconvE deconvGen
+  · unfold deconvGen
     refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
     exact le_trans (tokenBucket_le_affine r b (t+u))
@@ -1949,9 +1949,9 @@ theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
     · subst ht
       simp only [affine, ENNReal.coe_zero, mul_zero,
         zero_add]
-      unfold minDeconvE deconvGen; simp only [zero_add]
+      unfold deconvGen; simp only [zero_add]
       exact deconv_origin_lb r b R h
-    · unfold minDeconvE deconvGen; refine le_iSup_of_le 0 ?_
+    · unfold deconvGen; refine le_iSup_of_le 0 ?_
       rw [add_zero, tokenBucket_apply_pos r b t ht]
       simp only [rate, ENNReal.coe_zero, mul_zero,
         tsub_zero, affine, le_refl]
@@ -1966,7 +1966,7 @@ since $`\beta_{R,0} = \lambda_R`.
 ```lean
 theorem deconv_tokenBucket_rate_top (r b R : ℝ≥0)
     (hRr : R < r) :
-    minDeconvE (tokenBucket r b) (rate R)
+    deconvGen (tokenBucket r b) (rate R)
       = fun _ => (⊤:ℝ≥0∞) := by
   rw [← rateLatency_zero R]
   exact deconv_tokenBucket_rateLatency_top r b R 0 hRr
@@ -1979,7 +1979,7 @@ faster one is unchanged. It is the token-bucket identity at zero burst.
 
 ```lean
 theorem deconv_rate_rate (R R' : ℝ≥0) (h : R ≤ R') :
-    minDeconvE (rate R) (rate R') = rate R := by
+    deconvGen (rate R) (rate R') = rate R := by
   conv_lhs => rw [← tokenBucket_zero_rate R]
   rw [deconv_tokenBucket_rate R 0 R' h, affine_zero]
 ```
@@ -1991,7 +1991,7 @@ diverges — the previous divergence at zero burst.
 
 ```lean
 theorem deconv_rate_rate_top (R R' : ℝ≥0) (h : R' < R) :
-    minDeconvE (rate R) (rate R')
+    deconvGen (rate R) (rate R')
       = fun _ => (⊤:ℝ≥0∞) := by
   conv_lhs => rw [← tokenBucket_zero_rate R]
   exact deconv_tokenBucket_rate_top R 0 R' h
@@ -2061,8 +2061,8 @@ exactly the vertical-deviation supremum.
 
 ```lean
 theorem vDev_eq_deconv_zero (f g : ℝ≥0 → ℝ≥0∞) :
-    vDev f g = minDeconvE f g 0 := by
-  unfold vDev minDeconvE deconvGen
+    vDev f g = deconvGen f g 0 := by
+  unfold vDev deconvGen
   simp only [zero_add]
 ```
 

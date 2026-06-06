@@ -47,7 +47,7 @@ where the supremum is infinite both sides floor to $`0` alike.
 
 ```lean
 theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
-    ndClosure beta = maxConvR beta 0 := by
+    ndClosure beta = maxConvGen beta 0 := by
   funext t
   have hrange :
       Set.range
@@ -62,7 +62,7 @@ theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
         add_tsub_cancel_of_le hu⟩, rfl⟩
     · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
       exact ⟨⟨u, hus ▸ le_self_add⟩, rfl⟩
-  unfold ndClosure maxConvR maxConvGen
+  unfold ndClosure maxConvGen
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 ```
