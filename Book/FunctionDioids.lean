@@ -273,7 +273,18 @@ def IsNullAtOrigin {D T : Type*} [Zero D] [Zero T]
 
 The third atom, _non-decrease_ — $`x \le y \implies f(x) \le f(y)` —
 is exactly `Monotone f`, so we use the library predicate rather than
-naming our own.
+naming our own. The two coincide _definitionally_, not merely
+logically — unfolding `Monotone` gives back the implication verbatim,
+so the equivalence holds by `Iff.rfl`.
+
+*Example:* `Monotone` _is_ the non-decrease atom
+
+```lean
+example {α β : Type*} [Preorder α] [Preorder β]
+    (f : α → β) :
+    Monotone f ↔ ∀ x y, x ≤ y → f x ≤ f y :=
+  Iff.rfl
+```
 
 The textbook classes are conjunctions of these atoms:
 $`\mathcal{F}^{+}` is `IsNonneg`; $`\mathcal{F}_0` is
