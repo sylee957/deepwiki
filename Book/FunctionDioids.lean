@@ -552,17 +552,10 @@ theorem ndClosure_le {D T : Type*}
 ```
 
 On the _extended reals_ $`\mathbb{R} \cup \{\pm\infty\}` the lattice is
-_complete_, so the boundedness hypothesis is vacuous and the closure
-is unconditional. We read the generic construction there as $`f^{\uparrow}`.
-
-*Definition:* the non-decreasing closure $`f^{\uparrow}` on $`\overline{\mathbb{R}}`
-
-```lean
-noncomputable abbrev fUp
-    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    ℝ≥0 → WithTop (WithBot ℝ) :=
-  ndClosure f
-```
+_complete_, so the boundedness hypothesis is vacuous and the closure is
+unconditional. We read the generic `ndClosure` directly at this carrier
+— writing $`f^{\uparrow}` for `ndClosure f` — and record the
+carrier-specific facts (suffix `_ext`).
 
 On a complete lattice every set is bounded above, so the boundedness
 hypothesis is discharged once and reused.
@@ -570,7 +563,8 @@ hypothesis is discharged once and reused.
 *Theorem:* on $`\overline{\mathbb{R}}` the closure is unconditionally bounded
 
 ```lean
-theorem fUp_bdd (f : ℝ≥0 → WithTop (WithBot ℝ)) :
+theorem ndClosure_ext_bdd
+    (f : ℝ≥0 → WithTop (WithBot ℝ)) :
     ClosureBddAbove f :=
   fun t => OrderTop.bddAbove _
 ```
@@ -578,26 +572,26 @@ theorem fUp_bdd (f : ℝ≥0 → WithTop (WithBot ℝ)) :
 *Theorem:* $`f \le f^{\uparrow}`
 
 ```lean
-theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
-    (t : ℝ≥0) : f t ≤ fUp f t :=
-  le_ndClosure f (fUp_bdd f) t
+theorem le_ndClosure_ext (f : ℝ≥0 → WithTop (WithBot ℝ))
+    (t : ℝ≥0) : f t ≤ ndClosure f t :=
+  le_ndClosure f (ndClosure_ext_bdd f) t
 ```
 
 *Theorem:* $`f^{\uparrow}` is non-decreasing
 
 ```lean
-theorem monotone_fUp
+theorem monotone_ndClosure_ext
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    Monotone (fUp f) :=
-  fun _ _ hxy => ndClosure_mono f (fUp_bdd f) hxy
+    Monotone (ndClosure f) :=
+  fun _ _ hxy => ndClosure_mono f (ndClosure_ext_bdd f) hxy
 ```
 
 *Theorem:* $`g \in \mathcal{F}^{\uparrow},\ g \ge f \implies g \ge f^{\uparrow}`
 
 ```lean
-theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem ndClosure_ext_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
     (hg : Monotone g) (hfg : ∀ t, f t ≤ g t)
-    (t : ℝ≥0) : fUp f t ≤ g t :=
+    (t : ℝ≥0) : ndClosure f t ≤ g t :=
   ndClosure_le hg hfg t
 ```
 
@@ -608,10 +602,10 @@ has its closure back in $`\mathcal{F}^{\uparrow}`.
 *Theorem:* $`f \in \mathcal{F}^{+} \implies f^{\uparrow} \in \mathcal{F}^{+}`
 
 ```lean
-theorem fUp_isNonneg
+theorem ndClosure_ext_isNonneg
     {f : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : IsNonneg f) : IsNonneg (fUp f) :=
-  fun t => (hf t).trans (le_fUp f t)
+    (hf : IsNonneg f) : IsNonneg (ndClosure f) :=
+  fun t => (hf t).trans (le_ndClosure_ext f t)
 ```
 
 # F⁺ and F↑ are complete dioids
