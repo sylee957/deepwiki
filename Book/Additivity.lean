@@ -73,7 +73,7 @@ theorem minConvE_self_of_subadditive
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     minConvE g g = g := by
   funext t
-  unfold minConvE
+  unfold minConvE minConvGen
   apply le_antisymm
   · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
     simp [h0]
@@ -97,7 +97,7 @@ theorem maxConvE_self_of_superadditive
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     maxConvE g g = g := by
   funext t
-  unfold maxConvE
+  unfold maxConvE maxConvGen
   apply le_antisymm
   · refine iSup_le ?_
     rintro ⟨⟨u, s⟩, hus⟩
@@ -218,13 +218,13 @@ theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
   funext t
   apply le_antisymm
   · refine le_min ?_ ?_
-    · unfold minConvE
+    · unfold minConvE minConvGen
       refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
       simp only; rw [hg0, add_zero]
-    · unfold minConvE
+    · unfold minConvE minConvGen
       refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
       simp only; rw [hf0, zero_add]
-  · unfold minConvE
+  · unfold minConvE minConvGen
     refine le_iInf ?_
     rintro ⟨⟨u, s⟩, (huv : u + s = t)⟩
     simp only

@@ -62,7 +62,7 @@ theorem ndClosure_eq_maxConvR (beta : ℝ≥0 → ℝ≥0) :
         add_tsub_cancel_of_le hu⟩, rfl⟩
     · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
       exact ⟨⟨u, hus ▸ le_self_add⟩, rfl⟩
-  unfold ndClosure maxConvR
+  unfold ndClosure maxConvR maxConvGen
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 ```

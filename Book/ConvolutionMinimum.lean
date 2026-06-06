@@ -134,7 +134,7 @@ theorem minConvE_mono (g h : ℝ≥0 → ℝ≥0∞)
     (hg : Monotone g) (hh : Monotone h) :
     Monotone (minConvE g h) := by
   intro a b hab
-  unfold minConvE
+  unfold minConvE minConvGen
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, (hus : u + s = b)⟩
   by_cases hua : u ≤ a

@@ -1106,7 +1106,7 @@ theorem conv_delay (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
     minConvE f (delay d) = fun t => f (t - d) := by
   funext t
-  unfold minConvE
+  unfold minConvE minConvGen
   apply le_antisymm
   · rcases le_or_gt t d with ht | ht
     · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
@@ -1179,7 +1179,7 @@ theorem deconv_delay (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
     minDeconvE f (delay d) = fun t => f (t + d) := by
   funext t
-  unfold minDeconvE
+  unfold minDeconvE deconvGen
   apply le_antisymm
   · refine iSup_le ?_
     intro s
@@ -1207,7 +1207,7 @@ $`\overline{\mathbb{R}}_{\ge 0}`, where every element is non-negative.
 theorem minDeconvE_mono (g h : ℝ≥0 → ℝ≥0∞)
     (hg : Monotone g) : Monotone (minDeconvE g h) := by
   intro x y hxy
-  unfold minDeconvE
+  unfold minDeconvE deconvGen
   refine iSup_le (fun s => ?_)
   refine le_iSup_of_le s ?_
   have hxs : x + s ≤ y + s := by gcongr
@@ -1404,7 +1404,7 @@ linear functions over the splits is the line of minimal slope.
 theorem conv_rate_rate (R R' : ℝ≥0) :
     minConvE (rate R) (rate R') = rate (R ⊓ R') := by
   funext t
-  unfold minConvE rate
+  unfold minConvE minConvGen rate
   apply le_antisymm
   · rcases le_total R R' with h | h
     · refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
@@ -1743,11 +1743,13 @@ theorem deconv_tokenBucket_rateLatency
       = affine r (b + r*T) := by
   funext t
   apply le_antisymm
-  · unfold minDeconvE; refine iSup_le (fun u => ?_)
+  · unfold minDeconvE deconvGen
+    refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
     exact le_trans (tokenBucket_le_affine r b (t+u))
       (affine_shift_bound r b R T t u h)
-  · unfold minDeconvE; refine le_iSup_of_le T ?_
+  · unfold minDeconvE deconvGen
+    refine le_iSup_of_le T ?_
     have htT : t + T ≠ 0 := by positivity
     rw [tokenBucket_apply_pos r b (t+T) htT]
     have hbeta : rateLatency R T T = 0 := by
@@ -1938,7 +1940,8 @@ theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
     minDeconvE (tokenBucket r b) (rate R) = affine r b := by
   funext t
   apply le_antisymm
-  · unfold minDeconvE; refine iSup_le (fun u => ?_)
+  · unfold minDeconvE deconvGen
+    refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
     exact le_trans (tokenBucket_le_affine r b (t+u))
       (affine_shift_bound0 r b R t u h)
@@ -1946,9 +1949,9 @@ theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
     · subst ht
       simp only [affine, ENNReal.coe_zero, mul_zero,
         zero_add]
-      unfold minDeconvE; simp only [zero_add]
+      unfold minDeconvE deconvGen; simp only [zero_add]
       exact deconv_origin_lb r b R h
-    · unfold minDeconvE; refine le_iSup_of_le 0 ?_
+    · unfold minDeconvE deconvGen; refine le_iSup_of_le 0 ?_
       rw [add_zero, tokenBucket_apply_pos r b t ht]
       simp only [rate, ENNReal.coe_zero, mul_zero,
         tsub_zero, affine, le_refl]
@@ -2059,7 +2062,7 @@ exactly the vertical-deviation supremum.
 ```lean
 theorem vDev_eq_deconv_zero (f g : ℝ≥0 → ℝ≥0∞) :
     vDev f g = minDeconvE f g 0 := by
-  unfold vDev minDeconvE
+  unfold vDev minDeconvE deconvGen
   simp only [zero_add]
 ```
 

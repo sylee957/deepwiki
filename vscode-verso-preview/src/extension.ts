@@ -310,23 +310,45 @@ async function sendTokens(document: vscode.TextDocument, seq: number) {
   } catch {
     /* grammar engine failed to load — fall through to LSP-only */
   }
-  // Layer 2: LSP semantic tokens, merged over the grammar base.
-  try {
-    const legend = await vscode.commands.executeCommand<vscode.SemanticTokensLegend>(
-      "vscode.provideDocumentSemanticTokensLegend",
-      document.uri
-    );
-    const sem = await vscode.commands.executeCommand<vscode.SemanticTokens>(
-      "vscode.provideDocumentSemanticTokens",
-      document.uri
-    );
-    if (seq !== renderSeq || !legend || !sem) return;
-    const lsp = decodeTokens(sem.data, legend.tokenTypes);
-    post({ type: "tokens", tokens: mergeTokens(base, lsp) });
-  } catch {
-    /* server not ready — grammar layer already shown; refine on next render */
+  // Layer 2: LSP semantic tokens, merged over the grammar base. After a window
+  // restart the Lean server takes many seconds to load Mathlib and elaborate
+  // the file, so the first query returns nothing. Retry with backoff until
+  // tokens arrive (or we give up) — otherwise the preview stays grammar-only
+  // until the user happens to edit or re-navigate. A newer render (renderSeq
+  // bump) cancels the loop.
+  for (let attempt = 0; attempt < SEM_TOKEN_RETRIES; attempt++) {
+    if (seq !== renderSeq) return;
+    try {
+      const legend = await vscode.commands.executeCommand<vscode.SemanticTokensLegend>(
+        "vscode.provideDocumentSemanticTokensLegend",
+        document.uri
+      );
+      const sem = await vscode.commands.executeCommand<vscode.SemanticTokens>(
+        "vscode.provideDocumentSemanticTokens",
+        document.uri
+      );
+      if (seq !== renderSeq) return;
+      if (legend && sem && sem.data.length) {
+        const lsp = decodeTokens(sem.data, legend.tokenTypes);
+        post({ type: "tokens", tokens: mergeTokens(base, lsp) });
+        return; // got real tokens — done
+      }
+      // No tokens. If there's no code to elaborate (grammar found none),
+      // the server has nothing to produce — don't poll pointlessly.
+      if (!base.length) return;
+    } catch {
+      /* server not ready yet — fall through to wait and retry */
+    }
+    // Back off before retrying; the server is still elaborating.
+    await new Promise((r) => setTimeout(r, SEM_TOKEN_RETRY_MS));
   }
 }
+
+// The LSP semantic-token layer lags a cold Lean server (Mathlib load +
+// elaboration). Poll for up to ~SEM_TOKEN_RETRIES × SEM_TOKEN_RETRY_MS before
+// settling for grammar-only coloring.
+const SEM_TOKEN_RETRIES = 40;
+const SEM_TOKEN_RETRY_MS = 1500;
 
 // Merge LSP tokens over a grammar base. LSP tokens win on overlap (they carry
 // elaboration info); grammar tokens fill everything else. Both are absolute
