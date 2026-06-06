@@ -27,14 +27,16 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 # Sub- and super-additive real functions
 
-Everything here is on the bare value type $`\overline{\mathbb{R}}_{\ge
-0}^\infty`, with numeric $`+` and $`\le`.
+These notions need only a numeric $`+` and $`\le`, so we state them
+generically; the book reads them on the value type
+$`\overline{\mathbb{R}}_{\ge 0}^\infty`.
 
 *Definition:* $`g` is sub-additive when $`g(u + s) \le g(u) + g(s)`
 
 ```lean
-def IsSubadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ u s : ℝ≥0, g (u + s) ≤ g u + g s
+def IsSubadditive {D T : Type*} [Add D]
+    [_root_.Add T] [LE T] (g : D → T) : Prop :=
+  ∀ u s : D, g (u + s) ≤ g u + g s
 ```
 
 The dual notion reverses the inequality.
@@ -42,8 +44,9 @@ The dual notion reverses the inequality.
 *Definition:* $`g` is super-additive when $`g(u) + g(s) \le g(u + s)`
 
 ```lean
-def IsSuperadditive (g : ℝ≥0 → ℝ≥0∞) : Prop :=
-  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
+def IsSuperadditive {D T : Type*} [Add D]
+    [_root_.Add T] [LE T] (g : D → T) : Prop :=
+  ∀ u s : D, g u + g s ≤ g (u + s)
 ```
 
 The fixed-point results below are stated in terms of the _(min,plus)
@@ -68,8 +71,10 @@ Together they give equality.
 *Theorem:* if $`g` is sub-additive and $`g(0) = 0` then $`g \ast g = g`
 
 ```lean
-theorem minConvE_self_of_subadditive
-    (g : ℝ≥0 → ℝ≥0∞)
+theorem minConvE_self_of_subadditive {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteLattice T]
+    [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
+    (g : D → T)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     minConv g g = g := by
   funext t
@@ -92,8 +97,10 @@ $`g(t)`.
 *Theorem:* if $`g` is super-additive and $`g(0) = 0` then $`g \mathbin{\overline{\ast}} g = g`
 
 ```lean
-theorem maxConvE_self_of_superadditive
-    (g : ℝ≥0 → ℝ≥0∞)
+theorem maxConvE_self_of_superadditive {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteLattice T]
+    [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
+    (g : D → T)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     maxConv g g = g := by
   funext t
@@ -211,13 +218,16 @@ token-bucket catalog identity, and it sidesteps the closure detour.
 *Theorem:* $`f \ast g = f \wedge g` when $`f \wedge g` is sub-additive and $`f(0) = g(0) = 0`
 
 ```lean
-theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
+theorem minConvE_eq_inf_of_subadd {D T : Type*}
+    [_root_.AddCommMonoid D] [CompleteLattice T]
+    [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
+    (f g : D → T)
     (hf0 : f 0 = 0) (hg0 : g 0 = 0)
     (hinf : IsSubadditive (f ⊓ g)) :
     minConv f g = f ⊓ g := by
   funext t
   apply le_antisymm
-  · refine le_min ?_ ?_
+  · refine le_inf ?_ ?_
     · unfold minConv
       refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
       simp only; rw [hg0, add_zero]
@@ -231,7 +241,7 @@ theorem minConvE_eq_inf_of_subadd (f g : ℝ≥0 → ℝ≥0∞)
     calc (f ⊓ g) t = (f ⊓ g) (u + s) := by rw [huv]
       _ ≤ (f ⊓ g) u + (f ⊓ g) s := hinf u s
       _ ≤ f u + g s :=
-          add_le_add (min_le_left _ _) (min_le_right _ _)
+          add_le_add inf_le_left inf_le_right
 ```
 
 The dioid self-convolution fixed point is now a corollary of the real
