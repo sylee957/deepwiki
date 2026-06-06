@@ -299,7 +299,8 @@ being a conjunction of atoms, then inherits stability by conjunction.
 *Theorem:* non-negativity is stable under $`\min`
 
 ```lean
-theorem IsNonneg.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem IsNonneg.min {D T : Type*} [LinearOrder T]
+    [Zero T] {f g : D → T}
     (hf : IsNonneg f) (hg : IsNonneg g) :
     IsNonneg (fun t => min (f t) (g t)) :=
   fun t => le_min (hf t) (hg t)
@@ -308,8 +309,8 @@ theorem IsNonneg.min {f g : ℝ≥0 → WithTop (WithBot ℝ)}
 *Theorem:* nullity at the origin is stable under $`\min`
 
 ```lean
-theorem IsNullAtOrigin.min
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem IsNullAtOrigin.min {D T : Type*} [Zero D]
+    [LinearOrder T] [Zero T] {f g : D → T}
     (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
     IsNullAtOrigin (fun t => min (f t) (g t)) := by
   show Min.min (f 0) (g 0) = 0
@@ -322,8 +323,8 @@ of two monotone functions is monotone, by the library's `Monotone.min`.
 *Example:* non-decrease is stable under $`\min`
 
 ```lean
-example {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : Monotone f) (hg : Monotone g) :
+example {α β : Type*} [Preorder α] [LinearOrder β]
+    {f g : α → β} (hf : Monotone f) (hg : Monotone g) :
     Monotone (fun t => min (f t) (g t)) :=
   hf.min hg
 ```
@@ -342,20 +343,23 @@ the library's `Monotone.add`.
 *Theorem:* non-negativity is stable under the pointwise sum
 
 ```lean
-theorem IsNonneg.add
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem IsNonneg.add {D T : Type*}
+    [_root_.AddCommMonoid T] [PartialOrder T]
+    [IsOrderedAddMonoid T] {f g : D → T}
     (hf : IsNonneg f) (hg : IsNonneg g) :
     IsNonneg (fun t => f t + g t) := by
   intro t
-  calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
+  calc (0 : T) = 0 + 0 := by simp
     _ ≤ f t + g t := by gcongr; exacts [hf t, hg t]
 ```
 
 *Example:* non-decrease is stable under the pointwise sum
 
 ```lean
-example {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : Monotone f) (hg : Monotone g) :
+example {α β : Type*} [Preorder α]
+    [_root_.AddCommMonoid β] [PartialOrder β]
+    [IsOrderedAddMonoid β]
+    {f g : α → β} (hf : Monotone f) (hg : Monotone g) :
     Monotone (fun t => f t + g t) :=
   hf.add hg
 ```
@@ -370,23 +374,27 @@ the origin holds because the only split of $`0` is $`0 + 0`.
 *Theorem:* non-negativity is stable under the convolution
 
 ```lean
-theorem IsNonneg.conv
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem IsNonneg.conv {D T : Type*} [Add D]
+    [_root_.AddCommMonoid T] [CompleteLattice T]
+    [IsOrderedAddMonoid T] {f g : D → T}
     (hf : IsNonneg f) (hg : IsNonneg g) :
     IsNonneg (minConv f g) := by
   intro t
   simp only [minConv]
   refine le_iInf ?_
   rintro ⟨⟨u, s⟩, _⟩
-  calc (0 : WithTop (WithBot ℝ)) = 0 + 0 := by simp
+  calc (0 : T) = 0 + 0 := by simp
     _ ≤ f u + g s := by gcongr; exacts [hf u, hg s]
 ```
 
 *Theorem:* nullity at the origin is stable under the convolution
 
 ```lean
-theorem IsNullAtOrigin.conv
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem IsNullAtOrigin.conv {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CanonicallyOrderedAdd D]
+    [_root_.AddZeroClass T] [CompleteLattice T]
+    {f g : D → T}
     (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
     IsNullAtOrigin (minConv f g) := by
   show minConv f g 0 = 0
@@ -407,8 +415,11 @@ by lowering the first coordinate to $`\min(u, x)`.
 *Theorem:* non-decrease is stable under the convolution
 
 ```lean
-theorem monotone_minConv
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+theorem monotone_minConv {D T : Type*}
+    [_root_.AddCommMonoid D] [LinearOrder D]
+    [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
+    [_root_.AddCommMonoid T] [CompleteLattice T]
+    [IsOrderedAddMonoid T] {f g : D → T}
     (hf : Monotone f) (hg : Monotone g) :
     Monotone (minConv f g) := by
   intro x y hxy
