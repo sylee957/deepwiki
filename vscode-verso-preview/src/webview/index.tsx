@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createRoot } from "react-dom/client";
 import { Preview } from "./Preview";
+import { Toc } from "./Toc";
+import { buildToc } from "./tocData";
 import { posFromPoint, rectForCols, isQueryable } from "./hover";
 import type { HostToWebview, WebviewToHost, SemTok } from "../types";
 import type { Block } from "../doc";
@@ -32,6 +34,9 @@ function App() {
   const [tip, setTip] = useState<TipState>(HIDDEN);
   // Highlight rectangle for the hovered identifier (the "indicator").
   const [mark, setMark] = useState<DOMRect | null>(null);
+  const [tocOpen, setTocOpen] = useState(false);
+  // Table-of-contents entries derived from the document's headers.
+  const toc = useMemo(() => buildToc(blocks), [blocks]);
 
   const tokenRef = useRef(0);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -57,9 +62,11 @@ function App() {
         setTokens(tokensRef.current); // cleared until fresh tokens arrive
         setError("");
         setNav({ title: msg.title, canBack: msg.canBack, canForward: msg.canForward });
-        // Re-render is a navigation/content change — clear any open hover.
+        // Re-render is a navigation/content change — clear any open hover and
+        // close the TOC (its anchors point at the previous document).
         setTip(HIDDEN);
         setMark(null);
+        setTocOpen(false);
       } else if (msg.type === "tokens") {
         const byLine = new Map<number, SemTok[]>();
         for (const t of msg.tokens) {
@@ -121,14 +128,29 @@ function App() {
     return () => window.removeEventListener("scroll", onScroll, true);
   }, [dismiss]);
 
+  // Schedule the tooltip to fade after a short grace period. Re-entering a
+  // token (which cancels hideTimer at the top of onMouseMove / on tip enter)
+  // aborts the pending hide, so moving across a gap stays flicker-free.
+  const scheduleHide = useCallback(() => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      setTip(HIDDEN);
+      setMark(null);
+      pendingRef.current = { line: -1, col: -1, end: -1 };
+    }, 220);
+  }, []);
+
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.closest(".cline")) return;
+    // Off any code line (prose, gaps between blocks): let the tooltip fade.
+    if (!target.closest(".cline")) return scheduleHide();
     if (hideTimer.current) clearTimeout(hideTimer.current);
     const x = e.clientX;
     const y = e.clientY;
     const p = posFromPoint(x, y);
-    if (!p || !isQueryable(p)) return; // margin/whitespace: leave tooltip as-is
+    // Margin / whitespace / past line end: not on a token, so dismiss it.
+    if (!p || !isQueryable(p)) return scheduleHide();
     // The unit of "same thing" is the TOKEN, not the exact column. Moving the
     // cursor within the token already shown does nothing — no re-query, no
     // hide, no flicker. Re-query only when entering a DIFFERENT token.
@@ -156,16 +178,9 @@ function App() {
     hoverTimer.current = setTimeout(() => {
       vscode.postMessage({ type: "hover", line: p.line, col: queryCol, token: my });
     }, 60);
-  }, []);
+  }, [scheduleHide]);
 
-  const onMouseLeave = useCallback(() => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hideTimer.current = setTimeout(() => {
-      setTip(HIDDEN);
-      setMark(null);
-      pendingRef.current = { line: -1, col: -1, end: -1 };
-    }, 220);
-  }, []);
+  const onMouseLeave = useCallback(() => scheduleHide(), [scheduleHide]);
 
   const onClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -198,8 +213,18 @@ function App() {
         >
           →
         </button>
+        <button
+          className={"navbtn toc-toggle" + (tocOpen ? " active" : "")}
+          disabled={toc.length === 0}
+          title="Table of contents"
+          aria-expanded={tocOpen}
+          onClick={() => setTocOpen((v) => !v)}
+        >
+          ☰
+        </button>
         <span className="histtitle">{nav.title}</span>
       </div>
+      <Toc entries={toc} open={tocOpen} onClose={() => setTocOpen(false)} />
       <div
         className="doc"
         onMouseMove={onMouseMove}

@@ -145,15 +145,33 @@ function CodeBlock({
   );
 }
 
+// Stable DOM id for a header, derived from its source line — unique within a
+// doc and unchanged across re-renders, so TOC anchors keep working. Shared with
+// the TOC builder (toc.ts) so both sides agree on the id.
+export function headerId(sourceLine: number): string {
+  return `h-${sourceLine}`;
+}
+
 function BlockView({ block, tokens }: { block: Block; tokens: Map<number, SemTok[]> }) {
   switch (block.kind) {
     case "header": {
-      const H = `h${block.level}` as "h1" | "h2" | "h3" | "h4";
-      return (
-        <H>
-          <Inlines nodes={block.kids} />
-        </H>
-      );
+      const id = headerId(block.range.sl);
+      const kids = <Inlines nodes={block.kids} />;
+      switch (block.level) {
+        case 1:
+          return <h1 id={id}>{kids}</h1>;
+        case 2:
+          return <h2 id={id}>{kids}</h2>;
+        case 3:
+          return <h3 id={id}>{kids}</h3>;
+        case 4:
+          return <h4 id={id}>{kids}</h4>;
+        case 5:
+          return <h5 id={id}>{kids}</h5>;
+        default:
+          // level 6 and any deeper nesting clamp to h6 (HTML's deepest).
+          return <h6 id={id}>{kids}</h6>;
+      }
     }
     case "code":
       return <CodeBlock text={block.text} startLine={block.range.sl} tokens={tokens} />;
