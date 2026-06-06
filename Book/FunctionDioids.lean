@@ -250,34 +250,35 @@ Rather than bundle each class as a monolithic predicate, we name the
 three _atomic_ properties — non-negativity, nullity at the origin, and
 non-decrease — and build the classes as conjunctions of them. Each
 stability fact is then proved once, per atom, and the classes inherit
-it by conjunction.
+it by conjunction. Non-decrease is just `Monotone`, so we reuse it
+directly; the other two atoms are named here, generic over the domain
+and codomain (the curves are valued in the scalar carriers, but the
+properties need only a zero and an order).
 
 *Definition:* $`f` is non-negative: $`\forall t,\ 0 \le f(t)`
 
 ```lean
-def IsNonneg (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
+def IsNonneg {D T : Type*} [Zero T] [LE T]
+    (f : D → T) : Prop :=
   ∀ t, 0 ≤ f t
 ```
 
 *Definition:* $`f` is null at the origin: $`f(0) = 0`
 
 ```lean
-def IsNullAtOrigin (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    Prop :=
+def IsNullAtOrigin {D T : Type*} [Zero D] [Zero T]
+    (f : D → T) : Prop :=
   f 0 = 0
 ```
 
-*Definition:* $`f` is non-decreasing: $`\forall x \le y,\ f(x) \le f(y)`
-
-```lean
-def IsNondecr (f : ℝ≥0 → WithTop (WithBot ℝ)) : Prop :=
-  ∀ x y, x ≤ y → f x ≤ f y
-```
+The third atom, _non-decrease_ — $`x \le y \implies f(x) \le f(y)` —
+is exactly `Monotone f`, so we use the library predicate rather than
+naming our own.
 
 The textbook classes are conjunctions of these atoms:
 $`\mathcal{F}^{+}` is `IsNonneg`; $`\mathcal{F}_0` is
 `IsNonneg ∧ IsNullAtOrigin`; $`\mathcal{F}^{\uparrow}` is
-`IsNonneg ∧ IsNondecr`; and $`\mathcal{F}_0^{\uparrow}` is all three.
+`IsNonneg ∧ Monotone`; and $`\mathcal{F}_0^{\uparrow}` is all three.
 
 ## Stability under the minimum
 
@@ -304,14 +305,16 @@ theorem IsNullAtOrigin.min
   rw [hf, hg, min_self]
 ```
 
-*Theorem:* non-decrease is stable under $`\min`
+For non-decrease there is nothing new to prove: the pointwise minimum
+of two monotone functions is monotone, by the library's `Monotone.min`.
+
+*Example:* non-decrease is stable under $`\min`
 
 ```lean
-theorem IsNondecr.min
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : IsNondecr f) (hg : IsNondecr g) :
-    IsNondecr (fun t => min (f t) (g t)) :=
-  fun x y hxy => min_le_min (hf x y hxy) (hg x y hxy)
+example {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : Monotone f) (hg : Monotone g) :
+    Monotone (fun t => min (f t) (g t)) :=
+  hf.min hg
 ```
 
 ## Stability under the pointwise sum
@@ -322,7 +325,8 @@ of $`\overline{\mathbb{R}}`, _not_ the dioid sum $`\oplus` (which is
 the minimum); it plays no part in the sub-dioid builder below, but
 $`\mathcal{F}^{\uparrow}` is stable under it all the same. Both atoms
 pass through: a sum of non-negative values is non-negative, and the
-sum of two non-decreasing functions is non-decreasing.
+sum of two non-decreasing functions is non-decreasing — the latter by
+the library's `Monotone.add`.
 
 *Theorem:* non-negativity is stable under the pointwise sum
 
@@ -336,18 +340,13 @@ theorem IsNonneg.add
     _ ≤ f t + g t := by gcongr; exacts [hf t, hg t]
 ```
 
-*Theorem:* non-decrease is stable under the pointwise sum
+*Example:* non-decrease is stable under the pointwise sum
 
 ```lean
-theorem IsNondecr.add
-    {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : IsNondecr f) (hg : IsNondecr g) :
-    IsNondecr (fun t => f t + g t) := by
-  intro x y hxy
-  show f x + g x ≤ f y + g y
-  gcongr
-  · exact hf x y hxy
-  · exact hg x y hxy
+example {f g : ℝ≥0 → WithTop (WithBot ℝ)}
+    (hf : Monotone f) (hg : Monotone g) :
+    Monotone (fun t => f t + g t) :=
+  hf.add hg
 ```
 
 ## Stability under the convolution
@@ -397,10 +396,10 @@ by lowering the first coordinate to $`\min(u, x)`.
 *Theorem:* non-decrease is stable under the convolution
 
 ```lean
-theorem IsNondecr.conv
+theorem monotone_minConv
     {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hf : IsNondecr f) (hg : IsNondecr g) :
-    IsNondecr (minConv f g) := by
+    (hf : Monotone f) (hg : Monotone g) :
+    Monotone (minConv f g) := by
   intro x y hxy
   simp only [minConv]
   refine le_iInf ?_
@@ -414,8 +413,8 @@ theorem IsNondecr.conv
     · rw [min_eq_left h, add_comm, hus]; exact hxy
     · rw [min_eq_right h]; exact le_add_self
   gcongr
-  · exact hf _ _ (min_le_left u x)
-  · exact hg _ _ hs
+  · exact hf (min_le_left u x)
+  · exact hg hs
 ```
 
 # The non-decreasing closure
@@ -559,19 +558,19 @@ theorem le_fUp (f : ℝ≥0 → WithTop (WithBot ℝ))
 *Theorem:* $`f^{\uparrow}` is non-decreasing
 
 ```lean
-theorem fUp_isNondecr
+theorem monotone_fUp
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :
-    IsNondecr (fUp f) :=
-  fun x y hxy => ndClosure_mono f (fUp_bdd f) hxy
+    Monotone (fUp f) :=
+  fun _ _ hxy => ndClosure_mono f (fUp_bdd f) hxy
 ```
 
 *Theorem:* $`g \in \mathcal{F}^{\uparrow},\ g \ge f \implies g \ge f^{\uparrow}`
 
 ```lean
 theorem fUp_le {f g : ℝ≥0 → WithTop (WithBot ℝ)}
-    (hg : IsNondecr g) (hfg : ∀ t, f t ≤ g t)
+    (hg : Monotone g) (hfg : ∀ t, f t ≤ g t)
     (t : ℝ≥0) : fUp f t ≤ g t :=
-  ndClosure_le (fun _ _ h => hg _ _ h) hfg t
+  ndClosure_le hg hfg t
 ```
 
 When $`f` is itself non-negative, the closure stays non-negative —
@@ -618,7 +617,7 @@ abbrev FPlus :=
 abbrev FNondecr :=
   {f : FminBar //
     IsNonneg (fun t => (f t).toVal)
-      ∧ IsNondecr (fun t => (f t).toVal)}
+      ∧ Monotone (fun t => (f t).toVal)}
 ```
 
 ```lean
@@ -667,20 +666,20 @@ theorem isSubCompleteDioid_FNondecr :
     IsSubCompleteDioid
       (fun f : FminBar =>
         IsNonneg (fun t => (f t).toVal)
-          ∧ IsNondecr (fun t => (f t).toVal))
+          ∧ Monotone (fun t => (f t).toVal))
       where
   add ha hb :=
     ⟨fun t => le_min (ha.1 t) (hb.1 t),
-      fun x y hxy =>
-        min_le_min (ha.2 x y hxy) (hb.2 x y hxy)⟩
+      fun _ _ hxy =>
+        min_le_min (ha.2 hxy) (hb.2 hxy)⟩
   mul {a b} ha hb := by
     have hn := IsNonneg.conv ha.1 hb.1
-    have hm := IsNondecr.conv ha.2 hb.2
-    refine ⟨fun t => ?_, fun x y hxy => ?_⟩
+    have hm := monotone_minConv ha.2 hb.2
+    refine ⟨fun t => ?_, fun _ _ hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
       rw [mul_toVal]; exact hn t
-    · show ((a ⊗ₒ b) x).toVal ≤ ((a ⊗ₒ b) y).toVal
-      rw [mul_toVal, mul_toVal]; exact hm x y hxy
+    · show ((a ⊗ₒ b) _).toVal ≤ ((a ⊗ₒ b) _).toVal
+      rw [mul_toVal, mul_toVal]; exact hm hxy
   eps := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
   one := by
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
@@ -702,9 +701,9 @@ theorem isSubCompleteDioid_FNondecr :
         rw [convUnit, if_neg hx, convUnit, if_neg hy]
   iSup F hF :=
     ⟨fun t => le_iInf (fun i => (hF i).1 t),
-      fun x y hxy =>
+      fun _ _ hxy =>
         le_iInf (fun i =>
-          (iInf_le _ i).trans ((hF i).2 x y hxy))⟩
+          (iInf_le _ i).trans ((hF i).2 hxy))⟩
 ```
 
 The builder turns each into a complete dioid.
