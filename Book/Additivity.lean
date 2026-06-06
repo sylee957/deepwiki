@@ -128,7 +128,8 @@ exactly the numeric infimum over the splits.
 *Definition:* the dioid function induced by a real function
 
 ```lean
-def toF (g : ℝ≥0 → ℝ≥0∞) : Fmin := fun s => ⟨g s⟩
+def toF {D : Type} (g : D → ℝ≥0∞) : D → MinPlusNN :=
+  fun s => ⟨g s⟩
 ```
 
 Unwrapping the dioid convolution of induced functions gives the
@@ -139,7 +140,8 @@ $`\bigsqcup` is the numeric infimum, both over the same splits.
 *Theorem:* $`(\text{toF}\,g \ast \text{toF}\,h)(t)` unwraps to $`(g \ast h)(t)`
 
 ```lean
-theorem conv_toF_toE (g h : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+theorem conv_toF_toE {D : Type} [_root_.AddCommMonoid D]
+    (g h : D → ℝ≥0∞) (t : D) :
     ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
       = minConv g h t := by
   apply le_antisymm
@@ -165,7 +167,8 @@ the induced (min,plus) convolution.
 *Theorem:* $`\text{toF}\,g \ast \text{toF}\,h = \text{toF}\,(g \ast h)`
 
 ```lean
-theorem conv_toF (g h : ℝ≥0 → ℝ≥0∞) :
+theorem conv_toF {D : Type} [_root_.AddCommMonoid D]
+    (g h : D → ℝ≥0∞) :
     conv (toF g) (toF h) = toF (minConv g h) := by
   funext t
   apply MinPlusNN.ext
@@ -182,7 +185,7 @@ without re-deriving them from the nested infima.
 *Theorem:* the lift `toF` is injective
 
 ```lean
-theorem toF_inj {g h : ℝ≥0 → ℝ≥0∞}
+theorem toF_inj {D : Type} {g h : D → ℝ≥0∞}
     (H : toF g = toF h) : g = h := by
   funext t
   exact congrArg MinPlusNN.toVal (congrFun H t)
@@ -191,7 +194,8 @@ theorem toF_inj {g h : ℝ≥0 → ℝ≥0∞}
 *Theorem:* $`g \ast h = h \ast g`
 
 ```lean
-theorem minConvE_comm (g h : ℝ≥0 → ℝ≥0∞) :
+theorem minConvE_comm {D : Type} [_root_.AddCommMonoid D]
+    (g h : D → ℝ≥0∞) :
     minConv g h = minConv h g := by
   apply toF_inj
   rw [← conv_toF, ← conv_toF, conv_comm]
@@ -200,7 +204,8 @@ theorem minConvE_comm (g h : ℝ≥0 → ℝ≥0∞) :
 *Theorem:* $`(f \ast g) \ast h = f \ast (g \ast h)`
 
 ```lean
-theorem minConvE_assoc (f g h : ℝ≥0 → ℝ≥0∞) :
+theorem minConvE_assoc {D : Type} [_root_.AddCommMonoid D]
+    (f g h : D → ℝ≥0∞) :
     minConv (minConv f g) h
       = minConv f (minConv g h) := by
   apply toF_inj
@@ -251,7 +256,8 @@ one: rewrite `conv` to `minConv` and apply the fundamental result.
 
 ```lean
 theorem conv_self_toF_of_subadditive
-    (g : ℝ≥0 → ℝ≥0∞)
+    {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     conv (toF g) (toF g) = toF g := by
   rw [conv_toF, minConvE_self_of_subadditive g hsub h0]

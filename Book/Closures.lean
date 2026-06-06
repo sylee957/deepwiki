@@ -368,8 +368,9 @@ the numeric convolution `minConv` (the chapter `Additivity`).
 *Definition:* the numeric sub-additive closure $`g^{\star}` on $`\overline{\mathbb{R}}_{\ge 0}`
 
 ```lean
-noncomputable def subadditiveClosureE
-    (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ≥0∞ :=
+noncomputable def subadditiveClosureE {D : Type}
+    [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) : D → ℝ≥0∞ :=
   fun t => (subadditiveClosure (toF g) t).toVal
 ```
 
@@ -379,7 +380,8 @@ that carries the theory across.
 *Theorem:* $`\uparrow\!(g^{\star}) = (\uparrow\!g)^{\star}`
 
 ```lean
-theorem toF_subadditiveClosureE (g : ℝ≥0 → ℝ≥0∞) :
+theorem toF_subadditiveClosureE {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
     toF (subadditiveClosureE g)
       = subadditiveClosure (toF g) := by
   funext t; apply MinPlusNN.ext; rfl
@@ -392,8 +394,9 @@ one). It is the power-one term.
 *Theorem:* $`g^{\star} \le g`
 
 ```lean
-theorem subadditiveClosureE_le (g : ℝ≥0 → ℝ≥0∞)
-    (t : ℝ≥0) : subadditiveClosureE g t ≤ g t := by
+theorem subadditiveClosureE_le {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
+    (t : D) : subadditiveClosureE g t ≤ g t := by
   have h := convPow_le_closure (toF g) 1 t
   rw [convPow_one, MinPlusNN.le_iff] at h
   exact h
@@ -405,7 +408,8 @@ idempotence, transported through `conv_toF`.
 *Theorem:* $`g^{\star} \ast g^{\star} = g^{\star}`
 
 ```lean
-theorem subadditiveClosureE_idem (g : ℝ≥0 → ℝ≥0∞) :
+theorem subadditiveClosureE_idem {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
     minConv (subadditiveClosureE g)
         (subadditiveClosureE g)
       = subadditiveClosureE g := by
@@ -420,8 +424,8 @@ Hence the closure is itself sub-additive.
 *Theorem:* $`g^{\star}` is sub-additive
 
 ```lean
-theorem subadditiveClosureE_subadditive
-    (g : ℝ≥0 → ℝ≥0∞) :
+theorem subadditiveClosureE_subadditive {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
     IsSubadditive (subadditiveClosureE g) := by
   intro u s
   have h := closure_subadditive (toF g) u s
@@ -443,7 +447,8 @@ lemma applies.
 *Theorem:* if $`g` is sub-additive and $`g(0) = 0` then $`g^{\star} = g`
 
 ```lean
-theorem subadditiveClosureE_eq_self (g : ℝ≥0 → ℝ≥0∞)
+theorem subadditiveClosureE_eq_self {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     subadditiveClosureE g = g := by
   have hidem : conv (toF g) (toF g) = toF g := by
@@ -471,8 +476,9 @@ inequality before applying `subadditiveClosure_mono`).
 *Theorem:* $`g \le h \Rightarrow g^{\star} \le h^{\star}`
 
 ```lean
-theorem subadditiveClosureE_mono (g h : ℝ≥0 → ℝ≥0∞)
-    (hgh : ∀ t, g t ≤ h t) (t : ℝ≥0) :
+theorem subadditiveClosureE_mono {D : Type}
+    [_root_.AddCommMonoid D] (g h : D → ℝ≥0∞)
+    (hgh : ∀ t, g t ≤ h t) (t : D) :
     subadditiveClosureE g t ≤ subadditiveClosureE h t := by
   show (subadditiveClosure (toF g) t).toVal
       ≤ (subadditiveClosure (toF h) t).toVal
