@@ -289,4 +289,19 @@ theorem tendstoRightED_iff
 instance instNeBotNhdsGT (t : ℝ≥0) :
     (𝓝[>] t).NeBot := nhdsGT_neBot t
 
+/-- Left limits are unique (needs `0 < t`, so `𝓝[<] t` is `NeBot`). -/
+theorem TendstoLeft.unique
+    {g : ℝ≥0 → ℝ≥0∞} {t : ℝ≥0} (ht : 0 < t) {L₁ L₂ : ℝ≥0∞}
+    (h₁ : TendstoLeft g t L₁) (h₂ : TendstoLeft g t L₂) :
+    L₁ = L₂ :=
+  haveI : (𝓝[<] t).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
+  tendsto_nhds_unique h₁ h₂
+
+/-- Right limits are unique (`𝓝[>] t` is `NeBot` on `ℝ≥0`). -/
+theorem TendstoRight.unique
+    {g : ℝ≥0 → ℝ≥0∞} {t : ℝ≥0} {L₁ L₂ : ℝ≥0∞}
+    (h₁ : TendstoRight g t L₁) (h₂ : TendstoRight g t L₂) :
+    L₁ = L₂ :=
+  tendsto_nhds_unique h₁ h₂
+
 end DeepWiki
