@@ -16,6 +16,10 @@ open Set Topology Filter
 noncomputable def delay (d : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => if t ≤ d then 0 else ⊤
 
+/-- Pure-delay curve on the `ℝ≥0∞` domain: `0` for `t ≤ d`, `⊤` afterwards. -/
+noncomputable def delayE (d : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ :=
+  fun t => if t ≤ d then 0 else ⊤
+
 /-- Constant-rate curve `t ↦ R * t`. -/
 noncomputable def rate (R : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => (R : ℝ≥0∞) * (t : ℝ≥0∞)
@@ -42,6 +46,15 @@ noncomputable def test (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 /-- `delay d 0 = 0`. -/
 theorem delay_zero_eq (d : ℝ≥0) : delay d 0 = 0 := by
   simp [delay]
+
+/-- `delayE d 0 = 0`. -/
+theorem delayE_zero_eq (d : ℝ≥0∞) : delayE d 0 = 0 := by
+  simp [delayE]
+
+/-- On finite arguments, `delayE ↑d` agrees with `delay d`. -/
+theorem delayE_coe (d t : ℝ≥0) :
+    delayE (d : ℝ≥0∞) (t : ℝ≥0∞) = delay d t := by
+  simp only [delayE, delay, ENNReal.coe_le_coe]
 
 /-- `rate R 0 = 0`. -/
 theorem rate_zero_eq (R : ℝ≥0) : rate R 0 = 0 := by
