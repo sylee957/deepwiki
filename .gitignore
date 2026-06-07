@@ -3,7 +3,7 @@
 /build/
 /lake-packages/
 
-# Verso book output
+# Rendered output (doc-gen4 writes under /.lake/; legacy Verso wrote /_out/)
 /_out/
 
 # Editor

@@ -1,5 +1,5 @@
 name = "deepwiki"
-defaultTargets = ["Book", "generate-book"]
+defaultTargets = ["Book"]
 
 [[require]]
 name = "mathlib"
@@ -11,18 +11,5 @@ name = "«doc-gen4»"
 git = "https://github.com/leanprover/doc-gen4"
 rev = "v4.30.0"
 
-[[require]]
-name = "verso"
-git = "https://github.com/leanprover/verso"
-rev = "v4.30.0"
-
 [[lean_lib]]
 name = "Book"
-
-[[lean_exe]]
-name = "generate-book"
-root = "Main"
-
-[[lean_exe]]
-name = "verso-parse"
-root = "VersoParse"

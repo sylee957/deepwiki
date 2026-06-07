@@ -1,43 +1,19 @@
-import VersoManual
 import Book.Order
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Insert
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 
-open Verso.Genre Manual
-open Verso.Genre.Manual.InlineLean
+/-! # Complete dioids
+Dioids with arbitrary `iSup`/`sSup` and lower semi-continuity
+`a ⊗ sSup s = sSup (a ⊗ ·) '' s`, plus the sub-complete-dioid builder. -/
 
-#doc (Manual) "Complete dioids" =>
-A _complete dioid_ adds suprema of arbitrary indexed families to the
-dioid order, with the product lower semi-continuous. This chapter
-defines it, bridges its supremum to `Mathlib`'s, derives lower
-semi-continuity as an equality, and develops the top element and the
-agreement of the algebraic and lattice orders.
-
-```lean
 namespace DeepWiki
 
 namespace Algebra
 
 open scoped Bridge
-```
 
-# A complete dioid from scratch
-
-A dioid is _complete_ when every _indexed family_ has a least upper
-bound for the canonical order $`\preceq`, and the product is _lower
-semi-continuous_: it commutes with these suprema. We take the supremum
-$`\bigsqcup_i f(i)` over a family $`f : \iota \to T` as the field
-`iSup`, with the two least-upper-bound laws and lower semi-continuity.
-
-*Definition:* a _complete dioid_ adds $`\bigsqcup : (\iota \to T) \to T` with
-$$`f(i) \preceq \textstyle\bigsqcup_j f(j), \qquad (\forall i,\ f(i) \preceq b) \Rightarrow \textstyle\bigsqcup_i f(i) \preceq b,`
-$$`a \otimes \textstyle\bigsqcup_i f(i) = \textstyle\bigsqcup_i a \otimes f(i).`
-
-Lower semi-continuity is the equality `mul_iSup`: the product commutes
-with the supremum of a family.
-
-```lean
+/-- `Dioid` with arbitrary `iSup` that is a LUB and lower semi-continuous. -/
 class CompleteDioid (T : Type u) extends Dioid T where
   iSup : {ι : Type u} → (ι → T) → T
   le_iSup : ∀ {ι : Type u} (f : ι → T) (i : ι),
@@ -46,43 +22,25 @@ class CompleteDioid (T : Type u) extends Dioid T where
     (∀ i, f i ≼ₒ b) → iSup f ≼ₒ b
   mul_iSup : ∀ {ι : Type u} (a : T) (f : ι → T),
     a ⊗ₒ iSup f = iSup (fun i => a ⊗ₒ f i)
-```
 
-The supremum is taken over an _indexed family_ $`\bigsqcup_i f(i)`.
-The supremum of a _set_ is the special case indexing by the set's own
-elements; it is `Mathlib`'s `sSup`, and we derive it together with its
-two least-upper-bound laws, matching the `sSup` API the order and
-convolution proofs use.
-
-*Definition:* $`\bigsqcup s = \bigsqcup_{x \in s} x`
-
-```lean
 namespace CompleteDioid
 
+/-- Supremum of a set `s`, via `iSup` over its subtype. -/
 def sSup {T : Type*} [CompleteDioid T] (s : Set T) : T :=
   CompleteDioid.iSup (fun x : s => x.val)
-```
 
-*Theorem:* $`a \in s \Rightarrow a \preceq \bigsqcup s`
-
-```lean
+/-- Members of `s` are `≼ₒ`-below `sSup s`. -/
 theorem le_sSup {T : Type*} [CompleteDioid T]
     (s : Set T) (a : T) (h : a ∈ s) : a ≼ₒ sSup s :=
   CompleteDioid.le_iSup (fun x : s => x.val) ⟨a, h⟩
-```
 
-*Theorem:* $`(\forall a \in s,\ a \preceq b) \Rightarrow \bigsqcup s \preceq b`
-
-```lean
+/-- `sSup s` is the least upper bound of `s`. -/
 theorem sSup_le {T : Type*} [CompleteDioid T]
     (s : Set T) (b : T) (h : ∀ a ∈ s, a ≼ₒ b) :
     sSup s ≼ₒ b :=
   CompleteDioid.iSup_le _ b (fun x => h x.val x.2)
-```
 
-*Theorem:* $`a \otimes \bigsqcup s \preceq \bigsqcup\,\{\,a \otimes b \mid b \in s\,\}`
-
-```lean
+/-- `≼ₒ` half of `mul_sSup`: `a ⊗ sSup s ≼ₒ sSup (a ⊗ ·) '' s`. -/
 theorem mul_sSup_le {T : Type*} [CompleteDioid T]
     (a : T) (s : Set T) :
     a ⊗ₒ sSup s ≼ₒ sSup ((fun b => a ⊗ₒ b) '' s) := by
@@ -94,21 +52,15 @@ theorem mul_sSup_le {T : Type*} [CompleteDioid T]
   exact CompleteDioid.le_sSup _ _ ⟨x.val, x.2, rfl⟩
 
 end CompleteDioid
-```
 
-The supremum and its two least-upper-bound laws are exactly a
-`Mathlib` `CompleteSemilatticeSup`: the `sSup` is `Mathlib`'s `⨆`, and
-`le_sSup`/`sSup_le` package into `IsLUB`. A `scoped` bridge records
-this, reusing the partial order from the dioid, so `Mathlib`'s
-supremum API applies once `open scoped …Bridge`.
-
-```lean
 namespace Bridge
 
+/-- Mathlib `SupSet` from `CompleteDioid.sSup`. -/
 scoped instance instSupSet
     {T : Type*} [CompleteDioid T] : SupSet T where
   sSup := CompleteDioid.sSup
 
+/-- Mathlib `CompleteSemilatticeSup` bridging `sSup` to `IsLUB`. -/
 scoped instance instCompleteSemilatticeSup
     {T : Type*} [CompleteDioid T] :
     CompleteSemilatticeSup T where
@@ -119,24 +71,11 @@ scoped instance instCompleteSemilatticeSup
      fun b hb => CompleteDioid.sSup_le s b hb⟩
 
 end Bridge
-```
 
-With the bridge open, $`\bigsqcup s` is `Mathlib`'s least upper bound
-of $`s`.
-
-*Theorem:* $`\bigsqcup s` is the least upper bound of $`s`
-
-```lean
 example {T : Type*} [CompleteDioid T] (s : Set T) :
     IsLUB s (CompleteDioid.sSup s) := isLUB_sSup s
-```
 
-Lower semi-continuity in _set_ form follows, transferring the
-indexed-family equality to a supremum over a set.
-
-*Theorem:* $`a \otimes \bigsqcup_{b \in s} b = \bigsqcup_{b \in s} a \otimes b`
-
-```lean
+/-- Lower semi-continuity: `a ⊗ sSup s = sSup (a ⊗ ·) '' s`. -/
 theorem CompleteDioid.mul_sSup {T : Type*}
     [CompleteDioid T] (a : T) (s : Set T) :
     a ⊗ₒ CompleteDioid.sSup s
@@ -146,14 +85,8 @@ theorem CompleteDioid.mul_sSup {T : Type*}
   · refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨b, hb, rfl⟩
     exact mul_le_mul_left (CompleteDioid.le_sSup s b hb) a
-```
 
-Lower semi-continuity holds on the right as well, by commutativity of
-the product.
-
-*Theorem:* $`\Bigl(\bigsqcup_{b \in s} b\Bigr) \otimes a = \bigsqcup_{b \in s} b \otimes a`
-
-```lean
+/-- Right lower semi-continuity: `sSup s ⊗ a = sSup (· ⊗ a) '' s`. -/
 theorem sSup_mul {T : Type*} [CompleteDioid T]
     (a : T) (s : Set T) :
     (CompleteDioid.sSup s) ⊗ₒ a
@@ -167,21 +100,12 @@ theorem sSup_mul {T : Type*} [CompleteDioid T]
     exact ⟨y, hy, mul_comm y a⟩
   · rintro ⟨y, hy, rfl⟩
     exact ⟨y, hy, mul_comm a y⟩
-```
 
-The binary join is the supremum of a two-element set, and the product
-distributes over it — the finite shadow of lower semi-continuity.
-
-*Definition:* $`a \sqcup b := \bigsqcup \{a, b\}`
-
-```lean
+/-- Binary join `a ⊔ b` as `sSup {a, b}`. -/
 def sup {T : Type*} [CompleteDioid T] (a b : T) : T :=
   CompleteDioid.sSup {a, b}
-```
 
-*Theorem:* $`a \otimes (b \sqcup c) = (a \otimes b) \sqcup (a \otimes c)`
-
-```lean
+/-- `⊗` distributes over binary `sup`. -/
 theorem mul_sup {T : Type*} [CompleteDioid T]
     (a b c : T) :
     a ⊗ₒ sup b c = sup (a ⊗ₒ b) (a ⊗ₒ c) := by
@@ -198,76 +122,36 @@ theorem mul_sup {T : Type*} [CompleteDioid T]
   · rintro (rfl | rfl)
     · exact ⟨b, Or.inl rfl, rfl⟩
     · exact ⟨c, Or.inr rfl, rfl⟩
-```
 
-# The top element
-
-A complete dioid has a _greatest element_ $`\top`, the sum of all the
-elements of the carrier:
-$$`\top = \bigsqcup_{x} x.`
-We take it as the supremum of the universal set, written `⊤ₒ[T]`.
-
-*Definition:* $`\top = \bigsqcup_{x \in T} x`
-
-```lean
+/-- Greatest element `⊤ₒ`, as `sSup Set.univ`. -/
 def top (T : Type*) [CompleteDioid T] : T :=
   CompleteDioid.sSup Set.univ
 
+/-- Notation `⊤ₒ[T]` for `top T`. -/
 scoped notation:max "⊤ₒ[" T "]" => top T
-```
 
-Being the supremum of everything, $`\top` lies above every element.
-
-*Theorem:* $`a \preceq \top`
-
-```lean
+/-- Everything is `≼ₒ`-below `⊤ₒ`. -/
 theorem le_top {T : Type*} [CompleteDioid T] (a : T) :
     a ≼ₒ ⊤ₒ[T] :=
   CompleteDioid.le_sSup Set.univ a (Set.mem_univ a)
-```
 
-Hence $`\top` is _absorbing for the sum_: adding anything to it changes
-nothing.
-
-*Theorem:* $`\top \oplus a = \top`
-
-```lean
+/-- `⊤ₒ` absorbs under `⊕`: `⊤ₒ ⊕ a = ⊤ₒ`. -/
 theorem top_oplus {T : Type*} [CompleteDioid T] (a : T) :
     ⊤ₒ[T] ⊕ₒ a = ⊤ₒ[T] := by
   have h : a ⊕ₒ ⊤ₒ[T] = ⊤ₒ[T] := le_top a
   rw [add_comm, h]
-```
 
-Since the zero $`\varepsilon` is absorbing for the product, multiplying
-$`\top` by $`\varepsilon` on either side collapses to $`\varepsilon`.
-
-*Theorem:* $`\varepsilon \otimes \top = \top \otimes \varepsilon = \varepsilon`
-
-```lean
+/-- `εₒ ⊗ ⊤ₒ = εₒ` (`εₒ` is absorbing). -/
 theorem eps_otimes_top {T : Type*} [CompleteDioid T] :
     εₒ ⊗ₒ ⊤ₒ[T] = εₒ :=
   zero_mul (top T)
 
+/-- `⊤ₒ ⊗ εₒ = εₒ` (`εₒ` is absorbing). -/
 theorem top_otimes_eps {T : Type*} [CompleteDioid T] :
     ⊤ₒ[T] ⊗ₒ εₒ = εₒ :=
   mul_zero (top T)
-```
 
-# The two orders agree
-
-A complete dioid now carries _two_ ways to compare elements. The
-_algebraic_ order $`\preceq` comes from the sum, $`a \preceq b \iff a
-\oplus b = b`. The _lattice_ order comes from the supremum: $`a` is
-below $`b` when the least upper bound of $`\{a, b\}` is $`b`. These must
-coincide for the structure to be consistent, and they do — a direct
-consequence of the least-upper-bound laws.
-
-First, the supremum of a pair _is_ the binary sum: adjoining the two
-upper-bound facts to idempotency pins $`\bigsqcup\{a, b\} = a \oplus b`.
-
-*Theorem:* $`\bigsqcup \{a, b\} = a \oplus b`
-
-```lean
+/-- `sSup {a, b} = a ⊕ b`. -/
 theorem sSup_pair {T : Type*} [CompleteDioid T]
     (a b : T) : CompleteDioid.sSup {a, b} = a ⊕ₒ b := by
   apply le_antisymm
@@ -287,65 +171,29 @@ theorem sSup_pair {T : Type*} [CompleteDioid T]
     show (a ⊕ₒ b) ⊕ₒ CompleteDioid.sSup {a, b}
       = CompleteDioid.sSup {a, b}
     rw [add_assoc, hb, ha]
-```
 
-Hence the lattice order — $`\bigsqcup\{a, b\} = b` — is exactly the
-algebraic order $`a \preceq b`.
-
-*Theorem:* $`a \preceq b \iff \bigsqcup \{a, b\} = b`
-
-```lean
+/-- `a ≼ₒ b ↔ sSup {a, b} = b`. -/
 theorem le_iff_sSup_pair {T : Type*} [CompleteDioid T]
     {a b : T} :
     a ≼ₒ b ↔ CompleteDioid.sSup {a, b} = b := by
   rw [sSup_pair]; rfl
-```
 
-# Residuation
-
-In a field every nonzero element has an inverse, so division is the
-inverse of multiplication. A dioid has no inverses — but a complete
-dioid has suprema, and that is enough to define the _greatest solution_
-of an inequality. The right-multiplication map $`R_a : x \mapsto x
-\otimes a` is lower semi-continuous (`sSup_mul`), so it is _residuated_:
-its _residual_ $`R_a^{\sharp}` sends $`b` to the greatest $`x` with
-$`x \otimes a \preceq b`. We write that greatest solution $`b \oslash
-a`, the _residuation_ (or _right-quotient_) of $`b` by $`a`.
-
-*Definition:* $`b \oslash a = \bigsqcup\,\{\, x \mid x \otimes a \preceq b \,\}`
-
-```lean
+/-- Right residual `b ⊘ a`: greatest `x` with `x ⊗ a ≼ₒ b`. -/
 def resid {T : Type*} [CompleteDioid T] (b a : T) : T :=
   CompleteDioid.sSup { x | x ⊗ₒ a ≼ₒ b }
 
+/-- Notation `b ⊘ₒ a` for the residual `resid b a`. -/
 scoped notation:70 b:70 " ⊘ₒ " a:71 => resid b a
-```
 
-The residuation is itself a solution: $`(b \oslash a) \otimes a \preceq
-b`. Pushing $`\otimes a` through the supremum (right lower
-semi-continuity), each term $`x \otimes a` with $`x` in the set is
-$`\preceq b` by construction, so their supremum is too.
-
-*Theorem:* $`(b \oslash a) \otimes a \preceq b`
-
-```lean
+/-- Counit of the residuation: `(b ⊘ a) ⊗ a ≼ₒ b`. -/
 theorem resid_mul_le {T : Type*} [CompleteDioid T]
     (b a : T) : (b ⊘ₒ a) ⊗ₒ a ≼ₒ b := by
   rw [resid, sSup_mul]
   refine CompleteDioid.sSup_le _ _ ?_
   rintro y ⟨x, hx, rfl⟩
   exact hx
-```
 
-It is moreover the _greatest_ solution: the central equivalence is the
-Galois connection $`x \otimes a \preceq b \iff x \preceq b \oslash a`.
-Left to right is membership in the defining set; right to left raises
-$`x \otimes a` to $`(b \oslash a) \otimes a` by isotony, then applies
-`resid_mul_le`.
-
-*Theorem:* $`x \otimes a \preceq b \iff x \preceq b \oslash a`
-
-```lean
+/-- Adjunction: `x ⊗ a ≼ₒ b ↔ x ≼ₒ b ⊘ a`. -/
 theorem mul_le_iff_le_resid {T : Type*}
     [CompleteDioid T] (x a b : T) :
     x ⊗ₒ a ≼ₒ b ↔ x ≼ₒ b ⊘ₒ a := by
@@ -355,62 +203,28 @@ theorem mul_le_iff_le_resid {T : Type*}
   · intro h
     exact le_trans (mul_le_mul_right h a)
       (resid_mul_le b a)
-```
 
-The other round-trip is the residual after the map: $`x \preceq (x
-\otimes a) \oslash a`. It is the right-to-left direction applied to
-$`x \otimes a \preceq x \otimes a`.
-
-*Theorem:* $`x \preceq (x \otimes a) \oslash a`
-
-```lean
+/-- Unit of the residuation: `x ≼ₒ (x ⊗ a) ⊘ a`. -/
 theorem le_resid_mul {T : Type*} [CompleteDioid T]
     (x a : T) : x ≼ₒ (x ⊗ₒ a) ⊘ₒ a :=
   (mul_le_iff_le_resid x a (x ⊗ₒ a)).mp (le_refl _)
-```
 
-Residuation is _isotone_ in the dividend: a larger $`b` admits more
-solutions, so a larger quotient.
-
-*Theorem:* $`b \preceq b' \implies b \oslash a \preceq b' \oslash a`
-
-```lean
+/-- `b ⊘ a` is monotone in the numerator `b`. -/
 theorem resid_mono {T : Type*} [CompleteDioid T]
     {b b' : T} (a : T) (h : b ≼ₒ b') :
     b ⊘ₒ a ≼ₒ b' ⊘ₒ a := by
   rw [← mul_le_iff_le_resid]
   exact le_trans (resid_mul_le b a) h
-```
 
-Residuation is _antitone_ in the divisor: a larger $`a` makes $`x
-\otimes a` larger, so fewer $`x` solve the inequality, so a smaller
-quotient.
-
-*Theorem:* $`a \preceq a' \implies b \oslash a' \preceq b \oslash a`
-
-```lean
+/-- `b ⊘ a` is antitone in the denominator `a`. -/
 theorem resid_antitone {T : Type*} [CompleteDioid T]
     (b : T) {a a' : T} (h : a ≼ₒ a') :
     b ⊘ₒ a' ≼ₒ b ⊘ₒ a := by
   rw [← mul_le_iff_le_resid]
   exact le_trans (mul_le_mul_left h (b ⊘ₒ a'))
     (resid_mul_le b a')
-```
 
-# Sub-complete-dioids
-
-A subset of a complete dioid that is closed under the operations is
-itself a complete dioid. Concretely, given a predicate $`P` on the
-carrier closed under the sum $`\oplus`, the product $`\otimes`, the two
-neutrals $`\varepsilon` and $`e`, and arbitrary suprema, the subtype
-$`\{x \mid P(x)\}` inherits the whole structure: every law transports
-from the ambient dioid through the first projection, since the
-operations act on the underlying values. We package the five closure
-conditions and build the instance.
-
-*Definition:* the closure conditions making $`\{x \mid P(x)\}` a sub-complete-dioid
-
-```lean
+/-- `P` is closed under `⊕`, `⊗`, `εₒ`, `eₒ`, and `iSup`. -/
 structure IsSubCompleteDioid {T : Type u}
     [CompleteDioid T] (P : T → Prop) : Prop where
   add : ∀ {a b}, P a → P b → P (a ⊕ₒ b)
@@ -419,14 +233,8 @@ structure IsSubCompleteDioid {T : Type u}
   one : P eₒ
   iSup : ∀ {ι : Type u} (f : ι → T),
     (∀ i, P (f i)) → P (CompleteDioid.iSup f)
-```
 
-The operations on the subtype act on the underlying values, carrying
-the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
-
-*Definition:* the inherited `CompleteDioid` on $`\{x \mid P(x)\}`
-
-```lean
+/-- `CompleteDioid` on the subtype `{x // P x}` of a closed predicate `P`. -/
 @[reducible] noncomputable def
     IsSubCompleteDioid.toCompleteDioid
     {T : Type u} [CompleteDioid T] {P : T → Prop}
@@ -463,41 +271,36 @@ the closure proofs; the laws are those of $`T` lifted by `Subtype.ext`.
     show a.1 ⊗ₒ CompleteDioid.iSup _
         = CompleteDioid.iSup _
     exact CompleteDioid.mul_iSup a.1 (fun i => (f i).1))
-```
 
-The structure is _compatible_ with the ambient one: the operations on
-$`\{x \mid P(x)\}` are the operations of $`T` restricted, so the first
-projection $`\uparrow` is a complete-dioid homomorphism — it commutes
-with the sum, the product, both neutrals, and arbitrary suprema. Each
-equation holds by definition.
-
-*Theorem:* $`\uparrow` preserves the operations: $`\uparrow(a \oplus b) = \uparrow a \oplus \uparrow b`, $`\uparrow(a \otimes b) = \uparrow a \otimes \uparrow b`, $`\uparrow\varepsilon = \varepsilon`, $`\uparrow e = e`, $`\uparrow\bigsqcup_i f_i = \bigsqcup_i \uparrow f_i`
-
-```lean
 namespace IsSubCompleteDioid
 variable {T : Type u} [CompleteDioid T] {P : T → Prop}
     (h : IsSubCompleteDioid P)
 
+/-- Coercion commutes with subtype `⊕`. -/
 theorem coe_add (a b : {x // P x}) :
     letI := h.toCompleteDioid
     ((a ⊕ₒ b : {x // P x}) : T) = (a : T) ⊕ₒ (b : T) :=
   rfl
 
+/-- Coercion commutes with subtype `⊗`. -/
 theorem coe_mul (a b : {x // P x}) :
     letI := h.toCompleteDioid
     ((a ⊗ₒ b : {x // P x}) : T) = (a : T) ⊗ₒ (b : T) :=
   rfl
 
+/-- Coercion sends subtype `εₒ` to `εₒ`. -/
 theorem coe_eps :
     letI := h.toCompleteDioid
     ((εₒ : {x // P x}) : T) = εₒ :=
   rfl
 
+/-- Coercion sends subtype `eₒ` to `eₒ`. -/
 theorem coe_one :
     letI := h.toCompleteDioid
     ((eₒ : {x // P x}) : T) = eₒ :=
   rfl
 
+/-- Coercion commutes with subtype `iSup`. -/
 theorem coe_iSup {ι : Type u} (f : ι → {x // P x}) :
     letI := h.toCompleteDioid
     ((CompleteDioid.iSup f : {x // P x}) : T)
@@ -505,12 +308,7 @@ theorem coe_iSup {ι : Type u} (f : ι → {x // P x}) :
   rfl
 
 end IsSubCompleteDioid
-```
 
-```lean
 end Algebra
-```
 
-```lean
 end DeepWiki
-```

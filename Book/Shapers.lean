@@ -1,33 +1,17 @@
-import VersoManual
 import Book.Servers
 import Book.Closures
 import Book.RealConvolution
 
-open Verso.Genre Manual
-open Verso.Genre.Manual.InlineLean
+/-! # Shapers
+Greedy shapers and shaping curves in network calculus,
+built on the convolution/closure dioid theory. -/
 
-#doc (Manual) "Shapers" =>
-A _shaper_ is a server whose output is constrained by an arrival
-curve. Building on the curves and servers of the previous chapter, this
-chapter defines arrival curves, the shaper servers that enforce them,
-the sub-additive closure's effect, and the greedy shaper.
-
-```lean
 namespace DeepWiki
 
 open Algebra Set Topology Filter
 open scoped Classical NNReal ENNReal Algebra.Bridge
-```
 
-# Convolution monotonicity
-
-The convolution is isotone in each argument: increasing a curve can
-only increase the convolution. This is the one fact about the
-convolution that the service- and arrival-curve results share.
-
-*Theorem:* $`\sigma \preceq \sigma' \implies D \ast \sigma \preceq D \ast \sigma'` pointwise
-
-```lean
+/-- `conv` is monotone in its right argument. -/
 theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
     (h : sigma ≤ sigma') :
     conv D sigma ≤ conv D sigma' := by
@@ -40,54 +24,30 @@ theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
     (CompleteDioid.le_sSup _ _
       ⟨u, s, hus, rfl⟩)
   exact mul_le_mul_left (h s) (D u)
-```
 
-# Min-plus minimal service curves
-
-A _minimal service curve_ bounds a server's output from _below_: the
-server `S` offers the min-plus minimal service curve `beta` when every
-output is at least the convolution of its input with `beta`,
-$`D \ge A \ast \beta`, stated directly on the real values.
-
-*Definition:* `S` offers the min-plus service curve `beta`
-
-```lean
+/-- `S` offers min-plus service curve `beta`: `beta ∗ A ≤ D`. -/
 def OffersMinPlusService (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
   ∀ A D : Curve, (A, D) ∈ S → minConvProj A beta ≤ D
-```
 
-A server `S` _is_ a min-plus server for `beta` when it offers `beta` —
-the server (causal and left-total by construction) together with the
-service guarantee. We take this as a predicate on a `Server`.
-
-*Definition:* `S` is a min-plus server for `beta`
-
-```lean
+/-- `S` is a min-plus server for `beta` (offers it as service). -/
 def IsMinPlusServer (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
   OffersMinPlusService beta S
-```
 
-The _largest_ min-plus server for `beta` is the set of all causal pairs
-meeting the service bound — pairs with $`A \ge D \ge A \ast \beta`.
-Causality ($`D \le A`, the first conjunct) and the service bound make
-up the relation; assembling it into a `Server` needs left-totality,
-supplied as `htot`.
-
-*Definition:* $`S_{\mathrm{mp}}(\beta) = \{\,(A, D) \mid A \ge D \ge A \ast \beta\,\}`
-
-```lean
+/-- Largest causal relation offering min-plus service `beta`. -/
 def minPlusServiceRel (beta : ℝ≥0 → ℝ≥0) :
     Set (Curve × Curve) :=
   { p | p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 }
 
+/-- Membership unfolding for `minPlusServiceRel`. -/
 theorem mem_minPlusServiceRel_iff
     {beta : ℝ≥0 → ℝ≥0} {p : Curve × Curve} :
     p ∈ minPlusServiceRel beta ↔
       p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 :=
   Iff.rfl
 
+/-- The server built from `minPlusServiceRel beta`. -/
 def minPlusServer (beta : ℝ≥0 → ℝ≥0)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ minPlusServiceRel beta) :
@@ -95,15 +55,8 @@ def minPlusServer (beta : ℝ≥0 → ℝ≥0)
   rel := minPlusServiceRel beta
   causal _A _D hp := hp.1
   leftTotal A := htot A
-```
 
-A server lies inside the largest min-plus server for `beta` exactly
-when it offers `beta` — the causality conjunct is automatic, since a
-server is causal by construction.
-
-*Theorem:* $`S \subseteq S_{\mathrm{mp}}(\beta) \iff S` offers $`\beta`
-
-```lean
+/-- `S ⊆ minPlusServiceRel beta` iff `S` offers service `beta`. -/
 theorem subset_minPlusServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
     (∀ p ∈ S, p ∈ minPlusServiceRel beta) ↔
@@ -113,39 +66,19 @@ theorem subset_minPlusServiceRel_iff
     exact (h (A, D) hp).2
   · intro h p hp
     exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
-```
 
-Monotony of the service guarantee: if `S` offers the larger `beta'`, it
-also offers any smaller `beta`. Since `beta ≤ beta'` gives
-$`A \ast \beta \le A \ast \beta' \le D`, the smaller curve is still a
-valid lower bound.
-
-*Theorem:* $`\beta \le \beta' \;\wedge\; S \text{ offers } \beta' \implies S \text{ offers } \beta`
-
-```lean
+/-- Service curves are antitone: smaller `beta` is still offered. -/
 theorem OffersMinPlusService.mono
     {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
     (h : beta ≤ beta') (hS : OffersMinPlusService beta' S) :
     OffersMinPlusService beta S :=
   fun A D hp =>
     le_trans (minConvProj_mono_right A h) (hS A D hp)
-```
 
-The weakest service curve is the constant $`\beta_0 = 0`.
-
-*Definition:* the zero service curve $`\beta_0(t) = 0`
-
-```lean
+/-- The trivial zero service curve `beta ≡ 0`. -/
 def betaZero : ℝ≥0 → ℝ≥0 := fun _ => 0
-```
 
-Every server offers $`\beta_0`: then $`(A \ast \beta_0)(t) \le A(0) + 0
-= 0` (using $`A(0) = 0`), so it lies below every output. This is the
-weakest possible guarantee.
-
-*Theorem:* every server offers the zero service curve $`\beta_0`
-
-```lean
+/-- Every server offers the zero service curve `betaZero`. -/
 theorem offersMinPlusService_betaZero (S : Server) :
     OffersMinPlusService betaZero S := by
   intro A D _ t
@@ -156,76 +89,40 @@ theorem offersMinPlusService_betaZero (S : Server) :
   rw [A.zero]
   show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D t
   simp
-```
 
-# Backlogged periods
-
-The second main service curve — the _strict_ service curve — is stated
-over _backlogged periods_: intervals during which the system is never
-empty, i.e. the arrival stays strictly above the departure. (Causality
-gives $`A \ge D`; backlogged means the inequality is strict.)
-
-*Definition:* `I` is a backlogged period for `(A, D)` — $`\forall t \in I,\ D(t) < A(t)`
-
-```lean
+/-- `A`/`D` is backlogged on `I`: `D t < A t` for all `t ∈ I`. -/
 def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
   ∀ t ∈ I, D t < A t
-```
 
-The _start_ of the backlogged period of a time `t` is the last instant
-up to `t` at which the system was empty ($`A = D`): the supremum of
-those instants.
-
-*Definition:* $`\mathrm{Start}_{A,D}(t) = \sup\,\{\, u \le t \mid A(u) = D(u) \,\}`
-
-```lean
+/-- Start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
 noncomputable def Start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
   sSup { u | u ≤ t ∧ A u = D u }
-```
 
-The defining set is nonempty (the origin, where both curves vanish) and
-bounded above by `t`, so the supremum is well-behaved; in particular
-`Start t ≤ t`, and `Start` is monotone.
-
-*Theorem:* basic facts: the defining set is nonempty, $`\mathrm{Start}\,t \le t`, and $`\mathrm{Start}` is monotone
-
-```lean
+/-- The set defining `Start` is nonempty (`0` belongs). -/
 theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
     { u | u ≤ t ∧ A u = D u }.Nonempty :=
   ⟨0, by simp, by rw [A.zero, D.zero]⟩
 
+/-- `Start A D t ≤ t`. -/
 theorem start_le (A D : Curve) (t : ℝ≥0) :
     Start A D t ≤ t :=
   csSup_le (start_set_nonempty A D t) (fun _ hx => hx.1)
 
+/-- `Start A D` is monotone in `t`. -/
 theorem start_mono (A D : Curve) {t t' : ℝ≥0}
     (h : t ≤ t') : Start A D t ≤ Start A D t' :=
   csSup_le (start_set_nonempty A D t)
-    (fun x hx =>
-      le_csSup ⟨t', fun y hy => hy.1⟩
+    (fun _ hx =>
+      le_csSup ⟨t', fun _ hy => hy.1⟩
         ⟨le_trans hx.1 h, hx.2⟩)
-```
 
-_Property 1._ Any sub-interval of a backlogged period is backlogged —
-immediate from the definition.
-
-*Theorem:* a sub-interval of a backlogged period is backlogged
-
-```lean
+/-- Backlog restricts to subsets of the interval. -/
 theorem IsBacklogged.subset {A D : Curve}
     {I I' : Set ℝ≥0} (h : IsBacklogged A D I)
     (hsub : I' ⊆ I) : IsBacklogged A D I' :=
   fun t ht => h t (hsub ht)
-```
 
-_Property 2._ For a causal pair, $`(\mathrm{Start}\,t, t]` is itself a
-backlogged period: every instant after the start (and up to `t`) has
-$`A > D`, since otherwise it would be an emptiness instant beyond the
-supremum.
-
-*Theorem:* $`(\mathrm{Start}\,t, t]` is a backlogged period
-
-```lean
+/-- `(Start A D t, t]` is a backlogged period when `D ≤ A`. -/
 theorem isBacklogged_Ioc_start (A D : Curve)
     (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
     IsBacklogged A D (Set.Ioc (Start A D t) t) := by
@@ -236,17 +133,8 @@ theorem isBacklogged_Ioc_start (A D : Curve)
   · exact h
   · exact absurd (le_csSup hbdd ⟨hu.2, h.symm⟩)
       (not_le.mpr hu.1)
-```
 
-_Property 3._ At the start of a backlogged period the system is empty,
-$`A(\mathrm{Start}\,t) = D(\mathrm{Start}\,t)`. This rests on the
-_left-continuity_ of the curves: if $`A > D` at the start, both stay so
-just to its left, so emptiness instants could not accumulate there —
-contradicting the supremum.
-
-*Theorem:* $`A(\mathrm{Start}\,t) = D(\mathrm{Start}\,t)`
-
-```lean
+/-- At the start of a backlogged period, `A = D` (uses left continuity). -/
 theorem A_start_eq_D_start (A D : Curve)
     (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
     A (Start A D t) = D (Start A D t) := by
@@ -282,17 +170,8 @@ theorem A_start_eq_D_start (A D : Curve)
       (csSup_le (start_set_nonempty A D t) hub)
       (not_le.mpr hls)
   · exact heq.symm
-```
 
-_Property 4._ The start is _constant_ on a backlogged period: any two
-instants of the same (interval) period share a start. If two starts
-differed, the larger would lie inside $`(\mathrm{Start}, t]`, a
-backlogged period — yet by Property 3 the system is empty there, a
-contradiction.
-
-*Theorem:* $`\mathrm{Start}` is constant on a backlogged period
-
-```lean
+/-- `Start` is constant across an order-connected backlogged set. -/
 theorem start_const_of_backlogged (A D : Curve)
     (hc : ∀ x, D x ≤ A x)
     {I : Set ℝ≥0} (hI : IsBacklogged A D I)
@@ -312,31 +191,16 @@ theorem start_const_of_backlogged (A D : Curve)
     exact absurd this (lt_irrefl _)
   exact le_csSup ⟨t, fun y hy => hy.1⟩
     ⟨hst, A_start_eq_D_start A D hc t'⟩
-```
 
-# Strict service curves
-
-The _strict_ minimal service curve is the second main service notion.
-It demands the service bound on _every backlogged period_: over a
-backlogged $`(s, t]`, the departure grows by at least $`\beta(t - s)`.
-
-*Definition:* `S` offers a strict service curve `beta` — $`\forall (s,t] \text{ backlogged},\ D(t) - D(s) \ge \beta(t - s)`
-
-```lean
+/-- `S` offers strict service `beta`: `D s + beta(t-s) ≤ D t` on backlog. -/
 def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
     (S : Server) : Prop :=
   ∀ A D : Curve, (A, D) ∈ S →
     ∀ s t, s ≤ t →
       IsBacklogged A D (Set.Ioc s t) →
         D s + beta (t - s) ≤ D t
-```
 
-The largest server offering a strict service curve `beta` is the set
-of causal pairs meeting the bound on every backlogged period.
-
-*Definition:* $`S_{\mathrm{strict}}(\beta) = \{\,(A, D) \mid A \ge D,\ \forall (s,t] \text{ backlogged},\ D(t) - D(s) \ge \beta(t-s)\,\}`
-
-```lean
+/-- Largest causal relation offering strict service `beta`. -/
 def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
     Set (Curve × Curve) :=
   { p | p.2 ≤ p.1 ∧
@@ -344,6 +208,7 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
         IsBacklogged p.1 p.2 (Set.Ioc s t) →
           p.2 s + beta (t - s) ≤ p.2 t }
 
+/-- `S ⊆ strictServiceRel beta` iff `S` offers strict service `beta`. -/
 theorem subset_strictServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
     (∀ p ∈ S, p ∈ strictServiceRel beta) ↔
@@ -353,14 +218,8 @@ theorem subset_strictServiceRel_iff
     exact (h (A, D) hp).2
   · intro h p hp
     exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
-```
 
-The zero curve $`\beta_0 = 0` is a strict service curve for every
-server (departures are non-decreasing).
-
-*Theorem:* every server offers the strict service curve $`\beta_0`
-
-```lean
+/-- Every server offers the zero strict service curve. -/
 theorem offersStrictService_betaZero (S : Server) :
     OffersStrictService betaZero S := by
   intro A D _ s t hst _
@@ -368,14 +227,8 @@ theorem offersStrictService_betaZero (S : Server) :
   show D s + (0 : ℝ≥0) ≤ D t
   rw [add_zero]
   exact D.mono hst
-```
 
-Monotony (the analogue of Proposition 5.6, point 3): a smaller strict
-service curve is offered by at least as many servers.
-
-*Theorem:* $`\beta' \le \beta \implies S_{\mathrm{strict}}(\beta) \subseteq S_{\mathrm{strict}}(\beta')`
-
-```lean
+/-- Strict-service relation is antitone in `beta`. -/
 theorem strictServiceRel_mono
     {beta beta' : ℝ≥0 → ℝ≥0} (h : beta' ≤ beta) :
     strictServiceRel beta ⊆ strictServiceRel beta' := by
@@ -384,14 +237,8 @@ theorem strictServiceRel_mono
   refine le_trans ?_ (hp.2 s t hst hbl)
   gcongr
   exact h _
-```
 
-The join (Proposition 5.6, point 1): offering two strict service
-curves means offering their pointwise maximum.
-
-*Theorem:* $`S \text{ offers } \beta \text{ and } \beta' \implies S \text{ offers } \beta \vee \beta'`
-
-```lean
+/-- Pointwise max of two strict service curves is offered. -/
 theorem offersStrictService_sup
     {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
     (h : OffersStrictService beta S)
@@ -403,15 +250,8 @@ theorem offersStrictService_sup
   rcases le_total (beta (t-s)) (beta' (t-s)) with hle | hle
   · rw [max_eq_right hle]; exact h' A D hp s t hst hbl
   · rw [max_eq_left hle]; exact h A D hp s t hst hbl
-```
 
-The output bound (equation 5.13): from $`(\mathrm{Start}\,t, t]` being
-a backlogged period and $`A(\mathrm{Start}\,t) = D(\mathrm{Start}\,t)`,
-the departure satisfies $`D(t) \ge A(\mathrm{Start}\,t) + \beta(t - \mathrm{Start}\,t)`.
-
-*Theorem:* $`D(t) \ge A(\mathrm{Start}\,t) + \beta(t - \mathrm{Start}\,t)`
-
-```lean
+/-- Output bound: `A(Start) + beta(t - Start) ≤ D t` for strict service. -/
 theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve) (hp : (A, D) ∈ strictServiceRel beta)
     (t : ℝ≥0) :
@@ -421,19 +261,8 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
   have hbound := hp.2 (Start A D t) t (start_le A D t) hbl
   rw [A_start_eq_D_start A D hc t]
   exact hbound
-```
 
-# The strict service curve and its closure
-
-Strict service curves carry a closure phenomenon (Proposition 5.6,
-point 2): a strict service curve can be replaced by a _larger_ one, for
-free. The mechanism is _concatenation_ — a backlogged period splits at
-any interior point into two backlogged sub-periods, and the two service
-bounds compose.
-
-*Theorem:* concatenation — $`D(s) + \bigl(\beta(r - s) + \beta(t - r)\bigr) \le D(t)` over a backlogged $`(s,t]`
-
-```lean
+/-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
 theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S)
     (A D : Curve) (hp : (A, D) ∈ S)
@@ -451,25 +280,8 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
         ring
     _ ≤ D r + beta (t - r) := by gcongr
     _ ≤ D t := b2
-```
 
-The closure of interest (Proposition 5.6, point 2) is the
-_non-decreasing closure_ $`\beta_{\uparrow}(t) = \sup_{u \le t} \beta(u)`
-of the chapter `Real convolutions of curves` — the least non-decreasing
-curve above `beta`. The point is that a strict service curve can always
-be replaced by its non-decreasing closure for free:
-$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
-The supremum-absorption lemma `add_ciSup_le` from that chapter is the
-workhorse.
-
-The closure upgrade: a server offering the strict service curve `beta`
-automatically offers its non-decreasing closure. For each $`u \le t-s`,
-the sub-period $`(s, s+u]` is backlogged, so $`D(s) + \beta(u) \le
-D(s+u) \le D(t)`; taking the supremum over `u` absorbs into the bound.
-
-*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta_{\uparrow}`
-
-```lean
+/-- Strict service is preserved by the non-decreasing closure `ndClosure`. -/
 theorem offersStrictService_ndClosure
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
@@ -487,17 +299,8 @@ theorem offersStrictService_ndClosure
   rw [show (s + u) - s = u by
       rw [add_comm]; exact add_tsub_cancel_right u s] at hb
   exact le_trans hb (D.mono hsu)
-```
 
-The reverse inclusion is monotony: `beta` lies below its closure (it is
-the $`u = t` term), so offering $`\beta_{\uparrow}` offers `beta`. This
-needs `beta` bounded on each initial interval, so that the supremum is
-genuine. Together the two give the equality
-$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\beta_{\uparrow})`.
-
-*Theorem:* $`S \text{ offers } \beta \iff S \text{ offers } \beta_{\uparrow}`
-
-```lean
+/-- Offering `ndClosure beta` is equivalent to offering `beta` (when bdd). -/
 theorem offersStrictService_ndClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
@@ -510,20 +313,8 @@ theorem offersStrictService_ndClosure_iff
       (by gcongr; exact le_ndClosure beta hbdd (t - s))
       (h A D hp s t hst hbl)
   · exact offersStrictService_ndClosure beta
-```
 
-# The super-additive closure of a strict service curve
-
-The other closure is the _super-additive closure_ $`\bar\beta^{*}`,
-built from the _(max,plus) convolution_ `maxConvProj` and its iterates
-`maxConvProjPow`. The first step already upgrades for free: each split
-$`a + b = t - s` gives the interior point $`r = s + a`, where
-concatenation supplies the two-term bound, and the supremum over splits
-is absorbed.
-
-*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta \mathbin{\overline{\ast}} \beta`
-
-```lean
+/-- Strict service is preserved by the max-plus self-convolution. -/
 theorem offersStrictService_maxConvProj
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
@@ -546,15 +337,8 @@ theorem offersStrictService_maxConvProj
     strict_concat beta hβ A D hp le_self_add hsa hbl
   rw [hrs, htr] at hcc
   exact hcc
-```
 
-Offering `beta` is preserved by every iterate, by induction on the
-two-step upgrade; the supremum over `n` is then absorbed, so a server
-offering `beta` offers the whole super-additive closure.
-
-*Theorem:* $`S \text{ offers } \beta \implies S \text{ offers } \beta^{(n)}` and $`S \text{ offers } \bar\beta^{*}`
-
-```lean
+/-- Strict service is preserved by every max-plus convolution power. -/
 theorem offers_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
     {S : Server} (hβ : OffersStrictService beta S)
     (n : ℕ) :
@@ -563,6 +347,7 @@ theorem offers_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
   | zero => exact hβ
   | succ n ih => exact offersStrictService_maxConvProj _ ih
 
+/-- Strict service is preserved by the sub-additive closure `saClosure`. -/
 theorem offersStrictService_saClosure
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
@@ -572,17 +357,8 @@ theorem offersStrictService_saClosure
   unfold saClosure
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
-```
 
-The reverse inclusion is monotony: `beta` is the $`n = 0` iterate, so
-it lies below $`\bar\beta^{*}`, and offering $`\bar\beta^{*}` offers
-`beta`. As with the non-decreasing closure, this needs the iterates
-bounded on each initial point, giving the equality
-$`S_{\mathrm{strict}}(\beta) = S_{\mathrm{strict}}(\bar\beta^{*})`.
-
-*Theorem:* $`S \text{ offers } \beta \iff S \text{ offers } \bar\beta^{*}`
-
-```lean
+/-- Offering `saClosure beta` is equivalent to offering `beta` (when bdd). -/
 theorem offersStrictService_saClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
@@ -595,26 +371,12 @@ theorem offersStrictService_saClosure_iff
       (by gcongr; exact le_saClosure beta hbdd (t - s))
       (h A D hp s t hst hbl)
   · exact offersStrictService_saClosure beta
-```
 
-# Arrival curves
-
-An output cumulative function allows `sigma` as an arrival curve when
-it lies below its convolution with `sigma`.
-
-*Definition:* `D` allows `sigma` as an arrival curve
-
-```lean
+/-- `sigma` is an arrival curve for `D`: `D ∗ sigma ≤ D`. -/
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
   conv D sigma ≤ D
-```
 
-The defining inequality is equivalent to a kernel inequality for every
-split `u + s = t`. This form is the workhorse for the closure result.
-
-*Theorem:* $`D \text{ allows } \sigma \iff \forall\, u+s=t,\ D(u) \otimes \sigma(s) \preceq D(t)`
-
-```lean
+/-- Arrival-curve constraint, kernelized: `D u ⊗ sigma s ≼ D t` for `u+s=t`. -/
 theorem allowsArrivalCurve_iff_kernel
     (D sigma : Fmin) :
     AllowsArrivalCurve D sigma ↔
@@ -634,37 +396,17 @@ theorem allowsArrivalCurve_iff_kernel
     refine CompleteDioid.sSup_le _ _ ?_
     rintro x ⟨u, s, hus, rfl⟩
     exact h u s t hus
-```
 
-# Shapers
-
-A _shaper_ is a server whose every output allows `sigma` as an arrival
-curve.
-
-*Definition:* `S` is a `sigma`-shaper
-
-```lean
+/-- `S` is a shaper for `sigma`: every output allows arrival curve `sigma`. -/
 def IsShaper (S : Server) (sigma : Fmin) : Prop :=
   ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : Fmin) sigma
-```
 
-The largest causal server satisfying the shaper constraint is the set
-of all pairs whose output is below the input and whose output allows
-`sigma` as an arrival curve.
-
-*Definition:* the largest `sigma`-shaper relation and server
-
-The shaper _relation_ is the set of all causal pairs whose output
-allows `sigma`. It carries the causality proof on its own; assembling
-it into a `Server` additionally needs left-totality, supplied as a
-hypothesis `htot` — exactly the obligation that the curve class be
-closed under the shaping construction.
-
-```lean
+/-- Largest causal relation that shapes outputs to arrival curve `sigma`. -/
 def shaperRel (sigma : Fmin) : Set (Curve × Curve) :=
   { p | p.2 ≤ p.1 ∧
       AllowsArrivalCurve (↑p.2 : Fmin) sigma }
 
+/-- Membership unfolding for `shaperRel`. -/
 theorem mem_shaperRel_iff
     {sigma : Fmin} {p : Curve × Curve} :
     p ∈ shaperRel sigma ↔
@@ -672,6 +414,7 @@ theorem mem_shaperRel_iff
         AllowsArrivalCurve (↑p.2 : Fmin) sigma :=
   Iff.rfl
 
+/-- The server built from `shaperRel sigma`. -/
 def shaperServer (sigma : Fmin)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ shaperRel sigma) :
@@ -679,15 +422,8 @@ def shaperServer (sigma : Fmin)
   rel := shaperRel sigma
   causal := fun _A _D hp => hp.1
   leftTotal A := htot A
-```
 
-A server lies inside the largest `sigma`-shaper exactly when it is a
-`sigma`-shaper — the causality conjunct is automatic, since a server is
-causal by construction.
-
-*Theorem:* $`S \subseteq S_{\mathrm{sh}}(\sigma) \iff S` is a $`\sigma`-shaper
-
-```lean
+/-- `S ⊆ shaperRel sigma` iff `S` is a shaper for `sigma`. -/
 theorem subset_shaperRel_iff
     {S : Server} {sigma : Fmin} :
     (∀ p ∈ S, p ∈ shaperRel sigma) ↔
@@ -697,21 +433,8 @@ theorem subset_shaperRel_iff
     exact (h p hp).2
   · intro h p hp
     exact ⟨S.causal p.1 p.2 hp, h p hp⟩
-```
 
-# Shaping closure
-
-The _sub-additive closure_ $`\sigma^{\star}`, its convolution powers
-`convPow`, and the Kleene-star theory were developed in the chapter
-`The sub-additive closure`. Here we relate the closure to the shaper
-constructions through the natural order and the arrival-curve kernel.
-
-The original curve is below its closure in the dioid order because the
-curve is one of the powers.
-
-*Theorem:* $`\sigma \preceq \sigma^\star` pointwise
-
-```lean
+/-- `sigma ≤ sigma⋆`: a curve is below its sub-additive closure. -/
 theorem self_le_subadditiveClosure
     (sigma : Fmin) : sigma ≤ sigma⋆ := by
   intro t
@@ -723,13 +446,8 @@ theorem self_le_subadditiveClosure
     CompleteDioid.le_iSup
       (fun n : ℕ => convPow sigma n t) 1
   simpa [convPow_one] using h1
-```
 
-The kernel inequality propagates along every convolution power.
-
-*Theorem:* if $`D` allows $`\sigma`, then $`\forall\, u+s=t,\ D(u) \otimes \sigma^{\ast n}(s) \preceq D(t)`
-
-```lean
+/-- Kernel inequality holds for the convolution unit `convUnit`. -/
 theorem kernel_convUnit (D : Fmin) :
     ∀ u s t, u + s = t →
       D u ⊗ₒ convUnit s ≼ₒ D t := by
@@ -744,6 +462,7 @@ theorem kernel_convUnit (D : Fmin) :
     rw [Algebra.Semiring.otimes_eps]
     exact bot_le
 
+/-- If `D` allows `sigma`, the kernel bound holds for every power `sigmaⁿ`. -/
 theorem kernel_convPow_of_allows
     {D sigma : Fmin}
     (hD : AllowsArrivalCurve D sigma) :
@@ -774,13 +493,8 @@ theorem kernel_convPow_of_allows
         rw [add_assoc, hab, hus]
       exact le_trans hleft
         (hsigma (u + a) b t hsum)
-```
 
-Therefore allowing `sigma` and allowing its closure are equivalent.
-
-*Theorem:* $`D \text{ allows } \sigma^\star \iff D \text{ allows } \sigma`
-
-```lean
+/-- `D` allows `sigma⋆` iff it allows `sigma`. -/
 theorem allowsArrivalCurve_closure_iff
     (D sigma : Fmin) :
     AllowsArrivalCurve D sigma⋆ ↔
@@ -798,16 +512,8 @@ theorem allowsArrivalCurve_closure_iff
     refine CompleteDioid.iSup_le _ _ ?_
     intro n
     exact kernel_convPow_of_allows h n u s t hus
-```
 
-# Properties of shapers
-
-The largest `sigma`-shaper is unchanged by replacing `sigma` with its
-closure.
-
-*Theorem:* $`S_{\mathrm{sh}}(\sigma) = S_{\mathrm{sh}}(\sigma^\star)`
-
-```lean
+/-- A shaper for `sigma` equals one for its closure: `shaperRel sigma = shaperRel sigma⋆`. -/
 theorem shaperRel_closure
     (sigma : Fmin) :
     shaperRel sigma = shaperRel sigma⋆ := by
@@ -822,6 +528,7 @@ theorem shaperRel_closure
       (allowsArrivalCurve_closure_iff
         (↑p.2 : Fmin) sigma).1 hp.2⟩
 
+/-- A shaper for `sigma` is also a shaper for `sigma⋆`. -/
 theorem IsShaper.closure
     {S : Server} {sigma : Fmin}
     (hS : IsShaper S sigma) :
@@ -840,18 +547,8 @@ example
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ :=
   IsShaper.closure hS
-```
 
-Larger arrival curves preserve the shaper property, and their largest
-servers contain the smaller-curve largest server.
-
-A larger arrival curve in the natural order is $`\sigma' \preceq \sigma`
-in the dioid order. Then a $`\sigma`-shaper is also a
-$`\sigma'`-shaper, and the largest servers nest.
-
-*Theorem:* if $`\sigma' \preceq \sigma`, then $`S_{\mathrm{sh}}(\sigma) \subseteq S_{\mathrm{sh}}(\sigma')`
-
-```lean
+/-- A shaper for `sigma` is a shaper for any smaller `sigma' ≤ sigma`. -/
 theorem IsShaper.of_le
     {S : Server}
     {sigma sigma' : Fmin}
@@ -862,6 +559,7 @@ theorem IsShaper.of_le
   exact le_trans
     (conv_mono_right (↑p.2 : Fmin) h) (hS p hp)
 
+/-- `shaperRel` is antitone in `sigma`. -/
 theorem shaperRel_mono
     {sigma sigma' : Fmin}
     (h : sigma' ≤ sigma) :
@@ -883,49 +581,13 @@ example
     (h : sigma' ≤ sigma) :
     IsShaper S sigma' :=
   IsShaper.of_le hS h
-```
 
-# The greedy shaper
-
-A _shaper_ constrains its output to allow `sigma` as an arrival curve.
-A _greedy_ shaper does more: it shapes the output as tightly as
-possible, fixing it to be exactly the convolution of the input with
-`sigma`. Each output is then `sigma`-constrained by construction, and
-the shaper is _greedy_ in that it delays the input no more than
-forced.
-
-The relation itself places no constraint on `sigma`: a server is a
-`sigma`-greedy shaper when every admissible pair has output exactly the
-convolution of the input with `sigma`. The regularity of `sigma` —
-sub-additivity, left-continuity, nullity at the origin — enters only
-where it is needed: to make the greedy shaper a well-defined _server_
-(its output causal and a valid cumulative function).
-
-A server is a `sigma`-greedy shaper when every admissible pair has
-output exactly the convolution of the input with `sigma`.
-
-*Definition:* $`S \text{ is a } \sigma\text{-greedy shaper} \iff \forall (A, D) \in S,\ D = A \ast \sigma`
-
-```lean
+/-- `S` is a greedy shaper for `sigma`: every output is `A ∗ sigma`. -/
 def IsGreedyShaper
     (S : Server) (sigma : Fmin) : Prop :=
   ∀ p ∈ S, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
-```
 
-To form the greedy shaper _as a server_, its output must be causal —
-the departure below the arrival, $`A \ast \sigma \preceq A`. This holds
-exactly when `sigma` is null at the origin: the split $`t = t + 0`
-contributes the term $`A(t) \otimes \sigma(0) = A(t)`, so the
-convolution never exceeds `A`. Sub-additivity and left-continuity are
-not needed for causality; nullity at the origin is.
-
-The causal inequality is the dioid statement $`A \preceq A \ast \sigma`,
-which is numerically $`A \ast \sigma \le A` (the dioid order is the
-reversed numeric order).
-
-*Theorem:* if $`\sigma(0) = e` then $`A \preceq A \ast \sigma`
-
-```lean
+/-- If `sigma 0 = eₒ` then `A ≼ A ∗ sigma` in the dioid order. -/
 theorem self_le_conv_of_zeroAtOrigin
     (A sigma : Fmin) (h0 : sigma 0 = eₒ) :
     A ≤ conv A sigma := by
@@ -938,25 +600,19 @@ theorem self_le_conv_of_zeroAtOrigin
   show A t ≼ₒ A t ⊗ₒ sigma 0
   rw [h0]
   exact le_of_eq (MulMonoid.otimes_one (A t)).symm
-```
 
-The greedy _relation_ is the set of all pairs whose departure is the
-convolution of the arrival with `sigma`. It is causal when `sigma` is
-null at the origin (by the lemma above); assembling it into a `Server`
-additionally needs left-totality, supplied as a hypothesis `htot`.
-
-*Definition:* $`S_{\mathrm{gsh}}(\sigma) = \{\,(A, D) \mid D = A \ast \sigma\,\}`
-
-```lean
+/-- Greedy-shaper relation: outputs are exactly `A ∗ sigma`. -/
 def greedyRel (sigma : Fmin) : Set (Curve × Curve) :=
   { p | (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma }
 
+/-- Membership unfolding for `greedyRel`. -/
 theorem mem_greedyRel_iff
     {sigma : Fmin} {p : Curve × Curve} :
     p ∈ greedyRel sigma ↔
       (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma :=
   Iff.rfl
 
+/-- The greedy-shaper server built from `greedyRel sigma`. -/
 def greedyShaper
     (sigma : Fmin) (h0 : sigma 0 = eₒ)
     (htot : ∀ A : Curve, ∃ D : Curve,
@@ -968,37 +624,19 @@ def greedyShaper
     rw [(hp : (↑D : Fmin) = conv (↑A : Fmin) sigma)]
     exact self_le_conv_of_zeroAtOrigin (↑A) sigma h0
   leftTotal A := htot A
-```
 
-A `sigma`-greedy shaper is a server whose every member equals its own
-convolution; the greedy relation is the largest such set.
-
-*Theorem:* $`S \text{ greedy} \iff S \subseteq S_{\mathrm{gsh}}(\sigma)`
-
-```lean
+/-- `IsGreedyShaper S sigma` iff `S ⊆ greedyRel sigma`. -/
 theorem isGreedyShaper_iff_subset
     {S : Server} {sigma : Fmin} :
     IsGreedyShaper S sigma ↔
       ∀ p ∈ S, p ∈ greedyRel sigma :=
   Iff.rfl
-```
 
-# The greedy shaper is a sigma-shaper
-
-A sub-additive curve allows itself as an arrival curve: the kernel
-inequality $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)` is
-exactly the condition for $`\sigma` to allow $`\sigma`.
-
-*Definition:* dioid sub-additivity of a curve, $`\sigma(u) \otimes \sigma(s) \preceq \sigma(u + s)`
-
-```lean
+/-- `sigma` is sub-additive: `sigma u ⊗ sigma s ≼ sigma (u + s)`. -/
 def IsSubadditiveF (sigma : Fmin) : Prop :=
   ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
-```
 
-*Theorem:* a sub-additive curve allows itself
-
-```lean
+/-- A sub-additive `sigma` allows itself as an arrival curve. -/
 theorem allowsArrivalCurve_self_of_subadd
     {sigma : Fmin} (hsub : IsSubadditiveF sigma) :
     AllowsArrivalCurve sigma sigma := by
@@ -1006,16 +644,8 @@ theorem allowsArrivalCurve_self_of_subadd
   intro u s t hus
   rw [← hus]
   exact hsub u s
-```
 
-The point of the construction is that the output is `sigma`-shaped.
-Under sub-additivity the convolution `A ∗ sigma` allows `sigma`:
-shifting the constraint through associativity and monotonicity,
-$`(A \ast \sigma) \ast \sigma = A \ast (\sigma \ast \sigma) \preceq A \ast \sigma`.
-
-*Theorem:* if $`\sigma` is sub-additive then $`A \ast \sigma` allows $`\sigma`
-
-```lean
+/-- For sub-additive `sigma`, `A ∗ sigma` allows arrival curve `sigma`. -/
 theorem allowsArrivalCurve_conv_of_subadd
     (A : Fmin) {sigma : Fmin}
     (hsub : IsSubadditiveF sigma) :
@@ -1026,14 +656,8 @@ theorem allowsArrivalCurve_conv_of_subadd
   show conv (conv A sigma) sigma ≤ conv A sigma
   rw [conv_assoc]
   exact h
-```
 
-Hence every output of a greedy shaper over a sub-additive curve is a
-`sigma`-shaper output.
-
-*Theorem:* a greedy shaper over a sub-additive curve is a $`\sigma`-shaper
-
-```lean
+/-- A greedy shaper for sub-additive `sigma` is a shaper for `sigma`. -/
 theorem IsGreedyShaper.isShaper
     {S : Server} {sigma : Fmin}
     (hsub : IsSubadditiveF sigma)
@@ -1042,8 +666,5 @@ theorem IsGreedyShaper.isShaper
   intro p hp
   rw [hS p hp]
   exact allowsArrivalCurve_conv_of_subadd (↑p.1) hsub
-```
 
-```lean
 end DeepWiki
-```

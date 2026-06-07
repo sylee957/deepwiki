@@ -1,5 +1,3 @@
-import VersoManual
-import Book.Introduction
 import Book.Signatures
 import Book.Dioids
 import Book.Order
@@ -17,57 +15,32 @@ import Book.Servers
 import Book.RealConvolution
 import Book.Shapers
 
-open Verso.Genre Manual
-open Verso.Genre.Manual.InlineLean
+/-!
+# DeepWiki — autoformalized mathematics
 
-set_option pp.rawOnError true
+Aggregator module for the DeepWiki formalization: a wiki of autoformalized
+mathematics, mechanized in Lean 4 with Mathlib. Importing `Book` pulls in every
+chapter; all declarations live in `namespace DeepWiki`.
 
-#doc (Manual) "DeepWiki" =>
+The first entry is the algebra of (min,plus) dioids — the theory of dioids
+(idempotent semirings) and the complete (min,plus) function dioids that
+underlie deterministic network calculus. Chapters:
 
-%%%
-authors := ["Sangyub Lee", "Claude (Anthropic)"]
-%%%
+- `Signatures`, `Dioids`, `Order` — the abstract algebraic tower, the dioid,
+  the canonical order and isotony.
+- `CompleteDioids` — complete dioids with lower semi-continuity, residuation.
+- `ScalarDioids` — the carriers `MinPlus`, `MinPlusNN`, `MinPlusExt` and the
+  (max,plus) duals.
+- `DioidFunctions`, `FunctionDioids` — the convolution and the function dioid.
+- `Additivity` — sub- and super-additivity predicates.
+- `Closures` — the Kleene star and sub-additive closure.
+- `Limits`, `Continuity` — right limits, left- and lower semi-continuity.
+- `RealFunctionClasses` — concrete network-calculus curves (delay, rate,
+  rate-latency, token bucket) and their regularity.
+- `ConvolutionMinimum` — the convolution attains its minimum.
+- `Servers`, `RealConvolution`, `Shapers` — service curves, real convolution,
+  and greedy shapers.
 
-_DeepWiki_ is an AI-generated wiki of _autoformalized_ mathematics: each topic is
-developed as a self-contained article whose definitions, lemmas and propositions
-are stated and proved in Lean 4 with Mathlib, with the narrative and the
-machine-checked Lean declarations interleaved. The rendered statements are
-exactly what was proved — the document compiles as part of building it.
-
-The first entry is the algebra of _(min,plus)_ dioids, the theory behind
-deterministic network calculus; the chapters below develop it from the abstract
-dioid through to shapers and service curves.
-
-{include 1 Book.Introduction}
-
-{include 1 Book.Signatures}
-
-{include 1 Book.Dioids}
-
-{include 1 Book.Order}
-
-{include 1 Book.CompleteDioids}
-
-{include 1 Book.ScalarDioids}
-
-{include 1 Book.DioidFunctions}
-
-{include 1 Book.FunctionDioids}
-
-{include 1 Book.Additivity}
-
-{include 1 Book.Closures}
-
-{include 1 Book.Limits}
-
-{include 1 Book.Continuity}
-
-{include 1 Book.RealFunctionClasses}
-
-{include 1 Book.ConvolutionMinimum}
-
-{include 1 Book.Servers}
-
-{include 1 Book.RealConvolution}
-
-{include 1 Book.Shapers}
+Notation: `⊕ = +` (dioid sum / lattice join), `⊗ = *` (product), `𝟘 = 0`,
+`𝟙 = 1`, canonical order `≼ = ≤`.
+-/

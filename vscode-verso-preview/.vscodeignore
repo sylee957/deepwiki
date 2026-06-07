@@ -1,8 +1,0 @@
-src/**
-grammars/**
-node_modules/**
-esbuild.mjs
-tsconfig.json
-**/*.map
-.gitignore
-.vscodeignore

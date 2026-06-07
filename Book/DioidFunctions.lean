@@ -1,164 +1,74 @@
-import VersoManual
 import Book.ScalarDioids
 
-open Verso.Genre Manual
-open Verso.Genre.Manual.InlineLean
+/-!
+Dioid-valued functions `D → T`: pointwise sum, convolution `∗`,
+and the resulting complete-dioid structure on the function space. 
+-/
 
-#doc (Manual) "The dioid of functions into a complete dioid" =>
-Functions $`\mathbb{R}^{+} \to T` from the non-negative reals into any
-complete dioid $`T` themselves form a complete dioid. This chapter is
-that construction, presented as a construction: first the dioid
-operations on functions, then the laws they satisfy — grouped to match
-the `Dioid` and `CompleteDioid` axioms — then the assembled instance,
-and finally the properties derived from it.
-
-The sum is the pointwise dioid sum; the product is the _convolution_,
-the adaptation of the classical convolution $`\int_x f(x)\,g(t-x)\,dx`
-to the dioid setting, with $`\bigsqcup` for $`\int` and $`\otimes` for
-the multiplication.
-
-```lean
 namespace DeepWiki
 
 open Algebra
 open scoped Classical NNReal Algebra.Bridge
-```
 
-# The dioid operations on functions
-
-We work over the bare function type $`\mathbb{R}^{+} \to T` directly,
-equipping it with the operations below rather than wrapping it in a
-name. There are five: the pointwise sum, the convolution product,
-their two units, and the pointwise supremum.
-
-The dioid _sum_ is the _pointwise sum_: the functions inherit
-$`\oplus` from $`T` pointwise.
-
-*Definition:* $`(f \oplus g)(t) = f(t) \oplus g(t)`
-
-```lean
+/-- Pointwise dioid sum of functions: `(f ⊕ g) t = f t ⊕ₒ g t`. -/
 def psum {D T : Type*} [CompleteDioid T]
     (f g : D → T) : D → T :=
   fun t => f t ⊕ₒ g t
-```
 
-The dioid _product_ is the _convolution_ $`f \ast g`. Its value at
-$`t` is the dioid sum over all ways of splitting $`t` into a sum
-$`u + s`, of the product $`f(u) \otimes g(s)`:
-$$`(f \ast g)(t) = \bigsqcup_{u + s = t} f(u) \otimes g(s).`
-
-*Definition:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
-
-```lean
+/-- Convolution `(f ∗ g) t = ⨆ {f u ⊗ₒ g s | u + s = t}`. -/
 noncomputable def conv {D T : Type*} [Add D]
     [CompleteDioid T]
     (f g : D → T) : D → T := fun t =>
   CompleteDioid.sSup
     { x | ∃ u s : D, u + s = t ∧ x = f u ⊗ₒ g s }
-```
 
-The defining equation, as a rewrite lemma.
-
-*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(u) \otimes g(s) \mid u + s = t \,\}`
-
-```lean
+/-- Unfolds `conv f g t` to its defining supremum. -/
 theorem conv_apply {D T : Type*} [Add D] [CompleteDioid T]
     (f g : D → T) (t : D) :
     conv f g t
       = CompleteDioid.sSup
           { x | ∃ u s, u + s = t ∧ x = f u ⊗ₒ g s } :=
   rfl
-```
 
-The neutral for the sum is the constant $`\varepsilon` function.
-
-*Definition:* the sum-neutral $`\varepsilon_{\mathcal{F}}(t) = \varepsilon`
-
-```lean
+/-- Convolution zero `𝟘`: the constant `εₒ` function. -/
 def convZero {D T : Type*} [CompleteDioid T] :
     D → T := fun _ => εₒ
-```
 
-The neutral for the convolution is the _impulse_: $`e` at time $`0`,
-and $`\varepsilon` elsewhere.
-
-*Definition:* the convolution unit $`\delta_0(t) = e` if $`t = 0`, else $`\varepsilon`
-
-```lean
+/-- Convolution unit `𝟙`: `eₒ` at `0`, `εₒ` elsewhere. -/
 noncomputable def convUnit {D T : Type*} [Zero D]
     [CompleteDioid T] : D → T :=
   fun t => if t = 0 then eₒ else εₒ
-```
 
-The pointwise supremum of a family of functions, which will be the
-dioid supremum.
-
-*Definition:* $`\bigl(\bigsqcup_i f_i\bigr)(t) = \bigsqcup_i f_i(t)`
-
-```lean
+/-- Pointwise supremum of a family of functions. -/
 noncomputable def funSup {D : Type u} {T : Type u}
     [CompleteDioid T] {ι : Type u}
     (F : ι → D → T) : D → T :=
   fun t => CompleteDioid.iSup (fun i => F i t)
-```
 
-# The dioid laws
-
-The lemmas here are exactly the axioms of `Dioid` and `CompleteDioid`
-for these operations, in the order the instance below consumes them.
-Where the structure is pointwise — associativity, commutativity and
-the neutral of the sum, idempotency — the law is that of $`T` applied
-at each point, discharged inline in the instance. The convolution laws
-need real proofs, recorded here.
-
-The proofs rest on the dioid sum being the binary _join_ for
-$`\preceq`: each summand is below the sum, the sum is the least common
-upper bound, and the join is monotone. We record those four facts
-first.
-
-```lean
 section Join
 variable {T : Type*} [Algebra.CompleteDioid T]
 open Algebra
-```
 
-Each summand is below the sum.
-
-*Theorem:* $`a \preceq a \oplus b`
-
-```lean
+/-- `a ≼ₒ a ⊕ₒ b`: a join dominates its left summand. -/
 theorem le_oplus_left (a b : T) : a ≼ₒ a ⊕ₒ b := by
   show a ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
   rw [← add_assoc, Dioid.oplus_idem]
-```
 
-*Theorem:* $`b \preceq a \oplus b`
-
-```lean
+/-- `b ≼ₒ a ⊕ₒ b`: a join dominates its right summand. -/
 theorem le_oplus_right (a b : T) : b ≼ₒ a ⊕ₒ b := by
   show b ⊕ₒ (a ⊕ₒ b) = a ⊕ₒ b
   rw [add_comm a b,
     ← add_assoc, Dioid.oplus_idem]
-```
 
-The sum is the least common upper bound.
-
-*Theorem:* $`a \preceq c \land b \preceq c \implies a \oplus b \preceq c`
-
-```lean
+/-- Join is the least upper bound: `a,b ≼ₒ c → a ⊕ₒ b ≼ₒ c`. -/
 theorem oplus_le (a b c : T)
     (ha : a ≼ₒ c) (hb : b ≼ₒ c) : a ⊕ₒ b ≼ₒ c := by
   show (a ⊕ₒ b) ⊕ₒ c = c
   rw [add_assoc]
   show a ⊕ₒ (b ⊕ₒ c) = c
   rw [(by exact hb : b ⊕ₒ c = c)]; exact ha
-```
 
-The join is monotone in both arguments.
-
-*Theorem:* $`a \preceq c \land b \preceq d \implies a \oplus b \preceq c \oplus d`
-
-```lean
+/-- Join is monotone in both arguments. -/
 theorem oplus_le_oplus {a b c d : T}
     (h1 : a ≼ₒ c) (h2 : b ≼ₒ d) : a ⊕ₒ b ≼ₒ c ⊕ₒ d :=
   oplus_le _ _ _ (le_trans h1 (le_oplus_left c d))
@@ -167,28 +77,16 @@ theorem oplus_le_oplus {a b c d : T}
 end Join
 
 open Algebra
-```
 
-_Associativity_ of the convolution (`otimes_assoc`). Both
-$`(f \ast g) \ast h` and $`f \ast (g \ast h)` are the dioid sum, over
-all triple decompositions $`u + v + z = t`, of the product
-$`f(u) \otimes g(v) \otimes h(z)`; the two associations of that product
-agree by associativity of $`\otimes`.
-
-*Definition:* $`\mathrm{triple}(f, g, h)(t) = \bigsqcup_{u + v + z = t} (f(u) \otimes g(v)) \otimes h(z)`
-
-```lean
+/-- Three-fold convolution `⨆ {(f u ⊗ₒ g v) ⊗ₒ h z | u+v+z = t}`. -/
 noncomputable def triple {D T : Type*} [Add D]
     [CompleteDioid T]
     (f g h : D → T) (t : D) : T :=
   CompleteDioid.sSup
     { x | ∃ u v z : D,
         u + v + z = t ∧ x = (f u ⊗ₒ g v) ⊗ₒ h z }
-```
 
-*Theorem:* $`((f \ast g) \ast h)(t) = \bigsqcup_{u+v+z=t} f(u) \otimes g(v) \otimes h(z)`
-
-```lean
+/-- `(f ∗ g) ∗ h = triple f g h`. -/
 theorem conv_conv_eq_triple {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) (t : D) :
@@ -211,11 +109,8 @@ theorem conv_conv_eq_triple {D T : Type*}
     refine mul_le_mul_right ?_ _
     rw [conv_apply]
     exact CompleteDioid.le_sSup _ _ ⟨u, v, rfl, rfl⟩
-```
 
-*Theorem:* $`(f \ast (g \ast h))(t) = \bigsqcup_{u+v+z=t} f(u) \otimes g(v) \otimes h(z)`
-
-```lean
+/-- `f ∗ (g ∗ h) = triple f g h`. -/
 theorem conv_conv_eq_triple' {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) (t : D) :
@@ -241,26 +136,16 @@ theorem conv_conv_eq_triple' {D T : Type*}
     refine mul_le_mul_left ?_ _
     rw [conv_apply]
     exact CompleteDioid.le_sSup _ _ ⟨v, z, rfl, rfl⟩
-```
 
-*Theorem:* $`(f \ast g) \ast h = f \ast (g \ast h)`
-
-```lean
+/-- Convolution is associative: `(f ∗ g) ∗ h = f ∗ (g ∗ h)`. -/
 theorem conv_assoc {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) :
     conv (conv f g) h = conv f (conv g h) := by
   funext t
   rw [conv_conv_eq_triple, conv_conv_eq_triple']
-```
 
-_Commutativity_ of the convolution (`otimes_comm`). The product
-$`\otimes` on $`T` is commutative and the decomposition $`u + s = t` is
-symmetric under swapping the two parts.
-
-*Theorem:* $`f \ast g = g \ast f`
-
-```lean
+/-- Convolution is commutative: `f ∗ g = g ∗ f`. -/
 theorem conv_comm {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g : D → T) : conv f g = conv g f := by
@@ -274,15 +159,8 @@ theorem conv_comm {D T : Type*}
   · rintro ⟨u, s, hus, rfl⟩
     exact ⟨s, u, by rw [add_comm]; exact hus,
       mul_comm _ _⟩
-```
 
-The impulse is a two-sided _identity_ for the convolution
-(`one_otimes`, `otimes_one`). The left identity is proved directly from
-the definition.
-
-*Theorem:* $`\delta_0 \ast f = f`
-
-```lean
+/-- `convUnit` is a left identity: `convUnit ∗ f = f`. -/
 theorem convUnit_left {D T : Type*} [AddZeroClass D]
     [CompleteDioid T]
     (f : D → T) : conv convUnit f = f := by
@@ -303,26 +181,14 @@ theorem convUnit_left {D T : Type*} [AddZeroClass D]
       ⟨0, t, by rw [zero_add], ?_⟩
     rw [convUnit, if_pos rfl]
     exact (MulMonoid.one_otimes (f t)).symm
-```
 
-The right identity follows by commutativity.
-
-*Theorem:* $`f \ast \delta_0 = f`
-
-```lean
+/-- `convUnit` is a right identity: `f ∗ convUnit = f`. -/
 theorem convUnit_right {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f : D → T) : conv f convUnit = f := by
   rw [conv_comm, convUnit_left]
-```
 
-_Distributivity_ of the convolution over the pointwise sum
-(`left_distrib`), by the distributivity of $`\otimes` over $`\oplus` in
-the scalar dioid.
-
-*Theorem:* $`f \ast (g \oplus h) = (f \ast g) \oplus (f \ast h)`
-
-```lean
+/-- Left distributivity: `f ∗ (g ⊕ h) = (f ∗ g) ⊕ (f ∗ h)`. -/
 theorem conv_distrib {D T : Type*} [Add D]
     [CompleteDioid T]
     (f g h : D → T) :
@@ -357,31 +223,16 @@ theorem conv_distrib {D T : Type*} [Add D]
       refine le_trans ?_ (CompleteDioid.le_sSup _
         (f u ⊗ₒ (psum g h s)) ⟨u, s, hus, rfl⟩)
       exact mul_le_mul_left (le_oplus_right _ _) _
-```
 
-Right-distributivity (`right_distrib`) is the mirror, obtained by
-commuting the convolution.
-
-*Theorem:* $`(g \oplus h) \ast f = (g \ast f) \oplus (h \ast f)`
-
-```lean
+/-- Right distributivity: `(g ⊕ h) ∗ f = (g ∗ f) ⊕ (h ∗ f)`. -/
 theorem conv_distrib_right {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) :
     conv (psum g h) f = psum (conv g f) (conv h f) := by
   rw [conv_comm, conv_distrib, conv_comm g f,
     conv_comm h f]
-```
 
-The sum-neutral $`\varepsilon` is _absorbing_ for the convolution
-(`eps_otimes`, `otimes_eps`): convolving with the constant
-$`\varepsilon` collapses to $`\varepsilon`, since $`\varepsilon` is
-absorbing for $`\otimes` and least for $`\preceq`. The left case is
-proved directly.
-
-*Theorem:* $`\varepsilon_{\mathcal{F}} \ast f = \varepsilon_{\mathcal{F}}`
-
-```lean
+/-- `convZero` left-absorbs: `convZero ∗ f = convZero`. -/
 theorem convZero_left {D T : Type*} [Add D]
     [CompleteDioid T]
     (f : D → T) :
@@ -395,34 +246,15 @@ theorem convZero_left {D T : Type*} [Add D]
       Semiring.eps_otimes]
     exact bot_le
   · exact bot_le
-```
 
-The right case follows by commutativity.
-
-*Theorem:* $`f \ast \varepsilon_{\mathcal{F}} = \varepsilon_{\mathcal{F}}`
-
-```lean
+/-- `convZero` right-absorbs: `f ∗ convZero = convZero`. -/
 theorem convZero_right {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f : D → T) :
     conv f convZero = convZero := by
   rw [conv_comm, convZero_left]
-```
 
-# The complete dioid instance
-
-Assembling these laws with the pointwise sum, supremum, and units gives
-the instance. The sum, product, and units are `psum`, `conv`,
-`convZero`, and `convUnit`; the pointwise laws are discharged by
-`funext` to the laws of $`T`, the convolution laws by the theorems
-above, and the completeness laws (`le_iSup`, `iSup_le`, `mul_iSup`) by
-the pointwise supremum `funSup`. We build the instance explicitly: a
-function type carries a stray pointwise product from `Mathlib`, and the
-dioid product must instead be the convolution.
-
-*Definition:* $`(\mathbb{R}^{+} \to T, \oplus, \ast)` is an `Algebra.CompleteDioid`
-
-```lean
+/-- Complete-dioid structure on `D → T` via `psum`/`conv`. -/
 noncomputable instance funCompleteDioid
     {D : Type u} [_root_.AddCommMonoid D]
     {T : Type u} [CompleteDioid T] :
@@ -483,21 +315,8 @@ noncomputable instance funCompleteDioid
           = CompleteDioid.iSup (fun i => F i s) from rfl]
       exact mul_le_mul_left
         (CompleteDioid.le_iSup (fun i => F i s) i) _
-```
 
-# Derived properties
-
-With the instance in hand, the remaining facts are properties of the
-convolution as the dioid product.
-
-The decomposition $`u + s = t` of a non-negative real is the same as a
-single $`s \le t` with $`u = t - s`. So the convolution has the
-equivalent _single-variable_ form
-$$`(f \ast g)(t) = \bigsqcup_{0 \le s \le t} f(t - s) \otimes g(s).`
-
-*Theorem:* $`(f \ast g)(t) = \bigsqcup\,\{\, f(t - s) \otimes g(s) \mid s \le t \,\}`
-
-```lean
+/-- Convolution as `⨆ {f (t - s) ⊗ₒ g s | s ≤ t}` when `D` has subtraction. -/
 theorem conv_eq_sub {D T : Type*}
     [_root_.AddCommMonoid D] [PartialOrder D]
     [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
@@ -519,23 +338,13 @@ theorem conv_eq_sub {D T : Type*}
   · rintro ⟨s, hst, rfl⟩
     refine ⟨t - s, s, ?_, rfl⟩
     rw [tsub_add_cancel_of_le hst]
-```
 
-Addition by a constant. Adding a constant $`K` pointwise is, in the
-scalar dioid, multiplying by $`K` (numeric addition is the dioid
-product $`\otimes`); it slides through the convolution.
-
-*Definition:* $`(f + K)(t) = f(t) \otimes K`
-
-```lean
+/-- Add a constant on the right: `(addConst f K) t = f t ⊗ₒ K`. -/
 def addConst {D T : Type*} [CompleteDioid T]
     (f : D → T) (K : T) : D → T :=
   fun t => f t ⊗ₒ K
-```
 
-*Theorem:* $`(f \ast g) + K = f \ast (g + K)`
-
-```lean
+/-- A right constant commutes through convolution. -/
 theorem conv_add_const {D T : Type*} [Add D]
     [CompleteDioid T]
     (f g : D → T) (K : T) :
@@ -556,37 +365,21 @@ theorem conv_add_const {D T : Type*} [Add D]
     show (f u ⊗ₒ g s) ⊗ₒ K = f u ⊗ₒ (addConst g K s)
     rw [show addConst g K s = g s ⊗ₒ K from rfl,
       mul_assoc]
-```
 
-The convolution is _isotone_ in each factor: this is just the isotony
-of the dioid product over $`\preceq`, read through `conv` — raising
-either factor raises the convolution. No special argument is needed; it
-is `mul_le_mul_left` / `mul_le_mul_right`. Raising the right factor:
-
-*Theorem:* $`g \preceq g' \implies f \ast g \preceq f \ast g'`
-
-```lean
+/-- Convolution is monotone in its right argument. -/
 theorem conv_le_conv_right {D : Type u}
     [_root_.AddCommMonoid D] {T : Type u}
     [CompleteDioid T] (f : D → T)
     {g g' : D → T} (h : g ≼ₒ g') :
     conv f g ≼ₒ conv f g' :=
   mul_le_mul_left h f
-```
 
-Raising the left factor:
-
-*Theorem:* $`f \preceq f' \implies f \ast g \preceq f' \ast g`
-
-```lean
+/-- Convolution is monotone in its left argument. -/
 theorem conv_le_conv_left {D : Type u}
     [_root_.AddCommMonoid D] {T : Type u}
     [CompleteDioid T] {f f' : D → T}
     (h : f ≼ₒ f') (g : D → T) :
     conv f g ≼ₒ conv f' g :=
   mul_le_mul_right h g
-```
 
-```lean
 end DeepWiki
-```
