@@ -106,35 +106,29 @@ theorem pseudoInv_eq_sSup_lt [CompleteLinearOrder α] [DenselyOrdered α]
   -- so `t ∈ I_{<}`, hence `c < t ≤ sup I_{<}`.
   exact lt_of_lt_of_le hct (le_sSup (mem_pseudoInvLtSet.mpr hflt))
 
-/-! ## First-crossing on `delayE`
+/-! ## First-crossing of a delay
 
-For a flat-then-jump curve, `f⁻¹(x) = inf {t | f t ≥ x}` is the first time the
-level `x` is reached. The `ℝ≥0∞`-domain delay curve `delayE d` (from
-`RealCurves`) is `0` on `[0, d]` then jumps to `⊤`, so every positive level is
-first reached just past `d`: `(delayE d)⁻¹ x = d` for `x > 0`, while
-`(delayE d)⁻¹ 0 = 0`. -/
+For a pure delay (`IsDelay f d`: `0` up to `d`, `⊤` beyond), `f⁻¹(x)` is the
+first time the level `x` is reached. Over a densely-ordered complete linear
+domain, every positive level is first reached just past `d`, so `f⁻¹ x = d`
+for `x > 0`, while `f⁻¹ ⊥ = ⊥`. The `delayE`/`delay` curves are witnesses. -/
 
-/-- For `0 < x`, `x ≤ delayE d t` holds exactly when `d < t`. -/
-theorem le_delayE_iff {d : ℝ≥0∞} {x : ℝ≥0∞} (hx : 0 < x) (t : ℝ≥0∞) :
-    x ≤ delayE d t ↔ d < t := by
-  unfold delayE
-  rcases le_or_gt t d with ht | ht
-  · simp only [if_pos ht]
-    exact ⟨fun h => absurd (le_antisymm (h.trans bot_le) bot_le) hx.ne',
-      fun h => absurd ht (not_le.mpr h)⟩
-  · simp only [if_neg (not_le.mpr ht)]
-    exact ⟨fun _ => ht, fun _ => le_top⟩
-
-/-- First-crossing: `(delayE d)⁻¹ x = d` for `0 < x` (the level is first
-reached just past `d`). -/
-theorem pseudoInv_delayE_pos (d : ℝ≥0∞) {x : ℝ≥0∞} (hx : 0 < x) :
-    pseudoInv (delayE d) x = d := by
+/-- First-crossing for any pure delay: `f⁻¹ x = d` for `0 < x`. -/
+theorem pseudoInv_eq_of_isDelay [CompleteLinearOrder α] [DenselyOrdered α]
+    [PartialOrder β] [Zero β] [OrderTop β]
+    {f : α → β} {d : α} (hf : IsDelay f d) {x : β} (hx : 0 < x) :
+    pseudoInv f x = d := by
   apply le_antisymm
   · -- `d` is approached from above: every `d < c` is admissible.
     refine le_of_forall_gt_imp_ge_of_dense fun c hc => ?_
-    exact pseudoInv_le_of_le ((le_delayE_iff hx c).mpr hc)
+    exact pseudoInv_le_of_le ((hf.le_iff hx c).mpr hc)
   · -- `d` lower-bounds the admissible set (`d < t ⇒ d ≤ t`).
-    exact le_pseudoInv (fun t ht => le_of_lt ((le_delayE_iff hx t).mp ht))
+    exact le_pseudoInv (fun t ht => le_of_lt ((hf.le_iff hx t).mp ht))
+
+/-- First-crossing: `(delayE d)⁻¹ x = d` for `0 < x`. -/
+theorem pseudoInv_delayE_pos (d : ℝ≥0∞) {x : ℝ≥0∞} (hx : 0 < x) :
+    pseudoInv (delayE d) x = d :=
+  pseudoInv_eq_of_isDelay (delayE_isDelay d) hx
 
 /-- `(delayE d)⁻¹ 0 = 0`. -/
 theorem pseudoInv_delayE_zero (d : ℝ≥0∞) : pseudoInv (delayE d) 0 = 0 :=

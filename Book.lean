@@ -10,6 +10,7 @@ import Book.Additivity
 import Book.Closures
 import Book.Limits
 import Book.Continuity
+import Book.DelayCurve
 import Book.RealCurves
 import Book.RealCurvesAdditivity
 import Book.RealCurvesConv
