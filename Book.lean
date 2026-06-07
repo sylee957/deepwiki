@@ -1,4 +1,5 @@
 import Book.Signatures
+import Book.LevelSet
 import Book.Dioids
 import Book.Order
 import Book.CompleteDioids

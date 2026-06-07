@@ -63,7 +63,7 @@ Commands:
 Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
 then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
 Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
-imports them all in order: `Signatures`, `Dioids`, `Order`, `CompleteDioids`,
+imports them all in order: `Signatures`, `LevelSet`, `Dioids`, `Order`, `CompleteDioids`,
 `ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `NdClosure`, `Additivity`,
 `Closures`,
 `Limits`, `Continuity`, `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`,
