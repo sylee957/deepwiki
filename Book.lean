@@ -30,26 +30,8 @@ chapter; all declarations live in `namespace DeepWiki`.
 
 The first entry is the algebra of (min,plus) dioids — the theory of dioids
 (idempotent semirings) and the complete (min,plus) function dioids that
-underlie deterministic network calculus. Chapters:
-
-- `Signatures`, `Dioids`, `Order` — the abstract algebraic tower, the dioid,
-  the canonical order and isotony.
-- `CompleteDioids` — complete dioids with lower semi-continuity, residuation.
-- `ScalarDioids` — the carriers `MinPlus`, `MinPlusNN`, `MinPlusExt` and the
-  (max,plus) duals.
-- `DioidFunctions`, `FunctionDioids` — the convolution and the function dioid.
-- `NdClosure` — the non-decreasing (least monotone majorant) closure.
-- `Additivity` — sub- and super-additivity predicates.
-- `Closures` — the Kleene star and sub-additive closure.
-- `Limits`, `Continuity` — right limits, left- and lower semi-continuity.
-- `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`, `RealCurvesDeconv`,
-  `RealCurvesDeviations` — concrete network-calculus curves (delay, rate,
-  rate-latency, token bucket), their regularity, additivity/closures,
-  convolutions, deconvolutions, and horizontal/vertical deviations.
-- `PseudoInverse` — the lower pseudo-inverse `f⁻¹(x) = inf {t | f t ≥ x}`.
-- `ConvolutionMinimum` — the convolution attains its minimum.
-- `Servers`, `RealConvolution`, `Shapers` — service curves, real convolution,
-  and greedy shapers.
+underlie deterministic network calculus. The chapter list is the `import`
+block above.
 
 Notation: `⊕ = +` (dioid sum / lattice join), `⊗ = *` (product), `𝟘 = 0`,
 `𝟙 = 1`, canonical order `≼ = ≤`.
