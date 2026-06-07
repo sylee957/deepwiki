@@ -15,6 +15,7 @@ import Book.RealCurvesAdditivity
 import Book.RealCurvesConv
 import Book.RealCurvesDeconv
 import Book.RealCurvesDeviations
+import Book.PseudoInverse
 import Book.ConvolutionMinimum
 import Book.Servers
 import Book.RealConvolution
@@ -37,6 +38,7 @@ underlie deterministic network calculus. Chapters:
 - `ScalarDioids` — the carriers `MinPlus`, `MinPlusNN`, `MinPlusExt` and the
   (max,plus) duals.
 - `DioidFunctions`, `FunctionDioids` — the convolution and the function dioid.
+- `NdClosure` — the non-decreasing (least monotone majorant) closure.
 - `Additivity` — sub- and super-additivity predicates.
 - `Closures` — the Kleene star and sub-additive closure.
 - `Limits`, `Continuity` — right limits, left- and lower semi-continuity.
@@ -44,6 +46,7 @@ underlie deterministic network calculus. Chapters:
   `RealCurvesDeviations` — concrete network-calculus curves (delay, rate,
   rate-latency, token bucket), their regularity, additivity/closures,
   convolutions, deconvolutions, and horizontal/vertical deviations.
+- `PseudoInverse` — the lower pseudo-inverse `f⁻¹(x) = inf {t | f t ≥ x}`.
 - `ConvolutionMinimum` — the convolution attains its minimum.
 - `Servers`, `RealConvolution`, `Shapers` — service curves, real convolution,
   and greedy shapers.

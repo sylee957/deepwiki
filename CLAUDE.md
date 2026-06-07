@@ -67,8 +67,8 @@ imports them all in order: `Signatures`, `Dioids`, `Order`, `CompleteDioids`,
 `ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `NdClosure`, `Additivity`,
 `Closures`,
 `Limits`, `Continuity`, `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`,
-`RealCurvesDeconv`, `RealCurvesDeviations`, `ConvolutionMinimum`, `Servers`,
-`RealConvolution`, `Shapers` (the live list is `Book.lean`).
+`RealCurvesDeconv`, `RealCurvesDeviations`, `PseudoInverse`, `ConvolutionMinimum`,
+`Servers`, `RealConvolution`, `Shapers` (the live list is `Book.lean`).
 
 All declarations live in `namespace DeepWiki`.
 
