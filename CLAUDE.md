@@ -136,9 +136,9 @@ All declarations live in `namespace DeepWiki`.
   ` 2.lean` copies of chapters (stale Verso versions). They are never imported; if
   they appear untracked, delete them. The editor may keep a stale tab open on a
   deleted one and show phantom LSP errors — close the tab.
-- **Publishing is currently BROKEN and needs repointing.** The GitHub Actions
-  workflow (`.github/workflows/deploy.yml`) still runs `lake exe generate-book` and
-  deploys `_out/html-multi` — both Verso artifacts that no longer exist. It must be
-  rewritten to render doc-gen4 (`DOCGEN_SRC=file lake build Book:docs`) and deploy
-  `.lake/build/doc` before the next push to `main`. CI uses `lake exe cache get` for
-  Mathlib's prebuilt oleans so only `Book/*.lean` recompiles.
+- **CI is build-only (no deploy).** The GitHub Actions workflow
+  (`.github/workflows/ci.yml`) is an integrity check on push/PR to `main`: it runs
+  `lake build` and `DOCGEN_SRC=file lake build Book:docs`, but produces no artifact
+  and does not deploy to Pages. CI uses `lake exe cache get` for Mathlib's prebuilt
+  oleans so only `Book/*.lean` recompiles. If you later want to publish the
+  doc-gen4 HTML, add a Pages upload/deploy step pointing at `.lake/build/doc`.

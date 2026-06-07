@@ -1,0 +1,41 @@
+name: Build DeepWiki
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch Mathlib build cache
+        # Downloads prebuilt .olean files so only Book/*.lean compiles,
+        # turning a ~1h cold Mathlib build into a few minutes.
+        run: |
+          lake exe cache get || true
+
+      - name: Build the library
+        # Integrity check: the whole library must compile, warning- and
+        # sorry-free. No artifact is produced or deployed.
+        run: lake build
+
+      - name: Build API docs (doc-gen4)
+        # Verify the documentation path still elaborates. Output is left in
+        # .lake/build/doc and not uploaded. doc-gen's final HTML step expects a
+        # references.bib at the doc root, so create an empty one first.
+        run: |
+          mkdir -p .lake/build/doc
+          touch .lake/build/doc/references.bib
+          DOCGEN_SRC=file lake build Book:docs
