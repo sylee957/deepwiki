@@ -1,4 +1,5 @@
 import Book.RealCurvesDeconv
+import Book.Continuity
 
 /-! Horizontal and vertical deviations: `horizDevAt`, `hDev`, `vDev`, the
 delay/token-bucket/rate-latency deviation values (stable and unstable), and the

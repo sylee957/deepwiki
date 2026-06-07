@@ -60,7 +60,7 @@ theorem tokenBucket_apply_pos (r b t : ℝ≥0)
     (ht : t ≠ 0) :
     tokenBucket r b t = (r:ℝ≥0∞) * t + b := by
   have h0 : ¬ t ≤ 0 := by simpa using ht
-  simp only [tokenBucket, Pi.inf_apply, delayNN, delay_apply, if_neg h0,
+  simp only [tokenBucket_apply, delayNN, delay_apply, if_neg h0,
     min_top_right]
 
 /-- The min of two token-buckets is subadditive. -/
@@ -103,31 +103,32 @@ noncomputable def affine (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 
 /-- `affine r b ⊓ delayNN 0 = tokenBucket r b`. -/
 theorem affine_inf_delay0 (r b : ℝ≥0) :
-    affine r b ⊓ delayNN 0 = tokenBucket r b := rfl
+    affine r b ⊓ delayNN 0 = tokenBucket r b := by
+  rw [tokenBucket_eq]; rfl
 
 /-- `affine r 0 = rate r`. -/
 theorem affine_zero (r : ℝ≥0) : affine r 0 = rate r := by
   funext t
-  simp only [affine, rate, ENNReal.coe_zero, add_zero]
+  simp only [affine, rate_apply, ENNReal.coe_zero, add_zero]
 
 /-- `rateLatency R 0 = rate R`. -/
 theorem rateLatency_zero (R : ℝ≥0) :
     rateLatency R 0 = rate R := by
-  funext t; simp only [rateLatency, rate, tsub_zero]
+  funext t; simp only [rateLatency, rate_apply, tsub_zero]
 
 /-- `tokenBucket R 0 = rate R`. -/
 theorem tokenBucket_zero_rate (R : ℝ≥0) :
     tokenBucket R 0 = rate R := by
   funext t
   rcases eq_or_ne t 0 with ht | ht
-  · subst ht; rw [tokenBucket_zero_eq]; simp [rate]
-  · rw [tokenBucket_apply_pos R 0 t ht]; simp [rate]
+  · subst ht; rw [tokenBucket_zero_eq]; simp
+  · rw [tokenBucket_apply_pos R 0 t ht]; simp
 
 /-- `tokenBucket r b` is monotone. -/
 theorem tokenBucket_mono (r b : ℝ≥0) :
     Monotone (tokenBucket r b) := by
   intro a c hac
-  simp only [tokenBucket, Pi.inf_apply]
+  simp only [tokenBucket_apply]
   exact min_le_min (by gcongr) (delayNN_mono 0 hac)
 
 /-- `delayNN d ⊘ delayNN d' = delayNN (d - d')` when `d' ≤ d`. -/
@@ -143,7 +144,7 @@ theorem deconv_delayNN_delayNN (d d' : ℝ≥0) (h : d' ≤ d) :
 theorem deconv_rate_delayNN (R d : ℝ≥0) :
     deconv (rate R) (delayNN d) = affine R (R * d) := by
   rw [deconv_delayNN (rate R) (rate_mono R) d]
-  funext t; simp only [rate, affine]; push_cast; ring
+  funext t; simp only [rate_apply, affine]; push_cast; ring
 
 /-- `tokenBucket r b ⊘ delayNN d = affine r (b + r * d)` for `d > 0`. -/
 theorem deconv_tokenBucket_delay (r b d : ℝ≥0)
@@ -187,7 +188,7 @@ theorem affine_shift_bound (r b R T t u : ℝ≥0)
 /-- `tokenBucket r b ≤ affine r b` pointwise. -/
 theorem tokenBucket_le_affine (r b t : ℝ≥0) :
     tokenBucket r b t ≤ affine r b t := by
-  simp only [tokenBucket, Pi.inf_apply, affine]
+  simp only [tokenBucket_apply, affine]
   exact min_le_left _ _
 
 /-- `tokenBucket r b ⊘ βRT = affine r (b + r*T)` for `r ≤ R`, `T > 0`. -/
@@ -286,7 +287,7 @@ theorem deconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
   · subst hRr
     have h1 := hc 1
     rw [tokenBucket_apply_pos r b 1 one_ne_zero,
-      rate] at h1
+      rate_apply] at h1
     simp only [ENNReal.coe_one, mul_one] at h1
     rw [ENNReal.add_sub_cancel_left
       ENNReal.coe_ne_top] at h1
@@ -298,7 +299,7 @@ theorem deconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
     set s := (b - c') / (2 * d) with hs
     have hsne : s ≠ 0 := by rw [hs]; positivity
     have hcs := hc s
-    rw [tokenBucket_apply_pos r b s hsne, rate] at hcs
+    rw [tokenBucket_apply_pos r b s hsne, rate_apply] at hcs
     have hRcoe : (R:ℝ≥0∞) * s
         = ((R * s : ℝ≥0) : ℝ≥0∞) := by
       rw [ENNReal.coe_mul]
@@ -338,7 +339,7 @@ theorem deconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
 theorem affine_shift_bound0 (r b R t u : ℝ≥0)
     (h : r ≤ R) :
     affine r b (t + u) ≤ affine r b t + rate R u := by
-  simp only [affine, rate]
+  simp only [affine, rate_apply]
   have key : (r*(t+u)+b : ℝ≥0) ≤ (r*t+b) + R*u := by
     rw [← NNReal.coe_le_coe]; push_cast
     nlinarith [mul_le_mul_of_nonneg_right
@@ -369,7 +370,7 @@ theorem deconv_tokenBucket_rate (r b R : ℝ≥0)
       exact deconv_origin_lb r b R h
     · unfold deconv; refine le_iSup_of_le 0 ?_
       rw [add_zero, tokenBucket_apply_pos r b t ht]
-      simp only [rate, ENNReal.coe_zero, mul_zero,
+      simp only [rate_apply, ENNReal.coe_zero, mul_zero,
         tsub_zero, affine, le_refl]
 
 /-- `tokenBucket r b ⊘ rate R = ⊤` when `R < r` (unstable). -/

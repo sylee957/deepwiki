@@ -192,7 +192,7 @@ theorem delayNN_mono (d : ℝ≥0) : Monotone (delayNN d) := by
 
 /-- `rate R` is monotone. -/
 theorem rate_mono (R : ℝ≥0) : Monotone (rate R) := by
-  intro a b hab; simp only [rate]; gcongr
+  intro a b hab; simp only [rate, rateV]; gcongr
 
 /-- `delayNN d ∗ delayNN d' = delayNN (d + d')`. -/
 theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
@@ -211,13 +211,13 @@ theorem rateLatency_eq_conv (R T : ℝ≥0) :
     rateLatency R T = minConv (delayNN T) (rate R) := by
   rw [minConvE_comm, conv_delayNN (rate R) (rate_mono R) T]
   funext t
-  simp only [rate, rateLatency]
+  simp only [rate, rateV, rateLatency]
 
 /-- `rate R ∗ rate R' = rate (R ⊓ R')`. -/
 theorem conv_rate_rate (R R' : ℝ≥0) :
     minConv (rate R) (rate R') = rate (R ⊓ R') := by
   funext t
-  unfold minConv rate
+  unfold minConv rate rateV
   apply le_antisymm
   · rcases le_total R R' with h | h
     · refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_

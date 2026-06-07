@@ -1,4 +1,6 @@
 import Book.RealCurves
+import Book.Additivity
+import Book.Closures
 
 /-! Super- and sub-additivity of the real curves and their additive
 closures: each curve's `IsSubadditive`/`IsSuperadditive` status, the staircase
@@ -13,13 +15,14 @@ open Set Topology Filter
 /-- `rate R = rateLatency R 0`. -/
 theorem rate_eq_rateLatency_zero (R : ℝ≥0) :
     rate R = rateLatency R 0 := by
-  funext t; simp [rate, rateLatency]
+  funext t; simp [rate, rateV, rateLatency]
 
 /-- `rate R = tokenBucket R 0`. -/
 theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
     rate R = tokenBucket R 0 := by
   funext t
-  simp only [rate, tokenBucket, Pi.inf_apply,
+  rw [tokenBucket_eq]
+  simp only [rate, rateV, Pi.inf_apply,
     ENNReal.coe_zero, add_zero]
   rcases eq_or_ne t 0 with h | h
   · subst h; simp [delayNN]
@@ -30,20 +33,21 @@ theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
 theorem test_zero_eq_tokenBucket :
     test (0 : ℝ≥0) = tokenBucket 0 1 := by
   funext t
+  rw [tokenBucket_eq]
   rcases eq_or_ne t 0 with h | h
-  · subst h; simp [test, tokenBucket, delayNN]
+  · subst h; simp [test, delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
-    simp [test, tokenBucket, delayNN, ht]
+    simp [test, delayNN, ht]
 
 /-- `rate R` is subadditive. -/
 theorem rate_subadditive (R : ℝ≥0) :
     IsSubadditive (rate R) := by
-  intro u s; simp only [rate]; push_cast; rw [mul_add]
+  intro u s; simp only [rate, rateV]; push_cast; rw [mul_add]
 
 /-- `rate R` is superadditive (hence additive). -/
 theorem rate_superadditive (R : ℝ≥0) :
     IsSuperadditive (rate R) := by
-  intro u s; simp only [rate]; push_cast; rw [mul_add]
+  intro u s; simp only [rate, rateV]; push_cast; rw [mul_add]
 
 /-- `delayNN d` is superadditive. -/
 theorem delayNN_superadditive (d : ℝ≥0) :
@@ -91,7 +95,8 @@ theorem tokenBucket_subadditive (r b : ℝ≥0) :
       have hus0 : ¬ (u + s) ≤ 0 := by
         rw [nonpos_iff_eq_zero, add_eq_zero]
         rintro ⟨h1, _⟩; exact hu h1
-      simp only [tokenBucket, Pi.inf_apply, delayNN, delay_apply,
+      rw [tokenBucket_eq]
+      simp only [Pi.inf_apply, delayNN, delay_apply,
         if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
       push_cast [mul_add]
       calc (r:ℝ≥0∞)*u + r*s + b

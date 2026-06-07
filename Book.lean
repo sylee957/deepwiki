@@ -11,13 +11,14 @@ import Book.Additivity
 import Book.Closures
 import Book.Limits
 import Book.Continuity
-import Book.DelayCurve
 import Book.RealCurves
+import Book.CurveRegularity
 import Book.RealCurvesAdditivity
 import Book.RealCurvesConv
 import Book.RealCurvesDeconv
 import Book.RealCurvesDeviations
 import Book.PseudoInverse
+import Book.PseudoInverseCatalog
 import Book.ConvolutionMinimum
 import Book.Servers
 import Book.RealConvolution

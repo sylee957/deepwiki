@@ -66,7 +66,7 @@ Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
 imports them all in order: `Signatures`, `LevelSet`, `Dioids`, `Order`, `CompleteDioids`,
 `ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `NdClosure`, `Additivity`,
 `Closures`,
-`Limits`, `Continuity`, `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`,
+`Limits`, `Continuity`, `RealCurves`, `CurveRegularity`, `RealCurvesAdditivity`, `RealCurvesConv`,
 `RealCurvesDeconv`, `RealCurvesDeviations`, `PseudoInverse`, `ConvolutionMinimum`,
 `Servers`, `RealConvolution`, `Shapers` (the live list is `Book.lean`).
 
