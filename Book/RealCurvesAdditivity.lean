@@ -22,18 +22,18 @@ theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
   simp only [rate, tokenBucket, Pi.inf_apply,
     ENNReal.coe_zero, add_zero]
   rcases eq_or_ne t 0 with h | h
-  · subst h; simp [delay]
+  · subst h; simp [delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
-    simp [delay, ht]
+    simp [delayNN, ht]
 
 /-- `test 0 = tokenBucket 0 1`. -/
 theorem test_zero_eq_tokenBucket :
     test (0 : ℝ≥0) = tokenBucket 0 1 := by
   funext t
   rcases eq_or_ne t 0 with h | h
-  · subst h; simp [test, tokenBucket, delay]
+  · subst h; simp [test, tokenBucket, delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
-    simp [test, tokenBucket, delay, ht]
+    simp [test, tokenBucket, delayNN, ht]
 
 /-- `rate R` is subadditive. -/
 theorem rate_subadditive (R : ℝ≥0) :
@@ -45,11 +45,11 @@ theorem rate_superadditive (R : ℝ≥0) :
     IsSuperadditive (rate R) := by
   intro u s; simp only [rate]; push_cast; rw [mul_add]
 
-/-- `delay d` is superadditive. -/
-theorem delay_superadditive (d : ℝ≥0) :
-    IsSuperadditive (delay d) := by
+/-- `delayNN d` is superadditive. -/
+theorem delayNN_superadditive (d : ℝ≥0) :
+    IsSuperadditive (delayNN d) := by
   intro u s
-  simp only [delay]
+  simp only [delayNN, delay_apply]
   rcases le_or_gt (u + s) d with h | h
   · rw [if_pos h, if_pos (le_trans le_self_add h),
       if_pos (le_trans le_add_self h)]; simp
@@ -91,7 +91,7 @@ theorem tokenBucket_subadditive (r b : ℝ≥0) :
       have hus0 : ¬ (u + s) ≤ 0 := by
         rw [nonpos_iff_eq_zero, add_eq_zero]
         rintro ⟨h1, _⟩; exact hu h1
-      simp only [tokenBucket, Pi.inf_apply, delay,
+      simp only [tokenBucket, Pi.inf_apply, delayNN, delay_apply,
         if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
       push_cast [mul_add]
       calc (r:ℝ≥0∞)*u + r*s + b
@@ -161,7 +161,7 @@ theorem staircase_subadditive (P h : ℝ≥0)
       have hus0 : ¬ (u + s) ≤ 0 := by
         rw [nonpos_iff_eq_zero, add_eq_zero]
         rintro ⟨h1, _⟩; exact hu h1
-      simp only [staircase, delay, if_neg hu0,
+      simp only [staircase, delayNN, delay_apply, if_neg hu0,
         if_neg hs0, if_neg hus0, min_top_right]
       push_cast
       exact staircase_val_sub P h hP J hJ u s
@@ -239,7 +239,7 @@ theorem staircase_superadditive (P h : ℝ≥0)
       have hus0 : ¬ (u + s) ≤ 0 := by
         rw [nonpos_iff_eq_zero, add_eq_zero]
         rintro ⟨h1, _⟩; exact hu h1
-      simp only [staircase, delay, if_neg hu0,
+      simp only [staircase, delayNN, delay_apply, if_neg hu0,
         if_neg hs0, if_neg hus0, min_top_right]
       rw [← ENNReal.ofReal_add (le_max_right _ _)
         (le_max_right _ _)]
@@ -302,12 +302,12 @@ theorem superadditiveClosure_unbotD_eq
   show (((g t : ℝ≥0∞) : WithBot ℝ≥0∞)).unbotD 0 = g t
   rw [WithBot.unbotD_coe]
 
-/-- `delay d` is fixed by its superadditive closure. -/
-theorem delay_closure (d : ℝ≥0) (t : ℝ≥0) :
-    (superadditiveClosure (↑(delay d)) t).unbotD 0
-      = delay d t :=
+/-- `delayNN d` is fixed by its superadditive closure. -/
+theorem delayNN_closure (d : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(delayNN d)) t).unbotD 0
+      = delayNN d t :=
   superadditiveClosure_unbotD_eq _
-    (delay_superadditive d) (delay_zero_eq d) t
+    (delayNN_superadditive d) (delayNN_zero_eq d) t
 
 /-- `rate R` is fixed by its superadditive closure. -/
 theorem rate_closure (R : ℝ≥0) (t : ℝ≥0) :

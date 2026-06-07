@@ -41,18 +41,18 @@ theorem vDev_eq_deconv_zero {D T : Type*}
   unfold vDev deconv
   simp only [zero_add]
 
-/-- `delay d (t + u) = ⊤` when `d < t + u`. -/
-theorem delay_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
-    delay d (t + u) = ⊤ := by
-  simp only [delay, if_neg (not_le.mpr h)]
+/-- `delayNN d (t + u) = ⊤` when `d < t + u`. -/
+theorem delayNN_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
+    delayNN d (t + u) = ⊤ := by
+  simp only [delayNN, delay_apply, if_neg (not_le.mpr h)]
 
-/-- `horizDevAt f (delay d) t ≤ d`. -/
+/-- `horizDevAt f (delayNN d) t ≤ d`. -/
 theorem horizDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
-    horizDevAt f (delay d) t ≤ d := by
+    horizDevAt f (delayNN d) t ≤ d := by
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
-  have hadm : f t ≤ delay d (t + (d + ε)) := by
-    rw [delay_top_of_gt d t (d + ε) (by
+  have hadm : f t ≤ delayNN d (t + (d + ε)) := by
+    rw [delayNN_top_of_gt d t (d + ε) (by
       calc d < d + ε := by simpa using hε
         _ ≤ t + (d + ε) := le_add_self)]
     exact le_top
@@ -60,16 +60,16 @@ theorem horizDevAt_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
   refine iInf_le_of_le ⟨d + ε, hadm⟩ ?_
   push_cast; rfl
 
-/-- `hDev f (delay d) ≤ d`. -/
+/-- `hDev f (delayNN d) ≤ d`. -/
 theorem hDev_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
-    hDev f (delay d) ≤ d := by
+    hDev f (delayNN d) ≤ d := by
   unfold hDev
   exact iSup_le (fun t => horizDevAt_delay_le f d t)
 
-/-- `(d - t) ≤ horizDevAt f (delay d) t` when `f t > 0`. -/
+/-- `(d - t) ≤ horizDevAt f (delayNN d) t` when `f t > 0`. -/
 theorem horizDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
     (hft : 0 < f t) :
-    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ horizDevAt f (delay d) t := by
+    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ horizDevAt f (delayNN d) t := by
   unfold horizDevAt
   refine le_iInf ?_
   rintro ⟨d', hd'⟩
@@ -78,32 +78,32 @@ theorem horizDevAt_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
   have hd'r : d' < d - t := by exact_mod_cast hlt
   have htd : t + d' < d := by
     rwa [lt_tsub_iff_left] at hd'r
-  have h0 : delay d (t + d') = 0 := by
-    simp only [delay, if_pos htd.le]
+  have h0 : delayNN d (t + d') = 0 := by
+    simp only [delayNN, delay_apply, if_pos htd.le]
   rw [h0] at hd'
   exact absurd (le_antisymm hd' bot_le) hft.ne'
 
-/-- `hDev f (delay d) = d` when `f > 0` on `(0, ∞)`. -/
+/-- `hDev f (delayNN d) = d` when `f > 0` on `(0, ∞)`. -/
 theorem hDev_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hf : ∀ t : ℝ≥0, 0 < t → 0 < f t) :
-    hDev f (delay d) = d := by
+    hDev f (delayNN d) = d := by
   apply le_antisymm (hDev_delay_le f d)
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   have ht : (0:ℝ≥0) < ε := hε
-  have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDev f (delay d) := by
+  have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDev f (delayNN d) := by
     refine le_trans (horizDevAt_delay_ge f d ε (hf ε ht)) ?_
     unfold hDev; exact le_iSup _ ε
   calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
-    _ ≤ hDev f (delay d) + ε := by gcongr
+    _ ≤ hDev f (delayNN d) + ε := by gcongr
 
-/-- `hDev f (delay d) = d` if `f > 0` on some right-window of `0`. -/
+/-- `hDev f (delayNN d) = d` if `f > 0` on some right-window of `0`. -/
 theorem hDev_delay_eq_of_pos_window
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hw : ∃ δ : ℝ≥0, 0 < δ ∧
       ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t) :
-    hDev f (delay d) = d := by
+    hDev f (delayNN d) = d := by
   apply le_antisymm (hDev_delay_le f d)
   obtain ⟨δ, hδ, hpw⟩ := hw
   refine ENNReal.le_of_forall_pos_le_add ?_
@@ -116,27 +116,27 @@ theorem hDev_delay_eq_of_pos_window
   have hs_le_ε : (s:ℝ≥0∞) ≤ ε := by
     exact_mod_cast min_le_left _ _
   have hlb : ((d - s : ℝ≥0):ℝ≥0∞)
-      ≤ hDev f (delay d) := by
+      ≤ hDev f (delayNN d) := by
     refine le_trans
       (horizDevAt_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
     unfold hDev; exact le_iSup _ s
   calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s := by
         rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
-    _ ≤ hDev f (delay d) + ε := add_le_add hlb hs_le_ε
+    _ ≤ hDev f (delayNN d) + ε := add_le_add hlb hs_le_ε
 
-/-- `hDev f (delay d) = d` if `f(0⁺) = L > 0`. -/
+/-- `hDev f (delayNN d) = d` if `f(0⁺) = L > 0`. -/
 theorem hDev_delay_eq_of_rightLimit_pos
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) (L : ℝ≥0∞)
     (hL : TendstoRight f 0 L) (hL0 : 0 < L) :
-    hDev f (delay d) = d :=
+    hDev f (delayNN d) = d :=
   hDev_delay_eq_of_pos_window f d
     (pos_near_zero_of_rightLimit_pos f L hL hL0)
 
-/-- `hDev f (delay d) = d` if `f` is right-continuous with `f 0 > 0`. -/
+/-- `hDev f (delayNN d) = d` if `f` is right-continuous with `f 0 > 0`. -/
 theorem hDev_delay_eq_of_rightCont
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hrc : IsRightContinuous f) (h0 : 0 < f 0) :
-    hDev f (delay d) = d :=
+    hDev f (delayNN d) = d :=
   hDev_delay_eq_of_rightLimit_pos f d (f 0)
     (hrc 0).tendsto h0
 
@@ -161,10 +161,10 @@ theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
   simp only [mul_zero, zero_add] at hcont
   exact hcont.mono_left nhdsWithin_le_nhds
 
-/-- `hDev (tokenBucket r b) (delay d) = d` when `b > 0`. -/
+/-- `hDev (tokenBucket r b) (delayNN d) = d` when `b > 0`. -/
 theorem hDev_tokenBucket_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
-    hDev (tokenBucket r b) (delay d) = d :=
+    hDev (tokenBucket r b) (delayNN d) = d :=
   hDev_delay_eq_of_rightLimit_pos (tokenBucket r b) d
     (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
     (by exact_mod_cast hb)
@@ -350,10 +350,10 @@ theorem hDev_tokenBucket_rateLatency_top
       (fun t => horizDevAt (tokenBucket r b)
         (rateLatency R T) t) s
 
-/-- `vDev (tokenBucket r b) (delay d) = r*d + b` for `d > 0`. -/
+/-- `vDev (tokenBucket r b) (delayNN d) = r*d + b` for `d > 0`. -/
 theorem vDev_tokenBucket_delay (r b d : ℝ≥0)
     (hd : 0 < d) :
-    vDev (tokenBucket r b) (delay d)
+    vDev (tokenBucket r b) (delayNN d)
       = (r*d + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
     deconv_tokenBucket_delay r b d hd]

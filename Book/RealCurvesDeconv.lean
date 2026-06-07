@@ -60,7 +60,7 @@ theorem tokenBucket_apply_pos (r b t : ℝ≥0)
     (ht : t ≠ 0) :
     tokenBucket r b t = (r:ℝ≥0∞) * t + b := by
   have h0 : ¬ t ≤ 0 := by simpa using ht
-  simp only [tokenBucket, Pi.inf_apply, delay, if_neg h0,
+  simp only [tokenBucket, Pi.inf_apply, delayNN, delay_apply, if_neg h0,
     min_top_right]
 
 /-- The min of two token-buckets is subadditive. -/
@@ -101,9 +101,9 @@ theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
 noncomputable def affine (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => (r:ℝ≥0∞) * t + b
 
-/-- `affine r b ⊓ delay 0 = tokenBucket r b`. -/
+/-- `affine r b ⊓ delayNN 0 = tokenBucket r b`. -/
 theorem affine_inf_delay0 (r b : ℝ≥0) :
-    affine r b ⊓ delay 0 = tokenBucket r b := rfl
+    affine r b ⊓ delayNN 0 = tokenBucket r b := rfl
 
 /-- `affine r 0 = rate r`. -/
 theorem affine_zero (r : ℝ≥0) : affine r 0 = rate r := by
@@ -128,29 +128,29 @@ theorem tokenBucket_mono (r b : ℝ≥0) :
     Monotone (tokenBucket r b) := by
   intro a c hac
   simp only [tokenBucket, Pi.inf_apply]
-  exact min_le_min (by gcongr) (delay_mono 0 hac)
+  exact min_le_min (by gcongr) (delayNN_mono 0 hac)
 
-/-- `delay d ⊘ delay d' = delay (d - d')` when `d' ≤ d`. -/
-theorem deconv_delay_delay (d d' : ℝ≥0) (h : d' ≤ d) :
-    deconv (delay d) (delay d') = delay (d - d') := by
-  rw [deconv_delay (delay d) (delay_mono d) d']
+/-- `delayNN d ⊘ delayNN d' = delayNN (d - d')` when `d' ≤ d`. -/
+theorem deconv_delayNN_delayNN (d d' : ℝ≥0) (h : d' ≤ d) :
+    deconv (delayNN d) (delayNN d') = delayNN (d - d') := by
+  rw [deconv_delayNN (delayNN d) (delayNN_mono d) d']
   funext t
   show (if t + d' ≤ d then (0:ℝ≥0∞) else ⊤)
-      = delay (d - d') t
-  simp only [delay]; congr 1; rw [le_tsub_iff_right h]
+      = delayNN (d - d') t
+  simp only [delayNN, delay_apply]; congr 1; rw [le_tsub_iff_right h]
 
-/-- `rate R ⊘ delay d = affine R (R * d)`. -/
-theorem deconv_rate_delay (R d : ℝ≥0) :
-    deconv (rate R) (delay d) = affine R (R * d) := by
-  rw [deconv_delay (rate R) (rate_mono R) d]
+/-- `rate R ⊘ delayNN d = affine R (R * d)`. -/
+theorem deconv_rate_delayNN (R d : ℝ≥0) :
+    deconv (rate R) (delayNN d) = affine R (R * d) := by
+  rw [deconv_delayNN (rate R) (rate_mono R) d]
   funext t; simp only [rate, affine]; push_cast; ring
 
-/-- `tokenBucket r b ⊘ delay d = affine r (b + r * d)` for `d > 0`. -/
+/-- `tokenBucket r b ⊘ delayNN d = affine r (b + r * d)` for `d > 0`. -/
 theorem deconv_tokenBucket_delay (r b d : ℝ≥0)
     (hd : 0 < d) :
-    deconv (tokenBucket r b) (delay d)
+    deconv (tokenBucket r b) (delayNN d)
       = affine r (b + r * d) := by
-  rw [deconv_delay (tokenBucket r b)
+  rw [deconv_delayNN (tokenBucket r b)
     (tokenBucket_mono r b) d]
   funext t
   have htd : t + d ≠ 0 := by positivity

@@ -4,7 +4,7 @@ import Book.Closures
 import Book.DelayCurve
 
 /-! Concrete real curves over `ℝ≥0 → ℝ≥0∞`: rate, rate-latency, token-bucket,
-staircase, test (the delay curve and its `IsDelay` theory are in `DelayCurve`),
+staircase, test (the delay curve `delayNN` is in `DelayCurve`),
 with their regularity — pointwise/piecewise continuity and left-continuity,
 plus the `*_zero_eq` base values. -/
 
@@ -22,16 +22,16 @@ noncomputable def rate (R : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 noncomputable def rateLatency (R T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => (R : ℝ≥0∞) * ((t - T : ℝ≥0) : ℝ≥0∞)
 
-/-- Token-bucket curve `(r * t + b) ⊓ delay 0` (`0` at `t = 0`). -/
+/-- Token-bucket curve `(r * t + b) ⊓ delayNN 0` (`0` at `t = 0`). -/
 noncomputable def tokenBucket (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
-  (fun t => (r : ℝ≥0∞) * t + b) ⊓ delay 0
+  (fun t => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0
 
 /-- Staircase curve of step `P`, height `h`, offset `J`, clamped at `0`. -/
 noncomputable def staircase (P h : ℝ≥0) (J : ℝ) :
     ℝ≥0 → ℝ≥0∞ :=
   fun t =>
     min (ENNReal.ofReal
-      (max (h * ⌈((t : ℝ) + J) / P⌉) 0)) (delay 0 t)
+      (max (h * ⌈((t : ℝ) + J) / P⌉) 0)) (delayNN 0 t)
 
 /-- Test/step curve: `0` for `t ≤ T`, `1` afterwards. -/
 noncomputable def test (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
@@ -49,12 +49,12 @@ theorem rateLatency_zero_eq (R T : ℝ≥0) :
 /-- `tokenBucket r b 0 = 0`. -/
 theorem tokenBucket_zero_eq (r b : ℝ≥0) :
     tokenBucket r b 0 = 0 := by
-  simp [tokenBucket, delay]
+  simp [tokenBucket, delayNN]
 
 /-- `staircase P h J 0 = 0`. -/
 theorem staircase_zero_eq (P h : ℝ≥0) (J : ℝ) :
     staircase P h J 0 = 0 := by
-  simp [staircase, delay]
+  simp [staircase, delayNN]
 
 /-- `test T 0 = 0`. -/
 theorem test_zero_eq (T : ℝ≥0) : test T 0 = 0 := by
@@ -82,25 +82,25 @@ theorem rateLatency_pwc (R T : ℝ≥0) :
   isPiecewiseContinuous_of_continuous _
     (rateLatency_continuous R T)
 
-/-- `delay d` is continuous at every `t ≠ d`. -/
-theorem delay_continuousAt (d t : ℝ≥0) (h : t ≠ d) :
-    ContinuousAt (delay d) t := by
+/-- `delayNN d` is continuous at every `t ≠ d`. -/
+theorem delayNN_continuousAt (d t : ℝ≥0) (h : t ≠ d) :
+    ContinuousAt (delayNN d) t := by
   rcases lt_or_gt_of_ne h with h | h
   · refine (continuousAt_const (y := (0:ℝ≥0∞))).congr ?_
     filter_upwards [Iio_mem_nhds h] with s hs
-    simp [delay, le_of_lt (Set.mem_Iio.mp hs)]
+    simp [delayNN, le_of_lt (Set.mem_Iio.mp hs)]
   · refine (continuousAt_const (y := (⊤:ℝ≥0∞))).congr ?_
     filter_upwards [Ioi_mem_nhds h] with s hs
-    simp [delay, not_le.mpr (Set.mem_Ioi.mp hs)]
+    simp [delayNN, not_le.mpr (Set.mem_Ioi.mp hs)]
 
-/-- `delay d` is piecewise continuous (one jump at `d`). -/
-theorem delay_pwc (d : ℝ≥0) :
-    IsPiecewiseContinuous (delay d) := by
+/-- `delayNN d` is piecewise continuous (one jump at `d`). -/
+theorem delayNN_pwc (d : ℝ≥0) :
+    IsPiecewiseContinuous (delayNN d) := by
   intro T
   apply Set.Finite.subset (Set.finite_singleton d)
   rintro t ⟨ht, _⟩
   by_contra hne
-  exact ht (delay_continuousAt d t hne)
+  exact ht (delayNN_continuousAt d t hne)
 
 /-- `test T` is continuous at every `t ≠ T`. -/
 theorem test_continuousAt (T t : ℝ≥0) (h : t ≠ T) :
@@ -125,7 +125,7 @@ theorem test_pwc (T : ℝ≥0) :
 /-- `tokenBucket r b` is continuous at every `t ≠ 0`. -/
 theorem tokenBucket_continuousAt (r b t : ℝ≥0)
     (h : t ≠ 0) : ContinuousAt (tokenBucket r b) t := by
-  refine Filter.Tendsto.min ?_ (delay_continuousAt 0 t h)
+  refine Filter.Tendsto.min ?_ (delayNN_continuousAt 0 t h)
   have h1 : ContinuousAt
       (fun s : ℝ≥0 => (r:ℝ≥0∞) * s) t :=
     (ENNReal.continuous_const_mul
@@ -201,7 +201,7 @@ theorem staircase_continuousAt (P h : ℝ≥0) (J : ℝ)
     (t : ℝ≥0) (h0 : t ≠ 0)
     (ht : (⌈((t:ℝ)+J)/P⌉ : ℝ) ≠ ((t:ℝ)+J)/P) :
     ContinuousAt (staircase P h J) t := by
-  refine Filter.Tendsto.min ?_ (delay_continuousAt 0 t h0)
+  refine Filter.Tendsto.min ?_ (delayNN_continuousAt 0 t h0)
   apply ENNReal.continuous_ofReal.continuousAt.comp
   exact Filter.Tendsto.max
     ((stepCount_continuousAt P J t ht).const_mul (h:ℝ))
@@ -236,23 +236,23 @@ theorem rateLatency_leftCont (R T : ℝ≥0) :
     IsLeftContinuous (rateLatency R T) :=
   leftCont_of_continuous _ (rateLatency_continuous R T)
 
-/-- `delay d` is left-continuous. -/
-theorem delay_leftCont (d : ℝ≥0) :
-    IsLeftContinuous (delay d) := by
+/-- `delayNN d` is left-continuous. -/
+theorem delayNN_leftCont (d : ℝ≥0) :
+    IsLeftContinuous (delayNN d) := by
   intro t
   rcases le_or_gt t d with h | h
   · refine ContinuousWithinAt.congr
       (f := fun _ => (0:ℝ≥0∞)) continuousWithinAt_const
       (fun s hs => ?_) ?_
-    · simp only [delay,
+    · simp only [delayNN, delay_apply,
         if_pos (le_of_lt (lt_of_lt_of_le hs h))]
-    · simp [delay, h]
-  · have hev : (delay d) =ᶠ[𝓝[Iio t] t]
+    · simp [delayNN, h]
+  · have hev : (delayNN d) =ᶠ[𝓝[Iio t] t]
         (fun _ => (⊤:ℝ≥0∞)) := by
       filter_upwards [Ioo_mem_nhdsLT h] with s hs
-      simp [delay, not_le.mpr hs.1]
+      simp [delayNN, not_le.mpr hs.1]
     exact continuousWithinAt_const.congr_of_eventuallyEq
-      hev (by simp [delay, not_le.mpr h])
+      hev (by simp [delayNN, not_le.mpr h])
 
 /-- `test T` is left-continuous. -/
 theorem test_leftCont (T : ℝ≥0) :
@@ -276,7 +276,7 @@ theorem test_leftCont (T : ℝ≥0) :
 theorem tokenBucket_leftCont (r b : ℝ≥0) :
     IsLeftContinuous (tokenBucket r b) := by
   intro t
-  refine Filter.Tendsto.min ?_ (delay_leftCont 0 t)
+  refine Filter.Tendsto.min ?_ (delayNN_leftCont 0 t)
   have h1 : ContinuousWithinAt
       (fun s : ℝ≥0 => (r:ℝ≥0∞) * s) (Iio t) t :=
     ((ENNReal.continuous_const_mul
@@ -345,5 +345,5 @@ theorem staircase_leftCont (P h : ℝ≥0) (hP : (0:ℝ) < P)
     (J : ℝ) : IsLeftContinuous (staircase P h J) := by
   intro t
   exact Filter.Tendsto.min
-    (staircase_val_leftCont P h hP J t) (delay_leftCont 0 t)
+    (staircase_val_leftCont P h hP J t) (delayNN_leftCont 0 t)
 end DeepWiki
