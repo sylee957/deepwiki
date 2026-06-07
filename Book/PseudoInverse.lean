@@ -15,7 +15,7 @@ open Set Topology Filter
 
 /-- The admissible-time set `{t | x ≤ f t}` of the pseudo-inverse, in `ℝ≥0∞`. -/
 def pseudoInvSet (f : ℝ≥0 → ℝ≥0∞) (x : ℝ≥0∞) : Set ℝ≥0∞ :=
-  (fun t : ℝ≥0 => (t : ℝ≥0∞)) '' {t : ℝ≥0 | x ≤ f t}
+  ENNReal.ofNNReal '' {t : ℝ≥0 | x ≤ f t}
 
 /-- Lower pseudo-inverse `f⁻¹(x) = inf {t | f t ≥ x}` (in `ℝ≥0∞`). -/
 noncomputable def pseudoInv (f : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ :=
