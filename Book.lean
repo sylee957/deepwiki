@@ -9,7 +9,11 @@ import Book.Additivity
 import Book.Closures
 import Book.Limits
 import Book.Continuity
-import Book.RealFunctionClasses
+import Book.RealCurves
+import Book.RealCurvesAdditivity
+import Book.RealCurvesConv
+import Book.RealCurvesDeconv
+import Book.RealCurvesDeviations
 import Book.ConvolutionMinimum
 import Book.Servers
 import Book.RealConvolution
@@ -35,8 +39,10 @@ underlie deterministic network calculus. Chapters:
 - `Additivity` — sub- and super-additivity predicates.
 - `Closures` — the Kleene star and sub-additive closure.
 - `Limits`, `Continuity` — right limits, left- and lower semi-continuity.
-- `RealFunctionClasses` — concrete network-calculus curves (delay, rate,
-  rate-latency, token bucket) and their regularity.
+- `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`, `RealCurvesDeconv`,
+  `RealCurvesDeviations` — concrete network-calculus curves (delay, rate,
+  rate-latency, token bucket), their regularity, additivity/closures,
+  convolutions, deconvolutions, and horizontal/vertical deviations.
 - `ConvolutionMinimum` — the convolution attains its minimum.
 - `Servers`, `RealConvolution`, `Shapers` — service curves, real convolution,
   and greedy shapers.

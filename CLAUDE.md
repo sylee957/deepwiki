@@ -39,6 +39,17 @@ aggregator that imports every chapter. Rendered docs are produced by **doc-gen4*
 Commands:
 - Build one chapter: `lake build Book.<Chapter>` (e.g. `Book.Dioids`).
 - Build everything: `lake build`. Must be warning-free and `sorry`-free.
+- **Proof-result gate (agent loop): `scripts/check.sh [Book.<Chapter>]`.** Runs the
+  full `lake build` and returns a single verdict — exit `0` = `GATE: PASS`, exit `1`
+  = `GATE: FAIL`. Crucially it treats `warning:`/`error:`/`declaration uses 'sorry'`
+  as failure *even when lake itself exits 0* (lake exits 0 on `sorry`), enforcing the
+  warning-/sorry-free requirement. Pass a chapter target for faster mid-iteration
+  feedback; run with no arg (`Book`) as the final gate. Timing on a warm filesystem
+  cache: ~2.4s no-op (lake's manifest-parse + olean-stat floor over the ~1500-job
+  dependency closure — intrinsic, not network/elan/reservoir), plus 0–3s when a
+  chapter actually recompiles (the heaviest real-curve chapters elaborate in
+  ~1–2s each). The first build after idle is colder (~5–7s). Don't expect below ~2.4s
+  without bypassing lake.
 - Render API docs to HTML (doc-gen4): `DOCGEN_SRC=file lake build Book:docs`.
   Output lands in `.lake/build/doc/` (gitignored). doc-gen expects a
   `references.bib` at the doc root — if rendering fails on a missing
@@ -54,7 +65,8 @@ then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
 Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
 imports them all in order: `Signatures`, `Dioids`, `Order`, `CompleteDioids`,
 `ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `Additivity`, `Closures`,
-`Limits`, `Continuity`, `RealFunctionClasses`, `ConvolutionMinimum`, `Servers`,
+`Limits`, `Continuity`, `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`,
+`RealCurvesDeconv`, `RealCurvesDeviations`, `ConvolutionMinimum`, `Servers`,
 `RealConvolution`, `Shapers` (the live list is `Book.lean`).
 
 All declarations live in `namespace DeepWiki`.
