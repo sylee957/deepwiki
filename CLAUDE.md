@@ -64,7 +64,8 @@ Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
 then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
 Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
 imports them all in order: `Signatures`, `Dioids`, `Order`, `CompleteDioids`,
-`ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `Additivity`, `Closures`,
+`ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `NdClosure`, `Additivity`,
+`Closures`,
 `Limits`, `Continuity`, `RealCurves`, `RealCurvesAdditivity`, `RealCurvesConv`,
 `RealCurvesDeconv`, `RealCurvesDeviations`, `ConvolutionMinimum`, `Servers`,
 `RealConvolution`, `Shapers` (the live list is `Book.lean`).

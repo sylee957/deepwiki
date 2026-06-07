@@ -5,6 +5,7 @@ import Book.CompleteDioids
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids
+import Book.NdClosure
 import Book.Additivity
 import Book.Closures
 import Book.Limits

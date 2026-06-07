@@ -1,4 +1,5 @@
 import Book.FunctionDioids
+import Book.NdClosure
 
 /-!
 (min,plus) convolution specialized to real (`ℝ≥0`) functions:
