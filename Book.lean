@@ -31,6 +31,7 @@ import Book.ConvolutionContinuity
 import Book.ClosureEReal
 import Book.ECurveDioid
 import Book.ConcaveDioid
+import Book.SubadditiveNotConcave
 import Book.Servers
 import Book.RealConvolution
 import Book.Shapers
