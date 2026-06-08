@@ -7,7 +7,7 @@ import Mathlib.Topology.Order.LeftRightLim
 /-! # Properties of a minimal arrival curve
 The minimal arrival curves of `A` (`A ≥ A ⊼ α`, max-plus) are the order-duals of
 the maximal-curve properties (`Book.MaximalArrivalCurves`): closed under
-pointwise `max`, under the (max,+) sub-additive closure, and downward-closed; the
+pointwise `max`, under the (max,+) super-additive closure, and downward-closed; the
 max-plus deconvolution `A ⊘̄ A` is the greatest one; and the right-continuous
 extension is again minimal (for left- or right-continuous `A`). -/
 
@@ -76,7 +76,7 @@ theorem isMinimalArrivalCurve_maxDeconv_self {A : ℝ≥0 → ℝ≥0}
     _ = A (d + t) := add_tsub_cancel_of_le (hA (le_add_left le_rfl))
     _ = A (t + d) := by rw [add_comm]
 
-/-! ## Sub-additive closure -/
+/-! ## Super-additive closure -/
 
 /-- The increment bound iterated through the (max,+) powers: if
 `A t + α d ≤ A (t + d)` for all `t, d`, then
@@ -108,21 +108,21 @@ theorem isMinimalArrivalCurve_maxConvProjPow_of_monotone
   exact isMinimalArrivalCurve_of_increment A _
     (fun t d => increment_maxConvProjPow_of_increment hinc n t d)
 
-/-- The (max,+) sub-additive closure of a minimal arrival curve is again a
+/-- The (max,+) super-additive closure of a minimal arrival curve is again a
 minimal arrival curve, for non-decreasing `A`, `α`: if `A ≥ A ⊼ α` then
-`A ≥ A ⊼ saClosure α`, with the closure `≥ α`. The per-power increment bound
-also bounds the closure supremum above by `A (t + d) - A t`. -/
-theorem IsMinimalArrivalCurve.saClosure {A α : ℝ≥0 → ℝ≥0}
+`A ≥ A ⊼ superAdditiveClosureMax α`, with the closure `≥ α`. The per-power
+increment bound also bounds the closure supremum above by `A (t + d) - A t`. -/
+theorem IsMinimalArrivalCurve.superAdditiveClosureMax {A α : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α)
     (h : IsMinimalArrivalCurve A α) :
-    IsMinimalArrivalCurve A (saClosure α) := by
+    IsMinimalArrivalCurve A (superAdditiveClosureMax α) := by
   have hinc := (isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα).mp h
   refine isMinimalArrivalCurve_of_increment A _ (fun t d => ?_)
   have hbd : ∀ n : ℕ, maxConvProjPow α n d ≤ A (t + d) - A t := fun n =>
     le_tsub_of_add_le_left (increment_maxConvProjPow_of_increment hinc n t d)
-  have hsup : DeepWiki.saClosure α d ≤ A (t + d) - A t := ciSup_le hbd
+  have hsup : DeepWiki.superAdditiveClosureMax α d ≤ A (t + d) - A t := ciSup_le hbd
   have hle : A t ≤ A (t + d) := hA le_self_add
-  calc A t + DeepWiki.saClosure α d
+  calc A t + DeepWiki.superAdditiveClosureMax α d
         ≤ A t + (A (t + d) - A t) := by gcongr
     _ = A (t + d) := add_tsub_cancel_of_le hle
 

@@ -3,7 +3,8 @@ import Book.NdClosure
 
 /-!
 (min,plus) convolution specialized to real (`ℝ≥0`) functions:
-non-decreasing and sub-additive closures via max-plus convolution. 
+non-decreasing and super-additive closures via max-plus convolution, and the
+(min,+) sub-additive closure.
 -/
 
 namespace DeepWiki
@@ -46,17 +47,18 @@ noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
       maxConvProj (maxConvProjPow beta n)
         (maxConvProjPow beta n)
 
-/-- Sub-additive closure: supremum of all `maxConvProjPow` iterates. -/
-noncomputable def saClosure (beta : ℝ≥0 → ℝ≥0) :
+/-- (max,+) super-additive closure: supremum of all `maxConvProjPow`
+iterates. -/
+noncomputable def superAdditiveClosureMax (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t => ⨆ n : ℕ, maxConvProjPow beta n t
 
-/-- `beta` is below its sub-additive closure `saClosure beta`. -/
-theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
+/-- `beta` is below its super-additive closure `superAdditiveClosureMax beta`. -/
+theorem le_superAdditiveClosureMax (beta : ℝ≥0 → ℝ≥0)
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t)))
-    (t : ℝ≥0) : beta t ≤ saClosure beta t := by
-  unfold saClosure
+    (t : ℝ≥0) : beta t ≤ superAdditiveClosureMax beta t := by
+  unfold superAdditiveClosureMax
   exact le_ciSup (hbdd t) 0
 
 /-- `n`-fold (min,+) self-convolution iterate of `beta`, indexed from `beta`:

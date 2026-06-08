@@ -347,30 +347,31 @@ theorem offers_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
   | zero => exact hβ
   | succ n ih => exact offersStrictService_maxConvProj _ ih
 
-/-- Strict service is preserved by the sub-additive closure `saClosure`. -/
-theorem offersStrictService_saClosure
+/-- Strict service is preserved by the super-additive closure
+`superAdditiveClosureMax`. -/
+theorem offersStrictService_superAdditiveClosureMax
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S) :
-    OffersStrictService (saClosure beta) S := by
+    OffersStrictService (superAdditiveClosureMax beta) S := by
   intro A D hp s t hst hbl
-  show D.1 s + saClosure beta (t - s) ≤ D.1 t
-  unfold saClosure
+  show D.1 s + superAdditiveClosureMax beta (t - s) ≤ D.1 t
+  unfold superAdditiveClosureMax
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
 
-/-- Offering `saClosure beta` is equivalent to offering `beta` (when bdd). -/
-theorem offersStrictService_saClosure_iff
+/-- Offering `superAdditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
+theorem offersStrictService_superAdditiveClosureMax_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t))) :
-    OffersStrictService (saClosure beta) S ↔
+    OffersStrictService (superAdditiveClosureMax beta) S ↔
       OffersStrictService beta S := by
   constructor
   · intro h A D hp s t hst hbl
     exact le_trans
-      (by gcongr; exact le_saClosure beta hbdd (t - s))
+      (by gcongr; exact le_superAdditiveClosureMax beta hbdd (t - s))
       (h A D hp s t hst hbl)
-  · exact offersStrictService_saClosure beta
+  · exact offersStrictService_superAdditiveClosureMax beta
 
 /-- `sigma` is an arrival curve for `D`: `D ∗ sigma ≤ D`. -/
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
