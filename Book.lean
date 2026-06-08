@@ -38,6 +38,7 @@ import Book.RealConvolution
 import Book.ArrivalCurves
 import Book.MaximalArrivalCurves
 import Book.MinimalArrivalCurves
+import Book.CombinedArrivalCurves
 import Book.Shapers
 
 /-!
