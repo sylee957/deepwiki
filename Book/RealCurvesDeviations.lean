@@ -342,7 +342,7 @@ theorem vDev_tokenBucket_delay (r b d : ℝ≥0)
     vDev (tokenBucket r b) (delayNN d)
       = (r*d + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    deconv_tokenBucket_delay r b d hd]
+    minDeconv_tokenBucket_delay r b d hd]
   simp only [affine, ENNReal.coe_zero, mul_zero,
     zero_add]
   push_cast; ring
@@ -353,7 +353,7 @@ theorem vDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
     vDev (tokenBucket r b) (rateLatency R T)
       = (r*T + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    deconv_tokenBucket_rateLatency r b R T h hT]
+    minDeconv_tokenBucket_rateLatency r b R T h hT]
   simp only [affine, ENNReal.coe_zero, mul_zero,
     zero_add]
   push_cast; ring
@@ -363,6 +363,6 @@ theorem vDev_tokenBucket_rateLatency_top
     (r b R T : ℝ≥0) (hRr : R < r) :
     vDev (tokenBucket r b) (rateLatency R T) = ⊤ := by
   rw [vDev_eq_deconv_zero,
-    deconv_tokenBucket_rateLatency_top r b R T hRr]
+    minDeconv_tokenBucket_rateLatency_top r b R T hRr]
 
 end DeepWiki

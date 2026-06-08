@@ -1,8 +1,8 @@
 import Book.RealCurvesAdditivity
 
 /-! (min,plus) convolutions of the real curves: `conv_delayNN` and
-`deconv_delayNN` shift laws, monotonicity, `delayNN ∗ delayNN`, `rate ∗ rate`,
-the rate-latency convolution algebra, and the `deconv … (delayNN d)`
+`minDeconv_delayNN` shift laws, monotonicity, `delayNN ∗ delayNN`, `rate ∗ rate`,
+the rate-latency convolution algebra, and the `minDeconv … (delayNN d)`
 subadditive closure. -/
 
 namespace DeepWiki
@@ -59,11 +59,11 @@ theorem conv_delayNN_posPart (f : ℝ≥0 → ℝ≥0∞) (t d : ℝ≥0) :
   rw [tsub_eq_toNNReal_max]
 
 /-- Deconvolving by `delayNN d` advances: `f ⊘ delayNN d = f(· + d)`. -/
-theorem deconv_delayNN (f : ℝ≥0 → ℝ≥0∞)
+theorem minDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
-    deconv f (delayNN d) = fun t => f (t + d) := by
+    minDeconv f (delayNN d) = fun t => f (t + d) := by
   funext t
-  unfold deconv
+  unfold minDeconv
   apply le_antisymm
   · refine iSup_le ?_
     intro s
@@ -76,27 +76,27 @@ theorem deconv_delayNN (f : ℝ≥0 → ℝ≥0∞)
   · refine le_iSup_of_le d ?_
     rw [show delayNN d d = 0 by simp [delayNN], tsub_zero]
 
-/-- `deconv g h` is monotone in its first slot when `g` is monotone. -/
+/-- `minDeconv g h` is monotone in its first slot when `g` is monotone. -/
 theorem minDeconvE_mono {D T : Type*}
     [_root_.AddCommMonoid D] [PartialOrder D]
     [CovariantClass D D (·+·) (·≤·)]
     [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
     [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
     (g h : D → T)
-    (hg : Monotone g) : Monotone (deconv g h) := by
+    (hg : Monotone g) : Monotone (minDeconv g h) := by
   intro x y hxy
-  unfold deconv
+  unfold minDeconv
   refine iSup_le (fun s => ?_)
   refine le_iSup_of_le s ?_
   have hxs : x + s ≤ y + s := by gcongr
   exact tsub_le_tsub_right (hg hxs) (h s)
 
-/-- `delayNN 0 ⊓ deconv f (delayNN d)` is subadditive. -/
+/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` is subadditive. -/
 theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    IsSubadditive (delayNN 0 ⊓ deconv f (delayNN d)) := by
-  rw [deconv_delayNN f hmono d]
+    IsSubadditive (delayNN 0 ⊓ minDeconv f (delayNN d)) := by
+  rw [minDeconv_delayNN f hmono d]
   intro u s
   simp only [Pi.inf_apply]
   rcases eq_or_ne u 0 with hu | hu
@@ -124,11 +124,11 @@ theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
         rw [this]; gcongr; exact le_add_right (le_refl d)
       exact le_trans (hmono harg) (hsub (u + d) (s + d))
 
-/-- `delayNN 0 ⊓ deconv f (delayNN d)` vanishes at `0`. -/
+/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` vanishes at `0`. -/
 theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
     (hmono : Monotone f) (d : ℝ≥0) :
-    (delayNN 0 ⊓ deconv f (delayNN d)) 0 = 0 := by
-  rw [deconv_delayNN f hmono d]
+    (delayNN 0 ⊓ minDeconv f (delayNN d)) 0 = 0 := by
+  rw [minDeconv_delayNN f hmono d]
   show min (delayNN 0 0) (f (0 + d)) = 0
   rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
 
@@ -148,13 +148,13 @@ theorem toF_delay0 :
     rw [show delayNN 0 t = ⊤ by
       simp [delayNN, (by simpa using ht : ¬ t ≤ 0)]]; rfl
 
-/-- Subadditive closure of `deconv f (delayNN d)` is `delayNN 0 ⊓ ·`. -/
-theorem deconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
+/-- Subadditive closure of `minDeconv f (delayNN d)` is `delayNN 0 ⊓ ·`. -/
+theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    subadditiveClosureE (deconv f (delayNN d))
-      = delayNN 0 ⊓ deconv f (delayNN d) := by
-  set h : ℝ≥0 → ℝ≥0∞ := deconv f (delayNN d) with hh
+    subadditiveClosureE (minDeconv f (delayNN d))
+      = delayNN 0 ⊓ minDeconv f (delayNN d) := by
+  set h : ℝ≥0 → ℝ≥0∞ := minDeconv f (delayNN d) with hh
   set g : ℝ≥0 → ℝ≥0∞ := delayNN 0 ⊓ h with hg
   have hgsub : IsSubadditive g :=
     gdelay_subadd f hsub hmono d

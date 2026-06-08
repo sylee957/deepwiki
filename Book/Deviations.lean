@@ -54,8 +54,8 @@ theorem vDev_eq_iSup {D T : Type*} [SupSet T] [Sub T]
 theorem vDev_eq_deconv_zero {D T : Type*}
     [_root_.AddZeroClass D] [SupSet T] [Sub T]
     (f g : D → T) :
-    vDev f g = deconv f g 0 := by
-  unfold vDev vDevAt deconv
+    vDev f g = minDeconv f g 0 := by
+  unfold vDev vDevAt minDeconv
   simp only [zero_add]
 
 /-- `hDevAt f g t = ⊤` when no admissible shift exists. -/

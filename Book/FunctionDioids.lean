@@ -27,11 +27,18 @@ noncomputable def maxConv
     ⨆ p : {p : D × D // p.1 + p.2 = t},
       f p.1.1 + g p.1.2
 
-/-- Deconvolution: `t ↦ ⨆_s g (t + s) - h s`. -/
-noncomputable def deconv
+/-- (min,+) deconvolution `g ⊘ h`: `t ↦ ⨆_s g (t + s) - h s`. -/
+noncomputable def minDeconv
     {D T : Type*} [Add D] [Sub T] [SupSet T]
     (g h : D → T) : D → T :=
   fun t => ⨆ s : D, g (t + s) - h s
+
+/-- (max,+) deconvolution `g ⊘̄ h`: `t ↦ ⨅_s g (t + s) - h s`, the order dual
+of `minDeconv` (infimum in place of supremum). -/
+noncomputable def maxDeconv
+    {D T : Type*} [Add D] [Sub T] [InfSet T]
+    (g h : D → T) : D → T :=
+  fun t => ⨅ s : D, g (t + s) - h s
 
 /-- (min,+) functions valued in `R∪{±∞}`. -/
 abbrev FminBar := ℝ≥0 → MinPlusExt

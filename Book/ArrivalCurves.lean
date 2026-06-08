@@ -77,9 +77,9 @@ theorem IsMaximalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
 /-- The deconvolution `A ⊘ A` is below every maximal arrival curve: if `α` is a
 maximal arrival curve for `A` then `A ⊘ A ≤ α`. This is the "`A ⊘ A` is the best
 (least) maximal arrival curve" bound. -/
-theorem deconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
+theorem minDeconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
     (h : IsMaximalArrivalCurve A α) :
-    deconv A A ≤ α := by
+    minDeconv A A ≤ α := by
   rw [isMaximalArrivalCurve_iff_increment] at h
   intro d
   refine ciSup_le (fun s => ?_)
@@ -89,12 +89,12 @@ theorem deconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
 
 /-- When `A` admits some maximal arrival curve, `A ⊘ A` is itself one. The
 witness `α` bounds the deconvolution supremum (`A ⊘ A ≤ α`), so each increment
-term lies below it. Together with `deconv_self_le_of_isMaximalArrivalCurve` this
+term lies below it. Together with `minDeconv_self_le_of_isMaximalArrivalCurve` this
 makes `A ⊘ A` the least maximal arrival curve, and `α ≥ A ⊘ A` an equivalent
 definition of a maximal arrival curve. -/
 theorem isMaximalArrivalCurve_deconv_self {A : ℝ≥0 → ℝ≥0}
     (hex : ∃ α : ℝ≥0 → ℝ≥0, IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (deconv A A) := by
+    IsMaximalArrivalCurve A (minDeconv A A) := by
   obtain ⟨α, hα⟩ := hex
   -- the witness bounds the deconvolution family above by `α d` at each `d`
   have hbdd : ∀ d : ℝ≥0,
@@ -108,9 +108,9 @@ theorem isMaximalArrivalCurve_deconv_self {A : ℝ≥0 → ℝ≥0}
   rw [isMaximalArrivalCurve_iff_increment]
   intro t d
   -- `A (t + d) - A t ≤ (A ⊘ A) d`, the `s = t` term of the supremum
-  have hterm : A (t + d) - A t ≤ deconv A A d :=
+  have hterm : A (t + d) - A t ≤ minDeconv A A d :=
     le_ciSup_of_le (hbdd d) t (by rw [add_comm d t])
-  rw [tsub_le_iff_right, add_comm (deconv A A d) (A t)] at hterm
+  rw [tsub_le_iff_right, add_comm (minDeconv A A d) (A t)] at hterm
   exact hterm
 
 /-- A sufficient increment condition for a minimal arrival curve: if
