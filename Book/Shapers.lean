@@ -85,22 +85,22 @@ theorem offersMinPlusService_betaZero (S : Server) :
   rw [minConvProj_eq]
   refine le_trans
     (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
-  show A 0 + betaZero t ≤ D t
+  show A.1 0 + betaZero t ≤ D.1 t
   rw [A.zero]
-  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D t
+  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D.1 t
   simp
 
 /-- `A`/`D` is backlogged on `I`: `D t < A t` for all `t ∈ I`. -/
 def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
-  ∀ t ∈ I, D t < A t
+  ∀ t ∈ I, D.1 t < A.1 t
 
 /-- Start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
 noncomputable def Start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
-  sSup { u | u ≤ t ∧ A u = D u }
+  sSup { u | u ≤ t ∧ A.1 u = D.1 u }
 
 /-- The set defining `Start` is nonempty (`0` belongs). -/
 theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
-    { u | u ≤ t ∧ A u = D u }.Nonempty :=
+    { u | u ≤ t ∧ A.1 u = D.1 u }.Nonempty :=
   ⟨0, by simp, by rw [A.zero, D.zero]⟩
 
 /-- `Start A D t ≤ t`. -/
@@ -124,10 +124,10 @@ theorem IsBacklogged.subset {A D : Curve}
 
 /-- `(Start A D t, t]` is a backlogged period when `D ≤ A`. -/
 theorem isBacklogged_Ioc_start (A D : Curve)
-    (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
+    (hc : ∀ x, D.1 x ≤ A.1 x) (t : ℝ≥0) :
     IsBacklogged A D (Set.Ioc (Start A D t) t) := by
   intro u hu
-  have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
+  have hbdd : BddAbove { u | u ≤ t ∧ A.1 u = D.1 u } :=
     ⟨t, fun x hx => hx.1⟩
   rcases (hc u).lt_or_eq with h | h
   · exact h
@@ -136,26 +136,26 @@ theorem isBacklogged_Ioc_start (A D : Curve)
 
 /-- At the start of a backlogged period, `A = D` (uses left continuity). -/
 theorem A_start_eq_D_start (A D : Curve)
-    (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
-    A (Start A D t) = D (Start A D t) := by
+    (hc : ∀ x, D.1 x ≤ A.1 x) (t : ℝ≥0) :
+    A.1 (Start A D t) = D.1 (Start A D t) := by
   set s := Start A D t with hs
   rcases (hc s).lt_or_eq with hlt | heq
   · exfalso
-    have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
+    have hbdd : BddAbove { u | u ≤ t ∧ A.1 u = D.1 u } :=
       ⟨t, fun x hx => hx.1⟩
     have hs0 : 0 < s := by
       rcases eq_zero_or_pos s with h | h
       · rw [h, A.zero, D.zero] at hlt
         exact absurd hlt (lt_irrefl 0)
       · exact h
-    have hev : ∀ᶠ u in 𝓝[<] s, D u < A u :=
+    have hev : ∀ᶠ u in 𝓝[<] s, D.1 u < A.1 u :=
       (D.leftCont s).eventually_lt (A.leftCont s) hlt
     have hbasis :
         (𝓝[<] s).HasBasis (· < s) (Ioo · s) :=
       nhdsLT_basis_of_exists_lt ⟨0, hs0⟩
     rw [hbasis.eventually_iff] at hev
     obtain ⟨l, hls, hl⟩ := hev
-    have hub : ∀ x ∈ { u | u ≤ t ∧ A u = D u },
+    have hub : ∀ x ∈ { u | u ≤ t ∧ A.1 u = D.1 u },
         x ≤ l := by
       intro x hx
       by_contra hxl
@@ -173,7 +173,7 @@ theorem A_start_eq_D_start (A D : Curve)
 
 /-- `Start` is constant across an order-connected backlogged set. -/
 theorem start_const_of_backlogged (A D : Curve)
-    (hc : ∀ x, D x ≤ A x)
+    (hc : ∀ x, D.1 x ≤ A.1 x)
     {I : Set ℝ≥0} (hI : IsBacklogged A D I)
     (hoc : I.OrdConnected)
     {t t' : ℝ≥0} (ht : t ∈ I) (ht' : t' ∈ I) :
@@ -198,7 +198,7 @@ def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
   ∀ A D : Curve, (A, D) ∈ S →
     ∀ s t, s ≤ t →
       IsBacklogged A D (Set.Ioc s t) →
-        D s + beta (t - s) ≤ D t
+        D.1 s + beta (t - s) ≤ D.1 t
 
 /-- Largest causal relation offering strict service `beta`. -/
 def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
@@ -206,7 +206,7 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
   { p | p.2 ≤ p.1 ∧
       ∀ s t, s ≤ t →
         IsBacklogged p.1 p.2 (Set.Ioc s t) →
-          p.2 s + beta (t - s) ≤ p.2 t }
+          p.2.1 s + beta (t - s) ≤ p.2.1 t }
 
 /-- `S ⊆ strictServiceRel beta` iff `S` offers strict service `beta`. -/
 theorem subset_strictServiceRel_iff
@@ -223,8 +223,8 @@ theorem subset_strictServiceRel_iff
 theorem offersStrictService_betaZero (S : Server) :
     OffersStrictService betaZero S := by
   intro A D _ s t hst _
-  show D s + betaZero (t - s) ≤ D t
-  show D s + (0 : ℝ≥0) ≤ D t
+  show D.1 s + betaZero (t - s) ≤ D.1 t
+  show D.1 s + (0 : ℝ≥0) ≤ D.1 t
   rw [add_zero]
   exact D.mono hst
 
@@ -246,7 +246,7 @@ theorem offersStrictService_sup
     OffersStrictService
       (fun u => max (beta u) (beta' u)) S := by
   intro A D hp s t hst hbl
-  show D s + max (beta (t-s)) (beta' (t-s)) ≤ D t
+  show D.1 s + max (beta (t-s)) (beta' (t-s)) ≤ D.1 t
   rcases le_total (beta (t-s)) (beta' (t-s)) with hle | hle
   · rw [max_eq_right hle]; exact h' A D hp s t hst hbl
   · rw [max_eq_left hle]; exact h A D hp s t hst hbl
@@ -255,8 +255,8 @@ theorem offersStrictService_sup
 theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve) (hp : (A, D) ∈ strictServiceRel beta)
     (t : ℝ≥0) :
-    A (Start A D t) + beta (t - Start A D t) ≤ D t := by
-  have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
+    A.1 (Start A D t) + beta (t - Start A D t) ≤ D.1 t := by
+  have hc : ∀ x, D.1 x ≤ A.1 x := fun x => hp.1 x
   have hbl := isBacklogged_Ioc_start A D hc t
   have hbound := hp.2 (Start A D t) t (start_le A D t) hbl
   rw [A_start_eq_D_start A D hc t]
@@ -268,18 +268,18 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (A D : Curve) (hp : (A, D) ∈ S)
     {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
     (hbl : IsBacklogged A D (Set.Ioc s t)) :
-    D s + (beta (r - s) + beta (t - r)) ≤ D t := by
-  have b1 : D s + beta (r - s) ≤ D r :=
+    D.1 s + (beta (r - s) + beta (t - r)) ≤ D.1 t := by
+  have b1 : D.1 s + beta (r - s) ≤ D.1 r :=
     hβ A D hp s r hsr
       (hbl.subset (Set.Ioc_subset_Ioc_right hrt))
-  have b2 : D r + beta (t - r) ≤ D t :=
+  have b2 : D.1 r + beta (t - r) ≤ D.1 t :=
     hβ A D hp r t hrt
       (hbl.subset (Set.Ioc_subset_Ioc_left hsr))
-  calc D s + (beta (r - s) + beta (t - r))
-      = (D s + beta (r - s)) + beta (t - r) := by
+  calc D.1 s + (beta (r - s) + beta (t - r))
+      = (D.1 s + beta (r - s)) + beta (t - r) := by
         ring
-    _ ≤ D r + beta (t - r) := by gcongr
-    _ ≤ D t := b2
+    _ ≤ D.1 r + beta (t - r) := by gcongr
+    _ ≤ D.1 t := b2
 
 /-- Strict service is preserved by the non-decreasing closure `ndClosure`. -/
 theorem offersStrictService_ndClosure
@@ -287,7 +287,7 @@ theorem offersStrictService_ndClosure
     (hβ : OffersStrictService beta S) :
     OffersStrictService (ndClosure beta) S := by
   intro A D hp s t hst hbl
-  show D s + ndClosure beta (t - s) ≤ D t
+  show D.1 s + ndClosure beta (t - s) ≤ D.1 t
   unfold ndClosure
   refine add_ciSup_le _ _ _ (fun q => ?_)
   obtain ⟨u, (hu : u ≤ t - s)⟩ := q
@@ -320,7 +320,7 @@ theorem offersStrictService_maxConvProj
     (hβ : OffersStrictService beta S) :
     OffersStrictService (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
-  show D s + maxConvProj beta beta (t - s) ≤ D t
+  show D.1 s + maxConvProj beta beta (t - s) ≤ D.1 t
   refine add_maxConvProj_le _ _ _ _ (fun q => ?_)
   obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
   have hsum : s + (a + b) = t := by
@@ -353,7 +353,7 @@ theorem offersStrictService_saClosure
     (hβ : OffersStrictService beta S) :
     OffersStrictService (saClosure beta) S := by
   intro A D hp s t hst hbl
-  show D s + saClosure beta (t - s) ≤ D t
+  show D.1 s + saClosure beta (t - s) ≤ D.1 t
   unfold saClosure
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
