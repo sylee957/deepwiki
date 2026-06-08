@@ -231,4 +231,99 @@ theorem etaMax_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (le_maxDeconv_etaMax_etaMin hu hl hAmono hlmono humono hsub hsup)
     (maxDeconv_etaMax_etaMin_le hu hl hAmono hlmono)
 
+/-- Dual core per-shift bound for the minimal fixpoint: with `αᵘ` sub-additive,
+`αˡ` super-additive, `αˡ ≤ αᵘ`, `αᵘ` monotone, the `ηˡ`-witness term at
+`z = u+v+w` combines with sub- and super-additivity to give
+`αˡ (t+u+v) - αᵘ v ≤ ηt + (αᵘ (u+w) - αˡ w)`. -/
+private theorem etaMin_fixpoint_term {au al : ℝ≥0 → ℝ≥0}
+    (hsub : IsSubadditive au) (hsup : IsSuperadditive al) (hle : al ≤ au)
+    (humono : Monotone au) {ht : ℝ≥0} {t u v w : ℝ≥0}
+    (hηt : al (t + (u + v + w)) - au (u + v + w) ≤ ht) :
+    al (t + u + v) - au v ≤ ht + (au (u + w) - al w) := by
+  have hsa : (au (u + v + w) : ℝ) ≤ au v + au (u + w) := by
+    have := hsub v (u + w)
+    rw [show v + (u + w) = u + v + w by ring, ← NNReal.coe_le_coe] at this
+    push_cast at this; linarith
+  have hsp : (al (t + u + v) : ℝ) + al w ≤ al (t + (u + v + w)) := by
+    have := hsup (t + u + v) w
+    rw [show (t + u + v) + w = t + (u + v + w) by ring, ← NNReal.coe_le_coe] at this
+    push_cast at this; linarith
+  have hzr : (al (t + (u + v + w)) : ℝ) - au (u + v + w) ≤ ht := by
+    rcases le_total (au (u + v + w)) (al (t + (u + v + w))) with hz | hz
+    · rw [← NNReal.coe_le_coe, NNReal.coe_sub hz] at hηt; exact hηt
+    · have : (al (t + (u + v + w)) : ℝ) ≤ au (u + v + w) := by exact_mod_cast hz
+      nlinarith [ht.coe_nonneg]
+  have hwle : al w ≤ au (u + w) := le_trans (hle w) (humono le_add_self)
+  rcases le_total (au v) (al (t + u + v)) with hv | hv
+  · rw [← NNReal.coe_le_coe, NNReal.coe_sub hv]
+    push_cast [NNReal.coe_sub hwle]; linarith
+  · rw [tsub_eq_zero_of_le hv]; exact zero_le'
+
+/-- The hard minimal fixpoint inequality `ηˡ ⊘ ηᵘ ≤ ηˡ`: for each outer shift
+`u`, `ηˡ (t+u) ≤ ηˡ t + ηᵘ u`, obtained by pushing `ηˡ (t+u) = ⨆_v ⋯` and
+`ηᵘ u = ⨅_w ⋯` into the per-shift bound `etaMin_fixpoint_term`. -/
+theorem minDeconv_etaMin_etaMax_le {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hbdd : ∀ s : ℝ≥0,
+      BddAbove (Set.range (fun z : ℝ≥0 => αl (s + z) - αu z))) :
+    minDeconv (etaMin αu αl) (etaMax αu αl) ≤ etaMin αu αl := by
+  have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
+  intro t
+  show (⨆ u : ℝ≥0, etaMin αu αl (t + u) - etaMax αu αl u) ≤ etaMin αu αl t
+  refine ciSup_le (fun u => ?_)
+  -- `ηˡ (t+u) - ηᵘ u ≤ ηˡ t` ⟸ `ηˡ (t+u) ≤ ηˡ t + ηᵘ u`
+  refine tsub_le_iff_right.mpr ?_
+  -- `ηˡ (t+u) = ⨆_v αˡ (t+u+v) - αᵘ v`; bound each `v`-term
+  show (⨆ v : ℝ≥0, αl (t + u + v) - αu v) ≤ etaMin αu αl t + etaMax αu αl u
+  refine ciSup_le (fun v => ?_)
+  -- `αˡ`-witness term lower-bounds `ηˡ t = ⨆_z αˡ (t+z) - αᵘ z`
+  have hηt : ∀ z : ℝ≥0, αl (t + z) - αu z ≤ etaMin αu αl t := fun z =>
+    le_ciSup_of_le (hbdd t) z le_rfl
+  -- per-`w` core bound, with `ηᵘ u = ⨅_w αᵘ (u+w) - αˡ w` still to push out
+  have key : ∀ w : ℝ≥0,
+      αl (t + u + v) - αu v ≤ etaMin αu αl t + (αu (u + w) - αl w) := fun w =>
+    etaMin_fixpoint_term hsub hsup hle humono (hηt (u + v + w))
+  -- `X ≤ ηˡ t + ⨅_w f w`: shift `ηˡ t` across and use `le_ciInf`
+  show αl (t + u + v) - αu v ≤ etaMin αu αl t + ⨅ w : ℝ≥0, αu (u + w) - αl w
+  -- `X ≤ ηˡ t + ⨅_w f w` ⟸ `X - ηˡ t ≤ ⨅_w f w` ⟸ `∀ w, X - ηˡ t ≤ f w`
+  refine tsub_le_iff_left.mp (le_ciInf (fun w => ?_))
+  exact tsub_le_iff_left.mpr (key w)
+
+/-- The easy minimal fixpoint inequality `ηˡ ≤ ηˡ ⊘ ηᵘ`: the `u = 0` term of the
+defining supremum is `ηˡ t - ηᵘ 0 = ηˡ t` (using `ηᵘ 0 = 0`). The supremum is
+well-defined by `hbdd`. -/
+theorem le_minDeconv_etaMin_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hbdd : ∀ s : ℝ≥0,
+      BddAbove (Set.range (fun u : ℝ≥0 =>
+        etaMin αu αl (s + u) - etaMax αu αl u))) :
+    etaMin αu αl ≤ minDeconv (etaMin αu αl) (etaMax αu αl) := by
+  intro t
+  have h0 : etaMax αu αl 0 = 0 := etaMax_zero hu hl hAmono hlmono hu0 hl0
+  show etaMin αu αl t ≤ ⨆ u : ℝ≥0, etaMin αu αl (t + u) - etaMax αu αl u
+  refine le_ciSup_of_le (hbdd t) 0 ?_
+  rw [h0, tsub_zero, add_zero]
+
+/-- One-step fixpoint of the minimal refinement: under `αᵘ` sub-additive, `αˡ`
+super-additive, `αˡ ≤ αᵘ`, `αᵘ` monotone, `αᵘ 0 = αˡ 0 = 0`, and the two
+boundedness conditions making the suprema well-defined, `ηˡ = ηˡ ⊘ ηᵘ`. -/
+theorem etaMin_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hbddZ : ∀ s : ℝ≥0,
+      BddAbove (Set.range (fun z : ℝ≥0 => αl (s + z) - αu z)))
+    (hbddU : ∀ s : ℝ≥0,
+      BddAbove (Set.range (fun u : ℝ≥0 =>
+        etaMin αu αl (s + u) - etaMax αu αl u))) :
+    etaMin αu αl = minDeconv (etaMin αu αl) (etaMax αu αl) :=
+  le_antisymm
+    (le_minDeconv_etaMin_etaMax hu hl hAmono hlmono hu0 hl0 hbddU)
+    (minDeconv_etaMin_etaMax_le hu hl hAmono hlmono humono hsub hsup hbddZ)
+
 end DeepWiki
