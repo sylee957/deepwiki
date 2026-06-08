@@ -377,4 +377,108 @@ theorem etaMin_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (le_minDeconv_etaMin_etaMax hu hl hAmono hlmono hu0 hl0 hsubE hETle)
     (minDeconv_etaMin_etaMax_le hu hl hAmono hlmono humono hsub hsup)
 
+/-! ## The fixpoint is reached by iteration -/
+
+/-- One refinement step on a pair `(ηᵘ, ηˡ)`: the new maximal curve is the
+max-plus deconvolution `ηᵘ ⊘̄ ηˡ` and the new minimal curve is the min-plus
+deconvolution `ηˡ ⊘ ηᵘ`. -/
+noncomputable def refineStep
+    (p : (ℝ≥0 → ℝ≥0) × (ℝ≥0 → ℝ≥0)) : (ℝ≥0 → ℝ≥0) × (ℝ≥0 → ℝ≥0) :=
+  (maxDeconv p.1 p.2, minDeconv p.2 p.1)
+
+/-- The refinement sequence `(ηᵢᵘ, ηᵢˡ)` from a starting pair `αᵘ, αˡ`:
+`(η₀ᵘ, η₀ˡ) = (αᵘ, αˡ)` and `(ηᵢ₊₁ᵘ, ηᵢ₊₁ˡ) = (ηᵢᵘ ⊘̄ ηᵢˡ, ηᵢˡ ⊘ ηᵢᵘ)`. -/
+noncomputable def etaSeq (αu αl : ℝ≥0 → ℝ≥0) :
+    ℕ → (ℝ≥0 → ℝ≥0) × (ℝ≥0 → ℝ≥0)
+  | 0 => (αu, αl)
+  | n + 1 => refineStep (etaSeq αu αl n)
+
+/-- The maximal curve of the refinement sequence, `ηᵢᵘ`. -/
+noncomputable def etaSeqMax (αu αl : ℝ≥0 → ℝ≥0) (n : ℕ) : ℝ≥0 → ℝ≥0 :=
+  (etaSeq αu αl n).1
+
+/-- The minimal curve of the refinement sequence, `ηᵢˡ`. -/
+noncomputable def etaSeqMin (αu αl : ℝ≥0 → ℝ≥0) (n : ℕ) : ℝ≥0 → ℝ≥0 :=
+  (etaSeq αu αl n).2
+
+/-- The first iterate equals the one-step refinement `(ηᵘ, ηˡ) = (etaMax, etaMin)`:
+`η₁ᵘ = αᵘ ⊘̄ αˡ` and `η₁ˡ = αˡ ⊘ αᵘ`. -/
+theorem etaSeq_one (αu αl : ℝ≥0 → ℝ≥0) :
+    etaSeq αu αl 1 = (etaMax αu αl, etaMin αu αl) := rfl
+
+/-- The refined pair `(etaMax, etaMin)` is a fixed point of `refineStep`: combining
+the maximal and minimal one-step fixpoints `ηᵘ = ηᵘ ⊘̄ ηˡ` and `ηˡ = ηˡ ⊘ ηᵘ`. -/
+theorem refineStep_eta_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hsubE : IsSubadditive (etaMin αu αl)) :
+    refineStep (etaMax αu αl, etaMin αu αl) = (etaMax αu αl, etaMin αu αl) := by
+  unfold refineStep
+  refine Prod.ext ?_ ?_
+  · exact (etaMax_fixpoint hu hl hAmono hlmono humono hsub hsup).symm
+  · exact (etaMin_fixpoint hu hl hAmono hlmono humono hsub hsup hu0 hl0 hsubE).symm
+
+/-- The refinement sequence stabilizes after one step: for every `i ≥ 1`,
+`(ηᵢᵘ, ηᵢˡ) = (etaMax αu αl, etaMin αu αl)`. The first step reaches the refined
+pair, which `refineStep_eta_fixpoint` shows is fixed, so the iteration converges
+to the fixpoint immediately and stays there. -/
+theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hsubE : IsSubadditive (etaMin αu αl)) :
+    ∀ n, 1 ≤ n → etaSeq αu αl n = (etaMax αu αl, etaMin αu αl) := by
+  intro n hn
+  induction n with
+  | zero => exact absurd hn (by norm_num)
+  | succ k ih =>
+    rcases Nat.eq_zero_or_pos k with hk | hk
+    · subst hk; exact etaSeq_one αu αl
+    · show refineStep (etaSeq αu αl k) = _
+      rw [ih hk]
+      exact refineStep_eta_fixpoint hu hl hAmono hlmono humono hsub hsup hu0 hl0 hsubE
+
+/-- The maximal iterate converges: `ηᵢᵘ = etaMax αu αl` for all `i ≥ 1`. -/
+theorem etaSeqMax_eq_etaMax_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hsubE : IsSubadditive (etaMin αu αl)) (n : ℕ) (hn : 1 ≤ n) :
+    etaSeqMax αu αl n = etaMax αu αl :=
+  congrArg Prod.fst
+    (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 hsubE n hn)
+
+/-- The minimal iterate converges: `ηᵢˡ = etaMin αu αl` for all `i ≥ 1`. -/
+theorem etaSeqMin_eq_etaMin_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hsubE : IsSubadditive (etaMin αu αl)) (n : ℕ) (hn : 1 ≤ n) :
+    etaSeqMin αu αl n = etaMin αu αl :=
+  congrArg Prod.snd
+    (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 hsubE n hn)
+
+/-- A sequence `s : ℕ → X` converges to `L` (in the discrete sense of being
+eventually constant): there is an index `N` past which every term equals `L`. -/
+def Converges {X : Type*} (s : ℕ → X) (L : X) : Prop :=
+  ∃ N, ∀ n, N ≤ n → s n = L
+
+/-- The refinement tuple sequence converges to `(ηᵘ, ηˡ) = (etaMax αu αl,
+etaMin αu αl)`: it is constant from index `1` on, so `(etaMax, etaMin)` is its
+limit. Both components converge simultaneously, packaged as one statement on the
+pair. -/
+theorem converges_etaSeq {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
+    (hsubE : IsSubadditive (etaMin αu αl)) :
+    Converges (etaSeq αu αl) (etaMax αu αl, etaMin αu αl) :=
+  ⟨1, etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 hsubE⟩
+
 end DeepWiki
