@@ -16,11 +16,16 @@ open Set Topology Filter
 
 /-- `ℝ≥0∞`-valued horizontal deviation: `hDevAtE` with shift-embedding `↑`. -/
 noncomputable abbrev hDevAtE (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
-  hDevAt (fun d : ℝ≥0 => (d : ℝ≥0∞)) f g t
+  hDevAt f g t
 
 /-- `ℝ≥0∞`-valued horizontal deviation sup: `hDev` with shift-embedding `↑`. -/
 noncomputable abbrev hDevE (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
-  hDev (fun d : ℝ≥0 => (d : ℝ≥0∞)) f g
+  hDev f g
+
+/-- `hDevAtE` as an explicit-coe infimum (collapses the generic `CoeTC.coe`). -/
+theorem hDevAtE_eq (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    hDevAtE f g t
+      = ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) := rfl
 
 /-- `delayNN d (t + u) = ⊤` when `d < t + u`. -/
 theorem delayNN_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
@@ -37,7 +42,7 @@ theorem hDevAtE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
       calc d < d + ε := by simpa using hε
         _ ≤ t + (d + ε) := le_add_self)]
     exact le_top
-  unfold hDevAtE hDevAt
+  rw [hDevAtE_eq]
   refine iInf_le_of_le ⟨d + ε, hadm⟩ ?_
   push_cast; rfl
 
@@ -51,12 +56,11 @@ theorem hDevE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
 theorem hDevAtE_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
     (hft : 0 < f t) :
     ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtE f (delayNN d) t := by
-  unfold hDevAtE hDevAt
+  rw [hDevAtE_eq]
   refine le_iInf ?_
   rintro ⟨d', hd'⟩
   by_contra hlt
   rw [not_le] at hlt
-  dsimp only at hlt
   have hd'r : d' < d - t := by exact_mod_cast hlt
   have htd : t + d' < d := by
     rwa [lt_tsub_iff_left] at hd'r
@@ -226,7 +230,7 @@ theorem hDevAtE_rateLatency_ge (r b R T t : ℝ≥0)
     (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
       ≤ hDevAtE (tokenBucket r b)
           (rateLatency R T) t := by
-  unfold hDevAtE hDevAt
+  rw [hDevAtE_eq]
   refine le_iInf ?_
   rintro ⟨d, hd⟩
   rw [ENNReal.coe_le_coe, tsub_le_iff_right]
@@ -304,7 +308,7 @@ theorem hDevAtE_rateLatency_ge_top (r b R T t : ℝ≥0)
     ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
       ≤ hDevAtE (tokenBucket r b)
           (rateLatency R T) t := by
-  unfold hDevAtE hDevAt
+  rw [hDevAtE_eq]
   refine le_iInf ?_
   rintro ⟨d, hd⟩
   rw [ENNReal.coe_le_coe]

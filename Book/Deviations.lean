@@ -31,17 +31,18 @@ noncomputable def vDev {D T : Type*} [SupSet T] [Sub T]
   ⨆ t : D, vDevAt f g t
 
 /-- Horizontal deviation of `f` from `g` at `t`, measured through `ι`: the least
-shift `d` with `f t ≤ g (t + d)`, embedded by `ι` (missing shift reads as `⊤`). -/
+shift `d` with `f t ≤ g (t + d)`, measured in `R` via the coercion `D → R`
+(a missing shift reads as `⊤`). -/
 noncomputable def hDevAt {D V R : Type*}
-    [Add D] [Preorder V] [CompleteLattice R]
-    (ι : D → R) (f g : D → V) (t : D) : R :=
-  ⨅ d : {d : D // f t ≤ g (t + d)}, ι d.1
+    [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
+    (f g : D → V) (t : D) : R :=
+  ⨅ d : {d : D // f t ≤ g (t + d)}, (↑d.1 : R)
 
-/-- Horizontal deviation `hDev ι f g = ⨆ t, hDevAt ι f g t`. -/
+/-- Horizontal deviation `hDev f g = ⨆ t, hDevAt f g t`. -/
 noncomputable def hDev {D V R : Type*}
-    [Add D] [Preorder V] [CompleteLattice R]
-    (ι : D → R) (f g : D → V) : R :=
-  ⨆ t : D, hDevAt ι f g t
+    [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
+    (f g : D → V) : R :=
+  ⨆ t : D, hDevAt f g t
 
 /-! ## Basic lemmas -/
 
@@ -57,12 +58,12 @@ theorem vDev_eq_deconv_zero {D T : Type*}
   unfold vDev vDevAt deconv
   simp only [zero_add]
 
-/-- `hDevAt ι f g t = ⊤` when no admissible shift exists. -/
-theorem hDevAt_eq_top {D V R : Type*}
-    [Add D] [Preorder V] [CompleteLattice R]
-    (ι : D → R) (f g : D → V) (t : D)
+/-- `hDevAt f g t = ⊤` when no admissible shift exists. -/
+theorem hDevAt_eq_top {D V : Type*} (R : Type*)
+    [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
+    (f g : D → V) (t : D)
     (h : ∀ d : D, ¬ f t ≤ g (t + d)) :
-    hDevAt ι f g t = ⊤ := by
+    (hDevAt f g t : R) = ⊤ := by
   unfold hDevAt
   rw [iInf_eq_top]
   rintro ⟨d, hd⟩
@@ -85,11 +86,11 @@ noncomputable def backlog (A D : ℝ≥0 → ℝ≥0) : ℝ≥0 :=
 
 /-- Delay of `D` behind `A` at `t`: least shift `d` with `A t ≤ D (t + d)`. -/
 noncomputable def delayAt (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : ℝ≥0∞ :=
-  hDevAt (fun d : ℝ≥0 => (d : ℝ≥0∞)) A D t
+  hDevAt A D t
 
 /-- Delay `d(A, D) = ⨆ t, delayAt A D t`, the horizontal deviation. -/
 noncomputable def delay (A D : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :=
-  hDev (fun d : ℝ≥0 => (d : ℝ≥0∞)) A D
+  hDev A D
 
 /-- `backlogAt A D t = A t - D t`. -/
 theorem backlogAt_eq (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
