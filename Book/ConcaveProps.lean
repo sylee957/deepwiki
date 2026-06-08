@@ -1,15 +1,14 @@
 import Book.Concave
 import Book.Additivity
-import Book.Closures
 import Book.ConvolutionMinimumExt
+import Book.ClosureEReal
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Instances.EReal.Lemmas
 
 /-! # Closure properties of concave curves
-Stability of `ConcaveE` curves `ℝ≥0 → EReal` under the curve operations. The
-shared `EReal`-arithmetic helpers (nonneg-scalar multiply is monotone; addition
-is monotone) are stated near the top since the chord manipulations reuse them.
--/
+Stability of `ConcaveE` curves `ℝ≥0 → EReal` under the curve operations
+(pointwise sum, `min`, sub-additivity, the convolution decomposition, the
+sub-additive closure). `EReal` addition is monotone via Mathlib's `add_le_add`. -/
 
 namespace DeepWiki
 
@@ -21,12 +20,6 @@ theorem EReal.coe_mul_le_mul_left {p : ℝ} (hp : 0 ≤ p) {x y : EReal}
     (h : x ≤ y) : ((p : ℝ) : EReal) * x ≤ ((p : ℝ) : EReal) * y :=
   mul_le_mul_of_nonneg_left h (by exact_mod_cast hp)
 
-/-- `EReal` addition is monotone: `a ≤ a' → b ≤ b' → a + b ≤ a' + b'`
-(`EReal` is an `IsOrderedAddMonoid`, so this holds without finiteness). -/
-theorem EReal.add_le_add' {a a' b b' : EReal} (ha : a ≤ a') (hb : b ≤ b') :
-    a + b ≤ a' + b' :=
-  add_le_add ha hb
-
 /-- Pointwise `min` (`EReal` `⊓`) of two concave curves is concave: each scaled
 chord summand of `f ⊓ g` is below the corresponding summand of `f` and of `g`,
 and `EReal` addition is monotone, so the combined chord lies below both `f`'s
@@ -37,11 +30,11 @@ theorem ConcaveE.inf (f g : ℝ≥0 → EReal) (hf : ConcaveE f) (hg : ConcaveE 
   simp only [Pi.inf_apply]
   refine le_inf ?_ ?_
   · refine le_trans ?_ (hf s t p hp)
-    exact EReal.add_le_add'
+    exact add_le_add
       (EReal.coe_mul_le_mul_left p.coe_nonneg inf_le_left)
       (EReal.coe_mul_le_mul_left (1 - p : ℝ≥0).coe_nonneg inf_le_left)
   · refine le_trans ?_ (hg s t p hp)
-    exact EReal.add_le_add'
+    exact add_le_add
       (EReal.coe_mul_le_mul_left p.coe_nonneg inf_le_right)
       (EReal.coe_mul_le_mul_left (1 - p : ℝ≥0).coe_nonneg inf_le_right)
 
@@ -66,7 +59,7 @@ theorem ConcaveE.add (f g : ℝ≥0 → EReal) (hf : ConcaveE f) (hg : ConcaveE 
   rw [EReal.left_distrib_of_nonneg_of_ne_top hp0 hptop,
       EReal.left_distrib_of_nonneg_of_ne_top hq0 hqtop,
       add_add_add_comm]
-  exact EReal.add_le_add' hchf hchg
+  exact add_le_add hchf hchg
 
 /-- A concave curve with `0 ≤ f 0` is subadditive: `f (u + s) ≤ f u + f s`.
 The chord argument places `u`, `s` as convex combinations of `u + s` and `0`,
@@ -80,7 +73,7 @@ theorem IsSubadditive_of_concaveE
     -- which follows from `0 ≤ f 0` (drop a nonneg `f 0` on the right).
     obtain ⟨rfl, rfl⟩ := add_eq_zero.1 hT0
     have : f 0 + (0 : EReal) ≤ f 0 + f 0 :=
-      EReal.add_le_add' (le_refl _) h0
+      add_le_add (le_refl _) h0
     simpa using this
   · set T : ℝ≥0 := u + s with hTdef
     have hTpos : 0 < T := pos_iff_ne_zero.2 hT
@@ -132,10 +125,10 @@ theorem IsSubadditive_of_concaveE
     -- `f 0` terms are nonneg, so `f(u+s) ≤ f(u+s) + f 0 ≤ f u + f s`
     calc f (u + s)
         = f (u + s) + 0 := (add_zero _).symm
-      _ ≤ f (u + s) + f 0 := EReal.add_le_add' (le_refl _) h0
+      _ ≤ f (u + s) + f 0 := add_le_add (le_refl _) h0
       _ = (((p : ℝ) : EReal) * f T + ((q : ℝ) : EReal) * f 0)
             + (((q : ℝ) : EReal) * f T + ((p : ℝ) : EReal) * f 0) := hregroup
-      _ ≤ f u + f s := EReal.add_le_add' hc1 hc2
+      _ ≤ f u + f s := add_le_add hc1 hc2
 
 /-- Adding a finite real constant commutes with an `EReal` infimum:
 `(⨅ i, u i) + ↑c = ⨅ i, (u i + ↑c)`. The `≤` direction uses that `↑c` is
@@ -243,68 +236,6 @@ theorem minConv_eq_inf_sub_add
       = (fun x => f' x ⊓ g' x) t := congrFun hmc t
   rw [hval, EReal.coe_add]
 
-/-- Subadditivity transfers along the `ℝ≥0∞ → EReal` coercion: `g` is
-subadditive iff its `EReal` shadow `fun t => (g t : EReal)` is. -/
-theorem IsSubadditive_coe_ennreal (g : ℝ≥0 → ℝ≥0∞) :
-    IsSubadditive g ↔ IsSubadditive (fun t => ((g t : ℝ≥0∞) : EReal)) := by
-  constructor
-  · intro hsub u s
-    show ((g (u + s) : ℝ≥0∞) : EReal) ≤ ((g u : ℝ≥0∞) : EReal) + ((g s : ℝ≥0∞) : EReal)
-    rw [← EReal.coe_ennreal_add]
-    exact_mod_cast hsub u s
-  · intro hsub u s
-    have h := hsub u s
-    rw [show ((g u : ℝ≥0∞) : EReal) + ((g s : ℝ≥0∞) : EReal)
-        = (((g u + g s : ℝ≥0∞)) : EReal) from (EReal.coe_ennreal_add _ _).symm] at h
-    exact (EReal.coe_ennreal_le_coe_ennreal_iff).1 h
-
-/-- The origin-pinned curve `fun t => if t = 0 then 0 else g t`, the numeric
-`ℝ≥0∞` realization of `convUnit ⊓ g`: it forces value `0` at `t = 0` and leaves
-`g` unchanged elsewhere (since `convUnit 0 = 0` and `convUnit t = ⊤` for `t ≠ 0`). -/
-noncomputable def pinAtZero (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ≥0∞ :=
-  fun t => if t = 0 then 0 else g t
-
-/-- `pinAtZero g` vanishes at the origin: `pinAtZero g 0 = 0`. -/
-theorem pinAtZero_zero (g : ℝ≥0 → ℝ≥0∞) : pinAtZero g 0 = 0 := by
-  rw [pinAtZero, if_pos rfl]
-
-/-- A subadditive `g` stays subadditive after pinning the origin to `0`:
-`pinAtZero g` is subadditive. At a split with a zero summand the pinned term is
-`0`, matching the surviving value; with both summands nonzero it reduces to
-`g`'s own subadditivity. -/
-theorem IsSubadditive_pinAtZero (g : ℝ≥0 → ℝ≥0∞) (hsub : IsSubadditive g) :
-    IsSubadditive (pinAtZero g) := by
-  intro u s
-  show pinAtZero g (u + s) ≤ pinAtZero g u + pinAtZero g s
-  rcases eq_or_ne u 0 with hu | hu
-  · rw [pinAtZero, pinAtZero, pinAtZero, if_pos hu, zero_add, hu, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · rw [pinAtZero, pinAtZero, pinAtZero, if_pos hs, add_zero, hs, add_zero]
-    · have hus : u + s ≠ 0 := fun h => hu (add_eq_zero.1 h).1
-      simp only [pinAtZero, if_neg hus, if_neg hu, if_neg hs]
-      exact hsub u s
-
-/-- A curve whose `EReal` shadow is concave, finite on the positive ray, and
-nonneg at the origin is its own sub-additive closure once the origin is pinned
-to `0`. Equivalently the closure of `convUnit ⊓ g` equals `convUnit ⊓ g`
-(realized numerically as `pinAtZero g`): concavity gives subadditivity, pinning
-forces the unit value at `0`, and `subadditiveClosureE_eq_self` then closes the
-fixed point. -/
-theorem subadditiveClosureE_pinAtZero_eq_self
-    (g : ℝ≥0 → ℝ≥0∞)
-    (hconc : ConcaveE (fun x => ((g x : ℝ≥0∞) : EReal)))
-    (_hfin : FiniteOnPos (fun x => ((g x : ℝ≥0∞) : EReal))) :
-    subadditiveClosureE (pinAtZero g) = pinAtZero g := by
-  -- the `EReal` shadow is nonneg at the origin
-  have h0 : (0 : EReal) ≤ ((g 0 : ℝ≥0∞) : EReal) := EReal.coe_ennreal_nonneg _
-  -- the concave shadow is subadditive, transferred down to `ℝ≥0∞`
-  have hsubE : IsSubadditive (fun x => ((g x : ℝ≥0∞) : EReal)) :=
-    IsSubadditive_of_concaveE _ hconc h0
-  have hsub : IsSubadditive g := (IsSubadditive_coe_ennreal g).2 hsubE
-  -- pinning preserves subadditivity and fixes the origin at `0`
-  exact subadditiveClosureE_eq_self (pinAtZero g)
-    (IsSubadditive_pinAtZero g hsub) (pinAtZero_zero g)
-
 /-- Corollary: if both curves vanish at the origin, `minConv f g = f ⊓ g`. -/
 theorem minConv_eq_inf_of_null
     (f g : ℝ≥0 → EReal) (hf : ConcaveE f) (hg : ConcaveE g)
@@ -317,5 +248,14 @@ theorem minConv_eq_inf_of_null
   show (f t - ((0:ℝ):EReal)) ⊓ (g t - ((0:ℝ):EReal)) + (((0:ℝ):EReal) + ((0:ℝ):EReal))
       = f t ⊓ g t
   simp [EReal.coe_zero]
+
+/-- A concave `EReal` curve that never takes `−∞` and vanishes at the origin is
+its own sub-additive closure: concavity with `g 0 = 0` gives subadditivity, and
+`subadditiveClosureEReal_eq_self` closes the fixed point. -/
+theorem subadditiveClosureEReal_eq_self_of_concaveE
+    (g : ℝ≥0 → EReal) (hg : NeverBot g) (h0 : g 0 = 0) (hconc : ConcaveE g) :
+    subadditiveClosureEReal g = g :=
+  subadditiveClosureEReal_eq_self g hg
+    (IsSubadditive_of_concaveE g hconc (le_of_eq h0.symm)) h0
 
 end DeepWiki
