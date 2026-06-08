@@ -29,6 +29,7 @@ import Book.ConvolutionMinimumExt
 import Book.ConvolutionMinimumRC
 import Book.ConvolutionContinuity
 import Book.ClosureEReal
+import Book.ECurveDioid
 import Book.ConcaveDioid
 import Book.Servers
 import Book.RealConvolution
