@@ -220,6 +220,15 @@ theorem IsMaximalArrivalCurve.subadditiveClosure {A α : ℝ≥0 → ℝ≥0}
   rw [tsub_le_iff_right, add_comm (minConvProjPow α n d)]
   exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
+/-- Any function above the sub-additive closure of a maximal arrival curve is a
+maximal arrival curve: if `A ≤ A ∗ α` and `subadditiveClosureMin α ≤ α'`, then
+`α'` is a maximal arrival curve for `A`. Combines closure-maximality with upward
+closure. -/
+theorem isMaximalArrivalCurve_of_subadditiveClosure_le {A α α' : ℝ≥0 → ℝ≥0}
+    (h : IsMaximalArrivalCurve A α) (hle : subadditiveClosureMin α ≤ α') :
+    IsMaximalArrivalCurve A α' :=
+  h.subadditiveClosure.mono hle
+
 /-! ## Left-continuous extension of a maximal arrival curve
 The left-continuous extension of a non-decreasing `α` — its left limit
 `Function.leftLim α` (`lim_{y → x⁻} α y`, equal to `sSup (α '' Iio x)` for
