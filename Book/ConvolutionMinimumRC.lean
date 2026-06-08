@@ -139,6 +139,53 @@ theorem exists_minConv_eq_leftLim_split_of_cont
   exists_minConv_eq_leftLim_split_of_cont_core f h hfm hhm hhc t
     (fun u => (hpair u).continuousAt)
 
+/-- The general precondition for the `EReal` left-limit attainment, named for
+what it is: at no split `u` do `leftLim f` and `h` take *opposite* infinities
+(`(+∞,−∞)` or `(−∞,+∞)`) — the only pairs where `EReal` addition is
+discontinuous. This is the weakest such condition; a strictly weaker one would
+hit a real discontinuity and make the conclusion false. -/
+def NoOppositeInfinities (f h : ℝ≥0 → EReal) (t : ℝ≥0) : Prop :=
+  ∀ u : ℝ≥0, ¬ ((leftLim f u = ⊤ ∧ h (t - u) = ⊥) ∨
+                (leftLim f u = ⊥ ∧ h (t - u) = ⊤))
+
+/-- `NoOppositeInfinities` is exactly the per-split `AddDefined` family — the two
+are equivalent, so the named form loses no generality. -/
+theorem noOppositeInfinities_iff_addDefined (f h : ℝ≥0 → EReal) (t : ℝ≥0) :
+    NoOppositeInfinities f h t ↔
+      ∀ u : ℝ≥0, AddDefined (leftLim f u) (h (t - u)) := by
+  unfold NoOppositeInfinities AddDefined
+  refine ⟨fun H u => ?_, fun H u => ?_⟩
+  · have h2 := H u
+    push Not at h2
+    refine ⟨?_, ?_⟩
+    · rcases eq_or_ne (leftLim f u) ⊤ with h1 | h1
+      · exact Or.inr (h2.1 h1)
+      · exact Or.inl h1
+    · rcases eq_or_ne (leftLim f u) ⊥ with h1 | h1
+      · exact Or.inr (h2.2 h1)
+      · exact Or.inl h1
+  · rintro (⟨ht, hb⟩ | ⟨hb, ht⟩)
+    · rcases (H u).1 with h1 | h1
+      · exact h1 ht
+      · exact h1 hb
+    · rcases (H u).2 with h1 | h1
+      · exact h1 hb
+      · exact h1 ht
+
+/-- Over `EReal`, with the general precondition `NoOppositeInfinities`. Same
+conclusion as `exists_minConv_eq_leftLim_split_of_cont`, restated with the named
+(equivalent) hypothesis: at no split do `leftLim f` and `h` collide at opposite
+infinities. -/
+theorem exists_minConv_eq_leftLim_split_of_noOppInf
+    (f h : ℝ≥0 → EReal)
+    (hfm : Monotone f) (hhm : Monotone h)
+    (hhc : Continuous h) (t : ℝ≥0)
+    (hnd : NoOppositeInfinities f h t) :
+    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t,
+      minConv f h t = leftLim f u₀ + h (t - u₀) :=
+  exists_minConv_eq_leftLim_split_of_cont f h hfm hhm hhc t
+    ((noOppositeInfinities_iff_addDefined f h t).mp hnd)
+
 /-- Over the book's carrier `R̄min = WithTop (WithBot ℝ)` (top-absorbing `+`,
 `(+∞)+(−∞) = +∞`). Same statement as the `EReal` version with `AddDefinedExt` at
 the limit pairs, via the order topology + add-continuity of
