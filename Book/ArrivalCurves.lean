@@ -221,35 +221,12 @@ theorem IsMaximalArrivalCurve.subadditiveClosure {A α : ℝ≥0 → ℝ≥0}
   exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
 /-! ## Left-continuous extension of a maximal arrival curve
-The left limit `αₗ x = lim_{y → x⁻} α y` of a non-decreasing `α` is again a
-maximal arrival curve when the cumulative function `A` is left-continuous. The
-extension is defined as the genuine left limit; for monotone `α` it equals
-`sSup (α '' Iio x)`. -/
+The left-continuous extension of a non-decreasing `α` — its left limit
+`Function.leftLim α` (`lim_{y → x⁻} α y`, equal to `sSup (α '' Iio x)` for
+monotone `α` by `Monotone.leftLim_eq_sSup`) — is again a maximal arrival curve
+when the cumulative function `A` is left-continuous. -/
 
 open Set Filter Topology
-
-/-- Left-continuous extension of `α`: the left limit `lim_{y → x⁻} α y`. -/
-noncomputable def alphaLeftLim (α : ℝ≥0 → ℝ≥0) (x : ℝ≥0) : ℝ≥0 :=
-  Function.leftLim α x
-
-/-- For monotone `α` with a nontrivial left neighbourhood at `x` (i.e. `0 < x`),
-the left limit equals the supremum over the left interval:
-`alphaLeftLim α x = sSup (α '' Iio x)`. -/
-theorem alphaLeftLim_eq_sSup_of_monotone {α : ℝ≥0 → ℝ≥0}
-    (hα : Monotone α) {x : ℝ≥0} (hx : 0 < x) :
-    alphaLeftLim α x = sSup (α '' Set.Iio x) :=
-  hα.leftLim_eq_sSup (nhdsLT_neBot_of_exists_lt ⟨0, hx⟩).ne
-
-/-- For monotone `α`, each value `α y` with `y < x` is `≤ alphaLeftLim α x`. -/
-theorem le_alphaLeftLim_of_lt {α : ℝ≥0 → ℝ≥0} (hα : Monotone α)
-    {y x : ℝ≥0} (hyx : y < x) : α y ≤ alphaLeftLim α x :=
-  hα.le_leftLim hyx
-
-/-- The left limit is `≤` the function value: `alphaLeftLim α x ≤ α x` for
-monotone `α`. -/
-theorem alphaLeftLim_le_self {α : ℝ≥0 → ℝ≥0} (hα : Monotone α)
-    (x : ℝ≥0) : alphaLeftLim α x ≤ α x :=
-  hα.leftLim_le (le_refl x)
 
 /-- Left-continuous `A` has `A` as the left limit at each `t`:
 `Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
@@ -258,29 +235,29 @@ theorem tendsto_nhdsWithin_Iio_of_leftContinuous {A : ℝ≥0 → ℝ≥0}
     Tendsto A (𝓝[<] t) (𝓝 (A t)) :=
   (hA t).tendsto
 
-/-- Left-continuous extension of a maximal arrival curve is maximal: if `A` is
-left-continuous, `α` non-decreasing, and `α` a maximal arrival curve for `A`,
-then `alphaLeftLim α` is a maximal arrival curve for `A`. -/
-theorem isMaximalArrivalCurve_alphaLeftLim_of_leftContinuous
+/-- The left-continuous extension `Function.leftLim α` of a maximal arrival
+curve is maximal: if `A` is left-continuous, `α` non-decreasing, and `α` a
+maximal arrival curve for `A`, then `Function.leftLim α` is one too. -/
+theorem isMaximalArrivalCurve_leftLim_of_leftContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A) (hα : Monotone α)
     (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (alphaLeftLim α) := by
+    IsMaximalArrivalCurve A (Function.leftLim α) := by
   rw [isMaximalArrivalCurve_iff_increment] at h ⊢
   intro t d
-  -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + αₗ 0`.
+  -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
   rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd
   · rw [← hd, add_zero]; exact le_self_add
   -- For `s ∈ (t, t + d)` (eventually within `Iio (t+d)`), bound
-  -- `A s ≤ A t + αₗ d`, then pass to the left limit `A s → A (t+d)`.
+  -- `A s ≤ A t + (leftLim α) d`, then pass to the left limit `A s → A (t+d)`.
   have hlim : Tendsto A (𝓝[<] (t + d)) (𝓝 (A (t + d))) :=
     tendsto_nhdsWithin_Iio_of_leftContinuous hA (t + d)
   have htlt : t < t + d := lt_add_of_pos_right t hd
   haveI : (𝓝[<] (t + d)).NeBot :=
     nhdsLT_neBot_of_exists_lt ⟨t, htlt⟩
-  have hev : ∀ᶠ s in 𝓝[<] (t + d), A s ≤ A t + alphaLeftLim α d := by
+  have hev : ∀ᶠ s in 𝓝[<] (t + d), A s ≤ A t + Function.leftLim α d := by
     rw [eventually_nhdsWithin_iff]
     filter_upwards [Ioi_mem_nhds htlt] with s hts hslt
-    -- `s = t + (s - t)`, `s - t < d`, so `α (s - t) ≤ αₗ d`.
+    -- `s = t + (s - t)`, `s - t < d`, so `α (s - t) ≤ (leftLim α) d`.
     have hslt' : s < t + d := hslt
     have hsub : t + (s - t) = s := by
       rw [add_tsub_cancel_of_le (le_of_lt hts)]
@@ -292,7 +269,7 @@ theorem isMaximalArrivalCurve_alphaLeftLim_of_leftContinuous
       rwa [hsub] at this
     refine le_trans key ?_
     gcongr
-    exact le_alphaLeftLim_of_lt hα hltd
+    exact hα.le_leftLim hltd
   -- Pass the closed condition `A s ≤ c` to the limit.
   exact le_of_tendsto hlim hev
 
