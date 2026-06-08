@@ -12,13 +12,28 @@ namespace DeepWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 
-/-- A nondecreasing, left-continuous, piecewise-continuous curve with `f 0 = 0`. -/
-structure Curve where
-  toFun : ℝ≥0 → ℝ≥0
-  mono : Monotone toFun
-  zero : toFun 0 = 0
-  pwc : IsPiecewiseContinuous toFun
-  leftCont : IsLeftContinuous toFun
+/-- A function `ℝ≥0 → ℝ≥0` is a curve when it is nondecreasing, null at the
+origin, piecewise-continuous, and left-continuous. -/
+def IsCurve (f : ℝ≥0 → ℝ≥0) : Prop :=
+  Monotone f ∧ f 0 = 0 ∧ IsPiecewiseContinuous f ∧ IsLeftContinuous f
+
+/-- A curve: a function `ℝ≥0 → ℝ≥0` satisfying `IsCurve`. -/
+abbrev Curve : Type := {f : ℝ≥0 → ℝ≥0 // IsCurve f}
+
+/-- The underlying `ℝ≥0 → ℝ≥0` function of a `Curve`. -/
+def Curve.toFun (A : Curve) : ℝ≥0 → ℝ≥0 := A.1
+
+/-- A `Curve` is nondecreasing. -/
+theorem Curve.mono (A : Curve) : Monotone A.toFun := A.2.1
+
+/-- A `Curve` is null at the origin: `A 0 = 0`. -/
+theorem Curve.zero (A : Curve) : A.toFun 0 = 0 := A.2.2.1
+
+/-- A `Curve` is piecewise-continuous. -/
+theorem Curve.pwc (A : Curve) : IsPiecewiseContinuous A.toFun := A.2.2.2.1
+
+/-- A `Curve` is left-continuous. -/
+theorem Curve.leftCont (A : Curve) : IsLeftContinuous A.toFun := A.2.2.2.2
 
 /-- Apply a `Curve` as its underlying `ℝ≥0 → ℝ≥0` function. -/
 instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
@@ -28,11 +43,7 @@ instance : CoeFun Curve (fun _ => ℝ≥0 → ℝ≥0) where
 instance : Coe Curve Fmin where
   coe := fun A => fun t => ⟨(A.toFun t : ℝ≥0∞)⟩
 
-/-- Pointwise (numeric) order on curves: `D ≤ A ↔ ∀ t, D t ≤ A t`. -/
-instance : LE Curve where
-  le D A := ∀ t, D.toFun t ≤ A.toFun t
-
-/-- `D ≤ A` unfolds to pointwise numeric `≤`. -/
+/-- `D ≤ A` (inherited `Subtype`/`Pi` order) unfolds to pointwise numeric `≤`. -/
 theorem Curve.le_def {D A : Curve} :
     D ≤ A ↔ ∀ t, D.toFun t ≤ A.toFun t :=
   Iff.rfl
