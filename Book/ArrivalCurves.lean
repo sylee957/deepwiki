@@ -1,5 +1,6 @@
 import Book.FunctionDioids
 import Book.Continuity
+import Book.RealConvolution
 
 /-! # Arrival curves
 For a cumulative function `A` (taken as a plain `ℝ≥0 → ℝ≥0` function), a
@@ -166,75 +167,57 @@ theorem isMinimalArrivalCurve_iff_increment_of_monotone
     (maxConvBddAbove_of_monotone A α hA hα)
 
 /-! ## Sub-additive closure of a maximal arrival curve
-The (min,+) self-convolution powers of `α` and their pointwise infimum (the
-(min,+) sub-additive closure `α⋆`) are again maximal arrival curves for `A`,
-and `α⋆ ≤ α`. Powers are indexed from `1` (`convPowNN α 0 = α`), avoiding the
-`+∞`-valued (min,+) unit `δ₀` that `ℝ≥0` cannot represent. -/
-
-/-- `n`-fold (min,+) self-convolution of `α`, indexed from `1`:
-`convPowNN α 0 = α` and `convPowNN α (n+1) = α ∗ (convPowNN α n)`. -/
-noncomputable def convPowNN (α : ℝ≥0 → ℝ≥0) : ℕ → (ℝ≥0 → ℝ≥0)
-  | 0 => α
-  | n + 1 => minConvProj α (convPowNN α n)
-
-/-- The (min,+) sub-additive closure `α⋆ t = ⨅ₙ (convPowNN α n) t`, the
-pointwise infimum of the self-convolution powers (`ℝ≥0` infimum). -/
-noncomputable def subadditiveClosureNN (α : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun t => ⨅ n : ℕ, convPowNN α n t
-
-/-- The closure is below `α`: `α⋆ t ≤ α t`, as the `n = 0` term of the
-infimum `⨅ₙ (convPowNN α n) t`. -/
-theorem subadditiveClosureNN_le (α : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    subadditiveClosureNN α t ≤ α t :=
-  ciInf_le (OrderBot.bddBelow _) 0
+Each (min,+) self-convolution power of `α` and their pointwise infimum (the
+(min,+) sub-additive closure `subadditiveClosureMin`, from `Book.RealConvolution`)
+are again maximal arrival curves for `A`, and the closure is `≤ α`. -/
 
 /-- The increment bound iterated through the (min,+) powers: if `α` is a
-maximal arrival curve for `A`, then `A (t + d) ≤ A t + (convPowNN α n) d` for
-every power `n`. -/
-theorem increment_convPowNN_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
+maximal arrival curve for `A`, then `A (t + d) ≤ A t + (minConvProjPow α n) d`
+for every power `n`. -/
+theorem increment_minConvProjPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
     (h : IsMaximalArrivalCurve A α) (n : ℕ) (t d : ℝ≥0) :
-    A (t + d) ≤ A t + convPowNN α n d := by
+    A (t + d) ≤ A t + minConvProjPow α n d := by
   rw [isMaximalArrivalCurve_iff_increment] at h
   induction n generalizing t d with
   | zero => exact h t d
   | succ n ih =>
-    -- `convPowNN α (n+1) d = ⨅_{u+s=d} α u + (convPowNN α n) s`
-    show A (t + d) ≤ A t + minConvProj α (convPowNN α n) d
+    -- `minConvProjPow α (n+1) d = ⨅_{u+s=d} α u + (minConvProjPow α n) s`
+    show A (t + d) ≤ A t + minConvProj α (minConvProjPow α n) d
     rw [minConvProj_eq, add_comm (A t), ← tsub_le_iff_right]
     refine le_ciInf ?_
     rintro ⟨⟨u, s⟩, (hus : u + s = d)⟩
-    -- `A (t+d) = A ((t+u)+s) ≤ A (t+u) + (convPowNN α n) s`, and
-    -- `A (t+u) ≤ A t + α u`, so `A (t+d) - A t ≤ α u + (convPowNN α n) s`
+    -- `A (t+d) = A ((t+u)+s) ≤ A (t+u) + (minConvProjPow α n) s`, and
+    -- `A (t+u) ≤ A t + α u`, so `A (t+d) - A t ≤ α u + (minConvProjPow α n) s`
     rw [tsub_le_iff_right]
     calc A (t + d) = A ((t + u) + s) := by rw [add_assoc, hus]
-      _ ≤ A (t + u) + convPowNN α n s := ih (t + u) s
-      _ ≤ (A t + α u) + convPowNN α n s := by gcongr; exact h t u
-      _ = A t + (α u + convPowNN α n s) := by ring
-      _ = (α u + convPowNN α n s) + A t := by ring
+      _ ≤ A (t + u) + minConvProjPow α n s := ih (t + u) s
+      _ ≤ (A t + α u) + minConvProjPow α n s := by gcongr; exact h t u
+      _ = A t + (α u + minConvProjPow α n s) := by ring
+      _ = (α u + minConvProjPow α n s) + A t := by ring
 
 /-- Each self-convolution power of a maximal arrival curve is again a maximal
-arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ (convPowNN α n)`. -/
-theorem isMaximalArrivalCurve_convPowNN_of_isMaximalArrivalCurve
+arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ (minConvProjPow α n)`. -/
+theorem isMaximalArrivalCurve_minConvProjPow_of_isMaximalArrivalCurve
     {A α : ℝ≥0 → ℝ≥0} (h : IsMaximalArrivalCurve A α) (n : ℕ) :
-    IsMaximalArrivalCurve A (convPowNN α n) := by
+    IsMaximalArrivalCurve A (minConvProjPow α n) := by
   rw [isMaximalArrivalCurve_iff_increment]
-  exact fun t d => increment_convPowNN_of_isMaximalArrivalCurve h n t d
+  exact fun t d => increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
 /-- The (min,+) sub-additive closure of a maximal arrival curve is again a
-maximal arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ α⋆`, with `α⋆ ≤ α`. The
-increment bound through every power `A (t+d) ≤ A t + (convPowNN α n) d` passes
-to the infimum `α⋆ d = ⨅ₙ (convPowNN α n) d`. -/
+maximal arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ subadditiveClosureMin α`,
+with the closure `≤ α`. The increment bound through every power passes to the
+infimum defining the closure. -/
 theorem IsMaximalArrivalCurve.subadditiveClosure {A α : ℝ≥0 → ℝ≥0}
     (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (subadditiveClosureNN α) := by
+    IsMaximalArrivalCurve A (subadditiveClosureMin α) := by
   rw [isMaximalArrivalCurve_iff_increment]
   intro t d
-  -- `A (t+d) - A t ≤ (convPowNN α n) d` for every `n`, so `≤ ⨅ₙ = α⋆ d`
-  rw [show subadditiveClosureNN α d = ⨅ n : ℕ, convPowNN α n d from rfl,
+  -- `A (t+d) - A t ≤ (minConvProjPow α n) d` for every `n`, so `≤ ⨅ₙ`
+  rw [show subadditiveClosureMin α d = ⨅ n : ℕ, minConvProjPow α n d from rfl,
     add_comm (A t), ← tsub_le_iff_right]
   refine le_ciInf (fun n => ?_)
-  rw [tsub_le_iff_right, add_comm (convPowNN α n d)]
-  exact increment_convPowNN_of_isMaximalArrivalCurve h n t d
+  rw [tsub_le_iff_right, add_comm (minConvProjPow α n d)]
+  exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
 /-! ## Left-continuous extension of a maximal arrival curve
 The left limit `αₗ x = sSup (α '' Iio x)` of a non-decreasing `α` is again a

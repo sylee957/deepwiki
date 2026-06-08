@@ -59,4 +59,24 @@ theorem le_saClosure (beta : ℝ≥0 → ℝ≥0)
   unfold saClosure
   exact le_ciSup (hbdd t) 0
 
+/-- `n`-fold (min,+) self-convolution iterate of `beta`, indexed from `beta`:
+`minConvProjPow beta 0 = beta`, `minConvProjPow beta (n+1) = beta ∗ ·`. Indexing
+from `beta` (not the `+∞`-valued unit `δ₀`) keeps the iterate `ℝ≥0`-valued. -/
+noncomputable def minConvProjPow (beta : ℝ≥0 → ℝ≥0) :
+    ℕ → (ℝ≥0 → ℝ≥0)
+  | 0 => beta
+  | n + 1 => minConvProj beta (minConvProjPow beta n)
+
+/-- (min,+) sub-additive closure: pointwise infimum of all `minConvProjPow`
+iterates, `⨅ₙ minConvProjPow beta n t`. -/
+noncomputable def subadditiveClosureMin (beta : ℝ≥0 → ℝ≥0) :
+    ℝ≥0 → ℝ≥0 :=
+  fun t => ⨅ n : ℕ, minConvProjPow beta n t
+
+/-- The closure is below `beta`: `subadditiveClosureMin beta t ≤ beta t`, as the
+`n = 0` term of the infimum. -/
+theorem subadditiveClosureMin_le (beta : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    subadditiveClosureMin beta t ≤ beta t :=
+  ciInf_le (OrderBot.bddBelow _) 0
+
 end DeepWiki

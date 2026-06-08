@@ -20,7 +20,6 @@ import Book.RealCurvesAdditivity
 import Book.RealCurvesConv
 import Book.RealCurvesDeconv
 import Book.Deviations
-import Book.ArrivalCurves
 import Book.RealCurvesDeviations
 import Book.PseudoInverse
 import Book.PseudoInverseCatalog
@@ -36,6 +35,7 @@ import Book.ConcaveDioid
 import Book.SubadditiveNotConcave
 import Book.Servers
 import Book.RealConvolution
+import Book.ArrivalCurves
 import Book.Shapers
 
 /-!
