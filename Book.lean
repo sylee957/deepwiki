@@ -36,6 +36,8 @@ import Book.SubadditiveNotConcave
 import Book.Servers
 import Book.RealConvolution
 import Book.ArrivalCurves
+import Book.MaximalArrivalCurves
+import Book.MinimalArrivalCurves
 import Book.Shapers
 
 /-!
