@@ -76,6 +76,18 @@ theorem minDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞)
   · refine le_iSup_of_le d ?_
     rw [show delayNN d d = 0 by simp [delayNN], tsub_zero]
 
+/-- `f ⊘̄ delayNN d = 0`: the (max,+) deconvolution collapses to `0`. -/
+theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
+    maxDeconv f (delayNN d) = fun _ => 0 := by
+  funext t
+  unfold maxDeconv
+  apply le_antisymm
+  · refine iInf_le_of_le (d + 1) ?_
+    rw [show delayNN d (d + 1) = ⊤ by
+      simp [delayNN, not_le.mpr (lt_add_one d)]]
+    simp
+  · exact zero_le'
+
 /-- `minDeconv g h` is monotone in its first slot when `g` is monotone. -/
 theorem minDeconvE_mono {D T : Type*}
     [_root_.AddCommMonoid D] [PartialOrder D]
@@ -88,6 +100,21 @@ theorem minDeconvE_mono {D T : Type*}
   unfold minDeconv
   refine iSup_le (fun s => ?_)
   refine le_iSup_of_le s ?_
+  have hxs : x + s ≤ y + s := by gcongr
+  exact tsub_le_tsub_right (hg hxs) (h s)
+
+/-- `maxDeconv g h` is monotone in its first slot when `g` is monotone. -/
+theorem maxDeconvE_mono {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CovariantClass D D (·+·) (·≤·)]
+    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
+    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
+    (g h : D → T)
+    (hg : Monotone g) : Monotone (maxDeconv g h) := by
+  intro x y hxy
+  unfold maxDeconv
+  refine le_iInf (fun s => ?_)
+  refine iInf_le_of_le s ?_
   have hxs : x + s ≤ y + s := by gcongr
   exact tsub_le_tsub_right (hg hxs) (h s)
 
