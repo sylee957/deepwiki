@@ -1,5 +1,6 @@
 import Book.MaximalArrivalCurves
 import Book.MinimalArrivalCurves
+import Book.Additivity
 
 /-! # Combining minimal and maximal arrival curves
 From a maximal arrival curve `αᵘ` and a minimal one `αˡ` for `A`, the
@@ -117,5 +118,117 @@ theorem etaMin_zero {A αu αl : ℝ≥0 → ℝ≥0}
   have hz : (fun s : ℝ≥0 => αl (0 + s) - αu s) = fun _ => 0 := by
     funext s; rw [zero_add, tsub_eq_zero_of_le (hle s)]
   rw [hz]; exact ciSup_const
+
+/-- `ηᵘ 0 = 0`: with `αᵘ 0 = αˡ 0 = 0` the `v = 0` term of `ηᵘ 0 = ⨅_v αᵘ v - αˡ v`
+is `0`, and every term is `≥ 0` (`αˡ ≤ αᵘ`), so the infimum is `0`. -/
+theorem etaMax_zero {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl)
+    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
+    etaMax αu αl 0 = 0 := by
+  have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
+  show maxDeconv αu αl 0 = 0
+  unfold maxDeconv
+  apply le_antisymm
+  · -- the `v = 0` term is `αᵘ 0 - αˡ 0 = 0`
+    refine ciInf_le_of_le (OrderBot.bddBelow _) 0 ?_
+    rw [zero_add, hu0, hl0, tsub_zero]
+  · -- every term `αᵘ (0+v) - αˡ v ≥ 0`
+    exact le_ciInf (fun _ => zero_le')
+
+/-- The easy fixpoint inequality `ηᵘ ⊘̄ ηˡ ≤ ηᵘ`: the `u = 0` term of the
+defining infimum is `ηᵘ t - ηˡ 0 = ηᵘ t`. -/
+theorem maxDeconv_etaMax_etaMin_le {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) :
+    maxDeconv (etaMax αu αl) (etaMin αu αl) ≤ etaMax αu αl := by
+  intro t
+  have h0 : etaMin αu αl 0 = 0 := etaMin_zero hu hl hAmono hlmono
+  show maxDeconv (etaMax αu αl) (etaMin αu αl) t ≤ etaMax αu αl t
+  unfold maxDeconv
+  refine ciInf_le_of_le (OrderBot.bddBelow _) 0 ?_
+  rw [h0, tsub_zero, add_zero]
+
+/-- Core per-shift bound for the fixpoint: with `αᵘ` sub-additive, `αˡ`
+super-additive, `αˡ ≤ αᵘ`, and `αᵘ` monotone, every `ηᵘ`-witness `z`-bound at
+`z = u+v+w` (resp. `z = v`) combines with the sub- and super-additivity to
+give `ηt + (αˡ (u+w) - αᵘ w) ≤ αᵘ (t+u+v) - αˡ v`. -/
+private theorem etaMax_fixpoint_term {au al : ℝ≥0 → ℝ≥0}
+    (hsub : IsSubadditive au) (hsup : IsSuperadditive al) (hle : al ≤ au)
+    (humono : Monotone au) {ht : ℝ≥0} {t u v w : ℝ≥0}
+    (hηt : ∀ z : ℝ≥0, ht ≤ au (t + z) - al z) :
+    ht + (al (u + w) - au w) ≤ au (t + u + v) - al v := by
+  have ev : al v ≤ au (t + u + v) :=
+    le_trans (hle v) (humono (by rw [show t+u+v = v+(t+u) by ring]; exact le_self_add))
+  rw [← NNReal.coe_le_coe]; push_cast [NNReal.coe_sub ev]
+  rcases le_total (au w) (al (u + w)) with hw | hw
+  · have e1 : al (u + v + w) ≤ au (t + (u + v + w)) :=
+      le_trans (hle _) (humono le_add_self)
+    have hz : (ht : ℝ) ≤ au (t + (u + v + w)) - al (u + v + w) := by
+      have := hηt (u + v + w); rw [← NNReal.coe_le_coe] at this
+      rwa [NNReal.coe_sub e1] at this
+    have htuvw : (au (t + (u + v + w)) : ℝ) = au (t + u + v + w) := by
+      norm_num [add_assoc]
+    rw [htuvw] at hz
+    have hsa : (au (t + u + v + w) : ℝ) ≤ au (t + u + v) + au w := by
+      have := hsub (t + u + v) w; rw [← NNReal.coe_le_coe] at this
+      push_cast at this; linarith
+    have hsp : (al v : ℝ) + al (u + w) ≤ al (u + v + w) := by
+      have := hsup v (u + w)
+      rw [show v + (u + w) = u + v + w by ring, ← NNReal.coe_le_coe] at this
+      push_cast at this; linarith
+    rw [NNReal.coe_sub hw]; linarith
+  · rw [tsub_eq_zero_of_le hw]; push_cast
+    have evt : al v ≤ au (t + v) := le_trans (hle v) (humono le_add_self)
+    have hz : (ht : ℝ) ≤ au (t + v) - al v := by
+      have := hηt v; rw [← NNReal.coe_le_coe] at this
+      rwa [NNReal.coe_sub evt] at this
+    have hmono : (au (t + v) : ℝ) ≤ au (t + u + v) := by
+      have := humono (show t + v ≤ t + u + v by
+        rw [show t + u + v = t + v + u by ring]; exact le_self_add)
+      exact_mod_cast this
+    linarith
+
+/-- The hard fixpoint inequality `ηᵘ ≤ ηᵘ ⊘̄ ηˡ`: for each outer shift `u`,
+`ηᵘ t + ηˡ u ≤ ηᵘ (t+u)`, obtained by pushing `ηˡ u = ⨆_w ⋯` and
+`ηᵘ (t+u) = ⨅_v ⋯` into the per-shift bound `etaMax_fixpoint_term`. -/
+theorem le_maxDeconv_etaMax_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
+    etaMax αu αl ≤ maxDeconv (etaMax αu αl) (etaMin αu αl) := by
+  have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
+  intro t
+  show etaMax αu αl t ≤ ⨅ u : ℝ≥0, etaMax αu αl (t + u) - etaMin αu αl u
+  refine le_ciInf (fun u => ?_)
+  -- `ηᵘ t`-bound at every witness `z`
+  have hηt : ∀ z : ℝ≥0, etaMax αu αl t ≤ αu (t + z) - αl z := fun z =>
+    ciInf_le (OrderBot.bddBelow _) z
+  -- per-`(v, w)` core bound
+  have hterm : ∀ v w : ℝ≥0,
+      etaMax αu αl t + (αl (u + w) - αu w) ≤ αu (t + u + v) - αl v := fun v w =>
+    etaMax_fixpoint_term hsub hsup hle humono hηt
+  -- `ηᵘ t + ηˡ u ≤ ηᵘ (t+u)`, hence `ηᵘ t ≤ ηᵘ (t+u) - ηˡ u`
+  have hmain : etaMax αu αl t + etaMin αu αl u ≤ etaMax αu αl (t + u) := by
+    -- push the `⨆` of `ηˡ u` over the `+`, bound each term by the `⨅` of `ηᵘ (t+u)`
+    show etaMax αu αl t + (⨆ w : ℝ≥0, αl (u + w) - αu w) ≤ etaMax αu αl (t + u)
+    refine add_ciSup_le _ _ _ (fun w => ?_)
+    show etaMax αu αl t + (αl (u + w) - αu w) ≤ ⨅ v : ℝ≥0, αu (t + u + v) - αl v
+    exact le_ciInf (fun v => hterm v w)
+  -- conclude `ηᵘ t ≤ ηᵘ (t+u) - ηˡ u`
+  exact le_tsub_of_add_le_right hmain
+
+/-- One-step fixpoint of the maximal refinement: under `αᵘ` sub-additive, `αˡ`
+super-additive, `αˡ ≤ αᵘ` (from both being arrival curves) and `αᵘ` monotone,
+`ηᵘ = ηᵘ ⊘̄ ηˡ`. Combining the two inequalities, the refinement of the refined
+pair returns `ηᵘ` unchanged. -/
+theorem etaMax_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
+    etaMax αu αl = maxDeconv (etaMax αu αl) (etaMin αu αl) :=
+  le_antisymm
+    (le_maxDeconv_etaMax_etaMin hu hl hAmono hlmono humono hsub hsup)
+    (maxDeconv_etaMax_etaMin_le hu hl hAmono hlmono)
 
 end DeepWiki
