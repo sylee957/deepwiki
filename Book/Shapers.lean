@@ -1,6 +1,7 @@
 import Book.Servers
 import Book.Closures
 import Book.RealConvolution
+import Book.ECurveDioid
 
 /-! # Shapers
 Greedy shapers and shaping curves in network calculus,
@@ -25,80 +26,140 @@ theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
       ⟨u, s, hus, rfl⟩)
   exact mul_le_mul_left (h s) (D u)
 
-/-- `S` offers min-plus service curve `beta`: `beta ∗ A ≤ D`. -/
-def OffersMinPlusService (beta : ℝ≥0 → ℝ≥0) (S : Server) :
-    Prop :=
-  ∀ A D : Curve, (A, D) ∈ S.1 → minConvProj A beta ≤ D
 
-/-- `S` is a min-plus server for `beta` (offers it as service). -/
-def IsMinPlusServer (beta : ℝ≥0 → ℝ≥0) (S : Server) :
-    Prop :=
-  OffersMinPlusService beta S
+/-! ## Min-plus minimal service curves (`EReal`-valued `β`)
+The minimal service curve `β : ℝ≥0 → EReal` may take negative (and `±∞`) values,
+so it is `EReal`-valued; service is the convolution bound `D ≥ A ∗ β`. -/
 
-/-- Largest causal relation offering min-plus service `beta`. -/
-def minPlusServiceRel (beta : ℝ≥0 → ℝ≥0) :
+/-- A `Curve` viewed in `EReal`: `t ↦ ((A.val t : ℝ) : EReal)`. -/
+noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
+  fun t => ((A.val t : ℝ) : EReal)
+
+/-- `curveE A` is nonnegative: `0 ≤ curveE A t`. -/
+theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t := by
+  show (0 : EReal) ≤ ((A.val t : ℝ) : EReal); positivity
+
+/-- `curveE A 0 = 0`. -/
+theorem curveE_zero (A : Curve) : curveE A 0 = 0 := by
+  show ((A.val 0 : ℝ) : EReal) = 0; rw [A.zero]; norm_num
+
+/-- Curve order matches the `EReal` view: `D ≤ A ↔ curveE D ≤ curveE A`. -/
+theorem curveE_le_iff {D A : Curve} : curveE D ≤ curveE A ↔ D ≤ A := by
+  constructor
+  · intro h t
+    have := h t
+    show D.val t ≤ A.val t
+    have : ((D.val t : ℝ) : EReal) ≤ ((A.val t : ℝ) : EReal) := this
+    exact_mod_cast this
+  · intro h t
+    show ((D.val t : ℝ) : EReal) ≤ ((A.val t : ℝ) : EReal)
+    exact_mod_cast h t
+
+/-- Curve order transfers to the `EReal` view: `D ≤ A → curveE D ≤ curveE A`. -/
+theorem curveE_mono {D A : Curve} (h : D ≤ A) : curveE D ≤ curveE A :=
+  curveE_le_iff.mpr h
+
+/-- `S` offers `EReal`-valued min-plus minimal service curve `beta`: every served
+pair satisfies `A ∗ beta ≤ D` (i.e. `D ≥ A ∗ beta`), the curve pair lifted into
+`EReal` via `curveE`. -/
+def OffersMinPlusMinimalService (beta : ℝ≥0 → EReal) (S : Server) : Prop :=
+  ∀ A D : Curve, (A, D) ∈ S.val → minConv (curveE A) beta ≤ curveE D
+
+/-- Largest server offering min-plus minimal service `beta`: causal pairs with
+`A ∗ beta ≤ D`, i.e. `{(A, D) | A ≥ D ≥ A ∗ beta}`. -/
+def minPlusMinimalServiceRel (beta : ℝ≥0 → EReal) :
     Set (Curve × Curve) :=
-  { p | p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 }
+  { p | curveE p.2 ≤ curveE p.1 ∧ minConv (curveE p.1) beta ≤ curveE p.2 }
 
-/-- Membership unfolding for `minPlusServiceRel`. -/
-theorem mem_minPlusServiceRel_iff
-    {beta : ℝ≥0 → ℝ≥0} {p : Curve × Curve} :
-    p ∈ minPlusServiceRel beta ↔
-      p.2 ≤ p.1 ∧ minConvProj p.1 beta ≤ p.2 :=
+/-- Membership unfolding for `minPlusMinimalServiceRel`. -/
+theorem mem_minPlusMinimalServiceRel_iff
+    {beta : ℝ≥0 → EReal} {p : Curve × Curve} :
+    p ∈ minPlusMinimalServiceRel beta ↔
+      curveE p.2 ≤ curveE p.1 ∧ minConv (curveE p.1) beta ≤ curveE p.2 :=
   Iff.rfl
 
-/-- The server built from `minPlusServiceRel beta`. -/
-def minPlusServer (beta : ℝ≥0 → ℝ≥0)
-    (htot : ∀ A : Curve, ∃ D : Curve,
-      (A, D) ∈ minPlusServiceRel beta) :
-    Server :=
-  ⟨minPlusServiceRel beta, fun _A _D hp => hp.1, fun A => htot A⟩
-
-/-- `S ⊆ minPlusServiceRel beta` iff `S` offers service `beta`. -/
-theorem subset_minPlusServiceRel_iff
-    {S : Server} {beta : ℝ≥0 → ℝ≥0} :
-    (∀ p ∈ S.1, p ∈ minPlusServiceRel beta) ↔
-      OffersMinPlusService beta S := by
+/-- `S ⊆ minPlusMinimalServiceRel beta` iff `S` offers minimal service `beta`:
+the causality conjunct comes for free from `S.causal`. -/
+theorem subset_minPlusMinimalServiceRel_iff
+    {S : Server} {beta : ℝ≥0 → EReal} :
+    (∀ p ∈ S.val, p ∈ minPlusMinimalServiceRel beta) ↔
+      OffersMinPlusMinimalService beta S := by
   constructor
   · intro h A D hp
     exact (h (A, D) hp).2
   · intro h p hp
-    exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
+    exact ⟨curveE_mono (S.causal p.1 p.2 hp), h p.1 p.2 hp⟩
 
-/-- Service curves are antitone: smaller `beta` is still offered. -/
-theorem OffersMinPlusService.mono
-    {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
-    (h : beta ≤ beta') (hS : OffersMinPlusService beta' S) :
-    OffersMinPlusService beta S :=
-  fun A D hp =>
-    le_trans (minConvProj_mono_right A h) (hS A D hp)
+/-- The server built from `minPlusMinimalServiceRel beta`. -/
+def minPlusMinimalServer (beta : ℝ≥0 → EReal)
+    (htot : ∀ A : Curve, ∃ D : Curve,
+      (A, D) ∈ minPlusMinimalServiceRel beta) :
+    Server :=
+  ⟨minPlusMinimalServiceRel beta,
+    fun _A _D hp => curveE_le_iff.mp hp.1, fun A => htot A⟩
 
-/-- The trivial zero service curve `beta ≡ 0`. -/
-def betaZero : ℝ≥0 → ℝ≥0 := fun _ => 0
+/-- Minimal service curves are antitone: a smaller `beta` is still offered, since
+`minConv` is monotone in its right argument. -/
+theorem OffersMinPlusMinimalService.mono
+    {S : Server} {beta beta' : ℝ≥0 → EReal}
+    (h : beta ≤ beta') (hS : OffersMinPlusMinimalService beta' S) :
+    OffersMinPlusMinimalService beta S := by
+  intro A D hp t
+  refine le_trans ?_ (hS A D hp t)
+  refine le_iInf (fun p => ?_)
+  exact le_trans (ciInf_le (OrderBot.bddBelow _) p) (by gcongr; exact h p.1.2)
 
-/-- Every server offers the zero service curve `betaZero`. -/
-theorem offersMinPlusService_betaZero (S : Server) :
-    OffersMinPlusService betaZero S := by
-  intro A D _ t
-  rw [minConvProj_eq]
+/-- The trivial zero service curve `beta ≡ 0` (`EReal`-valued). -/
+noncomputable def betaZero : ℝ≥0 → EReal := fun _ => 0
+
+/-- `A ∗ beta₀ ≤ D` for any curves: the `(0, t)` split gives `curveE A 0 + 0 = 0`,
+and `0 ≤ curveE D t`. -/
+theorem minConv_betaZero_le (A D : Curve) :
+    minConv (curveE A) betaZero ≤ curveE D := by
+  intro t
+  refine le_trans ?_ (curveE_nonneg D t)
   refine le_trans
-    (ciInf_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩) ?_
-  show A.1 0 + betaZero t ≤ D.1 t
-  rw [A.zero]
-  show (0 : ℝ≥0) + (0 : ℝ≥0) ≤ D.1 t
-  simp
+    (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩ (le_refl _)) ?_
+  show curveE A 0 + betaZero t ≤ 0
+  rw [curveE_zero]; show (0 : EReal) + (0 : EReal) ≤ 0; norm_num
 
-/-- `A`/`D` is backlogged on `I`: `D t < A t` for all `t ∈ I`. -/
+/-- Every server offers the zero minimal service curve: `A ≥ D ≥ A ∗ beta₀`. -/
+theorem offersMinPlusMinimalService_betaZero (S : Server) :
+    OffersMinPlusMinimalService betaZero S :=
+  fun A D _ => minConv_betaZero_le A D
+
+/-- If `beta 0 > 0`, no server can offer it: `Smp(beta) = ∅`. The `(0,0)` split
+forces `D.val 0 ≥ A.val 0 + beta 0 = beta 0 > 0`, contradicting `D.val 0 = 0`. -/
+theorem minPlusMinimalServiceRel_eq_empty_of_pos
+    {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < beta 0) :
+    minPlusMinimalServiceRel beta = (∅ : Set (Curve × Curve)) := by
+  ext p
+  simp only [Set.mem_empty_iff_false, iff_false]
+  rintro ⟨_, hconv⟩
+  have hconv0 : minConv (curveE p.1) beta 0 ≤ curveE p.2 0 := hconv 0
+  rw [curveE_zero p.2] at hconv0
+  have hsplit : minConv (curveE p.1) beta 0 = curveE p.1 0 + beta 0 := by
+    unfold minConv
+    refine le_antisymm
+      (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(0, 0), by simp⟩ (le_refl _)) ?_
+    refine le_iInf ?_
+    rintro ⟨⟨u, s⟩, hus⟩
+    obtain ⟨rfl, rfl⟩ : u = 0 ∧ s = 0 := by constructor <;> simp_all
+    simp
+  rw [hsplit, curveE_zero p.1, zero_add] at hconv0
+  exact absurd hconv0 (not_le.mpr h0)
+
+/-- `A`/`D` is backlogged on `I`: `D.val t < A.val t` for all `t ∈ I`. -/
 def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
-  ∀ t ∈ I, D.1 t < A.1 t
+  ∀ t ∈ I, D.val t < A.val t
 
-/-- Start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
+/-- Start of the backlogged period of `t`: last `u ≤ t` with `A.val u = D.val u`. -/
 noncomputable def Start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
-  sSup { u | u ≤ t ∧ A.1 u = D.1 u }
+  sSup { u | u ≤ t ∧ A.val u = D.val u }
 
 /-- The set defining `Start` is nonempty (`0` belongs). -/
 theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
-    { u | u ≤ t ∧ A.1 u = D.1 u }.Nonempty :=
+    { u | u ≤ t ∧ A.val u = D.val u }.Nonempty :=
   ⟨0, by simp, by rw [A.zero, D.zero]⟩
 
 /-- `Start A D t ≤ t`. -/
@@ -122,10 +183,10 @@ theorem IsBacklogged.subset {A D : Curve}
 
 /-- `(Start A D t, t]` is a backlogged period when `D ≤ A`. -/
 theorem isBacklogged_Ioc_start (A D : Curve)
-    (hc : ∀ x, D.1 x ≤ A.1 x) (t : ℝ≥0) :
+    (hc : ∀ x, D.val x ≤ A.val x) (t : ℝ≥0) :
     IsBacklogged A D (Set.Ioc (Start A D t) t) := by
   intro u hu
-  have hbdd : BddAbove { u | u ≤ t ∧ A.1 u = D.1 u } :=
+  have hbdd : BddAbove { u | u ≤ t ∧ A.val u = D.val u } :=
     ⟨t, fun x hx => hx.1⟩
   rcases (hc u).lt_or_eq with h | h
   · exact h
@@ -134,26 +195,26 @@ theorem isBacklogged_Ioc_start (A D : Curve)
 
 /-- At the start of a backlogged period, `A = D` (uses left continuity). -/
 theorem A_start_eq_D_start (A D : Curve)
-    (hc : ∀ x, D.1 x ≤ A.1 x) (t : ℝ≥0) :
-    A.1 (Start A D t) = D.1 (Start A D t) := by
+    (hc : ∀ x, D.val x ≤ A.val x) (t : ℝ≥0) :
+    A.val (Start A D t) = D.val (Start A D t) := by
   set s := Start A D t with hs
   rcases (hc s).lt_or_eq with hlt | heq
   · exfalso
-    have hbdd : BddAbove { u | u ≤ t ∧ A.1 u = D.1 u } :=
+    have hbdd : BddAbove { u | u ≤ t ∧ A.val u = D.val u } :=
       ⟨t, fun x hx => hx.1⟩
     have hs0 : 0 < s := by
       rcases eq_zero_or_pos s with h | h
       · rw [h, A.zero, D.zero] at hlt
         exact absurd hlt (lt_irrefl 0)
       · exact h
-    have hev : ∀ᶠ u in 𝓝[<] s, D.1 u < A.1 u :=
+    have hev : ∀ᶠ u in 𝓝[<] s, D.val u < A.val u :=
       (D.leftCont s).eventually_lt (A.leftCont s) hlt
     have hbasis :
         (𝓝[<] s).HasBasis (· < s) (Ioo · s) :=
       nhdsLT_basis_of_exists_lt ⟨0, hs0⟩
     rw [hbasis.eventually_iff] at hev
     obtain ⟨l, hls, hl⟩ := hev
-    have hub : ∀ x ∈ { u | u ≤ t ∧ A.1 u = D.1 u },
+    have hub : ∀ x ∈ { u | u ≤ t ∧ A.val u = D.val u },
         x ≤ l := by
       intro x hx
       by_contra hxl
@@ -161,7 +222,7 @@ theorem A_start_eq_D_start (A D : Curve)
       rcases (le_csSup hbdd hx).lt_or_eq with hxlt | hxeq
       · have := hl ⟨hxl, hxlt⟩
         rw [hx.2] at this; exact absurd this (lt_irrefl _)
-      · -- x = sSup = s with A x = D x, vs D s < A s
+      · -- x = sSup = s with A.val x = D.val x, vs D.val s < A.val s
         subst hxeq
         exact absurd hx.2 (ne_of_gt hlt)
     exact absurd
@@ -171,7 +232,7 @@ theorem A_start_eq_D_start (A D : Curve)
 
 /-- `Start` is constant across an order-connected backlogged set. -/
 theorem start_const_of_backlogged (A D : Curve)
-    (hc : ∀ x, D.1 x ≤ A.1 x)
+    (hc : ∀ x, D.val x ≤ A.val x)
     {I : Set ℝ≥0} (hI : IsBacklogged A D I)
     (hoc : I.OrdConnected)
     {t t' : ℝ≥0} (ht : t ∈ I) (ht' : t' ∈ I) :
@@ -190,13 +251,13 @@ theorem start_const_of_backlogged (A D : Curve)
   exact le_csSup ⟨t, fun y hy => hy.1⟩
     ⟨hst, A_start_eq_D_start A D hc t'⟩
 
-/-- `S` offers strict service `beta`: `D s + beta(t-s) ≤ D t` on backlog. -/
+/-- `S` offers strict service `beta`: `D.val s + beta(t-s) ≤ D.val t` on backlog. -/
 def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
     (S : Server) : Prop :=
-  ∀ A D : Curve, (A, D) ∈ S.1 →
+  ∀ A D : Curve, (A, D) ∈ S.val →
     ∀ s t, s ≤ t →
       IsBacklogged A D (Set.Ioc s t) →
-        D.1 s + beta (t - s) ≤ D.1 t
+        D.val s + beta (t - s) ≤ D.val t
 
 /-- Largest causal relation offering strict service `beta`. -/
 def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
@@ -209,22 +270,13 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
 /-- `S ⊆ strictServiceRel beta` iff `S` offers strict service `beta`. -/
 theorem subset_strictServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
-    (∀ p ∈ S.1, p ∈ strictServiceRel beta) ↔
+    (∀ p ∈ S.val, p ∈ strictServiceRel beta) ↔
       OffersStrictService beta S := by
   constructor
   · intro h A D hp
     exact (h (A, D) hp).2
   · intro h p hp
     exact ⟨S.causal p.1 p.2 hp, h p.1 p.2 hp⟩
-
-/-- Every server offers the zero strict service curve. -/
-theorem offersStrictService_betaZero (S : Server) :
-    OffersStrictService betaZero S := by
-  intro A D _ s t hst _
-  show D.1 s + betaZero (t - s) ≤ D.1 t
-  show D.1 s + (0 : ℝ≥0) ≤ D.1 t
-  rw [add_zero]
-  exact D.mono hst
 
 /-- Strict-service relation is antitone in `beta`. -/
 theorem strictServiceRel_mono
@@ -244,17 +296,17 @@ theorem offersStrictService_sup
     OffersStrictService
       (fun u => max (beta u) (beta' u)) S := by
   intro A D hp s t hst hbl
-  show D.1 s + max (beta (t-s)) (beta' (t-s)) ≤ D.1 t
+  show D.val s + max (beta (t-s)) (beta' (t-s)) ≤ D.val t
   rcases le_total (beta (t-s)) (beta' (t-s)) with hle | hle
   · rw [max_eq_right hle]; exact h' A D hp s t hst hbl
   · rw [max_eq_left hle]; exact h A D hp s t hst hbl
 
-/-- Output bound: `A(Start) + beta(t - Start) ≤ D t` for strict service. -/
+/-- Output bound: `A(Start) + beta(t - Start) ≤ D.val t` for strict service. -/
 theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve) (hp : (A, D) ∈ strictServiceRel beta)
     (t : ℝ≥0) :
-    A.1 (Start A D t) + beta (t - Start A D t) ≤ D.1 t := by
-  have hc : ∀ x, D.1 x ≤ A.1 x := fun x => hp.1 x
+    A.val (Start A D t) + beta (t - Start A D t) ≤ D.val t := by
+  have hc : ∀ x, D.val x ≤ A.val x := fun x => hp.1 x
   have hbl := isBacklogged_Ioc_start A D hc t
   have hbound := hp.2 (Start A D t) t (start_le A D t) hbl
   rw [A_start_eq_D_start A D hc t]
@@ -263,21 +315,21 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
 theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S)
-    (A D : Curve) (hp : (A, D) ∈ S.1)
+    (A D : Curve) (hp : (A, D) ∈ S.val)
     {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
     (hbl : IsBacklogged A D (Set.Ioc s t)) :
-    D.1 s + (beta (r - s) + beta (t - r)) ≤ D.1 t := by
-  have b1 : D.1 s + beta (r - s) ≤ D.1 r :=
+    D.val s + (beta (r - s) + beta (t - r)) ≤ D.val t := by
+  have b1 : D.val s + beta (r - s) ≤ D.val r :=
     hβ A D hp s r hsr
       (hbl.subset (Set.Ioc_subset_Ioc_right hrt))
-  have b2 : D.1 r + beta (t - r) ≤ D.1 t :=
+  have b2 : D.val r + beta (t - r) ≤ D.val t :=
     hβ A D hp r t hrt
       (hbl.subset (Set.Ioc_subset_Ioc_left hsr))
-  calc D.1 s + (beta (r - s) + beta (t - r))
-      = (D.1 s + beta (r - s)) + beta (t - r) := by
+  calc D.val s + (beta (r - s) + beta (t - r))
+      = (D.val s + beta (r - s)) + beta (t - r) := by
         ring
-    _ ≤ D.1 r + beta (t - r) := by gcongr
-    _ ≤ D.1 t := b2
+    _ ≤ D.val r + beta (t - r) := by gcongr
+    _ ≤ D.val t := b2
 
 /-- Strict service is preserved by the non-decreasing closure `ndClosure`. -/
 theorem offersStrictService_ndClosure
@@ -285,7 +337,7 @@ theorem offersStrictService_ndClosure
     (hβ : OffersStrictService beta S) :
     OffersStrictService (ndClosure beta) S := by
   intro A D hp s t hst hbl
-  show D.1 s + ndClosure beta (t - s) ≤ D.1 t
+  show D.val s + ndClosure beta (t - s) ≤ D.val t
   unfold ndClosure
   refine add_ciSup_le _ _ _ (fun q => ?_)
   obtain ⟨u, (hu : u ≤ t - s)⟩ := q
@@ -318,7 +370,7 @@ theorem offersStrictService_maxConvProj
     (hβ : OffersStrictService beta S) :
     OffersStrictService (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
-  show D.1 s + maxConvProj beta beta (t - s) ≤ D.1 t
+  show D.val s + maxConvProj beta beta (t - s) ≤ D.val t
   refine add_maxConvProj_le _ _ _ _ (fun q => ?_)
   obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
   have hsum : s + (a + b) = t := by
@@ -352,7 +404,7 @@ theorem offersStrictService_superAdditiveClosureMax
     (hβ : OffersStrictService beta S) :
     OffersStrictService (superAdditiveClosureMax beta) S := by
   intro A D hp s t hst hbl
-  show D.1 s + superAdditiveClosureMax beta (t - s) ≤ D.1 t
+  show D.val s + superAdditiveClosureMax beta (t - s) ≤ D.val t
   unfold superAdditiveClosureMax
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
@@ -375,7 +427,7 @@ theorem offersStrictService_superAdditiveClosureMax_iff
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
   conv D sigma ≤ D
 
-/-- Arrival-curve constraint, kernelized: `D u ⊗ sigma s ≼ D t` for `u+s=t`. -/
+/-- Arrival-curve constraint, kernelized: `D.val u ⊗ sigma s ≼ D.val t` for `u+s=t`. -/
 theorem allowsArrivalCurve_iff_kernel
     (D sigma : Fmin) :
     AllowsArrivalCurve D sigma ↔
@@ -398,7 +450,7 @@ theorem allowsArrivalCurve_iff_kernel
 
 /-- `S` is a shaper for `sigma`: every output allows arrival curve `sigma`. -/
 def IsShaper (S : Server) (sigma : Fmin) : Prop :=
-  ∀ p ∈ S.1, AllowsArrivalCurve (↑p.2 : Fmin) sigma
+  ∀ p ∈ S.val, AllowsArrivalCurve (↑p.2 : Fmin) sigma
 
 /-- Largest causal relation that shapes outputs to arrival curve `sigma`. -/
 def shaperRel (sigma : Fmin) : Set (Curve × Curve) :=
@@ -423,7 +475,7 @@ def shaperServer (sigma : Fmin)
 /-- `S ⊆ shaperRel sigma` iff `S` is a shaper for `sigma`. -/
 theorem subset_shaperRel_iff
     {S : Server} {sigma : Fmin} :
-    (∀ p ∈ S.1, p ∈ shaperRel sigma) ↔
+    (∀ p ∈ S.val, p ∈ shaperRel sigma) ↔
       IsShaper S sigma := by
   constructor
   · intro h p hp
@@ -510,7 +562,7 @@ theorem allowsArrivalCurve_closure_iff
     intro n
     exact kernel_convPow_of_allows h n u s t hus
 
-/-- A shaper for `sigma` equals one for its closure: `shaperRel sigma = shaperRel sigma⋆`. -/
+/-- A.val shaper for `sigma` equals one for its closure: `shaperRel sigma = shaperRel sigma⋆`. -/
 theorem shaperRel_closure
     (sigma : Fmin) :
     shaperRel sigma = shaperRel sigma⋆ := by
@@ -525,7 +577,7 @@ theorem shaperRel_closure
       (allowsArrivalCurve_closure_iff
         (↑p.2 : Fmin) sigma).1 hp.2⟩
 
-/-- A shaper for `sigma` is also a shaper for `sigma⋆`. -/
+/-- A.val shaper for `sigma` is also a shaper for `sigma⋆`. -/
 theorem IsShaper.closure
     {S : Server} {sigma : Fmin}
     (hS : IsShaper S sigma) :
@@ -545,7 +597,7 @@ example
     IsShaper S sigma⋆ :=
   IsShaper.closure hS
 
-/-- A shaper for `sigma` is a shaper for any smaller `sigma' ≤ sigma`. -/
+/-- A.val shaper for `sigma` is a shaper for any smaller `sigma' ≤ sigma`. -/
 theorem IsShaper.of_le
     {S : Server}
     {sigma sigma' : Fmin}
@@ -582,7 +634,7 @@ example
 /-- `S` is a greedy shaper for `sigma`: every output is `A ∗ sigma`. -/
 def IsGreedyShaper
     (S : Server) (sigma : Fmin) : Prop :=
-  ∀ p ∈ S.1, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
+  ∀ p ∈ S.val, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
 
 /-- If `sigma 0 = eₒ` then `A ≼ A ∗ sigma` in the dioid order. -/
 theorem self_le_conv_of_zeroAtOrigin
@@ -625,14 +677,14 @@ def greedyShaper
 theorem isGreedyShaper_iff_subset
     {S : Server} {sigma : Fmin} :
     IsGreedyShaper S sigma ↔
-      ∀ p ∈ S.1, p ∈ greedyRel sigma :=
+      ∀ p ∈ S.val, p ∈ greedyRel sigma :=
   Iff.rfl
 
 /-- `sigma` is sub-additive: `sigma u ⊗ sigma s ≼ sigma (u + s)`. -/
 def IsSubadditiveF (sigma : Fmin) : Prop :=
   ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
 
-/-- A sub-additive `sigma` allows itself as an arrival curve. -/
+/-- A.val sub-additive `sigma` allows itself as an arrival curve. -/
 theorem allowsArrivalCurve_self_of_subadd
     {sigma : Fmin} (hsub : IsSubadditiveF sigma) :
     AllowsArrivalCurve sigma sigma := by
@@ -653,7 +705,7 @@ theorem allowsArrivalCurve_conv_of_subadd
   rw [conv_assoc]
   exact h
 
-/-- A greedy shaper for sub-additive `sigma` is a shaper for `sigma`. -/
+/-- A.val greedy shaper for sub-additive `sigma` is a shaper for `sigma`. -/
 theorem IsGreedyShaper.isShaper
     {S : Server} {sigma : Fmin}
     (hsub : IsSubadditiveF sigma)
