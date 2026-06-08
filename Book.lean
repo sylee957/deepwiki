@@ -20,6 +20,8 @@ import Book.RealCurvesDeviations
 import Book.PseudoInverse
 import Book.PseudoInverseCatalog
 import Book.ConvolutionMinimum
+import Book.MinPlusExtTopology
+import Book.ConvolutionMinimumExt
 import Book.Servers
 import Book.RealConvolution
 import Book.Shapers

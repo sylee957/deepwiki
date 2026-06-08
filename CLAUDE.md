@@ -136,6 +136,38 @@ All declarations live in `namespace DeepWiki`.
 - Treat all linter warnings (unused variables, deprecations) as errors; the build
   must be warning-free and `sorry`-free.
 
+## Style preferences
+
+How declarations should be shaped (these reflect repeated authoring decisions,
+not just defaults):
+
+- **Calibrated generality.** Generalize a declaration off the concrete carrier
+  when nothing pins it there — but to the *weakest **bundled** typeclass that
+  fits*, not a long list of atomic ones. Prefer `[Semiring V]` /
+  `[CompleteLinearOrder V]` over `[Mul V] [Add V] [Zero V] [Min V] [Top V] …`;
+  add `[Sub V]` etc. only on the declarations whose shape needs it. Never
+  over-strengthen: the carriers (`ℝ≥0`, `ℝ≥0∞`) are idempotent semirings with
+  *truncated* `Sub`, **not** rings — `ℝ≥0∞` has no `Neg`, so `Ring`/`Group`
+  bases don't even instantiate, and ring `-` would give the wrong `(t-T)₊`.
+  Don't add generality nothing uses; a relation/typeclass parameter must earn
+  its place by being instantiated more than once.
+
+- **Name a declaration for what it *is*, not its consumer.** A set of times
+  where `f t ⋈ x` is `levelSet`, not `pseudoInvSet` — even if today only the
+  pseudo-inverse uses it. When a notion becomes standalone, give it its own
+  file/name rather than leaving it coupled to a caller. Keep naming *families*
+  uniform: Mathlib's `conclusion_of_hypothesis` order, and one consistent term
+  for the same object across a related group (e.g. `apply` for `f t` across the
+  four `*_of_*` inversion lemmas).
+
+- **Definitions split from proofs; share one definition via base + abbrev.**
+  Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
+  file (`CurveRegularity`). When the same curve/notion lives over two carriers,
+  define it *once* over a polymorphic base and specialize with `abbrev`s (the
+  `delay` → `delayNN`/`delayE` pattern), rather than duplicating bodies; bridge
+  the variants with `*_coe` agreement lemmas where they are only propositionally
+  (not defeq) equal.
+
 ## Workflow conventions
 
 - Verify before claiming done: build the affected chapter, then `lake build`, and for
