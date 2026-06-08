@@ -15,13 +15,9 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
-/-- The refined maximal arrival curve `ηᵘ = αᵘ ⊘̄ αˡ` (max-plus deconvolution). -/
-noncomputable def etaMax (αu αl : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  maxDeconv αu αl
-
-/-- The refined minimal arrival curve `ηˡ = αˡ ⊘ αᵘ` (min-plus deconvolution). -/
-noncomputable def etaMin (αu αl : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  minDeconv αl αu
+/-! The refined maximal arrival curve is `ηᵘ = αᵘ ⊘̄ αˡ = maxDeconv αu αl` and the
+refined minimal one is `ηˡ = αˡ ⊘ αᵘ = minDeconv αl αu`; these deconvolutions are
+written inline throughout (note the argument swap in `ηˡ`). -/
 
 /-- Cross subtraction bound on `ℝ≥0`: `a + b ≤ c + d` gives `a - c ≤ d - b`. -/
 private theorem tsub_le_tsub_of_add_le {a b c d : ℝ≥0}
@@ -46,7 +42,7 @@ shift `v`, hence `A (t+d) ≤ A t + ηᵘ d`. -/
 theorem isMaximalArrivalCurve_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) :
-    IsMaximalArrivalCurve A (etaMax αu αl) := by
+    IsMaximalArrivalCurve A (maxDeconv αu αl) := by
   rw [isMaximalArrivalCurve_iff_increment] at hu
   rw [isMinimalArrivalCurve_iff_increment_of_monotone A αl hAmono hlmono] at hl
   rw [isMaximalArrivalCurve_iff_increment]
@@ -71,10 +67,10 @@ shift `v`, hence `A t + ηˡ d ≤ A (t+d)`. -/
 theorem isMinimalArrivalCurve_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) :
-    IsMinimalArrivalCurve A (etaMin αu αl) := by
+    IsMinimalArrivalCurve A (minDeconv αl αu) := by
   rw [isMaximalArrivalCurve_iff_increment] at hu
   rw [isMinimalArrivalCurve_iff_increment_of_monotone A αl hAmono hlmono] at hl
-  refine isMinimalArrivalCurve_of_increment A (etaMin αu αl) (fun t d => ?_)
+  refine isMinimalArrivalCurve_of_increment A (minDeconv αl αu) (fun t d => ?_)
   -- `ηˡ d = ⨆_v αˡ (d+v) - αᵘ v`; bound `A t + that ⨆ ≤ A (t+d)`
   show A t + minDeconv αl αu d ≤ A (t + d)
   -- the supremum is `≤ A (t+d) - A t`, each term via the chain
@@ -113,7 +109,7 @@ supremum defining `ηˡ 0` is `0`. -/
 theorem etaMin_zero {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) :
-    etaMin αu αl 0 = 0 := by
+    minDeconv αl αu 0 = 0 := by
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
   show minDeconv αl αu 0 = 0
   unfold minDeconv
@@ -127,7 +123,7 @@ theorem etaMax_zero {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    etaMax αu αl 0 = 0 := by
+    maxDeconv αu αl 0 = 0 := by
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
   show maxDeconv αu αl 0 = 0
   unfold maxDeconv
@@ -143,10 +139,10 @@ defining infimum is `ηᵘ t - ηˡ 0 = ηᵘ t`. -/
 theorem maxDeconv_etaMax_etaMin_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) :
-    maxDeconv (etaMax αu αl) (etaMin αu αl) ≤ etaMax αu αl := by
+    maxDeconv (maxDeconv αu αl) (minDeconv αl αu) ≤ maxDeconv αu αl := by
   intro t
-  have h0 : etaMin αu αl 0 = 0 := etaMin_zero hu hl hAmono hlmono
-  show maxDeconv (etaMax αu αl) (etaMin αu αl) t ≤ etaMax αu αl t
+  have h0 : minDeconv αl αu 0 = 0 := etaMin_zero hu hl hAmono hlmono
+  show maxDeconv (maxDeconv αu αl) (minDeconv αl αu) t ≤ maxDeconv αu αl t
   unfold maxDeconv
   refine ciInf_le_of_le (OrderBot.bddBelow _) 0 ?_
   rw [h0, tsub_zero, add_zero]
@@ -198,24 +194,24 @@ theorem le_maxDeconv_etaMax_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
-    etaMax αu αl ≤ maxDeconv (etaMax αu αl) (etaMin αu αl) := by
+    maxDeconv αu αl ≤ maxDeconv (maxDeconv αu αl) (minDeconv αl αu) := by
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
   intro t
-  show etaMax αu αl t ≤ ⨅ u : ℝ≥0, etaMax αu αl (t + u) - etaMin αu αl u
+  show maxDeconv αu αl t ≤ ⨅ u : ℝ≥0, maxDeconv αu αl (t + u) - minDeconv αl αu u
   refine le_ciInf (fun u => ?_)
   -- `ηᵘ t`-bound at every witness `z`
-  have hηt : ∀ z : ℝ≥0, etaMax αu αl t ≤ αu (t + z) - αl z := fun z =>
+  have hηt : ∀ z : ℝ≥0, maxDeconv αu αl t ≤ αu (t + z) - αl z := fun z =>
     ciInf_le (OrderBot.bddBelow _) z
   -- per-`(v, w)` core bound
   have hterm : ∀ v w : ℝ≥0,
-      etaMax αu αl t + (αl (u + w) - αu w) ≤ αu (t + u + v) - αl v := fun v w =>
+      maxDeconv αu αl t + (αl (u + w) - αu w) ≤ αu (t + u + v) - αl v := fun v w =>
     etaMax_fixpoint_term hsub hsup hle humono hηt
   -- `ηᵘ t + ηˡ u ≤ ηᵘ (t+u)`, hence `ηᵘ t ≤ ηᵘ (t+u) - ηˡ u`
-  have hmain : etaMax αu αl t + etaMin αu αl u ≤ etaMax αu αl (t + u) := by
+  have hmain : maxDeconv αu αl t + minDeconv αl αu u ≤ maxDeconv αu αl (t + u) := by
     -- push the `⨆` of `ηˡ u` over the `+`, bound each term by the `⨅` of `ηᵘ (t+u)`
-    show etaMax αu αl t + (⨆ w : ℝ≥0, αl (u + w) - αu w) ≤ etaMax αu αl (t + u)
+    show maxDeconv αu αl t + (⨆ w : ℝ≥0, αl (u + w) - αu w) ≤ maxDeconv αu αl (t + u)
     refine add_ciSup_le _ _ _ (fun w => ?_)
-    show etaMax αu αl t + (αl (u + w) - αu w) ≤ ⨅ v : ℝ≥0, αu (t + u + v) - αl v
+    show maxDeconv αu αl t + (αl (u + w) - αu w) ≤ ⨅ v : ℝ≥0, αu (t + u + v) - αl v
     exact le_ciInf (fun v => hterm v w)
   -- conclude `ηᵘ t ≤ ηᵘ (t+u) - ηˡ u`
   exact le_tsub_of_add_le_right hmain
@@ -228,7 +224,7 @@ theorem etaMax_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
-    etaMax αu αl = maxDeconv (etaMax αu αl) (etaMin αu αl) :=
+    maxDeconv αu αl = maxDeconv (maxDeconv αu αl) (minDeconv αl αu) :=
   le_antisymm
     (le_maxDeconv_etaMax_etaMin hu hl hAmono hlmono humono hsub hsup)
     (maxDeconv_etaMax_etaMin_le hu hl hAmono hlmono)
@@ -279,25 +275,25 @@ theorem minDeconv_etaMin_etaMax_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
-    minDeconv (etaMin αu αl) (etaMax αu αl) ≤ etaMin αu αl := by
+    minDeconv (minDeconv αl αu) (maxDeconv αu αl) ≤ minDeconv αl αu := by
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
   intro t
-  show (⨆ u : ℝ≥0, etaMin αu αl (t + u) - etaMax αu αl u) ≤ etaMin αu αl t
+  show (⨆ u : ℝ≥0, minDeconv αl αu (t + u) - maxDeconv αu αl u) ≤ minDeconv αl αu t
   refine ciSup_le (fun u => ?_)
   -- `ηˡ (t+u) - ηᵘ u ≤ ηˡ t` ⟸ `ηˡ (t+u) ≤ ηˡ t + ηᵘ u`
   refine tsub_le_iff_right.mpr ?_
   -- `ηˡ (t+u) = ⨆_v αˡ (t+u+v) - αᵘ v`; bound each `v`-term
-  show (⨆ v : ℝ≥0, αl (t + u + v) - αu v) ≤ etaMin αu αl t + etaMax αu αl u
+  show (⨆ v : ℝ≥0, αl (t + u + v) - αu v) ≤ minDeconv αl αu t + maxDeconv αu αl u
   refine ciSup_le (fun v => ?_)
   -- `αˡ`-witness term lower-bounds `ηˡ t = ⨆_z αˡ (t+z) - αᵘ z`
-  have hηt : ∀ z : ℝ≥0, αl (t + z) - αu z ≤ etaMin αu αl t := fun z =>
+  have hηt : ∀ z : ℝ≥0, αl (t + z) - αu z ≤ minDeconv αl αu t := fun z =>
     le_ciSup_of_le (bddAbove_etaMin_sup hsub hle t) z le_rfl
   -- per-`w` core bound, with `ηᵘ u = ⨅_w αᵘ (u+w) - αˡ w` still to push out
   have key : ∀ w : ℝ≥0,
-      αl (t + u + v) - αu v ≤ etaMin αu αl t + (αu (u + w) - αl w) := fun w =>
+      αl (t + u + v) - αu v ≤ minDeconv αl αu t + (αu (u + w) - αl w) := fun w =>
     etaMin_fixpoint_term hsub hsup hle humono (hηt (u + v + w))
   -- `X ≤ ηˡ t + ⨅_w f w`: shift `ηˡ t` across and use `le_ciInf`
-  show αl (t + u + v) - αu v ≤ etaMin αu αl t + ⨅ w : ℝ≥0, αu (u + w) - αl w
+  show αl (t + u + v) - αu v ≤ minDeconv αl αu t + ⨅ w : ℝ≥0, αu (u + w) - αl w
   -- `X ≤ ηˡ t + ⨅_w f w` ⟸ `X - ηˡ t ≤ ⨅_w f w` ⟸ `∀ w, X - ηˡ t ≤ f w`
   refine tsub_le_iff_left.mp (le_ciInf (fun w => ?_))
   exact tsub_le_iff_left.mpr (key w)
@@ -311,7 +307,7 @@ theorem etaMin_le_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
-    etaMin αu αl ≤ etaMax αu αl := by
+    minDeconv αl αu ≤ maxDeconv αu αl := by
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
   intro t
   show (⨆ z : ℝ≥0, αl (t + z) - αu z) ≤ ⨅ w : ℝ≥0, αu (t + w) - αl w
@@ -349,7 +345,7 @@ theorem le_ciInf_add_ciInf {c : ℝ≥0} {G H : ℝ≥0 → ℝ≥0}
 theorem isSubadditive_etaMax {αu αl : ℝ≥0 → ℝ≥0}
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hle : αl ≤ αu) (humono : Monotone αu) :
-    IsSubadditive (etaMax αu αl) := by
+    IsSubadditive (maxDeconv αu αl) := by
   intro u s
   show (⨅ z : ℝ≥0, αu (u + s + z) - αl z)
       ≤ (⨅ a : ℝ≥0, αu (u + a) - αl a) + ⨅ b : ℝ≥0, αu (s + b) - αl b
@@ -377,15 +373,15 @@ is sub-additive and `ηˡ ≤ ηᵘ`: `ηˡ (s+u) - ηᵘ u ≤ ηᵘ (s+u) - η
 conditions are derivable (`isSubadditive_etaMax`, `etaMin_le_etaMax`), so this
 needs no sub-additivity assumption on `ηˡ`. -/
 theorem bddAbove_minDeconv_etaMin_etaMax {αu αl : ℝ≥0 → ℝ≥0}
-    (hsubU : IsSubadditive (etaMax αu αl)) (hETle : etaMin αu αl ≤ etaMax αu αl)
+    (hsubU : IsSubadditive (maxDeconv αu αl)) (hETle : minDeconv αl αu ≤ maxDeconv αu αl)
     (s : ℝ≥0) :
     BddAbove (Set.range (fun u : ℝ≥0 =>
-      etaMin αu αl (s + u) - etaMax αu αl u)) := by
-  refine ⟨etaMax αu αl s, ?_⟩
+      minDeconv αl αu (s + u) - maxDeconv αu αl u)) := by
+  refine ⟨maxDeconv αu αl s, ?_⟩
   rintro x ⟨u, rfl⟩
-  calc etaMin αu αl (s + u) - etaMax αu αl u
-      ≤ etaMax αu αl (s + u) - etaMax αu αl u := by gcongr; exact hETle _
-    _ ≤ etaMax αu αl s := tsub_le_iff_right.mpr (hsubU s u)
+  calc minDeconv αl αu (s + u) - maxDeconv αu αl u
+      ≤ maxDeconv αu αl (s + u) - maxDeconv αu αl u := by gcongr; exact hETle _
+    _ ≤ maxDeconv αu αl s := tsub_le_iff_right.mpr (hsubU s u)
 
 /-- The easy minimal fixpoint inequality `ηˡ ≤ ηˡ ⊘ ηᵘ`: the `u = 0` term of the
 defining supremum is `ηˡ t - ηᵘ 0 = ηˡ t` (using `ηᵘ 0 = 0`). The supremum is
@@ -395,13 +391,13 @@ theorem le_minDeconv_etaMin_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
-    (hETle : etaMin αu αl ≤ etaMax αu αl) :
-    etaMin αu αl ≤ minDeconv (etaMin αu αl) (etaMax αu αl) := by
+    (hETle : minDeconv αl αu ≤ maxDeconv αu αl) :
+    minDeconv αl αu ≤ minDeconv (minDeconv αl αu) (maxDeconv αu αl) := by
   intro t
   have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
-  have hsubU : IsSubadditive (etaMax αu αl) := isSubadditive_etaMax hsub hsup hle humono
-  have h0 : etaMax αu αl 0 = 0 := etaMax_zero hu hl hAmono hlmono hu0 hl0
-  show etaMin αu αl t ≤ ⨆ u : ℝ≥0, etaMin αu αl (t + u) - etaMax αu αl u
+  have hsubU : IsSubadditive (maxDeconv αu αl) := isSubadditive_etaMax hsub hsup hle humono
+  have h0 : maxDeconv αu αl 0 = 0 := etaMax_zero hu hl hAmono hlmono hu0 hl0
+  show minDeconv αl αu t ≤ ⨆ u : ℝ≥0, minDeconv αl αu (t + u) - maxDeconv αu αl u
   refine le_ciSup_of_le (bddAbove_minDeconv_etaMin_etaMax hsubU hETle t) 0 ?_
   rw [h0, tsub_zero, add_zero]
 
@@ -415,7 +411,7 @@ theorem etaMin_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    etaMin αu αl = minDeconv (etaMin αu αl) (etaMax αu αl) :=
+    minDeconv αl αu = minDeconv (minDeconv αl αu) (maxDeconv αu αl) :=
   have hETle := etaMin_le_etaMax hu hl hAmono hlmono humono hsub hsup
   le_antisymm
     (le_minDeconv_etaMin_etaMax hu hl hAmono hlmono humono hsub hsup hu0 hl0 hETle)
@@ -445,26 +441,26 @@ noncomputable def etaSeqMax (αu αl : ℝ≥0 → ℝ≥0) (n : ℕ) : ℝ≥0 
 noncomputable def etaSeqMin (αu αl : ℝ≥0 → ℝ≥0) (n : ℕ) : ℝ≥0 → ℝ≥0 :=
   (etaSeq αu αl n).2
 
-/-- The first iterate equals the one-step refinement `(ηᵘ, ηˡ) = (etaMax, etaMin)`:
+/-- The first iterate is the one-step refinement `(ηᵘ, ηˡ)`:
 `η₁ᵘ = αᵘ ⊘̄ αˡ` and `η₁ˡ = αˡ ⊘ αᵘ`. -/
 theorem etaSeq_one (αu αl : ℝ≥0 → ℝ≥0) :
-    etaSeq αu αl 1 = (etaMax αu αl, etaMin αu αl) := rfl
+    etaSeq αu αl 1 = (maxDeconv αu αl, minDeconv αl αu) := rfl
 
-/-- The refined pair `(etaMax, etaMin)` is a fixed point of `refineStep`: combining
+/-- The refined pair `(ηᵘ, ηˡ)` is a fixed point of `refineStep`: combining
 the maximal and minimal one-step fixpoints `ηᵘ = ηᵘ ⊘̄ ηˡ` and `ηˡ = ηˡ ⊘ ηᵘ`. -/
 theorem refineStep_eta_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    refineStep (etaMax αu αl, etaMin αu αl) = (etaMax αu αl, etaMin αu αl) := by
+    refineStep (maxDeconv αu αl, minDeconv αl αu) = (maxDeconv αu αl, minDeconv αl αu) := by
   unfold refineStep
   refine Prod.ext ?_ ?_
   · exact (etaMax_fixpoint hu hl hAmono hlmono humono hsub hsup).symm
   · exact (etaMin_fixpoint hu hl hAmono hlmono humono hsub hsup hu0 hl0).symm
 
 /-- The refinement sequence stabilizes after one step: for every `i ≥ 1`,
-`(ηᵢᵘ, ηᵢˡ) = (etaMax αu αl, etaMin αu αl)`. The first step reaches the refined
+`(ηᵢᵘ, ηᵢˡ) = (maxDeconv αu αl, minDeconv αl αu)`. The first step reaches the refined
 pair, which `refineStep_eta_fixpoint` shows is fixed, so the iteration converges
 to the fixpoint immediately and stays there. -/
 theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
@@ -472,7 +468,7 @@ theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    ∀ n, 1 ≤ n → etaSeq αu αl n = (etaMax αu αl, etaMin αu αl) := by
+    ∀ n, 1 ≤ n → etaSeq αu αl n = (maxDeconv αu αl, minDeconv αl αu) := by
   intro n hn
   induction n with
   | zero => exact absurd hn (by norm_num)
@@ -483,23 +479,23 @@ theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
       rw [ih hk]
       exact refineStep_eta_fixpoint hu hl hAmono hlmono humono hsub hsup hu0 hl0
 
-/-- The maximal iterate converges: `ηᵢᵘ = etaMax αu αl` for all `i ≥ 1`. -/
+/-- The maximal iterate converges: `ηᵢᵘ = maxDeconv αu αl` for all `i ≥ 1`. -/
 theorem etaSeqMax_eq_etaMax_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) (n : ℕ) (hn : 1 ≤ n) :
-    etaSeqMax αu αl n = etaMax αu αl :=
+    etaSeqMax αu αl n = maxDeconv αu αl :=
   congrArg Prod.fst
     (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 n hn)
 
-/-- The minimal iterate converges: `ηᵢˡ = etaMin αu αl` for all `i ≥ 1`. -/
+/-- The minimal iterate converges: `ηᵢˡ = minDeconv αl αu` for all `i ≥ 1`. -/
 theorem etaSeqMin_eq_etaMin_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) (n : ℕ) (hn : 1 ≤ n) :
-    etaSeqMin αu αl n = etaMin αu αl :=
+    etaSeqMin αu αl n = minDeconv αl αu :=
   congrArg Prod.snd
     (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 n hn)
 
@@ -508,16 +504,15 @@ eventually constant): there is an index `N` past which every term equals `L`. -/
 def Converges {X : Type*} (s : ℕ → X) (L : X) : Prop :=
   ∃ N, ∀ n, N ≤ n → s n = L
 
-/-- The refinement tuple sequence converges to `(ηᵘ, ηˡ) = (etaMax αu αl,
-etaMin αu αl)`: it is constant from index `1` on, so `(etaMax, etaMin)` is its
-limit. Both components converge simultaneously, packaged as one statement on the
-pair. -/
+/-- The refinement tuple sequence converges to `(ηᵘ, ηˡ) = (maxDeconv αu αl,
+minDeconv αl αu)`: it is constant from index `1` on, so `(ηᵘ, ηˡ)` is its limit.
+Both components converge simultaneously, packaged as one statement on the pair. -/
 theorem converges_etaSeq {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    Converges (etaSeq αu αl) (etaMax αu αl, etaMin αu αl) :=
+    Converges (etaSeq αu αl) (maxDeconv αu αl, minDeconv αl αu) :=
   ⟨1, etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0⟩
 
 end DeepWiki
