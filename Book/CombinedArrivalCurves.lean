@@ -300,6 +300,36 @@ theorem minDeconv_etaMin_etaMax_le {A αu αl : ℝ≥0 → ℝ≥0}
   refine tsub_le_iff_left.mp (le_ciInf (fun w => ?_))
   exact tsub_le_iff_left.mpr (key w)
 
+/-- The refined minimal curve is below the refined maximal one, `ηˡ ≤ ηᵘ`: for
+each `t, z, w`, `αˡ (t+z) - αᵘ z ≤ αᵘ (t+w) - αˡ w` via the chain `αˡ (t+z) + αˡ w
+≤ αˡ (t+w+z) ≤ αᵘ (t+w+z) ≤ αᵘ (t+w) + αᵘ z`, so `⨆_z ⋯ ≤ ⨅_w ⋯`. This is the
+book's `ηᵘ ≥ ηˡ` hypothesis — automatic once `αᵘ` is sub-additive and `αˡ` is
+super-additive with `αˡ ≤ αᵘ`, so it need not be assumed for the fixpoint. -/
+theorem etaMin_le_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl) :
+    etaMin αu αl ≤ etaMax αu αl := by
+  have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
+  intro t
+  show (⨆ z : ℝ≥0, αl (t + z) - αu z) ≤ ⨅ w : ℝ≥0, αu (t + w) - αl w
+  refine ciSup_le (fun z => ?_)
+  refine le_ciInf (fun w => ?_)
+  rcases le_total (αu z) (αl (t + z)) with hz | hz
+  · rw [← NNReal.coe_le_coe, NNReal.coe_sub hz]
+    have hlw : αl w ≤ αu (t + w) := le_trans (hle w) (humono le_add_self)
+    push_cast [NNReal.coe_sub hlw]
+    have h1 : (αl (t + z) : ℝ) + αl w ≤ αl (t + w + z) := by
+      have := hsup (t + z) w
+      rw [show (t + z) + w = t + w + z by ring, ← NNReal.coe_le_coe] at this
+      push_cast at this; linarith
+    have h2 : (αu (t + w + z) : ℝ) ≤ αu (t + w) + αu z := by
+      have := hsub (t + w) z; rw [← NNReal.coe_le_coe] at this
+      push_cast at this; linarith
+    have h3 : (αl (t + w + z) : ℝ) ≤ αu (t + w + z) := by exact_mod_cast hle _
+    linarith
+  · rw [tsub_eq_zero_of_le hz]; exact zero_le'
+
 /-- The supremum defining `ηˡ ⊘ ηᵘ` at `s` is bounded above by `ηˡ s` when `ηˡ`
 is sub-additive and `ηˡ ≤ ηᵘ`: `ηˡ (s+u) - ηᵘ u ≤ (ηˡ s + ηˡ u) - ηᵘ u ≤ ηˡ s`. -/
 theorem bddAbove_minDeconv_etaMin_etaMax {αu αl : ℝ≥0 → ℝ≥0}
@@ -332,16 +362,17 @@ theorem le_minDeconv_etaMin_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
   rw [h0, tsub_zero, add_zero]
 
 /-- One-step fixpoint of the minimal refinement: under `αᵘ` sub-additive, `αˡ`
-super-additive, `αˡ ≤ αᵘ`, `αᵘ` monotone, `αᵘ 0 = αˡ 0 = 0`, and the book's
-`ηˡ ≤ ηᵘ` with `ηˡ` sub-additive (which make the `ℝ≥0` supremum well-defined),
-`ηˡ = ηˡ ⊘ ηᵘ`. -/
+super-additive, `αˡ ≤ αᵘ`, `αᵘ` monotone, `αᵘ 0 = αˡ 0 = 0`, and `ηˡ`
+sub-additive, `ηˡ = ηˡ ⊘ ηᵘ`. The book's `ηˡ ≤ ηᵘ` condition is derived here via
+`etaMin_le_etaMax`, so it need not be assumed. -/
 theorem etaMin_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0)
-    (hsubE : IsSubadditive (etaMin αu αl)) (hETle : etaMin αu αl ≤ etaMax αu αl) :
+    (hsubE : IsSubadditive (etaMin αu αl)) :
     etaMin αu αl = minDeconv (etaMin αu αl) (etaMax αu αl) :=
+  have hETle := etaMin_le_etaMax hu hl hAmono hlmono humono hsub hsup
   le_antisymm
     (le_minDeconv_etaMin_etaMax hu hl hAmono hlmono hu0 hl0 hsubE hETle)
     (minDeconv_etaMin_etaMax_le hu hl hAmono hlmono humono hsub hsup)
