@@ -24,6 +24,7 @@ import Book.MinPlusExtTopology
 import Book.MaxPlusExtTopology
 import Book.ConvolutionMinimumExt
 import Book.ConvolutionMinimumRC
+import Book.ConvolutionContinuity
 import Book.Servers
 import Book.RealConvolution
 import Book.Shapers
