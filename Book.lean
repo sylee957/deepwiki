@@ -21,7 +21,9 @@ import Book.PseudoInverse
 import Book.PseudoInverseCatalog
 import Book.ConvolutionMinimum
 import Book.MinPlusExtTopology
+import Book.MaxPlusExtTopology
 import Book.ConvolutionMinimumExt
+import Book.ConvolutionMinimumRC
 import Book.Servers
 import Book.RealConvolution
 import Book.Shapers

@@ -116,6 +116,21 @@ All declarations live in `namespace DeepWiki`.
    The builder supplies them in closed form (idempotent: `n • a = a` for `n ≥ 1`)
    rather than via `nsmulRec`/`Nat.unaryCast`.
 
+4. **Carrier/analysis boundary: dioid ALGEBRA stays on the WithTop/WithBot carriers;
+   real ANALYSIS routes through `toEReal` (extends gotcha #2).** The two-sided extended
+   carriers — `MinPlusExt` over `WithTop (WithBot ℝ)` (top-absorbing) and its dual
+   `MaxPlusExt` over `WithBot (WithTop ℝ)` (bot-absorbing) — must keep their *absorbing*
+   addition: that is exactly what makes `𝟘` absorbing and `mul_zero` hold. `EReal` has the
+   opposite convention on one side (`(+∞)+(−∞) = −∞`) and is **not** a dioid under it, so
+   do **not** "naturally" swap a carrier to `EReal` to borrow its topology — it silently
+   breaks `mul_zero`. Instead, keep the algebra on the WithTop/WithBot carrier and do all
+   *analysis* (limits, continuity, lsc, convolution-minimum) on `EReal` via the `toEReal`
+   cast (`Book/MinPlusExtTopology.lean`, and the max dual). The cast agrees with the dioid
+   `+` *exactly* on the open `AddDefined` region (no `(+∞)+(−∞)` collision), so add an
+   `AddDefined` hypothesis wherever a proof needs the two additions to coincide. Bridge
+   entry points: `toEReal`, `toEReal_add`, `AddDefinedExt`,
+   `continuousAt_add_of_addDefinedExt`.
+
 ## Docstring conventions
 
 - Every named declaration (`def`/`theorem`/`lemma`/`class`/`structure`/`abbrev`/
