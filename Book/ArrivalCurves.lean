@@ -1,6 +1,7 @@
 import Book.FunctionDioids
 import Book.Continuity
 import Book.RealConvolution
+import Mathlib.Topology.Order.LeftRightLim
 
 /-! # Arrival curves
 For a cumulative function `A` (taken as a plain `ℝ≥0 → ℝ≥0` function), a
@@ -220,37 +221,35 @@ theorem IsMaximalArrivalCurve.subadditiveClosure {A α : ℝ≥0 → ℝ≥0}
   exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
 /-! ## Left-continuous extension of a maximal arrival curve
-The left limit `αₗ x = sSup (α '' Iio x)` of a non-decreasing `α` is again a
-maximal arrival curve when the cumulative function `A` is left-continuous. -/
+The left limit `αₗ x = lim_{y → x⁻} α y` of a non-decreasing `α` is again a
+maximal arrival curve when the cumulative function `A` is left-continuous. The
+extension is defined as the genuine left limit; for monotone `α` it equals
+`sSup (α '' Iio x)`. -/
 
 open Set Filter Topology
 
-/-- Left limit of `α` at `x`: `sSup (α '' Iio x)`, the supremum of `α` over the
-left interval `Iio x`. For monotone `α` this is `lim_{y → x⁻} α y`. -/
+/-- Left-continuous extension of `α`: the left limit `lim_{y → x⁻} α y`. -/
 noncomputable def alphaLeftLim (α : ℝ≥0 → ℝ≥0) (x : ℝ≥0) : ℝ≥0 :=
-  sSup (α '' Set.Iio x)
+  Function.leftLim α x
 
-/-- For monotone `α`, the family `α '' Iio x` is bounded above by `α x`. -/
-theorem bddAbove_image_Iio_of_monotone {α : ℝ≥0 → ℝ≥0}
-    (hα : Monotone α) (x : ℝ≥0) : BddAbove (α '' Set.Iio x) := by
-  refine ⟨α x, ?_⟩
-  rintro y ⟨z, hz, rfl⟩
-  exact hα (le_of_lt hz)
+/-- For monotone `α` with a nontrivial left neighbourhood at `x` (i.e. `0 < x`),
+the left limit equals the supremum over the left interval:
+`alphaLeftLim α x = sSup (α '' Iio x)`. -/
+theorem alphaLeftLim_eq_sSup_of_monotone {α : ℝ≥0 → ℝ≥0}
+    (hα : Monotone α) {x : ℝ≥0} (hx : 0 < x) :
+    alphaLeftLim α x = sSup (α '' Set.Iio x) :=
+  hα.leftLim_eq_sSup (nhdsLT_neBot_of_exists_lt ⟨0, hx⟩).ne
 
 /-- For monotone `α`, each value `α y` with `y < x` is `≤ alphaLeftLim α x`. -/
 theorem le_alphaLeftLim_of_lt {α : ℝ≥0 → ℝ≥0} (hα : Monotone α)
     {y x : ℝ≥0} (hyx : y < x) : α y ≤ alphaLeftLim α x :=
-  le_csSup (bddAbove_image_Iio_of_monotone hα x) ⟨y, hyx, rfl⟩
+  hα.le_leftLim hyx
 
 /-- The left limit is `≤` the function value: `alphaLeftLim α x ≤ α x` for
-monotone `α` (each `α y`, `y < x`, lies below `α x`). -/
+monotone `α`. -/
 theorem alphaLeftLim_le_self {α : ℝ≥0 → ℝ≥0} (hα : Monotone α)
-    (x : ℝ≥0) : alphaLeftLim α x ≤ α x := by
-  rcases Set.eq_empty_or_nonempty (α '' Set.Iio x) with he | hne
-  · rw [alphaLeftLim, he, csSup_empty]; exact bot_le
-  · refine csSup_le hne ?_
-    rintro y ⟨z, hz, rfl⟩
-    exact hα (le_of_lt hz)
+    (x : ℝ≥0) : alphaLeftLim α x ≤ α x :=
+  hα.leftLim_le (le_refl x)
 
 /-- Left-continuous `A` has `A` as the left limit at each `t`:
 `Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
