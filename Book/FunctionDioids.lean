@@ -1,4 +1,5 @@
 import Book.DioidFunctions
+import Book.SubDioid
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
 /-! # Function dioids

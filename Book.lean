@@ -3,6 +3,7 @@ import Book.LevelSet
 import Book.Dioids
 import Book.Order
 import Book.CompleteDioids
+import Book.SubDioid
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids

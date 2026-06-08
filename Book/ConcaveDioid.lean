@@ -4,6 +4,7 @@ import Book.ClosureEReal
 import Book.Additivity
 import Book.FunctionDioids
 import Book.Dioids
+import Book.SubDioid
 import Book.ConvolutionMinimumExt
 import Mathlib.Data.EReal.Operations
 
@@ -338,40 +339,9 @@ theorem ConcaveE_convUnitEReal : ConcaveE convUnitEReal := by
     conv_rhs => rw [convUnitEReal, if_neg hpt]
     exact le_top
 
-/-! ## Sub-`Dioid` packaging
-A predicate-builder `IsSubDioid` (the `Dioid`-level analogue of
-`IsSubCompleteDioid`, with **no** `iSup` field), and its instantiation on the
-concave non-negative curves. -/
-
-/-- `P` is closed under `⊕ₒ`, `⊗ₒ`, `εₒ`, `eₒ` — a sub-`Dioid` predicate
-(the `Dioid`-level analogue of `IsSubCompleteDioid`, with no `iSup`). -/
-structure IsSubDioid {T : Type*} [Algebra.Dioid T] (P : T → Prop) : Prop where
-  add : ∀ {a b}, P a → P b → P (a ⊕ₒ b)
-  mul : ∀ {a b}, P a → P b → P (a ⊗ₒ b)
-  eps : P εₒ
-  one : P eₒ
-
-/-- `Algebra.Dioid` on the subtype `{x // P x}` of a sub-`Dioid` predicate `P`. -/
-@[reducible] noncomputable def IsSubDioid.toDioid
-    {T : Type*} [Algebra.Dioid T] {P : T → Prop} (h : IsSubDioid P) :
-    Algebra.Dioid {x : T // P x} where
-  add a b := ⟨a.1 ⊕ₒ b.1, h.add a.2 b.2⟩
-  zero := ⟨εₒ, h.eps⟩
-  mul a b := ⟨a.1 ⊗ₒ b.1, h.mul a.2 b.2⟩
-  one := ⟨eₒ, h.one⟩
-  oplus_assoc _ _ _ := Subtype.ext (add_assoc _ _ _)
-  eps_oplus _ := Subtype.ext (zero_add _)
-  oplus_eps _ := Subtype.ext (add_zero _)
-  oplus_comm _ _ := Subtype.ext (add_comm _ _)
-  otimes_assoc _ _ _ := Subtype.ext (mul_assoc _ _ _)
-  one_otimes _ := Subtype.ext (one_mul _)
-  otimes_one _ := Subtype.ext (mul_one _)
-  left_distrib _ _ _ := Subtype.ext (mul_add _ _ _)
-  right_distrib _ _ _ := Subtype.ext (add_mul _ _ _)
-  eps_otimes _ := Subtype.ext (zero_mul _)
-  otimes_eps _ := Subtype.ext (mul_zero _)
-  otimes_comm _ _ := Subtype.ext (mul_comm _ _)
-  oplus_idem _ := Subtype.ext (Algebra.Dioid.oplus_idem _)
+/-! ## The concave sub-`Dioid`
+Instantiating the `IsSubDioid` builder (from `Book.SubDioid`) on the concave
+non-negative curves. -/
 
 /-- The concave non-negative curves are closed under the `ECurve` operations:
 `⊕ₒ` (`ConcaveE.inf`), `⊗ₒ` (`ConcaveE_minConv`), `εₒ = topCurve`
