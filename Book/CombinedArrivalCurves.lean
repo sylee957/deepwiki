@@ -90,4 +90,32 @@ theorem isMinimalArrivalCurve_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
   calc A t + minDeconv αl αu d ≤ A t + (A (t + d) - A t) := by gcongr
     _ = A (t + d) := add_tsub_cancel_of_le (hAmono le_self_add)
 
+/-! ## One-step fixpoint -/
+
+/-- A minimal arrival curve is pointwise below a maximal one for the same `A`:
+`A t + αˡ d ≤ A (t+d) ≤ A t + αᵘ d` cancels to `αˡ d ≤ αᵘ d`. -/
+theorem isMinimalArrivalCurve_le_isMaximalArrivalCurve {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) :
+    αl ≤ αu := by
+  rw [isMaximalArrivalCurve_iff_increment] at hu
+  rw [isMinimalArrivalCurve_iff_increment_of_monotone A αl hAmono hlmono] at hl
+  intro d
+  have h1 : A 0 + αl d ≤ A (0 + d) := hl 0 d
+  have h2 : A (0 + d) ≤ A 0 + αu d := hu 0 d
+  exact le_of_add_le_add_left (le_trans h1 h2)
+
+/-- `ηˡ 0 = 0`: each shift term `αˡ v - αᵘ v` vanishes (`αˡ ≤ αᵘ`), so the
+supremum defining `ηˡ 0` is `0`. -/
+theorem etaMin_zero {A αu αl : ℝ≥0 → ℝ≥0}
+    (hu : IsMaximalArrivalCurve A αu) (hl : IsMinimalArrivalCurve A αl)
+    (hAmono : Monotone A) (hlmono : Monotone αl) :
+    etaMin αu αl 0 = 0 := by
+  have hle := isMinimalArrivalCurve_le_isMaximalArrivalCurve hu hl hAmono hlmono
+  show minDeconv αl αu 0 = 0
+  unfold minDeconv
+  have hz : (fun s : ℝ≥0 => αl (0 + s) - αu s) = fun _ => 0 := by
+    funext s; rw [zero_add, tsub_eq_zero_of_le (hle s)]
+  rw [hz]; exact ciSup_const
+
 end DeepWiki
