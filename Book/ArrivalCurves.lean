@@ -73,24 +73,36 @@ theorem IsMaximalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
   exact hle d
 
 /-- The deconvolution `A ⊘ A` is below every maximal arrival curve: if `α` is a
-maximal arrival curve for `A` then `(A ⊘ A) d ≤ α d` for all `d`. This is the
-"`A ⊘ A` is the best (least) maximal arrival curve" bound. -/
+maximal arrival curve for `A` then `A ⊘ A ≤ α`. This is the "`A ⊘ A` is the best
+(least) maximal arrival curve" bound. -/
 theorem deconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
-    (h : IsMaximalArrivalCurve A α) (d : ℝ≥0) :
-    deconv A A d ≤ α d := by
+    (h : IsMaximalArrivalCurve A α) :
+    deconv A A ≤ α := by
   rw [isMaximalArrivalCurve_iff_increment] at h
+  intro d
   refine ciSup_le (fun s => ?_)
   -- `A (d + s) - A s ≤ α d` since `A (d + s) ≤ A s + α d` (increment at `s, d`)
   rw [tsub_le_iff_right, add_comm d s, add_comm (α d) (A s)]
   exact h s d
 
-/-- When `A ⊘ A` is well-defined (the deconvolution supremum is bounded above),
-it is itself a maximal arrival curve for `A`. Together with
-`deconv_self_le_of_isMaximalArrivalCurve` this makes `A ⊘ A` the least maximal
-arrival curve, and `α ≥ A ⊘ A` an equivalent definition of a maximal curve. -/
+/-- When `A` admits some maximal arrival curve, `A ⊘ A` is itself one. The
+witness `α` bounds the deconvolution supremum (`A ⊘ A ≤ α`), so each increment
+term lies below it. Together with `deconv_self_le_of_isMaximalArrivalCurve` this
+makes `A ⊘ A` the least maximal arrival curve, and `α ≥ A ⊘ A` an equivalent
+definition of a maximal arrival curve. -/
 theorem isMaximalArrivalCurve_deconv_self {A : ℝ≥0 → ℝ≥0}
-    (hbdd : ∀ d : ℝ≥0, BddAbove (Set.range (fun s : ℝ≥0 => A (d + s) - A s))) :
+    (hex : ∃ α : ℝ≥0 → ℝ≥0, IsMaximalArrivalCurve A α) :
     IsMaximalArrivalCurve A (deconv A A) := by
+  obtain ⟨α, hα⟩ := hex
+  -- the witness bounds the deconvolution family above by `α d` at each `d`
+  have hbdd : ∀ d : ℝ≥0,
+      BddAbove (Set.range (fun s : ℝ≥0 => A (d + s) - A s)) := by
+    intro d
+    refine ⟨α d, ?_⟩
+    rintro x ⟨s, rfl⟩
+    rw [isMaximalArrivalCurve_iff_increment] at hα
+    rw [tsub_le_iff_right, add_comm d s, add_comm (α d) (A s)]
+    exact hα s d
   rw [isMaximalArrivalCurve_iff_increment]
   intro t d
   -- `A (t + d) - A t ≤ (A ⊘ A) d`, the `s = t` term of the supremum
