@@ -273,4 +273,51 @@ theorem isMaximalArrivalCurve_leftLim_of_leftContinuous
   -- Pass the closed condition `A s ≤ c` to the limit.
   exact le_of_tendsto hlim hev
 
+/-- Right-continuous `A` has `A` as the right limit at each `t`:
+`Tendsto A (𝓝[>] t) (𝓝 (A t))`. -/
+theorem tendsto_nhdsWithin_Ioi_of_rightContinuous {A : ℝ≥0 → ℝ≥0}
+    (hA : IsRightContinuous A) (t : ℝ≥0) :
+    Tendsto A (𝓝[>] t) (𝓝 (A t)) :=
+  (hA t).tendsto
+
+/-- The left-continuous extension `Function.leftLim α` of a maximal arrival
+curve is maximal also for a right-continuous cumulative function: if `A` is
+right-continuous, `α` non-decreasing, and `α` a maximal arrival curve for `A`,
+then `Function.leftLim α` is one too. -/
+theorem isMaximalArrivalCurve_leftLim_of_rightContinuous
+    {A α : ℝ≥0 → ℝ≥0} (hA : IsRightContinuous A) (hα : Monotone α)
+    (h : IsMaximalArrivalCurve A α) :
+    IsMaximalArrivalCurve A (Function.leftLim α) := by
+  rw [isMaximalArrivalCurve_iff_increment] at h ⊢
+  intro t d
+  -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
+  rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd
+  · rw [← hd, add_zero]; exact le_self_add
+  -- For `s ∈ (t, t + d)` (eventually within `Ioi t`), bound
+  -- `A (t+d) ≤ A s + (leftLim α) d`, then pass `A s → A t` (right limit at `t`).
+  have hlim : Tendsto (fun s => A s + Function.leftLim α d)
+      (𝓝[>] t) (𝓝 (A t + Function.leftLim α d)) :=
+    (tendsto_nhdsWithin_Ioi_of_rightContinuous hA t).add tendsto_const_nhds
+  haveI : (𝓝[>] t).NeBot :=
+    nhdsGT_neBot_of_exists_gt ⟨t + d, lt_add_of_pos_right t hd⟩
+  have hev : ∀ᶠ s in 𝓝[>] t, A (t + d) ≤ A s + Function.leftLim α d := by
+    rw [eventually_nhdsWithin_iff]
+    filter_upwards [Iio_mem_nhds (lt_add_of_pos_right t hd)] with s hslt hts
+    -- `s = t + (s - t)`, write `d' = (t+d) - s < d`, so `α d' ≤ (leftLim α) d`.
+    have hts' : t < s := hts
+    have hsub : s + ((t + d) - s) = t + d :=
+      add_tsub_cancel_of_le (le_of_lt hslt)
+    have hltd : (t + d) - s < d := by
+      rw [tsub_lt_iff_left (le_of_lt hslt)]
+      exact (add_lt_add_iff_right d).mpr hts'
+    -- increment bound at the split `s + ((t+d) - s) = t + d`
+    have key : A (t + d) ≤ A s + α ((t + d) - s) := by
+      have := h s ((t + d) - s)
+      rwa [hsub] at this
+    refine le_trans key ?_
+    gcongr
+    exact hα.le_leftLim hltd
+  -- Pass the closed condition `A (t+d) ≤ A s + c` to the limit `A s → A t`.
+  exact ge_of_tendsto hlim hev
+
 end DeepWiki
