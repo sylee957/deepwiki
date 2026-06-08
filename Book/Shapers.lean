@@ -28,7 +28,7 @@ theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
 /-- `S` offers min-plus service curve `beta`: `beta ∗ A ≤ D`. -/
 def OffersMinPlusService (beta : ℝ≥0 → ℝ≥0) (S : Server) :
     Prop :=
-  ∀ A D : Curve, (A, D) ∈ S → minConvProj A beta ≤ D
+  ∀ A D : Curve, (A, D) ∈ S.1 → minConvProj A beta ≤ D
 
 /-- `S` is a min-plus server for `beta` (offers it as service). -/
 def IsMinPlusServer (beta : ℝ≥0 → ℝ≥0) (S : Server) :
@@ -51,15 +51,13 @@ theorem mem_minPlusServiceRel_iff
 def minPlusServer (beta : ℝ≥0 → ℝ≥0)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ minPlusServiceRel beta) :
-    Server where
-  rel := minPlusServiceRel beta
-  causal _A _D hp := hp.1
-  leftTotal A := htot A
+    Server :=
+  ⟨minPlusServiceRel beta, fun _A _D hp => hp.1, fun A => htot A⟩
 
 /-- `S ⊆ minPlusServiceRel beta` iff `S` offers service `beta`. -/
 theorem subset_minPlusServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
-    (∀ p ∈ S, p ∈ minPlusServiceRel beta) ↔
+    (∀ p ∈ S.1, p ∈ minPlusServiceRel beta) ↔
       OffersMinPlusService beta S := by
   constructor
   · intro h A D hp
@@ -195,7 +193,7 @@ theorem start_const_of_backlogged (A D : Curve)
 /-- `S` offers strict service `beta`: `D s + beta(t-s) ≤ D t` on backlog. -/
 def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
     (S : Server) : Prop :=
-  ∀ A D : Curve, (A, D) ∈ S →
+  ∀ A D : Curve, (A, D) ∈ S.1 →
     ∀ s t, s ≤ t →
       IsBacklogged A D (Set.Ioc s t) →
         D.1 s + beta (t - s) ≤ D.1 t
@@ -211,7 +209,7 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
 /-- `S ⊆ strictServiceRel beta` iff `S` offers strict service `beta`. -/
 theorem subset_strictServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
-    (∀ p ∈ S, p ∈ strictServiceRel beta) ↔
+    (∀ p ∈ S.1, p ∈ strictServiceRel beta) ↔
       OffersStrictService beta S := by
   constructor
   · intro h A D hp
@@ -265,7 +263,7 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
 theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hβ : OffersStrictService beta S)
-    (A D : Curve) (hp : (A, D) ∈ S)
+    (A D : Curve) (hp : (A, D) ∈ S.1)
     {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
     (hbl : IsBacklogged A D (Set.Ioc s t)) :
     D.1 s + (beta (r - s) + beta (t - r)) ≤ D.1 t := by
@@ -400,7 +398,7 @@ theorem allowsArrivalCurve_iff_kernel
 
 /-- `S` is a shaper for `sigma`: every output allows arrival curve `sigma`. -/
 def IsShaper (S : Server) (sigma : Fmin) : Prop :=
-  ∀ p ∈ S, AllowsArrivalCurve (↑p.2 : Fmin) sigma
+  ∀ p ∈ S.1, AllowsArrivalCurve (↑p.2 : Fmin) sigma
 
 /-- Largest causal relation that shapes outputs to arrival curve `sigma`. -/
 def shaperRel (sigma : Fmin) : Set (Curve × Curve) :=
@@ -419,15 +417,13 @@ theorem mem_shaperRel_iff
 def shaperServer (sigma : Fmin)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ shaperRel sigma) :
-    Server where
-  rel := shaperRel sigma
-  causal := fun _A _D hp => hp.1
-  leftTotal A := htot A
+    Server :=
+  ⟨shaperRel sigma, fun _A _D hp => hp.1, fun A => htot A⟩
 
 /-- `S ⊆ shaperRel sigma` iff `S` is a shaper for `sigma`. -/
 theorem subset_shaperRel_iff
     {S : Server} {sigma : Fmin} :
-    (∀ p ∈ S, p ∈ shaperRel sigma) ↔
+    (∀ p ∈ S.1, p ∈ shaperRel sigma) ↔
       IsShaper S sigma := by
   constructor
   · intro h p hp
@@ -586,7 +582,7 @@ example
 /-- `S` is a greedy shaper for `sigma`: every output is `A ∗ sigma`. -/
 def IsGreedyShaper
     (S : Server) (sigma : Fmin) : Prop :=
-  ∀ p ∈ S, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
+  ∀ p ∈ S.1, (↑p.2 : Fmin) = conv (↑p.1 : Fmin) sigma
 
 /-- If `sigma 0 = eₒ` then `A ≼ A ∗ sigma` in the dioid order. -/
 theorem self_le_conv_of_zeroAtOrigin
@@ -618,19 +614,18 @@ def greedyShaper
     (sigma : Fmin) (h0 : sigma 0 = eₒ)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ greedyRel sigma) :
-    Server where
-  rel := greedyRel sigma
-  causal A D hp := by
+    Server :=
+  ⟨greedyRel sigma, fun A D hp => by
     rw [Curve.le_iff_conv]
     rw [(hp : (↑D : Fmin) = conv (↑A : Fmin) sigma)]
-    exact self_le_conv_of_zeroAtOrigin (↑A) sigma h0
-  leftTotal A := htot A
+    exact self_le_conv_of_zeroAtOrigin (↑A) sigma h0,
+   fun A => htot A⟩
 
 /-- `IsGreedyShaper S sigma` iff `S ⊆ greedyRel sigma`. -/
 theorem isGreedyShaper_iff_subset
     {S : Server} {sigma : Fmin} :
     IsGreedyShaper S sigma ↔
-      ∀ p ∈ S, p ∈ greedyRel sigma :=
+      ∀ p ∈ S.1, p ∈ greedyRel sigma :=
   Iff.rfl
 
 /-- `sigma` is sub-additive: `sigma u ⊗ sigma s ≼ sigma (u + s)`. -/

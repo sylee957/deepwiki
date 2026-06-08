@@ -55,22 +55,21 @@ theorem Curve.le_iff_conv {D A : Curve} :
     have : ((D.1 t : ℝ≥0∞)) ≤ (A.1 t : ℝ≥0∞) := ht
     exact_mod_cast this
 
-/-- A server: a causal, left-total input/output relation on curves. -/
-structure Server where
-  rel : Set (Curve × Curve)
-  causal : ∀ A D : Curve, (A, D) ∈ rel → D ≤ A
-  leftTotal : ∀ A : Curve, ∃ D : Curve, (A, D) ∈ rel
+/-- A relation on curves is a server when it is causal (`D ≤ A`) and
+left-total (every input has an output). -/
+def IsServer (rel : Set (Curve × Curve)) : Prop :=
+  (∀ A D : Curve, (A, D) ∈ rel → D ≤ A) ∧
+    (∀ A : Curve, ∃ D : Curve, (A, D) ∈ rel)
 
-/-- Membership `(A, D) ∈ S` reads through to `S.rel`. -/
-instance : Membership (Curve × Curve) Server where
-  mem S p := p ∈ S.rel
+/-- A server: a relation on curves satisfying `IsServer`. -/
+abbrev Server : Type := {rel : Set (Curve × Curve) // IsServer rel}
 
-/-- `S` maps input `A` to output `D`, i.e. `(A, D) ∈ S`. -/
-def Serves (S : Server) (A D : Curve) : Prop :=
-  (A, D) ∈ S
+/-- A `Server` is causal: `(A, D) ∈ S → D ≤ A`. -/
+theorem Server.causal (S : Server) :
+    ∀ A D : Curve, (A, D) ∈ S.1 → D ≤ A := S.2.1
 
-/-- Notation `A ⟶[S] D` for `Serves S A D`. -/
-scoped notation:50 A:51 " ⟶[" S "] " D:51 =>
-  Serves S A D
+/-- A `Server` is left-total: every input `A` has an output `D`. -/
+theorem Server.leftTotal (S : Server) :
+    ∀ A : Curve, ∃ D : Curve, (A, D) ∈ S.1 := S.2.2
 
 end DeepWiki
