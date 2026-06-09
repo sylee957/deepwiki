@@ -20,6 +20,10 @@ noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
 theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t := by
   show (0 : EReal) ≤ ((A t : ℝ) : EReal); positivity
 
+/-- `curveE A` is never `⊥`: each value is a real coercion. -/
+theorem curveE_neverBot (A : Curve) : NeverBot (curveE A) :=
+  fun _ => EReal.coe_ne_bot _
+
 /-- `curveE A 0 = 0`. -/
 theorem curveE_zero (A : Curve) : curveE A 0 = 0 := by
   show ((A 0 : ℝ) : EReal) = 0

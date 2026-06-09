@@ -23,6 +23,10 @@ def NeverBot (g : ℝ≥0 → EReal) : Prop := ∀ t, g t ≠ ⊥
 Strengthens `NeverBot`; the property `minConv`/powers actually preserve. -/
 def BddBelowReal (g : ℝ≥0 → EReal) : Prop := ∃ c : ℝ, ∀ t, (c : EReal) ≤ g t
 
+/-- A nonnegative `EReal` value is not `⊥`. -/
+theorem ne_bot_of_nonneg {x : EReal} (hx : 0 ≤ x) : x ≠ ⊥ :=
+  (hx.trans_lt' EReal.bot_lt_zero).ne'
+
 /-- `BddBelowReal g` implies `NeverBot g`. -/
 theorem BddBelowReal.neverBot {g : ℝ≥0 → EReal} (hg : BddBelowReal g) :
     NeverBot g := by
@@ -248,8 +252,7 @@ theorem subadditiveClosureEReal_subadditive {g : ℝ≥0 → EReal}
   intro u s
   have hbdd := hg.bddBelowReal
   have hCs : (⨅ n : ℕ, convPowEReal g n s) ≠ ⊥ :=
-    ne_bot_of_le_ne_bot (EReal.coe_ne_bot 0)
-      (by simpa using le_iInf (fun n => convPowEReal_isNonneg hg n s))
+    ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hg n s))
   -- For each m, the closure at u+s is ≤ gᵐ u + closure s.
   have hrow : ∀ m : ℕ,
       subadditiveClosureEReal g (u + s)
@@ -257,16 +260,14 @@ theorem subadditiveClosureEReal_subadditive {g : ℝ≥0 → EReal}
     intro m
     refine le_trans ?_
       (iInf_add_le_add_iInf
-        ((convPowEReal_isNonneg hg m u).trans_lt'
-          (EReal.bot_lt_zero)).ne'
+        (ne_bot_of_nonneg (convPowEReal_isNonneg hg m u))
         (f := fun n : ℕ => convPowEReal g n s) hCs)
     refine le_iInf (fun n => ?_)
     refine le_trans (iInf_le _ (m + n)) ?_
     exact convPowEReal_term_le hbdd m n u s
   -- Pull the closure-at-u out of the infimum over m.
   have hCu : (⨅ m : ℕ, convPowEReal g m u) ≠ ⊥ :=
-    ne_bot_of_le_ne_bot (EReal.coe_ne_bot 0)
-      (by simpa using le_iInf (fun n => convPowEReal_isNonneg hg n u))
+    ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hg n u))
   calc subadditiveClosureEReal g (u + s)
       ≤ ⨅ m : ℕ, convPowEReal g m u + subadditiveClosureEReal g s :=
         le_iInf hrow

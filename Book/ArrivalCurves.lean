@@ -1,8 +1,8 @@
 import Book.FunctionDioids
 
 /-! # Arrival curves
-For a cumulative function `A` (taken as a plain `ℝ≥0 → ℝ≥0` function), a
-non-decreasing function `α` is:
+For a cumulative function `A` (a plain function `ℝ≥0 → T` into an ordered
+codomain — `ℝ≥0`, or `EReal` for server outputs), a non-decreasing `α` is:
 
 * a **maximal** (upper) arrival curve when `A ≤ A ∗ α` (`∗` = min-plus
   convolution `minConv`): `A` is dominated by its min-plus self-convolution.
@@ -18,21 +18,26 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
-/-- `α` is a maximal (upper) arrival curve for `A`: `A t ≤ (A ∗ α) t` for all
-`t`, the natural-order form of `A ≤ A ∗ α` with `∗` the min-plus convolution. -/
-def IsMaximalArrivalCurve (A α : ℝ≥0 → ℝ≥0) : Prop :=
-  ∀ t : ℝ≥0, A t ≤ minConv A α t
+/-- `α` is a maximal (upper) arrival curve for `A`: `A ≤ A ∗ α` in the
+natural pointwise order, with `∗` the min-plus convolution (over any ordered
+codomain `T` with `+` and infima, e.g. `ℝ≥0` or `EReal`). -/
+def IsMaximalArrivalCurve {T : Type*} [Add T] [ConditionallyCompleteLattice T]
+    (A α : ℝ≥0 → T) : Prop :=
+  A ≤ minConv A α
 
-/-- `α` is a minimal (lower) arrival curve for `A`: `(A ⊼ α) t ≤ A t` for all
-`t`, the natural-order form of `A ≥ A ⊼ α` with `⊼` the max-plus convolution. -/
-def IsMinimalArrivalCurve (A α : ℝ≥0 → ℝ≥0) : Prop :=
-  ∀ t : ℝ≥0, maxConv A α t ≤ A t
+/-- `α` is a minimal (lower) arrival curve for `A`: `A ⊼ α ≤ A` in the
+natural pointwise order, with `⊼` the max-plus convolution (over any ordered
+codomain `T` with `+` and suprema). -/
+def IsMinimalArrivalCurve {T : Type*} [Add T] [ConditionallyCompleteLattice T]
+    (A α : ℝ≥0 → T) : Prop :=
+  maxConv A α ≤ A
 
 /-! ## Increment characterizations -/
 
 /-- Equivalent definition of a maximal arrival curve: `A ≤ A ∗ α` holds iff the
 increment bound `A (t + d) ≤ A t + α d` holds for all `t, d`. -/
-theorem isMaximalArrivalCurve_iff_increment (A α : ℝ≥0 → ℝ≥0) :
+theorem isMaximalArrivalCurve_iff_increment {T : Type*} [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T] (A α : ℝ≥0 → T) :
     IsMaximalArrivalCurve A α ↔ ∀ t d : ℝ≥0, A (t + d) ≤ A t + α d := by
   constructor
   · -- `A (t + d) ≤ ⨅ {A u + α s | u + s = t + d} ≤ A t + α d`

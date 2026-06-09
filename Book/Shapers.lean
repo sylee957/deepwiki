@@ -1,347 +1,259 @@
-import Book.Servers
-import Book.Closures
-import Book.RealConvolution
+import Book.ArrivalCurves
+import Book.ServiceCurveMaximal
 
 /-! # Shapers
-Greedy shapers and shaping curves in network calculus,
-built on the convolution/closure dioid theory. -/
+σ-shapers: servers whose every output allows `σ` as a maximal arrival curve,
+`D ≤ D ∗ σ` (`σ : ℝ≥0 → EReal`, `F₀` hypotheses at use sites). The largest
+shaper `shaperRel σ`, its closure and monotonicity properties, the universal
+`δ₀`-shaper, greedy shapers, and the containment in the maximal-service
+relation. -/
 
 namespace DeepWiki
 
-open Algebra Set Topology Filter
-open scoped Classical NNReal ENNReal Algebra.Bridge
+open scoped Classical NNReal
 
-/-- `conv` is monotone in its right argument. -/
-theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
-    (h : sigma ≤ sigma') :
-    conv D sigma ≤ conv D sigma' := by
-  intro t
-  rw [conv_apply]
-  refine CompleteDioid.sSup_le _ _ ?_
-  rintro x ⟨u, s, hus, rfl⟩
-  rw [conv_apply]
-  refine le_trans ?_
-    (CompleteDioid.le_sSup _ _
-      ⟨u, s, hus, rfl⟩)
-  exact mul_le_mul_left (h s) (D u)
+/-! ## Allowing an arrival curve, on `EReal` outputs -/
 
-/-- `sigma` is an arrival curve for `D`: `D ∗ sigma ≤ D`. -/
-def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
-  conv D sigma ≤ D
+/-- Allowing `sigma` gives the increment bound for every convolution power
+`sigmaⁿ`, for `NeverBot f` and nonnegative `sigma`. -/
+theorem increment_convPowEReal_of_isMaximalArrivalCurve
+    {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma)
+    (h : IsMaximalArrivalCurve f sigma) (n : ℕ) (u s : ℝ≥0) :
+    f (u + s) ≤ f u + convPowEReal sigma n s := by
+  induction n generalizing u s with
+  | zero =>
+      rcases eq_or_ne s 0 with hs | hs
+      · subst hs
+        rw [add_zero]
+        show f u ≤ f u + convUnitEReal 0
+        rw [convUnitEReal, if_pos rfl, add_zero]
+      · show f (u + s) ≤ f u + convUnitEReal s
+        rw [convUnitEReal, if_neg hs, EReal.add_top_of_ne_bot (hf u)]
+        exact le_top
+  | succ k ih =>
+      show f (u + s) ≤ f u + minConv (convPowEReal sigma k) sigma s
+      have hbot : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s},
+          convPowEReal sigma k p.1.1 + sigma p.1.2) ≠ ⊥ :=
+        ne_bot_of_nonneg (le_iInf (fun p =>
+          add_nonneg (convPowEReal_isNonneg hnn k p.1.1) (hnn p.1.2)))
+      refine le_trans (le_iInf ?_) (iInf_add_le_add_iInf (hf u) hbot)
+      rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
+      show f (u + s) ≤ f u + (convPowEReal sigma k a + sigma b)
+      have hsplit : u + s = (u + a) + b := by rw [add_assoc, hab]
+      rw [hsplit]
+      calc f ((u + a) + b)
+          ≤ f (u + a) + sigma b :=
+            (isMaximalArrivalCurve_iff_increment f sigma).mp h (u + a) b
+        _ ≤ (f u + convPowEReal sigma k a) + sigma b :=
+            add_le_add (ih u a) le_rfl
+        _ = f u + (convPowEReal sigma k a + sigma b) := add_assoc _ _ _
 
-/-- Arrival-curve constraint, kernelized: `D u ⊗ sigma s ≼ D t` for `u+s=t`. -/
-theorem allowsArrivalCurve_iff_kernel
-    (D sigma : Fmin) :
-    AllowsArrivalCurve D sigma ↔
-      ∀ u s t, u + s = t →
-        D u ⊗ₒ sigma s ≼ₒ D t := by
+/-- `f` allows the sub-additive closure `sigma⋆` iff it allows `sigma`
+(`NeverBot f`, nonnegative `sigma`). -/
+theorem isMaximalArrivalCurve_subadditiveClosureEReal_iff
+    {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma) :
+    IsMaximalArrivalCurve f (subadditiveClosureEReal sigma) ↔
+      IsMaximalArrivalCurve f sigma := by
   constructor
-  · intro h u s t hus
-    have hc : conv D sigma t ≼ₒ D t := h t
-    have hterm :
-        D u ⊗ₒ sigma s ≼ₒ conv D sigma t := by
-      rw [conv_apply]
-      exact CompleteDioid.le_sSup _ _
-        ⟨u, s, hus, rfl⟩
-    exact le_trans hterm hc
   · intro h t
-    rw [conv_apply]
-    refine CompleteDioid.sSup_le _ _ ?_
-    rintro x ⟨u, s, hus, rfl⟩
-    exact h u s t hus
+    refine le_trans (h t) (minConv_le_minConv (fun _ => le_rfl)
+      (fun s => subadditiveClosureEReal_le sigma
+        hnn.bddBelowReal.neverBot s) t)
+  · intro h
+    refine (isMaximalArrivalCurve_iff_increment _ _).mpr (fun u s => ?_)
+    show f (u + s) ≤ f u + subadditiveClosureEReal sigma s
+    have hbot : (⨅ n : ℕ, convPowEReal sigma n s) ≠ ⊥ :=
+      ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hnn n s))
+    refine le_trans (le_iInf (fun n => ?_)) (iInf_add_le_add_iInf (hf u) hbot)
+    exact increment_convPowEReal_of_isMaximalArrivalCurve hf hnn h n u s
 
-/-- `S` is a shaper for `sigma`: every output allows arrival curve `sigma`. -/
-def IsShaper (S : Curve → Curve → Prop) (sigma : Fmin) : Prop :=
-  ∀ A D : Curve, S A D → AllowsArrivalCurve (toFmin D) sigma
+/-! ## σ-shapers -/
 
-/-- Largest causal relation that shapes outputs to arrival curve `sigma`. -/
-def shaperRel (sigma : Fmin) : Curve → Curve → Prop :=
-  fun A D => D ≤ A ∧
-      AllowsArrivalCurve (toFmin D) sigma
+/-- `S` is a shaper for `sigma`: every output allows `sigma` as a maximal
+arrival curve, `D ≤ D ∗ sigma`. -/
+def IsShaper (sigma : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
+  ∀ A D : Curve, S A D → IsMaximalArrivalCurve (curveE D) sigma
+
+/-- The largest relation shaping outputs to `sigma`: the causal pairs whose
+output allows `sigma`. -/
+def shaperRel (sigma : ℝ≥0 → EReal) : Curve → Curve → Prop :=
+  fun A D => D ≤ A ∧ IsMaximalArrivalCurve (curveE D) sigma
 
 /-- `shaperRel sigma A D` unfolds to causality and the arrival-curve bound. -/
-theorem mem_shaperRel_iff
-    {sigma : Fmin} {A D : Curve} :
+theorem mem_shaperRel_iff {sigma : ℝ≥0 → EReal} {A D : Curve} :
     shaperRel sigma A D ↔
-      D ≤ A ∧
-        AllowsArrivalCurve (toFmin D) sigma :=
+      D ≤ A ∧ IsMaximalArrivalCurve (curveE D) sigma :=
   Iff.rfl
 
-/-- The zero output allows every `sigma` as an arrival curve: numerically
-`0 ≤ 0 ∗ sigma` is trivial on the `ℝ≥0∞` carrier. -/
-theorem allowsArrivalCurve_zeroCurve (sigma : Fmin) :
-    AllowsArrivalCurve (toFmin zeroCurve) sigma := by
+/-- The zero output allows every nonnegative `sigma`. -/
+theorem isMaximalArrivalCurve_zeroCurve {sigma : ℝ≥0 → EReal}
+    (hnn : IsNonneg sigma) :
+    IsMaximalArrivalCurve (curveE zeroCurve) sigma := by
   intro t
-  refine (MinPlusNN.le_iff _ _).mpr ?_
-  show ((zeroCurve t : ℝ≥0) : ℝ≥0∞) ≤ (conv (toFmin zeroCurve) sigma t).toVal
-  rw [zeroCurve_apply]
-  simp
+  rw [curveE_zeroCurve]
+  exact minConv_isNonneg (curveE_nonneg zeroCurve) hnn t
 
-/-- `shaperRel sigma` is a server: causality is the first conjunct, and
-`zeroCurve` — whose output allows every `sigma` — gives left-totality. -/
-theorem isServer_shaperRel (sigma : Fmin) :
+/-- For nonnegative `sigma`, `shaperRel sigma` is a server: causality is the
+first conjunct, and `zeroCurve` gives left-totality. -/
+theorem isServer_shaperRel {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
     IsServer (shaperRel sigma) :=
   ⟨fun _ _ hp => hp.1,
-    fun _ => ⟨zeroCurve,
-      fun _ => zero_le', allowsArrivalCurve_zeroCurve sigma⟩⟩
+    fun _ => ⟨zeroCurve, fun _ => zero_le',
+      isMaximalArrivalCurve_zeroCurve hnn⟩⟩
 
-/-- `S ≤ shaperRel sigma` iff `S` is a shaper for `sigma` on curve pairs. -/
-theorem subset_shaperRel_iff
-    {S : Curve → Curve → Prop} (hSrv : IsServer S) {sigma : Fmin} :
-    (∀ A D : Curve, S A D →
-        shaperRel sigma A D) ↔
-      (∀ A D : Curve, S A D →
-        AllowsArrivalCurve (toFmin D) sigma) := by
+/-- A causal `S` is a shaper for `sigma` iff its pairs lie in
+`shaperRel sigma`: `shaperRel sigma` is the largest shaper for `sigma`. -/
+theorem isShaper_iff_subset {S : Curve → Curve → Prop} (hc : IsCausal S)
+    {sigma : ℝ≥0 → EReal} :
+    IsShaper sigma S ↔ ∀ A D : Curve, S A D → shaperRel sigma A D := by
   constructor
+  · intro h A D hp
+    exact ⟨hc _ _ hp, h A D hp⟩
   · intro h A D hp
     exact (h A D hp).2
-  · intro h A D hp
-    exact ⟨hSrv.1 _ _ hp, h A D hp⟩
 
-/-- `sigma ≤ sigma⋆`: a curve is below its sub-additive closure. -/
-theorem self_le_subadditiveClosure
-    (sigma : Fmin) : sigma ≤ sigma⋆ := by
-  intro t
-  dsimp [subadditiveClosure]
-  have h1 :
-      convPow sigma 1 t ≼ₒ
-        CompleteDioid.iSup
-          (fun n : ℕ => convPow sigma n t) :=
-    CompleteDioid.le_iSup
-      (fun n : ℕ => convPow sigma n t) 1
-  simpa [convPow_one] using h1
+/-- `shaperRel sigma` is itself a shaper for `sigma`. -/
+theorem isShaper_shaperRel (sigma : ℝ≥0 → EReal) :
+    IsShaper sigma (shaperRel sigma) :=
+  fun _ _ hp => hp.2
 
-/-- Kernel inequality holds for the convolution unit `convUnit`. -/
-theorem kernel_convUnit (D : Fmin) :
-    ∀ u s t, u + s = t →
-      D u ⊗ₒ convUnit s ≼ₒ D t := by
-  intro u s t hus
-  by_cases hs : s = 0
-  · have hu : u = t := by
-      rw [← hus, hs, add_zero]
-    rw [convUnit, if_pos hs, hu]
-    exact le_of_eq
-      (Algebra.MulMonoid.otimes_one (D t))
-  · rw [convUnit, if_neg hs]
-    rw [Algebra.Semiring.otimes_eps]
-    exact bot_le
+/-- Every relation — in particular every server — is a `δ₀`-shaper:
+`D ∗ δ₀ = D`. -/
+theorem isShaper_delayEReal_zero (S : Curve → Curve → Prop) :
+    IsShaper (delayEReal 0) S :=
+  fun _ D _ t => le_of_eq (congrFun (minConv_delayEReal_zero D) t).symm
 
-/-- Every `D` allows the convolution unit `δ₀ = convUnit` as an arrival
-curve (`δ₀` is `toF (delayNN 0)`, see `toF_delay0`). -/
-theorem allowsArrivalCurve_convUnit (D : Fmin) :
-    AllowsArrivalCurve D convUnit :=
-  (allowsArrivalCurve_iff_kernel D convUnit).mpr (kernel_convUnit D)
+/-! ## Properties of shapers -/
 
-/-- Every server — indeed every relation — is a `δ₀`-shaper: each output
-allows the unit `convUnit` as an arrival curve. -/
-theorem isShaper_convUnit (S : Curve → Curve → Prop) :
-    IsShaper S convUnit :=
-  fun _ D _ => allowsArrivalCurve_convUnit (toFmin D)
+/-- A shaper for `sigma` is a shaper for any larger `sigma'`. -/
+theorem IsShaper.mono {S : Curve → Curve → Prop}
+    {sigma sigma' : ℝ≥0 → EReal} (h : sigma ≤ sigma')
+    (hS : IsShaper sigma S) : IsShaper sigma' S :=
+  fun A D hp t =>
+    le_trans (hS A D hp t) (minConv_le_minConv (fun _ => le_rfl) h t)
 
-/-- If `D` allows `sigma`, the kernel bound holds for every power `sigmaⁿ`. -/
-theorem kernel_convPow_of_allows
-    {D sigma : Fmin}
-    (hD : AllowsArrivalCurve D sigma) :
-    ∀ n u s t, u + s = t →
-      D u ⊗ₒ convPow sigma n s ≼ₒ D t := by
-  have hsigma :=
-    (allowsArrivalCurve_iff_kernel D sigma).mp hD
-  intro n
-  induction n with
-  | zero =>
-      exact kernel_convUnit D
-  | succ n ih =>
-      intro u s t hus
-      rw [convPow, conv_apply,
-        CompleteDioid.mul_sSup]
-      refine CompleteDioid.sSup_le _ _ ?_
-      rintro x ⟨y, ⟨a, b, hab, rfl⟩, rfl⟩
-      change D u ⊗ₒ
-          (convPow sigma n a ⊗ₒ sigma b) ≼ₒ D t
-      rw [← Algebra.MulMonoid.otimes_assoc]
-      have hleft :
-          (D u ⊗ₒ convPow sigma n a) ⊗ₒ
-              sigma b ≼ₒ
-            D (u + a) ⊗ₒ sigma b :=
-        mul_le_mul_right (ih u a (u + a) rfl)
-          (sigma b)
-      have hsum : (u + a) + b = t := by
-        rw [add_assoc, hab, hus]
-      exact le_trans hleft
-        (hsigma (u + a) b t hsum)
-
-/-- `D` allows `sigma⋆` iff it allows `sigma`. -/
-theorem allowsArrivalCurve_closure_iff
-    (D sigma : Fmin) :
-    AllowsArrivalCurve D sigma⋆ ↔
-      AllowsArrivalCurve D sigma := by
-  constructor
-  · intro h
-    exact le_trans
-      (conv_mono_right D
-        (self_le_subadditiveClosure sigma)) h
-  · intro h
-    rw [allowsArrivalCurve_iff_kernel]
-    intro u s t hus
-    rw [subadditiveClosure,
-      CompleteDioid.mul_iSup]
-    refine CompleteDioid.iSup_le _ _ ?_
-    intro n
-    exact kernel_convPow_of_allows h n u s t hus
-
-/-- A shaper for `sigma` equals one for its closure: `shaperRel sigma = shaperRel sigma⋆`. -/
-theorem shaperRel_closure
-    (sigma : Fmin) :
-    shaperRel sigma = shaperRel sigma⋆ := by
-  funext A D
-  apply propext
-  constructor
-  · intro hp
-    exact ⟨hp.1,
-      (allowsArrivalCurve_closure_iff
-        (toFmin D) sigma).2 hp.2⟩
-  · intro hp
-    exact ⟨hp.1,
-      (allowsArrivalCurve_closure_iff
-        (toFmin D) sigma).1 hp.2⟩
-
-/-- A shaper for `sigma` is also a shaper for `sigma⋆`. -/
-theorem IsShaper.closure
-    {S : Curve → Curve → Prop} {sigma : Fmin}
-    (hS : IsShaper S sigma) :
-    IsShaper S sigma⋆ := by
-  intro A D hp
-  exact (allowsArrivalCurve_closure_iff
-    (toFmin D) sigma).2 (hS A D hp)
-
-example
-    (sigma : Fmin) :
-    shaperRel sigma = shaperRel sigma⋆ :=
-  shaperRel_closure sigma
-
-example
-    {S : Curve → Curve → Prop} {sigma : Fmin}
-    (hS : IsShaper S sigma) :
-    IsShaper S sigma⋆ :=
-  IsShaper.closure hS
-
-/-- A shaper for `sigma` is a shaper for any smaller `sigma' ≤ sigma`. -/
-theorem IsShaper.of_le
-    {S : Curve → Curve → Prop}
-    {sigma sigma' : Fmin}
-    (hS : IsShaper S sigma)
-    (h : sigma' ≤ sigma) :
-    IsShaper S sigma' := by
-  intro A D hp
-  exact le_trans
-    (conv_mono_right (toFmin D) h) (hS A D hp)
-
-/-- `shaperRel` is antitone in `sigma`. -/
-theorem shaperRel_mono
-    {sigma sigma' : Fmin}
-    (h : sigma' ≤ sigma) :
+/-- `shaperRel` is monotone in the curve: `sigma ≤ sigma'` gives the
+containment of relations. -/
+theorem shaperRel_mono {sigma sigma' : ℝ≥0 → EReal} (h : sigma ≤ sigma') :
     shaperRel sigma ≤ shaperRel sigma' := by
   intro A D hp
-  exact ⟨hp.1,
-    le_trans
-      (conv_mono_right (toFmin D) h) hp.2⟩
+  exact ⟨hp.1, ((isShaper_shaperRel sigma).mono h) A D hp⟩
 
-example
-    {sigma sigma' : Fmin}
-    (h : sigma' ≤ sigma) :
-    shaperRel sigma ≤ shaperRel sigma' :=
-  shaperRel_mono h
+/-- A shaper for nonnegative `sigma` is a shaper for the sub-additive closure
+`sigma⋆`. -/
+theorem IsShaper.closure {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
+    (hnn : IsNonneg sigma) (hS : IsShaper sigma S) :
+    IsShaper (subadditiveClosureEReal sigma) S :=
+  fun A D hp =>
+    (isMaximalArrivalCurve_subadditiveClosureEReal_iff
+      (curveE_neverBot D) hnn).mpr (hS A D hp)
 
-example
-    {S : Curve → Curve → Prop} {sigma sigma' : Fmin}
-    (hS : IsShaper S sigma)
-    (h : sigma' ≤ sigma) :
-    IsShaper S sigma' :=
-  IsShaper.of_le hS h
+/-- Shaping to nonnegative `sigma` and to its sub-additive closure `sigma⋆`
+coincide: `shaperRel sigma = shaperRel sigma⋆`. -/
+theorem shaperRel_closure {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
+    shaperRel sigma = shaperRel (subadditiveClosureEReal sigma) := by
+  funext A D
+  apply propext
+  have hiff := isMaximalArrivalCurve_subadditiveClosureEReal_iff
+    (curveE_neverBot D) hnn
+  exact ⟨fun hp => ⟨hp.1, hiff.mpr hp.2⟩, fun hp => ⟨hp.1, hiff.mp hp.2⟩⟩
 
-/-- `S` is a greedy shaper for `sigma`: every output is `A ∗ sigma`. -/
-def IsGreedyShaper
-    (S : Curve → Curve → Prop) (sigma : Fmin) : Prop :=
-  ∀ A D : Curve, S A D → toFmin D = conv (toFmin A) sigma
+/-! ## A shaper offers a maximal service curve -/
 
-/-- If `sigma 0 = eₒ` then `A ≼ A ∗ sigma` in the dioid order. -/
-theorem self_le_conv_of_zeroAtOrigin
-    (A sigma : Fmin) (h0 : sigma 0 = eₒ) :
-    A ≤ conv A sigma := by
-  intro t
-  show A t ≼ₒ conv A sigma t
-  rw [conv_apply]
-  refine le_trans ?_
-    (CompleteDioid.le_sSup _ _
-      ⟨t, 0, add_zero t, rfl⟩)
-  show A t ≼ₒ A t ⊗ₒ sigma 0
-  rw [h0]
-  exact le_of_eq (MulMonoid.otimes_one (A t)).symm
+/-- A causal shaper for `sigma` offers `sigma` as a maximal service curve:
+`D ≤ A` and `D ≤ D ∗ sigma` give `D ≤ A ∗ sigma` by isotony of the
+convolution. -/
+theorem IsShaper.isMaximalServiceCurve {S : Curve → Curve → Prop}
+    {sigma : ℝ≥0 → EReal} (hc : IsCausal S) (hS : IsShaper sigma S) :
+    IsMaximalServiceCurve sigma S :=
+  fun A D hp t =>
+    le_trans (hS A D hp t)
+      (minConv_le_minConv (curveE_mono (hc A D hp)) (fun _ => le_rfl) t)
 
-/-- Greedy-shaper relation: outputs are exactly `A ∗ sigma`. -/
-def greedyRel (sigma : Fmin) : Curve → Curve → Prop :=
-  fun A D => toFmin D = conv (toFmin A) sigma
+/-- The largest-relation form: the largest shaper is contained in the largest
+server offering `sigma` as a maximal service curve. -/
+theorem shaperRel_le_maximalServiceRelation (sigma : ℝ≥0 → EReal) :
+    shaperRel sigma ≤ maximalServiceRelation sigma := by
+  intro A D hp
+  exact (isShaper_shaperRel sigma).isMaximalServiceCurve
+    (fun _ _ hq => hq.1) A D hp
 
-/-- `greedyRel sigma A D` unfolds to `toFmin D = A ∗ sigma`. -/
-theorem mem_greedyRel_iff
-    {sigma : Fmin} {A D : Curve} :
-    greedyRel sigma A D ↔
-      toFmin D = conv (toFmin A) sigma :=
+/-! ## Greedy shapers -/
+
+/-- `S` is a greedy shaper for `sigma`: every output is exactly `A ∗ sigma`. -/
+def IsGreedyShaper (sigma : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
+  ∀ A D : Curve, S A D → curveE D = minConv (curveE A) sigma
+
+/-- The greedy-shaper relation: the output is exactly `A ∗ sigma`. -/
+def greedyRel (sigma : ℝ≥0 → EReal) : Curve → Curve → Prop :=
+  fun A D => curveE D = minConv (curveE A) sigma
+
+/-- `greedyRel sigma A D` unfolds to `D = A ∗ sigma` (via `curveE`). -/
+theorem mem_greedyRel_iff {sigma : ℝ≥0 → EReal} {A D : Curve} :
+    greedyRel sigma A D ↔ curveE D = minConv (curveE A) sigma :=
   Iff.rfl
 
-/-- When `sigma 0 = eₒ`, `greedyRel sigma` is a server: causality follows from
-`A ≼ A ∗ sigma`, and left-totality is the supplied witness `htot`. -/
-theorem isServer_greedyRel
-    (sigma : Fmin) (h0 : sigma 0 = eₒ)
-    (htot : ∀ A : Curve, ∃ D : Curve,
-      greedyRel sigma A D) :
-    IsServer (greedyRel sigma) :=
-  ⟨fun A D hp => by
-      rw [le_iff_toFmin]
-      rw [(hp : toFmin D = conv (toFmin A) sigma)]
-      exact self_le_conv_of_zeroAtOrigin (toFmin A) sigma h0,
-    htot⟩
-
-/-- `IsGreedyShaper S sigma` iff `S ≤ greedyRel sigma`. -/
-theorem isGreedyShaper_iff_subset
-    {S : Curve → Curve → Prop} {sigma : Fmin} :
-    IsGreedyShaper S sigma ↔
+/-- `IsGreedyShaper sigma S` iff `S ≤ greedyRel sigma`. -/
+theorem isGreedyShaper_iff_subset {S : Curve → Curve → Prop}
+    {sigma : ℝ≥0 → EReal} :
+    IsGreedyShaper sigma S ↔
       ∀ A D : Curve, S A D → greedyRel sigma A D :=
   Iff.rfl
 
-/-- `sigma` is sub-additive: `sigma u ⊗ sigma s ≼ sigma (u + s)`. -/
-def IsSubadditiveF (sigma : Fmin) : Prop :=
-  ∀ u s : ℝ≥0, sigma u ⊗ₒ sigma s ≼ₒ sigma (u + s)
+/-- When `sigma 0 ≤ 0`, `greedyRel sigma` is a server: causality is
+`A ∗ sigma ≤ A` (`minConv_self_le`), left-totality is the supplied witness
+`htot` (the convolution must again be a `Curve`). -/
+theorem isServer_greedyRel {sigma : ℝ≥0 → EReal} (h0 : sigma 0 ≤ 0)
+    (htot : ∀ A : Curve, ∃ D : Curve, greedyRel sigma A D) :
+    IsServer (greedyRel sigma) :=
+  ⟨fun A D hp => curveE_le_iff.mp
+      (le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0 A)),
+    htot⟩
 
 /-- A sub-additive `sigma` allows itself as an arrival curve. -/
-theorem allowsArrivalCurve_self_of_subadd
-    {sigma : Fmin} (hsub : IsSubadditiveF sigma) :
-    AllowsArrivalCurve sigma sigma := by
-  rw [allowsArrivalCurve_iff_kernel]
-  intro u s t hus
-  rw [← hus]
-  exact hsub u s
+theorem isMaximalArrivalCurve_self_of_subadditive {sigma : ℝ≥0 → EReal}
+    (hsub : IsSubadditive sigma) :
+    IsMaximalArrivalCurve sigma sigma :=
+  (isMaximalArrivalCurve_iff_increment sigma sigma).mpr hsub
 
-/-- For sub-additive `sigma`, `A ∗ sigma` allows arrival curve `sigma`. -/
-theorem allowsArrivalCurve_conv_of_subadd
-    (A : Fmin) {sigma : Fmin}
-    (hsub : IsSubadditiveF sigma) :
-    AllowsArrivalCurve (conv A sigma) sigma := by
-  have h : conv A (conv sigma sigma) ≤ conv A sigma :=
-    conv_mono_right A
-      (allowsArrivalCurve_self_of_subadd hsub)
-  show conv (conv A sigma) sigma ≤ conv A sigma
-  rw [conv_assoc]
-  exact h
+/-- For nonnegative `f` and sub-additive nonnegative `sigma`, the greedy
+output `f ∗ sigma` allows `sigma`. -/
+theorem isMaximalArrivalCurve_minConv_of_subadditive
+    {f sigma : ℝ≥0 → EReal} (hf : IsNonneg f) (hnn : IsNonneg sigma)
+    (hsub : IsSubadditive sigma) :
+    IsMaximalArrivalCurve (minConv f sigma) sigma := by
+  refine (isMaximalArrivalCurve_iff_increment _ _).mpr (fun u s => ?_)
+  show minConv f sigma (u + s) ≤ minConv f sigma u + sigma s
+  have hbot : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u},
+      f p.1.1 + sigma p.1.2) ≠ ⊥ :=
+    ne_bot_of_nonneg (le_iInf (fun p =>
+      add_nonneg (hf p.1.1) (hnn p.1.2)))
+  have hexch :
+      (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u},
+          sigma s + (f p.1.1 + sigma p.1.2))
+        ≤ sigma s + minConv f sigma u :=
+    iInf_add_le_add_iInf (ne_bot_of_nonneg (hnn s)) hbot
+  rw [add_comm (minConv f sigma u) (sigma s)]
+  refine le_trans (le_iInf ?_) hexch
+  rintro ⟨⟨a, b⟩, (hab : a + b = u)⟩
+  show minConv f sigma (u + s) ≤ sigma s + (f a + sigma b)
+  have hterm : minConv f sigma (u + s) ≤ f a + sigma (b + s) :=
+    iInf_le _ (⟨(a, b + s), by rw [← hab, add_assoc]⟩ :
+      {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u + s})
+  refine le_trans hterm ?_
+  calc f a + sigma (b + s)
+      ≤ f a + (sigma b + sigma s) := add_le_add le_rfl (hsub b s)
+    _ = sigma s + (f a + sigma b) := by
+        rw [← add_assoc, add_comm (f a + sigma b) (sigma s)]
 
-/-- A greedy shaper for sub-additive `sigma` is a shaper for `sigma`. -/
-theorem IsGreedyShaper.isShaper
-    {S : Curve → Curve → Prop} {sigma : Fmin}
-    (hsub : IsSubadditiveF sigma)
-    (hS : IsGreedyShaper S sigma) :
-    IsShaper S sigma := by
+/-- A greedy shaper for sub-additive nonnegative `sigma` is a `sigma`-shaper:
+its outputs `A ∗ sigma` allow `sigma`. -/
+theorem IsGreedyShaper.isShaper {S : Curve → Curve → Prop}
+    {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma)
+    (hS : IsGreedyShaper sigma S) : IsShaper sigma S := by
   intro A D hp
-  rw [hS A D hp]
-  exact allowsArrivalCurve_conv_of_subadd (toFmin A) hsub
+  rw [show curveE D = minConv (curveE A) sigma from hS A D hp]
+  exact isMaximalArrivalCurve_minConv_of_subadditive
+    (curveE_nonneg A) hnn hsub
 
 end DeepWiki

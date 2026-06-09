@@ -84,7 +84,7 @@ theorem delayEReal_zero_eq_convUnitEReal :
 theorem minConv_delayEReal_zero (A : Curve) :
     minConv (curveE A) (delayEReal 0) = curveE A := by
   rw [delayEReal_zero_eq_convUnitEReal]
-  exact minConv_convUnitEReal_right (fun _ => EReal.coe_ne_bot _)
+  exact minConv_convUnitEReal_right (curveE_neverBot A)
 
 /-- Every causal relation — in particular every server — offers the maximal
 service curve `δ₀`: causality gives `D ≤ A = A ∗ δ₀`. -/
