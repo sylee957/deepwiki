@@ -44,7 +44,8 @@ import Book.ServiceCurveBacklog
 import Book.ServiceCurveStrict
 import Book.ServiceCurvePackets
 import Book.ServiceCurveMaximal
-import Book.Shapers
+import Book.ArrivalCurveShaper
+import Book.ArrivalCurveShaperGreedy
 
 /-!
 # DeepWiki — autoformalized mathematics

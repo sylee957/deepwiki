@@ -68,9 +68,14 @@ imports them all in order: `Signatures`, `LevelSet`, `Dioids`, `Order`, `Complet
 `Closures`,
 `Limits`, `Continuity`, `RealCurves`, `CurveRegularity`, `RealCurvesAdditivity`, `RealCurvesConv`,
 `RealCurvesDeconv`, `RealCurvesDeviations`, `PseudoInverse`, `ConvolutionMinimum`,
-`Servers`, `RealConvolution`, `Shapers` (the live list is `Book.lean`).
+`Servers`, `RealConvolution`, `ArrivalCurveShaper` (the live list is `Book.lean`).
 
 All declarations live in `namespace DeepWiki`.
+
+**Chapter naming:** base concept first, qualifiers appended as suffixes —
+`ServiceCurveStrict`, `ArrivalCurveShaper`, `ArrivalCurveShaperGreedy` — so
+related chapters sort together alphabetically. When a chapter grows a distinct
+sub-theory, split it into a suffixed sibling rather than growing the file.
 
 ## The mathematics (orientation — get this right or proofs invert)
 
