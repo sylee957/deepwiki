@@ -183,6 +183,21 @@ not just defaults):
   the variants with `*_coe` agreement lemmas where they are only propositionally
   (not defeq) equal.
 
+## Autoformalizing from source PDFs (`references/`)
+
+- `references/` is a **gitignored** local dump of the source books/papers being
+  formalized. Claude reads PDFs there directly with the Read tool (use the
+  `pages` parameter; ≤20 pages per request).
+- **The autoformalization workflow:** when the user posts a capture/screenshot of
+  a book passage (or points at pages of a PDF in `references/`), formalize that
+  passage in the appropriate `Book/*.lean` chapter. Before writing anything new,
+  search the existing library for the lemmas/definitions it should build on —
+  reuse and extend rather than redefine; new statements go in `namespace DeepWiki`
+  following the chapter DAG, docstring conventions, and style preferences above.
+  Mind the order inversion (numeric vs dioid order) when transcribing inequalities.
+  Finish with `scripts/check.sh` and `example`-restatements of the new theorems
+  against the book's wording.
+
 ## Workflow conventions
 
 - Verify before claiming done: build the affected chapter, then `lake build`, and for

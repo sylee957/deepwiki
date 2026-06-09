@@ -9,3 +9,6 @@
 # Editor
 .DS_Store
 /.vscode/
+
+# Source-book PDFs for autoformalization (local only, readable by Claude)
+/references/
