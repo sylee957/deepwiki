@@ -89,13 +89,25 @@ theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
   rw [add_zero]
   exact D.mono hst
 
-/-- Pointwise max of two strict service curves is offered. -/
+/-- A strict service curve is null at the origin: `beta 0 = 0`. The strict bound
+at `s = t = 0` (the empty period `(0, 0]` is vacuously backlogged) gives
+`D 0 + beta 0 ≤ D 0`, hence `beta 0 ≤ 0`. -/
+theorem strictServiceCurve_zero {beta : ℝ≥0 → ℝ≥0} {S : Curve → Curve → Prop}
+    (hβ : IsStrictMinimalServiceCurve beta S) {A D : Curve} (hp : S A D) :
+    beta 0 = 0 := by
+  have hbl : IsBacklogged A D (Set.Ioc 0 0) := by intro u hu; simp at hu
+  have h := hβ A D hp 0 0 (le_refl 0) hbl
+  rw [tsub_self] at h
+  have h0 : beta 0 ≤ 0 :=
+    le_of_add_le_add_left (a := D 0) (by rwa [add_zero])
+  exact le_antisymm h0 zero_le'
+
+/-- The join `beta ⊔ beta'` of two strict service curves is offered. -/
 theorem isStrictMinimalServiceCurve_sup
     {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → ℝ≥0}
     (h : IsStrictMinimalServiceCurve beta S)
     (h' : IsStrictMinimalServiceCurve beta' S) :
-    IsStrictMinimalServiceCurve
-      (fun u => max (beta u) (beta' u)) S := by
+    IsStrictMinimalServiceCurve (beta ⊔ beta') S := by
   intro A D hp s t hst hbl
   show D s + max (beta (t-s)) (beta' (t-s)) ≤ D t
   rcases le_total (beta (t-s)) (beta' (t-s)) with hle | hle
@@ -225,6 +237,58 @@ theorem isStrictMinimalServiceCurve_superAdditiveClosureMax_iff
       (by gcongr; exact le_superAdditiveClosureMax beta hbdd (t - s))
       (h A D hp s t hst hbl)
   · exact isStrictMinimalServiceCurve_superAdditiveClosureMax beta
+
+/-- Offering `beta`, its non-decreasing closure `ndClosure beta`, and its
+super-additive closure `superAdditiveClosureMax beta` are all equivalent:
+`Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) = Sₛₜᵣᵢ𝒸ₜ(β*̄)`. -/
+theorem isStrictMinimalServiceCurve_closures_iff
+    (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
+    (hbddNd : ∀ t, BddAbove
+      (Set.range (fun u : {u // u ≤ t} => beta u.1)))
+    (hbddSup : ∀ t, BddAbove
+      (Set.range (fun n => maxConvProjPow beta n t))) :
+    (IsStrictMinimalServiceCurve beta S ↔
+        IsStrictMinimalServiceCurve (ndClosure beta) S) ∧
+      (IsStrictMinimalServiceCurve beta S ↔
+        IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S) :=
+  ⟨(isStrictMinimalServiceCurve_ndClosure_iff beta hbddNd).symm,
+    (isStrictMinimalServiceCurve_superAdditiveClosureMax_iff beta hbddSup).symm⟩
+
+/-- Under an affine bound `beta s ≤ r * s`, each self-convolution iterate stays
+below `r * ·`: `maxConvProjPow beta n t ≤ r * t`, since `r * a + r * b = r * t`
+on any split `a + b = t`. -/
+theorem maxConvProjPow_le_of_affine_bound {beta : ℝ≥0 → ℝ≥0} {r : ℝ≥0}
+    (hr : ∀ s, beta s ≤ r * s) (n : ℕ) (t : ℝ≥0) :
+    maxConvProjPow beta n t ≤ r * t := by
+  induction n generalizing t with
+  | zero => exact hr t
+  | succ n ih =>
+    show maxConvProj (maxConvProjPow beta n) (maxConvProjPow beta n) t ≤ r * t
+    refine maxConvProj_le _ _ t (r * t) (fun p => ?_)
+    obtain ⟨⟨a, b⟩, (hab : a + b = t)⟩ := p
+    calc maxConvProjPow beta n a + maxConvProjPow beta n b
+        ≤ r * a + r * b := add_le_add (ih a) (ih b)
+      _ = r * (a + b) := (mul_add r a b).symm
+      _ = r * t := by rw [hab]
+
+/-- Closure equivalence under the interpretable hypothesis that `beta` has some
+affine rate bound `∃ r, ∀ s, beta s ≤ r * s`: this discharges both boundedness
+conditions (`beta` is then bounded by `r * t` on `[0, t]`, and its
+self-convolution iterates stay below `r * ·`), giving
+`Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) = Sₛₜᵣᵢ𝒸ₜ(β*̄)`. Unlike super-additivity, this allows a
+nontrivial closure. -/
+theorem isStrictMinimalServiceCurve_closures_iff_of_affine_bound
+    (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s) :
+    (IsStrictMinimalServiceCurve beta S ↔
+        IsStrictMinimalServiceCurve (ndClosure beta) S) ∧
+      (IsStrictMinimalServiceCurve beta S ↔
+        IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S) := by
+  obtain ⟨r, hr⟩ := hr
+  refine isStrictMinimalServiceCurve_closures_iff beta (fun t => ?_) (fun t => ?_)
+  · exact ⟨r * t, by rintro x ⟨⟨u, hu⟩, rfl⟩; exact le_trans (hr u) (by gcongr)⟩
+  · exact ⟨r * t, by
+      rintro x ⟨n, rfl⟩; exact maxConvProjPow_le_of_affine_bound hr n t⟩
 
 /-- `sigma` is an arrival curve for `D`: `D ∗ sigma ≤ D`. -/
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
