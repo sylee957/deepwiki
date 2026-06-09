@@ -416,6 +416,26 @@ theorem stepCurve_minPlus_total_count {S : Curve → Curve → Prop}
     (n : ℝ≥0) * s ≤ D (T + (n : ℝ≥0) * s / C) :=
   stepCurve_minPlus_total hC hβ hp
 
+/-- Packet count form of `le_rushCurve_of_pos`: the rush server for `n`
+packets of size `s` serves the first `n − 1` packets within any `ε > 0`. -/
+theorem le_rushCurve_of_pos_count {T s C ε : ℝ≥0} {n : ℕ} (hε : 0 < ε) :
+    ((n - 1 : ℕ) : ℝ≥0) * s ≤
+      rushCurve T ((n : ℝ≥0) * s) (((n - 1 : ℕ) : ℝ≥0) * s) C (T + ε) :=
+  le_rushCurve_of_pos hε
+
+/-- Packet count form of `rushCurve_lt_of_lt`: the rush server for `n ≥ 1`
+packets of size `s > 0` has not completed the last packet at any time before
+`T + n·s/C` — together with `le_rushCurve_of_pos_count`, its service time
+alone is `n·s/C − ε`. -/
+theorem rushCurve_lt_of_lt_count {T s C v : ℝ≥0} {n : ℕ} (hn : 0 < n)
+    (hs : 0 < s) (hC : C ≠ 0) (hv : v < T + (n : ℝ≥0) * s / C) :
+    rushCurve T ((n : ℝ≥0) * s) (((n - 1 : ℕ) : ℝ≥0) * s) C v <
+      (n : ℝ≥0) * s :=
+  rushCurve_lt_of_lt
+    (mul_lt_mul_of_pos_right
+      (Nat.cast_lt.mpr (Nat.sub_lt hn one_pos)) hs)
+    hC hv
+
 /-- Packet count form of the separation: for `n ≥ 2` packets of size `s > 0`,
 some server (the rush server with `c = (n−1)·s`, `b = n·s`) offers `λ_C`
 min-plus but not strictly. -/
