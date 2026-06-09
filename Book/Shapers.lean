@@ -80,6 +80,15 @@ theorem strictServiceRel_mono
   gcongr
   exact h _
 
+/-- The zero curve `beta₀ ≡ 0` is a strict service curve for every server: the
+bound `D s + 0 ≤ D t` is just monotonicity of `D`. -/
+theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
+    IsStrictMinimalServiceCurve (fun _ => 0) S := by
+  intro A D _ s t hst _
+  show D s + (0 : ℝ≥0) ≤ D t
+  rw [add_zero]
+  exact D.mono hst
+
 /-- Pointwise max of two strict service curves is offered. -/
 theorem isStrictMinimalServiceCurve_sup
     {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → ℝ≥0}
