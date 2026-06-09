@@ -27,7 +27,7 @@ theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
   exact mul_le_mul_left (h s) (D u)
 
 /-- `S` offers strict service `beta`: `D s + beta(t-s) ≤ D t` on backlog. -/
-def OffersStrictService (beta : ℝ≥0 → ℝ≥0)
+def IsStrictMinimalServiceCurve (beta : ℝ≥0 → ℝ≥0)
     (S : Server) : Prop :=
   ∀ A D : Curve, (A, D) ∈ S →
     ∀ s t, s ≤ t →
@@ -48,7 +48,7 @@ theorem subset_strictServiceRel_iff
     {S : Server} {beta : ℝ≥0 → ℝ≥0} :
     (∀ A D : Curve, (A, D) ∈ S →
         (A, D) ∈ strictServiceRel beta) ↔
-      OffersStrictService beta S := by
+      IsStrictMinimalServiceCurve beta S := by
   constructor
   · intro h A D hp
     exact (h A D hp).2
@@ -66,11 +66,11 @@ theorem strictServiceRel_mono
   exact h _
 
 /-- Pointwise max of two strict service curves is offered. -/
-theorem offersStrictService_sup
+theorem isStrictMinimalServiceCurve_sup
     {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
-    (h : OffersStrictService beta S)
-    (h' : OffersStrictService beta' S) :
-    OffersStrictService
+    (h : IsStrictMinimalServiceCurve beta S)
+    (h' : IsStrictMinimalServiceCurve beta' S) :
+    IsStrictMinimalServiceCurve
       (fun u => max (beta u) (beta' u)) S := by
   intro A D hp s t hst hbl
   show D s + max (beta (t-s)) (beta' (t-s)) ≤ D t
@@ -92,7 +92,7 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
 
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
 theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
-    (hβ : OffersStrictService beta S)
+    (hβ : IsStrictMinimalServiceCurve beta S)
     (A D : Curve)
     (hp : (A, D) ∈ S)
     {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
@@ -111,10 +111,10 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
     _ ≤ D t := b2
 
 /-- Strict service is preserved by the non-decreasing closure `ndClosure`. -/
-theorem offersStrictService_ndClosure
+theorem isStrictMinimalServiceCurve_ndClosure
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
-    (hβ : OffersStrictService beta S) :
-    OffersStrictService (ndClosure beta) S := by
+    (hβ : IsStrictMinimalServiceCurve beta S) :
+    IsStrictMinimalServiceCurve (ndClosure beta) S := by
   intro A D hp s t hst hbl
   show D s + ndClosure beta (t - s) ≤ D t
   unfold ndClosure
@@ -130,24 +130,24 @@ theorem offersStrictService_ndClosure
   exact le_trans hb (D.mono hsu)
 
 /-- Offering `ndClosure beta` is equivalent to offering `beta` (when bdd). -/
-theorem offersStrictService_ndClosure_iff
+theorem isStrictMinimalServiceCurve_ndClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
-    OffersStrictService (ndClosure beta) S ↔
-      OffersStrictService beta S := by
+    IsStrictMinimalServiceCurve (ndClosure beta) S ↔
+      IsStrictMinimalServiceCurve beta S := by
   constructor
   · intro h A D hp s t hst hbl
     exact le_trans
       (by gcongr; exact le_ndClosure beta hbdd (t - s))
       (h A D hp s t hst hbl)
-  · exact offersStrictService_ndClosure beta
+  · exact isStrictMinimalServiceCurve_ndClosure beta
 
 /-- Strict service is preserved by the max-plus self-convolution. -/
-theorem offersStrictService_maxConvProj
+theorem isStrictMinimalServiceCurve_maxConvProj
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
-    (hβ : OffersStrictService beta S) :
-    OffersStrictService (maxConvProj beta beta) S := by
+    (hβ : IsStrictMinimalServiceCurve beta S) :
+    IsStrictMinimalServiceCurve (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
   show D s + maxConvProj beta beta (t - s) ≤ D t
   refine add_maxConvProj_le _ _ _ _ (fun q => ?_)
@@ -168,39 +168,39 @@ theorem offersStrictService_maxConvProj
   exact hcc
 
 /-- Strict service is preserved by every max-plus convolution power. -/
-theorem offers_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
-    {S : Server} (hβ : OffersStrictService beta S)
+theorem isStrictMinimalServiceCurve_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
+    {S : Server} (hβ : IsStrictMinimalServiceCurve beta S)
     (n : ℕ) :
-    OffersStrictService (maxConvProjPow beta n) S := by
+    IsStrictMinimalServiceCurve (maxConvProjPow beta n) S := by
   induction n with
   | zero => exact hβ
-  | succ n ih => exact offersStrictService_maxConvProj _ ih
+  | succ n ih => exact isStrictMinimalServiceCurve_maxConvProj _ ih
 
 /-- Strict service is preserved by the super-additive closure
 `superAdditiveClosureMax`. -/
-theorem offersStrictService_superAdditiveClosureMax
+theorem isStrictMinimalServiceCurve_superAdditiveClosureMax
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
-    (hβ : OffersStrictService beta S) :
-    OffersStrictService (superAdditiveClosureMax beta) S := by
+    (hβ : IsStrictMinimalServiceCurve beta S) :
+    IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S := by
   intro A D hp s t hst hbl
   show D s + superAdditiveClosureMax beta (t - s) ≤ D t
   unfold superAdditiveClosureMax
   refine add_ciSup_le _ _ _ (fun n => ?_)
-  exact offers_maxConvProjPow beta hβ n A D hp s t hst hbl
+  exact isStrictMinimalServiceCurve_maxConvProjPow beta hβ n A D hp s t hst hbl
 
 /-- Offering `superAdditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
-theorem offersStrictService_superAdditiveClosureMax_iff
+theorem isStrictMinimalServiceCurve_superAdditiveClosureMax_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Server}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t))) :
-    OffersStrictService (superAdditiveClosureMax beta) S ↔
-      OffersStrictService beta S := by
+    IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S ↔
+      IsStrictMinimalServiceCurve beta S := by
   constructor
   · intro h A D hp s t hst hbl
     exact le_trans
       (by gcongr; exact le_superAdditiveClosureMax beta hbdd (t - s))
       (h A D hp s t hst hbl)
-  · exact offersStrictService_superAdditiveClosureMax beta
+  · exact isStrictMinimalServiceCurve_superAdditiveClosureMax beta
 
 /-- `sigma` is an arrival curve for `D`: `D ∗ sigma ≤ D`. -/
 def AllowsArrivalCurve (D sigma : Fmin) : Prop :=
