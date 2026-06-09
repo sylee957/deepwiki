@@ -59,32 +59,16 @@ theorem le_iff_toFmin {D A : Curve} :
     have : ((D t : ℝ≥0∞)) ≤ (A t : ℝ≥0∞) := ht
     exact_mod_cast this
 
-/-- A relation on curves is a server when it is causal (`D ≤ A`) and left-total
-(every curve input has an output). -/
+/-- `S` is causal: an output never exceeds its input, `(A, D) ∈ S → D ≤ A`. -/
+def IsCausal (S : Set (Curve × Curve)) : Prop :=
+  ∀ A D : Curve, (A, D) ∈ S → D ≤ A
+
+/-- `S` is left-total: every curve input `A` has an output `D`. -/
+def IsLeftTotal (S : Set (Curve × Curve)) : Prop :=
+  ∀ A : Curve, ∃ D : Curve, (A, D) ∈ S
+
+/-- A relation `S` on curves is a server when it is causal and left-total. -/
 def IsServer (S : Set (Curve × Curve)) : Prop :=
-  (∀ p ∈ S, p.2 ≤ p.1) ∧ (∀ A : Curve, ∃ D : Curve, (A, D) ∈ S)
-
-/-- A server: a set of curve pairs satisfying `IsServer`. -/
-abbrev Server : Type := {S : Set (Curve × Curve) // IsServer S}
-
-/-- `Server` is `SetLike`: it coerces to its underlying set of curve pairs, so
-`(A, D) ∈ S` is membership and `S₁ ≤ S₂` is inclusion. -/
-instance : SetLike Server (Curve × Curve) where
-  coe S := S.val
-  coe_injective' := Subtype.val_injective
-
-/-- Subset of servers `S₁ ⊆ S₂`: every member of `S₁` is a member of `S₂`. -/
-instance : HasSubset Server := ⟨fun S₁ S₂ => ∀ ⦃p⦄, p ∈ S₁ → p ∈ S₂⟩
-
-/-- `S₁ ⊆ S₂` and `S₁ ≤ S₂` coincide on servers. -/
-theorem Server.subset_iff_le {S₁ S₂ : Server} : S₁ ⊆ S₂ ↔ S₁ ≤ S₂ := Iff.rfl
-
-/-- A `Server` is causal: `(A, D) ∈ S → D ≤ A`. -/
-theorem Server.causal (S : Server) {A D : Curve} (h : (A, D) ∈ S) : D ≤ A :=
-  S.property.1 _ h
-
-/-- A `Server` is left-total: every curve input `A` has an output `D`. -/
-theorem Server.leftTotal (S : Server) (A : Curve) : ∃ D : Curve, (A, D) ∈ S :=
-  S.property.2 A
+  IsCausal S ∧ IsLeftTotal S
 
 end DeepWiki

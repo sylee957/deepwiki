@@ -28,7 +28,7 @@ theorem conv_mono_right (D : Fmin) {sigma sigma' : Fmin}
 
 /-- `S` offers strict service `beta`: `D s + beta(t-s) ≤ D t` on backlog. -/
 def IsStrictMinimalServiceCurve (beta : ℝ≥0 → ℝ≥0)
-    (S : Server) : Prop :=
+    (S : Set (Curve × Curve)) : Prop :=
   ∀ A D : Curve, (A, D) ∈ S →
     ∀ s t, s ≤ t →
       IsBacklogged A D (Set.Ioc s t) →
@@ -42,10 +42,25 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
         IsBacklogged A D (Set.Ioc s t) →
           D s + beta (t - s) ≤ D t)
 
+/-- When `beta 0 = 0`, `strictServiceRel beta` is a server: causality is the first
+conjunct, and left-totality holds since each input serves itself (its backlogged
+period is empty, so the bound is vacuous except at `s = t`, where `beta 0 = 0`). -/
+theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0) :
+    IsServer (strictServiceRel beta) := by
+  refine ⟨fun _ _ hp => hp.1, fun A => ⟨A, (fun _ => le_refl _), ?_⟩⟩
+  intro s t hst hbl
+  by_cases h : (Set.Ioc s t).Nonempty
+  · obtain ⟨u, hu⟩ := h
+    exact absurd (hbl u hu) (lt_irrefl _)
+  · rw [Set.not_nonempty_iff_eq_empty, Set.Ioc_eq_empty_iff] at h
+    have : s = t := le_antisymm hst (not_lt.mp h)
+    subst this
+    rw [tsub_self, h0, add_zero]
+
 /-- Every curve pair of `S` lies in `strictServiceRel beta` iff `S` offers strict
 service `beta`. -/
 theorem subset_strictServiceRel_iff
-    {S : Server} {beta : ℝ≥0 → ℝ≥0} :
+    {S : Set (Curve × Curve)} (hSrv : IsServer S) {beta : ℝ≥0 → ℝ≥0} :
     (∀ A D : Curve, (A, D) ∈ S →
         (A, D) ∈ strictServiceRel beta) ↔
       IsStrictMinimalServiceCurve beta S := by
@@ -53,7 +68,7 @@ theorem subset_strictServiceRel_iff
   · intro h A D hp
     exact (h A D hp).2
   · intro h A D hp
-    exact ⟨S.causal hp, h A D hp⟩
+    exact ⟨hSrv.1 _ _ hp, h A D hp⟩
 
 /-- Strict-service relation is antitone in `beta`. -/
 theorem strictServiceRel_mono
@@ -67,7 +82,7 @@ theorem strictServiceRel_mono
 
 /-- Pointwise max of two strict service curves is offered. -/
 theorem isStrictMinimalServiceCurve_sup
-    {S : Server} {beta beta' : ℝ≥0 → ℝ≥0}
+    {S : Set (Curve × Curve)} {beta beta' : ℝ≥0 → ℝ≥0}
     (h : IsStrictMinimalServiceCurve beta S)
     (h' : IsStrictMinimalServiceCurve beta' S) :
     IsStrictMinimalServiceCurve
@@ -91,7 +106,7 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
   exact hbound
 
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
-theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
+theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hβ : IsStrictMinimalServiceCurve beta S)
     (A D : Curve)
     (hp : (A, D) ∈ S)
@@ -112,7 +127,7 @@ theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Server}
 
 /-- Strict service is preserved by the non-decreasing closure `ndClosure`. -/
 theorem isStrictMinimalServiceCurve_ndClosure
-    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hβ : IsStrictMinimalServiceCurve beta S) :
     IsStrictMinimalServiceCurve (ndClosure beta) S := by
   intro A D hp s t hst hbl
@@ -131,7 +146,7 @@ theorem isStrictMinimalServiceCurve_ndClosure
 
 /-- Offering `ndClosure beta` is equivalent to offering `beta` (when bdd). -/
 theorem isStrictMinimalServiceCurve_ndClosure_iff
-    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
     IsStrictMinimalServiceCurve (ndClosure beta) S ↔
@@ -145,7 +160,7 @@ theorem isStrictMinimalServiceCurve_ndClosure_iff
 
 /-- Strict service is preserved by the max-plus self-convolution. -/
 theorem isStrictMinimalServiceCurve_maxConvProj
-    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hβ : IsStrictMinimalServiceCurve beta S) :
     IsStrictMinimalServiceCurve (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
@@ -169,7 +184,7 @@ theorem isStrictMinimalServiceCurve_maxConvProj
 
 /-- Strict service is preserved by every max-plus convolution power. -/
 theorem isStrictMinimalServiceCurve_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
-    {S : Server} (hβ : IsStrictMinimalServiceCurve beta S)
+    {S : Set (Curve × Curve)} (hβ : IsStrictMinimalServiceCurve beta S)
     (n : ℕ) :
     IsStrictMinimalServiceCurve (maxConvProjPow beta n) S := by
   induction n with
@@ -179,7 +194,7 @@ theorem isStrictMinimalServiceCurve_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
 /-- Strict service is preserved by the super-additive closure
 `superAdditiveClosureMax`. -/
 theorem isStrictMinimalServiceCurve_superAdditiveClosureMax
-    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hβ : IsStrictMinimalServiceCurve beta S) :
     IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S := by
   intro A D hp s t hst hbl
@@ -190,7 +205,7 @@ theorem isStrictMinimalServiceCurve_superAdditiveClosureMax
 
 /-- Offering `superAdditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
 theorem isStrictMinimalServiceCurve_superAdditiveClosureMax_iff
-    (beta : ℝ≥0 → ℝ≥0) {S : Server}
+    (beta : ℝ≥0 → ℝ≥0) {S : Set (Curve × Curve)}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t))) :
     IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S ↔
@@ -228,7 +243,7 @@ theorem allowsArrivalCurve_iff_kernel
     exact h u s t hus
 
 /-- `S` is a shaper for `sigma`: every output allows arrival curve `sigma`. -/
-def IsShaper (S : Server) (sigma : Fmin) : Prop :=
+def IsShaper (S : Set (Curve × Curve)) (sigma : Fmin) : Prop :=
   ∀ p ∈ S, AllowsArrivalCurve (toFmin p.2) sigma
 
 /-- Largest causal relation that shapes outputs to arrival curve `sigma`. -/
@@ -244,16 +259,17 @@ theorem mem_shaperRel_iff
         AllowsArrivalCurve (toFmin p.2) sigma :=
   Iff.rfl
 
-/-- The server built from `shaperRel sigma`. -/
-def shaperServer (sigma : Fmin)
+/-- `shaperRel sigma` is a server: causality is the first conjunct, and
+left-totality is the supplied witness `htot`. -/
+theorem isServer_shaperRel (sigma : Fmin)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ shaperRel sigma) :
-    Server :=
-  ⟨shaperRel sigma, fun _p hp => hp.1, htot⟩
+    IsServer (shaperRel sigma) :=
+  ⟨fun _ _ hp => hp.1, htot⟩
 
 /-- `S ⊆ shaperRel sigma` iff `S` is a shaper for `sigma` on curve pairs. -/
 theorem subset_shaperRel_iff
-    {S : Server} {sigma : Fmin} :
+    {S : Set (Curve × Curve)} (hSrv : IsServer S) {sigma : Fmin} :
     (∀ A D : Curve, (A, D) ∈ S →
         (A, D) ∈ shaperRel sigma) ↔
       (∀ A D : Curve, (A, D) ∈ S →
@@ -262,7 +278,7 @@ theorem subset_shaperRel_iff
   · intro h A D hp
     exact (h A D hp).2
   · intro h A D hp
-    exact ⟨S.causal hp, h A D hp⟩
+    exact ⟨hSrv.1 _ _ hp, h A D hp⟩
 
 /-- `sigma ≤ sigma⋆`: a curve is below its sub-additive closure. -/
 theorem self_le_subadditiveClosure
@@ -360,7 +376,7 @@ theorem shaperRel_closure
 
 /-- A shaper for `sigma` is also a shaper for `sigma⋆`. -/
 theorem IsShaper.closure
-    {S : Server} {sigma : Fmin}
+    {S : Set (Curve × Curve)} {sigma : Fmin}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ := by
   intro p hp
@@ -373,14 +389,14 @@ example
   shaperRel_closure sigma
 
 example
-    {S : Server} {sigma : Fmin}
+    {S : Set (Curve × Curve)} {sigma : Fmin}
     (hS : IsShaper S sigma) :
     IsShaper S sigma⋆ :=
   IsShaper.closure hS
 
 /-- A shaper for `sigma` is a shaper for any smaller `sigma' ≤ sigma`. -/
 theorem IsShaper.of_le
-    {S : Server}
+    {S : Set (Curve × Curve)}
     {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
     (h : sigma' ≤ sigma) :
@@ -406,7 +422,7 @@ example
   shaperRel_mono h
 
 example
-    {S : Server} {sigma sigma' : Fmin}
+    {S : Set (Curve × Curve)} {sigma sigma' : Fmin}
     (hS : IsShaper S sigma)
     (h : sigma' ≤ sigma) :
     IsShaper S sigma' :=
@@ -414,7 +430,7 @@ example
 
 /-- `S` is a greedy shaper for `sigma`: every output is `A ∗ sigma`. -/
 def IsGreedyShaper
-    (S : Server) (sigma : Fmin) : Prop :=
+    (S : Set (Curve × Curve)) (sigma : Fmin) : Prop :=
   ∀ p ∈ S, toFmin p.2 = conv (toFmin p.1) sigma
 
 /-- If `sigma 0 = eₒ` then `A ≼ A ∗ sigma` in the dioid order. -/
@@ -442,22 +458,22 @@ theorem mem_greedyRel_iff
       toFmin p.2 = conv (toFmin p.1) sigma :=
   Iff.rfl
 
-/-- The greedy-shaper server built from `greedyRel sigma`. -/
-def greedyShaper
+/-- When `sigma 0 = eₒ`, `greedyRel sigma` is a server: causality follows from
+`A ≼ A ∗ sigma`, and left-totality is the supplied witness `htot`. -/
+theorem isServer_greedyRel
     (sigma : Fmin) (h0 : sigma 0 = eₒ)
     (htot : ∀ A : Curve, ∃ D : Curve,
       (A, D) ∈ greedyRel sigma) :
-    Server :=
-  ⟨greedyRel sigma,
-    fun p hp => by
+    IsServer (greedyRel sigma) :=
+  ⟨fun A D hp => by
       rw [le_iff_toFmin]
-      rw [(hp : toFmin p.2 = conv (toFmin p.1) sigma)]
-      exact self_le_conv_of_zeroAtOrigin (toFmin p.1) sigma h0,
+      rw [(hp : toFmin D = conv (toFmin A) sigma)]
+      exact self_le_conv_of_zeroAtOrigin (toFmin A) sigma h0,
     htot⟩
 
 /-- `IsGreedyShaper S sigma` iff `S ⊆ greedyRel sigma`. -/
 theorem isGreedyShaper_iff_subset
-    {S : Server} {sigma : Fmin} :
+    {S : Set (Curve × Curve)} {sigma : Fmin} :
     IsGreedyShaper S sigma ↔
       ∀ p ∈ S, p ∈ greedyRel sigma :=
   Iff.rfl
@@ -489,7 +505,7 @@ theorem allowsArrivalCurve_conv_of_subadd
 
 /-- A greedy shaper for sub-additive `sigma` is a shaper for `sigma`. -/
 theorem IsGreedyShaper.isShaper
-    {S : Server} {sigma : Fmin}
+    {S : Set (Curve × Curve)} {sigma : Fmin}
     (hsub : IsSubadditiveF sigma)
     (hS : IsGreedyShaper S sigma) :
     IsShaper S sigma := by
