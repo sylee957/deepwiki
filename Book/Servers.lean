@@ -42,6 +42,15 @@ instance : LE Curve where
 /-- `D ≤ A` on curves unfolds to the pointwise numeric order. -/
 theorem Curve.le_def {D A : Curve} : D ≤ A ↔ ∀ t, D t ≤ A t := Iff.rfl
 
+/-- The zero curve: no data ever arrives or departs. -/
+noncomputable def zeroCurve : Curve :=
+  ⟨fun _ => 0, monotone_const, rfl,
+    isPiecewiseContinuous_of_continuous _ continuous_const,
+    leftCont_of_continuous _ continuous_const⟩
+
+/-- `zeroCurve t = 0`. -/
+@[simp] theorem zeroCurve_apply (t : ℝ≥0) : zeroCurve t = 0 := rfl
+
 /-- Embed a curve into the `(min,plus)` function dioid `Fmin`. -/
 def toFmin (A : Curve) : Fmin := fun t => ⟨(A t : ℝ≥0∞)⟩
 
