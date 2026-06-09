@@ -37,10 +37,10 @@ def IsStrictMinimalServiceCurve (beta : ℝ≥0 → ℝ≥0)
 /-- Largest causal relation offering strict service `beta`. -/
 def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
     Set (Curve × Curve) :=
-  { p | p.2 ≤ p.1 ∧
+  setOf (fun (A, D) => D ≤ A ∧
       ∀ s t, s ≤ t →
-        IsBacklogged p.1 p.2 (Set.Ioc s t) →
-          p.2 s + beta (t - s) ≤ p.2 t }
+        IsBacklogged A D (Set.Ioc s t) →
+          D s + beta (t - s) ≤ D t)
 
 /-- Every curve pair of `S` lies in `strictServiceRel beta` iff `S` offers strict
 service `beta`. -/
