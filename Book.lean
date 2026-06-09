@@ -42,6 +42,7 @@ import Book.CombinedArrivalCurves
 import Book.ServiceCurveMinPlus
 import Book.ServiceCurveBacklog
 import Book.ServiceCurveStrict
+import Book.ServiceCurvePackets
 import Book.Shapers
 
 /-!
