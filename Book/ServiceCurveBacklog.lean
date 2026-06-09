@@ -1,0 +1,120 @@
+import Book.Servers
+
+/-! # Backlogged periods and start of backlog
+The backlogged set `IsBacklogged A D I` (`D < A` on `I`) and the start of the
+backlogged period `Start A D t` (last `u ≤ t` with `A u = D u`), with its basic
+order properties used by strict service-curve theory. -/
+
+namespace DeepWiki
+
+open Set Topology Filter
+open scoped Classical NNReal
+
+/-- `A`/`D` is backlogged on `I`: `D t < A t` for all `t ∈ I`. -/
+def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
+  ∀ t ∈ I, D t < A t
+
+/-- Start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
+noncomputable def Start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
+  sSup { u | u ≤ t ∧ A u = D u }
+
+/-- The set defining `Start` is nonempty (`0` belongs). -/
+theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
+    { u | u ≤ t ∧ A u = D u }.Nonempty :=
+  ⟨0, by simp, by
+    have hA : A 0 = 0 := A.zero
+    have hD : D 0 = 0 := D.zero
+    rw [hA, hD]⟩
+
+/-- `Start A D t ≤ t`. -/
+theorem start_le (A D : Curve) (t : ℝ≥0) :
+    Start A D t ≤ t :=
+  csSup_le (start_set_nonempty A D t) (fun _ hx => hx.1)
+
+/-- `Start A D` is monotone in `t`. -/
+theorem start_mono (A D : Curve) {t t' : ℝ≥0}
+    (h : t ≤ t') : Start A D t ≤ Start A D t' :=
+  csSup_le (start_set_nonempty A D t)
+    (fun _ hx =>
+      le_csSup ⟨t', fun _ hy => hy.1⟩
+        ⟨le_trans hx.1 h, hx.2⟩)
+
+/-- Backlog restricts to subsets of the interval. -/
+theorem IsBacklogged.subset {A D : Curve}
+    {I I' : Set ℝ≥0} (h : IsBacklogged A D I)
+    (hsub : I' ⊆ I) : IsBacklogged A D I' :=
+  fun t ht => h t (hsub ht)
+
+/-- `(Start A D t, t]` is a backlogged period when `D ≤ A`. -/
+theorem isBacklogged_Ioc_start (A D : Curve)
+    (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
+    IsBacklogged A D (Set.Ioc (Start A D t) t) := by
+  intro u hu
+  have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
+    ⟨t, fun x hx => hx.1⟩
+  rcases (hc u).lt_or_eq with h | h
+  · exact h
+  · exact absurd (le_csSup hbdd ⟨hu.2, h.symm⟩)
+      (not_le.mpr hu.1)
+
+/-- At the start of a backlogged period, `A = D` (uses left continuity). -/
+theorem A_start_eq_D_start (A D : Curve)
+    (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
+    A (Start A D t) = D (Start A D t) := by
+  set s := Start A D t with hs
+  rcases (hc s).lt_or_eq with hlt | heq
+  · exfalso
+    have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
+      ⟨t, fun x hx => hx.1⟩
+    have hs0 : 0 < s := by
+      rcases eq_zero_or_pos s with h | h
+      · have hA : A 0 = 0 := A.zero
+        have hD : D 0 = 0 := D.zero
+        rw [h, hA, hD] at hlt
+        exact absurd hlt (lt_irrefl 0)
+      · exact h
+    have hev : ∀ᶠ u in 𝓝[<] s, D u < A u :=
+      (D.leftCont s).eventually_lt (A.leftCont s) hlt
+    have hbasis :
+        (𝓝[<] s).HasBasis (· < s) (Ioo · s) :=
+      nhdsLT_basis_of_exists_lt ⟨0, hs0⟩
+    rw [hbasis.eventually_iff] at hev
+    obtain ⟨l, hls, hl⟩ := hev
+    have hub : ∀ x ∈ { u | u ≤ t ∧ A u = D u },
+        x ≤ l := by
+      intro x hx
+      by_contra hxl
+      rw [not_le] at hxl
+      rcases (le_csSup hbdd hx).lt_or_eq with hxlt | hxeq
+      · have := hl ⟨hxl, hxlt⟩
+        rw [hx.2] at this; exact absurd this (lt_irrefl _)
+      · -- x = sSup = s with A x = D x, vs D s < A s
+        subst hxeq
+        exact absurd hx.2 (ne_of_gt hlt)
+    exact absurd
+      (csSup_le (start_set_nonempty A D t) hub)
+      (not_le.mpr hls)
+  · exact heq.symm
+
+/-- `Start` is constant across an order-connected backlogged set. -/
+theorem start_const_of_backlogged (A D : Curve)
+    (hc : ∀ x, D x ≤ A x)
+    {I : Set ℝ≥0} (hI : IsBacklogged A D I)
+    (hoc : I.OrdConnected)
+    {t t' : ℝ≥0} (ht : t ∈ I) (ht' : t' ∈ I) :
+    Start A D t = Start A D t' := by
+  wlog hle : t ≤ t' generalizing t t'
+  · exact (this ht' ht (not_le.mp hle).le).symm
+  refine le_antisymm (start_mono A D hle) ?_
+  have hst : Start A D t' ≤ t := by
+    by_contra h
+    rw [not_le] at h
+    have hmem : Start A D t' ∈ I :=
+      hoc.out ht ht' ⟨h.le, start_le A D t'⟩
+    have := hI _ hmem
+    rw [A_start_eq_D_start A D hc t'] at this
+    exact absurd this (lt_irrefl _)
+  exact le_csSup ⟨t, fun y hy => hy.1⟩
+    ⟨hst, A_start_eq_D_start A D hc t'⟩
+
+end DeepWiki

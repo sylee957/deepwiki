@@ -40,6 +40,7 @@ import Book.MaximalArrivalCurves
 import Book.MinimalArrivalCurves
 import Book.CombinedArrivalCurves
 import Book.ServiceCurveMinPlus
+import Book.ServiceCurveBacklog
 import Book.Shapers
 
 /-!
