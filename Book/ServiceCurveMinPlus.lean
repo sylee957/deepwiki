@@ -99,11 +99,9 @@ theorem isMinPlusServiceCurve_iff_subset {beta : ℝ≥0 → EReal}
 theorem IsMinPlusServiceCurve.mono
     {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → EReal}
     (h : beta ≤ beta') (hS : IsMinPlusServiceCurve beta' S) :
-    IsMinPlusServiceCurve beta S := by
-  intro A D hp t
-  refine le_trans ?_ (hS A D hp t)
-  refine le_iInf (fun p => ?_)
-  exact le_trans (ciInf_le (OrderBot.bddBelow _) p) (by gcongr; exact h p.1.2)
+    IsMinPlusServiceCurve beta S :=
+  fun A D hp t =>
+    le_trans (minConv_le_minConv (fun _ => le_rfl) h t) (hS A D hp t)
 
 /-- The trivial zero service curve `beta ≡ 0` (`EReal`-valued). -/
 noncomputable def betaZero : ℝ≥0 → EReal := fun _ => 0

@@ -1,4 +1,5 @@
 import Book.ConvolutionMinimum
+import Book.NdClosure
 import Book.ConvolutionMinimumExt
 import Book.Additivity
 import Book.FunctionDioids
@@ -8,7 +9,8 @@ import Mathlib.Data.EReal.Operations
 The (min,+) sub-additive (Kleene-star) closure `⨅ₙ gⁿ` for curves
 `g : ℝ≥0 → EReal`, built from raw `minConv`.  `EReal` is not a
 `CompleteDioid` (its native `+` is bot-absorbing, the wrong convention),
-so the good properties are gated on `NeverBot g` (never `−∞`). -/
+so the good properties are gated on `NeverBot g` (never `−∞`). Also the
+`EReal` specializations of `minConv` monotonicity and `ndClosure`. -/
 
 namespace DeepWiki
 
@@ -74,20 +76,23 @@ theorem subadditiveClosureEReal_le (g : ℝ≥0 → EReal) (hg : NeverBot g)
   have h := iInf_le (fun n : ℕ => convPowEReal g n t) 1
   rwa [convPowEReal_one g hg] at h
 
+/-- `minConv` is monotone in both arguments (pointwise). -/
+theorem minConv_le_minConv {g g' h h' : ℝ≥0 → EReal}
+    (hg : ∀ t, g t ≤ g' t) (hh : ∀ t, h t ≤ h' t) (t : ℝ≥0) :
+    minConv g h t ≤ minConv g' h' t := by
+  unfold minConv
+  refine le_iInf ?_
+  rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
+  refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
+  exact add_le_add (hg u) (hh s)
+
 /-- `convPowEReal` is monotone in `g` (pointwise, numeric). -/
 theorem convPowEReal_mono (g h : ℝ≥0 → EReal)
     (hgh : ∀ t, g t ≤ h t) (n : ℕ) (t : ℝ≥0) :
     convPowEReal g n t ≤ convPowEReal h n t := by
   induction n generalizing t with
   | zero => exact le_refl _
-  | succ k ih =>
-      show minConv (convPowEReal g k) g t
-          ≤ minConv (convPowEReal h k) h t
-      unfold minConv
-      refine le_iInf ?_
-      rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-      refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
-      exact add_le_add (ih u) (hgh s)
+  | succ k ih => exact minConv_le_minConv ih hgh t
 
 /-- The closure is monotone in `g` (pointwise, numeric). -/
 theorem subadditiveClosureEReal_mono (g h : ℝ≥0 → EReal)
@@ -301,5 +306,28 @@ theorem subadditiveClosureEReal_eq_self (g : ℝ≥0 → EReal)
         · rw [convUnitEReal, if_neg ht]; exact le_top
     | succ k =>
         rw [convPowEReal_succ_of_subadditive g hg hsub h0]
+
+/-! ## Non-decreasing closure over `EReal` -/
+
+/-- Over `EReal` every `f` satisfies `ClosureBddAbove`. -/
+theorem ndClosure_ereal_bdd (f : ℝ≥0 → EReal) : ClosureBddAbove f :=
+  fun _ => OrderTop.bddAbove _
+
+/-- `le_ndClosure` specialized to `EReal`: the closure dominates `f`. -/
+theorem le_ndClosure_ereal (f : ℝ≥0 → EReal) (t : ℝ≥0) :
+    f t ≤ ndClosure f t :=
+  le_ndClosure f (ndClosure_ereal_bdd f) t
+
+/-- `ndClosure_mono` specialized to `EReal`: the closure is non-decreasing. -/
+theorem monotone_ndClosure_ereal (f : ℝ≥0 → EReal) :
+    Monotone (ndClosure f) :=
+  fun _ _ hxy => ndClosure_mono f (ndClosure_ereal_bdd f) hxy
+
+/-- `ndClosure_le` specialized to `EReal`: the closure is the least
+non-decreasing majorant. -/
+theorem ndClosure_ereal_le {f g : ℝ≥0 → EReal} (hg : Monotone g)
+    (hfg : ∀ t, f t ≤ g t) (t : ℝ≥0) :
+    ndClosure f t ≤ g t :=
+  ndClosure_le hg hfg t
 
 end DeepWiki

@@ -95,4 +95,33 @@ theorem isMaximalServiceCurve_delayEReal_zero {S : Curve → Curve → Prop}
   rw [minConv_delayEReal_zero]
   exact curveE_mono (hc _ _ hp)
 
+/-! ## Monotony of maximal service curves -/
+
+/-- Monotony of maximal service curves: a relation offering `beta ≤ beta'`
+also offers `beta'`, since `A ∗ beta ≤ A ∗ beta'`. -/
+theorem IsMaximalServiceCurve.mono {S : Curve → Curve → Prop}
+    {beta beta' : ℝ≥0 → EReal} (h : beta ≤ beta')
+    (hS : IsMaximalServiceCurve beta S) :
+    IsMaximalServiceCurve beta' S :=
+  fun A D hp =>
+    le_trans (hS A D hp) (fun t => minConv_le_minConv (fun _ => le_rfl) h t)
+
+/-- Equivalently, `maximalServiceRelation` is monotone in the curve:
+`beta ≤ beta'` gives the containment of relations. -/
+theorem maximalServiceRelation_mono {beta beta' : ℝ≥0 → EReal}
+    (h : beta ≤ beta') :
+    maximalServiceRelation beta ≤ maximalServiceRelation beta' :=
+  (isMaximalServiceCurve_maximalServiceRelation beta).mono h
+
+example (beta : ℝ≥0 → EReal) : ndClosure beta = maxConv beta 0 :=
+  ndClosure_eq_maxConv beta
+
+/-- A maximal service curve may be replaced by its non-decreasing closure:
+offering `beta` gives offering `ndClosure beta`, the least monotone majorant
+of `beta` (equal to `maxConv beta 0` by `ndClosure_eq_maxConv`). -/
+theorem isMaximalServiceCurve_ndClosure {S : Curve → Curve → Prop}
+    {beta : ℝ≥0 → EReal} (hS : IsMaximalServiceCurve beta S) :
+    IsMaximalServiceCurve (ndClosure beta) S :=
+  hS.mono (le_ndClosure_ereal beta)
+
 end DeepWiki

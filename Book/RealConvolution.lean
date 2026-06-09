@@ -12,8 +12,10 @@ namespace DeepWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 
-/-- `ndClosure beta` equals the max-plus convolution `maxConv beta 0`. -/
-theorem ndClosure_eq_maxConv (beta : ℝ≥0 → ℝ≥0) :
+/-- `ndClosure beta` equals the max-plus convolution `maxConv beta 0`, over
+any conditionally complete codomain with additive zero. -/
+theorem ndClosure_eq_maxConv {T : Type*} [ConditionallyCompleteLattice T]
+    [AddZeroClass T] (beta : ℝ≥0 → T) :
     ndClosure beta = maxConv beta 0 := by
   funext t
   have hrange :
