@@ -67,13 +67,23 @@ theorem mem_shaperRel_iff
         AllowsArrivalCurve (toFmin D) sigma :=
   Iff.rfl
 
+/-- The zero output allows every `sigma` as an arrival curve: numerically
+`0 ≤ 0 ∗ sigma` is trivial on the `ℝ≥0∞` carrier. -/
+theorem allowsArrivalCurve_zeroCurve (sigma : Fmin) :
+    AllowsArrivalCurve (toFmin zeroCurve) sigma := by
+  intro t
+  refine (MinPlusNN.le_iff _ _).mpr ?_
+  show ((zeroCurve t : ℝ≥0) : ℝ≥0∞) ≤ (conv (toFmin zeroCurve) sigma t).toVal
+  rw [zeroCurve_apply]
+  simp
+
 /-- `shaperRel sigma` is a server: causality is the first conjunct, and
-left-totality is the supplied witness `htot`. -/
-theorem isServer_shaperRel (sigma : Fmin)
-    (htot : ∀ A : Curve, ∃ D : Curve,
-      shaperRel sigma A D) :
+`zeroCurve` — whose output allows every `sigma` — gives left-totality. -/
+theorem isServer_shaperRel (sigma : Fmin) :
     IsServer (shaperRel sigma) :=
-  ⟨fun _ _ hp => hp.1, htot⟩
+  ⟨fun _ _ hp => hp.1,
+    fun _ => ⟨zeroCurve,
+      fun _ => zero_le', allowsArrivalCurve_zeroCurve sigma⟩⟩
 
 /-- `S ≤ shaperRel sigma` iff `S` is a shaper for `sigma` on curve pairs. -/
 theorem subset_shaperRel_iff
@@ -115,6 +125,18 @@ theorem kernel_convUnit (D : Fmin) :
   · rw [convUnit, if_neg hs]
     rw [Algebra.Semiring.otimes_eps]
     exact bot_le
+
+/-- Every `D` allows the convolution unit `δ₀ = convUnit` as an arrival
+curve (`δ₀` is `toF (delayNN 0)`, see `toF_delay0`). -/
+theorem allowsArrivalCurve_convUnit (D : Fmin) :
+    AllowsArrivalCurve D convUnit :=
+  (allowsArrivalCurve_iff_kernel D convUnit).mpr (kernel_convUnit D)
+
+/-- Every server — indeed every relation — is a `δ₀`-shaper: each output
+allows the unit `convUnit` as an arrival curve. -/
+theorem isShaper_convUnit (S : Curve → Curve → Prop) :
+    IsShaper S convUnit :=
+  fun _ D _ => allowsArrivalCurve_convUnit (toFmin D)
 
 /-- If `D` allows `sigma`, the kernel bound holds for every power `sigmaⁿ`. -/
 theorem kernel_convPow_of_allows
