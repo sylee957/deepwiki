@@ -59,16 +59,16 @@ theorem le_iff_toFmin {D A : Curve} :
     have : ((D t : ℝ≥0∞)) ≤ (A t : ℝ≥0∞) := ht
     exact_mod_cast this
 
-/-- `S` is causal: an output never exceeds its input, `(A, D) ∈ S → D ≤ A`. -/
-def IsCausal (S : Set (Curve × Curve)) : Prop :=
-  ∀ A D : Curve, (A, D) ∈ S → D ≤ A
+/-- `S` is causal: an output never exceeds its input, `S A D → D ≤ A`. -/
+def IsCausal (S : Curve → Curve → Prop) : Prop :=
+  ∀ A D : Curve, S A D → D ≤ A
 
-/-- `S` is left-total: every curve input `A` has an output `D`. -/
-def IsLeftTotal (S : Set (Curve × Curve)) : Prop :=
-  ∀ A : Curve, ∃ D : Curve, (A, D) ∈ S
+/-- `S` is left-total: every curve input `A` has an output `D` (`Relator.LeftTotal`). -/
+def IsLeftTotal (S : Curve → Curve → Prop) : Prop :=
+  ∀ A : Curve, ∃ D : Curve, S A D
 
 /-- A relation `S` on curves is a server when it is causal and left-total. -/
-def IsServer (S : Set (Curve × Curve)) : Prop :=
+def IsServer (S : Curve → Curve → Prop) : Prop :=
   IsCausal S ∧ IsLeftTotal S
 
 end DeepWiki
