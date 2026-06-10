@@ -194,6 +194,69 @@ theorem monotone_superadditiveClosureMax_of_affine_bound
   exact (monotone_maxConvProjPow_of_affine_bound hmono hr n htt).trans
     (le_ciSup (bddAbove_range_maxConvProjPow_of_affine_bound hr t') n)
 
+/-! ## The super-additive closure on the `ℝ≥0∞` carrier
+The `ℝ≥0` closure above needs the affine bound only because unbounded
+`ℝ≥0` suprema collapse to junk; on the complete carrier `ℝ≥0∞` (the
+book's `R⁺ ∪ {+∞}`) the closure and all its properties are
+unconditional. -/
+
+/-- `n`-fold `maxConv` self-convolution iterate on the `ℝ≥0∞` carrier. -/
+noncomputable def maxConvPow (beta : ℝ≥0 → ℝ≥0∞) : ℕ → (ℝ≥0 → ℝ≥0∞)
+  | 0 => beta
+  | n + 1 => maxConv (maxConvPow beta n) (maxConvPow beta n)
+
+/-- (max,+) super-additive closure on the `ℝ≥0∞` carrier: supremum of all
+`maxConvPow` iterates (`+∞` allowed, so no boundedness is needed). -/
+noncomputable def superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t => ⨆ n : ℕ, maxConvPow beta n t
+
+/-- `beta` is below its `ℝ≥0∞` super-additive closure, unconditionally. -/
+theorem le_superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    beta t ≤ superadditiveClosureMaxENN beta t :=
+  le_iSup (fun n => maxConvPow beta n t) 0
+
+/-- The `ℝ≥0∞` iterates are non-decreasing in the index: the `(t, 0)`
+splitting. -/
+theorem maxConvPow_le_succ (beta : ℝ≥0 → ℝ≥0∞) (n : ℕ) (t : ℝ≥0) :
+    maxConvPow beta n t ≤ maxConvPow beta (n + 1) t :=
+  le_self_add.trans (add_le_maxConv _ _ (add_zero t))
+
+/-- The `ℝ≥0∞` iterates are monotone in the index. -/
+theorem maxConvPow_le_maxConvPow (beta : ℝ≥0 → ℝ≥0∞)
+    {n m : ℕ} (hnm : n ≤ m) (t : ℝ≥0) :
+    maxConvPow beta n t ≤ maxConvPow beta m t := by
+  induction m, hnm using Nat.le_induction with
+  | base => exact le_rfl
+  | succ m _ ih => exact ih.trans (maxConvPow_le_succ beta m t)
+
+/-- **Super-additivity of the `ℝ≥0∞` closure**, unconditional: two iterates
+at `u` and `s` are dominated by the next iterate at `u + s`. -/
+theorem isSuperadditive_superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) :
+    IsSuperadditive (superadditiveClosureMaxENN beta) := by
+  intro u s
+  show (⨆ n : ℕ, maxConvPow beta n u) + (⨆ n : ℕ, maxConvPow beta n s)
+    ≤ superadditiveClosureMaxENN beta (u + s)
+  refine ENNReal.iSup_add_iSup_le fun n m => ?_
+  calc maxConvPow beta n u + maxConvPow beta m s
+      ≤ maxConvPow beta (max n m) u + maxConvPow beta (max n m) s :=
+        add_le_add (maxConvPow_le_maxConvPow beta (le_max_left n m) u)
+          (maxConvPow_le_maxConvPow beta (le_max_right n m) s)
+    _ ≤ maxConvPow beta (max n m + 1) (u + s) := add_le_maxConv _ _ rfl
+    _ ≤ superadditiveClosureMaxENN beta (u + s) :=
+        le_iSup (fun k => maxConvPow beta k (u + s)) (max n m + 1)
+
+/-- The `ℝ≥0∞` closure of a monotone curve is monotone, unconditionally. -/
+theorem monotone_superadditiveClosureMaxENN {beta : ℝ≥0 → ℝ≥0∞}
+    (hmono : Monotone beta) :
+    Monotone (superadditiveClosureMaxENN beta) := by
+  have hpow : ∀ n, Monotone (maxConvPow beta n) := by
+    intro n
+    induction n with
+    | zero => exact hmono
+    | succ n ih => exact monotone_maxConv ih
+  exact fun a b hab => iSup_mono fun n => hpow n hab
+
 /-- `n`-fold (min,+) self-convolution iterate of `beta`, indexed from `beta`:
 `minConvProjPow beta 0 = beta`, `minConvProjPow beta (n+1) = beta ∗ ·`. Indexing
 from `beta` (not the `+∞`-valued unit `δ₀`) keeps the iterate `ℝ≥0`-valued. -/

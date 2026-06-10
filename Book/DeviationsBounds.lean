@@ -18,6 +18,11 @@ namespace Deviation
 /-- The `ℝ≥0∞` reading of an `ℝ≥0`-valued cumulative function. -/
 abbrev liftENN (A : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0∞ := fun u => (A u : ℝ≥0∞)
 
+/-- `liftENN` transports monotonicity. -/
+theorem monotone_liftENN {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) :
+    Monotone (liftENN A) :=
+  fun _ _ hab => ENNReal.coe_le_coe.mpr (hmono hab)
+
 /-- `liftENN` preserves and reflects maximal arrival curves:
 `IsMaximalArrivalBound (liftENN A) (liftENN α) ↔ IsMaximalArrivalBound A α`
 (the increment bounds match through the exact embedding). -/

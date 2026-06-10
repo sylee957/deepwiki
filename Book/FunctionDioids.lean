@@ -351,6 +351,23 @@ theorem monotone_minConv {D T : Type*}
   · exact hf (min_le_left u x)
   · exact hg hs
 
+/-- `maxConv` is monotone when its second argument is: a splitting of `x`
+widens to a splitting of `y ≥ x` with the slack in the second slot. -/
+theorem monotone_maxConv {D T : Type*}
+    [_root_.AddCommMonoid D] [LinearOrder D]
+    [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
+    [_root_.AddCommMonoid T] [CompleteLattice T]
+    [IsOrderedAddMonoid T] {f g : D → T}
+    (hg : Monotone g) :
+    Monotone (maxConv f g) := by
+  intro x y hxy
+  refine maxConv_le fun u s hus => ?_
+  calc f u + g s ≤ f u + g (s + (y - x)) :=
+        add_le_add le_rfl (hg le_self_add)
+    _ ≤ maxConv f g y :=
+        add_le_maxConv f g
+          (by rw [← add_assoc, hus, add_tsub_cancel_of_le hxy])
+
 /-- Non-negative (min,+) functions: `F⁺`. -/
 abbrev FPlus :=
   {f : FminBar // IsNonneg (fun t => (f t).toVal)}
