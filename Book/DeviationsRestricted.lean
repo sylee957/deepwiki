@@ -48,19 +48,27 @@ theorem vDevAt_nsmul_add_le {α β : ℝ≥0 → ℝ≥0∞}
           add_assoc]
         exact add_le_add le_rfl le_add_tsub
 
+/-- A pointwise family dominated under period shifts computes its supremum
+on `[0, τ]`: `F (q • τ + r) ≤ F r` gives `⨆ t, F t = ⨆ t ≤ τ, F t`. -/
+theorem iSup_eq_biSup_of_nsmul_add_le {F : ℝ≥0 → ℝ≥0∞} {τ : ℝ≥0}
+    (hτ : 0 < τ) (hdom : ∀ (q : ℕ) (r : ℝ≥0), F (q • τ + r) ≤ F r) :
+    (⨆ t, F t) = ⨆ t ≤ τ, F t := by
+  apply le_antisymm
+  · refine iSup_le fun t => ?_
+    obtain ⟨q, r, rfl, hrτ⟩ := exists_eq_nsmul_add_lt_of_pos hτ t
+    exact le_trans (hdom q r)
+      (le_iSup₂ (f := fun t (_ : t ≤ τ) => F t) r hrτ.le)
+  · exact iSup₂_le fun t _ => le_iSup F t
+
 /-- **Restricting the vertical-deviation domain.** At a positive crossing
 point `τ` of sub-additive `α` against super-additive `β`, the vertical
 deviation can be computed on `[0, τ]`: `vDev α β = ⨆ t ≤ τ, vDevAt α β t`. -/
 theorem vDev_eq_biSup_of_crossing {α β : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive α) (hsup : IsSuperadditive β)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ β τ) :
-    vDev α β = ⨆ t ≤ τ, vDevAt α β t := by
-  apply le_antisymm
-  · refine iSup_le fun t => ?_
-    obtain ⟨q, r, rfl, hrτ⟩ := exists_eq_nsmul_add_lt_of_pos hτ t
-    exact le_trans (vDevAt_nsmul_add_le hsub hsup hcross q r)
-      (le_iSup₂ (f := fun t (_ : t ≤ τ) => vDevAt α β t) r hrτ.le)
-  · exact iSup₂_le fun t _ => vDevAt_le_vDev α β t
+    vDev α β = ⨆ t ≤ τ, vDevAt α β t :=
+  iSup_eq_biSup_of_nsmul_add_le hτ
+    (vDevAt_nsmul_add_le hsub hsup hcross)
 
 /-- Crossing-point domination (horizontal): admissible shifts at `r`
 transfer to `q • τ + r`, so the pointwise horizontal deviation at
@@ -83,13 +91,9 @@ point `τ`, the horizontal deviation can be computed on `[0, τ]`:
 theorem hDev_eq_biSup_of_crossing {α β : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive α) (hsup : IsSuperadditive β)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ β τ) :
-    (hDev α β : ℝ≥0∞) = ⨆ t ≤ τ, (hDevAt α β t : ℝ≥0∞) := by
-  apply le_antisymm
-  · refine iSup_le fun t => ?_
-    obtain ⟨q, r, rfl, hrτ⟩ := exists_eq_nsmul_add_lt_of_pos hτ t
-    exact le_trans (hDevAt_nsmul_add_le hsub hsup hcross q r)
-      (le_iSup₂ (f := fun t (_ : t ≤ τ) => (hDevAt α β t : ℝ≥0∞)) r hrτ.le)
-  · exact iSup₂_le fun t _ => hDevAt_le_hDev α β t
+    (hDev α β : ℝ≥0∞) = ⨆ t ≤ τ, (hDevAt α β t : ℝ≥0∞) :=
+  iSup_eq_biSup_of_nsmul_add_le hτ
+    (hDevAt_nsmul_add_le hsub hsup hcross)
 
 /-- Sub-additivity transports through the `ℝ≥0∞` reading: `toENN sigma` is
 sub-additive when `sigma` is. -/

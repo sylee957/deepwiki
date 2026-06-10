@@ -69,7 +69,7 @@ theorem isMinimalArrivalCurve_maxDeconv_self {A : ℝ≥0 → ℝ≥0}
     IsMinimalArrivalCurve A (maxDeconv A A) := by
   refine isMinimalArrivalCurve_of_increment A (maxDeconv A A) (fun t d => ?_)
   have hterm : maxDeconv A A d ≤ A (d + t) - A t :=
-    ciInf_le (OrderBot.bddBelow _) t
+    maxDeconv_le_sub A A d t
   calc A t + maxDeconv A A d
       ≤ A t + (A (d + t) - A t) := by gcongr
     _ = A (d + t) := add_tsub_cancel_of_le (hA (le_add_left le_rfl))

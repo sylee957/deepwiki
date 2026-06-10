@@ -92,6 +92,17 @@ theorem minConv_le_minConv {D T : Type*} [AddZeroClass D] [Add T]
   le_minConv fun u s hus =>
     le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
 
+/-- `minConv` at the origin: the only splitting of `0` is `(0, 0)`, so
+`minConv f g 0 = f 0 + g 0`. -/
+theorem minConv_apply_zero {D T : Type*} [_root_.AddCommMonoid D]
+    [PartialOrder D] [CanonicallyOrderedAdd D] [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T] (f g : D → T) :
+    minConv f g 0 = f 0 + g 0 :=
+  le_antisymm (minConv_le_add f g (add_zero 0))
+    (le_minConv fun u s hus => by
+      obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
+      exact le_rfl)
+
 /-- Elim: every term bounds the (min,+) deconvolution from below,
 `g (t + s) - h s ≤ minDeconv g h t`. -/
 theorem sub_le_minDeconv {D T : Type*} [Add D] [Sub T]
@@ -313,14 +324,8 @@ theorem IsNullAtOrigin.conv {D T : Type*}
     (hf : IsNullAtOrigin f) (hg : IsNullAtOrigin g) :
     IsNullAtOrigin (minConv f g) := by
   show minConv f g 0 = 0
-  simp only [minConv]
-  apply le_antisymm
-  · exact iInf_le_of_le ⟨(0, 0), by simp⟩ (by
-      simp [IsNullAtOrigin] at hf hg; simp [hf, hg])
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = 0)⟩
-    obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
-    simp [IsNullAtOrigin] at hf hg; simp [hf, hg]
+  rw [minConv_apply_zero, show f 0 = 0 from hf, show g 0 = 0 from hg,
+    add_zero]
 
 /-- `minConv` of two monotone functions is monotone. -/
 theorem monotone_minConv {D T : Type*}

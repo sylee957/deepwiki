@@ -63,15 +63,9 @@ theorem minConv_self_of_subadditive {D T : Type*}
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     minConv g g = g := by
   funext t
-  unfold minConv
-  apply le_antisymm
-  · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
-    simp [h0]
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    simp only
-    calc g t = g (u + s) := by rw [hus]
-      _ ≤ g u + g s := hsub u s
+  exact le_antisymm
+    ((minConv_le_add g g (zero_add t)).trans_eq (by rw [h0, zero_add]))
+    (le_minConv fun u s hus => hus ▸ hsub u s)
 
 /-- Superadditive `g` with `g 0 = 0` is a `maxConv` fixed point. -/
 theorem maxConv_self_of_superadditive {D T : Type*}
@@ -81,14 +75,9 @@ theorem maxConv_self_of_superadditive {D T : Type*}
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     maxConv g g = g := by
   funext t
-  unfold maxConv
-  apply le_antisymm
-  · refine iSup_le ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    simp only
-    calc g u + g s ≤ g (u + s) := hsup u s
-      _ = g t := by rw [hus]
-  · exact le_iSup_of_le ⟨(0, t), by simp⟩ (by simp [h0])
+  exact le_antisymm
+    (maxConv_le fun u s hus => hus ▸ hsup u s)
+    (le_trans (by rw [h0, zero_add]) (add_le_maxConv g g (zero_add t)))
 
 /-- Lift an `ℝ≥0∞`-valued function into `MinPlusNN` pointwise. -/
 def toF {D : Type} (g : D → ℝ≥0∞) : D → MinPlusNN :=
@@ -155,18 +144,11 @@ theorem minConv_eq_inf_of_subadditive {D T : Type*}
     minConv f g = f ⊓ g := by
   funext t
   apply le_antisymm
-  · refine le_inf ?_ ?_
-    · unfold minConv
-      refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
-      simp only; rw [hg0, add_zero]
-    · unfold minConv
-      refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
-      simp only; rw [hf0, zero_add]
-  · unfold minConv
-    refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (huv : u + s = t)⟩
-    simp only
-    calc (f ⊓ g) t = (f ⊓ g) (u + s) := by rw [huv]
+  · exact le_inf
+      ((minConv_le_add f g (add_zero t)).trans_eq (by rw [hg0, add_zero]))
+      ((minConv_le_add f g (zero_add t)).trans_eq (by rw [hf0, zero_add]))
+  · refine le_minConv fun u s hus => ?_
+    calc (f ⊓ g) t = (f ⊓ g) (u + s) := by rw [hus]
       _ ≤ (f ⊓ g) u + (f ⊓ g) s := hinf u s
       _ ≤ f u + g s :=
           add_le_add inf_le_left inf_le_right

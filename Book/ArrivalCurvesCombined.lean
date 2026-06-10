@@ -201,7 +201,7 @@ theorem le_maxDeconv_etaMax_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
   refine le_ciInf (fun u => ?_)
   -- `ηᵘ t`-bound at every witness `z`
   have hηt : ∀ z : ℝ≥0, maxDeconv αu αl t ≤ αu (t + z) - αl z := fun z =>
-    ciInf_le (OrderBot.bddBelow _) z
+    maxDeconv_le_sub αu αl t z
   -- per-`(v, w)` core bound
   have hterm : ∀ v w : ℝ≥0,
       maxDeconv αu αl t + (αl (u + w) - αu w) ≤ αu (t + u + v) - αl v := fun v w =>

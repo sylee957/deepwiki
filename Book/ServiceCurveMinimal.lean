@@ -243,14 +243,8 @@ theorem not_serviceCurve_of_pos {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < b
     (hconv : minConv (curveE A) beta ≤ curveE D) : False := by
   have hconv0 : minConv (curveE A) beta 0 ≤ curveE D 0 := hconv 0
   have hcaus0 : curveE D 0 ≤ curveE A 0 := hcaus 0
-  have hsplit : minConv (curveE A) beta 0 = curveE A 0 + beta 0 := by
-    unfold minConv
-    refine le_antisymm
-      (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(0, 0), by simp⟩ (le_refl _)) ?_
-    refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    obtain ⟨rfl, rfl⟩ : u = 0 ∧ s = 0 := by constructor <;> simp_all
-    simp
+  have hsplit : minConv (curveE A) beta 0 = curveE A 0 + beta 0 :=
+    minConv_apply_zero (curveE A) beta
   rw [hsplit] at hconv0
   have hchain : ((A 0 : ℝ) : EReal) + beta 0 ≤ ((A 0 : ℝ) : EReal) + 0 := by
     rw [add_zero]; exact le_trans hconv0 hcaus0
