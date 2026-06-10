@@ -51,16 +51,16 @@ noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
 
 /-- (max,+) super-additive closure: supremum of all `maxConvProjPow`
 iterates. -/
-noncomputable def superAdditiveClosureMax (beta : ℝ≥0 → ℝ≥0) :
+noncomputable def superadditiveClosureMax (beta : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t => ⨆ n : ℕ, maxConvProjPow beta n t
 
-/-- `beta` is below its super-additive closure `superAdditiveClosureMax beta`. -/
-theorem le_superAdditiveClosureMax (beta : ℝ≥0 → ℝ≥0)
+/-- `beta` is below its super-additive closure `superadditiveClosureMax beta`. -/
+theorem le_superadditiveClosureMax (beta : ℝ≥0 → ℝ≥0)
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t)))
-    (t : ℝ≥0) : beta t ≤ superAdditiveClosureMax beta t := by
-  unfold superAdditiveClosureMax
+    (t : ℝ≥0) : beta t ≤ superadditiveClosureMax beta t := by
+  unfold superadditiveClosureMax
   exact le_ciSup (hbdd t) 0
 
 /-- `n`-fold (min,+) self-convolution iterate of `beta`, indexed from `beta`:

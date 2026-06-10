@@ -258,7 +258,7 @@ theorem convPowEReal_succ_of_subadditive (g : ℝ≥0 → EReal)
   | zero => exact convPowEReal_one g hg
   | succ k ih =>
       show minConv (convPowEReal g (k + 1)) g = g
-      rw [ih, minConvE_self_of_subadditive g hsub h0]
+      rw [ih, minConv_self_of_subadditive g hsub h0]
 
 /-- Under `NeverBot`, a subadditive `g` with `g 0 = 0` is its own closure. -/
 theorem subadditiveClosureEReal_eq_self (g : ℝ≥0 → EReal)

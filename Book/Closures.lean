@@ -277,7 +277,7 @@ theorem subadditiveClosureE_eq_self {D : Type}
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     subadditiveClosureE g = g := by
   have hidem : conv (toF g) (toF g) = toF g := by
-    rw [conv_toF, minConvE_self_of_subadditive g hsub h0]
+    rw [conv_toF, minConv_self_of_subadditive g hsub h0]
   have hunit : ∀ t,
       convUnit (T := MinPlusNN) t ≼ₒ toF g t := by
     intro t
@@ -345,13 +345,9 @@ theorem superadditiveClosure_superadditive
   rw [MaxPlusNN.le_iff] at h
   exact h
 
-/-- `g` is super-additive: `g u + g s ≤ g (u + s)` on `WithBot ℝ≥0∞`. -/
-def IsSuperadditiveW (g : ℝ≥0 → WithBot ℝ≥0∞) : Prop :=
-  ∀ u s : ℝ≥0, g u + g s ≤ g (u + s)
-
 /-- Super-additive `g` with `g 0 = 0` is convolution-idempotent. -/
 theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
-    (hsup : IsSuperadditiveW g) (h0 : g 0 = 0) :
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     conv (toFmax g) (toFmax g) = toFmax g := by
   funext t
   apply MaxPlusNN.ext
@@ -375,7 +371,7 @@ theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
 /-- Super-additive `g` with `g 0 = 0` is its own super-additive closure. -/
 theorem superadditiveClosure_eq_self
     (g : ℝ≥0 → WithBot ℝ≥0∞)
-    (hsup : IsSuperadditiveW g) (h0 : g 0 = 0) :
+    (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     superadditiveClosure g = g := by
   have hidem := conv_toFmax_self g hsup h0
   have hunit : ∀ t,

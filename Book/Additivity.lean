@@ -20,7 +20,7 @@ def IsSuperadditive {D T : Type*} [Add D]
   ∀ u s : D, g u + g s ≤ g (u + s)
 
 /-- Subadditive `g` with `g 0 = 0` is a `minConv` fixed point. -/
-theorem minConvE_self_of_subadditive {D T : Type*}
+theorem minConv_self_of_subadditive {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteLattice T]
     [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
     (g : D → T)
@@ -38,7 +38,7 @@ theorem minConvE_self_of_subadditive {D T : Type*}
       _ ≤ g u + g s := hsub u s
 
 /-- Superadditive `g` with `g 0 = 0` is a `maxConv` fixed point. -/
-theorem maxConvE_self_of_superadditive {D T : Type*}
+theorem maxConv_self_of_superadditive {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteLattice T]
     [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
     (g : D → T)
@@ -59,7 +59,7 @@ def toF {D : Type} (g : D → ℝ≥0∞) : D → MinPlusNN :=
   fun s => ⟨g s⟩
 
 /-- `conv` of `toF` lifts, read back via `toVal`, equals `minConv`. -/
-theorem conv_toF_toE {D : Type} [_root_.AddCommMonoid D]
+theorem conv_toF_apply {D : Type} [_root_.AddCommMonoid D]
     (g h : D → ℝ≥0∞) (t : D) :
     ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
       = minConv g h t := by
@@ -85,7 +85,7 @@ theorem conv_toF {D : Type} [_root_.AddCommMonoid D]
     conv (toF g) (toF h) = toF (minConv g h) := by
   funext t
   apply MinPlusNN.ext
-  exact conv_toF_toE g h t
+  exact conv_toF_apply g h t
 
 /-- `toF` is injective. -/
 theorem toF_inj {D : Type} {g h : D → ℝ≥0∞}
@@ -110,7 +110,7 @@ theorem minConvE_assoc {D : Type} [_root_.AddCommMonoid D]
     conv_assoc]
 
 /-- If `f ⊓ g` is subadditive (and both fix 0), `minConv f g = f ⊓ g`. -/
-theorem minConvE_eq_inf_of_subadd {D T : Type*}
+theorem minConv_eq_inf_of_subadditive {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteLattice T]
     [_root_.AddCommMonoid T] [IsOrderedAddMonoid T]
     (f g : D → T)
@@ -141,6 +141,6 @@ theorem conv_self_toF_of_subadditive
     (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     conv (toF g) (toF g) = toF g := by
-  rw [conv_toF, minConvE_self_of_subadditive g hsub h0]
+  rw [conv_toF, minConv_self_of_subadditive g hsub h0]
 
 end DeepWiki

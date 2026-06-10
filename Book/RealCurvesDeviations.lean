@@ -156,7 +156,7 @@ theorem hDevE_tokenBucket_delay (r b d : ℝ≥0)
     (by exact_mod_cast hb)
 
 /-- `rateLatency R T u = ↑(R * (u - T))`. -/
-theorem rateLatency_coe' (R T u : ℝ≥0) :
+theorem rateLatency_coe (R T u : ℝ≥0) :
     rateLatency R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
   simp only [rateLatency]; push_cast; ring
 
@@ -165,7 +165,7 @@ theorem beta_admissible_imp
     (r b R T t d : ℝ≥0) (ht : t ≠ 0)
     (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
     (r*t+b : ℝ≥0) ≤ R*((t+d)-T) := by
-  rw [tokenBucket_apply_pos r b t ht, rateLatency_coe',
+  rw [tokenBucket_apply_pos r b t ht, rateLatency_coe,
     show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
       by push_cast; ring,
     ENNReal.coe_le_coe] at h
@@ -178,7 +178,7 @@ theorem dstar_admissible (r b R T t : ℝ≥0)
       ≤ rateLatency R T (t + (T + b/R)) := by
   rcases eq_or_ne t 0 with ht | ht
   · subst ht; rw [tokenBucket_zero_eq]; exact bot_le
-  · rw [tokenBucket_apply_pos r b t ht, rateLatency_coe',
+  · rw [tokenBucket_apply_pos r b t ht, rateLatency_coe,
       show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
         by push_cast; ring, ENNReal.coe_le_coe]
     have hkey : (t + (T + b/R)) - T = t + b/R := by

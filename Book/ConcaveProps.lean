@@ -64,7 +64,7 @@ theorem ConcaveE.add (f g : ℝ≥0 → EReal) (hf : ConcaveE f) (hg : ConcaveE 
 /-- A concave curve with `0 ≤ f 0` is subadditive: `f (u + s) ≤ f u + f s`.
 The chord argument places `u`, `s` as convex combinations of `u + s` and `0`,
 then drops the nonneg `f 0` terms. -/
-theorem isSubadditive_of_concaveE
+theorem ConcaveE.isSubadditive
     (f : ℝ≥0 → EReal) (hf : ConcaveE f) (h0 : (0 : EReal) ≤ f 0) :
     IsSubadditive f := by
   intro u s
@@ -202,7 +202,7 @@ theorem minConv_eq_inf_sub_add
   -- the meet of the concave shifts is concave and null at 0, hence subadditive
   have hm0 : f' 0 ⊓ g' 0 = 0 := by rw [hf'0, hg'0, inf_idem]
   have hsub : IsSubadditive (fun x => f' x ⊓ g' x) :=
-    isSubadditive_of_concaveE _
+    ConcaveE.isSubadditive _
       (ConcaveE.inf f' g' (ConcaveE_sub_const f hf a) (ConcaveE_sub_const g hg b))
       (le_of_eq hm0.symm)
   -- per split: `f u + g s = (f' u + g' s) + (a + b)`, finite constants pulled out
@@ -251,6 +251,6 @@ theorem subadditiveClosureEReal_eq_self_of_concaveE
     (g : ℝ≥0 → EReal) (hg : NeverBot g) (h0 : g 0 = 0) (hconc : ConcaveE g) :
     subadditiveClosureEReal g = g :=
   subadditiveClosureEReal_eq_self g hg
-    (isSubadditive_of_concaveE g hconc (le_of_eq h0.symm)) h0
+    (ConcaveE.isSubadditive g hconc (le_of_eq h0.symm)) h0
 
 end DeepWiki

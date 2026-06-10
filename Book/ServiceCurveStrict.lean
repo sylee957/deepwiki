@@ -91,7 +91,7 @@ theorem IsStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0} {S : Curve
   exact le_antisymm h0 zero_le'
 
 /-- The join `beta ⊔ beta'` of two strict service curves is offered. -/
-theorem isStrictMinimalServiceCurve_sup
+theorem IsStrictMinimalServiceCurve.sup
     {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → ℝ≥0}
     (h : IsStrictMinimalServiceCurve beta S)
     (h' : IsStrictMinimalServiceCurve beta' S) :
@@ -201,33 +201,33 @@ theorem isStrictMinimalServiceCurve_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
   | succ n ih => exact isStrictMinimalServiceCurve_maxConvProj _ ih
 
 /-- Strict service is preserved by the super-additive closure
-`superAdditiveClosureMax`. -/
-theorem isStrictMinimalServiceCurve_superAdditiveClosureMax
+`superadditiveClosureMax`. -/
+theorem isStrictMinimalServiceCurve_superadditiveClosureMax
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hβ : IsStrictMinimalServiceCurve beta S) :
-    IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S := by
+    IsStrictMinimalServiceCurve (superadditiveClosureMax beta) S := by
   intro A D hp s t hst hbl
-  show D s + superAdditiveClosureMax beta (t - s) ≤ D t
-  unfold superAdditiveClosureMax
+  show D s + superadditiveClosureMax beta (t - s) ≤ D t
+  unfold superadditiveClosureMax
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact isStrictMinimalServiceCurve_maxConvProjPow beta hβ n A D hp s t hst hbl
 
-/-- Offering `superAdditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
-theorem isStrictMinimalServiceCurve_superAdditiveClosureMax_iff
+/-- Offering `superadditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
+theorem isStrictMinimalServiceCurve_superadditiveClosureMax_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hbdd : ∀ t, BddAbove
       (Set.range (fun n => maxConvProjPow beta n t))) :
-    IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S ↔
+    IsStrictMinimalServiceCurve (superadditiveClosureMax beta) S ↔
       IsStrictMinimalServiceCurve beta S := by
   constructor
   · intro h A D hp s t hst hbl
     exact le_trans
-      (by gcongr; exact le_superAdditiveClosureMax beta hbdd (t - s))
+      (by gcongr; exact le_superadditiveClosureMax beta hbdd (t - s))
       (h A D hp s t hst hbl)
-  · exact isStrictMinimalServiceCurve_superAdditiveClosureMax beta
+  · exact isStrictMinimalServiceCurve_superadditiveClosureMax beta
 
 /-- Offering `beta`, its non-decreasing closure `ndClosure beta`, and its
-super-additive closure `superAdditiveClosureMax beta` are all equivalent:
+super-additive closure `superadditiveClosureMax beta` are all equivalent:
 `Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) = Sₛₜᵣᵢ𝒸ₜ(β*̄)`. -/
 theorem isStrictMinimalServiceCurve_closures_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
@@ -238,9 +238,9 @@ theorem isStrictMinimalServiceCurve_closures_iff
     (IsStrictMinimalServiceCurve beta S ↔
         IsStrictMinimalServiceCurve (ndClosure beta) S) ∧
       (IsStrictMinimalServiceCurve beta S ↔
-        IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S) :=
+        IsStrictMinimalServiceCurve (superadditiveClosureMax beta) S) :=
   ⟨(isStrictMinimalServiceCurve_ndClosure_iff beta hbddNd).symm,
-    (isStrictMinimalServiceCurve_superAdditiveClosureMax_iff beta hbddSup).symm⟩
+    (isStrictMinimalServiceCurve_superadditiveClosureMax_iff beta hbddSup).symm⟩
 
 /-- Under an affine bound `beta s ≤ r * s`, each self-convolution iterate stays
 below `r * ·`: `maxConvProjPow beta n t ≤ r * t`, since `r * a + r * b = r * t`
@@ -271,7 +271,7 @@ theorem isStrictMinimalServiceCurve_closures_iff_of_affine_bound
     (IsStrictMinimalServiceCurve beta S ↔
         IsStrictMinimalServiceCurve (ndClosure beta) S) ∧
       (IsStrictMinimalServiceCurve beta S ↔
-        IsStrictMinimalServiceCurve (superAdditiveClosureMax beta) S) := by
+        IsStrictMinimalServiceCurve (superadditiveClosureMax beta) S) := by
   obtain ⟨r, hr⟩ := hr
   refine isStrictMinimalServiceCurve_closures_iff beta (fun t => ?_) (fun t => ?_)
   · exact ⟨r * t, by rintro x ⟨⟨u, hu⟩, rfl⟩; exact le_trans (hr u) (by gcongr)⟩

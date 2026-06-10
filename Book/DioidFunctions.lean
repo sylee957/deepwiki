@@ -87,7 +87,7 @@ noncomputable def triple {D T : Type*} [Add D]
         u + v + z = t ∧ x = (f u ⊗ₒ g v) ⊗ₒ h z }
 
 /-- `(f ∗ g) ∗ h = triple f g h`. -/
-theorem conv_conv_eq_triple {D T : Type*}
+theorem conv_conv_eq_triple_left {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) (t : D) :
     conv (conv f g) h t = triple f g h t := by
@@ -111,7 +111,7 @@ theorem conv_conv_eq_triple {D T : Type*}
     exact CompleteDioid.le_sSup _ _ ⟨u, v, rfl, rfl⟩
 
 /-- `f ∗ (g ∗ h) = triple f g h`. -/
-theorem conv_conv_eq_triple' {D T : Type*}
+theorem conv_conv_eq_triple_right {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteDioid T]
     (f g h : D → T) (t : D) :
     conv f (conv g h) t = triple f g h t := by
@@ -143,7 +143,7 @@ theorem conv_assoc {D T : Type*}
     (f g h : D → T) :
     conv (conv f g) h = conv f (conv g h) := by
   funext t
-  rw [conv_conv_eq_triple, conv_conv_eq_triple']
+  rw [conv_conv_eq_triple_left, conv_conv_eq_triple_right]
 
 /-- Convolution is commutative: `f ∗ g = g ∗ f`. -/
 theorem conv_comm {D T : Type*}

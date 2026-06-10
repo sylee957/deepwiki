@@ -93,7 +93,7 @@ theorem tokenBucket_inf_subadd (r b r' b' : ℝ≥0) :
 theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
     minConv (tokenBucket r b) (tokenBucket r' b')
       = tokenBucket r b ⊓ tokenBucket r' b' :=
-  minConvE_eq_inf_of_subadd _ _
+  minConv_eq_inf_of_subadditive _ _
     (tokenBucket_zero_eq r b) (tokenBucket_zero_eq r' b')
     (tokenBucket_inf_subadd r b r' b')
 

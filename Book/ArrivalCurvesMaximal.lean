@@ -108,7 +108,7 @@ theorem increment_minConvProjPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → �
 
 /-- Each self-convolution power of a maximal arrival curve is again a maximal
 arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ (minConvProjPow α n)`. -/
-theorem isMaximalArrivalCurve_minConvProjPow_of_isMaximalArrivalCurve
+theorem IsMaximalArrivalCurve.minConvProjPow
     {A α : ℝ≥0 → ℝ≥0} (h : IsMaximalArrivalCurve A α) (n : ℕ) :
     IsMaximalArrivalCurve A (minConvProjPow α n) := by
   rw [isMaximalArrivalCurve_iff_increment]
@@ -118,16 +118,17 @@ theorem isMaximalArrivalCurve_minConvProjPow_of_isMaximalArrivalCurve
 maximal arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ subadditiveClosureMin α`,
 with the closure `≤ α`. The increment bound through every power passes to the
 infimum defining the closure. -/
-theorem IsMaximalArrivalCurve.subadditiveClosure {A α : ℝ≥0 → ℝ≥0}
+theorem IsMaximalArrivalCurve.subadditiveClosureMin {A α : ℝ≥0 → ℝ≥0}
     (h : IsMaximalArrivalCurve A α) :
     IsMaximalArrivalCurve A (subadditiveClosureMin α) := by
   rw [isMaximalArrivalCurve_iff_increment]
   intro t d
   -- `A (t+d) - A t ≤ (minConvProjPow α n) d` for every `n`, so `≤ ⨅ₙ`
-  rw [show subadditiveClosureMin α d = ⨅ n : ℕ, minConvProjPow α n d from rfl,
+  rw [show DeepWiki.subadditiveClosureMin α d
+      = ⨅ n : ℕ, DeepWiki.minConvProjPow α n d from rfl,
     add_comm (A t), ← tsub_le_iff_right]
   refine le_ciInf (fun n => ?_)
-  rw [tsub_le_iff_right, add_comm (minConvProjPow α n d)]
+  rw [tsub_le_iff_right, add_comm (DeepWiki.minConvProjPow α n d)]
   exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
 
 /-- Any function above the sub-additive closure of a maximal arrival curve is a
@@ -137,7 +138,7 @@ closure. -/
 theorem isMaximalArrivalCurve_of_subadditiveClosure_le {A α α' : ℝ≥0 → ℝ≥0}
     (h : IsMaximalArrivalCurve A α) (hle : subadditiveClosureMin α ≤ α') :
     IsMaximalArrivalCurve A α' :=
-  h.subadditiveClosure.mono hle
+  h.subadditiveClosureMin.mono hle
 
 /-! ## Left-continuous extension
 The left-continuous extension of a non-decreasing `α` — its left limit

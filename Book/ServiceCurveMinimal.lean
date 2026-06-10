@@ -187,10 +187,10 @@ theorem minConv_betaZero_le (A D : Curve) :
 /-- The zero-service chain on any server: `S A D` gives
 `A ≥ D ≥ A ∗ beta₀ = beta₀`. -/
 theorem betaZero_chain {S : Curve → Curve → Prop} (hSrv : IsServer S)
-    {A D : Curve} (h : S A D) :
+    {A D : Curve} (hp : S A D) :
     D ≤ A ∧ minConv (curveE A) betaZero ≤ curveE D ∧
       minConv (curveE A) betaZero = betaZero :=
-  ⟨hSrv.1 _ _ h, minConv_betaZero_le A D, minConv_betaZero A⟩
+  ⟨hSrv.1 _ _ hp, minConv_betaZero_le A D, minConv_betaZero A⟩
 
 /-- Every server offers the zero service curve: `A ≥ D ≥ A ∗ beta₀ = beta₀`. -/
 theorem isMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :

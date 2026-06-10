@@ -36,7 +36,7 @@ theorem IsMinimalArrivalCurve.sup {A α α' : ℝ≥0 → ℝ≥0}
 /-- Any function below a minimal arrival curve is again a minimal arrival
 curve: if `A ≥ A ⊼ α` and `α' ≤ α` then `A ≥ A ⊼ α'`. Stated under monotone
 `A, α, α'`, where the increment characterization controls the junk supremum. -/
-theorem IsMinimalArrivalCurve.mono_le {A α α' : ℝ≥0 → ℝ≥0}
+theorem IsMinimalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α) (hα' : Monotone α')
     (h : IsMinimalArrivalCurve A α) (hle : α' ≤ α) :
     IsMinimalArrivalCurve A α' := by
@@ -110,19 +110,19 @@ theorem isMinimalArrivalCurve_maxConvProjPow_of_monotone
 
 /-- The (max,+) super-additive closure of a minimal arrival curve is again a
 minimal arrival curve, for non-decreasing `A`, `α`: if `A ≥ A ⊼ α` then
-`A ≥ A ⊼ superAdditiveClosureMax α`, with the closure `≥ α`. The per-power
+`A ≥ A ⊼ superadditiveClosureMax α`, with the closure `≥ α`. The per-power
 increment bound also bounds the closure supremum above by `A (t + d) - A t`. -/
-theorem IsMinimalArrivalCurve.superAdditiveClosureMax {A α : ℝ≥0 → ℝ≥0}
+theorem IsMinimalArrivalCurve.superadditiveClosureMax {A α : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α)
     (h : IsMinimalArrivalCurve A α) :
-    IsMinimalArrivalCurve A (superAdditiveClosureMax α) := by
+    IsMinimalArrivalCurve A (superadditiveClosureMax α) := by
   have hinc := (isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα).mp h
   refine isMinimalArrivalCurve_of_increment A _ (fun t d => ?_)
   have hbd : ∀ n : ℕ, maxConvProjPow α n d ≤ A (t + d) - A t := fun n =>
     le_tsub_of_add_le_left (increment_maxConvProjPow_of_increment hinc n t d)
-  have hsup : DeepWiki.superAdditiveClosureMax α d ≤ A (t + d) - A t := ciSup_le hbd
+  have hsup : DeepWiki.superadditiveClosureMax α d ≤ A (t + d) - A t := ciSup_le hbd
   have hle : A t ≤ A (t + d) := hA le_self_add
-  calc A t + DeepWiki.superAdditiveClosureMax α d
+  calc A t + DeepWiki.superadditiveClosureMax α d
         ≤ A t + (A (t + d) - A t) := by gcongr
     _ = A (t + d) := add_tsub_cancel_of_le hle
 
