@@ -93,6 +93,35 @@ theorem backlog_eq_vDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0}
           vDev_mono le_rfl (liftENN_le_of_minConv_eq h0 hD)
       _ = backlog A D := (backlog_eq_vDev_liftENN A D).symm
 
+/-- **Tightness of the deviation bounds** (function form): for monotone
+sub-additive `alpha` in `F₀` and monotone `β` in `F₀`, some served pair
+`(A, D)` — i.e. `A ∗ β ≤ D` — with `A` having maximal arrival curve `alpha`
+attains `d(A, D) = hDev(alpha, β)` and `b(A, D) = vDev(alpha, β)`. The
+witnesses are `A = alpha` and `D = alpha ∗ β`; neither left-continuity nor
+piecewise continuity is needed — those only package the pair into curves. -/
+theorem exists_delay_eq_hDev_backlog_eq_vDev
+    {alpha : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
+    (hmono : Monotone alpha) (h0 : IsNullAtOrigin alpha)
+    (hsub : IsSubadditive alpha)
+    (hβmono : Monotone β) (hβ0 : β 0 = 0) :
+    ∃ A D : ℝ≥0 → ℝ≥0,
+      (∀ t, minConv (liftENN A) β t ≤ (D t : ℝ≥0∞)) ∧
+      IsMaximalArrivalCurve (liftENN A) (liftENN alpha) ∧
+      delay A D = (hDev (liftENN alpha) β : ℝ≥0∞) ∧
+      backlog A D = vDev (liftENN alpha) β := by
+  have hne : ∀ t, minConv (liftENN alpha) β t ≠ ⊤ := by
+    intro t
+    refine ne_top_of_le_ne_top (ENNReal.coe_ne_top (r := alpha t)) ?_
+    refine le_trans (minConv_le_add (liftENN alpha) β (add_zero t)) ?_
+    rw [hβ0, add_zero]
+  have hD : ∀ t, (((minConv (liftENN alpha) β t).toNNReal : ℝ≥0) : ℝ≥0∞)
+      = minConv (liftENN alpha) β t := fun t => ENNReal.coe_toNNReal (hne t)
+  exact ⟨alpha, fun t => (minConv (liftENN alpha) β t).toNNReal,
+    fun t => (hD t).ge,
+    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN,
+    delay_eq_hDev_of_minConv_eq hmono h0 hsub hβmono hD,
+    backlog_eq_vDev_of_minConv_eq h0 hsub hD⟩
+
 /-! ## Server form: the greedy pair attains the bounds
 A greedy-served pair `(A, D)` with `D = A ∗ β` realizes the `ℝ≥0∞`
 convolution exactly, so for sub-additive `A` the raw equalities apply; the
@@ -193,13 +222,13 @@ theorem greedyShaperRel_greedyCurve (A : Curve) {beta : ℝ≥0 → EReal}
     greedyShaperRel beta A (greedyCurve A beta hmono h0 hlc hpwc) :=
   curveE_greedyCurve A hmono h0 hlc hpwc
 
-/-- **Tightness of the deviation bounds**: for sub-additive `alpha` and
-left-continuous `beta`, the bounds are tight — there exists a pair
+/-- **Tightness of the deviation bounds** (`C`-membership form): for
+sub-additive `alpha` and left-continuous `beta`, there exists a pair
 `(A, D)` of `minimalServiceRel beta` such that `A` has arrival curve
 `alpha`, `d(A, D) = hDev(alpha, beta)` and `b(A, D) = vDev(alpha, beta)`.
 The piecewise-continuity witness is the price of `C`-membership (the
-equalities themselves are the direct form above). -/
-theorem exists_delay_eq_hDev_backlog_eq_vDev (alpha : Curve)
+equalities themselves are the function form above). -/
+theorem exists_minimalServiceRel_delay_eq_hDev_backlog_eq_vDev (alpha : Curve)
     {beta : ℝ≥0 → EReal} (hsub : IsSubadditive (⇑alpha : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : beta 0 = 0)
     (hlc : IsLeftContinuous beta)
