@@ -148,13 +148,6 @@ when the cumulative function `A` is left-continuous. -/
 
 open Set Filter Topology
 
-/-- Left-continuous `A` has `A` as the left limit at each `t`:
-`Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
-theorem tendsto_nhdsWithin_Iio_of_leftContinuous {A : ℝ≥0 → ℝ≥0}
-    (hA : IsLeftContinuous A) (t : ℝ≥0) :
-    Tendsto A (𝓝[<] t) (𝓝 (A t)) :=
-  (hA t).tendsto
-
 /-- The left-continuous extension `Function.leftLim α` of a maximal arrival
 curve is maximal: if `A` is left-continuous, `α` non-decreasing, and `α` a
 maximal arrival curve for `A`, then `Function.leftLim α` is one too. -/
@@ -192,13 +185,6 @@ theorem isMaximalArrivalCurve_leftLim_of_leftContinuous
     exact hα.le_leftLim hltd
   -- Pass the closed condition `A s ≤ c` to the limit.
   exact le_of_tendsto hlim hev
-
-/-- Right-continuous `A` has `A` as the right limit at each `t`:
-`Tendsto A (𝓝[>] t) (𝓝 (A t))`. -/
-theorem tendsto_nhdsWithin_Ioi_of_rightContinuous {A : ℝ≥0 → ℝ≥0}
-    (hA : IsRightContinuous A) (t : ℝ≥0) :
-    Tendsto A (𝓝[>] t) (𝓝 (A t)) :=
-  (hA t).tendsto
 
 /-- The left-continuous extension `Function.leftLim α` of a maximal arrival
 curve is maximal also for a right-continuous cumulative function: if `A` is

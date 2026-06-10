@@ -199,6 +199,20 @@ def IsLeftContinuousF (f : Fmin) : Prop :=
 def IsRightContinuousF (f : Fmin) : Prop :=
   ∀ t : ℝ≥0, IsRightContinuousAt (numFn f) t
 
+/-- Left-continuous `A` has `A` as the left limit at each `t`:
+`Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
+theorem tendsto_nhdsWithin_Iio_of_leftContinuous {A : ℝ≥0 → ℝ≥0}
+    (hA : IsLeftContinuous A) (t : ℝ≥0) :
+    Tendsto A (𝓝[<] t) (𝓝 (A t)) :=
+  (hA t).tendsto
+
+/-- Right-continuous `A` has `A` as the right limit at each `t`:
+`Tendsto A (𝓝[>] t) (𝓝 (A t))`. -/
+theorem tendsto_nhdsWithin_Ioi_of_rightContinuous {A : ℝ≥0 → ℝ≥0}
+    (hA : IsRightContinuous A) (t : ℝ≥0) :
+    Tendsto A (𝓝[>] t) (𝓝 (A t)) :=
+  (hA t).tendsto
+
 /-- The set of points where `g` is not continuous. -/
 def discontSet {X : Type*} [TopologicalSpace X]
     (g : ℝ≥0 → X) : Set ℝ≥0 :=
