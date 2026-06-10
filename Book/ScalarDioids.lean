@@ -86,22 +86,6 @@ instance : Coe MaxPlusExt (WithBot (WithTop ℝ)) := ⟨toVal⟩
   cases a; cases b; exact congrArg ofVal h
 end MaxPlusExt
 
-namespace MinPlusAux
-
-/-- `+` left-distributes over `min` on `WithTop ℝ`. -/
-theorem add_min (a b c : WithTop ℝ) :
-    a + min b c = min (a + b) (a + c) := by
-  rcases le_total b c with h | h
-  · rw [min_eq_left h, min_eq_left (by gcongr)]
-  · rw [min_eq_right h, min_eq_right (by gcongr)]
-
-/-- `+` right-distributes over `min` on `WithTop ℝ`. -/
-theorem min_add (a b c : WithTop ℝ) :
-    min a b + c = min (a + c) (b + c) := by
-  rw [add_comm, add_min, add_comm a c, add_comm b c]
-
-end MinPlusAux
-
 namespace MinPlus
 open Algebra
 
@@ -118,8 +102,8 @@ instance : Algebra.Dioid MinPlus where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (MinPlusAux.add_min _ _ _)
-  right_distrib _ _ _ := ext (MinPlusAux.min_add _ _ _)
+  left_distrib _ _ _ := ext (min_add_add_left _ _ _).symm
+  right_distrib _ _ _ := ext (min_add_add_right _ _ _).symm
   eps_otimes _ := ext (WithTop.top_add _)
   otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
@@ -243,18 +227,6 @@ theorem add_iInf {ι : Sort*} (a : WithTop (WithBot ℝ))
               = (d : WithTop (WithBot ℝ)) from hd,
             ← WithTop.coe_add, WithBot.bot_add]
 
-/-- `+` left-distributes over `min` on `WithTop (WithBot ℝ)`. -/
-theorem add_min (a b c : WithTop (WithBot ℝ)) :
-    a + min b c = min (a + b) (a + c) := by
-  rcases le_total b c with h | h
-  · rw [min_eq_left h, min_eq_left (by gcongr)]
-  · rw [min_eq_right h, min_eq_right (by gcongr)]
-
-/-- `+` right-distributes over `min` on `WithTop (WithBot ℝ)`. -/
-theorem min_add (a b c : WithTop (WithBot ℝ)) :
-    min a b + c = min (a + c) (b + c) := by
-  rw [add_comm, add_min, add_comm a c, add_comm b c]
-
 end RbarX
 
 namespace MinPlusExt
@@ -272,8 +244,8 @@ instance : Algebra.Dioid MinPlusExt where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (RbarX.add_min _ _ _)
-  right_distrib _ _ _ := ext (RbarX.min_add _ _ _)
+  left_distrib _ _ _ := ext (min_add_add_left _ _ _).symm
+  right_distrib _ _ _ := ext (min_add_add_right _ _ _).symm
   eps_otimes _ := ext (WithTop.top_add _)
   otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
@@ -339,18 +311,6 @@ end MinPlusExt
 
 namespace RplusX
 
-/-- `+` left-distributes over `min` on `ℝ≥0∞`. -/
-theorem add_min (a b c : ℝ≥0∞) :
-    a + min b c = min (a + b) (a + c) := by
-  rcases le_total b c with h | h
-  · rw [min_eq_left h, min_eq_left (by gcongr)]
-  · rw [min_eq_right h, min_eq_right (by gcongr)]
-
-/-- `+` right-distributes over `min` on `ℝ≥0∞`. -/
-theorem min_add (a b c : ℝ≥0∞) :
-    min a b + c = min (a + c) (b + c) := by
-  rw [add_comm, add_min, add_comm a c, add_comm b c]
-
 /-- `+` distributes over `⨅` on `ℝ≥0∞`. -/
 theorem add_iInf {ι : Sort*} (a : ℝ≥0∞) (f : ι → ℝ≥0∞) :
     a + ⨅ i, f i = ⨅ i, a + f i := ENNReal.add_iInf
@@ -372,8 +332,8 @@ instance : Algebra.Dioid MinPlusNN where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (RplusX.add_min _ _ _)
-  right_distrib _ _ _ := ext (RplusX.min_add _ _ _)
+  left_distrib _ _ _ := ext (min_add_add_left _ _ _).symm
+  right_distrib _ _ _ := ext (min_add_add_right _ _ _).symm
   eps_otimes _ := ext (WithTop.top_add _)
   otimes_eps _ := ext (WithTop.add_top _)
   otimes_comm _ _ := ext (add_comm _ _)
@@ -510,18 +470,6 @@ theorem add_iSup {ι : Sort*} (a : WithBot ℝ≥0∞)
             exact le_iSup_of_le i (le_refl _)
       · push Not at hb; simp [hb]
 
-/-- `+` left-distributes over `max` on `WithBot ℝ≥0∞`. -/
-theorem add_max (a b c : WithBot ℝ≥0∞) :
-    a + max b c = max (a + b) (a + c) := by
-  rcases le_total b c with h | h
-  · rw [max_eq_right h, max_eq_right (by gcongr)]
-  · rw [max_eq_left h, max_eq_left (by gcongr)]
-
-/-- `+` right-distributes over `max` on `WithBot ℝ≥0∞`. -/
-theorem max_add (a b c : WithBot ℝ≥0∞) :
-    max a b + c = max (a + c) (b + c) := by
-  rw [add_comm, add_max, add_comm a c, add_comm b c]
-
 end MaxX
 
 namespace MaxPlusNN
@@ -539,8 +487,8 @@ instance : Algebra.Dioid MaxPlusNN where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (MaxX.add_max _ _ _)
-  right_distrib _ _ _ := ext (MaxX.max_add _ _ _)
+  left_distrib _ _ _ := ext (max_add_add_left _ _ _).symm
+  right_distrib _ _ _ := ext (max_add_add_right _ _ _).symm
   eps_otimes _ := ext (WithBot.bot_add _)
   otimes_eps _ := ext (WithBot.add_bot _)
   otimes_comm _ _ := ext (add_comm _ _)
@@ -652,18 +600,6 @@ theorem add_iSup {ι : Sort*} (a : WithBot (WithTop ℝ))
               = (d : WithBot (WithTop ℝ)) from hd,
             ← WithBot.coe_add, WithTop.top_add]
 
-/-- `+` left-distributes over `max` on `WithBot (WithTop ℝ)`. -/
-theorem add_max (a b c : WithBot (WithTop ℝ)) :
-    a + max b c = max (a + b) (a + c) := by
-  rcases le_total b c with h | h
-  · rw [max_eq_right h, max_eq_right (by gcongr)]
-  · rw [max_eq_left h, max_eq_left (by gcongr)]
-
-/-- `+` right-distributes over `max` on `WithBot (WithTop ℝ)`. -/
-theorem max_add (a b c : WithBot (WithTop ℝ)) :
-    max a b + c = max (a + c) (b + c) := by
-  rw [add_comm, add_max, add_comm a c, add_comm b c]
-
 end MaxPlusExtAux
 
 namespace MaxPlusExt
@@ -681,8 +617,8 @@ instance : Algebra.Dioid MaxPlusExt where
   otimes_assoc _ _ _ := ext (add_assoc _ _ _)
   one_otimes _ := ext (zero_add _)
   otimes_one _ := ext (add_zero _)
-  left_distrib _ _ _ := ext (MaxPlusExtAux.add_max _ _ _)
-  right_distrib _ _ _ := ext (MaxPlusExtAux.max_add _ _ _)
+  left_distrib _ _ _ := ext (max_add_add_left _ _ _).symm
+  right_distrib _ _ _ := ext (max_add_add_right _ _ _).symm
   eps_otimes _ := ext (WithBot.bot_add _)
   otimes_eps _ := ext (WithBot.add_bot _)
   otimes_comm _ _ := ext (add_comm _ _)

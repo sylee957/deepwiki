@@ -98,13 +98,6 @@ theorem minConv_assoc_le {f g h : ℝ≥0 → EReal}
       ≤ (f u + g a) + h b := by gcongr
     _ = f u + (g a + h b) := add_assoc _ _ _
 
-/-- `+` left-distributes over `min` on `EReal`: `a + min b c = min (a+b) (a+c)`. -/
-theorem EReal.add_min (a b c : EReal) :
-    a + min b c = min (a + b) (a + c) := by
-  rcases le_total b c with hbc | hbc
-  · rw [min_eq_left hbc, min_eq_left (by gcongr)]
-  · rw [min_eq_right hbc, min_eq_right (by gcongr)]
-
 /-- (min,+) convolution left-distributes over pointwise `min` on `EReal` curves:
 `minConv f (g ⊓ h) = minConv f g ⊓ minConv f h`. -/
 theorem minConv_min (f g h : ℝ≥0 → EReal) :
@@ -124,7 +117,7 @@ theorem minConv_min (f g h : ℝ≥0 → EReal) :
   · refine le_iInf ?_
     rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
     simp only
-    rw [EReal.add_min]
+    rw [← min_add_add_left]
     refine min_le_min ?_ ?_ <;>
       exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
 
