@@ -48,6 +48,23 @@ theorem iSup_backlogAt_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → 
     (⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞)) ≤ vDev α β :=
   iSup_le fun t => coe_backlogAt_le_vDev harr hserv t
 
+/-- **Backlog bound**: `b(A, D) ≤ vDev α β`. The `ℝ≥0`-valued `backlog` is
+junk-free here: the bound is trivial when `vDev α β = ⊤`, and otherwise the
+pointwise bound keeps the supremum honest. -/
+theorem coe_backlog_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞}
+    (harr : IsMaximalArrivalCurve (toE A) α)
+    (hserv : ∀ t, minConv (toE A) β t ≤ (D t : ℝ≥0∞)) :
+    (backlog A D : ℝ≥0∞) ≤ vDev α β := by
+  rcases eq_top_or_lt_top (vDev α β) with htop | hlt
+  · rw [htop]; exact le_top
+  · obtain ⟨c, hc⟩ : ∃ c : ℝ≥0, vDev α β = (c : ℝ≥0∞) :=
+      ⟨(vDev α β).toNNReal, (ENNReal.coe_toNNReal hlt.ne).symm⟩
+    rw [hc, ENNReal.coe_le_coe, backlog_eq_iSup]
+    refine ciSup_le fun t => ?_
+    have h := coe_backlogAt_le_vDev harr hserv t
+    rw [hc, ENNReal.coe_le_coe] at h
+    exact h
+
 /-- **Delay bound.** If nondecreasing `A` has maximal arrival curve `α` and
 `D` dominates the convolution `A ∗ β` for nondecreasing `β`, then the delay
 at every `t` is bounded by the horizontal deviation: `d(A, D)(t) ≤ hDev α β`. -/

@@ -94,14 +94,14 @@ theorem coe_backlogAt_le_vDev_of_isMinPlusServiceCurve
   coe_backlogAt_le_vDev harr
     (minConv_toENN_le_of_isMinPlusServiceCurve hβ hnn hp) t
 
-/-- **Backlog bound for servers** (sup form): `b(A, D) ≤ vDev α (toENN beta)`. -/
-theorem iSup_backlogAt_le_vDev_of_isMinPlusServiceCurve
+/-- **Backlog bound for servers**: `b(A, D) ≤ vDev α (toENN beta)`. -/
+theorem coe_backlog_le_vDev_of_isMinPlusServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinPlusServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
     (harr : IsMaximalArrivalCurve (toE ⇑A) α) :
-    (⨆ t : ℝ≥0, (backlogAt ⇑A ⇑D t : ℝ≥0∞)) ≤ vDev α (toENN beta) :=
-  iSup_backlogAt_le_vDev harr
+    (backlog ⇑A ⇑D : ℝ≥0∞) ≤ vDev α (toENN beta) :=
+  coe_backlog_le_vDev harr
     (minConv_toENN_le_of_isMinPlusServiceCurve hβ hnn hp)
 
 end Deviation
