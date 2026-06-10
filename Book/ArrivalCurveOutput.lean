@@ -282,8 +282,8 @@ theorem isMinimalArrivalCurve_output_of_isGreedyShaper
 
 /-- **Output arrival curve from the backlog bound.** A causal pair served
 with a nonnegative minimal service curve `beta`, the arrival allowing a
-sub-additive `α`, has output allowing `α` shifted by the vertical deviation
-`vDev α (toENN beta)`. -/
+sub-additive `α`, has output allowing `α` shifted by the vertical deviation:
+`α + Function.const _ (vDev α (toENN beta))`. -/
 theorem isMaximalArrivalCurve_output_add_vDev
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     (hc : IsCausal S)
@@ -291,16 +291,17 @@ theorem isMaximalArrivalCurve_output_add_vDev
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α) :
     IsMaximalArrivalCurve (liftENN ⇑D)
-      (fun d => α d + vDev α (toENN beta)) := by
+      (α + Function.const ℝ≥0 (vDev α (toENN beta))) := by
   refine (isMaximalArrivalCurve_output_of_isMinimalServiceCurve
     hc hβ hnn hp harr).mono fun d => ?_
   rw [vDev_eq_deconv_zero]
   exact minDeconv_le_add_minDeconv_zero (toENN beta) hsub d
 
 /-- **Improved output arrival curve from the backlog bound.** With a constant
-`c` below `α` on positive times — e.g. the right limit `α(0⁺)` of a monotone
-`α` — such that `fun t => α t - c` is sub-additive, the vertical-deviation
-shift improves to `vDev α (toENN beta) - c`, zeroed at the origin by `δ₀`. -/
+`c` below `α` on positive times — e.g. the right limit `Function.rightLim α 0`
+of a monotone `α` — such that `α - Function.const _ c` is sub-additive, the
+vertical-deviation shift improves to `vDev α (toENN beta) - c`, zeroed at the
+origin by `δ₀`. -/
 theorem isMaximalArrivalCurve_output_add_vDev_tsub
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {c : ℝ≥0∞} (hc : IsCausal S)
@@ -308,9 +309,10 @@ theorem isMaximalArrivalCurve_output_add_vDev_tsub
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hcle : ∀ s, 0 < s → c ≤ α s)
-    (hsubc : IsSubadditive (fun t => α t - c)) :
+    (hsubc : IsSubadditive (α - Function.const ℝ≥0 c)) :
     IsMaximalArrivalCurve (liftENN ⇑D)
-      ((fun d => α d + (vDev α (toENN beta) - c)) ⊓ delayNN 0) := by
+      ((α + Function.const ℝ≥0 (vDev α (toENN beta) - c))
+        ⊓ delayNN 0) := by
   rw [isMaximalArrivalCurve_iff_increment]
   intro t d
   rcases eq_or_ne d 0 with hd | hd
@@ -413,28 +415,29 @@ example {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
         isMinimalArrivalCurve_output_of_isGreedyShaper hgr hnns h0.le hp harrl⟩
 
 /-! ## Book restatement (backlog-bound output curves)
-A server `S ⊆ S_mp(beta)`, with arrival `A` allowing a sub-additive maximal
-curve `α`, gives every output `D` the maximal arrival curve `α + vDev(α, beta)`;
-when `fun t => α t - α(0⁺)` is sub-additive — `α(0⁺) = ⨅_{s > 0} α s`,
-which for monotone `α` is its right limit at the origin — this improves to
-`(α + (vDev(α, beta) - α(0⁺))) ⊓ δ₀`. -/
+A server `S ⊆ S_mp(beta)`, with arrival `A` allowing a sub-additive
+nondecreasing maximal curve `α`, gives every output `D` the maximal arrival
+curve `α + vDev(α, beta)`; when `α - Function.const _ (α(0⁺))` is
+sub-additive — `α(0⁺) = Function.rightLim α 0`, the right limit of `α` at
+the origin — this improves to `(α + (vDev(α, beta) - α(0⁺))) ⊓ δ₀`. -/
 example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     (hSrv : IsServer S)
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A : Curve}
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α)
+    (hmono : Monotone α)
     (hsubc : IsSubadditive
-      (fun t => α t - ⨅ s : {s : ℝ≥0 // 0 < s}, α s)) :
+      (α - Function.const ℝ≥0 (Function.rightLim α 0))) :
     ∀ D : Curve, S A D →
       IsMaximalArrivalCurve (liftENN ⇑D)
-        (fun d => α d + vDev α (toENN beta)) ∧
+        (α + Function.const ℝ≥0 (vDev α (toENN beta))) ∧
       IsMaximalArrivalCurve (liftENN ⇑D)
-        ((fun d => α d
-            + (vDev α (toENN beta) - ⨅ s : {s : ℝ≥0 // 0 < s}, α s))
+        ((α + Function.const ℝ≥0
+            (vDev α (toENN beta) - Function.rightLim α 0))
           ⊓ delayNN 0) :=
   fun _ hp =>
     ⟨isMaximalArrivalCurve_output_add_vDev hSrv.1 hβ hnn hp harr hsub,
       isMaximalArrivalCurve_output_add_vDev_tsub hSrv.1 hβ hnn hp harr
-        (fun s hs => iInf_le _ (⟨s, hs⟩ : {s : ℝ≥0 // 0 < s})) hsubc⟩
+        (fun _ hs => hmono.rightLim_le hs) hsubc⟩
 
 end DeepWiki
