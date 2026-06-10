@@ -71,6 +71,28 @@ theorem hDevAt_le_hDev {D V R : Type*}
     (f g : D → V) (t : D) : (hDevAt f g t : R) ≤ hDev f g :=
   le_iSup (fun t => (hDevAt f g t : R)) t
 
+/-- Intro: a uniform bound on the pointwise deviations bounds the vertical
+deviation, `vDev f g ≤ x`. -/
+theorem vDev_le {D T : Type*} [CompleteLattice T] [Sub T]
+    {f g : D → T} {x : T} (h : ∀ t, vDevAt f g t ≤ x) :
+    vDev f g ≤ x :=
+  iSup_le h
+
+/-- Intro: a uniform bound on the pointwise deviations bounds the horizontal
+deviation, `hDev f g ≤ x`. -/
+theorem hDev_le {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
+    [CoeTC D R] {f g : D → V} {x : R}
+    (h : ∀ t, (hDevAt f g t : R) ≤ x) :
+    (hDev f g : R) ≤ x :=
+  iSup_le h
+
+/-- Elim: an admissible shift bounds the pointwise horizontal deviation,
+`hDevAt f g t ≤ d` when `f t ≤ g (t + d)`. -/
+theorem hDevAt_le {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
+    [CoeTC D R] {f g : D → V} {t d : D} (h : f t ≤ g (t + d)) :
+    (hDevAt f g t : R) ≤ (d : R) :=
+  iInf_le (fun e : {e : D // f t ≤ g (t + e)} => (↑e.1 : R)) ⟨d, h⟩
+
 /-- `hDevAt f g t = ⊤` when no admissible shift exists. -/
 theorem hDevAt_eq_top {D V : Type*} (R : Type*)
     [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
@@ -105,9 +127,8 @@ theorem vDev_mono {D T : Type*} [CompleteLattice T] [AddCommSemigroup T]
 theorem hDevAt_mono {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
     [CoeTC D R] {f f' g g' : D → V} (hf : f' ≤ f) (hg : g ≤ g') (t : D) :
     (hDevAt f' g' t : R) ≤ hDevAt f g t :=
-  le_iInf fun d => iInf_le _
-    (⟨d.1, le_trans (hf t) (le_trans d.2 (hg (t + d.1)))⟩ :
-      {e : D // f' t ≤ g' (t + e)})
+  le_iInf fun d =>
+    hDevAt_le (le_trans (hf t) (le_trans d.2 (hg (t + d.1))))
 
 /-- Monotony of the horizontal deviation: `f' ≤ f` and `g ≤ g'` give
 `hDev f' g' ≤ hDev f g`. -/

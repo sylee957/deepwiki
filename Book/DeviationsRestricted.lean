@@ -69,8 +69,7 @@ theorem hDevAt_nsmul_add_le {α β : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive α) (hsup : IsSuperadditive β)
     {τ : ℝ≥0} (hcross : α τ ≤ β τ) (q : ℕ) (r : ℝ≥0) :
     (hDevAt α β (q • τ + r) : ℝ≥0∞) ≤ hDevAt α β r := by
-  refine le_iInf fun d => ?_
-  refine iInf_le_of_le ⟨d.1, ?_⟩ le_rfl
+  refine le_iInf fun d => hDevAt_le ?_
   calc α (q • τ + r)
       ≤ q • α τ + α r := hsub.apply_nsmul_add_le q τ r
     _ ≤ q • β τ + β (r + d.1) :=

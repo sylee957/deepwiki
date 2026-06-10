@@ -46,13 +46,8 @@ the admissibility predicates match through the coercion. -/
 theorem delayAt_eq_hDevAt_liftENN (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     delayAt A D t = (hDevAt (liftENN A) (liftENN D) t : ℝ≥0∞) := by
   apply le_antisymm
-  · refine le_iInf fun d => ?_
-    exact iInf_le (fun e : {e : ℝ≥0 // A t ≤ D (t + e)} => (e.1 : ℝ≥0∞))
-      ⟨d.1, by exact_mod_cast d.2⟩
-  · refine le_iInf fun d => ?_
-    exact iInf_le
-      (fun e : {e : ℝ≥0 // liftENN A t ≤ liftENN D (t + e)} => (e.1 : ℝ≥0∞))
-      ⟨d.1, by exact_mod_cast d.2⟩
+  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
+  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
 
 /-- `delay` is the horizontal deviation of the `ℝ≥0∞` readings. -/
 theorem delay_eq_hDev_liftENN (A D : ℝ≥0 → ℝ≥0) :

@@ -14,7 +14,7 @@ open scoped Classical NNReal ENNReal
 theorem minDeconv_minConv_le (f g h : ℝ≥0 → ℝ≥0∞) :
     minDeconv (minConv f g) h ≤ minConv f (minDeconv g h) := by
   intro t
-  refine iSup_le fun s => ?_
+  refine minDeconv_le fun s => ?_
   refine le_minConv fun u v huv => ?_
   rw [tsub_le_iff_right]
   calc minConv f g (t + s)
@@ -28,14 +28,14 @@ theorem minDeconv_minConv_le (f g h : ℝ≥0 → ℝ≥0∞) :
 /-- A sub-additive `f` bounds its own deconvolution: `f ⊘ f ≤ f` on `ℝ≥0∞`. -/
 theorem minDeconv_self_le_of_isSubadditive {f : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive f) : minDeconv f f ≤ f := fun t =>
-  iSup_le fun s => tsub_le_iff_right.mpr (hsub t s)
+  minDeconv_le fun s => tsub_le_iff_right.mpr (hsub t s)
 
 /-- For sub-additive `f`, the deconvolution exceeds its origin value by at
 most `f`: `(f ⊘ g) d ≤ f d + (f ⊘ g) 0` on `ℝ≥0∞`. -/
 theorem minDeconv_le_add_minDeconv_zero {f : ℝ≥0 → ℝ≥0∞} (g : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (d : ℝ≥0) :
     minDeconv f g d ≤ f d + minDeconv f g 0 := by
-  refine iSup_le fun u => ?_
+  refine minDeconv_le fun u => ?_
   calc f (d + u) - g u
       ≤ (f d + f u) - g u := tsub_le_tsub_right (hsub d u) _
     _ ≤ f d + (f u - g u) := add_tsub_le_assoc

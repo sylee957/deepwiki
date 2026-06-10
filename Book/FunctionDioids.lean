@@ -108,6 +108,22 @@ theorem maxDeconv_le_sub {D T : Type*} [Add D] [Sub T]
     maxDeconv g h t ≤ g (t + s) - h s :=
   ciInf_le_of_le (OrderBot.bddBelow _) s le_rfl
 
+/-- Intro: a uniform bound over all terms bounds the (min,+) deconvolution
+from above. -/
+theorem minDeconv_le {D T : Type*} [Add D] [Nonempty D] [Sub T]
+    [ConditionallyCompleteLattice T] {g h : D → T} {x : T} {t : D}
+    (hb : ∀ s, g (t + s) - h s ≤ x) :
+    minDeconv g h t ≤ x :=
+  ciSup_le hb
+
+/-- Intro: a uniform bound below all terms bounds the (max,+) deconvolution
+from below. -/
+theorem le_maxDeconv {D T : Type*} [Add D] [Nonempty D] [Sub T]
+    [ConditionallyCompleteLattice T] {g h : D → T} {x : T} {t : D}
+    (hb : ∀ s, x ≤ g (t + s) - h s) :
+    x ≤ maxDeconv g h t :=
+  le_ciInf hb
+
 
 /-- (min,+) functions valued in `R∪{±∞}`. -/
 abbrev FminBar := ℝ≥0 → MinPlusExt
