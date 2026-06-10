@@ -14,7 +14,7 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 
-/-- `ℝ≥0∞`-valued horizontal deviation: `hDevAtE` with shift-embedding `↑`. -/
+/-- `ℝ≥0∞`-valued horizontal deviation: `hDevAt` with shift-embedding `↑`. -/
 noncomputable abbrev hDevAtE (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
   hDevAt f g t
 

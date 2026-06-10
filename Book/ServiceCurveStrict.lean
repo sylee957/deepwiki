@@ -98,9 +98,10 @@ theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
   rw [add_zero]
   exact D.mono hst
 
-/-- A strict service curve is null at the origin: `beta 0 = 0`. The strict bound
-at `s = t = 0` (the empty period `(0, 0]` is vacuously backlogged) gives
-`D 0 + beta 0 ≤ D 0`, hence `beta 0 ≤ 0`. -/
+/-- A strict service curve of a relation with a served pair is null at the
+origin: `beta 0 = 0`. The strict bound at `s = t = 0` (the empty period
+`(0, 0]` is vacuously backlogged) gives `D 0 + beta 0 ≤ D 0`, hence
+`beta 0 ≤ 0`. -/
 theorem IsStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0} {S : Curve → Curve → Prop}
     (hβ : IsStrictMinimalServiceCurve beta S) {A D : Curve} (hp : S A D) :
     beta 0 = 0 := by
@@ -174,7 +175,8 @@ theorem isStrictMinimalServiceCurve_ndClosure
       rw [add_comm]; exact add_tsub_cancel_right u s] at hb
   exact le_trans hb (D.mono hsu)
 
-/-- Offering `ndClosure beta` is equivalent to offering `beta` (when bdd). -/
+/-- Offering `ndClosure beta` is equivalent to offering `beta`, for `beta`
+bounded on each `[0, t]` (so `ndClosure` is well-defined). -/
 theorem isStrictMinimalServiceCurve_ndClosure_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hbdd : ∀ t, BddAbove
@@ -233,7 +235,9 @@ theorem isStrictMinimalServiceCurve_superadditiveClosureMax
   refine add_ciSup_le _ _ _ (fun n => ?_)
   exact isStrictMinimalServiceCurve_maxConvProjPow beta hβ n A D hp s t hst hbl
 
-/-- Offering `superadditiveClosureMax beta` is equivalent to offering `beta` (when bdd). -/
+/-- Offering `superadditiveClosureMax beta` is equivalent to offering `beta`,
+for self-convolution iterates bounded at each `t` (so the closure is
+well-defined). -/
 theorem isStrictMinimalServiceCurve_superadditiveClosureMax_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hbdd : ∀ t, BddAbove

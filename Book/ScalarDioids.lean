@@ -379,7 +379,8 @@ theorem coe_unbotD_eq {x : WithBot ℝ≥0∞} (h : x ≠ ⊥) :
   obtain ⟨d, rfl⟩ := (WithBot.ne_bot_iff_exists).mp h
   rw [WithBot.unbotD_coe]
 
-/-- `⨆` on `WithBot ℝ≥0∞` equals the coerced `ℝ≥0∞` `⨆`. -/
+/-- For a family with some non-`⊥` term, `⨆` on `WithBot ℝ≥0∞` equals the
+coerced `ℝ≥0∞` `⨆` of the `unbotD 0` values. -/
 theorem bridge {ι : Sort*} (f : ι → WithBot ℝ≥0∞)
     (j : ι) (hj : f j ≠ ⊥) :
     (⨆ i, f i)

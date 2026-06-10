@@ -241,9 +241,10 @@ theorem greedyShaperRel_le_shaperRel {sigma : ℝ≥0 → EReal} (h0 : sigma 0 �
   exact ⟨(isGreedyShaper_greedyShaperRel sigma).isCausal h0 A D hp,
     (isGreedyShaper_greedyShaperRel sigma).isShaper hnn hsub A D hp⟩
 
-/-- The reduced form of the proposition: the greedy shaper is exactly
-minimal service plus shaping, `greedyShaperRel sigma = minimalServiceRel sigma ⊓
-shaperRel sigma` (for `F₀` sub-additive `sigma`). -/
+/-- Reduced form of `greedyShaperRel_eq_minimalServiceRel_inf_maximalServiceRel`:
+the greedy shaper is exactly minimal service plus shaping,
+`greedyShaperRel sigma = minimalServiceRel sigma ⊓ shaperRel sigma` (for `F₀`
+sub-additive `sigma`). -/
 theorem greedyShaperRel_eq_minimalServiceRel_inf_shaperRel {sigma : ℝ≥0 → EReal}
     (h0 : sigma 0 ≤ 0) (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma) :
     greedyShaperRel sigma = minimalServiceRel sigma ⊓ shaperRel sigma := by

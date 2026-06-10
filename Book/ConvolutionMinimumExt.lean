@@ -57,7 +57,8 @@ theorem exists_isMinOn_splitMap_of_contAt
     ((lowerSemicontinuous_splitMap_of_contAt g h hg hh t hcont)
       |>.lowerSemicontinuousOn _)
 
-/-- Over the extended reals `ℝ̄ = EReal`: for nondecreasing, left-continuous
+/-! ## Attainment over `EReal`
+Over the extended reals `ℝ̄ = EReal`: for nondecreasing, left-continuous
 `g, h : ℝ⁺ → ℝ̄` with `AddDefined (g u) (h (t−u))` at every split (no
 `(+∞)+(−∞)` collision), the min-plus convolution is attained:
 `minConv g h t = g u₀ + h (t − u₀)` for some `u₀ ∈ [0,t]`.
@@ -76,7 +77,8 @@ example (g h : ℝ≥0 → EReal)
       (fun u => (hpair u).continuousAt)
   exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
 
-/-- Over the book's carrier `R̄min = WithTop (WithBot ℝ)` (top-absorbing `+`,
+/-! ## Attainment over the book's carrier
+Over the book's carrier `R̄min = WithTop (WithBot ℝ)` (top-absorbing `+`,
 `(+∞)+(−∞) = +∞`): for nondecreasing, left-continuous `g, h : ℝ⁺ → R̄min` with
 `AddDefinedExt (g u) (h (t−u))` at every split (no `(+∞)+(−∞)` collision), the
 min-plus convolution is attained: `minConv g h t = g u₀ + h (t − u₀)` for some
