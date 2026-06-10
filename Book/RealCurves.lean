@@ -76,6 +76,10 @@ theorem delayNN_zero_eq (d : ℝ≥0) : delayNN d 0 = 0 := by
 theorem delayE_zero_eq (d : ℝ≥0∞) : delayE d 0 = 0 := by
   simp [delayE]
 
+/-- `delayEReal d 0 = 0`. -/
+theorem delayEReal_zero_eq (d : ℝ≥0) : delayEReal d 0 = 0 :=
+  delay_eq_zero d zero_le'
+
 /-- On finite arguments, `delayE ↑d` agrees with `delayNN d`. -/
 theorem delayE_coe (d t : ℝ≥0) :
     delayE (d : ℝ≥0∞) (t : ℝ≥0∞) = delayNN d t := by

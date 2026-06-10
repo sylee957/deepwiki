@@ -86,6 +86,20 @@ theorem backlog_eq_vDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
   rw [backlog_eq_iSup, vDev_eq_iSup]
   exact iSup_congr fun t => ENNReal.coe_sub
 
+/-- `delayAt` agrees with the horizontal deviation of the `ℝ≥0∞` readings:
+the admissibility predicates match through the coercion. -/
+theorem delayAt_eq_hDevAt_liftENN (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    delayAt A D t = (hDevAt (liftENN A) (liftENN D) t : ℝ≥0∞) := by
+  apply le_antisymm
+  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
+  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
+
+/-- `delay` is the horizontal deviation of the `ℝ≥0∞` readings. -/
+theorem delay_eq_hDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
+    delay A D = (hDev (liftENN A) (liftENN D) : ℝ≥0∞) := by
+  rw [delay_eq_iSup]
+  exact iSup_congr (delayAt_eq_hDevAt_liftENN A D)
+
 /-- **Delay bound.** If nondecreasing `A` has maximal arrival curve `α` and
 `D` dominates the convolution `A ∗ β` for nondecreasing `β`, then the delay
 at every `t` is bounded by the horizontal deviation: `d(A, D)(t) ≤ hDev α β`. -/

@@ -124,6 +124,36 @@ theorem le_maxDeconv {D T : Type*} [Add D] [Nonempty D] [Sub T]
     x ≤ maxDeconv g h t :=
   le_ciInf hb
 
+/-- `minDeconv g h` is monotone in its first slot when `g` is monotone. -/
+theorem monotone_minDeconv {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CovariantClass D D (·+·) (·≤·)]
+    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
+    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
+    (g h : D → T)
+    (hg : Monotone g) : Monotone (minDeconv g h) := by
+  intro x y hxy
+  unfold minDeconv
+  refine iSup_le (fun s => ?_)
+  refine le_iSup_of_le s ?_
+  have hxs : x + s ≤ y + s := by gcongr
+  exact tsub_le_tsub_right (hg hxs) (h s)
+
+/-- `maxDeconv g h` is monotone in its first slot when `g` is monotone. -/
+theorem monotone_maxDeconv {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D]
+    [CovariantClass D D (·+·) (·≤·)]
+    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
+    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
+    (g h : D → T)
+    (hg : Monotone g) : Monotone (maxDeconv g h) := by
+  intro x y hxy
+  unfold maxDeconv
+  refine le_iInf (fun s => ?_)
+  refine iInf_le_of_le s ?_
+  have hxs : x + s ≤ y + s := by gcongr
+  exact tsub_le_tsub_right (hg hxs) (h s)
+
 
 /-- (min,+) functions valued in `R∪{±∞}`. -/
 abbrev FminBar := ℝ≥0 → MinPlusExt

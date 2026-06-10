@@ -36,12 +36,6 @@ theorem ndClosure_eq_maxConv {T : Type*} [ConditionallyCompleteLattice T]
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 
-/-- Joining with `0` is a no-op for `ℝ≥0`-valued functions. -/
-theorem sup_zero_eq_self {D : Type*} (beta : D → ℝ≥0) :
-    (fun t => beta t ⊔ 0) = beta := by
-  funext t
-  exact sup_eq_left.mpr zero_le'
-
 /-- `n`-fold `maxConvProj` self-convolution iterate of `beta`. -/
 noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
     ℕ → (ℝ≥0 → ℝ≥0)

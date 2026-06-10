@@ -41,20 +41,6 @@ theorem liftENN_le_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → �
     exact_mod_cast hA0
   rw [htoE, zero_add]
 
-/-- `delayAt` agrees with the horizontal deviation of the `ℝ≥0∞` readings:
-the admissibility predicates match through the coercion. -/
-theorem delayAt_eq_hDevAt_liftENN (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    delayAt A D t = (hDevAt (liftENN A) (liftENN D) t : ℝ≥0∞) := by
-  apply le_antisymm
-  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
-  · exact le_iInf fun d => hDevAt_le (by exact_mod_cast d.2)
-
-/-- `delay` is the horizontal deviation of the `ℝ≥0∞` readings. -/
-theorem delay_eq_hDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
-    delay A D = (hDev (liftENN A) (liftENN D) : ℝ≥0∞) := by
-  rw [delay_eq_iSup]
-  exact iSup_congr (delayAt_eq_hDevAt_liftENN A D)
-
 /-- **Tightness of the delay bound**: sub-additive `A` is its own arrival
 curve, and against a `D` realizing `A ∗ β` exactly the delay attains the
 horizontal deviation, `d(A, D) = hDev (liftENN A) β`. -/

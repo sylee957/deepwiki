@@ -105,36 +105,6 @@ theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     simp
   · exact zero_le'
 
-/-- `minDeconv g h` is monotone in its first slot when `g` is monotone. -/
-theorem minDeconvE_mono {D T : Type*}
-    [_root_.AddCommMonoid D] [PartialOrder D]
-    [CovariantClass D D (·+·) (·≤·)]
-    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
-    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
-    (g h : D → T)
-    (hg : Monotone g) : Monotone (minDeconv g h) := by
-  intro x y hxy
-  unfold minDeconv
-  refine iSup_le (fun s => ?_)
-  refine le_iSup_of_le s ?_
-  have hxs : x + s ≤ y + s := by gcongr
-  exact tsub_le_tsub_right (hg hxs) (h s)
-
-/-- `maxDeconv g h` is monotone in its first slot when `g` is monotone. -/
-theorem maxDeconvE_mono {D T : Type*}
-    [_root_.AddCommMonoid D] [PartialOrder D]
-    [CovariantClass D D (·+·) (·≤·)]
-    [CompleteLattice T] [_root_.AddCommMonoid T] [Sub T]
-    [OrderedSub T] [CovariantClass T T (·+·) (·≤·)]
-    (g h : D → T)
-    (hg : Monotone g) : Monotone (maxDeconv g h) := by
-  intro x y hxy
-  unfold maxDeconv
-  refine le_iInf (fun s => ?_)
-  refine iInf_le_of_le s ?_
-  have hxs : x + s ≤ y + s := by gcongr
-  exact tsub_le_tsub_right (hg hxs) (h s)
-
 /-- `delayNN 0 ⊓ minDeconv f (delayNN d)` is subadditive. -/
 theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
