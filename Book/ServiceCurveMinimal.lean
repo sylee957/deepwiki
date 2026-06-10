@@ -29,17 +29,17 @@ theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
     Monotone (liftEReal f) :=
   fun _ _ hab => by exact_mod_cast hmono hab
 
-/-- A curve viewed in `EReal`: `t ↦ ((A t : ℝ) : EReal)`. -/
+/-- A curve viewed in `EReal`: the lift `liftEReal ⇑A`. -/
 noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
-  fun t => ((A t : ℝ) : EReal)
+  liftEReal ⇑A
 
 /-- `curveE A` is the `EReal` lift of the underlying function:
 `curveE A = liftEReal ⇑A`. -/
 theorem curveE_eq_liftEReal (A : Curve) : curveE A = liftEReal ⇑A := rfl
 
 /-- `curveE A` is nonnegative: `0 ≤ curveE A t`. -/
-theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t := by
-  show (0 : EReal) ≤ ((A t : ℝ) : EReal); positivity
+theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t :=
+  isNonneg_liftEReal ⇑A t
 
 /-- `curveE A` is never `⊥`: each value is a real coercion. -/
 theorem curveE_neverBot (A : Curve) : NeverBot (curveE A) :=
@@ -69,10 +69,8 @@ theorem curveE_mono {D A : Curve} (h : D ≤ A) : curveE D ≤ curveE A :=
 
 /-- `curveE A` is monotone in time (contrast `curveE_mono`: monotonicity in
 the curve argument). -/
-theorem monotone_curveE (A : Curve) : Monotone (curveE A) := by
-  intro a b hab
-  show ((A a : ℝ) : EReal) ≤ ((A b : ℝ) : EReal)
-  exact_mod_cast A.mono hab
+theorem monotone_curveE (A : Curve) : Monotone (curveE A) :=
+  monotone_liftEReal A.mono
 
 /-- `curveE A` is left-continuous. -/
 theorem isLeftContinuous_curveE (A : Curve) :
