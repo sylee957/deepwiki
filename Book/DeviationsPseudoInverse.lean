@@ -7,8 +7,9 @@ where the pseudo-inverse lives. Pointwise, at a finite time the horizontal
 deviation is the first time non-decreasing `g` reaches `f t`, shifted back
 by `t`: `hDevAt f g t = pseudoInv g (f t) - t` (truncated subtraction
 absorbs the `f t ≤ g t` case). Globally the deviations are deconvolutions:
-`vDev f g = (f ⊘ g) 0` and `hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the
-unit-rate curve `rateE 1`. -/
+`hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the unit-rate curve `rateE 1`,
+proved here, restated alongside `vDev_eq_deconv_zero` from
+`Book.Deviations`. -/
 
 namespace DeepWiki
 
