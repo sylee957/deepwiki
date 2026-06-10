@@ -92,6 +92,13 @@ theorem hDev_eq_biSup_of_crossing {α β : ℝ≥0 → ℝ≥0∞}
       (le_iSup₂ (f := fun t (_ : t ≤ τ) => (hDevAt α β t : ℝ≥0∞)) r hrτ.le)
   · exact iSup₂_le fun t _ => hDevAt_le_hDev α β t
 
+/-- Sub-additivity transports through the `ℝ≥0∞` reading: `toENN sigma` is
+sub-additive when `sigma` is. -/
+theorem IsSubadditive.toENN {sigma : ℝ≥0 → EReal}
+    (hsub : IsSubadditive sigma) : IsSubadditive (Deviation.toENN sigma) :=
+  fun u s =>
+    (EReal.toENNReal_le_toENNReal (hsub u s)).trans EReal.toENNReal_add_le
+
 /-- Super-additivity transports through the `ℝ≥0∞` reading for nonnegative
 curves: `toENN beta` is super-additive when `beta` is. -/
 theorem IsSuperadditive.toENN {beta : ℝ≥0 → EReal}

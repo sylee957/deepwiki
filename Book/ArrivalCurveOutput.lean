@@ -51,13 +51,6 @@ theorem toENN_delayEReal (d : ℝ≥0) :
 
 end Deviation
 
-/-- Sub-additivity transports through the `ℝ≥0∞` reading: `toENN sigma` is
-sub-additive when `sigma` is. -/
-theorem IsSubadditive.toENN {sigma : ℝ≥0 → EReal}
-    (hsub : IsSubadditive sigma) : IsSubadditive (Deviation.toENN sigma) :=
-  fun u s =>
-    (EReal.toENNReal_le_toENNReal (hsub u s)).trans EReal.toENNReal_add_le
-
 /-- The `ℝ≥0∞` reading of a maximal arrival curve: if `curveE f` allows the
 nonnegative `sigma`, then `liftENN ⇑f` allows `toENN sigma`. -/
 theorem IsMaximalArrivalCurve.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
