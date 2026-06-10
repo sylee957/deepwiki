@@ -8,8 +8,8 @@ backlog/delay of a pair of arrival/departure curves defined from them.
 
 The **vertical** deviation `vDevAt f g t = f t - g t` (and its sup `vDev`) lives
 over any domain with a `Sub` codomain. The **horizontal** deviation
-`hDevAt ι f g t` is the least admissible shift `d` with `f t ≤ g (t + d)`,
-measured through an embedding `ι` of shifts into a complete lattice (so a missing
+`hDevAt f g t` is the least admissible shift `d` with `f t ≤ g (t + d)`, read
+into a complete lattice `R` via a `CoeTC D R` coercion on shifts (so a missing
 shift reads as `⊤`); `hDev` is its sup over `t`.
 
 The cumulative-curve **backlog** `b(A, D)` is the vertical deviation and the
@@ -30,8 +30,8 @@ noncomputable def vDev {D T : Type*} [SupSet T] [Sub T]
     (f g : D → T) : T :=
   ⨆ t : D, vDevAt f g t
 
-/-- Horizontal deviation of `f` from `g` at `t`, measured through `ι`: the least
-shift `d` with `f t ≤ g (t + d)`, measured in `R` via the coercion `D → R`
+/-- Horizontal deviation of `f` from `g` at `t`: the least shift `d` with
+`f t ≤ g (t + d)`, read into `R` via the `CoeTC D R` coercion
 (a missing shift reads as `⊤`). -/
 noncomputable def hDevAt {D V R : Type*}
     [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
@@ -130,7 +130,7 @@ theorem hDevAt_eq_iSup_lt {V : Type*} [LinearOrder V] {f g : ℝ≥0 → V}
 /-! ## Backlog and delay of cumulative curves
 For arrival/departure curves `A, D : ℝ≥0 → ℝ≥0`, the **backlog** is the vertical
 deviation and the **delay** the horizontal one, the latter valued in `ℝ≥0∞` via
-the embedding `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
+the coercion `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
 
 namespace Deviation
 

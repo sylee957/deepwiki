@@ -4,7 +4,8 @@ import Book.ServiceCurveMinimal
 /-! # Maximal service curves
 A maximal service curve `β` upper-bounds a server's output by the convolution:
 `D ≤ A ∗ β` on every served pair — the order dual of the min-plus service
-curve. Largest relation `maximalServiceRel β`; universal curve `δ₀`. -/
+curve. Largest relation `maximalServiceRel β`; the universal curve `δ₀`;
+monotony in `β`, and replacement by the non-decreasing closure `ndClosure β`. -/
 
 namespace DeepWiki
 

@@ -2,11 +2,10 @@ import Book.ArrivalCurveShaper
 import Book.ConvolutionContinuity
 
 /-! # Greedy shapers
-The greedy shaper outputs exactly `A ∗ σ`: the relation `greedyShaperRel σ`, its
-well-definedness for `σ` in `F₀` left-continuous (the output is again a
-curve, up to a piecewise-continuity witness), and the consequences of the
-defining equality — a greedy shaper is both a `σ`-shaper and a min-plus
-service curve. -/
+The greedy shaper outputs exactly `A ∗ σ`: the relation `greedyShaperRel σ`,
+well-defined for `σ` in `F₀` left-continuous (the output is again a curve, up
+to a piecewise-continuity witness). A greedy shaper is a `σ`-shaper and a
+min-plus service curve; `greedyShaperRel σ = minimalServiceRel σ ⊓ shaperRel σ`. -/
 
 namespace DeepWiki
 

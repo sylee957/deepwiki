@@ -3,8 +3,11 @@ import Book.SubDioid
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
 /-! # Function dioids
-The dioid product is convolution `(f ∗ g)`; the function
-classes `FPlus`/`FNondecr` are sub-complete-dioids. -/
+Generic `minConv`/`maxConv` with intro and elim lemmas (`minConv_le_add`,
+`le_minConv`, `add_le_maxConv`, `maxConv_le`); the function spaces
+`FminBar`/`FmaxBar` over the extended carriers, whose dioid product `conv`
+agrees with `minConv`/`maxConv`; the predicates `IsNonneg`/`IsNullAtOrigin`
+with closure lemmas; and the sub-complete-dioids `FPlus`/`FNondecr`. -/
 
 namespace DeepWiki
 

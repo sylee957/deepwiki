@@ -47,11 +47,15 @@ noncomputable def toEReal : WithTop (WithBot ℝ) → EReal
   | (⊥ : WithBot ℝ) => ⊥
   | ((r : ℝ) : WithBot ℝ) => (r : EReal)
 
+/-- `toEReal ⊤ = ⊤`. -/
 @[simp] theorem toEReal_top : toEReal ⊤ = ⊤ := rfl
+/-- `toEReal ↑(⊥ : WithBot ℝ) = ⊥`: the coerced inner bottom maps to `⊥`. -/
 @[simp] theorem toEReal_coe_bot :
     toEReal ((⊥ : WithBot ℝ) : WithTop (WithBot ℝ)) = ⊥ := rfl
+/-- `toEReal ↑↑r = ↑r`: the cast is the identity on real values. -/
 @[simp] theorem toEReal_coe (r : ℝ) :
     toEReal (((r : WithBot ℝ) : WithTop (WithBot ℝ))) = (r : EReal) := rfl
+/-- `toEReal ⊥ = ⊥`. -/
 @[simp] theorem toEReal_bot : toEReal (⊥ : WithTop (WithBot ℝ)) = ⊥ := by
   rw [← WithTop.coe_bot]; rfl
 
@@ -61,9 +65,12 @@ noncomputable def ofEReal : EReal → WithTop (WithBot ℝ)
   | ⊥ => ((⊥ : WithBot ℝ) : WithTop (WithBot ℝ))
   | ((r : ℝ) : EReal) => (((r : WithBot ℝ)) : WithTop (WithBot ℝ))
 
+/-- `ofEReal ⊤ = ⊤`. -/
 @[simp] theorem ofEReal_top : ofEReal ⊤ = ⊤ := rfl
+/-- `ofEReal ⊥ = ↑(⊥ : WithBot ℝ)`: `⊥` maps to the coerced inner bottom. -/
 @[simp] theorem ofEReal_bot :
     ofEReal ⊥ = ((⊥ : WithBot ℝ) : WithTop (WithBot ℝ)) := rfl
+/-- `ofEReal ↑r = ↑↑r`: the inverse cast is the identity on real values. -/
 @[simp] theorem ofEReal_coe (r : ℝ) :
     ofEReal ((r : EReal)) = (((r : WithBot ℝ)) : WithTop (WithBot ℝ)) := rfl
 
@@ -116,9 +123,11 @@ between order-topology spaces). -/
 noncomputable def toERealHomeo : WithTop (WithBot ℝ) ≃ₜ EReal :=
   toERealOrderIso.toHomeomorph
 
+/-- `toERealHomeo a = toEReal a`: the homeomorphism applies the value cast. -/
 @[simp] theorem toERealHomeo_apply (a : WithTop (WithBot ℝ)) :
     toERealHomeo a = toEReal a := rfl
 
+/-- `toERealHomeo.symm x = ofEReal x`: the inverse homeomorphism is `ofEReal`. -/
 @[simp] theorem toERealHomeo_symm_apply (x : EReal) :
     toERealHomeo.symm x = ofEReal x := rfl
 
@@ -126,10 +135,12 @@ noncomputable def toERealHomeo : WithTop (WithBot ℝ) ≃ₜ EReal :=
 theorem toEReal_injective : Function.Injective toEReal :=
   Function.LeftInverse.injective ofEReal_toEReal
 
+/-- `toEReal a = ⊤ ↔ a = ⊤`: the cast hits `⊤` only at `⊤`. -/
 @[simp] theorem toEReal_eq_top {a : WithTop (WithBot ℝ)} :
     toEReal a = ⊤ ↔ a = ⊤ := by
   rw [show (⊤ : EReal) = toEReal ⊤ from rfl, toEReal_injective.eq_iff]
 
+/-- `toEReal a = ⊥ ↔ a = ⊥`: the cast hits `⊥` only at `⊥`. -/
 @[simp] theorem toEReal_eq_bot {a : WithTop (WithBot ℝ)} :
     toEReal a = ⊥ ↔ a = ⊥ := by
   rw [show (⊥ : EReal) = toEReal ⊥ from rfl, toEReal_injective.eq_iff]

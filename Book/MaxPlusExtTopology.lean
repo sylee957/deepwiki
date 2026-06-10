@@ -50,16 +50,22 @@ open scoped MaxPlusExt
 defeq to `EReal`). -/
 def toEReal : WithBot (WithTop ℝ) → EReal := id
 
+/-- `toEReal ⊤ = ⊤`. -/
 @[simp] theorem toEReal_top : toEReal ⊤ = ⊤ := rfl
+/-- `toEReal ⊥ = ⊥`. -/
 @[simp] theorem toEReal_bot : toEReal ⊥ = ⊥ := rfl
+/-- `toEReal` sends the carrier coercion of a real `r` to `(r : EReal)`. -/
 @[simp] theorem toEReal_coe (r : ℝ) :
     toEReal (((r : WithTop ℝ) : WithBot (WithTop ℝ))) = (r : EReal) := rfl
 
 /-- Inverse value cast `EReal → WithBot (WithTop ℝ)`: the identity. -/
 def ofEReal : EReal → WithBot (WithTop ℝ) := id
 
+/-- `ofEReal ⊤ = ⊤`. -/
 @[simp] theorem ofEReal_top : ofEReal ⊤ = ⊤ := rfl
+/-- `ofEReal ⊥ = ⊥`. -/
 @[simp] theorem ofEReal_bot : ofEReal ⊥ = ⊥ := rfl
+/-- `ofEReal` sends `(r : EReal)` to the carrier coercion of the real `r`. -/
 @[simp] theorem ofEReal_coe (r : ℝ) :
     ofEReal ((r : EReal)) = (((r : WithTop ℝ) : WithBot (WithTop ℝ))) := rfl
 
@@ -84,9 +90,11 @@ def toERealOrderIso : WithBot (WithTop ℝ) ≃o EReal where
 are *literally* `EReal`'s, so this is the identity homeomorphism. -/
 noncomputable def toERealHomeo : WithBot (WithTop ℝ) ≃ₜ EReal := Homeomorph.refl _
 
+/-- `toERealHomeo a = toEReal a`. -/
 @[simp] theorem toERealHomeo_apply (a : WithBot (WithTop ℝ)) :
     toERealHomeo a = toEReal a := rfl
 
+/-- `toERealHomeo.symm x = ofEReal x`. -/
 @[simp] theorem toERealHomeo_symm_apply (x : EReal) :
     toERealHomeo.symm x = ofEReal x := rfl
 
@@ -94,9 +102,11 @@ noncomputable def toERealHomeo : WithBot (WithTop ℝ) ≃ₜ EReal := Homeomorp
 theorem toEReal_injective : Function.Injective toEReal :=
   Function.LeftInverse.injective ofEReal_toEReal
 
+/-- `toEReal a = ⊤ ↔ a = ⊤`. -/
 @[simp] theorem toEReal_eq_top {a : WithBot (WithTop ℝ)} :
     toEReal a = ⊤ ↔ a = ⊤ := Iff.rfl
 
+/-- `toEReal a = ⊥ ↔ a = ⊥`. -/
 @[simp] theorem toEReal_eq_bot {a : WithBot (WithTop ℝ)} :
     toEReal a = ⊥ ↔ a = ⊥ := Iff.rfl
 

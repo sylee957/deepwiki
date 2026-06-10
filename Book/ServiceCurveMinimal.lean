@@ -3,9 +3,10 @@ import Book.RealConvolution
 import Book.ECurveDioid
 
 /-! # Min-plus service curves
-Min-plus service curves `β : ℝ≥0 → EReal`: the convolution bound `D ≥ A ∗ β` on a
-server's pairs, and the largest such relation `minimalServiceRel β` for a given `β`.
-`β` may take negative (and `±∞`) values, so it is `EReal`-valued. -/
+The `EReal` curve view `curveE`; `IsMinimalServiceCurve β S` — `A ∗ β ≤ D` on
+served pairs, `β : ℝ≥0 → EReal` — and the largest such relation
+`minimalServiceRel β`: a server when `β 0 ≤ 0`, empty when `β 0 > 0`, and
+every server offers the zero curve `betaZero`. -/
 
 namespace DeepWiki
 
