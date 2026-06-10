@@ -46,6 +46,25 @@ theorem curveE_le_iff {D A : Curve} : curveE D ≤ curveE A ↔ D ≤ A := by
 theorem curveE_mono {D A : Curve} (h : D ≤ A) : curveE D ≤ curveE A :=
   curveE_le_iff.mpr h
 
+/-- `curveE A` is monotone in time (contrast `curveE_mono`: monotonicity in
+the curve argument). -/
+theorem monotone_curveE (A : Curve) : Monotone (curveE A) := by
+  intro a b hab
+  show ((A a : ℝ) : EReal) ≤ ((A b : ℝ) : EReal)
+  exact_mod_cast A.mono hab
+
+/-- `curveE A` is left-continuous. -/
+theorem isLeftContinuous_curveE (A : Curve) :
+    IsLeftContinuous (curveE A) := fun t =>
+  ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt
+    ).comp_continuousWithinAt (A.leftCont t)
+
+/-- `curveE` values are real coercions, so they are `AddDefined` with
+anything. -/
+theorem addDefined_curveE (A : Curve) (u : ℝ≥0) (x : EReal) :
+    AddDefined (curveE A u) x :=
+  ⟨Or.inl (EReal.coe_ne_top _), Or.inl (EReal.coe_ne_bot _)⟩
+
 /-- `S` offers `EReal`-valued min-plus service curve `beta`: every served pair
 satisfies `A ∗ beta ≤ D` (i.e. `D ≥ A ∗ beta`), the curve pair lifted into
 `EReal` via `curveE`. -/
