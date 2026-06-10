@@ -295,7 +295,7 @@ theorem beta_lt_alpha_of_isBacklogged
     {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    (harr : IsMaximalArrivalBound (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
     {d' : ℝ≥0} (hd' : 0 < d') (hle : d' ≤ d) :
     beta d' < alpha d' := by
@@ -321,7 +321,7 @@ theorem beta_lt_alpha_of_isBacklogged
       _ ≤ D (s + d') := hserv
       _ < A (s + d') := hbacklog
       _ ≤ A s + alpha d' :=
-          (isMaximalArrivalCurve_iff_increment (⇑A) alpha).mp harr s d'
+          (isMaximalArrivalBound_iff_increment (⇑A) alpha).mp harr s d'
   exact lt_of_add_lt_add_left hchain
 
 /-- A positive crossing point `alpha d₀ ≤ beta d₀` bounds every backlogged
@@ -331,7 +331,7 @@ theorem length_lt_crossing_of_isBacklogged
     {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    (harr : IsMaximalArrivalBound (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
     {d₀ : ℝ≥0} (hd₀ : 0 < d₀) (hcross : alpha d₀ ≤ beta d₀) :
     d < d₀ := by
@@ -348,7 +348,7 @@ theorem length_le_firstCrossing_of_isBacklogged
     {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    (harr : IsMaximalArrivalBound (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   le_firstCrossing fun _ hx => ENNReal.coe_le_coe.mpr
@@ -364,6 +364,6 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
-  length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp harr hbl
+  length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp harr.2 hbl
 
 end DeepWiki

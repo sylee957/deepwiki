@@ -80,7 +80,7 @@ theorem delay_le_hDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) :
     delay ⇑A ⇑D ≤ (hDev α (toENN beta) : ℝ≥0∞) :=
   delay_le_hDev A.mono (monotone_toENN hmono)
     harr (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)
@@ -91,7 +91,7 @@ theorem coe_backlogAt_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (t : ℝ≥0) :
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) (t : ℝ≥0) :
     (backlogAt ⇑A ⇑D t : ℝ≥0∞) ≤ vDev α (toENN beta) :=
   coe_backlogAt_le_vDev harr
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp) t
@@ -101,7 +101,7 @@ theorem backlog_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) :
     backlog ⇑A ⇑D ≤ vDev α (toENN beta) :=
   backlog_le_vDev harr
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)

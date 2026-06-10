@@ -53,9 +53,9 @@ end Deviation
 
 /-- The `ℝ≥0∞` reading of a maximal arrival curve: if `curveE f` allows the
 nonnegative `sigma`, then `liftENN ⇑f` allows `toENN sigma`. -/
-theorem IsMaximalArrivalCurve.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
-    (h : IsMaximalArrivalCurve (curveE f) sigma) (hnn : IsNonneg sigma) :
-    IsMaximalArrivalCurve (liftENN ⇑f) (Deviation.toENN sigma) := by
+theorem IsMaximalArrivalBound.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
+    (h : IsMaximalArrivalBound (curveE f) sigma) (hnn : IsNonneg sigma) :
+    IsMaximalArrivalBound (liftENN ⇑f) (Deviation.toENN sigma) := by
   intro t
   rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN f hnn t]
   calc ((liftENN ⇑f t : ℝ≥0∞) : EReal)
@@ -66,16 +66,16 @@ theorem IsMaximalArrivalCurve.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
 nonnegative minimal and maximal service curves `betam`, `betaM`, the arrival
 allowing `αu`, has output allowing `(αu ∗ betaM) ⊘ betam` (`minDeconv`,
 `ℝ≥0∞` reading). -/
-theorem isMaximalArrivalCurve_output_deconv
+theorem isMaximalArrivalBound_output_deconv
     {S : Curve → Curve → Prop} {betam betaM : ℝ≥0 → EReal}
     {αu : ℝ≥0 → ℝ≥0∞}
     (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
     (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
     {A D : Curve} (hp : S A D)
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
-    IsMaximalArrivalCurve (liftENN ⇑D)
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (liftENN ⇑D)
       (minDeconv (minConv αu (toENN betaM)) (toENN betam)) := by
-  rw [isMaximalArrivalCurve_iff_increment]
+  rw [isMaximalArrivalBound_iff_increment]
   intro t d
   -- replace `D t` by its lower bound `(A ∗ betam) t`
   have h1 : minConv (liftENN ⇑A) (toENN betam) t ≤ (D t : ℝ≥0∞) :=
@@ -105,7 +105,7 @@ theorem isMaximalArrivalCurve_output_deconv
             (by rw [add_assoc, hpq, add_comm d s, ← add_assoc, hus])
       _ ≤ (liftENN ⇑A u + αu p) + toENN betaM q :=
           add_le_add
-            ((isMaximalArrivalCurve_iff_increment _ _).mp harru u p) le_rfl
+            ((isMaximalArrivalBound_iff_increment _ _).mp harru u p) le_rfl
       _ = liftENN ⇑A u + (αu p + toENN betaM q) := add_assoc _ _ _
   calc (D (t + d) : ℝ≥0∞)
       ≤ liftENN ⇑A u + minConv αu (toENN betaM) (d + s) := h3
@@ -119,18 +119,18 @@ theorem isMaximalArrivalCurve_output_deconv
 /-- **Output arrival curve (maximal).** Under nonnegative minimal and maximal
 service curves `betam`, `betaM` and a nonnegative `sigma`-shaper, the output
 allows `((αu ∗ betaM) ⊘ betam) ⊓ sigma` as a maximal arrival curve. -/
-theorem isMaximalArrivalCurve_output
+theorem isMaximalArrivalBound_output
     {S : Curve → Curve → Prop} {betam betaM sigma : ℝ≥0 → EReal}
     {αu : ℝ≥0 → ℝ≥0∞}
     (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
     (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
     (hsh : IsShaper sigma S) (hnns : IsNonneg sigma)
     {A D : Curve} (hp : S A D)
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
-    IsMaximalArrivalCurve (liftENN ⇑D)
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (liftENN ⇑D)
       (minDeconv (minConv αu (toENN betaM)) (toENN betam)
         ⊓ toENN sigma) :=
-  (isMaximalArrivalCurve_output_deconv hβm hnnm hβM hnnM hp harru).inf
+  (isMaximalArrivalBound_output_deconv hβm hnnm hβM hnnM hp harru).inf
     ((hsh A D hp).toENN hnns)
 
 /-- **Output arrival curve from minimal service alone.** Under causality, a
@@ -138,14 +138,14 @@ pair served with a nonnegative minimal service curve `betam`, the arrival
 allowing `αu`, has output allowing the deconvolution `αu ⊘ betam`: the output
 theorem at `betaM = δ₀` (a maximal service curve of every causal relation)
 and the everywhere-`⊤` shaper. -/
-theorem isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+theorem isMaximalArrivalBound_output_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {betam : ℝ≥0 → EReal}
     {αu : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
     (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
     {A D : Curve} (hp : S A D)
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
-    IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (toENN betam)) := by
-  have h := isMaximalArrivalCurve_output hβm hnnm
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (liftENN ⇑D) (minDeconv αu (toENN betam)) := by
+  have h := isMaximalArrivalBound_output hβm hnnm
     (isMaximalServiceCurve_delayEReal_zero hc) (isNonneg_delayEReal 0)
     (isShaper_top S) (fun _ => le_top) hp harru
   rwa [toENN_delayEReal, conv_delayNN_zero,
@@ -156,14 +156,14 @@ theorem isMaximalArrivalCurve_output_of_isMinimalServiceCurve
 served with a strict service curve `beta`, the arrival allowing `αu`, has
 output allowing the deconvolution `αu ⊘ beta`: the minimal-service output
 theorem through the strict-to-min-plus inclusion. -/
-theorem isMaximalArrivalCurve_output_of_isStrictMinimalServiceCurve
+theorem isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     {αu : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
     (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
-    IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (liftENN beta)) := by
-  have h := isMaximalArrivalCurve_output_of_isMinimalServiceCurve hc
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (liftENN ⇑D) (minDeconv αu (liftENN beta)) := by
+  have h := isMaximalArrivalBound_output_of_isMinimalServiceCurve hc
     (hβ.isMinimalServiceCurve hc) (isNonneg_liftEReal beta) hp harru
   rwa [toENN_liftEReal] at h
 
@@ -171,14 +171,14 @@ theorem isMaximalArrivalCurve_output_of_isStrictMinimalServiceCurve
 minimal and maximal service curves `betam`, `betaM`, the output keeps
 `αl ∗ (betam ⊘̄ betaM)` (`maxDeconv`, the dual deconvolution) as a minimal
 arrival curve. -/
-theorem isMinimalArrivalCurve_output
+theorem isMinimalArrivalBound_output
     {S : Curve → Curve → Prop} {betam betaM : ℝ≥0 → EReal}
     {αl : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
     (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
     (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
     {A D : Curve} (hp : S A D)
-    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
-    IsMinimalArrivalCurve (liftENN ⇑D)
+    (harrl : IsMinimalArrivalBound (liftENN ⇑A) αl) :
+    IsMinimalArrivalBound (liftENN ⇑D)
       (minConv αl (maxDeconv (toENN betam) (toENN betaM))) := by
   -- the arrival's minimal curve is null at the origin
   have hA0 : liftENN ⇑A 0 = 0 := by
@@ -259,14 +259,14 @@ theorem isMinimalArrivalCurve_output
 a greedy shaper for sub-additive nonnegative `sigma`, the arrival allowing
 `αu`, has output allowing `αu ∗ sigma`: the output theorem at
 `betam = betaM = sigma`, collapsed by `(αu ∗ sigma) ⊘ sigma ≤ αu ∗ sigma`. -/
-theorem isMaximalArrivalCurve_output_of_isGreedyShaper
+theorem isMaximalArrivalBound_output_of_isGreedyShaper
     {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal} {αu : ℝ≥0 → ℝ≥0∞}
     (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
     (hsub : IsSubadditive sigma)
     {A D : Curve} (hp : S A D)
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
-    IsMaximalArrivalCurve (liftENN ⇑D) (minConv αu (toENN sigma)) := by
-  have h := isMaximalArrivalCurve_output hgr.isMinimalServiceCurve hnns
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (liftENN ⇑D) (minConv αu (toENN sigma)) := by
+  have h := isMaximalArrivalBound_output hgr.isMinimalServiceCurve hnns
     hgr.isMaximalServiceCurve hnns (hgr.isShaper hnns hsub) hnns hp harru
   refine h.mono (le_trans inf_le_left ?_)
   refine le_trans (minDeconv_minConv_le αu (toENN sigma) (toENN sigma)) ?_
@@ -278,30 +278,30 @@ theorem isMaximalArrivalCurve_output_of_isGreedyShaper
 a greedy shaper for nonnegative `sigma` with `sigma 0 ≤ 0`, the arrival
 allowing minimal curve `αl`, has output keeping `αl ∗ (sigma ⊘̄ sigma)`: the
 output theorem at `betam = betaM = sigma`. -/
-theorem isMinimalArrivalCurve_output_of_isGreedyShaper
+theorem isMinimalArrivalBound_output_of_isGreedyShaper
     {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal} {αl : ℝ≥0 → ℝ≥0∞}
     (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
     (h0 : sigma 0 ≤ 0)
     {A D : Curve} (hp : S A D)
-    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
-    IsMinimalArrivalCurve (liftENN ⇑D)
+    (harrl : IsMinimalArrivalBound (liftENN ⇑A) αl) :
+    IsMinimalArrivalBound (liftENN ⇑D)
       (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
-  isMinimalArrivalCurve_output (hgr.isCausal h0) hgr.isMinimalServiceCurve
+  isMinimalArrivalBound_output (hgr.isCausal h0) hgr.isMinimalServiceCurve
     hnns hgr.isMaximalServiceCurve hnns hp harrl
 
 /-- **Output arrival curve from the backlog bound.** A causal pair served
 with a nonnegative minimal service curve `beta`, the arrival allowing a
 sub-additive `α`, has output allowing `α` shifted by the vertical deviation:
 `α + Function.const _ (vDev α (toENN beta))`. -/
-theorem isMaximalArrivalCurve_output_add_vDev
+theorem isMaximalArrivalBound_output_add_vDev
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     (hc : IsCausal S)
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α) :
-    IsMaximalArrivalCurve (liftENN ⇑D)
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) (hsub : IsSubadditive α) :
+    IsMaximalArrivalBound (liftENN ⇑D)
       (α + Function.const ℝ≥0 (vDev α (toENN beta))) := by
-  refine (isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+  refine (isMaximalArrivalBound_output_of_isMinimalServiceCurve
     hc hβ hnn hp harr).mono fun d => ?_
   rw [vDev_eq_deconv_zero]
   exact minDeconv_le_add_minDeconv_zero (toENN beta) hsub d
@@ -311,18 +311,18 @@ theorem isMaximalArrivalCurve_output_add_vDev
 of a monotone `α` — such that `α - Function.const _ c` is sub-additive, the
 vertical-deviation shift improves to `vDev α (toENN beta) - c`, zeroed at the
 origin by `δ₀`. -/
-theorem isMaximalArrivalCurve_output_add_vDev_tsub
+theorem isMaximalArrivalBound_output_add_vDev_tsub
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {c : ℝ≥0∞} (hc : IsCausal S)
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     (hcle : ∀ s, 0 < s → c ≤ α s)
     (hsubc : IsSubadditive (α - Function.const ℝ≥0 c)) :
-    IsMaximalArrivalCurve (liftENN ⇑D)
+    IsMaximalArrivalBound (liftENN ⇑D)
       ((α + Function.const ℝ≥0 (vDev α (toENN beta) - c))
         ⊓ delayNN 0) := by
-  rw [isMaximalArrivalCurve_iff_increment]
+  rw [isMaximalArrivalBound_iff_increment]
   intro t d
   rcases eq_or_ne d 0 with hd | hd
   · -- `d = 0`: the `δ₀` component zeroes the increment
@@ -333,8 +333,8 @@ theorem isMaximalArrivalCurve_output_add_vDev_tsub
     rw [Pi.inf_apply, show delayNN 0 d = ⊤ from delay_eq_top 0 hd',
       inf_top_eq]
     -- the deconvolution increment from the minimal-service corollary
-    refine le_trans ((isMaximalArrivalCurve_iff_increment _ _).mp
-      (isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+    refine le_trans ((isMaximalArrivalBound_iff_increment _ _).mp
+      (isMaximalArrivalBound_output_of_isMinimalServiceCurve
         hc hβ hnn hp harr) t d) (add_le_add le_rfl ?_)
     -- `(α ⊘ beta) d ≤ α d + (vDev - c)` for `d > 0`, term by term
     refine iSup_le fun u => ?_
@@ -374,17 +374,17 @@ example {S : Curve → Curve → Prop} {betam betaM sigma : ℝ≥0 → EReal}
     (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
     (hsh : IsShaper sigma S) (hnns : IsNonneg sigma)
     {A : Curve}
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu)
-    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu)
+    (harrl : IsMinimalArrivalBound (liftENN ⇑A) αl) :
     ∀ D : Curve, S A D →
-      IsMaximalArrivalCurve (liftENN ⇑D)
+      IsMaximalArrivalBound (liftENN ⇑D)
         (minDeconv (minConv αu (toENN betaM)) (toENN betam)
           ⊓ toENN sigma) ∧
-      IsMinimalArrivalCurve (liftENN ⇑D)
+      IsMinimalArrivalBound (liftENN ⇑D)
         (minConv αl (maxDeconv (toENN betam) (toENN betaM))) :=
   fun _ hp =>
-    ⟨isMaximalArrivalCurve_output hβm hnnm hβM hnnM hsh hnns hp harru,
-      isMinimalArrivalCurve_output hSrv.1 hβm hnnm hβM hnnM hp harrl⟩
+    ⟨isMaximalArrivalBound_output hβm hnnm hβM hnnM hsh hnns hp harru,
+      isMinimalArrivalBound_output hSrv.1 hβm hnnm hβM hnnM hp harrl⟩
 
 /-! ## Book restatement (minimal-service corollary)
 A server `S` offering only `betam`, with arrival `A` allowing maximal curve
@@ -392,10 +392,10 @@ A server `S` offering only `betam`, with arrival `A` allowing maximal curve
 example {S : Curve → Curve → Prop} {betam : ℝ≥0 → EReal}
     {αu : ℝ≥0 → ℝ≥0∞} (hSrv : IsServer S)
     (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
-    {A : Curve} (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    {A : Curve} (harru : IsMaximalArrivalBound (liftENN ⇑A) αu) :
     ∀ D : Curve, S A D →
-      IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (toENN betam)) :=
-  fun _ hp => isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+      IsMaximalArrivalBound (liftENN ⇑D) (minDeconv αu (toENN betam)) :=
+  fun _ hp => isMaximalArrivalBound_output_of_isMinimalServiceCurve
     hSrv.1 hβm hnnm hp harru
 
 /-! ## Book restatement (greedy-shaper corollary)
@@ -409,19 +409,19 @@ example {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
     (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
     (hsub : IsSubadditive sigma) (h0 : sigma 0 = 0)
     {A : Curve}
-    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu)
-    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
+    (harru : IsMaximalArrivalBound (liftENN ⇑A) αu)
+    (harrl : IsMinimalArrivalBound (liftENN ⇑A) αl) :
     ∀ D : Curve, S A D →
-      IsMaximalArrivalCurve (liftENN ⇑D)
+      IsMaximalArrivalBound (liftENN ⇑D)
         (minConv αu (toENN (subadditiveClosureEReal sigma))) ∧
-      IsMinimalArrivalCurve (liftENN ⇑D)
+      IsMinimalArrivalBound (liftENN ⇑D)
         (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
   fun _ hp => by
     rw [subadditiveClosureEReal_eq_self sigma hnns.bddBelowReal.neverBot
       hsub h0]
     exact
-      ⟨isMaximalArrivalCurve_output_of_isGreedyShaper hgr hnns hsub hp harru,
-        isMinimalArrivalCurve_output_of_isGreedyShaper hgr hnns h0.le hp harrl⟩
+      ⟨isMaximalArrivalBound_output_of_isGreedyShaper hgr hnns hsub hp harru,
+        isMinimalArrivalBound_output_of_isGreedyShaper hgr hnns h0.le hp harrl⟩
 
 /-! ## Book restatement (backlog-bound output curves)
 A server `S ⊆ S_mp(beta)`, with arrival `A` allowing a sub-additive
@@ -433,20 +433,20 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
     (hSrv : IsServer S)
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A : Curve}
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α)
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) (hsub : IsSubadditive α)
     (hmono : Monotone α)
     (hsubc : IsSubadditive
       (α - Function.const ℝ≥0 (Function.rightLim α 0))) :
     ∀ D : Curve, S A D →
-      IsMaximalArrivalCurve (liftENN ⇑D)
+      IsMaximalArrivalBound (liftENN ⇑D)
         (α + Function.const ℝ≥0 (vDev α (toENN beta))) ∧
-      IsMaximalArrivalCurve (liftENN ⇑D)
+      IsMaximalArrivalBound (liftENN ⇑D)
         ((α + Function.const ℝ≥0
             (vDev α (toENN beta) - Function.rightLim α 0))
           ⊓ delayNN 0) :=
   fun _ hp =>
-    ⟨isMaximalArrivalCurve_output_add_vDev hSrv.1 hβ hnn hp harr hsub,
-      isMaximalArrivalCurve_output_add_vDev_tsub hSrv.1 hβ hnn hp harr
+    ⟨isMaximalArrivalBound_output_add_vDev hSrv.1 hβ hnn hp harr hsub,
+      isMaximalArrivalBound_output_add_vDev_tsub hSrv.1 hβ hnn hp harr
         (fun _ hs => hmono.rightLim_le hs) hsubc⟩
 
 end DeepWiki

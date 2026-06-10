@@ -161,19 +161,19 @@ theorem IsGreedyShaper.isMinimalServiceCurve {S : Curve → Curve → Prop}
   fun A D hp => le_of_eq (hS A D hp).symm
 
 /-- A sub-additive `sigma` allows itself as an arrival curve. -/
-theorem isMaximalArrivalCurve_self_of_subadditive {T : Type*} [Add T]
+theorem isMaximalArrivalBound_self_of_subadditive {T : Type*} [Add T]
     [ConditionallyCompleteLattice T] [OrderBot T] {sigma : ℝ≥0 → T}
     (hsub : IsSubadditive sigma) :
-    IsMaximalArrivalCurve sigma sigma :=
-  (isMaximalArrivalCurve_iff_increment sigma sigma).mpr hsub
+    IsMaximalArrivalBound sigma sigma :=
+  (isMaximalArrivalBound_iff_increment sigma sigma).mpr hsub
 
 /-- For nonnegative `f` and sub-additive nonnegative `sigma`, the greedy
 output `f ∗ sigma` allows `sigma`. -/
-theorem isMaximalArrivalCurve_minConv_of_subadditive
+theorem isMaximalArrivalBound_minConv_of_subadditive
     {f sigma : ℝ≥0 → EReal} (hf : IsNonneg f) (hnn : IsNonneg sigma)
     (hsub : IsSubadditive sigma) :
-    IsMaximalArrivalCurve (minConv f sigma) sigma := by
-  refine (isMaximalArrivalCurve_iff_increment _ _).mpr (fun u s => ?_)
+    IsMaximalArrivalBound (minConv f sigma) sigma := by
+  refine (isMaximalArrivalBound_iff_increment _ _).mpr (fun u s => ?_)
   show minConv f sigma (u + s) ≤ minConv f sigma u + sigma s
   have hbot : minConv f sigma u ≠ ⊥ :=
     ne_bot_of_nonneg (IsNonneg.conv hf hnn u)
@@ -194,7 +194,7 @@ theorem IsGreedyShaper.isShaper {S : Curve → Curve → Prop}
     (hS : IsGreedyShaper sigma S) : IsShaper sigma S := by
   intro A D hp
   rw [show curveE D = minConv (curveE A) sigma from hS A D hp]
-  exact isMaximalArrivalCurve_minConv_of_subadditive
+  exact isMaximalArrivalBound_minConv_of_subadditive
     (curveE_nonneg A) hnn hsub
 
 /-! ## Greedy shaper is minimal and maximal service -/

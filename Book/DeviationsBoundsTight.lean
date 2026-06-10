@@ -49,8 +49,8 @@ theorem delay_eq_hDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 �
     (hβ : Monotone β)
     (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t) :
     delay A D = (hDev (liftENN A) β : ℝ≥0∞) := by
-  have harr : IsMaximalArrivalCurve (liftENN A) (liftENN A) :=
-    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN
+  have harr : IsMaximalArrivalBound (liftENN A) (liftENN A) :=
+    isMaximalArrivalBound_self_of_subadditive hsub.liftENN
   apply le_antisymm
   · exact delay_le_hDev hA hβ harr fun t => (hD t).ge
   · calc (hDev (liftENN A) β : ℝ≥0∞)
@@ -65,8 +65,8 @@ theorem backlog_eq_vDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0}
     {β : ℝ≥0 → ℝ≥0∞} (h0 : IsNullAtOrigin A) (hsub : IsSubadditive A)
     (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t) :
     backlog A D = vDev (liftENN A) β := by
-  have harr : IsMaximalArrivalCurve (liftENN A) (liftENN A) :=
-    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN
+  have harr : IsMaximalArrivalBound (liftENN A) (liftENN A) :=
+    isMaximalArrivalBound_self_of_subadditive hsub.liftENN
   apply le_antisymm
   · exact backlog_le_vDev harr fun t => (hD t).ge
   · calc vDev (liftENN A) β
@@ -88,7 +88,7 @@ theorem exists_delay_eq_hDev_backlog_eq_vDev
     (hβmono : Monotone β) (hβ0 : β 0 = 0) :
     ∃ A D : ℝ≥0 → ℝ≥0,
       minimalServicePair β (liftENN A) (liftENN D) ∧
-      IsMaximalArrivalCurve (liftENN A) (liftENN alpha) ∧
+      IsMaximalArrivalBound (liftENN A) (liftENN alpha) ∧
       delay A D = (hDev (liftENN alpha) β : ℝ≥0∞) ∧
       backlog A D = vDev (liftENN alpha) β := by
   have hle : ∀ t, minConv (liftENN alpha) β t ≤ (alpha t : ℝ≥0∞) := by
@@ -101,7 +101,7 @@ theorem exists_delay_eq_hDev_backlog_eq_vDev
       = minConv (liftENN alpha) β t := fun t => ENNReal.coe_toNNReal (hne t)
   exact ⟨alpha, fun t => (minConv (liftENN alpha) β t).toNNReal,
     ⟨fun t => le_trans (hD t).le (hle t), fun t => (hD t).ge⟩,
-    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN,
+    isMaximalArrivalBound_self_of_subadditive hsub.liftENN,
     delay_eq_hDev_of_minConv_eq hmono h0 hsub hβmono hD,
     backlog_eq_vDev_of_minConv_eq h0 hsub hD⟩
 
@@ -215,13 +215,13 @@ theorem exists_minimalServiceRel_delay_eq_hDev_backlog_eq_vDev (alpha : Curve)
     (hlc : IsLeftContinuous beta)
     (hpwc : IsPiecewiseContinuous (greedyFun alpha beta)) :
     ∃ A D : Curve, minimalServiceRel beta A D ∧
-      IsMaximalArrivalCurve (liftENN ⇑A) (liftENN ⇑alpha) ∧
+      IsMaximalArrivalBound (liftENN ⇑A) (liftENN ⇑alpha) ∧
       delay ⇑A ⇑D = (hDev (liftENN ⇑alpha) (toENN beta) : ℝ≥0∞) ∧
       backlog ⇑A ⇑D = vDev (liftENN ⇑alpha) (toENN beta) := by
   have hp := greedyShaperRel_greedyCurve alpha hmono h0 hlc hpwc
   exact ⟨alpha, greedyCurve alpha beta hmono h0 hlc hpwc,
     ((mem_greedyShaperRel_iff_minimal_and_maximal h0.le).mp hp).1,
-    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN,
+    isMaximalArrivalBound_self_of_subadditive hsub.liftENN,
     delay_eq_hDev_of_greedyShaperRel hsub hmono h0 hp,
     backlog_eq_vDev_of_greedyShaperRel hsub hmono h0 hp⟩
 

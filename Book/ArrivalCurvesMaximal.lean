@@ -20,12 +20,12 @@ open scoped Classical NNReal
 curve: if `A ≤ A ∗ α` and `A ≤ A ∗ α'` then `A ≤ A ∗ (α ⊓ α')` (over any
 conditionally complete linear order with `⊥` and monotone `+`, e.g. `ℝ≥0`
 or `ℝ≥0∞`). -/
-theorem IsMaximalArrivalCurve.inf {T : Type*} [Add T]
+theorem IsMaximalArrivalBound.inf {T : Type*} [Add T]
     [ConditionallyCompleteLinearOrder T] [OrderBot T] [AddLeftMono T]
     {A α α' : ℝ≥0 → T}
-    (h : IsMaximalArrivalCurve A α) (h' : IsMaximalArrivalCurve A α') :
-    IsMaximalArrivalCurve A (α ⊓ α') := by
-  rw [isMaximalArrivalCurve_iff_increment] at h h' ⊢
+    (h : IsMaximalArrivalBound A α) (h' : IsMaximalArrivalBound A α') :
+    IsMaximalArrivalBound A (α ⊓ α') := by
+  rw [isMaximalArrivalBound_iff_increment] at h h' ⊢
   intro t d
   rw [Pi.inf_apply, ← min_add_add_left]
   exact le_min (h t d) (h' t d)
@@ -33,12 +33,12 @@ theorem IsMaximalArrivalCurve.inf {T : Type*} [Add T]
 /-- Any function above a maximal arrival curve is again a maximal arrival curve:
 if `A ≤ A ∗ α` and `α ≤ α'` then `A ≤ A ∗ α'` (over any conditionally
 complete lattice with `⊥` and monotone `+`, e.g. `ℝ≥0` or `ℝ≥0∞`). -/
-theorem IsMaximalArrivalCurve.mono {T : Type*} [Add T]
+theorem IsMaximalArrivalBound.mono {T : Type*} [Add T]
     [ConditionallyCompleteLattice T] [OrderBot T] [AddLeftMono T]
     {A α α' : ℝ≥0 → T}
-    (h : IsMaximalArrivalCurve A α) (hle : α ≤ α') :
-    IsMaximalArrivalCurve A α' := by
-  rw [isMaximalArrivalCurve_iff_increment] at h ⊢
+    (h : IsMaximalArrivalBound A α) (hle : α ≤ α') :
+    IsMaximalArrivalBound A α' := by
+  rw [isMaximalArrivalBound_iff_increment] at h ⊢
   intro t d
   refine le_trans (h t d) ?_
   gcongr
@@ -49,10 +49,10 @@ theorem IsMaximalArrivalCurve.mono {T : Type*} [Add T]
 /-- The deconvolution `A ⊘ A` is below every maximal arrival curve: if `α` is a
 maximal arrival curve for `A` then `A ⊘ A ≤ α`. This is the "`A ⊘ A` is the best
 (least) maximal arrival curve" bound. -/
-theorem minDeconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
-    (h : IsMaximalArrivalCurve A α) :
+theorem minDeconv_self_le_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0}
+    (h : IsMaximalArrivalBound A α) :
     minDeconv A A ≤ α := by
-  rw [isMaximalArrivalCurve_iff_increment] at h
+  rw [isMaximalArrivalBound_iff_increment] at h
   intro d
   refine ciSup_le (fun s => ?_)
   -- `A (d + s) - A s ≤ α d` since `A (d + s) ≤ A s + α d` (increment at `s, d`)
@@ -61,12 +61,12 @@ theorem minDeconv_self_le_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
 
 /-- When `A` admits some maximal arrival curve, `A ⊘ A` is itself one. The
 witness `α` bounds the deconvolution supremum (`A ⊘ A ≤ α`), so each increment
-term lies below it. Together with `minDeconv_self_le_of_isMaximalArrivalCurve`
+term lies below it. Together with `minDeconv_self_le_of_isMaximalArrivalBound`
 this makes `A ⊘ A` the least maximal arrival curve, and `α ≥ A ⊘ A` an
 equivalent definition of a maximal arrival curve. -/
-theorem isMaximalArrivalCurve_minDeconv_self {A : ℝ≥0 → ℝ≥0}
-    (hex : ∃ α : ℝ≥0 → ℝ≥0, IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (minDeconv A A) := by
+theorem isMaximalArrivalBound_minDeconv_self {A : ℝ≥0 → ℝ≥0}
+    (hex : ∃ α : ℝ≥0 → ℝ≥0, IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (minDeconv A A) := by
   obtain ⟨α, hα⟩ := hex
   -- the witness bounds the deconvolution family above by `α d` at each `d`
   have hbdd : ∀ d : ℝ≥0,
@@ -74,10 +74,10 @@ theorem isMaximalArrivalCurve_minDeconv_self {A : ℝ≥0 → ℝ≥0}
     intro d
     refine ⟨α d, ?_⟩
     rintro x ⟨s, rfl⟩
-    rw [isMaximalArrivalCurve_iff_increment] at hα
+    rw [isMaximalArrivalBound_iff_increment] at hα
     rw [tsub_le_iff_right, add_comm d s, add_comm (α d) (A s)]
     exact hα s d
-  rw [isMaximalArrivalCurve_iff_increment]
+  rw [isMaximalArrivalBound_iff_increment]
   intro t d
   -- `A (t + d) - A t ≤ (A ⊘ A) d`, the `s = t` term of the supremum
   have hterm : A (t + d) - A t ≤ minDeconv A A d :=
@@ -93,10 +93,10 @@ are again maximal arrival curves for `A`, and the closure is `≤ α`. -/
 /-- The increment bound iterated through the (min,+) powers: if `α` is a
 maximal arrival curve for `A`, then `A (t + d) ≤ A t + (minConvProjPow α n) d`
 for every power `n`. -/
-theorem increment_minConvProjPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
-    (h : IsMaximalArrivalCurve A α) (n : ℕ) (t d : ℝ≥0) :
+theorem increment_minConvProjPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0}
+    (h : IsMaximalArrivalBound A α) (n : ℕ) (t d : ℝ≥0) :
     A (t + d) ≤ A t + minConvProjPow α n d := by
-  rw [isMaximalArrivalCurve_iff_increment] at h
+  rw [isMaximalArrivalBound_iff_increment] at h
   induction n generalizing t d with
   | zero => exact h t d
   | succ n ih =>
@@ -116,20 +116,20 @@ theorem increment_minConvProjPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → �
 
 /-- Each self-convolution power of a maximal arrival curve is again a maximal
 arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ (minConvProjPow α n)`. -/
-theorem IsMaximalArrivalCurve.minConvProjPow
-    {A α : ℝ≥0 → ℝ≥0} (h : IsMaximalArrivalCurve A α) (n : ℕ) :
-    IsMaximalArrivalCurve A (minConvProjPow α n) := by
-  rw [isMaximalArrivalCurve_iff_increment]
-  exact fun t d => increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
+theorem IsMaximalArrivalBound.minConvProjPow
+    {A α : ℝ≥0 → ℝ≥0} (h : IsMaximalArrivalBound A α) (n : ℕ) :
+    IsMaximalArrivalBound A (minConvProjPow α n) := by
+  rw [isMaximalArrivalBound_iff_increment]
+  exact fun t d => increment_minConvProjPow_of_isMaximalArrivalBound h n t d
 
 /-- The (min,+) sub-additive closure of a maximal arrival curve is again a
 maximal arrival curve: if `A ≤ A ∗ α` then `A ≤ A ∗ subadditiveClosureMin α`,
 with the closure `≤ α`. The increment bound through every power passes to the
 infimum defining the closure. -/
-theorem IsMaximalArrivalCurve.subadditiveClosureMin {A α : ℝ≥0 → ℝ≥0}
-    (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (subadditiveClosureMin α) := by
-  rw [isMaximalArrivalCurve_iff_increment]
+theorem IsMaximalArrivalBound.subadditiveClosureMin {A α : ℝ≥0 → ℝ≥0}
+    (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (subadditiveClosureMin α) := by
+  rw [isMaximalArrivalBound_iff_increment]
   intro t d
   -- `A (t+d) - A t ≤ (minConvProjPow α n) d` for every `n`, so `≤ ⨅ₙ`
   rw [show DeepWiki.subadditiveClosureMin α d
@@ -137,15 +137,15 @@ theorem IsMaximalArrivalCurve.subadditiveClosureMin {A α : ℝ≥0 → ℝ≥0}
     add_comm (A t), ← tsub_le_iff_right]
   refine le_ciInf (fun n => ?_)
   rw [tsub_le_iff_right, add_comm (DeepWiki.minConvProjPow α n d)]
-  exact increment_minConvProjPow_of_isMaximalArrivalCurve h n t d
+  exact increment_minConvProjPow_of_isMaximalArrivalBound h n t d
 
 /-- Any function above the sub-additive closure of a maximal arrival curve is a
 maximal arrival curve: if `A ≤ A ∗ α` and `subadditiveClosureMin α ≤ α'`, then
 `α'` is a maximal arrival curve for `A`. Combines closure-maximality with upward
 closure. -/
-theorem isMaximalArrivalCurve_of_subadditiveClosure_le {A α α' : ℝ≥0 → ℝ≥0}
-    (h : IsMaximalArrivalCurve A α) (hle : subadditiveClosureMin α ≤ α') :
-    IsMaximalArrivalCurve A α' :=
+theorem isMaximalArrivalBound_of_subadditiveClosure_le {A α α' : ℝ≥0 → ℝ≥0}
+    (h : IsMaximalArrivalBound A α) (hle : subadditiveClosureMin α ≤ α') :
+    IsMaximalArrivalBound A α' :=
   h.subadditiveClosureMin.mono hle
 
 /-! ## Sub-additive closure on the `ℝ≥0∞` carrier
@@ -157,10 +157,10 @@ open scoped ENNReal
 
 /-- The increment bound iterated through the closure powers on `ℝ≥0∞`:
 `A (t + d) ≤ A t + (convPow (toF α) n d).toVal` for every power `n`. -/
-theorem increment_convPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0∞}
-    (h : IsMaximalArrivalCurve A α) (n : ℕ) (t d : ℝ≥0) :
+theorem increment_convPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0∞}
+    (h : IsMaximalArrivalBound A α) (n : ℕ) (t d : ℝ≥0) :
     A (t + d) ≤ A t + (convPow (toF α) n d).toVal := by
-  rw [isMaximalArrivalCurve_iff_increment] at h
+  rw [isMaximalArrivalBound_iff_increment] at h
   induction n generalizing t d with
   | zero =>
       show A (t + d) ≤ A t + (convUnit (T := MinPlusNN) d).toVal
@@ -191,19 +191,26 @@ theorem increment_convPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0�
 /-- The (min,+) sub-additive closure on `ℝ≥0∞` of a maximal arrival curve is
 again a maximal arrival curve: if `A ≤ A ∗ α` then
 `A ≤ A ∗ subadditiveClosureE α`. -/
-theorem IsMaximalArrivalCurve.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
-    (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (DeepWiki.subadditiveClosureE α) := by
-  rw [isMaximalArrivalCurve_iff_increment]
+theorem IsMaximalArrivalBound.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
+    (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (DeepWiki.subadditiveClosureE α) := by
+  rw [isMaximalArrivalBound_iff_increment]
   intro t d
   rw [subadditiveClosureE_eq_iInf, ENNReal.add_iInf]
   exact le_iInf fun n =>
-    increment_convPow_of_isMaximalArrivalCurve h n t d
+    increment_convPow_of_isMaximalArrivalBound h n t d
+
+/-- The sub-additive closure of a maximal arrival curve (book form) is
+again one: monotonicity transports through the closure powers. -/
+theorem IsMaximalArrivalCurve.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
+    (h : IsMaximalArrivalCurve A α) :
+    IsMaximalArrivalCurve A (DeepWiki.subadditiveClosureE α) :=
+  ⟨monotone_subadditiveClosureE h.1, h.2.subadditiveClosureE⟩
 
 /-! Any `ℝ≥0∞` maximal arrival curve can be replaced by its sub-additive
 closure: still a maximal arrival curve, sub-additive, and below `α`. -/
-example {A α : ℝ≥0 → ℝ≥0∞} (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (subadditiveClosureE α)
+example {A α : ℝ≥0 → ℝ≥0∞} (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (subadditiveClosureE α)
       ∧ IsSubadditive (subadditiveClosureE α)
       ∧ ∀ t, subadditiveClosureE α t ≤ α t :=
   ⟨h.subadditiveClosureE, subadditiveClosureE_subadditive α,
@@ -220,11 +227,11 @@ open Set Filter Topology
 /-- The left-continuous extension `Function.leftLim α` of a maximal arrival
 curve is maximal: if `A` is left-continuous, `α` non-decreasing, and `α` a
 maximal arrival curve for `A`, then `Function.leftLim α` is one too. -/
-theorem isMaximalArrivalCurve_leftLim_of_leftContinuous
+theorem isMaximalArrivalBound_leftLim_of_leftContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A) (hα : Monotone α)
-    (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (Function.leftLim α) := by
-  rw [isMaximalArrivalCurve_iff_increment] at h ⊢
+    (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (Function.leftLim α) := by
+  rw [isMaximalArrivalBound_iff_increment] at h ⊢
   intro t d
   -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
   rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd
@@ -259,11 +266,11 @@ theorem isMaximalArrivalCurve_leftLim_of_leftContinuous
 curve is maximal also for a right-continuous cumulative function: if `A` is
 right-continuous, `α` non-decreasing, and `α` a maximal arrival curve for `A`,
 then `Function.leftLim α` is one too. -/
-theorem isMaximalArrivalCurve_leftLim_of_rightContinuous
+theorem isMaximalArrivalBound_leftLim_of_rightContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsRightContinuous A) (hα : Monotone α)
-    (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (Function.leftLim α) := by
-  rw [isMaximalArrivalCurve_iff_increment] at h ⊢
+    (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound A (Function.leftLim α) := by
+  rw [isMaximalArrivalBound_iff_increment] at h ⊢
   intro t d
   -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
   rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd

@@ -218,6 +218,14 @@ not just defaults):
   `vDev_le`, `hDevAt_le_hDev` / `hDev_le`, witness-elim `hDevAt_le`,
   `Book/Deviations.lean`); `minConv_apply_zero` computes the origin value.
 
+- **Arrival curves: `*ArrivalBound` vs `*ArrivalCurve`.**
+  `IsMaximalArrivalBound`/`IsMinimalArrivalBound` are the raw inequalities
+  `A ≤ A ∗ α` / `A ⊼ α ≤ A`; the book's definitions (α ∈ ℱ↑) are the
+  bundles `Is{Max,Min}imalArrivalCurve := Monotone α ∧ <bound>`. State
+  theorems on the bound when monotonicity is unused; book restatements and
+  monotonicity-consuming theorems (e.g. the `*_sInf_*` first-crossing
+  bounds) take the bundle and pass `.2` down.
+
 - **The first-crossing spelling is `crossingSet`/`firstCrossing`**
   (`Book/ArrivalCurves.lean`, generic over the value order): state ℓmax-style
   hypotheses as `ℓmax ∈ crossingSet α β` and never re-spell

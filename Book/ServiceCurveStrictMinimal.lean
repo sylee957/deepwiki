@@ -62,7 +62,7 @@ backlog at each `t` bounded by the vertical deviation
 theorem coe_backlogAt_le_vDev_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
-    (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (t : ℝ≥0) :
+    (hp : S A D) (harr : IsMaximalArrivalBound (liftENN ⇑A) α) (t : ℝ≥0) :
     (backlogAt ⇑A ⇑D t : ℝ≥0∞) ≤ vDev α (liftENN beta) := by
   have h := coe_backlogAt_le_vDev_of_isMinimalServiceCurve
     (hβ.isMinimalServiceCurve hc) hp (isNonneg_liftEReal beta) harr t
@@ -73,7 +73,7 @@ theorem coe_backlogAt_le_vDev_of_isStrictMinimalServiceCurve
 theorem backlog_le_vDev_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
-    (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
+    (hp : S A D) (harr : IsMaximalArrivalBound (liftENN ⇑A) α) :
     backlog ⇑A ⇑D ≤ vDev α (liftENN beta) := by
   have h := backlog_le_vDev_of_isMinimalServiceCurve
     (hβ.isMinimalServiceCurve hc) hp (isNonneg_liftEReal beta) harr
@@ -85,7 +85,7 @@ theorem delay_le_hDev_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
     (hp : S A D) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α) :
     delay ⇑A ⇑D ≤ (hDev α (liftENN beta) : ℝ≥0∞) := by
   have h := delay_le_hDev_of_isMinimalServiceCurve
     (hβ.isMinimalServiceCurve hc) hp (isNonneg_liftEReal beta)
@@ -101,7 +101,7 @@ closure of `beta` is still offered, is super-additive, and dominates
 theorem backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
-    (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hp : S A D) (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (liftENN beta) t := by
@@ -128,7 +128,7 @@ theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
     (hp : S A D) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
@@ -180,10 +180,10 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥
       delay ⇑A ⇑D
         ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
             (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
-  ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp harr
-      hr hmem.1 hmem.2,
+  ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp
+      harr.2 hr hmem.1 hmem.2,
     delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
-      harr hr hmem.1 hmem.2⟩
+      harr.2 hr hmem.1 hmem.2⟩
 
 /-! ## Bridging arrival-curve readings
 The maximal length of a backlogged period under the `ℝ≥0∞` reading of the
@@ -192,10 +192,10 @@ strict-service crossing bound applies. -/
 example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) (liftENN alpha))
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) (liftENN alpha))
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp
-    (isMaximalArrivalCurve_liftENN_iff.mp harr) hbl
+    (isMaximalArrivalBound_liftENN_iff.mp harr) hbl
 
 end DeepWiki

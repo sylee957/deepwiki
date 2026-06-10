@@ -271,7 +271,7 @@ still an arrival curve, crosses no later, and its deviations are below
 theorem backlog_le_biSup_vDevAt_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
-    (hnn : IsNonneg beta) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hnn : IsNonneg beta) (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ toENN beta τ) :
     backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (toENN beta) t := by
@@ -290,7 +290,7 @@ theorem delay_le_biSup_hDevAt_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ toENN beta τ) :
     delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (toENN beta) t : ℝ≥0∞) := by
@@ -311,7 +311,7 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hαmono : Monotone α)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     (hne : (crossingSet α (toENN beta)).Nonempty) :
     backlog ⇑A ⇑D
@@ -322,11 +322,11 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
   have hℓ : sInf (crossingSet (subadditiveClosureE α) (toENN beta))
       ≤ sInf (crossingSet α (toENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hclo := harr.subadditiveClosureE
   have hmain :=
-    (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn
-        harr.subadditiveClosureE).trans_eq
+    (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn hclo.2).trans_eq
       (vDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
-        (hsup.toENN hnn) (monotone_subadditiveClosureE hαmono)
+        (hsup.toENN hnn) hclo.1
         (hne.mono hsubset))
   exact hmain.trans
     (le_trans
@@ -340,7 +340,7 @@ theorem delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hαmono : Monotone α)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     (hne : (crossingSet α (toENN beta)).Nonempty) :
     delay ⇑A ⇑D
@@ -351,11 +351,11 @@ theorem delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
   have hℓ : sInf (crossingSet (subadditiveClosureE α) (toENN beta))
       ≤ sInf (crossingSet α (toENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hclo := harr.subadditiveClosureE
   have hmain :=
-    (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono
-        harr.subadditiveClosureE).trans_eq
+    (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono hclo.2).trans_eq
       (hDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
-        (hsup.toENN hnn) (monotone_subadditiveClosureE hαmono)
+        (hsup.toENN hnn) hclo.1
         (hne.mono hsubset))
   exact hmain.trans
     (le_trans
@@ -374,7 +374,7 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
     {A D : Curve}
     (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hαmono : Monotone α)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     (hne : (crossingSet α (toENN beta)).Nonempty) :
     backlog ⇑A ⇑D
@@ -384,9 +384,9 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
         ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
             (hDevAt α (toENN beta) t : ℝ≥0∞) :=
   ⟨backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve hβ hp hnn
-      harr hαmono hsup hne,
+      harr hsup hne,
     delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve hβ hp hnn hmono
-      harr hαmono hsup hne⟩
+      harr hsup hne⟩
 
 end Deviation
 

@@ -20,13 +20,13 @@ open scoped Classical NNReal
 curve: if `A ≥ A ⊼ α` and `A ≥ A ⊼ α'` then `A ≥ A ⊼ (α ⊔ α')`. Stated under
 monotone `A, α, α'` (the book's `𝒞`/`ℱ↑` setting), where the increment
 characterization controls the junk supremum. -/
-theorem IsMinimalArrivalCurve.sup {A α α' : ℝ≥0 → ℝ≥0}
+theorem IsMinimalArrivalBound.sup {A α α' : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α) (hα' : Monotone α')
-    (h : IsMinimalArrivalCurve A α) (h' : IsMinimalArrivalCurve A α') :
-    IsMinimalArrivalCurve A (α ⊔ α') := by
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα] at h
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α' hA hα'] at h'
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A (α ⊔ α') hA
+    (h : IsMinimalArrivalBound A α) (h' : IsMinimalArrivalBound A α') :
+    IsMinimalArrivalBound A (α ⊔ α') := by
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α hA hα] at h
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α' hA hα'] at h'
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A (α ⊔ α') hA
     (hα.sup hα')]
   intro t d
   rw [Pi.sup_apply, ← max_add_add_left]
@@ -35,12 +35,12 @@ theorem IsMinimalArrivalCurve.sup {A α α' : ℝ≥0 → ℝ≥0}
 /-- Any function below a minimal arrival curve is again a minimal arrival
 curve: if `A ≥ A ⊼ α` and `α' ≤ α` then `A ≥ A ⊼ α'`. Stated under monotone
 `A, α, α'`, where the increment characterization controls the junk supremum. -/
-theorem IsMinimalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
+theorem IsMinimalArrivalBound.mono {A α α' : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α) (hα' : Monotone α')
-    (h : IsMinimalArrivalCurve A α) (hle : α' ≤ α) :
-    IsMinimalArrivalCurve A α' := by
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα] at h
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α' hA hα']
+    (h : IsMinimalArrivalBound A α) (hle : α' ≤ α) :
+    IsMinimalArrivalBound A α' := by
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α hA hα] at h
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α' hA hα']
   intro t d
   refine le_trans ?_ (h t d)
   gcongr
@@ -51,11 +51,11 @@ theorem IsMinimalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
 /-- Every minimal arrival curve is below `A ⊘̄ A`: if `α` is a minimal arrival
 curve for non-decreasing `A`, `α`, then `α ≤ maxDeconv A A`. This is the
 "`A ⊘̄ A` is the best (greatest) minimal arrival curve" bound. -/
-theorem le_maxDeconv_self_of_isMinimalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
+theorem le_maxDeconv_self_of_isMinimalArrivalBound {A α : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α)
-    (h : IsMinimalArrivalCurve A α) :
+    (h : IsMinimalArrivalBound A α) :
     α ≤ maxDeconv A A := by
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα] at h
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α hA hα] at h
   intro d
   refine le_ciInf (fun s => ?_)
   rw [le_tsub_iff_left (hA (le_add_left le_rfl))]
@@ -63,11 +63,11 @@ theorem le_maxDeconv_self_of_isMinimalArrivalCurve {A α : ℝ≥0 → ℝ≥0}
   rwa [add_comm s d] at this
 
 /-- `A ⊘̄ A` is itself a minimal arrival curve (for non-decreasing `A`); with
-`le_maxDeconv_self_of_isMinimalArrivalCurve` this makes it the greatest one. -/
-theorem isMinimalArrivalCurve_maxDeconv_self {A : ℝ≥0 → ℝ≥0}
+`le_maxDeconv_self_of_isMinimalArrivalBound` this makes it the greatest one. -/
+theorem isMinimalArrivalBound_maxDeconv_self {A : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) :
-    IsMinimalArrivalCurve A (maxDeconv A A) := by
-  refine isMinimalArrivalCurve_of_increment A (maxDeconv A A) (fun t d => ?_)
+    IsMinimalArrivalBound A (maxDeconv A A) := by
+  refine isMinimalArrivalBound_of_increment A (maxDeconv A A) (fun t d => ?_)
   have hterm : maxDeconv A A d ≤ A (d + t) - A t :=
     maxDeconv_le_sub A A d t
   calc A t + maxDeconv A A d
@@ -99,24 +99,24 @@ theorem increment_maxConvProjPow_of_increment {A α : ℝ≥0 → ℝ≥0}
 /-- Each (max,+) self-convolution power of a minimal arrival curve is again a
 minimal arrival curve, for non-decreasing `A`, `α`: if `A ≥ A ⊼ α` then
 `A ≥ A ⊼ (maxConvProjPow α n)`. -/
-theorem isMinimalArrivalCurve_maxConvProjPow_of_monotone
+theorem isMinimalArrivalBound_maxConvProjPow_of_monotone
     {A α : ℝ≥0 → ℝ≥0} (hA : Monotone A) (hα : Monotone α)
-    (h : IsMinimalArrivalCurve A α) (n : ℕ) :
-    IsMinimalArrivalCurve A (maxConvProjPow α n) := by
-  have hinc := (isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα).mp h
-  exact isMinimalArrivalCurve_of_increment A _
+    (h : IsMinimalArrivalBound A α) (n : ℕ) :
+    IsMinimalArrivalBound A (maxConvProjPow α n) := by
+  have hinc := (isMinimalArrivalBound_iff_increment_of_monotone A α hA hα).mp h
+  exact isMinimalArrivalBound_of_increment A _
     (fun t d => increment_maxConvProjPow_of_increment hinc n t d)
 
 /-- The (max,+) super-additive closure of a minimal arrival curve is again a
 minimal arrival curve, for non-decreasing `A`, `α`: if `A ≥ A ⊼ α` then
 `A ≥ A ⊼ superadditiveClosureMax α`, with the closure `≥ α`. The per-power
 increment bound also bounds the closure supremum above by `A (t + d) - A t`. -/
-theorem IsMinimalArrivalCurve.superadditiveClosureMax {A α : ℝ≥0 → ℝ≥0}
+theorem IsMinimalArrivalBound.superadditiveClosureMax {A α : ℝ≥0 → ℝ≥0}
     (hA : Monotone A) (hα : Monotone α)
-    (h : IsMinimalArrivalCurve A α) :
-    IsMinimalArrivalCurve A (superadditiveClosureMax α) := by
-  have hinc := (isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα).mp h
-  refine isMinimalArrivalCurve_of_increment A _ (fun t d => ?_)
+    (h : IsMinimalArrivalBound A α) :
+    IsMinimalArrivalBound A (superadditiveClosureMax α) := by
+  have hinc := (isMinimalArrivalBound_iff_increment_of_monotone A α hA hα).mp h
+  refine isMinimalArrivalBound_of_increment A _ (fun t d => ?_)
   have hbd : ∀ n : ℕ, maxConvProjPow α n d ≤ A (t + d) - A t := fun n =>
     le_tsub_of_add_le_left (increment_maxConvProjPow_of_increment hinc n t d)
   have hsup : DeepWiki.superadditiveClosureMax α d ≤ A (t + d) - A t := ciSup_le hbd
@@ -140,12 +140,12 @@ open Set Filter Topology
 arrival curve is minimal for a right-continuous cumulative function: if
 `A` is right-continuous, `A` and `α` non-decreasing, and `α` a minimal
 arrival curve for `A`, then `Function.rightLim α` is one too. -/
-theorem isMinimalArrivalCurve_rightLim_of_rightContinuous
+theorem isMinimalArrivalBound_rightLim_of_rightContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsRightContinuous A) (hAmono : Monotone A)
-    (hα : Monotone α) (h : IsMinimalArrivalCurve A α) :
-    IsMinimalArrivalCurve A (Function.rightLim α) := by
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α hAmono hα] at h
-  refine isMinimalArrivalCurve_of_increment A (Function.rightLim α) ?_
+    (hα : Monotone α) (h : IsMinimalArrivalBound A α) :
+    IsMinimalArrivalBound A (Function.rightLim α) := by
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α hAmono hα] at h
+  refine isMinimalArrivalBound_of_increment A (Function.rightLim α) ?_
   intro t d
   -- For `s ∈ (t+d, ?)` (eventually within `Ioi (t+d)`), bound
   -- `A t + (rightLim α) d ≤ A s`, then pass `A s → A (t+d)` (right limit).
@@ -177,13 +177,13 @@ the boundary row `A 0 + (rightLim α) d ≤ A d` (which left-continuity
 cannot supply on `ℝ≥0` since `Iio 0 = ∅`): if `A` is left-continuous, `A`
 and `α` non-decreasing, `α` a minimal arrival curve for `A`, and the
 boundary bound holds, then `Function.rightLim α` is one too. -/
-theorem isMinimalArrivalCurve_rightLim_of_leftContinuous
+theorem isMinimalArrivalBound_rightLim_of_leftContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A) (hAmono : Monotone A)
-    (hα : Monotone α) (h : IsMinimalArrivalCurve A α)
+    (hα : Monotone α) (h : IsMinimalArrivalBound A α)
     (hbdry : ∀ d : ℝ≥0, A 0 + Function.rightLim α d ≤ A d) :
-    IsMinimalArrivalCurve A (Function.rightLim α) := by
-  rw [isMinimalArrivalCurve_iff_increment_of_monotone A α hAmono hα] at h
-  refine isMinimalArrivalCurve_of_increment A (Function.rightLim α) ?_
+    IsMinimalArrivalBound A (Function.rightLim α) := by
+  rw [isMinimalArrivalBound_iff_increment_of_monotone A α hAmono hα] at h
+  refine isMinimalArrivalBound_of_increment A (Function.rightLim α) ?_
   intro t d
   -- `t = 0` is the boundary row supplied by `hbdry`; for `t > 0` pass
   -- to the left limit `A s → A t` over `s ∈ Iio t`.

@@ -15,9 +15,9 @@ open scoped Classical NNReal
 
 /-- Allowing `sigma` gives the increment bound for every convolution power
 `sigmaⁿ`, for `NeverBot f` and nonnegative `sigma`. -/
-theorem increment_convPowEReal_of_isMaximalArrivalCurve
+theorem increment_convPowEReal_of_isMaximalArrivalBound
     {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma)
-    (h : IsMaximalArrivalCurve f sigma) (n : ℕ) (u s : ℝ≥0) :
+    (h : IsMaximalArrivalBound f sigma) (n : ℕ) (u s : ℝ≥0) :
     f (u + s) ≤ f u + convPowEReal sigma n s := by
   induction n generalizing u s with
   | zero =>
@@ -37,52 +37,52 @@ theorem increment_convPowEReal_of_isMaximalArrivalCurve
       rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
       calc f (u + s) = f ((u + a) + b) := by rw [add_assoc, hab]
         _ ≤ f (u + a) + sigma b :=
-            (isMaximalArrivalCurve_iff_increment f sigma).mp h (u + a) b
+            (isMaximalArrivalBound_iff_increment f sigma).mp h (u + a) b
         _ ≤ (f u + convPowEReal sigma k a) + sigma b :=
             add_le_add (ih u a) le_rfl
         _ = f u + (convPowEReal sigma k a + sigma b) := add_assoc _ _ _
 
 /-- `f` allows the sub-additive closure `sigma⋆` iff it allows `sigma`
 (`NeverBot f`, nonnegative `sigma`). -/
-theorem isMaximalArrivalCurve_subadditiveClosureEReal_iff
+theorem isMaximalArrivalBound_subadditiveClosureEReal_iff
     {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma) :
-    IsMaximalArrivalCurve f (subadditiveClosureEReal sigma) ↔
-      IsMaximalArrivalCurve f sigma := by
+    IsMaximalArrivalBound f (subadditiveClosureEReal sigma) ↔
+      IsMaximalArrivalBound f sigma := by
   constructor
   · intro h t
     refine le_trans (h t) (minConv_le_minConv (fun _ => le_rfl)
       (fun s => subadditiveClosureEReal_le sigma
         hnn.bddBelowReal.neverBot s) t)
   · intro h
-    refine (isMaximalArrivalCurve_iff_increment _ _).mpr (fun u s => ?_)
+    refine (isMaximalArrivalBound_iff_increment _ _).mpr (fun u s => ?_)
     show f (u + s) ≤ f u + subadditiveClosureEReal sigma s
     have hbot : (⨅ n : ℕ, convPowEReal sigma n s) ≠ ⊥ :=
       ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hnn n s))
     refine le_trans (le_iInf (fun n => ?_)) (iInf_add_le_add_iInf (hf u) hbot)
-    exact increment_convPowEReal_of_isMaximalArrivalCurve hf hnn h n u s
+    exact increment_convPowEReal_of_isMaximalArrivalBound hf hnn h n u s
 
 /-! ## σ-shapers -/
 
 /-- `S` is a shaper for `sigma`: every output allows `sigma` as a maximal
 arrival curve, `D ≤ D ∗ sigma`. -/
 def IsShaper (sigma : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
-  ∀ A D : Curve, S A D → IsMaximalArrivalCurve (curveE D) sigma
+  ∀ A D : Curve, S A D → IsMaximalArrivalBound (curveE D) sigma
 
 /-- The largest relation shaping outputs to `sigma`: the causal pairs whose
 output allows `sigma`. -/
 def shaperRel (sigma : ℝ≥0 → EReal) : Curve → Curve → Prop :=
-  fun A D => D ≤ A ∧ IsMaximalArrivalCurve (curveE D) sigma
+  fun A D => D ≤ A ∧ IsMaximalArrivalBound (curveE D) sigma
 
 /-- `shaperRel sigma A D` unfolds to causality and the arrival-curve bound. -/
 theorem mem_shaperRel_iff {sigma : ℝ≥0 → EReal} {A D : Curve} :
     shaperRel sigma A D ↔
-      D ≤ A ∧ IsMaximalArrivalCurve (curveE D) sigma :=
+      D ≤ A ∧ IsMaximalArrivalBound (curveE D) sigma :=
   Iff.rfl
 
 /-- The zero output allows every nonnegative `sigma`. -/
-theorem isMaximalArrivalCurve_zeroCurve {sigma : ℝ≥0 → EReal}
+theorem isMaximalArrivalBound_zeroCurve {sigma : ℝ≥0 → EReal}
     (hnn : IsNonneg sigma) :
-    IsMaximalArrivalCurve (curveE zeroCurve) sigma := by
+    IsMaximalArrivalBound (curveE zeroCurve) sigma := by
   intro t
   rw [curveE_zeroCurve]
   exact IsNonneg.conv (curveE_nonneg zeroCurve) hnn t
@@ -93,7 +93,7 @@ theorem isServer_shaperRel {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
     IsServer (shaperRel sigma) :=
   ⟨fun _ _ hp => hp.1,
     fun _ => ⟨zeroCurve, fun _ => zero_le',
-      isMaximalArrivalCurve_zeroCurve hnn⟩⟩
+      isMaximalArrivalBound_zeroCurve hnn⟩⟩
 
 /-- A causal `S` is a shaper for `sigma` iff its pairs lie in
 `shaperRel sigma`: `shaperRel sigma` is the largest shaper for `sigma`. -/
@@ -148,7 +148,7 @@ theorem IsShaper.closure {S : Curve → Curve → Prop} {sigma : ℝ≥0 → ERe
     (hnn : IsNonneg sigma) (hS : IsShaper sigma S) :
     IsShaper (subadditiveClosureEReal sigma) S :=
   fun A D hp =>
-    (isMaximalArrivalCurve_subadditiveClosureEReal_iff
+    (isMaximalArrivalBound_subadditiveClosureEReal_iff
       (curveE_neverBot D) hnn).mpr (hS A D hp)
 
 /-- Shaping to nonnegative `sigma` and to its sub-additive closure `sigma⋆`
@@ -157,7 +157,7 @@ theorem shaperRel_closure {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
     shaperRel sigma = shaperRel (subadditiveClosureEReal sigma) := by
   funext A D
   apply propext
-  have hiff := isMaximalArrivalCurve_subadditiveClosureEReal_iff
+  have hiff := isMaximalArrivalBound_subadditiveClosureEReal_iff
     (curveE_neverBot D) hnn
   exact ⟨fun hp => ⟨hp.1, hiff.mpr hp.2⟩, fun hp => ⟨hp.1, hiff.mp hp.2⟩⟩
 
