@@ -47,11 +47,27 @@ theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
     subst this
     rw [tsub_self, h0, add_zero]
 
+/-- `strictServiceRel beta A D` unfolds to causality plus the strict bound
+on backlogged periods. -/
+theorem mem_strictServiceRel_iff {beta : ℝ≥0 → ℝ≥0} {A D : Curve} :
+    strictServiceRel beta A D ↔
+      D ≤ A ∧ ∀ s t, s ≤ t → IsBacklogged A D (Set.Ioc s t) →
+        D s + beta (t - s) ≤ D t :=
+  Iff.rfl
+
 /-- The relation `strictServiceRel beta` offers its own strict service
 curve. -/
 theorem isStrictMinimalServiceCurve_strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
     IsStrictMinimalServiceCurve beta (strictServiceRel beta) :=
   fun _ _ hp => hp.2
+
+/-- Strict service curves are antitone: a smaller `beta` is still offered. -/
+theorem IsStrictMinimalServiceCurve.mono
+    {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → ℝ≥0}
+    (h : beta ≤ beta') (hβ : IsStrictMinimalServiceCurve beta' S) :
+    IsStrictMinimalServiceCurve beta S :=
+  fun A D hp s t hst hbl =>
+    le_trans (add_le_add le_rfl (h _)) (hβ A D hp s t hst hbl)
 
 /-- A causal `S` offers strict service `beta` iff its pairs all lie in
 `strictServiceRel beta`. -/
@@ -70,10 +86,8 @@ theorem strictServiceRel_mono
     {beta beta' : ℝ≥0 → ℝ≥0} (h : beta' ≤ beta) :
     strictServiceRel beta ≤ strictServiceRel beta' := by
   intro A D hp
-  refine ⟨hp.1, fun s t hst hbl => ?_⟩
-  refine le_trans ?_ (hp.2 s t hst hbl)
-  gcongr
-  exact h _
+  exact ⟨hp.1,
+    ((isStrictMinimalServiceCurve_strictServiceRel beta).mono h) A D hp⟩
 
 /-- The zero curve `beta₀ ≡ 0` is a strict service curve for every server: the
 bound `D s + 0 ≤ D t` is just monotonicity of `D`. -/

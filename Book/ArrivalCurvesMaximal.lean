@@ -64,7 +64,7 @@ witness `α` bounds the deconvolution supremum (`A ⊘ A ≤ α`), so each incre
 term lies below it. Together with `minDeconv_self_le_of_isMaximalArrivalCurve`
 this makes `A ⊘ A` the least maximal arrival curve, and `α ≥ A ⊘ A` an
 equivalent definition of a maximal arrival curve. -/
-theorem isMaximalArrivalCurve_deconv_self {A : ℝ≥0 → ℝ≥0}
+theorem isMaximalArrivalCurve_minDeconv_self {A : ℝ≥0 → ℝ≥0}
     (hex : ∃ α : ℝ≥0 → ℝ≥0, IsMaximalArrivalCurve A α) :
     IsMaximalArrivalCurve A (minDeconv A A) := by
   obtain ⟨α, hα⟩ := hex

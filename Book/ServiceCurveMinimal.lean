@@ -119,6 +119,11 @@ theorem mem_minimalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
         (curveE D ≤ curveE A ∧ minConv (curveE A) beta ≤ curveE D) from Iff.rfl,
     curveE_le_iff]
 
+/-- The relation `minimalServiceRel beta` offers its own service curve. -/
+theorem isMinimalServiceCurve_minimalServiceRel (beta : ℝ≥0 → EReal) :
+    IsMinimalServiceCurve beta (minimalServiceRel beta) :=
+  fun _ _ hp => hp.2
+
 /-- When `beta 0 ≤ 0`, `minimalServiceRel beta` is a server: causality is the first
 conjunct, and left-totality holds since each input serves itself. -/
 theorem isServer_minimalServiceRel {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) :
@@ -150,6 +155,15 @@ theorem IsMinimalServiceCurve.mono
     IsMinimalServiceCurve beta S :=
   fun A D hp t =>
     le_trans (minConv_le_minConv (fun _ => le_rfl) h t) (hS A D hp t)
+
+/-- The min-plus service relation is antitone in the curve: `beta ≤ beta'`
+gives `minimalServiceRel beta' ≤ minimalServiceRel beta`. -/
+theorem minimalServiceRel_mono {beta beta' : ℝ≥0 → EReal}
+    (h : beta ≤ beta') :
+    minimalServiceRel beta' ≤ minimalServiceRel beta := by
+  intro A D hp
+  exact ⟨hp.1,
+    ((isMinimalServiceCurve_minimalServiceRel beta').mono h) A D hp⟩
 
 /-- The trivial zero service curve `beta ≡ 0` (`EReal`-valued). -/
 noncomputable def betaZero : ℝ≥0 → EReal := fun _ => 0

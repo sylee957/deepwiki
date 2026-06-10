@@ -24,6 +24,12 @@ def maximalServiceRel (beta : ℝ≥0 → EReal) :
     Curve → Curve → Prop :=
   fun A D => curveE D ≤ minConv (curveE A) beta
 
+/-- `maximalServiceRel beta A D` unfolds to `D ≤ A ∗ beta` in the `EReal`
+view. -/
+theorem mem_maximalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
+    maximalServiceRel beta A D ↔ curveE D ≤ minConv (curveE A) beta :=
+  Iff.rfl
+
 /-- A relation offers maximal service `beta` iff all its pairs lie in
 `maximalServiceRel beta` — for `beta` in `F₀` (see
 `isServer_maximalServiceRel`), the largest server offering `beta`. -/
