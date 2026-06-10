@@ -32,10 +32,8 @@ theorem isLeftContinuous_of_mono_lsc
     [OrderTopology T] (g : ℝ≥0 → T) (hmono : Monotone g)
     (hlsc : LowerSemicontinuous g) :
     IsLeftContinuous g := by
-  intro t
-  rw [show IsLeftContinuousAt g t
-      = ContinuousWithinAt g (Iio t) t from rfl,
-    hmono.continuousWithinAt_Iio_iff_leftLim_eq]
+  rw [isLeftContinuous_iff_leftLim_eq hmono]
+  funext t
   -- `leftLim g t = g t`: `≤` is monotonicity; `≥` is lower semicontinuity.
   apply le_antisymm (hmono.leftLim_le le_rfl)
   rcases eq_or_ne (𝓝[<] t) ⊥ with hbot | hbot

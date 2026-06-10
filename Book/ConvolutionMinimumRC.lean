@@ -1,5 +1,6 @@
 import Book.ConvolutionMinimum
 import Book.ConvolutionMinimumExt
+import Book.ContinuityClosure
 import Book.MinPlusExtTopology
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Instances.EReal.Lemmas
@@ -31,17 +32,6 @@ namespace DeepWiki
 
 open Topology Filter Set Function
 open scoped Classical NNReal ENNReal Algebra.Bridge DeepWiki.MinPlusExt
-
-/-- `leftLim f` is left-continuous: its own left limit equals itself everywhere
-(`leftLim` is idempotent for monotone `f`, hence already left-continuous). -/
-theorem isLeftContinuous_leftLim
-    {T : Type*} [ConditionallyCompleteLinearOrder T] [TopologicalSpace T]
-    [OrderTopology T] [T3Space T] {f : ℝ≥0 → T} (hf : Monotone f) :
-    IsLeftContinuous (leftLim f) := by
-  intro t
-  show ContinuousWithinAt (leftLim f) (Iio t) t
-  rw [hf.leftLim.continuousWithinAt_Iio_iff_leftLim_eq]
-  exact leftLim_leftLim (hf.tendsto_leftLim t)
 
 /-- The convolution bridge (continuous `h`): `minConv f h t` is unchanged when
 `f` is replaced by its left limit `leftLim f`. The `≤` direction is monotonicity
