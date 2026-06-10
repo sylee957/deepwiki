@@ -31,6 +31,19 @@ theorem isGreedyShaper_iff_subset {S : Curve → Curve → Prop}
       ∀ A D : Curve, S A D → greedyShaperRel sigma A D :=
   Iff.rfl
 
+/-- `greedyShaperRel sigma` is itself a greedy shaper for `sigma`. -/
+theorem isGreedyShaper_greedyShaperRel (sigma : ℝ≥0 → EReal) :
+    IsGreedyShaper sigma (greedyShaperRel sigma) :=
+  fun _ _ hp => hp
+
+/-- A greedy shaper for `sigma` with `sigma 0 ≤ 0` is causal: the output
+`A ∗ sigma` lies below `A`. -/
+theorem IsGreedyShaper.isCausal {S : Curve → Curve → Prop}
+    {sigma : ℝ≥0 → EReal} (h0 : sigma 0 ≤ 0)
+    (hS : IsGreedyShaper sigma S) : IsCausal S :=
+  fun A D hp => curveE_le_iff.mp
+    (le_of_eq_of_le (hS A D hp) (minConv_self_le h0 A))
+
 /-! ## Well-definedness: the greedy output is a curve
 For `sigma` in `F₀` (nonnegative, nondecreasing, null at zero) and
 left-continuous, `A ∗ sigma` is nonnegative, finite, nondecreasing, null at
@@ -134,8 +147,7 @@ theorem isServer_greedyShaperRel {sigma : ℝ≥0 → EReal}
     (hlc : IsLeftContinuous sigma)
     (hpwc : ∀ A : Curve, IsPiecewiseContinuous (greedyFun A sigma)) :
     IsServer (greedyShaperRel sigma) :=
-  ⟨fun A D hp => curveE_le_iff.mp
-      (le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0.le A)),
+  ⟨(isGreedyShaper_greedyShaperRel sigma).isCausal h0.le,
     fun A => ⟨greedyCurve A sigma hmono h0 hlc (hpwc A),
       curveE_greedyCurve A hmono h0 hlc (hpwc A)⟩⟩
 
@@ -187,11 +199,6 @@ theorem IsGreedyShaper.isShaper {S : Curve → Curve → Prop}
 
 /-! ## Greedy shaper is minimal and maximal service -/
 
-/-- `greedyShaperRel sigma` is itself a greedy shaper for `sigma`. -/
-theorem isGreedyShaper_greedyShaperRel (sigma : ℝ≥0 → EReal) :
-    IsGreedyShaper sigma (greedyShaperRel sigma) :=
-  fun _ _ hp => hp
-
 /-- A greedy shaper offers `sigma` as a maximal service curve:
 `D ≤ A ∗ sigma` from the defining equality. -/
 theorem IsGreedyShaper.isMaximalServiceCurve {S : Curve → Curve → Prop}
@@ -231,8 +238,7 @@ theorem greedyShaperRel_le_shaperRel {sigma : ℝ≥0 → EReal} (h0 : sigma 0 �
     (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma) :
     greedyShaperRel sigma ≤ shaperRel sigma := by
   intro A D hp
-  exact ⟨curveE_le_iff.mp
-      (le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0 A)),
+  exact ⟨(isGreedyShaper_greedyShaperRel sigma).isCausal h0 A D hp,
     (isGreedyShaper_greedyShaperRel sigma).isShaper hnn hsub A D hp⟩
 
 /-- The reduced form of the proposition: the greedy shaper is exactly

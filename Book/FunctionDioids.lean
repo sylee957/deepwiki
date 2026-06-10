@@ -82,6 +82,16 @@ theorem maxConv_le {D T : Type*} [AddZeroClass D] [Add T]
     maxConv f g t ≤ x :=
   ciSup_le fun p => h p.1.1 p.1.2 p.2
 
+/-- `minConv` is monotone in both arguments (pointwise), over any ordered
+codomain with monotone `+` and infima, e.g. `EReal` or `ℝ≥0∞`. -/
+theorem minConv_le_minConv {D T : Type*} [AddZeroClass D] [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T]
+    [AddLeftMono T] [AddRightMono T] {g g' h h' : D → T}
+    (hg : ∀ t, g t ≤ g' t) (hh : ∀ t, h t ≤ h' t) (t : D) :
+    minConv g h t ≤ minConv g' h' t :=
+  le_minConv fun u s hus =>
+    le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
+
 /-- Elim: every term bounds the (min,+) deconvolution from below,
 `g (t + s) - h s ≤ minDeconv g h t`. -/
 theorem sub_le_minDeconv {D T : Type*} [Add D] [Sub T]

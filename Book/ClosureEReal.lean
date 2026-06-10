@@ -8,7 +8,7 @@ The (min,+) sub-additive (Kleene-star) closure `⨅ₙ gⁿ` for curves
 `g : ℝ≥0 → EReal`, built from raw `minConv`.  `EReal` is not a
 `CompleteDioid` (its native `+` is bot-absorbing, the wrong convention),
 so the good properties are gated on `NeverBot g` (never `−∞`). Also the
-`EReal` specializations of `minConv` monotonicity and `ndClosure`. -/
+`EReal` specialization of `ndClosure`. -/
 
 namespace DeepWiki
 
@@ -73,13 +73,6 @@ theorem subadditiveClosureEReal_le (g : ℝ≥0 → EReal) (hg : NeverBot g)
     (t : ℝ≥0) : subadditiveClosureEReal g t ≤ g t := by
   have h := iInf_le (fun n : ℕ => convPowEReal g n t) 1
   rwa [convPowEReal_one g hg] at h
-
-/-- `minConv` is monotone in both arguments (pointwise). -/
-theorem minConv_le_minConv {g g' h h' : ℝ≥0 → EReal}
-    (hg : ∀ t, g t ≤ g' t) (hh : ∀ t, h t ≤ h' t) (t : ℝ≥0) :
-    minConv g h t ≤ minConv g' h' t :=
-  le_minConv fun u s hus =>
-    le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
 
 /-- `convPowEReal` is monotone in `g` (pointwise, numeric). -/
 theorem convPowEReal_mono (g h : ℝ≥0 → EReal)

@@ -1,5 +1,7 @@
 import Book.ArrivalCurveShaper
+import Book.ArrivalCurveShaperGreedy
 import Book.ArrivalCurvesMaximal
+import Book.Deconvolution
 import Book.DeviationsBoundsServer
 import Book.RealCurvesConv
 
@@ -7,8 +9,10 @@ import Book.RealCurvesConv
 A server offering a minimal service curve `βᵐ`, a maximal service curve `βᴹ`,
 and shaping to `σ` propagates arrival curves to its output `D`: the maximal
 side is the deconvolution bound `((αᵘ ∗ βᴹ) ⊘ βᵐ) ⊓ σ`, the minimal side the
-convolution bound `αˡ ∗ (βᵐ ⊘̄ βᴹ)`. The `ℝ≥0∞` reading (`liftENN`/`toENN`,
-truncated subtraction) restricts the curves to nonnegative ones. -/
+convolution bound `αˡ ∗ (βᵐ ⊘̄ βᴹ)`; a greedy shaper for sub-additive `σ`
+specializes these to `αᵘ ∗ σ` and `αˡ ∗ (σ ⊘̄ σ)`. The `ℝ≥0∞` reading
+(`liftENN`/`toENN`, truncated subtraction) restricts the curves to
+nonnegative ones. -/
 
 namespace DeepWiki
 
@@ -44,6 +48,13 @@ theorem toENN_delayEReal (d : ℝ≥0) :
     exact EReal.toENNReal_top
 
 end Deviation
+
+/-- Sub-additivity transports through the `ℝ≥0∞` reading: `toENN sigma` is
+sub-additive when `sigma` is. -/
+theorem IsSubadditive.toENN {sigma : ℝ≥0 → EReal}
+    (hsub : IsSubadditive sigma) : IsSubadditive (Deviation.toENN sigma) :=
+  fun u s =>
+    (EReal.toENNReal_le_toENNReal (hsub u s)).trans EReal.toENNReal_add_le
 
 /-- The `ℝ≥0∞` reading of a maximal arrival curve: if `curveE f` allows the
 nonnegative `sigma`, then `liftENN ⇑f` allows `toENN sigma`. -/
@@ -234,6 +245,40 @@ theorem isMinimalArrivalCurve_output
         _ = (liftENN ⇑A t + αl (s - t)) + toENN betam w := (add_assoc _ _ _).symm
         _ ≤ liftENN ⇑A s + toENN betam w := add_le_add hincr le_rfl
 
+/-- **Output arrival curve for a greedy shaper (maximal).** A pair served by
+a greedy shaper for sub-additive nonnegative `sigma`, the arrival allowing
+`αu`, has output allowing `αu ∗ sigma`: the output theorem at
+`betam = betaM = sigma`, collapsed by `(αu ∗ sigma) ⊘ sigma ≤ αu ∗ sigma`. -/
+theorem isMaximalArrivalCurve_output_of_isGreedyShaper
+    {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal} {αu : ℝ≥0 → ℝ≥0∞}
+    (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
+    (hsub : IsSubadditive sigma)
+    {A D : Curve} (hp : S A D)
+    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    IsMaximalArrivalCurve (liftENN ⇑D) (minConv αu (toENN sigma)) := by
+  have h := isMaximalArrivalCurve_output hgr.isMinimalServiceCurve hnns
+    hgr.isMaximalServiceCurve hnns (hgr.isShaper hnns hsub) hnns hp harru
+  refine h.mono (le_trans inf_le_left ?_)
+  refine le_trans (minDeconv_minConv_le αu (toENN sigma) (toENN sigma)) ?_
+  -- `αu ∗ (sigma ⊘ sigma) ≤ αu ∗ sigma` by sub-additivity of `sigma`
+  exact fun t => minConv_le_minConv (fun _ => le_rfl)
+    (minDeconv_self_le_of_isSubadditive hsub.toENN) t
+
+/-- **Output arrival curve for a greedy shaper (minimal).** A pair served by
+a greedy shaper for nonnegative `sigma` with `sigma 0 ≤ 0`, the arrival
+allowing minimal curve `αl`, has output keeping `αl ∗ (sigma ⊘̄ sigma)`: the
+output theorem at `betam = betaM = sigma`. -/
+theorem isMinimalArrivalCurve_output_of_isGreedyShaper
+    {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal} {αl : ℝ≥0 → ℝ≥0∞}
+    (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
+    (h0 : sigma 0 ≤ 0)
+    {A D : Curve} (hp : S A D)
+    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
+    IsMinimalArrivalCurve (liftENN ⇑D)
+      (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
+  isMinimalArrivalCurve_output (hgr.isCausal h0) hgr.isMinimalServiceCurve
+    hnns hgr.isMaximalServiceCurve hnns hp harrl
+
 /-! ## Book restatement
 A server `S` offering `betam`, `betaM` and shaping to `sigma`, with arrival
 `A` allowing maximal curve `αu` and minimal curve `αl`, gives every output
@@ -268,5 +313,30 @@ example {S : Curve → Curve → Prop} {betam : ℝ≥0 → EReal}
       IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (toENN betam)) :=
   fun _ hp => isMaximalArrivalCurve_output_of_isMinimalServiceCurve
     hSrv.1 hβm hnnm hp harru
+
+/-! ## Book restatement (greedy-shaper corollary)
+A greedy shaper for sub-additive `sigma` in `F₀`, with arrival `A` allowing
+maximal curve `αu` and minimal curve `αl`, gives every output `D` the
+maximal arrival curve `αu ∗ sigma⋆` (`= αu ∗ sigma`, since sub-additive
+`sigma` is its own closure) and the minimal arrival curve
+`αl ∗ (sigma ⊘̄ sigma)`. -/
+example {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
+    {αu αl : ℝ≥0 → ℝ≥0∞}
+    (hgr : IsGreedyShaper sigma S) (hnns : IsNonneg sigma)
+    (hsub : IsSubadditive sigma) (h0 : sigma 0 = 0)
+    {A : Curve}
+    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu)
+    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
+    ∀ D : Curve, S A D →
+      IsMaximalArrivalCurve (liftENN ⇑D)
+        (minConv αu (toENN (subadditiveClosureEReal sigma))) ∧
+      IsMinimalArrivalCurve (liftENN ⇑D)
+        (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
+  fun _ hp => by
+    rw [subadditiveClosureEReal_eq_self sigma hnns.bddBelowReal.neverBot
+      hsub h0]
+    exact
+      ⟨isMaximalArrivalCurve_output_of_isGreedyShaper hgr hnns hsub hp harru,
+        isMinimalArrivalCurve_output_of_isGreedyShaper hgr hnns h0.le hp harrl⟩
 
 end DeepWiki

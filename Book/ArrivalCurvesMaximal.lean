@@ -30,8 +30,11 @@ theorem IsMaximalArrivalCurve.inf {T : Type*} [Add T]
   exact le_min (h t d) (h' t d)
 
 /-- Any function above a maximal arrival curve is again a maximal arrival curve:
-if `A ≤ A ∗ α` and `α ≤ α'` then `A ≤ A ∗ α'`. -/
-theorem IsMaximalArrivalCurve.mono {A α α' : ℝ≥0 → ℝ≥0}
+if `A ≤ A ∗ α` and `α ≤ α'` then `A ≤ A ∗ α'` (over any conditionally
+complete lattice with `⊥` and monotone `+`, e.g. `ℝ≥0` or `ℝ≥0∞`). -/
+theorem IsMaximalArrivalCurve.mono {T : Type*} [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T] [AddLeftMono T]
+    {A α α' : ℝ≥0 → T}
     (h : IsMaximalArrivalCurve A α) (hle : α ≤ α') :
     IsMaximalArrivalCurve A α' := by
   rw [isMaximalArrivalCurve_iff_increment] at h ⊢

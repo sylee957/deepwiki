@@ -9,6 +9,7 @@ import Book.DioidFunctions
 import Book.FunctionDioids
 import Book.ClosureNd
 import Book.Additivity
+import Book.Deconvolution
 import Book.Closures
 import Book.Limits
 import Book.Continuity
