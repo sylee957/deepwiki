@@ -172,11 +172,14 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥
     (hp : S A D) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
-    {ℓmax : ℝ≥0}
-    (_hℓ : ℓmax = sInf (crossingSet α (liftENN beta)))
-    (hmem : ℓmax ∈ crossingSet α (liftENN beta)) :
-    backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (liftENN beta) t) ∧
-      delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
+    (hmem : sInf (crossingSet α (liftENN beta))
+      ∈ crossingSet α (liftENN beta)) :
+    backlog ⇑A ⇑D
+        ≤ (⨆ t ≤ sInf (crossingSet α (liftENN beta)),
+            vDevAt α (liftENN beta) t) ∧
+      delay ⇑A ⇑D
+        ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
+            (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
   ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp harr
       hr hmem.1 hmem.2,
     delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
