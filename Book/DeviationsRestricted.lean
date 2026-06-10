@@ -1,4 +1,5 @@
 import Book.Additivity
+import Book.ArrivalCurvesMaximal
 import Book.DeviationsBoundsServer
 
 /-! # Deviations on a restricted domain
@@ -112,18 +113,25 @@ theorem IsSuperadditive.liftEReal {g : ℝ≥0 → ℝ≥0}
 namespace Deviation
 
 /-- **Backlog from a restricted domain.** A pair served with a nonnegative
-super-additive minimal service curve `beta`, the arrival allowing a
-sub-additive `α`, has backlog bounded by the vertical deviations on `[0, τ]`,
-for any positive crossing point `α τ ≤ toENN beta τ`. -/
+super-additive minimal service curve `beta`, the arrival allowing `α`, has
+backlog bounded by the vertical deviations on `[0, τ]`, for any positive
+crossing point `α τ ≤ toENN beta τ`: the sub-additive closure of `α` is
+still an arrival curve, crosses no later, and its deviations are below
+`α`'s. -/
 theorem backlog_le_biSup_vDevAt_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hsup : IsSuperadditive beta)
+    (hsup : IsSuperadditive beta)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ toENN beta τ) :
-    backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (toENN beta) t :=
-  (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn harr).trans_eq
-    (vDev_eq_biSup_of_crossing hsub (hsup.toENN hnn) hτ hcross)
+    backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (toENN beta) t := by
+  have hmain :=
+    (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn
+        harr.subadditiveClosureE).trans_eq
+      (vDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
+        (hsup.toENN hnn) hτ ((subadditiveClosureE_le α τ).trans hcross))
+  refine hmain.trans (iSup₂_mono fun t _ => ?_)
+  exact vDevAt_mono (fun t' => subadditiveClosureE_le α t') le_rfl t
 
 /-- **Delay from a restricted domain.** Under the same hypotheses, with
 nondecreasing `beta`, the delay is bounded by the horizontal deviations on
@@ -133,18 +141,21 @@ theorem delay_le_biSup_hDevAt_of_isMinimalServiceCurve
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hsup : IsSuperadditive beta)
+    (hsup : IsSuperadditive beta)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ toENN beta τ) :
-    delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (toENN beta) t : ℝ≥0∞) :=
-  (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono harr).trans_eq
-    (hDev_eq_biSup_of_crossing hsub (hsup.toENN hnn) hτ hcross)
+    delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (toENN beta) t : ℝ≥0∞) := by
+  have hmain :=
+    (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono
+        harr.subadditiveClosureE).trans_eq
+      (hDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
+        (hsup.toENN hnn) hτ ((subadditiveClosureE_le α τ).trans hcross))
+  refine hmain.trans (iSup₂_mono fun t _ => ?_)
+  exact hDevAt_mono (fun t' => subadditiveClosureE_le α t') le_rfl t
 
 /-! ## Book restatement (restricting the deviation domain)
 With `ℓmax = inf {t > 0 | α t ≤ β t}` itself a positive crossing point (the
 infimum attained), the backlog and delay of a served pair are bounded by the
-deviations computed on `[0, ℓmax]`. Two narrowings against the book: `α`
-is assumed sub-additive outright (the book reduces to this via the
-sub-additive closure, not yet transported to the `ℝ≥0∞` carrier); and at a
+deviations computed on `[0, ℓmax]`. One narrowing against the book: at a
 non-attained infimum the book's bound needs a further limiting argument
 (recoverable for monotone `α`, `β`). The strict branch — the book's
 reduction through the super-additive closure and the strict-to-min-plus
@@ -156,15 +167,15 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
     (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hsup : IsSuperadditive beta)
+    (hsup : IsSuperadditive beta)
     {ℓmax : ℝ≥0}
     (_hℓ : ℓmax = sInf {t : ℝ≥0 | 0 < t ∧ α t ≤ toENN beta t})
     (hτ : 0 < ℓmax) (hcross : α ℓmax ≤ toENN beta ℓmax) :
     backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (toENN beta) t) ∧
       delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (toENN beta) t : ℝ≥0∞) :=
-  ⟨backlog_le_biSup_vDevAt_of_isMinimalServiceCurve hβ hp hnn harr hsub
+  ⟨backlog_le_biSup_vDevAt_of_isMinimalServiceCurve hβ hp hnn harr
       hsup hτ hcross,
-    delay_le_biSup_hDevAt_of_isMinimalServiceCurve hβ hp hnn hmono harr hsub
+    delay_le_biSup_hDevAt_of_isMinimalServiceCurve hβ hp hnn hmono harr
       hsup hτ hcross⟩
 
 end Deviation

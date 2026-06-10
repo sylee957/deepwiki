@@ -93,16 +93,16 @@ theorem delay_le_hDev_of_isStrictMinimalServiceCurve
   rwa [toENN_liftEReal] at h
 
 /-- **Backlog from a restricted domain, strict service.** A causal pair with
-strict service `beta` under an affine rate bound, the arrival allowing a
-sub-additive `α`, has backlog bounded by the vertical deviations against
-`beta` on `[0, τ]`, for any positive crossing point `α τ ≤ liftENN beta τ`:
-the super-additive closure of `beta` is still offered, is super-additive,
-and dominates `beta`. -/
+strict service `beta` under an affine rate bound, the arrival allowing `α`,
+has backlog bounded by the vertical deviations against `beta` on `[0, τ]`,
+for any positive crossing point `α τ ≤ liftENN beta τ`: the super-additive
+closure of `beta` is still offered, is super-additive, and dominates
+`beta`. -/
 theorem backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
     (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (liftENN beta) t := by
   have hcross' : α τ ≤ toENN (liftEReal (superadditiveClosureMax beta)) τ := by
@@ -112,7 +112,7 @@ theorem backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve
   have hmain := backlog_le_biSup_vDevAt_of_isMinimalServiceCurve
     ((isStrictMinimalServiceCurve_superadditiveClosureMax beta
         hβ).isMinimalServiceCurve hc)
-    hp (isNonneg_liftEReal _) harr hsub
+    hp (isNonneg_liftEReal _) harr
     ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
     hτ hcross'
   rw [toENN_liftEReal] at hmain
@@ -129,7 +129,7 @@ theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
     {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
     (hp : S A D) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
   have hcross' : α τ ≤ toENN (liftEReal (superadditiveClosureMax beta)) τ := by
@@ -142,7 +142,7 @@ theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
     hp (isNonneg_liftEReal _)
     (monotone_liftEReal
       (monotone_superadditiveClosureMax_of_affine_bound hmono hr))
-    harr hsub
+    harr
     ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
     hτ hcross'
   rw [toENN_liftEReal] at hmain
@@ -171,16 +171,16 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     (hp : S A D) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
-    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {ℓmax : ℝ≥0}
     (_hℓ : ℓmax = sInf {t : ℝ≥0 | 0 < t ∧ α t ≤ liftENN beta t})
     (hτ : 0 < ℓmax) (hcross : α ℓmax ≤ liftENN beta ℓmax) :
     backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (liftENN beta) t) ∧
       delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
   ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp harr
-      hsub hr hτ hcross,
+      hr hτ hcross,
     delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
-      harr hsub hr hτ hcross⟩
+      harr hr hτ hcross⟩
 
 /-! ## Bridging arrival-curve readings
 The maximal length of a backlogged period under the `ℝ≥0∞` reading of the
