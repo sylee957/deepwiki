@@ -39,6 +39,12 @@ nonnegative values, `0` below). -/
 noncomputable def toENN (beta : ℝ≥0 → EReal) : ℝ≥0 → ℝ≥0∞ :=
   fun s => (beta s).toENNReal
 
+/-- `toENN` transports monotonicity: `toENN beta` is monotone when `beta`
+is. -/
+theorem monotone_toENN {beta : ℝ≥0 → EReal} (hmono : Monotone beta) :
+    Monotone (toENN beta) :=
+  fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab)
+
 /-- For nonnegative `beta`, the `ℝ≥0∞` convolution of a curve with the
 reading `toENN beta` coerces to the `EReal` convolution. -/
 theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
@@ -76,8 +82,7 @@ theorem delay_le_hDev_of_isMinimalServiceCurve
     (hnn : IsNonneg beta) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
     delay ⇑A ⇑D ≤ (hDev α (toENN beta) : ℝ≥0∞) :=
-  delay_le_hDev A.mono
-    (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
+  delay_le_hDev A.mono (monotone_toENN hmono)
     harr (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)
 
 /-- **Backlog bound for servers** (pointwise): the backlog of a served pair

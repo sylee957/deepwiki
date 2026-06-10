@@ -150,8 +150,7 @@ theorem delay_eq_hDev_of_greedyShaperRel {beta : ℝ≥0 → EReal} {A D : Curve
     (hmono : Monotone beta) (h0 : IsNullAtOrigin beta)
     (hp : greedyShaperRel beta A D) :
     delay ⇑A ⇑D = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) :=
-  delay_eq_hDev_of_minConv_eq A.mono A.zero hsub
-    (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
+  delay_eq_hDev_of_minConv_eq A.mono A.zero hsub (monotone_toENN hmono)
     (coe_eq_minConv_toENN_of_greedyShaperRel
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) hp)
 
@@ -194,8 +193,7 @@ theorem delay_greedyFun_eq_hDev (A : Curve) {beta : ℝ≥0 → EReal}
     (hmono : Monotone beta) (h0 : IsNullAtOrigin beta) :
     delay ⇑A (greedyFun A beta)
       = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) :=
-  delay_eq_hDev_of_minConv_eq A.mono A.zero hsub
-    (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
+  delay_eq_hDev_of_minConv_eq A.mono A.zero hsub (monotone_toENN hmono)
     (coe_greedyFun_eq_minConv_toENN A
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0)
 
