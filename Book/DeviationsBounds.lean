@@ -5,9 +5,9 @@ import Book.ArrivalCurves
 For a served pair with maximal arrival curve `α` and min-plus service `β`
 (both `ℝ≥0∞`-valued), the delay is bounded by the horizontal deviation
 `hDev α β` and the backlog by the vertical deviation `vDev α β`. The service
-hypothesis is the raw `ℝ≥0∞` convolution inequality `A ∗ β ≤ D`; bridging it
-to the `EReal`-valued `IsMinPlusServiceCurve` server stack (for nonnegative
-`β` and `Curve` pairs) is future work. -/
+hypothesis is the raw `ℝ≥0∞` convolution inequality `A ∗ β ≤ D`; the bridge
+from the `EReal`-valued `IsMinPlusServiceCurve` server stack is in
+`DeviationsBoundsServer`. -/
 
 namespace DeepWiki
 
