@@ -24,6 +24,7 @@ import Book.RealCurvesDeviations
 import Book.PseudoInverse
 import Book.PseudoInverseCatalog
 import Book.DeviationsPseudoInverse
+import Book.DeviationsContinuity
 import Book.ConvolutionMinimum
 import Book.MinPlusExtTopology
 import Book.MaxPlusExtTopology
