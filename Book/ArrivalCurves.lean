@@ -131,6 +131,13 @@ theorem crossingSet_anti_left {T : Type*} [Preorder T] {α α' β : ℝ≥0 → 
     crossingSet α β ⊆ crossingSet α' β :=
   fun x hx => ⟨hx.1, (hle x).trans hx.2⟩
 
+/-- The crossing set grows as the right curve grows: `β ≤ β'` gives
+`crossingSet α β ⊆ crossingSet α β'`. -/
+theorem crossingSet_mono_right {T : Type*} [Preorder T] {α β β' : ℝ≥0 → T}
+    (hle : ∀ t, β t ≤ β' t) :
+    crossingSet α β ⊆ crossingSet α β' :=
+  fun x hx => ⟨hx.1, hx.2.trans (hle x)⟩
+
 /-- The first crossing of `f` below `g`, read in `ℝ≥0∞` (`⊤` when the curves
 never cross). -/
 noncomputable def firstCrossing {T : Type*} [LE T] (f g : ℝ≥0 → T) : ℝ≥0∞ :=

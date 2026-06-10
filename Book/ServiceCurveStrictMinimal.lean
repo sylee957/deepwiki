@@ -151,6 +151,79 @@ theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
     (fun t' => ENNReal.coe_le_coe.mpr
       (le_superadditiveClosureMax_of_affine_bound hr t')) t
 
+/-- **Backlog from the first crossing, strict service.** Without
+attainment: a causal pair with strict service `beta` under an affine rate
+bound, the arrival having maximal arrival curve `α`, has backlog bounded
+by the vertical deviations against `beta` on `[0, ℓmax]`,
+`ℓmax = sInf (crossingSet α (liftENN beta))` — the super-additive closure
+of `beta` dominates `beta`, so `α` crosses it no later. -/
+theorem backlog_le_biSup_vDevAt_sInf_of_isStrictMinimalServiceCurve
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
+    {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
+    (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    (hne : (crossingSet α (liftENN beta)).Nonempty) :
+    backlog ⇑A ⇑D
+      ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
+          vDevAt α (liftENN beta) t := by
+  have hleβ : ∀ t, liftENN beta t
+      ≤ liftENN (superadditiveClosureMax beta) t := fun t =>
+    ENNReal.coe_le_coe.mpr (le_superadditiveClosureMax_of_affine_bound hr t)
+  have hsubset : crossingSet α (liftENN beta)
+      ⊆ crossingSet α (liftENN (superadditiveClosureMax beta)) :=
+    crossingSet_mono_right hleβ
+  have hℓ : sInf (crossingSet α (liftENN (superadditiveClosureMax beta)))
+      ≤ sInf (crossingSet α (liftENN beta)) :=
+    csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hmain := backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
+    ((isStrictMinimalServiceCurve_superadditiveClosureMax beta
+        hβ).isMinimalServiceCurve hc)
+    hp (isNonneg_liftEReal _) harr
+    ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
+    (by rw [toENN_liftEReal]; exact hne.mono hsubset)
+  rw [toENN_liftEReal] at hmain
+  exact hmain.trans
+    (le_trans
+      (iSup₂_mono fun t _ => vDevAt_mono le_rfl hleβ t)
+      (biSup_mono fun _ ht => ht.trans hℓ))
+
+/-- **Delay from the first crossing, strict service.** Without attainment:
+under the same hypotheses, with `beta` additionally monotone, the delay is
+bounded by the horizontal deviations against `beta` on `[0, ℓmax]`. -/
+theorem delay_le_biSup_hDevAt_sInf_of_isStrictMinimalServiceCurve
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
+    {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
+    (hp : S A D) (hmono : Monotone beta)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    (hne : (crossingSet α (liftENN beta)).Nonempty) :
+    delay ⇑A ⇑D
+      ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
+          (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
+  have hleβ : ∀ t, liftENN beta t
+      ≤ liftENN (superadditiveClosureMax beta) t := fun t =>
+    ENNReal.coe_le_coe.mpr (le_superadditiveClosureMax_of_affine_bound hr t)
+  have hsubset : crossingSet α (liftENN beta)
+      ⊆ crossingSet α (liftENN (superadditiveClosureMax beta)) :=
+    crossingSet_mono_right hleβ
+  have hℓ : sInf (crossingSet α (liftENN (superadditiveClosureMax beta)))
+      ≤ sInf (crossingSet α (liftENN beta)) :=
+    csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hmain := delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
+    ((isStrictMinimalServiceCurve_superadditiveClosureMax beta
+        hβ).isMinimalServiceCurve hc)
+    hp (isNonneg_liftEReal _)
+    (monotone_liftEReal
+      (monotone_superadditiveClosureMax_of_affine_bound hmono hr))
+    harr
+    ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
+    (by rw [toENN_liftEReal]; exact hne.mono hsubset)
+  rw [toENN_liftEReal] at hmain
+  exact hmain.trans
+    (le_trans
+      (iSup₂_mono fun t _ => hDevAt_mono le_rfl hleβ t)
+      (biSup_mono fun _ ht => ht.trans hℓ))
+
 end Deviation
 
 /-! ## Book restatement (strict service curves are service curves)
@@ -162,28 +235,27 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
   hβ.isMinimalServiceCurve hSrv.1
 
 /-! ## Book restatement (restricted deviation domain, strict service)
-With `ℓmax = inf {t > 0 | α t ≤ beta t}` itself a crossing point (the
-infimum attained), backlog and delay of a pair served with strict service
-`beta` (monotone, affinely rate-bounded) are bounded by the deviations
-against `beta` computed on `[0, ℓmax]`. -/
+With `ℓmax = inf {t > 0 | α t ≤ beta t}` — the curves do cross, but the
+infimum need not be attained — backlog and delay of a pair served with
+strict service `beta` (monotone, affinely rate-bounded) are bounded by
+the deviations against `beta` computed on `[0, ℓmax]`. -/
 example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     (hp : S A D) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
-    (hmem : sInf (crossingSet α (liftENN beta))
-      ∈ crossingSet α (liftENN beta)) :
+    (hne : (crossingSet α (liftENN beta)).Nonempty) :
     backlog ⇑A ⇑D
         ≤ (⨆ t ≤ sInf (crossingSet α (liftENN beta)),
             vDevAt α (liftENN beta) t) ∧
       delay ⇑A ⇑D
         ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
             (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
-  ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp
-      harr.2 hr hmem.1 hmem.2,
-    delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
-      harr.2 hr hmem.1 hmem.2⟩
+  ⟨backlog_le_biSup_vDevAt_sInf_of_isStrictMinimalServiceCurve hβ hSrv.1 hp
+      harr hr hne,
+    delay_le_biSup_hDevAt_sInf_of_isStrictMinimalServiceCurve hβ hSrv.1 hp
+      hmono harr hr hne⟩
 
 /-! ## Bridging arrival-curve readings
 The maximal length of a backlogged period under the `ℝ≥0∞` reading of the
