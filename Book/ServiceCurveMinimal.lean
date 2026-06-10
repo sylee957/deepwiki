@@ -75,9 +75,7 @@ def IsMinimalServiceCurve (beta : ℝ≥0 → EReal) (S : Curve → Curve → Pr
 `(t, 0)` split gives `A ∗ beta ≤ A`. The left-total witness for the relation. -/
 theorem minConv_self_le {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) (A : Curve) :
     minConv (curveE A) beta ≤ curveE A := by
-  refine fun t => le_trans
-    (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(t, 0), by simp⟩ (le_refl _)) ?_
-  show curveE A t + beta 0 ≤ curveE A t
+  refine fun t => le_trans (minConv_le_add _ _ (add_zero t)) ?_
   calc curveE A t + beta 0 ≤ curveE A t + 0 := by gcongr
     _ = curveE A t := add_zero _
 

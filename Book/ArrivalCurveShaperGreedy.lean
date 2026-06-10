@@ -177,8 +177,7 @@ theorem isMaximalArrivalCurve_minConv_of_subadditive
   rintro ⟨⟨a, b⟩, (hab : a + b = u)⟩
   show minConv f sigma (u + s) ≤ sigma s + (f a + sigma b)
   have hterm : minConv f sigma (u + s) ≤ f a + sigma (b + s) :=
-    iInf_le _ (⟨(a, b + s), by rw [← hab, add_assoc]⟩ :
-      {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u + s})
+    minConv_le_add f sigma (by rw [← hab, add_assoc])
   refine le_trans hterm ?_
   calc f a + sigma (b + s)
       ≤ f a + (sigma b + sigma s) := add_le_add le_rfl (hsub b s)

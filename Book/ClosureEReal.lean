@@ -83,12 +83,9 @@ theorem subadditiveClosureEReal_le (g : ℝ≥0 → EReal) (hg : NeverBot g)
 /-- `minConv` is monotone in both arguments (pointwise). -/
 theorem minConv_le_minConv {g g' h h' : ℝ≥0 → EReal}
     (hg : ∀ t, g t ≤ g' t) (hh : ∀ t, h t ≤ h' t) (t : ℝ≥0) :
-    minConv g h t ≤ minConv g' h' t := by
-  unfold minConv
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-  refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
-  exact add_le_add (hg u) (hh s)
+    minConv g h t ≤ minConv g' h' t :=
+  le_minConv fun u s hus =>
+    le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
 
 /-- `convPowEReal` is monotone in `g` (pointwise, numeric). -/
 theorem convPowEReal_mono (g h : ℝ≥0 → EReal)

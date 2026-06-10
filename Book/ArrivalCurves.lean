@@ -42,17 +42,10 @@ theorem isMaximalArrivalCurve_iff_increment {T : Type*} [Add T]
   constructor
   · -- `A (t + d) ≤ ⨅ {A u + α s | u + s = t + d} ≤ A t + α d`
     intro h t d
-    refine le_trans (h (t + d)) ?_
-    show (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t + d}, A p.1.1 + α p.1.2)
-        ≤ A t + α d
-    exact ciInf_le (OrderBot.bddBelow _)
-      (⟨(t, d), rfl⟩ : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t + d})
-  · -- each split `u + s = t` gives `A t = A (u + s) ≤ A u + α s`, so `A t ≤ ⨅`
+    exact le_trans (h (t + d)) (minConv_le_add A α rfl)
+  · -- each split `u + s = t` gives `A t = A (u + s) ≤ A u + α s`
     intro h t
-    show A t ≤ ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}, A p.1.1 + α p.1.2
-    refine le_ciInf ?_
-    rintro ⟨⟨u, s⟩, rfl⟩
-    exact h u s
+    exact le_minConv fun u s hus => hus ▸ h u s
 
 /-- A sufficient increment condition for a minimal arrival curve: if
 `A t + α d ≤ A (t + d)` for all `t, d`, then `A ≥ A ⊼ α`. This direction holds

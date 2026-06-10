@@ -40,6 +40,45 @@ noncomputable def maxDeconv
     (g h : D → T) : D → T :=
   fun t => ⨅ s : D, g (t + s) - h s
 
+/-- Splittings `{p // p.1 + p.2 = t}` are nonempty. -/
+instance splitNonempty {D : Type*} [AddZeroClass D]
+    (t : D) :
+    Nonempty {p : D × D // p.1 + p.2 = t} :=
+  ⟨⟨(t, 0), by simp⟩⟩
+
+/-- Elim: every split bounds the (min,+) convolution from above,
+`minConv f g t ≤ f u + g s` whenever `u + s = t`. -/
+theorem minConv_le_add {D T : Type*} [Add D] [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T]
+    (f g : D → T) {u s t : D} (h : u + s = t) :
+    minConv f g t ≤ f u + g s :=
+  ciInf_le_of_le (OrderBot.bddBelow _) ⟨(u, s), h⟩ le_rfl
+
+/-- Intro: a uniform bound over all splits bounds the (min,+) convolution
+from below, `x ≤ minConv f g t`. -/
+theorem le_minConv {D T : Type*} [AddZeroClass D] [Add T]
+    [ConditionallyCompleteLattice T] {f g : D → T} {x : T} {t : D}
+    (h : ∀ u s, u + s = t → x ≤ f u + g s) :
+    x ≤ minConv f g t :=
+  le_ciInf fun p => h p.1.1 p.1.2 p.2
+
+/-- Elim: every split bounds the (max,+) convolution from below,
+`f u + g s ≤ maxConv f g t` whenever `u + s = t`. -/
+theorem add_le_maxConv {D T : Type*} [Add D] [Add T]
+    [ConditionallyCompleteLattice T] [OrderTop T]
+    (f g : D → T) {u s t : D} (h : u + s = t) :
+    f u + g s ≤ maxConv f g t :=
+  le_ciSup_of_le (OrderTop.bddAbove _) ⟨(u, s), h⟩ le_rfl
+
+/-- Intro: a uniform bound over all splits bounds the (max,+) convolution
+from above, `maxConv f g t ≤ x`. -/
+theorem maxConv_le {D T : Type*} [AddZeroClass D] [Add T]
+    [ConditionallyCompleteLattice T] {f g : D → T} {x : T} {t : D}
+    (h : ∀ u s, u + s = t → f u + g s ≤ x) :
+    maxConv f g t ≤ x :=
+  ciSup_le fun p => h p.1.1 p.1.2 p.2
+
+
 /-- (min,+) functions valued in `R∪{±∞}`. -/
 abbrev FminBar := ℝ≥0 → MinPlusExt
 
@@ -365,12 +404,6 @@ def embMin (g : ℝ≥0 → ℝ≥0) : Fmin :=
 /-- Embed `g : ℝ≥0 → ℝ≥0` into `Fmax`. -/
 def embMax (g : ℝ≥0 → ℝ≥0) : Fmax :=
   fun t => ⟨((g t : ℝ≥0∞) : WithBot ℝ≥0∞)⟩
-
-/-- Splittings `{p // p.1 + p.2 = t}` are nonempty. -/
-instance splitNonempty {D : Type*} [AddZeroClass D]
-    (t : D) :
-    Nonempty {p : D × D // p.1 + p.2 = t} :=
-  ⟨⟨(t, 0), by simp⟩⟩
 
 /-- `minConv` of embedded functions, valued back in `ℝ≥0`. -/
 noncomputable def minConvProj (g h : ℝ≥0 → ℝ≥0) :
