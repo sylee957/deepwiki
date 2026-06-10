@@ -209,6 +209,15 @@ not just defaults):
 - **Bound convolutions through the intro/elim API**, not by hand-opening the
   split subtype `{p : D × D // p.1 + p.2 = t}`: `minConv_le_add` / `le_minConv`
   and the duals `add_le_maxConv` / `maxConv_le` (`Book/FunctionDioids.lean`).
+  Same for deconvolutions (`sub_le_minDeconv` / `minDeconv_le`,
+  `maxDeconv_le_sub` / `le_maxDeconv`) and deviations (`vDevAt_le_vDev` /
+  `vDev_le`, `hDevAt_le_hDev` / `hDev_le`, witness-elim `hDevAt_le`,
+  `Book/Deviations.lean`); `minConv_apply_zero` computes the origin value.
+
+- **The first-crossing spelling is `crossingSet`/`firstCrossing`**
+  (`Book/ArrivalCurves.lean`, generic over the value order): state ℓmax-style
+  hypotheses as `ℓmax ∈ crossingSet α β` and never re-spell
+  `{x | 0 < x ∧ α x ≤ β x}` or its `⨅`/`sInf` inline.
 
 - **Definitions split from proofs; share one definition via base + abbrev.**
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
