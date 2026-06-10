@@ -64,6 +64,13 @@ theorem vDevAt_le_vDev {D T : Type*} [CompleteLattice T] [Sub T]
     (f g : D → T) (t : D) : vDevAt f g t ≤ vDev f g :=
   le_iSup (vDevAt f g) t
 
+/-- Elim: each pointwise deviation bounds the horizontal deviation from
+below, `hDevAt f g t ≤ hDev f g`. -/
+theorem hDevAt_le_hDev {D V R : Type*}
+    [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
+    (f g : D → V) (t : D) : (hDevAt f g t : R) ≤ hDev f g :=
+  le_iSup (fun t => (hDevAt f g t : R)) t
+
 /-- `hDevAt f g t = ⊤` when no admissible shift exists. -/
 theorem hDevAt_eq_top {D V : Type*} (R : Type*)
     [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]

@@ -19,6 +19,42 @@ def IsSuperadditive {D T : Type*} [Add D]
     [_root_.Add T] [LE T] (g : D → T) : Prop :=
   ∀ u s : D, g u + g s ≤ g (u + s)
 
+/-- Sub-additivity iterated through a multiple:
+`g (q • s + r) ≤ q • g s + g r`. -/
+theorem IsSubadditive.apply_nsmul_add_le {D T : Type*}
+    [_root_.AddCommMonoid D] [_root_.AddCommMonoid T] [PartialOrder T]
+    [IsOrderedAddMonoid T] {g : D → T}
+    (hsub : IsSubadditive g) (q : ℕ) (s r : D) :
+    g (q • s + r) ≤ q • g s + g r := by
+  induction q with
+  | zero => simp
+  | succ k ih =>
+      calc g ((k + 1) • s + r)
+          = g (s + (k • s + r)) := by
+            rw [succ_nsmul, add_comm (k • s) s, add_assoc]
+        _ ≤ g s + g (k • s + r) := hsub s _
+        _ ≤ g s + (k • g s + g r) := add_le_add le_rfl ih
+        _ = (k + 1) • g s + g r := by
+            rw [succ_nsmul, add_comm (k • g s) (g s), add_assoc]
+
+/-- Super-additivity iterated through a multiple:
+`q • g s + g r ≤ g (q • s + r)`. -/
+theorem IsSuperadditive.le_apply_nsmul_add {D T : Type*}
+    [_root_.AddCommMonoid D] [_root_.AddCommMonoid T] [PartialOrder T]
+    [IsOrderedAddMonoid T] {g : D → T}
+    (hsup : IsSuperadditive g) (q : ℕ) (s r : D) :
+    q • g s + g r ≤ g (q • s + r) := by
+  induction q with
+  | zero => simp
+  | succ k ih =>
+      calc (k + 1) • g s + g r
+          = g s + (k • g s + g r) := by
+            rw [succ_nsmul, add_comm (k • g s) (g s), add_assoc]
+        _ ≤ g s + g (k • s + r) := add_le_add le_rfl ih
+        _ ≤ g (s + (k • s + r)) := hsup s _
+        _ = g ((k + 1) • s + r) := by
+            rw [succ_nsmul, add_comm (k • s) s, add_assoc]
+
 /-- Subadditive `g` with `g 0 = 0` is a `minConv` fixed point. -/
 theorem minConv_self_of_subadditive {D T : Type*}
     [_root_.AddCommMonoid D] [CompleteLattice T]
