@@ -223,6 +223,14 @@ not just defaults):
 - `references/` is a **gitignored** local dump of the source books/papers being
   formalized. Claude reads PDFs there directly with the Read tool (use the
   `pages` parameter; ≤20 pages per request).
+- **Read statements by OCR, never by text extraction.** Transcribe
+  theorem/definition statements only from *rendered pages*: the Read tool's PDF
+  rendering, or — if it errors about `pdftoppm` (stale extension PATH; poppler
+  is installed) — render manually with
+  `pdftoppm -png -r 110 -f <p> -l <p> <pdf> /tmp/page` and Read the PNGs.
+  Raw text extraction (`pdftotext`, content-stream scraping) garbles math
+  glyphs and statement *shape* (it has caused a misread quantifier structure);
+  use `pdftotext -layout` only to grep for which page holds a passage.
 - **The autoformalization workflow:** when the user posts a capture/screenshot of
   a book passage (or points at pages of a PDF in `references/`), formalize that
   passage in the appropriate `Book/*.lean` chapter. Before writing anything new,
