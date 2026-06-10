@@ -171,8 +171,8 @@ theorem IsShaper.isMaximalServiceCurve {S : Curve → Curve → Prop}
 
 /-- The largest-relation form: the largest shaper is contained in the largest
 server offering `sigma` as a maximal service curve. -/
-theorem shaperRel_le_maximalServiceRelation (sigma : ℝ≥0 → EReal) :
-    shaperRel sigma ≤ maximalServiceRelation sigma := by
+theorem shaperRel_le_maximalServiceRel (sigma : ℝ≥0 → EReal) :
+    shaperRel sigma ≤ maximalServiceRel sigma := by
   intro A D hp
   exact (isShaper_shaperRel sigma).isMaximalServiceCurve
     (fun _ _ hq => hq.1) A D hp

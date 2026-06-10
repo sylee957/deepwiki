@@ -1,6 +1,6 @@
 import Book.RealCurves
 import Book.ServiceCurveStrict
-import Book.ServiceCurveMinPlus
+import Book.ServiceCurveMinimal
 
 /-! # Packet service times: strict versus min-plus service
 For the burst arrival `b·1_{>T}` (`n` packets of size `s`, `b = n·s`, all
@@ -128,8 +128,8 @@ noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
 
 /-- **Min-plus total bound.** Under a min-plus `λ_C`, the whole burst `b` has
 departed by `T + b/C`: the total service time is at most `b/C`. -/
-theorem stepCurve_minPlus_total {S : Curve → Curve → Prop} {C T b : ℝ≥0}
-    (hC : C ≠ 0) (hβ : IsMinPlusServiceCurve (rateEReal C) S)
+theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : ℝ≥0}
+    (hC : C ≠ 0) (hβ : IsMinimalServiceCurve (rateEReal C) S)
     {D : Curve} (hp : S (stepCurve T b) D) :
     b ≤ D (T + b / C) := by
   have h := hβ _ _ hp (T + b / C)
@@ -271,8 +271,8 @@ theorem isServer_rushServer {T b c C : ℝ≥0} (hcb : c ≤ b) :
     · exact ⟨A, Or.inr ⟨hA, rfl⟩⟩
 
 /-- `rushServer` offers `λ_C` as a min-plus service curve. -/
-theorem isMinPlusServiceCurve_rushServer (T b c C : ℝ≥0) :
-    IsMinPlusServiceCurve (rateEReal C) (rushServer T b c C) := by
+theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
+    IsMinimalServiceCurve (rateEReal C) (rushServer T b c C) := by
   rintro A D (⟨rfl, rfl⟩ | ⟨_, rfl⟩)
   · intro v
     by_cases hTv : T < v
@@ -374,13 +374,13 @@ theorem not_isStrictMinimalServiceCurve_rushServer {T b c C : ℝ≥0}
 /-- **Min-plus service does not imply strict service.** For any rate `C ≠ 0`
 and burst levels `0 < c < b`, the rush server offers the min-plus service
 curve `λ_C` but not the strict one. -/
-theorem exists_minPlusService_not_strictService {C : ℝ≥0} (hC : C ≠ 0)
+theorem exists_minimalService_not_strictService {C : ℝ≥0} (hC : C ≠ 0)
     {b c : ℝ≥0} (hc : 0 < c) (hcb : c < b) :
     ∃ S : Curve → Curve → Prop,
-      IsServer S ∧ IsMinPlusServiceCurve (rateEReal C) S ∧
+      IsServer S ∧ IsMinimalServiceCurve (rateEReal C) S ∧
         ¬ IsStrictMinimalServiceCurve (rateV C) S :=
   ⟨rushServer 0 b c C, isServer_rushServer hcb.le,
-    isMinPlusServiceCurve_rushServer 0 b c C,
+    isMinimalServiceCurve_rushServer 0 b c C,
     not_isStrictMinimalServiceCurve_rushServer hc hcb hC⟩
 
 /-! ## The book's packet phrasing
@@ -406,15 +406,15 @@ theorem stepCurve_strict_packet_count {S : Curve → Curve → Prop}
   rw [hcast]
   exact stepCurve_strict_packet hC hβ hp hu hxb hxD
 
-/-- Packet count form of `stepCurve_minPlus_total`: under min-plus `λ_C`, all
+/-- Packet count form of `stepCurve_minimalService_total`: under min-plus `λ_C`, all
 `n` packets of size `s` have departed by `T + n·s/C` — the total service time
 is at most `n·s/C`. -/
-theorem stepCurve_minPlus_total_count {S : Curve → Curve → Prop}
+theorem stepCurve_minimalService_total_count {S : Curve → Curve → Prop}
     {C T s : ℝ≥0} {n : ℕ} (hC : C ≠ 0)
-    (hβ : IsMinPlusServiceCurve (rateEReal C) S)
+    (hβ : IsMinimalServiceCurve (rateEReal C) S)
     {D : Curve} (hp : S (stepCurve T ((n : ℝ≥0) * s)) D) :
     (n : ℝ≥0) * s ≤ D (T + (n : ℝ≥0) * s / C) :=
-  stepCurve_minPlus_total hC hβ hp
+  stepCurve_minimalService_total hC hβ hp
 
 /-- Packet count form of `le_rushCurve_of_pos`: the rush server for `n`
 packets of size `s` serves the first `n − 1` packets within any `ε > 0`. -/
@@ -439,12 +439,12 @@ theorem rushCurve_lt_of_lt_count {T s C v : ℝ≥0} {n : ℕ} (hn : 0 < n)
 /-- Packet count form of the separation: for `n ≥ 2` packets of size `s > 0`,
 some server (the rush server with `c = (n−1)·s`, `b = n·s`) offers `λ_C`
 min-plus but not strictly. -/
-theorem exists_minPlusService_not_strictService_count {C s : ℝ≥0} {n : ℕ}
+theorem exists_minimalService_not_strictService_count {C s : ℝ≥0} {n : ℕ}
     (hn : 2 ≤ n) (hs : 0 < s) (hC : C ≠ 0) :
     ∃ S : Curve → Curve → Prop,
-      IsServer S ∧ IsMinPlusServiceCurve (rateEReal C) S ∧
+      IsServer S ∧ IsMinimalServiceCurve (rateEReal C) S ∧
         ¬ IsStrictMinimalServiceCurve (rateV C) S :=
-  exists_minPlusService_not_strictService hC
+  exists_minimalService_not_strictService hC
     (c := ((n - 1 : ℕ) : ℝ≥0) * s) (b := ((n : ℕ) : ℝ≥0) * s)
     (mul_pos
       (by exact_mod_cast Nat.sub_pos_of_lt (lt_of_lt_of_le one_lt_two hn)) hs)

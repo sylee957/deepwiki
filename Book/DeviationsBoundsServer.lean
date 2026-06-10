@@ -1,5 +1,5 @@
 import Book.DeviationsBounds
-import Book.ServiceCurveMinPlus
+import Book.ServiceCurveMinimal
 
 /-! # Delay and backlog bounds for servers
 Theorem-level form of the deviation bounds: a served pair of a server
@@ -59,9 +59,9 @@ theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
 
 /-- A pair served with nonnegative min-plus service `beta` satisfies the
 `ℝ≥0∞` convolution inequality consumed by the deviation bounds. -/
-theorem minConv_toENN_le_of_isMinPlusServiceCurve
+theorem minConv_toENN_le_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal}
-    (hβ : IsMinPlusServiceCurve beta S) (hnn : IsNonneg beta)
+    (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D) (t : ℝ≥0) :
     minConv (toE ⇑A) (toENN beta) t ≤ (D t : ℝ≥0∞) := by
   rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t]
@@ -73,36 +73,36 @@ theorem minConv_toENN_le_of_isMinPlusServiceCurve
 /-- **Delay bound for servers.** A pair served with nonnegative nondecreasing
 min-plus service `beta`, the arrival having maximal arrival curve `α`, has
 delay at most the horizontal deviation `hDev α (toENN beta)`. -/
-theorem delay_le_hDev_of_isMinPlusServiceCurve
+theorem delay_le_hDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
-    {A D : Curve} (hβ : IsMinPlusServiceCurve beta S) (hp : S A D)
+    {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
     (harr : IsMaximalArrivalCurve (toE ⇑A) α) :
     delay ⇑A ⇑D ≤ (hDev α (toENN beta) : ℝ≥0∞) :=
   delay_le_hDev A.mono
     (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
-    harr (minConv_toENN_le_of_isMinPlusServiceCurve hβ hnn hp)
+    harr (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)
 
 /-- **Backlog bound for servers** (pointwise): the backlog of a served pair
 is bounded by the vertical deviation `vDev α (toENN beta)`. -/
-theorem coe_backlogAt_le_vDev_of_isMinPlusServiceCurve
+theorem coe_backlogAt_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
-    {A D : Curve} (hβ : IsMinPlusServiceCurve beta S) (hp : S A D)
+    {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
     (harr : IsMaximalArrivalCurve (toE ⇑A) α) (t : ℝ≥0) :
     (backlogAt ⇑A ⇑D t : ℝ≥0∞) ≤ vDev α (toENN beta) :=
   coe_backlogAt_le_vDev harr
-    (minConv_toENN_le_of_isMinPlusServiceCurve hβ hnn hp) t
+    (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp) t
 
 /-- **Backlog bound for servers**: `b(A, D) ≤ vDev α (toENN beta)`. -/
-theorem coe_backlog_le_vDev_of_isMinPlusServiceCurve
+theorem coe_backlog_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
-    {A D : Curve} (hβ : IsMinPlusServiceCurve beta S) (hp : S A D)
+    {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
     (harr : IsMaximalArrivalCurve (toE ⇑A) α) :
     (backlog ⇑A ⇑D : ℝ≥0∞) ≤ vDev α (toENN beta) :=
   coe_backlog_le_vDev harr
-    (minConv_toENN_le_of_isMinPlusServiceCurve hβ hnn hp)
+    (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)
 
 end Deviation
 

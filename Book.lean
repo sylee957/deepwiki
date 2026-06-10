@@ -40,7 +40,7 @@ import Book.MaximalArrivalCurves
 import Book.MinimalArrivalCurves
 import Book.CombinedArrivalCurves
 import Book.DeviationsBounds
-import Book.ServiceCurveMinPlus
+import Book.ServiceCurveMinimal
 import Book.DeviationsBoundsServer
 import Book.ServiceCurveBacklog
 import Book.ServiceCurveStrict

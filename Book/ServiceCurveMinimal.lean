@@ -4,7 +4,7 @@ import Book.ECurveDioid
 
 /-! # Min-plus service curves
 Min-plus service curves `β : ℝ≥0 → EReal`: the convolution bound `D ≥ A ∗ β` on a
-server's pairs, and the largest such relation `minPlusRelation β` for a given `β`.
+server's pairs, and the largest such relation `minimalServiceRel β` for a given `β`.
 `β` may take negative (and `±∞`) values, so it is `EReal`-valued. -/
 
 namespace DeepWiki
@@ -68,7 +68,7 @@ theorem addDefined_curveE (A : Curve) (u : ℝ≥0) (x : EReal) :
 /-- `S` offers `EReal`-valued min-plus service curve `beta`: every served pair
 satisfies `A ∗ beta ≤ D` (i.e. `D ≥ A ∗ beta`), the curve pair lifted into
 `EReal` via `curveE`. -/
-def IsMinPlusServiceCurve (beta : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
+def IsMinimalServiceCurve (beta : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
   ∀ A D : Curve, S A D → minConv (curveE A) beta ≤ curveE D
 
 /-- When `beta 0 ≤ 0`, each input is its own output: `A` serves itself, since the
@@ -83,46 +83,46 @@ theorem minConv_self_le {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) (A : Curv
 
 /-- The min-plus service relation of `beta`: the causal pairs meeting
 `A ∗ beta ≤ D`, i.e. `A ≥ D ≥ A ∗ beta`. Depends on `beta` alone. -/
-def minPlusRelation (beta : ℝ≥0 → EReal) : Curve → Curve → Prop :=
+def minimalServiceRel (beta : ℝ≥0 → EReal) : Curve → Curve → Prop :=
   fun A D => curveE D ≤ curveE A ∧ minConv (curveE A) beta ≤ curveE D
 
-/-- `minPlusRelation beta A D` unfolds to `A ≥ D` and `A ∗ beta ≤ D`. -/
-theorem mem_minPlusRelation_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
-    minPlusRelation beta A D ↔
+/-- `minimalServiceRel beta A D` unfolds to `A ≥ D` and `A ∗ beta ≤ D`. -/
+theorem mem_minimalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
+    minimalServiceRel beta A D ↔
       D ≤ A ∧ minConv (curveE A) beta ≤ curveE D := by
-  rw [show (minPlusRelation beta A D) ↔
+  rw [show (minimalServiceRel beta A D) ↔
         (curveE D ≤ curveE A ∧ minConv (curveE A) beta ≤ curveE D) from Iff.rfl,
     curveE_le_iff]
 
-/-- When `beta 0 ≤ 0`, `minPlusRelation beta` is a server: causality is the first
+/-- When `beta 0 ≤ 0`, `minimalServiceRel beta` is a server: causality is the first
 conjunct, and left-totality holds since each input serves itself. -/
-theorem isServer_minPlusRelation {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) :
-    IsServer (minPlusRelation beta) :=
+theorem isServer_minimalServiceRel {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) :
+    IsServer (minimalServiceRel beta) :=
   ⟨fun _ _ hp => curveE_le_iff.mp hp.1,
     fun A => ⟨A, le_refl _, minConv_self_le h0 A⟩⟩
 
 /-- The largest server offering `beta` (for `beta 0 ≤ 0`) is the relation
-`minPlusRelation beta`; any server `S` offering `beta` is contained in it. -/
-theorem subset_minPlusRelation {beta : ℝ≥0 → EReal} {S : Curve → Curve → Prop}
-    (hS : IsMinPlusServiceCurve beta S) (hSrv : IsServer S) :
-    ∀ A D, S A D → minPlusRelation beta A D := by
+`minimalServiceRel beta`; any server `S` offering `beta` is contained in it. -/
+theorem subset_minimalServiceRel {beta : ℝ≥0 → EReal} {S : Curve → Curve → Prop}
+    (hS : IsMinimalServiceCurve beta S) (hSrv : IsServer S) :
+    ∀ A D, S A D → minimalServiceRel beta A D := by
   intro A D hp
   exact ⟨curveE_mono (hSrv.1 _ _ hp), hS A D hp⟩
 
-/-- A server offers `beta` iff its pairs all lie in `minPlusRelation beta`. -/
-theorem isMinPlusServiceCurve_iff_subset {beta : ℝ≥0 → EReal}
+/-- A server offers `beta` iff its pairs all lie in `minimalServiceRel beta`. -/
+theorem isMinimalServiceCurve_iff_subset {beta : ℝ≥0 → EReal}
     {S : Curve → Curve → Prop} (hSrv : IsServer S) :
-    IsMinPlusServiceCurve beta S ↔
-      ∀ A D, S A D → minPlusRelation beta A D := by
-  refine ⟨fun hS => subset_minPlusRelation hS hSrv, fun h A D hp => ?_⟩
-  exact (mem_minPlusRelation_iff.mp (h A D hp)).2
+    IsMinimalServiceCurve beta S ↔
+      ∀ A D, S A D → minimalServiceRel beta A D := by
+  refine ⟨fun hS => subset_minimalServiceRel hS hSrv, fun h A D hp => ?_⟩
+  exact (mem_minimalServiceRel_iff.mp (h A D hp)).2
 
 /-- Min-plus service curves are antitone: a smaller `beta` is still offered, since
 `minConv` is monotone in its right argument. -/
-theorem IsMinPlusServiceCurve.mono
+theorem IsMinimalServiceCurve.mono
     {S : Curve → Curve → Prop} {beta beta' : ℝ≥0 → EReal}
-    (h : beta ≤ beta') (hS : IsMinPlusServiceCurve beta' S) :
-    IsMinPlusServiceCurve beta S :=
+    (h : beta ≤ beta') (hS : IsMinimalServiceCurve beta' S) :
+    IsMinimalServiceCurve beta S :=
   fun A D hp t =>
     le_trans (minConv_le_minConv (fun _ => le_rfl) h t) (hS A D hp t)
 
@@ -151,10 +151,10 @@ theorem monotone_maxDeconv_betaZero (beta : ℝ≥0 → EReal) :
 
 /-- `beta` can be replaced by the non-decreasing `beta ⊘̄ 0`: a server offering
 `beta` also offers `beta ⊘̄ 0`, since `beta ⊘̄ 0 ≤ beta`. -/
-theorem isMinPlusServiceCurve_maxDeconv_betaZero {S : Curve → Curve → Prop}
+theorem isMinimalServiceCurve_maxDeconv_betaZero {S : Curve → Curve → Prop}
     {beta : ℝ≥0 → EReal}
-    (hS : IsMinPlusServiceCurve beta S) :
-    IsMinPlusServiceCurve (maxDeconv beta betaZero) S :=
+    (hS : IsMinimalServiceCurve beta S) :
+    IsMinimalServiceCurve (maxDeconv beta betaZero) S :=
   hS.mono (maxDeconv_betaZero_le beta)
 
 /-- `A ∗ beta₀ = beta₀` for any curve: the `(0, t)` split gives `curveE A 0 = 0`,
@@ -186,16 +186,16 @@ theorem betaZero_chain {S : Curve → Curve → Prop} (hSrv : IsServer S)
   ⟨hSrv.1 _ _ h, minConv_betaZero_le A D, minConv_betaZero A⟩
 
 /-- Every server offers the zero service curve: `A ≥ D ≥ A ∗ beta₀ = beta₀`. -/
-theorem isMinPlusServiceCurve_betaZero (S : Curve → Curve → Prop) :
-    IsMinPlusServiceCurve betaZero S :=
+theorem isMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
+    IsMinimalServiceCurve betaZero S :=
   fun A D _ => minConv_betaZero_le A D
 
-/-- Every server's pairs lie in `minPlusRelation betaZero`: since each server
-offers the zero service curve, `S ≤ minPlusRelation betaZero`. -/
-theorem subset_minPlusRelation_betaZero {S : Curve → Curve → Prop}
+/-- Every server's pairs lie in `minimalServiceRel betaZero`: since each server
+offers the zero service curve, `S ≤ minimalServiceRel betaZero`. -/
+theorem subset_minimalServiceRel_betaZero {S : Curve → Curve → Prop}
     (hSrv : IsServer S) :
-    ∀ A D, S A D → minPlusRelation betaZero A D :=
-  subset_minPlusRelation (isMinPlusServiceCurve_betaZero S) hSrv
+    ∀ A D, S A D → minimalServiceRel betaZero A D :=
+  subset_minimalServiceRel (isMinimalServiceCurve_betaZero S) hSrv
 
 /-- If `beta 0 > 0`, no curve pair can satisfy `A ≥ D ≥ A ∗ beta`. The `(0,0)`
 split forces `D 0 ≥ A 0 + beta 0 > A 0 ≥ D 0`, a contradiction. -/
@@ -221,9 +221,9 @@ theorem not_serviceCurve_of_pos {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < b
 
 /-- If `beta 0 > 0` the min-plus service relation is empty: no curve pair meets
 `A ≥ D ≥ A ∗ beta`. With `beta 0 ≤ 0` assumable, this is why it is no loss. -/
-theorem minPlusRelation_eq_empty_of_pos {beta : ℝ≥0 → EReal}
+theorem minimalServiceRel_eq_empty_of_pos {beta : ℝ≥0 → EReal}
     (h0 : (0 : EReal) < beta 0) (A D : Curve) :
-    ¬ minPlusRelation beta A D := by
+    ¬ minimalServiceRel beta A D := by
   rintro ⟨hcaus, hconv⟩
   exact not_serviceCurve_of_pos h0 A D hcaus hconv
 

@@ -1,10 +1,10 @@
 import Book.RealCurves
-import Book.ServiceCurveMinPlus
+import Book.ServiceCurveMinimal
 
 /-! # Maximal service curves
 A maximal service curve `β` upper-bounds a server's output by the convolution:
 `D ≤ A ∗ β` on every served pair — the order dual of the min-plus service
-curve. Largest relation `maximalServiceRelation β`; universal curve `δ₀`. -/
+curve. Largest relation `maximalServiceRel β`; universal curve `δ₀`. -/
 
 namespace DeepWiki
 
@@ -18,30 +18,30 @@ def IsMaximalServiceCurve (beta : ℝ≥0 → EReal)
 
 /-- The maximal-service relation of `beta`: all curve pairs with
 `D ≤ A ∗ beta`. For `beta 0 ≤ 0` no causality conjunct is needed — see
-`isCausal_maximalServiceRelation`. -/
-def maximalServiceRelation (beta : ℝ≥0 → EReal) :
+`isCausal_maximalServiceRel`. -/
+def maximalServiceRel (beta : ℝ≥0 → EReal) :
     Curve → Curve → Prop :=
   fun A D => curveE D ≤ minConv (curveE A) beta
 
 /-- A relation offers maximal service `beta` iff all its pairs lie in
-`maximalServiceRelation beta` — for `beta` in `F₀` (see
-`isServer_maximalServiceRelation`), the largest server offering `beta`. -/
+`maximalServiceRel beta` — for `beta` in `F₀` (see
+`isServer_maximalServiceRel`), the largest server offering `beta`. -/
 theorem isMaximalServiceCurve_iff_subset {beta : ℝ≥0 → EReal}
     {S : Curve → Curve → Prop} :
     IsMaximalServiceCurve beta S ↔
-      ∀ A D, S A D → maximalServiceRelation beta A D :=
+      ∀ A D, S A D → maximalServiceRel beta A D :=
   Iff.rfl
 
-/-- `maximalServiceRelation beta` itself offers maximal service `beta`. -/
-theorem isMaximalServiceCurve_maximalServiceRelation (beta : ℝ≥0 → EReal) :
-    IsMaximalServiceCurve beta (maximalServiceRelation beta) :=
+/-- `maximalServiceRel beta` itself offers maximal service `beta`. -/
+theorem isMaximalServiceCurve_maximalServiceRel (beta : ℝ≥0 → EReal) :
+    IsMaximalServiceCurve beta (maximalServiceRel beta) :=
   fun _ _ h => h
 
 /-- Causality is automatic: when `beta 0 ≤ 0`, `A ∗ beta ≤ A`
 (`minConv_self_le`), so `D ≤ A ∗ beta` already forces `D ≤ A`. -/
-theorem isCausal_maximalServiceRelation {beta : ℝ≥0 → EReal}
+theorem isCausal_maximalServiceRel {beta : ℝ≥0 → EReal}
     (h0 : beta 0 ≤ 0) :
-    IsCausal (maximalServiceRelation beta) := by
+    IsCausal (maximalServiceRel beta) := by
   intro A D hp
   exact curveE_le_iff.mp (le_trans hp (minConv_self_le h0 A))
 
@@ -50,23 +50,23 @@ theorem curveE_zeroCurve (t : ℝ≥0) : curveE zeroCurve t = 0 := by
   simp [curveE]
 
 /-- For nonnegative `beta`, `0 ≤ A ∗ beta` (`minConv_isNonneg`), so `zeroCurve`
-is a valid output for every arrival: `maximalServiceRelation beta` is
+is a valid output for every arrival: `maximalServiceRel beta` is
 left-total. -/
-theorem isLeftTotal_maximalServiceRelation {beta : ℝ≥0 → EReal}
+theorem isLeftTotal_maximalServiceRel {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) :
-    IsLeftTotal (maximalServiceRelation beta) := by
+    IsLeftTotal (maximalServiceRel beta) := by
   intro A
   refine ⟨zeroCurve, fun t => ?_⟩
   rw [curveE_zeroCurve]
   exact minConv_isNonneg (curveE_nonneg A) hnn t
 
 /-- For `beta` in `F₀` — null at the origin and nonnegative —
-`maximalServiceRelation beta` is a server. -/
-theorem isServer_maximalServiceRelation {beta : ℝ≥0 → EReal}
+`maximalServiceRel beta` is a server. -/
+theorem isServer_maximalServiceRel {beta : ℝ≥0 → EReal}
     (h0 : beta 0 ≤ 0) (hnn : IsNonneg beta) :
-    IsServer (maximalServiceRelation beta) :=
-  ⟨isCausal_maximalServiceRelation h0,
-    isLeftTotal_maximalServiceRelation hnn⟩
+    IsServer (maximalServiceRel beta) :=
+  ⟨isCausal_maximalServiceRel h0,
+    isLeftTotal_maximalServiceRel hnn⟩
 
 /-- The `EReal`-valued pure-delay curve on `ℝ≥0`: `0` up to `d`, `⊤` after
 (the `delayNN`/`delayE` sibling for `EReal` values). -/
@@ -106,12 +106,12 @@ theorem IsMaximalServiceCurve.mono {S : Curve → Curve → Prop}
   fun A D hp =>
     le_trans (hS A D hp) (fun t => minConv_le_minConv (fun _ => le_rfl) h t)
 
-/-- Equivalently, `maximalServiceRelation` is monotone in the curve:
+/-- Equivalently, `maximalServiceRel` is monotone in the curve:
 `beta ≤ beta'` gives the containment of relations. -/
-theorem maximalServiceRelation_mono {beta beta' : ℝ≥0 → EReal}
+theorem maximalServiceRel_mono {beta beta' : ℝ≥0 → EReal}
     (h : beta ≤ beta') :
-    maximalServiceRelation beta ≤ maximalServiceRelation beta' :=
-  (isMaximalServiceCurve_maximalServiceRelation beta).mono h
+    maximalServiceRel beta ≤ maximalServiceRel beta' :=
+  (isMaximalServiceCurve_maximalServiceRel beta).mono h
 
 example (beta : ℝ≥0 → EReal) : ndClosure beta = maxConv beta 0 :=
   ndClosure_eq_maxConv beta

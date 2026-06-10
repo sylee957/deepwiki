@@ -46,18 +46,17 @@ theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
     subst this
     rw [tsub_self, h0, add_zero]
 
-/-- Every curve pair of `S` lies in `strictServiceRel beta` iff `S` offers strict
-service `beta`. -/
-theorem subset_strictServiceRel_iff
-    {S : Curve → Curve → Prop} (hSrv : IsServer S) {beta : ℝ≥0 → ℝ≥0} :
-    (∀ A D : Curve, S A D →
-        strictServiceRel beta A D) ↔
-      IsStrictMinimalServiceCurve beta S := by
+/-- A causal `S` offers strict service `beta` iff its pairs all lie in
+`strictServiceRel beta`. -/
+theorem isStrictMinimalServiceCurve_iff_subset
+    {S : Curve → Curve → Prop} (hc : IsCausal S) {beta : ℝ≥0 → ℝ≥0} :
+    IsStrictMinimalServiceCurve beta S ↔
+      ∀ A D : Curve, S A D → strictServiceRel beta A D := by
   constructor
   · intro h A D hp
-    exact (h A D hp).2
+    exact ⟨hc _ _ hp, h A D hp⟩
   · intro h A D hp
-    exact ⟨hSrv.1 _ _ hp, h A D hp⟩
+    exact (h A D hp).2
 
 /-- Strict-service relation is antitone in `beta`. -/
 theorem strictServiceRel_mono
@@ -81,7 +80,7 @@ theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
 /-- A strict service curve is null at the origin: `beta 0 = 0`. The strict bound
 at `s = t = 0` (the empty period `(0, 0]` is vacuously backlogged) gives
 `D 0 + beta 0 ≤ D 0`, hence `beta 0 ≤ 0`. -/
-theorem strictServiceCurve_zero {beta : ℝ≥0 → ℝ≥0} {S : Curve → Curve → Prop}
+theorem IsStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0} {S : Curve → Curve → Prop}
     (hβ : IsStrictMinimalServiceCurve beta S) {A D : Curve} (hp : S A D) :
     beta 0 = 0 := by
   have hbl : IsBacklogged A D (Set.Ioc 0 0) := by intro u hu; simp at hu
@@ -104,7 +103,7 @@ theorem isStrictMinimalServiceCurve_sup
   · rw [max_eq_left hle]; exact h A D hp s t hst hbl
 
 /-- Output bound: `A(Start) + beta(t - Start) ≤ D t` for strict service. -/
-theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
+theorem strictServiceRel_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve)
     (hp : strictServiceRel beta A D)
     (t : ℝ≥0) :
@@ -116,7 +115,7 @@ theorem strictService_output_bound (beta : ℝ≥0 → ℝ≥0)
   exact hbound
 
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
-theorem strict_concat (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
+theorem IsStrictMinimalServiceCurve.concat (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hβ : IsStrictMinimalServiceCurve beta S)
     (A D : Curve)
     (hp : S A D)
@@ -188,7 +187,7 @@ theorem isStrictMinimalServiceCurve_maxConvProj
       show s + (a + b) = (s + a) + b by ring,
       add_tsub_cancel_left]
   have hcc :=
-    strict_concat beta hβ A D hp le_self_add hsa hbl
+    IsStrictMinimalServiceCurve.concat beta hβ A D hp le_self_add hsa hbl
   rw [hrs, htr] at hcc
   exact hcc
 
