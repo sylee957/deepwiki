@@ -163,24 +163,15 @@ theorem isMaximalArrivalCurve_minConv_of_subadditive
     IsMaximalArrivalCurve (minConv f sigma) sigma := by
   refine (isMaximalArrivalCurve_iff_increment _ _).mpr (fun u s => ?_)
   show minConv f sigma (u + s) ≤ minConv f sigma u + sigma s
-  have hbot : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u},
-      f p.1.1 + sigma p.1.2) ≠ ⊥ :=
-    ne_bot_of_nonneg (le_iInf (fun p =>
-      add_nonneg (hf p.1.1) (hnn p.1.2)))
-  have hexch :
-      (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = u},
-          sigma s + (f p.1.1 + sigma p.1.2))
-        ≤ sigma s + minConv f sigma u :=
-    iInf_add_le_add_iInf (ne_bot_of_nonneg (hnn s)) hbot
+  have hbot : minConv f sigma u ≠ ⊥ :=
+    ne_bot_of_nonneg (IsNonneg.conv hf hnn u)
   rw [add_comm (minConv f sigma u) (sigma s)]
-  refine le_trans (le_iInf ?_) hexch
+  refine le_trans (le_iInf ?_)
+    (iInf_add_le_add_iInf (ne_bot_of_nonneg (hnn s)) hbot)
   rintro ⟨⟨a, b⟩, (hab : a + b = u)⟩
-  show minConv f sigma (u + s) ≤ sigma s + (f a + sigma b)
-  have hterm : minConv f sigma (u + s) ≤ f a + sigma (b + s) :=
-    minConv_le_add f sigma (by rw [← hab, add_assoc])
-  refine le_trans hterm ?_
-  calc f a + sigma (b + s)
-      ≤ f a + (sigma b + sigma s) := add_le_add le_rfl (hsub b s)
+  calc minConv f sigma (u + s)
+      ≤ f a + sigma (b + s) := minConv_le_add f sigma (by rw [← hab, add_assoc])
+    _ ≤ f a + (sigma b + sigma s) := add_le_add le_rfl (hsub b s)
     _ = sigma s + (f a + sigma b) := by
         rw [← add_assoc, add_comm (f a + sigma b) (sigma s)]
 

@@ -53,14 +53,10 @@ noncomputable def subadditiveClosureEReal (g : ℝ≥0 → EReal) : ℝ≥0 → 
 theorem minConv_convUnitEReal_left (g : ℝ≥0 → EReal) (hg : NeverBot g) :
     minConv convUnitEReal g = g := by
   funext t
-  unfold minConv
   apply le_antisymm
-  · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
-    show convUnitEReal 0 + g t ≤ g t
+  · refine le_trans (minConv_le_add convUnitEReal g (zero_add t)) ?_
     rw [convUnitEReal, if_pos rfl, zero_add]
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    show g t ≤ convUnitEReal u + g s
+  · refine le_minConv fun u s hus => ?_
     rcases eq_or_ne u 0 with hu | hu
     · subst hu
       rw [convUnitEReal, if_pos rfl, zero_add]
@@ -113,12 +109,9 @@ theorem bddBelowReal_convUnitEReal : BddBelowReal convUnitEReal := by
 /-- `minConv` preserves a real lower bound: bound `c, d` gives bound `c + d`. -/
 theorem minConv_bddBelowReal {g h : ℝ≥0 → EReal} {c d : ℝ}
     (hc : ∀ t, (c : EReal) ≤ g t) (hd : ∀ t, (d : EReal) ≤ h t) (t : ℝ≥0) :
-    ((c + d : ℝ) : EReal) ≤ minConv g h t := by
-  unfold minConv
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, _⟩
-  rw [EReal.coe_add]
-  exact add_le_add (hc u) (hd s)
+    ((c + d : ℝ) : EReal) ≤ minConv g h t :=
+  le_minConv fun u s _ =>
+    (EReal.coe_add c d).trans_le (add_le_add (hc u) (hd s))
 
 /-- Every power `gⁿ` is bounded below by a real when `g` is. -/
 theorem convPowEReal_bddBelowReal {g : ℝ≥0 → EReal}
@@ -182,28 +175,18 @@ theorem convPowEReal_term_le {g : ℝ≥0 → EReal} (hg : BddBelowReal g)
               + minConv (convPowEReal g k) g s
             ≥ ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s},
                 convPowEReal g m u
-                  + (convPowEReal g k p.1.1 + g p.1.2) := by
-        refine iInf_add_le_add_iInf
+                  + (convPowEReal g k p.1.1 + g p.1.2) :=
+        iInf_add_le_add_iInf
           ((convPowEReal_bddBelowReal hg m).neverBot u)
-          (f := fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s} =>
-            convPowEReal g k p.1.1 + g p.1.2) ?_
-        have hd : ((ck + c : ℝ) : EReal)
-            ≤ ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s},
-                convPowEReal g k p.1.1 + g p.1.2 := by
-          refine le_iInf (fun p => ?_)
-          rw [EReal.coe_add]; exact add_le_add (hck _) (hc _)
-        exact ne_bot_of_le_ne_bot (EReal.coe_ne_bot _) hd
+          (ne_bot_of_le_ne_bot (EReal.coe_ne_bot _)
+            (minConv_bddBelowReal hck hc s))
       refine le_trans ?_ hstep
       show minConv (convPowEReal g (m + k)) g (u + s)
           ≤ _
-      unfold minConv
       refine le_iInf ?_
       rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
-      simp only
-      refine iInf_le_of_le
-        ⟨(u + a, b), show (u + a) + b = u + s by rw [add_assoc, hab]⟩ ?_
-      show convPowEReal g (m + k) (u + a) + g b
-          ≤ convPowEReal g m u + (convPowEReal g k a + g b)
+      refine le_trans (minConv_le_add (convPowEReal g (m + k)) g
+        (show (u + a) + b = u + s by rw [add_assoc, hab])) ?_
       rw [← add_assoc]
       exact add_le_add (ih a) le_rfl
 

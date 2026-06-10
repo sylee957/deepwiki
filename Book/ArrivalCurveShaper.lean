@@ -31,17 +31,12 @@ theorem increment_convPowEReal_of_isMaximalArrivalCurve
         exact le_top
   | succ k ih =>
       show f (u + s) ≤ f u + minConv (convPowEReal sigma k) sigma s
-      have hbot : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s},
-          convPowEReal sigma k p.1.1 + sigma p.1.2) ≠ ⊥ :=
-        ne_bot_of_nonneg (le_iInf (fun p =>
-          add_nonneg (convPowEReal_isNonneg hnn k p.1.1) (hnn p.1.2)))
+      have hbot : minConv (convPowEReal sigma k) sigma s ≠ ⊥ :=
+        ne_bot_of_nonneg (IsNonneg.conv (convPowEReal_isNonneg hnn k) hnn s)
       refine le_trans (le_iInf ?_) (iInf_add_le_add_iInf (hf u) hbot)
       rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
-      show f (u + s) ≤ f u + (convPowEReal sigma k a + sigma b)
-      have hsplit : u + s = (u + a) + b := by rw [add_assoc, hab]
-      rw [hsplit]
-      calc f ((u + a) + b)
-          ≤ f (u + a) + sigma b :=
+      calc f (u + s) = f ((u + a) + b) := by rw [add_assoc, hab]
+        _ ≤ f (u + a) + sigma b :=
             (isMaximalArrivalCurve_iff_increment f sigma).mp h (u + a) b
         _ ≤ (f u + convPowEReal sigma k a) + sigma b :=
             add_le_add (ih u a) le_rfl

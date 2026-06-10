@@ -192,9 +192,6 @@ theorem minConv_eq_inf_sub_add
           + Function.const ℝ≥0 ((a : EReal) + (b : EReal)) := by
   set f' : ℝ≥0 → EReal := fun x => f x - (a:EReal) with hf'def
   set g' : ℝ≥0 → EReal := fun x => g x - (b:EReal) with hg'def
-  -- concavity of the shifted curves
-  have hcf' : ConcaveE f' := ConcaveE_sub_const f hf a
-  have hcg' : ConcaveE g' := ConcaveE_sub_const g hg b
   -- the shifts vanish at the origin: `f' 0 = a − a = 0`, likewise `g'`
   have hf'0 : f' 0 = 0 := by
     show f 0 - (a:EReal) = 0
@@ -202,18 +199,12 @@ theorem minConv_eq_inf_sub_add
   have hg'0 : g' 0 = 0 := by
     show g 0 - (b:EReal) = 0
     rw [hb, EReal.sub_self (EReal.coe_ne_top b) (EReal.coe_ne_bot b)]
-  -- their meet is concave with value 0 at the origin
-  have hcm : ConcaveE (fun x => f' x ⊓ g' x) := ConcaveE.inf f' g' hcf' hcg'
-  have hm0 : (fun x => f' x ⊓ g' x) 0 = 0 := by
-    show f' 0 ⊓ g' 0 = 0
-    rw [hf'0, hg'0, inf_idem]
-  -- the meet is concave with `0 ≤ value at 0`, hence subadditive
+  -- the meet of the concave shifts is concave and null at 0, hence subadditive
+  have hm0 : f' 0 ⊓ g' 0 = 0 := by rw [hf'0, hg'0, inf_idem]
   have hsub : IsSubadditive (fun x => f' x ⊓ g' x) :=
-    isSubadditive_of_concaveE _ hcm (le_of_eq hm0.symm)
-  -- a subadditive meet (both shifts fixing 0) gives `minConv f' g' = f' ⊓ g'`
-  have hmc : minConv f' g' = fun x => f' x ⊓ g' x := by
-    have := minConvE_eq_inf_of_subadd f' g' hf'0 hg'0 (show IsSubadditive (f' ⊓ g') from hsub)
-    rw [this]; rfl
+    isSubadditive_of_concaveE _
+      (ConcaveE.inf f' g' (ConcaveE_sub_const f hf a) (ConcaveE_sub_const g hg b))
+      (le_of_eq hm0.symm)
   -- per split: `f u + g s = (f' u + g' s) + (a + b)`, finite constants pulled out
   have hsummand : ∀ u s : ℝ≥0, f u + g s = (f' u + g' s) + ((a:EReal) + (b:EReal)) := by
     intro u s
@@ -223,18 +214,22 @@ theorem minConv_eq_inf_sub_add
       show g s = (g s - (b:EReal)) + (b:EReal); rw [EReal.sub_add_cancel]
     rw [e1, e2]; abel
   funext t
-  show (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}, f p.1.1 + g p.1.2)
-      = (f' t ⊓ g' t) + ((a:EReal) + (b:EReal))
-  have hrw : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}, f p.1.1 + g p.1.2)
-      = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-          ((f' p.1.1 + g' p.1.2) + ((a:EReal)+(b:EReal))) :=
-    iInf_congr fun p => hsummand p.1.1 p.1.2
-  rw [hrw,
-    show ((a:EReal) + (b:EReal)) = (((a:ℝ)+(b:ℝ) : ℝ) : EReal) from (EReal.coe_add a b).symm,
-    ← iInf_add_coe (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} => f' p.1.1 + g' p.1.2) ((a:ℝ)+(b:ℝ))]
-  have hval : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}, f' p.1.1 + g' p.1.2)
-      = (fun x => f' x ⊓ g' x) t := congrFun hmc t
-  rw [hval, EReal.coe_add]
+  show minConv f g t = (f' t ⊓ g' t) + ((a:EReal) + (b:EReal))
+  apply le_antisymm
+  · -- bound the convolution by the two extreme splits `t + 0` and `0 + t`
+    rw [← min_add_add_right]
+    refine le_inf ?_ ?_
+    · refine le_trans (minConv_le_add f g (add_zero t)) ?_
+      rw [hsummand t 0, hg'0, add_zero]
+    · refine le_trans (minConv_le_add f g (zero_add t)) ?_
+      rw [hsummand 0 t, hf'0, zero_add]
+  · -- the subadditive meet undercuts every split
+    refine le_minConv fun u s hus => ?_
+    rw [hsummand u s]
+    refine add_le_add ?_ le_rfl
+    calc f' t ⊓ g' t = f' (u + s) ⊓ g' (u + s) := by rw [hus]
+      _ ≤ (f' u ⊓ g' u) + (f' s ⊓ g' s) := hsub u s
+      _ ≤ f' u + g' s := add_le_add inf_le_left inf_le_right
 
 /-- Corollary: if both curves vanish at the origin, `minConv f g = f ⊓ g`. -/
 theorem minConv_eq_inf_of_null

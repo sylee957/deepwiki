@@ -55,12 +55,8 @@ supremum is junk `0` and `A ≥ A ⊼ α` holds vacuously while the increment bo
 may fail. -/
 theorem isMinimalArrivalCurve_of_increment (A α : ℝ≥0 → ℝ≥0)
     (h : ∀ t d : ℝ≥0, A t + α d ≤ A (t + d)) :
-    IsMinimalArrivalCurve A α := by
-  -- each split `u + s = t` gives `A u + α s ≤ A (u + s) = A t`, so `⨆ ≤ A t`
-  intro t
-  refine ciSup_le ?_
-  rintro ⟨⟨u, s⟩, rfl⟩
-  exact h u s
+    IsMinimalArrivalCurve A α :=
+  fun t => maxConv_le fun u s (hus : u + s = t) => hus ▸ h u s
 
 /-- The max-plus convolution family `{A u + α s | u + s = t}` is bounded above
 for every `t` — the condition making the `ℝ≥0` supremum `A ⊼ α` well-defined
@@ -75,12 +71,9 @@ def MaxConvBddAbove (A α : ℝ≥0 → ℝ≥0) : Prop :=
 each term lies below it. -/
 theorem isMinimalArrivalCurve_iff_increment_of_bddAbove
     (A α : ℝ≥0 → ℝ≥0) (hbdd : MaxConvBddAbove A α) :
-    IsMinimalArrivalCurve A α ↔ ∀ t d : ℝ≥0, A t + α d ≤ A (t + d) := by
-  refine ⟨fun h t d => ?_, isMinimalArrivalCurve_of_increment A α⟩
-  -- `A t + α d` is the `(t, d)`-split term, so it is `≤` the supremum `≤ A (t+d)`
-  refine le_trans ?_ (h (t + d))
-  exact le_ciSup_of_le (hbdd (t + d))
-    (⟨(t, d), rfl⟩ : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t + d}) le_rfl
+    IsMinimalArrivalCurve A α ↔ ∀ t d : ℝ≥0, A t + α d ≤ A (t + d) :=
+  ⟨fun h t d => (le_ciSup (hbdd (t + d)) ⟨(t, d), rfl⟩).trans (h (t + d)),
+    isMinimalArrivalCurve_of_increment A α⟩
 
 /-- When `A` and `α` are non-decreasing, the max-plus convolution family at `t`
 is bounded above by `A t + α t` (each split has `u, s ≤ t`). Cumulative `A` and
