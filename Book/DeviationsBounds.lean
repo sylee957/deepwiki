@@ -91,6 +91,13 @@ theorem backlog_eq_vDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
   rw [backlog_eq_iSup, vDev_eq_iSup]
   exact iSup_congr fun t => ENNReal.coe_sub
 
+/-- **The backlog is a deconvolution**: `b(A, D) = (A ⊘ D)(0)` in the
+`ℝ≥0∞` reading — the cumulative-curve instance of
+`vDev f g = (f ⊘ g) 0`. -/
+theorem backlog_eq_deconv_zero (A D : ℝ≥0 → ℝ≥0) :
+    backlog A D = minDeconv (liftENN A) (liftENN D) 0 :=
+  (backlog_eq_vDev_liftENN A D).trans (vDev_eq_deconv_zero _ _)
+
 /-- `delayAt` agrees with the horizontal deviation of the `ℝ≥0∞` readings:
 the admissibility predicates match through the coercion. -/
 theorem delayAt_eq_hDevAt_liftENN (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
