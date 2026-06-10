@@ -13,7 +13,6 @@ import Book.Closures
 import Book.Limits
 import Book.Continuity
 import Book.Concave
-import Book.ConcaveProps
 import Book.RealCurves
 import Book.CurveRegularity
 import Book.RealCurvesAdditivity
@@ -31,6 +30,7 @@ import Book.ConvolutionMinimumRC
 import Book.ConvolutionContinuity
 import Book.ClosureEReal
 import Book.ECurveDioid
+import Book.ConcaveProps
 import Book.ConcaveDioid
 import Book.SubadditiveNotConcave
 import Book.Servers

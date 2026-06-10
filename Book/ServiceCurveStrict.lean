@@ -1,5 +1,4 @@
 import Book.Servers
-import Book.Closures
 import Book.RealConvolution
 import Book.ServiceCurveBacklog
 

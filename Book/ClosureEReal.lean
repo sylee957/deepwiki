@@ -1,6 +1,4 @@
-import Book.ConvolutionMinimum
 import Book.NdClosure
-import Book.ConvolutionMinimumExt
 import Book.Additivity
 import Book.FunctionDioids
 import Mathlib.Data.EReal.Operations

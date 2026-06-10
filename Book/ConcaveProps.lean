@@ -1,6 +1,5 @@
 import Book.Concave
 import Book.Additivity
-import Book.ConvolutionMinimumExt
 import Book.ClosureEReal
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Instances.EReal.Lemmas

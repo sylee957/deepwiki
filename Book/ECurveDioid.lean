@@ -1,7 +1,6 @@
 import Book.ClosureEReal
 import Book.FunctionDioids
 import Book.Dioids
-import Book.SubDioid
 import Mathlib.Data.EReal.Operations
 
 /-! # A (min,+) Dioid of `EReal`-valued curves

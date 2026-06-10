@@ -1,6 +1,4 @@
-import Book.Additivity
 import Book.Continuity
-import Book.Closures
 import Book.RealCurves
 
 /-! Regularity of the concrete real curves (defined in `RealCurves`): pointwise /

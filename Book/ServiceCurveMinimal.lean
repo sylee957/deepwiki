@@ -1,6 +1,7 @@
 import Book.Servers
 import Book.RealConvolution
 import Book.ECurveDioid
+import Book.ConvolutionMinimumExt
 
 /-! # Min-plus service curves
 The `EReal` curve view `curveE`; `IsMinimalServiceCurve β S` — `A ∗ β ≤ D` on
