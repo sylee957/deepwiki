@@ -1,11 +1,11 @@
 import Book.Concave
 import Book.ConcaveProps
-import Book.ECurveDioid
+import Book.CurveDioidEReal
 import Mathlib.Data.EReal.Operations
 
 /-! # The concave sub-`Dioid` of `EReal` curves
 The concave bounded-below curves form a sub-`Dioid` of `ECurve`
-(`Book.ECurveDioid`): closed under `⊕ = ` pointwise `min`, `⊗ = minConv`, and
+(`Book.CurveDioidEReal`): closed under `⊕ = ` pointwise `min`, `⊗ = minConv`, and
 containing `𝟘 = topCurve`, `𝟙 = convUnitEReal`. The `minConv` case is the
 inf-convolution-of-concave-is-concave fact, proved without any attainment /
 left-continuity hypothesis by a dichotomy on the (finite-or-`⊤`) origin value. -/

@@ -212,7 +212,7 @@ not just defaults):
 
 - **Definitions split from proofs; share one definition via base + abbrev.**
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
-  file (`CurveRegularity`). When the same curve/notion lives over two carriers,
+  file (`RealCurvesRegularity`). When the same curve/notion lives over two carriers,
   define it *once* over a polymorphic base and specialize with `abbrev`s (the
   `delay` → `delayNN`/`delayE` pattern), rather than duplicating bodies; bridge
   the variants with `*_coe` agreement lemmas where they are only propositionally

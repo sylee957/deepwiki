@@ -1,6 +1,6 @@
 import Book.ArrivalCurves
 import Book.Continuity
-import Book.RealConvolution
+import Book.ConvolutionReal
 import Mathlib.Topology.Order.LeftRightLim
 
 /-! # Properties of a maximal arrival curve
@@ -79,7 +79,7 @@ theorem isMaximalArrivalCurve_deconv_self {A : ℝ≥0 → ℝ≥0}
 
 /-! ## Sub-additive closure
 Each (min,+) self-convolution power of `α` and their pointwise infimum (the
-(min,+) sub-additive closure `subadditiveClosureMin`, from `Book.RealConvolution`)
+(min,+) sub-additive closure `subadditiveClosureMin`, from `Book.ConvolutionReal`)
 are again maximal arrival curves for `A`, and the closure is `≤ α`. -/
 
 /-- The increment bound iterated through the (min,+) powers: if `α` is a

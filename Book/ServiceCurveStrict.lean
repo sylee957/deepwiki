@@ -1,6 +1,6 @@
 import Book.Servers
-import Book.RealConvolution
-import Book.ServiceCurveBacklog
+import Book.ConvolutionReal
+import Book.ServersBacklog
 
 /-! # Strict service curves
 A strict service curve `β` bounds the output growth on each backlogged period:

@@ -1,4 +1,4 @@
-import Book.NdClosure
+import Book.ClosureNd
 import Book.Additivity
 import Book.FunctionDioids
 import Mathlib.Data.EReal.Operations

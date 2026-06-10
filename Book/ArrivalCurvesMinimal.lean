@@ -1,6 +1,6 @@
 import Book.ArrivalCurves
 import Book.Continuity
-import Book.RealConvolution
+import Book.ConvolutionReal
 import Book.ArrivalCurvesMaximal
 import Mathlib.Topology.Order.LeftRightLim
 

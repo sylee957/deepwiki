@@ -1,6 +1,6 @@
 import Book.Servers
-import Book.RealConvolution
-import Book.ECurveDioid
+import Book.ConvolutionReal
+import Book.CurveDioidEReal
 import Book.ConvolutionMinimumExt
 
 /-! # Min-plus service curves

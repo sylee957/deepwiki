@@ -4,7 +4,7 @@ import Mathlib.Data.EReal.Basic
 
 /-! # Curve definitions
 The concrete service/arrival curves of network calculus, as plain definitions
-(regularity proofs live in `CurveRegularity`). The pure-delay curve `delay` is
+(regularity proofs live in `RealCurvesRegularity`). The pure-delay curve `delay` is
 defined once over any ordered domain/value type, then the rate / rate-latency /
 token-bucket curves over a semiring value type via the domain-polymorphic bases
 `rateV`/`rateLatencyV`/`tokenBucketV` (the `delay`-style pattern). Each
