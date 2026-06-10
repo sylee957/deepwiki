@@ -162,10 +162,10 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
   hβ.isMinimalServiceCurve hSrv.1
 
 /-! ## Book restatement (restricted deviation domain, strict service)
-With `ℓmax = inf {t > 0 | α t ≤ beta t}` itself a positive crossing point
-(the infimum attained), backlog and delay of a pair served with strict
-service `beta` (monotone, affinely rate-bounded) are bounded by the
-deviations against `beta` computed on `[0, ℓmax]`. -/
+With `ℓmax = inf {t > 0 | α t ≤ beta t}` itself a crossing point (the
+infimum attained), backlog and delay of a pair served with strict service
+`beta` (monotone, affinely rate-bounded) are bounded by the deviations
+against `beta` computed on `[0, ℓmax]`. -/
 example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
@@ -173,14 +173,14 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
     {ℓmax : ℝ≥0}
-    (_hℓ : ℓmax = sInf {t : ℝ≥0 | 0 < t ∧ α t ≤ liftENN beta t})
-    (hτ : 0 < ℓmax) (hcross : α ℓmax ≤ liftENN beta ℓmax) :
+    (_hℓ : ℓmax = sInf (crossingSet α (liftENN beta)))
+    (hmem : ℓmax ∈ crossingSet α (liftENN beta)) :
     backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (liftENN beta) t) ∧
       delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
   ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp harr
-      hr hτ hcross,
+      hr hmem.1 hmem.2,
     delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
-      harr hr hτ hcross⟩
+      harr hr hmem.1 hmem.2⟩
 
 /-! ## Bridging arrival-curve readings
 The maximal length of a backlogged period under the `ℝ≥0∞` reading of the
@@ -191,9 +191,8 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) (liftENN alpha))
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
-    (d : ℝ≥0∞)
-      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
-  length_le_iInf_crossing_of_isBacklogged hSrv.1 hβ hp
+    (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
+  length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp
     (isMaximalArrivalCurve_liftENN_iff.mp harr) hbl
 
 end DeepWiki

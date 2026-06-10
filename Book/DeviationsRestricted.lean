@@ -169,14 +169,14 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
     (hsup : IsSuperadditive beta)
     {ℓmax : ℝ≥0}
-    (_hℓ : ℓmax = sInf {t : ℝ≥0 | 0 < t ∧ α t ≤ toENN beta t})
-    (hτ : 0 < ℓmax) (hcross : α ℓmax ≤ toENN beta ℓmax) :
+    (_hℓ : ℓmax = sInf (crossingSet α (toENN beta)))
+    (hmem : ℓmax ∈ crossingSet α (toENN beta)) :
     backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (toENN beta) t) ∧
       delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (toENN beta) t : ℝ≥0∞) :=
   ⟨backlog_le_biSup_vDevAt_of_isMinimalServiceCurve hβ hp hnn harr
-      hsup hτ hcross,
+      hsup hmem.1 hmem.2,
     delay_le_biSup_hDevAt_of_isMinimalServiceCurve hβ hp hnn hmono harr
-      hsup hτ hcross⟩
+      hsup hmem.1 hmem.2⟩
 
 end Deviation
 

@@ -325,30 +325,27 @@ theorem length_lt_crossing_of_isBacklogged
 /-- **Maximal length of a backlogged period.** Every backlogged period
 `(t, t + d]` of a causal pair with strict service `beta` whose arrival
 admits maximal arrival curve `alpha` has length at most the first crossing
-`inf {x > 0 | alpha x ≤ beta x}` (`⊤` in `ℝ≥0∞` when the curves never
-cross). -/
-theorem length_le_iInf_crossing_of_isBacklogged
+`firstCrossing alpha beta` (`⊤` in `ℝ≥0∞` when the curves never cross). -/
+theorem length_le_firstCrossing_of_isBacklogged
     {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
-    (d : ℝ≥0∞)
-      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
-  le_iInf₂ fun _ hx => ENNReal.coe_le_coe.mpr
+    (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
+  le_firstCrossing fun _ hx => ENNReal.coe_le_coe.mpr
     (length_lt_crossing_of_isBacklogged hc hβ hp harr hbl hx.1 hx.2).le
 
 /-! ## Book restatement (maximal length of a backlogged period)
 A server `S ⊆ Sₛₜᵣᵢ𝒸ₜ(beta)` whose arrival `A` admits maximal arrival
 curve `alpha` has every backlogged period of length at most
-`ℓmax = inf {x > 0 | alpha x ≤ beta x}`. -/
+`ℓmax = inf {x > 0 | alpha x ≤ beta x} = firstCrossing alpha beta`. -/
 example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
-    (d : ℝ≥0∞)
-      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
-  length_le_iInf_crossing_of_isBacklogged hSrv.1 hβ hp harr hbl
+    (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
+  length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp harr hbl
 
 end DeepWiki

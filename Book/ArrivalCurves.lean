@@ -16,7 +16,7 @@ ones in `Book.ArrivalCurvesMinimal`. -/
 
 namespace DeepWiki
 
-open scoped Classical NNReal
+open scoped Classical NNReal ENNReal
 
 /-- `α` is a maximal (upper) arrival curve for `A`: `A ≤ A ∗ α` in the
 natural pointwise order, with `∗` the min-plus convolution (over any ordered
@@ -93,5 +93,30 @@ theorem isMinimalArrivalCurve_iff_increment_of_monotone
     IsMinimalArrivalCurve A α ↔ ∀ t d : ℝ≥0, A t + α d ≤ A (t + d) :=
   isMinimalArrivalCurve_iff_increment_of_bddAbove A α
     (maxConvBddAbove_of_monotone A α hA hα)
+
+/-! ## Crossing of one curve below another
+The set of positive times where a curve falls to or below another — for an
+arrival curve against a service curve, the lengths at which service catches
+arrivals — and its infimum, the first crossing. -/
+
+/-- The crossing set of `f` below `g`: the positive times where `f x ≤ g x`. -/
+def crossingSet {T : Type*} [LE T] (f g : ℝ≥0 → T) : Set ℝ≥0 :=
+  {x | 0 < x ∧ f x ≤ g x}
+
+/-- Membership in `crossingSet f g` is positivity plus the crossing
+inequality. -/
+theorem mem_crossingSet_iff {T : Type*} [LE T] {f g : ℝ≥0 → T} {x : ℝ≥0} :
+    x ∈ crossingSet f g ↔ 0 < x ∧ f x ≤ g x := Iff.rfl
+
+/-- The first crossing of `f` below `g`, read in `ℝ≥0∞` (`⊤` when the curves
+never cross). -/
+noncomputable def firstCrossing {T : Type*} [LE T] (f g : ℝ≥0 → T) : ℝ≥0∞ :=
+  ⨅ x ∈ crossingSet f g, (x : ℝ≥0∞)
+
+/-- Intro: a bound below every crossing point is below the first crossing. -/
+theorem le_firstCrossing {T : Type*} [LE T] {f g : ℝ≥0 → T} {c : ℝ≥0∞}
+    (h : ∀ x ∈ crossingSet f g, c ≤ (x : ℝ≥0∞)) :
+    c ≤ firstCrossing f g :=
+  le_iInf₂ h
 
 end DeepWiki
