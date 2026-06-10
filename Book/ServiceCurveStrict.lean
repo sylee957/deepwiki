@@ -21,7 +21,7 @@ def IsStrictMinimalServiceCurve (beta : ℝ≥0 → ℝ≥0)
     (S : Curve → Curve → Prop) : Prop :=
   ∀ A D : Curve, S A D →
     ∀ s t, s ≤ t →
-      IsBacklogged A D (Set.Ioc s t) →
+      IsBacklogged (⇑A) (⇑D) (Set.Ioc s t) →
         D s + beta (t - s) ≤ D t
 
 /-- Largest causal relation offering strict service `beta`. -/
@@ -29,7 +29,7 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
     Curve → Curve → Prop :=
   fun A D => D ≤ A ∧
       ∀ s t, s ≤ t →
-        IsBacklogged A D (Set.Ioc s t) →
+        IsBacklogged (⇑A) (⇑D) (Set.Ioc s t) →
           D s + beta (t - s) ≤ D t
 
 /-- When `beta 0 = 0`, `strictServiceRel beta` is a server: causality is the first
@@ -51,7 +51,7 @@ theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
 on backlogged periods. -/
 theorem mem_strictServiceRel_iff {beta : ℝ≥0 → ℝ≥0} {A D : Curve} :
     strictServiceRel beta A D ↔
-      D ≤ A ∧ ∀ s t, s ≤ t → IsBacklogged A D (Set.Ioc s t) →
+      D ≤ A ∧ ∀ s t, s ≤ t → IsBacklogged (⇑A) (⇑D) (Set.Ioc s t) →
         D s + beta (t - s) ≤ D t :=
   Iff.rfl
 
@@ -105,7 +105,7 @@ origin: `beta 0 = 0`. The strict bound at `s = t = 0` (the empty period
 theorem IsStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0} {S : Curve → Curve → Prop}
     (hβ : IsStrictMinimalServiceCurve beta S) {A D : Curve} (hp : S A D) :
     beta 0 = 0 := by
-  have hbl : IsBacklogged A D (Set.Ioc 0 0) := by intro u hu; simp at hu
+  have hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc 0 0) := by intro u hu; simp at hu
   have h := hβ A D hp 0 0 (le_refl 0) hbl
   rw [tsub_self] at h
   have h0 : beta 0 ≤ 0 :=
@@ -129,11 +129,11 @@ theorem strictServiceRel_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve)
     (hp : strictServiceRel beta A D)
     (t : ℝ≥0) :
-    A (start A D t) + beta (t - start A D t) ≤ D t := by
+    A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t := by
   have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
-  have hbl := isBacklogged_Ioc_start A D hc t
-  have hbound := hp.2 (start A D t) t (start_le A D t) hbl
-  rw [A_start_eq_D_start A D hc t]
+  have hbl := isBacklogged_Ioc_start hc t
+  have hbound := hp.2 (start ⇑A ⇑D t) t (start_le (A.zero_eq D) t) hbl
+  rw [A.apply_start_eq D hc t]
   exact hbound
 
 /-- Concatenating strict-service bounds across `s ≤ r ≤ t`. -/
@@ -142,7 +142,7 @@ theorem IsStrictMinimalServiceCurve.concat (beta : ℝ≥0 → ℝ≥0) {S : Cur
     (A D : Curve)
     (hp : S A D)
     {s r t : ℝ≥0} (hsr : s ≤ r) (hrt : r ≤ t)
-    (hbl : IsBacklogged A D (Set.Ioc s t)) :
+    (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc s t)) :
     D s + (beta (r - s) + beta (t - r)) ≤ D t := by
   have b1 : D s + beta (r - s) ≤ D r :=
     hβ A D hp s r hsr
@@ -296,23 +296,23 @@ theorem beta_lt_alpha_of_isBacklogged
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalBound (⇑A) alpha)
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d)))
     {d' : ℝ≥0} (hd' : 0 < d') (hle : d' ≤ d) :
     beta d' < alpha d' := by
   have hcAD : ∀ x, D x ≤ A x := hc A D hp
-  set s := start A D (t + d)
-  have heq : A s = D s := A_start_eq_D_start A D hcAD (t + d)
+  set s := start ⇑A ⇑D (t + d)
+  have heq : A s = D s := A.apply_start_eq D hcAD (t + d)
   -- the start lies at or before `t`: no equality point inside the backlog
-  have hst : s ≤ t := start_le_of_isBacklogged A D hbl
+  have hst : s ≤ t := start_le_of_isBacklogged (A.zero_eq D) hbl
   -- `s + d'` stays inside the backlogged period from the start
   have hmem : s + d' ∈ Set.Ioc s (t + d) :=
     ⟨lt_add_of_pos_right s hd', add_le_add hst hle⟩
   have hbacklog : D (s + d') < A (s + d') :=
-    isBacklogged_Ioc_start A D hcAD (t + d) (s + d') hmem
+    isBacklogged_Ioc_start hcAD (t + d) (s + d') hmem
   -- strict service on `(s, s + d']`
   have hserv : D s + beta d' ≤ D (s + d') := by
     have := hβ A D hp s (s + d') le_self_add
-      ((isBacklogged_Ioc_start A D hcAD (t + d)).subset
+      ((isBacklogged_Ioc_start hcAD (t + d)).subset
         (Set.Ioc_subset_Ioc_right hmem.2))
     rwa [add_tsub_cancel_left] at this
   -- arrival increment and `A = D` at the start close the chain
@@ -332,7 +332,7 @@ theorem length_lt_crossing_of_isBacklogged
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalBound (⇑A) alpha)
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d)))
     {d₀ : ℝ≥0} (hd₀ : 0 < d₀) (hcross : alpha d₀ ≤ beta d₀) :
     d < d₀ := by
   by_contra h
@@ -349,25 +349,25 @@ theorem length_le_firstCrossing_of_isBacklogged
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalBound (⇑A) alpha)
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   le_firstCrossing fun _ hx => ENNReal.coe_le_coe.mpr
     (length_lt_crossing_of_isBacklogged hc hβ hp harr hbl hx.1 hx.2).le
 
 /-- **Maximal length of a backlogged period**, function form: the supremum
 of backlogged-period ages is bounded by the first crossing — each age's
-period `(start A D t, t]` is itself backlogged. -/
+period `(start ⇑A ⇑D t, t]` is itself backlogged. -/
 theorem maxBackloggedLength_le_firstCrossing
     {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalBound (⇑A) alpha) :
-    maxBackloggedLength A D ≤ firstCrossing alpha beta := by
+    maxBackloggedLength ⇑A ⇑D ≤ firstCrossing alpha beta := by
   refine iSup_le fun t => ?_
-  have hbl : IsBacklogged A D
-      (Set.Ioc (start A D t) (start A D t + (t - start A D t))) := by
-    rw [add_tsub_cancel_of_le (start_le A D t)]
-    exact isBacklogged_Ioc_start A D (hc A D hp) t
+  have hbl : IsBacklogged (⇑A) (⇑D)
+      (Set.Ioc (start ⇑A ⇑D t) (start ⇑A ⇑D t + (t - start ⇑A ⇑D t))) := by
+    rw [add_tsub_cancel_of_le (start_le (A.zero_eq D) t)]
+    exact isBacklogged_Ioc_start (hc A D hp) t
   exact length_le_firstCrossing_of_isBacklogged hc hβ hp harr hbl
 
 /-! ## Book restatement (maximal length of a backlogged period)
@@ -378,7 +378,7 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp harr.2 hbl
 
@@ -388,9 +388,9 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
-  le_trans (le_maxBackloggedLength_of_isBacklogged A D hbl)
+  le_trans (le_maxBackloggedLength_of_isBacklogged (A.zero_eq D) hbl)
     (maxBackloggedLength_le_firstCrossing hSrv.1 hβ hp harr.2)
 
 end DeepWiki

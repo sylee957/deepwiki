@@ -15,7 +15,7 @@ open scoped Classical NNReal ENNReal
 open Deviation
 
 /-- **A strict service curve is a min-plus service curve.** At
-`s = start A D t`, the start-of-backlog output bound gives
+`s = start ⇑A ⇑D t`, the start-of-backlog output bound gives
 `A s + beta (t - s) ≤ D t`, and the split `s + (t - s) = t` bounds the
 convolution: `(A ∗ beta) t ≤ A s + beta (t - s) ≤ D t`. -/
 theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
@@ -23,15 +23,15 @@ theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
     (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S) :
     IsMinimalServiceCurve (liftEReal beta) S := by
   intro A D hp t
-  have hst : start A D t ≤ t := start_le A D t
-  have hbound : A (start A D t) + beta (t - start A D t) ≤ D t :=
+  have hst : start ⇑A ⇑D t ≤ t := start_le (A.zero_eq D) t
+  have hbound : A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t :=
     strictServiceRel_output_bound beta A D ⟨hc A D hp, hβ A D hp⟩ t
   calc minConv (curveE A) (liftEReal beta) t
-      ≤ curveE A (start A D t) + liftEReal beta (t - start A D t) :=
+      ≤ curveE A (start ⇑A ⇑D t) + liftEReal beta (t - start ⇑A ⇑D t) :=
         minConv_le_add _ _ (add_tsub_cancel_of_le hst)
     _ ≤ curveE D t := by
-        show ((A (start A D t) : ℝ) : EReal)
-            + ((beta (t - start A D t) : ℝ) : EReal) ≤ ((D t : ℝ) : EReal)
+        show ((A (start ⇑A ⇑D t) : ℝ) : EReal)
+            + ((beta (t - start ⇑A ⇑D t) : ℝ) : EReal) ≤ ((D t : ℝ) : EReal)
         rw [← EReal.coe_add]
         exact_mod_cast hbound
 
@@ -62,7 +62,7 @@ theorem add_maxConvPow_le_of_isBacklogged
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     (hβ : IsStrictMinimalServiceCurve beta S) {A D : Curve} (hp : S A D)
     (n : ℕ) {s t : ℝ≥0} (hst : s ≤ t)
-    (hbl : IsBacklogged A D (Set.Ioc s t)) :
+    (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc s t)) :
     (D s : ℝ≥0∞) + maxConvPow (liftENN beta) n (t - s) ≤ (D t : ℝ≥0∞) := by
   induction n generalizing s t with
   | zero =>
@@ -105,25 +105,25 @@ theorem minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
     minConv (liftENN ⇑A) (superadditiveClosureMaxNN (liftENN beta)) t
       ≤ (D t : ℝ≥0∞) := by
   have hcAD : ∀ x, D x ≤ A x := hc A D hp
-  have hst : start A D t ≤ t := start_le A D t
-  have hcl : (D (start A D t) : ℝ≥0∞)
-      + superadditiveClosureMaxNN (liftENN beta) (t - start A D t)
+  have hst : start ⇑A ⇑D t ≤ t := start_le (A.zero_eq D) t
+  have hcl : (D (start ⇑A ⇑D t) : ℝ≥0∞)
+      + superadditiveClosureMaxNN (liftENN beta) (t - start ⇑A ⇑D t)
       ≤ (D t : ℝ≥0∞) := by
-    show (D (start A D t) : ℝ≥0∞)
-      + ⨆ n : ℕ, maxConvPow (liftENN beta) n (t - start A D t)
+    show (D (start ⇑A ⇑D t) : ℝ≥0∞)
+      + ⨆ n : ℕ, maxConvPow (liftENN beta) n (t - start ⇑A ⇑D t)
       ≤ (D t : ℝ≥0∞)
     rw [ENNReal.add_iSup]
     exact iSup_le fun n =>
       add_maxConvPow_le_of_isBacklogged hβ hp n hst
-        (isBacklogged_Ioc_start A D hcAD t)
+        (isBacklogged_Ioc_start hcAD t)
   calc minConv (liftENN ⇑A) (superadditiveClosureMaxNN (liftENN beta)) t
-      ≤ liftENN ⇑A (start A D t)
-          + superadditiveClosureMaxNN (liftENN beta) (t - start A D t) :=
+      ≤ liftENN ⇑A (start ⇑A ⇑D t)
+          + superadditiveClosureMaxNN (liftENN beta) (t - start ⇑A ⇑D t) :=
         minConv_le_add _ _ (add_tsub_cancel_of_le hst)
     _ ≤ (D t : ℝ≥0∞) := by
-        rw [show liftENN ⇑A (start A D t) = ((D (start A D t) : ℝ≥0) : ℝ≥0∞) by
-          show ((A (start A D t) : ℝ≥0) : ℝ≥0∞) = _
-          rw [A_start_eq_D_start A D hcAD t]]
+        rw [show liftENN ⇑A (start ⇑A ⇑D t) = ((D (start ⇑A ⇑D t) : ℝ≥0) : ℝ≥0∞) by
+          show ((A (start ⇑A ⇑D t) : ℝ≥0) : ℝ≥0∞) = _
+          rw [A.apply_start_eq D hcAD t]]
         exact hcl
 
 /-- **Backlog bound for strict service** (pointwise): a causal pair with
@@ -325,7 +325,7 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
     {A D : Curve} (hp : S A D)
     (harr : IsMaximalArrivalBound (liftENN ⇑A) (liftENN alpha))
-    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp
     (isMaximalArrivalBound_liftENN_iff.mp harr) hbl

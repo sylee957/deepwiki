@@ -107,7 +107,7 @@ theorem stepCurve_strict_drain {S : Curve → Curve → Prop} {C T b : ℝ≥0}
     {D : Curve} (hp : S (stepCurve T b) D)
     {u : ℝ≥0} (hu : T ≤ u) (d : ℝ≥0) :
     min b (D u + C * d) ≤ D (u + d) := by
-  by_cases hbl : IsBacklogged (stepCurve T b) D (Set.Ioc u (u + d))
+  by_cases hbl : IsBacklogged (⇑(stepCurve T b)) (⇑D) (Set.Ioc u (u + d))
   · have h := hβ _ _ hp u (u + d) le_self_add hbl
     simp only [rateV] at h
     rw [add_tsub_cancel_left] at h
