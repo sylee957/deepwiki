@@ -110,31 +110,4 @@ theorem exists_minConv_eq_split_of_curves
     exists_isMinOn_splitMap_of_curves g h hgm hhm hgc hhc t
   exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
 
-/-- `minConv g h` is monotone when `g` and `h` are monotone. -/
-theorem minConvE_mono {D T : Type*}
-    [_root_.AddCommMonoid D] [LinearOrder D]
-    [CanonicallyOrderedAdd D] [Sub D] [OrderedSub D]
-    [AddLeftReflectLE D]
-    [_root_.AddCommMonoid T] [CompleteLattice T]
-    [IsOrderedAddMonoid T] (g h : D → T)
-    (hg : Monotone g) (hh : Monotone h) :
-    Monotone (minConv g h) := by
-  intro a b hab
-  unfold minConv
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, (hus : u + s = b)⟩
-  by_cases hua : u ≤ a
-  · refine iInf_le_of_le
-      ⟨(u, a - u), by rw [add_tsub_cancel_of_le hua]⟩ ?_
-    show g u + h (a - u) ≤ g u + h s
-    gcongr
-    have hb : b - u = s := by
-      rw [← hus, add_comm u s, add_tsub_cancel_right]
-    exact hb ▸ hh (by gcongr)
-  · refine iInf_le_of_le ⟨(a, 0), by rw [add_zero]⟩ ?_
-    show g a + h 0 ≤ g u + h s
-    gcongr
-    · exact hg (not_le.mp hua).le
-    · exact hh zero_le
-
 end DeepWiki

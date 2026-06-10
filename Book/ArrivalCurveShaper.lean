@@ -90,7 +90,7 @@ theorem isMaximalArrivalCurve_zeroCurve {sigma : ℝ≥0 → EReal}
     IsMaximalArrivalCurve (curveE zeroCurve) sigma := by
   intro t
   rw [curveE_zeroCurve]
-  exact minConv_isNonneg (curveE_nonneg zeroCurve) hnn t
+  exact IsNonneg.conv (curveE_nonneg zeroCurve) hnn t
 
 /-- For nonnegative `sigma`, `shaperRel sigma` is a server: causality is the
 first conjunct, and `zeroCurve` gives left-totality. -/

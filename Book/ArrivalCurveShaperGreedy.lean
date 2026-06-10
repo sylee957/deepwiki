@@ -57,7 +57,7 @@ theorem coe_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
     (hnn : IsNonneg sigma) (h0 : sigma 0 = 0) (t : ℝ≥0) :
     ((greedyFun A sigma t : ℝ) : EReal) = minConv (curveE A) sigma t := by
   have hpos : (0 : EReal) ≤ minConv (curveE A) sigma t :=
-    minConv_isNonneg (curveE_nonneg A) hnn t
+    IsNonneg.conv (curveE_nonneg A) hnn t
   have hne_bot : minConv (curveE A) sigma t ≠ ⊥ := ne_bot_of_nonneg hpos
   have hne_top := minConv_curveE_ne_top A h0.le t
   show (((minConv (curveE A) sigma t).toReal.toNNReal : ℝ) : EReal) = _
@@ -69,9 +69,9 @@ theorem greedyFun_mono (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0) :
     Monotone (greedyFun A sigma) := by
   intro a b hab
-  have hm := minConvE_mono (curveE A) sigma (monotone_curveE A) hmono hab
+  have hm := monotone_minConv (monotone_curveE A) hmono hab
   have hpos : (0 : EReal) ≤ minConv (curveE A) sigma a :=
-    minConv_isNonneg (curveE_nonneg A)
+    IsNonneg.conv (curveE_nonneg A)
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) a
   exact Real.toNNReal_mono
     (EReal.toReal_le_toReal hm (ne_bot_of_nonneg hpos)
@@ -97,7 +97,7 @@ theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
       (fun r u => addDefined_curveE A u (sigma (r - u)))
   intro t
   have hpos : (0 : EReal) ≤ minConv (curveE A) sigma t :=
-    minConv_isNonneg (curveE_nonneg A)
+    IsNonneg.conv (curveE_nonneg A)
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) t
   have htr : ContinuousAt EReal.toReal (minConv (curveE A) sigma t) :=
     EReal.tendsto_toReal (minConv_curveE_ne_top A h0.le t)

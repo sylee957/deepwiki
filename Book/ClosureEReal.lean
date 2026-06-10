@@ -217,22 +217,12 @@ theorem isNonneg_convUnitEReal : IsNonneg convUnitEReal := by
   · rw [convUnitEReal, if_pos ht]
   · rw [convUnitEReal, if_neg ht]; exact le_top
 
-/-- `minConv` preserves non-negativity. -/
-theorem minConv_isNonneg {g h : ℝ≥0 → EReal}
-    (hg : IsNonneg g) (hh : IsNonneg h) : IsNonneg (minConv g h) := by
-  intro t
-  unfold minConv
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, _⟩
-  calc (0 : EReal) = 0 + 0 := by simp
-    _ ≤ g u + h s := add_le_add (hg u) (hh s)
-
 /-- Every power `gⁿ` is non-negative when `g` is. -/
 theorem convPowEReal_isNonneg {g : ℝ≥0 → EReal}
     (hg : IsNonneg g) (n : ℕ) : IsNonneg (convPowEReal g n) := by
   induction n with
   | zero => exact isNonneg_convUnitEReal
-  | succ k ih => exact minConv_isNonneg ih hg
+  | succ k ih => exact IsNonneg.conv ih hg
 
 /-- A non-negative `g` is `BddBelowReal` (witness `0`). -/
 theorem IsNonneg.bddBelowReal {g : ℝ≥0 → EReal} (hg : IsNonneg g) :

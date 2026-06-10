@@ -49,7 +49,7 @@ theorem isCausal_maximalServiceRel {beta : ℝ≥0 → EReal}
 theorem curveE_zeroCurve (t : ℝ≥0) : curveE zeroCurve t = 0 := by
   simp [curveE]
 
-/-- For nonnegative `beta`, `0 ≤ A ∗ beta` (`minConv_isNonneg`), so `zeroCurve`
+/-- For nonnegative `beta`, `0 ≤ A ∗ beta` (`IsNonneg.conv`), so `zeroCurve`
 is a valid output for every arrival: `maximalServiceRel beta` is
 left-total. -/
 theorem isLeftTotal_maximalServiceRel {beta : ℝ≥0 → EReal}
@@ -58,7 +58,7 @@ theorem isLeftTotal_maximalServiceRel {beta : ℝ≥0 → EReal}
   intro A
   refine ⟨zeroCurve, fun t => ?_⟩
   rw [curveE_zeroCurve]
-  exact minConv_isNonneg (curveE_nonneg A) hnn t
+  exact IsNonneg.conv (curveE_nonneg A) hnn t
 
 /-- For `beta` in `F₀` — null at the origin and nonnegative —
 `maximalServiceRel beta` is a server. -/

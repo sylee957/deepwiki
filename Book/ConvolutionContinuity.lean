@@ -173,7 +173,7 @@ theorem isLeftContinuous_minConv_ennreal
     (hfc : IsLeftContinuous f) (hgc : IsLeftContinuous g) :
     IsLeftContinuous (minConv f g) :=
   isLeftContinuous_of_mono_lsc (minConv f g)
-    (minConvE_mono f g hf hg)
+    (monotone_minConv hf hg)
     (lowerSemicontinuous_minConv_ennreal f g hf hg hfc hgc)
 
 /-! ### Over `EReal` (analysis substrate; `+` discontinuous at the collision) -/
@@ -207,7 +207,7 @@ theorem isLeftContinuous_minConv_ereal
     (hpair : ∀ r u : ℝ≥0, AddDefined (f u) (g (r - u))) :
     IsLeftContinuous (minConv f g) :=
   isLeftContinuous_of_mono_lsc (minConv f g)
-    (minConvE_mono f g hf hg)
+    (monotone_minConv hf hg)
     (lowerSemicontinuous_minConv_ereal f g hf hg hfc hgc hpair)
 
 end DeepWiki
