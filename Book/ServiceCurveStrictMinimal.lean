@@ -96,18 +96,18 @@ theorem add_maxConvPow_le_of_isBacklogged
         _ ≤ (D t : ℝ≥0∞) := h2
 
 /-- Strict service yields the raw `ℝ≥0∞` convolution inequality for the
-closure: `(A ∗ superadditiveClosureMaxENN (liftENN beta)) ≤ D`, by the
+closure: `(A ∗ superadditiveClosureMaxNN (liftENN beta)) ≤ D`, by the
 start-of-backlog split — no boundedness of `beta` needed. -/
-theorem minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
+theorem minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
     {A D : Curve} (hp : S A D) (t : ℝ≥0) :
-    minConv (liftENN ⇑A) (superadditiveClosureMaxENN (liftENN beta)) t
+    minConv (liftENN ⇑A) (superadditiveClosureMaxNN (liftENN beta)) t
       ≤ (D t : ℝ≥0∞) := by
   have hcAD : ∀ x, D x ≤ A x := hc A D hp
   have hst : start A D t ≤ t := start_le A D t
   have hcl : (D (start A D t) : ℝ≥0∞)
-      + superadditiveClosureMaxENN (liftENN beta) (t - start A D t)
+      + superadditiveClosureMaxNN (liftENN beta) (t - start A D t)
       ≤ (D t : ℝ≥0∞) := by
     show (D (start A D t) : ℝ≥0∞)
       + ⨆ n : ℕ, maxConvPow (liftENN beta) n (t - start A D t)
@@ -116,9 +116,9 @@ theorem minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
     exact iSup_le fun n =>
       add_maxConvPow_le_of_isBacklogged hβ hp n hst
         (isBacklogged_Ioc_start A D hcAD t)
-  calc minConv (liftENN ⇑A) (superadditiveClosureMaxENN (liftENN beta)) t
+  calc minConv (liftENN ⇑A) (superadditiveClosureMaxNN (liftENN beta)) t
       ≤ liftENN ⇑A (start A D t)
-          + superadditiveClosureMaxENN (liftENN beta) (t - start A D t) :=
+          + superadditiveClosureMaxNN (liftENN beta) (t - start A D t) :=
         minConv_le_add _ _ (add_tsub_cancel_of_le hst)
     _ ≤ (D t : ℝ≥0∞) := by
         rw [show liftENN ⇑A (start A D t) = ((D (start A D t) : ℝ≥0) : ℝ≥0∞) by
@@ -175,14 +175,14 @@ theorem backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve
     (hp : S A D) (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (liftENN beta) t := by
-  have hleβ := le_superadditiveClosureMaxENN (liftENN beta)
+  have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hmain :=
     (backlog_le_vDev harr.subadditiveClosureE
-        (minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
+        (minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
           hβ hc hp)).trans_eq
       (vDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
-        (isSuperadditive_superadditiveClosureMaxENN (liftENN beta)) hτ
+        (isSuperadditive_superadditiveClosureMaxNN (liftENN beta)) hτ
         (((hleα τ).trans hcross).trans (hleβ τ)))
   refine hmain.trans (iSup₂_mono fun t _ => ?_)
   exact vDevAt_mono (fun t' => hleα t') hleβ t
@@ -197,24 +197,24 @@ theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
     (harr : IsMaximalArrivalBound (liftENN ⇑A) α)
     {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
     delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
-  have hleβ := le_superadditiveClosureMaxENN (liftENN beta)
+  have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hmain :=
     (delay_le_hDev A.mono
-        (monotone_superadditiveClosureMaxENN (monotone_liftENN hmono))
+        (monotone_superadditiveClosureMaxNN (monotone_liftENN hmono))
         harr.subadditiveClosureE
-        (minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
+        (minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
           hβ hc hp)).trans_eq
       (hDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
-        (isSuperadditive_superadditiveClosureMaxENN (liftENN beta)) hτ
+        (isSuperadditive_superadditiveClosureMaxNN (liftENN beta)) hτ
         (((hleα τ).trans hcross).trans (hleβ τ)))
   refine hmain.trans (iSup₂_mono fun t _ => ?_)
   exact hDevAt_mono (fun t' => hleα t') hleβ t
 
 /-- **Backlog from the first crossing, strict service.** Without
-attainment: a causal pair with strict service `beta` under an affine rate
-bound, the arrival having maximal arrival curve `α`, has backlog bounded
-by the vertical deviations against `beta` on `[0, ℓmax]`,
+attainment: a causal pair with strict service `beta`, the arrival having
+maximal arrival curve `α`, has backlog bounded by the vertical deviations
+against `beta` on `[0, ℓmax]`,
 `ℓmax = sInf (crossingSet α (liftENN beta))` — the super-additive closure
 of `beta` dominates `beta`, so `α` crosses it no later. -/
 theorem backlog_le_biSup_vDevAt_sInf_of_isStrictMinimalServiceCurve
@@ -225,23 +225,23 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isStrictMinimalServiceCurve
     backlog ⇑A ⇑D
       ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
           vDevAt α (liftENN beta) t := by
-  have hleβ := le_superadditiveClosureMaxENN (liftENN beta)
+  have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hclo := harr.subadditiveClosureE
   have hsubset : crossingSet α (liftENN beta)
       ⊆ crossingSet (subadditiveClosureE α)
-          (superadditiveClosureMaxENN (liftENN beta)) :=
+          (superadditiveClosureMaxNN (liftENN beta)) :=
     (crossingSet_mono_right hleβ).trans (crossingSet_anti_left hleα)
   have hℓ : sInf (crossingSet (subadditiveClosureE α)
-        (superadditiveClosureMaxENN (liftENN beta)))
+        (superadditiveClosureMaxNN (liftENN beta)))
       ≤ sInf (crossingSet α (liftENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
   have hmain :=
     (backlog_le_vDev hclo.2
-        (minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
+        (minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
           hβ hc hp)).trans_eq
       (vDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
-        (isSuperadditive_superadditiveClosureMaxENN (liftENN beta))
+        (isSuperadditive_superadditiveClosureMaxNN (liftENN beta))
         hclo.1 (hne.mono hsubset))
   exact hmain.trans
     (le_trans
@@ -260,25 +260,25 @@ theorem delay_le_biSup_hDevAt_sInf_of_isStrictMinimalServiceCurve
     delay ⇑A ⇑D
       ≤ ⨆ t ≤ sInf (crossingSet α (liftENN beta)),
           (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
-  have hleβ := le_superadditiveClosureMaxENN (liftENN beta)
+  have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hclo := harr.subadditiveClosureE
   have hsubset : crossingSet α (liftENN beta)
       ⊆ crossingSet (subadditiveClosureE α)
-          (superadditiveClosureMaxENN (liftENN beta)) :=
+          (superadditiveClosureMaxNN (liftENN beta)) :=
     (crossingSet_mono_right hleβ).trans (crossingSet_anti_left hleα)
   have hℓ : sInf (crossingSet (subadditiveClosureE α)
-        (superadditiveClosureMaxENN (liftENN beta)))
+        (superadditiveClosureMaxNN (liftENN beta)))
       ≤ sInf (crossingSet α (liftENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
   have hmain :=
     (delay_le_hDev A.mono
-        (monotone_superadditiveClosureMaxENN (monotone_liftENN hmono))
+        (monotone_superadditiveClosureMaxNN (monotone_liftENN hmono))
         hclo.2
-        (minConv_superadditiveClosureMaxENN_le_of_isStrictMinimalServiceCurve
+        (minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
           hβ hc hp)).trans_eq
       (hDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
-        (isSuperadditive_superadditiveClosureMaxENN (liftENN beta))
+        (isSuperadditive_superadditiveClosureMaxNN (liftENN beta))
         hclo.1 (hne.mono hsubset))
   exact hmain.trans
     (le_trans

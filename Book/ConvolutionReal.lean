@@ -84,116 +84,6 @@ theorem bddAbove_range_maxConvProjPow_of_affine_bound {beta : ℝ≥0 → ℝ≥
     rintro x ⟨n, rfl⟩
     exact maxConvProjPow_le_of_affine_bound hr n t⟩
 
-/-- Under an affine bound, a splitting bounds the next self-convolution
-iterate from below:
-`maxConvProjPow beta n a + maxConvProjPow beta n b ≤
-maxConvProjPow beta (n + 1) (a + b)`. -/
-theorem maxConvProjPow_add_le_succ_of_affine_bound {beta : ℝ≥0 → ℝ≥0}
-    {r : ℝ≥0} (hr : ∀ s, beta s ≤ r * s) (n : ℕ) (a b : ℝ≥0) :
-    maxConvProjPow beta n a + maxConvProjPow beta n b
-      ≤ maxConvProjPow beta (n + 1) (a + b) := by
-  have hbound : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = a + b},
-      maxConvProjPow beta n p.1.1 + maxConvProjPow beta n p.1.2
-        ≤ r * (a + b) :=
-    fun p => by
-      calc maxConvProjPow beta n p.1.1 + maxConvProjPow beta n p.1.2
-          ≤ r * p.1.1 + r * p.1.2 :=
-            add_le_add (maxConvProjPow_le_of_affine_bound hr n _)
-              (maxConvProjPow_le_of_affine_bound hr n _)
-        _ = r * (a + b) := by rw [← mul_add, p.2]
-  exact le_maxConvProj_of_bound hbound ⟨(a, b), rfl⟩
-
-/-- Under an affine bound, the self-convolution iterates are non-decreasing
-in the index: the `(t, 0)` splitting. -/
-theorem maxConvProjPow_le_succ_of_affine_bound {beta : ℝ≥0 → ℝ≥0} {r : ℝ≥0}
-    (hr : ∀ s, beta s ≤ r * s) (n : ℕ) (t : ℝ≥0) :
-    maxConvProjPow beta n t ≤ maxConvProjPow beta (n + 1) t := by
-  have h := maxConvProjPow_add_le_succ_of_affine_bound hr n t 0
-  rw [add_zero] at h
-  exact le_self_add.trans h
-
-/-- Under an affine bound, the self-convolution iterates are monotone in the
-index. -/
-theorem maxConvProjPow_le_maxConvProjPow_of_affine_bound
-    {beta : ℝ≥0 → ℝ≥0} {r : ℝ≥0} (hr : ∀ s, beta s ≤ r * s)
-    {n m : ℕ} (hnm : n ≤ m) (t : ℝ≥0) :
-    maxConvProjPow beta n t ≤ maxConvProjPow beta m t := by
-  induction m, hnm using Nat.le_induction with
-  | base => exact le_rfl
-  | succ m _ ih =>
-      exact ih.trans (maxConvProjPow_le_succ_of_affine_bound hr m t)
-
-/-- Under an affine bound, `beta` is below its super-additive closure (the
-iterate range is bounded, so the supremum is not junk). -/
-theorem le_superadditiveClosureMax_of_affine_bound {beta : ℝ≥0 → ℝ≥0}
-    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s) (t : ℝ≥0) :
-    beta t ≤ superadditiveClosureMax beta t := by
-  obtain ⟨r, hr⟩ := hr
-  exact le_superadditiveClosureMax beta
-    (bddAbove_range_maxConvProjPow_of_affine_bound hr) t
-
-/-- **Super-additivity of the closure.** Under an affine bound on `beta`,
-the super-additive closure `superadditiveClosureMax beta` is super-additive:
-two iterates at `u` and `s` are dominated by the next iterate at `u + s`. -/
-theorem isSuperadditive_superadditiveClosureMax_of_affine_bound
-    {beta : ℝ≥0 → ℝ≥0} (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s) :
-    IsSuperadditive (superadditiveClosureMax beta) := by
-  obtain ⟨r, hr⟩ := hr
-  intro u s
-  show (⨆ n : ℕ, maxConvProjPow beta n u) + (⨆ n : ℕ, maxConvProjPow beta n s)
-    ≤ superadditiveClosureMax beta (u + s)
-  rw [add_comm]
-  refine add_ciSup_le _ _ _ fun n => ?_
-  rw [add_comm]
-  refine add_ciSup_le _ _ _ fun m => ?_
-  calc maxConvProjPow beta n u + maxConvProjPow beta m s
-      ≤ maxConvProjPow beta (max n m) u + maxConvProjPow beta (max n m) s :=
-        add_le_add
-          (maxConvProjPow_le_maxConvProjPow_of_affine_bound hr
-            (le_max_left n m) u)
-          (maxConvProjPow_le_maxConvProjPow_of_affine_bound hr
-            (le_max_right n m) s)
-    _ ≤ maxConvProjPow beta (max n m + 1) (u + s) :=
-        maxConvProjPow_add_le_succ_of_affine_bound hr (max n m) u s
-    _ ≤ superadditiveClosureMax beta (u + s) :=
-        le_ciSup (bddAbove_range_maxConvProjPow_of_affine_bound hr (u + s))
-          (max n m + 1)
-
-/-- Under an affine bound, the self-convolution iterates of a monotone `beta`
-are monotone: a splitting of `t` widens to a splitting of `t' ≥ t`. -/
-theorem monotone_maxConvProjPow_of_affine_bound {beta : ℝ≥0 → ℝ≥0} {r : ℝ≥0}
-    (hmono : Monotone beta) (hr : ∀ s, beta s ≤ r * s) (n : ℕ) :
-    Monotone (maxConvProjPow beta n) := by
-  induction n with
-  | zero => exact hmono
-  | succ n ih =>
-      intro t t' htt
-      refine maxConvProj_le _ _ t (maxConvProjPow beta (n + 1) t')
-        fun p => ?_
-      have hsplit : p.1.1 + (p.1.2 + (t' - t)) = t' := by
-        rw [← add_assoc, p.2, add_tsub_cancel_of_le htt]
-      calc maxConvProjPow beta n p.1.1 + maxConvProjPow beta n p.1.2
-          ≤ maxConvProjPow beta n p.1.1
-              + maxConvProjPow beta n (p.1.2 + (t' - t)) :=
-            add_le_add le_rfl (ih le_self_add)
-        _ ≤ maxConvProjPow beta (n + 1) (p.1.1 + (p.1.2 + (t' - t))) :=
-            maxConvProjPow_add_le_succ_of_affine_bound hr n _ _
-        _ = maxConvProjPow beta (n + 1) t' := by rw [hsplit]
-
-/-- Under an affine bound, the super-additive closure of a monotone `beta`
-is monotone. -/
-theorem monotone_superadditiveClosureMax_of_affine_bound
-    {beta : ℝ≥0 → ℝ≥0} (hmono : Monotone beta)
-    (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s) :
-    Monotone (superadditiveClosureMax beta) := by
-  obtain ⟨r, hr⟩ := hr
-  intro t t' htt
-  show (⨆ n : ℕ, maxConvProjPow beta n t)
-    ≤ ⨆ n : ℕ, maxConvProjPow beta n t'
-  refine ciSup_le fun n => ?_
-  exact (monotone_maxConvProjPow_of_affine_bound hmono hr n htt).trans
-    (le_ciSup (bddAbove_range_maxConvProjPow_of_affine_bound hr t') n)
-
 /-! ## The super-additive closure on the `ℝ≥0∞` carrier
 The `ℝ≥0` closure above needs the affine bound only because unbounded
 `ℝ≥0` suprema collapse to junk; on the complete carrier `ℝ≥0∞` (the
@@ -207,13 +97,13 @@ noncomputable def maxConvPow (beta : ℝ≥0 → ℝ≥0∞) : ℕ → (ℝ≥0 
 
 /-- (max,+) super-additive closure on the `ℝ≥0∞` carrier: supremum of all
 `maxConvPow` iterates (`+∞` allowed, so no boundedness is needed). -/
-noncomputable def superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) :
+noncomputable def superadditiveClosureMaxNN (beta : ℝ≥0 → ℝ≥0∞) :
     ℝ≥0 → ℝ≥0∞ :=
   fun t => ⨆ n : ℕ, maxConvPow beta n t
 
 /-- `beta` is below its `ℝ≥0∞` super-additive closure, unconditionally. -/
-theorem le_superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    beta t ≤ superadditiveClosureMaxENN beta t :=
+theorem le_superadditiveClosureMaxNN (beta : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    beta t ≤ superadditiveClosureMaxNN beta t :=
   le_iSup (fun n => maxConvPow beta n t) 0
 
 /-- The `ℝ≥0∞` iterates are non-decreasing in the index: the `(t, 0)`
@@ -232,24 +122,24 @@ theorem maxConvPow_le_maxConvPow (beta : ℝ≥0 → ℝ≥0∞)
 
 /-- **Super-additivity of the `ℝ≥0∞` closure**, unconditional: two iterates
 at `u` and `s` are dominated by the next iterate at `u + s`. -/
-theorem isSuperadditive_superadditiveClosureMaxENN (beta : ℝ≥0 → ℝ≥0∞) :
-    IsSuperadditive (superadditiveClosureMaxENN beta) := by
+theorem isSuperadditive_superadditiveClosureMaxNN (beta : ℝ≥0 → ℝ≥0∞) :
+    IsSuperadditive (superadditiveClosureMaxNN beta) := by
   intro u s
   show (⨆ n : ℕ, maxConvPow beta n u) + (⨆ n : ℕ, maxConvPow beta n s)
-    ≤ superadditiveClosureMaxENN beta (u + s)
+    ≤ superadditiveClosureMaxNN beta (u + s)
   refine ENNReal.iSup_add_iSup_le fun n m => ?_
   calc maxConvPow beta n u + maxConvPow beta m s
       ≤ maxConvPow beta (max n m) u + maxConvPow beta (max n m) s :=
         add_le_add (maxConvPow_le_maxConvPow beta (le_max_left n m) u)
           (maxConvPow_le_maxConvPow beta (le_max_right n m) s)
     _ ≤ maxConvPow beta (max n m + 1) (u + s) := add_le_maxConv _ _ rfl
-    _ ≤ superadditiveClosureMaxENN beta (u + s) :=
+    _ ≤ superadditiveClosureMaxNN beta (u + s) :=
         le_iSup (fun k => maxConvPow beta k (u + s)) (max n m + 1)
 
 /-- The `ℝ≥0∞` closure of a monotone curve is monotone, unconditionally. -/
-theorem monotone_superadditiveClosureMaxENN {beta : ℝ≥0 → ℝ≥0∞}
+theorem monotone_superadditiveClosureMaxNN {beta : ℝ≥0 → ℝ≥0∞}
     (hmono : Monotone beta) :
-    Monotone (superadditiveClosureMaxENN beta) := by
+    Monotone (superadditiveClosureMaxNN beta) := by
   have hpow : ∀ n, Monotone (maxConvPow beta n) := by
     intro n
     induction n with
