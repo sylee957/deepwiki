@@ -69,6 +69,64 @@ theorem hDevAt_eq_top {D V : Type*} (R : Type*)
   rintro ⟨d, hd⟩
   exact absurd hd (h d)
 
+/-! ## Monotony of deviations -/
+
+/-- Monotony of the vertical deviation: `f' ≤ f` and `g ≤ g'` give
+`vDev f' g' ≤ vDev f g`. -/
+theorem vDev_mono {D T : Type*} [CompleteLattice T] [AddCommSemigroup T]
+    [Sub T] [OrderedSub T] [CovariantClass T T (· + ·) (· ≤ ·)]
+    {f f' g g' : D → T} (hf : f' ≤ f) (hg : g ≤ g') :
+    vDev f' g' ≤ vDev f g :=
+  iSup_le fun t => le_iSup_of_le t (tsub_le_tsub (hf t) (hg t))
+
+/-- Monotony of the horizontal deviation at `t`: `f' ≤ f` and `g ≤ g'` give
+`hDevAt f' g' t ≤ hDevAt f g t` (an admissible shift stays admissible). -/
+theorem hDevAt_mono {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
+    [CoeTC D R] {f f' g g' : D → V} (hf : f' ≤ f) (hg : g ≤ g') (t : D) :
+    (hDevAt f' g' t : R) ≤ hDevAt f g t :=
+  le_iInf fun d => iInf_le _
+    (⟨d.1, le_trans (hf t) (le_trans d.2 (hg (t + d.1)))⟩ :
+      {e : D // f' t ≤ g' (t + e)})
+
+/-- Monotony of the horizontal deviation: `f' ≤ f` and `g ≤ g'` give
+`hDev f' g' ≤ hDev f g`. -/
+theorem hDev_mono {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
+    [CoeTC D R] {f f' g g' : D → V} (hf : f' ≤ f) (hg : g ≤ g') :
+    (hDev f' g' : R) ≤ hDev f g :=
+  iSup_le fun t => le_iSup_of_le t (hDevAt_mono hf hg t)
+
+/-! ## Sup-based form of the horizontal deviation -/
+
+/-- For nondecreasing `g`, `hDevAt f g t` — an infimum of admissible shifts —
+is also the supremum of the inadmissible ones, `⨆ {d | g (t + d) < f t}`. -/
+theorem hDevAt_eq_iSup_lt {V : Type*} [LinearOrder V] {f g : ℝ≥0 → V}
+    (hg : Monotone g) (t : ℝ≥0) :
+    (hDevAt f g t : ℝ≥0∞) =
+      ⨆ d : {d : ℝ≥0 // g (t + d) < f t}, (d.1 : ℝ≥0∞) := by
+  apply le_antisymm
+  · by_contra hcon
+    rw [not_le] at hcon
+    obtain ⟨c, hc1, hc2⟩ := ENNReal.lt_iff_exists_nnreal_btwn.mp hcon
+    rcases le_or_gt (f t) (g (t + c)) with hadm | hbad
+    · exact absurd
+        (iInf_le _ (⟨c, hadm⟩ : {d : ℝ≥0 // f t ≤ g (t + d)}))
+        (not_le.mpr hc2)
+    · exact absurd
+        (le_iSup (fun d : {d : ℝ≥0 // g (t + d) < f t} => (d.1 : ℝ≥0∞))
+          ⟨c, hbad⟩)
+        (not_le.mpr hc1)
+  · refine iSup_le ?_
+    rintro ⟨d', hd'⟩
+    refine le_iInf ?_
+    rintro ⟨d, hd⟩
+    show (d' : ℝ≥0∞) ≤ (d : ℝ≥0∞)
+    by_contra hdd
+    rw [not_le] at hdd
+    have hlt : d < d' := by exact_mod_cast hdd
+    exact absurd
+      (lt_of_le_of_lt (le_trans hd (hg (add_le_add le_rfl hlt.le))) hd')
+      (lt_irrefl _)
+
 /-! ## Backlog and delay of cumulative curves
 For arrival/departure curves `A, D : ℝ≥0 → ℝ≥0`, the **backlog** is the vertical
 deviation and the **delay** the horizontal one, the latter valued in `ℝ≥0∞` via

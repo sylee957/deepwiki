@@ -39,6 +39,7 @@ import Book.ArrivalCurves
 import Book.MaximalArrivalCurves
 import Book.MinimalArrivalCurves
 import Book.CombinedArrivalCurves
+import Book.DeviationsBounds
 import Book.ServiceCurveMinPlus
 import Book.ServiceCurveBacklog
 import Book.ServiceCurveStrict
