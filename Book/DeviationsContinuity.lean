@@ -1,3 +1,4 @@
+import Book.ContinuityClosure
 import Book.Deviations
 import Mathlib.Topology.Order.LeftRightLim
 
@@ -8,7 +9,9 @@ hDev (rightLim f) (rightLim g)` for monotone `f, g`, and likewise for
 `vDev` when also `f 0 = 0` (needed at the origin). The book additionally
 assumes piecewise continuity; the infima and suprema absorb the limiting
 arguments through the cross inequality `rightLim h x ≤ leftLim h y` for
-`x < y` alone. -/
+`x < y` alone. Combined with the closure fixed points
+(`Book.ContinuityClosure`), switching a left-continuous pair to its
+right-continuous closures does not change the deviations. -/
 
 namespace DeepWiki
 
@@ -199,6 +202,30 @@ theorem vDev_leftLim_eq_vDev_rightLim {f g : ℝ≥0 → ℝ≥0∞}
           rw [add_tsub_cancel_of_le hz.le]
           exact hg.leftLim_le le_rfl
 
+/-- **Right-continuous cumulative functions do not change the bounds**: for
+a left-continuous pair the right closures have the same vertical deviation,
+`vDev (rightLim f) (rightLim g) = vDev f g` (the left closures fix `f, g`
+and Theorem 5.6 bridges to the right closures). -/
+theorem vDev_rightLim_eq_vDev_of_isLeftContinuous {f g : ℝ≥0 → ℝ≥0∞}
+    (hf : Monotone f) (hg : Monotone g)
+    (hflc : IsLeftContinuous f) (hglc : IsLeftContinuous g)
+    (hf0 : f 0 = 0) :
+    vDev (rightLim f) (rightLim g) = vDev f g := by
+  rw [← vDev_leftLim_eq_vDev_rightLim hf hg hf0,
+    (isLeftContinuous_iff_leftLim_eq hf).mp hflc,
+    (isLeftContinuous_iff_leftLim_eq hg).mp hglc]
+
+/-- The dual reading: for a right-continuous pair the left closures have
+the same vertical deviation, `vDev (leftLim f) (leftLim g) = vDev f g`. -/
+theorem vDev_leftLim_eq_vDev_of_isRightContinuous {f g : ℝ≥0 → ℝ≥0∞}
+    (hf : Monotone f) (hg : Monotone g)
+    (hfrc : IsRightContinuous f) (hgrc : IsRightContinuous g)
+    (hf0 : f 0 = 0) :
+    vDev (leftLim f) (leftLim g) = vDev f g := by
+  rw [vDev_leftLim_eq_vDev_rightLim hf hg hf0,
+    (isRightContinuous_iff_rightLim_eq hf).mp hfrc,
+    (isRightContinuous_iff_rightLim_eq hg).mp hgrc]
+
 /-! ## Book restatement (performance operators are continuity insensitive)
 For non-decreasing `f, g ∈ ℱ₀↑` with left- and right-closures
 `fₗ, fᵣ, gₗ, gᵣ`: `hDev(fᵣ, gᵣ) = hDev(fₗ, gₗ)` and
@@ -232,5 +259,21 @@ example {f g : ℝ≥0 → ℝ≥0∞} (hf : Monotone f) (hg : Monotone g)
       vDev (rightLim f) (rightLim g) = vDev (leftLim f) (leftLim g) :=
   ⟨(hDev_leftLim_eq_hDev_rightLim hf hg).symm,
     (vDev_leftLim_eq_vDev_rightLim hf hg hf0).symm⟩
+
+/-! ## Book restatement (right-continuous cumulative functions)
+"If `(A, D) ∈ C` (then `A` and `D` are left-continuous), then
+`hDev(Aᵣ, Dᵣ) = hDev(A, D)` and `vDev(Aᵣ, Dᵣ) = vDev(A, D)`": the
+worst-case backlog and delay bounds are the same as with left-continuous
+cumulative functions. The horizontal half does not even need
+left-continuity; the vertical half consumes it through the closure
+fixed point, plus null at the origin (the class `C`). Causality `D ≤ A`
+is carried unused for fidelity to `C`. -/
+example {A D : ℝ≥0 → ℝ≥0∞} (hAmono : Monotone A) (hDmono : Monotone D)
+    (hAlc : IsLeftContinuous A) (hDlc : IsLeftContinuous D)
+    (hA0 : A 0 = 0) (_hc : ∀ t, D t ≤ A t) :
+    (hDev (rightLim A) (rightLim D) : ℝ≥0∞) = hDev A D ∧
+      vDev (rightLim A) (rightLim D) = vDev A D :=
+  ⟨hDev_rightLim_eq_hDev hAmono hDmono,
+    vDev_rightLim_eq_vDev_of_isLeftContinuous hAmono hDmono hAlc hDlc hA0⟩
 
 end DeepWiki
