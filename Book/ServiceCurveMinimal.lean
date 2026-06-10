@@ -14,9 +14,28 @@ namespace DeepWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 
+/-- The exact `EReal` lift of an `ℝ≥0`-valued cumulative function:
+`t ↦ ((f t : ℝ) : EReal)`. -/
+noncomputable abbrev liftEReal (f : ℝ≥0 → ℝ≥0) : ℝ≥0 → EReal :=
+  fun t => ((f t : ℝ) : EReal)
+
+/-- `liftEReal f` is nonnegative. -/
+theorem isNonneg_liftEReal (f : ℝ≥0 → ℝ≥0) : IsNonneg (liftEReal f) :=
+  fun t => EReal.coe_nonneg.mpr (f t).coe_nonneg
+
+/-- `liftEReal` transports monotonicity: `liftEReal f` is monotone when `f`
+is. -/
+theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
+    Monotone (liftEReal f) :=
+  fun _ _ hab => by exact_mod_cast hmono hab
+
 /-- A curve viewed in `EReal`: `t ↦ ((A t : ℝ) : EReal)`. -/
 noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
   fun t => ((A t : ℝ) : EReal)
+
+/-- `curveE A` is the `EReal` lift of the underlying function:
+`curveE A = liftEReal ⇑A`. -/
+theorem curveE_eq_liftEReal (A : Curve) : curveE A = liftEReal ⇑A := rfl
 
 /-- `curveE A` is nonnegative: `0 ≤ curveE A t`. -/
 theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t := by

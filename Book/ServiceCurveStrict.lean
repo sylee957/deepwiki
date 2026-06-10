@@ -47,6 +47,12 @@ theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
     subst this
     rw [tsub_self, h0, add_zero]
 
+/-- The relation `strictServiceRel beta` offers its own strict service
+curve. -/
+theorem isStrictMinimalServiceCurve_strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
+    IsStrictMinimalServiceCurve beta (strictServiceRel beta) :=
+  fun _ _ hp => hp.2
+
 /-- A causal `S` offers strict service `beta` iff its pairs all lie in
 `strictServiceRel beta`. -/
 theorem isStrictMinimalServiceCurve_iff_subset

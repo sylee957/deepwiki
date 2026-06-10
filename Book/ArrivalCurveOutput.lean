@@ -4,6 +4,7 @@ import Book.ArrivalCurvesMaximal
 import Book.Deconvolution
 import Book.DeviationsBoundsServer
 import Book.RealCurvesConv
+import Book.ServiceCurveStrictMinimal
 
 /-! # Output arrival curves
 A server offering a minimal service curve `βᵐ`, a maximal service curve `βᴹ`,
@@ -157,6 +158,21 @@ theorem isMaximalArrivalCurve_output_of_isMinimalServiceCurve
   rwa [toENN_delayEReal, conv_delayNN_zero,
     show toENN (⊤ : ℝ≥0 → EReal) = (⊤ : ℝ≥0 → ℝ≥0∞) from rfl,
     inf_top_eq] at h
+
+/-- **Output arrival curve from strict service.** Under causality, a pair
+served with a strict service curve `beta`, the arrival allowing `αu`, has
+output allowing the deconvolution `αu ⊘ beta`: the minimal-service output
+theorem through the strict-to-min-plus inclusion. -/
+theorem isMaximalArrivalCurve_output_of_isStrictMinimalServiceCurve
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
+    {αu : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
+    (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (liftENN beta)) := by
+  have h := isMaximalArrivalCurve_output_of_isMinimalServiceCurve hc
+    (hβ.isMinimalServiceCurve hc) (isNonneg_liftEReal beta) hp harru
+  rwa [toENN_liftEReal] at h
 
 /-- **Output arrival curve (minimal).** Under causality and nonnegative
 minimal and maximal service curves `betam`, `betaM`, the output keeps
