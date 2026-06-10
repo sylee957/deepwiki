@@ -18,6 +18,41 @@ namespace Deviation
 /-- The `ℝ≥0∞` reading of an `ℝ≥0`-valued cumulative function. -/
 abbrev liftENN (A : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0∞ := fun u => (A u : ℝ≥0∞)
 
+/-- `liftENN` preserves and reflects maximal arrival curves:
+`IsMaximalArrivalCurve (liftENN A) (liftENN α) ↔ IsMaximalArrivalCurve A α`
+(the increment bounds match through the exact embedding). -/
+theorem isMaximalArrivalCurve_liftENN_iff {A α : ℝ≥0 → ℝ≥0} :
+    IsMaximalArrivalCurve (liftENN A) (liftENN α)
+      ↔ IsMaximalArrivalCurve A α := by
+  rw [isMaximalArrivalCurve_iff_increment, isMaximalArrivalCurve_iff_increment]
+  exact ⟨fun h t d => by exact_mod_cast h t d,
+    fun h t d => by exact_mod_cast h t d⟩
+
+/-- `liftENN` reflects minimal arrival curves unconditionally: the `ℝ≥0∞`
+supremum is never junk, so it dominates each increment, which suffices on
+`ℝ≥0`. -/
+theorem isMinimalArrivalCurve_of_liftENN {A α : ℝ≥0 → ℝ≥0}
+    (h : IsMinimalArrivalCurve (liftENN A) (liftENN α)) :
+    IsMinimalArrivalCurve A α :=
+  isMinimalArrivalCurve_of_increment A α fun t d => by
+    exact_mod_cast
+      ((add_le_maxConv (liftENN A) (liftENN α) rfl).trans (h (t + d)) :
+        liftENN A t + liftENN α d ≤ liftENN A (t + d))
+
+/-- `liftENN` preserves minimal arrival curves of non-decreasing curves:
+monotonicity bounds the `ℝ≥0` supremum, making its increment bounds
+available to the `ℝ≥0∞` reading. -/
+theorem isMinimalArrivalCurve_liftENN_of_monotone {A α : ℝ≥0 → ℝ≥0}
+    (hA : Monotone A) (hα : Monotone α)
+    (h : IsMinimalArrivalCurve A α) :
+    IsMinimalArrivalCurve (liftENN A) (liftENN α) := by
+  have hincr := (isMinimalArrivalCurve_iff_increment_of_monotone A α hA hα).mp h
+  intro t
+  refine maxConv_le fun u s hus => ?_
+  exact hus ▸
+    (by exact_mod_cast hincr u s :
+      liftENN A u + liftENN α s ≤ liftENN A (u + s))
+
 /-- **Backlog bound.** If `A` has maximal arrival curve `α` and `D` dominates
 the convolution `A ∗ β`, then the backlog at every `t` is bounded by the
 vertical deviation: `b(A, D)(t) ≤ vDev α β`. -/

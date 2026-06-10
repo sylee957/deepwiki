@@ -182,4 +182,18 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥
     delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
       harr hsub hr hτ hcross⟩
 
+/-! ## Bridging arrival-curve readings
+The maximal length of a backlogged period under the `ℝ≥0∞` reading of the
+arrival-curve hypothesis: `liftENN` reflects it onto `ℝ≥0`, where the
+strict-service crossing bound applies. -/
+example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) (liftENN alpha))
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    (d : ℝ≥0∞)
+      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
+  length_le_iInf_crossing_of_isBacklogged hSrv.1 hβ hp
+    (isMaximalArrivalCurve_liftENN_iff.mp harr) hbl
+
 end DeepWiki
