@@ -1,3 +1,4 @@
+import Book.ArrivalCurves
 import Book.Servers
 import Book.ConvolutionReal
 import Book.ServersBacklog
@@ -6,8 +7,9 @@ import Book.ServersBacklog
 A strict service curve `β` bounds the output growth on each backlogged period:
 `D s + β (t − s) ≤ D t`. This chapter develops the largest strict-service
 relation `strictServiceRel β`, its server status, monotonicity, the join, the
-output bound, and the closure equivalences `Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) =
-Sₛₜᵣᵢ𝒸ₜ(β*̄)`. -/
+output bound, the closure equivalences `Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) =
+Sₛₜᵣᵢ𝒸ₜ(β*̄)`, and the maximal length of a backlogged period (bounded by the
+first crossing of the arrival curve below `β`). -/
 
 namespace DeepWiki
 
@@ -276,5 +278,89 @@ theorem isStrictMinimalServiceCurve_closures_iff_of_affine_bound
   · exact ⟨r * t, by rintro x ⟨⟨u, hu⟩, rfl⟩; exact le_trans (hr u) (by gcongr)⟩
   · exact ⟨r * t, by
       rintro x ⟨n, rfl⟩; exact maxConvProjPow_le_of_affine_bound hr n t⟩
+
+/-! ## Maximal length of a backlogged period -/
+
+/-- On a backlogged period `(t, t + d]` of a causal pair with strict service
+`beta` whose arrival admits maximal arrival curve `alpha`, the service curve
+sits strictly below the arrival curve at every positive length `d' ≤ d`:
+`beta d' < alpha d'`. -/
+theorem beta_lt_alpha_of_isBacklogged
+    {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
+    {d' : ℝ≥0} (hd' : 0 < d') (hle : d' ≤ d) :
+    beta d' < alpha d' := by
+  have hcAD : ∀ x, D x ≤ A x := hc A D hp
+  set s := start A D (t + d)
+  have heq : A s = D s := A_start_eq_D_start A D hcAD (t + d)
+  -- the start lies at or before `t`: no equality point inside the backlog
+  have hst : s ≤ t := start_le_of_isBacklogged A D hbl
+  -- `s + d'` stays inside the backlogged period from the start
+  have hmem : s + d' ∈ Set.Ioc s (t + d) :=
+    ⟨lt_add_of_pos_right s hd', add_le_add hst hle⟩
+  have hbacklog : D (s + d') < A (s + d') :=
+    isBacklogged_Ioc_start A D hcAD (t + d) (s + d') hmem
+  -- strict service on `(s, s + d']`
+  have hserv : D s + beta d' ≤ D (s + d') := by
+    have := hβ A D hp s (s + d') le_self_add
+      ((isBacklogged_Ioc_start A D hcAD (t + d)).subset
+        (Set.Ioc_subset_Ioc_right hmem.2))
+    rwa [add_tsub_cancel_left] at this
+  -- arrival increment and `A = D` at the start close the chain
+  have hchain : A s + beta d' < A s + alpha d' :=
+    calc A s + beta d' = D s + beta d' := by rw [heq]
+      _ ≤ D (s + d') := hserv
+      _ < A (s + d') := hbacklog
+      _ ≤ A s + alpha d' :=
+          (isMaximalArrivalCurve_iff_increment (⇑A) alpha).mp harr s d'
+  exact lt_of_add_lt_add_left hchain
+
+/-- A positive crossing point `alpha d₀ ≤ beta d₀` bounds every backlogged
+period of a causal pair with strict service `beta`: backlog on `(t, t + d]`
+forces the length `d < d₀`. -/
+theorem length_lt_crossing_of_isBacklogged
+    {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d)))
+    {d₀ : ℝ≥0} (hd₀ : 0 < d₀) (hcross : alpha d₀ ≤ beta d₀) :
+    d < d₀ := by
+  by_contra h
+  rw [not_lt] at h
+  exact absurd hcross (not_le.mpr
+    (beta_lt_alpha_of_isBacklogged hc hβ hp harr hbl hd₀ h))
+
+/-- **Maximal length of a backlogged period.** Every backlogged period
+`(t, t + d]` of a causal pair with strict service `beta` whose arrival
+admits maximal arrival curve `alpha` has length at most the first crossing
+`inf {x > 0 | alpha x ≤ beta x}` (`⊤` in `ℝ≥0∞` when the curves never
+cross). -/
+theorem length_le_iInf_crossing_of_isBacklogged
+    {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    (d : ℝ≥0∞)
+      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
+  le_iInf₂ fun _ hx => ENNReal.coe_le_coe.mpr
+    (length_lt_crossing_of_isBacklogged hc hβ hp harr hbl hx.1 hx.2).le
+
+/-! ## Book restatement (maximal length of a backlogged period)
+A server `S ⊆ Sₛₜᵣᵢ𝒸ₜ(beta)` whose arrival `A` admits maximal arrival
+curve `alpha` has every backlogged period of length at most
+`ℓmax = inf {x > 0 | alpha x ≤ beta x}`. -/
+example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    (d : ℝ≥0∞)
+      ≤ ⨅ x ∈ {x : ℝ≥0 | 0 < x ∧ alpha x ≤ beta x}, (x : ℝ≥0∞) :=
+  length_le_iInf_crossing_of_isBacklogged hSrv.1 hβ hp harr hbl
 
 end DeepWiki

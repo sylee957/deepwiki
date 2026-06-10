@@ -45,6 +45,17 @@ theorem IsBacklogged.subset {A D : Curve}
     (hsub : I' ⊆ I) : IsBacklogged A D I' :=
   fun t ht => h t (hsub ht)
 
+/-- When `(t, t']` is backlogged, the start of the period of `t'` lies at or
+before `t`: equality points avoid the backlog. -/
+theorem start_le_of_isBacklogged (A D : Curve) {t t' : ℝ≥0}
+    (hbl : IsBacklogged A D (Set.Ioc t t')) :
+    start A D t' ≤ t := by
+  refine csSup_le (start_set_nonempty A D t') ?_
+  intro u hu
+  by_contra hut
+  rw [not_le] at hut
+  exact absurd hu.2 (ne_of_gt (hbl u ⟨hut, hu.1⟩))
+
 /-- `(start A D t, t]` is a backlogged period when `D ≤ A`. -/
 theorem isBacklogged_Ioc_start (A D : Curve)
     (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
