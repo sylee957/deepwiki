@@ -231,6 +231,13 @@ noncomputable def subadditiveClosureE {D : Type}
     (g : D → ℝ≥0∞) : D → ℝ≥0∞ :=
   fun t => (subadditiveClosure (toF g) t).toVal
 
+/-- `subadditiveClosureE g t` is the numeric infimum of the convolution
+powers: `⨅ n, (convPow (toF g) n t).toVal`. -/
+theorem subadditiveClosureE_eq_iInf {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) (t : D) :
+    subadditiveClosureE g t
+      = ⨅ n : ℕ, (convPow (toF g) n t).toVal := rfl
+
 /-- `toF` transports `subadditiveClosureE` to `subadditiveClosure`. -/
 theorem toF_subadditiveClosureE {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :

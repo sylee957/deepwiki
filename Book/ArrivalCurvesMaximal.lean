@@ -1,4 +1,5 @@
 import Book.ArrivalCurves
+import Book.Closures
 import Book.Continuity
 import Book.ConvolutionReal
 import Mathlib.Topology.Order.LeftRightLim
@@ -146,6 +147,67 @@ theorem isMaximalArrivalCurve_of_subadditiveClosure_le {A α α' : ℝ≥0 → �
     (h : IsMaximalArrivalCurve A α) (hle : subadditiveClosureMin α ≤ α') :
     IsMaximalArrivalCurve A α' :=
   h.subadditiveClosureMin.mono hle
+
+/-! ## Sub-additive closure on the `ℝ≥0∞` carrier
+The same family for `ℝ≥0∞`-valued curves, against the dioid closure
+`subadditiveClosureE` (from `Book.Closures`): the closure of a maximal
+arrival curve is again one, sub-additive, and `≤ α`. -/
+
+open scoped ENNReal
+
+/-- The increment bound iterated through the closure powers on `ℝ≥0∞`:
+`A (t + d) ≤ A t + (convPow (toF α) n d).toVal` for every power `n`. -/
+theorem increment_convPow_of_isMaximalArrivalCurve {A α : ℝ≥0 → ℝ≥0∞}
+    (h : IsMaximalArrivalCurve A α) (n : ℕ) (t d : ℝ≥0) :
+    A (t + d) ≤ A t + (convPow (toF α) n d).toVal := by
+  rw [isMaximalArrivalCurve_iff_increment] at h
+  induction n generalizing t d with
+  | zero =>
+      show A (t + d) ≤ A t + (convUnit (T := MinPlusNN) d).toVal
+      rcases eq_or_ne d 0 with rfl | hd
+      · rw [convUnit, if_pos rfl]
+        show A (t + 0) ≤ A t + (0 : ℝ≥0∞)
+        rw [add_zero, add_zero]
+      · rw [convUnit, if_neg hd]
+        show A (t + d) ≤ A t + (⊤ : ℝ≥0∞)
+        rw [add_top]
+        exact le_top
+  | succ n ih =>
+      rw [show (convPow (toF α) (n + 1) d).toVal
+          = minConv (fun u => (convPow (toF α) n u).toVal) α d from
+        conv_toF_apply (fun u => (convPow (toF α) n u).toVal) α d]
+      show A (t + d)
+        ≤ A t + ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = d},
+            ((convPow (toF α) n p.1.1).toVal + α p.1.2)
+      rw [ENNReal.add_iInf]
+      refine le_iInf ?_
+      rintro ⟨⟨u, s⟩, (hus : u + s = d)⟩
+      calc A (t + d) = A ((t + u) + s) := by rw [add_assoc, hus]
+        _ ≤ A (t + u) + α s := h (t + u) s
+        _ ≤ (A t + (convPow (toF α) n u).toVal) + α s :=
+            add_le_add (ih t u) le_rfl
+        _ = A t + ((convPow (toF α) n u).toVal + α s) := add_assoc _ _ _
+
+/-- The (min,+) sub-additive closure on `ℝ≥0∞` of a maximal arrival curve is
+again a maximal arrival curve: if `A ≤ A ∗ α` then
+`A ≤ A ∗ subadditiveClosureE α`. -/
+theorem IsMaximalArrivalCurve.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
+    (h : IsMaximalArrivalCurve A α) :
+    IsMaximalArrivalCurve A (DeepWiki.subadditiveClosureE α) := by
+  rw [isMaximalArrivalCurve_iff_increment]
+  intro t d
+  rw [subadditiveClosureE_eq_iInf, ENNReal.add_iInf]
+  exact le_iInf fun n =>
+    increment_convPow_of_isMaximalArrivalCurve h n t d
+
+/-! Any `ℝ≥0∞` maximal arrival curve can be replaced by its sub-additive
+closure: still a maximal arrival curve, sub-additive, and below `α`. -/
+example {A α : ℝ≥0 → ℝ≥0∞} (h : IsMaximalArrivalCurve A α) :
+    IsMaximalArrivalCurve A (subadditiveClosureE α)
+      ∧ IsSubadditive (subadditiveClosureE α)
+      ∧ ∀ t, subadditiveClosureE α t ≤ α t :=
+  ⟨h.subadditiveClosureE, subadditiveClosureE_subadditive α,
+    subadditiveClosureE_le α⟩
 
 /-! ## Left-continuous extension
 The left-continuous extension of a non-decreasing `α` — its left limit
