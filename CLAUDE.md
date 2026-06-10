@@ -63,14 +63,12 @@ Commands:
 Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
 then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
 Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
-imports them all in order: `Signatures`, `LevelSet`, `Dioids`, `Order`, `CompleteDioids`,
-`ScalarDioids`, `DioidFunctions`, `FunctionDioids`, `NdClosure`, `Additivity`,
-`Closures`,
-`Limits`, `Continuity`, `RealCurves`, `CurveRegularity`, `RealCurvesAdditivity`, `RealCurvesConv`,
-`RealCurvesDeconv`, `RealCurvesDeviations`, `PseudoInverse`, `ConvolutionMinimum`,
-`Servers`, `RealConvolution`, `ArrivalCurveShaper` (the live list is `Book.lean`).
+imports them all in dependency order — it is the live chapter list (do not
+maintain a copy of it here).
 
-All declarations live in `namespace DeepWiki`.
+All declarations live in `namespace DeepWiki` (sub-namespace `Deviation` for
+the backlog/delay theory, whose short names would clash with the curve
+catalog).
 
 **Chapter naming:** base concept first, qualifiers appended as suffixes —
 `ServiceCurveStrict`, `ArrivalCurveShaper`, `ArrivalCurveShaperGreedy` — so
@@ -179,6 +177,26 @@ not just defaults):
   uniform: Mathlib's `conclusion_of_hypothesis` order, and one consistent term
   for the same object across a related group (e.g. `apply` for `f t` across the
   four `*_of_*` inversion lemmas).
+
+- **Naming conventions** (codified; legacy names migrate gradually):
+  - Predicates are `Is<Concept>` with the curve argument first
+    (`IsMinimalServiceCurve beta S`); transport lemmas use dot notation on the
+    predicate (`IsShaper.mono`, `IsGreedyShaper.isShaper`). No primed names.
+  - Duality pairs are `Minimal`/`Maximal` — for arrival and service curves
+    alike; `MinPlus`/`MaxPlus` are reserved for the dioid carriers.
+  - The largest relation offering a property is `<concept>Rel`
+    (`minimalServiceRel`, `maximalServiceRel`, `strictServiceRel`,
+    `shaperRel`, `greedyShaperRel`), with the lemma family `mem_<rel>_iff`,
+    `isServer_<rel>`, `is<Concept>_iff_subset` (predicate on the left),
+    `is<Concept>_<rel>` (a relation offers its own property), `<rel>_mono`,
+    `<rel>_closure`.
+  - Hypothesis binders: `hmono` monotone, `hnn` nonneg, `h0` null at origin,
+    `hlc` left-continuous, `hsub` sub-additive, `hp` pair membership `S A D`,
+    `hc` causal, `hSrv` server, `harr` arrival-curve, `hserv` service bound.
+  - Carrier tags (target grammar; bare `E` is legacy and ambiguous):
+    `NN` = `ℝ≥0∞` values on `ℝ≥0` domain, `ENN` = an `ℝ≥0∞` reading/lift,
+    `EReal` = `EReal` values, `Ext` = `WithTop (WithBot ℝ)`; lowercase
+    `_ereal`/`_ext` for theorem-variant suffixes.
 
 - **Definitions split from proofs; share one definition via base + abbrev.**
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
