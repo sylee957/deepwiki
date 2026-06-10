@@ -115,16 +115,8 @@ namespace MinPlus
 
 /-- Dioid order `≼ₒ` is the reverse numeric order on `MinPlus`. -/
 theorem le_iff (a b : MinPlus) :
-    a ≼ₒ b ↔ (b : WithTop ℝ) ≤ a := by
-  have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : MinPlus) = b := Iff.rfl
-  rw [h1]
-  constructor
-  · intro h
-    have : min (↑a : WithTop ℝ) ↑b = ↑b :=
-      congrArg toVal h
-    rw [← this]; exact min_le_left _ _
-  · intro h; exact ext (min_eq_right h)
+    a ≼ₒ b ↔ (b : WithTop ℝ) ≤ a :=
+  MinPlus.ext_iff.trans min_eq_right_iff
 
 end MinPlus
 
@@ -253,16 +245,8 @@ instance : Algebra.Dioid MinPlusExt where
 
 /-- Dioid order `≼ₒ` is the reverse numeric order on `MinPlusExt`. -/
 theorem le_iff (a b : MinPlusExt) :
-    a ≼ₒ b ↔ (b : WithTop (WithBot ℝ)) ≤ a := by
-  have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : MinPlusExt) = b := Iff.rfl
-  rw [h1]
-  constructor
-  · intro h
-    have : min (↑a : WithTop (WithBot ℝ)) ↑b = ↑b :=
-      congrArg toVal h
-    rw [← this]; exact min_le_left _ _
-  · intro h; exact ext (min_eq_right h)
+    a ≼ₒ b ↔ (b : WithTop (WithBot ℝ)) ≤ a :=
+  MinPlusExt.ext_iff.trans min_eq_right_iff
 
 /-- `MinPlusExt` complete dioid: `⨆ = ⨅` numerically. -/
 noncomputable instance :
@@ -341,15 +325,8 @@ instance : Algebra.Dioid MinPlusNN where
 
 /-- Dioid order `≼ₒ` is the reverse numeric order on `MinPlusNN`. -/
 theorem le_iff (a b : MinPlusNN) :
-    a ≼ₒ b ↔ (b : ℝ≥0∞) ≤ a := by
-  have h1 : a ≼ₒ b
-      ↔ (⟨min ↑a ↑b⟩ : MinPlusNN) = b := Iff.rfl
-  rw [h1]
-  constructor
-  · intro h
-    have : min (↑a : ℝ≥0∞) ↑b = ↑b := congrArg toVal h
-    rw [← this]; exact min_le_left _ _
-  · intro h; exact ext (min_eq_right h)
+    a ≼ₒ b ↔ (b : ℝ≥0∞) ≤ a :=
+  MinPlusNN.ext_iff.trans min_eq_right_iff
 
 /-- `MinPlusNN` complete dioid: `⨆ = ⨅` numerically. -/
 noncomputable instance :
@@ -496,16 +473,8 @@ instance : Algebra.Dioid MaxPlusNN where
 
 /-- Dioid order `≼ₒ` agrees with the numeric order on `MaxPlusNN`. -/
 theorem le_iff (a b : MaxPlusNN) :
-    a ≼ₒ b ↔ (a : WithBot ℝ≥0∞) ≤ b := by
-  have h1 : a ≼ₒ b
-      ↔ (⟨max ↑a ↑b⟩ : MaxPlusNN) = b := Iff.rfl
-  rw [h1]
-  constructor
-  · intro h
-    have : max (↑a : WithBot ℝ≥0∞) ↑b = ↑b :=
-      congrArg toVal h
-    rw [← this]; exact le_max_left _ _
-  · intro h; exact ext (max_eq_right h)
+    a ≼ₒ b ↔ (a : WithBot ℝ≥0∞) ≤ b :=
+  MaxPlusNN.ext_iff.trans max_eq_right_iff
 
 /-- `MaxPlusNN` complete dioid: `⨆` is the numeric `⨆`. -/
 noncomputable instance :
@@ -626,16 +595,8 @@ instance : Algebra.Dioid MaxPlusExt where
 
 /-- Dioid order `≼ₒ` agrees with the numeric order on `MaxPlusExt`. -/
 theorem le_iff (a b : MaxPlusExt) :
-    a ≼ₒ b ↔ (a : WithBot (WithTop ℝ)) ≤ b := by
-  have h1 : a ≼ₒ b
-      ↔ (⟨max ↑a ↑b⟩ : MaxPlusExt) = b := Iff.rfl
-  rw [h1]
-  constructor
-  · intro h
-    have : max (↑a : WithBot (WithTop ℝ)) ↑b = ↑b :=
-      congrArg toVal h
-    rw [← this]; exact le_max_left _ _
-  · intro h; exact ext (max_eq_right h)
+    a ≼ₒ b ↔ (a : WithBot (WithTop ℝ)) ≤ b :=
+  MaxPlusExt.ext_iff.trans max_eq_right_iff
 
 /-- `MaxPlusExt` complete dioid: `⨆` is the numeric `⨆`. -/
 noncomputable instance :

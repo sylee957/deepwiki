@@ -55,19 +55,6 @@ theorem isLeftContinuous_of_mono_lsc
         ⟨s, hslt, rfl⟩
     exact absurd hle (not_le.2 hsy)
 
-/-- The split objective as a function of the *pair* `(t, u)`, `f u + g (t − u)`,
-is jointly lower semicontinuous when `f`, `g` are. -/
-theorem lowerSemicontinuous_splitPair
-    {T : Type*} [_root_.AddCommMonoid T] [LinearOrder T]
-    [IsOrderedAddMonoid T] [TopologicalSpace T] [OrderTopology T]
-    [ContinuousAdd T] (f g : ℝ≥0 → T)
-    (hf : LowerSemicontinuous f) (hg : LowerSemicontinuous g) :
-    LowerSemicontinuous (fun p : ℝ≥0 × ℝ≥0 => f p.2 + g (p.1 - p.2)) := by
-  have h1 : LowerSemicontinuous (fun p : ℝ≥0 × ℝ≥0 => f p.2) :=
-    hf.comp continuous_snd
-  have hsub : Continuous (fun p : ℝ≥0 × ℝ≥0 => p.1 - p.2) := by continuity
-  exact h1.add (hg.comp hsub)
-
 /-- The split objective `(t, u) ↦ f u + g (t − u)` is jointly lower
 semicontinuous with an explicit pointwise `ContinuousAt (+)` hypothesis (for
 carriers like `EReal` where `+` is not globally continuous). -/
@@ -82,6 +69,17 @@ theorem lowerSemicontinuous_splitPair_of_contAt
     hf.comp continuous_snd
   have hsub : Continuous (fun p : ℝ≥0 × ℝ≥0 => p.1 - p.2) := by continuity
   exact h1.add' (hg.comp hsub) hcont
+
+/-- The split objective as a function of the *pair* `(t, u)`, `f u + g (t − u)`,
+is jointly lower semicontinuous when `f`, `g` are. -/
+theorem lowerSemicontinuous_splitPair
+    {T : Type*} [_root_.AddCommMonoid T] [LinearOrder T]
+    [IsOrderedAddMonoid T] [TopologicalSpace T] [OrderTopology T]
+    [ContinuousAdd T] (f g : ℝ≥0 → T)
+    (hf : LowerSemicontinuous f) (hg : LowerSemicontinuous g) :
+    LowerSemicontinuous (fun p : ℝ≥0 × ℝ≥0 => f p.2 + g (p.1 - p.2)) :=
+  lowerSemicontinuous_splitPair_of_contAt f g hf hg
+    (fun _ => continuous_add.continuousAt)
 
 /-- Lower semicontinuity of the (min,+) convolution: core form. Given joint lsc
 of the split objective and a per-point minimizer `u_r ∈ [0,r]` with

@@ -14,12 +14,6 @@ namespace DeepWiki
 open Set Topology Filter
 open scoped Classical NNReal
 
-/-- `C * (x / C) = x` for `C ≠ 0` (`ℝ≥0` division). -/
-theorem mul_div_cancel_left_of_ne {C : ℝ≥0} (hC : C ≠ 0) (x : ℝ≥0) :
-    C * (x / C) = x := by
-  rw [← mul_div_assoc]
-  exact mul_div_cancel_left₀ x hC
-
 /-! ## Piecewise-after curves -/
 
 /-- A function that is `0` up to `T` and follows the branch `g` strictly
@@ -132,7 +126,7 @@ theorem stepCurve_strict_packet {S : Curve → Curve → Prop} {C T b s x : ℝ�
     {u : ℝ≥0} (hu : T ≤ u) (hxb : x + s ≤ b) (hxD : x ≤ D u) :
     x + s ≤ D (u + s / C) := by
   have h := stepCurve_strict_drain hβ hp hu (s / C)
-  rw [mul_div_cancel_left_of_ne hC] at h
+  rw [mul_div_cancel₀ _ hC] at h
   exact le_trans (le_min hxb (add_le_add hxD le_rfl)) h
 
 /-! ## Min-plus service: a total guarantee only -/
@@ -165,7 +159,7 @@ theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : �
         exact le_of_add_le_add_left hTw
       have hb : b ≤ C * w := by
         have h1 : C * (b / C) ≤ C * w := mul_le_mul' le_rfl hw
-        rwa [mul_div_cancel_left_of_ne hC] at h1
+        rwa [mul_div_cancel₀ _ hC] at h1
       calc ((b : ℝ) : EReal)
           ≤ ((C * w : ℝ≥0) : ℝ) := by exact_mod_cast hb
         _ ≤ curveE (stepCurve T b) v + rateEReal C w :=
@@ -293,7 +287,7 @@ theorem rushCurve_lt_of_lt {T b c C v : ℝ≥0} (hcb : c < b) (hC : C ≠ 0)
     have hCvT : C * (v - T) < b := by
       have h1 : C * (v - T) < C * (b / C) :=
         mul_lt_mul_of_pos_left hvT (zero_lt_iff.mpr hC)
-      rwa [mul_div_cancel_left_of_ne hC] at h1
+      rwa [mul_div_cancel₀ _ hC] at h1
     exact max_lt hcb (lt_of_le_of_lt (min_le_right _ _) hCvT)
   · rw [if_neg hTv]
     exact lt_of_le_of_lt zero_le' hcb

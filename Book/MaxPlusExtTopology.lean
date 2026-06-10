@@ -145,48 +145,14 @@ theorem isOpen_addDefinedExtMax :
   rw [hset]
   exact (o1.union o2).inter (o3.union o4)
 
-/-- The conjugated `EReal` addition `p ↦ ofEReal (toEReal p.1 + toEReal p.2)`. -/
-noncomputable def conjAdd
-    (p : WithBot (WithTop ℝ) × WithBot (WithTop ℝ)) : WithBot (WithTop ℝ) :=
-  ofEReal (toEReal p.1 + toEReal p.2)
-
-/-- The conjugated addition is continuous at any `AddDefinedExtMax` pair, by
-transport through the homeomorphism `toEReal` and `EReal.continuousAt_add`. -/
-theorem continuousAt_conjAdd {a b : WithBot (WithTop ℝ)}
-    (h : AddDefinedExtMax a b) : ContinuousAt conjAdd (a, b) := by
-  have hpair : Continuous (fun p : WithBot (WithTop ℝ) × WithBot (WithTop ℝ) =>
-      (toEReal p.1, toEReal p.2)) :=
-    (toERealHomeo.continuous.comp continuous_fst).prodMk
-      (toERealHomeo.continuous.comp continuous_snd)
-  have hEReal : ContinuousAt (fun q : EReal × EReal => q.1 + q.2)
-      (toEReal a, toEReal b) := by
-    refine EReal.continuousAt_add ?_ ?_
-    · rcases h.1 with ha | hb
-      · exact Or.inl (by simpa using ha)
-      · exact Or.inr (by simpa using hb)
-    · rcases h.2 with ha | hb
-      · exact Or.inl (by simpa using ha)
-      · exact Or.inr (by simpa using hb)
-  have hadd : ContinuousAt (fun p : WithBot (WithTop ℝ) × WithBot (WithTop ℝ) =>
-      toEReal p.1 + toEReal p.2) (a, b) := by
-    have := hEReal.comp (x := (a, b)) hpair.continuousAt
-    simpa [Function.comp] using this
-  have := (toERealHomeo.symm.continuous.continuousAt
-    (x := toEReal a + toEReal b)).comp (x := (a, b)) hadd
-  simpa [conjAdd, Function.comp] using this
-
-/-- Bot-absorbing `R̄max` addition is continuous at any `AddDefinedExtMax` pair,
-proved by conjugation through the `EReal` cast (no from-scratch case analysis):
-`conjAdd` agrees with `+` everywhere (`toEReal_add` is unconditional). -/
+/-- Bot-absorbing `R̄max` addition is continuous at any `AddDefinedExtMax` pair:
+the carrier's topology and addition are definitionally `EReal`'s, so this is
+`EReal.continuousAt_add` read through the identity cast. -/
 theorem continuousAt_add_of_addDefinedExtMax {a b : WithBot (WithTop ℝ)}
     (h : AddDefinedExtMax a b) :
     ContinuousAt
-      (fun p : WithBot (WithTop ℝ) × WithBot (WithTop ℝ) => p.1 + p.2) (a, b) := by
-  refine (continuousAt_conjAdd h).congr ?_
-  filter_upwards with p
-  show conjAdd p = p.1 + p.2
-  unfold conjAdd
-  rw [← toEReal_add, ofEReal_toEReal]
+      (fun p : WithBot (WithTop ℝ) × WithBot (WithTop ℝ) => p.1 + p.2) (a, b) :=
+  EReal.continuousAt_add h.1 h.2
 
 /-- `AddDefinedExtMax a b` makes `(+)` continuous at `(a, b)`. -/
 theorem AddDefinedExtMax.continuousAt {a b : WithBot (WithTop ℝ)}

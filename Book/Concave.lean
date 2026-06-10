@@ -67,12 +67,7 @@ theorem concaveOn_toRealCurve_of_concaveE
     simp [smul_eq_mul]
   have hz0 : 0 < z := by
     rw [← NNReal.coe_pos, hzval]
-    simp only [smul_eq_mul]
-    rcases le_total x y with hxy | hxy
-    · nlinarith [mul_nonneg ha hx0.le, mul_nonneg hb hy0.le,
-        mul_le_mul_of_nonneg_left hxy hb]
-    · nlinarith [mul_nonneg ha hx0.le, mul_nonneg hb hy0.le,
-        mul_le_mul_of_nonneg_left hxy ha]
+    exact convex_Ioi (0 : ℝ) hx hy ha hb hab
   -- finiteness facts
   obtain ⟨hsT, hsB⟩ := hfin s hs0
   obtain ⟨htT, htB⟩ := hfin t ht0

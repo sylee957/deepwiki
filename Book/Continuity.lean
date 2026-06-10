@@ -102,51 +102,15 @@ def IsRightContinuousAtED
 /-- For `t > 0`, ε–δ left-continuity agrees with `IsLeftContinuousAt`. -/
 theorem isLeftContinuousAtED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
-    IsLeftContinuousAtED g t ↔ IsLeftContinuousAt g t := by
-  unfold IsLeftContinuousAtED IsLeftContinuousAt
-  by_cases hfin : g t = ⊤
-  · have hinf := infinite_tendstoLeftED_iff g t ht
-    rw [show (⊤ : ℝ≥0∞) = g t from hfin.symm,
-      show TendstoLeft g t (g t)
-        = ContinuousWithinAt g (Iio t) t from rfl] at hinf
-    rw [← hinf]
-    constructor
-    · rintro ⟨-, h⟩; exact h hfin
-    · intro h
-      exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
-  · have hf := finite_tendstoLeftED_iff g t ht (g t) hfin
-    rw [show TendstoLeft g t (g t)
-        = ContinuousWithinAt g (Iio t) t from rfl] at hf
-    rw [← hf]
-    constructor
-    · rintro ⟨h, -⟩; exact h hfin
-    · intro h
-      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+    IsLeftContinuousAtED g t ↔ IsLeftContinuousAt g t :=
+  tendstoLeftED_iff g t ht (g t)
 
 /-- ε–δ right-continuity agrees with `IsRightContinuousAt`. -/
 theorem isRightContinuousAtED_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     IsRightContinuousAtED g t
-      ↔ IsRightContinuousAt g t := by
-  unfold IsRightContinuousAtED IsRightContinuousAt
-  by_cases hfin : g t = ⊤
-  · have hinf := infinite_tendstoRightED_iff g t
-    rw [show (⊤ : ℝ≥0∞) = g t from hfin.symm,
-      show TendstoRight g t (g t)
-        = ContinuousWithinAt g (Ioi t) t from rfl] at hinf
-    rw [← hinf]
-    constructor
-    · rintro ⟨-, h⟩; exact h hfin
-    · intro h
-      exact ⟨fun hne => absurd hfin hne, fun _ => h⟩
-  · have hf := finite_tendstoRightED_iff g t (g t) hfin
-    rw [show TendstoRight g t (g t)
-        = ContinuousWithinAt g (Ioi t) t from rfl] at hf
-    rw [← hf]
-    constructor
-    · rintro ⟨h, -⟩; exact h hfin
-    · intro h
-      exact ⟨fun _ => h, fun hT => absurd hT hfin⟩
+      ↔ IsRightContinuousAt g t :=
+  tendstoRightED_iff g t (g t)
 
 /-- Left-continuity at `t` is the left limit equaling `g t`. -/
 theorem tendstoLeft_value_iff_leftContinuousAt
