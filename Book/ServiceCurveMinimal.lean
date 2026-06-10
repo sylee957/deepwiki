@@ -80,10 +80,18 @@ theorem minConv_self_le {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) (A : Curv
   calc curveE A t + beta 0 ≤ curveE A t + 0 := by gcongr
     _ = curveE A t := add_zero _
 
+/-- `(A, D)` is a min-plus service pair of `beta`: `A ≥ D ≥ A ∗ beta`, on
+`T`-valued cumulative functions (the value-type-generic core of
+`minimalServiceRel`). -/
+def minimalServicePair {T : Type*} [Add T] [InfSet T] [LE T]
+    (beta : ℝ≥0 → T) (A D : ℝ≥0 → T) : Prop :=
+  D ≤ A ∧ minConv A beta ≤ D
+
 /-- The min-plus service relation of `beta`: the causal pairs meeting
-`A ∗ beta ≤ D`, i.e. `A ≥ D ≥ A ∗ beta`. Depends on `beta` alone. -/
+`A ∗ beta ≤ D`, i.e. `A ≥ D ≥ A ∗ beta`, read through `curveE`. Depends on
+`beta` alone. -/
 def minimalServiceRel (beta : ℝ≥0 → EReal) : Curve → Curve → Prop :=
-  fun A D => curveE D ≤ curveE A ∧ minConv (curveE A) beta ≤ curveE D
+  fun A D => minimalServicePair beta (curveE A) (curveE D)
 
 /-- `minimalServiceRel beta A D` unfolds to `A ≥ D` and `A ∗ beta ≤ D`. -/
 theorem mem_minimalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :

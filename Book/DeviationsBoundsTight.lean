@@ -94,30 +94,32 @@ theorem backlog_eq_vDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0}
       _ = backlog A D := (backlog_eq_vDev_liftENN A D).symm
 
 /-- **Tightness of the deviation bounds** (function form): for monotone
-sub-additive `alpha` in `F₀` and monotone `β` in `F₀`, some served pair
-`(A, D)` — i.e. `A ∗ β ≤ D` — with `A` having maximal arrival curve `alpha`
-attains `d(A, D) = hDev(alpha, β)` and `b(A, D) = vDev(alpha, β)`. The
-witnesses are `A = alpha` and `D = alpha ∗ β`; neither left-continuity nor
-piecewise continuity is needed — those only package the pair into curves. -/
+sub-additive `alpha` in `F₀` and monotone `β` in `F₀`, some min-plus service
+pair `(A, D)` of `β` — `A ≥ D ≥ A ∗ β` in the `ℝ≥0∞` reading — with `A`
+having maximal arrival curve `alpha` attains `d(A, D) = hDev(alpha, β)` and
+`b(A, D) = vDev(alpha, β)`. The witnesses are `A = alpha` and
+`D = alpha ∗ β`; neither left-continuity nor piecewise continuity is
+needed — those only package the pair into curves. -/
 theorem exists_delay_eq_hDev_backlog_eq_vDev
     {alpha : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
     (hmono : Monotone alpha) (h0 : IsNullAtOrigin alpha)
     (hsub : IsSubadditive alpha)
     (hβmono : Monotone β) (hβ0 : β 0 = 0) :
     ∃ A D : ℝ≥0 → ℝ≥0,
-      (∀ t, minConv (liftENN A) β t ≤ (D t : ℝ≥0∞)) ∧
+      minimalServicePair β (liftENN A) (liftENN D) ∧
       IsMaximalArrivalCurve (liftENN A) (liftENN alpha) ∧
       delay A D = (hDev (liftENN alpha) β : ℝ≥0∞) ∧
       backlog A D = vDev (liftENN alpha) β := by
-  have hne : ∀ t, minConv (liftENN alpha) β t ≠ ⊤ := by
+  have hle : ∀ t, minConv (liftENN alpha) β t ≤ (alpha t : ℝ≥0∞) := by
     intro t
-    refine ne_top_of_le_ne_top (ENNReal.coe_ne_top (r := alpha t)) ?_
     refine le_trans (minConv_le_add (liftENN alpha) β (add_zero t)) ?_
     rw [hβ0, add_zero]
+  have hne : ∀ t, minConv (liftENN alpha) β t ≠ ⊤ := fun t =>
+    ne_top_of_le_ne_top (ENNReal.coe_ne_top (r := alpha t)) (hle t)
   have hD : ∀ t, (((minConv (liftENN alpha) β t).toNNReal : ℝ≥0) : ℝ≥0∞)
       = minConv (liftENN alpha) β t := fun t => ENNReal.coe_toNNReal (hne t)
   exact ⟨alpha, fun t => (minConv (liftENN alpha) β t).toNNReal,
-    fun t => (hD t).ge,
+    ⟨fun t => le_trans (hD t).le (hle t), fun t => (hD t).ge⟩,
     isMaximalArrivalCurve_self_of_subadditive hsub.liftENN,
     delay_eq_hDev_of_minConv_eq hmono h0 hsub hβmono hD,
     backlog_eq_vDev_of_minConv_eq h0 hsub hD⟩
