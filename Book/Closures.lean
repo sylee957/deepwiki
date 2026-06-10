@@ -278,6 +278,36 @@ theorem subadditiveClosureE_subadditive {D : Type}
     _ = subadditiveClosureE g u
           + subadditiveClosureE g s := rfl
 
+/-- The numeric closure of a monotone `ℝ≥0∞` curve is monotone: `convUnit`
+is monotone and `minConv` preserves monotonicity through the powers. -/
+theorem monotone_subadditiveClosureE {g : ℝ≥0 → ℝ≥0∞}
+    (hmono : Monotone g) : Monotone (subadditiveClosureE g) := by
+  have hpow : ∀ n, Monotone fun t => (convPow (toF g) n t).toVal := by
+    intro n
+    induction n with
+    | zero =>
+        intro a b hab
+        show (convUnit (T := MinPlusNN) a).toVal
+          ≤ (convUnit (T := MinPlusNN) b).toVal
+        rcases eq_or_ne a 0 with rfl | ha
+        · rw [convUnit, if_pos rfl]
+          exact zero_le'
+        · have hb : b ≠ 0 := fun hb0 =>
+            ha (le_antisymm (hb0 ▸ hab) zero_le')
+          rw [convUnit, if_neg ha, convUnit, if_neg hb]
+    | succ n ih =>
+        intro a b hab
+        calc (convPow (toF g) (n + 1) a).toVal
+            = minConv (fun u => (convPow (toF g) n u).toVal) g a :=
+              conv_toF_apply _ g a
+          _ ≤ minConv (fun u => (convPow (toF g) n u).toVal) g b :=
+              monotone_minConv ih hmono hab
+          _ = (convPow (toF g) (n + 1) b).toVal :=
+              (conv_toF_apply _ g b).symm
+  intro a b hab
+  rw [subadditiveClosureE_eq_iInf, subadditiveClosureE_eq_iInf]
+  exact iInf_mono fun n => hpow n hab
+
 /-- Sub-additive `g` with `g 0 = 0` is its own closure. -/
 theorem subadditiveClosureE_eq_self {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
