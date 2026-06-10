@@ -8,7 +8,7 @@ order properties used by strict service-curve theory. -/
 namespace DeepWiki
 
 open Set Topology Filter
-open scoped Classical NNReal
+open scoped Classical NNReal ENNReal
 
 /-- `A`/`D` is backlogged on `I`: `D t < A t` for all `t ∈ I`. -/
 def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
@@ -106,6 +106,30 @@ theorem A_start_eq_D_start (A D : Curve)
       (csSup_le (start_set_nonempty A D t) hub)
       (not_le.mpr hls)
   · exact heq.symm
+
+/-- Age of the backlogged period at `t`: the time since the last equality
+point, `t - start A D t`. -/
+noncomputable def backloggedAgeAt (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
+  t - start A D t
+
+/-- Maximal length of a backlogged period: `⨆ t, backloggedAgeAt A D t`,
+valued in `ℝ≥0∞` (unbounded periods read `⊤`). -/
+noncomputable def maxBackloggedLength (A D : Curve) : ℝ≥0∞ :=
+  ⨆ t : ℝ≥0, (backloggedAgeAt A D t : ℝ≥0∞)
+
+/-- Every backlogged period's length is dominated by the maximal one: on a
+backlogged `(t, t + d]` the start of the period of `t + d` lies at or
+before `t`, so the age at `t + d` is at least `d`. -/
+theorem le_maxBackloggedLength_of_isBacklogged (A D : Curve) {t d : ℝ≥0}
+    (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    (d : ℝ≥0∞) ≤ maxBackloggedLength A D := by
+  refine le_trans ?_
+    (le_iSup (fun u => ((backloggedAgeAt A D u : ℝ≥0) : ℝ≥0∞)) (t + d))
+  have hage : d ≤ backloggedAgeAt A D (t + d) := by
+    calc d = (t + d) - t := (add_tsub_cancel_left t d).symm
+      _ ≤ (t + d) - start A D (t + d) :=
+        tsub_le_tsub_left (start_le_of_isBacklogged A D hbl) _
+  exact_mod_cast hage
 
 /-- `start` is constant across an order-connected backlogged set. -/
 theorem start_const_of_backlogged (A D : Curve)

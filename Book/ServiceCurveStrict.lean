@@ -354,6 +354,22 @@ theorem length_le_firstCrossing_of_isBacklogged
   le_firstCrossing fun _ hx => ENNReal.coe_le_coe.mpr
     (length_lt_crossing_of_isBacklogged hc hβ hp harr hbl hx.1 hx.2).le
 
+/-- **Maximal length of a backlogged period**, function form: the supremum
+of backlogged-period ages is bounded by the first crossing — each age's
+period `(start A D t, t]` is itself backlogged. -/
+theorem maxBackloggedLength_le_firstCrossing
+    {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalBound (⇑A) alpha) :
+    maxBackloggedLength A D ≤ firstCrossing alpha beta := by
+  refine iSup_le fun t => ?_
+  have hbl : IsBacklogged A D
+      (Set.Ioc (start A D t) (start A D t + (t - start A D t))) := by
+    rw [add_tsub_cancel_of_le (start_le A D t)]
+    exact isBacklogged_Ioc_start A D (hc A D hp) t
+  exact length_le_firstCrossing_of_isBacklogged hc hβ hp harr hbl
+
 /-! ## Book restatement (maximal length of a backlogged period)
 A server `S ⊆ Sₛₜᵣᵢ𝒸ₜ(beta)` whose arrival `A` admits maximal arrival
 curve `alpha` has every backlogged period of length at most
@@ -365,5 +381,16 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
   length_le_firstCrossing_of_isBacklogged hSrv.1 hβ hp harr.2 hbl
+
+/-! The function form subsumes the per-period one: any backlogged period's
+length sits below `maxBackloggedLength`, which the theorem bounds. -/
+example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
+    (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (⇑A) alpha)
+    {t d : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
+    (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
+  le_trans (le_maxBackloggedLength_of_isBacklogged A D hbl)
+    (maxBackloggedLength_le_firstCrossing hSrv.1 hβ hp harr.2)
 
 end DeepWiki
