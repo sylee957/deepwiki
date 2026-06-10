@@ -1,5 +1,5 @@
-import Book.MaximalArrivalCurves
-import Book.MinimalArrivalCurves
+import Book.ArrivalCurvesMaximal
+import Book.ArrivalCurvesMinimal
 import Book.Additivity
 
 /-! # Combining minimal and maximal arrival curves

@@ -36,9 +36,9 @@ import Book.SubadditiveNotConcave
 import Book.Servers
 import Book.RealConvolution
 import Book.ArrivalCurves
-import Book.MaximalArrivalCurves
-import Book.MinimalArrivalCurves
-import Book.CombinedArrivalCurves
+import Book.ArrivalCurvesMaximal
+import Book.ArrivalCurvesMinimal
+import Book.ArrivalCurvesCombined
 import Book.DeviationsBounds
 import Book.ServiceCurveMinimal
 import Book.DeviationsBoundsServer

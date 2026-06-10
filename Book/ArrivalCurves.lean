@@ -11,8 +11,8 @@ codomain — `ℝ≥0`, or `EReal` for server outputs), a non-decreasing `α` is
 
 Each has an equivalent **increment** characterization: `A (t + d) ≤ A t + α d`
 for the maximal curve, and `A t + α d ≤ A (t + d)` for the minimal one. The
-maximal-curve properties live in `Book.MaximalArrivalCurves`, the minimal-curve
-ones in `Book.MinimalArrivalCurves`. -/
+maximal-curve properties live in `Book.ArrivalCurvesMaximal`, the minimal-curve
+ones in `Book.ArrivalCurvesMinimal`. -/
 
 namespace DeepWiki
 

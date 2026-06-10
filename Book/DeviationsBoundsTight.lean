@@ -4,8 +4,11 @@ import Book.ArrivalCurveShaperGreedy
 /-! # Tightness of the delay and backlog bounds
 The deviation bounds are attained: for sub-additive `A` the greedy pair
 `(A, A ∗ β)` realizes `d(A, A ∗ β) = hDev` and `b(A, A ∗ β) = vDev`. The raw
-equalities hold for any `D` realizing the `ℝ≥0∞` convolution exactly; the
-greedy shaper supplies the served witness. -/
+equalities hold for any `D` realizing the `ℝ≥0∞` convolution exactly. The
+greedy output `greedyFun` always realizes it, so the direct form needs only
+`A` sub-additive and `β` in `F₀`; left-continuity and the
+piecewise-continuity witness only package the output as a `Curve` served in
+`minimalServiceRel β`. -/
 
 namespace DeepWiki
 
@@ -170,6 +173,68 @@ theorem coe_backlog_eq_vDev_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     (coe_eq_minConv_toENN_of_greedyShaperRel
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) hp) hfin
 
+/-! ## Direct form: no regularity on `beta`
+The deviation equalities are function-level facts: the always-defined output
+`greedyFun A beta` realizes the convolution for any `beta` in `F₀`, so the
+tightness needs only sub-additivity of `A`. Left-continuity of `beta` and the
+piecewise-continuity witness matter only for packaging the output as a
+`Curve` member of `minimalServiceRel beta` below. -/
+
+/-- The greedy output function realizes the `ℝ≥0∞` convolution with the
+reading `toENN beta` exactly, without any curve packaging. -/
+theorem coe_greedyFun_eq_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
+    (hnn : IsNonneg beta) (h0 : IsNullAtOrigin beta) (t : ℝ≥0) :
+    (greedyFun A beta t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t := by
+  apply EReal.coe_ennreal_injective
+  calc ((greedyFun A beta t : ℝ≥0∞) : EReal)
+      = ((greedyFun A beta t : ℝ) : EReal) := EReal.coe_nnreal_eq_coe_real _
+    _ = minConv (curveE A) beta t := coe_greedyFun A hnn h0 t
+    _ = ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal) :=
+        (coe_minConv_toENN A hnn t).symm
+
+/-- **Delay-bound tightness, direct form**: for sub-additive `A` and `beta`
+in `F₀`, the greedy output attains the delay bound,
+`d(A, A ∗ beta) = hDev (liftENN A) (toENN beta)`. -/
+theorem delay_greedyFun_eq_hDev (A : Curve) {beta : ℝ≥0 → EReal}
+    (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
+    (hmono : Monotone beta) (h0 : IsNullAtOrigin beta) :
+    delay ⇑A (greedyFun A beta)
+      = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) :=
+  delay_eq_hDev_of_minConv_eq A.mono A.zero hsub
+    (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
+    (coe_greedyFun_eq_minConv_toENN A
+      (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0)
+
+/-- **Backlog-bound tightness, direct form** (sup form): for sub-additive `A`
+and `beta` in `F₀`, the greedy output attains the backlog bound,
+`⨆ t, b(A, A ∗ beta)(t) = vDev (liftENN A) (toENN beta)`. -/
+theorem iSup_backlogAt_greedyFun_eq_vDev (A : Curve) {beta : ℝ≥0 → EReal}
+    (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
+    (hmono : Monotone beta) (h0 : IsNullAtOrigin beta) :
+    (⨆ t : ℝ≥0, (backlogAt ⇑A (greedyFun A beta) t : ℝ≥0∞))
+      = vDev (liftENN ⇑A) (toENN beta) :=
+  iSup_backlogAt_eq_vDev_of_minConv_eq A.zero hsub
+    (coe_greedyFun_eq_minConv_toENN A
+      (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0)
+
+/-- **Backlog-bound tightness, direct form** (named):
+`b(A, A ∗ beta) = vDev (liftENN A) (toENN beta)` for sub-additive `A` and
+`beta` in `F₀`, when the deviation is finite. -/
+theorem coe_backlog_greedyFun_eq_vDev (A : Curve) {beta : ℝ≥0 → EReal}
+    (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
+    (hmono : Monotone beta) (h0 : IsNullAtOrigin beta)
+    (hfin : vDev (liftENN ⇑A) (toENN beta) ≠ ⊤) :
+    (backlog ⇑A (greedyFun A beta) : ℝ≥0∞)
+      = vDev (liftENN ⇑A) (toENN beta) :=
+  coe_backlog_eq_vDev_of_minConv_eq A.zero hsub
+    (coe_greedyFun_eq_minConv_toENN A
+      (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0) hfin
+
+/-! ## `C`-membership form
+The witnesses below buy only membership: the greedy output as a `Curve`,
+served in `minimalServiceRel beta`. The attained equalities are those of the
+direct form. -/
+
 /-- The greedy output curve is greedy-served: `D = A ∗ beta` by
 construction. -/
 theorem greedyShaperRel_greedyCurve (A : Curve) {beta : ℝ≥0 → EReal}
@@ -179,10 +244,9 @@ theorem greedyShaperRel_greedyCurve (A : Curve) {beta : ℝ≥0 → EReal}
     greedyShaperRel beta A (greedyCurve A beta hmono h0 hlc hpwc) :=
   curveE_greedyCurve A hmono h0 hlc hpwc
 
-/-- **Tightness of the deviation bounds**: for sub-additive `A` and `beta` in
-`F₀` left-continuous (with the piecewise-continuity witness for the
-convolution), some pair of `minimalServiceRel beta` with arrival `A` attains
-both the delay and the backlog bound. -/
+/-- **Tightness of the deviation bounds** (`C`-membership form): packaging
+the greedy output as a `Curve`, some pair of `minimalServiceRel beta` with
+arrival `A` attains both the delay and the backlog bound. -/
 theorem exists_delay_eq_hDev_backlog_eq_vDev (A : Curve)
     {beta : ℝ≥0 → EReal} (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : beta 0 = 0)
