@@ -196,7 +196,19 @@ not just defaults):
   - Carrier tags (target grammar; bare `E` is legacy and ambiguous):
     `NN` = `ℝ≥0∞` values on `ℝ≥0` domain, `ENN` = an `ℝ≥0∞` reading/lift,
     `EReal` = `EReal` values, `Ext` = `WithTop (WithBot ℝ)`; lowercase
-    `_ereal`/`_ext` for theorem-variant suffixes.
+    `_ereal`/`_ext` for theorem-variant suffixes. Cast helpers: `lift*` for
+    exact embeddings (`Deviation.liftENN`), `to*` for truncating reads
+    (`Deviation.toENN`, after Mathlib's lossy `EReal.toENNReal`).
+  - Function-level vs pointwise lemma pairs follow Mathlib: the plain name
+    states the function equality, `_apply` the pointwise one
+    (`conv_coe_min` / `conv_coe_min_apply`) — not a primed variant.
+  - Concrete curves live in the `RealCurves` catalog (all carrier variants
+    of one curve side by side), with the base-value family `<curve>_zero_eq`;
+    chapters state theorems about them but don't define them.
+
+- **Bound convolutions through the intro/elim API**, not by hand-opening the
+  split subtype `{p : D × D // p.1 + p.2 = t}`: `minConv_le_add` / `le_minConv`
+  and the duals `add_le_maxConv` / `maxConv_le` (`Book/FunctionDioids.lean`).
 
 - **Definitions split from proofs; share one definition via base + abbrev.**
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
