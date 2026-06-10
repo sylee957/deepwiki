@@ -10,7 +10,8 @@ A server offering a minimal service curve `βᵐ`, a maximal service curve `β�
 and shaping to `σ` propagates arrival curves to its output `D`: the maximal
 side is the deconvolution bound `((αᵘ ∗ βᴹ) ⊘ βᵐ) ⊓ σ`, the minimal side the
 convolution bound `αˡ ∗ (βᵐ ⊘̄ βᴹ)`; a greedy shaper for sub-additive `σ`
-specializes these to `αᵘ ∗ σ` and `αˡ ∗ (σ ⊘̄ σ)`. The `ℝ≥0∞` reading
+specializes these to `αᵘ ∗ σ` and `αˡ ∗ (σ ⊘̄ σ)`; the backlog bound shifts
+a sub-additive `αᵘ` by the vertical deviation `vDev`. The `ℝ≥0∞` reading
 (`liftENN`/`toENN`, truncated subtraction) restricts the curves to
 nonnegative ones. -/
 
@@ -279,6 +280,78 @@ theorem isMinimalArrivalCurve_output_of_isGreedyShaper
   isMinimalArrivalCurve_output (hgr.isCausal h0) hgr.isMinimalServiceCurve
     hnns hgr.isMaximalServiceCurve hnns hp harrl
 
+/-- **Output arrival curve from the backlog bound.** A causal pair served
+with a nonnegative minimal service curve `beta`, the arrival allowing a
+sub-additive `α`, has output allowing `α` shifted by the vertical deviation
+`vDev α (toENN beta)`. -/
+theorem isMaximalArrivalCurve_output_add_vDev
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
+    (hc : IsCausal S)
+    (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α) :
+    IsMaximalArrivalCurve (liftENN ⇑D)
+      (fun d => α d + vDev α (toENN beta)) := by
+  refine (isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+    hc hβ hnn hp harr).mono fun d => ?_
+  rw [vDev_eq_deconv_zero]
+  exact minDeconv_le_add_minDeconv_zero (toENN beta) hsub d
+
+/-- **Improved output arrival curve from the backlog bound.** With a constant
+`c` below `α` on positive times — e.g. the right limit `α(0⁺)` of a monotone
+`α` — such that `fun t => α t - c` is sub-additive, the vertical-deviation
+shift improves to `vDev α (toENN beta) - c`, zeroed at the origin by `δ₀`. -/
+theorem isMaximalArrivalCurve_output_add_vDev_tsub
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
+    {c : ℝ≥0∞} (hc : IsCausal S)
+    (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
+    {A D : Curve} (hp : S A D)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hcle : ∀ s, 0 < s → c ≤ α s)
+    (hsubc : IsSubadditive (fun t => α t - c)) :
+    IsMaximalArrivalCurve (liftENN ⇑D)
+      ((fun d => α d + (vDev α (toENN beta) - c)) ⊓ delayNN 0) := by
+  rw [isMaximalArrivalCurve_iff_increment]
+  intro t d
+  rcases eq_or_ne d 0 with hd | hd
+  · -- `d = 0`: the `δ₀` component zeroes the increment
+    subst hd
+    rw [Pi.inf_apply, show delayNN 0 0 = 0 from delayNN_zero_eq 0,
+      inf_eq_right.mpr zero_le', add_zero, add_zero]
+  · have hd' : 0 < d := pos_of_ne_zero hd
+    rw [Pi.inf_apply, show delayNN 0 d = ⊤ from delay_eq_top 0 hd',
+      inf_top_eq]
+    -- the deconvolution increment from the minimal-service corollary
+    refine le_trans ((isMaximalArrivalCurve_iff_increment _ _).mp
+      (isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+        hc hβ hnn hp harr) t d) (add_le_add le_rfl ?_)
+    -- `(α ⊘ beta) d ≤ α d + (vDev - c)` for `d > 0`, term by term
+    refine iSup_le fun u => ?_
+    rcases eq_or_ne u 0 with hu | hu
+    · -- the `u = 0` term is absorbed by the truncation
+      subst hu
+      rw [add_zero]
+      exact tsub_le_self.trans le_self_add
+    · have hu' : 0 < u := pos_of_ne_zero hu
+      have h1 : α (d + u) ≤ ((α d - c) + (α u - c)) + c :=
+        le_tsub_add.trans (add_le_add (hsubc d u) le_rfl)
+      calc α (d + u) - toENN beta u
+          ≤ (((α d - c) + (α u - c)) + c) - toENN beta u :=
+            tsub_le_tsub_right h1 _
+        _ = ((α d - c) + ((α u - c) + c)) - toENN beta u := by
+            rw [add_assoc]
+        _ ≤ (α d - c) + (((α u - c) + c) - toENN beta u) := add_tsub_le_assoc
+        _ = (α d - c) + (α u - toENN beta u) := by
+            rw [tsub_add_cancel_of_le (hcle u hu')]
+        _ ≤ (α d - c) + vDev α (toENN beta) :=
+            add_le_add le_rfl (vDevAt_le_vDev α (toENN beta) u)
+        _ ≤ (α d - c) + ((vDev α (toENN beta) - c) + c) :=
+            add_le_add le_rfl le_tsub_add
+        _ = ((α d - c) + c) + (vDev α (toENN beta) - c) := by
+            rw [add_comm (vDev α (toENN beta) - c) c, ← add_assoc]
+        _ = α d + (vDev α (toENN beta) - c) := by
+            rw [tsub_add_cancel_of_le (hcle d hd')]
+
 /-! ## Book restatement
 A server `S` offering `betam`, `betaM` and shaping to `sigma`, with arrival
 `A` allowing maximal curve `αu` and minimal curve `αl`, gives every output
@@ -338,5 +411,30 @@ example {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
     exact
       ⟨isMaximalArrivalCurve_output_of_isGreedyShaper hgr hnns hsub hp harru,
         isMinimalArrivalCurve_output_of_isGreedyShaper hgr hnns h0.le hp harrl⟩
+
+/-! ## Book restatement (backlog-bound output curves)
+A server `S ⊆ S_mp(beta)`, with arrival `A` allowing a sub-additive maximal
+curve `α`, gives every output `D` the maximal arrival curve `α + vDev(α, beta)`;
+when `fun t => α t - α(0⁺)` is sub-additive — `α(0⁺) = ⨅_{s > 0} α s`,
+which for monotone `α` is its right limit at the origin — this improves to
+`(α + (vDev(α, beta) - α(0⁺))) ⊓ δ₀`. -/
+example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
+    (hSrv : IsServer S)
+    (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
+    {A : Curve}
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hsub : IsSubadditive α)
+    (hsubc : IsSubadditive
+      (fun t => α t - ⨅ s : {s : ℝ≥0 // 0 < s}, α s)) :
+    ∀ D : Curve, S A D →
+      IsMaximalArrivalCurve (liftENN ⇑D)
+        (fun d => α d + vDev α (toENN beta)) ∧
+      IsMaximalArrivalCurve (liftENN ⇑D)
+        ((fun d => α d
+            + (vDev α (toENN beta) - ⨅ s : {s : ℝ≥0 // 0 < s}, α s))
+          ⊓ delayNN 0) :=
+  fun _ hp =>
+    ⟨isMaximalArrivalCurve_output_add_vDev hSrv.1 hβ hnn hp harr hsub,
+      isMaximalArrivalCurve_output_add_vDev_tsub hSrv.1 hβ hnn hp harr
+        (fun s hs => iInf_le _ (⟨s, hs⟩ : {s : ℝ≥0 // 0 < s})) hsubc⟩
 
 end DeepWiki

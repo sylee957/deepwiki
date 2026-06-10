@@ -58,6 +58,12 @@ theorem vDev_eq_deconv_zero {D T : Type*}
   unfold vDev vDevAt minDeconv
   simp only [zero_add]
 
+/-- Elim: each pointwise deviation bounds the vertical deviation from below,
+`vDevAt f g t ≤ vDev f g`. -/
+theorem vDevAt_le_vDev {D T : Type*} [CompleteLattice T] [Sub T]
+    (f g : D → T) (t : D) : vDevAt f g t ≤ vDev f g :=
+  le_iSup (vDevAt f g) t
+
 /-- `hDevAt f g t = ⊤` when no admissible shift exists. -/
 theorem hDevAt_eq_top {D V : Type*} (R : Type*)
     [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]

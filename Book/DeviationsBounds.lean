@@ -36,7 +36,7 @@ theorem coe_backlogAt_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → �
   calc (A t : ℝ≥0∞) - (liftENN A u + β s)
       = ((A t : ℝ≥0∞) - liftENN A u) - β s := tsub_add_eq_tsub_tsub _ _ _
     _ ≤ α s - β s := tsub_le_tsub_right (tsub_le_iff_left.mpr hinc) _
-    _ ≤ vDev α β := le_iSup (fun d => vDevAt α β d) s
+    _ ≤ vDev α β := vDevAt_le_vDev α β s
 
 /-- **Backlog bound**: `b(A, D) ≤ vDev α β`. -/
 theorem backlog_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞}
