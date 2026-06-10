@@ -11,6 +11,23 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 
+/-- `δ₀` is a right unit on `ℝ≥0∞` curves: `f ∗ delayNN 0 = f`, for any `f`
+(contrast `conv_delayNN`, which needs monotone `f`). -/
+theorem conv_delayNN_zero (f : ℝ≥0 → ℝ≥0∞) :
+    minConv f (delayNN 0) = f := by
+  funext t
+  apply le_antisymm
+  · refine (minConv_le_add f (delayNN 0) (add_zero t)).trans ?_
+    rw [delayNN_zero_eq, add_zero]
+  · refine le_minConv fun u s hus => ?_
+    rcases eq_or_ne s 0 with hs | hs
+    · subst hs
+      rw [add_zero] at hus
+      rw [delayNN_zero_eq, add_zero, hus]
+    · rw [show delayNN 0 s = ⊤ from delay_eq_top 0 (pos_of_ne_zero hs),
+        add_top]
+      exact le_top
+
 /-- Convolving with `delayNN d` shifts: `f ∗ delayNN d = f(· - d)`. -/
 theorem conv_delayNN (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :

@@ -1,6 +1,7 @@
 import Book.ArrivalCurveShaper
 import Book.ArrivalCurvesMaximal
 import Book.DeviationsBoundsServer
+import Book.RealCurvesConv
 
 /-! # Output arrival curves
 A server offering a minimal service curve `βᵐ`, a maximal service curve `βᴹ`,
@@ -27,6 +28,20 @@ theorem le_minConv_toENN_of_isMaximalServiceCurve
   calc (((D t : ℝ≥0) : ℝ≥0∞) : EReal)
       = curveE D t := EReal.coe_nnreal_eq_coe_real (D t)
     _ ≤ minConv (curveE A) beta t := hβ A D hp t
+
+/-- The `ℝ≥0∞` reading of the `EReal` delay curve is the `ℝ≥0∞` delay curve:
+`toENN (delayEReal d) = delayNN d`. -/
+theorem toENN_delayEReal (d : ℝ≥0) :
+    toENN (delayEReal d) = delayNN d := by
+  funext t
+  show (delayEReal d t).toENNReal = delayNN d t
+  rcases le_or_gt t d with ht | ht
+  · rw [show delayEReal d t = 0 from delay_eq_zero d ht,
+      show delayNN d t = 0 from delay_eq_zero d ht]
+    exact EReal.toENNReal_zero
+  · rw [show delayEReal d t = ⊤ from delay_eq_top d ht,
+      show delayNN d t = ⊤ from delay_eq_top d ht]
+    exact EReal.toENNReal_top
 
 end Deviation
 
@@ -111,6 +126,25 @@ theorem isMaximalArrivalCurve_output
         ⊓ toENN sigma) :=
   (isMaximalArrivalCurve_output_deconv hβm hnnm hβM hnnM hp harru).inf
     ((hsh A D hp).toENN hnns)
+
+/-- **Output arrival curve from minimal service alone.** Under causality, a
+pair served with a nonnegative minimal service curve `betam`, the arrival
+allowing `αu`, has output allowing the deconvolution `αu ⊘ betam`: the output
+theorem at `betaM = δ₀` (a maximal service curve of every causal relation)
+and the everywhere-`⊤` shaper. -/
+theorem isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+    {S : Curve → Curve → Prop} {betam : ℝ≥0 → EReal}
+    {αu : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
+    (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
+    {A D : Curve} (hp : S A D)
+    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (toENN betam)) := by
+  have h := isMaximalArrivalCurve_output hβm hnnm
+    (isMaximalServiceCurve_delayEReal_zero hc) (isNonneg_delayEReal 0)
+    (isShaper_top S) (fun _ => le_top) hp harru
+  rwa [toENN_delayEReal, conv_delayNN_zero,
+    show toENN (⊤ : ℝ≥0 → EReal) = (⊤ : ℝ≥0 → ℝ≥0∞) from rfl,
+    inf_top_eq] at h
 
 /-- **Output arrival curve (minimal).** Under causality and nonnegative
 minimal and maximal service curves `betam`, `betaM`, the output keeps
@@ -222,5 +256,17 @@ example {S : Curve → Curve → Prop} {betam betaM sigma : ℝ≥0 → EReal}
   fun _ hp =>
     ⟨isMaximalArrivalCurve_output hβm hnnm hβM hnnM hsh hnns hp harru,
       isMinimalArrivalCurve_output hSrv.1 hβm hnnm hβM hnnM hp harrl⟩
+
+/-! ## Book restatement (minimal-service corollary)
+A server `S` offering only `betam`, with arrival `A` allowing maximal curve
+`αu`, gives every output `D` the maximal arrival curve `αu ⊘ betam`. -/
+example {S : Curve → Curve → Prop} {betam : ℝ≥0 → EReal}
+    {αu : ℝ≥0 → ℝ≥0∞} (hSrv : IsServer S)
+    (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
+    {A : Curve} (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    ∀ D : Curve, S A D →
+      IsMaximalArrivalCurve (liftENN ⇑D) (minDeconv αu (toENN betam)) :=
+  fun _ hp => isMaximalArrivalCurve_output_of_isMinimalServiceCurve
+    hSrv.1 hβm hnnm hp harru
 
 end DeepWiki

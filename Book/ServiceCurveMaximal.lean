@@ -69,6 +69,13 @@ theorem isServer_maximalServiceRel {beta : ℝ≥0 → EReal}
   ⟨isCausal_maximalServiceRel h0,
     isLeftTotal_maximalServiceRel hnn⟩
 
+/-- The delay curve `delayEReal d` is nonnegative (each value is `0` or `⊤`). -/
+theorem isNonneg_delayEReal (d : ℝ≥0) : IsNonneg (delayEReal d) := fun t => by
+  rcases le_or_gt t d with ht | ht
+  · exact (delay_eq_zero d ht).ge
+  · rw [show delayEReal d t = ⊤ from delay_eq_top d ht]
+    exact le_top
+
 /-- `δ₀` agrees with the convolution unit: `delayEReal 0 = convUnitEReal`
 (on `ℝ≥0`, `t ≤ 0 ↔ t = 0`). -/
 theorem delayEReal_zero_eq_convUnitEReal :

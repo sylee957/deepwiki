@@ -4,8 +4,8 @@ import Book.ServiceCurveMaximal
 /-! # σ-shapers
 Servers whose every output allows `σ` as a maximal arrival curve, `D ≤ D ∗ σ`
 (`σ : ℝ≥0 → EReal`, `F₀` hypotheses at use sites): the largest shaper
-`shaperRel σ`, its closure and monotonicity properties, the universal
-`δ₀`-shaper, and the containment in the maximal-service relation. -/
+`shaperRel σ`, its closure and monotonicity properties, the universal `δ₀`-
+and `⊤`-shapers, and the containment in the maximal-service relation. -/
 
 namespace DeepWiki
 
@@ -116,6 +116,15 @@ theorem isShaper_shaperRel (sigma : ℝ≥0 → EReal) :
 theorem isShaper_delayEReal_zero (S : Curve → Curve → Prop) :
     IsShaper (delayEReal 0) S :=
   fun _ D _ t => le_of_eq (congrFun (minConv_delayEReal_zero D) t).symm
+
+/-- Every relation — in particular every server — is a shaper for the
+everywhere-`⊤` curve: `D ∗ ⊤ = ⊤` dominates any output. -/
+theorem isShaper_top (S : Curve → Curve → Prop) :
+    IsShaper (⊤ : ℝ≥0 → EReal) S := by
+  intro A D _
+  refine fun t => le_minConv fun u s _ => ?_
+  rw [Pi.top_apply, EReal.add_top_of_ne_bot (curveE_neverBot D u)]
+  exact le_top
 
 /-! ## Properties of shapers -/
 
