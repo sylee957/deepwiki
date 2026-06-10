@@ -69,10 +69,6 @@ theorem isServer_maximalServiceRel {beta : ℝ≥0 → EReal}
   ⟨isCausal_maximalServiceRel h0,
     isLeftTotal_maximalServiceRel hnn⟩
 
-/-- The `EReal`-valued pure-delay curve on `ℝ≥0`: `0` up to `d`, `⊤` after
-(the `delayNN`/`delayE` sibling for `EReal` values). -/
-noncomputable abbrev delayEReal (d : ℝ≥0) : ℝ≥0 → EReal := delay d
-
 /-- `δ₀` agrees with the convolution unit: `delayEReal 0 = convUnitEReal`
 (on `ℝ≥0`, `t ≤ 0 ↔ t = 0`). -/
 theorem delayEReal_zero_eq_convUnitEReal :

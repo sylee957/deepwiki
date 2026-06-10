@@ -102,15 +102,15 @@ theorem isStrictMinimalServiceCurve_sup
   · rw [max_eq_right hle]; exact h' A D hp s t hst hbl
   · rw [max_eq_left hle]; exact h A D hp s t hst hbl
 
-/-- Output bound: `A(Start) + beta(t - Start) ≤ D t` for strict service. -/
+/-- Output bound: `A(start) + beta(t - start) ≤ D t` for strict service. -/
 theorem strictServiceRel_output_bound (beta : ℝ≥0 → ℝ≥0)
     (A D : Curve)
     (hp : strictServiceRel beta A D)
     (t : ℝ≥0) :
-    A (Start A D t) + beta (t - Start A D t) ≤ D t := by
+    A (start A D t) + beta (t - start A D t) ≤ D t := by
   have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
   have hbl := isBacklogged_Ioc_start A D hc t
-  have hbound := hp.2 (Start A D t) t (start_le A D t) hbl
+  have hbound := hp.2 (start A D t) t (start_le A D t) hbl
   rw [A_start_eq_D_start A D hc t]
   exact hbound
 

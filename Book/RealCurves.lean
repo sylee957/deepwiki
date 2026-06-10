@@ -1,5 +1,6 @@
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
+import Mathlib.Data.EReal.Basic
 
 /-! # Curve definitions
 The concrete service/arrival curves of network calculus, as plain definitions
@@ -8,10 +9,11 @@ defined once over any ordered domain/value type, then the rate / rate-latency /
 token-bucket curves over a semiring value type via the domain-polymorphic bases
 `rateV`/`rateLatencyV`/`tokenBucketV` (the `delay`-style pattern). Each
 specializes two ways: the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rate`,
-`rateLatency`, `tokenBucket`, plus `staircase`/`test`) and the complete-domain
+`rateLatency`, `tokenBucket`, plus `staircase`/`unitStep`), the complete-domain
 `ℝ≥0∞ → ℝ≥0∞` variants (`delayE`, `rateE`/`rateLatencyE`/`tokenBucketE`) used by
-the pseudo-inverse catalog. Plus the `*_zero_eq` base values and `*_coe`
-real/complete agreements. -/
+the pseudo-inverse catalog, and the `EReal`-valued variants
+(`delayEReal`/`rateEReal`) used by the service-curve stack. Plus the
+`*_zero_eq` base values and `*_coe` real/complete agreements. -/
 
 namespace DeepWiki
 
@@ -61,6 +63,10 @@ noncomputable abbrev delayNN (d : ℝ≥0) : ℝ≥0 → ℝ≥0∞ := delay d
 
 /-- Pure-delay curve over `ℝ≥0∞ → ℝ≥0∞`. -/
 noncomputable abbrev delayE (d : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := delay d
+
+/-- Pure-delay curve over `ℝ≥0 → EReal`: `0` up to `d`, `⊤` after (the
+`delayNN`/`delayE` sibling for `EReal` values). -/
+noncomputable abbrev delayEReal (d : ℝ≥0) : ℝ≥0 → EReal := delay d
 
 /-- `delayNN d 0 = 0`. -/
 theorem delayNN_zero_eq (d : ℝ≥0) : delayNN d 0 = 0 := by
@@ -134,8 +140,8 @@ noncomputable def staircase (P h : ℝ≥0) (J : ℝ) :
     min (ENNReal.ofReal
       (max (h * ⌈((t : ℝ) + J) / P⌉) 0)) (delayNN 0 t)
 
-/-- Test/step curve: `0` for `t ≤ T`, `1` afterwards. -/
-noncomputable def test (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+/-- Unit step at `T`: `0` for `t ≤ T`, `1` afterwards. -/
+noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => if t ≤ T then 0 else 1
 
 /-! ## Complete-domain variants `ℝ≥0∞ → ℝ≥0∞` (for the pseudo-inverse catalog) -/
@@ -148,6 +154,13 @@ noncomputable abbrev rateLatencyE (R T : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞
 
 /-- Token-bucket curve over `ℝ≥0∞ → ℝ≥0∞`. -/
 noncomputable abbrev tokenBucketE (r b : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := tokenBucketV r b
+
+/-! ## `EReal`-valued variants (for the service-curve stack) -/
+
+/-- The `EReal`-valued constant-rate curve `u ↦ C·u`, for min-plus service
+statements. -/
+noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
+  fun u => ((C * u : ℝ≥0) : ℝ)
 
 /-! ## Agreements and base values -/
 
@@ -181,8 +194,12 @@ theorem staircase_zero_eq (P h : ℝ≥0) (J : ℝ) :
     staircase P h J 0 = 0 := by
   simp [staircase, delayNN]
 
-/-- `test T 0 = 0`. -/
-theorem test_zero_eq (T : ℝ≥0) : test T 0 = 0 := by
-  simp [test]
+/-- `unitStep T 0 = 0`. -/
+theorem unitStep_zero_eq (T : ℝ≥0) : unitStep T 0 = 0 := by
+  simp [unitStep]
+
+/-- `rateEReal C 0 = 0`. -/
+theorem rateEReal_zero_eq (C : ℝ≥0) : rateEReal C 0 = 0 := by
+  simp [rateEReal]
 
 end DeepWiki

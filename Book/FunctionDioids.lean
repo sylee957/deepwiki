@@ -90,7 +90,7 @@ instance : Coe (ℝ≥0 → WithTop (WithBot ℝ)) FminBar :=
   ⟨fun f t => ⟨f t⟩⟩
 
 /-- `(f ∗ g)` on `FminBar` agrees with `minConv` numerically. -/
-theorem conv_coe_min
+theorem conv_coe_min_apply
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MinPlusExt)
         : WithTop (WithBot ℝ))
@@ -112,13 +112,13 @@ theorem conv_coe_min
     exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
 
 /-- `(f ∗ g)` on `FminBar` is the coerced `minConv f g`. -/
-theorem conv_coe
+theorem conv_coe_min
     (f g : ℝ≥0 → WithTop (WithBot ℝ)) :
     conv (↑f : FminBar) (↑g : FminBar)
       = (↑(minConv f g) : FminBar) := by
   funext t
   apply MinPlusExt.ext
-  exact conv_coe_min f g t
+  exact conv_coe_min_apply f g t
 
 /-- (max,+) functions valued in `R∪{±∞}`. -/
 abbrev FmaxBar := ℝ≥0 → MaxPlusExt
@@ -128,7 +128,7 @@ instance : Coe (ℝ≥0 → WithBot (WithTop ℝ)) FmaxBar :=
   ⟨fun f t => ⟨f t⟩⟩
 
 /-- `(f ∗ g)` on `FmaxBar` agrees with `maxConv` numerically. -/
-theorem conv_coe_max
+theorem conv_coe_max_apply
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) (t : ℝ≥0) :
     ((conv (↑f) (↑g) t : MaxPlusExt)
         : WithBot (WithTop ℝ))
@@ -150,13 +150,13 @@ theorem conv_coe_max
     exact (MaxPlusExt.le_iff _ _).mp hle
 
 /-- `(f ∗ g)` on `FmaxBar` is the coerced `maxConv f g`. -/
-theorem conv_coe_max'
+theorem conv_coe_max
     (f g : ℝ≥0 → WithBot (WithTop ℝ)) :
     conv (↑f : FmaxBar) (↑g : FmaxBar)
       = (↑(maxConv f g) : FmaxBar) := by
   funext t
   apply MaxPlusExt.ext
-  exact conv_coe_max f g t
+  exact conv_coe_max_apply f g t
 
 /-- `f` is non-negative: `∀ t, 0 ≤ f t`. -/
 def IsNonneg {D T : Type*} [Zero T] [LE T]
@@ -295,7 +295,7 @@ theorem mul_toVal (a b : FminBar) (t : ℝ≥0) :
           (fun t => (b t).toVal) t := by
   show ((conv a b t : MinPlusExt) : WithTop (WithBot ℝ)) = _
   rw [← coe_toVal a, ← coe_toVal b]
-  exact conv_coe_min _ _ t
+  exact conv_coe_min_apply _ _ t
 
 /-- `IsNonneg` cuts out a sub-complete-dioid of `FminBar`. -/
 theorem isSubCompleteDioid_FPlus :

@@ -137,15 +137,6 @@ theorem stepCurve_strict_packet {S : Curve → Curve → Prop} {C T b s x : ℝ�
 
 /-! ## Min-plus service: a total guarantee only -/
 
-/-- The `EReal`-valued constant-rate curve `u ↦ C·u`, for min-plus service
-statements. -/
-noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
-  fun u => ((C * u : ℝ≥0) : ℝ)
-
-/-- `rateEReal C 0 = 0`. -/
-@[simp] theorem rateEReal_zero (C : ℝ≥0) : rateEReal C 0 = 0 := by
-  simp [rateEReal]
-
 /-- **Min-plus total bound.** Under a min-plus `λ_C`, the whole burst `b` has
 departed by `T + b/C`: the total service time is at most `b/C`. -/
 theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : ℝ≥0}
@@ -263,7 +254,7 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
           ⟨(v, 0), add_zero v⟩ ?_
         show curveE (stepCurve T b) v + rateEReal C 0 ≤
           curveE (rushCurve T b c C) v
-        rw [rateEReal_zero, add_zero]
+        rw [rateEReal_zero_eq, add_zero]
         have hle : stepCurve T b v ≤ rushCurve T b c C v := by
           rw [stepCurve_apply, if_pos hTv, rushCurve_apply, if_pos hTv,
             min_eq_left (not_le.mp hCb).le]
@@ -274,12 +265,12 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
         ⟨(v, 0), add_zero v⟩ ?_
       show curveE (stepCurve T b) v + rateEReal C 0 ≤
         curveE (rushCurve T b c C) v
-      rw [rateEReal_zero, add_zero]
+      rw [rateEReal_zero_eq, add_zero]
       have hAv : curveE (stepCurve T b) v = 0 := by
         simp [curveE, hTv]
       rw [hAv]
       exact curveE_nonneg _ v
-  · exact minConv_self_le (rateEReal_zero C).le _
+  · exact minConv_self_le (rateEReal_zero_eq C).le _
 
 /-- The first `c` of the burst departs within any `ε > 0`:
 `c ≤ rushCurve (T + ε)`. -/

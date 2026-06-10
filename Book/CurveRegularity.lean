@@ -54,25 +54,25 @@ theorem delayNN_pwc (d : ℝ≥0) :
   by_contra hne
   exact ht (delayNN_continuousAt d t hne)
 
-/-- `test T` is continuous at every `t ≠ T`. -/
-theorem test_continuousAt (T t : ℝ≥0) (h : t ≠ T) :
-    ContinuousAt (test T) t := by
+/-- `unitStep T` is continuous at every `t ≠ T`. -/
+theorem unitStep_continuousAt (T t : ℝ≥0) (h : t ≠ T) :
+    ContinuousAt (unitStep T) t := by
   rcases lt_or_gt_of_ne h with h | h
   · refine (continuousAt_const (y := (0:ℝ≥0∞))).congr ?_
     filter_upwards [Iio_mem_nhds h] with s hs
-    simp [test, le_of_lt (Set.mem_Iio.mp hs)]
+    simp [unitStep, le_of_lt (Set.mem_Iio.mp hs)]
   · refine (continuousAt_const (y := (1:ℝ≥0∞))).congr ?_
     filter_upwards [Ioi_mem_nhds h] with s hs
-    simp [test, not_le.mpr (Set.mem_Ioi.mp hs)]
+    simp [unitStep, not_le.mpr (Set.mem_Ioi.mp hs)]
 
-/-- `test T` is piecewise continuous (one jump at `T`). -/
-theorem test_pwc (T : ℝ≥0) :
-    IsPiecewiseContinuous (test T) := by
+/-- `unitStep T` is piecewise continuous (one jump at `T`). -/
+theorem unitStep_pwc (T : ℝ≥0) :
+    IsPiecewiseContinuous (unitStep T) := by
   intro S
   apply Set.Finite.subset (Set.finite_singleton T)
   rintro t ⟨ht, _⟩
   by_contra hne
-  exact ht (test_continuousAt T t hne)
+  exact ht (unitStep_continuousAt T t hne)
 
 /-- `tokenBucket r b` is continuous at every `t ≠ 0`. -/
 theorem tokenBucket_continuousAt (r b t : ℝ≥0)
@@ -207,23 +207,23 @@ theorem delayNN_leftCont (d : ℝ≥0) :
     exact continuousWithinAt_const.congr_of_eventuallyEq
       hev (by simp [delayNN, not_le.mpr h])
 
-/-- `test T` is left-continuous. -/
-theorem test_leftCont (T : ℝ≥0) :
-    IsLeftContinuous (test T) := by
+/-- `unitStep T` is left-continuous. -/
+theorem unitStep_leftCont (T : ℝ≥0) :
+    IsLeftContinuous (unitStep T) := by
   intro t
   rcases le_or_gt t T with h | h
   · refine ContinuousWithinAt.congr
       (f := fun _ => (0:ℝ≥0∞)) continuousWithinAt_const
       (fun s hs => ?_) ?_
-    · simp only [test,
+    · simp only [unitStep,
         if_pos (le_of_lt (lt_of_lt_of_le hs h))]
-    · simp [test, h]
-  · have hev : (test T) =ᶠ[𝓝[Iio t] t]
+    · simp [unitStep, h]
+  · have hev : (unitStep T) =ᶠ[𝓝[Iio t] t]
         (fun _ => (1:ℝ≥0∞)) := by
       filter_upwards [Ioo_mem_nhdsLT h] with s hs
-      simp [test, not_le.mpr hs.1]
+      simp [unitStep, not_le.mpr hs.1]
     exact continuousWithinAt_const.congr_of_eventuallyEq
-      hev (by simp [test, not_le.mpr h])
+      hev (by simp [unitStep, not_le.mpr h])
 
 /-- `tokenBucket r b` is left-continuous. -/
 theorem tokenBucket_leftCont (r b : ℝ≥0) :

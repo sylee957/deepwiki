@@ -32,27 +32,27 @@ theorem coe_ennreal_iInf {ι : Sort*} (f : ι → ℝ≥0∞) :
     ((⨅ i, f i : ℝ≥0∞) : EReal) = ⨅ i, (f i : EReal) :=
   gc_toENNReal_coe.u_iInf
 
+namespace Deviation
+
 /-- The `ℝ≥0∞` reading of an `EReal`-valued service curve (the identity on
 nonnegative values, `0` below). -/
 noncomputable def toENN (beta : ℝ≥0 → EReal) : ℝ≥0 → ℝ≥0∞ :=
   fun s => (beta s).toENNReal
 
-namespace Deviation
-
 /-- For nonnegative `beta`, the `ℝ≥0∞` convolution of a curve with the
 reading `toENN beta` coerces to the `EReal` convolution. -/
 theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (t : ℝ≥0) :
-    ((minConv (toE ⇑A) (toENN beta) t : ℝ≥0∞) : EReal)
+    ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal)
       = minConv (curveE A) beta t := by
   show ((⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      toE ⇑A p.1.1 + toENN beta p.1.2 : ℝ≥0∞) : EReal)
+      liftENN ⇑A p.1.1 + toENN beta p.1.2 : ℝ≥0∞) : EReal)
     = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         curveE A p.1.1 + beta p.1.2
   rw [coe_ennreal_iInf]
   refine iInf_congr ?_
   rintro ⟨⟨u, s⟩, _⟩
-  show ((toE ⇑A u + toENN beta s : ℝ≥0∞) : EReal) = curveE A u + beta s
+  show ((liftENN ⇑A u + toENN beta s : ℝ≥0∞) : EReal) = curveE A u + beta s
   rw [EReal.coe_ennreal_add]
   congr 1
   exact EReal.coe_toENNReal (hnn s)
@@ -63,7 +63,7 @@ theorem minConv_toENN_le_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal}
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D) (t : ℝ≥0) :
-    minConv (toE ⇑A) (toENN beta) t ≤ (D t : ℝ≥0∞) := by
+    minConv (liftENN ⇑A) (toENN beta) t ≤ (D t : ℝ≥0∞) := by
   rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t]
   calc minConv (curveE A) beta t
       ≤ curveE D t := hβ A D hp t
@@ -77,7 +77,7 @@ theorem delay_le_hDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta) (hmono : Monotone beta)
-    (harr : IsMaximalArrivalCurve (toE ⇑A) α) :
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
     delay ⇑A ⇑D ≤ (hDev α (toENN beta) : ℝ≥0∞) :=
   delay_le_hDev A.mono
     (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
@@ -89,7 +89,7 @@ theorem coe_backlogAt_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
-    (harr : IsMaximalArrivalCurve (toE ⇑A) α) (t : ℝ≥0) :
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (t : ℝ≥0) :
     (backlogAt ⇑A ⇑D t : ℝ≥0∞) ≤ vDev α (toENN beta) :=
   coe_backlogAt_le_vDev harr
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp) t
@@ -99,7 +99,7 @@ theorem coe_backlog_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
-    (harr : IsMaximalArrivalCurve (toE ⇑A) α) :
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
     (backlog ⇑A ⇑D : ℝ≥0∞) ≤ vDev α (toENN beta) :=
   coe_backlog_le_vDev harr
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)

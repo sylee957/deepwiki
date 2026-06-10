@@ -29,15 +29,15 @@ theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
   · have ht : ¬ t ≤ 0 := by simpa using h
     simp [delayNN, ht]
 
-/-- `test 0 = tokenBucket 0 1`. -/
-theorem test_zero_eq_tokenBucket :
-    test (0 : ℝ≥0) = tokenBucket 0 1 := by
+/-- `unitStep 0 = tokenBucket 0 1`. -/
+theorem unitStep_zero_eq_tokenBucket :
+    unitStep (0 : ℝ≥0) = tokenBucket 0 1 := by
   funext t
   rw [tokenBucket_eq]
   rcases eq_or_ne t 0 with h | h
-  · subst h; simp [test, delayNN]
+  · subst h; simp [unitStep, delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
-    simp [test, delayNN, ht]
+    simp [unitStep, delayNN, ht]
 
 /-- `rate R` is subadditive. -/
 theorem rate_subadditive (R : ℝ≥0) :
@@ -103,10 +103,10 @@ theorem tokenBucket_subadditive (r b : ℝ≥0) :
           ≤ (r*u + r*s + b) + b := le_self_add
         _ = (r*u + b) + (r*s + b) := by ring
 
-/-- `test 0` is subadditive. -/
-theorem test_zero_subadditive :
-    IsSubadditive (test (0 : ℝ≥0)) := by
-  rw [test_zero_eq_tokenBucket]
+/-- `unitStep 0` is subadditive. -/
+theorem unitStep_zero_subadditive :
+    IsSubadditive (unitStep (0 : ℝ≥0)) := by
+  rw [unitStep_zero_eq_tokenBucket]
   exact tokenBucket_subadditive 0 1
 
 /-- Subadditive step-count bound when `J ≥ 0`. -/

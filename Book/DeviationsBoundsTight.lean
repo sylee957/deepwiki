@@ -11,9 +11,9 @@ namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
 
-/-- Sub-additivity transfers to the `ℝ≥0∞` reading `Deviation.toE`. -/
-theorem IsSubadditive.toE {A : ℝ≥0 → ℝ≥0} (hsub : IsSubadditive A) :
-    IsSubadditive (Deviation.toE A) :=
+/-- Sub-additivity transfers to the `ℝ≥0∞` reading `Deviation.liftENN`. -/
+theorem IsSubadditive.liftENN {A : ℝ≥0 → ℝ≥0} (hsub : IsSubadditive A) :
+    IsSubadditive (Deviation.liftENN A) :=
   fun u s => by exact_mod_cast hsub u s
 
 namespace Deviation
@@ -25,89 +25,89 @@ the `(0, t)` split, so the monotony of deviations reverses the bounds. -/
 
 /-- A `D` realizing `A ∗ β` lies below `β` when `A 0 = 0` (the `(0, t)`
 split). -/
-theorem toE_le_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
+theorem liftENN_le_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
     (h0 : IsNullAtOrigin A)
-    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (toE A) β t) :
-    toE D ≤ β := by
+    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t) :
+    liftENN D ≤ β := by
   intro t
-  rw [show toE D t = minConv (toE A) β t from hD t]
-  refine le_trans (minConv_le_add (toE A) β (zero_add t)) ?_
+  rw [show liftENN D t = minConv (liftENN A) β t from hD t]
+  refine le_trans (minConv_le_add (liftENN A) β (zero_add t)) ?_
   have hA0 : A 0 = 0 := h0
-  have htoE : toE A 0 = 0 := by
+  have htoE : liftENN A 0 = 0 := by
     show ((A 0 : ℝ≥0) : ℝ≥0∞) = 0
     exact_mod_cast hA0
   rw [htoE, zero_add]
 
 /-- `delayAt` agrees with the horizontal deviation of the `ℝ≥0∞` readings:
 the admissibility predicates match through the coercion. -/
-theorem delayAt_eq_hDevAt_toE (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    delayAt A D t = (hDevAt (toE A) (toE D) t : ℝ≥0∞) := by
+theorem delayAt_eq_hDevAt_liftENN (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    delayAt A D t = (hDevAt (liftENN A) (liftENN D) t : ℝ≥0∞) := by
   apply le_antisymm
   · refine le_iInf fun d => ?_
     exact iInf_le (fun e : {e : ℝ≥0 // A t ≤ D (t + e)} => (e.1 : ℝ≥0∞))
       ⟨d.1, by exact_mod_cast d.2⟩
   · refine le_iInf fun d => ?_
     exact iInf_le
-      (fun e : {e : ℝ≥0 // toE A t ≤ toE D (t + e)} => (e.1 : ℝ≥0∞))
+      (fun e : {e : ℝ≥0 // liftENN A t ≤ liftENN D (t + e)} => (e.1 : ℝ≥0∞))
       ⟨d.1, by exact_mod_cast d.2⟩
 
 /-- `delay` is the horizontal deviation of the `ℝ≥0∞` readings. -/
-theorem delay_eq_hDev_toE (A D : ℝ≥0 → ℝ≥0) :
-    delay A D = (hDev (toE A) (toE D) : ℝ≥0∞) := by
+theorem delay_eq_hDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
+    delay A D = (hDev (liftENN A) (liftENN D) : ℝ≥0∞) := by
   rw [delay_eq_iSup]
-  exact iSup_congr (delayAt_eq_hDevAt_toE A D)
+  exact iSup_congr (delayAt_eq_hDevAt_liftENN A D)
 
 /-- **Tightness of the delay bound**: sub-additive `A` is its own arrival
 curve, and against a `D` realizing `A ∗ β` exactly the delay attains the
-horizontal deviation, `d(A, D) = hDev (toE A) β`. -/
+horizontal deviation, `d(A, D) = hDev (liftENN A) β`. -/
 theorem delay_eq_hDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
     (hA : Monotone A) (h0 : IsNullAtOrigin A) (hsub : IsSubadditive A)
     (hβ : Monotone β)
-    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (toE A) β t) :
-    delay A D = (hDev (toE A) β : ℝ≥0∞) := by
-  have harr : IsMaximalArrivalCurve (toE A) (toE A) :=
-    isMaximalArrivalCurve_self_of_subadditive hsub.toE
+    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t) :
+    delay A D = (hDev (liftENN A) β : ℝ≥0∞) := by
+  have harr : IsMaximalArrivalCurve (liftENN A) (liftENN A) :=
+    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN
   apply le_antisymm
   · exact delay_le_hDev hA hβ harr fun t => (hD t).ge
-  · calc (hDev (toE A) β : ℝ≥0∞)
-        ≤ hDev (toE A) (toE D) :=
-          hDev_mono le_rfl (toE_le_of_minConv_eq h0 hD)
-      _ = delay A D := (delay_eq_hDev_toE A D).symm
+  · calc (hDev (liftENN A) β : ℝ≥0∞)
+        ≤ hDev (liftENN A) (liftENN D) :=
+          hDev_mono le_rfl (liftENN_le_of_minConv_eq h0 hD)
+      _ = delay A D := (delay_eq_hDev_liftENN A D).symm
 
 /-- **Tightness of the backlog bound** (sup form): against a `D` realizing
 `A ∗ β` exactly, the pointwise backlogs attain the vertical deviation,
-`⨆ t, b(A, D)(t) = vDev (toE A) β`. -/
+`⨆ t, b(A, D)(t) = vDev (liftENN A) β`. -/
 theorem iSup_backlogAt_eq_vDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0}
     {β : ℝ≥0 → ℝ≥0∞} (h0 : IsNullAtOrigin A) (hsub : IsSubadditive A)
-    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (toE A) β t) :
-    (⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞)) = vDev (toE A) β := by
-  have harr : IsMaximalArrivalCurve (toE A) (toE A) :=
-    isMaximalArrivalCurve_self_of_subadditive hsub.toE
+    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t) :
+    (⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞)) = vDev (liftENN A) β := by
+  have harr : IsMaximalArrivalCurve (liftENN A) (liftENN A) :=
+    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN
   apply le_antisymm
   · exact iSup_backlogAt_le_vDev harr fun t => (hD t).ge
-  · calc vDev (toE A) β
-        ≤ vDev (toE A) (toE D) :=
-          vDev_mono le_rfl (toE_le_of_minConv_eq h0 hD)
+  · calc vDev (liftENN A) β
+        ≤ vDev (liftENN A) (liftENN D) :=
+          vDev_mono le_rfl (liftENN_le_of_minConv_eq h0 hD)
       _ = ⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞) := by
           rw [vDev_eq_iSup]
           refine iSup_congr fun t => ?_
           rw [backlogAt_eq, ENNReal.coe_sub]
 
-/-- **Tightness of the backlog bound** (named form): `b(A, D) = vDev (toE A) β`
+/-- **Tightness of the backlog bound** (named form): `b(A, D) = vDev (liftENN A) β`
 when the deviation is finite, so the `ℝ≥0` supremum is honest. -/
 theorem coe_backlog_eq_vDev_of_minConv_eq {A D : ℝ≥0 → ℝ≥0}
     {β : ℝ≥0 → ℝ≥0∞} (h0 : IsNullAtOrigin A) (hsub : IsSubadditive A)
-    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (toE A) β t)
-    (hfin : vDev (toE A) β ≠ ⊤) :
-    (backlog A D : ℝ≥0∞) = vDev (toE A) β := by
-  have harr : IsMaximalArrivalCurve (toE A) (toE A) :=
-    isMaximalArrivalCurve_self_of_subadditive hsub.toE
+    (hD : ∀ t, (D t : ℝ≥0∞) = minConv (liftENN A) β t)
+    (hfin : vDev (liftENN A) β ≠ ⊤) :
+    (backlog A D : ℝ≥0∞) = vDev (liftENN A) β := by
+  have harr : IsMaximalArrivalCurve (liftENN A) (liftENN A) :=
+    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN
   apply le_antisymm
   · exact coe_backlog_le_vDev harr fun t => (hD t).ge
   · have hbdd : BddAbove (Set.range fun t => A t - D t) := by
-      refine ⟨(vDev (toE A) β).toNNReal, ?_⟩
+      refine ⟨(vDev (liftENN A) β).toNNReal, ?_⟩
       rintro x ⟨t, rfl⟩
-      have hx : ((A t - D t : ℝ≥0) : ℝ≥0∞) ≤ vDev (toE A) β :=
+      have hx : ((A t - D t : ℝ≥0) : ℝ≥0∞) ≤ vDev (liftENN A) β :=
         coe_backlogAt_le_vDev harr (fun u => (hD u).ge) t
       rwa [← ENNReal.coe_toNNReal hfin, ENNReal.coe_le_coe] at hx
     rw [← iSup_backlogAt_eq_vDev_of_minConv_eq h0 hsub hD]
@@ -125,22 +125,22 @@ greedy output curve supplies the served witness in `minimalServiceRel β`. -/
 theorem coe_eq_minConv_toENN_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) {A D : Curve} (hp : greedyShaperRel beta A D)
     (t : ℝ≥0) :
-    (D t : ℝ≥0∞) = minConv (toE ⇑A) (toENN beta) t := by
+    (D t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t := by
   apply EReal.coe_ennreal_injective
   calc ((D t : ℝ≥0∞) : EReal)
       = curveE D t := EReal.coe_nnreal_eq_coe_real (D t)
     _ = minConv (curveE A) beta t := by
         rw [(hp : curveE D = minConv (curveE A) beta)]
-    _ = ((minConv (toE ⇑A) (toENN beta) t : ℝ≥0∞) : EReal) :=
+    _ = ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal) :=
         (coe_minConv_toENN A hnn t).symm
 
 /-- **Delay-bound tightness for greedy shapers**: a greedy-served pair with
-sub-additive arrival attains `d(A, D) = hDev (toE A) (toENN beta)`. -/
+sub-additive arrival attains `d(A, D) = hDev (liftENN A) (toENN beta)`. -/
 theorem delay_eq_hDev_of_greedyShaperRel {beta : ℝ≥0 → EReal} {A D : Curve}
     (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : IsNullAtOrigin beta)
     (hp : greedyShaperRel beta A D) :
-    delay ⇑A ⇑D = (hDev (toE ⇑A) (toENN beta) : ℝ≥0∞) :=
+    delay ⇑A ⇑D = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) :=
   delay_eq_hDev_of_minConv_eq A.mono A.zero hsub
     (fun _ _ hab => EReal.toENNReal_le_toENNReal (hmono hab))
     (coe_eq_minConv_toENN_of_greedyShaperRel
@@ -148,24 +148,24 @@ theorem delay_eq_hDev_of_greedyShaperRel {beta : ℝ≥0 → EReal} {A D : Curve
 
 /-- **Backlog-bound tightness for greedy shapers** (sup form): a greedy-served
 pair with sub-additive arrival attains
-`⨆ t, b(A, D)(t) = vDev (toE A) (toENN beta)`. -/
+`⨆ t, b(A, D)(t) = vDev (liftENN A) (toENN beta)`. -/
 theorem iSup_backlogAt_eq_vDev_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     {A D : Curve} (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : IsNullAtOrigin beta)
     (hp : greedyShaperRel beta A D) :
-    (⨆ t : ℝ≥0, (backlogAt ⇑A ⇑D t : ℝ≥0∞)) = vDev (toE ⇑A) (toENN beta) :=
+    (⨆ t : ℝ≥0, (backlogAt ⇑A ⇑D t : ℝ≥0∞)) = vDev (liftENN ⇑A) (toENN beta) :=
   iSup_backlogAt_eq_vDev_of_minConv_eq A.zero hsub
     (coe_eq_minConv_toENN_of_greedyShaperRel
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) hp)
 
 /-- **Backlog-bound tightness for greedy shapers** (named form):
-`b(A, D) = vDev (toE A) (toENN beta)` when the deviation is finite. -/
+`b(A, D) = vDev (liftENN A) (toENN beta)` when the deviation is finite. -/
 theorem coe_backlog_eq_vDev_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     {A D : Curve} (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : IsNullAtOrigin beta)
     (hp : greedyShaperRel beta A D)
-    (hfin : vDev (toE ⇑A) (toENN beta) ≠ ⊤) :
-    (backlog ⇑A ⇑D : ℝ≥0∞) = vDev (toE ⇑A) (toENN beta) :=
+    (hfin : vDev (liftENN ⇑A) (toENN beta) ≠ ⊤) :
+    (backlog ⇑A ⇑D : ℝ≥0∞) = vDev (liftENN ⇑A) (toENN beta) :=
   coe_backlog_eq_vDev_of_minConv_eq A.zero hsub
     (coe_eq_minConv_toENN_of_greedyShaperRel
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) hp) hfin
@@ -189,9 +189,9 @@ theorem exists_delay_eq_hDev_backlog_eq_vDev (A : Curve)
     (hlc : IsLeftContinuous beta)
     (hpwc : IsPiecewiseContinuous (greedyFun A beta)) :
     ∃ D : Curve, minimalServiceRel beta A D ∧
-      delay ⇑A ⇑D = (hDev (toE ⇑A) (toENN beta) : ℝ≥0∞) ∧
+      delay ⇑A ⇑D = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) ∧
       (⨆ t : ℝ≥0, (backlogAt ⇑A ⇑D t : ℝ≥0∞))
-        = vDev (toE ⇑A) (toENN beta) := by
+        = vDev (liftENN ⇑A) (toENN beta) := by
   have hp := greedyShaperRel_greedyCurve A hmono h0 hlc hpwc
   exact ⟨greedyCurve A beta hmono h0 hlc hpwc,
     ((mem_greedyShaperRel_iff_minimal_and_maximal h0.le).mp hp).1,

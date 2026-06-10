@@ -2,7 +2,7 @@ import Book.Servers
 
 /-! # Backlogged periods and start of backlog
 The backlogged set `IsBacklogged A D I` (`D < A` on `I`) and the start of the
-backlogged period `Start A D t` (last `u ≤ t` with `A u = D u`), with its basic
+backlogged period `start A D t` (last `u ≤ t` with `A u = D u`), with its basic
 order properties used by strict service-curve theory. -/
 
 namespace DeepWiki
@@ -14,11 +14,11 @@ open scoped Classical NNReal
 def IsBacklogged (A D : Curve) (I : Set ℝ≥0) : Prop :=
   ∀ t ∈ I, D t < A t
 
-/-- Start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
-noncomputable def Start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
+/-- start of the backlogged period of `t`: last `u ≤ t` with `A u = D u`. -/
+noncomputable def start (A D : Curve) (t : ℝ≥0) : ℝ≥0 :=
   sSup { u | u ≤ t ∧ A u = D u }
 
-/-- The set defining `Start` is nonempty (`0` belongs). -/
+/-- The set defining `start` is nonempty (`0` belongs). -/
 theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
     { u | u ≤ t ∧ A u = D u }.Nonempty :=
   ⟨0, by simp, by
@@ -26,14 +26,14 @@ theorem start_set_nonempty (A D : Curve) (t : ℝ≥0) :
     have hD : D 0 = 0 := D.zero
     rw [hA, hD]⟩
 
-/-- `Start A D t ≤ t`. -/
+/-- `start A D t ≤ t`. -/
 theorem start_le (A D : Curve) (t : ℝ≥0) :
-    Start A D t ≤ t :=
+    start A D t ≤ t :=
   csSup_le (start_set_nonempty A D t) (fun _ hx => hx.1)
 
-/-- `Start A D` is monotone in `t`. -/
+/-- `start A D` is monotone in `t`. -/
 theorem start_mono (A D : Curve) {t t' : ℝ≥0}
-    (h : t ≤ t') : Start A D t ≤ Start A D t' :=
+    (h : t ≤ t') : start A D t ≤ start A D t' :=
   csSup_le (start_set_nonempty A D t)
     (fun _ hx =>
       le_csSup ⟨t', fun _ hy => hy.1⟩
@@ -45,10 +45,10 @@ theorem IsBacklogged.subset {A D : Curve}
     (hsub : I' ⊆ I) : IsBacklogged A D I' :=
   fun t ht => h t (hsub ht)
 
-/-- `(Start A D t, t]` is a backlogged period when `D ≤ A`. -/
+/-- `(start A D t, t]` is a backlogged period when `D ≤ A`. -/
 theorem isBacklogged_Ioc_start (A D : Curve)
     (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
-    IsBacklogged A D (Set.Ioc (Start A D t) t) := by
+    IsBacklogged A D (Set.Ioc (start A D t) t) := by
   intro u hu
   have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
     ⟨t, fun x hx => hx.1⟩
@@ -60,8 +60,8 @@ theorem isBacklogged_Ioc_start (A D : Curve)
 /-- At the start of a backlogged period, `A = D` (uses left continuity). -/
 theorem A_start_eq_D_start (A D : Curve)
     (hc : ∀ x, D x ≤ A x) (t : ℝ≥0) :
-    A (Start A D t) = D (Start A D t) := by
-  set s := Start A D t with hs
+    A (start A D t) = D (start A D t) := by
+  set s := start A D t with hs
   rcases (hc s).lt_or_eq with hlt | heq
   · exfalso
     have hbdd : BddAbove { u | u ≤ t ∧ A u = D u } :=
@@ -96,20 +96,20 @@ theorem A_start_eq_D_start (A D : Curve)
       (not_le.mpr hls)
   · exact heq.symm
 
-/-- `Start` is constant across an order-connected backlogged set. -/
+/-- `start` is constant across an order-connected backlogged set. -/
 theorem start_const_of_backlogged (A D : Curve)
     (hc : ∀ x, D x ≤ A x)
     {I : Set ℝ≥0} (hI : IsBacklogged A D I)
     (hoc : I.OrdConnected)
     {t t' : ℝ≥0} (ht : t ∈ I) (ht' : t' ∈ I) :
-    Start A D t = Start A D t' := by
+    start A D t = start A D t' := by
   wlog hle : t ≤ t' generalizing t t'
   · exact (this ht' ht (not_le.mp hle).le).symm
   refine le_antisymm (start_mono A D hle) ?_
-  have hst : Start A D t' ≤ t := by
+  have hst : start A D t' ≤ t := by
     by_contra h
     rw [not_le] at h
-    have hmem : Start A D t' ∈ I :=
+    have hmem : start A D t' ∈ I :=
       hoc.out ht ht' ⟨h.le, start_le A D t'⟩
     have := hI _ hmem
     rw [A_start_eq_D_start A D hc t'] at this
