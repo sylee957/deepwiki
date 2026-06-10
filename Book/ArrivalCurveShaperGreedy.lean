@@ -150,7 +150,8 @@ theorem IsGreedyShaper.isMinimalServiceCurve {S : Curve → Curve → Prop}
   fun A D hp => le_of_eq (hS A D hp).symm
 
 /-- A sub-additive `sigma` allows itself as an arrival curve. -/
-theorem isMaximalArrivalCurve_self_of_subadditive {sigma : ℝ≥0 → EReal}
+theorem isMaximalArrivalCurve_self_of_subadditive {T : Type*} [Add T]
+    [ConditionallyCompleteLattice T] [OrderBot T] {sigma : ℝ≥0 → T}
     (hsub : IsSubadditive sigma) :
     IsMaximalArrivalCurve sigma sigma :=
   (isMaximalArrivalCurve_iff_increment sigma sigma).mpr hsub

@@ -20,64 +20,84 @@ theorem mul_div_cancel_left_of_ne {C : ℝ≥0} (hC : C ≠ 0) (x : ℝ≥0) :
   rw [← mul_div_assoc]
   exact mul_div_cancel_left₀ x hC
 
-/-! ## The burst arrival -/
+/-! ## Piecewise-after curves -/
 
-/-- The step function `b·1_{>T}`: `0` up to `T`, `b` strictly after. -/
-noncomputable def stepFun (T b : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun u => if T < u then b else 0
+/-- A function that is `0` up to `T` and follows the branch `g` strictly
+after. -/
+noncomputable def afterFun (T : ℝ≥0) (g : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun u => if T < u then g u else 0
 
-/-- `stepFun T b` is nondecreasing. -/
-theorem stepFun_mono (T b : ℝ≥0) : Monotone (stepFun T b) := by
+/-- `afterFun T g` is nondecreasing for nondecreasing `g`. -/
+theorem afterFun_mono (T : ℝ≥0) {g : ℝ≥0 → ℝ≥0} (hg : Monotone g) :
+    Monotone (afterFun T g) := by
   intro u v huv
-  unfold stepFun
+  unfold afterFun
   by_cases hu : T < u
-  · exact le_of_eq (by rw [if_pos hu, if_pos (lt_of_lt_of_le hu huv)])
+  · rw [if_pos hu, if_pos (lt_of_lt_of_le hu huv)]
+    exact hg huv
   · rw [if_neg hu]
     exact zero_le'
 
-/-- `stepFun T b` vanishes at the origin. -/
-theorem stepFun_zero (T b : ℝ≥0) : IsNullAtOrigin (stepFun T b) := by
-  simp [IsNullAtOrigin, stepFun]
+/-- `afterFun T g` vanishes at the origin. -/
+theorem afterFun_zero (T : ℝ≥0) (g : ℝ≥0 → ℝ≥0) :
+    IsNullAtOrigin (afterFun T g) := by
+  simp [IsNullAtOrigin, afterFun]
 
-/-- `stepFun T b` is continuous at every `u ≠ T`. -/
-theorem stepFun_continuousAt (T b : ℝ≥0) {u : ℝ≥0} (h : u ≠ T) :
-    ContinuousAt (stepFun T b) u := by
+/-- `afterFun T g` is continuous at every `u ≠ T` for continuous `g`. -/
+theorem afterFun_continuousAt (T : ℝ≥0) {g : ℝ≥0 → ℝ≥0} (hg : Continuous g)
+    {u : ℝ≥0} (h : u ≠ T) :
+    ContinuousAt (afterFun T g) u := by
   rcases lt_or_gt_of_ne h with h | h
   · refine (continuousAt_const (y := (0 : ℝ≥0))).congr ?_
     filter_upwards [Iio_mem_nhds h] with s hs
-    simp [stepFun, (Set.mem_Iio.mp hs).asymm]
-  · refine (continuousAt_const (y := b)).congr ?_
+    simp [afterFun, (Set.mem_Iio.mp hs).asymm]
+  · refine hg.continuousAt.congr ?_
     filter_upwards [Ioi_mem_nhds h] with s hs
-    simp [stepFun, Set.mem_Ioi.mp hs]
+    simp [afterFun, Set.mem_Ioi.mp hs]
 
-/-- `stepFun T b` is piecewise continuous (one jump at `T`). -/
-theorem stepFun_pwc (T b : ℝ≥0) : IsPiecewiseContinuous (stepFun T b) := by
+/-- `afterFun T g` is piecewise continuous (one jump at `T`). -/
+theorem afterFun_pwc (T : ℝ≥0) {g : ℝ≥0 → ℝ≥0} (hg : Continuous g) :
+    IsPiecewiseContinuous (afterFun T g) := by
   intro S
   apply Set.Finite.subset (Set.finite_singleton T)
   rintro t ⟨ht, _⟩
   by_contra hne
-  exact ht (stepFun_continuousAt T b hne)
+  exact ht (afterFun_continuousAt T hg hne)
 
-/-- `stepFun T b` is left-continuous. -/
-theorem stepFun_leftCont (T b : ℝ≥0) : IsLeftContinuous (stepFun T b) := by
+/-- `afterFun T g` is left-continuous for continuous `g`. -/
+theorem afterFun_leftCont (T : ℝ≥0) {g : ℝ≥0 → ℝ≥0} (hg : Continuous g) :
+    IsLeftContinuous (afterFun T g) := by
   intro t
   rcases le_or_gt t T with h | h
   · refine ContinuousWithinAt.congr
       (f := fun _ => (0 : ℝ≥0)) continuousWithinAt_const
       (fun s hs => ?_) ?_
-    · simp [stepFun, (lt_of_lt_of_le hs h).asymm]
-    · simp [stepFun, not_lt.mpr h]
-  · have hev : stepFun T b =ᶠ[𝓝[Iio t] t] (fun _ => b) := by
+    · simp [afterFun, (lt_of_lt_of_le hs h).asymm]
+    · simp [afterFun, not_lt.mpr h]
+  · have hev : afterFun T g =ᶠ[𝓝[Iio t] t] g := by
       filter_upwards [Ioo_mem_nhdsLT h] with s hs
-      simp [stepFun, hs.1]
-    exact continuousWithinAt_const.congr_of_eventuallyEq hev
-      (by simp [stepFun, h])
+      simp [afterFun, hs.1]
+    exact (hg.continuousAt.continuousWithinAt).congr_of_eventuallyEq hev
+      (by simp [afterFun, h])
+
+/-- The piecewise-after curve: `0` up to `T`, a continuous nondecreasing
+branch `g` strictly after. -/
+noncomputable def afterCurve (T : ℝ≥0) (g : ℝ≥0 → ℝ≥0)
+    (hmono : Monotone g) (hcont : Continuous g) : Curve :=
+  ⟨afterFun T g, afterFun_mono T hmono, afterFun_zero T g,
+    afterFun_pwc T hcont, afterFun_leftCont T hcont⟩
+
+/-- `afterCurve T g … u = g u` past `T`, `0` before. -/
+@[simp] theorem afterCurve_apply (T : ℝ≥0) (g : ℝ≥0 → ℝ≥0)
+    (hmono : Monotone g) (hcont : Continuous g) (u : ℝ≥0) :
+    afterCurve T g hmono hcont u = if T < u then g u else 0 := rfl
+
+/-! ## The burst arrival -/
 
 /-- The burst arrival `b·1_{>T}` as a `Curve`: `n` packets totalling `b`
 arrive together at time `T`. -/
 noncomputable def stepCurve (T b : ℝ≥0) : Curve :=
-  ⟨stepFun T b, stepFun_mono T b, stepFun_zero T b, stepFun_pwc T b,
-    stepFun_leftCont T b⟩
+  afterCurve T (fun _ => b) monotone_const continuous_const
 
 /-- `stepCurve T b u = b·1_{T<u}`. -/
 @[simp] theorem stepCurve_apply (T b u : ℝ≥0) :
@@ -168,73 +188,23 @@ The rush server releases `c` of the burst immediately and the remaining
 `b − c` at the minimal rate `C`: with `c = (n−1)·s`, the first `n − 1` packets
 are served within any `ε > 0`, the last one alone in `b/C − ε`. -/
 
-/-- The rush output for the burst `b·1_{>T}`: `c` departs immediately at `T`,
-the remainder at rate `C` — `max c (min b (C·(v−T)))` past `T`. -/
-noncomputable def rushFun (T b c C : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun v => if T < v then max c (min b (C * (v - T))) else 0
-
 /-- The rush branch `v ↦ max c (min b (C·(v−T)))` is continuous. -/
 theorem rushBranch_continuous (T b c C : ℝ≥0) :
     Continuous (fun v : ℝ≥0 => max c (min b (C * (v - T)))) :=
   continuous_const.max (continuous_const.min
     (continuous_const.mul (continuous_id.sub continuous_const)))
 
-/-- `rushFun T b c C` is nondecreasing. -/
-theorem rushFun_mono (T b c C : ℝ≥0) : Monotone (rushFun T b c C) := by
-  intro u v huv
-  unfold rushFun
-  by_cases hu : T < u
-  · rw [if_pos hu, if_pos (lt_of_lt_of_le hu huv)]
-    exact max_le_max le_rfl
-      (min_le_min le_rfl (mul_le_mul' le_rfl (tsub_le_tsub_right huv T)))
-  · rw [if_neg hu]
-    exact zero_le'
+/-- The rush branch is nondecreasing. -/
+theorem rushBranch_mono (T b c C : ℝ≥0) :
+    Monotone (fun v : ℝ≥0 => max c (min b (C * (v - T)))) :=
+  fun _ _ huv => max_le_max le_rfl
+    (min_le_min le_rfl (mul_le_mul' le_rfl (tsub_le_tsub_right huv T)))
 
-/-- `rushFun T b c C` vanishes at the origin. -/
-theorem rushFun_zero (T b c C : ℝ≥0) : IsNullAtOrigin (rushFun T b c C) := by
-  simp [IsNullAtOrigin, rushFun]
-
-/-- `rushFun T b c C` is continuous at every `v ≠ T`. -/
-theorem rushFun_continuousAt (T b c C : ℝ≥0) {v : ℝ≥0} (h : v ≠ T) :
-    ContinuousAt (rushFun T b c C) v := by
-  rcases lt_or_gt_of_ne h with h | h
-  · refine (continuousAt_const (y := (0 : ℝ≥0))).congr ?_
-    filter_upwards [Iio_mem_nhds h] with s hs
-    simp [rushFun, (Set.mem_Iio.mp hs).asymm]
-  · refine ((rushBranch_continuous T b c C).continuousAt).congr ?_
-    filter_upwards [Ioi_mem_nhds h] with s hs
-    simp [rushFun, Set.mem_Ioi.mp hs]
-
-/-- `rushFun T b c C` is piecewise continuous (one jump at `T`). -/
-theorem rushFun_pwc (T b c C : ℝ≥0) :
-    IsPiecewiseContinuous (rushFun T b c C) := by
-  intro S
-  apply Set.Finite.subset (Set.finite_singleton T)
-  rintro t ⟨ht, _⟩
-  by_contra hne
-  exact ht (rushFun_continuousAt T b c C hne)
-
-/-- `rushFun T b c C` is left-continuous. -/
-theorem rushFun_leftCont (T b c C : ℝ≥0) :
-    IsLeftContinuous (rushFun T b c C) := by
-  intro t
-  rcases le_or_gt t T with h | h
-  · refine ContinuousWithinAt.congr
-      (f := fun _ => (0 : ℝ≥0)) continuousWithinAt_const
-      (fun s hs => ?_) ?_
-    · simp [rushFun, (lt_of_lt_of_le hs h).asymm]
-    · simp [rushFun, not_lt.mpr h]
-  · have hev : rushFun T b c C =ᶠ[𝓝[Iio t] t]
-        (fun v => max c (min b (C * (v - T)))) := by
-      filter_upwards [Ioo_mem_nhdsLT h] with s hs
-      simp [rushFun, hs.1]
-    exact ((rushBranch_continuous T b c C).continuousAt.continuousWithinAt
-      ).congr_of_eventuallyEq hev (by simp [rushFun, h])
-
-/-- The rush output as a `Curve`. -/
+/-- The rush output for the burst `b·1_{>T}`: `c` departs immediately at `T`,
+the remainder at rate `C` — `max c (min b (C·(v−T)))` past `T`. -/
 noncomputable def rushCurve (T b c C : ℝ≥0) : Curve :=
-  ⟨rushFun T b c C, rushFun_mono T b c C, rushFun_zero T b c C,
-    rushFun_pwc T b c C, rushFun_leftCont T b c C⟩
+  afterCurve T (fun v => max c (min b (C * (v - T))))
+    (rushBranch_mono T b c C) (rushBranch_continuous T b c C)
 
 /-- `rushCurve T b c C v = max c (min b (C·(v−T)))·1_{T<v}`. -/
 @[simp] theorem rushCurve_apply (T b c C v : ℝ≥0) :
