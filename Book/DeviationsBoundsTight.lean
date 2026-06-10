@@ -244,21 +244,26 @@ theorem greedyShaperRel_greedyCurve (A : Curve) {beta : ℝ≥0 → EReal}
     greedyShaperRel beta A (greedyCurve A beta hmono h0 hlc hpwc) :=
   curveE_greedyCurve A hmono h0 hlc hpwc
 
-/-- **Tightness of the deviation bounds** (`C`-membership form): packaging
-the greedy output as a `Curve`, some pair of `minimalServiceRel beta` with
-arrival `A` attains both the delay and the backlog bound. -/
-theorem exists_delay_eq_hDev_backlog_eq_vDev (A : Curve)
-    {beta : ℝ≥0 → EReal} (hsub : IsSubadditive (⇑A : ℝ≥0 → ℝ≥0))
+/-- **Tightness of the deviation bounds**: for sub-additive `alpha` and
+left-continuous `beta`, the bounds are tight — there exists a pair
+`(A, D)` of `minimalServiceRel beta` such that `A` has arrival curve
+`alpha`, `d(A, D) = hDev(alpha, beta)` and `b(A, D) = vDev(alpha, beta)`.
+The piecewise-continuity witness is the price of `C`-membership (the
+equalities themselves are the direct form above). -/
+theorem exists_delay_eq_hDev_backlog_eq_vDev (alpha : Curve)
+    {beta : ℝ≥0 → EReal} (hsub : IsSubadditive (⇑alpha : ℝ≥0 → ℝ≥0))
     (hmono : Monotone beta) (h0 : beta 0 = 0)
     (hlc : IsLeftContinuous beta)
-    (hpwc : IsPiecewiseContinuous (greedyFun A beta)) :
-    ∃ D : Curve, minimalServiceRel beta A D ∧
-      delay ⇑A ⇑D = (hDev (liftENN ⇑A) (toENN beta) : ℝ≥0∞) ∧
+    (hpwc : IsPiecewiseContinuous (greedyFun alpha beta)) :
+    ∃ A D : Curve, minimalServiceRel beta A D ∧
+      IsMaximalArrivalCurve (liftENN ⇑A) (liftENN ⇑alpha) ∧
+      delay ⇑A ⇑D = (hDev (liftENN ⇑alpha) (toENN beta) : ℝ≥0∞) ∧
       (⨆ t : ℝ≥0, (backlogAt ⇑A ⇑D t : ℝ≥0∞))
-        = vDev (liftENN ⇑A) (toENN beta) := by
-  have hp := greedyShaperRel_greedyCurve A hmono h0 hlc hpwc
-  exact ⟨greedyCurve A beta hmono h0 hlc hpwc,
+        = vDev (liftENN ⇑alpha) (toENN beta) := by
+  have hp := greedyShaperRel_greedyCurve alpha hmono h0 hlc hpwc
+  exact ⟨alpha, greedyCurve alpha beta hmono h0 hlc hpwc,
     ((mem_greedyShaperRel_iff_minimal_and_maximal h0.le).mp hp).1,
+    isMaximalArrivalCurve_self_of_subadditive hsub.liftENN,
     delay_eq_hDev_of_greedyShaperRel hsub hmono h0 hp,
     iSup_backlogAt_eq_vDev_of_greedyShaperRel hsub hmono h0 hp⟩
 
