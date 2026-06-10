@@ -48,6 +48,7 @@ import Book.ServiceCurvePackets
 import Book.ServiceCurveMaximal
 import Book.ArrivalCurveShaper
 import Book.ArrivalCurveShaperGreedy
+import Book.ArrivalCurveOutput
 import Book.DeviationsBoundsTight
 
 /-!

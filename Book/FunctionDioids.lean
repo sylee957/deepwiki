@@ -4,7 +4,8 @@ import Mathlib.Topology.Instances.NNReal.Lemmas
 
 /-! # Function dioids
 Generic `minConv`/`maxConv` with intro and elim lemmas (`minConv_le_add`,
-`le_minConv`, `add_le_maxConv`, `maxConv_le`); the function spaces
+`le_minConv`, `add_le_maxConv`, `maxConv_le`) and the deconvolution term
+bounds (`sub_le_minDeconv`, `maxDeconv_le_sub`); the function spaces
 `FminBar`/`FmaxBar` over the extended carriers, whose dioid product `conv`
 agrees with `minConv`/`maxConv`; the predicates `IsNonneg`/`IsNullAtOrigin`
 with closure lemmas; and the sub-complete-dioids `FPlus`/`FNondecr`. -/
@@ -80,6 +81,22 @@ theorem maxConv_le {D T : Type*} [AddZeroClass D] [Add T]
     (h : ∀ u s, u + s = t → f u + g s ≤ x) :
     maxConv f g t ≤ x :=
   ciSup_le fun p => h p.1.1 p.1.2 p.2
+
+/-- Elim: every term bounds the (min,+) deconvolution from below,
+`g (t + s) - h s ≤ minDeconv g h t`. -/
+theorem sub_le_minDeconv {D T : Type*} [Add D] [Sub T]
+    [ConditionallyCompleteLattice T] [OrderTop T]
+    (g h : D → T) (t s : D) :
+    g (t + s) - h s ≤ minDeconv g h t :=
+  le_ciSup_of_le (OrderTop.bddAbove _) s le_rfl
+
+/-- Elim: the (max,+) deconvolution lies below every term,
+`maxDeconv g h t ≤ g (t + s) - h s`. -/
+theorem maxDeconv_le_sub {D T : Type*} [Add D] [Sub T]
+    [ConditionallyCompleteLattice T] [OrderBot T]
+    (g h : D → T) (t s : D) :
+    maxDeconv g h t ≤ g (t + s) - h s :=
+  ciInf_le_of_le (OrderBot.bddBelow _) s le_rfl
 
 
 /-- (min,+) functions valued in `R∪{±∞}`. -/

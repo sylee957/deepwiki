@@ -16,8 +16,12 @@ open scoped Classical NNReal
 /-! ## Lattice and order closure -/
 
 /-- The pointwise minimum of two maximal arrival curves is a maximal arrival
-curve: if `A ≤ A ∗ α` and `A ≤ A ∗ α'` then `A ≤ A ∗ (α ⊓ α')`. -/
-theorem IsMaximalArrivalCurve.inf {A α α' : ℝ≥0 → ℝ≥0}
+curve: if `A ≤ A ∗ α` and `A ≤ A ∗ α'` then `A ≤ A ∗ (α ⊓ α')` (over any
+conditionally complete linear order with `⊥` and monotone `+`, e.g. `ℝ≥0`
+or `ℝ≥0∞`). -/
+theorem IsMaximalArrivalCurve.inf {T : Type*} [Add T]
+    [ConditionallyCompleteLinearOrder T] [OrderBot T] [AddLeftMono T]
+    {A α α' : ℝ≥0 → T}
     (h : IsMaximalArrivalCurve A α) (h' : IsMaximalArrivalCurve A α') :
     IsMaximalArrivalCurve A (α ⊓ α') := by
   rw [isMaximalArrivalCurve_iff_increment] at h h' ⊢
