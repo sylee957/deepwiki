@@ -192,4 +192,72 @@ theorem IsGreedyShaper.isShaper {S : Curve → Curve → Prop}
   exact isMaximalArrivalCurve_minConv_of_subadditive
     (curveE_nonneg A) hnn hsub
 
+/-! ## Greedy shaper is minimal and maximal service -/
+
+/-- `greedyRel sigma` is itself a greedy shaper for `sigma`. -/
+theorem isGreedyShaper_greedyRel (sigma : ℝ≥0 → EReal) :
+    IsGreedyShaper sigma (greedyRel sigma) :=
+  fun _ _ hp => hp
+
+/-- A greedy shaper offers `sigma` as a maximal service curve:
+`D ≤ A ∗ sigma` from the defining equality. -/
+theorem IsGreedyShaper.isMaximalServiceCurve {S : Curve → Curve → Prop}
+    {sigma : ℝ≥0 → EReal} (hS : IsGreedyShaper sigma S) :
+    IsMaximalServiceCurve sigma S :=
+  fun A D hp => le_of_eq (hS A D hp)
+
+/-- Pointwise form of the minimal-and-maximal characterization: for
+`sigma 0 ≤ 0`, `D = A ∗ sigma` iff the pair is in both the min-plus and the
+maximal-service relations. -/
+theorem mem_greedyRel_iff_minPlus_and_maximal {sigma : ℝ≥0 → EReal}
+    (h0 : sigma 0 ≤ 0) {A D : Curve} :
+    greedyRel sigma A D ↔
+      minPlusRelation sigma A D ∧ maximalServiceRelation sigma A D := by
+  constructor
+  · intro hp
+    exact ⟨⟨le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0 A),
+        le_of_eq (hp : curveE D = _).symm⟩,
+      le_of_eq (hp : curveE D = _)⟩
+  · rintro ⟨⟨_, hge⟩, hle⟩
+    exact le_antisymm hle hge
+
+/-- The greedy shaper is exactly minimal-and-maximal service: for
+`sigma 0 ≤ 0`, `greedyRel sigma` is the intersection of `minPlusRelation
+sigma` and `maximalServiceRelation sigma`. -/
+theorem greedyRel_eq_minPlus_inf_maximal {sigma : ℝ≥0 → EReal}
+    (h0 : sigma 0 ≤ 0) :
+    greedyRel sigma =
+      minPlusRelation sigma ⊓ maximalServiceRelation sigma := by
+  funext A D
+  simp only [Pi.inf_apply, inf_Prop_eq]
+  exact propext (mem_greedyRel_iff_minPlus_and_maximal h0)
+
+/-- The greedy-shaper relation is contained in the shaper relation: for `F₀`
+sub-additive `sigma`, `D = A ∗ sigma` gives `D ≤ A` and `D ≤ D ∗ sigma`. -/
+theorem greedyRel_le_shaperRel {sigma : ℝ≥0 → EReal} (h0 : sigma 0 ≤ 0)
+    (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma) :
+    greedyRel sigma ≤ shaperRel sigma := by
+  intro A D hp
+  exact ⟨curveE_le_iff.mp
+      (le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0 A)),
+    (isGreedyShaper_greedyRel sigma).isShaper hnn hsub A D hp⟩
+
+/-- The reduced form of the proposition: the greedy shaper is exactly
+minimal service plus shaping, `greedyRel sigma = minPlusRelation sigma ⊓
+shaperRel sigma` (for `F₀` sub-additive `sigma`). -/
+theorem greedyRel_eq_minPlus_inf_shaper {sigma : ℝ≥0 → EReal}
+    (h0 : sigma 0 ≤ 0) (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma) :
+    greedyRel sigma = minPlusRelation sigma ⊓ shaperRel sigma := by
+  funext A D
+  simp only [Pi.inf_apply, inf_Prop_eq]
+  apply propext
+  constructor
+  · intro hp
+    exact ⟨((mem_greedyRel_iff_minPlus_and_maximal h0).mp hp).1,
+      greedyRel_le_shaperRel h0 hnn hsub A D hp⟩
+  · rintro ⟨⟨hca, hge⟩, hsh⟩
+    refine le_antisymm (fun t => ?_) hge
+    exact le_trans (hsh.2 t)
+      (minConv_le_minConv hca (fun _ => le_rfl) t)
+
 end DeepWiki
