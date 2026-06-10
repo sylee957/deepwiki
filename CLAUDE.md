@@ -191,8 +191,12 @@ not just defaults):
     `is<Concept>_<rel>` (a relation offers its own property), `<rel>_mono`,
     `<rel>_closure`.
   - Hypothesis binders: `hmono` monotone, `hnn` nonneg, `h0` null at origin,
-    `hlc` left-continuous, `hsub` sub-additive, `hp` pair membership `S A D`,
-    `hc` causal, `hSrv` server, `harr` arrival-curve, `hserv` service bound.
+    `hlc` left-continuous, `hsub` sub-additive, `hsup` super-additive,
+    `hp` pair membership `S A D`, `hc` causal, `hSrv` server, `harr`
+    arrival-curve, `hserv` service bound, `hcross` crossing, `hne` nonempty
+    (crossing set). When two curves both need a property, tag the binder by
+    the curve (`hαmono`/`hβmono`), keeping plain `hmono` where only one
+    curve carries it.
   - Carrier tags (target grammar; bare `E` is legacy and ambiguous):
     `NN` = `ℝ≥0∞` values on `ℝ≥0` domain, `ENN` = an `ℝ≥0∞` reading/lift,
     `EReal` = `EReal` values, `Ext` = `WithTop (WithBot ℝ)`; lowercase

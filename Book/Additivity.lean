@@ -19,6 +19,18 @@ def IsSuperadditive {D T : Type*} [Add D]
     [_root_.Add T] [LE T] (g : D → T) : Prop :=
   ∀ u s : D, g u + g s ≤ g (u + s)
 
+/-- A super-additive function into a canonically ordered monoid is
+monotone: `g a ≤ g a + g (b - a) ≤ g (a + (b - a)) = g b`. -/
+theorem IsSuperadditive.monotone {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D] [ExistsAddOfLE D]
+    [Sub D] [OrderedSub D] [AddLeftMono D]
+    [_root_.AddCommMonoid T] [PartialOrder T] [CanonicallyOrderedAdd T]
+    {g : D → T} (hsup : IsSuperadditive g) : Monotone g := by
+  intro a b hab
+  calc g a ≤ g a + g (b - a) := le_self_add
+    _ ≤ g (a + (b - a)) := hsup a (b - a)
+    _ = g b := by rw [add_tsub_cancel_of_le hab]
+
 /-- Sub-additivity iterated through a multiple:
 `g (q • s + r) ≤ q • g s + g r`. -/
 theorem IsSubadditive.apply_nsmul_add_le {D T : Type*}

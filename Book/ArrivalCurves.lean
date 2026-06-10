@@ -108,6 +108,13 @@ inequality. -/
 theorem mem_crossingSet_iff {T : Type*} [LE T] {f g : ℝ≥0 → T} {x : ℝ≥0} :
     x ∈ crossingSet f g ↔ 0 < x ∧ f x ≤ g x := Iff.rfl
 
+/-- The crossing set grows as the left curve shrinks: `α' ≤ α` gives
+`crossingSet α β ⊆ crossingSet α' β`. -/
+theorem crossingSet_anti_left {T : Type*} [Preorder T] {α α' β : ℝ≥0 → T}
+    (hle : ∀ t, α' t ≤ α t) :
+    crossingSet α β ⊆ crossingSet α' β :=
+  fun x hx => ⟨hx.1, (hle x).trans hx.2⟩
+
 /-- The first crossing of `f` below `g`, read in `ℝ≥0∞` (`⊤` when the curves
 never cross). -/
 noncomputable def firstCrossing {T : Type*} [LE T] (f g : ℝ≥0 → T) : ℝ≥0∞ :=

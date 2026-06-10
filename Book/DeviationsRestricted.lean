@@ -127,12 +127,14 @@ theorem iSup_eq_biSup_sInf_of_vanishing_gap {F : ℝ≥0 → ℝ≥0∞} {S : Se
     exact zero_le'
 
 /-- **Restricting the vertical-deviation domain at the first crossing.**
-For monotone sub-additive `α` against monotone super-additive `β` with a
-nonempty crossing set, the vertical deviation is computed on
-`[0, sInf (crossingSet α β)]` — whether or not the infimum is attained. -/
+For monotone sub-additive `α` against super-additive `β` with a nonempty
+crossing set, the vertical deviation is computed on
+`[0, sInf (crossingSet α β)]` — whether or not the infimum is attained
+(contrast `vDev_eq_biSup_of_crossing`: any crossing point, no
+monotonicity). -/
 theorem vDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive α) (hsup : IsSuperadditive β)
-    (hαmono : Monotone α) (hβmono : Monotone β)
+    (hαmono : Monotone α)
     (hne : (crossingSet α β).Nonempty) :
     vDev α β = ⨆ t ≤ sInf (crossingSet α β), vDevAt α β t := by
   refine iSup_eq_biSup_sInf_of_vanishing_gap
@@ -146,7 +148,7 @@ theorem vDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
       _ ≤ α τ - β t := tsub_le_tsub_right (hαmono htτ) _
       _ ≤ α τ - ⨅ σ ∈ crossingSet α β, β σ :=
           tsub_le_tsub_left
-            ((iInf₂_le σ hσS).trans (hβmono hσt.le)) _
+            ((iInf₂_le σ hσS).trans (hsup.monotone hσt.le)) _
   · -- vanishing: `⨅ α ≤ α σ ≤ β σ` over crossings forces the bound to `0`
     intro x hx
     have hx' : ∀ τ ∈ crossingSet α β,
@@ -179,7 +181,8 @@ theorem vDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
 /-- **Restricting the horizontal-deviation domain at the first crossing.**
 Same as the vertical side: with a nonempty crossing set and monotone `α`,
 the horizontal deviation is computed on `[0, sInf (crossingSet α β)]` —
-the gap shifts `τ - t` vanish along the crossing set. -/
+the gap shifts `τ - t` vanish along the crossing set (contrast
+`hDev_eq_biSup_of_crossing`: any crossing point, no monotonicity). -/
 theorem hDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive α) (hsup : IsSuperadditive β)
     (hαmono : Monotone α)
@@ -307,7 +310,7 @@ closure of `α` crosses no later and its deviations sit below `α`'s. -/
 theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
-    (hnn : IsNonneg beta) (hmono : Monotone beta)
+    (hnn : IsNonneg beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) (hαmono : Monotone α)
     (hsup : IsSuperadditive beta)
     (hne : (crossingSet α (toENN beta)).Nonempty) :
@@ -315,9 +318,7 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
       ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
           vDevAt α (toENN beta) t := by
   have hle := subadditiveClosureE_le α
-  have hsubset : crossingSet α (toENN beta)
-      ⊆ crossingSet (subadditiveClosureE α) (toENN beta) :=
-    fun x hx => ⟨hx.1, (hle x).trans hx.2⟩
+  have hsubset := crossingSet_anti_left (β := toENN beta) hle
   have hℓ : sInf (crossingSet (subadditiveClosureE α) (toENN beta))
       ≤ sInf (crossingSet α (toENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
@@ -326,13 +327,11 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
         harr.subadditiveClosureE).trans_eq
       (vDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
         (hsup.toENN hnn) (monotone_subadditiveClosureE hαmono)
-        (monotone_toENN hmono) (hne.mono hsubset))
-  refine hmain.trans (iSup₂_le fun t ht => ?_)
-  exact le_trans (vDevAt_mono (fun t' => hle t') le_rfl t)
-    (le_iSup₂
-      (f := fun t (_ : t ≤ sInf (crossingSet α (toENN beta))) =>
-        vDevAt α (toENN beta) t)
-      t (ht.trans hℓ))
+        (hne.mono hsubset))
+  exact hmain.trans
+    (le_trans
+      (iSup₂_mono fun t _ => vDevAt_mono (fun t' => hle t') le_rfl t)
+      (biSup_mono fun _ ht => ht.trans hℓ))
 
 /-- **Delay from the first crossing.** Without attainment: under the same
 hypotheses, the delay is bounded by the horizontal deviations on
@@ -348,9 +347,7 @@ theorem delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
       ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
           (hDevAt α (toENN beta) t : ℝ≥0∞) := by
   have hle := subadditiveClosureE_le α
-  have hsubset : crossingSet α (toENN beta)
-      ⊆ crossingSet (subadditiveClosureE α) (toENN beta) :=
-    fun x hx => ⟨hx.1, (hle x).trans hx.2⟩
+  have hsubset := crossingSet_anti_left (β := toENN beta) hle
   have hℓ : sInf (crossingSet (subadditiveClosureE α) (toENN beta))
       ≤ sInf (crossingSet α (toENN beta)) :=
     csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
@@ -360,12 +357,10 @@ theorem delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
       (hDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
         (hsup.toENN hnn) (monotone_subadditiveClosureE hαmono)
         (hne.mono hsubset))
-  refine hmain.trans (iSup₂_le fun t ht => ?_)
-  exact le_trans (hDevAt_mono (fun t' => hle t') le_rfl t)
-    (le_iSup₂
-      (f := fun t (_ : t ≤ sInf (crossingSet α (toENN beta))) =>
-        (hDevAt α (toENN beta) t : ℝ≥0∞))
-      t (ht.trans hℓ))
+  exact hmain.trans
+    (le_trans
+      (iSup₂_mono fun t _ => hDevAt_mono (fun t' => hle t') le_rfl t)
+      (biSup_mono fun _ ht => ht.trans hℓ))
 
 /-! ## Book restatement (restricting the deviation domain)
 With `ℓmax = inf {t > 0 | α t ≤ β t}` — the curves do cross, but the
@@ -388,7 +383,7 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 
       delay ⇑A ⇑D
         ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
             (hDevAt α (toENN beta) t : ℝ≥0∞) :=
-  ⟨backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve hβ hp hnn hmono
+  ⟨backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve hβ hp hnn
       harr hαmono hsup hne,
     delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve hβ hp hnn hmono
       harr hαmono hsup hne⟩
