@@ -27,43 +27,29 @@ theorem coe_backlogAt_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → �
     (backlogAt A D t : ℝ≥0∞) ≤ vDev α β := by
   rw [backlogAt_eq, ENNReal.coe_sub]
   refine le_trans (tsub_le_tsub_left (hserv t) _) ?_
-  rw [show minConv (liftENN A) β t
-      = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}, liftENN A p.1.1 + β p.1.2
-    from rfl, ENNReal.sub_iInf]
+  simp only [minConv]
+  rw [ENNReal.sub_iInf]
   refine iSup_le ?_
   rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-  have hinc : (A t : ℝ≥0∞) ≤ (A u : ℝ≥0∞) + α s := by
-    have h := (isMaximalArrivalCurve_iff_increment (liftENN A) α).mp harr u s
-    rwa [show u + s = t from hus] at h
+  have hinc : (A t : ℝ≥0∞) ≤ (A u : ℝ≥0∞) + α s :=
+    (harr t).trans (minConv_le_add (liftENN A) α hus)
   calc (A t : ℝ≥0∞) - (liftENN A u + β s)
       = ((A t : ℝ≥0∞) - liftENN A u) - β s := tsub_add_eq_tsub_tsub _ _ _
     _ ≤ α s - β s := tsub_le_tsub_right (tsub_le_iff_left.mpr hinc) _
     _ ≤ vDev α β := le_iSup (fun d => vDevAt α β d) s
 
-/-- **Backlog bound, sup form**: `b(A, D) ≤ vDev α β`, read junk-free in
-`ℝ≥0∞` as the supremum of the pointwise backlogs. -/
-theorem iSup_backlogAt_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞}
+/-- **Backlog bound**: `b(A, D) ≤ vDev α β`. -/
+theorem backlog_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞}
     (harr : IsMaximalArrivalCurve (liftENN A) α)
     (hserv : ∀ t, minConv (liftENN A) β t ≤ (D t : ℝ≥0∞)) :
-    (⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞)) ≤ vDev α β :=
+    backlog A D ≤ vDev α β :=
   iSup_le fun t => coe_backlogAt_le_vDev harr hserv t
 
-/-- **Backlog bound**: `b(A, D) ≤ vDev α β`. The `ℝ≥0`-valued `backlog` is
-junk-free here: the bound is trivial when `vDev α β = ⊤`, and otherwise the
-pointwise bound keeps the supremum honest. -/
-theorem coe_backlog_le_vDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞}
-    (harr : IsMaximalArrivalCurve (liftENN A) α)
-    (hserv : ∀ t, minConv (liftENN A) β t ≤ (D t : ℝ≥0∞)) :
-    (backlog A D : ℝ≥0∞) ≤ vDev α β := by
-  rcases eq_top_or_lt_top (vDev α β) with htop | hlt
-  · rw [htop]; exact le_top
-  · obtain ⟨c, hc⟩ : ∃ c : ℝ≥0, vDev α β = (c : ℝ≥0∞) :=
-      ⟨(vDev α β).toNNReal, (ENNReal.coe_toNNReal hlt.ne).symm⟩
-    rw [hc, ENNReal.coe_le_coe, backlog_eq_iSup]
-    refine ciSup_le fun t => ?_
-    have h := coe_backlogAt_le_vDev harr hserv t
-    rw [hc, ENNReal.coe_le_coe] at h
-    exact h
+/-- `backlog` is the vertical deviation of the `ℝ≥0∞` readings. -/
+theorem backlog_eq_vDev_liftENN (A D : ℝ≥0 → ℝ≥0) :
+    backlog A D = vDev (liftENN A) (liftENN D) := by
+  rw [backlog_eq_iSup, vDev_eq_iSup]
+  exact iSup_congr fun t => ENNReal.coe_sub
 
 /-- **Delay bound.** If nondecreasing `A` has maximal arrival curve `α` and
 `D` dominates the convolution `A ∗ β` for nondecreasing `β`, then the delay
@@ -77,18 +63,15 @@ theorem delayAt_le_hDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0
   rw [not_le] at hcon
   obtain ⟨d, hd1, hd2⟩ := ENNReal.lt_iff_exists_nnreal_btwn.mp hcon
   have hadm : (A t : ℝ≥0∞) ≤ (D (t + d) : ℝ≥0∞) := by
-    refine le_trans ?_ (hserv (t + d))
-    refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t + d)⟩
+    refine le_trans (le_minConv fun u s hus => ?_) (hserv (t + d))
     by_cases hut : u ≤ t
     · have hs : s = (t - u) + d := by
         have h1 : u + s = u + ((t - u) + d) := by
           rw [hus, ← add_assoc, add_tsub_cancel_of_le hut]
         exact add_left_cancel h1
-      have hα : (A t : ℝ≥0∞) ≤ (A u : ℝ≥0∞) + α (t - u) := by
-        have h := (isMaximalArrivalCurve_iff_increment (liftENN A) α).mp
-          harr u (t - u)
-        rwa [add_tsub_cancel_of_le hut] at h
+      have hα : (A t : ℝ≥0∞) ≤ (A u : ℝ≥0∞) + α (t - u) :=
+        (harr t).trans
+          (minConv_le_add (liftENN A) α (add_tsub_cancel_of_le hut))
       have hβd : α (t - u) ≤ β ((t - u) + d) := by
         have hlt : (hDevAt α β (t - u) : ℝ≥0∞) < (d : ℝ≥0∞) :=
           lt_of_le_of_lt

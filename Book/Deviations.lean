@@ -129,8 +129,9 @@ theorem hDevAt_eq_iSup_lt {V : Type*} [LinearOrder V] {f g : ℝ≥0 → V}
 
 /-! ## Backlog and delay of cumulative curves
 For arrival/departure curves `A, D : ℝ≥0 → ℝ≥0`, the **backlog** is the vertical
-deviation and the **delay** the horizontal one, the latter valued in `ℝ≥0∞` via
-the coercion `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
+deviation and the **delay** the horizontal one, both valued in `ℝ≥0∞` via the
+coercion `(↑· : ℝ≥0 → ℝ≥0∞)`, so unbounded deviations read `⊤` (not the junk
+`ℝ≥0` supremum). -/
 
 namespace Deviation
 
@@ -138,9 +139,10 @@ namespace Deviation
 def backlogAt (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : ℝ≥0 :=
   vDevAt A D t
 
-/-- Backlog `b(A, D) = ⨆ t, A t - D t`, the vertical deviation. -/
-noncomputable def backlog (A D : ℝ≥0 → ℝ≥0) : ℝ≥0 :=
-  vDev A D
+/-- Backlog `b(A, D) = ⨆ t, A t - D t`, the vertical deviation, valued in
+`ℝ≥0∞` (like `delay`) so an unbounded backlog reads `⊤`. -/
+noncomputable def backlog (A D : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :=
+  ⨆ t : ℝ≥0, (backlogAt A D t : ℝ≥0∞)
 
 /-- Delay of `D` behind `A` at `t`: least shift `d` with `A t ≤ D (t + d)`. -/
 noncomputable def delayAt (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : ℝ≥0∞ :=
@@ -154,9 +156,9 @@ noncomputable def delay (A D : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :=
 theorem backlogAt_eq (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     backlogAt A D t = A t - D t := rfl
 
-/-- `backlog A D = ⨆ t, A t - D t`. -/
+/-- `backlog A D = ⨆ t, ↑(A t - D t)`. -/
 theorem backlog_eq_iSup (A D : ℝ≥0 → ℝ≥0) :
-    backlog A D = ⨆ t : ℝ≥0, A t - D t := rfl
+    backlog A D = ⨆ t : ℝ≥0, ((A t - D t : ℝ≥0) : ℝ≥0∞) := rfl
 
 /-- `delayAt A D t` is the least shift `d` with `A t ≤ D (t + d)`. -/
 theorem delayAt_eq (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :

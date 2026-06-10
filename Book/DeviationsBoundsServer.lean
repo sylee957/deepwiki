@@ -45,10 +45,7 @@ theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (t : ℝ≥0) :
     ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal)
       = minConv (curveE A) beta t := by
-  show ((⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      liftENN ⇑A p.1.1 + toENN beta p.1.2 : ℝ≥0∞) : EReal)
-    = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-        curveE A p.1.1 + beta p.1.2
+  simp only [minConv]
   rw [coe_ennreal_iInf]
   refine iInf_congr ?_
   rintro ⟨⟨u, s⟩, _⟩
@@ -95,13 +92,13 @@ theorem coe_backlogAt_le_vDev_of_isMinimalServiceCurve
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp) t
 
 /-- **Backlog bound for servers**: `b(A, D) ≤ vDev α (toENN beta)`. -/
-theorem coe_backlog_le_vDev_of_isMinimalServiceCurve
+theorem backlog_le_vDev_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve} (hβ : IsMinimalServiceCurve beta S) (hp : S A D)
     (hnn : IsNonneg beta)
     (harr : IsMaximalArrivalCurve (liftENN ⇑A) α) :
-    (backlog ⇑A ⇑D : ℝ≥0∞) ≤ vDev α (toENN beta) :=
-  coe_backlog_le_vDev harr
+    backlog ⇑A ⇑D ≤ vDev α (toENN beta) :=
+  backlog_le_vDev harr
     (minConv_toENN_le_of_isMinimalServiceCurve hβ hnn hp)
 
 end Deviation
