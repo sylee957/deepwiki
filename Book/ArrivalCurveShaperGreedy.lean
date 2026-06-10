@@ -66,12 +66,13 @@ theorem coe_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
 
 /-- `greedyFun A sigma` is nondecreasing. -/
 theorem greedyFun_mono (A : Curve) {sigma : ℝ≥0 → EReal}
-    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0) :
+    (hmono : Monotone sigma) (h0 : sigma 0 = 0) :
     Monotone (greedyFun A sigma) := by
   intro a b hab
   have hm := minConvE_mono (curveE A) sigma (monotone_curveE A) hmono hab
   have hpos : (0 : EReal) ≤ minConv (curveE A) sigma a :=
-    minConv_isNonneg (curveE_nonneg A) hnn a
+    minConv_isNonneg (curveE_nonneg A)
+      (isNonneg_of_monotone_of_nullAtOrigin hmono h0) a
   exact Real.toNNReal_mono
     (EReal.toReal_le_toReal hm (ne_bot_of_nonneg hpos)
       (minConv_curveE_ne_top A h0.le b))
@@ -87,7 +88,7 @@ theorem greedyFun_zero (A : Curve) {sigma : ℝ≥0 → EReal} (h0 : sigma 0 = 0
 /-- `greedyFun A sigma` is left-continuous: the convolution is left-continuous
 (`isLeftContinuous_minConv_ereal`), and its values are finite. -/
 theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
-    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0)
+    (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma) :
     IsLeftContinuous (greedyFun A sigma) := by
   have hm : IsLeftContinuous (minConv (curveE A) sigma) :=
@@ -96,7 +97,8 @@ theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
       (fun r u => addDefined_curveE A u (sigma (r - u)))
   intro t
   have hpos : (0 : EReal) ≤ minConv (curveE A) sigma t :=
-    minConv_isNonneg (curveE_nonneg A) hnn t
+    minConv_isNonneg (curveE_nonneg A)
+      (isNonneg_of_monotone_of_nullAtOrigin hmono h0) t
   have htr : ContinuousAt EReal.toReal (minConv (curveE A) sigma t) :=
     EReal.tendsto_toReal (minConv_curveE_ne_top A h0.le t)
       (ne_bot_of_nonneg hpos)
@@ -107,35 +109,36 @@ theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
 nonnegative, null at zero, and left-continuous; the piecewise-continuity
 witness for the convolution is the remaining hypothesis. -/
 noncomputable def greedyCurve (A : Curve) (sigma : ℝ≥0 → EReal)
-    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0)
+    (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma)
     (hpwc : IsPiecewiseContinuous (greedyFun A sigma)) : Curve :=
-  ⟨greedyFun A sigma, greedyFun_mono A hmono hnn h0, greedyFun_zero A h0,
-    hpwc, greedyFun_leftCont A hmono hnn h0 hlc⟩
+  ⟨greedyFun A sigma, greedyFun_mono A hmono h0, greedyFun_zero A h0,
+    hpwc, greedyFun_leftCont A hmono h0 hlc⟩
 
 /-- The greedy curve realizes the convolution:
 `curveE (greedyCurve …) = A ∗ sigma`. -/
 theorem curveE_greedyCurve (A : Curve) {sigma : ℝ≥0 → EReal}
-    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0)
+    (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma)
     (hpwc : IsPiecewiseContinuous (greedyFun A sigma)) :
-    curveE (greedyCurve A sigma hmono hnn h0 hlc hpwc)
+    curveE (greedyCurve A sigma hmono h0 hlc hpwc)
       = minConv (curveE A) sigma :=
-  funext (coe_greedyFun A hnn h0)
+  funext (coe_greedyFun A
+    (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0)
 
 /-- For `sigma` in `F₀` and left-continuous, `greedyRel sigma` is a server:
 causality is `A ∗ sigma ≤ A` (`minConv_self_le`), and `greedyCurve` realizes
 each output — given the piecewise-continuity witness `hpwc` for the
 convolution (the remaining regularity gap). -/
 theorem isServer_greedyRel {sigma : ℝ≥0 → EReal}
-    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0)
+    (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma)
     (hpwc : ∀ A : Curve, IsPiecewiseContinuous (greedyFun A sigma)) :
     IsServer (greedyRel sigma) :=
   ⟨fun A D hp => curveE_le_iff.mp
       (le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0.le A)),
-    fun A => ⟨greedyCurve A sigma hmono hnn h0 hlc (hpwc A),
-      curveE_greedyCurve A hmono hnn h0 hlc (hpwc A)⟩⟩
+    fun A => ⟨greedyCurve A sigma hmono h0 hlc (hpwc A),
+      curveE_greedyCurve A hmono h0 hlc (hpwc A)⟩⟩
 
 /-! ## A greedy shaper is a shaper and a minimal service curve -/
 

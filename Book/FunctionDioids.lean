@@ -126,6 +126,14 @@ def IsNullAtOrigin {D T : Type*} [Zero D] [Zero T]
     (f : D → T) : Prop :=
   f 0 = 0
 
+/-- A monotone function vanishing at the origin is nonnegative:
+`0 = f 0 ≤ f t`. -/
+theorem isNonneg_of_monotone_of_nullAtOrigin {D T : Type*}
+    [_root_.AddCommMonoid D] [PartialOrder D] [CanonicallyOrderedAdd D]
+    [Zero T] [Preorder T] {f : D → T}
+    (hmono : Monotone f) (h0 : IsNullAtOrigin f) : IsNonneg f :=
+  fun _ => h0 ▸ hmono zero_le'
+
 example {α β : Type*} [Preorder α] [Preorder β]
     (f : α → β) :
     Monotone f ↔ ∀ x y, x ≤ y → f x ≤ f y :=
