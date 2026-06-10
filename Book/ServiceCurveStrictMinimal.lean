@@ -1,14 +1,18 @@
 import Book.ServiceCurveStrict
 import Book.DeviationsBoundsServer
+import Book.DeviationsRestricted
 
 /-! # Strict service curves are minimal service curves
 The inclusion of the strict into the min-plus service-curve theory: a strict
 minimal service curve is in particular a minimal service curve (lifted into
-`EReal` via `liftEReal`), so the deviation bounds for servers apply. -/
+`EReal` via `liftEReal`), so the deviation bounds for servers apply —
+including the restricted-domain bounds, through the super-additive closure
+under an affine rate bound. -/
 
 namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
+open Deviation
 
 /-- **A strict service curve is a min-plus service curve.** At
 `s = start A D t`, the start-of-backlog output bound gives
@@ -88,6 +92,65 @@ theorem delay_le_hDev_of_isStrictMinimalServiceCurve
     (monotone_liftEReal hmono) harr
   rwa [toENN_liftEReal] at h
 
+/-- **Backlog from a restricted domain, strict service.** A causal pair with
+strict service `beta` under an affine rate bound, the arrival allowing a
+sub-additive `α`, has backlog bounded by the vertical deviations against
+`beta` on `[0, τ]`, for any positive crossing point `α τ ≤ liftENN beta τ`:
+the super-additive closure of `beta` is still offered, is super-additive,
+and dominates `beta`. -/
+theorem backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
+    {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
+    (hp : S A D) (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
+    backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (liftENN beta) t := by
+  have hcross' : α τ ≤ toENN (liftEReal (superadditiveClosureMax beta)) τ := by
+    rw [toENN_liftEReal]
+    exact hcross.trans (ENNReal.coe_le_coe.mpr
+      (le_superadditiveClosureMax_of_affine_bound hr τ))
+  have hmain := backlog_le_biSup_vDevAt_of_isMinimalServiceCurve
+    ((isStrictMinimalServiceCurve_superadditiveClosureMax beta
+        hβ).isMinimalServiceCurve hc)
+    hp (isNonneg_liftEReal _) harr hsub
+    ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
+    hτ hcross'
+  rw [toENN_liftEReal] at hmain
+  refine hmain.trans (iSup₂_mono fun t _ => ?_)
+  exact vDevAt_mono le_rfl
+    (fun t' => ENNReal.coe_le_coe.mpr
+      (le_superadditiveClosureMax_of_affine_bound hr t')) t
+
+/-- **Delay from a restricted domain, strict service.** Under the same
+hypotheses, with `beta` additionally monotone, the delay is bounded by the
+horizontal deviations against `beta` on `[0, τ]`. -/
+theorem delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve
+    {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
+    {A D : Curve} (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S)
+    (hp : S A D) (hmono : Monotone beta)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    {τ : ℝ≥0} (hτ : 0 < τ) (hcross : α τ ≤ liftENN beta τ) :
+    delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (liftENN beta) t : ℝ≥0∞) := by
+  have hcross' : α τ ≤ toENN (liftEReal (superadditiveClosureMax beta)) τ := by
+    rw [toENN_liftEReal]
+    exact hcross.trans (ENNReal.coe_le_coe.mpr
+      (le_superadditiveClosureMax_of_affine_bound hr τ))
+  have hmain := delay_le_biSup_hDevAt_of_isMinimalServiceCurve
+    ((isStrictMinimalServiceCurve_superadditiveClosureMax beta
+        hβ).isMinimalServiceCurve hc)
+    hp (isNonneg_liftEReal _)
+    (monotone_liftEReal
+      (monotone_superadditiveClosureMax_of_affine_bound hmono hr))
+    harr hsub
+    ((isSuperadditive_superadditiveClosureMax_of_affine_bound hr).liftEReal)
+    hτ hcross'
+  rw [toENN_liftEReal] at hmain
+  refine hmain.trans (iSup₂_mono fun t _ => ?_)
+  exact hDevAt_mono le_rfl
+    (fun t' => ENNReal.coe_le_coe.mpr
+      (le_superadditiveClosureMax_of_affine_bound hr t')) t
+
 end Deviation
 
 /-! ## Book restatement (strict service curves are service curves)
@@ -97,5 +160,26 @@ example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S) :
     IsMinimalServiceCurve (liftEReal beta) S :=
   hβ.isMinimalServiceCurve hSrv.1
+
+/-! ## Book restatement (restricted deviation domain, strict service)
+With `ℓmax = inf {t > 0 | α t ≤ beta t}` itself a positive crossing point
+(the infimum attained), backlog and delay of a pair served with strict
+service `beta` (monotone, affinely rate-bounded) are bounded by the
+deviations against `beta` computed on `[0, ℓmax]`. -/
+example {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0} {α : ℝ≥0 → ℝ≥0∞}
+    {A D : Curve}
+    (hSrv : IsServer S) (hβ : IsStrictMinimalServiceCurve beta S)
+    (hp : S A D) (hmono : Monotone beta)
+    (harr : IsMaximalArrivalCurve (liftENN ⇑A) α)
+    (hsub : IsSubadditive α) (hr : ∃ r : ℝ≥0, ∀ s, beta s ≤ r * s)
+    {ℓmax : ℝ≥0}
+    (_hℓ : ℓmax = sInf {t : ℝ≥0 | 0 < t ∧ α t ≤ liftENN beta t})
+    (hτ : 0 < ℓmax) (hcross : α ℓmax ≤ liftENN beta ℓmax) :
+    backlog ⇑A ⇑D ≤ (⨆ t ≤ ℓmax, vDevAt α (liftENN beta) t) ∧
+      delay ⇑A ⇑D ≤ ⨆ t ≤ ℓmax, (hDevAt α (liftENN beta) t : ℝ≥0∞) :=
+  ⟨backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp harr
+      hsub hr hτ hcross,
+    delay_le_biSup_hDevAt_of_isStrictMinimalServiceCurve hβ hSrv.1 hp hmono
+      harr hsub hr hτ hcross⟩
 
 end DeepWiki

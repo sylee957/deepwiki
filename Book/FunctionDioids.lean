@@ -576,6 +576,21 @@ theorem maxConvProj_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
   have := ENNReal.toNNReal_mono (by simp) hb
   simpa using this
 
+/-- Intro: a splitting bounds `maxConvProj` from below, given a uniform
+bound on all splittings (which keeps the projected supremum finite). -/
+theorem le_maxConvProj_of_bound {g h : ℝ≥0 → ℝ≥0} {t c : ℝ≥0}
+    (hbound : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+      g p.1.1 + h p.1.2 ≤ c)
+    (p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}) :
+    g p.1.1 + h p.1.2 ≤ maxConvProj g h t := by
+  have hfin : (⨆ q : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = t},
+      ((g q.1.1 + h q.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.coe_ne_top
+      (iSup_le fun q => by exact_mod_cast hbound q)
+  rw [← ENNReal.coe_le_coe, maxConvProj_coe g h t hfin]
+  exact le_iSup (fun q : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = t} =>
+    ((g q.1.1 + h q.1.2 : ℝ≥0) : ℝ≥0∞)) p
+
 /-- `c + maxConvProj g g t ≤ y` from a per-splitting bound. -/
 theorem add_maxConvProj_le
     (g : ℝ≥0 → ℝ≥0) (t c y : ℝ≥0)

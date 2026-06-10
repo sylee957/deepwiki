@@ -249,23 +249,6 @@ theorem isStrictMinimalServiceCurve_closures_iff
   ⟨(isStrictMinimalServiceCurve_ndClosure_iff beta hbddNd).symm,
     (isStrictMinimalServiceCurve_superadditiveClosureMax_iff beta hbddSup).symm⟩
 
-/-- Under an affine bound `beta s ≤ r * s`, each self-convolution iterate stays
-below `r * ·`: `maxConvProjPow beta n t ≤ r * t`, since `r * a + r * b = r * t`
-on any split `a + b = t`. -/
-theorem maxConvProjPow_le_of_affine_bound {beta : ℝ≥0 → ℝ≥0} {r : ℝ≥0}
-    (hr : ∀ s, beta s ≤ r * s) (n : ℕ) (t : ℝ≥0) :
-    maxConvProjPow beta n t ≤ r * t := by
-  induction n generalizing t with
-  | zero => exact hr t
-  | succ n ih =>
-    show maxConvProj (maxConvProjPow beta n) (maxConvProjPow beta n) t ≤ r * t
-    refine maxConvProj_le _ _ t (r * t) (fun p => ?_)
-    obtain ⟨⟨a, b⟩, (hab : a + b = t)⟩ := p
-    calc maxConvProjPow beta n a + maxConvProjPow beta n b
-        ≤ r * a + r * b := add_le_add (ih a) (ih b)
-      _ = r * (a + b) := (mul_add r a b).symm
-      _ = r * t := by rw [hab]
-
 /-- Closure equivalence under the interpretable hypothesis that `beta` has some
 affine rate bound `∃ r, ∀ s, beta s ≤ r * s`: this discharges both boundedness
 conditions (`beta` is then bounded by `r * t` on `[0, t]`, and its
@@ -282,8 +265,7 @@ theorem isStrictMinimalServiceCurve_closures_iff_of_affine_bound
   obtain ⟨r, hr⟩ := hr
   refine isStrictMinimalServiceCurve_closures_iff beta (fun t => ?_) (fun t => ?_)
   · exact ⟨r * t, by rintro x ⟨⟨u, hu⟩, rfl⟩; exact le_trans (hr u) (by gcongr)⟩
-  · exact ⟨r * t, by
-      rintro x ⟨n, rfl⟩; exact maxConvProjPow_le_of_affine_bound hr n t⟩
+  · exact bddAbove_range_maxConvProjPow_of_affine_bound hr t
 
 /-! ## Maximal length of a backlogged period -/
 

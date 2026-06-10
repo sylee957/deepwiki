@@ -100,6 +100,15 @@ theorem IsSuperadditive.toENN {beta : ℝ≥0 → EReal}
   rw [← EReal.toENNReal_add (hnn u) (hnn s)]
   exact EReal.toENNReal_le_toENNReal (hsup u s)
 
+/-- Super-additivity transports through the `EReal` lift: `liftEReal g` is
+super-additive when `g` is. -/
+theorem IsSuperadditive.liftEReal {g : ℝ≥0 → ℝ≥0}
+    (hsup : IsSuperadditive g) : IsSuperadditive (liftEReal g) :=
+  fun u s => by
+    show ((g u : ℝ) : EReal) + ((g s : ℝ) : EReal) ≤ ((g (u + s) : ℝ) : EReal)
+    rw [← EReal.coe_add]
+    exact_mod_cast hsup u s
+
 namespace Deviation
 
 /-- **Backlog from a restricted domain.** A pair served with a nonnegative
@@ -133,14 +142,15 @@ theorem delay_le_biSup_hDevAt_of_isMinimalServiceCurve
 /-! ## Book restatement (restricting the deviation domain)
 With `ℓmax = inf {t > 0 | α t ≤ β t}` itself a positive crossing point (the
 infimum attained), the backlog and delay of a served pair are bounded by the
-deviations computed on `[0, ℓmax]`. Three narrowings against the book: `α`
+deviations computed on `[0, ℓmax]`. Two narrowings against the book: `α`
 is assumed sub-additive outright (the book reduces to this via the
-sub-additive closure, not yet transported to the `ℝ≥0∞` carrier); only the
-super-additive min-plus branch is covered (the book reduces the strict
-branch to it through the strict-to-min-plus inclusion, not yet formalized,
-and `isStrictMinimalServiceCurve_superadditiveClosureMax`); and at a
+sub-additive closure, not yet transported to the `ℝ≥0∞` carrier); and at a
 non-attained infimum the book's bound needs a further limiting argument
-(recoverable for monotone `α`, `β`). -/
+(recoverable for monotone `α`, `β`). The strict branch — the book's
+reduction through the super-additive closure and the strict-to-min-plus
+inclusion — is `backlog_le_biSup_vDevAt_of_isStrictMinimalServiceCurve` and
+its delay sibling in `ServiceCurveStrictMinimal`, under an affine rate
+bound. -/
 example {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0∞}
     {A D : Curve}
     (hβ : IsMinimalServiceCurve beta S) (hp : S A D)

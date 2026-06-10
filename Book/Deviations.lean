@@ -84,13 +84,21 @@ theorem hDevAt_eq_top {D V : Type*} (R : Type*)
 
 /-! ## Monotony of deviations -/
 
+/-- Monotony of the vertical deviation at `t`: `f' ≤ f` and `g ≤ g'` give
+`vDevAt f' g' t ≤ vDevAt f g t`. -/
+theorem vDevAt_mono {D T : Type*} [Preorder T] [AddCommSemigroup T]
+    [Sub T] [OrderedSub T] [CovariantClass T T (· + ·) (· ≤ ·)]
+    {f f' g g' : D → T} (hf : f' ≤ f) (hg : g ≤ g') (t : D) :
+    vDevAt f' g' t ≤ vDevAt f g t :=
+  tsub_le_tsub (hf t) (hg t)
+
 /-- Monotony of the vertical deviation: `f' ≤ f` and `g ≤ g'` give
 `vDev f' g' ≤ vDev f g`. -/
 theorem vDev_mono {D T : Type*} [CompleteLattice T] [AddCommSemigroup T]
     [Sub T] [OrderedSub T] [CovariantClass T T (· + ·) (· ≤ ·)]
     {f f' g g' : D → T} (hf : f' ≤ f) (hg : g ≤ g') :
     vDev f' g' ≤ vDev f g :=
-  iSup_le fun t => le_iSup_of_le t (tsub_le_tsub (hf t) (hg t))
+  iSup_le fun t => le_iSup_of_le t (vDevAt_mono hf hg t)
 
 /-- Monotony of the horizontal deviation at `t`: `f' ≤ f` and `g ≤ g'` give
 `hDevAt f' g' t ≤ hDevAt f g t` (an admissible shift stays admissible). -/
