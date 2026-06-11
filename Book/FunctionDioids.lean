@@ -510,7 +510,7 @@ theorem embMin_mul (g h : ℝ≥0 → ℝ≥0) (u s : ℝ≥0) :
       = (g u : ℝ≥0∞) + (h s : ℝ≥0∞) := rfl
 
 /-- `(embMin g ∗ embMin h)` as an `ℝ≥0∞`-valued infimum. -/
-theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+theorem conv_embMin_toVal (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     ((conv (embMin g) (embMin h) t : MinPlusNN) : ℝ≥0∞)
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞) := by
@@ -536,7 +536,7 @@ theorem minConvProj_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     minConvProj g h t
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (g p.1.1 + h p.1.2) := by
-  rw [minConvProj, conv_embMin_toE,
+  rw [minConvProj, conv_embMin_toVal,
     ← ENNReal.coe_iInf
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2),
@@ -567,7 +567,7 @@ theorem embMax_mul (g h : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
         + (((h b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
 
 /-- `(embMax g ∗ embMax h)` as a `WithBot ℝ≥0∞`-valued sup. -/
-theorem conv_embMax_toW (g h : ℝ≥0 → ℝ≥0)
+theorem conv_embMax_toVal (g h : ℝ≥0 → ℝ≥0)
     (t : ℝ≥0) :
     ((conv (embMax g) (embMax h) t : MaxPlusNN)
         : WithBot ℝ≥0∞)
@@ -606,7 +606,7 @@ theorem maxConvProj_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
-  rw [maxConvProj, conv_embMax_toW, hcoe]
+  rw [maxConvProj, conv_embMax_toVal, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
 
 /-- `maxConvProj g h t ≤ c` if every splitting is `≤ c`. -/
@@ -614,7 +614,7 @@ theorem maxConvProj_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
     (hsplit : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
       g p.1.1 + h p.1.2 ≤ c) :
     maxConvProj g h t ≤ c := by
-  rw [maxConvProj, conv_embMax_toW]
+  rw [maxConvProj, conv_embMax_toVal]
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         (((g p.1.1 + h p.1.2 : ℝ≥0)
