@@ -11,9 +11,10 @@ controlled network is guaranteed `βc ∗ β` — at the relation level, any
 admissible controller makes `Smp(β) ∘ Smp(βc)` offer `βref` — so the
 admissible controllers are `{βc | βref ≤ βc ∗ β}`, and by residuation the
 smallest one is the deconvolution `β̂c = βref ⊘ β`. For a delay
-requirement `τ`, arrival curves below `(β ⊘ δ_τ)⋆` keep `hDev(α, β) ≤ τ`,
-and the closure `(β ⊘ δ_τ)⋆` is the largest sub-additive curve below the
-deconvolution. -/
+requirement `τ`, arrival curves below `(β ⊘ δ_τ)⋆` keep `hDev(α, β) ≤ τ`;
+for a backlog requirement `b`, arrival curves below `(β + b)⋆` keep
+`vDev(α, β) ≤ b` — each closure being the largest sub-additive curve with
+its property. -/
 
 namespace DeepWiki
 
@@ -149,5 +150,73 @@ example {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞} {τ : ℝ�
     Deviation.delay A D ≤ (τ : ℝ≥0∞) :=
   le_trans (Deviation.delay_le_hDev hA hβmono harr hserv)
     (hDev_le_of_le_subadditiveClosureENN_minDeconv hβmono hα)
+
+/-! ## Backlog requirement -/
+
+/-- **Tandem control with a backlog requirement**: an arrival curve below
+the raised service curve meets it — `α ≤ β + b` gives `vDev(α, β) ≤ b`. -/
+theorem vDev_le_of_le_add {α β : ℝ≥0 → ℝ≥0∞} {b : ℝ≥0∞}
+    (h : α ≤ fun t => β t + b) :
+    vDev α β ≤ b :=
+  vDev_le fun t => tsub_le_iff_left.mpr (h t)
+
+/-- The closure form: `α ≤ (β + b)⋆` still meets the backlog requirement,
+the closure lying below the raised curve. -/
+theorem vDev_le_of_le_subadditiveClosureENN_add {α β : ℝ≥0 → ℝ≥0∞}
+    {b : ℝ≥0∞} (h : α ≤ subadditiveClosureENN fun t => β t + b) :
+    vDev α β ≤ b :=
+  vDev_le_of_le_add fun t => (h t).trans (subadditiveClosureENN_le _ t)
+
+/-- Exceeding the raised curve anywhere forfeits the backlog requirement:
+`β t + b < α t` at some `t` gives the strict `b < vDev(α, β)`. Unlike the
+delay requirement, the vertical deviation is a supremum of pointwise
+differences, so the book's strict claim is sharp here. -/
+theorem lt_vDev_of_apply_add_lt {α β : ℝ≥0 → ℝ≥0∞} {b : ℝ≥0∞}
+    {t : ℝ≥0} (hlt : β t + b < α t) :
+    b < vDev α β := by
+  refine lt_of_lt_of_le ?_ (vDevAt_le_vDev α β t)
+  show b < α t - β t
+  by_contra hcon
+  rw [not_lt] at hcon
+  exact absurd (tsub_le_iff_left.mp hcon) (not_le.mpr hlt)
+
+/-- **Optimality of the closure**: every sub-additive arrival curve (null
+at the origin) below the raised curve `β + b` lies below its sub-additive
+closure `(β + b)⋆` — the closure is the largest sub-additive curve meeting
+the backlog requirement through `β + b`. -/
+theorem le_subadditiveClosureENN_add_of_isSubadditive
+    {α β : ℝ≥0 → ℝ≥0∞} {b : ℝ≥0∞} (hsub : IsSubadditive α) (h0 : α 0 = 0)
+    (h : α ≤ fun t => β t + b) :
+    α ≤ subadditiveClosureENN fun t => β t + b :=
+  fun t => le_subadditiveClosureENN_of_isSubadditive hsub h0 h t
+
+/-! ## Book restatement (backlog requirement)
+Let `β ∈ F₀↑` be the service curve of a server and `b` a fixed maximal
+backlog. If `α ≤ (β + b)⋆`, then `vDev(α, β) ≤ b`. Moreover `(β + b)⋆` is
+the largest sub-additive function with this property: it is sub-additive,
+dominates every sub-additive `α` below `β + b`, and exceeding `β + b`
+anywhere forces the strict `vDev(α, β) > b`. -/
+example {β : ℝ≥0 → ℝ≥0∞} (b : ℝ≥0∞) :
+    (∀ α : ℝ≥0 → ℝ≥0∞,
+        α ≤ subadditiveClosureENN (fun t => β t + b) → vDev α β ≤ b)
+      ∧ IsSubadditive (subadditiveClosureENN fun t => β t + b)
+      ∧ ∀ α : ℝ≥0 → ℝ≥0∞, IsSubadditive α → α 0 = 0 →
+          (α ≤ fun t => β t + b) →
+            α ≤ subadditiveClosureENN fun t => β t + b :=
+  ⟨fun _ hα => vDev_le_of_le_subadditiveClosureENN_add hα,
+    subadditiveClosureENN_subadditive _,
+    fun _ hsub h0 hα =>
+      le_subadditiveClosureENN_add_of_isSubadditive hsub h0 hα⟩
+
+/-! In other words: through a server pair `(A, D)` offering the service
+curve `β`, an `α`-constrained arrival with `α ≤ (β + b)⋆` has backlog at
+most `b`. -/
+example {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞} {b : ℝ≥0∞}
+    (harr : IsMaximalArrivalBound (Deviation.liftENN A) α)
+    (hserv : ∀ t, minConv (Deviation.liftENN A) β t ≤ (D t : ℝ≥0∞))
+    (hα : α ≤ subadditiveClosureENN fun t => β t + b) :
+    Deviation.backlog A D ≤ b :=
+  le_trans (Deviation.backlog_le_vDev harr hserv)
+    (vDev_le_of_le_subadditiveClosureENN_add hα)
 
 end DeepWiki
