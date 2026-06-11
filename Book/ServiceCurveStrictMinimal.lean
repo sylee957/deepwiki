@@ -226,14 +226,8 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isStrictMinimalServiceCurve
   have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hclo := harr.subadditiveClosureE
-  have hsubset : crossingSet α (liftENN beta)
-      ⊆ crossingSet (subadditiveClosureE α)
-          (superadditiveClosureMaxNN (liftENN beta)) :=
-    (crossingSet_mono_right hleβ).trans (crossingSet_anti_left hleα)
-  have hℓ : sInf (crossingSet (subadditiveClosureE α)
-        (superadditiveClosureMaxNN (liftENN beta)))
-      ≤ sInf (crossingSet α (liftENN beta)) :=
-    csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hsubset := crossingSet_subset_crossingSet hleα hleβ
+  have hℓ := sInf_crossingSet_le_sInf_crossingSet hleα hleβ hne
   have hmain :=
     (backlog_le_vDev hclo.2
         (minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
@@ -261,14 +255,8 @@ theorem delay_le_biSup_hDevAt_sInf_of_isStrictMinimalServiceCurve
   have hleβ := le_superadditiveClosureMaxNN (liftENN beta)
   have hleα := subadditiveClosureE_le α
   have hclo := harr.subadditiveClosureE
-  have hsubset : crossingSet α (liftENN beta)
-      ⊆ crossingSet (subadditiveClosureE α)
-          (superadditiveClosureMaxNN (liftENN beta)) :=
-    (crossingSet_mono_right hleβ).trans (crossingSet_anti_left hleα)
-  have hℓ : sInf (crossingSet (subadditiveClosureE α)
-        (superadditiveClosureMaxNN (liftENN beta)))
-      ≤ sInf (crossingSet α (liftENN beta)) :=
-    csInf_le_csInf (OrderBot.bddBelow _) hne hsubset
+  have hsubset := crossingSet_subset_crossingSet hleα hleβ
+  have hℓ := sInf_crossingSet_le_sInf_crossingSet hleα hleβ hne
   have hmain :=
     (delay_le_hDev A.mono
         (monotone_superadditiveClosureMaxNN (monotone_liftENN hmono))

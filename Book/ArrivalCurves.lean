@@ -138,6 +138,23 @@ theorem crossingSet_mono_right {T : Type*} [Preorder T] {α β β' : ℝ≥0 →
     crossingSet α β ⊆ crossingSet α β' :=
   fun x hx => ⟨hx.1, hx.2.trans (hle x)⟩
 
+/-- The crossing set grows two-sidedly: `α' ≤ α` and `β ≤ β'` give
+`crossingSet α β ⊆ crossingSet α' β'`. -/
+theorem crossingSet_subset_crossingSet {T : Type*} [Preorder T]
+    {α α' β β' : ℝ≥0 → T} (hα : ∀ t, α' t ≤ α t) (hβ : ∀ t, β t ≤ β' t) :
+    crossingSet α β ⊆ crossingSet α' β' :=
+  (crossingSet_mono_right hβ).trans (crossingSet_anti_left hα)
+
+/-- The first crossing moves no later when the left curve shrinks and the
+right curve grows: for a nonempty crossing set, `α' ≤ α` and `β ≤ β'` give
+`sInf (crossingSet α' β') ≤ sInf (crossingSet α β)`. -/
+theorem sInf_crossingSet_le_sInf_crossingSet {T : Type*} [Preorder T]
+    {α α' β β' : ℝ≥0 → T} (hα : ∀ t, α' t ≤ α t) (hβ : ∀ t, β t ≤ β' t)
+    (hne : (crossingSet α β).Nonempty) :
+    sInf (crossingSet α' β') ≤ sInf (crossingSet α β) :=
+  csInf_le_csInf (OrderBot.bddBelow _) hne
+    (crossingSet_subset_crossingSet hα hβ)
+
 /-- The first crossing of `f` below `g`, read in `ℝ≥0∞` (`⊤` when the curves
 never cross). -/
 noncomputable def firstCrossing {T : Type*} [LE T] (f g : ℝ≥0 → T) : ℝ≥0∞ :=
