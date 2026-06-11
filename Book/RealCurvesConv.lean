@@ -162,7 +162,7 @@ theorem toF_delay0 :
 theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
     (hsub : IsSubadditive f) (hmono : Monotone f)
     (d : ℝ≥0) :
-    subadditiveClosureE (minDeconv f (delayNN d))
+    subadditiveClosureENN (minDeconv f (delayNN d))
       = delayNN 0 ⊓ minDeconv f (delayNN d) := by
   set h : ℝ≥0 → ℝ≥0∞ := minDeconv f (delayNN d) with hh
   set g : ℝ≥0 → ℝ≥0∞ := delayNN 0 ⊓ h with hg
@@ -173,8 +173,8 @@ theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
     fun t => min_le_right _ _
   funext t
   apply le_antisymm
-  · refine le_min ?_ (subadditiveClosureE_le h t)
-    rw [show subadditiveClosureE h t
+  · refine le_min ?_ (subadditiveClosureENN_le h t)
+    rw [show subadditiveClosureENN h t
         = (subadditiveClosure (toF h) t).toVal from rfl,
       ← MinPlusNN.le_iff]
     -- goal: toF (delayNN 0) t ≼ₒ subadditiveClosure (toF h) t
@@ -184,11 +184,11 @@ theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
       have := convPow_le_closure (toF h) 0 t
       simpa [convPow] using this
     exact hu
-  · have hgeq := subadditiveClosureE_eq_self g hgsub hg0
-    calc g t = subadditiveClosureE g t :=
+  · have hgeq := subadditiveClosureENN_eq_self g hgsub hg0
+    calc g t = subadditiveClosureENN g t :=
           (congrFun hgeq t).symm
-      _ ≤ subadditiveClosureE h t :=
-          subadditiveClosureE_mono g h hgh t
+      _ ≤ subadditiveClosureENN h t :=
+          subadditiveClosureENN_mono g h hgh t
 
 /-- `delayNN d` is monotone. -/
 theorem delayNN_mono (d : ℝ≥0) : Monotone (delayNN d) := by

@@ -286,72 +286,72 @@ theorem monotone_minConvPow {g : ℝ≥0 → ℝ≥0∞} (hmono : Monotone g)
   | succ n ih => exact monotone_minConv ih hmono
 
 /-- Closure on numeric `ℝ≥0∞` values via the `MinPlusNN` carrier. -/
-noncomputable def subadditiveClosureE {D : Type}
+noncomputable def subadditiveClosureENN {D : Type}
     [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) : D → ℝ≥0∞ :=
   fun t => (subadditiveClosure (toF g) t).toVal
 
-/-- `subadditiveClosureE g t` is the numeric infimum of the convolution
+/-- `subadditiveClosureENN g t` is the numeric infimum of the convolution
 powers: `⨅ n, minConvPow g n t`. -/
-theorem subadditiveClosureE_eq_iInf {D : Type}
+theorem subadditiveClosureENN_eq_iInf {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) (t : D) :
-    subadditiveClosureE g t
+    subadditiveClosureENN g t
       = ⨅ n : ℕ, minConvPow g n t :=
   iInf_congr fun n => convPow_toF_apply g n t
 
-/-- `toF` transports `subadditiveClosureE` to `subadditiveClosure`. -/
-theorem toF_subadditiveClosureE {D : Type}
+/-- `toF` transports `subadditiveClosureENN` to `subadditiveClosure`. -/
+theorem toF_subadditiveClosureENN {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
-    toF (subadditiveClosureE g)
+    toF (subadditiveClosureENN g)
       = subadditiveClosure (toF g) := by
   funext t; apply MinPlusNN.ext; rfl
 
 /-- Closure lies below the original: `g⋆ t ≤ g t` (numeric). -/
-theorem subadditiveClosureE_le {D : Type}
+theorem subadditiveClosureENN_le {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
-    (t : D) : subadditiveClosureE g t ≤ g t := by
+    (t : D) : subadditiveClosureENN g t ≤ g t := by
   have h := convPow_le_closure (toF g) 1 t
   rw [convPow_one, MinPlusNN.le_iff] at h
   exact h
 
 /-- Numeric closure is idempotent under `minConv`. -/
-theorem subadditiveClosureE_idem {D : Type}
+theorem subadditiveClosureENN_idem {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
-    minConv (subadditiveClosureE g)
-        (subadditiveClosureE g)
-      = subadditiveClosureE g := by
+    minConv (subadditiveClosureENN g)
+        (subadditiveClosureENN g)
+      = subadditiveClosureENN g := by
   have h := closure_idem (toF g)
-  rw [← toF_subadditiveClosureE, conv_toF] at h
+  rw [← toF_subadditiveClosureENN, conv_toF] at h
   funext t
   exact congrArg MinPlusNN.toVal (congrFun h t)
 
 /-- Numeric closure is sub-additive. -/
-theorem subadditiveClosureE_subadditive {D : Type}
+theorem subadditiveClosureENN_subadditive {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
-    IsSubadditive (subadditiveClosureE g) := by
+    IsSubadditive (subadditiveClosureENN g) := by
   intro u s
   have h := closure_subadditive (toF g) u s
   rw [MinPlusNN.le_iff] at h
-  calc subadditiveClosureE g (u + s)
+  calc subadditiveClosureENN g (u + s)
       = (subadditiveClosure (toF g) (u + s)).toVal := rfl
     _ ≤ (subadditiveClosure (toF g) u
           ⊗ₒ subadditiveClosure (toF g) s).toVal := h
-    _ = subadditiveClosureE g u
-          + subadditiveClosureE g s := rfl
+    _ = subadditiveClosureENN g u
+          + subadditiveClosureENN g s := rfl
 
 /-- The numeric closure of a monotone `ℝ≥0∞` curve is monotone: each
 `minConvPow` power is. -/
-theorem monotone_subadditiveClosureE {g : ℝ≥0 → ℝ≥0∞}
-    (hmono : Monotone g) : Monotone (subadditiveClosureE g) := by
+theorem monotone_subadditiveClosureENN {g : ℝ≥0 → ℝ≥0∞}
+    (hmono : Monotone g) : Monotone (subadditiveClosureENN g) := by
   intro a b hab
-  rw [subadditiveClosureE_eq_iInf, subadditiveClosureE_eq_iInf]
+  rw [subadditiveClosureENN_eq_iInf, subadditiveClosureENN_eq_iInf]
   exact iInf_mono fun n => monotone_minConvPow hmono n hab
 
 /-- Sub-additive `g` with `g 0 = 0` is its own closure. -/
-theorem subadditiveClosureE_eq_self {D : Type}
+theorem subadditiveClosureENN_eq_self {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
-    subadditiveClosureE g = g := by
+    subadditiveClosureENN g = g := by
   have hidem : conv (toF g) (toF g) = toF g := by
     rw [conv_toF, minConv_self_of_subadditive g hsub h0]
   have hunit : ∀ t,
@@ -367,10 +367,10 @@ theorem subadditiveClosureE_eq_self {D : Type}
   rw [hself]; rfl
 
 /-- Numeric closure is monotone in `g`. -/
-theorem subadditiveClosureE_mono {D : Type}
+theorem subadditiveClosureENN_mono {D : Type}
     [_root_.AddCommMonoid D] (g h : D → ℝ≥0∞)
     (hgh : ∀ t, g t ≤ h t) (t : D) :
-    subadditiveClosureE g t ≤ subadditiveClosureE h t := by
+    subadditiveClosureENN g t ≤ subadditiveClosureENN h t := by
   show (subadditiveClosure (toF g) t).toVal
       ≤ (subadditiveClosure (toF h) t).toVal
   rw [← MinPlusNN.le_iff]
@@ -403,7 +403,7 @@ theorem conv_toFmax (g h : ℝ≥0 → WithBot ℝ≥0∞) :
   apply MaxPlusNN.ext
   exact conv_toFmax_apply g h t
 
-/-- Super-additive closure: the (max,plus)-dual of `subadditiveClosureE`. -/
+/-- Super-additive closure: the (max,plus)-dual of `subadditiveClosureENN`. -/
 noncomputable def superadditiveClosure
     (g : ℝ≥0 → WithBot ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
   fun t => (subadditiveClosure (toFmax g) t).toVal

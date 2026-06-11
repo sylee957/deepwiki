@@ -150,7 +150,7 @@ theorem isMaximalArrivalBound_of_subadditiveClosure_le {A α α' : ℝ≥0 → �
 
 /-! ## Sub-additive closure on the `ℝ≥0∞` carrier
 The same family for `ℝ≥0∞`-valued curves, against the dioid closure
-`subadditiveClosureE` (from `Book.Closures`): the closure of a maximal
+`subadditiveClosureENN` (from `Book.Closures`): the closure of a maximal
 arrival curve is again one, sub-additive, and `≤ α`. -/
 
 open scoped ENNReal
@@ -181,31 +181,31 @@ theorem increment_minConvPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥
 
 /-- The (min,+) sub-additive closure on `ℝ≥0∞` of a maximal arrival curve is
 again a maximal arrival curve: if `A ≤ A ∗ α` then
-`A ≤ A ∗ subadditiveClosureE α`. -/
-theorem IsMaximalArrivalBound.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
+`A ≤ A ∗ subadditiveClosureENN α`. -/
+theorem IsMaximalArrivalBound.subadditiveClosureENN {A α : ℝ≥0 → ℝ≥0∞}
     (h : IsMaximalArrivalBound A α) :
-    IsMaximalArrivalBound A (DeepWiki.subadditiveClosureE α) := by
+    IsMaximalArrivalBound A (DeepWiki.subadditiveClosureENN α) := by
   rw [isMaximalArrivalBound_iff_increment]
   intro t d
-  rw [subadditiveClosureE_eq_iInf, ENNReal.add_iInf]
+  rw [subadditiveClosureENN_eq_iInf, ENNReal.add_iInf]
   exact le_iInf fun n =>
     increment_minConvPow_of_isMaximalArrivalBound h n t d
 
 /-- The sub-additive closure of a maximal arrival curve (book form) is
 again one: monotonicity transports through the closure powers. -/
-theorem IsMaximalArrivalCurve.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞}
+theorem IsMaximalArrivalCurve.subadditiveClosureENN {A α : ℝ≥0 → ℝ≥0∞}
     (h : IsMaximalArrivalCurve A α) :
-    IsMaximalArrivalCurve A (DeepWiki.subadditiveClosureE α) :=
-  ⟨monotone_subadditiveClosureE h.1, h.2.subadditiveClosureE⟩
+    IsMaximalArrivalCurve A (DeepWiki.subadditiveClosureENN α) :=
+  ⟨monotone_subadditiveClosureENN h.1, h.2.subadditiveClosureENN⟩
 
 /-! Any `ℝ≥0∞` maximal arrival curve can be replaced by its sub-additive
 closure: still a maximal arrival curve, sub-additive, and below `α`. -/
 example {A α : ℝ≥0 → ℝ≥0∞} (h : IsMaximalArrivalBound A α) :
-    IsMaximalArrivalBound A (subadditiveClosureE α)
-      ∧ IsSubadditive (subadditiveClosureE α)
-      ∧ ∀ t, subadditiveClosureE α t ≤ α t :=
-  ⟨h.subadditiveClosureE, subadditiveClosureE_subadditive α,
-    subadditiveClosureE_le α⟩
+    IsMaximalArrivalBound A (subadditiveClosureENN α)
+      ∧ IsSubadditive (subadditiveClosureENN α)
+      ∧ ∀ t, subadditiveClosureENN α t ≤ α t :=
+  ⟨h.subadditiveClosureENN, subadditiveClosureENN_subadditive α,
+    subadditiveClosureENN_le α⟩
 
 /-! ## Left-continuous extension
 The left-continuous extension of a non-decreasing `α` — its left limit

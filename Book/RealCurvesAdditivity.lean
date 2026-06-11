@@ -262,18 +262,18 @@ theorem staircase_superadditive (P h : ℝ≥0)
 
 /-- The token-bucket is its own subadditive closure. -/
 theorem tokenBucket_closure (r b : ℝ≥0) :
-    subadditiveClosureE (tokenBucket r b)
+    subadditiveClosureENN (tokenBucket r b)
       = tokenBucket r b :=
-  subadditiveClosureE_eq_self _
+  subadditiveClosureENN_eq_self _
     (tokenBucket_subadditive r b)
     (tokenBucket_zero_eq r b)
 
 /-- The staircase (`J ≥ 0`) is its own subadditive closure. -/
 theorem staircase_closure (P h : ℝ≥0) (hP : (0:ℝ) < P)
     (J : ℝ) (hJ : 0 ≤ J) :
-    subadditiveClosureE (staircase P h J)
+    subadditiveClosureENN (staircase P h J)
       = staircase P h J :=
-  subadditiveClosureE_eq_self _
+  subadditiveClosureENN_eq_self _
     (staircase_subadditive P h hP J hJ)
     (staircase_zero_eq P h J)
 

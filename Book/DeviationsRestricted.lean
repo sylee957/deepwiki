@@ -249,11 +249,11 @@ theorem backlog_le_biSup_vDevAt_of_isMinimalServiceCurve
     backlog ⇑A ⇑D ≤ ⨆ t ≤ τ, vDevAt α (toENN beta) t := by
   have hmain :=
     (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn
-        harr.subadditiveClosureE).trans_eq
-      (vDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
-        (hsup.toENN hnn) hτ ((subadditiveClosureE_le α τ).trans hcross))
+        harr.subadditiveClosureENN).trans_eq
+      (vDev_eq_biSup_of_crossing (subadditiveClosureENN_subadditive α)
+        (hsup.toENN hnn) hτ ((subadditiveClosureENN_le α τ).trans hcross))
   refine hmain.trans (iSup₂_mono fun t _ => ?_)
-  exact vDevAt_mono (fun t' => subadditiveClosureE_le α t') le_rfl t
+  exact vDevAt_mono (fun t' => subadditiveClosureENN_le α t') le_rfl t
 
 /-- **Delay from a restricted domain.** Under the same hypotheses, with
 nondecreasing `beta`, the delay is bounded by the horizontal deviations on
@@ -268,11 +268,11 @@ theorem delay_le_biSup_hDevAt_of_isMinimalServiceCurve
     delay ⇑A ⇑D ≤ ⨆ t ≤ τ, (hDevAt α (toENN beta) t : ℝ≥0∞) := by
   have hmain :=
     (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono
-        harr.subadditiveClosureE).trans_eq
-      (hDev_eq_biSup_of_crossing (subadditiveClosureE_subadditive α)
-        (hsup.toENN hnn) hτ ((subadditiveClosureE_le α τ).trans hcross))
+        harr.subadditiveClosureENN).trans_eq
+      (hDev_eq_biSup_of_crossing (subadditiveClosureENN_subadditive α)
+        (hsup.toENN hnn) hτ ((subadditiveClosureENN_le α τ).trans hcross))
   refine hmain.trans (iSup₂_mono fun t _ => ?_)
-  exact hDevAt_mono (fun t' => subadditiveClosureE_le α t') le_rfl t
+  exact hDevAt_mono (fun t' => subadditiveClosureENN_le α t') le_rfl t
 
 /-- **Backlog from the first crossing.** Without attainment: for monotone
 `α` with a nonempty crossing set against the nonnegative monotone
@@ -289,13 +289,13 @@ theorem backlog_le_biSup_vDevAt_sInf_of_isMinimalServiceCurve
     backlog ⇑A ⇑D
       ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
           vDevAt α (toENN beta) t := by
-  have hle := subadditiveClosureE_le α
+  have hle := subadditiveClosureENN_le α
   have hsubset := crossingSet_anti_left (β := toENN beta) hle
   have hℓ := sInf_crossingSet_le_sInf_crossingSet hle (fun _ => le_rfl) hne
-  have hclo := harr.subadditiveClosureE
+  have hclo := harr.subadditiveClosureENN
   have hmain :=
     (backlog_le_vDev_of_isMinimalServiceCurve hβ hp hnn hclo.2).trans_eq
-      (vDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
+      (vDev_eq_biSup_sInf_crossingSet (subadditiveClosureENN_subadditive α)
         (hsup.toENN hnn) hclo.1
         (hne.mono hsubset))
   exact hmain.trans
@@ -316,13 +316,13 @@ theorem delay_le_biSup_hDevAt_sInf_of_isMinimalServiceCurve
     delay ⇑A ⇑D
       ≤ ⨆ t ≤ sInf (crossingSet α (toENN beta)),
           (hDevAt α (toENN beta) t : ℝ≥0∞) := by
-  have hle := subadditiveClosureE_le α
+  have hle := subadditiveClosureENN_le α
   have hsubset := crossingSet_anti_left (β := toENN beta) hle
   have hℓ := sInf_crossingSet_le_sInf_crossingSet hle (fun _ => le_rfl) hne
-  have hclo := harr.subadditiveClosureE
+  have hclo := harr.subadditiveClosureENN
   have hmain :=
     (delay_le_hDev_of_isMinimalServiceCurve hβ hp hnn hmono hclo.2).trans_eq
-      (hDev_eq_biSup_sInf_crossingSet (subadditiveClosureE_subadditive α)
+      (hDev_eq_biSup_sInf_crossingSet (subadditiveClosureENN_subadditive α)
         (hsup.toENN hnn) hclo.1
         (hne.mono hsubset))
   exact hmain.trans
