@@ -30,9 +30,7 @@ theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
       ≤ curveE A (start ⇑A ⇑D t) + liftEReal beta (t - start ⇑A ⇑D t) :=
         minConv_le_add _ _ (add_tsub_cancel_of_le hst)
     _ ≤ curveE D t := by
-        show ((A (start ⇑A ⇑D t) : ℝ) : EReal)
-            + ((beta (t - start ⇑A ⇑D t) : ℝ) : EReal) ≤ ((D t : ℝ) : EReal)
-        rw [← EReal.coe_add]
+        simp only [curveE_apply]
         exact_mod_cast hbound
 
 /-- The largest-relation form: the largest strict-service relation is

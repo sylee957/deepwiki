@@ -33,6 +33,11 @@ theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
 noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
   liftEReal ⇑A
 
+/-- `curveE A t = ((A t : ℝ) : EReal)`: the pointwise value of the `EReal`
+view. -/
+@[simp] theorem curveE_apply (A : Curve) (t : ℝ≥0) :
+    curveE A t = ((A t : ℝ) : EReal) := rfl
+
 /-- `curveE A` is the `EReal` lift of the underlying function:
 `curveE A = liftEReal ⇑A`. -/
 theorem curveE_eq_liftEReal (A : Curve) : curveE A = liftEReal ⇑A := rfl
@@ -47,20 +52,18 @@ theorem curveE_neverBot (A : Curve) : NeverBot (curveE A) :=
 
 /-- `curveE A 0 = 0`. -/
 theorem curveE_zero (A : Curve) : curveE A 0 = 0 := by
-  show ((A 0 : ℝ) : EReal) = 0
-  have : A 0 = 0 := A.zero
-  rw [this]; norm_num
+  have h0 : A 0 = 0 := A.zero
+  simp [h0]
 
 /-- Curve order matches the `EReal` view: `D ≤ A ↔ curveE D ≤ curveE A`. -/
 theorem curveE_le_iff {D A : Curve} : curveE D ≤ curveE A ↔ D ≤ A := by
   constructor
   · intro h t
-    have := h t
-    show D t ≤ A t
-    have : ((D t : ℝ) : EReal) ≤ ((A t : ℝ) : EReal) := this
-    exact_mod_cast this
+    have ht := h t
+    simp only [curveE_apply] at ht
+    exact_mod_cast ht
   · intro h t
-    show ((D t : ℝ) : EReal) ≤ ((A t : ℝ) : EReal)
+    simp only [curveE_apply]
     exact_mod_cast h t
 
 /-- Curve order transfers to the `EReal` view: `D ≤ A → curveE D ≤ curveE A`. -/

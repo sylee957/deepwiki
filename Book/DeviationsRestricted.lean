@@ -255,10 +255,7 @@ theorem IsSuperadditive.toENN {beta : ℝ≥0 → EReal}
 super-additive when `g` is. -/
 theorem IsSuperadditive.liftEReal {g : ℝ≥0 → ℝ≥0}
     (hsup : IsSuperadditive g) : IsSuperadditive (liftEReal g) :=
-  fun u s => by
-    show ((g u : ℝ) : EReal) + ((g s : ℝ) : EReal) ≤ ((g (u + s) : ℝ) : EReal)
-    rw [← EReal.coe_add]
-    exact_mod_cast hsup u s
+  fun u s => by exact_mod_cast hsup u s
 
 namespace Deviation
 

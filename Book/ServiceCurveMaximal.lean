@@ -54,7 +54,7 @@ theorem isCausal_maximalServiceRel {beta : ℝ≥0 → EReal}
 
 /-- `curveE zeroCurve t = 0`. -/
 theorem curveE_zeroCurve (t : ℝ≥0) : curveE zeroCurve t = 0 := by
-  simp [curveE, liftEReal]
+  simp
 
 /-- For nonnegative `beta`, `0 ≤ A ∗ beta` (`IsNonneg.conv`), so `zeroCurve`
 is a valid output for every arrival: `maximalServiceRel beta` is

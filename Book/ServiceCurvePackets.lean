@@ -146,7 +146,7 @@ theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : �
     show ((b : ℝ) : EReal) ≤ curveE (stepCurve T b) v + rateEReal C w
     by_cases hv : T < v
     · have hA : curveE (stepCurve T b) v = ((b : ℝ) : EReal) := by
-        simp [curveE, liftEReal, hv]
+        simp [hv]
       rw [hA]
       refine le_add_of_nonneg_right ?_
       unfold rateEReal
@@ -164,8 +164,8 @@ theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : �
           ≤ ((C * w : ℝ≥0) : ℝ) := by exact_mod_cast hb
         _ ≤ curveE (stepCurve T b) v + rateEReal C w :=
             le_add_of_nonneg_left (curveE_nonneg _ v)
-  have hbD : ((b : ℝ) : EReal) ≤ ((D (T + b / C) : ℝ) : EReal) :=
-    le_trans hlb h
+  have hbD := le_trans hlb h
+  rw [curveE_apply] at hbD
   exact_mod_cast hbD
 
 /-! ## No per-packet guarantee under min-plus service
@@ -237,12 +237,12 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
         show curveE (stepCurve T b) T + rateEReal C (v - T) ≤
           curveE (rushCurve T b c C) v
         have hAT : curveE (stepCurve T b) T = 0 := by
-          simp [curveE, liftEReal]
+          simp
         rw [hAT, zero_add]
         have hle : C * (v - T) ≤ rushCurve T b c C v := by
           rw [rushCurve_apply, if_pos hTv, min_eq_right hCb]
           exact le_max_right _ _
-        unfold rateEReal curveE liftEReal
+        simp only [curveE_apply, rateEReal]
         exact_mod_cast hle
       · refine ciInf_le_of_le (OrderBot.bddBelow _)
           ⟨(v, 0), add_zero v⟩ ?_
@@ -253,7 +253,7 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
           rw [stepCurve_apply, if_pos hTv, rushCurve_apply, if_pos hTv,
             min_eq_left (not_le.mp hCb).le]
           exact le_max_right _ _
-        unfold curveE liftEReal
+        simp only [curveE_apply]
         exact_mod_cast hle
     · refine ciInf_le_of_le (OrderBot.bddBelow _)
         ⟨(v, 0), add_zero v⟩ ?_
@@ -261,7 +261,7 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
         curveE (rushCurve T b c C) v
       rw [rateEReal_zero_eq, add_zero]
       have hAv : curveE (stepCurve T b) v = 0 := by
-        simp [curveE, liftEReal, hTv]
+        simp [hTv]
       rw [hAv]
       exact curveE_nonneg _ v
   · exact minConv_self_le (rateEReal_zero_eq C).le _

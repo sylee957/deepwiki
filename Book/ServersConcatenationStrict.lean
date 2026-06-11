@@ -86,7 +86,6 @@ theorem witness_mem_minimalServiceRel :
     · -- split `(0, t)`; the inner convolution is at most `min 2 (t - 3)₊`
       refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
       have hA0 : curveE witnessArrival 0 = 0 := by
-        show ((witnessArrival 0 : ℝ) : EReal) = 0
         norm_num [witnessArrival_apply]
       rw [hA0, zero_add]
       rcases le_or_gt t 3 with h3 | h3
@@ -102,8 +101,7 @@ theorem witness_mem_minimalServiceRel :
         refine le_trans
           (minConv_le_add _ _ (add_tsub_cancel_of_le h3.le)) ?_
         rw [show delayEReal 3 3 = 0 from delay_eq_zero 3 le_rfl, zero_add]
-        show (((1 * (t - 3) : ℝ≥0) : ℝ) : EReal)
-          ≤ ((witnessDeparture t : ℝ) : EReal)
+        simp only [curveE_apply, rateEReal]
         rw [witnessDeparture_mid (lt_trans (by norm_num) h3) h4]
         have h2 : (1 * (t - 3) : ℝ≥0) ≤ 2 := by
           rw [one_mul]
@@ -120,8 +118,7 @@ theorem witness_mem_minimalServiceRel :
           add_zero]
       refine le_trans (add_le_add le_rfl hinner) ?_
       rw [add_zero]
-      show ((witnessArrival t : ℝ) : EReal)
-        ≤ ((witnessDeparture t : ℝ) : EReal)
+      simp only [curveE_apply]
       rw [witnessArrival_pos (lt_trans (by norm_num) h4),
         witnessDeparture_late h4]
 
@@ -136,14 +133,12 @@ theorem witness_not_mem_comp :
   rw [mem_minimalServiceRel_iff] at hAB hBC
   have hbound := hBC.2 4
   have hC4 : curveE witnessDeparture 4 = (((2 : ℝ≥0) : ℝ) : EReal) := by
-    show ((witnessDeparture 4 : ℝ) : EReal) = _
-    rw [witnessDeparture_mid (by norm_num) le_rfl]
+    rw [curveE_apply, witnessDeparture_mid (by norm_num) le_rfl]
   rw [hC4] at hbound
   have hlow : (((5 / 2 : ℝ≥0) : ℝ) : EReal)
       ≤ minConv (curveE B) (rateEReal 1) 4 := by
     refine le_minConv fun u s hus => ?_
-    show (((5 / 2 : ℝ≥0) : ℝ) : EReal)
-      ≤ ((B u : ℝ) : EReal) + (((1 * s : ℝ≥0) : ℝ) : EReal)
+    simp only [curveE_apply, rateEReal]
     have key : (5 / 2 : ℝ≥0) ≤ B u + 1 * s := by
       rw [one_mul]
       rcases le_or_gt u 3 with hu3 | hu3
@@ -193,18 +188,15 @@ theorem witness_not_mem_comp :
                 rw [hab, add_comm 3 x]
                 exact add_le_add le_rfl hb3
               exact le_of_add_le_add_right hadd
-            show ((witnessArrival x : ℝ) : EReal)
-              ≤ ((witnessArrival a : ℝ) : EReal)
+            simp only [curveE_apply]
             exact_mod_cast witnessArrival.mono hxa
           · rw [show delayEReal 3 b = ⊤ from delay_eq_top 3 hb3,
               show curveE witnessArrival a + (⊤ : EReal) = ⊤ from
                 EReal.add_top_of_ne_bot (EReal.coe_ne_bot _)]
             exact le_top
         have hBu : (2 + x / 2 : ℝ≥0) ≤ B (3 + x) := by
-          rw [witnessArrival_pos hx0] at hAx
-          have hAx' : (((2 + x / 2 : ℝ≥0) : ℝ) : EReal)
-              ≤ ((B (3 + x) : ℝ) : EReal) := hAx
-          exact_mod_cast hAx'
+          rw [witnessArrival_pos hx0, curveE_apply] at hAx
+          exact_mod_cast hAx
         have hhalf : (1 / 2 : ℝ≥0) ≤ x / 2 + s :=
           calc (1 / 2 : ℝ≥0) = (x + s) / 2 := by rw [hxs]
             _ = x / 2 + s / 2 := add_div x s 2
@@ -217,7 +209,6 @@ theorem witness_not_mem_comp :
           _ ≤ 2 + (x / 2 + s) := add_le_add le_rfl hhalf
           _ = (2 + x / 2) + s := (add_assoc _ _ _).symm
           _ ≤ B (3 + x) + s := add_le_add hBu le_rfl
-    rw [← EReal.coe_add]
     exact_mod_cast key
   have hcontra : (5 / 2 : ℝ) ≤ 2 := by
     exact_mod_cast le_trans hlow hbound
