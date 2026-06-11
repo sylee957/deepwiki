@@ -69,6 +69,11 @@ theorem hDevAtE_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
   rw [h0] at hd'
   exact absurd (le_antisymm hd' bot_le) hft.ne'
 
+/-- `↑a ≤ ↑(a - e) + ↑e`: the truncated-sub split, lifted to `ℝ≥0∞`. -/
+theorem coe_le_coe_tsub_add (a e : ℝ≥0) :
+    (a : ℝ≥0∞) ≤ ((a - e : ℝ≥0) : ℝ≥0∞) + (e : ℝ≥0∞) :=
+  ENNReal.coe_sub ▸ le_tsub_add
+
 /-- `hDevE f (delayNN d) = d` when `f > 0` on `(0, ∞)`. -/
 theorem hDevE_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hf : ∀ t : ℝ≥0, 0 < t → 0 < f t) :
@@ -80,8 +85,8 @@ theorem hDevE_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
   have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDevE f (delayNN d) := by
     refine le_trans (hDevAtE_delay_ge f d ε (hf ε ht)) ?_
     unfold hDevE hDev; exact le_iSup _ ε
-  calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε := by
-        rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
+  calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε :=
+        coe_le_coe_tsub_add d ε
     _ ≤ hDevE f (delayNN d) + ε := by gcongr
 
 /-- `hDevE f (delayNN d) = d` if `f > 0` on some right-window of `0`. -/
@@ -106,8 +111,8 @@ theorem hDevE_delay_eq_of_pos_window
     refine le_trans
       (hDevAtE_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
     unfold hDevE hDev; exact le_iSup _ s
-  calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s := by
-        rw [← ENNReal.coe_add]; exact_mod_cast le_tsub_add
+  calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s :=
+        coe_le_coe_tsub_add d s
     _ ≤ hDevE f (delayNN d) + ε := add_le_add hlb hs_le_ε
 
 /-- `hDevE f (delayNN d) = d` if `f(0⁺) = L > 0`. -/
@@ -134,9 +139,7 @@ theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
       (tokenBucket r b)
       (fun t => ((r*t + b : ℝ≥0):ℝ≥0∞)) := by
     filter_upwards [self_mem_nhdsWithin] with t ht
-    rw [tokenBucket_apply_pos r b t
-      (Set.mem_Ioi.mp ht).ne']
-    push_cast; ring
+    exact tokenBucket_coe_of_ne r b (Set.mem_Ioi.mp ht).ne'
   rw [tendsto_congr' heq]
   have hcont : Tendsto
       (fun t : ℝ≥0 => ((r*t + b : ℝ≥0):ℝ≥0∞))
@@ -155,19 +158,12 @@ theorem hDevE_tokenBucket_delay (r b d : ℝ≥0)
     (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
     (by exact_mod_cast hb)
 
-/-- `rateLatency R T u = ↑(R * (u - T))`. -/
-theorem rateLatency_coe (R T u : ℝ≥0) :
-    rateLatency R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
-  simp only [rateLatency]; push_cast; ring
-
 /-- Admissibility `tb ≤ βRT(t+d)` gives `r*t+b ≤ R*((t+d)-T)`. -/
 theorem beta_admissible_imp
     (r b R T t d : ℝ≥0) (ht : t ≠ 0)
     (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
     (r*t+b : ℝ≥0) ≤ R*((t+d)-T) := by
-  rw [tokenBucket_apply_pos r b t ht, rateLatency_coe,
-    show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
-      by push_cast; ring,
+  rw [tokenBucket_coe_of_ne r b ht, rateLatency_coe,
     ENNReal.coe_le_coe] at h
   exact h
 
@@ -178,9 +174,8 @@ theorem dstar_admissible (r b R T t : ℝ≥0)
       ≤ rateLatency R T (t + (T + b/R)) := by
   rcases eq_or_ne t 0 with ht | ht
   · subst ht; rw [tokenBucket_zero_eq]; exact bot_le
-  · rw [tokenBucket_apply_pos r b t ht, rateLatency_coe,
-      show (r:ℝ≥0∞)*t+b = ((r*t+b:ℝ≥0):ℝ≥0∞)
-        by push_cast; ring, ENNReal.coe_le_coe]
+  · rw [tokenBucket_coe_of_ne r b ht, rateLatency_coe,
+      ENNReal.coe_le_coe]
     have hkey : (t + (T + b/R)) - T = t + b/R := by
       rw [show t + (T + b/R) = (t + b/R) + T by ring,
         add_tsub_cancel_right]
@@ -267,9 +262,8 @@ theorem hDevE_tokenBucket_rateLatency_ge
     rw [mul_div_assoc', div_le_iff₀ hd]
     nlinarith [c.coe_nonneg, ε.coe_nonneg]
   calc ((T + b/R : ℝ≥0):ℝ≥0∞)
-      ≤ (((T+b/R) - c*s : ℝ≥0):ℝ≥0∞) + (c*s : ℝ≥0) := by
-        rw [← ENNReal.coe_add]
-        exact_mod_cast le_tsub_add
+      ≤ (((T+b/R) - c*s : ℝ≥0):ℝ≥0∞) + (c*s : ℝ≥0) :=
+        coe_le_coe_tsub_add (T + b/R) (c*s)
     _ ≤ hDevE (tokenBucket r b) (rateLatency R T) + ε :=
         add_le_add h1 hcs_le
 
@@ -342,10 +336,8 @@ theorem vDev_tokenBucket_delay (r b d : ℝ≥0)
     vDev (tokenBucket r b) (delayNN d)
       = (r*d + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    minDeconv_tokenBucket_delay r b d hd]
-  simp only [affine, ENNReal.coe_zero, mul_zero,
-    zero_add]
-  push_cast; ring
+    minDeconv_tokenBucket_delay r b d hd,
+    affine_zero_eq, add_comm b (r*d)]
 
 /-- `vDev (tokenBucket r b) βRT = r*T + b` (`r ≤ R`, `T > 0`). -/
 theorem vDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
@@ -353,10 +345,8 @@ theorem vDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
     vDev (tokenBucket r b) (rateLatency R T)
       = (r*T + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    minDeconv_tokenBucket_rateLatency r b R T h hT]
-  simp only [affine, ENNReal.coe_zero, mul_zero,
-    zero_add]
-  push_cast; ring
+    minDeconv_tokenBucket_rateLatency r b R T h hT,
+    affine_zero_eq, add_comm b (r*T)]
 
 /-- `vDev (tokenBucket r b) βRT = ⊤` when `R < r` (unstable). -/
 theorem vDev_tokenBucket_rateLatency_top

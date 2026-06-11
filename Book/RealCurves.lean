@@ -179,6 +179,11 @@ theorem rateLatencyE_coe (R T t : ℝ≥0) :
     rateLatencyE (R : ℝ≥0∞) (T : ℝ≥0∞) (t : ℝ≥0∞) = rateLatency R T t := by
   rw [rateLatency, rateLatencyE, rateLatencyV, ENNReal.coe_sub]
 
+/-- `rateLatency R T u = ↑(R * (u - T))`. -/
+theorem rateLatency_coe (R T u : ℝ≥0) :
+    rateLatency R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
+  simp only [rateLatency]; push_cast; ring
+
 /-- `tokenBucket` as the pointwise `(r·t + b) ⊓ delayNN 0` over `ℝ≥0`. -/
 theorem tokenBucket_eq (r b : ℝ≥0) :
     tokenBucket r b = (fun t : ℝ≥0 => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0 := by
