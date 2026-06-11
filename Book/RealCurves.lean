@@ -163,6 +163,18 @@ noncomputable def window (w : ℝ≥0∞) : ℝ≥0 → ℝ≥0∞ :=
 /-- `window w 0 = w`. -/
 theorem window_zero_eq (w : ℝ≥0∞) : window w 0 = w := if_pos rfl
 
+/-- `window w` is monotone (it only steps up to `⊤`). -/
+theorem window_mono (w : ℝ≥0∞) : Monotone (window w) := by
+  intro a b hab
+  by_cases ha : a = 0
+  · by_cases hb : b = 0
+    · rw [ha, hb]
+    · rw [ha, window_zero_eq, show window w b = ⊤ from if_neg hb]
+      exact le_top
+  · have hb : b ≠ 0 := fun hb0 => ha (le_antisymm (hb0 ▸ hab) zero_le')
+    rw [show window w a = ⊤ from if_neg ha,
+      show window w b = ⊤ from if_neg hb]
+
 /-! ## Complete-domain variants `ℝ≥0∞ → ℝ≥0∞` (for the pseudo-inverse catalog) -/
 
 /-- Constant-rate curve over `ℝ≥0∞ → ℝ≥0∞`. -/
