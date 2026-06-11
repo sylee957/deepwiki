@@ -5,7 +5,7 @@ import Book.Deviations
 /-! Horizontal and vertical deviations specialized to `ℝ≥0 → ℝ≥0∞`: the
 `delay`/`tokenBucket`/`rateLatency` deviation values (stable and unstable), and
 the right-limit/right-continuity criteria for a positive horizontal deviation.
-The general deviations live in `Book.Deviations`; here `hDevAtE`/`hDevE`
+The general deviations live in `Book.Deviations`; here `hDevAtENN`/`hDevENN`
 pin the shift-embedding to `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
 
 namespace DeepWiki
@@ -15,24 +15,24 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 
 /-- `ℝ≥0∞`-valued horizontal deviation: `hDevAt` with shift-embedding `↑`. -/
-noncomputable abbrev hDevAtE (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
+noncomputable abbrev hDevAtENN (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
   hDevAt f g t
 
 /-- `ℝ≥0∞`-valued horizontal deviation sup: `hDev` with shift-embedding `↑`. -/
-noncomputable abbrev hDevE (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
+noncomputable abbrev hDevENN (f g : ℝ≥0 → ℝ≥0∞) : ℝ≥0∞ :=
   hDev f g
 
-/-- `hDevAtE` as an explicit-coe infimum (collapses the generic `CoeTC.coe`). -/
-theorem hDevAtE_eq (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    hDevAtE f g t
+/-- `hDevAtENN` as an explicit-coe infimum (collapses the generic `CoeTC.coe`). -/
+theorem hDevAtENN_eq (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
+    hDevAtENN f g t
       = ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) := rfl
 
-/-- Intro: `x ≤ d` over all admissible shifts `d` gives `↑x ≤ hDevAtE f g t`
+/-- Intro: `x ≤ d` over all admissible shifts `d` gives `↑x ≤ hDevAtENN f g t`
 (the coercion crossing is absorbed). -/
-theorem le_hDevAtE {f g : ℝ≥0 → ℝ≥0∞} {t x : ℝ≥0}
+theorem le_hDevAtENN {f g : ℝ≥0 → ℝ≥0∞} {t x : ℝ≥0}
     (h : ∀ d : ℝ≥0, f t ≤ g (t + d) → x ≤ d) :
-    (x : ℝ≥0∞) ≤ hDevAtE f g t := by
-  rw [hDevAtE_eq]
+    (x : ℝ≥0∞) ≤ hDevAtENN f g t := by
+  rw [hDevAtENN_eq]
   exact le_iInf fun d => ENNReal.coe_le_coe.mpr (h d.1 d.2)
 
 /-- `delayNN d (t + u) = ⊤` when `d < t + u`. -/
@@ -40,9 +40,9 @@ theorem delayNN_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
     delayNN d (t + u) = ⊤ := by
   simp only [delayNN, delay_apply, if_neg (not_le.mpr h)]
 
-/-- `hDevAtE f (delayNN d) t ≤ d`. -/
-theorem hDevAtE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
-    hDevAtE f (delayNN d) t ≤ d := by
+/-- `hDevAtENN f (delayNN d) t ≤ d`. -/
+theorem hDevAtENN_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
+    hDevAtENN f (delayNN d) t ≤ d := by
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   have hadm : f t ≤ delayNN d (t + (d + ε)) := by
@@ -50,21 +50,21 @@ theorem hDevAtE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0) :
       calc d < d + ε := by simpa using hε
         _ ≤ t + (d + ε) := le_add_self)]
     exact le_top
-  rw [hDevAtE_eq]
+  rw [hDevAtENN_eq]
   refine iInf_le_of_le ⟨d + ε, hadm⟩ ?_
   push_cast; rfl
 
-/-- `hDevE f (delayNN d) ≤ d`. -/
-theorem hDevE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
-    hDevE f (delayNN d) ≤ d := by
-  unfold hDevE hDev
-  exact iSup_le (fun t => hDevAtE_delay_le f d t)
+/-- `hDevENN f (delayNN d) ≤ d`. -/
+theorem hDevENN_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
+    hDevENN f (delayNN d) ≤ d := by
+  unfold hDevENN hDev
+  exact iSup_le (fun t => hDevAtENN_delay_le f d t)
 
-/-- `(d - t) ≤ hDevAtE f (delayNN d) t` when `f t > 0`. -/
-theorem hDevAtE_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
+/-- `(d - t) ≤ hDevAtENN f (delayNN d) t` when `f t > 0`. -/
+theorem hDevAtENN_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
     (hft : 0 < f t) :
-    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtE f (delayNN d) t := by
-  refine le_hDevAtE fun d' hd' => ?_
+    ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtENN f (delayNN d) t := by
+  refine le_hDevAtENN fun d' hd' => ?_
   by_contra hlt
   rw [not_le] at hlt
   have htd : t + d' < d := by
@@ -79,28 +79,28 @@ theorem coe_le_coe_tsub_add (a e : ℝ≥0) :
     (a : ℝ≥0∞) ≤ ((a - e : ℝ≥0) : ℝ≥0∞) + (e : ℝ≥0∞) :=
   ENNReal.coe_sub ▸ le_tsub_add
 
-/-- `hDevE f (delayNN d) = d` when `f > 0` on `(0, ∞)`. -/
-theorem hDevE_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
+/-- `hDevENN f (delayNN d) = d` when `f > 0` on `(0, ∞)`. -/
+theorem hDevENN_delay_eq (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hf : ∀ t : ℝ≥0, 0 < t → 0 < f t) :
-    hDevE f (delayNN d) = d := by
-  apply le_antisymm (hDevE_delay_le f d)
+    hDevENN f (delayNN d) = d := by
+  apply le_antisymm (hDevENN_delay_le f d)
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   have ht : (0:ℝ≥0) < ε := hε
-  have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDevE f (delayNN d) := by
-    refine le_trans (hDevAtE_delay_ge f d ε (hf ε ht)) ?_
-    unfold hDevE hDev; exact le_iSup _ ε
+  have hlb : ((d - ε : ℝ≥0):ℝ≥0∞) ≤ hDevENN f (delayNN d) := by
+    refine le_trans (hDevAtENN_delay_ge f d ε (hf ε ht)) ?_
+    unfold hDevENN hDev; exact le_iSup _ ε
   calc (d:ℝ≥0∞) ≤ ((d - ε : ℝ≥0):ℝ≥0∞) + ε :=
         coe_le_coe_tsub_add d ε
-    _ ≤ hDevE f (delayNN d) + ε := by gcongr
+    _ ≤ hDevENN f (delayNN d) + ε := by gcongr
 
-/-- `hDevE f (delayNN d) = d` if `f > 0` on some right-window of `0`. -/
-theorem hDevE_delay_eq_of_pos_window
+/-- `hDevENN f (delayNN d) = d` if `f > 0` on some right-window of `0`. -/
+theorem hDevENN_delay_eq_of_pos_window
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hw : ∃ δ : ℝ≥0, 0 < δ ∧
       ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t) :
-    hDevE f (delayNN d) = d := by
-  apply le_antisymm (hDevE_delay_le f d)
+    hDevENN f (delayNN d) = d := by
+  apply le_antisymm (hDevENN_delay_le f d)
   obtain ⟨δ, hδ, hpw⟩ := hw
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
@@ -112,28 +112,28 @@ theorem hDevE_delay_eq_of_pos_window
   have hs_le_ε : (s:ℝ≥0∞) ≤ ε := by
     exact_mod_cast min_le_left _ _
   have hlb : ((d - s : ℝ≥0):ℝ≥0∞)
-      ≤ hDevE f (delayNN d) := by
+      ≤ hDevENN f (delayNN d) := by
     refine le_trans
-      (hDevAtE_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
-    unfold hDevE hDev; exact le_iSup _ s
+      (hDevAtENN_delay_ge f d s (hpw s hs_pos hs_ltδ)) ?_
+    unfold hDevENN hDev; exact le_iSup _ s
   calc (d:ℝ≥0∞) ≤ ((d - s : ℝ≥0):ℝ≥0∞) + s :=
         coe_le_coe_tsub_add d s
-    _ ≤ hDevE f (delayNN d) + ε := add_le_add hlb hs_le_ε
+    _ ≤ hDevENN f (delayNN d) + ε := add_le_add hlb hs_le_ε
 
-/-- `hDevE f (delayNN d) = d` if `f(0⁺) = L > 0`. -/
-theorem hDevE_delay_eq_of_rightLimit_pos
+/-- `hDevENN f (delayNN d) = d` if `f(0⁺) = L > 0`. -/
+theorem hDevENN_delay_eq_of_rightLimit_pos
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) (L : ℝ≥0∞)
     (hL : TendstoRight f 0 L) (hL0 : 0 < L) :
-    hDevE f (delayNN d) = d :=
-  hDevE_delay_eq_of_pos_window f d
+    hDevENN f (delayNN d) = d :=
+  hDevENN_delay_eq_of_pos_window f d
     (pos_near_zero_of_rightLimit_pos f L hL hL0)
 
-/-- `hDevE f (delayNN d) = d` if `f` is right-continuous with `f 0 > 0`. -/
-theorem hDevE_delay_eq_of_rightCont
+/-- `hDevENN f (delayNN d) = d` if `f` is right-continuous with `f 0 > 0`. -/
+theorem hDevENN_delay_eq_of_rightCont
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hrc : IsRightContinuous f) (h0 : 0 < f 0) :
-    hDevE f (delayNN d) = d :=
-  hDevE_delay_eq_of_rightLimit_pos f d (f 0)
+    hDevENN f (delayNN d) = d :=
+  hDevENN_delay_eq_of_rightLimit_pos f d (f 0)
     (hrc 0).tendsto h0
 
 /-- `tokenBucket r b` has right limit `b` at `0`. -/
@@ -155,11 +155,11 @@ theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
   simp only [mul_zero, zero_add] at hcont
   exact hcont.mono_left nhdsWithin_le_nhds
 
-/-- `hDevE (tokenBucket r b) (delayNN d) = d` when `b > 0`. -/
-theorem hDevE_tokenBucket_delay (r b d : ℝ≥0)
+/-- `hDevENN (tokenBucket r b) (delayNN d) = d` when `b > 0`. -/
+theorem hDevENN_tokenBucket_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
-    hDevE (tokenBucket r b) (delayNN d) = d :=
-  hDevE_delay_eq_of_rightLimit_pos (tokenBucket r b) d
+    hDevENN (tokenBucket r b) (delayNN d) = d :=
+  hDevENN_delay_eq_of_rightLimit_pos (tokenBucket r b) d
     (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
     (by exact_mod_cast hb)
 
@@ -191,12 +191,12 @@ theorem dstar_admissible (r b R T t : ℝ≥0)
     calc (r*t+b : ℝ≥0) ≤ R*t + b := by gcongr
       _ = R*(t + b/R) := by rw [mul_add, hRbR]
 
-/-- `hDevE (tokenBucket r b) βRT ≤ T + b/R` (`0 < R`, `r ≤ R`). -/
-theorem hDevE_tokenBucket_rateLatency_le
+/-- `hDevENN (tokenBucket r b) βRT ≤ T + b/R` (`0 < R`, `r ≤ R`). -/
+theorem hDevENN_tokenBucket_rateLatency_le
     (r b R T : ℝ≥0) (hR : 0 < R) (hrR : r ≤ R) :
-    hDevE (tokenBucket r b) (rateLatency R T)
+    hDevENN (tokenBucket r b) (rateLatency R T)
       ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
-  unfold hDevE hDev
+  unfold hDevENN hDev
   refine iSup_le (fun t => ?_)
   unfold hDevAt
   exact iInf_le_of_le
@@ -224,13 +224,13 @@ theorem dlb (r b R T t d : ℝ≥0) (hb : 0 < b)
   · rw [max_eq_left hle] at hreal
     nlinarith [hreal, hmrt]
 
-/-- Per-point lower bound on `hDevAtE (tokenBucket r b) βRT`. -/
-theorem hDevAtE_rateLatency_ge (r b R T t : ℝ≥0)
+/-- Per-point lower bound on `hDevAtENN (tokenBucket r b) βRT`. -/
+theorem hDevAtENN_rateLatency_ge (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (ht : t ≠ 0) :
     (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAtE (tokenBucket r b)
+      ≤ hDevAtENN (tokenBucket r b)
           (rateLatency R T) t := by
-  refine le_hDevAtE fun d hd => ?_
+  refine le_hDevAtENN fun d hd => ?_
   rw [tsub_le_iff_right]
   have hbnd := dlb r b R T t d hb ht hd
   rw [← NNReal.coe_le_coe] at hbnd ⊢
@@ -243,21 +243,21 @@ theorem hDevAtE_rateLatency_ge (r b R T t : ℝ≥0)
       = R*d + max ((R:ℝ)-r) 0 * t := by field_simp
   rw [e1, e2]; linarith [hbnd]
 
-/-- `T + b/R ≤ hDevE (tokenBucket r b) βRT` (`0 < R`, `0 < b`). -/
-theorem hDevE_tokenBucket_rateLatency_ge
+/-- `T + b/R ≤ hDevENN (tokenBucket r b) βRT` (`0 < R`, `0 < b`). -/
+theorem hDevENN_tokenBucket_rateLatency_ge
     (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b) :
     ((T + b/R : ℝ≥0):ℝ≥0∞)
-      ≤ hDevE (tokenBucket r b) (rateLatency R T) := by
+      ≤ hDevENN (tokenBucket r b) (rateLatency R T) := by
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   set c : ℝ≥0 := (R-r)/R with hc
   set s : ℝ≥0 := ε / (c + 1) with hs
   have hsne : s ≠ 0 := by rw [hs]; positivity
   have h1 : (((T + b/R) - c*s : ℝ≥0):ℝ≥0∞)
-      ≤ hDevE (tokenBucket r b) (rateLatency R T) := by
+      ≤ hDevENN (tokenBucket r b) (rateLatency R T) := by
     refine le_trans
-      (hDevAtE_rateLatency_ge r b R T s hR hb hsne) ?_
-    unfold hDevE hDev; exact le_iSup _ s
+      (hDevAtENN_rateLatency_ge r b R T s hR hb hsne) ?_
+    unfold hDevENN hDev; exact le_iSup _ s
   have hcs_le : ((c*s : ℝ≥0):ℝ≥0∞) ≤ (ε:ℝ≥0∞) := by
     rw [ENNReal.coe_le_coe, ← NNReal.coe_le_coe]
     rw [hs]; push_cast
@@ -267,17 +267,17 @@ theorem hDevE_tokenBucket_rateLatency_ge
   calc ((T + b/R : ℝ≥0):ℝ≥0∞)
       ≤ (((T+b/R) - c*s : ℝ≥0):ℝ≥0∞) + (c*s : ℝ≥0) :=
         coe_le_coe_tsub_add (T + b/R) (c*s)
-    _ ≤ hDevE (tokenBucket r b) (rateLatency R T) + ε :=
+    _ ≤ hDevENN (tokenBucket r b) (rateLatency R T) + ε :=
         add_le_add h1 hcs_le
 
-/-- `hDevE (tokenBucket r b) βRT = T + b/R` (stable case). -/
-theorem hDevE_tokenBucket_rateLatency (r b R T : ℝ≥0)
+/-- `hDevENN (tokenBucket r b) βRT = T + b/R` (stable case). -/
+theorem hDevENN_tokenBucket_rateLatency (r b R T : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
-    hDevE (tokenBucket r b) (rateLatency R T)
+    hDevENN (tokenBucket r b) (rateLatency R T)
       = ((T + b/R : ℝ≥0):ℝ≥0∞) :=
   le_antisymm
-    (hDevE_tokenBucket_rateLatency_le r b R T hR hrR)
-    (hDevE_tokenBucket_rateLatency_ge r b R T hR hb)
+    (hDevENN_tokenBucket_rateLatency_le r b R T hR hrR)
+    (hDevENN_tokenBucket_rateLatency_ge r b R T hR hb)
 
 /-- Unstable admissible bound: `(r-R)*t ≤ R*d` when `R < r`. -/
 theorem dlb_top (r b R T t d : ℝ≥0) (hR : 0 < R)
@@ -300,21 +300,21 @@ theorem dlb_top (r b R T t d : ℝ≥0) (hR : 0 < R)
       mul_nonneg hRpos.le T.coe_nonneg]
 
 /-- Unstable per-point lower bound growing linearly in `t`. -/
-theorem hDevAtE_rateLatency_ge_top (r b R T t : ℝ≥0)
+theorem hDevAtENN_rateLatency_ge_top (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0) :
     ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAtE (tokenBucket r b)
+      ≤ hDevAtENN (tokenBucket r b)
           (rateLatency R T) t := by
-  refine le_hDevAtE fun d hd => ?_
+  refine le_hDevAtENN fun d hd => ?_
   have hbnd := dlb_top r b R T t d hR hb hRr ht hd
   rw [div_mul_eq_mul_div, div_le_iff₀ hR, mul_comm d R]
   exact hbnd
 
-/-- `hDevE (tokenBucket r b) βRT = ⊤` when `R < r` (unstable). -/
-theorem hDevE_tokenBucket_rateLatency_top
+/-- `hDevENN (tokenBucket r b) βRT = ⊤` when `R < r` (unstable). -/
+theorem hDevENN_tokenBucket_rateLatency_top
     (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b)
     (hRr : R < r) :
-    hDevE (tokenBucket r b) (rateLatency R T) = ⊤ := by
+    hDevENN (tokenBucket r b) (rateLatency R T) = ⊤ := by
   have hc : 0 < (r - R)/R := by
     have : 0 < r - R := tsub_pos_of_lt hRr
     positivity
@@ -323,10 +323,10 @@ theorem hDevE_tokenBucket_rateLatency_top
   rcases eq_or_ne s 0 with hs | hs
   · subst hs; simp
   · refine le_trans
-      (hDevAtE_rateLatency_ge_top r b R T s hR hb hRr hs)
+      (hDevAtENN_rateLatency_ge_top r b R T s hR hb hRr hs)
       ?_
     exact le_iSup
-      (fun t => hDevAtE (tokenBucket r b)
+      (fun t => hDevAtENN (tokenBucket r b)
         (rateLatency R T) t) s
 
 /-- `vDev (tokenBucket r b) (delayNN d) = r*d + b` for `d > 0`. -/
