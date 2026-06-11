@@ -342,6 +342,28 @@ theorem subadditiveClosureE_mono {D : Type}
 def toFmax (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
   fun s => ⟨g s⟩
 
+/-- `conv` of `toFmax` lifts, read back via `toVal`, equals `maxConv`. -/
+theorem conv_toFmax_apply
+    (g h : ℝ≥0 → WithBot ℝ≥0∞) (t : ℝ≥0) :
+    ((conv (toFmax g) (toFmax h) t : MaxPlusNN)
+        : WithBot ℝ≥0∞)
+      = maxConv g h t := by
+  rw [conv_apply, MaxPlusNN.toVal_sSup]
+  apply le_antisymm
+  · refine iSup_le (fun x => ?_)
+    obtain ⟨u, s, hus, hx⟩ := x.2
+    rw [hx]
+    exact le_iSup_of_le ⟨(u, s), hus⟩ le_rfl
+  · refine iSup_le (fun p => ?_)
+    exact le_iSup_of_le ⟨_, p.1.1, p.1.2, p.2, rfl⟩ le_rfl
+
+/-- `conv (toFmax g) (toFmax h) = toFmax (maxConv g h)`. -/
+theorem conv_toFmax (g h : ℝ≥0 → WithBot ℝ≥0∞) :
+    conv (toFmax g) (toFmax h) = toFmax (maxConv g h) := by
+  funext t
+  apply MaxPlusNN.ext
+  exact conv_toFmax_apply g h t
+
 /-- Super-additive closure: the (max,plus)-dual of `subadditiveClosureE`. -/
 noncomputable def superadditiveClosure
     (g : ℝ≥0 → WithBot ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
@@ -383,20 +405,7 @@ theorem superadditiveClosure_superadditive
 theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     conv (toFmax g) (toFmax g) = toFmax g := by
-  funext t
-  apply MaxPlusNN.ext
-  show ((conv (toFmax g) (toFmax g) t : MaxPlusNN)
-      : WithBot ℝ≥0∞) = g t
-  rw [conv_apply, MaxPlusNN.toVal_sSup]
-  apply le_antisymm
-  · refine iSup_le (fun x => ?_)
-    obtain ⟨u, s, hus, hx⟩ := x.2
-    rw [hx]
-    show g u + g s ≤ g t
-    rw [← hus]; exact hsup u s
-  · refine le_iSup_of_le ⟨_, 0, t, zero_add t, rfl⟩ ?_
-    show g t ≤ g 0 + g t
-    rw [h0, zero_add]
+  rw [conv_toFmax, maxConv_self_of_superadditive g hsup h0]
 
 /-- Super-additive `g` with `g 0 = 0` is its own super-additive closure. -/
 theorem superadditiveClosure_eq_self
