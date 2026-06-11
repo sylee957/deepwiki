@@ -35,16 +35,6 @@ theorem iInf_add_of_ne_bot {ι : Type*} [Nonempty ι] {a : EReal}
   rw [add_comm, add_iInf_of_ne_bot ha hbot]
   simp_rw [add_comm a]
 
-/-- (min,+) convolution on `EReal`-valued curves is commutative. -/
-theorem minConv_comm (f g : ℝ≥0 → EReal) : minConv f g = minConv g f := by
-  funext t
-  apply le_antisymm <;>
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    refine iInf_le_of_le ⟨(s, u), by rw [add_comm]; exact hus⟩ ?_
-    simp only
-    rw [add_comm]
-
 /-- `BddBelowReal` is closed under pointwise `min` (the dioid sum `⊕`): a common
 real lower bound for `f`, `g` bounds their min. -/
 theorem BddBelowReal.inf {f g : ℝ≥0 → EReal}

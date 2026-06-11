@@ -115,6 +115,17 @@ theorem minConv_apply_zero {D T : Type*} [_root_.AddCommMonoid D]
       obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
       exact le_rfl)
 
+/-- `minConv f g = minConv g f`: the (min,+) convolution is commutative. -/
+theorem minConv_comm {D T : Type*} [_root_.AddCommMonoid D]
+    [_root_.AddCommMonoid T] [InfSet T] (f g : D → T) :
+    minConv f g = minConv g f := by
+  funext t
+  simp only [minConv]
+  rw [← sInf_range, ← sInf_range]
+  refine congrArg sInf (Set.ext fun x => ⟨?_, ?_⟩) <;>
+    · rintro ⟨⟨⟨u, s⟩, hus⟩, rfl⟩
+      exact ⟨⟨(s, u), by rw [add_comm]; exact hus⟩, add_comm _ _⟩
+
 /-- Elim: every term bounds the (min,+) deconvolution from below,
 `g (t + s) - h s ≤ minDeconv g h t`. -/
 theorem sub_le_minDeconv {D T : Type*} [Add D] [Sub T]

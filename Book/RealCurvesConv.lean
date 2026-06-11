@@ -219,7 +219,7 @@ theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
 /-- `rateLatency R T = delayNN T ∗ rate R`. -/
 theorem rateLatency_eq_conv (R T : ℝ≥0) :
     rateLatency R T = minConv (delayNN T) (rate R) := by
-  rw [minConvE_comm, conv_delayNN (rate R) (rate_mono R) T]
+  rw [minConv_comm, conv_delayNN (rate R) (rate_mono R) T]
   funext t
   simp only [rate, rateV, rateLatency]
 
@@ -251,7 +251,7 @@ theorem conv_rateLatency_rateLatency (R R' T T' : ℝ≥0) :
       = rateLatency (R ⊓ R') (T + T') := by
   rw [rateLatency_eq_conv R T, rateLatency_eq_conv R' T']
   rw [minConvE_assoc, ← minConvE_assoc (rate R),
-      minConvE_comm (rate R) (delayNN T'),
+      minConv_comm (rate R) (delayNN T'),
       minConvE_assoc (delayNN T'), ← minConvE_assoc (delayNN T),
       conv_delayNN_delayNN, conv_rate_rate,
       rateLatency_eq_conv (R ⊓ R') (T + T')]

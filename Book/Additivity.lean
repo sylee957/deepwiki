@@ -135,13 +135,6 @@ theorem toF_inj {D : Type} {g h : D → ℝ≥0∞}
   funext t
   exact congrArg MinPlusNN.toVal (congrFun H t)
 
-/-- `minConv` is commutative on `ℝ≥0∞`-valued functions. -/
-theorem minConvE_comm {D : Type} [_root_.AddCommMonoid D]
-    (g h : D → ℝ≥0∞) :
-    minConv g h = minConv h g := by
-  apply toF_inj
-  rw [← conv_toF, ← conv_toF, conv_comm]
-
 /-- `minConv` is associative on `ℝ≥0∞`-valued functions. -/
 theorem minConvE_assoc {D : Type} [_root_.AddCommMonoid D]
     (f g h : D → ℝ≥0∞) :
