@@ -218,6 +218,24 @@ not just defaults):
   `maxDeconv_le_sub` / `le_maxDeconv`) and deviations (`vDevAt_le_vDev` /
   `vDev_le`, `hDevAt_le_hDev` / `hDev_le`, witness-elim `hDevAt_le`,
   `Book/Deviations.lean`); `minConv_apply_zero` computes the origin value.
+  Cross the `ℝ≥0∞`-vs-`EReal` reading of served-pair convolutions through the
+  bridge iffs `coe_le_minConv_toENN_iff` / `minConv_toENN_le_coe_iff` /
+  `coe_eq_minConv_toENN_iff` (`Book/DeviationsBoundsServer.lean`), not a
+  per-site `EReal.coe_ennreal_le_coe_ennreal_iff` + `coe_minConv_toENN`
+  rewrite dance.
+
+- **Every `def` ships its satellite lemmas, in the defining file.** A
+  definition is findable only through its predictable API: intro rule, elim
+  rule, closed-form/pointwise reading (`_apply`/`_coe`, `rfl`-provable,
+  `@[simp]` when the gate tolerates it), origin value (`*_zero_eq`),
+  monotonicity, and a transport through each standard cast it meets
+  (`lift*`, `to*`, numeric `coe`) — transports named by dot notation on the
+  predicate/helper (`IsSubadditive.liftENN`, `IsSubadditive.coe_real`) so a
+  family enumerates under `grep "IsSubadditive\."`. A missing satellite gets
+  re-derived inline at call sites (this is how cast noise accumulates); a
+  reading lemma placed downstream of its definition is invisible upstream and
+  gets re-proved verbatim (the `rateLatency_coe` lesson). Satellites live in
+  the file that defines the object, not where its first consumer sits.
 
 - **Arrival curves: `*ArrivalBound` vs `*ArrivalCurve`.**
   `IsMaximalArrivalBound`/`IsMinimalArrivalBound` are the raw inequalities
