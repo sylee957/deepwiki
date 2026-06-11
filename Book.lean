@@ -38,7 +38,6 @@ import Book.ConcaveProps
 import Book.ConcaveDioid
 import Book.ConcaveSubadditive
 import Book.Servers
-import Book.ServersConcatenation
 import Book.ConvolutionReal
 import Book.ArrivalCurves
 import Book.ArrivalCurvesMaximal
@@ -53,6 +52,7 @@ import Book.ServiceCurveStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.ServiceCurveMaximal
+import Book.ServersConcatenation
 import Book.ArrivalCurveShaper
 import Book.ArrivalCurveShaperGreedy
 import Book.ArrivalCurveOutput
