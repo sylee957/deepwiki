@@ -265,6 +265,100 @@ example (β : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) :
     minConv (window w) β = fun s => β s + w := by
   rw [minConv_comm, conv_window]
 
+/-! ## Window flow control with acknowledgments -/
+
+/-- **Window flow control with acknowledgments**: distinguishing
+the data flow (service `β`) from the acknowledgment flow (service `βack`),
+the loop equations `A' ≥ A ⊓ (D ∗ βack ∗ ω_w)` and `D ≥ A' ∗ β` give, for
+a positive window, the closed-loop bound
+`D ≥ (A ∗ β) ∗ (ω_w ∗ βack ∗ β)⋆` — the service curve
+`β_wfc_ack = β ∗ (ω_w ∗ βack ∗ β)⋆`. -/
+theorem windowAckFlowControl_minConv_le
+    {A A' D β βack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞} (hw : 0 < w)
+    (hA' : ∀ t, A t ⊓ minConv (minConv D βack) (window w) t ≤ A' t)
+    (hD : ∀ t, minConv A' β t ≤ D t) (t : ℝ≥0) :
+    minConv (minConv A β)
+      (subadditiveClosureENN
+        (minConv (minConv (window w) βack) β)) t ≤ D t := by
+  -- the two feedback stages compose into the controller `βack ∗ ω_w`
+  have hD' : ∀ u, minConv D (minConv βack (window w)) u
+      ≤ minConv (minConv D βack) (window w) u := by
+    intro u
+    rw [← minConv_assoc_enn]
+  -- the loop still ends in the window, so each turn costs `w`
+  have hlb : ∀ s, w ≤ minConv β (minConv βack (window w)) s := by
+    intro s
+    rw [← minConv_assoc_enn]
+    exact le_minConv_window (minConv β βack) w s
+  have h := feedback_minConv_le hw hlb hA' hD hD' t
+  rw [minConv_comm (minConv (window w) βack) β, minConv_comm (window w) βack,
+    minConv_assoc_enn,
+    minConv_comm β (subadditiveClosureENN
+      (minConv β (minConv βack (window w)))),
+    ← minConv_assoc_enn]
+  exact h
+
+/-- **A large enough acknowledged window reaches the server curve**: if
+`w ≥ (β ⊘ (β² ∗ βack)) 0`, the two-stage controller `ω_w ∗ βack` dominates
+`β ⊘ β²` — the requirement residuates through the acknowledgment stage —
+so it is admissible for the reference `β` itself:
+`β_wfc_ack = β ∗ (ω_w ∗ βack ∗ β)⋆ ≥ β`. -/
+theorem windowAck_mem_feedbackControlSet_self
+    {β βack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConv (minConvPow β 2) βack) 0 ≤ w) :
+    minConv (window w) βack ∈ feedbackControlSet β β := by
+  refine mem_feedbackControlSet_self_of_minDeconv_le ?_
+  rw [← minDeconv_le_iff_le_minConv, minDeconv_minDeconv]
+  intro t
+  by_cases ht : t = 0
+  · rw [ht, window_zero_eq]
+    exact hw
+  · rw [show window w t = ⊤ from if_neg ht]
+    exact le_top
+
+/-- **A large enough acknowledged window preserves the service curve**:
+`β_wfc_ack = β ∗ (ω_w ∗ βack ∗ β)⋆ = β` (the `≤` holds always, the
+closure vanishing at the origin). -/
+theorem minConv_subadditiveClosureENN_windowAck_eq
+    {β βack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConv (minConvPow β 2) βack) 0 ≤ w) :
+    minConv β (subadditiveClosureENN
+      (minConv (minConv (window w) βack) β)) = β :=
+  le_antisymm (fun t => minConv_subadditiveClosureENN_le β _ t)
+    (windowAck_mem_feedbackControlSet_self hw)
+
+/-! ## Book restatement (window flow control with acknowledgments)
+The acknowledgments require considerably less bandwidth than the data, so
+sizing the window against `βack` profits from it: the closed-loop network
+of the equations `A' ≥ A ∧ (D ∗ βack ∗ ω_w)`, `D ≥ A' ∗ β` has service
+curve `β_wfc_ack = β ∗ (ω_w ∗ βack ∗ β)⋆` ([6.4]); and if
+`w ≥ (β ⊘ (β² ∗ βack))(0)`, then the large enough acknowledged window
+reaches the server curve, `β_wfc_ack ≥ β`: the
+controller `ω_w ∗ βack` must satisfy `ω_w ∗ βack ≥ β ⊘ β²`, which is
+equivalent to `ω_w ≥ (β ⊘ β²) ⊘ βack = β ⊘ (β² ∗ βack)`. -/
+example {β βack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConv (minConvPow β 2) βack) 0 ≤ w) :
+    β ≤ minConv β (subadditiveClosureENN
+      (minConv (minConv (window w) βack) β)) :=
+  windowAck_mem_feedbackControlSet_self hw
+
+/-! The two spellings of the window bound agree — the deconvolutions
+compose: `(β ⊘ β²) ⊘ βack = β ⊘ (β² ∗ βack)`. -/
+example (β βack : ℝ≥0 → ℝ≥0∞) :
+    minDeconv (minDeconv β (minConvPow β 2)) βack
+      = minDeconv β (minConv (minConvPow β 2) βack) :=
+  minDeconv_minDeconv β (minConvPow β 2) βack
+
+/-! The book prints the bound as `(β ⊘ β) ⊘ (βack ∗ β) (0)`: same curve,
+since `β ⊘ (β ∗ (βack ∗ β)) = β ⊘ (β² ∗ βack)`. -/
+example (β βack : ℝ≥0 → ℝ≥0∞) :
+    minDeconv (minDeconv β β) (minConv βack β)
+      = minDeconv β (minConv (minConvPow β 2) βack) := by
+  rw [minDeconv_minDeconv, minConv_comm βack β, ← minConv_assoc_enn,
+    show minConv β β = minConvPow β 2 from by
+      rw [show minConvPow β 2 = minConv (minConvPow β 1) β from rfl,
+        minConvPow_one]]
+
 /-! ## Book restatement ([6.3]: the closed-loop service curve)
 The closed-loop network obeys `A' = A ∧ D' ≥ A ∧ (D ∗ βc)` and
 `D ≥ A' ∗ β`; as a result `A' ≥ A ∧ A' ∗ (β ∗ βc)`, hence
