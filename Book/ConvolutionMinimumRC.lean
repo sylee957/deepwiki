@@ -47,12 +47,11 @@ theorem minConv_eq_minConv_leftLim_of_cont
     minConv f h t = minConv (leftLim f) h t := by
   have hsub : Continuous (fun u : ℝ≥0 => t - u) := by continuity
   apply le_antisymm
-  · -- HARD direction `minConv f h t ≤ minConv (leftLim f) h t`. By `le_iInf`
-    -- over the `leftLim f`-infimum, suffices for each split `(u, t−u)`:
-    -- `minConv f h t ≤ leftLim f u + h (t − u)`, shown via `u' ↗ u` (where
+  · -- HARD direction `minConv f h t ≤ minConv (leftLim f) h t`. By `le_minConv`
+    -- it suffices, for each split `(u, t−u)`, to show
+    -- `minConv f h t ≤ leftLim f u + h (t − u)`, via `u' ↗ u` (where
     -- `f u' → leftLim f u`, and continuity of `h` handles `t − u' ↘ t − u`).
-    refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
+    refine le_minConv fun u s hus => ?_
     have hut : u ≤ t := hus ▸ le_self_add
     have hsu : s = t - u := by rw [← hus, add_tsub_cancel_left]
     subst hsu
@@ -62,7 +61,7 @@ theorem minConv_eq_minConv_leftLim_of_cont
         have : u = 0 := hu0.symm
         subst this; exact leftLim_eq_of_isBot isBot_bot
       rw [h0]
-      exact iInf_le_of_le ⟨(u, t - u), add_tsub_cancel_of_le hut⟩ le_rfl
+      exact minConv_le_add f h (add_tsub_cancel_of_le hut)
     · -- `u > 0`: take `u' ↗ u`; each `f u' + h (t − u') ≥ minConv f h t`,
       -- and the family tends to `leftLim f u + h (t − u)`.
       have hbot : (𝓝[<] u).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, hu0⟩
@@ -79,14 +78,10 @@ theorem minConv_eq_minConv_leftLim_of_cont
       refine ge_of_tendsto hlim ?_
       filter_upwards [self_mem_nhdsWithin] with u' (hu' : u' < u)
       have hu't : u' ≤ t := hu'.le.trans hut
-      exact iInf_le_of_le ⟨(u', t - u'), add_tsub_cancel_of_le hu't⟩ le_rfl
-  · -- EASY direction `minConv (leftLim f) h t ≤ minConv f h t`: termwise,
-    -- `leftLim f u + h s ≤ f u + h s` since `leftLim f ≤ f`.
-    refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
-    gcongr
-    exact hfm.leftLim_le (le_refl u)
+      exact minConv_le_add f h (add_tsub_cancel_of_le hu't)
+  · -- EASY direction `minConv (leftLim f) h t ≤ minConv f h t`: termwise via
+    -- `minConv_le_minConv`, since `leftLim f ≤ f`.
+    exact minConv_le_minConv (fun u => hfm.leftLim_le le_rfl) (fun _ => le_rfl) t
 
 /-- Generic core. For monotone `f` and **continuous** `h`, with `+` continuous
 at each limit pair `(leftLim f u, h (t − u))`, the convolution is attained at

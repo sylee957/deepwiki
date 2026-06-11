@@ -16,25 +16,6 @@ namespace DeepWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 
-/-- For non-`⊥` `a` and a family with non-`⊥` infimum,
-`a + ⨅ i, f i = ⨅ i, a + f i` on `EReal`. -/
-theorem add_iInf_of_ne_bot {ι : Type*} [Nonempty ι] {a : EReal}
-    (ha : a ≠ ⊥) {f : ι → EReal} (hbot : (⨅ i, f i) ≠ ⊥) :
-    a + ⨅ i, f i = ⨅ i, a + f i := by
-  apply le_antisymm
-  · refine le_iInf (fun i => ?_)
-    gcongr
-    exact iInf_le _ i
-  · exact iInf_add_le_add_iInf ha hbot
-
-/-- For a non-`⊥` family infimum and non-`⊥` `a`,
-`(⨅ i, f i) + a = ⨅ i, f i + a` on `EReal`. -/
-theorem iInf_add_of_ne_bot {ι : Type*} [Nonempty ι] {a : EReal}
-    (ha : a ≠ ⊥) {f : ι → EReal} (hbot : (⨅ i, f i) ≠ ⊥) :
-    (⨅ i, f i) + a = ⨅ i, f i + a := by
-  rw [add_comm, add_iInf_of_ne_bot ha hbot]
-  simp_rw [add_comm a]
-
 /-- `BddBelowReal` is closed under pointwise `min` (the dioid sum `⊕`): a common
 real lower bound for `f`, `g` bounds their min. -/
 theorem BddBelowReal.inf {f g : ℝ≥0 → EReal}
@@ -66,26 +47,16 @@ theorem minConv_ne_bot {f g : ℝ≥0 → EReal}
 theorem minConv_assoc_le {f g h : ℝ≥0 → EReal}
     (hf : BddBelowReal f) (hg : BddBelowReal g) (hh : BddBelowReal h) (t : ℝ≥0) :
     minConv (minConv f g) h t ≤ minConv f (minConv g h) t := by
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-  simp only
-  -- `f u + minConv g h s = ⨅_{a+b=s} (f u + (g a + h b))`
-  rw [show minConv g h s
-        = ⨅ q : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = s}, g q.1.1 + h q.1.2 from rfl,
-    add_iInf_of_ne_bot (hf.neverBot u) (minConv_ne_bot hg hh s)]
-  refine le_iInf ?_
-  rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
-  simp only
-  -- target split `(u+a)+b = t`
-  refine iInf_le_of_le
-    ⟨(u + a, b), by rw [add_assoc, hab, hus]⟩ ?_
-  simp only
-  have hinner : minConv f g (u + a) ≤ f u + g a :=
-    iInf_le_of_le
-      (⟨(u, a), rfl⟩ : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = u + a}) (le_refl _)
-  calc minConv f g (u + a) + h b
-      ≤ (f u + g a) + h b := by gcongr
-    _ = f u + (g a + h b) := add_assoc _ _ _
+  refine le_minConv fun u s hus => ?_
+  -- the inner `minConv g h s` opens via `le_add_minConv_of_ne_bot`
+  refine le_add_minConv_of_ne_bot (hf.neverBot u) (minConv_ne_bot hg hh s)
+    fun a b hab => ?_
+  -- elim at the target split `(u+a)+b = t`
+  refine (minConv_le_add (minConv f g) h
+    (show (u + a) + b = t by rw [add_assoc, hab, hus])).trans ?_
+  rw [← add_assoc]
+  gcongr
+  exact minConv_le_add f g rfl
 
 /-- (min,+) convolution left-distributes over pointwise `min` on `EReal` curves:
 `minConv f (g ⊓ h) = minConv f g ⊓ minConv f h`. -/
@@ -94,21 +65,13 @@ theorem minConv_min (f g h : ℝ≥0 → EReal) :
       = fun t => min (minConv f g t) (minConv f h t) := by
   funext t
   apply le_antisymm
-  · refine le_min ?_ ?_ <;>
-    · refine le_iInf ?_
-      rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-      refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
-      simp only
-      gcongr
-      first
-      | exact min_le_left _ _
-      | exact min_le_right _ _
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    simp only
+  · exact le_min
+      (minConv_le_minConv (fun _ => le_rfl) (fun r => min_le_left _ _) t)
+      (minConv_le_minConv (fun _ => le_rfl) (fun r => min_le_right _ _) t)
+  · refine le_minConv fun u s hus => ?_
+    show min (minConv f g t) (minConv f h t) ≤ f u + min (g s) (h s)
     rw [← min_add_add_left]
-    refine min_le_min ?_ ?_ <;>
-      exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
+    exact min_le_min (minConv_le_add f g hus) (minConv_le_add f h hus)
 
 /-- The (min,+) zero curve, constant `⊤ = +∞`. -/
 noncomputable def topCurve : ℝ≥0 → EReal := fun _ => ⊤
@@ -118,8 +81,7 @@ theorem minConv_topCurve_right {f : ℝ≥0 → EReal} (hf : NeverBot f) :
     minConv f topCurve = topCurve := by
   funext t
   apply le_antisymm le_top
-  refine le_iInf ?_
-  rintro ⟨⟨u, s⟩, _⟩
+  refine le_minConv fun u s _ => ?_
   show (⊤ : EReal) ≤ f u + (⊤ : EReal)
   rw [EReal.add_top_of_ne_bot (hf u)]
 

@@ -33,20 +33,18 @@ theorem conv_delayNN (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
     minConv f (delayNN d) = fun t => f (t - d) := by
   funext t
-  unfold minConv
   apply le_antisymm
   · rcases le_or_gt t d with ht | ht
-    · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
-      simp only
+    · refine (minConv_le_add f (delayNN d) (zero_add t)).trans ?_
+      show f 0 + delayNN d t ≤ f (t - d)
       rw [show delayNN d t = 0 by simp [delayNN, ht], add_zero,
         tsub_eq_zero_of_le ht]
-    · refine iInf_le_of_le ⟨(t - d, d), by
-        rw [tsub_add_cancel_of_le (le_of_lt ht)]⟩ ?_
-      simp only
+    · refine (minConv_le_add f (delayNN d)
+        (tsub_add_cancel_of_le ht.le)).trans ?_
+      show f (t - d) + delayNN d d ≤ f (t - d)
       rw [show delayNN d d = 0 by simp [delayNN], add_zero]
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    simp only
+  · refine le_minConv fun u s hus => ?_
+    show f (t - d) ≤ f u + delayNN d s
     rcases le_or_gt s d with hs | hs
     · rw [show delayNN d s = 0 by simp [delayNN, hs], add_zero]
       apply hf
@@ -80,26 +78,23 @@ theorem minDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞)
     (hf : Monotone f) (d : ℝ≥0) :
     minDeconv f (delayNN d) = fun t => f (t + d) := by
   funext t
-  unfold minDeconv
   apply le_antisymm
-  · refine iSup_le ?_
-    intro s
+  · refine minDeconv_le fun s => ?_
     rcases le_or_gt s d with hs | hs
     · rw [show delayNN d s = 0 by simp [delayNN, hs], tsub_zero]
       exact hf (by gcongr)
     · rw [show delayNN d s = ⊤ by
         simp [delayNN, not_le.mpr hs]]
       simp
-  · refine le_iSup_of_le d ?_
+  · refine le_trans ?_ (sub_le_minDeconv f (delayNN d) t d)
     rw [show delayNN d d = 0 by simp [delayNN], tsub_zero]
 
 /-- `f ⊘̄ delayNN d = 0`: the (max,+) deconvolution collapses to `0`. -/
 theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     maxDeconv f (delayNN d) = fun _ => 0 := by
   funext t
-  unfold maxDeconv
   apply le_antisymm
-  · refine iInf_le_of_le (d + 1) ?_
+  · refine (maxDeconv_le_sub f (delayNN d) t (d + 1)).trans ?_
     rw [show delayNN d (d + 1) = ⊤ by
       simp [delayNN, not_le.mpr (lt_add_one d)]]
     simp
@@ -218,16 +213,14 @@ theorem rateLatency_eq_conv (R T : ℝ≥0) :
 theorem conv_rate_rate (R R' : ℝ≥0) :
     minConv (rate R) (rate R') = rate (R ⊓ R') := by
   funext t
-  unfold minConv rate rateV
   apply le_antisymm
   · rcases le_total R R' with h | h
-    · refine iInf_le_of_le ⟨(t, 0), by simp⟩ ?_
-      simp only; rw [min_eq_left h]; simp
-    · refine iInf_le_of_le ⟨(0, t), by simp⟩ ?_
-      simp only; rw [min_eq_right h]; simp
-  · refine le_iInf ?_
-    rintro ⟨⟨u, v⟩, (huv : u + v = t)⟩
-    simp only
+    · refine (minConv_le_add (rate R) (rate R') (add_zero t)).trans ?_
+      simp only [rate_apply]; rw [min_eq_left h]; simp
+    · refine (minConv_le_add (rate R) (rate R') (zero_add t)).trans ?_
+      simp only [rate_apply]; rw [min_eq_right h]; simp
+  · refine le_minConv fun u v huv => ?_
+    simp only [rate_apply]
     rw [← huv]
     calc ((R ⊓ R' : ℝ≥0):ℝ≥0∞) * (u + v)
         = (R ⊓ R') * u + (R ⊓ R') * v := by rw [mul_add]

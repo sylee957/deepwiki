@@ -147,6 +147,18 @@ theorem iInf_add_le_add_iInf {ι : Type*} [Nonempty ι] {a : EReal}
       rw [add_comm]
       exact iInf_le _ i
 
+/-- Intro with a leading constant, on `EReal`: `x ≤ a + minConv g h t` from the
+per-split bounds `x ≤ a + (g u + h s)`, for `a ≠ ⊥` and a non-`⊥` convolution
+(the constant pushes through the defining infimum). -/
+theorem le_add_minConv_of_ne_bot {g h : ℝ≥0 → EReal} {a x : EReal} {t : ℝ≥0}
+    (ha : a ≠ ⊥) (hbot : minConv g h t ≠ ⊥)
+    (hle : ∀ u s, u + s = t → x ≤ a + (g u + h s)) :
+    x ≤ a + minConv g h t :=
+  le_trans
+    (le_iInf fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
+      hle p.1.1 p.1.2 p.2)
+    (iInf_add_le_add_iInf ha hbot)
+
 /-- Term bound `gᵐ⁺ⁿ (u+s) ≤ gᵐ u + gⁿ s`, the heart of sub-additivity.
 Needs `BddBelowReal` so the `⊤ + (·)` / inner-`iInf` steps stay non-`⊥`. -/
 theorem convPowEReal_term_le {g : ℝ≥0 → EReal} (hg : BddBelowReal g)
@@ -163,21 +175,11 @@ theorem convPowEReal_term_le {g : ℝ≥0 → EReal} (hg : BddBelowReal g)
       obtain ⟨c, hc⟩ := id hg
       show convPowEReal g (m + k + 1) (u + s)
           ≤ convPowEReal g m u + minConv (convPowEReal g k) g s
-      have hstep :
-          convPowEReal g m u
-              + minConv (convPowEReal g k) g s
-            ≥ ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = s},
-                convPowEReal g m u
-                  + (convPowEReal g k p.1.1 + g p.1.2) :=
-        iInf_add_le_add_iInf
-          ((convPowEReal_bddBelowReal hg m).neverBot u)
-          (ne_bot_of_le_ne_bot (EReal.coe_ne_bot _)
-            (minConv_bddBelowReal hck hc s))
-      refine le_trans ?_ hstep
-      show minConv (convPowEReal g (m + k)) g (u + s)
-          ≤ _
-      refine le_iInf ?_
-      rintro ⟨⟨a, b⟩, (hab : a + b = s)⟩
+      refine le_add_minConv_of_ne_bot
+        ((convPowEReal_bddBelowReal hg m).neverBot u)
+        (ne_bot_of_le_ne_bot (EReal.coe_ne_bot _)
+          (minConv_bddBelowReal hck hc s)) fun a b hab => ?_
+      show minConv (convPowEReal g (m + k)) g (u + s) ≤ _
       refine le_trans (minConv_le_add (convPowEReal g (m + k)) g
         (show (u + a) + b = u + s by rw [add_assoc, hab])) ?_
       rw [← add_assoc]
