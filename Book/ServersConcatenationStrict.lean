@@ -7,7 +7,10 @@ The convolution does not exactly model the composition:
 `2` and rate `1/2`, and the departure holding at `2` on `(0, 4]` before
 rejoining the arrival. The pair is served by `δ₃ ∗ λ₁`, but any
 intermediate `B` dominates both the departure and `A ∗ δ₃`, forcing
-`(B ∗ λ₁) 4 ≥ 5/2 > 2 = C 4`. -/
+`(B ∗ λ₁) 4 ≥ 5/2 > 2 = C 4`. The maximal-side inclusion is strict as
+well: `Smax(0) ∘ Smax(1) ⊊ Smax(1 ∗ 0)` — a cumulative intermediate has
+`B 0 = 0`, capping the tandem by `β₂` alone, while the convolution keeps
+`β₁`'s origin offset. -/
 
 namespace DeepWiki
 
@@ -249,6 +252,94 @@ example :
         (minimalServiceRel (rateEReal 1))
       < minimalServiceRel (minConv (delayEReal 3) (rateEReal 1)) :=
   comp_minimalServiceRel_lt_delay_rate
+
+/-! ## The maximal-side inclusion is also strict
+Beyond the book's remark: the maximal-curve concatenation inclusion
+`Smax(β₂) ∘ Smax(β₁) ⊆ Smax(β₁ ∗ β₂)` is likewise strict. Witnesses: the
+constant curves `β₁ ≡ 1`, `β₂ ≡ 0` with the zero arrival and the unit-step
+departure. The convolution `β₁ ∗ β₂ ≡ 1` keeps `β₁`'s origin offset, so it
+permits the tandem to emit a unit burst from nothing; but any factoring
+intermediate `B` is a cumulative process with `B 0 = 0`, and the origin
+split caps the second stage by `β₂` alone: `C ≤ B ∗ 0 ≤ B 0 + 0 = 0`.
+(The witness `β₁` sits outside `F₀`; for `β₁ 0 = 0` one has
+`β₁ ∗ β₂ ≤ β₂` and this particular gap closes.) -/
+
+/-- The witness pair for the maximal side: the unit step is an admissible
+output of the zero arrival under the convolved maximal curve `1 ∗ 0 ≡ 1`. -/
+theorem witness_mem_maximalServiceRel :
+    maximalServiceRel
+      (minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal)))
+      zeroCurve (stepCurve 0 1) := by
+  intro t
+  refine le_minConv fun u v huv => ?_
+  have hstep : curveEReal (stepCurve 0 1) t ≤ ((1 : ℝ) : EReal) := by
+    rw [curveEReal_apply, stepCurve_apply]
+    split_ifs
+    · exact_mod_cast le_refl (1 : ℝ)
+    · exact_mod_cast (by norm_num : (0 : ℝ) ≤ 1)
+  have hinner : ((1 : ℝ) : EReal)
+      ≤ minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal)) v :=
+    le_minConv fun a b hab => by
+      show ((1 : ℝ) : EReal) ≤ (1 : EReal) + (0 : EReal)
+      rw [add_zero]
+      exact_mod_cast le_refl (1 : ℝ)
+  calc curveEReal (stepCurve 0 1) t
+      ≤ ((1 : ℝ) : EReal) := hstep
+    _ ≤ minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal)) v :=
+        hinner
+    _ = curveEReal zeroCurve u
+        + minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal)) v := by
+        rw [curveEReal_zeroCurve, zero_add]
+
+/-- No intermediate curve realizes the maximal witness pair: any cumulative
+`B` has `B 0 = 0`, so `C ≤ B ∗ 0 ≤ B 0 + 0 = 0`, while the step reaches
+`1`. -/
+theorem witness_not_mem_comp_maximal :
+    ¬ Relation.Comp (maximalServiceRel (fun _ : ℝ≥0 => (1 : EReal)))
+        (maximalServiceRel (fun _ : ℝ≥0 => (0 : EReal)))
+      zeroCurve (stepCurve 0 1) := by
+  rintro ⟨B, -, hBC⟩
+  have h := hBC 1
+  have hC : curveEReal (stepCurve 0 1) 1 = ((1 : ℝ) : EReal) := by
+    rw [curveEReal_apply, stepCurve_apply,
+      if_pos (by norm_num : (0 : ℝ≥0) < 1)]
+    norm_cast
+  have hB : minConv (curveEReal B) (fun _ : ℝ≥0 => (0 : EReal)) 1
+      ≤ ((0 : ℝ) : EReal) := by
+    refine le_trans (minConv_le_add _ _ (zero_add 1)) ?_
+    show curveEReal B 0 + (0 : EReal) ≤ ((0 : ℝ) : EReal)
+    rw [add_zero, curveEReal_apply, show B 0 = 0 from B.zero]
+    exact_mod_cast le_refl (0 : ℝ)
+  rw [hC] at h
+  have hcontra : (1 : ℝ) ≤ 0 := EReal.coe_le_coe_iff.mp (le_trans h hB)
+  norm_num at hcontra
+
+/-- **The reverse containment fails on the maximal side**:
+`Smax(1 ∗ 0) ⊄ Smax(0) ∘ Smax(1)` — the witness pair satisfies the
+end-to-end bound but factors through no cumulative intermediate. -/
+theorem not_maximalServiceRel_le_comp_one_zero :
+    ¬ maximalServiceRel
+        (minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal)))
+      ≤ Relation.Comp (maximalServiceRel (fun _ : ℝ≥0 => (1 : EReal)))
+          (maximalServiceRel (fun _ : ℝ≥0 => (0 : EReal))) :=
+  fun hle => witness_not_mem_comp_maximal
+    (hle _ _ witness_mem_maximalServiceRel)
+
+/-- **The maximal concatenation inclusion is strict**:
+`Smax(0) ∘ Smax(1) ⊊ Smax(1 ∗ 0)`. -/
+theorem comp_maximalServiceRel_lt_one_zero :
+    Relation.Comp (maximalServiceRel (fun _ : ℝ≥0 => (1 : EReal)))
+        (maximalServiceRel (fun _ : ℝ≥0 => (0 : EReal)))
+      < maximalServiceRel
+          (minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal))) :=
+  lt_of_le_not_ge
+    (comp_maximalServiceRel_le
+      (show IsNonneg (fun _ : ℝ≥0 => (1 : EReal)) from fun _ => by
+        show (0 : EReal) ≤ (1 : EReal)
+        exact_mod_cast (zero_le_one : (0 : ℝ) ≤ 1)).isBddBelowReal
+      (show IsNonneg (fun _ : ℝ≥0 => (0 : EReal)) from
+        fun _ => le_rfl).isBddBelowReal)
+    not_maximalServiceRel_le_comp_one_zero
 
 /-! The strictness decomposes into its two directions: the concatenation
 containment `Smp(β₂) ∘ Smp(β₁) ⊆ Smp(β₁ ∗ β₂)` holds, while the reverse
