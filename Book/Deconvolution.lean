@@ -35,6 +35,27 @@ theorem galoisConnection_minDeconv_minConv (g : ℝ≥0 → ℝ≥0∞) :
       (fun h : ℝ≥0 → ℝ≥0∞ => minConv h g) :=
   fun _ _ => minDeconv_le_iff_le_minConv
 
+/-- Deconvolution composes into a convolution:
+`(f ⊘ g) ⊘ h = f ⊘ (g ∗ h)` on `ℝ≥0∞` curves — the two sides are left
+adjoints of the same map, by associativity and commutativity. -/
+theorem minDeconv_minDeconv (f g h : ℝ≥0 → ℝ≥0∞) :
+    minDeconv (minDeconv f g) h = minDeconv f (minConv g h) := by
+  apply le_antisymm
+  · rw [minDeconv_le_iff_le_minConv, minDeconv_le_iff_le_minConv,
+      minConv_assoc_enn, minConv_comm h g]
+    exact minDeconv_le_iff_le_minConv.mp le_rfl
+  · rw [minDeconv_le_iff_le_minConv]
+    calc f ≤ minConv (minDeconv f g) g :=
+          minDeconv_le_iff_le_minConv.mp le_rfl
+      _ ≤ minConv (minConv (minDeconv (minDeconv f g) h) h) g := fun t =>
+          minConv_le_minConv
+            (fun s => minDeconv_le_iff_le_minConv.mp le_rfl s)
+            (fun _ => le_rfl) t
+      _ = minConv (minDeconv (minDeconv f g) h) (minConv h g) :=
+          minConv_assoc_enn _ _ _
+      _ = minConv (minDeconv (minDeconv f g) h) (minConv g h) := by
+          rw [minConv_comm h g]
+
 /-- Deconvolving a convolution: `(f ∗ g) ⊘ h ≤ f ∗ (g ⊘ h)` on `ℝ≥0∞`. -/
 theorem minDeconv_minConv_le (f g h : ℝ≥0 → ℝ≥0∞) :
     minDeconv (minConv f g) h ≤ minConv f (minDeconv g h) := by

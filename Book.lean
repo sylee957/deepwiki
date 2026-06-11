@@ -57,6 +57,7 @@ import Book.ServersConcatenation
 import Book.ServersConcatenationStrict
 import Book.ServiceCurveStrictConcatenation
 import Book.ServersControlTandem
+import Book.ServersControlFeedback
 import Book.ArrivalCurveShaper
 import Book.ArrivalCurveShaperGreedy
 import Book.ArrivalCurveOutput

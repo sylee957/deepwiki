@@ -243,6 +243,54 @@ theorem minConvPow_succ {D : Type} [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) (n : ℕ) :
     minConvPow g (n + 1) = minConv (minConvPow g n) g := rfl
 
+/-- Convolution powers split across a convolution: `(f ∗ g)ⁿ = fⁿ ∗ gⁿ`
+(commutativity and associativity reshuffle the factors). -/
+theorem minConvPow_minConv {D : Type} [_root_.AddCommMonoid D]
+    (f g : D → ℝ≥0∞) (n : ℕ) :
+    minConvPow (minConv f g) n
+      = minConv (minConvPow f n) (minConvPow g n) := by
+  induction n with
+  | zero =>
+      funext t
+      rw [minConvPow_zero]
+      symm
+      apply le_antisymm
+      · refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
+        rw [minConvPow_zero, minConvPow_zero, if_pos rfl, zero_add]
+      · refine le_minConv fun p q hpq => ?_
+        rw [minConvPow_zero, minConvPow_zero]
+        by_cases hp : p = 0
+        · by_cases hq : q = 0
+          · rw [if_pos hp, if_pos hq,
+              if_pos (by rw [← hpq, hp, hq, add_zero]), add_zero]
+          · rw [if_neg hq, add_top]
+            exact le_top
+        · rw [if_neg hp, top_add]
+          exact le_top
+  | succ n ih =>
+      rw [minConvPow_succ, ih, minConvPow_succ, minConvPow_succ,
+        minConv_assoc_enn,
+        ← minConv_assoc_enn (minConvPow g n) f g,
+        minConv_comm (minConvPow g n) f,
+        minConv_assoc_enn f (minConvPow g n) g,
+        ← minConv_assoc_enn (minConvPow f n) f
+          (minConv (minConvPow g n) g)]
+
+/-- Uniform lower bounds add up through convolution powers:
+`n • c ≤ (minConvPow w n) t` when `c ≤ w` everywhere. -/
+theorem nsmul_le_minConvPow {D : Type} [_root_.AddCommMonoid D]
+    {w : D → ℝ≥0∞} {c : ℝ≥0∞} (hlb : ∀ s, c ≤ w s) (n : ℕ) (t : D) :
+    n • c ≤ minConvPow w n t := by
+  induction n generalizing t with
+  | zero =>
+      rw [zero_smul]
+      exact zero_le'
+  | succ n ih =>
+      rw [minConvPow_succ]
+      refine le_minConv fun u v huv => ?_
+      rw [succ_nsmul]
+      exact add_le_add (ih u) (hlb v)
+
 /-- The `MinPlusNN` dioid power read back via `toVal` is `minConvPow`:
 `((convPow (liftMinPlusNN g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t`. -/
 theorem convPow_liftMinPlusNN_apply {D : Type} [_root_.AddCommMonoid D]
@@ -313,6 +361,30 @@ theorem subadditiveClosureENN_le {D : Type}
   have h := convPow_le_closure (liftMinPlusNN g) 1 t
   rw [convPow_one, MinPlusNN.le_iff] at h
   exact h
+
+/-- The closure vanishes at the origin: `g⋆ 0 = 0` (the zeroth power is
+the convolution unit). -/
+theorem subadditiveClosureENN_zero_eq {D : Type}
+    [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
+    subadditiveClosureENN g 0 = 0 :=
+  le_antisymm (by
+    rw [subadditiveClosureENN_eq_iInf]
+    exact iInf_le_of_le 0 (by rw [minConvPow_zero, if_pos rfl]))
+    zero_le'
+
+/-- A curve lies below the closure iff it lies below every convolution
+power: `y ≤ g⋆ ↔ ∀ n, y ≤ gⁿ`. -/
+theorem le_subadditiveClosureENN_iff {D : Type}
+    [_root_.AddCommMonoid D] {g y : D → ℝ≥0∞} :
+    y ≤ subadditiveClosureENN g ↔ ∀ n, y ≤ minConvPow g n := by
+  constructor
+  · intro h n t
+    refine (h t).trans ?_
+    rw [subadditiveClosureENN_eq_iInf]
+    exact iInf_le _ n
+  · intro h t
+    rw [subadditiveClosureENN_eq_iInf]
+    exact le_iInf fun n => h n t
 
 /-- Numeric closure is idempotent under `minConv`. -/
 theorem subadditiveClosureENN_idem {D : Type}

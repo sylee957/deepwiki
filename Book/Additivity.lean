@@ -197,4 +197,46 @@ theorem conv_self_liftMinPlusNN_of_subadditive
     conv (liftMinPlusNN g) (liftMinPlusNN g) = liftMinPlusNN g := by
   rw [conv_liftMinPlusNN, minConv_self_of_subadditive g hsub h0]
 
+/-- The (min,+) convolution of `ℝ≥0∞` curves is associative (the truncated
+subtraction adjunction routes the splits, no infimum distribution needed). -/
+theorem minConv_assoc_enn {D : Type} [_root_.AddCommMonoid D]
+    (f g h : D → ℝ≥0∞) :
+    minConv (minConv f g) h = minConv f (minConv g h) := by
+  funext t
+  apply le_antisymm
+  · refine le_minConv fun u v huv => ?_
+    rw [← tsub_le_iff_left]
+    refine le_minConv fun p q hpq => ?_
+    rw [tsub_le_iff_left]
+    calc minConv (minConv f g) h t
+        ≤ minConv f g (u + p) + h q :=
+          minConv_le_add _ _ (by rw [add_assoc, hpq, huv])
+      _ ≤ (f u + g p) + h q :=
+          add_le_add_left (minConv_le_add f g rfl) _
+      _ = f u + (g p + h q) := add_assoc _ _ _
+  · refine le_minConv fun u v huv => ?_
+    rw [← tsub_le_iff_right]
+    refine le_minConv fun p q hpq => ?_
+    rw [tsub_le_iff_right]
+    calc minConv f (minConv g h) t
+        ≤ f p + minConv g h (q + v) :=
+          minConv_le_add _ _ (by rw [← add_assoc, hpq, huv])
+      _ ≤ f p + (g q + h v) :=
+          add_le_add_right (minConv_le_add g h rfl) _
+      _ = (f p + g q) + h v := (add_assoc _ _ _).symm
+
+/-- Convolving with a subadditive curve is shift-subadditive:
+`(f ∗ g) (u + v) ≤ (f ∗ g) u + g v`. -/
+theorem minConv_apply_add_le_of_isSubadditive {D : Type}
+    [_root_.AddCommMonoid D] {f g : D → ℝ≥0∞}
+    (hsub : IsSubadditive g) (u v : D) :
+    minConv f g (u + v) ≤ minConv f g u + g v := by
+  rw [← tsub_le_iff_right]
+  refine le_minConv fun p q hpq => ?_
+  rw [tsub_le_iff_right]
+  calc minConv f g (u + v)
+      ≤ f p + g (q + v) := minConv_le_add f g (by rw [← add_assoc, hpq])
+    _ ≤ f p + (g q + g v) := add_le_add_right (hsub q v) _
+    _ = (f p + g q) + g v := (add_assoc _ _ _).symm
+
 end DeepWiki
