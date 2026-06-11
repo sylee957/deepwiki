@@ -10,7 +10,7 @@ sets `𝓘_{≥x}`, `𝓘_{<x}` live in `Book.LevelSet`. Core API over
 `[CompleteLattice α] [Preorder β]`: the admissibility/Galois bounds,
 monotonicity, value at `⊥`. Over a densely-ordered complete linear `α` and
 linearly-ordered `β`, the `sup {t | f t < x}` characterization. A worked
-first-crossing computation on the `ℝ≥0∞`-domain `delayE` curve. -/
+first-crossing computation on the `ℝ≥0∞`-domain `delayENN` curve. -/
 
 namespace DeepWiki
 
@@ -180,7 +180,7 @@ theorem continuousWithinAt_Iio_pseudoInv [CompleteLinearOrder α]
 For the pure-delay curve `delay d` (`0` up to `d`, `⊤` beyond), `f⁻¹(x)` is the
 first time the level `x` is reached. Over a densely-ordered complete linear
 domain, every positive level is first reached just past `d`, so `f⁻¹ x = d`
-for `x > 0`, while `f⁻¹ ⊥ = ⊥`. The `delayE`/`delayNN` curves are witnesses. -/
+for `x > 0`, while `f⁻¹ ⊥ = ⊥`. The `delayENN`/`delayNN` curves are witnesses. -/
 
 /-- First-crossing for the pure delay: `(delay d)⁻¹ x = d` for `0 < x`. -/
 theorem pseudoInv_delay_pos [CompleteLinearOrder α] [DenselyOrdered α]
@@ -194,13 +194,13 @@ theorem pseudoInv_delay_pos [CompleteLinearOrder α] [DenselyOrdered α]
   · -- `d` lower-bounds the admissible set (`d < t ⇒ d ≤ t`).
     exact le_pseudoInv (fun t ht => le_of_lt ((le_delay_iff d hx t).mp ht))
 
-/-- First-crossing: `(delayE d)⁻¹ x = d` for `0 < x`. -/
-theorem pseudoInv_delayE_pos (d : ℝ≥0∞) {x : ℝ≥0∞} (hx : 0 < x) :
-    pseudoInv (delayE d) x = d :=
+/-- First-crossing: `(delayENN d)⁻¹ x = d` for `0 < x`. -/
+theorem pseudoInv_delayENN_pos (d : ℝ≥0∞) {x : ℝ≥0∞} (hx : 0 < x) :
+    pseudoInv (delayENN d) x = d :=
   pseudoInv_delay_pos d hx
 
-/-- `(delayE d)⁻¹ 0 = 0`. -/
-theorem pseudoInv_delayE_zero (d : ℝ≥0∞) : pseudoInv (delayE d) 0 = 0 :=
-  pseudoInv_bot (delayE d)
+/-- `(delayENN d)⁻¹ 0 = 0`. -/
+theorem pseudoInv_delayENN_zero (d : ℝ≥0∞) : pseudoInv (delayENN d) 0 = 0 :=
+  pseudoInv_bot (delayENN d)
 
 end DeepWiki

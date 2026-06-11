@@ -10,7 +10,7 @@ token-bucket curves over a semiring value type via the domain-polymorphic bases
 `rateV`/`rateLatencyV`/`tokenBucketV` (the `delay`-style pattern). Each
 specializes two ways: the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rate`,
 `rateLatency`, `tokenBucket`, plus `staircase`/`unitStep`), the complete-domain
-`ℝ≥0∞ → ℝ≥0∞` variants (`delayE`, `rateE`/`rateLatencyE`/`tokenBucketE`) used by
+`ℝ≥0∞ → ℝ≥0∞` variants (`delayENN`, `rateENN`/`rateLatencyENN`/`tokenBucketENN`) used by
 the pseudo-inverse catalog, and the `EReal`-valued variants
 (`delayEReal`/`rateEReal`) used by the service-curve stack. Plus the
 `*_zero_eq` base values and `*_coe` real/complete agreements. -/
@@ -62,28 +62,28 @@ theorem le_delay_iff {D V : Type*} [LinearOrder D]
 noncomputable abbrev delayNN (d : ℝ≥0) : ℝ≥0 → ℝ≥0∞ := delay d
 
 /-- Pure-delay curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev delayE (d : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := delay d
+noncomputable abbrev delayENN (d : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := delay d
 
 /-- Pure-delay curve over `ℝ≥0 → EReal`: `0` up to `d`, `⊤` after (the
-`delayNN`/`delayE` sibling for `EReal` values). -/
+`delayNN`/`delayENN` sibling for `EReal` values). -/
 noncomputable abbrev delayEReal (d : ℝ≥0) : ℝ≥0 → EReal := delay d
 
 /-- `delayNN d 0 = 0`. -/
 theorem delayNN_zero_eq (d : ℝ≥0) : delayNN d 0 = 0 := by
   simp [delayNN]
 
-/-- `delayE d 0 = 0`. -/
-theorem delayE_zero_eq (d : ℝ≥0∞) : delayE d 0 = 0 := by
-  simp [delayE]
+/-- `delayENN d 0 = 0`. -/
+theorem delayENN_zero_eq (d : ℝ≥0∞) : delayENN d 0 = 0 := by
+  simp [delayENN]
 
 /-- `delayEReal d 0 = 0`. -/
 theorem delayEReal_zero_eq (d : ℝ≥0) : delayEReal d 0 = 0 :=
   delay_eq_zero d zero_le'
 
-/-- On finite arguments, `delayE ↑d` agrees with `delayNN d`. -/
-theorem delayE_coe (d t : ℝ≥0) :
-    delayE (d : ℝ≥0∞) (t : ℝ≥0∞) = delayNN d t := by
-  simp only [delayE, delayNN, delay_apply, ENNReal.coe_le_coe]; convert rfl
+/-- On finite arguments, `delayENN ↑d` agrees with `delayNN d`. -/
+theorem delayENN_coe (d t : ℝ≥0) :
+    delayENN (d : ℝ≥0∞) (t : ℝ≥0∞) = delayNN d t := by
+  simp only [delayENN, delayNN, delay_apply, ENNReal.coe_le_coe]; convert rfl
 
 /-! ## Polymorphic curve bases
 
@@ -108,7 +108,7 @@ noncomputable def tokenBucketV {V : Type*} [Semiring V] [CompleteLinearOrder V]
 
 `rate` is `rateV` on coerced inputs (defeq). `rateLatency` subtracts in `ℝ≥0`
 *before* coercing (the `(t - T)₊` semantics) — not the post-coercion
-`rateLatencyV` form, so it is its own definition (`rateLatencyE_coe` bridges
+`rateLatencyV` form, so it is its own definition (`rateLatencyENN_coe` bridges
 them). `tokenBucket` takes the `⊓ delayNN 0` meet pointwise on `ℝ≥0`. -/
 
 /-- Constant-rate curve `t ↦ R * t`. -/
@@ -151,13 +151,13 @@ noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 /-! ## Complete-domain variants `ℝ≥0∞ → ℝ≥0∞` (for the pseudo-inverse catalog) -/
 
 /-- Constant-rate curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev rateE (R : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateV R
+noncomputable abbrev rateENN (R : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateV R
 
 /-- Rate-latency curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev rateLatencyE (R T : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateLatencyV R T
+noncomputable abbrev rateLatencyENN (R T : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateLatencyV R T
 
 /-- Token-bucket curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev tokenBucketE (r b : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := tokenBucketV r b
+noncomputable abbrev tokenBucketENN (r b : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := tokenBucketV r b
 
 /-! ## `EReal`-valued variants (for the service-curve stack) -/
 
@@ -173,11 +173,11 @@ noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
 
 /-! ## Agreements and base values -/
 
-/-- `rateLatency` is `rateLatencyE` on coerced inputs (subtraction commutes with
+/-- `rateLatency` is `rateLatencyENN` on coerced inputs (subtraction commutes with
 the `ℝ≥0 → ℝ≥0∞` coercion via `ENNReal.coe_sub`). -/
-theorem rateLatencyE_coe (R T t : ℝ≥0) :
-    rateLatencyE (R : ℝ≥0∞) (T : ℝ≥0∞) (t : ℝ≥0∞) = rateLatency R T t := by
-  rw [rateLatency, rateLatencyE, rateLatencyV, ENNReal.coe_sub]
+theorem rateLatencyENN_coe (R T t : ℝ≥0) :
+    rateLatencyENN (R : ℝ≥0∞) (T : ℝ≥0∞) (t : ℝ≥0∞) = rateLatency R T t := by
+  rw [rateLatency, rateLatencyENN, rateLatencyV, ENNReal.coe_sub]
 
 /-- `rateLatency R T u = ↑(R * (u - T))`. -/
 theorem rateLatency_coe (R T u : ℝ≥0) :

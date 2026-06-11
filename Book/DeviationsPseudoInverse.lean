@@ -7,7 +7,7 @@ where the pseudo-inverse lives. Pointwise, at a finite time the horizontal
 deviation is the first time non-decreasing `g` reaches `f t`, shifted back
 by `t`: `hDevAt f g t = pseudoInv g (f t) - t` (truncated subtraction
 absorbs the `f t ≤ g t` case). Globally the deviations are deconvolutions:
-`hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the unit-rate curve `rateE 1`,
+`hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the unit-rate curve `rateENN 1`,
 proved here, restated alongside `vDev_eq_deconv_zero` from
 `Book.Deviations`. -/
 
@@ -58,20 +58,20 @@ theorem hDevAt_eq_pseudoInv_sub {V : Type*} [LinearOrder V]
   · exact hDevAt_eq_pseudoInv_sub_of_lt hg ht hgt
 
 /-- **The horizontal deviation is a deconvolution**:
-`hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the unit-rate curve `rateE 1`.
+`hDev f g = ((g⁻¹ ∘ f) ⊘ λ₁) 0` with `λ₁` the unit-rate curve `rateENN 1`.
 At the added point `⊤` (absent from the book's `ℝ⁺` domain) the two sides
 need `f ⊤ ≤ g ⊤` — truncated subtraction zeroes the deconvolution term
 there. -/
 theorem hDev_eq_deconv_pseudoInv_zero {V : Type*} [LinearOrder V]
     {f g : ℝ≥0∞ → V} (hg : Monotone g) (htop : f ⊤ ≤ g ⊤) :
-    (hDev f g : ℝ≥0∞) = minDeconv (pseudoInv g ∘ f) (rateE 1) 0 := by
-  have hrate : ∀ s : ℝ≥0∞, rateE 1 s = s := fun s => one_mul s
+    (hDev f g : ℝ≥0∞) = minDeconv (pseudoInv g ∘ f) (rateENN 1) 0 := by
+  have hrate : ∀ s : ℝ≥0∞, rateENN 1 s = s := fun s => one_mul s
   apply le_antisymm
   · refine iSup_le fun t => ?_
     rcases eq_or_ne t ⊤ with rfl | ht
     · exact le_trans (hDevAt_le (d := 0) (by rwa [add_zero])) zero_le'
     · rw [hDevAt_eq_pseudoInv_sub hg ht]
-      have h := sub_le_minDeconv (pseudoInv g ∘ f) (rateE 1) 0 t
+      have h := sub_le_minDeconv (pseudoInv g ∘ f) (rateENN 1) 0 t
       rwa [zero_add, Function.comp_apply, hrate] at h
   · refine minDeconv_le fun s => ?_
     rcases eq_or_ne s ⊤ with rfl | hs
@@ -96,7 +96,7 @@ example {f g : ℝ≥0∞ → ℝ≥0∞} (_hf : Monotone f) (_hg : Monotone g) 
 
 example {f g : ℝ≥0∞ → ℝ≥0∞} (_hf : Monotone f) (hg : Monotone g)
     (htop : f ⊤ ≤ g ⊤) :
-    (hDev f g : ℝ≥0∞) = minDeconv (pseudoInv g ∘ f) (rateE 1) 0 :=
+    (hDev f g : ℝ≥0∞) = minDeconv (pseudoInv g ∘ f) (rateENN 1) 0 :=
   hDev_eq_deconv_pseudoInv_zero hg htop
 
 end DeepWiki
