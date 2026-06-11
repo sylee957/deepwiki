@@ -43,7 +43,7 @@ noncomputable def toRealCurve (f : ℝ≥0 → EReal) : ℝ → ℝ :=
   fun x => (f x.toNNReal).toReal
 
 /-- A finite concave curve has a concave real shadow on `(0, ∞) ⊆ ℝ`. -/
-theorem concaveOn_toRealCurve_of_concaveE
+theorem concaveOn_toRealCurve_of_isConcaveEReal
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : IsFiniteOnPos f) :
     ConcaveOn ℝ (Ioi (0 : ℝ)) (toRealCurve f) := by
@@ -96,13 +96,13 @@ theorem concaveOn_toRealCurve_of_concaveE
   exact hchord
 
 /-- A finite concave curve `f : ℝ≥0 → EReal` is continuous on `(0, ∞)`. -/
-theorem continuousOn_of_concaveE_of_finite
+theorem continuousOn_of_isConcaveEReal_of_finite
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : IsFiniteOnPos f) :
     ContinuousOn f {x : ℝ≥0 | 0 < x} := by
   -- the real shadow is concave, hence continuous, on the open ray `(0, ∞) ⊆ ℝ`
   have hconc : ConcaveOn ℝ (Ioi (0 : ℝ)) (toRealCurve f) :=
-    concaveOn_toRealCurve_of_concaveE f hf hfin
+    concaveOn_toRealCurve_of_isConcaveEReal f hf hfin
   have hRcont : ContinuousOn (toRealCurve f) (Ioi (0 : ℝ)) :=
     hconc.continuousOn isOpen_Ioi
   -- post-compose with the continuous coercion `ℝ → EReal`
@@ -122,8 +122,8 @@ theorem continuousOn_of_concaveE_of_finite
   rw [toRealCurve, Real.toNNReal_coe, hfin.coe_toReal hx0]
 
 /-- `Ioi`-set restatement: a finite concave curve is continuous on `(0, ∞)`. -/
-theorem continuousOn_Ioi_of_concaveE_of_finite
+theorem continuousOn_Ioi_of_isConcaveEReal_of_finite
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : IsFiniteOnPos f) :
     ContinuousOn f (Ioi (0 : ℝ≥0)) :=
-  continuousOn_of_concaveE_of_finite f hf hfin
+  continuousOn_of_isConcaveEReal_of_finite f hf hfin

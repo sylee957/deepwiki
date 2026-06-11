@@ -86,7 +86,7 @@ continuity on `(0, ∞)`, contradicting its jump at `x = 1`. -/
 theorem not_concaveE_ceilCurve : ¬ IsConcaveEReal ceilCurve := by
   intro hconc
   exact not_continuousOn_ceilCurve
-    (continuousOn_of_concaveE_of_finite ceilCurve hconc isFiniteOnPos_ceilCurve)
+    (continuousOn_of_isConcaveEReal_of_finite ceilCurve hconc isFiniteOnPos_ceilCurve)
 
 /-- There is a subadditive, positively-finite curve that is not concave:
 the ceiling curve witnesses subadditive ⟹ concave is false. -/

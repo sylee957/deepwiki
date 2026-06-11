@@ -29,7 +29,7 @@ theorem isConcaveEReal_topCurve : IsConcaveEReal topCurve := by
 /-- A non-negative concave curve with `f 0 = ⊤` is identically `⊤`: the chord
 through the origin at any positive point forces `f x = ⊤`. Hence such an `f`
 equals `topCurve`. -/
-theorem eq_topCurve_of_concaveE_of_zero_top
+theorem eq_topCurve_of_isConcaveEReal_of_zero_top
     {f : ℝ≥0 → EReal} (hf : IsConcaveEReal f) (hnb : IsNeverBot f) (h0 : f 0 = ⊤) :
     f = topCurve := by
   funext x
@@ -75,11 +75,11 @@ theorem IsConcaveEReal.minConv
     IsConcaveEReal (minConv f g) := by
   -- `⊤`-origin dichotomy: handle `f 0 = ⊤` or `g 0 = ⊤` first
   rcases eq_or_ne (f 0) ⊤ with hf0 | hf0
-  · rw [eq_topCurve_of_concaveE_of_zero_top hf hnf.isNeverBot hf0,
+  · rw [eq_topCurve_of_isConcaveEReal_of_zero_top hf hnf.isNeverBot hf0,
       minConv_topCurve_left hng.isNeverBot]
     exact isConcaveEReal_topCurve
   rcases eq_or_ne (g 0) ⊤ with hg0 | hg0
-  · rw [eq_topCurve_of_concaveE_of_zero_top hg hng.isNeverBot hg0,
+  · rw [eq_topCurve_of_isConcaveEReal_of_zero_top hg hng.isNeverBot hg0,
       minConv_topCurve_right hnf.isNeverBot]
     exact isConcaveEReal_topCurve
   -- both origin values finite: name them as reals

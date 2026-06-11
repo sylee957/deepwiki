@@ -239,7 +239,7 @@ theorem minConv_eq_inf_of_null
 /-- A concave `EReal` curve that never takes `−∞` and vanishes at the origin is
 its own sub-additive closure: concavity with `g 0 = 0` gives subadditivity, and
 `subadditiveClosureEReal_eq_self` closes the fixed point. -/
-theorem subadditiveClosureEReal_eq_self_of_concaveE
+theorem subadditiveClosureEReal_eq_self_of_isConcaveEReal
     (g : ℝ≥0 → EReal) (hg : IsNeverBot g) (h0 : g 0 = 0) (hconc : IsConcaveEReal g) :
     subadditiveClosureEReal g = g :=
   subadditiveClosureEReal_eq_self g hg
