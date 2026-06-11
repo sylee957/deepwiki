@@ -418,46 +418,37 @@ theorem isSubCompleteDioid_FPlus :
     split <;> simp
   iSup F hF := fun t => le_iInf (fun i => hF i t)
 
+/-- Monotonicity of the numeric values cuts out a sub-complete-dioid of
+`FminBar`. -/
+theorem isSubCompleteDioid_monotone :
+    IsSubCompleteDioid
+      (fun f : FminBar => Monotone (fun t => (f t).toVal)) where
+  add ha hb := fun _ _ hxy => min_le_min (ha hxy) (hb hxy)
+  mul {a b} ha hb := fun _ _ hxy => by
+    show ((a ⊗ₒ b) _).toVal ≤ ((a ⊗ₒ b) _).toVal
+    rw [mul_toVal, mul_toVal]
+    exact monotone_minConv ha hb hxy
+  eps := fun _ _ _ => le_top
+  one := fun x y hxy => by
+    show ((convUnit x : MinPlusExt)).toVal
+        ≤ ((convUnit y : MinPlusExt)).toVal
+    rw [MinPlusExt.convUnit_toVal,
+      MinPlusExt.convUnit_toVal]
+    split_ifs with hx hy hy
+    · exact le_rfl
+    · exact le_top
+    · exact absurd (le_zero_iff.mp (hy ▸ hxy)) hx
+    · exact le_rfl
+  iSup F hF := fun _ _ hxy =>
+    le_iInf (fun i => (iInf_le _ i).trans ((hF i) hxy))
+
 /-- Non-neg + monotone cut out a sub-complete-dioid. -/
 theorem isSubCompleteDioid_FNondecr :
     IsSubCompleteDioid
       (fun f : FminBar =>
         IsNonneg (fun t => (f t).toVal)
-          ∧ Monotone (fun t => (f t).toVal))
-      where
-  add ha hb :=
-    ⟨fun t => le_min (ha.1 t) (hb.1 t),
-      fun _ _ hxy =>
-        min_le_min (ha.2 hxy) (hb.2 hxy)⟩
-  mul {a b} ha hb := by
-    have hn := IsNonneg.conv ha.1 hb.1
-    have hm := monotone_minConv ha.2 hb.2
-    refine ⟨fun t => ?_, fun _ _ hxy => ?_⟩
-    · show (0 : WithTop (WithBot ℝ)) ≤ ((a ⊗ₒ b) t).toVal
-      rw [mul_toVal]; exact hn t
-    · show ((a ⊗ₒ b) _).toVal ≤ ((a ⊗ₒ b) _).toVal
-      rw [mul_toVal, mul_toVal]; exact hm hxy
-  eps := ⟨fun _ => le_top, fun _ _ _ => le_top⟩
-  one := by
-    refine ⟨fun t => ?_, fun x y hxy => ?_⟩
-    · show (0 : WithTop (WithBot ℝ))
-          ≤ ((convUnit t : MinPlusExt)).toVal
-      rw [MinPlusExt.convUnit_toVal]
-      split <;> simp
-    · show ((convUnit x : MinPlusExt)).toVal
-          ≤ ((convUnit y : MinPlusExt)).toVal
-      rw [MinPlusExt.convUnit_toVal,
-        MinPlusExt.convUnit_toVal]
-      split_ifs with hx hy hy
-      · exact le_rfl
-      · exact le_top
-      · exact absurd (le_zero_iff.mp (hy ▸ hxy)) hx
-      · exact le_rfl
-  iSup F hF :=
-    ⟨fun t => le_iInf (fun i => (hF i).1 t),
-      fun _ _ hxy =>
-        le_iInf (fun i =>
-          (iInf_le _ i).trans ((hF i).2 hxy))⟩
+          ∧ Monotone (fun t => (f t).toVal)) :=
+  isSubCompleteDioid_FPlus.and isSubCompleteDioid_monotone
 
 /-- `CompleteDioid` structure on `FPlus`. -/
 noncomputable instance : CompleteDioid FPlus :=

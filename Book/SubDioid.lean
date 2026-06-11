@@ -60,6 +60,17 @@ theorem IsSubCompleteDioid.toIsSubDioid {T : Type u} [CompleteDioid T]
   eps := h.eps
   one := h.one
 
+/-- Conjunction of sub-complete-dioid predicates is a sub-complete-dioid
+predicate. -/
+theorem IsSubCompleteDioid.and {T : Type u} [CompleteDioid T]
+    {P Q : T → Prop} (hP : IsSubCompleteDioid P) (hQ : IsSubCompleteDioid Q) :
+    IsSubCompleteDioid (fun x => P x ∧ Q x) where
+  add ha hb := ⟨hP.add ha.1 hb.1, hQ.add ha.2 hb.2⟩
+  mul ha hb := ⟨hP.mul ha.1 hb.1, hQ.mul ha.2 hb.2⟩
+  eps := ⟨hP.eps, hQ.eps⟩
+  one := ⟨hP.one, hQ.one⟩
+  iSup f hf := ⟨hP.iSup f fun i => (hf i).1, hQ.iSup f fun i => (hf i).2⟩
+
 /-- `CompleteDioid` on the subtype `{x // P x}` of a closed predicate `P`. -/
 @[reducible] noncomputable def
     IsSubCompleteDioid.toCompleteDioid
