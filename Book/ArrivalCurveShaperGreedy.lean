@@ -77,7 +77,7 @@ theorem coe_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
     EReal.coe_toReal hne_top hne_bot]
 
 /-- `greedyFun A sigma` is nondecreasing. -/
-theorem greedyFun_mono (A : Curve) {sigma : ℝ≥0 → EReal}
+theorem monotone_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0) :
     Monotone (greedyFun A sigma) := by
   intro a b hab
@@ -90,7 +90,7 @@ theorem greedyFun_mono (A : Curve) {sigma : ℝ≥0 → EReal}
       (minConv_curveEReal_ne_top A h0.le b))
 
 /-- `greedyFun A sigma` vanishes at the origin. -/
-theorem greedyFun_zero (A : Curve) {sigma : ℝ≥0 → EReal} (h0 : sigma 0 = 0) :
+theorem isNullAtOrigin_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal} (h0 : sigma 0 = 0) :
     IsNullAtOrigin (greedyFun A sigma) := by
   have hm : minConv (curveEReal A) sigma 0 = 0 :=
     IsNullAtOrigin.conv (curveEReal_zero A) h0
@@ -99,7 +99,7 @@ theorem greedyFun_zero (A : Curve) {sigma : ℝ≥0 → EReal} (h0 : sigma 0 = 0
 
 /-- `greedyFun A sigma` is left-continuous: the convolution is left-continuous
 (`isLeftContinuous_minConv_ereal`), and its values are finite. -/
-theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
+theorem isLeftContinuous_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma) :
     IsLeftContinuous (greedyFun A sigma) := by
@@ -124,8 +124,8 @@ noncomputable def greedyCurve (A : Curve) (sigma : ℝ≥0 → EReal)
     (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma)
     (hpwc : IsPiecewiseContinuous (greedyFun A sigma)) : Curve :=
-  ⟨greedyFun A sigma, greedyFun_mono A hmono h0, greedyFun_zero A h0,
-    hpwc, greedyFun_leftCont A hmono h0 hlc⟩
+  ⟨greedyFun A sigma, monotone_greedyFun A hmono h0, isNullAtOrigin_greedyFun A h0,
+    hpwc, isLeftContinuous_greedyFun A hmono h0 hlc⟩
 
 /-- The greedy curve realizes the convolution:
 `curveEReal (greedyCurve …) = A ∗ sigma`. -/
