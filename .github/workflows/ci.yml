@@ -6,6 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Allow the deploy job to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,14 +34,39 @@ jobs:
 
       - name: Build the library
         # Integrity check: the whole library must compile, warning- and
-        # sorry-free. No artifact is produced or deployed.
+        # sorry-free.
         run: lake build
 
       - name: Build API docs (doc-gen4)
-        # Verify the documentation path still elaborates. Output is left in
-        # .lake/build/doc and not uploaded. doc-gen's final HTML step expects a
-        # references.bib at the doc root, so create an empty one first.
+        # doc-gen's final HTML step expects a references.bib at the doc root,
+        # so create an empty one first. HTML is generated for the Book library
+        # only; the long docInfo extraction over Mathlib feeds cross-reference
+        # data, not published pages.
         run: |
           mkdir -p .lake/build/doc
           touch .lake/build/doc/references.bib
           DOCGEN_SRC=file lake build Book:docs
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .lake/build/doc
+
+  deploy:
+    # Publish the doc-gen4 HTML to GitHub Pages on pushes to main
+    # (and manual dispatches); PR runs stop at the build check.
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time; let an in-progress run finish.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

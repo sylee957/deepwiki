@@ -286,9 +286,12 @@ not just defaults):
   ` 2.lean` copies of chapters (stale Verso versions). They are never imported; if
   they appear untracked, delete them. The editor may keep a stale tab open on a
   deleted one and show phantom LSP errors — close the tab.
-- **CI is build-only (no deploy).** The GitHub Actions workflow
-  (`.github/workflows/ci.yml`) is an integrity check on push/PR to `main`: it runs
-  `lake build` and `DOCGEN_SRC=file lake build Book:docs`, but produces no artifact
-  and does not deploy to Pages. CI uses `lake exe cache get` for Mathlib's prebuilt
-  oleans so only `Book/*.lean` recompiles. If you later want to publish the
-  doc-gen4 HTML, add a Pages upload/deploy step pointing at `.lake/build/doc`.
+- **CI builds and deploys to GitHub Pages.** The GitHub Actions workflow
+  (`.github/workflows/ci.yml`) runs `lake build` and
+  `DOCGEN_SRC=file lake build Book:docs` on push/PR to `main`; on pushes (not
+  PRs) it then publishes `.lake/build/doc` to Pages
+  (https://sylee957.github.io/deepwiki/) via `upload-pages-artifact` +
+  `deploy-pages`. The artifact is small: doc-gen4 renders HTML for the Book
+  library only — its long docInfo pass over Mathlib feeds cross-reference data,
+  not published pages. CI uses `lake exe cache get` for Mathlib's prebuilt
+  oleans so only `Book/*.lean` recompiles.
