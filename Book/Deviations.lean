@@ -93,6 +93,14 @@ theorem hDevAt_le {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
     (hDevAt f g t : R) ≤ (d : R) :=
   iInf_le (fun e : {e : D // f t ≤ g (t + e)} => (↑e.1 : R)) ⟨d, h⟩
 
+/-- Lower-bounding the pointwise deviation: when every admissible shift `d`
+(`f t ≤ g (t + d)`) satisfies `c ≤ d`, also `c ≤ hDevAt f g t`. -/
+theorem le_hDevAt {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
+    [CoeTC D R] {f g : D → V} {t : D} {c : R}
+    (h : ∀ d : D, f t ≤ g (t + d) → c ≤ (d : R)) :
+    c ≤ (hDevAt f g t : R) :=
+  le_iInf fun d => h d.1 d.2
+
 /-- Intro for a right-added deviation: `x ≤ ↑d + y` over all admissible
 shifts `d` gives `x ≤ hDevAt f g t + y`. -/
 theorem le_hDevAt_add {D V : Type*} [Add D] [Preorder V] [CoeTC D ℝ≥0∞]

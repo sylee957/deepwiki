@@ -377,6 +377,17 @@ theorem subadditiveClosureENN_mono {D : Type}
   refine subadditiveClosure_mono (liftMinPlusNN h) (liftMinPlusNN g) ?_ t
   intro r; rw [MinPlusNN.le_iff]; exact hgh r
 
+/-- The numeric closure is the greatest sub-additive minorant: a
+sub-additive `f` with `f 0 = 0` lying below `g` lies below
+`subadditiveClosureENN g`. -/
+theorem le_subadditiveClosureENN_of_isSubadditive {D : Type}
+    [_root_.AddCommMonoid D] {f g : D → ℝ≥0∞}
+    (hsub : IsSubadditive f) (h0 : f 0 = 0) (hfg : ∀ t, f t ≤ g t)
+    (t : D) : f t ≤ subadditiveClosureENN g t :=
+  calc f t = subadditiveClosureENN f t := by
+        rw [subadditiveClosureENN_eq_self f hsub h0]
+    _ ≤ subadditiveClosureENN g t := subadditiveClosureENN_mono f g hfg t
+
 /-- Lift a `WithBot ℝ≥0∞`-valued function into `MaxPlusNN` pointwise. -/
 def liftMaxPlusNN (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
   fun s => ⟨g s⟩
