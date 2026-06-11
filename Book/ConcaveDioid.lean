@@ -23,14 +23,14 @@ concave fact; it is proved without any attainment/left-continuity hypothesis by
 a dichotomy on the (necessarily finite-or-`⊤`) origin value. -/
 
 /-- `topCurve` (constant `⊤ = +∞`) is concave: every chord lands `≤ ⊤`. -/
-theorem isIsConcaveERealReal_topCurve : IsConcaveEReal topCurve := by
+theorem isConcaveEReal_topCurve : IsConcaveEReal topCurve := by
   intro s t p _; exact le_top
 
 /-- A non-negative concave curve with `f 0 = ⊤` is identically `⊤`: the chord
 through the origin at any positive point forces `f x = ⊤`. Hence such an `f`
 equals `topCurve`. -/
 theorem eq_topCurve_of_concaveE_of_zero_top
-    {f : ℝ≥0 → EReal} (hf : IsConcaveEReal f) (hnn : NeverBot f) (h0 : f 0 = ⊤) :
+    {f : ℝ≥0 → EReal} (hf : IsConcaveEReal f) (hnb : IsNeverBot f) (h0 : f 0 = ⊤) :
     f = topCurve := by
   funext x
   show f x = ⊤
@@ -57,7 +57,7 @@ theorem eq_topCurve_of_concaveE_of_zero_top
     -- `≠ ⊥`, so the sum `= ⊤`
     have hmulbot : ((((2 : ℝ≥0)⁻¹ : ℝ≥0) : ℝ) : EReal) * f s ≠ ⊥ := by
       induction hfs : f s with
-      | bot => exact absurd hfs (hnn s)
+      | bot => exact absurd hfs (hnb s)
       | top => rw [EReal.mul_top_of_pos hpos]; simp
       | coe r => rw [← EReal.coe_mul]; exact EReal.coe_ne_bot _
     rw [EReal.add_top_of_ne_bot hmulbot] at hchord
@@ -69,40 +69,40 @@ continuity hypothesis is required: if either origin value is `⊤` that curve is
 `topCurve` (so `minConv` is `topCurve`, concave); otherwise both origin values
 are finite reals and the decomposition `minConv f g = ((f − f 0) ⊓ (g − g 0)) +
 (f 0 + g 0)` exhibits `minConv f g` as a concave meet shifted by a constant. -/
-theorem IsIsConcaveERealReal.minConv
+theorem IsConcaveEReal.minConv
     {f g : ℝ≥0 → EReal} (hf : IsConcaveEReal f) (hg : IsConcaveEReal g)
-    (hnf : BddBelowReal f) (hng : BddBelowReal g) :
+    (hnf : IsBddBelowReal f) (hng : IsBddBelowReal g) :
     IsConcaveEReal (minConv f g) := by
   -- `⊤`-origin dichotomy: handle `f 0 = ⊤` or `g 0 = ⊤` first
   rcases eq_or_ne (f 0) ⊤ with hf0 | hf0
-  · rw [eq_topCurve_of_concaveE_of_zero_top hf hnf.neverBot hf0,
-      minConv_topCurve_left hng.neverBot]
-    exact isIsConcaveERealReal_topCurve
+  · rw [eq_topCurve_of_concaveE_of_zero_top hf hnf.isNeverBot hf0,
+      minConv_topCurve_left hng.isNeverBot]
+    exact isConcaveEReal_topCurve
   rcases eq_or_ne (g 0) ⊤ with hg0 | hg0
-  · rw [eq_topCurve_of_concaveE_of_zero_top hg hng.neverBot hg0,
-      minConv_topCurve_right hnf.neverBot]
-    exact isIsConcaveERealReal_topCurve
+  · rw [eq_topCurve_of_concaveE_of_zero_top hg hng.isNeverBot hg0,
+      minConv_topCurve_right hnf.isNeverBot]
+    exact isConcaveEReal_topCurve
   -- both origin values finite: name them as reals
   set a : ℝ := (f 0).toReal with hadef
   set b : ℝ := (g 0).toReal with hbdef
-  have ha : f 0 = (a : EReal) := (EReal.coe_toReal hf0 (hnf.neverBot 0)).symm
-  have hb : g 0 = (b : EReal) := (EReal.coe_toReal hg0 (hng.neverBot 0)).symm
+  have ha : f 0 = (a : EReal) := (EReal.coe_toReal hf0 (hnf.isNeverBot 0)).symm
+  have hb : g 0 = (b : EReal) := (EReal.coe_toReal hg0 (hng.isNeverBot 0)).symm
   rw [minConv_eq_inf_sub_add f g a b ha hb hf hg]
   -- the meet of the two finite shifts is concave; adding the constant keeps it so
   have hcm : IsConcaveEReal
       ((f - Function.const ℝ≥0 (a : EReal)) ⊓ (g - Function.const ℝ≥0 (b : EReal))) :=
-    IsConcaveEReal.inf _ _ (IsIsConcaveERealReal.sub_const f hf a) (IsIsConcaveERealReal.sub_const g hg b)
+    IsConcaveEReal.inf _ _ (IsConcaveEReal.sub_const f hf a) (IsConcaveEReal.sub_const g hg b)
   have hconst : Function.const ℝ≥0 ((a : EReal) + (b : EReal))
       = Function.const ℝ≥0 (((a + b : ℝ)) : EReal) := by
     rw [EReal.coe_add]
   rw [hconst]
-  exact IsConcaveEReal.add _ _ hcm (isIsConcaveERealReal_const (a + b))
+  exact IsConcaveEReal.add _ _ hcm (isConcaveEReal_const (a + b))
 
 /-- `convUnitEReal` (`0` at the origin, `⊤` elsewhere) is concave. The only
 non-trivial chord is one landing on the origin, which forces both nonzero-weight
 endpoints to the origin, where the chord value is `0`; the `EReal` rule
 `0 * ⊤ = 0` settles the boundary weights `p ∈ {0, 1}`. -/
-theorem isIsConcaveERealReal_convUnitEReal : IsConcaveEReal convUnitEReal := by
+theorem isConcaveEReal_convUnitEReal : IsConcaveEReal convUnitEReal := by
   intro s t p hp
   -- the convex-combination point
   show ((p : ℝ) : EReal) * convUnitEReal s
@@ -141,14 +141,14 @@ Instantiating the `IsSubDioid` builder (from `Book.SubDioid`) on the concave
 non-negative curves. -/
 
 /-- The concave non-negative curves are closed under the `ECurve` operations:
-`⊕ₒ` (`IsConcaveEReal.inf`), `⊗ₒ` (`IsIsConcaveERealReal.minConv`), `εₒ = topCurve`
-(`isIsConcaveERealReal_topCurve`), `eₒ = convUnitEReal` (`isIsConcaveERealReal_convUnitEReal`). -/
+`⊕ₒ` (`IsConcaveEReal.inf`), `⊗ₒ` (`IsConcaveEReal.minConv`), `εₒ = topCurve`
+(`isConcaveEReal_topCurve`), `eₒ = convUnitEReal` (`isConcaveEReal_convUnitEReal`). -/
 theorem isSubDioid_concaveE :
     IsSubDioid (fun a : ECurve => IsConcaveEReal a.1) where
   add ha hb := IsConcaveEReal.inf _ _ ha hb
-  mul {a b} ha hb := IsIsConcaveERealReal.minConv ha hb a.2 b.2
-  eps := isIsConcaveERealReal_topCurve
-  one := isIsConcaveERealReal_convUnitEReal
+  mul {a b} ha hb := IsConcaveEReal.minConv ha hb a.2 b.2
+  eps := isConcaveEReal_topCurve
+  one := isConcaveEReal_convUnitEReal
 
 /-- The (min,+) Dioid of **concave** non-negative `EReal` curves. -/
 noncomputable instance : Algebra.Dioid {a : ECurve // IsConcaveEReal a.1} :=

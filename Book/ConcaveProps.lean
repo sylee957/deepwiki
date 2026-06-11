@@ -141,7 +141,7 @@ theorem iInf_add_coe {ι : Type*} [Nonempty ι] (u : ι → EReal) (c : ℝ) :
 
 /-- A finite-constant curve `Function.const _ ↑c` is concave: its chord weights
 sum to `1`, so every chord equals `↑c` (concavity holds with equality). -/
-theorem isIsConcaveERealReal_const (c : ℝ) : IsConcaveEReal (Function.const ℝ≥0 (c : EReal)) := by
+theorem isConcaveEReal_const (c : ℝ) : IsConcaveEReal (Function.const ℝ≥0 (c : EReal)) := by
   intro s t p hp
   show ((p : ℝ) : EReal) * (c:EReal) + (((1 - p : ℝ≥0) : ℝ) : EReal) * (c:EReal) ≤ (c:EReal)
   rw [← EReal.coe_mul, ← EReal.coe_mul, ← EReal.coe_add]
@@ -154,18 +154,18 @@ theorem isIsConcaveERealReal_const (c : ℝ) : IsConcaveEReal (Function.const �
 
 /-- Subtracting a finite real constant preserves concavity: `f − const ↑a`
 is concave when `f` is (it is `f` plus the concave constant `const ↑(−a)`). -/
-theorem IsIsConcaveERealReal.sub_const (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f) (a : ℝ) :
+theorem IsConcaveEReal.sub_const (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f) (a : ℝ) :
     IsConcaveEReal (f - Function.const ℝ≥0 (a:EReal)) := by
   have : (f - Function.const ℝ≥0 (a:EReal))
       = f + Function.const ℝ≥0 ((-a:ℝ):EReal) := by
     funext x; show f x - (a:EReal) = f x + ((-a:ℝ):EReal); rw [EReal.coe_neg]; rfl
   rw [this]
-  exact IsConcaveEReal.add f (Function.const ℝ≥0 ((-a:ℝ):EReal)) hf (isIsConcaveERealReal_const (-a))
+  exact IsConcaveEReal.add f (Function.const ℝ≥0 ((-a:ℝ):EReal)) hf (isConcaveEReal_const (-a))
 
 /-- Subtracting a finite real constant preserves finiteness on the positive
-ray: `f − const ↑a` is `FiniteOnPos` when `f` is. -/
-theorem FiniteOnPos_sub_const (f : ℝ≥0 → EReal) (hf : FiniteOnPos f) (a : ℝ) :
-    FiniteOnPos (f - Function.const ℝ≥0 (a:EReal)) := by
+ray: `f − const ↑a` is `IsFiniteOnPos` when `f` is. -/
+theorem IsFiniteOnPos.sub_const {f : ℝ≥0 → EReal} (hf : IsFiniteOnPos f) (a : ℝ) :
+    IsFiniteOnPos (f - Function.const ℝ≥0 (a:EReal)) := by
   intro x hx
   show f x - (a:EReal) ≠ ⊤ ∧ f x - (a:EReal) ≠ ⊥
   rw [← hf.coe_toReal hx, ← EReal.coe_sub]
@@ -195,7 +195,7 @@ theorem minConv_eq_inf_sub_add
   have hm0 : f' 0 ⊓ g' 0 = 0 := by rw [hf'0, hg'0, inf_idem]
   have hsub : IsSubadditive (fun x => f' x ⊓ g' x) :=
     IsConcaveEReal.isSubadditive _
-      (IsConcaveEReal.inf f' g' (IsIsConcaveERealReal.sub_const f hf a) (IsIsConcaveERealReal.sub_const g hg b))
+      (IsConcaveEReal.inf f' g' (IsConcaveEReal.sub_const f hf a) (IsConcaveEReal.sub_const g hg b))
       (le_of_eq hm0.symm)
   -- per split: `f u + g s = (f' u + g' s) + (a + b)`, finite constants pulled out
   have hsummand : ∀ u s : ℝ≥0, f u + g s = (f' u + g' s) + ((a:EReal) + (b:EReal)) := by
@@ -240,7 +240,7 @@ theorem minConv_eq_inf_of_null
 its own sub-additive closure: concavity with `g 0 = 0` gives subadditivity, and
 `subadditiveClosureEReal_eq_self` closes the fixed point. -/
 theorem subadditiveClosureEReal_eq_self_of_concaveE
-    (g : ℝ≥0 → EReal) (hg : NeverBot g) (h0 : g 0 = 0) (hconc : IsConcaveEReal g) :
+    (g : ℝ≥0 → EReal) (hg : IsNeverBot g) (h0 : g 0 = 0) (hconc : IsConcaveEReal g) :
     subadditiveClosureEReal g = g :=
   subadditiveClosureEReal_eq_self g hg
     (IsConcaveEReal.isSubadditive g hconc (le_of_eq h0.symm)) h0

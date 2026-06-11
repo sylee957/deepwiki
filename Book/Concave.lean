@@ -28,12 +28,12 @@ def IsConcaveEReal (f : ℝ≥0 → EReal) : Prop :=
 
 /-- A curve `f : ℝ≥0 → EReal` is finite on the positive ray: `f x ≠ ⊤` and
 `f x ≠ ⊥` for every `x > 0`. -/
-def FiniteOnPos (f : ℝ≥0 → EReal) : Prop :=
+def IsFiniteOnPos (f : ℝ≥0 → EReal) : Prop :=
   ∀ x : ℝ≥0, 0 < x → f x ≠ ⊤ ∧ f x ≠ ⊥
 
-/-- For `FiniteOnPos f` and `0 < x`, the real reading round-trips:
+/-- For `IsFiniteOnPos f` and `0 < x`, the real reading round-trips:
 `(((f x).toReal : ℝ) : EReal) = f x`. -/
-theorem FiniteOnPos.coe_toReal {f : ℝ≥0 → EReal} (hfin : FiniteOnPos f)
+theorem IsFiniteOnPos.coe_toReal {f : ℝ≥0 → EReal} (hfin : IsFiniteOnPos f)
     {x : ℝ≥0} (hx : 0 < x) : (((f x).toReal : ℝ) : EReal) = f x :=
   EReal.coe_toReal (hfin x hx).1 (hfin x hx).2
 
@@ -45,7 +45,7 @@ noncomputable def toRealCurve (f : ℝ≥0 → EReal) : ℝ → ℝ :=
 /-- A finite concave curve has a concave real shadow on `(0, ∞) ⊆ ℝ`. -/
 theorem concaveOn_toRealCurve_of_concaveE
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
-    (hfin : FiniteOnPos f) :
+    (hfin : IsFiniteOnPos f) :
     ConcaveOn ℝ (Ioi (0 : ℝ)) (toRealCurve f) := by
   refine ⟨convex_Ioi 0, ?_⟩
   intro x hx y hy a b ha hb hab
@@ -98,7 +98,7 @@ theorem concaveOn_toRealCurve_of_concaveE
 /-- A finite concave curve `f : ℝ≥0 → EReal` is continuous on `(0, ∞)`. -/
 theorem continuousOn_of_concaveE_of_finite
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
-    (hfin : FiniteOnPos f) :
+    (hfin : IsFiniteOnPos f) :
     ContinuousOn f {x : ℝ≥0 | 0 < x} := by
   -- the real shadow is concave, hence continuous, on the open ray `(0, ∞) ⊆ ℝ`
   have hconc : ConcaveOn ℝ (Ioi (0 : ℝ)) (toRealCurve f) :=
@@ -124,6 +124,6 @@ theorem continuousOn_of_concaveE_of_finite
 /-- `Ioi`-set restatement: a finite concave curve is continuous on `(0, ∞)`. -/
 theorem continuousOn_Ioi_of_concaveE_of_finite
     (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
-    (hfin : FiniteOnPos f) :
+    (hfin : IsFiniteOnPos f) :
     ContinuousOn f (Ioi (0 : ℝ≥0)) :=
   continuousOn_of_concaveE_of_finite f hf hfin

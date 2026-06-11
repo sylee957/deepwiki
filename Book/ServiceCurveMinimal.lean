@@ -47,7 +47,7 @@ theorem curveEReal_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveEReal
   isNonneg_liftEReal ⇑A t
 
 /-- `curveEReal A` is never `⊥`: each value is a real coercion. -/
-theorem curveEReal_neverBot (A : Curve) : NeverBot (curveEReal A) :=
+theorem isNeverBot_curveEReal (A : Curve) : IsNeverBot (curveEReal A) :=
   fun _ => EReal.coe_ne_bot _
 
 /-- `curveEReal A 0 = 0`. -/

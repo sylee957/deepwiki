@@ -90,11 +90,11 @@ theorem delayEReal_zero_eq_convUnitEReal :
   simp [convUnitEReal]
 
 /-- `δ₀` is a unit on curves: `A ∗ δ₀ = A`, via `minConv_convUnitEReal_right`
-(`curveEReal A` is real-valued, hence `NeverBot`). -/
+(`curveEReal A` is real-valued, hence `IsNeverBot`). -/
 theorem minConv_delayEReal_zero (A : Curve) :
     minConv (curveEReal A) (delayEReal 0) = curveEReal A := by
   rw [delayEReal_zero_eq_convUnitEReal]
-  exact minConv_convUnitEReal_right (curveEReal_neverBot A)
+  exact minConv_convUnitEReal_right (isNeverBot_curveEReal A)
 
 /-- Every causal relation — in particular every server — offers the maximal
 service curve `δ₀`: causality gives `D ≤ A = A ∗ δ₀`. -/

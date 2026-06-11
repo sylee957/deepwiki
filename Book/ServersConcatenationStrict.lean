@@ -216,8 +216,8 @@ theorem comp_minimalServiceRel_lt_delay_rate :
       < minimalServiceRel (minConv (delayEReal 3) (rateEReal 1)) :=
   lt_of_le_not_ge
     (comp_minimalServiceRel_le
-      (isNonneg_delayEReal 3).bddBelowReal
-      (isNonneg_rateEReal 1).bddBelowReal)
+      (isNonneg_delayEReal 3).isBddBelowReal
+      (isNonneg_rateEReal 1).isBddBelowReal)
     (fun hle => witness_not_mem_comp
       (hle _ _ witness_mem_minimalServiceRel))
 

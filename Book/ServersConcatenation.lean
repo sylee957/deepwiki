@@ -76,13 +76,13 @@ theorem IsServer.compPow {S : Curve → Curve → Prop} (h : IsServer S) :
 
 /-! ## Concatenation of servers in a convolution
 Composing the two offers through the intermediate curve by isotony, then
-reassociating the convolution onto the input. `BddBelowReal` keeps the
+reassociating the convolution onto the input. `IsBddBelowReal` keeps the
 `EReal` convolution associative (no `(+∞) + (−∞)` collision; the book's
 curves are nonnegative, hence bounded below). -/
 
 /-- `curveEReal A` is bounded below by a real (curves are nonnegative). -/
-theorem bddBelowReal_curveEReal (A : Curve) : BddBelowReal (curveEReal A) :=
-  (isNonneg_liftEReal ⇑A).bddBelowReal
+theorem isBddBelowReal_curveEReal (A : Curve) : IsBddBelowReal (curveEReal A) :=
+  (isNonneg_liftEReal ⇑A).isBddBelowReal
 
 /-- **Concatenated servers offer the convolution of their min-plus service
 curves**: if `S₁` offers `β₁` and `S₂` offers `β₂`, the concatenation
@@ -90,12 +90,12 @@ curves**: if `S₁` offers `β₁` and `S₂` offers `β₂`, the concatenation
 theorem IsMinimalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
     {β₁ β₂ : ℝ≥0 → EReal}
     (h₁ : IsMinimalServiceCurve β₁ S₁) (h₂ : IsMinimalServiceCurve β₂ S₂)
-    (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
+    (hb₁ : IsBddBelowReal β₁) (hb₂ : IsBddBelowReal β₂) :
     IsMinimalServiceCurve (minConv β₁ β₂) (Relation.Comp S₁ S₂) := by
   rintro A C ⟨B, hAB, hBC⟩
   calc minConv (curveEReal A) (minConv β₁ β₂)
       = minConv (minConv (curveEReal A) β₁) β₂ :=
-        (minConv_assoc (bddBelowReal_curveEReal A) hb₁ hb₂).symm
+        (minConv_assoc (isBddBelowReal_curveEReal A) hb₁ hb₂).symm
     _ ≤ minConv (curveEReal B) β₂ := fun t =>
         minConv_le_minConv (h₁ A B hAB) (fun _ => le_rfl) t
     _ ≤ curveEReal C := h₂ B C hBC
@@ -103,7 +103,7 @@ theorem IsMinimalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
 /-- The largest-relation form of the concatenation theorem:
 `Smp(β₂) ∘ Smp(β₁) ⊆ Smp(β₁ ∗ β₂)`. -/
 theorem comp_minimalServiceRel_le {β₁ β₂ : ℝ≥0 → EReal}
-    (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
+    (hb₁ : IsBddBelowReal β₁) (hb₂ : IsBddBelowReal β₂) :
     Relation.Comp (minimalServiceRel β₁) (minimalServiceRel β₂)
       ≤ minimalServiceRel (minConv β₁ β₂) := by
   rintro A C ⟨B, hAB, hBC⟩
@@ -117,7 +117,7 @@ the convolution, `D ≤ A ∗ β` composing through the intermediate output. -/
 theorem IsMaximalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
     {β₁ β₂ : ℝ≥0 → EReal}
     (h₁ : IsMaximalServiceCurve β₁ S₁) (h₂ : IsMaximalServiceCurve β₂ S₂)
-    (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
+    (hb₁ : IsBddBelowReal β₁) (hb₂ : IsBddBelowReal β₂) :
     IsMaximalServiceCurve (minConv β₁ β₂) (Relation.Comp S₁ S₂) := by
   rintro A C ⟨B, hAB, hBC⟩
   calc curveEReal C
@@ -125,12 +125,12 @@ theorem IsMaximalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
     _ ≤ minConv (minConv (curveEReal A) β₁) β₂ := fun t =>
         minConv_le_minConv (h₁ A B hAB) (fun _ => le_rfl) t
     _ = minConv (curveEReal A) (minConv β₁ β₂) :=
-        minConv_assoc (bddBelowReal_curveEReal A) hb₁ hb₂
+        minConv_assoc (isBddBelowReal_curveEReal A) hb₁ hb₂
 
 /-- The largest-relation form for maximal service curves:
 `Smax(β₂) ∘ Smax(β₁) ⊆ Smax(β₁ ∗ β₂)`. -/
 theorem comp_maximalServiceRel_le {β₁ β₂ : ℝ≥0 → EReal}
-    (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
+    (hb₁ : IsBddBelowReal β₁) (hb₂ : IsBddBelowReal β₂) :
     Relation.Comp (maximalServiceRel β₁) (maximalServiceRel β₂)
       ≤ maximalServiceRel (minConv β₁ β₂) :=
   (isMaximalServiceCurve_maximalServiceRel β₁).comp
@@ -162,7 +162,7 @@ service curves: `Smax(β₂) ∘ Smax(β₁) ⊆ Smax(β₁ ∗ β₂)`. The con
 is commutative but the composition is not — the inclusions can be strict,
 so the convolution does not exactly model the composition. -/
 example {β₁ β₂ : ℝ≥0 → EReal}
-    (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
+    (hb₁ : IsBddBelowReal β₁) (hb₂ : IsBddBelowReal β₂) :
     Relation.Comp (minimalServiceRel β₁) (minimalServiceRel β₂)
         ≤ minimalServiceRel (minConv β₁ β₂) ∧
       Relation.Comp (maximalServiceRel β₁) (maximalServiceRel β₂)

@@ -28,7 +28,7 @@ theorem isSubadditive_ceilCurve : IsSubadditive ceilCurve := by
   exact hle
 
 /-- `ceilCurve` is finite on `(0, ∞)`: a coerced `ℕ` is neither `⊤` nor `⊥`. -/
-theorem finiteOnPos_ceilCurve : FiniteOnPos ceilCurve := by
+theorem isFiniteOnPos_ceilCurve : IsFiniteOnPos ceilCurve := by
   intro x _
   exact ⟨EReal.natCast_ne_top _, EReal.natCast_ne_bot _⟩
 
@@ -86,13 +86,13 @@ continuity on `(0, ∞)`, contradicting its jump at `x = 1`. -/
 theorem not_concaveE_ceilCurve : ¬ IsConcaveEReal ceilCurve := by
   intro hconc
   exact not_continuousOn_ceilCurve
-    (continuousOn_of_concaveE_of_finite ceilCurve hconc finiteOnPos_ceilCurve)
+    (continuousOn_of_concaveE_of_finite ceilCurve hconc isFiniteOnPos_ceilCurve)
 
 /-- There is a subadditive, positively-finite curve that is not concave:
 the ceiling curve witnesses subadditive ⟹ concave is false. -/
 theorem exists_subadditive_not_concaveE :
-    ∃ f : ℝ≥0 → EReal, IsSubadditive f ∧ FiniteOnPos f ∧ ¬ IsConcaveEReal f :=
-  ⟨ceilCurve, isSubadditive_ceilCurve, finiteOnPos_ceilCurve,
+    ∃ f : ℝ≥0 → EReal, IsSubadditive f ∧ IsFiniteOnPos f ∧ ¬ IsConcaveEReal f :=
+  ⟨ceilCurve, isSubadditive_ceilCurve, isFiniteOnPos_ceilCurve,
     not_concaveE_ceilCurve⟩
 
 /-- Subadditive does not imply concave: the implication fails on `ℝ≥0 → EReal`,

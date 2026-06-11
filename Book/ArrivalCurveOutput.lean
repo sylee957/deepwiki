@@ -408,7 +408,7 @@ example {S : Curve → Curve → Prop} {sigma : ℝ≥0 → EReal}
       IsMinimalArrivalBound (liftENN ⇑D)
         (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
   fun _ hp => by
-    rw [subadditiveClosureEReal_eq_self sigma hnns.bddBelowReal.neverBot
+    rw [subadditiveClosureEReal_eq_self sigma hnns.isBddBelowReal.isNeverBot
       hsub h0]
     exact
       ⟨isMaximalArrivalBound_output_of_isGreedyShaper hgr hnns hsub hp harru,

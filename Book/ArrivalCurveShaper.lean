@@ -14,9 +14,9 @@ open scoped Classical NNReal
 /-! ## Allowing an arrival curve, on `EReal` outputs -/
 
 /-- Allowing `sigma` gives the increment bound for every convolution power
-`sigmaⁿ`, for `NeverBot f` and nonnegative `sigma`. -/
+`sigmaⁿ`, for `IsNeverBot f` and nonnegative `sigma`. -/
 theorem increment_convPowEReal_of_isMaximalArrivalBound
-    {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma)
+    {f sigma : ℝ≥0 → EReal} (hf : IsNeverBot f) (hnn : IsNonneg sigma)
     (h : IsMaximalArrivalBound f sigma) (n : ℕ) (u s : ℝ≥0) :
     f (u + s) ≤ f u + convPowEReal sigma n s := by
   induction n generalizing u s with
@@ -35,21 +35,21 @@ theorem increment_convPowEReal_of_isMaximalArrivalBound
         _ = f u + (convPowEReal sigma k a + sigma b) := add_assoc _ _ _
 
 /-- `f` allows the sub-additive closure `sigma⋆` iff it allows `sigma`
-(`NeverBot f`, nonnegative `sigma`). -/
+(`IsNeverBot f`, nonnegative `sigma`). -/
 theorem isMaximalArrivalBound_subadditiveClosureEReal_iff
-    {f sigma : ℝ≥0 → EReal} (hf : NeverBot f) (hnn : IsNonneg sigma) :
+    {f sigma : ℝ≥0 → EReal} (hf : IsNeverBot f) (hnn : IsNonneg sigma) :
     IsMaximalArrivalBound f (subadditiveClosureEReal sigma) ↔
       IsMaximalArrivalBound f sigma := by
   constructor
   · intro h t
     refine le_trans (h t) (minConv_le_minConv (fun _ => le_rfl)
       (fun s => subadditiveClosureEReal_le sigma
-        hnn.bddBelowReal.neverBot s) t)
+        hnn.isBddBelowReal.isNeverBot s) t)
   · intro h
     refine (isMaximalArrivalBound_iff_increment _ _).mpr (fun u s => ?_)
     show f (u + s) ≤ f u + subadditiveClosureEReal sigma s
     have hbot : (⨅ n : ℕ, convPowEReal sigma n s) ≠ ⊥ :=
-      subadditiveClosureEReal_neverBot hnn s
+      subadditiveClosureEReal_isNeverBot hnn s
     refine le_trans (le_iInf (fun n => ?_)) (iInf_add_le_add_iInf (hf u) hbot)
     exact increment_convPowEReal_of_isMaximalArrivalBound hf hnn h n u s
 
@@ -115,7 +115,7 @@ theorem isShaper_top (S : Curve → Curve → Prop) :
     IsShaper (⊤ : ℝ≥0 → EReal) S := by
   intro A D _
   refine fun t => le_minConv fun u s _ => ?_
-  rw [Pi.top_apply, EReal.add_top_of_ne_bot (curveEReal_neverBot D u)]
+  rw [Pi.top_apply, EReal.add_top_of_ne_bot (isNeverBot_curveEReal D u)]
   exact le_top
 
 /-! ## Properties of shapers -/
@@ -141,7 +141,7 @@ theorem IsShaper.closure {S : Curve → Curve → Prop} {sigma : ℝ≥0 → ERe
     IsShaper (subadditiveClosureEReal sigma) S :=
   fun A D hp =>
     (isMaximalArrivalBound_subadditiveClosureEReal_iff
-      (curveEReal_neverBot D) hnn).mpr (hS A D hp)
+      (isNeverBot_curveEReal D) hnn).mpr (hS A D hp)
 
 /-- Shaping to nonnegative `sigma` and to its sub-additive closure `sigma⋆`
 coincide: `shaperRel sigma = shaperRel sigma⋆`. -/
@@ -150,7 +150,7 @@ theorem shaperRel_closure {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
   funext A D
   apply propext
   have hiff := isMaximalArrivalBound_subadditiveClosureEReal_iff
-    (curveEReal_neverBot D) hnn
+    (isNeverBot_curveEReal D) hnn
   exact ⟨fun hp => ⟨hp.1, hiff.mpr hp.2⟩, fun hp => ⟨hp.1, hiff.mp hp.2⟩⟩
 
 /-! ## A shaper offers a maximal service curve -/

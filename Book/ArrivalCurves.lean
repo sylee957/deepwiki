@@ -65,7 +65,7 @@ theorem isMaximalArrivalBound_iff_increment {T : Type*} [Add T]
 
 /-- A sufficient increment condition for a minimal arrival curve: if
 `A t + α d ≤ A (t + d)` for all `t, d`, then `A ≥ A ⊼ α`. This direction holds
-unconditionally on `ℝ≥0`; the converse needs `MaxConvBddAbove` (see
+unconditionally on `ℝ≥0`; the converse needs `IsMaxConvBddAbove` (see
 `isMinimalArrivalBound_iff_increment_of_bddAbove`), since otherwise the `ℝ≥0`
 supremum is junk `0` and `A ≥ A ⊼ α` holds vacuously while the increment bound
 may fail. -/
@@ -77,16 +77,16 @@ theorem isMinimalArrivalBound_of_increment (A α : ℝ≥0 → ℝ≥0)
 /-- The max-plus convolution family `{A u + α s | u + s = t}` is bounded above
 for every `t` — the condition making the `ℝ≥0` supremum `A ⊼ α` well-defined
 (not junk), needed for the converse of the increment characterization. -/
-def MaxConvBddAbove (A α : ℝ≥0 → ℝ≥0) : Prop :=
+def IsMaxConvBddAbove (A α : ℝ≥0 → ℝ≥0) : Prop :=
   ∀ t : ℝ≥0, BddAbove (Set.range
     (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} => A p.1.1 + α p.1.2))
 
-/-- Equivalent definition of a minimal arrival curve, under `MaxConvBddAbove`:
+/-- Equivalent definition of a minimal arrival curve, under `IsMaxConvBddAbove`:
 `A ≥ A ⊼ α` holds iff the increment bound `A t + α d ≤ A (t + d)` holds for all
 `t, d`. The bound on the convolution family makes the supremum well-defined, so
 each term lies below it. -/
 theorem isMinimalArrivalBound_iff_increment_of_bddAbove
-    (A α : ℝ≥0 → ℝ≥0) (hbdd : MaxConvBddAbove A α) :
+    (A α : ℝ≥0 → ℝ≥0) (hbdd : IsMaxConvBddAbove A α) :
     IsMinimalArrivalBound A α ↔ ∀ t d : ℝ≥0, A t + α d ≤ A (t + d) :=
   ⟨fun h t d => (le_ciSup (hbdd (t + d)) ⟨(t, d), rfl⟩).trans (h (t + d)),
     isMinimalArrivalBound_of_increment A α⟩
@@ -94,8 +94,8 @@ theorem isMinimalArrivalBound_iff_increment_of_bddAbove
 /-- When `A` and `α` are non-decreasing, the max-plus convolution family at `t`
 is bounded above by `A t + α t` (each split has `u, s ≤ t`). Cumulative `A` and
 `α ∈ ℱ↑` are non-decreasing, so this holds in the book's setting. -/
-theorem maxConvBddAbove_of_monotone (A α : ℝ≥0 → ℝ≥0)
-    (hA : Monotone A) (hα : Monotone α) : MaxConvBddAbove A α := by
+theorem isMaxConvBddAbove_of_monotone (A α : ℝ≥0 → ℝ≥0)
+    (hA : Monotone A) (hα : Monotone α) : IsMaxConvBddAbove A α := by
   intro t
   refine ⟨A t + α t, ?_⟩
   rintro x ⟨⟨⟨u, s⟩, rfl⟩, rfl⟩
@@ -103,12 +103,12 @@ theorem maxConvBddAbove_of_monotone (A α : ℝ≥0 → ℝ≥0)
 
 /-- Equivalent definition of a minimal arrival curve for non-decreasing `A`, `α`:
 `A ≥ A ⊼ α` holds iff `A t + α d ≤ A (t + d)` for all `t, d`. Monotonicity bounds
-the max-plus convolution, discharging `MaxConvBddAbove`. -/
+the max-plus convolution, discharging `IsMaxConvBddAbove`. -/
 theorem isMinimalArrivalBound_iff_increment_of_monotone
     (A α : ℝ≥0 → ℝ≥0) (hA : Monotone A) (hα : Monotone α) :
     IsMinimalArrivalBound A α ↔ ∀ t d : ℝ≥0, A t + α d ≤ A (t + d) :=
   isMinimalArrivalBound_iff_increment_of_bddAbove A α
-    (maxConvBddAbove_of_monotone A α hA hα)
+    (isMaxConvBddAbove_of_monotone A α hA hα)
 
 /-! ## Crossing of one curve below another
 The set of positive times where a curve falls to or below another — for an
