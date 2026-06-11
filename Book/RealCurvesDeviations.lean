@@ -163,17 +163,24 @@ theorem hDevENN_tokenBucket_delay (r b d : ℝ≥0)
     (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
     (by exact_mod_cast hb)
 
-/-- Admissibility `tb ≤ βRT(t+d)` gives `r*t+b ≤ R*((t+d)-T)`. -/
-theorem beta_admissible_imp
-    (r b R T t d : ℝ≥0) (ht : t ≠ 0)
+/-- Real reading of admissibility: `tokenBucket r b t ≤ rateLatency R T (t + d)`
+gives `r*t + b ≤ R*(t + d - T)` over `ℝ` (`0 < b`, `t ≠ 0`). -/
+theorem tokenBucket_le_rateLatency_real
+    (r b R T t d : ℝ≥0) (hb : 0 < b) (ht : t ≠ 0)
     (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
-    (r*t+b : ℝ≥0) ≤ R*((t+d)-T) := by
+    (r:ℝ)*t + b ≤ (R:ℝ)*((t:ℝ) + d - T) := by
   rw [tokenBucket_coe_of_ne r b ht, rateLatency_coe,
-    ENNReal.coe_le_coe] at h
-  exact h
+    ENNReal.coe_le_coe, ← NNReal.coe_le_coe] at h
+  push_cast [NNReal.coe_sub_def] at h
+  rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
+  · rw [max_eq_right hle] at h
+    have hbb : (0:ℝ) < b := by exact_mod_cast hb
+    linarith [mul_nonneg r.coe_nonneg t.coe_nonneg]
+  · rwa [max_eq_left hle] at h
 
-/-- Shift `d* = T + b/R` is admissible (`0 < R`, `r ≤ R`). -/
-theorem dstar_admissible (r b R T t : ℝ≥0)
+/-- The shift `T + b/R` is admissible:
+`tokenBucket r b t ≤ rateLatency R T (t + (T + b/R))` when `0 < R`, `r ≤ R`. -/
+theorem tokenBucket_le_rateLatency_shift (r b R T t : ℝ≥0)
     (hR : 0 < R) (hrR : r ≤ R) :
     tokenBucket r b t
       ≤ rateLatency R T (t + (T + b/R)) := by
@@ -196,33 +203,24 @@ theorem hDevENN_tokenBucket_rateLatency_le
     (r b R T : ℝ≥0) (hR : 0 < R) (hrR : r ≤ R) :
     hDevENN (tokenBucket r b) (rateLatency R T)
       ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
-  unfold hDevENN hDev
-  refine iSup_le (fun t => ?_)
-  unfold hDevAt
-  exact iInf_le_of_le
-    ⟨T + b/R, dstar_admissible r b R T t hR hrR⟩
-    (le_refl _)
+  refine hDev_le fun t => ?_
+  exact hDevAt_le (tokenBucket_le_rateLatency_shift r b R T t hR hrR)
 
-/-- Admissible shift lower bound: `R*T + b ≤ R*d + (R-r)*t`. -/
-theorem dlb (r b R T t d : ℝ≥0) (hb : 0 < b)
-    (ht : t ≠ 0)
+/-- Any admissible shift `d` obeys `R*T + b ≤ R*d + (R - r)*t`
+(`0 < b`, `t ≠ 0`). -/
+theorem tokenBucket_rateLatency_shift_bound (r b R T t d : ℝ≥0)
+    (hb : 0 < b) (ht : t ≠ 0)
     (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
     R*T + b ≤ R*d + (R - r)*t := by
-  have hreal := beta_admissible_imp r b R T t d ht h
-  rw [← NNReal.coe_le_coe] at hreal ⊢
-  push_cast [NNReal.coe_sub_def] at hreal ⊢
-  have htt : (0:ℝ) ≤ t := by positivity
-  have hbb : (0:ℝ) < b := by exact_mod_cast hb
-  have hmrt : (R-r:ℝ)*t ≤ max ((R:ℝ)-r) 0 * t := by
+  have hreal := tokenBucket_le_rateLatency_real r b R T t d hb ht h
+  rw [← NNReal.coe_le_coe]
+  push_cast [NNReal.coe_sub_def]
+  have htt : (0:ℝ) ≤ t := t.coe_nonneg
+  have hmrt : ((R:ℝ)-r)*t ≤ max ((R:ℝ)-r) 0 * t := by
     rcases le_total ((R:ℝ)-r) 0 with hle|hle
     · rw [max_eq_right hle]; nlinarith
     · rw [max_eq_left hle]
-  rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
-  · rw [max_eq_right hle] at hreal
-    nlinarith [hreal,
-      mul_nonneg htt (by positivity : (0:ℝ) ≤ r)]
-  · rw [max_eq_left hle] at hreal
-    nlinarith [hreal, hmrt]
+  linarith [hreal, hmrt]
 
 /-- Per-point lower bound on `hDevAtENN (tokenBucket r b) βRT`. -/
 theorem hDevAtENN_rateLatency_ge (r b R T t : ℝ≥0)
@@ -232,7 +230,7 @@ theorem hDevAtENN_rateLatency_ge (r b R T t : ℝ≥0)
           (rateLatency R T) t := by
   refine le_hDevAtENN fun d hd => ?_
   rw [tsub_le_iff_right]
-  have hbnd := dlb r b R T t d hb ht hd
+  have hbnd := tokenBucket_rateLatency_shift_bound r b R T t d hb ht hd
   rw [← NNReal.coe_le_coe] at hbnd ⊢
   push_cast [NNReal.coe_sub_def] at hbnd ⊢
   have hRpos : (0:ℝ) < R := by exact_mod_cast hR
@@ -279,25 +277,19 @@ theorem hDevENN_tokenBucket_rateLatency (r b R T : ℝ≥0)
     (hDevENN_tokenBucket_rateLatency_le r b R T hR hrR)
     (hDevENN_tokenBucket_rateLatency_ge r b R T hR hb)
 
-/-- Unstable admissible bound: `(r-R)*t ≤ R*d` when `R < r`. -/
-theorem dlb_top (r b R T t d : ℝ≥0) (hR : 0 < R)
+/-- Unstable case `R < r`: any admissible shift `d` obeys `(r - R)*t ≤ R*d`
+(`0 < b`, `t ≠ 0`). -/
+theorem tokenBucket_rateLatency_shift_bound_unstable (r b R T t d : ℝ≥0)
     (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0)
     (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
     (r - R)*t ≤ R*d := by
-  have hreal := beta_admissible_imp r b R T t d ht h
-  rw [← NNReal.coe_le_coe] at hreal ⊢
-  push_cast [NNReal.coe_sub_def] at hreal ⊢
-  have hRpos : (0:ℝ) < R := by exact_mod_cast hR
+  have hreal := tokenBucket_le_rateLatency_real r b R T t d hb ht h
+  rw [← NNReal.coe_le_coe]
+  push_cast [NNReal.coe_sub_def]
   have hbb : (0:ℝ) < b := by exact_mod_cast hb
   have hRr' : (R:ℝ) < r := by exact_mod_cast hRr
   rw [max_eq_left (by linarith : (0:ℝ) ≤ (r:ℝ)-R)]
-  rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
-  · rw [max_eq_right hle] at hreal
-    nlinarith [hreal,
-      mul_nonneg hRpos.le (by positivity:(0:ℝ)≤t)]
-  · rw [max_eq_left hle] at hreal
-    nlinarith [hreal, T.coe_nonneg, hbb,
-      mul_nonneg hRpos.le T.coe_nonneg]
+  linarith [hreal, mul_nonneg R.coe_nonneg T.coe_nonneg]
 
 /-- Unstable per-point lower bound growing linearly in `t`. -/
 theorem hDevAtENN_rateLatency_ge_top (r b R T t : ℝ≥0)
@@ -306,7 +298,8 @@ theorem hDevAtENN_rateLatency_ge_top (r b R T t : ℝ≥0)
       ≤ hDevAtENN (tokenBucket r b)
           (rateLatency R T) t := by
   refine le_hDevAtENN fun d hd => ?_
-  have hbnd := dlb_top r b R T t d hR hb hRr ht hd
+  have hbnd :=
+    tokenBucket_rateLatency_shift_bound_unstable r b R T t d hb hRr ht hd
   rw [div_mul_eq_mul_div, div_le_iff₀ hR, mul_comm d R]
   exact hbnd
 
