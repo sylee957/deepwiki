@@ -497,8 +497,7 @@ theorem add_ciSup_le {ι : Type} [Nonempty ι]
     le_trans le_self_add (h (Classical.arbitrary ι))
   have hsup : ⨆ i, f i ≤ y - c :=
     ciSup_le (fun i => le_tsub_of_add_le_left (h i))
-  calc c + ⨆ i, f i ≤ c + (y - c) := by gcongr
-    _ = y := add_tsub_cancel_of_le hcy
+  exact add_le_of_le_tsub_left_of_le hcy hsup
 
 /-- Embed `g : ℝ≥0 → ℝ≥0` into `Fmin`. -/
 def embMin (g : ℝ≥0 → ℝ≥0) : Fmin :=
@@ -620,10 +619,10 @@ theorem maxConvProj_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
   rw [maxConvProj, conv_embMax_toVal, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
 
-/-- `maxConvProj g h t ≤ c` if every splitting is `≤ c`. -/
-theorem maxConvProj_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
-    (hsplit : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2 ≤ c) :
+/-- Intro: a uniform bound over all splits bounds the projected (max,+)
+convolution from above, `maxConvProj g h t ≤ c`. -/
+theorem maxConvProj_le {g h : ℝ≥0 → ℝ≥0} {t c : ℝ≥0}
+    (hsplit : ∀ u s, u + s = t → g u + h s ≤ c) :
     maxConvProj g h t ≤ c := by
   rw [maxConvProj, conv_embMax_toVal]
   have hcoe :
@@ -638,56 +637,43 @@ theorem maxConvProj_le (g h : ℝ≥0 → ℝ≥0) (t c : ℝ≥0)
   have hb : (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
         ≤ (c : ℝ≥0∞) :=
-    iSup_le (fun p => by exact_mod_cast hsplit p)
+    iSup_le (fun p => by exact_mod_cast hsplit p.1.1 p.1.2 p.2)
   have := ENNReal.toNNReal_mono (by simp) hb
   simpa using this
 
-/-- Intro: a splitting bounds `maxConvProj` from below, given a uniform
+/-- Elim: a splitting bounds `maxConvProj` from below, given a uniform
 bound on all splittings (which keeps the projected supremum finite). -/
-theorem le_maxConvProj_of_bound {g h : ℝ≥0 → ℝ≥0} {t c : ℝ≥0}
-    (hbound : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      g p.1.1 + h p.1.2 ≤ c)
-    (p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t}) :
-    g p.1.1 + h p.1.2 ≤ maxConvProj g h t := by
+theorem add_le_maxConvProj_of_bound {g h : ℝ≥0 → ℝ≥0} {t c : ℝ≥0}
+    (hbound : ∀ u s, u + s = t → g u + h s ≤ c)
+    {u s : ℝ≥0} (hus : u + s = t) :
+    g u + h s ≤ maxConvProj g h t := by
   have hfin : (⨆ q : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = t},
       ((g q.1.1 + h q.1.2 : ℝ≥0) : ℝ≥0∞)) ≠ ⊤ :=
     ne_top_of_le_ne_top ENNReal.coe_ne_top
-      (iSup_le fun q => by exact_mod_cast hbound q)
+      (iSup_le fun q => by exact_mod_cast hbound q.1.1 q.1.2 q.2)
   rw [← ENNReal.coe_le_coe, maxConvProj_coe g h t hfin]
   exact le_iSup (fun q : {q : ℝ≥0 × ℝ≥0 // q.1 + q.2 = t} =>
-    ((g q.1.1 + h q.1.2 : ℝ≥0) : ℝ≥0∞)) p
+    ((g q.1.1 + h q.1.2 : ℝ≥0) : ℝ≥0∞)) ⟨(u, s), hus⟩
 
-/-- `c + maxConvProj g g t ≤ y` from a per-splitting bound. -/
-theorem add_maxConvProj_le
-    (g : ℝ≥0 → ℝ≥0) (t c y : ℝ≥0)
-    (h : ∀ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
-      c + (g p.1.1 + g p.1.2) ≤ y) :
-    c + maxConvProj g g t ≤ y := by
-  have hcy : c ≤ y :=
-    le_trans le_self_add (h ⟨(t, 0), by simp⟩)
-  have hsup : maxConvProj g g t ≤ y - c :=
-    maxConvProj_le g g t (y - c)
-      (fun p => le_tsub_of_add_le_left (h p))
-  calc c + maxConvProj g g t ≤ c + (y - c) := by gcongr
-    _ = y := add_tsub_cancel_of_le hcy
+/-- Intro with a leading constant: `c + maxConvProj g h t ≤ y` from the
+per-split bounds `c + (g u + h s) ≤ y`. -/
+theorem add_maxConvProj_le {g h : ℝ≥0 → ℝ≥0} {t c y : ℝ≥0}
+    (hsplit : ∀ u s, u + s = t → c + (g u + h s) ≤ y) :
+    c + maxConvProj g h t ≤ y := by
+  have hcy : c ≤ y := le_trans le_self_add (hsplit t 0 (add_zero t))
+  have hsup : maxConvProj g h t ≤ y - c :=
+    maxConvProj_le fun u s hus => le_tsub_of_add_le_left (hsplit u s hus)
+  exact add_le_of_le_tsub_left_of_le hcy hsup
 
-/-- `⨆ i, g i = - ⨅ i, - g i` for a bounded-above family. -/
-theorem neg_ciInf_neg {ι : Type} [Nonempty ι]
-    {T : Type*} [_root_.LinearOrder T]
-    [_root_.AddCommGroup T]
-    [ConditionallyCompleteLattice T]
-    [CovariantClass T T (·+·) (·≤·)]
+/-- `⨆ i, g i = - ⨅ i, - g i` for a bounded-above family: indexed form of
+`csInf_neg`. -/
+theorem ciSup_eq_neg_ciInf_neg {ι : Type} [Nonempty ι]
+    {T : Type*} [ConditionallyCompleteLattice T] [_root_.AddGroup T]
+    [AddLeftMono T] [AddRightMono T]
     (g : ι → T) (hbdd : BddAbove (Set.range g)) :
     (⨆ i, g i) = - ⨅ i, - g i := by
-  have hbb : BddBelow (Set.range (fun i => - g i)) := by
-    obtain ⟨c, hc⟩ := hbdd
-    exact ⟨-c, by
-      rintro _ ⟨i, rfl⟩; simpa using hc ⟨i, rfl⟩⟩
-  apply le_antisymm
-  · refine ciSup_le (fun i => ?_)
-    rw [le_neg]; exact ciInf_le_of_le hbb i (le_refl _)
-  · rw [neg_le]; refine le_ciInf (fun i => ?_)
-    rw [le_neg, neg_neg]; exact le_ciSup hbdd i
+  rw [← sInf_range, Set.range_comp' Neg.neg g, Set.image_neg_eq_neg,
+    csInf_neg (Set.range_nonempty g) hbdd, neg_neg, sSup_range]
 
 /-- `maxConvProj g g` as `-` a (min,+) infimum over `ℝ`. -/
 theorem maxConvProj_eq_neg_iInf
@@ -729,7 +715,7 @@ theorem maxConvProj_eq_neg_iInf
     rintro _ ⟨p, rfl⟩
     exact_mod_cast hc ⟨p, rfl⟩
   simp only [← NNReal.coe_add]
-  rw [← neg_ciInf_neg _ hbR,
+  rw [← ciSup_eq_neg_ciInf_neg _ hbR,
     show (((maxConvProj g g t : ℝ≥0)) : ℝ)
         = ((⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
             (g p.1.1 + g p.1.2) : ℝ≥0) : ℝ)

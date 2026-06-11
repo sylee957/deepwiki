@@ -88,8 +88,7 @@ theorem increment_maxConvProjPow_of_increment {A α : ℝ≥0 → ℝ≥0}
   | succ n ih =>
     show A t + maxConvProj (maxConvProjPow α n) (maxConvProjPow α n) d
         ≤ A (t + d)
-    refine add_maxConvProj_le (maxConvProjPow α n) d (A t) (A (t + d)) ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = d)⟩
+    refine add_maxConvProj_le fun u s hus => ?_
     calc A t + (maxConvProjPow α n u + maxConvProjPow α n s)
           = (A t + maxConvProjPow α n u) + maxConvProjPow α n s := by ring
       _ ≤ A (t + u) + maxConvProjPow α n s := by gcongr; exact ih t u
@@ -121,9 +120,7 @@ theorem IsMinimalArrivalBound.superadditiveClosureMax {A α : ℝ≥0 → ℝ≥
     le_tsub_of_add_le_left (increment_maxConvProjPow_of_increment hinc n t d)
   have hsup : DeepWiki.superadditiveClosureMax α d ≤ A (t + d) - A t := ciSup_le hbd
   have hle : A t ≤ A (t + d) := hA le_self_add
-  calc A t + DeepWiki.superadditiveClosureMax α d
-        ≤ A t + (A (t + d) - A t) := by gcongr
-    _ = A (t + d) := add_tsub_cancel_of_le hle
+  exact add_le_of_le_tsub_left_of_le hle hsup
 
 /-! ## Right-continuous extension
 The right-continuous extension `Function.rightLim α` of a minimal arrival

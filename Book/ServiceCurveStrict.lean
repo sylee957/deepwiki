@@ -197,8 +197,7 @@ theorem isStrictMinimalServiceCurve_maxConvProj
     IsStrictMinimalServiceCurve (maxConvProj beta beta) S := by
   intro A D hp s t hst hbl
   show D s + maxConvProj beta beta (t - s) ≤ D t
-  refine add_maxConvProj_le _ _ _ _ (fun q => ?_)
-  obtain ⟨⟨a, b⟩, (hab : a + b = t - s)⟩ := q
+  refine add_maxConvProj_le fun a b hab => ?_
   have hsum : s + (a + b) = t := by
     rw [hab, add_tsub_cancel_of_le hst]
   have hsa : s + a ≤ t :=

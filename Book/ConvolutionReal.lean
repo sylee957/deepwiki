@@ -68,8 +68,7 @@ theorem maxConvProjPow_le_of_affine_bound {beta : ℝ≥0 → ℝ≥0} {r : ℝ�
   | zero => exact hr t
   | succ n ih =>
     show maxConvProj (maxConvProjPow beta n) (maxConvProjPow beta n) t ≤ r * t
-    refine maxConvProj_le _ _ t (r * t) (fun p => ?_)
-    obtain ⟨⟨a, b⟩, (hab : a + b = t)⟩ := p
+    refine maxConvProj_le fun a b hab => ?_
     calc maxConvProjPow beta n a + maxConvProjPow beta n b
         ≤ r * a + r * b := add_le_add (ih a) (ih b)
       _ = r * (a + b) := (mul_add r a b).symm

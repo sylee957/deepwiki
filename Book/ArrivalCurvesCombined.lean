@@ -85,9 +85,7 @@ theorem isMinimalArrivalBound_etaMin {A αu αl : ℝ≥0 → ℝ≥0}
     -- `αˡ (d+v) - αᵘ v ≤ A (t+d) - A t` from the chain
     rw [add_comm (A t) (αl (d + v)), add_comm (A (t + d)) (αu v)] at hchain
     exact tsub_le_tsub_of_add_le hchain
-  -- `A t + (A (t+d) - A t) = A (t+d)` since `A t ≤ A (t+d)`
-  calc A t + minDeconv αl αu d ≤ A t + (A (t + d) - A t) := by gcongr
-    _ = A (t + d) := add_tsub_cancel_of_le (hAmono le_self_add)
+  exact add_le_of_le_tsub_left_of_le (hAmono le_self_add) hsup
 
 /-! ## One-step fixpoint -/
 
