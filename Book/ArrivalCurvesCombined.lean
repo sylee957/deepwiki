@@ -104,35 +104,21 @@ theorem isMinimalArrivalBound_le_isMaximalArrivalBound {A αu αl : ℝ≥0 → 
   have h2 : A (0 + d) ≤ A 0 + αu d := hu 0 d
   exact le_of_add_le_add_left (le_trans h1 h2)
 
-/-- `ηˡ 0 = 0`: each shift term `αˡ v - αᵘ v` vanishes (`αˡ ≤ αᵘ`), so the
-supremum defining `ηˡ 0` is `0`. -/
-theorem etaMin_zero {A αu αl : ℝ≥0 → ℝ≥0}
-    (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
-    (hAmono : Monotone A) (hlmono : Monotone αl) :
+/-- `ηˡ 0 = 0`: when `αˡ ≤ αᵘ` every term `αˡ (0 + s) - αᵘ s` of the supremum
+defining `ηˡ 0` vanishes. -/
+theorem etaMin_zero {αu αl : ℝ≥0 → ℝ≥0} (hle : αl ≤ αu) :
     minDeconv αl αu 0 = 0 := by
-  have hle := isMinimalArrivalBound_le_isMaximalArrivalBound hu hl hAmono hlmono
-  show minDeconv αl αu 0 = 0
-  unfold minDeconv
-  have hz : (fun s : ℝ≥0 => αl (0 + s) - αu s) = fun _ => 0 := by
-    funext s; rw [zero_add, tsub_eq_zero_of_le (hle s)]
-  rw [hz]; exact ciSup_const
+  refine le_antisymm (minDeconv_le fun s => ?_) zero_le'
+  rw [zero_add]
+  exact (tsub_eq_zero_of_le (hle s)).le
 
-/-- `ηᵘ 0 = 0`: with `αᵘ 0 = αˡ 0 = 0` the `v = 0` term of `ηᵘ 0 = ⨅_v αᵘ v - αˡ v`
-is `0`, and every term is `≥ 0` (`αˡ ≤ αᵘ`), so the infimum is `0`. -/
-theorem etaMax_zero {A αu αl : ℝ≥0 → ℝ≥0}
-    (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
-    (hAmono : Monotone A) (hlmono : Monotone αl)
-    (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
+/-- `ηᵘ 0 = 0`: with `αᵘ 0 = αˡ 0 = 0` the `v = 0` term of the infimum defining
+`ηᵘ 0` is `0`, and `ℝ≥0` infima are nonnegative. -/
+theorem etaMax_zero {αu αl : ℝ≥0 → ℝ≥0} (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
     maxDeconv αu αl 0 = 0 := by
-  have hle := isMinimalArrivalBound_le_isMaximalArrivalBound hu hl hAmono hlmono
-  show maxDeconv αu αl 0 = 0
-  unfold maxDeconv
-  apply le_antisymm
-  · -- the `v = 0` term is `αᵘ 0 - αˡ 0 = 0`
-    refine ciInf_le_of_le (OrderBot.bddBelow _) 0 ?_
-    rw [zero_add, hu0, hl0, tsub_zero]
-  · -- every term `αᵘ (0+v) - αˡ v ≥ 0`
-    exact le_ciInf (fun _ => zero_le')
+  refine le_antisymm ?_ zero_le'
+  have h := maxDeconv_le_sub αu αl 0 0
+  rwa [zero_add, hu0, hl0, tsub_zero] at h
 
 /-- The easy fixpoint inequality `ηᵘ ⊘̄ ηˡ ≤ ηᵘ`: the `u = 0` term of the
 defining infimum is `ηᵘ t - ηˡ 0 = ηᵘ t`. -/
@@ -140,12 +126,10 @@ theorem maxDeconv_etaMax_etaMin_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) :
     maxDeconv (maxDeconv αu αl) (minDeconv αl αu) ≤ maxDeconv αu αl := by
+  have hle := isMinimalArrivalBound_le_isMaximalArrivalBound hu hl hAmono hlmono
   intro t
-  have h0 : minDeconv αl αu 0 = 0 := etaMin_zero hu hl hAmono hlmono
-  show maxDeconv (maxDeconv αu αl) (minDeconv αl αu) t ≤ maxDeconv αu αl t
-  unfold maxDeconv
-  refine ciInf_le_of_le (OrderBot.bddBelow _) 0 ?_
-  rw [h0, tsub_zero, add_zero]
+  have h := maxDeconv_le_sub (maxDeconv αu αl) (minDeconv αl αu) t 0
+  rwa [add_zero, etaMin_zero hle, tsub_zero] at h
 
 /-- Core per-shift bound for the fixpoint: with `αᵘ` sub-additive, `αˡ`
 super-additive, `αˡ ≤ αᵘ`, and `αᵘ` monotone, every `ηᵘ`-witness `z`-bound at
@@ -388,7 +372,7 @@ theorem le_minDeconv_etaMin_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
   intro t
   have hle := isMinimalArrivalBound_le_isMaximalArrivalBound hu hl hAmono hlmono
   have hsubU : IsSubadditive (maxDeconv αu αl) := isSubadditive_etaMax hsub hsup hle humono
-  have h0 : maxDeconv αu αl 0 = 0 := etaMax_zero hu hl hAmono hlmono hu0 hl0
+  have h0 : maxDeconv αu αl 0 = 0 := etaMax_zero hu0 hl0
   show minDeconv αl αu t ≤ ⨆ u : ℝ≥0, minDeconv αl αu (t + u) - maxDeconv αu αl u
   refine le_ciSup_of_le (bddAbove_minDeconv_etaMin_etaMax hsubU hETle t) 0 ?_
   rw [h0, tsub_zero, add_zero]
