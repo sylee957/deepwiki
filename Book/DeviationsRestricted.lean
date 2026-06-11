@@ -126,6 +126,32 @@ theorem iSup_eq_biSup_sInf_of_vanishing_gap {F : ℝ≥0 → ℝ≥0∞} {S : Se
     rw [hvanish _ hC]
     exact zero_le'
 
+/-- An `ℝ≥0∞` value below every truncated gap `f τ - c` over a nonempty set
+on which `⨅ τ ∈ S, f τ ≤ c` is zero. -/
+theorem eq_zero_of_forall_le_tsub_of_iInf_le {ι : Type*} {S : Set ι}
+    {f : ι → ℝ≥0∞} {c x : ℝ≥0∞} (hne : S.Nonempty)
+    (hle : ∀ τ ∈ S, x ≤ f τ - c) (hinf : (⨅ τ ∈ S, f τ) ≤ c) :
+    x = 0 := by
+  rcases eq_or_ne c ⊤ with rfl | hcne
+  · obtain ⟨τ, hτ⟩ := hne
+    have hxτ := hle τ hτ
+    rw [ENNReal.sub_top] at hxτ
+    exact le_antisymm hxτ zero_le'
+  · by_cases hlt : ∃ τ ∈ S, f τ < c
+    · obtain ⟨τ, hτ, hfτ⟩ := hlt
+      have hxτ := hle τ hτ
+      rw [tsub_eq_zero_of_le hfτ.le] at hxτ
+      exact le_antisymm hxτ zero_le'
+    · have hcf : ∀ τ ∈ S, c ≤ f τ := fun τ hτ =>
+        not_lt.mp fun h => hlt ⟨τ, hτ, h⟩
+      have hxc : x + c ≤ 0 + c := by
+        rw [zero_add]
+        exact (le_iInf₂ fun τ hτ =>
+          ((ENNReal.cancel_of_ne hcne).le_tsub_iff_right (hcf τ hτ)).mp
+            (hle τ hτ)).trans hinf
+      exact le_antisymm
+        ((ENNReal.cancel_of_ne hcne).add_le_add_iff_right.mp hxc) zero_le'
+
 /-- **Restricting the vertical-deviation domain at the first crossing.**
 For monotone sub-additive `α` against super-additive `β` with a nonempty
 crossing set, the vertical deviation is computed on
@@ -151,32 +177,8 @@ theorem vDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
             ((iInf₂_le σ hσS).trans (hsup.monotone hσt.le)) _
   · -- vanishing: `⨅ α ≤ α σ ≤ β σ` over crossings forces the bound to `0`
     intro x hx
-    have hx' : ∀ τ ∈ crossingSet α β,
-        x ≤ α τ - ⨅ σ ∈ crossingSet α β, β σ := hx
-    set c := ⨅ σ ∈ crossingSet α β, β σ with hc
-    rcases eq_or_ne c ⊤ with hctop | hcne
-    · obtain ⟨τ, hτ⟩ := hne
-      have hxτ := hx' τ hτ
-      rw [hctop, ENNReal.sub_top] at hxτ
-      exact le_antisymm hxτ zero_le'
-    · by_contra hx0
-      have hadd : ∀ τ ∈ crossingSet α β, x + c ≤ α τ := by
-        intro τ hτ
-        have hCτ := hx' τ hτ
-        have hcα : c ≤ α τ := by
-          by_contra hcon
-          rw [not_le] at hcon
-          rw [tsub_eq_zero_of_le hcon.le] at hCτ
-          exact hx0 (le_antisymm hCτ zero_le')
-        exact ((ENNReal.cancel_of_ne hcne).le_tsub_iff_right hcα).mp hCτ
-      have hαc : (⨅ τ ∈ crossingSet α β, α τ) ≤ c :=
-        le_iInf₂ fun σ hσ => (iInf₂_le σ hσ).trans hσ.2
-      have hxc : x + c ≤ 0 + c := by
-        rw [zero_add]
-        exact (le_iInf₂ hadd).trans hαc
-      exact hx0 (le_antisymm
-        ((ENNReal.cancel_of_ne hcne).add_le_add_iff_right.mp hxc)
-        zero_le')
+    exact eq_zero_of_forall_le_tsub_of_iInf_le hne hx
+      (le_iInf₂ fun σ hσ => (iInf₂_le σ hσ).trans hσ.2)
 
 /-- **Restricting the horizontal-deviation domain at the first crossing.**
 Same as the vertical side: with a nonempty crossing set and monotone `α`,
@@ -204,36 +206,9 @@ theorem hDev_eq_biSup_sInf_crossingSet {α β : ℝ≥0 → ℝ≥0∞}
       exact_mod_cast tsub_le_tsub_left htℓ.le τ
   · -- vanishing: crossings sit arbitrarily close above the infimum
     intro x hx
-    have hx' : ∀ τ ∈ crossingSet α β,
-        x ≤ ((τ - sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) := hx
-    by_contra hx0
-    obtain ⟨τ₀, hτ₀⟩ := hne
-    have hadd : ∀ τ ∈ crossingSet α β,
-        x + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) ≤ (τ : ℝ≥0∞) := by
-      intro τ hτ
-      have hxτ := hx' τ hτ
-      rw [ENNReal.coe_sub] at hxτ
-      have hℓτ : ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) ≤ (τ : ℝ≥0∞) :=
-        ENNReal.coe_le_coe.mpr (csInf_le (OrderBot.bddBelow _) hτ)
-      calc x + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞)
-          ≤ ((τ : ℝ≥0∞) - ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞))
-              + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) :=
-            add_le_add hxτ le_rfl
-        _ = (τ : ℝ≥0∞) := tsub_add_cancel_of_le hℓτ
-    have hfin : x + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) ≠ ⊤ :=
-      ne_top_of_le_ne_top (ENNReal.coe_ne_top (r := τ₀)) (hadd τ₀ hτ₀)
-    have hlb : ∀ τ ∈ crossingSet α β,
-        (x + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞)).toNNReal ≤ τ :=
-      fun τ hτ => by
-        have h := ENNReal.toNNReal_mono ENNReal.coe_ne_top (hadd τ hτ)
-        rwa [ENNReal.toNNReal_coe] at h
-    have hxle : x + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞)
-        ≤ (0 : ℝ≥0∞) + ((sInf (crossingSet α β) : ℝ≥0) : ℝ≥0∞) := by
-      rw [zero_add, ← ENNReal.coe_toNNReal hfin]
-      exact ENNReal.coe_le_coe.mpr (le_csInf ⟨τ₀, hτ₀⟩ hlb)
-    exact hx0 (le_antisymm
-      ((ENNReal.cancel_of_ne ENNReal.coe_ne_top).add_le_add_iff_right.mp hxle)
-      zero_le')
+    refine eq_zero_of_forall_le_tsub_of_iInf_le hne (fun τ hτ => ?_)
+      (ENNReal.coe_sInf hne).ge
+    exact (hx τ hτ).trans_eq ENNReal.coe_sub
 
 /-- Sub-additivity transports through the `ℝ≥0∞` reading: `toENN sigma` is
 sub-additive when `sigma` is. -/
