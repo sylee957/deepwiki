@@ -103,15 +103,11 @@ theorem exists_minConv_eq_leftLim_split_of_cont_core
       ContinuousAt (fun p : T × T => p.1 + p.2) (leftLim f u, h (t - u))) :
     ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t,
       minConv f h t = leftLim f u₀ + h (t - u₀) := by
-  obtain ⟨u₀, hu₀, hmin⟩ :=
-    exists_isMinOn_splitMap_of_contAt (leftLim f) h
-      (lowerSemicontinuous_of_mono_leftCont (leftLim f) hfm.leftLim
-        (isLeftContinuous_leftLim hfm))
-      (lowerSemicontinuous_of_mono_leftCont h hhm
-        (leftCont_of_continuous h hhc)) t hadd
-  refine ⟨u₀, hu₀, ?_⟩
-  rw [minConv_eq_minConv_leftLim_of_cont f h hfm hhc t hadd]
-  exact minConv_eq_splitMap_of_isMinOn (leftLim f) h t hu₀ hmin
+  obtain ⟨u₀, hu₀, heq⟩ :=
+    exists_minConv_eq_split_of_curves_of_contAt (leftLim f) h hfm.leftLim hhm
+      (isLeftContinuous_leftLim hfm) (leftCont_of_continuous h hhc) t hadd
+  exact ⟨u₀, hu₀,
+    (minConv_eq_minConv_leftLim_of_cont f h hfm hhc t hadd).trans heq⟩
 
 /-- Over `EReal`. For monotone `f` and continuous `h : ℝ⁺ → ℝ̄` with
 `AddDefined (leftLim f u) (h (t − u))` at every split (no `(+∞)+(−∞)` collision

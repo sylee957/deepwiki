@@ -57,6 +57,23 @@ theorem exists_isMinOn_splitMap_of_contAt
     ((lowerSemicontinuous_splitMap_of_contAt g h hg hh t hcont)
       |>.lowerSemicontinuousOn _)
 
+/-- `minConv g h t = g u₀ + h (t - u₀)` at some `u₀ ∈ [0,t]` for nondecreasing
+left-continuous curves, pointwise-`ContinuousAt (+)` form (so `EReal` and
+`WithTop (WithBot ℝ)` instantiate where `ContinuousAdd` fails). -/
+theorem exists_minConv_eq_split_of_curves_of_contAt
+    {T : Type*} [_root_.AddCommMonoid T] [CompleteLinearOrder T]
+    [IsOrderedAddMonoid T] [TopologicalSpace T] [OrderTopology T]
+    (g h : ℝ≥0 → T) (hgm : Monotone g) (hhm : Monotone h)
+    (hgc : IsLeftContinuous g) (hhc : IsLeftContinuous h) (t : ℝ≥0)
+    (hcont : ∀ u : ℝ≥0,
+      ContinuousAt (fun p : T × T => p.1 + p.2) (g u, h (t - u))) :
+    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) := by
+  obtain ⟨u₀, hu₀, hmin⟩ :=
+    exists_isMinOn_splitMap_of_contAt g h
+      (lowerSemicontinuous_of_mono_leftCont g hgm hgc)
+      (lowerSemicontinuous_of_mono_leftCont h hhm hhc) t hcont
+  exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
+
 /-! ## Attainment over `EReal`
 Over the extended reals `ℝ̄ = EReal`: for nondecreasing, left-continuous
 `g, h : ℝ⁺ → ℝ̄` with `AddDefined (g u) (h (t−u))` at every split (no
@@ -69,13 +86,9 @@ example (g h : ℝ≥0 → EReal)
     (hgm : Monotone g) (hhm : Monotone h)
     (hgc : IsLeftContinuous g) (hhc : IsLeftContinuous h) (t : ℝ≥0)
     (hpair : ∀ u : ℝ≥0, AddDefined (g u) (h (t - u))) :
-    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) := by
-  obtain ⟨u₀, hu₀, hmin⟩ :=
-    exists_isMinOn_splitMap_of_contAt g h
-      (lowerSemicontinuous_of_mono_leftCont g hgm hgc)
-      (lowerSemicontinuous_of_mono_leftCont h hhm hhc) t
-      (fun u => (hpair u).continuousAt)
-  exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
+    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) :=
+  exists_minConv_eq_split_of_curves_of_contAt g h hgm hhm hgc hhc t
+    (fun u => (hpair u).continuousAt)
 
 /-! ## Attainment over the book's carrier
 Over the book's carrier `R̄min = WithTop (WithBot ℝ)` (top-absorbing `+`,
@@ -88,12 +101,8 @@ example (g h : ℝ≥0 → WithTop (WithBot ℝ))
     (hgm : Monotone g) (hhm : Monotone h)
     (hgc : IsLeftContinuous g) (hhc : IsLeftContinuous h) (t : ℝ≥0)
     (hpair : ∀ u : ℝ≥0, AddDefinedExt (g u) (h (t - u))) :
-    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) := by
-  obtain ⟨u₀, hu₀, hmin⟩ :=
-    exists_isMinOn_splitMap_of_contAt g h
-      (lowerSemicontinuous_of_mono_leftCont g hgm hgc)
-      (lowerSemicontinuous_of_mono_leftCont h hhm hhc) t
-      (fun u => (hpair u).continuousAt)
-  exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
+    ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) :=
+  exists_minConv_eq_split_of_curves_of_contAt g h hgm hhm hgc hhc t
+    (fun u => (hpair u).continuousAt)
 
 end DeepWiki

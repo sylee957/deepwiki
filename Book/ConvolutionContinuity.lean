@@ -188,11 +188,8 @@ theorem lowerSemicontinuous_minConv_ereal
       (lowerSemicontinuous_of_mono_leftCont g hg hgc)
       (fun p => (hpair p.1 p.2).continuousAt))
     (fun r =>
-      exists_isMinOn_splitMap_of_contAt f g
-        (lowerSemicontinuous_of_mono_leftCont f hf hfc)
-        (lowerSemicontinuous_of_mono_leftCont g hg hgc) r
-        (fun u => (hpair r u).continuousAt) |>.imp
-        (fun _u₀ h => ⟨h.1, minConv_eq_splitMap_of_isMinOn f g r h.1 h.2⟩))
+      exists_minConv_eq_split_of_curves_of_contAt f g hf hg hfc hgc r
+        (fun u => (hpair r u).continuousAt))
 
 /-- (min,+) convolution of two nondecreasing left-continuous curves
 `ℝ≥0 → EReal` is left-continuous, given no `(+∞)+(−∞)` collision at the split
