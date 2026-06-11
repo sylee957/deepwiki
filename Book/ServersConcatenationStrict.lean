@@ -15,7 +15,7 @@ open scoped Classical NNReal
 
 /-- Nonnegativity of the `EReal` rate curve: `0 ≤ rateEReal C t`. -/
 theorem isNonneg_rateEReal (C : ℝ≥0) : IsNonneg (rateEReal C) := fun t => by
-  show (0 : EReal) ≤ (((C * t : ℝ≥0) : ℝ) : EReal)
+  rw [rateEReal_apply]
   exact_mod_cast (C * t).coe_nonneg
 
 /-- Halving is monotone on `ℝ≥0`. -/
@@ -85,23 +85,18 @@ theorem witness_mem_minimalServiceRel :
     rcases le_or_gt t 4 with h4 | h4
     · -- split `(0, t)`; the inner convolution is at most `min 2 (t - 3)₊`
       refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
-      have hA0 : curveE witnessArrival 0 = 0 := by
-        norm_num [witnessArrival_apply]
-      rw [hA0, zero_add]
+      rw [curveE_zero, zero_add]
       rcases le_or_gt t 3 with h3 | h3
       · -- inner split `(t, 0)`: both factors vanish
         refine le_trans (minConv_le_add _ _ (add_zero t)) ?_
         rw [show delayEReal 3 t = 0 from delay_eq_zero 3 h3,
-          show rateEReal 1 0 = 0 by
-            show (((1 * 0 : ℝ≥0) : ℝ) : EReal) = 0
-            norm_num,
-          add_zero]
+          rateEReal_zero_eq 1, add_zero]
         exact curveE_nonneg _ t
       · -- inner split `(3, t - 3)`: worth at most `1 ≤ 2 = C t`
         refine le_trans
           (minConv_le_add _ _ (add_tsub_cancel_of_le h3.le)) ?_
         rw [show delayEReal 3 3 = 0 from delay_eq_zero 3 le_rfl, zero_add]
-        simp only [curveE_apply, rateEReal]
+        simp only [curveE_apply, rateEReal_apply]
         rw [witnessDeparture_mid (lt_trans (by norm_num) h3) h4]
         have h2 : (1 * (t - 3) : ℝ≥0) ≤ 2 := by
           rw [one_mul]
@@ -112,10 +107,7 @@ theorem witness_mem_minimalServiceRel :
       have hinner : minConv (delayEReal 3) (rateEReal 1) 0 ≤ 0 := by
         refine le_trans (minConv_le_add _ _ (add_zero 0)) ?_
         rw [show delayEReal 3 0 = 0 from delay_eq_zero 3 zero_le',
-          show rateEReal 1 0 = 0 by
-            show (((1 * 0 : ℝ≥0) : ℝ) : EReal) = 0
-            norm_num,
-          add_zero]
+          rateEReal_zero_eq 1, add_zero]
       refine le_trans (add_le_add le_rfl hinner) ?_
       rw [add_zero]
       simp only [curveE_apply]
@@ -138,7 +130,7 @@ theorem witness_not_mem_comp :
   have hlow : (((5 / 2 : ℝ≥0) : ℝ) : EReal)
       ≤ minConv (curveE B) (rateEReal 1) 4 := by
     refine le_minConv fun u s hus => ?_
-    simp only [curveE_apply, rateEReal]
+    simp only [curveE_apply, rateEReal_apply]
     have key : (5 / 2 : ℝ≥0) ≤ B u + 1 * s := by
       rw [one_mul]
       rcases le_or_gt u 3 with hu3 | hu3

@@ -166,6 +166,11 @@ statements. -/
 noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
   fun u => ((C * u : ℝ≥0) : ℝ)
 
+/-- `rateEReal C u = C * u` (the `ℝ≥0` product, embedded through `ℝ` into
+`EReal`). -/
+@[simp] theorem rateEReal_apply (C u : ℝ≥0) :
+    rateEReal C u = (((C * u : ℝ≥0) : ℝ) : EReal) := rfl
+
 /-! ## Agreements and base values -/
 
 /-- `rateLatency` is `rateLatencyE` on coerced inputs (subtraction commutes with

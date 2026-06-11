@@ -149,7 +149,7 @@ theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : �
         simp [hv]
       rw [hA]
       refine le_add_of_nonneg_right ?_
-      unfold rateEReal
+      rw [rateEReal_apply]
       exact_mod_cast (C * w).coe_nonneg
     · rw [not_lt] at hv
       have hw : b / C ≤ w := by
@@ -161,7 +161,7 @@ theorem stepCurve_minimalService_total {S : Curve → Curve → Prop} {C T b : �
         have h1 : C * (b / C) ≤ C * w := mul_le_mul' le_rfl hw
         rwa [mul_div_cancel₀ _ hC] at h1
       calc ((b : ℝ) : EReal)
-          ≤ ((C * w : ℝ≥0) : ℝ) := by exact_mod_cast hb
+          ≤ rateEReal C w := by rw [rateEReal_apply]; exact_mod_cast hb
         _ ≤ curveE (stepCurve T b) v + rateEReal C w :=
             le_add_of_nonneg_left (curveE_nonneg _ v)
   have hbD := le_trans hlb h
@@ -242,7 +242,7 @@ theorem isMinimalServiceCurve_rushServer (T b c C : ℝ≥0) :
         have hle : C * (v - T) ≤ rushCurve T b c C v := by
           rw [rushCurve_apply, if_pos hTv, min_eq_right hCb]
           exact le_max_right _ _
-        simp only [curveE_apply, rateEReal]
+        simp only [curveE_apply, rateEReal_apply]
         exact_mod_cast hle
       · refine ciInf_le_of_le (OrderBot.bddBelow _)
           ⟨(v, 0), add_zero v⟩ ?_
