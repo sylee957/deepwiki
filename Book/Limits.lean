@@ -31,7 +31,7 @@ noncomputable def realOf (g : ℝ≥0 → ℝ≥0∞) : ℝ≥0 → ℝ :=
   fun s => (g s).toReal
 
 /-- ε–δ left limit: ε–δ if `L` finite, `M`-blowup if `L = ⊤`. -/
-def TendstoLeftED
+def TendstoLeftEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
   (L ≠ ⊤ →
     ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
@@ -41,7 +41,7 @@ def TendstoLeftED
       (M : ℝ≥0∞) < g s)
 
 /-- ε–δ right limit: ε–δ if `L` finite, `M`-blowup if `L = ⊤`. -/
-def TendstoRightED
+def TendstoRightEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) : Prop :=
   (L ≠ ⊤ →
     ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
@@ -67,7 +67,7 @@ theorem real_close_iff_of_hasBasis
 
 /-- For finite `L`, the ε–δ condition along a basis `l.HasBasis p S` is
 `Tendsto g l (𝓝 L)`. -/
-theorem finite_tendstoED_iff_of_hasBasis
+theorem finite_tendstoEpsDelta_iff_of_hasBasis
     {l : Filter ℝ≥0} {p : ℝ≥0 → Prop} {S : ℝ≥0 → Set ℝ≥0}
     (hbasis : l.HasBasis p S) (g : ℝ≥0 → ℝ≥0∞)
     (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
@@ -115,7 +115,7 @@ theorem finite_tendstoED_iff_of_hasBasis
 
 /-- The `M`-blowup condition along a basis `l.HasBasis p S` is
 `Tendsto g l (𝓝 ⊤)`. -/
-theorem infinite_tendstoED_iff_of_hasBasis
+theorem infinite_tendstoEpsDelta_iff_of_hasBasis
     {l : Filter ℝ≥0} {p : ℝ≥0 → Prop} {S : ℝ≥0 → Set ℝ≥0}
     (hbasis : l.HasBasis p S) (g : ℝ≥0 → ℝ≥0∞) :
     (∀ M : ℝ≥0, ∃ δ, p δ ∧ ∀ s ∈ S δ, (M : ℝ≥0∞) < g s)
@@ -125,7 +125,7 @@ theorem infinite_tendstoED_iff_of_hasBasis
 
 /-- The combined two-case ε–δ condition along a basis `l.HasBasis p S` is
 `Tendsto g l (𝓝 L)` for any `L`. -/
-theorem tendstoED_iff_of_hasBasis
+theorem tendstoEpsDelta_iff_of_hasBasis
     {l : Filter ℝ≥0} {p : ℝ≥0 → Prop} {S : ℝ≥0 → Set ℝ≥0}
     (hbasis : l.HasBasis p S) (g : ℝ≥0 → ℝ≥0∞) (L : ℝ≥0∞) :
     ((L ≠ ⊤ →
@@ -136,10 +136,10 @@ theorem tendstoED_iff_of_hasBasis
       ↔ Tendsto g l (𝓝 L) := by
   by_cases hfin : L = ⊤
   · subst hfin
-    rw [← infinite_tendstoED_iff_of_hasBasis hbasis g]
+    rw [← infinite_tendstoEpsDelta_iff_of_hasBasis hbasis g]
     exact ⟨fun h => h.2 rfl,
       fun h => ⟨fun hne => absurd rfl hne, fun _ => h⟩⟩
-  · rw [← finite_tendstoED_iff_of_hasBasis hbasis g L hfin]
+  · rw [← finite_tendstoEpsDelta_iff_of_hasBasis hbasis g L hfin]
     exact ⟨fun h => h.1 hfin,
       fun h => ⟨fun _ => h, fun hT => absurd hT hfin⟩⟩
 
@@ -152,30 +152,30 @@ theorem real_close_iff
   real_close_iff_of_hasBasis (nhdsLT_basis_of_exists_lt ⟨0, ht⟩) g t
 
 /-- For finite `L`, the ε–δ left limit ↔ `TendstoLeft g t L`. -/
-theorem finite_tendstoLeftED_iff
+theorem finite_tendstoLeftEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
     (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
       ↔ TendstoLeft g t L :=
-  finite_tendstoED_iff_of_hasBasis
+  finite_tendstoEpsDelta_iff_of_hasBasis
     (nhdsLT_basis_of_exists_lt ⟨0, ht⟩) g L hLfin
 
 /-- The `M`-blowup left condition ↔ `TendstoLeft g t ⊤`. -/
-theorem infinite_tendstoLeftED_iff
+theorem infinite_tendstoLeftEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
     (∀ M : ℝ≥0, ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
         (M : ℝ≥0∞) < g s)
       ↔ TendstoLeft g t ⊤ :=
-  infinite_tendstoED_iff_of_hasBasis
+  infinite_tendstoEpsDelta_iff_of_hasBasis
     (nhdsLT_basis_of_exists_lt ⟨0, ht⟩) g
 
-/-- `TendstoLeftED g t L ↔ TendstoLeft g t L` for any `L`. -/
-theorem tendstoLeftED_iff
+/-- `TendstoLeftEpsDelta g t L ↔ TendstoLeft g t L` for any `L`. -/
+theorem tendstoLeftEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t)
     (L : ℝ≥0∞) :
-    TendstoLeftED g t L ↔ TendstoLeft g t L :=
-  tendstoED_iff_of_hasBasis
+    TendstoLeftEpsDelta g t L ↔ TendstoLeft g t L :=
+  tendstoEpsDelta_iff_of_hasBasis
     (nhdsLT_basis_of_exists_lt ⟨0, ht⟩) g L
 
 /-- Right ε–δ Cauchy condition for `realOf g` ↔ right continuity at `t`. -/
@@ -187,27 +187,27 @@ theorem real_close_iff_right
   real_close_iff_of_hasBasis (nhdsGT_basis t) g t
 
 /-- For finite `L`, the ε–δ right limit ↔ `TendstoRight g t L`. -/
-theorem finite_tendstoRightED_iff
+theorem finite_tendstoRightEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0)
     (L : ℝ≥0∞) (hLfin : L ≠ ⊤) :
     (∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         g s ≠ ⊤ ∧ |realOf g s - L.toReal| < ε)
       ↔ TendstoRight g t L :=
-  finite_tendstoED_iff_of_hasBasis (nhdsGT_basis t) g L hLfin
+  finite_tendstoEpsDelta_iff_of_hasBasis (nhdsGT_basis t) g L hLfin
 
 /-- The `M`-blowup right condition ↔ `TendstoRight g t ⊤`. -/
-theorem infinite_tendstoRightED_iff
+theorem infinite_tendstoRightEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     (∀ M : ℝ≥0, ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
         (M : ℝ≥0∞) < g s)
       ↔ TendstoRight g t ⊤ :=
-  infinite_tendstoED_iff_of_hasBasis (nhdsGT_basis t) g
+  infinite_tendstoEpsDelta_iff_of_hasBasis (nhdsGT_basis t) g
 
-/-- `TendstoRightED g t L ↔ TendstoRight g t L` for any `L`. -/
-theorem tendstoRightED_iff
+/-- `TendstoRightEpsDelta g t L ↔ TendstoRight g t L` for any `L`. -/
+theorem tendstoRightEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (L : ℝ≥0∞) :
-    TendstoRightED g t L ↔ TendstoRight g t L :=
-  tendstoED_iff_of_hasBasis (nhdsGT_basis t) g L
+    TendstoRightEpsDelta g t L ↔ TendstoRight g t L :=
+  tendstoEpsDelta_iff_of_hasBasis (nhdsGT_basis t) g L
 
 /-- Left limits are unique (needs `0 < t`, so `𝓝[<] t` is `NeBot`). -/
 theorem TendstoLeft.unique

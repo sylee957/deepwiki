@@ -80,7 +80,7 @@ theorem continuous_iff_left_right
       ⟨hl t, hr t⟩
 
 /-- ε–δ left-continuity at `t` for `ℝ≥0∞`-valued `g` (finite/infinite cases). -/
-def IsLeftContinuousAtED
+def IsLeftContinuousAtEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
   (g t ≠ ⊤ →
     ∀ ε : ℝ, 0 < ε → ∃ δ < t, ∀ s ∈ Set.Ioo δ t,
@@ -90,7 +90,7 @@ def IsLeftContinuousAtED
       (M : ℝ≥0∞) < g s)
 
 /-- ε–δ right-continuity at `t` for `ℝ≥0∞`-valued `g` (finite/infinite cases). -/
-def IsRightContinuousAtED
+def IsRightContinuousAtEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
   (g t ≠ ⊤ →
     ∀ ε : ℝ, 0 < ε → ∃ δ > t, ∀ s ∈ Set.Ioo t δ,
@@ -100,17 +100,17 @@ def IsRightContinuousAtED
       (M : ℝ≥0∞) < g s)
 
 /-- For `t > 0`, ε–δ left-continuity agrees with `IsLeftContinuousAt`. -/
-theorem isLeftContinuousAtED_iff
+theorem isLeftContinuousAtEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) (ht : 0 < t) :
-    IsLeftContinuousAtED g t ↔ IsLeftContinuousAt g t :=
-  tendstoLeftED_iff g t ht (g t)
+    IsLeftContinuousAtEpsDelta g t ↔ IsLeftContinuousAt g t :=
+  tendstoLeftEpsDelta_iff g t ht (g t)
 
 /-- ε–δ right-continuity agrees with `IsRightContinuousAt`. -/
-theorem isRightContinuousAtED_iff
+theorem isRightContinuousAtEpsDelta_iff
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
-    IsRightContinuousAtED g t
+    IsRightContinuousAtEpsDelta g t
       ↔ IsRightContinuousAt g t :=
-  tendstoRightED_iff g t (g t)
+  tendstoRightEpsDelta_iff g t (g t)
 
 /-- Left-continuity at `t` is the left limit equaling `g t`. -/
 theorem tendstoLeft_value_iff_leftContinuousAt
@@ -186,18 +186,6 @@ theorem pos_near_zero_of_rightLimit_pos
       abs_of_nonneg t.coe_nonneg]
     exact_mod_cast htδ
   · exact ht
-
-/-- The `ℝ≥0∞`-valued numeric function underlying `f : Fmin`. -/
-noncomputable def numFn (f : Fmin) : ℝ≥0 → ℝ≥0∞ :=
-  fun s => (f s : ℝ≥0∞)
-
-/-- `f : Fmin` is left-continuous (via its numeric function `numFn f`). -/
-def IsLeftContinuousF (f : Fmin) : Prop :=
-  ∀ t : ℝ≥0, IsLeftContinuousAt (numFn f) t
-
-/-- `f : Fmin` is right-continuous (via its numeric function `numFn f`). -/
-def IsRightContinuousF (f : Fmin) : Prop :=
-  ∀ t : ℝ≥0, IsRightContinuousAt (numFn f) t
 
 /-- Left-continuous `A` has `A` as the left limit at each `t`:
 `Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
