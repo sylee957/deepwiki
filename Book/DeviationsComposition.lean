@@ -17,22 +17,14 @@ at `t` composes with the deviation of `(g, h)` at `t + d₁`,
 `hDevAt f h t ≤ hDevAt f g t + hDev g h`. -/
 theorem hDevAt_le_hDevAt_add_hDev {V : Type*} [Preorder V]
     {f g h : ℝ≥0 → V} (t : ℝ≥0) :
-    (hDevAt f h t : ℝ≥0∞) ≤ (hDevAt f g t : ℝ≥0∞) + hDev g h := by
-  rw [show (hDevAt f g t : ℝ≥0∞)
-        = ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) from rfl,
-    ENNReal.iInf_add]
-  refine le_iInf ?_
-  rintro ⟨d₁, hd₁⟩
-  refine le_trans ?_ (add_le_add le_rfl (hDevAt_le_hDev g h (t + d₁)))
-  rw [show (hDevAt g h (t + d₁) : ℝ≥0∞)
-        = ⨅ d : {d : ℝ≥0 // g (t + d₁) ≤ h (t + d₁ + d)}, (d.1 : ℝ≥0∞)
-      from rfl,
-    ENNReal.add_iInf]
-  refine le_iInf ?_
-  rintro ⟨d₂, hd₂⟩
-  rw [← ENNReal.coe_add]
-  rw [add_assoc] at hd₂
-  exact hDevAt_le (le_trans hd₁ hd₂)
+    (hDevAt f h t : ℝ≥0∞) ≤ (hDevAt f g t : ℝ≥0∞) + hDev g h :=
+  le_hDevAt_add fun d₁ hd₁ =>
+    le_trans
+      (le_add_hDevAt fun d₂ hd₂ =>
+        hDevAt_le (show f t ≤ h (t + (d₁ + d₂)) by
+          rw [← add_assoc]
+          exact le_trans hd₁ hd₂))
+      (add_le_add le_rfl (hDevAt_le_hDev g h (t + d₁)))
 
 /-- **Triangle inequality of the horizontal deviation**:
 `hDev f h ≤ hDev f g + hDev g h` (no hypotheses on the functions). -/
@@ -46,17 +38,6 @@ of the per-hop delays: `d(A, C) ≤ d(A, B) + d(B, C)`. -/
 theorem Deviation.delay_triangle (A B C : ℝ≥0 → ℝ≥0) :
     Deviation.delay A C ≤ Deviation.delay A B + Deviation.delay B C :=
   hDev_triangle A B C
-
-/-- For non-decreasing `g`, any shift strictly above the pointwise
-horizontal deviation is admissible: `hDevAt f g x < d` gives
-`f x ≤ g (x + d)`. -/
-theorem le_of_hDevAt_lt {V : Type*} [Preorder V] {f g : ℝ≥0 → V}
-    (hg : Monotone g) {x d : ℝ≥0}
-    (hd : (hDevAt f g x : ℝ≥0∞) < d) :
-    f x ≤ g (x + d) := by
-  obtain ⟨⟨e, he⟩, hed⟩ := iInf_lt_iff.mp hd
-  have hed' : (e : ℝ≥0∞) < (d : ℝ≥0∞) := hed
-  exact le_trans he (hg (add_le_add le_rfl (by exact_mod_cast hed'.le)))
 
 /-- **Pay burst only once**: the horizontal deviation from the convolved
 curve is at most the per-stage sum through the deconvolved intermediate
@@ -80,11 +61,9 @@ theorem hDev_minConv_le_add_hDev_minDeconv {α β₁ β₂ : ℝ≥0 → ℝ≥0
   obtain ⟨r₂, hr₂l, hr₂u⟩ := ENNReal.lt_iff_exists_nnreal_btwn.mp
     (ENNReal.lt_add_right h₂t hε2.ne')
   -- `r₁`, `r₂` are uniformly admissible for their pairs
-  have hadm₁ : ∀ x, α x ≤ β₁ (x + r₁) := fun x =>
-    le_of_hDevAt_lt hβ₁mono ((hDevAt_le_hDev α β₁ x).trans_lt hr₁l)
-  have hadm₂ : ∀ x, minDeconv α β₁ x ≤ β₂ (x + r₂) := fun x =>
-    le_of_hDevAt_lt hβ₂mono
-      ((hDevAt_le_hDev (minDeconv α β₁) β₂ x).trans_lt hr₂l)
+  have hadm₁ : ∀ x, α x ≤ β₁ (x + r₁) := le_of_hDev_lt hβ₁mono hr₁l
+  have hadm₂ : ∀ x, minDeconv α β₁ x ≤ β₂ (x + r₂) :=
+    le_of_hDev_lt hβ₂mono hr₂l
   refine le_trans (hDevAt_le (d := r₁ + r₂) ?_) ?_
   · -- `α t ≤ (β₁ ∗ β₂) (t + (r₁ + r₂))`, split by split
     refine le_minConv fun u s hus => ?_

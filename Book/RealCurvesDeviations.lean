@@ -27,6 +27,14 @@ theorem hDevAtE_eq (f g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     hDevAtE f g t
       = ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) := rfl
 
+/-- Intro: `x ≤ d` over all admissible shifts `d` gives `↑x ≤ hDevAtE f g t`
+(the coercion crossing is absorbed). -/
+theorem le_hDevAtE {f g : ℝ≥0 → ℝ≥0∞} {t x : ℝ≥0}
+    (h : ∀ d : ℝ≥0, f t ≤ g (t + d) → x ≤ d) :
+    (x : ℝ≥0∞) ≤ hDevAtE f g t := by
+  rw [hDevAtE_eq]
+  exact le_iInf fun d => ENNReal.coe_le_coe.mpr (h d.1 d.2)
+
 /-- `delayNN d (t + u) = ⊤` when `d < t + u`. -/
 theorem delayNN_top_of_gt (d t u : ℝ≥0) (h : d < t + u) :
     delayNN d (t + u) = ⊤ := by
@@ -56,14 +64,11 @@ theorem hDevE_delay_le (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
 theorem hDevAtE_delay_ge (f : ℝ≥0 → ℝ≥0∞) (d t : ℝ≥0)
     (hft : 0 < f t) :
     ((d - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtE f (delayNN d) t := by
-  rw [hDevAtE_eq]
-  refine le_iInf ?_
-  rintro ⟨d', hd'⟩
+  refine le_hDevAtE fun d' hd' => ?_
   by_contra hlt
   rw [not_le] at hlt
-  have hd'r : d' < d - t := by exact_mod_cast hlt
   have htd : t + d' < d := by
-    rwa [lt_tsub_iff_left] at hd'r
+    rwa [lt_tsub_iff_left] at hlt
   have h0 : delayNN d (t + d') = 0 := by
     simp only [delayNN, delay_apply, if_pos htd.le]
   rw [h0] at hd'
@@ -225,10 +230,8 @@ theorem hDevAtE_rateLatency_ge (r b R T t : ℝ≥0)
     (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
       ≤ hDevAtE (tokenBucket r b)
           (rateLatency R T) t := by
-  rw [hDevAtE_eq]
-  refine le_iInf ?_
-  rintro ⟨d, hd⟩
-  rw [ENNReal.coe_le_coe, tsub_le_iff_right]
+  refine le_hDevAtE fun d hd => ?_
+  rw [tsub_le_iff_right]
   have hbnd := dlb r b R T t d hb ht hd
   rw [← NNReal.coe_le_coe] at hbnd ⊢
   push_cast [NNReal.coe_sub_def] at hbnd ⊢
@@ -302,12 +305,8 @@ theorem hDevAtE_rateLatency_ge_top (r b R T t : ℝ≥0)
     ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
       ≤ hDevAtE (tokenBucket r b)
           (rateLatency R T) t := by
-  rw [hDevAtE_eq]
-  refine le_iInf ?_
-  rintro ⟨d, hd⟩
-  rw [ENNReal.coe_le_coe]
+  refine le_hDevAtE fun d hd => ?_
   have hbnd := dlb_top r b R T t d hR hb hRr ht hd
-  show ((r-R)/R)*t ≤ d
   rw [div_mul_eq_mul_div, div_le_iff₀ hR, mul_comm d R]
   exact hbnd
 

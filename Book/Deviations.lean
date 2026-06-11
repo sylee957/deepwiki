@@ -93,6 +93,28 @@ theorem hDevAt_le {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
     (hDevAt f g t : R) ≤ (d : R) :=
   iInf_le (fun e : {e : D // f t ≤ g (t + e)} => (↑e.1 : R)) ⟨d, h⟩
 
+/-- Intro for a right-added deviation: `x ≤ ↑d + y` over all admissible
+shifts `d` gives `x ≤ hDevAt f g t + y`. -/
+theorem le_hDevAt_add {D V : Type*} [Add D] [Preorder V] [CoeTC D ℝ≥0∞]
+    {f g : D → V} {x y : ℝ≥0∞} {t : D}
+    (h : ∀ d : D, f t ≤ g (t + d) → x ≤ (d : ℝ≥0∞) + y) :
+    x ≤ (hDevAt f g t : ℝ≥0∞) + y := by
+  rw [show (hDevAt f g t : ℝ≥0∞)
+        = ⨅ d : {d : D // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) from rfl,
+    ENNReal.iInf_add]
+  exact le_iInf fun d => h d.1 d.2
+
+/-- Intro for a left-shifted deviation: `x ≤ ↑(c + d)` over all admissible
+shifts `d` gives `x ≤ ↑c + hDevAt f g t`. -/
+theorem le_add_hDevAt {V : Type*} [Preorder V] {f g : ℝ≥0 → V}
+    {x : ℝ≥0∞} {c t : ℝ≥0}
+    (h : ∀ d : ℝ≥0, f t ≤ g (t + d) → x ≤ ((c + d : ℝ≥0) : ℝ≥0∞)) :
+    x ≤ (c : ℝ≥0∞) + (hDevAt f g t : ℝ≥0∞) := by
+  rw [show (hDevAt f g t : ℝ≥0∞)
+        = ⨅ d : {d : ℝ≥0 // f t ≤ g (t + d)}, (d.1 : ℝ≥0∞) from rfl,
+    ENNReal.add_iInf]
+  exact le_iInf fun d => (h d.1 d.2).trans_eq (ENNReal.coe_add c d.1)
+
 /-- `hDevAt f g t = ⊤` when no admissible shift exists. -/
 theorem hDevAt_eq_top {D V : Type*} (R : Type*)
     [Add D] [Preorder V] [CompleteLattice R] [CoeTC D R]
@@ -168,6 +190,26 @@ theorem hDevAt_eq_iSup_lt {V : Type*} [LinearOrder V] {f g : ℝ≥0 → V}
     exact absurd
       (lt_of_le_of_lt (le_trans hd (hg (add_le_add le_rfl hlt.le))) hd')
       (lt_irrefl _)
+
+/-- For non-decreasing `g`, any shift strictly above the pointwise
+horizontal deviation is admissible: `hDevAt f g x < d` gives
+`f x ≤ g (x + d)`. -/
+theorem le_of_hDevAt_lt {V : Type*} [Preorder V] {f g : ℝ≥0 → V}
+    (hg : Monotone g) {x d : ℝ≥0}
+    (hd : (hDevAt f g x : ℝ≥0∞) < d) :
+    f x ≤ g (x + d) := by
+  obtain ⟨⟨e, he⟩, hed⟩ := iInf_lt_iff.mp hd
+  have hed' : (e : ℝ≥0∞) < (d : ℝ≥0∞) := hed
+  exact le_trans he (hg (add_le_add le_rfl (by exact_mod_cast hed'.le)))
+
+/-- For non-decreasing `g`, any shift strictly above the horizontal
+deviation is uniformly admissible: `hDev f g < d` gives `f x ≤ g (x + d)`
+at every `x`. -/
+theorem le_of_hDev_lt {V : Type*} [Preorder V] {f g : ℝ≥0 → V}
+    (hg : Monotone g) {d : ℝ≥0}
+    (hd : (hDev f g : ℝ≥0∞) < (d : ℝ≥0∞)) (x : ℝ≥0) :
+    f x ≤ g (x + d) :=
+  le_of_hDevAt_lt hg ((hDevAt_le_hDev f g x).trans_lt hd)
 
 /-! ## Backlog and delay of cumulative curves
 For arrival/departure curves `A, D : ℝ≥0 → ℝ≥0`, the **backlog** is the vertical

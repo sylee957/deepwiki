@@ -23,20 +23,11 @@ open scoped Classical NNReal ENNReal
 `hDevAt f g t ≤ s + hDevAt f g (t + s)` (for non-decreasing `f`). -/
 theorem hDevAt_le_add_hDevAt {f g : ℝ≥0 → ℝ≥0∞} (hf : Monotone f)
     (t s : ℝ≥0) :
-    (hDevAt f g t : ℝ≥0∞) ≤ ↑s + hDevAt f g (t + s) := by
-  calc (hDevAt f g t : ℝ≥0∞)
-      ≤ ⨅ d : {d : ℝ≥0 // f (t + s) ≤ g (t + s + d)},
-          ((s : ℝ≥0∞) + ↑d.1) :=
-        le_iInf fun d => by
-          rw [← ENNReal.coe_add]
-          exact hDevAt_le (show f t ≤ g (t + (s + d.1)) by
-            rw [← add_assoc]
-            exact (hf le_self_add).trans d.2)
-    _ = (s : ℝ≥0∞)
-          + ⨅ d : {d : ℝ≥0 // f (t + s) ≤ g (t + s + d)},
-              (↑d.1 : ℝ≥0∞) :=
-        ENNReal.add_iInf.symm
-    _ = ↑s + hDevAt f g (t + s) := rfl
+    (hDevAt f g t : ℝ≥0∞) ≤ ↑s + hDevAt f g (t + s) :=
+  le_add_hDevAt fun d hd =>
+    hDevAt_le (show f t ≤ g (t + (s + d)) by
+      rw [← add_assoc]
+      exact (hf le_self_add).trans hd)
 
 /-- Core insensitivity: every shift strictly larger than an admissible
 shift for `rightLim g` is admissible for `leftLim g`, so the left-closed
@@ -79,25 +70,15 @@ inequality `rightLim f t ≤ leftLim f (t + δ)` transfers admissibility). -/
 theorem hDevAt_rightLim_le_add_hDevAt_leftLim {f g : ℝ≥0 → ℝ≥0∞}
     (hf : Monotone f) (hg : Monotone g) (t : ℝ≥0) {δ : ℝ≥0} (hδ : 0 < δ) :
     (hDevAt (rightLim f) (rightLim g) t : ℝ≥0∞)
-      ≤ ↑δ + hDevAt (leftLim f) (leftLim g) (t + δ) := by
-  calc (hDevAt (rightLim f) (rightLim g) t : ℝ≥0∞)
-      ≤ ⨅ d : {d : ℝ≥0 // leftLim f (t + δ) ≤ leftLim g (t + δ + d)},
-          ((δ : ℝ≥0∞) + ↑d.1) :=
-        le_iInf fun d => by
-          rw [← ENNReal.coe_add]
-          refine hDevAt_le (show rightLim f t ≤ rightLim g (t + (δ + d.1))
-            from ?_)
-          calc rightLim f t
-              ≤ leftLim f (t + δ) :=
-                hf.rightLim_le_leftLim (lt_add_of_pos_right t hδ)
-            _ ≤ leftLim g (t + δ + d.1) := d.2
-            _ ≤ rightLim g (t + δ + d.1) := hg.leftLim_le_rightLim le_rfl
-            _ = rightLim g (t + (δ + d.1)) := by rw [add_assoc]
-    _ = (δ : ℝ≥0∞)
-          + ⨅ d : {d : ℝ≥0 // leftLim f (t + δ) ≤ leftLim g (t + δ + d)},
-              (↑d.1 : ℝ≥0∞) :=
-        ENNReal.add_iInf.symm
-    _ = ↑δ + hDevAt (leftLim f) (leftLim g) (t + δ) := rfl
+      ≤ ↑δ + hDevAt (leftLim f) (leftLim g) (t + δ) :=
+  le_add_hDevAt fun d hd =>
+    hDevAt_le (show rightLim f t ≤ rightLim g (t + (δ + d)) from
+      calc rightLim f t
+          ≤ leftLim f (t + δ) :=
+            hf.rightLim_le_leftLim (lt_add_of_pos_right t hδ)
+        _ ≤ leftLim g (t + δ + d) := hd
+        _ ≤ rightLim g (t + δ + d) := hg.leftLim_le_rightLim le_rfl
+        _ = rightLim g (t + (δ + d)) := by rw [add_assoc])
 
 /-- **The horizontal deviation is continuity insensitive**: the left- and
 right-closures of a non-decreasing pair have the same horizontal deviation

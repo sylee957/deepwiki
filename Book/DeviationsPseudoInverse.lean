@@ -40,15 +40,9 @@ theorem hDevAt_eq_pseudoInv_sub_of_lt {V : Type*} [Preorder V]
             le_rfl
       _ = d' := tsub_add_cancel_of_le htd'
   · -- conversely each admissible shift `d` makes `t + d` admissible for `g⁻¹`
-    rcases isEmpty_or_nonempty {d : ℝ≥0∞ // f t ≤ g (t + d)} with he | hne
-    · rw [hDevAt_eq_top ℝ≥0∞ f g t fun d hd => he.elim ⟨d, hd⟩]
-      exact le_top
-    · refine tsub_le_iff_right.mpr ?_
-      calc pseudoInv g (f t)
-          ≤ ⨅ d : {d : ℝ≥0∞ // f t ≤ g (t + d)}, (d.1 + t) :=
-            le_iInf fun d =>
-              pseudoInv_le_of_le_apply (by rw [add_comm]; exact d.2)
-        _ = (hDevAt f g t : ℝ≥0∞) + t := ENNReal.iInf_add.symm
+    exact tsub_le_iff_right.mpr
+      (le_hDevAt_add fun d hd =>
+        pseudoInv_le_of_le_apply (by rw [add_comm]; exact hd))
 
 /-- The pointwise identity without strictness: truncated subtraction
 absorbs the `f t ≤ g t` case, where both sides vanish (`d = 0` is an

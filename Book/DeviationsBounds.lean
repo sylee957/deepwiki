@@ -139,14 +139,7 @@ theorem delayAt_le_hDev {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0
       have hα : (A t : ℝ≥0∞) ≤ (A u : ℝ≥0∞) + α (t - u) :=
         (harr t).trans
           (minConv_le_add (liftENN A) α (add_tsub_cancel_of_le hut))
-      have hβd : α (t - u) ≤ β ((t - u) + d) := by
-        have hlt : (hDevAt α β (t - u) : ℝ≥0∞) < (d : ℝ≥0∞) :=
-          lt_of_le_of_lt
-            (le_iSup (fun x => (hDevAt α β x : ℝ≥0∞)) (t - u)) hd1
-        obtain ⟨⟨e, he⟩, hed⟩ := iInf_lt_iff.mp hlt
-        have hed' : (e : ℝ≥0∞) < (d : ℝ≥0∞) := hed
-        have hede : e ≤ d := by exact_mod_cast hed'.le
-        exact le_trans he (hβ (add_le_add le_rfl hede))
+      have hβd : α (t - u) ≤ β ((t - u) + d) := le_of_hDev_lt hβ hd1 (t - u)
       calc (A t : ℝ≥0∞)
           ≤ (A u : ℝ≥0∞) + α (t - u) := hα
         _ ≤ (A u : ℝ≥0∞) + β ((t - u) + d) := add_le_add le_rfl hβd
