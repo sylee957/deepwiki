@@ -155,35 +155,29 @@ arrival curve is again one, sub-additive, and `≤ α`. -/
 
 open scoped ENNReal
 
-/-- The increment bound iterated through the closure powers on `ℝ≥0∞`:
-`A (t + d) ≤ A t + (convPow (toF α) n d).toVal` for every power `n`. -/
-theorem increment_convPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0∞}
+/-- The increment bound iterated through the (min,+) powers on `ℝ≥0∞`:
+`A (t + d) ≤ A t + minConvPow α n d` for every power `n`. -/
+theorem increment_minConvPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0∞}
     (h : IsMaximalArrivalBound A α) (n : ℕ) (t d : ℝ≥0) :
-    A (t + d) ≤ A t + (convPow (toF α) n d).toVal := by
+    A (t + d) ≤ A t + minConvPow α n d := by
   rw [isMaximalArrivalBound_iff_increment] at h
   induction n generalizing t d with
   | zero =>
-      show A (t + d) ≤ A t + (convUnit (T := MinPlusNN) d).toVal
-      rw [MinPlusNN.convUnit_toVal]
+      rw [minConvPow_zero]
       split_ifs with hd
       · rw [hd, add_zero, add_zero]
       · rw [add_top]
         exact le_top
   | succ n ih =>
-      rw [show (convPow (toF α) (n + 1) d).toVal
-          = minConv (fun u => (convPow (toF α) n u).toVal) α d from
-        conv_toF_apply (fun u => (convPow (toF α) n u).toVal) α d]
-      show A (t + d)
-        ≤ A t + ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = d},
-            ((convPow (toF α) n p.1.1).toVal + α p.1.2)
-      rw [ENNReal.add_iInf]
-      refine le_iInf ?_
-      rintro ⟨⟨u, s⟩, (hus : u + s = d)⟩
+      rw [minConvPow_succ, add_comm (A t), ← tsub_le_iff_right]
+      refine le_minConv fun u s hus => ?_
+      rw [tsub_le_iff_right]
       calc A (t + d) = A ((t + u) + s) := by rw [add_assoc, hus]
         _ ≤ A (t + u) + α s := h (t + u) s
-        _ ≤ (A t + (convPow (toF α) n u).toVal) + α s :=
+        _ ≤ (A t + minConvPow α n u) + α s :=
             add_le_add (ih t u) le_rfl
-        _ = A t + ((convPow (toF α) n u).toVal + α s) := add_assoc _ _ _
+        _ = A t + (minConvPow α n u + α s) := add_assoc _ _ _
+        _ = (minConvPow α n u + α s) + A t := add_comm _ _
 
 /-- The (min,+) sub-additive closure on `ℝ≥0∞` of a maximal arrival curve is
 again a maximal arrival curve: if `A ≤ A ∗ α` then
@@ -195,7 +189,7 @@ theorem IsMaximalArrivalBound.subadditiveClosureE {A α : ℝ≥0 → ℝ≥0∞
   intro t d
   rw [subadditiveClosureE_eq_iInf, ENNReal.add_iInf]
   exact le_iInf fun n =>
-    increment_convPow_of_isMaximalArrivalBound h n t d
+    increment_minConvPow_of_isMaximalArrivalBound h n t d
 
 /-- The sub-additive closure of a maximal arrival curve (book form) is
 again one: monotonicity transports through the closure powers. -/

@@ -225,6 +225,66 @@ theorem subadditiveClosure_mono {D : Type}
     le_trans (convPow_mono sigma tau h n t)
       (convPow_le_closure tau n t))
 
+/-- `n`-fold (min,+) convolution power on numeric `ℝ≥0∞` values; `g⁰` is the
+unit (`0` at the origin, `⊤` elsewhere). -/
+noncomputable def minConvPow {D : Type}
+    [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) : ℕ → (D → ℝ≥0∞)
+  | 0 => fun t => if t = 0 then 0 else ⊤
+  | n + 1 => minConv (minConvPow g n) g
+
+/-- `minConvPow g 0 t` is `0` at the origin and `⊤` elsewhere. -/
+theorem minConvPow_zero {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) (t : D) :
+    minConvPow g 0 t = if t = 0 then 0 else ⊤ := rfl
+
+/-- `minConvPow g (n + 1) = minConv (minConvPow g n) g`. -/
+theorem minConvPow_succ {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) (n : ℕ) :
+    minConvPow g (n + 1) = minConv (minConvPow g n) g := rfl
+
+/-- The `MinPlusNN` dioid power read back via `toVal` is `minConvPow`:
+`((convPow (toF g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t`. -/
+theorem convPow_toF_apply {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) (n : ℕ) (t : D) :
+    ((convPow (toF g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t := by
+  induction n generalizing t with
+  | zero =>
+      rw [show ((convPow (toF g) 0 t : MinPlusNN) : ℝ≥0∞)
+          = (convUnit (T := MinPlusNN) t).toVal from rfl,
+        MinPlusNN.convUnit_toVal, minConvPow_zero]
+  | succ n ih =>
+      calc ((convPow (toF g) (n + 1) t : MinPlusNN) : ℝ≥0∞)
+          = minConv
+              (fun u => ((convPow (toF g) n u : MinPlusNN) : ℝ≥0∞)) g t :=
+            conv_toF_apply _ g t
+        _ = minConv (minConvPow g n) g t := by simp only [ih]
+        _ = minConvPow g (n + 1) t := rfl
+
+/-- `convPow (toF g) n = toF (minConvPow g n)`: the dioid power of the lift
+is the lift of the numeric power. -/
+theorem convPow_toF {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) (n : ℕ) :
+    convPow (toF g) n = toF (minConvPow g n) := by
+  funext t
+  apply MinPlusNN.ext
+  exact convPow_toF_apply g n t
+
+/-- Each (min,+) power of a monotone `ℝ≥0∞` curve is monotone: the unit power
+is monotone and `minConv` preserves monotonicity. -/
+theorem monotone_minConvPow {g : ℝ≥0 → ℝ≥0∞} (hmono : Monotone g)
+    (n : ℕ) : Monotone (minConvPow g n) := by
+  induction n with
+  | zero =>
+      intro a b hab
+      rw [minConvPow_zero, minConvPow_zero]
+      split_ifs with ha hb hb
+      · exact le_rfl
+      · exact le_top
+      · exact absurd (le_antisymm (hb ▸ hab) zero_le') ha
+      · exact le_rfl
+  | succ n ih => exact monotone_minConv ih hmono
+
 /-- Closure on numeric `ℝ≥0∞` values via the `MinPlusNN` carrier. -/
 noncomputable def subadditiveClosureE {D : Type}
     [_root_.AddCommMonoid D]
@@ -232,11 +292,12 @@ noncomputable def subadditiveClosureE {D : Type}
   fun t => (subadditiveClosure (toF g) t).toVal
 
 /-- `subadditiveClosureE g t` is the numeric infimum of the convolution
-powers: `⨅ n, (convPow (toF g) n t).toVal`. -/
+powers: `⨅ n, minConvPow g n t`. -/
 theorem subadditiveClosureE_eq_iInf {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) (t : D) :
     subadditiveClosureE g t
-      = ⨅ n : ℕ, (convPow (toF g) n t).toVal := rfl
+      = ⨅ n : ℕ, minConvPow g n t :=
+  iInf_congr fun n => convPow_toF_apply g n t
 
 /-- `toF` transports `subadditiveClosureE` to `subadditiveClosure`. -/
 theorem toF_subadditiveClosureE {D : Type}
@@ -278,35 +339,13 @@ theorem subadditiveClosureE_subadditive {D : Type}
     _ = subadditiveClosureE g u
           + subadditiveClosureE g s := rfl
 
-/-- The numeric closure of a monotone `ℝ≥0∞` curve is monotone: `convUnit`
-is monotone and `minConv` preserves monotonicity through the powers. -/
+/-- The numeric closure of a monotone `ℝ≥0∞` curve is monotone: each
+`minConvPow` power is. -/
 theorem monotone_subadditiveClosureE {g : ℝ≥0 → ℝ≥0∞}
     (hmono : Monotone g) : Monotone (subadditiveClosureE g) := by
-  have hpow : ∀ n, Monotone fun t => (convPow (toF g) n t).toVal := by
-    intro n
-    induction n with
-    | zero =>
-        intro a b hab
-        show (convUnit (T := MinPlusNN) a).toVal
-          ≤ (convUnit (T := MinPlusNN) b).toVal
-        rw [MinPlusNN.convUnit_toVal, MinPlusNN.convUnit_toVal]
-        split_ifs with ha hb hb
-        · exact le_rfl
-        · exact le_top
-        · exact absurd (le_antisymm (hb ▸ hab) zero_le') ha
-        · exact le_rfl
-    | succ n ih =>
-        intro a b hab
-        calc (convPow (toF g) (n + 1) a).toVal
-            = minConv (fun u => (convPow (toF g) n u).toVal) g a :=
-              conv_toF_apply _ g a
-          _ ≤ minConv (fun u => (convPow (toF g) n u).toVal) g b :=
-              monotone_minConv ih hmono hab
-          _ = (convPow (toF g) (n + 1) b).toVal :=
-              (conv_toF_apply _ g b).symm
   intro a b hab
   rw [subadditiveClosureE_eq_iInf, subadditiveClosureE_eq_iInf]
-  exact iInf_mono fun n => hpow n hab
+  exact iInf_mono fun n => monotone_minConvPow hmono n hab
 
 /-- Sub-additive `g` with `g 0 = 0` is its own closure. -/
 theorem subadditiveClosureE_eq_self {D : Type}
