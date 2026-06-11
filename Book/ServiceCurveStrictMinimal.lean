@@ -23,7 +23,7 @@ theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
     (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S) :
     IsMinimalServiceCurve (liftEReal beta) S := by
   intro A D hp t
-  have hst : start ⇑A ⇑D t ≤ t := start_le (A.zero_eq D) t
+  have hst : start ⇑A ⇑D t ≤ t := start_le ⇑A ⇑D t
   have hbound : A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t :=
     strictServiceRel_output_bound beta A D ⟨hc A D hp, hβ A D hp⟩ t
   calc minConv (curveE A) (liftEReal beta) t
@@ -105,7 +105,7 @@ theorem minConv_superadditiveClosureMaxNN_le_of_isStrictMinimalServiceCurve
     minConv (liftENN ⇑A) (superadditiveClosureMaxNN (liftENN beta)) t
       ≤ (D t : ℝ≥0∞) := by
   have hcAD : ∀ x, D x ≤ A x := hc A D hp
-  have hst : start ⇑A ⇑D t ≤ t := start_le (A.zero_eq D) t
+  have hst : start ⇑A ⇑D t ≤ t := start_le ⇑A ⇑D t
   have hcl : (D (start ⇑A ⇑D t) : ℝ≥0∞)
       + superadditiveClosureMaxNN (liftENN beta) (t - start ⇑A ⇑D t)
       ≤ (D t : ℝ≥0∞) := by

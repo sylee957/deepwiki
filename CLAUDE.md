@@ -194,9 +194,10 @@ not just defaults):
     `hlc` left-continuous, `hsub` sub-additive, `hsup` super-additive,
     `hp` pair membership `S A D`, `hc` causal, `hSrv` server, `harr`
     arrival-curve, `hserv` service bound, `hcross` crossing, `hne` nonempty
-    (crossing set). When two curves both need a property, tag the binder by
-    the curve (`hαmono`/`hβmono`), keeping plain `hmono` where only one
-    curve carries it.
+    (crossing set) or the `≠` hypothesis of an `_of_ne` lemma. When two
+    curves both need a property, tag the binder by the curve
+    (`hαmono`/`hβmono`, `hAlc`/`hDlc`), keeping plain `hmono` where only
+    one curve carries it.
   - Carrier tags (target grammar; bare `E` is legacy and ambiguous):
     `NN` = `ℝ≥0∞` values on `ℝ≥0` domain, `ENN` = an `ℝ≥0∞` reading/lift,
     `EReal` = `EReal` values, `Ext` = `WithTop (WithBot ℝ)`; lowercase
@@ -230,6 +231,16 @@ not just defaults):
   (`Book/ArrivalCurves.lean`, generic over the value order): state ℓmax-style
   hypotheses as `ℓmax ∈ crossingSet α β` and never re-spell
   `{x | 0 < x ∧ α x ≤ β x}` or its `⨅`/`sInf` inline.
+
+- **Time-domain machinery is unbundled from `Curve`.** `IsBacklogged`,
+  `start`, `backloggedAgeAt`, `maxBackloggedLength` (`Book/ServersBacklog.lean`)
+  — like `backlog`/`delay` and the deviations — are stated on plain
+  `ℝ≥0 → ℝ≥0` functions with the properties they consume as hypotheses
+  (`h0 : A 0 = D 0` only where the equality set must be inhabited;
+  left-continuity only in `apply_start_eq`). `Curve` call sites pass
+  `⇑A ⇑D` and discharge hypotheses via the wrappers `Curve.zero_eq` /
+  `Curve.apply_start_eq`. Don't re-bundle new time-domain notions into
+  `Curve`; right-continuous cumulative functions must remain stateable.
 
 - **Definitions split from proofs; share one definition via base + abbrev.**
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof

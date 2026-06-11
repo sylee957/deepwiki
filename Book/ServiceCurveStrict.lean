@@ -132,7 +132,7 @@ theorem strictServiceRel_output_bound (beta : ℝ≥0 → ℝ≥0)
     A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t := by
   have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
   have hbl := isBacklogged_Ioc_start hc t
-  have hbound := hp.2 (start ⇑A ⇑D t) t (start_le (A.zero_eq D) t) hbl
+  have hbound := hp.2 (start ⇑A ⇑D t) t (start_le ⇑A ⇑D t) hbl
   rw [A.apply_start_eq D hc t]
   exact hbound
 
@@ -303,7 +303,7 @@ theorem beta_lt_alpha_of_isBacklogged
   set s := start ⇑A ⇑D (t + d)
   have heq : A s = D s := A.apply_start_eq D hcAD (t + d)
   -- the start lies at or before `t`: no equality point inside the backlog
-  have hst : s ≤ t := start_le_of_isBacklogged (A.zero_eq D) hbl
+  have hst : s ≤ t := start_le_of_isBacklogged hbl
   -- `s + d'` stays inside the backlogged period from the start
   have hmem : s + d' ∈ Set.Ioc s (t + d) :=
     ⟨lt_add_of_pos_right s hd', add_le_add hst hle⟩
@@ -366,7 +366,7 @@ theorem maxBackloggedLength_le_firstCrossing
   refine iSup_le fun t => ?_
   have hbl : IsBacklogged (⇑A) (⇑D)
       (Set.Ioc (start ⇑A ⇑D t) (start ⇑A ⇑D t + (t - start ⇑A ⇑D t))) := by
-    rw [add_tsub_cancel_of_le (start_le (A.zero_eq D) t)]
+    rw [add_tsub_cancel_of_le (start_le ⇑A ⇑D t)]
     exact isBacklogged_Ioc_start (hc A D hp) t
   exact length_le_firstCrossing_of_isBacklogged hc hβ hp harr hbl
 
@@ -390,7 +390,7 @@ example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}
     (harr : IsMaximalArrivalCurve (⇑A) alpha)
     {t d : ℝ≥0} (hbl : IsBacklogged (⇑A) (⇑D) (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ firstCrossing alpha beta :=
-  le_trans (le_maxBackloggedLength_of_isBacklogged (A.zero_eq D) hbl)
+  le_trans (le_maxBackloggedLength_of_isBacklogged hbl)
     (maxBackloggedLength_le_firstCrossing hSrv.1 hβ hp harr.2)
 
 end DeepWiki

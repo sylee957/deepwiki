@@ -202,29 +202,79 @@ theorem vDev_leftLim_eq_vDev_rightLim {f g : ℝ≥0 → ℝ≥0∞}
           rw [add_tsub_cancel_of_le hz.le]
           exact hg.leftLim_le le_rfl
 
+/-- Left-closing both arguments never increases the vertical deviation:
+`vDev (leftLim f) (leftLim g) ≤ vDev f g` for non-decreasing `f, g` (no
+continuity needed; each closed term is a supremum of original terms). -/
+theorem vDev_leftLim_le_vDev {f g : ℝ≥0 → ℝ≥0∞}
+    (hf : Monotone f) (hg : Monotone g) :
+    vDev (leftLim f) (leftLim g) ≤ vDev f g := by
+  refine iSup_le fun t => ?_
+  rcases eq_or_ne t 0 with rfl | ht
+  · show leftLim f 0 - leftLim g 0 ≤ _
+    rw [leftLim_zero_eq f, leftLim_zero_eq g]
+    exact vDevAt_le_vDev f g 0
+  · show leftLim f t - leftLim g t ≤ _
+    rw [hf.leftLim_eq_sSup
+        (nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩).ne,
+      tsub_le_iff_right]
+    refine sSup_le ?_
+    rintro b ⟨y, (hy : y < t), rfl⟩
+    rw [← tsub_le_iff_right]
+    calc f y - leftLim g t
+        ≤ f y - g y := tsub_le_tsub le_rfl (hg.le_leftLim hy)
+      _ ≤ vDev f g := vDevAt_le_vDev f g y
+
 /-- **Right-continuous cumulative functions do not change the bounds**: for
-a left-continuous pair the right closures have the same vertical deviation,
-`vDev (rightLim f) (rightLim g) = vDev f g` (the left closures fix `f, g`
-and Theorem 5.6 bridges to the right closures). -/
+non-decreasing `f, g` with `f` left-continuous and `f 0 = 0`, the right
+closures have the same vertical deviation,
+`vDev (rightLim f) (rightLim g) = vDev f g` (the closure insensitivity
+`vDev_leftLim_eq_vDev_rightLim` bridges to the left closures, which fix `f`
+and only lower `g`). -/
 theorem vDev_rightLim_eq_vDev_of_isLeftContinuous {f g : ℝ≥0 → ℝ≥0∞}
-    (hf : Monotone f) (hg : Monotone g)
-    (hflc : IsLeftContinuous f) (hglc : IsLeftContinuous g)
+    (hf : Monotone f) (hg : Monotone g) (hflc : IsLeftContinuous f)
     (hf0 : f 0 = 0) :
     vDev (rightLim f) (rightLim g) = vDev f g := by
-  rw [← vDev_leftLim_eq_vDev_rightLim hf hg hf0,
-    (isLeftContinuous_iff_leftLim_eq hf).mp hflc,
-    (isLeftContinuous_iff_leftLim_eq hg).mp hglc]
+  rw [← vDev_leftLim_eq_vDev_rightLim hf hg hf0]
+  apply le_antisymm (vDev_leftLim_le_vDev hf hg)
+  rw [(isLeftContinuous_iff_leftLim_eq hf).mp hflc]
+  exact iSup_le fun t => le_trans
+    (tsub_le_tsub le_rfl (hg.leftLim_le le_rfl))
+    (vDevAt_le_vDev _ _ t)
 
-/-- The dual reading: for a right-continuous pair the left closures have
-the same vertical deviation, `vDev (leftLim f) (leftLim g) = vDev f g`. -/
+/-- The dual reading: for non-decreasing `f, g` with `g` right-continuous,
+the left closures have the same vertical deviation,
+`vDev (leftLim f) (leftLim g) = vDev f g` (no null-at-origin needed: the
+`δ`-shifted left closures squeeze onto `rightLim g = g`). -/
 theorem vDev_leftLim_eq_vDev_of_isRightContinuous {f g : ℝ≥0 → ℝ≥0∞}
-    (hf : Monotone f) (hg : Monotone g)
-    (hfrc : IsRightContinuous f) (hgrc : IsRightContinuous g)
-    (hf0 : f 0 = 0) :
+    (hf : Monotone f) (hg : Monotone g) (hgrc : IsRightContinuous g) :
     vDev (leftLim f) (leftLim g) = vDev f g := by
-  rw [vDev_leftLim_eq_vDev_rightLim hf hg hf0,
-    (isRightContinuous_iff_rightLim_eq hf).mp hfrc,
-    (isRightContinuous_iff_rightLim_eq hg).mp hgrc]
+  apply le_antisymm (vDev_leftLim_le_vDev hf hg)
+  refine iSup_le fun t => ?_
+  show f t - g t ≤ _
+  rw [tsub_le_iff_right]
+  calc f t
+      ≤ ⨅ δ : {δ : ℝ≥0 // 0 < δ},
+          (vDev (leftLim f) (leftLim g) + leftLim g (t + δ.1)) :=
+        le_iInf fun δ => by
+          calc f t
+              ≤ leftLim f (t + δ.1) :=
+                hf.le_leftLim (lt_add_of_pos_right t δ.2)
+            _ ≤ (leftLim f (t + δ.1) - leftLim g (t + δ.1))
+                  + leftLim g (t + δ.1) := le_tsub_add
+            _ ≤ vDev (leftLim f) (leftLim g) + leftLim g (t + δ.1) :=
+                add_le_add (vDevAt_le_vDev _ _ _) le_rfl
+    _ = vDev (leftLim f) (leftLim g)
+          + ⨅ δ : {δ : ℝ≥0 // 0 < δ}, leftLim g (t + δ.1) :=
+        ENNReal.add_iInf.symm
+    _ ≤ vDev (leftLim f) (leftLim g) + g t := by
+        refine add_le_add le_rfl ?_
+        rw [← congrFun ((isRightContinuous_iff_rightLim_eq hg).mp hgrc) t,
+          hg.rightLim_eq_sInf (nhdsGT_neBot t).ne]
+        refine le_sInf ?_
+        rintro b ⟨z, (hz : t < z), rfl⟩
+        refine iInf_le_of_le ⟨z - t, tsub_pos_of_lt hz⟩ ?_
+        rw [add_tsub_cancel_of_le hz.le]
+        exact hg.leftLim_le le_rfl
 
 /-! ## Book restatement (performance operators are continuity insensitive)
 For non-decreasing `f, g ∈ ℱ₀↑` with left- and right-closures
@@ -265,15 +315,16 @@ example {f g : ℝ≥0 → ℝ≥0∞} (hf : Monotone f) (hg : Monotone g)
 `hDev(Aᵣ, Dᵣ) = hDev(A, D)` and `vDev(Aᵣ, Dᵣ) = vDev(A, D)`": the
 worst-case backlog and delay bounds are the same as with left-continuous
 cumulative functions. The horizontal half does not even need
-left-continuity; the vertical half consumes it through the closure
-fixed point, plus null at the origin (the class `C`). Causality `D ≤ A`
-is carried unused for fidelity to `C`. -/
+left-continuity; the vertical half consumes it for `A` through the closure
+fixed point, plus null at the origin (the class `C`). Causality `D ≤ A`,
+left-continuity of `D`, and `D 0 = 0` are carried unused for fidelity to
+`C`. -/
 example {A D : ℝ≥0 → ℝ≥0∞} (hAmono : Monotone A) (hDmono : Monotone D)
-    (hAlc : IsLeftContinuous A) (hDlc : IsLeftContinuous D)
-    (hA0 : A 0 = 0) (_hc : ∀ t, D t ≤ A t) :
+    (hAlc : IsLeftContinuous A) (_hDlc : IsLeftContinuous D)
+    (hA0 : A 0 = 0) (_hD0 : D 0 = 0) (_hc : ∀ t, D t ≤ A t) :
     (hDev (rightLim A) (rightLim D) : ℝ≥0∞) = hDev A D ∧
       vDev (rightLim A) (rightLim D) = vDev A D :=
   ⟨hDev_rightLim_eq_hDev hAmono hDmono,
-    vDev_rightLim_eq_vDev_of_isLeftContinuous hAmono hDmono hAlc hDlc hA0⟩
+    vDev_rightLim_eq_vDev_of_isLeftContinuous hAmono hDmono hAlc hA0⟩
 
 end DeepWiki

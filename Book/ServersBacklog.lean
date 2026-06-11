@@ -33,15 +33,15 @@ theorem start_set_nonempty {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0) (t : ℝ
     { u | u ≤ t ∧ A u = D u }.Nonempty :=
   ⟨0, zero_le', h0⟩
 
-/-- `start A D t ≤ t`. -/
-theorem start_le {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0) (t : ℝ≥0) :
+/-- `start A D t ≤ t` (`sSup ∅ = 0` covers an empty equality set). -/
+theorem start_le (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     start A D t ≤ t :=
-  csSup_le (start_set_nonempty h0 t) (fun _ hx => hx.1)
+  csSup_le' (fun _ hx => hx.1)
 
 /-- `start A D` is monotone in `t`. -/
-theorem start_mono {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0) {t t' : ℝ≥0}
+theorem start_mono (A D : ℝ≥0 → ℝ≥0) {t t' : ℝ≥0}
     (h : t ≤ t') : start A D t ≤ start A D t' :=
-  csSup_le (start_set_nonempty h0 t)
+  csSup_le'
     (fun _ hx =>
       le_csSup ⟨t', fun _ hy => hy.1⟩
         ⟨le_trans hx.1 h, hx.2⟩)
@@ -54,10 +54,10 @@ theorem IsBacklogged.subset {A D : ℝ≥0 → ℝ≥0}
 
 /-- When `(t, t']` is backlogged, the start of the period of `t'` lies at or
 before `t`: equality points avoid the backlog. -/
-theorem start_le_of_isBacklogged {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0)
+theorem start_le_of_isBacklogged {A D : ℝ≥0 → ℝ≥0}
     {t t' : ℝ≥0} (hbl : IsBacklogged A D (Set.Ioc t t')) :
     start A D t' ≤ t := by
-  refine csSup_le (start_set_nonempty h0 t') ?_
+  refine csSup_le' ?_
   intro u hu
   by_contra hut
   rw [not_le] at hut
@@ -187,7 +187,7 @@ noncomputable def maxBackloggedLength (A D : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :
 backlogged `(t, t + d]` the start of the period of `t + d` lies at or
 before `t`, so the age at `t + d` is at least `d`. -/
 theorem le_maxBackloggedLength_of_isBacklogged {A D : ℝ≥0 → ℝ≥0}
-    (h0 : A 0 = D 0) {t d : ℝ≥0}
+    {t d : ℝ≥0}
     (hbl : IsBacklogged A D (Set.Ioc t (t + d))) :
     (d : ℝ≥0∞) ≤ maxBackloggedLength A D := by
   refine le_trans ?_
@@ -195,7 +195,7 @@ theorem le_maxBackloggedLength_of_isBacklogged {A D : ℝ≥0 → ℝ≥0}
   have hage : d ≤ backloggedAgeAt A D (t + d) := by
     calc d = (t + d) - t := (add_tsub_cancel_left t d).symm
       _ ≤ (t + d) - start A D (t + d) :=
-        tsub_le_tsub_left (start_le_of_isBacklogged h0 hbl) _
+        tsub_le_tsub_left (start_le_of_isBacklogged hbl) _
   exact_mod_cast hage
 
 /-- `start` is constant across an order-connected backlogged set. -/
@@ -208,12 +208,12 @@ theorem start_const_of_backlogged {A D : ℝ≥0 → ℝ≥0}
     start A D t = start A D t' := by
   wlog hle : t ≤ t' generalizing t t'
   · exact (this ht' ht (not_le.mp hle).le).symm
-  refine le_antisymm (start_mono h0 hle) ?_
+  refine le_antisymm (start_mono A D hle) ?_
   have hst : start A D t' ≤ t := by
     by_contra h
     rw [not_le] at h
     have hmem : start A D t' ∈ I :=
-      hoc.out ht ht' ⟨h.le, start_le h0 t'⟩
+      hoc.out ht ht' ⟨h.le, start_le A D t'⟩
     have := hI _ hmem
     rw [apply_start_eq hAlc hDlc h0 hc t'] at this
     exact absurd this (lt_irrefl _)
