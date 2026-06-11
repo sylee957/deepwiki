@@ -218,6 +218,17 @@ theorem not_minimalServiceRel_le_comp_delay_rate :
           (minimalServiceRel (rateEReal 1)) :=
   fun hle => witness_not_mem_comp (hle _ _ witness_mem_minimalServiceRel)
 
+/-- **The converse of the concatenation theorem is false**: it is not the
+case that `Smp(β₁ ∗ β₂) ⊆ Smp(β₂) ∘ Smp(β₁)` for all bounded-below curves
+— `β₁ = δ₃`, `β₂ = λ₁` is a counterexample. -/
+theorem not_forall_minimalServiceRel_le_comp :
+    ¬ ∀ (β₁ β₂ : ℝ≥0 → EReal), IsBddBelowReal β₁ → IsBddBelowReal β₂ →
+      minimalServiceRel (minConv β₁ β₂)
+        ≤ Relation.Comp (minimalServiceRel β₁) (minimalServiceRel β₂) :=
+  fun h => not_minimalServiceRel_le_comp_delay_rate
+    (h _ _ (isNonneg_delayEReal 3).isBddBelowReal
+      (isNonneg_rateEReal 1).isBddBelowReal)
+
 /-- **The concatenation inclusion is strict**:
 `Smp(λ₁) ∘ Smp(δ₃) ⊊ Smp(δ₃ ∗ λ₁)`. The convolution is commutative, the
 composition is not — the convolution does not exactly model the
@@ -263,6 +274,16 @@ intermediate `B` is a cumulative process with `B 0 = 0`, and the origin
 split caps the second stage by `β₂` alone: `C ≤ B ∗ 0 ≤ B 0 + 0 = 0`.
 (The witness `β₁` sits outside `F₀`; for `β₁ 0 = 0` one has
 `β₁ ∗ β₂ ≤ β₂` and this particular gap closes.) -/
+
+/-- The constant-one curve is nonnegative. -/
+theorem isNonneg_one_ereal : IsNonneg (fun _ : ℝ≥0 => (1 : EReal)) :=
+  fun _ => by
+    show (0 : EReal) ≤ (1 : EReal)
+    exact_mod_cast (zero_le_one : (0 : ℝ) ≤ 1)
+
+/-- The constant-zero curve is nonnegative. -/
+theorem isNonneg_zero_ereal : IsNonneg (fun _ : ℝ≥0 => (0 : EReal)) :=
+  fun _ => le_rfl
 
 /-- The witness pair for the maximal side: the unit step is an admissible
 output of the zero arrival under the convolved maximal curve `1 ∗ 0 ≡ 1`. -/
@@ -334,12 +355,20 @@ theorem comp_maximalServiceRel_lt_one_zero :
           (minConv (fun _ : ℝ≥0 => (1 : EReal)) (fun _ : ℝ≥0 => (0 : EReal))) :=
   lt_of_le_not_ge
     (comp_maximalServiceRel_le
-      (show IsNonneg (fun _ : ℝ≥0 => (1 : EReal)) from fun _ => by
-        show (0 : EReal) ≤ (1 : EReal)
-        exact_mod_cast (zero_le_one : (0 : ℝ) ≤ 1)).isBddBelowReal
-      (show IsNonneg (fun _ : ℝ≥0 => (0 : EReal)) from
-        fun _ => le_rfl).isBddBelowReal)
+      isNonneg_one_ereal.isBddBelowReal
+      isNonneg_zero_ereal.isBddBelowReal)
     not_maximalServiceRel_le_comp_one_zero
+
+/-- **The converse of the maximal concatenation theorem is false**: it is
+not the case that `Smax(β₁ ∗ β₂) ⊆ Smax(β₂) ∘ Smax(β₁)` for all
+bounded-below curves — `β₁ ≡ 1`, `β₂ ≡ 0` is a counterexample. -/
+theorem not_forall_maximalServiceRel_le_comp :
+    ¬ ∀ (β₁ β₂ : ℝ≥0 → EReal), IsBddBelowReal β₁ → IsBddBelowReal β₂ →
+      maximalServiceRel (minConv β₁ β₂)
+        ≤ Relation.Comp (maximalServiceRel β₁) (maximalServiceRel β₂) :=
+  fun h => not_maximalServiceRel_le_comp_one_zero
+    (h _ _ isNonneg_one_ereal.isBddBelowReal
+      isNonneg_zero_ereal.isBddBelowReal)
 
 /-! The strictness decomposes into its two directions: the concatenation
 containment `Smp(β₂) ∘ Smp(β₁) ⊆ Smp(β₁ ∗ β₂)` holds, while the reverse
