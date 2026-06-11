@@ -69,13 +69,10 @@ theorem add_maxConvPow_le_of_isBacklogged
       exact_mod_cast hβ A D hp s t hst hbl
   | succ n ih =>
       show (D s : ℝ≥0∞)
-        + ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t - s},
-            (maxConvPow (liftENN beta) n p.1.1
-              + maxConvPow (liftENN beta) n p.1.2)
+        + maxConv (maxConvPow (liftENN beta) n) (maxConvPow (liftENN beta) n)
+            (t - s)
         ≤ (D t : ℝ≥0∞)
-      rw [ENNReal.add_iSup]
-      refine iSup_le ?_
-      rintro ⟨⟨a, b⟩, (hab : a + b = t - s)⟩
+      refine add_maxConv_le fun a b hab => ?_
       have hsum : s + a + b = t := by
         rw [add_assoc, hab, add_tsub_cancel_of_le hst]
       have hat : s + a ≤ t := by

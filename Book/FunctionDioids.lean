@@ -82,6 +82,18 @@ theorem maxConv_le {D T : Type*} [AddZeroClass D] [Add T]
     maxConv f g t ≤ x :=
   ciSup_le fun p => h p.1.1 p.1.2 p.2
 
+/-- Intro with a leading constant, on the `ℝ≥0∞` carrier:
+`c + maxConv f g t ≤ x` from the per-split bounds `c + (f u + g s) ≤ x`
+(the constant pushes through the supremum). -/
+theorem add_maxConv_le {D : Type*} [AddZeroClass D]
+    {f g : D → ℝ≥0∞} {c x : ℝ≥0∞} {t : D}
+    (h : ∀ u s, u + s = t → c + (f u + g s) ≤ x) :
+    c + maxConv f g t ≤ x := by
+  rw [show maxConv f g t
+      = ⨆ p : {p : D × D // p.1 + p.2 = t}, f p.1.1 + g p.1.2 from rfl,
+    ENNReal.add_iSup]
+  exact iSup_le fun p => h p.1.1 p.1.2 p.2
+
 /-- `minConv` is monotone in both arguments (pointwise), over any ordered
 codomain with monotone `+` and infima, e.g. `EReal` or `ℝ≥0∞`. -/
 theorem minConv_le_minConv {D T : Type*} [AddZeroClass D] [Add T]
