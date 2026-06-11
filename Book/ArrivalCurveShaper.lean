@@ -20,15 +20,7 @@ theorem increment_convPowEReal_of_isMaximalArrivalBound
     (h : IsMaximalArrivalBound f sigma) (n : ℕ) (u s : ℝ≥0) :
     f (u + s) ≤ f u + convPowEReal sigma n s := by
   induction n generalizing u s with
-  | zero =>
-      rcases eq_or_ne s 0 with hs | hs
-      · subst hs
-        rw [add_zero]
-        show f u ≤ f u + convUnitEReal 0
-        rw [convUnitEReal, if_pos rfl, add_zero]
-      · show f (u + s) ≤ f u + convUnitEReal s
-        rw [convUnitEReal, if_neg hs, EReal.add_top_of_ne_bot (hf u)]
-        exact le_top
+  | zero => exact hf.increment_convUnitEReal u s
   | succ k ih =>
       show f (u + s) ≤ f u + minConv (convPowEReal sigma k) sigma s
       have hbot : minConv (convPowEReal sigma k) sigma s ≠ ⊥ :=
@@ -57,7 +49,7 @@ theorem isMaximalArrivalBound_subadditiveClosureEReal_iff
     refine (isMaximalArrivalBound_iff_increment _ _).mpr (fun u s => ?_)
     show f (u + s) ≤ f u + subadditiveClosureEReal sigma s
     have hbot : (⨅ n : ℕ, convPowEReal sigma n s) ≠ ⊥ :=
-      ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hnn n s))
+      subadditiveClosureEReal_neverBot hnn s
     refine le_trans (le_iInf (fun n => ?_)) (iInf_add_le_add_iInf (hf u) hbot)
     exact increment_convPowEReal_of_isMaximalArrivalBound hf hnn h n u s
 

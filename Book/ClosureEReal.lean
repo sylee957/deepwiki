@@ -38,6 +38,17 @@ theorem BddBelowReal.neverBot {g : ℝ≥0 → EReal} (hg : BddBelowReal g) :
 noncomputable def convUnitEReal : ℝ≥0 → EReal :=
   fun t => if t = 0 then 0 else ⊤
 
+/-- For `NeverBot f`, the unit increment bound
+`f (u + s) ≤ f u + convUnitEReal s`. -/
+theorem NeverBot.increment_convUnitEReal {f : ℝ≥0 → EReal}
+    (hf : NeverBot f) (u s : ℝ≥0) :
+    f (u + s) ≤ f u + convUnitEReal s := by
+  rcases eq_or_ne s 0 with hs | hs
+  · subst hs
+    rw [add_zero, convUnitEReal, if_pos rfl, add_zero]
+  · rw [convUnitEReal, if_neg hs, EReal.add_top_of_ne_bot (hf u)]
+    exact le_top
+
 /-- `n`-fold (min,+) convolution power `gⁿ`; `g⁰ = convUnitEReal`. -/
 noncomputable def convPowEReal (g : ℝ≥0 → EReal) : ℕ → (ℝ≥0 → EReal)
   | 0 => convUnitEReal
@@ -145,17 +156,8 @@ theorem convPowEReal_term_le {g : ℝ≥0 → EReal} (hg : BddBelowReal g)
   induction n generalizing s with
   | zero =>
       rw [Nat.add_zero]
-      rcases eq_or_ne s 0 with hs | hs
-      · subst hs
-        rw [add_zero]
-        show convPowEReal g m u ≤ convPowEReal g m u + convUnitEReal 0
-        rw [convUnitEReal, if_pos rfl, add_zero]
-      · show convPowEReal g m (u + s)
-            ≤ convPowEReal g m u + convUnitEReal s
-        rw [convUnitEReal, if_neg hs,
-          EReal.add_top_of_ne_bot
-            ((convPowEReal_bddBelowReal hg m).neverBot u)]
-        exact le_top
+      exact (convPowEReal_bddBelowReal hg m).neverBot.increment_convUnitEReal
+        u s
   | succ k ih =>
       obtain ⟨ck, hck⟩ := convPowEReal_bddBelowReal hg k
       obtain ⟨c, hc⟩ := id hg
@@ -199,10 +201,15 @@ theorem convPowEReal_isNonneg {g : ℝ≥0 → EReal}
 theorem IsNonneg.bddBelowReal {g : ℝ≥0 → EReal} (hg : IsNonneg g) :
     BddBelowReal g := ⟨0, fun t => by simpa using hg t⟩
 
-/-- The closure of a non-negative `g` is non-negative (hence `≠ ⊥`). -/
+/-- The closure of a non-negative `g` is non-negative. -/
 theorem subadditiveClosureEReal_isNonneg {g : ℝ≥0 → EReal}
     (hg : IsNonneg g) : IsNonneg (subadditiveClosureEReal g) :=
   fun t => le_iInf (fun n => convPowEReal_isNonneg hg n t)
+
+/-- The closure of a non-negative `g` is never `⊥`. -/
+theorem subadditiveClosureEReal_neverBot {g : ℝ≥0 → EReal}
+    (hg : IsNonneg g) : NeverBot (subadditiveClosureEReal g) :=
+  fun t => ne_bot_of_nonneg (subadditiveClosureEReal_isNonneg hg t)
 
 /-- For non-negative `g`, the closure is sub-additive:
 `g⋆ (u+s) ≤ g⋆ u + g⋆ s`.  `NeverBot` alone is insufficient (the powers,
@@ -213,7 +220,7 @@ theorem subadditiveClosureEReal_subadditive {g : ℝ≥0 → EReal}
   intro u s
   have hbdd := hg.bddBelowReal
   have hCs : (⨅ n : ℕ, convPowEReal g n s) ≠ ⊥ :=
-    ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hg n s))
+    subadditiveClosureEReal_neverBot hg s
   -- For each m, the closure at u+s is ≤ gᵐ u + closure s.
   have hrow : ∀ m : ℕ,
       subadditiveClosureEReal g (u + s)
@@ -228,7 +235,7 @@ theorem subadditiveClosureEReal_subadditive {g : ℝ≥0 → EReal}
     exact convPowEReal_term_le hbdd m n u s
   -- Pull the closure-at-u out of the infimum over m.
   have hCu : (⨅ m : ℕ, convPowEReal g m u) ≠ ⊥ :=
-    ne_bot_of_nonneg (le_iInf (fun n => convPowEReal_isNonneg hg n u))
+    subadditiveClosureEReal_neverBot hg u
   calc subadditiveClosureEReal g (u + s)
       ≤ ⨅ m : ℕ, convPowEReal g m u + subadditiveClosureEReal g s :=
         le_iInf hrow
