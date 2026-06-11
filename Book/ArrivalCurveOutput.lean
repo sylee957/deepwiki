@@ -29,11 +29,8 @@ theorem le_minConv_toENN_of_isMaximalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal}
     (hβ : IsMaximalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D) (t : ℝ≥0) :
-    (D t : ℝ≥0∞) ≤ minConv (liftENN ⇑A) (toENN beta) t := by
-  rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t]
-  calc (((D t : ℝ≥0) : ℝ≥0∞) : EReal)
-      = curveE D t := EReal.coe_nnreal_eq_coe_real (D t)
-    _ ≤ minConv (curveE A) beta t := hβ A D hp t
+    (D t : ℝ≥0∞) ≤ minConv (liftENN ⇑A) (toENN beta) t :=
+  (coe_le_minConv_toENN_iff A hnn (D t) t).mpr (hβ A D hp t)
 
 /-- The `ℝ≥0∞` reading of the `EReal` delay curve is the `ℝ≥0∞` delay curve:
 `toENN (delayEReal d) = delayNN d`. -/
@@ -55,12 +52,8 @@ end Deviation
 nonnegative `sigma`, then `liftENN ⇑f` allows `toENN sigma`. -/
 theorem IsMaximalArrivalBound.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
     (h : IsMaximalArrivalBound (curveE f) sigma) (hnn : IsNonneg sigma) :
-    IsMaximalArrivalBound (liftENN ⇑f) (Deviation.toENN sigma) := by
-  intro t
-  rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN f hnn t]
-  calc ((liftENN ⇑f t : ℝ≥0∞) : EReal)
-      = curveE f t := EReal.coe_nnreal_eq_coe_real (f t)
-    _ ≤ minConv (curveE f) sigma t := h t
+    IsMaximalArrivalBound (liftENN ⇑f) (Deviation.toENN sigma) := fun t =>
+  (coe_le_minConv_toENN_iff f hnn (f t) t).mpr (h t)
 
 /-- **Output arrival curve, deconvolution part.** A pair served with
 nonnegative minimal and maximal service curves `betam`, `betaM`, the arrival

@@ -115,14 +115,9 @@ greedy output curve supplies the served witness in `minimalServiceRel β`. -/
 theorem coe_eq_minConv_toENN_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) {A D : Curve} (hp : greedyShaperRel beta A D)
     (t : ℝ≥0) :
-    (D t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t := by
-  apply EReal.coe_ennreal_injective
-  calc ((D t : ℝ≥0∞) : EReal)
-      = curveE D t := EReal.coe_nnreal_eq_coe_real (D t)
-    _ = minConv (curveE A) beta t := by
-        rw [(hp : curveE D = minConv (curveE A) beta)]
-    _ = ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal) :=
-        (coe_minConv_toENN A hnn t).symm
+    (D t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t :=
+  (coe_eq_minConv_toENN_iff A hnn (D t) t).mpr
+    (congrFun (hp : curveE D = minConv (curveE A) beta) t)
 
 /-- **Delay-bound tightness for greedy shapers**: a greedy-served pair with
 sub-additive arrival attains `d(A, D) = hDev (liftENN A) (toENN beta)`. -/
@@ -158,13 +153,9 @@ piecewise-continuity witness matter only for packaging the output as a
 reading `toENN beta` exactly, without any curve packaging. -/
 theorem coe_greedyFun_eq_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (h0 : IsNullAtOrigin beta) (t : ℝ≥0) :
-    (greedyFun A beta t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t := by
-  apply EReal.coe_ennreal_injective
-  calc ((greedyFun A beta t : ℝ≥0∞) : EReal)
-      = ((greedyFun A beta t : ℝ) : EReal) := EReal.coe_nnreal_eq_coe_real _
-    _ = minConv (curveE A) beta t := coe_greedyFun A hnn h0 t
-    _ = ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal) :=
-        (coe_minConv_toENN A hnn t).symm
+    (greedyFun A beta t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t :=
+  (coe_eq_minConv_toENN_iff A hnn (greedyFun A beta t) t).mpr
+    (coe_greedyFun A hnn h0 t)
 
 /-- **Delay-bound tightness, direct form**: for sub-additive `A` and `beta`
 in `F₀`, the greedy output attains the delay bound,

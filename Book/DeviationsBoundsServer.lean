@@ -60,18 +60,42 @@ theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
   congr 1
   exact EReal.coe_toENNReal (hnn s)
 
+/-- For nonnegative `beta`, an `ℝ≥0` value lower-bounds the `ℝ≥0∞`
+convolution reading iff its `EReal` cast lower-bounds the `EReal`
+convolution. -/
+theorem coe_le_minConv_toENN_iff (A : Curve) {beta : ℝ≥0 → EReal}
+    (hnn : IsNonneg beta) (x t : ℝ≥0) :
+    (x : ℝ≥0∞) ≤ minConv (liftENN ⇑A) (toENN beta) t ↔
+      ((x : ℝ) : EReal) ≤ minConv (curveE A) beta t := by
+  rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t,
+    EReal.coe_nnreal_eq_coe_real]
+
+/-- For nonnegative `beta`, the `ℝ≥0∞` convolution reading is below an `ℝ≥0`
+value iff the `EReal` convolution is below its `EReal` cast. -/
+theorem minConv_toENN_le_coe_iff (A : Curve) {beta : ℝ≥0 → EReal}
+    (hnn : IsNonneg beta) (x t : ℝ≥0) :
+    minConv (liftENN ⇑A) (toENN beta) t ≤ (x : ℝ≥0∞) ↔
+      minConv (curveE A) beta t ≤ ((x : ℝ) : EReal) := by
+  rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t,
+    EReal.coe_nnreal_eq_coe_real]
+
+/-- For nonnegative `beta`, an `ℝ≥0` value equals the `ℝ≥0∞` convolution
+reading iff its `EReal` cast equals the `EReal` convolution. -/
+theorem coe_eq_minConv_toENN_iff (A : Curve) {beta : ℝ≥0 → EReal}
+    (hnn : IsNonneg beta) (x t : ℝ≥0) :
+    (x : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t ↔
+      ((x : ℝ) : EReal) = minConv (curveE A) beta t := by
+  rw [← EReal.coe_ennreal_eq_coe_ennreal_iff, coe_minConv_toENN A hnn t,
+    EReal.coe_nnreal_eq_coe_real]
+
 /-- A pair served with nonnegative min-plus service `beta` satisfies the
 `ℝ≥0∞` convolution inequality consumed by the deviation bounds. -/
 theorem minConv_toENN_le_of_isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → EReal}
     (hβ : IsMinimalServiceCurve beta S) (hnn : IsNonneg beta)
     {A D : Curve} (hp : S A D) (t : ℝ≥0) :
-    minConv (liftENN ⇑A) (toENN beta) t ≤ (D t : ℝ≥0∞) := by
-  rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t]
-  calc minConv (curveE A) beta t
-      ≤ curveE D t := hβ A D hp t
-    _ = (((D t : ℝ≥0) : ℝ≥0∞) : EReal) :=
-        (EReal.coe_nnreal_eq_coe_real (D t)).symm
+    minConv (liftENN ⇑A) (toENN beta) t ≤ (D t : ℝ≥0∞) :=
+  (minConv_toENN_le_coe_iff A hnn (D t) t).mpr (hβ A D hp t)
 
 /-- **Delay bound for servers.** A pair served with nonnegative nondecreasing
 min-plus service `beta`, the arrival having maximal arrival curve `α`, has
