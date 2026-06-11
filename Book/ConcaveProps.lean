@@ -13,12 +13,6 @@ namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
 
-/-- Nonneg-scalar multiply is monotone on `EReal`: from `0 ≤ p` and `x ≤ y`,
-`((p : ℝ) : EReal) * x ≤ ((p : ℝ) : EReal) * y`. -/
-theorem EReal.coe_mul_le_mul_left {p : ℝ} (hp : 0 ≤ p) {x y : EReal}
-    (h : x ≤ y) : ((p : ℝ) : EReal) * x ≤ ((p : ℝ) : EReal) * y :=
-  mul_le_mul_of_nonneg_left h (by exact_mod_cast hp)
-
 /-- Pointwise `min` (`EReal` `⊓`) of two concave curves is concave: each scaled
 chord summand of `f ⊓ g` is below the corresponding summand of `f` and of `g`,
 and `EReal` addition is monotone, so the combined chord lies below both `f`'s
@@ -30,12 +24,12 @@ theorem IsConcaveEReal.inf (f g : ℝ≥0 → EReal) (hf : IsConcaveEReal f) (hg
   refine le_inf ?_ ?_
   · refine le_trans ?_ (hf s t p hp)
     exact add_le_add
-      (EReal.coe_mul_le_mul_left p.coe_nonneg inf_le_left)
-      (EReal.coe_mul_le_mul_left (1 - p : ℝ≥0).coe_nonneg inf_le_left)
+      (mul_le_mul_of_nonneg_left inf_le_left (EReal.coe_nonneg.2 p.coe_nonneg))
+      (mul_le_mul_of_nonneg_left inf_le_left (EReal.coe_nonneg.2 (1 - p : ℝ≥0).coe_nonneg))
   · refine le_trans ?_ (hg s t p hp)
     exact add_le_add
-      (EReal.coe_mul_le_mul_left p.coe_nonneg inf_le_right)
-      (EReal.coe_mul_le_mul_left (1 - p : ℝ≥0).coe_nonneg inf_le_right)
+      (mul_le_mul_of_nonneg_left inf_le_right (EReal.coe_nonneg.2 p.coe_nonneg))
+      (mul_le_mul_of_nonneg_left inf_le_right (EReal.coe_nonneg.2 (1 - p : ℝ≥0).coe_nonneg))
 
 /-- Pointwise sum of two concave curves is concave. The chord weights enter as
 finite, nonneg `ℝ→EReal` coercions, so `EReal` left-distributivity expands each
