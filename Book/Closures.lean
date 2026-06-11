@@ -243,6 +243,25 @@ theorem minConvPow_succ {D : Type} [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) (n : ℕ) :
     minConvPow g (n + 1) = minConv (minConvPow g n) g := rfl
 
+/-- `minConvPow g 1 = g`: the unit is neutral. -/
+theorem minConvPow_one {D : Type} [_root_.AddCommMonoid D]
+    (g : D → ℝ≥0∞) :
+    minConvPow g 1 = g := by
+  have h1 : minConvPow g 1 = minConv (minConvPow g 0) g := rfl
+  rw [h1]
+  funext t
+  apply le_antisymm
+  · refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
+    rw [minConvPow_zero, if_pos rfl, zero_add]
+  · refine le_minConv fun u v huv => ?_
+    rw [minConvPow_zero]
+    by_cases hu : u = 0
+    · rw [if_pos hu, zero_add]
+      rw [hu, zero_add] at huv
+      rw [huv]
+    · rw [if_neg hu, top_add]
+      exact le_top
+
 /-- Convolution powers split across a convolution: `(f ∗ g)ⁿ = fⁿ ∗ gⁿ`
 (commutativity and associativity reshuffle the factors). -/
 theorem minConvPow_minConv {D : Type} [_root_.AddCommMonoid D]
@@ -371,6 +390,14 @@ theorem subadditiveClosureENN_zero_eq {D : Type}
     rw [subadditiveClosureENN_eq_iInf]
     exact iInf_le_of_le 0 (by rw [minConvPow_zero, if_pos rfl]))
     zero_le'
+
+/-- Convolving with a closure stays below the curve: `(f ∗ g⋆) t ≤ f t`
+(the closure vanishes at the origin). -/
+theorem minConv_subadditiveClosureENN_le {D : Type}
+    [_root_.AddCommMonoid D] (f g : D → ℝ≥0∞) (t : D) :
+    minConv f (subadditiveClosureENN g) t ≤ f t :=
+  (minConv_le_add f _ (add_zero t)).trans_eq
+    (by rw [subadditiveClosureENN_zero_eq, add_zero])
 
 /-- A curve lies below the closure iff it lies below every convolution
 power: `y ≤ g⋆ ↔ ∀ n, y ≤ gⁿ`. -/

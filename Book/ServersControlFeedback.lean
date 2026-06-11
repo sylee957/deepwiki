@@ -40,9 +40,7 @@ theorem minConv_subadditiveClosureENN_le_of_inf_le
         intro u
         refine le_trans (le_inf ?_ ?_) (hx u)
         · -- the arrival branch: `a ∗ w⋆ ≤ a` since `w⋆ 0 = 0`
-          refine inf_le_left.trans ?_
-          refine le_trans (minConv_le_add a _ (add_zero u)) ?_
-          rw [subadditiveClosureENN_zero_eq, add_zero]
+          exact inf_le_left.trans (minConv_subadditiveClosureENN_le a w u)
         · -- the loop branch spends one `c` per turn
           refine le_minConv fun p q hpq => ?_
           have hXshift : minConv a (subadditiveClosureENN w) u
@@ -152,6 +150,100 @@ theorem windowFlowControl_minConv_le
     minConv_comm β (subadditiveClosureENN (minConv (window w) β)),
     ← minConv_assoc_enn, minConv_comm (window w) β]
   exact h
+
+/-! ## A large enough window -/
+
+/-- **The quadratic deconvolution controls the loop**: a controller above
+`β ⊘ β²` meets every power constraint `βcⁿ ≥ β ⊘ βⁿ⁺¹`, hence is
+admissible for the reference `β` itself. Inductively, `β ≤ βcⁿ⁻¹ ∗ βⁿ`
+and `β ≤ βc ∗ β²` give `β ≤ βcⁿ ∗ βⁿ⁺¹` by isotony and reshuffling. -/
+theorem mem_feedbackControlSet_self_of_minDeconv_le
+    {β βc : ℝ≥0 → ℝ≥0∞} (h : minDeconv β (minConvPow β 2) ≤ βc) :
+    βc ∈ feedbackControlSet β β := by
+  rw [mem_feedbackControlSet_iff]
+  have h2 : minConvPow β 2 = minConv β β := by
+    have hs : minConvPow β 2 = minConv (minConvPow β 1) β := rfl
+    rw [hs, minConvPow_one]
+  have hres : β ≤ minConv βc (minConv β β) := by
+    have hr := minDeconv_le_iff_le_minConv.mp h
+    rwa [h2] at hr
+  -- residuated form of the power constraints
+  have aux : ∀ n : ℕ, β ≤ minConv (minConvPow βc n) (minConvPow β (n + 1)) := by
+    intro n
+    induction n with
+    | zero =>
+        intro t
+        rw [minConvPow_one]
+        refine le_minConv fun u v huv => ?_
+        rw [minConvPow_zero]
+        by_cases hu : u = 0
+        · rw [if_pos hu, zero_add]
+          rw [hu, zero_add] at huv
+          rw [huv]
+        · rw [if_neg hu, top_add]
+          exact le_top
+    | succ n ih =>
+        calc β ≤ minConv (minConvPow βc n) (minConvPow β (n + 1)) := ih
+          _ = minConv (minConvPow βc n)
+                (minConv (minConvPow β n) β) := by rw [minConvPow_succ]
+          _ ≤ minConv (minConvPow βc n) (minConv (minConvPow β n)
+                (minConv βc (minConv β β))) := fun t =>
+              minConv_le_minConv (fun _ => le_rfl)
+                (fun s => minConv_le_minConv (fun _ => le_rfl)
+                  (fun r => hres r) s) t
+          _ = minConv (minConv (minConvPow βc n) βc)
+                (minConv (minConv (minConvPow β n) β) β) := by
+              rw [← minConv_assoc_enn (minConvPow β n) βc (minConv β β),
+                minConv_comm (minConvPow β n) βc,
+                minConv_assoc_enn βc (minConvPow β n) (minConv β β),
+                ← minConv_assoc_enn (minConvPow βc n) βc
+                  (minConv (minConvPow β n) (minConv β β)),
+                ← minConv_assoc_enn (minConvPow β n) β β]
+          _ = minConv (minConvPow βc (n + 1)) (minConvPow β (n + 1 + 1)) := by
+              rw [← minConvPow_succ βc n, ← minConvPow_succ β n,
+                ← minConvPow_succ β (n + 1)]
+  exact fun n => minDeconv_le_iff_le_minConv.mpr (aux n)
+
+/-- **A large enough window is admissible for the server curve itself**:
+`w ≥ (β ⊘ β²) 0` makes the window controller reach the reference `β`,
+i.e. `β_wfc = β ∗ (ω_w ∗ β)⋆ ≥ β`. -/
+theorem window_mem_feedbackControlSet_self
+    {β : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConvPow β 2) 0 ≤ w) :
+    window w ∈ feedbackControlSet β β := by
+  refine mem_feedbackControlSet_self_of_minDeconv_le fun t => ?_
+  by_cases ht : t = 0
+  · rw [ht, window_zero_eq]
+    exact hw
+  · rw [show window w t = ⊤ from if_neg ht]
+    exact le_top
+
+/-- **A large enough window preserves the service curve**: for
+`w ≥ (β ⊘ β²) 0` the closed-loop curve is exactly the server curve,
+`β_wfc = β ∗ (ω_w ∗ β)⋆ = β` — `≥` from the admissibility of `ω_w`, `≤`
+always since `(ω_w ∗ β)⋆ 0 = 0`. -/
+theorem minConv_subadditiveClosureENN_window_eq
+    {β : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConvPow β 2) 0 ≤ w) :
+    minConv β (subadditiveClosureENN (minConv (window w) β)) = β :=
+  le_antisymm (fun t => minConv_subadditiveClosureENN_le β _ t)
+    (window_mem_feedbackControlSet_self hw)
+
+/-! ## Book restatement (a large enough window)
+If `βc ≥ β ⊘ β²` then `∀ n ∈ ℕ, βcⁿ ≥ β ⊘ βⁿ⁺¹`; and if
+`w ≥ (β ⊘ β²)(0)`, then `β_wfc ≥ β` — in which case `β_wfc = β`, since
+`(ω_w ∗ β)⋆ 0 = 0` always forces `β_wfc = β ∗ (ω_w ∗ β)⋆ ≤ β`. -/
+example {β βc : ℝ≥0 → ℝ≥0∞} (h : minDeconv β (minConvPow β 2) ≤ βc) :
+    ∀ n : ℕ, minDeconv β (minConvPow β (n + 1)) ≤ minConvPow βc n :=
+  mem_feedbackControlSet_iff.mp
+    (mem_feedbackControlSet_self_of_minDeconv_le h)
+
+example {β : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : minDeconv β (minConvPow β 2) 0 ≤ w) :
+    β ≤ minConv β (subadditiveClosureENN (minConv (window w) β))
+      ∧ minConv β (subadditiveClosureENN (minConv (window w) β)) = β :=
+  ⟨window_mem_feedbackControlSet_self hw,
+    minConv_subadditiveClosureENN_window_eq hw⟩
 
 /-! ## Book restatement (window flow control)
 Window flow control ensures the backlog never exceeds `w`: when the
