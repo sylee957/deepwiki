@@ -128,6 +128,51 @@ theorem mem_feedbackControlSet_iff {β βref βc : ℝ≥0 → ℝ≥0∞} :
   rw [minConvPow_minConv, ← minDeconv_le_iff_le_minConv,
     minDeconv_minDeconv, minConv_comm β (minConvPow β n), ← minConvPow_succ]
 
+/-! ## Window flow control -/
+
+/-- The loop cost of the window controller is the window itself:
+`w ≤ (β ∗ ω_w) s` — one turn around the feedback always pays `w`. -/
+theorem le_minConv_window (β : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) (s : ℝ≥0) :
+    w ≤ minConv β (window w) s := by
+  rw [conv_window]
+  exact le_add_self
+
+/-- **Window flow control**: with the window controller `βc = ω_w` and a
+positive window `0 < w`, the closed-loop network is guaranteed the
+service curve `β_wfc = β ∗ (ω_w ∗ β)⋆`. -/
+theorem windowFlowControl_minConv_le
+    {A A' D D' β : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞} (hw : 0 < w)
+    (hA' : ∀ t, A t ⊓ D' t ≤ A' t)
+    (hD : ∀ t, minConv A' β t ≤ D t)
+    (hD' : ∀ t, minConv D (window w) t ≤ D' t) (t : ℝ≥0) :
+    minConv (minConv A β)
+      (subadditiveClosureENN (minConv (window w) β)) t ≤ D t := by
+  have h := feedback_minConv_le hw (le_minConv_window β w) hA' hD hD' t
+  rw [minConv_assoc_enn,
+    minConv_comm β (subadditiveClosureENN (minConv (window w) β)),
+    ← minConv_assoc_enn, minConv_comm (window w) β]
+  exact h
+
+/-! ## Book restatement (window flow control)
+Window flow control ensures the backlog never exceeds `w`: when the
+feedback filter is exactly the window — `D' ≤ D ∗ ω_w` as well — the
+synchronized arrival satisfies `A' t ≤ D t + w`. And replacing `βc` by
+`ω_w` in the closed-loop bound, the controlled network has min-plus
+service curve `β_wfc = β ∗ (ω_w ∗ β)⋆` (with the positive window as the
+loop's well-posedness). -/
+example {A' D D' : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hsync : ∀ t, A' t ≤ D' t)
+    (hmax : ∀ t, D' t ≤ minConv D (window w) t) (t : ℝ≥0) :
+    A' t ≤ D t + w :=
+  le_trans (hsync t)
+    (le_trans (hmax t) (congrFun (conv_window D w) t).le)
+
+/-! The window loop curve is the raised service curve of the backlog
+requirement: `ω_w ∗ β = β + w`, so `β_wfc = β ∗ (β + w)⋆`. -/
+example (β : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) :
+    minConv (window w) β = fun s => β s + w := by
+  rw [minConv_comm, conv_window]
+
 /-! ## Book restatement ([6.3]: the closed-loop service curve)
 The closed-loop network obeys `A' = A ∧ D' ≥ A ∧ (D ∗ βc)` and
 `D ≥ A' ∗ β`; as a result `A' ≥ A ∧ A' ∗ (β ∗ βc)`, hence
