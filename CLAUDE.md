@@ -264,7 +264,7 @@ not just defaults):
   Keep a definitions file (e.g. `RealCurves`) separate from its regularity/proof
   file (`RealCurvesRegularity`). When the same curve/notion lives over two carriers,
   define it *once* over a polymorphic base and specialize with `abbrev`s (the
-  `delay` → `delayNN`/`delayE` pattern), rather than duplicating bodies; bridge
+  `delay` → `delayNN`/`delayENN` pattern), rather than duplicating bodies; bridge
   the variants with `*_coe` agreement lemmas where they are only propositionally
   (not defeq) equal.
 
