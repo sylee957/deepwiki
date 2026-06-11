@@ -8,9 +8,10 @@ positive `T₁`, `T₂`, the only strict service curve offered by every
 concatenation `Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁)` is `0` — witnessed by the staircase
 arrival `ν_{T,b}` (period `max(T₁,T₂) < T < T₁ + T₂`) and its delayed copies,
 which keep the tandem backlogged forever while `C ≤ A ≤ γ_{b,b/T}` for every
-burst `b > 0`. For constant rates the loss is repaired:
-`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) ⊆ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁} ∗ λ_{R₂})`, with
-`λ_{R₁} ∗ λ_{R₂} = λ_{R₁ ⊓ R₂}`. -/
+burst `b > 0`. For constant rates the loss is repaired exactly:
+`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) = Sₛₜᵣᵢ𝒸ₜ(λ_{R₁} ∗ λ_{R₂})`, with
+`λ_{R₁} ∗ λ_{R₂} = λ_{R₁ ⊓ R₂}` — unlike the min-plus inclusion, which can
+be strict. -/
 
 namespace DeepWiki
 
@@ -662,6 +663,29 @@ theorem comp_strictServiceRel_rate_le (R₁ R₂ : ℝ≥0) :
     (isStrictMinimalServiceCurve_strictServiceRel (rate R₁))
     (isStrictMinimalServiceCurve_strictServiceRel (rate R₂)) A C hp
 
+/-- The reverse containment also holds for constant rates: a pair served at
+strict rate `R₁ ⊓ R₂` factors through the tandem by routing it through the
+identity server on the faster stage (`B = A` when `R₂ ≤ R₁`, else `B = C`),
+whose backlogged periods are empty. -/
+theorem strictServiceRel_rate_le_comp (R₁ R₂ : ℝ≥0) :
+    strictServiceRel (rate (R₁ ⊓ R₂))
+      ≤ Relation.Comp (strictServiceRel (rate R₁))
+          (strictServiceRel (rate R₂)) := by
+  intro A C hp
+  rcases le_total R₂ R₁ with h | h
+  · exact ⟨A, strictServiceRel_self (mul_zero R₁) A,
+      by rwa [inf_eq_right.mpr h] at hp⟩
+  · exact ⟨C, by rwa [inf_eq_left.mpr h] at hp,
+      strictServiceRel_self (mul_zero R₂) C⟩
+
+/-- **For constant rates the composition is exactly the convolution**:
+`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) = Sₛₜᵣᵢ𝒸ₜ(λ_{R₁ ⊓ R₂})`. -/
+theorem comp_strictServiceRel_rate_eq (R₁ R₂ : ℝ≥0) :
+    Relation.Comp (strictServiceRel (rate R₁)) (strictServiceRel (rate R₂))
+      = strictServiceRel (rate (R₁ ⊓ R₂)) :=
+  le_antisymm (comp_strictServiceRel_rate_le R₁ R₂)
+    (strictServiceRel_rate_le_comp R₁ R₂)
+
 /-! ## Book restatement (composition of strict service curves)
 Let `β₁` and `β₂` be two (non-decreasing) functions such that there exist
 `T₁, T₂ > 0` with `β₁ T₁ = 0` and `β₂ T₂ = 0`. Then there is no `β ≠ 0` such
@@ -698,5 +722,13 @@ example (R₁ R₂ : ℝ≥0) :
         ≤ strictServiceRel (rate (R₁ ⊓ R₂))
       ∧ minConv (rateNN R₁) (rateNN R₂) = rateNN (R₁ ⊓ R₂) :=
   ⟨comp_strictServiceRel_rate_le R₁ R₂, conv_rateNN_rateNN R₁ R₂⟩
+
+/-! The formalization sharpens the inclusion to an equality: for constant
+rates the composition is *exactly* the convolution — in contrast with the
+min-plus relations, where the concatenation inclusion can be strict. -/
+example (R₁ R₂ : ℝ≥0) :
+    Relation.Comp (strictServiceRel (rate R₁)) (strictServiceRel (rate R₂))
+      = strictServiceRel (rate (R₁ ⊓ R₂)) :=
+  comp_strictServiceRel_rate_eq R₁ R₂
 
 end DeepWiki
