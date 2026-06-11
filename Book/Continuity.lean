@@ -38,7 +38,7 @@ theorem isLeftContinuousAt_zero {X : Type*}
   exact tendsto_bot
 
 /-- A continuous `g` is left-continuous. -/
-theorem leftCont_of_continuous {X : Type*}
+theorem isLeftContinuous_of_continuous {X : Type*}
     [TopologicalSpace X] (g : ℝ≥0 → X)
     (hg : Continuous g) : IsLeftContinuous g :=
   fun _ => hg.continuousAt.continuousWithinAt
@@ -54,7 +54,7 @@ def IsRightContinuous {X : Type*} [TopologicalSpace X]
   ∀ t : ℝ≥0, IsRightContinuousAt g t
 
 /-- A continuous `g` is right-continuous. -/
-theorem rightCont_of_continuous {X : Type*}
+theorem isRightContinuous_of_continuous {X : Type*}
     [TopologicalSpace X] (g : ℝ≥0 → X)
     (hg : Continuous g) : IsRightContinuous g :=
   fun _ => hg.continuousAt.continuousWithinAt
@@ -113,31 +113,31 @@ theorem isRightContinuousAtEpsDelta_iff
   tendstoRightEpsDelta_iff g t (g t)
 
 /-- Left-continuity at `t` is the left limit equaling `g t`. -/
-theorem tendstoLeft_value_iff_leftContinuousAt
+theorem tendstoLeft_value_iff_isLeftContinuousAt
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     TendstoLeft g t (g t)
       ↔ IsLeftContinuousAt g t := Iff.rfl
 
 /-- Right-continuity at `t` is the right limit equaling `g t`. -/
-theorem tendstoRight_value_iff_rightContinuousAt
+theorem tendstoRight_value_iff_isRightContinuousAt
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     TendstoRight g t (g t)
       ↔ IsRightContinuousAt g t := Iff.rfl
 
 /-- Left-continuous `g` has left limit `g t` at each `t`. -/
-theorem tendstoLeft_value_of_leftContinuous
+theorem tendstoLeft_value_of_isLeftContinuous
     (g : ℝ≥0 → ℝ≥0∞) (hlc : IsLeftContinuous g)
     (t : ℝ≥0) : TendstoLeft g t (g t) :=
   (hlc t).tendsto
 
 /-- Right-continuous `g` has right limit `g t` at each `t`. -/
-theorem tendstoRight_value_of_rightContinuous
+theorem tendstoRight_value_of_isRightContinuous
     (g : ℝ≥0 → ℝ≥0∞) (hrc : IsRightContinuous g)
     (t : ℝ≥0) : TendstoRight g t (g t) :=
   (hrc t).tendsto
 
 /-- Left-continuity at `t` iff some left limit `L` equals `g t`. -/
-theorem leftContinuousAt_iff_limit_eq_value
+theorem isLeftContinuousAt_iff_limit_eq_value
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     IsLeftContinuousAt g t
       ↔ ∃ L, TendstoLeft g t L ∧ L = g t := by
@@ -146,7 +146,7 @@ theorem leftContinuousAt_iff_limit_eq_value
   · rintro ⟨L, hL, rfl⟩; exact hL
 
 /-- Right-continuity at `t` iff some right limit `L` equals `g t`. -/
-theorem rightContinuousAt_iff_limit_eq_value
+theorem isRightContinuousAt_iff_limit_eq_value
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) :
     IsRightContinuousAt g t
       ↔ ∃ L, TendstoRight g t L ∧ L = g t := by
@@ -155,13 +155,13 @@ theorem rightContinuousAt_iff_limit_eq_value
   · rintro ⟨L, hL, rfl⟩; exact hL
 
 /-- Left-continuous `g` has a left limit at every `t`. -/
-theorem hasLeftLimit_of_leftContinuous
+theorem hasLeftLimit_of_isLeftContinuous
     (g : ℝ≥0 → ℝ≥0∞) (h : IsLeftContinuous g)
     (t : ℝ≥0) : ∃ L, TendstoLeft g t L :=
   ⟨g t, h t⟩
 
 /-- Right-continuous `g` has a right limit at every `t`. -/
-theorem hasRightLimit_of_rightContinuous
+theorem hasRightLimit_of_isRightContinuous
     (g : ℝ≥0 → ℝ≥0∞) (h : IsRightContinuous g)
     (t : ℝ≥0) : ∃ L, TendstoRight g t L :=
   ⟨g t, h t⟩
@@ -189,14 +189,14 @@ theorem pos_near_zero_of_rightLimit_pos
 
 /-- Left-continuous `A` has `A` as the left limit at each `t`:
 `Tendsto A (𝓝[<] t) (𝓝 (A t))`. -/
-theorem tendsto_nhdsWithin_Iio_of_leftContinuous {A : ℝ≥0 → ℝ≥0}
+theorem tendsto_nhdsWithin_Iio_of_isLeftContinuous {A : ℝ≥0 → ℝ≥0}
     (hA : IsLeftContinuous A) (t : ℝ≥0) :
     Tendsto A (𝓝[<] t) (𝓝 (A t)) :=
   (hA t).tendsto
 
 /-- Right-continuous `A` has `A` as the right limit at each `t`:
 `Tendsto A (𝓝[>] t) (𝓝 (A t))`. -/
-theorem tendsto_nhdsWithin_Ioi_of_rightContinuous {A : ℝ≥0 → ℝ≥0}
+theorem tendsto_nhdsWithin_Ioi_of_isRightContinuous {A : ℝ≥0 → ℝ≥0}
     (hA : IsRightContinuous A) (t : ℝ≥0) :
     Tendsto A (𝓝[>] t) (𝓝 (A t)) :=
   (hA t).tendsto

@@ -129,7 +129,7 @@ theorem hDevENN_delay_eq_of_rightLimit_pos
     (pos_near_zero_of_rightLimit_pos f L hL hL0)
 
 /-- `hDevENN f (delayNN d) = d` if `f` is right-continuous with `f 0 > 0`. -/
-theorem hDevENN_delay_eq_of_rightCont
+theorem hDevENN_delay_eq_of_isRightContinuous
     (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0)
     (hrc : IsRightContinuous f) (h0 : 0 < f 0) :
     hDevENN f (delayNN d) = d :=

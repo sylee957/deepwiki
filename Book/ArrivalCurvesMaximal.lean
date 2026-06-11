@@ -218,7 +218,7 @@ open Set Filter Topology
 /-- The left-continuous extension `Function.leftLim α` of a maximal arrival
 curve is maximal: if `A` is left-continuous, `α` non-decreasing, and `α` a
 maximal arrival curve for `A`, then `Function.leftLim α` is one too. -/
-theorem isMaximalArrivalBound_leftLim_of_leftContinuous
+theorem isMaximalArrivalBound_leftLim_of_isLeftContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A) (hα : Monotone α)
     (h : IsMaximalArrivalBound A α) :
     IsMaximalArrivalBound A (Function.leftLim α) := by
@@ -230,7 +230,7 @@ theorem isMaximalArrivalBound_leftLim_of_leftContinuous
   -- For `s ∈ (t, t + d)` (eventually within `Iio (t+d)`), bound
   -- `A s ≤ A t + (leftLim α) d`, then pass to the left limit `A s → A (t+d)`.
   have hlim : Tendsto A (𝓝[<] (t + d)) (𝓝 (A (t + d))) :=
-    tendsto_nhdsWithin_Iio_of_leftContinuous hA (t + d)
+    tendsto_nhdsWithin_Iio_of_isLeftContinuous hA (t + d)
   have htlt : t < t + d := lt_add_of_pos_right t hd
   haveI : (𝓝[<] (t + d)).NeBot :=
     nhdsLT_neBot_of_exists_lt ⟨t, htlt⟩
@@ -257,7 +257,7 @@ theorem isMaximalArrivalBound_leftLim_of_leftContinuous
 curve is maximal also for a right-continuous cumulative function: if `A` is
 right-continuous, `α` non-decreasing, and `α` a maximal arrival curve for `A`,
 then `Function.leftLim α` is one too. -/
-theorem isMaximalArrivalBound_leftLim_of_rightContinuous
+theorem isMaximalArrivalBound_leftLim_of_isRightContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsRightContinuous A) (hα : Monotone α)
     (h : IsMaximalArrivalBound A α) :
     IsMaximalArrivalBound A (Function.leftLim α) := by
@@ -270,7 +270,7 @@ theorem isMaximalArrivalBound_leftLim_of_rightContinuous
   -- `A (t+d) ≤ A s + (leftLim α) d`, then pass `A s → A t` (right limit at `t`).
   have hlim : Tendsto (fun s => A s + Function.leftLim α d)
       (𝓝[>] t) (𝓝 (A t + Function.leftLim α d)) :=
-    (tendsto_nhdsWithin_Ioi_of_rightContinuous hA t).add tendsto_const_nhds
+    (tendsto_nhdsWithin_Ioi_of_isRightContinuous hA t).add tendsto_const_nhds
   haveI : (𝓝[>] t).NeBot :=
     nhdsGT_neBot_of_exists_gt ⟨t + d, lt_add_of_pos_right t hd⟩
   have hev : ∀ᶠ s in 𝓝[>] t, A (t + d) ≤ A s + Function.leftLim α d := by

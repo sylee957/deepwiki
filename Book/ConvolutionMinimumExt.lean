@@ -70,8 +70,8 @@ theorem exists_minConv_eq_split_of_curves_of_contAt
     ∃ u₀ ∈ Set.Icc (0 : ℝ≥0) t, minConv g h t = g u₀ + h (t - u₀) := by
   obtain ⟨u₀, hu₀, hmin⟩ :=
     exists_isMinOn_splitMap_of_contAt g h
-      (lowerSemicontinuous_of_mono_leftCont g hgm hgc)
-      (lowerSemicontinuous_of_mono_leftCont h hhm hhc) t hcont
+      (lowerSemicontinuous_of_mono_isLeftContinuous g hgm hgc)
+      (lowerSemicontinuous_of_mono_isLeftContinuous h hhm hhc) t hcont
   exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
 
 /-! ## Attainment over `EReal`

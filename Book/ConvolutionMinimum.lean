@@ -18,7 +18,7 @@ open scoped Classical NNReal ENNReal Algebra.Bridge
 
 /-- Monotone + left-continuous `g : ℝ≥0 → T` (order-topology codomain) is
 lower semicontinuous. -/
-theorem lowerSemicontinuous_of_mono_leftCont
+theorem lowerSemicontinuous_of_mono_isLeftContinuous
     {T : Type*} [LinearOrder T] [TopologicalSpace T] [OrderTopology T]
     (g : ℝ≥0 → T) (hmono : Monotone g)
     (hlc : IsLeftContinuous g) :
@@ -74,8 +74,8 @@ theorem exists_isMinOn_splitMap_of_curves
     ∃ u ∈ Set.Icc (0 : ℝ≥0) t,
       IsMinOn (splitMap g h t) (Set.Icc 0 t) u :=
   exists_isMinOn_splitMap g h
-    (lowerSemicontinuous_of_mono_leftCont g hgm hgc)
-    (lowerSemicontinuous_of_mono_leftCont h hhm hhc) t
+    (lowerSemicontinuous_of_mono_isLeftContinuous g hgm hgc)
+    (lowerSemicontinuous_of_mono_isLeftContinuous h hhm hhc) t
 
 /-- The convolution value `minConv g h t` equals the split objective at any
 minimizer `u₀ ∈ [0,t]`: the defining infimum is attained. -/

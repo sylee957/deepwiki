@@ -158,8 +158,8 @@ theorem lowerSemicontinuous_minConv_ennreal
     LowerSemicontinuous (minConv f g) :=
   lowerSemicontinuous_minConv_of_splitPairLsc f g
     (lowerSemicontinuous_splitPair f g
-      (lowerSemicontinuous_of_mono_leftCont f hf hfc)
-      (lowerSemicontinuous_of_mono_leftCont g hg hgc))
+      (lowerSemicontinuous_of_mono_isLeftContinuous f hf hfc)
+      (lowerSemicontinuous_of_mono_isLeftContinuous g hg hgc))
     (fun r => exists_minConv_eq_split_of_curves f g hf hg hfc hgc r)
 
 /-- (min,+) convolution of two nondecreasing left-continuous curves
@@ -184,8 +184,8 @@ theorem lowerSemicontinuous_minConv_ereal
     LowerSemicontinuous (minConv f g) :=
   lowerSemicontinuous_minConv_of_splitPairLsc f g
     (lowerSemicontinuous_splitPair_of_contAt f g
-      (lowerSemicontinuous_of_mono_leftCont f hf hfc)
-      (lowerSemicontinuous_of_mono_leftCont g hg hgc)
+      (lowerSemicontinuous_of_mono_isLeftContinuous f hf hfc)
+      (lowerSemicontinuous_of_mono_isLeftContinuous g hg hgc)
       (fun p => (hpair p.1 p.2).continuousAt))
     (fun r =>
       exists_minConv_eq_split_of_curves_of_contAt f g hf hg hfc hgc r

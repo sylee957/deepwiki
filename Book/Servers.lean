@@ -73,7 +73,7 @@ noncomputable instance : Add Curve where
 noncomputable def zeroCurve : Curve :=
   ⟨fun _ => 0, monotone_const, rfl,
     isPiecewiseContinuous_of_continuous _ continuous_const,
-    leftCont_of_continuous _ continuous_const⟩
+    isLeftContinuous_of_continuous _ continuous_const⟩
 
 /-- `zeroCurve t = 0`. -/
 @[simp] theorem zeroCurve_apply (t : ℝ≥0) : zeroCurve t = 0 := rfl

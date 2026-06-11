@@ -105,7 +105,7 @@ theorem exists_minConv_eq_leftLim_split_of_cont_core
       minConv f h t = leftLim f u₀ + h (t - u₀) := by
   obtain ⟨u₀, hu₀, heq⟩ :=
     exists_minConv_eq_split_of_curves_of_contAt (leftLim f) h hfm.leftLim hhm
-      (isLeftContinuous_leftLim hfm) (leftCont_of_continuous h hhc) t hadd
+      (isLeftContinuous_leftLim hfm) (isLeftContinuous_of_continuous h hhc) t hadd
   exact ⟨u₀, hu₀,
     (minConv_eq_minConv_leftLim_of_cont f h hfm hhc t hadd).trans heq⟩
 

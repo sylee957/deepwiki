@@ -180,12 +180,12 @@ theorem staircase_pwc (P h : ℝ≥0) (J : ℝ)
 /-- `rate R` is left-continuous. -/
 theorem rate_leftCont (R : ℝ≥0) :
     IsLeftContinuous (rate R) :=
-  leftCont_of_continuous _ (rate_continuous R)
+  isLeftContinuous_of_continuous _ (rate_continuous R)
 
 /-- `rateLatency R T` is left-continuous. -/
 theorem rateLatency_leftCont (R T : ℝ≥0) :
     IsLeftContinuous (rateLatency R T) :=
-  leftCont_of_continuous _ (rateLatency_continuous R T)
+  isLeftContinuous_of_continuous _ (rateLatency_continuous R T)
 
 /-- `delayNN d` is left-continuous. -/
 theorem delayNN_leftCont (d : ℝ≥0) :

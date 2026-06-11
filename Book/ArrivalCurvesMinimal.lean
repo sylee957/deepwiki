@@ -140,7 +140,7 @@ open Set Filter Topology
 arrival curve is minimal for a right-continuous cumulative function: if
 `A` is right-continuous, `A` and `α` non-decreasing, and `α` a minimal
 arrival curve for `A`, then `Function.rightLim α` is one too. -/
-theorem isMinimalArrivalBound_rightLim_of_rightContinuous
+theorem isMinimalArrivalBound_rightLim_of_isRightContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsRightContinuous A) (hAmono : Monotone A)
     (hα : Monotone α) (h : IsMinimalArrivalBound A α) :
     IsMinimalArrivalBound A (Function.rightLim α) := by
@@ -150,7 +150,7 @@ theorem isMinimalArrivalBound_rightLim_of_rightContinuous
   -- For `s ∈ (t+d, ?)` (eventually within `Ioi (t+d)`), bound
   -- `A t + (rightLim α) d ≤ A s`, then pass `A s → A (t+d)` (right limit).
   have hlim : Tendsto A (𝓝[>] (t + d)) (𝓝 (A (t + d))) :=
-    tendsto_nhdsWithin_Ioi_of_rightContinuous hA (t + d)
+    tendsto_nhdsWithin_Ioi_of_isRightContinuous hA (t + d)
   haveI : (𝓝[>] (t + d)).NeBot :=
     nhdsGT_neBot_of_exists_gt ⟨t + d + 1, lt_add_of_pos_right _ one_pos⟩
   have hev : ∀ᶠ s in 𝓝[>] (t + d),
@@ -177,7 +177,7 @@ the boundary row `A 0 + (rightLim α) d ≤ A d` (which left-continuity
 cannot supply on `ℝ≥0` since `Iio 0 = ∅`): if `A` is left-continuous, `A`
 and `α` non-decreasing, `α` a minimal arrival curve for `A`, and the
 boundary bound holds, then `Function.rightLim α` is one too. -/
-theorem isMinimalArrivalBound_rightLim_of_leftContinuous
+theorem isMinimalArrivalBound_rightLim_of_isLeftContinuous
     {A α : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A) (hAmono : Monotone A)
     (hα : Monotone α) (h : IsMinimalArrivalBound A α)
     (hbdry : ∀ d : ℝ≥0, A 0 + Function.rightLim α d ≤ A d) :
@@ -191,7 +191,7 @@ theorem isMinimalArrivalBound_rightLim_of_leftContinuous
   · rw [← ht, zero_add]; exact hbdry d
   have hlim : Tendsto (fun s => A s + Function.rightLim α d)
       (𝓝[<] t) (𝓝 (A t + Function.rightLim α d)) :=
-    (tendsto_nhdsWithin_Iio_of_leftContinuous hA t).add tendsto_const_nhds
+    (tendsto_nhdsWithin_Iio_of_isLeftContinuous hA t).add tendsto_const_nhds
   haveI : (𝓝[<] t).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, ht⟩
   have hev : ∀ᶠ s in 𝓝[<] t,
       A s + Function.rightLim α d ≤ A (t + d) := by
