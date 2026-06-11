@@ -21,6 +21,7 @@ import Book.RealCurvesAdditivity
 import Book.RealCurvesConv
 import Book.RealCurvesDeconv
 import Book.Deviations
+import Book.DeviationsComposition
 import Book.RealCurvesDeviations
 import Book.PseudoInverse
 import Book.PseudoInverseCatalog
