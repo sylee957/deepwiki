@@ -19,6 +19,18 @@ def IsSuperadditive {D T : Type*} [Add D]
     [_root_.Add T] [LE T] (g : D → T) : Prop :=
   ∀ u s : D, g u + g s ≤ g (u + s)
 
+/-- Sub-additivity transports through the real coercion: `fun t => (g t : ℝ)`
+is sub-additive when `g : ℝ≥0 → ℝ≥0` is. -/
+theorem IsSubadditive.coe_real {g : ℝ≥0 → ℝ≥0} (hsub : IsSubadditive g) :
+    IsSubadditive (fun t => (g t : ℝ)) :=
+  fun u s => by exact_mod_cast hsub u s
+
+/-- Super-additivity transports through the real coercion: `fun t => (g t : ℝ)`
+is super-additive when `g : ℝ≥0 → ℝ≥0` is. -/
+theorem IsSuperadditive.coe_real {g : ℝ≥0 → ℝ≥0} (hsup : IsSuperadditive g) :
+    IsSuperadditive (fun t => (g t : ℝ)) :=
+  fun u s => by exact_mod_cast hsup u s
+
 /-- A super-additive function into a canonically ordered monoid is
 monotone: `g a ≤ g a + g (b - a) ≤ g (a + (b - a)) = g b`. -/
 theorem IsSuperadditive.monotone {D T : Type*}

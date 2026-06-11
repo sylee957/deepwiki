@@ -168,13 +168,11 @@ private theorem etaMax_fixpoint_term {au al : ℝ≥0 → ℝ≥0}
     have htuvw : (au (t + (u + v + w)) : ℝ) = au (t + u + v + w) := by
       norm_num [add_assoc]
     rw [htuvw] at hz
-    have hsa : (au (t + u + v + w) : ℝ) ≤ au (t + u + v) + au w := by
-      have := hsub (t + u + v) w; rw [← NNReal.coe_le_coe] at this
-      push_cast at this; linarith
+    have hsa : (au (t + u + v + w) : ℝ) ≤ au (t + u + v) + au w :=
+      hsub.coe_real (t + u + v) w
     have hsp : (al v : ℝ) + al (u + w) ≤ al (u + v + w) := by
-      have := hsup v (u + w)
-      rw [show v + (u + w) = u + v + w by ring, ← NNReal.coe_le_coe] at this
-      push_cast at this; linarith
+      have := hsup.coe_real v (u + w)
+      rwa [show v + (u + w) = u + v + w by ring] at this
     rw [NNReal.coe_sub hw]; linarith
   · rw [tsub_eq_zero_of_le hw]; push_cast
     have evt : al v ≤ au (t + v) := le_trans (hle v) (humono le_add_self)
@@ -239,13 +237,11 @@ private theorem etaMin_fixpoint_term {au al : ℝ≥0 → ℝ≥0}
     (hηt : al (t + (u + v + w)) - au (u + v + w) ≤ ht) :
     al (t + u + v) - au v ≤ ht + (au (u + w) - al w) := by
   have hsa : (au (u + v + w) : ℝ) ≤ au v + au (u + w) := by
-    have := hsub v (u + w)
-    rw [show v + (u + w) = u + v + w by ring, ← NNReal.coe_le_coe] at this
-    push_cast at this; linarith
+    have := hsub.coe_real v (u + w)
+    rwa [show v + (u + w) = u + v + w by ring] at this
   have hsp : (al (t + u + v) : ℝ) + al w ≤ al (t + (u + v + w)) := by
-    have := hsup (t + u + v) w
-    rw [show (t + u + v) + w = t + (u + v + w) by ring, ← NNReal.coe_le_coe] at this
-    push_cast at this; linarith
+    have := hsup.coe_real (t + u + v) w
+    rwa [show (t + u + v) + w = t + (u + v + w) by ring] at this
   have hzr : (al (t + (u + v + w)) : ℝ) - au (u + v + w) ≤ ht := by
     rcases le_total (au (u + v + w)) (al (t + (u + v + w))) with hz | hz
     · rw [← NNReal.coe_le_coe, NNReal.coe_sub hz] at hηt; exact hηt
@@ -318,12 +314,10 @@ theorem etaMin_le_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
     have hlw : αl w ≤ αu (t + w) := le_trans (hle w) (humono le_add_self)
     push_cast [NNReal.coe_sub hlw]
     have h1 : (αl (t + z) : ℝ) + αl w ≤ αl (t + w + z) := by
-      have := hsup (t + z) w
-      rw [show (t + z) + w = t + w + z by ring, ← NNReal.coe_le_coe] at this
-      push_cast at this; linarith
-    have h2 : (αu (t + w + z) : ℝ) ≤ αu (t + w) + αu z := by
-      have := hsub (t + w) z; rw [← NNReal.coe_le_coe] at this
-      push_cast at this; linarith
+      have := hsup.coe_real (t + z) w
+      rwa [show (t + z) + w = t + w + z by ring] at this
+    have h2 : (αu (t + w + z) : ℝ) ≤ αu (t + w) + αu z :=
+      hsub.coe_real (t + w) z
     have h3 : (αl (t + w + z) : ℝ) ≤ αu (t + w + z) := by exact_mod_cast hle _
     linarith
   · rw [tsub_eq_zero_of_le hz]; exact zero_le'
@@ -355,12 +349,10 @@ theorem isSubadditive_etaMax {αu αl : ℝ≥0 → ℝ≥0}
   have ha' : αl a ≤ αu (u + a) := le_trans (hle a) (humono le_add_self)
   have hb' : αl b ≤ αu (s + b) := le_trans (hle b) (humono le_add_self)
   have hsa : (αu (u + s + (a + b)) : ℝ) ≤ αu (u + a) + αu (s + b) := by
-    have := hsub (u + a) (s + b)
-    rw [show (u + a) + (s + b) = u + s + (a + b) by ring,
-      ← NNReal.coe_le_coe] at this
-    push_cast at this; linarith
-  have hsp : (αl a : ℝ) + αl b ≤ αl (a + b) := by
-    have := hsup a b; rw [← NNReal.coe_le_coe] at this; push_cast at this; linarith
+    have := hsub.coe_real (u + a) (s + b)
+    rwa [show (u + a) + (s + b) = u + s + (a + b) by ring] at this
+  have hsp : (αl a : ℝ) + αl b ≤ αl (a + b) :=
+    hsup.coe_real a b
   rcases le_total (αl (a + b)) (αu (u + s + (a + b))) with hz | hz
   · rw [NNReal.coe_sub hz]
     push_cast [NNReal.coe_sub ha', NNReal.coe_sub hb']; linarith
