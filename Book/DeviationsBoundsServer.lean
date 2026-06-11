@@ -50,12 +50,12 @@ reading `toENN beta` coerces to the `EReal` convolution. -/
 theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (t : ℝ≥0) :
     ((minConv (liftENN ⇑A) (toENN beta) t : ℝ≥0∞) : EReal)
-      = minConv (curveE A) beta t := by
+      = minConv (curveEReal A) beta t := by
   simp only [minConv]
   rw [coe_ennreal_iInf]
   refine iInf_congr ?_
   rintro ⟨⟨u, s⟩, _⟩
-  show ((liftENN ⇑A u + toENN beta s : ℝ≥0∞) : EReal) = curveE A u + beta s
+  show ((liftENN ⇑A u + toENN beta s : ℝ≥0∞) : EReal) = curveEReal A u + beta s
   rw [EReal.coe_ennreal_add]
   congr 1
   exact EReal.coe_toENNReal (hnn s)
@@ -66,7 +66,7 @@ convolution. -/
 theorem coe_le_minConv_toENN_iff (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (x t : ℝ≥0) :
     (x : ℝ≥0∞) ≤ minConv (liftENN ⇑A) (toENN beta) t ↔
-      ((x : ℝ) : EReal) ≤ minConv (curveE A) beta t := by
+      ((x : ℝ) : EReal) ≤ minConv (curveEReal A) beta t := by
   rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t,
     EReal.coe_nnreal_eq_coe_real]
 
@@ -75,7 +75,7 @@ value iff the `EReal` convolution is below its `EReal` cast. -/
 theorem minConv_toENN_le_coe_iff (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (x t : ℝ≥0) :
     minConv (liftENN ⇑A) (toENN beta) t ≤ (x : ℝ≥0∞) ↔
-      minConv (curveE A) beta t ≤ ((x : ℝ) : EReal) := by
+      minConv (curveEReal A) beta t ≤ ((x : ℝ) : EReal) := by
   rw [← EReal.coe_ennreal_le_coe_ennreal_iff, coe_minConv_toENN A hnn t,
     EReal.coe_nnreal_eq_coe_real]
 
@@ -84,7 +84,7 @@ reading iff its `EReal` cast equals the `EReal` convolution. -/
 theorem coe_eq_minConv_toENN_iff (A : Curve) {beta : ℝ≥0 → EReal}
     (hnn : IsNonneg beta) (x t : ℝ≥0) :
     (x : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t ↔
-      ((x : ℝ) : EReal) = minConv (curveE A) beta t := by
+      ((x : ℝ) : EReal) = minConv (curveEReal A) beta t := by
   rw [← EReal.coe_ennreal_eq_coe_ennreal_iff, coe_minConv_toENN A hnn t,
     EReal.coe_nnreal_eq_coe_real]
 

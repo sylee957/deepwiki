@@ -13,15 +13,15 @@ open scoped Classical NNReal
 
 /-- `S` is a greedy shaper for `sigma`: every output is exactly `A ∗ sigma`. -/
 def IsGreedyShaper (sigma : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
-  ∀ A D : Curve, S A D → curveE D = minConv (curveE A) sigma
+  ∀ A D : Curve, S A D → curveEReal D = minConv (curveEReal A) sigma
 
 /-- The greedy-shaper relation: the output is exactly `A ∗ sigma`. -/
 def greedyShaperRel (sigma : ℝ≥0 → EReal) : Curve → Curve → Prop :=
-  fun A D => curveE D = minConv (curveE A) sigma
+  fun A D => curveEReal D = minConv (curveEReal A) sigma
 
-/-- `greedyShaperRel sigma A D` unfolds to `D = A ∗ sigma` (via `curveE`). -/
+/-- `greedyShaperRel sigma A D` unfolds to `D = A ∗ sigma` (via `curveEReal`). -/
 theorem mem_greedyShaperRel_iff {sigma : ℝ≥0 → EReal} {A D : Curve} :
-    greedyShaperRel sigma A D ↔ curveE D = minConv (curveE A) sigma :=
+    greedyShaperRel sigma A D ↔ curveEReal D = minConv (curveEReal A) sigma :=
   Iff.rfl
 
 /-- `IsGreedyShaper sigma S` iff `S ≤ greedyShaperRel sigma`. -/
@@ -41,7 +41,7 @@ theorem isGreedyShaper_greedyShaperRel (sigma : ℝ≥0 → EReal) :
 theorem IsGreedyShaper.isCausal {S : Curve → Curve → Prop}
     {sigma : ℝ≥0 → EReal} (h0 : sigma 0 ≤ 0)
     (hS : IsGreedyShaper sigma S) : IsCausal S :=
-  fun A D hp => curveE_le_iff.mp
+  fun A D hp => curveEReal_le_iff.mp
     (le_of_eq_of_le (hS A D hp) (minConv_self_le h0 A))
 
 /-! ## Well-definedness: the greedy output is a curve
@@ -53,26 +53,26 @@ hypothesis; sub-additivity is not needed for the output to be a curve, only
 for the shaper property (`IsGreedyShaper.isShaper`). -/
 
 /-- `A ∗ sigma` is finite when `sigma 0 ≤ 0`: it is bounded by `A`. -/
-theorem minConv_curveE_ne_top (A : Curve) {sigma : ℝ≥0 → EReal}
+theorem minConv_curveEReal_ne_top (A : Curve) {sigma : ℝ≥0 → EReal}
     (h0 : sigma 0 ≤ 0) (t : ℝ≥0) :
-    minConv (curveE A) sigma t ≠ ⊤ :=
+    minConv (curveEReal A) sigma t ≠ ⊤ :=
   (lt_of_le_of_lt (minConv_self_le h0 A t) (EReal.coe_lt_top _)).ne
 
 /-- The greedy output `A ∗ sigma`, read back as an `ℝ≥0`-valued function. -/
 noncomputable def greedyFun (A : Curve) (sigma : ℝ≥0 → EReal) : ℝ≥0 → ℝ≥0 :=
-  fun t => (minConv (curveE A) sigma t).toReal.toNNReal
+  fun t => (minConv (curveEReal A) sigma t).toReal.toNNReal
 
 /-- `A ∗ sigma` is nonnegative (nonnegative `sigma`) and finite (null-at-zero
 `sigma` bounds it by `A`), so the `ℝ≥0` reading round-trips:
 `(greedyFun A sigma t : EReal) = (A ∗ sigma) t`. -/
 theorem coe_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
     (hnn : IsNonneg sigma) (h0 : sigma 0 = 0) (t : ℝ≥0) :
-    ((greedyFun A sigma t : ℝ) : EReal) = minConv (curveE A) sigma t := by
-  have hpos : (0 : EReal) ≤ minConv (curveE A) sigma t :=
-    IsNonneg.conv (curveE_nonneg A) hnn t
-  have hne_bot : minConv (curveE A) sigma t ≠ ⊥ := ne_bot_of_nonneg hpos
-  have hne_top := minConv_curveE_ne_top A h0.le t
-  show (((minConv (curveE A) sigma t).toReal.toNNReal : ℝ) : EReal) = _
+    ((greedyFun A sigma t : ℝ) : EReal) = minConv (curveEReal A) sigma t := by
+  have hpos : (0 : EReal) ≤ minConv (curveEReal A) sigma t :=
+    IsNonneg.conv (curveEReal_nonneg A) hnn t
+  have hne_bot : minConv (curveEReal A) sigma t ≠ ⊥ := ne_bot_of_nonneg hpos
+  have hne_top := minConv_curveEReal_ne_top A h0.le t
+  show (((minConv (curveEReal A) sigma t).toReal.toNNReal : ℝ) : EReal) = _
   rw [Real.coe_toNNReal _ (EReal.toReal_nonneg hpos),
     EReal.coe_toReal hne_top hne_bot]
 
@@ -81,20 +81,20 @@ theorem greedyFun_mono (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0) :
     Monotone (greedyFun A sigma) := by
   intro a b hab
-  have hm := monotone_minConv (monotone_curveE A) hmono hab
-  have hpos : (0 : EReal) ≤ minConv (curveE A) sigma a :=
-    IsNonneg.conv (curveE_nonneg A)
+  have hm := monotone_minConv (monotone_curveEReal A) hmono hab
+  have hpos : (0 : EReal) ≤ minConv (curveEReal A) sigma a :=
+    IsNonneg.conv (curveEReal_nonneg A)
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) a
   exact Real.toNNReal_mono
     (EReal.toReal_le_toReal hm (ne_bot_of_nonneg hpos)
-      (minConv_curveE_ne_top A h0.le b))
+      (minConv_curveEReal_ne_top A h0.le b))
 
 /-- `greedyFun A sigma` vanishes at the origin. -/
 theorem greedyFun_zero (A : Curve) {sigma : ℝ≥0 → EReal} (h0 : sigma 0 = 0) :
     IsNullAtOrigin (greedyFun A sigma) := by
-  have hm : minConv (curveE A) sigma 0 = 0 :=
-    IsNullAtOrigin.conv (curveE_zero A) h0
-  show (minConv (curveE A) sigma 0).toReal.toNNReal = 0
+  have hm : minConv (curveEReal A) sigma 0 = 0 :=
+    IsNullAtOrigin.conv (curveEReal_zero A) h0
+  show (minConv (curveEReal A) sigma 0).toReal.toNNReal = 0
   rw [hm, EReal.toReal_zero, Real.toNNReal_zero]
 
 /-- `greedyFun A sigma` is left-continuous: the convolution is left-continuous
@@ -103,16 +103,16 @@ theorem greedyFun_leftCont (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma) :
     IsLeftContinuous (greedyFun A sigma) := by
-  have hm : IsLeftContinuous (minConv (curveE A) sigma) :=
-    isLeftContinuous_minConv_ereal _ _ (monotone_curveE A) hmono
-      (isLeftContinuous_curveE A) hlc
-      (fun r u => addDefined_curveE A u (sigma (r - u)))
+  have hm : IsLeftContinuous (minConv (curveEReal A) sigma) :=
+    isLeftContinuous_minConv_ereal _ _ (monotone_curveEReal A) hmono
+      (isLeftContinuous_curveEReal A) hlc
+      (fun r u => addDefined_curveEReal A u (sigma (r - u)))
   intro t
-  have hpos : (0 : EReal) ≤ minConv (curveE A) sigma t :=
-    IsNonneg.conv (curveE_nonneg A)
+  have hpos : (0 : EReal) ≤ minConv (curveEReal A) sigma t :=
+    IsNonneg.conv (curveEReal_nonneg A)
       (isNonneg_of_monotone_of_nullAtOrigin hmono h0) t
-  have htr : ContinuousAt EReal.toReal (minConv (curveE A) sigma t) :=
-    EReal.tendsto_toReal (minConv_curveE_ne_top A h0.le t)
+  have htr : ContinuousAt EReal.toReal (minConv (curveEReal A) sigma t) :=
+    EReal.tendsto_toReal (minConv_curveEReal_ne_top A h0.le t)
       (ne_bot_of_nonneg hpos)
   exact ((continuous_real_toNNReal.continuousAt).comp htr
     ).comp_continuousWithinAt (hm t)
@@ -128,13 +128,13 @@ noncomputable def greedyCurve (A : Curve) (sigma : ℝ≥0 → EReal)
     hpwc, greedyFun_leftCont A hmono h0 hlc⟩
 
 /-- The greedy curve realizes the convolution:
-`curveE (greedyCurve …) = A ∗ sigma`. -/
-theorem curveE_greedyCurve (A : Curve) {sigma : ℝ≥0 → EReal}
+`curveEReal (greedyCurve …) = A ∗ sigma`. -/
+theorem curveEReal_greedyCurve (A : Curve) {sigma : ℝ≥0 → EReal}
     (hmono : Monotone sigma) (h0 : sigma 0 = 0)
     (hlc : IsLeftContinuous sigma)
     (hpwc : IsPiecewiseContinuous (greedyFun A sigma)) :
-    curveE (greedyCurve A sigma hmono h0 hlc hpwc)
-      = minConv (curveE A) sigma :=
+    curveEReal (greedyCurve A sigma hmono h0 hlc hpwc)
+      = minConv (curveEReal A) sigma :=
   funext (coe_greedyFun A
     (isNonneg_of_monotone_of_nullAtOrigin hmono h0) h0)
 
@@ -149,7 +149,7 @@ theorem isServer_greedyShaperRel {sigma : ℝ≥0 → EReal}
     IsServer (greedyShaperRel sigma) :=
   ⟨(isGreedyShaper_greedyShaperRel sigma).isCausal h0.le,
     fun A => ⟨greedyCurve A sigma hmono h0 hlc (hpwc A),
-      curveE_greedyCurve A hmono h0 hlc (hpwc A)⟩⟩
+      curveEReal_greedyCurve A hmono h0 hlc (hpwc A)⟩⟩
 
 /-! ## A greedy shaper is a shaper and a minimal service curve -/
 
@@ -193,9 +193,9 @@ theorem IsGreedyShaper.isShaper {S : Curve → Curve → Prop}
     {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) (hsub : IsSubadditive sigma)
     (hS : IsGreedyShaper sigma S) : IsShaper sigma S := by
   intro A D hp
-  rw [show curveE D = minConv (curveE A) sigma from hS A D hp]
+  rw [show curveEReal D = minConv (curveEReal A) sigma from hS A D hp]
   exact isMaximalArrivalBound_minConv_of_subadditive
-    (curveE_nonneg A) hnn hsub
+    (curveEReal_nonneg A) hnn hsub
 
 /-! ## Greedy shaper is minimal and maximal service -/
 
@@ -215,9 +215,9 @@ theorem mem_greedyShaperRel_iff_minimal_and_maximal {sigma : ℝ≥0 → EReal}
       minimalServiceRel sigma A D ∧ maximalServiceRel sigma A D := by
   constructor
   · intro hp
-    exact ⟨⟨le_trans (le_of_eq (hp : curveE D = _)) (minConv_self_le h0 A),
-        le_of_eq (hp : curveE D = _).symm⟩,
-      le_of_eq (hp : curveE D = _)⟩
+    exact ⟨⟨le_trans (le_of_eq (hp : curveEReal D = _)) (minConv_self_le h0 A),
+        le_of_eq (hp : curveEReal D = _).symm⟩,
+      le_of_eq (hp : curveEReal D = _)⟩
   · rintro ⟨⟨_, hge⟩, hle⟩
     exact le_antisymm hle hge
 

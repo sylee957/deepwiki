@@ -80,8 +80,8 @@ reassociating the convolution onto the input. `BddBelowReal` keeps the
 `EReal` convolution associative (no `(+∞) + (−∞)` collision; the book's
 curves are nonnegative, hence bounded below). -/
 
-/-- `curveE A` is bounded below by a real (curves are nonnegative). -/
-theorem bddBelowReal_curveE (A : Curve) : BddBelowReal (curveE A) :=
+/-- `curveEReal A` is bounded below by a real (curves are nonnegative). -/
+theorem bddBelowReal_curveEReal (A : Curve) : BddBelowReal (curveEReal A) :=
   (isNonneg_liftEReal ⇑A).bddBelowReal
 
 /-- **Concatenated servers offer the convolution of their min-plus service
@@ -93,12 +93,12 @@ theorem IsMinimalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
     (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
     IsMinimalServiceCurve (minConv β₁ β₂) (Relation.Comp S₁ S₂) := by
   rintro A C ⟨B, hAB, hBC⟩
-  calc minConv (curveE A) (minConv β₁ β₂)
-      = minConv (minConv (curveE A) β₁) β₂ :=
-        (minConv_assoc (bddBelowReal_curveE A) hb₁ hb₂).symm
-    _ ≤ minConv (curveE B) β₂ := fun t =>
+  calc minConv (curveEReal A) (minConv β₁ β₂)
+      = minConv (minConv (curveEReal A) β₁) β₂ :=
+        (minConv_assoc (bddBelowReal_curveEReal A) hb₁ hb₂).symm
+    _ ≤ minConv (curveEReal B) β₂ := fun t =>
         minConv_le_minConv (h₁ A B hAB) (fun _ => le_rfl) t
-    _ ≤ curveE C := h₂ B C hBC
+    _ ≤ curveEReal C := h₂ B C hBC
 
 /-- The largest-relation form of the concatenation theorem:
 `Smp(β₂) ∘ Smp(β₁) ⊆ Smp(β₁ ∗ β₂)`. -/
@@ -120,12 +120,12 @@ theorem IsMaximalServiceCurve.comp {S₁ S₂ : Curve → Curve → Prop}
     (hb₁ : BddBelowReal β₁) (hb₂ : BddBelowReal β₂) :
     IsMaximalServiceCurve (minConv β₁ β₂) (Relation.Comp S₁ S₂) := by
   rintro A C ⟨B, hAB, hBC⟩
-  calc curveE C
-      ≤ minConv (curveE B) β₂ := h₂ B C hBC
-    _ ≤ minConv (minConv (curveE A) β₁) β₂ := fun t =>
+  calc curveEReal C
+      ≤ minConv (curveEReal B) β₂ := h₂ B C hBC
+    _ ≤ minConv (minConv (curveEReal A) β₁) β₂ := fun t =>
         minConv_le_minConv (h₁ A B hAB) (fun _ => le_rfl) t
-    _ = minConv (curveE A) (minConv β₁ β₂) :=
-        minConv_assoc (bddBelowReal_curveE A) hb₁ hb₂
+    _ = minConv (curveEReal A) (minConv β₁ β₂) :=
+        minConv_assoc (bddBelowReal_curveEReal A) hb₁ hb₂
 
 /-- The largest-relation form for maximal service curves:
 `Smax(β₂) ∘ Smax(β₁) ⊆ Smax(β₁ ∗ β₂)`. -/

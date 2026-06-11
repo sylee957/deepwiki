@@ -114,7 +114,7 @@ theorem coe_eq_minConv_toENN_of_greedyShaperRel {beta : ℝ≥0 → EReal}
     (t : ℝ≥0) :
     (D t : ℝ≥0∞) = minConv (liftENN ⇑A) (toENN beta) t :=
   (coe_eq_minConv_toENN_iff A hnn (D t) t).mpr
-    (congrFun (hp : curveE D = minConv (curveE A) beta) t)
+    (congrFun (hp : curveEReal D = minConv (curveEReal A) beta) t)
 
 /-- **Delay-bound tightness for greedy shapers**: a greedy-served pair with
 sub-additive arrival attains `d(A, D) = hDev (liftENN A) (toENN beta)`. -/
@@ -189,7 +189,7 @@ theorem greedyShaperRel_greedyCurve (A : Curve) {beta : ℝ≥0 → EReal}
     (hlc : IsLeftContinuous beta)
     (hpwc : IsPiecewiseContinuous (greedyFun A beta)) :
     greedyShaperRel beta A (greedyCurve A beta hmono h0 hlc hpwc) :=
-  curveE_greedyCurve A hmono h0 hlc hpwc
+  curveEReal_greedyCurve A hmono h0 hlc hpwc
 
 /-- **Tightness of the deviation bounds** (`C`-membership form): for
 sub-additive `alpha` and left-continuous `beta`, there exists a pair

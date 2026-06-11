@@ -26,11 +26,11 @@ theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
   have hst : start ⇑A ⇑D t ≤ t := start_le ⇑A ⇑D t
   have hbound : A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t :=
     strictServiceRel_output_bound beta A D ⟨hc A D hp, hβ A D hp⟩ t
-  calc minConv (curveE A) (liftEReal beta) t
-      ≤ curveE A (start ⇑A ⇑D t) + liftEReal beta (t - start ⇑A ⇑D t) :=
+  calc minConv (curveEReal A) (liftEReal beta) t
+      ≤ curveEReal A (start ⇑A ⇑D t) + liftEReal beta (t - start ⇑A ⇑D t) :=
         minConv_le_add _ _ (add_tsub_cancel_of_le hst)
-    _ ≤ curveE D t := by
-        simp only [curveE_apply]
+    _ ≤ curveEReal D t := by
+        simp only [curveEReal_apply]
         exact_mod_cast hbound
 
 /-- The largest-relation form: the largest strict-service relation is
@@ -39,7 +39,7 @@ service curve. -/
 theorem strictServiceRel_le_minimalServiceRel (beta : ℝ≥0 → ℝ≥0) :
     strictServiceRel beta ≤ minimalServiceRel (liftEReal beta) := by
   intro A D hp
-  exact ⟨curveE_mono hp.1,
+  exact ⟨curveEReal_mono hp.1,
     (isStrictMinimalServiceCurve_strictServiceRel beta).isMinimalServiceCurve
       (fun _ _ hq => hq.1) A D hp⟩
 

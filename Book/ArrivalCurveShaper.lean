@@ -58,26 +58,26 @@ theorem isMaximalArrivalBound_subadditiveClosureEReal_iff
 /-- `S` is a shaper for `sigma`: every output allows `sigma` as a maximal
 arrival curve, `D ≤ D ∗ sigma`. -/
 def IsShaper (sigma : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
-  ∀ A D : Curve, S A D → IsMaximalArrivalBound (curveE D) sigma
+  ∀ A D : Curve, S A D → IsMaximalArrivalBound (curveEReal D) sigma
 
 /-- The largest relation shaping outputs to `sigma`: the causal pairs whose
 output allows `sigma`. -/
 def shaperRel (sigma : ℝ≥0 → EReal) : Curve → Curve → Prop :=
-  fun A D => D ≤ A ∧ IsMaximalArrivalBound (curveE D) sigma
+  fun A D => D ≤ A ∧ IsMaximalArrivalBound (curveEReal D) sigma
 
 /-- `shaperRel sigma A D` unfolds to causality and the arrival-curve bound. -/
 theorem mem_shaperRel_iff {sigma : ℝ≥0 → EReal} {A D : Curve} :
     shaperRel sigma A D ↔
-      D ≤ A ∧ IsMaximalArrivalBound (curveE D) sigma :=
+      D ≤ A ∧ IsMaximalArrivalBound (curveEReal D) sigma :=
   Iff.rfl
 
 /-- The zero output allows every nonnegative `sigma`. -/
 theorem isMaximalArrivalBound_zeroCurve {sigma : ℝ≥0 → EReal}
     (hnn : IsNonneg sigma) :
-    IsMaximalArrivalBound (curveE zeroCurve) sigma := by
+    IsMaximalArrivalBound (curveEReal zeroCurve) sigma := by
   intro t
-  rw [curveE_zeroCurve]
-  exact IsNonneg.conv (curveE_nonneg zeroCurve) hnn t
+  rw [curveEReal_zeroCurve]
+  exact IsNonneg.conv (curveEReal_nonneg zeroCurve) hnn t
 
 /-- For nonnegative `sigma`, `shaperRel sigma` is a server: causality is the
 first conjunct, and `zeroCurve` gives left-totality. -/
@@ -115,7 +115,7 @@ theorem isShaper_top (S : Curve → Curve → Prop) :
     IsShaper (⊤ : ℝ≥0 → EReal) S := by
   intro A D _
   refine fun t => le_minConv fun u s _ => ?_
-  rw [Pi.top_apply, EReal.add_top_of_ne_bot (curveE_neverBot D u)]
+  rw [Pi.top_apply, EReal.add_top_of_ne_bot (curveEReal_neverBot D u)]
   exact le_top
 
 /-! ## Properties of shapers -/
@@ -141,7 +141,7 @@ theorem IsShaper.closure {S : Curve → Curve → Prop} {sigma : ℝ≥0 → ERe
     IsShaper (subadditiveClosureEReal sigma) S :=
   fun A D hp =>
     (isMaximalArrivalBound_subadditiveClosureEReal_iff
-      (curveE_neverBot D) hnn).mpr (hS A D hp)
+      (curveEReal_neverBot D) hnn).mpr (hS A D hp)
 
 /-- Shaping to nonnegative `sigma` and to its sub-additive closure `sigma⋆`
 coincide: `shaperRel sigma = shaperRel sigma⋆`. -/
@@ -150,7 +150,7 @@ theorem shaperRel_closure {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
   funext A D
   apply propext
   have hiff := isMaximalArrivalBound_subadditiveClosureEReal_iff
-    (curveE_neverBot D) hnn
+    (curveEReal_neverBot D) hnn
   exact ⟨fun hp => ⟨hp.1, hiff.mpr hp.2⟩, fun hp => ⟨hp.1, hiff.mp hp.2⟩⟩
 
 /-! ## A shaper offers a maximal service curve -/
@@ -163,7 +163,7 @@ theorem IsShaper.isMaximalServiceCurve {S : Curve → Curve → Prop}
     IsMaximalServiceCurve sigma S :=
   fun A D hp t =>
     le_trans (hS A D hp t)
-      (minConv_le_minConv (curveE_mono (hc A D hp)) (fun _ => le_rfl) t)
+      (minConv_le_minConv (curveEReal_mono (hc A D hp)) (fun _ => le_rfl) t)
 
 /-- The largest-relation form: the largest shaper is contained in the largest
 server offering `sigma` as a maximal service curve. -/

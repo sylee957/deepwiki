@@ -4,7 +4,7 @@ import Book.CurveDioidEReal
 import Book.ConvolutionMinimumExt
 
 /-! # Min-plus service curves
-The `EReal` curve view `curveE`; `IsMinimalServiceCurve β S` — `A ∗ β ≤ D` on
+The `EReal` curve view `curveEReal`; `IsMinimalServiceCurve β S` — `A ∗ β ≤ D` on
 served pairs, `β : ℝ≥0 → EReal` — and the largest such relation
 `minimalServiceRel β`: a server when `β 0 ≤ 0`, empty when `β 0 > 0`, and
 every server offers the zero curve `betaZero`. -/
@@ -30,76 +30,76 @@ theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
   fun _ _ hab => by exact_mod_cast hmono hab
 
 /-- A curve viewed in `EReal`: the lift `liftEReal ⇑A`. -/
-noncomputable def curveE (A : Curve) : ℝ≥0 → EReal :=
+noncomputable def curveEReal (A : Curve) : ℝ≥0 → EReal :=
   liftEReal ⇑A
 
-/-- `curveE A t = ((A t : ℝ) : EReal)`: the pointwise value of the `EReal`
+/-- `curveEReal A t = ((A t : ℝ) : EReal)`: the pointwise value of the `EReal`
 view. -/
-@[simp] theorem curveE_apply (A : Curve) (t : ℝ≥0) :
-    curveE A t = ((A t : ℝ) : EReal) := rfl
+@[simp] theorem curveEReal_apply (A : Curve) (t : ℝ≥0) :
+    curveEReal A t = ((A t : ℝ) : EReal) := rfl
 
-/-- `curveE A` is the `EReal` lift of the underlying function:
-`curveE A = liftEReal ⇑A`. -/
-theorem curveE_eq_liftEReal (A : Curve) : curveE A = liftEReal ⇑A := rfl
+/-- `curveEReal A` is the `EReal` lift of the underlying function:
+`curveEReal A = liftEReal ⇑A`. -/
+theorem curveEReal_eq_liftEReal (A : Curve) : curveEReal A = liftEReal ⇑A := rfl
 
-/-- `curveE A` is nonnegative: `0 ≤ curveE A t`. -/
-theorem curveE_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveE A t :=
+/-- `curveEReal A` is nonnegative: `0 ≤ curveEReal A t`. -/
+theorem curveEReal_nonneg (A : Curve) (t : ℝ≥0) : (0 : EReal) ≤ curveEReal A t :=
   isNonneg_liftEReal ⇑A t
 
-/-- `curveE A` is never `⊥`: each value is a real coercion. -/
-theorem curveE_neverBot (A : Curve) : NeverBot (curveE A) :=
+/-- `curveEReal A` is never `⊥`: each value is a real coercion. -/
+theorem curveEReal_neverBot (A : Curve) : NeverBot (curveEReal A) :=
   fun _ => EReal.coe_ne_bot _
 
-/-- `curveE A 0 = 0`. -/
-theorem curveE_zero (A : Curve) : curveE A 0 = 0 := by
+/-- `curveEReal A 0 = 0`. -/
+theorem curveEReal_zero (A : Curve) : curveEReal A 0 = 0 := by
   have h0 : A 0 = 0 := A.zero
   simp [h0]
 
-/-- Curve order matches the `EReal` view: `D ≤ A ↔ curveE D ≤ curveE A`. -/
-theorem curveE_le_iff {D A : Curve} : curveE D ≤ curveE A ↔ D ≤ A := by
+/-- Curve order matches the `EReal` view: `D ≤ A ↔ curveEReal D ≤ curveEReal A`. -/
+theorem curveEReal_le_iff {D A : Curve} : curveEReal D ≤ curveEReal A ↔ D ≤ A := by
   constructor
   · intro h t
     have ht := h t
-    simp only [curveE_apply] at ht
+    simp only [curveEReal_apply] at ht
     exact_mod_cast ht
   · intro h t
-    simp only [curveE_apply]
+    simp only [curveEReal_apply]
     exact_mod_cast h t
 
-/-- Curve order transfers to the `EReal` view: `D ≤ A → curveE D ≤ curveE A`. -/
-theorem curveE_mono {D A : Curve} (h : D ≤ A) : curveE D ≤ curveE A :=
-  curveE_le_iff.mpr h
+/-- Curve order transfers to the `EReal` view: `D ≤ A → curveEReal D ≤ curveEReal A`. -/
+theorem curveEReal_mono {D A : Curve} (h : D ≤ A) : curveEReal D ≤ curveEReal A :=
+  curveEReal_le_iff.mpr h
 
-/-- `curveE A` is monotone in time (contrast `curveE_mono`: monotonicity in
+/-- `curveEReal A` is monotone in time (contrast `curveEReal_mono`: monotonicity in
 the curve argument). -/
-theorem monotone_curveE (A : Curve) : Monotone (curveE A) :=
+theorem monotone_curveEReal (A : Curve) : Monotone (curveEReal A) :=
   monotone_liftEReal A.mono
 
-/-- `curveE A` is left-continuous. -/
-theorem isLeftContinuous_curveE (A : Curve) :
-    IsLeftContinuous (curveE A) := fun t =>
+/-- `curveEReal A` is left-continuous. -/
+theorem isLeftContinuous_curveEReal (A : Curve) :
+    IsLeftContinuous (curveEReal A) := fun t =>
   ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt
     ).comp_continuousWithinAt (A.leftCont t)
 
-/-- `curveE` values are real coercions, so they are `AddDefined` with
+/-- `curveEReal` values are real coercions, so they are `AddDefined` with
 anything. -/
-theorem addDefined_curveE (A : Curve) (u : ℝ≥0) (x : EReal) :
-    AddDefined (curveE A u) x :=
+theorem addDefined_curveEReal (A : Curve) (u : ℝ≥0) (x : EReal) :
+    AddDefined (curveEReal A u) x :=
   ⟨Or.inl (EReal.coe_ne_top _), Or.inl (EReal.coe_ne_bot _)⟩
 
 /-- `S` offers `EReal`-valued min-plus service curve `beta`: every served pair
 satisfies `A ∗ beta ≤ D` (i.e. `D ≥ A ∗ beta`), the curve pair lifted into
-`EReal` via `curveE`. -/
+`EReal` via `curveEReal`. -/
 def IsMinimalServiceCurve (beta : ℝ≥0 → EReal) (S : Curve → Curve → Prop) : Prop :=
-  ∀ A D : Curve, S A D → minConv (curveE A) beta ≤ curveE D
+  ∀ A D : Curve, S A D → minConv (curveEReal A) beta ≤ curveEReal D
 
 /-- When `beta 0 ≤ 0`, each input is its own output: `A` serves itself, since the
 `(t, 0)` split gives `A ∗ beta ≤ A`. The left-total witness for the relation. -/
 theorem minConv_self_le {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) (A : Curve) :
-    minConv (curveE A) beta ≤ curveE A := by
+    minConv (curveEReal A) beta ≤ curveEReal A := by
   refine fun t => le_trans (minConv_le_add _ _ (add_zero t)) ?_
-  calc curveE A t + beta 0 ≤ curveE A t + 0 := by gcongr
-    _ = curveE A t := add_zero _
+  calc curveEReal A t + beta 0 ≤ curveEReal A t + 0 := by gcongr
+    _ = curveEReal A t := add_zero _
 
 /-- `(A, D)` is a min-plus service pair of `beta`: `A ≥ D ≥ A ∗ beta`, on
 `T`-valued cumulative functions (the value-type-generic core of
@@ -109,18 +109,18 @@ def minimalServicePair {T : Type*} [Add T] [InfSet T] [LE T]
   D ≤ A ∧ minConv A beta ≤ D
 
 /-- The min-plus service relation of `beta`: the causal pairs meeting
-`A ∗ beta ≤ D`, i.e. `A ≥ D ≥ A ∗ beta`, read through `curveE`. Depends on
+`A ∗ beta ≤ D`, i.e. `A ≥ D ≥ A ∗ beta`, read through `curveEReal`. Depends on
 `beta` alone. -/
 def minimalServiceRel (beta : ℝ≥0 → EReal) : Curve → Curve → Prop :=
-  fun A D => minimalServicePair beta (curveE A) (curveE D)
+  fun A D => minimalServicePair beta (curveEReal A) (curveEReal D)
 
 /-- `minimalServiceRel beta A D` unfolds to `A ≥ D` and `A ∗ beta ≤ D`. -/
 theorem mem_minimalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
     minimalServiceRel beta A D ↔
-      D ≤ A ∧ minConv (curveE A) beta ≤ curveE D := by
+      D ≤ A ∧ minConv (curveEReal A) beta ≤ curveEReal D := by
   rw [show (minimalServiceRel beta A D) ↔
-        (curveE D ≤ curveE A ∧ minConv (curveE A) beta ≤ curveE D) from Iff.rfl,
-    curveE_le_iff]
+        (curveEReal D ≤ curveEReal A ∧ minConv (curveEReal A) beta ≤ curveEReal D) from Iff.rfl,
+    curveEReal_le_iff]
 
 /-- The relation `minimalServiceRel beta` offers its own service curve. -/
 theorem isMinimalServiceCurve_minimalServiceRel (beta : ℝ≥0 → EReal) :
@@ -131,7 +131,7 @@ theorem isMinimalServiceCurve_minimalServiceRel (beta : ℝ≥0 → EReal) :
 conjunct, and left-totality holds since each input serves itself. -/
 theorem isServer_minimalServiceRel {beta : ℝ≥0 → EReal} (h0 : beta 0 ≤ 0) :
     IsServer (minimalServiceRel beta) :=
-  ⟨fun _ _ hp => curveE_le_iff.mp hp.1,
+  ⟨fun _ _ hp => curveEReal_le_iff.mp hp.1,
     fun A => ⟨A, le_refl _, minConv_self_le h0 A⟩⟩
 
 /-- The largest server offering `beta` (for `beta 0 ≤ 0`) is the relation
@@ -140,7 +140,7 @@ theorem subset_minimalServiceRel {beta : ℝ≥0 → EReal} {S : Curve → Curve
     (hS : IsMinimalServiceCurve beta S) (hSrv : IsServer S) :
     ∀ A D, S A D → minimalServiceRel beta A D := by
   intro A D hp
-  exact ⟨curveE_mono (hSrv.1 _ _ hp), hS A D hp⟩
+  exact ⟨curveEReal_mono (hSrv.1 _ _ hp), hS A D hp⟩
 
 /-- A server offers `beta` iff its pairs all lie in `minimalServiceRel beta`. -/
 theorem isMinimalServiceCurve_iff_subset {beta : ℝ≥0 → EReal}
@@ -199,32 +199,32 @@ theorem isMinimalServiceCurve_maxDeconv_betaZero {S : Curve → Curve → Prop}
     IsMinimalServiceCurve (maxDeconv beta betaZero) S :=
   hS.mono (maxDeconv_betaZero_le beta)
 
-/-- `A ∗ beta₀ = beta₀` for any curve: the `(0, t)` split gives `curveE A 0 = 0`,
-and every other term `curveE A u + 0 = curveE A u ≥ 0`, so the infimum is `0`. -/
+/-- `A ∗ beta₀ = beta₀` for any curve: the `(0, t)` split gives `curveEReal A 0 = 0`,
+and every other term `curveEReal A u + 0 = curveEReal A u ≥ 0`, so the infimum is `0`. -/
 theorem minConv_betaZero (A : Curve) :
-    minConv (curveE A) betaZero = betaZero := by
+    minConv (curveEReal A) betaZero = betaZero := by
   funext t
   refine le_antisymm ?_ ?_
   · refine le_trans
       (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(0, t), by simp⟩ (le_refl _)) ?_
-    show curveE A 0 + betaZero t ≤ betaZero t
-    rw [curveE_zero]; show (0 : EReal) + 0 ≤ betaZero t; simp [betaZero]
+    show curveEReal A 0 + betaZero t ≤ betaZero t
+    rw [curveEReal_zero]; show (0 : EReal) + 0 ≤ betaZero t; simp [betaZero]
   · refine le_iInf (fun p => ?_)
-    show betaZero t ≤ curveE A p.1.1 + betaZero p.1.2
-    show (0 : EReal) ≤ curveE A p.1.1 + 0
-    rw [add_zero]; exact curveE_nonneg A p.1.1
+    show betaZero t ≤ curveEReal A p.1.1 + betaZero p.1.2
+    show (0 : EReal) ≤ curveEReal A p.1.1 + 0
+    rw [add_zero]; exact curveEReal_nonneg A p.1.1
 
-/-- `A ∗ beta₀ ≤ D` for any curves: `A ∗ beta₀ = beta₀ = 0 ≤ curveE D`. -/
+/-- `A ∗ beta₀ ≤ D` for any curves: `A ∗ beta₀ = beta₀ = 0 ≤ curveEReal D`. -/
 theorem minConv_betaZero_le (A D : Curve) :
-    minConv (curveE A) betaZero ≤ curveE D := by
-  rw [minConv_betaZero]; exact fun t => curveE_nonneg D t
+    minConv (curveEReal A) betaZero ≤ curveEReal D := by
+  rw [minConv_betaZero]; exact fun t => curveEReal_nonneg D t
 
 /-- The zero-service chain on any server: `S A D` gives
 `A ≥ D ≥ A ∗ beta₀ = beta₀`. -/
 theorem betaZero_chain {S : Curve → Curve → Prop} (hSrv : IsServer S)
     {A D : Curve} (hp : S A D) :
-    D ≤ A ∧ minConv (curveE A) betaZero ≤ curveE D ∧
-      minConv (curveE A) betaZero = betaZero :=
+    D ≤ A ∧ minConv (curveEReal A) betaZero ≤ curveEReal D ∧
+      minConv (curveEReal A) betaZero = betaZero :=
   ⟨hSrv.1 _ _ hp, minConv_betaZero_le A D, minConv_betaZero A⟩
 
 /-- Every server offers the zero service curve: `A ≥ D ≥ A ∗ beta₀ = beta₀`. -/
@@ -242,12 +242,12 @@ theorem subset_minimalServiceRel_betaZero {S : Curve → Curve → Prop}
 /-- If `beta 0 > 0`, no curve pair can satisfy `A ≥ D ≥ A ∗ beta`. The `(0,0)`
 split forces `D 0 ≥ A 0 + beta 0 > A 0 ≥ D 0`, a contradiction. -/
 theorem not_serviceCurve_of_pos {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < beta 0)
-    (A D : Curve) (hcaus : curveE D ≤ curveE A)
-    (hconv : minConv (curveE A) beta ≤ curveE D) : False := by
-  have hconv0 : minConv (curveE A) beta 0 ≤ curveE D 0 := hconv 0
-  have hcaus0 : curveE D 0 ≤ curveE A 0 := hcaus 0
-  have hsplit : minConv (curveE A) beta 0 = curveE A 0 + beta 0 :=
-    minConv_apply_zero (curveE A) beta
+    (A D : Curve) (hcaus : curveEReal D ≤ curveEReal A)
+    (hconv : minConv (curveEReal A) beta ≤ curveEReal D) : False := by
+  have hconv0 : minConv (curveEReal A) beta 0 ≤ curveEReal D 0 := hconv 0
+  have hcaus0 : curveEReal D 0 ≤ curveEReal A 0 := hcaus 0
+  have hsplit : minConv (curveEReal A) beta 0 = curveEReal A 0 + beta 0 :=
+    minConv_apply_zero (curveEReal A) beta
   rw [hsplit] at hconv0
   have hchain : ((A 0 : ℝ) : EReal) + beta 0 ≤ ((A 0 : ℝ) : EReal) + 0 := by
     rw [add_zero]; exact le_trans hconv0 hcaus0

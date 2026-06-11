@@ -12,22 +12,22 @@ namespace DeepWiki
 open scoped Classical NNReal
 
 /-- `S` offers maximal service curve `beta`: every served pair satisfies
-`D ≤ A ∗ beta`, the curve pair lifted into `EReal` via `curveE`. -/
+`D ≤ A ∗ beta`, the curve pair lifted into `EReal` via `curveEReal`. -/
 def IsMaximalServiceCurve (beta : ℝ≥0 → EReal)
     (S : Curve → Curve → Prop) : Prop :=
-  ∀ A D : Curve, S A D → curveE D ≤ minConv (curveE A) beta
+  ∀ A D : Curve, S A D → curveEReal D ≤ minConv (curveEReal A) beta
 
 /-- The maximal-service relation of `beta`: all curve pairs with
 `D ≤ A ∗ beta`. For `beta 0 ≤ 0` no causality conjunct is needed — see
 `isCausal_maximalServiceRel`. -/
 def maximalServiceRel (beta : ℝ≥0 → EReal) :
     Curve → Curve → Prop :=
-  fun A D => curveE D ≤ minConv (curveE A) beta
+  fun A D => curveEReal D ≤ minConv (curveEReal A) beta
 
 /-- `maximalServiceRel beta A D` unfolds to `D ≤ A ∗ beta` in the `EReal`
 view. -/
 theorem mem_maximalServiceRel_iff {beta : ℝ≥0 → EReal} {A D : Curve} :
-    maximalServiceRel beta A D ↔ curveE D ≤ minConv (curveE A) beta :=
+    maximalServiceRel beta A D ↔ curveEReal D ≤ minConv (curveEReal A) beta :=
   Iff.rfl
 
 /-- A relation offers maximal service `beta` iff all its pairs lie in
@@ -50,10 +50,10 @@ theorem isCausal_maximalServiceRel {beta : ℝ≥0 → EReal}
     (h0 : beta 0 ≤ 0) :
     IsCausal (maximalServiceRel beta) := by
   intro A D hp
-  exact curveE_le_iff.mp (le_trans hp (minConv_self_le h0 A))
+  exact curveEReal_le_iff.mp (le_trans hp (minConv_self_le h0 A))
 
-/-- `curveE zeroCurve t = 0`. -/
-theorem curveE_zeroCurve (t : ℝ≥0) : curveE zeroCurve t = 0 := by
+/-- `curveEReal zeroCurve t = 0`. -/
+theorem curveEReal_zeroCurve (t : ℝ≥0) : curveEReal zeroCurve t = 0 := by
   simp
 
 /-- For nonnegative `beta`, `0 ≤ A ∗ beta` (`IsNonneg.conv`), so `zeroCurve`
@@ -64,8 +64,8 @@ theorem isLeftTotal_maximalServiceRel {beta : ℝ≥0 → EReal}
     IsLeftTotal (maximalServiceRel beta) := by
   intro A
   refine ⟨zeroCurve, fun t => ?_⟩
-  rw [curveE_zeroCurve]
-  exact IsNonneg.conv (curveE_nonneg A) hnn t
+  rw [curveEReal_zeroCurve]
+  exact IsNonneg.conv (curveEReal_nonneg A) hnn t
 
 /-- For `beta` in `F₀` — null at the origin and nonnegative —
 `maximalServiceRel beta` is a server. -/
@@ -90,11 +90,11 @@ theorem delayEReal_zero_eq_convUnitEReal :
   simp [convUnitEReal]
 
 /-- `δ₀` is a unit on curves: `A ∗ δ₀ = A`, via `minConv_convUnitEReal_right`
-(`curveE A` is real-valued, hence `NeverBot`). -/
+(`curveEReal A` is real-valued, hence `NeverBot`). -/
 theorem minConv_delayEReal_zero (A : Curve) :
-    minConv (curveE A) (delayEReal 0) = curveE A := by
+    minConv (curveEReal A) (delayEReal 0) = curveEReal A := by
   rw [delayEReal_zero_eq_convUnitEReal]
-  exact minConv_convUnitEReal_right (curveE_neverBot A)
+  exact minConv_convUnitEReal_right (curveEReal_neverBot A)
 
 /-- Every causal relation — in particular every server — offers the maximal
 service curve `δ₀`: causality gives `D ≤ A = A ∗ δ₀`. -/
@@ -103,7 +103,7 @@ theorem isMaximalServiceCurve_delayEReal_zero {S : Curve → Curve → Prop}
     IsMaximalServiceCurve (delayEReal 0) S := by
   intro A D hp
   rw [minConv_delayEReal_zero]
-  exact curveE_mono (hc _ _ hp)
+  exact curveEReal_mono (hc _ _ hp)
 
 /-! ## Monotony of maximal service curves -/
 

@@ -48,10 +48,10 @@ theorem toENN_delayEReal (d : ℝ≥0) :
 
 end Deviation
 
-/-- The `ℝ≥0∞` reading of a maximal arrival curve: if `curveE f` allows the
+/-- The `ℝ≥0∞` reading of a maximal arrival curve: if `curveEReal f` allows the
 nonnegative `sigma`, then `liftENN ⇑f` allows `toENN sigma`. -/
 theorem IsMaximalArrivalBound.toENN {f : Curve} {sigma : ℝ≥0 → EReal}
-    (h : IsMaximalArrivalBound (curveE f) sigma) (hnn : IsNonneg sigma) :
+    (h : IsMaximalArrivalBound (curveEReal f) sigma) (hnn : IsNonneg sigma) :
     IsMaximalArrivalBound (liftENN ⇑f) (Deviation.toENN sigma) := fun t =>
   (coe_le_minConv_toENN_iff f hnn (f t) t).mpr (h t)
 
