@@ -78,12 +78,12 @@ noncomputable def zeroCurve : Curve :=
 /-- `zeroCurve t = 0`. -/
 @[simp] theorem zeroCurve_apply (t : ℝ≥0) : zeroCurve t = 0 := rfl
 
-/-- Embed a curve into the `(min,plus)` function dioid `Fmin`. -/
-def toFmin (A : Curve) : Fmin := fun t => ⟨(A t : ℝ≥0∞)⟩
+/-- Lift a `Curve` into the `(min,plus)` function dioid `Fmin` via `liftFmin`. -/
+abbrev Curve.liftFmin (A : Curve) : Fmin := DeepWiki.liftFmin ⇑A
 
 /-- Numeric `D ≤ A` is the reversed dioid order on the `Fmin` images. -/
-theorem le_iff_toFmin {D A : Curve} :
-    D ≤ A ↔ toFmin A ≤ toFmin D := by
+theorem Curve.le_iff_liftFmin_le {D A : Curve} :
+    D ≤ A ↔ A.liftFmin ≤ D.liftFmin := by
   constructor
   · intro h t
     refine (MinPlusNN.le_iff _ _).mpr ?_

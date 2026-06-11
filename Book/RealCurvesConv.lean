@@ -132,9 +132,9 @@ theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
     rw [this]; gcongr; exact le_add_right (le_refl d)
   exact le_trans (hmono harg) (hsub (u + d) (s + d))
 
-/-- `toF (delayNN 0)` is the convolution unit `δ₀` over `MinPlusNN`. -/
-theorem toF_delay0 :
-    toF (delayNN 0) = (convUnit : ℝ≥0 → MinPlusNN) := by
+/-- `liftMinPlusNN (delayNN 0)` is the convolution unit `δ₀` over `MinPlusNN`. -/
+theorem liftMinPlusNN_delay0 :
+    liftMinPlusNN (delayNN 0) = (convUnit : ℝ≥0 → MinPlusNN) := by
   funext t
   apply MinPlusNN.ext
   show delayNN 0 t = (convUnit t : MinPlusNN).toVal
@@ -161,13 +161,13 @@ theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
   apply le_antisymm
   · refine le_min ?_ (subadditiveClosureENN_le h t)
     rw [show subadditiveClosureENN h t
-        = (subadditiveClosure (toF h) t).toVal from rfl,
+        = (subadditiveClosure (liftMinPlusNN h) t).toVal from rfl,
       ← MinPlusNN.le_iff]
-    -- goal: toF (delayNN 0) t ≼ₒ subadditiveClosure (toF h) t
-    have hu : (toF (delayNN 0)) t ≼ₒ
-        subadditiveClosure (toF h) t := by
-      rw [congrFun toF_delay0 t]
-      have := convPow_le_closure (toF h) 0 t
+    -- goal: liftMinPlusNN (delayNN 0) t ≼ₒ subadditiveClosure (liftMinPlusNN h) t
+    have hu : (liftMinPlusNN (delayNN 0)) t ≼ₒ
+        subadditiveClosure (liftMinPlusNN h) t := by
+      rw [congrFun liftMinPlusNN_delay0 t]
+      have := convPow_le_closure (liftMinPlusNN h) 0 t
       simpa [convPow] using this
     exact hu
   · have hgeq := subadditiveClosureENN_eq_self g hgsub hg0

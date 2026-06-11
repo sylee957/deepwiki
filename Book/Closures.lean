@@ -244,31 +244,31 @@ theorem minConvPow_succ {D : Type} [_root_.AddCommMonoid D]
     minConvPow g (n + 1) = minConv (minConvPow g n) g := rfl
 
 /-- The `MinPlusNN` dioid power read back via `toVal` is `minConvPow`:
-`((convPow (toF g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t`. -/
-theorem convPow_toF_apply {D : Type} [_root_.AddCommMonoid D]
+`((convPow (liftMinPlusNN g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t`. -/
+theorem convPow_liftMinPlusNN_apply {D : Type} [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) (n : ℕ) (t : D) :
-    ((convPow (toF g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t := by
+    ((convPow (liftMinPlusNN g) n t : MinPlusNN) : ℝ≥0∞) = minConvPow g n t := by
   induction n generalizing t with
   | zero =>
-      rw [show ((convPow (toF g) 0 t : MinPlusNN) : ℝ≥0∞)
+      rw [show ((convPow (liftMinPlusNN g) 0 t : MinPlusNN) : ℝ≥0∞)
           = (convUnit (T := MinPlusNN) t).toVal from rfl,
         MinPlusNN.convUnit_toVal, minConvPow_zero]
   | succ n ih =>
-      calc ((convPow (toF g) (n + 1) t : MinPlusNN) : ℝ≥0∞)
+      calc ((convPow (liftMinPlusNN g) (n + 1) t : MinPlusNN) : ℝ≥0∞)
           = minConv
-              (fun u => ((convPow (toF g) n u : MinPlusNN) : ℝ≥0∞)) g t :=
-            conv_toF_apply _ g t
+              (fun u => ((convPow (liftMinPlusNN g) n u : MinPlusNN) : ℝ≥0∞)) g t :=
+            conv_liftMinPlusNN_apply _ g t
         _ = minConv (minConvPow g n) g t := by simp only [ih]
         _ = minConvPow g (n + 1) t := rfl
 
-/-- `convPow (toF g) n = toF (minConvPow g n)`: the dioid power of the lift
+/-- `convPow (liftMinPlusNN g) n = liftMinPlusNN (minConvPow g n)`: the dioid power of the lift
 is the lift of the numeric power. -/
-theorem convPow_toF {D : Type} [_root_.AddCommMonoid D]
+theorem convPow_liftMinPlusNN {D : Type} [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) (n : ℕ) :
-    convPow (toF g) n = toF (minConvPow g n) := by
+    convPow (liftMinPlusNN g) n = liftMinPlusNN (minConvPow g n) := by
   funext t
   apply MinPlusNN.ext
-  exact convPow_toF_apply g n t
+  exact convPow_liftMinPlusNN_apply g n t
 
 /-- Each (min,+) power of a monotone `ℝ≥0∞` curve is monotone: the unit power
 is monotone and `minConv` preserves monotonicity. -/
@@ -289,7 +289,7 @@ theorem monotone_minConvPow {g : ℝ≥0 → ℝ≥0∞} (hmono : Monotone g)
 noncomputable def subadditiveClosureENN {D : Type}
     [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞) : D → ℝ≥0∞ :=
-  fun t => (subadditiveClosure (toF g) t).toVal
+  fun t => (subadditiveClosure (liftMinPlusNN g) t).toVal
 
 /-- `subadditiveClosureENN g t` is the numeric infimum of the convolution
 powers: `⨅ n, minConvPow g n t`. -/
@@ -297,20 +297,20 @@ theorem subadditiveClosureENN_eq_iInf {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) (t : D) :
     subadditiveClosureENN g t
       = ⨅ n : ℕ, minConvPow g n t :=
-  iInf_congr fun n => convPow_toF_apply g n t
+  iInf_congr fun n => convPow_liftMinPlusNN_apply g n t
 
-/-- `toF` transports `subadditiveClosureENN` to `subadditiveClosure`. -/
-theorem toF_subadditiveClosureENN {D : Type}
+/-- `liftMinPlusNN` transports `subadditiveClosureENN` to `subadditiveClosure`. -/
+theorem liftMinPlusNN_subadditiveClosureENN {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
-    toF (subadditiveClosureENN g)
-      = subadditiveClosure (toF g) := by
+    liftMinPlusNN (subadditiveClosureENN g)
+      = subadditiveClosure (liftMinPlusNN g) := by
   funext t; apply MinPlusNN.ext; rfl
 
 /-- Closure lies below the original: `g⋆ t ≤ g t` (numeric). -/
 theorem subadditiveClosureENN_le {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
     (t : D) : subadditiveClosureENN g t ≤ g t := by
-  have h := convPow_le_closure (toF g) 1 t
+  have h := convPow_le_closure (liftMinPlusNN g) 1 t
   rw [convPow_one, MinPlusNN.le_iff] at h
   exact h
 
@@ -320,8 +320,8 @@ theorem subadditiveClosureENN_idem {D : Type}
     minConv (subadditiveClosureENN g)
         (subadditiveClosureENN g)
       = subadditiveClosureENN g := by
-  have h := closure_idem (toF g)
-  rw [← toF_subadditiveClosureENN, conv_toF] at h
+  have h := closure_idem (liftMinPlusNN g)
+  rw [← liftMinPlusNN_subadditiveClosureENN, conv_liftMinPlusNN] at h
   funext t
   exact congrArg MinPlusNN.toVal (congrFun h t)
 
@@ -330,12 +330,12 @@ theorem subadditiveClosureENN_subadditive {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞) :
     IsSubadditive (subadditiveClosureENN g) := by
   intro u s
-  have h := closure_subadditive (toF g) u s
+  have h := closure_subadditive (liftMinPlusNN g) u s
   rw [MinPlusNN.le_iff] at h
   calc subadditiveClosureENN g (u + s)
-      = (subadditiveClosure (toF g) (u + s)).toVal := rfl
-    _ ≤ (subadditiveClosure (toF g) u
-          ⊗ₒ subadditiveClosure (toF g) s).toVal := h
+      = (subadditiveClosure (liftMinPlusNN g) (u + s)).toVal := rfl
+    _ ≤ (subadditiveClosure (liftMinPlusNN g) u
+          ⊗ₒ subadditiveClosure (liftMinPlusNN g) s).toVal := h
     _ = subadditiveClosureENN g u
           + subadditiveClosureENN g s := rfl
 
@@ -352,18 +352,18 @@ theorem subadditiveClosureENN_eq_self {D : Type}
     [_root_.AddCommMonoid D] (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     subadditiveClosureENN g = g := by
-  have hidem : conv (toF g) (toF g) = toF g := by
-    rw [conv_toF, minConv_self_of_subadditive g hsub h0]
+  have hidem : conv (liftMinPlusNN g) (liftMinPlusNN g) = liftMinPlusNN g := by
+    rw [conv_liftMinPlusNN, minConv_self_of_subadditive g hsub h0]
   have hunit : ∀ t,
-      convUnit (T := MinPlusNN) t ≼ₒ toF g t :=
+      convUnit (T := MinPlusNN) t ≼ₒ liftMinPlusNN g t :=
     convUnit_le (by
       rw [MinPlusNN.le_iff]
-      show (toF g 0).toVal ≤ (eₒ : MinPlusNN).toVal
-      simp [toF, h0])
+      show (liftMinPlusNN g 0).toVal ≤ (eₒ : MinPlusNN).toVal
+      simp [liftMinPlusNN, h0])
   have hself :=
-    subadditiveClosure_eq_self (toF g) hidem hunit
+    subadditiveClosure_eq_self (liftMinPlusNN g) hidem hunit
   funext t
-  show (subadditiveClosure (toF g) t).toVal = g t
+  show (subadditiveClosure (liftMinPlusNN g) t).toVal = g t
   rw [hself]; rfl
 
 /-- Numeric closure is monotone in `g`. -/
@@ -371,20 +371,20 @@ theorem subadditiveClosureENN_mono {D : Type}
     [_root_.AddCommMonoid D] (g h : D → ℝ≥0∞)
     (hgh : ∀ t, g t ≤ h t) (t : D) :
     subadditiveClosureENN g t ≤ subadditiveClosureENN h t := by
-  show (subadditiveClosure (toF g) t).toVal
-      ≤ (subadditiveClosure (toF h) t).toVal
+  show (subadditiveClosure (liftMinPlusNN g) t).toVal
+      ≤ (subadditiveClosure (liftMinPlusNN h) t).toVal
   rw [← MinPlusNN.le_iff]
-  refine subadditiveClosure_mono (toF h) (toF g) ?_ t
+  refine subadditiveClosure_mono (liftMinPlusNN h) (liftMinPlusNN g) ?_ t
   intro r; rw [MinPlusNN.le_iff]; exact hgh r
 
-/-- Wrap a numeric `g` into the `MaxPlusNN` function `Fmax`. -/
-def toFmax (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
+/-- Lift a `WithBot ℝ≥0∞`-valued function into `MaxPlusNN` pointwise. -/
+def liftMaxPlusNN (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
   fun s => ⟨g s⟩
 
-/-- `conv` of `toFmax` lifts, read back via `toVal`, equals `maxConv`. -/
-theorem conv_toFmax_apply
+/-- `conv` of `liftMaxPlusNN` lifts, read back via `toVal`, equals `maxConv`. -/
+theorem conv_liftMaxPlusNN_apply
     (g h : ℝ≥0 → WithBot ℝ≥0∞) (t : ℝ≥0) :
-    ((conv (toFmax g) (toFmax h) t : MaxPlusNN)
+    ((conv (liftMaxPlusNN g) (liftMaxPlusNN h) t : MaxPlusNN)
         : WithBot ℝ≥0∞)
       = maxConv g h t := by
   rw [conv_apply, MaxPlusNN.toVal_sSup]
@@ -396,72 +396,72 @@ theorem conv_toFmax_apply
   · refine iSup_le (fun p => ?_)
     exact le_iSup_of_le ⟨_, p.1.1, p.1.2, p.2, rfl⟩ le_rfl
 
-/-- `conv (toFmax g) (toFmax h) = toFmax (maxConv g h)`. -/
-theorem conv_toFmax (g h : ℝ≥0 → WithBot ℝ≥0∞) :
-    conv (toFmax g) (toFmax h) = toFmax (maxConv g h) := by
+/-- `conv (liftMaxPlusNN g) (liftMaxPlusNN h) = liftMaxPlusNN (maxConv g h)`. -/
+theorem conv_liftMaxPlusNN (g h : ℝ≥0 → WithBot ℝ≥0∞) :
+    conv (liftMaxPlusNN g) (liftMaxPlusNN h) = liftMaxPlusNN (maxConv g h) := by
   funext t
   apply MaxPlusNN.ext
-  exact conv_toFmax_apply g h t
+  exact conv_liftMaxPlusNN_apply g h t
 
 /-- Super-additive closure: the (max,plus)-dual of `subadditiveClosureENN`. -/
 noncomputable def superadditiveClosure
     (g : ℝ≥0 → WithBot ℝ≥0∞) : ℝ≥0 → WithBot ℝ≥0∞ :=
-  fun t => (subadditiveClosure (toFmax g) t).toVal
+  fun t => (subadditiveClosure (liftMaxPlusNN g) t).toVal
 
-/-- `toFmax` transports `superadditiveClosure` to `subadditiveClosure`. -/
-theorem toFmax_superadditiveClosure
+/-- `liftMaxPlusNN` transports `superadditiveClosure` to `subadditiveClosure`. -/
+theorem liftMaxPlusNN_superadditiveClosure
     (g : ℝ≥0 → WithBot ℝ≥0∞) :
-    toFmax (superadditiveClosure g)
-      = subadditiveClosure (toFmax g) := by
+    liftMaxPlusNN (superadditiveClosure g)
+      = subadditiveClosure (liftMaxPlusNN g) := by
   funext t; apply MaxPlusNN.ext; rfl
 
 /-- Super-additive closure lies above the original: `g t ≤ g⋆ t`. -/
 theorem le_superadditiveClosure
     (g : ℝ≥0 → WithBot ℝ≥0∞) (t : ℝ≥0) :
     g t ≤ superadditiveClosure g t := by
-  have h := convPow_le_closure (toFmax g) 1 t
+  have h := convPow_le_closure (liftMaxPlusNN g) 1 t
   rw [convPow_one, MaxPlusNN.le_iff] at h
   exact h
 
 /-- Idempotence of the super-additive closure. -/
 theorem superadditiveClosure_idem
     (g : ℝ≥0 → WithBot ℝ≥0∞) :
-    conv (subadditiveClosure (toFmax g))
-        (subadditiveClosure (toFmax g))
-      = subadditiveClosure (toFmax g) :=
-  closure_idem (toFmax g)
+    conv (subadditiveClosure (liftMaxPlusNN g))
+        (subadditiveClosure (liftMaxPlusNN g))
+      = subadditiveClosure (liftMaxPlusNN g) :=
+  closure_idem (liftMaxPlusNN g)
 
 /-- Super-additive closure is super-additive. -/
 theorem superadditiveClosure_superadditive
     (g : ℝ≥0 → WithBot ℝ≥0∞) (u s : ℝ≥0) :
     superadditiveClosure g u + superadditiveClosure g s
       ≤ superadditiveClosure g (u + s) := by
-  have h := closure_subadditive (toFmax g) u s
+  have h := closure_subadditive (liftMaxPlusNN g) u s
   rw [MaxPlusNN.le_iff] at h
   exact h
 
 /-- Super-additive `g` with `g 0 = 0` is convolution-idempotent. -/
-theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
+theorem conv_liftMaxPlusNN_self (g : ℝ≥0 → WithBot ℝ≥0∞)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
-    conv (toFmax g) (toFmax g) = toFmax g := by
-  rw [conv_toFmax, maxConv_self_of_superadditive g hsup h0]
+    conv (liftMaxPlusNN g) (liftMaxPlusNN g) = liftMaxPlusNN g := by
+  rw [conv_liftMaxPlusNN, maxConv_self_of_superadditive g hsup h0]
 
 /-- Super-additive `g` with `g 0 = 0` is its own super-additive closure. -/
 theorem superadditiveClosure_eq_self
     (g : ℝ≥0 → WithBot ℝ≥0∞)
     (hsup : IsSuperadditive g) (h0 : g 0 = 0) :
     superadditiveClosure g = g := by
-  have hidem := conv_toFmax_self g hsup h0
+  have hidem := conv_liftMaxPlusNN_self g hsup h0
   have hunit : ∀ t,
-      convUnit (T := MaxPlusNN) t ≼ₒ toFmax g t :=
+      convUnit (T := MaxPlusNN) t ≼ₒ liftMaxPlusNN g t :=
     convUnit_le (by
       rw [MaxPlusNN.le_iff]
       show (eₒ : MaxPlusNN).toVal ≤ g 0
       rw [h0]; rfl)
   have hself :=
-    subadditiveClosure_eq_self (toFmax g) hidem hunit
+    subadditiveClosure_eq_self (liftMaxPlusNN g) hidem hunit
   funext t
-  show (subadditiveClosure (toFmax g) t).toVal = g t
+  show (subadditiveClosure (liftMaxPlusNN g) t).toVal = g t
   rw [hself]; rfl
 
 end DeepWiki

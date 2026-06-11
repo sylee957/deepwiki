@@ -130,13 +130,13 @@ theorem maxConv_self_of_superadditive {D T : Type*}
     (le_trans (by rw [h0, zero_add]) (add_le_maxConv g g (zero_add t)))
 
 /-- Lift an `ℝ≥0∞`-valued function into `MinPlusNN` pointwise. -/
-def toF {D : Type} (g : D → ℝ≥0∞) : D → MinPlusNN :=
+def liftMinPlusNN {D : Type} (g : D → ℝ≥0∞) : D → MinPlusNN :=
   fun s => ⟨g s⟩
 
-/-- `conv` of `toF` lifts, read back via `toVal`, equals `minConv`. -/
-theorem conv_toF_apply {D : Type} [_root_.AddCommMonoid D]
+/-- `conv` of `liftMinPlusNN` lifts, read back via `toVal`, equals `minConv`. -/
+theorem conv_liftMinPlusNN_apply {D : Type} [_root_.AddCommMonoid D]
     (g h : D → ℝ≥0∞) (t : D) :
-    ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
+    ((conv (liftMinPlusNN g) (liftMinPlusNN h) t : MinPlusNN) : ℝ≥0∞)
       = minConv g h t := by
   rw [conv_apply, MinPlusNN.toVal_sSup]
   apply le_antisymm
@@ -147,17 +147,17 @@ theorem conv_toF_apply {D : Type} [_root_.AddCommMonoid D]
     rw [hx]
     exact iInf_le_of_le ⟨(u, s), hus⟩ le_rfl
 
-/-- `conv (toF g) (toF h) = toF (minConv g h)`. -/
-theorem conv_toF {D : Type} [_root_.AddCommMonoid D]
+/-- `conv (liftMinPlusNN g) (liftMinPlusNN h) = liftMinPlusNN (minConv g h)`. -/
+theorem conv_liftMinPlusNN {D : Type} [_root_.AddCommMonoid D]
     (g h : D → ℝ≥0∞) :
-    conv (toF g) (toF h) = toF (minConv g h) := by
+    conv (liftMinPlusNN g) (liftMinPlusNN h) = liftMinPlusNN (minConv g h) := by
   funext t
   apply MinPlusNN.ext
-  exact conv_toF_apply g h t
+  exact conv_liftMinPlusNN_apply g h t
 
-/-- `toF` is injective. -/
-theorem toF_inj {D : Type} {g h : D → ℝ≥0∞}
-    (H : toF g = toF h) : g = h := by
+/-- `liftMinPlusNN` is injective. -/
+theorem liftMinPlusNN_inj {D : Type} {g h : D → ℝ≥0∞}
+    (H : liftMinPlusNN g = liftMinPlusNN h) : g = h := by
   funext t
   exact congrArg MinPlusNN.toVal (congrFun H t)
 
@@ -166,8 +166,8 @@ theorem minConvE_assoc {D : Type} [_root_.AddCommMonoid D]
     (f g h : D → ℝ≥0∞) :
     minConv (minConv f g) h
       = minConv f (minConv g h) := by
-  apply toF_inj
-  rw [← conv_toF, ← conv_toF, ← conv_toF, ← conv_toF,
+  apply liftMinPlusNN_inj
+  rw [← conv_liftMinPlusNN, ← conv_liftMinPlusNN, ← conv_liftMinPlusNN, ← conv_liftMinPlusNN,
     conv_assoc]
 
 /-- If `f ⊓ g` is subadditive (and both fix 0), `minConv f g = f ⊓ g`. -/
@@ -189,12 +189,12 @@ theorem minConv_eq_inf_of_subadditive {D T : Type*}
       _ ≤ f u + g s :=
           add_le_add inf_le_left inf_le_right
 
-/-- Subadditive `g` with `g 0 = 0` is a `conv`-self fixed point in `toF`. -/
-theorem conv_self_toF_of_subadditive
+/-- Subadditive `g` with `g 0 = 0` is a `conv`-self fixed point in `liftMinPlusNN`. -/
+theorem conv_self_liftMinPlusNN_of_subadditive
     {D : Type} [_root_.AddCommMonoid D]
     (g : D → ℝ≥0∞)
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
-    conv (toF g) (toF g) = toF g := by
-  rw [conv_toF, minConv_self_of_subadditive g hsub h0]
+    conv (liftMinPlusNN g) (liftMinPlusNN g) = liftMinPlusNN g := by
+  rw [conv_liftMinPlusNN, minConv_self_of_subadditive g hsub h0]
 
 end DeepWiki

@@ -490,46 +490,46 @@ theorem add_ciSup_le {ι : Type} [Nonempty ι]
     ciSup_le (fun i => le_tsub_of_add_le_left (h i))
   exact add_le_of_le_tsub_left_of_le hcy hsup
 
-/-- Embed `g : ℝ≥0 → ℝ≥0` into `Fmin`. -/
-def embMin (g : ℝ≥0 → ℝ≥0) : Fmin :=
+/-- Lift `g : ℝ≥0 → ℝ≥0` into `Fmin`. -/
+def liftFmin (g : ℝ≥0 → ℝ≥0) : Fmin :=
   fun t => ⟨(g t : ℝ≥0∞)⟩
 
-/-- Embed `g : ℝ≥0 → ℝ≥0` into `Fmax`. -/
-def embMax (g : ℝ≥0 → ℝ≥0) : Fmax :=
+/-- Lift `g : ℝ≥0 → ℝ≥0` into `Fmax`. -/
+def liftFmax (g : ℝ≥0 → ℝ≥0) : Fmax :=
   fun t => ⟨((g t : ℝ≥0∞) : WithBot ℝ≥0∞)⟩
 
-/-- `minConv` of embedded functions, valued back in `ℝ≥0`. -/
+/-- `minConv` of lifted functions, valued back in `ℝ≥0`. -/
 noncomputable def minConvProj (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
-    (conv (embMin g) (embMin h) t
+    (conv (liftFmin g) (liftFmin h) t
       : MinPlusNN).toVal.toNNReal
 
-/-- The (min,+) product of embedded values is `g u + h s`. -/
-theorem embMin_mul (g h : ℝ≥0 → ℝ≥0) (u s : ℝ≥0) :
-    ((embMin g u ⊗ₒ embMin h s : MinPlusNN) : ℝ≥0∞)
+/-- The (min,+) product of lifted values is `g u + h s`. -/
+theorem liftFmin_mul (g h : ℝ≥0 → ℝ≥0) (u s : ℝ≥0) :
+    ((liftFmin g u ⊗ₒ liftFmin h s : MinPlusNN) : ℝ≥0∞)
       = (g u : ℝ≥0∞) + (h s : ℝ≥0∞) := rfl
 
-/-- `(embMin g ∗ embMin h)` as an `ℝ≥0∞`-valued infimum. -/
-theorem conv_embMin_toVal (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
-    ((conv (embMin g) (embMin h) t : MinPlusNN) : ℝ≥0∞)
+/-- `(liftFmin g ∗ liftFmin h)` as an `ℝ≥0∞`-valued infimum. -/
+theorem conv_liftFmin_toVal (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    ((conv (liftFmin g) (liftFmin h) t : MinPlusNN) : ℝ≥0∞)
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞) := by
   rw [conv_apply, MinPlusNN.toVal_sSup]
   apply le_antisymm
   · refine le_iInf (fun p => ?_)
     refine iInf_le_of_le
-      ⟨embMin g p.1.1 ⊗ₒ embMin h p.1.2,
+      ⟨liftFmin g p.1.1 ⊗ₒ liftFmin h p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
-    show ((embMin g p.1.1 ⊗ₒ embMin h p.1.2 : MinPlusNN)
+    show ((liftFmin g p.1.1 ⊗ₒ liftFmin h p.1.2 : MinPlusNN)
         : ℝ≥0∞) ≤ _
-    rw [embMin_mul]; push_cast; rfl
+    rw [liftFmin_mul]; push_cast; rfl
   · refine le_iInf (fun x => ?_)
     obtain ⟨u, s, hus, hx⟩ := x.2
     refine iInf_le_of_le ⟨(u, s), hus⟩ ?_
     rw [show (x.val : ℝ≥0∞)
-          = ((embMin g u ⊗ₒ embMin h s : MinPlusNN)
-              : ℝ≥0∞) from congrArg _ hx, embMin_mul]
+          = ((liftFmin g u ⊗ₒ liftFmin h s : MinPlusNN)
+              : ℝ≥0∞) from congrArg _ hx, liftFmin_mul]
     push_cast; rfl
 
 /-- `minConvProj` as the `ℝ≥0` infimum `⨅_{u+s=t} g u + h s`. -/
@@ -537,7 +537,7 @@ theorem minConvProj_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     minConvProj g h t
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (g p.1.1 + h p.1.2) := by
-  rw [minConvProj, conv_embMin_toVal,
+  rw [minConvProj, conv_liftFmin_toVal,
     ← ENNReal.coe_iInf
       (fun p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t} =>
         g p.1.1 + h p.1.2),
@@ -553,24 +553,24 @@ theorem minConvProj_mono_right (A : ℝ≥0 → ℝ≥0)
   gcongr
   exact h p.1.2
 
-/-- `maxConv` of embedded functions, valued back in `ℝ≥0`. -/
+/-- `maxConv` of lifted functions, valued back in `ℝ≥0`. -/
 noncomputable def maxConvProj (g h : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   fun t =>
-    (conv (embMax g) (embMax h) t
+    (conv (liftFmax g) (liftFmax h) t
       : MaxPlusNN).toVal.unbotD 0 |>.toNNReal
 
-/-- The (max,+) product of embedded values is `g a + h b`. -/
-theorem embMax_mul (g h : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
-    ((embMax g a ⊗ₒ embMax h b : MaxPlusNN)
+/-- The (max,+) product of lifted values is `g a + h b`. -/
+theorem liftFmax_mul (g h : ℝ≥0 → ℝ≥0) (a b : ℝ≥0) :
+    ((liftFmax g a ⊗ₒ liftFmax h b : MaxPlusNN)
         : WithBot ℝ≥0∞)
       = (((g a : ℝ≥0∞) : WithBot ℝ≥0∞))
         + (((h b : ℝ≥0∞) : WithBot ℝ≥0∞)) := rfl
 
-/-- `(embMax g ∗ embMax h)` as a `WithBot ℝ≥0∞`-valued sup. -/
-theorem conv_embMax_toVal (g h : ℝ≥0 → ℝ≥0)
+/-- `(liftFmax g ∗ liftFmax h)` as a `WithBot ℝ≥0∞`-valued sup. -/
+theorem conv_liftFmax_toVal (g h : ℝ≥0 → ℝ≥0)
     (t : ℝ≥0) :
-    ((conv (embMax g) (embMax h) t : MaxPlusNN)
+    ((conv (liftFmax g) (liftFmax h) t : MaxPlusNN)
         : WithBot ℝ≥0∞)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (((g p.1.1 + h p.1.2 : ℝ≥0)
@@ -581,17 +581,17 @@ theorem conv_embMax_toVal (g h : ℝ≥0 → ℝ≥0)
     obtain ⟨u, s, hus, hx⟩ := x.2
     refine le_iSup_of_le ⟨(u, s), hus⟩ ?_
     rw [show (x.val : WithBot ℝ≥0∞)
-          = ((embMax g u ⊗ₒ embMax h s
+          = ((liftFmax g u ⊗ₒ liftFmax h s
                 : MaxPlusNN) : WithBot ℝ≥0∞)
-            from congrArg _ hx, embMax_mul]
+            from congrArg _ hx, liftFmax_mul]
     push_cast; rfl
   · refine iSup_le (fun p => ?_)
     refine le_iSup_of_le
-      ⟨embMax g p.1.1 ⊗ₒ embMax h p.1.2,
+      ⟨liftFmax g p.1.1 ⊗ₒ liftFmax h p.1.2,
         p.1.1, p.1.2, p.2, rfl⟩ ?_
-    show _ ≤ ((embMax g p.1.1 ⊗ₒ embMax h p.1.2
+    show _ ≤ ((liftFmax g p.1.1 ⊗ₒ liftFmax h p.1.2
         : MaxPlusNN) : WithBot ℝ≥0∞)
-    rw [embMax_mul]; push_cast; rfl
+    rw [liftFmax_mul]; push_cast; rfl
 
 /-- `maxConvProj` equals the `ℝ≥0∞` sup when that sup is finite. -/
 theorem maxConvProj_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
@@ -607,7 +607,7 @@ theorem maxConvProj_coe (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0)
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞))
           : ℝ≥0∞) : WithBot ℝ≥0∞) :=
     (WithBot.coe_iSup (OrderTop.bddAbove _)).symm
-  rw [maxConvProj, conv_embMax_toVal, hcoe]
+  rw [maxConvProj, conv_liftFmax_toVal, hcoe]
   rw [WithBot.unbotD_coe, ENNReal.coe_toNNReal hfin]
 
 /-- Intro: a uniform bound over all splits bounds the projected (max,+)
@@ -615,7 +615,7 @@ convolution from above, `maxConvProj g h t ≤ c`. -/
 theorem maxConvProj_le {g h : ℝ≥0 → ℝ≥0} {t c : ℝ≥0}
     (hsplit : ∀ u s, u + s = t → g u + h s ≤ c) :
     maxConvProj g h t ≤ c := by
-  rw [maxConvProj, conv_embMax_toVal]
+  rw [maxConvProj, conv_liftFmax_toVal]
   have hcoe :
       (⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
         (((g p.1.1 + h p.1.2 : ℝ≥0)
