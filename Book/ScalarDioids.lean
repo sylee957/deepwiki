@@ -202,9 +202,9 @@ theorem add_iInf {ι : Sort*} (a : WithTop (WithBot ℝ))
           simp only [hall, WithTop.add_top,
             ciInf_const, le_refl]
         · obtain ⟨c, hc⟩ :=
-            Option.ne_none_iff_exists'.mp htop
+            WithTop.ne_top_iff_exists.mp htop
           rw [show (⨅ i, f i)
-              = (c : WithTop (WithBot ℝ)) from hc,
+              = (c : WithTop (WithBot ℝ)) from hc.symm,
             ← WithTop.coe_add]
           have hex : ∃ j, f j ≠ ⊤ := by
             by_contra h; push Not at h
@@ -214,9 +214,9 @@ theorem add_iInf {ι : Sort*} (a : WithTop (WithBot ℝ))
               = ⊥ from WithBot.bot_add c]
           refine iInf_le_of_le j ?_
           obtain ⟨d, hd⟩ :=
-            Option.ne_none_iff_exists'.mp hj
+            WithTop.ne_top_iff_exists.mp hj
           rw [show f j
-              = (d : WithTop (WithBot ℝ)) from hd,
+              = (d : WithTop (WithBot ℝ)) from hd.symm,
             ← WithTop.coe_add, WithBot.bot_add]
 
 end RbarX
@@ -577,9 +577,9 @@ theorem add_iSup {ι : Sort*} (a : WithBot (WithTop ℝ))
           simp only [hall, WithBot.add_bot,
             ciSup_const, le_refl]
         · obtain ⟨c, hc⟩ :=
-            Option.ne_none_iff_exists'.mp hbot
+            WithBot.ne_bot_iff_exists.mp hbot
           rw [show (⨆ i, f i)
-              = (c : WithBot (WithTop ℝ)) from hc,
+              = (c : WithBot (WithTop ℝ)) from hc.symm,
             ← WithBot.coe_add]
           have hex : ∃ j, f j ≠ ⊥ := by
             by_contra h; push Not at h
@@ -589,9 +589,9 @@ theorem add_iSup {ι : Sort*} (a : WithBot (WithTop ℝ))
               = ⊤ from WithTop.top_add c]
           refine le_iSup_of_le j ?_
           obtain ⟨d, hd⟩ :=
-            Option.ne_none_iff_exists'.mp hj
+            WithBot.ne_bot_iff_exists.mp hj
           rw [show f j
-              = (d : WithBot (WithTop ℝ)) from hd,
+              = (d : WithBot (WithTop ℝ)) from hd.symm,
             ← WithBot.coe_add, WithTop.top_add]
 
 end MaxPlusExtAux
