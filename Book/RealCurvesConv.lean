@@ -256,4 +256,11 @@ theorem conv_window (f : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) :
     · rw [show window w v = ⊤ from if_neg hv, add_top]
       exact le_top
 
+/-- Convolving with the window curve never drops below the window:
+`w ≤ (f ∗ ω_w) s`. -/
+theorem le_minConv_window (f : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) (s : ℝ≥0) :
+    w ≤ minConv f (window w) s := by
+  rw [conv_window]
+  exact le_add_self
+
 end DeepWiki

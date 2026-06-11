@@ -487,6 +487,65 @@ theorem le_subadditiveClosureENN_of_isSubadditive {D : Type}
         rw [subadditiveClosureENN_eq_self f hsub h0]
     _ ≤ subadditiveClosureENN g t := subadditiveClosureENN_mono f g hfg t
 
+/-- **The star bound**: a curve dominating `a ⊓ (x ∗ w)` for a uniformly
+positive `w` (`0 < c ≤ w`) dominates `a ∗ w⋆` — the numeric form of the
+least-fixed-point property of the Kleene star, and the engine of feedback
+control. Each unrolling adds `c` to the discarded branch, which escapes
+to `⊤`. -/
+theorem minConv_subadditiveClosureENN_le_of_inf_le
+    {x a w : ℝ≥0 → ℝ≥0∞} {c : ℝ≥0∞} (hc : 0 < c) (hlb : ∀ s, c ≤ w s)
+    (hx : ∀ t, a t ⊓ minConv x w t ≤ x t) (t : ℝ≥0) :
+    minConv a (subadditiveClosureENN w) t ≤ x t := by
+  -- the bound holds up to the escaping cost `n • c`
+  have key : ∀ n : ℕ, ∀ u : ℝ≥0,
+      minConv a (subadditiveClosureENN w) u ⊓ n • c ≤ x u := by
+    intro n
+    induction n with
+    | zero =>
+        intro u
+        rw [zero_smul]
+        exact inf_le_right.trans zero_le'
+    | succ n ih =>
+        intro u
+        refine le_trans (le_inf ?_ ?_) (hx u)
+        · -- the left branch: `a ∗ w⋆ ≤ a` since `w⋆ 0 = 0`
+          exact inf_le_left.trans (minConv_subadditiveClosureENN_le a w u)
+        · -- the looping branch spends one `c` per turn
+          refine le_minConv fun p q hpq => ?_
+          have hXshift : minConv a (subadditiveClosureENN w) u
+              ≤ minConv a (subadditiveClosureENN w) p + w q := by
+            rw [← hpq]
+            refine le_trans (minConv_apply_add_le_of_isSubadditive
+              (subadditiveClosureENN_subadditive w) p q) ?_
+            exact add_le_add_right (subadditiveClosureENN_le w q) _
+          have hcc : (n + 1) • c ≤ n • c + w q := by
+            rw [succ_nsmul]
+            exact add_le_add_right (hlb q) _
+          rcases le_total (minConv a (subadditiveClosureENN w) p) (n • c)
+            with hpc | hpc
+          · exact le_trans inf_le_left (hXshift.trans
+              (add_le_add_left (le_trans (le_inf le_rfl hpc) (ih p)) _))
+          · exact le_trans inf_le_right (hcc.trans
+              (add_le_add_left (le_trans (le_inf hpc le_rfl) (ih p)) _))
+  -- let the cost escape
+  rcases eq_or_ne c ⊤ with rfl | hctop
+  · have h1 := key 1 t
+    rwa [one_nsmul, inf_top_eq] at h1
+  rcases eq_or_ne (x t) ⊤ with hxt | hxt
+  · rw [hxt]
+    exact le_top
+  obtain ⟨n, hn⟩ : ∃ n : ℕ, x t < n • c := by
+    obtain ⟨n, hn⟩ := ENNReal.exists_nat_gt
+      (ENNReal.div_lt_top hxt hc.ne').ne
+    refine ⟨n, ?_⟩
+    rw [nsmul_eq_mul]
+    rwa [ENNReal.div_lt_iff (Or.inl hc.ne') (Or.inl hctop)] at hn
+  have hkey := key n t
+  rcases le_total (minConv a (subadditiveClosureENN w) t) (n • c) with hle | hle
+  · rwa [inf_eq_left.mpr hle] at hkey
+  · rw [inf_eq_right.mpr hle] at hkey
+    exact absurd hkey (not_le.mpr hn)
+
 /-- Lift a `WithBot ℝ≥0∞`-valued function into `MaxPlusNN` pointwise. -/
 def liftMaxPlusNN (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
   fun s => ⟨g s⟩
