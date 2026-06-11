@@ -1,7 +1,7 @@
 import Book.RealCurvesAdditivity
 
 /-! (min,plus) convolutions of the real curves: `conv_delayNN` and
-`minDeconv_delayNN` shift laws, monotonicity, `delayNN ∗ delayNN`, `rate ∗ rate`,
+`minDeconv_delayNN` shift laws, monotonicity, `delayNN ∗ delayNN`, `rateNN ∗ rateNN`,
 the rate-latency convolution algebra, and the `minDeconv … (delayNN d)`
 subadditive closure. -/
 
@@ -186,9 +186,9 @@ theorem delayNN_mono (d : ℝ≥0) : Monotone (delayNN d) := by
     · rename_i h1 h2; exact absurd (le_trans hab h2) h1
     · exact le_refl _
 
-/-- `rate R` is monotone. -/
-theorem rate_mono (R : ℝ≥0) : Monotone (rate R) := by
-  intro a b hab; simp only [rate, rateV]; gcongr
+/-- `rateNN R` is monotone. -/
+theorem rateNN_mono (R : ℝ≥0) : Monotone (rateNN R) := by
+  intro a b hab; simp only [rateNN, rate]; gcongr
 
 /-- `delayNN d ∗ delayNN d' = delayNN (d + d')`. -/
 theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
@@ -202,25 +202,25 @@ theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
       if_neg (fun h =>
         absurd (tsub_le_iff_right.mp h) (not_le.mpr ht))]
 
-/-- `rateLatency R T = delayNN T ∗ rate R`. -/
-theorem rateLatency_eq_conv (R T : ℝ≥0) :
-    rateLatency R T = minConv (delayNN T) (rate R) := by
-  rw [minConv_comm, conv_delayNN (rate R) (rate_mono R) T]
+/-- `rateLatencyNN R T = delayNN T ∗ rateNN R`. -/
+theorem rateLatencyNN_eq_conv (R T : ℝ≥0) :
+    rateLatencyNN R T = minConv (delayNN T) (rateNN R) := by
+  rw [minConv_comm, conv_delayNN (rateNN R) (rateNN_mono R) T]
   funext t
-  simp only [rate, rateV, rateLatency]
+  simp only [rateNN, rate, rateLatencyNN]
 
-/-- `rate R ∗ rate R' = rate (R ⊓ R')`. -/
-theorem conv_rate_rate (R R' : ℝ≥0) :
-    minConv (rate R) (rate R') = rate (R ⊓ R') := by
+/-- `rateNN R ∗ rateNN R' = rateNN (R ⊓ R')`. -/
+theorem conv_rateNN_rateNN (R R' : ℝ≥0) :
+    minConv (rateNN R) (rateNN R') = rateNN (R ⊓ R') := by
   funext t
   apply le_antisymm
   · rcases le_total R R' with h | h
-    · refine (minConv_le_add (rate R) (rate R') (add_zero t)).trans ?_
-      simp only [rate_apply]; rw [min_eq_left h]; simp
-    · refine (minConv_le_add (rate R) (rate R') (zero_add t)).trans ?_
-      simp only [rate_apply]; rw [min_eq_right h]; simp
+    · refine (minConv_le_add (rateNN R) (rateNN R') (add_zero t)).trans ?_
+      simp only [rateNN_apply]; rw [min_eq_left h]; simp
+    · refine (minConv_le_add (rateNN R) (rateNN R') (zero_add t)).trans ?_
+      simp only [rateNN_apply]; rw [min_eq_right h]; simp
   · refine le_minConv fun u v huv => ?_
-    simp only [rate_apply]
+    simp only [rateNN_apply]
     rw [← huv]
     calc ((R ⊓ R' : ℝ≥0):ℝ≥0∞) * (u + v)
         = (R ⊓ R') * u + (R ⊓ R') * v := by rw [mul_add]
@@ -230,13 +230,13 @@ theorem conv_rate_rate (R R' : ℝ≥0) :
           · exact_mod_cast min_le_right R R'
 
 /-- `βRT ∗ βR'T' = β_{R⊓R', T+T'}` for rate-latency curves. -/
-theorem conv_rateLatency_rateLatency (R R' T T' : ℝ≥0) :
-    minConv (rateLatency R T) (rateLatency R' T')
-      = rateLatency (R ⊓ R') (T + T') := by
-  rw [rateLatency_eq_conv R T, rateLatency_eq_conv R' T']
-  rw [minConvE_assoc, ← minConvE_assoc (rate R),
-      minConv_comm (rate R) (delayNN T'),
+theorem conv_rateLatencyNN_rateLatencyNN (R R' T T' : ℝ≥0) :
+    minConv (rateLatencyNN R T) (rateLatencyNN R' T')
+      = rateLatencyNN (R ⊓ R') (T + T') := by
+  rw [rateLatencyNN_eq_conv R T, rateLatencyNN_eq_conv R' T']
+  rw [minConvE_assoc, ← minConvE_assoc (rateNN R),
+      minConv_comm (rateNN R) (delayNN T'),
       minConvE_assoc (delayNN T'), ← minConvE_assoc (delayNN T),
-      conv_delayNN_delayNN, conv_rate_rate,
-      rateLatency_eq_conv (R ⊓ R') (T + T')]
+      conv_delayNN_delayNN, conv_rateNN_rateNN,
+      rateLatencyNN_eq_conv (R ⊓ R') (T + T')]
 end DeepWiki

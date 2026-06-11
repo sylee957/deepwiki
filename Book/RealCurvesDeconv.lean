@@ -55,45 +55,45 @@ theorem affine_min_subadd (r b r' b' s t : ℝ≥0) :
   · exact le_trans (min_le_right _ _)
       (cle (by push_cast; nlinarith [b'.coe_nonneg]))
 
-/-- For `t ≠ 0`, `tokenBucket r b t = r * t + b`. -/
-theorem tokenBucket_apply_pos (r b t : ℝ≥0)
+/-- For `t ≠ 0`, `tokenBucketNN r b t = r * t + b`. -/
+theorem tokenBucketNN_apply_pos (r b t : ℝ≥0)
     (ht : t ≠ 0) :
-    tokenBucket r b t = (r:ℝ≥0∞) * t + b := by
+    tokenBucketNN r b t = (r:ℝ≥0∞) * t + b := by
   have h0 : ¬ t ≤ 0 := by simpa using ht
-  simp only [tokenBucket_apply, delayNN, delay_apply, if_neg h0,
+  simp only [tokenBucketNN_apply, delayNN, delay_apply, if_neg h0,
     min_top_right]
 
-/-- For `t ≠ 0`, `tokenBucket r b t = ↑(r * t + b)` (single coercion). -/
-theorem tokenBucket_coe_of_ne (r b : ℝ≥0) {t : ℝ≥0}
+/-- For `t ≠ 0`, `tokenBucketNN r b t = ↑(r * t + b)` (single coercion). -/
+theorem tokenBucketNN_coe_of_ne (r b : ℝ≥0) {t : ℝ≥0}
     (hne : t ≠ 0) :
-    tokenBucket r b t = ((r * t + b : ℝ≥0):ℝ≥0∞) :=
-  (tokenBucket_apply_pos r b t hne).trans (by push_cast; ring)
+    tokenBucketNN r b t = ((r * t + b : ℝ≥0):ℝ≥0∞) :=
+  (tokenBucketNN_apply_pos r b t hne).trans (by push_cast; ring)
 
 /-- The min of two token-buckets is subadditive. -/
-theorem tokenBucket_inf_subadd (r b r' b' : ℝ≥0) :
+theorem tokenBucketNN_inf_subadd (r b r' b' : ℝ≥0) :
     IsSubadditive
-      (tokenBucket r b ⊓ tokenBucket r' b') := by
+      (tokenBucketNN r b ⊓ tokenBucketNN r' b') := by
   refine IsSubadditive.of_ne_zero ?_ fun u s hu hs => ?_
-  · rw [Pi.inf_apply, tokenBucket_zero_eq,
-      tokenBucket_zero_eq, min_self]
+  · rw [Pi.inf_apply, tokenBucketNN_zero_eq,
+      tokenBucketNN_zero_eq, min_self]
   · simp only [Pi.inf_apply]
     have hus : (u + s) ≠ 0 := by
       rw [← pos_iff_ne_zero] at hu ⊢; positivity
-    rw [tokenBucket_coe_of_ne r b hu,
-        tokenBucket_coe_of_ne r' b' hu,
-        tokenBucket_coe_of_ne r b hs,
-        tokenBucket_coe_of_ne r' b' hs,
-        tokenBucket_coe_of_ne r b hus,
-        tokenBucket_coe_of_ne r' b' hus]
+    rw [tokenBucketNN_coe_of_ne r b hu,
+        tokenBucketNN_coe_of_ne r' b' hu,
+        tokenBucketNN_coe_of_ne r b hs,
+        tokenBucketNN_coe_of_ne r' b' hs,
+        tokenBucketNN_coe_of_ne r b hus,
+        tokenBucketNN_coe_of_ne r' b' hus]
     exact affine_min_subadd r b r' b' u s
 
 /-- Token-bucket convolution equals their pointwise min. -/
-theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :
-    minConv (tokenBucket r b) (tokenBucket r' b')
-      = tokenBucket r b ⊓ tokenBucket r' b' :=
+theorem conv_tokenBucketNN_tokenBucketNN (r b r' b' : ℝ≥0) :
+    minConv (tokenBucketNN r b) (tokenBucketNN r' b')
+      = tokenBucketNN r b ⊓ tokenBucketNN r' b' :=
   minConv_eq_inf_of_subadditive _ _
-    (tokenBucket_zero_eq r b) (tokenBucket_zero_eq r' b')
-    (tokenBucket_inf_subadd r b r' b')
+    (tokenBucketNN_zero_eq r b) (tokenBucketNN_zero_eq r' b')
+    (tokenBucketNN_inf_subadd r b r' b')
 
 /-- Affine curve `t ↦ r * t + b` (no clamp at `0`). -/
 noncomputable def affine (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
@@ -104,38 +104,38 @@ theorem affine_coe (r b t : ℝ≥0) :
     affine r b t = ((r * t + b : ℝ≥0):ℝ≥0∞) := by
   simp only [affine]; push_cast; ring
 
-/-- `affine r b ⊓ delayNN 0 = tokenBucket r b`. -/
+/-- `affine r b ⊓ delayNN 0 = tokenBucketNN r b`. -/
 theorem affine_inf_delay0 (r b : ℝ≥0) :
-    affine r b ⊓ delayNN 0 = tokenBucket r b := by
-  rw [tokenBucket_eq]; rfl
+    affine r b ⊓ delayNN 0 = tokenBucketNN r b := by
+  rw [tokenBucketNN_eq]; rfl
 
-/-- `affine r 0 = rate r`. -/
-theorem affine_zero (r : ℝ≥0) : affine r 0 = rate r := by
+/-- `affine r 0 = rateNN r`. -/
+theorem affine_zero (r : ℝ≥0) : affine r 0 = rateNN r := by
   funext t
-  simp only [affine, rate_apply, ENNReal.coe_zero, add_zero]
+  simp only [affine, rateNN_apply, ENNReal.coe_zero, add_zero]
 
 /-- `affine r b 0 = b`. -/
 theorem affine_zero_eq (r b : ℝ≥0) : affine r b 0 = (b:ℝ≥0∞) := by
   simp only [affine, ENNReal.coe_zero, mul_zero, zero_add]
 
-/-- `rateLatency R 0 = rate R`. -/
-theorem rateLatency_zero (R : ℝ≥0) :
-    rateLatency R 0 = rate R := by
-  funext t; simp only [rateLatency, rate_apply, tsub_zero]
+/-- `rateLatencyNN R 0 = rateNN R`. -/
+theorem rateLatencyNN_zero (R : ℝ≥0) :
+    rateLatencyNN R 0 = rateNN R := by
+  funext t; simp only [rateLatencyNN, rateNN_apply, tsub_zero]
 
-/-- `tokenBucket R 0 = rate R`. -/
-theorem tokenBucket_zero_rate (R : ℝ≥0) :
-    tokenBucket R 0 = rate R := by
+/-- `tokenBucketNN R 0 = rateNN R`. -/
+theorem tokenBucketNN_zero_rateNN (R : ℝ≥0) :
+    tokenBucketNN R 0 = rateNN R := by
   funext t
   rcases eq_or_ne t 0 with ht | ht
-  · subst ht; rw [tokenBucket_zero_eq]; simp
-  · rw [tokenBucket_apply_pos R 0 t ht]; simp
+  · subst ht; rw [tokenBucketNN_zero_eq]; simp
+  · rw [tokenBucketNN_apply_pos R 0 t ht]; simp
 
-/-- `tokenBucket r b` is monotone. -/
-theorem tokenBucket_mono (r b : ℝ≥0) :
-    Monotone (tokenBucket r b) := by
+/-- `tokenBucketNN r b` is monotone. -/
+theorem tokenBucketNN_mono (r b : ℝ≥0) :
+    Monotone (tokenBucketNN r b) := by
   intro a c hac
-  simp only [tokenBucket_apply]
+  simp only [tokenBucketNN_apply]
   exact min_le_min (by gcongr) (delayNN_mono 0 hac)
 
 /-- `delayNN d ⊘ delayNN d' = delayNN (d - d')` when `d' ≤ d`. -/
@@ -147,29 +147,29 @@ theorem minDeconv_delayNN_delayNN (d d' : ℝ≥0) (h : d' ≤ d) :
       = delayNN (d - d') t
   simp only [delayNN, delay_apply]; congr 1; rw [le_tsub_iff_right h]
 
-/-- `rate R ⊘ delayNN d = affine R (R * d)`. -/
-theorem minDeconv_rate_delayNN (R d : ℝ≥0) :
-    minDeconv (rate R) (delayNN d) = affine R (R * d) := by
-  rw [minDeconv_delayNN (rate R) (rate_mono R) d]
-  funext t; simp only [rate_apply, affine]; push_cast; ring
+/-- `rateNN R ⊘ delayNN d = affine R (R * d)`. -/
+theorem minDeconv_rateNN_delayNN (R d : ℝ≥0) :
+    minDeconv (rateNN R) (delayNN d) = affine R (R * d) := by
+  rw [minDeconv_delayNN (rateNN R) (rateNN_mono R) d]
+  funext t; simp only [rateNN_apply, affine]; push_cast; ring
 
-/-- `tokenBucket r b ⊘ delayNN d = affine r (b + r * d)` for `d > 0`. -/
-theorem minDeconv_tokenBucket_delay (r b d : ℝ≥0)
+/-- `tokenBucketNN r b ⊘ delayNN d = affine r (b + r * d)` for `d > 0`. -/
+theorem minDeconv_tokenBucketNN_delay (r b d : ℝ≥0)
     (hd : 0 < d) :
-    minDeconv (tokenBucket r b) (delayNN d)
+    minDeconv (tokenBucketNN r b) (delayNN d)
       = affine r (b + r * d) := by
-  rw [minDeconv_delayNN (tokenBucket r b)
-    (tokenBucket_mono r b) d]
+  rw [minDeconv_delayNN (tokenBucketNN r b)
+    (tokenBucketNN_mono r b) d]
   funext t
   have htd : t + d ≠ 0 := by positivity
-  rw [tokenBucket_apply_pos r b (t + d) htd]
+  rw [tokenBucketNN_apply_pos r b (t + d) htd]
   simp only [affine]; push_cast; ring
 
 /-- Affine shift bound against a rate-latency term (`r ≤ R`). -/
 theorem affine_shift_bound (r b R T t u : ℝ≥0)
     (h : r ≤ R) :
     affine r b (t + u)
-      ≤ affine r (b + r*T) t + rateLatency R T u := by
+      ≤ affine r (b + r*T) t + rateLatencyNN R T u := by
   have key : (r*(t+u)+b : ℝ≥0)
       ≤ (r*t+(b+r*T)) + R*(u-T) := by
     rw [← NNReal.coe_le_coe]
@@ -184,33 +184,33 @@ theorem affine_shift_bound (r b R T t u : ℝ≥0)
       nlinarith [mul_le_mul_of_nonneg_right
         (sub_nonneg.mpr (NNReal.coe_le_coe.mpr h))
         (sub_nonneg.mpr (NNReal.coe_le_coe.mpr hu))]
-  rw [affine_coe, affine_coe, rateLatency_coe]
+  rw [affine_coe, affine_coe, rateLatencyNN_coe]
   exact_mod_cast key
 
-/-- `tokenBucket r b ≤ affine r b` pointwise. -/
-theorem tokenBucket_le_affine (r b t : ℝ≥0) :
-    tokenBucket r b t ≤ affine r b t := by
-  simp only [tokenBucket_apply, affine]
+/-- `tokenBucketNN r b ≤ affine r b` pointwise. -/
+theorem tokenBucketNN_le_affine (r b t : ℝ≥0) :
+    tokenBucketNN r b t ≤ affine r b t := by
+  simp only [tokenBucketNN_apply, affine]
   exact min_le_left _ _
 
-/-- `tokenBucket r b ⊘ βRT = affine r (b + r*T)` for `r ≤ R`, `T > 0`. -/
-theorem minDeconv_tokenBucket_rateLatency
+/-- `tokenBucketNN r b ⊘ βRT = affine r (b + r*T)` for `r ≤ R`, `T > 0`. -/
+theorem minDeconv_tokenBucketNN_rateLatencyNN
     (r b R T : ℝ≥0) (h : r ≤ R) (hT : 0 < T) :
-    minDeconv (tokenBucket r b) (rateLatency R T)
+    minDeconv (tokenBucketNN r b) (rateLatencyNN R T)
       = affine r (b + r*T) := by
   funext t
   apply le_antisymm
   · unfold minDeconv
     refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
-    exact le_trans (tokenBucket_le_affine r b (t+u))
+    exact le_trans (tokenBucketNN_le_affine r b (t+u))
       (affine_shift_bound r b R T t u h)
   · unfold minDeconv
     refine le_iSup_of_le T ?_
     have htT : t + T ≠ 0 := by positivity
-    rw [tokenBucket_apply_pos r b (t+T) htT]
-    have hbeta : rateLatency R T T = 0 := by
-      simp only [rateLatency, tsub_self]; simp
+    rw [tokenBucketNN_apply_pos r b (t+T) htT]
+    have hbeta : rateLatencyNN R T T = 0 := by
+      simp only [rateLatencyNN, tsub_self]; simp
     rw [hbeta, tsub_zero]
     simp only [affine]; push_cast; ring_nf; rfl
 
@@ -218,8 +218,8 @@ theorem minDeconv_tokenBucket_rateLatency
 theorem minDeconv_term_lb (r b R T t u : ℝ≥0)
     (hRr : R ≤ r) (hu : T ≤ u) (htu : t + u ≠ 0) :
     ((((r-R)*(u-T) : ℝ≥0)):ℝ≥0∞)
-      ≤ tokenBucket r b (t+u) - rateLatency R T u := by
-  rw [tokenBucket_apply_pos r b (t+u) htu, rateLatency_coe]
+      ≤ tokenBucketNN r b (t+u) - rateLatencyNN R T u := by
+  rw [tokenBucketNN_apply_pos r b (t+u) htu, rateLatencyNN_coe]
   apply ENNReal.le_sub_of_add_le_right ENNReal.coe_ne_top
   rw [← ENNReal.coe_mul, ← ENNReal.coe_add,
       ← ENNReal.coe_add, ENNReal.coe_le_coe,
@@ -244,10 +244,10 @@ theorem iSup_coe_mul_eq_top (c : ℝ≥0) (hc : 0 < c) :
     div_mul_cancel₀ M' hc.ne']
   exact lt_add_of_le_of_pos le_rfl hc
 
-/-- `tokenBucket r b ⊘ βRT = ⊤` when `R < r` (unstable). -/
-theorem minDeconv_tokenBucket_rateLatency_top
+/-- `tokenBucketNN r b ⊘ βRT = ⊤` when `R < r` (unstable). -/
+theorem minDeconv_tokenBucketNN_rateLatencyNN_top
     (r b R T : ℝ≥0) (hRr : R < r) :
-    minDeconv (tokenBucket r b) (rateLatency R T)
+    minDeconv (tokenBucketNN r b) (rateLatencyNN R T)
       = fun _ => (⊤:ℝ≥0∞) := by
   funext t
   rw [eq_top_iff]
@@ -271,10 +271,10 @@ theorem minDeconv_tokenBucket_rateLatency_top
     have he : (T + w) - T = w := by simp
     rw [he]
 
-/-- The deconvolution `sup` against `rate R` is at least `b` (`r ≤ R`). -/
+/-- The deconvolution `sup` against `rateNN R` is at least `b` (`r ≤ R`). -/
 theorem minDeconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
     (b:ℝ≥0∞)
-      ≤ ⨆ s : ℝ≥0, tokenBucket r b s - rate R s := by
+      ≤ ⨆ s : ℝ≥0, tokenBucketNN r b s - rateNN R s := by
   rw [le_iSup_iff]
   intro c hc
   by_contra hbc
@@ -284,8 +284,8 @@ theorem minDeconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
   rcases eq_or_lt_of_le h with hRr | hRr
   · subst hRr
     have h1 := hc 1
-    rw [tokenBucket_apply_pos r b 1 one_ne_zero,
-      rate_apply] at h1
+    rw [tokenBucketNN_apply_pos r b 1 one_ne_zero,
+      rateNN_apply] at h1
     simp only [ENNReal.coe_one, mul_one] at h1
     rw [ENNReal.add_sub_cancel_left
       ENNReal.coe_ne_top] at h1
@@ -297,7 +297,7 @@ theorem minDeconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
     set s := (b - c') / (2 * d) with hs
     have hsne : s ≠ 0 := by rw [hs]; positivity
     have hcs := hc s
-    rw [tokenBucket_coe_of_ne r b hsne, rate_apply,
+    rw [tokenBucketNN_coe_of_ne r b hsne, rateNN_apply,
       ← ENNReal.coe_mul, ← ENNReal.coe_sub,
       ENNReal.coe_le_coe] at hcs
     apply absurd hcs
@@ -327,27 +327,27 @@ theorem minDeconv_origin_lb (r b R : ℝ≥0) (h : r ≤ R) :
       linarith [c'.coe_nonneg, b.coe_nonneg]), hval]
     linarith
 
-/-- Affine shift bound against a `rate R` term (`r ≤ R`). -/
+/-- Affine shift bound against a `rateNN R` term (`r ≤ R`). -/
 theorem affine_shift_bound0 (r b R t u : ℝ≥0)
     (h : r ≤ R) :
-    affine r b (t + u) ≤ affine r b t + rate R u := by
+    affine r b (t + u) ≤ affine r b t + rateNN R u := by
   have key : (r*(t+u)+b : ℝ≥0) ≤ (r*t+b) + R*u := by
     rw [← NNReal.coe_le_coe]; push_cast
     nlinarith [mul_le_mul_of_nonneg_right
       (NNReal.coe_le_coe.mpr h) u.coe_nonneg]
-  rw [affine_coe, affine_coe, rate_apply]
+  rw [affine_coe, affine_coe, rateNN_apply]
   exact_mod_cast key
 
-/-- `tokenBucket r b ⊘ rate R = affine r b` when `r ≤ R`. -/
-theorem minDeconv_tokenBucket_rate (r b R : ℝ≥0)
+/-- `tokenBucketNN r b ⊘ rateNN R = affine r b` when `r ≤ R`. -/
+theorem minDeconv_tokenBucketNN_rateNN (r b R : ℝ≥0)
     (h : r ≤ R) :
-    minDeconv (tokenBucket r b) (rate R) = affine r b := by
+    minDeconv (tokenBucketNN r b) (rateNN R) = affine r b := by
   funext t
   apply le_antisymm
   · unfold minDeconv
     refine iSup_le (fun u => ?_)
     refine le_trans (tsub_le_iff_right.mpr ?_) le_rfl
-    exact le_trans (tokenBucket_le_affine r b (t+u))
+    exact le_trans (tokenBucketNN_le_affine r b (t+u))
       (affine_shift_bound0 r b R t u h)
   · rcases eq_or_ne t 0 with ht | ht
     · subst ht
@@ -355,28 +355,28 @@ theorem minDeconv_tokenBucket_rate (r b R : ℝ≥0)
       unfold minDeconv; simp only [zero_add]
       exact minDeconv_origin_lb r b R h
     · unfold minDeconv; refine le_iSup_of_le 0 ?_
-      rw [add_zero, tokenBucket_apply_pos r b t ht]
-      simp only [rate_apply, ENNReal.coe_zero, mul_zero,
+      rw [add_zero, tokenBucketNN_apply_pos r b t ht]
+      simp only [rateNN_apply, ENNReal.coe_zero, mul_zero,
         tsub_zero, affine, le_refl]
 
-/-- `tokenBucket r b ⊘ rate R = ⊤` when `R < r` (unstable). -/
-theorem minDeconv_tokenBucket_rate_top (r b R : ℝ≥0)
+/-- `tokenBucketNN r b ⊘ rateNN R = ⊤` when `R < r` (unstable). -/
+theorem minDeconv_tokenBucketNN_rateNN_top (r b R : ℝ≥0)
     (hRr : R < r) :
-    minDeconv (tokenBucket r b) (rate R)
+    minDeconv (tokenBucketNN r b) (rateNN R)
       = fun _ => (⊤:ℝ≥0∞) := by
-  rw [← rateLatency_zero R]
-  exact minDeconv_tokenBucket_rateLatency_top r b R 0 hRr
+  rw [← rateLatencyNN_zero R]
+  exact minDeconv_tokenBucketNN_rateLatencyNN_top r b R 0 hRr
 
-/-- `rate R ⊘ rate R' = rate R` when `R ≤ R'`. -/
-theorem minDeconv_rate_rate (R R' : ℝ≥0) (h : R ≤ R') :
-    minDeconv (rate R) (rate R') = rate R := by
-  conv_lhs => rw [← tokenBucket_zero_rate R]
-  rw [minDeconv_tokenBucket_rate R 0 R' h, affine_zero]
+/-- `rateNN R ⊘ rateNN R' = rateNN R` when `R ≤ R'`. -/
+theorem minDeconv_rateNN_rateNN (R R' : ℝ≥0) (h : R ≤ R') :
+    minDeconv (rateNN R) (rateNN R') = rateNN R := by
+  conv_lhs => rw [← tokenBucketNN_zero_rateNN R]
+  rw [minDeconv_tokenBucketNN_rateNN R 0 R' h, affine_zero]
 
-/-- `rate R ⊘ rate R' = ⊤` when `R' < R` (unstable). -/
-theorem minDeconv_rate_rate_top (R R' : ℝ≥0) (h : R' < R) :
-    minDeconv (rate R) (rate R')
+/-- `rateNN R ⊘ rateNN R' = ⊤` when `R' < R` (unstable). -/
+theorem minDeconv_rateNN_rateNN_top (R R' : ℝ≥0) (h : R' < R) :
+    minDeconv (rateNN R) (rateNN R')
       = fun _ => (⊤:ℝ≥0∞) := by
-  conv_lhs => rw [← tokenBucket_zero_rate R]
-  exact minDeconv_tokenBucket_rate_top R 0 R' h
+  conv_lhs => rw [← tokenBucketNN_zero_rateNN R]
+  exact minDeconv_tokenBucketNN_rateNN_top R 0 R' h
 end DeepWiki

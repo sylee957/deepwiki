@@ -10,27 +10,27 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 
-/-- `rate R` is continuous. -/
-theorem rate_continuous (R : ℝ≥0) : Continuous (rate R) :=
+/-- `rateNN R` is continuous. -/
+theorem rateNN_continuous (R : ℝ≥0) : Continuous (rateNN R) :=
   (ENNReal.continuous_const_mul (by simp)).comp
     (by fun_prop)
 
-/-- `rateLatency R T` is continuous. -/
-theorem rateLatency_continuous (R T : ℝ≥0) :
-    Continuous (rateLatency R T) :=
+/-- `rateLatencyNN R T` is continuous. -/
+theorem rateLatencyNN_continuous (R T : ℝ≥0) :
+    Continuous (rateLatencyNN R T) :=
   (ENNReal.continuous_const_mul (by simp)).comp
     (by fun_prop)
 
-/-- `rate R` is piecewise continuous. -/
-theorem rate_pwc (R : ℝ≥0) :
-    IsPiecewiseContinuous (rate R) :=
-  isPiecewiseContinuous_of_continuous _ (rate_continuous R)
+/-- `rateNN R` is piecewise continuous. -/
+theorem rateNN_pwc (R : ℝ≥0) :
+    IsPiecewiseContinuous (rateNN R) :=
+  isPiecewiseContinuous_of_continuous _ (rateNN_continuous R)
 
-/-- `rateLatency R T` is piecewise continuous. -/
-theorem rateLatency_pwc (R T : ℝ≥0) :
-    IsPiecewiseContinuous (rateLatency R T) :=
+/-- `rateLatencyNN R T` is piecewise continuous. -/
+theorem rateLatencyNN_pwc (R T : ℝ≥0) :
+    IsPiecewiseContinuous (rateLatencyNN R T) :=
   isPiecewiseContinuous_of_continuous _
-    (rateLatency_continuous R T)
+    (rateLatencyNN_continuous R T)
 
 /-- `delayNN d` is continuous at every `t ≠ d`. -/
 theorem delayNN_continuousAt (d t : ℝ≥0) (h : t ≠ d) :
@@ -72,10 +72,10 @@ theorem unitStep_pwc (T : ℝ≥0) :
   by_contra hne
   exact ht (unitStep_continuousAt T t hne)
 
-/-- `tokenBucket r b` is continuous at every `t ≠ 0`. -/
-theorem tokenBucket_continuousAt (r b t : ℝ≥0)
-    (h : t ≠ 0) : ContinuousAt (tokenBucket r b) t := by
-  rw [tokenBucket_eq]
+/-- `tokenBucketNN r b` is continuous at every `t ≠ 0`. -/
+theorem tokenBucketNN_continuousAt (r b t : ℝ≥0)
+    (h : t ≠ 0) : ContinuousAt (tokenBucketNN r b) t := by
+  rw [tokenBucketNN_eq]
   refine Filter.Tendsto.min ?_ (delayNN_continuousAt 0 t h)
   have h1 : ContinuousAt
       (fun s : ℝ≥0 => (r:ℝ≥0∞) * s) t :=
@@ -83,14 +83,14 @@ theorem tokenBucket_continuousAt (r b t : ℝ≥0)
       (by simp)).continuousAt.comp (by fun_prop)
   exact h1.add continuousAt_const
 
-/-- `tokenBucket r b` is piecewise continuous (one jump at `0`). -/
-theorem tokenBucket_pwc (r b : ℝ≥0) :
-    IsPiecewiseContinuous (tokenBucket r b) := by
+/-- `tokenBucketNN r b` is piecewise continuous (one jump at `0`). -/
+theorem tokenBucketNN_pwc (r b : ℝ≥0) :
+    IsPiecewiseContinuous (tokenBucketNN r b) := by
   intro T
   apply Set.Finite.subset (Set.finite_singleton 0)
   rintro t ⟨ht, _⟩
   by_contra hne
-  exact ht (tokenBucket_continuousAt r b t hne)
+  exact ht (tokenBucketNN_continuousAt r b t hne)
 
 /-- `⌈·⌉` is locally constant at non-integer points. -/
 theorem ceil_eventuallyEq (x : ℝ) (hx : (⌈x⌉ : ℝ) ≠ x) :
@@ -177,15 +177,15 @@ theorem staircase_pwc (P h : ℝ≥0) (J : ℝ)
   · intro hcontra
     exact hjump ⟨hcontra, htT.2⟩
 
-/-- `rate R` is left-continuous. -/
-theorem rate_leftCont (R : ℝ≥0) :
-    IsLeftContinuous (rate R) :=
-  isLeftContinuous_of_continuous _ (rate_continuous R)
+/-- `rateNN R` is left-continuous. -/
+theorem rateNN_leftCont (R : ℝ≥0) :
+    IsLeftContinuous (rateNN R) :=
+  isLeftContinuous_of_continuous _ (rateNN_continuous R)
 
-/-- `rateLatency R T` is left-continuous. -/
-theorem rateLatency_leftCont (R T : ℝ≥0) :
-    IsLeftContinuous (rateLatency R T) :=
-  isLeftContinuous_of_continuous _ (rateLatency_continuous R T)
+/-- `rateLatencyNN R T` is left-continuous. -/
+theorem rateLatencyNN_leftCont (R T : ℝ≥0) :
+    IsLeftContinuous (rateLatencyNN R T) :=
+  isLeftContinuous_of_continuous _ (rateLatencyNN_continuous R T)
 
 /-- `delayNN d` is left-continuous. -/
 theorem delayNN_leftCont (d : ℝ≥0) :
@@ -223,11 +223,11 @@ theorem unitStep_leftCont (T : ℝ≥0) :
     exact continuousWithinAt_const.congr_of_eventuallyEq
       hev (by simp [unitStep, not_le.mpr h])
 
-/-- `tokenBucket r b` is left-continuous. -/
-theorem tokenBucket_leftCont (r b : ℝ≥0) :
-    IsLeftContinuous (tokenBucket r b) := by
+/-- `tokenBucketNN r b` is left-continuous. -/
+theorem tokenBucketNN_leftCont (r b : ℝ≥0) :
+    IsLeftContinuous (tokenBucketNN r b) := by
   intro t
-  rw [tokenBucket_eq]
+  rw [tokenBucketNN_eq]
   refine Filter.Tendsto.min ?_ (delayNN_leftCont 0 t)
   have h1 : ContinuousWithinAt
       (fun s : ℝ≥0 => (r:ℝ≥0∞) * s) (Iio t) t :=

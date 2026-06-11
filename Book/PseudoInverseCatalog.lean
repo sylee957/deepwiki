@@ -20,14 +20,14 @@ open Set
 theorem levelGeSet_rateENN (R : ℝ≥0∞) (hR : 0 < R) (hRtop : R ≠ ⊤) (x : ℝ≥0∞) :
     levelGeSet (rateENN R) x = Ici (R⁻¹ * x) := by
   ext t
-  rw [mem_levelGeSet, mem_Ici, ge_iff_le, rateENN, rateV,
+  rw [mem_levelGeSet, mem_Ici, ge_iff_le, rateENN, rate,
     ENNReal.inv_mul_le_iff hR.ne' hRtop]
 
 /-- `λ_R⁻¹ = λ_{1/R}`: the peak-rate inverse is peak-rate of reciprocal slope
 (for `0 < R < ⊤`). -/
 theorem pseudoInv_rateENN (R : ℝ≥0∞) (hR : 0 < R) (hRtop : R ≠ ⊤) (x : ℝ≥0∞) :
     pseudoInv (rateENN R) x = rateENN R⁻¹ x := by
-  rw [pseudoInv, levelGeSet_rateENN R hR hRtop, csInf_Ici, rateENN, rateV]
+  rw [pseudoInv, levelGeSet_rateENN R hR hRtop, csInf_Ici, rateENN, rate]
 
 /-! ## Rate-latency: `β_{R,T}⁻¹ = γ_{1/R,T}` -/
 
@@ -37,7 +37,7 @@ theorem levelGeSet_rateLatencyENN (R T : ℝ≥0∞) (hR : 0 < R) (hRtop : R ≠
     (hT : T ≠ ⊤) (x : ℝ≥0∞) (hx : 0 < x) :
     levelGeSet (rateLatencyENN R T) x = Ici (R⁻¹ * x + T) := by
   ext t
-  rw [mem_levelGeSet, mem_Ici, ge_iff_le, rateLatencyENN, rateLatencyV,
+  rw [mem_levelGeSet, mem_Ici, ge_iff_le, rateLatencyENN, rateLatency,
     ← ENNReal.inv_mul_le_iff hR.ne' hRtop]
   constructor
   · intro h
@@ -56,7 +56,7 @@ theorem levelGeSet_rateLatencyENN (R T : ℝ≥0∞) (hR : 0 < R) (hRtop : R ≠
 /-- `tokenBucketENN r b x = r·x + b` for `0 < x` (the `delay 0` factor is `⊤`). -/
 theorem tokenBucketENN_pos (r b : ℝ≥0∞) {x : ℝ≥0∞} (hx : 0 < x) :
     tokenBucketENN r b x = r * x + b := by
-  rw [tokenBucketENN, tokenBucketV]
+  rw [tokenBucketENN, tokenBucket]
   simp only [Pi.inf_apply, delay_apply]
   rw [if_neg (by simp [hx.ne']), min_top_right]
 
@@ -73,7 +73,7 @@ theorem pseudoInv_rateLatencyENN (R T : ℝ≥0∞) (hR : 0 < R) (hRtop : R ≠ 
 /-- Pointwise form: `γ_{r,b} t = 0` at `t = 0`, else `r·t + b`. -/
 theorem tokenBucketENN_apply (r b t : ℝ≥0∞) :
     tokenBucketENN r b t = if t = 0 then 0 else r * t + b := by
-  rw [tokenBucketENN, tokenBucketV]
+  rw [tokenBucketENN, tokenBucket]
   simp only [Pi.inf_apply, delay_apply]
   by_cases h : t = 0
   · subst h; simp
@@ -156,7 +156,7 @@ and `pseudoInv_delayENN_zero` in `PseudoInverse`. -/
 
 /-- `δ_d⁻¹ = γ_{0,d}`: the delay inverts to the rate-`0` token-bucket
 `tokenBucketENN 0 d`, for every `x`. -/
-theorem pseudoInv_delayENN_eq_tokenBucket (d x : ℝ≥0∞) :
+theorem pseudoInv_delayENN_eq_tokenBucketENN (d x : ℝ≥0∞) :
     pseudoInv (delayENN d) x = tokenBucketENN 0 d x := by
   rw [tokenBucketENN_apply, zero_mul, zero_add]
   rcases eq_or_ne x 0 with hx | hx

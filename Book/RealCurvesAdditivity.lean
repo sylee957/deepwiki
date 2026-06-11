@@ -12,42 +12,42 @@ open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
 
-/-- `rate R = rateLatency R 0`. -/
-theorem rate_eq_rateLatency_zero (R : ℝ≥0) :
-    rate R = rateLatency R 0 := by
-  funext t; simp [rate, rateV, rateLatency]
+/-- `rateNN R = rateLatencyNN R 0`. -/
+theorem rateNN_eq_rateLatencyNN_zero (R : ℝ≥0) :
+    rateNN R = rateLatencyNN R 0 := by
+  funext t; simp [rateNN, rate, rateLatencyNN]
 
-/-- `rate R = tokenBucket R 0`. -/
-theorem rate_eq_tokenBucket_zero (R : ℝ≥0) :
-    rate R = tokenBucket R 0 := by
+/-- `rateNN R = tokenBucketNN R 0`. -/
+theorem rateNN_eq_tokenBucketNN_zero (R : ℝ≥0) :
+    rateNN R = tokenBucketNN R 0 := by
   funext t
-  rw [tokenBucket_eq]
-  simp only [rate, rateV, Pi.inf_apply,
+  rw [tokenBucketNN_eq]
+  simp only [rateNN, rate, Pi.inf_apply,
     ENNReal.coe_zero, add_zero]
   rcases eq_or_ne t 0 with h | h
   · subst h; simp [delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
     simp [delayNN, ht]
 
-/-- `unitStep 0 = tokenBucket 0 1`. -/
-theorem unitStep_zero_eq_tokenBucket :
-    unitStep (0 : ℝ≥0) = tokenBucket 0 1 := by
+/-- `unitStep 0 = tokenBucketNN 0 1`. -/
+theorem unitStep_zero_eq_tokenBucketNN :
+    unitStep (0 : ℝ≥0) = tokenBucketNN 0 1 := by
   funext t
-  rw [tokenBucket_eq]
+  rw [tokenBucketNN_eq]
   rcases eq_or_ne t 0 with h | h
   · subst h; simp [unitStep, delayNN]
   · have ht : ¬ t ≤ 0 := by simpa using h
     simp [unitStep, delayNN, ht]
 
-/-- `rate R` is subadditive. -/
-theorem rate_subadditive (R : ℝ≥0) :
-    IsSubadditive (rate R) := by
-  intro u s; simp only [rate, rateV]; push_cast; rw [mul_add]
+/-- `rateNN R` is subadditive. -/
+theorem rateNN_subadditive (R : ℝ≥0) :
+    IsSubadditive (rateNN R) := by
+  intro u s; simp only [rateNN, rate]; push_cast; rw [mul_add]
 
-/-- `rate R` is superadditive (hence additive). -/
-theorem rate_superadditive (R : ℝ≥0) :
-    IsSuperadditive (rate R) := by
-  intro u s; simp only [rate, rateV]; push_cast; rw [mul_add]
+/-- `rateNN R` is superadditive (hence additive). -/
+theorem rateNN_superadditive (R : ℝ≥0) :
+    IsSuperadditive (rateNN R) := by
+  intro u s; simp only [rateNN, rate]; push_cast; rw [mul_add]
 
 /-- `delayNN d` is superadditive. -/
 theorem delayNN_superadditive (d : ℝ≥0) :
@@ -71,27 +71,27 @@ theorem tsub_add_tsub_le_tsub (u s T : ℝ≥0) :
     · rw [tsub_add_tsub_comm (le_of_lt hu) (le_of_lt hs)]
       exact tsub_le_tsub_left le_add_self _
 
-/-- `rateLatency R T` is superadditive. -/
-theorem rateLatency_superadditive (R T : ℝ≥0) :
-    IsSuperadditive (rateLatency R T) := by
+/-- `rateLatencyNN R T` is superadditive. -/
+theorem rateLatencyNN_superadditive (R T : ℝ≥0) :
+    IsSuperadditive (rateLatencyNN R T) := by
   intro u s
-  simp only [rateLatency]
+  simp only [rateLatencyNN]
   rw [← ENNReal.coe_mul, ← ENNReal.coe_mul,
     ← ENNReal.coe_mul, ← ENNReal.coe_add,
     ENNReal.coe_le_coe, ← mul_add]
   exact _root_.mul_le_mul_right (tsub_add_tsub_le_tsub u s T) R
 
-/-- `tokenBucket r b` is subadditive. -/
-theorem tokenBucket_subadditive (r b : ℝ≥0) :
-    IsSubadditive (tokenBucket r b) := by
-  refine IsSubadditive.of_ne_zero (tokenBucket_zero_eq r b)
+/-- `tokenBucketNN r b` is subadditive. -/
+theorem tokenBucketNN_subadditive (r b : ℝ≥0) :
+    IsSubadditive (tokenBucketNN r b) := by
+  refine IsSubadditive.of_ne_zero (tokenBucketNN_zero_eq r b)
     fun u s hu hs => ?_
   have hu0 : ¬ u ≤ 0 := by simpa using hu
   have hs0 : ¬ s ≤ 0 := by simpa using hs
   have hus0 : ¬ (u + s) ≤ 0 := by
     rw [nonpos_iff_eq_zero, add_eq_zero]
     rintro ⟨h1, _⟩; exact hu h1
-  rw [tokenBucket_eq]
+  rw [tokenBucketNN_eq]
   simp only [Pi.inf_apply, delayNN, delay_apply,
     if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
   push_cast [mul_add]
@@ -102,8 +102,8 @@ theorem tokenBucket_subadditive (r b : ℝ≥0) :
 /-- `unitStep 0` is subadditive. -/
 theorem unitStep_zero_subadditive :
     IsSubadditive (unitStep (0 : ℝ≥0)) := by
-  rw [unitStep_zero_eq_tokenBucket]
-  exact tokenBucket_subadditive 0 1
+  rw [unitStep_zero_eq_tokenBucketNN]
+  exact tokenBucketNN_subadditive 0 1
 
 /-- Subadditive step-count bound when `J ≥ 0`. -/
 theorem staircase_ceil_sub (P : ℝ≥0) (hP : (0:ℝ) < P)
@@ -249,12 +249,12 @@ theorem staircase_superadditive (P h : ℝ≥0)
     (staircase_ceil_super P hP J hJ u s)
 
 /-- The token-bucket is its own subadditive closure. -/
-theorem tokenBucket_closure (r b : ℝ≥0) :
-    subadditiveClosureENN (tokenBucket r b)
-      = tokenBucket r b :=
+theorem tokenBucketNN_closure (r b : ℝ≥0) :
+    subadditiveClosureENN (tokenBucketNN r b)
+      = tokenBucketNN r b :=
   subadditiveClosureENN_eq_self _
-    (tokenBucket_subadditive r b)
-    (tokenBucket_zero_eq r b)
+    (tokenBucketNN_subadditive r b)
+    (tokenBucketNN_zero_eq r b)
 
 /-- The staircase (`J ≥ 0`) is its own subadditive closure. -/
 theorem staircase_closure (P h : ℝ≥0) (hP : (0:ℝ) < P)
@@ -302,20 +302,20 @@ theorem delayNN_closure (d : ℝ≥0) (t : ℝ≥0) :
   superadditiveClosure_unbotD_eq _
     (delayNN_superadditive d) (delayNN_zero_eq d) t
 
-/-- `rate R` is fixed by its superadditive closure. -/
-theorem rate_closure (R : ℝ≥0) (t : ℝ≥0) :
-    (superadditiveClosure (↑(rate R)) t).unbotD 0
-      = rate R t :=
+/-- `rateNN R` is fixed by its superadditive closure. -/
+theorem rateNN_closure (R : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(rateNN R)) t).unbotD 0
+      = rateNN R t :=
   superadditiveClosure_unbotD_eq _
-    (rate_superadditive R) (rate_zero_eq R) t
+    (rateNN_superadditive R) (rateNN_zero_eq R) t
 
-/-- `rateLatency R T` is fixed by its superadditive closure. -/
-theorem rateLatency_closure (R T : ℝ≥0) (t : ℝ≥0) :
-    (superadditiveClosure (↑(rateLatency R T)) t).unbotD 0
-      = rateLatency R T t :=
+/-- `rateLatencyNN R T` is fixed by its superadditive closure. -/
+theorem rateLatencyNN_closure (R T : ℝ≥0) (t : ℝ≥0) :
+    (superadditiveClosure (↑(rateLatencyNN R T)) t).unbotD 0
+      = rateLatencyNN R T t :=
   superadditiveClosure_unbotD_eq _
-    (rateLatency_superadditive R T)
-    (rateLatency_zero_eq R T) t
+    (rateLatencyNN_superadditive R T)
+    (rateLatencyNN_zero_eq R T) t
 
 /-- The staircase (`J < -P`) is fixed by its superadditive closure. -/
 theorem staircase_closure_super (P h : ℝ≥0)

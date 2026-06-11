@@ -103,13 +103,13 @@ noncomputable def stepCurve (T b : ℝ≥0) : Curve :=
 `min b (D u + C·d) ≤ D (u + d)`. Either `(u, u + d]` is backlogged and the
 strict bound applies, or the whole burst has already departed. -/
 theorem stepCurve_strict_drain {S : Curve → Curve → Prop} {C T b : ℝ≥0}
-    (hβ : IsStrictMinimalServiceCurve (rateV C) S)
+    (hβ : IsStrictMinimalServiceCurve (rate C) S)
     {D : Curve} (hp : S (stepCurve T b) D)
     {u : ℝ≥0} (hu : T ≤ u) (d : ℝ≥0) :
     min b (D u + C * d) ≤ D (u + d) := by
   by_cases hbl : IsBacklogged (⇑(stepCurve T b)) (⇑D) (Set.Ioc u (u + d))
   · have h := hβ _ _ hp u (u + d) le_self_add hbl
-    simp only [rateV] at h
+    simp only [rate] at h
     rw [add_tsub_cancel_left] at h
     exact le_trans (min_le_right _ _) h
   · simp only [IsBacklogged, not_forall, not_lt] at hbl
@@ -121,7 +121,7 @@ theorem stepCurve_strict_drain {S : Curve → Curve → Prop} {C T b : ℝ≥0}
 the next packet of size `s` departs by `u + s/C`: each packet's service time —
 waiting excluded — is at most `s/C`. -/
 theorem stepCurve_strict_packet {S : Curve → Curve → Prop} {C T b s x : ℝ≥0}
-    (hC : C ≠ 0) (hβ : IsStrictMinimalServiceCurve (rateV C) S)
+    (hC : C ≠ 0) (hβ : IsStrictMinimalServiceCurve (rate C) S)
     {D : Curve} (hp : S (stepCurve T b) D)
     {u : ℝ≥0} (hu : T ≤ u) (hxb : x + s ≤ b) (hxD : x ≤ D u) :
     x + s ≤ D (u + s / C) := by
@@ -297,7 +297,7 @@ strict per-packet bound on the last packet, so it does not offer `λ_C` as a
 strict service curve. -/
 theorem not_isStrictMinimalServiceCurve_rushServer {T b c C : ℝ≥0}
     (hc : 0 < c) (hcb : c < b) (hC : C ≠ 0) :
-    ¬ IsStrictMinimalServiceCurve (rateV C) (rushServer T b c C) := by
+    ¬ IsStrictMinimalServiceCurve (rate C) (rushServer T b c C) := by
   intro hβ
   have hp : rushServer T b c C (stepCurve T b) (rushCurve T b c C) :=
     Or.inl ⟨rfl, rfl⟩
@@ -333,7 +333,7 @@ theorem exists_minimalService_not_strictService {C : ℝ≥0} (hC : C ≠ 0)
     {b c : ℝ≥0} (hc : 0 < c) (hcb : c < b) :
     ∃ S : Curve → Curve → Prop,
       IsServer S ∧ IsMinimalServiceCurve (rateEReal C) S ∧
-        ¬ IsStrictMinimalServiceCurve (rateV C) S :=
+        ¬ IsStrictMinimalServiceCurve (rate C) S :=
   ⟨rushServer 0 b c C, isServer_rushServer hcb.le,
     isMinimalServiceCurve_rushServer 0 b c C,
     not_isStrictMinimalServiceCurve_rushServer hc hcb hC⟩
@@ -348,7 +348,7 @@ the first `k` of `n` packets of size `s` have departed by `u ≥ T`, packet
 `k + 1` departs by `u + s/C`. -/
 theorem stepCurve_strict_packet_count {S : Curve → Curve → Prop}
     {C T s : ℝ≥0} {n k : ℕ} (hC : C ≠ 0)
-    (hβ : IsStrictMinimalServiceCurve (rateV C) S)
+    (hβ : IsStrictMinimalServiceCurve (rate C) S)
     {D : Curve} (hp : S (stepCurve T ((n : ℝ≥0) * s)) D)
     {u : ℝ≥0} (hu : T ≤ u) (hk : k < n) (hxD : (k : ℝ≥0) * s ≤ D u) :
     ((k + 1 : ℕ) : ℝ≥0) * s ≤ D (u + s / C) := by
@@ -398,7 +398,7 @@ theorem exists_minimalService_not_strictService_count {C s : ℝ≥0} {n : ℕ}
     (hn : 2 ≤ n) (hs : 0 < s) (hC : C ≠ 0) :
     ∃ S : Curve → Curve → Prop,
       IsServer S ∧ IsMinimalServiceCurve (rateEReal C) S ∧
-        ¬ IsStrictMinimalServiceCurve (rateV C) S :=
+        ¬ IsStrictMinimalServiceCurve (rate C) S :=
   exists_minimalService_not_strictService hC
     (c := ((n - 1 : ℕ) : ℝ≥0) * s) (b := ((n : ℕ) : ℝ≥0) * s)
     (mul_pos

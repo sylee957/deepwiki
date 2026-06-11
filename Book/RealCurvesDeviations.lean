@@ -3,7 +3,7 @@ import Book.Continuity
 import Book.Deviations
 
 /-! Horizontal and vertical deviations specialized to `ℝ≥0 → ℝ≥0∞`: the
-`delay`/`tokenBucket`/`rateLatency` deviation values (stable and unstable), and
+`delayNN`/`tokenBucketNN`/`rateLatencyNN` deviation values (stable and unstable), and
 the right-limit/right-continuity criteria for a positive horizontal deviation.
 The general deviations live in `Book.Deviations`; here `hDevAtENN`/`hDevENN`
 pin the shift-embedding to `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
@@ -136,15 +136,15 @@ theorem hDevENN_delay_eq_of_isRightContinuous
   hDevENN_delay_eq_of_rightLimit_pos f d (f 0)
     (hrc 0).tendsto h0
 
-/-- `tokenBucket r b` has right limit `b` at `0`. -/
-theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
-    Tendsto (tokenBucket r b) (𝓝[>] (0:ℝ≥0))
+/-- `tokenBucketNN r b` has right limit `b` at `0`. -/
+theorem tokenBucketNN_tendsto_right (r b : ℝ≥0) :
+    Tendsto (tokenBucketNN r b) (𝓝[>] (0:ℝ≥0))
       (𝓝 (b:ℝ≥0∞)) := by
   have heq : (𝓝[>] (0:ℝ≥0)).EventuallyEq
-      (tokenBucket r b)
+      (tokenBucketNN r b)
       (fun t => ((r*t + b : ℝ≥0):ℝ≥0∞)) := by
     filter_upwards [self_mem_nhdsWithin] with t ht
-    exact tokenBucket_coe_of_ne r b (Set.mem_Ioi.mp ht).ne'
+    exact tokenBucketNN_coe_of_ne r b (Set.mem_Ioi.mp ht).ne'
   rw [tendsto_congr' heq]
   have hcont : Tendsto
       (fun t : ℝ≥0 => ((r*t + b : ℝ≥0):ℝ≥0∞))
@@ -155,21 +155,21 @@ theorem tokenBucket_tendsto_right (r b : ℝ≥0) :
   simp only [mul_zero, zero_add] at hcont
   exact hcont.mono_left nhdsWithin_le_nhds
 
-/-- `hDevENN (tokenBucket r b) (delayNN d) = d` when `b > 0`. -/
-theorem hDevENN_tokenBucket_delay (r b d : ℝ≥0)
+/-- `hDevENN (tokenBucketNN r b) (delayNN d) = d` when `b > 0`. -/
+theorem hDevENN_tokenBucketNN_delay (r b d : ℝ≥0)
     (hb : 0 < b) :
-    hDevENN (tokenBucket r b) (delayNN d) = d :=
-  hDevENN_delay_eq_of_rightLimit_pos (tokenBucket r b) d
-    (b:ℝ≥0∞) (tokenBucket_tendsto_right r b)
+    hDevENN (tokenBucketNN r b) (delayNN d) = d :=
+  hDevENN_delay_eq_of_rightLimit_pos (tokenBucketNN r b) d
+    (b:ℝ≥0∞) (tokenBucketNN_tendsto_right r b)
     (by exact_mod_cast hb)
 
-/-- Real reading of admissibility: `tokenBucket r b t ≤ rateLatency R T (t + d)`
+/-- Real reading of admissibility: `tokenBucketNN r b t ≤ rateLatencyNN R T (t + d)`
 gives `r*t + b ≤ R*(t + d - T)` over `ℝ` (`0 < b`, `t ≠ 0`). -/
-theorem tokenBucket_le_rateLatency_real
+theorem tokenBucketNN_le_rateLatencyNN_real
     (r b R T t d : ℝ≥0) (hb : 0 < b) (ht : t ≠ 0)
-    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    (h : tokenBucketNN r b t ≤ rateLatencyNN R T (t+d)) :
     (r:ℝ)*t + b ≤ (R:ℝ)*((t:ℝ) + d - T) := by
-  rw [tokenBucket_coe_of_ne r b ht, rateLatency_coe,
+  rw [tokenBucketNN_coe_of_ne r b ht, rateLatencyNN_coe,
     ENNReal.coe_le_coe, ← NNReal.coe_le_coe] at h
   push_cast [NNReal.coe_sub_def] at h
   rcases le_total ((t:ℝ)+d-T) 0 with hle|hle
@@ -179,14 +179,14 @@ theorem tokenBucket_le_rateLatency_real
   · rwa [max_eq_left hle] at h
 
 /-- The shift `T + b/R` is admissible:
-`tokenBucket r b t ≤ rateLatency R T (t + (T + b/R))` when `0 < R`, `r ≤ R`. -/
-theorem tokenBucket_le_rateLatency_shift (r b R T t : ℝ≥0)
+`tokenBucketNN r b t ≤ rateLatencyNN R T (t + (T + b/R))` when `0 < R`, `r ≤ R`. -/
+theorem tokenBucketNN_le_rateLatencyNN_shift (r b R T t : ℝ≥0)
     (hR : 0 < R) (hrR : r ≤ R) :
-    tokenBucket r b t
-      ≤ rateLatency R T (t + (T + b/R)) := by
+    tokenBucketNN r b t
+      ≤ rateLatencyNN R T (t + (T + b/R)) := by
   rcases eq_or_ne t 0 with ht | ht
-  · subst ht; rw [tokenBucket_zero_eq]; exact bot_le
-  · rw [tokenBucket_coe_of_ne r b ht, rateLatency_coe,
+  · subst ht; rw [tokenBucketNN_zero_eq]; exact bot_le
+  · rw [tokenBucketNN_coe_of_ne r b ht, rateLatencyNN_coe,
       ENNReal.coe_le_coe]
     have hkey : (t + (T + b/R)) - T = t + b/R := by
       rw [show t + (T + b/R) = (t + b/R) + T by ring,
@@ -198,21 +198,21 @@ theorem tokenBucket_le_rateLatency_shift (r b R T t : ℝ≥0)
     calc (r*t+b : ℝ≥0) ≤ R*t + b := by gcongr
       _ = R*(t + b/R) := by rw [mul_add, hRbR]
 
-/-- `hDevENN (tokenBucket r b) βRT ≤ T + b/R` (`0 < R`, `r ≤ R`). -/
-theorem hDevENN_tokenBucket_rateLatency_le
+/-- `hDevENN (tokenBucketNN r b) βRT ≤ T + b/R` (`0 < R`, `r ≤ R`). -/
+theorem hDevENN_tokenBucketNN_rateLatencyNN_le
     (r b R T : ℝ≥0) (hR : 0 < R) (hrR : r ≤ R) :
-    hDevENN (tokenBucket r b) (rateLatency R T)
+    hDevENN (tokenBucketNN r b) (rateLatencyNN R T)
       ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
   refine hDev_le fun t => ?_
-  exact hDevAt_le (tokenBucket_le_rateLatency_shift r b R T t hR hrR)
+  exact hDevAt_le (tokenBucketNN_le_rateLatencyNN_shift r b R T t hR hrR)
 
 /-- Any admissible shift `d` obeys `R*T + b ≤ R*d + (R - r)*t`
 (`0 < b`, `t ≠ 0`). -/
-theorem tokenBucket_rateLatency_shift_bound (r b R T t d : ℝ≥0)
+theorem tokenBucketNN_rateLatencyNN_shift_bound (r b R T t d : ℝ≥0)
     (hb : 0 < b) (ht : t ≠ 0)
-    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    (h : tokenBucketNN r b t ≤ rateLatencyNN R T (t+d)) :
     R*T + b ≤ R*d + (R - r)*t := by
-  have hreal := tokenBucket_le_rateLatency_real r b R T t d hb ht h
+  have hreal := tokenBucketNN_le_rateLatencyNN_real r b R T t d hb ht h
   rw [← NNReal.coe_le_coe]
   push_cast [NNReal.coe_sub_def]
   have htt : (0:ℝ) ≤ t := t.coe_nonneg
@@ -222,15 +222,15 @@ theorem tokenBucket_rateLatency_shift_bound (r b R T t d : ℝ≥0)
     · rw [max_eq_left hle]
   linarith [hreal, hmrt]
 
-/-- Per-point lower bound on `hDevAtENN (tokenBucket r b) βRT`. -/
-theorem hDevAtENN_rateLatency_ge (r b R T t : ℝ≥0)
+/-- Per-point lower bound on `hDevAtENN (tokenBucketNN r b) βRT`. -/
+theorem hDevAtENN_rateLatencyNN_ge (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (ht : t ≠ 0) :
     (((T + b/R) - ((R-r)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAtENN (tokenBucket r b)
-          (rateLatency R T) t := by
+      ≤ hDevAtENN (tokenBucketNN r b)
+          (rateLatencyNN R T) t := by
   refine le_hDevAtENN fun d hd => ?_
   rw [tsub_le_iff_right]
-  have hbnd := tokenBucket_rateLatency_shift_bound r b R T t d hb ht hd
+  have hbnd := tokenBucketNN_rateLatencyNN_shift_bound r b R T t d hb ht hd
   rw [← NNReal.coe_le_coe] at hbnd ⊢
   push_cast [NNReal.coe_sub_def] at hbnd ⊢
   have hRpos : (0:ℝ) < R := by exact_mod_cast hR
@@ -241,20 +241,20 @@ theorem hDevAtENN_rateLatency_ge (r b R T t : ℝ≥0)
       = R*d + max ((R:ℝ)-r) 0 * t := by field_simp
   rw [e1, e2]; linarith [hbnd]
 
-/-- `T + b/R ≤ hDevENN (tokenBucket r b) βRT` (`0 < R`, `0 < b`). -/
-theorem hDevENN_tokenBucket_rateLatency_ge
+/-- `T + b/R ≤ hDevENN (tokenBucketNN r b) βRT` (`0 < R`, `0 < b`). -/
+theorem hDevENN_tokenBucketNN_rateLatencyNN_ge
     (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b) :
     ((T + b/R : ℝ≥0):ℝ≥0∞)
-      ≤ hDevENN (tokenBucket r b) (rateLatency R T) := by
+      ≤ hDevENN (tokenBucketNN r b) (rateLatencyNN R T) := by
   refine ENNReal.le_of_forall_pos_le_add ?_
   intro ε hε _
   set c : ℝ≥0 := (R-r)/R with hc
   set s : ℝ≥0 := ε / (c + 1) with hs
   have hsne : s ≠ 0 := by rw [hs]; positivity
   have h1 : (((T + b/R) - c*s : ℝ≥0):ℝ≥0∞)
-      ≤ hDevENN (tokenBucket r b) (rateLatency R T) := by
+      ≤ hDevENN (tokenBucketNN r b) (rateLatencyNN R T) := by
     refine le_trans
-      (hDevAtENN_rateLatency_ge r b R T s hR hb hsne) ?_
+      (hDevAtENN_rateLatencyNN_ge r b R T s hR hb hsne) ?_
     unfold hDevENN hDev; exact le_iSup _ s
   have hcs_le : ((c*s : ℝ≥0):ℝ≥0∞) ≤ (ε:ℝ≥0∞) := by
     rw [ENNReal.coe_le_coe, ← NNReal.coe_le_coe]
@@ -265,25 +265,25 @@ theorem hDevENN_tokenBucket_rateLatency_ge
   calc ((T + b/R : ℝ≥0):ℝ≥0∞)
       ≤ (((T+b/R) - c*s : ℝ≥0):ℝ≥0∞) + (c*s : ℝ≥0) :=
         coe_le_coe_tsub_add (T + b/R) (c*s)
-    _ ≤ hDevENN (tokenBucket r b) (rateLatency R T) + ε :=
+    _ ≤ hDevENN (tokenBucketNN r b) (rateLatencyNN R T) + ε :=
         add_le_add h1 hcs_le
 
-/-- `hDevENN (tokenBucket r b) βRT = T + b/R` (stable case). -/
-theorem hDevENN_tokenBucket_rateLatency (r b R T : ℝ≥0)
+/-- `hDevENN (tokenBucketNN r b) βRT = T + b/R` (stable case). -/
+theorem hDevENN_tokenBucketNN_rateLatencyNN (r b R T : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
-    hDevENN (tokenBucket r b) (rateLatency R T)
+    hDevENN (tokenBucketNN r b) (rateLatencyNN R T)
       = ((T + b/R : ℝ≥0):ℝ≥0∞) :=
   le_antisymm
-    (hDevENN_tokenBucket_rateLatency_le r b R T hR hrR)
-    (hDevENN_tokenBucket_rateLatency_ge r b R T hR hb)
+    (hDevENN_tokenBucketNN_rateLatencyNN_le r b R T hR hrR)
+    (hDevENN_tokenBucketNN_rateLatencyNN_ge r b R T hR hb)
 
 /-- Unstable case `R < r`: any admissible shift `d` obeys `(r - R)*t ≤ R*d`
 (`0 < b`, `t ≠ 0`). -/
-theorem tokenBucket_rateLatency_shift_bound_unstable (r b R T t d : ℝ≥0)
+theorem tokenBucketNN_rateLatencyNN_shift_bound_unstable (r b R T t d : ℝ≥0)
     (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0)
-    (h : tokenBucket r b t ≤ rateLatency R T (t+d)) :
+    (h : tokenBucketNN r b t ≤ rateLatencyNN R T (t+d)) :
     (r - R)*t ≤ R*d := by
-  have hreal := tokenBucket_le_rateLatency_real r b R T t d hb ht h
+  have hreal := tokenBucketNN_le_rateLatencyNN_real r b R T t d hb ht h
   rw [← NNReal.coe_le_coe]
   push_cast [NNReal.coe_sub_def]
   have hbb : (0:ℝ) < b := by exact_mod_cast hb
@@ -292,22 +292,22 @@ theorem tokenBucket_rateLatency_shift_bound_unstable (r b R T t d : ℝ≥0)
   linarith [hreal, mul_nonneg R.coe_nonneg T.coe_nonneg]
 
 /-- Unstable per-point lower bound growing linearly in `t`. -/
-theorem hDevAtENN_rateLatency_ge_top (r b R T t : ℝ≥0)
+theorem hDevAtENN_rateLatencyNN_ge_top (r b R T t : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hRr : R < r) (ht : t ≠ 0) :
     ((((r-R)/R)*t : ℝ≥0):ℝ≥0∞)
-      ≤ hDevAtENN (tokenBucket r b)
-          (rateLatency R T) t := by
+      ≤ hDevAtENN (tokenBucketNN r b)
+          (rateLatencyNN R T) t := by
   refine le_hDevAtENN fun d hd => ?_
   have hbnd :=
-    tokenBucket_rateLatency_shift_bound_unstable r b R T t d hb hRr ht hd
+    tokenBucketNN_rateLatencyNN_shift_bound_unstable r b R T t d hb hRr ht hd
   rw [div_mul_eq_mul_div, div_le_iff₀ hR, mul_comm d R]
   exact hbnd
 
-/-- `hDevENN (tokenBucket r b) βRT = ⊤` when `R < r` (unstable). -/
-theorem hDevENN_tokenBucket_rateLatency_top
+/-- `hDevENN (tokenBucketNN r b) βRT = ⊤` when `R < r` (unstable). -/
+theorem hDevENN_tokenBucketNN_rateLatencyNN_top
     (r b R T : ℝ≥0) (hR : 0 < R) (hb : 0 < b)
     (hRr : R < r) :
-    hDevENN (tokenBucket r b) (rateLatency R T) = ⊤ := by
+    hDevENN (tokenBucketNN r b) (rateLatencyNN R T) = ⊤ := by
   have hc : 0 < (r - R)/R := by
     have : 0 < r - R := tsub_pos_of_lt hRr
     positivity
@@ -316,35 +316,35 @@ theorem hDevENN_tokenBucket_rateLatency_top
   rcases eq_or_ne s 0 with hs | hs
   · subst hs; simp
   · refine le_trans
-      (hDevAtENN_rateLatency_ge_top r b R T s hR hb hRr hs)
+      (hDevAtENN_rateLatencyNN_ge_top r b R T s hR hb hRr hs)
       ?_
     exact le_iSup
-      (fun t => hDevAtENN (tokenBucket r b)
-        (rateLatency R T) t) s
+      (fun t => hDevAtENN (tokenBucketNN r b)
+        (rateLatencyNN R T) t) s
 
-/-- `vDev (tokenBucket r b) (delayNN d) = r*d + b` for `d > 0`. -/
-theorem vDev_tokenBucket_delay (r b d : ℝ≥0)
+/-- `vDev (tokenBucketNN r b) (delayNN d) = r*d + b` for `d > 0`. -/
+theorem vDev_tokenBucketNN_delay (r b d : ℝ≥0)
     (hd : 0 < d) :
-    vDev (tokenBucket r b) (delayNN d)
+    vDev (tokenBucketNN r b) (delayNN d)
       = (r*d + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    minDeconv_tokenBucket_delay r b d hd,
+    minDeconv_tokenBucketNN_delay r b d hd,
     affine_zero_eq, add_comm b (r*d)]
 
-/-- `vDev (tokenBucket r b) βRT = r*T + b` (`r ≤ R`, `T > 0`). -/
-theorem vDev_tokenBucket_rateLatency (r b R T : ℝ≥0)
+/-- `vDev (tokenBucketNN r b) βRT = r*T + b` (`r ≤ R`, `T > 0`). -/
+theorem vDev_tokenBucketNN_rateLatencyNN (r b R T : ℝ≥0)
     (h : r ≤ R) (hT : 0 < T) :
-    vDev (tokenBucket r b) (rateLatency R T)
+    vDev (tokenBucketNN r b) (rateLatencyNN R T)
       = (r*T + b : ℝ≥0) := by
   rw [vDev_eq_deconv_zero,
-    minDeconv_tokenBucket_rateLatency r b R T h hT,
+    minDeconv_tokenBucketNN_rateLatencyNN r b R T h hT,
     affine_zero_eq, add_comm b (r*T)]
 
-/-- `vDev (tokenBucket r b) βRT = ⊤` when `R < r` (unstable). -/
-theorem vDev_tokenBucket_rateLatency_top
+/-- `vDev (tokenBucketNN r b) βRT = ⊤` when `R < r` (unstable). -/
+theorem vDev_tokenBucketNN_rateLatencyNN_top
     (r b R T : ℝ≥0) (hRr : R < r) :
-    vDev (tokenBucket r b) (rateLatency R T) = ⊤ := by
+    vDev (tokenBucketNN r b) (rateLatencyNN R T) = ⊤ := by
   rw [vDev_eq_deconv_zero,
-    minDeconv_tokenBucket_rateLatency_top r b R T hRr]
+    minDeconv_tokenBucketNN_rateLatencyNN_top r b R T hRr]
 
 end DeepWiki

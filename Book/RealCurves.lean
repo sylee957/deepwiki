@@ -4,16 +4,17 @@ import Mathlib.Data.EReal.Basic
 
 /-! # Curve definitions
 The concrete service/arrival curves of network calculus, as plain definitions
-(regularity proofs live in `RealCurvesRegularity`). The pure-delay curve `delay` is
-defined once over any ordered domain/value type, then the rate / rate-latency /
-token-bucket curves over a semiring value type via the domain-polymorphic bases
-`rateV`/`rateLatencyV`/`tokenBucketV` (the `delay`-style pattern). Each
-specializes two ways: the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rate`,
-`rateLatency`, `tokenBucket`, plus `staircase`/`unitStep`), the complete-domain
-`ℝ≥0∞ → ℝ≥0∞` variants (`delayENN`, `rateENN`/`rateLatencyENN`/`tokenBucketENN`) used by
-the pseudo-inverse catalog, and the `EReal`-valued variants
-(`delayEReal`/`rateEReal`) used by the service-curve stack. Plus the
-`*_zero_eq` base values and `*_coe` real/complete agreements. -/
+(regularity proofs live in `RealCurvesRegularity`). The pure-delay curve `delay`
+is defined once over any ordered domain/value type, and the rate / rate-latency /
+token-bucket bases `rate`/`rateLatency`/`tokenBucket` once over a semiring value
+type. Each specializes to the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rateNN`,
+`rateLatencyNN`, `tokenBucketNN`, plus `staircase`/`unitStep`) and the
+complete-domain `ℝ≥0∞ → ℝ≥0∞` variants (`delayENN`,
+`rateENN`/`rateLatencyENN`/`tokenBucketENN`) used by the pseudo-inverse catalog;
+the `EReal`-valued variants for the service-curve stack are `delayEReal` and
+`rateEReal` (its own def — it multiplies in `ℝ≥0` and embeds through `ℝ`, not
+the base at `EReal`). Plus the `*_zero_eq` base values and `*_coe` real/complete
+agreements. -/
 
 namespace DeepWiki
 
@@ -92,44 +93,46 @@ Each curve is defined once over a value type `V` — a `Semiring` (for `·`, `+`
 needs them — then specialized below. -/
 
 /-- Constant-rate curve `t ↦ R · t`, over a semiring value type. -/
-def rateV {V : Type*} [Semiring V] (R : V) : V → V := fun t => R * t
+def rate {V : Type*} [Semiring V] (R : V) : V → V := fun t => R * t
 
 /-- Rate-latency curve `t ↦ R · (t - T)`, over a semiring with subtraction. -/
-def rateLatencyV {V : Type*} [Semiring V] [Sub V] (R T : V) : V → V :=
+def rateLatency {V : Type*} [Semiring V] [Sub V] (R T : V) : V → V :=
   fun t => R * (t - T)
 
 /-- Token-bucket curve `(r · t + b) ⊓ delay 0` (`0` at `t = 0`), over a semiring
 that is a complete linear order. -/
-noncomputable def tokenBucketV {V : Type*} [Semiring V] [CompleteLinearOrder V]
+noncomputable def tokenBucket {V : Type*} [Semiring V] [CompleteLinearOrder V]
     (r b : V) : V → V :=
   (fun t => r * t + b) ⊓ delay (0 : V)
 
 /-! ## Real curves `ℝ≥0 → ℝ≥0∞`
 
-`rate` is `rateV` on coerced inputs (defeq). `rateLatency` subtracts in `ℝ≥0`
+`rateNN` is `rate` on coerced inputs (defeq). `rateLatencyNN` subtracts in `ℝ≥0`
 *before* coercing (the `(t - T)₊` semantics) — not the post-coercion
-`rateLatencyV` form, so it is its own definition (`rateLatencyENN_coe` bridges
-them). `tokenBucket` takes the `⊓ delayNN 0` meet pointwise on `ℝ≥0`. -/
+`rateLatency` form, so it is its own definition (`rateLatencyENN_coe` bridges
+them). `tokenBucketNN` takes the `⊓ delayNN 0` meet pointwise on `ℝ≥0`. -/
 
-/-- Constant-rate curve `t ↦ R * t`. -/
-noncomputable abbrev rate (R : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
-  fun t => rateV (R : ℝ≥0∞) (t : ℝ≥0∞)
+/-- Constant-rate curve over `ℝ≥0 → ℝ≥0∞`. -/
+noncomputable abbrev rateNN (R : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+  fun t => rate (R : ℝ≥0∞) (t : ℝ≥0∞)
 
-/-- `rate R t = R * t` (the `ℝ≥0 → ℝ≥0∞` coerced product). -/
-@[simp] theorem rate_apply (R t : ℝ≥0) :
-    rate R t = (R : ℝ≥0∞) * (t : ℝ≥0∞) := rfl
+/-- `rateNN R t = R * t` (the `ℝ≥0 → ℝ≥0∞` coerced product). -/
+@[simp] theorem rateNN_apply (R t : ℝ≥0) :
+    rateNN R t = (R : ℝ≥0∞) * (t : ℝ≥0∞) := rfl
 
-/-- Rate-latency curve `t ↦ R * (t - T)₊` (subtraction in `ℝ≥0`, then coerced). -/
-noncomputable def rateLatency (R T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+/-- Rate-latency curve over `ℝ≥0 → ℝ≥0∞`: `t ↦ R * (t - T)₊` (subtraction in
+`ℝ≥0`, then coerced). -/
+noncomputable def rateLatencyNN (R T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => (R : ℝ≥0∞) * ((t - T : ℝ≥0) : ℝ≥0∞)
 
-/-- Token-bucket curve `(r * t + b) ⊓ delayNN 0` (`0` at `t = 0`). -/
-noncomputable abbrev tokenBucket (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
-  fun t => tokenBucketV (r : ℝ≥0∞) (b : ℝ≥0∞) (t : ℝ≥0∞)
+/-- Token-bucket curve over `ℝ≥0 → ℝ≥0∞`: `(r * t + b) ⊓ delayNN 0` (`0` at
+`t = 0`). -/
+noncomputable abbrev tokenBucketNN (r b : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
+  fun t => tokenBucket (r : ℝ≥0∞) (b : ℝ≥0∞) (t : ℝ≥0∞)
 
-/-- `tokenBucket r b t = (r * t + b) ⊓ delayNN 0 t` (pointwise on `ℝ≥0`). -/
-@[simp] theorem tokenBucket_apply (r b t : ℝ≥0) :
-    tokenBucket r b t = ((r : ℝ≥0∞) * t + b) ⊓ delayNN 0 t := by
+/-- `tokenBucketNN r b t = (r * t + b) ⊓ delayNN 0 t` (pointwise on `ℝ≥0`). -/
+@[simp] theorem tokenBucketNN_apply (r b t : ℝ≥0) :
+    tokenBucketNN r b t = ((r : ℝ≥0∞) * t + b) ⊓ delayNN 0 t := by
   show ((r : ℝ≥0∞) * t + b) ⊓ delay (0 : ℝ≥0∞) (t : ℝ≥0∞)
       = ((r : ℝ≥0∞) * t + b) ⊓ delayNN 0 t
   congr 1
@@ -151,13 +154,13 @@ noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
 /-! ## Complete-domain variants `ℝ≥0∞ → ℝ≥0∞` (for the pseudo-inverse catalog) -/
 
 /-- Constant-rate curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev rateENN (R : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateV R
+noncomputable abbrev rateENN (R : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rate R
 
 /-- Rate-latency curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev rateLatencyENN (R T : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateLatencyV R T
+noncomputable abbrev rateLatencyENN (R T : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := rateLatency R T
 
 /-- Token-bucket curve over `ℝ≥0∞ → ℝ≥0∞`. -/
-noncomputable abbrev tokenBucketENN (r b : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := tokenBucketV r b
+noncomputable abbrev tokenBucketENN (r b : ℝ≥0∞) : ℝ≥0∞ → ℝ≥0∞ := tokenBucket r b
 
 /-! ## `EReal`-valued variants (for the service-curve stack) -/
 
@@ -173,34 +176,34 @@ noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
 
 /-! ## Agreements and base values -/
 
-/-- `rateLatency` is `rateLatencyENN` on coerced inputs (subtraction commutes with
+/-- `rateLatencyNN` is `rateLatencyENN` on coerced inputs (subtraction commutes with
 the `ℝ≥0 → ℝ≥0∞` coercion via `ENNReal.coe_sub`). -/
 theorem rateLatencyENN_coe (R T t : ℝ≥0) :
-    rateLatencyENN (R : ℝ≥0∞) (T : ℝ≥0∞) (t : ℝ≥0∞) = rateLatency R T t := by
-  rw [rateLatency, rateLatencyENN, rateLatencyV, ENNReal.coe_sub]
+    rateLatencyENN (R : ℝ≥0∞) (T : ℝ≥0∞) (t : ℝ≥0∞) = rateLatencyNN R T t := by
+  rw [rateLatencyNN, rateLatencyENN, rateLatency, ENNReal.coe_sub]
 
-/-- `rateLatency R T u = ↑(R * (u - T))`. -/
-theorem rateLatency_coe (R T u : ℝ≥0) :
-    rateLatency R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
-  simp only [rateLatency]; push_cast; ring
+/-- `rateLatencyNN R T u = ↑(R * (u - T))`. -/
+theorem rateLatencyNN_coe (R T u : ℝ≥0) :
+    rateLatencyNN R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
+  simp only [rateLatencyNN]; push_cast; ring
 
-/-- `tokenBucket` as the pointwise `(r·t + b) ⊓ delayNN 0` over `ℝ≥0`. -/
-theorem tokenBucket_eq (r b : ℝ≥0) :
-    tokenBucket r b = (fun t : ℝ≥0 => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0 := by
-  funext t; exact tokenBucket_apply r b t
+/-- `tokenBucketNN` as the pointwise `(r·t + b) ⊓ delayNN 0` over `ℝ≥0`. -/
+theorem tokenBucketNN_eq (r b : ℝ≥0) :
+    tokenBucketNN r b = (fun t : ℝ≥0 => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0 := by
+  funext t; exact tokenBucketNN_apply r b t
 
-/-- `rate R 0 = 0`. -/
-theorem rate_zero_eq (R : ℝ≥0) : rate R 0 = 0 := by
+/-- `rateNN R 0 = 0`. -/
+theorem rateNN_zero_eq (R : ℝ≥0) : rateNN R 0 = 0 := by
   simp
 
-/-- `rateLatency R T 0 = 0`. -/
-theorem rateLatency_zero_eq (R T : ℝ≥0) :
-    rateLatency R T 0 = 0 := by
-  simp [rateLatency]
+/-- `rateLatencyNN R T 0 = 0`. -/
+theorem rateLatencyNN_zero_eq (R T : ℝ≥0) :
+    rateLatencyNN R T 0 = 0 := by
+  simp [rateLatencyNN]
 
-/-- `tokenBucket r b 0 = 0`. -/
-theorem tokenBucket_zero_eq (r b : ℝ≥0) :
-    tokenBucket r b 0 = 0 := by
+/-- `tokenBucketNN r b 0 = 0`. -/
+theorem tokenBucketNN_zero_eq (r b : ℝ≥0) :
+    tokenBucketNN r b 0 = 0 := by
   simp [delayNN]
 
 /-- `staircase P h J 0 = 0`. -/
