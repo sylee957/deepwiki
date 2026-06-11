@@ -268,6 +268,18 @@ not just defaults):
   the variants with `*_coe` agreement lemmas where they are only propositionally
   (not defeq) equal.
 
+- **A settled counterexample also refutes the general statement — state the
+  `¬ ∀` theorem.** Ship the full ladder, each layer named: the witness lemmas
+  (`witness_mem_<rel>`, `witness_not_mem_comp*`), the instance-level failing
+  direction (`not_<rel>_le_<witness-tags>`), the strict inequality
+  (`<rel>_lt_*` via `lt_of_le_not_ge`), and the refutation of the
+  universally quantified converse (`not_forall_<rel>_le_comp`), whose
+  quantified hypotheses mirror the forward theorem *verbatim* — so the pair
+  reads "this direction is a theorem, the flipped direction is a
+  non-theorem". Don't stop at the instance: the `¬ ∀` form is what makes
+  the failure a citable general fact (`ServersConcatenationStrict` is the
+  model).
+
 ## Autoformalizing from source PDFs (`references/`)
 
 - `references/` is a **gitignored** local dump of the source books/papers being
