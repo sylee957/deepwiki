@@ -173,9 +173,8 @@ ray: `f − const ↑a` is `FiniteOnPos` when `f` is. -/
 theorem FiniteOnPos_sub_const (f : ℝ≥0 → EReal) (hf : FiniteOnPos f) (a : ℝ) :
     FiniteOnPos (f - Function.const ℝ≥0 (a:EReal)) := by
   intro x hx
-  obtain ⟨hT, hB⟩ := hf x hx
   show f x - (a:EReal) ≠ ⊤ ∧ f x - (a:EReal) ≠ ⊥
-  rw [← EReal.coe_toReal hT hB, ← EReal.coe_sub]
+  rw [← hf.coe_toReal hx, ← EReal.coe_sub]
   exact ⟨EReal.coe_ne_top _, EReal.coe_ne_bot _⟩
 
 /-- Convolution decomposition with finite values at the origin. With `a = f 0`,

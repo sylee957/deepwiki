@@ -31,6 +31,12 @@ def ConcaveE (f : ℝ≥0 → EReal) : Prop :=
 def FiniteOnPos (f : ℝ≥0 → EReal) : Prop :=
   ∀ x : ℝ≥0, 0 < x → f x ≠ ⊤ ∧ f x ≠ ⊥
 
+/-- For `FiniteOnPos f` and `0 < x`, the real reading round-trips:
+`(((f x).toReal : ℝ) : EReal) = f x`. -/
+theorem FiniteOnPos.coe_toReal {f : ℝ≥0 → EReal} (hfin : FiniteOnPos f)
+    {x : ℝ≥0} (hx : 0 < x) : (((f x).toReal : ℝ) : EReal) = f x :=
+  EReal.coe_toReal (hfin x hx).1 (hfin x hx).2
+
 /-- The real-curve shadow `x ↦ (f x.toNNReal).toReal` of a curve `f`, the
 ℝ-domain/ℝ-codomain form on which Mathlib's `ConcaveOn` is stated. -/
 noncomputable def toRealCurve (f : ℝ≥0 → EReal) : ℝ → ℝ :=
@@ -68,10 +74,6 @@ theorem concaveOn_toRealCurve_of_concaveE
   have hz0 : 0 < z := by
     rw [← NNReal.coe_pos, hzval]
     exact convex_Ioi (0 : ℝ) hx hy ha hb hab
-  -- finiteness facts
-  obtain ⟨hsT, hsB⟩ := hfin s hs0
-  obtain ⟨htT, htB⟩ := hfin t ht0
-  obtain ⟨hzT, hzB⟩ := hfin z hz0
   -- the EReal chord inequality at these points
   have hchord := hf s t p hp1
   -- the combined point inside `toRealCurve (a•x+b•y)`
@@ -81,9 +83,9 @@ theorem concaveOn_toRealCurve_of_concaveE
   have hLeq : ((p : ℝ) : EReal) * f s + (((1 - p : ℝ≥0) : ℝ) : EReal) * f t
       = (((p : ℝ) * (f s).toReal + ((1 - p : ℝ≥0) : ℝ) * (f t).toReal : ℝ) : EReal) := by
     rw [EReal.coe_add, EReal.coe_mul, EReal.coe_mul,
-      EReal.coe_toReal hsT hsB, EReal.coe_toReal htT htB]
+      hfin.coe_toReal hs0, hfin.coe_toReal ht0]
   have hReq : f (p * s + (1 - p) * t) = (((f z).toReal : ℝ) : EReal) := by
-    rw [EReal.coe_toReal hzT hzB]
+    rw [hfin.coe_toReal hz0]
   rw [hLeq, hReq, EReal.coe_le_coe_iff] at hchord
   -- now translate to `toRealCurve` and the `a•/b•` form
   show a • toRealCurve f x + b • toRealCurve f y ≤ toRealCurve f (a • x + b • y)
@@ -116,9 +118,8 @@ theorem continuousOn_of_concaveE_of_finite
   refine hcomp.congr ?_
   intro x hx
   have hx0 : 0 < x := hx
-  obtain ⟨hxT, hxB⟩ := hfin x hx0
   show f x = ((toRealCurve f (x : ℝ) : ℝ) : EReal)
-  rw [toRealCurve, Real.toNNReal_coe, EReal.coe_toReal hxT hxB]
+  rw [toRealCurve, Real.toNNReal_coe, hfin.coe_toReal hx0]
 
 /-- `Ioi`-set restatement: a finite concave curve is continuous on `(0, ∞)`. -/
 theorem continuousOn_Ioi_of_concaveE_of_finite
