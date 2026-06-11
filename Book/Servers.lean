@@ -42,6 +42,33 @@ instance : LE Curve where
 /-- `D ≤ A` on curves unfolds to the pointwise numeric order. -/
 theorem Curve.le_def {D A : Curve} : D ≤ A ↔ ∀ t, D t ≤ A t := Iff.rfl
 
+/-- Pointwise sum of curves is a curve: monotonicity, null at origin, and
+left-continuity are termwise; the discontinuities of the sum lie in the
+union of the summands' (finite) discontinuity sets. -/
+noncomputable instance : Add Curve where
+  add A B :=
+    { toFun := fun t => A t + B t
+      mono := fun _ _ h => add_le_add (A.mono h) (B.mono h)
+      zero := by
+        have hA : A 0 = 0 := A.zero
+        have hB : B 0 = 0 := B.zero
+        show A 0 + B 0 = 0
+        rw [hA, hB, add_zero]
+      pwc := by
+        intro T
+        refine Set.Finite.subset ((A.pwc T).union (B.pwc T)) ?_
+        rintro t ⟨ht, htm⟩
+        by_cases hA : ContinuousAt (⇑A) t
+        · by_cases hB : ContinuousAt (⇑B) t
+          · exact absurd (hA.add hB) ht
+          · exact Or.inr ⟨hB, htm⟩
+        · exact Or.inl ⟨hA, htm⟩
+      leftCont := fun t => (A.leftCont t).add (B.leftCont t) }
+
+/-- `(A + B) t = A t + B t`: curve addition is pointwise. -/
+@[simp] theorem Curve.add_apply (A B : Curve) (t : ℝ≥0) :
+    (A + B) t = A t + B t := rfl
+
 /-- The zero curve: no data ever arrives or departs. -/
 noncomputable def zeroCurve : Curve :=
   ⟨fun _ => 0, monotone_const, rfl,
