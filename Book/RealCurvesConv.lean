@@ -105,39 +105,6 @@ theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     simp
   · exact zero_le'
 
-/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` is subadditive. -/
-theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
-    (hsub : IsSubadditive f) (hmono : Monotone f)
-    (d : ℝ≥0) :
-    IsSubadditive (delayNN 0 ⊓ minDeconv f (delayNN d)) := by
-  rw [minDeconv_delayNN f hmono d]
-  intro u s
-  simp only [Pi.inf_apply]
-  rcases eq_or_ne u 0 with hu | hu
-  · subst hu
-    have : min (delayNN 0 0) (f (0 + d)) = 0 := by
-      rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
-    rw [this, zero_add, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · subst hs
-      have : min (delayNN 0 0) (f (0 + d)) = 0 := by
-        rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
-      rw [this, add_zero, add_zero]
-    · have hu0 : ¬ u ≤ 0 := by simpa using hu
-      have hs0 : ¬ s ≤ 0 := by simpa using hs
-      have hus0 : ¬ (u + s) ≤ 0 := by
-        rw [nonpos_iff_eq_zero, add_eq_zero]
-        rintro ⟨h1, _⟩; exact hu h1
-      rw [show delayNN 0 u = ⊤ by simp [delayNN, hu0],
-          show delayNN 0 s = ⊤ by simp [delayNN, hs0],
-          show delayNN 0 (u + s) = ⊤ by simp [delayNN, hus0],
-          min_top_left, min_top_left, min_top_left]
-      have harg : u + s + d ≤ (u + d) + (s + d) := by
-        have : (u + d) + (s + d) = u + s + (d + d) := by
-          ring
-        rw [this]; gcongr; exact le_add_right (le_refl d)
-      exact le_trans (hmono harg) (hsub (u + d) (s + d))
-
 /-- `delayNN 0 ⊓ minDeconv f (delayNN d)` vanishes at `0`. -/
 theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
     (hmono : Monotone f) (d : ℝ≥0) :
@@ -145,6 +112,30 @@ theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
   rw [minDeconv_delayNN f hmono d]
   show min (delayNN 0 0) (f (0 + d)) = 0
   rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
+
+/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` is subadditive. -/
+theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive f) (hmono : Monotone f)
+    (d : ℝ≥0) :
+    IsSubadditive (delayNN 0 ⊓ minDeconv f (delayNN d)) := by
+  refine IsSubadditive.of_ne_zero (gdelay_zero f hmono d)
+    fun u s hu hs => ?_
+  rw [minDeconv_delayNN f hmono d]
+  simp only [Pi.inf_apply]
+  have hu0 : ¬ u ≤ 0 := by simpa using hu
+  have hs0 : ¬ s ≤ 0 := by simpa using hs
+  have hus0 : ¬ (u + s) ≤ 0 := by
+    rw [nonpos_iff_eq_zero, add_eq_zero]
+    rintro ⟨h1, _⟩; exact hu h1
+  rw [show delayNN 0 u = ⊤ by simp [delayNN, hu0],
+      show delayNN 0 s = ⊤ by simp [delayNN, hs0],
+      show delayNN 0 (u + s) = ⊤ by simp [delayNN, hus0],
+      min_top_left, min_top_left, min_top_left]
+  have harg : u + s + d ≤ (u + d) + (s + d) := by
+    have : (u + d) + (s + d) = u + s + (d + d) := by
+      ring
+    rw [this]; gcongr; exact le_add_right (le_refl d)
+  exact le_trans (hmono harg) (hsub (u + d) (s + d))
 
 /-- `toF (delayNN 0)` is the convolution unit `δ₀` over `MinPlusNN`. -/
 theorem toF_delay0 :

@@ -73,25 +73,19 @@ theorem tokenBucket_coe_of_ne (r b : ℝ≥0) {t : ℝ≥0}
 theorem tokenBucket_inf_subadd (r b r' b' : ℝ≥0) :
     IsSubadditive
       (tokenBucket r b ⊓ tokenBucket r' b') := by
-  intro u s
-  simp only [Pi.inf_apply]
-  rcases eq_or_ne u 0 with hu | hu
-  · subst hu
-    rw [tokenBucket_zero_eq, tokenBucket_zero_eq, min_self,
-      zero_add, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · subst hs
-      rw [tokenBucket_zero_eq, tokenBucket_zero_eq,
-        min_self, add_zero, add_zero]
-    · have hus : (u + s) ≠ 0 := by
-        rw [← pos_iff_ne_zero] at hu ⊢; positivity
-      rw [tokenBucket_coe_of_ne r b hu,
-          tokenBucket_coe_of_ne r' b' hu,
-          tokenBucket_coe_of_ne r b hs,
-          tokenBucket_coe_of_ne r' b' hs,
-          tokenBucket_coe_of_ne r b hus,
-          tokenBucket_coe_of_ne r' b' hus]
-      exact affine_min_subadd r b r' b' u s
+  refine IsSubadditive.of_ne_zero ?_ fun u s hu hs => ?_
+  · rw [Pi.inf_apply, tokenBucket_zero_eq,
+      tokenBucket_zero_eq, min_self]
+  · simp only [Pi.inf_apply]
+    have hus : (u + s) ≠ 0 := by
+      rw [← pos_iff_ne_zero] at hu ⊢; positivity
+    rw [tokenBucket_coe_of_ne r b hu,
+        tokenBucket_coe_of_ne r' b' hu,
+        tokenBucket_coe_of_ne r b hs,
+        tokenBucket_coe_of_ne r' b' hs,
+        tokenBucket_coe_of_ne r b hus,
+        tokenBucket_coe_of_ne r' b' hus]
+    exact affine_min_subadd r b r' b' u s
 
 /-- Token-bucket convolution equals their pointwise min. -/
 theorem conv_tokenBucket_tokenBucket (r b r' b' : ℝ≥0) :

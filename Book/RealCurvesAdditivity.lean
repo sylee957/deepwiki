@@ -84,24 +84,20 @@ theorem rateLatency_superadditive (R T : ℝ≥0) :
 /-- `tokenBucket r b` is subadditive. -/
 theorem tokenBucket_subadditive (r b : ℝ≥0) :
     IsSubadditive (tokenBucket r b) := by
-  intro u s
-  rcases eq_or_ne u 0 with hu | hu
-  · subst hu; rw [zero_add, tokenBucket_zero_eq, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · subst hs
-      rw [add_zero, tokenBucket_zero_eq, add_zero]
-    · have hu0 : ¬ u ≤ 0 := by simpa using hu
-      have hs0 : ¬ s ≤ 0 := by simpa using hs
-      have hus0 : ¬ (u + s) ≤ 0 := by
-        rw [nonpos_iff_eq_zero, add_eq_zero]
-        rintro ⟨h1, _⟩; exact hu h1
-      rw [tokenBucket_eq]
-      simp only [Pi.inf_apply, delayNN, delay_apply,
-        if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
-      push_cast [mul_add]
-      calc (r:ℝ≥0∞)*u + r*s + b
-          ≤ (r*u + r*s + b) + b := le_self_add
-        _ = (r*u + b) + (r*s + b) := by ring
+  refine IsSubadditive.of_ne_zero (tokenBucket_zero_eq r b)
+    fun u s hu hs => ?_
+  have hu0 : ¬ u ≤ 0 := by simpa using hu
+  have hs0 : ¬ s ≤ 0 := by simpa using hs
+  have hus0 : ¬ (u + s) ≤ 0 := by
+    rw [nonpos_iff_eq_zero, add_eq_zero]
+    rintro ⟨h1, _⟩; exact hu h1
+  rw [tokenBucket_eq]
+  simp only [Pi.inf_apply, delayNN, delay_apply,
+    if_neg hu0, if_neg hs0, if_neg hus0, min_top_right]
+  push_cast [mul_add]
+  calc (r:ℝ≥0∞)*u + r*s + b
+      ≤ (r*u + r*s + b) + b := le_self_add
+    _ = (r*u + b) + (r*s + b) := by ring
 
 /-- `unitStep 0` is subadditive. -/
 theorem unitStep_zero_subadditive :
@@ -155,21 +151,17 @@ theorem staircase_val_sub (P h : ℝ≥0) (hP : (0:ℝ) < P)
 theorem staircase_subadditive (P h : ℝ≥0)
     (hP : (0:ℝ) < P) (J : ℝ) (hJ : 0 ≤ J) :
     IsSubadditive (staircase P h J) := by
-  intro u s
-  rcases eq_or_ne u 0 with hu | hu
-  · subst hu; rw [zero_add, staircase_zero_eq, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · subst hs
-      rw [add_zero, staircase_zero_eq, add_zero]
-    · have hu0 : ¬ u ≤ 0 := by simpa using hu
-      have hs0 : ¬ s ≤ 0 := by simpa using hs
-      have hus0 : ¬ (u + s) ≤ 0 := by
-        rw [nonpos_iff_eq_zero, add_eq_zero]
-        rintro ⟨h1, _⟩; exact hu h1
-      simp only [staircase, delayNN, delay_apply, if_neg hu0,
-        if_neg hs0, if_neg hus0, min_top_right]
-      push_cast
-      exact staircase_val_sub P h hP J hJ u s
+  refine IsSubadditive.of_ne_zero (staircase_zero_eq P h J)
+    fun u s hu hs => ?_
+  have hu0 : ¬ u ≤ 0 := by simpa using hu
+  have hs0 : ¬ s ≤ 0 := by simpa using hs
+  have hus0 : ¬ (u + s) ≤ 0 := by
+    rw [nonpos_iff_eq_zero, add_eq_zero]
+    rintro ⟨h1, _⟩; exact hu h1
+  simp only [staircase, delayNN, delay_apply, if_neg hu0,
+    if_neg hs0, if_neg hus0, min_top_right]
+  push_cast
+  exact staircase_val_sub P h hP J hJ u s
 
 /-- `⌈x⌉ + ⌈y⌉ ≤ ⌈x+y⌉ + 1`. -/
 theorem ceil_add_le_ceil_succ (x y : ℝ) :
@@ -233,32 +225,28 @@ theorem clamp_super (h : ℝ) (hh : 0 ≤ h) (n m k : ℤ)
 theorem staircase_superadditive (P h : ℝ≥0)
     (hP : (0:ℝ) < P) (J : ℝ) (hJ : J < -P) :
     IsSuperadditive (staircase P h J) := by
-  intro u s
-  rcases eq_or_ne u 0 with hu | hu
-  · subst hu; rw [zero_add, staircase_zero_eq, zero_add]
-  · rcases eq_or_ne s 0 with hs | hs
-    · subst hs
-      rw [add_zero, staircase_zero_eq, add_zero]
-    · have hu0 : ¬ u ≤ 0 := by simpa using hu
-      have hs0 : ¬ s ≤ 0 := by simpa using hs
-      have hus0 : ¬ (u + s) ≤ 0 := by
-        rw [nonpos_iff_eq_zero, add_eq_zero]
-        rintro ⟨h1, _⟩; exact hu h1
-      simp only [staircase, delayNN, delay_apply, if_neg hu0,
-        if_neg hs0, if_neg hus0, min_top_right]
-      rw [← ENNReal.ofReal_add (le_max_right _ _)
-        (le_max_right _ _)]
-      apply ENNReal.ofReal_le_ofReal
-      have hnk : ⌈((u:ℝ)+J)/P⌉
-          ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
-        Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
-          (by linarith [s.coe_nonneg]))
-      have hmk : ⌈((s:ℝ)+J)/P⌉
-          ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
-        Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
-          (by linarith [u.coe_nonneg]))
-      exact clamp_super (h:ℝ) h.coe_nonneg _ _ _ hnk hmk
-        (staircase_ceil_super P hP J hJ u s)
+  refine IsSuperadditive.of_ne_zero (staircase_zero_eq P h J)
+    fun u s hu hs => ?_
+  have hu0 : ¬ u ≤ 0 := by simpa using hu
+  have hs0 : ¬ s ≤ 0 := by simpa using hs
+  have hus0 : ¬ (u + s) ≤ 0 := by
+    rw [nonpos_iff_eq_zero, add_eq_zero]
+    rintro ⟨h1, _⟩; exact hu h1
+  simp only [staircase, delayNN, delay_apply, if_neg hu0,
+    if_neg hs0, if_neg hus0, min_top_right]
+  rw [← ENNReal.ofReal_add (le_max_right _ _)
+    (le_max_right _ _)]
+  apply ENNReal.ofReal_le_ofReal
+  have hnk : ⌈((u:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
+    Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
+      (by linarith [s.coe_nonneg]))
+  have hmk : ⌈((s:ℝ)+J)/P⌉
+      ≤ ⌈((u:ℝ)+(s:ℝ)+J)/P⌉ :=
+    Int.ceil_mono ((div_le_div_iff_of_pos_right hP).2
+      (by linarith [u.coe_nonneg]))
+  exact clamp_super (h:ℝ) h.coe_nonneg _ _ _ hnk hmk
+    (staircase_ceil_super P hP J hJ u s)
 
 /-- The token-bucket is its own subadditive closure. -/
 theorem tokenBucket_closure (r b : ℝ≥0) :

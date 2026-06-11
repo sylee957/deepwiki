@@ -19,6 +19,32 @@ def IsSuperadditive {D T : Type*} [Add D]
     [_root_.Add T] [LE T] (g : D → T) : Prop :=
   ∀ u s : D, g u + g s ≤ g (u + s)
 
+/-- Build `IsSubadditive g` from `g 0 = 0` and sub-additivity restricted to
+nonzero arguments. -/
+theorem IsSubadditive.of_ne_zero {D T : Type*} [AddZeroClass D]
+    [AddZeroClass T] [Preorder T] {g : D → T} (h0 : g 0 = 0)
+    (hsub : ∀ u s : D, u ≠ 0 → s ≠ 0 → g (u + s) ≤ g u + g s) :
+    IsSubadditive g := by
+  intro u s
+  rcases eq_or_ne u 0 with rfl | hu
+  · rw [zero_add, h0, zero_add]
+  · rcases eq_or_ne s 0 with rfl | hs
+    · rw [add_zero, h0, add_zero]
+    · exact hsub u s hu hs
+
+/-- Build `IsSuperadditive g` from `g 0 = 0` and super-additivity restricted to
+nonzero arguments. -/
+theorem IsSuperadditive.of_ne_zero {D T : Type*} [AddZeroClass D]
+    [AddZeroClass T] [Preorder T] {g : D → T} (h0 : g 0 = 0)
+    (hsup : ∀ u s : D, u ≠ 0 → s ≠ 0 → g u + g s ≤ g (u + s)) :
+    IsSuperadditive g := by
+  intro u s
+  rcases eq_or_ne u 0 with rfl | hu
+  · rw [zero_add, h0, zero_add]
+  · rcases eq_or_ne s 0 with rfl | hs
+    · rw [add_zero, h0, add_zero]
+    · exact hsup u s hu hs
+
 /-- Sub-additivity transports through the real coercion: `fun t => (g t : ℝ)`
 is sub-additive when `g : ℝ≥0 → ℝ≥0` is. -/
 theorem IsSubadditive.coe_real {g : ℝ≥0 → ℝ≥0} (hsub : IsSubadditive g) :
