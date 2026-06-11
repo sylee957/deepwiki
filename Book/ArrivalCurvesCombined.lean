@@ -8,7 +8,7 @@ max-plus deconvolution `ηᵘ = αᵘ ⊘̄ αˡ` is a (refined) maximal arrival
 the min-plus deconvolution `ηˡ = αˡ ⊘ αᵘ` is a (refined) minimal one. Under
 sub- and super-additivity with `αᵘ 0 = αˡ 0 = 0`, the refinement reaches a
 fixpoint in one step, so the iteration `ηᵢ₊₁ᵘ = ηᵢᵘ ⊘̄ ηᵢˡ, ηᵢ₊₁ˡ = ηᵢˡ ⊘ ηᵢᵘ`
-converges to `(ηᵘ, ηˡ)` from index `1`. The book's `ηᵘ ≥ ηˡ` hypothesis is
+stabilizes at `(ηᵘ, ηˡ)` from index `1`. The book's `ηᵘ ≥ ηˡ` hypothesis is
 derived (`etaMin_le_etaMax`), not assumed. -/
 
 namespace DeepWiki
@@ -453,8 +453,8 @@ theorem refineStep_eta_fixpoint {A αu αl : ℝ≥0 → ℝ≥0}
 
 /-- The refinement sequence stabilizes after one step: for every `i ≥ 1`,
 `(ηᵢᵘ, ηᵢˡ) = (maxDeconv αu αl, minDeconv αl αu)`. The first step reaches the refined
-pair, which `refineStep_eta_fixpoint` shows is fixed, so the iteration converges
-to the fixpoint immediately and stays there. -/
+pair, which `refineStep_eta_fixpoint` shows is fixed, so the iteration stabilizes
+at the fixpoint immediately. -/
 theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
@@ -471,7 +471,7 @@ theorem etaSeq_eq_eta_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
       rw [ih hk]
       exact refineStep_eta_fixpoint hu hl hAmono hlmono humono hsub hsup hu0 hl0
 
-/-- The maximal iterate converges: `ηᵢᵘ = maxDeconv αu αl` for all `i ≥ 1`. -/
+/-- The maximal iterate stabilizes: `ηᵢᵘ = maxDeconv αu αl` for all `i ≥ 1`. -/
 theorem etaSeqMax_eq_etaMax_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
@@ -481,7 +481,7 @@ theorem etaSeqMax_eq_etaMax_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
   congrArg Prod.fst
     (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 n hn)
 
-/-- The minimal iterate converges: `ηᵢˡ = minDeconv αl αu` for all `i ≥ 1`. -/
+/-- The minimal iterate stabilizes: `ηᵢˡ = minDeconv αl αu` for all `i ≥ 1`. -/
 theorem etaSeqMin_eq_etaMin_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
@@ -491,20 +491,27 @@ theorem etaSeqMin_eq_etaMin_of_one_le {A αu αl : ℝ≥0 → ℝ≥0}
   congrArg Prod.snd
     (etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0 n hn)
 
-/-- A sequence `s : ℕ → X` converges to `L` (in the discrete sense of being
-eventually constant): there is an index `N` past which every term equals `L`. -/
-def Converges {X : Type*} (s : ℕ → X) (L : X) : Prop :=
+/-- `IsEventuallyConst s L`: the sequence `s` is eventually constant with value
+`L` — beyond some index `N`, every term equals `L`. -/
+def IsEventuallyConst {X : Type*} (s : ℕ → X) (L : X) : Prop :=
   ∃ N, ∀ n, N ≤ n → s n = L
 
-/-- The refinement tuple sequence converges to `(ηᵘ, ηˡ) = (maxDeconv αu αl,
-minDeconv αl αu)`: it is constant from index `1` on, so `(ηᵘ, ηˡ)` is its limit.
-Both components converge simultaneously, packaged as one statement on the pair. -/
-theorem converges_etaSeq {A αu αl : ℝ≥0 → ℝ≥0}
+/-- `IsEventuallyConst s L ↔ ∀ᶠ n in Filter.atTop, s n = L`: eventual constancy
+at `L` is the `atTop` eventuality of `s n = L` (the value-pinned counterpart of
+`Filter.EventuallyConst`). -/
+theorem isEventuallyConst_iff_eventually_atTop {X : Type*} {s : ℕ → X} {L : X} :
+    IsEventuallyConst s L ↔ ∀ᶠ n in Filter.atTop, s n = L :=
+  Iff.symm Filter.eventually_atTop
+
+/-- The refinement sequence is eventually constant with value
+`(ηᵘ, ηˡ) = (maxDeconv αu αl, minDeconv αl αu)`: it is constant from index `1` on.
+Both components stabilize simultaneously, packaged as one statement on the pair. -/
+theorem isEventuallyConst_etaSeq {A αu αl : ℝ≥0 → ℝ≥0}
     (hu : IsMaximalArrivalBound A αu) (hl : IsMinimalArrivalBound A αl)
     (hAmono : Monotone A) (hlmono : Monotone αl) (humono : Monotone αu)
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
-    Converges (etaSeq αu αl) (maxDeconv αu αl, minDeconv αl αu) :=
+    IsEventuallyConst (etaSeq αu αl) (maxDeconv αu αl, minDeconv αl αu) :=
   ⟨1, etaSeq_eq_eta_of_one_le hu hl hAmono hlmono humono hsub hsup hu0 hl0⟩
 
 end DeepWiki
