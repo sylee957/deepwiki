@@ -112,21 +112,14 @@ theorem conv_toF_apply {D : Type} [_root_.AddCommMonoid D]
     (g h : D → ℝ≥0∞) (t : D) :
     ((conv (toF g) (toF h) t : MinPlusNN) : ℝ≥0∞)
       = minConv g h t := by
+  rw [conv_apply, MinPlusNN.toVal_sSup]
   apply le_antisymm
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    have hle := CompleteDioid.le_sSup _ _
-      (show (toF g u ⊗ₒ toF h s)
-          ∈ {x | ∃ u s, u + s = t
-              ∧ x = toF g u ⊗ₒ toF h s}
-        from ⟨u, s, hus, rfl⟩)
-    rw [← conv_apply] at hle
-    exact (MinPlusNN.le_iff _ _).mp hle
-  · rw [conv_apply, ← MinPlusNN.le_iff]
-    refine CompleteDioid.sSup_le _ _ ?_
-    rintro x ⟨u, s, hus, rfl⟩
-    rw [MinPlusNN.le_iff]
-    exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
+  · refine le_iInf (fun p => ?_)
+    exact iInf_le_of_le ⟨_, p.1.1, p.1.2, p.2, rfl⟩ le_rfl
+  · refine le_iInf (fun x => ?_)
+    obtain ⟨u, s, hus, hx⟩ := x.2
+    rw [hx]
+    exact iInf_le_of_le ⟨(u, s), hus⟩ le_rfl
 
 /-- `conv (toF g) (toF h) = toF (minConv g h)`. -/
 theorem conv_toF {D : Type} [_root_.AddCommMonoid D]

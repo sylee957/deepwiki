@@ -164,13 +164,10 @@ theorem increment_convPow_of_isMaximalArrivalBound {A α : ℝ≥0 → ℝ≥0�
   induction n generalizing t d with
   | zero =>
       show A (t + d) ≤ A t + (convUnit (T := MinPlusNN) d).toVal
-      rcases eq_or_ne d 0 with rfl | hd
-      · rw [convUnit, if_pos rfl]
-        show A (t + 0) ≤ A t + (0 : ℝ≥0∞)
-        rw [add_zero, add_zero]
-      · rw [convUnit, if_neg hd]
-        show A (t + d) ≤ A t + (⊤ : ℝ≥0∞)
-        rw [add_top]
+      rw [MinPlusNN.convUnit_toVal]
+      split_ifs with hd
+      · rw [hd, add_zero, add_zero]
+      · rw [add_top]
         exact le_top
   | succ n ih =>
       rw [show (convPow (toF α) (n + 1) d).toVal

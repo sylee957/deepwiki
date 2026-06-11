@@ -289,12 +289,12 @@ theorem monotone_subadditiveClosureE {g : ℝ≥0 → ℝ≥0∞}
         intro a b hab
         show (convUnit (T := MinPlusNN) a).toVal
           ≤ (convUnit (T := MinPlusNN) b).toVal
-        rcases eq_or_ne a 0 with rfl | ha
-        · rw [convUnit, if_pos rfl]
-          exact zero_le'
-        · have hb : b ≠ 0 := fun hb0 =>
-            ha (le_antisymm (hb0 ▸ hab) zero_le')
-          rw [convUnit, if_neg ha, convUnit, if_neg hb]
+        rw [MinPlusNN.convUnit_toVal, MinPlusNN.convUnit_toVal]
+        split_ifs with ha hb hb
+        · exact le_rfl
+        · exact le_top
+        · exact absurd (le_antisymm (hb ▸ hab) zero_le') ha
+        · exact le_rfl
     | succ n ih =>
         intro a b hab
         calc (convPow (toF g) (n + 1) a).toVal
@@ -316,14 +316,11 @@ theorem subadditiveClosureE_eq_self {D : Type}
   have hidem : conv (toF g) (toF g) = toF g := by
     rw [conv_toF, minConv_self_of_subadditive g hsub h0]
   have hunit : ∀ t,
-      convUnit (T := MinPlusNN) t ≼ₒ toF g t := by
-    intro t
-    rcases eq_or_ne t 0 with ht | ht
-    · subst ht
-      rw [convUnit, if_pos rfl, MinPlusNN.le_iff]
+      convUnit (T := MinPlusNN) t ≼ₒ toF g t :=
+    convUnit_le (by
+      rw [MinPlusNN.le_iff]
       show (toF g 0).toVal ≤ (eₒ : MinPlusNN).toVal
-      simp [toF, h0]
-    · rw [convUnit, if_neg ht]; exact OrderBot.bot_le _
+      simp [toF, h0])
   have hself :=
     subadditiveClosure_eq_self (toF g) hidem hunit
   funext t
@@ -390,18 +387,14 @@ theorem conv_toFmax_self (g : ℝ≥0 → WithBot ℝ≥0∞)
   apply MaxPlusNN.ext
   show ((conv (toFmax g) (toFmax g) t : MaxPlusNN)
       : WithBot ℝ≥0∞) = g t
-  rw [conv_apply]
+  rw [conv_apply, MaxPlusNN.toVal_sSup]
   apply le_antisymm
-  · rw [← MaxPlusNN.le_iff]
-    refine CompleteDioid.sSup_le _ _ ?_
-    rintro x ⟨u, s, hus, rfl⟩
-    rw [MaxPlusNN.le_iff]
+  · refine iSup_le (fun x => ?_)
+    obtain ⟨u, s, hus, hx⟩ := x.2
+    rw [hx]
     show g u + g s ≤ g t
     rw [← hus]; exact hsup u s
-  · rw [← MaxPlusNN.le_iff]
-    refine le_trans ?_
-      (CompleteDioid.le_sSup _ _ ⟨0, t, zero_add t, rfl⟩)
-    rw [MaxPlusNN.le_iff]
+  · refine le_iSup_of_le ⟨_, 0, t, zero_add t, rfl⟩ ?_
     show g t ≤ g 0 + g t
     rw [h0, zero_add]
 
@@ -412,17 +405,11 @@ theorem superadditiveClosure_eq_self
     superadditiveClosure g = g := by
   have hidem := conv_toFmax_self g hsup h0
   have hunit : ∀ t,
-      convUnit (T := MaxPlusNN) t ≼ₒ toFmax g t := by
-    intro t
-    rcases eq_or_ne t 0 with ht | ht
-    · subst ht
-      rw [convUnit, if_pos rfl, MaxPlusNN.le_iff]
-      show (eₒ : MaxPlusNN).toVal ≤ (toFmax g 0).toVal
+      convUnit (T := MaxPlusNN) t ≼ₒ toFmax g t :=
+    convUnit_le (by
+      rw [MaxPlusNN.le_iff]
       show (eₒ : MaxPlusNN).toVal ≤ g 0
-      rw [h0]
-      show (eₒ : MaxPlusNN).toVal ≤ (0 : WithBot ℝ≥0∞)
-      rfl
-    · rw [convUnit, if_neg ht]; exact OrderBot.bot_le _
+      rw [h0]; rfl)
   have hself :=
     subadditiveClosure_eq_self (toFmax g) hidem hunit
   funext t

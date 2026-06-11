@@ -8,7 +8,7 @@ and the resulting complete-dioid structure on the function space.
 namespace DeepWiki
 
 open Algebra
-open scoped Classical NNReal Algebra.Bridge
+open scoped Classical NNReal ENNReal Algebra.Bridge
 
 /-- Pointwise dioid sum of functions: `(f ⊕ g) t = f t ⊕ₒ g t`. -/
 def psum {D T : Type*} [CompleteDioid T]
@@ -38,6 +38,31 @@ def convZero {D T : Type*} [CompleteDioid T] :
 noncomputable def convUnit {D T : Type*} [Zero D]
     [CompleteDioid T] : D → T :=
   fun t => if t = 0 then eₒ else εₒ
+
+/-- Numeric reading of `convUnit` on `MinPlusNN`: `0` at the origin, `⊤` elsewhere. -/
+theorem MinPlusNN.convUnit_toVal {D : Type*} [Zero D] (t : D) :
+    (convUnit t : MinPlusNN).toVal = if t = 0 then (0 : ℝ≥0∞) else ⊤ := by
+  unfold convUnit; split <;> rfl
+
+/-- Numeric reading of `convUnit` on `MinPlusExt`: `0` at the origin, `⊤` elsewhere. -/
+theorem MinPlusExt.convUnit_toVal {D : Type*} [Zero D] (t : D) :
+    (convUnit t : MinPlusExt).toVal
+      = if t = 0 then (0 : WithTop (WithBot ℝ)) else ⊤ := by
+  unfold convUnit; split <;> rfl
+
+/-- Numeric reading of `convUnit` on `MaxPlusNN`: `0` at the origin, `⊥` elsewhere. -/
+theorem MaxPlusNN.convUnit_toVal {D : Type*} [Zero D] (t : D) :
+    (convUnit t : MaxPlusNN).toVal = if t = 0 then (0 : WithBot ℝ≥0∞) else ⊥ := by
+  unfold convUnit; split <;> rfl
+
+/-- `convUnit t ≼ₒ f t` once `eₒ ≼ₒ f 0`: off the origin `convUnit` is the
+dioid bottom `εₒ`. -/
+theorem convUnit_le {D T : Type*} [Zero D] [CompleteDioid T]
+    {f : D → T} (h0 : eₒ ≼ₒ f 0) (t : D) :
+    convUnit t ≼ₒ f t := by
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [convUnit, if_pos rfl]; exact h0
+  · rw [convUnit, if_neg ht]; exact OrderBot.bot_le _
 
 /-- Pointwise supremum of a family of functions. -/
 noncomputable def funSup {D : Type u} {T : Type u}

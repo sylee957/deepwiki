@@ -262,6 +262,14 @@ noncomputable instance :
        = ⨅ i, ((↑a : WithTop (WithBot ℝ)) + ↑(f i))
     exact RbarX.add_iInf _ _
 
+/-- `toVal` of the dioid `iSup` on `MinPlusExt` is the numeric `⨅`. -/
+theorem toVal_iSup {ι : Type} (f : ι → MinPlusExt) :
+    (Algebra.CompleteDioid.iSup f).toVal = ⨅ i, (f i).toVal := rfl
+
+/-- `toVal` of the dioid `sSup` on `MinPlusExt` is the numeric `⨅`. -/
+theorem toVal_sSup (s : Set MinPlusExt) :
+    (Algebra.CompleteDioid.sSup s).toVal = ⨅ x : s, x.val.toVal := rfl
+
 end MinPlusExt
 
 namespace MinPlusExt
@@ -341,6 +349,14 @@ noncomputable instance :
     show (↑a : ℝ≥0∞) + ⨅ i, ↑(f i)
        = ⨅ i, ((↑a : ℝ≥0∞) + ↑(f i))
     exact RplusX.add_iInf _ _
+
+/-- `toVal` of the dioid `iSup` on `MinPlusNN` is the numeric `⨅`. -/
+theorem toVal_iSup {ι : Type} (f : ι → MinPlusNN) :
+    (Algebra.CompleteDioid.iSup f).toVal = ⨅ i, (f i).toVal := rfl
+
+/-- `toVal` of the dioid `sSup` on `MinPlusNN` is the numeric `⨅`. -/
+theorem toVal_sSup (s : Set MinPlusNN) :
+    (Algebra.CompleteDioid.sSup s).toVal = ⨅ x : s, x.val.toVal := rfl
 
 end MinPlusNN
 
@@ -492,6 +508,14 @@ noncomputable instance :
        = ⨆ i, ((↑a : WithBot ℝ≥0∞) + ↑(f i))
     exact MaxX.add_iSup _ _
 
+/-- `toVal` of the dioid `iSup` on `MaxPlusNN` is the numeric `⨆`. -/
+theorem toVal_iSup {ι : Type} (f : ι → MaxPlusNN) :
+    (Algebra.CompleteDioid.iSup f).toVal = ⨆ i, (f i).toVal := rfl
+
+/-- `toVal` of the dioid `sSup` on `MaxPlusNN` is the numeric `⨆`. -/
+theorem toVal_sSup (s : Set MaxPlusNN) :
+    (Algebra.CompleteDioid.sSup s).toVal = ⨆ x : s, x.val.toVal := rfl
+
 end MaxPlusNN
 
 namespace MaxPlusExtAux
@@ -613,6 +637,14 @@ noncomputable instance :
     show (↑a : WithBot (WithTop ℝ)) + ⨆ i, ↑(f i)
        = ⨆ i, ((↑a : WithBot (WithTop ℝ)) + ↑(f i))
     exact MaxPlusExtAux.add_iSup _ _
+
+/-- `toVal` of the dioid `iSup` on `MaxPlusExt` is the numeric `⨆`. -/
+theorem toVal_iSup {ι : Type} (f : ι → MaxPlusExt) :
+    (Algebra.CompleteDioid.iSup f).toVal = ⨆ i, (f i).toVal := rfl
+
+/-- `toVal` of the dioid `sSup` on `MaxPlusExt` is the numeric `⨆`. -/
+theorem toVal_sSup (s : Set MaxPlusExt) :
+    (Algebra.CompleteDioid.sSup s).toVal = ⨆ x : s, x.val.toVal := rfl
 
 end MaxPlusExt
 

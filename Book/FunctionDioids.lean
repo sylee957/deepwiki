@@ -179,21 +179,14 @@ theorem conv_coe_min_apply
     ((conv (↑f) (↑g) t : MinPlusExt)
         : WithTop (WithBot ℝ))
       = minConv f g t := by
+  rw [conv_apply, MinPlusExt.toVal_sSup]
   apply le_antisymm
-  · refine le_iInf ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    have hle := CompleteDioid.le_sSup _ _
-      (show ((↑f : FminBar) u ⊗ₒ (↑g : FminBar) s)
-          ∈ {x | ∃ u s, u + s = t
-              ∧ x = (↑f : FminBar) u ⊗ₒ (↑g : FminBar) s}
-        from ⟨u, s, hus, rfl⟩)
-    rw [← conv_apply] at hle
-    exact (MinPlusExt.le_iff _ _).mp hle
-  · rw [conv_apply, ← MinPlusExt.le_iff]
-    refine CompleteDioid.sSup_le _ _ ?_
-    rintro x ⟨u, s, hus, rfl⟩
-    rw [MinPlusExt.le_iff]
-    exact iInf_le_of_le ⟨(u, s), hus⟩ (le_refl _)
+  · refine le_iInf (fun p => ?_)
+    exact iInf_le_of_le ⟨_, p.1.1, p.1.2, p.2, rfl⟩ le_rfl
+  · refine le_iInf (fun x => ?_)
+    obtain ⟨u, s, hus, hx⟩ := x.2
+    rw [hx]
+    exact iInf_le_of_le ⟨(u, s), hus⟩ le_rfl
 
 /-- `(f ∗ g)` on `FminBar` is the coerced `minConv f g`. -/
 theorem conv_coe_min
@@ -217,21 +210,14 @@ theorem conv_coe_max_apply
     ((conv (↑f) (↑g) t : MaxPlusExt)
         : WithBot (WithTop ℝ))
       = maxConv f g t := by
+  rw [conv_apply, MaxPlusExt.toVal_sSup]
   apply le_antisymm
-  · rw [conv_apply, ← MaxPlusExt.le_iff]
-    refine CompleteDioid.sSup_le _ _ ?_
-    rintro x ⟨u, s, hus, rfl⟩
-    rw [MaxPlusExt.le_iff]
-    exact le_iSup_of_le ⟨(u, s), hus⟩ (le_refl _)
-  · refine iSup_le ?_
-    rintro ⟨⟨u, s⟩, hus⟩
-    have hle := CompleteDioid.le_sSup _ _
-      (show ((↑f : FmaxBar) u ⊗ₒ (↑g : FmaxBar) s)
-          ∈ {x | ∃ u s, u + s = t
-              ∧ x = (↑f : FmaxBar) u ⊗ₒ (↑g : FmaxBar) s}
-        from ⟨u, s, hus, rfl⟩)
-    rw [← conv_apply] at hle
-    exact (MaxPlusExt.le_iff _ _).mp hle
+  · refine iSup_le (fun x => ?_)
+    obtain ⟨u, s, hus, hx⟩ := x.2
+    rw [hx]
+    exact le_iSup_of_le ⟨(u, s), hus⟩ le_rfl
+  · refine iSup_le (fun p => ?_)
+    exact le_iSup_of_le ⟨_, p.1.1, p.1.2, p.2, rfl⟩ le_rfl
 
 /-- `(f ∗ g)` on `FmaxBar` is the coerced `maxConv f g`. -/
 theorem conv_coe_max
@@ -405,9 +391,8 @@ theorem isSubCompleteDioid_FPlus :
   one := fun t => by
     show (0 : WithTop (WithBot ℝ))
         ≤ ((convUnit t : MinPlusExt)).toVal
-    rcases eq_or_ne t 0 with h | h
-    · rw [convUnit, if_pos h]; exact le_rfl
-    · rw [convUnit, if_neg h]; exact le_top
+    rw [MinPlusExt.convUnit_toVal]
+    split <;> simp
   iSup F hF := fun t => le_iInf (fun i => hF i t)
 
 /-- Non-neg + monotone cut out a sub-complete-dioid. -/
@@ -434,20 +419,17 @@ theorem isSubCompleteDioid_FNondecr :
     refine ⟨fun t => ?_, fun x y hxy => ?_⟩
     · show (0 : WithTop (WithBot ℝ))
           ≤ ((convUnit t : MinPlusExt)).toVal
-      rcases eq_or_ne t 0 with h | h
-      · rw [convUnit, if_pos h]; exact le_rfl
-      · rw [convUnit, if_neg h]; exact le_top
+      rw [MinPlusExt.convUnit_toVal]
+      split <;> simp
     · show ((convUnit x : MinPlusExt)).toVal
           ≤ ((convUnit y : MinPlusExt)).toVal
-      rcases eq_or_ne x 0 with hx | hx
-      · rw [convUnit, if_pos hx]
-        show (0 : WithTop (WithBot ℝ)) ≤ _
-        rcases eq_or_ne y 0 with hy | hy
-        · rw [convUnit, if_pos hy]; exact le_rfl
-        · rw [convUnit, if_neg hy]; exact le_top
-      · have hy : y ≠ 0 := by
-          rintro rfl; exact hx (le_zero_iff.mp hxy)
-        rw [convUnit, if_neg hx, convUnit, if_neg hy]
+      rw [MinPlusExt.convUnit_toVal,
+        MinPlusExt.convUnit_toVal]
+      split_ifs with hx hy hy
+      · exact le_rfl
+      · exact le_top
+      · exact absurd (le_zero_iff.mp (hy ▸ hxy)) hx
+      · exact le_rfl
   iSup F hF :=
     ⟨fun t => le_iInf (fun i => (hF i).1 t),
       fun _ _ hxy =>
@@ -520,10 +502,7 @@ theorem conv_embMin_toE (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     ((conv (embMin g) (embMin h) t : MinPlusNN) : ℝ≥0∞)
       = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           ((g p.1.1 + h p.1.2 : ℝ≥0) : ℝ≥0∞) := by
-  rw [conv_apply]
-  show (⨅ x : {x : MinPlusNN //
-        ∃ u s, u + s = t ∧ x = embMin g u ⊗ₒ embMin h s},
-        (x.val : ℝ≥0∞)) = _
+  rw [conv_apply, MinPlusNN.toVal_sSup]
   apply le_antisymm
   · refine le_iInf (fun p => ?_)
     refine iInf_le_of_le
@@ -583,11 +562,7 @@ theorem conv_embMax_toW (g h : ℝ≥0 → ℝ≥0)
       = ⨆ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
           (((g p.1.1 + h p.1.2 : ℝ≥0)
             : ℝ≥0∞) : WithBot ℝ≥0∞) := by
-  rw [conv_apply]
-  show (⨆ x : {x : MaxPlusNN //
-        ∃ u s, u + s = t ∧
-          x = embMax g u ⊗ₒ embMax h s},
-        (x.val : WithBot ℝ≥0∞)) = _
+  rw [conv_apply, MaxPlusNN.toVal_sSup]
   apply le_antisymm
   · refine iSup_le (fun x => ?_)
     obtain ⟨u, s, hus, hx⟩ := x.2

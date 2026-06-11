@@ -150,17 +150,13 @@ theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
 theorem toF_delay0 :
     toF (delayNN 0) = (convUnit : ℝ≥0 → MinPlusNN) := by
   funext t
-  rcases eq_or_ne t 0 with ht | ht
-  · subst ht
-    rw [convUnit, if_pos rfl]
-    apply MinPlusNN.ext
-    show delayNN 0 0 = ((eₒ : MinPlusNN) : ℝ≥0∞)
-    rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; rfl
-  · rw [convUnit, if_neg ht]
-    apply MinPlusNN.ext
-    show delayNN 0 t = ((εₒ : MinPlusNN) : ℝ≥0∞)
-    rw [show delayNN 0 t = ⊤ by
-      simp [delayNN, (by simpa using ht : ¬ t ≤ 0)]]; rfl
+  apply MinPlusNN.ext
+  show delayNN 0 t = (convUnit t : MinPlusNN).toVal
+  rw [MinPlusNN.convUnit_toVal]
+  split_ifs with ht
+  · rw [ht, show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]
+  · rw [show delayNN 0 t = ⊤ by
+      simp [delayNN, (by simpa using ht : ¬ t ≤ 0)]]
 
 /-- Subadditive closure of `minDeconv f (delayNN d)` is `delayNN 0 ⊓ ·`. -/
 theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
