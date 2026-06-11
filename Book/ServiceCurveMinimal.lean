@@ -239,11 +239,13 @@ theorem subset_minimalServiceRel_betaZero {S : Curve → Curve → Prop}
     ∀ A D, S A D → minimalServiceRel betaZero A D :=
   subset_minimalServiceRel (isMinimalServiceCurve_betaZero S) hSrv
 
-/-- If `beta 0 > 0`, no curve pair can satisfy `A ≥ D ≥ A ∗ beta`. The `(0,0)`
-split forces `D 0 ≥ A 0 + beta 0 > A 0 ≥ D 0`, a contradiction. -/
-theorem not_serviceCurve_of_pos {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < beta 0)
-    (A D : Curve) (hcaus : curveEReal D ≤ curveEReal A)
-    (hconv : minConv (curveEReal A) beta ≤ curveEReal D) : False := by
+/-- If `beta 0 > 0` the min-plus service relation is empty: the `(0, 0)` split
+forces `D 0 ≥ A 0 + beta 0 > A 0 ≥ D 0`, so no curve pair meets
+`A ≥ D ≥ A ∗ beta`, and assuming `beta 0 ≤ 0` is no loss. -/
+theorem not_minimalServiceRel_of_pos {beta : ℝ≥0 → EReal}
+    (h0 : (0 : EReal) < beta 0) {A D : Curve} :
+    ¬ minimalServiceRel beta A D := by
+  rintro ⟨hcaus, hconv⟩
   have hconv0 : minConv (curveEReal A) beta 0 ≤ curveEReal D 0 := hconv 0
   have hcaus0 : curveEReal D 0 ≤ curveEReal A 0 := hcaus 0
   have hsplit : minConv (curveEReal A) beta 0 = curveEReal A 0 + beta 0 :=
@@ -254,13 +256,5 @@ theorem not_serviceCurve_of_pos {beta : ℝ≥0 → EReal} (h0 : (0 : EReal) < b
   have : beta 0 ≤ 0 :=
     (EReal.addLECancellable_coe (A 0 : ℝ)).add_le_add_iff_left.mp hchain
   exact absurd this (not_le.mpr h0)
-
-/-- If `beta 0 > 0` the min-plus service relation is empty: no curve pair meets
-`A ≥ D ≥ A ∗ beta`. With `beta 0 ≤ 0` assumable, this is why it is no loss. -/
-theorem minimalServiceRel_eq_empty_of_pos {beta : ℝ≥0 → EReal}
-    (h0 : (0 : EReal) < beta 0) (A D : Curve) :
-    ¬ minimalServiceRel beta A D := by
-  rintro ⟨hcaus, hconv⟩
-  exact not_serviceCurve_of_pos h0 A D hcaus hconv
 
 end DeepWiki
