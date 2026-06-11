@@ -206,6 +206,15 @@ theorem witness_not_mem_comp :
     exact_mod_cast le_trans hlow hbound
   norm_num at hcontra
 
+/-- **The reverse containment fails**:
+`Smp(δ₃ ∗ λ₁) ⊄ Smp(λ₁) ∘ Smp(δ₃)` — the witness pair satisfies the
+end-to-end convolution bound but factors through no intermediate curve. -/
+theorem not_minimalServiceRel_le_comp_delay_rate :
+    ¬ minimalServiceRel (minConv (delayEReal 3) (rateEReal 1))
+      ≤ Relation.Comp (minimalServiceRel (delayEReal 3))
+          (minimalServiceRel (rateEReal 1)) :=
+  fun hle => witness_not_mem_comp (hle _ _ witness_mem_minimalServiceRel)
+
 /-- **The concatenation inclusion is strict**:
 `Smp(λ₁) ∘ Smp(δ₃) ⊊ Smp(δ₃ ∗ λ₁)`. The convolution is commutative, the
 composition is not — the convolution does not exactly model the
@@ -218,8 +227,7 @@ theorem comp_minimalServiceRel_lt_delay_rate :
     (comp_minimalServiceRel_le
       (isNonneg_delayEReal 3).isBddBelowReal
       (isNonneg_rateEReal 1).isBddBelowReal)
-    (fun hle => witness_not_mem_comp
-      (hle _ _ witness_mem_minimalServiceRel))
+    not_minimalServiceRel_le_comp_delay_rate
 
 /-! ## Book restatement (the inclusion may be strict)
 Let `β₁ = δ₃`, `β₂ = λ₁`, `A = γ_{2,1/2}`, and
@@ -241,5 +249,21 @@ example :
         (minimalServiceRel (rateEReal 1))
       < minimalServiceRel (minConv (delayEReal 3) (rateEReal 1)) :=
   comp_minimalServiceRel_lt_delay_rate
+
+/-! The strictness decomposes into its two directions: the concatenation
+containment `Smp(β₂) ∘ Smp(β₁) ⊆ Smp(β₁ ∗ β₂)` holds, while the reverse
+containment `Smp(β₁ ∗ β₂) ⊆ Smp(β₂) ∘ Smp(β₁)` fails — a pair satisfying
+the end-to-end bound need not factor through any intermediate curve. -/
+example :
+    (Relation.Comp (minimalServiceRel (delayEReal 3))
+        (minimalServiceRel (rateEReal 1))
+      ≤ minimalServiceRel (minConv (delayEReal 3) (rateEReal 1)))
+    ∧ ¬ (minimalServiceRel (minConv (delayEReal 3) (rateEReal 1))
+      ≤ Relation.Comp (minimalServiceRel (delayEReal 3))
+          (minimalServiceRel (rateEReal 1))) :=
+  ⟨comp_minimalServiceRel_le
+      (isNonneg_delayEReal 3).isBddBelowReal
+      (isNonneg_rateEReal 1).isBddBelowReal,
+    not_minimalServiceRel_le_comp_delay_rate⟩
 
 end DeepWiki
