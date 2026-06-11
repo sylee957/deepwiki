@@ -21,7 +21,7 @@ open Set
 /-- A curve `f : ℝ≥0 → EReal` is concave when it lies above each of its chords:
 for `p ≤ 1`, `↑p * f s + ↑(1 - p) * f t ≤ f (p * s + (1 - p) * t)`, with the
 weights coerced `ℝ≥0 → ℝ → EReal` and `EReal` multiplication/addition. -/
-def ConcaveE (f : ℝ≥0 → EReal) : Prop :=
+def IsConcaveEReal (f : ℝ≥0 → EReal) : Prop :=
   ∀ s t : ℝ≥0, ∀ p : ℝ≥0, p ≤ 1 →
     ((p : ℝ) : EReal) * f s + (((1 - p : ℝ≥0) : ℝ) : EReal) * f t
       ≤ f (p * s + (1 - p) * t)
@@ -44,7 +44,7 @@ noncomputable def toRealCurve (f : ℝ≥0 → EReal) : ℝ → ℝ :=
 
 /-- A finite concave curve has a concave real shadow on `(0, ∞) ⊆ ℝ`. -/
 theorem concaveOn_toRealCurve_of_concaveE
-    (f : ℝ≥0 → EReal) (hf : ConcaveE f)
+    (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : FiniteOnPos f) :
     ConcaveOn ℝ (Ioi (0 : ℝ)) (toRealCurve f) := by
   refine ⟨convex_Ioi 0, ?_⟩
@@ -97,7 +97,7 @@ theorem concaveOn_toRealCurve_of_concaveE
 
 /-- A finite concave curve `f : ℝ≥0 → EReal` is continuous on `(0, ∞)`. -/
 theorem continuousOn_of_concaveE_of_finite
-    (f : ℝ≥0 → EReal) (hf : ConcaveE f)
+    (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : FiniteOnPos f) :
     ContinuousOn f {x : ℝ≥0 | 0 < x} := by
   -- the real shadow is concave, hence continuous, on the open ray `(0, ∞) ⊆ ℝ`
@@ -123,7 +123,7 @@ theorem continuousOn_of_concaveE_of_finite
 
 /-- `Ioi`-set restatement: a finite concave curve is continuous on `(0, ∞)`. -/
 theorem continuousOn_Ioi_of_concaveE_of_finite
-    (f : ℝ≥0 → EReal) (hf : ConcaveE f)
+    (f : ℝ≥0 → EReal) (hf : IsConcaveEReal f)
     (hfin : FiniteOnPos f) :
     ContinuousOn f (Ioi (0 : ℝ≥0)) :=
   continuousOn_of_concaveE_of_finite f hf hfin
