@@ -174,9 +174,7 @@ theorem isMinimalArrivalBound_output
     IsMinimalArrivalBound (liftENN ⇑D)
       (minConv αl (maxDeconv (toENN betam) (toENN betaM))) := by
   -- the arrival's minimal curve is null at the origin
-  have hA0 : liftENN ⇑A 0 = 0 := by
-    show ((A 0 : ℝ≥0) : ℝ≥0∞) = 0
-    rw [show A 0 = 0 from A.zero, ENNReal.coe_zero]
+  have hA0 : liftENN ⇑A 0 = 0 := A.zero.liftENN
   have hl0 : αl 0 = 0 := by
     have hterm : liftENN ⇑A 0 + αl 0 ≤ maxConv (liftENN ⇑A) αl 0 :=
       add_le_maxConv _ _ (add_zero 0)

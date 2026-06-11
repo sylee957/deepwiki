@@ -35,10 +35,7 @@ theorem liftENN_le_of_minConv_eq {A D : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → �
   intro t
   rw [show liftENN D t = minConv (liftENN A) β t from hD t]
   refine le_trans (minConv_le_add (liftENN A) β (zero_add t)) ?_
-  have hA0 : A 0 = 0 := h0
-  have htoE : liftENN A 0 = 0 := by
-    show ((A 0 : ℝ≥0) : ℝ≥0∞) = 0
-    exact_mod_cast hA0
+  have htoE : liftENN A 0 = 0 := h0.liftENN
   rw [htoE, zero_add]
 
 /-- **Tightness of the delay bound**: sub-additive `A` is its own arrival
