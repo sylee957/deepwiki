@@ -76,6 +76,7 @@ import Book.ServersResidualPriority
 import Book.ServersResidualGps
 import Book.ServersResidualMinimal
 import Book.ServersResidualStrictness
+import Book.ServersResidualOutput
 import Book.ServersResidualEdf
 
 /-!

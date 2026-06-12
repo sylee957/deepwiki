@@ -299,9 +299,10 @@ An `n`-server offering a strict service curve `β` whose arrival
 processes have arrival curves `αᵢ`: the residual server for flow `i`
 offers the min-plus service curve `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`, i.e.
 `Dᵢ ≥ Aᵢ ∗ βᵢ`. The strict aggregate hypothesis is essential
-(`not_forall_minConv_residualCurve_le_of_minimal_aggregate`); the book
-also shows the conclusion cannot be upgraded to strict (that refutation
-is still owed). If instead the aggregate departure process
+(`not_forall_minConv_residualCurve_le_of_minimal_aggregate`); the
+conclusion also cannot be upgraded to strict
+(`not_forall_add_residualCurve_le_of_strict_aggregate`). If instead
+the aggregate departure process
 of the cross-traffic is constrained by `α`, the residual server offers
 the *strict* service curve `[β − α]⁺↑`. -/
 example {ι : Type*} [Fintype ι]
