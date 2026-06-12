@@ -31,8 +31,13 @@ theorem IsMaximalArrivalBound.inf {T : Type*} [Add T]
   exact le_min (h t d) (h' t d)
 
 /-- **Maximal arrival bounds through a one-sided sandwich**: a process
-within `c` below `A` keeps `A`'s maximal arrival bound up to `+ c`. -/
-theorem isMaximalArrivalBound_of_sandwich {A D α : ℝ≥0 → ℝ≥0} {c : ℝ≥0}
+within `c` below `A` keeps `A`'s maximal arrival bound up to `+ c`
+(over any conditionally complete lattice with `⊥` and monotone `+`,
+e.g. `ℝ≥0` or `EReal`). -/
+theorem isMaximalArrivalBound_of_sandwich {T : Type*}
+    [_root_.AddCommMonoid T] [ConditionallyCompleteLattice T]
+    [OrderBot T] [AddLeftMono T] [AddRightMono T]
+    {A D α : ℝ≥0 → T} {c : T}
     (hc : ∀ t, D t ≤ A t) (hsand : ∀ t, A t ≤ D t + c)
     (h : IsMaximalArrivalBound A α) :
     IsMaximalArrivalBound D (fun d => α d + c) := by

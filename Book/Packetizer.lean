@@ -235,6 +235,14 @@ level. -/
 theorem mem_packetizerRel_iff {L : ℕ → ℝ≥0} {A D : Curve} :
     packetizerRel L A D ↔ ⇑D = packetize L ⇑A := Iff.rfl
 
+/-- `packetizerRel L A D` at the `Curve` level: `D = Pᴸ(A)` as curves
+(under a packet length sequence witnessing the `Curve` structure). -/
+theorem packetizerRel_iff_eq_packetizeCurve {L : ℕ → ℝ≥0}
+    {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu) {A D : Curve} :
+    packetizerRel L A D ↔ D = packetizeCurve hL A :=
+  ⟨fun hp => Curve.ext fun t => congrFun hp t,
+    fun hp => by subst hp; rfl⟩
+
 /-- `S` is an `L`-packetizer: every pair's output is the packetized
 input. -/
 def IsPacketizer (L : ℕ → ℝ≥0) (S : Curve → Curve → Prop) : Prop :=
@@ -253,9 +261,9 @@ theorem isPacketizer_packetizerRel (L : ℕ → ℝ≥0) :
 /-- **A packetizer is a server**: causal and left-total. -/
 theorem isServer_packetizerRel {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     (hL : IsPacketLengthSeq L ll lu) : IsServer (packetizerRel L) :=
-  ⟨fun A D hp => fun t => by
-      rw [show D t = packetize L ⇑A t from congrFun hp t]
-      exact packetize_le A.mono L t,
+  ⟨fun A D hp => by
+      rw [(packetizerRel_iff_eq_packetizeCurve hL).mp hp]
+      exact packetizeCurve_le hL A,
     fun A => ⟨packetizeCurve hL A, rfl⟩⟩
 
 /-! ## Book restatement (a packetizer is a server with unit buffer)

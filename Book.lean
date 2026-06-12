@@ -53,7 +53,6 @@ import Book.ServiceCurveStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.Packetizer
-import Book.PacketizerConcatenation
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
 import Book.ServersConcatenationStrict
@@ -62,6 +61,7 @@ import Book.ServersControlTandem
 import Book.ServersControlFeedback
 import Book.ServersControlFeedbackWindow
 import Book.ArrivalCurvesShaper
+import Book.PacketizerConcatenation
 import Book.ArrivalCurvesShaperGreedy
 import Book.ArrivalCurvesOutput
 import Book.DeviationsBoundsTight
