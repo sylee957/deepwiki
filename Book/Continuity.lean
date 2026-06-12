@@ -82,6 +82,14 @@ theorem continuous_iff_left_right
     exact continuousAt_iff_continuous_left'_right'.mpr
       ⟨hl t, hr t⟩
 
+/-- A finite sum of left-continuous functions into a commutative
+topological additive monoid is left-continuous. -/
+theorem isLeftContinuous_sum {ι X : Type*} [TopologicalSpace X]
+    [_root_.AddCommMonoid X] [ContinuousAdd X] (s : Finset ι)
+    {f : ι → ℝ≥0 → X} (hf : ∀ i ∈ s, IsLeftContinuous (f i)) :
+    IsLeftContinuous (fun x => ∑ i ∈ s, f i x) := fun t =>
+  tendsto_finsetSum s fun i hi => hf i hi t
+
 /-- ε–δ left-continuity at `t` for `ℝ≥0∞`-valued `g` (finite/infinite cases). -/
 def IsLeftContinuousAtEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=

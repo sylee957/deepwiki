@@ -69,6 +69,7 @@ import Book.ServersRate
 import Book.ArrivalCurvesPeriodic
 import Book.ArrivalCurvesAggregate
 import Book.ServersMimo
+import Book.ServersResidual
 
 /-!
 # DeepWiki — autoformalized mathematics
