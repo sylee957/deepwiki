@@ -53,6 +53,7 @@ import Book.ServiceCurveStrict
 import Book.ServiceCurveWeaklyStrict
 import Book.ServiceCurveVariableCapacity
 import Book.ServiceCurveVariableCapacityStart
+import Book.ServiceCurveVariableCapacityStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.Packetizer
