@@ -17,7 +17,9 @@ open scoped Classical NNReal ENNReal
 /-- **WRR through packet curves**: on each backlogged period of flow
 `i` there is a round count `p` granting flow `i` at least `Lᵢˡ(p·wᵢ)`
 (its packets in `p` complete rounds, priced by the lower packet curve)
-while every other flow takes at most `Lⱼᵘ((p+1)·wⱼ)`. -/
+while every other flow takes at most `Lⱼᵘ((p+1)·wⱼ)`. Degenerate
+periods `s = t` force `∃ p, Lᵢˡ(p·wᵢ) = 0` — satisfied by book-valid
+lower curves, whose empty-window instance forces `Lᵢˡ(0) = 0`. -/
 def IsWrrPackets {ι : Type*} (w : ι → ℕ) (Ll Lu : ι → ℕ → ℝ≥0)
     (A D : ι → ℝ≥0 → ℝ≥0) : Prop :=
   ∀ i : ι, ∀ s t : ℝ≥0, s ≤ t →
@@ -25,6 +27,24 @@ def IsWrrPackets {ι : Type*} (w : ι → ℕ) (Ll Lu : ι → ℕ → ℝ≥0)
     ∃ p : ℕ,
       (D i s + Ll i (p * w i) ≤ D i t)
       ∧ ∀ j, j ≠ i → D j t ≤ D j s + Lu j ((p + 1) * w j)
+
+/-- Degenerate-interval elim: the `s = t` instance of the coupling
+forces the lower packet curve to vanish at some sampled multiple. -/
+theorem IsWrrPackets.exists_ll_eq_zero {ι : Type*} {w : ι → ℕ}
+    {Ll Lu : ι → ℕ → ℝ≥0} {A D : ι → ℝ≥0 → ℝ≥0}
+    (h : IsWrrPackets w Ll Lu A D) (i : ι) :
+    ∃ p : ℕ, Ll i (p * w i) = 0 := by
+  obtain ⟨p, hown, -⟩ := h i 0 0 le_rfl (by simp [IsBacklogged])
+  exact ⟨p, nonpos_iff_eq_zero.mp (by simpa using hown)⟩
+
+/-- Model witness: the zero pair satisfies the packet-curve coupling
+for every lower curve with `Lᵢˡ(0) = 0`. -/
+theorem isWrrPackets_zero {ι : Type*} {w : ι → ℕ}
+    {Ll Lu : ι → ℕ → ℝ≥0} (hLl0 : ∀ i, Ll i 0 = 0) :
+    IsWrrPackets w Ll Lu (fun _ _ => 0) (fun _ _ => 0) := by
+  intro i s t hst hbl
+  refine ⟨0, ?_, fun j hj => zero_le'⟩
+  simp [hLl0 i]
 
 /-- The linear packet curves `n ↦ n·ℓ` recover the constant-length
 coupling: `IsWrr` transports to `IsWrrPackets`. -/
@@ -57,6 +77,15 @@ def IsWrrPacketsServerN {ι : Type*} (w : ι → ℕ) (Ll Lu : ι → ℕ → �
   ∀ As Ds, S As Ds →
     IsWrrPackets w Ll Lu (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
 
+/-- A constant-length WRR `n`-server is a packet-curve WRR `n`-server
+for the linear packet curves. -/
+theorem IsWrrServerN.isWrrPacketsServerN {ι : Type*} {w : ι → ℕ}
+    {lmin lmax : ι → ℝ≥0} {S : (ι → Curve) → (ι → Curve) → Prop}
+    (h : IsWrrServerN w lmin lmax S) :
+    IsWrrPacketsServerN w (fun j n => (n : ℝ≥0) * lmin j)
+      (fun j n => (n : ℝ≥0) * lmax j) S :=
+  fun As Ds hp => (h As Ds hp).isWrrPackets
+
 /-- The WRR packet price `f`: a served amount `x` costs `x` plus the
 other flows' worst admissible per-round charge,
 `⨆_{p : Lᵢˡ(p·wᵢ) ≤ x} ∑_{j≠i} Lⱼᵘ((p+1)·wⱼ)`. -/
@@ -81,6 +110,24 @@ theorem wrrPacketsPrice_mono {ι : Type*} [Fintype ι] (w : ι → ℕ)
   intro x y hxy
   exact add_le_add hxy
     (iSup₂_le fun p hp => le_iSup₂_of_le p (hp.trans hxy) le_rfl)
+
+/-- Intro: any admissible round count bounds the price from below,
+`x + ∑_{j≠i} Lⱼᵘ((p+1)·wⱼ) ≤ f x` once `Lᵢˡ(p·wᵢ) ≤ x`. -/
+theorem add_le_wrrPacketsPrice {ι : Type*} [Fintype ι] {w : ι → ℕ}
+    {Ll Lu : ι → ℕ → ℝ≥0} {i : ι} {x : ℝ≥0∞} (p : ℕ)
+    (hadm : (Ll i (p * w i) : ℝ≥0∞) ≤ x) :
+    x + ∑ j ∈ Finset.univ.erase i, (Lu j ((p + 1) * w j) : ℝ≥0∞)
+      ≤ wrrPacketsPrice w Ll Lu i x :=
+  add_le_add le_rfl (le_iSup₂_of_le p hadm le_rfl)
+
+/-- Elim: a uniform bound on the admissible per-round charges bounds
+the price, `f x ≤ x + y`. -/
+theorem wrrPacketsPrice_le_add {ι : Type*} [Fintype ι] {w : ι → ℕ}
+    {Ll Lu : ι → ℕ → ℝ≥0} {i : ι} {x y : ℝ≥0∞}
+    (h : ∀ p : ℕ, (Ll i (p * w i) : ℝ≥0∞) ≤ x →
+      ∑ j ∈ Finset.univ.erase i, (Lu j ((p + 1) * w j) : ℝ≥0∞) ≤ y) :
+    wrrPacketsPrice w Ll Lu i x ≤ x + y :=
+  add_le_add le_rfl (iSup₂_le h)
 
 /-- The WRR packet-curve residual `f⁻¹ ∘ β`: the lower pseudo-inverse
 of the packet price, read back into `ℝ≥0`. -/
@@ -168,7 +215,7 @@ theorem add_wrrResidualPackets_le_of_isWrrPackets {ι : Type*}
   have hkey : ((β (t - s) : ℝ≥0) : ℝ≥0∞)
       ≤ wrrPacketsPrice w Ll Lu i
           (((Ds i) t - (Ds i) s : ℝ≥0) : ℝ≥0∞) := by
-    refine le_trans ?_ (add_le_add le_rfl (le_iSup₂_of_le p hadm le_rfl))
+    refine le_trans ?_ (add_le_wrrPacketsPrice p hadm)
     exact_mod_cast hβbound
   have hinv := pseudoInv_le_of_le_apply hkey
   have hread := ENNReal.toNNReal_mono ENNReal.coe_ne_top hinv
@@ -198,12 +245,20 @@ weights `wⱼ` and flow-`j` packets bounded by the packet curves
 `f⁻¹ ∘ β` — the book's most precise form. Here `f` prices a served
 amount `x` as `x` plus the worst admissible per-round charge
 `⨆_{p : Lᵢˡ(p·wᵢ) ≤ x} ∑_{j≠i} Lⱼᵘ((p+1)·wⱼ)`; for non-decreasing
-`Lⱼᵘ` the supremum is attained at the largest admissible round count
-`⌊g(x)/wᵢ⌋` with `g` the upper pseudo-inverse of `Lᵢˡ`, recovering
-the book's spelling `f(x) = x + ∑_{j≠i} Lⱼᵘ(wⱼ(1 + ⌊g(x)/wᵢ⌋))`, and
-`f⁻¹` is the lower pseudo-inverse `pseudoInv`. The round-count
-coupling is taken as the trajectory definition (`IsWrrPackets`); the
-linear packet curves recover `IsWrr` (`IsWrr.isWrrPackets`). -/
+`Lᵢˡ` and `Lⱼᵘ` (Definition 8.4's standing assumption), positive
+`wᵢ`, and finite `g(x)`, the supremum is attained at the largest
+admissible round count `⌊g(x)/wᵢ⌋` with `g` the upper pseudo-inverse
+of `Lᵢˡ`, recovering the book's spelling
+`f(x) = x + ∑_{j≠i} Lⱼᵘ(wⱼ(1 + ⌊g(x)/wᵢ⌋))`; in the corners `wᵢ = 0`
+or `g(x) = ∞` the sup spelling stays well-defined where the book's
+expression is not, and the theorem remains sound. `f⁻¹` is the lower
+pseudo-inverse `pseudoInv`. The book's packet curves take values in
+`ℝ̄min`; they are restricted here to finite `ℝ≥0` values — the
+excluded `Lᵘ = ∞` instances are vacuous (zero residual). The
+round-count coupling is taken as the trajectory definition
+(`IsWrrPackets`); the linear packet curves recover `IsWrr`
+(`IsWrr.isWrrPackets`), and the curve-level comparison with the
+staircase form is deferred. -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {Ll Lu : ι → ℕ → ℝ≥0} {i : ι}

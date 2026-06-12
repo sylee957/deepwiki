@@ -12,8 +12,8 @@ aggregate curve yields the weight-proportional strict residual
 `(λ₁ ∗ ν) ∘ [β − Qᵢ]⁺` from the same packet-length constants
 (`wrrResidualStaircase`), of which the ratio form is the
 linearization. The book's sharpest form — the pseudo-inverse
-composition through cumulative packet curves — is the remaining
-refinement. -/
+composition through cumulative packet curves — is formalized in
+`Book.ServersResidualWrrPackets` (`wrrResidualPackets`). -/
 
 namespace DeepWiki
 
@@ -194,8 +194,8 @@ guaranteed the strict service curve `qᵢ/(qᵢ+Qᵢ)·[β − Qᵢ]⁺` with
 round-count coupling from the WRR algorithm; it is taken here as the
 WRR trajectory definition. The staircase convolution refinement is
 formalized below; the book's sharpest form — the pseudo-inverse
-composition through cumulative packet curves — is the remaining
-refinement.) -/
+composition through cumulative packet curves — is formalized in
+`Book.ServersResidualWrrPackets`.) -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {lmin lmax : ι → ℝ≥0} {i : ι}
