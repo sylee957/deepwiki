@@ -1,4 +1,7 @@
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Tactic.FinCases
 import Book.ServersResidual
+import Book.ServiceCurvePackets
 
 /-! # Static-priority residual service
 A preemptive static-priority server freezes a flow while strictly
@@ -267,5 +270,313 @@ example {ι : Type*} [Fintype ι] [LinearOrder ι]
   intro Ai Di hpair
   obtain ⟨As, Ds, ⟨hp, harr⟩, hA, hD⟩ := hpair
   exact h Ai Di ⟨As, Ds, ⟨hp, fun j hj => (harr j hj).2⟩, hA, hD⟩
+
+/-! ## The left-continuity of `β` is necessary
+The witness: two flows under preemptive priority served exactly one
+unit at each integer instant `0, …, 12` — all to the low-priority flow
+except the units at `2, 3, 4` — against the right-continuous step
+`β = 1_{d≥1}`. Every backlogged window of length at least `1` contains
+an integer service instant, so the aggregate strict inequality holds;
+but the high-priority burst arrives at `1⁺` and its backlogged pair
+`(1, 2]` receives nothing, while `residualCurve β 0` serves `β(1) = 1`. -/
+
+/-- The step service curve `1_{d≥1}` — not left-continuous at `1`. -/
+noncomputable def spWitnessBeta : ℝ≥0 → ℝ≥0 := fun d => if d < 1 then 0 else 1
+
+/-- High-priority witness departures: one unit at each of `2, 3, 4`. -/
+noncomputable def spWitnessDHigh : Curve :=
+  ∑ k ∈ ({2, 3, 4} : Finset ℕ), stepCurve (k : ℝ≥0) 1
+
+/-- Low-priority witness departures: one unit at each of
+`0, 1, 5, …, 12`. -/
+noncomputable def spWitnessDLow : Curve :=
+  ∑ k ∈ ({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ), stepCurve (k : ℝ≥0) 1
+
+/-- A sum of unit steps evaluates to the number of steps already
+passed. -/
+theorem sum_stepCurve_apply (s : Finset ℕ) (u : ℝ≥0) :
+    (∑ k ∈ s, stepCurve (k : ℝ≥0) 1) u
+      = ((s.filter (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0) := by
+  rw [Curve.sum_apply, Finset.card_filter]
+  push_cast
+  exact Finset.sum_congr rfl fun k _ => stepCurve_apply _ _ _
+
+/-- The witness aggregate serves one unit at every integer in
+`0, …, 12`. -/
+theorem spWitness_agg_apply (u : ℝ≥0) :
+    spWitnessDHigh u + spWitnessDLow u
+      = (((Finset.range 13).filter
+          (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0) := by
+  rw [spWitnessDHigh, spWitnessDLow, sum_stepCurve_apply,
+    sum_stepCurve_apply, ← Nat.cast_add, ← Finset.card_union_of_disjoint
+      (((by decide : Disjoint ({2, 3, 4} : Finset ℕ)
+          ({0, 1} ∪ Finset.Icc 5 12))).mono
+        (Finset.filter_subset _ _) (Finset.filter_subset _ _))]
+  congr 2
+  rw [← Finset.filter_union]
+  congr 1
+  decide
+
+/-- The step `β` is monotone (it is only left-discontinuous). -/
+theorem spWitnessBeta_mono : Monotone spWitnessBeta := by
+  intro a b hab
+  simp only [spWitnessBeta]
+  by_cases ha : a < 1
+  · by_cases hb : b < 1
+    · rw [if_pos ha, if_pos hb]
+    · rw [if_pos ha, if_neg hb]
+      exact zero_le'
+  · rw [if_neg ha, if_neg (fun hb => ha (lt_of_le_of_lt hab hb))]
+
+/-- The high-priority witness has departed nothing by time `2`. -/
+theorem spWitnessDHigh_eq_zero {u : ℝ≥0} (hu : u ≤ 2) :
+    spWitnessDHigh u = 0 := by
+  have hempty : ({2, 3, 4} : Finset ℕ).filter
+      (fun k : ℕ => (k : ℝ≥0) < u) = ∅ := by
+    rw [Finset.filter_eq_empty_iff]
+    intro k hk
+    fin_cases hk
+    all_goals
+      push_cast
+      exact not_lt.mpr (le_trans hu (by norm_num))
+  rw [spWitnessDHigh, sum_stepCurve_apply, hempty]
+  simp
+
+/-- The witness pairs are causal. -/
+theorem spWitness_causal :
+    ∀ j : Fin 2, (![spWitnessDHigh, spWitnessDLow] j)
+      ≤ (![stepCurve 1 3, stepCurve 0 10] j) := by
+  intro j
+  fin_cases j
+  · intro u
+    show spWitnessDHigh u ≤ stepCurve 1 3 u
+    rw [spWitnessDHigh, sum_stepCurve_apply, stepCurve_apply]
+    by_cases h1 : (1 : ℝ≥0) < u
+    · rw [if_pos h1]
+      calc ((({2, 3, 4} : Finset ℕ).filter
+            (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0)
+          ≤ ((({2, 3, 4} : Finset ℕ).card : ℕ) : ℝ≥0) := by
+            exact_mod_cast Finset.card_le_card (Finset.filter_subset _ _)
+        _ = 3 := by norm_num
+    · have hempty : ({2, 3, 4} : Finset ℕ).filter
+          (fun k : ℕ => (k : ℝ≥0) < u) = ∅ := by
+        rw [Finset.filter_eq_empty_iff]
+        intro k hk
+        fin_cases hk
+        all_goals
+          push_cast
+          exact not_lt.mpr (le_trans (not_lt.mp h1) (by norm_num))
+      rw [if_neg h1, hempty]
+      simp
+  · intro u
+    show spWitnessDLow u ≤ stepCurve 0 10 u
+    rw [spWitnessDLow, sum_stepCurve_apply, stepCurve_apply]
+    by_cases h0 : (0 : ℝ≥0) < u
+    · rw [if_pos h0]
+      calc ((( ({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ)).filter
+            (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0)
+          ≤ ((({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ).card : ℕ) : ℝ≥0) := by
+            exact_mod_cast Finset.card_le_card (Finset.filter_subset _ _)
+        _ = 10 := by
+            rw [show ({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ).card = 10
+              from by decide]
+            norm_num
+    · have hempty : (({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ)).filter
+          (fun k : ℕ => (k : ℝ≥0) < u) = ∅ :=
+        Finset.filter_eq_empty_iff.mpr fun k _ hlt =>
+          h0 (lt_of_le_of_lt zero_le' hlt)
+      rw [if_neg h0, hempty]
+      simp
+
+/-- The witness aggregate obeys the strict step inequality: every
+backlogged window of length at least `1` contains a service instant. -/
+theorem spWitness_strict : ∀ s t : ℝ≥0, s ≤ t →
+    IsBacklogged
+      (fun x => ∑ j, (![stepCurve 1 3, stepCurve 0 10] j) x)
+      (fun x => ∑ j, (![spWitnessDHigh, spWitnessDLow] j) x)
+      (Set.Ioc s t) →
+    (∑ j, (![spWitnessDHigh, spWitnessDLow] j) s) + spWitnessBeta (t - s)
+      ≤ ∑ j, (![spWitnessDHigh, spWitnessDLow] j) t := by
+  intro s t hst hbl
+  have hsum : ∀ x : ℝ≥0, (∑ j, (![spWitnessDHigh, spWitnessDLow] j) x)
+      = (((Finset.range 13).filter
+          (fun k : ℕ => (k : ℝ≥0) < x)).card : ℝ≥0) := by
+    intro x
+    rw [Fin.sum_univ_two]
+    exact spWitness_agg_apply x
+  have hmono : ((Finset.range 13).filter
+        (fun k : ℕ => (k : ℝ≥0) < s)).card
+      ≤ ((Finset.range 13).filter (fun k : ℕ => (k : ℝ≥0) < t)).card :=
+    Finset.card_le_card (Finset.monotone_filter_right _
+      (fun k _ hk => lt_of_lt_of_le hk hst))
+  by_cases hlen : t - s < 1
+  · rw [hsum, hsum, show spWitnessBeta (t - s) = 0 from if_pos hlen,
+      add_zero]
+    exact_mod_cast hmono
+  · have h1ts : (1 : ℝ≥0) ≤ t - s := not_lt.mp hlen
+    have hs1t : s + 1 ≤ t := by
+      calc s + 1 ≤ s + (t - s) := add_le_add le_rfl h1ts
+        _ = t := add_tsub_cancel_of_le hst
+    have hslt : s < t := lt_of_lt_of_le (lt_add_of_pos_right s one_pos) hs1t
+    have ht12 : t ≤ 12 := by
+      by_contra hcon
+      push Not at hcon
+      have hb : (∑ j, (![spWitnessDHigh, spWitnessDLow] j) t)
+          < ∑ j, (![stepCurve 1 3, stepCurve 0 10] j) t :=
+        hbl t ⟨hslt, le_rfl⟩
+      rw [hsum,
+        show (((Finset.range 13).filter
+            (fun k : ℕ => (k : ℝ≥0) < t)).card : ℝ≥0) = 13 from by
+          rw [Finset.filter_true_of_mem fun k hk => ?_, Finset.card_range]
+          · norm_num
+          · have hk13 : (k : ℝ≥0) ≤ 12 := by
+              have := Finset.mem_range.mp hk
+              exact_mod_cast Nat.lt_succ_iff.mp this
+            exact lt_of_le_of_lt hk13 hcon,
+        show (∑ j, (![stepCurve 1 3, stepCurve 0 10] j) t) = 13 from by
+          rw [Fin.sum_univ_two]
+          show stepCurve 1 3 t + stepCurve 0 10 t = 13
+          rw [stepCurve_apply, stepCurve_apply,
+            if_pos (lt_trans (by norm_num : (1:ℝ≥0) < 12) hcon),
+            if_pos (lt_trans (by norm_num : (0:ℝ≥0) < 12) hcon)]
+          norm_num] at hb
+      exact absurd hb (lt_irrefl 13)
+    set k₀ : ℕ := ⌈s⌉₊ with hk₀def
+    have hsk₀ : s ≤ (k₀ : ℝ≥0) := Nat.le_ceil s
+    have hk₀t : (k₀ : ℝ≥0) < t :=
+      lt_of_lt_of_le (Nat.ceil_lt_add_one zero_le') hs1t
+    have hk₀range : k₀ ∈ Finset.range 13 := by
+      rw [Finset.mem_range]
+      have h13 : (k₀ : ℝ≥0) < 13 :=
+        lt_of_lt_of_le hk₀t (le_trans ht12 (by norm_num))
+      exact_mod_cast h13
+    rw [hsum, hsum, show spWitnessBeta (t - s) = 1 from if_neg hlen]
+    have hss : (Finset.range 13).filter (fun k : ℕ => (k : ℝ≥0) < s)
+        ⊂ (Finset.range 13).filter (fun k : ℕ => (k : ℝ≥0) < t) := by
+      refine (Finset.ssubset_iff_of_subset
+        (Finset.monotone_filter_right _
+          (fun k _ hk => lt_of_lt_of_le hk hst))).mpr ?_
+      exact ⟨k₀, Finset.mem_filter.mpr ⟨hk₀range, hk₀t⟩, fun hmem =>
+        absurd (Finset.mem_filter.mp hmem).2 (not_lt.mpr hsk₀)⟩
+    have hcard := Finset.card_lt_card hss
+    exact_mod_cast Nat.succ_le_of_lt hcard
+
+/-- The witness family is served by static priority: the premise is
+vacuous for the high-priority flow and pins the freeze window inside
+`(1, 4]` for the low one. -/
+theorem spWitness_staticPriority :
+    IsStaticPriority (fun j => ⇑(![stepCurve 1 3, stepCurve 0 10] j))
+      (fun j => ⇑(![spWitnessDHigh, spWitnessDLow] j)) := by
+  intro i s t hst hprem
+  fin_cases i
+  · exfalso
+    simp only [Fin.mk_zero] at hprem
+    have h := hprem s ⟨le_rfl, hst⟩
+    rw [show (Finset.univ.filter (fun j : Fin 2 => j < 0)) = ∅ from by
+      decide] at h
+    simp at h
+  · simp only [Fin.mk_one] at hprem
+    have hfilter : (Finset.univ.filter (fun j : Fin 2 => j < 1)) = {0} := by
+      decide
+    have hs1 : (1 : ℝ≥0) < s := by
+      have h := hprem s ⟨le_rfl, hst⟩
+      rw [hfilter, Finset.sum_singleton, Finset.sum_singleton] at h
+      by_contra hcon
+      push Not at hcon
+      rw [show (![stepCurve 1 3, stepCurve 0 10] 0) s = 0 from by
+        show stepCurve 1 3 s = 0
+        rw [stepCurve_apply, if_neg (not_lt.mpr hcon)]] at h
+      exact absurd h (not_lt.mpr zero_le')
+    have ht4 : t ≤ 4 := by
+      have h := hprem t ⟨hst, le_rfl⟩
+      rw [hfilter, Finset.sum_singleton, Finset.sum_singleton] at h
+      by_contra hcon
+      push Not at hcon
+      rw [show (![spWitnessDHigh, spWitnessDLow] 0) t = 3 from by
+          show spWitnessDHigh t = 3
+          rw [spWitnessDHigh, sum_stepCurve_apply,
+            Finset.filter_true_of_mem fun k hk => ?_]
+          · norm_num
+          · have : (k : ℝ≥0) ≤ 4 := by fin_cases hk <;> norm_num
+            exact lt_of_le_of_lt this hcon,
+        show (![stepCurve 1 3, stepCurve 0 10] 0) t = 3 from by
+          show stepCurve 1 3 t = 3
+          rw [stepCurve_apply,
+            if_pos (lt_trans (by norm_num : (1:ℝ≥0) < 4) hcon)]] at h
+      exact absurd h (lt_irrefl 3)
+    have heval : ∀ u : ℝ≥0, 1 < u → u ≤ 4 → spWitnessDLow u = 2 := by
+      intro u h1 h4
+      rw [spWitnessDLow, sum_stepCurve_apply,
+        show (({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ)).filter
+            (fun k : ℕ => (k : ℝ≥0) < u) = {0, 1} from by
+          ext k
+          rw [Finset.mem_filter, Finset.mem_union]
+          constructor
+          · rintro ⟨hk | hk, hlt⟩
+            · exact hk
+            · exfalso
+              have h5 : (5 : ℝ≥0) ≤ (k : ℝ≥0) := by
+                exact_mod_cast (Finset.mem_Icc.mp hk).1
+              exact absurd hlt
+                (not_lt.mpr (le_trans (le_trans h4 (by norm_num)) h5))
+          · intro hk
+            refine ⟨Or.inl hk, ?_⟩
+            have h1k : (k : ℝ≥0) ≤ 1 := by
+              fin_cases hk <;> norm_num
+            exact lt_of_le_of_lt h1k h1]
+      norm_num
+    show spWitnessDLow t = spWitnessDLow s
+    rw [heval t (lt_of_lt_of_le hs1 hst) ht4,
+      heval s hs1 (le_trans hst ht4)]
+
+/-- **The book's static-priority residual fails without left-continuity
+of `β`**: the universally quantified statement mirroring
+`add_residualCurve_le_of_isStaticPriority` with `hβlc` removed is
+false. -/
+theorem not_forall_add_residualCurve_le_of_isStaticPriority :
+    ¬ ∀ (ι : Type) [Fintype ι] [LinearOrder ι]
+      (As Ds : ι → Curve) (β : ℝ≥0 → ℝ≥0) (α : ι → ℝ≥0 → ℝ≥0),
+      (∀ j, Ds j ≤ As j) →
+      (∀ s t, s ≤ t →
+        IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+          (Set.Ioc s t) →
+        (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t) →
+      IsStaticPriority (fun j => ⇑(As j)) (fun j => ⇑(Ds j)) →
+      ∀ i, (∀ j, j < i → IsMaximalArrivalBound ⇑(As j) (α j)) →
+      ∀ s t : ℝ≥0, s ≤ t →
+      IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t) →
+      (Ds i) s + residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.filter (fun j => j < i), α j v) (t - s)
+      ≤ (Ds i) t := by
+  intro h
+  have hbad := h (Fin 2) ![stepCurve 1 3, stepCurve 0 10]
+    ![spWitnessDHigh, spWitnessDLow] spWitnessBeta (fun _ _ => 0)
+    spWitness_causal spWitness_strict spWitness_staticPriority 0
+    (fun j hj => absurd hj (not_lt.mpr (Fin.zero_le j)))
+    1 2 (by norm_num)
+    (fun u hu => by
+      show spWitnessDHigh u < stepCurve 1 3 u
+      rw [spWitnessDHigh_eq_zero hu.2, stepCurve_apply, if_pos hu.1]
+      norm_num)
+  rw [show (![spWitnessDHigh, spWitnessDLow] 0) = spWitnessDHigh from rfl,
+    spWitnessDHigh_eq_zero (by norm_num : (1 : ℝ≥0) ≤ 2),
+    spWitnessDHigh_eq_zero le_rfl, zero_add] at hbad
+  have hres : (1 : ℝ≥0) ≤ residualCurve spWitnessBeta
+      (fun v => ∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0),
+        (fun _ _ => (0 : ℝ≥0)) j v) ((2 : ℝ≥0) - 1) := by
+    have h21 : (2 : ℝ≥0) - 1 = 1 := tsub_eq_of_eq_add (by norm_num)
+    rw [h21]
+    have hb := tsub_le_residualCurve
+      (β := spWitnessBeta)
+      (α := fun v => ∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0),
+        (fun _ _ => (0 : ℝ≥0)) j v)
+      (closureBddAbove_tsub_of_monotone spWitnessBeta_mono)
+      (le_refl (1 : ℝ≥0))
+    refine le_trans (le_of_eq ?_) hb
+    show (1 : ℝ≥0) = spWitnessBeta 1
+        - (∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0), (0 : ℝ≥0))
+    rw [show spWitnessBeta 1 = 1 from if_neg (lt_irrefl 1),
+      Finset.sum_const_zero, tsub_zero]
+  exact absurd (le_trans hres hbad) (by norm_num)
 
 end DeepWiki
