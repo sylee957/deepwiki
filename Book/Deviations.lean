@@ -159,6 +159,23 @@ theorem hDev_mono {D V R : Type*} [Add D] [Preorder V] [CompleteLattice R]
     (hDev f' g' : R) ≤ hDev f g :=
   iSup_le fun t => le_iSup_of_le t (hDevAt_mono hf hg t)
 
+/-- An `⊓` with the reference function drops from the horizontal deviation:
+for monotone `f`, `hDevAt f (f ⊓ g) t = hDevAt f g t` — the `f`-component of
+the shift constraint holds automatically. -/
+theorem hDevAt_inf_self {V R : Type*} [SemilatticeInf V] [CompleteLattice R]
+    [CoeTC ℝ≥0 R] {f g : ℝ≥0 → V} (hmono : Monotone f) (t : ℝ≥0) :
+    (hDevAt f (f ⊓ g) t : R) = hDevAt f g t :=
+  le_antisymm
+    (le_iInf fun d => hDevAt_le (le_inf (hmono le_self_add) d.2))
+    (le_iInf fun d => hDevAt_le (le_trans d.2 inf_le_right))
+
+/-- An `⊓` with the reference function drops from the horizontal deviation,
+sup form: for monotone `f`, `hDev f (f ⊓ g) = hDev f g`. -/
+theorem hDev_inf_self {V R : Type*} [SemilatticeInf V] [CompleteLattice R]
+    [CoeTC ℝ≥0 R] {f g : ℝ≥0 → V} (hmono : Monotone f) :
+    (hDev f (f ⊓ g) : R) = hDev f g :=
+  iSup_congr fun t => hDevAt_inf_self hmono t
+
 /-! ## Sup-based form of the horizontal deviation -/
 
 /-- For nondecreasing `g`, `hDevAt f g t` — an infimum of admissible shifts —

@@ -59,6 +59,7 @@ import Book.ArrivalCurveShaper
 import Book.ArrivalCurveShaperGreedy
 import Book.ArrivalCurveOutput
 import Book.DeviationsBoundsTight
+import Book.DeviationsCompositionTight
 
 /-!
 # DeepWiki — autoformalized mathematics

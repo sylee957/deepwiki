@@ -104,6 +104,20 @@ theorem minConv_le_minConv {D T : Type*} [AddZeroClass D] [Add T]
   le_minConv fun u s hus =>
     le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
 
+/-- The `(t, 0)` split: `minConv f g t ≤ f t` when `g 0 = 0`. -/
+theorem minConv_le_left {D T : Type*} [AddZeroClass D] [AddZeroClass T]
+    [ConditionallyCompleteLattice T] [OrderBot T]
+    (f : D → T) {g : D → T} (h0 : g 0 = 0) (t : D) :
+    minConv f g t ≤ f t :=
+  le_of_le_of_eq (minConv_le_add f g (add_zero t)) (by rw [h0, add_zero])
+
+/-- The `(0, t)` split: `minConv f g t ≤ g t` when `f 0 = 0`. -/
+theorem minConv_le_right {D T : Type*} [AddZeroClass D] [AddZeroClass T]
+    [ConditionallyCompleteLattice T] [OrderBot T]
+    {f : D → T} (h0 : f 0 = 0) (g : D → T) (t : D) :
+    minConv f g t ≤ g t :=
+  le_of_le_of_eq (minConv_le_add f g (zero_add t)) (by rw [h0, zero_add])
+
 /-- `minConv` at the origin: the only splitting of `0` is `(0, 0)`, so
 `minConv f g 0 = f 0 + g 0`. -/
 theorem minConv_apply_zero {D T : Type*} [_root_.AddCommMonoid D]
