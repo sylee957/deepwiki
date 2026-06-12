@@ -101,6 +101,19 @@ def rate {V : Type*} [Semiring V] (R : V) : V → V := fun t => R * t
 @[simp] theorem rate_apply {V : Type*} [Semiring V] (R t : V) :
     rate R t = R * t := rfl
 
+/-- `rate R 0 = 0`. -/
+theorem rate_zero_eq {V : Type*} [Semiring V] (R : V) :
+    rate R 0 = 0 := mul_zero R
+
+/-- The rate curve `λ_g` is `R`-Lipschitz once `g ≤ R`. -/
+theorem rate_lipschitz {g R : ℝ≥0} (hg : g ≤ R) :
+    ∀ v w : ℝ≥0, w ≤ v → rate g v ≤ rate g w + R * (v - w) := by
+  intro v w hwv
+  have he : rate g v = rate g w + g * (v - w) := by
+    rw [rate_apply, rate_apply, ← mul_add, add_tsub_cancel_of_le hwv]
+  rw [he]
+  exact add_le_add le_rfl (mul_le_mul' hg le_rfl)
+
 /-- Rate-latency curve `t ↦ R · (t - T)`, over a semiring with subtraction. -/
 def rateLatency {V : Type*} [Semiring V] [Sub V] (R T : V) : V → V :=
   fun t => R * (t - T)
