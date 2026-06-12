@@ -3,7 +3,7 @@ import Book.Continuity
 import Book.Deviations
 
 /-! Horizontal and vertical deviations specialized to `ℝ≥0 → ℝ≥0∞`: the
-`delayNN`/`tokenBucketNN`/`rateLatencyNN` deviation values (stable and unstable), and
+`delayNN`/`tokenBucketNN`/`affine`/`rateLatencyNN` deviation values (stable and unstable), and
 the right-limit/right-continuity criteria for a positive horizontal deviation.
 The general deviations live in `Book.Deviations`; here `hDevAtENN`/`hDevENN`
 pin the shift-embedding to `(↑· : ℝ≥0 → ℝ≥0∞)`. Any curve's value at the
@@ -323,6 +323,72 @@ theorem hDevENN_tokenBucketNN_rateLatencyNN_top
     exact le_iSup
       (fun t => hDevAtENN (tokenBucketNN r b)
         (rateLatencyNN R T) t) s
+
+/-- The shift `T + b/R` is admissible for the affine curve:
+`affine r b t ≤ rateLatencyNN R T (t + (T + b/R))` when `0 < R`, `r ≤ R`. -/
+theorem affine_le_rateLatencyNN_shift (r b R T t : ℝ≥0)
+    (hR : 0 < R) (hrR : r ≤ R) :
+    affine r b t ≤ rateLatencyNN R T (t + (T + b/R)) := by
+  rw [affine_coe, rateLatencyNN_coe, ENNReal.coe_le_coe]
+  have hkey : (t + (T + b/R)) - T = t + b/R := by
+    rw [show t + (T + b/R) = (t + b/R) + T by ring,
+      add_tsub_cancel_right]
+  rw [hkey]
+  have hRbR : R * (b/R) = b := by
+    rw [mul_div_assoc', mul_comm, mul_div_assoc,
+      div_self hR.ne', mul_one]
+  calc (r*t+b : ℝ≥0) ≤ R*t + b := by gcongr
+    _ = R*(t + b/R) := by rw [mul_add, hRbR]
+
+/-- `hDevENN (affine r b) βRT ≤ T + b/R` (`0 < R`, `r ≤ R`). -/
+theorem hDevENN_affine_rateLatencyNN_le (r b R T : ℝ≥0)
+    (hR : 0 < R) (hrR : r ≤ R) :
+    hDevENN (affine r b) (rateLatencyNN R T)
+      ≤ ((T + b/R : ℝ≥0):ℝ≥0∞) := by
+  refine hDev_le fun t => ?_
+  exact hDevAt_le (affine_le_rateLatencyNN_shift r b R T t hR hrR)
+
+/-- `T + b/R ≤ hDevENN (affine r b) βRT` (`0 < R`, `0 < b`): the origin value
+`b` already forces the full shift. -/
+theorem hDevENN_affine_rateLatencyNN_ge (r b R T : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) :
+    ((T + b/R : ℝ≥0):ℝ≥0∞)
+      ≤ hDevENN (affine r b) (rateLatencyNN R T) := by
+  have h0 : ((T + b/R : ℝ≥0):ℝ≥0∞)
+      ≤ hDevAtENN (affine r b) (rateLatencyNN R T) 0 := by
+    refine le_hDevAtENN fun d hd => ?_
+    rw [affine_zero_eq, zero_add, rateLatencyNN_coe,
+      ENNReal.coe_le_coe] at hd
+    have hTd : T ≤ d := by
+      by_contra hlt
+      rw [not_le] at hlt
+      rw [tsub_eq_zero_of_le hlt.le, mul_zero] at hd
+      exact absurd hd (not_le.mpr hb)
+    have hdiv : b/R ≤ d - T := by
+      rw [div_le_iff₀ hR, mul_comm]; exact hd
+    calc T + b/R ≤ T + (d - T) := add_le_add le_rfl hdiv
+      _ = d := add_tsub_cancel_of_le hTd
+  refine le_trans h0 ?_
+  unfold hDevENN hDev
+  exact le_iSup _ 0
+
+/-- `hDevENN (affine r b) βRT = T + b/R` (stable case) — the affine curve's
+deviation agrees with the token bucket's. -/
+theorem hDevENN_affine_rateLatencyNN (r b R T : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
+    hDevENN (affine r b) (rateLatencyNN R T)
+      = ((T + b/R : ℝ≥0):ℝ≥0∞) :=
+  le_antisymm
+    (hDevENN_affine_rateLatencyNN_le r b R T hR hrR)
+    (hDevENN_affine_rateLatencyNN_ge r b R T hR hb)
+
+/-- `hDevENN (affine r b) βRT = ⊤` when `R < r` (unstable). -/
+theorem hDevENN_affine_rateLatencyNN_top (r b R T : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (hRr : R < r) :
+    hDevENN (affine r b) (rateLatencyNN R T) = ⊤ := by
+  rw [eq_top_iff,
+    ← hDevENN_tokenBucketNN_rateLatencyNN_top r b R T hR hb hRr]
+  exact hDev_mono (fun t => tokenBucketNN_le_affine r b t) le_rfl
 
 /-- `vDev (tokenBucketNN r b) (delayNN d) = r*d + b` for `d > 0`. -/
 theorem vDev_tokenBucketNN_delay (r b d : ℝ≥0)

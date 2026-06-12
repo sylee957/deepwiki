@@ -190,6 +190,13 @@ theorem delayNN_mono (d : ℝ≥0) : Monotone (delayNN d) := by
 theorem rateNN_mono (R : ℝ≥0) : Monotone (rateNN R) := by
   intro a b hab; simp only [rateNN, rate]; gcongr
 
+/-- `rateLatencyNN R T` is monotone. -/
+theorem rateLatencyNN_mono (R T : ℝ≥0) : Monotone (rateLatencyNN R T) := by
+  intro a b hab
+  simp only [rateLatencyNN]
+  exact _root_.mul_le_mul_right
+    (by exact_mod_cast tsub_le_tsub_right hab T) _
+
 /-- `delayNN d ∗ delayNN d' = delayNN (d + d')`. -/
 theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
     minConv (delayNN d) (delayNN d') = delayNN (d + d') := by
