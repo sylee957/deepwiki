@@ -168,6 +168,76 @@ theorem minConv_pgpsResidual_rate_le_of_isPgpsTracking
   minConv_pgpsResidual_le_of_isPgpsTracking hAlc hDlc h0 hA0
     (by rw [rate_apply, mul_zero]) hcD hstrict hp (rate_lipschitz hg) t
 
+/-! ## Vertical closeness does not suffice -/
+
+/-- The refutation flow: arrivals and reference departures both
+`min(·, 1)` — never backlogged, so *any* null-at-origin curve is
+vacuously strict for the reference pair. -/
+noncomputable def pgpsWitnessFlow : ℝ≥0 → ℝ≥0 := fun x => min x 1
+
+/-- The witness reference pair is strict for every null-at-origin
+curve (its backlog is empty). -/
+theorem pgpsWitnessFlow_strict {β : ℝ≥0 → ℝ≥0} (hβ0 : β 0 = 0) :
+    ∀ s t, s ≤ t →
+      IsBacklogged pgpsWitnessFlow pgpsWitnessFlow (Set.Ioc s t) →
+      pgpsWitnessFlow s + β (t - s) ≤ pgpsWitnessFlow t := by
+  intro s t hst hbl
+  rcases eq_or_lt_of_le hst with rfl | hlt
+  · rw [tsub_self, hβ0, add_zero]
+  · exact absurd (hbl t ⟨hlt, le_rfl⟩) (lt_irrefl _)
+
+/-- The witness convolution stays above `1/2` at `t = 2`: every split
+pays either the arrival half or the residual half. -/
+theorem le_minConv_pgpsWitnessFlow :
+    (2⁻¹ : ℝ≥0) ≤ minConv pgpsWitnessFlow (pgpsResidual (rate 1) 1) 2 := by
+  refine le_minConv fun u v huv => ?_
+  rw [pgpsResidual_apply, rate_apply, one_mul]
+  rcases le_total (2⁻¹ : ℝ≥0) u with hu | hu
+  · exact le_trans (le_min hu (by norm_num)) le_self_add
+  · have hv : (2 : ℝ≥0) - u = v := by
+      rw [← huv, add_tsub_cancel_left]
+    have hv32 : (3 / 2 : ℝ≥0) ≤ v := by
+      rw [← hv]
+      refine le_tsub_of_add_le_right ?_
+      calc (3 / 2 : ℝ≥0) + u ≤ 3 / 2 + 2⁻¹ := add_le_add le_rfl hu
+        _ = 2 := by norm_num
+    refine le_trans ?_ le_add_self
+    refine le_tsub_of_add_le_right ?_
+    calc (2⁻¹ : ℝ≥0) + 1 = 3 / 2 := by norm_num
+      _ ≤ v := hv32
+
+/-- **Vertical closeness is not enough**: replacing the horizontal
+deadline by the book's carried bound `D ≤ D̂ + ℓᵘ` (with PGPS
+causality) refutes the universally quantified conclusion — the
+hypotheses mirror `minConv_pgpsResidual_le_of_isPgpsTracking`
+verbatim, with only the tracking field swapped. Witness: the
+never-backlogged flow `min(·, 1)` against the zero PGPS departure,
+with `β = λ₁`, `R = ℓᵘ = 1`, refuted at `t = 2`. -/
+theorem not_forall_minConv_pgpsResidual_le_of_closeness :
+    ¬ ∀ (A D Dh : ℝ≥0 → ℝ≥0) (β : ℝ≥0 → ℝ≥0) (R lu : ℝ≥0),
+      IsLeftContinuous A → IsLeftContinuous D →
+      A 0 = D 0 → A 0 = 0 → β 0 = 0 →
+      (∀ x, D x ≤ A x) →
+      (∀ s t, s ≤ t → IsBacklogged A D (Set.Ioc s t) →
+        D s + β (t - s) ≤ D t) →
+      Dh ≤ A → (∀ x, D x ≤ Dh x + lu) →
+      (∀ v w, w ≤ v → β v ≤ β w + R * (v - w)) →
+      ∀ t, minConv A (pgpsResidual β lu) t ≤ Dh t := by
+  intro h
+  have hlc : IsLeftContinuous pgpsWitnessFlow :=
+    isLeftContinuous_of_continuous _
+      (continuous_id.min continuous_const)
+  have hβ0 : rate (1 : ℝ≥0) 0 = 0 := by rw [rate_apply, mul_zero]
+  have hW := h pgpsWitnessFlow pgpsWitnessFlow (fun _ => 0) (rate 1)
+    1 1 hlc hlc rfl (min_eq_left zero_le') hβ0 (fun x => le_rfl)
+    (fun s t hst hbl => pgpsWitnessFlow_strict hβ0 s t hst hbl)
+    (fun x => zero_le') (fun x => by
+      rw [zero_add]
+      exact min_le_right x 1)
+    (rate_lipschitz le_rfl) 2
+  have hcontra := le_trans le_minConv_pgpsWitnessFlow hW
+  exact absurd hcontra (by norm_num)
+
 /-! ## Book restatement (PGPS residual service, Theorem 8.4 repaired)
 An `n`-server under PGPS at line rate `R` whose GPS reference offers
 flow `i` the strict service curve `βᵢᴳᴾˢ`, with packets of length at
