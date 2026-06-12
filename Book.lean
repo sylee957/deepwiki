@@ -70,6 +70,7 @@ import Book.ArrivalCurvesPeriodic
 import Book.ArrivalCurvesAggregate
 import Book.ServersMimo
 import Book.ServersResidual
+import Book.ServersResidualFifo
 
 /-!
 # DeepWiki — autoformalized mathematics
