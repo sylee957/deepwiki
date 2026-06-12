@@ -7,9 +7,10 @@ packets of at least `ℓᵢˡ` per complete round — with the other flows'
 bound of `wⱼ` packets of at most `ℓⱼᵘ` per round, and a strict
 aggregate curve yields the weight-proportional strict residual
 `qᵢ/(qᵢ+Qᵢ)·[β − Qᵢ]⁺` with `qᵢ = wᵢℓᵢˡ` and `Qᵢ = ∑_{j≠i} wⱼℓⱼᵘ`
-(`wrrResidual`). The book's sharper forms through cumulative packet
-curves — the pseudo-inverse composition and the staircase convolution
-— are the remaining refinements. -/
+(`wrrResidual`). The book's sharper forms — the pseudo-inverse
+composition through cumulative packet curves, and the staircase
+convolution `(λ₁ ∗ ν) ∘ [β − Qᵢ]⁺` built from the same packet-length
+constants — are the remaining refinements. -/
 
 namespace DeepWiki
 
@@ -188,8 +189,9 @@ weights `wⱼ` and packet lengths in `[ℓⱼˡ, ℓⱼᵘ]`: flow `i` is
 guaranteed the strict service curve `qᵢ/(qᵢ+Qᵢ)·[β − Qᵢ]⁺` with
 `qᵢ = wᵢℓᵢˡ` and `Qᵢ = ∑_{j≠i} wⱼℓⱼᵘ`. (The book derives the
 round-count coupling from the WRR algorithm; it is taken here as the
-WRR trajectory definition. The sharper packet-curve forms — the
-pseudo-inverse composition and the staircase convolution — are the
+WRR trajectory definition. The sharper forms — the pseudo-inverse
+composition through cumulative packet curves, and the staircase
+convolution from the same packet-length constants — are the
 remaining refinements.) -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
