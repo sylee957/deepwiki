@@ -94,25 +94,44 @@ theorem beta_zero_eq_of_strict {A D β : ℝ≥0 → ℝ≥0}
   rw [tsub_zero] at h
   exact le_antisymm (by rwa [add_le_iff_nonpos_right] at h) zero_le'
 
-/-- **Blind multiplexing**: if the aggregate pair obeys a strict service
-inequality for `β` and every cross-traffic arrival is `αⱼ`-constrained,
-then flow `i` is served at the min-plus residual `[β − ∑_{j≠i} αⱼ]⁺↑`:
-`Aᵢ ∗ residualCurve ≤ Dᵢ`. -/
-theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
+/-- A start-anchored (weakly strict) service bound forces `β 0 = 0`:
+the instant `0` anchors at itself. -/
+theorem beta_zero_eq_of_wstrict {A D β : ℝ≥0 → ℝ≥0}
+    (hws : ∀ w, D (start A D w) + β (w - start A D w) ≤ D w) :
+    β 0 = 0 := by
+  have h := hws 0
+  rw [show start A D 0 = 0 from
+      le_antisymm (start_le A D 0) zero_le', tsub_self] at h
+  have h0 : β 0 ≤ 0 :=
+    le_of_add_le_add_left (a := D 0) (by rwa [add_zero])
+  exact le_antisymm h0 zero_le'
+
+/-- **Blind multiplexing from weakly strict service**: the aggregate
+pair need only gain `β` from the start of each backlogged period —
+the start is constant across the window, so the anchored bound covers
+every shifted difference. Flow `i` is served at the min-plus residual
+`[β − ∑_{j≠i} αⱼ]⁺↑`: `Aᵢ ∗ residualCurve ≤ Dᵢ`. -/
+theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
+    [Fintype ι]
     {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
-    (hstrict : ∀ s t, s ≤ t →
-      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
-        (Set.Ioc s t) →
-      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    (hws : ∀ w, (∑ j, (Ds j)
+        (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) w))
+      + β (w - start (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) w)
+      ≤ ∑ j, (Ds j) w)
     {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
     (t : ℝ≥0) :
     minConv (Deviation.liftENN ⇑(As i))
         (Deviation.liftENN (residualCurve β
           (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
       ≤ ((Ds i) t : ℝ≥0∞) := by
-  have hcagg : ∀ x, (∑ j, (Ds j) x) ≤ ∑ j, (As j) x := fun x =>
-    Finset.sum_le_sum fun j _ => hc j x
+  have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 := by
+    have hA : (∑ j, (As j) 0) = 0 :=
+      Finset.sum_eq_zero fun j _ => ((As j).zero : (As j) 0 = 0)
+    have hD : (∑ j, (Ds j) 0) = 0 :=
+      Finset.sum_eq_zero fun j _ => ((Ds j).zero : (Ds j) 0 = 0)
+    rw [hA, hD]
   set s₀ : ℝ≥0 := start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) t
     with hs₀def
   have hs₀t : s₀ ≤ t := start_le _ _ t
@@ -130,31 +149,32 @@ theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
     have hut : s₀ + v ≤ t := by
       calc s₀ + v ≤ s₀ + (t - s₀) := add_le_add le_rfl hvle
         _ = t := add_tsub_cancel_of_le hs₀t
-    rcases eq_zero_or_pos v with rfl | hvpos
-    · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
-    · have hbl : IsBacklogged (fun x => ∑ j, (As j) x)
-          (fun x => ∑ j, (Ds j) x) (Set.Ioc s₀ (s₀ + v)) := fun u hu =>
-        (isBacklogged_Ioc_start hcagg t) u ⟨hu.1, hu.2.trans hut⟩
-      have hstr := hstrict s₀ (s₀ + v) le_self_add hbl
-      rw [add_tsub_cancel_left,
-        ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) s₀)
-          (Finset.mem_univ i),
-        ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) (s₀ + v))
-          (Finset.mem_univ i)] at hstr
-      -- the cross-traffic consumed at most its arrival constraint
-      have hcross : ∑ j ∈ Finset.univ.erase i, (Ds j) (s₀ + v)
-          ≤ (∑ j ∈ Finset.univ.erase i, (Ds j) s₀)
-            + ∑ j ∈ Finset.univ.erase i, α j v := by
-        rw [← Finset.sum_add_distrib]
-        refine Finset.sum_le_sum fun j hj => ?_
-        have hne : j ≠ i := Finset.ne_of_mem_erase hj
-        calc (Ds j) (s₀ + v) ≤ (As j) (s₀ + v) := hc j (s₀ + v)
-          _ ≤ (As j) s₀ + α j v :=
-            (isMaximalArrivalBound_iff_increment _ _).mp (harr j hne) s₀ v
-          _ = (Ds j) s₀ + α j v := by rw [hfloweq j]
-      exact tsub_le_of_aggregate_step hstr hcross
-        ((Ds i).mono hut) ((Ds i).mono hs₀t)
+    -- the start is constant across the window, so the anchored bound
+    -- applies at `s₀ + v` with anchor `s₀`
+    have hstartv : start (fun x => ∑ j, (As j) x)
+        (fun x => ∑ j, (Ds j) x) (s₀ + v) = s₀ := by
+      rw [hs₀def]
+      exact start_eq_start_of_le h0agg
+        (by rw [← hs₀def]; exact le_self_add) hut
+    have hstr := hws (s₀ + v)
+    rw [hstartv, add_tsub_cancel_left,
+      ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) s₀)
+        (Finset.mem_univ i),
+      ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) (s₀ + v))
+        (Finset.mem_univ i)] at hstr
+    -- the cross-traffic consumed at most its arrival constraint
+    have hcross : ∑ j ∈ Finset.univ.erase i, (Ds j) (s₀ + v)
+        ≤ (∑ j ∈ Finset.univ.erase i, (Ds j) s₀)
+          + ∑ j ∈ Finset.univ.erase i, α j v := by
+      rw [← Finset.sum_add_distrib]
+      refine Finset.sum_le_sum fun j hj => ?_
+      have hne : j ≠ i := Finset.ne_of_mem_erase hj
+      calc (Ds j) (s₀ + v) ≤ (As j) (s₀ + v) := hc j (s₀ + v)
+        _ ≤ (As j) s₀ + α j v :=
+          (isMaximalArrivalBound_iff_increment _ _).mp (harr j hne) s₀ v
+        _ = (Ds j) s₀ + α j v := by rw [hfloweq j]
+    exact tsub_le_of_aggregate_step hstr hcross
+      ((Ds i).mono hut) ((Ds i).mono hs₀t)
   -- collect the supremum and split the convolution at `s₀`
   have hkey : (Ds i) s₀
       + residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (t - s₀)
@@ -173,6 +193,29 @@ theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
     ≤ ((Ds i) t : ℝ≥0∞)
   rw [← hfloweq i, ← ENNReal.coe_add, ENNReal.coe_le_coe]
   exact hkey
+
+/-- **Blind multiplexing residual** under the strict aggregate
+hypothesis — a corollary of the weakly strict form, which is all the
+start-anchored argument ever uses. -/
+theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*}
+    [Fintype ι]
+    {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) := by
+  refine minConv_residualCurve_le_of_wstrict_aggregate hc ?_ harr t
+  intro w
+  exact hstrict (start _ _ w) w (start_le _ _ w)
+    (isBacklogged_Ioc_start
+      (fun x => Finset.sum_le_sum fun j _ => hc j x) w)
 
 /-- **Strict residual service**: if the aggregate pair obeys a strict
 service inequality for `β` and the cross-traffic *departures* are
@@ -314,6 +357,90 @@ theorem isMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
   rw [curveEReal_apply]
   exact (Deviation.minConv_toENN_le_coe_iff (As i)
     (isNonneg_liftEReal _) ((Ds i) t) t).mp h
+
+/-- A weakly strict aggregate service curve gives the start-anchored
+sum form on each served family — the `hws` premise of the weakly
+strict residual theorem. -/
+theorem IsWeaklyStrictMinimalServiceCurve.sum_wstrict {ι : Type*}
+    [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds) :
+    ∀ w, (∑ j, (Ds j)
+        (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) w))
+      + β (w - start (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) w)
+      ≤ ∑ j, (Ds j) w := by
+  intro w
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) w
+  rw [Curve.coe_sum, Curve.coe_sum] at h
+  exact h
+
+/-- Relation form of weakly strict blind multiplexing: the residual
+of a weakly strict aggregate is the same min-plus curve. -/
+theorem minConv_residualCurve_le_of_isWeaklyStrictMinimalServiceCurve
+    {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0}
+    (hcaus : IsCausalN S)
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) :=
+  minConv_residualCurve_le_of_wstrict_aggregate
+    (fun j => hcaus As Ds hp j) (hβ.sum_wstrict hp) harr t
+
+/-- **Blind multiplexing needs only weak strictness**: restricting an
+`n`-server with a weakly strict aggregate curve to pairs with
+`αⱼ`-constrained cross-traffic, the residual server for flow `i`
+offers `[β − ∑_{j≠i} αⱼ]⁺↑` as a min-plus service curve. -/
+theorem isMinimalServiceCurve_residualServer_of_wstrict {ι : Type*}
+    [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : IsCausalN S)
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S)) :
+    IsMinimalServiceCurve
+      (liftEReal (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+      (residualServer (fun A D => S A D ∧
+        ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩
+  intro t
+  have h := minConv_residualCurve_le_of_isWeaklyStrictMinimalServiceCurve
+    hcaus hβ hp harr t
+  rw [show Deviation.liftENN (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
+      = Deviation.toENN (liftEReal (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+    from (Deviation.toENN_liftEReal _).symm] at h
+  rw [curveEReal_apply]
+  exact (Deviation.minConv_toENN_le_coe_iff (As i)
+    (isNonneg_liftEReal _) ((Ds i) t) t).mp h
+
+/-! ## Book restatement (blind multiplexing, weakly strict aggregate)
+An `n`-server offering a *weakly strict* service curve `β` — the
+increment required only from the start of each backlogged period —
+whose arrival processes have arrival curves `αᵢ` still serves each
+flow `i` at the min-plus residual `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`: the
+blind-multiplexing proof only ever uses strictness at the start, so
+the strict version is a corollary of this one. The residual computed
+this way is not necessarily weakly strict. -/
+example {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : IsCausalN S)
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S)) :
+    IsMinimalServiceCurve
+      (liftEReal (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+      (residualServer (fun A D => S A D ∧
+        ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) :=
+  isMinimalServiceCurve_residualServer_of_wstrict hcaus hβ
 
 /-! ## Book restatement (blind multiplexing)
 An `n`-server offering a strict service curve `β` whose arrival
