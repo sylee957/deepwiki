@@ -94,11 +94,11 @@ theorem isBacklogged_sum_iff {ι : Type*} [Fintype ι]
 /-- A backlogged period for one flow is a backlogged period for any
 aggregate containing it (for causal families). -/
 theorem isBacklogged_sum_of_isBacklogged {ι : Type*} {s : Finset ι}
-    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ j x, D j x ≤ A j x) {I : Set ℝ≥0}
+    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ j ∈ s, ∀ x, D j x ≤ A j x) {I : Set ℝ≥0}
     {i : ι} (hi : i ∈ s) (hbl : IsBacklogged (A i) (D i) I) :
     IsBacklogged (fun x => ∑ j ∈ s, A j x) (fun x => ∑ j ∈ s, D j x) I :=
   fun u hu =>
-    Finset.sum_lt_sum (fun j _ => hc j u) ⟨i, hi, hbl u hu⟩
+    Finset.sum_lt_sum (fun j hj => hc j hj u) ⟨i, hi, hbl u hu⟩
 
 /-- **Per-flow equality at the start of an aggregate backlogged period**:
 at `start (∑ Aⱼ) (∑ Dⱼ) t` every flow has served exactly its arrivals

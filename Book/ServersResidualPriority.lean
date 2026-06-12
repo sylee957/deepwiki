@@ -9,8 +9,9 @@ flows only, flow `i` receives the strict residual
 the book's proof equates the flow's backlog at the start of the
 higher-priority busy period, which an instantaneous service burst at
 that instant can break; anchoring just inside the period and passing
-`β` through its left limit closes the gap (for `β` not left-continuous
-the statement fails — refutation ladder deferred). -/
+`β` through its left limit closes the gap. For `β` not left-continuous
+the statement fails — `not_forall` ladder to be stated in this file
+(step-`β` witness; see the restatement note). -/
 
 namespace DeepWiki
 
@@ -29,11 +30,18 @@ def IsStaticPriority {ι : Type*} [Fintype ι] [LinearOrder ι]
         < ∑ j ∈ Finset.univ.filter (fun j => j < i), A j u) →
     D i t = D i s
 
+/-- **Static-priority `n`-server**: every served family obeys the
+preemptive priority freeze. -/
+def IsStaticPriorityServerN {ι : Type*} [Fintype ι] [LinearOrder ι]
+    (S : (ι → Curve) → (ι → Curve) → Prop) : Prop :=
+  ∀ As Ds, S As Ds →
+    IsStaticPriority (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
+
 /-- **Static-priority residual service**: under preemptive SP with a
 left-continuous strict aggregate curve `β` and `αⱼ`-constrained
 higher-priority arrivals, flow `i` obeys the strict service inequality
 for `[β − ∑_{j<i} αⱼ]⁺↑` on its backlogged periods. -/
-theorem add_residualCurve_le_of_staticPriority {ι : Type*} [Fintype ι]
+theorem add_residualCurve_le_of_isStaticPriority {ι : Type*} [Fintype ι]
     [LinearOrder ι] {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
@@ -99,7 +107,7 @@ theorem add_residualCurve_le_of_staticPriority {ι : Type*} [Fintype ι]
     intro u hu
     rcases le_or_gt u s with hus | hus
     · exact hsplit Finset.univ (Finset.subset_univ F) u (hblH u ⟨hu.1, hus⟩)
-    · exact isBacklogged_sum_of_isBacklogged (fun j x => hc j x) (Finset.mem_univ i)
+    · exact isBacklogged_sum_of_isBacklogged (fun j _ x => hc j x) (Finset.mem_univ i)
         hbl u ⟨hus, hu.2⟩
   -- lower-priority flows are frozen on `(p, t]`
   have hfreezeLow : ∀ k ∈ L, ∀ s' w : ℝ≥0, p < s' → s' ≤ w → w ≤ t →
@@ -216,21 +224,20 @@ theorem add_residualCurve_le_of_staticPriority {ι : Type*} [Fintype ι]
 aggregate curve, restricted to pairs with constrained higher-priority
 arrivals, offers `[β − ∑_{j<i} αⱼ]⁺↑` as a strict service curve to the
 residual server of flow `i`. -/
-theorem isStrictMinimalServiceCurve_residualServer_of_staticPriority
+theorem isStrictMinimalServiceCurve_residualServer_of_isStaticPriority
     {ι : Type*} [Fintype ι] [LinearOrder ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
     (hcaus : IsCausalN S) (hβlc : IsLeftContinuous β)
     (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
-    (hSP : ∀ As Ds, S As Ds →
-      IsStaticPriority (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) :
+    (hSP : IsStaticPriorityServerN S) :
     IsStrictMinimalServiceCurve
       (residualCurve β
         (fun v => ∑ j ∈ Finset.univ.filter (fun j => j < i), α j v))
       (residualServer (fun As Ds => S As Ds ∧
         ∀ j, j < i → IsMaximalArrivalBound ⇑(As j) (α j)) i) := by
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
-  refine add_residualCurve_le_of_staticPriority
+  refine add_residualCurve_le_of_isStaticPriority
     (fun j => hcaus As Ds hp j) hβlc ?_ (hSP As Ds hp) harr hst hbl
   intro s' t' hst' hbl'
   have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
@@ -249,14 +256,13 @@ example {ι : Type*} [Fintype ι] [LinearOrder ι]
     {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
     (hSrv : IsServerN S) (hβlc : IsLeftContinuous β)
     (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
-    (hSP : ∀ As Ds, S As Ds →
-      IsStaticPriority (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) :
+    (hSP : IsStaticPriorityServerN S) :
     IsStrictMinimalServiceCurve
       (residualCurve β
         (fun v => ∑ j ∈ Finset.univ.filter (fun j => j < i), α j v))
       (residualServer (fun As Ds => S As Ds ∧
         ∀ j, j < i → IsMaximalArrivalCurve ⇑(As j) (α j)) i) := by
-  have h := isStrictMinimalServiceCurve_residualServer_of_staticPriority
+  have h := isStrictMinimalServiceCurve_residualServer_of_isStaticPriority
     (α := α) (i := i) hSrv.1 hβlc hβ hSP
   intro Ai Di hpair
   obtain ⟨As, Ds, ⟨hp, harr⟩, hA, hD⟩ := hpair
