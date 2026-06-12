@@ -58,6 +58,26 @@ theorem mul_le_sum_mul_of_isGps {ι : Type*} {φ : ι → ℝ≥0}
         Finset.sum_le_sum fun j _ => hgps i j s t hst hbl
     _ = (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := (Finset.sum_mul ..).symm
 
+/-- **GPS share against any aggregate**: on a backlogged period of
+flow `i`, the total weight of `J` times flow `i`'s increment
+dominates `φ i` times the `J`-aggregate increment. -/
+theorem mul_sum_le_sum_mul_of_isGps {ι : Type*} {φ : ι → ℝ≥0}
+    {As Ds : ι → Curve} {J : Finset ι}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {i : ι} {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    φ i * ((∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s)
+      ≤ (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := by
+  calc φ i * ((∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s)
+      = φ i * ∑ j ∈ J, ((Ds j) t - (Ds j) s) := by
+        congr 1
+        exact (Finset.sum_tsub_distrib J fun j _ =>
+          ((Ds j).mono hst : (Ds j) s ≤ (Ds j) t)).symm
+    _ = ∑ j ∈ J, φ i * ((Ds j) t - (Ds j) s) := Finset.mul_sum ..
+    _ ≤ ∑ j ∈ J, φ j * ((Ds i) t - (Ds i) s) :=
+        Finset.sum_le_sum fun j _ => hgps i j s t hst hbl
+    _ = (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := (Finset.sum_mul ..).symm
+
 /-- **GPS residual service over a subset** (the book's subset lemma, in
 strict-service form): with positive total weight on `J`, flow `i ∈ J`
 obeys the strict inequality for `(φᵢ/∑_{j∈J} φⱼ)·β_J`. -/

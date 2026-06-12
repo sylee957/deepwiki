@@ -81,6 +81,12 @@ theorem IsBacklogged.subset {A D : ℝ≥0 → ℝ≥0}
     (hsub : I' ⊆ I) : IsBacklogged A D I' :=
   fun t ht => h t (hsub ht)
 
+/-- Backlog over a union of intervals: both parts backlogged. -/
+theorem IsBacklogged.union {A D : ℝ≥0 → ℝ≥0} {I I' : Set ℝ≥0}
+    (h : IsBacklogged A D I) (h' : IsBacklogged A D I') :
+    IsBacklogged A D (I ∪ I') :=
+  fun u hu => hu.elim (h u) (h' u)
+
 /-- When `(t, t']` is backlogged, the start of the period of `t'` lies at or
 before `t`: equality points avoid the backlog. -/
 theorem start_le_of_isBacklogged {A D : ℝ≥0 → ℝ≥0}

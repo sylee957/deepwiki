@@ -100,6 +100,22 @@ theorem isBacklogged_sum_of_isBacklogged {ι : Type*} {s : Finset ι}
   fun u hu =>
     Finset.sum_lt_sum (fun j hj => hc j hj u) ⟨i, hi, hbl u hu⟩
 
+/-- A backlogged period of a sub-aggregate is one of any larger
+aggregate (for causal families): the extra flows only add slack. -/
+theorem isBacklogged_sum_of_isBacklogged_subset {ι : Type*}
+    {s s' : Finset ι} {A D : ι → ℝ≥0 → ℝ≥0}
+    (hc : ∀ j ∈ s', ∀ x, D j x ≤ A j x) (hsub : s ⊆ s') {I : Set ℝ≥0}
+    (hbl : IsBacklogged (fun x => ∑ j ∈ s, A j x)
+      (fun x => ∑ j ∈ s, D j x) I) :
+    IsBacklogged (fun x => ∑ j ∈ s', A j x)
+      (fun x => ∑ j ∈ s', D j x) I := by
+  intro u hu
+  show (∑ j ∈ s', D j u) < ∑ j ∈ s', A j u
+  rw [← Finset.sum_sdiff hsub, ← Finset.sum_sdiff (f := fun j => A j u) hsub]
+  exact add_lt_add_of_le_of_lt
+    (Finset.sum_le_sum fun j hj => hc j (Finset.mem_sdiff.mp hj).1 u)
+    (hbl u hu)
+
 /-- **Per-flow equality at the start of an aggregate backlogged period**:
 at `start (∑ Aⱼ) (∑ Dⱼ) t` every flow has served exactly its arrivals
 (for causal, left-continuous, null-at-origin families). -/
