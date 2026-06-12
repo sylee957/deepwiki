@@ -1,6 +1,6 @@
 import Book.ArrivalCurves
 import Book.Continuity
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Mathlib.Topology.Order.LeftRightLim
 
 /-! # Properties of a minimal arrival curve

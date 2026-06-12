@@ -39,7 +39,7 @@ import Book.ConcaveProps
 import Book.ConcaveDioid
 import Book.ConcaveSubadditive
 import Book.Servers
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Book.ArrivalCurves
 import Book.ArrivalCurvesMaximal
 import Book.ArrivalCurvesMinimal

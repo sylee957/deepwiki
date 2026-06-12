@@ -1,6 +1,6 @@
 import Book.ArrivalCurves
 import Book.Servers
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Book.ServersBacklog
 
 /-! # Strict service curves

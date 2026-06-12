@@ -2,11 +2,13 @@ import Book.FunctionDioids
 import Book.ClosuresNd
 import Book.Additivity
 
-/-!
-(min,plus) convolution specialized to real (`ℝ≥0`) functions:
-non-decreasing and super-additive closures via max-plus convolution, and the
-(min,+) sub-additive closure.
--/
+/-! # Closures over the real carriers
+Additive closures over `ℝ≥0` and `ℝ≥0∞`: the non-decreasing closure
+`ndClosure` as a max-plus convolution, the super-additive closures
+(`maxConvProjPow`/`superadditiveClosureMax` on `ℝ≥0`, unconditional
+`maxConvPow`/`superadditiveClosureMaxNN` on `ℝ≥0∞` — itself
+super-additive), and the (min,+) sub-additive closure
+`minConvProjPow`/`subadditiveClosureMin` on `ℝ≥0`. -/
 
 namespace DeepWiki
 
