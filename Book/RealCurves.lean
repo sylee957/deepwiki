@@ -239,6 +239,12 @@ theorem staircase_zero_eq (P h : ℝ≥0) (J : ℝ) :
 theorem unitStep_zero_eq (T : ℝ≥0) : unitStep T 0 = 0 := by
   simp [unitStep]
 
+/-- `rateEReal C` is monotone. -/
+theorem rateEReal_mono (C : ℝ≥0) : Monotone (rateEReal C) := by
+  intro u v huv
+  rw [rateEReal_apply, rateEReal_apply]
+  exact_mod_cast mul_le_mul_right huv C
+
 /-- `rateEReal C 0 = 0`. -/
 theorem rateEReal_zero_eq (C : ℝ≥0) : rateEReal C 0 = 0 := by
   simp [rateEReal]
