@@ -36,25 +36,48 @@ theorem IsPacketLengthSeq.nsmul_le {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     rw [succ_nsmul]
     exact le_trans (add_le_add ih le_rfl) (h.2.2 n).1
 
+/-- The candidate indices of the packetizer at `t`: the packets fully
+arrived strictly before `t`. -/
+def packetizeSet (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : Set ℕ :=
+  {n | ∃ u < t, L n ≤ A u}
+
+/-- `n ∈ packetizeSet L A t ↔ ∃ u < t, L n ≤ A u`. -/
+theorem mem_packetizeSet_iff {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0} {t : ℝ≥0}
+    {n : ℕ} : n ∈ packetizeSet L A t ↔ ∃ u < t, L n ≤ A u := Iff.rfl
+
 /-- The packetizer: at `t`, release the largest cumulative packet
 length fully arrived strictly before `t`. -/
 noncomputable def packetize (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
-  fun t => sSup (L '' {n | ∃ u < t, L n ≤ A u})
+  fun t => sSup (L '' packetizeSet L A t)
 
 /-- The packetizer's candidate values are bounded by the current
 arrivals. -/
-theorem bddAbove_packetize_image {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A)
+theorem bddAbove_image_packetizeSet {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A)
     (L : ℕ → ℝ≥0) (t : ℝ≥0) :
-    BddAbove (L '' {n | ∃ u < t, L n ≤ A u}) := by
+    BddAbove (L '' packetizeSet L A t) := by
   refine ⟨A t, ?_⟩
   rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
   exact le_trans hLn (hmono hu.le)
+
+/-- Intro: a fully-arrived packet length bounds the packetizer from
+below. -/
+theorem le_packetize {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A)
+    {n : ℕ} {t : ℝ≥0} (hn : n ∈ packetizeSet L A t) :
+    L n ≤ packetize L A t :=
+  le_csSup (bddAbove_image_packetizeSet hmono L t) ⟨n, hn, rfl⟩
+
+/-- Elim: a bound on all candidate packet lengths bounds the
+packetizer. -/
+theorem packetize_le_of_forall {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0}
+    {x t : ℝ≥0} (h : ∀ n ∈ packetizeSet L A t, L n ≤ x) :
+    packetize L A t ≤ x :=
+  csSup_le' (by rintro y ⟨n, hn, rfl⟩; exact h n hn)
 
 /-- `packetize L A 0 = 0`: nothing has arrived strictly before `0`. -/
 theorem packetize_zero (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) :
     packetize L A 0 = 0 := by
   rw [packetize,
-    show {n | ∃ u < (0 : ℝ≥0), L n ≤ A u} = ∅ from
+    show packetizeSet L A 0 = ∅ from
       Set.eq_empty_iff_forall_notMem.mpr fun n ⟨u, hu, _⟩ =>
         absurd hu (not_lt.mpr zero_le'),
     Set.image_empty, csSup_empty]
@@ -64,18 +87,16 @@ theorem packetize_zero (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) :
 `packetize L A t ≤ A t`. -/
 theorem packetize_le {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) (L : ℕ → ℝ≥0)
     (t : ℝ≥0) : packetize L A t ≤ A t :=
-  csSup_le' fun x hx => by
-    obtain ⟨n, ⟨u, hu, hLn⟩, rfl⟩ := hx
-    exact le_trans hLn (hmono hu.le)
+  packetize_le_of_forall fun _ ⟨_, hu, hLn⟩ =>
+    le_trans hLn (hmono hu.le)
 
 /-- `packetize` is monotone in time: the candidate set grows. -/
 theorem packetize_mono {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A)
     (L : ℕ → ℝ≥0) : Monotone (packetize L A) := by
   intro a b hab
-  refine csSup_le' ?_
-  rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
-  exact le_csSup (bddAbove_packetize_image hmono L b)
-    ⟨n, ⟨u, lt_of_lt_of_le hu hab, hLn⟩, rfl⟩
+  refine packetize_le_of_forall ?_
+  rintro n ⟨u, hu, hLn⟩
+  exact le_packetize hmono ⟨u, lt_of_lt_of_le hu hab, hLn⟩
 
 /-- **Attainment**: for `t > 0` the packetizer value is a cumulative
 packet length `L n`, achieved strictly before `t`, with
@@ -86,9 +107,9 @@ theorem exists_packetize_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     (ht : 0 < t) :
     ∃ n, packetize L A t = L n ∧ (∃ u < t, L n ≤ A u)
       ∧ L n ≤ A t ∧ A t ≤ L (n + 1) := by
-  have hne : {n | ∃ u < t, L n ≤ A u}.Nonempty :=
+  have hne : (packetizeSet L A t).Nonempty :=
     ⟨0, 0, ht, by rw [hL.1]; exact zero_le'⟩
-  have hbdd : BddAbove {n | ∃ u < t, L n ≤ A u} := by
+  have hbdd : BddAbove (packetizeSet L A t) := by
     refine ⟨⌊A t / ll⌋₊, ?_⟩
     rintro n ⟨u, hu, hLn⟩
     refine Nat.le_floor ?_
@@ -97,20 +118,17 @@ theorem exists_packetize_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
       _ ≤ L n := hL.nsmul_le n
       _ ≤ A u := hLn
       _ ≤ A t := hmono hu.le
-  set m := sSup {n | ∃ u < t, L n ≤ A u} with hmdef
-  have hmem : m ∈ {n | ∃ u < t, L n ≤ A u} := Nat.sSup_mem hne hbdd
+  set m := sSup (packetizeSet L A t) with hmdef
+  have hmem : m ∈ packetizeSet L A t := Nat.sSup_mem hne hbdd
   refine ⟨m, ?_, hmem, ?_, ?_⟩
-  · refine le_antisymm (csSup_le' ?_)
-      (le_csSup (bddAbove_packetize_image hmono L t)
-        (Set.mem_image_of_mem L hmem))
-    rintro x ⟨n, hn, rfl⟩
-    exact hL.monotone (le_csSup hbdd hn)
+  · refine le_antisymm (packetize_le_of_forall fun n hn =>
+      hL.monotone (le_csSup hbdd hn)) (le_packetize hmono hmem)
   · obtain ⟨u, hu, hLm⟩ := hmem
     exact le_trans hLm (hmono hu.le)
   · have hub : ∀ u ∈ Set.Iio t, A u ≤ L (m + 1) := by
       intro u hu
       by_contra hgt
-      have hmem1 : m + 1 ∈ {n | ∃ u < t, L n ≤ A u} :=
+      have hmem1 : m + 1 ∈ packetizeSet L A t :=
         ⟨u, hu, (not_le.mp hgt).le⟩
       have := le_csSup hbdd hmem1
       omega
@@ -148,8 +166,7 @@ theorem packetize_leftCont {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
       refine le_antisymm ?_ ?_
       · rw [← hP]
         exact packetize_mono hmono L hs.2
-      · exact le_csSup (bddAbove_packetize_image hmono L s)
-          ⟨n, ⟨u₀, hs.1, hLn⟩, rfl⟩
+      · exact le_packetize hmono ⟨u₀, hs.1, hLn⟩
     have htend : Filter.Tendsto (packetize L A) (𝓝[<] t) (𝓝 (L n)) := by
       refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
       filter_upwards [Ioo_mem_nhdsLT hu₀] with v hv
@@ -208,18 +225,37 @@ theorem packetizeCurve_sandwich {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
       (A.zero : A 0 = 0) A.leftCont t),
     packetize_le A.mono L t⟩
 
-/-- The packetizer server: each input is paired with its packetized
-output. -/
-def packetizerRel {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
-    (hL : IsPacketLengthSeq L ll lu) : Curve → Curve → Prop :=
-  fun A D => D = packetizeCurve hL A
+/-- The packetizer relation: the output is exactly the packetized
+input. -/
+def packetizerRel (L : ℕ → ℝ≥0) : Curve → Curve → Prop :=
+  fun A D => ⇑D = packetize L ⇑A
+
+/-- `packetizerRel L A D` unfolds to `D = Pᴸ(A)` at the function
+level. -/
+theorem mem_packetizerRel_iff {L : ℕ → ℝ≥0} {A D : Curve} :
+    packetizerRel L A D ↔ ⇑D = packetize L ⇑A := Iff.rfl
+
+/-- `S` is an `L`-packetizer: every pair's output is the packetized
+input. -/
+def IsPacketizer (L : ℕ → ℝ≥0) (S : Curve → Curve → Prop) : Prop :=
+  ∀ A D : Curve, S A D → ⇑D = packetize L ⇑A
+
+/-- `IsPacketizer L S` iff `S ≤ packetizerRel L`. -/
+theorem isPacketizer_iff_subset {L : ℕ → ℝ≥0}
+    {S : Curve → Curve → Prop} :
+    IsPacketizer L S ↔ ∀ A D : Curve, S A D → packetizerRel L A D :=
+  Iff.rfl
+
+/-- The packetizer relation is an `L`-packetizer. -/
+theorem isPacketizer_packetizerRel (L : ℕ → ℝ≥0) :
+    IsPacketizer L (packetizerRel L) := fun _ _ hp => hp
 
 /-- **A packetizer is a server**: causal and left-total. -/
 theorem isServer_packetizerRel {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
-    (hL : IsPacketLengthSeq L ll lu) : IsServer (packetizerRel hL) :=
-  ⟨fun A D hp => by
-      rw [show D = packetizeCurve hL A from hp]
-      exact packetizeCurve_le hL A,
+    (hL : IsPacketLengthSeq L ll lu) : IsServer (packetizerRel L) :=
+  ⟨fun A D hp => fun t => by
+      rw [show D t = packetize L ⇑A t from congrFun hp t]
+      exact packetize_le A.mono L t,
     fun A => ⟨packetizeCurve hL A, rfl⟩⟩
 
 /-! ## Book restatement (a packetizer is a server with unit buffer)
@@ -227,7 +263,7 @@ theorem isServer_packetizerRel {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
 `A ≥ Pᴸ(A)`, and its backlog is at most the maximum packet size:
 `A ≥ Pᴸ(A) ≥ A − ℓᵘ`. -/
 example {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu) :
-    IsServer (packetizerRel hL)
+    IsServer (packetizerRel L)
       ∧ ∀ A : Curve, ∀ t, A t - lu ≤ packetizeCurve hL A t :=
   ⟨isServer_packetizerRel hL,
     fun A t => (packetizeCurve_sandwich hL A t).1⟩
@@ -245,17 +281,15 @@ theorem packetize_packetize {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0}
     (hmono : Monotone A) :
     packetize L (packetize L A) = packetize L A := by
   funext t
-  refine le_antisymm (csSup_le' ?_) (csSup_le' ?_)
-  · rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
-    exact le_csSup (bddAbove_packetize_image hmono L t)
-      ⟨n, ⟨u, hu, le_trans hLn (packetize_le hmono L u)⟩, rfl⟩
-  · rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
+  refine le_antisymm (packetize_le_of_forall ?_)
+    (packetize_le_of_forall ?_)
+  · rintro n ⟨u, hu, hLn⟩
+    exact le_packetize hmono
+      ⟨u, hu, le_trans hLn (packetize_le hmono L u)⟩
+  · rintro n ⟨u, hu, hLn⟩
     obtain ⟨v, huv, hvt⟩ := exists_between hu
-    refine le_csSup
-      (bddAbove_packetize_image (packetize_mono hmono L) L t)
-      ⟨n, ⟨v, hvt, ?_⟩, rfl⟩
-    exact le_csSup (bddAbove_packetize_image hmono L v)
-      ⟨n, ⟨u, huv, hLn⟩, rfl⟩
+    exact le_packetize (packetize_mono hmono L)
+      ⟨v, hvt, le_packetize hmono ⟨u, huv, hLn⟩⟩
 
 /-- Packetizer outputs are packetized. -/
 theorem isPacketized_packetize {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0}
@@ -295,14 +329,25 @@ theorem isMinimalArrivalBound_packetizeCurve {L : ℕ → ℝ≥0}
       A.leftCont t) h
 
 /-! ## Book restatement (arrival curve after a packetizer)
-`(A, D) ∈ Pᴸ` with maximum packet size `ℓᵘ`: if `A` has maximal
-arrival curve `αᵘ` then `D` has maximal arrival curve `αᵘ + ℓᵘ`. -/
+`(A, D) ∈ Pᴸ` with maximum packet size `ℓᵘ`: if `A` has a maximal
+(respectively minimal) arrival curve `αᵘ` (resp. `αˡ`), then `D` has
+maximal (resp. minimal) arrival curve `αᵘ + ℓᵘ` (resp. `αˡ − ℓᵘ`). -/
 example {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
-    {A D : Curve} (hp : packetizerRel hL A D)
+    {A D : Curve} (hp : packetizerRel L A D)
     {αu : ℝ≥0 → ℝ≥0} (harr : IsMaximalArrivalCurve ⇑A αu) :
     IsMaximalArrivalCurve ⇑D (fun d => αu d + lu) := by
-  rw [show D = packetizeCurve hL A from hp]
+  rw [show ⇑D = packetize L ⇑A from hp]
   exact ⟨fun a b hab => add_le_add (harr.1 hab) le_rfl,
     isMaximalArrivalBound_packetizeCurve hL harr.2⟩
+
+example {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
+    {A D : Curve} (hp : packetizerRel L A D)
+    {αl : ℝ≥0 → ℝ≥0} (harr : IsMinimalArrivalCurve ⇑A αl) :
+    IsMinimalArrivalCurve ⇑D (fun d => αl d - lu) := by
+  rw [show ⇑D = packetize L ⇑A from hp]
+  exact ⟨fun a b hab => tsub_le_tsub_right (harr.1 hab) lu,
+    isMinimalArrivalBound_packetizeCurve hL
+      ((isMinimalArrivalBound_iff_increment_of_monotone _ _ A.mono
+        harr.1).mp harr.2)⟩
 
 end DeepWiki

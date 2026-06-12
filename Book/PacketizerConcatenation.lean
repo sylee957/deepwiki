@@ -48,8 +48,9 @@ theorem isMinimalServiceCurve_comp_packetizerRel
     {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
     (hβ : IsMinimalServiceCurve β S) :
     IsMinimalServiceCurve (fun v => β v - ((lu : ℝ) : EReal))
-      (Relation.Comp S (packetizerRel hL)) := by
-  rintro A C ⟨B, hSB, rfl⟩
+      (Relation.Comp S (packetizerRel L)) := by
+  rintro A C ⟨B, hSB, hC⟩
+  obtain rfl : C = packetizeCurve hL B := Curve.ext fun t => congrFun hC t
   intro t
   refine le_trans (minConv_sub_const_le (curveEReal A) β lu t) ?_
   calc minConv (curveEReal A) β t - ((lu : ℝ) : EReal)
@@ -67,8 +68,9 @@ theorem isMaximalServiceCurve_comp_packetizerRel
     {S : Curve → Curve → Prop} {β : ℝ≥0 → EReal}
     {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
     (hβ : IsMaximalServiceCurve β S) :
-    IsMaximalServiceCurve β (Relation.Comp S (packetizerRel hL)) := by
-  rintro A C ⟨B, hSB, rfl⟩
+    IsMaximalServiceCurve β (Relation.Comp S (packetizerRel L)) := by
+  rintro A C ⟨B, hSB, hC⟩
+  obtain rfl : C = packetizeCurve hL B := Curve.ext fun t => congrFun hC t
   exact le_trans (curveEReal_mono (packetizeCurve_le hL B)) (hβ A B hSB)
 
 /-- Sandwich transport at the `EReal` reading: a curve within `c` below
@@ -98,8 +100,9 @@ theorem isShaper_comp_packetizerRel {S : Curve → Curve → Prop}
     {σ : ℝ≥0 → EReal} {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     (hL : IsPacketLengthSeq L ll lu) (hS : IsShaper σ S) :
     IsShaper (fun d => σ d + ((lu : ℝ) : EReal))
-      (Relation.Comp S (packetizerRel hL)) := by
-  rintro A C ⟨B, hSB, rfl⟩
+      (Relation.Comp S (packetizerRel L)) := by
+  rintro A C ⟨B, hSB, hC⟩
+  obtain rfl : C = packetizeCurve hL B := Curve.ext fun t => congrFun hC t
   exact isMaximalArrivalBound_curveEReal_of_sandwich
     (fun t => (packetizeCurve_sandwich hL B t).2)
     (fun t => apply_le_packetize_add hL B.mono (B.zero : B 0 = 0)
@@ -108,10 +111,11 @@ theorem isShaper_comp_packetizerRel {S : Curve → Curve → Prop}
 
 /-- **The combined system's outputs are packetized.** -/
 theorem isPacketized_of_comp_packetizerRel {S : Curve → Curve → Prop}
-    {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
-    {A C : Curve} (hp : Relation.Comp S (packetizerRel hL) A C) :
+    {L : ℕ → ℝ≥0} {A C : Curve}
+    (hp : Relation.Comp S (packetizerRel L) A C) :
     IsPacketized L ⇑C := by
-  obtain ⟨B, _, rfl⟩ := hp
+  obtain ⟨B, _, hC⟩ := hp
+  rw [hC]
   exact isPacketized_packetize B.mono
 
 /-- **Backlog through a packetizer** (pair level): the packetizer adds
@@ -142,30 +146,89 @@ theorem backlog_packetizeCurve_sandwich {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
           add_le_add
             (le_iSup (fun s => ((A s - B s : ℝ≥0) : ℝ≥0∞)) t) le_rfl
 
+/-- **A packetizer adds no delay to packetized inputs** (pointwise):
+for `L`-packetized `A`, every admissible shift for `B` is a limit of
+admissible shifts for `Pᴸ(B)` — the packet `A t` releases as soon as
+its last bit is served. -/
+theorem delayAt_packetizeCurve_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
+    (hL : IsPacketLengthSeq L ll lu) {A : Curve}
+    (hA : IsPacketized L ⇑A) (B : Curve) (t : ℝ≥0) :
+    Deviation.delayAt ⇑A ⇑(packetizeCurve hL B) t
+      = Deviation.delayAt ⇑A ⇑B t := by
+  refine le_antisymm ?_ ?_
+  · show Deviation.delayAt ⇑A ⇑(packetizeCurve hL B) t
+      ≤ ⨅ d : {d : ℝ≥0 // A t ≤ B (t + d)}, (d.1 : ℝ≥0∞)
+    refine le_iInf fun d => ?_
+    refine ENNReal.le_of_forall_pos_le_add fun ε hε _ => ?_
+    rw [show ((d.1 : ℝ≥0∞) + ε) = ((d.1 + ε : ℝ≥0) : ℝ≥0∞) from by
+      push_cast; rfl]
+    refine hDevAt_le ?_
+    rcases eq_zero_or_pos t with rfl | ht
+    · exact (A.zero : A 0 = 0).trans_le zero_le'
+    · obtain ⟨n, hPn, _, _, _⟩ :=
+        exists_packetize_eq hL A.mono A.leftCont ht
+      have hAt : A t = L n := by
+        rw [← hA]
+        exact hPn
+      refine le_trans (le_of_eq hAt) ?_
+      refine le_packetize B.mono ⟨t + d.1, ?_, ?_⟩
+      · rw [← add_assoc]
+        exact lt_add_of_pos_right _ hε
+      · exact le_trans (le_of_eq hAt.symm) d.2
+  · show Deviation.delayAt ⇑A ⇑B t
+      ≤ ⨅ d : {d : ℝ≥0 // A t ≤ packetizeCurve hL B (t + d)},
+          (d.1 : ℝ≥0∞)
+    refine le_iInf fun d => ?_
+    exact hDevAt_le (le_trans d.2 (packetize_le B.mono L _))
+
+/-- **A packetizer adds no delay to packetized inputs**:
+`d(A, Pᴸ(B)) = d(A, B)` for `L`-packetized `A`. -/
+theorem delay_packetizeCurve_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
+    (hL : IsPacketLengthSeq L ll lu) {A : Curve}
+    (hA : IsPacketized L ⇑A) (B : Curve) :
+    Deviation.delay ⇑A ⇑(packetizeCurve hL B)
+      = Deviation.delay ⇑A ⇑B := by
+  rw [Deviation.delay_eq_iSup, Deviation.delay_eq_iSup]
+  exact iSup_congr fun t => delayAt_packetizeCurve_eq hL hA B t
+
+/-- Pair form: every `S;P` pair with packetized input realizes exactly
+the delay of its `S` stage. -/
+theorem exists_delay_eq_of_comp_packetizerRel
+    {S : Curve → Curve → Prop} {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
+    (hL : IsPacketLengthSeq L ll lu) {A C : Curve}
+    (hA : IsPacketized L ⇑A)
+    (hp : Relation.Comp S (packetizerRel L) A C) :
+    ∃ B, S A B ∧ Deviation.delay ⇑A ⇑C = Deviation.delay ⇑A ⇑B := by
+  obtain ⟨B, hSB, hC⟩ := hp
+  obtain rfl : C = packetizeCurve hL B := Curve.ext fun t => congrFun hC t
+  exact ⟨B, hSB, delay_packetizeCurve_eq hL hA B⟩
+
 /-! ## Book restatement (the server/packetizer system)
 `S` a server, `P` a packetizer with maximum packet size `ℓᵘ`: the
 combined system `S;P` is a server; if `S` offers a min-plus minimal
 service curve `βᵐ`, a maximal service curve `βᴹ`, and is a `σ`-shaper,
 then `S;P` offers `βᵐ − ℓᵘ` and `βᴹ` and is a `(σ + ℓᵘ)`-shaper; its
-outputs are packetized; and per pair it holds at most one extra
-maximal packet of backlog. (The delay-preservation property for
-packetized inputs is the remaining piece.) -/
+outputs are packetized; per pair it holds at most one extra maximal
+packet of backlog; and on packetized inputs it adds no delay
+(`exists_delay_eq_of_comp_packetizerRel`). (The no-strict-counterpart
+warning — `β − ℓᵘ` need not be strict for `S;P` — is the remaining
+refutation.) -/
 example {S : Curve → Curve → Prop} {βm βM σ : ℝ≥0 → EReal}
     {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
     (hSrv : IsServer S) (hβm : IsMinimalServiceCurve βm S)
     (hβM : IsMaximalServiceCurve βM S) (hsh : IsShaper σ S) :
-    IsServer (Relation.Comp S (packetizerRel hL))
+    IsServer (Relation.Comp S (packetizerRel L))
       ∧ IsMinimalServiceCurve (fun v => βm v - ((lu : ℝ) : EReal))
-          (Relation.Comp S (packetizerRel hL))
-      ∧ IsMaximalServiceCurve βM (Relation.Comp S (packetizerRel hL))
+          (Relation.Comp S (packetizerRel L))
+      ∧ IsMaximalServiceCurve βM (Relation.Comp S (packetizerRel L))
       ∧ IsShaper (fun d => σ d + ((lu : ℝ) : EReal))
-          (Relation.Comp S (packetizerRel hL))
-      ∧ ∀ A C, Relation.Comp S (packetizerRel hL) A C →
+          (Relation.Comp S (packetizerRel L))
+      ∧ ∀ A C, Relation.Comp S (packetizerRel L) A C →
           IsPacketized L ⇑C :=
   ⟨hSrv.comp (isServer_packetizerRel hL),
     isMinimalServiceCurve_comp_packetizerRel hL hβm,
     isMaximalServiceCurve_comp_packetizerRel hL hβM,
     isShaper_comp_packetizerRel hL hsh,
-    fun _ _ hp => isPacketized_of_comp_packetizerRel hL hp⟩
+    fun _ _ hp => isPacketized_of_comp_packetizerRel hp⟩
 
 end DeepWiki
