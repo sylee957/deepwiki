@@ -8,7 +8,10 @@ maximal packet. With a left-continuous strict aggregate curve `β` (the
 same repair as preemptive static priority) and arrival curves on the
 higher-priority flows, flow `i` receives the min-plus residual
 `[β − ∑_{j<i} αⱼ − max_{j>i} ℓⱼᵘ]⁺↑`: the preemptive residual, one
-maximal lower-priority packet cheaper. -/
+maximal lower-priority packet cheaper. Under packet exclusivity it
+also receives `[β − ∑_{j<i} αⱼ − max_{j≥i} ℓⱼᵘ]⁺↑` as a strict
+service curve — the blocking packet may then be of the flow's own
+priority class. -/
 
 namespace DeepWiki
 
@@ -94,6 +97,77 @@ def IsNpspServerN {ι : Type*} [Fintype ι] [LinearOrder ι]
   ∀ As Ds, S As Ds →
     IsNpsp lmax (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
       ∧ IsNpspExclusive lmax (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
+
+/-- A preemptive static-priority family of monotone flows satisfies
+packet exclusivity for every packet bound: flow `i` and the strictly
+lower flows are all frozen on the relevant windows, so the coupled
+service is zero. -/
+theorem IsStaticPriority.isNpspExclusive {ι : Type*} [Fintype ι]
+    [LinearOrder ι] {A D : ι → ℝ≥0 → ℝ≥0} (h : IsStaticPriority A D)
+    (hc : ∀ j x, D j x ≤ A j x) (hmono : ∀ j, Monotone (D j))
+    (lmax : ι → ℝ≥0) : IsNpspExclusive lmax A D := by
+  intro i u s t hst hicc hibl
+  -- the `< k` aggregates are backlogged wherever `< i` is or flow `i` is
+  have hklt : ∀ k, i < k → ∀ v, (v ∈ Set.Icc u s ∨ v ∈ Set.Ioc s t) →
+      (∑ j ∈ Finset.univ.filter (fun j => j < k), D j v)
+        < ∑ j ∈ Finset.univ.filter (fun j => j < k), A j v := by
+    intro k hik v hv
+    rcases hv with hv | hv
+    · have hsub : Finset.univ.filter (fun j => j < i)
+          ⊆ Finset.univ.filter (fun j => j < k) := by
+        intro j hj
+        exact Finset.mem_filter.mpr ⟨Finset.mem_univ j,
+          lt_trans (Finset.mem_filter.mp hj).2 hik⟩
+      calc (∑ j ∈ Finset.univ.filter (fun j => j < k), D j v)
+          = (∑ j ∈ Finset.univ.filter (fun j => j < k)
+              \ Finset.univ.filter (fun j => j < i), D j v)
+            + ∑ j ∈ Finset.univ.filter (fun j => j < i), D j v :=
+            (Finset.sum_sdiff hsub).symm
+        _ < (∑ j ∈ Finset.univ.filter (fun j => j < k)
+              \ Finset.univ.filter (fun j => j < i), A j v)
+            + ∑ j ∈ Finset.univ.filter (fun j => j < i), A j v :=
+            add_lt_add_of_le_of_lt
+              (Finset.sum_le_sum fun j _ => hc j v) (hicc v hv)
+        _ = ∑ j ∈ Finset.univ.filter (fun j => j < k), A j v :=
+            Finset.sum_sdiff hsub
+    · exact Finset.sum_lt_sum (fun j _ => hc j v)
+        ⟨i, Finset.mem_filter.mpr ⟨Finset.mem_univ i, hik⟩, hibl v hv⟩
+  rcases le_or_gt u s with hus | hus
+  · -- flow `i` frozen on `[u, s]`, lower flows frozen on `[u, t]`
+    have hDi : D i s = D i u := h i u s hus fun v hv => hicc v hv
+    have hDk : ∀ k ∈ Finset.univ.filter (fun j => i < j),
+        D k t = D k u := by
+      intro k hk
+      have hik := (Finset.mem_filter.mp hk).2
+      refine h k u t (hus.trans hst) fun v hv => ?_
+      rcases le_or_gt v s with hvs | hvs
+      · exact hklt k hik v (Or.inl ⟨hv.1, hvs⟩)
+      · exact hklt k hik v (Or.inr ⟨hvs, hv.2⟩)
+    rw [hDi, Finset.sum_congr rfl hDk]
+    exact le_self_add
+  · rcases le_or_gt u t with hut | hut
+    · -- past `s`: flow `i` by monotonicity, lower flows frozen on `[u, t]`
+      have hDk : ∀ k ∈ Finset.univ.filter (fun j => i < j),
+          D k t = D k u := by
+        intro k hk
+        have hik := (Finset.mem_filter.mp hk).2
+        refine h k u t hut fun v hv => ?_
+        exact hklt k hik v (Or.inr ⟨lt_of_lt_of_le hus hv.1, hv.2⟩)
+      rw [Finset.sum_congr rfl hDk]
+      exact le_trans (add_le_add (hmono i hus.le) le_rfl) le_self_add
+    · -- everything by monotonicity
+      refine le_trans (add_le_add (hmono i (hst.trans hut.le))
+        (Finset.sum_le_sum fun k _ => hmono k hut.le)) le_self_add
+
+/-- A preemptive static-priority `n`-server is an NP-SP `n`-server for
+every packet bound. -/
+theorem IsStaticPriorityServerN.isNpspServerN {ι : Type*} [Fintype ι]
+    [LinearOrder ι] {S : (ι → Curve) → (ι → Curve) → Prop}
+    (hSP : IsStaticPriorityServerN S) (hcaus : IsCausalN S)
+    (lmax : ι → ℝ≥0) : IsNpspServerN lmax S := fun As Ds hp =>
+  ⟨(hSP As Ds hp).isNpsp (fun j x => hcaus As Ds hp j x) lmax,
+    (hSP As Ds hp).isNpspExclusive (fun j x => hcaus As Ds hp j x)
+      (fun j => (Ds j).mono) lmax⟩
 
 /-- **Non-preemptive static-priority residual** (min-plus): under NP-SP
 with a left-continuous strict aggregate curve `β` and `αⱼ`-constrained
@@ -335,7 +409,7 @@ repair as preemptive static priority), with arrival curves `αⱼ` on the
 higher-priority flows: flow `i` is offered the min-plus service curve
 `βᵢ = [β − ∑_{j<i} αⱼ − max_{i<j≤n} ℓⱼᵘ]⁺↑`, and the strict service
 curve `βᵢˢ` with the maximum extended to `j = i`
-(`add_residualCurve_le_of_isNpsp` below). -/
+(`add_residualCurve_le_of_isNpspExclusive` below). -/
 example {ι : Type*} [Fintype ι] [LinearOrder ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {As Ds : ι → Curve}
     {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {lmax : ι → ℝ≥0}
@@ -360,7 +434,7 @@ exclusivity with a left-continuous strict aggregate curve `β` and
 service inequality for `[β − ∑_{j<i} αⱼ − max_{j≥i} ℓⱼᵘ]⁺↑` on its
 backlogged periods — the packet that may block it is now any of
 priority `≥ i`, including its own. -/
-theorem add_residualCurve_le_of_isNpsp {ι : Type*} [Fintype ι]
+theorem add_residualCurve_le_of_isNpspExclusive {ι : Type*} [Fintype ι]
     [LinearOrder ι] {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0} {lmax : ι → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
@@ -486,7 +560,7 @@ theorem add_residualCurve_le_of_isNpsp {ι : Type*} [Fintype ι]
               add_le_add (Finset.sum_le_sum fun j _ =>
                 (Ds j).mono hps'.le) le_rfl
       -- packet exclusivity couples flow `i` at `s` with the lower flows
-      have h87 : (Ds i) s
+      have hexcl : (Ds i) s
             + (∑ j ∈ Finset.univ.filter (fun j => i < j), (Ds j) w)
           ≤ ((Ds i) s'
             + ∑ j ∈ Finset.univ.filter (fun j => i < j), (Ds j) s')
@@ -527,7 +601,7 @@ theorem add_residualCurve_le_of_isNpsp {ι : Type*} [Fintype ι]
               + ((∑ j ∈ Finset.univ.filter (fun j => i < j),
                   (Ds j) s' : ℝ≥0) : ℝ)
               + (cI : ℝ) := by
-          exact_mod_cast h87
+          exact_mod_cast hexcl
         have h4R : ((Ds i) w : ℝ) ≤ ((Ds i) t : ℝ) := by
           exact_mod_cast (Ds i).mono hwt
         push_cast at hstrR h2R h3R h4R ⊢
@@ -576,7 +650,30 @@ theorem isStrictMinimalServiceCurve_residualServer_of_isNpsp
       (residualServer (fun As Ds => S As Ds ∧
         ∀ j, j < i → IsMaximalArrivalBound ⇑(As j) (α j)) i) := by
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
-  exact add_residualCurve_le_of_isNpsp (fun j => hcaus As Ds hp j)
+  exact add_residualCurve_le_of_isNpspExclusive (fun j => hcaus As Ds hp j)
     hβlc (hβ.sum_strict hp) ((hnp As Ds hp).2) harr hst hbl
+
+/-! ## Book restatement (NP-SP residual, strict half)
+The same NP-SP `n`-server offers flow `i` the strict service curve
+`βᵢˢ = [β − ∑_{j<i} αⱼ − max_{i≤j≤n} ℓⱼᵘ]⁺↑` — the blocking packet
+may now be of priority `i` itself, so the maximum extends to `j = i`. -/
+example {ι : Type*} [Fintype ι] [LinearOrder ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {As Ds : ι → Curve}
+    {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {lmax : ι → ℝ≥0}
+    (hSrv : IsServerN S) (hp : S As Ds)
+    (hβlc : IsLeftContinuous β)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    (hnp : IsNpspServerN lmax S)
+    {i : ι} (harr : ∀ j, j < i → IsMaximalArrivalCurve ⇑(As j) (α j))
+    {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    (Ds i) s
+      + residualCurve β (fun v =>
+          (∑ j ∈ Finset.univ.filter (fun j => j < i), α j v)
+            + (Finset.univ.filter (fun j => i ≤ j)).sup lmax) (t - s)
+      ≤ (Ds i) t :=
+  add_residualCurve_le_of_isNpspExclusive (fun j => hSrv.1 As Ds hp j)
+    hβlc (hβ.sum_strict hp) ((hnp As Ds hp).2)
+    (fun j hj => (harr j hj).2) hst hbl
 
 end DeepWiki
