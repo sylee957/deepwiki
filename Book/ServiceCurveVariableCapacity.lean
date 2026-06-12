@@ -144,10 +144,27 @@ theorem variableCapacityRel_mono {beta beta' : ℝ≥0 → ℝ≥0}
   obtain ⟨C, hD, hcap⟩ := hp
   exact ⟨C, hD, fun s t hst => le_trans (h _) (hcap s t hst)⟩
 
+/-- Capacity domination passes to the non-decreasing closure: each
+earlier value of `beta` is dominated through monotonicity of `C`. -/
+theorem ndClosure_le_capacity {beta : ℝ≥0 → ℝ≥0} {C : Curve}
+    (hcap : ∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) :
+    ∀ s t, s ≤ t → ndClosure beta (t - s) ≤ C t - C s := by
+  intro s t hst
+  unfold ndClosure
+  haveI : Nonempty {v // v ≤ t - s} := ⟨⟨0, zero_le'⟩⟩
+  refine ciSup_le fun v => ?_
+  obtain ⟨v, (hv : v ≤ t - s)⟩ := v
+  have hsv : s + v ≤ t := by
+    have h1 : s + v ≤ s + (t - s) := by gcongr
+    rwa [add_tsub_cancel_of_le hst] at h1
+  have hb := hcap s (s + v) le_self_add
+  rw [show (s + v) - s = v by
+    rw [add_comm]; exact add_tsub_cancel_right v s] at hb
+  exact le_trans hb (tsub_le_tsub_right (C.mono hsv) (C s))
+
 /-- The variable-capacity relation is closure-invariant:
 `variableCapacityRel (ndClosure beta) = variableCapacityRel beta` for
-`beta` bounded on each `[0, t]` — the capacity increments dominate
-every earlier value of `beta` through monotonicity of `C`. -/
+`beta` bounded on each `[0, t]`. -/
 theorem variableCapacityRel_closure (beta : ℝ≥0 → ℝ≥0)
     (hbdd : ∀ t, BddAbove
       (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
@@ -159,18 +176,7 @@ theorem variableCapacityRel_closure (beta : ℝ≥0 → ℝ≥0)
     exact ⟨C, hD, fun s t hst =>
       le_trans (le_ndClosure beta hbdd (t - s)) (hcap s t hst)⟩
   · obtain ⟨C, hD, hcap⟩ := hp
-    refine ⟨C, hD, fun s t hst => ?_⟩
-    unfold ndClosure
-    haveI : Nonempty {v // v ≤ t - s} := ⟨⟨0, zero_le'⟩⟩
-    refine ciSup_le fun v => ?_
-    obtain ⟨v, (hv : v ≤ t - s)⟩ := v
-    have hsv : s + v ≤ t := by
-      have h1 : s + v ≤ s + (t - s) := by gcongr
-      rwa [add_tsub_cancel_of_le hst] at h1
-    have hb := hcap s (s + v) le_self_add
-    rw [show (s + v) - s = v by
-      rw [add_comm]; exact add_tsub_cancel_right v s] at hb
-    exact le_trans hb (tsub_le_tsub_right (C.mono hsv) (C s))
+    exact ⟨C, hD, ndClosure_le_capacity hcap⟩
 
 /-- The capacity increments dominate the max-plus self-convolution:
 the variable-capacity relation absorbs `maxConvProj`. -/
@@ -211,5 +217,50 @@ theorem variableCapacityRel_le_maxConvProjPow (beta : ℝ≥0 → ℝ≥0)
   | succ n ih =>
       exact le_trans ih
         (variableCapacityRel_le_maxConvProj (maxConvProjPow beta n))
+
+/-- **Hierarchy, outer inclusion**: every variable-capacity node is a
+min-plus server — unconditionally, capacity jumps or not. Each split
+of the driving infimum dominates the matching convolution split; the
+infimum needs no attainment, only `ε`-room. -/
+theorem variableCapacityRel_le_minimalServiceRel (beta : ℝ≥0 → ℝ≥0) :
+    variableCapacityRel beta ≤ minimalServiceRel (liftEReal beta) := by
+  intro A D hp
+  obtain ⟨C, hD, hcap⟩ := hp
+  rw [mem_minimalServiceRel_iff]
+  refine ⟨isCausal_variableCapacityRel beta A D ⟨C, hD, hcap⟩,
+    fun t => ?_⟩
+  by_contra hcon
+  rw [not_le] at hcon
+  obtain ⟨c, hc1, hc2⟩ := EReal.exists_between_coe_real hcon
+  have hεpos : (0 : ℝ) < c - (D t : ℝ) := by
+    refine sub_pos.mpr ?_
+    have hc1' : (((D t : ℝ≥0) : ℝ) : EReal) < (c : EReal) := hc1
+    exact_mod_cast hc1'
+  have hεnn0 : 0 < (c - (D t : ℝ)).toNNReal :=
+    Real.toNNReal_pos.mpr hεpos
+  have hlt : (⨅ s : {s // s ≤ t}, (A s.1 + (C t - C s.1)))
+      < D t + (c - (D t : ℝ)).toNNReal := by
+    rw [hD t] at *
+    exact lt_add_of_pos_right _ hεnn0
+  obtain ⟨s, hs⟩ := exists_lt_of_ciInf_lt hlt
+  have hsR : ((A s.1 + (C t - C s.1) : ℝ≥0) : ℝ) < c := by
+    have h := (NNReal.coe_lt_coe.mpr hs :
+      ((A s.1 + (C t - C s.1) : ℝ≥0) : ℝ) < _)
+    push_cast [Real.coe_toNNReal _ hεpos.le] at h ⊢
+    linarith
+  have hchain : minConv (curveEReal A) (liftEReal beta) t
+      ≤ (((A s.1 + (C t - C s.1) : ℝ≥0) : ℝ) : EReal) := by
+    refine le_trans (minConv_le_add _ _
+      (add_tsub_cancel_of_le s.2)) ?_
+    rw [curveEReal_apply]
+    push_cast
+    have hβ : ((beta (t - s.1) : ℝ≥0) : ℝ)
+        ≤ ((C t - C s.1 : ℝ≥0) : ℝ) :=
+      NNReal.coe_le_coe.mpr (hcap s.1 t s.2)
+    exact_mod_cast add_le_add le_rfl hβ
+  have hfinal : minConv (curveEReal A) (liftEReal beta) t
+      < (c : EReal) :=
+    lt_of_le_of_lt hchain (by exact_mod_cast hsR)
+  exact lt_irrefl _ (lt_trans hfinal hc2)
 
 end DeepWiki

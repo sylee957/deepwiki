@@ -225,6 +225,38 @@ def variableCapacityJumpRel (beta : ℝ≥0 → ℝ≥0) :
     ∧ (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s)
     ∧ IsJumpDominated ⇑A ⇑C
 
+/-- `variableCapacityJumpRel beta A D` unfolds to the constrained
+capacity witness. -/
+theorem mem_variableCapacityJumpRel_iff {beta : ℝ≥0 → ℝ≥0}
+    {A D : Curve} :
+    variableCapacityJumpRel beta A D ↔ ∃ C : Curve,
+      (∀ t, D t = variableCapacityOutput ⇑A ⇑C t)
+      ∧ (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s)
+      ∧ IsJumpDominated ⇑A ⇑C :=
+  Iff.rfl
+
+/-- The jump-dominated relation is antitone in `beta`. -/
+theorem variableCapacityJumpRel_mono {beta beta' : ℝ≥0 → ℝ≥0}
+    (h : beta' ≤ beta) :
+    variableCapacityJumpRel beta ≤ variableCapacityJumpRel beta' := by
+  intro A D hp
+  obtain ⟨C, hD, hcap, hjump⟩ := hp
+  exact ⟨C, hD, fun s t hst => le_trans (h _) (hcap s t hst), hjump⟩
+
+/-- The jump-dominated relation is closure-invariant. -/
+theorem variableCapacityJumpRel_closure (beta : ℝ≥0 → ℝ≥0)
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun u : {u // u ≤ t} => beta u.1))) :
+    variableCapacityJumpRel (ndClosure beta)
+      = variableCapacityJumpRel beta := by
+  funext A D
+  refine propext ⟨fun hp => ?_, fun hp => ?_⟩
+  · obtain ⟨C, hD, hcap, hjump⟩ := hp
+    exact ⟨C, hD, fun s t hst =>
+      le_trans (le_ndClosure beta hbdd (t - s)) (hcap s t hst), hjump⟩
+  · obtain ⟨C, hD, hcap, hjump⟩ := hp
+    exact ⟨C, hD, ndClosure_le_capacity hcap, hjump⟩
+
 /-- Forgetting the jump constraint lands in the plain
 variable-capacity relation. -/
 theorem variableCapacityJumpRel_le_variableCapacityRel

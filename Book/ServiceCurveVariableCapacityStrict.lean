@@ -268,6 +268,19 @@ theorem vcnWitness_mem_variableCapacityRel :
       vcnWitnessArrival vcnWitnessDeparture :=
   ⟨vcnWitnessCapacity, fun _ => rfl, vcnCeilCapacity_dominates⟩
 
+/-- `vcnWitnessDeparture 0 = 0`. -/
+theorem vcnWitnessDeparture_zero_eq : vcnWitnessDeparture 0 = 0 := by
+  show variableCapacityOutput (· / 2) vcnCeilCapacity 0 = 0
+  rw [variableCapacityOutput_zero_eq]
+  show (0 : ℝ≥0) / 2 = 0
+  rw [zero_div]
+
+/-- The witness departure per completed cycle, at the `Curve` level. -/
+theorem vcnWitnessDeparture_apply {t : ℝ≥0} {k : ℕ}
+    (hk : ⌈t⌉₊ = k + 1) :
+    vcnWitnessDeparture t = (k : ℝ≥0) / 2 :=
+  variableCapacityOutput_half_ceil_eq hk
+
 /-- `⌈5/2⌉₊ = 3`. -/
 theorem ceil_five_halves : (⌈(5 / 2 : ℝ≥0)⌉₊ : ℕ) = 3 := by
   rw [Nat.ceil_eq_iff (by norm_num)]
@@ -285,14 +298,9 @@ theorem vcnWitness_not_mem_strictServiceRel :
   have h := hstrict 0 (5 / 2) (by norm_num)
     (isBacklogged_half_ceil (5 / 2))
   rw [show vcnWitnessDeparture (5 / 2 : ℝ≥0) = 1 from by
-      show variableCapacityOutput (· / 2) vcnCeilCapacity (5 / 2) = 1
-      rw [variableCapacityOutput_half_ceil_eq (k := 2) ceil_five_halves]
+      rw [vcnWitnessDeparture_apply (k := 2) ceil_five_halves]
       norm_num,
-    show vcnWitnessDeparture 0 = 0 from by
-      show variableCapacityOutput (· / 2) vcnCeilCapacity 0 = 0
-      rw [variableCapacityOutput_zero_eq]
-      show (0 : ℝ≥0) / 2 = 0
-      rw [zero_div]] at h
+    vcnWitnessDeparture_zero_eq] at h
   rw [show rateLatency (1 : ℝ≥0) 1 ((5 / 2 : ℝ≥0) - 0) = 3 / 2 from by
       show (1 : ℝ≥0) * (((5 / 2 : ℝ≥0) - 0) - 1) = 3 / 2
       rw [one_mul, tsub_zero, tsub_eq_of_eq_add (by norm_num :
@@ -333,14 +341,9 @@ theorem vcnWitness_not_mem_weaklyStrictServiceRel :
   rw [show start ⇑vcnWitnessArrival ⇑vcnWitnessDeparture (5 / 2) = 0
       from start_half_ceil_eq (5 / 2)] at h
   rw [show vcnWitnessDeparture (5 / 2 : ℝ≥0) = 1 from by
-      show variableCapacityOutput (· / 2) vcnCeilCapacity (5 / 2) = 1
-      rw [variableCapacityOutput_half_ceil_eq (k := 2) ceil_five_halves]
+      rw [vcnWitnessDeparture_apply (k := 2) ceil_five_halves]
       norm_num,
-    show vcnWitnessDeparture 0 = 0 from by
-      show variableCapacityOutput (· / 2) vcnCeilCapacity 0 = 0
-      rw [variableCapacityOutput_zero_eq]
-      show (0 : ℝ≥0) / 2 = 0
-      rw [zero_div]] at h
+    vcnWitnessDeparture_zero_eq] at h
   rw [show rateLatency (1 : ℝ≥0) 1 ((5 / 2 : ℝ≥0) - 0) = 3 / 2 from by
       show (1 : ℝ≥0) * (((5 / 2 : ℝ≥0) - 0) - 1) = 3 / 2
       rw [one_mul, tsub_zero, tsub_eq_of_eq_add (by norm_num :
@@ -381,5 +384,64 @@ theorem not_forall_variableCapacityRel_le_weaklyStrictServiceRel :
     ¬ ∀ beta : ℝ≥0 → ℝ≥0,
       variableCapacityRel beta ≤ weaklyStrictServiceRel beta := fun h =>
   not_variableCapacityRel_le_weaklyStrictServiceRel_rateLatency (h _)
+
+/-- The ceiling witness is driven by no jump-dominated capacity: a
+jump-dominated witness would make it a strict server. -/
+theorem vcnWitness_not_mem_variableCapacityJumpRel :
+    ¬ variableCapacityJumpRel (rateLatency 1 1)
+      vcnWitnessArrival vcnWitnessDeparture := fun hp =>
+  vcnWitness_not_mem_strictServiceRel
+    (variableCapacityJumpRel_le_strictServiceRel _ _ _ hp)
+
+/-- Jump domination is a genuine restriction: the jump-dominated
+relation sits strictly below the plain one. -/
+theorem variableCapacityJumpRel_lt_variableCapacityRel_rateLatency :
+    variableCapacityJumpRel (rateLatency 1 1)
+      < variableCapacityRel (rateLatency 1 1) :=
+  lt_of_le_not_ge (variableCapacityJumpRel_le_variableCapacityRel _)
+    (fun h => vcnWitness_not_mem_variableCapacityJumpRel
+      (h _ _ vcnWitness_mem_variableCapacityRel))
+
+/-- The book-literal closed-form universal also fails: the witnesses
+lie in the book's exact cumulative class, null at origin and
+piecewise continuous included. -/
+theorem not_forall_variableCapacityOutput_start_eq_curve :
+    ¬ ∀ A C : ℝ≥0 → ℝ≥0, Monotone A → IsLeftContinuous A →
+      IsPiecewiseContinuous A → A 0 = 0 →
+      Monotone C → IsLeftContinuous C →
+      IsPiecewiseContinuous C → C 0 = 0 → ∀ t,
+      variableCapacityOutput A C t
+        = A (start A (variableCapacityOutput A C) t)
+          + (C t - C (start A (variableCapacityOutput A C) t)) := by
+  intro h
+  refine not_variableCapacityOutput_start_eq_stepCapacity
+    (h id vcnStepCapacity monotone_id
+      (isLeftContinuous_of_continuous _ continuous_id)
+      (isPiecewiseContinuous_of_continuous _ continuous_id) rfl
+      vcnStepCapacity_mono vcnStepCapacity_leftCont ?_ (if_pos rfl) 1)
+  refine isPiecewiseContinuous_of_monotone_of_finite_image
+    vcnStepCapacity_mono vcnStepCapacity_leftCont (fun T =>
+      Set.Finite.subset (Set.Finite.insert 0 (Set.finite_singleton 1)) ?_)
+  rintro x ⟨u, -, rfl⟩
+  by_cases hu : u = 0
+  · subst hu
+    exact Set.mem_insert_iff.mpr (Or.inl (if_pos rfl))
+  · exact Set.mem_insert_iff.mpr (Or.inr (if_neg hu))
+
+/-- The hierarchy refutation survives the book's regularity on `beta`
+as well: the witness curve is monotone and continuous. -/
+theorem not_forall_variableCapacityRel_le_strictServiceRel_of_monotone :
+    ¬ ∀ beta : ℝ≥0 → ℝ≥0, Monotone beta → IsLeftContinuous beta →
+      variableCapacityRel beta ≤ strictServiceRel beta := by
+  intro h
+  refine not_variableCapacityRel_le_strictServiceRel_rateLatency
+    (h _ ?_ ?_)
+  · intro a b hab
+    show (1 : ℝ≥0) * (a - 1) ≤ 1 * (b - 1)
+    rw [one_mul, one_mul]
+    exact tsub_le_tsub_right hab 1
+  · refine isLeftContinuous_of_continuous _ ?_
+    show Continuous fun x : ℝ≥0 => (1 : ℝ≥0) * (x - 1)
+    simpa [one_mul] using (continuous_sub_right (1 : ℝ≥0))
 
 end DeepWiki

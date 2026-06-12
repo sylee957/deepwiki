@@ -214,7 +214,8 @@ not just defaults):
     unnamed expression (the GPS share, `residualCurve` applications).
   - Hypothesis binders: `hmono` monotone, `hnn` nonneg, `h0` null at origin,
     `hlc` left-continuous, `hsub` sub-additive, `hsup` super-additive,
-    `hp` pair membership `S A D`, `hc` causal, `hSrv` server, `harr`
+    `hp` pair membership `S A D`, `hc` causal, `hSrv` server,
+    `hjump` jump domination, `hcap` capacity domination, `harr`
     arrival-curve, `hserv` service bound, `hcross` crossing, `hne` nonempty
     (crossing set) or the `≠` hypothesis of an `_of_ne` lemma. When two
     curves both need a property, tag the binder by the curve
