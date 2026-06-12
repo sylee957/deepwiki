@@ -1,4 +1,5 @@
 import Book.Packetizer
+import Book.ServiceCurvePackets
 import Book.ServersConcatenation
 import Book.ArrivalCurvesShaper
 import Book.ServiceCurveMaximal
@@ -13,6 +14,7 @@ are packetized, and on packetized inputs it adds no delay. -/
 namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
+open Set Topology Filter
 
 /-- Lowering the kernel by a real constant lowers the convolution by
 the same constant: `f ∗ (g − c) ≤ (f ∗ g) − c` pointwise. -/
@@ -242,5 +244,277 @@ example {S : Curve → Curve → Prop} {βm βM σ : ℝ≥0 → EReal}
     fun _ _ hp => isPacketized_of_comp_packetizerRel hp,
     fun _ _ hp => exists_backlog_sandwich_of_comp_packetizerRel hL hp,
     fun _ _ hA hp => exists_delay_eq_of_comp_packetizerRel hL hA hp⟩
+
+/-! ## No strict counterpart
+The minimal-service property has no strict analogue: `β − ℓᵘ` need not
+be a strict service curve for `S;P`. The witness: unit packets, the
+shifted staircase arrival `A(t) = ⌈t − 1⌉` served at `B(t) = t − 1` —
+admissible for the strict `β = λ₁ ∨ β_{2,1/2}`, since every backlogged
+period of `(A, B)` lies strictly between two touch points and so is
+shorter than one — while the packetized output starves the combined
+pair on `(1, 4]`, where `β − 1` demands four units of service. -/
+
+/-- The unit-packet length sequence `L n = n`. -/
+theorem isPacketLengthSeq_natCast :
+    IsPacketLengthSeq (fun n => (n : ℝ≥0)) 1 1 :=
+  ⟨Nat.cast_zero, one_pos, fun n => by push_cast; exact ⟨le_rfl, le_rfl⟩⟩
+
+/-- The witness strict aggregate curve `λ₁ ∨ β_{2,1/2}`: rate `1` up to
+`1`, rate `2` beyond. -/
+noncomputable def pkBeta : ℝ≥0 → ℝ≥0 :=
+  fun d => max d (2 * (d - 2⁻¹))
+
+/-- The shifted unit staircase `t ↦ ⌈t − 1⌉` is monotone. -/
+theorem pkWitness_stair_mono :
+    Monotone (fun t : ℝ≥0 => (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)) :=
+  fun _ _ hab =>
+    Nat.cast_le.mpr (Nat.ceil_mono (tsub_le_tsub_right hab 1))
+
+/-- The shifted unit staircase is left-continuous: it is constant on a
+left interval ending at each point. -/
+theorem pkWitness_stair_leftCont :
+    IsLeftContinuous (fun t : ℝ≥0 => (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)) := by
+  intro t
+  rcases le_or_gt t 1 with h1 | h1
+  · show Filter.Tendsto _ (𝓝[<] t) (𝓝 ((⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)))
+    rw [show (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0) = 0 from by
+      rw [tsub_eq_zero_of_le h1, Nat.ceil_zero, Nat.cast_zero]]
+    refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [self_mem_nhdsWithin] with u hu
+    rw [tsub_eq_zero_of_le (le_trans (le_of_lt hu) h1), Nat.ceil_zero,
+      Nat.cast_zero]
+  · have hx : (0 : ℝ≥0) < t - 1 := tsub_pos_of_lt h1
+    have hk1 : 1 ≤ ⌈(t - 1 : ℝ≥0)⌉₊ := Nat.one_le_ceil_iff.mpr hx
+    have hkt : ((⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)) < t := by
+      have h := Nat.ceil_lt_add_one (zero_le' : (0 : ℝ≥0) ≤ t - 1)
+      rwa [tsub_add_cancel_of_le h1.le] at h
+    show Filter.Tendsto _ (𝓝[<] t) (𝓝 ((⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)))
+    refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [Ioo_mem_nhdsLT hkt] with u hu
+    have hueq : ⌈(u - 1 : ℝ≥0)⌉₊ = ⌈(t - 1 : ℝ≥0)⌉₊ := by
+      rw [Nat.ceil_eq_iff (Nat.one_le_iff_ne_zero.mp hk1)]
+      constructor
+      · have hcast : ((⌈(t - 1 : ℝ≥0)⌉₊ - 1 : ℕ) : ℝ≥0)
+            = (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0) - 1 := by
+          rw [Nat.cast_tsub, Nat.cast_one]
+        rw [hcast]
+        refine lt_of_lt_of_le
+          (tsub_lt_tsub_right_of_le ?_ hu.1) le_rfl
+        exact_mod_cast hk1
+      · exact le_trans (tsub_le_tsub_right hu.2.le 1) (Nat.le_ceil _)
+    rw [hueq]
+
+/-- The witness arrival: the shifted unit staircase `t ↦ ⌈t − 1⌉`, one
+unit packet just after each integer time `≥ 1`. -/
+noncomputable def pkWitnessA : Curve :=
+  ⟨fun t => (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0),
+    pkWitness_stair_mono,
+    by
+      show (⌈((0 : ℝ≥0) - 1 : ℝ≥0)⌉₊ : ℝ≥0) = 0
+      rw [zero_tsub, Nat.ceil_zero, Nat.cast_zero],
+    by
+      refine isPiecewiseContinuous_of_monotone_of_finite_image
+        pkWitness_stair_mono pkWitness_stair_leftCont fun T => ?_
+      refine Set.Finite.subset
+        ((Set.finite_Iic ⌈(T - 1 : ℝ≥0)⌉₊).image
+          (fun n : ℕ => (n : ℝ≥0))) ?_
+      rintro x ⟨s, hs, rfl⟩
+      exact ⟨⌈(s - 1 : ℝ≥0)⌉₊, Set.mem_Iic.mpr
+        (Nat.ceil_mono (tsub_le_tsub_right hs.2 1)), rfl⟩,
+    pkWitness_stair_leftCont⟩
+
+/-- `pkWitnessA t = ⌈t − 1⌉`. -/
+theorem pkWitnessA_apply (t : ℝ≥0) :
+    pkWitnessA t = (⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0) := rfl
+
+/-- The witness service `t ↦ t − 1`: rate `1` after latency `1`. -/
+noncomputable def pkWitnessB : Curve :=
+  afterCurve 1 (fun w => w - 1)
+    (fun _ _ hab => tsub_le_tsub_right hab 1)
+    (continuous_sub.comp (continuous_id.prodMk continuous_const))
+
+/-- `pkWitnessB t = t − 1`. -/
+theorem pkWitnessB_apply (t : ℝ≥0) : pkWitnessB t = t - 1 := by
+  rw [pkWitnessB, afterCurve_apply]
+  rcases le_or_gt t 1 with h | h
+  · rw [if_neg (not_lt.mpr h), tsub_eq_zero_of_le h]
+  · rw [if_pos h]
+
+/-- The witness pair is causal: `t − 1 ≤ ⌈t − 1⌉`. -/
+theorem pkWitness_causal : pkWitnessB ≤ pkWitnessA := fun t => by
+  rw [pkWitnessB_apply, pkWitnessA_apply]
+  exact Nat.le_ceil _
+
+/-- The witness pair obeys the strict `λ₁ ∨ β_{2,1/2}`: a backlogged
+period avoids the touch points `t − 1 ∈ ℕ`, so it starts after `1`, is
+shorter than one, and the service runs at exact rate `1` through it. -/
+theorem pkWitness_strict :
+    ∀ s t, s ≤ t →
+      IsBacklogged ⇑pkWitnessA ⇑pkWitnessB (Set.Ioc s t) →
+      pkWitnessB s + pkBeta (t - s) ≤ pkWitnessB t := by
+  intro s t hst hbl
+  rcases eq_or_lt_of_le hst with rfl | hlt
+  · rw [tsub_self,
+      show pkBeta 0 = 0 from by
+        show max 0 (2 * ((0 : ℝ≥0) - 2⁻¹)) = 0
+        rw [zero_tsub, mul_zero, max_self],
+      add_zero]
+  · have hs1 : (1 : ℝ≥0) ≤ s := by
+      by_contra hs
+      rw [not_le] at hs
+      have hu : min 1 t ∈ Set.Ioc s t :=
+        ⟨lt_min hs hlt, min_le_right _ _⟩
+      have hb := hbl _ hu
+      rw [pkWitnessB_apply, pkWitnessA_apply,
+        tsub_eq_zero_of_le (min_le_left _ _)] at hb
+      simp at hb
+    have hts1 : t ≤ s + 1 := by
+      by_contra hts
+      rw [not_le] at hts
+      set m := ⌊(s - 1 : ℝ≥0)⌋₊ with hm
+      have hmem : ((m : ℝ≥0) + 2) ∈ Set.Ioc s t := by
+        constructor
+        · calc s = (s - 1) + 1 := (tsub_add_cancel_of_le hs1).symm
+            _ < ((m : ℝ≥0) + 1) + 1 :=
+              add_lt_add_left (Nat.lt_floor_add_one (s - 1 : ℝ≥0)) 1
+            _ = (m : ℝ≥0) + 2 := by ring
+        · refine le_trans ?_ hts.le
+          calc (m : ℝ≥0) + 2 = ((m : ℝ≥0) + 1) + 1 := by ring
+            _ ≤ ((s - 1) + 1) + 1 := by
+              exact add_le_add (add_le_add
+                (Nat.floor_le zero_le') le_rfl) le_rfl
+            _ = s + 1 := by rw [tsub_add_cancel_of_le hs1]
+      have hb := hbl _ hmem
+      rw [pkWitnessB_apply, pkWitnessA_apply,
+        show ((m : ℝ≥0) + 2) - 1 = ((m + 1 : ℕ) : ℝ≥0) from by
+          push_cast
+          rw [show (2 : ℝ≥0) = 1 + 1 from by norm_num, ← add_assoc,
+            add_tsub_cancel_right],
+        Nat.ceil_natCast] at hb
+      exact absurd hb (lt_irrefl _)
+    rw [pkWitnessB_apply, pkWitnessB_apply,
+      show pkBeta (t - s) = t - s from by
+        show max (t - s) (2 * ((t - s) - 2⁻¹)) = t - s
+        refine max_eq_left ?_
+        rcases le_total (t - s) 2⁻¹ with hc | hc
+        · rw [tsub_eq_zero_of_le hc, mul_zero]
+          exact zero_le'
+        · have hx1 : t - s ≤ 1 := by
+            rw [tsub_le_iff_right, add_comm]
+            exact hts1
+          rw [← NNReal.coe_le_coe, NNReal.coe_mul, NNReal.coe_sub hc]
+          have hxc : ((t - s : ℝ≥0) : ℝ) ≤ 1 := by exact_mod_cast hx1
+          push_cast
+          linarith]
+    rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub hs1, NNReal.coe_sub (le_trans hs1 hst),
+      NNReal.coe_sub hst]
+    linarith
+
+/-- The witness pair sits in the largest strict server of `pkBeta`. -/
+theorem pkWitness_mem :
+    strictServiceRel pkBeta pkWitnessA pkWitnessB :=
+  ⟨pkWitness_causal, pkWitness_strict⟩
+
+/-- The packetized output stays a full packet below the staircase past
+`1`: the combined system is never empty. -/
+theorem pkWitness_packetize_lt {t : ℝ≥0} (ht : 1 < t) :
+    packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB t < pkWitnessA t := by
+  have hA1 : (1 : ℝ≥0) ≤ pkWitnessA t := by
+    rw [pkWitnessA_apply]
+    exact_mod_cast Nat.one_le_ceil_iff.mpr (tsub_pos_of_lt ht)
+  refine lt_of_le_of_lt (packetize_le_of_forall ?_)
+    (tsub_lt_self (lt_of_lt_of_le one_pos hA1) one_pos)
+  rintro n ⟨u, hu, hn⟩
+  rw [pkWitnessB_apply] at hn
+  have hnlt : n < ⌈(t - 1 : ℝ≥0)⌉₊ := by
+    rcases le_or_gt u 1 with h1u | h1u
+    · rw [tsub_eq_zero_of_le h1u] at hn
+      have hn' : (n : ℝ≥0) ≤ 0 := hn
+      have hn0 : n = 0 := by exact_mod_cast le_antisymm hn' zero_le'
+      rw [hn0]
+      exact Nat.one_le_ceil_iff.mpr (tsub_pos_of_lt ht)
+    · have hn' : (n : ℝ≥0) ≤ u - 1 := hn
+      have hlt : (n : ℝ≥0) < t - 1 :=
+        lt_of_le_of_lt hn' (tsub_lt_tsub_right_of_le h1u.le hu)
+      exact_mod_cast lt_of_lt_of_le hlt (Nat.le_ceil _)
+  rw [pkWitnessA_apply]
+  refine le_tsub_of_add_le_right ?_
+  exact_mod_cast Nat.succ_le_of_lt hnlt
+
+/-- The packetizer has released nothing by time `1`. -/
+theorem pkWitness_packetize_one :
+    packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 1 = 0 := by
+  refine le_antisymm ?_ zero_le'
+  have h : packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 1 ≤ pkWitnessB 1 :=
+    packetize_le pkWitnessB.mono _ 1
+  rwa [pkWitnessB_apply, tsub_self] at h
+
+/-- The packetizer has released at most two packets by time `4`. -/
+theorem pkWitness_packetize_four :
+    packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 4 ≤ 2 := by
+  refine packetize_le_of_forall ?_
+  rintro n ⟨u, hu, hn⟩
+  rw [pkWitnessB_apply] at hn
+  rcases le_or_gt u 1 with h1u | h1u
+  · rw [tsub_eq_zero_of_le h1u] at hn
+    have hn' : (n : ℝ≥0) ≤ 0 := hn
+    exact le_trans hn' (by norm_num)
+  · have h3 : u - 1 < 3 := by
+      rw [tsub_lt_iff_right h1u.le]
+      exact lt_of_lt_of_le hu (by norm_num)
+    have hn' : (n : ℝ≥0) ≤ u - 1 := hn
+    have hn3 : n < 3 := by exact_mod_cast lt_of_le_of_lt hn' h3
+    exact_mod_cast Nat.lt_succ_iff.mp hn3
+
+/-- The combined witness pair is backlogged throughout `(1, 4]`. -/
+theorem pkWitness_backlogged :
+    IsBacklogged ⇑pkWitnessA
+      ⇑(packetizeCurve isPacketLengthSeq_natCast pkWitnessB)
+      (Set.Ioc 1 4) :=
+  fun _ hu => pkWitness_packetize_lt hu.1
+
+/-- The violation: on `(1, 4]` the strict `pkBeta − 1` demands four
+units while the packetizer releases at most two. -/
+theorem not_add_le_pkWitness :
+    ¬ (packetizeCurve isPacketLengthSeq_natCast pkWitnessB 1
+        + (pkBeta (4 - 1) - 1)
+      ≤ packetizeCurve isPacketLengthSeq_natCast pkWitnessB 4) := by
+  intro h
+  rw [show (4 : ℝ≥0) - 1 = 3 from tsub_eq_of_eq_add (by norm_num),
+    show pkBeta 3 - 1 = 4 from by
+      rw [show pkBeta 3 = 5 from by
+        show max 3 (2 * ((3 : ℝ≥0) - 2⁻¹)) = 5
+        rw [show (3 : ℝ≥0) - 2⁻¹ = 5 / 2 from
+            tsub_eq_of_eq_add (by norm_num),
+          show (2 : ℝ≥0) * (5 / 2) = 5 from by norm_num]
+        exact max_eq_right (by norm_num)]
+      exact tsub_eq_of_eq_add (by norm_num),
+    show packetizeCurve isPacketLengthSeq_natCast pkWitnessB 1
+        = packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 1 from rfl,
+    pkWitness_packetize_one, zero_add] at h
+  have h2 := le_trans h
+    (show packetizeCurve isPacketLengthSeq_natCast pkWitnessB 4
+        ≤ 2 from pkWitness_packetize_four)
+  norm_num at h2
+
+/-- **`β − ℓᵘ` has no strict counterpart**: the minimal-service
+property of the server/packetizer system
+(`IsMinimalServiceCurve.comp_packetizerRel`) with "min-plus" upgraded
+to "strict" is false. -/
+theorem not_forall_isStrictMinimalServiceCurve_comp_packetizerRel :
+    ¬ ∀ (S : Curve → Curve → Prop) (β : ℝ≥0 → ℝ≥0) (L : ℕ → ℝ≥0)
+      (ll lu : ℝ≥0), IsPacketLengthSeq L ll lu →
+      IsStrictMinimalServiceCurve β S →
+      IsStrictMinimalServiceCurve (fun v => β v - lu)
+        (Relation.Comp S (packetizerRel L)) := by
+  intro h
+  have hbad := h (strictServiceRel pkBeta) pkBeta (fun n => (n : ℝ≥0))
+    1 1 isPacketLengthSeq_natCast
+    (isStrictMinimalServiceCurve_strictServiceRel pkBeta)
+    pkWitnessA (packetizeCurve isPacketLengthSeq_natCast pkWitnessB)
+    ⟨pkWitnessB, pkWitness_mem, rfl⟩
+    1 4 (by norm_num) pkWitness_backlogged
+  exact not_add_le_pkWitness hbad
 
 end DeepWiki
