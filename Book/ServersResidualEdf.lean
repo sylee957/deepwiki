@@ -97,21 +97,40 @@ theorem truncBefore_zero_eq {A : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0) (T : ℝ≥
 /-! ## The EDF server -/
 
 /-- **EDF family of trajectories** with deadlines `d`: for every horizon
-`T`, while the part of flow `i` with absolute deadline by `T` (arrived
-by `T − dᵢ`) is backlogged throughout `[s, t]`, the part of flow `j`
-with deadline after `T` (arrived after `T − dⱼ`) receives nothing on
-`(s, t]`. -/
-def IsEdf {ι : Type*} (d : ι → ℝ≥0) (A D : ι → ℝ≥0 → ℝ≥0) : Prop :=
-  ∀ i j, ∀ T s t : ℝ≥0, s ≤ t →
+`T`, while data with absolute deadline by `T` is backlogged throughout
+`[s, t]` (the aggregate of the parts arrived by `T − dₖ`), the part of
+flow `j` with deadline after `T` (arrived after `T − dⱼ`) receives
+nothing on `(s, t]` — the static-priority freeze between the
+deadline-ordered derived flows. -/
+def IsEdf {ι : Type*} [Fintype ι] (d : ι → ℝ≥0)
+    (A D : ι → ℝ≥0 → ℝ≥0) : Prop :=
+  ∀ j, ∀ T s t : ℝ≥0, s ≤ t →
     (∀ u ∈ Set.Icc s t,
-      truncBeforeD (T - d i) (A i) (D i) u
-        < truncBefore (T - d i) (A i) u) →
+      (∑ k, truncBeforeD (T - d k) (A k) (D k) u)
+        < ∑ k, truncBefore (T - d k) (A k) u) →
     truncAfterD (T - d j) (A j) (D j) t
       = truncAfterD (T - d j) (A j) (D j) s
 
+/-- A single backlogged deadline-`T` part suffices for the EDF freeze
+premise (for causal pairs): the aggregate transfer. -/
+theorem isEdf_premise_of_single {ι : Type*} [Fintype ι] {d : ι → ℝ≥0}
+    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ k u, D k u ≤ A k u)
+    {T u : ℝ≥0} (i : ι)
+    (hbl : truncBeforeD (T - d i) (A i) (D i) u
+      < truncBefore (T - d i) (A i) u) :
+    (∑ k, truncBeforeD (T - d k) (A k) (D k) u)
+      < ∑ k, truncBefore (T - d k) (A k) u := by
+  refine Finset.sum_lt_sum (fun k _ => ?_) ⟨i, Finset.mem_univ i, hbl⟩
+  rw [truncBeforeD, truncBefore]
+  rcases le_total u (T - d k) with h | h
+  · rw [min_eq_left h]
+    exact le_trans (min_le_left _ _) (hc k u)
+  · rw [min_eq_right h]
+    exact min_le_right _ _
+
 /-- **EDF `n`-server**: every served family obeys the deadline-ordered
 priority. -/
-def IsEdfServerN {ι : Type*} (d : ι → ℝ≥0)
+def IsEdfServerN {ι : Type*} [Fintype ι] (d : ι → ℝ≥0)
     (S : (ι → Curve) → (ι → Curve) → Prop) : Prop :=
   ∀ As Ds, S As Ds → IsEdf d (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
 
