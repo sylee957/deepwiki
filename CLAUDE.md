@@ -206,6 +206,12 @@ not just defaults):
     `isServer_<rel>`, `is<Concept>_iff_subset` (predicate on the left),
     `is<Concept>_<rel>` (a relation offers its own property), `<rel>_mono`,
     `<rel>_closure`.
+  - Relation-form residual wrappers: `is<Pred>_<curve>_of_<hyp>` when the
+    chapter defines a named residual curve for the conclusion
+    (`isStrictMinimalServiceCurve_drrResidual_of_isDrr`,
+    `…_wrrResidualStaircase_of_isWrr`, `…_tdmaResidual_of_isTdma`);
+    `is<Pred>_residualServer_of_<hyp>` when the conclusion curve is an
+    unnamed expression (the GPS share, `residualCurve` applications).
   - Hypothesis binders: `hmono` monotone, `hnn` nonneg, `h0` null at origin,
     `hlc` left-continuous, `hsub` sub-additive, `hsup` super-additive,
     `hp` pair membership `S A D`, `hc` causal, `hSrv` server, `harr`

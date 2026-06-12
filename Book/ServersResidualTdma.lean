@@ -105,7 +105,7 @@ theorem add_tdmaResidual_le_of_isTdma {c o T R : ℝ≥0}
 
 /-- Relation form: a TDMA `n`-server offers each flow the strict
 residual `ν_{c,oᵢ,−Tᵢ} ∗ λ_R` on the residual server. -/
-theorem isStrictMinimalServiceCurve_residualServer_of_isTdma
+theorem isStrictMinimalServiceCurve_tdmaResidual_of_isTdma
     {ι : Type*} {S : (ι → Curve) → (ι → Curve) → Prop}
     {c R : ℝ≥0} {o T : ι → ℝ≥0} {i : ι}
     (htdma : IsTdmaServerN c o T R S) :
@@ -140,6 +140,6 @@ example {ι : Type*} {S : (ι → Curve) → (ι → Curve) → Prop}
     IsStrictMinimalServiceCurve
       (tdmaResidual c (o i) (lmax i / R + c - slot i) R)
       (residualServer S i) :=
-  hT ▸ isStrictMinimalServiceCurve_residualServer_of_isTdma htdma
+  hT ▸ isStrictMinimalServiceCurve_tdmaResidual_of_isTdma htdma
 
 end DeepWiki

@@ -188,7 +188,7 @@ theorem add_drrResidual_le_of_isDrr {ι : Type*} [Fintype ι]
 /-- Relation form: a DRR `n`-server with a strict aggregate curve
 offers each flow the quantum-proportional strict residual on the
 residual server, without arrival-curve hypotheses. -/
-theorem isStrictMinimalServiceCurve_residualServer_of_isDrr
+theorem isStrictMinimalServiceCurve_drrResidual_of_isDrr
     {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {Q lmax : ι → ℝ≥0} {i : ι}
@@ -217,7 +217,7 @@ example {ι : Type*} [Fintype ι]
     (hdrr : IsDrrServerN Q lmax S) :
     IsStrictMinimalServiceCurve (drrResidual Q lmax i β)
       (residualServer S i) :=
-  isStrictMinimalServiceCurve_residualServer_of_isDrr
+  isStrictMinimalServiceCurve_drrResidual_of_isDrr
     hSrv.1 hβ hdrr
 
 /-! ## Book restatement (the basic-unit refinement)

@@ -173,7 +173,7 @@ theorem add_wrrResidual_le_of_isWrr {ι : Type*} [Fintype ι]
 /-- Relation form: a WRR `n`-server with a strict aggregate curve
 offers each flow the weight-proportional strict residual on the
 residual server, without arrival-curve hypotheses. -/
-theorem isStrictMinimalServiceCurve_residualServer_of_isWrr
+theorem isStrictMinimalServiceCurve_wrrResidual_of_isWrr
     {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {lmin lmax : ι → ℝ≥0} {i : ι}
@@ -204,7 +204,7 @@ example {ι : Type*} [Fintype ι]
     (hwrr : IsWrrServerN w lmin lmax S) :
     IsStrictMinimalServiceCurve (wrrResidual w lmin lmax i β)
       (residualServer S i) :=
-  isStrictMinimalServiceCurve_residualServer_of_isWrr
+  isStrictMinimalServiceCurve_wrrResidual_of_isWrr
     hSrv.1 hβ hwrr
 
 /-! ## The staircase refinement -/
