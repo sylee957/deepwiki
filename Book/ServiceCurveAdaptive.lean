@@ -122,32 +122,6 @@ theorem adaptiveServiceRel_le_minimalServiceRel
     exact absurd (lt_of_le_of_lt hchain (by exact_mod_cast huR))
       (not_lt.mpr hc2.le)
 
-/-- Attainment for the `ℝ≥0` projected convolution: against a
-monotone left-continuous curve and a continuous one, the defining
-infimum is attained at a split. -/
-theorem exists_minConvProj_eq {g h : ℝ≥0 → ℝ≥0}
-    (hgmono : Monotone g) (hglc : IsLeftContinuous g)
-    (hcont : Continuous h) (t : ℝ≥0) :
-    ∃ v, v ≤ t ∧ (∀ u, u ≤ t → g v + h (t - v) ≤ g u + h (t - u))
-      ∧ minConvProj g h t = g v + h (t - v) := by
-  obtain ⟨v, hv, hmin⟩ := exists_isMinOn_splitMap g h
-    (lowerSemicontinuous_of_mono_isLeftContinuous g hgmono hglc)
-    hcont.lowerSemicontinuous t
-  have hterm : ∀ u, u ≤ t → g v + h (t - v) ≤ g u + h (t - u) :=
-    fun u hu => (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le', hu⟩)
-  refine ⟨v, (Set.mem_Icc.mp hv).2, hterm, le_antisymm ?_ ?_⟩
-  · rw [minConvProj_eq]
-    exact ciInf_le_of_le (OrderBot.bddBelow _)
-      ⟨(v, t - v), add_tsub_cancel_of_le (Set.mem_Icc.mp hv).2⟩ le_rfl
-  · rw [minConvProj_eq]
-    refine le_ciInf ?_
-    rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
-    have hut : u ≤ t := hus ▸ le_self_add
-    have hsu : t - u = s := by rw [← hus, add_tsub_cancel_left]
-    show g v + h (t - v) ≤ g u + h s
-    rw [← hsu]
-    exact hterm u hut
-
 /-- **The convolution output meets the adaptive pair `(β, β)`** for
 super-additive continuous `β`: with the `t`-window minimum attained
 at `v`, a window start `s ≤ v` puts `v` in the windowed infimum, and
@@ -163,10 +137,8 @@ theorem isAdaptiveServiceBound_minConvProj {A beta : ℝ≥0 → ℝ≥0}
     rw [hval]
     exact ciInf_le_of_le (OrderBot.bddBelow _) ⟨v, hsv, hvt⟩ le_rfl
   · refine le_trans (min_le_left _ _) ?_
-    have hDs : minConvProj A beta s ≤ A v + beta (s - v) := by
-      rw [minConvProj_eq]
-      exact ciInf_le_of_le (OrderBot.bddBelow _)
-        ⟨(v, s - v), add_tsub_cancel_of_le hvs.le⟩ le_rfl
+    have hDs : minConvProj A beta s ≤ A v + beta (s - v) :=
+      minConvProj_le_add (add_tsub_cancel_of_le hvs.le)
     calc minConvProj A beta s + beta (t - s)
         ≤ (A v + beta (s - v)) + beta (t - s) := add_le_add hDs le_rfl
       _ = A v + (beta (s - v) + beta (t - s)) := add_assoc _ _ _

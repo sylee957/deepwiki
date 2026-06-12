@@ -110,4 +110,26 @@ theorem exists_minConv_eq_split_of_curves
     exists_isMinOn_splitMap_of_curves g h hgm hhm hgc hhc t
   exact ⟨u₀, hu₀, minConv_eq_splitMap_of_isMinOn g h t hu₀ hmin⟩
 
+/-- Attainment for the `ℝ≥0` projected convolution: against a
+monotone left-continuous curve and a continuous one, the defining
+infimum is attained at a split. -/
+theorem exists_minConvProj_eq {g h : ℝ≥0 → ℝ≥0}
+    (hgmono : Monotone g) (hglc : IsLeftContinuous g)
+    (hcont : Continuous h) (t : ℝ≥0) :
+    ∃ v, v ≤ t ∧ (∀ u, u ≤ t → g v + h (t - v) ≤ g u + h (t - u))
+      ∧ minConvProj g h t = g v + h (t - v) := by
+  obtain ⟨v, hv, hmin⟩ := exists_isMinOn_splitMap g h
+    (lowerSemicontinuous_of_mono_isLeftContinuous g hgmono hglc)
+    hcont.lowerSemicontinuous t
+  have hterm : ∀ u, u ≤ t → g v + h (t - v) ≤ g u + h (t - u) :=
+    fun u hu => (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le', hu⟩)
+  refine ⟨v, (Set.mem_Icc.mp hv).2, hterm, le_antisymm
+    (minConvProj_le_add
+      (add_tsub_cancel_of_le (Set.mem_Icc.mp hv).2)) ?_⟩
+  refine le_minConvProj fun u s hus => ?_
+  have hut : u ≤ t := hus ▸ le_self_add
+  have hsu : t - u = s := by rw [← hus, add_tsub_cancel_left]
+  rw [← hsu]
+  exact hterm u hut
+
 end DeepWiki

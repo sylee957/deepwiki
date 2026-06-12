@@ -559,6 +559,22 @@ theorem minConvProj_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
         g p.1.1 + h p.1.2),
     ENNReal.toNNReal_coe]
 
+/-- Elim: every split bounds the projected convolution from above,
+`minConvProj g h t ≤ g u + h s` whenever `u + s = t`. -/
+theorem minConvProj_le_add {g h : ℝ≥0 → ℝ≥0} {u s t : ℝ≥0}
+    (hus : u + s = t) :
+    minConvProj g h t ≤ g u + h s := by
+  rw [minConvProj_eq]
+  exact ciInf_le_of_le (OrderBot.bddBelow _) ⟨(u, s), hus⟩ le_rfl
+
+/-- Intro: a bound on every split bounds the projected convolution
+from below. -/
+theorem le_minConvProj {g h : ℝ≥0 → ℝ≥0} {x t : ℝ≥0}
+    (hb : ∀ u s, u + s = t → x ≤ g u + h s) :
+    x ≤ minConvProj g h t := by
+  rw [minConvProj_eq]
+  exact le_ciInf fun p => hb p.1.1 p.1.2 p.2
+
 /-- `minConvProj A` is monotone in its right argument. -/
 theorem minConvProj_mono_right (A : ℝ≥0 → ℝ≥0)
     {g g' : ℝ≥0 → ℝ≥0} (h : g ≤ g') :
