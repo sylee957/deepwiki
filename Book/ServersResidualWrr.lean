@@ -301,6 +301,38 @@ theorem wrrResidual_le_wrrResidualStaircase {ι : Type*} [Fintype ι]
   push_cast at h1 h2 h2' hratio ⊢
   nlinarith [h1, h2, h2']
 
+/-- Scalar core of the staircase bound: when `b ≤ tv + (p+1)·Q` and
+`p·q ≤ tv`, the convolution of `λ₁` with the staircase of height `q`
+and period `q + Q` satisfies `(λ₁ ∗ ν)(b − Q) ≤ tv` — split at `p`
+complete rounds. -/
+theorem minConv_rate_one_staircaseFun_le {q Q b tv : ℝ≥0} {p : ℕ}
+    (hb : b ≤ tv + ((p : ℝ≥0) + 1) * Q) (hpq : (p : ℝ≥0) * q ≤ tv) :
+    minConv (rate 1) (staircaseFun (q + Q) q 0) (b - Q) ≤ tv := by
+  rcases le_total b Q with hd | hd
+  · rw [tsub_eq_zero_of_le hd, minConv_apply_zero, staircaseFun_zero_eq,
+      add_zero, rate_apply, mul_zero]
+    exact zero_le'
+  rcases le_total (b - Q) ((p : ℝ≥0) * (q + Q)) with hyT | hyT
+  · refine le_trans (minConv_le_add _ _ (zero_add (b - Q))) ?_
+    rw [rate_apply, mul_zero, zero_add]
+    refine le_trans (staircaseFun_le (k := p) (by rwa [zero_add])) ?_
+    rw [mul_comm]
+    exact hpq
+  · refine le_trans (minConv_le_add _ _
+      (add_tsub_cancel_of_le (tsub_le_self
+        (a := b - Q) (b := (p : ℝ≥0) * (q + Q))))) ?_
+    have hν : staircaseFun (q + Q) q 0
+        ((b - Q) - ((b - Q) - (p : ℝ≥0) * (q + Q))) ≤ q * p :=
+      staircaseFun_le
+        (by rw [zero_add]; exact tsub_le_iff_right.mpr le_add_tsub)
+    refine le_trans (add_le_add le_rfl hν) ?_
+    rw [rate_apply, one_mul, ← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub hyT, NNReal.coe_sub hd]
+    have hbR : (b : ℝ) ≤ (tv : ℝ) + ((p : ℝ) + 1) * (Q : ℝ) := by
+      exact_mod_cast hb
+    have hpqR : (p : ℝ) * (q : ℝ) ≤ (tv : ℝ) := by exact_mod_cast hpq
+    linarith
+
 /-- **WRR staircase residual service**: under WRR with a strict
 aggregate `β`, flow `i` obeys the strict service inequality for the
 round-quantized `(λ₁ ∗ ν) ∘ [β − Qᵢ]⁺` on its backlogged periods —
@@ -320,44 +352,9 @@ theorem add_wrrResidualStaircase_le_of_isWrr {ι : Type*} [Fintype ι]
       ≤ (Ds i) t := by
   rw [wrrResidualStaircase_apply]
   obtain ⟨p, hown, hcross⟩ := hwrr i s t hst hbl
-  -- the residual vanishes when `β` does not clear the per-round price
-  rcases le_total (β (t - s))
-      (∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j) with hd | hd
-  · rw [tsub_eq_zero_of_le hd, minConv_apply_zero,
-      staircaseFun_zero_eq, add_zero]
-    simpa [rate] using (Ds i).mono hst
-  -- one split bounds the convolution: `p` complete rounds to `ν`
-  refine le_trans (add_le_add le_rfl (minConv_le_add _ _
-    (add_tsub_cancel_of_le (tsub_le_self
-      (a := β (t - s)
-        - ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
-      (b := (p : ℝ≥0) * ((w i : ℝ≥0) * lmin i
-        + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)))))) ?_
-  have hν : staircaseFun
-      ((w i : ℝ≥0) * lmin i
-        + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
-      ((w i : ℝ≥0) * lmin i) 0
-      ((β (t - s) - ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
-        - ((β (t - s)
-            - ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
-          - (p : ℝ≥0) * ((w i : ℝ≥0) * lmin i
-            + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)))
-      ≤ (w i : ℝ≥0) * lmin i * p := by
-    refine staircaseFun_le ?_
-    rw [zero_add]
-    exact tsub_le_iff_right.mpr le_add_tsub
-  refine le_trans (add_le_add le_rfl (add_le_add le_rfl hν)) ?_
-  simp only [rate, one_mul]
-  -- below `p` complete rounds the `λ₁` part vanishes
-  rcases le_total
-      (β (t - s) - ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
-      ((p : ℝ≥0) * ((w i : ℝ≥0) * lmin i
-        + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j))
-      with hyT | hyT
-  · rw [tsub_eq_zero_of_le hyT, zero_add,
-      mul_comm ((w i : ℝ≥0) * lmin i) (p : ℝ≥0)]
-    exact hown
-  -- past `p` complete rounds: the strict aggregate pays the rest
+  have hDst : (Ds i) s ≤ (Ds i) t := (Ds i).mono hst
+  rw [add_comm, ← le_tsub_iff_right hDst]
+  -- the strict aggregate plus the cross bounds price the increment
   have hstr := hstrict s t hst
     (isBacklogged_sum_of_isBacklogged (fun j _ x => hc j x)
       (Finset.mem_univ i) hbl)
@@ -365,33 +362,34 @@ theorem add_wrrResidualStaircase_le_of_isWrr {ι : Type*} [Fintype ι]
       (Finset.mem_univ i),
     ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) t)
       (Finset.mem_univ i)] at hstr
-  have hownR : ((Ds i) s : ℝ)
-      + (p : ℝ) * (((w i : ℝ≥0) * lmin i : ℝ≥0) : ℝ)
-      ≤ ((Ds i) t : ℝ) := by
-    exact_mod_cast hown
-  have hcrossR :
-      ((∑ j ∈ Finset.univ.erase i, (Ds j) t : ℝ≥0) : ℝ)
-        ≤ ((∑ j ∈ Finset.univ.erase i, (Ds j) s : ℝ≥0) : ℝ)
-          + ((p : ℝ) + 1)
-            * ((∑ j ∈ Finset.univ.erase i,
-                (w j : ℝ≥0) * lmax j : ℝ≥0) : ℝ) := by
-    have h : (∑ j ∈ Finset.univ.erase i, (Ds j) t)
-        ≤ ∑ j ∈ Finset.univ.erase i,
-            ((Ds j) s + ((p : ℝ≥0) + 1) * ((w j : ℝ≥0) * lmax j)) :=
-      Finset.sum_le_sum fun j hj =>
-        hcross j (Finset.ne_of_mem_erase hj)
-    rw [Finset.sum_add_distrib, ← Finset.mul_sum] at h
-    exact_mod_cast h
-  have hstrR : (((Ds i) s : ℝ)
-        + ((∑ j ∈ Finset.univ.erase i, (Ds j) s : ℝ≥0) : ℝ))
-        + ((β (t - s) : ℝ≥0) : ℝ)
-      ≤ ((Ds i) t : ℝ)
-        + ((∑ j ∈ Finset.univ.erase i, (Ds j) t : ℝ≥0) : ℝ) := by
-    exact_mod_cast hstr
-  rw [← NNReal.coe_le_coe]
-  push_cast [NNReal.coe_sub hyT, NNReal.coe_sub hd]
-  push_cast at hownR hcrossR hstrR
-  linarith
+  have hβb : β (t - s) ≤ ((Ds i) t - (Ds i) s)
+      + ((p : ℝ≥0) + 1)
+        * ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j := by
+    have hcrossR :
+        ((∑ j ∈ Finset.univ.erase i, (Ds j) t : ℝ≥0) : ℝ)
+          ≤ ((∑ j ∈ Finset.univ.erase i, (Ds j) s : ℝ≥0) : ℝ)
+            + ((p : ℝ) + 1)
+              * ((∑ j ∈ Finset.univ.erase i,
+                  (w j : ℝ≥0) * lmax j : ℝ≥0) : ℝ) := by
+      have h : (∑ j ∈ Finset.univ.erase i, (Ds j) t)
+          ≤ ∑ j ∈ Finset.univ.erase i,
+              ((Ds j) s + ((p : ℝ≥0) + 1) * ((w j : ℝ≥0) * lmax j)) :=
+        Finset.sum_le_sum fun j hj =>
+          hcross j (Finset.ne_of_mem_erase hj)
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum] at h
+      exact_mod_cast h
+    have hstrR : (((Ds i) s : ℝ)
+          + ((∑ j ∈ Finset.univ.erase i, (Ds j) s : ℝ≥0) : ℝ))
+          + ((β (t - s) : ℝ≥0) : ℝ)
+        ≤ ((Ds i) t : ℝ)
+          + ((∑ j ∈ Finset.univ.erase i, (Ds j) t : ℝ≥0) : ℝ) := by
+      exact_mod_cast hstr
+    rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub hDst]
+    push_cast at hcrossR hstrR
+    linarith
+  exact minConv_rate_one_staircaseFun_le hβb
+    (le_tsub_of_add_le_left hown)
 
 /-- Relation form: a WRR `n`-server with a strict aggregate curve
 offers each flow the staircase-refined strict residual on the

@@ -238,6 +238,102 @@ theorem isStrictMinimalServiceCurve_wrrResidualPackets_of_isWrrPackets
     (fun j => hcaus As Ds hp j) (hβ.sum_strict hp) (hwrr As Ds hp)
     hst hbl
 
+/-- For the linear packet curves the packet-curve residual refines
+the staircase form: `wrrResidualStaircase ≤ wrrResidualPackets` —
+every value the price admits is paid by the split at the floor round
+count `⌊tv/qᵢ⌋`. -/
+theorem wrrResidualStaircase_le_wrrResidualPackets {ι : Type*}
+    [Fintype ι] (w : ι → ℕ) (lmin lmax : ι → ℝ≥0) (i : ι)
+    (β : ℝ≥0 → ℝ≥0) (τ : ℝ≥0) :
+    wrrResidualStaircase w lmin lmax i β τ
+      ≤ wrrResidualPackets w (fun j n => (n : ℝ≥0) * lmin j)
+          (fun j n => (n : ℝ≥0) * lmax j) i β τ := by
+  rw [wrrResidualStaircase_apply, wrrResidualPackets_apply]
+  have hfin : pseudoInv
+      (wrrPacketsPrice w (fun j n => (n : ℝ≥0) * lmin j)
+        (fun j n => (n : ℝ≥0) * lmax j) i) ((β τ : ℝ≥0) : ℝ≥0∞)
+      ≤ ((β τ : ℝ≥0) : ℝ≥0∞) :=
+    pseudoInv_le_of_le_apply le_self_add
+  have hcoe : ((minConv (rate 1)
+      (staircaseFun
+        ((w i : ℝ≥0) * lmin i
+          + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
+        ((w i : ℝ≥0) * lmin i) 0)
+      (β τ - ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j)
+        : ℝ≥0) : ℝ≥0∞)
+      ≤ pseudoInv
+          (wrrPacketsPrice w (fun j n => (n : ℝ≥0) * lmin j)
+            (fun j n => (n : ℝ≥0) * lmax j) i)
+          ((β τ : ℝ≥0) : ℝ≥0∞) := by
+    refine le_pseudoInv fun u hu => ?_
+    rcases eq_or_ne u ⊤ with rfl | hutop
+    · exact le_top
+    lift u to ℝ≥0 using hutop with tv
+    rw [ENNReal.coe_le_coe]
+    rcases eq_zero_or_pos ((w i : ℝ≥0) * lmin i) with hq | hq
+    · -- height-zero staircase: the convolution vanishes
+      refine le_trans (minConv_le_add _ _ (zero_add _)) ?_
+      rw [rate_apply, mul_zero, hq, staircaseFun_apply, zero_mul,
+        zero_add]
+      exact zero_le'
+    · -- extract the floor round count from the admissible supremum
+      rw [wrrPacketsPrice_apply] at hu
+      have hsup : (⨆ (p : ℕ)
+          (_ : ((((p * w i : ℕ) : ℝ≥0) * lmin i : ℝ≥0) : ℝ≥0∞)
+            ≤ ((tv : ℝ≥0) : ℝ≥0∞)),
+            ∑ j ∈ Finset.univ.erase i,
+              (((((p + 1) * w j : ℕ) : ℝ≥0) * lmax j : ℝ≥0) : ℝ≥0∞))
+          ≤ (((⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ : ℝ≥0) + 1)
+              * ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j
+            : ℝ≥0) := by
+        refine iSup₂_le fun p hp => ?_
+        have hple : p ≤ ⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ := by
+          have hp' : ((p * w i : ℕ) : ℝ≥0) * lmin i ≤ tv := by
+            exact_mod_cast hp
+          have he : ((p * w i : ℕ) : ℝ≥0) * lmin i
+              = (p : ℝ≥0) * ((w i : ℝ≥0) * lmin i) := by
+            push_cast
+            ring
+          rw [he] at hp'
+          refine Nat.le_floor ?_
+          rw [le_div_iff₀ hq]
+          exact hp'
+        have hsum : ∑ j ∈ Finset.univ.erase i,
+            (((p + 1) * w j : ℕ) : ℝ≥0) * lmax j
+            ≤ ((⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ : ℝ≥0) + 1)
+              * ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j := by
+          rw [Finset.mul_sum]
+          refine Finset.sum_le_sum fun j hj => ?_
+          have he : (((p + 1) * w j : ℕ) : ℝ≥0) * lmax j
+              = ((p : ℝ≥0) + 1) * ((w j : ℝ≥0) * lmax j) := by
+            push_cast
+            ring
+          rw [he]
+          exact mul_le_mul'
+            (add_le_add (Nat.cast_le.mpr hple) le_rfl) le_rfl
+        exact_mod_cast hsum
+      have hb : β τ ≤ tv
+          + ((⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ : ℝ≥0) + 1)
+            * ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j := by
+        have h := hu.trans (add_le_add le_rfl hsup)
+        exact_mod_cast h
+      have hpq : ((⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ : ℝ≥0))
+          * ((w i : ℝ≥0) * lmin i) ≤ tv := by
+        calc ((⌊tv / ((w i : ℝ≥0) * lmin i)⌋₊ : ℝ≥0))
+              * ((w i : ℝ≥0) * lmin i)
+            ≤ (tv / ((w i : ℝ≥0) * lmin i))
+              * ((w i : ℝ≥0) * lmin i) :=
+              mul_le_mul' (Nat.floor_le zero_le') le_rfl
+          _ = tv := div_mul_cancel₀ tv hq.ne'
+      exact minConv_rate_one_staircaseFun_le hb hpq
+  have hne : pseudoInv
+      (wrrPacketsPrice w (fun j n => (n : ℝ≥0) * lmin j)
+        (fun j n => (n : ℝ≥0) * lmax j) i) ((β τ : ℝ≥0) : ℝ≥0∞)
+      ≠ ⊤ :=
+    (lt_of_le_of_lt hfin ENNReal.coe_lt_top).ne
+  have h := ENNReal.toNNReal_mono hne hcoe
+  simpa using h
+
 /-! ## Book restatement (WRR residual service, packet-curve form)
 An `n`-server offering a strict service curve `β` under WRR with
 weights `wⱼ` and flow-`j` packets bounded by the packet curves
@@ -257,8 +353,8 @@ pseudo-inverse `pseudoInv`. The book's packet curves take values in
 excluded `Lᵘ = ∞` instances are vacuous (zero residual). The
 round-count coupling is taken as the trajectory definition
 (`IsWrrPackets`); the linear packet curves recover `IsWrr`
-(`IsWrr.isWrrPackets`), and the curve-level comparison with the
-staircase form is deferred. -/
+(`IsWrr.isWrrPackets`), where the packet-curve residual refines the
+staircase form (`wrrResidualStaircase_le_wrrResidualPackets`). -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {Ll Lu : ι → ℕ → ℝ≥0} {i : ι}
