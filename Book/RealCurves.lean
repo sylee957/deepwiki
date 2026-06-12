@@ -8,7 +8,8 @@ The concrete service/arrival curves of network calculus, as plain definitions
 is defined once over any ordered domain/value type, and the rate / rate-latency /
 token-bucket bases `rate`/`rateLatency`/`tokenBucket` once over a semiring value
 type. Each specializes to the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rateNN`,
-`rateLatencyNN`, `tokenBucketNN`, plus `staircase`/`unitStep`) and the
+`rateLatencyNN`, `tokenBucketNN`, plus `staircase`/`staircaseFloor`/`unitStep`)
+and the
 complete-domain `ℝ≥0∞ → ℝ≥0∞` variants (`delayENN`,
 `rateENN`/`rateLatencyENN`/`tokenBucketENN`) used by the pseudo-inverse catalog;
 the `EReal`-valued variants for the service-curve stack are `delayEReal` and
@@ -147,6 +148,27 @@ noncomputable def staircase (P h : ℝ≥0) (J : ℝ) :
     min (ENNReal.ofReal
       (max (h * ⌈((t : ℝ) + J) / P⌉) 0)) (delayNN 0 t)
 
+/-- Floor staircase of step `P`, height `h`, offset `J`:
+`t ↦ h·⌊(t − J)/P⌋`, clamped at `0` by the `ENNReal.ofReal` truncation. -/
+noncomputable def staircaseFloor (P h : ℝ≥0) (J : ℝ) :
+    ℝ≥0 → ℝ≥0∞ :=
+  fun t => ENNReal.ofReal ((h : ℝ) * ⌊((t : ℝ) - J) / (P : ℝ)⌋)
+
+/-- `staircaseFloor P h J t` unfolds to its closed form. -/
+@[simp] theorem staircaseFloor_apply (P h : ℝ≥0) (J : ℝ) (t : ℝ≥0) :
+    staircaseFloor P h J t
+      = ENNReal.ofReal ((h : ℝ) * ⌊((t : ℝ) - J) / (P : ℝ)⌋) := rfl
+
+/-- `staircaseFloor P h J` is monotone (for `0 < P`). -/
+theorem staircaseFloor_mono (P h : ℝ≥0) (hP : (0:ℝ) < P) (J : ℝ) :
+    Monotone (staircaseFloor P h J) := by
+  intro a b hab
+  refine ENNReal.ofReal_le_ofReal ?_
+  refine mul_le_mul_of_nonneg_left ?_ h.coe_nonneg
+  refine Int.cast_le.mpr (Int.floor_mono ?_)
+  refine (div_le_div_iff_of_pos_right hP).mpr ?_
+  exact sub_le_sub_right (NNReal.coe_le_coe.mpr hab) J
+
 /-- Unit step at `T`: `0` for `t ≤ T`, `1` afterwards. -/
 noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => if t ≤ T then 0 else 1
@@ -234,6 +256,15 @@ theorem tokenBucketNN_zero_eq (r b : ℝ≥0) :
 theorem staircase_zero_eq (P h : ℝ≥0) (J : ℝ) :
     staircase P h J 0 = 0 := by
   simp [staircase, delayNN]
+
+/-- `staircaseFloor P h J 0 = 0` (for `J ≥ 0`). -/
+theorem staircaseFloor_zero_eq (P h : ℝ≥0) {J : ℝ} (hJ : 0 ≤ J) :
+    staircaseFloor P h J 0 = 0 := by
+  refine ENNReal.ofReal_eq_zero.mpr ?_
+  refine mul_nonpos_iff.mpr (Or.inl ⟨h.coe_nonneg, ?_⟩)
+  refine Int.cast_nonpos.mpr (Int.floor_nonpos ?_)
+  rw [NNReal.coe_zero, zero_sub]
+  exact div_nonpos_of_nonpos_of_nonneg (neg_nonpos.mpr hJ) P.coe_nonneg
 
 /-- `unitStep T 0 = 0`. -/
 theorem unitStep_zero_eq (T : ℝ≥0) : unitStep T 0 = 0 := by
