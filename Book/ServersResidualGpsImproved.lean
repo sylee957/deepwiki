@@ -159,4 +159,103 @@ theorem add_gatedResidual_le_of_isGps {ι : Type*} [Fintype ι]
   have hcancel := le_of_mul_le_mul_left hgoalΦ hΦR
   linarith
 
+/-- **The improved per-flow GPS residual, one peel**: flow `i ≠ k`
+keeps the better of its full-GPS share of `β` and its share, among
+the remaining flows, of the gated residual the constrained flow `k`
+releases. -/
+theorem add_max_div_mul_le_of_isGps {ι : Type*} [Fintype ι]
+    [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+    (hΦ : 0 < ∑ j, φ j)
+    (hc : ∀ j, Ds j ≤ As j)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    {k : ι} (harr : IsMaximalArrivalBound ⇑(As k) α)
+    (hcross : ∀ x, T ≤ x → (∑ j, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j, φ j) * α y ≤ φ k * β y + (∑ j, φ j) * α x)
+    {i : ι} (hik : i ≠ k) {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    (Ds i) s
+      + max ((φ i / ∑ j, φ j) * β (t - s))
+          ((φ i / ∑ j ∈ Finset.univ.erase k, φ j)
+            * gatedResidual β α T (t - s))
+      ≤ (Ds i) t := by
+  have hfull : (Ds i) s + (φ i / ∑ j, φ j) * β (t - s) ≤ (Ds i) t :=
+    add_div_mul_le_of_isGps (fun j _ => hc j) hgps
+      (fun s t hst hbl => hstrict s t hst hbl)
+      (Finset.mem_univ i) hst hbl
+  have hgated : (Ds i) s
+      + (φ i / ∑ j ∈ Finset.univ.erase k, φ j)
+        * gatedResidual β α T (t - s) ≤ (Ds i) t :=
+    add_div_mul_le_of_isGps (J := Finset.univ.erase k)
+      (fun j _ => hc j) hgps
+      (fun s t hst hbl => add_gatedResidual_le_of_isGps hΦ hc hgps
+        hstrict harr hcross hgrow hst hbl)
+      (Finset.mem_erase.mpr ⟨hik, Finset.mem_univ i⟩) hst hbl
+  rcases le_total ((φ i / ∑ j, φ j) * β (t - s))
+      ((φ i / ∑ j ∈ Finset.univ.erase k, φ j)
+        * gatedResidual β α T (t - s)) with hle | hle
+  · rwa [max_eq_right hle]
+  · rwa [max_eq_left hle]
+
+/-- Relation form: a GPS `n`-server with positive total weight, a
+strict aggregate `β`, and flow `k` arrival-constrained offers flow
+`i ≠ k` the maximum of its two shares as a strict service curve on
+the residual server. -/
+theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop}
+    {φ : ι → ℝ≥0} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0} {k i : ι}
+    (hΦ : 0 < ∑ j, φ j) (hik : i ≠ k)
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    (hgps : IsGpsServerN φ S)
+    (hcross : ∀ x, T ≤ x → (∑ j, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j, φ j) * α y ≤ φ k * β y + (∑ j, φ j) * α x) :
+    IsStrictMinimalServiceCurve
+      (fun v => max ((φ i / ∑ j, φ j) * β v)
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j)
+          * gatedResidual β α T v))
+      (residualServer (fun A D => S A D
+        ∧ IsMaximalArrivalBound ⇑(A k) α) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
+  exact add_max_div_mul_le_of_isGps hΦ
+    (fun j => hcaus As Ds hp j) (hgps As Ds hp)
+    (hβ.sum_strict hp) harr hcross hgrow hik hst hbl
+
+/-! ## Book restatement (towards the improved GPS residual)
+The two lemmas on the way to the improved GPS theorem: in a GPS
+`n`-server offering a strict `β` whose flow `k` has a (concave)
+arrival curve `α`, with `β` convex of finite asymptotic rate — here
+the consequences past the crossing time `T` taken as hypotheses —
+the other flows' aggregate keeps the strict gated residual
+`(β − α)·1_{[T,∞)}`, and each flow `i ≠ k` keeps the maximum of its
+full share `(φᵢ/Φ)β` and its remaining share of the gated residual.
+The book proves the first through a variable-capacity witness;
+every window of its argument is backlogged, so the strict bound
+carries the proof by itself. -/
+example {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop}
+    {φ : ι → ℝ≥0} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0} {k i : ι}
+    (hΦ : 0 < ∑ j, φ j) (hik : i ≠ k)
+    (hSrv : IsServerN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    (hgps : IsGpsServerN φ S)
+    (hcross : ∀ x, T ≤ x → (∑ j, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j, φ j) * α y ≤ φ k * β y + (∑ j, φ j) * α x) :
+    IsStrictMinimalServiceCurve
+      (fun v => max ((φ i / ∑ j, φ j) * β v)
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j)
+          * gatedResidual β α T v))
+      (residualServer (fun A D => S A D
+        ∧ IsMaximalArrivalBound ⇑(A k) α) i) :=
+  isStrictMinimalServiceCurve_max_residualServer_of_isGps
+    hΦ hik hSrv.1 hβ hgps hcross hgrow
+
 end DeepWiki
