@@ -105,6 +105,17 @@ def rate {V : Type*} [Semiring V] (R : V) : V → V := fun t => R * t
 theorem rate_zero_eq {V : Type*} [Semiring V] (R : V) :
     rate R 0 = 0 := mul_zero R
 
+/-- `rate R` is monotone (`ℝ≥0`). -/
+theorem rate_mono (R : ℝ≥0) : Monotone (rate R) := by
+  intro a b hab
+  rw [rate_apply, rate_apply]
+  exact mul_le_mul' le_rfl hab
+
+/-- `rate R` is continuous (`ℝ≥0`). -/
+theorem rate_continuous (R : ℝ≥0) : Continuous (rate R) := by
+  show Continuous fun t : ℝ≥0 => R * t
+  exact continuous_const.mul continuous_id
+
 /-- The rate curve `λ_g` is `R`-Lipschitz once `g ≤ R`. -/
 theorem rate_lipschitz {g R : ℝ≥0} (hg : g ≤ R) :
     ∀ v w : ℝ≥0, w ≤ v → rate g v ≤ rate g w + R * (v - w) := by
@@ -117,6 +128,19 @@ theorem rate_lipschitz {g R : ℝ≥0} (hg : g ≤ R) :
 /-- Rate-latency curve `t ↦ R · (t - T)`, over a semiring with subtraction. -/
 def rateLatency {V : Type*} [Semiring V] [Sub V] (R T : V) : V → V :=
   fun t => R * (t - T)
+
+/-- `rateLatency R T` is monotone (`ℝ≥0`). -/
+theorem rateLatency_mono (R T : ℝ≥0) : Monotone (rateLatency R T) := by
+  intro a b hab
+  show R * (a - T) ≤ R * (b - T)
+  exact mul_le_mul' le_rfl (tsub_le_tsub_right hab T)
+
+/-- `rateLatency R T` is continuous (`ℝ≥0`). -/
+theorem rateLatency_continuous (R T : ℝ≥0) :
+    Continuous (rateLatency R T) := by
+  show Continuous fun t : ℝ≥0 => R * (t - T)
+  exact continuous_const.mul (continuous_sub_right T)
+
 
 /-- Token-bucket curve `(r · t + b) ⊓ delay 0` (`0` at `t = 0`), over a semiring
 that is a complete linear order. -/

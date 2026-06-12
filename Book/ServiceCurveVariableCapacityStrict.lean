@@ -424,14 +424,8 @@ theorem not_forall_variableCapacityRel_le_strictServiceRel_of_monotone :
     ¬ ∀ beta : ℝ≥0 → ℝ≥0, Monotone beta → IsLeftContinuous beta →
       variableCapacityRel beta ≤ strictServiceRel beta := by
   intro h
-  refine not_variableCapacityRel_le_strictServiceRel_rateLatency
-    (h _ ?_ ?_)
-  · intro a b hab
-    show (1 : ℝ≥0) * (a - 1) ≤ 1 * (b - 1)
-    rw [one_mul, one_mul]
-    exact tsub_le_tsub_right hab 1
-  · refine isLeftContinuous_of_continuous _ ?_
-    show Continuous fun x : ℝ≥0 => (1 : ℝ≥0) * (x - 1)
-    simpa [one_mul] using (continuous_sub_right (1 : ℝ≥0))
+  exact not_variableCapacityRel_le_strictServiceRel_rateLatency
+    (h _ (rateLatency_mono 1 1)
+      (isLeftContinuous_of_continuous _ (rateLatency_continuous 1 1)))
 
 end DeepWiki

@@ -4,14 +4,16 @@ import Book.ClosuresNd
 import Book.DeviationsBoundsServer
 
 /-! # Residual service under blind multiplexing
-With no information on the service policy, a strict aggregate service
-curve still leaves a guarantee to each flow: the residual server for
-flow `i` offers the min-plus service curve `[β − ∑_{j≠i} αⱼ]⁺↑`
-(`residualCurve`), where the `αⱼ` constrain the cross-traffic arrivals.
-If instead the cross-traffic *departures* are constrained, the residual
-curve is strict. Both proofs run inside a backlogged period of the
-aggregate pair: strictness serves `β` there, the cross-traffic can have
-consumed at most its constraint, and the leftover is flow `i`'s. -/
+With no information on the service policy, a *weakly strict* aggregate
+service curve already leaves a guarantee to each flow: the residual
+server for flow `i` offers the min-plus service curve
+`[β − ∑_{j≠i} αⱼ]⁺↑` (`residualCurve`), where the `αⱼ` constrain the
+cross-traffic arrivals — the proof anchors at the start of the
+aggregate's backlogged period, which is all the start-anchored bound
+provides, and the strict hypothesis enters only as a corollary route.
+If instead the cross-traffic *departures* are constrained, the
+residual curve is strict; that proof runs inside backlogged windows
+and genuinely consumes strictness. -/
 
 namespace DeepWiki
 
@@ -93,18 +95,6 @@ theorem beta_zero_eq_of_strict {A D β : ℝ≥0 → ℝ≥0}
   have h := hstrict 0 0 le_rfl (fun u hu => absurd hu.2 (not_le.mpr hu.1))
   rw [tsub_zero] at h
   exact le_antisymm (by rwa [add_le_iff_nonpos_right] at h) zero_le'
-
-/-- A start-anchored (weakly strict) service bound forces `β 0 = 0`:
-the instant `0` anchors at itself. -/
-theorem beta_zero_eq_of_wstrict {A D β : ℝ≥0 → ℝ≥0}
-    (hws : ∀ w, D (start A D w) + β (w - start A D w) ≤ D w) :
-    β 0 = 0 := by
-  have h := hws 0
-  rw [show start A D 0 = 0 from
-      le_antisymm (start_le A D 0) zero_le', tsub_self] at h
-  have h0 : β 0 ≤ 0 :=
-    le_of_add_le_add_left (a := D 0) (by rwa [add_zero])
-  exact le_antisymm h0 zero_le'
 
 /-- **Blind multiplexing from weakly strict service**: the aggregate
 pair need only gain `β` from the start of each backlogged period —
@@ -376,8 +366,10 @@ theorem IsWeaklyStrictMinimalServiceCurve.sum_wstrict {ι : Type*}
   rw [Curve.coe_sum, Curve.coe_sum] at h
   exact h
 
-/-- Relation form of weakly strict blind multiplexing: the residual
-of a weakly strict aggregate is the same min-plus curve. -/
+/-- Relation form of weakly strict blind multiplexing: an `n`-server
+offering a weakly strict aggregate service curve serves each pair's
+flow `i` at the min-plus residual of the cross-traffic arrival
+constraints. -/
 theorem minConv_residualCurve_le_of_isWeaklyStrictMinimalServiceCurve
     {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
@@ -428,19 +420,23 @@ increment required only from the start of each backlogged period —
 whose arrival processes have arrival curves `αᵢ` still serves each
 flow `i` at the min-plus residual `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`: the
 blind-multiplexing proof only ever uses strictness at the start, so
-the strict version is a corollary of this one. The residual computed
-this way is not necessarily weakly strict. -/
+the strict version is a corollary of this one. The book notes, via
+its two-flow example, that the residual computed this way is not
+necessarily weakly strict. -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
-    {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
-    (hcaus : IsCausalN S)
-    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S)) :
-    IsMinimalServiceCurve
-      (liftEReal (residualCurve β
-        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
-      (residualServer (fun A D => S A D ∧
-        ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) :=
-  isMinimalServiceCurve_residualServer_of_wstrict hcaus hβ
+    {α : ι → ℝ≥0 → ℝ≥0}
+    (hSrv : IsServerN S)
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalCurve ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) :=
+  minConv_residualCurve_le_of_isWeaklyStrictMinimalServiceCurve
+    hSrv.1 hβ hp (fun j hj => (harr j hj).2) t
 
 /-! ## Book restatement (blind multiplexing)
 An `n`-server offering a strict service curve `β` whose arrival

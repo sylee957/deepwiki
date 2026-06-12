@@ -12,52 +12,50 @@ namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
 
+/-- The witness burst function: `4/3` just after the origin. -/
+noncomputable def wsBurst : ℝ≥0 → ℝ≥0 := fun t => if t = 0 then 0 else 4 / 3
+
+/-- `wsBurst` is monotone. -/
+theorem wsBurst_mono : Monotone wsBurst := by
+  intro a b hab
+  by_cases ha : a = 0
+  · subst ha
+    simp only [wsBurst, if_pos]
+    exact zero_le'
+  · have hb : b ≠ 0 := fun hb =>
+      ha (le_antisymm (hb ▸ hab) zero_le')
+    simp only [wsBurst, if_neg ha, if_neg hb]
+    exact le_rfl
+
+/-- `wsBurst` is left-continuous: the jump at the origin is
+right-sided. -/
+theorem wsBurst_leftCont : IsLeftContinuous wsBurst := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · exact isLeftContinuousAt_zero _
+  · refine continuousWithinAt_const.congr_of_eventuallyEq ?_
+      (if_neg ht)
+    filter_upwards [Ioo_mem_nhdsLT (pos_of_ne_zero ht)] with v hv
+    exact if_neg (ne_of_gt hv.1)
+
 /-- The witness arrivals: a `4/3` burst at the origin. -/
 noncomputable def wsWitnessArrival : Curve where
-  toFun := fun t => if t = 0 then 0 else 4 / 3
-  mono := by
-    intro a b hab
-    by_cases ha : a = 0
-    · subst ha
-      simp only [if_pos]
-      exact zero_le'
-    · have hb : b ≠ 0 := fun hb =>
-        ha (le_antisymm (hb ▸ hab) zero_le')
-      simp only [if_neg ha, if_neg hb]
-      exact le_rfl
+  toFun := wsBurst
+  mono := wsBurst_mono
   zero := if_pos rfl
   pwc := by
     refine isPiecewiseContinuous_of_monotone_of_finite_image
-      ?_ ?_ (fun T => Set.Finite.subset
+      wsBurst_mono wsBurst_leftCont (fun T => Set.Finite.subset
         (Set.Finite.insert 0 (Set.finite_singleton (4 / 3))) ?_)
-    · intro a b hab
-      by_cases ha : a = 0
-      · subst ha
-        simp only [if_pos]
-        exact zero_le'
-      · have hb : b ≠ 0 := fun hb =>
-          ha (le_antisymm (hb ▸ hab) zero_le')
-        simp only [if_neg ha, if_neg hb]
-        exact le_rfl
-    · intro t
-      rcases eq_or_ne t 0 with rfl | ht
-      · exact isLeftContinuousAt_zero _
-      · refine continuousWithinAt_const.congr_of_eventuallyEq ?_
-          (if_neg ht)
-        filter_upwards [Ioo_mem_nhdsLT (pos_of_ne_zero ht)] with v hv
-        exact if_neg (ne_of_gt hv.1)
-    · rintro x ⟨u, -, rfl⟩
-      by_cases hu : u = 0
-      · exact Set.mem_insert_iff.mpr (Or.inl (if_pos hu))
-      · exact Set.mem_insert_iff.mpr (Or.inr (if_neg hu))
-  leftCont := by
-    intro t
-    rcases eq_or_ne t 0 with rfl | ht
-    · exact isLeftContinuousAt_zero _
-    · refine continuousWithinAt_const.congr_of_eventuallyEq ?_
-        (if_neg ht)
-      filter_upwards [Ioo_mem_nhdsLT (pos_of_ne_zero ht)] with v hv
-      exact if_neg (ne_of_gt hv.1)
+    rintro x ⟨u, -, rfl⟩
+    by_cases hu : u = 0
+    · exact Set.mem_insert_iff.mpr (Or.inl (if_pos hu))
+    · exact Set.mem_insert_iff.mpr (Or.inr (if_neg hu))
+  leftCont := wsBurst_leftCont
+
+/-- `wsWitnessArrival t = 4/3` away from the origin. -/
+theorem wsWitnessArrival_pos {t : ℝ≥0} (ht : t ≠ 0) :
+    wsWitnessArrival t = 4 / 3 := if_neg ht
 
 /-- The witness departures: rate `2`, then rate `2/3`, capped at the
 burst. -/
@@ -81,8 +79,28 @@ noncomputable def wsWitnessDeparture : Curve where
       (((continuous_const.mul continuous_id).add
         continuous_const).div_const 3 |>.min continuous_const)
 
+/-- `wsWitnessDeparture t` unfolds to its three-piece minimum. -/
+theorem wsWitnessDeparture_apply (t : ℝ≥0) :
+    wsWitnessDeparture t
+      = min (2 * t) (min ((2 * t + 2) / 3) (4 / 3)) := rfl
+
+/-- `wsWitnessDeparture 0 = 0`. -/
+theorem wsWitnessDeparture_zero_eq : wsWitnessDeparture 0 = 0 :=
+  wsWitnessDeparture.zero
+
+/-- Before saturation the departures sit strictly below the burst. -/
+theorem wsWitnessDeparture_lt_of_lt_one {u : ℝ≥0} (hu : u < 1) :
+    wsWitnessDeparture u < 4 / 3 := by
+  rw [wsWitnessDeparture_apply]
+  refine lt_of_le_of_lt
+    (le_trans (min_le_right _ _) (min_le_left _ _)) ?_
+  rw [div_lt_div_iff_of_pos_right (by norm_num : (0 : ℝ≥0) < 3)]
+  calc 2 * u + 2 < 2 * 1 + 2 := by gcongr
+    _ = 4 := by norm_num
+
 /-- The witness is causal: the departures stay below the burst. -/
-theorem wsWitnessDeparture_le : wsWitnessDeparture ≤ wsWitnessArrival := by
+theorem wsWitnessDeparture_le_wsWitnessArrival :
+    wsWitnessDeparture ≤ wsWitnessArrival := by
   intro t
   by_cases ht : t = 0
   · subst ht
@@ -105,15 +123,9 @@ theorem wsWitness_eq_iff {u : ℝ≥0} :
     · refine Or.inr ?_
       by_contra hu1
       push Not at hu1
-      have hA : wsWitnessArrival u = 4 / 3 := if_neg hu
-      have hDlt : wsWitnessDeparture u < 4 / 3 := by
-        show min (2 * u) (min ((2 * u + 2) / 3) (4 / 3)) < 4 / 3
-        refine lt_of_le_of_lt
-          (le_trans (min_le_right _ _) (min_le_left _ _)) ?_
-        rw [div_lt_div_iff_of_pos_right (by norm_num : (0 : ℝ≥0) < 3)]
-        calc 2 * u + 2 < 2 * 1 + 2 := by gcongr
-          _ = 4 := by norm_num
-      rw [← h, hA] at hDlt
+      have hDlt : wsWitnessDeparture u < 4 / 3 :=
+        wsWitnessDeparture_lt_of_lt_one hu1
+      rw [← h, wsWitnessArrival_pos hu] at hDlt
       exact lt_irrefl _ hDlt
   · rintro (rfl | hu)
     · exact wsWitnessArrival.zero_eq wsWitnessDeparture
@@ -139,7 +151,7 @@ start is the origin and the departures dominate the elapsed time;
 after saturation the start is the instant itself. -/
 theorem wsWitness_mem_weaklyStrictServiceRel :
     weaklyStrictServiceRel (rate 1) wsWitnessArrival wsWitnessDeparture := by
-  refine ⟨wsWitnessDeparture_le, fun t => ?_⟩
+  refine ⟨wsWitnessDeparture_le_wsWitnessArrival, fun t => ?_⟩
   rcases lt_or_ge t 1 with ht | ht
   · -- the start is the origin
     have hstart : start ⇑wsWitnessArrival ⇑wsWitnessDeparture t = 0 := by
@@ -197,14 +209,8 @@ theorem wsWitness_not_mem_strictServiceRel :
     have hu1 : u < 1 :=
       lt_of_le_of_lt hu.2 (by norm_num)
     show wsWitnessDeparture u < wsWitnessArrival u
-    have hA : wsWitnessArrival u = 4 / 3 := if_neg hu0
-    rw [hA]
-    show min (2 * u) (min ((2 * u + 2) / 3) (4 / 3)) < 4 / 3
-    refine lt_of_le_of_lt
-      (le_trans (min_le_right _ _) (min_le_left _ _)) ?_
-    rw [div_lt_div_iff_of_pos_right (by norm_num : (0 : ℝ≥0) < 3)]
-    calc 2 * u + 2 < 2 * 1 + 2 := by gcongr
-      _ = 4 := by norm_num
+    rw [wsWitnessArrival_pos hu0]
+    exact wsWitnessDeparture_lt_of_lt_one hu1
   have h := hstrict (1 / 2) (3 / 4) (by
     rw [div_le_div_iff₀ (by norm_num : (0 : ℝ≥0) < 2)
       (by norm_num : (0 : ℝ≥0) < 4)]
@@ -250,20 +256,20 @@ theorem strictServiceRel_lt_weaklyStrictServiceRel_rate :
   lt_of_le_not_ge (strictServiceRel_le_weaklyStrictServiceRel _)
     not_weaklyStrictServiceRel_le_strictServiceRel_rate
 
-/-- **The converse of the middle inclusion is a non-theorem**, even
-for monotone continuous curves. -/
+/-- **The converse of the middle inclusion is a non-theorem.** -/
 theorem not_forall_weaklyStrictServiceRel_le_strictServiceRel :
+    ¬ ∀ beta : ℝ≥0 → ℝ≥0,
+      weaklyStrictServiceRel beta ≤ strictServiceRel beta := fun h =>
+  not_weaklyStrictServiceRel_le_strictServiceRel_rate (h _)
+
+/-- The converse fails even for monotone left-continuous curves —
+the book's standing regularity. -/
+theorem not_forall_weaklyStrictServiceRel_le_strictServiceRel_of_monotone :
     ¬ ∀ beta : ℝ≥0 → ℝ≥0, Monotone beta → IsLeftContinuous beta →
       weaklyStrictServiceRel beta ≤ strictServiceRel beta := by
   intro h
-  refine not_weaklyStrictServiceRel_le_strictServiceRel_rate
-    (h _ ?_ ?_)
-  · intro a b hab
-    show (1 : ℝ≥0) * a ≤ 1 * b
-    rw [one_mul, one_mul]
-    exact hab
-  · refine isLeftContinuous_of_continuous _ ?_
-    show Continuous fun x : ℝ≥0 => (1 : ℝ≥0) * x
-    simpa [one_mul] using (continuous_id : Continuous fun x : ℝ≥0 => x)
+  exact not_weaklyStrictServiceRel_le_strictServiceRel_rate
+    (h _ (rate_mono 1)
+      (isLeftContinuous_of_continuous _ (rate_continuous 1)))
 
 end DeepWiki

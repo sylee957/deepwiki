@@ -74,6 +74,10 @@ catalog).
 `ServiceCurveStrict`, `ArrivalCurvesShaper`, `ArrivalCurvesShaperGreedy` — so
 related chapters sort together alphabetically. When a chapter grows a distinct
 sub-theory, split it into a suffixed sibling rather than growing the file.
+Counterexample-ladder chapters take the suffix `Strict`
+(`ServersConcatenationStrict`, `ServiceCurveVariableCapacityStrict`); when the
+parent name already ends in `Strict` or contains it as the concept term, use
+`Strictness` (`ServersResidualStrictness`, `ServiceCurveWeaklyStrictStrictness`).
 
 **Singular vs plural:** plural when the chapter is the theory of a class of
 objects (`Dioids`, `Servers`, `RealCurves`, `ArrivalCurves`, `Deviations`,
@@ -215,7 +219,9 @@ not just defaults):
   - Hypothesis binders: `hmono` monotone, `hnn` nonneg, `h0` null at origin,
     `hlc` left-continuous, `hsub` sub-additive, `hsup` super-additive,
     `hp` pair membership `S A D`, `hc` causal, `hSrv` server,
-    `hjump` jump domination, `hcap` capacity domination, `harr`
+    `hjump` jump domination, `hcap` capacity domination,
+    `hstrict` windowed strict service bound, `hws` start-anchored
+    (weakly strict) service bound, `harr`
     arrival-curve, `hserv` service bound, `hcross` crossing, `hne` nonempty
     (crossing set) or the `≠` hypothesis of an `_of_ne` lemma. When two
     curves both need a property, tag the binder by the curve
