@@ -1,5 +1,5 @@
 import Book.FunctionDioids
-import Book.ClosureNd
+import Book.ClosuresNd
 import Book.Additivity
 
 /-!

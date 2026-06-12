@@ -7,7 +7,7 @@ import Book.SubDioid
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids
-import Book.ClosureNd
+import Book.ClosuresNd
 import Book.Additivity
 import Book.Deconvolution
 import Book.Closures
@@ -33,7 +33,7 @@ import Book.MaxPlusExtTopology
 import Book.ConvolutionMinimumExt
 import Book.ConvolutionMinimumRC
 import Book.ConvolutionContinuity
-import Book.ClosureEReal
+import Book.ClosuresEReal
 import Book.CurveDioidEReal
 import Book.ConcaveProps
 import Book.ConcaveDioid
