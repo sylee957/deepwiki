@@ -7,8 +7,8 @@ import Book.ServersBacklog
 A strict service curve `β` bounds the output growth on each backlogged period:
 `D s + β (t − s) ≤ D t`. This chapter develops the largest strict-service
 relation `strictServiceRel β`, its server status, monotonicity, the join, the
-output bound, the closure equivalences `Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) =
-Sₛₜᵣᵢ𝒸ₜ(β*̄)`, and the maximal length of a backlogged period (bounded by the
+output bound, the closure equivalences `S_strict(β) = S_strict(β↑) =
+S_strict(β*̄)`, and the maximal length of a backlogged period (bounded by the
 first crossing of the arrival curve below `β`). -/
 
 namespace DeepWiki
@@ -259,7 +259,7 @@ theorem isStrictMinimalServiceCurve_superadditiveClosureMax_iff
 
 /-- Offering `beta`, its non-decreasing closure `ndClosure beta`, and its
 super-additive closure `superadditiveClosureMax beta` are all equivalent:
-`Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) = Sₛₜᵣᵢ𝒸ₜ(β*̄)`. -/
+`S_strict(β) = S_strict(β↑) = S_strict(β*̄)`. -/
 theorem isStrictMinimalServiceCurve_closures_iff
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
     (hbddNd : ∀ t, BddAbove
@@ -277,7 +277,7 @@ theorem isStrictMinimalServiceCurve_closures_iff
 affine rate bound `∃ r, ∀ s, beta s ≤ r * s`: this discharges both boundedness
 conditions (`beta` is then bounded by `r * t` on `[0, t]`, and its
 self-convolution iterates stay below `r * ·`), giving
-`Sₛₜᵣᵢ𝒸ₜ(β) = Sₛₜᵣᵢ𝒸ₜ(β↑) = Sₛₜᵣᵢ𝒸ₜ(β*̄)`. Unlike super-additivity, this allows a
+`S_strict(β) = S_strict(β↑) = S_strict(β*̄)`. Unlike super-additivity, this allows a
 nontrivial closure. -/
 theorem isStrictMinimalServiceCurve_closures_iff_of_affine_bound
     (beta : ℝ≥0 → ℝ≥0) {S : Curve → Curve → Prop}
@@ -377,7 +377,7 @@ theorem maxBackloggedLength_le_firstCrossing
   exact length_le_firstCrossing_of_isBacklogged hc hβ hp harr hbl
 
 /-! ## Book restatement (maximal length of a backlogged period)
-A server `S ⊆ Sₛₜᵣᵢ𝒸ₜ(beta)` whose arrival `A` admits maximal arrival
+A server `S ⊆ S_strict(beta)` whose arrival `A` admits maximal arrival
 curve `alpha` has every backlogged period of length at most
 `ℓmax = inf {x > 0 | alpha x ≤ beta x} = firstCrossing alpha beta`. -/
 example {S : Curve → Curve → Prop} {beta alpha : ℝ≥0 → ℝ≥0}

@@ -6,11 +6,11 @@ import Book.RealCurvesRegularity
 /-! # Composition of strict service curves
 Strict service curves do not compose: when `β₁` and `β₂` vanish at some
 positive `T₁`, `T₂`, the only strict service curve offered by every
-concatenation `Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁)` is `0` — witnessed by the staircase
+concatenation `S_strict(β₂) ∘ S_strict(β₁)` is `0` — witnessed by the staircase
 arrival `ν_{T,b}` (period `max(T₁,T₂) < T < T₁ + T₂`) and its delayed copies,
 which keep the tandem backlogged forever while `C ≤ A ≤ γ_{b,b/T}` for every
 burst `b > 0`. For constant rates the loss is repaired exactly:
-`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) = Sₛₜᵣᵢ𝒸ₜ(λ_{R₁} ∗ λ_{R₂})`, with
+`S_strict(λ_{R₂}) ∘ S_strict(λ_{R₁}) = S_strict(λ_{R₁} ∗ λ_{R₂})`, with
 `λ_{R₁} ∗ λ_{R₂} = λ_{R₁ ⊓ R₂}` — unlike the min-plus inclusion, which can
 be strict. -/
 
@@ -109,7 +109,7 @@ theorem staircaseFun_length_le_of_isBacklogged
 
 /-- A staircase against its copy delayed by `δ < T` more is served with any
 strict curve vanishing at `δ`:
-`(ν_{T,b,d}, ν_{T,b,d+δ}) ∈ Sₛₜᵣᵢ𝒸ₜ(β)` for monotone `β` with `β δ = 0`. -/
+`(ν_{T,b,d}, ν_{T,b,d+δ}) ∈ S_strict(β)` for monotone `β` with `β δ = 0`. -/
 theorem staircaseCurve_strictServiceRel
     {β : ℝ≥0 → ℝ≥0} {T δ : ℝ≥0} (hδT : δ < T)
     (hβmono : Monotone β) (hβδ : β δ = 0) (b d : ℝ≥0) :
@@ -156,7 +156,7 @@ theorem staircaseFun_isBacklogged_Ioc_zero
 
 /-- **Composition of strict service curves offers only the zero curve**: if
 `β₁`, `β₂` vanish at some positive `T₁`, `T₂` and the concatenation
-`Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁)` offers the strict service curve `β`, then
+`S_strict(β₂) ∘ S_strict(β₁)` offers the strict service curve `β`, then
 `β = 0`. -/
 theorem IsStrictMinimalServiceCurve.eq_zero_of_comp
     {β₁ β₂ β : ℝ≥0 → ℝ≥0} {T₁ T₂ : ℝ≥0} (hT₁ : 0 < T₁) (hT₂ : 0 < T₂)
@@ -222,7 +222,7 @@ theorem IsStrictMinimalServiceCurve.eq_zero_of_comp
   linarith
 
 /-- Relation form of the impossibility: if
-`Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁) ⊆ Sₛₜᵣᵢ𝒸ₜ(β)` with `β₁`, `β₂` vanishing at
+`S_strict(β₂) ∘ S_strict(β₁) ⊆ S_strict(β)` with `β₁`, `β₂` vanishing at
 positive points, then `β = 0`. -/
 theorem eq_zero_of_comp_strictServiceRel_le
     {β₁ β₂ β : ℝ≥0 → ℝ≥0} {T₁ T₂ : ℝ≥0} (hT₁ : 0 < T₁) (hT₂ : 0 < T₂)
@@ -451,7 +451,7 @@ theorem IsStrictMinimalServiceCurve.comp_rate
     (fun x y hxy hb => h₂ B C hBC x y hxy hb) hst hbl
 
 /-- Relation form of the rate composition:
-`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) ⊆ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁ ⊓ R₂})`. -/
+`S_strict(λ_{R₂}) ∘ S_strict(λ_{R₁}) ⊆ S_strict(λ_{R₁ ⊓ R₂})`. -/
 theorem comp_strictServiceRel_rate_le (R₁ R₂ : ℝ≥0) :
     Relation.Comp (strictServiceRel (rate R₁)) (strictServiceRel (rate R₂))
       ≤ strictServiceRel (rate (R₁ ⊓ R₂)) := by
@@ -480,7 +480,7 @@ theorem strictServiceRel_rate_le_comp (R₁ R₂ : ℝ≥0) :
       strictServiceRel_self (mul_zero R₂) C⟩
 
 /-- **For constant rates the composition is exactly the convolution**:
-`Sₛₜᵣᵢ𝒸ₜ(λ_{R₂}) ∘ Sₛₜᵣᵢ𝒸ₜ(λ_{R₁}) = Sₛₜᵣᵢ𝒸ₜ(λ_{R₁ ⊓ R₂})`. -/
+`S_strict(λ_{R₂}) ∘ S_strict(λ_{R₁}) = S_strict(λ_{R₁ ⊓ R₂})`. -/
 theorem comp_strictServiceRel_rate_eq (R₁ R₂ : ℝ≥0) :
     Relation.Comp (strictServiceRel (rate R₁)) (strictServiceRel (rate R₂))
       = strictServiceRel (rate (R₁ ⊓ R₂)) :=
@@ -490,7 +490,7 @@ theorem comp_strictServiceRel_rate_eq (R₁ R₂ : ℝ≥0) :
 /-! ## Book restatement (composition of strict service curves)
 Let `β₁` and `β₂` be two (non-decreasing) functions such that there exist
 `T₁, T₂ > 0` with `β₁ T₁ = 0` and `β₂ T₂ = 0`. Then there is no `β ≠ 0` such
-that `Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁) ⊆ Sₛₜᵣᵢ𝒸ₜ(β)`. -/
+that `S_strict(β₂) ∘ S_strict(β₁) ⊆ S_strict(β)`. -/
 example {β₁ β₂ : ℝ≥0 → ℝ≥0} {T₁ T₂ : ℝ≥0} (hT₁ : 0 < T₁) (hT₂ : 0 < T₂)
     (hβ₁mono : Monotone β₁) (hβ₂mono : Monotone β₂)
     (hβ₁ : β₁ T₁ = 0) (hβ₂ : β₂ T₂ = 0) :
@@ -515,7 +515,7 @@ example {T : ℝ≥0} (hT : 0 < T) (b t : ℝ≥0) :
 
 /-! ## Book restatement (constant rates: the loss is repaired)
 When `β₁ = λ_{R₁}` and `β₂ = λ_{R₂}`,
-`Sₛₜᵣᵢ𝒸ₜ(β₂) ∘ Sₛₜᵣᵢ𝒸ₜ(β₁) ⊆ Sₛₜᵣᵢ𝒸ₜ(β₁ ∗ β₂)`: over a backlogged period the
+`S_strict(β₂) ∘ S_strict(β₁) ⊆ S_strict(β₁ ∗ β₂)`: over a backlogged period the
 service offered is at least `min(R₁,R₂)·(t − s)`, and
 `λ_{R₁} ∗ λ_{R₂} = λ_{R₁ ⊓ R₂}`. -/
 example (R₁ R₂ : ℝ≥0) :
