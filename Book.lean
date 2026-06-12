@@ -79,6 +79,7 @@ import Book.ArrivalCurvesPeriodic
 import Book.ArrivalCurvesAggregate
 import Book.ServersMimo
 import Book.ServersResidual
+import Book.ServersResidualWeaklyStrict
 import Book.ServersResidualFifo
 import Book.ServersResidualPriority
 import Book.ServersResidualPriorityPackets

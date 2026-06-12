@@ -96,12 +96,11 @@ theorem beta_zero_eq_of_strict {A D β : ℝ≥0 → ℝ≥0}
   rw [tsub_zero] at h
   exact le_antisymm (by rwa [add_le_iff_nonpos_right] at h) zero_le'
 
-/-- **Blind multiplexing from weakly strict service**: the aggregate
-pair need only gain `β` from the start of each backlogged period —
-the start is constant across the window, so the anchored bound covers
-every shifted difference. Flow `i` is served at the min-plus residual
-`[β − ∑_{j≠i} αⱼ]⁺↑`: `Aᵢ ∗ residualCurve ≤ Dᵢ`. -/
-theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
+/-- **The start-anchored residual**: under a weakly strict aggregate,
+flow `i` receives the full residual from the start of the aggregate's
+backlogged period — the start is constant across the window, so the
+anchored bound covers every shifted difference. -/
+theorem add_residualCurve_start_le_of_wstrict_aggregate {ι : Type*}
     [Fintype ι]
     {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
@@ -112,10 +111,11 @@ theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
       ≤ ∑ j, (Ds j) w)
     {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
     (t : ℝ≥0) :
-    minConv (Deviation.liftENN ⇑(As i))
-        (Deviation.liftENN (residualCurve β
-          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
-      ≤ ((Ds i) t : ℝ≥0∞) := by
+    (Ds i) (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) t)
+      + residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v)
+        (t - start (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) t)
+      ≤ (Ds i) t := by
   have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 := by
     have hA : (∑ j, (As j) 0) = 0 :=
       Finset.sum_eq_zero fun j _ => ((As j).zero : (As j) 0 = 0)
@@ -165,21 +165,51 @@ theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
         _ = (Ds j) s₀ + α j v := by rw [hfloweq j]
     exact tsub_le_of_aggregate_step hstr hcross
       ((Ds i).mono hut) ((Ds i).mono hs₀t)
-  -- collect the supremum and split the convolution at `s₀`
-  have hkey : (Ds i) s₀
-      + residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (t - s₀)
-      ≤ (Ds i) t := by
-    have hsup : residualCurve β
-        (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (t - s₀)
-        ≤ (Ds i) t - (Ds i) s₀ :=
-      ciSup_le fun v => hv v.1 v.2
-    calc (Ds i) s₀ + residualCurve β _ (t - s₀)
-        ≤ (Ds i) s₀ + ((Ds i) t - (Ds i) s₀) := add_le_add le_rfl hsup
-      _ = (Ds i) t := add_tsub_cancel_of_le ((Ds i).mono hs₀t)
+  -- collect the supremum
+  have hsup : residualCurve β
+      (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (t - s₀)
+      ≤ (Ds i) t - (Ds i) s₀ :=
+    ciSup_le fun v => hv v.1 v.2
+  calc (Ds i) s₀ + residualCurve β _ (t - s₀)
+      ≤ (Ds i) s₀ + ((Ds i) t - (Ds i) s₀) := add_le_add le_rfl hsup
+    _ = (Ds i) t := add_tsub_cancel_of_le ((Ds i).mono hs₀t)
+
+/-- **Blind multiplexing from weakly strict service**: flow `i` is
+served at the min-plus residual `[β − ∑_{j≠i} αⱼ]⁺↑`,
+`Aᵢ ∗ residualCurve ≤ Dᵢ` — the convolution splits at the aggregate
+start, where the flow's arrivals are fully served. -/
+theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
+    [Fintype ι]
+    {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hws : ∀ w, (∑ j, (Ds j)
+        (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) w))
+      + β (w - start (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) w)
+      ≤ ∑ j, (Ds j) w)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) := by
+  have hs₀t : start (fun x => ∑ j, (As j) x)
+      (fun x => ∑ j, (Ds j) x) t ≤ t := start_le _ _ t
+  have hfloweq : ∀ j, (Ds j) (start (fun x => ∑ j, (As j) x)
+      (fun x => ∑ j, (Ds j) x) t) = (As j) (start (fun x => ∑ j, (As j) x)
+      (fun x => ∑ j, (Ds j) x) t) :=
+    apply_start_sum_eq (fun j x => hc j x)
+      (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
+      (fun j => ((As j).zero : (As j) 0 = 0).trans
+        ((Ds j).zero : (Ds j) 0 = 0).symm) t
+  have hkey := add_residualCurve_start_le_of_wstrict_aggregate
+    hc hws harr t
   refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hs₀t)) ?_
-  show ((As i) s₀ : ℝ≥0∞)
+  show ((As i) (start (fun x => ∑ j, (As j) x)
+        (fun x => ∑ j, (Ds j) x) t) : ℝ≥0∞)
       + (residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v)
-          (t - s₀) : ℝ≥0∞)
+          (t - start (fun x => ∑ j, (As j) x)
+            (fun x => ∑ j, (Ds j) x) t) : ℝ≥0∞)
     ≤ ((Ds i) t : ℝ≥0∞)
   rw [← hfloweq i, ← ENNReal.coe_add, ENNReal.coe_le_coe]
   exact hkey
