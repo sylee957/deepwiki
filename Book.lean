@@ -52,6 +52,7 @@ import Book.ServersBacklog
 import Book.ServiceCurveStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
+import Book.Packetizer
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
 import Book.ServersConcatenationStrict

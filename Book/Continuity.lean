@@ -4,6 +4,7 @@ import Mathlib.Topology.Order.Monotone
 import Mathlib.Topology.Order.DenselyOrdered
 import Mathlib.Topology.Order.LeftRightNhds
 import Mathlib.Topology.Order.LeftRight
+import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
@@ -233,5 +234,31 @@ theorem isPiecewiseContinuous_of_continuous
     simp [discontSet, hg.continuousAt]
   rw [hempty, Set.empty_inter]
   exact Set.finite_empty
+
+/-- A monotone left-continuous `g` with finite image on each `[0, T]`
+is piecewise continuous: every discontinuity is a right jump, so `g` is
+injective on its discontinuity set, which embeds in the finite image. -/
+theorem isPiecewiseContinuous_of_monotone_of_finite_image
+    {g : ℝ≥0 → ℝ≥0} (hmono : Monotone g) (hlc : IsLeftContinuous g)
+    (hfin : ∀ T, (g '' Set.Icc 0 T).Finite) :
+    IsPiecewiseContinuous g := by
+  intro T
+  refine Set.Finite.of_finite_image
+    ((hfin T).subset (Set.image_mono Set.inter_subset_right)) ?_
+  have key : ∀ a b : ℝ≥0, a ∈ discontSet g ∩ Set.Icc 0 T → a < b →
+      g a < g b := by
+    intro a b ha hab
+    have hra : g a < Function.rightLim g a := by
+      rcases lt_or_eq_of_le (hmono.le_rightLim (le_refl a)) with h | h
+      · exact h
+      · exact absurd (hmono.continuousAt_iff_leftLim_eq_rightLim.mpr
+          (((hmono.continuousWithinAt_Iio_iff_leftLim_eq).mp
+            (hlc a)).trans h)) ha.1
+    exact lt_of_lt_of_le hra (hmono.rightLim_le hab)
+  intro t₁ ht₁ t₂ ht₂ heq
+  by_contra hne
+  rcases lt_or_gt_of_ne hne with h | h
+  · exact absurd heq (ne_of_lt (key t₁ t₂ ht₁ h))
+  · exact absurd heq.symm (ne_of_lt (key t₂ t₁ ht₂ h))
 
 end DeepWiki
