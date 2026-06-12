@@ -22,7 +22,7 @@ namespace Deviation
 
 /-- **A minimal per-bit delay caps the output**: if every bit waits at
 least `dm` (`dm ≤ delayAt A D t` for all `t`), then for left-continuous
-monotone `D` the output is below the `dm`-shifted input,
+`D` with `D ≤ A` the output is below the `dm`-shifted input,
 `D t ≤ A (t − dm)` — the maximal service curve `δ_dm`. -/
 theorem le_apply_tsub_of_le_delayAt {A D : ℝ≥0 → ℝ≥0} {dm : ℝ≥0}
     (hDlc : IsLeftContinuous D) (hc : ∀ x, D x ≤ A x)
@@ -187,10 +187,10 @@ end Deviation
 
 /-! ## Book restatement (server as a jitter)
 A server whose per-bit delay always lies between `dm` and `dM` offers the
-maximal service curve `δ_dm` and — in the sharp shifted form — the
-min-plus service curve `δ_d` for every `d` beyond `dM`:
-`dm ≤ inf_t d(A, D, t)` gives `D ≤ A ∗ δ_dm`, and `d(A, D) ≤ dM` gives
-`A ∗ δ_d ≤ D` for `dM < d`. -/
+maximal service curve `δ_dm` and the min-plus service curve `δ_dM`:
+`dm ≤ inf_t d(A, D, t)` gives `D ≤ A ∗ δ_dm`; `d(A, D) ≤ dM` gives
+`A ∗ δ_dM ≤ D` for left-continuous `A`, and `A ∗ δ_d ≤ D` for every
+`d > dM` with no continuity at all. -/
 example {A D : ℝ≥0 → ℝ≥0} {dm : ℝ≥0} {dM : ℝ≥0∞}
     (hA0 : A 0 = 0) (hAmono : Monotone A) (hDmono : Monotone D)
     (hDlc : IsLeftContinuous D) (hc : ∀ x, D x ≤ A x)
@@ -208,6 +208,37 @@ example {A D : ℝ≥0 → ℝ≥0} {dm : ℝ≥0} {dM : ℝ≥0∞}
   · rw [conv_delayNN _ hAmonoE d]
     show (A (t - d) : ℝ≥0∞) ≤ (D t : ℝ≥0∞)
     exact_mod_cast Deviation.apply_tsub_le_of_delay_le hA0 hDmono hdel hd t
+
+/-! At the bound `dM` itself, with the book's left-continuity of the
+arrival: `d(A, D) ≤ dM` gives the min-plus service curve `δ_dM`. -/
+example {A D : ℝ≥0 → ℝ≥0} {dM : ℝ≥0}
+    (hA0 : A 0 = 0) (hAmono : Monotone A) (hAlc : IsLeftContinuous A)
+    (hDmono : Monotone D)
+    (hdel : Deviation.delay A D ≤ (dM : ℝ≥0∞)) (t : ℝ≥0) :
+    minConv (Deviation.liftENN A) (delayNN dM) t ≤ (D t : ℝ≥0∞) := by
+  have hAmonoE : Monotone (Deviation.liftENN A) :=
+    fun u v huv => ENNReal.coe_le_coe.mpr (hAmono huv)
+  rw [conv_delayNN _ hAmonoE dM]
+  show (A (t - dM) : ℝ≥0∞) ≤ (D t : ℝ≥0∞)
+  exact_mod_cast
+    Deviation.apply_tsub_le_of_delay_le_of_leftCont hA0 hAlc hDmono hdel t
+
+/-! Service curve for a jitter, at the deviation itself: a `β`-server
+serving an `α`-constrained left-continuous arrival offers the pure-delay
+min-plus curve `δ_dM` at any `dM` above `hDev α β`. -/
+example {A D : ℝ≥0 → ℝ≥0} {α β : ℝ≥0 → ℝ≥0∞} {dM : ℝ≥0}
+    (hA0 : A 0 = 0) (hAmono : Monotone A) (hAlc : IsLeftContinuous A)
+    (hβmono : Monotone β) (hDmono : Monotone D)
+    (harr : IsMaximalArrivalBound (Deviation.liftENN A) α)
+    (hserv : ∀ t, minConv (Deviation.liftENN A) β t ≤ (D t : ℝ≥0∞))
+    (hd : (hDev α β : ℝ≥0∞) ≤ (dM : ℝ≥0∞)) (t : ℝ≥0) :
+    minConv (Deviation.liftENN A) (delayNN dM) t ≤ (D t : ℝ≥0∞) := by
+  have hAmonoE : Monotone (Deviation.liftENN A) :=
+    fun u v huv => ENNReal.coe_le_coe.mpr (hAmono huv)
+  rw [conv_delayNN _ hAmonoE dM]
+  show (A (t - dM) : ℝ≥0∞) ≤ (D t : ℝ≥0∞)
+  exact_mod_cast Deviation.apply_tsub_le_of_hDev_le_of_leftCont hA0 hAmono
+    hAlc hβmono hDmono harr hserv hd t
 
 /-! The output of a jitter is constrained by the jitter deconvolution:
 with minimal and maximal delays `a ≤ b`, the output arrival curve

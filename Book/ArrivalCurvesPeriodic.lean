@@ -252,10 +252,11 @@ A periodic flow crossing a constant-rate server `λ_C` (a shaper) under
 stability `s/P < C`: with the token-bucket approximation `γ_{s/P,s}`,
 the arrival curve at the next server is
 `(γ_{s/P,s} ⊘ λ_C) ∧ λ_C = γ_{s/P,s} ∧ λ_C` — the TSpec shape, whose
-rate cap is what reduces the downstream burst (the *shaping effect*). -/
-example {P s C : ℝ≥0} (hst : s / P < C) :
+rate cap is what reduces the downstream burst (the *shaping effect*).
+(The identity needs no stability at all.) -/
+example (P s C : ℝ≥0) :
     minDeconv (tokenBucketNN (s / P) s) (rateNN C) ⊓ rateNN C
       = tokenBucketNN (s / P) s ⊓ rateNN C :=
-  minDeconv_tokenBucketNN_rateNN_inf (s / P) s C hst.le
+  minDeconv_tokenBucketNN_rateNN_inf (s / P) s C
 
 end DeepWiki

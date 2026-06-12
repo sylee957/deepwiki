@@ -368,19 +368,34 @@ theorem minDeconv_tokenBucketNN_rateNN_top (r b R : ℝ≥0)
   exact minDeconv_tokenBucketNN_rateLatencyNN_top r b R 0 hRr
 
 /-- **The TSpec shaping identity**: a `λ_C`-shaped token-bucket flow
-keeps its arrival curve, `(γ_{r,b} ⊘ λ_C) ⊓ λ_C = γ_{r,b} ⊓ λ_C` for
-`r ≤ C` — shaping only unclamps the origin, and the rate re-clamps it. -/
-theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) (h : r ≤ C) :
+keeps its arrival curve, `(γ_{r,b} ⊘ λ_C) ⊓ λ_C = γ_{r,b} ⊓ λ_C` —
+below the rate shaping only unclamps the origin and the rate re-clamps
+it; above it both sides collapse to `λ_C`. -/
+theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) :
     minDeconv (tokenBucketNN r b) (rateNN C) ⊓ rateNN C
       = tokenBucketNN r b ⊓ rateNN C := by
-  have hrd : rateNN C ≤ delayNN 0 := by
-    intro t
-    rcases eq_zero_or_pos t with rfl | ht
-    · simp [rateNN_apply, delayNN]
-    · rw [show delayNN 0 t = ⊤ from delay_eq_top 0 ht]
-      exact le_top
-  rw [minDeconv_tokenBucketNN_rateNN r b C h, ← affine_inf_delay0,
-    inf_assoc, inf_eq_right.mpr hrd]
+  rcases le_or_gt r C with h | h
+  · have hrd : rateNN C ≤ delayNN 0 := by
+      intro t
+      rcases eq_zero_or_pos t with rfl | ht
+      · simp [rateNN_apply, delayNN]
+      · rw [show delayNN 0 t = ⊤ from delay_eq_top 0 ht]
+        exact le_top
+    rw [minDeconv_tokenBucketNN_rateNN r b C h, ← affine_inf_delay0,
+      inf_assoc, inf_eq_right.mpr hrd]
+  · -- unstable: the deconvolution is `⊤` and `λ_C ≤ γ_{r,b}`
+    have hrate : rateNN C ≤ tokenBucketNN r b := by
+      intro t
+      rcases eq_zero_or_pos t with rfl | ht
+      · simp [rateNN_apply]
+      · rw [tokenBucketNN_apply,
+          show delayNN 0 t = ⊤ from delay_eq_top 0 ht, inf_top_eq]
+        simp only [rateNN_apply, ← ENNReal.coe_mul, ← ENNReal.coe_add,
+          ENNReal.coe_le_coe]
+        exact le_trans (mul_le_mul_left h.le t) le_self_add
+    rw [minDeconv_tokenBucketNN_rateNN_top r b C h]
+    show ⊤ ⊓ rateNN C = tokenBucketNN r b ⊓ rateNN C
+    rw [top_inf_eq, inf_eq_right.mpr hrate]
 
 /-- `rateNN R ⊘ rateNN R' = rateNN R` when `R ≤ R'`. -/
 theorem minDeconv_rateNN_rateNN (R R' : ℝ≥0) (h : R ≤ R') :

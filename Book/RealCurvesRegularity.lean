@@ -1,3 +1,4 @@
+import Mathlib.Topology.Instances.EReal.Lemmas
 import Book.Continuity
 import Book.RealCurves
 
@@ -9,6 +10,15 @@ namespace DeepWiki
 open Algebra
 open scoped Classical NNReal ENNReal Algebra.Bridge
 open Set Topology Filter
+
+/-- `rateEReal C` is continuous. -/
+theorem rateEReal_continuous (C : ℝ≥0) : Continuous (rateEReal C) :=
+  continuous_coe_real_ereal.comp (NNReal.continuous_coe.comp
+    (continuous_const.mul continuous_id))
+
+/-- `rateEReal C` is left-continuous. -/
+theorem rateEReal_leftCont (C : ℝ≥0) : IsLeftContinuous (rateEReal C) :=
+  isLeftContinuous_of_continuous _ (rateEReal_continuous C)
 
 /-- `rateNN R` is continuous. -/
 theorem rateNN_continuous (R : ℝ≥0) : Continuous (rateNN R) :=

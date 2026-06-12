@@ -1,11 +1,13 @@
 import Book.ServiceCurveStrictMinimal
 import Book.DeviationsBoundsTight
+import Book.RealCurvesRegularity
 
 /-! # Rate servers
 The guaranteed-rate server offers the strict service curve `λ_R`, hence
 also the min-plus service curve `λ_R`. The constant-rate server moreover
-caps its increments by the rate — the maximal service curve `λ_R` — and
-its exact output `A ∗ λ_R` makes it the greedy `λ_R`-shaper. -/
+caps its increments by the rate — the maximal service curve `λ_R` (stated
+at the `ℝ≥0∞` level) — and a pair served at `λ_R` from both sides is
+exactly a greedy `λ_R`-shaper pair, whose output is `A ∗ λ_R`. -/
 
 namespace DeepWiki
 
@@ -38,16 +40,26 @@ example {S : Curve → Curve → Prop} {R : ℝ≥0} (hSrv : IsServer S)
     IsMinimalServiceCurve (liftEReal (rate R)) S :=
   hβ.isMinimalServiceCurve hSrv.1
 
-/-! A constant-rate server serves *exactly* at rate `R`: its output is the
-greedy one, `D = A ∗ λ_R`, so it is the greedy `λ_R`-shaper (the
-regularity witnesses package the output as a curve). -/
+/-! A constant-rate server serves *exactly* at rate `R`: it offers `λ_R`
+both as a min-plus service curve (it is strict `λ_R`) and as a maximal
+one (its increments are rate-capped, `coe_le_minConv_rateNN_of_increment`
+at the `ℝ≥0∞` level) — and a pair served at `λ_R` from both sides is
+exactly a greedy `λ_R`-shaper pair. -/
+example {R : ℝ≥0} {A D : Curve}
+    (hmin : minimalServiceRel (rateEReal R) A D)
+    (hmax : maximalServiceRel (rateEReal R) A D) :
+    greedyShaperRel (rateEReal R) A D :=
+  (mem_greedyShaperRel_iff_minimal_and_maximal
+    (le_of_eq (rateEReal_zero_eq R))).mpr ⟨hmin, hmax⟩
+
+/-! The greedy `λ_R`-output itself, packaged as a curve (the
+piecewise-continuity witness is the price of `C`-membership). -/
 example (A : Curve) {R : ℝ≥0}
-    (hlc : IsLeftContinuous (rateEReal R))
     (hpwc : IsPiecewiseContinuous (greedyFun A (rateEReal R))) :
     greedyShaperRel (rateEReal R) A
       (greedyCurve A (rateEReal R) (rateEReal_mono R) (rateEReal_zero_eq R)
-        hlc hpwc) :=
-  Deviation.greedyShaperRel_greedyCurve A (rateEReal_mono R) (rateEReal_zero_eq R)
-    hlc hpwc
+        (rateEReal_leftCont R) hpwc) :=
+  Deviation.greedyShaperRel_greedyCurve A (rateEReal_mono R)
+    (rateEReal_zero_eq R) (rateEReal_leftCont R) hpwc
 
 end DeepWiki
