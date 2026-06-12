@@ -239,6 +239,38 @@ noncomputable def residualCurveEReal (β : ℝ≥0 → EReal) (α : ℝ≥0 → 
     (α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
     residualCurveEReal β α v = β v - ((α v : ℝ) : EReal) := rfl
 
+/-- `residualCurveEReal β α 0 = 0` when both curves are null at the
+origin. -/
+theorem residualCurveEReal_zero_eq {β : ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0}
+    (hβ0 : β 0 = 0) (hα0 : α 0 = 0) :
+    residualCurveEReal β α 0 = 0 := by
+  rw [residualCurveEReal_apply, hβ0, hα0]
+  simp
+
+/-- The raw residual is dominated by the truncated-closed residual of
+blind multiplexing: `β − α ≤ [β − α]⁺↑` pointwise through `liftEReal`
+(monotonicity of `β` prefix-bounds the closure). -/
+theorem residualCurveEReal_le_liftEReal_residualCurve {β α : ℝ≥0 → ℝ≥0}
+    (hβmono : Monotone β) (v : ℝ≥0) :
+    residualCurveEReal (liftEReal β) α v
+      ≤ liftEReal (residualCurve β α) v := by
+  rw [residualCurveEReal_apply,
+    show liftEReal β v - ((α v : ℝ) : EReal)
+        = ((((β v : ℝ) - (α v : ℝ)) : ℝ) : EReal) from
+      (EReal.coe_sub _ _).symm]
+  by_cases hle : α v ≤ β v
+  · rw [show ((β v : ℝ) - (α v : ℝ)) = ((β v - α v : ℝ≥0) : ℝ) from
+        (NNReal.coe_sub hle).symm]
+    have h := tsub_le_residualCurve (α := α)
+      (closureBddAbove_tsub_of_monotone hβmono) (le_refl v)
+    exact_mod_cast h
+  · refine le_trans ?_ (isNonneg_liftEReal (residualCurve β α) v)
+    have hlt : (β v : ℝ) - (α v : ℝ) ≤ 0 := by
+      have h := (not_le.mp hle).le
+      have : (β v : ℝ) ≤ (α v : ℝ) := by exact_mod_cast h
+      linarith
+    exact_mod_cast hlt
+
 /-- **The raw residual can be negative**: against the rate-latency
 aggregate `β_{2,2}` and rate-`1` cross-traffic, the residual at `1` is
 `−1 < 0` — the warning that bars it from performance bounds. -/
@@ -253,17 +285,16 @@ theorem residualCurveEReal_rateLatency_neg :
   exact EReal.coe_neg'.mpr (by norm_num)
 
 /-- **Blind multiplexing from a min-plus aggregate** (the warning
-theorem, pair level): an aggregate served at a monotone left-continuous
-min-plus `β` with `αⱼ`-bounded cross-traffic serves flow `i` at the raw
-residual `β − ∑_{j≠i} αⱼ`. The convolution split of the aggregate is
-attained because `β` is left-continuous; the residual may be negative,
-so — unlike the strict-aggregate residual — this cannot feed
-performance bounds. -/
+theorem, pair level): an aggregate served at a min-plus `β` with
+`αⱼ`-bounded cross-traffic serves flow `i` at the raw residual
+`β − ∑_{j≠i} αⱼ`. The book assumes `β` left-continuous to attain the
+aggregate split; an `ε`-approximate split makes the hypothesis
+unnecessary. The residual may be negative, so — unlike the
+strict-aggregate residual — this cannot feed performance bounds. -/
 theorem minConv_residualCurveEReal_le_of_minimal_aggregate {ι : Type*}
     [Fintype ι] {As Ds : ι → Curve} {β : ℝ≥0 → EReal}
     {α : ι → ℝ≥0 → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
-    (hβm : Monotone β) (hβlc : IsLeftContinuous β)
     (hserv : minConv (liftEReal (fun x => ∑ j, (As j) x)) β
       ≤ liftEReal (fun x => ∑ j, (Ds j) x))
     {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
@@ -272,39 +303,54 @@ theorem minConv_residualCurveEReal_le_of_minimal_aggregate {ι : Type*}
         (residualCurveEReal β
           (fun v => ∑ j ∈ Finset.univ.erase i, α j v)) t
       ≤ curveEReal (Ds i) t := by
-  -- the aggregate convolution is attained at some split `s ∈ [0, t]`
-  obtain ⟨s, hs, heq⟩ := exists_minConv_eq_split_of_curves_of_contAt
-    (liftEReal (fun x => ∑ j, (As j) x)) β
-    (monotone_liftEReal fun a b hab =>
-      Finset.sum_le_sum fun j _ => (As j).mono hab)
-    hβm
-    (isLeftContinuous_liftEReal
-      (isLeftContinuous_sum _ fun j _ => fun u => (As j).leftCont u))
-    hβlc t
-    (fun u => (addDefined_liftEReal _ u _).continuousAt)
-  have hatt : liftEReal (fun x => ∑ j, (As j) x) s + β (t - s)
-      ≤ liftEReal (fun x => ∑ j, (Ds j) x) t := by
-    rw [← heq]; exact hserv t
-  -- split the flow-`i` convolution at the same point
-  refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hs.2)) ?_
-  by_cases hbot : β (t - s) = ⊥
+  by_contra hcon
+  rw [not_le] at hcon
+  -- a real level strictly between the target and the convolution
+  obtain ⟨c, hc1, hc2⟩ := EReal.exists_between_coe_real hcon
+  set ε : ℝ := c - ((Ds i) t : ℝ) with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    refine sub_pos.mpr ?_
+    have hc1' : ((((Ds i) t : ℝ)) : EReal) < (c : EReal) := hc1
+    exact_mod_cast hc1'
+  -- `ε`-room: some split of the aggregate convolution undershoots
+  have hex : ∃ u v : ℝ≥0, u + v = t
+      ∧ liftEReal (fun x => ∑ j, (As j) x) u + β v
+        < liftEReal (fun x => ∑ j, (Ds j) x) t + (ε : EReal) := by
+    by_contra hall
+    push Not at hall
+    have hle : liftEReal (fun x => ∑ j, (Ds j) x) t + (ε : EReal)
+        ≤ minConv (liftEReal (fun x => ∑ j, (As j) x)) β t :=
+      le_minConv fun u v huv => hall u v huv
+    have hch := le_trans hle (hserv t)
+    have : ((∑ j, (Ds j) t : ℝ≥0) : ℝ) + ε
+        ≤ ((∑ j, (Ds j) t : ℝ≥0) : ℝ) := by exact_mod_cast hch
+    linarith
+  obtain ⟨u, v, huv, hsplit⟩ := hex
+  -- flow `i`'s convolution at the same split exceeds `c`
+  have hqlt : (c : EReal) < curveEReal (As i) u
+      + residualCurveEReal β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v) v :=
+    lt_of_lt_of_le hc2 (minConv_le_add _ _ huv)
+  by_cases hbot : β v = ⊥
   · rw [residualCurveEReal_apply, hbot, EReal.bot_sub, EReal.add_bot]
-    exact bot_le
-  · have htop : β (t - s) ≠ ⊤ := by
+      at hqlt
+    exact absurd hqlt (not_lt.mpr bot_le)
+  · have htop : β v ≠ ⊤ := by
       intro htop
-      rw [htop, EReal.coe_add_top] at hatt
-      exact absurd hatt (EReal.coe_lt_top _).not_ge
-    obtain ⟨b, hb⟩ : ∃ b : ℝ, β (t - s) = (b : EReal) :=
-      ⟨(β (t - s)).toReal, (EReal.coe_toReal htop hbot).symm⟩
-    -- the attained split, decomposed over flow `i` and the cross-traffic
-    have hattR : (((As i) s : ℝ)
-          + ∑ j ∈ Finset.univ.erase i, ((As j) s : ℝ)) + b
-        ≤ ((Ds i) t : ℝ)
-          + ∑ j ∈ Finset.univ.erase i, ((Ds j) t : ℝ) := by
-      rw [hb] at hatt
-      have h' : ((∑ j, (As j) s : ℝ≥0) : ℝ) + b
-          ≤ ((∑ j, (Ds j) t : ℝ≥0) : ℝ) := by exact_mod_cast hatt
-      rw [← Finset.add_sum_erase Finset.univ (fun j => (As j) s)
+      rw [htop, EReal.coe_add_top] at hsplit
+      exact absurd hsplit (not_lt.mpr le_top)
+    obtain ⟨b, hb⟩ : ∃ b : ℝ, β v = (b : EReal) :=
+      ⟨(β v).toReal, (EReal.coe_toReal htop hbot).symm⟩
+    -- the split inequality, decomposed over flow `i` and the rest
+    have hsplitR : (((As i) u : ℝ)
+          + ∑ j ∈ Finset.univ.erase i, ((As j) u : ℝ)) + b
+        < (((Ds i) t : ℝ)
+          + ∑ j ∈ Finset.univ.erase i, ((Ds j) t : ℝ)) + ε := by
+      rw [hb] at hsplit
+      have h' : ((∑ j, (As j) u : ℝ≥0) : ℝ) + b
+          < ((∑ j, (Ds j) t : ℝ≥0) : ℝ) + ε := by exact_mod_cast hsplit
+      rw [← Finset.add_sum_erase Finset.univ (fun j => (As j) u)
             (Finset.mem_univ i),
         ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) t)
             (Finset.mem_univ i)] at h'
@@ -312,31 +358,34 @@ theorem minConv_residualCurveEReal_le_of_minimal_aggregate {ι : Type*}
       linarith
     -- causality + the arrival bounds control the cross-traffic
     have hcross : ∑ j ∈ Finset.univ.erase i, ((Ds j) t : ℝ)
-        ≤ (∑ j ∈ Finset.univ.erase i, ((As j) s : ℝ))
-          + ∑ j ∈ Finset.univ.erase i, ((α j (t - s) : ℝ)) := by
+        ≤ (∑ j ∈ Finset.univ.erase i, ((As j) u : ℝ))
+          + ∑ j ∈ Finset.univ.erase i, ((α j v : ℝ)) := by
       rw [← Finset.sum_add_distrib]
       refine Finset.sum_le_sum fun j hj => ?_
-      have hinc : (As j) t ≤ (As j) s + α j (t - s) := by
+      have hinc : (As j) t ≤ (As j) u + α j v := by
         have h := (isMaximalArrivalBound_iff_increment _ _).mp
-          (harr j (Finset.ne_of_mem_erase hj)) s (t - s)
-        rwa [add_tsub_cancel_of_le hs.2] at h
+          (harr j (Finset.ne_of_mem_erase hj)) u v
+        rwa [huv] at h
       exact_mod_cast le_trans (hc j t) hinc
-    rw [residualCurveEReal_apply, hb, curveEReal_apply, curveEReal_apply,
-      ← EReal.coe_sub, ← EReal.coe_add, EReal.coe_le_coe_iff]
-    push_cast
+    -- the flow-`i` reading of the gap
+    have hqltR : c < ((As i) u : ℝ)
+        + (b - ((∑ j ∈ Finset.univ.erase i, α j v : ℝ≥0) : ℝ)) := by
+      rw [residualCurveEReal_apply, hb, curveEReal_apply,
+        ← EReal.coe_sub, ← EReal.coe_add] at hqlt
+      exact_mod_cast hqlt
+    push_cast at hqltR
     linarith
 
 /-- **The residual server from a min-plus aggregate** (relation form):
-restricting an `n`-server whose aggregate is served at a monotone
-left-continuous min-plus `β` to pairs with `αⱼ`-constrained
-cross-traffic, the residual server for flow `i` offers the raw
-`EReal`-valued residual `β − ∑_{j≠i} αⱼ` as a min-plus service curve. -/
+restricting an `n`-server whose aggregate is served at a min-plus `β`
+to pairs with `αⱼ`-constrained cross-traffic, the residual server for
+flow `i` offers the raw `EReal`-valued residual `β − ∑_{j≠i} αⱼ` as a
+min-plus service curve. -/
 theorem isMinimalServiceCurve_residualServer_of_minimal_aggregate
     {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → EReal}
     {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
     (hcaus : IsCausalN S)
-    (hβm : Monotone β) (hβlc : IsLeftContinuous β)
     (hβ : IsMinimalServiceCurve β (aggregateServer S)) :
     IsMinimalServiceCurve
       (residualCurveEReal β (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
@@ -345,7 +394,7 @@ theorem isMinimalServiceCurve_residualServer_of_minimal_aggregate
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩
   intro t
   refine minConv_residualCurveEReal_le_of_minimal_aggregate
-    (fun j => hcaus As Ds hp j) hβm hβlc ?_ harr t
+    (fun j => hcaus As Ds hp j) ?_ harr t
   have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
   rwa [curveEReal_eq_liftEReal, curveEReal_eq_liftEReal,
     Curve.coe_sum, Curve.coe_sum] at h
@@ -356,12 +405,14 @@ whose arrival processes have arrival curves `αⱼ`: the residual server
 for flow `i` offers the min-plus service curve `β − ∑_{j≠i} αⱼ`. The
 result is a warning — the residual may be negative
 (`residualCurveEReal_rateLatency_neg`), so it cannot be applied to
-compute performance bounds. -/
+compute performance bounds. (The book's left-continuity of `β` is
+unnecessary: the proof takes an `ε`-approximate split instead of an
+attained one.) -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → EReal}
     {α : ι → ℝ≥0 → ℝ≥0}
     (hSrv : IsServerN S)
-    (hβm : Monotone β) (hβlc : IsLeftContinuous β)
+    (_hβlc : IsLeftContinuous β)
     (hβ : IsMinimalServiceCurve β (aggregateServer S))
     {As Ds : ι → Curve} (hp : S As Ds)
     {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalCurve ⇑(As j) (α j))
@@ -371,7 +422,7 @@ example {ι : Type*} [Fintype ι]
           (fun v => ∑ j ∈ Finset.univ.erase i, α j v)) t
       ≤ curveEReal (Ds i) t :=
   minConv_residualCurveEReal_le_of_minimal_aggregate
-    (fun j => hSrv.1 As Ds hp j) hβm hβlc
+    (fun j => hSrv.1 As Ds hp j)
     (by
       have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
       rwa [curveEReal_eq_liftEReal, curveEReal_eq_liftEReal,

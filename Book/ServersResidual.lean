@@ -301,7 +301,8 @@ offers the min-plus service curve `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`, i.
 `Dᵢ ≥ Aᵢ ∗ βᵢ`. The strict aggregate hypothesis is essential
 (`not_forall_minConv_residualCurve_le_of_minimal_aggregate`); the
 conclusion also cannot be upgraded to strict
-(`not_forall_add_residualCurve_le_of_strict_aggregate`). If instead
+(`not_forall_add_residualCurve_le_of_strict_aggregate_of_arrival_bounds`).
+If instead
 the aggregate departure process
 of the cross-traffic is constrained by `α`, the residual server offers
 the *strict* service curve `[β − α]⁺↑`. -/

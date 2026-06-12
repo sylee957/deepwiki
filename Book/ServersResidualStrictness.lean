@@ -27,17 +27,17 @@ theorem flipWitnessA_apply (u : ℝ≥0) :
 
 /-- The flip-priority output of flow `0`: rate `2` while it has
 priority on `[0, 1]`, frozen at `2` on `[1, 2]`, then rate `1`. -/
-noncomputable def flipWitnessD1 : Curve :=
+noncomputable def flipWitnessDBurst : Curve :=
   afterCurve 0 (fun w => min (2 * w) (max 2 w))
     (fun _ _ hab => min_le_min (mul_le_mul_right hab 2)
       (max_le_max le_rfl hab))
     ((continuous_const.mul continuous_id).min
       (continuous_const.max continuous_id))
 
-/-- `flipWitnessD1` reads off as the unconditional two-piece minimum. -/
-theorem flipWitnessD1_apply (u : ℝ≥0) :
-    flipWitnessD1 u = min (2 * u) (max 2 u) := by
-  rw [flipWitnessD1, afterCurve_apply]
+/-- `flipWitnessDBurst` reads off as the unconditional two-piece minimum. -/
+theorem flipWitnessDBurst_apply (u : ℝ≥0) :
+    flipWitnessDBurst u = min (2 * u) (max 2 u) := by
+  rw [flipWitnessDBurst, afterCurve_apply]
   rcases eq_zero_or_pos u with rfl | hu
   · rw [if_neg (lt_irrefl 0), mul_zero]
     exact (min_eq_left zero_le').symm
@@ -45,7 +45,7 @@ theorem flipWitnessD1_apply (u : ℝ≥0) :
 
 /-- The flip-priority output of flow `1`: nothing while flow `0` has
 priority, rate `2` on `[1, 2]` to catch up, then rate `1`. -/
-noncomputable def flipWitnessD2 : Curve :=
+noncomputable def flipWitnessDRate : Curve :=
   afterCurve 0 (fun w => min (2 * (w - 1)) w)
     (fun _ _ hab => min_le_min
       (mul_le_mul_right (tsub_le_tsub_right hab 1) 2) hab)
@@ -53,10 +53,10 @@ noncomputable def flipWitnessD2 : Curve :=
         (continuous_sub.comp (continuous_id.prodMk continuous_const))).min
       continuous_id)
 
-/-- `flipWitnessD2` reads off as the unconditional clamped minimum. -/
-theorem flipWitnessD2_apply (u : ℝ≥0) :
-    flipWitnessD2 u = min (2 * (u - 1)) u := by
-  rw [flipWitnessD2, afterCurve_apply]
+/-- `flipWitnessDRate` reads off as the unconditional clamped minimum. -/
+theorem flipWitnessDRate_apply (u : ℝ≥0) :
+    flipWitnessDRate u = min (2 * (u - 1)) u := by
+  rw [flipWitnessDRate, afterCurve_apply]
   rcases eq_zero_or_pos u with rfl | hu
   · rw [if_neg (lt_irrefl 0), zero_tsub, mul_zero]
     exact (min_self 0).symm
@@ -64,13 +64,13 @@ theorem flipWitnessD2_apply (u : ℝ≥0) :
 
 /-- The witness pairs are causal. -/
 theorem flipWitness_causal :
-    ∀ j : Fin 2, (![flipWitnessD1, flipWitnessD2] j)
+    ∀ j : Fin 2, (![flipWitnessDBurst, flipWitnessDRate] j)
       ≤ (![flipWitnessA, mpWitnessRate] j) := by
   intro j
   fin_cases j
   · intro u
-    show flipWitnessD1 u ≤ flipWitnessA u
-    rw [flipWitnessD1_apply, flipWitnessA_apply]
+    show flipWitnessDBurst u ≤ flipWitnessA u
+    rw [flipWitnessDBurst_apply, flipWitnessA_apply]
     rcases eq_zero_or_pos u with rfl | hu
     · rw [if_neg (lt_irrefl 0), mul_zero]
       exact min_le_left _ _
@@ -83,16 +83,16 @@ theorem flipWitness_causal :
         calc (2 : ℝ≥0) = 1 + 1 := one_add_one_eq_two.symm
           _ ≤ u + 1 := add_le_add (not_le.mp h1).le le_rfl
   · intro u
-    show flipWitnessD2 u ≤ mpWitnessRate u
-    rw [flipWitnessD2_apply, mpWitnessRate_apply]
+    show flipWitnessDRate u ≤ mpWitnessRate u
+    rw [flipWitnessDRate_apply, mpWitnessRate_apply]
     exact min_le_right _ _
 
 /-- The witness aggregate output is exactly the strict rate:
 `D₁(x) + D₂(x) = 2x` — the priority flip reassigns the service but
 never wastes it. -/
 theorem flipWitness_sum_eq (x : ℝ≥0) :
-    flipWitnessD1 x + flipWitnessD2 x = 2 * x := by
-  rw [flipWitnessD1_apply, flipWitnessD2_apply]
+    flipWitnessDBurst x + flipWitnessDRate x = 2 * x := by
+  rw [flipWitnessDBurst_apply, flipWitnessDRate_apply]
   by_cases h1 : x ≤ 1
   · -- flow `0` is served alone at rate `2`
     have h2x : 2 * x ≤ 2 := by
@@ -142,17 +142,17 @@ theorem flipWitness_strict :
         (fun x => ∑ j,
           ((![flipWitnessA, mpWitnessRate] : Fin 2 → Curve) j) x)
         (fun x => ∑ j,
-          ((![flipWitnessD1, flipWitnessD2] : Fin 2 → Curve) j) x)
+          ((![flipWitnessDBurst, flipWitnessDRate] : Fin 2 → Curve) j) x)
         (Set.Ioc s t) →
-      (∑ j, ((![flipWitnessD1, flipWitnessD2] : Fin 2 → Curve) j) s)
+      (∑ j, ((![flipWitnessDBurst, flipWitnessDRate] : Fin 2 → Curve) j) s)
           + (rateLatency 2 0) (t - s)
-        ≤ ∑ j, ((![flipWitnessD1, flipWitnessD2] : Fin 2 → Curve) j) t := by
+        ≤ ∑ j, ((![flipWitnessDBurst, flipWitnessDRate] : Fin 2 → Curve) j) t := by
   intro s t hst _
   have hsum : ∀ x : ℝ≥0,
-      (∑ j, ((![flipWitnessD1, flipWitnessD2] : Fin 2 → Curve) j) x)
+      (∑ j, ((![flipWitnessDBurst, flipWitnessDRate] : Fin 2 → Curve) j) x)
         = 2 * x := fun x => by
     rw [Fin.sum_univ_two]
-    show flipWitnessD1 x + flipWitnessD2 x = 2 * x
+    show flipWitnessDBurst x + flipWitnessDRate x = 2 * x
     exact flipWitness_sum_eq x
   rw [hsum s, hsum t,
     show (rateLatency (2 : ℝ≥0) 0) (t - s) = 2 * (t - s) from by
@@ -163,11 +163,11 @@ theorem flipWitness_strict :
 /-- The starved flow is backlogged throughout `(1, 2]`: its output is
 frozen at `2` while its arrivals keep growing. -/
 theorem flipWitness_backlogged :
-    IsBacklogged ⇑flipWitnessA ⇑flipWitnessD1 (Set.Ioc 1 2) := by
+    IsBacklogged ⇑flipWitnessA ⇑flipWitnessDBurst (Set.Ioc 1 2) := by
   intro u hu
   have hpos : (0 : ℝ≥0) < u := lt_trans one_pos hu.1
-  show flipWitnessD1 u < flipWitnessA u
-  rw [flipWitnessD1_apply, flipWitnessA_apply, if_pos hpos,
+  show flipWitnessDBurst u < flipWitnessA u
+  rw [flipWitnessDBurst_apply, flipWitnessA_apply, if_pos hpos,
     max_eq_left hu.2,
     min_eq_right (by
       calc (2 : ℝ≥0) = 2 * 1 := (mul_one 2).symm
@@ -178,17 +178,17 @@ theorem flipWitness_backlogged :
 /-- The violation: the residual `λ₁` promises the starved flow one unit
 over `(1, 2]`, but its output is frozen at `2`. -/
 theorem not_add_residualCurve_le_flipWitness :
-    ¬ (flipWitnessD1 1 + residualCurve (rateLatency 2 0)
+    ¬ (flipWitnessDBurst 1 + residualCurve (rateLatency 2 0)
           (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).erase 0,
             (fun _ v => v) j v) (2 - 1)
-        ≤ flipWitnessD1 2) := by
+        ≤ flipWitnessDBurst 2) := by
   intro h
   have hβmono : Monotone (rateLatency (2 : ℝ≥0) 0) :=
     fun a b hab => mul_le_mul_right (tsub_le_tsub_right hab 0) 2
-  have hd11 : flipWitnessD1 1 = 2 := by
-    rw [flipWitnessD1_apply, max_eq_left one_le_two, mul_one, min_self]
-  have hd12 : flipWitnessD1 2 = 2 := by
-    rw [flipWitnessD1_apply, max_self,
+  have hd11 : flipWitnessDBurst 1 = 2 := by
+    rw [flipWitnessDBurst_apply, max_eq_left one_le_two, mul_one, min_self]
+  have hd12 : flipWitnessDBurst 2 = 2 := by
+    rw [flipWitnessDBurst_apply, max_self,
       min_eq_right (by
         calc (2 : ℝ≥0) = 2 * 1 := (mul_one 2).symm
           _ ≤ 2 * 2 := mul_le_mul_right one_le_two 2)]
@@ -211,9 +211,13 @@ theorem not_add_residualCurve_le_flipWitness :
   norm_num at h3
 
 /-- **The blind-multiplexing residual cannot be upgraded to strict**:
-the statement of blind multiplexing with its min-plus conclusion
-replaced by the strict service inequality for flow `i` is false. -/
-theorem not_forall_add_residualCurve_le_of_strict_aggregate :
+the statement of blind multiplexing
+(`minConv_residualCurve_le_of_strict_aggregate`, arrival-constrained
+cross-traffic) with its min-plus conclusion replaced by the strict
+service inequality for flow `i` is false. Contrast
+`add_residualCurve_le_of_strict_aggregate`: the same conclusion *is* a
+theorem when the cross-traffic *departures* are constrained. -/
+theorem not_forall_add_residualCurve_le_of_strict_aggregate_of_arrival_bounds :
     ¬ ∀ (ι : Type) [Fintype ι] [DecidableEq ι]
       (As Ds : ι → Curve) (β : ℝ≥0 → ℝ≥0) (α : ι → ℝ≥0 → ℝ≥0),
       (∀ j, Ds j ≤ As j) →
@@ -229,7 +233,7 @@ theorem not_forall_add_residualCurve_le_of_strict_aggregate :
           ≤ (Ds i) t := by
   intro h
   have hbad := h (Fin 2) ![flipWitnessA, mpWitnessRate]
-    ![flipWitnessD1, flipWitnessD2] (rateLatency 2 0) (fun _ v => v)
+    ![flipWitnessDBurst, flipWitnessDRate] (rateLatency 2 0) (fun _ v => v)
     flipWitness_causal flipWitness_strict 0
     (by
       intro j hj
@@ -241,9 +245,37 @@ theorem not_forall_add_residualCurve_le_of_strict_aggregate :
 
 /-! ## Book restatement (residual service curves are not strict)
 The two-flow figure: `β = λ₂` strict, `A₀(t) = t + 1`, `A₁(t) = t`,
-priority flipped at `t = 1`. The residual `[λ₂ − λ₁]⁺↑ = λ₁` is a
-min-plus service curve for flow `0` (blind multiplexing), but during
-`1 ≤ t ≤ 2` flow `0` has data backlogged and is not served at all, so
-`λ₁` is not a strict service curve for it. -/
+priority flipped at `t = 1`. The residual `[λ₂ − λ₁]⁺↑` is a min-plus
+service curve for flow `0` (blind multiplexing) — but not a strict
+one: during `1 ≤ t ≤ 2` flow `0` has data backlogged and is not served
+at all. -/
+example :
+    (∀ t, minConv (Deviation.liftENN ⇑flipWitnessA)
+        (Deviation.liftENN
+          (residualCurve (rateLatency 2 0) (fun v => v))) t
+      ≤ ((flipWitnessDBurst t : ℝ≥0) : ℝ≥0∞))
+    ∧ ¬ (flipWitnessDBurst 1
+          + residualCurve (rateLatency 2 0) (fun v => v) (2 - 1)
+        ≤ flipWitnessDBurst 2) := by
+  constructor
+  · intro t
+    have h := minConv_residualCurve_le_of_strict_aggregate
+      (As := ![flipWitnessA, mpWitnessRate])
+      (Ds := ![flipWitnessDBurst, flipWitnessDRate])
+      (β := rateLatency 2 0) (α := fun _ v => v) (i := 0)
+      flipWitness_causal flipWitness_strict
+      (by
+        intro j hj
+        fin_cases j
+        · exact absurd rfl hj
+        · exact mpWitnessRate_arrivalBound)
+      t
+    simpa using h
+  · rw [show (fun v => v : ℝ≥0 → ℝ≥0)
+        = (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).erase 0,
+            (fun _ v => v) j v) from funext fun v => by
+      rw [show ((Finset.univ : Finset (Fin 2)).erase 0) = {1} from by
+          decide, Finset.sum_singleton]]
+    exact not_add_residualCurve_le_flipWitness
 
 end DeepWiki
