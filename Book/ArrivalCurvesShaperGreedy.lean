@@ -1,4 +1,4 @@
-import Book.ArrivalCurveShaper
+import Book.ArrivalCurvesShaper
 import Book.ConvolutionContinuity
 
 /-! # Greedy shapers

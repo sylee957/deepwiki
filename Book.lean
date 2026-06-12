@@ -59,9 +59,9 @@ import Book.ServiceCurveStrictTandem
 import Book.ServersControlTandem
 import Book.ServersControlFeedback
 import Book.ServersControlFeedbackWindow
-import Book.ArrivalCurveShaper
-import Book.ArrivalCurveShaperGreedy
-import Book.ArrivalCurveOutput
+import Book.ArrivalCurvesShaper
+import Book.ArrivalCurvesShaperGreedy
+import Book.ArrivalCurvesOutput
 import Book.DeviationsBoundsTight
 
 /-!

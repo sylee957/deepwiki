@@ -1,5 +1,5 @@
-import Book.ArrivalCurveShaper
-import Book.ArrivalCurveShaperGreedy
+import Book.ArrivalCurvesShaper
+import Book.ArrivalCurvesShaperGreedy
 import Book.ArrivalCurvesMaximal
 import Book.Deconvolution
 import Book.DeviationsBoundsServer

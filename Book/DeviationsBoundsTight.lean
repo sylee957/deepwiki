@@ -1,5 +1,5 @@
 import Book.DeviationsBoundsServer
-import Book.ArrivalCurveShaperGreedy
+import Book.ArrivalCurvesShaperGreedy
 
 /-! # Tightness of the delay and backlog bounds
 The deviation bounds are attained: for sub-additive `A` the greedy pair

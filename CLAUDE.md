@@ -71,9 +71,20 @@ the backlog/delay theory, whose short names would clash with the curve
 catalog).
 
 **Chapter naming:** base concept first, qualifiers appended as suffixes —
-`ServiceCurveStrict`, `ArrivalCurveShaper`, `ArrivalCurveShaperGreedy` — so
+`ServiceCurveStrict`, `ArrivalCurvesShaper`, `ArrivalCurvesShaperGreedy` — so
 related chapters sort together alphabetically. When a chapter grows a distinct
 sub-theory, split it into a suffixed sibling rather than growing the file.
+
+**Singular vs plural:** plural when the chapter is the theory of a class of
+objects (`Dioids`, `Servers`, `RealCurves`, `ArrivalCurves`, `Deviations`,
+`Closures`); singular when it names one operation, property, or
+distinguished concept (`Deconvolution`, `Continuity`, `PseudoInverse`,
+`ConvolutionMinimum`), including compounds where the concept is the
+qualified head (`SubDioid`, `ConcaveDioid`). Whichever number a family head
+gets, it is frozen verbatim across every sibling — the prefix is an
+identifier, not prose (`ArrivalCurves*` throughout, never a mixed
+`ArrivalCurve*`/`ArrivalCurves*` family). `ServiceCurve*` predates the rule
+and stays singular: within-family uniformity is the binding part.
 
 **Flat layout:** chapters stay flat in `Book/`, organized by the prefix
 families above — no subdirectories. Revisit only when a second wiki topic
