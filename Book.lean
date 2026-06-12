@@ -73,6 +73,7 @@ import Book.ServersMimo
 import Book.ServersResidual
 import Book.ServersResidualFifo
 import Book.ServersResidualPriority
+import Book.ServersResidualGps
 
 /-!
 # DeepWiki — autoformalized mathematics

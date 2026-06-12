@@ -99,8 +99,8 @@ theorem add_residualCurve_le_of_staticPriority {ι : Type*} [Fintype ι]
     intro u hu
     rcases le_or_gt u s with hus | hus
     · exact hsplit Finset.univ (Finset.subset_univ F) u (hblH u ⟨hu.1, hus⟩)
-    · exact isBacklogged_sum_of_isBacklogged (fun j x => hc j x) i hbl u
-        ⟨hus, hu.2⟩
+    · exact isBacklogged_sum_of_isBacklogged (fun j x => hc j x) (Finset.mem_univ i)
+        hbl u ⟨hus, hu.2⟩
   -- lower-priority flows are frozen on `(p, t]`
   have hfreezeLow : ∀ k ∈ L, ∀ s' w : ℝ≥0, p < s' → s' ≤ w → w ≤ t →
       (Ds k) w = (Ds k) s' := by

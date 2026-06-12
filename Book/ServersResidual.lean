@@ -195,7 +195,7 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
   -- flow-`i` backlog forces aggregate backlog
   have hblagg : ∀ u, u ∈ Set.Ioc s t →
       (∑ j, (Ds j) u) < ∑ j, (As j) u :=
-    isBacklogged_sum_of_isBacklogged (fun j x => hc j x) i hbl
+    isBacklogged_sum_of_isBacklogged (fun j x => hc j x) (Finset.mem_univ i) hbl
   have hv : ∀ v : ℝ≥0, v ≤ t - s → β v - α v ≤ (Ds i) t - (Ds i) s := by
     intro v hvle
     have hut : s + v ≤ t := by
