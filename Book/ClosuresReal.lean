@@ -56,6 +56,14 @@ theorem ndClosure_eq_zero_iff {f : ℝ≥0 → ℝ≥0}
     exact ndClosure_le (monotone_const : Monotone (0 : ℝ≥0 → ℝ≥0))
       (fun _ => le_rfl) t
 
+/-- The non-decreasing closure of a monotone `ℝ≥0` curve is itself. -/
+theorem ndClosure_eq_self {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
+    ndClosure f = f := by
+  funext t
+  refine le_antisymm (ndClosure_le hmono (fun _ => le_rfl) t) ?_
+  exact le_ndClosure f
+    (fun u => ⟨f u, by rintro x ⟨v, rfl⟩; exact hmono v.2⟩) t
+
 /-- `n`-fold `maxConvProj` self-convolution iterate of `beta`. -/
 noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
     ℕ → (ℝ≥0 → ℝ≥0)

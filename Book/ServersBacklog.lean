@@ -61,6 +61,12 @@ theorem start_self (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : start A A t = t := 
   simp only [and_true]
   exact csSup_Iic
 
+/-- An equality point at `t` itself anchors the start at `t`. -/
+theorem start_eq_of_apply_eq {A D : ℝ≥0 → ℝ≥0} {t : ℝ≥0}
+    (h : A t = D t) : start A D t = t :=
+  le_antisymm (start_le A D t)
+    (le_csSup ⟨t, fun _ hx => hx.1⟩ ⟨le_rfl, h⟩)
+
 /-- `start A D` is monotone in `t`. -/
 theorem start_mono (A D : ℝ≥0 → ℝ≥0) {t t' : ℝ≥0}
     (h : t ≤ t') : start A D t ≤ start A D t' :=

@@ -52,6 +52,7 @@ import Book.ServersBacklog
 import Book.ServiceCurveStrict
 import Book.ServiceCurveWeaklyStrict
 import Book.ServiceCurveFamilies
+import Book.ServiceCurveMonotony
 import Book.ServiceCurveWeaklyStrictStrictness
 import Book.ServiceCurveVariableCapacity
 import Book.ServiceCurveVariableCapacityStart

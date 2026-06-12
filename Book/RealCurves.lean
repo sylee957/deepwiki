@@ -246,6 +246,34 @@ theorem staircaseFun_mono (T b d : ℝ≥0) : Monotone (staircaseFun T b d) := b
       (inv_nonneg.mpr T.coe_nonneg)
   exact_mod_cast Nat.ceil_mono h
 
+/-- The burst curve at level `c`: `0` at the origin, `c` at every
+positive time — the finite stand-in for `δ₀`-shaped inputs. -/
+noncomputable def burstFun (c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun t => if t = 0 then 0 else c
+
+/-- `burstFun c 0 = 0`. -/
+theorem burstFun_zero_eq (c : ℝ≥0) : burstFun c 0 = 0 := if_pos rfl
+
+/-- `burstFun c t = c` away from the origin. -/
+theorem burstFun_apply_of_ne (c : ℝ≥0) {t : ℝ≥0} (ht : t ≠ 0) :
+    burstFun c t = c := if_neg ht
+
+/-- `burstFun c` never exceeds its level `c`. -/
+theorem burstFun_le (c t : ℝ≥0) : burstFun c t ≤ c := by
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [burstFun_zero_eq]
+    exact zero_le'
+  · rw [burstFun_apply_of_ne c ht]
+
+/-- `burstFun c` is monotone. -/
+theorem burstFun_mono (c : ℝ≥0) : Monotone (burstFun c) := by
+  intro a b hab
+  rcases eq_or_ne a 0 with rfl | ha
+  · rw [burstFun_zero_eq]
+    exact zero_le'
+  · have hb : b ≠ 0 := fun hb => ha (le_antisymm (hb ▸ hab) zero_le')
+    rw [burstFun_apply_of_ne c ha, burstFun_apply_of_ne c hb]
+
 /-- Larger delay, smaller process: `staircaseFun T b d' ≤ staircaseFun T b d`
 for `d ≤ d'`. -/
 theorem staircaseFun_anti (T b : ℝ≥0) {d d' : ℝ≥0} (h : d ≤ d') (t : ℝ≥0) :

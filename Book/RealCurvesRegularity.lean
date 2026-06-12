@@ -387,6 +387,16 @@ theorem staircaseFun_pwc (T b d : ℝ≥0) :
     push_cast
     linarith [hk]
 
+/-- `burstFun c` is left-continuous: the jump at the origin is
+right-sided. -/
+theorem burstFun_leftCont (c : ℝ≥0) : IsLeftContinuous (burstFun c) := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · exact isLeftContinuousAt_zero _
+  · refine continuousWithinAt_const.congr_of_eventuallyEq ?_ (if_neg ht)
+    filter_upwards [Ioo_mem_nhdsLT (pos_of_ne_zero ht)] with v hv
+    exact if_neg (ne_of_gt hv.1)
+
 /-- `staircaseFun T b d` is left-continuous. -/
 theorem staircaseFun_leftCont (T b d : ℝ≥0) :
     IsLeftContinuous (staircaseFun T b d) := by
