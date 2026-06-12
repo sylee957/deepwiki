@@ -183,4 +183,67 @@ example (β βack : ℝ≥0 → ℝ≥0∞) :
       rw [show minConvPow β 2 = minConv (minConvPow β 1) β from rfl,
         minConvPow_one]]
 
+/-! ## Minimal and maximal service curves -/
+
+/-- **Window flow control with a maximal service curve**: the upper-side
+loop equations `A' ≤ A ⊓ (D ∗ βᴹack ∗ ω_w)` and `D ≤ A' ∗ βᴹ` bound the
+output above through the loop star,
+`D ≤ (A ∗ βᴹ) ∗ (ω_w ∗ βᴹack ∗ βᴹ)⋆` — unconditionally: the unrolling
+induction only discards minimum components. -/
+theorem windowAckFlowControl_le_minConv
+    {A A' D βM βMack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hA' : ∀ t, A' t ≤ A t ⊓ minConv (minConv D βMack) (window w) t)
+    (hD : ∀ t, D t ≤ minConv A' βM t) (t : ℝ≥0) :
+    D t ≤ minConv (minConv A βM)
+      (subadditiveClosureENN
+        (minConv (minConv (window w) βMack) βM)) t := by
+  have h := feedback_le_minConv
+    (D' := fun u => minConv (minConv D βMack) (window w) u)
+    hA' hD (fun u => by rw [← minConv_assoc_enn]) t
+  rw [minConv_comm (window w) βMack]
+  exact h
+
+/-! ## Book restatement (minimal and maximal service curves)
+With maximal service curves `βᴹ` for the data and `βᴹack` for the
+acknowledgments (`βᴹ ≥ β`, `βᴹack ≥ βack` — not needed for either bound),
+the network equations
+`A ∧ (D ∗ βack ∗ ω_w) ≤ A' ≤ A ∧ (D ∗ βᴹack ∗ ω_w)` and
+`A' ∗ β ≤ D ≤ A' ∗ βᴹ` give the global service curves: at least
+`β ∗ (ω_w ∗ βack ∗ β)⋆` as before, and — by the unrolling induction,
+with no well-posedness — at most `A ∗ βᴹ ∗ (βᴹ ∗ ω_w ∗ βᴹack)⋆` (the
+book's factor order; commutativity gives the statement's
+`(ω_w ∗ βᴹack ∗ βᴹ)⋆`). -/
+example {A A' D β βM βack βMack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞} (hw : 0 < w)
+    (hA'l : ∀ t, A t ⊓ minConv (minConv D βack) (window w) t ≤ A' t)
+    (hA'u : ∀ t, A' t ≤ A t ⊓ minConv (minConv D βMack) (window w) t)
+    (hDl : ∀ t, minConv A' β t ≤ D t)
+    (hDu : ∀ t, D t ≤ minConv A' βM t) (t : ℝ≥0) :
+    minConv (minConv A β)
+        (subadditiveClosureENN (minConv (minConv (window w) βack) β)) t
+        ≤ D t
+      ∧ D t ≤ minConv (minConv A βM)
+        (subadditiveClosureENN
+          (minConv (minConv (window w) βMack) βM)) t :=
+  ⟨windowAckFlowControl_minConv_le hw hA'l hDl t,
+    windowAckFlowControl_le_minConv hA'u hDu t⟩
+
+/-! The window size that does not damage the service: above both
+quadratic-deconvolution bounds,
+`w ≥ max((β ⊘ β) ⊘ (βack ∗ β)(0), (βᴹ ⊘ βᴹ) ⊘ (βᴹack ∗ βᴹ)(0))`, both
+closed-loop curves collapse — the loop preserves `β` and `βᴹ`
+simultaneously (each side an instance of the acknowledged-window
+equality). The book prints the preceding "it remains to compute"
+sentence with the two inequality directions swapped: the unconditional
+side is `β ∗ (loop)⋆ ≤ β`, and the window buys `≥`. -/
+example {β βack βM βMack : ℝ≥0 → ℝ≥0∞} {w : ℝ≥0∞}
+    (hw : max (minDeconv β (minConv (minConvPow β 2) βack) 0)
+        (minDeconv βM (minConv (minConvPow βM 2) βMack) 0) ≤ w) :
+    minConv β (subadditiveClosureENN
+        (minConv (minConv (window w) βack) β)) = β
+      ∧ minConv βM (subadditiveClosureENN
+        (minConv (minConv (window w) βMack) βM)) = βM :=
+  ⟨minConv_subadditiveClosureENN_windowAck_eq ((le_max_left _ _).trans hw),
+    minConv_subadditiveClosureENN_windowAck_eq
+      ((le_max_right _ _).trans hw)⟩
+
 end DeepWiki

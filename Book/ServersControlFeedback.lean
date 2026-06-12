@@ -47,6 +47,29 @@ theorem feedback_minConv_le {A A' D D' β βc : ℝ≥0 → ℝ≥0∞} {c : ℝ
           (fun _ => le_rfl) t
     _ ≤ D t := hD t
 
+/-- **The closed-loop maximal service curve**: with `A' ≤ A ⊓ D'`,
+`D ≤ A' ∗ βᴹ` and `D' ≤ D ∗ βc`, the output stays below the loop star,
+`D ≤ (A ∗ βᴹ) ∗ (βc ∗ βᴹ)⋆` — unconditionally: on this side the
+unrolling only discards minimum components, so no well-posedness is
+needed. -/
+theorem feedback_le_minConv {A A' D D' βM βc : ℝ≥0 → ℝ≥0∞}
+    (hA' : ∀ t, A' t ≤ A t ⊓ D' t)
+    (hD : ∀ t, D t ≤ minConv A' βM t)
+    (hD' : ∀ t, D' t ≤ minConv D βc t) (t : ℝ≥0) :
+    D t ≤ minConv (minConv A βM)
+      (subadditiveClosureENN (minConv βc βM)) t := by
+  refine le_minConv_subadditiveClosureENN_of_le_inf (x := D) ?_ t
+  intro u
+  refine le_trans (hD u) (le_inf ?_ ?_)
+  · exact minConv_le_minConv (fun s => le_trans (hA' s) inf_le_left)
+      (fun _ => le_rfl) u
+  · calc minConv A' βM u
+        ≤ minConv (minConv D βc) βM u :=
+          minConv_le_minConv
+            (fun s => le_trans (hA' s) (le_trans inf_le_right (hD' s)))
+            (fun _ => le_rfl) u
+      _ = minConv D (minConv βc βM) u := by rw [minConv_assoc_enn]
+
 /-! ## The feedback design constraint -/
 
 /-- The admissible feedback controllers for a server curve `β` and a

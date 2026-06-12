@@ -213,7 +213,9 @@ not just defaults):
     (crossing set) or the `≠` hypothesis of an `_of_ne` lemma. When two
     curves both need a property, tag the binder by the curve
     (`hαmono`/`hβmono`, `hAlc`/`hDlc`), keeping plain `hmono` where only
-    one curve carries it.
+    one curve carries it; when a quantity is bounded on both sides, tag
+    by side with `l`/`u` (`hDl`/`hDu` for the lower and upper service
+    inequalities).
   - Carrier tags (target grammar; bare `E` is legacy and ambiguous):
     `NN` = `ℝ≥0∞` values on `ℝ≥0` domain, `ENN` = an `ℝ≥0∞` reading/lift,
     `EReal` = `EReal` values, `Ext` = `WithTop (WithBot ℝ)`; lowercase

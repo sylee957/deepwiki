@@ -262,6 +262,14 @@ theorem minConvPow_one {D : Type} [_root_.AddCommMonoid D]
     · rw [if_neg hu, top_add]
       exact le_top
 
+/-- The zeroth power is a right unit: `f ∗ g⁰ = f`. -/
+theorem minConv_minConvPow_zero {D : Type} [_root_.AddCommMonoid D]
+    (f g : D → ℝ≥0∞) :
+    minConv f (minConvPow g 0) = f := by
+  rw [minConv_comm, show minConvPow g 0 = minConvPow f 0 from by
+      funext t; rw [minConvPow_zero, minConvPow_zero],
+    ← minConvPow_succ, minConvPow_one]
+
 /-- Convolution powers split across a convolution: `(f ∗ g)ⁿ = fⁿ ∗ gⁿ`
 (commutativity and associativity reshuffle the factors). -/
 theorem minConvPow_minConv {D : Type} [_root_.AddCommMonoid D]
@@ -545,6 +553,41 @@ theorem minConv_subadditiveClosureENN_le_of_inf_le
   · rwa [inf_eq_left.mpr hle] at hkey
   · rw [inf_eq_right.mpr hle] at hkey
     exact absurd hkey (not_le.mpr hn)
+
+/-- Convolution distributes over the closure infimum:
+`(f ∗ g⋆) t = ⨅ n, (f ∗ gⁿ) t`. -/
+theorem minConv_subadditiveClosureENN_eq_iInf {D : Type}
+    [_root_.AddCommMonoid D] (f g : D → ℝ≥0∞) (t : D) :
+    minConv f (subadditiveClosureENN g) t
+      = ⨅ n, minConv f (minConvPow g n) t := by
+  apply le_antisymm
+  · refine le_iInf fun n => ?_
+    refine minConv_le_minConv (fun _ => le_rfl) (fun s => ?_) t
+    rw [subadditiveClosureENN_eq_iInf]
+    exact iInf_le _ n
+  · refine le_minConv fun u v huv => ?_
+    rw [subadditiveClosureENN_eq_iInf, ENNReal.add_iInf]
+    exact le_iInf fun n => iInf_le_of_le n (minConv_le_add f _ huv)
+
+/-- **The dual star bound**: a curve below `a ⊓ (x ∗ w)` lies below
+`a ∗ w⋆` — unconditionally: the unrolling induction only discards
+minimum components, so no positivity of `w` is needed. -/
+theorem le_minConv_subadditiveClosureENN_of_le_inf {D : Type}
+    [_root_.AddCommMonoid D] {x a w : D → ℝ≥0∞}
+    (hx : ∀ t, x t ≤ a t ⊓ minConv x w t) (t : D) :
+    x t ≤ minConv a (subadditiveClosureENN w) t := by
+  rw [minConv_subadditiveClosureENN_eq_iInf]
+  refine le_iInf fun n => ?_
+  induction n generalizing t with
+  | zero =>
+      rw [minConv_minConvPow_zero]
+      exact le_trans (hx t) inf_le_left
+  | succ n ih =>
+      calc x t ≤ minConv x w t := le_trans (hx t) inf_le_right
+        _ ≤ minConv (minConv a (minConvPow w n)) w t :=
+            minConv_le_minConv (fun s => ih s) (fun _ => le_rfl) t
+        _ = minConv a (minConvPow w (n + 1)) t := by
+            rw [minConv_assoc_enn, ← minConvPow_succ]
 
 /-- Lift a `WithBot ℝ≥0∞`-valued function into `MaxPlusNN` pointwise. -/
 def liftMaxPlusNN (g : ℝ≥0 → WithBot ℝ≥0∞) : Fmax :=
