@@ -497,7 +497,7 @@ example (f : Fmin) : conv convUnit f = f :=
   convUnit_left f
 
 /-- `c + ⨆ f ≤ y` when `c + f i ≤ y` for all `i`. -/
-theorem add_ciSup_le {ι : Type} [Nonempty ι]
+theorem add_ciSup_le {ι : Type*} [Nonempty ι]
     (c y : ℝ≥0) (f : ι → ℝ≥0)
     (h : ∀ i, c + f i ≤ y) : c + ⨆ i, f i ≤ y := by
   have hcy : c ≤ y :=

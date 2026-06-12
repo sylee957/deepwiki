@@ -265,6 +265,22 @@ theorem isStrictMinimalServiceCurve_superadditiveClosureMax_iff
       (h A D hp s t hst hbl)
   · exact isStrictMinimalServiceCurve_superadditiveClosureMax beta
 
+/-- The strict relation is super-additive-closure-invariant:
+`strictServiceRel (superadditiveClosureMax beta) = strictServiceRel beta`
+for self-convolution iterates bounded at each `t`. -/
+theorem strictServiceRel_superadditiveClosureMax (beta : ℝ≥0 → ℝ≥0)
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun n => maxConvProjPow beta n t))) :
+    strictServiceRel (superadditiveClosureMax beta)
+      = strictServiceRel beta := by
+  funext A D
+  refine propext ⟨fun hp => ⟨hp.1, ?_⟩, fun hp => ⟨hp.1, ?_⟩⟩
+  · exact ((isStrictMinimalServiceCurve_strictServiceRel
+      (superadditiveClosureMax beta)).mono
+      (fun u => le_superadditiveClosureMax beta hbdd u)) A D hp
+  · exact (isStrictMinimalServiceCurve_superadditiveClosureMax beta
+      (isStrictMinimalServiceCurve_strictServiceRel beta)) A D hp
+
 /-- Offering `beta`, its non-decreasing closure `ndClosure beta`, and its
 super-additive closure `superadditiveClosureMax beta` are all equivalent:
 `S_strict(β) = S_strict(β↑) = S_strict(β*̄)`. -/
