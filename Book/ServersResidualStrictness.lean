@@ -278,4 +278,121 @@ example :
           decide, Finset.sum_singleton]]
     exact not_add_residualCurve_le_flipWitness
 
+/-! ## Not even weakly strict
+The same flip witness refutes the weaker start-anchored upgrade: the
+plain residual is not a *weakly strict* curve on the residual server
+— the deconvolution in the weakly strict composition is necessary. -/
+
+/-- The starved flow's own start at `t = 2` sits at `1`: past the
+burst the only equality points of `(A₀, D₀)` are `0` and `1`. -/
+theorem flipWitness_start_eq :
+    start ⇑flipWitnessA ⇑flipWitnessDBurst 2 = 1 := by
+  refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) ?_
+  · show flipWitnessA 0 = flipWitnessDBurst 0
+    rw [flipWitnessA_apply, if_neg (lt_irrefl 0), flipWitnessDBurst_apply,
+      mul_zero, min_eq_left zero_le']
+  · by_contra h1u
+    rw [not_le] at h1u
+    exact absurd hu.2.symm
+      (ne_of_lt (flipWitness_backlogged u ⟨h1u, hu.1⟩))
+  · refine le_csSup ⟨2, fun x hx => hx.1⟩ ⟨one_le_two, ?_⟩
+    show flipWitnessA 1 = flipWitnessDBurst 1
+    rw [flipWitnessA_apply, if_pos one_pos, flipWitnessDBurst_apply,
+      max_eq_left one_le_two, mul_one, min_self]
+    exact one_add_one_eq_two
+
+/-- The own-start violation: at `t = 2` the starved flow's start is
+`1`, where the anchored residual bound is the strict-window
+violation. -/
+theorem not_add_residualCurve_start_le_flipWitness :
+    ¬ (flipWitnessDBurst (start ⇑flipWitnessA ⇑flipWitnessDBurst 2)
+        + residualCurve (rateLatency 2 0)
+          (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).erase 0,
+            (fun _ v => v) j v)
+          (2 - start ⇑flipWitnessA ⇑flipWitnessDBurst 2)
+      ≤ flipWitnessDBurst 2) := by
+  rw [flipWitness_start_eq]
+  exact not_add_residualCurve_le_flipWitness
+
+/-- The burst-plus-rate arrivals are `(· + 1)`-upper constrained: the
+worst increment is from the origin, a burst on top of the rate. -/
+theorem flipWitnessA_arrivalBound :
+    IsMaximalArrivalBound ⇑flipWitnessA (fun v => v + 1) := by
+  rw [isMaximalArrivalBound_iff_increment]
+  intro t d
+  show flipWitnessA (t + d) ≤ flipWitnessA t + (d + 1)
+  rw [flipWitnessA_apply, flipWitnessA_apply]
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [if_neg (lt_irrefl 0), zero_add, zero_add]
+    split
+    · exact le_rfl
+    · exact zero_le'
+  · rw [if_pos (pos_of_ne_zero ht),
+      if_pos (lt_of_lt_of_le (pos_of_ne_zero ht) le_self_add)]
+    calc t + d + 1 = (t + 1) + d := by ring
+      _ ≤ (t + 1) + (d + 1) := add_le_add le_rfl le_self_add
+
+/-- The flip witness's aggregate offers `λ₂` weakly strictly: the
+strict window bound anchors at the aggregate start. -/
+theorem flipWitness_wstrict_aggregate :
+    IsWeaklyStrictMinimalServiceCurve (rateLatency 2 0)
+      (aggregateServer (fun A D =>
+        A = ![flipWitnessA, mpWitnessRate]
+          ∧ D = ![flipWitnessDBurst, flipWitnessDRate])) := by
+  rintro A D ⟨As, Ds, ⟨rfl, rfl⟩, rfl, rfl⟩ t
+  have hws := flipWitness_strict
+    (start
+      (fun x => ∑ j,
+        ((![flipWitnessA, mpWitnessRate] : Fin 2 → Curve) j) x)
+      (fun x => ∑ j,
+        ((![flipWitnessDBurst, flipWitnessDRate] : Fin 2 → Curve) j) x)
+      t)
+    t (start_le _ _ t)
+    (isBacklogged_Ioc_start
+      (fun x => Finset.sum_le_sum fun j _ => flipWitness_causal j x) t)
+  rw [← Curve.coe_sum, ← Curve.coe_sum] at hws
+  exact hws
+
+/-- **The deconvolution is necessary**: the weakly strict composition
+(`isWeaklyStrictMinimalServiceCurve_residualServer_of_wstrict`) with
+the deconvolved residual replaced by the plain blind-multiplexing
+residual `[β − ∑_{j≠i} αⱼ]⁺↑` is false — the book's two-flow figure:
+the plain residual is min-plus but not weakly strict for the starved
+flow. -/
+theorem not_forall_isWeaklyStrictMinimalServiceCurve_residualCurve :
+    ¬ ∀ (ι : Type) (_ : Fintype ι) (_ : DecidableEq ι)
+      (S : (ι → Curve) → (ι → Curve) → Prop) (β : ℝ≥0 → ℝ≥0)
+      (α : ι → ℝ≥0 → ℝ≥0) (i : ι),
+      IsCausalN S →
+      IsWeaklyStrictMinimalServiceCurve β (aggregateServer S) →
+      IsWeaklyStrictMinimalServiceCurve
+        (residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
+        (residualServer (fun A D => S A D ∧
+          ∀ j, IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
+  intro h
+  have hbad := h (Fin 2) inferInstance inferInstance
+    (fun A D =>
+      A = ![flipWitnessA, mpWitnessRate]
+        ∧ D = ![flipWitnessDBurst, flipWitnessDRate])
+    (rateLatency 2 0) ![fun v => v + 1, fun v => v] 0
+    (by rintro A D ⟨rfl, rfl⟩ j; exact flipWitness_causal j)
+    flipWitness_wstrict_aggregate
+    flipWitnessA flipWitnessDBurst
+    ⟨![flipWitnessA, mpWitnessRate],
+      ![flipWitnessDBurst, flipWitnessDRate],
+      ⟨⟨rfl, rfl⟩, by
+        intro j
+        fin_cases j
+        · exact flipWitnessA_arrivalBound
+        · exact mpWitnessRate_arrivalBound⟩,
+      rfl, rfl⟩ 2
+  rw [show (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).erase 0,
+      (![fun v => v + 1, fun v => v] : Fin 2 → ℝ≥0 → ℝ≥0) j v)
+      = (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).erase 0,
+        (fun (_ : Fin 2) (v : ℝ≥0) => v) j v) from funext fun v => by
+    rw [show ((Finset.univ : Finset (Fin 2)).erase 0) = {1} from by
+        decide, Finset.sum_singleton, Finset.sum_singleton]
+    rfl] at hbad
+  exact not_add_residualCurve_start_le_flipWitness hbad
+
 end DeepWiki
