@@ -281,7 +281,9 @@ the whole hierarchy collapses onto the causal relation, as the book
 notes — `S_mp(0) = S_wstrict(0) = {(A, D) ∈ F↑² | A ≥ D}`. The
 strictness of the inclusions for nonzero curves is witnessed per
 curve (the burst–stall ladder at `β = λ₁`); the book's general
-witnesses ride `δ₀`-shaped arrivals, likewise not `ℝ≥0`-valued. -/
+strict-vs-weakly-strict witness rides a `δ₀`-shaped arrival, likewise
+not `ℝ≥0`-valued, while its weakly-strict-vs-min-plus witnesses are
+finite rate arrivals, representable and deferred. -/
 example :
     strictServiceRel (fun _ => 0)
       = weaklyStrictServiceRel (fun _ => 0) := by
