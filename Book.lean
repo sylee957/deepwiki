@@ -52,6 +52,7 @@ import Book.ServersBacklog
 import Book.ServiceCurveStrict
 import Book.ServiceCurveWeaklyStrict
 import Book.ServiceCurveVariableCapacity
+import Book.ServiceCurveVariableCapacityStart
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.Packetizer
