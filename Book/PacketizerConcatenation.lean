@@ -9,7 +9,8 @@ import Book.Deviations
 The combined system `S;P`: the packetizer costs one maximal packet on
 the minimal service curve (`β − ℓᵘ`), nothing on the maximal one, one
 packet on the shaping curve (`σ + ℓᵘ`) and on the backlog; its outputs
-are packetized, and on packetized inputs it adds no delay. -/
+are packetized, and on packetized inputs it adds no delay. The
+minimal-service bound has no strict counterpart. -/
 
 namespace DeepWiki
 
@@ -214,9 +215,9 @@ service curve `βᵐ`, a maximal service curve `βᴹ`, and is a `σ`-shaper,
 then `S;P` offers `βᵐ − ℓᵘ` and `βᴹ` and is a `(σ + ℓᵘ)`-shaper; its
 outputs are packetized; per pair it holds at most one extra maximal
 packet of backlog; and on packetized inputs it adds no delay
-(`exists_delay_eq_of_comp_packetizerRel`). (The no-strict-counterpart
-warning — `β − ℓᵘ` need not be strict for `S;P` — is the remaining
-refutation.) -/
+(`exists_delay_eq_of_comp_packetizerRel`). `β − ℓᵘ` has no strict
+counterpart
+(`not_forall_isStrictMinimalServiceCurve_comp_packetizerRel` below). -/
 example {S : Curve → Curve → Prop} {βm βM σ : ℝ≥0 → EReal}
     {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
     (hSrv : IsServer S) (hβm : IsMinimalServiceCurve βm S)
@@ -261,8 +262,16 @@ theorem isPacketLengthSeq_natCast :
 
 /-- The witness strict aggregate curve `λ₁ ∨ β_{2,1/2}`: rate `1` up to
 `1`, rate `2` beyond. -/
-noncomputable def pkBeta : ℝ≥0 → ℝ≥0 :=
+noncomputable def pkWitnessBeta : ℝ≥0 → ℝ≥0 :=
   fun d => max d (2 * (d - 2⁻¹))
+
+/-- `pkWitnessBeta d = d ⊔ 2(d − 2⁻¹)`: the pointwise reading. -/
+theorem pkWitnessBeta_apply (d : ℝ≥0) :
+    pkWitnessBeta d = max d (2 * (d - 2⁻¹)) := rfl
+
+/-- `pkWitnessBeta 0 = 0`. -/
+theorem pkWitnessBeta_zero_eq : pkWitnessBeta 0 = 0 := by
+  rw [pkWitnessBeta_apply, zero_tsub, mul_zero, max_self]
 
 /-- The shifted unit staircase `t ↦ ⌈t − 1⌉` is monotone. -/
 theorem pkWitness_stair_mono :
@@ -351,14 +360,10 @@ shorter than one, and the service runs at exact rate `1` through it. -/
 theorem pkWitness_strict :
     ∀ s t, s ≤ t →
       IsBacklogged ⇑pkWitnessA ⇑pkWitnessB (Set.Ioc s t) →
-      pkWitnessB s + pkBeta (t - s) ≤ pkWitnessB t := by
+      pkWitnessB s + pkWitnessBeta (t - s) ≤ pkWitnessB t := by
   intro s t hst hbl
   rcases eq_or_lt_of_le hst with rfl | hlt
-  · rw [tsub_self,
-      show pkBeta 0 = 0 from by
-        show max 0 (2 * ((0 : ℝ≥0) - 2⁻¹)) = 0
-        rw [zero_tsub, mul_zero, max_self],
-      add_zero]
+  · rw [tsub_self, pkWitnessBeta_zero_eq, add_zero]
   · have hs1 : (1 : ℝ≥0) ≤ s := by
       by_contra hs
       rw [not_le] at hs
@@ -393,8 +398,8 @@ theorem pkWitness_strict :
         Nat.ceil_natCast] at hb
       exact absurd hb (lt_irrefl _)
     rw [pkWitnessB_apply, pkWitnessB_apply,
-      show pkBeta (t - s) = t - s from by
-        show max (t - s) (2 * ((t - s) - 2⁻¹)) = t - s
+      show pkWitnessBeta (t - s) = t - s from by
+        rw [pkWitnessBeta_apply]
         refine max_eq_left ?_
         rcases le_total (t - s) 2⁻¹ with hc | hc
         · rw [tsub_eq_zero_of_le hc, mul_zero]
@@ -411,13 +416,15 @@ theorem pkWitness_strict :
       NNReal.coe_sub hst]
     linarith
 
-/-- The witness pair sits in the largest strict server of `pkBeta`. -/
-theorem pkWitness_mem :
-    strictServiceRel pkBeta pkWitnessA pkWitnessB :=
+/-- The witness pair sits in the largest strict server of `pkWitnessBeta`. -/
+theorem pkWitness_mem_strictServiceRel :
+    strictServiceRel pkWitnessBeta pkWitnessA pkWitnessB :=
   ⟨pkWitness_causal, pkWitness_strict⟩
 
 /-- The packetized output stays a full packet below the staircase past
-`1`: the combined system is never empty. -/
+`1`, so the combined system is backlogged from `1` on. (The book states
+the gap for all `t > 0`, but arrival and output both vanish on
+`(0, 1]`; past `1` is what holds, and all the refutation needs.) -/
 theorem pkWitness_packetize_lt {t : ℝ≥0} (ht : 1 < t) :
     packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB t < pkWitnessA t := by
   have hA1 : (1 : ℝ≥0) ≤ pkWitnessA t := by
@@ -474,18 +481,18 @@ theorem pkWitness_backlogged :
       (Set.Ioc 1 4) :=
   fun _ hu => pkWitness_packetize_lt hu.1
 
-/-- The violation: on `(1, 4]` the strict `pkBeta − 1` demands four
+/-- The violation: on `(1, 4]` the strict `pkWitnessBeta − 1` demands four
 units while the packetizer releases at most two. -/
 theorem not_add_le_pkWitness :
     ¬ (packetizeCurve isPacketLengthSeq_natCast pkWitnessB 1
-        + (pkBeta (4 - 1) - 1)
+        + (pkWitnessBeta (4 - 1) - 1)
       ≤ packetizeCurve isPacketLengthSeq_natCast pkWitnessB 4) := by
   intro h
   rw [show (4 : ℝ≥0) - 1 = 3 from tsub_eq_of_eq_add (by norm_num),
-    show pkBeta 3 - 1 = 4 from by
-      rw [show pkBeta 3 = 5 from by
-        show max 3 (2 * ((3 : ℝ≥0) - 2⁻¹)) = 5
-        rw [show (3 : ℝ≥0) - 2⁻¹ = 5 / 2 from
+    show pkWitnessBeta 3 - 1 = 4 from by
+      rw [show pkWitnessBeta 3 = 5 from by
+        rw [pkWitnessBeta_apply,
+          show (3 : ℝ≥0) - 2⁻¹ = 5 / 2 from
             tsub_eq_of_eq_add (by norm_num),
           show (2 : ℝ≥0) * (5 / 2) = 5 from by norm_num]
         exact max_eq_right (by norm_num)]
@@ -504,16 +511,16 @@ property of the server/packetizer system
 to "strict" is false. -/
 theorem not_forall_isStrictMinimalServiceCurve_comp_packetizerRel :
     ¬ ∀ (S : Curve → Curve → Prop) (β : ℝ≥0 → ℝ≥0) (L : ℕ → ℝ≥0)
-      (ll lu : ℝ≥0), IsPacketLengthSeq L ll lu →
-      IsStrictMinimalServiceCurve β S →
+      (ll lu : ℝ≥0), IsStrictMinimalServiceCurve β S →
+      IsPacketLengthSeq L ll lu →
       IsStrictMinimalServiceCurve (fun v => β v - lu)
         (Relation.Comp S (packetizerRel L)) := by
   intro h
-  have hbad := h (strictServiceRel pkBeta) pkBeta (fun n => (n : ℝ≥0))
-    1 1 isPacketLengthSeq_natCast
-    (isStrictMinimalServiceCurve_strictServiceRel pkBeta)
+  have hbad := h (strictServiceRel pkWitnessBeta) pkWitnessBeta (fun n => (n : ℝ≥0))
+    1 1 (isStrictMinimalServiceCurve_strictServiceRel pkWitnessBeta)
+    isPacketLengthSeq_natCast
     pkWitnessA (packetizeCurve isPacketLengthSeq_natCast pkWitnessB)
-    ⟨pkWitnessB, pkWitness_mem, rfl⟩
+    ⟨pkWitnessB, pkWitness_mem_strictServiceRel, rfl⟩
     1 4 (by norm_num) pkWitness_backlogged
   exact not_add_le_pkWitness hbad
 
