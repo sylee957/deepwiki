@@ -213,6 +213,17 @@ theorem staircaseFun_anti (T b : ℝ≥0) {d d' : ℝ≥0} (h : d ≤ d') (t : �
       (inv_nonneg.mpr T.coe_nonneg)
   exact_mod_cast Nat.ceil_mono h'
 
+/-- Translation: a delay bump moves the staircase rigidly,
+`staircaseFun T b (d + e) (t + e) = staircaseFun T b d t`. -/
+theorem staircaseFun_shift (T b d e t : ℝ≥0) :
+    staircaseFun T b (d + e) (t + e) = staircaseFun T b d t := by
+  unfold staircaseFun
+  have h : (((t + e : ℝ≥0) : ℝ) - ((d + e : ℝ≥0) : ℝ)) / T
+      = ((t : ℝ) - d) / T := by
+    push_cast
+    ring_nf
+  rw [h]
+
 /-- Ceiling elim: `staircaseFun T b d t ≤ b·k` once `t ≤ d + k·T` —
 within the delay plus `k` periods, at most `k` steps have fired. -/
 theorem staircaseFun_le {T b d t : ℝ≥0} {k : ℕ}
