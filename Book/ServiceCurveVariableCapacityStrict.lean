@@ -1,4 +1,5 @@
 import Book.ServiceCurveVariableCapacityStart
+import Book.RealCurves
 
 /-! # Variable capacity nodes: the unrepaired forms fail
 The counterexample ladder for the adjudicated gap: without jump
@@ -100,5 +101,285 @@ theorem not_forall_vcnOutput_start_eq :
     (h id vcnStepCapacity monotone_id
       (isLeftContinuous_of_continuous _ continuous_id)
       vcnStepCapacity_mono vcnStepCapacity_leftCont 1)
+
+/-! ## The ceiling capacity against half-rate arrivals -/
+
+/-- The ceiling capacity: a full unit at the start of every cycle. -/
+noncomputable def vcnCeilCapacity : ℝ≥0 → ℝ≥0 := fun t => (⌈t⌉₊ : ℝ≥0)
+
+/-- The ceiling capacity is monotone. -/
+theorem vcnCeilCapacity_mono : Monotone vcnCeilCapacity :=
+  fun _ _ hab => Nat.cast_le.mpr (Nat.ceil_mono hab)
+
+/-- The ceiling capacity is left-continuous: constant on each
+`(k, k+1]`. -/
+theorem vcnCeilCapacity_leftCont : IsLeftContinuous vcnCeilCapacity := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · exact isLeftContinuousAt_zero _
+  · obtain ⟨k, hk⟩ : ∃ k : ℕ, ⌈t⌉₊ = k + 1 :=
+      ⟨⌈t⌉₊ - 1, (Nat.succ_pred_eq_of_pos
+        (Nat.ceil_pos.mpr (pos_of_ne_zero ht))).symm⟩
+    have hkt : (k : ℝ≥0) < t := Nat.lt_ceil.mp (hk ▸ k.lt_succ_self)
+    refine continuousWithinAt_const.congr_of_eventuallyEq ?_ rfl
+    filter_upwards [Ioo_mem_nhdsLT hkt] with v hv
+    show vcnCeilCapacity v = vcnCeilCapacity t
+    have h1 : ⌈v⌉₊ ≤ ⌈t⌉₊ := Nat.ceil_mono (le_of_lt hv.2)
+    have h2 : k < ⌈v⌉₊ := Nat.lt_ceil.mpr hv.1
+    have he : ⌈v⌉₊ = ⌈t⌉₊ := by omega
+    simp only [vcnCeilCapacity, he]
+
+/-- The closed output value: against the ceiling capacity the
+half-rate arrivals receive one half-unit per completed cycle. -/
+theorem vcnOutput_half_ceil_eq {t : ℝ≥0} {k : ℕ} (hk : ⌈t⌉₊ = k + 1) :
+    vcnOutput (· / 2) vcnCeilCapacity t = (k : ℝ≥0) / 2 := by
+  have hkt : (k : ℝ≥0) < t := Nat.lt_ceil.mp (hk ▸ k.lt_succ_self)
+  refine le_antisymm ?_ (le_vcnOutput fun s hs => ?_)
+  · refine le_of_forall_pos_le_add fun ε hε => ?_
+    have hsk : (k : ℝ≥0) < min ((k : ℝ≥0) + ε) t :=
+      lt_min (lt_add_of_pos_right _ hε) hkt
+    have hsle : min ((k : ℝ≥0) + ε) t ≤ t := min_le_right _ _
+    refine le_trans (vcnOutput_le hsle) ?_
+    have hceil : ⌈min ((k : ℝ≥0) + ε) t⌉₊ = k + 1 := by
+      refine le_antisymm (le_trans (Nat.ceil_mono hsle) hk.le) ?_
+      exact Nat.lt_ceil.mpr hsk
+    show min ((k : ℝ≥0) + ε) t / 2
+        + (vcnCeilCapacity t - vcnCeilCapacity (min ((k : ℝ≥0) + ε) t))
+      ≤ (k : ℝ≥0) / 2 + ε
+    simp only [vcnCeilCapacity, hceil, hk]
+    rw [tsub_self, add_zero]
+    have hstep : min ((k : ℝ≥0) + ε) t / 2 ≤ ((k : ℝ≥0) + ε) / 2 := by
+      gcongr
+      exact min_le_left _ _
+    refine le_trans hstep ?_
+    rw [add_div]
+    refine add_le_add le_rfl ?_
+    rw [div_le_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
+    exact le_mul_of_one_le_right zero_le' (by norm_num)
+  · show (k : ℝ≥0) / 2 ≤ s / 2 + (vcnCeilCapacity t - vcnCeilCapacity s)
+    have hj2 : ⌈s⌉₊ ≤ k + 1 := hk ▸ Nat.ceil_mono hs
+    simp only [vcnCeilCapacity, hk]
+    rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub
+      (show ((⌈s⌉₊ : ℕ) : ℝ≥0) ≤ (k : ℝ≥0) + 1 from by
+        exact_mod_cast hj2)]
+    have hj1 : ((⌈s⌉₊ : ℕ) : ℝ) < (s : ℝ) + 1 := by
+      exact_mod_cast (Nat.ceil_lt_add_one zero_le' :
+        (⌈s⌉₊ : ℝ≥0) < s + 1)
+    have hj2R : ((⌈s⌉₊ : ℕ) : ℝ) ≤ (k : ℝ) + 1 := by
+      exact_mod_cast hj2
+    linarith
+
+/-- The witness pair is backlogged on every positive window. -/
+theorem isBacklogged_half_ceil (t : ℝ≥0) :
+    IsBacklogged (· / 2) (vcnOutput (· / 2) vcnCeilCapacity)
+      (Set.Ioc 0 t) := by
+  intro u hu
+  obtain ⟨k, hk⟩ : ∃ k : ℕ, ⌈u⌉₊ = k + 1 :=
+    ⟨⌈u⌉₊ - 1, (Nat.succ_pred_eq_of_pos
+      (Nat.ceil_pos.mpr hu.1)).symm⟩
+  rw [vcnOutput_half_ceil_eq hk]
+  have hku : (k : ℝ≥0) < u := Nat.lt_ceil.mp (hk ▸ k.lt_succ_self)
+  show (k : ℝ≥0) / 2 < u / 2
+  rw [← NNReal.coe_lt_coe]
+  push_cast
+  have hkuR : (k : ℝ) < (u : ℝ) := by exact_mod_cast hku
+  linarith
+
+/-- The ceiling capacity dominates the unit rate-latency curve. -/
+theorem vcnCeilCapacity_dominates :
+    ∀ s t : ℝ≥0, s ≤ t →
+      rateLatency 1 1 (t - s) ≤ vcnCeilCapacity t - vcnCeilCapacity s := by
+  intro s t hst
+  show (1 : ℝ≥0) * ((t - s) - 1) ≤ _
+  rw [one_mul]
+  rcases le_total (t - s) 1 with h1 | h1
+  · rw [tsub_eq_zero_of_le h1]
+    exact zero_le'
+  · have hcle : ⌈s⌉₊ ≤ ⌈t⌉₊ := Nat.ceil_mono hst
+    simp only [vcnCeilCapacity]
+    rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub
+      (Nat.cast_le.mpr hcle : ((⌈s⌉₊ : ℕ) : ℝ≥0) ≤ ((⌈t⌉₊ : ℕ) : ℝ≥0)),
+      NNReal.coe_sub h1, NNReal.coe_sub hst]
+    have h2 : (t : ℝ) ≤ ((⌈t⌉₊ : ℕ) : ℝ) := by
+      exact_mod_cast (Nat.le_ceil t : (t : ℝ≥0) ≤ (⌈t⌉₊ : ℝ≥0))
+    have h3 : ((⌈s⌉₊ : ℕ) : ℝ) < (s : ℝ) + 1 := by
+      exact_mod_cast (Nat.ceil_lt_add_one zero_le' :
+        (⌈s⌉₊ : ℝ≥0) < s + 1)
+    linarith
+
+/-- The half-rate arrival curve. -/
+noncomputable def vcnWitnessArrival : Curve :=
+  ⟨(· / 2), fun a b hab => by show a / 2 ≤ b / 2; gcongr,
+    by show (0 : ℝ≥0) / 2 = 0; rw [zero_div],
+    isPiecewiseContinuous_of_continuous _ (continuous_id.div_const 2),
+    isLeftContinuous_of_continuous _ (continuous_id.div_const 2)⟩
+
+/-- The ceiling capacity as a curve. -/
+noncomputable def vcnWitnessCapacity : Curve :=
+  ⟨vcnCeilCapacity, vcnCeilCapacity_mono,
+    by show vcnCeilCapacity 0 = 0; simp [vcnCeilCapacity],
+    isPiecewiseContinuous_of_monotone_of_finite_image
+      vcnCeilCapacity_mono vcnCeilCapacity_leftCont (fun T =>
+        Set.Finite.subset
+          ((Set.finite_Iic ⌈T⌉₊).image (Nat.cast : ℕ → ℝ≥0))
+          (by
+            rintro x ⟨u, hu, rfl⟩
+            exact ⟨⌈u⌉₊, Nat.ceil_mono hu.2, rfl⟩)),
+    vcnCeilCapacity_leftCont⟩
+
+/-- The witness departure: the variable-capacity output itself. -/
+noncomputable def vcnWitnessDeparture : Curve :=
+  ⟨vcnOutput (· / 2) vcnCeilCapacity,
+    vcnOutput_mono (fun a b hab => by show a / 2 ≤ b / 2; gcongr) vcnCeilCapacity_mono,
+    by
+      show vcnOutput (· / 2) vcnCeilCapacity 0 = 0
+      rw [vcnOutput_zero_eq]
+      show (0 : ℝ≥0) / 2 = 0
+      rw [zero_div],
+    isPiecewiseContinuous_of_monotone_of_finite_image
+      (vcnOutput_mono (fun a b hab => by show a / 2 ≤ b / 2; gcongr) vcnCeilCapacity_mono)
+      (isLeftContinuous_vcnOutput (fun a b hab => by show a / 2 ≤ b / 2; gcongr)
+        vcnCeilCapacity_mono vcnCeilCapacity_leftCont)
+      (fun T => Set.Finite.subset
+        ((Set.finite_Iic ⌈T⌉₊).image (fun n : ℕ => (n : ℝ≥0) / 2))
+        (by
+          rintro x ⟨u, hu, rfl⟩
+          rcases eq_or_ne u 0 with rfl | hu0
+          · refine ⟨0, Set.mem_Iic.mpr (Nat.zero_le _), ?_⟩
+            rw [vcnOutput_zero_eq]
+            show ((0 : ℕ) : ℝ≥0) / 2 = (0 : ℝ≥0) / 2
+            norm_num
+          · obtain ⟨k, hk⟩ : ∃ k : ℕ, ⌈u⌉₊ = k + 1 :=
+              ⟨⌈u⌉₊ - 1, (Nat.succ_pred_eq_of_pos
+                (Nat.ceil_pos.mpr (pos_of_ne_zero hu0))).symm⟩
+            refine ⟨k, Set.mem_Iic.mpr ?_, ?_⟩
+            · have : k < ⌈u⌉₊ := hk ▸ k.lt_succ_self
+              exact le_trans (Nat.le_of_lt this) (Nat.ceil_mono hu.2)
+            · exact (vcnOutput_half_ceil_eq hk).symm)),
+    isLeftContinuous_vcnOutput (fun a b hab => by show a / 2 ≤ b / 2; gcongr)
+      vcnCeilCapacity_mono vcnCeilCapacity_leftCont⟩
+
+/-- The witness pair is a variable-capacity node for the unit
+rate-latency curve. -/
+theorem vcnWitness_mem_variableCapacityRel :
+    variableCapacityRel (rateLatency 1 1)
+      vcnWitnessArrival vcnWitnessDeparture :=
+  ⟨vcnWitnessCapacity, fun _ => rfl, vcnCeilCapacity_dominates⟩
+
+/-- `⌈5/2⌉₊ = 3`. -/
+theorem ceil_five_halves : (⌈(5 / 2 : ℝ≥0)⌉₊ : ℕ) = 3 := by
+  rw [Nat.ceil_eq_iff (by norm_num)]
+  refine ⟨by norm_num, ?_⟩
+  rw [show ((3 : ℕ) : ℝ≥0) = 3 by norm_num,
+    div_le_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
+  norm_num
+
+/-- The witness escapes the strict layer: on `(0, 5/2]` the increment
+falls short. -/
+theorem vcnWitness_not_mem_strictServiceRel :
+    ¬ strictServiceRel (rateLatency 1 1)
+      vcnWitnessArrival vcnWitnessDeparture := by
+  rintro ⟨-, hstrict⟩
+  have h := hstrict 0 (5 / 2) (by norm_num)
+    (isBacklogged_half_ceil (5 / 2))
+  rw [show vcnWitnessDeparture (5 / 2 : ℝ≥0) = 1 from by
+      show vcnOutput (· / 2) vcnCeilCapacity (5 / 2) = 1
+      rw [vcnOutput_half_ceil_eq (k := 2) ceil_five_halves]
+      norm_num,
+    show vcnWitnessDeparture 0 = 0 from by
+      show vcnOutput (· / 2) vcnCeilCapacity 0 = 0
+      rw [vcnOutput_zero_eq]
+      show (0 : ℝ≥0) / 2 = 0
+      rw [zero_div]] at h
+  rw [show rateLatency (1 : ℝ≥0) 1 ((5 / 2 : ℝ≥0) - 0) = 3 / 2 from by
+      show (1 : ℝ≥0) * (((5 / 2 : ℝ≥0) - 0) - 1) = 3 / 2
+      rw [one_mul, tsub_zero, tsub_eq_of_eq_add (by norm_num :
+        (5 / 2 : ℝ≥0) = 3 / 2 + 1)]] at h
+  rw [zero_add] at h
+  have hcontra : ¬ ((3 / 2 : ℝ≥0) ≤ 1) := by
+    rw [not_le, lt_div_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
+    norm_num
+  exact hcontra h
+
+/-- The only equality point of the witness pair is the origin. -/
+theorem start_half_ceil_eq (t : ℝ≥0) :
+    start (· / 2) (vcnOutput (· / 2) vcnCeilCapacity) t = 0 := by
+  unfold start
+  have hset : {u | u ≤ t
+      ∧ u / 2 = vcnOutput (· / 2) vcnCeilCapacity u} = {0} := by
+    ext u
+    simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+    constructor
+    · rintro ⟨hut, heq⟩
+      by_contra hu0
+      have hbl := isBacklogged_half_ceil t u
+        ⟨pos_of_ne_zero hu0, hut⟩
+      rw [← heq] at hbl
+      exact lt_irrefl _ hbl
+    · rintro rfl
+      refine ⟨zero_le', ?_⟩
+      rw [vcnOutput_zero_eq]
+  rw [hset, csSup_singleton]
+
+/-- The witness escapes even the weakly strict layer: its start is the
+origin, and the start-anchored increment falls short on `(0, 5/2]`. -/
+theorem vcnWitness_not_mem_weaklyStrictServiceRel :
+    ¬ weaklyStrictServiceRel (rateLatency 1 1)
+      vcnWitnessArrival vcnWitnessDeparture := by
+  rintro ⟨-, hws⟩
+  have h := hws (5 / 2)
+  rw [show start ⇑vcnWitnessArrival ⇑vcnWitnessDeparture (5 / 2) = 0
+      from start_half_ceil_eq (5 / 2)] at h
+  rw [show vcnWitnessDeparture (5 / 2 : ℝ≥0) = 1 from by
+      show vcnOutput (· / 2) vcnCeilCapacity (5 / 2) = 1
+      rw [vcnOutput_half_ceil_eq (k := 2) ceil_five_halves]
+      norm_num,
+    show vcnWitnessDeparture 0 = 0 from by
+      show vcnOutput (· / 2) vcnCeilCapacity 0 = 0
+      rw [vcnOutput_zero_eq]
+      show (0 : ℝ≥0) / 2 = 0
+      rw [zero_div]] at h
+  rw [show rateLatency (1 : ℝ≥0) 1 ((5 / 2 : ℝ≥0) - 0) = 3 / 2 from by
+      show (1 : ℝ≥0) * (((5 / 2 : ℝ≥0) - 0) - 1) = 3 / 2
+      rw [one_mul, tsub_zero, tsub_eq_of_eq_add (by norm_num :
+        (5 / 2 : ℝ≥0) = 3 / 2 + 1)]] at h
+  rw [zero_add] at h
+  have hcontra : ¬ ((3 / 2 : ℝ≥0) ≤ 1) := by
+    rw [not_le, lt_div_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
+    norm_num
+  exact hcontra h
+
+/-- Instance level: the variable-capacity relation is not contained in
+the strict one. -/
+theorem not_variableCapacityRel_le_strictServiceRel :
+    ¬ (variableCapacityRel (rateLatency 1 1)
+      ≤ strictServiceRel (rateLatency 1 1)) := fun h =>
+  vcnWitness_not_mem_strictServiceRel
+    (h _ _ vcnWitness_mem_variableCapacityRel)
+
+/-- Instance level: nor in the weakly strict one. -/
+theorem not_variableCapacityRel_le_weaklyStrictServiceRel :
+    ¬ (variableCapacityRel (rateLatency 1 1)
+      ≤ weaklyStrictServiceRel (rateLatency 1 1)) := fun h =>
+  vcnWitness_not_mem_weaklyStrictServiceRel
+    (h _ _ vcnWitness_mem_variableCapacityRel)
+
+/-- **The unrepaired bottom inclusion is a non-theorem**: without jump
+domination, variable capacity does not refine strict service — the
+witness `β` is continuous with finite self-deconvolution, so the
+book's equality criterion for the two layers is refuted as well. -/
+theorem not_forall_variableCapacityRel_le_strictServiceRel :
+    ¬ ∀ beta : ℝ≥0 → ℝ≥0,
+      variableCapacityRel beta ≤ strictServiceRel beta := fun h =>
+  not_variableCapacityRel_le_strictServiceRel (h _)
+
+/-- **Variable capacity escapes even the weakly strict layer**: the
+start-anchored form of the inclusion is a non-theorem too. -/
+theorem not_forall_variableCapacityRel_le_weaklyStrictServiceRel :
+    ¬ ∀ beta : ℝ≥0 → ℝ≥0,
+      variableCapacityRel beta ≤ weaklyStrictServiceRel beta := fun h =>
+  not_variableCapacityRel_le_weaklyStrictServiceRel (h _)
 
 end DeepWiki
