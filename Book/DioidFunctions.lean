@@ -1,9 +1,10 @@
 import Book.ScalarDioids
 
-/-!
-Dioid-valued functions `D → T`: pointwise sum, convolution `∗`,
-and the resulting complete-dioid structure on the function space. 
--/
+/-! # Dioid-valued functions
+Dioid-valued functions `D → T`: pointwise sum, convolution `∗`, and the
+resulting complete-dioid structure on the function space. The numeric
+(min,plus)/(max,plus) readings of this structure — `minConv`/`maxConv`
+with their intro and elim API — live in `Book.FunctionDioids`. -/
 
 namespace DeepWiki
 

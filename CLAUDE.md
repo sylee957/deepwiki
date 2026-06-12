@@ -75,6 +75,11 @@ catalog).
 related chapters sort together alphabetically. When a chapter grows a distinct
 sub-theory, split it into a suffixed sibling rather than growing the file.
 
+**Flat layout:** chapters stay flat in `Book/`, organized by the prefix
+families above — no subdirectories. Revisit only when a second wiki topic
+lands; then partition by topic (`Book/<Topic>/…`), not before (module
+renames touch every import and doc-gen URL).
+
 ## The mathematics (orientation — get this right or proofs invert)
 
 - A **dioid** is `IdemCommSemiring`; the dioid sum `⊕ = +` is the lattice join
