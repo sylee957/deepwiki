@@ -22,7 +22,7 @@ theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S) :
     IsMinimalServiceCurve (liftEReal beta) S :=
-  (hβ.isWeaklyStrictServiceCurve hc).isMinimalServiceCurve hc
+  (hβ.isWeaklyStrictMinimalServiceCurve hc).isMinimalServiceCurve hc
 
 /-- The largest-relation form: the largest strict-service relation is
 contained in the largest relation offering `liftEReal beta` as a minimal

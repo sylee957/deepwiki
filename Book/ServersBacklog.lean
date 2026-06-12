@@ -38,6 +38,23 @@ theorem start_le (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     start A D t ≤ t :=
   csSup_le' (fun _ hx => hx.1)
 
+/-- The start is constant across its own backlogged window: for
+`start A D t ≤ w ≤ t` the equality points below `w` and below `t`
+coincide. -/
+theorem start_eq_start_of_le {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0)
+    {w t : ℝ≥0} (hsw : start A D t ≤ w) (hwt : w ≤ t) :
+    start A D w = start A D t := by
+  have hbt : BddAbove { u | u ≤ t ∧ A u = D u } :=
+    ⟨t, fun x hx => hx.1⟩
+  have hbw : BddAbove { u | u ≤ w ∧ A u = D u } :=
+    ⟨w, fun x hx => hx.1⟩
+  refine le_antisymm ?_ ?_
+  · refine csSup_le ⟨0, zero_le', h0⟩ fun v hv => ?_
+    exact le_csSup hbt ⟨hv.1.trans hwt, hv.2⟩
+  · refine csSup_le ⟨0, zero_le', h0⟩ fun v hv => ?_
+    have hvw : v ≤ w := le_trans (le_csSup hbt hv) hsw
+    exact le_csSup hbw ⟨hvw, hv.2⟩
+
 /-- Against itself every instant is an equality point: `start A A t = t`. -/
 theorem start_self (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : start A A t = t := by
   unfold start
