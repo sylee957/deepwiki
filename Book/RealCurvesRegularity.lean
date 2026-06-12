@@ -3,7 +3,8 @@ import Book.Continuity
 import Book.RealCurves
 
 /-! Regularity of the concrete real curves (defined in `RealCurves`): pointwise /
-piecewise continuity and left-continuity over `ℝ≥0 → ℝ≥0∞`. -/
+piecewise continuity and left-continuity over `ℝ≥0 → ℝ≥0∞`, plus the
+`ℝ≥0`-valued staircase `staircaseFun`. -/
 
 namespace DeepWiki
 

@@ -404,7 +404,7 @@ theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) :
   · have hrd : rateNN C ≤ delayNN 0 := by
       intro t
       rcases eq_zero_or_pos t with rfl | ht
-      · simp [rateNN_apply, delayNN]
+      · simp [delayNN]
       · rw [show delayNN 0 t = ⊤ from delay_eq_top 0 ht]
         exact le_top
     rw [minDeconv_tokenBucketNN_rateNN r b C h, ← affine_inf_delay0,
@@ -413,7 +413,7 @@ theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) :
     have hrate : rateNN C ≤ tokenBucketNN r b := by
       intro t
       rcases eq_zero_or_pos t with rfl | ht
-      · simp [rateNN_apply]
+      · simp
       · rw [tokenBucketNN_apply,
           show delayNN 0 t = ⊤ from delay_eq_top 0 ht, inf_top_eq]
         simp only [rateNN_apply, ← ENNReal.coe_mul, ← ENNReal.coe_add,

@@ -192,10 +192,10 @@ weights `wⱼ` and packet lengths in `[ℓⱼˡ, ℓⱼᵘ]`: flow `i` is
 guaranteed the strict service curve `qᵢ/(qᵢ+Qᵢ)·[β − Qᵢ]⁺` with
 `qᵢ = wᵢℓᵢˡ` and `Qᵢ = ∑_{j≠i} wⱼℓⱼᵘ`. (The book derives the
 round-count coupling from the WRR algorithm; it is taken here as the
-WRR trajectory definition. The sharper forms — the pseudo-inverse
-composition through cumulative packet curves, and the staircase
-convolution from the same packet-length constants — are the
-remaining refinements.) -/
+WRR trajectory definition. The staircase convolution refinement is
+formalized below; the book's sharpest form — the pseudo-inverse
+composition through cumulative packet curves — is the remaining
+refinement.) -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {lmin lmax : ι → ℝ≥0} {i : ι}
@@ -211,8 +211,9 @@ example {ι : Type*} [Fintype ι]
 
 /-- The WRR staircase residual curve: the round-quantized form
 `(λ₁ ∗ ν) ∘ [β − Qᵢ]⁺`, where the staircase `ν` releases `qᵢ = wᵢℓᵢˡ`
-per period `qᵢ + Qᵢ` with `Qᵢ = ∑_{j≠i} wⱼℓⱼᵘ` — the pseudo-inverse
-of the round-count map `x ↦ x + Qᵢ(1 + ⌊x/qᵢ⌋)`. -/
+per period `qᵢ + Qᵢ` with `Qᵢ = ∑_{j≠i} wⱼℓⱼᵘ`; `λ₁ ∗ ν` is the
+pseudo-inverse of `x ↦ x + Qᵢ⌊x/qᵢ⌋`, the extra `+Qᵢ` of the
+round-count map being absorbed by the `[β − Qᵢ]⁺` composition. -/
 noncomputable def wrrResidualStaircase {ι : Type*} [Fintype ι]
     (w : ι → ℕ) (lmin lmax : ι → ℝ≥0) (i : ι) (β : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
@@ -299,7 +300,6 @@ theorem wrrResidual_le_wrrResidualStaircase {ι : Type*} [Fintype ι]
     (mul_div_assoc _ _ _)
   push_cast at h1 h2 h2' hratio ⊢
   nlinarith [h1, h2, h2']
-
 
 /-- **WRR staircase residual service**: under WRR with a strict
 aggregate `β`, flow `i` obeys the strict service inequality for the
@@ -412,13 +412,15 @@ theorem isStrictMinimalServiceCurve_wrrResidualStaircase_of_isWrr
 /-! ## Book restatement (WRR residual service, staircase form)
 Flow `i` is also guaranteed the sharper strict service curve
 `(λ₁ ∗ ν) ∘ [β − Qᵢ]⁺`, where `ν` is the staircase of height
-`qᵢ = wᵢℓᵢˡ` and period `qᵢ + Qᵢ` — the pseudo-inverse of the
-round-count map `x ↦ x + Qᵢ(1 + ⌊x/qᵢ⌋)` — and the ratio form is its
+`qᵢ = wᵢℓᵢˡ` and period `qᵢ + Qᵢ`; `λ₁ ∗ ν` is the pseudo-inverse of
+`x ↦ x + Qᵢ⌊x/qᵢ⌋` (the round-count map less its `+Qᵢ` constant,
+absorbed by the `[β − Qᵢ]⁺` composition), and the ratio form is its
 linearization. (The book prints the staircase subscripts as
-`ν_{qᵢ,qᵢ+Qᵢ}`; its staircase convention puts the period first, and
-the curve inverting `x ↦ x + a⌊x/b⌋` has period `a + b` and height
-`b`, so the subscripts are read here as height `qᵢ`, period
-`qᵢ + Qᵢ`.) -/
+`ν_{qᵢ,qᵢ+Qᵢ}` in the theorem and `ν_{Qᵢ,qᵢ+Qᵢ}` in the proof — two
+inconsistent spellings; its staircase convention puts the period
+first, and the curve inverting `x ↦ x + a⌊x/b⌋` has period `a + b`
+and height `b`, so the subscripts are read here as height `qᵢ`,
+period `qᵢ + Qᵢ`.) -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {w : ι → ℕ} {lmin lmax : ι → ℝ≥0} {i : ι}

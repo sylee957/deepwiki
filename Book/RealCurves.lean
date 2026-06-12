@@ -8,7 +8,8 @@ The concrete service/arrival curves of network calculus, as plain definitions
 is defined once over any ordered domain/value type, and the rate / rate-latency /
 token-bucket bases `rate`/`rateLatency`/`tokenBucket` once over a semiring value
 type. Each specializes to the `ℝ≥0 → ℝ≥0∞` real curves (`delayNN`, `rateNN`,
-`rateLatencyNN`, `tokenBucketNN`, plus `staircase`/`staircaseFloor`/`unitStep`)
+`rateLatencyNN`, `tokenBucketNN`, plus `staircase`/`staircaseFloor`/`unitStep`
+and the `ℝ≥0`-valued cumulative staircase `staircaseFun`)
 and the
 complete-domain `ℝ≥0∞ → ℝ≥0∞` variants (`delayENN`,
 `rateENN`/`rateLatencyENN`/`tokenBucketENN`) used by the pseudo-inverse catalog;
@@ -96,6 +97,10 @@ needs them — then specialized below. -/
 /-- Constant-rate curve `t ↦ R · t`, over a semiring value type. -/
 def rate {V : Type*} [Semiring V] (R : V) : V → V := fun t => R * t
 
+/-- `rate R t = R * t`. -/
+@[simp] theorem rate_apply {V : Type*} [Semiring V] (R t : V) :
+    rate R t = R * t := rfl
+
 /-- Rate-latency curve `t ↦ R · (t - T)`, over a semiring with subtraction. -/
 def rateLatency {V : Type*} [Semiring V] [Sub V] (R T : V) : V → V :=
   fun t => R * (t - T)
@@ -175,6 +180,10 @@ theorem staircaseFloor_mono (P h : ℝ≥0) (hP : (0:ℝ) < P) (J : ℝ) :
 `t ↦ b·⌈(t − d)/T⌉₊`, i.e. `k·b` on `(d + (k−1)·T, d + k·T]`, `0` up to `d`. -/
 noncomputable def staircaseFun (T b d : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun t => b * (⌈((t : ℝ) - d) / T⌉₊ : ℝ≥0)
+
+/-- `staircaseFun T b d t` unfolds to its ceiling form. -/
+@[simp] theorem staircaseFun_apply (T b d t : ℝ≥0) :
+    staircaseFun T b d t = b * (⌈((t : ℝ) - d) / T⌉₊ : ℝ≥0) := rfl
 
 /-- `staircaseFun T b d` vanishes at or before the delay `d`. -/
 theorem staircaseFun_eq_zero_of_le {T b d t : ℝ≥0} (h : t ≤ d) :

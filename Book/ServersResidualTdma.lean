@@ -31,13 +31,27 @@ def IsTdmaServerN {ι : Type*} (c : ℝ≥0) (o T : ι → ℝ≥0) (R : ℝ≥0
     (S : (ι → Curve) → (ι → Curve) → Prop) : Prop :=
   ∀ As Ds, S As Ds → ∀ i, IsTdma c (o i) (T i) R ⇑(As i) ⇑(Ds i)
 
+/-- Model witness: the constant-rate served pair `A = D = λ_R`
+satisfies `IsTdma` for every cycle, quantum, and latency — the period
+start itself serves, and the split `(0, t − s)` realizes the
+convolution bound. -/
+theorem isTdma_rate (c o T R : ℝ≥0) :
+    IsTdma c o T R (rate R) (rate R) := by
+  intro s t hst _hbl
+  refine ⟨s, le_rfl, hst, le_self_add, ?_⟩
+  refine le_trans (add_le_add le_rfl
+    (minConv_le_add _ _ (zero_add (t - s)))) ?_
+  rw [staircaseFun_zero_eq, zero_add]
+  show R * s + R * (t - s) ≤ R * t
+  rw [← mul_add, add_tsub_cancel_of_le hst]
+
 /-- The TDMA residual curve `ν_{c,o,−T} ∗ λ_R`: the delayed staircase
 of quantum `o` per cycle `c`, smoothed at the line rate `R`. -/
 noncomputable def tdmaResidual (c o T R : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   minConv (staircaseFun c o T) (rate R)
 
 /-- `tdmaResidual c o T R τ` unfolds to its convolution form. -/
-theorem tdmaResidual_apply (c o T R τ : ℝ≥0) :
+@[simp] theorem tdmaResidual_apply (c o T R τ : ℝ≥0) :
     tdmaResidual c o T R τ
       = minConv (staircaseFun c o T) (rate R) τ := rfl
 
@@ -111,9 +125,12 @@ length `ℓᵢˡ = ℓᵢᵘ`, and `oᵢ = ℓᵢˡ ⊔ (R·sᵢ − ℓᵢᵘ)`
 cyclic slot-alternation facts — service `(ν_{c,oᵢ,0} ∗ λ_R)(t − u)`
 from the first in-period start `u`, and `u − s ≤ Tᵢ` — are taken as
 the TDMA trajectory definition (`IsTdma`); the book derives them from
-the slot mechanics, with the line rate `R` consumed there. -/
+the slot mechanics, with the line rate `R` consumed there. The
+`ℝ≥0` truncations in the pinned constants are exact under the book's
+implicit guards `0 < R` and `sᵢ ≤ c` (slots fit in the cycle). -/
 example {ι : Type*} {S : (ι → Curve) → (ι → Curve) → Prop}
     {c R : ℝ≥0} {o T lmin lmax slot : ι → ℝ≥0} {i : ι}
+    (_hR : 0 < R) (_hcycle : slot i ≤ c)
     (_hslot : lmax i / R ≤ slot i)
     (_ho : (lmin i = lmax i
         ∧ o i = lmax i * ⌊R * slot i / lmax i⌋₊)
