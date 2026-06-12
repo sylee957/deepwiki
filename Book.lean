@@ -55,7 +55,7 @@ import Book.ServiceCurvePackets
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
 import Book.ServersConcatenationStrict
-import Book.ServiceCurveStrictConcatenation
+import Book.ServiceCurveStrictTandem
 import Book.ServersControlTandem
 import Book.ServersControlFeedback
 import Book.ServersControlFeedbackWindow
