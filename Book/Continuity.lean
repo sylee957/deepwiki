@@ -4,6 +4,7 @@ import Mathlib.Topology.Order.Monotone
 import Mathlib.Topology.Order.DenselyOrdered
 import Mathlib.Topology.Order.LeftRightNhds
 import Mathlib.Topology.Order.LeftRight
+import Mathlib.Topology.Semicontinuity.Defs
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
@@ -260,5 +261,18 @@ theorem isPiecewiseContinuous_of_monotone_of_finite_image
   rcases lt_or_gt_of_ne hne with h | h
   · exact absurd heq (ne_of_lt (key t₁ t₂ ht₁ h))
   · exact absurd heq.symm (ne_of_lt (key t₂ t₁ ht₂ h))
+
+/-- A monotone left-continuous `ℝ≥0`-curve is lower semicontinuous:
+the left side converges by left-continuity, the right side only sees
+larger values. -/
+theorem Monotone.lowerSemicontinuous_of_isLeftContinuous
+    {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) (hlc : IsLeftContinuous f) :
+    LowerSemicontinuous f := by
+  intro x y hy
+  rw [← nhdsLT_sup_nhdsGE x, Filter.eventually_sup]
+  constructor
+  · exact (hlc x).eventually (eventually_gt_nhds hy)
+  · filter_upwards [self_mem_nhdsWithin] with v (hv : x ≤ v)
+    exact lt_of_lt_of_le hy (hmono hv)
 
 end DeepWiki
