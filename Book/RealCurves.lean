@@ -169,6 +169,73 @@ theorem staircaseFloor_mono (P h : ℝ≥0) (hP : (0:ℝ) < P) (J : ℝ) :
   refine (div_le_div_iff_of_pos_right hP).mpr ?_
   exact sub_le_sub_right (NNReal.coe_le_coe.mpr hab) J
 
+/-! ## The `ℝ≥0`-valued staircase (the cumulative staircase process) -/
+
+/-- The staircase cumulative process `ν_{T,b}` delayed by `d`:
+`t ↦ b·⌈(t − d)/T⌉₊`, i.e. `k·b` on `(d + (k−1)·T, d + k·T]`, `0` up to `d`. -/
+noncomputable def staircaseFun (T b d : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun t => b * (⌈((t : ℝ) - d) / T⌉₊ : ℝ≥0)
+
+/-- `staircaseFun T b d` vanishes at or before the delay `d`. -/
+theorem staircaseFun_eq_zero_of_le {T b d t : ℝ≥0} (h : t ≤ d) :
+    staircaseFun T b d t = 0 := by
+  unfold staircaseFun
+  rw [Nat.ceil_eq_zero.mpr, Nat.cast_zero, mul_zero]
+  exact div_nonpos_iff.mpr (Or.inr ⟨by
+    simpa using (NNReal.coe_le_coe.mpr h), T.coe_nonneg⟩)
+
+/-- `staircaseFun T b d 0 = 0`. -/
+theorem staircaseFun_zero_eq (T b d : ℝ≥0) : staircaseFun T b d 0 = 0 :=
+  staircaseFun_eq_zero_of_le zero_le'
+
+/-- `staircaseFun T b d` is nondecreasing. -/
+theorem staircaseFun_mono (T b d : ℝ≥0) : Monotone (staircaseFun T b d) := by
+  intro u v huv
+  unfold staircaseFun
+  refine mul_le_mul_right ?_ b
+  have h : ((u : ℝ) - d) / T ≤ ((v : ℝ) - d) / T := by
+    rw [div_eq_mul_inv, div_eq_mul_inv]
+    have hc : (u : ℝ) ≤ v := NNReal.coe_le_coe.mpr huv
+    exact mul_le_mul_of_nonneg_right (by linarith)
+      (inv_nonneg.mpr T.coe_nonneg)
+  exact_mod_cast Nat.ceil_mono h
+
+/-- Larger delay, smaller process: `staircaseFun T b d' ≤ staircaseFun T b d`
+for `d ≤ d'`. -/
+theorem staircaseFun_anti (T b : ℝ≥0) {d d' : ℝ≥0} (h : d ≤ d') (t : ℝ≥0) :
+    staircaseFun T b d' t ≤ staircaseFun T b d t := by
+  unfold staircaseFun
+  refine mul_le_mul_right ?_ b
+  have h' : ((t : ℝ) - d') / T ≤ ((t : ℝ) - d) / T := by
+    rw [div_eq_mul_inv, div_eq_mul_inv]
+    have hc : (d : ℝ) ≤ d' := NNReal.coe_le_coe.mpr h
+    exact mul_le_mul_of_nonneg_right (by linarith)
+      (inv_nonneg.mpr T.coe_nonneg)
+  exact_mod_cast Nat.ceil_mono h'
+
+/-- The undelayed staircase obeys its affine constraint `γ_{b,b/T}`:
+`ν_{T,b} t ≤ (b/T)·t + b`. -/
+theorem staircaseFun_le_affine {T : ℝ≥0} (hT : 0 < T) (b t : ℝ≥0) :
+    staircaseFun T b 0 t ≤ b / T * t + b := by
+  have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
+  rw [← NNReal.coe_le_coe]
+  unfold staircaseFun
+  push_cast
+  rw [sub_zero]
+  have hceil : (⌈(t : ℝ) / T⌉₊ : ℝ) < (t : ℝ) / T + 1 :=
+    Nat.ceil_lt_add_one (div_nonneg t.coe_nonneg hT'.le)
+  have hb := mul_le_mul_of_nonneg_left hceil.le b.coe_nonneg
+  calc (b : ℝ) * (⌈(t : ℝ) / T⌉₊ : ℝ)
+      ≤ (b : ℝ) * ((t : ℝ) / T + 1) := hb
+    _ = (b : ℝ) / T * t + b := by ring
+
+/-- Degenerate period: `staircaseFun 0 b d` is constantly `0`. -/
+theorem staircaseFun_period_zero (b d : ℝ≥0) :
+    staircaseFun 0 b d = fun _ => 0 := by
+  funext t
+  unfold staircaseFun
+  rw [NNReal.coe_zero, div_zero, Nat.ceil_zero, Nat.cast_zero, mul_zero]
+
 /-- Unit step at `T`: `0` for `t ≤ T`, `1` afterwards. -/
 noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => if t ≤ T then 0 else 1

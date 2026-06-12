@@ -308,4 +308,140 @@ theorem staircase_leftCont (P h : ℝ≥0) (hP : (0:ℝ) < P)
   intro t
   exact Filter.Tendsto.min
     (staircase_val_leftCont P h hP J t) (delayNN_leftCont 0 t)
+
+/-- `staircaseFun T b d` is continuous at every `u` off the jump set
+`{d + k·T | k ∈ ℕ}`. -/
+theorem staircaseFun_continuousAt {T : ℝ≥0} (hT : 0 < T) (b d : ℝ≥0)
+    {u : ℝ≥0} (h : ∀ k : ℕ, (u : ℝ) ≠ (d : ℝ) + k * T) :
+    ContinuousAt (staircaseFun T b d) u := by
+  have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
+  have hud : (u : ℝ) ≠ (d : ℝ) := by simpa using h 0
+  rcases lt_or_gt_of_ne hud with hlt | hgt
+  · -- below the delay: locally `0`
+    have hud' : u < d := by exact_mod_cast hlt
+    refine (continuousAt_const (y := (0 : ℝ≥0))).congr ?_
+    filter_upwards [Iio_mem_nhds hud'] with s hs
+    rw [staircaseFun_eq_zero_of_le (le_of_lt hs)]
+  · -- strictly between two jumps: locally `b·(m + 1)`
+    set x : ℝ := ((u : ℝ) - d) / T with hx
+    have hxpos : 0 < x := div_pos (by linarith) hT'
+    obtain ⟨m, hm⟩ : ∃ m : ℕ, ⌈x⌉₊ = m + 1 :=
+      ⟨⌈x⌉₊ - 1, (Nat.succ_pred_eq_of_pos (Nat.ceil_pos.mpr hxpos)).symm⟩
+    have hxne : x ≠ ((m + 1 : ℕ) : ℝ) := by
+      intro hxeq
+      refine h (m + 1) ?_
+      have h1 : (u : ℝ) - d = ((m + 1 : ℕ) : ℝ) * T :=
+        (div_eq_iff hT'.ne').mp hxeq
+      push_cast at h1 ⊢
+      linarith
+    have hxlt : x < (m : ℝ) + 1 := by
+      have hle : x ≤ ((m + 1 : ℕ) : ℝ) := hm ▸ Nat.le_ceil x
+      have := lt_of_le_of_ne hle hxne
+      exact_mod_cast this
+    have hxgt : (m : ℝ) < x := by
+      have hmlt : m < ⌈x⌉₊ := hm ▸ m.lt_succ_self
+      exact_mod_cast Nat.lt_ceil.mp hmlt
+    have hcont : Continuous fun s : ℝ≥0 => ((s : ℝ) - d) / T :=
+      (NNReal.continuous_coe.sub continuous_const).div_const (T : ℝ)
+    have hev : ∀ᶠ s : ℝ≥0 in 𝓝 u,
+        ((s : ℝ) - d) / T ∈ Set.Ioo (m : ℝ) ((m : ℝ) + 1) :=
+      hcont.continuousAt.eventually_mem (isOpen_Ioo.mem_nhds ⟨hxgt, hxlt⟩)
+    refine (continuousAt_const (y := b * ((m + 1 : ℕ) : ℝ≥0))).congr ?_
+    filter_upwards [hev] with s hs
+    symm
+    show staircaseFun T b d s = b * ((m + 1 : ℕ) : ℝ≥0)
+    unfold staircaseFun
+    congr 2
+    rw [Nat.ceil_eq_iff (Nat.succ_ne_zero m)]
+    refine ⟨by simpa using hs.1, ?_⟩
+    push_cast
+    exact hs.2.le
+
+/-- `staircaseFun T b d` is piecewise continuous: at most `⌈M/T⌉₊ + 1` jumps
+on each `[0, M]`. -/
+theorem staircaseFun_pwc (T b d : ℝ≥0) :
+    IsPiecewiseContinuous (staircaseFun T b d) := by
+  rcases eq_zero_or_pos T with rfl | hT
+  · rw [staircaseFun_period_zero]
+    exact isPiecewiseContinuous_of_continuous _ continuous_const
+  intro M
+  have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
+  refine Set.Finite.subset
+    ((Set.finite_Iic ⌈(M : ℝ) / T⌉₊).image fun k : ℕ => d + (k : ℝ≥0) * T) ?_
+  rintro u ⟨hu, -, huM⟩
+  have hk : ∃ k : ℕ, (u : ℝ) = (d : ℝ) + k * T := by
+    by_contra hcon
+    push Not at hcon
+    exact hu (staircaseFun_continuousAt hT b d hcon)
+  obtain ⟨k, hk⟩ := hk
+  refine ⟨k, ?_, ?_⟩
+  · -- the jump index is bounded on `[0, M]`
+    have hM : (u : ℝ) ≤ M := NNReal.coe_le_coe.mpr huM
+    have hd : (0 : ℝ) ≤ d := d.coe_nonneg
+    have hkT : (k : ℝ) * T ≤ (M : ℝ) := by linarith
+    have hdiv : (k : ℝ) ≤ (M : ℝ) / T := (le_div_iff₀ hT').mpr hkT
+    have hN : (k : ℝ) ≤ (⌈(M : ℝ) / T⌉₊ : ℝ) := hdiv.trans (Nat.le_ceil _)
+    exact_mod_cast hN
+  · refine NNReal.coe_injective ?_
+    push_cast
+    linarith [hk]
+
+/-- `staircaseFun T b d` is left-continuous. -/
+theorem staircaseFun_leftCont (T b d : ℝ≥0) :
+    IsLeftContinuous (staircaseFun T b d) := by
+  rcases eq_zero_or_pos T with rfl | hT
+  · rw [staircaseFun_period_zero]
+    exact isLeftContinuous_of_continuous _ continuous_const
+  intro t
+  have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
+  rcases le_or_gt t d with htd | hdt
+  · -- at or below the delay: locally `0`
+    refine ContinuousWithinAt.congr (f := fun _ => (0 : ℝ≥0))
+      continuousWithinAt_const (fun s hs => ?_) ?_
+    · exact staircaseFun_eq_zero_of_le ((le_of_lt hs).trans htd)
+    · exact staircaseFun_eq_zero_of_le htd
+  · -- strictly after the delay: constant `b·(m + 1)` on `(d + m·T, t]`
+    set x : ℝ := ((t : ℝ) - d) / T with hx
+    have hdt' : (d : ℝ) < t := NNReal.coe_lt_coe.mpr hdt
+    have hxpos : 0 < x := div_pos (by linarith) hT'
+    obtain ⟨m, hm⟩ : ∃ m : ℕ, ⌈x⌉₊ = m + 1 :=
+      ⟨⌈x⌉₊ - 1, (Nat.succ_pred_eq_of_pos (Nat.ceil_pos.mpr hxpos)).symm⟩
+    set t₀ : ℝ≥0 := d + (m : ℝ≥0) * T with ht₀
+    have hmx : (m : ℝ) < x := by
+      have hmlt : m < ⌈x⌉₊ := hm ▸ m.lt_succ_self
+      exact_mod_cast Nat.lt_ceil.mp hmlt
+    have ht₀t : t₀ < t := by
+      rw [← NNReal.coe_lt_coe, ht₀]
+      have := (lt_div_iff₀ hT').mp hmx
+      push_cast
+      linarith
+    have hval : ∀ s : ℝ≥0, s ∈ Set.Ioc t₀ t →
+        staircaseFun T b d s = b * ((m + 1 : ℕ) : ℝ≥0) := by
+      intro s hs
+      unfold staircaseFun
+      congr 2
+      have hlow : (m : ℝ) < ((s : ℝ) - d) / T := by
+        rw [lt_div_iff₀ hT']
+        have h1 : (t₀ : ℝ) < (s : ℝ) := NNReal.coe_lt_coe.mpr hs.1
+        rw [ht₀] at h1
+        push_cast at h1
+        linarith
+      have hupp : ((s : ℝ) - d) / T ≤ (m : ℝ) + 1 := by
+        have h2 : ((s : ℝ) - d) / T ≤ x := by
+          rw [hx, div_eq_mul_inv, div_eq_mul_inv]
+          have := NNReal.coe_le_coe.mpr hs.2
+          exact mul_le_mul_of_nonneg_right (by linarith)
+            (inv_nonneg.mpr T.coe_nonneg)
+        have h3 : x ≤ ((m + 1 : ℕ) : ℝ) := hm ▸ Nat.le_ceil x
+        push_cast at h3
+        linarith
+      rw [Nat.ceil_eq_iff (Nat.succ_ne_zero m)]
+      exact ⟨by simpa using hlow, by push_cast; exact hupp⟩
+    have hev : staircaseFun T b d
+        =ᶠ[𝓝[<] t] fun _ => b * ((m + 1 : ℕ) : ℝ≥0) := by
+      filter_upwards [Ioo_mem_nhdsLT ht₀t] with s hs
+      exact hval s ⟨hs.1, hs.2.le⟩
+    exact continuousWithinAt_const.congr_of_eventuallyEq hev
+      (hval t ⟨ht₀t, le_rfl⟩)
+
 end DeepWiki
