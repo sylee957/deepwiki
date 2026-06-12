@@ -77,8 +77,8 @@ theorem hDevENN_tokenBucketNN_rateLatencyNN_add_minDeconv_eq_conv_add
 /-! ## Book restatement (quantifying pay burst only once)
 With rate-latency services `βᵢ = β_{Rᵢ,Tᵢ}` and token-bucket arrival
 `α = γ_{r,b}` (`r ≤ Rᵢ`): `d₁ = hDev(α, β₁) = T₁ + b/R₁`, the deconvolution
-is `α ⊘ β₁ = γ_{r,b+rT₁}` (in affine form), and
-`d₂ = hDev(α ⊘ β₁, β₂) = T₂ + (b+rT₁)/R₂`, so the sum of individual delays
+is `α ⊘ β₁ = affine r (b+rT₁)` with closure `α' = (α ⊘ β₁)* = γ_{r,b+rT₁}`,
+and `d₂ = hDev(α', β₂) = T₂ + (b+rT₁)/R₂`, so the sum of individual delays
 is `d₁ + d₂ = T₁ + T₂ + b/R₁ + b/R₂ + rT₁/R₂`. The concatenation offers
 `β₁ ∗ β₂ = β_{R₁⊓R₂, T₁+T₂}`, leading to
 `d = hDev(α, β₁ ∗ β₂) = T₁ + T₂ + b/(R₁ ⊓ R₂)`, and
@@ -94,6 +94,24 @@ example {r b R₁ T₁ : ℝ≥0} (hrR₁ : r ≤ R₁) (hT₁ : 0 < T₁) :
     minDeconv (tokenBucketNN r b) (rateLatencyNN R₁ T₁)
       = affine r (b + r*T₁) :=
   minDeconv_tokenBucketNN_rateLatencyNN r b R₁ T₁ hrR₁ hT₁
+
+example {r b R₁ T₁ : ℝ≥0} (hrR₁ : r ≤ R₁) (hT₁ : 0 < T₁) :
+    subadditiveClosureENN
+        (minDeconv (tokenBucketNN r b) (rateLatencyNN R₁ T₁))
+      = tokenBucketNN r (b + r*T₁) :=
+  subadditiveClosureENN_minDeconv_tokenBucketNN_rateLatencyNN
+    r b R₁ T₁ hrR₁ hT₁
+
+example {r b R₁ T₁ R₂ T₂ : ℝ≥0} (hrR₁ : r ≤ R₁) (hT₁ : 0 < T₁)
+    (hR₂ : 0 < R₂) (hrR₂ : r ≤ R₂) (hb : 0 < b) :
+    hDevENN (subadditiveClosureENN
+        (minDeconv (tokenBucketNN r b) (rateLatencyNN R₁ T₁)))
+        (rateLatencyNN R₂ T₂)
+      = ((T₂ + (b + r*T₁)/R₂ : ℝ≥0):ℝ≥0∞) := by
+  rw [subadditiveClosureENN_minDeconv_tokenBucketNN_rateLatencyNN
+      r b R₁ T₁ hrR₁ hT₁,
+    hDevENN_tokenBucketNN_rateLatencyNN r (b + r*T₁) R₂ T₂ hR₂
+      (lt_of_lt_of_le hb le_self_add) hrR₂]
 
 example {r b R₁ T₁ R₂ T₂ : ℝ≥0} (hrR₁ : r ≤ R₁) (hT₁ : 0 < T₁)
     (hR₂ : 0 < R₂) (hrR₂ : r ≤ R₂) (hb : 0 < b) :

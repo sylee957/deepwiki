@@ -118,6 +118,22 @@ theorem affine_zero (r : ℝ≥0) : affine r 0 = rateNN r := by
 theorem affine_zero_eq (r b : ℝ≥0) : affine r b 0 = (b:ℝ≥0∞) := by
   simp only [affine, ENNReal.coe_zero, mul_zero, zero_add]
 
+/-- `affine r b` is subadditive (`b` is paid once on the left, twice on the
+right). -/
+theorem affine_subadd (r b : ℝ≥0) : IsSubadditive (affine r b) := by
+  intro u s
+  rw [affine_coe, affine_coe, affine_coe, ← ENNReal.coe_add,
+    ENNReal.coe_le_coe]
+  calc (r*(u+s)+b : ℝ≥0) = (r*u + b) + r*s := by ring
+    _ ≤ (r*u + b) + (r*s + b) := add_le_add le_rfl le_self_add
+
+/-- The subadditive closure of the affine curve is the token bucket:
+`(affine r b)* = tokenBucketNN r b` — the closure only clamps the origin. -/
+theorem subadditiveClosureENN_affine (r b : ℝ≥0) :
+    subadditiveClosureENN (affine r b) = tokenBucketNN r b := by
+  rw [subadditiveClosureENN_eq_inf_delay0 (affine r b) (affine_subadd r b),
+    inf_comm, affine_inf_delay0]
+
 /-- `rateLatencyNN R 0 = rateNN R`. -/
 theorem rateLatencyNN_zero (R : ℝ≥0) :
     rateLatencyNN R 0 = rateNN R := by
@@ -213,6 +229,16 @@ theorem minDeconv_tokenBucketNN_rateLatencyNN
       simp only [rateLatencyNN, tsub_self]; simp
     rw [hbeta, tsub_zero]
     simp only [affine]; push_cast; ring_nf; rfl
+
+/-- The closure of the deconvolved token bucket is again a token bucket:
+`(γ_{r,b} ⊘ β_{R,T})* = tokenBucketNN r (b + r*T)` (`r ≤ R`, `T > 0`). -/
+theorem subadditiveClosureENN_minDeconv_tokenBucketNN_rateLatencyNN
+    (r b R T : ℝ≥0) (h : r ≤ R) (hT : 0 < T) :
+    subadditiveClosureENN
+        (minDeconv (tokenBucketNN r b) (rateLatencyNN R T))
+      = tokenBucketNN r (b + r*T) := by
+  rw [minDeconv_tokenBucketNN_rateLatencyNN r b R T h hT,
+    subadditiveClosureENN_affine]
 
 /-- Lower bound on a single deconvolution term when `R ≤ r`. -/
 theorem minDeconv_term_lb (r b R T t u : ℝ≥0)

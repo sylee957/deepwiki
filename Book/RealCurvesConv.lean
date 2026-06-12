@@ -100,37 +100,25 @@ theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     simp
   · exact zero_le'
 
-/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` vanishes at `0`. -/
-theorem gdelay_zero (f : ℝ≥0 → ℝ≥0∞)
-    (hmono : Monotone f) (d : ℝ≥0) :
-    (delayNN 0 ⊓ minDeconv f (delayNN d)) 0 = 0 := by
-  rw [minDeconv_delayNN f hmono d]
-  show min (delayNN 0 0) (f (0 + d)) = 0
-  rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
-
-/-- `delayNN 0 ⊓ minDeconv f (delayNN d)` is subadditive. -/
-theorem gdelay_subadd (f : ℝ≥0 → ℝ≥0∞)
-    (hsub : IsSubadditive f) (hmono : Monotone f)
-    (d : ℝ≥0) :
-    IsSubadditive (delayNN 0 ⊓ minDeconv f (delayNN d)) := by
-  refine IsSubadditive.of_ne_zero (gdelay_zero f hmono d)
-    fun u s hu hs => ?_
-  rw [minDeconv_delayNN f hmono d]
-  simp only [Pi.inf_apply]
-  have hu0 : ¬ u ≤ 0 := by simpa using hu
-  have hs0 : ¬ s ≤ 0 := by simpa using hs
-  have hus0 : ¬ (u + s) ≤ 0 := by
-    rw [nonpos_iff_eq_zero, add_eq_zero]
-    rintro ⟨h1, _⟩; exact hu h1
-  rw [show delayNN 0 u = ⊤ by simp [delayNN, hu0],
-      show delayNN 0 s = ⊤ by simp [delayNN, hs0],
-      show delayNN 0 (u + s) = ⊤ by simp [delayNN, hus0],
-      min_top_left, min_top_left, min_top_left]
-  have harg : u + s + d ≤ (u + d) + (s + d) := by
-    have : (u + d) + (s + d) = u + s + (d + d) := by
-      ring
-    rw [this]; gcongr; exact le_add_right (le_refl d)
-  exact le_trans (hmono harg) (hsub (u + d) (s + d))
+/-- Subadditivity transports to the origin-clamped curve: `delayNN 0 ⊓ h` is
+subadditive when `h` is. -/
+theorem IsSubadditive.inf_delay0 {h : ℝ≥0 → ℝ≥0∞}
+    (hsub : IsSubadditive h) :
+    IsSubadditive (delayNN 0 ⊓ h) := by
+  refine IsSubadditive.of_ne_zero ?_ fun u s hu hs => ?_
+  · show min (delayNN 0 0) (h 0) = 0
+    rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
+  · simp only [Pi.inf_apply]
+    have hu0 : ¬ u ≤ 0 := by simpa using hu
+    have hs0 : ¬ s ≤ 0 := by simpa using hs
+    have hus0 : ¬ (u + s) ≤ 0 := by
+      rw [nonpos_iff_eq_zero, add_eq_zero]
+      rintro ⟨h1, _⟩; exact hu h1
+    rw [show delayNN 0 u = ⊤ by simp [delayNN, hu0],
+        show delayNN 0 s = ⊤ by simp [delayNN, hs0],
+        show delayNN 0 (u + s) = ⊤ by simp [delayNN, hus0],
+        min_top_left, min_top_left, min_top_left]
+    exact hsub u s
 
 /-- `liftMinPlusNN (delayNN 0)` is the convolution unit `δ₀` over `MinPlusNN`. -/
 theorem liftMinPlusNN_delay0 :
@@ -144,19 +132,15 @@ theorem liftMinPlusNN_delay0 :
   · rw [show delayNN 0 t = ⊤ by
       simp [delayNN, (by simpa using ht : ¬ t ≤ 0)]]
 
-/-- Subadditive closure of `minDeconv f (delayNN d)` is `delayNN 0 ⊓ ·`. -/
-theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
-    (hsub : IsSubadditive f) (hmono : Monotone f)
-    (d : ℝ≥0) :
-    subadditiveClosureENN (minDeconv f (delayNN d))
-      = delayNN 0 ⊓ minDeconv f (delayNN d) := by
-  set h : ℝ≥0 → ℝ≥0∞ := minDeconv f (delayNN d) with hh
-  set g : ℝ≥0 → ℝ≥0∞ := delayNN 0 ⊓ h with hg
-  have hgsub : IsSubadditive g :=
-    gdelay_subadd f hsub hmono d
-  have hg0 : g 0 = 0 := gdelay_zero f hmono d
-  have hgh : ∀ t, g t ≤ h t :=
-    fun t => min_le_right _ _
+/-- For subadditive `h` the closure only clamps the origin:
+`subadditiveClosureENN h = delayNN 0 ⊓ h`. -/
+theorem subadditiveClosureENN_eq_inf_delay0 (h : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive h) :
+    subadditiveClosureENN h = delayNN 0 ⊓ h := by
+  set g : ℝ≥0 → ℝ≥0∞ := delayNN 0 ⊓ h
+  have hg0 : g 0 = 0 := by
+    show min (delayNN 0 0) (h 0) = 0
+    rw [show delayNN 0 0 = (0:ℝ≥0∞) by simp [delayNN]]; simp
   funext t
   apply le_antisymm
   · refine le_min ?_ (subadditiveClosureENN_le h t)
@@ -170,11 +154,33 @@ theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
       have := convPow_le_closure (liftMinPlusNN h) 0 t
       simpa [convPow] using this
     exact hu
-  · have hgeq := subadditiveClosureENN_eq_self g hgsub hg0
+  · have hgeq := subadditiveClosureENN_eq_self g hsub.inf_delay0 hg0
     calc g t = subadditiveClosureENN g t :=
           (congrFun hgeq t).symm
       _ ≤ subadditiveClosureENN h t :=
-          subadditiveClosureENN_mono g h hgh t
+          subadditiveClosureENN_mono g h (fun t => min_le_right _ _) t
+
+/-- `minDeconv f (delayNN d)` is subadditive for subadditive monotone `f`. -/
+theorem minDeconv_delayNN_subadd (f : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive f) (hmono : Monotone f)
+    (d : ℝ≥0) :
+    IsSubadditive (minDeconv f (delayNN d)) := by
+  intro u s
+  simp only [minDeconv_delayNN f hmono d]
+  have harg : u + s + d ≤ (u + d) + (s + d) := by
+    have : (u + d) + (s + d) = u + s + (d + d) := by
+      ring
+    rw [this]; gcongr; exact le_add_right (le_refl d)
+  exact le_trans (hmono harg) (hsub (u + d) (s + d))
+
+/-- Subadditive closure of `minDeconv f (delayNN d)` is `delayNN 0 ⊓ ·`. -/
+theorem minDeconv_delayNN_closure (f : ℝ≥0 → ℝ≥0∞)
+    (hsub : IsSubadditive f) (hmono : Monotone f)
+    (d : ℝ≥0) :
+    subadditiveClosureENN (minDeconv f (delayNN d))
+      = delayNN 0 ⊓ minDeconv f (delayNN d) :=
+  subadditiveClosureENN_eq_inf_delay0 _
+    (minDeconv_delayNN_subadd f hsub hmono d)
 
 /-- `delayNN d` is monotone. -/
 theorem delayNN_mono (d : ℝ≥0) : Monotone (delayNN d) := by
