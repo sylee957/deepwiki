@@ -67,6 +67,8 @@ import Book.DeviationsCompositionTight
 import Book.ServersJitter
 import Book.ServersRate
 import Book.ArrivalCurvesPeriodic
+import Book.ArrivalCurvesAggregate
+import Book.ServersMimo
 
 /-!
 # DeepWiki — autoformalized mathematics

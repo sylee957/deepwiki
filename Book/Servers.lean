@@ -78,6 +78,39 @@ noncomputable def zeroCurve : Curve :=
 /-- `zeroCurve t = 0`. -/
 @[simp] theorem zeroCurve_apply (t : ℝ≥0) : zeroCurve t = 0 := rfl
 
+/-- The zero curve is the zero of the curve monoid. -/
+noncomputable instance : Zero Curve := ⟨zeroCurve⟩
+
+/-- Curves form an additive commutative monoid under pointwise sum with
+`zeroCurve` as zero — the carrier for aggregating finitely many flows. -/
+noncomputable instance : _root_.AddCommMonoid Curve where
+  add_assoc A B C := Curve.ext fun t => add_assoc (A t) (B t) (C t)
+  zero := zeroCurve
+  zero_add A := Curve.ext fun t => zero_add (A t)
+  add_zero A := Curve.ext fun t => add_zero (A t)
+  add_comm A B := Curve.ext fun t => add_comm (A t) (B t)
+  nsmul := nsmulRec
+  nsmul_zero _ := rfl
+  nsmul_succ _ _ := rfl
+
+/-- The zero of the curve monoid is `zeroCurve`. -/
+theorem Curve.zero_def : (0 : Curve) = zeroCurve := rfl
+
+/-- `(0 : Curve) t = 0`. -/
+@[simp] theorem Curve.zero_apply (t : ℝ≥0) : (0 : Curve) t = 0 := rfl
+
+/-- Evaluation at `t` as an additive monoid morphism `Curve →+ ℝ≥0`. -/
+noncomputable def Curve.evalHom (t : ℝ≥0) : Curve →+ ℝ≥0 where
+  toFun A := A t
+  map_zero' := rfl
+  map_add' _ _ := rfl
+
+/-- A finite sum of curves evaluates pointwise:
+`(∑ i ∈ s, A i) t = ∑ i ∈ s, A i t`. -/
+@[simp] theorem Curve.sum_apply {ι : Type*} (s : Finset ι) (A : ι → Curve)
+    (t : ℝ≥0) : (∑ i ∈ s, A i) t = ∑ i ∈ s, A i t :=
+  map_sum (Curve.evalHom t) A s
+
 /-- Lift a `Curve` into the `(min,plus)` function dioid `Fmin` via `liftFmin`. -/
 abbrev Curve.liftFmin (A : Curve) : Fmin := DeepWiki.liftFmin ⇑A
 

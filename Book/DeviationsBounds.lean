@@ -1,3 +1,4 @@
+import Mathlib.Data.ENNReal.BigOperators
 import Book.Deviations
 import Book.ArrivalCurves
 
@@ -22,6 +23,12 @@ abbrev liftENN (A : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0∞ := fun u => (A
 theorem monotone_liftENN {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) :
     Monotone (liftENN A) :=
   fun _ _ hab => ENNReal.coe_le_coe.mpr (hmono hab)
+
+/-- `liftENN` of a pointwise finite sum is the pointwise sum of the lifts. -/
+theorem liftENN_sum {ι : Type*} (s : Finset ι) (A : ι → ℝ≥0 → ℝ≥0) :
+    liftENN (fun t => ∑ i ∈ s, A i t) = fun t => ∑ i ∈ s, liftENN (A i) t := by
+  funext t
+  exact ENNReal.coe_finsetSum
 
 /-- `liftENN` transports null-at-origin: `liftENN A 0 = 0` when `A 0 = 0`. -/
 theorem _root_.DeepWiki.IsNullAtOrigin.liftENN {A : ℝ≥0 → ℝ≥0}
