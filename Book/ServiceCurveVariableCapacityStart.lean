@@ -7,8 +7,9 @@ false for general left-continuous capacity: a right jump of `C` fired
 into a right-limit-empty queue is harvested by the driving infimum
 without being attained (see the counterexample ladder). It is
 repaired by *jump domination* — the arrivals absorb every right jump
-of the capacity (`IsJumpDominated`), automatic for continuous
-capacity. Under it the infimum is attained at an equality point, the
+of the capacity (`IsJumpDominated`), automatic for monotone arrivals
+and continuous capacity. Under it the infimum is attained at an
+equality point, the
 closed form holds, and the variable-capacity node is a strict server
 for its capacity curve — the repaired bottom inclusion of the
 hierarchy. -/
@@ -102,12 +103,12 @@ theorem lowerSemicontinuousOn_sub_of_isJumpDominated
 
 /-- **Attainment**: under jump domination the driving infimum is
 attained — there is a minimizing split realizing the output. -/
-theorem exists_isMinOn_vcnOutput {A C : ℝ≥0 → ℝ≥0}
+theorem exists_isMinOn_variableCapacityOutput {A C : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hAlc : IsLeftContinuous A)
     (hCmono : Monotone C) (hjump : IsJumpDominated A C) (t : ℝ≥0) :
     ∃ s, s ≤ t
       ∧ (∀ u, u ≤ t → A s + (C t - C s) ≤ A u + (C t - C u))
-      ∧ vcnOutput A C t = A s + (C t - C s) := by
+      ∧ variableCapacityOutput A C t = A s + (C t - C s) := by
   obtain ⟨s, hs, hmin⟩ :=
     (lowerSemicontinuousOn_sub_of_isJumpDominated hAmono hAlc hCmono
       hjump t).exists_isMinOn (Set.nonempty_Icc.mpr zero_le')
@@ -121,17 +122,17 @@ theorem exists_isMinOn_vcnOutput {A C : ℝ≥0 → ℝ≥0}
       NNReal.coe_sub (hCmono hu)]
     linarith
   exact ⟨s, (Set.mem_Icc.mp hs).2, hterm,
-    le_antisymm (vcnOutput_le (Set.mem_Icc.mp hs).2)
-      (le_vcnOutput hterm)⟩
+    le_antisymm (variableCapacityOutput_le_add (Set.mem_Icc.mp hs).2)
+      (le_variableCapacityOutput hterm)⟩
 
 /-- Every minimizing split is an equality point: the arrivals at it
 are fully served. -/
-theorem apply_eq_vcnOutput_of_isMinOn {A C : ℝ≥0 → ℝ≥0}
+theorem apply_eq_variableCapacityOutput_of_isMinOn {A C : ℝ≥0 → ℝ≥0}
     (hCmono : Monotone C) {s t : ℝ≥0} (hst : s ≤ t)
     (hmin : ∀ u, u ≤ t → A s + (C t - C s) ≤ A u + (C t - C u)) :
-    A s = vcnOutput A C s := by
-  refine le_antisymm (le_vcnOutput fun u hu => ?_)
-    (vcnOutput_le_apply A C s)
+    A s = variableCapacityOutput A C s := by
+  refine le_antisymm (le_variableCapacityOutput fun u hu => ?_)
+    (variableCapacityOutput_le_apply A C s)
   have h := hmin u (hu.trans hst)
   rw [← NNReal.coe_le_coe] at h ⊢
   push_cast [NNReal.coe_sub (hCmono hst),
@@ -143,28 +144,28 @@ theorem apply_eq_vcnOutput_of_isMinOn {A C : ℝ≥0 → ℝ≥0}
 domination the output is anchored at the start of the backlogged
 period, `D(t) = A(Start(t)) + (C(t) − C(Start(t)))`. False for
 general left-continuous capacity — see the counterexample ladder. -/
-theorem vcnOutput_start_eq {A C : ℝ≥0 → ℝ≥0}
+theorem variableCapacityOutput_start_eq {A C : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hAlc : IsLeftContinuous A)
     (hCmono : Monotone C) (hClc : IsLeftContinuous C)
     (hjump : IsJumpDominated A C) (t : ℝ≥0) :
-    vcnOutput A C t
-      = A (start A (vcnOutput A C) t)
-        + (C t - C (start A (vcnOutput A C) t)) := by
+    variableCapacityOutput A C t
+      = A (start A (variableCapacityOutput A C) t)
+        + (C t - C (start A (variableCapacityOutput A C) t)) := by
   obtain ⟨s, hst, hmin, hattain⟩ :=
-    exists_isMinOn_vcnOutput hAmono hAlc hCmono hjump t
-  have heqpt : A s = vcnOutput A C s :=
-    apply_eq_vcnOutput_of_isMinOn hCmono hst hmin
-  have hsσ : s ≤ start A (vcnOutput A C) t :=
+    exists_isMinOn_variableCapacityOutput hAmono hAlc hCmono hjump t
+  have heqpt : A s = variableCapacityOutput A C s :=
+    apply_eq_variableCapacityOutput_of_isMinOn hCmono hst hmin
+  have hsσ : s ≤ start A (variableCapacityOutput A C) t :=
     le_csSup ⟨t, fun x hx => hx.1⟩ ⟨hst, heqpt⟩
-  have hσt : start A (vcnOutput A C) t ≤ t := start_le _ _ t
-  have hσeq : A (start A (vcnOutput A C) t)
-      = vcnOutput A C (start A (vcnOutput A C) t) :=
+  have hσt : start A (variableCapacityOutput A C) t ≤ t := start_le _ _ t
+  have hσeq : A (start A (variableCapacityOutput A C) t)
+      = variableCapacityOutput A C (start A (variableCapacityOutput A C) t) :=
     apply_start_eq hAlc
-      (isLeftContinuous_vcnOutput hAmono hCmono hClc)
-      (vcnOutput_zero_eq A C).symm (vcnOutput_le_apply A C) t
-  refine le_antisymm (vcnOutput_le hσt) ?_
+      (isLeftContinuous_variableCapacityOutput hAmono hCmono hClc)
+      (variableCapacityOutput_zero_eq A C).symm (variableCapacityOutput_le_apply A C) t
+  refine le_antisymm (variableCapacityOutput_le_add hσt) ?_
   rw [hattain, hσeq]
-  refine le_trans (add_le_add (vcnOutput_le hsσ) le_rfl) ?_
+  refine le_trans (add_le_add (variableCapacityOutput_le_add hsσ) le_rfl) ?_
   rw [add_assoc, add_comm (C _ - C s) (C t - C _),
     tsub_add_tsub_cancel (hCmono hσt) (hCmono hsσ)]
 
@@ -172,45 +173,45 @@ theorem vcnOutput_start_eq {A C : ℝ≥0 → ℝ≥0}
 domination, on a backlogged window the output increment equals the
 capacity increment — the direct route to strict service, with no
 left-continuity of the capacity needed. -/
-theorem vcnOutput_add_capacity_eq_of_isBacklogged {A C : ℝ≥0 → ℝ≥0}
+theorem variableCapacityOutput_add_capacity_eq_of_isBacklogged {A C : ℝ≥0 → ℝ≥0}
     (hAmono : Monotone A) (hAlc : IsLeftContinuous A)
     (hCmono : Monotone C) (hjump : IsJumpDominated A C)
     {s t : ℝ≥0} (hst : s ≤ t)
-    (hbl : IsBacklogged A (vcnOutput A C) (Set.Ioc s t)) :
-    vcnOutput A C s + (C t - C s) = vcnOutput A C t := by
-  refine le_antisymm ?_ (vcnOutput_le_add hCmono hst)
+    (hbl : IsBacklogged A (variableCapacityOutput A C) (Set.Ioc s t)) :
+    variableCapacityOutput A C s + (C t - C s) = variableCapacityOutput A C t := by
+  refine le_antisymm ?_ (variableCapacityOutput_le_add_capacity hCmono hst)
   obtain ⟨u, hut, hmin, hattain⟩ :=
-    exists_isMinOn_vcnOutput hAmono hAlc hCmono hjump t
-  have hequ : A u = vcnOutput A C u :=
-    apply_eq_vcnOutput_of_isMinOn hCmono hut hmin
+    exists_isMinOn_variableCapacityOutput hAmono hAlc hCmono hjump t
+  have hequ : A u = variableCapacityOutput A C u :=
+    apply_eq_variableCapacityOutput_of_isMinOn hCmono hut hmin
   have hus : u ≤ s := by
     by_contra hcon
     push Not at hcon
     exact absurd hequ (ne_of_gt (hbl u ⟨hcon, hut⟩))
   rw [hattain]
-  refine le_trans (add_le_add (vcnOutput_le hus) le_rfl) ?_
+  refine le_trans (add_le_add (variableCapacityOutput_le_add hus) le_rfl) ?_
   rw [add_assoc, add_comm (C s - C u) (C t - C s),
     tsub_add_tsub_cancel (hCmono hst) (hCmono hus)]
 
 /-- A jump-dominated variable-capacity output is a strict server for
 its capacity curve. -/
-theorem strictServiceRel_of_vcnOutput {beta : ℝ≥0 → ℝ≥0}
+theorem strictServiceRel_of_variableCapacityOutput {beta : ℝ≥0 → ℝ≥0}
     {A D : Curve} (C : Curve)
-    (hD : ∀ t, D t = vcnOutput ⇑A ⇑C t)
+    (hD : ∀ t, D t = variableCapacityOutput ⇑A ⇑C t)
     (hcap : ∀ s t, s ≤ t → beta (t - s) ≤ C t - C s)
     (hjump : IsJumpDominated ⇑A ⇑C) :
     strictServiceRel beta A D := by
   constructor
   · intro t
     rw [hD t]
-    exact vcnOutput_le_apply ⇑A ⇑C t
+    exact variableCapacityOutput_le_apply ⇑A ⇑C t
   · intro s t hst hbl
-    have hbl' : IsBacklogged ⇑A (vcnOutput ⇑A ⇑C) (Set.Ioc s t) := by
+    have hbl' : IsBacklogged ⇑A (variableCapacityOutput ⇑A ⇑C) (Set.Ioc s t) := by
       intro v hv
       have h := hbl v hv
       rwa [hD v] at h
-    have heq : vcnOutput ⇑A ⇑C s + (C t - C s) = vcnOutput ⇑A ⇑C t :=
-      vcnOutput_add_capacity_eq_of_isBacklogged A.mono
+    have heq : variableCapacityOutput ⇑A ⇑C s + (C t - C s) = variableCapacityOutput ⇑A ⇑C t :=
+      variableCapacityOutput_add_capacity_eq_of_isBacklogged A.mono
         A.leftCont C.mono hjump hst hbl'
     rw [hD s, hD t, ← heq]
     exact add_le_add le_rfl (hcap s t hst)
@@ -220,7 +221,7 @@ witness additionally has its right jumps absorbed by the arrivals. -/
 def variableCapacityJumpRel (beta : ℝ≥0 → ℝ≥0) :
     Curve → Curve → Prop :=
   fun A D => ∃ C : Curve,
-    (∀ t, D t = vcnOutput ⇑A ⇑C t)
+    (∀ t, D t = variableCapacityOutput ⇑A ⇑C t)
     ∧ (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s)
     ∧ IsJumpDominated ⇑A ⇑C
 
@@ -243,7 +244,7 @@ theorem variableCapacityJumpRel_le_strictServiceRel
     variableCapacityJumpRel beta ≤ strictServiceRel beta := by
   intro A D hp
   obtain ⟨C, hD, hcap, hjump⟩ := hp
-  exact strictServiceRel_of_vcnOutput C hD hcap hjump
+  exact strictServiceRel_of_variableCapacityOutput C hD hcap hjump
 
 /-! ## Book restatement (the closed form and the bottom inclusion)
 The book derives `D(t) = A(Start(t)) + C(t) − C(Start(t))` for every
@@ -252,8 +253,9 @@ unconditionally. **Adjudicated (three independent analyses,
 unanimous):** both fail for left-continuous capacity with right
 jumps — the infimum step "necessarily reached at `Start(t)`" is a non
 sequitur, and the book's own closing remark that monotonicity is
-unused marks the gap (monotonicity of `A` is essential on the right
-side). The repair is jump domination
+unused marks the gap (the repair's right side runs on monotonicity
+of the arrivals — right-limit jump domination is meaningless without
+it). The repair is jump domination
 `A(u) + C(u⁺) ≤ A(u⁺) + C(u)` (`IsJumpDominated`), automatic for
 continuous capacity; the equality criterion the book attaches to the
 hierarchy (finite self-deconvolution) is refuted by the same
