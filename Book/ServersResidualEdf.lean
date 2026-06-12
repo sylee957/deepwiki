@@ -1,3 +1,4 @@
+import Mathlib.Topology.Order.Lattice
 import Book.ServersResidualFifo
 
 /-! # Earliest deadline first
@@ -14,6 +15,7 @@ curve to dominate the shifted arrival curves. -/
 namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
+open Set Topology Filter
 
 /-! ## The before/after-`T` parts of a flow -/
 
@@ -94,6 +96,35 @@ theorem truncBefore_zero_eq {A : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0) (T : ℝ≥
   rw [truncBefore, min_eq_left zero_le']
   exact h0
 
+/-- The before-`T` departures never exceed the before-`T` arrivals (for
+causal pairs). -/
+theorem truncBeforeD_le_truncBefore {A D : ℝ≥0 → ℝ≥0}
+    (hc : ∀ u, D u ≤ A u) (T u : ℝ≥0) :
+    truncBeforeD T A D u ≤ truncBefore T A u := by
+  rw [truncBeforeD, truncBefore]
+  rcases le_total u T with h | h
+  · rw [min_eq_left h]
+    exact le_trans (min_le_left _ _) (hc u)
+  · rw [min_eq_right h]
+    exact min_le_right _ _
+
+/-- `truncBeforeD` is monotone for monotone `D`. -/
+theorem truncBeforeD_mono {A D : ℝ≥0 → ℝ≥0} (hmono : Monotone D)
+    (T : ℝ≥0) : Monotone (truncBeforeD T A D) :=
+  fun _ _ hab => min_le_min (hmono hab) le_rfl
+
+/-- `truncBeforeD` is left-continuous for left-continuous `D`. -/
+theorem truncBeforeD_leftCont {A D : ℝ≥0 → ℝ≥0}
+    (hlc : IsLeftContinuous D) (T : ℝ≥0) :
+    IsLeftContinuous (truncBeforeD T A D) := fun t =>
+  ContinuousWithinAt.inf (hlc t) continuousWithinAt_const
+
+/-- `truncBeforeD T A D 0 = 0` for null-at-origin `D`. -/
+theorem truncBeforeD_zero_eq {A D : ℝ≥0 → ℝ≥0} (h0 : D 0 = 0) (T : ℝ≥0) :
+    truncBeforeD T A D 0 = 0 := by
+  rw [truncBeforeD, h0]
+  exact min_eq_left zero_le' 
+
 /-! ## The EDF server -/
 
 /-- **EDF family of trajectories** with deadlines `d`: for every horizon
@@ -172,6 +203,294 @@ theorem edfResidual_const_deadline {ι : Type*} [Fintype ι]
     congr 2
     refine Finset.sum_congr rfl fun j _ => ?_
     rw [add_tsub_cancel_right]
+
+/-- **The EDF residual family**: an EDF family (deadlines `d`) whose
+aggregate obeys a strict service inequality for a left-continuous `β`,
+with cross-traffic arrival curves `αⱼ`, is served per flow at
+`edfResidual β α d i θ` for every offset `θ`. -/
+theorem minConv_edfResidual_le_of_isEdf {ι : Type*} [Fintype ι]
+    {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {d : ι → ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hβlc : IsLeftContinuous β)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    (hedf : IsEdf d (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (θ τ : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (edfResidual (Deviation.liftENN β) α d i θ) τ
+      ≤ ((Ds i) τ : ℝ≥0∞) := by
+  set t : ℝ≥0 := τ - θ with htdef
+  have htτ : t ≤ τ := tsub_le_self
+  by_cases hD : (As i) t ≤ (Ds i) τ
+  · -- the data arrived by `t` is served by `τ`: split `(t, τ − t)`
+    have hres : edfResidual (Deviation.liftENN β) α d i θ (τ - t) = 0 :=
+      if_pos tsub_tsub_le
+    refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le htτ)) ?_
+    rw [hres, add_zero]
+    exact_mod_cast hD
+  · push Not at hD
+    -- the filtered family: data with absolute deadline by `t + dᵢ`
+    set X : ι → ℝ≥0 := fun k => (t + d i) - d k with hXdef
+    have hXi : X i = t := by
+      simp only [hXdef]
+      exact tsub_eq_of_eq_add rfl
+    set FA : ι → ℝ≥0 → ℝ≥0 := fun k => truncBefore (X k) ⇑(As k) with hFA
+    set FD : ι → ℝ≥0 → ℝ≥0 :=
+      fun k => truncBeforeD (X k) ⇑(As k) ⇑(Ds k) with hFD
+    have hFc : ∀ k u, FD k u ≤ FA k u := fun k u =>
+      truncBeforeD_le_truncBefore (fun u => hc k u) (X k) u
+    set p : ℝ≥0 := start (fun x => ∑ k, FA k x) (fun x => ∑ k, FD k x) t
+      with hpdef
+    have hpt : p ≤ t := start_le _ _ t
+    have hpτ : p ≤ τ := hpt.trans htτ
+    -- per-flow equality at the filtered start
+    have hfloweq : ∀ k, FD k p = FA k p :=
+      apply_start_sum_eq (fun k x => hFc k x)
+        (fun k => truncBefore_leftCont (As k).leftCont (X k))
+        (fun k => truncBeforeD_leftCont (Ds k).leftCont (X k))
+        (fun k => (truncBefore_zero_eq (As k).zero (X k)).trans
+          (truncBeforeD_zero_eq (Ds k).zero (X k)).symm) t
+    have hDi_lt : ∀ u, u ≤ τ → (Ds i) u < (As i) t :=
+      fun u hu => lt_of_le_of_lt ((Ds i).mono hu) hD
+    have hFDi : ∀ u, u ≤ τ → FD i u = (Ds i) u := by
+      intro u hu
+      show min ((Ds i) u) ((As i) (X i)) = (Ds i) u
+      rw [hXi]
+      exact min_eq_left (le_of_lt (hDi_lt u hu))
+    -- flow i's filtered part is backlogged on the closed `[t, τ]`
+    have hbli : ∀ u, u ∈ Set.Icc t τ → FD i u < FA i u := by
+      intro u hu
+      rw [hFDi u hu.2]
+      show (Ds i) u < (As i) (min u (X i))
+      rw [hXi, min_eq_right hu.1]
+      exact hDi_lt u hu.2
+    -- the filtered aggregate is backlogged at every point of `(p, τ]`
+    have hblF : ∀ u, u ∈ Set.Ioc p τ →
+        (∑ k, FD k u) < ∑ k, FA k u := by
+      intro u hu
+      rcases le_total u t with hut | htu
+      · exact isBacklogged_Ioc_start
+          (fun x => Finset.sum_le_sum fun k _ => hFc k x) t u ⟨hu.1, hut⟩
+      · exact Finset.sum_lt_sum (fun k _ => hFc k u)
+          ⟨i, Finset.mem_univ i, hbli u ⟨htu, hu.2⟩⟩
+    -- the full aggregate is backlogged on `(p, τ]`
+    have hblFull : IsBacklogged (fun x => ∑ k, (As k) x)
+        (fun x => ∑ k, (Ds k) x) (Set.Ioc p τ) := by
+      intro u hu
+      obtain ⟨k, hk⟩ : ∃ k, FD k u < FA k u := by
+        by_contra hcon
+        push Not at hcon
+        exact absurd (hblF u hu)
+          (not_lt.mpr (Finset.sum_le_sum fun k _ => hcon k))
+      refine Finset.sum_lt_sum (fun j _ => hc j u) ⟨k, Finset.mem_univ k, ?_⟩
+      have hk' : min ((Ds k) u) ((As k) (X k)) < (As k) (min u (X k)) := hk
+      rcases le_total u (X k) with h | h
+      · rw [min_eq_left h] at hk'
+        rcases le_total ((Ds k) u) ((As k) (X k)) with h2 | h2
+        · rwa [min_eq_left h2] at hk'
+        · rw [min_eq_right h2] at hk'
+          exact absurd ((As k).mono h) (not_le.mpr hk')
+      · rw [min_eq_right h] at hk'
+        rcases le_total ((Ds k) u) ((As k) (X k)) with h2 | h2
+        · exact lt_of_lt_of_le (by rwa [min_eq_left h2] at hk')
+            ((As k).mono h)
+        · rw [min_eq_right h2] at hk'
+          exact absurd le_rfl (not_le.mpr hk')
+    -- the after-deadline parts are frozen on `(p, τ]`
+    have hfreeze : ∀ k, ∀ s' w : ℝ≥0, p < s' → s' ≤ w → w ≤ τ →
+        truncAfterD (X k) ⇑(As k) ⇑(Ds k) w
+          = truncAfterD (X k) ⇑(As k) ⇑(Ds k) s' := by
+      intro k s' w hps' hs'w hwτ
+      refine hedf k (t + d i) s' w hs'w fun u hu => ?_
+      exact hblF u ⟨lt_of_lt_of_le hps' hu.1, hu.2.trans hwτ⟩
+    -- the filtered start is strictly before `t`
+    have hplt : p < t := by
+      rcases lt_or_eq_of_le hpt with h | heq
+      · exact h
+      · exact absurd ((heq ▸ hfloweq i : FD i t = FA i t))
+          (ne_of_lt (hbli t ⟨le_rfl, htτ⟩))
+    -- in this case `t` is positive and `τ = t + θ` exactly
+    have ht0 : 0 < t := by
+      by_contra hcon
+      push Not at hcon
+      have ht00 : t = 0 := le_antisymm hcon zero_le'
+      have hA0 : (As i) 0 = 0 := (As i).zero
+      rw [ht00, hA0] at hD
+      exact absurd hD (not_lt.mpr zero_le')
+    have hθτ : θ ≤ τ := by
+      by_contra hcon
+      push Not at hcon
+      exact absurd (htdef.trans (tsub_eq_zero_of_le hcon.le))
+        (ne_of_gt ht0)
+    have hτeq : (τ : ℝ) = (t : ℝ) + θ := by
+      rw [htdef]
+      push_cast [NNReal.coe_sub hθτ]
+      ring
+    -- cross-flow increments are bounded at the residual shifts
+    have hshift : ∀ k, k ≠ i →
+        FD k τ ≤ FD k p + α k ((τ - p) - ((θ + d k) - d i)) := by
+      intro k hk
+      have hbase : FD k p = (As k) (min p (X k)) := hfloweq k
+      rcases le_total (X k) p with hXp | hpX
+      · -- the filter closed before `p`: no increment at all
+        refine le_trans ?_ le_self_add
+        rw [hbase, min_eq_right hXp]
+        exact le_trans (hFc k τ) ((As k).mono (min_le_right _ _))
+      · -- one arrival increment from `p`
+        have hkey : min τ (X k) ≤ p + ((τ - p) - ((θ + d k) - d i)) := by
+          rcases le_total (θ + d k) (d i) with hsk | hsk
+          · rw [tsub_eq_zero_of_le hsk, tsub_zero,
+              add_tsub_cancel_of_le hpτ]
+            exact min_le_left _ _
+          · rcases le_total ((θ + d k) - d i) (τ - p) with hcmp | hcmp
+            · rcases le_total (d k) (t + d i) with hdk | hdk
+              · refine le_trans (min_le_right τ (X k)) ?_
+                rw [← NNReal.coe_le_coe]
+                rw [show (X k : ℝ≥0) = (t + d i) - d k from rfl]
+                push_cast [NNReal.coe_sub hdk, NNReal.coe_sub hsk,
+                  NNReal.coe_sub hcmp, NNReal.coe_sub hpτ]
+                linarith [hτeq]
+              · rw [show X k = 0 from tsub_eq_zero_of_le hdk,
+                  min_eq_right zero_le']
+                exact zero_le'
+            · rw [tsub_eq_zero_of_le hcmp, add_zero]
+              rcases le_total (d k) (t + d i) with hdk | hdk
+              · refine le_trans (min_le_right τ (X k)) ?_
+                rw [← NNReal.coe_le_coe]
+                rw [show (X k : ℝ≥0) = (t + d i) - d k from rfl]
+                push_cast [NNReal.coe_sub hdk]
+                -- from `τ − p ≤ θ + dₖ − dᵢ`: `t + dᵢ − dₖ ≤ p`
+                have hcmp' : (τ : ℝ) - p ≤ (θ : ℝ) + d k - d i := by
+                  have h1 : ((τ - p : ℝ≥0) : ℝ) ≤ (((θ + d k) - d i : ℝ≥0) : ℝ) := by
+                    exact_mod_cast hcmp
+                  rwa [NNReal.coe_sub hpτ, NNReal.coe_sub hsk] at h1
+                push_cast at hcmp' ⊢
+                linarith [hτeq]
+              · rw [show X k = 0 from tsub_eq_zero_of_le hdk,
+                  min_eq_right zero_le']
+                exact zero_le'
+        calc FD k τ ≤ (As k) (min τ (X k)) := hFc k τ
+          _ ≤ (As k) (p + ((τ - p) - ((θ + d k) - d i))) :=
+              (As k).mono hkey
+          _ ≤ (As k) p + α k ((τ - p) - ((θ + d k) - d i)) :=
+              (isMaximalArrivalBound_iff_increment _ _).mp (harr k hk) p _
+          _ = FD k p + α k ((τ - p) - ((θ + d k) - d i)) := by
+              rw [hbase, min_eq_left hpX]
+    -- flow i at the filtered start: served exactly its arrivals
+    have hAip : FD i p = (As i) p := by
+      rw [hfloweq i]
+      show (As i) (min p (X i)) = (As i) p
+      rw [hXi, min_eq_left hplt.le]
+    -- the anchored strict step leaves the residual to flow i
+    have hanch : ∀ s' : ℝ≥0, p < s' → s' ≤ τ →
+        β (τ - s') ≤ (∑ k ∈ Finset.univ.erase i,
+            α k ((τ - p) - ((θ + d k) - d i)))
+          + ((Ds i) τ - (As i) p) := by
+      intro s' hps' hs'τ
+      have hstr := hstrict s' τ hs'τ fun u hu =>
+        hblFull u ⟨lt_trans hps' hu.1, hu.2⟩
+      have hsplitD : ∀ u : ℝ≥0, (∑ k, (Ds k) u)
+          = (∑ k, FD k u)
+            + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) u := by
+        intro u
+        rw [← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun k _ =>
+          (truncBeforeD_add_truncAfterD (X k) _ _ u).symm
+      rw [hsplitD s', hsplitD τ,
+        show (∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) τ)
+            = ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s' from
+          Finset.sum_congr rfl fun k _ =>
+            hfreeze k s' τ hps' hs'τ le_rfl] at hstr
+      have hstr2 : (∑ k, FD k s') + β (τ - s') ≤ ∑ k, FD k τ := by
+        have h2 : ((∑ k, FD k s') + β (τ - s'))
+              + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s'
+            ≤ (∑ k, FD k τ)
+              + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s' := by
+          calc ((∑ k, FD k s') + β (τ - s'))
+                + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s'
+              = ((∑ k, FD k s')
+                  + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s')
+                + β (τ - s') := by ring
+            _ ≤ (∑ k, FD k τ)
+                + ∑ k, truncAfterD (X k) ⇑(As k) ⇑(Ds k) s' := hstr
+        exact le_of_add_le_add_right h2
+      rw [← Finset.add_sum_erase _ (fun k => FD k s') (Finset.mem_univ i),
+        ← Finset.add_sum_erase _ (fun k => FD k τ)
+          (Finset.mem_univ i)] at hstr2
+      have hcross : ∑ k ∈ Finset.univ.erase i, FD k τ
+          ≤ (∑ k ∈ Finset.univ.erase i, FD k s')
+            + ∑ k ∈ Finset.univ.erase i,
+                α k ((τ - p) - ((θ + d k) - d i)) := by
+        rw [← Finset.sum_add_distrib]
+        refine Finset.sum_le_sum fun k hk => ?_
+        refine le_trans (hshift k (Finset.ne_of_mem_erase hk)) ?_
+        exact add_le_add
+          (truncBeforeD_mono (Ds k).mono (X k) hps'.le) le_rfl
+      have hcore := tsub_le_of_aggregate_step hstr2 hcross
+        (le_of_eq (hFDi τ le_rfl))
+        (le_trans (truncBeforeD_mono (Ds i).mono (X i) hs'τ)
+          (le_of_eq (hFDi τ le_rfl)))
+      have hcore' : β (τ - s')
+          - (∑ k ∈ Finset.univ.erase i,
+              α k ((τ - p) - ((θ + d k) - d i)))
+          ≤ (Ds i) τ - (As i) p := by
+        refine le_trans hcore ?_
+        refine tsub_le_tsub_left ?_ _
+        rw [← hAip]
+        exact truncBeforeD_mono (Ds i).mono (X i) hps'.le
+      exact tsub_le_iff_left.mp hcore'
+    -- pass `β` through its left limit at `τ − p`
+    have hτp : 0 < τ - p := tsub_pos_of_lt (lt_of_lt_of_le hplt htτ)
+    have hlim : β (τ - p) ≤ (∑ k ∈ Finset.univ.erase i,
+          α k ((τ - p) - ((θ + d k) - d i)))
+        + ((Ds i) τ - (As i) p) := by
+      have hne : (𝓝[<] (τ - p)).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, hτp⟩
+      refine le_of_tendsto (hβlc (τ - p)).tendsto ?_
+      filter_upwards [Ioo_mem_nhdsLT hτp] with σ' hσ'
+      have hσ'τ : σ' ≤ τ := le_trans hσ'.2.le tsub_le_self
+      have hps' : p < τ - σ' := by
+        have h1 : τ - σ' = p + ((τ - p) - σ') := by
+          rw [← NNReal.coe_inj]
+          push_cast [NNReal.coe_sub hσ'τ, NNReal.coe_sub hpτ,
+            NNReal.coe_sub hσ'.2.le]
+          ring
+        rw [h1]
+        exact lt_add_of_pos_right p (tsub_pos_of_lt hσ'.2)
+      have happ := hanch (τ - σ') hps' tsub_le_self
+      rwa [tsub_tsub_cancel_of_le hσ'τ] at happ
+    -- conclude through the split `(p, τ − p)`
+    refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hpτ)) ?_
+    have hresneg : ¬ (τ - p ≤ θ) := by
+      rw [not_le, ← NNReal.coe_lt_coe]
+      push_cast [NNReal.coe_sub hpτ]
+      have hpt' : (p : ℝ) < t := by exact_mod_cast hplt
+      linarith [hτeq]
+    rw [show edfResidual (Deviation.liftENN β) α d i θ (τ - p)
+        = Deviation.liftENN β (τ - p)
+          - ((∑ k ∈ Finset.univ.erase i,
+              α k ((τ - p) - ((θ + d k) - d i)) : ℝ≥0) : ℝ≥0∞) from
+      if_neg hresneg]
+    show ((As i) p : ℝ≥0∞)
+        + (((β (τ - p) : ℝ≥0) : ℝ≥0∞)
+          - ((∑ k ∈ Finset.univ.erase i,
+              α k ((τ - p) - ((θ + d k) - d i)) : ℝ≥0) : ℝ≥0∞))
+      ≤ ((Ds i) τ : ℝ≥0∞)
+    rw [← ENNReal.coe_sub, ← ENNReal.coe_add, ENNReal.coe_le_coe]
+    have hbS : β (τ - p)
+        - (∑ k ∈ Finset.univ.erase i,
+            α k ((τ - p) - ((θ + d k) - d i)))
+        ≤ (Ds i) τ - (As i) p := tsub_le_iff_left.mpr hlim
+    calc (As i) p + (β (τ - p)
+          - ∑ k ∈ Finset.univ.erase i,
+              α k ((τ - p) - ((θ + d k) - d i)))
+        ≤ (As i) p + ((Ds i) τ - (As i) p) := add_le_add le_rfl hbS
+      _ = (Ds i) τ := add_tsub_cancel_of_le
+          (le_trans (le_of_eq hAip.symm)
+            (le_trans (truncBeforeD_mono (Ds i).mono (X i) hpτ)
+              (le_of_eq (hFDi τ le_rfl))))
 
 /-! ## Deadline compatibility -/
 
