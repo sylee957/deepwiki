@@ -27,37 +27,6 @@ def IsGpsServerN {ι : Type*} (φ : ι → ℝ≥0)
     (S : (ι → Curve) → (ι → Curve) → Prop) : Prop :=
   ∀ As Ds, S As Ds → IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
 
-/-- **GPS proportional share over a subset** (product form): if the
-aggregate of the flows in `J` is served at a strict `β_J`, each flow
-`i ∈ J` keeps its share on its own backlogged periods:
-`φᵢ·β_J(t−s) ≤ (∑_{j∈J} φⱼ)·(Dᵢ(t)−Dᵢ(s))`. -/
-theorem mul_le_sum_mul_of_isGps {ι : Type*} {φ : ι → ℝ≥0}
-    {As Ds : ι → Curve} {J : Finset ι} {βJ : ℝ≥0 → ℝ≥0}
-    (hc : ∀ j ∈ J, Ds j ≤ As j)
-    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
-    (hstrict : ∀ s t, s ≤ t →
-      IsBacklogged (fun x => ∑ j ∈ J, (As j) x) (fun x => ∑ j ∈ J, (Ds j) x)
-        (Set.Ioc s t) →
-      (∑ j ∈ J, (Ds j) s) + βJ (t - s) ≤ ∑ j ∈ J, (Ds j) t)
-    {i : ι} (hi : i ∈ J) {s t : ℝ≥0} (hst : s ≤ t)
-    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
-    φ i * βJ (t - s) ≤ (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := by
-  have hstr := hstrict s t hst
-    (isBacklogged_sum_of_isBacklogged (fun j hj x => hc j hj x) hi hbl)
-  have hβle : βJ (t - s) ≤ (∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s :=
-    le_tsub_of_add_le_left hstr
-  calc φ i * βJ (t - s)
-      ≤ φ i * ((∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s) :=
-        mul_le_mul_right hβle (φ i)
-    _ = φ i * ∑ j ∈ J, ((Ds j) t - (Ds j) s) := by
-        congr 1
-        exact (Finset.sum_tsub_distrib J fun j _ =>
-          ((Ds j).mono hst : (Ds j) s ≤ (Ds j) t)).symm
-    _ = ∑ j ∈ J, φ i * ((Ds j) t - (Ds j) s) := Finset.mul_sum ..
-    _ ≤ ∑ j ∈ J, φ j * ((Ds i) t - (Ds i) s) :=
-        Finset.sum_le_sum fun j _ => hgps i j s t hst hbl
-    _ = (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := (Finset.sum_mul ..).symm
-
 /-- **GPS share against any aggregate**: on a backlogged period of
 flow `i`, the total weight of `J` times flow `i`'s increment
 dominates `φ i` times the `J`-aggregate increment. -/
@@ -77,6 +46,28 @@ theorem mul_sum_le_sum_mul_of_isGps {ι : Type*} {φ : ι → ℝ≥0}
     _ ≤ ∑ j ∈ J, φ j * ((Ds i) t - (Ds i) s) :=
         Finset.sum_le_sum fun j _ => hgps i j s t hst hbl
     _ = (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := (Finset.sum_mul ..).symm
+
+/-- **GPS proportional share over a subset** (product form): if the
+aggregate of the flows in `J` is served at a strict `β_J`, each flow
+`i ∈ J` keeps its share on its own backlogged periods:
+`φᵢ·β_J(t−s) ≤ (∑_{j∈J} φⱼ)·(Dᵢ(t)−Dᵢ(s))`. -/
+theorem mul_le_sum_mul_of_isGps {ι : Type*} {φ : ι → ℝ≥0}
+    {As Ds : ι → Curve} {J : Finset ι} {βJ : ℝ≥0 → ℝ≥0}
+    (hc : ∀ j ∈ J, Ds j ≤ As j)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j ∈ J, (As j) x) (fun x => ∑ j ∈ J, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j ∈ J, (Ds j) s) + βJ (t - s) ≤ ∑ j ∈ J, (Ds j) t)
+    {i : ι} (hi : i ∈ J) {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    φ i * βJ (t - s) ≤ (∑ j ∈ J, φ j) * ((Ds i) t - (Ds i) s) := by
+  have hstr := hstrict s t hst
+    (isBacklogged_sum_of_isBacklogged (fun j hj x => hc j hj x) hi hbl)
+  have hβle : βJ (t - s) ≤ (∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s :=
+    le_tsub_of_add_le_left hstr
+  exact le_trans (mul_le_mul_right hβle (φ i))
+    (mul_sum_le_sum_mul_of_isGps hgps hst hbl)
 
 /-- **GPS residual service over a subset** (the book's subset lemma, in
 strict-service form): with positive total weight on `J`, flow `i ∈ J`

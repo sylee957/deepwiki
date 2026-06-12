@@ -442,7 +442,8 @@ flow `i` at the min-plus residual `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`: th
 blind-multiplexing proof only ever uses strictness at the start, so
 the strict version is a corollary of this one. The book notes, via
 its two-flow example, that the residual computed this way is not
-necessarily weakly strict. -/
+necessarily weakly strict — formalized as
+`not_forall_isWeaklyStrictMinimalServiceCurve_residualCurve`. -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0}

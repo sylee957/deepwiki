@@ -360,7 +360,7 @@ residual `[β − ∑_{j≠i} αⱼ]⁺↑` is false — the book's two-flow fig
 the plain residual is min-plus but not weakly strict for the starved
 flow. -/
 theorem not_forall_isWeaklyStrictMinimalServiceCurve_residualCurve :
-    ¬ ∀ (ι : Type) (_ : Fintype ι) (_ : DecidableEq ι)
+    ¬ ∀ (ι : Type) [Fintype ι] [DecidableEq ι]
       (S : (ι → Curve) → (ι → Curve) → Prop) (β : ℝ≥0 → ℝ≥0)
       (α : ι → ℝ≥0 → ℝ≥0) (i : ι),
       IsCausalN S →
@@ -370,7 +370,7 @@ theorem not_forall_isWeaklyStrictMinimalServiceCurve_residualCurve :
         (residualServer (fun A D => S A D ∧
           ∀ j, IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
   intro h
-  have hbad := h (Fin 2) inferInstance inferInstance
+  have hbad := h (Fin 2)
     (fun A D =>
       A = ![flipWitnessA, mpWitnessRate]
         ∧ D = ![flipWitnessDBurst, flipWitnessDRate])
