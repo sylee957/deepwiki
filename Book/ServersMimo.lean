@@ -1,4 +1,5 @@
 import Book.Servers
+import Book.ServersBacklog
 
 /-! # MIMO servers
 A MIMO (`n`-)server relates a vector of input cumulative processes to a
@@ -6,8 +7,8 @@ vector of outputs, causally per flow. Two reductions return the analysis
 to single-flow servers: the **aggregate server** relates the summed
 input to the summed output, and the **residual server** for flow `i`
 projects the relation onto coordinate `i` (the other flows are the
-cross-traffic). A residual server of a deterministic MIMO server is in
-general non-deterministic — the relational server model is essential.
+cross-traffic). A residual server of a deterministic MIMO server can be
+non-deterministic — the book's reason for the relational server model.
 Aggregate/residual *service curves* of a MIMO server are, by definition,
 service curves of its aggregate/residual servers. -/
 
@@ -72,6 +73,52 @@ theorem isServer_aggregateServer {ι : Type*} [Fintype ι] [Nonempty ι]
     refine Curve.ext fun t => ?_
     rw [Curve.sum_apply]
     simp [Pi.single_apply, apply_ite (fun B : Curve => B t)]
+
+/-- An aggregate backlog instant disaggregates: at each backlogged
+instant of the aggregate pair some flow is backlogged, and conversely
+(for causal families). -/
+theorem isBacklogged_sum_iff {ι : Type*} [Fintype ι]
+    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ j x, D j x ≤ A j x) {I : Set ℝ≥0} :
+    IsBacklogged (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) I
+      ↔ ∀ u ∈ I, ∃ i, D i u < A i u := by
+  constructor
+  · intro h u hu
+    by_contra hcon
+    push Not at hcon
+    exact absurd (h u hu)
+      (not_lt.mpr (Finset.sum_le_sum fun j _ => hcon j))
+  · intro h u hu
+    obtain ⟨i, hi⟩ := h u hu
+    exact Finset.sum_lt_sum (fun j _ => hc j u) ⟨i, Finset.mem_univ i, hi⟩
+
+/-- A backlogged period for one flow is a backlogged period for the
+aggregate (for causal families). -/
+theorem isBacklogged_sum_of_isBacklogged {ι : Type*} [Fintype ι]
+    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ j x, D j x ≤ A j x) {I : Set ℝ≥0}
+    (i : ι) (hbl : IsBacklogged (A i) (D i) I) :
+    IsBacklogged (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) I :=
+  fun u hu =>
+    Finset.sum_lt_sum (fun j _ => hc j u) ⟨i, Finset.mem_univ i, hbl u hu⟩
+
+/-- **Per-flow equality at the start of an aggregate backlogged period**:
+at `start (∑ Aⱼ) (∑ Dⱼ) t` every flow has served exactly its arrivals
+(for causal, left-continuous, null-at-origin families). -/
+theorem apply_start_sum_eq {ι : Type*} [Fintype ι]
+    {A D : ι → ℝ≥0 → ℝ≥0} (hc : ∀ j x, D j x ≤ A j x)
+    (hAlc : ∀ j, IsLeftContinuous (A j)) (hDlc : ∀ j, IsLeftContinuous (D j))
+    (h0 : ∀ j, A j 0 = D j 0) (t : ℝ≥0) (i : ι) :
+    D i (start (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) t)
+      = A i (start (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) t) := by
+  set s₀ := start (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) t
+  have haggeq : (∑ j, A j s₀) = ∑ j, D j s₀ :=
+    apply_start_eq
+      (isLeftContinuous_sum _ fun j _ => hAlc j)
+      (isLeftContinuous_sum _ fun j _ => hDlc j)
+      (by show (∑ j, A j 0) = ∑ j, D j 0
+          exact Finset.sum_congr rfl fun j _ => h0 j)
+      (fun x => Finset.sum_le_sum fun j _ => hc j x) t
+  exact (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm i
+    (Finset.mem_univ i)
 
 /-- **Each residual of an `n`-server is a server**: causality projects,
 and an input extends to the constant vector. -/

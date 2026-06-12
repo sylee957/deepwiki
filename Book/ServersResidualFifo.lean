@@ -20,6 +20,12 @@ condition is the contrapositive (`isFifo_iff`). -/
 def IsFifo {ι : Type*} (A D : ι → ℝ≥0 → ℝ≥0) : Prop :=
   ∀ i j, ∀ t u : ℝ≥0, A i u < D i t → A j u ≤ D j t
 
+/-- **FIFO `n`-server**: every served family satisfies the FIFO
+trajectory condition. -/
+def IsFifoServerN {ι : Type*}
+    (S : (ι → Curve) → (ι → Curve) → Prop) : Prop :=
+  ∀ As Ds, S As Ds → IsFifo (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
+
 /-- The book's second FIFO condition is the contrapositive of the
 first: data still queued for one flow is still queued for all. -/
 theorem isFifo_iff {ι : Type*} (A D : ι → ℝ≥0 → ℝ≥0) :
@@ -86,34 +92,46 @@ theorem apply_tsub_le_of_isFifo {ι : Type*} [Fintype ι]
       harr hserv hd t
   exact forall_le_of_sum_le_of_isFifo hfifo hagg i
 
-/-- **FIFO per-flow delay bound**: under the hypotheses of the
-delay-based residual, `dM` bounds the delay of every flow. -/
-theorem delay_le_of_isFifo {ι : Type*} [Fintype ι]
-    {As Ds : ι → Curve} {α β : ℝ≥0 → ℝ≥0∞} {dM : ℝ≥0}
+/-- **FIFO transfers delay to the flows**: with no arrival or service
+hypotheses at all, each flow's delay is bounded by the aggregate's —
+every shift admissible for the aggregate is admissible per flow. -/
+theorem delay_le_delay_sum_of_isFifo {ι : Type*} [Fintype ι]
+    {A D : ι → ℝ≥0 → ℝ≥0} (h : IsFifo A D) (i : ι) :
+    Deviation.delay (A i) (D i)
+      ≤ Deviation.delay (fun x => ∑ j, A j x) (fun x => ∑ j, D j x) := by
+  refine iSup_mono fun t => ?_
+  refine le_iInf fun d => ?_
+  exact iInf_le_of_le ⟨d.1, forall_le_of_sum_le_of_isFifo h d.2 i⟩ le_rfl
+
+/-- **FIFO per-flow delay bound**: the aggregate's horizontal deviation
+`hDev(α, β)` bounds the delay of every flow. -/
+theorem delay_le_hDev_of_isFifo {ι : Type*} [Fintype ι]
+    {As Ds : ι → Curve} {α β : ℝ≥0 → ℝ≥0∞}
     (hfifo : IsFifo (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
     (hβmono : Monotone β)
     (harr : IsMaximalArrivalBound
       (Deviation.liftENN (fun x => ∑ j, (As j) x)) α)
     (hserv : ∀ x, minConv (Deviation.liftENN (fun x => ∑ j, (As j) x)) β x
-      ≤ ((∑ j, (Ds j) x : ℝ≥0) : ℝ≥0∞))
-    (hd : (hDev α β : ℝ≥0∞) ≤ (dM : ℝ≥0∞)) (i : ι) :
-    Deviation.delay ⇑(As i) ⇑(Ds i) ≤ (dM : ℝ≥0∞) := by
-  refine hDev_le fun t => ?_
-  refine hDevAt_le ?_
-  have h := apply_tsub_le_of_isFifo hfifo hβmono harr hserv hd i (t + dM)
-  rwa [add_tsub_cancel_right] at h
+      ≤ ((∑ j, (Ds j) x : ℝ≥0) : ℝ≥0∞)) (i : ι) :
+    Deviation.delay ⇑(As i) ⇑(Ds i) ≤ (hDev α β : ℝ≥0∞) :=
+  le_trans (delay_le_delay_sum_of_isFifo hfifo i)
+    (Deviation.delay_le_hDev
+      (fun _ _ hab => Finset.sum_le_sum fun j _ => (As j).mono hab)
+      hβmono harr hserv)
 
 /-! ## Book restatement (FIFO delay-based residual)
 A FIFO `n`-server offering a min-plus service curve `β` to flows with
 arrival curves `αⱼ` offers each flow the residual service curve
 `δ_dM` at any `dM ≥ hDev(∑ⱼ αⱼ, β)` — in convolution form
 `Aᵢ ∗ δ_dM ≤ Dᵢ` — and `dM` bounds every flow's delay. (The aggregate
-arrival curve `∑ⱼ αⱼ` is supplied by the aggregation chapter.) -/
+arrival curve `∑ⱼ αⱼ` is supplied by the aggregation chapter; the
+hypotheses are per served pair of a FIFO `n`-server,
+`IsFifoServerN`.) -/
 example {ι : Type*} [Fintype ι] {As Ds : ι → Curve}
     {α β : ℝ≥0 → ℝ≥0∞} {dM : ℝ≥0}
     (hfifo : IsFifo (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
     (hβmono : Monotone β)
-    (harr : IsMaximalArrivalBound
+    (harr : IsMaximalArrivalCurve
       (Deviation.liftENN (fun x => ∑ j, (As j) x)) α)
     (hserv : ∀ x, minConv (Deviation.liftENN (fun x => ∑ j, (As j) x)) β x
       ≤ ((∑ j, (Ds j) x : ℝ≥0) : ℝ≥0∞))
@@ -124,6 +142,6 @@ example {ι : Type*} [Fintype ι] {As Ds : ι → Curve}
     fun u v huv => ENNReal.coe_le_coe.mpr ((As i).mono huv)
   rw [conv_delayNN _ hAmonoE dM]
   show ((As i) (t - dM) : ℝ≥0∞) ≤ ((Ds i) t : ℝ≥0∞)
-  exact_mod_cast apply_tsub_le_of_isFifo hfifo hβmono harr hserv hd i t
+  exact_mod_cast apply_tsub_le_of_isFifo hfifo hβmono harr.2 hserv hd i t
 
 end DeepWiki

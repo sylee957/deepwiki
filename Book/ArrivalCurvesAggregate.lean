@@ -68,17 +68,18 @@ and any arrival curve `α` of the aggregate is an arrival curve of each
 sub-flow `Aⱼ`. -/
 example {ι : Type*} (s : Finset ι) (A : ι → ℝ≥0 → ℝ≥0)
     (α : ι → ℝ≥0 → ℝ≥0∞)
-    (h : ∀ i ∈ s, IsMaximalArrivalBound (Deviation.liftENN (A i)) (α i)) :
-    IsMaximalArrivalBound (Deviation.liftENN (fun t => ∑ i ∈ s, A i t))
+    (h : ∀ i ∈ s, IsMaximalArrivalCurve (Deviation.liftENN (A i)) (α i)) :
+    IsMaximalArrivalCurve (Deviation.liftENN (fun t => ∑ i ∈ s, A i t))
       (fun t => ∑ i ∈ s, α i t) := by
+  refine ⟨fun a b hab => Finset.sum_le_sum fun i hi => (h i hi).1 hab, ?_⟩
   rw [Deviation.liftENN_sum]
-  exact isMaximalArrivalBound_sum s h
+  exact isMaximalArrivalBound_sum s fun i hi => (h i hi).2
 
 example {ι : Type*} {s : Finset ι} (A : ι → ℝ≥0 → ℝ≥0) {α : ℝ≥0 → ℝ≥0∞}
     (hmono : ∀ i ∈ s, Monotone (A i)) {j : ι} (hj : j ∈ s)
-    (h : IsMaximalArrivalBound
+    (h : IsMaximalArrivalCurve
       (Deviation.liftENN (fun t => ∑ i ∈ s, A i t)) α) :
-    IsMaximalArrivalBound (Deviation.liftENN (A j)) α :=
-  isMaximalArrivalBound_of_sum hmono hj h
+    IsMaximalArrivalCurve (Deviation.liftENN (A j)) α :=
+  ⟨h.1, isMaximalArrivalBound_of_sum hmono hj h.2⟩
 
 end DeepWiki

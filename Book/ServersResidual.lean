@@ -1,7 +1,7 @@
 import Book.ServersMimo
-import Book.ServiceCurveStrict
+import Book.ServiceCurveStrictMinimal
 import Book.ClosuresNd
-import Book.DeviationsBounds
+import Book.DeviationsBoundsServer
 
 /-! # Residual service under blind multiplexing
 With no information on the service policy, a strict aggregate service
@@ -55,6 +55,36 @@ theorem residualCurve_mono {β α : ℝ≥0 → ℝ≥0}
     Monotone (residualCurve β α) :=
   ndClosure_mono _ hbdd
 
+/-- For non-decreasing `β` the residual differences are prefix-bounded:
+`β t` dominates every clamped difference on `[0, t]`. -/
+theorem closureBddAbove_tsub_of_monotone {β α : ℝ≥0 → ℝ≥0}
+    (hβ : Monotone β) : ClosureBddAbove (fun v => β v - α v) := fun t =>
+  ⟨β t, by rintro x ⟨v, rfl⟩; exact le_trans tsub_le_self (hβ v.2)⟩
+
+/-- `residualCurve β α` is monotone for non-decreasing `β`. -/
+theorem residualCurve_mono_of_monotone {β α : ℝ≥0 → ℝ≥0}
+    (hβ : Monotone β) : Monotone (residualCurve β α) :=
+  residualCurve_mono (closureBddAbove_tsub_of_monotone hβ)
+
+/-- The `ℝ≥0` cancellation core of the residual-service proofs: an
+aggregate step of at least `b` minus a cross-traffic consumption of at
+most `c` leaves the clamped difference to the tagged flow. -/
+theorem tsub_le_of_aggregate_step {xs xv xt ys yv c b : ℝ≥0}
+    (hstr : (xs + ys) + b ≤ xv + yv) (hcross : yv ≤ ys + c)
+    (hxv : xv ≤ xt) (hxs : xs ≤ xt) :
+    b - c ≤ xt - xs := by
+  have hmain : xs + b ≤ xv + c := by
+    have h2 : (xs + b) + ys ≤ (xv + c) + ys := by
+      calc (xs + b) + ys = (xs + ys) + b := by ring
+        _ ≤ xv + yv := hstr
+        _ ≤ xv + (ys + c) := add_le_add le_rfl hcross
+        _ = (xv + c) + ys := by ring
+    exact le_of_add_le_add_right h2
+  refine tsub_le_iff_right.mpr ?_
+  calc b ≤ (xv + c) - xs := le_tsub_of_add_le_left hmain
+    _ ≤ (xt + c) - xs := tsub_le_tsub_right (add_le_add hxv le_rfl) _
+    _ = (xt - xs) + c := (tsub_add_eq_add_tsub hxs).symm
+
 /-- A strict service inequality forces `β 0 = 0`: the empty backlogged
 period `(s, s]` serves `β 0` instantly. -/
 theorem beta_zero_eq_of_strict {A D β : ℝ≥0 → ℝ≥0}
@@ -87,18 +117,11 @@ theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
     with hs₀def
   have hs₀t : s₀ ≤ t := start_le _ _ t
   -- per-flow equality at the start of the aggregate backlogged period
-  have haggeq : (∑ j, (As j) s₀) = ∑ j, (Ds j) s₀ :=
-    apply_start_eq
-      (isLeftContinuous_sum _ fun j _ => (As j).leftCont)
-      (isLeftContinuous_sum _ fun j _ => (Ds j).leftCont)
-      (by show (∑ j, (As j) 0) = ∑ j, (Ds j) 0
-          have hA : ∀ j : ι, (As j) 0 = 0 := fun j => (As j).zero
-          have hD : ∀ j : ι, (Ds j) 0 = 0 := fun j => (Ds j).zero
-          simp [hA, hD])
-      hcagg t
-  have hfloweq : ∀ j, (Ds j) s₀ = (As j) s₀ := fun j =>
-    (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm j
-      (Finset.mem_univ j)
+  have hfloweq : ∀ j, (Ds j) s₀ = (As j) s₀ :=
+    apply_start_sum_eq (fun j x => hc j x)
+      (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
+      (fun j => ((As j).zero : (As j) 0 = 0).trans
+        ((Ds j).zero : (Ds j) 0 = 0).symm) t
   -- every shifted difference is covered by what flow `i` receives
   have hv : ∀ v : ℝ≥0, v ≤ t - s₀ →
       β v - (∑ j ∈ Finset.univ.erase i, α j v)
@@ -130,36 +153,8 @@ theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
           _ ≤ (As j) s₀ + α j v :=
             (isMaximalArrivalBound_iff_increment _ _).mp (harr j hne) s₀ v
           _ = (Ds j) s₀ + α j v := by rw [hfloweq j]
-      -- cancel the cross-traffic backlog at `s₀`
-      have hmain : (Ds i) s₀ + β v
-          ≤ (Ds i) (s₀ + v) + ∑ j ∈ Finset.univ.erase i, α j v := by
-        have h2 : ((Ds i) s₀ + β v)
-              + ∑ j ∈ Finset.univ.erase i, (Ds j) s₀
-            ≤ ((Ds i) (s₀ + v) + ∑ j ∈ Finset.univ.erase i, α j v)
-              + ∑ j ∈ Finset.univ.erase i, (Ds j) s₀ := by
-          calc ((Ds i) s₀ + β v) + ∑ j ∈ Finset.univ.erase i, (Ds j) s₀
-              = ((Ds i) s₀ + ∑ j ∈ Finset.univ.erase i, (Ds j) s₀) + β v := by
-                ring
-            _ ≤ (Ds i) (s₀ + v) + ∑ j ∈ Finset.univ.erase i, (Ds j) (s₀ + v) :=
-                hstr
-            _ ≤ (Ds i) (s₀ + v)
-                + ((∑ j ∈ Finset.univ.erase i, (Ds j) s₀)
-                  + ∑ j ∈ Finset.univ.erase i, α j v) :=
-                add_le_add le_rfl hcross
-            _ = ((Ds i) (s₀ + v) + ∑ j ∈ Finset.univ.erase i, α j v)
-                + ∑ j ∈ Finset.univ.erase i, (Ds j) s₀ := by
-                ring
-        exact le_of_add_le_add_right h2
-      -- pass to the truncated differences
-      have hDi : (Ds i) (s₀ + v) ≤ (Ds i) t := (Ds i).mono hut
-      refine tsub_le_iff_right.mpr ?_
-      calc β v ≤ ((Ds i) (s₀ + v) + ∑ j ∈ Finset.univ.erase i, α j v)
-            - (Ds i) s₀ :=
-            le_tsub_of_add_le_left hmain
-        _ ≤ ((Ds i) t + ∑ j ∈ Finset.univ.erase i, α j v) - (Ds i) s₀ :=
-            tsub_le_tsub_right (add_le_add hDi le_rfl) _
-        _ = ((Ds i) t - (Ds i) s₀) + ∑ j ∈ Finset.univ.erase i, α j v :=
-            (tsub_add_eq_add_tsub ((Ds i).mono hs₀t)).symm
+      exact tsub_le_of_aggregate_step hstr hcross
+        ((Ds i).mono hut) ((Ds i).mono hs₀t)
   -- collect the supremum and split the convolution at `s₀`
   have hkey : (Ds i) s₀
       + residualCurve β (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (t - s₀)
@@ -199,8 +194,8 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
     (Ds i) s + residualCurve β α (t - s) ≤ (Ds i) t := by
   -- flow-`i` backlog forces aggregate backlog
   have hblagg : ∀ u, u ∈ Set.Ioc s t →
-      (∑ j, (Ds j) u) < ∑ j, (As j) u := fun u hu =>
-    Finset.sum_lt_sum (fun j _ => hc j u) ⟨i, Finset.mem_univ i, hbl u hu⟩
+      (∑ j, (Ds j) u) < ∑ j, (As j) u :=
+    isBacklogged_sum_of_isBacklogged (fun j x => hc j x) i hbl
   have hv : ∀ v : ℝ≥0, v ≤ t - s → β v - α v ≤ (Ds i) t - (Ds i) s := by
     intro v hvle
     have hut : s + v ≤ t := by
@@ -221,30 +216,8 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
       have hcross : ∑ j ∈ Finset.univ.erase i, (Ds j) (s + v)
           ≤ (∑ j ∈ Finset.univ.erase i, (Ds j) s) + α v :=
         (isMaximalArrivalBound_iff_increment _ _).mp hdep s v
-      have hmain : (Ds i) s + β v ≤ (Ds i) (s + v) + α v := by
-        have h2 : ((Ds i) s + β v) + ∑ j ∈ Finset.univ.erase i, (Ds j) s
-            ≤ ((Ds i) (s + v) + α v)
-              + ∑ j ∈ Finset.univ.erase i, (Ds j) s := by
-          calc ((Ds i) s + β v) + ∑ j ∈ Finset.univ.erase i, (Ds j) s
-              = ((Ds i) s + ∑ j ∈ Finset.univ.erase i, (Ds j) s) + β v := by
-                ring
-            _ ≤ (Ds i) (s + v)
-                + ∑ j ∈ Finset.univ.erase i, (Ds j) (s + v) := hstr
-            _ ≤ (Ds i) (s + v)
-                + ((∑ j ∈ Finset.univ.erase i, (Ds j) s) + α v) :=
-                add_le_add le_rfl hcross
-            _ = ((Ds i) (s + v) + α v)
-                + ∑ j ∈ Finset.univ.erase i, (Ds j) s := by
-                ring
-        exact le_of_add_le_add_right h2
-      have hDi : (Ds i) (s + v) ≤ (Ds i) t := (Ds i).mono hut
-      refine tsub_le_iff_right.mpr ?_
-      calc β v ≤ ((Ds i) (s + v) + α v) - (Ds i) s :=
-            le_tsub_of_add_le_left hmain
-        _ ≤ ((Ds i) t + α v) - (Ds i) s :=
-            tsub_le_tsub_right (add_le_add hDi le_rfl) _
-        _ = ((Ds i) t - (Ds i) s) + α v :=
-            (tsub_add_eq_add_tsub ((Ds i).mono hst)).symm
+      exact tsub_le_of_aggregate_step hstr hcross
+        ((Ds i).mono hut) ((Ds i).mono hst)
   have hsup : residualCurve β α (t - s) ≤ (Ds i) t - (Ds i) s :=
     ciSup_le fun v => hv v.1 v.2
   calc (Ds i) s + residualCurve β α (t - s)
@@ -293,27 +266,57 @@ theorem isStrictMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
     (by rwa [Curve.coe_sum, Curve.coe_sum])
   rwa [Curve.sum_apply, Curve.sum_apply] at h
 
+/-- **The residual server offers the residual curve** (the book's
+residual-service-curve reading of blind multiplexing): restricting an
+`n`-server with a strict aggregate curve to pairs with `αⱼ`-constrained
+cross-traffic, the residual server for flow `i` offers
+`[β − ∑_{j≠i} αⱼ]⁺↑` as a min-plus service curve. -/
+theorem isMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S)) :
+    IsMinimalServiceCurve
+      (liftEReal (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+      (residualServer (fun A D => S A D ∧
+        ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩
+  intro t
+  have h := minConv_residualCurve_le_of_isStrictMinimalServiceCurve
+    hcaus hβ hp harr t
+  rw [show Deviation.liftENN (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
+      = Deviation.toENN (liftEReal (residualCurve β
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+    from (Deviation.toENN_liftEReal _).symm] at h
+  rw [curveEReal_apply]
+  exact (Deviation.minConv_toENN_le_coe_iff (As i)
+    (isNonneg_liftEReal _) ((Ds i) t) t).mp h
+
 /-! ## Book restatement (blind multiplexing)
 An `n`-server offering a strict service curve `β` whose arrival
 processes have arrival curves `αᵢ`: the residual server for flow `i`
 offers the min-plus service curve `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`, i.e.
-`Dᵢ ≥ Aᵢ ∗ βᵢ`. The strictness of the aggregate hypothesis and the
-non-strictness of the conclusion are both essential. If instead the
-aggregate departure process of the cross-traffic is constrained by `α`,
-the residual server offers the *strict* service curve `[β − α]⁺↑`. -/
+`Dᵢ ≥ Aᵢ ∗ βᵢ`. The book shows (its two counterexample figures) that
+the strict aggregate hypothesis is essential and that the conclusion
+cannot be upgraded to strict; that refutation ladder is deferred to the
+min-plus residual chapter. If instead the aggregate departure process
+of the cross-traffic is constrained by `α`, the residual server offers
+the *strict* service curve `[β − α]⁺↑`. -/
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0}
     (hSrv : IsServerN S)
     (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
     {As Ds : ι → Curve} (hp : S As Ds)
-    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalCurve ⇑(As j) (α j))
     (t : ℝ≥0) :
     minConv (Deviation.liftENN ⇑(As i))
         (Deviation.liftENN (residualCurve β
           (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
       ≤ ((Ds i) t : ℝ≥0∞) :=
   minConv_residualCurve_le_of_isStrictMinimalServiceCurve
-    hSrv.1 hβ hp harr t
+    hSrv.1 hβ hp (fun j hj => (harr j hj).2) t
 
 end DeepWiki
