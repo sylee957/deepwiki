@@ -38,6 +38,12 @@ theorem start_le (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     start A D t ≤ t :=
   csSup_le' (fun _ hx => hx.1)
 
+/-- Against itself every instant is an equality point: `start A A t = t`. -/
+theorem start_self (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) : start A A t = t := by
+  unfold start
+  simp only [and_true]
+  exact csSup_Iic
+
 /-- `start A D` is monotone in `t`. -/
 theorem start_mono (A D : ℝ≥0 → ℝ≥0) {t t' : ℝ≥0}
     (h : t ≤ t') : start A D t ≤ start A D t' :=

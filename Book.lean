@@ -50,6 +50,7 @@ import Book.DeviationsBoundsServer
 import Book.DeviationsRestricted
 import Book.ServersBacklog
 import Book.ServiceCurveStrict
+import Book.ServiceCurveWeaklyStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.Packetizer

@@ -1,4 +1,4 @@
-import Book.ServiceCurveStrict
+import Book.ServiceCurveWeaklyStrict
 import Book.DeviationsBoundsServer
 import Book.DeviationsRestricted
 
@@ -21,17 +21,8 @@ convolution: `(A ∗ beta) t ≤ A s + beta (t - s) ≤ D t`. -/
 theorem IsStrictMinimalServiceCurve.isMinimalServiceCurve
     {S : Curve → Curve → Prop} {beta : ℝ≥0 → ℝ≥0}
     (hβ : IsStrictMinimalServiceCurve beta S) (hc : IsCausal S) :
-    IsMinimalServiceCurve (liftEReal beta) S := by
-  intro A D hp t
-  have hst : start ⇑A ⇑D t ≤ t := start_le ⇑A ⇑D t
-  have hbound : A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) ≤ D t :=
-    strictServiceRel_output_bound beta A D ⟨hc A D hp, hβ A D hp⟩ t
-  calc minConv (curveEReal A) (liftEReal beta) t
-      ≤ curveEReal A (start ⇑A ⇑D t) + liftEReal beta (t - start ⇑A ⇑D t) :=
-        minConv_le_add _ _ (add_tsub_cancel_of_le hst)
-    _ ≤ curveEReal D t := by
-        simp only [curveEReal_apply]
-        exact_mod_cast hbound
+    IsMinimalServiceCurve (liftEReal beta) S :=
+  (hβ.isWeaklyStrictServiceCurve hc).isMinimalServiceCurve hc
 
 /-- The largest-relation form: the largest strict-service relation is
 contained in the largest relation offering `liftEReal beta` as a minimal
