@@ -213,6 +213,22 @@ theorem staircaseFun_anti (T b : ℝ≥0) {d d' : ℝ≥0} (h : d ≤ d') (t : �
       (inv_nonneg.mpr T.coe_nonneg)
   exact_mod_cast Nat.ceil_mono h'
 
+/-- Ceiling elim: `staircaseFun T b d t ≤ b·k` once `t ≤ d + k·T` —
+within the delay plus `k` periods, at most `k` steps have fired. -/
+theorem staircaseFun_le {T b d t : ℝ≥0} {k : ℕ}
+    (h : t ≤ d + (k : ℝ≥0) * T) :
+    staircaseFun T b d t ≤ b * k := by
+  unfold staircaseFun
+  have hceil : ⌈((t : ℝ) - d) / T⌉₊ ≤ k := by
+    rcases eq_zero_or_pos T with rfl | hT
+    · simp
+    · refine Nat.ceil_le.mpr ?_
+      rw [div_le_iff₀ (by exact_mod_cast hT : (0 : ℝ) < (T : ℝ))]
+      have hc := NNReal.coe_le_coe.mpr h
+      push_cast at hc
+      linarith
+  exact mul_le_mul_right (by exact_mod_cast hceil) b
+
 /-- The undelayed staircase obeys its affine constraint `γ_{b,b/T}`:
 `ν_{T,b} t ≤ (b/T)·t + b`. -/
 theorem staircaseFun_le_affine {T : ℝ≥0} (hT : 0 < T) (b t : ℝ≥0) :
