@@ -60,6 +60,25 @@ theorem coe_minConv_toENN (A : Curve) {beta : ℝ≥0 → EReal}
   congr 1
   exact EReal.coe_toENNReal (hnn s)
 
+/-- For nonnegative curves the `ℝ≥0∞` reading commutes with convolution:
+`toENN (β₁ ∗ β₂) = toENN β₁ ∗ toENN β₂`. -/
+theorem toENN_minConv {β₁ β₂ : ℝ≥0 → EReal}
+    (hnn₁ : IsNonneg β₁) (hnn₂ : IsNonneg β₂) :
+    toENN (minConv β₁ β₂) = minConv (toENN β₁) (toENN β₂) := by
+  funext t
+  rw [← EReal.coe_ennreal_eq_coe_ennreal_iff,
+    show ((toENN (minConv β₁ β₂) t : ℝ≥0∞) : EReal) = minConv β₁ β₂ t from
+      EReal.coe_toENNReal (hnn₁.conv hnn₂ t)]
+  simp only [minConv]
+  rw [coe_ennreal_iInf]
+  refine iInf_congr ?_
+  rintro ⟨⟨u, s⟩, _⟩
+  show β₁ u + β₂ s = ((toENN β₁ u + toENN β₂ s : ℝ≥0∞) : EReal)
+  rw [EReal.coe_ennreal_add]
+  congr 1
+  · exact (EReal.coe_toENNReal (hnn₁ u)).symm
+  · exact (EReal.coe_toENNReal (hnn₂ s)).symm
+
 /-- For nonnegative `beta`, an `ℝ≥0` value lower-bounds the `ℝ≥0∞`
 convolution reading iff its `EReal` cast lower-bounds the `EReal`
 convolution. -/
