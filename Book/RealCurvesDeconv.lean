@@ -367,6 +367,21 @@ theorem minDeconv_tokenBucketNN_rateNN_top (r b R : ℝ≥0)
   rw [← rateLatencyNN_zero R]
   exact minDeconv_tokenBucketNN_rateLatencyNN_top r b R 0 hRr
 
+/-- **The TSpec shaping identity**: a `λ_C`-shaped token-bucket flow
+keeps its arrival curve, `(γ_{r,b} ⊘ λ_C) ⊓ λ_C = γ_{r,b} ⊓ λ_C` for
+`r ≤ C` — shaping only unclamps the origin, and the rate re-clamps it. -/
+theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) (h : r ≤ C) :
+    minDeconv (tokenBucketNN r b) (rateNN C) ⊓ rateNN C
+      = tokenBucketNN r b ⊓ rateNN C := by
+  have hrd : rateNN C ≤ delayNN 0 := by
+    intro t
+    rcases eq_zero_or_pos t with rfl | ht
+    · simp [rateNN_apply, delayNN]
+    · rw [show delayNN 0 t = ⊤ from delay_eq_top 0 ht]
+      exact le_top
+  rw [minDeconv_tokenBucketNN_rateNN r b C h, ← affine_inf_delay0,
+    inf_assoc, inf_eq_right.mpr hrd]
+
 /-- `rateNN R ⊘ rateNN R' = rateNN R` when `R ≤ R'`. -/
 theorem minDeconv_rateNN_rateNN (R R' : ℝ≥0) (h : R ≤ R') :
     minDeconv (rateNN R) (rateNN R') = rateNN R := by

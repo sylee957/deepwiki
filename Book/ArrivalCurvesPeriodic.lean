@@ -1,5 +1,6 @@
 import Book.Deconvolution
 import Book.RealCurvesAdditivity
+import Book.RealCurvesDeviations
 
 /-! # Arrival curves of periodic flows
 A periodic flow (a packet of size `s` every `P`) has cumulative process
@@ -216,5 +217,45 @@ example (P s : ℝ≥0) (hP : (0:ℝ) < P) (t : ℝ≥0) :
     rateLatencyNN (s / P) P t ≤ staircaseFloor P s 0 t := by
   have h := rateLatencyNN_le_staircaseFloor P s hP 0 t
   rwa [NNReal.coe_zero, add_zero] at h
+
+/-! ## Book restatement (propagation and performance bounds)
+A periodic flow with jitter crossing a server that offers the min-plus
+service curve `β_{R,T}`, under stability `s/P < R`. With the linear
+approximation `α₂ = γ_{s/P, s(P+J)/P}` the bounds are closed-form:
+`hDev(α₂, β_{R,T}) = T + s(P+J)/(RP)` and
+`vDev(α₂, β_{R,T}) = s(P+T+J)/P`. With the staircase `α₁ = ν_{P,s,J}`
+itself, `vDev(α₁, β_{R,T})` dominates `α₁(T)` — the value the book
+reports; the supremum can exceed it at a jump just past `T`
+(`not_forall_vDev_staircase_rateLatencyNN_eq`). -/
+example {P s R T J : ℝ≥0} (hP : 0 < P) (hs : 0 < s) (hst : s / P < R) :
+    hDevENN (tokenBucketNN (s / P) (s * (P + J) / P)) (rateLatencyNN R T)
+      = ((T + s * (P + J) / (R * P) : ℝ≥0) : ℝ≥0∞) := by
+  rw [hDevENN_tokenBucketNN_rateLatencyNN _ _ _ _
+      (lt_of_le_of_lt zero_le' hst)
+      (div_pos (mul_pos hs (lt_of_lt_of_le hP le_self_add)) hP) hst.le,
+    ENNReal.coe_inj, div_div, mul_comm P R]
+
+example {P s R T J : ℝ≥0} (hst : s / P < R) (hT : 0 < T) :
+    vDev (tokenBucketNN (s / P) (s * (P + J) / P)) (rateLatencyNN R T)
+      = ((s * (P + T + J) / P : ℝ≥0) : ℝ≥0∞) := by
+  rw [vDev_tokenBucketNN_rateLatencyNN _ _ _ _ hst.le hT, ENNReal.coe_inj,
+    div_mul_eq_mul_div, ← add_div]
+  congr 1
+  ring
+
+example (P s R T : ℝ≥0) (J : ℝ) :
+    staircase P s J T ≤ vDev (staircase P s J) (rateLatencyNN R T) :=
+  apply_le_vDev_rateLatencyNN (staircase P s J) R T
+
+/-! ## Book restatement (shaping and periodic flows)
+A periodic flow crossing a constant-rate server `λ_C` (a shaper) under
+stability `s/P < C`: with the token-bucket approximation `γ_{s/P,s}`,
+the arrival curve at the next server is
+`(γ_{s/P,s} ⊘ λ_C) ∧ λ_C = γ_{s/P,s} ∧ λ_C` — the TSpec shape, whose
+rate cap is what reduces the downstream burst (the *shaping effect*). -/
+example {P s C : ℝ≥0} (hst : s / P < C) :
+    minDeconv (tokenBucketNN (s / P) s) (rateNN C) ⊓ rateNN C
+      = tokenBucketNN (s / P) s ⊓ rateNN C :=
+  minDeconv_tokenBucketNN_rateNN_inf (s / P) s C hst.le
 
 end DeepWiki

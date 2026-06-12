@@ -6,7 +6,9 @@ import Book.Deviations
 `delayNN`/`tokenBucketNN`/`rateLatencyNN` deviation values (stable and unstable), and
 the right-limit/right-continuity criteria for a positive horizontal deviation.
 The general deviations live in `Book.Deviations`; here `hDevAtENN`/`hDevENN`
-pin the shift-embedding to `(↑· : ℝ≥0 → ℝ≥0∞)`. -/
+pin the shift-embedding to `(↑· : ℝ≥0 → ℝ≥0∞)`. Any curve's value at the
+latency lower-bounds its `vDev` against `β_{R,T}`; for the staircase the
+book's matching equality fails at jump points (`¬∀` refutation). -/
 
 namespace DeepWiki
 
@@ -346,5 +348,58 @@ theorem vDev_tokenBucketNN_rateLatencyNN_top
     vDev (tokenBucketNN r b) (rateLatencyNN R T) = ⊤ := by
   rw [vDev_eq_deconv_zero,
     minDeconv_tokenBucketNN_rateLatencyNN_top r b R T hRr]
+
+/-- A curve's value at the latency lower-bounds its vertical deviation
+against `β_{R,T}`: `α T ≤ vDev α (rateLatencyNN R T)` — the rate-latency
+server is still null at its latency. -/
+theorem apply_le_vDev_rateLatencyNN (α : ℝ≥0 → ℝ≥0∞) (R T : ℝ≥0) :
+    α T ≤ vDev α (rateLatencyNN R T) := by
+  refine le_trans (le_of_eq ?_) (vDevAt_le_vDev _ _ T)
+  rw [vDevAt, rateLatencyNN, tsub_self, ENNReal.coe_zero, mul_zero,
+    tsub_zero]
+
+/-- The matching equality `vDev(ν_{P,s}, β_{R,T}) = ν_{P,s}(T)` fails in
+general, even under stability `s/P < R`: a jump of the staircase just
+past the latency pushes the supremum strictly above the value at `T`. -/
+theorem not_forall_vDev_staircase_rateLatencyNN_eq :
+    ¬ ∀ (P s R T : ℝ≥0), s / P < R →
+      vDev (staircase P s 0) (rateLatencyNN R T) = staircase P s 0 T := by
+  intro h
+  have hbad := h 1 1 2 1 (by norm_num)
+  -- `ν(1) = 1`, while the deviation at `t = 11/10` is `2 − 1/5 = 9/5`
+  have hT : staircase 1 1 0 1 = 1 := by
+    simp only [staircase, delayNN, delay_apply,
+      if_neg (by norm_num : ¬ (1:ℝ≥0) ≤ 0), min_top_right]
+    norm_num
+  have hsval : staircase 1 1 0 (11 / 10) = ((2 : ℝ≥0) : ℝ≥0∞) := by
+    simp only [staircase, delayNN, delay_apply,
+      if_neg (by norm_num : ¬ (11 / 10 : ℝ≥0) ≤ 0), min_top_right]
+    have hc : ⌈(((11 / 10 : ℝ≥0) : ℝ) + 0) / ((1 : ℝ≥0) : ℝ)⌉ = 2 := by
+      rw [Int.ceil_eq_iff]
+      push_cast
+      norm_num
+    rw [hc]
+    norm_num
+  have hβval : rateLatencyNN 2 1 (11 / 10) = ((1 / 5 : ℝ≥0) : ℝ≥0∞) := by
+    rw [rateLatencyNN,
+      show (11 / 10 - 1 : ℝ≥0) = 1 / 10 from by
+        rw [← NNReal.coe_inj, NNReal.coe_sub (by
+          rw [← NNReal.coe_le_coe]; push_cast; norm_num)]
+        push_cast
+        norm_num,
+      ← ENNReal.coe_mul, ENNReal.coe_inj, ← NNReal.coe_inj]
+    push_cast
+    norm_num
+  have hAt : ((9 / 5 : ℝ≥0) : ℝ≥0∞)
+      ≤ vDev (staircase 1 1 0) (rateLatencyNN 2 1) := by
+    refine le_trans (le_of_eq ?_) (vDevAt_le_vDev _ _ (11 / 10))
+    rw [vDevAt, hsval, hβval, ← ENNReal.coe_sub, ENNReal.coe_inj,
+      ← NNReal.coe_inj, NNReal.coe_sub (by
+        rw [← NNReal.coe_le_coe]; push_cast; norm_num)]
+    push_cast
+    norm_num
+  rw [hbad, hT, ← ENNReal.coe_one, ENNReal.coe_le_coe] at hAt
+  have : ((9 / 5 : ℝ≥0) : ℝ) ≤ 1 := by exact_mod_cast hAt
+  norm_num at this
 
 end DeepWiki
