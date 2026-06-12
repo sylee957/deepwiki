@@ -379,6 +379,7 @@ theorem minDeconv_rateNN_rateNN_top (R R' : ℝ≥0) (h : R' < R) :
       = fun _ => (⊤:ℝ≥0∞) := by
   conv_lhs => rw [← tokenBucketNN_zero_rateNN R]
   exact minDeconv_tokenBucketNN_rateNN_top R 0 R' h
+
 /-- The jitter window collapses to a single shift:
 `(α ∗ δ_a) ⊘ δ_b = α ⊘ δ_(b − a)` for monotone `α` and `a ≤ b` — the
 output of a jitter with per-bit delays in `[a, b]` is constrained by the

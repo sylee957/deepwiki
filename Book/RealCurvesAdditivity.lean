@@ -325,6 +325,7 @@ theorem staircase_closure_super (P h : ℝ≥0)
   superadditiveClosure_unbotD_eq _
     (staircase_superadditive P h hP J hJ)
     (staircase_zero_eq P h J) t
+
 /-- The pure delay `δ_d` is not sub-additive for `0 < d` (so it is not a
 greedy-shaper curve): `δ_d (d + d) = ⊤` exceeds `δ_d d + δ_d d = 0`. -/
 theorem not_isSubadditive_delayNN {d : ℝ≥0} (hd : 0 < d) :
