@@ -7,7 +7,9 @@ them, so the counter stays below the flow's maximal packet size. On a
 backlogged period the round count couples a service guarantee for the
 flow with a service bound for every other flow, and a strict aggregate
 curve turns the coupling into the strict residual
-`[Qᵢ/F·β − (Qᵢ(L−ℓᵢᵘ) + (F−Qᵢ)(Qᵢ+ℓᵢᵘ))/F]⁺`. -/
+`[Qᵢ/F·β − (Qᵢ(L−ℓᵢᵘ) + (F−Qᵢ)(Qᵢ+ℓᵢᵘ))/F]⁺` (`drrResidual`). The
+book's sharpening for packet lengths and quanta that are multiples of
+a basic unit `ε` is the same theorem at `ℓⱼᵘ − ε`. -/
 
 namespace DeepWiki
 
@@ -35,12 +37,43 @@ def IsDrrServerN {ι : Type*} (Q lmax : ι → ℝ≥0)
   ∀ As Ds, S As Ds →
     IsDrr Q lmax (fun j => ⇑(As j)) (fun j => ⇑(Ds j))
 
+/-- `(∑ j, f j) − f i` is the exact erased sum: summands make the
+truncated difference honest. -/
+theorem sum_tsub_eq_sum_erase {ι : Type*} [Fintype ι]
+    (f : ι → ℝ≥0) (i : ι) :
+    (∑ j, f j) - f i = ∑ j ∈ Finset.univ.erase i, f j := by
+  rw [← Finset.add_sum_erase Finset.univ f (Finset.mem_univ i)]
+  exact tsub_eq_of_eq_add (by rw [add_comm])
+
+/-- The DRR residual curve: flow `i`'s quantum share of `β`, minus the
+round-robin price of the other flows' rounds and its own leftover
+deficit. -/
+noncomputable def drrResidual {ι : Type*} [Fintype ι]
+    (Q lmax : ι → ℝ≥0) (i : ι) (β : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
+  fun τ => (Q i / ∑ j, Q j) * β τ
+    - (Q i * ((∑ j, lmax j) - lmax i)
+      + ((∑ j, Q j) - Q i) * (Q i + lmax i)) / ∑ j, Q j
+
+/-- `drrResidual Q lmax i β τ` unfolds to its closed form. -/
+@[simp] theorem drrResidual_apply {ι : Type*} [Fintype ι]
+    (Q lmax : ι → ℝ≥0) (i : ι) (β : ℝ≥0 → ℝ≥0) (τ : ℝ≥0) :
+    drrResidual Q lmax i β τ
+      = (Q i / ∑ j, Q j) * β τ
+        - (Q i * ((∑ j, lmax j) - lmax i)
+          + ((∑ j, Q j) - Q i) * (Q i + lmax i)) / ∑ j, Q j := rfl
+
+/-- `drrResidual Q lmax i β 0 = 0` when `β 0 = 0`. -/
+theorem drrResidual_zero_eq {ι : Type*} [Fintype ι]
+    {Q lmax : ι → ℝ≥0} {i : ι} {β : ℝ≥0 → ℝ≥0} (hβ0 : β 0 = 0) :
+    drrResidual Q lmax i β 0 = 0 := by
+  rw [drrResidual_apply, hβ0, mul_zero, zero_tsub]
+
 /-- **DRR residual service**: under DRR with a strict aggregate `β`,
 flow `i` obeys the strict service inequality for
 `[Qᵢ/F·β − (Qᵢ(L−ℓᵢᵘ) + (F−Qᵢ)(Qᵢ+ℓᵢᵘ))/F]⁺` on its backlogged
 periods, with `F = ∑ Qⱼ` and `L = ∑ ℓⱼᵘ` — no arrival curves are
 needed. -/
-theorem add_div_mul_le_of_isDrr {ι : Type*} [Fintype ι]
+theorem add_drrResidual_le_of_isDrr {ι : Type*} [Fintype ι]
     {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {Q lmax : ι → ℝ≥0}
     (hc : ∀ j, Ds j ≤ As j)
     (hstrict : ∀ s t, s ≤ t →
@@ -50,11 +83,8 @@ theorem add_div_mul_le_of_isDrr {ι : Type*} [Fintype ι]
     (hdrr : IsDrr Q lmax (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
     {i : ι} {s t : ℝ≥0} (hst : s ≤ t)
     (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
-    (Ds i) s
-      + ((Q i / ∑ j, Q j) * β (t - s)
-          - (Q i * ((∑ j, lmax j) - lmax i)
-            + ((∑ j, Q j) - Q i) * (Q i + lmax i)) / ∑ j, Q j)
-      ≤ (Ds i) t := by
+    (Ds i) s + drrResidual Q lmax i β (t - s) ≤ (Ds i) t := by
+  rw [drrResidual_apply]
   obtain ⟨p, hown, hcross⟩ := hdrr i s t hst hbl
   have hstr := hstrict s t hst
     (isBacklogged_sum_of_isBacklogged (fun j _ x => hc j x)
@@ -69,14 +99,8 @@ theorem add_div_mul_le_of_isDrr {ι : Type*} [Fintype ι]
     Finset.single_le_sum (fun j _ => zero_le') (Finset.mem_univ i)
   have hlle : lmax i ≤ ∑ j, lmax j :=
     Finset.single_le_sum (fun j _ => zero_le') (Finset.mem_univ i)
-  have hQerase : ((∑ j, Q j) - Q i : ℝ≥0)
-      = ∑ j ∈ Finset.univ.erase i, Q j := by
-    rw [← Finset.add_sum_erase Finset.univ Q (Finset.mem_univ i)]
-    exact tsub_eq_of_eq_add (by rw [add_comm])
-  have hlerase : ((∑ j, lmax j) - lmax i : ℝ≥0)
-      = ∑ j ∈ Finset.univ.erase i, lmax j := by
-    rw [← Finset.add_sum_erase Finset.univ lmax (Finset.mem_univ i)]
-    exact tsub_eq_of_eq_add (by rw [add_comm])
+  have hQerase := sum_tsub_eq_sum_erase Q i
+  have hlerase := sum_tsub_eq_sum_erase lmax i
   rcases eq_zero_or_pos (∑ j, Q j) with hF | hF
   · -- no quanta at all: the residual is `0 − …`
     rw [hF, div_zero, zero_mul, zero_tsub, add_zero]
@@ -171,13 +195,10 @@ theorem isStrictMinimalServiceCurve_residualServer_of_isDrr
     (hcaus : IsCausalN S)
     (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
     (hdrr : IsDrrServerN Q lmax S) :
-    IsStrictMinimalServiceCurve
-      (fun τ => (Q i / ∑ j, Q j) * β τ
-        - (Q i * ((∑ j, lmax j) - lmax i)
-          + ((∑ j, Q j) - Q i) * (Q i + lmax i)) / ∑ j, Q j)
+    IsStrictMinimalServiceCurve (drrResidual Q lmax i β)
       (residualServer S i) := by
   rintro Ai Di ⟨As, Ds, hp, rfl, rfl⟩ s t hst hbl
-  exact add_div_mul_le_of_isDrr (fun j => hcaus As Ds hp j)
+  exact add_drrResidual_le_of_isDrr (fun j => hcaus As Ds hp j)
     (hβ.sum_strict hp) (hdrr As Ds hp) hst hbl
 
 /-! ## Book restatement (DRR residual service)
@@ -194,12 +215,29 @@ example {ι : Type*} [Fintype ι]
     (hSrv : IsServerN S)
     (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
     (hdrr : IsDrrServerN Q lmax S) :
-    IsStrictMinimalServiceCurve
-      (fun τ => (Q i / ∑ j, Q j) * β τ
-        - (Q i * ((∑ j, lmax j) - lmax i)
-          + ((∑ j, Q j) - Q i) * (Q i + lmax i)) / ∑ j, Q j)
+    IsStrictMinimalServiceCurve (drrResidual Q lmax i β)
       (residualServer S i) :=
   isStrictMinimalServiceCurve_residualServer_of_isDrr
     hSrv.1 hβ hdrr
+
+/-! ## Book restatement (the basic-unit refinement)
+When packet lengths and quanta are all multiples of a basic unit `ε`,
+the deficit counters stay within `ℓᵢᵘ − ε`, so the round-count
+coupling holds with every `ℓⱼᵘ` replaced by `ℓⱼᵘ − ε` — and the same
+theorem instantiates at the sharpened residual. -/
+example {ι : Type*} [Fintype ι] {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0}
+    {Q lmax : ι → ℝ≥0} {ε : ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    (hdrr : IsDrr Q (fun j => lmax j - ε)
+      (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {i : ι} {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    (Ds i) s + drrResidual Q (fun j => lmax j - ε) i β (t - s)
+      ≤ (Ds i) t :=
+  add_drrResidual_le_of_isDrr hc hstrict hdrr hst hbl
 
 end DeepWiki
