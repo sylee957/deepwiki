@@ -29,6 +29,19 @@ theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
     Monotone (liftEReal f) :=
   fun _ _ hab => by exact_mod_cast hmono hab
 
+/-- `liftEReal` transports left-continuity: `liftEReal f` is left-continuous
+when `f` is. -/
+theorem isLeftContinuous_liftEReal {f : ℝ≥0 → ℝ≥0}
+    (hlc : IsLeftContinuous f) : IsLeftContinuous (liftEReal f) := fun t =>
+  ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt
+    ).comp_continuousWithinAt (hlc t)
+
+/-- `liftEReal` values are real coercions, so they are `AddDefined` with
+anything. -/
+theorem addDefined_liftEReal (f : ℝ≥0 → ℝ≥0) (u : ℝ≥0) (x : EReal) :
+    AddDefined (liftEReal f u) x :=
+  ⟨Or.inl (EReal.coe_ne_top _), Or.inl (EReal.coe_ne_bot _)⟩
+
 /-- A curve viewed in `EReal`: the lift `liftEReal ⇑A`. -/
 noncomputable def curveEReal (A : Curve) : ℝ≥0 → EReal :=
   liftEReal ⇑A
