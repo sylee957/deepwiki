@@ -4,9 +4,13 @@ import Book.ServersResidualFifo
 /-! # Earliest deadline first
 Each flow carries a relative deadline `dᵢ`; the scheduler serves the
 data with the smallest absolute deadline. Formally, for every horizon
-`T` the part of flow `i` arrived by `T − dᵢ` (`truncBefore`) has
-static-priority precedence over the part of flow `j` arrived after
-`T − dⱼ` (`truncAfter`) — `IsEdf`. The residual family `edfResidual`
+`T`, while data with absolute deadline by `T` is queued (the aggregate
+of the parts arrived by `T − dₖ`, `truncBefore`), the parts arrived
+after `T − dⱼ` (`truncAfter`) receive nothing — `IsEdf`. The book
+prints the pairwise relation between two derived flows; the aggregate
+premise (the shape of its static-priority definition) is what its own
+residual proof uses, since the backlogged part alternates across flows.
+The residual family `edfResidual`
 shifts each cross-flow by `[θ − Δᵢⱼ]⁺` (in `ℝ≥0`: `(θ + dⱼ) − dᵢ`) and
 degenerates to the FIFO family when all deadlines agree. Deadline
 compatibility (`IsDeadlineCompatible`) forces the aggregate min-plus
@@ -37,6 +41,22 @@ noncomputable def truncBeforeD (T : ℝ≥0) (A D : ℝ≥0 → ℝ≥0) : ℝ�
 /-- The departures of the data arrived after `T`: `t ↦ D t − A T`. -/
 noncomputable def truncAfterD (T : ℝ≥0) (A D : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun t => D t - A T
+
+/-- `truncBefore T A t = A (t ⊓ T)`. -/
+@[simp] theorem truncBefore_apply (T : ℝ≥0) (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    truncBefore T A t = A (min t T) := rfl
+
+/-- `truncAfter T A t = A t − A T`. -/
+@[simp] theorem truncAfter_apply (T : ℝ≥0) (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
+    truncAfter T A t = A t - A T := rfl
+
+/-- `truncBeforeD T A D t = D t ⊓ A T`. -/
+@[simp] theorem truncBeforeD_apply (T : ℝ≥0) (A D : ℝ≥0 → ℝ≥0)
+    (t : ℝ≥0) : truncBeforeD T A D t = min (D t) (A T) := rfl
+
+/-- `truncAfterD T A D t = D t − A T`. -/
+@[simp] theorem truncAfterD_apply (T : ℝ≥0) (A D : ℝ≥0 → ℝ≥0)
+    (t : ℝ≥0) : truncAfterD T A D t = D t - A T := rfl
 
 /-- The two parts recover the flow: `A^{≤T} + A^{>T} = A` (for
 non-decreasing `A`). -/
@@ -123,7 +143,27 @@ theorem truncBeforeD_leftCont {A D : ℝ≥0 → ℝ≥0}
 theorem truncBeforeD_zero_eq {A D : ℝ≥0 → ℝ≥0} (h0 : D 0 = 0) (T : ℝ≥0) :
     truncBeforeD T A D 0 = 0 := by
   rw [truncBeforeD, h0]
-  exact min_eq_left zero_le' 
+  exact min_eq_left zero_le'
+
+/-- `truncAfter` is monotone for monotone `A`. -/
+theorem truncAfter_mono {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) (T : ℝ≥0) :
+    Monotone (truncAfter T A) :=
+  fun _ _ hab => tsub_le_tsub_right (hmono hab) _
+
+/-- `truncAfterD` is monotone for monotone `D`. -/
+theorem truncAfterD_mono {A D : ℝ≥0 → ℝ≥0} (hmono : Monotone D)
+    (T : ℝ≥0) : Monotone (truncAfterD T A D) :=
+  fun _ _ hab => tsub_le_tsub_right (hmono hab) _
+
+/-- `truncAfter T A 0 = 0` for null-at-origin `A`. -/
+theorem truncAfter_zero_eq {A : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0) (T : ℝ≥0) :
+    truncAfter T A 0 = 0 := by
+  rw [truncAfter, h0, zero_tsub]
+
+/-- `truncAfterD T A D 0 = 0` for null-at-origin `D`. -/
+theorem truncAfterD_zero_eq {A D : ℝ≥0 → ℝ≥0} (h0 : D 0 = 0) (T : ℝ≥0) :
+    truncAfterD T A D 0 = 0 := by
+  rw [truncAfterD, h0, zero_tsub]
 
 /-! ## The EDF server -/
 
@@ -131,8 +171,11 @@ theorem truncBeforeD_zero_eq {A D : ℝ≥0 → ℝ≥0} (h0 : D 0 = 0) (T : ℝ
 `T`, while data with absolute deadline by `T` is backlogged throughout
 `[s, t]` (the aggregate of the parts arrived by `T − dₖ`), the part of
 flow `j` with deadline after `T` (arrived after `T − dⱼ`) receives
-nothing on `(s, t]` — the static-priority freeze between the
-deadline-ordered derived flows. -/
+nothing on `(s, t]`. (The book prints the pairwise relation between
+single derived flows, which is insufficient for the residual-theorem
+proof — the backlogged part alternates across flows; the aggregate
+premise matches its static-priority definition, and
+`isEdf_premise_of_single` recovers the pairwise reading.) -/
 def IsEdf {ι : Type*} [Fintype ι] (d : ι → ℝ≥0)
     (A D : ι → ℝ≥0 → ℝ≥0) : Prop :=
   ∀ j, ∀ T s t : ℝ≥0, s ≤ t →
@@ -150,14 +193,10 @@ theorem isEdf_premise_of_single {ι : Type*} [Fintype ι] {d : ι → ℝ≥0}
     (hbl : truncBeforeD (T - d i) (A i) (D i) u
       < truncBefore (T - d i) (A i) u) :
     (∑ k, truncBeforeD (T - d k) (A k) (D k) u)
-      < ∑ k, truncBefore (T - d k) (A k) u := by
-  refine Finset.sum_lt_sum (fun k _ => ?_) ⟨i, Finset.mem_univ i, hbl⟩
-  rw [truncBeforeD, truncBefore]
-  rcases le_total u (T - d k) with h | h
-  · rw [min_eq_left h]
-    exact le_trans (min_le_left _ _) (hc k u)
-  · rw [min_eq_right h]
-    exact min_le_right _ _
+      < ∑ k, truncBefore (T - d k) (A k) u :=
+  Finset.sum_lt_sum
+    (fun k _ => truncBeforeD_le_truncBefore (hc k) (T - d k) u)
+    ⟨i, Finset.mem_univ i, hbl⟩
 
 /-- **EDF `n`-server**: every served family obeys the deadline-ordered
 priority. -/
@@ -492,6 +531,33 @@ theorem minConv_edfResidual_le_of_isEdf {ι : Type*} [Fintype ι]
             (le_trans (truncBeforeD_mono (Ds i).mono (X i) hpτ)
               (le_of_eq (hFDi τ le_rfl))))
 
+/-- For monotone cross-flow `αⱼ` the EDF residual is the book's wedge
+`[β − ∑_{j≠i} αⱼ ∗ δ_{[θ−Δᵢⱼ]⁺}]⁺ ∧ δ_θ`: each summand is a
+convolution with the burst-delay at the clamped shift, and the `δ_θ`
+clamp absorbs the per-flow shifts below `θ`. -/
+theorem edfResidual_eq_min_conv_delayNN {ι : Type*} [Fintype ι]
+    {β : ℝ≥0 → ℝ≥0∞} {α : ι → ℝ≥0 → ℝ≥0} {d : ι → ℝ≥0} {i : ι} {θ : ℝ≥0}
+    (hαmono : ∀ j, j ≠ i → Monotone (α j)) :
+    edfResidual β α d i θ
+      = fun v => min (β v
+          - ∑ j ∈ Finset.univ.erase i,
+              minConv (Deviation.liftENN (α j))
+                (delayNN ((θ + d j) - d i)) v)
+        (delayNN θ v) := by
+  funext v
+  rw [edfResidual_apply]
+  have hconv : ∀ j ∈ Finset.univ.erase i,
+      minConv (Deviation.liftENN (α j)) (delayNN ((θ + d j) - d i)) v
+        = ((α j (v - ((θ + d j) - d i)) : ℝ≥0) : ℝ≥0∞) := fun j hj => by
+    rw [conv_delayNN _ (Deviation.monotone_liftENN
+      (hαmono j (Finset.ne_of_mem_erase hj))) _]
+  by_cases hv : v ≤ θ
+  · rw [if_pos hv, show delayNN θ v = 0 from delay_eq_zero θ hv,
+      min_eq_right zero_le']
+  · rw [if_neg hv, show delayNN θ v = ⊤ from delay_eq_top θ (not_le.mp hv),
+      min_eq_left le_top, Finset.sum_congr rfl hconv,
+      ← ENNReal.coe_finsetSum]
+
 /-! ## Deadline compatibility -/
 
 /-- **Deadline compatibility**: every flow's arrivals are served within
@@ -531,25 +597,70 @@ theorem sum_apply_tsub_le_of_isDeadlineCompatible {ι : Type*} [Fintype ι]
             Finset.sum_eq_zero fun j _ => (As j).zero,
           ENNReal.coe_zero, zero_add]
 
+/-! ## Book restatement (the EDF residual family)
+An EDF `n`-server with deadlines `dᵢ` offering a strict service curve
+`β` (left-continuous, per the same repair as static priority) to flows
+with arrival curves `αⱼ` offers flow `i` the residual
+`βᵢ^θ = [β − ∑_{j≠i} αⱼ ∗ δ_{[θ−Δᵢⱼ]⁺}]⁺ ∧ δ_θ` for every `θ` — the
+wedge reduces to `edfResidual` through `conv_delayNN`. (As in the FIFO
+family, the book's constraint on flow `i` itself and the monotonicity
+of the `αⱼ` beyond the bundles' use here are unnecessary.) -/
+example {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {As Ds : ι → Curve}
+    {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {d : ι → ℝ≥0}
+    (hSrv : IsServerN S) (hS : IsEdfServerN d S) (hp : S As Ds)
+    (hβlc : IsLeftContinuous β)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalCurve ⇑(As j) (α j))
+    (θ τ : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (fun v => min (Deviation.liftENN β v
+          - ∑ j ∈ Finset.univ.erase i,
+              minConv (Deviation.liftENN (α j))
+                (delayNN ((θ + d j) - d i)) v)
+          (delayNN θ v)) τ
+      ≤ ((Ds i) τ : ℝ≥0∞) := by
+  rw [show (fun v => min (Deviation.liftENN β v
+        - ∑ j ∈ Finset.univ.erase i,
+            minConv (Deviation.liftENN (α j))
+              (delayNN ((θ + d j) - d i)) v)
+        (delayNN θ v))
+      = edfResidual (Deviation.liftENN β) α d i θ from
+    (edfResidual_eq_min_conv_delayNN fun j hj => (harr j hj).1).symm]
+  refine minConv_edfResidual_le_of_isEdf (fun j => hSrv.1 As Ds hp j)
+    hβlc ?_ (hS As Ds hp) (fun j hj => (harr j hj).2) θ τ
+  intro s' t' hst' hbl'
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
+    (by rwa [Curve.coe_sum, Curve.coe_sum])
+  rwa [Curve.sum_apply, Curve.sum_apply] at h
+
 /-! ## Book restatement (deadline compatibility, necessary condition)
 If an `n`-server whose aggregate offers the min-plus service curve `β`
 is deadline compatible for `d₁,…,dₙ` under constraints `α₁,…,αₙ`, then
 `β ≥ ∑ᵢ αᵢ ∗ δ_{dᵢ}` — witnessed at the greedy trajectory whose
 arrivals realize the constraints and whose aggregate output is
 `A ∗ β`. The condition is not sufficient for min-plus aggregates (the
-book's two-flow figure); for strict aggregates it is, via the EDF
-scheduler — the sufficiency direction is deferred with the EDF residual
-theorem. -/
+book's two-flow figure); for strict aggregates the EDF scheduler makes
+it sufficient — that equivalence (the book's deadline-compatibility
+iff) is the remaining deferred piece. -/
 example {ι : Type*} [Fintype ι]
     {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0∞} {α : ι → ℝ≥0 → ℝ≥0}
     {d : ι → ℝ≥0}
     (hA : ∀ i t, (As i) t = α i t)
+    (hαmono : ∀ i, Monotone (α i))
     (hgreedy : ∀ x, ((∑ j, (Ds j) x : ℝ≥0) : ℝ≥0∞)
       ≤ minConv (Deviation.liftENN (fun y => ∑ j, (As j) y)) β x)
     (hcompat : IsDeadlineCompatible d
       (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
     (s : ℝ≥0) :
-    ((∑ i, α i (s - d i) : ℝ≥0) : ℝ≥0∞) ≤ β s :=
-  sum_apply_tsub_le_of_isDeadlineCompatible hA hgreedy hcompat s
+    (∑ i, minConv (Deviation.liftENN (α i)) (delayNN (d i)) s) ≤ β s := by
+  calc (∑ i, minConv (Deviation.liftENN (α i)) (delayNN (d i)) s)
+      = ∑ i, ((α i (s - d i) : ℝ≥0) : ℝ≥0∞) :=
+        Finset.sum_congr rfl fun i _ => by
+          rw [conv_delayNN _ (Deviation.monotone_liftENN (hαmono i)) (d i)]
+    _ = ((∑ i, α i (s - d i) : ℝ≥0) : ℝ≥0∞) :=
+        (ENNReal.coe_finsetSum).symm
+    _ ≤ β s := sum_apply_tsub_le_of_isDeadlineCompatible hA hgreedy
+        hcompat s
 
 end DeepWiki
