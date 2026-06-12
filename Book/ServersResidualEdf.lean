@@ -597,6 +597,97 @@ theorem sum_apply_tsub_le_of_isDeadlineCompatible {ι : Type*} [Fintype ι]
             Finset.sum_eq_zero fun j _ => (As j).zero,
           ENNReal.coe_zero, zero_add]
 
+/-- **EDF is deadline compatible under the capacity condition**
+(the sufficiency of the book's deadline-compatibility theorem): if the
+service curve dominates the shifted arrival curves pointwise,
+`∑ₖ αₖ(t − dₖ) ≤ β(t)`, then an EDF family with `αₖ`-constrained
+arrivals meets every deadline. The residual at `θ = dᵢ` shifts each
+cross-flow by exactly `dⱼ`, and the capacity condition leaves `αᵢ`'s
+own share. (The book restricts the condition below the first crossing
+of `β` with `∑ αₖ` — the busy-period cap; for monotone `αₖ` the bound
+beyond a crossed point is automatic, and threading the cap through the
+residual theorem is the remaining refinement.) -/
+theorem isDeadlineCompatible_of_isEdf {ι : Type*} [Fintype ι]
+    {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0}
+    {d : ι → ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hβlc : IsLeftContinuous β)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    (hedf : IsEdf d (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    (harr : ∀ j, IsMaximalArrivalBound ⇑(As j) (α j))
+    (hpoint : ∀ t, (∑ k, α k (t - d k)) ≤ β t) :
+    IsDeadlineCompatible d (fun j => ⇑(As j)) (fun j => ⇑(Ds j)) := by
+  intro i τ
+  have h79 := minConv_edfResidual_le_of_isEdf (i := i) hc hβlc hstrict hedf
+    (fun j _ => harr j) (d i) τ
+  have hlow : ((As i) (τ - d i) : ℝ≥0∞)
+      ≤ minConv (Deviation.liftENN ⇑(As i))
+          (edfResidual (Deviation.liftENN β) α d i (d i)) τ := by
+    refine le_minConv fun u s hus => ?_
+    by_cases hs : s ≤ d i
+    · -- short shift: the arrival point is already inside the split
+      have hu : τ - d i ≤ u := by
+        rw [← hus]
+        exact tsub_le_iff_right.mpr (add_le_add le_rfl hs)
+      refine le_trans ?_ le_self_add
+      exact_mod_cast (As i).mono hu
+    · -- long shift: the capacity condition leaves `αᵢ`'s share
+      have hresge : ((α i (s - d i) : ℝ≥0) : ℝ≥0∞)
+          ≤ edfResidual (Deviation.liftENN β) α d i (d i) s := by
+        rw [edfResidual_apply, if_neg hs,
+          show (∑ j ∈ Finset.univ.erase i,
+              α j (s - ((d i + d j) - d i)))
+            = ∑ j ∈ Finset.univ.erase i, α j (s - d j) from
+            Finset.sum_congr rfl fun j _ => by
+              rw [show (d i + d j) - d i = d j from by
+                rw [add_comm]; exact tsub_eq_of_eq_add rfl]]
+        refine ENNReal.le_sub_of_add_le_right ENNReal.coe_ne_top ?_
+        show ((α i (s - d i) : ℝ≥0) : ℝ≥0∞)
+            + ((∑ j ∈ Finset.univ.erase i, α j (s - d j) : ℝ≥0) : ℝ≥0∞)
+          ≤ ((β s : ℝ≥0) : ℝ≥0∞)
+        rw [← ENNReal.coe_add, ENNReal.coe_le_coe,
+          Finset.add_sum_erase _ (fun k => α k (s - d k))
+            (Finset.mem_univ i)]
+        exact hpoint s
+      have hsplit : (τ - d i) = u + (s - d i) := by
+        rw [← hus, ← NNReal.coe_inj]
+        push_cast [NNReal.coe_sub (not_le.mp hs).le,
+          NNReal.coe_sub (show d i ≤ u + s from
+            le_trans (not_le.mp hs).le le_add_self)]
+        ring
+      have hinc : (As i) (τ - d i) ≤ (As i) u + α i (s - d i) := by
+        rw [hsplit]
+        exact (isMaximalArrivalBound_iff_increment _ _).mp (harr i) u _
+      calc ((As i) (τ - d i) : ℝ≥0∞)
+          ≤ ((As i) u : ℝ≥0∞) + ((α i (s - d i) : ℝ≥0) : ℝ≥0∞) := by
+            rw [← ENNReal.coe_add, ENNReal.coe_le_coe]
+            exact hinc
+        _ ≤ ((As i) u : ℝ≥0∞)
+            + edfResidual (Deviation.liftENN β) α d i (d i) s :=
+            add_le_add le_rfl hresge
+  have := le_trans hlow h79
+  exact_mod_cast this
+
+/-- **Deadline compatibility forces the capacity condition on the busy
+window** (the necessity, at the greedy trajectory): if the arrivals
+realize their curves and the aggregate output follows `β` on a window,
+compatibility yields `∑ₖ αₖ(t − dₖ) ≤ β(t)` there. -/
+theorem sum_apply_tsub_le_of_isDeadlineCompatible_eq {ι : Type*}
+    [Fintype ι] {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0} {d : ι → ℝ≥0}
+    (hA : ∀ i t, (As i) t = α i t)
+    (hcompat : IsDeadlineCompatible d
+      (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {t : ℝ≥0} (hDeq : (∑ j, (Ds j) t) = β t) :
+    (∑ k, α k (t - d k)) ≤ β t := by
+  rw [← hDeq]
+  refine Finset.sum_le_sum fun k _ => ?_
+  rw [← hA k (t - d k)]
+  exact hcompat k t
+
 /-! ## Book restatement (the EDF residual family)
 An EDF `n`-server with deadlines `dᵢ` offering a strict service curve
 `β` (left-continuous, per the same repair as static priority) to flows
