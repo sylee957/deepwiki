@@ -38,6 +38,24 @@ theorem ndClosure_eq_maxConv {T : Type*} [ConditionallyCompleteLattice T]
   simp only [Pi.zero_apply, add_zero]
   exact congrArg sSup hrange
 
+/-- A null closure nulls the curve: `ndClosure f = 0 ↔ f = 0` for
+prefix-bounded `f` — the closure dominates `f`, and the closure of
+the zero curve is a constant supremum. -/
+theorem ndClosure_eq_zero_iff {f : ℝ≥0 → ℝ≥0}
+    (hbdd : ClosureBddAbove f) :
+    ndClosure f = 0 ↔ f = 0 := by
+  constructor
+  · intro h
+    funext t
+    have hle := le_ndClosure f hbdd t
+    rw [h] at hle
+    exact le_antisymm hle zero_le'
+  · rintro rfl
+    funext t
+    refine le_antisymm ?_ zero_le'
+    exact ndClosure_le (monotone_const : Monotone (0 : ℝ≥0 → ℝ≥0))
+      (fun _ => le_rfl) t
+
 /-- `n`-fold `maxConvProj` self-convolution iterate of `beta`. -/
 noncomputable def maxConvProjPow (beta : ℝ≥0 → ℝ≥0) :
     ℕ → (ℝ≥0 → ℝ≥0)

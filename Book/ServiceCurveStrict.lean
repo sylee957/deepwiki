@@ -105,6 +105,14 @@ theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
   rw [add_zero]
   exact D.mono hst
 
+/-- At the zero curve the strict relation collapses to the causal
+relation: the strict bound is monotonicity, so only causality binds. -/
+theorem strictServiceRel_betaZero :
+    strictServiceRel (fun _ => 0) = causalRel := by
+  funext A D
+  exact propext ⟨fun hp => hp.1,
+    fun hc => ⟨hc, isStrictMinimalServiceCurve_betaZero causalRel A D hc⟩⟩
+
 /-- A strict service curve of a relation with a served pair is null at the
 origin: `beta 0 = 0`. The strict bound at `s = t = 0` (the empty period
 `(0, 0]` is vacuously backlogged) gives `D 0 + beta 0 ≤ D 0`, hence

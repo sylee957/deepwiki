@@ -146,4 +146,24 @@ def IsLeftTotal (S : Curve → Curve → Prop) : Prop :=
 def IsServer (S : Curve → Curve → Prop) : Prop :=
   IsCausal S ∧ IsLeftTotal S
 
+/-- The largest causal relation: all pairs with `D ≤ A` — the
+trajectory set `{(A, D) | A ≥ D}`, the top of the service hierarchy. -/
+def causalRel : Curve → Curve → Prop := fun A D => D ≤ A
+
+/-- `causalRel A D` unfolds to causality, `D ≤ A`. -/
+theorem mem_causalRel_iff {A D : Curve} : causalRel A D ↔ D ≤ A :=
+  Iff.rfl
+
+/-- `causalRel` is causal. -/
+theorem isCausal_causalRel : IsCausal causalRel := fun _ _ h => h
+
+/-- `S` is causal iff its pairs all lie in `causalRel`. -/
+theorem isCausal_iff_subset {S : Curve → Curve → Prop} :
+    IsCausal S ↔ ∀ A D, S A D → causalRel A D :=
+  Iff.rfl
+
+/-- `causalRel` is a server: each curve serves itself. -/
+theorem isServer_causalRel : IsServer causalRel :=
+  ⟨isCausal_causalRel, fun A => ⟨A, fun _ => le_rfl⟩⟩
+
 end DeepWiki

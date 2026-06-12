@@ -85,6 +85,16 @@ theorem isWeaklyStrictMinimalServiceCurve_betaZero
   rw [add_zero]
   exact D.mono (start_le ⇑A ⇑D t)
 
+/-- At the zero curve the weakly strict relation collapses to the
+causal relation: the start-anchored bound is monotonicity, so only
+causality binds. -/
+theorem weaklyStrictServiceRel_betaZero :
+    weaklyStrictServiceRel (fun _ => 0) = causalRel := by
+  funext A D
+  exact propext ⟨fun hp => hp.1,
+    fun hc => ⟨hc,
+      isWeaklyStrictMinimalServiceCurve_betaZero causalRel A D hc⟩⟩
+
 /-- The join `beta ⊔ beta'` of two weakly strict service curves is
 offered. -/
 theorem IsWeaklyStrictMinimalServiceCurve.sup
@@ -260,5 +270,26 @@ example (beta : ℝ≥0 → ℝ≥0) :
         ≤ minimalServiceRel (liftEReal beta) :=
   ⟨strictServiceRel_le_weaklyStrictServiceRel beta,
     weaklyStrictServiceRel_le_minimalServiceRel beta⟩
+
+/-! ## Book restatement (conditions of equality — the representable case)
+The hierarchy theorem's equality criteria: `S_strict(β) = S_wstrict(β)`
+iff `β↑ = δ_T` (`T ∈ ℝ₊ ∪ {+∞}`), and `S_wstrict(β) = S_mp(β)` iff
+`β↑ = δ₀` or `0`. The delays `δ_T` (`T < +∞`) and the burst `δ₀` take
+the value `+∞`, so the single `ℝ≥0`-valued instance of either
+criterion is `β↑ = 0`, i.e. `β = 0` (`ndClosure_eq_zero_iff`): there
+the whole hierarchy collapses onto the causal relation, as the book
+notes — `S_mp(0) = S_wstrict(0) = {(A, D) ∈ F↑² | A ≥ D}`. The
+strictness of the inclusions for nonzero curves is witnessed per
+curve (the burst–stall ladder at `β = λ₁`); the book's general
+witnesses ride `δ₀`-shaped arrivals, likewise not `ℝ≥0`-valued. -/
+example :
+    strictServiceRel (fun _ => 0)
+      = weaklyStrictServiceRel (fun _ => 0) := by
+  rw [strictServiceRel_betaZero, weaklyStrictServiceRel_betaZero]
+example :
+    weaklyStrictServiceRel (fun _ => 0)
+      = minimalServiceRel (liftEReal (fun _ => 0)) := by
+  rw [weaklyStrictServiceRel_betaZero, liftEReal_betaZero,
+    minimalServiceRel_betaZero]
 
 end DeepWiki

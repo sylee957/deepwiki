@@ -184,6 +184,11 @@ theorem minimalServiceRel_mono {beta beta' : ℝ≥0 → EReal}
 /-- The trivial zero service curve `beta ≡ 0` (`EReal`-valued). -/
 noncomputable def betaZero : ℝ≥0 → EReal := fun _ => 0
 
+/-- The `EReal` lift of the zero curve is `betaZero`. -/
+theorem liftEReal_betaZero : liftEReal (fun _ => 0) = betaZero := by
+  funext t
+  simp [liftEReal, betaZero]
+
 /-- `beta ⊘̄ 0 ≤ beta`: the `s = 0` term of the defining infimum is `beta t`. -/
 theorem maxDeconv_betaZero_le (beta : ℝ≥0 → EReal) :
     maxDeconv beta betaZero ≤ beta := by
@@ -251,6 +256,15 @@ theorem subset_minimalServiceRel_betaZero {S : Curve → Curve → Prop}
     (hSrv : IsServer S) :
     ∀ A D, S A D → minimalServiceRel betaZero A D :=
   subset_minimalServiceRel (isMinimalServiceCurve_betaZero S) hSrv
+
+/-- At the zero curve the min-plus relation collapses to the causal
+relation: the convolution against `betaZero` is null, so only
+causality binds. -/
+theorem minimalServiceRel_betaZero :
+    minimalServiceRel betaZero = causalRel := by
+  funext A D
+  exact propext ⟨fun hp => curveEReal_le_iff.mp hp.1,
+    fun hc => ⟨curveEReal_mono hc, minConv_betaZero_le A D⟩⟩
 
 /-- If `beta 0 > 0` the min-plus service relation is empty: the `(0, 0)` split
 forces `D 0 ≥ A 0 + beta 0 > A 0 ≥ D 0`, so no curve pair meets
