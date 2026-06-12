@@ -1,11 +1,14 @@
 import Book.Servers
+import Book.ArrivalCurvesMaximal
+import Book.ArrivalCurvesMinimal
 
 /-! # The packetizer
 A packetizer groups a flow into packets: it stores bits until a
 packet's last bit arrives, then releases the whole packet. `packetize`
 releases, at each time, the largest cumulative packet length fully
-arrived strictly before it; it is a server whose backlog never exceeds
-one maximal packet, `A − ℓᵘ ≤ Pᴸ(A) ≤ A`. -/
+arrived strictly before it; it is an idempotent server whose backlog
+never exceeds one maximal packet, `A − ℓᵘ ≤ Pᴸ(A) ≤ A`, and which
+shifts arrival curves by at most one maximal packet. -/
 
 namespace DeepWiki
 
@@ -228,5 +231,78 @@ example {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
       ∧ ∀ A : Curve, ∀ t, A t - lu ≤ packetizeCurve hL A t :=
   ⟨isServer_packetizerRel hL,
     fun A t => (packetizeCurve_sandwich hL A t).1⟩
+
+/-! ## Packetized functions and idempotence -/
+
+/-- `A` is `L`-packetized: the packetizer leaves it unchanged. -/
+def IsPacketized (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) : Prop :=
+  packetize L A = A
+
+/-- **The packetizer is idempotent**: `Pᴸ(Pᴸ(A)) = Pᴸ(A)` — a
+candidate before the inner packetizer is a candidate before the outer
+one, by density of the time axis. -/
+theorem packetize_packetize {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0}
+    (hmono : Monotone A) :
+    packetize L (packetize L A) = packetize L A := by
+  funext t
+  refine le_antisymm (csSup_le' ?_) (csSup_le' ?_)
+  · rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
+    exact le_csSup (bddAbove_packetize_image hmono L t)
+      ⟨n, ⟨u, hu, le_trans hLn (packetize_le hmono L u)⟩, rfl⟩
+  · rintro x ⟨n, ⟨u, hu, hLn⟩, rfl⟩
+    obtain ⟨v, huv, hvt⟩ := exists_between hu
+    refine le_csSup
+      (bddAbove_packetize_image (packetize_mono hmono L) L t)
+      ⟨n, ⟨v, hvt, ?_⟩, rfl⟩
+    exact le_csSup (bddAbove_packetize_image hmono L v)
+      ⟨n, ⟨u, huv, hLn⟩, rfl⟩
+
+/-- Packetizer outputs are packetized. -/
+theorem isPacketized_packetize {L : ℕ → ℝ≥0} {A : ℝ≥0 → ℝ≥0}
+    (hmono : Monotone A) : IsPacketized L (packetize L A) :=
+  packetize_packetize hmono
+
+/-- Curve form of idempotence. -/
+theorem packetizeCurve_packetizeCurve {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
+    (hL : IsPacketLengthSeq L ll lu) (A : Curve) :
+    packetizeCurve hL (packetizeCurve hL A) = packetizeCurve hL A :=
+  Curve.ext fun t => congrFun (packetize_packetize A.mono) t
+
+/-! ## Arrival curves after a packetizer -/
+
+/-- **Arrival curve after a packetizer** (maximal): the output allows
+`αᵘ + ℓᵘ`, through the one-packet sandwich. -/
+theorem isMaximalArrivalBound_packetizeCurve {L : ℕ → ℝ≥0}
+    {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu) {A : Curve}
+    {α : ℝ≥0 → ℝ≥0} (h : IsMaximalArrivalBound ⇑A α) :
+    IsMaximalArrivalBound ⇑(packetizeCurve hL A)
+      (fun d => α d + lu) :=
+  isMaximalArrivalBound_of_sandwich
+    (fun t => packetize_le A.mono L t)
+    (fun t => apply_le_packetize_add hL A.mono (A.zero : A 0 = 0)
+      A.leftCont t) h
+
+/-- **Arrival curve after a packetizer** (minimal): the output allows
+`αˡ − ℓᵘ`, with the hypothesis in increment form. -/
+theorem isMinimalArrivalBound_packetizeCurve {L : ℕ → ℝ≥0}
+    {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu) {A : Curve}
+    {α : ℝ≥0 → ℝ≥0} (h : ∀ t d, A t + α d ≤ A (t + d)) :
+    IsMinimalArrivalBound ⇑(packetizeCurve hL A)
+      (fun d => α d - lu) :=
+  isMinimalArrivalBound_of_sandwich (packetize_mono A.mono L)
+    (fun t => packetize_le A.mono L t)
+    (fun t => apply_le_packetize_add hL A.mono (A.zero : A 0 = 0)
+      A.leftCont t) h
+
+/-! ## Book restatement (arrival curve after a packetizer)
+`(A, D) ∈ Pᴸ` with maximum packet size `ℓᵘ`: if `A` has maximal
+arrival curve `αᵘ` then `D` has maximal arrival curve `αᵘ + ℓᵘ`. -/
+example {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
+    {A D : Curve} (hp : packetizerRel hL A D)
+    {αu : ℝ≥0 → ℝ≥0} (harr : IsMaximalArrivalCurve ⇑A αu) :
+    IsMaximalArrivalCurve ⇑D (fun d => αu d + lu) := by
+  rw [show D = packetizeCurve hL A from hp]
+  exact ⟨fun a b hab => add_le_add (harr.1 hab) le_rfl,
+    isMaximalArrivalBound_packetizeCurve hL harr.2⟩
 
 end DeepWiki

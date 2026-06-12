@@ -14,6 +14,25 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
+/-- **Minimal arrival bounds through a one-sided sandwich**: a monotone
+process within `c` below `A` keeps `A`'s minimal increment bound up to
+`− c` (hypothesis in increment form, immune to the junk supremum). -/
+theorem isMinimalArrivalBound_of_sandwich {A D α : ℝ≥0 → ℝ≥0} {c : ℝ≥0}
+    (hDmono : Monotone D) (hc : ∀ t, D t ≤ A t)
+    (hsand : ∀ t, A t ≤ D t + c)
+    (h : ∀ t d, A t + α d ≤ A (t + d)) :
+    IsMinimalArrivalBound D (fun d => α d - c) := by
+  refine isMinimalArrivalBound_of_increment _ _ fun t d => ?_
+  rcases le_total (α d) c with hcase | hcase
+  · rw [tsub_eq_zero_of_le hcase, add_zero]
+    exact hDmono le_self_add
+  · refine le_of_add_le_add_right (a := c) ?_
+    calc D t + (α d - c) + c = D t + (α d - c + c) := add_assoc _ _ _
+      _ = D t + α d := by rw [tsub_add_cancel_of_le hcase]
+      _ ≤ A t + α d := add_le_add (hc t) le_rfl
+      _ ≤ A (t + d) := h t d
+      _ ≤ D (t + d) + c := hsand (t + d)
+
 /-! ## Lattice and order closure -/
 
 /-- The pointwise maximum of two minimal arrival curves is a minimal arrival

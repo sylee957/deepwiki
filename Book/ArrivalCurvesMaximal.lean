@@ -30,6 +30,19 @@ theorem IsMaximalArrivalBound.inf {T : Type*} [Add T]
   rw [Pi.inf_apply, ← min_add_add_left]
   exact le_min (h t d) (h' t d)
 
+/-- **Maximal arrival bounds through a one-sided sandwich**: a process
+within `c` below `A` keeps `A`'s maximal arrival bound up to `+ c`. -/
+theorem isMaximalArrivalBound_of_sandwich {A D α : ℝ≥0 → ℝ≥0} {c : ℝ≥0}
+    (hc : ∀ t, D t ≤ A t) (hsand : ∀ t, A t ≤ D t + c)
+    (h : IsMaximalArrivalBound A α) :
+    IsMaximalArrivalBound D (fun d => α d + c) := by
+  rw [isMaximalArrivalBound_iff_increment] at h ⊢
+  intro t d
+  calc D (t + d) ≤ A (t + d) := hc _
+    _ ≤ A t + α d := h t d
+    _ ≤ (D t + c) + α d := add_le_add (hsand t) le_rfl
+    _ = D t + (α d + c) := by rw [add_assoc, add_comm c (α d)]
+
 /-- Any function above a maximal arrival curve is again a maximal arrival curve:
 if `A ≤ A ∗ α` and `α ≤ α'` then `A ≤ A ∗ α'` (over any conditionally
 complete lattice with `⊥` and monotone `+`, e.g. `ℝ≥0` or `ℝ≥0∞`). -/
