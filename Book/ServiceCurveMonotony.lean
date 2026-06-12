@@ -55,14 +55,7 @@ noncomputable def burstCurve (M : ℝ≥0) : Curve where
   toFun := burstFun M
   mono := burstFun_mono M
   zero := burstFun_zero_eq M
-  pwc := by
-    refine isPiecewiseContinuous_of_monotone_of_finite_image
-      (burstFun_mono M) (burstFun_leftCont M) (fun T => Set.Finite.subset
-        (Set.Finite.insert 0 (Set.finite_singleton M)) ?_)
-    rintro x ⟨u, -, rfl⟩
-    by_cases hu : u = 0
-    · exact Set.mem_insert_iff.mpr (Or.inl (if_pos hu))
-    · exact Set.mem_insert_iff.mpr (Or.inr (if_neg hu))
+  pwc := burstFun_pwc M
   leftCont := burstFun_leftCont M
 
 /-- `burstCurve M t` is `burstFun M t`. -/
@@ -112,11 +105,13 @@ anchors at `t`. -/
 theorem start_burst_clip_eq_self {β : ℝ≥0 → ℝ≥0} {M : ℝ≥0}
     (hmono : Monotone β) (hlc : IsLeftContinuous β)
     (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0) {t : ℝ≥0}
-    (hM : M ≤ β t) (ht : t ≠ 0) :
-    start ⇑(burstCurve M) ⇑(clipCurve β M hmono hlc hpwc h0) t = t :=
-  start_eq_of_apply_eq (by
-    show burstFun M t = clipFun β M t
-    rw [burstFun_apply_of_ne M ht, clipFun_eq_of_le hM])
+    (hM : M ≤ β t) :
+    start ⇑(burstCurve M) ⇑(clipCurve β M hmono hlc hpwc h0) t = t := by
+  rcases eq_or_ne t 0 with rfl | hne
+  · exact le_antisymm (start_le _ _ 0) zero_le'
+  · exact start_eq_of_apply_eq (by
+      show burstFun M t = clipFun β M t
+      rw [burstFun_apply_of_ne M hne, clipFun_eq_of_le hM])
 
 /-- The burst–clip pair is weakly-strictly served at `β`: below the
 clip the start anchors at the origin and the output is `β` itself;
@@ -139,14 +134,8 @@ theorem clip_mem_weaklyStrictServiceRel {β : ℝ≥0 → ℝ≥0} (M : ℝ≥0)
       show clipFun β M 0 + β (t - 0) ≤ clipFun β M t
       rw [clipFun_zero_eq M h0, zero_add, tsub_zero]
       exact (clipFun_eq_of_lt hM).symm.le
-    · rcases eq_or_ne t 0 with rfl | ht
-      · rw [show start ⇑(burstCurve M)
-            ⇑(clipCurve β M hmono hlc hpwc h0) 0 = 0 from
-            le_antisymm (start_le _ _ 0) zero_le']
-        show clipFun β M 0 + β (0 - 0) ≤ clipFun β M 0
-        rw [tsub_self, h0, add_zero]
-      · rw [start_burst_clip_eq_self hmono hlc hpwc h0 hM ht,
-          tsub_self, h0, add_zero]
+    · rw [start_burst_clip_eq_self hmono hlc hpwc h0 hM,
+        tsub_self, h0, add_zero]
 
 /-- The burst–clip pair is min-plus served at `β`: below the clip the
 `(0, t)` split bounds the convolution, at and beyond it the `(t, 0)`

@@ -255,8 +255,8 @@ noncomputable def burstFun (c : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
 theorem burstFun_zero_eq (c : ℝ≥0) : burstFun c 0 = 0 := if_pos rfl
 
 /-- `burstFun c t = c` away from the origin. -/
-theorem burstFun_apply_of_ne (c : ℝ≥0) {t : ℝ≥0} (ht : t ≠ 0) :
-    burstFun c t = c := if_neg ht
+theorem burstFun_apply_of_ne (c : ℝ≥0) {t : ℝ≥0} (hne : t ≠ 0) :
+    burstFun c t = c := if_neg hne
 
 /-- `burstFun c` never exceeds its level `c`. -/
 theorem burstFun_le (c t : ℝ≥0) : burstFun c t ≤ c := by

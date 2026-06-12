@@ -62,6 +62,17 @@ theorem ndClosure_le {D T : Type*}
   refine ciSup_le (fun s => ?_)
   exact (hfg s.1).trans (hg s.2)
 
+/-- The non-decreasing closure of a monotone curve is itself. -/
+theorem ndClosure_eq_self {D T : Type*}
+    [Preorder D] [OrderBot D]
+    [ConditionallyCompleteLattice T] {f : D → T}
+    (hmono : Monotone f) :
+    ndClosure f = f := by
+  funext t
+  refine le_antisymm (ndClosure_le hmono (fun _ => le_rfl) t) ?_
+  exact le_ndClosure f
+    (fun u => ⟨f u, by rintro x ⟨v, rfl⟩; exact hmono v.2⟩) t
+
 /-- Over `R∪{±∞}` every `f` satisfies `ClosureBddAbove`. -/
 theorem ndClosure_ext_bdd
     (f : ℝ≥0 → WithTop (WithBot ℝ)) :

@@ -397,6 +397,17 @@ theorem burstFun_leftCont (c : ℝ≥0) : IsLeftContinuous (burstFun c) := by
     filter_upwards [Ioo_mem_nhdsLT (pos_of_ne_zero ht)] with v hv
     exact if_neg (ne_of_gt hv.1)
 
+/-- `burstFun c` is piecewise continuous: its image is `{0, c}`. -/
+theorem burstFun_pwc (c : ℝ≥0) :
+    IsPiecewiseContinuous (burstFun c) := by
+  refine isPiecewiseContinuous_of_monotone_of_finite_image
+    (burstFun_mono c) (burstFun_leftCont c) (fun T => Set.Finite.subset
+      (Set.Finite.insert 0 (Set.finite_singleton c)) ?_)
+  rintro x ⟨u, -, rfl⟩
+  by_cases hu : u = 0
+  · exact Set.mem_insert_iff.mpr (Or.inl (if_pos hu))
+  · exact Set.mem_insert_iff.mpr (Or.inr (if_neg hu))
+
 /-- `staircaseFun T b d` is left-continuous. -/
 theorem staircaseFun_leftCont (T b d : ℝ≥0) :
     IsLeftContinuous (staircaseFun T b d) := by
