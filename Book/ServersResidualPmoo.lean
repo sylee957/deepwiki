@@ -153,6 +153,36 @@ theorem minConv_pmooResidual_le_of_strict_tandem {ι : Type*}
   refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hut)) ?_
   exact_mod_cast hkey
 
+/-- Relation form: composing two `n`-servers with strict aggregate
+curves into a tandem and constraining the cross-traffic arrivals,
+the residual server of the tagged flow offers the PMOO residual as a
+min-plus service curve. -/
+theorem isMinimalServiceCurve_residualServer_of_strict_tandem
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S₁ S₂ : (ι → Curve) → (ι → Curve) → Prop} {β₁ β₂ : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus₁ : IsCausalN S₁) (hcaus₂ : IsCausalN S₂)
+    (hβ₁ : IsStrictMinimalServiceCurve β₁ (aggregateServer S₁))
+    (hβ₂ : IsStrictMinimalServiceCurve β₂ (aggregateServer S₂)) :
+    IsMinimalServiceCurve
+      (liftEReal (pmooResidual β₁ β₂
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+      (residualServer (fun A D =>
+        (∃ B, S₁ A B ∧ S₂ B D)
+          ∧ ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨⟨Bs, hp₁, hp₂⟩, harr⟩, rfl, rfl⟩ t
+  have h := minConv_pmooResidual_le_of_strict_tandem
+    (fun j => hcaus₁ As Bs hp₁ j) (fun j => hcaus₂ Bs Ds hp₂ j)
+    (hβ₁.sum_strict hp₁) (hβ₂.sum_strict hp₂) harr t
+  rw [show Deviation.liftENN (pmooResidual β₁ β₂
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
+      = Deviation.toENN (liftEReal (pmooResidual β₁ β₂
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+    from (Deviation.toENN_liftEReal _).symm] at h
+  rw [curveEReal_apply]
+  exact (Deviation.minConv_toENN_le_coe_iff (As i)
+    (isNonneg_liftEReal _) ((Ds i) t) t).mp h
+
 /-! ## Book restatement (the pay-multiplexing-only-once phenomenon)
 Two flows crossing two strict servers in tandem under blind
 multiplexing: direct computation over the trajectories gives flow
