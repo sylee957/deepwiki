@@ -1,6 +1,6 @@
 import Book.ArrivalCurves
 import Book.Servers
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Book.ServersBacklog
 
 /-! # Strict service curves
@@ -32,12 +32,12 @@ def strictServiceRel (beta : ℝ≥0 → ℝ≥0) :
         IsBacklogged (⇑A) (⇑D) (Set.Ioc s t) →
           D s + beta (t - s) ≤ D t
 
-/-- When `beta 0 = 0`, `strictServiceRel beta` is a server: causality is the first
-conjunct, and left-totality holds since each input serves itself (its backlogged
-period is empty, so the bound is vacuous except at `s = t`, where `beta 0 = 0`). -/
-theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0) :
-    IsServer (strictServiceRel beta) := by
-  refine ⟨fun _ _ hp => hp.1, fun A => ⟨A, (fun _ => le_refl _), ?_⟩⟩
+/-- Each curve serves itself with any strict curve null at the origin: the
+backlogged periods of `(A, A)` are empty, so the bound is vacuous except at
+`s = t`, where `beta 0 = 0`. -/
+theorem strictServiceRel_self {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
+    (A : Curve) : strictServiceRel beta A A := by
+  refine ⟨fun _ => le_refl _, ?_⟩
   intro s t hst hbl
   by_cases h : (Set.Ioc s t).Nonempty
   · obtain ⟨u, hu⟩ := h
@@ -46,6 +46,13 @@ theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0)
     have : s = t := le_antisymm hst (not_lt.mp h)
     subst this
     rw [tsub_self, h0, add_zero]
+
+/-- When `beta 0 = 0`, `strictServiceRel beta` is a server: causality is the
+first conjunct, and left-totality holds since each input serves itself
+(`strictServiceRel_self`). -/
+theorem isServer_strictServiceRel {beta : ℝ≥0 → ℝ≥0} (h0 : beta 0 = 0) :
+    IsServer (strictServiceRel beta) :=
+  ⟨fun _ _ hp => hp.1, fun A => ⟨A, strictServiceRel_self h0 A⟩⟩
 
 /-- `strictServiceRel beta A D` unfolds to causality plus the strict bound
 on backlogged periods. -/

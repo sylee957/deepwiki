@@ -234,9 +234,33 @@ theorem conv_rateLatencyNN_rateLatencyNN (R R' T T' : ℝ≥0) :
     minConv (rateLatencyNN R T) (rateLatencyNN R' T')
       = rateLatencyNN (R ⊓ R') (T + T') := by
   rw [rateLatencyNN_eq_conv R T, rateLatencyNN_eq_conv R' T']
-  rw [minConvE_assoc, ← minConvE_assoc (rateNN R),
+  rw [minConv_assoc_enn, ← minConv_assoc_enn (rateNN R),
       minConv_comm (rateNN R) (delayNN T'),
-      minConvE_assoc (delayNN T'), ← minConvE_assoc (delayNN T),
+      minConv_assoc_enn (delayNN T'), ← minConv_assoc_enn (delayNN T),
       conv_delayNN_delayNN, conv_rateNN_rateNN,
       rateLatencyNN_eq_conv (R ⊓ R') (T + T')]
+
+/-- Convolving with the window curve raises by the window:
+`f ∗ ω_w = f + w` (any `f` — every positive split is `⊤`). -/
+theorem conv_window (f : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) :
+    minConv f (window w) = fun t => f t + w := by
+  funext t
+  apply le_antisymm
+  · exact (minConv_le_add f (window w) (add_zero t)).trans_eq
+      (by rw [window_zero_eq])
+  · refine le_minConv fun u v huv => ?_
+    by_cases hv : v = 0
+    · subst hv
+      rw [add_zero] at huv
+      rw [huv, window_zero_eq]
+    · rw [show window w v = ⊤ from if_neg hv, add_top]
+      exact le_top
+
+/-- Convolving with the window curve never drops below the window:
+`w ≤ (f ∗ ω_w) s`. -/
+theorem le_minConv_window (f : ℝ≥0 → ℝ≥0∞) (w : ℝ≥0∞) (s : ℝ≥0) :
+    w ≤ minConv f (window w) s := by
+  rw [conv_window]
+  exact le_add_self
+
 end DeepWiki

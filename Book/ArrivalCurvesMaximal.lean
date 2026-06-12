@@ -1,7 +1,7 @@
 import Book.ArrivalCurves
 import Book.Closures
 import Book.Continuity
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Mathlib.Topology.Order.LeftRightLim
 
 /-! # Properties of a maximal arrival curve

@@ -8,7 +8,9 @@ Generic `minConv`/`maxConv` with intro and elim lemmas (`minConv_le_add`,
 bounds (`sub_le_minDeconv`, `maxDeconv_le_sub`); the function spaces
 `FminBar`/`FmaxBar` over the extended carriers, whose dioid product `conv`
 agrees with `minConv`/`maxConv`; the predicates `IsNonneg`/`IsNullAtOrigin`
-with closure lemmas; and the sub-complete-dioids `FPlus`/`FNondecr`. -/
+with closure lemmas; and the sub-complete-dioids `FPlus`/`FNondecr`.
+The abstract dioid structure on `D → T` underneath these readings is
+`Book.DioidFunctions`. -/
 
 namespace DeepWiki
 

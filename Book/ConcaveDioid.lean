@@ -143,7 +143,7 @@ non-negative curves. -/
 /-- The concave non-negative curves are closed under the `ECurve` operations:
 `⊕ₒ` (`IsConcaveEReal.inf`), `⊗ₒ` (`IsConcaveEReal.minConv`), `εₒ = topCurve`
 (`isConcaveEReal_topCurve`), `eₒ = convUnitEReal` (`isConcaveEReal_convUnitEReal`). -/
-theorem isSubDioid_concaveE :
+theorem isSubDioid_isConcaveEReal :
     IsSubDioid (fun a : ECurve => IsConcaveEReal a.1) where
   add ha hb := IsConcaveEReal.inf _ _ ha hb
   mul {a b} ha hb := IsConcaveEReal.minConv ha hb a.2 b.2
@@ -152,6 +152,6 @@ theorem isSubDioid_concaveE :
 
 /-- The (min,+) Dioid of **concave** non-negative `EReal` curves. -/
 noncomputable instance : Algebra.Dioid {a : ECurve // IsConcaveEReal a.1} :=
-  isSubDioid_concaveE.toDioid
+  isSubDioid_isConcaveEReal.toDioid
 
 end DeepWiki

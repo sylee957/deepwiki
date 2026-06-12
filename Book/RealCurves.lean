@@ -151,6 +151,30 @@ noncomputable def staircase (P h : ℝ≥0) (J : ℝ) :
 noncomputable def unitStep (T : ℝ≥0) : ℝ≥0 → ℝ≥0∞ :=
   fun t => if t ≤ T then 0 else 1
 
+/-- Window curve `ω_w`: `w` at the origin and `⊤` afterwards — the
+feedback controller of window flow control. -/
+noncomputable def window (w : ℝ≥0∞) : ℝ≥0 → ℝ≥0∞ :=
+  fun t => if t = 0 then w else ⊤
+
+/-- `window w t` unfolds to its closed form. -/
+@[simp] theorem window_apply (w : ℝ≥0∞) (t : ℝ≥0) :
+    window w t = if t = 0 then w else ⊤ := rfl
+
+/-- `window w 0 = w`. -/
+theorem window_zero_eq (w : ℝ≥0∞) : window w 0 = w := if_pos rfl
+
+/-- `window w` is monotone (it only steps up to `⊤`). -/
+theorem window_mono (w : ℝ≥0∞) : Monotone (window w) := by
+  intro a b hab
+  by_cases ha : a = 0
+  · by_cases hb : b = 0
+    · rw [ha, hb]
+    · rw [ha, window_zero_eq, show window w b = ⊤ from if_neg hb]
+      exact le_top
+  · have hb : b ≠ 0 := fun hb0 => ha (le_antisymm (hb0 ▸ hab) zero_le')
+    rw [show window w a = ⊤ from if_neg ha,
+      show window w b = ⊤ from if_neg hb]
+
 /-! ## Complete-domain variants `ℝ≥0∞ → ℝ≥0∞` (for the pseudo-inverse catalog) -/
 
 /-- Constant-rate curve over `ℝ≥0∞ → ℝ≥0∞`. -/

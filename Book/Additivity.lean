@@ -162,7 +162,7 @@ theorem liftMinPlusNN_inj {D : Type} {g h : D → ℝ≥0∞}
   exact congrArg MinPlusNN.toVal (congrFun H t)
 
 /-- `minConv` is associative on `ℝ≥0∞`-valued functions. -/
-theorem minConvE_assoc {D : Type} [_root_.AddCommMonoid D]
+theorem minConv_assoc_enn {D : Type} [_root_.AddCommMonoid D]
     (f g h : D → ℝ≥0∞) :
     minConv (minConv f g) h
       = minConv f (minConv g h) := by
@@ -196,5 +196,19 @@ theorem conv_self_liftMinPlusNN_of_subadditive
     (hsub : IsSubadditive g) (h0 : g 0 = 0) :
     conv (liftMinPlusNN g) (liftMinPlusNN g) = liftMinPlusNN g := by
   rw [conv_liftMinPlusNN, minConv_self_of_subadditive g hsub h0]
+
+/-- Convolving with a subadditive curve is shift-subadditive:
+`(f ∗ g) (u + v) ≤ (f ∗ g) u + g v`. -/
+theorem minConv_apply_add_le_of_isSubadditive {D : Type}
+    [_root_.AddCommMonoid D] {f g : D → ℝ≥0∞}
+    (hsub : IsSubadditive g) (u v : D) :
+    minConv f g (u + v) ≤ minConv f g u + g v := by
+  rw [← tsub_le_iff_right]
+  refine le_minConv fun p q hpq => ?_
+  rw [tsub_le_iff_right]
+  calc minConv f g (u + v)
+      ≤ f p + g (q + v) := minConv_le_add f g (by rw [← add_assoc, hpq])
+    _ ≤ f p + (g q + g v) := add_le_add_right (hsub q v) _
+    _ = (f p + g q) + g v := (add_assoc _ _ _).symm
 
 end DeepWiki

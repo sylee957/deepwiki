@@ -1,6 +1,6 @@
 import Book.DeviationsComposition
 import Book.ServiceCurveMinimal
-import Book.ArrivalCurveShaperGreedy
+import Book.ArrivalCurvesShaperGreedy
 
 /-! # The worst-case tandem trajectory
 For sub-additive `α` and curves `β₁`, `β₂` in `F₀`, the triple `A = α`,

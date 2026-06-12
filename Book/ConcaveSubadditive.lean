@@ -83,22 +83,22 @@ theorem not_continuousOn_ceilCurve :
 
 /-- `ceilCurve` is not concave: were it concave, finiteness would force
 continuity on `(0, ∞)`, contradicting its jump at `x = 1`. -/
-theorem not_concaveE_ceilCurve : ¬ IsConcaveEReal ceilCurve := by
+theorem not_isConcaveEReal_ceilCurve : ¬ IsConcaveEReal ceilCurve := by
   intro hconc
   exact not_continuousOn_ceilCurve
     (continuousOn_of_isConcaveEReal_of_finite ceilCurve hconc isFiniteOnPos_ceilCurve)
 
 /-- There is a subadditive, positively-finite curve that is not concave:
 the ceiling curve witnesses subadditive ⟹ concave is false. -/
-theorem exists_subadditive_not_concaveE :
+theorem exists_subadditive_not_isConcaveEReal :
     ∃ f : ℝ≥0 → EReal, IsSubadditive f ∧ IsFiniteOnPos f ∧ ¬ IsConcaveEReal f :=
   ⟨ceilCurve, isSubadditive_ceilCurve, isFiniteOnPos_ceilCurve,
-    not_concaveE_ceilCurve⟩
+    not_isConcaveEReal_ceilCurve⟩
 
 /-- Subadditive does not imply concave: the implication fails on `ℝ≥0 → EReal`,
 refuted by `ceilCurve` (subadditive but not concave). -/
-theorem not_isSubadditive_imp_concaveE :
+theorem not_isSubadditive_imp_isConcaveEReal :
     ¬ ∀ f : ℝ≥0 → EReal, IsSubadditive f → IsConcaveEReal f :=
-  fun h => not_concaveE_ceilCurve (h ceilCurve isSubadditive_ceilCurve)
+  fun h => not_isConcaveEReal_ceilCurve (h ceilCurve isSubadditive_ceilCurve)
 
 end DeepWiki

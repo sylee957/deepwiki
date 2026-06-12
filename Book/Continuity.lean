@@ -8,8 +8,11 @@ import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
 
 /-! # Continuity notions for real functions
-One-sided continuity and piecewise continuity over `ℝ≥0`,
-used by the convolution theory. -/
+One-sided continuity over `ℝ≥0` (`IsLeftContinuous`/`IsRightContinuous`),
+its ε–δ characterizations and their bridges to the filter limits
+`TendstoLeft`/`TendstoRight`, and piecewise continuity
+(`IsPiecewiseContinuous`: finitely many discontinuities on each `[0, T]`)
+— the regularity layer of the convolution theory. -/
 
 namespace DeepWiki
 

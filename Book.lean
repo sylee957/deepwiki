@@ -7,7 +7,7 @@ import Book.SubDioid
 import Book.ScalarDioids
 import Book.DioidFunctions
 import Book.FunctionDioids
-import Book.ClosureNd
+import Book.ClosuresNd
 import Book.Additivity
 import Book.Deconvolution
 import Book.Closures
@@ -33,13 +33,13 @@ import Book.MaxPlusExtTopology
 import Book.ConvolutionMinimumExt
 import Book.ConvolutionMinimumRC
 import Book.ConvolutionContinuity
-import Book.ClosureEReal
+import Book.ClosuresEReal
 import Book.CurveDioidEReal
 import Book.ConcaveProps
 import Book.ConcaveDioid
 import Book.ConcaveSubadditive
 import Book.Servers
-import Book.ConvolutionReal
+import Book.ClosuresReal
 import Book.ArrivalCurves
 import Book.ArrivalCurvesMaximal
 import Book.ArrivalCurvesMinimal
@@ -55,9 +55,13 @@ import Book.ServiceCurvePackets
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
 import Book.ServersConcatenationStrict
-import Book.ArrivalCurveShaper
-import Book.ArrivalCurveShaperGreedy
-import Book.ArrivalCurveOutput
+import Book.ServiceCurveStrictTandem
+import Book.ServersControlTandem
+import Book.ServersControlFeedback
+import Book.ServersControlFeedbackWindow
+import Book.ArrivalCurvesShaper
+import Book.ArrivalCurvesShaperGreedy
+import Book.ArrivalCurvesOutput
 import Book.DeviationsBoundsTight
 import Book.DeviationsCompositionTight
 
