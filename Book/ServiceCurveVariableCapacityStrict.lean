@@ -1,5 +1,5 @@
 import Book.ServiceCurveVariableCapacityStart
-import Book.RealCurves
+import Book.RealCurvesRegularity
 
 /-! # Variable capacity nodes: the unrepaired forms fail
 The counterexample ladder for the adjudicated gap: without jump
@@ -107,27 +107,23 @@ theorem not_forall_variableCapacityOutput_start_eq :
 /-- The ceiling capacity: a full unit at the start of every cycle. -/
 noncomputable def vcnCeilCapacity : ℝ≥0 → ℝ≥0 := fun t => (⌈t⌉₊ : ℝ≥0)
 
-/-- The ceiling capacity is monotone. -/
-theorem vcnCeilCapacity_mono : Monotone vcnCeilCapacity :=
-  fun _ _ hab => Nat.cast_le.mpr (Nat.ceil_mono hab)
+/-- The ceiling capacity is the unit staircase of the catalog. -/
+theorem vcnCeilCapacity_eq_staircaseFun :
+    vcnCeilCapacity = staircaseFun 1 1 0 := by
+  funext t
+  show ((⌈t⌉₊ : ℕ) : ℝ≥0) = 1 * (⌈((t : ℝ) - 0) / 1⌉₊ : ℝ≥0)
+  rw [one_mul, sub_zero, div_one]
+  congr 1
 
-/-- The ceiling capacity is left-continuous: constant on each
-`(k, k+1]`. -/
+/-- The ceiling capacity is monotone. -/
+theorem vcnCeilCapacity_mono : Monotone vcnCeilCapacity := by
+  rw [vcnCeilCapacity_eq_staircaseFun]
+  exact staircaseFun_mono 1 1 0
+
+/-- The ceiling capacity is left-continuous. -/
 theorem vcnCeilCapacity_leftCont : IsLeftContinuous vcnCeilCapacity := by
-  intro t
-  rcases eq_or_ne t 0 with rfl | ht
-  · exact isLeftContinuousAt_zero _
-  · obtain ⟨k, hk⟩ : ∃ k : ℕ, ⌈t⌉₊ = k + 1 :=
-      ⟨⌈t⌉₊ - 1, (Nat.succ_pred_eq_of_pos
-        (Nat.ceil_pos.mpr (pos_of_ne_zero ht))).symm⟩
-    have hkt : (k : ℝ≥0) < t := Nat.lt_ceil.mp (hk ▸ k.lt_succ_self)
-    refine continuousWithinAt_const.congr_of_eventuallyEq ?_ rfl
-    filter_upwards [Ioo_mem_nhdsLT hkt] with v hv
-    show vcnCeilCapacity v = vcnCeilCapacity t
-    have h1 : ⌈v⌉₊ ≤ ⌈t⌉₊ := Nat.ceil_mono (le_of_lt hv.2)
-    have h2 : k < ⌈v⌉₊ := Nat.lt_ceil.mpr hv.1
-    have he : ⌈v⌉₊ = ⌈t⌉₊ := by omega
-    simp only [vcnCeilCapacity, he]
+  rw [vcnCeilCapacity_eq_staircaseFun]
+  exact staircaseFun_leftCont 1 1 0
 
 /-- The closed output value: against the ceiling capacity the
 half-rate arrivals receive one half-unit per completed cycle. -/
@@ -220,13 +216,7 @@ noncomputable def vcnWitnessArrival : Curve :=
 noncomputable def vcnWitnessCapacity : Curve :=
   ⟨vcnCeilCapacity, vcnCeilCapacity_mono,
     by show vcnCeilCapacity 0 = 0; simp [vcnCeilCapacity],
-    isPiecewiseContinuous_of_monotone_of_finite_image
-      vcnCeilCapacity_mono vcnCeilCapacity_leftCont (fun T =>
-        Set.Finite.subset
-          ((Set.finite_Iic ⌈T⌉₊).image (Nat.cast : ℕ → ℝ≥0))
-          (by
-            rintro x ⟨u, hu, rfl⟩
-            exact ⟨⌈u⌉₊, Nat.ceil_mono hu.2, rfl⟩)),
+    by rw [vcnCeilCapacity_eq_staircaseFun]; exact staircaseFun_pwc 1 1 0,
     vcnCeilCapacity_leftCont⟩
 
 /-- The witness departure: the variable-capacity output itself. -/
