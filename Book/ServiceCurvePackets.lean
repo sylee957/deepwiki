@@ -97,6 +97,15 @@ noncomputable def stepCurve (T b : ℝ≥0) : Curve :=
 @[simp] theorem stepCurve_apply (T b u : ℝ≥0) :
     stepCurve T b u = if T < u then b else 0 := rfl
 
+/-- A sum of unit steps evaluates to the number of steps already
+passed. -/
+theorem sum_stepCurve_apply (s : Finset ℕ) (u : ℝ≥0) :
+    (∑ k ∈ s, stepCurve (k : ℝ≥0) 1) u
+      = ((s.filter (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0) := by
+  rw [Curve.sum_apply, Finset.card_filter]
+  push_cast
+  exact Finset.sum_congr rfl fun k _ => stepCurve_apply _ _ _
+
 /-! ## Strict service: a per-packet guarantee -/
 
 /-- Strict `λ_C` drains a burst at rate `C` past `T`:

@@ -13,8 +13,8 @@ the book's proof equates the flow's backlog at the start of the
 higher-priority busy period, which an instantaneous service burst at
 that instant can break; anchoring just inside the period and passing
 `β` through its left limit closes the gap. For `β` not left-continuous
-the statement fails — `not_forall` ladder to be stated in this file
-(step-`β` witness; see the restatement note). -/
+the statement fails — settled by the step-`β` witness ladder ending in
+`not_forall_add_residualCurve_le_of_isStaticPriority`. -/
 
 namespace DeepWiki
 
@@ -292,15 +292,6 @@ noncomputable def spWitnessDHigh : Curve :=
 noncomputable def spWitnessDLow : Curve :=
   ∑ k ∈ ({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ), stepCurve (k : ℝ≥0) 1
 
-/-- A sum of unit steps evaluates to the number of steps already
-passed. -/
-theorem sum_stepCurve_apply (s : Finset ℕ) (u : ℝ≥0) :
-    (∑ k ∈ s, stepCurve (k : ℝ≥0) 1) u
-      = ((s.filter (fun k : ℕ => (k : ℝ≥0) < u)).card : ℝ≥0) := by
-  rw [Curve.sum_apply, Finset.card_filter]
-  push_cast
-  exact Finset.sum_congr rfl fun k _ => stepCurve_apply _ _ _
-
 /-- The witness aggregate serves one unit at every integer in
 `0, …, 12`. -/
 theorem spWitness_agg_apply (u : ℝ≥0) :
@@ -529,6 +520,52 @@ theorem spWitness_staticPriority :
     rw [heval t (lt_of_lt_of_le hs1 hst) ht4,
       heval s hs1 (le_trans hst ht4)]
 
+/-- The step `β` is not left-continuous at `1` — the witness separates
+exactly the repaired hypothesis. -/
+theorem not_isLeftContinuous_spWitnessBeta :
+    ¬ IsLeftContinuous spWitnessBeta := by
+  intro h
+  have hne : (𝓝[<] (1 : ℝ≥0)).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, one_pos⟩
+  have h0 : Filter.Tendsto spWitnessBeta (𝓝[<] (1 : ℝ≥0)) (𝓝 0) := by
+    refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
+    filter_upwards [self_mem_nhdsWithin] with v hv
+    exact (if_pos hv).symm
+  have huniq := tendsto_nhds_unique (h 1).tendsto h0
+  rw [show spWitnessBeta 1 = 1 from if_neg (lt_irrefl 1)] at huniq
+  exact one_ne_zero huniq
+
+/-- The residual conclusion fails at the witness: on the pair `(1, 2)`
+the high-priority flow gains nothing while the residual demands one
+unit. -/
+theorem not_add_residualCurve_le_spWitness :
+    ¬ (spWitnessDHigh 1 + residualCurve spWitnessBeta
+        (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).filter
+          (fun j => j < (0 : Fin 2)), (fun _ _ => (0 : ℝ≥0)) j v)
+        ((2 : ℝ≥0) - 1)
+      ≤ spWitnessDHigh 2) := by
+  intro hbad
+  rw [spWitnessDHigh_eq_zero (by norm_num : (1 : ℝ≥0) ≤ 2),
+    spWitnessDHigh_eq_zero le_rfl, zero_add] at hbad
+  have hres : (1 : ℝ≥0) ≤ residualCurve spWitnessBeta
+      (fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).filter
+        (fun j => j < (0 : Fin 2)), (fun _ _ => (0 : ℝ≥0)) j v)
+      ((2 : ℝ≥0) - 1) := by
+    have h21 : (2 : ℝ≥0) - 1 = 1 := tsub_eq_of_eq_add (by norm_num)
+    rw [h21]
+    have hb := tsub_le_residualCurve
+      (β := spWitnessBeta)
+      (α := fun v => ∑ j ∈ (Finset.univ : Finset (Fin 2)).filter
+        (fun j => j < (0 : Fin 2)), (fun _ _ => (0 : ℝ≥0)) j v)
+      (closureBddAbove_tsub_of_monotone spWitnessBeta_mono)
+      (le_refl (1 : ℝ≥0))
+    refine le_trans (le_of_eq ?_) hb
+    show (1 : ℝ≥0) = spWitnessBeta 1
+        - (∑ j ∈ (Finset.univ : Finset (Fin 2)).filter
+            (fun j => j < (0 : Fin 2)), (0 : ℝ≥0))
+    rw [show spWitnessBeta 1 = 1 from if_neg (lt_irrefl 1),
+      Finset.sum_const_zero, tsub_zero]
+  exact absurd (le_trans hres hbad) (by norm_num)
+
 /-- **The book's static-priority residual fails without left-continuity
 of `β`**: the universally quantified statement mirroring
 `add_residualCurve_le_of_isStaticPriority` with `hβlc` removed is
@@ -558,25 +595,6 @@ theorem not_forall_add_residualCurve_le_of_isStaticPriority :
       show spWitnessDHigh u < stepCurve 1 3 u
       rw [spWitnessDHigh_eq_zero hu.2, stepCurve_apply, if_pos hu.1]
       norm_num)
-  rw [show (![spWitnessDHigh, spWitnessDLow] 0) = spWitnessDHigh from rfl,
-    spWitnessDHigh_eq_zero (by norm_num : (1 : ℝ≥0) ≤ 2),
-    spWitnessDHigh_eq_zero le_rfl, zero_add] at hbad
-  have hres : (1 : ℝ≥0) ≤ residualCurve spWitnessBeta
-      (fun v => ∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0),
-        (fun _ _ => (0 : ℝ≥0)) j v) ((2 : ℝ≥0) - 1) := by
-    have h21 : (2 : ℝ≥0) - 1 = 1 := tsub_eq_of_eq_add (by norm_num)
-    rw [h21]
-    have hb := tsub_le_residualCurve
-      (β := spWitnessBeta)
-      (α := fun v => ∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0),
-        (fun _ _ => (0 : ℝ≥0)) j v)
-      (closureBddAbove_tsub_of_monotone spWitnessBeta_mono)
-      (le_refl (1 : ℝ≥0))
-    refine le_trans (le_of_eq ?_) hb
-    show (1 : ℝ≥0) = spWitnessBeta 1
-        - (∑ j ∈ Finset.univ.filter (fun j : Fin 2 => j < 0), (0 : ℝ≥0))
-    rw [show spWitnessBeta 1 = 1 from if_neg (lt_irrefl 1),
-      Finset.sum_const_zero, tsub_zero]
-  exact absurd (le_trans hres hbad) (by norm_num)
+  exact not_add_residualCurve_le_spWitness hbad
 
 end DeepWiki

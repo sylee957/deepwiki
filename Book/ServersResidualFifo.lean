@@ -163,6 +163,24 @@ theorem fifoResidual_apply (β α : ℝ≥0 → ℝ≥0∞) (θ v : ℝ≥0) :
 theorem fifoResidual_zero_eq (β α : ℝ≥0 → ℝ≥0∞) (θ : ℝ≥0) :
     fifoResidual β α θ 0 = 0 := if_pos zero_le'
 
+/-- For monotone `α` the FIFO residual is the book's wedge
+`[β − α ∗ δ_θ]⁺ ∧ δ_θ` pointwise. -/
+theorem fifoResidual_eq_min_conv_delayNN {β α : ℝ≥0 → ℝ≥0∞} {θ : ℝ≥0}
+    (hαmono : Monotone α) :
+    fifoResidual β α θ
+      = fun v => min (β v - minConv α (delayNN θ) v) (delayNN θ v) := by
+  funext v
+  show (if v ≤ θ then 0 else β v - α (v - θ))
+      = min (β v - minConv α (delayNN θ) v) (delayNN θ v)
+  have hconv : minConv α (delayNN θ) v = α (v - θ) := by
+    rw [conv_delayNN α hαmono θ]
+  rw [hconv]
+  by_cases hv : v ≤ θ
+  · rw [if_pos hv, show delayNN θ v = 0 from delay_eq_zero θ hv,
+      min_eq_right zero_le']
+  · rw [if_neg hv, show delayNN θ v = ⊤ from delay_eq_top θ (not_le.mp hv),
+      min_eq_left le_top]
+
 /-- **The FIFO residual θ-family**: a FIFO family whose aggregate is
 served at a non-decreasing left-continuous min-plus `β`, with
 cross-traffic arrival curves `αⱼ`, serves flow `i` at
@@ -368,5 +386,40 @@ theorem minConv_fifoResidual_le_of_isFifo {ι : Type*} [Fintype ι]
                 rw [tsub_add_cancel_of_le hle]
             _ ≤ _ := hchain
         exact (ENNReal.add_le_add_iff_right ENNReal.coe_ne_top).mp h4
+
+/-! ## Book restatement (the FIFO residual θ-family)
+A FIFO `n`-server offering a min-plus service curve `β` (non-decreasing,
+left-continuous) to flows with arrival curves `αⱼ` offers flow `i` the
+residual `β_i^θ = [β − ∑_{j≠i} αⱼ ∗ δ_θ]⁺ ∧ δ_θ` for every `θ` — the
+wedge form reduces to `fifoResidual` through `conv_delayNN`, the
+bundles' monotonicity carrying the identification. -/
+example {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {As Ds : ι → Curve}
+    {β : ℝ≥0 → ℝ≥0∞} {α : ι → ℝ≥0 → ℝ≥0}
+    (hS : IsFifoServerN S) (hp : S As Ds)
+    (hβmono : Monotone β) (hβlc : IsLeftContinuous β)
+    (hserv : ∀ x, minConv (Deviation.liftENN (fun y => ∑ j, (As j) y)) β x
+      ≤ ((∑ j, (Ds j) x : ℝ≥0) : ℝ≥0∞))
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalCurve ⇑(As j) (α j))
+    (θ t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (fun v => min (β v
+          - minConv
+              (fun w => ((∑ j ∈ Finset.univ.erase i, α j w : ℝ≥0) : ℝ≥0∞))
+              (delayNN θ) v)
+          (delayNN θ v)) t
+      ≤ ((Ds i) t : ℝ≥0∞) := by
+  rw [show (fun v => min (β v
+        - minConv
+            (fun w => ((∑ j ∈ Finset.univ.erase i, α j w : ℝ≥0) : ℝ≥0∞))
+            (delayNN θ) v)
+        (delayNN θ v))
+      = fifoResidual β
+          (fun w => ((∑ j ∈ Finset.univ.erase i, α j w : ℝ≥0) : ℝ≥0∞)) θ
+    from (fifoResidual_eq_min_conv_delayNN fun a b hab =>
+      ENNReal.coe_le_coe.mpr (Finset.sum_le_sum fun j hj =>
+        (harr j (Finset.ne_of_mem_erase hj)).1 hab)).symm]
+  exact minConv_fifoResidual_le_of_isFifo (hS As Ds hp) hβmono hβlc hserv
+    (fun j hj => (harr j hj).2) θ t
 
 end DeepWiki
