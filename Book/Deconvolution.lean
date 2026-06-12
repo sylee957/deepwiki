@@ -76,6 +76,16 @@ theorem minDeconv_self_le_of_isSubadditive {f : ℝ≥0 → ℝ≥0∞}
     (hsub : IsSubadditive f) : minDeconv f f ≤ f := fun t =>
   minDeconv_le fun s => tsub_le_iff_right.mpr (hsub t s)
 
+/-- A sub-additive `f` null at the origin is its own self-deconvolution:
+`f ⊘ f = f` on `ℝ≥0∞` — its own tightest maximal arrival curve. -/
+theorem minDeconv_self_eq_of_isSubadditive {f : ℝ≥0 → ℝ≥0∞}
+    (hsub : IsSubadditive f) (h0 : f 0 = 0) :
+    minDeconv f f = f := by
+  funext t
+  refine le_antisymm (minDeconv_self_le_of_isSubadditive hsub t) ?_
+  have h := sub_le_minDeconv f f t 0
+  rwa [add_zero, h0, tsub_zero] at h
+
 /-- For sub-additive `f`, the deconvolution exceeds its origin value by at
 most `f`: `(f ⊘ g) d ≤ f d + (f ⊘ g) 0` on `ℝ≥0∞`. -/
 theorem minDeconv_le_add_minDeconv_zero {f : ℝ≥0 → ℝ≥0∞} (g : ℝ≥0 → ℝ≥0∞)

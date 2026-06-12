@@ -64,6 +64,7 @@ import Book.ArrivalCurvesShaperGreedy
 import Book.ArrivalCurvesOutput
 import Book.DeviationsBoundsTight
 import Book.DeviationsCompositionTight
+import Book.ServersJitter
 
 /-!
 # DeepWiki — autoformalized mathematics
