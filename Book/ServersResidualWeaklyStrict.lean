@@ -21,10 +21,72 @@ noncomputable def residualCurveDeconv (β αc αi : ℝ≥0 → ℝ≥0) :
     ℝ≥0 → ℝ≥0 :=
   ndClosure (maxDeconv (residualCurve β αc) αi)
 
-/-- `residualCurveDeconv β αc αi t` unfolds to its closure form. -/
+/-- `residualCurveDeconv β αc αi t` is the supremum of the deconvolved
+residuals up to `t`. -/
 theorem residualCurveDeconv_apply (β αc αi : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     residualCurveDeconv β αc αi t
-      = ndClosure (maxDeconv (residualCurve β αc) αi) t := rfl
+      = ⨆ v : {v : ℝ≥0 // v ≤ t},
+          maxDeconv (residualCurve β αc) αi v.1 := rfl
+
+/-- `residualCurveDeconv β αc αi 0` is the deconvolution at the
+origin. -/
+theorem residualCurveDeconv_zero_eq (β αc αi : ℝ≥0 → ℝ≥0) :
+    residualCurveDeconv β αc αi 0
+      = maxDeconv (residualCurve β αc) αi 0 := by
+  refine le_antisymm (ciSup_le fun v => ?_) ?_
+  · show maxDeconv (residualCurve β αc) αi v.1
+        ≤ maxDeconv (residualCurve β αc) αi 0
+    rw [show v.1 = 0 from le_antisymm v.2 zero_le']
+  · refine le_ciSup_of_le
+      ⟨maxDeconv (residualCurve β αc) αi 0, ?_⟩ ⟨0, le_rfl⟩ le_rfl
+    rintro y ⟨v, rfl⟩
+    show maxDeconv (residualCurve β αc) αi v.1
+        ≤ maxDeconv (residualCurve β αc) αi 0
+    rw [show v.1 = 0 from le_antisymm v.2 zero_le']
+
+/-- Intro: each deconvolved residual below `t` bounds
+`residualCurveDeconv β αc αi t` from below (under
+prefix-boundedness). -/
+theorem maxDeconv_le_residualCurveDeconv {β αc αi : ℝ≥0 → ℝ≥0}
+    (hbdd : ClosureBddAbove (maxDeconv (residualCurve β αc) αi))
+    {v t : ℝ≥0} (hvt : v ≤ t) :
+    maxDeconv (residualCurve β αc) αi v
+      ≤ residualCurveDeconv β αc αi t :=
+  le_ciSup_of_le (hbdd t) ⟨v, hvt⟩ le_rfl
+
+/-- Elim: `residualCurveDeconv β αc αi t ≤ x` from the pointwise
+deconvolution bounds on `[0, t]`. -/
+theorem residualCurveDeconv_le {β αc αi : ℝ≥0 → ℝ≥0} {x t : ℝ≥0}
+    (h : ∀ v, v ≤ t → maxDeconv (residualCurve β αc) αi v ≤ x) :
+    residualCurveDeconv β αc αi t ≤ x :=
+  ciSup_le fun v => h v.1 v.2
+
+/-- `residualCurveDeconv β αc αi` is monotone (under
+prefix-boundedness). -/
+theorem residualCurveDeconv_mono {β αc αi : ℝ≥0 → ℝ≥0}
+    (hbdd : ClosureBddAbove (maxDeconv (residualCurve β αc) αi)) :
+    Monotone (residualCurveDeconv β αc αi) :=
+  ndClosure_mono _ hbdd
+
+/-- For non-decreasing `β` the deconvolved residuals are
+prefix-bounded: the `s = 0` term of each deconvolution is dominated
+by the residual, which `β t` dominates. -/
+theorem closureBddAbove_maxDeconv_of_monotone {β αc αi : ℝ≥0 → ℝ≥0}
+    (hβ : Monotone β) :
+    ClosureBddAbove (maxDeconv (residualCurve β αc) αi) := fun t =>
+  ⟨β t, by
+    rintro y ⟨v, rfl⟩
+    refine le_trans (maxDeconv_le_sub _ _ v.1 0) ?_
+    refine le_trans tsub_le_self ?_
+    rw [add_zero]
+    exact residualCurve_le fun w hw =>
+      le_trans tsub_le_self (hβ (hw.trans v.2))⟩
+
+/-- `residualCurveDeconv β αc αi` is monotone for non-decreasing
+`β`. -/
+theorem residualCurveDeconv_mono_of_monotone {β αc αi : ℝ≥0 → ℝ≥0}
+    (hβ : Monotone β) : Monotone (residualCurveDeconv β αc αi) :=
+  residualCurveDeconv_mono (closureBddAbove_maxDeconv_of_monotone hβ)
 
 /-- **Weakly strict residual service**: under a weakly strict
 aggregate with every flow arrival-constrained, flow `i` gains the
@@ -48,30 +110,19 @@ theorem add_residualCurveDeconv_le_of_wstrict_aggregate {ι : Type*}
           (t - start ⇑(As i) ⇑(Ds i) t)
       ≤ (Ds i) t := by
   have hs1t : start ⇑(As i) ⇑(Ds i) t ≤ t := start_le _ _ t
-  have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 := by
-    have hA : (∑ j, (As j) 0) = 0 :=
-      Finset.sum_eq_zero fun j _ => ((As j).zero : (As j) 0 = 0)
-    have hD : (∑ j, (Ds j) 0) = 0 :=
-      Finset.sum_eq_zero fun j _ => ((Ds j).zero : (Ds j) 0 = 0)
-    rw [hA, hD]
+  have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 :=
+    (Curve.sum_zero_eq As).trans (Curve.sum_zero_eq Ds).symm
   -- the aggregate start sits at or before flow `i`'s
   have hagg_le : start (fun x => ∑ j, (As j) x)
-      (fun x => ∑ j, (Ds j) x) t ≤ start ⇑(As i) ⇑(Ds i) t := by
-    unfold start
-    refine csSup_le_csSup ⟨t, fun x hx => hx.1⟩
-      ⟨0, zero_le', h0agg⟩ ?_
-    rintro u ⟨hut, hequ⟩
-    refine ⟨hut, ?_⟩
-    exact ((Finset.sum_eq_sum_iff_of_le
-      (fun j _ => hc j u)).mp hequ.symm i (Finset.mem_univ i)).symm
+      (fun x => ∑ j, (Ds j) x) t ≤ start ⇑(As i) ⇑(Ds i) t :=
+    start_le_of_isBacklogged
+      (isBacklogged_sum_of_isBacklogged (fun j _ x => hc j x)
+        (Finset.mem_univ i) (isBacklogged_Ioc_start (hc i) t))
   -- per-flow equality at the aggregate start
   have hfloweq : ∀ j, (Ds j) (start (fun x => ∑ j, (As j) x)
       (fun x => ∑ j, (Ds j) x) t) = (As j)
       (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) t) :=
-    apply_start_sum_eq (fun j x => hc j x)
-      (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
-      (fun j => ((As j).zero : (As j) 0 = 0).trans
-        ((Ds j).zero : (Ds j) 0 = 0).symm) t
+    Curve.apply_start_sum_eq hc t
   -- flow `i`'s arrivals across the gap
   have hgap : (As i) (start ⇑(As i) ⇑(Ds i) t)
       ≤ (Ds i) (start (fun x => ∑ j, (As j) x)
@@ -139,8 +190,7 @@ theorem add_residualCurveDeconv_le_of_wstrict_aggregate {ι : Type*}
       (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (α i)
       (t - start ⇑(As i) ⇑(Ds i) t)
       ≤ (Ds i) t - (Ds i) (start ⇑(As i) ⇑(Ds i) t) := by
-    rw [residualCurveDeconv_apply]
-    exact ciSup_le fun w => hv w.1 w.2
+    exact residualCurveDeconv_le hv
   calc (Ds i) (start ⇑(As i) ⇑(Ds i) t)
       + residualCurveDeconv β _ (α i) (t - start ⇑(As i) ⇑(Ds i) t)
       ≤ (Ds i) (start ⇑(As i) ⇑(Ds i) t)
@@ -172,7 +222,26 @@ flows of respective arrival curves `α₁, α₂`, under arbitrary
 multiplexing, offers flow `1` the weakly strict service curve
 `β₁ = [[β − α₂]⁺↑ ⊘̄ α₁]⁺↑` — formalized here for `n` flows with the
 cross-traffic summed, the book's statement being the case `n = 2`.
-The curve is not tight and, the book notes, not used in practice. -/
+The curve is not tight and, the book notes, not used in practice.
+First pair-level with the arrival-curve bundles
+`IsMaximalArrivalCurve` (monotonicity passed down as `.2`), then in
+relation form. -/
+example {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0}
+    (hSrv : IsServerN S)
+    (hβ : IsWeaklyStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    {i : ι} (harr : ∀ j, IsMaximalArrivalCurve ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    (Ds i) (start ⇑(As i) ⇑(Ds i) t)
+      + residualCurveDeconv β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v) (α i)
+          (t - start ⇑(As i) ⇑(Ds i) t)
+      ≤ (Ds i) t :=
+  add_residualCurveDeconv_le_of_wstrict_aggregate
+    (fun j => hSrv.1 As Ds hp j) (hβ.sum_wstrict hp)
+    (fun j => (harr j).2) t
 example {ι : Type*} [Fintype ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0} {i : ι}

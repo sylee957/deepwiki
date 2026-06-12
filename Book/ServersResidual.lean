@@ -116,21 +116,14 @@ theorem add_residualCurve_start_le_of_wstrict_aggregate {ι : Type*}
         (t - start (fun x => ∑ j, (As j) x)
           (fun x => ∑ j, (Ds j) x) t)
       ≤ (Ds i) t := by
-  have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 := by
-    have hA : (∑ j, (As j) 0) = 0 :=
-      Finset.sum_eq_zero fun j _ => ((As j).zero : (As j) 0 = 0)
-    have hD : (∑ j, (Ds j) 0) = 0 :=
-      Finset.sum_eq_zero fun j _ => ((Ds j).zero : (Ds j) 0 = 0)
-    rw [hA, hD]
+  have h0agg : (∑ j, (As j) 0) = ∑ j, (Ds j) 0 :=
+    (Curve.sum_zero_eq As).trans (Curve.sum_zero_eq Ds).symm
   set s₀ : ℝ≥0 := start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) t
     with hs₀def
   have hs₀t : s₀ ≤ t := start_le _ _ t
   -- per-flow equality at the start of the aggregate backlogged period
   have hfloweq : ∀ j, (Ds j) s₀ = (As j) s₀ :=
-    apply_start_sum_eq (fun j x => hc j x)
-      (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
-      (fun j => ((As j).zero : (As j) 0 = 0).trans
-        ((Ds j).zero : (Ds j) 0 = 0).symm) t
+    Curve.apply_start_sum_eq hc t
   -- every shifted difference is covered by what flow `i` receives
   have hv : ∀ v : ℝ≥0, v ≤ t - s₀ →
       β v - (∑ j ∈ Finset.univ.erase i, α j v)
@@ -198,10 +191,7 @@ theorem minConv_residualCurve_le_of_wstrict_aggregate {ι : Type*}
   have hfloweq : ∀ j, (Ds j) (start (fun x => ∑ j, (As j) x)
       (fun x => ∑ j, (Ds j) x) t) = (As j) (start (fun x => ∑ j, (As j) x)
       (fun x => ∑ j, (Ds j) x) t) :=
-    apply_start_sum_eq (fun j x => hc j x)
-      (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
-      (fun j => ((As j).zero : (As j) 0 = 0).trans
-        ((Ds j).zero : (Ds j) 0 = 0).symm) t
+    Curve.apply_start_sum_eq hc t
   have hkey := add_residualCurve_start_le_of_wstrict_aggregate
     hc hws harr t
   refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hs₀t)) ?_

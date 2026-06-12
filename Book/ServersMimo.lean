@@ -120,6 +120,18 @@ theorem apply_start_sum_eq {ι : Type*} [Fintype ι]
   exact (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm i
     (Finset.mem_univ i)
 
+/-- `apply_start_sum_eq` with `Curve` bundles: causality alone remains,
+the regularity hypotheses discharge from the curve fields. -/
+theorem Curve.apply_start_sum_eq {ι : Type*} [Fintype ι]
+    {As Ds : ι → Curve} (hc : ∀ j, Ds j ≤ As j) (t : ℝ≥0) (i : ι) :
+    (Ds i) (start (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x) t)
+      = (As i) (start (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) t) :=
+  _root_.DeepWiki.apply_start_sum_eq (fun j x => hc j x)
+    (fun j => (As j).leftCont) (fun j => (Ds j).leftCont)
+    (fun j => ((As j).zero : (As j) 0 = 0).trans
+      ((Ds j).zero : (Ds j) 0 = 0).symm) t i
+
 /-- **Each residual of an `n`-server is a server**: causality projects,
 and an input extends to the constant vector. -/
 theorem isServer_residualServer {ι : Type*}

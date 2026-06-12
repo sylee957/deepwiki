@@ -117,6 +117,11 @@ theorem Curve.coe_sum {ι : Type*} (s : Finset ι) (A : ι → Curve) :
     ⇑(∑ i ∈ s, A i) = fun t => ∑ i ∈ s, A i t :=
   funext fun t => Curve.sum_apply s A t
 
+/-- A finite family of curves sums to zero at the origin. -/
+theorem Curve.sum_zero_eq {ι : Type*} [Fintype ι] (A : ι → Curve) :
+    (∑ i, A i 0) = 0 :=
+  Finset.sum_eq_zero fun i _ => (A i).zero
+
 /-- Lift a `Curve` into the `(min,plus)` function dioid `Fmin` via `liftFmin`. -/
 abbrev Curve.liftFmin (A : Curve) : Fmin := DeepWiki.liftFmin ⇑A
 
