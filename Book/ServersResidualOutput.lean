@@ -185,10 +185,7 @@ theorem isStrictMinimalServiceCurve_residualServer_of_closure_le
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
   refine add_residualCurve_le_of_strict_aggregate_of_closure_le
     (fun j => hcaus As Ds hp j) ?_ harr hdom hst hbl
-  intro s' t' hst' hbl'
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact hβ.sum_strict hp
 
 /-! ## Book restatement (strict residual from arrival curves)
 An `n`-server offering a strict service curve `β` whose arrival
@@ -214,11 +211,7 @@ example {ι : Type*} [Fintype ι]
     (Ds i) s + residualCurve β α' (t - s) ≤ (Ds i) t :=
   add_residualCurve_le_of_strict_aggregate_of_closure_le
     (fun j => hSrv.1 As Ds hp j)
-    (by
-      intro s' t' hst' hbl'
-      have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
-        s' t' hst' (by rwa [Curve.coe_sum, Curve.coe_sum])
-      rwa [Curve.sum_apply, Curve.sum_apply] at h)
+    (hβ.sum_strict hp)
     (fun j => (harr j).2) hdom hst hbl
 
 end DeepWiki

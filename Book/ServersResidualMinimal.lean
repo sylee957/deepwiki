@@ -393,11 +393,8 @@ theorem isMinimalServiceCurve_residualServer_of_minimal_aggregate
         ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩
   intro t
-  refine minConv_residualCurveEReal_le_of_minimal_aggregate
-    (fun j => hcaus As Ds hp j) ?_ harr t
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
-  rwa [curveEReal_eq_liftEReal, curveEReal_eq_liftEReal,
-    Curve.coe_sum, Curve.coe_sum] at h
+  exact minConv_residualCurveEReal_le_of_minimal_aggregate
+    (fun j => hcaus As Ds hp j) (hβ.sum_minConv_le hp) harr t
 
 /-! ## Book restatement (blind multiplexing from a min-plus aggregate)
 An `n`-server offering a left-continuous min-plus service curve `β`
@@ -423,10 +420,7 @@ example {ι : Type*} [Fintype ι]
       ≤ curveEReal (Ds i) t :=
   minConv_residualCurveEReal_le_of_minimal_aggregate
     (fun j => hSrv.1 As Ds hp j)
-    (by
-      have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
-      rwa [curveEReal_eq_liftEReal, curveEReal_eq_liftEReal,
-        Curve.coe_sum, Curve.coe_sum] at h)
+    (hβ.sum_minConv_le hp)
     (fun j hj => (harr j hj).2) t
 
 end DeepWiki

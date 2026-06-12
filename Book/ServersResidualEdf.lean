@@ -732,10 +732,7 @@ example {ι : Type*} [Fintype ι]
     (edfResidual_eq_min_conv_delayNN fun j hj => (harr j hj).1).symm]
   refine minConv_edfResidual_le_of_isEdf (fun j => hSrv.1 As Ds hp j)
     hβlc ?_ (hS As Ds hp) (fun j hj => (harr j hj).2) θ τ
-  intro s' t' hst' hbl'
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact hβ.sum_strict hp
 
 /-! ## Book restatement (deadline compatibility, necessary condition)
 If an `n`-server whose aggregate offers the min-plus service curve `β`
@@ -785,10 +782,7 @@ example {ι : Type*} [Fintype ι]
     IsDeadlineCompatible d (fun j => ⇑(As j)) (fun j => ⇑(Ds j)) := by
   refine isDeadlineCompatible_of_isEdf (fun j => hSrv.1 As Ds hp j) hβlc
     ?_ (hS As Ds hp) (fun j => (harr j).2) ?_
-  · intro s' t' hst' hbl'
-    have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t'
-      hst' (by rwa [Curve.coe_sum, Curve.coe_sum])
-    rwa [Curve.sum_apply, Curve.sum_apply] at h
+  · exact hβ.sum_strict hp
   · intro t
     have h := hpoint t
     rw [show (∑ i, minConv (Deviation.liftENN (α i)) (delayNN (d i)) t)

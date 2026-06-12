@@ -97,10 +97,7 @@ theorem isStrictMinimalServiceCurve_residualServer_of_isGps {ι : Type*}
   rintro Ai Di ⟨As, Ds, hp, rfl, rfl⟩ s t hst hbl
   refine add_div_mul_le_of_isGps (fun j _ => hcaus As Ds hp j)
     (hgps As Ds hp) ?_ (Finset.mem_univ i) hst hbl
-  intro s' t' hst' hbl'
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact hβ.sum_strict hp
 
 /-! ## Book restatement (GPS residual service)
 A GPS `n`-server offering a strict service curve `β` with non-null

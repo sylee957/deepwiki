@@ -224,6 +224,35 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
       ≤ (Ds i) s + ((Ds i) t - (Ds i) s) := add_le_add le_rfl hsup
     _ = (Ds i) t := add_tsub_cancel_of_le ((Ds i).mono hst)
 
+/-- A strict aggregate service curve gives the plain-function sum form
+of the strict service inequality on each served family — the `hstrict`
+premise of the pair-level residual theorems. -/
+theorem IsStrictMinimalServiceCurve.sum_strict {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds) :
+    ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t := by
+  intro s t hst hbl
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s t hst
+    (by rwa [Curve.coe_sum, Curve.coe_sum])
+  rwa [Curve.sum_apply, Curve.sum_apply] at h
+
+/-- A min-plus aggregate service curve gives the plain-function sum
+form of the service inequality on each served family — the `hserv`
+premise of the pair-level warning theorem. -/
+theorem IsMinimalServiceCurve.sum_minConv_le {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → EReal}
+    (hβ : IsMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds) :
+    minConv (liftEReal (fun x => ∑ j, (As j) x)) β
+      ≤ liftEReal (fun x => ∑ j, (Ds j) x) := by
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp)
+  rwa [curveEReal_eq_liftEReal, curveEReal_eq_liftEReal,
+    Curve.coe_sum, Curve.coe_sum] at h
+
 /-- Relation form of blind multiplexing: an `n`-server offering a strict
 aggregate service curve serves each pair's flow `i` at the min-plus
 residual of the cross-traffic arrival constraints. -/
@@ -240,12 +269,8 @@ theorem minConv_residualCurve_le_of_isStrictMinimalServiceCurve
         (Deviation.liftENN (residualCurve β
           (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
       ≤ ((Ds i) t : ℝ≥0∞) := by
-  refine minConv_residualCurve_le_of_strict_aggregate
-    (fun j => hcaus As Ds hp j) ?_ harr t
-  intro s t' hst hbl
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s t' hst
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact minConv_residualCurve_le_of_strict_aggregate
+    (fun j => hcaus As Ds hp j) (hβ.sum_strict hp) harr t
 
 /-- Relation form of the strict residual: restricting an `n`-server with
 a strict aggregate service curve to pairs whose cross-traffic departures
@@ -259,12 +284,8 @@ theorem isStrictMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
       (residualServer (fun A D => S A D ∧ IsMaximalArrivalBound
         (fun x => ∑ j ∈ Finset.univ.erase i, (D j) x) α) i) := by
   rintro Ai Di ⟨As, Ds, ⟨hp, hdep⟩, rfl, rfl⟩ s t hst hbl
-  refine add_residualCurve_le_of_strict_aggregate
-    (fun j => hcaus As Ds hp j) ?_ hdep hst hbl
-  intro s' t' hst' hbl'
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact add_residualCurve_le_of_strict_aggregate
+    (fun j => hcaus As Ds hp j) (hβ.sum_strict hp) hdep hst hbl
 
 /-- **The residual server offers the residual curve** (the book's
 residual-service-curve reading of blind multiplexing): restricting an

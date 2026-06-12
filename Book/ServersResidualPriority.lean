@@ -242,10 +242,7 @@ theorem isStrictMinimalServiceCurve_residualServer_of_isStaticPriority
   rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
   refine add_residualCurve_le_of_isStaticPriority
     (fun j => hcaus As Ds hp j) hβlc ?_ (hSP As Ds hp) harr hst hbl
-  intro s' t' hst' hbl'
-  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
-    (by rwa [Curve.coe_sum, Curve.coe_sum])
-  rwa [Curve.sum_apply, Curve.sum_apply] at h
+  exact hβ.sum_strict hp
 
 /-! ## Book restatement (static priority)
 A preemptive SP `n`-server offering a (left-continuous) strict service
