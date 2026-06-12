@@ -179,4 +179,141 @@ theorem minConv_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
   rw [← hfloweq i, ← ENNReal.coe_add, ENNReal.coe_le_coe]
   exact hkey
 
+/-- **Strict residual service**: if the aggregate pair obeys a strict
+service inequality for `β` and the cross-traffic *departures* are
+`α`-constrained, then flow `i` obeys the strict service inequality for
+`residualCurve β α` on its own backlogged periods (which sit inside the
+aggregate's). -/
+theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
+    {As Ds : ι → Curve} {β α : ℝ≥0 → ℝ≥0}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    {i : ι}
+    (hdep : IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Finset.univ.erase i, (Ds j) x) α)
+    {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t)) :
+    (Ds i) s + residualCurve β α (t - s) ≤ (Ds i) t := by
+  -- flow-`i` backlog forces aggregate backlog
+  have hblagg : ∀ u, u ∈ Set.Ioc s t →
+      (∑ j, (Ds j) u) < ∑ j, (As j) u := fun u hu =>
+    Finset.sum_lt_sum (fun j _ => hc j u) ⟨i, Finset.mem_univ i, hbl u hu⟩
+  have hv : ∀ v : ℝ≥0, v ≤ t - s → β v - α v ≤ (Ds i) t - (Ds i) s := by
+    intro v hvle
+    have hut : s + v ≤ t := by
+      calc s + v ≤ s + (t - s) := add_le_add le_rfl hvle
+        _ = t := add_tsub_cancel_of_le hst
+    rcases eq_zero_or_pos v with rfl | hvpos
+    · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
+      exact zero_le'
+    · have hbl' : IsBacklogged (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) (Set.Ioc s (s + v)) := fun u hu =>
+        hblagg u ⟨hu.1, hu.2.trans hut⟩
+      have hstr := hstrict s (s + v) le_self_add hbl'
+      rw [add_tsub_cancel_left,
+        ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) s)
+          (Finset.mem_univ i),
+        ← Finset.add_sum_erase Finset.univ (fun j => (Ds j) (s + v))
+          (Finset.mem_univ i)] at hstr
+      have hcross : ∑ j ∈ Finset.univ.erase i, (Ds j) (s + v)
+          ≤ (∑ j ∈ Finset.univ.erase i, (Ds j) s) + α v :=
+        (isMaximalArrivalBound_iff_increment _ _).mp hdep s v
+      have hmain : (Ds i) s + β v ≤ (Ds i) (s + v) + α v := by
+        have h2 : ((Ds i) s + β v) + ∑ j ∈ Finset.univ.erase i, (Ds j) s
+            ≤ ((Ds i) (s + v) + α v)
+              + ∑ j ∈ Finset.univ.erase i, (Ds j) s := by
+          calc ((Ds i) s + β v) + ∑ j ∈ Finset.univ.erase i, (Ds j) s
+              = ((Ds i) s + ∑ j ∈ Finset.univ.erase i, (Ds j) s) + β v := by
+                ring
+            _ ≤ (Ds i) (s + v)
+                + ∑ j ∈ Finset.univ.erase i, (Ds j) (s + v) := hstr
+            _ ≤ (Ds i) (s + v)
+                + ((∑ j ∈ Finset.univ.erase i, (Ds j) s) + α v) :=
+                add_le_add le_rfl hcross
+            _ = ((Ds i) (s + v) + α v)
+                + ∑ j ∈ Finset.univ.erase i, (Ds j) s := by
+                ring
+        exact le_of_add_le_add_right h2
+      have hDi : (Ds i) (s + v) ≤ (Ds i) t := (Ds i).mono hut
+      refine tsub_le_iff_right.mpr ?_
+      calc β v ≤ ((Ds i) (s + v) + α v) - (Ds i) s :=
+            le_tsub_of_add_le_left hmain
+        _ ≤ ((Ds i) t + α v) - (Ds i) s :=
+            tsub_le_tsub_right (add_le_add hDi le_rfl) _
+        _ = ((Ds i) t - (Ds i) s) + α v :=
+            (tsub_add_eq_add_tsub ((Ds i).mono hst)).symm
+  have hsup : residualCurve β α (t - s) ≤ (Ds i) t - (Ds i) s :=
+    ciSup_le fun v => hv v.1 v.2
+  calc (Ds i) s + residualCurve β α (t - s)
+      ≤ (Ds i) s + ((Ds i) t - (Ds i) s) := add_le_add le_rfl hsup
+    _ = (Ds i) t := add_tsub_cancel_of_le ((Ds i).mono hst)
+
+/-- Relation form of blind multiplexing: an `n`-server offering a strict
+aggregate service curve serves each pair's flow `i` at the min-plus
+residual of the cross-traffic arrival constraints. -/
+theorem minConv_residualCurve_le_of_isStrictMinimalServiceCurve
+    {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0}
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) := by
+  refine minConv_residualCurve_le_of_strict_aggregate
+    (fun j => hcaus As Ds hp j) ?_ harr t
+  intro s t' hst hbl
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s t' hst
+    (by rwa [Curve.coe_sum, Curve.coe_sum])
+  rwa [Curve.sum_apply, Curve.sum_apply] at h
+
+/-- Relation form of the strict residual: restricting an `n`-server with
+a strict aggregate service curve to pairs whose cross-traffic departures
+are `α`-constrained, the residual server for flow `i` offers
+`residualCurve β α` as a strict service curve. -/
+theorem isStrictMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β α : ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S)) :
+    IsStrictMinimalServiceCurve (residualCurve β α)
+      (residualServer (fun A D => S A D ∧ IsMaximalArrivalBound
+        (fun x => ∑ j ∈ Finset.univ.erase i, (D j) x) α) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨hp, hdep⟩, rfl, rfl⟩ s t hst hbl
+  refine add_residualCurve_le_of_strict_aggregate
+    (fun j => hcaus As Ds hp j) ?_ hdep hst hbl
+  intro s' t' hst' hbl'
+  have h := hβ (∑ j, As j) (∑ j, Ds j) (aggregateServer_sum hp) s' t' hst'
+    (by rwa [Curve.coe_sum, Curve.coe_sum])
+  rwa [Curve.sum_apply, Curve.sum_apply] at h
+
+/-! ## Book restatement (blind multiplexing)
+An `n`-server offering a strict service curve `β` whose arrival
+processes have arrival curves `αᵢ`: the residual server for flow `i`
+offers the min-plus service curve `βᵢ = [β − ∑_{j≠i} αⱼ]⁺↑`, i.e.
+`Dᵢ ≥ Aᵢ ∗ βᵢ`. The strictness of the aggregate hypothesis and the
+non-strictness of the conclusion are both essential. If instead the
+aggregate departure process of the cross-traffic is constrained by `α`,
+the residual server offers the *strict* service curve `[β − α]⁺↑`. -/
+example {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0}
+    {α : ι → ℝ≥0 → ℝ≥0}
+    (hSrv : IsServerN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    {i : ι} (harr : ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(As j) (α j))
+    (t : ℝ≥0) :
+    minConv (Deviation.liftENN ⇑(As i))
+        (Deviation.liftENN (residualCurve β
+          (fun v => ∑ j ∈ Finset.univ.erase i, α j v))) t
+      ≤ ((Ds i) t : ℝ≥0∞) :=
+  minConv_residualCurve_le_of_isStrictMinimalServiceCurve
+    hSrv.1 hβ hp harr t
+
 end DeepWiki

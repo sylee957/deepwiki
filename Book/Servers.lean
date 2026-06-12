@@ -111,6 +111,12 @@ noncomputable def Curve.evalHom (t : ℝ≥0) : Curve →+ ℝ≥0 where
     (t : ℝ≥0) : (∑ i ∈ s, A i) t = ∑ i ∈ s, A i t :=
   map_sum (Curve.evalHom t) A s
 
+/-- The underlying function of a finite sum of curves is the pointwise
+sum of the underlying functions. -/
+theorem Curve.coe_sum {ι : Type*} (s : Finset ι) (A : ι → Curve) :
+    ⇑(∑ i ∈ s, A i) = fun t => ∑ i ∈ s, A i t :=
+  funext fun t => Curve.sum_apply s A t
+
 /-- Lift a `Curve` into the `(min,plus)` function dioid `Fmin` via `liftFmin`. -/
 abbrev Curve.liftFmin (A : Curve) : Fmin := DeepWiki.liftFmin ⇑A
 
