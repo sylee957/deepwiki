@@ -659,4 +659,37 @@ theorem mem_minimalServiceRel_delay_of_exists_systemClosure (T : ℝ≥0) {A D :
   obtain ⟨n, hn, hmem⟩ := h
   exact systemClosure_compPow_strictServiceRelEReal_delayDiv_le T hn A D hmem
 
+/-- The relation `⋃ₙ (S_strict(δ_{T/n}))ⁿ` (over `n ≥ 1`): a pair is related when
+some positive-length tandem of strict `δ_{T/n}` servers produces it. This is the
+system whose §9.3 closure Lemma 9.5 identifies with `S_mp(δ_T)`. -/
+def delayTandemUnion (T : ℝ≥0) : Curve → Curve → Prop :=
+  fun A D => ∃ n : ℕ, 0 < n ∧
+    compPow (strictServiceRelEReal (delayEReal (T / n))) n A D
+
+/-- `delayTandemUnion T A D` unfolds to the existence of a positive `n`-tandem of
+strict `δ_{T/n}` servers carrying `A` to `D`. -/
+theorem mem_delayTandemUnion_iff {T : ℝ≥0} {A D : Curve} :
+    delayTandemUnion T A D ↔
+      ∃ n : ℕ, 0 < n ∧
+        compPow (strictServiceRelEReal (delayEReal (T / n))) n A D :=
+  Iff.rfl
+
+/-- Every tandem in the union is min-plus served by `δ_T`:
+`⋃ₙ (S_strict(δ_{T/n}))ⁿ ⊆ S_mp(δ_T)`. -/
+theorem delayTandemUnion_le_minimalServiceRel_delay (T : ℝ≥0) :
+    delayTandemUnion T ≤ minimalServiceRel (delayEReal T) := by
+  rintro A D ⟨n, hn, hmem⟩
+  exact compPow_strictServiceRelEReal_delayDiv_le T hn A D hmem
+
+/-- **Lemma 9.5, `⊆` direction (book form, union inside the closure)**: the §9.3
+closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` is min-plus served by `δ_T`,
+`S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) ⊆ S_mp(δ_T)`. This is the genuine left-hand side of
+Lemma 9.5 (stronger than `⋃ₙ S̄((S_strict(δ_{T/n}))ⁿ)`, which it contains via
+`systemClosure_mono`). The reverse inclusion (the Figure 9.4 burst-train dilution
+as `n → ∞`) completes the equality. -/
+theorem systemClosure_delayTandemUnion_le (T : ℝ≥0) :
+    systemClosure (delayTandemUnion T) ≤ minimalServiceRel (delayEReal T) :=
+  le_trans (systemClosure_mono (delayTandemUnion_le_minimalServiceRel_delay T))
+    (systemClosure_minimalServiceRel_delay_le T)
+
 end DeepWiki
