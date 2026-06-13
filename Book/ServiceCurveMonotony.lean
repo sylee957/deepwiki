@@ -366,6 +366,87 @@ theorem minimalServiceRel_monoCexBetaB_le_monoCexBetaA :
         curveEReal_zero, add_zero]
       exact curveEReal_nonneg D t
 
+/-- A separating departure: `D = min(t − 1, 1)` (the closure of `λ₁ ∗ β`).
+It lies in `S_mp(β)` but not `S_mp(β')`, so the inclusion is proper. -/
+noncomputable def monoCexSep : Curve where
+  toFun := fun t => min (t - 1) 1
+  mono := fun _ _ h => min_le_min (tsub_le_tsub_right h 1) le_rfl
+  zero := by
+    show min ((0 : ℝ≥0) - 1) 1 = 0
+    rw [tsub_eq_zero_of_le zero_le_one, min_eq_left zero_le_one]
+  pwc := isPiecewiseContinuous_of_continuous _
+    ((continuous_sub_right 1).min continuous_const)
+  leftCont := isLeftContinuous_of_continuous _
+    ((continuous_sub_right 1).min continuous_const)
+
+/-- `monoCexSep t = min (t - 1) 1`. -/
+theorem monoCexSep_apply (t : ℝ≥0) : monoCexSep t = min (t - 1) 1 := rfl
+
+/-- The identity arrival `A t = t` (the rate-`1` line), the separating input. -/
+noncomputable def monoCexArr : Curve where
+  toFun := fun t => t
+  mono := fun _ _ h => h
+  zero := rfl
+  pwc := isPiecewiseContinuous_of_continuous _ continuous_id
+  leftCont := isLeftContinuous_of_continuous _ continuous_id
+
+/-- `monoCexArr t = t`. -/
+theorem monoCexArr_apply (t : ℝ≥0) : monoCexArr t = t := rfl
+
+/-- The separating departure is served by `β` (under the rate-`1` arrival). -/
+theorem monoCexSep_mem_monoCexBetaA :
+    minimalServiceRel monoCexBetaA monoCexArr monoCexSep := by
+  rw [mem_minimalServiceRel_iff]
+  refine ⟨fun t => ?_, fun t => ?_⟩
+  · show monoCexSep t ≤ monoCexArr t
+    rw [monoCexArr_apply, monoCexSep_apply]
+    exact le_trans (min_le_left _ _) tsub_le_self
+  · rcases le_or_gt t 1 with ht1 | ht1
+    · refine le_trans (minConv_le_add (curveEReal monoCexArr) monoCexBetaA (zero_add t)) ?_
+      rw [show monoCexBetaA t = 0 from if_neg (fun h => absurd h.1 (not_lt.mpr ht1)),
+        curveEReal_zero, add_zero]
+      exact curveEReal_nonneg monoCexSep t
+    · rcases le_or_gt t 2 with ht2 | ht2
+      · have h1t : (1 : ℝ≥0) ≤ t := ht1.le
+        have htm1 : t - 1 ≤ 1 :=
+          tsub_le_iff_right.mpr (le_trans ht2 (by norm_num : (2 : ℝ≥0) ≤ 1 + 1))
+        refine le_trans (minConv_le_add (curveEReal monoCexArr) monoCexBetaA
+          (tsub_add_cancel_of_le h1t)) (le_of_eq ?_)
+        rw [show monoCexBetaA 1 = 0 from if_neg (fun h => absurd h.1 (lt_irrefl 1)), add_zero,
+          curveEReal_apply, curveEReal_apply, monoCexArr_apply,
+          show monoCexSep t = t - 1 from by rw [monoCexSep_apply, min_eq_left htm1]]
+      · refine le_trans (minConv_le_add (curveEReal monoCexArr) monoCexBetaA (zero_add t)) ?_
+        rw [show monoCexBetaA t = 0 from if_neg (fun h => absurd h.2 (not_le.mpr ht2)),
+          curveEReal_zero, add_zero]
+        exact curveEReal_nonneg monoCexSep t
+
+/-- The separating departure is NOT served by `β'`: at `t = 1`, `(λ₁ ∗ β') 1 = 1`
+but `D 1 = 0`. -/
+theorem monoCexSep_not_mem_monoCexBetaB :
+    ¬ minimalServiceRel monoCexBetaB monoCexArr monoCexSep := by
+  rw [mem_minimalServiceRel_iff]
+  rintro ⟨-, hconv⟩
+  have hge : (1 : EReal) ≤ minConv (curveEReal monoCexArr) monoCexBetaB 1 := by
+    have h := curveEReal_one_le_minConv_monoCexBetaB monoCexArr
+    rwa [curveEReal_apply, monoCexArr_apply, NNReal.coe_one, EReal.coe_one] at h
+  have hD1 : curveEReal monoCexSep 1 = 0 := by
+    rw [curveEReal_apply,
+      show monoCexSep 1 = 0 from by rw [monoCexSep_apply, tsub_self, min_eq_left zero_le_one],
+      NNReal.coe_zero, EReal.coe_zero]
+  exact absurd (le_trans hge ((hconv 1).trans_eq hD1)) (not_le.mpr (by exact_mod_cast zero_lt_one : (0 : EReal) < 1))
+
+/-- The reverse inclusion fails (the separating departure witnesses it). -/
+theorem not_minimalServiceRel_monoCexBetaA_le_monoCexBetaB :
+    ¬ minimalServiceRel monoCexBetaA ≤ minimalServiceRel monoCexBetaB := fun h =>
+  monoCexSep_not_mem_monoCexBetaB
+    (h monoCexArr monoCexSep monoCexSep_mem_monoCexBetaA)
+
+/-- The inclusion is **proper**: `S_mp(β) ⊋ S_mp(β')`. -/
+theorem minimalServiceRel_monoCexBetaB_lt_monoCexBetaA :
+    minimalServiceRel monoCexBetaB < minimalServiceRel monoCexBetaA :=
+  lt_of_le_not_ge minimalServiceRel_monoCexBetaB_le_monoCexBetaA
+    not_minimalServiceRel_monoCexBetaA_le_monoCexBetaB
+
 /-- **The converse of monotony is a non-theorem**: `S_mp(β) ⊇ S_mp(β')` does not
 force `β ≤ β'` — the relation inclusion holds for incomparable `β`, `β'`. -/
 theorem not_forall_minimalServiceRel_le_imp_le :
