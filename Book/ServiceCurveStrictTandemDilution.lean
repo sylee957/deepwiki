@@ -229,3 +229,74 @@ theorem warp_leftCont {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) :
     · have h := hτ.1; rw [← NNReal.coe_lt_coe] at h; push_cast at h; linarith
     · have h := hτ.2; rw [← NNReal.coe_lt_coe] at h; linarith [hub]
   exact (warpPeriod_continuous d r j).continuousWithinAt.congr_of_eventuallyEq hev hval
+
+/-- The warp is continuous: left-continuous, and right-continuous because it follows
+the continuous period formula `warpPeriod d r k` on each `[kd, (k+1)d)`. -/
+theorem warp_continuous {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) : Continuous (warp d r) := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  rw [continuous_iff_continuousAt]
+  intro u
+  rw [← continuousWithinAt_univ, ← Set.Iic_union_Ici (a := u), continuousWithinAt_union]
+  set k : ℕ := ⌊(u : ℝ) / d⌋₊ with hk
+  have hval : warp d r u = warpPeriod d r k u := warp_eq_warpPeriod hk.symm
+  have huk : (d : ℝ) * k ≤ u := by
+    have h := Nat.floor_le (show (0 : ℝ) ≤ (u : ℝ) / d by positivity)
+    rw [← hk, le_div_iff₀ hd', mul_comm] at h; linarith
+  refine ⟨?_, ?_⟩
+  · rw [show Set.Iic u = Set.Iio u ∪ {u} from by
+        ext x; simp only [Set.mem_Iic, Set.mem_union, Set.mem_Iio, Set.mem_singleton_iff]
+        exact le_iff_lt_or_eq,
+      continuousWithinAt_union]
+    exact ⟨warp_leftCont hr hrd u, continuousWithinAt_singleton⟩
+  · have hu_lt : (u : ℝ) < d * (k + 1) := by
+      have h := Nat.lt_floor_add_one ((u : ℝ) / d)
+      rw [← hk, div_lt_iff₀ hd'] at h; nlinarith [h]
+    have hu_lt' : u < d * ((k : ℝ≥0) + 1) := by
+      rw [← NNReal.coe_lt_coe]; push_cast; exact hu_lt
+    have hev : warp d r =ᶠ[nhdsWithin u (Set.Ici u)] warpPeriod d r k := by
+      filter_upwards [Ico_mem_nhdsGE hu_lt'] with τ hτ
+      refine warp_eq_warpPeriod (warp_floor_eq hd ?_ ?_)
+      · have h := hτ.1; rw [← NNReal.coe_le_coe] at h; linarith
+      · have h := hτ.2; rw [← NNReal.coe_lt_coe] at h; push_cast at h; linarith
+    exact (warpPeriod_continuous d r k).continuousWithinAt.congr_of_eventuallyEq hev hval
+
+/-- **Piecewise continuity is preserved by precomposition with a continuous monotone
+map.** If `A` is piecewise continuous and `g` is continuous and monotone, then `A ∘ g`
+is piecewise continuous: on each level set `{g = a}` (an interval, by monotonicity)
+`A ∘ g` is constant, so its discontinuities sit only at the `≤ 2` endpoints, and `A`
+has finitely many discontinuity values on `[0, g T]`. -/
+theorem IsPiecewiseContinuous.comp_continuous_monotone {A : ℝ≥0 → ℝ≥0}
+    (hA : IsPiecewiseContinuous A) {g : ℝ≥0 → ℝ≥0} (hgc : Continuous g) (hgm : Monotone g) :
+    IsPiecewiseContinuous (fun τ => A (g τ)) := by
+  intro T
+  set S : ℝ≥0 → Set ℝ≥0 := fun a => {σ | σ ∈ Set.Icc 0 T ∧ g σ = a} with hSdef
+  have hbddB : ∀ a, BddBelow (S a) := fun a => ⟨0, fun σ hσ => hσ.1.1⟩
+  have hbddA : ∀ a, BddAbove (S a) := fun a => ⟨T, fun σ hσ => hσ.1.2⟩
+  refine Set.Finite.subset ((hA (g T)).biUnion (fun a _ =>
+    (Set.finite_singleton (sInf (S a))).union (Set.finite_singleton (sSup (S a))))) ?_
+  rintro τ hτ
+  have hτdisc : ¬ ContinuousAt (fun τ => A (g τ)) τ := hτ.1
+  have hτT : τ ∈ Set.Icc 0 T := hτ.2
+  have hgτD : g τ ∈ discontSet A ∩ Set.Icc 0 (g T) :=
+    ⟨fun hcon => hτdisc (hcon.comp hgc.continuousAt), ⟨zero_le', hgm hτT.2⟩⟩
+  have hτS : τ ∈ S (g τ) := ⟨hτT, rfl⟩
+  refine Set.mem_biUnion hgτD ?_
+  by_contra hcon
+  rw [Set.mem_union, Set.mem_singleton_iff, Set.mem_singleton_iff] at hcon
+  push Not at hcon
+  obtain ⟨hne1, hne2⟩ := hcon
+  obtain ⟨σ1, hσ1S, hσ1τ⟩ := exists_lt_of_csInf_lt ⟨τ, hτS⟩
+    (lt_of_le_of_ne (csInf_le (hbddB _) hτS) (Ne.symm hne1))
+  obtain ⟨σ2, hσ2S, hτσ2⟩ := exists_lt_of_lt_csSup ⟨τ, hτS⟩
+    (lt_of_le_of_ne (le_csSup (hbddA _) hτS) hne2)
+  refine hτdisc ((continuousAt_const : ContinuousAt (fun _ : ℝ≥0 => A (g τ)) τ).congr ?_)
+  filter_upwards [Ioo_mem_nhds hσ1τ hτσ2] with σ' hσ'
+  show A (g τ) = A (g σ')
+  have hgeq : g σ' = g τ := by
+    have h1 : g σ1 ≤ g σ' := hgm (le_of_lt hσ'.1)
+    have h2 : g σ' ≤ g σ2 := hgm (le_of_lt hσ'.2)
+    rw [hσ1S.2] at h1
+    rw [hσ2S.2] at h2
+    exact le_antisymm h2 h1
+  rw [hgeq]
