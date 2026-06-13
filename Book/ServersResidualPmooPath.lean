@@ -345,4 +345,128 @@ theorem sum_add_pathTelescope_le {ι : Type*} [Fintype ι] {F : ℕ → ι → C
       _ = P + ∑ j, (F (lst j + 1) j) (node (lst j + 1)) := telsum
   exact le_of_add_le_add_left key
 
+/-! ## Assembly: the general per-path PMOO service curve (book Theorem 10.1)
+The telescope bounds the tagged flow's service by the cascaded
+`∑ₕ β⁽ʰ⁾(uₕ)` less each cross-flow's arrival over its own sub-path; the
+operator is the infimum over splits, reached at the cascade widths. -/
+
+/-- Causality chained over a flow's contiguous path: `Fⱼ^{b+1}(x) ≤ Fⱼ^a(x)`
+for `a ≤ b ≤ n` (output after the path at most input before it). -/
+theorem causality_fold {m : ℕ} {F : ℕ → Fin m → Curve} {n : ℕ}
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j) (j : Fin m) (x : ℝ≥0) :
+    ∀ {a b : ℕ}, a ≤ b → b ≤ n → (F (b + 1) j) x ≤ (F a j) x := by
+  intro a b hab
+  induction b, hab using Nat.le_induction with
+  | base => intro hbn; exact hc a hbn j x
+  | succ b hab ih => intro hbn; exact le_trans (hc (b + 1) hbn j x) (ih (by omega))
+
+/-- **The tagged-flow floor**: a flow crossing every hop is at most as far
+along at the cascade bottom (input) as at the top (output),
+`F⁰_tg(s₀) ≤ Fⁿ⁺¹_tg(t)` — full service at each cascade start plus
+monotonicity. -/
+theorem pathNode_floor {m : ℕ} {F : ℕ → Fin m → Curve} {S : ℕ → Finset (Fin m)}
+    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+    (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (htgfst : fst tg = 0) (htglst : lst tg = n) :
+    (F 0 tg) (pathNode F S n t 0) ≤ (F (n + 1) tg) (pathNode F S n t (n + 1)) := by
+  set node := pathNode F S n t with hnode
+  have htgmem : ∀ h, h ≤ n → tg ∈ S h := fun h hh =>
+    (hS h tg).mpr ⟨htgfst ▸ Nat.zero_le h, htglst ▸ hh⟩
+  have hstep : ∀ h, h ≤ n → (F h tg) (node h) ≤ (F (h + 1) tg) (node (h + 1)) := by
+    intro h hh
+    have heq : (F (h + 1) tg) (node h) = (F h tg) (node h) := by
+      rw [hnode, pathNode_eq F S n t hh]
+      exact apply_start_sum_finset_eq (S h) (fun k x => hc h hh k x)
+        (fun k => (F h k).leftCont) (fun k => (F (h + 1) k).leftCont)
+        (fun k => ((F h k).zero).trans ((F (h + 1) k).zero).symm) _ (htgmem h hh)
+    calc (F h tg) (node h) = (F (h + 1) tg) (node h) := heq.symm
+      _ ≤ (F (h + 1) tg) (node (h + 1)) := (F (h + 1) tg).mono (pathNode_le_succ F S n t h)
+  have hfold : ∀ k, k ≤ n + 1 → (F 0 tg) (node 0) ≤ (F k tg) (node k) := by
+    intro k
+    induction k with
+    | zero => intro _; exact le_rfl
+    | succ k ih => intro hk; exact le_trans (ih (by omega)) (hstep k (by omega))
+  exact hfold (n + 1) le_rfl
+
+/-- **The per-path PMOO residual is a service curve for the tagged flow**
+(book Theorem 10.1, strict aggregates, blind multiplexing): in a tandem
+where each cross-flow `j ≠ tg` is `αⱼ`-constrained on its contiguous
+sub-path `[fst j, lst j]` and the tagged flow crosses every hop, flow `tg`
+obeys the strict service inequality for `pmooPathResidual` from the
+cascade bottom. Charging the tagged flow itself is suppressed (`α tg = 0`);
+each cross-flow pays once over its own path. -/
+theorem add_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
+    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+    (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
+      IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x) (fun x => ∑ j ∈ S h, (F (h + 1) j) x)
+        (Set.Ioc s t') →
+      (∑ j ∈ S h, (F (h + 1) j) s) + β h (t' - s) ≤ ∑ j ∈ S h, (F (h + 1) j) t')
+    (hpath : ∀ j, fst j ≤ lst j ∧ lst j ≤ n)
+    (harr : ∀ j, j ≠ tg → IsMaximalArrivalBound (F (fst j) j) (α j))
+    (htgfst : fst tg = 0) (htglst : lst tg = n) (hαtg : α tg = 0) :
+    (F 0 tg) (pathNode F S n t 0)
+        + pmooPathResidual n β α fst lst (t - pathNode F S n t 0)
+      ≤ (F (n + 1) tg) t := by
+  set node := pathNode F S n t with hnode
+  have hmono := pathNode_mono F S n t
+  have hsumu : ∑ h ∈ range (n + 1), (node (h + 1) - node h) = t - node 0 := by
+    have h := sum_range_width_telescope hmono n
+    rwa [pathNode_succ F S n t] at h
+  have hwin : ∀ i, (∑ h ∈ pathHops n fst lst i, (node (h + 1) - node h))
+      = node (lst i + 1) - node (fst i) := fun i => by
+    rw [pathHops_eq_Ico (hpath i).2]
+    exact sum_Ico_width_telescope hmono (le_trans (hpath i).1 (Nat.le_succ _))
+  have htel := sum_add_pathTelescope_le (β := β) t hS hc hstrict hpath
+  have hcross : ∀ j ∈ univ.erase tg,
+      (F (lst j + 1) j) (node (lst j + 1))
+        ≤ (F (fst j) j) (node (fst j)) + α j (node (lst j + 1) - node (fst j)) := by
+    intro j hj
+    have hjtg : j ≠ tg := Finset.ne_of_mem_erase hj
+    have harr' := (isMaximalArrivalBound_iff_increment _ _).mp (harr j hjtg)
+      (node (fst j)) (node (lst j + 1) - node (fst j))
+    rw [add_tsub_cancel_of_le (hmono (le_trans (hpath j).1 (Nat.le_succ _)))] at harr'
+    exact le_trans (causality_fold hc j _ (hpath j).1 (hpath j).2) harr'
+  refine le_trans (add_le_add le_rfl
+    (pmooPathResidual_le (β := β) (α := α) (fst := fst) (lst := lst) hsumu)) ?_
+  have hbody : pmooPathBody n β α fst lst (fun h => node (h + 1) - node h)
+      = (∑ h ∈ range (n + 1), β h (node (h + 1) - node h))
+        - (∑ i, α i (node (lst i + 1) - node (fst i))) := by
+    rw [pmooPathBody]
+    congr 1
+    exact Finset.sum_congr rfl fun i _ => by rw [hwin i]
+  rw [hbody]
+  set B := ∑ h ∈ range (n + 1), β h (node (h + 1) - node h) with hB
+  set X := ∑ i, α i (node (lst i + 1) - node (fst i)) with hX
+  have hnt : node (n + 1) = t := pathNode_succ F S n t
+  have hclub : B + (F 0 tg) (node 0) ≤ (F (n + 1) tg) t + X := by
+    rw [← Finset.add_sum_erase univ (fun j => (F (fst j) j) (node (fst j))) (mem_univ tg),
+        ← Finset.add_sum_erase univ (fun j => (F (lst j + 1) j) (node (lst j + 1)))
+          (mem_univ tg), htgfst, htglst, hnt] at htel
+    have hXsplit : X = ∑ j ∈ univ.erase tg, α j (node (lst j + 1) - node (fst j)) := by
+      rw [hX, ← Finset.add_sum_erase univ (fun j => α j (node (lst j + 1) - node (fst j)))
+        (mem_univ tg), hαtg]
+      simp
+    have hcrosssum : (∑ j ∈ univ.erase tg, (F (lst j + 1) j) (node (lst j + 1)))
+        ≤ (∑ j ∈ univ.erase tg, (F (fst j) j) (node (fst j)))
+          + ∑ j ∈ univ.erase tg, α j (node (lst j + 1) - node (fst j)) := by
+      rw [← Finset.sum_add_distrib]; exact Finset.sum_le_sum hcross
+    rw [hXsplit, ← NNReal.coe_le_coe]
+    have h1 := NNReal.coe_le_coe.mpr htel
+    have h2 := NNReal.coe_le_coe.mpr hcrosssum
+    push_cast at h1 h2 ⊢
+    linarith
+  have hfloor : (F 0 tg) (node 0) ≤ (F (n + 1) tg) t := by
+    have h := pathNode_floor (F := F) (S := S) t hS hc htgfst htglst
+    rwa [pathNode_succ F S n t] at h
+  rcases le_total X B with hXB | hBX
+  · rw [← NNReal.coe_le_coe]
+    have hc' := NNReal.coe_le_coe.mpr hclub
+    push_cast [NNReal.coe_sub hXB] at hc' ⊢
+    linarith
+  · rw [tsub_eq_zero_of_le hBX, add_zero]; exact hfloor
+
 end DeepWiki
