@@ -70,6 +70,38 @@ theorem variableCapacityOutput_le_add_capacity {A C : ℝ≥0 → ℝ≥0} (hCmo
     tsub_add_tsub_cancel (hCmono hst) (hCmono hs)]
   exact variableCapacityOutput_le_add (hs.trans hst)
 
+/-- **Waste monotonicity**: the output increment is dominated by the
+capacity increment, `D(t) + C(s) ≤ D(s) + C(t)` for `s ≤ t` — the engine
+behind the finite-family merge. -/
+theorem rep_add_le_add {A C : ℝ≥0 → ℝ≥0} (hCmono : Monotone C)
+    {s t : ℝ≥0} (hst : s ≤ t) :
+    variableCapacityOutput A C t + C s
+      ≤ variableCapacityOutput A C s + C t := by
+  calc variableCapacityOutput A C t + C s
+      ≤ (variableCapacityOutput A C s + (C t - C s)) + C s :=
+        add_le_add (variableCapacityOutput_le_add_capacity hCmono hst) le_rfl
+    _ = variableCapacityOutput A C s + ((C t - C s) + C s) := by
+        rw [add_assoc]
+    _ = variableCapacityOutput A C s + C t := by
+        rw [tsub_add_cancel_of_le (hCmono hst)]
+
+/-- The **waste** `C − D` is non-decreasing: the capacity outpaces the
+output, `C(s) − D(s) ≤ C(t) − D(t)` for `s ≤ t`. The truncated reading is
+genuine since `D ≤ C` for null-at-origin arrivals. -/
+theorem sub_variableCapacityOutput_mono {A C : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0)
+    (hCmono : Monotone C) :
+    Monotone (fun t => C t - variableCapacityOutput A C t) := by
+  intro s t hst
+  have hDs : variableCapacityOutput A C s ≤ C s :=
+    variableCapacityOutput_le_capacity h0 s
+  have hDt : variableCapacityOutput A C t ≤ C t :=
+    variableCapacityOutput_le_capacity h0 t
+  rw [← NNReal.coe_le_coe, NNReal.coe_sub hDs, NNReal.coe_sub hDt]
+  have h := rep_add_le_add (A := A) hCmono hst
+  rw [← NNReal.coe_le_coe] at h
+  push_cast at h ⊢
+  linarith
+
 /-- The output is monotone for monotone arrivals and capacity. -/
 theorem variableCapacityOutput_mono {A C : ℝ≥0 → ℝ≥0} (hAmono : Monotone A)
     (hCmono : Monotone C) : Monotone (variableCapacityOutput A C) := by
