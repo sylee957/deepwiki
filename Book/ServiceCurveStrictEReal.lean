@@ -87,6 +87,23 @@ theorem strictServiceRel_eq_strictServiceRelEReal_liftEReal {β : ℝ≥0 → �
     rw [curveEReal_apply, curveEReal_apply] at hbnd
     exact_mod_cast hbnd
 
+/-- **The hierarchy `strict ⊆ mp` for extended curves**: every `EReal`-strict
+pair is min-plus served. Anchor the convolution at the start `σ` of `t`'s
+backlogged period — where `A σ = D σ` — so
+`A ∗ beta (t) ≤ A σ + beta (t − σ) = D σ + beta (t − σ) ≤ D t`. -/
+theorem strictServiceRelEReal_le_minimalServiceRel {beta : ℝ≥0 → EReal} :
+    strictServiceRelEReal beta ≤ minimalServiceRel beta := by
+  intro A D hp
+  have hc : ∀ x, D x ≤ A x := fun x => hp.1 x
+  refine mem_minimalServiceRel_iff.mpr ⟨hp.1, fun t => ?_⟩
+  calc minConv (curveEReal A) beta t
+      ≤ curveEReal A (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) :=
+        minConv_le_add _ _ (add_tsub_cancel_of_le (start_le ⇑A ⇑D t))
+    _ = curveEReal D (start ⇑A ⇑D t) + beta (t - start ⇑A ⇑D t) := by
+        rw [curveEReal_apply, curveEReal_apply, A.apply_start_eq D hc t]
+    _ ≤ curveEReal D t :=
+        hp.2 (start ⇑A ⇑D t) t (start_le ⇑A ⇑D t) (isBacklogged_Ioc_start hc t)
+
 /-! ## The pure-delay curve `δ_T`
 `delayEReal T` (`Book.RealCurves`, `= delay T`) is the pure-delay service curve
 `δ_T`: `0` up to `T`, `⊤ = +∞` past it (`delay_eq_zero`/`delay_eq_top`); at
@@ -147,5 +164,11 @@ example {T : ℝ≥0} (A D : Curve) :
 example {β : ℝ≥0 → ℝ≥0} :
     strictServiceRel β = strictServiceRelEReal (liftEReal β) :=
   strictServiceRel_eq_strictServiceRelEReal_liftEReal
+
+/-! The delay curve lands in the hierarchy: `S_strict(δ_T) ⊆ S_mp(δ_T)` — a
+delay-bounded server is min-plus served by `δ_T`. -/
+example (T : ℝ≥0) :
+    strictServiceRelEReal (delayEReal T) ≤ minimalServiceRel (delayEReal T) :=
+  strictServiceRelEReal_le_minimalServiceRel
 
 end DeepWiki
