@@ -280,4 +280,80 @@ example {A D : ℝ≥0 → ℝ≥0} (hAmono : Monotone A) (hDmono : Monotone D)
       leftLim A (start A D t) = leftLim D (start A D t) :=
   apply_start_eq_or_leftLim_start_eq hAmono hDmono h0 hc t
 
+/-- **The disjunction is sharp** — the blanket left-limit relation is
+false: a departure burst exactly at an attained start makes the
+values agree while the left limits differ. Witness: identity
+arrivals against the step output `1_{[1,∞)}` — the start of the
+period of `2` is attained at `1` with both values `1` and `(1, 2]`
+backlogged, yet `A(1−) = 1 ≠ 0 = D(1−)`. -/
+example :
+    ∃ A D : ℝ≥0 → ℝ≥0, Monotone A ∧ Monotone D ∧ A 0 = D 0
+      ∧ (∀ x, D x ≤ A x)
+      ∧ start A D 2 = 1
+      ∧ A (start A D 2) = D (start A D 2)
+      ∧ IsBacklogged A D (Set.Ioc 1 2)
+      ∧ leftLim A (start A D 2) ≠ leftLim D (start A D 2) := by
+  have hDmono : Monotone (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) := by
+    intro a b hab
+    show (if a < 1 then (0 : ℝ≥0) else 1) ≤ if b < 1 then 0 else 1
+    by_cases ha : a < 1
+    · rw [if_pos ha]
+      exact zero_le'
+    · rw [if_neg ha, if_neg fun hb => ha (lt_of_le_of_lt hab hb)]
+  have hstart : start id (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) 2
+      = 1 := by
+    refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) ?_
+    · show (0 : ℝ≥0) = if (0 : ℝ≥0) < 1 then 0 else 1
+      rw [if_pos zero_lt_one]
+    · by_contra h1u
+      rw [not_le] at h1u
+      have heq : u = if u < 1 then (0 : ℝ≥0) else 1 := hu.2
+      rw [if_neg (not_lt.mpr h1u.le)] at heq
+      exact absurd heq.symm (ne_of_lt h1u)
+    · refine le_csSup ⟨2, fun x hx => hx.1⟩ ⟨one_le_two, ?_⟩
+      show (1 : ℝ≥0) = if (1 : ℝ≥0) < 1 then 0 else 1
+      rw [if_neg (lt_irrefl 1)]
+  refine ⟨id, fun y => if y < 1 then (0 : ℝ≥0) else 1, monotone_id,
+    hDmono, ?_, ?_, hstart, ?_, ?_, ?_⟩
+  · show (0 : ℝ≥0) = if (0 : ℝ≥0) < 1 then 0 else 1
+    rw [if_pos zero_lt_one]
+  · intro x
+    show (if x < 1 then (0 : ℝ≥0) else 1) ≤ id x
+    by_cases hx : x < 1
+    · rw [if_pos hx]
+      exact zero_le'
+    · rw [if_neg hx]
+      exact not_lt.mp hx
+  · rw [hstart]
+    show (1 : ℝ≥0) = if (1 : ℝ≥0) < 1 then 0 else 1
+    rw [if_neg (lt_irrefl 1)]
+  · intro u hu
+    show (if u < 1 then (0 : ℝ≥0) else 1) < id u
+    rw [if_neg (not_lt.mpr (le_of_lt hu.1))]
+    exact hu.1
+  · rw [hstart]
+    have hbot : 𝓝[<] (1 : ℝ≥0) ≠ ⊥ :=
+      (nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩).ne
+    rw [monotone_id.leftLim_eq_sSup hbot,
+      hDmono.leftLim_eq_sSup hbot, Set.image_id]
+    have himg : (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1)
+        '' Set.Iio 1 = {0} := by
+      refine Set.eq_singleton_iff_unique_mem.mpr
+        ⟨⟨0, Set.mem_Iio.mpr zero_lt_one, if_pos zero_lt_one⟩, ?_⟩
+      rintro x ⟨y, hy, rfl⟩
+      exact if_pos hy
+    have hIio : sSup (Set.Iio (1 : ℝ≥0)) = 1 := by
+      refine le_antisymm
+        (csSup_le ⟨0, Set.mem_Iio.mpr zero_lt_one⟩
+          fun x hx => le_of_lt hx) ?_
+      refine (le_csSup_iff ⟨1, fun x hx => le_of_lt hx⟩
+        ⟨0, Set.mem_Iio.mpr zero_lt_one⟩).mpr ?_
+      intro b hb
+      by_contra hb1
+      rw [not_le] at hb1
+      obtain ⟨c, hbc, hc1⟩ := exists_between hb1
+      exact absurd (hb (Set.mem_Iio.mpr hc1)) (not_le.mpr hbc)
+    rw [himg, csSup_singleton, hIio]
+    exact one_ne_zero
+
 end DeepWiki
