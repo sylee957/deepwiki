@@ -1,3 +1,4 @@
+import Mathlib.Analysis.Convex.Function
 import Book.ServersResidualGps
 
 /-! # GPS residual service, improved
@@ -56,6 +57,99 @@ theorem gatedResidual_zero (β : ℝ≥0 → ℝ≥0) :
     gatedResidual β (fun _ => 0) 0 = β := by
   funext v
   rw [gatedResidual_apply_of_le zero_le', tsub_zero]
+
+/-- A convex function nonpositive at the origin and nonnegative at a
+positive gate is nonnegative and non-decreasing past the gate: the
+secant through the origin pins every later value. -/
+theorem ConvexOn.nonneg_and_le_of_gate {g : ℝ → ℝ}
+    (hg : ConvexOn ℝ (Set.Ici 0) g) (h0 : g 0 ≤ 0)
+    {T : ℝ} (hT : 0 < T) (hgT : 0 ≤ g T) :
+    ∀ ⦃x y : ℝ⦄, T ≤ x → x ≤ y → 0 ≤ g x ∧ g x ≤ g y := by
+  have hsec : ∀ c z : ℝ, 0 < z → 0 ≤ c → c ≤ z →
+      g c ≤ (1 - c / z) * g 0 + (c / z) * g z := by
+    intro c z hz0 hc0 hcz
+    have hw1 : (0 : ℝ) ≤ 1 - c / z := by
+      have h1 : c / z ≤ 1 := (div_le_one hz0).mpr hcz
+      linarith
+    have hw2 : (0 : ℝ) ≤ c / z := div_nonneg hc0 hz0.le
+    have hab : (1 - c / z) + c / z = 1 := by ring
+    have hcomb := hg.2 (Set.mem_Ici.mpr le_rfl)
+      (Set.mem_Ici.mpr hz0.le) hw1 hw2 hab
+    rwa [smul_eq_mul, smul_eq_mul, smul_eq_mul, smul_eq_mul,
+      mul_zero, zero_add, div_mul_cancel₀ _ hz0.ne'] at hcomb
+  have hnn : ∀ z, T ≤ z → 0 ≤ g z := by
+    intro z hz
+    rcases eq_or_lt_of_le hz with rfl | hz'
+    · exact hgT
+    have hz0 : 0 < z := lt_trans hT hz'
+    have h := hsec T z hz0 hT.le hz
+    have hw : (0 : ℝ) ≤ 1 - T / z := by
+      have : T / z ≤ 1 := (div_le_one hz0).mpr hz
+      linarith
+    have hgz : 0 ≤ (T / z) * g z := by nlinarith
+    exact nonneg_of_mul_nonneg_right hgz (div_pos hT hz0)
+  intro x y hx hxy
+  refine ⟨hnn x hx, ?_⟩
+  rcases eq_or_lt_of_le hxy with rfl | hxy'
+  · exact le_rfl
+  have hx0 : 0 < x := lt_of_lt_of_le hT hx
+  have hy0 : 0 < y := lt_trans hx0 hxy'
+  have h := hsec x y hy0 hx0.le hxy
+  have hw : (0 : ℝ) ≤ 1 - x / y := by
+    have : x / y ≤ 1 := (div_le_one hy0).mpr hxy
+    linarith
+  have hgy := hnn y (le_trans hx hxy)
+  have hxy1 : x / y ≤ 1 := (div_le_one hy0).mpr hxy
+  nlinarith
+
+/-- **The convexity bridge**: a convex weighted gap
+`x ↦ c·β(x) − d·α(x)` (the book's convex `β` against a concave `α`)
+that starts below zero and is nonnegative at a positive gate yields
+both gate conditions of the improved-GPS aggregation — domination
+(`hcross`) and growth (`hgrow`) past the gate. -/
+theorem cross_and_grow_of_convexOn_gap {β α : ℝ≥0 → ℝ≥0}
+    {c d T : ℝ≥0}
+    (hg : ConvexOn ℝ (Set.Ici 0) (fun x : ℝ =>
+      (c : ℝ) * (β x.toNNReal : ℝ) - (d : ℝ) * (α x.toNNReal : ℝ)))
+    (h0 : c * β 0 ≤ d * α 0) (hT : 0 < T)
+    (hgate : d * α T ≤ c * β T) :
+    (∀ x, T ≤ x → d * α x ≤ c * β x)
+      ∧ ∀ x y, T ≤ x → x ≤ y →
+          c * β x + d * α y ≤ c * β y + d * α x := by
+  set g : ℝ → ℝ := fun x =>
+    (c : ℝ) * (β x.toNNReal : ℝ) - (d : ℝ) * (α x.toNNReal : ℝ)
+    with hgdef
+  have hval : ∀ x : ℝ≥0, g (x : ℝ)
+      = (c : ℝ) * (β x : ℝ) - (d : ℝ) * (α x : ℝ) := fun x => by
+    simp only [hgdef, Real.toNNReal_coe]
+  have hg0 : g 0 ≤ 0 := by
+    have h := hval 0
+    rw [NNReal.coe_zero] at h
+    rw [h]
+    have h0R : (c : ℝ) * (β 0 : ℝ) ≤ (d : ℝ) * (α 0 : ℝ) := by
+      exact_mod_cast h0
+    linarith
+  have hgT : 0 ≤ g (T : ℝ) := by
+    rw [hval T]
+    have hR : (d : ℝ) * (α T : ℝ) ≤ (c : ℝ) * (β T : ℝ) := by
+      exact_mod_cast hgate
+    linarith
+  have hTR : (0 : ℝ) < (T : ℝ) := by exact_mod_cast hT
+  have hkey := ConvexOn.nonneg_and_le_of_gate hg hg0 hTR hgT
+  constructor
+  · intro x hx
+    have h := (hkey (x := (x : ℝ)) (y := (x : ℝ))
+      (by exact_mod_cast hx) le_rfl).1
+    rw [hval x] at h
+    have : (d : ℝ) * (α x : ℝ) ≤ (c : ℝ) * (β x : ℝ) := by linarith
+    exact_mod_cast this
+  · intro x y hx hxy
+    have h := (hkey (x := (x : ℝ)) (y := (y : ℝ))
+      (by exact_mod_cast hx) (by exact_mod_cast hxy)).2
+    rw [hval x, hval y] at h
+    have : (c : ℝ) * (β x : ℝ) + (d : ℝ) * (α y : ℝ)
+        ≤ (c : ℝ) * (β y : ℝ) + (d : ℝ) * (α x : ℝ) := by linarith
+    exact_mod_cast this
 
 /-- **The constrained flow releases its share past its crossing
 time** — the improved-GPS aggregation step: in a GPS server with
