@@ -759,4 +759,25 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_superlinear (β : Curve) {ρ
   refine wsmpSup_not_mem β hbelow hov ?_
   rw [heq]; exact wsmpSup_mem β ρ
 
+/-- **The no-delay separation for every sub-linear curve** (the practical case
+of Theorem 9.5): a no-delay `β` bounded by some rate (`β t ≤ ρ₀·t`) has
+`wstrict(β) ⊊ mp(β)` — it is case B with `ρ = 2ρ₀+1`, stalling at `s = 1/2`
+below `ts = 1`. Covers rates, rate-latencies (no-delay part), and every
+bounded-rate flow; superlinear and infinite-initial-slope curves are the
+remaining (case-C / open) classes. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_subLinear (β : Curve) {ρ₀ : ℝ≥0}
+    (hsub : ∀ t, β t ≤ ρ₀ * t) (hpos : ∀ u, 0 < u → 0 < β u) :
+    weaklyStrictServiceRel ⇑β < minimalServiceRel (curveEReal β) := by
+  have hρρ : ρ₀ < 2 * ρ₀ + 1 := by
+    rw [show 2 * ρ₀ + 1 = ρ₀ + (ρ₀ + 1) from by ring]
+    exact lt_add_of_pos_right ρ₀ (by positivity)
+  refine weaklyStrictServiceRel_lt_minimalServiceRel_subRate β.mono β.leftCont β.pwc β.zero
+    (ρ := 2 * ρ₀ + 1) (s := 1 / 2) (by positivity) hpos
+    (fun u hu => (hsub u).trans_lt (mul_lt_mul_of_pos_right hρρ hu)) 1 (by norm_num) ?_
+  calc β 1 ≤ ρ₀ * 1 := hsub 1
+    _ = ρ₀ := mul_one _
+    _ < (2 * ρ₀ + 1) * (1 / 2) := by
+        rw [show (2 * ρ₀ + 1) * (1 / 2) = ρ₀ + 1 / 2 from by ring]
+        exact lt_add_of_pos_right ρ₀ (by norm_num)
+
 end DeepWiki
