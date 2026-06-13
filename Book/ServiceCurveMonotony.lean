@@ -243,6 +243,70 @@ theorem minimalServiceRel_le_iff {β β' : ℝ≥0 → ℝ≥0}
       show ((β t : ℝ) : EReal) ≤ ((β' t : ℝ) : EReal)
       exact_mod_cast hle t⟩
 
+/-- The burst–clip pair is strictly served at a *super-additive* `β`: on a
+backlogged period the output is `β` itself, so the strict bound
+`β s + β (t − s) ≤ β t` is exactly super-additivity of `β`. -/
+theorem clip_mem_strictServiceRel {β : ℝ≥0 → ℝ≥0} (M : ℝ≥0)
+    (hmono : Monotone β) (hlc : IsLeftContinuous β)
+    (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0)
+    (hsuper : IsSuperadditive β) :
+    strictServiceRel β (burstCurve M) (clipCurve β M hmono hlc hpwc h0) := by
+  refine ⟨(clip_mem_weaklyStrictServiceRel M hmono hlc hpwc h0).1,
+    fun s t hst hbl => ?_⟩
+  rcases eq_or_lt_of_le hst with rfl | hlt
+  · show clipFun β M s + β (s - s) ≤ clipFun β M s
+    rw [tsub_self, h0, add_zero]
+  · have htpos : 0 < t := lt_of_le_of_lt (zero_le' : (0 : ℝ≥0) ≤ s) hlt
+    have hbt : clipFun β M t < burstFun M t := hbl t ⟨hlt, le_rfl⟩
+    rw [burstFun_apply_of_ne M (ne_of_gt htpos)] at hbt
+    have hβtM : β t < M := by
+      by_contra hcon
+      rw [clipFun_eq_of_le (not_lt.mp hcon)] at hbt
+      exact absurd hbt (lt_irrefl M)
+    have hβsM : β s < M := lt_of_le_of_lt (hmono hst) hβtM
+    show clipFun β M s + β (t - s) ≤ clipFun β M t
+    rw [clipFun_eq_of_lt hβsM, clipFun_eq_of_lt hβtM]
+    calc β s + β (t - s) ≤ β (s + (t - s)) := hsuper s (t - s)
+      _ = β t := by rw [add_tsub_cancel_of_le hst]
+
+/-- Forcing direction for the strict comparison (super-additive `β'`):
+relation inclusion forces pointwise domination, via the always-backlogged
+burst–clip pair clipped just above the target value. -/
+theorem le_of_strictServiceRel_le {β β' : ℝ≥0 → ℝ≥0}
+    (hmono : Monotone β') (hlc : IsLeftContinuous β')
+    (hpwc : IsPiecewiseContinuous β') (h0 : β' 0 = 0)
+    (hsuper : IsSuperadditive β')
+    (h : strictServiceRel β' ≤ strictServiceRel β) :
+    β ≤ β' := by
+  intro t
+  have hM : β' t < β' t + 1 := lt_add_one _
+  have hp := h _ _ (clip_mem_strictServiceRel (β' t + 1) hmono hlc hpwc h0 hsuper)
+  have hbl : IsBacklogged (⇑(burstCurve (β' t + 1)))
+      (⇑(clipCurve β' (β' t + 1) hmono hlc hpwc h0)) (Set.Ioc 0 t) := by
+    intro u hu
+    have hβuM : β' u < β' t + 1 := lt_of_le_of_lt (hmono hu.2) hM
+    show clipFun β' (β' t + 1) u < burstFun (β' t + 1) u
+    rw [burstFun_apply_of_ne _ (ne_of_gt hu.1), clipFun_eq_of_lt hβuM]
+    exact hβuM
+  have hbound := hp.2 0 t (zero_le' : (0 : ℝ≥0) ≤ t) hbl
+  have e0 : (clipCurve β' (β' t + 1) hmono hlc hpwc h0) 0 = 0 :=
+    clipFun_zero_eq _ h0
+  have et : (clipCurve β' (β' t + 1) hmono hlc hpwc h0) t = β' t :=
+    clipFun_eq_of_lt hM
+  rw [e0, tsub_zero, et, zero_add] at hbound
+  exact hbound
+
+/-- **Monotony refined, strict** (super-additive `β'`): against a
+super-additive regular curve, relation inclusion is exactly pointwise
+domination. As a super-additive curve is its own super-additive closure,
+this is the book's criterion `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. -/
+theorem strictServiceRel_le_iff_of_superadditive {β β' : ℝ≥0 → ℝ≥0}
+    (hmono : Monotone β') (hlc : IsLeftContinuous β')
+    (hpwc : IsPiecewiseContinuous β') (h0 : β' 0 = 0)
+    (hsuper : IsSuperadditive β') :
+    strictServiceRel β' ≤ strictServiceRel β ↔ β ≤ β' :=
+  ⟨le_of_strictServiceRel_le hmono hlc hpwc h0 hsuper, strictServiceRel_mono⟩
+
 /-! ## Book restatement (monotony refined, the closure criteria)
 `S_mp(β↑) ⊇ S_mp(β'↑)` iff `β↑ ≤ β'↑`, and
 `S_wstrict(β) ⊇ S_wstrict(β')` iff `β↑ ≤ β'↑` — stated against the
@@ -252,10 +316,13 @@ pointwise `β ≤ β'` (below, with the closure spelled out under
 prefix-boundedness of `β`). The book's forcing witness is the pair
 `(δ₀, β'↑)`; the burst–clip pair at a level just above the target
 value is its finite stand-in — the book's own remark that `+∞` may
-be replaced by a large enough constant. The strict and
-variable-capacity items, whose criterion compares super-additive
-closures, ride a super-additively closed witness output and are
-deferred. -/
+be replaced by a large enough constant. The strict item, whose
+criterion compares super-additive closures, is
+`strictServiceRel_le_iff_of_superadditive` above — for super-additive
+`β'` (its own closure) the criterion is the pointwise `β ≤ β'`, the
+backlog bound on the burst–clip witness being exactly super-additivity.
+The variable-capacity item, whose witness output must be
+super-additively closed, is deferred. -/
 example {β β' : ℝ≥0 → ℝ≥0}
     (hmono : Monotone β') (hlc : IsLeftContinuous β')
     (hpwc : IsPiecewiseContinuous β') (h0 : β' 0 = 0)
@@ -282,6 +349,16 @@ example {β β' : ℝ≥0 → ℝ≥0}
     exact ndClosure_le hmono hle t
   · intro hle t
     exact le_trans (le_ndClosure β hbdd t) (hle t)
+
+/-! For super-additive regular `β'` the strict criterion
+`(β↑)^⊛̄ ≤ (β'↑)^⊛̄` collapses to the pointwise `β ≤ β'`: `S_strict(β')`
+nests inside `S_strict(β)` exactly when `β ≤ β'`. -/
+example {β β' : ℝ≥0 → ℝ≥0}
+    (hmono : Monotone β') (hlc : IsLeftContinuous β')
+    (hpwc : IsPiecewiseContinuous β') (h0 : β' 0 = 0)
+    (hsuper : IsSuperadditive β') :
+    strictServiceRel β' ≤ strictServiceRel β ↔ β ≤ β' :=
+  strictServiceRel_le_iff_of_superadditive hmono hlc hpwc h0 hsuper
 
 /-! ## The converse of min-plus monotony fails without closures
 Without the non-decreasing closure, `S_mp(β) ⊇ S_mp(β')` does not force
