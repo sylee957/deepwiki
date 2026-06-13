@@ -548,4 +548,30 @@ example (R₁ R₂ : ℝ≥0) :
       = strictServiceRel (rate (R₁ ⊓ R₂)) :=
   comp_strictServiceRel_rate_eq R₁ R₂
 
+/-! ## Delay tandems dilute to min-plus (§9.3, towards Lemma 9.5)
+Two strict pure-delay servers in tandem are min-plus served by the delay of the
+sum: `S_strict(δ_a) ∘ S_strict(δ_b) ⊆ S_mp(δ_{a+b})`. This is the `n = 2` core of
+Lemma 9.5's `⊆` direction (an `n`-tandem of `S_strict(δ_{T/n})` lands in
+`S_mp(δ_T)`, since `δ_{T/n}∗ⁿ = δ_T`): each strict server is min-plus
+(`strictServiceRelEReal_le_minimalServiceRel`), the min-plus concatenation
+convolves the curves (`comp_minimalServiceRel_le`), and pure delays add
+(`conv_delayEReal_delayEReal`). Note the tandem is *not* a strict server
+(Prop 6.2 above) — it only achieves the min-plus delay. -/
+theorem comp_strictServiceRelEReal_delay_le (a b : ℝ≥0) :
+    Relation.Comp (strictServiceRelEReal (delayEReal a))
+        (strictServiceRelEReal (delayEReal b))
+      ≤ minimalServiceRel (delayEReal (a + b)) := by
+  have hbd : ∀ d : ℝ≥0, IsNonneg (delayEReal d) := fun d t => by
+    simp only [delayEReal, delay_apply]
+    split
+    · exact le_refl 0
+    · exact le_top
+  rw [← conv_delayEReal_delayEReal a b]
+  rintro A C ⟨B, hAB, hBC⟩
+  have hmp : Relation.Comp (minimalServiceRel (delayEReal a))
+      (minimalServiceRel (delayEReal b)) A C :=
+    ⟨B, strictServiceRelEReal_le_minimalServiceRel A B hAB,
+      strictServiceRelEReal_le_minimalServiceRel B C hBC⟩
+  exact comp_minimalServiceRel_le (hbd a).isBddBelowReal (hbd b).isBddBelowReal A C hmp
+
 end DeepWiki
