@@ -107,6 +107,26 @@ theorem pathHops_univ_sum {m : ℕ} {n : ℕ} {fst lst : Fin m → ℕ} {i : Fin
   rw [Finset.mem_range, Nat.lt_succ_iff] at hh
   exact ⟨h0 ▸ Nat.zero_le h, hh.trans hn⟩
 
+/-- **Layer-2 gateway**: the restricted-aggregate start-equality. At the
+backlogged-period start of the `s'`-aggregate, every member `i ∈ s'` is
+fully served, `Dᵢ(start) = Aᵢ(start)` — `apply_start_sum_eq` over an
+arbitrary flow set rather than `univ`. -/
+theorem apply_start_sum_finset_eq {ι : Type*}
+    {A D : ι → ℝ≥0 → ℝ≥0} (s' : Finset ι) (hc : ∀ j x, D j x ≤ A j x)
+    (hAlc : ∀ j, IsLeftContinuous (A j)) (hDlc : ∀ j, IsLeftContinuous (D j))
+    (h0 : ∀ j, A j 0 = D j 0) (t : ℝ≥0) {i : ι} (hi : i ∈ s') :
+    D i (start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t)
+      = A i (start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t) := by
+  set s₀ := start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t
+  have haggeq : (∑ j ∈ s', A j s₀) = ∑ j ∈ s', D j s₀ :=
+    apply_start_eq
+      (isLeftContinuous_sum _ fun j _ => hAlc j)
+      (isLeftContinuous_sum _ fun j _ => hDlc j)
+      (by show (∑ j ∈ s', A j 0) = ∑ j ∈ s', D j 0
+          exact Finset.sum_congr rfl fun j _ => h0 j)
+      (fun x => Finset.sum_le_sum fun j _ => hc j x) t
+  exact (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm i hi
+
 /-! ## The cascade witness's widths (pure facts about a monotone node family)
 For a nondecreasing node sequence `s : ℕ → ℝ≥0` (the cascaded per-hop
 starts, with `s (n+1) = t`), the hop widths `uₕ = s (h+1) − s h` split `t`
