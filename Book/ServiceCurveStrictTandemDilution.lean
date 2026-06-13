@@ -334,3 +334,68 @@ theorem warpCurve_strictServiceRelEReal (A : Curve) {d r : ℝ≥0} (hr : 0 < r)
     strictServiceRelEReal (delayEReal d) A (warpCurve A hr hrd) :=
   strictServiceRelEReal_delay_of_comp_catchUp (fun τ => (warpCurve_apply A hr hrd τ))
     (warp_le_self hr hrd) (warp_catchUp_dense (lt_of_lt_of_le hr hrd))
+
+/-- Shift a curve right by `η`: `shiftCurve C η = C ∘ (· − η)` (a later tandem stage). -/
+noncomputable def shiftCurve (C : Curve) (η : ℝ≥0) : Curve :=
+  ⟨fun τ => C (τ - η), C.mono.comp (fun _ _ hab => tsub_le_tsub_right hab η),
+    by show C (0 - η) = 0; rw [zero_tsub]; exact C.zero,
+    C.pwc.comp_continuous_monotone (continuous_sub_right η)
+      (fun _ _ hab => tsub_le_tsub_right hab η),
+    C.leftCont.comp_continuous_monotone (continuous_sub_right η)
+      (fun _ _ hab => tsub_le_tsub_right hab η)⟩
+
+/-- `shiftCurve C η τ = C (τ − η)`. -/
+@[simp] theorem shiftCurve_apply (C : Curve) (η τ : ℝ≥0) : shiftCurve C η τ = C (τ - η) := rfl
+
+/-- **Shift density bounds backlogged windows** (sibling of `catch_window_le`): if `f`
+has a coincidence `f (p − η) = f p` in every window `(x, x + d]`, then any `(s, t]` on
+which `f (τ − η) < f τ` throughout has length `≤ d`. -/
+theorem shift_window_le {f : ℝ≥0 → ℝ≥0} {d η : ℝ≥0}
+    (hdense : ∀ x : ℝ≥0, ∃ p, x < p ∧ p ≤ x + d ∧ f (p - η) = f p)
+    {s t : ℝ≥0} (hst : s ≤ t) (hwin : ∀ τ ∈ Set.Ioc s t, f (τ - η) < f τ) :
+    t - s ≤ d := by
+  by_contra hcon
+  rw [not_le] at hcon
+  obtain ⟨p, hsp, hpsd, heq⟩ := hdense s
+  have hsdt : s + d < t :=
+    calc s + d < s + (t - s) := by gcongr
+      _ = t := add_tsub_cancel_of_le hst
+  have hb := hwin p ⟨hsp, (lt_of_le_of_lt hpsd hsdt).le⟩
+  rw [heq] at hb
+  exact absurd hb (lt_irrefl _)
+
+/-- At the flat-right-endpoint the warp sits at the base: `warp d r (d·k + (d−r)) = d·k`.
+(Combined with `warp_mul_nat`, this is the coincidence point of the `(d−r)`-shift.) -/
+theorem warp_shift_eq {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (k : ℕ) :
+    warp d r (d * (k : ℝ≥0) + (d - r)) = d * k := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  have hr' : (0 : ℝ) < (r : ℝ) := NNReal.coe_pos.mpr hr
+  have hrd' : (r : ℝ) ≤ d := NNReal.coe_le_coe.mpr hrd
+  have hfloor : ⌊((d * (k : ℝ≥0) + (d - r) : ℝ≥0) : ℝ) / d⌋₊ = k := by
+    apply warp_floor_eq hd
+    · push_cast [NNReal.coe_sub hrd]; linarith
+    · push_cast [NNReal.coe_sub hrd]
+      have hexp : (d : ℝ) * ((k : ℝ) + 1) = d * k + d := by ring
+      linarith
+  rw [warp_eq_warpPeriod hfloor, warpPeriod, add_tsub_cancel_left, tsub_self, mul_zero,
+    add_zero]
+
+/-- **The `(d−r)`-shift coincidence is dense**: in every `(x, x + d]` there is a `p` with
+`warp d r (p − (d−r)) = warp d r p` — the next flat-right-endpoint `d⌊(x+r)/d⌋ + (d−r)`. -/
+theorem warp_shift_dense {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (x : ℝ≥0) :
+    ∃ p, x < p ∧ p ≤ x + d ∧ warp d r (p - (d - r)) = warp d r p := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  refine ⟨d * (⌊((x + r : ℝ≥0) : ℝ) / d⌋₊ : ℝ≥0) + (d - r), ?_, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hrd]
+    have h2 := (div_lt_iff₀ hd').mp (Nat.lt_floor_add_one (((x + r : ℝ≥0) : ℝ) / d))
+    push_cast at h2
+    have hexp : ((⌊((x + r : ℝ≥0) : ℝ) / d⌋₊ : ℝ) + 1) * d
+        = d * (⌊((x + r : ℝ≥0) : ℝ) / d⌋₊ : ℝ) + d := by ring
+    linarith
+  · rw [← NNReal.coe_le_coe]; push_cast [NNReal.coe_sub hrd]
+    have h := Nat.floor_le (show (0 : ℝ) ≤ ((x + r : ℝ≥0) : ℝ) / d by positivity)
+    rw [le_div_iff₀ hd', mul_comm] at h
+    push_cast at h
+    linarith
+  · rw [add_tsub_cancel_right, warp_mul_nat hd, warp_shift_eq hr hrd]
