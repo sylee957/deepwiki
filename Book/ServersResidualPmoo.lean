@@ -19,8 +19,15 @@ noncomputable def pmooResidual (β₁ β₂ α : ℝ≥0 → ℝ≥0) : ℝ≥0 
   fun v => minConvProj β₁ β₂ v - α v
 
 /-- `pmooResidual β₁ β₂ α v` is the clamped difference at `v`. -/
-theorem pmooResidual_apply (β₁ β₂ α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
+@[simp] theorem pmooResidual_apply (β₁ β₂ α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
     pmooResidual β₁ β₂ α v = minConvProj β₁ β₂ v - α v := rfl
+
+/-- `pmooResidual β₁ β₂ α 0 = 0` for `β₁, β₂` null at the origin. -/
+theorem pmooResidual_zero_eq {β₁ β₂ : ℝ≥0 → ℝ≥0} (α : ℝ≥0 → ℝ≥0)
+    (hβ₁ : β₁ 0 = 0) (hβ₂ : β₂ 0 = 0) :
+    pmooResidual β₁ β₂ α 0 = 0 := by
+  rw [pmooResidual_apply, minConvProj_zero_eq, hβ₁, hβ₂, add_zero,
+    zero_tsub]
 
 /-- The PMOO residual stays below the tandem convolution. -/
 theorem pmooResidual_le_minConvProj (β₁ β₂ α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
@@ -157,7 +164,7 @@ theorem minConv_pmooResidual_le_of_strict_tandem {ι : Type*}
 curves into a tandem and constraining the cross-traffic arrivals,
 the residual server of the tagged flow offers the PMOO residual as a
 min-plus service curve. -/
-theorem isMinimalServiceCurve_residualServer_of_strict_tandem
+theorem isMinimalServiceCurve_pmooResidual_of_strict_tandem
     {ι : Type*} [Fintype ι] [DecidableEq ι]
     {S₁ S₂ : (ι → Curve) → (ι → Curve) → Prop} {β₁ β₂ : ℝ≥0 → ℝ≥0}
     {α : ι → ℝ≥0 → ℝ≥0} {i : ι}

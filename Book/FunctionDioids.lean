@@ -559,6 +559,17 @@ theorem minConvProj_eq (g h : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
         g p.1.1 + h p.1.2),
     ENNReal.toNNReal_coe]
 
+/-- The projected convolution at the origin is the sum of the origin
+values: the only split of `0` is `(0, 0)`. -/
+theorem minConvProj_zero_eq (g h : ℝ≥0 → ℝ≥0) :
+    minConvProj g h 0 = g 0 + h 0 := by
+  rw [minConvProj_eq]
+  refine le_antisymm
+    (ciInf_le_of_le (OrderBot.bddBelow _) ⟨(0, 0), add_zero 0⟩ le_rfl) ?_
+  refine le_ciInf fun p => ?_
+  obtain ⟨hu, hs⟩ := add_eq_zero.mp p.2
+  rw [hu, hs]
+
 /-- Elim: every split bounds the projected convolution from above,
 `minConvProj g h t ≤ g u + h s` whenever `u + s = t`. -/
 theorem minConvProj_le_add {g h : ℝ≥0 → ℝ≥0} {u s t : ℝ≥0}
