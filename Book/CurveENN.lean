@@ -1,4 +1,5 @@
 import Book.ServiceCurveMinimal
+import Book.ClosuresEReal
 
 /-! # Extended cumulative curves (`ℝ≥0∞`-valued)
 The `Curve` type is `ℝ≥0 → ℝ≥0` everywhere, so it cannot carry the `+∞`-valued
@@ -105,5 +106,27 @@ theorem mem_minimalServiceRelExt_iff {beta : ℝ≥0 → EReal} {A D : CurveENN}
     minimalServiceRelExt beta A D ↔
       curveENNEReal D ≤ curveENNEReal A ∧ minConv (curveENNEReal A) beta ≤ curveENNEReal D :=
   Iff.rfl
+
+/-- `δ_0` is the convolution unit, also as an `EReal` arrival:
+`curveENNEReal delay0ENN = convUnitEReal`. -/
+theorem curveENNEReal_delay0ENN : curveENNEReal delay0ENN = convUnitEReal := by
+  funext t
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [curveENNEReal_apply, delay0ENN_zero_eq, convUnitEReal, if_pos rfl,
+      EReal.coe_ennreal_zero]
+  · rw [curveENNEReal_apply, delay0ENN_apply_pos ht, convUnitEReal, if_neg ht,
+      EReal.coe_ennreal_top]
+
+/-- **Feeding `δ_0` recovers the service curve**: if the instantaneous infinite burst
+`δ_0` is min-plus served by `beta` (with `beta` never `−∞`), the departure dominates
+`beta` — `beta ≤ D` (in the `EReal` view). This is the book's `δ_0`-probing technique
+(e.g. the Thm 9.6 step `(δ_0, β') ∈ S(β) ⟹ β' ≥ β`), now expressible with an extended
+arrival. Since `δ_0 ∗ beta = beta`, the min-plus lower bound `δ_0 ∗ beta ≤ D` is exactly
+`beta ≤ D`. -/
+theorem le_curveENNEReal_of_minimalServiceRelExt_delay0 {beta : ℝ≥0 → EReal}
+    (hbeta : IsNeverBot beta) {D : CurveENN} (h : minimalServiceRelExt beta delay0ENN D) :
+    beta ≤ curveENNEReal D := by
+  have hD := (mem_minimalServiceRelExt_iff.mp h).2
+  rwa [curveENNEReal_delay0ENN, minConv_convUnitEReal_left beta hbeta] at hD
 
 end DeepWiki
