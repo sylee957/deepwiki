@@ -89,6 +89,7 @@ import Book.ServersResidualPriorityPackets
 import Book.ServersResidualGps
 import Book.ServersResidualGpsImproved
 import Book.ServersResidualPmoo
+import Book.ServersResidualPmooChain
 import Book.ServersResidualPgps
 import Book.ServersResidualDrr
 import Book.ServersResidualTdma
