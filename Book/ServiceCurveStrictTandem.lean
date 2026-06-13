@@ -647,4 +647,16 @@ theorem systemClosure_compPow_strictServiceRelEReal_delayDiv_le
   le_trans (systemClosure_mono (compPow_strictServiceRelEReal_delayDiv_le T hn))
     (systemClosure_minimalServiceRel_delay_le T)
 
+/-- **Lemma 9.5, `⊆` direction (union form)**: any pair in
+`⋃ₙ S̄((S_strict(δ_{T/n}))ⁿ)` (some closed positive tandem of strict-`δ_{T/n}`
+servers) is min-plus served by `δ_T`. The reverse inclusion (Lemma 9.5's
+equality, via the Figure 9.4 burst-train dilution as `n → ∞`) is the remaining
+half. -/
+theorem mem_minimalServiceRel_delay_of_exists_systemClosure (T : ℝ≥0) {A D : Curve}
+    (h : ∃ n : ℕ, 0 < n ∧
+      systemClosure (compPow (strictServiceRelEReal (delayEReal (T / n))) n) A D) :
+    minimalServiceRel (delayEReal T) A D := by
+  obtain ⟨n, hn, hmem⟩ := h
+  exact systemClosure_compPow_strictServiceRelEReal_delayDiv_le T hn A D hmem
+
 end DeepWiki
