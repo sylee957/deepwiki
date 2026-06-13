@@ -62,6 +62,16 @@ theorem IsMaximalArrivalBound.mono {T : Type*} [Add T]
   gcongr
   exact hle d
 
+/-- A process allows the conjunction `α ⊓ α'` as a maximal arrival curve iff it
+allows each of `α`, `α'`: the `⟸` direction is `IsMaximalArrivalBound.inf`, the
+`⟹` direction is monotonicity against `α ⊓ α' ≤ α`, `α'`. -/
+theorem isMaximalArrivalBound_inf_iff {T : Type*} [Add T]
+    [ConditionallyCompleteLinearOrder T] [OrderBot T] [AddLeftMono T]
+    {A α α' : ℝ≥0 → T} :
+    IsMaximalArrivalBound A (α ⊓ α') ↔
+      IsMaximalArrivalBound A α ∧ IsMaximalArrivalBound A α' :=
+  ⟨fun h => ⟨h.mono inf_le_left, h.mono inf_le_right⟩, fun ⟨h, h'⟩ => h.inf h'⟩
+
 /-! ## The deconvolution `A ⊘ A` -/
 
 /-- The deconvolution `A ⊘ A` is below every maximal arrival curve: if `α` is a
