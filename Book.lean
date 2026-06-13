@@ -66,6 +66,7 @@ import Book.Packetizer
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
 import Book.ServersConcatenationStrict
+import Book.ServersSystemClosure
 import Book.ServiceCurveStrictTandem
 import Book.ServersControlTandem
 import Book.ServersControlFeedback
