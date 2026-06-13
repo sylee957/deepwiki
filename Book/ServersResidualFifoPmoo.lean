@@ -7,13 +7,18 @@ Where GPS fails to survive composition, FIFO survives *aggregation*: in a
 FIFO system the two-group family `(∑_{j≠k} flow, flow k)` is again FIFO
 (`isFifo_erase_pair`), because a strict aggregate clearing of the group
 forces some member to clear, and FIFO then clears every flow — including
-flow `k`. Feeding this to the FIFO residual theorem gives the book's
-FIFO-PMOO consequence: with flow `k` arrival-constrained by `α` and an
-aggregate min-plus service curve `β`, the `m − 1` other flows together
-receive `[β − α ∗ δ_θ]⁺ ∧ δ_θ` (`fifoResidual β α θ`) — a direct
-consequence of the FIFO residual and concatenation theorems, taking the
-tandem's FIFO property and aggregate service curve as the hypotheses they
-supply. -/
+flow `k`. Feeding this to the FIFO residual theorem yields the FIFO-PMOO
+residual: with flow `k` arrival-constrained by `α` and an aggregate
+min-plus service curve `β`, the `m − 1` other flows together receive
+`[β − α ∗ δ_θ]⁺ ∧ δ_θ` (`fifoResidual β α θ`).
+
+The *aggregation* step is what is proved here; that the tandem itself is
+FIFO and offers the aggregate `β` are taken as hypotheses (`hfifo`,
+`hserv`). Both are genuine assumptions: the tandem-is-FIFO fact is a
+property of the FIFO *scheduling discipline* (it does not follow from the
+trajectory predicate `IsFifo` on the per-server input/output pairs alone),
+and `β = ∗ₕ β⁽ʰ⁾` is the concatenation service curve — the book supplies
+them separately, then reads off this residual. -/
 
 namespace DeepWiki
 
@@ -46,13 +51,9 @@ theorem isFifo_erase_pair {ι : Type*} [Fintype ι]
     exact Finset.sum_le_sum fun j _ => hfifo k j t u hlt
   · exact hlt.le
 
-/-- **FIFO-PMOO (grouped residual)**: a FIFO `m`-flow system with aggregate
-min-plus service curve `β`, in which flow `k` is constrained by the arrival
-curve `α`, serves the `m − 1` other flows together at the FIFO residual
-`[β − α ∗ δ_θ]⁺ ∧ δ_θ` for every offset `θ`:
-`(∑_{j≠k} Aⱼ) ∗ fifoResidual β α θ ≤ ∑_{j≠k} Dⱼ`. The tandem's FIFO
-property and aggregate service curve `β = ∗ₕ β⁽ʰ⁾` are exactly what the
-FIFO residual and concatenation theorems supply. -/
+/-- **FIFO grouped residual**: in a FIFO system with aggregate min-plus
+service curve `β` where flow `k` has arrival curve `α`, the other flows
+together obey `(∑_{j≠k} Aⱼ) ∗ fifoResidual β α θ ≤ ∑_{j≠k} Dⱼ`. -/
 theorem minConv_fifoResidual_le_of_isFifo_group {ι : Type*} [Fintype ι]
     {As Ds : ι → Curve} {β : ℝ≥0 → ℝ≥0∞} {α : ℝ≥0 → ℝ≥0}
     (hfifo : IsFifo (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
