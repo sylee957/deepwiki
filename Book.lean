@@ -46,6 +46,7 @@ import Book.ArrivalCurvesMinimal
 import Book.ArrivalCurvesCombined
 import Book.DeviationsBounds
 import Book.ServiceCurveMinimal
+import Book.CurveENN
 import Book.DeviationsBoundsServer
 import Book.DeviationsRestricted
 import Book.ServersBacklog
