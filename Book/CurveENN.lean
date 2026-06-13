@@ -129,4 +129,46 @@ theorem le_curveENNEReal_of_minimalServiceRelExt_delay0 {beta : ℝ≥0 → ERea
   have hD := (mem_minimalServiceRelExt_iff.mp h).2
   rwa [curveENNEReal_delay0ENN, minConv_convUnitEReal_left beta hbeta] at hD
 
+/-- The `EReal` view of an extended curve never takes `−∞`. -/
+theorem isNeverBot_curveENNEReal (A : CurveENN) : IsNeverBot (curveENNEReal A) :=
+  fun t => by rw [curveENNEReal_apply]; exact EReal.coe_ennreal_ne_bot _
+
+/-- Every extended curve is dominated by `δ_0`. -/
+theorem le_delay0ENN (A : CurveENN) : A ≤ delay0ENN := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [show A 0 = 0 from A.zero, delay0ENN_zero_eq]
+  · rw [delay0ENN_apply_pos ht]; exact le_top
+
+/-- `curveENNEReal` is monotone in the curve. -/
+theorem curveENNEReal_mono {A B : CurveENN} (h : A ≤ B) :
+    curveENNEReal A ≤ curveENNEReal B :=
+  fun t => by
+    rw [curveENNEReal_apply, curveENNEReal_apply]
+    exact EReal.coe_ennreal_le_coe_ennreal_iff.mpr (h t)
+
+/-- Under its own service curve, `δ_0` is min-plus served by the curve itself:
+`(δ_0, A) ∈ S_mp^ext(A)` (since `δ_0 ∗ A = A` and `A ≤ δ_0`). -/
+theorem minimalServiceRelExt_delay0_self (A : CurveENN) :
+    minimalServiceRelExt (curveENNEReal A) delay0ENN A := by
+  refine ⟨curveENNEReal_mono (le_delay0ENN A), ?_⟩
+  rw [curveENNEReal_delay0ENN]
+  exact le_of_eq (minConv_convUnitEReal_left _ (isNeverBot_curveENNEReal A))
+
+/-- **Converse min-plus monotony, with extended arrivals**: if every extended pair
+min-plus served by `β'` is also served by `β`, then `β ≤ β'`. Over `Curve` (finite
+arrivals) the converse of `β ≤ β' ⟹ S_mp(β) ⊇ S_mp(β')` *fails*; the instantaneous
+infinite burst `δ_0` is exactly the arrival that makes it hold — probing the `β'`-server
+with `δ_0` recovers `β'`, which must then dominate `β`. -/
+theorem le_of_minimalServiceRelExt_le {β β' : CurveENN}
+    (h : minimalServiceRelExt (curveENNEReal β') ≤ minimalServiceRelExt (curveENNEReal β)) :
+    β ≤ β' := by
+  have hmem : minimalServiceRelExt (curveENNEReal β) delay0ENN β' :=
+    h delay0ENN β' (minimalServiceRelExt_delay0_self β')
+  have hle := le_curveENNEReal_of_minimalServiceRelExt_delay0 (isNeverBot_curveENNEReal β) hmem
+  intro t
+  have ht := hle t
+  rw [curveENNEReal_apply, curveENNEReal_apply] at ht
+  exact EReal.coe_ennreal_le_coe_ennreal_iff.mp ht
+
 end DeepWiki
