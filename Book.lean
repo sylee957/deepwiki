@@ -53,6 +53,7 @@ import Book.ServersBacklog
 import Book.ServiceCurveStrict
 import Book.ServiceCurveStrictEReal
 import Book.ServiceCurveWeaklyStrict
+import Book.ServiceCurveWeaklyStrictEReal
 import Book.ServiceCurveFamilies
 import Book.ServiceCurveMonotony
 import Book.ServiceCurveAdaptive
