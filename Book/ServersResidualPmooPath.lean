@@ -183,4 +183,91 @@ theorem chainConv_le_sum_widths {β : ℕ → ℝ≥0 → ℝ≥0} {s : ℕ → 
       _ = ∑ h ∈ Finset.range (n + 2), β h (s (h + 1) - s h) :=
           (Finset.sum_range_succ (fun h => β h (s (h + 1) - s h)) (n + 1)).symm
 
+/-! ## The cascade node sequence and the per-hop strict step
+The hop-indexed cascade `pathNode`: descending from the top `sₙ₊₁ = t`,
+each node is the backlogged-period start of its hop's flow-set aggregate,
+`sₕ = start_{Fl h}(sₕ₊₁)`. The widths `uₕ = sₕ₊₁ − sₕ` are the witness
+split. The per-hop strict step `pathNode_strict_step` is the book's
+inequality [10.2] read at the cascade: the flow-set aggregate input at
+`sₕ` plus `β⁽ʰ⁾(uₕ)` is dominated by the output at `sₕ₊₁`. -/
+
+/-- The hop-indexed cascade node: `sₕ = start_{S h}(sₕ₊₁)` for `h ≤ n`,
+`sₕ = t` above the top. -/
+noncomputable def pathNode {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) : ℕ → ℝ≥0
+  | h => if h_le : h ≤ n then
+           start (fun x => ∑ j ∈ S h, (F h j) x)
+             (fun x => ∑ j ∈ S h, (F (h + 1) j) x) (pathNode F S n t (h + 1))
+         else t
+  termination_by h => n + 1 - h
+  decreasing_by omega
+
+/-- `pathNode` descends one hop by the flow-set aggregate start (`h ≤ n`). -/
+theorem pathNode_eq {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) {h : ℕ} (hh : h ≤ n) :
+    pathNode F S n t h
+      = start (fun x => ∑ j ∈ S h, (F h j) x)
+          (fun x => ∑ j ∈ S h, (F (h + 1) j) x) (pathNode F S n t (h + 1)) := by
+  rw [pathNode.eq_def, dif_pos hh]
+
+/-- Above the top hop `pathNode` is the time itself. -/
+theorem pathNode_top {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) {h : ℕ} (hh : ¬ h ≤ n) :
+    pathNode F S n t h = t := by
+  rw [pathNode.eq_def, dif_neg hh]
+
+/-- The top node `sₙ₊₁` is `t`. -/
+theorem pathNode_succ {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) :
+    pathNode F S n t (n + 1) = t :=
+  pathNode_top F S n t (by omega)
+
+/-- Each node sits at or before the next (the start descends). -/
+theorem pathNode_le_succ {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) (h : ℕ) :
+    pathNode F S n t h ≤ pathNode F S n t (h + 1) := by
+  by_cases hh : h ≤ n
+  · rw [pathNode_eq F S n t hh]; exact start_le _ _ _
+  · rw [pathNode_top F S n t hh, pathNode_top F S n t (by omega)]
+
+/-- The cascade nodes are nondecreasing in the hop index. -/
+theorem pathNode_mono {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) : Monotone (pathNode F S n t) :=
+  monotone_nat_of_le_succ (pathNode_le_succ F S n t)
+
+/-- **The per-hop strict step** (book inequality [10.2] at the cascade):
+the flow-set aggregate input at `sₕ` plus `β⁽ʰ⁾(uₕ)` is dominated by the
+output at `sₕ₊₁`. The aggregate is backlogged on `(sₕ, sₕ₊₁]` (its own
+start window) and every member is fully served at `sₕ`. -/
+theorem pathNode_strict_step {ι : Type*} [Fintype ι] {F : ℕ → ι → Curve}
+    {S : ℕ → Finset ι} {β : ℕ → ℝ≥0 → ℝ≥0} {n : ℕ} (t : ℝ≥0)
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
+      IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x)
+        (fun x => ∑ j ∈ S h, (F (h + 1) j) x) (Set.Ioc s t') →
+      (∑ j ∈ S h, (F (h + 1) j) s) + β h (t' - s) ≤ ∑ j ∈ S h, (F (h + 1) j) t')
+    {h : ℕ} (hh : h ≤ n) :
+    (∑ j ∈ S h, (F h j) (pathNode F S n t h))
+        + β h (pathNode F S n t (h + 1) - pathNode F S n t h)
+      ≤ ∑ j ∈ S h, (F (h + 1) j) (pathNode F S n t (h + 1)) := by
+  set s := pathNode F S n t h with hsdef
+  set t' := pathNode F S n t (h + 1) with htdef
+  have hst : s ≤ t' := pathNode_le_succ F S n t h
+  have hseq : s = start (fun x => ∑ j ∈ S h, (F h j) x)
+      (fun x => ∑ j ∈ S h, (F (h + 1) j) x) t' := pathNode_eq F S n t hh
+  have hcS : ∀ x, (∑ j ∈ S h, (F (h + 1) j) x) ≤ ∑ j ∈ S h, (F h j) x :=
+    fun x => Finset.sum_le_sum fun j _ => hc h hh j x
+  have hbl : IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x)
+      (fun x => ∑ j ∈ S h, (F (h + 1) j) x) (Set.Ioc s t') := by
+    rw [hseq]; exact isBacklogged_Ioc_start hcS t'
+  have hstr := hstrict h hh s t' hst hbl
+  have heq : (∑ j ∈ S h, (F (h + 1) j) s) = ∑ j ∈ S h, (F h j) s := by
+    refine Finset.sum_congr rfl fun j hj => ?_
+    rw [hseq]
+    exact apply_start_sum_finset_eq (S h) (fun k x => hc h hh k x)
+      (fun k => (F h k).leftCont) (fun k => (F (h + 1) k).leftCont)
+      (fun k => ((F h k).zero).trans ((F (h + 1) k).zero).symm) t' hj
+  rw [heq] at hstr
+  exact hstr
+
 end DeepWiki
