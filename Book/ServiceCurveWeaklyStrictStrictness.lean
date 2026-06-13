@@ -1118,13 +1118,31 @@ theorem strictServiceRel_lt_weaklyStrictServiceRel_rateLatency :
     fun heq => rl_not_mem_strictServiceRel ?_
   rw [heq]; exact rl_mem_weaklyStrictServiceRel
 
-/-! The witness pair lies in `S_wstrict(β_{2,1}) ∖ S_strict(β_{2,1})`: a
-front-loaded server can grant each `t` its full increment from the backlog
-start yet under-serve an interior window — even for the practical (superadditive)
-rate-latency curve. -/
+/-- **wstrict ⊊ mp for every rate-latency curve `β_{R,T}` (`R, T > 0`)** — the
+delayed-start instance of case A (`t₀ = T`, `s = T + 1`: `β_{R,T}` vanishes
+below `T` and is positive past it). -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_rateLatency {R T : ℝ≥0}
+    (hR : 0 < R) (hT : 0 < T) :
+    weaklyStrictServiceRel (rateLatency R T)
+      < minimalServiceRel (liftEReal (rateLatency R T)) :=
+  weaklyStrictServiceRel_lt_minimalServiceRel (t₀ := T) (s := T + 1)
+    (rateLatency_mono R T)
+    (fun u hu => by show R * (u - T) = 0; rw [tsub_eq_zero_of_le hu.le, mul_zero])
+    hT le_self_add
+    (by show 0 < R * (T + 1 - T); rw [add_tsub_cancel_left, mul_one]; exact hR)
+
+/-! Both upper inclusions are strict for rate-latency: the witness pair lies in
+`S_wstrict(β_{2,1}) ∖ S_strict(β_{2,1})` (a front-loaded server grants each `t`
+its full increment from the backlog start yet under-serves an interior window),
+and `S_wstrict(β_{R,T}) ⊊ S_mp(β_{R,T})` for all `R, T > 0`. So for the practical
+rate-latency curve `S_strict ⊊ S_wstrict ⊊ S_mp`. -/
 example :
     weaklyStrictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep ∧
       ¬ strictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep :=
   ⟨rl_mem_weaklyStrictServiceRel, rl_not_mem_strictServiceRel⟩
+example {R T : ℝ≥0} (hR : 0 < R) (hT : 0 < T) :
+    weaklyStrictServiceRel (rateLatency R T)
+      < minimalServiceRel (liftEReal (rateLatency R T)) :=
+  weaklyStrictServiceRel_lt_minimalServiceRel_rateLatency hR hT
 
 end DeepWiki
