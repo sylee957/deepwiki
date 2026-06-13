@@ -529,12 +529,12 @@ tandems is exactly the min-plus pure-delay server `δ_T`:
 `systemClosure_delayTandemUnion_le`; the reverse `⊇` (the dilution: each `ε` is met by an
 `n`-stage tandem of strict `δ_{T/n}` servers whose worst-case staircase output approaches
 `A ∗ δ_T` from below) is `minimalServiceRel_delay_le_systemClosure`. -/
+/-- The `§9.3` closure of `⋃ₙ (S_strict(δ_{T/n}))ⁿ` equals `S_mp(δ_T)` (for `T > 0`):
+`systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T)`. -/
 theorem systemClosure_delayTandemUnion_eq {T : ℝ≥0} (hT : 0 < T) :
     systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T) :=
   le_antisymm (systemClosure_delayTandemUnion_le T) (minimalServiceRel_delay_le_systemClosure hT)
 
-/-- **Lemma 9.5** (book restatement): the closure of the strict-delay tandem union is the
-min-plus delay server. -/
 example {T : ℝ≥0} (hT : 0 < T) :
     systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T) :=
   systemClosure_delayTandemUnion_eq hT
