@@ -210,17 +210,17 @@ theorem hDevENN_shaped_rateLatencyNN (P s C R T : ℝ≥0)
   refine le_trans (le_hDevAtENN_shaped_kinkTime P s C R T hR hRC hs hsPR) ?_
   exact hDevAt_le_hDev _ _ (kinkTime P s C)
 
-/-- Book restatement: the shaping closed-form delay
-`hDev(γ_{s/P,s} ⊓ λ_C, β_{R,T}) = T + [(C − R)/(C − s/P)] · (s/R)` under
-stability `s/P < R ≤ C`. -/
+/-! ## Book restatement (shaping closed-form delay, §6.3.2.2)
+The shaped periodic flow's deviation
+`hDev(γ_{s/P,s} ⊓ λ_C, β_{R,T}) = T + [(C − R)/(C − s/P)]·(s/R)`
+under stability `s/P < R ≤ C`, and the *shaping reduces delay*
+comparison `hDev(γ ⊓ λ_C, β) ≤ T + s/R` against the unshaped token
+bucket. -/
 example (P s C R T : ℝ≥0)
     (hR : 0 < R) (hRC : R ≤ C) (hs : 0 < s) (hsPR : s / P < R) :
     hDevENN (tokenBucketNN (s / P) s ⊓ rateNN C) (rateLatencyNN R T)
       = ((T + (C - R) / (C - s / P) * (s / R) : ℝ≥0) : ℝ≥0∞) :=
   hDevENN_shaped_rateLatencyNN P s C R T hR hRC hs hsPR
-
-/-- Book restatement (shaping reduces delay): the shaped flow's delay is bounded
-by the unshaped token bucket's, `hDev(γ ⊓ λ_C, β) ≤ T + s/R`. -/
 example (P s C R T : ℝ≥0) (hR : 0 < R) (hs : 0 < s) (hsPR : s / P ≤ R) :
     hDevENN (tokenBucketNN (s / P) s ⊓ rateNN C) (rateLatencyNN R T)
       ≤ ((T + s / R : ℝ≥0) : ℝ≥0∞) :=

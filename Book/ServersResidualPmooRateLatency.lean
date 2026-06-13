@@ -4,12 +4,13 @@ import Mathlib.Tactic.LinearCombination
 
 /-! # The PMOO chain on rate-latency servers
 The chain convolution of rate-latency service curves folds to a
-single rate-latency curve `β_{⨅ Rₕ, ∑ Tₕ}` — the tandem of
-rate-latency servers behaves like one rate-latency server, the
-service-curve half of the book's Example 10.1 closed form. The
-remaining half (folding the token-bucket cross-traffic into the
-residual's effective rate and latency) is the arithmetic of
-`pmooResidualChain` on this folded curve. -/
+single rate-latency curve `β_{⨅ Rₕ, ∑ Tₕ}` — a tandem of
+rate-latency servers behaves like one rate-latency server (the
+simple-tandem service-curve composition). Subtracting the summed
+token-bucket cross-traffic then keeps the tagged flow's residual
+itself rate-latency: this is the all-crossing case of the
+multi-dimensional PMOO operator, where each cross arrival, applied
+over the whole window, pulls out of the splitting infimum. -/
 
 namespace DeepWiki
 
@@ -108,9 +109,44 @@ noncomputable def chainLatency (T : ℕ → ℝ≥0) : ℕ → ℝ≥0
   | 0 => T 0
   | n + 1 => chainLatency T n + T (n + 1)
 
+/-- `chainRate R 0 = R 0`. -/
+theorem chainRate_zero (R : ℕ → ℝ≥0) : chainRate R 0 = R 0 := rfl
+
+/-- `chainRate R (n+1) = chainRate R n ⊓ R (n+1)`. -/
+theorem chainRate_succ (R : ℕ → ℝ≥0) (n : ℕ) :
+    chainRate R (n + 1) = chainRate R n ⊓ R (n + 1) := rfl
+
+/-- `chainLatency T 0 = T 0`. -/
+theorem chainLatency_zero (T : ℕ → ℝ≥0) : chainLatency T 0 = T 0 := rfl
+
+/-- `chainLatency T (n+1) = chainLatency T n + T (n+1)`. -/
+theorem chainLatency_succ (T : ℕ → ℝ≥0) (n : ℕ) :
+    chainLatency T (n + 1) = chainLatency T n + T (n + 1) := rfl
+
+/-- The folded rate is the slowest among hops `0..n`: `chainRate R n
+≤ R k` for every `k ≤ n`. -/
+theorem chainRate_le (R : ℕ → ℝ≥0) {n k : ℕ} (hk : k ≤ n) :
+    chainRate R n ≤ R k := by
+  induction n with
+  | zero => rw [Nat.le_zero.mp hk]; exact le_rfl
+  | succ n ih =>
+    rcases Nat.lt_succ_iff_lt_or_eq.mp (Nat.lt_succ_of_le hk) with h | h
+    · exact le_trans (chainRate_succ R n ▸ inf_le_left)
+        (ih (Nat.lt_succ_iff.mp h))
+    · rw [h]; exact chainRate_succ R n ▸ inf_le_right
+
+/-- The folded latency is the sum over hops `0..n`. -/
+theorem chainLatency_eq_sum (T : ℕ → ℝ≥0) (n : ℕ) :
+    chainLatency T n = ∑ h ∈ Finset.range (n + 1), T h := by
+  induction n with
+  | zero => rw [chainLatency_zero, Finset.sum_range_one]
+  | succ n ih =>
+    rw [chainLatency_succ, ih, Finset.sum_range_succ (f := T) (n + 1)]
+
 /-- **The tandem of rate-latency servers is a rate-latency server**:
 the chain convolution of `β_{Rₕ,Tₕ}` over hops `0..n` is
-`β_{⨅ Rₕ, ∑ Tₕ}` — the service-curve closed form of Example 10.1. -/
+`β_{⨅ Rₕ, ∑ Tₕ}` (the slowest rate, the summed latencies) — the
+simple-tandem service-curve composition. -/
 theorem chainConv_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ) :
     chainConv (fun h => rateLatency (R h) (T h)) n
       = rateLatency (chainRate R n) (chainLatency T n) := by
@@ -189,13 +225,12 @@ theorem rateLatency_sub_affine (R0 T0 rho b : ℝ≥0) (hR : rho < R0) :
     rw [hRcoe] at hRT'
     linear_combination hRT'
 
-/-- **Example 10.1, the residual closed form**: a tagged flow crossing
-the all-crossing rate-latency tandem, with summed cross-traffic
-arrival `ρ·t + b` (the sum of the token buckets `γ_{rⱼ,bⱼ}`), is
-served the rate-latency residual `β_{R, T}` with rate
-`R = (⨅ₕ Rₕ) − ρ` and latency `T = (∑ₕ Tₕ) + (ρ·∑ₕ Tₕ + b)/R`, under
-stability `ρ < ⨅ₕ Rₕ` — recovering the book's effective service
-curve. -/
+/-- **The all-crossing PMOO residual is rate-latency**: a tagged
+flow crossing the rate-latency tandem, with summed cross-traffic
+arrival `ρ·t + b` (the sum of the token buckets), is served the
+rate-latency residual `β_{R, T}` with rate `R = (⨅ₕ Rₕ) − ρ` and
+latency `T = (∑ₕ Tₕ) + (ρ·∑ₕ Tₕ + b)/R`, under stability
+`ρ < ⨅ₕ Rₕ` — the chain fold less the cross-traffic. -/
 theorem pmooResidualChain_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ)
     (rho b : ℝ≥0) (hstab : rho < chainRate R n) :
     pmooResidualChain (fun h => rateLatency (R h) (T h)) n
@@ -208,18 +243,27 @@ theorem pmooResidualChain_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ)
   exact congrFun
     (rateLatency_sub_affine (chainRate R n) (chainLatency T n) rho b hstab) v
 
-/-! ## Book restatement (Example 10.1, the service-curve fold)
+/-! ## Book restatement (Example 10.1, all-crossing case)
 A tandem of `n + 1` rate-latency servers crossed by every flow folds
-to a single rate-latency server `β_{⨅ₕ Rₕ, ∑ₕ Tₕ}`: the chain PMOO
-residual `(β₀ ∗ ⋯ ∗ βₙ − ∑_{j≠i} αⱼ)⁺` of the tagged flow is the
-clamped difference against this folded curve. With token-bucket
-cross-traffic the residual is itself rate-latency, recovering the
-book's `R = ⨅ₕ(Rₕ − ∑ rⱼ)`, `T = ∑ₕ Tₕ(1 + ∑rⱼ/R) + ∑ bⱼ/R`; the
-folding of the arrivals into that effective rate/latency is the
-remaining arithmetic. -/
+to a single rate-latency server `β_{⨅ₕ Rₕ, ∑ₕ Tₕ}`, and the chain
+PMOO residual of the tagged flow is the clamped difference against
+it. For all-crossing flows each cross arrival applies over the whole
+window, so it pulls out of the splitting infimum and the residual is
+`(β₀ ∗ ⋯ ∗ βₙ − ∑_{j≠i} αⱼ)⁺` against the folded curve. With summed
+token-bucket cross-traffic `ρ·t + b` this is the rate-latency curve
+`β_{R, T}`, `R = (⨅ₕ Rₕ) − ρ`, `T = (∑ₕ Tₕ) + (ρ·∑ₕ Tₕ + b)/R` — the
+book's effective rate `⨅ₕ(Rₕ − ρ)` and latency
+`∑ₕ Tₕ(1 + ρ/R) + b/R`. -/
 example (R T : ℕ → ℝ≥0) (n : ℕ) (α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
     pmooResidualChain (fun h => rateLatency (R h) (T h)) n α v
       = rateLatency (chainRate R n) (chainLatency T n) v - α v := by
   rw [pmooResidualChain_apply, chainConv_rateLatency]
+example (R T : ℕ → ℝ≥0) (n : ℕ) (rho b : ℝ≥0) (hstab : rho < chainRate R n) :
+    pmooResidualChain (fun h => rateLatency (R h) (T h)) n
+        (fun v => rho * v + b)
+      = rateLatency (chainRate R n - rho)
+          (chainLatency T n
+            + (rho * chainLatency T n + b) / (chainRate R n - rho)) :=
+  pmooResidualChain_rateLatency R T n rho b hstab
 
 end DeepWiki
