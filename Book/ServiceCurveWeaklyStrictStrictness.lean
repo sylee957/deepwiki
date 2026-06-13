@@ -828,141 +828,108 @@ theorem sqrtFun_two_lt_two : sqrtFun 2 < 2 := by
     _ < NNReal.sqrt 4 := NNReal.sqrt_lt_sqrt.mpr (by norm_num)
     _ = 2 := h4
 
-/-- `√u ≤ 2` for `u ≤ 2`. -/
-theorem sqrtFun_le_two_of_le {u : ℝ≥0} (h : u ≤ 2) : sqrtFun u ≤ 2 :=
-  (sqrtFun_mono h).trans sqrtFun_two_lt_two.le
-
-/-- The two-burst arrival `A = 1_{>0} + 1_{>1}`. -/
-noncomputable def sqrtMpArr : Curve := stepCurve 0 1 + stepCurve 1 1
-
-/-- `sqrtMpArr t = 1_{0<t} + 1_{1<t}`. -/
-theorem sqrtMpArr_apply (t : ℝ≥0) :
-    sqrtMpArr t = (if (0 : ℝ≥0) < t then 1 else 0) + (if (1 : ℝ≥0) < t then 1 else 0) := by
-  show (stepCurve 0 1 + stepCurve 1 1) t = _
-  rw [Curve.add_apply, stepCurve_apply, stepCurve_apply]
-
-/-- `sqrtMpArr 0 = 0`. -/
-theorem sqrtMpArr_zero : sqrtMpArr 0 = 0 := by
-  rw [sqrtMpArr_apply, if_neg (lt_irrefl 0), if_neg (by norm_num : ¬(1 : ℝ≥0) < 0), add_zero]
-
-/-- `sqrtMpArr 1 = 1` (only the burst at `0` has passed). -/
-theorem sqrtMpArr_one : sqrtMpArr 1 = 1 := by
-  rw [sqrtMpArr_apply, if_pos zero_lt_one, if_neg (lt_irrefl 1), add_zero]
-
-/-- `sqrtMpArr u = 2` past `1` (both bursts have passed). -/
-theorem sqrtMpArr_eq_two_of_one_lt {u : ℝ≥0} (h : 1 < u) : sqrtMpArr u = 2 := by
-  rw [sqrtMpArr_apply, if_pos (zero_lt_one.trans h), if_pos h]; norm_num
-
-/-- `sqrtMpArr t ≤ 2` everywhere. -/
-theorem sqrtMpArr_le_two (t : ℝ≥0) : sqrtMpArr t ≤ 2 := by
-  rw [sqrtMpArr_apply]
-  have h1 : (if (0 : ℝ≥0) < t then (1 : ℝ≥0) else 0) ≤ 1 := by split_ifs <;> norm_num
-  have h2 : (if (1 : ℝ≥0) < t then (1 : ℝ≥0) else 0) ≤ 1 := by split_ifs <;> norm_num
-  calc _ ≤ (1 : ℝ≥0) + 1 := add_le_add h1 h2
-    _ = 2 := by norm_num
-
-/-- The clipped square-root departure `D = √· ⊓ 2`. -/
-noncomputable def sqrtMpDep : Curve :=
-  clipCurve sqrtFun 2 sqrtFun_mono sqrtFun_leftCont sqrtFun_pwc sqrtFun_zero
-
-/-- `sqrtMpDep t = min (√t) 2`. -/
-theorem sqrtMpDep_apply (t : ℝ≥0) : sqrtMpDep t = min (sqrtFun t) 2 := rfl
-
-/-- `sqrtMpDep 1 = 1`. -/
-theorem sqrtMpDep_one : sqrtMpDep 1 = 1 := by
-  rw [sqrtMpDep_apply, sqrtFun_one, min_eq_left (by norm_num : (1 : ℝ≥0) ≤ 2)]
-
-/-- `sqrtMpDep 2 = √2`. -/
-theorem sqrtMpDep_two : sqrtMpDep 2 = sqrtFun 2 := by
-  rw [sqrtMpDep_apply, min_eq_left sqrtFun_two_lt_two.le]
-
-/-- `sqrtMpDep u = √u` for `u ≤ 2` (the clip is inactive below the level). -/
-theorem sqrtMpDep_eq_of_le {u : ℝ≥0} (h : u ≤ 2) : sqrtMpDep u = sqrtFun u := by
-  rw [sqrtMpDep_apply, min_eq_left (sqrtFun_le_two_of_le h)]
-
-/-- Causality: `D = √· ⊓ 2 ≤ A`. -/
-theorem sqrtMpDep_le_sqrtMpArr : sqrtMpDep ≤ sqrtMpArr := by
-  intro t
-  rcases le_or_gt t 1 with ht | ht
-  · rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ t) with h0 | h0
-    · rw [← h0, sqrtMpDep_apply, sqrtMpArr_zero, sqrtFun_zero]; simp
-    · have harr : sqrtMpArr t = 1 := by
-        rw [sqrtMpArr_apply, if_pos h0, if_neg (not_lt.mpr ht), add_zero]
-      rw [harr, sqrtMpDep_apply]
-      calc min (sqrtFun t) 2 ≤ sqrtFun t := min_le_left _ _
-        _ ≤ 1 := NNReal.sqrt_le_one.mpr ht
-  · rw [sqrtMpArr_eq_two_of_one_lt ht, sqrtMpDep_apply]
-    exact min_le_right _ _
-
-/-- The pair is min-plus served at `√·`: the `(0, t)` split bounds the
-convolution by `√t`, the `(t, 0)` split by `A t ≤ 2`, so it stays under
-`√· ⊓ 2 = D`. -/
-theorem sqrtMp_mem_minimalServiceRel :
-    minimalServiceRel (liftEReal sqrtFun) sqrtMpArr sqrtMpDep := by
-  refine mem_minimalServiceRel_iff.mpr ⟨sqrtMpDep_le_sqrtMpArr, fun t => ?_⟩
-  rcases le_total (sqrtFun t) 2 with h | h
-  · calc minConv (curveEReal sqrtMpArr) (liftEReal sqrtFun) t
-        ≤ curveEReal sqrtMpArr 0 + liftEReal sqrtFun t := minConv_le_add _ _ (zero_add t)
-      _ ≤ curveEReal sqrtMpDep t := by
-          rw [curveEReal_zero, zero_add, curveEReal_apply]
-          exact_mod_cast
-            (show sqrtFun t ≤ sqrtMpDep t by rw [sqrtMpDep_apply]; exact le_min le_rfl h)
-  · calc minConv (curveEReal sqrtMpArr) (liftEReal sqrtFun) t
-        ≤ curveEReal sqrtMpArr t + liftEReal sqrtFun 0 := minConv_le_add _ _ (add_zero t)
-      _ ≤ curveEReal sqrtMpDep t := by
-          have hz : liftEReal sqrtFun 0 = 0 := by
-            show ((sqrtFun 0 : ℝ) : EReal) = 0
-            rw [sqrtFun_zero, NNReal.coe_zero, EReal.coe_zero]
-          rw [hz, add_zero, curveEReal_apply, curveEReal_apply]
-          exact_mod_cast
-            (show sqrtMpArr t ≤ sqrtMpDep t by
-              rw [sqrtMpDep_apply, min_eq_right h]; exact sqrtMpArr_le_two t)
-
-/-- The backlogged period of `t = 2` starts at `1`: `A` and `D` agree at `0`
-and `1`, and `A = 2 > √u = D` on `(1, 2]`. -/
-theorem sqrtMp_start_two : start ⇑sqrtMpArr ⇑sqrtMpDep 2 = 1 := by
-  have h1mem : (1 : ℝ≥0) ≤ 2 ∧ sqrtMpArr 1 = sqrtMpDep 1 :=
-    ⟨by norm_num, by rw [sqrtMpArr_one, sqrtMpDep_one]⟩
-  unfold start
-  refine le_antisymm (csSup_le ⟨1, h1mem⟩ fun u hu => ?_)
-    (le_csSup ⟨2, fun v hv => hv.1⟩ h1mem)
-  by_contra hcon
-  rw [not_le] at hcon
-  obtain ⟨hu1, hu2⟩ := hu
-  have harr : sqrtMpArr u = 2 := sqrtMpArr_eq_two_of_one_lt hcon
-  have hdep : sqrtMpDep u = sqrtFun u := sqrtMpDep_eq_of_le hu1
-  have hlt : sqrtFun u < 2 := (sqrtFun_mono hu1).trans_lt sqrtFun_two_lt_two
-  rw [harr, hdep] at hu2
-  exact absurd hu2.symm (ne_of_lt hlt)
-
-/-- The pair is not weakly strictly served at `√·`: the window starting at `1`
-demands `D 2 ≥ D 1 + √1 = 2`, but `D 2 = √2 < 2`. -/
-theorem sqrtMp_not_mem_weaklyStrictServiceRel :
-    ¬ weaklyStrictServiceRel sqrtFun sqrtMpArr sqrtMpDep := by
-  rintro ⟨-, hb⟩
-  have h := hb 2
-  rw [sqrtMp_start_two, sqrtMpDep_one, sqrtMpDep_two,
-    show (2 : ℝ≥0) - 1 = 1 from tsub_eq_of_eq_add (by norm_num), sqrtFun_one] at h
-  exact absurd h
-    (not_le.mpr (by rw [show (1 : ℝ≥0) + 1 = 2 from by norm_num]; exact sqrtFun_two_lt_two))
+/-- **The upper inclusion is strict for any strictly-subadditive curve.**
+If a regular `β` is strictly subadditive at some split `0 < a < t`
+(`β t < β a + β (t − a)`), then `weaklyStrictServiceRel β < minimalServiceRel
+(liftEReal β)`. Witness: arrival `A = β a · 1_{>0} + (β t + 1 − β a) · 1_{>a}`
+(it empties at `a`) and departure `D = β ⊓ (β t + 1)`. The convolution harvests
+the burst at `0`, so `A ∗ β ≤ D ≤ A` (min-plus served); but `t`'s backlogged
+period starts at `a`, and the start-anchored bound demands
+`β a + β (t − a) ≤ β t`, which strict subadditivity denies. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_strictSubadditive
+    {β : ℝ≥0 → ℝ≥0} (hmono : Monotone β) (hlc : IsLeftContinuous β)
+    (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0)
+    {a t : ℝ≥0} (ha : 0 < a) (hat : a < t)
+    (hsub : β t < β a + β (t - a)) :
+    weaklyStrictServiceRel β < minimalServiceRel (liftEReal β) := by
+  have hβtM : β t < β t + 1 := lt_add_one _
+  have hβaM : β a < β t + 1 := (hmono hat.le).trans_lt hβtM
+  set A : Curve := stepCurve 0 (β a) + stepCurve a (β t + 1 - β a) with hAdef
+  set D : Curve := clipCurve β (β t + 1) hmono hlc hpwc h0 with hDdef
+  have hAapp : ∀ u, A u =
+      (if (0 : ℝ≥0) < u then β a else 0) + (if a < u then β t + 1 - β a else 0) := by
+    intro u
+    show (stepCurve 0 (β a) + stepCurve a (β t + 1 - β a)) u = _
+    rw [Curve.add_apply, stepCurve_apply, stepCurve_apply]
+  have hDapp : ∀ u, D u = min (β u) (β t + 1) := fun _ => rfl
+  have hA_zero : A 0 = 0 := by
+    rw [hAapp, if_neg (lt_irrefl 0),
+      if_neg (not_lt.mpr (zero_le' : (0 : ℝ≥0) ≤ a)), add_zero]
+  have hA_mid : ∀ u, 0 < u → u ≤ a → A u = β a := fun u h0u hua => by
+    rw [hAapp, if_pos h0u, if_neg (not_lt.mpr hua), add_zero]
+  have hA_hi : ∀ u, a < u → A u = β t + 1 := fun u hu => by
+    rw [hAapp, if_pos (ha.trans hu), if_pos hu, add_tsub_cancel_of_le hβaM.le]
+  have hA_le_M : ∀ u, A u ≤ β t + 1 := by
+    intro u
+    rcases le_or_gt u a with hua | hua
+    · rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ u) with h0u | h0u
+      · rw [← h0u, hA_zero]; exact zero_le'
+      · rw [hA_mid u h0u hua]; exact hβaM.le
+    · rw [hA_hi u hua]
+  have hcaus : D ≤ A := by
+    intro u
+    rcases le_or_gt u a with hua | hua
+    · rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ u) with h0u | h0u
+      · rw [← h0u, hDapp, h0, hA_zero, min_eq_left (zero_le' : (0 : ℝ≥0) ≤ β t + 1)]
+      · rw [hA_mid u h0u hua, hDapp]
+        exact (min_le_left _ _).trans (hmono hua)
+    · rw [hA_hi u hua, hDapp]; exact min_le_right _ _
+  have hmem : minimalServiceRel (liftEReal β) A D := by
+    refine mem_minimalServiceRel_iff.mpr ⟨hcaus, fun u => ?_⟩
+    rcases le_total (β u) (β t + 1) with h | h
+    · calc minConv (curveEReal A) (liftEReal β) u
+          ≤ curveEReal A 0 + liftEReal β u := minConv_le_add _ _ (zero_add u)
+        _ ≤ curveEReal D u := by
+            rw [curveEReal_zero, zero_add, curveEReal_apply]
+            exact_mod_cast (show β u ≤ D u by rw [hDapp]; exact le_min le_rfl h)
+    · calc minConv (curveEReal A) (liftEReal β) u
+          ≤ curveEReal A u + liftEReal β 0 := minConv_le_add _ _ (add_zero u)
+        _ ≤ curveEReal D u := by
+            have hz : liftEReal β 0 = 0 := by
+              show ((β 0 : ℝ) : EReal) = 0
+              rw [h0, NNReal.coe_zero, EReal.coe_zero]
+            rw [hz, add_zero, curveEReal_apply, curveEReal_apply]
+            exact_mod_cast
+              (show A u ≤ D u by rw [hDapp, min_eq_right h]; exact hA_le_M u)
+  have hstart : start ⇑A ⇑D t = a := by
+    have hamem : a ≤ t ∧ A a = D a :=
+      ⟨hat.le, by rw [hA_mid a ha le_rfl, hDapp, min_eq_left hβaM.le]⟩
+    unfold start
+    refine le_antisymm (csSup_le ⟨a, hamem⟩ fun u hu => ?_)
+      (le_csSup ⟨t, fun v hv => hv.1⟩ hamem)
+    by_contra hcon
+    rw [not_le] at hcon
+    obtain ⟨hut, hAD⟩ := hu
+    rw [hA_hi u hcon, hDapp] at hAD
+    have hle1 : β t + 1 ≤ β u := by rw [hAD]; exact min_le_left _ _
+    exact absurd (hle1.trans (hmono hut)) (not_le.mpr hβtM)
+  have hnotmem : ¬ weaklyStrictServiceRel β A D := by
+    rintro ⟨-, hb⟩
+    have h := hb t
+    rw [hstart, show D a = β a from by rw [hDapp, min_eq_left hβaM.le],
+      show D t = β t from by rw [hDapp, min_eq_left hβtM.le]] at h
+    exact absurd h (not_le.mpr hsub)
+  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => hnotmem ?_
+  rw [heq]; exact hmem
 
 /-- **The upper inclusion is strict for `√·`** — the infinite-initial-slope
-curve missed by the rate constructions: its weakly strict relation is strictly
-below its min-plus relation. -/
+curve missed by the rate constructions. It is the strict-subadditivity instance
+at the split `(a, t) = (1, 2)`: `√2 < √1 + √1 = 2`. -/
 theorem weaklyStrictServiceRel_lt_minimalServiceRel_sqrt :
-    weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) := by
-  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
-  refine sqrtMp_not_mem_weaklyStrictServiceRel ?_
-  rw [heq]; exact sqrtMp_mem_minimalServiceRel
+    weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) :=
+  weaklyStrictServiceRel_lt_minimalServiceRel_of_strictSubadditive
+    (a := 1) (t := 2) sqrtFun_mono sqrtFun_leftCont sqrtFun_pwc sqrtFun_zero
+    one_pos (by norm_num)
+    (by rw [show (2 : ℝ≥0) - 1 = 1 from tsub_eq_of_eq_add (by norm_num), sqrtFun_one,
+          show (1 : ℝ≥0) + 1 = 2 from by norm_num]
+        exact sqrtFun_two_lt_two)
 
 /-! ## Book restatement (the hierarchy is strict at `√·`)
-`√·` is concave with infinite initial slope, so `√·↑ = √· ∉ {δ₀, 0}`. The
-witness pair `(A, D) = (1_{>0} + 1_{>1}, √· ⊓ 2)` lies in the min-plus relation
-but not the weakly strict one, so `S_wstrict(√·) ⊊ S_mp(√·)` — the strict
-hierarchy holds for infinite-initial-slope curves the rate constructions miss. -/
-example :
-    minimalServiceRel (liftEReal sqrtFun) sqrtMpArr sqrtMpDep ∧
-      ¬ weaklyStrictServiceRel sqrtFun sqrtMpArr sqrtMpDep :=
-  ⟨sqrtMp_mem_minimalServiceRel, sqrtMp_not_mem_weaklyStrictServiceRel⟩
+`√·` is concave with infinite initial slope, so `√·↑ = √· ∉ {δ₀, 0}`, and it is
+strictly subadditive (`√2 < √1 + √1`). Hence `S_wstrict(√·) ⊊ S_mp(√·)` — the
+strict hierarchy holds for the infinite-initial-slope curves the rate
+constructions miss. -/
+example : weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) :=
+  weaklyStrictServiceRel_lt_minimalServiceRel_sqrt
 
 end DeepWiki
