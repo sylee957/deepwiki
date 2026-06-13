@@ -107,4 +107,60 @@ theorem pathHops_univ_sum {m : ℕ} {n : ℕ} {fst lst : Fin m → ℕ} {i : Fin
   rw [Finset.mem_range, Nat.lt_succ_iff] at hh
   exact ⟨h0 ▸ Nat.zero_le h, hh.trans hn⟩
 
+/-! ## The cascade witness's widths (pure facts about a monotone node family)
+For a nondecreasing node sequence `s : ℕ → ℝ≥0` (the cascaded per-hop
+starts, with `s (n+1) = t`), the hop widths `uₕ = s (h+1) − s h` split `t`
+and telescope; the chain convolution of the gap is bounded by the sum of
+the hops applied to the widths. These feed the per-path assembly with the
+cascaded starts as the witness split. -/
+
+/-- The hop widths sum to the total gap: `∑_{h≤n} (s(h+1) − sₕ) = s(n+1) − s 0`. -/
+theorem sum_range_width_telescope {s : ℕ → ℝ≥0} (hs : Monotone s) (n : ℕ) :
+    (∑ h ∈ Finset.range (n + 1), (s (h + 1) - s h)) = s (n + 1) - s 0 := by
+  induction n with
+  | zero => rw [Finset.sum_range_one]
+  | succ n ih =>
+    rw [Finset.sum_range_succ, ih, add_comm,
+      tsub_add_tsub_cancel (hs (Nat.le_succ _)) (hs (Nat.zero_le _))]
+
+/-- The widths over a flow's contiguous window telescope to the gap across
+that window: `∑_{h∈[a,b)} (s(h+1) − sₕ) = s b − s a`. -/
+theorem sum_Ico_width_telescope {s : ℕ → ℝ≥0} (hs : Monotone s) :
+    ∀ {a b : ℕ}, a ≤ b →
+      (∑ h ∈ Finset.Ico a b, (s (h + 1) - s h)) = s b - s a := by
+  intro a b
+  induction b with
+  | zero => intro hab; rw [Nat.le_zero.mp hab]; simp
+  | succ b ih =>
+    intro hab
+    rcases eq_or_lt_of_le hab with rfl | h
+    · simp
+    · have hab' : a ≤ b := Nat.lt_succ_iff.mp h
+      rw [Finset.sum_Ico_succ_top hab', ih hab', add_comm,
+        tsub_add_tsub_cancel (hs (Nat.le_succ b)) (hs hab')]
+
+/-- **Layer 1**: the chain convolution of the total gap is bounded by the
+sum of the hop curves applied to the hop widths,
+`chainConv β n (s(n+1) − s 0) ≤ ∑_{h≤n} β⁽ʰ⁾(s(h+1) − sₕ)`, for any
+nondecreasing node sequence `s`. The peel step splits the top width off
+the convolution. -/
+theorem chainConv_le_sum_widths {β : ℕ → ℝ≥0 → ℝ≥0} {s : ℕ → ℝ≥0}
+    (hs : Monotone s) (n : ℕ) :
+    chainConv β n (s (n + 1) - s 0)
+      ≤ ∑ h ∈ Finset.range (n + 1), β h (s (h + 1) - s h) := by
+  induction n with
+  | zero => simp [chainConv_zero]
+  | succ n ih =>
+    rw [chainConv_succ]
+    have hsplit : (s (n + 1) - s 0) + (s (n + 2) - s (n + 1)) = s (n + 2) - s 0 := by
+      rw [add_comm]
+      exact tsub_add_tsub_cancel (hs (Nat.le_succ _)) (hs (Nat.zero_le _))
+    calc minConvProj (chainConv β n) (β (n + 1)) (s (n + 2) - s 0)
+        ≤ chainConv β n (s (n + 1) - s 0)
+            + β (n + 1) (s (n + 2) - s (n + 1)) := minConvProj_le_add hsplit
+      _ ≤ (∑ h ∈ Finset.range (n + 1), β h (s (h + 1) - s h))
+            + β (n + 1) (s (n + 2) - s (n + 1)) := add_le_add ih le_rfl
+      _ = ∑ h ∈ Finset.range (n + 2), β h (s (h + 1) - s h) :=
+          (Finset.sum_range_succ (fun h => β h (s (h + 1) - s h)) (n + 1)).symm
+
 end DeepWiki
