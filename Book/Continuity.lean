@@ -8,6 +8,7 @@ import Mathlib.Topology.Semicontinuity.Defs
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
+import Mathlib.Topology.MetricSpace.Lipschitz
 
 /-! # Continuity notions for real functions
 One-sided continuity over `ℝ≥0` (`IsLeftContinuous`/`IsRightContinuous`),
@@ -261,6 +262,40 @@ theorem isPiecewiseContinuous_of_monotone_of_finite_image
   rcases lt_or_gt_of_ne hne with h | h
   · exact absurd heq (ne_of_lt (key t₁ t₂ ht₁ h))
   · exact absurd heq.symm (ne_of_lt (key t₂ t₁ ht₂ h))
+
+/-- A monotone curve with an additive Lipschitz bound is continuous:
+the two one-sided estimates squeeze every approach. -/
+theorem continuous_of_monotone_of_lipschitz_bound {f : ℝ≥0 → ℝ≥0}
+    {R : ℝ≥0} (hmono : Monotone f)
+    (hlip : ∀ v w, w ≤ v → f v ≤ f w + R * (v - w)) :
+    Continuous f := by
+  refine (LipschitzWith.of_dist_le_mul (K := R) fun x y => ?_).continuous
+  rcases le_total x y with h | h
+  · have hfy := hlip y x h
+    have hxy : (x : ℝ) ≤ (y : ℝ) := by exact_mod_cast h
+    have hfxy : ((f x : ℝ≥0) : ℝ) ≤ (f y : ℝ) := by
+      exact_mod_cast hmono h
+    rw [NNReal.dist_eq, NNReal.dist_eq, abs_sub_comm ((x : ℝ≥0) : ℝ),
+      abs_sub_comm ((f x : ℝ≥0) : ℝ),
+      abs_of_nonneg (sub_nonneg.mpr hxy),
+      abs_of_nonneg (sub_nonneg.mpr hfxy)]
+    have hR : ((f y : ℝ≥0) : ℝ)
+        ≤ (f x : ℝ) + (R : ℝ) * ((y - x : ℝ≥0) : ℝ) := by
+      exact_mod_cast hfy
+    rw [NNReal.coe_sub h] at hR
+    linarith
+  · have hfx := hlip x y h
+    have hxy : (y : ℝ) ≤ (x : ℝ) := by exact_mod_cast h
+    have hfxy : ((f y : ℝ≥0) : ℝ) ≤ (f x : ℝ) := by
+      exact_mod_cast hmono h
+    rw [NNReal.dist_eq, NNReal.dist_eq,
+      abs_of_nonneg (sub_nonneg.mpr hfxy),
+      abs_of_nonneg (sub_nonneg.mpr hxy)]
+    have hR : ((f x : ℝ≥0) : ℝ)
+        ≤ (f y : ℝ) + (R : ℝ) * ((x - y : ℝ≥0) : ℝ) := by
+      exact_mod_cast hfx
+    rw [NNReal.coe_sub h] at hR
+    linarith
 
 /-- A monotone left-continuous `ℝ≥0`-curve is lower semicontinuous:
 the left side converges by left-continuity, the right side only sees

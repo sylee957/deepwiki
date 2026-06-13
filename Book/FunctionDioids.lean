@@ -586,6 +586,23 @@ theorem le_minConvProj {g h : ℝ≥0 → ℝ≥0} {x t : ℝ≥0}
   rw [minConvProj_eq]
   exact le_ciInf fun p => hb p.1.1 p.1.2 p.2
 
+/-- `minConvProj` of monotone curves is monotone. -/
+theorem minConvProj_mono {g h : ℝ≥0 → ℝ≥0}
+    (hg : Monotone g) (hh : Monotone h) :
+    Monotone (minConvProj g h) := by
+  intro a b hab
+  rw [minConvProj_eq, minConvProj_eq]
+  refine le_ciInf ?_
+  rintro ⟨⟨u, v⟩, (huv : u + v = b)⟩
+  rcases le_total u a with hua | hua
+  · refine ciInf_le_of_le (OrderBot.bddBelow _)
+      ⟨(u, a - u), add_tsub_cancel_of_le hua⟩ ?_
+    refine add_le_add le_rfl (hh ?_)
+    exact tsub_le_iff_left.mpr (huv ▸ hab)
+  · refine ciInf_le_of_le (OrderBot.bddBelow _)
+      ⟨(a, 0), add_zero a⟩ ?_
+    exact add_le_add (hg hua) (hh zero_le')
+
 /-- `minConvProj A` is monotone in its right argument. -/
 theorem minConvProj_mono_right (A : ℝ≥0 → ℝ≥0)
     {g g' : ℝ≥0 → ℝ≥0} (h : g ≤ g') :

@@ -272,4 +272,183 @@ theorem not_forall_weaklyStrictServiceRel_le_strictServiceRel_of_monotone :
     (h _ (rate_mono 1)
       (isLeftContinuous_of_continuous _ (rate_continuous 1)))
 
+
+/-! ## The upper inclusion is strict for every delayed-start curve
+For monotone `β` vanishing on `[0, t₀)` (`0 < t₀`) and positive at
+some `s`, the rate input `λ_ρ` with `ρ = β(s)/s`, served at exactly
+the convolution `λ_ρ ∗ β`, is min-plus served at `β` but not weakly
+strictly: the pair's only equality point is the origin, and at `s`
+the anchored bound demands the full `β(s)` while the convolution
+stays strictly below it. The book's rate-line witness for this case
+is finite-valued, hence representable here unchanged. -/
+
+/-- The rate input as a curve. -/
+noncomputable def rateCurve (R : ℝ≥0) : Curve where
+  toFun := rate R
+  mono := rate_mono R
+  zero := mul_zero R
+  pwc := isPiecewiseContinuous_of_continuous _ (rate_continuous R)
+  leftCont := isLeftContinuous_of_continuous _ (rate_continuous R)
+
+/-- `rateCurve R t = R * t`. -/
+@[simp] theorem rateCurve_apply (R t : ℝ≥0) :
+    rateCurve R t = R * t := rfl
+
+/-- The convolution against a rate obeys the rate's additive
+Lipschitz bound: shift each split of the smaller time. -/
+theorem minConvProj_rate_le_add {β : ℝ≥0 → ℝ≥0} {R : ℝ≥0} :
+    ∀ v w, w ≤ v → minConvProj (rate R) β v
+      ≤ minConvProj (rate R) β w + R * (v - w) := by
+  intro v w hwv
+  rw [← tsub_le_iff_right]
+  refine le_minConvProj fun u x hux => ?_
+  rw [tsub_le_iff_right]
+  refine le_trans (minConvProj_le_add (u := u + (v - w)) (s := x) ?_) ?_
+  · rw [add_right_comm, hux, add_tsub_cancel_of_le hwv]
+  · refine le_of_eq ?_
+    rw [rate_apply, rate_apply, mul_add]
+    ring
+
+/-- The rate convolution `λ_R ∗ β` as a curve, for monotone `β` null
+at the origin: Lipschitz, hence continuous. -/
+noncomputable def rateConvCurve (β : ℝ≥0 → ℝ≥0) (R : ℝ≥0)
+    (hmono : Monotone β) (h0 : β 0 = 0) : Curve where
+  toFun := minConvProj (rate R) β
+  mono := minConvProj_mono (rate_mono R) hmono
+  zero := by
+    show minConvProj (rate R) β 0 = 0
+    rw [minConvProj_zero_eq, rate_apply, mul_zero, zero_add, h0]
+  pwc := isPiecewiseContinuous_of_continuous _
+    (continuous_of_monotone_of_lipschitz_bound
+      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
+  leftCont := isLeftContinuous_of_continuous _
+    (continuous_of_monotone_of_lipschitz_bound
+      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
+
+/-- Before its start the delayed curve contributes nothing, so the
+rate convolution sits strictly below the rate at every positive
+time. -/
+theorem rateConvCurve_lt_rateCurve {β : ℝ≥0 → ℝ≥0} {t₀ s : ℝ≥0}
+    (hmono : Monotone β) (hvan : ∀ u, u < t₀ → β u = 0)
+    (ht₀ : 0 < t₀) (hts : t₀ ≤ s) (hβs : 0 < β s) {u : ℝ≥0}
+    (hu : 0 < u) :
+    rateConvCurve β (β s / s) hmono (hvan 0 ht₀) u
+      < rateCurve (β s / s) u := by
+  have hs0 : 0 < s := lt_of_lt_of_le ht₀ hts
+  have hρ : 0 < β s / s := div_pos hβs hs0
+  set w := min (t₀ / 2) u with hw
+  have hw0 : 0 < w := lt_min (half_pos ht₀) hu
+  have hwu : w ≤ u := min_le_right _ _
+  have hwt₀ : w < t₀ := lt_of_le_of_lt (min_le_left _ _)
+    (NNReal.half_lt_self (ne_of_gt ht₀))
+  have hβw : β w = 0 := hvan w hwt₀
+  have hsplit : (u - w) + w = u := tsub_add_cancel_of_le hwu
+  calc rateConvCurve β (β s / s) hmono (hvan 0 ht₀) u
+      ≤ rate (β s / s) (u - w) + β w := minConvProj_le_add hsplit
+    _ = (β s / s) * (u - w) := by rw [hβw, add_zero, rate_apply]
+    _ < (β s / s) * u := by
+        refine mul_lt_mul_of_pos_left ?_ hρ
+        exact tsub_lt_self hu hw0
+    _ = rateCurve (β s / s) u := rfl
+
+/-- The pair's only equality point is the origin: the start anchors
+there. -/
+theorem start_rateCurve_rateConvCurve_eq_zero {β : ℝ≥0 → ℝ≥0}
+    {t₀ s : ℝ≥0}
+    (hmono : Monotone β) (hvan : ∀ u, u < t₀ → β u = 0)
+    (ht₀ : 0 < t₀) (hts : t₀ ≤ s) (hβs : 0 < β s) (t : ℝ≥0) :
+    start ⇑(rateCurve (β s / s))
+      ⇑(rateConvCurve β (β s / s) hmono (hvan 0 ht₀)) t = 0 := by
+  refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_)
+    zero_le'
+  · have hA0 : rateCurve (β s / s) 0 = 0 := (rateCurve _).zero
+    have hD0 : rateConvCurve β (β s / s) hmono (hvan 0 ht₀) 0 = 0 :=
+      (rateConvCurve β (β s / s) hmono (hvan 0 ht₀)).zero
+    show rateCurve (β s / s) 0
+      = rateConvCurve β (β s / s) hmono (hvan 0 ht₀) 0
+    rw [hA0, hD0]
+  · by_contra hu0
+    rw [not_le] at hu0
+    exact absurd hu.2.symm (ne_of_lt
+      (rateConvCurve_lt_rateCurve hmono hvan ht₀ hts hβs hu0))
+
+/-- **For every delayed-start curve the min-plus relation strictly
+exceeds the weakly strict one**: the rate pair is min-plus served at
+`β` but the anchored bound fails at `s`. -/
+theorem exists_minimalServiceRel_not_weaklyStrictServiceRel
+    {β : ℝ≥0 → ℝ≥0} {t₀ s : ℝ≥0}
+    (hmono : Monotone β) (hvan : ∀ u, u < t₀ → β u = 0)
+    (ht₀ : 0 < t₀) (hts : t₀ ≤ s) (hβs : 0 < β s) :
+    ∃ A D : Curve, minimalServiceRel (liftEReal β) A D
+      ∧ ¬ weaklyStrictServiceRel β A D := by
+  have hs0 : 0 < s := lt_of_lt_of_le ht₀ hts
+  set A := rateCurve (β s / s) with hA
+  set D := rateConvCurve β (β s / s) hmono (hvan 0 ht₀) with hD
+  have hcaus : D ≤ A := by
+    intro t
+    rcases eq_zero_or_pos t with rfl | ht
+    · have hA0 : A 0 = 0 := A.zero
+      have hD0 : D 0 = 0 := D.zero
+      rw [hA0, hD0]
+    · exact (rateConvCurve_lt_rateCurve hmono hvan ht₀ hts hβs ht).le
+  refine ⟨A, D, mem_minimalServiceRel_iff.mpr ⟨hcaus, fun t => ?_⟩, ?_⟩
+  · -- the ε-room between the `ℝ≥0` infimum and the `EReal` convolution
+    by_contra hcon
+    rw [not_le] at hcon
+    obtain ⟨c, hc1, hc2⟩ := EReal.exists_between_coe_real hcon
+    have hεpos : (0 : ℝ) < c - (D t : ℝ) := by
+      refine sub_pos.mpr ?_
+      have hc1' : (((D t : ℝ≥0) : ℝ) : EReal) < (c : EReal) := hc1
+      exact_mod_cast hc1'
+    have hlt : (⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+        (rate (β s / s) p.1.1 + β p.1.2))
+        < D t + (c - (D t : ℝ)).toNNReal := by
+      have hDt : D t = ⨅ p : {p : ℝ≥0 × ℝ≥0 // p.1 + p.2 = t},
+          (rate (β s / s) p.1.1 + β p.1.2) := minConvProj_eq _ _ t
+      rw [← hDt]
+      exact lt_add_of_pos_right _ (Real.toNNReal_pos.mpr hεpos)
+    obtain ⟨p, hp⟩ := exists_lt_of_ciInf_lt hlt
+    have hpR : ((rate (β s / s) p.1.1 + β p.1.2 : ℝ≥0) : ℝ) < c := by
+      have h := (NNReal.coe_lt_coe.mpr hp :
+        ((rate (β s / s) p.1.1 + β p.1.2 : ℝ≥0) : ℝ) < _)
+      push_cast [Real.coe_toNNReal _ hεpos.le] at h ⊢
+      linarith
+    have hchain : minConv (curveEReal A) (liftEReal β) t
+        ≤ (((rate (β s / s) p.1.1 + β p.1.2 : ℝ≥0) : ℝ) : EReal) := by
+      refine le_trans (minConv_le_add _ _ p.2) ?_
+      rw [curveEReal_apply]
+      push_cast
+      exact le_rfl
+    exact absurd (lt_of_le_of_lt hchain (by exact_mod_cast hpR))
+      (not_lt.mpr hc2.le)
+  · rintro ⟨_, hb⟩
+    have h := hb s
+    have hD0 : D 0 = 0 := D.zero
+    rw [start_rateCurve_rateConvCurve_eq_zero hmono hvan ht₀ hts hβs,
+      tsub_zero, hD0, zero_add] at h
+    have hDs : D s < A s :=
+      rateConvCurve_lt_rateCurve hmono hvan ht₀ hts hβs hs0
+    have hAs : A s = β s := by
+      show β s / s * s = β s
+      rw [div_mul_cancel₀ _ (ne_of_gt hs0)]
+    rw [hAs] at hDs
+    exact absurd h (not_le.mpr hDs)
+
+/-- The strict relation-level separation: for every delayed-start
+curve the weakly strict relation is strictly below the min-plus
+one. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel
+    {β : ℝ≥0 → ℝ≥0} {t₀ s : ℝ≥0}
+    (hmono : Monotone β) (hvan : ∀ u, u < t₀ → β u = 0)
+    (ht₀ : 0 < t₀) (hts : t₀ ≤ s) (hβs : 0 < β s) :
+    weaklyStrictServiceRel β < minimalServiceRel (liftEReal β) := by
+  obtain ⟨A, D, hmp, hnws⟩ :=
+    exists_minimalServiceRel_not_weaklyStrictServiceRel
+      hmono hvan ht₀ hts hβs
+  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel β)
+    fun heq => ?_
+  refine hnws ?_
+  rw [heq]
+  exact hmp
+
 end DeepWiki
