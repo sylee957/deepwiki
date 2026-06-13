@@ -971,11 +971,13 @@ theorem strictServiceRel_lt_weaklyStrictServiceRel_sqrt :
 
 /-! ## Book restatement (the hierarchy is strict at `√·`)
 `√·` is concave with infinite initial slope, so `√·↑ = √· ∉ {δ₀, 0}`, and it is
-strictly subadditive (`√2 < √1 + √1`). Both hierarchy inclusions are therefore
-strict at `√·`: `S_vcn ⊆ S_strict ⊊ S_wstrict ⊊ S_mp`. The lower strictness
-holds for every strictly-subadditive (e.g. strictly-concave) curve; the upper
-one additionally covers the infinite-initial-slope curves the rate constructions
-miss. -/
+strictly subadditive (`√2 < √1 + √1`). The two upper inclusions are therefore
+both strict at `√·`: `S_strict(√·) ⊊ S_wstrict(√·) ⊊ S_mp(√·)`. The lower
+(`strict`) strictness holds for every strictly-subadditive (e.g.
+strictly-concave) curve; the upper (`mp`) one additionally covers the
+infinite-initial-slope curves the rate constructions miss. (The bottom
+`S_vcn`-vs-`S_strict` inclusion is the adjudicated jump-sensitive one — not
+asserted here.) -/
 example : strictServiceRel sqrtFun < weaklyStrictServiceRel sqrtFun :=
   strictServiceRel_lt_weaklyStrictServiceRel_sqrt
 example : weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) :=
