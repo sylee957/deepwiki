@@ -344,6 +344,75 @@ theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps
     (fun j => hcaus As Ds hp j) (hgps As Ds hp)
     (hβ.sum_strict hp) harr hcross hgrow hik hst hbl
 
+/-- **Aggregate-strict service**: the `J`-aggregate of an `n`-server
+obeys the strict inequality for `β` on its own backlogged periods —
+the hypothesis-and-conclusion shape that the per-flow peeling
+transports. -/
+def IsAggregateStrict {ι : Type*}
+    (As Ds : ι → Curve) (J : Finset ι) (β : ℝ≥0 → ℝ≥0) : Prop :=
+  ∀ s t, s ≤ t →
+    IsBacklogged (fun x => ∑ j ∈ J, (As j) x)
+      (fun x => ∑ j ∈ J, (Ds j) x) (Set.Ioc s t) →
+    (∑ j ∈ J, (Ds j) s) + β (t - s) ≤ ∑ j ∈ J, (Ds j) t
+
+/-- **One peel of the improved-GPS chain**: removing an
+arrival-constrained flow `k` from a `J`-aggregate-strict curve `β`
+leaves the remaining `J ∖ {k}`-aggregate strict for the gated
+residual `(β − α)·1_{[T,∞)}` — the inductive step that, iterated,
+peels every cross flow. -/
+theorem IsAggregateStrict.peel {ι : Type*} [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve} {J : Finset ι}
+    {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+    (hΦ : 0 < ∑ j ∈ J, φ j) (hc : ∀ j ∈ J, Ds j ≤ As j)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {k : ι} (hk : k ∈ J) (harr : IsMaximalArrivalBound ⇑(As k) α)
+    (hcross : ∀ x, T ≤ x → (∑ j ∈ J, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j ∈ J, φ j) * α y
+        ≤ φ k * β y + (∑ j ∈ J, φ j) * α x)
+    (h : IsAggregateStrict As Ds J β) :
+    IsAggregateStrict As Ds (J.erase k) (gatedResidual β α T) :=
+  fun s t hst hbl =>
+    add_gatedResidual_le_of_isGps (s := s) (t := t) hΦ hc hgps h hk harr
+      hcross hgrow hst hbl
+
+/-- **Two peels collapse to one gate**: peeling flows `k₁` then `k₂`
+(gates `T₁ ≤ T₂`) from an aggregate-strict `β` leaves the remaining
+aggregate strict for the single-gated residual
+`(β − (α₁ + α₂))·1_{[T₂,∞)}` — the gate-collapse in action, the
+shape the `n`-fold improved-GPS residual takes. -/
+theorem IsAggregateStrict.peel_two {ι : Type*} [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve} {J : Finset ι}
+    {β α₁ α₂ : ℝ≥0 → ℝ≥0} {T₁ T₂ : ℝ≥0} (hT : T₁ ≤ T₂)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    {k₁ k₂ : ι} (hk₁ : k₁ ∈ J) (hk₂ : k₂ ∈ J.erase k₁)
+    (hΦ₁ : 0 < ∑ j ∈ J, φ j) (hΦ₂ : 0 < ∑ j ∈ J.erase k₁, φ j)
+    (hc : ∀ j ∈ J, Ds j ≤ As j)
+    (harr₁ : IsMaximalArrivalBound ⇑(As k₁) α₁)
+    (harr₂ : IsMaximalArrivalBound ⇑(As k₂) α₂)
+    (hcross₁ : ∀ x, T₁ ≤ x → (∑ j ∈ J, φ j) * α₁ x ≤ φ k₁ * β x)
+    (hgrow₁ : ∀ x y, T₁ ≤ x → x ≤ y →
+      φ k₁ * β x + (∑ j ∈ J, φ j) * α₁ y
+        ≤ φ k₁ * β y + (∑ j ∈ J, φ j) * α₁ x)
+    (hcross₂ : ∀ x, T₂ ≤ x →
+      (∑ j ∈ J.erase k₁, φ j) * α₂ x
+        ≤ φ k₂ * gatedResidual β α₁ T₁ x)
+    (hgrow₂ : ∀ x y, T₂ ≤ x → x ≤ y →
+      φ k₂ * gatedResidual β α₁ T₁ x + (∑ j ∈ J.erase k₁, φ j) * α₂ y
+        ≤ φ k₂ * gatedResidual β α₁ T₁ y
+          + (∑ j ∈ J.erase k₁, φ j) * α₂ x)
+    (h : IsAggregateStrict As Ds J β) :
+    IsAggregateStrict As Ds ((J.erase k₁).erase k₂)
+      (gatedResidual β (fun v => α₁ v + α₂ v) T₂) := by
+  have hpeel₁ : IsAggregateStrict As Ds (J.erase k₁)
+      (gatedResidual β α₁ T₁) :=
+    h.peel hΦ₁ hc hgps hk₁ harr₁ hcross₁ hgrow₁
+  have hpeel₂ : IsAggregateStrict As Ds ((J.erase k₁).erase k₂)
+      (gatedResidual (gatedResidual β α₁ T₁) α₂ T₂) :=
+    hpeel₁.peel hΦ₂ (fun j hj => hc j (Finset.mem_of_mem_erase hj))
+      hgps hk₂ harr₂ hcross₂ hgrow₂
+  rwa [gatedResidual_gatedResidual hT] at hpeel₂
+
 /-! ## Book restatement (towards the improved GPS residual)
 The two lemmas on the way to the improved GPS theorem: in a GPS
 `n`-server offering a strict `β` whose flow `k` has a (concave)
