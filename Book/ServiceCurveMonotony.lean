@@ -283,4 +283,102 @@ example {β β' : ℝ≥0 → ℝ≥0}
   · intro hle t
     exact le_trans (le_ndClosure β hbdd t) (hle t)
 
+/-! ## The converse of min-plus monotony fails without closures
+Without the non-decreasing closure, `S_mp(β) ⊇ S_mp(β')` does not force
+`β ≤ β'`: two incomparable (necessarily non-monotone, `+∞`-valued) curves can
+have nested min-plus relations. Here `β` is `0` on `[0,1] ∪ (2,∞)`, `+∞` on
+`(1,2]`; `β'` is `0` on `{0} ∪ (1,2]`, `+∞` elsewhere. -/
+
+/-- The converse-monotony witness `β`: `0` on `[0,1] ∪ (2,∞)`, `+∞` on `(1,2]`. -/
+noncomputable def monoCexBetaA : ℝ≥0 → EReal := fun t => if 1 < t ∧ t ≤ 2 then ⊤ else 0
+
+/-- The converse-monotony witness `β'`: `0` on `{0} ∪ (1,2]`, `+∞` elsewhere. -/
+noncomputable def monoCexBetaB : ℝ≥0 → EReal :=
+  fun t => if t = 0 ∨ (1 < t ∧ t ≤ 2) then 0 else ⊤
+
+/-- The witnesses are incomparable: at `t = 2`, `β = +∞` but `β' = 0`. -/
+theorem not_monoCexBetaA_le_monoCexBetaB : ¬ monoCexBetaA ≤ monoCexBetaB := by
+  intro h
+  have h2 := h 2
+  rw [show monoCexBetaA 2 = ⊤ from if_pos ⟨one_lt_two, le_refl 2⟩,
+    show monoCexBetaB 2 = 0 from if_pos (Or.inr ⟨one_lt_two, le_refl 2⟩)] at h2
+  simp at h2
+
+/-- The reverse incomparability: at `t = 1`, `β' = +∞` but `β = 0`. -/
+theorem not_monoCexBetaB_le_monoCexBetaA : ¬ monoCexBetaB ≤ monoCexBetaA := by
+  intro h
+  have h1 := h 1
+  rw [show monoCexBetaB 1 = ⊤ from if_neg (by
+      rintro (h0 | ⟨hlt, _⟩); exacts [one_ne_zero h0, lt_irrefl 1 hlt]),
+    show monoCexBetaA 1 = 0 from if_neg (fun hh => absurd hh.1 (lt_irrefl 1))] at h1
+  simp at h1
+
+/-- The value at `1` for `β'`: `A 1 ≤ (A ∗ β') 1` (the only finite split of `1`
+is `(1,0)`; every other split hits `β' = +∞`). -/
+theorem curveEReal_one_le_minConv_monoCexBetaB (A : Curve) :
+    curveEReal A 1 ≤ minConv (curveEReal A) monoCexBetaB 1 := by
+  refine le_minConv fun u s hus => ?_
+  rcases eq_or_ne s 0 with hs | hs
+  · have hu : u = 1 := by rw [hs, add_zero] at hus; exact hus
+    rw [hu, hs]
+    exact le_add_of_nonneg_right
+      (le_of_eq (show monoCexBetaB 0 = 0 from if_pos (Or.inl rfl)).symm)
+  · have hs1 : s ≤ 1 := le_trans le_add_self (le_of_eq hus)
+    rw [show monoCexBetaB s = ⊤ from if_neg (by
+        rintro (h0 | ⟨h1, _⟩)
+        · exact hs h0
+        · exact absurd h1 (not_lt.mpr hs1)),
+      EReal.add_top_of_ne_bot (isNeverBot_curveEReal A u)]
+    exact le_top
+
+/-- **The converse of min-plus monotony holds for the witnesses**:
+`minimalServiceRel β' ≤ minimalServiceRel β` (i.e. `S_mp(β) ⊇ S_mp(β')`), since
+`β`'s convolution stays under `β'`'s along the monotone departure `D`. -/
+theorem minimalServiceRel_monoCexBetaB_le_monoCexBetaA :
+    minimalServiceRel monoCexBetaB ≤ minimalServiceRel monoCexBetaA := by
+  intro A D hp
+  rw [mem_minimalServiceRel_iff] at hp ⊢
+  refine ⟨hp.1, fun t => ?_⟩
+  rcases le_or_gt t 1 with ht1 | ht1
+  · refine le_trans (minConv_le_add (curveEReal A) monoCexBetaA (zero_add t)) ?_
+    rw [show monoCexBetaA t = 0 from if_neg (fun h => absurd h.1 (not_lt.mpr ht1)),
+      curveEReal_zero, add_zero]
+    exact curveEReal_nonneg D t
+  · rcases le_or_gt t 2 with ht2 | ht2
+    · have h1t : (1 : ℝ≥0) ≤ t := ht1.le
+      have htm1 : t - 1 ≤ 1 :=
+        tsub_le_iff_right.mpr (le_trans ht2 (by norm_num : (2 : ℝ≥0) ≤ 1 + 1))
+      calc minConv (curveEReal A) monoCexBetaA t
+          ≤ curveEReal A (t - 1) + monoCexBetaA 1 :=
+            minConv_le_add (curveEReal A) monoCexBetaA (tsub_add_cancel_of_le h1t)
+        _ = curveEReal A (t - 1) := by
+            rw [show monoCexBetaA 1 = 0 from if_neg (fun h => absurd h.1 (lt_irrefl 1)),
+              add_zero]
+        _ ≤ curveEReal A 1 := by
+            rw [curveEReal_apply, curveEReal_apply]; exact_mod_cast A.mono htm1
+        _ ≤ minConv (curveEReal A) monoCexBetaB 1 :=
+            curveEReal_one_le_minConv_monoCexBetaB A
+        _ ≤ curveEReal D 1 := hp.2 1
+        _ ≤ curveEReal D t := by
+            rw [curveEReal_apply, curveEReal_apply]; exact_mod_cast D.mono h1t
+    · refine le_trans (minConv_le_add (curveEReal A) monoCexBetaA (zero_add t)) ?_
+      rw [show monoCexBetaA t = 0 from if_neg (fun h => absurd h.2 (not_le.mpr ht2)),
+        curveEReal_zero, add_zero]
+      exact curveEReal_nonneg D t
+
+/-- **The converse of monotony is a non-theorem**: `S_mp(β) ⊇ S_mp(β')` does not
+force `β ≤ β'` — the relation inclusion holds for incomparable `β`, `β'`. -/
+theorem not_forall_minimalServiceRel_le_imp_le :
+    ¬ ∀ β β' : ℝ≥0 → EReal,
+      minimalServiceRel β' ≤ minimalServiceRel β → β ≤ β' := fun h =>
+  not_monoCexBetaA_le_monoCexBetaB
+    (h monoCexBetaA monoCexBetaB minimalServiceRel_monoCexBetaB_le_monoCexBetaA)
+
+/-! Book restatement: there exist incomparable `β`, `β'` (neither dominates the
+other) with `S_mp(β) ⊇ S_mp(β')` — the converse of monotony, refuted. -/
+example : ∃ β β' : ℝ≥0 → EReal,
+    ¬ β ≤ β' ∧ ¬ β' ≤ β ∧ minimalServiceRel β' ≤ minimalServiceRel β :=
+  ⟨monoCexBetaA, monoCexBetaB, not_monoCexBetaA_le_monoCexBetaB,
+    not_monoCexBetaB_le_monoCexBetaA, minimalServiceRel_monoCexBetaB_le_monoCexBetaA⟩
+
 end DeepWiki
