@@ -495,6 +495,41 @@ theorem le_subadditiveClosureENN_of_isSubadditive {D : Type}
         rw [subadditiveClosureENN_eq_self f hsub h0]
     _ ≤ subadditiveClosureENN g t := subadditiveClosureENN_mono f g hfg t
 
+/-- **Star of a meet**: the closure of a pointwise minimum is the convolution
+of the closures, `(σ ⊓ τ)⋆ = σ⋆ ∗ τ⋆` — the (min,+) Kleene-star identity
+`(a ⊕ b)⋆ = a⋆ ⊗ b⋆` of a commutative idempotent dioid. -/
+theorem subadditiveClosureENN_min {D : Type} [_root_.AddCommMonoid D]
+    (σ τ : D → ℝ≥0∞) :
+    subadditiveClosureENN (fun t => min (σ t) (τ t))
+      = minConv (subadditiveClosureENN σ) (subadditiveClosureENN τ) := by
+  funext t
+  apply le_antisymm
+  · refine le_minConv fun u s hus => ?_
+    subst hus
+    calc subadditiveClosureENN (fun t => min (σ t) (τ t)) (u + s)
+        ≤ subadditiveClosureENN (fun t => min (σ t) (τ t)) u
+            + subadditiveClosureENN (fun t => min (σ t) (τ t)) s :=
+          subadditiveClosureENN_subadditive _ u s
+      _ ≤ subadditiveClosureENN σ u + subadditiveClosureENN τ s :=
+          add_le_add
+            (subadditiveClosureENN_mono _ σ (fun _ => min_le_left _ _) u)
+            (subadditiveClosureENN_mono _ τ (fun _ => min_le_right _ _) s)
+  · have hsub : IsSubadditive
+        (minConv (subadditiveClosureENN σ) (subadditiveClosureENN τ)) :=
+      IsSubadditive.minConv (subadditiveClosureENN_subadditive σ)
+        (subadditiveClosureENN_subadditive τ)
+    have h0 : minConv (subadditiveClosureENN σ) (subadditiveClosureENN τ) 0 = 0 :=
+      le_antisymm
+        ((minConv_le_add _ _ (add_zero 0)).trans_eq (by
+          rw [subadditiveClosureENN_zero_eq, subadditiveClosureENN_zero_eq, add_zero]))
+        zero_le'
+    refine le_subadditiveClosureENN_of_isSubadditive hsub h0 (fun r => ?_) t
+    exact le_min
+      ((minConv_le_left _ (subadditiveClosureENN_zero_eq τ) r).trans
+        (subadditiveClosureENN_le σ r))
+      ((minConv_le_right (subadditiveClosureENN_zero_eq σ) _ r).trans
+        (subadditiveClosureENN_le τ r))
+
 /-- **The star bound**: a curve dominating `a ⊓ (x ∗ w)` for a uniformly
 positive `w` (`0 < c ≤ w`) dominates `a ∗ w⋆` — the numeric form of the
 least-fixed-point property of the Kleene star, and the engine of feedback

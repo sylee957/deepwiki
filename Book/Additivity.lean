@@ -211,4 +211,17 @@ theorem minConv_apply_add_le_of_isSubadditive {D : Type}
     _ ≤ f p + (g q + g v) := add_le_add_right (hsub q v) _
     _ = (f p + g q) + g v := (add_assoc _ _ _).symm
 
+/-- The `(min,+)` convolution of two sub-additive `ℝ≥0∞` curves is sub-additive. -/
+theorem IsSubadditive.minConv {D : Type} [_root_.AddCommMonoid D]
+    {f g : D → ℝ≥0∞} (hf : IsSubadditive f) (hg : IsSubadditive g) :
+    IsSubadditive (minConv f g) := by
+  intro a b
+  refine ENNReal.le_iInf_add_iInf fun p q => ?_
+  calc _root_.DeepWiki.minConv f g (a + b)
+      ≤ f (p.1.1 + q.1.1) + g (p.1.2 + q.1.2) :=
+        minConv_le_add f g (by rw [add_add_add_comm, p.2, q.2])
+    _ ≤ (f p.1.1 + f q.1.1) + (g p.1.2 + g q.1.2) :=
+        add_le_add (hf p.1.1 q.1.1) (hg p.1.2 q.1.2)
+    _ = (f p.1.1 + g p.1.2) + (f q.1.1 + g q.1.2) := by abel
+
 end DeepWiki

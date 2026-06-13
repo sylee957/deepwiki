@@ -247,6 +247,17 @@ example (P s R T : ℝ≥0) (J : ℝ) :
     staircase P s J T ≤ vDev (staircase P s J) (rateLatencyNN R T) :=
   apply_le_vDev_rateLatencyNN (staircase P s J) R T
 
+/-- **The shaped staircase arrival curve**: the closure of the minimum
+`λ_C ⊓ ν_{P,s,0}` is the convolution `λ_C ∗ ν_{P,s,0}`
+(`rateNN C ∗ staircase P s 0`) — both factors are their own closures, so the
+star-of-meet identity collapses to the plain convolution. -/
+theorem subadditiveClosureENN_min_rateNN_staircase (C P s : ℝ≥0) (hP : (0:ℝ) < P) :
+    subadditiveClosureENN (fun t => min (rateNN C t) (staircase P s 0 t))
+      = minConv (rateNN C) (staircase P s 0) := by
+  rw [subadditiveClosureENN_min (rateNN C) (staircase P s 0),
+    subadditiveClosureENN_eq_self (rateNN C) (rateNN_subadditive C) (rateNN_zero_eq C),
+    staircase_closure P s hP 0 le_rfl]
+
 /-! ## Book restatement (shaping and periodic flows)
 A periodic flow crossing a constant-rate server `λ_C` (a shaper) under
 stability `s/P < C`: with the token-bucket approximation `γ_{s/P,s}`,
@@ -258,5 +269,13 @@ example (P s C : ℝ≥0) :
     minDeconv (tokenBucketNN (s / P) s) (rateNN C) ⊓ rateNN C
       = tokenBucketNN (s / P) s ⊓ rateNN C :=
   minDeconv_tokenBucketNN_rateNN_inf (s / P) s C
+
+/-! With the tighter periodic staircase `ν_{P,s,0}` in place of the
+token-bucket, the arrival curve at the next server is `λ_C ∧ ν_{P,s,0}`;
+the sub-additive closure sharpens it to `(λ_C ∧ ν_{P,s,0})⋆ = λ_C ∗ ν_{P,s,0}`. -/
+example (P s C : ℝ≥0) (hP : (0:ℝ) < P) :
+    subadditiveClosureENN (fun t => min (rateNN C t) (staircase P s 0 t))
+      = minConv (rateNN C) (staircase P s 0) :=
+  subadditiveClosureENN_min_rateNN_staircase C P s hP
 
 end DeepWiki
