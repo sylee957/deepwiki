@@ -1,4 +1,5 @@
 import Book.ServiceCurveStrict
+import Book.ServiceCurveStrictEReal
 import Book.ServersConcatenation
 import Book.RealCurvesConv
 import Book.RealCurvesRegularity
@@ -123,6 +124,21 @@ theorem staircaseCurve_strictServiceRel
   show staircaseFun T b (d + δ) s + β (t - s) ≤ staircaseFun T b (d + δ) t
   rw [hβ0, add_zero]
   exact staircaseFun_mono T b (d + δ) hst
+
+/-- The same staircase delay-pair realizes the `EReal` pure-delay curve `δ_δ`
+*directly*: its backlogged periods have length at most `δ`
+(`staircaseFun_length_le_of_isBacklogged`), which is exactly the delay-bound
+reading `mem_strictServiceRelEReal_delay_iff`. Composing with
+`strictServiceRelEReal_delay_le_strictServiceRel` recovers the finite
+`staircaseCurve_strictServiceRel` for any `β` vanishing at `δ` — the book's
+`βᵢ ≤ δ_Tᵢ` route through `δ_T`. -/
+theorem staircaseCurve_strictServiceRelEReal_delay {T δ : ℝ≥0} (hδT : δ < T)
+    (b d : ℝ≥0) :
+    strictServiceRelEReal (delayEReal δ)
+      (staircaseCurve T b d) (staircaseCurve T b (d + δ)) :=
+  mem_strictServiceRelEReal_delay_iff.mpr
+    ⟨fun τ => staircaseFun_anti T b le_self_add τ,
+      fun _ _ hst hbl => staircaseFun_length_le_of_isBacklogged hδT hst hbl⟩
 
 /-- Delaying the staircase by at least one period keeps the pair backlogged
 at every positive time. -/
