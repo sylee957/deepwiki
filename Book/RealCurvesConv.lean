@@ -215,6 +215,58 @@ theorem conv_delayNN_delayNN (d d' : ℝ≥0) :
       if_neg (fun h =>
         absurd (tsub_le_iff_right.mp h) (not_le.mpr ht))]
 
+/-- `delayEReal d` is monotone (the `EReal` sibling of `delayNN_mono`). -/
+theorem delayEReal_mono (d : ℝ≥0) : Monotone (delayEReal d) := by
+  intro a b hab
+  simp only [delayEReal, delay_apply]
+  split
+  · split
+    · exact le_refl _
+    · exact le_top
+  · rename_i h1
+    rw [if_neg fun hb => h1 (hab.trans hb)]
+
+/-- `delayEReal d` is never `⊥` (its values are `0` or `⊤`). -/
+theorem delayEReal_ne_bot (d u : ℝ≥0) : delayEReal d u ≠ ⊥ := by
+  simp only [delayEReal, delay_apply]
+  split <;> simp
+
+/-- Convolving with `delayEReal d` shifts: `f ∗ δ_d = f(· − d)` for monotone
+`f` never `⊥` (the `EReal` sibling of `conv_delayNN`). -/
+theorem conv_delayEReal (f : ℝ≥0 → EReal) (hf : Monotone f) (hb : ∀ u, f u ≠ ⊥)
+    (d : ℝ≥0) :
+    minConv f (delayEReal d) = fun t => f (t - d) := by
+  simp only [delayEReal]
+  funext t
+  apply le_antisymm
+  · rcases le_or_gt t d with ht | ht
+    · refine (minConv_le_add f (delay d) (zero_add t)).trans ?_
+      rw [delay_eq_zero d ht, add_zero, tsub_eq_zero_of_le ht]
+    · refine (minConv_le_add f (delay d) (tsub_add_cancel_of_le ht.le)).trans ?_
+      rw [delay_eq_zero d le_rfl, add_zero]
+  · refine le_minConv fun u s hus => ?_
+    rcases le_or_gt s d with hs | hs
+    · rw [delay_eq_zero d hs, add_zero]
+      have hu : u = t - s := by rw [← hus, add_tsub_cancel_right]
+      rw [hu]
+      exact hf (tsub_le_tsub_left hs t)
+    · rw [delay_eq_top d hs, EReal.add_top_of_ne_bot (hb u)]
+      exact le_top
+
+/-- **Pure delays add under convolution**: `δ_d ∗ δ_{d'} = δ_{d + d'}` on
+`EReal` (the `EReal` sibling of `conv_delayNN_delayNN`; min-plus convolution
+of two delay servers is the delay of the sum). -/
+theorem conv_delayEReal_delayEReal (d d' : ℝ≥0) :
+    minConv (delayEReal d) (delayEReal d') = delayEReal (d + d') := by
+  rw [conv_delayEReal (delayEReal d) (delayEReal_mono d) (delayEReal_ne_bot d) d']
+  funext t
+  simp only [delayEReal, delay_apply]
+  rcases le_or_gt t (d + d') with ht | ht
+  · rw [if_pos ht, if_pos (tsub_le_iff_right.mpr ht)]
+  · rw [if_neg (not_le.mpr ht),
+      if_neg (fun h =>
+        absurd (tsub_le_iff_right.mp h) (not_le.mpr ht))]
+
 /-- `rateLatencyNN R T = delayNN T ∗ rateNN R`. -/
 theorem rateLatencyNN_eq_conv (R T : ℝ≥0) :
     rateLatencyNN R T = minConv (delayNN T) (rateNN R) := by
