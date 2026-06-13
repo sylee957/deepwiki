@@ -399,3 +399,38 @@ theorem warp_shift_dense {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (x : ℝ�
     push_cast at h
     linarith
   · rw [add_tsub_cancel_right, warp_mul_nat hd, warp_shift_eq hr hrd]
+
+/-- **A shift stage is a strict `δ_d` server**: shifting the warp-staircase
+`shiftCurve (warpCurve A) c` by a further `d − r` is a strict `δ_d` server of it. The
+backlog reduces (via `A` monotone) to the warp's `(d−r)`-shift coincidence, which is
+`≤ d`-dense (`warp_shift_dense`; near the origin the shifted warp is `0`, so the
+coincidence is trivial). -/
+theorem shiftCurve_warpCurve_strictServiceRelEReal (A : Curve) {d r : ℝ≥0}
+    (hr : 0 < r) (hrd : r ≤ d) (c : ℝ≥0) :
+    strictServiceRelEReal (delayEReal d) (shiftCurve (warpCurve A hr hrd) c)
+      (shiftCurve (warpCurve A hr hrd) (c + (d - r))) := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  set F : ℝ≥0 → ℝ≥0 := fun τ => A (warp d r (τ - c)) with hF
+  refine mem_strictServiceRelEReal_delay_iff.mpr ⟨fun τ => ?_, fun s t hst hbl => ?_⟩
+  · exact A.mono (warp_mono hr hrd (tsub_le_tsub_left le_self_add τ))
+  · have hFdense : ∀ x : ℝ≥0, ∃ p, x < p ∧ p ≤ x + d ∧ F (p - (d - r)) = F p := by
+      intro x
+      rcases le_or_gt c x with hcx | hxc
+      · obtain ⟨q, hxq, hqd, heq⟩ := warp_shift_dense hr hrd (x - c)
+        refine ⟨q + c, ?_, ?_, ?_⟩
+        · calc x = (x - c) + c := (tsub_add_cancel_of_le hcx).symm
+            _ < q + c := add_lt_add_of_lt_of_le hxq le_rfl
+        · calc q + c ≤ ((x - c) + d) + c := add_le_add hqd le_rfl
+            _ = x + d := by rw [add_right_comm, tsub_add_cancel_of_le hcx]
+        · show A (warp d r (q + c - (d - r) - c)) = A (warp d r (q + c - c))
+          rw [add_tsub_cancel_right, tsub_right_comm, add_tsub_cancel_right, heq]
+      · refine ⟨min (x + d) c, lt_min (lt_add_of_pos_right x hd) hxc, min_le_left _ _, ?_⟩
+        have hmc : min (x + d) c ≤ c := min_le_right _ _
+        show A (warp d r (min (x + d) c - (d - r) - c)) = A (warp d r (min (x + d) c - c))
+        rw [tsub_eq_zero_of_le hmc, tsub_eq_zero_of_le (le_trans tsub_le_self hmc)]
+    refine shift_window_le hFdense hst (fun τ hτ => ?_)
+    have hb := hbl τ hτ
+    simp only [shiftCurve_apply, warpCurve_apply] at hb
+    show A (warp d r (τ - (d - r) - c)) < A (warp d r (τ - c))
+    rw [tsub_right_comm, ← tsub_add_eq_tsub_tsub]
+    exact hb
