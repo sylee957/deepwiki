@@ -210,6 +210,72 @@ theorem hDevENN_shaped_rateLatencyNN (P s C R T : ℝ≥0)
   refine le_trans (le_hDevAtENN_shaped_kinkTime P s C R T hR hRC hs hsPR) ?_
   exact hDevAt_le_hDev _ _ (kinkTime P s C)
 
+/-- **Deviation against a rate-latency is at least `T − t`** at any
+point where the curve is positive: an admissible shift `d` must
+push `t + d` past the latency `T`. -/
+theorem hDevAtENN_rateLatencyNN_ge_latency (f : ℝ≥0 → ℝ≥0∞)
+    (R T t : ℝ≥0) (hft : 0 < f t) :
+    ((T - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtENN f (rateLatencyNN R T) t := by
+  refine le_hDevAtENN fun d hd => ?_
+  rcases le_total T t with hTt | hTt
+  · rw [tsub_eq_zero_of_le hTt]; exact zero_le'
+  · by_contra hlt
+    rw [not_le] at hlt
+    have htd : t + d < T := by
+      have h := add_lt_add_right hlt t
+      rwa [add_tsub_cancel_of_le hTt] at h
+    have hz : rateLatencyNN R T (t + d) = 0 := by
+      rw [rateLatencyNN_coe, tsub_eq_zero_of_le htd.le, mul_zero,
+        ENNReal.coe_zero]
+    rw [hz] at hd
+    exact absurd (le_antisymm hd bot_le) hft.ne'
+
+/-- **The latency is a lower bound on the deviation**: against a
+rate-latency `β_{R,T}`, any curve positive on a right-window of the
+origin has `T ≤ hDev` — the deviation at small positive times
+approaches `T` from below. -/
+theorem latency_le_hDevENN (f : ℝ≥0 → ℝ≥0∞) (R T : ℝ≥0)
+    (hpw : ∃ δ : ℝ≥0, 0 < δ ∧ ∀ t : ℝ≥0, 0 < t → t < δ → 0 < f t) :
+    (T : ℝ≥0∞) ≤ hDevENN f (rateLatencyNN R T) := by
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε _
+  obtain ⟨δ, hδ, hpwf⟩ := hpw
+  set t : ℝ≥0 := min ε (δ / 2) with ht
+  have ht_pos : 0 < t := lt_min hε (by positivity)
+  have ht_lt : t < δ :=
+    lt_of_le_of_lt (min_le_right _ _) (NNReal.half_lt_self hδ.ne')
+  have hft : 0 < f t := hpwf t ht_pos ht_lt
+  have hlb : ((T - t : ℝ≥0) : ℝ≥0∞) ≤ hDevENN f (rateLatencyNN R T) := by
+    refine le_trans (hDevAtENN_rateLatencyNN_ge_latency f R T t hft) ?_
+    unfold hDevENN hDev; exact le_iSup _ t
+  calc (T : ℝ≥0∞) ≤ ((T - t : ℝ≥0) : ℝ≥0∞) + t := coe_le_coe_tsub_add T t
+    _ ≤ hDevENN f (rateLatencyNN R T) + ε := by
+        gcongr
+        exact min_le_left _ _
+
+/-- **Shaping with a slow shaper caps the delay at the latency**: when
+the shaper rate `C ≤ R`, the shaped flow `γ_{s/P,s} ⊓ λ_C` against
+`β_{R,T}` has deviation exactly `T` — the rate cap kills the burst, so
+the server adds only its latency (the `C < R` regime of the closed
+form, where the shift `[(C−R)/(C−s/P)]⁺·(s/R)` vanishes). -/
+theorem hDevENN_shaped_rateLatencyNN_of_le (P s C R T : ℝ≥0)
+    (hC : 0 < C) (hCR : C ≤ R) (hs : 0 < s) :
+    hDevENN (tokenBucketNN (s / P) s ⊓ rateNN C) (rateLatencyNN R T) = T := by
+  apply le_antisymm
+  · refine hDev_le fun t => ?_
+    refine hDevAt_le (d := T) ?_
+    refine inf_le_right.trans ?_
+    rw [rateNN_apply, rateLatencyNN_coe, add_tsub_cancel_right,
+      ← ENNReal.coe_mul, ENNReal.coe_le_coe]
+    gcongr
+  · refine latency_le_hDevENN _ R T ⟨1, one_pos, fun t ht _ => ?_⟩
+    rw [Pi.inf_apply, lt_inf_iff]
+    refine ⟨?_, ?_⟩
+    · rw [tokenBucketNN_coe_of_ne (s / P) s ht.ne']
+      exact_mod_cast lt_of_lt_of_le hs le_add_self
+    · rw [rateNN_apply, ← ENNReal.coe_mul]
+      exact_mod_cast mul_pos hC ht
+
 /-! ## Book restatement (shaping closed-form delay, §6.3.2.2)
 The shaped periodic flow's deviation
 `hDev(γ_{s/P,s} ⊓ λ_C, β_{R,T}) = T + [(C − R)/(C − s/P)]·(s/R)`
@@ -225,5 +291,8 @@ example (P s C R T : ℝ≥0) (hR : 0 < R) (hs : 0 < s) (hsPR : s / P ≤ R) :
     hDevENN (tokenBucketNN (s / P) s ⊓ rateNN C) (rateLatencyNN R T)
       ≤ ((T + s / R : ℝ≥0) : ℝ≥0∞) :=
   hDevENN_shaped_le_tokenBucketNN P s C R T hR hs hsPR
+example (P s C R T : ℝ≥0) (hC : 0 < C) (hCR : C ≤ R) (hs : 0 < s) :
+    hDevENN (tokenBucketNN (s / P) s ⊓ rateNN C) (rateLatencyNN R T) = T :=
+  hDevENN_shaped_rateLatencyNN_of_le P s C R T hC hCR hs
 
 end DeepWiki
