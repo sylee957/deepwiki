@@ -912,6 +912,39 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_strictSubadditive
   refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => hnotmem ?_
   rw [heq]; exact hmem
 
+/-- **Strict is strictly below weakly strict for any strictly-subadditive
+curve.** For regular `β` strictly subadditive at some `0 < a < t`
+(`β t < β a + β (t − a)`), the burst-clip pair `(M·1_{>0}, β ⊓ M)` (`M = β t + 1`)
+is weakly strictly served by `β` — its backlog starts at the origin, where the
+anchored bound is `β` itself (`clip_mem_weaklyStrictServiceRel`) — but not
+strictly: the interior window `(a, t]` demands `β a + β (t − a) ≤ β t`, which
+strict subadditivity denies. (Contrast the rate witness `λ_b`, which is additive,
+not strictly subadditive.) -/
+theorem strictServiceRel_lt_weaklyStrictServiceRel_of_strictSubadditive
+    {β : ℝ≥0 → ℝ≥0} (hmono : Monotone β) (hlc : IsLeftContinuous β)
+    (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0)
+    {a t : ℝ≥0} (ha : 0 < a) (hat : a < t)
+    (hsub : β t < β a + β (t - a)) :
+    strictServiceRel β < weaklyStrictServiceRel β := by
+  have hβtM : β t < β t + 1 := lt_add_one _
+  have hβaM : β a < β t + 1 := (hmono hat.le).trans_lt hβtM
+  have hnotmem : ¬ strictServiceRel β (burstCurve (β t + 1))
+      (clipCurve β (β t + 1) hmono hlc hpwc h0) := by
+    rintro ⟨-, hstrict⟩
+    have hbl : IsBacklogged (⇑(burstCurve (β t + 1)))
+        (⇑(clipCurve β (β t + 1) hmono hlc hpwc h0)) (Set.Ioc a t) := by
+      intro u hu
+      show clipFun β (β t + 1) u < burstFun (β t + 1) u
+      rw [burstFun_apply_of_ne _ (ne_of_gt (ha.trans hu.1)),
+        clipFun_eq_of_lt ((hmono hu.2).trans_lt hβtM)]
+      exact (hmono hu.2).trans_lt hβtM
+    have h := hstrict a t hat.le hbl
+    rw [show (clipCurve β (β t + 1) hmono hlc hpwc h0) a = β a from clipFun_eq_of_lt hβaM,
+      show (clipCurve β (β t + 1) hmono hlc hpwc h0) t = β t from clipFun_eq_of_lt hβtM] at h
+    exact absurd h (not_le.mpr hsub)
+  refine lt_of_le_of_ne (strictServiceRel_le_weaklyStrictServiceRel β) fun heq => hnotmem ?_
+  rw [heq]; exact clip_mem_weaklyStrictServiceRel (β t + 1) hmono hlc hpwc h0
+
 /-- **The upper inclusion is strict for `√·`** — the infinite-initial-slope
 curve missed by the rate constructions. It is the strict-subadditivity instance
 at the split `(a, t) = (1, 2)`: `√2 < √1 + √1 = 2`. -/
@@ -924,11 +957,27 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_sqrt :
           show (1 : ℝ≥0) + 1 = 2 from by norm_num]
         exact sqrtFun_two_lt_two)
 
+/-- `√·` is strictly subadditive, so its strict relation also lies strictly
+below its weakly strict relation: both hierarchy inclusions are strict at `√·`
+(the `(a, t) = (1, 2)` instance). -/
+theorem strictServiceRel_lt_weaklyStrictServiceRel_sqrt :
+    strictServiceRel sqrtFun < weaklyStrictServiceRel sqrtFun :=
+  strictServiceRel_lt_weaklyStrictServiceRel_of_strictSubadditive
+    (a := 1) (t := 2) sqrtFun_mono sqrtFun_leftCont sqrtFun_pwc sqrtFun_zero
+    one_pos (by norm_num)
+    (by rw [show (2 : ℝ≥0) - 1 = 1 from tsub_eq_of_eq_add (by norm_num), sqrtFun_one,
+          show (1 : ℝ≥0) + 1 = 2 from by norm_num]
+        exact sqrtFun_two_lt_two)
+
 /-! ## Book restatement (the hierarchy is strict at `√·`)
 `√·` is concave with infinite initial slope, so `√·↑ = √· ∉ {δ₀, 0}`, and it is
-strictly subadditive (`√2 < √1 + √1`). Hence `S_wstrict(√·) ⊊ S_mp(√·)` — the
-strict hierarchy holds for the infinite-initial-slope curves the rate
-constructions miss. -/
+strictly subadditive (`√2 < √1 + √1`). Both hierarchy inclusions are therefore
+strict at `√·`: `S_vcn ⊆ S_strict ⊊ S_wstrict ⊊ S_mp`. The lower strictness
+holds for every strictly-subadditive (e.g. strictly-concave) curve; the upper
+one additionally covers the infinite-initial-slope curves the rate constructions
+miss. -/
+example : strictServiceRel sqrtFun < weaklyStrictServiceRel sqrtFun :=
+  strictServiceRel_lt_weaklyStrictServiceRel_sqrt
 example : weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) :=
   weaklyStrictServiceRel_lt_minimalServiceRel_sqrt
 
