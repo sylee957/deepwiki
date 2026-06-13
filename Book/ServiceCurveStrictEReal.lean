@@ -151,6 +151,29 @@ theorem strictServiceRelEReal_delay_le_strictServiceRel {β : ℝ≥0 → ℝ≥
     rw [delay_eq_top T ht]
     exact le_top
 
+/-- **Per-stage strictness via a time-warp** (the reverse-dilution core): if a
+curve `D` is the time-warp `D τ = X (h τ)` of a curve `X` by a warp `h ≤ id` whose
+below-diagonal set `{τ | h τ < τ}` has every backlogged window of length `≤ d`
+(`hcatch`: any `(s, t]` on which `h τ < τ` throughout has `t − s ≤ d`), then
+`(X, D) ∈ S_strict(δ_d)`. The backlog of `(X, X ∘ h)` is contained in
+`{τ | h τ < τ}` for any monotone `X` (since `X (h τ) < X τ` forces `h τ < τ`), so
+strictness reduces to a property of the warp alone — independent of `X`. This is
+the per-server step of Lemma 9.5's reverse dilution: each tandem stage warps its
+input by a staggered catch-up `h`, and the closure's pure delay `δ_d` is met
+because the warp catches up to the identity within `d`. -/
+theorem strictServiceRelEReal_delay_of_comp_warp {X D : Curve} {h : ℝ≥0 → ℝ≥0}
+    {d : ℝ≥0} (hcomp : ∀ τ, D τ = X (h τ)) (hh_le : ∀ τ, h τ ≤ τ)
+    (hcatch : ∀ s t, s ≤ t → (∀ τ ∈ Set.Ioc s t, h τ < τ) → t - s ≤ d) :
+    strictServiceRelEReal (delayEReal d) X D := by
+  refine mem_strictServiceRelEReal_delay_iff.mpr ⟨fun τ => ?_, fun s t hst hbl => ?_⟩
+  · rw [hcomp τ]; exact X.mono (hh_le τ)
+  · refine hcatch s t hst (fun τ hτ => ?_)
+    have hb := hbl τ hτ
+    rw [hcomp τ] at hb
+    rcases (hh_le τ).lt_or_eq with hlt | heq
+    · exact hlt
+    · rw [heq] at hb; exact absurd hb (lt_irrefl _)
+
 /-! ## Book restatement
 `δ_T` (`+∞` past `T`) is unrepresentable for the finite `strictServiceRel`; over
 `EReal` it reads exactly as the delay bound — a causal pair is in `S_strict(δ_T)`
