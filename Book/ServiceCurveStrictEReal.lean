@@ -174,6 +174,37 @@ theorem strictServiceRelEReal_delay_of_comp_warp {X D : Curve} {h : ℝ≥0 → 
     · exact hlt
     · rw [heq] at hb; exact absurd hb (lt_irrefl _)
 
+/-- **Catch-up density bounds backlogged windows**: if a warp `h` has a fixed point
+(catch-up `h p = p`) in every half-open window `(x, x + d]`, then any interval
+`(s, t]` on which `h τ < τ` throughout has length `t − s ≤ d`. A window longer than
+`d` would contain a catch-up point `p ∈ (s, s + d] ⊆ (s, t]` with `h p = p`,
+contradicting `h p < p`. -/
+theorem catch_window_le {h : ℝ≥0 → ℝ≥0} {d : ℝ≥0}
+    (hdense : ∀ x : ℝ≥0, ∃ p, x < p ∧ p ≤ x + d ∧ h p = p)
+    {s t : ℝ≥0} (hst : s ≤ t) (hwin : ∀ τ ∈ Set.Ioc s t, h τ < τ) :
+    t - s ≤ d := by
+  by_contra hcon
+  rw [not_le] at hcon
+  obtain ⟨p, hsp, hpsd, hfix⟩ := hdense s
+  have hsdt : s + d < t :=
+    calc s + d < s + (t - s) := by gcongr
+      _ = t := add_tsub_cancel_of_le hst
+  have hb := hwin p ⟨hsp, (lt_of_le_of_lt hpsd hsdt).le⟩
+  rw [hfix] at hb
+  exact absurd hb (lt_irrefl p)
+
+/-- **Per-stage strictness via a catch-up warp**: combining the warp core with
+catch-up density — if `D τ = X (h τ)` for `h ≤ id` with a catch-up `h p = p` in
+every window `(x, x + d]`, then `(X, D) ∈ S_strict(δ_d)`. This is the clean
+per-server hypothesis for Lemma 9.5's reverse dilution: each tandem stage is a
+continuous warp `h` of its input that catches up to the identity within `d`. -/
+theorem strictServiceRelEReal_delay_of_comp_catchUp {X D : Curve} {h : ℝ≥0 → ℝ≥0}
+    {d : ℝ≥0} (hcomp : ∀ τ, D τ = X (h τ)) (hh_le : ∀ τ, h τ ≤ τ)
+    (hdense : ∀ x : ℝ≥0, ∃ p, x < p ∧ p ≤ x + d ∧ h p = p) :
+    strictServiceRelEReal (delayEReal d) X D :=
+  strictServiceRelEReal_delay_of_comp_warp hcomp hh_le
+    (fun _ _ hst hwin => catch_window_le hdense hst hwin)
+
 /-! ## Book restatement
 `δ_T` (`+∞` past `T`) is unrepresentable for the finite `strictServiceRel`; over
 `EReal` it reads exactly as the delay bound — a causal pair is in `S_strict(δ_T)`
