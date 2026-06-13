@@ -1,4 +1,5 @@
 import Book.ServiceCurveWeaklyStrict
+import Book.ServiceCurveStrictEReal
 import Book.ClosuresEReal
 import Book.CurveDioidEReal
 
@@ -81,5 +82,55 @@ theorem weaklyStrictServiceRelEReal_convUnitEReal_eq :
   funext A D
   rw [propext (weaklyStrictServiceRelEReal_convUnitEReal_iff),
     propext (minimalServiceRel_convUnitEReal_iff)]
+
+/-! ## `strict = wstrict` at the pure-delay curve `δ_T`
+For the pure-delay curve `δ_T`, the strict and weakly-strict notions coincide:
+both relations collapse to the single backlog bound "every backlogged period has
+length at most `T`". The weakly-strict relation only constrains the *maximal*
+period `(Start t, t]`, but `δ_T`'s `⊤`-past-`T` value propagates that bound to
+*every* sub-period — so the apparently weaker start-anchored condition recovers
+the full strict one. (For a general `β` the two differ; the pure-delay curve is
+exactly where they agree.) -/
+
+/-- **`δ_T` weakly-strict service is a backlog bound**: a pair is weakly-strictly
+served by `δ_T` iff it is causal and the maximal backlogged period of every `t`
+has length at most `T` — `δ_T`'s `⊤` past `T` forbids a longer `t − Start t`,
+while up to `T` the bound is just monotonicity of `D`. -/
+theorem mem_weaklyStrictServiceRelEReal_delay_iff {T : ℝ≥0} {A D : Curve} :
+    weaklyStrictServiceRelEReal (delayEReal T) A D ↔
+      D ≤ A ∧ ∀ t, t - start ⇑A ⇑D t ≤ T := by
+  rw [mem_weaklyStrictServiceRelEReal_iff]
+  refine and_congr_right fun _ => ?_
+  constructor
+  · intro hb t
+    by_contra hcon
+    rw [not_le] at hcon
+    have hbnd := hb t
+    simp only [delayEReal] at hbnd
+    rw [delay_eq_top T hcon, curveEReal_apply, curveEReal_apply,
+      EReal.add_top_of_ne_bot (EReal.coe_ne_bot _)] at hbnd
+    exact absurd hbnd (not_le.mpr (EReal.coe_lt_top _))
+  · intro hb t
+    simp only [delayEReal]
+    rw [delay_eq_zero T (hb t), add_zero]
+    exact monotone_curveEReal D (start_le ⇑A ⇑D t)
+
+/-- **`strict = wstrict` at `δ_T`**: `S_strict(δ_T) = S_wstrict(δ_T)`. Both reduce
+to the same backlog bound. `strict ⟹ wstrict` reads the bound on the maximal
+period `(Start t, t]` (`isBacklogged_Ioc_start`); `wstrict ⟹ strict` lifts it to
+an arbitrary period `(s, t]` since its start lies at or before `s`
+(`start_le_of_isBacklogged`), so `t − s ≤ t − Start t ≤ T`. -/
+theorem strictServiceRelEReal_delay_eq_weaklyStrictServiceRelEReal_delay {T : ℝ≥0} :
+    strictServiceRelEReal (delayEReal T) = weaklyStrictServiceRelEReal (delayEReal T) := by
+  funext A D
+  apply propext
+  rw [mem_strictServiceRelEReal_delay_iff, mem_weaklyStrictServiceRelEReal_delay_iff]
+  refine and_congr_right fun hDA => ?_
+  have hc : ∀ x, D x ≤ A x := fun x => hDA x
+  constructor
+  · intro hb t
+    exact hb (start ⇑A ⇑D t) t (start_le ⇑A ⇑D t) (isBacklogged_Ioc_start hc t)
+  · intro hb s t hst hbl
+    exact le_trans (tsub_le_tsub_left (start_le_of_isBacklogged hbl) t) (hb t)
 
 end DeepWiki
