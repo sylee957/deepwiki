@@ -215,6 +215,23 @@ theorem tendsto_nhdsWithin_Ioi_of_isRightContinuous {A : ℝ≥0 → ℝ≥0}
     Tendsto A (𝓝[>] t) (𝓝 (A t)) :=
   (hA t).tendsto
 
+/-- **Left limit dominated by a uniform bound**: for left-continuous `A`, if
+`A (x − ε) ≤ c` for every `ε > 0`, then `A x ≤ c` — the left limit `A x` is the
+limit of the dominated values `A (x − ε)` (and `A 0 = A (0 − ε)` directly). -/
+theorem le_of_forall_sub_pos_le_of_isLeftContinuous {A : ℝ≥0 → ℝ≥0}
+    (hA : IsLeftContinuous A) {x c : ℝ≥0}
+    (h : ∀ ε : ℝ≥0, 0 < ε → A (x - ε) ≤ c) : A x ≤ c := by
+  rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ x) with hx | hx
+  · subst hx
+    have h0 := h 1 one_pos
+    rwa [zero_tsub] at h0
+  · haveI : (𝓝[<] x).NeBot := nhdsLT_neBot_of_exists_lt ⟨0, hx⟩
+    refine le_of_tendsto (tendsto_nhdsWithin_Iio_of_isLeftContinuous hA x) ?_
+    filter_upwards [self_mem_nhdsWithin] with y hy
+    have hyx : y < x := hy
+    have hb := h (x - y) (tsub_pos_of_lt hyx)
+    rwa [tsub_tsub_cancel_of_le hyx.le] at hb
+
 /-- The set of points where `g` is not continuous. -/
 def discontSet {X : Type*} [TopologicalSpace X]
     (g : ℝ≥0 → X) : Set ℝ≥0 :=

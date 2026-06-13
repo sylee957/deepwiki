@@ -1,6 +1,7 @@
 import Book.ServiceCurveStrict
 import Book.ServiceCurveStrictEReal
 import Book.ServersConcatenation
+import Book.ServersSystemClosure
 import Book.RealCurvesConv
 import Book.RealCurvesRegularity
 
@@ -611,5 +612,39 @@ theorem compPow_strictServiceRelEReal_delayDiv_le (T : ℝ≥0) {n : ℕ} (hn : 
     rw [nsmul_eq_mul]; field_simp
   rw [show delayEReal T = delayEReal (n • (T / n)) from by rw [hTn]]
   exact compPow_strictServiceRelEReal_delay_le (T / n) n
+
+/-- **`S_mp(δ_T)` is closed** under the §9.3 closure: `S̄(S_mp(δ_T)) ⊆ S_mp(δ_T)`.
+The closure's `ε`-approximation gives `(A∗δ_T)((t−T)−ε) ≤ D' t` for every `ε > 0`
+(through some `D ∈ S_mp(δ_T)` with `D(·−ε) ≤ D'`); as `A∗δ_T = A(·−T)` is
+left-continuous, the left limit yields `(A∗δ_T) t ≤ D' t`. -/
+theorem systemClosure_minimalServiceRel_delay_le (T : ℝ≥0) :
+    systemClosure (minimalServiceRel (delayEReal T)) ≤ minimalServiceRel (delayEReal T) := by
+  rintro A D' ⟨hcaus, happ⟩
+  refine mem_minimalServiceRel_iff.mpr ⟨hcaus, fun t => ?_⟩
+  rw [conv_delayEReal (curveEReal A) (monotone_curveEReal A) (isNeverBot_curveEReal A)]
+  have key : A (t - T) ≤ D' t := by
+    refine le_of_forall_sub_pos_le_of_isLeftContinuous A.leftCont (fun ε hε => ?_)
+    obtain ⟨D, hD, hDε⟩ := happ ε hε
+    have hmpD := (mem_minimalServiceRel_iff.mp hD).2
+    rw [conv_delayEReal (curveEReal A) (monotone_curveEReal A) (isNeverBot_curveEReal A)] at hmpD
+    have h := hmpD (t - ε)
+    simp only [curveEReal_apply] at h
+    have h1 : A ((t - ε) - T) ≤ D (t - ε) := by exact_mod_cast h
+    calc A ((t - T) - ε) = A ((t - ε) - T) := by rw [tsub_right_comm]
+      _ ≤ D (t - ε) := h1
+      _ ≤ D' t := hDε t
+  simp only [curveEReal_apply]
+  exact_mod_cast key
+
+/-- **Lemma 9.5, `⊆` direction** (per `n`): the §9.3 closure of the `n`-tandem of
+strict `δ_{T/n}` servers is min-plus served by `δ_T`,
+`(S_strict(δ_{T/n}))ⁿ-bar ⊆ S_mp(δ_T)` (`n ≥ 1`). Hence `⋃ₙ` of these closures is
+contained in `S_mp(δ_T)`. The reverse dilution (Fig 9.4) is the remaining half. -/
+theorem systemClosure_compPow_strictServiceRelEReal_delayDiv_le
+    (T : ℝ≥0) {n : ℕ} (hn : 0 < n) :
+    systemClosure (compPow (strictServiceRelEReal (delayEReal (T / n))) n)
+      ≤ minimalServiceRel (delayEReal T) :=
+  le_trans (systemClosure_mono (compPow_strictServiceRelEReal_delayDiv_le T hn))
+    (systemClosure_minimalServiceRel_delay_le T)
 
 end DeepWiki
