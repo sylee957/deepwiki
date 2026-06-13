@@ -469,4 +469,56 @@ theorem add_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → 
     linarith
   · rw [tsub_eq_zero_of_le hBX, add_zero]; exact hfloor
 
+/-- **Min-plus service-curve form of Theorem 10.1**: the tagged flow is
+served at the per-path PMOO residual, `Aᵗᵍ ∗ pmooPathResidual ≤ Dᵗᵍ` —
+the convolution splits at the cascade bottom. -/
+theorem minConv_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
+    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+    (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
+      IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x) (fun x => ∑ j ∈ S h, (F (h + 1) j) x)
+        (Set.Ioc s t') →
+      (∑ j ∈ S h, (F (h + 1) j) s) + β h (t' - s) ≤ ∑ j ∈ S h, (F (h + 1) j) t')
+    (hpath : ∀ j, fst j ≤ lst j ∧ lst j ≤ n)
+    (harr : ∀ j, j ≠ tg → IsMaximalArrivalBound (F (fst j) j) (α j))
+    (htgfst : fst tg = 0) (htglst : lst tg = n) (hαtg : α tg = 0) :
+    minConv (Deviation.liftENN ⇑(F 0 tg))
+        (Deviation.liftENN (pmooPathResidual n β α fst lst)) t
+      ≤ ((F (n + 1) tg) t : ℝ≥0∞) := by
+  have hkey := add_pmooPathResidual_le_of_strict_path t hS hc hstrict hpath harr
+    htgfst htglst hαtg
+  have hnode0t : pathNode F S n t 0 ≤ t :=
+    le_trans (pathNode_mono F S n t (Nat.zero_le (n + 1))) (le_of_eq (pathNode_succ F S n t))
+  refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hnode0t)) ?_
+  exact_mod_cast hkey
+
+/-! ## Book restatement (Theorem 10.1, per-path PMOO)
+A tandem of `n + 1` servers each offering a strict service curve `β⁽ʰ⁾`,
+under blind multiplexing, where the tagged flow crosses every server and
+each cross-flow `j` is `αⱼ`-constrained over the contiguous sub-path
+`[fst j, lst j]` it crosses: the tagged flow is served at the min-plus
+residual `pmooPathResidual`, the infimum over time splits of
+`∑ₕ β⁽ʰ⁾(uₕ) − ∑ⱼ αⱼ(∑_{h∈pⱼ} uₕ)` — each cross-flow's burst paid once,
+over its own path. The all-crossing case (`pathHops_univ_sum`) recovers the
+chain residual `pmooResidualChain`. -/
+example {m : ℕ} {F : ℕ → Fin m → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
+    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+    (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
+      IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x) (fun x => ∑ j ∈ S h, (F (h + 1) j) x)
+        (Set.Ioc s t') →
+      (∑ j ∈ S h, (F (h + 1) j) s) + β h (t' - s) ≤ ∑ j ∈ S h, (F (h + 1) j) t')
+    (hpath : ∀ j, fst j ≤ lst j ∧ lst j ≤ n)
+    (harr : ∀ j, j ≠ tg → IsMaximalArrivalCurve ⇑(F (fst j) j) (α j))
+    (htgfst : fst tg = 0) (htglst : lst tg = n) (hαtg : α tg = 0) :
+    minConv (Deviation.liftENN ⇑(F 0 tg))
+        (Deviation.liftENN (pmooPathResidual n β α fst lst)) t
+      ≤ ((F (n + 1) tg) t : ℝ≥0∞) :=
+  minConv_pmooPathResidual_le_of_strict_path t hS hc hstrict hpath
+    (fun j hj => (harr j hj).2) htgfst htglst hαtg
+
 end DeepWiki
