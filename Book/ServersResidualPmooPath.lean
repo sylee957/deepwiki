@@ -20,7 +20,7 @@ open Finset
 
 /-- The hops on flow `i`'s contiguous sub-path `[fst i, lst i]` within the
 line `0..n`. -/
-def pathHops {m : ℕ} (n : ℕ) (fst lst : Fin m → ℕ) (i : Fin m) : Finset ℕ :=
+def pathHops {ι : Type*} (n : ℕ) (fst lst : ι → ℕ) (i : ι) : Finset ℕ :=
   (Finset.range (n + 1)).filter (fun h => fst i ≤ h ∧ h ≤ lst i)
 
 /-- The per-split body: the aggregate strict service `∑ₕ β⁽ʰ⁾(uₕ)` less
@@ -86,7 +86,7 @@ theorem pmooPathResidual_zero_eq {m : ℕ} {n : ℕ}
 
 /-- For a path ending within the line (`lst i ≤ n`) the hop set is the
 integer interval `[fst i, lst i]`. -/
-theorem pathHops_eq_Ico {m : ℕ} {n : ℕ} {fst lst : Fin m → ℕ} {i : Fin m}
+theorem pathHops_eq_Ico {ι : Type*} {n : ℕ} {fst lst : ι → ℕ} {i : ι}
     (hi : lst i ≤ n) :
     pathHops n fst lst i = Finset.Ico (fst i) (lst i + 1) := by
   ext h
@@ -99,7 +99,7 @@ theorem pathHops_eq_Ico {m : ℕ} {n : ℕ} {fst lst : Fin m → ℕ} {i : Fin m
 /-- All-crossing collapse: a flow whose path is the whole line
 (`fst i = 0`, `n ≤ lst i`) is charged over the entire split,
 `∑_{h∈pᵢ} uₕ = ∑_{h≤n} uₕ`. -/
-theorem pathHops_univ_sum {m : ℕ} {n : ℕ} {fst lst : Fin m → ℕ} {i : Fin m}
+theorem pathHops_univ_sum {ι : Type*} {n : ℕ} {fst lst : ι → ℕ} {i : ι}
     (h0 : fst i = 0) (hn : n ≤ lst i) (u : ℕ → ℝ≥0) :
     (∑ h ∈ pathHops n fst lst i, u h) = ∑ h ∈ Finset.range (n + 1), u h := by
   apply Finset.sum_congr _ (fun _ _ => rfl)
@@ -269,5 +269,80 @@ theorem pathNode_strict_step {ι : Type*} [Fintype ι] {F : ℕ → ι → Curve
       (fun k => ((F h k).zero).trans ((F (h + 1) k).zero).symm) t' hj
   rw [heq] at hstr
   exact hstr
+
+/-! ## The flow-set telescope (book Lemma 10.1)
+Summing the per-hop steps and reorganizing the double sum
+`∑ₕ ∑_{j∈Fl h}` into `∑ⱼ ∑_{h∈pᵢ}` (each flow over its own contiguous
+path), every flow telescopes over its window: the service `∑ₕ β⁽ʰ⁾(uₕ)`
+plus the flows' inputs at their path starts is dominated by the flows'
+outputs at their path ends. -/
+
+/-- Additive telescope over a contiguous window: shifting the summand by one
+hop trades the bottom term `G a` for the top term `G (b+1)`. -/
+theorem pathTelescope_shift (G : ℕ → ℝ≥0) {a b : ℕ} (hab : a ≤ b) :
+    (∑ h ∈ Ico a (b + 1), G (h + 1)) + G a
+      = (∑ h ∈ Ico a (b + 1), G h) + G (b + 1) := by
+  have hRHS : (∑ h ∈ Ico a (b + 1), G h) + G (b + 1) = ∑ h ∈ Ico a (b + 2), G h :=
+    (Finset.sum_Ico_succ_top (by omega) G).symm
+  have hreindex : (∑ h ∈ Ico a (b + 1), G (h + 1)) = ∑ h ∈ Ico (a + 1) (b + 2), G h := by
+    rw [Finset.sum_Ico_eq_sum_range, Finset.sum_Ico_eq_sum_range]
+    apply Finset.sum_congr (by congr 1; omega)
+    intro k _; congr 1; omega
+  rw [hRHS, hreindex, add_comm _ (G a),
+    Finset.sum_eq_sum_Ico_succ_bot (show a < b + 2 by omega) G]
+
+/-- **The flow-set telescope** (book Lemma 10.1): with flow sets
+`S h = {j | fst j ≤ h ≤ lst j}` (linked by `hS`), causality `hc`, the
+per-hop strict bounds `hstrict`, and contiguous in-line paths `hpath`,
+the cascaded service plus the flows' inputs at their path starts is
+dominated by the flows' outputs at their path ends:
+`∑ₕ β⁽ʰ⁾(uₕ) + ∑ⱼ Fⱼ^{fst}(s_{fst}) ≤ ∑ⱼ Fⱼ^{lst+1}(s_{lst+1})`. -/
+theorem sum_add_pathTelescope_le {ι : Type*} [Fintype ι] {F : ℕ → ι → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset ι} {fst lst : ι → ℕ} {n : ℕ} (t : ℝ≥0)
+    (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
+    (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
+      IsBacklogged (fun x => ∑ j ∈ S h, (F h j) x)
+        (fun x => ∑ j ∈ S h, (F (h + 1) j) x) (Set.Ioc s t') →
+      (∑ j ∈ S h, (F (h + 1) j) s) + β h (t' - s) ≤ ∑ j ∈ S h, (F (h + 1) j) t')
+    (hpath : ∀ j, fst j ≤ lst j ∧ lst j ≤ n) :
+    (∑ h ∈ range (n + 1), β h (pathNode F S n t (h + 1) - pathNode F S n t h))
+      + ∑ j, (F (fst j) j) (pathNode F S n t (fst j))
+    ≤ ∑ j, (F (lst j + 1) j) (pathNode F S n t (lst j + 1)) := by
+  set node := pathNode F S n t with hnode
+  set P := ∑ j, ∑ h ∈ pathHops n fst lst j, (F h j) (node h) with hP
+  set Q := ∑ j, ∑ h ∈ pathHops n fst lst j, (F (h + 1) j) (node (h + 1)) with hQ
+  have hequiv : ∀ (h : ℕ) (j : ι),
+      h ∈ range (n + 1) ∧ j ∈ S h ↔ h ∈ pathHops n fst lst j ∧ j ∈ (univ : Finset ι) := by
+    intro h j
+    simp only [Finset.mem_range, Finset.mem_univ, and_true, pathHops, Finset.mem_filter,
+      hS h j]
+  have step1 : P + (∑ h ∈ range (n + 1), β h (node (h + 1) - node h)) ≤ Q := by
+    have hsum : (∑ h ∈ range (n + 1), (∑ j ∈ S h, (F h j) (node h)))
+                 + ∑ h ∈ range (n + 1), β h (node (h + 1) - node h)
+               ≤ ∑ h ∈ range (n + 1), ∑ j ∈ S h, (F (h + 1) j) (node (h + 1)) := by
+      rw [← Finset.sum_add_distrib]
+      apply Finset.sum_le_sum
+      intro h hh
+      exact pathNode_strict_step t hc hstrict (Nat.lt_succ_iff.mp (Finset.mem_range.mp hh))
+    rwa [Finset.sum_comm' hequiv (f := fun h j => (F h j) (node h)),
+      Finset.sum_comm' hequiv (f := fun h j => (F (h + 1) j) (node (h + 1)))] at hsum
+  have telsum : Q + ∑ j, (F (fst j) j) (node (fst j))
+              = P + ∑ j, (F (lst j + 1) j) (node (lst j + 1)) := by
+    rw [hP, hQ, ← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro j _
+    rw [pathHops_eq_Ico (hpath j).2]
+    exact pathTelescope_shift (fun h => (F h j) (node h)) (hpath j).1
+  have key : P + ((∑ h ∈ range (n + 1), β h (node (h + 1) - node h))
+              + ∑ j, (F (fst j) j) (node (fst j)))
+            ≤ P + ∑ j, (F (lst j + 1) j) (node (lst j + 1)) :=
+    calc P + ((∑ h ∈ range (n + 1), β h (node (h + 1) - node h))
+              + ∑ j, (F (fst j) j) (node (fst j)))
+        = (P + ∑ h ∈ range (n + 1), β h (node (h + 1) - node h))
+            + ∑ j, (F (fst j) j) (node (fst j)) := by ring
+      _ ≤ Q + ∑ j, (F (fst j) j) (node (fst j)) := add_le_add step1 le_rfl
+      _ = P + ∑ j, (F (lst j + 1) j) (node (lst j + 1)) := telsum
+  exact le_of_add_le_add_left key
 
 end DeepWiki
