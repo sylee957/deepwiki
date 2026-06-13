@@ -115,6 +115,25 @@ theorem mem_strictServiceRelEReal_delay_iff {T : ℝ≥0} {A D : Curve} :
     rw [delay_eq_zero T (hb s t hst hbl), add_zero]
     exact monotone_curveEReal D hst
 
+/-- **The Prop 6.2 reduction step**: a finite strict curve `β` vanishing on
+`[0, T]` is dominated by `δ_T`, so every `δ_T`-strict pair is `β`-strict —
+`S_strict(δ_T) ⊆ S_strict(β)`. (A monotone `β` with `β T = 0` vanishes on
+`[0, T]`.) -/
+theorem strictServiceRelEReal_delay_le_strictServiceRel {β : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+    (hβT : ∀ t, t ≤ T → β t = 0) :
+    strictServiceRelEReal (delayEReal T) ≤ strictServiceRel β := by
+  rw [strictServiceRel_eq_strictServiceRelEReal_liftEReal]
+  refine strictServiceRelEReal_mono fun t => ?_
+  rcases le_or_gt t T with ht | ht
+  · simp only [delayEReal]
+    rw [delay_eq_zero T ht]
+    show ((β t : ℝ) : EReal) ≤ 0
+    rw [hβT t ht]
+    simp
+  · simp only [delayEReal]
+    rw [delay_eq_top T ht]
+    exact le_top
+
 /-! ## Book restatement
 `δ_T` (`+∞` past `T`) is unrepresentable for the finite `strictServiceRel`; over
 `EReal` it reads exactly as the delay bound — a causal pair is in `S_strict(δ_T)`
