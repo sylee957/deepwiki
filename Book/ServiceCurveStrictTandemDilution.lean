@@ -434,3 +434,33 @@ theorem shiftCurve_warpCurve_strictServiceRelEReal (A : Curve) {d r : ℝ≥0}
     show A (warp d r (τ - (d - r) - c)) < A (warp d r (τ - c))
     rw [tsub_right_comm, ← tsub_add_eq_tsub_tsub]
     exact hb
+
+/-- Shifting by `0` is the identity curve. -/
+theorem shiftCurve_zero (C : Curve) : shiftCurve C 0 = C :=
+  Curve.ext fun τ => by rw [shiftCurve_apply, tsub_zero]
+
+/-- **The `(k+1)`-stage tandem**: one warp stage followed by `k` shift stages (each by
+`d − r`) carries `A` to `shiftCurve (warpCurve A) (k·(d−r))` through
+`(S_strict(δ_d))^{k+1}`. -/
+theorem compPow_shiftCurve_warpCurve (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d)
+    (k : ℕ) :
+    compPow (strictServiceRelEReal (delayEReal d)) (k + 1) A
+      (shiftCurve (warpCurve A hr hrd) ((k : ℝ≥0) * (d - r))) := by
+  induction k with
+  | zero =>
+    rw [compPow_succ]
+    refine ⟨A, rfl, ?_⟩
+    simp only [Nat.cast_zero, zero_mul]
+    rw [shiftCurve_zero]
+    exact warpCurve_strictServiceRelEReal A hr hrd
+  | succ k ih =>
+    rw [compPow_succ]
+    refine ⟨shiftCurve (warpCurve A hr hrd) ((k : ℝ≥0) * (d - r)), ih, ?_⟩
+    rw [show ((k + 1 : ℕ) : ℝ≥0) * (d - r) = (k : ℝ≥0) * (d - r) + (d - r) by push_cast; ring]
+    exact shiftCurve_warpCurve_strictServiceRelEReal A hr hrd ((k : ℝ≥0) * (d - r))
+
+/-- The tandem output is bounded by the pure delay of the total shift:
+`shiftCurve (warpCurve A) c τ = A (warp (τ − c)) ≤ A (τ − c)` (warp `≤ id`). -/
+theorem shiftCurve_warpCurve_le (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d)
+    (c τ : ℝ≥0) : shiftCurve (warpCurve A hr hrd) c τ ≤ A (τ - c) :=
+  A.mono (warp_le_self hr hrd (τ - c))
