@@ -270,6 +270,17 @@ example (P s C : ℝ≥0) :
       = tokenBucketNN (s / P) s ⊓ rateNN C :=
   minDeconv_tokenBucketNN_rateNN_inf (s / P) s C
 
+/-! The periodic flow's linear approximation `γ_{s/P,s(P+J)/P}` (jitter `J`)
+crossing a stable rate-latency server `β_{R,T}` (`s/P ≤ R`) leaves the output
+arrival curve `(γ_{s/P,s(P+J)/P} ⊘ β_{R,T}) ∧ λ_R = γ_{s/P,s(P+J+T)/P} ∧ λ_R`:
+the latency inflates the burst by `(s/P)·T = sT/P`. -/
+example (s P J R T : ℝ≥0) (hsR : s / P ≤ R) (hT : 0 < T) :
+    minDeconv (tokenBucketNN (s / P) (s * (P + J) / P)) (rateLatencyNN R T) ⊓ rateNN R
+      = tokenBucketNN (s / P) (s * (P + J + T) / P) ⊓ rateNN R := by
+  have hb : s * (P + J) / P + s / P * T = s * (P + J + T) / P := by
+    rw [div_mul_eq_mul_div, ← add_div, ← mul_add]
+  rw [minDeconv_tokenBucketNN_rateLatencyNN_inf (s / P) (s * (P + J) / P) R T hsR hT, hb]
+
 /-! With the tighter periodic staircase `ν_{P,s,0}` in place of the
 token-bucket, the arrival curve at the next server is `λ_C ∧ ν_{P,s,0}`;
 the sub-additive closure sharpens it to `(λ_C ∧ ν_{P,s,0})⋆ = λ_C ∗ ν_{P,s,0}`. -/

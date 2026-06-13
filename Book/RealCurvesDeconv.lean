@@ -423,6 +423,24 @@ theorem minDeconv_tokenBucketNN_rateNN_inf (r b C : ℝ≥0) :
     show ⊤ ⊓ rateNN C = tokenBucketNN r b ⊓ rateNN C
     rw [top_inf_eq, inf_eq_right.mpr hrate]
 
+/-- **The shaped output arrival curve**: a `γ_{r,b}` flow through a
+rate-latency server `β_{R,T}` (stable, `r ≤ R`) leaves a `λ_R`-shaped
+output curve `(γ_{r,b} ⊘ β_{R,T}) ⊓ λ_R = γ_{r,b+rT} ⊓ λ_R` — the
+latency shifts the burst by `rT`, and `⊓ λ_R` re-clamps the origin the
+deconvolution unclamped. -/
+theorem minDeconv_tokenBucketNN_rateLatencyNN_inf (r b R T : ℝ≥0)
+    (h : r ≤ R) (hT : 0 < T) :
+    minDeconv (tokenBucketNN r b) (rateLatencyNN R T) ⊓ rateNN R
+      = tokenBucketNN r (b + r * T) ⊓ rateNN R := by
+  have hrd : rateNN R ≤ delayNN 0 := by
+    intro t
+    rcases eq_zero_or_pos t with rfl | ht
+    · simp [delayNN]
+    · rw [show delayNN 0 t = ⊤ from delay_eq_top 0 ht]
+      exact le_top
+  rw [minDeconv_tokenBucketNN_rateLatencyNN r b R T h hT, ← affine_inf_delay0,
+    inf_assoc, inf_eq_right.mpr hrd]
+
 /-- `rateNN R ⊘ rateNN R' = rateNN R` when `R ≤ R'`. -/
 theorem minDeconv_rateNN_rateNN (R R' : ℝ≥0) (h : R ≤ R') :
     minDeconv (rateNN R) (rateNN R') = rateNN R := by
