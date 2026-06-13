@@ -96,6 +96,7 @@ import Book.ServersResidualGpsStrict
 import Book.ServersResidualPmoo
 import Book.ServersResidualPmooChain
 import Book.ServersResidualPmooRateLatency
+import Book.ServersResidualPmooPath
 import Book.ServersResidualPgps
 import Book.ServersResidualDrr
 import Book.ServersResidualTdma
