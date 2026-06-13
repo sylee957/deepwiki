@@ -280,26 +280,67 @@ example {A D : ℝ≥0 → ℝ≥0} (hAmono : Monotone A) (hDmono : Monotone D)
       leftLim A (start A D t) = leftLim D (start A D t) :=
   apply_start_eq_or_leftLim_start_eq hAmono hDmono h0 hc t
 
-/-- **The disjunction is sharp** — the blanket left-limit relation is
-false: a departure burst exactly at an attained start makes the
-values agree while the left limits differ. Witness: identity
-arrivals against the step output `1_{[1,∞)}` — the start of the
-period of `2` is attained at `1` with both values `1` and `(1, 2]`
-backlogged, yet `A(1−) = 1 ≠ 0 = D(1−)`. -/
-example :
-    ∃ A D : ℝ≥0 → ℝ≥0, Monotone A ∧ Monotone D ∧ A 0 = D 0
-      ∧ (∀ x, D x ≤ A x)
+/-- `sSup (Iio a) = a` on `ℝ≥0` for positive `a`: density supplies
+approximants despite the bottom element. -/
+theorem csSup_Iio_of_pos {a : ℝ≥0} (ha : 0 < a) :
+    sSup (Set.Iio a) = a := by
+  refine le_antisymm
+    (csSup_le ⟨0, Set.mem_Iio.mpr ha⟩ fun x hx => le_of_lt hx) ?_
+  refine (le_csSup_iff ⟨a, fun x hx => le_of_lt hx⟩
+    ⟨0, Set.mem_Iio.mpr ha⟩).mpr ?_
+  intro b hb
+  by_contra hb1
+  rw [not_le] at hb1
+  obtain ⟨c, hbc, hc1⟩ := exists_between hb1
+  exact absurd (hb (Set.mem_Iio.mpr hc1)) (not_le.mpr hbc)
+
+/-- The step output `1_{[1,∞)}` is monotone. -/
+private theorem stepOut_mono :
+    Monotone (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) := by
+  intro a b hab
+  show (if a < 1 then (0 : ℝ≥0) else 1) ≤ if b < 1 then 0 else 1
+  by_cases ha : a < 1
+  · rw [if_pos ha]
+    exact zero_le'
+  · rw [if_neg ha, if_neg fun hb => ha (lt_of_le_of_lt hab hb)]
+
+/-- The step output `1_{[1,∞)}` is right-continuous. -/
+private theorem stepOut_rightCont :
+    IsRightContinuous (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) := by
+  intro t
+  rcases lt_or_ge t 1 with ht | ht
+  · refine continuousWithinAt_const.congr_of_eventuallyEq ?_ (if_pos ht)
+    filter_upwards [Ioo_mem_nhdsGT ht] with v hv
+    exact if_pos hv.2
+  · refine continuousWithinAt_const.congr_of_eventuallyEq ?_
+      (if_neg (not_lt.mpr ht))
+    filter_upwards [self_mem_nhdsWithin] with v (hv : t < v)
+    exact if_neg (not_lt.mpr (le_trans ht (le_of_lt hv)))
+
+/-- The step's left image below `1` is `{0}`. -/
+private theorem stepOut_image_Iio :
+    (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) '' Set.Iio 1
+      = {0} := by
+  refine Set.eq_singleton_iff_unique_mem.mpr
+    ⟨⟨0, Set.mem_Iio.mpr zero_lt_one, if_pos zero_lt_one⟩, ?_⟩
+  rintro x ⟨y, hy, rfl⟩
+  exact if_pos hy
+
+/-- **The left-limit side of the start disjunction is sharp**: a
+right-continuous departure burst exactly at an attained start makes
+the values agree while the left limits differ — the blanket
+left-limit replacement is false. Witness: identity arrivals against
+the step output `1_{[1,∞)}`; the start of the period of `2` is
+attained at `1` with both values `1` and `(1, 2]` backlogged, yet
+`A(1−) = 1 ≠ 0 = D(1−)`. -/
+theorem exists_rightContinuous_apply_start_eq_not_leftLim_start_eq :
+    ∃ A D : ℝ≥0 → ℝ≥0, Monotone A ∧ Monotone D
+      ∧ IsRightContinuous A ∧ IsRightContinuous D
+      ∧ A 0 = D 0 ∧ (∀ x, D x ≤ A x)
       ∧ start A D 2 = 1
       ∧ A (start A D 2) = D (start A D 2)
       ∧ IsBacklogged A D (Set.Ioc 1 2)
       ∧ leftLim A (start A D 2) ≠ leftLim D (start A D 2) := by
-  have hDmono : Monotone (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) := by
-    intro a b hab
-    show (if a < 1 then (0 : ℝ≥0) else 1) ≤ if b < 1 then 0 else 1
-    by_cases ha : a < 1
-    · rw [if_pos ha]
-      exact zero_le'
-    · rw [if_neg ha, if_neg fun hb => ha (lt_of_le_of_lt hab hb)]
   have hstart : start id (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) 2
       = 1 := by
     refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) ?_
@@ -314,7 +355,8 @@ example :
       show (1 : ℝ≥0) = if (1 : ℝ≥0) < 1 then 0 else 1
       rw [if_neg (lt_irrefl 1)]
   refine ⟨id, fun y => if y < 1 then (0 : ℝ≥0) else 1, monotone_id,
-    hDmono, ?_, ?_, hstart, ?_, ?_, ?_⟩
+    stepOut_mono, isRightContinuous_of_continuous _ continuous_id,
+    stepOut_rightCont, ?_, ?_, hstart, ?_, ?_, ?_⟩
   · show (0 : ℝ≥0) = if (0 : ℝ≥0) < 1 then 0 else 1
     rw [if_pos zero_lt_one]
   · intro x
@@ -335,25 +377,62 @@ example :
     have hbot : 𝓝[<] (1 : ℝ≥0) ≠ ⊥ :=
       (nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩).ne
     rw [monotone_id.leftLim_eq_sSup hbot,
-      hDmono.leftLim_eq_sSup hbot, Set.image_id]
-    have himg : (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1)
-        '' Set.Iio 1 = {0} := by
-      refine Set.eq_singleton_iff_unique_mem.mpr
-        ⟨⟨0, Set.mem_Iio.mpr zero_lt_one, if_pos zero_lt_one⟩, ?_⟩
-      rintro x ⟨y, hy, rfl⟩
-      exact if_pos hy
-    have hIio : sSup (Set.Iio (1 : ℝ≥0)) = 1 := by
-      refine le_antisymm
-        (csSup_le ⟨0, Set.mem_Iio.mpr zero_lt_one⟩
-          fun x hx => le_of_lt hx) ?_
-      refine (le_csSup_iff ⟨1, fun x hx => le_of_lt hx⟩
-        ⟨0, Set.mem_Iio.mpr zero_lt_one⟩).mpr ?_
-      intro b hb
-      by_contra hb1
-      rw [not_le] at hb1
-      obtain ⟨c, hbc, hc1⟩ := exists_between hb1
-      exact absurd (hb (Set.mem_Iio.mpr hc1)) (not_le.mpr hbc)
-    rw [himg, csSup_singleton, hIio]
+      stepOut_mono.leftLim_eq_sSup hbot, Set.image_id,
+      stepOut_image_Iio, csSup_singleton, csSup_Iio_of_pos zero_lt_one]
     exact one_ne_zero
+
+/-- **The value side of the start disjunction is sharp**: a
+right-continuous arrival burst exactly at an unattained start makes
+the values disagree (the left limits then agree, per the
+disjunction). Witness: the step arrivals `1_{[1,∞)}` against the
+zero output; the equality points of the period of `2` accumulate at
+`1` without reaching it, `A(1) = 1 ≠ 0 = D(1)`. -/
+theorem exists_rightContinuous_not_apply_start_eq :
+    ∃ A D : ℝ≥0 → ℝ≥0, Monotone A ∧ Monotone D
+      ∧ IsRightContinuous A ∧ IsRightContinuous D
+      ∧ A 0 = D 0 ∧ (∀ x, D x ≤ A x)
+      ∧ start A D 2 = 1
+      ∧ A (start A D 2) ≠ D (start A D 2)
+      ∧ IsBacklogged A D (Set.Ioc 1 2)
+      ∧ leftLim A (start A D 2) = leftLim D (start A D 2) := by
+  have hstart : start (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1)
+      (fun _ : ℝ≥0 => 0) 2 = 1 := by
+    have hset : { u : ℝ≥0 | u ≤ 2
+        ∧ (if u < 1 then (0 : ℝ≥0) else 1) = 0 } = Set.Iio 1 := by
+      ext u
+      constructor
+      · rintro ⟨hu2, hueq⟩
+        by_contra h1u
+        rw [Set.mem_Iio, not_lt] at h1u
+        rw [if_neg (not_lt.mpr h1u)] at hueq
+        exact one_ne_zero hueq
+      · intro hu
+        exact ⟨le_trans (le_of_lt hu) one_le_two, if_pos hu⟩
+    show sSup { u : ℝ≥0 | u ≤ 2
+        ∧ (if u < 1 then (0 : ℝ≥0) else 1) = 0 } = 1
+    rw [hset, csSup_Iio_of_pos zero_lt_one]
+  refine ⟨fun y => if y < 1 then (0 : ℝ≥0) else 1, fun _ => 0,
+    stepOut_mono, monotone_const, stepOut_rightCont,
+    isRightContinuous_of_continuous _ continuous_const, ?_, ?_,
+    hstart, ?_, ?_, ?_⟩
+  · show (if (0 : ℝ≥0) < 1 then (0 : ℝ≥0) else 1) = 0
+    rw [if_pos zero_lt_one]
+  · intro x
+    exact zero_le'
+  · rw [hstart]
+    show (if (1 : ℝ≥0) < 1 then (0 : ℝ≥0) else 1) ≠ 0
+    rw [if_neg (lt_irrefl 1)]
+    exact one_ne_zero
+  · intro u hu
+    show (0 : ℝ≥0) < if u < 1 then (0 : ℝ≥0) else 1
+    rw [if_neg (not_lt.mpr (le_of_lt hu.1))]
+    exact zero_lt_one
+  · rw [hstart]
+    have hbot : 𝓝[<] (1 : ℝ≥0) ≠ ⊥ :=
+      (nhdsLT_neBot_of_exists_lt ⟨0, zero_lt_one⟩).ne
+    have himg : (fun _ : ℝ≥0 => (0 : ℝ≥0)) '' Set.Iio 1 = {0} :=
+      Set.Nonempty.image_const ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ 0
+    rw [stepOut_mono.leftLim_eq_sSup hbot,
+      monotone_const.leftLim_eq_sSup hbot, stepOut_image_Iio, himg]
 
 end DeepWiki

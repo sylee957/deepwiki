@@ -1,12 +1,16 @@
 import Book.ServiceCurveWeaklyStrict
 import Book.RealCurves
+import Book.ServersRate
 
 /-! # Weakly strict is strictly weaker than strict
 The middle inclusion of the hierarchy is strict: a server may grant
 each `t` its full increment from the start of its backlogged period
 while under-serving interior windows. The witness serves a `4/3`
 burst at rate `2`, then rate `2/3` — the start-anchored bound holds
-against `λ₁`, but the window `(1/2, 3/4]` receives `1/6 < 1/4`. -/
+against `λ₁`, but the window `(1/2, 3/4]` receives `1/6 < 1/4`.
+The chapter also separates the upper inclusion: for every
+delayed-start curve the min-plus relation strictly exceeds the
+weakly strict one — the rate-line pair witnesses it per curve. -/
 
 namespace DeepWiki
 
@@ -282,49 +286,6 @@ the anchored bound demands the full `β(s)` while the convolution
 stays strictly below it. The book's rate-line witness for this case
 is finite-valued, hence representable here unchanged. -/
 
-/-- The rate input as a curve. -/
-noncomputable def rateCurve (R : ℝ≥0) : Curve where
-  toFun := rate R
-  mono := rate_mono R
-  zero := mul_zero R
-  pwc := isPiecewiseContinuous_of_continuous _ (rate_continuous R)
-  leftCont := isLeftContinuous_of_continuous _ (rate_continuous R)
-
-/-- `rateCurve R t = R * t`. -/
-@[simp] theorem rateCurve_apply (R t : ℝ≥0) :
-    rateCurve R t = R * t := rfl
-
-/-- The convolution against a rate obeys the rate's additive
-Lipschitz bound: shift each split of the smaller time. -/
-theorem minConvProj_rate_le_add {β : ℝ≥0 → ℝ≥0} {R : ℝ≥0} :
-    ∀ v w, w ≤ v → minConvProj (rate R) β v
-      ≤ minConvProj (rate R) β w + R * (v - w) := by
-  intro v w hwv
-  rw [← tsub_le_iff_right]
-  refine le_minConvProj fun u x hux => ?_
-  rw [tsub_le_iff_right]
-  refine le_trans (minConvProj_le_add (u := u + (v - w)) (s := x) ?_) ?_
-  · rw [add_right_comm, hux, add_tsub_cancel_of_le hwv]
-  · refine le_of_eq ?_
-    rw [rate_apply, rate_apply, mul_add]
-    ring
-
-/-- The rate convolution `λ_R ∗ β` as a curve, for monotone `β` null
-at the origin: Lipschitz, hence continuous. -/
-noncomputable def rateConvCurve (β : ℝ≥0 → ℝ≥0) (R : ℝ≥0)
-    (hmono : Monotone β) (h0 : β 0 = 0) : Curve where
-  toFun := minConvProj (rate R) β
-  mono := minConvProj_mono (rate_mono R) hmono
-  zero := by
-    show minConvProj (rate R) β 0 = 0
-    rw [minConvProj_zero_eq, rate_apply, mul_zero, zero_add, h0]
-  pwc := isPiecewiseContinuous_of_continuous _
-    (continuous_of_monotone_of_lipschitz_bound
-      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
-  leftCont := isLeftContinuous_of_continuous _
-    (continuous_of_monotone_of_lipschitz_bound
-      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
-
 /-- Before its start the delayed curve contributes nothing, so the
 rate convolution sits strictly below the rate at every positive
 time. -/
@@ -450,5 +411,26 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel
   refine hnws ?_
   rw [heq]
   exact hmp
+
+/-- **The upper inclusion cannot be reversed**: it is not the case
+that every monotone curve's min-plus relation refines its weakly
+strict one — instantiated at the unit rate-latency curve. -/
+theorem not_forall_minimalServiceRel_le_weaklyStrictServiceRel :
+    ¬ ∀ β : ℝ≥0 → ℝ≥0, Monotone β →
+      minimalServiceRel (liftEReal β) ≤ weaklyStrictServiceRel β := by
+  intro h
+  have hvan : ∀ u : ℝ≥0, u < 1 → rateLatency (1 : ℝ≥0) 1 u = 0 := by
+    intro u hu
+    show (1 : ℝ≥0) * (u - 1) = 0
+    rw [tsub_eq_zero_of_le (le_of_lt hu), mul_zero]
+  have hpos : (0 : ℝ≥0) < rateLatency (1 : ℝ≥0) 1 2 := by
+    show (0 : ℝ≥0) < 1 * (2 - 1)
+    rw [one_mul]
+    norm_num
+  obtain ⟨A, D, hmp, hnws⟩ :=
+    exists_minimalServiceRel_not_weaklyStrictServiceRel
+      (t₀ := 1) (s := 2)
+      (rateLatency_mono 1 1) hvan one_pos one_le_two hpos
+  exact hnws (h _ (rateLatency_mono 1 1) A D hmp)
 
 end DeepWiki

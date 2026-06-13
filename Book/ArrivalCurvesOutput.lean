@@ -160,6 +160,29 @@ theorem isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve
     (hβ.isMinimalServiceCurve hc) (isNonneg_liftEReal beta) hp harru
   rwa [toENN_liftEReal] at h
 
+/-- Bundle form of the general maximal output theorem: the refined
+shaped output curve is itself a maximal arrival curve, for monotone
+`betaM` and `sigma`. -/
+theorem isMaximalArrivalCurve_output
+    {S : Curve → Curve → Prop} {betam betaM sigma : ℝ≥0 → EReal}
+    {αu : ℝ≥0 → ℝ≥0∞}
+    (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
+    (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
+    (hMmono : Monotone betaM)
+    (hsh : IsShaper sigma S) (hnns : IsNonneg sigma)
+    (hsmono : Monotone sigma)
+    {A D : Curve} (hp : S A D)
+    (harru : IsMaximalArrivalCurve (liftENN ⇑A) αu) :
+    IsMaximalArrivalCurve (liftENN ⇑D)
+      (minDeconv (minConv αu (toENN betaM)) (toENN betam)
+        ⊓ toENN sigma) :=
+  ⟨Monotone.inf
+      (monotone_minDeconv _ _
+        (monotone_minConv harru.1 (monotone_toENN hMmono)))
+      (monotone_toENN hsmono),
+    isMaximalArrivalBound_output hβm hnnm hβM hnnM hsh hnns hp
+      harru.2⟩
+
 /-- Bundle form of the strict-service output: the deconvolved output
 curve is a maximal arrival curve. -/
 theorem isMaximalArrivalCurve_output_of_isStrictMinimalServiceCurve
@@ -307,6 +330,23 @@ theorem isMinimalArrivalBound_output_of_isGreedyShaper
       (minConv αl (maxDeconv (toENN sigma) (toENN sigma))) :=
   isMinimalArrivalBound_output (hgr.isCausal h0) hgr.isMinimalServiceCurve
     hnns hgr.isMaximalServiceCurve hnns hp harrl
+
+/-- Bundle form of the general minimal output theorem: the kept
+minimal output curve is itself a minimal arrival curve, for monotone
+`betam`. -/
+theorem isMinimalArrivalCurve_output
+    {S : Curve → Curve → Prop} {betam betaM : ℝ≥0 → EReal}
+    {αl : ℝ≥0 → ℝ≥0∞} (hc : IsCausal S)
+    (hβm : IsMinimalServiceCurve betam S) (hnnm : IsNonneg betam)
+    (hmmono : Monotone betam)
+    (hβM : IsMaximalServiceCurve betaM S) (hnnM : IsNonneg betaM)
+    {A D : Curve} (hp : S A D)
+    (harrl : IsMinimalArrivalCurve (liftENN ⇑A) αl) :
+    IsMinimalArrivalCurve (liftENN ⇑D)
+      (minConv αl (maxDeconv (toENN betam) (toENN betaM))) :=
+  ⟨monotone_minConv harrl.1
+      (monotone_maxDeconv _ _ (monotone_toENN hmmono)),
+    isMinimalArrivalBound_output hc hβm hnnm hβM hnnM hp harrl.2⟩
 
 /-- Bundle form of the greedy-shaper output (maximal): the shaped
 output curve `αᵘ ∗ σ` is a maximal arrival curve for monotone `σ`. -/

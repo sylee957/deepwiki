@@ -62,4 +62,52 @@ example (A : Curve) {R : ℝ≥0}
   Deviation.greedyShaperRel_greedyCurve A (rateEReal_mono R)
     (rateEReal_zero_eq R) (rateEReal_leftCont R) hpwc
 
+/-- The rate input as a curve. -/
+noncomputable def rateCurve (R : ℝ≥0) : Curve where
+  toFun := rate R
+  mono := rate_mono R
+  zero := mul_zero R
+  pwc := isPiecewiseContinuous_of_continuous _ (rate_continuous R)
+  leftCont := isLeftContinuous_of_continuous _ (rate_continuous R)
+
+/-- `rateCurve R t = R * t`. -/
+@[simp] theorem rateCurve_apply (R t : ℝ≥0) :
+    rateCurve R t = R * t := rfl
+
+/-- The convolution against a rate obeys the rate's additive
+Lipschitz bound: shift each split of the smaller time. -/
+theorem minConvProj_rate_le_add {β : ℝ≥0 → ℝ≥0} {R : ℝ≥0} :
+    ∀ v w, w ≤ v → minConvProj (rate R) β v
+      ≤ minConvProj (rate R) β w + R * (v - w) := by
+  intro v w hwv
+  rw [← tsub_le_iff_right]
+  refine le_minConvProj fun u x hux => ?_
+  rw [tsub_le_iff_right]
+  refine le_trans (minConvProj_le_add (u := u + (v - w)) (s := x) ?_) ?_
+  · rw [add_right_comm, hux, add_tsub_cancel_of_le hwv]
+  · refine le_of_eq ?_
+    rw [rate_apply, rate_apply, mul_add]
+    ring
+
+/-- The rate convolution `λ_R ∗ β` as a curve, for monotone `β` null
+at the origin: Lipschitz, hence continuous. -/
+noncomputable def rateConvCurve (β : ℝ≥0 → ℝ≥0) (R : ℝ≥0)
+    (hmono : Monotone β) (h0 : β 0 = 0) : Curve where
+  toFun := minConvProj (rate R) β
+  mono := minConvProj_mono (rate_mono R) hmono
+  zero := by
+    show minConvProj (rate R) β 0 = 0
+    rw [minConvProj_zero_eq, rate_apply, mul_zero, zero_add, h0]
+  pwc := isPiecewiseContinuous_of_continuous _
+    (continuous_of_monotone_of_lipschitz_bound
+      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
+  leftCont := isLeftContinuous_of_continuous _
+    (continuous_of_monotone_of_lipschitz_bound
+      (minConvProj_mono (rate_mono R) hmono) minConvProj_rate_le_add)
+
+/-- `rateConvCurve β R … t` is the projected convolution at `t`. -/
+theorem rateConvCurve_apply {β : ℝ≥0 → ℝ≥0} {R : ℝ≥0}
+    (hmono : Monotone β) (h0 : β 0 = 0) (t : ℝ≥0) :
+    rateConvCurve β R hmono h0 t = minConvProj (rate R) β t := rfl
+
 end DeepWiki

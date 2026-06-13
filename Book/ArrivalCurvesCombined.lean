@@ -345,19 +345,12 @@ theorem isSubadditive_etaMax {αu αl : ℝ≥0 → ℝ≥0}
 /-- `ηˡ = αˡ ⊘ αᵘ` is super-additive when `αˡ` is super-additive and
 `αᵘ` sub-additive with `αˡ ≤ αᵘ`: witnesses with positive clamp
 combine into the `a + b` supremum term; a clamped witness defers to
-the other flow's term alone. -/
+the other supremum's witness alone. -/
 theorem isSuperadditive_etaMin {αu αl : ℝ≥0 → ℝ≥0}
     (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
     (hle : αl ≤ αu) :
     IsSuperadditive (minDeconv αl αu) := by
-  have hbddS : ∀ t, BddAbove
-      (Set.range fun z : ℝ≥0 => αl (t + z) - αu z) := by
-    intro t
-    refine ⟨αu t, ?_⟩
-    rintro x ⟨z, rfl⟩
-    refine le_trans (tsub_le_tsub_right (hle _) _) ?_
-    refine tsub_le_iff_right.mpr ?_
-    exact hsub t z
+  have hbddS := bddAbove_etaMin_sup hsub hle
   intro u s
   show (⨆ a : ℝ≥0, αl (u + a) - αu a)
       + (⨆ b : ℝ≥0, αl (s + b) - αu b)

@@ -165,7 +165,7 @@ theorem ndClosure_le_capacity {beta : ℝ≥0 → ℝ≥0} {C : Curve}
 /-- Capacity increments dominating `beta` dominate every
 self-convolution iterate: split the increment window at the
 iterate's split point. -/
-theorem maxConvProjPow_le_tsub {C : Curve} {beta : ℝ≥0 → ℝ≥0}
+theorem maxConvProjPow_le_capacity {C : Curve} {beta : ℝ≥0 → ℝ≥0}
     (hcap : ∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) (k : ℕ) :
     ∀ s t, s ≤ t → maxConvProjPow beta k (t - s) ≤ C t - C s := by
   induction k with
@@ -205,7 +205,7 @@ theorem variableCapacityRel_superadditiveClosureMax {beta : ℝ≥0 → ℝ≥0}
     le_trans (le_superadditiveClosureMax beta hbdd _) (hcap s t hst)⟩,
     fun ⟨C, hD, hcap⟩ => ⟨C, hD, fun s t hst => ?_⟩⟩
   show superadditiveClosureMax beta (t - s) ≤ C t - C s
-  exact ciSup_le fun k => maxConvProjPow_le_tsub hcap k s t hst
+  exact ciSup_le fun k => maxConvProjPow_le_capacity hcap k s t hst
 
 /-- The variable-capacity relation is closure-invariant:
 `variableCapacityRel (ndClosure beta) = variableCapacityRel beta` for
