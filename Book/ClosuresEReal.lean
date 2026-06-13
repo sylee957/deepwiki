@@ -278,6 +278,80 @@ theorem subadditiveClosureEReal_eq_self (g : ℝ≥0 → EReal)
     | succ k =>
         rw [convPowEReal_succ_of_subadditive g hg hsub h0]
 
+/-- The closure vanishes at the origin: `g⋆ 0 = 0` (the zeroth power is the
+unit, `0` at the origin), for non-negative `g`. -/
+theorem subadditiveClosureEReal_zero_eq {g : ℝ≥0 → EReal} (hg : IsNonneg g) :
+    subadditiveClosureEReal g 0 = 0 := by
+  refine le_antisymm ?_ (subadditiveClosureEReal_isNonneg hg 0)
+  refine le_trans (iInf_le (fun n : ℕ => convPowEReal g n 0) 0) (le_of_eq ?_)
+  show convUnitEReal 0 = 0
+  rw [convUnitEReal, if_pos rfl]
+
+/-- The `(min,+)` convolution of two sub-additive non-negative `EReal` curves is
+sub-additive (non-negativity keeps the values `≠ ⊥`, so `EReal` `+` behaves). -/
+theorem isSubadditive_minConv_ereal {f g : ℝ≥0 → EReal}
+    (hf : IsSubadditive f) (hg : IsSubadditive g)
+    (hfn : IsNonneg f) (hgn : IsNonneg g) :
+    IsSubadditive (minConv f g) := by
+  have hconv : IsNonneg (minConv f g) := hfn.conv hgn
+  intro aa bb
+  refine le_add_minConv_of_ne_bot (ne_bot_of_nonneg (hconv aa))
+    (ne_bot_of_nonneg (hconv bb)) fun v w hvw => ?_
+  rw [add_comm (minConv f g aa) (f v + g w)]
+  refine le_add_minConv_of_ne_bot (ne_bot_of_nonneg (add_nonneg (hfn v) (hgn w)))
+    (ne_bot_of_nonneg (hconv aa)) fun u s hus => ?_
+  calc minConv f g (aa + bb)
+      ≤ f (u + v) + g (s + w) :=
+        minConv_le_add f g (by rw [← hus, ← hvw]; exact add_add_add_comm u v s w)
+    _ ≤ (f u + f v) + (g s + g w) := add_le_add (hf u v) (hg s w)
+    _ = (f u + g s) + (f v + g w) := add_add_add_comm _ _ _ _
+    _ = (f v + g w) + (f u + g s) := add_comm _ _
+
+/-- The greatest sub-additive minorant property on `EReal`: a sub-additive
+never-`⊥` `f` with `f 0 = 0` lying below `g` lies below `g⋆`. -/
+theorem le_subadditiveClosureEReal_of_isSubadditive {f g : ℝ≥0 → EReal}
+    (hsub : IsSubadditive f) (hnb : IsNeverBot f) (h0 : f 0 = 0)
+    (hfg : ∀ t, f t ≤ g t) (t : ℝ≥0) :
+    f t ≤ subadditiveClosureEReal g t :=
+  calc f t = subadditiveClosureEReal f t :=
+        (congrFun (subadditiveClosureEReal_eq_self f hnb hsub h0) t).symm
+    _ ≤ subadditiveClosureEReal g t := subadditiveClosureEReal_mono f g hfg t
+
+/-- **Star of a meet on `EReal`**: for non-negative `σ`, `τ`, the closure of
+their pointwise minimum is the convolution of the closures,
+`(σ ⊓ τ)⋆ = σ⋆ ∗ τ⋆` — the `EReal` (min,+) Kleene-star-of-meet identity. -/
+theorem subadditiveClosureEReal_min {σ τ : ℝ≥0 → EReal}
+    (hσ : IsNonneg σ) (hτ : IsNonneg τ) :
+    subadditiveClosureEReal (fun t => min (σ t) (τ t))
+      = minConv (subadditiveClosureEReal σ) (subadditiveClosureEReal τ) := by
+  have hinf : IsNonneg (fun t => min (σ t) (τ t)) := fun t => le_min (hσ t) (hτ t)
+  funext t
+  apply le_antisymm
+  · refine le_minConv fun u s hus => ?_
+    subst hus
+    calc subadditiveClosureEReal (fun t => min (σ t) (τ t)) (u + s)
+        ≤ subadditiveClosureEReal (fun t => min (σ t) (τ t)) u
+            + subadditiveClosureEReal (fun t => min (σ t) (τ t)) s :=
+          subadditiveClosureEReal_subadditive hinf u s
+      _ ≤ subadditiveClosureEReal σ u + subadditiveClosureEReal τ s :=
+          add_le_add
+            (subadditiveClosureEReal_mono _ σ (fun _ => min_le_left _ _) u)
+            (subadditiveClosureEReal_mono _ τ (fun _ => min_le_right _ _) s)
+  · have h0σ : subadditiveClosureEReal σ 0 = 0 := subadditiveClosureEReal_zero_eq hσ
+    have h0τ : subadditiveClosureEReal τ 0 = 0 := subadditiveClosureEReal_zero_eq hτ
+    refine le_subadditiveClosureEReal_of_isSubadditive
+      (isSubadditive_minConv_ereal
+        (subadditiveClosureEReal_subadditive hσ) (subadditiveClosureEReal_subadditive hτ)
+        (subadditiveClosureEReal_isNonneg hσ) (subadditiveClosureEReal_isNonneg hτ))
+      (fun r => ne_bot_of_nonneg
+        (IsNonneg.conv (subadditiveClosureEReal_isNonneg hσ)
+          (subadditiveClosureEReal_isNonneg hτ) r))
+      (by rw [minConv_apply_zero, h0σ, h0τ, add_zero]) (fun r => le_min
+        ((minConv_le_left _ h0τ r).trans
+          (subadditiveClosureEReal_le σ (fun t => ne_bot_of_nonneg (hσ t)) r))
+        ((minConv_le_right h0σ _ r).trans
+          (subadditiveClosureEReal_le τ (fun t => ne_bot_of_nonneg (hτ t)) r))) t
+
 /-! ## Non-decreasing closure over `EReal` -/
 
 /-- Over `EReal` every `f` satisfies `ClosureBddAbove`. -/

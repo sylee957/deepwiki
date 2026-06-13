@@ -174,6 +174,19 @@ example {σ₁ σ₂ : ℝ≥0 → EReal} (h1 : IsNonneg σ₁) (h2 : IsNonneg �
   rw [← shaperRel_inf,
     shaperRel_closure (sigma := σ₁ ⊓ σ₂) (fun t => le_inf (h1 t) (h2 t))]
 
+/-- **Conjunction of shapers, convolution form**: shaping a flow by both
+nonnegative `σ₁` and `σ₂` equals shaping by the convolution of their closures,
+`shaperRel σ₁ ⊓ shaperRel σ₂ = shaperRel (σ₁⋆ ∗ σ₂⋆)` — the conjunction
+invariance, the closure invariance, and the `EReal` star-of-meet combined. -/
+theorem shaperRel_inf_minConv_closure {σ₁ σ₂ : ℝ≥0 → EReal}
+    (h1 : IsNonneg σ₁) (h2 : IsNonneg σ₂) :
+    shaperRel σ₁ ⊓ shaperRel σ₂
+      = shaperRel (minConv (subadditiveClosureEReal σ₁) (subadditiveClosureEReal σ₂)) := by
+  rw [← shaperRel_inf,
+    shaperRel_closure (sigma := σ₁ ⊓ σ₂) (fun t => le_inf (h1 t) (h2 t))]
+  congr 1
+  exact subadditiveClosureEReal_min h1 h2
+
 /-! ## A shaper offers a maximal service curve -/
 
 /-- A causal shaper for `sigma` offers `sigma` as a maximal service curve:
