@@ -546,4 +546,123 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_rateHalf :
   weaklyStrictServiceRel_lt_minimalServiceRel_rate (1 / 2) (by positivity)
     (by rw [div_lt_one (by norm_num : (0 : ℝ≥0) < 2)]; norm_num)
 
+/-! ## Case B of the general no-delay separation: a sub-rate curve
+The book's general no-delay case (Theorem 9.5) when the rate `λ_ρ` overtakes a
+no-delay `β` that stays strictly below it (`∀ u > 0, β u < ρu`) yet is *slow*:
+some stall point `s < ts` has `β ts < ρs`. The stalling departure
+`D = (λ_ρ ⊓ ρs) ⊔ β` rises with `λ_ρ` to the level `ρs` at `s`, stalls there
+through `(s, ts]`, then follows `β`. It is min-plus served by `β` under
+`A = λ_ρ` but breaks the start-anchored bound on the stall window. The rate
+family `λ_b` above is the instance `ρ = 1`, `s = 1`. -/
+
+/-- The case-B stalling departure `D = (λ_ρ ⊓ ρs) ⊔ β`. -/
+noncomputable def wsmpGenDep (β : ℝ≥0 → ℝ≥0) (ρ s : ℝ≥0)
+    (hmono : Monotone β) (hlc : IsLeftContinuous β)
+    (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0) : Curve where
+  toFun := fun t => max (min (ρ * t) (ρ * s)) (β t)
+  mono := fun _ _ h => max_le_max (min_le_min (by gcongr) le_rfl) (hmono h)
+  zero := by show max (min (ρ * 0) (ρ * s)) (β 0) = 0; rw [mul_zero, h0]; simp
+  pwc := by
+    intro T
+    refine Set.Finite.subset (hpwc T) ?_
+    rintro t ⟨ht, htm⟩
+    exact ⟨fun hc => ht (((continuousAt_const.mul continuousAt_id).min
+      continuousAt_const).max hc), htm⟩
+  leftCont := fun t => (((continuous_const.mul continuous_id).min
+    continuous_const).continuousWithinAt).max (hlc t)
+
+/-- `wsmpGenDep … t = max (min (ρ t) (ρ s)) (β t)`. -/
+theorem wsmpGenDep_apply {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0} (t : ℝ≥0) :
+    wsmpGenDep β ρ s hmono hlc hpwc h0 t = max (min (ρ * t) (ρ * s)) (β t) := rfl
+
+/-- The departure dominates `β`. -/
+theorem wsmpGenDep_ge {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0} (t : ℝ≥0) :
+    β t ≤ wsmpGenDep β ρ s hmono hlc hpwc h0 t := le_max_right _ _
+
+/-- Below the rate, the departure stays under `λ_ρ`. -/
+theorem wsmpGenDep_le_arr {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0}
+    (hle : ∀ t, β t ≤ ρ * t) (t : ℝ≥0) :
+    wsmpGenDep β ρ s hmono hlc hpwc h0 t ≤ rateCurve ρ t := by
+  rw [wsmpGenDep_apply]; show max (min (ρ * t) (ρ * s)) (β t) ≤ rateCurve ρ t
+  rw [rateCurve_apply]
+  exact max_le (min_le_left _ _) (hle t)
+
+/-- The pair's equality points are exactly `[0, s]`. -/
+theorem wsmpGen_eq_iff {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0}
+    (hρ : 0 < ρ) (hlt : ∀ u, 0 < u → β u < ρ * u) (hle : ∀ t, β t ≤ ρ * t) {u : ℝ≥0} :
+    rateCurve ρ u = wsmpGenDep β ρ s hmono hlc hpwc h0 u ↔ u ≤ s := by
+  rw [rateCurve_apply, wsmpGenDep_apply]
+  constructor
+  · intro h
+    by_contra hu
+    rw [not_le] at hu
+    rw [min_eq_right (le_of_lt (mul_lt_mul_of_pos_left hu hρ))] at h
+    rcases le_total (β u) (ρ * s) with h2 | h2
+    · rw [max_eq_left h2] at h
+      exact absurd h (ne_of_gt (mul_lt_mul_of_pos_left hu hρ))
+    · rw [max_eq_right h2] at h
+      exact absurd h (ne_of_gt (hlt u (lt_of_le_of_lt zero_le' hu)))
+  · intro h
+    rw [min_eq_left (by gcongr), max_eq_left (hle u)]
+
+/-- The pair is min-plus served at `β`: the `(0, t)` split bounds the
+convolution by `β t ≤ D t`. -/
+theorem wsmpGen_mem {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0}
+    (hle : ∀ t, β t ≤ ρ * t) :
+    minimalServiceRel (liftEReal β) (rateCurve ρ) (wsmpGenDep β ρ s hmono hlc hpwc h0) := by
+  refine mem_minimalServiceRel_iff.mpr ⟨fun t => wsmpGenDep_le_arr hle t, fun t => ?_⟩
+  calc minConv (curveEReal (rateCurve ρ)) (liftEReal β) t
+      ≤ curveEReal (rateCurve ρ) 0 + liftEReal β t := minConv_le_add _ _ (zero_add t)
+    _ ≤ curveEReal (wsmpGenDep β ρ s hmono hlc hpwc h0) t := by
+        rw [curveEReal_apply, curveEReal_apply, rateCurve_apply, mul_zero,
+          NNReal.coe_zero, EReal.coe_zero, zero_add]
+        show ((β t : ℝ) : EReal) ≤ ((wsmpGenDep β ρ s hmono hlc hpwc h0 t : ℝ) : EReal)
+        exact_mod_cast wsmpGenDep_ge t
+
+/-- The pair is not weakly strictly served at `β`: the stall window `(s, ts]`
+starts at `s` but receives nothing while the anchored bound demands growth. -/
+theorem wsmpGen_not_mem {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hpwc h0}
+    (hρ : 0 < ρ) (hpos : ∀ u, 0 < u → 0 < β u)
+    (hlt : ∀ u, 0 < u → β u < ρ * u) (hle : ∀ t, β t ≤ ρ * t)
+    (ts : ℝ≥0) (hts1 : s < ts) (hts2 : β ts < ρ * s) :
+    ¬ weaklyStrictServiceRel β (rateCurve ρ) (wsmpGenDep β ρ s hmono hlc hpwc h0) := by
+  rintro ⟨-, hb⟩
+  have hstart : start ⇑(rateCurve ρ) ⇑(wsmpGenDep β ρ s hmono hlc hpwc h0) ts = s := by
+    unfold start
+    have hset : {u | u ≤ ts ∧ rateCurve ρ u = wsmpGenDep β ρ s hmono hlc hpwc h0 u}
+        = Set.Iic s := by
+      ext u
+      simp only [Set.mem_setOf_eq, Set.mem_Iic, wsmpGen_eq_iff hρ hlt hle]
+      exact ⟨fun h => h.2, fun h => ⟨le_trans h hts1.le, h⟩⟩
+    rw [hset, csSup_Iic]
+  have h := hb ts
+  rw [hstart] at h
+  have hDs : wsmpGenDep β ρ s hmono hlc hpwc h0 s = ρ * s := by
+    rw [wsmpGenDep_apply, min_self, max_eq_left (hle s)]
+  have hDts : wsmpGenDep β ρ s hmono hlc hpwc h0 ts = ρ * s := by
+    rw [wsmpGenDep_apply, min_eq_right (le_of_lt (mul_lt_mul_of_pos_left hts1 hρ)),
+      max_eq_left hts2.le]
+  rw [hDs, hDts] at h
+  exact absurd h (not_le.mpr (lt_add_of_pos_right (ρ * s)
+    (hpos (ts - s) (tsub_pos_of_lt hts1))))
+
+/-- **The upper inclusion is strict for a no-delay sub-rate curve** (case B of
+Theorem 9.5): a no-delay `β` strictly below the rate `ρ`, slow enough to stall
+(`β ts < ρs` for some `s < ts`), has `wstrict(β) ⊊ mp(β)`. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_subRate
+    {β : ℝ≥0 → ℝ≥0} (hmono : Monotone β) (hlc : IsLeftContinuous β)
+    (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0)
+    {ρ s : ℝ≥0} (hρ : 0 < ρ) (hpos : ∀ u, 0 < u → 0 < β u)
+    (hlt : ∀ u, 0 < u → β u < ρ * u)
+    (ts : ℝ≥0) (hts1 : s < ts) (hts2 : β ts < ρ * s) :
+    weaklyStrictServiceRel β < minimalServiceRel (liftEReal β) := by
+  have hle : ∀ t, β t ≤ ρ * t := fun t => by
+    rcases eq_or_ne t 0 with rfl | ht
+    · rw [h0, mul_zero]
+    · exact (hlt t (lt_of_le_of_ne zero_le' (Ne.symm ht))).le
+  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
+  refine wsmpGen_not_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0)
+    hρ hpos hlt hle ts hts1 hts2 ?_
+  rw [heq]; exact wsmpGen_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0) hle
+
 end DeepWiki
