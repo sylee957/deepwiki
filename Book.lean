@@ -90,6 +90,7 @@ import Book.ServersResidualPriority
 import Book.ServersResidualPriorityPackets
 import Book.ServersResidualGps
 import Book.ServersResidualGpsImproved
+import Book.ServersResidualGpsStrict
 import Book.ServersResidualPmoo
 import Book.ServersResidualPmooChain
 import Book.ServersResidualPmooRateLatency
