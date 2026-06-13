@@ -1,5 +1,6 @@
 import Book.ServersResidualPmooChain
 import Book.RealCurves
+import Mathlib.Tactic.LinearCombination
 
 /-! # The PMOO chain on rate-latency servers
 The chain convolution of rate-latency service curves folds to a
@@ -118,6 +119,94 @@ theorem chainConv_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ) :
   | succ n ih =>
     rw [chainConv_succ, ih]
     exact minConvProj_rateLatency _ _ _ _
+
+/-- **Residual of a rate-latency against an affine arrival**:
+`[β_{R₀,T₀} − (ρ·t + b)]⁺ = β_{R₀−ρ, T'}` with the effective latency
+`T' = T₀ + (ρ·T₀ + b)/(R₀−ρ)`, under stability `ρ < R₀` — the
+clamped difference is again a rate-latency curve. -/
+theorem rateLatency_sub_affine (R0 T0 rho b : ℝ≥0) (hR : rho < R0) :
+    (fun t => rateLatency R0 T0 t - (rho * t + b))
+      = rateLatency (R0 - rho) (T0 + (rho * T0 + b) / (R0 - rho)) := by
+  have hRpos : 0 < R0 - rho := tsub_pos_of_lt hR
+  have hRcoe : ((R0 - rho : ℝ≥0) : ℝ) = (R0 : ℝ) - rho :=
+    NNReal.coe_sub (le_of_lt hR)
+  have hRne : ((R0 : ℝ) - rho) ≠ 0 := by
+    rw [← hRcoe]; exact_mod_cast hRpos.ne'
+  have hRT' : ((R0 - rho : ℝ≥0) : ℝ)
+      * ((T0 + (rho * T0 + b) / (R0 - rho) : ℝ≥0) : ℝ)
+      = (R0 : ℝ) * T0 + b := by
+    push_cast [hRcoe]
+    field_simp
+    ring
+  funext t
+  set R : ℝ≥0 := R0 - rho with hRdef
+  set T' : ℝ≥0 := T0 + (rho * T0 + b) / (R0 - rho) with hT'def
+  rcases le_total t T' with htle | htge
+  · have hrhs : rateLatency R T' t = 0 := by
+      show R * (t - T') = 0
+      rw [tsub_eq_zero_of_le htle, mul_zero]
+    have hlhs : rateLatency R0 T0 t - (rho * t + b) = 0 := by
+      refine tsub_eq_zero_of_le ?_
+      show R0 * (t - T0) ≤ rho * t + b
+      rw [← NNReal.coe_le_coe]
+      push_cast [NNReal.coe_sub_def]
+      have htR : (t : ℝ) ≤ T' := by exact_mod_cast htle
+      rcases le_total (t : ℝ) T0 with h0 | h0
+      · rw [max_eq_right (by linarith), mul_zero]
+        positivity
+      · rw [max_eq_left (by linarith)]
+        have hRtle : ((R0 : ℝ) - rho) * t ≤ (R0 : ℝ) * T0 + b := by
+          have hle : ((R0 : ℝ) - rho) * t ≤ ((R0 : ℝ) - rho) * T' := by
+            apply mul_le_mul_of_nonneg_left htR
+            rw [← hRcoe]; exact (R0 - rho).coe_nonneg
+          rw [hRcoe] at hRT'
+          nlinarith [hle, hRT']
+        nlinarith [hRtle]
+    rw [hrhs, hlhs]
+  · have hT0le : T0 ≤ T' := le_self_add
+    have htT0 : T0 ≤ t := le_trans hT0le htge
+    rw [← NNReal.coe_inj]
+    show ((rateLatency R0 T0 t - (rho * t + b) : ℝ≥0) : ℝ)
+      = ((rateLatency R T' t : ℝ≥0) : ℝ)
+    have hRHS : ((rateLatency R T' t : ℝ≥0) : ℝ)
+        = ((R0 : ℝ) - rho) * ((t : ℝ) - T') := by
+      show ((R * (t - T') : ℝ≥0) : ℝ) = _
+      rw [NNReal.coe_mul, NNReal.coe_sub htge, hRcoe]
+    have htge' : (T' : ℝ) ≤ t := by exact_mod_cast htge
+    have hge0 : rho * t + b ≤ rateLatency R0 T0 t := by
+      show rho * t + b ≤ R0 * (t - T0)
+      rw [← NNReal.coe_le_coe]
+      push_cast [NNReal.coe_sub htT0]
+      rw [hRcoe] at hRT'
+      have hRtge : ((R0 : ℝ) - rho) * T' ≤ ((R0 : ℝ) - rho) * t := by
+        apply mul_le_mul_of_nonneg_left htge'
+        rw [← hRcoe]; exact (R0 - rho).coe_nonneg
+      nlinarith [hRT', hRtge]
+    rw [NNReal.coe_sub hge0, hRHS]
+    show (((R0 * (t - T0) : ℝ≥0)) : ℝ) - ((rho * t + b : ℝ≥0) : ℝ)
+      = ((R0 : ℝ) - rho) * ((t : ℝ) - T')
+    push_cast [NNReal.coe_sub htT0]
+    rw [hRcoe] at hRT'
+    linear_combination hRT'
+
+/-- **Example 10.1, the residual closed form**: a tagged flow crossing
+the all-crossing rate-latency tandem, with summed cross-traffic
+arrival `ρ·t + b` (the sum of the token buckets `γ_{rⱼ,bⱼ}`), is
+served the rate-latency residual `β_{R, T}` with rate
+`R = (⨅ₕ Rₕ) − ρ` and latency `T = (∑ₕ Tₕ) + (ρ·∑ₕ Tₕ + b)/R`, under
+stability `ρ < ⨅ₕ Rₕ` — recovering the book's effective service
+curve. -/
+theorem pmooResidualChain_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ)
+    (rho b : ℝ≥0) (hstab : rho < chainRate R n) :
+    pmooResidualChain (fun h => rateLatency (R h) (T h)) n
+        (fun v => rho * v + b)
+      = rateLatency (chainRate R n - rho)
+          (chainLatency T n
+            + (rho * chainLatency T n + b) / (chainRate R n - rho)) := by
+  funext v
+  rw [pmooResidualChain_apply, chainConv_rateLatency]
+  exact congrFun
+    (rateLatency_sub_affine (chainRate R n) (chainLatency T n) rho b hstab) v
 
 /-! ## Book restatement (Example 10.1, the service-curve fold)
 A tandem of `n + 1` rate-latency servers crossed by every flow folds
