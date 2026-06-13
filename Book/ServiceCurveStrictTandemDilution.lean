@@ -464,3 +464,77 @@ theorem compPow_shiftCurve_warpCurve (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (h
 theorem shiftCurve_warpCurve_le (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d)
     (c τ : ℝ≥0) : shiftCurve (warpCurve A hr hrd) c τ ≤ A (τ - c) :=
   A.mono (warp_le_self hr hrd (τ - c))
+
+/-- **Lemma 9.5, reverse `⊇` direction**:
+`S_mp(δ_T) ⊆ S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ)` (for `T > 0`). Given `(A, D')` min-plus served
+by `δ_T` (so `A(·−T) ≤ D'`), for each `ε > 0` pick `n > 2T/ε` and a tiny ramp
+`r = T/n²`: the `n`-stage tandem (one warp stage + `n−1` shift stages by `d − r`,
+`d = T/n`) produces `D` with `D(t−ε) ≤ A(t − (ε + (n−1)(d−r))) ≤ A(t−T) ≤ D'(t)`, since
+`(n−1)(d−r) ≥ T − ε`. The output is in `(S_strict(δ_{T/n}))ⁿ`, so `(A, D')` lies in the
+closure. -/
+theorem minimalServiceRel_delay_le_systemClosure {T : ℝ≥0} (hT : 0 < T) :
+    minimalServiceRel (delayEReal T) ≤ systemClosure (delayTandemUnion T) := by
+  intro A D' hmem
+  obtain ⟨hcaus, hconv⟩ := mem_minimalServiceRel_iff.mp hmem
+  have hAD' : ∀ t, A (t - T) ≤ D' t := by
+    intro t
+    have h := hconv t
+    rw [conv_delayEReal (curveEReal A) (monotone_curveEReal A) (isNeverBot_curveEReal A)] at h
+    simp only [curveEReal_apply] at h
+    exact_mod_cast h
+  refine ⟨hcaus, fun ε hε => ?_⟩
+  have hε' : (0 : ℝ) < (ε : ℝ) := NNReal.coe_pos.mpr hε
+  have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
+  set n : ℕ := ⌈(2 * (T : ℝ) / ε)⌉₊ + 1 with hndef
+  have hn : 0 < n := Nat.succ_pos _
+  have hNpos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have hN2 : 2 * (T : ℝ) < ε * n := by
+    have hlt : (2 * (T : ℝ) / ε) < n := by
+      rw [hndef]; push_cast; exact lt_of_le_of_lt (Nat.le_ceil _) (lt_add_one _)
+    rw [div_lt_iff₀ hε'] at hlt; linarith [hlt]
+  have h1n : (1 : ℝ≥0) ≤ (n : ℝ≥0) := by exact_mod_cast hn
+  have hr : (0 : ℝ≥0) < T / ((n : ℝ≥0) * n) := by positivity
+  have hrd : T / ((n : ℝ≥0) * n) ≤ T / (n : ℝ≥0) := by
+    gcongr
+    exact le_mul_of_one_le_left zero_le' h1n
+  have hreal : (T : ℝ) ≤ ε + ((n : ℝ) - 1) * ((T : ℝ) / n - T / (n * n)) := by
+    have expand : (ε : ℝ) + ((n : ℝ) - 1) * ((T : ℝ) / n - T / (n * n))
+        = (ε * (n * n) + T * ((n : ℝ) - 1) ^ 2) / (n * n) := by field_simp
+    rw [expand, le_div_iff₀ (by positivity)]
+    nlinarith [hN2, hNpos, hT', mul_pos hNpos hNpos]
+  have e1 : (((n - 1 : ℕ) : ℝ≥0) : ℝ) = (n : ℝ) - 1 := by
+    rw [NNReal.coe_natCast, Nat.cast_sub hn, Nat.cast_one]
+  have hcast : ((((n - 1 : ℕ) : ℝ≥0) * (T / (n : ℝ≥0) - T / ((n : ℝ≥0) * n)) : ℝ≥0) : ℝ)
+      = ((n : ℝ) - 1) * ((T : ℝ) / n - T / (n * n)) := by
+    rw [NNReal.coe_mul, NNReal.coe_sub hrd, e1]
+    push_cast
+    ring
+  have hkey : T ≤ ε + ((n - 1 : ℕ) : ℝ≥0) * (T / (n : ℝ≥0) - T / ((n : ℝ≥0) * n)) := by
+    rw [← NNReal.coe_le_coe, NNReal.coe_add, hcast]; exact hreal
+  refine ⟨shiftCurve (warpCurve A hr hrd)
+    (((n - 1 : ℕ) : ℝ≥0) * (T / (n : ℝ≥0) - T / ((n : ℝ≥0) * n))), ⟨n, hn, ?_⟩, fun t => ?_⟩
+  · have h := compPow_shiftCurve_warpCurve A hr hrd (n - 1)
+    rwa [Nat.sub_add_cancel hn] at h
+  · set c : ℝ≥0 := ((n - 1 : ℕ) : ℝ≥0) * (T / (n : ℝ≥0) - T / ((n : ℝ≥0) * n)) with hc
+    calc shiftCurve (warpCurve A hr hrd) c (t - ε)
+        ≤ A (t - ε - c) := shiftCurve_warpCurve_le A hr hrd c (t - ε)
+      _ = A (t - (ε + c)) := by rw [← tsub_add_eq_tsub_tsub]
+      _ ≤ A (t - T) := A.mono (tsub_le_tsub_left hkey t)
+      _ ≤ D' t := hAD' t
+
+/-! ## Book restatement (Lemma 9.5)
+The §9.3 closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` of `n`-fold strict-`δ_{T/n}`
+tandems is exactly the min-plus pure-delay server `δ_T`:
+`S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) = S_mp(δ_T)` (for `T > 0`). The `⊆` direction is
+`systemClosure_delayTandemUnion_le`; the reverse `⊇` (the dilution: each `ε` is met by an
+`n`-stage tandem of strict `δ_{T/n}` servers whose worst-case staircase output approaches
+`A ∗ δ_T` from below) is `minimalServiceRel_delay_le_systemClosure`. -/
+theorem systemClosure_delayTandemUnion_eq {T : ℝ≥0} (hT : 0 < T) :
+    systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T) :=
+  le_antisymm (systemClosure_delayTandemUnion_le T) (minimalServiceRel_delay_le_systemClosure hT)
+
+/-- **Lemma 9.5** (book restatement): the closure of the strict-delay tandem union is the
+min-plus delay server. -/
+example {T : ℝ≥0} (hT : 0 < T) :
+    systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T) :=
+  systemClosure_delayTandemUnion_eq hT
