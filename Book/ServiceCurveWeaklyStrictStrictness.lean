@@ -1,6 +1,7 @@
 import Book.ServiceCurveWeaklyStrict
 import Book.RealCurves
 import Book.ServersRate
+import Book.ArrivalCurvesShaperGreedy
 
 /-! # Weakly strict is strictly weaker than strict
 The middle inclusion of the hierarchy is strict: a server may grant
@@ -664,5 +665,98 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_subRate
   refine wsmpGen_not_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0)
     hρ hpos hlt hle ts hts1 hts2 ?_
   rw [heq]; exact wsmpGen_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0) hle
+
+/-! ## Case C of the general no-delay separation: a superlinear curve
+The book's remaining no-delay case (Theorem 9.5): when `β` overtakes every rate
+(no `λ_ρ` stays above it), pick `ρ` with `λ_ρ > β` near the origin but
+`β` overtaking at some `t_ov` (`β t_ov > ρ·t_ov`). The departure `D = λ_ρ ∗ β`
+(a Curve via the Lipschitz-greedy machinery) is min-plus served by `β`, but
+has no positive equality point with `λ_ρ` (so its start is the origin), and the
+start-anchored bound then demands `D t_ov ≥ β t_ov` while `D t_ov ≤ ρ·t_ov <
+β t_ov`. -/
+
+/-- The case-C departure `λ_ρ ∗ β`, as a Curve (`λ_ρ` is `ρ`-Lipschitz). -/
+noncomputable def wsmpSupDep (β : Curve) (ρ : ℝ≥0) : Curve :=
+  greedyCurve (rateCurve ρ) (curveEReal β) (monotone_curveEReal β) (curveEReal_zero β)
+    (isLeftContinuous_curveEReal β)
+    (isPiecewiseContinuous_greedyFun_of_lipschitz (rateCurve ρ) (monotone_curveEReal β)
+      (curveEReal_nonneg β) (curveEReal_zero β)
+      (fun u v => le_of_eq (by rw [rateCurve_apply, rateCurve_apply]; ring)))
+
+/-- `curveEReal (wsmpSupDep β ρ) = λ_ρ ∗ β`. -/
+theorem curveEReal_wsmpSupDep (β : Curve) (ρ : ℝ≥0) :
+    curveEReal (wsmpSupDep β ρ) = minConv (curveEReal (rateCurve ρ)) (curveEReal β) :=
+  curveEReal_greedyCurve _ _ _ _ _
+
+/-- The case-C departure stays below `λ_ρ`. -/
+theorem wsmpSupDep_le (β : Curve) (ρ : ℝ≥0) (t : ℝ≥0) :
+    wsmpSupDep β ρ t ≤ rateCurve ρ t := by
+  have h : curveEReal (wsmpSupDep β ρ) t ≤ curveEReal (rateCurve ρ) t := by
+    rw [curveEReal_wsmpSupDep]
+    exact minConv_self_le (curveEReal_zero β).le (rateCurve ρ) t
+  rwa [curveEReal_apply, curveEReal_apply, EReal.coe_le_coe_iff, NNReal.coe_le_coe] at h
+
+/-- Case C is min-plus served at `β` (the departure is exactly `λ_ρ ∗ β`). -/
+theorem wsmpSup_mem (β : Curve) (ρ : ℝ≥0) :
+    minimalServiceRel (curveEReal β) (rateCurve ρ) (wsmpSupDep β ρ) :=
+  mem_minimalServiceRel_iff.mpr ⟨fun t => wsmpSupDep_le β ρ t,
+    fun t => le_of_eq (congrFun (curveEReal_wsmpSupDep β ρ).symm t)⟩
+
+/-- Below an overtaking, `λ_ρ ∗ β` sits strictly below `λ_ρ`: the equality
+points with `λ_ρ` are just the origin, so the start is the origin. -/
+theorem wsmpSupDep_lt (β : Curve) {ρ : ℝ≥0}
+    (hbelow : ∀ t, 0 < t → ∃ s, 0 < s ∧ s ≤ t ∧ β s < ρ * s) {u : ℝ≥0} (hu : 0 < u) :
+    wsmpSupDep β ρ u < rateCurve ρ u := by
+  obtain ⟨s, hs0, hsu, hsβ⟩ := hbelow u hu
+  have hE : curveEReal (wsmpSupDep β ρ) u < curveEReal (rateCurve ρ) u := by
+    rw [curveEReal_wsmpSupDep]
+    refine lt_of_le_of_lt (minConv_le_add (curveEReal (rateCurve ρ)) (curveEReal β)
+      (tsub_add_cancel_of_le hsu)) ?_
+    rw [curveEReal_apply, curveEReal_apply, curveEReal_apply, ← EReal.coe_add,
+      EReal.coe_lt_coe_iff, rateCurve_apply, rateCurve_apply]
+    have hβs : ((β s : ℝ)) < (ρ : ℝ) * (s : ℝ) := by exact_mod_cast hsβ
+    have hdist : (ρ : ℝ) * ((u : ℝ) - (s : ℝ)) + (ρ : ℝ) * (s : ℝ) = (ρ : ℝ) * (u : ℝ) := by
+      ring
+    push_cast [NNReal.coe_sub hsu]
+    linarith
+  rwa [curveEReal_apply, curveEReal_apply, EReal.coe_lt_coe_iff, NNReal.coe_lt_coe] at hE
+
+/-- Case C is not weakly strictly served: start at the origin, but the bound
+demands `D t_ov ≥ β t_ov` while `D t_ov ≤ ρ·t_ov < β t_ov`. -/
+theorem wsmpSup_not_mem (β : Curve) {ρ : ℝ≥0}
+    (hbelow : ∀ t, 0 < t → ∃ s, 0 < s ∧ s ≤ t ∧ β s < ρ * s)
+    {t_ov : ℝ≥0} (hov : ρ * t_ov < β t_ov) :
+    ¬ weaklyStrictServiceRel ⇑β (rateCurve ρ) (wsmpSupDep β ρ) := by
+  rintro ⟨-, hb⟩
+  have hstart : start ⇑(rateCurve ρ) ⇑(wsmpSupDep β ρ) t_ov = 0 := by
+    unfold start
+    have hset : {u | u ≤ t_ov ∧ rateCurve ρ u = wsmpSupDep β ρ u} = {0} := by
+      ext u
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨-, heq⟩
+        by_contra hu0
+        exact absurd heq.symm (ne_of_lt (wsmpSupDep_lt β hbelow (zero_lt_iff.mpr hu0)))
+      · rintro rfl
+        refine ⟨zero_le', ?_⟩
+        rw [rateCurve_apply, mul_zero]
+        exact ((wsmpSupDep β ρ).zero).symm
+    rw [hset, csSup_singleton]
+  have h := hb t_ov
+  have h0D : wsmpSupDep β ρ 0 = 0 := (wsmpSupDep β ρ).zero
+  rw [hstart, tsub_zero, h0D, zero_add] at h
+  exact absurd (le_trans h (wsmpSupDep_le β ρ t_ov)) (not_le.mpr hov)
+
+/-- **The upper inclusion is strict for a no-delay superlinear curve** (case C of
+Theorem 9.5): if `β` overtakes the rate `ρ` (`ρ·t_ov < β t_ov`) but `λ_ρ`
+exceeds `β` near the origin (`β s < ρ·s` arbitrarily close to `0`), then
+`wstrict(β) ⊊ mp(β)`. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_superlinear (β : Curve) {ρ : ℝ≥0}
+    (hbelow : ∀ t, 0 < t → ∃ s, 0 < s ∧ s ≤ t ∧ β s < ρ * s)
+    {t_ov : ℝ≥0} (hov : ρ * t_ov < β t_ov) :
+    weaklyStrictServiceRel ⇑β < minimalServiceRel (curveEReal β) := by
+  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
+  refine wsmpSup_not_mem β hbelow hov ?_
+  rw [heq]; exact wsmpSup_mem β ρ
 
 end DeepWiki
