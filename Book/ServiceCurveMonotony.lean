@@ -462,4 +462,94 @@ example : ∃ β β' : ℝ≥0 → EReal,
   ⟨monoCexBetaA, monoCexBetaB, not_monoCexBetaA_le_monoCexBetaB,
     not_monoCexBetaB_le_monoCexBetaA, minimalServiceRel_monoCexBetaB_le_monoCexBetaA⟩
 
+/-! ## The closure-refined converse also fails
+`S_mp(β) ⊇ S_mp(β') ⇐ β↑ ≤ β'↑` is a non-theorem too: with `β = δ₀` and
+`β'` zero on `{0} ∪ (1,∞)`, `+∞` on `(0,1]`, both closures equal `δ₀`, yet the
+identity arrival with departure `min(·,1)` lies in `S_mp(β') ∖ S_mp(δ₀)`. -/
+
+/-- `convUnitEReal = δ₀` is non-decreasing. -/
+theorem monotone_convUnitEReal : Monotone convUnitEReal := by
+  intro a b hab
+  rcases eq_or_ne a 0 with rfl | ha
+  · rw [show convUnitEReal 0 = 0 from if_pos rfl]; exact isNonneg_convUnitEReal b
+  · rw [show convUnitEReal a = ⊤ from if_neg ha,
+      show convUnitEReal b = ⊤ from if_neg (fun hb => ha (le_antisymm (hb ▸ hab) zero_le'))]
+
+/-- The closure-converse witness `β'`: `0` on `{0} ∪ (1,∞)`, `+∞` on `(0,1]`. -/
+noncomputable def monoCexBetaC : ℝ≥0 → EReal := fun t => if t = 0 ∨ 1 < t then 0 else ⊤
+
+/-- The clip departure `D = min(t, 1)`. -/
+noncomputable def monoCexClip : Curve where
+  toFun := fun t => min t 1
+  mono := fun _ _ h => min_le_min h le_rfl
+  zero := by show min (0 : ℝ≥0) 1 = 0; exact min_eq_left zero_le_one
+  pwc := isPiecewiseContinuous_of_continuous _ (continuous_id.min continuous_const)
+  leftCont := isLeftContinuous_of_continuous _ (continuous_id.min continuous_const)
+
+/-- `monoCexClip t = min t 1`. -/
+theorem monoCexClip_apply (t : ℝ≥0) : monoCexClip t = min t 1 := rfl
+
+/-- The clip departure is served by `β'` under the identity arrival. -/
+theorem monoCexClip_mem_monoCexBetaC :
+    minimalServiceRel monoCexBetaC monoCexArr monoCexClip := by
+  rw [mem_minimalServiceRel_iff]
+  refine ⟨fun t => ?_, fun t => ?_⟩
+  · show monoCexClip t ≤ monoCexArr t
+    rw [monoCexArr_apply, monoCexClip_apply]; exact min_le_left _ _
+  · rcases le_or_gt t 1 with ht1 | ht1
+    · refine le_trans (minConv_le_add (curveEReal monoCexArr) monoCexBetaC (add_zero t))
+        (le_of_eq ?_)
+      rw [show monoCexBetaC 0 = 0 from if_pos (Or.inl rfl), add_zero, curveEReal_apply,
+        curveEReal_apply, monoCexArr_apply,
+        show monoCexClip t = t from by rw [monoCexClip_apply, min_eq_left ht1]]
+    · refine le_trans (minConv_le_add (curveEReal monoCexArr) monoCexBetaC (zero_add t)) ?_
+      rw [show monoCexBetaC t = 0 from if_pos (Or.inr ht1), add_zero, curveEReal_zero]
+      exact curveEReal_nonneg monoCexClip t
+
+/-- The clip departure is NOT served by `δ₀`: `λ₁ ∗ δ₀ = λ₁`, and at `t = 2`,
+`λ₁ 2 = 2 > 1 = D 2`. -/
+theorem monoCexClip_not_mem_convUnitEReal :
+    ¬ minimalServiceRel convUnitEReal monoCexArr monoCexClip := by
+  rw [mem_minimalServiceRel_iff]
+  rintro ⟨-, hconv⟩
+  have h2 := hconv 2
+  rw [show minConv (curveEReal monoCexArr) convUnitEReal = curveEReal monoCexArr from by
+      rw [minConv_comm, minConv_convUnitEReal_left _ (isNeverBot_curveEReal monoCexArr)],
+    curveEReal_apply, curveEReal_apply, monoCexArr_apply,
+    show monoCexClip 2 = 1 from by rw [monoCexClip_apply, min_eq_right one_le_two]] at h2
+  rw [EReal.coe_le_coe_iff, NNReal.coe_le_coe] at h2
+  exact absurd h2 (by norm_num)
+
+/-- The reverse inclusion fails: `¬ S_mp(δ₀) ⊇ S_mp(β')`. -/
+theorem not_minimalServiceRel_monoCexBetaC_le_convUnitEReal :
+    ¬ minimalServiceRel monoCexBetaC ≤ minimalServiceRel convUnitEReal := fun h =>
+  monoCexClip_not_mem_convUnitEReal
+    (h monoCexArr monoCexClip monoCexClip_mem_monoCexBetaC)
+
+/-- Both closures coincide at `δ₀`: `δ₀↑ ≤ β'↑` (in fact both equal `δ₀`). -/
+theorem ndClosure_convUnitEReal_le_monoCexBetaC :
+    ndClosure convUnitEReal ≤ ndClosure monoCexBetaC := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · refine le_trans (ndClosure_ereal_le monotone_convUnitEReal (fun _ => le_rfl) 0) ?_
+    rw [show convUnitEReal 0 = 0 from if_pos rfl]
+    exact le_trans (le_of_eq (show monoCexBetaC 0 = 0 from if_pos (Or.inl rfl)).symm)
+      (le_ndClosure_ereal monoCexBetaC 0)
+  · refine le_top.trans ?_
+    calc (⊤ : EReal) = monoCexBetaC (min t 1) :=
+          (if_neg (by
+            rintro (h0 | h1)
+            · exact (lt_min (zero_lt_iff.mpr ht) one_pos).ne' h0
+            · exact absurd h1 (not_lt.mpr (min_le_right t 1)))).symm
+      _ ≤ ndClosure monoCexBetaC (min t 1) := le_ndClosure_ereal monoCexBetaC (min t 1)
+      _ ≤ ndClosure monoCexBetaC t := monotone_ndClosure_ereal monoCexBetaC (min_le_left t 1)
+
+/-- **The closure-refined converse is a non-theorem**: `β↑ ≤ β'↑` does not force
+`S_mp(β) ⊇ S_mp(β')`. -/
+theorem not_forall_ndClosure_le_imp_minimalServiceRel_le :
+    ¬ ∀ β β' : ℝ≥0 → EReal,
+      ndClosure β ≤ ndClosure β' → minimalServiceRel β' ≤ minimalServiceRel β := fun h =>
+  not_minimalServiceRel_monoCexBetaC_le_convUnitEReal
+    (h convUnitEReal monoCexBetaC ndClosure_convUnitEReal_le_monoCexBetaC)
+
 end DeepWiki
