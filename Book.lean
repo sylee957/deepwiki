@@ -88,6 +88,7 @@ import Book.ServersResidualWeaklyStrict
 import Book.ServersResidualFifo
 import Book.ServersResidualFifoPmoo
 import Book.ServersResidualPriority
+import Book.ServersResidualPriorityStrict
 import Book.ServersResidualPriorityPackets
 import Book.ServersResidualGps
 import Book.ServersResidualGpsImproved
