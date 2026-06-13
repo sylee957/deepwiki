@@ -549,29 +549,67 @@ example (R₁ R₂ : ℝ≥0) :
   comp_strictServiceRel_rate_eq R₁ R₂
 
 /-! ## Delay tandems dilute to min-plus (§9.3, towards Lemma 9.5)
-Two strict pure-delay servers in tandem are min-plus served by the delay of the
-sum: `S_strict(δ_a) ∘ S_strict(δ_b) ⊆ S_mp(δ_{a+b})`. This is the `n = 2` core of
-Lemma 9.5's `⊆` direction (an `n`-tandem of `S_strict(δ_{T/n})` lands in
-`S_mp(δ_T)`, since `δ_{T/n}∗ⁿ = δ_T`): each strict server is min-plus
+An `n`-tandem of strict pure-delay servers is min-plus served by the delay of the
+sum: `(S_strict(δ_d))ⁿ ⊆ S_mp(δ_{n·d})`. This is Lemma 9.5's `⊆` direction
+without the closure (with `d = T/n` it gives `(S_strict(δ_{T/n}))ⁿ ⊆ S_mp(δ_T)`,
+since `δ_{T/n}∗ⁿ = δ_T`): each strict server is min-plus
 (`strictServiceRelEReal_le_minimalServiceRel`), the min-plus concatenation
 convolves the curves (`comp_minimalServiceRel_le`), and pure delays add
-(`conv_delayEReal_delayEReal`). Note the tandem is *not* a strict server
-(Prop 6.2 above) — it only achieves the min-plus delay. -/
+(`conv_delayEReal_delayEReal`). Note each tandem is *not* a strict server
+(Prop 6.2 above) — it only achieves the min-plus delay, which is exactly the
+dilution Lemma 9.5 turns into a limit. -/
+
+/-- **Two strict delay servers in tandem** are min-plus served by the delay of
+the sum: `S_strict(δ_a) ∘ S_strict(δ_b) ⊆ S_mp(δ_{a+b})`. -/
 theorem comp_strictServiceRelEReal_delay_le (a b : ℝ≥0) :
     Relation.Comp (strictServiceRelEReal (delayEReal a))
         (strictServiceRelEReal (delayEReal b))
       ≤ minimalServiceRel (delayEReal (a + b)) := by
-  have hbd : ∀ d : ℝ≥0, IsNonneg (delayEReal d) := fun d t => by
-    simp only [delayEReal, delay_apply]
-    split
-    · exact le_refl 0
-    · exact le_top
   rw [← conv_delayEReal_delayEReal a b]
   rintro A C ⟨B, hAB, hBC⟩
   have hmp : Relation.Comp (minimalServiceRel (delayEReal a))
       (minimalServiceRel (delayEReal b)) A C :=
     ⟨B, strictServiceRelEReal_le_minimalServiceRel A B hAB,
       strictServiceRelEReal_le_minimalServiceRel B C hBC⟩
-  exact comp_minimalServiceRel_le (hbd a).isBddBelowReal (hbd b).isBddBelowReal A C hmp
+  exact comp_minimalServiceRel_le (isNonneg_delayEReal a).isBddBelowReal
+    (isNonneg_delayEReal b).isBddBelowReal A C hmp
+
+/-- **The `n`-tandem of strict delay servers is min-plus**:
+`(S_strict(δ_d))ⁿ ⊆ S_mp(δ_{n·d})`. By induction — the base is the unit
+(`δ_0` shifts by `0`), each step peels one server through the binary tandem
+above. -/
+theorem compPow_strictServiceRelEReal_delay_le (d : ℝ≥0) (n : ℕ) :
+    compPow (strictServiceRelEReal (delayEReal d)) n
+      ≤ minimalServiceRel (delayEReal (n • d)) := by
+  induction n with
+  | zero =>
+    rw [compPow_zero, zero_nsmul]
+    rintro A C rfl
+    refine mem_minimalServiceRel_iff.mpr ⟨fun _ => le_refl _, ?_⟩
+    rw [conv_delayEReal (curveEReal A) (monotone_curveEReal A) (isNeverBot_curveEReal A)]
+    intro t
+    show curveEReal A (t - 0) ≤ curveEReal A t
+    rw [tsub_zero]
+  | succ n ih =>
+    rw [compPow_succ, succ_nsmul]
+    rintro A C ⟨B, hAB, hBC⟩
+    have hcomp : Relation.Comp (minimalServiceRel (delayEReal (n • d)))
+        (minimalServiceRel (delayEReal d)) A C :=
+      ⟨B, ih A B hAB, strictServiceRelEReal_le_minimalServiceRel B C hBC⟩
+    have hcat := comp_minimalServiceRel_le (isNonneg_delayEReal (n • d)).isBddBelowReal
+      (isNonneg_delayEReal d).isBddBelowReal A C hcomp
+    rwa [conv_delayEReal_delayEReal (n • d) d] at hcat
+
+/-- **Lemma 9.5, `⊆` (per-`n`, before the closure)**: `n` strict `δ_{T/n}`
+servers in tandem are min-plus served by `δ_T` (for `n ≥ 1`, where
+`n · (T/n) = T`). The closure and the reverse dilution remain. -/
+theorem compPow_strictServiceRelEReal_delayDiv_le (T : ℝ≥0) {n : ℕ} (hn : 0 < n) :
+    compPow (strictServiceRelEReal (delayEReal (T / n))) n
+      ≤ minimalServiceRel (delayEReal T) := by
+  have hcast : (n : ℝ≥0) ≠ 0 := Nat.cast_ne_zero.mpr hn.ne'
+  have hTn : n • (T / n) = T := by
+    rw [nsmul_eq_mul]; field_simp
+  rw [show delayEReal T = delayEReal (n • (T / n)) from by rw [hTn]]
+  exact compPow_strictServiceRelEReal_delay_le (T / n) n
 
 end DeepWiki
