@@ -171,4 +171,15 @@ theorem le_of_minimalServiceRelExt_le {β β' : CurveENN}
   rw [curveENNEReal_apply, curveENNEReal_apply] at ht
   exact EReal.coe_ennreal_le_coe_ennreal_iff.mp ht
 
+/-- **The min-plus relation determines the service curve, with extended arrivals**: if
+`β` and `β'` induce the same extended min-plus service relation, then `β = β'`. Over
+`Curve` (finite arrivals) distinct service curves can share a service relation; admitting
+the infinite burst `δ_0` removes that slack, making `β ↦ S_mp^ext(β)` injective. -/
+theorem eq_of_minimalServiceRelExt_eq {β β' : CurveENN}
+    (h : minimalServiceRelExt (curveENNEReal β) = minimalServiceRelExt (curveENNEReal β')) :
+    β = β' := by
+  have hle : β ≤ β' := le_of_minimalServiceRelExt_le (le_of_eq h.symm)
+  have hge : β' ≤ β := le_of_minimalServiceRelExt_le (le_of_eq h)
+  exact CurveENN.ext fun t => le_antisymm (hle t) (hge t)
+
 end DeepWiki
