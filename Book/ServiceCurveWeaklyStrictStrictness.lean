@@ -983,4 +983,148 @@ example : strictServiceRel sqrtFun < weaklyStrictServiceRel sqrtFun :=
 example : weaklyStrictServiceRel sqrtFun < minimalServiceRel (liftEReal sqrtFun) :=
   weaklyStrictServiceRel_lt_minimalServiceRel_sqrt
 
+/-! ## strict ⊊ wstrict for rate-latency (the superadditive practical curve)
+Rate-latency `β_{R,T}` is superadditive, so the burst-clip witness above (which
+rides strict subadditivity) does not separate it. A *front-loaded* departure
+does: banking service above `β` early keeps the start-anchored bound while an
+interior window of length `> T` is under-served. Witness at `(R, T) = (2, 1)`
+(`β = 2(t−1)₊`): arrival `8·1_{>0}`, departure `min(4t, t+3, 8)` — rate `4` to
+height `4` by `t = 1`, then the slow rate `1` to the cap `8` at `t = 5`. The
+backlog (`(0, 5)`) starts at the origin, where the anchored bound holds; but the
+window `(1, 4]` demands `D 1 + β 3 = 4 + 4 = 8 > 7 = D 4`. -/
+
+/-- The front-loaded rate-latency witness departure `min(4t, t+3, 8)`. -/
+noncomputable def rlDep : Curve where
+  toFun := fun t => min (min (4 * t) (t + 3)) 8
+  mono := fun _ _ h => min_le_min (min_le_min (by gcongr) (by gcongr)) le_rfl
+  zero := by
+    show min (min (4 * 0) (0 + 3)) 8 = 0
+    rw [mul_zero, zero_add, min_eq_left (zero_le' : (0 : ℝ≥0) ≤ 3),
+      min_eq_left (zero_le' : (0 : ℝ≥0) ≤ 8)]
+  pwc := isPiecewiseContinuous_of_continuous _
+    (((continuous_const.mul continuous_id).min
+      (continuous_id.add continuous_const)).min continuous_const)
+  leftCont := isLeftContinuous_of_continuous _
+    (((continuous_const.mul continuous_id).min
+      (continuous_id.add continuous_const)).min continuous_const)
+
+/-- `rlDep t = min (min (4t) (t+3)) 8`. -/
+theorem rlDep_apply (t : ℝ≥0) : rlDep t = min (min (4 * t) (t + 3)) 8 := rfl
+
+/-- `rlDep 0 = 0`. -/
+theorem rlDep_zero : rlDep 0 = 0 := rlDep.zero
+
+/-- `rlDep 1 = 4` (the banked height at the kink). -/
+theorem rlDep_one : rlDep 1 = 4 := by
+  rw [rlDep_apply, show (4 : ℝ≥0) * 1 = 4 from by norm_num,
+    show (1 : ℝ≥0) + 3 = 4 from by norm_num, min_self,
+    min_eq_left (by norm_num : (4 : ℝ≥0) ≤ 8)]
+
+/-- `rlDep 4 = 7` (the under-served interior endpoint). -/
+theorem rlDep_four : rlDep 4 = 7 := by
+  rw [rlDep_apply, show (4 : ℝ≥0) * 4 = 16 from by norm_num,
+    show (4 : ℝ≥0) + 3 = 7 from by norm_num,
+    min_eq_right (by norm_num : (7 : ℝ≥0) ≤ 16),
+    min_eq_left (by norm_num : (7 : ℝ≥0) ≤ 8)]
+
+/-- `rlDep t = 8` past `t = 5` (the cap, where the backlog clears). -/
+theorem rlDep_eq_eight_of_ge {t : ℝ≥0} (h : 5 ≤ t) : rlDep t = 8 := by
+  rw [rlDep_apply, min_eq_right (le_min ?_ ?_)]
+  · calc (8 : ℝ≥0) ≤ 4 * 5 := by norm_num
+      _ ≤ 4 * t := by gcongr
+  · rw [show (8 : ℝ≥0) = 5 + 3 from by norm_num]; gcongr
+
+/-- `rlDep t < 8` before `t = 5` (the backlogged region). -/
+theorem rlDep_lt_eight_of_lt {t : ℝ≥0} (h : t < 5) : rlDep t < 8 := by
+  rw [rlDep_apply]
+  calc min (min (4 * t) (t + 3)) 8 ≤ t + 3 :=
+        (min_le_left _ _).trans (min_le_right _ _)
+    _ < 8 := by rw [show (8 : ℝ≥0) = 5 + 3 from by norm_num]; gcongr
+
+/-- Causality: `rlDep ≤ 8·1_{>0}`. -/
+theorem rlDep_le_burst : rlDep ≤ burstCurve 8 := by
+  intro t
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [rlDep_zero]; exact zero_le'
+  · rw [burstCurve_apply, burstFun_apply_of_ne 8 ht, rlDep_apply]
+    exact min_le_right _ _
+
+/-- Before `t = 5` the backlog has not cleared, so the start anchors at the
+origin. -/
+theorem rl_start_lt_five {t : ℝ≥0} (ht : t < 5) :
+    start ⇑(burstCurve 8) ⇑rlDep t = 0 := by
+  refine le_antisymm (csSup_le ⟨0, ⟨zero_le', ?_⟩⟩ fun u hu => ?_) zero_le'
+  · show burstCurve 8 0 = rlDep 0
+    rw [burstCurve_apply, burstFun_zero_eq, rlDep_zero]
+  · by_contra hu0
+    rw [not_le] at hu0
+    obtain ⟨hut, hAD⟩ := hu
+    rw [burstCurve_apply, burstFun_apply_of_ne 8 (ne_of_gt hu0)] at hAD
+    exact absurd hAD.symm (ne_of_lt (rlDep_lt_eight_of_lt (lt_of_le_of_lt hut ht)))
+
+/-- At and past `t = 5` the pair has emptied, so the start anchors at `t`. -/
+theorem rl_start_ge_five {t : ℝ≥0} (ht : 5 ≤ t) :
+    start ⇑(burstCurve 8) ⇑rlDep t = t := by
+  refine start_eq_of_apply_eq ?_
+  show burstCurve 8 t = rlDep t
+  rw [burstCurve_apply,
+    burstFun_apply_of_ne 8 (ne_of_gt (lt_of_lt_of_le (by norm_num : (0 : ℝ≥0) < 5) ht)),
+    rlDep_eq_eight_of_ge ht]
+
+/-- The pair is weakly strictly served at `β_{2,1}`: its backlog starts at the
+origin, where the anchored bound `D 0 + β t = 2(t−1)₊ ≤ D t` holds on `[0, 5]`. -/
+theorem rl_mem_weaklyStrictServiceRel :
+    weaklyStrictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep := by
+  refine ⟨rlDep_le_burst, fun t => ?_⟩
+  rcases lt_or_ge t 5 with ht | ht
+  · rw [rl_start_lt_five ht]
+    show rlDep 0 + rateLatency 2 1 (t - 0) ≤ rlDep t
+    rw [rlDep_zero, zero_add, tsub_zero, rlDep_apply]
+    show (2 : ℝ≥0) * (t - 1) ≤ min (min (4 * t) (t + 3)) 8
+    refine le_min (le_min ?_ ?_) ?_
+    · exact mul_le_mul' (by norm_num : (2 : ℝ≥0) ≤ 4) tsub_le_self
+    · rw [mul_tsub, mul_one, tsub_le_iff_right, two_mul,
+        show t + 3 + 2 = t + 5 from by ring]
+      exact add_le_add le_rfl ht.le
+    · rw [mul_tsub, mul_one, tsub_le_iff_right]
+      exact le_trans (by rw [two_mul]; exact add_le_add ht.le ht.le)
+        (by norm_num : (5 : ℝ≥0) + 5 ≤ 8 + 2)
+  · rw [rl_start_ge_five ht, tsub_self]
+    have h0 : rateLatency (2 : ℝ≥0) 1 0 = 0 := by simp [rateLatency]
+    rw [h0, add_zero]
+
+/-- The pair is not strictly served at `β_{2,1}`: the interior window `(1, 4]`
+demands `D 1 + β 3 = 8 > 7 = D 4`. -/
+theorem rl_not_mem_strictServiceRel :
+    ¬ strictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep := by
+  rintro ⟨-, hstrict⟩
+  have hbl : IsBacklogged (⇑(burstCurve 8)) (⇑rlDep) (Set.Ioc 1 4) := by
+    intro u hu
+    show rlDep u < burstCurve 8 u
+    rw [burstCurve_apply, burstFun_apply_of_ne 8 (ne_of_gt (lt_trans one_pos hu.1))]
+    exact rlDep_lt_eight_of_lt (lt_of_le_of_lt hu.2 (by norm_num))
+  have h := hstrict 1 4 (by norm_num) hbl
+  rw [rlDep_one, rlDep_four, show (4 : ℝ≥0) - 1 = 3 from tsub_eq_of_eq_add (by norm_num),
+    show rateLatency (2 : ℝ≥0) 1 3 = 4 from by
+      simp only [rateLatency]
+      rw [show (3 : ℝ≥0) - 1 = 2 from tsub_eq_of_eq_add (by norm_num)]; norm_num] at h
+  exact absurd h (by norm_num)
+
+/-- **strict ⊊ wstrict for the rate-latency curve `β_{2,1}`** — the practical
+superadditive curve the strict-subadditivity witness cannot reach. -/
+theorem strictServiceRel_lt_weaklyStrictServiceRel_rateLatency :
+    strictServiceRel (rateLatency 2 1) < weaklyStrictServiceRel (rateLatency 2 1) := by
+  refine lt_of_le_of_ne (strictServiceRel_le_weaklyStrictServiceRel _)
+    fun heq => rl_not_mem_strictServiceRel ?_
+  rw [heq]; exact rl_mem_weaklyStrictServiceRel
+
+/-! The witness pair lies in `S_wstrict(β_{2,1}) ∖ S_strict(β_{2,1})`: a
+front-loaded server can grant each `t` its full increment from the backlog
+start yet under-serve an interior window — even for the practical (superadditive)
+rate-latency curve. -/
+example :
+    weaklyStrictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep ∧
+      ¬ strictServiceRel (rateLatency 2 1) (burstCurve 8) rlDep :=
+  ⟨rl_mem_weaklyStrictServiceRel, rl_not_mem_strictServiceRel⟩
+
 end DeepWiki
