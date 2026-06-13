@@ -84,3 +84,68 @@ theorem warp_mul_nat {d r : ℝ≥0} (hd : 0 < d) (k : ℕ) : warp d r (d * (k :
     push_cast
     rw [mul_comm, mul_div_assoc, div_self hd'.ne', mul_one, Nat.floor_natCast]
   rw [warp_apply, hfloor, tsub_self, tsub_eq_zero_of_le zero_le', mul_zero, add_zero]
+
+/-- **Catch-up density**: the warp has a fixed point in every window `(x, x + d]` —
+namely the next multiple of the period, `d·(⌊x/d⌋ + 1)`. This is the hypothesis
+`strictServiceRelEReal_delay_of_comp_catchUp` consumes to make each tandem stage a
+strict `δ_d` server. -/
+theorem warp_catchUp_dense {d r : ℝ≥0} (hd : 0 < d) (x : ℝ≥0) :
+    ∃ p, x < p ∧ p ≤ x + d ∧ warp d r p = p := by
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  refine ⟨d * ((⌊(x : ℝ) / d⌋₊ : ℝ≥0) + 1), ?_, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]
+    push_cast
+    have h : (x : ℝ) / d < (⌊(x : ℝ) / d⌋₊ : ℝ) + 1 := Nat.lt_floor_add_one _
+    rw [mul_comm]
+    exact (div_lt_iff₀ hd').mp h
+  · rw [← NNReal.coe_le_coe]
+    push_cast
+    have h : (⌊(x : ℝ) / d⌋₊ : ℝ) ≤ (x : ℝ) / d := Nat.floor_le (by positivity)
+    have h2 : (d : ℝ) * (⌊(x : ℝ) / d⌋₊ : ℝ) ≤ x := by
+      have hm := mul_le_mul_of_nonneg_left h hd'.le
+      rwa [mul_comm (d : ℝ) ((x : ℝ) / d), div_mul_cancel₀ (x : ℝ) hd'.ne'] at hm
+    have hexp : (d : ℝ) * ((⌊(x : ℝ) / d⌋₊ : ℝ) + 1) = d * (⌊(x : ℝ) / d⌋₊ : ℝ) + d := by
+      ring
+    linarith [h2, hexp]
+  · rw [show d * ((⌊(x : ℝ) / d⌋₊ : ℝ≥0) + 1)
+        = d * ((⌊(x : ℝ) / d⌋₊ + 1 : ℕ) : ℝ≥0) by push_cast; ring]
+    exact warp_mul_nat hd _
+
+/-- Within one period the warp stays at or below the next catch-up point:
+`warp d r τ ≤ d⌊τ/d⌋ + d`. -/
+theorem warp_le_period_top {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (τ : ℝ≥0) :
+    warp d r τ ≤ d * (⌊(τ : ℝ) / d⌋₊ : ℝ≥0) + d := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  rw [warp_apply]
+  have hφd : (τ - d * (⌊(τ : ℝ) / d⌋₊ : ℝ≥0)) ≤ d :=
+    (NNReal.coe_lt_coe.mp (warp_frac_lt hd τ)).le
+  have hbound : (τ - d * (⌊(τ : ℝ) / d⌋₊ : ℝ≥0)) - (d - r) ≤ r := by
+    rw [tsub_le_iff_right, add_tsub_cancel_of_le hrd]
+    exact hφd
+  have hstep : d / r * ((τ - d * (⌊(τ : ℝ) / d⌋₊ : ℝ≥0)) - (d - r)) ≤ d := by
+    calc d / r * ((τ - d * (⌊(τ : ℝ) / d⌋₊ : ℝ≥0)) - (d - r))
+        ≤ d / r * r := by gcongr
+      _ = d := by rw [div_mul_cancel₀ _ hr.ne']
+  gcongr
+
+/-- The warp is monotone. -/
+theorem warp_mono {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) : Monotone (warp d r) := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  intro a b hab
+  have hfa : ⌊(a : ℝ) / d⌋₊ ≤ ⌊(b : ℝ) / d⌋₊ := Nat.floor_mono (by gcongr)
+  rcases eq_or_lt_of_le hfa with heq | hlt
+  · -- same period: only the ramp term moves, monotone in `τ`
+    rw [warp_apply, warp_apply, heq]
+    gcongr
+  · -- `a` is in an earlier period than `b`: `warp a ≤ top_a ≤ base_b ≤ warp b`
+    have hbase_b : d * (⌊(b : ℝ) / d⌋₊ : ℝ≥0) ≤ warp d r b := by
+      rw [warp_apply]; exact le_self_add
+    have htop_a : warp d r a ≤ d * (⌊(a : ℝ) / d⌋₊ : ℝ≥0) + d := warp_le_period_top hr hrd a
+    have hsucc : (⌊(a : ℝ) / d⌋₊ : ℝ≥0) + 1 ≤ (⌊(b : ℝ) / d⌋₊ : ℝ≥0) := by
+      exact_mod_cast Nat.succ_le_of_lt hlt
+    have hchain : d * (⌊(a : ℝ) / d⌋₊ : ℝ≥0) + d ≤ d * (⌊(b : ℝ) / d⌋₊ : ℝ≥0) :=
+      calc d * (⌊(a : ℝ) / d⌋₊ : ℝ≥0) + d
+          = d * ((⌊(a : ℝ) / d⌋₊ : ℝ≥0) + 1) := by ring
+        _ ≤ d * (⌊(b : ℝ) / d⌋₊ : ℝ≥0) := by gcongr
+    exact htop_a.trans (hchain.trans hbase_b)
