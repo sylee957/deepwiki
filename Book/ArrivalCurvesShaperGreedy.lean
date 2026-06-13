@@ -117,6 +117,49 @@ theorem isLeftContinuous_greedyFun (A : Curve) {sigma : ℝ≥0 → EReal}
   exact ((continuous_real_toNNReal.continuousAt).comp htr
     ).comp_continuousWithinAt (hm t)
 
+/-- For a `ρ`-Lipschitz arrival (`A (u + v) ≤ A u + ρ·v`), the greedy output is
+`ρ`-Lipschitz: `(A ∗ σ)(t) ≤ ρ(t − t') + (A ∗ σ)(t')` for `t' ≤ t`. -/
+theorem greedyFun_le_add_of_lipschitz (A : Curve) {sigma : ℝ≥0 → EReal}
+    (hnn : IsNonneg sigma) (h0 : sigma 0 = 0) {ρ : ℝ≥0}
+    (hLip : ∀ u v : ℝ≥0, A (u + v) ≤ A u + ρ * v) {t' t : ℝ≥0} (htt' : t' ≤ t) :
+    greedyFun A sigma t ≤ ρ * (t - t') + greedyFun A sigma t' := by
+  have hbot : minConv (curveEReal A) sigma t' ≠ ⊥ :=
+    ne_bot_of_nonneg (IsNonneg.conv (curveEReal_nonneg A) hnn t')
+  have hE : minConv (curveEReal A) sigma t
+      ≤ ((ρ * (t - t') : ℝ≥0) : ℝ) + minConv (curveEReal A) sigma t' := by
+    refine le_add_minConv_of_ne_bot (EReal.coe_ne_bot _) hbot (fun u s hus => ?_)
+    have hsplit : (u + (t - t')) + s = t := by
+      rw [add_right_comm, hus, add_tsub_cancel_of_le htt']
+    refine le_trans (minConv_le_add (curveEReal A) sigma hsplit) ?_
+    rw [← add_assoc]
+    refine add_le_add ?_ le_rfl
+    rw [curveEReal_apply, curveEReal_apply, ← EReal.coe_add]
+    exact_mod_cast (hLip u (t - t')).trans (le_of_eq (add_comm _ _))
+  rw [← coe_greedyFun A hnn h0 t, ← coe_greedyFun A hnn h0 t', ← EReal.coe_add] at hE
+  exact_mod_cast hE
+
+/-- For a `ρ`-Lipschitz arrival, the greedy output is piecewise-continuous
+(indeed `ρ`-Lipschitz hence continuous), so it builds a `Curve`. -/
+theorem isPiecewiseContinuous_greedyFun_of_lipschitz (A : Curve) {sigma : ℝ≥0 → EReal}
+    (hmono : Monotone sigma) (hnn : IsNonneg sigma) (h0 : sigma 0 = 0) {ρ : ℝ≥0}
+    (hLip : ∀ u v : ℝ≥0, A (u + v) ≤ A u + ρ * v) :
+    IsPiecewiseContinuous (greedyFun A sigma) := by
+  have hgmono : Monotone (greedyFun A sigma) := monotone_greedyFun A hmono h0
+  refine isPiecewiseContinuous_of_continuous _
+    (LipschitzWith.continuous (K := ρ) (lipschitzWith_iff_dist_le_mul.mpr fun x y => ?_))
+  wlog hxy : x ≤ y generalizing x y
+  · rw [dist_comm, dist_comm x y]; exact this y x (not_le.mp hxy).le
+  rw [NNReal.dist_eq, NNReal.dist_eq,
+    abs_of_nonpos (sub_nonpos.mpr (by exact_mod_cast hgmono hxy)),
+    abs_of_nonpos (sub_nonpos.mpr (by exact_mod_cast hxy)), neg_sub, neg_sub]
+  have hinc := greedyFun_le_add_of_lipschitz A hnn h0 hLip hxy
+  have : (greedyFun A sigma y : ℝ) ≤ (ρ : ℝ) * ((y : ℝ) - (x : ℝ)) + greedyFun A sigma x := by
+    calc (greedyFun A sigma y : ℝ)
+        ≤ ((ρ * (y - x) + greedyFun A sigma x : ℝ≥0) : ℝ) := by exact_mod_cast hinc
+      _ = (ρ : ℝ) * ((y : ℝ) - (x : ℝ)) + greedyFun A sigma x := by
+          push_cast [NNReal.coe_sub hxy]; ring
+  linarith
+
 /-- The greedy output `A ∗ sigma` as a `Curve`, for `sigma` nondecreasing,
 nonnegative, null at zero, and left-continuous; the piecewise-continuity
 witness for the convolution is the remaining hypothesis. -/
