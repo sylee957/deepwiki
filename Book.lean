@@ -79,6 +79,7 @@ import Book.DeviationsCompositionServers
 import Book.ServersJitter
 import Book.ServersRate
 import Book.ArrivalCurvesPeriodic
+import Book.ArrivalCurvesPeriodicDelay
 import Book.ArrivalCurvesAggregate
 import Book.ServersMimo
 import Book.ServersResidual
