@@ -162,6 +162,51 @@ theorem ndClosure_le_capacity {beta : ℝ≥0 → ℝ≥0} {C : Curve}
     rw [add_comm]; exact add_tsub_cancel_right v s] at hb
   exact le_trans hb (tsub_le_tsub_right (C.mono hsv) (C s))
 
+/-- Capacity increments dominating `beta` dominate every
+self-convolution iterate: split the increment window at the
+iterate's split point. -/
+theorem maxConvProjPow_le_tsub {C : Curve} {beta : ℝ≥0 → ℝ≥0}
+    (hcap : ∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) (k : ℕ) :
+    ∀ s t, s ≤ t → maxConvProjPow beta k (t - s) ≤ C t - C s := by
+  induction k with
+  | zero => exact hcap
+  | succ k ih =>
+    intro s t hst
+    show maxConvProj (maxConvProjPow beta k) (maxConvProjPow beta k)
+        (t - s) ≤ C t - C s
+    refine maxConvProj_le fun a b hab => ?_
+    have hT : s + (a + b) = t := by
+      rw [hab, add_tsub_cancel_of_le hst]
+    have hmid : s + a ≤ t := by
+      calc s + a ≤ s + (a + b) := by
+            exact add_le_add le_rfl le_self_add
+        _ = t := hT
+    have h1 := ih s (s + a) le_self_add
+    have h2 := ih (s + a) t hmid
+    rw [add_tsub_cancel_left] at h1
+    rw [show t - (s + a) = b from by
+      rw [← hT, ← add_assoc, add_tsub_cancel_left]] at h2
+    calc maxConvProjPow beta k a + maxConvProjPow beta k b
+        ≤ (C (s + a) - C s) + (C t - C (s + a)) := add_le_add h1 h2
+      _ = C t - C s := by
+          rw [add_comm]
+          exact tsub_add_tsub_cancel (C.mono hmid) (C.mono le_self_add)
+
+/-- The variable-capacity relation is super-additive-closure-invariant:
+capacity increments dominating `beta` dominate the closure term by
+term, and the closure dominates `beta` for bounded iterates. -/
+theorem variableCapacityRel_superadditiveClosureMax {beta : ℝ≥0 → ℝ≥0}
+    (hbdd : ∀ t, BddAbove
+      (Set.range (fun n => maxConvProjPow beta n t))) :
+    variableCapacityRel (superadditiveClosureMax beta)
+      = variableCapacityRel beta := by
+  funext A D
+  refine propext ⟨fun ⟨C, hD, hcap⟩ => ⟨C, hD, fun s t hst =>
+    le_trans (le_superadditiveClosureMax beta hbdd _) (hcap s t hst)⟩,
+    fun ⟨C, hD, hcap⟩ => ⟨C, hD, fun s t hst => ?_⟩⟩
+  show superadditiveClosureMax beta (t - s) ≤ C t - C s
+  exact ciSup_le fun k => maxConvProjPow_le_tsub hcap k s t hst
+
 /-- The variable-capacity relation is closure-invariant:
 `variableCapacityRel (ndClosure beta) = variableCapacityRel beta` for
 `beta` bounded on each `[0, t]`. -/

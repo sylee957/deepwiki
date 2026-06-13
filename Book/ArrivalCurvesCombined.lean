@@ -342,6 +342,65 @@ theorem isSubadditive_etaMax {αu αl : ℝ≥0 → ℝ≥0}
     push_cast [NNReal.coe_sub ha', NNReal.coe_sub hb']
     nlinarith [NNReal.coe_le_coe.mpr ha', NNReal.coe_le_coe.mpr hb']
 
+/-- `ηˡ = αˡ ⊘ αᵘ` is super-additive when `αˡ` is super-additive and
+`αᵘ` sub-additive with `αˡ ≤ αᵘ`: witnesses with positive clamp
+combine into the `a + b` supremum term; a clamped witness defers to
+the other flow's term alone. -/
+theorem isSuperadditive_etaMin {αu αl : ℝ≥0 → ℝ≥0}
+    (hsub : IsSubadditive αu) (hsup : IsSuperadditive αl)
+    (hle : αl ≤ αu) :
+    IsSuperadditive (minDeconv αl αu) := by
+  have hbddS : ∀ t, BddAbove
+      (Set.range fun z : ℝ≥0 => αl (t + z) - αu z) := by
+    intro t
+    refine ⟨αu t, ?_⟩
+    rintro x ⟨z, rfl⟩
+    refine le_trans (tsub_le_tsub_right (hle _) _) ?_
+    refine tsub_le_iff_right.mpr ?_
+    exact hsub t z
+  intro u s
+  show (⨆ a : ℝ≥0, αl (u + a) - αu a)
+      + (⨆ b : ℝ≥0, αl (s + b) - αu b)
+      ≤ ⨆ z : ℝ≥0, αl (u + s + z) - αu z
+  rw [add_comm]
+  refine add_ciSup_le _ _ _ fun a => ?_
+  rw [add_comm]
+  refine add_ciSup_le _ _ _ fun b => ?_
+  rcases le_or_gt (αl (u + a)) (αu a) with h1 | h1
+  · -- the `a`-witness is clamped: defer to the `b`-term
+    rw [tsub_eq_zero_of_le h1, zero_add]
+    refine le_ciSup_of_le (hbddS _) b ?_
+    refine tsub_le_tsub_right ?_ _
+    calc αl (s + b) ≤ αl u + αl (s + b) := le_add_self
+      _ ≤ αl (u + (s + b)) := hsup u (s + b)
+      _ = αl (u + s + b) := by rw [add_assoc]
+  rcases le_or_gt (αl (s + b)) (αu b) with h2 | h2
+  · -- the `b`-witness is clamped: defer to the `a`-term
+    rw [tsub_eq_zero_of_le h2, add_zero]
+    refine le_ciSup_of_le (hbddS _) a ?_
+    refine tsub_le_tsub_right ?_ _
+    calc αl (u + a) ≤ αl (u + a) + αl s := le_self_add
+      _ ≤ αl (u + a + s) := hsup (u + a) s
+      _ = αl (u + s + a) := by ring_nf
+  · -- both clamps positive: the `a + b` term over `ℝ`
+    refine le_ciSup_of_le (hbddS _) (a + b) ?_
+    have hX : αl (u + a) + αl (s + b) ≤ αl (u + s + (a + b)) := by
+      refine le_trans (hsup (u + a) (s + b)) ?_
+      apply le_of_eq
+      ring_nf
+    have hY : αu (a + b) ≤ αu a + αu b := hsub a b
+    have hz : αu (a + b) ≤ αl (u + s + (a + b)) :=
+      calc αu (a + b) ≤ αu a + αu b := hY
+        _ ≤ αl (u + a) + αl (s + b) := add_le_add h1.le h2.le
+        _ ≤ αl (u + s + (a + b)) := hX
+    rw [← NNReal.coe_le_coe, NNReal.coe_sub hz,
+      NNReal.coe_add, NNReal.coe_sub h1.le, NNReal.coe_sub h2.le]
+    have hXR : ((αl (u + a) : ℝ≥0) : ℝ) + (αl (s + b) : ℝ)
+        ≤ (αl (u + s + (a + b)) : ℝ) := by exact_mod_cast hX
+    have hYR : ((αu (a + b) : ℝ≥0) : ℝ)
+        ≤ (αu a : ℝ) + (αu b : ℝ) := by exact_mod_cast hY
+    linarith
+
 /-- The supremum defining `ηˡ ⊘ ηᵘ` at `s` is bounded above by `ηᵘ s` when `ηᵘ`
 is sub-additive and `ηˡ ≤ ηᵘ`: `ηˡ (s+u) - ηᵘ u ≤ ηᵘ (s+u) - ηᵘ u ≤ ηᵘ s`. Both
 conditions are derivable (`isSubadditive_etaMax`, `etaMin_le_etaMax`), so this

@@ -280,6 +280,42 @@ theorem minConv_pmooResidualChain_le_of_strict_chain {ι : Type*}
     (add_tsub_cancel_of_le (chainStart_le F (n + 1) t))) ?_
   exact_mod_cast hkey
 
+/-- Relation form: composing a chain of `n + 1` `n`-servers with
+strict aggregate curves (the intermediate stage vectors
+existentially quantified) and constraining the cross-traffic
+arrivals, the residual server of the tagged flow offers the chain
+PMOO residual as a min-plus service curve. -/
+theorem isMinimalServiceCurve_pmooResidualChain_of_strict_chain
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S : ℕ → (ι → Curve) → (ι → Curve) → Prop}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {n : ℕ} {α : ι → ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : ∀ h, h ≤ n → IsCausalN (S h))
+    (hβ : ∀ h, h ≤ n →
+      IsStrictMinimalServiceCurve (β h) (aggregateServer (S h))) :
+    IsMinimalServiceCurve
+      (liftEReal (pmooResidualChain β n
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+      (residualServer (fun A D =>
+        (∃ G : ℕ → ι → Curve, G 0 = A ∧ G (n + 1) = D
+          ∧ ∀ h, h ≤ n → S h (G h) (G (h + 1)))
+        ∧ ∀ j, j ≠ i → IsMaximalArrivalBound ⇑(A j) (α j)) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨⟨G, hG0, hGn, hhops⟩, harr⟩, rfl, rfl⟩ t
+  subst hG0
+  subst hGn
+  have h := minConv_pmooResidualChain_le_of_strict_chain
+    (F := G) (β := β) (n := n)
+    (fun h hh j => hcaus h hh (G h) (G (h + 1)) (hhops h hh) j)
+    (fun h hh => (hβ h hh).sum_strict (hhops h hh))
+    (i := i) harr t
+  rw [show Deviation.liftENN (pmooResidualChain β n
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v))
+      = Deviation.toENN (liftEReal (pmooResidualChain β n
+        (fun v => ∑ j ∈ Finset.univ.erase i, α j v)))
+    from (Deviation.toENN_liftEReal _).symm] at h
+  rw [curveEReal_apply]
+  exact (Deviation.minConv_toENN_le_coe_iff (G 0 i)
+    (isNonneg_liftEReal _) ((G (n + 1) i) t) t).mp h
+
 /-! ## Book restatement (the PMOO multi-dimensional operator)
 The tandem PMOO theorem, in the case where every flow crosses every
 server: a tandem of `n + 1` servers, each offering a strict service
