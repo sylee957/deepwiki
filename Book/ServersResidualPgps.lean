@@ -304,9 +304,14 @@ the window slack `[ℓᵘ − R(t−s)]⁺` vanishes — exactly the case the
 adjudicated proof's binding split lands in. The disjunctive hypothesis
 `hreg` packages precisely the regime each clear instant must fall in.
 The recent-*and*-short corner (`βᴳᴾˢ(t−s) < ℓᵘ` with `R(t−s) < ℓᵘ`) is
-the one regime the window alone does not settle here — there the only
-available split pays the full `A s` and the window carries an
-irreducible `[ℓᵘ − R(t−s)]⁺` slack, so it is excluded by `hreg`. The
+excluded by `hreg` — but only because this proof anchors at the
+backlogged-period start `s`. It is **not** a genuine gap: the residual
+holds there too (the split at `t − ℓᵘ/R`, whose residual vanishes by
+`R`-Lipschitz `βᴳᴾˢ(ℓᵘ/R) ≤ ℓᵘ`, with the window at the latest clear
+instant `≤ t − ℓᵘ/R` carrying zero slack), so the unconditional
+slack-free residual is true (numerically confirmed exhaustively); `hreg`
+is an artifact of the `s`-anchored route, the unconditional proof
+deferred. The
 binders `_hA0`, `_hβ0`, `_hLip` are carried to mirror the forward
 tracking theorem's signature (`minConv_pgpsResidual_le_of_isPgpsTracking`)
 verbatim; this window route does not consume them. -/

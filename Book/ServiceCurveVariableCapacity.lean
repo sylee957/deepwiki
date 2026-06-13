@@ -73,7 +73,8 @@ theorem variableCapacityOutput_le_add_capacity {A C : ℝ≥0 → ℝ≥0} (hCmo
 /-- **Waste monotonicity**: the output increment is dominated by the
 capacity increment, `D(t) + C(s) ≤ D(s) + C(t)` for `s ≤ t` — the engine
 behind the finite-family merge. -/
-theorem rep_add_le_add {A C : ℝ≥0 → ℝ≥0} (hCmono : Monotone C)
+theorem variableCapacityOutput_add_capacity_le {A C : ℝ≥0 → ℝ≥0}
+    (hCmono : Monotone C)
     {s t : ℝ≥0} (hst : s ≤ t) :
     variableCapacityOutput A C t + C s
       ≤ variableCapacityOutput A C s + C t := by
@@ -97,7 +98,7 @@ theorem sub_variableCapacityOutput_mono {A C : ℝ≥0 → ℝ≥0} (h0 : A 0 = 
   have hDt : variableCapacityOutput A C t ≤ C t :=
     variableCapacityOutput_le_capacity h0 t
   rw [← NNReal.coe_le_coe, NNReal.coe_sub hDs, NNReal.coe_sub hDt]
-  have h := rep_add_le_add (A := A) hCmono hst
+  have h := variableCapacityOutput_add_capacity_le (A := A) hCmono hst
   rw [← NNReal.coe_le_coe] at h
   push_cast at h ⊢
   linarith

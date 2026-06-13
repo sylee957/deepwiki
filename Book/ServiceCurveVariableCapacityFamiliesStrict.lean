@@ -15,8 +15,10 @@ pointwise supremum `⨆ᵢ βᵢ` is the unit step `1_{>0}`. Any single capacity
 realising the unit-step floor would need increment `≥ 1` on *every*
 positive window; telescoping `n+1` equal windows of `[0, 1]` forces
 `C(1) ≥ n+1` for all `n` — impossible for a finite-valued curve. The
-finite-family law *does* hold (`ServiceCurveVariableCapacity`,
-`variableCapacityRel_iSup_finite`). -/
+finite-family law, by contrast, holds — its waste-monotonicity engine
+(`variableCapacityOutput_add_capacity_le`,
+`sub_variableCapacityOutput_mono`) is in `ServiceCurveVariableCapacity`;
+the binary-merge representation that completes it is deferred. -/
 
 namespace DeepWiki
 
@@ -130,18 +132,6 @@ theorem not_variableCapacityRel_iSup_rampFamily :
   have hmlt : (m : ℝ≥0) < (m + 1 : ℝ≥0) := lt_add_of_pos_right _ one_pos
   exact absurd (lt_of_lt_of_le hmlt hcontra) (not_lt.mpr hm.le)
 
-/-- A fortiori the super-additive closure of the unit step is not realised
-at the `(0, 0)` pair: the closure dominates the sup, so its window cost is
-still at least the saturating `1`. -/
-theorem not_variableCapacityRel_superadditiveClosureMax_rampFamily
-    (hbdd : ∀ t, BddAbove (Set.range
-      (fun n => maxConvProjPow (fun u => ⨆ i, rampFamily i u) n t))) :
-    ¬ variableCapacityRel
-        (superadditiveClosureMax (fun u => ⨆ i, rampFamily i u)) 0 0 := by
-  rintro ⟨C, hD, hcap⟩
-  refine not_variableCapacityRel_iSup_rampFamily ⟨C, hD, fun s t hst => ?_⟩
-  exact le_trans (le_superadditiveClosureMax _ hbdd _) (hcap s t hst)
-
 /-- **The infinite-family law is false**: it is not the case that a pair
 served by every `βᵢ` of a (countable) family is served by the supremum
 `⨆ᵢ βᵢ`. The ramp family `βᵢ(u) = min(i·u, 1)` at the `(0, 0)` pair is a
@@ -163,8 +153,13 @@ infinite `I` — each `βᵢ` carries its own capacity `Cᵢ`, and merging an
 infinite `{Cᵢ}` is unproven and here impossible. The ramp witnesses are
 *continuous* (so jump-dominated): jump domination does **not** rescue the
 infinite case; the obstruction is the unbounded idle-period capacity (an
-Archimedean escape). The finite-family law holds unconditionally
-(`variableCapacityRel_iSup_finite`). -/
+Archimedean escape). The book's literal right-hand side is the
+*super-additive closure* `(⨆ᵢ βᵢ)^⊛̄`; for the ramp witness the sup is
+the unit step, whose closure is unbounded (its self-convolutions
+diverge), so no finite capacity realises it either — the closure form
+fails a fortiori, the formalized `¬∀` on the sup itself being the
+citable core. The finite-family law, by contrast, holds (the merge
+engine is landed; its representation is deferred). -/
 example :
     (∀ i, variableCapacityRel (rampFamily i) 0 0)
       ∧ ¬ variableCapacityRel (fun u => ⨆ i, rampFamily i u) 0 0 :=
