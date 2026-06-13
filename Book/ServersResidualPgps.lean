@@ -335,12 +335,16 @@ gap (adjudicated):** the book's final step reads
 `s = start_{Ŝ,i}(t)` — it applies the *reference*'s strict service on
 the *PGPS* pair's backlogged window, which needs the reference pair
 backlogged there with `Aᵢ = Dᵢ` at the PGPS start; neither follows
-from the vertical closeness `Dᵢ − D̂ᵢ ≤ ℓᵘ` the proof carries (the
-printed chain also drops a `− ℓᵘ` after the `β` term). Three
+from the vertical closeness `Dᵢ − D̂ᵢ ≤ ℓᵘ` the proof carries. Three
 independent analyses produced PGPS runs satisfying every theorem
 hypothesis where the step fails; the formal ladder below certifies
 the pair-level core — vertical closeness plus causality does not
-yield the residual. **Scope of the formalization:** the conclusion is
+yield the residual. (The book's printed Step-3 chain is correct as
+written — `Dᵢ(t) − ℓᵘ ≥ Aᵢ(s) + βᵢᴳᴾˢ(t − s)`, the `− ℓᵘ` on the
+`Dᵢ` side — and the slack-free residual DOES hold for genuine PGPS;
+the gap is only the *reference-vs-PGPS start* mismatch, closed by
+splitting at the reference clear instant under the packet-deadline
+window, not by the bit-level tracking this file uses.) **Scope of the formalization:** the conclusion is
 recovered here from the bit-level tracking `Dᵢ(u) ≤ D̂ᵢ(u + ℓᵘ/R)`
 (`IsPgpsTracking`), splitting at the *reference* start of `t − ℓᵘ/R`;
 that tracking is *strictly stronger* than the book's per-packet
