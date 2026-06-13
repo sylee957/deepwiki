@@ -24,9 +24,9 @@ noncomputable def pmooResidual (β₁ β₂ α : ℝ≥0 → ℝ≥0) : ℝ≥0 
 
 /-- `pmooResidual β₁ β₂ α 0 = 0` for `β₁, β₂` null at the origin. -/
 theorem pmooResidual_zero_eq {β₁ β₂ : ℝ≥0 → ℝ≥0} (α : ℝ≥0 → ℝ≥0)
-    (hβ₁ : β₁ 0 = 0) (hβ₂ : β₂ 0 = 0) :
+    (hβ₁0 : β₁ 0 = 0) (hβ₂0 : β₂ 0 = 0) :
     pmooResidual β₁ β₂ α 0 = 0 := by
-  rw [pmooResidual_apply, minConvProj_zero_eq, hβ₁, hβ₂, add_zero,
+  rw [pmooResidual_apply, minConvProj_zero_eq, hβ₁0, hβ₂0, add_zero,
     zero_tsub]
 
 /-- The PMOO residual stays below the tandem convolution. -/

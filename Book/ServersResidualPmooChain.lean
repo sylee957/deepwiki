@@ -41,6 +41,14 @@ theorem chainStart_le {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
   | zero => exact fun t => le_rfl
   | succ n ih => exact fun t => le_trans (ih _) (start_le _ _ t)
 
+/-- The cascaded start is monotone in its time. -/
+theorem chainStart_mono {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
+    (n : ℕ) : ∀ {t t' : ℝ≥0}, t ≤ t' →
+      chainStart F n t ≤ chainStart F n t' := by
+  induction n with
+  | zero => exact fun h => h
+  | succ n ih => exact fun h => ih (start_mono _ _ h)
+
 /-- The convolution of the chain's curves, hop `0` through hop `n`:
 indexed from `β 0` to stay `ℝ≥0`-valued. -/
 noncomputable def chainConv (β : ℕ → ℝ≥0 → ℝ≥0) : ℕ → ℝ≥0 → ℝ≥0
@@ -55,6 +63,16 @@ theorem chainConv_zero (β : ℕ → ℝ≥0 → ℝ≥0) : chainConv β 0 = β 
 theorem chainConv_succ (β : ℕ → ℝ≥0 → ℝ≥0) (n : ℕ) :
     chainConv β (n + 1) = minConvProj (chainConv β n) (β (n + 1)) :=
   rfl
+
+/-- The chain convolution at the origin is the sum of the hops'
+origin values. -/
+theorem chainConv_zero_eq (β : ℕ → ℝ≥0 → ℝ≥0) (n : ℕ) :
+    chainConv β n 0 = ∑ h ∈ Finset.range (n + 1), β h 0 := by
+  induction n with
+  | zero => exact (Finset.sum_range_one (f := fun h => β h 0)).symm
+  | succ n ih =>
+    rw [chainConv_succ, minConvProj_zero_eq, ih,
+      Finset.sum_range_succ (f := fun h => β h 0) (n + 1)]
 
 /-- **The telescope**: along a chain of `n + 1` strict servers, the
 aggregate output at `t` dominates the aggregate input at the fully
@@ -169,6 +187,16 @@ noncomputable def pmooResidualChain (β : ℕ → ℝ≥0 → ℝ≥0) (n : ℕ)
 @[simp] theorem pmooResidualChain_apply (β : ℕ → ℝ≥0 → ℝ≥0) (n : ℕ)
     (α : ℝ≥0 → ℝ≥0) (v : ℝ≥0) :
     pmooResidualChain β n α v = chainConv β n v - α v := rfl
+
+/-- `pmooResidualChain β n α 0 = 0` for hop curves null at the
+origin. -/
+theorem pmooResidualChain_zero_eq {β : ℕ → ℝ≥0 → ℝ≥0} {n : ℕ}
+    (α : ℝ≥0 → ℝ≥0) (hβ0 : ∀ h, h ≤ n → β h 0 = 0) :
+    pmooResidualChain β n α 0 = 0 := by
+  rw [pmooResidualChain_apply, chainConv_zero_eq,
+    Finset.sum_eq_zero fun h hh =>
+      hβ0 h (Nat.lt_succ_iff.mp (Finset.mem_range.mp hh)),
+    zero_tsub]
 
 /-- **Pay multiplexing only once along the chain, anchored form**:
 across a tandem of `n + 1` strict servers crossed by every flow, the
