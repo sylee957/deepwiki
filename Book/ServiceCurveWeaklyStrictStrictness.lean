@@ -434,43 +434,45 @@ theorem not_forall_minimalServiceRel_le_weaklyStrictServiceRel :
   exact hnws (h _ (rateLatency_mono 1 1) A D hmp)
 
 /-! ## The upper inclusion is strict even for a no-delay curve
-The delayed-start witness above needs `t₀ > 0`. For a finite no-delay
-rate `λ_{1/2}`, the separation still holds, via a *stalling* departure:
-`Dᵗ = max(min(t, 1), t/2)` rises with `λ₁` to the value `1` at `t = 1`,
-stalls at `1` through `[1, 2]`, then follows the convolution `λ₁ ∗ λ_{1/2}
-= λ_{1/2}`. The stall keeps `D` above `λ₁ ∗ λ_{1/2}` (so `(λ₁, D)` is
-min-plus served) while the backlogged window `(1, 2]` — whose start is
-`1` — receives nothing, breaking the start-anchored bound (the book's
-no-delay case, with the pseudo-inverse made explicit by `λ_{1/2}⁻¹(y) =
-2y`). -/
+The delayed-start witness above needs `t₀ > 0`. For any finite no-delay
+rate `λ_b` (`0 < b < 1`), the separation still holds, via a *stalling*
+departure: `Dᵗ = max(min(t, 1), b·t)` rises with `λ₁` to the value `1` at
+`t = 1`, stalls at `1` through `[1, 1/b]`, then follows the convolution
+`λ₁ ∗ λ_b = λ_b`. The stall keeps `D` above `λ₁ ∗ λ_b` (so `(λ₁, D)` is
+min-plus served) while a backlogged window `(1, t*]` (`1 < t* < 1/b`) —
+whose start is `1` — receives nothing, breaking the start-anchored bound
+(the book's no-delay case, the pseudo-inverse made explicit by
+`λ_b⁻¹(y) = y / b`). -/
 
-/-- The no-delay witness departure: rate `1` to time `1`, a stall at `1`
-through `[1, 2]`, then rate `1/2`. -/
-noncomputable def wsmpDep : Curve where
-  toFun := fun t => max (min t 1) (t / 2)
-  mono := fun a b h => max_le_max (min_le_min h le_rfl) (by gcongr)
-  zero := by show max (min (0 : ℝ≥0) 1) (0 / 2) = 0; simp
+/-- The no-delay witness departure for rate `λ_b`: rate `1` to time `1`, a
+stall at `1`, then rate `b`. -/
+noncomputable def wsmpDep (b : ℝ≥0) : Curve where
+  toFun := fun t => max (min t 1) (b * t)
+  mono := fun x y h => max_le_max (min_le_min h le_rfl) (by gcongr)
+  zero := by show max (min (0 : ℝ≥0) 1) (b * 0) = 0; simp
   pwc := by
     refine isPiecewiseContinuous_of_continuous _ ?_
-    exact (continuous_id.min continuous_const).max (continuous_id.div_const 2)
+    exact (continuous_id.min continuous_const).max (continuous_const.mul continuous_id)
   leftCont := by
     refine isLeftContinuous_of_continuous _ ?_
-    exact (continuous_id.min continuous_const).max (continuous_id.div_const 2)
+    exact (continuous_id.min continuous_const).max (continuous_const.mul continuous_id)
 
-/-- `wsmpDep t` unfolds to the stall expression. -/
-theorem wsmpDep_apply (t : ℝ≥0) : wsmpDep t = max (min t 1) (t / 2) := rfl
+/-- `wsmpDep b t` unfolds to the stall expression. -/
+theorem wsmpDep_apply (b t : ℝ≥0) : wsmpDep b t = max (min t 1) (b * t) := rfl
 
-/-- The departure dominates the convolution `λ₁ ∗ λ_{1/2} = λ_{1/2}`. -/
-theorem wsmpDep_ge_half (t : ℝ≥0) : t / 2 ≤ wsmpDep t := le_max_right _ _
+/-- The departure dominates the convolution `λ₁ ∗ λ_b = λ_b`. -/
+theorem wsmpDep_ge_rate (b t : ℝ≥0) : b * t ≤ wsmpDep b t := le_max_right _ _
 
-/-- The departure stays below the rate-`1` arrival. -/
-theorem wsmpDep_le_arr (t : ℝ≥0) : wsmpDep t ≤ rateCurve 1 t := by
-  show max (min t 1) (t / 2) ≤ rateCurve 1 t
+/-- The departure stays below the rate-`1` arrival when `b ≤ 1`. -/
+theorem wsmpDep_le_arr (b : ℝ≥0) (hb1 : b ≤ 1) (t : ℝ≥0) :
+    wsmpDep b t ≤ rateCurve 1 t := by
+  show max (min t 1) (b * t) ≤ rateCurve 1 t
   rw [rateCurve_apply, one_mul]
-  exact max_le (min_le_left _ _) (div_le_self zero_le' one_le_two)
+  exact max_le (min_le_left _ _) (mul_le_of_le_one_left zero_le' hb1)
 
-/-- The pair's equality points are exactly `[0, 1]`. -/
-theorem wsmp_eq_iff {u : ℝ≥0} : rateCurve 1 u = wsmpDep u ↔ u ≤ 1 := by
+/-- The pair's equality points are exactly `[0, 1]` (for `b < 1`). -/
+theorem wsmp_eq_iff (b : ℝ≥0) (hb1 : b < 1) {u : ℝ≥0} :
+    rateCurve 1 u = wsmpDep b u ↔ u ≤ 1 := by
   rw [rateCurve_apply, one_mul, wsmpDep_apply]
   constructor
   · intro h
@@ -478,70 +480,70 @@ theorem wsmp_eq_iff {u : ℝ≥0} : rateCurve 1 u = wsmpDep u ↔ u ≤ 1 := by
     rw [not_le] at hu
     have hupos : (0 : ℝ≥0) < u := lt_of_lt_of_le one_pos hu.le
     rw [min_eq_right hu.le] at h
-    rcases le_total (u / 2) 1 with h2 | h2
+    rcases le_total (b * u) 1 with h2 | h2
     · rw [max_eq_left h2] at h; exact absurd h (ne_of_gt hu)
     · rw [max_eq_right h2] at h
-      exact absurd h (ne_of_gt (div_lt_self hupos one_lt_two))
+      exact absurd h (ne_of_gt (mul_lt_of_lt_one_left hupos hb1))
   · intro h
-    rw [min_eq_left h, max_eq_left (div_le_self zero_le' one_le_two)]
+    rw [min_eq_left h, max_eq_left (mul_le_of_le_one_left zero_le' hb1.le)]
 
-/-- The pair is min-plus served at `λ_{1/2}`: the `(0, t)` split bounds the
-convolution by `λ_{1/2}(t) ≤ D(t)`. -/
-theorem wsmp_mem_minimalServiceRel :
-    minimalServiceRel (liftEReal (rate (1 / 2 : ℝ≥0))) (rateCurve 1) wsmpDep := by
-  refine mem_minimalServiceRel_iff.mpr ⟨fun t => wsmpDep_le_arr t, fun t => ?_⟩
-  have hb : rate (1 / 2 : ℝ≥0) t ≤ wsmpDep t := by
-    rw [rate_apply, div_mul_eq_mul_div, one_mul]; exact wsmpDep_ge_half t
-  calc minConv (curveEReal (rateCurve 1)) (liftEReal (rate (1 / 2))) t
-      ≤ curveEReal (rateCurve 1) 0 + liftEReal (rate (1 / 2)) t :=
+/-- The pair is min-plus served at `λ_b` (`b ≤ 1`): the `(0, t)` split bounds
+the convolution by `λ_b(t) ≤ D(t)`. -/
+theorem wsmp_mem_minimalServiceRel (b : ℝ≥0) (hb1 : b ≤ 1) :
+    minimalServiceRel (liftEReal (rate b)) (rateCurve 1) (wsmpDep b) := by
+  refine mem_minimalServiceRel_iff.mpr ⟨fun t => wsmpDep_le_arr b hb1 t, fun t => ?_⟩
+  have hbnd : rate b t ≤ wsmpDep b t := by rw [rate_apply]; exact wsmpDep_ge_rate b t
+  calc minConv (curveEReal (rateCurve 1)) (liftEReal (rate b)) t
+      ≤ curveEReal (rateCurve 1) 0 + liftEReal (rate b) t :=
         minConv_le_add _ _ (zero_add t)
-    _ ≤ curveEReal wsmpDep t := by
+    _ ≤ curveEReal (wsmpDep b) t := by
         rw [curveEReal_apply, curveEReal_apply, rateCurve_apply, mul_zero,
           NNReal.coe_zero, EReal.coe_zero, zero_add]
-        show ((rate (1 / 2) t : ℝ) : EReal) ≤ ((wsmpDep t : ℝ) : EReal)
-        exact_mod_cast hb
+        show ((rate b t : ℝ) : EReal) ≤ ((wsmpDep b t : ℝ) : EReal)
+        exact_mod_cast hbnd
 
-/-- The pair is not weakly strictly served at `λ_{1/2}`: the backlogged
-window `(1, 2]` starts at `1` but receives nothing while the anchored
-bound demands growth. -/
-theorem wsmp_not_mem_weaklyStrictServiceRel :
-    ¬ weaklyStrictServiceRel (rate (1 / 2 : ℝ≥0)) (rateCurve 1) wsmpDep := by
+/-- The pair is not weakly strictly served at `λ_b` (`0 < b < 1`): a
+backlogged window `(1, t*]` with `1 < t* < 1/b` starts at `1` but receives
+nothing while the anchored bound demands growth. -/
+theorem wsmp_not_mem_weaklyStrictServiceRel (b : ℝ≥0) (hb0 : 0 < b) (hb1 : b < 1) :
+    ¬ weaklyStrictServiceRel (rate b) (rateCurve 1) (wsmpDep b) := by
   rintro ⟨-, hb⟩
-  have h32 : (1 : ℝ≥0) ≤ 3 / 2 := by
-    rw [le_div_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]; norm_num
-  have h34 : (3 / 2 : ℝ≥0) / 2 ≤ 1 := by
-    rw [div_le_one (by norm_num : (0 : ℝ≥0) < 2), div_le_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
-    norm_num
-  have hstart : start ⇑(rateCurve 1) ⇑wsmpDep (3 / 2) = 1 := by
+  obtain ⟨ts, hts1, hts2⟩ := exists_between ((one_lt_div hb0).mpr hb1)
+  have hts1le : (1 : ℝ≥0) ≤ ts := hts1.le
+  have htsb : b * ts < 1 :=
+    calc b * ts < b * (1 / b) := mul_lt_mul_of_pos_left hts2 hb0
+      _ = 1 := by rw [mul_one_div, div_self hb0.ne']
+  have hstart : start ⇑(rateCurve 1) ⇑(wsmpDep b) ts = 1 := by
     unfold start
-    have hset : {u | u ≤ (3 / 2 : ℝ≥0) ∧ rateCurve 1 u = wsmpDep u} = Set.Iic 1 := by
+    have hset : {u | u ≤ ts ∧ rateCurve 1 u = wsmpDep b u} = Set.Iic 1 := by
       ext u
-      simp only [Set.mem_setOf_eq, Set.mem_Iic, wsmp_eq_iff]
-      exact ⟨fun h => h.2, fun h => ⟨le_trans h h32, h⟩⟩
+      simp only [Set.mem_setOf_eq, Set.mem_Iic, wsmp_eq_iff b hb1]
+      exact ⟨fun h => h.2, fun h => ⟨le_trans h hts1le, h⟩⟩
     rw [hset, csSup_Iic]
-  have h := hb (3 / 2)
+  have h := hb ts
   rw [hstart] at h
-  have hD1 : wsmpDep 1 = 1 := by
-    rw [wsmpDep_apply, min_eq_left (le_refl 1), max_eq_left (by
-      rw [div_le_one (by norm_num : (0 : ℝ≥0) < 2)]; norm_num)]
-  have hD32 : wsmpDep (3 / 2) = 1 := by
-    rw [wsmpDep_apply, min_eq_right h32, max_eq_left h34]
-  rw [hD1, hD32, show (3 / 2 : ℝ≥0) - 1 = 1 / 2 from by
-    rw [tsub_eq_iff_eq_add_of_le h32]; norm_num, rate_apply,
-    show (1 / 2 : ℝ≥0) * (1 / 2) = 1 / 4 from by norm_num] at h
-  exact absurd h (not_le.mpr (by
-    rw [show (1 : ℝ≥0) + 1 / 4 = 5 / 4 from by norm_num,
-      one_lt_div (by norm_num : (0 : ℝ≥0) < 4)]
-    norm_num))
+  have hD1 : wsmpDep b 1 = 1 := by
+    rw [wsmpDep_apply, min_eq_left (le_refl 1), max_eq_left (by rw [mul_one]; exact hb1.le)]
+  have hDts : wsmpDep b ts = 1 := by
+    rw [wsmpDep_apply, min_eq_right hts1le, max_eq_left htsb.le]
+  rw [hD1, hDts, rate_apply] at h
+  exact absurd h (not_le.mpr (lt_add_of_pos_right 1 (mul_pos hb0 (tsub_pos_of_lt hts1))))
 
-/-- **The upper inclusion is strict for the no-delay rate `λ_{1/2}`**: its
-weakly strict relation is strictly below its min-plus relation,
-witnessed by the stalling departure. -/
+/-- **The upper inclusion is strict for every no-delay rate `λ_b`**
+(`0 < b < 1`): its weakly strict relation is strictly below its min-plus
+relation, witnessed by the stalling departure. -/
+theorem weaklyStrictServiceRel_lt_minimalServiceRel_rate (b : ℝ≥0)
+    (hb0 : 0 < b) (hb1 : b < 1) :
+    weaklyStrictServiceRel (rate b) < minimalServiceRel (liftEReal (rate b)) := by
+  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
+  refine wsmp_not_mem_weaklyStrictServiceRel b hb0 hb1 ?_
+  rw [heq]; exact wsmp_mem_minimalServiceRel b hb1.le
+
+/-- The no-delay separation at the representative rate `λ_{1/2}`. -/
 theorem weaklyStrictServiceRel_lt_minimalServiceRel_rateHalf :
     weaklyStrictServiceRel (rate (1 / 2 : ℝ≥0))
-      < minimalServiceRel (liftEReal (rate (1 / 2 : ℝ≥0))) := by
-  refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
-  refine wsmp_not_mem_weaklyStrictServiceRel ?_
-  rw [heq]; exact wsmp_mem_minimalServiceRel
+      < minimalServiceRel (liftEReal (rate (1 / 2 : ℝ≥0))) :=
+  weaklyStrictServiceRel_lt_minimalServiceRel_rate (1 / 2) (by positivity)
+    (by rw [div_lt_one (by norm_num : (0 : ℝ≥0) < 2)]; norm_num)
 
 end DeepWiki
