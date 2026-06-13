@@ -1,5 +1,6 @@
 import Book.ServiceCurveStrictEReal
 import Book.ServiceCurveStrictTandem
+import Book.Continuity
 
 /-! # Lemma 9.5 reverse dilution: the catch-up time-warp
 Building towards the reverse inclusion `S_mp(δ_T) ⊆ S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ)`.
@@ -149,3 +150,82 @@ theorem warp_mono {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) : Monotone (warp 
           = d * ((⌊(a : ℝ) / d⌋₊ : ℝ≥0) + 1) := by ring
         _ ≤ d * (⌊(b : ℝ) / d⌋₊ : ℝ≥0) := by gcongr
     exact htop_a.trans (hchain.trans hbase_b)
+
+/-- The period-`j` formula `f_j(τ) = dj + (d/r)(τ − dj − (d−r))` that the warp
+follows on `[dj, d(j+1)]`. -/
+noncomputable def warpPeriod (d r : ℝ≥0) (j : ℕ) (τ : ℝ≥0) : ℝ≥0 :=
+  d * (j : ℝ≥0) + d / r * (τ - d * (j : ℝ≥0) - (d - r))
+
+/-- `warpPeriod d r j` is continuous (truncated subtractions of continuous maps). -/
+theorem warpPeriod_continuous (d r : ℝ≥0) (j : ℕ) : Continuous (warpPeriod d r j) := by
+  unfold warpPeriod
+  exact continuous_const.add
+    (((continuous_sub_right _).comp (continuous_sub_right _)).const_mul _)
+
+/-- On its period the warp equals the period formula: if `⌊τ/d⌋ = j` then
+`warp d r τ = warpPeriod d r j τ`. -/
+theorem warp_eq_warpPeriod {d r : ℝ≥0} {τ : ℝ≥0} {j : ℕ}
+    (h : ⌊(τ : ℝ) / d⌋₊ = j) : warp d r τ = warpPeriod d r j τ := by
+  rw [warp_apply, warpPeriod, h]
+
+/-- If `dj ≤ τ < d(j+1)` (as reals) then `⌊τ/d⌋ = j`. -/
+theorem warp_floor_eq {d : ℝ≥0} (hd : 0 < d) {τ : ℝ≥0} {j : ℕ}
+    (h1 : (d : ℝ) * j ≤ τ) (h2 : (τ : ℝ) < d * (j + 1)) : ⌊(τ : ℝ) / d⌋₊ = j := by
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  rw [Nat.floor_eq_iff (by positivity)]
+  refine ⟨?_, ?_⟩
+  · rw [le_div_iff₀ hd', mul_comm]; exact h1
+  · rw [div_lt_iff₀ hd', mul_comm]; exact h2
+
+/-- The ramp reaches the next catch-up: `warpPeriod d r j (d·(j+1)) = d·(j+1)`. -/
+theorem warpPeriod_top {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (j : ℕ) :
+    warpPeriod d r j (d * ((j + 1 : ℕ) : ℝ≥0)) = d * ((j + 1 : ℕ) : ℝ≥0) := by
+  rw [warpPeriod]
+  push_cast
+  rw [show d * ((j : ℝ≥0) + 1) - d * (j : ℝ≥0) = d by
+      rw [mul_add, mul_one, add_tsub_cancel_left],
+    tsub_tsub_cancel_of_le hrd, div_mul_cancel₀ _ hr.ne']
+  ring
+
+/-- The warp is left-continuous: on every left-neighborhood it coincides with a
+continuous period formula. -/
+theorem warp_leftCont {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) :
+    IsLeftContinuous (warp d r) := by
+  have hd : 0 < d := lt_of_lt_of_le hr hrd
+  have hd' : (0 : ℝ) < (d : ℝ) := NNReal.coe_pos.mpr hd
+  intro u
+  rcases eq_or_ne u 0 with rfl | hune
+  · exact isLeftContinuousAt_zero _
+  have hupos : (0 : ℝ) < (u : ℝ) := NNReal.coe_pos.mpr (pos_of_ne_zero hune)
+  set k : ℕ := ⌊(u : ℝ) / d⌋₊ with hk
+  have hkle : (d : ℝ) * k ≤ u := by
+    have h := Nat.floor_le (le_of_lt (div_pos hupos hd'))
+    rw [← hk, le_div_iff₀ hd', mul_comm] at h; linarith
+  have hklt : (u : ℝ) < d * (k + 1) := by
+    have h := Nat.lt_floor_add_one ((u : ℝ) / d)
+    rw [← hk, div_lt_iff₀ hd'] at h; nlinarith [h]
+  -- pick the period `j` just left of `u`: `j = k` if `u` is interior, else `k-1`
+  obtain ⟨j, hlo, hub, hval⟩ : ∃ j : ℕ, (d : ℝ) * j < u ∧ (u : ℝ) ≤ d * (j + 1) ∧
+      warp d r u = warpPeriod d r j u := by
+    rcases eq_or_lt_of_le hkle with heq | hlt
+    · -- `u = d·k`, a multiple (so `k ≥ 1`); the period just left is `k-1`
+      obtain ⟨k', hk'⟩ : ∃ k', k = k' + 1 := by
+        rcases Nat.eq_zero_or_pos k with hk0 | hk0
+        · rw [hk0, Nat.cast_zero, mul_zero] at heq; exact absurd heq.symm (ne_of_gt hupos)
+        · exact ⟨k - 1, (Nat.succ_pred_eq_of_pos hk0).symm⟩
+      have huval : u = d * ((k' + 1 : ℕ) : ℝ≥0) := by
+        rw [← NNReal.coe_inj]; push_cast; rw [hk'] at heq; push_cast at heq; linarith
+      refine ⟨k', ?_, ?_, ?_⟩
+      · rw [hk'] at heq; push_cast at heq ⊢; nlinarith [heq, hd']
+      · rw [hk'] at heq; push_cast at heq ⊢; linarith
+      · rw [huval, warp_mul_nat hd, warpPeriod_top hr hrd]
+    · exact ⟨k, hlt, hklt.le, warp_eq_warpPeriod hk.symm⟩
+  -- on `(d·j, u)` the warp follows the period formula
+  have hlo' : d * (j : ℝ≥0) < u := by
+    rw [← NNReal.coe_lt_coe]; push_cast; exact hlo
+  have hev : warp d r =ᶠ[nhdsWithin u (Set.Iio u)] warpPeriod d r j := by
+    filter_upwards [Ioo_mem_nhdsLT hlo'] with τ hτ
+    refine warp_eq_warpPeriod (warp_floor_eq hd ?_ ?_)
+    · have h := hτ.1; rw [← NNReal.coe_lt_coe] at h; push_cast at h; linarith
+    · have h := hτ.2; rw [← NNReal.coe_lt_coe] at h; linarith [hub]
+  exact (warpPeriod_continuous d r j).continuousWithinAt.congr_of_eventuallyEq hev hval
