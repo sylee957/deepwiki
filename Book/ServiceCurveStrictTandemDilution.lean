@@ -300,3 +300,37 @@ theorem IsPiecewiseContinuous.comp_continuous_monotone {A : ℝ≥0 → ℝ≥0}
     rw [hσ2S.2] at h2
     exact le_antisymm h2 h1
   rw [hgeq]
+
+/-- Left-continuity is preserved by precomposition with a continuous monotone map. -/
+theorem IsLeftContinuous.comp_continuous_monotone {A : ℝ≥0 → ℝ≥0} (hA : IsLeftContinuous A)
+    {g : ℝ≥0 → ℝ≥0} (hgc : Continuous g) (hgm : Monotone g) :
+    IsLeftContinuous (fun τ => A (g τ)) := by
+  intro t
+  have hA' : ContinuousWithinAt A (Set.Iic (g t)) (g t) := by
+    rw [show Set.Iic (g t) = Set.Iio (g t) ∪ {g t} from by
+        ext x; simp only [Set.mem_Iic, Set.mem_union, Set.mem_Iio, Set.mem_singleton_iff]
+        exact le_iff_lt_or_eq,
+      continuousWithinAt_union]
+    exact ⟨hA (g t), continuousWithinAt_singleton⟩
+  exact hA'.comp (hgc.continuousAt.continuousWithinAt) (fun s hs => hgm (le_of_lt hs))
+
+/-- The first tandem stage `A ∘ warp d r` as a `Curve`: the warp turns the smooth
+arrival `A` into a staircase (flats of length `d − r`, ramps of width `r`), which is a
+strict `δ_d` server of `A`. -/
+noncomputable def warpCurve (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) : Curve :=
+  ⟨fun τ => A (warp d r τ), A.mono.comp (warp_mono hr hrd),
+    by show A (warp d r 0) = 0; rw [warp_zero_eq]; exact A.zero,
+    A.pwc.comp_continuous_monotone (warp_continuous hr hrd) (warp_mono hr hrd),
+    A.leftCont.comp_continuous_monotone (warp_continuous hr hrd) (warp_mono hr hrd)⟩
+
+/-- `warpCurve A hr hrd τ = A (warp d r τ)`. -/
+@[simp] theorem warpCurve_apply (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (τ : ℝ≥0) :
+    warpCurve A hr hrd τ = A (warp d r τ) := rfl
+
+/-- **The first stage is a strict `δ_d` server**:
+`(A, A ∘ warp d r) ∈ S_strict(δ_d)`, via the catch-up warp (`warp ≤ id`, catch-up
+dense) and the per-stage criterion. -/
+theorem warpCurve_strictServiceRelEReal (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) :
+    strictServiceRelEReal (delayEReal d) A (warpCurve A hr hrd) :=
+  strictServiceRelEReal_delay_of_comp_catchUp (fun τ => (warpCurve_apply A hr hrd τ))
+    (warp_le_self hr hrd) (warp_catchUp_dense (lt_of_lt_of_le hr hrd))
