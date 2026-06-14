@@ -1,17 +1,19 @@
 import DeepWiki.NetworkCalculus.ServersResidual
 import DeepWiki.NetworkCalculus.ServersResidualWeaklyStrict
-import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveAdaptive
+import DeepWiki.NetworkCalculus.ServiceCurveFamilies
+import DeepWiki.NetworkCalculus.ServiceCurveFamiliesMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveMonotony
+import DeepWiki.NetworkCalculus.ServiceCurveStrict
+import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacity
-import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamilies
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamiliesStrict
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityMonotonyExt
-import DeepWiki.NetworkCalculus.ServiceCurveAdaptive
-import DeepWiki.NetworkCalculus.ServiceCurveMonotony
-import DeepWiki.NetworkCalculus.ServiceCurveFamilies
-import DeepWiki.NetworkCalculus.ServiceCurveFamiliesMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
-import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
@@ -64,22 +66,23 @@ alias lemma_9_3 := adaptiveServiceRel_le_minimalServiceRel
 /-- **Lemma 9.4** (§9.1.4, p.218): If β ∈ F₀↑ is piecewise linear convex then ∀A∈C, (A,A∗β) ∈ S_asc(β,β); the convolution output meets the adaptive pair (β,β) (formalized for super-additive continuous β). -/
 alias lemma_9_4 := isAdaptiveServiceBound_minConvProj
 
-/-! **Proposition 9.2** (§9.2.1, p.219): Monotony: for any type T ∈ {mp,strict,wstrict,vcn} and β ≤ β' left-continuous, S_T(β) ⊇ S_T(β'). Library: minimalServiceRel_mono, weaklyStrictServiceRel_mono, strictServiceRel_mono, variableCapacityRel_mono, adaptiveServiceRel_mono. -/
+/-! **Proposition 9.2** (§9.2.1, p.219): Monotony: for any type T ∈ {mp,strict,wstrict,vcn} and β ≤ β' left-continuous, S_T(β) ⊇ S_T(β'). Library: minimalServiceRel_mono, weaklyStrictServiceRel_mono, strictServiceRel_mono, variableCapacityRel_mono. -/
 
-/-! **Proposition 9.3** (§9.2.1, p.219): Closure invariance: S_strict(β)=S_strict(β*̄), S_wstrict(β)=S_wstrict(β↑), S_vcn(β)=S_vcn(β*̄) — a curve may be replaced by its (sub- /super-additive, non-decreasing) closure. Library: weaklyStrictServiceRel_closure, strictServiceRel_superadditiveClosureMax, variableCapacityRel_superadditiveClosureMax, variableCapacityRel_closure. -/
+/-! **Proposition 9.3** (§9.2.1, p.219): Closure invariance: S_strict(β)=S_strict(β*̄), S_wstrict(β)=S_wstrict(β↑), S_vcn(β)=S_vcn(β*̄) — a curve may be replaced by its (sub- /super-additive, non-decreasing) closure. Library: strictServiceRel_superadditiveClosureMax, weaklyStrictServiceRel_closure, variableCapacityRel_superadditiveClosureMax, variableCapacityRel_closure. -/
 
-/-! **Theorem 9.3** (§9.2.1, p.220): Monotony refined (8 parts): S_mp(β)⊇S_mp(β') ⇔ β↑≤β'↑ (and likewise wstrict, strict via super-additive closures (β↑)*̄≤(β'↑)*̄, vcn) — relation inclusion is exactly pointwise/closure domination. Library: minimalServiceRel_le_iff, weaklyStrictServiceRel_le_iff, strictServiceRel_le_iff_of_superadditive, superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le, variableCapacityRelExt_le_of_superadditiveClosureMaxNN_ndClosure_le. -/
+/-! **Theorem 9.3** (§9.2.1, p.220): Monotony refined (8 parts): S_mp(β)⊇S_mp(β') ⇔ β↑≤β'↑ (and likewise wstrict, strict via super-additive closures (β↑)*̄≤(β'↑)*̄, vcn) — relation inclusion is exactly pointwise/closure domination. Library: minimalServiceRel_le_iff, weaklyStrictServiceRel_le_iff, strictServiceRel_le_iff_of_superadditive, variableCapacityRelExt_le_iff_superadditiveClosureMaxNN_ndClosure_le. -/
 
-/-! **Theorem 9.4** (§9.2.2, p.221): Families of service curves (4 parts): ⋂ᵢS_mp(βᵢ)=⋂ⱼS_mp(β'ⱼ) iff same downward closure; ⋂ᵢS_wstrict(βᵢ)=S_wstrict((supᵢβᵢ)↑); ⋂ᵢS_strict(βᵢ)=S_strict((supᵢβᵢ)*̄); ⋂ᵢS_vcn(βᵢ)=S_vcn((supᵢβᵢ)*̄). Library: minimalServiceRel_iInter_eq_iff_setOf_le_eq, weaklyStrictServiceRel_iSup, strictServiceRel_iSup, variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup, iInter_variableCapacityRel_of_variableCapacityRel_iSup. -/
+/-! **Theorem 9.4** (§9.2.2, p.221): Families of service curves (4 parts): ⋂ᵢS_mp(βᵢ)=⋂ⱼS_mp(β'ⱼ) iff same downward closure; ⋂ᵢS_wstrict(βᵢ)=S_wstrict((supᵢβᵢ)↑); ⋂ᵢS_strict(βᵢ)=S_strict((supᵢβᵢ)*̄); ⋂ᵢS_vcn(βᵢ)=S_vcn((supᵢβᵢ)*̄). Library: minimalServiceRel_iInter_eq_iff_mutually_dominated, weaklyStrictServiceRel_iSup, strictServiceRel_iSup, variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup. -/
 
-/-! **Theorem 9.5** (§9.2.3, p.222): Hierarchy: for β∈F, S_vcn(β) ⊆ S_strict(β) ⊆ S_wstrict(β) ⊆ S_mp(β); with equalities S_vcn=S_strict iff β⊘β only has finite values, S_strict=S_wstrict iff β↑=δ_T, S_wstrict=S_mp iff β↑=δ₀ or 0. Library: variableCapacityJumpRel_le_strictServiceRel, strictServiceRel_le_weaklyStrictServiceRel, weaklyStrictServiceRel_le_minimalServiceRel, strictServiceRel_lt_weaklyStrictServiceRel_rate, weaklyStrictServiceRel_lt_minimalServiceRel_rate. -/
+/-! **Theorem 9.5** (§9.2.3, p.222): Hierarchy: for β∈F, S_vcn(β) ⊆ S_strict(β) ⊆ S_wstrict(β) ⊆ S_mp(β); with equalities S_vcn=S_strict iff β⊘β only has finite values, S_strict=S_wstrict iff β↑=δ_T, S_wstrict=S_mp iff β↑=δ₀ or 0. Library: variableCapacityRel_le_minimalServiceRel, variableCapacityJumpRel_le_strictServiceRel, strictServiceRel_le_weaklyStrictServiceRel, weaklyStrictServiceRel_le_minimalServiceRel, not_forall_variableCapacityRel_le_strictServiceRel, not_forall_weaklyStrictServiceRel_le_strictServiceRel, not_forall_minimalServiceRel_le_weaklyStrictServiceRel. -/
 
-/-! **Theorem 9.6** (§9.2.3, p.225): No translation with families: for two different types T,T' among vcn,wstrict,strict,mp and a family (βᵢ) of type T, there is no family (β'ⱼ) of type T' with ⋂ᵢS_T(βᵢ)=⋂ⱼS_T'(β'ⱼ), except in the equality cases of Thm 9.5. Not formalized in the library. -/
+/-! **Theorem 9.6** (§9.2.3, p.225): No translation with families: for two different types T,T' among vcn,wstrict,strict,mp and a family (βᵢ) of type T, there is no family (β'ⱼ) of type T' with ⋂ᵢS_T(βᵢ)=⋂ⱼS_T'(β'ⱼ), except in the equality cases of Thm 9.5. Library: not_forall_weaklyStrictServiceRel_le_strictServiceRel, not_forall_variableCapacityRel_le_strictServiceRel, not_forall_variableCapacityRel_le_weaklyStrictServiceRel, not_forall_iInf_variableCapacityRel_le_iSup. -/
 
 /-- **Lemma 9.5** (§9.3.1, p.226): For T ∈ ℝ₊, the closure of the union of n-fold strict-δ_{T/n} tandems equals the min-plus pure-delay server: S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) = S_mp(δ_T). -/
 alias lemma_9_5 := systemClosure_delayTandemUnion_eq
 
-/-! **Theorem 9.7** (§9.3.1, p.227): For each convex piecewise linear β, there is a system S of strict-service servers such that S_strict(β) ⊆ S̄ ⊆ S_mp(β), and if β=β̃₁∗β̃₂ are convex PL then ∀β, S̄(β̃)=S_mp(β) — no good intermediate type of service curve exists (the book does not prove the general theorem; only the δ_T dilution lemma is formalized). Library: systemClosure_delayTandemUnion_eq, systemClosure, subset_systemClosure. -/
+/-- **Theorem 9.7** (§9.3.1, p.227): For each convex piecewise linear β, there is a system S of strict-service servers such that S_strict(β) ⊆ S̄ ⊆ S_mp(β), and if β=β̃₁∗β̃₂ are convex PL then ∀β, S̄(β̃)=S_mp(β) — no good intermediate type of service curve exists (the book does not prove the general theorem; only the δ_T dilution lemma is formalized). -/
+alias thm_9_7 := systemClosure_delayTandemUnion_eq
 
 /-! **Theorem 9.8** (§9.3.2, p.228): Sufficiently strict service curve: with Dw : S_s3c(β) → P(F) and Dw₁:S_s3c(β₁)→P(F), Dw₂:S_s3c(β₂)→P(F) possible dwell periods, S_s3c(β₂,Dw₂)∘S_s3c(β₁,Dw₁) ⊆ S(β₁∗β₂,Dw') for a suitable composed dwell Dw'; FIFO multiplexing with flow 1 arrival-α₂-constrained gives S_s3c((β−α₂)⁺,Dw). Not formalized in the library. -/
 

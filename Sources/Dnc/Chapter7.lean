@@ -1,13 +1,15 @@
 import DeepWiki.NetworkCalculus.ArrivalCurvesAggregate
+import DeepWiki.NetworkCalculus.Servers
 import DeepWiki.NetworkCalculus.ServersMimo
 import DeepWiki.NetworkCalculus.ServersResidual
-import DeepWiki.NetworkCalculus.ServersResidualMinimal
-import DeepWiki.NetworkCalculus.ServersResidualOutput
+import DeepWiki.NetworkCalculus.ServersResidualEdf
 import DeepWiki.NetworkCalculus.ServersResidualFifo
-import DeepWiki.NetworkCalculus.ServersResidualPriority
 import DeepWiki.NetworkCalculus.ServersResidualGps
 import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
-import DeepWiki.NetworkCalculus.ServersResidualEdf
+import DeepWiki.NetworkCalculus.ServersResidualMinimal
+import DeepWiki.NetworkCalculus.ServersResidualOutput
+import DeepWiki.NetworkCalculus.ServersResidualPriority
+import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
 import DeepWiki.NetworkCalculus.ServiceCurveMinimal
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
 import Sources.Dnc.Source
@@ -22,7 +24,8 @@ namespace DeepWiki.Dnc
 open DeepWiki
 open scoped NNReal ENNReal
 
-/-! **Definition 7.1** (§7.1.1, p.152): Aggregate flow: for a finite set I of flows the aggregate cumulative process is the pointwise sum A = ∑_{i∈I} A_i. Library: Curve.sum_apply, Curve.sum_zero_eq. -/
+/-- **Definition 7.1** (§7.1.1, p.152): Aggregate flow: for a finite set I of flows the aggregate cumulative process is the pointwise sum A = ∑_{i∈I} A_i. -/
+alias def_7_1 := Curve.sum_apply
 
 /-- **Proposition 7.1** (§7.1.1, p.152): If each A_i has arrival curve α_i then α = ∑_i α_i is an arrival curve for the aggregate process ∑_i A_i. -/
 alias prop_7_1 := isMaximalArrivalBound_sum
@@ -39,9 +42,9 @@ abbrev def_7_3 := @aggregateServer
 /-- **Definition 7.4** (§7.1.2, p.154): Residual server S_i of an n-server for flow i: the projection of the relation onto coordinate i (the other flows are cross-traffic), possibly non-deterministic. -/
 noncomputable def def_7_4 := @residualServer
 
-/-! **Definition 7.5** (§7.1.2, p.154): Aggregate service curve: a MIMO server S offers β as an aggregate service curve of type 𝒯 iff its aggregate server S_Σ offers β as a service curve of type 𝒯. Library: IsMinimalServiceCurve, IsStrictMinimalServiceCurve, aggregateServer. -/
+/-! **Definition 7.5** (§7.1.2, p.154): Aggregate service curve: a MIMO server S offers β as an aggregate service curve of type 𝒯 iff its aggregate server S_Σ offers β as a service curve of type 𝒯. Library: aggregateServer, IsMinimalServiceCurve, IsStrictMinimalServiceCurve. -/
 
-/-! **Definition 7.6** (§7.1.2, p.154): Residual service curve: a MIMO server S offers β as a residual service curve for flow i iff its residual server S_i offers β as a service curve. Library: IsMinimalServiceCurve, IsStrictMinimalServiceCurve, residualServer. -/
+/-! **Definition 7.6** (§7.1.2, p.154): Residual service curve: a MIMO server S offers β as a residual service curve for flow i iff its residual server S_i offers β as a service curve. Library: residualServer, isMinimalServiceCurve_residualServer_of_minimal_aggregate. -/
 
 /-! **Lemma 7.1** (§7.1.2, p.155): MIMO server backlogged period: for a causal family, the aggregate is backlogged on a period iff at each instant some flow is backlogged; a flow's backlogged period is one for any aggregate containing it. Library: isBacklogged_sum_iff, isBacklogged_sum_of_isBacklogged. -/
 
@@ -87,11 +90,14 @@ alias thm_7_7 := isStrictMinimalServiceCurve_residualServer_of_isGps
 /-- **Theorem 7.8** (§7.3.3, p.172): GPS with variable capacity / arrival-constrained cross-flow k (convex β, concave α): flow i≠k is offered the improved residual φ_i·max(β/Φ, (β−α_k)/Φ_{−k}) as a strict service curve. -/
 alias thm_7_8 := add_max_div_mul_le_of_isGps_ungated
 
-/-! **Lemma 7.3** (§7.3.3, p.173): GPS aggregate-share lemma: on a backlogged period of flow i, the rest-of-traffic increment is controlled by flow i's increment scaled by the weights, ∑_{j≠1}(D_j(t)−D_j(s)) relation used in the improved-GPS proof. Library: mul_sum_le_sum_mul_of_isGps, add_gatedResidual_le_of_isGps. -/
+/-- **Lemma 7.3** (§7.3.3, p.173): GPS aggregate-share lemma: on a backlogged period of flow i, the rest-of-traffic increment is controlled by flow i's increment scaled by the weights, ∑_{j≠1}(D_j(t)−D_j(s)) relation used in the improved-GPS proof. -/
+alias lemma_7_3 := mul_sum_le_sum_mul_of_isGps
 
-/-! **Lemma 7.4** (§7.3.3, p.173): GPS backlogged-period bound: under the hypotheses of Thm 7.8, the per-flow released share over a backlogged period is bounded below by the gated residual (φ_k·β − Φ·α released after crossing T). Library: add_gatedResidual_le_of_isGps, IsAggregateStrict.peel. -/
+/-- **Lemma 7.4** (§7.3.3, p.173): GPS backlogged-period bound: under the hypotheses of Thm 7.8, the per-flow released share over a backlogged period is bounded below by the gated residual (φ_k·β − Φ·α released after crossing T). -/
+alias lemma_7_4 := add_gatedResidual_le_of_isGps
 
-/-! **Lemma 7.5** (§7.3.3, p.174): Under the hypotheses of Thm 7.8, for each flow i≥2 the curve φ_i·max(β/Φ, (β−α_1)/Φ_{−1}) is a strict service curve for flow i (the maximum of the two share curves). Library: add_max_div_mul_le_of_isGps, isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated_convex. -/
+/-- **Lemma 7.5** (§7.3.3, p.174): Under the hypotheses of Thm 7.8, for each flow i≥2 the curve φ_i·max(β/Φ, (β−α_1)/Φ_{−1}) is a strict service curve for flow i (the maximum of the two share curves). -/
+alias lemma_7_5 := isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
 
 /-- **Definition 7.10** (§7.3.4.1, p.177): EDF (earliest-deadline-first) scheduler with relative deadlines d_i: if the deadline-T aggregate (data due by T) is backlogged, flow j's data with deadline after T receives nothing — a deadline-ordered preemptive priority. -/
 abbrev def_7_10 := @IsEdf
