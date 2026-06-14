@@ -96,7 +96,7 @@ example {ι : Type*} [Nonempty ι] {β : ι → ℝ≥0 → ℝ≥0}
   rw [strictServiceRel_superadditiveClosureMax _ hbddSup,
     strictServiceRel_iSup hbdd]
 
-/-! ## Min-plus families (Thm 9.4 item 1, the `⟸` half)
+/-! ## Min-plus families (the downward-closure criterion, the `⟸` half)
 Unlike the weakly-strict/strict families, a min-plus family does *not* collapse to a
 single curve: `⋂ᵢ S_mp(βᵢ) = ⋂ⱼ S_mp(β'ⱼ)` holds exactly when the two families have the
 same downward closure. The easy direction — mutual domination forces the intersections to
@@ -137,7 +137,7 @@ theorem mutually_dominated_iff_setOf_le_eq {ιβ ιβ' : Type*}
     · have hi : β i ∈ {f : ℝ≥0 → EReal | ∃ i', f ≤ β i'} := ⟨i, le_refl _⟩
       rw [h] at hi; exact hi
 
-/-- **Thm 9.4 item 1, the `⟸` half in the book's closure form**: if the two min-plus
+/-- **Min-plus families, the `⟸` half in closure form**: if the two min-plus
 families have the same downward closure, their trajectory-set intersections coincide.
 (The `⟹` direction needs the `+∞` staircase witness — deferred.) -/
 theorem minimalServiceRel_iInter_eq_of_setOf_le_eq {ιβ ιβ' : Type*}

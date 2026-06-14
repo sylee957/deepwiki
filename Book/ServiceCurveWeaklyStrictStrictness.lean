@@ -551,7 +551,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_rateHalf :
     (by rw [div_lt_one (by norm_num : (0 : ℝ≥0) < 2)]; norm_num)
 
 /-! ## Case B of the general no-delay separation: a sub-rate curve
-The book's general no-delay case (Theorem 9.5) when the rate `λ_ρ` overtakes a
+The general no-delay case when the rate `λ_ρ` overtakes a
 no-delay `β` that stays strictly below it (`∀ u > 0, β u < ρu`) yet is *slow*:
 some stall point `s < ts` has `β ts < ρs`. The stalling departure
 `D = (λ_ρ ⊓ ρs) ⊔ β` rises with `λ_ρ` to the level `ρs` at `s`, stalls there
@@ -651,7 +651,7 @@ theorem wsmpGen_not_mem {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc h
     (hpos (ts - s) (tsub_pos_of_lt hts1))))
 
 /-- **The upper inclusion is strict for a no-delay sub-rate curve** (case B of
-Theorem 9.5): a no-delay `β` strictly below the rate `ρ`, slow enough to stall
+the no-delay separation): a no-delay `β` strictly below the rate `ρ`, slow enough to stall
 (`β ts < ρs` for some `s < ts`), has `wstrict(β) ⊊ mp(β)`. -/
 theorem weaklyStrictServiceRel_lt_minimalServiceRel_subRate
     {β : ℝ≥0 → ℝ≥0} (hmono : Monotone β) (hlc : IsLeftContinuous β)
@@ -670,7 +670,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_subRate
   rw [heq]; exact wsmpGen_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0) hle
 
 /-! ## Case C of the general no-delay separation: a superlinear curve
-The book's remaining no-delay case (Theorem 9.5): when `β` overtakes every rate
+The remaining no-delay case: when `β` overtakes every rate
 (no `λ_ρ` stays above it), pick `ρ` with `λ_ρ > β` near the origin but
 `β` overtaking at some `t_ov` (`β t_ov > ρ·t_ov`). The departure `D = λ_ρ ∗ β`
 (a Curve via the Lipschitz-greedy machinery) is min-plus served by `β`, but
@@ -751,7 +751,7 @@ theorem wsmpSup_not_mem (β : Curve) {ρ : ℝ≥0}
   exact absurd (le_trans h (wsmpSupDep_le β ρ t_ov)) (not_le.mpr hov)
 
 /-- **The upper inclusion is strict for a no-delay superlinear curve** (case C of
-Theorem 9.5): if `β` overtakes the rate `ρ` (`ρ·t_ov < β t_ov`) but `λ_ρ`
+the no-delay separation): if `β` overtakes the rate `ρ` (`ρ·t_ov < β t_ov`) but `λ_ρ`
 exceeds `β` near the origin (`β s < ρ·s` arbitrarily close to `0`), then
 `wstrict(β) ⊊ mp(β)`. -/
 theorem weaklyStrictServiceRel_lt_minimalServiceRel_superlinear (β : Curve) {ρ : ℝ≥0}
@@ -763,7 +763,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_superlinear (β : Curve) {ρ
   rw [heq]; exact wsmpSup_mem β ρ
 
 /-- **The no-delay separation for every sub-linear curve** (the practical case
-of Theorem 9.5): a no-delay `β` bounded by some rate (`β t ≤ ρ₀·t`) has
+of the no-delay separation): a no-delay `β` bounded by some rate (`β t ≤ ρ₀·t`) has
 `wstrict(β) ⊊ mp(β)` — it is case B with `ρ = 2ρ₀+1`, stalling at `s = 1/2`
 below `ts = 1`. Covers rates, rate-latencies (no-delay part), and every
 bounded-rate flow; superlinear and infinite-initial-slope curves are the
@@ -783,7 +783,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_subLinear (β : Curve) {�
         rw [show (2 * ρ₀ + 1) * (1 / 2) = ρ₀ + 1 / 2 from by ring]
         exact lt_add_of_pos_right ρ₀ (by norm_num)
 
-/-! ## The `√·` witness: an infinite-initial-slope curve (Theorem 9.5)
+/-! ## The `√·` witness: an infinite-initial-slope curve
 The rate-based separations above need a rate `λ_ρ` sitting above `β` near the
 origin; a concave curve with infinite initial slope (`β = √·`) admits no such
 rate, so those constructions miss it. A direct witness covers it: the arrival

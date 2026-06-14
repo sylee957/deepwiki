@@ -2,7 +2,7 @@ import Book.SchedulerSemantics
 import Book.ServersWrr
 
 /-! # WRR as an imperative program, and its soundness
-Algorithm 2 (WRR) written in the operational-semantics framework: the
+WRR written in the operational-semantics framework: the
 inner send loop `wrrInner` (lines 4-7), the per-flow turn `wrrTurn`
 (lines 3-7, `k ← 1` then the loop), and one round `wrrRound` (the
 `for` over flows). The soundness theorems pin the big-step execution to
@@ -224,7 +224,7 @@ theorem bigStep_wrrRound (w : Fin n → ℕ) {σ σ' : SchedState n}
       rw [ihframe k hkrest, hmq, Function.update_of_ne hkne]
 
 /-! ## Book restatement (WRR as an imperative program)
-Running Algorithm 2's per-flow turn `wrrTurn w i` leaves flow `i`'s queue
+Running WRR's per-flow turn `wrrTurn w i` leaves flow `i`'s queue
 as `wrrServe`'s — the first `w` packets sent, the rest retained
 (`bigStep_wrrTurn`); one round `wrrRound` does so for every flow
 (`bigStep_wrrRound`). So the operational semantics and the functional

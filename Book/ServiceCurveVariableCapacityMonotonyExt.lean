@@ -1,7 +1,7 @@
 import Book.ServiceCurveMonotonyExt
 import Book.ServiceCurveVariableCapacityFamilies
 
-/-! # Refined variable-capacity monotony with extended arrivals (Thm 9.3 item 8)
+/-! # Refined variable-capacity monotony with extended arrivals
 The variable-capacity (`vcn`) inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` is equivalent to the
 super-additive closures (of the non-decreasing closures) being ordered, the book's
 `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. The book states this unconditionally; here the forcing direction carries
@@ -229,7 +229,7 @@ theorem superadditiveClosureMaxNN_ndClosure_le_capacityNN {β : Curve} {C : ℝ�
     superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞))) (t - s) ≤ C t - C s :=
   iSup_le fun n => maxConvPow_ndClosure_le_capacityNN hCmono hcap n s t hst
 
-/-- **Thm 9.3 item 8 (refined variable-capacity monotony, extended arrivals — the forcing)**:
+/-- **Refined variable-capacity monotony, extended arrivals — the forcing**:
 if every extended pair variable-capacity served by `β'` is also served by `β`, the
 super-additive closures of the non-decreasing closures are ordered, the book's
 `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. Probing the `β'`-server with the infinite burst `δ₀` recovers
@@ -261,7 +261,7 @@ theorem superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le
   rw [hKeqC t]
   exact hb
 
-/-- **Thm 9.3 item 8 (the converse — closure ordering forces the inclusion)**: if the
+/-- **The converse — closure ordering forces the inclusion**: if the
 super-additive closures are ordered, `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`, then every extended pair
 variable-capacity served by `β'` is served by `β` — `S_vcn^ext(β') ⊆ S_vcn^ext(β)`. The same
 witness capacity `C` works: its `β'`-increments dominate `(β'↑)^⊛̄`
@@ -282,7 +282,7 @@ theorem variableCapacityRelExt_le_of_superadditiveClosureMaxNN_ndClosure_le {β 
   exact le_trans (le_trans hβclo (h (t - s)))
     (superadditiveClosureMaxNN_ndClosure_le_capacityNN hCmono hcap hst)
 
-/-- **Thm 9.3 item 8 (the equivalence)**: when the tight witness `(β'↑)^⊛̄` is pointwise finite,
+/-- **The equivalence**: when the tight witness `(β'↑)^⊛̄` is pointwise finite,
 the extended variable-capacity inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` holds *iff* the
 super-additive closures of the non-decreasing closures are ordered, `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. The
 forcing (`⟹`) rides the infinite burst `δ₀`; the converse (`⟸`) is the capacity-domination

@@ -5,11 +5,11 @@ namespace DeepWiki
 open Set Topology Filter Function Finset
 open scoped Classical NNReal ENNReal BigOperators
 
-/-! # Variable-capacity families (Thm 9.4 item 4, the `⊆` direction under jump domination)
+/-! # Variable-capacity families (the `⊆` direction under jump domination)
 For a finite family of variable-capacity (`vcn`) servers, the trajectory intersection is
 served by the pointwise supremum `⨆ᵢ βᵢ` — provided each per-`i` capacity is jump-dominated
-(the repair the book elides with "Idem item 3, replacing `D` by `C`"; cf. the Lemma 9.1 /
-Thm 9.5 jump repairs). The witness is the merged capacity `∑ᵢ (Cᵢ − D) + D`. The reverse
+(the repair the book elides with "Idem item 3, replacing `D` by `C`"; cf. the single-server
+jump repairs). The witness is the merged capacity `∑ᵢ (Cᵢ − D) + D`. The reverse
 `⊇` is unconditional. Adjudicated 2026-06-14 (prove-vs-refute panel): no finite-family
 counterexample exists; the unconditional `⊆` is open in the rising-arrival/harvested-jump
 regime, and for *infinite* families it is refuted in the `…FamiliesStrict` sibling. -/
@@ -162,7 +162,7 @@ def variableCapacityJumpFamilyRel {ι : Type*} (β : ι → ℝ≥0 → ℝ≥0)
 theorem mem_variableCapacityJumpFamilyRel_iff {ι : Type*} {β : ι → ℝ≥0 → ℝ≥0} {A D : Curve} :
     variableCapacityJumpFamilyRel β A D ↔ ∀ i, variableCapacityJumpRel (β i) A D := Iff.rfl
 
-/-- **Thm 9.4 item 4 (`⊆`, jump-dominated repair)**: a finite family of jump-dominated variable-capacity servers is jointly served by the pointwise supremum `⨆ᵢ βᵢ` — the merged capacity `mergeCapN` carries every `βᵢ`-increment at once and reproduces `D`. (The unconditional `⊆` is open in the rising-arrival/harvested-jump regime; for infinite families it is false, `ServiceCurveVariableCapacityFamiliesStrict`.) -/
+/-- **Finite-family `⊆`, jump-dominated repair**: a finite family of jump-dominated variable-capacity servers is jointly served by the pointwise supremum `⨆ᵢ βᵢ` — the merged capacity `mergeCapN` carries every `βᵢ`-increment at once and reproduces `D`. (The unconditional `⊆` is open in the rising-arrival/harvested-jump regime; for infinite families it is false, `ServiceCurveVariableCapacityFamiliesStrict`.) -/
 theorem variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup
     {ι : Type*} [Fintype ι] [Nonempty ι] (β : ι → ℝ≥0 → ℝ≥0) :
     variableCapacityJumpFamilyRel β

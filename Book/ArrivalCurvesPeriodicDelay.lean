@@ -233,7 +233,7 @@ theorem hDevENN_shaped_rateLatencyNN_of_le (P s C R T : ℝ≥0)
     · rw [rateNN_apply, ← ENNReal.coe_mul]
       exact_mod_cast mul_pos hC ht
 
-/-! ## Book restatement (shaping closed-form delay, §6.3.2.2)
+/-! ## Book restatement (shaping closed-form delay)
 The shaped periodic flow's deviation
 `hDev(γ_{s/P,s} ⊓ λ_C, β_{R,T}) = T + [(C − R)/(C − s/P)]·(s/R)`
 under stability `s/P < R ≤ C`, and the *shaping reduces delay*

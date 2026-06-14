@@ -1,8 +1,8 @@
 import Book.ServersResidualWrr
 
-/-! # Weighted-round-robin scheduling dynamics (Algorithm 2)
+/-! # Weighted-round-robin scheduling dynamics
 The operational weight-counter scheduler. Each flow holds a queue of
-packet sizes; a turn (`wrrServe`, Algorithm 2 lines 3-7) sends up to the
+packet sizes; a turn (`wrrServe`, lines 3-7) sends up to the
 flow's weight `w` head packets — exactly `w` while backlogged, fewer
 only when the queue runs dry. A backlogged turn therefore sends exactly
 `w` packets, of total length between `w·ℓˡ` and `w·ℓᵘ`. Summing over a
@@ -15,7 +15,7 @@ namespace DeepWiki
 
 open scoped NNReal
 
-/-- WRR per-flow turn (Algorithm 2, lines 3-7): send up to `w` head
+/-- WRR per-flow turn (lines 3-7): send up to `w` head
 packets of the flow, stopping early only if the queue empties. -/
 def wrrServe : ℕ → List ℝ≥0 → List ℝ≥0 × List ℝ≥0
   | 0, q => ([], q)

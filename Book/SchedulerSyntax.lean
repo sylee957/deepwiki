@@ -6,10 +6,11 @@ A concrete `[sched| … ]` notation rendering `Stmt` programs in the book's
 imperative pseudocode style — `DC[i] := DC[i] + Q`, `while … do { … }`,
 `send(head(i))`, `removeHead(i)` — elaborating to the `Stmt` AST of
 `Book.SchedulerSemantics`. Statements are `;`-separated and grouped by
-`{ … }` blocks, so the round-robin algorithms read like Algorithms 1 and
-2; each is proven equal to its constructor definition by `rfl`.
+`{ … }` blocks, so the round-robin DRR and WRR algorithms read in the
+book's pseudocode style; each is proven equal to its constructor
+definition by `rfl`.
 
-The weight-counter `k` of Algorithm 2 is written `cnt` here, to avoid
+The weight-counter `k` of WRR is written `cnt` here, to avoid
 globally reserving the ubiquitous identifier `k` as a keyword. The atoms
 `DC`, `size`, `head`, `empty`, `send`, `removeHead`, `cnt`, `skip` are
 reserved as keywords in any file importing this one (only `Book.lean`
@@ -97,7 +98,7 @@ the constructor form (`rfl`). -/
 
 variable {n : ℕ}
 
-/-- DRR inner loop (Algorithm 1, lines 7-10) in pseudocode syntax. -/
+/-- DRR inner loop (lines 7-10) in pseudocode syntax. -/
 example (i : Fin n) :
     drrInner i =
       [sched|
@@ -107,7 +108,7 @@ example (i : Fin n) :
           removeHead(i)
         }] := rfl
 
-/-- DRR per-flow turn (Algorithm 1, lines 5-12) in pseudocode syntax. -/
+/-- DRR per-flow turn (lines 5-12) in pseudocode syntax. -/
 example (Q : ℝ≥0) (i : Fin n) :
     drrTurn Q i =
       [sched|
@@ -121,7 +122,7 @@ example (Q : ℝ≥0) (i : Fin n) :
           if not empty(i) then skip else { DC[i] := 0 }
         }] := rfl
 
-/-- WRR per-flow turn (Algorithm 2, lines 3-7) in pseudocode syntax,
+/-- WRR per-flow turn (lines 3-7) in pseudocode syntax,
 writing the weight counter `k` as `cnt`. -/
 example (w : ℕ) (i : Fin n) :
     wrrTurn w i =
@@ -133,7 +134,7 @@ example (w : ℕ) (i : Fin n) :
           cnt++
         }] := rfl
 
-/-- One DRR round (Algorithm 1, the `for i = 1 to n` over flows) in
+/-- One DRR round (the `for i = 1 to n` over flows) in
 pseudocode syntax, with per-flow quanta `Q i`. -/
 example (Q : Fin n → ℝ≥0) :
     drrRound Q =
@@ -150,7 +151,7 @@ example (Q : Fin n → ℝ≥0) :
           }
         }] := rfl
 
-/-- One WRR round (Algorithm 2, the `for i = 1 to n` over flows) in
+/-- One WRR round (the `for i = 1 to n` over flows) in
 pseudocode syntax, with per-flow weights `w i`. -/
 example (w : Fin n → ℕ) :
     wrrRound w =

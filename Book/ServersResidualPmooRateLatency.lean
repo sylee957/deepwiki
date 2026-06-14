@@ -243,7 +243,7 @@ theorem pmooResidualChain_rateLatency (R T : ℕ → ℝ≥0) (n : ℕ)
   exact congrFun
     (rateLatency_sub_affine (chainRate R n) (chainLatency T n) rho b hstab) v
 
-/-! ## Book restatement (Example 10.1, all-crossing case)
+/-! ## Book restatement (all-crossing case)
 A tandem of `n + 1` rate-latency servers crossed by every flow folds
 to a single rate-latency server `β_{⨅ₕ Rₕ, ∑ₕ Tₕ}`, and the chain
 PMOO residual of the tagged flow is the clamped difference against

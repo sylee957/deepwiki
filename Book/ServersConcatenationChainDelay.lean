@@ -2,7 +2,7 @@ import Book.ServersResidualSfa
 import Book.DeviationsCompositionChain
 
 /-! # Delay through a server-concatenation chain (pay bursts only once)
-Bridges the two halves of the §10.4 tightness picture. The end-to-end
+Bridges the two halves of the pay-bursts-only-once tightness picture. The end-to-end
 service curve of a server chain (SFA/GFA's `concatConv`, an `EReal`
 convolution fold) read in the `ℝ≥0∞` delay world via `toENN` is exactly
 the unit-free convolution chain `minConvChain` of the per-server readings

@@ -456,8 +456,8 @@ theorem add_max_div_mul_le_of_isGps_ungated {ι : Type*} [Fintype ι] [Decidable
   rw [heq]; exact hgated
 
 /-- Relation form, ungated: with the pre-crossing ordering `hgate`, flow `i ≠ k` is offered the
-ungated maximum `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` — the book's Figure-7.8 display — as a strict service
-curve on the residual server. -/
+ungated maximum `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` — the book's displayed per-flow residual — as a strict
+service curve on the residual server. -/
 theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
     {ι : Type*} [Fintype ι] [DecidableEq ι]
     {S : (ι → Curve) → (ι → Curve) → Prop}
@@ -481,7 +481,7 @@ theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
     (fun j => hcaus As Ds hp j) (hgps As Ds hp)
     (hβ.sum_strict hp) harr hcross hgrow hik hst hbl hgate
 
-/-- **Theorem 7.8 / Figure 7.8, fully derived from convexity**: when the weighted gap
+/-- **The improved per-flow GPS residual, fully derived from convexity**: when the weighted gap
 `φ_k·β − Φ·α` is convex, nonpositive at the origin, and crosses zero at a positive `T`
 (`φ_k·β T = Φ·α T`), flow `i ≠ k` is offered the ungated `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` as a strict
 service curve — with NO ordering hypothesis. Convexity supplies both the post-crossing
@@ -580,8 +580,8 @@ theorem IsAggregateStrict.peel_two {ι : Type*} [DecidableEq ι]
   rwa [gatedResidual_gatedResidual hT] at hpeel₂
 
 /-! ## The `n`-flow fold: iterated peeling
-The book's Theorem 7.8 is proved by induction — peel the arrival-constrained flows one at a
-time, each peel gating the residual, until a single aggregate remains. `GpsPeelChain` records
+The improved per-flow GPS residual is proved by induction — peel the arrival-constrained flows
+one at a time, each peel gating the residual, until a single aggregate remains. `GpsPeelChain` records
 one such peel sequence (from `(J, β)` down to `(J', β')`, threading the running residual
 through each `peel`); `GpsPeelChain.isAggregateStrict` transports aggregate-strictness along
 it. Iterating from the full aggregate down to a single flow recovers the book's
@@ -607,7 +607,7 @@ inductive GpsPeelChain {ι : Type*} [DecidableEq ι] (φ : ι → ℝ≥0) (As :
       (rest : GpsPeelChain φ As (J.erase k) (gatedResidual β α T) J' β') :
       GpsPeelChain φ As J β J' β'
 
-/-- **The `n`-flow fold (Theorem 7.8's induction)**: aggregate-strictness transports along a
+/-- **The `n`-flow fold (the improved-residual induction)**: aggregate-strictness transports along a
 peel chain — if `β` is strict for the aggregate `J` and the chain peels flows down to `(J', β')`,
 then `β'` is strict for the remaining aggregate `J'`. Each step is one `IsAggregateStrict.peel`;
 the chain just iterates it. -/
@@ -634,7 +634,7 @@ theorem strictServiceRel_of_isAggregateStrict_singleton {ι : Type*} {As Ds : ι
   simp only [Finset.sum_singleton] at key
   exact key hbl
 
-/-- **Theorem 7.8 (the improved per-flow GPS residual)**: peel every other flow from the full
+/-- **The improved per-flow GPS residual**: peel every other flow from the full
 aggregate (strict for `β`) along a `GpsPeelChain` down to the single flow `k`; the residual `γ`
 left at the end is a strict service curve for flow `k`. With the linear peel order this `γ` is
 the book's `β̃ = (β − ∑_{j≠k} αⱼ)·1_{≥T}` (the nested gates collapse via
@@ -661,7 +661,7 @@ theorem strictServiceRel_div_mul_of_isAggregateStrict {ι : Type*} {φ : ι → 
   ⟨hc i, fun _ _ hst hbl =>
     add_div_mul_le_of_isGps (fun j _ => hc j) hgps h hi hst hbl⟩
 
-/-- **The general `n`-flow max-combination (Theorem 7.8, gated form)**: given finitely many peel
+/-- **The general `n`-flow max-combination (gated form)**: given finitely many peel
 levels — each a flow set `J l` aggregate-strict for a residual `γ l`, all containing flow `n` —
 flow `n` is served at the maximum over levels of its GPS shares,
 `⨆ₗ (φₙ / ∑_{J l} φ)·γ l`. Each level's share is strict (the sub-aggregate guarantee); their
@@ -677,7 +677,7 @@ theorem strictServiceRel_iSup_div_mul_of_isAggregateStrict {ι κ : Type*} [Fint
     (fun _ => Set.Finite.bddAbove (Set.finite_range _))).mpr
     (fun l => strictServiceRel_div_mul_of_isAggregateStrict hgps hc (h l) (hn l))
 
-/-- **The ungated max-combination from the gated one** (drops the gates from Theorem 7.8's
+/-- **The ungated max-combination from the gated one** (drops the gates from the improved-residual
 display): if the gated maximum `⨆ₗ γₗ` is a strict service curve, each ungated level `uₗ` agrees
 with `γₗ` past its gate `Tₗ` (`hactive`) and stays above it (`hγu`), and below its gate `uₗ` is
 dominated by an always-active base level `l₀` (`hdom`), then the *ungated* maximum `⨆ₗ uₗ` is
@@ -705,8 +705,8 @@ theorem strictServiceRel_iSup_ungated_of_gated {ι κ : Type*} [Fintype κ] [Non
 
 /-- The smallest multi-peel display: in a three-flow GPS server strict for `β`, peeling the two
 arrival-constrained flows `0` and `1` (gates `T₀ ≤ T₁`) leaves flow `2` the collapsed gated
-residual `(β − (α₀ + α₁))·1_{≥T₁}` as a strict service curve — the literal `β̃` of Theorem 7.8
-with the two gates merged. -/
+residual `(β − (α₀ + α₁))·1_{≥T₁}` as a strict service curve — the literal `β̃` of the improved
+per-flow residual with the two gates merged. -/
 example {φ : Fin 3 → ℝ≥0} {As Ds : Fin 3 → Curve} {β α₀ α₁ : ℝ≥0 → ℝ≥0} {T₀ T₁ : ℝ≥0}
     (hT : T₀ ≤ T₁)
     (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
@@ -727,7 +727,7 @@ example {φ : Fin 3 → ℝ≥0} {As Ds : Fin 3 → Curve} {β α₀ α₁ : ℝ
   rw [show (Finset.univ.erase (0 : Fin 3)).erase 1 = {2} from by decide] at hpeel
   exact strictServiceRel_of_isAggregateStrict_singleton (hc 2) hpeel
 
-/-- **The full Theorem 7.8 max-combination, three flows**: flow `2`'s strict service curve is
+/-- **The full max-combination, three flows**: flow `2`'s strict service curve is
 the *maximum* over peel levels of its GPS share —
 `φ₂·max(β/Φ₁, (β−α₀)·1_{≥T₀}/Φ₂, (β−(α₀+α₁))·1_{≥T₁}/Φ₃)` with `Φ₁ = ∑φ`, `Φ₂ = ∑_{j≠0}φ`,
 `Φ₃ = ∑_{j∉{0,1}}φ` — better than any single level. Each level's share is strict by the

@@ -1,13 +1,13 @@
 import Book.ServersResidualGfa
 import Book.ServersResidualPriority
 
-/-! # Static-priority PMOO (Algorithm 3)
+/-! # Static-priority PMOO
 For static-priority multiplexing, flow `i`'s residual at a server is the
 priority residual `[β^(h) − ∑_{j<i} α_j^(h)]⁺` — only the higher-priority
 flows `j < i` preempt it (`isStrictMinimalServiceCurve_residualServer_of_isStaticPriority`).
 Concatenating these per-server residuals along flow `i`'s path gives the
 end-to-end service curve `β̃_i = ∗_{h∈p_i} [β^(h) − ∑_{j<i} α_j^(h)]⁺`
-(`IsMinimalServiceCurve.concatComp`). The book's full Algorithm 3 sharpens
+(`IsMinimalServiceCurve.concatComp`). The full SP-PMOO algorithm sharpens
 this on *nested* tandems by paying the multiplexing only once — the
 recursion `β̃_i = (∗_{h∈N(i)} β^(h)) ∗ (∗_{j∈PF(i)} [β̃_j − α_j]⁺)` over the
 nesting order — whose correctness is proof-external in the book [BOU 09];
@@ -52,7 +52,7 @@ offering a left-continuous strict service curve `β^(h)` with the
 higher-priority flows `j < i` arrival-constrained by `α_j^(h)`, is offered
 the end-to-end min-plus service curve `β̃_i = ∗_{h∈p_i} [β^(h) − ∑_{j<i}
 α_j^(h)]⁺` — the convolution of the per-server priority residuals.
-(Algorithm 3's nested-tandem sharpening, paying the multiplexing only
+(The SP-PMOO nested-tandem sharpening, paying the multiplexing only
 once, is correctness-external [BOU 09].) -/
 example {ι κ : Type*} [Fintype ι] [LinearOrder ι]
     {S : κ → (ι → Curve) → (ι → Curve) → Prop} {β : κ → ℝ≥0 → ℝ≥0}

@@ -132,7 +132,7 @@ theorem mem_strictServiceRelEReal_delay_iff {T : ℝ≥0} {A D : Curve} :
     rw [delay_eq_zero T (hb s t hst hbl), add_zero]
     exact monotone_curveEReal D hst
 
-/-- **The Prop 6.2 reduction step**: a finite strict curve `β` vanishing on
+/-- **The delay-domination reduction step**: a finite strict curve `β` vanishing on
 `[0, T]` is dominated by `δ_T`, so every `δ_T`-strict pair is `β`-strict —
 `S_strict(δ_T) ⊆ S_strict(β)`. (A monotone `β` with `β T = 0` vanishes on
 `[0, T]`.) -/
@@ -158,7 +158,7 @@ below-diagonal set `{τ | h τ < τ}` has every backlogged window of length `≤
 `(X, D) ∈ S_strict(δ_d)`. The backlog of `(X, X ∘ h)` is contained in
 `{τ | h τ < τ}` for any monotone `X` (since `X (h τ) < X τ` forces `h τ < τ`), so
 strictness reduces to a property of the warp alone — independent of `X`. This is
-the per-server step of Lemma 9.5's reverse dilution: each tandem stage warps its
+the per-server step of the reverse dilution: each tandem stage warps its
 input by a staggered catch-up `h`, and the closure's pure delay `δ_d` is met
 because the warp catches up to the identity within `d`. -/
 theorem strictServiceRelEReal_delay_of_comp_warp {X D : Curve} {h : ℝ≥0 → ℝ≥0}
@@ -196,7 +196,7 @@ theorem catch_window_le {h : ℝ≥0 → ℝ≥0} {d : ℝ≥0}
 /-- **Per-stage strictness via a catch-up warp**: combining the warp core with
 catch-up density — if `D τ = X (h τ)` for `h ≤ id` with a catch-up `h p = p` in
 every window `(x, x + d]`, then `(X, D) ∈ S_strict(δ_d)`. This is the clean
-per-server hypothesis for Lemma 9.5's reverse dilution: each tandem stage is a
+per-server hypothesis for the reverse dilution: each tandem stage is a
 continuous warp `h` of its input that catches up to the identity within `d`. -/
 theorem strictServiceRelEReal_delay_of_comp_catchUp {X D : Curve} {h : ℝ≥0 → ℝ≥0}
     {d : ℝ≥0} (hcomp : ∀ τ, D τ = X (h τ)) (hh_le : ∀ τ, h τ ≤ τ)

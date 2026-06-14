@@ -1,13 +1,13 @@
 import Book.Servers
 
-/-! # The closure of a system (§9.3)
-The book's §9.3 introduces the *closure* `S̄` of a system `S` — the pairs reachable
+/-! # The closure of a system
+The book introduces the *closure* `S̄` of a system `S` — the pairs reachable
 as left limits of pairs in `S` — to discuss the (non-)existence of an intermediate
 type of service curve. A pair `(A, D')` is in `S̄` when it is causal and, for every
 `ε > 0`, some `(A, D) ∈ S` (same input `A`) approximates `D'` from below up to the
 `ε`-shift: `D(· − ε) ≤ D'`. This file defines the operator and its basic
 properties (containment of `S`, monotonicity); the dilution `⋃ₙ (S_strict(δ_{T/n}))ⁿ`
-closure `= S_mp(δ_T)` (Lemma 9.5) and Theorem 9.7 build on it. -/
+closure `= S_mp(δ_T)` and the intermediate-service-curve result build on it. -/
 
 namespace DeepWiki
 

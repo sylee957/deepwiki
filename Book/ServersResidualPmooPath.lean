@@ -145,8 +145,8 @@ theorem sum_Ico_width_telescope {s : ℕ → ℝ≥0} (hs : Monotone s) :
 The hop-indexed cascade `pathNode`: descending from the top `sₙ₊₁ = t`,
 each node is the backlogged-period start of its hop's flow-set aggregate,
 `sₕ = start_{Fl h}(sₕ₊₁)`. The widths `uₕ = sₕ₊₁ − sₕ` are the witness
-split. The per-hop strict step `pathNode_strict_step` is the book's
-inequality [10.2] read at the cascade: the flow-set aggregate input at
+split. The per-hop strict step `pathNode_strict_step` is the windowed
+strict service inequality read at the cascade: the flow-set aggregate input at
 `sₕ` plus `β⁽ʰ⁾(uₕ)` is dominated by the output at `sₕ₊₁`. -/
 
 /-- The hop-indexed cascade node: `sₕ = start_{S h}(sₕ₊₁)` for `h ≤ n`,
@@ -228,7 +228,7 @@ theorem pathNode_strict_step {ι : Type*} [Fintype ι] {F : ℕ → ι → Curve
   rw [heq] at hstr
   exact hstr
 
-/-! ## The flow-set telescope (book Lemma 10.1)
+/-! ## The flow-set telescope
 Summing the per-hop steps and reorganizing the double sum
 `∑ₕ ∑_{j∈Fl h}` into `∑ⱼ ∑_{h∈pᵢ}` (each flow over its own contiguous
 path), every flow telescopes over its window: the service `∑ₕ β⁽ʰ⁾(uₕ)`
@@ -303,7 +303,7 @@ theorem sum_add_pathTelescope_le {ι : Type*} [Fintype ι] {F : ℕ → ι → C
       _ = P + ∑ j, (F (lst j + 1) j) (node (lst j + 1)) := telsum
   exact le_of_add_le_add_left key
 
-/-! ## Assembly: the general per-path PMOO service curve (book Theorem 10.1)
+/-! ## Assembly: the general per-path PMOO service curve
 The telescope bounds the tagged flow's service by the cascaded
 `∑ₕ β⁽ʰ⁾(uₕ)` less each cross-flow's arrival over its own sub-path; the
 operator is the infimum over splits, reached at the cascade widths. -/
@@ -454,7 +454,7 @@ theorem minConv_pmooPathResidual_le_of_strict_path {ι : Type*} [Fintype ι] [De
   refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hnode0t)) ?_
   exact_mod_cast hkey
 
-/-- **Theorem 10.1, relation/server form**: a tandem of `n+1` per-hop servers `Srv h`, each
+/-- **Per-path PMOO residual, relation/server form**: a tandem of `n+1` per-hop servers `Srv h`, each
 offering a strict service curve `β h` on its *present-flow* `Fl(h)`-aggregate (the flows `j` with
 `fst j ≤ h ≤ lst j`), with each cross-flow `j ≠ tg` constrained by `αⱼ` at its entry input
 `G_{fst j}`: the residual server of the tagged flow (which crosses every hop) offers the per-path
@@ -495,7 +495,7 @@ theorem isMinimalServiceCurve_pmooPathResidual_of_strict_path {ι : Type*} [Fint
   exact (Deviation.minConv_toENN_le_coe_iff (G 0 tg) (isNonneg_liftEReal _)
     ((G (n + 1) tg) t) t).mp h
 
-/-! ## Book restatement (Theorem 10.1, per-path PMOO)
+/-! ## Book restatement (per-path PMOO)
 A tandem of `n + 1` servers each offering a strict service curve `β⁽ʰ⁾`,
 under blind multiplexing, where the tagged flow crosses every server and
 each cross-flow `j` is `αⱼ`-constrained over the contiguous sub-path

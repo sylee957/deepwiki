@@ -341,7 +341,7 @@ weights `wⱼ` and flow-`j` packets bounded by the packet curves
 `f⁻¹ ∘ β` — the book's most precise form. Here `f` prices a served
 amount `x` as `x` plus the worst admissible per-round charge
 `⨆_{p : Lᵢˡ(p·wᵢ) ≤ x} ∑_{j≠i} Lⱼᵘ((p+1)·wⱼ)`; for non-decreasing
-`Lᵢˡ` and `Lⱼᵘ` (Definition 8.4's standing assumption), positive
+`Lᵢˡ` and `Lⱼᵘ` (the packet curves' standing assumption), positive
 `wᵢ`, and finite `g(x)`, the supremum is attained at the largest
 admissible round count `⌊g(x)/wᵢ⌋` with `g` the upper pseudo-inverse
 of `Lᵢˡ`, recovering the book's spelling

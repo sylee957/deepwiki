@@ -1,7 +1,7 @@
 import Book.ServersResidualSfa
 import Book.ServiceCurveStrictMinimal
 
-/-! # Group-flow analysis (Algorithm 7)
+/-! # Group-flow analysis (GFA)
 GFA generalizes separated-flow analysis (`Book.ServersResidualSfa`) by
 grouping the cross-traffic: at each server `h` on flow `i`'s path it
 subtracts not the flat per-flow sum `∑_{j≠i} α_j` but a *grouped*

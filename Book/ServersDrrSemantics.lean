@@ -1,7 +1,7 @@
 import Book.SchedulerSemantics
 
 /-! # DRR as an imperative program, and its soundness
-Algorithm 1 (DRR) written in the operational-semantics framework: the
+DRR written in the operational-semantics framework: the
 inner drain loop `drrInner` (lines 7-10), the per-flow turn `drrTurn`
 (lines 5-12), and one round `drrRound` (the `for i = 1 to n` pass). The
 soundness theorems pin the big-step execution of these programs to the
@@ -299,7 +299,7 @@ theorem bigStep_drrRound (Q : Fin n → ℝ≥0) {σ σ' : SchedState n}
         by rw [fq, hmq, Function.update_of_ne hkne]⟩
 
 /-! ## Book restatement (DRR as an imperative program)
-Running Algorithm 1's per-flow turn `drrTurn Q i` updates flow `i`'s
+Running DRR's per-flow turn `drrTurn Q i` updates flow `i`'s
 deficit counter and queue exactly as the functional model `drrServe`
 (`bigStep_drrTurn`); one round `drrRound` does so for every flow
 (`bigStep_drrRound`). `drrServe` is the per-step building block of the

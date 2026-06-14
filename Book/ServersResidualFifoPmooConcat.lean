@@ -1,15 +1,15 @@
 import Book.ServersResidualFifoPmoo
 import Book.ServersConcatenationChain
 
-/-! # FIFO-PMOO over a tandem (Proposition 10.1, Algorithm 4)
-The book derives the FIFO-PMOO residual from FIFO single-server residual
-(Theorem 7.5) and concatenation (Theorem 6.1): a flow crossing a tandem
+/-! # FIFO-PMOO over a tandem
+The FIFO-PMOO residual is derived from the FIFO single-server residual
+and concatenation: a flow crossing a tandem
 of FIFO servers, constrained by `α`, leaves the other flows the residual
 `[∗ₕ β^(h) − α ∗ δ_θ]⁺ ∧ δ_θ`. This wires the `n`-server concatenation
 (`IsMinimalServiceCurve.concatComp`, the aggregate input/output flowing
 through the server chain offers `∗ₕ β^(h)`) into the FIFO-group residual
-(`minConv_fifoResidual_le_of_isFifo_group`), realizing the FIFO-multiplexing
-step of Algorithm 4 with the aggregate service curve `β = ∗ₕ β^(h)` made
+(`minConv_fifoResidual_le_of_isFifo_group`), realizing the FIFO-PMOO
+multiplexing step with the aggregate service curve `β = ∗ₕ β^(h)` made
 explicit rather than supplied separately. -/
 
 namespace DeepWiki
@@ -17,7 +17,7 @@ namespace DeepWiki
 open scoped Classical NNReal ENNReal
 open Finset
 
-/-- **FIFO-PMOO residual over a tandem** (Proposition 10.1): the flows
+/-- **FIFO-PMOO residual over a tandem**: the flows
 of a FIFO tandem cross servers offering min-plus service curves `βE h`,
 the aggregate traffic flowing through the server chain `concatComp Sserv
 path`. With the tagged flow `k` constrained by `α`, the `m − 1` other
@@ -48,7 +48,7 @@ theorem minConv_fifoResidual_concatConv_le {ι κ : Type*} [Fintype ι]
     rwa [Curve.coe_sum, Curve.sum_apply] at h
   exact minConv_fifoResidual_le_of_isFifo_group hfifo hβmono hβlc hserv harr θ t
 
-/-! ## Book restatement (FIFO-PMOO, Proposition 10.1)
+/-! ## Book restatement (FIFO-PMOO residual)
 A sequence of FIFO servers offering min-plus service curves `β^(h)`,
 crossed by `m` flows with the tagged flow `k` constrained by the arrival
 curve `α`: the aggregate traffic flowing through the concatenation

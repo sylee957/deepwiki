@@ -1,11 +1,11 @@
 import Book.CurveENN
 import Book.ClosuresNdRegularity
 
-/-! # Refined min-plus monotony with extended arrivals (Thm 9.3 item 3)
+/-! # Refined min-plus monotony with extended arrivals
 The book's monotony refinement distinguishes a service curve `β` from its non-decreasing
 closure `β↑`: the min-plus inclusion `S_mp(β) ⊇ S_mp(β')` forces only the *closures* to be
-ordered, `β↑ ≤ β'↑` (item 3). Its converse fails (item 4, `ServiceCurveMonotony`), and the
-inclusion does not force the raw `β ≤ β'` (item 2). The proof rides the instantaneous
+ordered, `β↑ ≤ β'↑`. Its converse fails (`ServiceCurveMonotony`), and the
+inclusion does not force the raw `β ≤ β'`. The proof rides the instantaneous
 infinite burst `δ_0` as the probing arrival: `(δ_0, β'↑) ∈ S_mp(β')`, carried by the
 inclusion into `S_mp(β)`, yields `β ≤ β'↑` and hence `β↑ ≤ β'↑`. The departure `β'↑` is the
 running-sup closure of `β'`, a genuine `CurveENN` exactly because `ndClosure` preserves the
@@ -53,12 +53,12 @@ theorem minimalServiceRelExt_delay0_ndClosureCurveENN {β : ℝ≥0 → ℝ≥0�
     rw [curveENNEReal_apply, ndClosureCurveENN_apply]
     exact EReal.coe_ennreal_le_coe_ennreal_iff.mpr (le_ndClosure_apply β le_rfl)
 
-/-- **Thm 9.3 item 3 (refined min-plus monotony, with extended arrivals)**: if every extended
+/-- **Refined min-plus monotony, with extended arrivals**: if every extended
 pair min-plus served by `β'` is also served by `β`, then the non-decreasing closures are
 ordered, `β↑ ≤ β'↑`. Probing the `β'`-server with the infinite burst `δ_0` recovers `β'↑` as
 the departure; the inclusion then forces `β ≤ β'↑`, and `β↑` is the least monotone majorant.
-Only the closures are forced — the raw converse (`β ≤ β'`) and the converse implication fail
-(items 2, 4). `β'` ranges over regular curves (the book's `ℱ`); `β` is arbitrary. -/
+Only the closures are forced — the raw converse (`β ≤ β'`) and the converse implication fail.
+`β'` ranges over regular curves (the book's `ℱ`); `β` is arbitrary. -/
 theorem ndClosure_le_of_minimalServiceRelExt_le {β β' : ℝ≥0 → ℝ≥0∞}
     (hpwc : IsPiecewiseContinuous β') (hlc : IsLeftContinuous β') (h0 : IsNullAtOrigin β')
     (h : minimalServiceRelExt (fun t => (β' t : EReal))
@@ -73,17 +73,17 @@ theorem ndClosure_le_of_minimalServiceRelExt_le {β β' : ℝ≥0 → ℝ≥0∞
   rw [curveENNEReal_apply, ndClosureCurveENN_apply] at ht
   exact EReal.coe_ennreal_le_coe_ennreal_iff.mp ht
 
-/-! ## Thm 9.3 item 2: the inclusion `S_mp(β) ⊇ S_mp(β')` does not force `β ≤ β'`
+/-! ## The inclusion `S_mp(β) ⊇ S_mp(β')` does not force `β ≤ β'`
 The book's witness, over extended arrivals: `β'` is `0` at `0` and on `(1,2]`, `+∞` elsewhere;
 `β` is `0` on `[0,1] ∪ (2,∞)`, `+∞` on `(1,2]`. Every extended pair served by `β'` is served
 by `β` (`S_mp(β') ⊆ S_mp(β)`), yet `β ≰ β'` (at any `t ∈ (1,2]`, `β t = +∞ > 0 = β' t`). The
-closures are ordered, `β↑ ≤ β'↑` (consistent with item 3), but the raw curves are not — the
-inclusion sits strictly between `β ≤ β'` and `β↑ ≤ β'↑`. -/
+closures are ordered, `β↑ ≤ β'↑` (consistent with the refined monotony), but the raw curves are
+not — the inclusion sits strictly between `β ≤ β'` and `β↑ ≤ β'↑`. -/
 
-/-- Item-2 witness `β`: `0` on `[0,1] ∪ (2,∞)`, `+∞` on `(1,2]`. -/
+/-- Witness `β` for the non-domination of raw curves: `0` on `[0,1] ∪ (2,∞)`, `+∞` on `(1,2]`. -/
 noncomputable def mono2Cexβ : ℝ≥0 → EReal := fun t => if t ≤ 1 ∨ 2 < t then 0 else ⊤
 
-/-- Item-2 witness `β'`: `0` at `0` and on `(1,2]`, `+∞` on `(0,1] ∪ (2,∞)`. -/
+/-- Witness `β'` for the non-domination of raw curves: `0` at `0` and on `(1,2]`, `+∞` on `(0,1] ∪ (2,∞)`. -/
 noncomputable def mono2Cexβ' : ℝ≥0 → EReal :=
   fun t => if t = 0 ∨ (1 < t ∧ t ≤ 2) then 0 else ⊤
 
@@ -102,7 +102,7 @@ theorem mono2Cexβ'_zero_of {t : ℝ≥0} (h : t = 0 ∨ (1 < t ∧ t ≤ 2)) : 
 theorem mono2Cexβ'_top_of {t : ℝ≥0} (h0 : t ≠ 0) (h : ¬ (1 < t ∧ t ≤ 2)) :
     mono2Cexβ' t = ⊤ := if_neg (not_or.mpr ⟨h0, h⟩)
 
-/-- **`S_mp(β') ⊆ S_mp(β)` for the item-2 witness.** For `t ∉ (1,2]` the split at the origin
+/-- **`S_mp(β') ⊆ S_mp(β)` for the non-domination witness.** For `t ∉ (1,2]` the split at the origin
 gives `(A ∗ β) t ≤ A 0 + β t = 0`. For `t ∈ (1,2]`, `(A ∗ β) t ≤ A(t−1)`, and the departure
 absorbs it: `A(t−1) ≤ (A ∗ β')(t−1) ≤ D(t−1) ≤ D t` — the first step because every split of
 `t−1 ≤ 1` either puts the mass at `0` (giving `A(t−1)`) or hits `β'`'s `+∞` band. -/
@@ -149,8 +149,8 @@ theorem minimalServiceRelExt_mono2Cex_le :
       rw [hA0, mono2Cexβ_zero_of (Or.inr ht2), zero_add, curveENNEReal_apply]
       exact EReal.coe_ennreal_nonneg _
 
-/-- **Thm 9.3 item 2 (`S_mp(β) ⊇ S_mp(β') ⇏ β ≤ β'`)**: the min-plus inclusion does not force
-pointwise domination of the raw service curves — only of their closures (item 3). The witness
+/-- **`S_mp(β) ⊇ S_mp(β') ⇏ β ≤ β'`**: the min-plus inclusion does not force
+pointwise domination of the raw service curves — only of their closures. The witness
 `(mono2Cexβ, mono2Cexβ')` satisfies the inclusion yet `β 2 = +∞ > 0 = β' 2`. -/
 theorem not_forall_minimalServiceRelExt_le_imp_le :
     ¬ ∀ β β' : ℝ≥0 → EReal, minimalServiceRelExt β' ≤ minimalServiceRelExt β → β ≤ β' := by

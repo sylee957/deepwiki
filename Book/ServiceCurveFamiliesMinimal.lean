@@ -3,7 +3,7 @@ import Book.ServiceCurveMonotony
 import Book.ArrivalCurvesShaperGreedy
 import Mathlib.Topology.Order.Lattice
 
-/-! # Min-plus families: the forcing direction (Thm 9.4 item 1, ⟹)
+/-! # Min-plus families: the forcing direction (finite-family criterion, item 1, ⟹)
 The forward half of the finite-family min-plus criterion: if a finite family `(βᵢ)` and `(β'ⱼ)`
 induce the same trajectory intersection, their downward closures agree. The engine is a
 *forcing lemma*: `⋂ᵢ S_mp(βᵢ) ⊆ S_mp(β') ⟹ ∃i, β' ≤ βᵢ`. Its witness is the **step-staircase
@@ -154,7 +154,7 @@ theorem minConv_forcingArr_lt (β' β : Curve) (v : ι → ℝ≥0) (T : ℝ≥0
   rw [← EReal.coe_add]
   exact_mod_cast key
 
-/-! ## Departure component is piecewise-continuous (Thm 9.4 item 1 ⟹, piece 2b)
+/-! ## Departure component is piecewise-continuous (finite-family criterion, item 1 ⟹, piece 2b)
 The convolution `A ∗ βᵢ` of the staircase arrival with a curve is piecewise-continuous — so it
 bundles as a `Curve` via `greedyCurve`. Route: `A = ⨅ⱼ forcingStepⱼ`, conv distributes over the
 inf (`minConv_finset_inf'`), each single-step conv is `min (lo + βᵢ(·−c)) hi` (pwc), the finite
@@ -320,13 +320,13 @@ theorem isPiecewiseContinuous_greedyFun_forcingArr
       (ne_bot_of_nonneg hpos)
   exact ((continuous_real_toNNReal.continuousAt).comp htr).comp hcon
 
-/-! ## The forcing lemma and the full criterion (Thm 9.4 item 1, ⟹ and the iff)
+/-! ## The forcing lemma and the full criterion (finite-family criterion, item 1, ⟹ and the iff)
 The witness `(forcingArr bp v T, ⨆ᵢ greedyCurve …)` sits in `⋂ᵢ S_mp(βᵢ)` but escapes
 `S_mp(β')` (the convolution exceeds the departure at `T`), forcing some `β' ≤ βᵢ`. Combined
 with the `⟸` half (`ServiceCurveFamilies`), this gives the full criterion: a finite min-plus
 family's trajectory intersection is determined exactly by the downward closure of the family. -/
 
-/-- **The forcing lemma (Thm 9.4 item 1, forward engine).** If a finite nonempty family
+/-- **The forcing lemma (finite-family criterion, item 1, forward engine).** If a finite nonempty family
 `(bᵢ)` induces a min-plus trajectory intersection contained in `S_mp(bp)`, then `bp` lies
 below one of the `bᵢ`. The witness is the staircase arrival `forcingArr bp v T` with its
 finite-sup greedy departure. -/
@@ -408,7 +408,7 @@ theorem exists_le_of_iInter_minimalServiceRel_le {ix : Type*} [Fintype ix] [None
     exact absurd (lt_of_lt_of_le hDT hge) (not_lt.mpr (h2 T))
   exact hbad (h A D hmem)
 
-/-- **Thm 9.4 item 1 (the full iff).** Two finite nonempty min-plus families `(bᵢ)` and
+/-- **The finite-family criterion, item 1 (the full iff).** Two finite nonempty min-plus families `(bᵢ)` and
 `(bp'ⱼ)` induce the same trajectory intersection iff they mutually dominate (each curve of
 one family lies below some curve of the other). -/
 theorem minimalServiceRel_iInter_eq_iff_mutually_dominated
@@ -436,7 +436,7 @@ theorem minimalServiceRel_iInter_eq_iff_mutually_dominated
         fun i => (h2 i).imp fun j hij => curveEReal_mono hij⟩
     exact minimalServiceRel_iInter_eq_of_mutually_dominated hmd.1 hmd.2
 
-/-- **Thm 9.4 item 1, downward-closure form.** Two finite nonempty min-plus families induce
+/-- **The finite-family criterion, item 1, downward-closure form.** Two finite nonempty min-plus families induce
 the same trajectory intersection iff their downward closures (as sets of `EReal` functions)
 agree. -/
 theorem minimalServiceRel_iInter_eq_iff_setOf_le_eq

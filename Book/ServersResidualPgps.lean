@@ -488,7 +488,7 @@ theorem not_forall_minConv_pgpsResidual_le_of_closeness :
   have hcontra := le_trans half_le_minConv_pgpsResidual_pgpsWitnessFlow hW
   exact absurd hcontra (by norm_num)
 
-/-! ## Book restatement (PGPS residual service, Theorem 8.4)
+/-! ## Book restatement (PGPS residual service)
 An `n`-server under PGPS at line rate `R` whose GPS reference offers
 flow `i` the strict service curve `βᵢᴳᴾˢ`, with packets of length at
 most `ℓᵘ`: flow `i` is guaranteed `[βᵢᴳᴾˢ − ℓᵘ]⁺` min-plus. **Book

@@ -1,7 +1,7 @@
 import Book.ServersConcatenationChain
 import Book.ServersResidual
 
-/-! # Separated-flow analysis (Algorithm 6)
+/-! # Separated-flow analysis (SFA)
 SFA computes an end-to-end min-plus service curve for one flow `i`
 crossing a path of servers. At each server `h` on the path it isolates a
 residual service curve `β_i^(h) = [β^(h) − ∑_{j≠i} α_j^(h)]⁺` by blind
@@ -9,8 +9,8 @@ multiplexing (`isMinimalServiceCurve_residualServer`), where `α_j^(h)` is
 flow `j`'s arrival curve at `h`; the flow then crosses the chain of these
 residual servers, so by the `n`-server concatenation
 (`IsMinimalServiceCurve.concatComp`) it is offered the convolution
-`β̃_i = ∗_{h∈p_i} β_i^(h)`. This is the global service curve of Algorithm
-6's line 9, assembled from the per-server residuals of lines 6-7. -/
+`β̃_i = ∗_{h∈p_i} β_i^(h)`. This is the global service curve of the SFA
+pseudocode's line 9, assembled from the per-server residuals of lines 6-7. -/
 
 namespace DeepWiki
 

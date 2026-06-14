@@ -549,16 +549,16 @@ example (R₁ R₂ : ℝ≥0) :
       = strictServiceRel (rate (R₁ ⊓ R₂)) :=
   comp_strictServiceRel_rate_eq R₁ R₂
 
-/-! ## Delay tandems dilute to min-plus (§9.3, towards Lemma 9.5)
+/-! ## Delay tandems dilute to min-plus
 An `n`-tandem of strict pure-delay servers is min-plus served by the delay of the
-sum: `(S_strict(δ_d))ⁿ ⊆ S_mp(δ_{n·d})`. This is Lemma 9.5's `⊆` direction
-without the closure (with `d = T/n` it gives `(S_strict(δ_{T/n}))ⁿ ⊆ S_mp(δ_T)`,
-since `δ_{T/n}∗ⁿ = δ_T`): each strict server is min-plus
-(`strictServiceRelEReal_le_minimalServiceRel`), the min-plus concatenation
-convolves the curves (`comp_minimalServiceRel_le`), and pure delays add
-(`conv_delayEReal_delayEReal`). Note each tandem is *not* a strict server
-(Prop 6.2 above) — it only achieves the min-plus delay, which is exactly the
-dilution Lemma 9.5 turns into a limit. -/
+sum: `(S_strict(δ_d))ⁿ ⊆ S_mp(δ_{n·d})`. This is the `⊆` direction of the delay
+dilution without the closure (with `d = T/n` it gives
+`(S_strict(δ_{T/n}))ⁿ ⊆ S_mp(δ_T)`, since `δ_{T/n}∗ⁿ = δ_T`): each strict server
+is min-plus (`strictServiceRelEReal_le_minimalServiceRel`), the min-plus
+concatenation convolves the curves (`comp_minimalServiceRel_le`), and pure delays
+add (`conv_delayEReal_delayEReal`). Note each tandem is *not* a strict server (by
+the impossibility above) — it only achieves the min-plus delay, which is exactly
+the dilution the closure turns into a limit. -/
 
 /-- **Two strict delay servers in tandem** are min-plus served by the delay of
 the sum: `S_strict(δ_a) ∘ S_strict(δ_b) ⊆ S_mp(δ_{a+b})`. -/
@@ -601,7 +601,7 @@ theorem compPow_strictServiceRelEReal_delay_le (d : ℝ≥0) (n : ℕ) :
       (isNonneg_delayEReal d).isBddBelowReal A C hcomp
     rwa [conv_delayEReal_delayEReal (n • d) d] at hcat
 
-/-- **Lemma 9.5, `⊆` (per-`n`, before the closure)**: `n` strict `δ_{T/n}`
+/-- **Delay dilution, `⊆` (per-`n`, before the closure)**: `n` strict `δ_{T/n}`
 servers in tandem are min-plus served by `δ_T` (for `n ≥ 1`, where
 `n · (T/n) = T`). The closure and the reverse dilution remain. -/
 theorem compPow_strictServiceRelEReal_delayDiv_le (T : ℝ≥0) {n : ℕ} (hn : 0 < n) :
@@ -613,7 +613,7 @@ theorem compPow_strictServiceRelEReal_delayDiv_le (T : ℝ≥0) {n : ℕ} (hn : 
   rw [show delayEReal T = delayEReal (n • (T / n)) from by rw [hTn]]
   exact compPow_strictServiceRelEReal_delay_le (T / n) n
 
-/-- **`S_mp(δ_T)` is closed** under the §9.3 closure: `S̄(S_mp(δ_T)) ⊆ S_mp(δ_T)`.
+/-- **`S_mp(δ_T)` is closed** under the system closure: `S̄(S_mp(δ_T)) ⊆ S_mp(δ_T)`.
 The closure's `ε`-approximation gives `(A∗δ_T)((t−T)−ε) ≤ D' t` for every `ε > 0`
 (through some `D ∈ S_mp(δ_T)` with `D(·−ε) ≤ D'`); as `A∗δ_T = A(·−T)` is
 left-continuous, the left limit yields `(A∗δ_T) t ≤ D' t`. -/
@@ -636,10 +636,10 @@ theorem systemClosure_minimalServiceRel_delay_le (T : ℝ≥0) :
   simp only [curveEReal_apply]
   exact_mod_cast key
 
-/-- **Lemma 9.5, `⊆` direction** (per `n`): the §9.3 closure of the `n`-tandem of
-strict `δ_{T/n}` servers is min-plus served by `δ_T`,
+/-- **Delay dilution, `⊆` direction** (per `n`): the system closure of the
+`n`-tandem of strict `δ_{T/n}` servers is min-plus served by `δ_T`,
 `(S_strict(δ_{T/n}))ⁿ-bar ⊆ S_mp(δ_T)` (`n ≥ 1`). Hence `⋃ₙ` of these closures is
-contained in `S_mp(δ_T)`. The reverse dilution (Fig 9.4) is the remaining half. -/
+contained in `S_mp(δ_T)`. The reverse burst-train dilution is the remaining half. -/
 theorem systemClosure_compPow_strictServiceRelEReal_delayDiv_le
     (T : ℝ≥0) {n : ℕ} (hn : 0 < n) :
     systemClosure (compPow (strictServiceRelEReal (delayEReal (T / n))) n)
@@ -647,10 +647,10 @@ theorem systemClosure_compPow_strictServiceRelEReal_delayDiv_le
   le_trans (systemClosure_mono (compPow_strictServiceRelEReal_delayDiv_le T hn))
     (systemClosure_minimalServiceRel_delay_le T)
 
-/-- **Lemma 9.5, `⊆` direction (union form)**: any pair in
+/-- **Delay dilution, `⊆` direction (union form)**: any pair in
 `⋃ₙ S̄((S_strict(δ_{T/n}))ⁿ)` (some closed positive tandem of strict-`δ_{T/n}`
-servers) is min-plus served by `δ_T`. The reverse inclusion (Lemma 9.5's
-equality, via the Figure 9.4 burst-train dilution as `n → ∞`) is the remaining
+servers) is min-plus served by `δ_T`. The reverse inclusion (completing the
+dilution equality, via the burst-train dilution as `n → ∞`) is the remaining
 half. -/
 theorem mem_minimalServiceRel_delay_of_exists_systemClosure (T : ℝ≥0) {A D : Curve}
     (h : ∃ n : ℕ, 0 < n ∧
@@ -661,7 +661,7 @@ theorem mem_minimalServiceRel_delay_of_exists_systemClosure (T : ℝ≥0) {A D :
 
 /-- The relation `⋃ₙ (S_strict(δ_{T/n}))ⁿ` (over `n ≥ 1`): a pair is related when
 some positive-length tandem of strict `δ_{T/n}` servers produces it. This is the
-system whose §9.3 closure Lemma 9.5 identifies with `S_mp(δ_T)`. -/
+system whose system closure the delay dilution identifies with `S_mp(δ_T)`. -/
 def delayTandemUnion (T : ℝ≥0) : Curve → Curve → Prop :=
   fun A D => ∃ n : ℕ, 0 < n ∧
     compPow (strictServiceRelEReal (delayEReal (T / n))) n A D
@@ -681,12 +681,12 @@ theorem delayTandemUnion_le_minimalServiceRel_delay (T : ℝ≥0) :
   rintro A D ⟨n, hn, hmem⟩
   exact compPow_strictServiceRelEReal_delayDiv_le T hn A D hmem
 
-/-- **Lemma 9.5, `⊆` direction (book form, union inside the closure)**: the §9.3
-closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` is min-plus served by `δ_T`,
+/-- **Delay dilution, `⊆` direction (book form, union inside the closure)**: the
+system closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` is min-plus served by `δ_T`,
 `S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) ⊆ S_mp(δ_T)`. This is the genuine left-hand side of
-Lemma 9.5 (stronger than `⋃ₙ S̄((S_strict(δ_{T/n}))ⁿ)`, which it contains via
-`systemClosure_mono`). The reverse inclusion (the Figure 9.4 burst-train dilution
-as `n → ∞`) completes the equality. -/
+the dilution (stronger than `⋃ₙ S̄((S_strict(δ_{T/n}))ⁿ)`, which it contains via
+`systemClosure_mono`). The reverse inclusion (the burst-train dilution as
+`n → ∞`) completes the equality. -/
 theorem systemClosure_delayTandemUnion_le (T : ℝ≥0) :
     systemClosure (delayTandemUnion T) ≤ minimalServiceRel (delayEReal T) :=
   le_trans (systemClosure_mono (delayTandemUnion_le_minimalServiceRel_delay T))

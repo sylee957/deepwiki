@@ -5,7 +5,7 @@ import Book.ClosuresEReal
 The `Curve` type is `ℝ≥0 → ℝ≥0` everywhere, so it cannot carry the `+∞`-valued
 cumulative processes the book uses as witnesses in several `⇏` statements — most
 notably `δ_0` as an *arrival* (an instantaneous infinite burst) for the refined
-monotony/family theorems (Thm 9.3 item 3/8, Thm 9.4 item 1). `CurveENN` is the
+monotony/family theorems. `CurveENN` is the
 extended analogue: a non-decreasing, null-at-origin, piecewise- and left-continuous
 function `ℝ≥0 → ℝ≥0∞`. It lifts to `ℝ≥0 → EReal` (via `coe_ennreal`) so the generic
 `minimalServicePair` and the convolution machinery apply unchanged. -/
@@ -119,8 +119,8 @@ theorem curveENNEReal_delay0ENN : curveENNEReal delay0ENN = convUnitEReal := by
 
 /-- **Feeding `δ_0` recovers the service curve**: if the instantaneous infinite burst
 `δ_0` is min-plus served by `beta` (with `beta` never `−∞`), the departure dominates
-`beta` — `beta ≤ D` (in the `EReal` view). This is the book's `δ_0`-probing technique
-(e.g. the Thm 9.6 step `(δ_0, β') ∈ S(β) ⟹ β' ≥ β`), now expressible with an extended
+`beta` — `beta ≤ D` (in the `EReal` view). This is the `δ_0`-probing technique
+(the step `(δ_0, β') ∈ S(β) ⟹ β' ≥ β`), now expressible with an extended
 arrival. Since `δ_0 ∗ beta = beta`, the min-plus lower bound `δ_0 ∗ beta ≤ D` is exactly
 `beta ≤ D`. -/
 theorem le_curveENNEReal_of_minimalServiceRelExt_delay0 {beta : ℝ≥0 → EReal}
@@ -191,7 +191,7 @@ theorem minimalServiceRelExt_mono {β β' : CurveENN} (h : β ≤ β') :
   exact ⟨hAD.1,
     le_trans (minConv_le_minConv (fun _ => le_rfl) (curveENNEReal_mono h)) hAD.2⟩
 
-/-- **Extended min-plus monotony is an equivalence** (Thm 9.3 item 5/6 for the min-plus
+/-- **Extended min-plus monotony is an equivalence** (for the min-plus
 type, monotone curves): `S_mp^ext(β) ⊇ S_mp^ext(β') ↔ β ≤ β'`. Over `Curve` (finite
 arrivals) only `⟸` holds — the converse needs the infinite burst `δ_0`
 (`le_of_minimalServiceRelExt_le`), which extended arrivals supply. -/

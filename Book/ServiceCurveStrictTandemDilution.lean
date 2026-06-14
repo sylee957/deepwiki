@@ -2,7 +2,7 @@ import Book.ServiceCurveStrictEReal
 import Book.ServiceCurveStrictTandem
 import Book.Continuity
 
-/-! # Lemma 9.5 reverse dilution: the catch-up time-warp
+/-! # Reverse dilution: the catch-up time-warp
 Building towards the reverse inclusion `S_mp(δ_T) ⊆ S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ)`.
 The witness is a tandem of strict `δ_{T/n}` servers whose stages are time-warps of
 the input: `Dᵢ = Dᵢ₋₁ ∘ hᵢ` for a continuous **catch-up warp** `h` (`h ≤ id`,
@@ -465,7 +465,7 @@ theorem shiftCurve_warpCurve_le (A : Curve) {d r : ℝ≥0} (hr : 0 < r) (hrd : 
     (c τ : ℝ≥0) : shiftCurve (warpCurve A hr hrd) c τ ≤ A (τ - c) :=
   A.mono (warp_le_self hr hrd (τ - c))
 
-/-- **Lemma 9.5, reverse `⊇` direction**:
+/-- **Reverse `⊇` direction of the dilution equality**:
 `S_mp(δ_T) ⊆ S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ)` (for `T > 0`). Given `(A, D')` min-plus served
 by `δ_T` (so `A(·−T) ≤ D'`), for each `ε > 0` pick `n > 2T/ε` and a tiny ramp
 `r = T/n²`: the `n`-stage tandem (one warp stage + `n−1` shift stages by `d − r`,
@@ -522,14 +522,14 @@ theorem minimalServiceRel_delay_le_systemClosure {T : ℝ≥0} (hT : 0 < T) :
       _ ≤ A (t - T) := A.mono (tsub_le_tsub_left hkey t)
       _ ≤ D' t := hAD' t
 
-/-! ## Book restatement (Lemma 9.5)
-The §9.3 closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` of `n`-fold strict-`δ_{T/n}`
+/-! ## Book restatement: the dilution equality
+The closure of the union `⋃ₙ (S_strict(δ_{T/n}))ⁿ` of `n`-fold strict-`δ_{T/n}`
 tandems is exactly the min-plus pure-delay server `δ_T`:
 `S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) = S_mp(δ_T)` (for `T > 0`). The `⊆` direction is
 `systemClosure_delayTandemUnion_le`; the reverse `⊇` (the dilution: each `ε` is met by an
 `n`-stage tandem of strict `δ_{T/n}` servers whose worst-case staircase output approaches
 `A ∗ δ_T` from below) is `minimalServiceRel_delay_le_systemClosure`. -/
-/-- The `§9.3` closure of `⋃ₙ (S_strict(δ_{T/n}))ⁿ` equals `S_mp(δ_T)` (for `T > 0`):
+/-- The closure of `⋃ₙ (S_strict(δ_{T/n}))ⁿ` equals `S_mp(δ_T)` (for `T > 0`):
 `systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T)`. -/
 theorem systemClosure_delayTandemUnion_eq {T : ℝ≥0} (hT : 0 < T) :
     systemClosure (delayTandemUnion T) = minimalServiceRel (delayEReal T) :=

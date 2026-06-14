@@ -1,8 +1,8 @@
 import Book.ServersResidualDrr
 
-/-! # Deficit-round-robin scheduling dynamics (Algorithm 1)
+/-! # Deficit-round-robin scheduling dynamics
 The operational deficit-counter scheduler. Each flow holds a queue of
-packet sizes; a turn (`drrServe`, Algorithm 1 lines 5-12) adds the
+packet sizes; a turn (`drrServe`, lines 5-12) adds the
 flow's quantum `Q` to its deficit counter, drains head packets while
 the counter covers them (`drrDrain`, lines 7-10), and resets the
 counter to zero when the queue empties (lines 11-12). The two
@@ -20,7 +20,7 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
-/-- DRR inner loop (Algorithm 1, lines 7-10): send the head packet
+/-- DRR inner loop (lines 7-10): send the head packet
 while its size fits the deficit counter `d`, decrementing `d` by each
 served size; stop at the first head the counter cannot cover. -/
 noncomputable def drrDrain (d : ℝ≥0) : List ℝ≥0 → ℝ≥0 × List ℝ≥0
@@ -110,7 +110,7 @@ theorem drrDrainSent_append (d : ℝ≥0) (q : List ℝ≥0) :
     · rw [if_pos hpd, if_pos hpd, List.cons_append, ih (d - p)]
     · rw [if_neg hpd, if_neg hpd, List.nil_append]
 
-/-- DRR per-flow turn (Algorithm 1, lines 5-12): a non-empty queue adds
+/-- DRR per-flow turn (lines 5-12): a non-empty queue adds
 the quantum to the counter, drains the head packets it covers, and
 resets the counter to zero if the queue empties; an empty queue is
 skipped, leaving the counter unchanged. -/

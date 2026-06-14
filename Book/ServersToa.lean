@@ -1,9 +1,9 @@
 import Book.DeviationsComposition
 import Book.ServiceCurveStrict
 
-/-! # Total output analysis (Algorithm 5)
+/-! # Total output analysis (TOA)
 TOA computes a worst-case end-to-end delay bound for a flow crossing a
-path of servers, using only Chapter 5 (strict service curves). At each
+path of servers, using only strict service curves. At each
 server `h` the per-server delay is the maximal backlogged-period length
 `d^(h) = inf{t > 0 | α^(h)(t) ≤ β^(h)(t)} = firstCrossing α^(h) β^(h)`
 (line 4, `length_le_firstCrossing_of_isBacklogged`), where `α^(h)` is the
