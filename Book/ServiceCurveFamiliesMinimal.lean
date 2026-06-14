@@ -404,4 +404,141 @@ theorem supCurve_le {ι : Type*} [Fintype ι] [Nonempty ι] {C : ι → Curve} {
     (h : ∀ i, C i ≤ D) : supCurve C ≤ D :=
   fun t => Finset.sup'_le Finset.univ_nonempty _ (fun i _ => h i t)
 
+/-! ## The forcing lemma and the full criterion (Thm 9.4 item 1, ⟹ and the iff)
+The witness `(forcingArr bp v T, ⨆ᵢ greedyCurve …)` sits in `⋂ᵢ S_mp(βᵢ)` but escapes
+`S_mp(β')` (the convolution exceeds the departure at `T`), forcing some `β' ≤ βᵢ`. Combined
+with the `⟸` half (`ServiceCurveFamilies`), this gives the full criterion: a finite min-plus
+family's trajectory intersection is determined exactly by the downward closure of the family. -/
+
+/-- **The forcing lemma (Thm 9.4 item 1, forward engine).** If a finite nonempty family
+`(bᵢ)` induces a min-plus trajectory intersection contained in `S_mp(bp)`, then `bp` lies
+below one of the `bᵢ`. The witness is the staircase arrival `forcingArr bp v T` with its
+finite-sup greedy departure. -/
+theorem exists_le_of_iInter_minimalServiceRel_le {ix : Type*} [Fintype ix] [Nonempty ix]
+    {b : ix → Curve} {bp : Curve}
+    (h : (fun A D => ∀ i, minimalServiceRel (curveEReal (b i)) A D)
+      ≤ minimalServiceRel (curveEReal bp)) :
+    ∃ i, bp ≤ b i := by
+  by_contra hcon
+  push Not at hcon
+  -- For each i, bp ≰ b i, so there is a crossing time where b i < bp.
+  have hcross : ∀ i, ∃ t, b i t < bp t := by
+    intro i
+    have := hcon i
+    rw [Curve.le_def] at this
+    push Not at this
+    exact this
+  choose v hv using hcross
+  -- T = max of the crossing times.
+  obtain ⟨i₀, -, hi₀max⟩ := Finset.exists_max_image Finset.univ v Finset.univ_nonempty
+  set T : ℝ≥0 := v i₀ with hT
+  have hi₀ : v i₀ = T := rfl
+  have hvT : ∀ i, v i ≤ T := fun i => hi₀max i (Finset.mem_univ i)
+  -- The forcing arrival.
+  set A : Curve := forcingArr bp v T hi₀ with hA
+  -- The greedy departure components.
+  set C : ix → Curve := fun i => greedyCurve A (curveEReal (b i))
+      (monotone_curveEReal (b i)) (curveEReal_zero (b i))
+      (isLeftContinuous_curveEReal (b i))
+      (isPiecewiseContinuous_greedyFun_forcingArr bp (b i) v T hi₀) with hC
+  -- curveEReal (C i) = A ∗ (b i).
+  have hCconv : ∀ i, curveEReal (C i) = minConv (curveEReal A) (curveEReal (b i)) := fun i =>
+    curveEReal_greedyCurve A (monotone_curveEReal (b i)) (curveEReal_zero (b i))
+      (isLeftContinuous_curveEReal (b i))
+      (isPiecewiseContinuous_greedyFun_forcingArr bp (b i) v T hi₀)
+  set D : Curve := supCurve C with hD
+  -- (A, D) lies in the intersection ⋂ᵢ S_mp(bᵢ).
+  have hmem : (fun A D => ∀ i, minimalServiceRel (curveEReal (b i)) A D) A D := by
+    intro i
+    rw [mem_minimalServiceRel_iff]
+    refine ⟨?_, ?_⟩
+    · -- D ≤ A: each C i ≤ A, so the sup ≤ A.
+      refine supCurve_le (fun j => ?_)
+      rw [← curveEReal_le_iff, hCconv j]
+      -- A ∗ (b j) ≤ A via the split (t, 0).
+      intro t
+      refine le_trans (minConv_le_add _ _ (add_zero t)) ?_
+      rw [curveEReal_zero (b j), add_zero]
+    · -- A ∗ (b i) ≤ D: curveEReal (C i) = A ∗ (b i) and C i ≤ D.
+      rw [← hCconv i]
+      exact curveEReal_mono (le_supCurve C i)
+  -- (A, D) is NOT in S_mp(bp): the convolution exceeds D at T.
+  have hbad : ¬ minimalServiceRel (curveEReal bp) A D := by
+    rw [mem_minimalServiceRel_iff]
+    rintro ⟨-, h2⟩
+    -- D T < bp T but bp T ≤ (A ∗ bp) T.
+    have hDT : curveEReal D T < curveEReal bp T := by
+      rw [hD, curveEReal_apply, supCurve_apply]
+      -- the sup' over the family is < bp T because each component is.
+      have hlt : ∀ i, ((C i T : ℝ) : EReal) < curveEReal bp T := by
+        intro i
+        have hci : ((C i T : ℝ) : EReal) = minConv (curveEReal A) (curveEReal (b i)) T := by
+          have := congrFun (hCconv i) T
+          rwa [curveEReal_apply] at this
+        rw [hci]
+        exact minConv_forcingArr_lt bp (b i) v T hvT hi₀ i (hv i)
+      -- sup' of reals strictly below a real bound (lifted to EReal).
+      have hsupreal : (Finset.univ.sup' Finset.univ_nonempty (fun i => C i T) : ℝ≥0) < bp T := by
+        refine Finset.sup'_lt_iff Finset.univ_nonempty |>.mpr (fun i _ => ?_)
+        have := hlt i
+        rw [curveEReal_apply] at this
+        exact_mod_cast this
+      have : ((Finset.univ.sup' Finset.univ_nonempty (fun i => C i T) : ℝ≥0) : ℝ)
+          < ((bp T : ℝ≥0) : ℝ) := by exact_mod_cast hsupreal
+      rw [curveEReal_apply]
+      exact_mod_cast this
+    have hge : curveEReal bp T ≤ minConv (curveEReal A) (curveEReal bp) T :=
+      le_minConv_forcingArr bp v T hvT hi₀
+    exact absurd (lt_of_lt_of_le hDT hge) (not_lt.mpr (h2 T))
+  exact hbad (h A D hmem)
+
+/-- **Thm 9.4 item 1 (the full iff).** Two finite nonempty min-plus families `(bᵢ)` and
+`(bp'ⱼ)` induce the same trajectory intersection iff they mutually dominate (each curve of
+one family lies below some curve of the other). -/
+theorem minimalServiceRel_iInter_eq_iff_mutually_dominated
+    {ix jx : Type*} [Fintype ix] [Nonempty ix] [Fintype jx] [Nonempty jx]
+    {b : ix → Curve} {bp : jx → Curve} :
+    ((fun A D => ∀ i, minimalServiceRel (curveEReal (b i)) A D)
+        = fun A D => ∀ j, minimalServiceRel (curveEReal (bp j)) A D)
+      ↔ ((∀ j, ∃ i, bp j ≤ b i) ∧ (∀ i, ∃ j, b i ≤ bp j)) := by
+  constructor
+  · intro heq
+    refine ⟨fun j => ?_, fun i => ?_⟩
+    · -- ⋂ᵢ S_mp(bᵢ) ⊆ S_mp(bp j): use the forcing lemma.
+      apply exists_le_of_iInter_minimalServiceRel_le (b := b) (bp := bp j)
+      rw [heq]
+      exact fun A D hA => hA j
+    · -- ⋂ⱼ S_mp(bp'ⱼ) ⊆ S_mp(b i): the symmetric application.
+      apply exists_le_of_iInter_minimalServiceRel_le (b := bp) (bp := b i)
+      rw [← heq]
+      exact fun A D hA => hA i
+  · rintro ⟨h1, h2⟩
+    -- mutual domination ⟹ equal intersections, via the committed lemma.
+    have hmd : (∀ j, ∃ i, curveEReal (bp j) ≤ curveEReal (b i))
+        ∧ (∀ i, ∃ j, curveEReal (b i) ≤ curveEReal (bp j)) :=
+      ⟨fun j => (h1 j).imp fun i hij => curveEReal_mono hij,
+        fun i => (h2 i).imp fun j hij => curveEReal_mono hij⟩
+    exact minimalServiceRel_iInter_eq_of_mutually_dominated hmd.1 hmd.2
+
+/-- **Thm 9.4 item 1, downward-closure form.** Two finite nonempty min-plus families induce
+the same trajectory intersection iff their downward closures (as sets of `EReal` functions)
+agree. -/
+theorem minimalServiceRel_iInter_eq_iff_setOf_le_eq
+    {ix jx : Type*} [Fintype ix] [Nonempty ix] [Fintype jx] [Nonempty jx]
+    {b : ix → Curve} {bp : jx → Curve} :
+    ((fun A D => ∀ i, minimalServiceRel (curveEReal (b i)) A D)
+        = fun A D => ∀ j, minimalServiceRel (curveEReal (bp j)) A D)
+      ↔ {f : ℝ≥0 → EReal | ∃ i, f ≤ curveEReal (b i)}
+          = {f | ∃ j, f ≤ curveEReal (bp j)} := by
+  rw [minimalServiceRel_iInter_eq_iff_mutually_dominated]
+  constructor
+  · rintro ⟨h1, h2⟩
+    exact mutually_dominated_iff_setOf_le_eq.mp
+      ⟨fun j => (h1 j).imp fun i hij => curveEReal_mono hij,
+        fun i => (h2 i).imp fun j hij => curveEReal_mono hij⟩
+  · intro h
+    have hmd := mutually_dominated_iff_setOf_le_eq.mpr h
+    exact ⟨fun j => (hmd.1 j).imp fun i hij => curveEReal_le_iff.mp hij,
+      fun i => (hmd.2 i).imp fun j hij => curveEReal_le_iff.mp hij⟩
+
 end DeepWiki
