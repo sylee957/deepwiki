@@ -1,3 +1,4 @@
+import DeepWiki.NetworkCalculus.Stability
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -7,7 +8,16 @@ or recorded as a note / unformalized item. -/
 
 namespace DeepWiki.Dnc
 
-/-! **Definition 12.1** (§12.1.1, p.270): Long-term rates: for sub-additive α and super-additive β, the long-term arrival rate is limsup_{t→∞} α(t)/t and the long-term service rate is liminf_{t→∞} β(t)/t. Not formalized in the library. -/
+open DeepWiki
+
+/-- **Definition 12.1** (§12.1.1, p.270): long-term rates — the arrival rate
+`limsup_{t→∞} α(t)/t` (`longTermArrivalRate`) and the service rate
+`liminf_{t→∞} β(t)/t` (`longTermServiceRate`). -/
+noncomputable def def_12_1_arrivalRate := @longTermArrivalRate
+
+/-- **Definition 12.1** (§12.1.1, p.270): the long-term service rate
+`liminf_{t→∞} β(t)/t`. -/
+noncomputable def def_12_1_serviceRate := @longTermServiceRate
 
 /-! **Definition 12.2** (§12.1.1, p.271): Local stability: a network is locally stable if for every server h, ∑_{i∈Fl(h)} rᵢ < R^(h), or R^(h)=∞ (sum of flow long-term arrival rates below the server's long-term service rate). Not formalized in the library. -/
 
@@ -35,8 +45,13 @@ namespace DeepWiki.Dnc
 
 /-! **Theorem 12.4** (§12.3.3, p.279): GPS with constant rates: the local stability condition is a sufficient condition for global stability. Not formalized in the library. -/
 
-/-! **Definition 12.4** (§12.4.2, p.284): Scaled flow: for a cumulative process A of a flow and m∈ℝ⁺, the scaled flow with factor m has cumulative process mA. Not formalized in the library. -/
+/-- **Definition 12.4** (§12.4.2, p.284): the scaled flow `m·A` of a
+cumulative process `A` with factor `m ∈ ℝ≥0`. The library's `scaledFlow`. -/
+def def_12_4 := @scaledFlow
 
-/-! **Lemma 12.6** (§12.4.2, p.284): If A is α-upper-constrained then mA is mα-upper-constrained: for s≤t, m(A(t)−A(s)) ≤ mα(t−s). Not formalized in the library. -/
+/-- **Lemma 12.6** (§12.4.2, p.284): if `A` is `α`-upper-constrained then
+`m·A` is `m·α`-upper-constrained. The library's
+`isMaximalArrivalBound_scaledFlow`. -/
+alias lemma_12_6 := isMaximalArrivalBound_scaledFlow
 
 end DeepWiki.Dnc
