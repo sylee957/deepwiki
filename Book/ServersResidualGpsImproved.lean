@@ -483,6 +483,18 @@ theorem strictServiceRel_of_gpsPeelChain_singleton {ι : Type*} [Fintype ι] [De
   strictServiceRel_of_isAggregateStrict_singleton (hc k)
     (chain.isAggregateStrict hgps hc h)
 
+/-- **GPS share of a strict sub-aggregate** (Theorem 7.7 on a sub-aggregate): if the aggregate
+of a flow set `J` is strict for `γ`, GPS grants each flow `i ∈ J` the weighted share
+`(φᵢ / ∑_{j∈J} φⱼ)·γ` as a strict service curve. Applied to each peel level `β̃ᵢ` of the fold
+(strict for the aggregate `{i,…,n}`), this is the share the last flow takes at that level. -/
+theorem strictServiceRel_div_mul_of_isAggregateStrict {ι : Type*} {φ : ι → ℝ≥0}
+    {As Ds : ι → Curve} {J : Finset ι} {γ : ℝ≥0 → ℝ≥0}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    (h : IsAggregateStrict As Ds J γ) {i : ι} (hi : i ∈ J) :
+    strictServiceRel (fun v => (φ i / ∑ j ∈ J, φ j) * γ v) (As i) (Ds i) :=
+  ⟨hc i, fun _ _ hst hbl =>
+    add_div_mul_le_of_isGps (fun j _ => hc j) hgps h hi hst hbl⟩
+
 /-- The smallest multi-peel display: in a three-flow GPS server strict for `β`, peeling the two
 arrival-constrained flows `0` and `1` (gates `T₀ ≤ T₁`) leaves flow `2` the collapsed gated
 residual `(β − (α₀ + α₁))·1_{≥T₁}` as a strict service curve — the literal `β̃` of Theorem 7.8
@@ -506,6 +518,44 @@ example {φ : Fin 3 → ℝ≥0} {As Ds : Fin 3 → Curve} {β α₀ α₁ : ℝ
     (fun j _ => hc j) harr₀ harr₁ hcross₀ hgrow₀ hcross₁ hgrow₁
   rw [show (Finset.univ.erase (0 : Fin 3)).erase 1 = {2} from by decide] at hpeel
   exact strictServiceRel_of_isAggregateStrict_singleton (hc 2) hpeel
+
+/-- **The full Theorem 7.8 max-combination, three flows**: flow `2`'s strict service curve is
+the *maximum* over peel levels of its GPS share —
+`φ₂·max(β/Φ₁, (β−α₀)·1_{≥T₀}/Φ₂, (β−(α₀+α₁))·1_{≥T₁}/Φ₃)` with `Φ₁ = ∑φ`, `Φ₂ = ∑_{j≠0}φ`,
+`Φ₃ = ∑_{j∉{0,1}}φ` — better than any single level. Each level's share is strict by the
+sub-aggregate GPS guarantee (`strictServiceRel_div_mul_of_isAggregateStrict`) applied to the
+fold's `β̃ᵢ`; their max is strict because the max of strict service curves is strict
+(`strictServiceRel_max`). -/
+example {φ : Fin 3 → ℝ≥0} {As Ds : Fin 3 → Curve} {β α₀ α₁ : ℝ≥0 → ℝ≥0} {T₀ T₁ : ℝ≥0}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    (hΦ₀ : 0 < ∑ j, φ j) (hΦ₁ : 0 < ∑ j ∈ Finset.univ.erase 0, φ j)
+    (harr₀ : IsMaximalArrivalBound ⇑(As 0) α₀) (harr₁ : IsMaximalArrivalBound ⇑(As 1) α₁)
+    (hcross₀ : ∀ x, T₀ ≤ x → (∑ j, φ j) * α₀ x ≤ φ 0 * β x)
+    (hgrow₀ : ∀ x y, T₀ ≤ x → x ≤ y →
+      φ 0 * β x + (∑ j, φ j) * α₀ y ≤ φ 0 * β y + (∑ j, φ j) * α₀ x)
+    (hcross₁ : ∀ x, T₁ ≤ x →
+      (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ x ≤ φ 1 * gatedResidual β α₀ T₀ x)
+    (hgrow₁ : ∀ x y, T₁ ≤ x → x ≤ y →
+      φ 1 * gatedResidual β α₀ T₀ x + (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ y
+        ≤ φ 1 * gatedResidual β α₀ T₀ y + (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ x)
+    (h : IsAggregateStrict As Ds Finset.univ β) :
+    strictServiceRel
+      (fun v => max (max ((φ 2 / ∑ j, φ j) * β v)
+          ((φ 2 / ∑ j ∈ Finset.univ.erase 0, φ j) * gatedResidual β α₀ T₀ v))
+        ((φ 2 / ∑ j ∈ (Finset.univ.erase 0).erase 1, φ j)
+          * gatedResidual (gatedResidual β α₀ T₀) α₁ T₁ v))
+      (As 2) (Ds 2) := by
+  have h1 : IsAggregateStrict As Ds (Finset.univ.erase 0) (gatedResidual β α₀ T₀) :=
+    h.peel hΦ₀ (fun j _ => hc j) hgps (Finset.mem_univ 0) harr₀ hcross₀ hgrow₀
+  have h2 : IsAggregateStrict As Ds ((Finset.univ.erase 0).erase 1)
+      (gatedResidual (gatedResidual β α₀ T₀) α₁ T₁) :=
+    h1.peel hΦ₁ (fun j _ => hc j) hgps (by decide) harr₁ hcross₁ hgrow₁
+  have s0 := strictServiceRel_div_mul_of_isAggregateStrict hgps hc h (Finset.mem_univ 2)
+  have s1 := strictServiceRel_div_mul_of_isAggregateStrict hgps hc h1
+    (show (2 : Fin 3) ∈ Finset.univ.erase 0 by decide)
+  have s2 := strictServiceRel_div_mul_of_isAggregateStrict hgps hc h2
+    (show (2 : Fin 3) ∈ (Finset.univ.erase 0).erase 1 by decide)
+  exact strictServiceRel_max (strictServiceRel_max s0 s1) s2
 
 /-! ## Book restatement (towards the improved GPS residual)
 The two lemmas on the way to the improved GPS theorem: in a GPS

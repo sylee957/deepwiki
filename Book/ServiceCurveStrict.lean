@@ -96,6 +96,17 @@ theorem strictServiceRel_mono
   exact ⟨hp.1,
     ((isStrictMinimalServiceCurve_strictServiceRel beta).mono h) A D hp⟩
 
+/-- The pointwise max of two strict service curves (for the same pair) is a strict service
+curve: on a backlogged period the larger of the two bounds applies. -/
+theorem strictServiceRel_max {beta beta' : ℝ≥0 → ℝ≥0} {A D : Curve}
+    (h : strictServiceRel beta A D) (h' : strictServiceRel beta' A D) :
+    strictServiceRel (fun v => max (beta v) (beta' v)) A D := by
+  refine ⟨h.1, fun s t hst hbl => ?_⟩
+  show D s + max (beta (t - s)) (beta' (t - s)) ≤ D t
+  rcases le_total (beta (t - s)) (beta' (t - s)) with hle | hle
+  · rw [max_eq_right hle]; exact h'.2 s t hst hbl
+  · rw [max_eq_left hle]; exact h.2 s t hst hbl
+
 /-- The zero curve `beta₀ ≡ 0` is a strict service curve for every server: the
 bound `D s + 0 ≤ D t` is just monotonicity of `D`. -/
 theorem isStrictMinimalServiceCurve_betaZero (S : Curve → Curve → Prop) :
