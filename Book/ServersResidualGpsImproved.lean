@@ -487,7 +487,7 @@ theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
 service curve — with NO ordering hypothesis. Convexity supplies both the post-crossing
 domination (`cross_and_grow_of_convexOn_gap` ⇒ `hcross`/`hgrow`) and the pre-crossing dominance
 (`cross_before_of_convexOn_gap` ⇒ `hgate`, via the weighted-to-share `div_mul_sub_le_div_mul_of_weighted`),
-matching the book's convex-`β` / concave-`α` hypotheses exactly. -/
+the convex gap being implied by the book's convex-`β` / concave-`α` hypotheses. -/
 theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated_convex
     {ι : Type*} [Fintype ι] [DecidableEq ι]
     {S : (ι → Curve) → (ι → Curve) → Prop}
@@ -649,7 +649,7 @@ theorem strictServiceRel_of_gpsPeelChain_singleton {ι : Type*} [Fintype ι] [De
   strictServiceRel_of_isAggregateStrict_singleton (hc k)
     (chain.isAggregateStrict hgps hc h)
 
-/-- **GPS share of a strict sub-aggregate** (Theorem 7.7 on a sub-aggregate): if the aggregate
+/-- **GPS share of a strict sub-aggregate**: if the aggregate
 of a flow set `J` is strict for `γ`, GPS grants each flow `i ∈ J` the weighted share
 `(φᵢ / ∑_{j∈J} φⱼ)·γ` as a strict service curve. Applied to each peel level `β̃ᵢ` of the fold
 (strict for the aggregate `{i,…,n}`), this is the share the last flow takes at that level. -/
