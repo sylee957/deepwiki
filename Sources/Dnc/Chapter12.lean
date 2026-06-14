@@ -96,4 +96,9 @@ def def_12_4 := @scaledFlow
 `isMaximalArrivalBound_scaledFlow`. -/
 alias lemma_12_6 := isMaximalArrivalBound_scaledFlow
 
+/-- **Scaling scales the long-term rate** (§12.4.2): the long-term arrival rate
+of the scaled flow `m·A` is `m` times that of `A`. The library's
+`longTermArrivalRate_scaledFlow`. -/
+alias prop_12_scaledRate := longTermArrivalRate_scaledFlow
+
 end DeepWiki.Dnc

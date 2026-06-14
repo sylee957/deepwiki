@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.ArrivalCurves
 import Mathlib.Order.LiminfLimsup
+import Mathlib.Order.Filter.ENNReal
 
 /-! # Stability primitives
 The self-contained building blocks of the stability theory: the long-term
@@ -81,6 +82,18 @@ def scaledFlow (m : ℝ≥0) (A : ℝ≥0 → ℝ≥0) : ℝ≥0 → ℝ≥0 := 
 /-- `scaledFlow m A t = m * A t`. -/
 @[simp] theorem scaledFlow_apply (m : ℝ≥0) (A : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
     scaledFlow m A t = m * A t := rfl
+
+/-- Scaling a flow scales its long-term arrival rate (§12.4.2): the long-term
+arrival rate of `m·A` is `m` times that of `A`. The constant `↑m ≠ ⊤` factors
+out of the `limsup` (`ENNReal.limsup_const_mul_of_ne_top`). -/
+theorem longTermArrivalRate_scaledFlow (m : ℝ≥0) (A : ℝ≥0 → ℝ≥0) :
+    longTermArrivalRate (scaledFlow m A) = (m : ℝ≥0∞) * longTermArrivalRate A := by
+  have hfun : (fun t => ((scaledFlow m A t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞))
+      = (fun t => (m : ℝ≥0∞) * (((A t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞))) := by
+    funext t
+    rw [scaledFlow_apply, ENNReal.coe_mul, mul_div_assoc]
+  rw [longTermArrivalRate, hfun, ENNReal.limsup_const_mul_of_ne_top ENNReal.coe_ne_top,
+    longTermArrivalRate]
 
 /-- Scaling preserves a maximal arrival bound: if `α` upper-bounds the flow
 `A`, then `m·α` upper-bounds the scaled flow `m·A` (Lemma 12.6). -/
