@@ -573,6 +573,32 @@ theorem strictServiceRel_iSup_div_mul_of_isAggregateStrict {ι κ : Type*} [Fint
     (fun _ => Set.Finite.bddAbove (Set.finite_range _))).mpr
     (fun l => strictServiceRel_div_mul_of_isAggregateStrict hgps hc (h l) (hn l))
 
+/-- **The ungated max-combination from the gated one** (drops the gates from Theorem 7.8's
+display): if the gated maximum `⨆ₗ γₗ` is a strict service curve, each ungated level `uₗ` agrees
+with `γₗ` past its gate `Tₗ` (`hactive`) and stays above it (`hγu`), and below its gate `uₗ` is
+dominated by an always-active base level `l₀` (`hdom`), then the *ungated* maximum `⨆ₗ uₗ` is
+the very same curve, hence also strict. This recovers the displayed `φₙ·maxⱼ(β−∑α)/Φⱼ` from the
+gated `φₙ·maxⱼ(β̃ⱼ/Φⱼ)`. The ordering `hdom` is the book's tⱼ-crossing condition (supplied by
+convexity); here it is taken as a hypothesis, as the chapter does for its gate conditions. -/
+theorem strictServiceRel_iSup_ungated_of_gated {ι κ : Type*} [Fintype κ] [Nonempty κ]
+    {As Ds : ι → Curve} {n : ι} {l₀ : κ}
+    {u γ : κ → ℝ≥0 → ℝ≥0} {T : κ → ℝ≥0}
+    (hgated : strictServiceRel (fun v => ⨆ l, γ l v) (As n) (Ds n))
+    (hγu : ∀ l v, γ l v ≤ u l v)
+    (hactive : ∀ l v, T l ≤ v → u l v ≤ γ l v)
+    (hdom : ∀ l v, v < T l → u l v ≤ γ l₀ v) :
+    strictServiceRel (fun v => ⨆ l, u l v) (As n) (Ds n) := by
+  have hbdd : ∀ f : κ → ℝ≥0, BddAbove (Set.range f) :=
+    fun f => Set.Finite.bddAbove (Set.finite_range f)
+  have heq : (fun v => ⨆ l, u l v) = fun v => ⨆ l, γ l v := by
+    funext v
+    refine le_antisymm (ciSup_le fun l => ?_)
+      (ciSup_le fun l => le_trans (hγu l v) (le_ciSup (hbdd (fun l => u l v)) l))
+    rcases le_or_gt (T l) v with hTl | hTl
+    · exact le_trans (hactive l v hTl) (le_ciSup (hbdd (fun l => γ l v)) l)
+    · exact le_trans (hdom l v hTl) (le_ciSup (hbdd (fun l => γ l v)) l₀)
+  rw [heq]; exact hgated
+
 /-- The smallest multi-peel display: in a three-flow GPS server strict for `β`, peeling the two
 arrival-constrained flows `0` and `1` (gates `T₀ ≤ T₁`) leaves flow `2` the collapsed gated
 residual `(β − (α₀ + α₁))·1_{≥T₁}` as a strict service curve — the literal `β̃` of Theorem 7.8
