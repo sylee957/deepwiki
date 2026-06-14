@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.Stability
+import DeepWiki.NetworkCalculus.StabilityGlobal
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -9,6 +10,7 @@ or recorded as a note / unformalized item. -/
 namespace DeepWiki.Dnc
 
 open DeepWiki
+open scoped NNReal ENNReal
 
 /-- **Definition 12.1** (§12.1.1, p.270): long-term rates — the arrival rate
 `limsup_{t→∞} α(t)/t` (`longTermArrivalRate`) and the service rate
@@ -19,17 +21,45 @@ noncomputable def def_12_1_arrivalRate := @longTermArrivalRate
 `liminf_{t→∞} β(t)/t`. -/
 noncomputable def def_12_1_serviceRate := @longTermServiceRate
 
-/-! **Definition 12.2** (§12.1.1, p.271): Local stability: a network is locally stable if for every server h, ∑_{i∈Fl(h)} rᵢ < R^(h), or R^(h)=∞ (sum of flow long-term arrival rates below the server's long-term service rate). Not formalized in the library. -/
+/-- **Definition 12.2** (§12.1.1, p.271): local stability (per-server form) —
+a server is locally stable when the aggregate long-term arrival rate is
+strictly below its long-term service rate, `∑ rᵢ < R`. The library's
+`IsLocallyStableServer`. (The network predicate quantifies this over every
+server `h`; that quantification needs a network model and is not formalized.) -/
+abbrev def_12_2 := @IsLocallyStableServer
 
-/-! **Lemma 12.1** (§12.1.1, p.271): If server h is locally stable then ℓmax(∑_{i∈Fl(h)} αᵢ, β^(h)) < ∞, i.e. the maximal length of its backlogged period (as in Theorem 5.5) is finite. Not formalized in the library. -/
+/-- **Lemma 12.1** (§12.1.1, p.271): if a server is locally stable then
+`ℓmax(α, β) < ∞`, i.e. its first crossing — equivalently (Theorem 5.5) the
+maximal length of its backlogged period — is finite. The library's
+`firstCrossing_lt_top_of_isLocallyStableServer`. -/
+theorem lemma_12_1 {α β : ℝ≥0 → ℝ≥0} (h : IsLocallyStableServer α β) :
+    firstCrossing α β < ⊤ :=
+  firstCrossing_lt_top_of_isLocallyStableServer h
 
-/-! **Definition 12.3** (§12.1.2, p.271): Global stability: a network is globally stable if for each server the length of its maximal backlogged period is bounded. Not formalized in the library. -/
+/-- **Definition 12.3** (§12.1.2, p.271): global stability (per-server form) —
+a server is globally stable when its maximal backlogged-period length is
+bounded, `maxBackloggedLength A D < ⊤`. The library's `IsGloballyStableServer`.
+(The network predicate asks this of every server.) -/
+abbrev def_12_3 := @IsGloballyStableServer
 
-/-! **Lemma 12.2** (§12.1.2, p.271): If a network is globally stable then it is locally stable. Not formalized in the library. -/
+/-! **Lemma 12.2** (§12.1.2, p.271): If a network is globally stable then it is locally stable. (Converse direction — not formalized in the library.) -/
 
 /-! **Lemma 12.3** (§12.1.2, p.272): If for a network with token-bucket arrival and rate-latency service curves respecting the local stability conditions the network is globally stable, then local stability for any arrival and service curve is also a sufficient condition for global stability. Not formalized in the library. -/
 
-/-! **Lemma 12.4** (§12.1.2, p.272): If αᵢ^(h) are arrival curves for flow i at the input of server h and for all h, ℓmax(∑_{i∈Fl(h)} αᵢ^(h), β^(h)) < ∞, then the network is globally stable. Not formalized in the library. -/
+/-- **Lemma 12.4** (§12.1.2, p.272), per-server form: if a server's arrival is
+maximal-arrival-curve constrained and `ℓmax(α, β) = firstCrossing α β < ∞`,
+then the server is globally stable (its backlogged period is bounded by the
+first crossing, Theorem 5.5). The library's
+`isGloballyStableServer_of_firstCrossing_lt_top`. Chaining it with Lemma 12.1
+gives the local ⟹ global per-server implication
+(`isGloballyStableServer_of_isLocallyStableServer`). (The network statement
+quantifies over all servers; not formalized.) -/
+theorem lemma_12_4 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve β S)
+    {A D : Curve} (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) α)
+    (hfin : firstCrossing α β < ⊤) :
+    IsGloballyStableServer ⇑A ⇑D :=
+  isGloballyStableServer_of_firstCrossing_lt_top hc hβ hp harr hfin
 
 /-! **Example 12.1** (§12.2.1, p.273): The example network of Figure 12.1 (top) is transformed by removing arc h'={(4,2),(2,1)} into an acyclic feed-forward network N^FF; flows splitting into sub-flows (i,k). Not formalized in the library. -/
 
