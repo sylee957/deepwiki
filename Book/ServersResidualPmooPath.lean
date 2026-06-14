@@ -28,16 +28,16 @@ def pathHops {ι : Type*} (n : ℕ) (fst lst : ι → ℕ) (i : ι) : Finset ℕ
 /-- The per-split body: the aggregate strict service `∑ₕ β⁽ʰ⁾(uₕ)` less
 each cross-flow's arrival charged over the time on its own sub-path; the
 `ℝ≥0` truncated subtraction is the `[·]⁺`. -/
-noncomputable def pmooPathBody {m : ℕ} (n : ℕ)
-    (β : ℕ → ℝ≥0 → ℝ≥0) (α : Fin m → ℝ≥0 → ℝ≥0) (fst lst : Fin m → ℕ)
+noncomputable def pmooPathBody {ι : Type*} [Fintype ι] (n : ℕ)
+    (β : ℕ → ℝ≥0 → ℝ≥0) (α : ι → ℝ≥0 → ℝ≥0) (fst lst : ι → ℕ)
     (u : ℕ → ℝ≥0) : ℝ≥0 :=
   (∑ h ∈ Finset.range (n + 1), β h (u h))
     - (∑ i, α i (∑ h ∈ pathHops n fst lst i, u h))
 
 /-- **The per-path PMOO residual**: the infimum of `pmooPathBody` over the
 time splits `∑_{h≤n} uₕ = t`. -/
-noncomputable def pmooPathResidual {m : ℕ} (n : ℕ)
-    (β : ℕ → ℝ≥0 → ℝ≥0) (α : Fin m → ℝ≥0 → ℝ≥0) (fst lst : Fin m → ℕ) :
+noncomputable def pmooPathResidual {ι : Type*} [Fintype ι] (n : ℕ)
+    (β : ℕ → ℝ≥0 → ℝ≥0) (α : ι → ℝ≥0 → ℝ≥0) (fst lst : ι → ℕ) :
     ℝ≥0 → ℝ≥0 :=
   fun t => ⨅ u : {u : ℕ → ℝ≥0 // ∑ h ∈ Finset.range (n + 1), u h = t},
     pmooPathBody n β α fst lst u.1
@@ -51,23 +51,23 @@ instance pmooSplitNonempty {n : ℕ} {t : ℝ≥0} :
     simp⟩⟩
 
 /-- `pmooPathResidual` is the infimum of the bodies over the splits. -/
-theorem pmooPathResidual_apply {m : ℕ} (n : ℕ)
-    (β : ℕ → ℝ≥0 → ℝ≥0) (α : Fin m → ℝ≥0 → ℝ≥0) (fst lst : Fin m → ℕ)
+theorem pmooPathResidual_apply {ι : Type*} [Fintype ι] (n : ℕ)
+    (β : ℕ → ℝ≥0 → ℝ≥0) (α : ι → ℝ≥0 → ℝ≥0) (fst lst : ι → ℕ)
     (t : ℝ≥0) :
     pmooPathResidual n β α fst lst t
       = ⨅ u : {u : ℕ → ℝ≥0 // ∑ h ∈ Finset.range (n + 1), u h = t},
           pmooPathBody n β α fst lst u.1 := rfl
 
 /-- Elim: each split's body bounds `pmooPathResidual` from below. -/
-theorem pmooPathResidual_le {m : ℕ} {n : ℕ}
-    {β : ℕ → ℝ≥0 → ℝ≥0} {α : Fin m → ℝ≥0 → ℝ≥0} {fst lst : Fin m → ℕ}
+theorem pmooPathResidual_le {ι : Type*} [Fintype ι] {n : ℕ}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {fst lst : ι → ℕ}
     {t : ℝ≥0} {u : ℕ → ℝ≥0} (hu : ∑ h ∈ Finset.range (n + 1), u h = t) :
     pmooPathResidual n β α fst lst t ≤ pmooPathBody n β α fst lst u :=
   ciInf_le_of_le (OrderBot.bddBelow _) ⟨u, hu⟩ le_rfl
 
 /-- Intro: a lower bound on every split's body bounds `pmooPathResidual`. -/
-theorem le_pmooPathResidual {m : ℕ} {n : ℕ}
-    {β : ℕ → ℝ≥0 → ℝ≥0} {α : Fin m → ℝ≥0 → ℝ≥0} {fst lst : Fin m → ℕ}
+theorem le_pmooPathResidual {ι : Type*} [Fintype ι] {n : ℕ}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {fst lst : ι → ℕ}
     {t x : ℝ≥0}
     (h : ∀ u : ℕ → ℝ≥0, ∑ h ∈ Finset.range (n + 1), u h = t →
       x ≤ pmooPathBody n β α fst lst u) :
@@ -76,8 +76,8 @@ theorem le_pmooPathResidual {m : ℕ} {n : ℕ}
 
 /-- `pmooPathResidual … 0 = 0` when every hop curve is null at the origin:
 the only split of `0` is all-zero, whose body is `0`. -/
-theorem pmooPathResidual_zero_eq {m : ℕ} {n : ℕ}
-    {β : ℕ → ℝ≥0 → ℝ≥0} (α : Fin m → ℝ≥0 → ℝ≥0) (fst lst : Fin m → ℕ)
+theorem pmooPathResidual_zero_eq {ι : Type*} [Fintype ι] {n : ℕ}
+    {β : ℕ → ℝ≥0 → ℝ≥0} (α : ι → ℝ≥0 → ℝ≥0) (fst lst : ι → ℕ)
     (hβ0 : ∀ h, β h 0 = 0) :
     pmooPathResidual n β α fst lst 0 = 0 := by
   refine le_antisymm ?_ zero_le'
@@ -310,8 +310,8 @@ operator is the infimum over splits, reached at the cascade widths. -/
 
 /-- Causality chained over a flow's contiguous path: `Fⱼ^{b+1}(x) ≤ Fⱼ^a(x)`
 for `a ≤ b ≤ n` (output after the path at most input before it). -/
-theorem causality_fold {m : ℕ} {F : ℕ → Fin m → Curve} {n : ℕ}
-    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j) (j : Fin m) (x : ℝ≥0) :
+theorem causality_fold {ι : Type*} {F : ℕ → ι → Curve} {n : ℕ}
+    (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j) (j : ι) (x : ℝ≥0) :
     ∀ {a b : ℕ}, a ≤ b → b ≤ n → (F (b + 1) j) x ≤ (F a j) x := by
   intro a b hab
   induction b, hab using Nat.le_induction with
@@ -322,8 +322,8 @@ theorem causality_fold {m : ℕ} {F : ℕ → Fin m → Curve} {n : ℕ}
 along at the cascade bottom (input) as at the top (output),
 `F⁰_tg(s₀) ≤ Fⁿ⁺¹_tg(t)` — full service at each cascade start plus
 monotonicity. -/
-theorem pathNode_floor {m : ℕ} {F : ℕ → Fin m → Curve} {S : ℕ → Finset (Fin m)}
-    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+theorem pathNode_floor {ι : Type*} [Fintype ι] {F : ℕ → ι → Curve} {S : ℕ → Finset ι}
+    {fst lst : ι → ℕ} {n : ℕ} (t : ℝ≥0) {tg : ι}
     (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
     (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
     (htgfst : fst tg = 0) (htglst : lst tg = n) :
@@ -354,9 +354,10 @@ sub-path `[fst j, lst j]` and the tagged flow crosses every hop, flow `tg`
 obeys the strict service inequality for `pmooPathResidual` from the
 cascade bottom. Charging the tagged flow itself is suppressed (`α tg = 0`);
 each cross-flow pays once over its own path. -/
-theorem add_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → Curve}
-    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
-    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+theorem add_pmooPathResidual_le_of_strict_path {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {F : ℕ → ι → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset ι} {α : ι → ℝ≥0 → ℝ≥0}
+    {fst lst : ι → ℕ} {n : ℕ} (t : ℝ≥0) {tg : ι}
     (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
     (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
     (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
@@ -430,9 +431,10 @@ theorem add_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → 
 /-- **Min-plus service-curve form**: the tagged flow is
 served at the per-path PMOO residual, `Aᵗᵍ ∗ pmooPathResidual ≤ Dᵗᵍ` —
 the convolution splits at the cascade bottom. -/
-theorem minConv_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → Curve}
-    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
-    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+theorem minConv_pmooPathResidual_le_of_strict_path {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {F : ℕ → ι → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset ι} {α : ι → ℝ≥0 → ℝ≥0}
+    {fst lst : ι → ℕ} {n : ℕ} (t : ℝ≥0) {tg : ι}
     (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
     (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
     (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
@@ -461,9 +463,9 @@ residual `pmooPathResidual`, the infimum over time splits of
 `∑ₕ β⁽ʰ⁾(uₕ) − ∑ⱼ αⱼ(∑_{h∈pⱼ} uₕ)` — each cross-flow's burst paid once,
 over its own path. The all-crossing case (`pathHops_univ_sum`) reduces the
 sub-path sums to the whole split, the bridge toward `pmooResidualChain`. -/
-example {m : ℕ} {F : ℕ → Fin m → Curve}
-    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
-    {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
+example {ι : Type*} [Fintype ι] [DecidableEq ι] {F : ℕ → ι → Curve}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset ι} {α : ι → ℝ≥0 → ℝ≥0}
+    {fst lst : ι → ℕ} {n : ℕ} (t : ℝ≥0) {tg : ι}
     (hS : ∀ h j, j ∈ S h ↔ (fst j ≤ h ∧ h ≤ lst j))
     (hc : ∀ h, h ≤ n → ∀ j, F (h + 1) j ≤ F h j)
     (hstrict : ∀ h, h ≤ n → ∀ s t', s ≤ t' →
