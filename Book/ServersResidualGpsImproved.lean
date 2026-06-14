@@ -103,6 +103,57 @@ theorem ConvexOn.nonneg_and_le_of_gate {g : ℝ → ℝ}
   have hxy1 : x / y ≤ 1 := (div_le_one hy0).mpr hxy
   nlinarith
 
+/-- A convex function nonpositive at the origin and at a gate `T` is nonpositive on all of
+`[0, T]`: it lies below the chord, whose endpoints are both `≤ 0`. -/
+theorem ConvexOn.nonpos_of_le_gate {g : ℝ → ℝ}
+    (hg : ConvexOn ℝ (Set.Ici 0) g) (h0 : g 0 ≤ 0)
+    {T : ℝ} (hgT : g T ≤ 0) :
+    ∀ ⦃x : ℝ⦄, 0 ≤ x → x ≤ T → g x ≤ 0 := by
+  intro x hx0 hxT
+  rcases le_or_gt T 0 with hT0 | hT0
+  · rw [show x = 0 from le_antisymm (hxT.trans hT0) hx0]; exact h0
+  · have hw2 : (0 : ℝ) ≤ x / T := div_nonneg hx0 hT0.le
+    have hw1 : (0 : ℝ) ≤ 1 - x / T := by
+      have : x / T ≤ 1 := (div_le_one hT0).mpr hxT
+      linarith
+    have hab : (1 - x / T) + x / T = 1 := by ring
+    have hcomb := hg.2 (Set.mem_Ici.mpr le_rfl) (Set.mem_Ici.mpr hT0.le) hw1 hw2 hab
+    rw [smul_eq_mul, smul_eq_mul, smul_eq_mul, smul_eq_mul,
+      mul_zero, zero_add, div_mul_cancel₀ _ hT0.ne'] at hcomb
+    have ht1 : (1 - x / T) * g 0 ≤ 0 := mul_nonpos_iff.2 (Or.inl ⟨hw1, h0⟩)
+    have ht2 : x / T * g T ≤ 0 := mul_nonpos_iff.2 (Or.inl ⟨hw2, hgT⟩)
+    linarith
+
+/-- Companion to the convexity bridge: a convex weighted gap nonpositive at the origin and at the
+gate yields the *pre-gate* ordering — before `T` the weighted service stays below the weighted
+arrival, `c·β ≤ d·α` (the complement of `hcross`). -/
+theorem cross_before_of_convexOn_gap {β α : ℝ≥0 → ℝ≥0} {c d T : ℝ≥0}
+    (hg : ConvexOn ℝ (Set.Ici 0) (fun x : ℝ =>
+      (c : ℝ) * (β x.toNNReal : ℝ) - (d : ℝ) * (α x.toNNReal : ℝ)))
+    (h0 : c * β 0 ≤ d * α 0) (hgate : c * β T ≤ d * α T) :
+    ∀ x, x ≤ T → c * β x ≤ d * α x := by
+  set g : ℝ → ℝ := fun x =>
+    (c : ℝ) * (β x.toNNReal : ℝ) - (d : ℝ) * (α x.toNNReal : ℝ) with hgdef
+  have hval : ∀ x : ℝ≥0, g (x : ℝ)
+      = (c : ℝ) * (β x : ℝ) - (d : ℝ) * (α x : ℝ) := fun x => by
+    simp only [hgdef, Real.toNNReal_coe]
+  have hg0 : g 0 ≤ 0 := by
+    have h := hval 0
+    rw [NNReal.coe_zero] at h
+    rw [h]
+    have : (c : ℝ) * (β 0 : ℝ) ≤ (d : ℝ) * (α 0 : ℝ) := by exact_mod_cast h0
+    linarith
+  have hgTle : g (T : ℝ) ≤ 0 := by
+    rw [hval T]
+    have : (c : ℝ) * (β T : ℝ) ≤ (d : ℝ) * (α T : ℝ) := by exact_mod_cast hgate
+    linarith
+  intro x hx
+  have h := ConvexOn.nonpos_of_le_gate hg hg0 hgTle (NNReal.coe_nonneg x)
+    (by exact_mod_cast hx)
+  rw [hval x] at h
+  have : (c : ℝ) * (β x : ℝ) ≤ (d : ℝ) * (α x : ℝ) := by linarith
+  exact_mod_cast this
+
 /-- **The convexity bridge**: a convex weighted gap
 `x ↦ c·β(x) − d·α(x)` (the book's convex `β` against a concave `α`)
 that starts below zero and is nonnegative at a positive gate yields
