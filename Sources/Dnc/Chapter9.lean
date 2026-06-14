@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacity
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamilies
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamiliesStrict
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStrict
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityMonotonyExt
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
@@ -83,17 +84,71 @@ alias lemma_9_3 := adaptiveServiceRel_le_minimalServiceRel
 /-- **Lemma 9.4** (§9.1.4, p.218): If β ∈ F₀↑ is piecewise linear convex then ∀A∈C, (A,A∗β) ∈ S_asc(β,β); the convolution output meets the adaptive pair (β,β) (formalized for super-additive continuous β). -/
 alias lemma_9_4 := isAdaptiveServiceBound_minConvProj
 
-/-! **Proposition 9.2** (§9.2.1, p.219): Monotony: for any type T ∈ {mp,strict,wstrict,vcn} and β ≤ β' left-continuous, S_T(β) ⊇ S_T(β'). Library: minimalServiceRel_mono, weaklyStrictServiceRel_mono, strictServiceRel_mono, variableCapacityRel_mono. -/
+/-! **Proposition 9.2** (§9.2.1, p.219): Monotony: for any type T ∈ {mp,strict,wstrict,vcn} and β ≤ β' left-continuous, S_T(β) ⊇ S_T(β'). -/
+/-- **Proposition 9.2** (linked: `minimalServiceRel_mono`). -/
+alias prop_9_2_1 := minimalServiceRel_mono
+/-- **Proposition 9.2** (linked: `weaklyStrictServiceRel_mono`). -/
+alias prop_9_2_2 := weaklyStrictServiceRel_mono
+/-- **Proposition 9.2** (linked: `strictServiceRel_mono`). -/
+alias prop_9_2_3 := strictServiceRel_mono
+/-- **Proposition 9.2** (linked: `variableCapacityRel_mono`). -/
+alias prop_9_2_4 := variableCapacityRel_mono
 
-/-! **Proposition 9.3** (§9.2.1, p.219): Closure invariance: S_strict(β)=S_strict(β*̄), S_wstrict(β)=S_wstrict(β↑), S_vcn(β)=S_vcn(β*̄) — a curve may be replaced by its (sub- /super-additive, non-decreasing) closure. Library: strictServiceRel_superadditiveClosureMax, weaklyStrictServiceRel_closure, variableCapacityRel_superadditiveClosureMax, variableCapacityRel_closure. -/
+/-! **Proposition 9.3** (§9.2.1, p.219): Closure invariance: S_strict(β)=S_strict(β*̄), S_wstrict(β)=S_wstrict(β↑), S_vcn(β)=S_vcn(β*̄) — a curve may be replaced by its (sub- /super-additive, non-decreasing) closure. -/
+/-- **Proposition 9.3** (linked: `strictServiceRel_superadditiveClosureMax`). -/
+alias prop_9_3_1 := strictServiceRel_superadditiveClosureMax
+/-- **Proposition 9.3** (linked: `weaklyStrictServiceRel_closure`). -/
+alias prop_9_3_2 := weaklyStrictServiceRel_closure
+/-- **Proposition 9.3** (linked: `variableCapacityRel_superadditiveClosureMax`). -/
+alias prop_9_3_3 := variableCapacityRel_superadditiveClosureMax
+/-- **Proposition 9.3** (linked: `variableCapacityRel_closure`). -/
+alias prop_9_3_4 := variableCapacityRel_closure
 
-/-! **Theorem 9.3** (§9.2.1, p.220): Monotony refined (8 parts): S_mp(β)⊇S_mp(β') ⇔ β↑≤β'↑ (and likewise wstrict, strict via super-additive closures (β↑)*̄≤(β'↑)*̄, vcn) — relation inclusion is exactly pointwise/closure domination. Library: minimalServiceRel_le_iff, weaklyStrictServiceRel_le_iff, strictServiceRel_le_iff_of_superadditive, variableCapacityRelExt_le_iff_superadditiveClosureMaxNN_ndClosure_le. -/
+/-! **Theorem 9.3** (§9.2.1, p.220): Monotony refined (8 parts): S_mp(β)⊇S_mp(β') ⇔ β↑≤β'↑ (and likewise wstrict, strict via super-additive closures (β↑)*̄≤(β'↑)*̄, vcn) — relation inclusion is exactly pointwise/closure domination. -/
+/-- **Theorem 9.3** (linked: `minimalServiceRel_le_iff`). -/
+alias thm_9_3_1 := minimalServiceRel_le_iff
+/-- **Theorem 9.3** (linked: `weaklyStrictServiceRel_le_iff`). -/
+alias thm_9_3_2 := weaklyStrictServiceRel_le_iff
+/-- **Theorem 9.3** (linked: `strictServiceRel_le_iff_of_superadditive`). -/
+alias thm_9_3_3 := strictServiceRel_le_iff_of_superadditive
+/-- **Theorem 9.3** (linked: `variableCapacityRelExt_le_iff_superadditiveClosureMaxNN_ndClosure_le`). -/
+alias thm_9_3_4 := variableCapacityRelExt_le_iff_superadditiveClosureMaxNN_ndClosure_le
 
-/-! **Theorem 9.4** (§9.2.2, p.221): Families of service curves (4 parts): ⋂ᵢS_mp(βᵢ)=⋂ⱼS_mp(β'ⱼ) iff same downward closure; ⋂ᵢS_wstrict(βᵢ)=S_wstrict((supᵢβᵢ)↑); ⋂ᵢS_strict(βᵢ)=S_strict((supᵢβᵢ)*̄); ⋂ᵢS_vcn(βᵢ)=S_vcn((supᵢβᵢ)*̄). Library: minimalServiceRel_iInter_eq_iff_mutually_dominated, weaklyStrictServiceRel_iSup, strictServiceRel_iSup, variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup. -/
+/-! **Theorem 9.4** (§9.2.2, p.221): Families of service curves (4 parts): ⋂ᵢS_mp(βᵢ)=⋂ⱼS_mp(β'ⱼ) iff same downward closure; ⋂ᵢS_wstrict(βᵢ)=S_wstrict((supᵢβᵢ)↑); ⋂ᵢS_strict(βᵢ)=S_strict((supᵢβᵢ)*̄); ⋂ᵢS_vcn(βᵢ)=S_vcn((supᵢβᵢ)*̄). -/
+/-- **Theorem 9.4** (linked: `minimalServiceRel_iInter_eq_iff_mutually_dominated`). -/
+alias thm_9_4_1 := minimalServiceRel_iInter_eq_iff_mutually_dominated
+/-- **Theorem 9.4** (linked: `weaklyStrictServiceRel_iSup`). -/
+alias thm_9_4_2 := weaklyStrictServiceRel_iSup
+/-- **Theorem 9.4** (linked: `strictServiceRel_iSup`). -/
+alias thm_9_4_3 := strictServiceRel_iSup
+/-- **Theorem 9.4** (linked: `variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup`). -/
+alias thm_9_4_4 := variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup
 
-/-! **Theorem 9.5** (§9.2.3, p.222): Hierarchy: for β∈F, S_vcn(β) ⊆ S_strict(β) ⊆ S_wstrict(β) ⊆ S_mp(β); with equalities S_vcn=S_strict iff β⊘β only has finite values, S_strict=S_wstrict iff β↑=δ_T, S_wstrict=S_mp iff β↑=δ₀ or 0. Library: variableCapacityRel_le_minimalServiceRel, variableCapacityJumpRel_le_strictServiceRel, strictServiceRel_le_weaklyStrictServiceRel, weaklyStrictServiceRel_le_minimalServiceRel, not_forall_variableCapacityRel_le_strictServiceRel, not_forall_weaklyStrictServiceRel_le_strictServiceRel, not_forall_minimalServiceRel_le_weaklyStrictServiceRel. -/
+/-! **Theorem 9.5** (§9.2.3, p.222): Hierarchy: for β∈F, S_vcn(β) ⊆ S_strict(β) ⊆ S_wstrict(β) ⊆ S_mp(β); with equalities S_vcn=S_strict iff β⊘β only has finite values, S_strict=S_wstrict iff β↑=δ_T, S_wstrict=S_mp iff β↑=δ₀ or 0. -/
+/-- **Theorem 9.5** (linked: `variableCapacityRel_le_minimalServiceRel`). -/
+alias thm_9_5_1 := variableCapacityRel_le_minimalServiceRel
+/-- **Theorem 9.5** (linked: `variableCapacityJumpRel_le_strictServiceRel`). -/
+alias thm_9_5_2 := variableCapacityJumpRel_le_strictServiceRel
+/-- **Theorem 9.5** (linked: `strictServiceRel_le_weaklyStrictServiceRel`). -/
+alias thm_9_5_3 := strictServiceRel_le_weaklyStrictServiceRel
+/-- **Theorem 9.5** (linked: `weaklyStrictServiceRel_le_minimalServiceRel`). -/
+alias thm_9_5_4 := weaklyStrictServiceRel_le_minimalServiceRel
+/-- **Theorem 9.5** (linked: `not_forall_variableCapacityRel_le_strictServiceRel`). -/
+alias thm_9_5_5 := not_forall_variableCapacityRel_le_strictServiceRel
+/-- **Theorem 9.5** (linked: `not_forall_weaklyStrictServiceRel_le_strictServiceRel`). -/
+alias thm_9_5_6 := not_forall_weaklyStrictServiceRel_le_strictServiceRel
+/-- **Theorem 9.5** (linked: `not_forall_minimalServiceRel_le_weaklyStrictServiceRel`). -/
+alias thm_9_5_7 := not_forall_minimalServiceRel_le_weaklyStrictServiceRel
 
-/-! **Theorem 9.6** (§9.2.3, p.225): No translation with families: for two different types T,T' among vcn,wstrict,strict,mp and a family (βᵢ) of type T, there is no family (β'ⱼ) of type T' with ⋂ᵢS_T(βᵢ)=⋂ⱼS_T'(β'ⱼ), except in the equality cases of Thm 9.5. Library: not_forall_weaklyStrictServiceRel_le_strictServiceRel, not_forall_variableCapacityRel_le_strictServiceRel, not_forall_variableCapacityRel_le_weaklyStrictServiceRel, not_forall_iInf_variableCapacityRel_le_iSup. -/
+/-! **Theorem 9.6** (§9.2.3, p.225): No translation with families: for two different types T,T' among vcn,wstrict,strict,mp and a family (βᵢ) of type T, there is no family (β'ⱼ) of type T' with ⋂ᵢS_T(βᵢ)=⋂ⱼS_T'(β'ⱼ), except in the equality cases of Thm 9.5. -/
+/-- **Theorem 9.6** (linked: `not_forall_weaklyStrictServiceRel_le_strictServiceRel`). -/
+alias thm_9_6_1 := not_forall_weaklyStrictServiceRel_le_strictServiceRel
+/-- **Theorem 9.6** (linked: `not_forall_variableCapacityRel_le_strictServiceRel`). -/
+alias thm_9_6_2 := not_forall_variableCapacityRel_le_strictServiceRel
+/-- **Theorem 9.6** (linked: `not_forall_variableCapacityRel_le_weaklyStrictServiceRel`). -/
+alias thm_9_6_3 := not_forall_variableCapacityRel_le_weaklyStrictServiceRel
+/-- **Theorem 9.6** (linked: `not_forall_iInf_variableCapacityRel_le_iSup`). -/
+alias thm_9_6_4 := not_forall_iInf_variableCapacityRel_le_iSup
 
 /-- **Lemma 9.5** (§9.3.1, p.226): For T ∈ ℝ₊, the closure of the union of n-fold strict-δ_{T/n} tandems equals the min-plus pure-delay server: S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) = S_mp(δ_T). -/
 alias lemma_9_5 := systemClosure_delayTandemUnion_eq

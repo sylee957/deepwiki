@@ -23,7 +23,11 @@ abbrev def_6_1 := @compPow
 /-- **Proposition 6.1** (§6.1.1, p.130): If S₁ and S₂ are two servers, then so is the concatenation S₂ ∘ S₁. -/
 alias prop_6_1 := IsServer.comp
 
-/-! **Theorem 6.1** (§6.1.1, p.131): Concatenation of servers in a convolution: a flow crossing two servers offering β₁, β₂ is offered β₁ ∗ β₂ — Smp(β₂)∘Smp(β₁) ⊆ Smp(β₁∗β₂), and likewise for maximal curves Smax(β₂)∘Smax(β₁) ⊆ Smax(β₁∗β₂). Library: DeepWiki.comp_minimalServiceRel_le, DeepWiki.comp_maximalServiceRel_le. -/
+/-! **Theorem 6.1** (§6.1.1, p.131): Concatenation of servers in a convolution: a flow crossing two servers offering β₁, β₂ is offered β₁ ∗ β₂ — Smp(β₂)∘Smp(β₁) ⊆ Smp(β₁∗β₂), and likewise for maximal curves Smax(β₂)∘Smax(β₁) ⊆ Smax(β₁∗β₂). -/
+/-- **Theorem 6.1** (linked: `comp_minimalServiceRel_le`). -/
+alias thm_6_1_1 := comp_minimalServiceRel_le
+/-- **Theorem 6.1** (linked: `comp_maximalServiceRel_le`). -/
+alias thm_6_1_2 := comp_maximalServiceRel_le
 
 /-- **Remark 6.1** (§6.1.1, p.132): The convolution is commutative but the composition is not, so the inclusion of Theorem 6.1 can be strict: Smp(β₂)∘Smp(β₁) ⊊ Smp(β₁∗β₂) (Figure 6.3, with β₁=δ₃, β₂=λ₁). -/
 alias remark_6_1_strict := comp_minimalServiceRel_lt_delay_rate
@@ -34,9 +38,17 @@ alias prop_6_2 := eq_zero_of_comp_strictServiceRel_le
 /-- **Proposition 6.3** (§6.2.1, p.136): Tandem control: the smallest controller β_c with β_c ∗ β ≥ β_ref is the deconvolution β̂_c = ⋀{β_c | β_c∗β ≥ β_ref} = β_ref ⊘ β. -/
 alias prop_6_3 := DeepWiki.isLeast_tandemControlSet
 
-/-! **Proposition 6.4** (§6.2.1, p.136): Delay requirement: if α ≤ (β ⊘ δ_τ)⋆ then hDev(α,β) ≤ τ; moreover (β ⊘ δ_τ)⋆ is the largest sub-additive function with this property. Library: DeepWiki.hDev_le_of_le_subadditiveClosureENN_minDeconv, DeepWiki.le_subadditiveClosureENN_minDeconv_of_isSubadditive. -/
+/-! **Proposition 6.4** (§6.2.1, p.136): Delay requirement: if α ≤ (β ⊘ δ_τ)⋆ then hDev(α,β) ≤ τ; moreover (β ⊘ δ_τ)⋆ is the largest sub-additive function with this property. -/
+/-- **Proposition 6.4** (linked: `hDev_le_of_le_subadditiveClosureENN_minDeconv`). -/
+alias prop_6_4_1 := hDev_le_of_le_subadditiveClosureENN_minDeconv
+/-- **Proposition 6.4** (linked: `le_subadditiveClosureENN_minDeconv_of_isSubadditive`). -/
+alias prop_6_4_2 := le_subadditiveClosureENN_minDeconv_of_isSubadditive
 
-/-! **Proposition 6.5** (§6.2.1, p.137): Backlog requirement: if α ≤ (β + b)⋆ then vDev(α,β) ≤ b; moreover (β + b)⋆ is the largest sub-additive function with this property. Library: DeepWiki.vDev_le_of_le_subadditiveClosureENN_add, DeepWiki.le_subadditiveClosureENN_add_of_isSubadditive. -/
+/-! **Proposition 6.5** (§6.2.1, p.137): Backlog requirement: if α ≤ (β + b)⋆ then vDev(α,β) ≤ b; moreover (β + b)⋆ is the largest sub-additive function with this property. -/
+/-- **Proposition 6.5** (linked: `vDev_le_of_le_subadditiveClosureENN_add`). -/
+alias prop_6_5_1 := vDev_le_of_le_subadditiveClosureENN_add
+/-- **Proposition 6.5** (linked: `le_subadditiveClosureENN_add_of_isSubadditive`). -/
+alias prop_6_5_2 := le_subadditiveClosureENN_add_of_isSubadditive
 
 /-- **Proposition 6.6** (§6.2.2, p.138): Feedback control: the smallest controller β_c with β ∗ (β_c∗β)⋆ ≥ β_ref must satisfy ∀n∈ℕ, β_cⁿ ≥ β_ref ⊘ βⁿ⁺¹ (residuation + associativity of convolution). -/
 alias prop_6_6 := mem_feedbackControlSet_iff
@@ -53,8 +65,18 @@ alias lemma_6_1 := mem_feedbackControlSet_self_of_minDeconv_le
 /-- **Proposition 6.9** (§6.2.2, p.140): Window flow control with acknowledgments: if w ≥ ((β⊘β) ⊘ (β_ack∗β))(0), then β_wfc-ack = β ∗ (ω_w∗β_ack∗β)⋆ ≥ β. -/
 alias prop_6_9 := DeepWiki.windowAck_mem_feedbackControlSet_self
 
-/-! **Theorem 6.2** (§6.3.1.2, p.143): Server as a jitter: if every bit's delay lies between dᵐ and dᴹ, the server offers maximal service curve δ_dᵐ (infₜ d≥dᵐ ⟹ D ≤ A∗δ_dᵐ) and min-plus service curve δ_dᴹ (d≤dᴹ ⟹ A∗δ_dᴹ ≤ D, for left-continuous A). Library: DeepWiki.Deviation.le_apply_tsub_of_le_delayAt, DeepWiki.Deviation.apply_tsub_le_of_delay_le, DeepWiki.Deviation.apply_tsub_le_of_delay_le_of_leftCont. -/
+/-! **Theorem 6.2** (§6.3.1.2, p.143): Server as a jitter: if every bit's delay lies between dᵐ and dᴹ, the server offers maximal service curve δ_dᵐ (infₜ d≥dᵐ ⟹ D ≤ A∗δ_dᵐ) and min-plus service curve δ_dᴹ (d≤dᴹ ⟹ A∗δ_dᴹ ≤ D, for left-continuous A). -/
+/-- **Theorem 6.2** (linked: `Deviation.le_apply_tsub_of_le_delayAt`). -/
+alias thm_6_2_1 := Deviation.le_apply_tsub_of_le_delayAt
+/-- **Theorem 6.2** (linked: `Deviation.apply_tsub_le_of_delay_le`). -/
+alias thm_6_2_2 := Deviation.apply_tsub_le_of_delay_le
+/-- **Theorem 6.2** (linked: `Deviation.apply_tsub_le_of_delay_le_of_leftCont`). -/
+alias thm_6_2_3 := Deviation.apply_tsub_le_of_delay_le_of_leftCont
 
-/-! **Corollary 6.1** (§6.3.1.2, p.143): Service curve for a jitter: a server offering min-plus service curve β to an α-constrained arrival also offers the pure-delay min-plus curve δ_{dM} for any dM ≥ hDev(α,β). Library: DeepWiki.Deviation.apply_tsub_le_of_hDev_lt, DeepWiki.Deviation.apply_tsub_le_of_hDev_le_of_leftCont. -/
+/-! **Corollary 6.1** (§6.3.1.2, p.143): Service curve for a jitter: a server offering min-plus service curve β to an α-constrained arrival also offers the pure-delay min-plus curve δ_{dM} for any dM ≥ hDev(α,β). -/
+/-- **Corollary 6.1** (linked: `Deviation.apply_tsub_le_of_hDev_lt`). -/
+alias cor_6_1_1 := Deviation.apply_tsub_le_of_hDev_lt
+/-- **Corollary 6.1** (linked: `Deviation.apply_tsub_le_of_hDev_le_of_leftCont`). -/
+alias cor_6_1_2 := Deviation.apply_tsub_le_of_hDev_le_of_leftCont
 
 end DeepWiki.Dnc

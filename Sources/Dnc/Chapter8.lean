@@ -45,7 +45,19 @@ alias lemma_8_2 := packetize_packetize
 /-- **Theorem 8.1** (§8.1, p.187): Arrival curve after a packetizer: with maximum packet size ℓ^u, if A has a maximal (resp. minimal) arrival curve α^u (resp. α^l) then the packetized output D has maximal (resp. minimal) arrival curve α^u + ℓ^u (resp. α^l − ℓ^u). -/
 alias thm_8_1 := DeepWiki.isMaximalArrivalBound_packetizeCurve
 
-/-! **Theorem 8.2** (§8.1, p.188): Server/packetizer system S;P with max packet size ℓ^u: (1) if S offers min-plus β^m, maximal β^M and is a σ-shaper, then S;P offers β^m − ℓ^u, β^M, and is a (σ + ℓ^u)-shaper; (2) S;P outputs are P-packetized; (3) backlog of S;P differs from that of S by at most ℓ^u; (4) on P-packetized input, P adds no delay, d(A,S;P) = d(A,S). Library: DeepWiki.IsMinimalServiceCurve.comp_packetizerRel, DeepWiki.IsMaximalServiceCurve.comp_packetizerRel, DeepWiki.IsShaper.comp_packetizerRel, DeepWiki.isPacketized_of_comp_packetizerRel, DeepWiki.exists_backlog_sandwich_of_comp_packetizerRel, DeepWiki.exists_delay_eq_of_comp_packetizerRel. -/
+/-! **Theorem 8.2** (§8.1, p.188): Server/packetizer system S;P with max packet size ℓ^u: (1) if S offers min-plus β^m, maximal β^M and is a σ-shaper, then S;P offers β^m − ℓ^u, β^M, and is a (σ + ℓ^u)-shaper; (2) S;P outputs are P-packetized; (3) backlog of S;P differs from that of S by at most ℓ^u; (4) on P-packetized input, P adds no delay, d(A,S;P) = d(A,S). -/
+/-- **Theorem 8.2** (linked: `IsMinimalServiceCurve.comp_packetizerRel`). -/
+alias thm_8_2_1 := IsMinimalServiceCurve.comp_packetizerRel
+/-- **Theorem 8.2** (linked: `IsMaximalServiceCurve.comp_packetizerRel`). -/
+alias thm_8_2_2 := IsMaximalServiceCurve.comp_packetizerRel
+/-- **Theorem 8.2** (linked: `IsShaper.comp_packetizerRel`). -/
+alias thm_8_2_3 := IsShaper.comp_packetizerRel
+/-- **Theorem 8.2** (linked: `isPacketized_of_comp_packetizerRel`). -/
+alias thm_8_2_4 := isPacketized_of_comp_packetizerRel
+/-- **Theorem 8.2** (linked: `exists_backlog_sandwich_of_comp_packetizerRel`). -/
+alias thm_8_2_5 := exists_backlog_sandwich_of_comp_packetizerRel
+/-- **Theorem 8.2** (linked: `exists_delay_eq_of_comp_packetizerRel`). -/
+alias thm_8_2_6 := exists_delay_eq_of_comp_packetizerRel
 
 /-! **Corollary 8.2** (§8.1, p.190): Packetizer as a delay: if a cumulative function A is P-packetized then S;P offers the pure-delay min-plus service curve δ_{d(A,S)} to A (using d(A,S;P) = d(A,S)). Not formalized in the library. -/
 

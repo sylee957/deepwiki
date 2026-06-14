@@ -42,11 +42,25 @@ abbrev def_7_3 := @aggregateServer
 /-- **Definition 7.4** (§7.1.2, p.154): Residual server S_i of an n-server for flow i: the projection of the relation onto coordinate i (the other flows are cross-traffic), possibly non-deterministic. -/
 noncomputable def def_7_4 := @residualServer
 
-/-! **Definition 7.5** (§7.1.2, p.154): Aggregate service curve: a MIMO server S offers β as an aggregate service curve of type 𝒯 iff its aggregate server S_Σ offers β as a service curve of type 𝒯. Library: aggregateServer, IsMinimalServiceCurve, IsStrictMinimalServiceCurve. -/
+/-! **Definition 7.5** (§7.1.2, p.154): Aggregate service curve: a MIMO server S offers β as an aggregate service curve of type 𝒯 iff its aggregate server S_Σ offers β as a service curve of type 𝒯. -/
+/-- **Definition 7.5** (linked: `aggregateServer`). -/
+noncomputable def def_7_5_1 := @aggregateServer
+/-- **Definition 7.5** (linked: `IsMinimalServiceCurve`). -/
+noncomputable def def_7_5_2 := @IsMinimalServiceCurve
+/-- **Definition 7.5** (linked: `IsStrictMinimalServiceCurve`). -/
+alias def_7_5_3 := IsStrictMinimalServiceCurve
 
-/-! **Definition 7.6** (§7.1.2, p.154): Residual service curve: a MIMO server S offers β as a residual service curve for flow i iff its residual server S_i offers β as a service curve. Library: residualServer, isMinimalServiceCurve_residualServer_of_minimal_aggregate. -/
+/-! **Definition 7.6** (§7.1.2, p.154): Residual service curve: a MIMO server S offers β as a residual service curve for flow i iff its residual server S_i offers β as a service curve. -/
+/-- **Definition 7.6** (linked: `residualServer`). -/
+noncomputable def def_7_6_1 := @residualServer
+/-- **Definition 7.6** (linked: `isMinimalServiceCurve_residualServer_of_minimal_aggregate`). -/
+alias def_7_6_2 := isMinimalServiceCurve_residualServer_of_minimal_aggregate
 
-/-! **Lemma 7.1** (§7.1.2, p.155): MIMO server backlogged period: for a causal family, the aggregate is backlogged on a period iff at each instant some flow is backlogged; a flow's backlogged period is one for any aggregate containing it. Library: isBacklogged_sum_iff, isBacklogged_sum_of_isBacklogged. -/
+/-! **Lemma 7.1** (§7.1.2, p.155): MIMO server backlogged period: for a causal family, the aggregate is backlogged on a period iff at each instant some flow is backlogged; a flow's backlogged period is one for any aggregate containing it. -/
+/-- **Lemma 7.1** (linked: `isBacklogged_sum_iff`). -/
+alias lemma_7_1_1 := isBacklogged_sum_iff
+/-- **Lemma 7.1** (linked: `isBacklogged_sum_of_isBacklogged`). -/
+alias lemma_7_1_2 := isBacklogged_sum_of_isBacklogged
 
 /-- **Theorem 7.1** (§7.2.1, p.156): Blind multiplexing from an aggregate strict service: an n-server with a strict aggregate curve β and α_j-bounded arrivals serves flow i at the min-plus residual β_i = [β − ∑_{j≠i} α_j]⁺↑, i.e. D_i ≥ A_i ∗ β_i. -/
 alias thm_7_1 := minConv_residualCurve_le_of_isStrictMinimalServiceCurve
@@ -63,7 +77,13 @@ alias thm_7_3 := minConv_residualCurveEReal_le_of_minimal_aggregate
 /-- **Definition 7.7** (§7.3.1.1, p.164): FIFO service policy: an n-server is FIFO iff D_i(t) > A_i(u) ⟹ D_j(t) ≥ A_j(u) for all flows i,j and all t,u (data gone for one flow is gone for all, and conversely). -/
 abbrev def_7_7 := @IsFifo
 
-/-! **Lemma 7.2** (§7.3.1.1, p.165): FIFO characterization via aggregate: the two FIFO implications are contrapositives, and a FIFO aggregate comparison ∑A_j(u) ≤ ∑D_j(t) (or the reverse) transfers to every flow. Library: isFifo_iff, forall_le_of_sum_le_of_isFifo, forall_le_of_le_sum_of_isFifo. -/
+/-! **Lemma 7.2** (§7.3.1.1, p.165): FIFO characterization via aggregate: the two FIFO implications are contrapositives, and a FIFO aggregate comparison ∑A_j(u) ≤ ∑D_j(t) (or the reverse) transfers to every flow. -/
+/-- **Lemma 7.2** (linked: `isFifo_iff`). -/
+alias lemma_7_2_1 := isFifo_iff
+/-- **Lemma 7.2** (linked: `forall_le_of_sum_le_of_isFifo`). -/
+alias lemma_7_2_2 := forall_le_of_sum_le_of_isFifo
+/-- **Lemma 7.2** (linked: `forall_le_of_le_sum_of_isFifo`). -/
+alias lemma_7_2_3 := forall_le_of_le_sum_of_isFifo
 
 /-- **Theorem 7.4** (§7.3.1.2, p.165): FIFO delay bound: a FIFO server with min-plus aggregate β and aggregate arrival curve α offers each flow the pure delay δ_dM for any dM ≥ hDev(α, β); dM bounds every flow's delay. -/
 alias thm_7_4 := apply_tsub_le_of_isFifo

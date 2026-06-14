@@ -46,7 +46,11 @@ alias thm_10_1 := isMinimalServiceCurve_pmooPathResidual_of_strict_path
 /-- **Definition 10** (§10.3.2, p.237): The PMOO operator's service curve: infimum over time splits ∑_{h≤n}uₕ=t of ∑ₕβ⁽ʰ⁾(uₕ) − ∑ᵢαᵢ(∑_{h∈pᵢ}uₕ), the aggregate strict service less each cross-flow's arrival charged over its own contiguous path. -/
 noncomputable def def_10_pmooPathResidual := @pmooPathResidual
 
-/-! **Lemma 10.1** (§10.3.2, p.237): Cumulative-process inequality underlying Theorem 10.1: ∀t ∃u₁..uₙ≥0 with ∑uⱼ such that F₁⁽ⁿ⁾(t)−F₁⁽⁰⁾(t−∑uⱼ) ≥ ∑ⱼβⱼ(uⱼ) − ∑ᵢ(Fᵢ^{end(i)}(…)−Fᵢ^{(0)}(…)), and moreover F₁⁽ⁿ⁾(t)−F₁⁽⁰⁾(t−∑uⱼ)≥0 — the telescope of per-hop strict steps over the cascaded starts. Library: DeepWiki.sum_add_pathTelescope_le, DeepWiki.pathNode_floor. -/
+/-! **Lemma 10.1** (§10.3.2, p.237): Cumulative-process inequality underlying Theorem 10.1: ∀t ∃u₁..uₙ≥0 with ∑uⱼ such that F₁⁽ⁿ⁾(t)−F₁⁽⁰⁾(t−∑uⱼ) ≥ ∑ⱼβⱼ(uⱼ) − ∑ᵢ(Fᵢ^{end(i)}(…)−Fᵢ^{(0)}(…)), and moreover F₁⁽ⁿ⁾(t)−F₁⁽⁰⁾(t−∑uⱼ)≥0 — the telescope of per-hop strict steps over the cascaded starts. -/
+/-- **Lemma 10.1** (linked: `sum_add_pathTelescope_le`). -/
+alias lemma_10_1_1 := sum_add_pathTelescope_le
+/-- **Lemma 10.1** (linked: `pathNode_floor`). -/
+alias lemma_10_1_2 := pathNode_floor
 
 /-- **Example 10.1** (§10.3.2, p.238): PMOO on a sink-tree of rate-latency servers β_{Rₕ,Tₕ} with token-bucket cross-traffic γ_{rₐ,bₐ}: the residual is again rate-latency β_{R,T} with R=(⊓ₕRₕ)−∑rₐ and T=∑ₕTₕ + (∑rₐ·∑ₕTₕ+∑bₐ)/R, under stability ∑rₐ<⊓ₕRₕ; the tandem of rate-latency servers folds to one rate-latency server. -/
 alias ex_10_1 := pmooResidualChain_rateLatency
