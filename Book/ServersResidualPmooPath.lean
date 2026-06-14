@@ -9,9 +9,11 @@ flow receives
 the infimum over splits of the aggregate strict service less each
 cross-flow's arrival charged *only over the hops on its own path*
 (`pmooPathResidual`). The `ℝ≥0` truncated subtraction is the positive
-part. The all-crossing case (every path the full line) collapses the
-sub-path sums to the whole split and recovers `pmooResidualChain`
-(`pathHops_univ_sum`). -/
+part. The all-crossing case (every path the full line) collapses each
+cross-flow's sub-path sum to the whole split (`pathHops_univ_sum`) — the
+key reduction toward the single-`α` chain residual `pmooResidualChain`.
+Cumulative functions follow the repo's left-continuous convention (used for
+the start-equality of the per-hop step). -/
 
 namespace DeepWiki
 
@@ -130,9 +132,9 @@ theorem apply_start_sum_finset_eq {ι : Type*}
 /-! ## The cascade witness's widths (pure facts about a monotone node family)
 For a nondecreasing node sequence `s : ℕ → ℝ≥0` (the cascaded per-hop
 starts, with `s (n+1) = t`), the hop widths `uₕ = s (h+1) − s h` split `t`
-and telescope; the chain convolution of the gap is bounded by the sum of
-the hops applied to the widths. These feed the per-path assembly with the
-cascaded starts as the witness split. -/
+and telescope — over the whole range and over each flow's contiguous
+window. These feed the per-path assembly with the cascaded starts as the
+witness split. -/
 
 /-- The hop widths sum to the total gap: `∑_{h≤n} (s(h+1) − sₕ) = s(n+1) − s 0`. -/
 theorem sum_range_width_telescope {s : ℕ → ℝ≥0} (hs : Monotone s) (n : ℕ) :
@@ -158,30 +160,6 @@ theorem sum_Ico_width_telescope {s : ℕ → ℝ≥0} (hs : Monotone s) :
     · have hab' : a ≤ b := Nat.lt_succ_iff.mp h
       rw [Finset.sum_Ico_succ_top hab', ih hab', add_comm,
         tsub_add_tsub_cancel (hs (Nat.le_succ b)) (hs hab')]
-
-/-- **Layer 1**: the chain convolution of the total gap is bounded by the
-sum of the hop curves applied to the hop widths,
-`chainConv β n (s(n+1) − s 0) ≤ ∑_{h≤n} β⁽ʰ⁾(s(h+1) − sₕ)`, for any
-nondecreasing node sequence `s`. The peel step splits the top width off
-the convolution. -/
-theorem chainConv_le_sum_widths {β : ℕ → ℝ≥0 → ℝ≥0} {s : ℕ → ℝ≥0}
-    (hs : Monotone s) (n : ℕ) :
-    chainConv β n (s (n + 1) - s 0)
-      ≤ ∑ h ∈ Finset.range (n + 1), β h (s (h + 1) - s h) := by
-  induction n with
-  | zero => simp [chainConv_zero]
-  | succ n ih =>
-    rw [chainConv_succ]
-    have hsplit : (s (n + 1) - s 0) + (s (n + 2) - s (n + 1)) = s (n + 2) - s 0 := by
-      rw [add_comm]
-      exact tsub_add_tsub_cancel (hs (Nat.le_succ _)) (hs (Nat.zero_le _))
-    calc minConvProj (chainConv β n) (β (n + 1)) (s (n + 2) - s 0)
-        ≤ chainConv β n (s (n + 1) - s 0)
-            + β (n + 1) (s (n + 2) - s (n + 1)) := minConvProj_le_add hsplit
-      _ ≤ (∑ h ∈ Finset.range (n + 1), β h (s (h + 1) - s h))
-            + β (n + 1) (s (n + 2) - s (n + 1)) := add_le_add ih le_rfl
-      _ = ∑ h ∈ Finset.range (n + 2), β h (s (h + 1) - s h) :=
-          (Finset.sum_range_succ (fun h => β h (s (h + 1) - s h)) (n + 1)).symm
 
 /-! ## The cascade node sequence and the per-hop strict step
 The hop-indexed cascade `pathNode`: descending from the top `sₙ₊₁ = t`,
@@ -235,7 +213,7 @@ theorem pathNode_mono {ι : Type*} [Fintype ι] (F : ℕ → ι → Curve)
     (S : ℕ → Finset ι) (n : ℕ) (t : ℝ≥0) : Monotone (pathNode F S n t) :=
   monotone_nat_of_le_succ (pathNode_le_succ F S n t)
 
-/-- **The per-hop strict step** (book inequality [10.2] at the cascade):
+/-- **The per-hop strict step** at the cascade:
 the flow-set aggregate input at `sₕ` plus `β⁽ʰ⁾(uₕ)` is dominated by the
 output at `sₕ₊₁`. The aggregate is backlogged on `(sₕ, sₕ₊₁]` (its own
 start window) and every member is fully served at `sₕ`. -/
@@ -291,7 +269,7 @@ theorem pathTelescope_shift (G : ℕ → ℝ≥0) {a b : ℕ} (hab : a ≤ b) :
   rw [hRHS, hreindex, add_comm _ (G a),
     Finset.sum_eq_sum_Ico_succ_bot (show a < b + 2 by omega) G]
 
-/-- **The flow-set telescope** (book Lemma 10.1): with flow sets
+/-- **The flow-set telescope**: with flow sets
 `S h = {j | fst j ≤ h ≤ lst j}` (linked by `hS`), causality `hc`, the
 per-hop strict bounds `hstrict`, and contiguous in-line paths `hpath`,
 the cascaded service plus the flows' inputs at their path starts is
@@ -390,7 +368,7 @@ theorem pathNode_floor {m : ℕ} {F : ℕ → Fin m → Curve} {S : ℕ → Fins
   exact hfold (n + 1) le_rfl
 
 /-- **The per-path PMOO residual is a service curve for the tagged flow**
-(book Theorem 10.1, strict aggregates, blind multiplexing): in a tandem
+(strict aggregates, blind multiplexing): in a tandem
 where each cross-flow `j ≠ tg` is `αⱼ`-constrained on its contiguous
 sub-path `[fst j, lst j]` and the tagged flow crosses every hop, flow `tg`
 obeys the strict service inequality for `pmooPathResidual` from the
@@ -469,7 +447,7 @@ theorem add_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → 
     linarith
   · rw [tsub_eq_zero_of_le hBX, add_zero]; exact hfloor
 
-/-- **Min-plus service-curve form of Theorem 10.1**: the tagged flow is
+/-- **Min-plus service-curve form**: the tagged flow is
 served at the per-path PMOO residual, `Aᵗᵍ ∗ pmooPathResidual ≤ Dᵗᵍ` —
 the convolution splits at the cascade bottom. -/
 theorem minConv_pmooPathResidual_le_of_strict_path {m : ℕ} {F : ℕ → Fin m → Curve}
@@ -501,8 +479,8 @@ each cross-flow `j` is `αⱼ`-constrained over the contiguous sub-path
 `[fst j, lst j]` it crosses: the tagged flow is served at the min-plus
 residual `pmooPathResidual`, the infimum over time splits of
 `∑ₕ β⁽ʰ⁾(uₕ) − ∑ⱼ αⱼ(∑_{h∈pⱼ} uₕ)` — each cross-flow's burst paid once,
-over its own path. The all-crossing case (`pathHops_univ_sum`) recovers the
-chain residual `pmooResidualChain`. -/
+over its own path. The all-crossing case (`pathHops_univ_sum`) reduces the
+sub-path sums to the whole split, the bridge toward `pmooResidualChain`. -/
 example {m : ℕ} {F : ℕ → Fin m → Curve}
     {β : ℕ → ℝ≥0 → ℝ≥0} {S : ℕ → Finset (Fin m)} {α : Fin m → ℝ≥0 → ℝ≥0}
     {fst lst : Fin m → ℕ} {n : ℕ} (t : ℝ≥0) {tg : Fin m}
