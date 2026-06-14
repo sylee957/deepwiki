@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityGlobal
+import DeepWiki.NetworkCalculus.StabilityFixPoint
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -63,7 +64,18 @@ theorem lemma_12_4 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0}
 
 /-! **Example 12.1** (§12.2.1, p.273): The example network of Figure 12.1 (top) is transformed by removing arc h'={(4,2),(2,1)} into an acyclic feed-forward network N^FF; flows splitting into sub-flows (i,k). Not formalized in the library. -/
 
-/-! **Theorem 12.1** (§12.2.3, p.275): Fix-point sufficient condition: let C={α | α ≤ F(α)} be the solutions of α ≤ F(α) and α̂ = sup{α | α∈C}; if α̂ is finite then N is globally stable and each α̂_{i,k} is an arrival curve for flow i at the first server of flow (i,k). Not formalized in the library. -/
+/-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
+Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
+assignment `α̂ = sSup {α | α ≤ F α}` (`canonicalArrivalAssignment`) is a fixed
+point of `F` and the greatest consistent (post-fixed) assignment. The library's
+`map_canonicalArrivalAssignment` + `isGreatest_canonicalArrivalAssignment`.
+(That a *finite* `α̂` then makes the network globally stable and gives each flow
+`(i,k)` an arrival curve at its first server is the network-model
+instantiation, which builds on this kernel and is not formalized.) -/
+theorem thm_12_1 {V : Type*} [CompleteLattice V] (F : V →o V) :
+    F (canonicalArrivalAssignment F) = canonicalArrivalAssignment F ∧
+      IsGreatest {α | α ≤ F α} (canonicalArrivalAssignment F) :=
+  ⟨map_canonicalArrivalAssignment F, isGreatest_canonicalArrivalAssignment F⟩
 
 /-! **Theorem 12.2** (§12.3.1, p.276): Static priority policies: a network where flows have fixed priorities and a strict priority order (each flow a different priority) is stable if and only if it is locally stable. Not formalized in the library. -/
 

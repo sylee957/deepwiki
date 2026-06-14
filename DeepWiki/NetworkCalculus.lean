@@ -43,6 +43,7 @@ import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityGlobal
+import DeepWiki.NetworkCalculus.StabilityFixPoint
 import DeepWiki.NetworkCalculus.NetworkTopology
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
