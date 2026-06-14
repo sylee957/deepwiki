@@ -133,4 +133,32 @@ theorem strictServiceRelEReal_delay_eq_weaklyStrictServiceRelEReal_delay {T : �
   · intro hb s t hst hbl
     exact le_trans (tsub_le_tsub_left (start_le_of_isBacklogged hbl) t) (hb t)
 
+/-! ## The hierarchy collapses at `δ_0`
+At the strongest pure-delay curve `δ_0` (`= convUnitEReal`, the min-plus unit) the three
+extended service notions coincide: `S_strict(δ_0) = S_wstrict(δ_0) = S_mp(δ_0)`, all equal
+to the causal-equality relation `D = A` — a `δ_0`-server forbids every proper backlogged
+period, in each sense. This is the top of the `vcn ⊆ strict ⊆ wstrict ⊆ mp` hierarchy
+pinching shut, combining `strict = wstrict @ δ_T` (at `T = 0`) with `wstrict = mp @ δ_0`. -/
+
+/-- `δ_0` (`= delayEReal 0`) is the min-plus unit `convUnitEReal` (on `ℝ≥0`, `t ≤ 0 ↔
+t = 0`); mirrors the catalog `delayEReal_zero_eq_convUnitEReal` for import-DAG reasons. -/
+theorem delayEReal_zero_eq_convUnitEReal' :
+    (delayEReal 0 : ℝ≥0 → EReal) = convUnitEReal := by
+  funext t; simp [convUnitEReal]
+
+/-- `S_strict(δ_0) = S_wstrict(δ_0)`: the `T = 0` case of `strict = wstrict @ δ_T`, read
+through `δ_0 = delayEReal 0 = convUnitEReal`. -/
+theorem strictServiceRelEReal_convUnitEReal_eq_weaklyStrict :
+    strictServiceRelEReal convUnitEReal = weaklyStrictServiceRelEReal convUnitEReal := by
+  rw [← delayEReal_zero_eq_convUnitEReal']
+  exact strictServiceRelEReal_delay_eq_weaklyStrictServiceRelEReal_delay
+
+/-- **The hierarchy collapses at `δ_0`**: `S_strict(δ_0) = S_mp(δ_0)`, both the
+causal-equality relation. With `weaklyStrictServiceRelEReal_convUnitEReal_eq`, the three
+notions `strict`, `wstrict`, `mp` all coincide at `δ_0`. -/
+theorem strictServiceRelEReal_convUnitEReal_eq :
+    strictServiceRelEReal convUnitEReal = minimalServiceRel convUnitEReal := by
+  rw [strictServiceRelEReal_convUnitEReal_eq_weaklyStrict,
+    weaklyStrictServiceRelEReal_convUnitEReal_eq]
+
 end DeepWiki
