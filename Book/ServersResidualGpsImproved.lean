@@ -413,6 +413,49 @@ theorem IsAggregateStrict.peel_two {ι : Type*} [DecidableEq ι]
       hgps hk₂ harr₂ hcross₂ hgrow₂
   rwa [gatedResidual_gatedResidual hT] at hpeel₂
 
+/-! ## The `n`-flow fold: iterated peeling
+The book's Theorem 7.8 is proved by induction — peel the arrival-constrained flows one at a
+time, each peel gating the residual, until a single aggregate remains. `GpsPeelChain` records
+one such peel sequence (from `(J, β)` down to `(J', β')`, threading the running residual
+through each `peel`); `GpsPeelChain.isAggregateStrict` transports aggregate-strictness along
+it. Iterating from the full aggregate down to a single flow recovers the book's
+`β̃ᵢ = (β − ∑_{j<i} αⱼ)·1_{≥t_{i-1}}`. -/
+
+/-- A valid sequence of improved-GPS peels: from the aggregate `J` carrying the strict curve
+`β`, peel arrival-constrained flows one at a time — each past its gate `T`, with the two gate
+conditions (`hcross` domination, `hgrow` growth) on the running residual — down to the
+aggregate `J'` carrying the gated residual `β'`. -/
+inductive GpsPeelChain {ι : Type*} [DecidableEq ι] (φ : ι → ℝ≥0) (As : ι → Curve) :
+    Finset ι → (ℝ≥0 → ℝ≥0) → Finset ι → (ℝ≥0 → ℝ≥0) → Prop
+  /-- The empty peel sequence: the aggregate and curve are unchanged. -/
+  | nil (J : Finset ι) (β : ℝ≥0 → ℝ≥0) : GpsPeelChain φ As J β J β
+  /-- Peel one arrival-constrained flow `k` (gate `T`, gate conditions `hcross`/`hgrow`),
+  then continue from the smaller aggregate `J.erase k` with the gated residual. -/
+  | cons {J : Finset ι} {β : ℝ≥0 → ℝ≥0} {k : ι} {α : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+      {J' : Finset ι} {β' : ℝ≥0 → ℝ≥0}
+      (hΦ : 0 < ∑ j ∈ J, φ j) (hk : k ∈ J)
+      (harr : IsMaximalArrivalBound ⇑(As k) α)
+      (hcross : ∀ x, T ≤ x → (∑ j ∈ J, φ j) * α x ≤ φ k * β x)
+      (hgrow : ∀ x y, T ≤ x → x ≤ y →
+        φ k * β x + (∑ j ∈ J, φ j) * α y ≤ φ k * β y + (∑ j ∈ J, φ j) * α x)
+      (rest : GpsPeelChain φ As (J.erase k) (gatedResidual β α T) J' β') :
+      GpsPeelChain φ As J β J' β'
+
+/-- **The `n`-flow fold (Theorem 7.8's induction)**: aggregate-strictness transports along a
+peel chain — if `β` is strict for the aggregate `J` and the chain peels flows down to `(J', β')`,
+then `β'` is strict for the remaining aggregate `J'`. Each step is one `IsAggregateStrict.peel`;
+the chain just iterates it. -/
+theorem GpsPeelChain.isAggregateStrict {ι : Type*} [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    {J : Finset ι} {β : ℝ≥0 → ℝ≥0} {J' : Finset ι} {β' : ℝ≥0 → ℝ≥0}
+    (chain : GpsPeelChain φ As J β J' β') :
+    IsAggregateStrict As Ds J β → IsAggregateStrict As Ds J' β' := by
+  induction chain with
+  | nil => exact id
+  | cons hΦ hk harr hcross hgrow _ ih =>
+    exact fun h => ih (h.peel hΦ (fun j _ => hc j) hgps hk harr hcross hgrow)
+
 /-! ## Book restatement (towards the improved GPS residual)
 The two lemmas on the way to the improved GPS theorem: in a GPS
 `n`-server offering a strict `β` whose flow `k` has a (concave)
