@@ -112,6 +112,8 @@ import Book.ServersResidualDrr
 import Book.ServersResidualTdma
 import Book.ServersResidualWrr
 import Book.ServersResidualWrrPackets
+import Book.ServersDrr
+import Book.ServersWrr
 import Book.ServersResidualMinimal
 import Book.ServersResidualStrictness
 import Book.ServersResidualOutput
