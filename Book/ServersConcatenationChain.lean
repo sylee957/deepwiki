@@ -63,6 +63,14 @@ theorem isBddBelowReal_concatConv {ι : Type*} {β : ι → ℝ≥0 → EReal}
   | nil => exact isBddBelowReal_convUnitEReal
   | cons h hs ih => exact (hb h).minConv ih
 
+/-- The convolution fold of nonnegative curves is nonnegative. -/
+theorem isNonneg_concatConv {ι : Type*} {β : ι → ℝ≥0 → EReal}
+    (hnn : ∀ h, IsNonneg (β h)) (hs : List ι) :
+    IsNonneg (concatConv β hs) := by
+  induction hs with
+  | nil => exact isNonneg_convUnitEReal
+  | cons h hs ih => exact (hnn h).conv ih
+
 /-- The identity relation offers the convolution unit `δ₀` as its
 min-plus service curve. -/
 theorem isMinimalServiceCurve_eq_convUnitEReal :
