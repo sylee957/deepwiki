@@ -122,4 +122,29 @@ theorem Network.isGloballyStable_of_isLocallyStable (net : Network κ ι)
   isGloballyStableServer_of_isLocallyStableServer (hc h) (hβ h) (hp h) (harr h)
     (net.isLocallyStableServer_of_isLocallyStable hstab h)
 
+/-! ## Network topology classes (Definition 10.1)
+The modular-analysis topology classes of `NetworkTopology`, read off a
+network's routing `paths`. -/
+
+/-- A network is **feed-forward** when its routing admits an acyclic server
+ranking — every flow path strictly increases in rank (`IsFeedForward`). -/
+def Network.IsFeedForward (net : Network κ ι) (rank : κ → ℕ) : Prop :=
+  _root_.DeepWiki.IsFeedForward rank net.paths
+
+/-- A network is a **nested tandem** when its flow paths are totally ordered by
+contiguous-subpath inclusion (the (Nest) condition, `IsNestedTandem`). -/
+def Network.IsNestedTandem (net : Network κ ι) : Prop :=
+  _root_.DeepWiki.IsNestedTandem net.paths
+
+/-- A network is a **tandem** along `line` when every flow path is a contiguous
+subpath of `line` (`IsTandemNetwork`). -/
+def Network.IsTandem (net : Network κ ι) (line : List κ) : Prop :=
+  _root_.DeepWiki.IsTandemNetwork line net.paths
+
+omit [Fintype ι] [DecidableEq κ] in
+/-- A single-flow network is trivially a nested tandem. -/
+theorem Network.isNestedTandem_of_subsingleton [Subsingleton ι]
+    (net : Network κ ι) : net.IsNestedTandem :=
+  _root_.DeepWiki.isNestedTandem_of_subsingleton net.paths
+
 end DeepWiki
