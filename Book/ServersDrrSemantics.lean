@@ -6,8 +6,11 @@ inner drain loop `drrInner` (lines 7-10), the per-flow turn `drrTurn`
 (lines 5-12), and one round `drrRound` (the `for i = 1 to n` pass). The
 soundness theorems pin the big-step execution of these programs to the
 functional models of `Book.ServersDrr` — `drrInner` realizes `drrDrain`
-and `drrTurn` realizes `drrServe` on flow `i`'s counter and queue — so the
-round-count bounds (`IsDrr`) carry over to the genuine imperative program.
+and `drrTurn` realizes `drrServe` on flow `i`'s counter and queue. `drrServe`
+is the per-step building block of the `IsDrr` round-count coupling derived
+at the curve level in `Book.ServersResidualDrr`; the rounds-to-continuous-time
+bridge (`IsDrr`'s abstraction boundary) and the output trace are not
+formalized here.
 -/
 
 namespace DeepWiki
@@ -175,12 +178,67 @@ theorem bigStep_drrTurn (Q : ℝ≥0) (i : Fin n) {σ σ' : SchedState n}
     refine ⟨(Function.update_eq_self _ _).symm, ?_, rfl⟩
     rw [← hqe]; exact (Function.update_eq_self _ _).symm
 
+/-- One DRR round (line 4, `for i = 1 to n`): run every flow's turn once,
+with its own quantum `Q i`. -/
+def drrRound (Q : Fin n → ℝ≥0) : Stmt n := roundStmt (fun i => drrTurn (Q i) i)
+
+/-- **Round soundness** (the `for`-loop over flows): one round serves each
+flow once, realizing `drrServe` on every flow independently — turn `i`
+touches only flow `i`, so the serving order is immaterial. -/
+theorem bigStep_drrRound (Q : Fin n → ℝ≥0) {σ σ' : SchedState n}
+    (h : BigStep (drrRound Q) σ σ') (j : Fin n) :
+    σ'.dc j = (drrServe (Q j) (σ.dc j) (σ.queue j)).1
+      ∧ σ'.queue j = (drrServe (Q j) (σ.dc j) (σ.queue j)).2 := by
+  suffices H : ∀ (L : List (Fin n)), L.Nodup → ∀ {a a' : SchedState n},
+      BigStep (L.foldr (fun i s => Stmt.seq (drrTurn (Q i) i) s) Stmt.skip) a a' →
+      (∀ k ∈ L, a'.dc k = (drrServe (Q k) (a.dc k) (a.queue k)).1
+          ∧ a'.queue k = (drrServe (Q k) (a.dc k) (a.queue k)).2)
+        ∧ (∀ k, k ∉ L → a'.dc k = a.dc k ∧ a'.queue k = a.queue k) by
+    exact (H (List.finRange n) (List.nodup_finRange n) h).1 j (List.mem_finRange j)
+  intro L
+  induction L with
+  | nil =>
+    intro _ a a' h
+    rw [List.foldr_nil, bigStep_skip_iff] at h
+    subst h
+    exact ⟨fun k hk => by simp at hk, fun k _ => ⟨rfl, rfl⟩⟩
+  | cons i rest ih =>
+    intro hnd a a' h
+    rw [List.foldr_cons, bigStep_seq_iff] at h
+    obtain ⟨σm, hturn, hfold⟩ := h
+    obtain ⟨hmdc, hmq, _⟩ := bigStep_drrTurn (Q i) i hturn
+    rw [List.nodup_cons] at hnd
+    obtain ⟨hinotmem, hndrest⟩ := hnd
+    obtain ⟨ihserved, ihframe⟩ := ih hndrest hfold
+    refine ⟨fun k hk => ?_, fun k hk => ?_⟩
+    · rw [List.mem_cons] at hk
+      rcases hk with rfl | hkrest
+      · obtain ⟨fd, fq⟩ := ihframe k hinotmem
+        exact ⟨by rw [fd, hmdc, Function.update_self],
+          by rw [fq, hmq, Function.update_self]⟩
+      · obtain ⟨sd, sq⟩ := ihserved k hkrest
+        have hki : k ≠ i := fun he => hinotmem (he ▸ hkrest)
+        exact ⟨by rw [sd, hmdc, hmq, Function.update_of_ne hki,
+            Function.update_of_ne hki],
+          by rw [sq, hmdc, hmq, Function.update_of_ne hki,
+            Function.update_of_ne hki]⟩
+    · rw [List.mem_cons, not_or] at hk
+      obtain ⟨hkne, hkrest⟩ := hk
+      obtain ⟨fd, fq⟩ := ihframe k hkrest
+      exact ⟨by rw [fd, hmdc, Function.update_of_ne hkne],
+        by rw [fq, hmq, Function.update_of_ne hkne]⟩
+
 /-! ## Book restatement (DRR as an imperative program)
 Running Algorithm 1's per-flow turn `drrTurn Q i` updates flow `i`'s
-deficit counter and queue exactly as the functional model `drrServe` — the
-basis of the `IsDrr` round-count bounds in `Book.ServersResidualDrr`. The
-operational semantics and the functional model agree, so the round-count
-guarantees hold of the genuine imperative program. -/
+deficit counter and queue exactly as the functional model `drrServe`
+(`bigStep_drrTurn`); one round `drrRound` does so for every flow
+(`bigStep_drrRound`). `drrServe` is the per-step building block of the
+`IsDrr` round-count coupling derived at the curve level in
+`Book.ServersResidualDrr`; bridging this state-trajectory to the
+continuous-time departure process `D` over a backlogged period (the
+rounds-to-time correspondence) is `IsDrr`'s deliberate abstraction
+boundary and is not formalized here. The output trace `out` and a
+fuel-based executable evaluator are likewise deferred. -/
 example (Q : ℝ≥0) (i : Fin n) {σ σ' : SchedState n}
     (h : BigStep (drrTurn Q i) σ σ') :
     σ'.dc i = (drrServe Q (σ.dc i) (σ.queue i)).1
