@@ -8,6 +8,7 @@ import DeepWiki.NetworkCalculus.ServersResidualTdma
 import DeepWiki.NetworkCalculus.ServersResidualWrr
 import DeepWiki.NetworkCalculus.ServersResidualWrrPackets
 import DeepWiki.NetworkCalculus.ServersWrr
+import DeepWiki.NetworkCalculus.PacketCurves
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 8: Packets
@@ -71,7 +72,10 @@ alias thm_8_5 := isStrictMinimalServiceCurve_drrResidual_of_isDrr
 /-- **Definition 8.2** (§8.2.4, p.200): Algorithm 2 (WRR): per-round each non-empty flow sends up to w_i head packets in turn. -/
 abbrev alg_8_2_wrr := @wrrServe
 
-/-! **Definition 8.4** (§8.2.4, p.200): Packet curves: for a cumulative packet length sequence L = (L_n) and nondecreasing L^l, L^u : ℕ → ℝ≥0, L^l and L^u are lower and upper packet curves iff ∀ i,n, L^l(n) ≤ ∑_{j=i+1}^{i+n} L_j ≤ L^u(n). Not formalized in the library. -/
+/-- **Definition 8.4** (§8.2.4, p.200): packet curves — `Lˡ, Lᵘ` bound the
+total length of any `n` consecutive packets of the length sequence `L`,
+`Lˡ n ≤ ∑_{j=i+1}^{i+n} L j ≤ Lᵘ n`. The library's `IsPacketCurve`. -/
+def def_8_4 := @IsPacketCurve
 
 /-- **Theorem 8.6** (§8.2.4, p.200): WRR residual service curve, eq [8.10] (packet-curve form): a WRR n-server with weights w_i and lower/upper packet curves L_i^l, L_i^u, aggregate strict β, offers flow i the strict service curve f^{-1} ∘ β (f the worst-round-count price, f^{-1} its lower pseudo-inverse). -/
 alias thm_8_6_a := isStrictMinimalServiceCurve_wrrResidualPackets_of_isWrrPackets
