@@ -15,10 +15,11 @@ pointwise supremum `⨆ᵢ βᵢ` is the unit step `1_{>0}`. Any single capacity
 realising the unit-step floor would need increment `≥ 1` on *every*
 positive window; telescoping `n+1` equal windows of `[0, 1]` forces
 `C(1) ≥ n+1` for all `n` — impossible for a finite-valued curve. The
-finite-family law, by contrast, holds — its waste-monotonicity engine
-(`variableCapacityOutput_add_capacity_le`,
-`sub_variableCapacityOutput_mono`) is in `ServiceCurveVariableCapacity`;
-the binary-merge representation that completes it is deferred. -/
+finite-family `⊆`, by contrast, holds *under per-`i` jump domination* —
+realised by the merged capacity `mergeCapN` in
+`ServiceCurveVariableCapacityFamilies`
+(`variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup`); the
+unconditional finite case is open. -/
 
 namespace DeepWiki
 
@@ -158,8 +159,10 @@ Archimedean escape). The book's literal right-hand side is the
 the unit step, whose closure is unbounded (its self-convolutions
 diverge), so no finite capacity realises it either — the closure form
 fails a fortiori, the formalized `¬∀` on the sup itself being the
-citable core. The finite-family law, by contrast, holds (the merge
-engine is landed; its representation is deferred). -/
+citable core. The finite-family `⊆`, by contrast, holds under per-`i`
+jump domination (`variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup`,
+`ServiceCurveVariableCapacityFamilies`); the unconditional finite case
+is open. -/
 example :
     (∀ i, variableCapacityRel (rampFamily i) 0 0)
       ∧ ¬ variableCapacityRel (fun u => ⨆ i, rampFamily i u) 0 0 :=

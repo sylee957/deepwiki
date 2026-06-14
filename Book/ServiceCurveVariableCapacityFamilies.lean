@@ -158,6 +158,10 @@ def variableCapacityJumpFamilyRel {ι : Type*} (β : ι → ℝ≥0 → ℝ≥0)
     Curve → Curve → Prop :=
   fun A D => ∀ i, variableCapacityJumpRel (β i) A D
 
+/-- `variableCapacityJumpFamilyRel β A D` unfolds to per-member jump-dominated `vcn` service. -/
+theorem mem_variableCapacityJumpFamilyRel_iff {ι : Type*} {β : ι → ℝ≥0 → ℝ≥0} {A D : Curve} :
+    variableCapacityJumpFamilyRel β A D ↔ ∀ i, variableCapacityJumpRel (β i) A D := Iff.rfl
+
 /-- **Thm 9.4 item 4 (`⊆`, jump-dominated repair)**: a finite family of jump-dominated variable-capacity servers is jointly served by the pointwise supremum `⨆ᵢ βᵢ` — the merged capacity `mergeCapN` carries every `βᵢ`-increment at once and reproduces `D`. (The unconditional `⊆` is open in the rising-arrival/harvested-jump regime; for infinite families it is false, `ServiceCurveVariableCapacityFamiliesStrict`.) -/
 theorem variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup
     {ι : Type*} [Fintype ι] [Nonempty ι] (β : ι → ℝ≥0 → ℝ≥0) :
@@ -197,7 +201,6 @@ theorem variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup
     exact (variableCapacityOutput_mergeCapN_eq A.mono A.leftCont h0 hCmono hj
       hDfun D.leftCont t).symm
   · rw [hCmFun]
-    haveI : Nonempty ι := ‹Nonempty ι›
     refine ciSup_le fun i => ?_
     refine le_trans (hcap i s t hst) ?_
     exact capacity_le_mergeCapN_increment hDmono hDC hW hCmono i hst
@@ -214,12 +217,13 @@ example {ι : Type*} [Fintype ι] [Nonempty ι] (β : ι → ℝ≥0 → ℝ≥0
     variableCapacityRel (superadditiveClosureMax (fun u => ⨆ i, β i u)) A D := by
   rw [variableCapacityRel_superadditiveClosureMax hbdd]
   exact variableCapacityJumpFamilyRel_le_variableCapacityRel_iSup β A D hp
+
 /-! ## The reverse inclusion (unconditional) -/
 
 /-- The easy half: a pair served by the pointwise-sup curve is served by every family
 member (`vcn` is antitone, and `β i ≤ ⨆ⱼ βⱼ`). Any finite index; no jump domination. -/
-theorem iInter_variableCapacityRel_of_variableCapacityRel_iSup {κ : Type*} [Fintype κ]
-    {β : κ → ℝ≥0 → ℝ≥0} {A D : Curve}
+theorem iInter_variableCapacityRel_of_variableCapacityRel_iSup {ι : Type*} [Fintype ι]
+    {β : ι → ℝ≥0 → ℝ≥0} {A D : Curve}
     (hp : variableCapacityRel (fun t => ⨆ i, β i t) A D) :
     ∀ i, variableCapacityRel (β i) A D := by
   intro i
