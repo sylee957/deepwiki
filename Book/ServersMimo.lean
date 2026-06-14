@@ -50,6 +50,19 @@ theorem aggregateServer_sum {ι : Type*} [Fintype ι]
     (hp : S As Ds) : aggregateServer S (∑ i, As i) (∑ i, Ds i) :=
   ⟨As, Ds, hp, rfl, rfl⟩
 
+/-- The **`J`-restricted aggregate server**: like `aggregateServer`, but summing the input and
+output vectors only over the flow set `J` (the flows present at a hop). -/
+def aggregateServerOn {ι : Type*}
+    (S : (ι → Curve) → (ι → Curve) → Prop) (J : Finset ι) :
+    Curve → Curve → Prop :=
+  fun A D => ∃ As Ds, S As Ds ∧ A = ∑ i ∈ J, As i ∧ D = ∑ i ∈ J, Ds i
+
+/-- Intro: the `J`-aggregate of an `n`-server pair lies in the `J`-restricted aggregate server. -/
+theorem aggregateServerOn_sum {ι : Type*}
+    {S : (ι → Curve) → (ι → Curve) → Prop} {J : Finset ι} {As Ds : ι → Curve}
+    (hp : S As Ds) : aggregateServerOn S J (∑ i ∈ J, As i) (∑ i ∈ J, Ds i) :=
+  ⟨As, Ds, hp, rfl, rfl⟩
+
 /-- Intro: an `n`-server pair projects onto a residual-server pair. -/
 theorem residualServer_apply {ι : Type*}
     {S : (ι → Curve) → (ι → Curve) → Prop} {As Ds : ι → Curve}

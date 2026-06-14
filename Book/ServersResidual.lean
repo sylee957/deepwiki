@@ -293,6 +293,22 @@ theorem IsStrictMinimalServiceCurve.sum_strict {ι : Type*} [Fintype ι]
     (by rwa [Curve.coe_sum, Curve.coe_sum])
   rwa [Curve.sum_apply, Curve.sum_apply] at h
 
+/-- The `J`-restricted analogue of `sum_strict`: a strict aggregate service curve for the
+`J`-restricted aggregate gives the strict inequality on the `J`-aggregate of each served family —
+the per-hop `Fl(h)` bound the per-path PMOO residual consumes. -/
+theorem IsStrictMinimalServiceCurve.sum_strict_on {ι : Type*}
+    {S : (ι → Curve) → (ι → Curve) → Prop} {β : ℝ≥0 → ℝ≥0} {J : Finset ι}
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServerOn S J))
+    {As Ds : ι → Curve} (hp : S As Ds) :
+    ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j ∈ J, (As j) x) (fun x => ∑ j ∈ J, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j ∈ J, (Ds j) s) + β (t - s) ≤ ∑ j ∈ J, (Ds j) t := by
+  intro s t hst hbl
+  have h := hβ (∑ j ∈ J, As j) (∑ j ∈ J, Ds j) (aggregateServerOn_sum hp) s t hst
+    (by rwa [Curve.coe_sum, Curve.coe_sum])
+  rwa [Curve.sum_apply, Curve.sum_apply] at h
+
 /-- A min-plus aggregate service curve gives the plain-function sum
 form of the service inequality on each served family — the `hserv`
 premise of the pair-level warning theorem. -/

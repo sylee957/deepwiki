@@ -454,6 +454,47 @@ theorem minConv_pmooPathResidual_le_of_strict_path {ι : Type*} [Fintype ι] [De
   refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hnode0t)) ?_
   exact_mod_cast hkey
 
+/-- **Theorem 10.1, relation/server form**: a tandem of `n+1` per-hop servers `Srv h`, each
+offering a strict service curve `β h` on its *present-flow* `Fl(h)`-aggregate (the flows `j` with
+`fst j ≤ h ≤ lst j`), with each cross-flow `j ≠ tg` constrained by `αⱼ` at its entry input
+`G_{fst j}`: the residual server of the tagged flow (which crosses every hop) offers the per-path
+PMOO residual `pmooPathResidual` as a min-plus service curve. The per-path analogue of the chain's
+full-aggregate `isMinimalServiceCurve_pmooResidualChain_of_strict_chain` — the strictness here is
+on each hop's `Fl(h)`-restricted aggregate (`aggregateServerOn`). -/
+theorem isMinimalServiceCurve_pmooPathResidual_of_strict_path {ι : Type*} [Fintype ι]
+    [DecidableEq ι]
+    {Srv : ℕ → (ι → Curve) → (ι → Curve) → Prop}
+    {β : ℕ → ℝ≥0 → ℝ≥0} {α : ι → ℝ≥0 → ℝ≥0} {fst lst : ι → ℕ} {n : ℕ} {tg : ι}
+    (hpath : ∀ j, fst j ≤ lst j ∧ lst j ≤ n)
+    (hcaus : ∀ h, h ≤ n → IsCausalN (Srv h))
+    (hβ : ∀ h, h ≤ n → IsStrictMinimalServiceCurve (β h)
+      (aggregateServerOn (Srv h) (Finset.univ.filter (fun j => fst j ≤ h ∧ h ≤ lst j))))
+    (htgfst : fst tg = 0) (htglst : lst tg = n) (hαtg : α tg = 0) :
+    IsMinimalServiceCurve
+      (liftEReal (pmooPathResidual n β α fst lst))
+      (residualServer (fun A D =>
+        ∃ G : ℕ → ι → Curve, G 0 = A ∧ G (n + 1) = D
+          ∧ (∀ h, h ≤ n → Srv h (G h) (G (h + 1)))
+          ∧ ∀ j, j ≠ tg → IsMaximalArrivalBound ⇑(G (fst j) j) (α j)) tg) := by
+  rintro Ai Di ⟨As, Ds, ⟨G, hG0, hGn, hhops, harr⟩, rfl, rfl⟩ t
+  subst hG0
+  subst hGn
+  have hS : ∀ h j,
+      j ∈ Finset.univ.filter (fun j => fst j ≤ h ∧ h ≤ lst j) ↔ (fst j ≤ h ∧ h ≤ lst j) :=
+    fun h j => by simp [Finset.mem_filter]
+  have h := minConv_pmooPathResidual_le_of_strict_path
+    (F := G) (β := β) (S := fun h => Finset.univ.filter (fun j => fst j ≤ h ∧ h ≤ lst j))
+    (α := α) (fst := fst) (lst := lst) (n := n) t hS
+    (fun h hh j => hcaus h hh (G h) (G (h + 1)) (hhops h hh) j)
+    (fun h hh => (hβ h hh).sum_strict_on (hhops h hh))
+    hpath harr htgfst htglst hαtg
+  rw [show Deviation.liftENN (pmooPathResidual n β α fst lst)
+      = Deviation.toENN (liftEReal (pmooPathResidual n β α fst lst))
+    from (Deviation.toENN_liftEReal _).symm] at h
+  rw [curveEReal_apply]
+  exact (Deviation.minConv_toENN_le_coe_iff (G 0 tg) (isNonneg_liftEReal _)
+    ((G (n + 1) tg) t) t).mp h
+
 /-! ## Book restatement (Theorem 10.1, per-path PMOO)
 A tandem of `n + 1` servers each offering a strict service curve `β⁽ʰ⁾`,
 under blind multiplexing, where the tagged flow crosses every server and
