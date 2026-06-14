@@ -95,6 +95,7 @@ import DeepWiki.NetworkCalculus.ArrivalCurvesShaper
 import DeepWiki.NetworkCalculus.PacketizerConcatenation
 import DeepWiki.NetworkCalculus.ArrivalCurvesShaperGreedy
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutput
+import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import DeepWiki.NetworkCalculus.DeviationsBoundsTight
 import DeepWiki.NetworkCalculus.DeviationsCompositionTight
 import DeepWiki.NetworkCalculus.DeviationsCompositionRateLatency

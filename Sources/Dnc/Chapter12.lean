@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityGlobal
 import DeepWiki.NetworkCalculus.StabilityFixPoint
 import DeepWiki.NetworkCalculus.StabilityNetwork
+import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -84,7 +85,21 @@ theorem lemma_12_4 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0}
     IsGloballyStableServer ⇑A ⇑D :=
   isGloballyStableServer_of_firstCrossing_lt_top hc hβ hp harr hfin
 
-/-! **Example 12.1** (§12.2.1, p.273): The example network of Figure 12.1 (top) is transformed by removing arc h'={(4,2),(2,1)} into an acyclic feed-forward network N^FF; flows splitting into sub-flows (i,k). Not formalized in the library. -/
+/-! **Example 12.1** (§12.2.1, p.273): The example network of Figure 12.1 (top) is transformed by removing arc h'={(4,2),(2,1)} into an acyclic feed-forward network N^FF; flows splitting into sub-flows (i,k). The concrete Figure-12.1 transformation is not formalized; its engine — feed-forward propagation of arrival curves along a server path — is `arrivalProp_chain` below. -/
+
+/-- **Feed-forward arrival-curve propagation** (the §12.2 engine): a flow
+crossing a chain of causal strict-service servers carries its ingress maximal
+arrival curve to the chain's output, deconvolved by each server in turn
+(`αu ⊘ β₁ ⊘ ⋯ ⊘ βₙ`). The library's `isMaximalArrivalBound_concatComp_output`.
+This is how an ingress constraint becomes a constraint at every downstream
+server in a feed-forward network. -/
+alias arrivalProp_chain := isMaximalArrivalBound_concatComp_output
+
+/-- **Two-server tandem propagation** (the atomic step of `arrivalProp_chain`):
+output of the first strict-service server is input of the second, so the
+ingress curve `αu` emerges as `(αu ⊘ β₁) ⊘ β₂`. The library's
+`isMaximalArrivalBound_tandem_output`. -/
+alias arrivalProp_tandem := isMaximalArrivalBound_tandem_output
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
