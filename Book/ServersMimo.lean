@@ -136,6 +136,25 @@ theorem apply_start_sum_eq {ι : Type*} [Fintype ι]
   exact (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm i
     (Finset.mem_univ i)
 
+/-- **Restricted-aggregate start-equality**: `apply_start_sum_eq` over an arbitrary flow set
+`s'` rather than `univ`. At the start of the `s'`-aggregate's backlogged period, every member
+`i ∈ s'` is fully served, `Dᵢ(start) = Aᵢ(start)`. -/
+theorem apply_start_sum_finset_eq {ι : Type*}
+    {A D : ι → ℝ≥0 → ℝ≥0} (s' : Finset ι) (hc : ∀ j x, D j x ≤ A j x)
+    (hAlc : ∀ j, IsLeftContinuous (A j)) (hDlc : ∀ j, IsLeftContinuous (D j))
+    (h0 : ∀ j, A j 0 = D j 0) (t : ℝ≥0) {i : ι} (hi : i ∈ s') :
+    D i (start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t)
+      = A i (start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t) := by
+  set s₀ := start (fun x => ∑ j ∈ s', A j x) (fun x => ∑ j ∈ s', D j x) t
+  have haggeq : (∑ j ∈ s', A j s₀) = ∑ j ∈ s', D j s₀ :=
+    apply_start_eq
+      (isLeftContinuous_sum _ fun j _ => hAlc j)
+      (isLeftContinuous_sum _ fun j _ => hDlc j)
+      (by show (∑ j ∈ s', A j 0) = ∑ j ∈ s', D j 0
+          exact Finset.sum_congr rfl fun j _ => h0 j)
+      (fun x => Finset.sum_le_sum fun j _ => hc j x) t
+  exact (Finset.sum_eq_sum_iff_of_le (fun j _ => hc j s₀)).mp haggeq.symm i hi
+
 /-- `apply_start_sum_eq` with `Curve` bundles: causality alone remains,
 the regularity hypotheses discharge from the curve fields. -/
 theorem Curve.apply_start_sum_eq {ι : Type*} [Fintype ι]
