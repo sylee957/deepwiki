@@ -6,11 +6,12 @@ inner drain loop `drrInner` (lines 7-10), the per-flow turn `drrTurn`
 (lines 5-12), and one round `drrRound` (the `for i = 1 to n` pass). The
 soundness theorems pin the big-step execution of these programs to the
 functional models of `Book.ServersDrr` — `drrInner` realizes `drrDrain`
-and `drrTurn` realizes `drrServe` on flow `i`'s counter and queue. `drrServe`
-is the per-step building block of the `IsDrr` round-count coupling derived
-at the curve level in `Book.ServersResidualDrr`; the rounds-to-continuous-time
-bridge (`IsDrr`'s abstraction boundary) and the output trace are not
-formalized here.
+and `drrTurn` realizes `drrServe` on flow `i`'s counter and queue, with the
+output trace gaining exactly the packets sent (`drrDrainSent`,
+`bigStep_drrTurn_out`). `drrServe` is the per-step building block of the
+`IsDrr` round-count coupling derived at the curve level in
+`Book.ServersResidualDrr`; the rounds-to-continuous-time bridge (`IsDrr`'s
+abstraction boundary) is not formalized here.
 -/
 
 namespace DeepWiki
@@ -124,6 +125,52 @@ theorem bigStep_drrInner (i : Fin n) {σ σ' : SchedState n}
       · rw [ihq, hσmdci, hσmq, Function.update_idem]
       · rw [ihk, hσmk]
 
+/-- **Inner-loop output**: the drain loop appends to the output trace
+exactly the packets it sends — the prefix `drrDrainSent (σ.dc i) (σ.queue i)`. -/
+theorem bigStep_drrInner_out (i : Fin n) {σ σ' : SchedState n}
+    (h : BigStep (drrInner i) σ σ') :
+    σ'.out = σ.out ++ drrDrainSent (σ.dc i) (σ.queue i) := by
+  suffices H : ∀ (q : List ℝ≥0) (a a' : SchedState n), a.queue i = q →
+      BigStep (drrInner i) a a' →
+      a'.out = a.out ++ drrDrainSent (a.dc i) q from H (σ.queue i) σ σ' rfl h
+  intro q
+  induction q with
+  | nil =>
+    intro a a' hq h
+    rw [drrInner, bigStep_whileB_iff] at h
+    rcases h with ⟨_, heq⟩ | ⟨hc, _⟩
+    · rw [heq, drrDrainSent_nil, List.append_nil]
+    · rw [drrGuard_eval_nil i a hq] at hc; exact absurd hc (by simp)
+  | cons p ps ih =>
+    intro a a' hq h
+    rw [drrInner, bigStep_whileB_iff] at h
+    rcases h with ⟨hc, heq⟩ | ⟨hc, σm, hbody, hrest⟩
+    · rw [drrGuard_eval_cons i a hq] at hc
+      rw [heq, drrDrainSent_cons, if_neg (of_decide_eq_false hc), List.append_nil]
+    · have hp : p ≤ a.dc i :=
+        of_decide_eq_true (by rw [← drrGuard_eval_cons i a hq]; exact hc)
+      have hhead : headSize a i = p := by simp only [headSize, hq, List.headI_cons]
+      obtain ⟨sm, h1, h2⟩ := bigStep_seq_iff.mp hbody
+      rw [bigStep_assignDc_iff] at h1
+      rw [bigStep_serveHead_iff] at h2
+      have hσmout : σm.out = a.out ++ [p] := by
+        rw [h2]
+        simp only [SchedState.setQueue_out, SchedState.emit_out, h1,
+          SchedState.setDc_out, headSize_setDc, hhead]
+      have hσmdc : σm.dc = Function.update a.dc i (a.dc i - p) := by
+        rw [h2]
+        simp only [SchedState.setQueue_dc, SchedState.emit_dc, h1,
+          SchedState.setDc_dc, AExp.eval, hhead]
+      have hσmq : σm.queue = Function.update a.queue i ps := by
+        rw [h2]
+        simp only [SchedState.setQueue_queue, SchedState.emit_queue, h1,
+          SchedState.setDc_queue]
+        rw [hq, List.tail_cons]
+      have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
+      have hσmdci : σm.dc i = a.dc i - p := by rw [hσmdc, Function.update_self]
+      rw [ih σm a' hσmqi hrest, hσmout, hσmdci, drrDrainSent_cons,
+        if_pos hp, List.append_assoc, List.singleton_append]
+
 /-- The non-emptiness guard reads off the queue. -/
 theorem notEmpty_eval (i : Fin n) (σ : SchedState n) :
     (BExp.notEmpty i).eval σ = !(σ.queue i).isEmpty := rfl
@@ -177,6 +224,31 @@ theorem bigStep_drrTurn (Q : ℝ≥0) (i : Fin n) {σ σ' : SchedState n}
     rw [hqe, drrServe_nil]
     refine ⟨(Function.update_eq_self _ _).symm, ?_, rfl⟩
     rw [← hqe]; exact (Function.update_eq_self _ _).symm
+
+/-- **Per-turn output**: a DRR turn appends to the output trace exactly the
+packets it sends — `drrDrainSent (σ.dc i + Q) (σ.queue i)`, the prefix
+drained after the quantum is added. -/
+theorem bigStep_drrTurn_out (Q : ℝ≥0) (i : Fin n) {σ σ' : SchedState n}
+    (h : BigStep (drrTurn Q i) σ σ') :
+    σ'.out = σ.out ++ drrDrainSent (σ.dc i + Q) (σ.queue i) := by
+  rw [drrTurn, bigStep_ifte_iff] at h
+  rcases h with ⟨_, hbody⟩ | ⟨hempty, hskip⟩
+  · obtain ⟨σ1, h1, h2⟩ := bigStep_seq_iff.mp hbody
+    obtain ⟨σ2, hinner, hreset⟩ := bigStep_seq_iff.mp h2
+    rw [bigStep_assignDc_iff] at h1
+    subst h1
+    have hout := bigStep_drrInner_out i hinner
+    simp only [SchedState.setDc_out, SchedState.setDc_dc, SchedState.setDc_queue,
+      AExp.eval, Function.update_self] at hout
+    rw [bigStep_ifte_iff] at hreset
+    rcases hreset with ⟨_, hsk⟩ | ⟨_, hass⟩
+    · rw [bigStep_skip_iff] at hsk; subst hsk; exact hout
+    · rw [bigStep_assignDc_iff] at hass; subst hass
+      simpa only [SchedState.setDc_out] using hout
+  · rw [bigStep_skip_iff] at hskip
+    rw [hskip]
+    have hqe : σ.queue i = [] := by rw [notEmpty_eval] at hempty; simpa using hempty
+    rw [hqe, drrDrainSent_nil, List.append_nil]
 
 /-- One DRR round (line 4, `for i = 1 to n`): run every flow's turn once,
 with its own quantum `Q i`. -/
@@ -242,8 +314,10 @@ fuel-based executable evaluator are likewise deferred. -/
 example (Q : ℝ≥0) (i : Fin n) {σ σ' : SchedState n}
     (h : BigStep (drrTurn Q i) σ σ') :
     σ'.dc i = (drrServe Q (σ.dc i) (σ.queue i)).1
-      ∧ σ'.queue i = (drrServe Q (σ.dc i) (σ.queue i)).2 := by
+      ∧ σ'.queue i = (drrServe Q (σ.dc i) (σ.queue i)).2
+      ∧ σ'.out = σ.out ++ drrDrainSent (σ.dc i + Q) (σ.queue i) := by
   obtain ⟨hdc, hq, _⟩ := bigStep_drrTurn Q i h
-  exact ⟨by rw [hdc, Function.update_self], by rw [hq, Function.update_self]⟩
+  exact ⟨by rw [hdc, Function.update_self], by rw [hq, Function.update_self],
+    bigStep_drrTurn_out Q i h⟩
 
 end DeepWiki

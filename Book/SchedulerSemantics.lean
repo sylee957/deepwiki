@@ -170,6 +170,18 @@ variable {n : ℕ}
 @[simp] theorem setK_kvar (σ : SchedState n) (k : ℕ) :
     (σ.setK k).kvar = k := rfl
 
+@[simp] theorem emit_out (σ : SchedState n) (x : ℝ≥0) :
+    (σ.emit x).out = σ.out ++ [x] := rfl
+
+@[simp] theorem setQueue_out (σ : SchedState n) (i : Fin n) (q : List ℝ≥0) :
+    (σ.setQueue i q).out = σ.out := rfl
+
+@[simp] theorem setDc_out (σ : SchedState n) (i : Fin n) (d : ℝ≥0) :
+    (σ.setDc i d).out = σ.out := rfl
+
+@[simp] theorem setK_out (σ : SchedState n) (k : ℕ) :
+    (σ.setK k).out = σ.out := rfl
+
 end SchedState
 
 /-! ## Inversion of the big-step relation -/

@@ -8,10 +8,11 @@ inner send loop `wrrInner` (lines 4-7), the per-flow turn `wrrTurn`
 `for` over flows). The soundness theorems pin the big-step execution to
 the functional model `wrrServe` of `Book.ServersWrr` — a turn drops the
 first `w` packets of flow `i`'s queue, leaving every other flow
-untouched. `wrrServe` is the per-step building block of the `IsWrr`
-round-count coupling derived at the curve level in
-`Book.ServersResidualWrr`; the rounds-to-continuous-time bridge (`IsWrr`'s
-abstraction boundary) and the output trace are not formalized here. -/
+untouched, and its output trace gains exactly the sent packets
+`(wrrServe w …).1` (`bigStep_wrrTurn_out`). `wrrServe` is the per-step
+building block of the `IsWrr` round-count coupling derived at the curve
+level in `Book.ServersResidualWrr`; the rounds-to-continuous-time bridge
+(`IsWrr`'s abstraction boundary) is not formalized here. -/
 
 namespace DeepWiki
 
@@ -105,6 +106,56 @@ theorem bigStep_wrrInner (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
         rw [e1, e2, List.drop_succ_cons]
       · rw [ihdc, hσmdc]
 
+/-- **Inner-loop output**: the WRR send loop appends to the output trace
+exactly the packets it sends — the prefix `(σ.queue i).take (w + 1 − k)`
+the weight counter allows. -/
+theorem bigStep_wrrInner_out (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
+    (h : BigStep (wrrInner w i) σ σ') :
+    σ'.out = σ.out ++ (σ.queue i).take (w + 1 - σ.kvar) := by
+  suffices H : ∀ (q : List ℝ≥0) (a a' : SchedState n), a.queue i = q →
+      BigStep (wrrInner w i) a a' →
+      a'.out = a.out ++ q.take (w + 1 - a.kvar) from H (σ.queue i) σ σ' rfl h
+  intro q
+  induction q with
+  | nil =>
+    intro a a' hq h
+    rw [wrrInner, bigStep_whileB_iff] at h
+    rcases h with ⟨_, heq⟩ | ⟨hc, _⟩
+    · rw [heq, List.take_nil, List.append_nil]
+    · rw [wrrGuard_eval_nil w i a hq] at hc; exact absurd hc (by simp)
+  | cons p ps ih =>
+    intro a a' hq h
+    rw [wrrInner, bigStep_whileB_iff] at h
+    rcases h with ⟨hc, heq⟩ | ⟨hc, σm, hbody, hrest⟩
+    · rw [wrrGuard_eval_cons w i a hq] at hc
+      have hkw : ¬ a.kvar ≤ w := of_decide_eq_false hc
+      have hz : w + 1 - a.kvar = 0 := by omega
+      rw [heq, hz, List.take_zero, List.append_nil]
+    · have hkw : a.kvar ≤ w :=
+        of_decide_eq_true (by rw [← wrrGuard_eval_cons w i a hq]; exact hc)
+      obtain ⟨σ1, h1, h2⟩ := bigStep_seq_iff.mp hbody
+      rw [bigStep_serveHead_iff] at h1
+      rw [bigStep_incK_iff] at h2
+      have hhead : headSize a i = p := by simp only [headSize, hq, List.headI_cons]
+      have hσmout : σm.out = a.out ++ [p] := by
+        rw [h2]
+        simp only [SchedState.setK_out, h1, SchedState.setQueue_out,
+          SchedState.emit_out, hhead]
+      have hσmq : σm.queue = Function.update a.queue i ps := by
+        rw [h2]
+        simp only [SchedState.setK_queue, h1, SchedState.setQueue_queue,
+          SchedState.emit_queue]
+        rw [hq, List.tail_cons]
+      have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
+      have hσmk : σm.kvar = a.kvar + 1 := by
+        rw [h2]
+        simp only [SchedState.setK_kvar, h1, SchedState.setQueue_kvar,
+          SchedState.emit_kvar]
+      rw [ih σm a' hσmqi hrest, hσmout, hσmk]
+      have e1 : w + 1 - (a.kvar + 1) = w - a.kvar := by omega
+      have e2 : w + 1 - a.kvar = (w - a.kvar) + 1 := by omega
+      rw [e1, e2, List.take_succ_cons, List.append_assoc, List.singleton_append]
+
 /-- **Per-turn soundness**: the big-step execution of `wrrTurn w i` drops
 the first `w` packets of flow `i`'s queue — exactly `(wrrServe w …).2` —
 leaving the deficit counters untouched. The WRR program realizes the
@@ -120,6 +171,19 @@ theorem bigStep_wrrTurn (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
     at hq hdc
   rw [Nat.add_sub_cancel] at hq
   exact ⟨hq, hdc⟩
+
+/-- **Per-turn output**: a WRR turn appends to the output trace exactly the
+`w` packets it sends — `(σ.queue i).take w = (wrrServe w (σ.queue i)).1`. -/
+theorem bigStep_wrrTurn_out (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
+    (h : BigStep (wrrTurn w i) σ σ') :
+    σ'.out = σ.out ++ (σ.queue i).take w := by
+  obtain ⟨σ1, h1, h2⟩ := bigStep_seq_iff.mp h
+  rw [bigStep_setK_iff] at h1
+  subst h1
+  have hout := bigStep_wrrInner_out w i h2
+  simp only [SchedState.setK_out, SchedState.setK_queue, SchedState.setK_kvar]
+    at hout
+  rwa [Nat.add_sub_cancel] at hout
 
 /-- One WRR round (the `for` over flows): run every flow's turn once,
 with its own weight `w i`. -/
@@ -170,8 +234,10 @@ model agree, and the per-step basis of the `IsWrr` round-count coupling
 program. -/
 example (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
     (h : BigStep (wrrTurn w i) σ σ') :
-    σ'.queue i = (wrrServe w (σ.queue i)).2 := by
+    σ'.queue i = (wrrServe w (σ.queue i)).2
+      ∧ σ'.out = σ.out ++ (wrrServe w (σ.queue i)).1 := by
   obtain ⟨hq, _⟩ := bigStep_wrrTurn w i h
-  rw [hq, Function.update_self, wrrServe_snd]
+  refine ⟨by rw [hq, Function.update_self, wrrServe_snd], ?_⟩
+  rw [bigStep_wrrTurn_out w i h, wrrServe_fst]
 
 end DeepWiki

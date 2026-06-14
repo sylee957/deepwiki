@@ -84,6 +84,32 @@ theorem drrDrain_fst_lt_of_snd_eq (d : ℝ≥0) (q : List ℝ≥0)
       obtain ⟨ha, -⟩ := List.cons_eq_cons.mp hac
       exact ha ▸ not_le.mp had
 
+/-- The packets `drrDrain` sends: the head prefix it removes while the
+counter covers each head. -/
+noncomputable def drrDrainSent (d : ℝ≥0) : List ℝ≥0 → List ℝ≥0
+  | [] => []
+  | p :: ps => if p ≤ d then p :: drrDrainSent (d - p) ps else []
+
+/-- `drrDrainSent d [] = []`. -/
+@[simp] theorem drrDrainSent_nil (d : ℝ≥0) : drrDrainSent d [] = [] := rfl
+
+/-- `drrDrainSent` unfolds on a cons by the head-fits test. -/
+theorem drrDrainSent_cons (d p : ℝ≥0) (ps : List ℝ≥0) :
+    drrDrainSent d (p :: ps)
+      = if p ≤ d then p :: drrDrainSent (d - p) ps else [] := rfl
+
+/-- The sent prefix and the leftover queue reassemble the input:
+`drrDrainSent d q ++ (drrDrain d q).2 = q`. -/
+theorem drrDrainSent_append (d : ℝ≥0) (q : List ℝ≥0) :
+    drrDrainSent d q ++ (drrDrain d q).2 = q := by
+  induction q generalizing d with
+  | nil => rfl
+  | cons p ps ih =>
+    rw [drrDrainSent_cons, drrDrain_cons]
+    by_cases hpd : p ≤ d
+    · rw [if_pos hpd, if_pos hpd, List.cons_append, ih (d - p)]
+    · rw [if_neg hpd, if_neg hpd, List.nil_append]
+
 /-- DRR per-flow turn (Algorithm 1, lines 5-12): a non-empty queue adds
 the quantum to the counter, drains the head packets it covers, and
 resets the counter to zero if the queue empties; an empty queue is
