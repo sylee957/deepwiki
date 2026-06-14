@@ -456,6 +456,33 @@ theorem GpsPeelChain.isAggregateStrict {ι : Type*} [DecidableEq ι]
   | cons hΦ hk harr hcross hgrow _ ih =>
     exact fun h => ih (h.peel hΦ (fun j _ => hc j) hgps hk harr hcross hgrow)
 
+/-- A singleton aggregate is one flow: `IsAggregateStrict As Ds {k} γ` is exactly the
+backlogged-period bound of `strictServiceRel γ (As k) (Ds k)`, so with causality it *is* a
+strict service curve for flow `k`. -/
+theorem strictServiceRel_of_isAggregateStrict_singleton {ι : Type*} {As Ds : ι → Curve}
+    {γ : ℝ≥0 → ℝ≥0} {k : ι} (hc : Ds k ≤ As k)
+    (h : IsAggregateStrict As Ds {k} γ) :
+    strictServiceRel γ (As k) (Ds k) := by
+  refine ⟨hc, fun s t hst hbl => ?_⟩
+  have key := h s t hst
+  simp only [Finset.sum_singleton] at key
+  exact key hbl
+
+/-- **Theorem 7.8 (the improved per-flow GPS residual)**: peel every other flow from the full
+aggregate (strict for `β`) along a `GpsPeelChain` down to the single flow `k`; the residual `γ`
+left at the end is a strict service curve for flow `k`. With the linear peel order this `γ` is
+the book's `β̃ = (β − ∑_{j≠k} αⱼ)·1_{≥T}` (the nested gates collapse via
+`gatedResidual_gatedResidual`). -/
+theorem strictServiceRel_of_gpsPeelChain_singleton {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    {β γ : ℝ≥0 → ℝ≥0} {k : ι}
+    (chain : GpsPeelChain φ As Finset.univ β {k} γ)
+    (h : IsAggregateStrict As Ds Finset.univ β) :
+    strictServiceRel γ (As k) (Ds k) :=
+  strictServiceRel_of_isAggregateStrict_singleton (hc k)
+    (chain.isAggregateStrict hgps hc h)
+
 /-! ## Book restatement (towards the improved GPS residual)
 The two lemmas on the way to the improved GPS theorem: in a GPS
 `n`-server offering a strict `β` whose flow `k` has a (concave)
