@@ -72,6 +72,7 @@ import Book.ServiceCurvePackets
 import Book.Packetizer
 import Book.ServiceCurveMaximal
 import Book.ServersConcatenation
+import Book.ServersConcatenationChain
 import Book.ServersConcatenationStrict
 import Book.ServersSystemClosure
 import Book.ServiceCurveStrictTandem
@@ -112,6 +113,7 @@ import Book.ServersResidualDrr
 import Book.ServersResidualTdma
 import Book.ServersResidualWrr
 import Book.ServersResidualWrrPackets
+import Book.ServersResidualSfa
 import Book.ServersDrr
 import Book.ServersWrr
 import Book.ServersResidualMinimal
