@@ -182,4 +182,21 @@ theorem eq_of_minimalServiceRelExt_eq {β β' : CurveENN}
   have hge : β' ≤ β := le_of_minimalServiceRelExt_le (le_of_eq h)
   exact CurveENN.ext fun t => le_antisymm (hle t) (hge t)
 
+/-- `minimalServiceRelExt` is antitone in the service curve: a larger extended curve is
+offered by fewer pairs, since `A ∗ β ≤ A ∗ β'` when `β ≤ β'`. -/
+theorem minimalServiceRelExt_mono {β β' : CurveENN} (h : β ≤ β') :
+    minimalServiceRelExt (curveENNEReal β') ≤ minimalServiceRelExt (curveENNEReal β) := by
+  intro A D hAD
+  rw [mem_minimalServiceRelExt_iff] at hAD ⊢
+  exact ⟨hAD.1,
+    le_trans (minConv_le_minConv (fun _ => le_rfl) (curveENNEReal_mono h)) hAD.2⟩
+
+/-- **Extended min-plus monotony is an equivalence** (Thm 9.3 item 5/6 for the min-plus
+type, monotone curves): `S_mp^ext(β) ⊇ S_mp^ext(β') ↔ β ≤ β'`. Over `Curve` (finite
+arrivals) only `⟸` holds — the converse needs the infinite burst `δ_0`
+(`le_of_minimalServiceRelExt_le`), which extended arrivals supply. -/
+theorem minimalServiceRelExt_le_iff {β β' : CurveENN} :
+    minimalServiceRelExt (curveENNEReal β') ≤ minimalServiceRelExt (curveENNEReal β) ↔ β ≤ β' :=
+  ⟨le_of_minimalServiceRelExt_le, minimalServiceRelExt_mono⟩
+
 end DeepWiki
