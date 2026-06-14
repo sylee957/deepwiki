@@ -94,6 +94,16 @@ theorem isLeftContinuous_curveEReal (A : Curve) :
   ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt
     ).comp_continuousWithinAt (A.leftCont t)
 
+/-- `curveEReal b` is piecewise-continuous: the coercions are continuous, so its
+discontinuities are exactly those of `b`. -/
+theorem isPiecewiseContinuous_curveEReal (b : Curve) :
+    IsPiecewiseContinuous (curveEReal b) := by
+  intro T'
+  have hsub : discontSet (curveEReal b) ⊆ discontSet (⇑b) := by
+    intro t ht hcon
+    exact ht ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt.comp hcon)
+  exact (b.pwc T').subset (Set.inter_subset_inter_left _ hsub)
+
 /-- `curveEReal` values are real coercions, so they are `AddDefined` with
 anything. -/
 theorem addDefined_curveEReal (A : Curve) (u : ℝ≥0) (x : EReal) :

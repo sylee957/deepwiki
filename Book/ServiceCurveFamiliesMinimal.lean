@@ -18,29 +18,6 @@ open scoped Classical NNReal ENNReal
 
 variable {ι : Type*} [Fintype ι] [Nonempty ι]
 
-/-- `+ y` distributes through a finite `inf'` over `EReal` (`+ y` is monotone and the inf is
-attained). -/
-theorem inf'_add_ereal {κ : Type*} {s : Finset κ} (hne : s.Nonempty) (x : κ → EReal) (y : EReal) :
-    s.inf' hne x + y = s.inf' hne (fun j => x j + y) := by
-  obtain ⟨j₀, hj₀, hxj₀⟩ := Finset.exists_mem_eq_inf' hne x
-  refine le_antisymm (Finset.le_inf' _ _ (fun j hj => ?_)) ?_
-  · gcongr
-    exact Finset.inf'_le _ hj
-  · calc s.inf' hne (fun j => x j + y) ≤ x j₀ + y := Finset.inf'_le _ hj₀
-      _ = s.inf' hne x + y := by rw [hxj₀]
-
-/-- **Min-plus convolution distributes over a finite `inf'` of arrivals**:
-`(⨅ⱼ fⱼ) ∗ g = ⨅ⱼ (fⱼ ∗ g)`. The keystone that turns the inf-staircase arrival's convolution
-into a finite inf of single-step convolutions (each piecewise-continuous). -/
-theorem minConv_finset_inf' {κ : Type*} {s : Finset κ} (hne : s.Nonempty)
-    (f : κ → ℝ≥0 → EReal) (g : ℝ≥0 → EReal) (t : ℝ≥0) :
-    minConv (fun u => s.inf' hne (fun j => f j u)) g t
-      = s.inf' hne (fun j => minConv (f j) g t) := by
-  simp only [minConv, inf'_add_ereal]
-  exact le_antisymm
-    (Finset.le_inf' _ _ (fun j hj => le_iInf (fun p => (iInf_le _ p).trans (Finset.inf'_le _ hj))))
-    (le_iInf (fun p => Finset.le_inf' _ _ (fun j hj => (Finset.inf'_le _ hj).trans (iInf_le _ p))))
-
 /-- A single step term of the forcing staircase: `β'(T) − β'(vᵢ)` up to `T − vᵢ`, then `β'(T)`. -/
 noncomputable def forcingStep (β' : ℝ≥0 → ℝ≥0) (vi T : ℝ≥0) : ℝ≥0 → ℝ≥0 :=
   fun u => if u ≤ T - vi then β' T - β' vi else β' T
@@ -239,16 +216,6 @@ theorem minConv_forcingStepEReal (β' : ℝ≥0 → ℝ≥0) (vi T : ℝ≥0) (b
       calc ((hi : ℝ) : EReal) = ((hi : ℝ) : EReal) + 0 := (add_zero _).symm
         _ ≤ ((hi : ℝ) : EReal) + curveEReal b s := by gcongr
 
-/-- `curveEReal b` is piecewise-continuous: the coercions are continuous, so its
-discontinuities are exactly those of `b`. -/
-theorem isPiecewiseContinuous_curveEReal (b : Curve) :
-    IsPiecewiseContinuous (curveEReal b) := by
-  intro T'
-  have hsub : discontSet (curveEReal b) ⊆ discontSet (⇑b) := by
-    intro t ht hcon
-    exact ht ((continuous_coe_real_ereal.comp NNReal.continuous_coe).continuousAt.comp hcon)
-  exact (b.pwc T').subset (Set.inter_subset_inter_left _ hsub)
-
 /-- A `min` of (a real constant plus a right-shift of a piecewise-continuous `cb`) and
 a constant is piecewise-continuous: discontinuities occur only at `t ≥ sh`, where the
 shift `(· − sh)` is injective, so they inject into `cb`'s finitely many discontinuities. -/
@@ -286,22 +253,6 @@ theorem isPiecewiseContinuous_min_shift_const (cb : ℝ≥0 → EReal)
   have htsI : (t - sh) ∈ Set.Icc (0 : ℝ≥0) T' :=
     ⟨zero_le', le_trans tsub_le_self htI.2⟩
   exact ⟨t - sh, ⟨hcbd, htsI⟩, tsub_add_cancel_of_le htge⟩
-
-/-- A finite `inf'` of piecewise-continuous functions (into an order with continuous
-inf) is piecewise-continuous: its discontinuities are contained in the union of the
-families' discontinuities. -/
-theorem isPiecewiseContinuous_finset_inf' {κ X : Type*} [TopologicalSpace X]
-    [SemilatticeInf X] [ContinuousInf X] {s : Finset κ} (hne : s.Nonempty)
-    {f : κ → ℝ≥0 → X} (hf : ∀ i ∈ s, IsPiecewiseContinuous (f i)) :
-    IsPiecewiseContinuous (fun t => s.inf' hne (fun j => f j t)) := by
-  intro T'
-  refine Set.Finite.subset
-    (Set.Finite.biUnion s.finite_toSet (fun i hi => hf i hi T')) ?_
-  rintro t ⟨htd, htI⟩
-  by_contra hnot
-  refine htd (ContinuousAt.finset_inf'_apply hne (fun i hi => ?_))
-  by_contra hci
-  exact hnot (Set.mem_biUnion hi ⟨hci, htI⟩)
 
 /-! ## Assembly -/
 
@@ -368,41 +319,6 @@ theorem isPiecewiseContinuous_greedyFun_forcingArr
     EReal.tendsto_toReal (minConv_curveEReal_ne_top A (curveEReal_zero b).le t)
       (ne_bot_of_nonneg hpos)
   exact ((continuous_real_toNNReal.continuousAt).comp htr).comp hcon
-
-/-! ## Finite supremum of curves (the departure `D = ⨆ᵢ A ∗ βᵢ`) -/
-
-noncomputable def supCurve {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) : Curve where
-  toFun := fun t => Finset.univ.sup' Finset.univ_nonempty (fun i => C i t)
-  mono := by
-    intro a b hab
-    show Finset.univ.sup' Finset.univ_nonempty (fun i => C i a)
-        ≤ Finset.univ.sup' Finset.univ_nonempty (fun i => C i b)
-    exact Finset.sup'_le _ _ (fun i _ =>
-      le_trans ((C i).mono hab) (Finset.le_sup' (fun i => C i b) (Finset.mem_univ i)))
-  zero := by
-    show Finset.univ.sup' Finset.univ_nonempty (fun i => C i 0) = 0
-    refine le_antisymm (Finset.sup'_le _ _ (fun i _ => le_of_eq (C i).zero)) ?_
-    exact (le_of_eq (C (Classical.arbitrary ι)).zero.symm).trans
-      (Finset.le_sup' (fun i => C i 0) (Finset.mem_univ _))
-  pwc := fun T => by
-    refine Set.Finite.subset (Set.finite_iUnion (fun i => (C i).pwc T)) (fun t ht => ?_)
-    rw [Set.mem_iUnion]
-    by_contra hcon
-    exact ht.1 (ContinuousAt.finset_sup'_apply Finset.univ_nonempty (fun i _ => by
-      by_contra hdi
-      exact hcon ⟨i, hdi, ht.2⟩))
-  leftCont := fun t => ContinuousWithinAt.finset_sup'_apply Finset.univ_nonempty
-    (fun i _ => (C i).leftCont t)
-
-@[simp] theorem supCurve_apply {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) (t : ℝ≥0) :
-    supCurve C t = Finset.univ.sup' Finset.univ_nonempty (fun i => C i t) := rfl
-
-theorem le_supCurve {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) (i : ι) :
-    C i ≤ supCurve C := fun t => Finset.le_sup' (fun i => C i t) (Finset.mem_univ i)
-
-theorem supCurve_le {ι : Type*} [Fintype ι] [Nonempty ι] {C : ι → Curve} {D : Curve}
-    (h : ∀ i, C i ≤ D) : supCurve C ≤ D :=
-  fun t => Finset.sup'_le Finset.univ_nonempty _ (fun i _ => h i t)
 
 /-! ## The forcing lemma and the full criterion (Thm 9.4 item 1, ⟹ and the iff)
 The witness `(forcingArr bp v T, ⨆ᵢ greedyCurve …)` sits in `⋂ᵢ S_mp(βᵢ)` but escapes

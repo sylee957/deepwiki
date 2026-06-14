@@ -1,5 +1,6 @@
 import Book.Continuity
 import Book.FunctionDioids
+import Mathlib.Topology.Order.Lattice
 
 /-!
 # Servers and service curves
@@ -170,5 +171,40 @@ theorem isCausal_iff_subset {S : Curve → Curve → Prop} :
 /-- `causalRel` is a server: each curve serves itself. -/
 theorem isServer_causalRel : IsServer causalRel :=
   ⟨isCausal_causalRel, fun A => ⟨A, fun _ => le_rfl⟩⟩
+
+/-! ## Finite supremum of curves -/
+
+noncomputable def supCurve {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) : Curve where
+  toFun := fun t => Finset.univ.sup' Finset.univ_nonempty (fun i => C i t)
+  mono := by
+    intro a b hab
+    show Finset.univ.sup' Finset.univ_nonempty (fun i => C i a)
+        ≤ Finset.univ.sup' Finset.univ_nonempty (fun i => C i b)
+    exact Finset.sup'_le _ _ (fun i _ =>
+      le_trans ((C i).mono hab) (Finset.le_sup' (fun i => C i b) (Finset.mem_univ i)))
+  zero := by
+    show Finset.univ.sup' Finset.univ_nonempty (fun i => C i 0) = 0
+    refine le_antisymm (Finset.sup'_le _ _ (fun i _ => le_of_eq (C i).zero)) ?_
+    exact (le_of_eq (C (Classical.arbitrary ι)).zero.symm).trans
+      (Finset.le_sup' (fun i => C i 0) (Finset.mem_univ _))
+  pwc := fun T => by
+    refine Set.Finite.subset (Set.finite_iUnion (fun i => (C i).pwc T)) (fun t ht => ?_)
+    rw [Set.mem_iUnion]
+    by_contra hcon
+    exact ht.1 (ContinuousAt.finset_sup'_apply Finset.univ_nonempty (fun i _ => by
+      by_contra hdi
+      exact hcon ⟨i, hdi, ht.2⟩))
+  leftCont := fun t => ContinuousWithinAt.finset_sup'_apply Finset.univ_nonempty
+    (fun i _ => (C i).leftCont t)
+
+@[simp] theorem supCurve_apply {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) (t : ℝ≥0) :
+    supCurve C t = Finset.univ.sup' Finset.univ_nonempty (fun i => C i t) := rfl
+
+theorem le_supCurve {ι : Type*} [Fintype ι] [Nonempty ι] (C : ι → Curve) (i : ι) :
+    C i ≤ supCurve C := fun t => Finset.le_sup' (fun i => C i t) (Finset.mem_univ i)
+
+theorem supCurve_le {ι : Type*} [Fintype ι] [Nonempty ι] {C : ι → Curve} {D : Curve}
+    (h : ∀ i, C i ≤ D) : supCurve C ≤ D :=
+  fun t => Finset.sup'_le Finset.univ_nonempty _ (fun i _ => h i t)
 
 end DeepWiki

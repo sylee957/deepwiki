@@ -375,4 +375,29 @@ theorem ndClosure_ereal_le {f g : ℝ≥0 → EReal} (hg : Monotone g)
     ndClosure f t ≤ g t :=
   ndClosure_le hg hfg t
 
+/-! ## Convolution distributes over a finite `inf'` -/
+
+/-- `+ y` distributes through a finite `inf'` over `EReal` (`+ y` is monotone and the inf is
+attained). -/
+theorem inf'_add_ereal {κ : Type*} {s : Finset κ} (hne : s.Nonempty) (x : κ → EReal) (y : EReal) :
+    s.inf' hne x + y = s.inf' hne (fun j => x j + y) := by
+  obtain ⟨j₀, hj₀, hxj₀⟩ := Finset.exists_mem_eq_inf' hne x
+  refine le_antisymm (Finset.le_inf' _ _ (fun j hj => ?_)) ?_
+  · gcongr
+    exact Finset.inf'_le _ hj
+  · calc s.inf' hne (fun j => x j + y) ≤ x j₀ + y := Finset.inf'_le _ hj₀
+      _ = s.inf' hne x + y := by rw [hxj₀]
+
+/-- **Min-plus convolution distributes over a finite `inf'` of arrivals**:
+`(⨅ⱼ fⱼ) ∗ g = ⨅ⱼ (fⱼ ∗ g)`. The keystone that turns the inf-staircase arrival's convolution
+into a finite inf of single-step convolutions (each piecewise-continuous). -/
+theorem minConv_finset_inf' {κ : Type*} {s : Finset κ} (hne : s.Nonempty)
+    (f : κ → ℝ≥0 → EReal) (g : ℝ≥0 → EReal) (t : ℝ≥0) :
+    minConv (fun u => s.inf' hne (fun j => f j u)) g t
+      = s.inf' hne (fun j => minConv (f j) g t) := by
+  simp only [minConv, inf'_add_ereal]
+  exact le_antisymm
+    (Finset.le_inf' _ _ (fun j hj => le_iInf (fun p => (iInf_le _ p).trans (Finset.inf'_le _ hj))))
+    (le_iInf (fun p => Finset.le_inf' _ _ (fun j hj => (Finset.inf'_le _ hj).trans (iInf_le _ p))))
+
 end DeepWiki

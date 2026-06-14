@@ -9,6 +9,7 @@ import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Topology.Instances.NNReal.Lemmas
 import Mathlib.Topology.MetricSpace.Lipschitz
+import Mathlib.Topology.Order.Lattice
 
 /-! # Continuity notions for real functions
 One-sided continuity over `ℝ≥0` (`IsLeftContinuous`/`IsRightContinuous`),
@@ -279,6 +280,22 @@ theorem isPiecewiseContinuous_of_monotone_of_finite_image
   rcases lt_or_gt_of_ne hne with h | h
   · exact absurd heq (ne_of_lt (key t₁ t₂ ht₁ h))
   · exact absurd heq.symm (ne_of_lt (key t₂ t₁ ht₂ h))
+
+/-- A finite `inf'` of piecewise-continuous functions (into an order with continuous
+inf) is piecewise-continuous: its discontinuities are contained in the union of the
+families' discontinuities. -/
+theorem isPiecewiseContinuous_finset_inf' {κ X : Type*} [TopologicalSpace X]
+    [SemilatticeInf X] [ContinuousInf X] {s : Finset κ} (hne : s.Nonempty)
+    {f : κ → ℝ≥0 → X} (hf : ∀ i ∈ s, IsPiecewiseContinuous (f i)) :
+    IsPiecewiseContinuous (fun t => s.inf' hne (fun j => f j t)) := by
+  intro T'
+  refine Set.Finite.subset
+    (Set.Finite.biUnion s.finite_toSet (fun i hi => hf i hi T')) ?_
+  rintro t ⟨htd, htI⟩
+  by_contra hnot
+  refine htd (ContinuousAt.finset_inf'_apply hne (fun i hi => ?_))
+  by_contra hci
+  exact hnot (Set.mem_biUnion hi ⟨hci, htI⟩)
 
 /-- A monotone curve with an additive Lipschitz bound is continuous:
 the two one-sided estimates squeeze every approach. -/
