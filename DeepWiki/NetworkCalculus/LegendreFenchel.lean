@@ -42,4 +42,20 @@ theorem legendre_antitone {f g : ℝ≥0 → EReal} (h : ∀ x, f x ≤ g x) (t 
   refine iSup_mono fun u => ?_
   exact EReal.sub_le_sub (le_refl _) (h u)
 
+/-- The Legendre–Fenchel transform turns the pointwise `min` into a `max`:
+`𝓛(f ⊓ g) = 𝓛(f) ⊔ 𝓛(g)`. Subtracting the smaller of `f u, g u` gives the
+larger of the two slices, and the supremum distributes over the join. -/
+theorem legendre_inf (f g : ℝ≥0 → EReal) :
+    legendre (f ⊓ g) = legendre f ⊔ legendre g := by
+  funext t
+  show (⨆ u : ℝ≥0, (((t * u : ℝ≥0) : ℝ) : EReal) - (f u ⊓ g u))
+      = (⨆ u : ℝ≥0, (((t * u : ℝ≥0) : ℝ) : EReal) - f u)
+        ⊔ (⨆ u : ℝ≥0, (((t * u : ℝ≥0) : ℝ) : EReal) - g u)
+  rw [← iSup_sup_eq]
+  refine iSup_congr fun u => ?_
+  set c : EReal := (((t * u : ℝ≥0) : ℝ) : EReal)
+  rcases le_total (f u) (g u) with h | h
+  · rw [inf_eq_left.mpr h, sup_eq_left.mpr (EReal.sub_le_sub (le_refl c) h)]
+  · rw [inf_eq_right.mpr h, sup_eq_right.mpr (EReal.sub_le_sub (le_refl c) h)]
+
 end DeepWiki

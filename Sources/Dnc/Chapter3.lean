@@ -90,12 +90,17 @@ transforms (𝓛(λ_R)=δ_R; 𝓛(δ_d)=λ_d; 𝓛(β_{R,T})=λ_T∨δ_R). Not f
 catalog-curve supremum computations are not done. -/
 
 /-- **Proposition 3.15**, non-decreasing (§3.3.2, p.54): `𝓛(f)` is
-non-decreasing (`monotone_legendre`); it is also antitone in `f`
-(`legendre_antitone`). The remaining properties — `𝓛(f)` convex,
-`𝓛(f∧g)=𝓛(f)∨𝓛(g)`, `𝓛(f∗g)=𝓛(f)+𝓛(g)`, and the Fenchel–Moreau
-involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not yet
-formalized. -/
+non-decreasing (`monotone_legendre`); also antitone in `f`
+(`legendre_antitone`). -/
 theorem prop_3_15_mono (f : ℝ≥0 → EReal) : Monotone (legendre f) :=
   monotone_legendre f
+
+/-- **Proposition 3.15**, min-to-max (§3.3.2, p.54): `𝓛(f∧g)=𝓛(f)∨𝓛(g)`.
+The remaining properties — `𝓛(f)` convex, `𝓛(f∗g)=𝓛(f)+𝓛(g)`, and the
+Fenchel–Moreau involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not
+yet formalized. -/
+theorem prop_3_15_inf (f g : ℝ≥0 → EReal) :
+    legendre (f ⊓ g) = legendre f ⊔ legendre g :=
+  legendre_inf f g
 
 end DeepWiki.Dnc
