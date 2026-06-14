@@ -52,6 +52,7 @@ syntax "removeHead" "(" term ")" : sstmt
 syntax "if " sbexp " then " sstmt:max " else " sstmt:max : sstmt
 syntax "if " sbexp " then " sstmt:max : sstmt
 syntax "while " sbexp " do " sstmt:max : sstmt
+syntax "for " ident " do " sstmt:max : sstmt
 
 -- elaboration brackets
 syntax "[saexp| " saexp "]" : term
@@ -87,6 +88,8 @@ macro_rules
       `(Stmt.ifte [sbexp| $b] [sched| $s] Stmt.skip)
   | `([sched| while $b:sbexp do $s:sstmt]) =>
       `(Stmt.whileB [sbexp| $b] [sched| $s])
+  | `([sched| for $i:ident do $s:sstmt]) =>
+      `(roundStmt (fun $i => [sched| $s]))
 
 /-! ## The round-robin algorithms in pseudocode syntax
 Each definition reads like the book's pseudocode and is the same `Stmt` as
@@ -128,6 +131,37 @@ example (w : ℕ) (i : Fin n) :
           send(head(i));
           removeHead(i);
           cnt++
+        }] := rfl
+
+/-- One DRR round (Algorithm 1, the `for i = 1 to n` over flows) in
+pseudocode syntax, with per-flow quanta `Q i`. -/
+example (Q : Fin n → ℝ≥0) :
+    drrRound Q =
+      [sched|
+        for i do {
+          if not empty(i) then {
+            DC[i] := DC[i] + (Q i);
+            while not empty(i) ∧ size(head(i)) ≤ DC[i] do {
+              send(head(i));
+              DC[i] := DC[i] - size(head(i));
+              removeHead(i)
+            };
+            if not empty(i) then skip else { DC[i] := 0 }
+          }
+        }] := rfl
+
+/-- One WRR round (Algorithm 2, the `for i = 1 to n` over flows) in
+pseudocode syntax, with per-flow weights `w i`. -/
+example (w : Fin n → ℕ) :
+    wrrRound w =
+      [sched|
+        for i do {
+          cnt := 1;
+          while not empty(i) ∧ cnt ≤ (w i) do {
+            send(head(i));
+            removeHead(i);
+            cnt++
+          }
         }] := rfl
 
 end DeepWiki
