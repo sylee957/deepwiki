@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.ClosuresNd
 import DeepWiki.NetworkCalculus.Concave
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
+import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.ConvolutionContinuity
 import DeepWiki.NetworkCalculus.ConvolutionMinimum
 import DeepWiki.NetworkCalculus.PseudoInverse
@@ -66,9 +67,18 @@ abbrev def_3_4 := @IsConcaveEReal
 
 /-! **Proposition 3.12** (§3.3.1, p.50): Properties of concave functions f,g: f+g concave; f∧g concave; if f(0)≥0 then f sub-additive; f∗g=(f−f(0)∧g−g(0))+(f(0)+g(0)) (so f∗g=f∧g when f(0)=g(0)=0); if f(0)≥0 then f*=e∧f. Library: DeepWiki.IsConcaveEReal.add, DeepWiki.IsConcaveEReal.inf, DeepWiki.IsConcaveEReal.isSubadditive, DeepWiki.minConv_eq_inf_sub_add, DeepWiki.minConv_eq_inf_of_null, DeepWiki.subadditiveClosureEReal_eq_self_of_isConcaveEReal. -/
 
-/-! **Definition 3.5** (§3.3.2, p.51): Convex function: f∈ℱ is convex iff ∀s,t,∀p∈[0,1], p·f(s)+(1−p)·f(t) ≥ f(ps+(1−p)t). Not formalized in the library. -/
+/-- **Definition 3.5** (§3.3.2, p.51): Convex function: `f∈ℱ` is convex iff
+`f(ps+(1−p)t) ≤ p·f(s)+(1−p)·f(t)` for `p∈[0,1]`. The library's
+`IsConvexEReal` (the order-dual of `IsConcaveEReal`). -/
+abbrev def_3_5 := @IsConvexEReal
 
-/-! **Proposition 3.13** (§3.3.2, p.51): Properties of convex functions f,g: f+g convex; f∨g convex; f∗g convex. Not formalized in the library. -/
+/-- **Proposition 3.13**, sum (§3.3.2, p.51): `f+g` is convex when `f,g` are. -/
+alias prop_3_13_add := IsConvexEReal.add
+
+/-- **Proposition 3.13**, max (§3.3.2, p.51): `f∨g` is convex when `f,g` are.
+(The convolution part `f∗g` convex is not separately formalized — the infimal
+convolution of convex curves, needing an attained-or-ε split argument.) -/
+alias prop_3_13_sup := IsConvexEReal.sup
 
 /-! **Definition 3.6** (§3.3.2, p.53): Legendre–Fenchel transform on R̄min^{R⁺}: 𝓛(f)(t)=sup_{u≥0}{t·u−f(u)}. Not formalized in the library. -/
 
