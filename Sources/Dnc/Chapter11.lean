@@ -9,6 +9,7 @@ or recorded as a note / unformalized item. -/
 namespace DeepWiki.Dnc
 
 open DeepWiki
+open scoped NNReal ENNReal
 
 /-- **Worst-case value as a program optimum** (the `obj`-over-`Feasible`
 supremum underlying §11.1.2's LP). The library's `programOptimum`. -/
@@ -29,7 +30,22 @@ theorem thm_11_1 {ι : Type*} (Feasible : ι → Prop) (obj : ι → EReal) :
       (programOptimum Feasible obj) :=
   isLUB_programOptimum Feasible obj
 
-/-! **Example 11.2** (§11.2.1, p.263): Single FIFO node example with arrival/service curves; Table 11.2 lists the LP for one FIFO server — maximize ta−ts subject to ts≤ta≤tb, monotonicity, arrival D−D≤β, and the FIFO date-ordering constraint Ai−... ≥ ... − RT, illustrating the FIFO worst-case delay encoding. Not formalized in the library. -/
+/-- **Theorem 11.1, single-node instance** (§11.1/§11.2.1) — the *genuine*
+optimum-equals-worst-case for one server: the worst-case delay
+`worstCaseServerDelay α β` (the supremum of the delay over all feasible
+`α`-arrival-constrained, `β`-served trajectories — the single-node program
+optimum) equals the closed-form horizontal deviation `hDev(α, β)`. Proven by
+the upper bound `delay ≤ hDev` on every feasible trajectory and the greedy pair
+`(α, α∗β)` attaining it. (For one node the program optimum is the curve bound;
+the multi-server LP of §11.1.2, where the optimum is strictly below the
+curve-composition bound, is the part that needs the finite-LP construction.) -/
+theorem thm_11_1_singleNode {α : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
+    (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
+    (hβmono : Monotone β) (hβ0 : β 0 = 0) :
+    worstCaseServerDelay α β = (hDev (Deviation.liftENN α) β : ℝ≥0∞) :=
+  worstCaseServerDelay_eq_hDev hαmono hα0 hαsub hβmono hβ0
+
+/-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
 
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
