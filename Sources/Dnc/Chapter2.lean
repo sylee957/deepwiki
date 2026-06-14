@@ -175,4 +175,26 @@ alias residuation := galoisConnection_minDeconv_minConv
 `f ⊘ g (t) = sup_{u≥0} (f(t+u) − g(u))`. The library's `minDeconv`. -/
 noncomputable def def_2_12 := @minDeconv
 
+/-! **Propositions 2.7–2.9** (further deconvolution properties, §2.3.2,
+pp.31-32): the nine residuation identities of Proposition 2.7 — property 1
+(`h ∗ g ≽ f ⟺ h ≽ f ⊘ g`) is the Galois connection `residuation` above;
+the others are monotonicity, `f ⊘ (g ∗ h) = (f ⊘ g) ⊘ h`, and
+`(f ∗ g) ⊘ h ≼ f ∗ (g ⊘ h)` — together with the decomposition Proposition
+2.8 and the `⋆` and `⁺` decomposition Proposition 2.9. Mapped to
+`Book.Deconvolution` (`minDeconv_le_iff_le_minConv`, `minDeconv_minConv`,
+`monotone_minDeconv`, `minDeconv_minConv_le`) and `Book.Closures`; not
+catalogued here as single declarations. -/
+
+/-! ## §2.4 Link with the (max,plus) dioid
+The order-dual (max,plus) dioid `(ℝ ∪ {−∞}, ∨, +)` (zero `−∞`, unit `0`)
+and its operators — the (max,plus) convolution `f ⊼ g`, the deconvolution
+`f ⊘̄ g (t) = inf_{u≥0} (f(t+u) − g(u))`, and the super-additive closure
+`fᶠ` — are obtained from the (min,plus) ones by negation (equation [2.13]),
+and the canonical-order properties [2.14]-[2.17] are the order-inverted
+duals. The library's dual carriers are `MaxPlusNN` / `MaxPlusExt`, with
+`maxConv` (`Book.FunctionDioids`) the (max,plus) convolution and `maxDeconv`
+the deconvolution. **Proposition 2.10** (p.34),
+`(f ∗ g) ⊘ (f' ∗ g') ≼ (f ⊘ f') ∗ (g ⊘ g')`, is the composition bound for
+deconvolution. -/
+
 end DeepWiki.Dnc
