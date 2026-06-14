@@ -483,6 +483,30 @@ theorem strictServiceRel_of_gpsPeelChain_singleton {ι : Type*} [Fintype ι] [De
   strictServiceRel_of_isAggregateStrict_singleton (hc k)
     (chain.isAggregateStrict hgps hc h)
 
+/-- The smallest multi-peel display: in a three-flow GPS server strict for `β`, peeling the two
+arrival-constrained flows `0` and `1` (gates `T₀ ≤ T₁`) leaves flow `2` the collapsed gated
+residual `(β − (α₀ + α₁))·1_{≥T₁}` as a strict service curve — the literal `β̃` of Theorem 7.8
+with the two gates merged. -/
+example {φ : Fin 3 → ℝ≥0} {As Ds : Fin 3 → Curve} {β α₀ α₁ : ℝ≥0 → ℝ≥0} {T₀ T₁ : ℝ≥0}
+    (hT : T₀ ≤ T₁)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    (hΦ₀ : 0 < ∑ j, φ j) (hΦ₁ : 0 < ∑ j ∈ Finset.univ.erase 0, φ j)
+    (harr₀ : IsMaximalArrivalBound ⇑(As 0) α₀) (harr₁ : IsMaximalArrivalBound ⇑(As 1) α₁)
+    (hcross₀ : ∀ x, T₀ ≤ x → (∑ j, φ j) * α₀ x ≤ φ 0 * β x)
+    (hgrow₀ : ∀ x y, T₀ ≤ x → x ≤ y →
+      φ 0 * β x + (∑ j, φ j) * α₀ y ≤ φ 0 * β y + (∑ j, φ j) * α₀ x)
+    (hcross₁ : ∀ x, T₁ ≤ x →
+      (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ x ≤ φ 1 * gatedResidual β α₀ T₀ x)
+    (hgrow₁ : ∀ x y, T₁ ≤ x → x ≤ y →
+      φ 1 * gatedResidual β α₀ T₀ x + (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ y
+        ≤ φ 1 * gatedResidual β α₀ T₀ y + (∑ j ∈ Finset.univ.erase 0, φ j) * α₁ x)
+    (h : IsAggregateStrict As Ds Finset.univ β) :
+    strictServiceRel (gatedResidual β (fun v => α₀ v + α₁ v) T₁) (As 2) (Ds 2) := by
+  have hpeel := h.peel_two hT hgps (Finset.mem_univ 0) (by decide) hΦ₀ hΦ₁
+    (fun j _ => hc j) harr₀ harr₁ hcross₀ hgrow₀ hcross₁ hgrow₁
+  rw [show (Finset.univ.erase (0 : Fin 3)).erase 1 = {2} from by decide] at hpeel
+  exact strictServiceRel_of_isAggregateStrict_singleton (hc 2) hpeel
+
 /-! ## Book restatement (towards the improved GPS residual)
 The two lemmas on the way to the improved GPS theorem: in a GPS
 `n`-server offering a strict `β` whose flow `k` has a (concave)
