@@ -64,6 +64,7 @@ import Book.ServiceCurveWeaklyStrictStrictness
 import Book.ServiceCurveVariableCapacity
 import Book.ServiceCurveVariableCapacityStart
 import Book.ServiceCurveVariableCapacityStrict
+import Book.ServiceCurveVariableCapacityFamilies
 import Book.ServiceCurveVariableCapacityFamiliesStrict
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
