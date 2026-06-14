@@ -14,45 +14,6 @@ Thm 9.5 jump repairs). The witness is the merged capacity `∑ᵢ (Cᵢ − D) +
 counterexample exists; the unconditional `⊆` is open in the rising-arrival/harvested-jump
 regime, and for *infinite* families it is refuted in the `…FamiliesStrict` sibling. -/
 
-/-! ## Curve closure under truncated subtraction -/
-
-/-- `t ↦ P t − D t` is left-continuous when `P` and `D` are (truncated subtraction is continuous). -/
-theorem IsLeftContinuous.tsub {P D : ℝ≥0 → ℝ≥0}
-    (hP : IsLeftContinuous P) (hD : IsLeftContinuous D) :
-    IsLeftContinuous (fun t => P t - D t) := by
-  intro t
-  have h : ContinuousWithinAt (fun x => (P x, D x)) (Set.Iio t) t :=
-    ContinuousWithinAt.prodMk (hP t) (hD t)
-  exact (continuous_sub.continuousAt).comp_continuousWithinAt h
-
-/-- `t ↦ P t − D t` is piecewise-continuous when `P` and `D` are. -/
-theorem IsPiecewiseContinuous.tsub {P D : ℝ≥0 → ℝ≥0}
-    (hP : IsPiecewiseContinuous P) (hD : IsPiecewiseContinuous D) :
-    IsPiecewiseContinuous (fun t => P t - D t) := by
-  intro T
-  refine Set.Finite.subset ((hP T).union (hD T)) ?_
-  rintro t ⟨ht, htm⟩
-  by_cases hP' : ContinuousAt P t
-  · by_cases hD' : ContinuousAt D t
-    · have hpr : ContinuousAt (fun x => (P x, D x)) t := ContinuousAt.prodMk hP' hD'
-      exact absurd (continuous_sub.continuousAt.comp hpr) ht
-    · right; exact ⟨hD', htm⟩
-  · left; exact ⟨hP', htm⟩
-
-/-- The pointwise truncated difference `C − D`, as a `Curve` (caller supplies its monotonicity). -/
-noncomputable def Curve.wasteSub (C D : Curve)
-    (hmono : Monotone (fun t => C t - D t)) : Curve :=
-  { toFun := fun t => C t - D t
-    mono := hmono
-    zero := by show C 0 - D 0 = 0; rw [C.zero_eq D, tsub_self]
-    pwc := IsPiecewiseContinuous.tsub C.pwc D.pwc
-    leftCont := IsLeftContinuous.tsub C.leftCont D.leftCont }
-
-/-- `C.wasteSub D _ t = C t − D t`. -/
-@[simp] theorem Curve.wasteSub_apply (C D : Curve)
-    (hmono : Monotone (fun t => C t - D t)) (t : ℝ≥0) :
-    C.wasteSub D hmono t = C t - D t := rfl
-
 /-! ## The n-ary merged capacity (function level) -/
 
 variable {ι : Type*} [Fintype ι] [Nonempty ι]

@@ -94,6 +94,16 @@ theorem isLeftContinuous_sum {ι X : Type*} [TopologicalSpace X]
     IsLeftContinuous (fun x => ∑ i ∈ s, f i x) := fun t =>
   tendsto_finsetSum s fun i hi => hf i hi t
 
+/-- `t ↦ P t − D t` is left-continuous when `P` and `D` are (truncated subtraction is
+continuous). -/
+theorem IsLeftContinuous.tsub {P D : ℝ≥0 → ℝ≥0}
+    (hP : IsLeftContinuous P) (hD : IsLeftContinuous D) :
+    IsLeftContinuous (fun t => P t - D t) := by
+  intro t
+  have h : ContinuousWithinAt (fun x => (P x, D x)) (Set.Iio t) t :=
+    ContinuousWithinAt.prodMk (hP t) (hD t)
+  exact (continuous_sub.continuousAt).comp_continuousWithinAt h
+
 /-- ε–δ left-continuity at `t` for `ℝ≥0∞`-valued `g` (finite/infinite cases). -/
 def IsLeftContinuousAtEpsDelta
     (g : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : Prop :=
@@ -296,6 +306,20 @@ theorem isPiecewiseContinuous_finset_inf' {κ X : Type*} [TopologicalSpace X]
   refine htd (ContinuousAt.finset_inf'_apply hne (fun i hi => ?_))
   by_contra hci
   exact hnot (Set.mem_biUnion hi ⟨hci, htI⟩)
+
+/-- `t ↦ P t − D t` is piecewise-continuous when `P` and `D` are. -/
+theorem IsPiecewiseContinuous.tsub {P D : ℝ≥0 → ℝ≥0}
+    (hP : IsPiecewiseContinuous P) (hD : IsPiecewiseContinuous D) :
+    IsPiecewiseContinuous (fun t => P t - D t) := by
+  intro T
+  refine Set.Finite.subset ((hP T).union (hD T)) ?_
+  rintro t ⟨ht, htm⟩
+  by_cases hP' : ContinuousAt P t
+  · by_cases hD' : ContinuousAt D t
+    · have hpr : ContinuousAt (fun x => (P x, D x)) t := ContinuousAt.prodMk hP' hD'
+      exact absurd (continuous_sub.continuousAt.comp hpr) ht
+    · right; exact ⟨hD', htm⟩
+  · left; exact ⟨hP', htm⟩
 
 /-- A monotone curve with an additive Lipschitz bound is continuous:
 the two one-sided estimates squeeze every approach. -/

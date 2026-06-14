@@ -207,4 +207,25 @@ theorem supCurve_le {ι : Type*} [Fintype ι] [Nonempty ι] {C : ι → Curve} {
     (h : ∀ i, C i ≤ D) : supCurve C ≤ D :=
   fun t => Finset.sup'_le Finset.univ_nonempty _ (fun i _ => h i t)
 
+/-! ## Truncated difference of curves -/
+
+/-- The pointwise truncated difference `C − D`, as a `Curve` (caller supplies its
+monotonicity); the regularity rides `IsLeftContinuous.tsub`/`IsPiecewiseContinuous.tsub`. -/
+noncomputable def Curve.wasteSub (C D : Curve)
+    (hmono : Monotone (fun t => C t - D t)) : Curve where
+  toFun := fun t => C t - D t
+  mono := hmono
+  zero := by
+    show C 0 - D 0 = 0
+    have hC : C 0 = 0 := C.zero
+    have hD : D 0 = 0 := D.zero
+    rw [hC, hD, tsub_self]
+  pwc := IsPiecewiseContinuous.tsub C.pwc D.pwc
+  leftCont := IsLeftContinuous.tsub C.leftCont D.leftCont
+
+/-- `C.wasteSub D _ t = C t − D t`. -/
+@[simp] theorem Curve.wasteSub_apply (C D : Curve)
+    (hmono : Monotone (fun t => C t - D t)) (t : ℝ≥0) :
+    C.wasteSub D hmono t = C t - D t := rfl
+
 end DeepWiki
