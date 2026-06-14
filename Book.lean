@@ -118,6 +118,8 @@ import Book.ServersResidualFifoPmooConcat
 import Book.ServersToa
 import Book.ServersDrr
 import Book.ServersWrr
+import Book.SchedulerSemantics
+import Book.ServersDrrSemantics
 import Book.ServersResidualMinimal
 import Book.ServersResidualStrictness
 import Book.ServersResidualOutput
