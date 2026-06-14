@@ -2,13 +2,18 @@ import Book.ServiceCurveMonotonyExt
 import Book.ServiceCurveVariableCapacityFamilies
 
 /-! # Refined variable-capacity monotony with extended arrivals (Thm 9.3 item 8)
-The variable-capacity (`vcn`) inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` forces the
-super-additive closures (of the non-decreasing closures) to be ordered, the book's
-`(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. Over finite `Curve` arrivals the forcing fails — the positive-time
-capacity terms can undercut the origin term; the instantaneous infinite burst `δ₀`, a
-genuine arrival only over the extended carrier, makes it hold. Feeding `δ₀` collapses the
+The variable-capacity (`vcn`) inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` is equivalent to the
+super-additive closures (of the non-decreasing closures) being ordered, the book's
+`(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. The book states this unconditionally; here the forcing direction carries
+one honesty hypothesis — the tight witness `(β'↑)^⊛̄` is pointwise finite — which is exactly
+what the book implicitly assumes by quantifying its capacity over genuine (finite) cumulative
+functions, and is the weakest condition the proof needs.
+
+The finite-`Curve`-arrival route is `+∞`-blocked (a finite burst's positive-time capacity
+terms can undercut the origin term — documented in the parent `vcn` chapters), which is why the
+forcing rides the extended carrier: feeding the instantaneous infinite burst `δ₀` collapses the
 variable-capacity output onto the capacity itself (`vcnOutputExt δ₀ C = C`), so the
-super-additive closure `K := (β'↑)^⊛̄` is its own `δ₀`-output: the canonical tight pair
+super-additive closure `K := (β'↑)^⊛̄` is its own `δ₀`-output and the canonical tight pair
 `(δ₀, K)` sits in `S_vcn^ext(β')`. The inclusion carries it into `S_vcn^ext(β)`, producing a
 `β`-incrementing capacity equal to `K`, whence `(β↑)^⊛̄ ≤ K = (β'↑)^⊛̄`. This mirrors the
 min-plus item-3 forcing `ndClosure_le_of_minimalServiceRelExt_le`, with the super-additive
@@ -16,7 +21,13 @@ closure in place of the non-decreasing one and the
 `δ₀`-output-of-a-capacity-is-the-capacity collapse in place of `δ₀ ∗ β = β`. The converse is
 the easy direction (a capacity carrying `β'`-increments carries `(β'↑)^⊛̄`-increments, hence
 `β`-increments once the closures are ordered), so the inclusion is *equivalent* to the
-closure ordering. -/
+closure ordering.
+
+The relation domain is `ProcessENN` (monotone, null-at-origin, `ℝ≥0∞`-valued — NO continuity),
+broader than the book's piecewise- and left-continuous class: the closure witness `(β'↑)^⊛̄` is
+only provably monotone and null-at-origin (no super-additive-closure continuity-preservation
+lemma),
+so it cannot be hosted on the continuous `CurveENN` the item-3 sibling uses. -/
 
 namespace DeepWiki
 
@@ -41,10 +52,6 @@ instance : FunLike ProcessENN ℝ≥0 ℝ≥0∞ where
 /-- Two extended processes are equal when equal as functions. -/
 @[ext] theorem ProcessENN.ext {A B : ProcessENN} (h : ∀ t, A t = B t) : A = B :=
   DFunLike.ext A B h
-
-/-- Pointwise order on extended processes. -/
-instance : LE ProcessENN where
-  le D A := ∀ t, D t ≤ A t
 
 /-- Every `CurveENN` is an extended cumulative process (forgetting continuity). -/
 noncomputable def ProcessENN.ofCurveENN (A : CurveENN) : ProcessENN where
@@ -111,28 +118,6 @@ theorem mem_variableCapacityRelExt_iff {beta : ℝ≥0 → ℝ≥0∞} {A D : Pr
       (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) :=
   Iff.rfl
 
-/-- Each extended super-additive iterate stays below an affine bound:
-`maxConvPow g n t ≤ ρ · t` when `g s ≤ ρ · s`. -/
-theorem maxConvPow_le_of_affine_boundNN {g : ℝ≥0 → ℝ≥0∞} {ρ : ℝ≥0∞}
-    (hr : ∀ s : ℝ≥0, g s ≤ ρ * s) (n : ℕ) (t : ℝ≥0) :
-    maxConvPow g n t ≤ ρ * t := by
-  induction n generalizing t with
-  | zero => exact hr t
-  | succ n ih =>
-    show maxConv (maxConvPow g n) (maxConvPow g n) t ≤ ρ * t
-    refine maxConv_le fun a b hab => ?_
-    calc maxConvPow g n a + maxConvPow g n b
-        ≤ ρ * (a : ℝ≥0∞) + ρ * (b : ℝ≥0∞) := add_le_add (ih a) (ih b)
-      _ = ρ * ((a : ℝ≥0∞) + b) := (mul_add ρ _ _).symm
-      _ = ρ * t := by rw [← hab]; push_cast; ring_nf
-
-/-- The extended super-additive closure stays below an affine bound,
-`superadditiveClosureMaxNN g t ≤ ρ · t`. -/
-theorem superadditiveClosureMaxNN_le_of_affine_bound {g : ℝ≥0 → ℝ≥0∞} {ρ : ℝ≥0∞}
-    (hr : ∀ s : ℝ≥0, g s ≤ ρ * s) (t : ℝ≥0) :
-    superadditiveClosureMaxNN g t ≤ ρ * t :=
-  iSup_le fun n => maxConvPow_le_of_affine_boundNN hr n t
-
 /-- The extended super-additive iterates vanish at the origin when `g 0 = 0`. -/
 theorem maxConvPow_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) (n : ℕ) :
     maxConvPow g n 0 = 0 := by
@@ -150,67 +135,44 @@ theorem superadditiveClosureMaxNN_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0
   refine le_antisymm (iSup_le fun n => ?_) zero_le'
   rw [maxConvPow_zero_eq h0 n]
 
-/-- `f t ≤ ndClosure f t` on the `ℝ≥0∞` carrier (boundedness is automatic). -/
-theorem le_ndClosureNN (f : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : f t ≤ ndClosure f t :=
-  le_ndClosure f (fun _ => OrderTop.bddAbove _) t
-
-/-- `ndClosure f` is monotone on the `ℝ≥0∞` carrier. -/
-theorem monotone_ndClosureNN (f : ℝ≥0 → ℝ≥0∞) : Monotone (ndClosure f) :=
-  fun _ _ hxy => ndClosure_mono f (fun _ => OrderTop.bddAbove _) hxy
-
-/-- The non-decreasing closure of a rate-`ρ` bounded curve's `ℝ≥0∞`-coe is below `ρ · t`. -/
-theorem ndClosure_coe_le_affine {β' : Curve} {ρ : ℝ≥0} (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s)
-    (t : ℝ≥0) : ndClosure (fun u => (β' u : ℝ≥0∞)) t ≤ (ρ : ℝ≥0∞) * t := by
-  refine ndClosure_le (f := fun u => (β' u : ℝ≥0∞)) (g := fun u => (ρ : ℝ≥0∞) * u) ?_ ?_ t
-  · intro a b hab; exact mul_le_mul' le_rfl (by exact_mod_cast hab)
-  · intro u
-    calc (β' u : ℝ≥0∞) ≤ ((ρ * u : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hr u
-      _ = (ρ : ℝ≥0∞) * u := by push_cast; rfl
-
-/-- The non-decreasing closure of a rate-bounded curve's `ℝ≥0∞`-coe vanishes at the origin. -/
-theorem ndClosure_coe_zero_eq {β' : Curve} {ρ : ℝ≥0} (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s) :
+/-- The non-decreasing closure of a curve's `ℝ≥0∞`-coe vanishes at the origin. -/
+theorem ndClosure_coe_zero_eq (β' : Curve) :
     ndClosure (fun u => (β' u : ℝ≥0∞)) 0 = 0 := by
-  refine le_antisymm ?_ zero_le'
-  have h := ndClosure_coe_le_affine hr 0
-  rwa [show (ρ : ℝ≥0∞) * ((0 : ℝ≥0) : ℝ≥0∞) = 0 by push_cast; ring] at h
+  rw [ndClosure_zero_eq]
+  show ((β' 0 : ℝ≥0) : ℝ≥0∞) = 0
+  rw [show (β' 0 : ℝ≥0) = 0 from β'.zero]; rfl
 
 /-- The super-additive closure `(β'↑)^⊛̄`, monotone and null at the origin, as an extended
 cumulative process — the canonical `vcn` capacity for `β'`. -/
-noncomputable def superadditiveNdClosureProcess {β' : Curve} {ρ : ℝ≥0}
-    (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s) : ProcessENN where
+noncomputable def superadditiveNdClosureProcess (β' : Curve) : ProcessENN where
   toFun := superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞)))
-  mono := monotone_superadditiveClosureMaxNN (monotone_ndClosureNN _)
-  zero := superadditiveClosureMaxNN_zero_eq (ndClosure_coe_zero_eq hr)
+  mono := monotone_superadditiveClosureMaxNN (monotone_ndClosure_complete _)
+  zero := superadditiveClosureMaxNN_zero_eq (ndClosure_coe_zero_eq β')
 
-/-- `superadditiveNdClosureProcess hr t = (β'↑)^⊛̄ t`. -/
-@[simp] theorem superadditiveNdClosureProcess_apply {β' : Curve} {ρ : ℝ≥0}
-    (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s) (t : ℝ≥0) :
-    (superadditiveNdClosureProcess hr) t
+/-- `superadditiveNdClosureProcess β' t = (β'↑)^⊛̄ t`. -/
+@[simp] theorem superadditiveNdClosureProcess_apply (β' : Curve) (t : ℝ≥0) :
+    (superadditiveNdClosureProcess β') t
       = superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) t := rfl
 
 /-- **The closure `(δ₀, (β'↑)^⊛̄)` is variable-capacity served by `β'`** (extended arrivals):
 the canonical tight pair with the infinite-burst input. `K := (β'↑)^⊛̄` is monotone, null at
 the origin, has `β'`-dominating increments (it is super-additive and dominates `β'`), and is
-its own `δ₀`-output. The rate bound on `β'` keeps `K` finite. -/
-theorem variableCapacityRelExt_delay0Process_closure {β' : Curve} {ρ : ℝ≥0}
-    (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s) :
+its own `δ₀`-output. The pointwise finiteness of `K` is what lets super-additivity convert into
+the increment bound. -/
+theorem variableCapacityRelExt_delay0Process_closure {β' : Curve}
+    (hfin : ∀ s, superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) s ≠ ⊤) :
     variableCapacityRelExt (fun u => (β' u : ℝ≥0∞)) delay0Process
-      (superadditiveNdClosureProcess hr) := by
+      (superadditiveNdClosureProcess β') := by
   set g : ℝ≥0 → ℝ≥0∞ := fun u => (β' u : ℝ≥0∞) with hg
   set K : ℝ≥0 → ℝ≥0∞ := superadditiveClosureMaxNN (ndClosure g) with hK
-  have hmonoK : Monotone K := monotone_superadditiveClosureMaxNN (monotone_ndClosureNN g)
-  have h0K : K 0 = 0 := superadditiveClosureMaxNN_zero_eq (ndClosure_coe_zero_eq hr)
+  have hmonoK : Monotone K := monotone_superadditiveClosureMaxNN (monotone_ndClosure_complete g)
+  have h0K : K 0 = 0 := superadditiveClosureMaxNN_zero_eq (ndClosure_coe_zero_eq β')
   have hsupK : IsSuperadditive K := isSuperadditive_superadditiveClosureMaxNN _
-  have hfin : ∀ s : ℝ≥0, K s ≠ ⊤ := by
-    intro s
-    have hb : K s ≤ (ρ : ℝ≥0∞) * s :=
-      superadditiveClosureMaxNN_le_of_affine_bound (fun u => ndClosure_coe_le_affine hr u) s
-    exact ne_top_of_le_ne_top (ENNReal.mul_ne_top (by simp) (by simp)) hb
   refine ⟨K, hmonoK, h0K, fun t => ?_, fun s t hst => ?_⟩
   · rw [superadditiveNdClosureProcess_apply, ← hK, delay0Process_coe]
     exact (vcnOutputExt_delay0ENN h0K t).symm
   · have hβle : g (t - s) ≤ K (t - s) :=
-      le_trans (le_ndClosureNN g (t - s))
+      le_trans (le_ndClosure_apply g (le_refl (t - s)))
         (le_superadditiveClosureMaxNN (ndClosure g) (t - s))
     have hincr : K (t - s) ≤ K t - K s := by
       have hsa : K (t - s) + K s ≤ K t := by
@@ -275,19 +237,20 @@ if every extended pair variable-capacity served by `β'` is also served by `β`,
 super-additive closures of the non-decreasing closures are ordered, the book's
 `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. Probing the `β'`-server with the infinite burst `δ₀` recovers
 `K := (β'↑)^⊛̄` as the departure (its own `δ₀`-output); the inclusion forces a
-`β`-incrementing capacity equal to `K`, so `β(t−s) ≤ K(t) − K(s)`, whence `(β↑)^⊛̄ ≤ K`. A
-rate bound on `β'` keeps `K` finite. Over finite `Curve` arrivals the forcing fails; `δ₀`
-is what makes it hold. -/
+`β`-incrementing capacity equal to `K`, so `β(t−s) ≤ K(t) − K(s)`, whence `(β↑)^⊛̄ ≤ K`. The
+sole hypothesis is that the tight witness `K = (β'↑)^⊛̄` is pointwise finite — the book's
+implicit honesty condition (its capacities are genuine finite cumulative functions). -/
 theorem superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le
-    {β β' : Curve} {ρ : ℝ≥0} (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s)
+    {β β' : Curve}
+    (hfin : ∀ s, superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) s ≠ ⊤)
     (h : variableCapacityRelExt (fun u => (β' u : ℝ≥0∞))
       ≤ variableCapacityRelExt (fun u => (β u : ℝ≥0∞))) :
     superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞)))
       ≤ superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) := by
   have hmem : variableCapacityRelExt (fun u => (β u : ℝ≥0∞)) delay0Process
-      (superadditiveNdClosureProcess hr) :=
-    h delay0Process (superadditiveNdClosureProcess hr)
-      (variableCapacityRelExt_delay0Process_closure hr)
+      (superadditiveNdClosureProcess β') :=
+    h delay0Process (superadditiveNdClosureProcess β')
+      (variableCapacityRelExt_delay0Process_closure hfin)
   obtain ⟨C, hCmono, hC0, hDout, hcap⟩ := hmem
   have hKeqC : ∀ t, superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) t = C t := by
     intro t
@@ -305,8 +268,8 @@ theorem superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le
 super-additive closures are ordered, `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`, then every extended pair
 variable-capacity served by `β'` is served by `β` — `S_vcn^ext(β') ⊆ S_vcn^ext(β)`. The same
 witness capacity `C` works: its `β'`-increments dominate `(β'↑)^⊛̄`
-(`superadditiveClosureMaxNN_ndClosure_le_capacityNN`), hence `(β↑)^⊛̄`, hence `β`. No rate
-bound is needed for this direction. -/
+(`superadditiveClosureMaxNN_ndClosure_le_capacityNN`), hence `(β↑)^⊛̄`, hence `β`. No
+finiteness is needed for this direction. -/
 theorem variableCapacityRelExt_le_of_superadditiveClosureMaxNN_ndClosure_le {β β' : Curve}
     (h : superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞)))
       ≤ superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞)))) :
@@ -317,32 +280,33 @@ theorem variableCapacityRelExt_le_of_superadditiveClosureMaxNN_ndClosure_le {β 
   refine ⟨C, hCmono, hC0, hDout, fun s t hst => ?_⟩
   have hβclo : (β (t - s) : ℝ≥0∞)
       ≤ superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞))) (t - s) :=
-    le_trans (le_ndClosureNN (fun u => (β u : ℝ≥0∞)) (t - s))
+    le_trans (le_ndClosure_apply (fun u => (β u : ℝ≥0∞)) (le_refl (t - s)))
       (le_superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞))) (t - s))
   exact le_trans (le_trans hβclo (h (t - s)))
     (superadditiveClosureMaxNN_ndClosure_le_capacityNN hCmono hcap hst)
 
-/-- **Thm 9.3 item 8 (the equivalence)**: for a rate-bounded `β'`, the extended
-variable-capacity inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` holds *iff* the super-additive
-closures of the non-decreasing closures are ordered, `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. The forcing
-(`⟹`) rides the infinite burst `δ₀`; the converse (`⟸`) is the capacity-domination
+/-- **Thm 9.3 item 8 (the equivalence)**: when the tight witness `(β'↑)^⊛̄` is pointwise finite,
+the extended variable-capacity inclusion `S_vcn^ext(β') ⊆ S_vcn^ext(β)` holds *iff* the
+super-additive closures of the non-decreasing closures are ordered, `(β↑)^⊛̄ ≤ (β'↑)^⊛̄`. The
+forcing (`⟹`) rides the infinite burst `δ₀`; the converse (`⟸`) is the capacity-domination
 argument. -/
 theorem variableCapacityRelExt_le_iff_superadditiveClosureMaxNN_ndClosure_le {β β' : Curve}
-    {ρ : ℝ≥0} (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s) :
+    (hfin : ∀ s, superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) s ≠ ⊤) :
     variableCapacityRelExt (fun u => (β' u : ℝ≥0∞))
         ≤ variableCapacityRelExt (fun u => (β u : ℝ≥0∞))
       ↔ superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞)))
         ≤ superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) :=
-  ⟨fun h => superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le hr h,
+  ⟨fun h => superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le hfin h,
    variableCapacityRelExt_le_of_superadditiveClosureMaxNN_ndClosure_le⟩
 
 /-- Faithfulness restatement of the forcing against the book's wording
 `S_vcn^ext(β') ⊆ S_vcn^ext(β) ⟹ (β↑)^⊛̄ ≤ (β'↑)^⊛̄`. -/
-example {β β' : Curve} {ρ : ℝ≥0} (hr : ∀ s : ℝ≥0, β' s ≤ ρ * s)
+example {β β' : Curve}
+    (hfin : ∀ s, superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) s ≠ ⊤)
     (h : variableCapacityRelExt (fun u => (β' u : ℝ≥0∞))
       ≤ variableCapacityRelExt (fun u => (β u : ℝ≥0∞))) :
     superadditiveClosureMaxNN (ndClosure (fun u => (β u : ℝ≥0∞)))
       ≤ superadditiveClosureMaxNN (ndClosure (fun u => (β' u : ℝ≥0∞))) :=
-  superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le hr h
+  superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le hfin h
 
 end DeepWiki
