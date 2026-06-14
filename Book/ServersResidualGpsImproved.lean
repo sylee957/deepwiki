@@ -344,6 +344,67 @@ theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps
     (fun j => hcaus As Ds hp j) (hgps As Ds hp)
     (hβ.sum_strict hp) harr hcross hgrow hik hst hbl
 
+/-- **The improved per-flow GPS residual, ungated form**: the same bound with the gate dropped
+from the residual share. Before the crossing time `T` the full-GPS share `(φᵢ/Φ)·β` dominates
+the ungated residual share (`hgate`), so the maximum is unchanged — recovering the book's
+displayed `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` with no indicator. -/
+theorem add_max_div_mul_le_of_isGps_ungated {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+    (hΦ : 0 < ∑ j, φ j) (hc : ∀ j, Ds j ≤ As j)
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    {k : ι} (harr : IsMaximalArrivalBound ⇑(As k) α)
+    (hcross : ∀ x, T ≤ x → (∑ j, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j, φ j) * α y ≤ φ k * β y + (∑ j, φ j) * α x)
+    {i : ι} (hik : i ≠ k) {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged ⇑(As i) ⇑(Ds i) (Set.Ioc s t))
+    (hgate : ∀ v, v < T → (φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β v - α v)
+      ≤ (φ i / ∑ j, φ j) * β v) :
+    (Ds i) s
+      + max ((φ i / ∑ j, φ j) * β (t - s))
+          ((φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β (t - s) - α (t - s)))
+      ≤ (Ds i) t := by
+  have hgated := add_max_div_mul_le_of_isGps hΦ hc hgps hstrict harr hcross hgrow hik hst hbl
+  have heq : max ((φ i / ∑ j, φ j) * β (t - s))
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β (t - s) - α (t - s)))
+      = max ((φ i / ∑ j, φ j) * β (t - s))
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j) * gatedResidual β α T (t - s)) := by
+    rcases le_or_gt T (t - s) with hT | hT
+    · rw [gatedResidual_apply_of_le hT]
+    · rw [gatedResidual_apply_of_lt hT, mul_zero, max_eq_left (hgate (t - s) hT),
+        max_eq_left zero_le']
+  rw [heq]; exact hgated
+
+/-- Relation form, ungated: with the pre-crossing ordering `hgate`, flow `i ≠ k` is offered the
+ungated maximum `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` — the book's Figure-7.8 display — as a strict service
+curve on the residual server. -/
+theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop}
+    {φ : ι → ℝ≥0} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0} {k i : ι}
+    (hΦ : 0 < ∑ j, φ j) (hik : i ≠ k)
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    (hgps : IsGpsServerN φ S)
+    (hcross : ∀ x, T ≤ x → (∑ j, φ j) * α x ≤ φ k * β x)
+    (hgrow : ∀ x y, T ≤ x → x ≤ y →
+      φ k * β x + (∑ j, φ j) * α y ≤ φ k * β y + (∑ j, φ j) * α x)
+    (hgate : ∀ v, v < T → (φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β v - α v)
+      ≤ (φ i / ∑ j, φ j) * β v) :
+    IsStrictMinimalServiceCurve
+      (fun v => max ((φ i / ∑ j, φ j) * β v)
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β v - α v)))
+      (residualServer (fun A D => S A D
+        ∧ IsMaximalArrivalBound ⇑(A k) α) i) := by
+  rintro Ai Di ⟨As, Ds, ⟨hp, harr⟩, rfl, rfl⟩ s t hst hbl
+  exact add_max_div_mul_le_of_isGps_ungated hΦ
+    (fun j => hcaus As Ds hp j) (hgps As Ds hp)
+    (hβ.sum_strict hp) harr hcross hgrow hik hst hbl hgate
+
 /-- **Aggregate-strict service**: the `J`-aggregate of an `n`-server
 obeys the strict inequality for `β` on its own backlogged periods —
 the hypothesis-and-conclusion shape that the per-flow peeling
