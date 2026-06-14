@@ -1,17 +1,17 @@
-import Book.ServersResidual
-import Book.ServersResidualWeaklyStrict
-import Book.ServiceCurveWeaklyStrict
-import Book.ServiceCurveVariableCapacity
-import Book.ServiceCurveVariableCapacityStart
-import Book.ServiceCurveVariableCapacityFamilies
-import Book.ServiceCurveVariableCapacityFamiliesStrict
-import Book.ServiceCurveVariableCapacityMonotonyExt
-import Book.ServiceCurveAdaptive
-import Book.ServiceCurveMonotony
-import Book.ServiceCurveFamilies
-import Book.ServiceCurveFamiliesMinimal
-import Book.ServiceCurveWeaklyStrictStrictness
-import Book.ServiceCurveStrictTandemDilution
+import DeepWiki.NetworkCalculus.ServersResidual
+import DeepWiki.NetworkCalculus.ServersResidualWeaklyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacity
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamilies
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamiliesStrict
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityMonotonyExt
+import DeepWiki.NetworkCalculus.ServiceCurveAdaptive
+import DeepWiki.NetworkCalculus.ServiceCurveMonotony
+import DeepWiki.NetworkCalculus.ServiceCurveFamilies
+import DeepWiki.NetworkCalculus.ServiceCurveFamiliesMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
+import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves

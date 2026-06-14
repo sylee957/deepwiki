@@ -1,15 +1,15 @@
-import Book.ServersResidualPmoo
-import Book.ServersResidualPmooChain
-import Book.ServersResidualPmooPath
-import Book.ServersResidualPmooRateLatency
-import Book.ServersResidualSpPmoo
-import Book.ServersResidualFifoPmoo
-import Book.ServersResidualFifoPmooConcat
-import Book.ServersToa
-import Book.ServersResidualSfa
-import Book.ServersResidualGfa
-import Book.ServersResidualGfaTightness
-import Book.ServersResidualGpsStrict
+import DeepWiki.NetworkCalculus.ServersResidualPmoo
+import DeepWiki.NetworkCalculus.ServersResidualPmooChain
+import DeepWiki.NetworkCalculus.ServersResidualPmooPath
+import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
+import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
+import DeepWiki.NetworkCalculus.ServersResidualFifoPmoo
+import DeepWiki.NetworkCalculus.ServersResidualFifoPmooConcat
+import DeepWiki.NetworkCalculus.ServersToa
+import DeepWiki.NetworkCalculus.ServersResidualSfa
+import DeepWiki.NetworkCalculus.ServersResidualGfa
+import DeepWiki.NetworkCalculus.ServersResidualGfaTightness
+import DeepWiki.NetworkCalculus.ServersResidualGpsStrict
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves

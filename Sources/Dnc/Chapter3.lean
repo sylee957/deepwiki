@@ -1,16 +1,16 @@
-import Book.RealCurves
-import Book.RealCurvesConv
-import Book.RealCurvesDeconv
-import Book.RealCurvesAdditivity
-import Book.RealCurvesDeviations
-import Book.PseudoInverse
-import Book.PseudoInverseCatalog
-import Book.ClosuresNd
-import Book.ConvolutionMinimum
-import Book.ConvolutionContinuity
-import Book.Concave
-import Book.ConcaveProps
-import Book.ConcaveDioid
+import DeepWiki.NetworkCalculus.RealCurves
+import DeepWiki.NetworkCalculus.RealCurvesConv
+import DeepWiki.NetworkCalculus.RealCurvesDeconv
+import DeepWiki.NetworkCalculus.RealCurvesAdditivity
+import DeepWiki.NetworkCalculus.RealCurvesDeviations
+import DeepWiki.NetworkCalculus.PseudoInverse
+import DeepWiki.NetworkCalculus.PseudoInverseCatalog
+import DeepWiki.NetworkCalculus.ClosuresNd
+import DeepWiki.NetworkCalculus.ConvolutionMinimum
+import DeepWiki.NetworkCalculus.ConvolutionContinuity
+import DeepWiki.NetworkCalculus.Concave
+import DeepWiki.NetworkCalculus.ConcaveProps
+import DeepWiki.NetworkCalculus.ConcaveDioid
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 3: Sub-classes of Functions

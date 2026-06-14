@@ -1,0 +1,149 @@
+import DeepWiki.NetworkCalculus.Signatures
+import DeepWiki.NetworkCalculus.LevelSet
+import DeepWiki.NetworkCalculus.Dioids
+import DeepWiki.NetworkCalculus.Order
+import DeepWiki.NetworkCalculus.CompleteDioids
+import DeepWiki.NetworkCalculus.SubDioid
+import DeepWiki.NetworkCalculus.ScalarDioids
+import DeepWiki.NetworkCalculus.DioidFunctions
+import DeepWiki.NetworkCalculus.FunctionDioids
+import DeepWiki.NetworkCalculus.ClosuresNd
+import DeepWiki.NetworkCalculus.Additivity
+import DeepWiki.NetworkCalculus.Deconvolution
+import DeepWiki.NetworkCalculus.Closures
+import DeepWiki.NetworkCalculus.Limits
+import DeepWiki.NetworkCalculus.Continuity
+import DeepWiki.NetworkCalculus.ContinuityClosure
+import DeepWiki.NetworkCalculus.ClosuresNdRegularity
+import DeepWiki.NetworkCalculus.Concave
+import DeepWiki.NetworkCalculus.RealCurves
+import DeepWiki.NetworkCalculus.RealCurvesRegularity
+import DeepWiki.NetworkCalculus.RealCurvesAdditivity
+import DeepWiki.NetworkCalculus.RealCurvesConv
+import DeepWiki.NetworkCalculus.RealCurvesDeconv
+import DeepWiki.NetworkCalculus.Deviations
+import DeepWiki.NetworkCalculus.DeviationsComposition
+import DeepWiki.NetworkCalculus.RealCurvesDeviations
+import DeepWiki.NetworkCalculus.PseudoInverse
+import DeepWiki.NetworkCalculus.PseudoInverseCatalog
+import DeepWiki.NetworkCalculus.DeviationsPseudoInverse
+import DeepWiki.NetworkCalculus.DeviationsContinuity
+import DeepWiki.NetworkCalculus.ConvolutionMinimum
+import DeepWiki.NetworkCalculus.MinPlusExtTopology
+import DeepWiki.NetworkCalculus.MaxPlusExtTopology
+import DeepWiki.NetworkCalculus.ConvolutionMinimumExt
+import DeepWiki.NetworkCalculus.ConvolutionMinimumRC
+import DeepWiki.NetworkCalculus.ConvolutionContinuity
+import DeepWiki.NetworkCalculus.ClosuresEReal
+import DeepWiki.NetworkCalculus.CurveDioidEReal
+import DeepWiki.NetworkCalculus.ConcaveProps
+import DeepWiki.NetworkCalculus.ConcaveDioid
+import DeepWiki.NetworkCalculus.ConcaveSubadditive
+import DeepWiki.NetworkCalculus.Servers
+import DeepWiki.NetworkCalculus.ClosuresReal
+import DeepWiki.NetworkCalculus.ArrivalCurves
+import DeepWiki.NetworkCalculus.ArrivalCurvesMaximal
+import DeepWiki.NetworkCalculus.ArrivalCurvesMinimal
+import DeepWiki.NetworkCalculus.ArrivalCurvesCombined
+import DeepWiki.NetworkCalculus.DeviationsBounds
+import DeepWiki.NetworkCalculus.ServiceCurveMinimal
+import DeepWiki.NetworkCalculus.CurveENN
+import DeepWiki.NetworkCalculus.DeviationsBoundsServer
+import DeepWiki.NetworkCalculus.DeviationsRestricted
+import DeepWiki.NetworkCalculus.ServersBacklog
+import DeepWiki.NetworkCalculus.ServiceCurveStrict
+import DeepWiki.NetworkCalculus.ServiceCurveStrictEReal
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictEReal
+import DeepWiki.NetworkCalculus.ServiceCurveFamilies
+import DeepWiki.NetworkCalculus.ServiceCurveMonotony
+import DeepWiki.NetworkCalculus.ServiceCurveFamiliesMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveMonotonyExt
+import DeepWiki.NetworkCalculus.ServiceCurveAdaptive
+import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacity
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStrict
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamilies
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityFamiliesStrict
+import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityMonotonyExt
+import DeepWiki.NetworkCalculus.ServiceCurveStrictMinimal
+import DeepWiki.NetworkCalculus.ServiceCurvePackets
+import DeepWiki.NetworkCalculus.Packetizer
+import DeepWiki.NetworkCalculus.ServiceCurveMaximal
+import DeepWiki.NetworkCalculus.ServersConcatenation
+import DeepWiki.NetworkCalculus.ServersConcatenationChain
+import DeepWiki.NetworkCalculus.ServersConcatenationStrict
+import DeepWiki.NetworkCalculus.ServersSystemClosure
+import DeepWiki.NetworkCalculus.ServiceCurveStrictTandem
+import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
+import DeepWiki.NetworkCalculus.ServersControlTandem
+import DeepWiki.NetworkCalculus.ServersControlFeedback
+import DeepWiki.NetworkCalculus.ServersControlFeedbackWindow
+import DeepWiki.NetworkCalculus.ArrivalCurvesShaper
+import DeepWiki.NetworkCalculus.PacketizerConcatenation
+import DeepWiki.NetworkCalculus.ArrivalCurvesShaperGreedy
+import DeepWiki.NetworkCalculus.ArrivalCurvesOutput
+import DeepWiki.NetworkCalculus.DeviationsBoundsTight
+import DeepWiki.NetworkCalculus.DeviationsCompositionTight
+import DeepWiki.NetworkCalculus.DeviationsCompositionRateLatency
+import DeepWiki.NetworkCalculus.DeviationsCompositionServers
+import DeepWiki.NetworkCalculus.DeviationsCompositionChain
+import DeepWiki.NetworkCalculus.ServersJitter
+import DeepWiki.NetworkCalculus.ServersRate
+import DeepWiki.NetworkCalculus.ArrivalCurvesPeriodic
+import DeepWiki.NetworkCalculus.ArrivalCurvesPeriodicDelay
+import DeepWiki.NetworkCalculus.ArrivalCurvesAggregate
+import DeepWiki.NetworkCalculus.ServersMimo
+import DeepWiki.NetworkCalculus.ServersResidual
+import DeepWiki.NetworkCalculus.ServersResidualWeaklyStrict
+import DeepWiki.NetworkCalculus.ServersResidualFifo
+import DeepWiki.NetworkCalculus.ServersResidualFifoPmoo
+import DeepWiki.NetworkCalculus.ServersResidualPriority
+import DeepWiki.NetworkCalculus.ServersResidualPriorityStrict
+import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
+import DeepWiki.NetworkCalculus.ServersResidualGps
+import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
+import DeepWiki.NetworkCalculus.ServersResidualGpsStrict
+import DeepWiki.NetworkCalculus.ServersResidualPmoo
+import DeepWiki.NetworkCalculus.ServersResidualPmooChain
+import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
+import DeepWiki.NetworkCalculus.ServersResidualPmooPath
+import DeepWiki.NetworkCalculus.ServersResidualPgps
+import DeepWiki.NetworkCalculus.ServersResidualDrr
+import DeepWiki.NetworkCalculus.ServersResidualTdma
+import DeepWiki.NetworkCalculus.ServersResidualWrr
+import DeepWiki.NetworkCalculus.ServersResidualWrrPackets
+import DeepWiki.NetworkCalculus.ServersResidualSfa
+import DeepWiki.NetworkCalculus.ServersResidualGfa
+import DeepWiki.NetworkCalculus.ServersResidualGfaTightness
+import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
+import DeepWiki.NetworkCalculus.ServersResidualFifoPmooConcat
+import DeepWiki.NetworkCalculus.ServersToa
+import DeepWiki.NetworkCalculus.ServersConcatenationChainDelay
+import DeepWiki.NetworkCalculus.ServersDrr
+import DeepWiki.NetworkCalculus.ServersWrr
+import DeepWiki.NetworkCalculus.SchedulerSemantics
+import DeepWiki.NetworkCalculus.ServersDrrSemantics
+import DeepWiki.NetworkCalculus.ServersWrrSemantics
+import DeepWiki.NetworkCalculus.SchedulerSyntax
+import DeepWiki.NetworkCalculus.ServersResidualMinimal
+import DeepWiki.NetworkCalculus.ServersResidualStrictness
+import DeepWiki.NetworkCalculus.ServersResidualOutput
+import DeepWiki.NetworkCalculus.ServersResidualEdf
+
+/-!
+# DeepWiki — autoformalized mathematics
+
+Aggregator module for the DeepWiki formalization: a wiki of autoformalized
+mathematics, mechanized in Lean 4 with Mathlib. Importing `Book` pulls in every
+chapter; all declarations live in `namespace DeepWiki`.
+
+The first entry is the algebra of (min,plus) dioids — the theory of dioids
+(idempotent semirings) and the complete (min,plus) function dioids that
+underlie deterministic network calculus. The chapter list is the `import`
+block above.
+
+Notation: `⊕ = +` (dioid sum / lattice join), `⊗ = *` (product), `𝟘 = 0`,
+`𝟙 = 1`, canonical order `≼ = ≤`.
+-/

@@ -1,15 +1,15 @@
-import Book.ArrivalCurvesAggregate
-import Book.ServersMimo
-import Book.ServersResidual
-import Book.ServersResidualMinimal
-import Book.ServersResidualOutput
-import Book.ServersResidualFifo
-import Book.ServersResidualPriority
-import Book.ServersResidualGps
-import Book.ServersResidualGpsImproved
-import Book.ServersResidualEdf
-import Book.ServiceCurveMinimal
-import Book.ServiceCurveStrict
+import DeepWiki.NetworkCalculus.ArrivalCurvesAggregate
+import DeepWiki.NetworkCalculus.ServersMimo
+import DeepWiki.NetworkCalculus.ServersResidual
+import DeepWiki.NetworkCalculus.ServersResidualMinimal
+import DeepWiki.NetworkCalculus.ServersResidualOutput
+import DeepWiki.NetworkCalculus.ServersResidualFifo
+import DeepWiki.NetworkCalculus.ServersResidualPriority
+import DeepWiki.NetworkCalculus.ServersResidualGps
+import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
+import DeepWiki.NetworkCalculus.ServersResidualEdf
+import DeepWiki.NetworkCalculus.ServiceCurveMinimal
+import DeepWiki.NetworkCalculus.ServiceCurveStrict
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 7: Multiple Flows Crossing One Server

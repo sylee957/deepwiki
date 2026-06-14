@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Proof-result gate for the agent loop.
 #
-# Runs the full `lake build` correctness gate over the Book library and
-# reports a single verdict. Mathlib is cached, so this only ever recompiles
-# changed Book/*.lean chapters.
+# Runs the full `lake build` correctness gate over the DeepWiki library and
+# Sources catalog, and reports a single verdict. Mathlib is cached, so this
+# only ever recompiles changed DeepWiki/NetworkCalculus/*.lean chapters (and
+# Sources/*.lean catalog files).
 #
 # Timing (warm filesystem cache, this machine):
 #   - no-op (nothing changed):            ~2.4s  (lake manifest + olean stat floor)
@@ -15,17 +16,19 @@
 #      (CLAUDE.md requires the build to be warning-free and sorry-free)
 #
 # Usage:
-#   scripts/check.sh            # full gate over `Book`
-#   scripts/check.sh Book.Limits   # gate a single chapter (faster feedback)
+#   scripts/check.sh            # full gate over all default targets (DeepWiki + Sources)
+#   scripts/check.sh DeepWiki.NetworkCalculus.Dioids   # gate a single chapter (faster feedback)
+#   scripts/check.sh Sources    # gate the source catalogs
 
 set -u
 export PATH="$HOME/.elan/bin:$PATH"
 cd "$(dirname "$0")/.." || exit 1
 
-TARGET="${1:-Book}"
+TARGET="${1:-}"
 
 # Capture combined output so we can scan it; tee nothing to keep the loop quiet.
-out="$(lake build "$TARGET" 2>&1)"
+# With no TARGET, build all default targets (DeepWiki + Sources).
+out="$(lake build ${TARGET:+"$TARGET"} 2>&1)"
 status=$?
 
 echo "$out"

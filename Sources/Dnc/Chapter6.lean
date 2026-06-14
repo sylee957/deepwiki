@@ -1,10 +1,10 @@
-import Book.ServersConcatenation
-import Book.ServersConcatenationStrict
-import Book.ServiceCurveStrictTandem
-import Book.ServersControlTandem
-import Book.ServersControlFeedback
-import Book.ServersControlFeedbackWindow
-import Book.ServersJitter
+import DeepWiki.NetworkCalculus.ServersConcatenation
+import DeepWiki.NetworkCalculus.ServersConcatenationStrict
+import DeepWiki.NetworkCalculus.ServiceCurveStrictTandem
+import DeepWiki.NetworkCalculus.ServersControlTandem
+import DeepWiki.NetworkCalculus.ServersControlFeedback
+import DeepWiki.NetworkCalculus.ServersControlFeedbackWindow
+import DeepWiki.NetworkCalculus.ServersJitter
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 6: Single Flow Crossing Several Servers

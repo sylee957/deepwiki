@@ -1,7 +1,7 @@
-import Book.ConcaveDioid
-import Book.ConcaveProps
-import Book.ClosuresEReal
-import Book.FunctionDioids
+import DeepWiki.NetworkCalculus.ConcaveDioid
+import DeepWiki.NetworkCalculus.ConcaveProps
+import DeepWiki.NetworkCalculus.ClosuresEReal
+import DeepWiki.NetworkCalculus.FunctionDioids
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 4: Efficient Computations for (min,plus) Operators

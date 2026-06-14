@@ -27,8 +27,8 @@ jobs:
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Fetch Mathlib build cache
-        # Downloads prebuilt .olean files so only Book/*.lean compiles,
-        # turning a ~1h cold Mathlib build into a few minutes.
+        # Downloads prebuilt .olean files so only DeepWiki/*.lean and
+        # Sources/*.lean compile, turning a ~1h cold Mathlib build into minutes.
         run: |
           lake exe cache get || true
 
@@ -39,13 +39,13 @@ jobs:
 
       - name: Build API docs (doc-gen4)
         # doc-gen's final HTML step expects a references.bib at the doc root,
-        # so create an empty one first. HTML is generated for the Book library
-        # only; the long docInfo extraction over Mathlib feeds cross-reference
-        # data, not published pages.
+        # so create an empty one first. HTML is generated for the DeepWiki
+        # library and the Sources catalog; the long docInfo extraction over
+        # Mathlib feeds cross-reference data, not published pages.
         run: |
           mkdir -p .lake/build/doc
           touch .lake/build/doc/references.bib
-          DOCGEN_SRC=file lake build Book:docs
+          DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

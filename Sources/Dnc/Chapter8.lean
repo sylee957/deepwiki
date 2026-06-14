@@ -1,13 +1,13 @@
-import Book.Packetizer
-import Book.PacketizerConcatenation
-import Book.ServersResidualPriorityPackets
-import Book.ServersResidualPgps
-import Book.ServersResidualDrr
-import Book.ServersDrr
-import Book.ServersResidualWrr
-import Book.ServersResidualWrrPackets
-import Book.ServersWrr
-import Book.ServersResidualTdma
+import DeepWiki.NetworkCalculus.Packetizer
+import DeepWiki.NetworkCalculus.PacketizerConcatenation
+import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
+import DeepWiki.NetworkCalculus.ServersResidualPgps
+import DeepWiki.NetworkCalculus.ServersResidualDrr
+import DeepWiki.NetworkCalculus.ServersDrr
+import DeepWiki.NetworkCalculus.ServersResidualWrr
+import DeepWiki.NetworkCalculus.ServersResidualWrrPackets
+import DeepWiki.NetworkCalculus.ServersWrr
+import DeepWiki.NetworkCalculus.ServersResidualTdma
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 8: Packets

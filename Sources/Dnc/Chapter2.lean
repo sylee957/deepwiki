@@ -1,9 +1,9 @@
-import Book.ScalarDioids
-import Book.FunctionDioids
-import Book.DioidFunctions
-import Book.Closures
-import Book.Additivity
-import Book.Deconvolution
+import DeepWiki.NetworkCalculus.ScalarDioids
+import DeepWiki.NetworkCalculus.FunctionDioids
+import DeepWiki.NetworkCalculus.DioidFunctions
+import DeepWiki.NetworkCalculus.Closures
+import DeepWiki.NetworkCalculus.Additivity
+import DeepWiki.NetworkCalculus.Deconvolution
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 2: The (min,plus) Functions Semi-ring

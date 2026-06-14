@@ -1,5 +1,5 @@
 name = "deepwiki"
-defaultTargets = ["Book", "Sources"]
+defaultTargets = ["DeepWiki", "Sources"]
 
 [[require]]
 name = "mathlib"
@@ -12,7 +12,7 @@ git = "https://github.com/leanprover/doc-gen4"
 rev = "v4.30.0"
 
 [[lean_lib]]
-name = "Book"
+name = "DeepWiki"
 
 [[lean_lib]]
 name = "Sources"
