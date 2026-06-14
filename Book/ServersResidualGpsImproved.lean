@@ -203,7 +203,7 @@ theorem cross_and_grow_of_convexOn_gap {β α : ℝ≥0 → ℝ≥0}
         ≤ (c : ℝ) * (β y : ℝ) + (d : ℝ) * (α x : ℝ) := by linarith
     exact_mod_cast this
 
-/-- **Weighted-to-share**: the pre-crossing ordering `φ_k·b ≤ Φ·b̦a` (weighted, the form the
+/-- **Weighted-to-share**: the pre-crossing ordering `φ_k·b ≤ Φ·a` (weighted, the form the
 convexity bridge produces) implies the residual-share bound `(φᵢ/Φ₋₁)·(b−a) ≤ (φᵢ/Φ)·b` — the
 `hgate` the ungated bound consumes. (`Φ = ∑φ`, `Φ₋₁ = ∑_{j≠k}φ`.) -/
 theorem div_mul_sub_le_div_mul_of_weighted {ι : Type*} [Fintype ι] [DecidableEq ι]
