@@ -203,6 +203,30 @@ theorem cross_and_grow_of_convexOn_gap {β α : ℝ≥0 → ℝ≥0}
         ≤ (c : ℝ) * (β y : ℝ) + (d : ℝ) * (α x : ℝ) := by linarith
     exact_mod_cast this
 
+/-- **Weighted-to-share**: the pre-crossing ordering `φ_k·b ≤ Φ·b̦a` (weighted, the form the
+convexity bridge produces) implies the residual-share bound `(φᵢ/Φ₋₁)·(b−a) ≤ (φᵢ/Φ)·b` — the
+`hgate` the ungated bound consumes. (`Φ = ∑φ`, `Φ₋₁ = ∑_{j≠k}φ`.) -/
+theorem div_mul_sub_le_div_mul_of_weighted {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {φ : ι → ℝ≥0} {k i : ι} {b a : ℝ≥0}
+    (hΦ : 0 < ∑ j, φ j) (hw : φ k * b ≤ (∑ j, φ j) * a) :
+    (φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (b - a) ≤ (φ i / ∑ j, φ j) * b := by
+  rcases le_or_gt b a with hba | hba
+  · rw [tsub_eq_zero_of_le hba, mul_zero]; exact zero_le'
+  rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ ∑ j ∈ Finset.univ.erase k, φ j) with hΦ1 | hΦ1
+  · rw [← hΦ1, div_zero, zero_mul]; exact zero_le'
+  rw [← NNReal.coe_le_coe]
+  push_cast [NNReal.coe_sub hba.le]
+  rw [div_mul_eq_mul_div, div_mul_eq_mul_div,
+    div_le_div_iff₀ (by exact_mod_cast hΦ1) (by exact_mod_cast hΦ)]
+  have hsum : (∑ j, (φ j : ℝ)) = (φ k : ℝ) + ∑ j ∈ Finset.univ.erase k, (φ j : ℝ) :=
+    (Finset.add_sum_erase _ (fun j => (φ j : ℝ)) (Finset.mem_univ k)).symm
+  have hwR' : (φ k : ℝ) * (b : ℝ)
+      ≤ ((φ k : ℝ) + ∑ j ∈ Finset.univ.erase k, (φ j : ℝ)) * (a : ℝ) := by
+    rw [← hsum]; exact_mod_cast hw
+  rw [hsum]
+  nlinarith [mul_le_mul_of_nonneg_left hwR' (NNReal.coe_nonneg (φ i)),
+    NNReal.coe_nonneg (φ i), NNReal.coe_nonneg b, NNReal.coe_nonneg a]
+
 /-- **The constrained flow releases its share past its crossing
 time** — the improved-GPS aggregation step: in a GPS server with
 strict aggregate `β` and flow `k` arrival-constrained by `α`, the
@@ -456,6 +480,35 @@ theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated
   exact add_max_div_mul_le_of_isGps_ungated hΦ
     (fun j => hcaus As Ds hp j) (hgps As Ds hp)
     (hβ.sum_strict hp) harr hcross hgrow hik hst hbl hgate
+
+/-- **Theorem 7.8 / Figure 7.8, fully derived from convexity**: when the weighted gap
+`φ_k·β − Φ·α` is convex, nonpositive at the origin, and crosses zero at a positive `T`
+(`φ_k·β T = Φ·α T`), flow `i ≠ k` is offered the ungated `φᵢ·max(β/Φ, (β−α)/Φ₋₁)` as a strict
+service curve — with NO ordering hypothesis. Convexity supplies both the post-crossing
+domination (`cross_and_grow_of_convexOn_gap` ⇒ `hcross`/`hgrow`) and the pre-crossing dominance
+(`cross_before_of_convexOn_gap` ⇒ `hgate`, via the weighted-to-share `div_mul_sub_le_div_mul_of_weighted`),
+matching the book's convex-`β` / concave-`α` hypotheses exactly. -/
+theorem isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated_convex
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop}
+    {φ : ι → ℝ≥0} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0} {k i : ι}
+    (hΦ : 0 < ∑ j, φ j) (hik : i ≠ k) (hT : 0 < T)
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S))
+    (hgps : IsGpsServerN φ S)
+    (hgconv : ConvexOn ℝ (Set.Ici 0) (fun x : ℝ =>
+      (φ k : ℝ) * (β x.toNNReal : ℝ) - ((∑ j, φ j : ℝ≥0) : ℝ) * (α x.toNNReal : ℝ)))
+    (h0 : φ k * β 0 ≤ (∑ j, φ j) * α 0)
+    (hcrossT : φ k * β T = (∑ j, φ j) * α T) :
+    IsStrictMinimalServiceCurve
+      (fun v => max ((φ i / ∑ j, φ j) * β v)
+        ((φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (β v - α v)))
+      (residualServer (fun A D => S A D
+        ∧ IsMaximalArrivalBound ⇑(A k) α) i) := by
+  obtain ⟨hcross, hgrow⟩ := cross_and_grow_of_convexOn_gap hgconv h0 hT hcrossT.ge
+  have hgateW := cross_before_of_convexOn_gap hgconv h0 hcrossT.le
+  exact isStrictMinimalServiceCurve_max_residualServer_of_isGps_ungated hΦ hik hcaus hβ hgps
+    hcross hgrow (fun v hv => div_mul_sub_le_div_mul_of_weighted hΦ (hgateW v hv.le))
 
 /-- **Aggregate-strict service**: the `J`-aggregate of an `n`-server
 obeys the strict inequality for `β` on its own backlogged periods —
