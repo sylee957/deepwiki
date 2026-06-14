@@ -1,6 +1,7 @@
 import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityGlobal
 import DeepWiki.NetworkCalculus.StabilityFixPoint
+import DeepWiki.NetworkCalculus.StabilityNetwork
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -25,8 +26,8 @@ noncomputable def def_12_1_serviceRate := @longTermServiceRate
 /-- **Definition 12.2** (§12.1.1, p.271): local stability (per-server form) —
 a server is locally stable when the aggregate long-term arrival rate is
 strictly below its long-term service rate, `∑ rᵢ < R`. The library's
-`IsLocallyStableServer`. (The network predicate quantifies this over every
-server `h`; that quantification needs a network model and is not formalized.) -/
+`IsLocallyStableServer`. (The whole-network form quantifying over every server
+is `def_12_2_network` below.) -/
 abbrev def_12_2 := @IsLocallyStableServer
 
 /-- **Lemma 12.1** (§12.1.1, p.271): if a server is locally stable then
@@ -40,8 +41,29 @@ theorem lemma_12_1 {α β : ℝ≥0 → ℝ≥0} (h : IsLocallyStableServer α �
 /-- **Definition 12.3** (§12.1.2, p.271): global stability (per-server form) —
 a server is globally stable when its maximal backlogged-period length is
 bounded, `maxBackloggedLength A D < ⊤`. The library's `IsGloballyStableServer`.
-(The network predicate asks this of every server.) -/
+(The whole-network form is `def_12_3_network` below.) -/
 abbrev def_12_3 := @IsGloballyStableServer
+
+/-- **Definition 12.2** (network form, §12.1.1 p.271): a network is locally
+stable when at every server `h` the aggregate arrival rate of the crossing
+flows is below the service rate, `∀ h, ∑_{i∈Fl(h)} rᵢ < R^(h)`. The library's
+`Network.IsLocallyStable`. -/
+abbrev def_12_2_network := @Network.IsLocallyStable
+
+/-- **Definition 12.3** (network form, §12.1.2 p.271): a network is globally
+stable when every server's aggregate backlogged period is bounded. The
+library's `Network.IsGloballyStable`. -/
+abbrev def_12_3_network := @Network.IsGloballyStable
+
+/-- **Network local ⟹ global** (Definition 12.2 ⟹ Definition 12.3): under a
+causal strict-service relation and an aggregate arrival bound at each server,
+network local stability bounds every server's backlogged period. The library's
+`Network.isGloballyStable_of_isLocallyStable` — the rate-sum condition bounds
+(limsup subadditivity) each aggregate rate below the service rate, then the
+per-server `local ⟹ global` fires at every server. (Deriving the per-server
+served pair and aggregate arrival bound by cross-traffic propagation, rather
+than assuming them, is the remaining network-model step.) -/
+alias thm_12_localGlobal := Network.isGloballyStable_of_isLocallyStable
 
 /-! **Lemma 12.2** (§12.1.2, p.271): If a network is globally stable then it is locally stable. (Converse direction — not formalized in the library.) -/
 

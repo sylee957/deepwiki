@@ -28,6 +28,66 @@ noncomputable def longTermArrivalRate (α : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :=
 noncomputable def longTermServiceRate (β : ℝ≥0 → ℝ≥0) : ℝ≥0∞ :=
   liminf (fun t => (β t : ℝ≥0∞) / (t : ℝ≥0∞)) atTop
 
+/-- Subadditivity of `limsup` over `atTop` in `ℝ≥0∞`: `limsup (u + v) ≤ limsup u
++ limsup v`. (Off-the-shelf `limsup_add_le` does not apply — `ENNReal`'s needs
+`CountableInterFilter` which `atTop` lacks, the group version needs a group;
+this is the hand proof via `ENNReal.le_of_forall_pos_le_add`.) -/
+theorem limsup_add_le_atTop (u v : ℝ≥0 → ℝ≥0∞) :
+    limsup (fun t => u t + v t) atTop ≤ limsup u atTop + limsup v atTop := by
+  refine ENNReal.le_of_forall_pos_le_add ?_
+  intro ε hε hfin
+  set Lu := limsup u atTop
+  set Lv := limsup v atTop
+  obtain ⟨hLuf, hLvf⟩ := ENNReal.add_lt_top.mp hfin
+  have hu : ∀ᶠ t in atTop, u t < Lu + (ε / 2 : ℝ≥0) :=
+    eventually_lt_of_limsup_lt (ENNReal.lt_add_right hLuf.ne (by positivity))
+  have hv : ∀ᶠ t in atTop, v t < Lv + (ε / 2 : ℝ≥0) :=
+    eventually_lt_of_limsup_lt (ENNReal.lt_add_right hLvf.ne (by positivity))
+  refine limsup_le_of_le (by isBoundedDefault) ?_
+  filter_upwards [hu, hv] with t htu htv
+  calc u t + v t ≤ (Lu + (ε / 2 : ℝ≥0)) + (Lv + (ε / 2 : ℝ≥0)) := add_le_add htu.le htv.le
+    _ = (Lu + Lv) + ((ε / 2 : ℝ≥0) + (ε / 2 : ℝ≥0)) := by ring
+    _ = (Lu + Lv) + (ε : ℝ≥0) := by rw [← ENNReal.coe_add]; norm_num
+
+/-- The long-term arrival rate is subadditive: `r(A + B) ≤ r(A) + r(B)`
+(the per-flow rates upper-bound the aggregate rate). -/
+theorem longTermArrivalRate_add_le (A B : ℝ≥0 → ℝ≥0) :
+    longTermArrivalRate (fun t => A t + B t)
+      ≤ longTermArrivalRate A + longTermArrivalRate B := by
+  have hfun : (fun t => ((A t + B t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞))
+      = (fun t => ((A t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞)
+                + ((B t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞)) := by
+    funext t; rw [ENNReal.coe_add, ENNReal.add_div]
+  show limsup (fun t => ((A t + B t : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞)) atTop
+      ≤ longTermArrivalRate A + longTermArrivalRate B
+  rw [hfun]
+  exact limsup_add_le_atTop _ _
+
+/-- The long-term arrival rate of a finite aggregate is below the sum of the
+per-flow rates: `r(∑_{i∈s} Aᵢ) ≤ ∑_{i∈s} r(Aᵢ)` (the rate-sum bridge of the
+network local-stability condition `∑ rᵢ < R`). -/
+theorem longTermArrivalRate_sum_le {ι : Type*} (s : Finset ι) (A : ι → ℝ≥0 → ℝ≥0) :
+    longTermArrivalRate (fun t => ∑ i ∈ s, A i t)
+      ≤ ∑ i ∈ s, longTermArrivalRate (A i) := by
+  classical
+  refine Finset.induction_on s ?_ ?_
+  · have h0 : longTermArrivalRate (fun _ : ℝ≥0 => (0 : ℝ≥0)) = 0 := by
+      simp only [longTermArrivalRate]
+      have hz : (fun t : ℝ≥0 => ((0 : ℝ≥0) : ℝ≥0∞) / (t : ℝ≥0∞)) = fun _ => (0 : ℝ≥0∞) := by
+        funext t; simp
+      rw [hz, Filter.limsup_const]
+    simp only [Finset.sum_empty]
+    exact h0.le
+  · intro a s ha ih
+    have hL : longTermArrivalRate (fun t => ∑ i ∈ insert a s, A i t)
+        = longTermArrivalRate (fun t => A a t + ∑ i ∈ s, A i t) := by
+      congr 1; funext t; rw [Finset.sum_insert ha]
+    rw [hL, Finset.sum_insert ha]
+    calc longTermArrivalRate (fun t => A a t + ∑ i ∈ s, A i t)
+        ≤ longTermArrivalRate (A a) + longTermArrivalRate (fun t => ∑ i ∈ s, A i t) :=
+          longTermArrivalRate_add_le (A a) (fun t => ∑ i ∈ s, A i t)
+      _ ≤ longTermArrivalRate (A a) + ∑ i ∈ s, longTermArrivalRate (A i) := by gcongr
+
 /-- A single server is **locally stable** when the long-term arrival rate of
 its (aggregate) input flow is strictly below its long-term service rate
 (Definition 12.2, per-server form: `∑ rᵢ < R` for the aggregate `α`). -/
