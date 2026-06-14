@@ -88,6 +88,7 @@ import Book.DeviationsBoundsTight
 import Book.DeviationsCompositionTight
 import Book.DeviationsCompositionRateLatency
 import Book.DeviationsCompositionServers
+import Book.DeviationsCompositionChain
 import Book.ServersJitter
 import Book.ServersRate
 import Book.ArrivalCurvesPeriodic
