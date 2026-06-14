@@ -48,29 +48,4 @@ theorem minConv_fifoResidual_concatConv_le {ι κ : Type*} [Fintype ι]
     rwa [Curve.coe_sum, Curve.sum_apply] at h
   exact minConv_fifoResidual_le_of_isFifo_group hfifo hβmono hβlc hserv harr θ t
 
-/-! ## Book restatement (FIFO-PMOO residual)
-A sequence of FIFO servers offering min-plus service curves `β^(h)`,
-crossed by `m` flows with the tagged flow `k` constrained by the arrival
-curve `α`: the aggregate traffic flowing through the concatenation
-`concatComp Sserv path` (which offers `∗ₕ β^(h)` by
-`IsMinimalServiceCurve.concatComp`), the `m − 1` other flows together
-receive the min-plus service curve `[∗ₕ β^(h) − α ∗ δ_θ]⁺ ∧ δ_θ` for
-every `θ`. -/
-example {ι κ : Type*} [Fintype ι]
-    {As Ds : ι → Curve} {Sserv : κ → Curve → Curve → Prop}
-    {βE : κ → ℝ≥0 → EReal} {α : ℝ≥0 → ℝ≥0}
-    (hfifo : IsFifo (fun j => ⇑(As j)) (fun j => ⇑(Ds j)))
-    (hnn : ∀ h, IsNonneg (βE h)) (path : List κ)
-    (hSβ : ∀ h, IsMinimalServiceCurve (βE h) (Sserv h))
-    (hagg : concatComp Sserv path (∑ j, As j) (∑ j, Ds j))
-    (hβmono : Monotone (Deviation.toENN (concatConv βE path)))
-    (hβlc : IsLeftContinuous (Deviation.toENN (concatConv βE path)))
-    {k : ι} (harr : IsMaximalArrivalBound ⇑(As k) α) (θ t : ℝ≥0) :
-    minConv (Deviation.liftENN ⇑(∑ j ∈ univ.erase k, As j))
-        (fifoResidual (Deviation.toENN (concatConv βE path))
-          (fun v => ((α v : ℝ≥0) : ℝ≥0∞)) θ) t
-      ≤ (((∑ j ∈ univ.erase k, Ds j) t : ℝ≥0) : ℝ≥0∞) :=
-  minConv_fifoResidual_concatConv_le hfifo hnn path hSβ hagg hβmono hβlc
-    harr θ t
-
 end DeepWiki

@@ -1,5 +1,5 @@
 name = "deepwiki"
-defaultTargets = ["Book"]
+defaultTargets = ["Book", "Sources"]
 
 [[require]]
 name = "mathlib"
@@ -13,3 +13,6 @@ rev = "v4.30.0"
 
 [[lean_lib]]
 name = "Book"
+
+[[lean_lib]]
+name = "Sources"
