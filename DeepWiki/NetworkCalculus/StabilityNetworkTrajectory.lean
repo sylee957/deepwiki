@@ -41,6 +41,24 @@ theorem isGloballyStableServer_aggregateServer {ι : Type*} [Fintype ι]
   isGloballyStableServer_of_isLocallyStableServer
     (isCausal_aggregateServer hc) hβ (aggregateServer_sum hp) harr hstab
 
+/-- **Rate conservation**: a causal server's output never has a larger
+long-term rate than its input (`D ≤ A`, so `r(D) ≤ r(A)`). The rate does not
+grow through a server. -/
+theorem longTermArrivalRate_departure_le {S : Curve → Curve → Prop}
+    (hc : IsCausal S) {A D : Curve} (hp : S A D) :
+    longTermArrivalRate ⇑D ≤ longTermArrivalRate ⇑A :=
+  longTermArrivalRate_mono fun t => hc A D hp t
+
+/-- **Local stability is inherited downstream**: since the rate does not grow
+through a causal server, an input locally stable against `β` has an output
+whose rate is still below `β`'s service rate — the feed-forward reason a
+source-level rate condition suffices at every downstream server. -/
+theorem longTermArrivalRate_departure_lt_serviceRate {S : Curve → Curve → Prop}
+    {β : ℝ≥0 → ℝ≥0} (hc : IsCausal S) {A D : Curve} (hp : S A D)
+    (hstab : IsLocallyStableServer (⇑A) β) :
+    longTermArrivalRate ⇑D < longTermServiceRate β :=
+  lt_of_le_of_lt (longTermArrivalRate_departure_le hc hp) hstab
+
 variable {κ ι : Type*} [Fintype ι] [DecidableEq κ]
 
 /-- **Network global stability from per-hop MIMO servers** (Definition 12.2 ⟹

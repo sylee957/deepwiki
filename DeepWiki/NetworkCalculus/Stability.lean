@@ -88,6 +88,15 @@ theorem longTermArrivalRate_sum_le {ι : Type*} (s : Finset ι) (A : ι → ℝ�
           longTermArrivalRate_add_le (A a) (fun t => ∑ i ∈ s, A i t)
       _ ≤ longTermArrivalRate (A a) + ∑ i ∈ s, longTermArrivalRate (A i) := by gcongr
 
+/-- The long-term arrival rate is monotone under pointwise domination: a flow
+dominated by another has no larger long-term rate (`A ≤ B ⟹ r(A) ≤ r(B)`). -/
+theorem longTermArrivalRate_mono {A B : ℝ≥0 → ℝ≥0} (h : ∀ t, A t ≤ B t) :
+    longTermArrivalRate A ≤ longTermArrivalRate B := by
+  refine Filter.limsup_le_limsup (Filter.Eventually.of_forall fun t => ?_)
+  show (A t : ℝ≥0∞) / (t : ℝ≥0∞) ≤ (B t : ℝ≥0∞) / (t : ℝ≥0∞)
+  gcongr
+  exact_mod_cast h t
+
 /-- A single server is **locally stable** when the long-term arrival rate of
 its (aggregate) input flow is strictly below its long-term service rate
 (Definition 12.2, per-server form: `∑ rᵢ < R` for the aggregate `α`). -/
