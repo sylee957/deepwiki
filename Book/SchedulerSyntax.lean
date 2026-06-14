@@ -3,11 +3,11 @@ import Book.ServersWrrSemantics
 
 /-! # Pseudocode syntax for the scheduler language
 A concrete `[sched| … ]` notation rendering `Stmt` programs in the book's
-imperative pseudocode style — `DC[i] := DC[i] + Q`, `while … do …`,
+imperative pseudocode style — `DC[i] := DC[i] + Q`, `while … do { … }`,
 `serve(i)` — elaborating to the `Stmt` AST of `Book.SchedulerSemantics`.
-The round-robin algorithms are then written in a form that reads like
-Algorithms 1 and 2, and proven equal to the constructor definitions by
-`rfl`.
+Statements are `;`-separated and grouped by `{ … }` blocks, so the
+round-robin algorithms read like Algorithms 1 and 2; each is proven equal
+to its constructor definition by `rfl`.
 
 The weight-counter `k` of Algorithm 2 is written `cnt` here, to avoid
 globally reserving the ubiquitous identifier `k` as a keyword. The atoms
@@ -41,7 +41,8 @@ syntax:35 sbexp:36 " ∧ " sbexp:35 : sbexp
 
 -- statements
 syntax "skip" : sstmt
-syntax:10 sstmt:11 " ;; " sstmt:10 : sstmt
+syntax:10 sstmt:11 "; " sstmt:10 : sstmt
+syntax "{" sstmt "}" : sstmt
 syntax "DC" "[" term "]" " := " saexp : sstmt
 syntax "cnt" " := " term:max : sstmt
 syntax "cnt" "++" : sstmt
@@ -49,7 +50,6 @@ syntax "serve" "(" term ")" : sstmt
 syntax "if " sbexp " then " sstmt:max " else " sstmt:max : sstmt
 syntax "if " sbexp " then " sstmt:max : sstmt
 syntax "while " sbexp " do " sstmt:max : sstmt
-syntax "(" sstmt ")" : sstmt
 
 -- elaboration brackets
 syntax "[saexp| " saexp "]" : term
@@ -72,7 +72,8 @@ macro_rules
 
 macro_rules
   | `([sched| skip]) => `(Stmt.skip)
-  | `([sched| $s:sstmt ;; $t:sstmt]) => `(Stmt.seq [sched| $s] [sched| $t])
+  | `([sched| $s:sstmt ; $t:sstmt]) => `(Stmt.seq [sched| $s] [sched| $t])
+  | `([sched| { $s:sstmt }]) => `([sched| $s])
   | `([sched| DC[$i:term] := $a:saexp]) => `(Stmt.assignDc $i [saexp| $a])
   | `([sched| cnt := $c:term]) => `(Stmt.setK $c)
   | `([sched| cnt ++]) => `(Stmt.incK)
@@ -83,7 +84,6 @@ macro_rules
       `(Stmt.ifte [sbexp| $b] [sched| $s] Stmt.skip)
   | `([sched| while $b:sbexp do $s:sstmt]) =>
       `(Stmt.whileB [sbexp| $b] [sched| $s])
-  | `([sched| ($s:sstmt)]) => `([sched| $s])
 
 /-! ## The round-robin algorithms in pseudocode syntax
 Each definition reads like the book's pseudocode and is the same `Stmt` as
@@ -94,23 +94,34 @@ variable {n : ℕ}
 /-- DRR inner loop (Algorithm 1, lines 7-10) in pseudocode syntax. -/
 example (i : Fin n) :
     drrInner i =
-      [sched| while not empty(i) ∧ size(head(i)) ≤ DC[i] do
-                (DC[i] := DC[i] - size(head(i)) ;; serve(i))] := rfl
+      [sched|
+        while not empty(i) ∧ size(head(i)) ≤ DC[i] do {
+          DC[i] := DC[i] - size(head(i));
+          serve(i)
+        }] := rfl
 
 /-- DRR per-flow turn (Algorithm 1, lines 5-12) in pseudocode syntax. -/
 example (Q : ℝ≥0) (i : Fin n) :
     drrTurn Q i =
-      [sched| if not empty(i) then
-                (DC[i] := DC[i] + Q ;;
-                 ((while not empty(i) ∧ size(head(i)) ≤ DC[i] do
-                     (DC[i] := DC[i] - size(head(i)) ;; serve(i))) ;;
-                  (if not empty(i) then skip else (DC[i] := 0))))] := rfl
+      [sched|
+        if not empty(i) then {
+          DC[i] := DC[i] + Q;
+          while not empty(i) ∧ size(head(i)) ≤ DC[i] do {
+            DC[i] := DC[i] - size(head(i));
+            serve(i)
+          };
+          if not empty(i) then skip else { DC[i] := 0 }
+        }] := rfl
 
 /-- WRR per-flow turn (Algorithm 2, lines 3-7) in pseudocode syntax,
 writing the weight counter `k` as `cnt`. -/
 example (w : ℕ) (i : Fin n) :
     wrrTurn w i =
-      [sched| cnt := 1 ;;
-              (while not empty(i) ∧ cnt ≤ w do (serve(i) ;; cnt++))] := rfl
+      [sched|
+        cnt := 1;
+        while not empty(i) ∧ cnt ≤ w do {
+          serve(i);
+          cnt++
+        }] := rfl
 
 end DeepWiki
