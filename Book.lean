@@ -66,6 +66,7 @@ import Book.ServiceCurveVariableCapacityStart
 import Book.ServiceCurveVariableCapacityStrict
 import Book.ServiceCurveVariableCapacityFamilies
 import Book.ServiceCurveVariableCapacityFamiliesStrict
+import Book.ServiceCurveVariableCapacityMonotonyExt
 import Book.ServiceCurveStrictMinimal
 import Book.ServiceCurvePackets
 import Book.Packetizer
