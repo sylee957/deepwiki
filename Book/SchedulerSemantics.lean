@@ -248,4 +248,40 @@ theorem bigStep_whileB_iff {b : BExp n} {body : Stmt n} {σ σ' : SchedState n} 
     · exact .whileFalse hc
     · exact .whileTrue hc hbody hrest
 
+/-- **The big-step semantics is deterministic**: a statement run from a
+state reaches at most one final state. -/
+theorem bigStep_deterministic {s : Stmt n} {σ σ1 : SchedState n}
+    (h1 : BigStep s σ σ1) : ∀ {σ2}, BigStep s σ σ2 → σ1 = σ2 := by
+  induction h1 with
+  | skip => intro σ2 h2; rw [bigStep_skip_iff] at h2; exact h2.symm
+  | seq hs ht ihs iht =>
+    intro σ2 h2
+    obtain ⟨σm2, hb, hc⟩ := bigStep_seq_iff.mp h2
+    obtain rfl := ihs hb
+    exact iht hc
+  | ifTrue hcond _ ih =>
+    intro σ2 h2
+    rcases bigStep_ifte_iff.mp h2 with ⟨_, hh⟩ | ⟨hcond2, _⟩
+    · exact ih hh
+    · rw [hcond] at hcond2; simp at hcond2
+  | ifFalse hcond _ ih =>
+    intro σ2 h2
+    rcases bigStep_ifte_iff.mp h2 with ⟨hcond2, _⟩ | ⟨_, hh⟩
+    · rw [hcond] at hcond2; simp at hcond2
+    · exact ih hh
+  | whileFalse hcond =>
+    intro σ2 h2
+    rcases bigStep_whileB_iff.mp h2 with ⟨_, heq⟩ | ⟨hcond2, _⟩
+    · exact heq.symm
+    · rw [hcond] at hcond2; simp at hcond2
+  | whileTrue hcond _ _ ihbody ihrest =>
+    intro σ2 h2
+    rcases bigStep_whileB_iff.mp h2 with ⟨hcond2, _⟩ | ⟨_, σm2, hbody2, hrest2⟩
+    · rw [hcond] at hcond2; simp at hcond2
+    · obtain rfl := ihbody hbody2; exact ihrest hrest2
+  | assignDc => intro σ2 h2; rw [bigStep_assignDc_iff] at h2; exact h2.symm
+  | setK => intro σ2 h2; rw [bigStep_setK_iff] at h2; exact h2.symm
+  | incK => intro σ2 h2; rw [bigStep_incK_iff] at h2; exact h2.symm
+  | serveHead => intro σ2 h2; rw [bigStep_serveHead_iff] at h2; exact h2.symm
+
 end DeepWiki
