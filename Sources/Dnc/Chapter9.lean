@@ -15,6 +15,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
 import DeepWiki.NetworkCalculus.RealTimeCalculus
+import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
@@ -42,9 +43,13 @@ noncomputable def def_9_types_vcn := @variableCapacityRel
 /-- **Definition 9** (§9.1, p.210): S_asc(β,β̃) = {(A,D) | A ≥ D, ∀ s≤t either D(t)≥D(s)+β̃(t−s) or ∃u∈[s,t] D(t)≥A(u)+β(t−u)}: adaptive service curve. -/
 noncomputable def def_9_types_asc := @adaptiveServiceRel
 
-/-! **Definition 9** (§9.1, p.210): Real-time-calculus greedy processor: a service-curve type defined via RTC bivariate functions (deferred to §9.1.3). Not formalized in the library. -/
+/-! **Definition 9** (§9.1, p.210): Real-time-calculus greedy processor: a service-curve type defined via RTC bivariate functions (§9.1.3). The bivariate Chasles framework underlying it is `DeepWiki.IsChasles` / `ofUnivariate` (see def_9_1, lemma_9_2); the greedy-processor service-curve type itself (from equations [9.4]-[9.6]) is not separately formalized. -/
 
-/-! **Definition 9** (§9.1, p.210): Sufficiently strict service curve: a service-curve type defined later in §9.3.2. Not formalized in the library. -/
+/-- **Definition 9** / §9.3.2, p.227: the sufficiently-strict (s3c) service
+curve — `(A,D)` is s3c for `β` with dwell period `dw` when `D ≤ A` and
+`A (t − dw t) + β (dw t) ≤ D t`. The library's `IsSufficientlyStrict` (for a
+fixed dwell; the book quantifies over a family of dwells). -/
+def def_9_types_s3c := @IsSufficientlyStrict
 
 /-- **Proposition 9.1** (§9.1.1, p.211): Blind multiplexing from a weakly strict curve: an n-server with weakly strict β and arrival curves αᵢ offers flow j the minimal min-plus residual βⱼ = [β − ∑_{i≠j} αᵢ]⁺↑. -/
 alias prop_9_1 := isMinimalServiceCurve_residualServer_of_wstrict
@@ -96,6 +101,6 @@ alias lemma_9_5 := systemClosure_delayTandemUnion_eq
 /-- **Theorem 9.7** (§9.3.1, p.227): For each convex piecewise linear β, there is a system S of strict-service servers such that S_strict(β) ⊆ S̄ ⊆ S_mp(β), and if β=β̃₁∗β̃₂ are convex PL then ∀β, S̄(β̃)=S_mp(β) — no good intermediate type of service curve exists (the book does not prove the general theorem; only the δ_T dilution lemma is formalized). -/
 alias thm_9_7 := systemClosure_delayTandemUnion_eq
 
-/-! **Theorem 9.8** (§9.3.2, p.228): Sufficiently strict service curve: with Dw : S_s3c(β) → P(F) and Dw₁:S_s3c(β₁)→P(F), Dw₂:S_s3c(β₂)→P(F) possible dwell periods, S_s3c(β₂,Dw₂)∘S_s3c(β₁,Dw₁) ⊆ S(β₁∗β₂,Dw') for a suitable composed dwell Dw'; FIFO multiplexing with flow 1 arrival-α₂-constrained gives S_s3c((β−α₂)⁺,Dw). Not formalized in the library. -/
+/-! **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`, and FIFO multiplexing with flow 1 arrival-α₂-constrained gives `S_s3c((β−α₂)⁺,Dw)`. The s3c relation is `DeepWiki.IsSufficientlyStrict` (def_9_types_s3c); the dwell-composition concatenation theorem itself is not formalized. -/
 
 end DeepWiki.Dnc
