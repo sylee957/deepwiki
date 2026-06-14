@@ -14,6 +14,7 @@ import Book.Closures
 import Book.Limits
 import Book.Continuity
 import Book.ContinuityClosure
+import Book.ClosuresNdRegularity
 import Book.Concave
 import Book.RealCurves
 import Book.RealCurvesRegularity
