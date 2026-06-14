@@ -1,5 +1,6 @@
 import Mathlib.Analysis.Convex.Function
 import Book.ServersResidualGps
+import Book.ServiceCurveFamilies
 
 /-! # GPS residual service, improved
 The GPS residual ignores the cross-traffic intensity. When a flow is
@@ -555,6 +556,22 @@ theorem strictServiceRel_div_mul_of_isAggregateStrict {ι : Type*} {φ : ι → 
     strictServiceRel (fun v => (φ i / ∑ j ∈ J, φ j) * γ v) (As i) (Ds i) :=
   ⟨hc i, fun _ _ hst hbl =>
     add_div_mul_le_of_isGps (fun j _ => hc j) hgps h hi hst hbl⟩
+
+/-- **The general `n`-flow max-combination (Theorem 7.8, gated form)**: given finitely many peel
+levels — each a flow set `J l` aggregate-strict for a residual `γ l`, all containing flow `n` —
+flow `n` is served at the maximum over levels of its GPS shares,
+`⨆ₗ (φₙ / ∑_{J l} φ)·γ l`. Each level's share is strict (the sub-aggregate guarantee); their
+supremum is strict because the supremum of strict service curves is strict. Instantiated at the
+fold's levels `β̃ⱼ` (strict for `{j,…,n}`), this is the book's `φₙ·maxⱼ(β̃ⱼ/Φⱼ)`. -/
+theorem strictServiceRel_iSup_div_mul_of_isAggregateStrict {ι κ : Type*} [Fintype κ] [Nonempty κ]
+    {φ : ι → ℝ≥0} {As Ds : ι → Curve} {n : ι}
+    (hgps : IsGps φ (fun j => ⇑(As j)) (fun j => ⇑(Ds j))) (hc : ∀ j, Ds j ≤ As j)
+    {J : κ → Finset ι} {γ : κ → ℝ≥0 → ℝ≥0}
+    (h : ∀ l, IsAggregateStrict As Ds (J l) (γ l)) (hn : ∀ l, n ∈ J l) :
+    strictServiceRel (fun v => ⨆ l, (φ n / ∑ j ∈ J l, φ j) * γ l v) (As n) (Ds n) :=
+  (strictServiceRel_iSup_iff
+    (fun _ => Set.Finite.bddAbove (Set.finite_range _))).mpr
+    (fun l => strictServiceRel_div_mul_of_isAggregateStrict hgps hc (h l) (hn l))
 
 /-- The smallest multi-peel display: in a three-flow GPS server strict for `β`, peeling the two
 arrival-constrained flows `0` and `1` (gates `T₀ ≤ T₁`) leaves flow `2` the collapsed gated
