@@ -52,6 +52,10 @@ end SchedState
 def headSize {n : ℕ} (σ : SchedState n) (i : Fin n) : ℝ≥0 :=
   (σ.queue i).headI
 
+/-- `send` (to the output trace) does not change a head size. -/
+@[simp] theorem headSize_emit {n : ℕ} (σ : SchedState n) (i : Fin n)
+    (x : ℝ≥0) : headSize (σ.emit x) i = headSize σ i := rfl
+
 /-- Arithmetic expressions: the deficit-counter RHS forms of the
 pseudocode — constants, `DC[i]`, `size(head(i))`, sums and truncated
 differences. -/
@@ -87,8 +91,8 @@ noncomputable def BExp.eval {n : ℕ} (σ : SchedState n) : BExp n → Bool
 
 /-- Statements: structural forms (`skip`, sequencing, `if`, `while`) plus
 the domain primitives — counter assignment `DC[i] ← e`, the loop-counter
-updates `k ← c` and `k ← k + 1`, and `serveHead i` fusing
-`send(head(i)); removeHead(i)`. -/
+updates `k ← c` and `k ← k + 1`, `send i` (emit the head packet of queue
+`i` to the output), and `removeHead i` (drop the head of queue `i`). -/
 inductive Stmt (n : ℕ) where
   | skip
   | seq (s t : Stmt n)
@@ -97,7 +101,8 @@ inductive Stmt (n : ℕ) where
   | assignDc (i : Fin n) (a : AExp n)
   | setK (c : ℕ)
   | incK
-  | serveHead (i : Fin n)
+  | send (i : Fin n)
+  | removeHead (i : Fin n)
 
 /-- **Big-step operational semantics**: `BigStep s σ σ'` holds when
 running statement `s` from `σ` terminates in `σ'`. A divergent statement
@@ -119,9 +124,9 @@ inductive BigStep {n : ℕ} : Stmt n → SchedState n → SchedState n → Prop 
       BigStep (.assignDc i a) σ (σ.setDc i (a.eval σ))
   | setK {c σ} : BigStep (.setK c) σ (σ.setK c)
   | incK {σ} : BigStep .incK σ (σ.setK (σ.kvar + 1))
-  | serveHead {i σ} :
-      BigStep (.serveHead i) σ
-        ((σ.emit (headSize σ i)).setQueue i (σ.queue i).tail)
+  | send {i σ} : BigStep (.send i) σ (σ.emit (headSize σ i))
+  | removeHead {i σ} :
+      BigStep (.removeHead i) σ (σ.setQueue i (σ.queue i).tail)
 
 /-- One scheduling round: run `body i` for each flow `i` in turn,
 `for i = 1 to n do body i`, desugared to a chain of `seq`. -/
@@ -205,11 +210,15 @@ theorem bigStep_seq_iff {s t : Stmt n} {σ σ'' : SchedState n} :
     BigStep (.assignDc i a) σ σ' ↔ σ' = σ.setDc i (a.eval σ) :=
   ⟨fun h => by cases h; rfl, fun h => by subst h; exact .assignDc⟩
 
-/-- `serveHead i` emits the head size and drops the head of queue `i`. -/
-@[simp] theorem bigStep_serveHead_iff {i : Fin n} {σ σ' : SchedState n} :
-    BigStep (.serveHead i) σ σ'
-      ↔ σ' = (σ.emit (headSize σ i)).setQueue i (σ.queue i).tail :=
-  ⟨fun h => by cases h; rfl, fun h => by subst h; exact .serveHead⟩
+/-- `send i` appends the head size of queue `i` to the output trace. -/
+@[simp] theorem bigStep_send_iff {i : Fin n} {σ σ' : SchedState n} :
+    BigStep (.send i) σ σ' ↔ σ' = σ.emit (headSize σ i) :=
+  ⟨fun h => by cases h; rfl, fun h => by subst h; exact .send⟩
+
+/-- `removeHead i` drops the head of queue `i`. -/
+@[simp] theorem bigStep_removeHead_iff {i : Fin n} {σ σ' : SchedState n} :
+    BigStep (.removeHead i) σ σ' ↔ σ' = σ.setQueue i (σ.queue i).tail :=
+  ⟨fun h => by cases h; rfl, fun h => by subst h; exact .removeHead⟩
 
 /-- `k ← c`. -/
 @[simp] theorem bigStep_setK_iff {c : ℕ} {σ σ' : SchedState n} :
@@ -282,6 +291,7 @@ theorem bigStep_deterministic {s : Stmt n} {σ σ1 : SchedState n}
   | assignDc => intro σ2 h2; rw [bigStep_assignDc_iff] at h2; exact h2.symm
   | setK => intro σ2 h2; rw [bigStep_setK_iff] at h2; exact h2.symm
   | incK => intro σ2 h2; rw [bigStep_incK_iff] at h2; exact h2.symm
-  | serveHead => intro σ2 h2; rw [bigStep_serveHead_iff] at h2; exact h2.symm
+  | send => intro σ2 h2; rw [bigStep_send_iff] at h2; exact h2.symm
+  | removeHead => intro σ2 h2; rw [bigStep_removeHead_iff] at h2; exact h2.symm
 
 end DeepWiki

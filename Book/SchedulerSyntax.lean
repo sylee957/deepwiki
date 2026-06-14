@@ -4,15 +4,16 @@ import Book.ServersWrrSemantics
 /-! # Pseudocode syntax for the scheduler language
 A concrete `[sched| … ]` notation rendering `Stmt` programs in the book's
 imperative pseudocode style — `DC[i] := DC[i] + Q`, `while … do { … }`,
-`serve(i)` — elaborating to the `Stmt` AST of `Book.SchedulerSemantics`.
-Statements are `;`-separated and grouped by `{ … }` blocks, so the
-round-robin algorithms read like Algorithms 1 and 2; each is proven equal
-to its constructor definition by `rfl`.
+`send(head(i))`, `removeHead(i)` — elaborating to the `Stmt` AST of
+`Book.SchedulerSemantics`. Statements are `;`-separated and grouped by
+`{ … }` blocks, so the round-robin algorithms read like Algorithms 1 and
+2; each is proven equal to its constructor definition by `rfl`.
 
 The weight-counter `k` of Algorithm 2 is written `cnt` here, to avoid
 globally reserving the ubiquitous identifier `k` as a keyword. The atoms
-`DC`, `size`, `head`, `empty`, `serve`, `cnt`, `skip` are reserved as
-keywords in any file importing this one (only `Book.lean` does). -/
+`DC`, `size`, `head`, `empty`, `send`, `removeHead`, `cnt`, `skip` are
+reserved as keywords in any file importing this one (only `Book.lean`
+does). -/
 
 namespace DeepWiki
 
@@ -46,7 +47,8 @@ syntax "{" sstmt "}" : sstmt
 syntax "DC" "[" term "]" " := " saexp : sstmt
 syntax "cnt" " := " term:max : sstmt
 syntax "cnt" "++" : sstmt
-syntax "serve" "(" term ")" : sstmt
+syntax "send" "(" "head" "(" term ")" ")" : sstmt
+syntax "removeHead" "(" term ")" : sstmt
 syntax "if " sbexp " then " sstmt:max " else " sstmt:max : sstmt
 syntax "if " sbexp " then " sstmt:max : sstmt
 syntax "while " sbexp " do " sstmt:max : sstmt
@@ -77,7 +79,8 @@ macro_rules
   | `([sched| DC[$i:term] := $a:saexp]) => `(Stmt.assignDc $i [saexp| $a])
   | `([sched| cnt := $c:term]) => `(Stmt.setK $c)
   | `([sched| cnt ++]) => `(Stmt.incK)
-  | `([sched| serve($i:term)]) => `(Stmt.serveHead $i)
+  | `([sched| send(head($i:term))]) => `(Stmt.send $i)
+  | `([sched| removeHead($i:term)]) => `(Stmt.removeHead $i)
   | `([sched| if $b:sbexp then $s:sstmt else $t:sstmt]) =>
       `(Stmt.ifte [sbexp| $b] [sched| $s] [sched| $t])
   | `([sched| if $b:sbexp then $s:sstmt]) =>
@@ -96,8 +99,9 @@ example (i : Fin n) :
     drrInner i =
       [sched|
         while not empty(i) ∧ size(head(i)) ≤ DC[i] do {
+          send(head(i));
           DC[i] := DC[i] - size(head(i));
-          serve(i)
+          removeHead(i)
         }] := rfl
 
 /-- DRR per-flow turn (Algorithm 1, lines 5-12) in pseudocode syntax. -/
@@ -107,8 +111,9 @@ example (Q : ℝ≥0) (i : Fin n) :
         if not empty(i) then {
           DC[i] := DC[i] + Q;
           while not empty(i) ∧ size(head(i)) ≤ DC[i] do {
+            send(head(i));
             DC[i] := DC[i] - size(head(i));
-            serve(i)
+            removeHead(i)
           };
           if not empty(i) then skip else { DC[i] := 0 }
         }] := rfl
@@ -120,7 +125,8 @@ example (w : ℕ) (i : Fin n) :
       [sched|
         cnt := 1;
         while not empty(i) ∧ cnt ≤ w do {
-          serve(i);
+          send(head(i));
+          removeHead(i);
           cnt++
         }] := rfl
 

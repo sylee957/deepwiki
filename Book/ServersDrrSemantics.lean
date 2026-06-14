@@ -22,10 +22,10 @@ open scoped Classical NNReal
 def drrGuard {n : ℕ} (i : Fin n) : BExp n :=
   .and (.notEmpty i) (.le (.headSize i) (.dc i))
 
-/-- The DRR inner-loop body (lines 8-10): decrement the counter by the
-head size, then `send(head(i)); removeHead(i)`. -/
+/-- The DRR inner-loop body (lines 8-10): `send(head(i))`, decrement the
+counter by the head size, then `removeHead(i)`. -/
 def drrInnerBody {n : ℕ} (i : Fin n) : Stmt n :=
-  .seq (.assignDc i (.sub (.dc i) (.headSize i))) (.serveHead i)
+  .seq (.send i) (.seq (.assignDc i (.sub (.dc i) (.headSize i))) (.removeHead i))
 
 /-- The DRR inner loop (lines 7-10): drain head packets while the
 counter covers them. -/
@@ -99,23 +99,22 @@ theorem bigStep_drrInner (i : Fin n) {σ σ' : SchedState n}
       have hp : p ≤ a.dc i :=
         of_decide_eq_true (by rw [← drrGuard_eval_cons i a hq]; exact hc)
       have hhead : headSize a i = p := by simp only [headSize, hq, List.headI_cons]
-      -- the body's effect on flow `i`
-      obtain ⟨sm, h1, h2⟩ := bigStep_seq_iff.mp hbody
-      rw [bigStep_assignDc_iff] at h1
-      rw [bigStep_serveHead_iff] at h2
+      -- the body's effect on flow `i`: send, then DC -= size, then removeHead
+      obtain ⟨s1, hsend, hbody2⟩ := bigStep_seq_iff.mp hbody
+      obtain ⟨s2, hassign, hrem⟩ := bigStep_seq_iff.mp hbody2
+      rw [bigStep_send_iff] at hsend
+      rw [bigStep_assignDc_iff] at hassign
+      rw [bigStep_removeHead_iff] at hrem
       have hσmdc : σm.dc = Function.update a.dc i (a.dc i - p) := by
-        rw [h2]
-        simp only [SchedState.setQueue_dc, SchedState.emit_dc, h1,
-          SchedState.setDc_dc, AExp.eval, hhead]
+        simp only [hrem, SchedState.setQueue_dc, hassign, SchedState.setDc_dc,
+          hsend, SchedState.emit_dc, AExp.eval, headSize_emit, hhead]
       have hσmq : σm.queue = Function.update a.queue i ps := by
-        rw [h2]
-        simp only [SchedState.setQueue_queue, SchedState.emit_queue, h1,
-          SchedState.setDc_queue]
+        simp only [hrem, SchedState.setQueue_queue, hassign,
+          SchedState.setDc_queue, hsend, SchedState.emit_queue]
         rw [hq, List.tail_cons]
       have hσmk : σm.kvar = a.kvar := by
-        rw [h2]
-        simp only [SchedState.setQueue_kvar, SchedState.emit_kvar, h1,
-          SchedState.setDc_kvar]
+        simp only [hrem, SchedState.setQueue_kvar, hassign,
+          SchedState.setDc_kvar, hsend, SchedState.emit_kvar]
       have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
       have hσmdci : σm.dc i = a.dc i - p := by rw [hσmdc, Function.update_self]
       obtain ⟨ihdc, ihq, ihk⟩ := ih σm a' hσmqi hrest
@@ -150,21 +149,20 @@ theorem bigStep_drrInner_out (i : Fin n) {σ σ' : SchedState n}
     · have hp : p ≤ a.dc i :=
         of_decide_eq_true (by rw [← drrGuard_eval_cons i a hq]; exact hc)
       have hhead : headSize a i = p := by simp only [headSize, hq, List.headI_cons]
-      obtain ⟨sm, h1, h2⟩ := bigStep_seq_iff.mp hbody
-      rw [bigStep_assignDc_iff] at h1
-      rw [bigStep_serveHead_iff] at h2
+      obtain ⟨s1, hsend, hbody2⟩ := bigStep_seq_iff.mp hbody
+      obtain ⟨s2, hassign, hrem⟩ := bigStep_seq_iff.mp hbody2
+      rw [bigStep_send_iff] at hsend
+      rw [bigStep_assignDc_iff] at hassign
+      rw [bigStep_removeHead_iff] at hrem
       have hσmout : σm.out = a.out ++ [p] := by
-        rw [h2]
-        simp only [SchedState.setQueue_out, SchedState.emit_out, h1,
-          SchedState.setDc_out, headSize_setDc, hhead]
+        simp only [hrem, SchedState.setQueue_out, hassign, SchedState.setDc_out,
+          hsend, SchedState.emit_out, hhead]
       have hσmdc : σm.dc = Function.update a.dc i (a.dc i - p) := by
-        rw [h2]
-        simp only [SchedState.setQueue_dc, SchedState.emit_dc, h1,
-          SchedState.setDc_dc, AExp.eval, hhead]
+        simp only [hrem, SchedState.setQueue_dc, hassign, SchedState.setDc_dc,
+          hsend, SchedState.emit_dc, AExp.eval, headSize_emit, hhead]
       have hσmq : σm.queue = Function.update a.queue i ps := by
-        rw [h2]
-        simp only [SchedState.setQueue_queue, SchedState.emit_queue, h1,
-          SchedState.setDc_queue]
+        simp only [hrem, SchedState.setQueue_queue, hassign,
+          SchedState.setDc_queue, hsend, SchedState.emit_queue]
         rw [hq, List.tail_cons]
       have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
       have hσmdci : σm.dc i = a.dc i - p := by rw [hσmdc, Function.update_self]

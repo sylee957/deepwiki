@@ -18,9 +18,10 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
-/-- The WRR inner-loop body (lines 5-6): `send(head(i)); removeHead(i)`
+/-- The WRR inner-loop body (lines 5-7): `send(head(i))`, `removeHead(i)`,
 then `k ← k + 1`. -/
-def wrrInnerBody {n : ℕ} (i : Fin n) : Stmt n := .seq (.serveHead i) .incK
+def wrrInnerBody {n : ℕ} (i : Fin n) : Stmt n :=
+  .seq (.send i) (.seq (.removeHead i) .incK)
 
 /-- The WRR inner loop (lines 4-7): send head packets while the queue is
 non-empty and the weight counter has not been spent. -/
@@ -81,22 +82,21 @@ theorem bigStep_wrrInner (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
     · -- guard true: send the head, increment, and recurse
       have hkw : a.kvar ≤ w :=
         of_decide_eq_true (by rw [← wrrGuard_eval_cons w i a hq]; exact hc)
-      obtain ⟨σ1, h1, h2⟩ := bigStep_seq_iff.mp hbody
-      rw [bigStep_serveHead_iff] at h1
-      rw [bigStep_incK_iff] at h2
+      obtain ⟨s1, hsend, hbody2⟩ := bigStep_seq_iff.mp hbody
+      obtain ⟨s2, hrem, hinc⟩ := bigStep_seq_iff.mp hbody2
+      rw [bigStep_send_iff] at hsend
+      rw [bigStep_removeHead_iff] at hrem
+      rw [bigStep_incK_iff] at hinc
       have hσmq : σm.queue = Function.update a.queue i ps := by
-        rw [h2]
-        simp only [SchedState.setK_queue, h1, SchedState.setQueue_queue,
-          SchedState.emit_queue]
+        simp only [hinc, SchedState.setK_queue, hrem, SchedState.setQueue_queue,
+          hsend, SchedState.emit_queue]
         rw [hq, List.tail_cons]
       have hσmk : σm.kvar = a.kvar + 1 := by
-        rw [h2]
-        simp only [SchedState.setK_kvar, h1, SchedState.setQueue_kvar,
-          SchedState.emit_kvar]
+        simp only [hinc, SchedState.setK_kvar, hrem, SchedState.setQueue_kvar,
+          hsend, SchedState.emit_kvar]
       have hσmdc : σm.dc = a.dc := by
-        rw [h2]
-        simp only [SchedState.setK_dc, h1, SchedState.setQueue_dc,
-          SchedState.emit_dc]
+        simp only [hinc, SchedState.setK_dc, hrem, SchedState.setQueue_dc,
+          hsend, SchedState.emit_dc]
       have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
       obtain ⟨ihq, ihdc⟩ := ih σm a' hσmqi hrest
       refine ⟨?_, ?_⟩
@@ -133,24 +133,23 @@ theorem bigStep_wrrInner_out (w : ℕ) (i : Fin n) {σ σ' : SchedState n}
       rw [heq, hz, List.take_zero, List.append_nil]
     · have hkw : a.kvar ≤ w :=
         of_decide_eq_true (by rw [← wrrGuard_eval_cons w i a hq]; exact hc)
-      obtain ⟨σ1, h1, h2⟩ := bigStep_seq_iff.mp hbody
-      rw [bigStep_serveHead_iff] at h1
-      rw [bigStep_incK_iff] at h2
+      obtain ⟨s1, hsend, hbody2⟩ := bigStep_seq_iff.mp hbody
+      obtain ⟨s2, hrem, hinc⟩ := bigStep_seq_iff.mp hbody2
+      rw [bigStep_send_iff] at hsend
+      rw [bigStep_removeHead_iff] at hrem
+      rw [bigStep_incK_iff] at hinc
       have hhead : headSize a i = p := by simp only [headSize, hq, List.headI_cons]
       have hσmout : σm.out = a.out ++ [p] := by
-        rw [h2]
-        simp only [SchedState.setK_out, h1, SchedState.setQueue_out,
-          SchedState.emit_out, hhead]
+        simp only [hinc, SchedState.setK_out, hrem, SchedState.setQueue_out,
+          hsend, SchedState.emit_out, hhead]
       have hσmq : σm.queue = Function.update a.queue i ps := by
-        rw [h2]
-        simp only [SchedState.setK_queue, h1, SchedState.setQueue_queue,
-          SchedState.emit_queue]
+        simp only [hinc, SchedState.setK_queue, hrem, SchedState.setQueue_queue,
+          hsend, SchedState.emit_queue]
         rw [hq, List.tail_cons]
       have hσmqi : σm.queue i = ps := by rw [hσmq, Function.update_self]
       have hσmk : σm.kvar = a.kvar + 1 := by
-        rw [h2]
-        simp only [SchedState.setK_kvar, h1, SchedState.setQueue_kvar,
-          SchedState.emit_kvar]
+        simp only [hinc, SchedState.setK_kvar, hrem, SchedState.setQueue_kvar,
+          hsend, SchedState.emit_kvar]
       rw [ih σm a' hσmqi hrest, hσmout, hσmk]
       have e1 : w + 1 - (a.kvar + 1) = w - a.kvar := by omega
       have e2 : w + 1 - a.kvar = (w - a.kvar) + 1 := by omega
