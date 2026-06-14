@@ -14,6 +14,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityMonotonyExt
 import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
+import DeepWiki.NetworkCalculus.RealTimeCalculus
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
@@ -54,11 +55,22 @@ alias thm_9_1 := isWeaklyStrictMinimalServiceCurve_residualServer_of_wstrict
 /-- **Lemma 9.1** (§9.1.2, p.212): Alternative definition of a variable capacity node: with C ∈ C, the output D(t)=inf_{0≤s≤t}(A(s)+C(t)−C(s)) anchors at the start, D(t)=A(Start(t))+C(t)−C(Start(t)) (formalized under jump domination, where the closed form is repaired). -/
 alias lemma_9_1 := variableCapacityOutput_start_eq
 
-/-! **Lemma 9.2** (§9.1.3, p.215): Coherence of RTC equations: given A,C,D and one of b,C' solving the RTC equations [9.4]-[9.6], if A,C satisfy the Chasles relation then so do D,C'. Not formalized in the library. -/
+/-- **Lemma 9.2**, departure coherence (§9.1.3, p.215): in the RTC
+greedy-processor equations, if the arrival `A` is Chasles then the departure
+`D` (satisfying the backlog relation `D s t = A s t − (b t − b s)`, eq [9.6])
+is Chasles too — the library's `isChasles_departure`. (The analogous coherence
+of the remaining capacity `C'` is not separately formalized.) -/
+alias lemma_9_2 := isChasles_departure
 
-/-! **Theorem 9.2** (§9.1.3, p.216): Equivalence RTC-NC: bivariate non-negative (Â,Ĉ,D̂,Ĉ',b̂) satisfy the variable-capacity equations [9.7]-[9.9] iff (A,C,D,C',b) satisfy the RTC equations [9.4]-[9.6]. Not formalized in the library. -/
+/-! **Theorem 9.2** (§9.1.3, p.216): Equivalence RTC-NC: bivariate non-negative (Â,Ĉ,D̂,Ĉ',b̂) satisfy the variable-capacity equations [9.7]-[9.9] iff (A,C,D,C',b) satisfy the RTC equations [9.4]-[9.6]. The Chasles-coherence half is `isChasles_departure`; the full variable-capacity equivalence is not formalized. -/
 
-/-! **Definition 9.1** (§9.1.3, p.217): RTC arrival and service curves: αⁱᵘ(t−s) ≤ A[s,t] ≤ αᵘ(t−s), βᵐ(t−s) ≤ C[s,t] ≤ βᴹ(t−s), with αⁱᵘ,αᵘ,βᴹ,βᵐ given by the RTC-to-NC conversion formulas. Not formalized in the library. -/
+/-- **Definition 9.1** (§9.1.3, p.217): the RTC↔NC conversion underlying the RTC
+arrival/service curves — a univariate cumulative `g` induces the Chasles
+bivariate `(s,t) ↦ g t − g s` (`ofUnivariate`, `isChasles_ofUnivariate`), and a
+Chasles bivariate reads back as `f s t = f 0 t − f 0 s` (`IsChasles`,
+`IsChasles.eq_univariate_sub`). The min/max RTC curves `αⁱᵘ,αᵘ,βᵐ,βᴹ` extracted
+from these bounds are not separately formalized. -/
+def def_9_1 := @ofUnivariate
 
 /-- **Lemma 9.3** (§9.1.4, p.218): If β ≤ β̃ then S_asc(β,β̃) ⊆ S_mp(β): an adaptive server with β ≤ β̃ is a min-plus server for β. -/
 alias lemma_9_3 := adaptiveServiceRel_le_minimalServiceRel
