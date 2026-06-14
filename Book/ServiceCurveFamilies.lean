@@ -117,4 +117,35 @@ theorem minimalServiceRel_iInter_eq_of_mutually_dominated {ιβ ιβ' : Type*}
     obtain ⟨j, hij⟩ := h2 i
     exact ⟨(hA' j).1, le_trans (minConv_le_minConv (fun _ => le_rfl) hij) (hA' j).2⟩
 
+/-- Two families are mutually dominated iff their downward closures (as sets of functions)
+agree — pure set theory: each curve lies in its own family's closure, so membership in the
+other's closure is exactly domination by one of its members. -/
+theorem mutually_dominated_iff_setOf_le_eq {ιβ ιβ' : Type*}
+    {β : ιβ → ℝ≥0 → EReal} {β' : ιβ' → ℝ≥0 → EReal} :
+    ((∀ j, ∃ i, β' j ≤ β i) ∧ (∀ i, ∃ j, β i ≤ β' j)) ↔
+      {f : ℝ≥0 → EReal | ∃ i, f ≤ β i} = {f | ∃ j, f ≤ β' j} := by
+  constructor
+  · rintro ⟨h1, h2⟩
+    ext f
+    constructor
+    · rintro ⟨i, hfi⟩; obtain ⟨j, hij⟩ := h2 i; exact ⟨j, hfi.trans hij⟩
+    · rintro ⟨j, hfj⟩; obtain ⟨i, hij⟩ := h1 j; exact ⟨i, hfj.trans hij⟩
+  · intro h
+    refine ⟨fun j => ?_, fun i => ?_⟩
+    · have hj : β' j ∈ {f : ℝ≥0 → EReal | ∃ j', f ≤ β' j'} := ⟨j, le_refl _⟩
+      rw [← h] at hj; exact hj
+    · have hi : β i ∈ {f : ℝ≥0 → EReal | ∃ i', f ≤ β i'} := ⟨i, le_refl _⟩
+      rw [h] at hi; exact hi
+
+/-- **Thm 9.4 item 1, the `⟸` half in the book's closure form**: if the two min-plus
+families have the same downward closure, their trajectory-set intersections coincide.
+(The `⟹` direction needs the `+∞` staircase witness — deferred.) -/
+theorem minimalServiceRel_iInter_eq_of_setOf_le_eq {ιβ ιβ' : Type*}
+    {β : ιβ → ℝ≥0 → EReal} {β' : ιβ' → ℝ≥0 → EReal}
+    (h : {f : ℝ≥0 → EReal | ∃ i, f ≤ β i} = {f | ∃ j, f ≤ β' j}) :
+    (fun A D => ∀ i, minimalServiceRel (β i) A D)
+      = (fun A D => ∀ j, minimalServiceRel (β' j) A D) :=
+  let hmd := mutually_dominated_iff_setOf_le_eq.mpr h
+  minimalServiceRel_iInter_eq_of_mutually_dominated hmd.1 hmd.2
+
 end DeepWiki
