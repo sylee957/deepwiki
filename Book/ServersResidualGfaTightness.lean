@@ -9,9 +9,10 @@ A smaller subtracted aggregate leaves a larger residual at each server
 (`residualCurve_le_residualCurve_of_le`), and the convolution fold is
 monotone in the per-server curves (`concatConv_mono`), so the GFA
 end-to-end service curve dominates the SFA one. This is the curve-level
-content of the book's tightness ordering TOA ≤ SFA ≤ GFA: a tighter
-cross-traffic grouping never weakens — and generally sharpens — the
-end-to-end guarantee. -/
+`SFA ≤ GFA` comparison — the service-curve leg of the book's tightness
+ordering: a tighter cross-traffic grouping never weakens — and generally
+sharpens — the end-to-end guarantee. (The `TOA ≤ SFA` leg is a delay-bound
+fact, the pay-bursts-only-once chain, not a service-curve statement.) -/
 
 namespace DeepWiki
 
@@ -35,7 +36,7 @@ theorem concatConv_residualCurve_sfa_le_gfa
   exact liftEReal_le_liftEReal
     (fun u => residualCurve_le_residualCurve_of_le (hβ h) (hη h) u) s
 
-/-! ## Book restatement (TOA ≤ SFA ≤ GFA tightness)
+/-! ## Book restatement (SFA ≤ GFA service-curve tightness)
 Group-flow analysis refines separated-flow analysis: whenever the grouped
 cross-traffic aggregate `η^(h)` bounds the flat per-flow sum
 `∑_{j≠i} α_j^(h)` from below at every server `h` on flow `i`'s path, the
@@ -43,7 +44,8 @@ GFA end-to-end service curve `∗_{h∈p_i} [β^(h) − η^(h)]⁺` dominates th
 SFA end-to-end service curve `∗_{h∈p_i} [β^(h) − ∑_{j≠i} α_j^(h)]⁺`. The
 residual is antitone in the subtracted aggregate and the path convolution
 is monotone in its factors, so a tighter grouping never weakens the
-guarantee — the curve-level half of the book's tightness ordering. -/
+guarantee — the curve-level `SFA ≤ GFA` leg of the book's tightness
+ordering. -/
 example {ι κ : Type*} [Fintype ι]
     {β : κ → ℝ≥0 → ℝ≥0} {α : κ → ι → ℝ≥0 → ℝ≥0} {η : κ → ℝ≥0 → ℝ≥0} {i : ι}
     (hβ : ∀ h, Monotone (β h))

@@ -5,14 +5,14 @@ import Book.ServiceCurveStrictMinimal
 GFA generalizes separated-flow analysis (`Book.ServersResidualSfa`) by
 grouping the cross-traffic: at each server `h` on flow `i`'s path it
 subtracts not the flat per-flow sum `∑_{j≠i} α_j` but a *grouped*
-aggregate `η^(h)` that bounds the other flows' departures — computed
-tightly by partitioning flows along the network arcs and exploiting the
-servers' shapers (the backward exploration of lines 2-6, and the
-shaper-capped output arrival `α_f^(h) = (η_f ⊘ β_f) ∧ σ^(h)` of line 13,
-which is exactly `isMaximalArrivalBound_output`). The end-to-end service
-curve (line 15) is again the convolution of the per-server blind-mux
-residuals `β̃_i = ∗_{h∈p_i} [β^(h) − η^(h)]⁺`, here for an arbitrary valid
-grouped aggregate `η`. -/
+aggregate `η^(h)` that bounds the other flows' departures — in the book
+computed tightly by partitioning flows along the network arcs and
+exploiting the servers' shapers (the backward exploration of lines 2-6,
+and the shaper-capped output arrival `α_f^(h) = (η_f ⊘ β_f) ∧ σ^(h)` of
+line 13 — the kind of bound the output-arrival theory produces). The
+end-to-end service curve (line 15) is again the convolution of the
+per-server blind-mux residuals `β̃_i = ∗_{h∈p_i} [β^(h) − η^(h)]⁺`, here
+for an arbitrary valid grouped aggregate `η`. -/
 
 namespace DeepWiki
 
@@ -53,9 +53,8 @@ min-plus service curve `β̃_i = ∗_{h∈p_i} [β^(h) − η^(h)]⁺` — the
 convolution of the per-server group residuals. The grouping refines
 separated-flow analysis: `η^(h)` is the arrival curve of the *group* of
 other flows at `h`, computed by the arc-wise partition (lines 2-6) and
-the shaper-capped output arrival `(η ⊘ β) ∧ σ`
-(`isMaximalArrivalBound_output`), giving a smaller aggregate than the
-flat `∑_{j≠i} α_j` and hence a larger residual. -/
+the shaper-capped output arrival `(η ⊘ β) ∧ σ`, giving a smaller
+aggregate than the flat `∑_{j≠i} α_j` and hence a larger residual. -/
 example {ι κ : Type*} [Fintype ι]
     {S : κ → (ι → Curve) → (ι → Curve) → Prop} {β η : κ → ℝ≥0 → ℝ≥0} {i : ι}
     (hcaus : ∀ h, IsCausalN (S h))
