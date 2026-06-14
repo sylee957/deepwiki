@@ -132,23 +132,6 @@ theorem mem_variableCapacityRelExt_iff {beta : ℝ≥0 → ℝ≥0∞} {A D : Pr
       (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) :=
   Iff.rfl
 
-/-- The extended super-additive iterates vanish at the origin when `g 0 = 0`. -/
-theorem maxConvPow_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) (n : ℕ) :
-    maxConvPow g n 0 = 0 := by
-  induction n with
-  | zero => exact h0
-  | succ n ih =>
-    show maxConv (maxConvPow g n) (maxConvPow g n) 0 = 0
-    refine le_antisymm (maxConv_le fun u s hus => ?_) zero_le'
-    obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
-    rw [ih, add_zero]
-
-/-- The extended super-additive closure vanishes at the origin when `g 0 = 0`. -/
-theorem superadditiveClosureMaxNN_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) :
-    superadditiveClosureMaxNN g 0 = 0 := by
-  refine le_antisymm (iSup_le fun n => ?_) zero_le'
-  rw [maxConvPow_zero_eq h0 n]
-
 /-- The non-decreasing closure of a curve's `ℝ≥0∞`-coe vanishes at the origin. -/
 theorem ndClosure_coe_zero_eq (β' : Curve) :
     ndClosure (fun u => (β' u : ℝ≥0∞)) 0 = 0 := by

@@ -125,6 +125,23 @@ theorem le_superadditiveClosureMaxNN (beta : ℝ≥0 → ℝ≥0∞) (t : ℝ≥
     beta t ≤ superadditiveClosureMaxNN beta t :=
   le_iSup (fun n => maxConvPow beta n t) 0
 
+/-- The `ℝ≥0∞` super-additive iterates vanish at the origin when `g 0 = 0`. -/
+theorem maxConvPow_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) (n : ℕ) :
+    maxConvPow g n 0 = 0 := by
+  induction n with
+  | zero => exact h0
+  | succ n ih =>
+    show maxConv (maxConvPow g n) (maxConvPow g n) 0 = 0
+    refine le_antisymm (maxConv_le fun u s hus => ?_) zero_le'
+    obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
+    rw [ih, add_zero]
+
+/-- The `ℝ≥0∞` super-additive closure vanishes at the origin when `g 0 = 0`. -/
+theorem superadditiveClosureMaxNN_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) :
+    superadditiveClosureMaxNN g 0 = 0 := by
+  refine le_antisymm (iSup_le fun n => ?_) zero_le'
+  rw [maxConvPow_zero_eq h0 n]
+
 /-- The `ℝ≥0∞` iterates are non-decreasing in the index: the `(t, 0)`
 splitting. -/
 theorem maxConvPow_le_succ (beta : ℝ≥0 → ℝ≥0∞) (n : ℕ) (t : ℝ≥0) :
