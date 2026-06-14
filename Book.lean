@@ -120,6 +120,7 @@ import Book.ServersResidualGfaTightness
 import Book.ServersResidualSpPmoo
 import Book.ServersResidualFifoPmooConcat
 import Book.ServersToa
+import Book.ServersConcatenationChainDelay
 import Book.ServersDrr
 import Book.ServersWrr
 import Book.SchedulerSemantics
