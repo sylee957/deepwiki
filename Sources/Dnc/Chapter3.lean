@@ -3,6 +3,7 @@ import DeepWiki.NetworkCalculus.Concave
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.Convex
+import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.ConvolutionContinuity
 import DeepWiki.NetworkCalculus.ConvolutionMinimum
 import DeepWiki.NetworkCalculus.PseudoInverse
@@ -80,10 +81,21 @@ alias prop_3_13_add := IsConvexEReal.add
 convolution of convex curves, needing an attained-or-ε split argument.) -/
 alias prop_3_13_sup := IsConvexEReal.sup
 
-/-! **Definition 3.6** (§3.3.2, p.53): Legendre–Fenchel transform on R̄min^{R⁺}: 𝓛(f)(t)=sup_{u≥0}{t·u−f(u)}. Not formalized in the library. -/
+/-- **Definition 3.6** (§3.3.2, p.53): the Legendre–Fenchel transform
+`𝓛(f)(t)=⨆_{u≥0}(t·u−f(u))`. The library's `legendre`. -/
+noncomputable def def_3_6 := @legendre
 
-/-! **Proposition 3.14** (§3.3.2, p.53): Examples of Legendre–Fenchel transforms: 𝓛(λ_R)=δ_R; 𝓛(δ_d)=λ_d; 𝓛(β_{R,T})=λ_T∨δ_R. Not formalized in the library. -/
+/-! **Proposition 3.14** (§3.3.2, p.53): examples of Legendre–Fenchel
+transforms (𝓛(λ_R)=δ_R; 𝓛(δ_d)=λ_d; 𝓛(β_{R,T})=λ_T∨δ_R). Not formalized — the
+catalog-curve supremum computations are not done. -/
 
-/-! **Proposition 3.15** (§3.3.2, p.54): Properties of the Legendre–Fenchel transform: 𝓛(f) convex non-decreasing; 𝓛(f∧g)=𝓛(f)∨𝓛(g); 𝓛(f∗g)=𝓛(f)+𝓛(g); if f convex non-decreasing then 𝓛(𝓛(f))=f (involution). Not formalized in the library. -/
+/-- **Proposition 3.15**, non-decreasing (§3.3.2, p.54): `𝓛(f)` is
+non-decreasing (`monotone_legendre`); it is also antitone in `f`
+(`legendre_antitone`). The remaining properties — `𝓛(f)` convex,
+`𝓛(f∧g)=𝓛(f)∨𝓛(g)`, `𝓛(f∗g)=𝓛(f)+𝓛(g)`, and the Fenchel–Moreau
+involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not yet
+formalized. -/
+theorem prop_3_15_mono (f : ℝ≥0 → EReal) : Monotone (legendre f) :=
+  monotone_legendre f
 
 end DeepWiki.Dnc
