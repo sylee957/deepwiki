@@ -10,11 +10,21 @@ Guidance for working in this repository.
 further topics are added as additional chapters.
 
 The formalization is a **plain Lean library**: the real
-`def`/`theorem`/`instance` declarations live in the `Book/*.lean` chapter files
+`def`/`theorem`/`instance` declarations live in the `DeepWiki/NetworkCalculus/*.lean` chapter files
 as ordinary top-level Lean, each carrying a concise one-line `/-- … -/`
-docstring, with a `/-! … -/` module docstring per file. `Book.lean` is the
-aggregator that imports every chapter. Rendered docs are produced by **doc-gen4**
+docstring, with a `/-! … -/` module docstring per file. `DeepWiki/NetworkCalculus.lean`
+is the topic aggregator that imports every chapter (and `DeepWiki.lean` is the
+library root that imports it). Rendered docs are produced by **doc-gen4**
 (standard Lean API documentation).
+
+**Two-layer architecture.** The repo is a single lake package with two libs:
+the **topic library** `DeepWiki/NetworkCalculus/` (the book-number-free general
+theory — this is what the chapter files below are) and the **source catalogs**
+`Sources/<slug>/` (per-book, DOI-keyed: one declaration per book item, named by
+its book number — `Dnc.prop_10_1`, `Dnc.def_2_7` — `alias`/`abbrev`-linked to the
+library, with §/page in the docstring and the DOI in `Sources/<slug>/Source.lean`).
+Book numbers live **only** in the catalog; the library stays number-free. A second
+topic gets `DeepWiki/<Topic>/` over the same `Sources/` layer.
 
 > **History:** this used to be a Verso "Manual"-genre book where declarations
 > lived inside elaborated ` ```lean ` code blocks interleaved with prose, and the
@@ -33,38 +43,39 @@ aggregator that imports every chapter. Rendered docs are produced by **doc-gen4*
   fresh `Bash` invocation (the shell is non-interactive and may not load it).
 - Dependencies (pinned to `v4.30.0`, matching the toolchain): `mathlib`,
   `doc-gen4`. (Verso is gone.)
-- `lakefile.toml` has one target: `Book` (lean_lib, root `Book.lean`);
-  `defaultTargets = ["Book"]`.
+- `lakefile.toml` has two libs: `DeepWiki` (lean_lib, root `DeepWiki.lean`, the
+  topic library) and `Sources` (the DOI catalogs); `defaultTargets = ["DeepWiki", "Sources"]`.
 
 Commands:
-- Build one chapter: `lake build Book.<Chapter>` (e.g. `Book.Dioids`).
+- Build one chapter: `lake build DeepWiki.NetworkCalculus.<Chapter>` (e.g.
+  `DeepWiki.NetworkCalculus.Dioids`).
 - Build everything: `lake build`. Must be warning-free and `sorry`-free.
-- **Proof-result gate (agent loop): `scripts/check.sh [Book.<Chapter>]`.** Runs the
+- **Proof-result gate (agent loop): `scripts/check.sh [DeepWiki.NetworkCalculus.<Chapter>]`.** Runs the
   full `lake build` and returns a single verdict — exit `0` = `GATE: PASS`, exit `1`
   = `GATE: FAIL`. Crucially it treats `warning:`/`error:`/`declaration uses 'sorry'`
   as failure *even when lake itself exits 0* (lake exits 0 on `sorry`), enforcing the
   warning-/sorry-free requirement. Pass a chapter target for faster mid-iteration
-  feedback; run with no arg (`Book`) as the final gate. Timing on a warm filesystem
+  feedback; run with no arg (all default targets) as the final gate. Timing on a warm filesystem
   cache: ~2.4s no-op (lake's manifest-parse + olean-stat floor over the ~1500-job
   dependency closure — intrinsic, not network/elan/reservoir), plus 0–3s when a
   chapter actually recompiles (the heaviest real-curve chapters elaborate in
   ~1–2s each). The first build after idle is colder (~5–7s). Don't expect below ~2.4s
   without bypassing lake.
-- Render API docs to HTML (doc-gen4): `DOCGEN_SRC=file lake build Book:docs`.
+- Render API docs to HTML (doc-gen4): `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs`.
   Output lands in `.lake/build/doc/` (gitignored). doc-gen expects a
   `references.bib` at the doc root — if rendering fails on a missing
   `.lake/build/doc/references.bib`, `touch` an empty one. If doc-gen "Replays"
   stale HTML instead of regenerating, remove its facet markers
-  (`.lake/build/doc-data/Book--library.docs_built*`) and the `.lake/build/doc`
+  (`.lake/build/doc-data/DeepWiki--library.docs_built*`) and the `.lake/build/doc`
   tree, then rebuild.
 
-## Chapter structure (`Book/`)
+## Chapter structure (`DeepWiki/NetworkCalculus/`)
 
 Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
 then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
-Chapters `import` earlier chapters to form the dependency DAG; `Book.lean`
-imports them all in dependency order — it is the live chapter list (do not
-maintain a copy of it here).
+Chapters `import` earlier chapters to form the dependency DAG;
+`DeepWiki/NetworkCalculus.lean` imports them all in dependency order — it is the
+live chapter list (do not maintain a copy of it here).
 
 All declarations live in `namespace DeepWiki` (sub-namespace `Deviation` for
 the backlog/delay theory, whose short names would clash with the curve
@@ -90,10 +101,11 @@ identifier, not prose (`ArrivalCurves*` throughout, never a mixed
 `ArrivalCurve*`/`ArrivalCurves*` family). `ServiceCurve*` predates the rule
 and stays singular: within-family uniformity is the binding part.
 
-**Flat layout:** chapters stay flat in `Book/`, organized by the prefix
-families above — no subdirectories. Revisit only when a second wiki topic
-lands; then partition by topic (`Book/<Topic>/…`), not before (module
-renames touch every import and doc-gen URL).
+**Flat layout:** chapters stay flat in `DeepWiki/NetworkCalculus/`, organized by the prefix
+families above — no subdirectories. The topic partition is already in place
+(`NetworkCalculus` is the first topic); a second wiki topic gets its own
+sibling `DeepWiki/<Topic>/` library (module renames touch every import and
+doc-gen URL, so this is done once per topic, not per chapter).
 
 ## The mathematics (orientation — get this right or proofs invert)
 
@@ -110,14 +122,14 @@ renames touch every import and doc-gen URL).
   "non-decreasing", "sub-additive `f(s+t) ≤ f(s)+f(t)`" are *natural*-order notions,
   stated on `.toVal` values with numeric `+`. The *dioid* order (`≤` on the newtype)
   is what isotony / Kleene-star / convolution-as-product use.
-- Carriers (newtypes in `Book/ScalarDioids.lean`, sense + number-system names):
+- Carriers (newtypes in `DeepWiki/NetworkCalculus/ScalarDioids.lean`, sense + number-system names):
   `MinPlus` over `WithTop ℝ` (dioid, `R∪{+∞}`); `MinPlusNN` over `ℝ≥0∞` (complete);
   `MinPlusExt` over `WithTop (WithBot ℝ)` (complete, `R∪{±∞}`); plus the (max,plus)
   duals `MaxPlusNN` over `WithBot ℝ≥0∞` and `MaxPlusExt` over `WithBot (WithTop ℝ)`.
 - The convolution `conv` (notation `∗`) is generic over `CompleteDioid`; the function
-  dioid (`Book/FunctionDioids.lean`) and the function classes `FPlus`/`FNondecr` are
+  dioid (`DeepWiki/NetworkCalculus/FunctionDioids.lean`) and the function classes `FPlus`/`FNondecr` are
   subtypes built by `IsSubCompleteDioid.toCompleteDioid` (the sub-complete-dioid
-  builder in `Book/CompleteDioids.lean`).
+  builder in `DeepWiki/NetworkCalculus/CompleteDioids.lean`).
 
 ## Hard-won gotchas (read before editing)
 
@@ -148,7 +160,7 @@ renames touch every import and doc-gen URL).
    do **not** "naturally" swap a carrier to `EReal` to borrow its topology — it silently
    breaks `mul_zero`. Instead, keep the algebra on the WithTop/WithBot carrier and do all
    *analysis* (limits, continuity, lsc, convolution-minimum) on `EReal` via the `toEReal`
-   cast (`Book/MinPlusExtTopology.lean`, and the max dual). The cast agrees with the dioid
+   cast (`DeepWiki/NetworkCalculus/MinPlusExtTopology.lean`, and the max dual). The cast agrees with the dioid
    `+` *exactly* on the open `AddDefined` region (no `(+∞)+(−∞)` collision), so add an
    `AddDefined` hypothesis wherever a proof needs the two additions to coincide. Bridge
    entry points: `toEReal`, `toEReal_add`, `AddDefinedExt`,
@@ -244,14 +256,14 @@ not just defaults):
 
 - **Bound convolutions through the intro/elim API**, not by hand-opening the
   split subtype `{p : D × D // p.1 + p.2 = t}`: `minConv_le_add` / `le_minConv`
-  and the duals `add_le_maxConv` / `maxConv_le` (`Book/FunctionDioids.lean`).
+  and the duals `add_le_maxConv` / `maxConv_le` (`DeepWiki/NetworkCalculus/FunctionDioids.lean`).
   Same for deconvolutions (`sub_le_minDeconv` / `minDeconv_le`,
   `maxDeconv_le_sub` / `le_maxDeconv`) and deviations (`vDevAt_le_vDev` /
   `vDev_le`, `hDevAt_le_hDev` / `hDev_le`, witness-elim `hDevAt_le`,
-  `Book/Deviations.lean`); `minConv_apply_zero` computes the origin value.
+  `DeepWiki/NetworkCalculus/Deviations.lean`); `minConv_apply_zero` computes the origin value.
   Cross the `ℝ≥0∞`-vs-`EReal` reading of served-pair convolutions through the
   bridge iffs `coe_le_minConv_toENN_iff` / `minConv_toENN_le_coe_iff` /
-  `coe_eq_minConv_toENN_iff` (`Book/DeviationsBoundsServer.lean`), not a
+  `coe_eq_minConv_toENN_iff` (`DeepWiki/NetworkCalculus/DeviationsBoundsServer.lean`), not a
   per-site `EReal.coe_ennreal_le_coe_ennreal_iff` + `coe_minConv_toENN`
   rewrite dance.
 
@@ -277,12 +289,12 @@ not just defaults):
   bounds) take the bundle and pass `.2` down.
 
 - **The first-crossing spelling is `crossingSet`/`firstCrossing`**
-  (`Book/ArrivalCurves.lean`, generic over the value order): state ℓmax-style
+  (`DeepWiki/NetworkCalculus/ArrivalCurves.lean`, generic over the value order): state ℓmax-style
   hypotheses as `ℓmax ∈ crossingSet α β` and never re-spell
   `{x | 0 < x ∧ α x ≤ β x}` or its `⨅`/`sInf` inline.
 
 - **Time-domain machinery is unbundled from `Curve`.** `IsBacklogged`,
-  `start`, `backloggedAgeAt`, `maxBackloggedLength` (`Book/ServersBacklog.lean`)
+  `start`, `backloggedAgeAt`, `maxBackloggedLength` (`DeepWiki/NetworkCalculus/ServersBacklog.lean`)
   — like `backlog`/`delay` and the deviations — are stated on plain
   `ℝ≥0 → ℝ≥0` functions with the properties they consume as hypotheses
   (`h0 : A 0 = D 0` only where the equality set must be inhabited;
@@ -326,7 +338,7 @@ not just defaults):
   use `pdftotext -layout` only to grep for which page holds a passage.
 - **The autoformalization workflow:** when the user posts a capture/screenshot of
   a book passage (or points at pages of a PDF in `references/`), formalize that
-  passage in the appropriate `Book/*.lean` chapter. Before writing anything new,
+  passage in the appropriate `DeepWiki/NetworkCalculus/*.lean` chapter. Before writing anything new,
   search the existing library for the lemmas/definitions it should build on —
   reuse and extend rather than redefine; new statements go in `namespace DeepWiki`
   following the chapter DAG, docstring conventions, and style preferences above.
@@ -349,10 +361,10 @@ not just defaults):
   deleted one and show phantom LSP errors — close the tab.
 - **CI builds and deploys to GitHub Pages.** The GitHub Actions workflow
   (`.github/workflows/ci.yml`) runs `lake build` and
-  `DOCGEN_SRC=file lake build Book:docs` on push/PR to `main`; on pushes (not
+  `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs` on push/PR to `main`; on pushes (not
   PRs) it then publishes `.lake/build/doc` to Pages
   (https://sylee957.github.io/deepwiki/) via `upload-pages-artifact` +
-  `deploy-pages`. The artifact is small: doc-gen4 renders HTML for the Book
-  library only — its long docInfo pass over Mathlib feeds cross-reference data,
+  `deploy-pages`. The artifact is small: doc-gen4 renders HTML for the DeepWiki
+  + Sources libraries only — its long docInfo pass over Mathlib feeds cross-reference data,
   not published pages. CI uses `lake exe cache get` for Mathlib's prebuilt
-  oleans so only `Book/*.lean` recompiles.
+  oleans so only `DeepWiki/NetworkCalculus/*.lean` recompiles.
