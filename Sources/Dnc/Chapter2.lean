@@ -1,150 +1,178 @@
 import Book.ScalarDioids
 import Book.FunctionDioids
 import Book.DioidFunctions
+import Book.Closures
+import Book.Additivity
+import Book.Deconvolution
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 2: The (min,plus) Functions Semi-ring
-The book's Chapter 2 builds the algebraic substrate of network calculus:
-dioids, the (min,plus) dioid and its completions, the dioid of (min,plus)
-functions, and the convolution. Each item is a `SourceRef` carrying the
-book's own numbering, linked to the `DeepWiki` library declaration that
-formalizes it — with a machine-checked anchor where the item is a theorem
-or an instance, and a reference to the library declaration otherwise.
+Each numbered item of the book's Chapter 2 is one declaration named by its
+book number: a `theorem` (the book-faithful statement, discharged by the
+`DeepWiki` library) for theorems/propositions/lemmas, and an `abbrev`
+aliasing the library declaration for definitions. The book numbering lives
+here in the catalog, never in the library; the citation (section, page) is
+in each docstring, the source's DOI in `Sources.Dnc.Source`.
 
 (Library import paths are `Book.…` until the topic rename to
 `DeepWiki.NetworkCalculus.…`.) -/
 
 namespace DeepWiki.Dnc
 
-open DeepWiki DeepWiki.Algebra DeepWiki.Catalog
+open DeepWiki DeepWiki.Algebra
 open scoped DeepWiki.Algebra.Bridge NNReal ENNReal
 
 /-! ## §2.1.1 Dioids -/
 
-/-- A monoid `(M, ⊕)`: associative with a neutral element. Foundational;
-formalized by Mathlib's `Monoid` / `AddMonoid`. -/
-def def_2_1 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Definition 2.1", kind := .defn, page := some 16 }
+/-- **Definition 2.1** (§2.1.1, p.16). A monoid `(M, ⊕)`: associative with
+a neutral element. Reuses Mathlib's `Monoid`. -/
+abbrev def_2_1 := @Monoid
 
-/-- Commutative and idempotent monoids. Formalized by Mathlib's
-`CommMonoid` and the idempotency axiom carried by `DeepWiki.Algebra.Dioid`. -/
-def def_2_2 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Definition 2.2", kind := .defn, page := some 16 }
+/-- **Definition 2.2** (§2.1.1, p.16). Commutative and idempotent monoids.
+Reuses Mathlib's `CommMonoid`; idempotency is the `oplus_idem` axiom of
+`DeepWiki.Algebra.Dioid`. -/
+abbrev def_2_2 := @CommMonoid
 
-/-- A semi-ring `(D, ⊕, ⊗)`: a commutative monoid for `⊕` and a monoid for
-`⊗` with `⊗` distributing over `⊕` and the zero absorbing. Formalized by
+/-- **Definition 2.3** (§2.1.1, p.16). A semi-ring `(D, ⊕, ⊗)`. Reuses
 Mathlib's `CommSemiring`, the base of `DeepWiki.Algebra.Dioid`. -/
-def def_2_3 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Definition 2.3", kind := .defn, page := some 16 }
+abbrev def_2_3 := @_root_.CommSemiring
 
-/-- An idempotent semi-ring (dioid): a semi-ring whose `⊕` is idempotent.
-Formalized by `DeepWiki.Algebra.Dioid` (`CommSemiring` + `oplus_idem`),
-bridged to Mathlib's `IdemCommSemiring`. -/
-def def_2_4 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Definition 2.4", kind := .defn, page := some 17 }
+/-- **Definition 2.4** (§2.1.1, p.17). An idempotent semi-ring (dioid).
+The library's `DeepWiki.Algebra.Dioid` (`CommSemiring` + `oplus_idem`). -/
+abbrev def_2_4 := @Dioid
 
-/-- The product `⊗` may be omitted and has priority over `⊕`. A notational
-remark; `DeepWiki.Algebra` writes `⊗ₒ`/`⊕ₒ` with the usual precedence. -/
-def remark_2_1 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Remark 2.1", kind := .remark, page := some 17 }
-
-/-- Order relation of a dioid: `a ≼ b ⟺ a ⊕ b = b` is a (partial) order,
-and `⊕`, `⊗` are isotone for it. Formalized by the canonical order `≼ₒ`
-(`DeepWiki.Algebra.Bridge`) with isotony `Algebra.add_le_add_right`/`_left`
-and `Algebra.mul_le_mul_right`/`_left`. -/
-def thm_2_1 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Theorem 2.1", kind := .thm, page := some 17 }
-
-/-- `≼ₒ` is, by definition, `a ⊕ₒ b = b` — the book's order relation. -/
+/-- **Theorem 2.1**, order definition (§2.1.1, p.17). The canonical dioid
+order `≼ₒ` is, by definition, `a ⊕ₒ b = b`. -/
 theorem thm_2_1_order_iff {T : Type*} [Dioid T] (a b : T) :
     (a ≼ₒ b) ↔ (a ⊕ₒ b = b) := Iff.rfl
 
-/-- Isotony of `⊕ₒ` (Theorem 2.1), discharged by `Algebra.add_le_add_right`. -/
+/-- **Theorem 2.1**, isotony of `⊕ₒ` (§2.1.1, p.17). Discharged by
+`Algebra.add_le_add_right`. -/
 theorem thm_2_1_add_isotone {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (a ⊕ₒ c) ≼ₒ (b ⊕ₒ c) :=
   add_le_add_right h c
 
-/-- Isotony of `⊗ₒ` (Theorem 2.1), discharged by `Algebra.mul_le_mul_right`. -/
+/-- **Theorem 2.1**, isotony of `⊗ₒ` (§2.1.1, p.17). Discharged by
+`Algebra.mul_le_mul_right`. -/
 theorem thm_2_1_mul_isotone {T : Type*} [Dioid T] {a b : T}
     (h : a ≼ₒ b) (c : T) : (a ⊗ₒ c) ≼ₒ (b ⊗ₒ c) :=
   mul_le_mul_right h c
 
-/-- Two definitions of "dioid" appear in the literature (idempotent
-semi-ring vs. a semi-ring where the canonical order is an order); for
-(min,plus) they coincide. A meta-remark; `DeepWiki.Algebra.Dioid` takes
-the idempotent-semi-ring definition. -/
-def remark_2_2 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Remark 2.2", kind := .remark, page := some 17 }
-
-/-- A complete dioid: closed for infinite sums, with the product
-distributing over infinite sums on both sides (hence a top element).
-Formalized by `DeepWiki.Algebra.CompleteDioid` (with the lower-semicontinuity
-field `mul_iSup`). -/
-def def_2_5 : SourceRef :=
-  { doi := doi, location := "§2.1.1", label := "Definition 2.5", kind := .defn, page := some 18 }
+/-- **Definition 2.5** (§2.1.1, p.18). A complete dioid: closed for
+infinite sums, the product distributing over them. The library's
+`DeepWiki.Algebra.CompleteDioid`. -/
+abbrev def_2_5 := @CompleteDioid
 
 /-! ## §2.1.2 The (min,plus) dioid -/
 
-/-- The (min,plus) dioid `(ℝ ∪ {+∞}, ∧, +)` is a commutative dioid with
-zero `+∞` and unit `0`. Formalized by the carrier `MinPlus` (over
-`WithTop ℝ`) and its `Algebra.Dioid` instance. -/
-def thm_2_2 : SourceRef :=
-  { doi := doi, location := "§2.1.2", label := "Theorem 2.2", kind := .thm, page := some 18 }
+/-- **Theorem 2.2** (§2.1.2, p.18). The (min,plus) dioid `(ℝ ∪ {+∞}, ∧, +)`
+is a commutative dioid (zero `+∞`, unit `0`): the carrier `MinPlus` has an
+`Algebra.Dioid` instance. -/
+theorem thm_2_2 : Nonempty (Dioid MinPlus) := ⟨inferInstance⟩
 
-/-- `MinPlus` is a dioid (Theorem 2.2). -/
-example : Dioid MinPlus := inferInstance
+/-- **Proposition 2.1** (§2.1.2, p.19). The complete (min,plus) dioid
+`(ℝ ∪ {±∞}, ∧, +)` (top `−∞`, with `(+∞)+(−∞)=+∞`): the carrier
+`MinPlusExt` has an `Algebra.CompleteDioid` instance. -/
+theorem prop_2_1 : Nonempty (CompleteDioid MinPlusExt) := ⟨inferInstance⟩
 
-/-- The complete (min,plus) dioid `(ℝ ∪ {±∞}, ∧, +)` is a complete
-commutative dioid with top `−∞`, with the absorbing convention
-`(+∞) + (−∞) = +∞`. Formalized by the carrier `MinPlusExt` (over
-`WithTop (WithBot ℝ)`) and its `Algebra.CompleteDioid` instance. -/
-def prop_2_1 : SourceRef :=
-  { doi := doi, location := "§2.1.2", label := "Proposition 2.1", kind := .prop, page := some 19 }
-
-/-- `MinPlusExt` is a complete dioid (Proposition 2.1). -/
-example : Nonempty (CompleteDioid MinPlusExt) := ⟨inferInstance⟩
-
-/-- `(ℝ≥0 ∪ {+∞}, ∧, +)` is a complete commutative dioid. Formalized by the
-carrier `MinPlusNN` (over `ℝ≥0∞`) and its `Algebra.CompleteDioid` instance. -/
-def prop_2_2 : SourceRef :=
-  { doi := doi, location := "§2.1.2", label := "Proposition 2.2", kind := .prop, page := some 19 }
-
-/-- `MinPlusNN` is a complete dioid (Proposition 2.2). -/
-example : Nonempty (CompleteDioid MinPlusNN) := ⟨inferInstance⟩
+/-- **Proposition 2.2** (§2.1.2, p.19). `(ℝ≥0 ∪ {+∞}, ∧, +)` is a complete
+commutative dioid: the carrier `MinPlusNN` has an `Algebra.CompleteDioid`
+instance. -/
+theorem prop_2_2 : Nonempty (CompleteDioid MinPlusNN) := ⟨inferInstance⟩
 
 /-! ## §2.1.3 The dioid of (min,plus) functions -/
 
-/-- The (min,plus) functions `ℱ = {f : ℝ≥0 → ℝ̄min}`. Formalized by the
-function space `FminBar := ℝ≥0 → MinPlusExt` (and its non-negative /
-non-decreasing sub-dioids `FPlus`, `FNondecr`). -/
-def def_2_6 : SourceRef :=
-  { doi := doi, location := "§2.1.3", label := "Definition 2.6", kind := .defn, page := some 19 }
+/-- **Definition 2.6** (§2.1.3, p.19). The (min,plus) functions
+`ℱ = {f : ℝ≥0 → ℝ̄min}`. The library's function space
+`FminBar := ℝ≥0 → MinPlusExt`. -/
+abbrev def_2_6 := FminBar
 
-/-- The (min,plus) convolution `(f ∗ g)(t) = inf_{0 ≤ s ≤ t} (f(t−s) + g(s))`.
-Formalized concretely by `minConv` (`Book.FunctionDioids`) and as the
-generic dioid convolution `conv` on the function dioid
-(`Book.DioidFunctions`). -/
-def def_2_7 : SourceRef :=
-  { doi := doi, location := "§2.1.3", label := "Definition 2.7", kind := .defn, page := some 19 }
+/-- **Definition 2.7** (§2.1.3, p.19). The (min,plus) convolution
+`(f ∗ g)(t) = inf_{0 ≤ s ≤ t} (f(t−s) + g(s))`. The library's concrete
+`minConv` (and the generic dioid convolution `conv`). -/
+noncomputable def def_2_7 := @minConv
 
-/-- Properties of the convolution: it is commutative, associative,
-distributes over the minimum, and `(f ∗ g) + K = f ∗ (g + K)`. Formalized
-by `conv_comm`, `conv_assoc`, `conv_distrib`, `conv_add_const`
-(`Book.DioidFunctions`); the concrete `minConv` carries `minConv_comm`,
-`minConv_assoc_enn`, `minConv_min`. -/
-def lemma_2_1 : SourceRef :=
-  { doi := doi, location := "§2.1.3", label := "Lemma 2.1", kind := .lem, page := some 20 }
-
-/-- Convolution is commutative (part of Lemma 2.1), discharged by
-`minConv_comm`. -/
+/-- **Lemma 2.1**, commutativity (§2.1.3, p.20). The convolution is
+commutative; discharged by `minConv_comm`. (Lemma 2.1 also states
+associativity, distributivity over `∧`, and `(f ∗ g) + K = f ∗ (g + K)`:
+`minConv_assoc_enn` / `conv_assoc`, `minConv_min` / `conv_distrib`,
+`conv_add_const`.) -/
 theorem lemma_2_1_comm (f g : ℝ≥0 → ℝ≥0∞) : minConv f g = minConv g f :=
   minConv_comm f g
 
-/-! ## Section index -/
+/-! ## §2.2.1 Kleene star operator -/
 
-/-- The §2.1 portion of the DNC Chapter 2 catalog. -/
-def chapter2Section1 : List SourceRef :=
-  [def_2_1, def_2_2, def_2_3, def_2_4, remark_2_1, thm_2_1, remark_2_2,
-   def_2_5, thm_2_2, prop_2_1, prop_2_2, def_2_6, def_2_7, lemma_2_1]
+/-- **Definition 2.9** (§2.2.1, p.23). The Kleene star `a⋆ = ⊕_{i≥0} aⁱ` in
+a complete dioid. The library's `subadditiveClosure` (`⨆ n, σⁿ`, with the
+dioid power `convPow`). -/
+noncomputable def def_2_9 := @subadditiveClosure
+
+/-- **Lemma 2.4**, star is monotone (§2.2.1, p.24): `a ≼ b ⟹ a⋆ ≼ b⋆`. -/
+alias lemma_2_4_mono := subadditiveClosure_mono
+
+/-- **Lemma 2.4**, star is idempotent (§2.2.1, p.24). -/
+alias lemma_2_4_idem := closure_idem
+
+/-- **Lemma 2.4**, power below star (§2.2.1, p.24): `aⁱ ≼ a⋆`. -/
+alias lemma_2_4_pow_le := convPow_le_closure
+
+/-! **Theorem 2.3** (Kleene star theorem, §2.2.1, p.24): `a⋆b` is the least
+solution of `x = ax ⊕ b`. The library provides the least-solution (`≤`)
+direction in feedback-control form (`minConv_subadditiveClosureENN_le_of_inf_le`);
+the clean abstract fixpoint statement is not separately formalized. -/
+
+/-! ## §2.2.2 Sub-additive closure -/
+
+/-- **Definition 2.10** (§2.2.2, p.25). A sub-additive function:
+`f(s+t) ≤ f(s) + f(t)`. The library's `IsSubadditive`. -/
+abbrev def_2_10 := @IsSubadditive
+
+/-- **Proposition 2.4**, convolution (§2.2.2, p.25): the convolution of two
+sub-additive functions is sub-additive. (The sum `f + g` is likewise
+sub-additive, directly from the definition.) -/
+alias prop_2_4_conv := IsSubadditive.minConv
+
+/-- **Definition 2.11** (§2.2.2, p.26). The sub-additive closure
+`f* = ⋀_{i≥0} fⁱ`. The library's `subadditiveClosureENN` (over `ℝ≥0∞`;
+`subadditiveClosureEReal` over `EReal`). -/
+noncomputable def def_2_11 := @subadditiveClosureENN
+
+/-! **Lemma 2.5** (§2.2.2, p.27): a sub-additive `f` with `f(0) < 0` has
+`f(0) = −∞` and `f(t) ∈ {−∞, +∞}`. Not separately formalized. -/
+
+/-- **Proposition 2.5**, sub-additivity (§2.2.2, p.27): `f*` is
+sub-additive. -/
+alias prop_2_5_subadditive := subadditiveClosureENN_subadditive
+
+/-- **Proposition 2.5**, minorant (§2.2.2, p.27): `f* ≼ f`. -/
+alias prop_2_5_le := subadditiveClosureENN_le
+
+/-- **Proposition 2.5**, value at the origin (§2.2.2, p.27): `f*(0) = 0`. -/
+alias prop_2_5_zero := subadditiveClosureENN_zero_eq
+
+/-! **Lemma 2.6** (§2.2.2, p.27): a sub-additive `f` with `f(0) ≤ 0` equals
+its closure, `f = f*`. Not separately formalized (the library gives the
+greatest-minorant Theorem 2.4 below). -/
+
+/-- **Theorem 2.4** (§2.2.2, p.27): `f*` is the largest sub-additive
+function `≼ f` with `f*(0) ≤ 0`. -/
+alias thm_2_4 := le_subadditiveClosureENN_of_isSubadditive
+
+/-- **Proposition 2.6** (§2.2.2, p.28): `(f ∧ g)* = f* ∗ g*`. -/
+alias prop_2_6 := subadditiveClosureENN_min
+
+/-! **Corollary 2.1** (efficient sub-additive closure, §2.2.2, p.28):
+`f* = (e ∧ f)*`. Not separately formalized. -/
+
+/-! ## §2.3 Deconvolution -/
+
+/-- **§2.3.1 Residuation** (p.29-30): convolution and deconvolution form a
+Galois connection, `x ⊗ a ≼ b ⟺ x ≼ b ⊘ a`. The library's
+`galoisConnection_minDeconv_minConv` (with `minDeconv_le_iff_le_minConv`). -/
+alias residuation := galoisConnection_minDeconv_minConv
+
+/-- **Definition 2.12** (§2.3.2, p.30). The (min,plus) deconvolution
+`f ⊘ g (t) = sup_{u≥0} (f(t+u) − g(u))`. The library's `minDeconv`. -/
+noncomputable def def_2_12 := @minDeconv
 
 end DeepWiki.Dnc
