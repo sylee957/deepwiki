@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityGlobal
 import DeepWiki.NetworkCalculus.StabilityFixPoint
 import DeepWiki.NetworkCalculus.StabilityNetwork
+import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import Sources.Dnc.Source
 
@@ -100,6 +101,17 @@ output of the first strict-service server is input of the second, so the
 ingress curve `αu` emerges as `(αu ⊘ β₁) ⊘ β₂`. The library's
 `isMaximalArrivalBound_tandem_output`. -/
 alias arrivalProp_tandem := isMaximalArrivalBound_tandem_output
+
+/-- **Multiplexing ⟹ aggregate global stability** (the per-flow trajectory
+wiring): a server multiplexing a vector of flows, offering a strict service
+curve to its aggregate, with a locally stable arrival-constrained aggregate, is
+globally stable — its served pair and causality *derived* from the MIMO
+multiplexing model (`aggregateServer`/`isCausal_aggregateServer`), not assumed.
+The library's `isGloballyStableServer_aggregateServer`; the network-wide form is
+`Network.isGloballyStable_mimo`. (Deriving the per-hop arrival bound itself by
+arrival-curve propagation along each flow's path — `arrivalProp_chain` summed
+over a server's flows — is the remaining topological/fix-point step.) -/
+alias thm_12_mimoStable := isGloballyStableServer_aggregateServer
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate

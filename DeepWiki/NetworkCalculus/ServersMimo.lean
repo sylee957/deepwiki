@@ -69,6 +69,15 @@ theorem residualServer_apply {ι : Type*}
     (hp : S As Ds) (i : ι) : residualServer S i (As i) (Ds i) :=
   ⟨As, Ds, hp, rfl, rfl⟩
 
+/-- **The aggregate server of a per-flow-causal `n`-server is causal**: the
+summed output never exceeds the summed input. -/
+theorem isCausal_aggregateServer {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} (hc : IsCausalN S) :
+    IsCausal (aggregateServer S) := by
+  rintro A D ⟨As, Ds, hp, rfl, rfl⟩ t
+  rw [Curve.sum_apply, Curve.sum_apply]
+  exact Finset.sum_le_sum fun i _ => hc As Ds hp i t
+
 /-- **The aggregate of an `n`-server is a server**: causality sums, and
 an input decomposes by loading it onto one flow. -/
 theorem isServer_aggregateServer {ι : Type*} [Fintype ι] [Nonempty ι]
@@ -76,9 +85,7 @@ theorem isServer_aggregateServer {ι : Type*} [Fintype ι] [Nonempty ι]
     {S : (ι → Curve) → (ι → Curve) → Prop} (hS : IsServerN S) :
     IsServer (aggregateServer S) := by
   constructor
-  · rintro A D ⟨As, Ds, hp, rfl, rfl⟩ t
-    rw [Curve.sum_apply, Curve.sum_apply]
-    exact Finset.sum_le_sum fun i _ => hS.1 As Ds hp i t
+  · exact isCausal_aggregateServer hS.1
   · intro A
     obtain ⟨j⟩ := ‹Nonempty ι›
     obtain ⟨Ds, hDs⟩ := hS.2 (Pi.single j A)
