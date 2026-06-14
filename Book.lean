@@ -114,6 +114,7 @@ import Book.ServersResidualTdma
 import Book.ServersResidualWrr
 import Book.ServersResidualWrrPackets
 import Book.ServersResidualSfa
+import Book.ServersResidualGfa
 import Book.ServersResidualFifoPmooConcat
 import Book.ServersToa
 import Book.ServersDrr
