@@ -57,6 +57,7 @@ import Book.ServiceCurveWeaklyStrict
 import Book.ServiceCurveWeaklyStrictEReal
 import Book.ServiceCurveFamilies
 import Book.ServiceCurveMonotony
+import Book.ServiceCurveMonotonyExt
 import Book.ServiceCurveAdaptive
 import Book.ServiceCurveWeaklyStrictStrictness
 import Book.ServiceCurveVariableCapacity
