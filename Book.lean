@@ -121,6 +121,7 @@ import Book.ServersWrr
 import Book.SchedulerSemantics
 import Book.ServersDrrSemantics
 import Book.ServersWrrSemantics
+import Book.SchedulerSyntax
 import Book.ServersResidualMinimal
 import Book.ServersResidualStrictness
 import Book.ServersResidualOutput
