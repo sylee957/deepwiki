@@ -119,4 +119,38 @@ noncomputable def forcingArr (β' : Curve) (v : ι → ℝ≥0) (T : ℝ≥0)
     {i₀ : ι} (hi₀ : v i₀ = T) (u : ℝ≥0) :
     forcingArr β' v T hi₀ u = forcingArrFun (⇑β') v T u := rfl
 
+/-- **The staircase is `β'`-tight at `T`**: `A ∗ β'(T) = β'(T)` — the `≥` half (the `≤` half is
+the `u = 0` split). Every split `a + s = T` has `A(a) ≥ β'(T) − β'(s)`, so `A(a) + β'(s) ≥ β'(T)`. -/
+theorem le_minConv_forcingArr (β' : Curve) (v : ι → ℝ≥0) (T : ℝ≥0) (hvT : ∀ i, v i ≤ T)
+    {i₀ : ι} (hi₀ : v i₀ = T) :
+    curveEReal β' T ≤ minConv (curveEReal (forcingArr β' v T hi₀)) (curveEReal β') T := by
+  refine le_minConv (fun a s hus => ?_)
+  have hsa : s = T - a := eq_tsub_of_add_eq (by rw [add_comm]; exact hus)
+  have key : β' T ≤ forcingArrFun (⇑β') v T a + β' s := by
+    calc β' T = (β' T - β' (T - a)) + β' (T - a) :=
+          (tsub_add_cancel_of_le (β'.mono tsub_le_self)).symm
+      _ ≤ forcingArrFun (⇑β') v T a + β' (T - a) :=
+          add_le_add (le_forcingArrFun (⇑β') β'.mono v T hvT a) le_rfl
+      _ = forcingArrFun (⇑β') v T a + β' s := by rw [hsa]
+  simp only [curveEReal_apply, forcingArr_apply]
+  rw [← EReal.coe_add]
+  exact_mod_cast key
+
+/-- **The staircase under-serves `βᵢ` at `T`**: `A ∗ βᵢ(T) < β'(T)`. The split `(T − vᵢ, vᵢ)`
+gives `A ∗ βᵢ(T) ≤ A(T − vᵢ) + βᵢ(vᵢ) ≤ (β'(T) − β'(vᵢ)) + βᵢ(vᵢ) < β'(T)`, the last step
+because `βᵢ(vᵢ) < β'(vᵢ)`. -/
+theorem minConv_forcingArr_lt (β' β : Curve) (v : ι → ℝ≥0) (T : ℝ≥0) (hvT : ∀ i, v i ≤ T)
+    {i₀ : ι} (hi₀ : v i₀ = T) (i : ι) (hcross : β (v i) < β' (v i)) :
+    minConv (curveEReal (forcingArr β' v T hi₀)) (curveEReal β) T < curveEReal β' T := by
+  have hsplit : (T - v i) + v i = T := tsub_add_cancel_of_le (hvT i)
+  have key : forcingArrFun (⇑β') v T (T - v i) + β (v i) < β' T :=
+    calc forcingArrFun (⇑β') v T (T - v i) + β (v i)
+        ≤ (β' T - β' (v i)) + β (v i) := add_le_add (forcingArrFun_le_step _ v T i) le_rfl
+      _ < (β' T - β' (v i)) + β' (v i) := add_lt_add_of_le_of_lt le_rfl hcross
+      _ = β' T := tsub_add_cancel_of_le (β'.mono (hvT i))
+  refine lt_of_le_of_lt (minConv_le_add _ _ hsplit) ?_
+  simp only [curveEReal_apply, forcingArr_apply]
+  rw [← EReal.coe_add]
+  exact_mod_cast key
+
 end DeepWiki
