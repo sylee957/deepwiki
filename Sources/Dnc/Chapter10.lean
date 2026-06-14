@@ -11,6 +11,7 @@ import DeepWiki.NetworkCalculus.ServersResidualSfa
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
+import DeepWiki.NetworkCalculus.NetworkTopology
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -23,7 +24,19 @@ namespace DeepWiki.Dnc
 open DeepWiki
 open scoped NNReal ENNReal
 
-/-! **Definition 10.1** (§10.2, p.233): Network topology classes: feed-forward (acyclic flow graph, topological sort), tandem (servers in a line), and nested tandem (flow paths totally ordered by inclusion, (Nest): i<j ⇔ pᵢ⊆pⱼ). Not formalized in the library. -/
+/-- **Definition 10.1**, feed-forward (§10.2, p.233): the flow graph is acyclic
+— there is a server ranking under which every flow path strictly increases.
+The library's `IsFeedForward`. -/
+def def_10_1_feedforward := @IsFeedForward
+
+/-- **Definition 10.1**, tandem (§10.2, p.233): every flow path is a contiguous
+subpath of one line of servers. The library's `IsTandemNetwork`. -/
+def def_10_1_tandem := @IsTandemNetwork
+
+/-- **Definition 10.1**, nested tandem (§10.2, p.233): the flow paths are
+totally ordered by contiguous-subpath inclusion (the (Nest) condition). The
+library's `IsNestedTandem`. -/
+def def_10_1_nested := @IsNestedTandem
 
 /-! **Example 10** (§10.3.1, p.235): Loss of tightness: on the two-flow two-server network, the two computation methods give incomparable end-to-end service curves β̃₁ (general feed-forward residual) and β̃₂ (PMOO), with neither dominating in general (β₁=β₂ ⇒ β̃₂≤β̃₁; b₁=0,T₁=0,R₂>R₁ ⇒ β̃₁≤β̃₂). Not formalized in the library. -/
 
