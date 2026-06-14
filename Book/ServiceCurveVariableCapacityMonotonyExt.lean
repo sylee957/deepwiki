@@ -12,7 +12,7 @@ functions, and is the weakest condition the proof needs.
 The finite-`Curve`-arrival route is `+∞`-blocked (a finite burst's positive-time capacity
 terms can undercut the origin term — documented in the parent `vcn` chapters), which is why the
 forcing rides the extended carrier: feeding the instantaneous infinite burst `δ₀` collapses the
-variable-capacity output onto the capacity itself (`vcnOutputExt δ₀ C = C`), so the
+variable-capacity output onto the capacity itself (`variableCapacityOutputExt δ₀ C = C`), so the
 super-additive closure `K := (β'↑)^⊛̄` is its own `δ₀`-output and the canonical tight pair
 `(δ₀, K)` sits in `S_vcn^ext(β')`. The inclusion carries it into `S_vcn^ext(β)`, producing a
 `β`-incrementing capacity equal to `K`, whence `(β↑)^⊛̄ ≤ K = (β'↑)^⊛̄`. This mirrors the
@@ -77,24 +77,38 @@ theorem delay0Process_apply_pos {t : ℝ≥0} (ht : t ≠ 0) : delay0Process t =
 @[simp] theorem delay0Process_coe : (⇑delay0Process : ℝ≥0 → ℝ≥0∞) = ⇑delay0ENN := rfl
 
 /-- Extended variable-capacity output, `ℝ≥0∞`-valued:
-`vcnOutputExt A C t = ⨅_{s ≤ t} (A s + (C t − C s))`. The `variableCapacityOutput` of
+`variableCapacityOutputExt A C t = ⨅_{s ≤ t} (A s + (C t − C s))`. The `variableCapacityOutput` of
 `ServiceCurveVariableCapacity`, lifted to the complete carrier so `δ₀` is admissible. -/
-noncomputable def vcnOutputExt (A C : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
+noncomputable def variableCapacityOutputExt (A C : ℝ≥0 → ℝ≥0∞) (t : ℝ≥0) : ℝ≥0∞ :=
   ⨅ s : {s // s ≤ t}, (A s.1 + (C t - C s.1))
 
 /-- Elim: every split bounds the extended output,
-`vcnOutputExt A C t ≤ A s + (C t − C s)` for `s ≤ t`. -/
-theorem vcnOutputExt_le_add {A C : ℝ≥0 → ℝ≥0∞} {s t : ℝ≥0} (h : s ≤ t) :
-    vcnOutputExt A C t ≤ A s + (C t - C s) :=
+`variableCapacityOutputExt A C t ≤ A s + (C t − C s)` for `s ≤ t`. -/
+theorem variableCapacityOutputExt_le_add {A C : ℝ≥0 → ℝ≥0∞} {s t : ℝ≥0} (h : s ≤ t) :
+    variableCapacityOutputExt A C t ≤ A s + (C t - C s) :=
   iInf_le _ (⟨s, h⟩ : {s // s ≤ t})
 
-/-- **The `δ₀`-collapse**: `vcnOutputExt (⇑delay0ENN) C t = C t` for any null-at-origin
+/-- Intro: a uniform lower bound over the splits bounds the extended output from below. -/
+theorem le_variableCapacityOutputExt {A C : ℝ≥0 → ℝ≥0∞} {x : ℝ≥0∞} {t : ℝ≥0}
+    (h : ∀ s, s ≤ t → x ≤ A s + (C t - C s)) :
+    x ≤ variableCapacityOutputExt A C t :=
+  le_iInf fun s : {s // s ≤ t} => h s.1 s.2
+
+/-- `variableCapacityOutputExt A C 0 = A 0` (the only split at the origin is `s = 0`). -/
+theorem variableCapacityOutputExt_zero_eq (A C : ℝ≥0 → ℝ≥0∞) :
+    variableCapacityOutputExt A C 0 = A 0 := by
+  refine le_antisymm ?_ (le_variableCapacityOutputExt fun s hs => ?_)
+  · have h := variableCapacityOutputExt_le_add (A := A) (C := C) (le_refl 0)
+    rwa [tsub_self, add_zero] at h
+  · rw [le_antisymm hs zero_le']; exact le_self_add
+
+/-- **The `δ₀`-collapse**: `variableCapacityOutputExt (⇑delay0ENN) C t = C t` for any null-at-origin
 capacity `C`. The origin split gives `C t`; every positive-time split gives `⊤`, so the
 infimum is the capacity itself. -/
-theorem vcnOutputExt_delay0ENN {C : ℝ≥0 → ℝ≥0∞} (h0 : C 0 = 0) (t : ℝ≥0) :
-    vcnOutputExt (⇑delay0ENN) C t = C t := by
+theorem variableCapacityOutputExt_delay0ENN {C : ℝ≥0 → ℝ≥0∞} (h0 : C 0 = 0) (t : ℝ≥0) :
+    variableCapacityOutputExt (⇑delay0ENN) C t = C t := by
   refine le_antisymm ?_ ?_
-  · have h := vcnOutputExt_le_add (A := ⇑delay0ENN) (C := C) (s := 0) (t := t) zero_le'
+  · have h := variableCapacityOutputExt_le_add (A := ⇑delay0ENN) (C := C) (s := 0) (t := t) zero_le'
     rwa [delay0ENN_zero_eq, zero_add, h0, tsub_zero] at h
   · refine le_iInf fun s : {s // s ≤ t} => ?_
     rcases eq_or_ne s.1 0 with hs | hs
@@ -104,17 +118,17 @@ theorem vcnOutputExt_delay0ENN {C : ℝ≥0 → ℝ≥0∞} (h0 : C 0 = 0) (t : 
 
 /-- The extended variable-capacity relation, over `ProcessENN` arrivals/departures: some
 monotone null-at-origin extended capacity `C` with `β`-dominating increments drives the
-output, `D = vcnOutputExt A C`. Mirrors `minimalServiceRelExt`; the capacity is an extended
+output, `D = variableCapacityOutputExt A C`. Mirrors `minimalServiceRelExt`; the capacity is an extended
 cumulative process. -/
 def variableCapacityRelExt (beta : ℝ≥0 → ℝ≥0∞) : ProcessENN → ProcessENN → Prop :=
   fun A D => ∃ C : ℝ≥0 → ℝ≥0∞, Monotone C ∧ C 0 = 0 ∧
-    (∀ t, (D t : ℝ≥0∞) = vcnOutputExt (⇑A) C t) ∧
+    (∀ t, (D t : ℝ≥0∞) = variableCapacityOutputExt (⇑A) C t) ∧
     (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s)
 
 /-- `variableCapacityRelExt beta A D` unfolds to the extended capacity witness. -/
 theorem mem_variableCapacityRelExt_iff {beta : ℝ≥0 → ℝ≥0∞} {A D : ProcessENN} :
     variableCapacityRelExt beta A D ↔ ∃ C : ℝ≥0 → ℝ≥0∞, Monotone C ∧ C 0 = 0 ∧
-      (∀ t, (D t : ℝ≥0∞) = vcnOutputExt (⇑A) C t) ∧
+      (∀ t, (D t : ℝ≥0∞) = variableCapacityOutputExt (⇑A) C t) ∧
       (∀ s t, s ≤ t → beta (t - s) ≤ C t - C s) :=
   Iff.rfl
 
@@ -170,7 +184,7 @@ theorem variableCapacityRelExt_delay0Process_closure {β' : Curve}
   have hsupK : IsSuperadditive K := isSuperadditive_superadditiveClosureMaxNN _
   refine ⟨K, hmonoK, h0K, fun t => ?_, fun s t hst => ?_⟩
   · rw [superadditiveNdClosureProcess_apply, ← hK, delay0Process_coe]
-    exact (vcnOutputExt_delay0ENN h0K t).symm
+    exact (variableCapacityOutputExt_delay0ENN h0K t).symm
   · have hβle : g (t - s) ≤ K (t - s) :=
       le_trans (le_ndClosure_apply g (le_refl (t - s)))
         (le_superadditiveClosureMaxNN (ndClosure g) (t - s))
@@ -256,7 +270,7 @@ theorem superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le
     intro t
     have hd := hDout t
     rw [superadditiveNdClosureProcess_apply] at hd
-    rw [hd, delay0Process_coe, vcnOutputExt_delay0ENN hC0 t]
+    rw [hd, delay0Process_coe, variableCapacityOutputExt_delay0ENN hC0 t]
   intro t
   have hb := superadditiveClosureMaxNN_ndClosure_le_capacityNN hCmono hcap (s := 0) (t := t)
     zero_le'
