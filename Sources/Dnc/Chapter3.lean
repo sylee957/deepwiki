@@ -25,21 +25,117 @@ namespace DeepWiki.Dnc
 open DeepWiki
 open scoped NNReal ENNReal
 
-/-! **Definition 3.1** (§3.1, p.38): Classes of usual functions: pure delay δ_d (0 for t≤d, +∞ after), guaranteed rate λ_R: t↦Rt, rate-latency β_{R,T}: t↦R[t−T]⁺, token-bucket γ_{r,b}: t↦(rt+b)∧δ_0(t), staircase ν_{P,h,J}, and test function 1_{>T}. Library: DeepWiki.delay, DeepWiki.rate, DeepWiki.rateLatency, DeepWiki.tokenBucket, DeepWiki.staircase, DeepWiki.staircaseFun, DeepWiki.unitStep, DeepWiki.window. -/
+/-! ## §3.1 The usual functions, their catalog of operations and deviations -/
 
-/-! **Proposition 3.1** (§3.1, p.39): Sub/super-additivity of the usual functions: δ_d sub-additive, λ_R sub- and super-additive, β_{R,T} super-additive, γ_{r,b} sub-additive, ν_{P,h,J} sub-additive (super-additive for J<−P), each its own sub- /super-additive closure; the test function 1_{>T} is neither. Library: DeepWiki.delayNN_superadditive, DeepWiki.not_isSubadditive_delayNN, DeepWiki.rateNN_subadditive, DeepWiki.rateNN_superadditive, DeepWiki.rateLatencyNN_superadditive, DeepWiki.tokenBucketNN_subadditive, DeepWiki.staircase_subadditive, DeepWiki.staircase_superadditive, DeepWiki.unitStep_zero_subadditive, DeepWiki.tokenBucketNN_closure, DeepWiki.staircase_closure, DeepWiki.delayNN_closure, DeepWiki.rateNN_closure, DeepWiki.rateLatencyNN_closure, DeepWiki.staircase_closure_super. -/
+/-- **Definition 3.1** (§3.1, p.38), pure delay `δ_d`. -/
+noncomputable def def_3_1_delay := @delay
+/-- **Definition 3.1**, guaranteed rate `λ_R`. -/
+noncomputable def def_3_1_rate := @rate
+/-- **Definition 3.1**, rate-latency `β_{R,T}`. -/
+noncomputable def def_3_1_rateLatency := @rateLatency
+/-- **Definition 3.1**, token-bucket `γ_{r,b}`. -/
+noncomputable def def_3_1_tokenBucket := @tokenBucket
+/-- **Definition 3.1**, staircase `ν_{P,h,J}`. -/
+noncomputable def def_3_1_staircase := @staircase
+/-- **Definition 3.1**, cumulative staircase. -/
+noncomputable def def_3_1_staircaseFun := @staircaseFun
+/-- **Definition 3.1**, test function `1_{>T}`. -/
+noncomputable def def_3_1_unitStep := @unitStep
+/-- **Definition 3.1**, window function. -/
+noncomputable def def_3_1_window := @window
 
-/-! **Proposition 3.2** (§3.1, p.40): Convolution and deconvolution by pure delays are time-shifts: f∗δ_d = t↦f([t−d]⁺) and f⊘δ_d = t↦f(t+d) for non-decreasing f. Library: DeepWiki.conv_delayNN, DeepWiki.minDeconv_delayNN. -/
+/-- **Proposition 3.1** (§3.1, p.39), `δ_d` super-additive. -/
+alias prop_3_1_delay_super := delayNN_superadditive
+/-- **Proposition 3.1**, `δ_d` not sub-additive (faithful min-plus reading). -/
+alias prop_3_1_delay_not_sub := not_isSubadditive_delayNN
+/-- **Proposition 3.1**, `λ_R` sub-additive. -/
+alias prop_3_1_rate_sub := rateNN_subadditive
+/-- **Proposition 3.1**, `λ_R` super-additive. -/
+alias prop_3_1_rate_super := rateNN_superadditive
+/-- **Proposition 3.1**, `β_{R,T}` super-additive. -/
+alias prop_3_1_rateLatency_super := rateLatencyNN_superadditive
+/-- **Proposition 3.1**, `γ_{r,b}` sub-additive. -/
+alias prop_3_1_tokenBucket_sub := tokenBucketNN_subadditive
+/-- **Proposition 3.1**, `ν_{P,h,J}` sub-additive. -/
+alias prop_3_1_staircase_sub := staircase_subadditive
+/-- **Proposition 3.1**, `ν_{P,h,J}` super-additive (for `J < −P`). -/
+alias prop_3_1_staircase_super := staircase_superadditive
+/-- **Proposition 3.1**, the test function is sub-additive at the origin. -/
+alias prop_3_1_unitStep_sub := unitStep_zero_subadditive
+/-- **Proposition 3.1**, `γ_{r,b}` is its own sub-additive closure. -/
+alias prop_3_1_tokenBucket_closure := tokenBucketNN_closure
+/-- **Proposition 3.1**, `ν_{P,h,J}` is its own sub-additive closure. -/
+alias prop_3_1_staircase_closure := staircase_closure
+/-- **Proposition 3.1**, `δ_d` is its own sub-additive closure. -/
+alias prop_3_1_delay_closure := delayNN_closure
+/-- **Proposition 3.1**, `λ_R` is its own sub-additive closure. -/
+alias prop_3_1_rate_closure := rateNN_closure
+/-- **Proposition 3.1**, `β_{R,T}` is its own sub-additive closure. -/
+alias prop_3_1_rateLatency_closure := rateLatencyNN_closure
+/-- **Proposition 3.1**, `ν_{P,h,J}` super-additive closure. -/
+alias prop_3_1_staircase_closure_super := staircase_closure_super
 
-/-! **Proposition 3.3** (§3.1, p.40): For sub-additive f, (f⊘δ_d)* = δ_0∗(f⊘δ_d). Library: DeepWiki.minDeconv_delayNN_closure, DeepWiki.subadditiveClosureENN_eq_inf_delay0. -/
+/-- **Proposition 3.2** (§3.1, p.40), convolution by a pure delay is a
+right time-shift `f ∗ δ_d = t ↦ f([t−d]⁺)`. -/
+alias prop_3_2_conv := conv_delayNN
+/-- **Proposition 3.2**, deconvolution by a pure delay is a left time-shift
+`f ⊘ δ_d = t ↦ f(t+d)`. -/
+alias prop_3_2_deconv := minDeconv_delayNN
 
-/-! **Proposition 3.4** (§3.1.1, p.41): Catalog of convolutions: δ_d∗δ_{d'}=δ_{d+d'}; β_{R,T}=δ_T∗λ_R; λ_R∗λ_{R'}=λ_{R∧R'}; β_{R,T}∗β_{R',T'}=β_{(R∧R'),(T+T')}; γ_{r,b}∗γ_{r',b'}=γ_{r,b}∧γ_{r',b'}. Library: DeepWiki.conv_delayNN_delayNN, DeepWiki.rateLatencyNN_eq_conv, DeepWiki.conv_rateNN_rateNN, DeepWiki.conv_rateLatencyNN_rateLatencyNN, DeepWiki.conv_tokenBucketNN_tokenBucketNN. -/
+/-- **Proposition 3.3** (§3.1, p.40), `(f ⊘ δ_d)* = δ_0 ∗ (f ⊘ δ_d)` for
+sub-additive `f`. -/
+alias prop_3_3_closure := minDeconv_delayNN_closure
+/-- **Proposition 3.3**, the sub-additive closure of a sub-additive curve is
+`δ_0 ⊓ ·`. -/
+alias prop_3_3_inf_delay0 := subadditiveClosureENN_eq_inf_delay0
 
-/-! **Proposition 3.5** (§3.1.1, p.41): Catalog of deconvolutions: δ_d⊘δ_{d'}=δ_{d−d'} (d≥d'); λ_R⊘δ_d=γ̂_{R,Rd}; γ_{r,b}⊘δ_d=γ̂_{r,b+rd}; λ_R⊘λ_{R'}=λ_R (R≤R') else ∞; γ_{r,b}⊘λ_R=γ̂_{r,b} (R≥r) else ∞; γ_{r,b}⊘β_{R,T}=γ̂_{r,b+rT} (R≥r) else ∞. Library: DeepWiki.minDeconv_delayNN_delayNN, DeepWiki.minDeconv_rateNN_delayNN, DeepWiki.minDeconv_tokenBucketNN_delay, DeepWiki.minDeconv_rateNN_rateNN, DeepWiki.minDeconv_rateNN_rateNN_top, DeepWiki.minDeconv_tokenBucketNN_rateNN, DeepWiki.minDeconv_tokenBucketNN_rateNN_inf, DeepWiki.minDeconv_tokenBucketNN_rateLatencyNN, DeepWiki.minDeconv_tokenBucketNN_rateLatencyNN_inf. -/
+/-- **Proposition 3.4** (§3.1.1, p.41), `δ_d ∗ δ_{d'} = δ_{d+d'}`. -/
+alias prop_3_4_delay_delay := conv_delayNN_delayNN
+/-- **Proposition 3.4**, `β_{R,T} = δ_T ∗ λ_R`. -/
+alias prop_3_4_rateLatency := rateLatencyNN_eq_conv
+/-- **Proposition 3.4**, `λ_R ∗ λ_{R'} = λ_{R∧R'}`. -/
+alias prop_3_4_rate_rate := conv_rateNN_rateNN
+/-- **Proposition 3.4**, `β_{R,T} ∗ β_{R',T'} = β_{R∧R',T+T'}`. -/
+alias prop_3_4_rateLatency_rateLatency := conv_rateLatencyNN_rateLatencyNN
+/-- **Proposition 3.4**, `γ_{r,b} ∗ γ_{r',b'} = γ ⊓ γ'`. -/
+alias prop_3_4_tokenBucket := conv_tokenBucketNN_tokenBucketNN
 
-/-! **Proposition 3.6** (§3.1.2, p.42): Horizontal deviation and pure delay: hDev(f,δ_d) ≤ d, with equality hDev(f,δ_d)=d when f(0⁺)>0. Library: DeepWiki.hDevENN_delay_le, DeepWiki.hDevENN_delay_eq_of_rightLimit_pos. -/
+/-- **Proposition 3.5** (§3.1.1, p.41), `δ_d ⊘ δ_{d'} = δ_{d−d'}`. -/
+alias prop_3_5_delay_delay := minDeconv_delayNN_delayNN
+/-- **Proposition 3.5**, `λ_R ⊘ δ_d` is an affine curve. -/
+alias prop_3_5_rate_delay := minDeconv_rateNN_delayNN
+/-- **Proposition 3.5**, `γ_{r,b} ⊘ δ_d` is an affine curve. -/
+alias prop_3_5_tokenBucket_delay := minDeconv_tokenBucketNN_delay
+/-- **Proposition 3.5**, `λ_R ⊘ λ_{R'} = λ_R` for `R ≤ R'`. -/
+alias prop_3_5_rate_rate := minDeconv_rateNN_rateNN
+/-- **Proposition 3.5**, `λ_R ⊘ λ_{R'} = ∞` for `R > R'`. -/
+alias prop_3_5_rate_rate_top := minDeconv_rateNN_rateNN_top
+/-- **Proposition 3.5**, `γ_{r,b} ⊘ λ_R` is affine for `R ≥ r`. -/
+alias prop_3_5_tokenBucket_rate := minDeconv_tokenBucketNN_rateNN
+/-- **Proposition 3.5**, `γ_{r,b} ⊘ λ_R = ∞` for `R < r`. -/
+alias prop_3_5_tokenBucket_rate_inf := minDeconv_tokenBucketNN_rateNN_inf
+/-- **Proposition 3.5**, `γ_{r,b} ⊘ β_{R,T}` is affine for `R ≥ r`. -/
+alias prop_3_5_tokenBucket_rateLatency := minDeconv_tokenBucketNN_rateLatencyNN
+/-- **Proposition 3.5**, `γ_{r,b} ⊘ β_{R,T} = ∞` for `R < r`. -/
+alias prop_3_5_tokenBucket_rateLatency_inf := minDeconv_tokenBucketNN_rateLatencyNN_inf
 
-/-! **Proposition 3.7** (§3.1.2, p.43): Catalog of deviations: hDev(γ_{r,b},δ_d)=d; hDev(γ_{r,b},β_{R,T})=T+b/R (r≤R) else ∞; vDev(γ_{r,b},δ_d)=rd+b; vDev(γ_{r,b},β_{R,T})=rT+b (r≤R) else ∞. Library: DeepWiki.hDevENN_tokenBucketNN_delay, DeepWiki.hDevENN_tokenBucketNN_rateLatencyNN, DeepWiki.hDevENN_tokenBucketNN_rateLatencyNN_top, DeepWiki.vDev_tokenBucketNN_delay, DeepWiki.vDev_tokenBucketNN_rateLatencyNN, DeepWiki.vDev_tokenBucketNN_rateLatencyNN_top. -/
+/-- **Proposition 3.6** (§3.1.2, p.42), `hDev(f, δ_d) ≤ d`. -/
+alias prop_3_6_le := hDevENN_delay_le
+/-- **Proposition 3.6**, `hDev(f, δ_d) = d` when `f(0⁺) > 0`. -/
+alias prop_3_6_eq := hDevENN_delay_eq_of_rightLimit_pos
+
+/-- **Proposition 3.7** (§3.1.2, p.43), `hDev(γ_{r,b}, δ_d) = d`. -/
+alias prop_3_7_hDev_delay := hDevENN_tokenBucketNN_delay
+/-- **Proposition 3.7**, `hDev(γ_{r,b}, β_{R,T}) = T + b/R` for `r ≤ R`. -/
+alias prop_3_7_hDev_rateLatency := hDevENN_tokenBucketNN_rateLatencyNN
+/-- **Proposition 3.7**, `hDev(γ_{r,b}, β_{R,T}) = ∞` for `r > R`. -/
+alias prop_3_7_hDev_rateLatency_top := hDevENN_tokenBucketNN_rateLatencyNN_top
+/-- **Proposition 3.7**, `vDev(γ_{r,b}, δ_d) = rd + b`. -/
+alias prop_3_7_vDev_delay := vDev_tokenBucketNN_delay
+/-- **Proposition 3.7**, `vDev(γ_{r,b}, β_{R,T}) = rT + b` for `r ≤ R`. -/
+alias prop_3_7_vDev_rateLatency := vDev_tokenBucketNN_rateLatencyNN
+/-- **Proposition 3.7**, `vDev(γ_{r,b}, β_{R,T}) = ∞` for `r > R`. -/
+alias prop_3_7_vDev_rateLatency_top := vDev_tokenBucketNN_rateLatencyNN_top
 
 /-- **Definition 3.2** (§3.2, p.45): Non-negative closure [f]⁺(t)=f(t)∨0 and non-decreasing closure f↑(t)=⨆_{s≤t}f(s) (and their composite [f]⁺↑), the closure operators keeping curves in ℱ↑. -/
 noncomputable def def_3_2 := @ndClosure
