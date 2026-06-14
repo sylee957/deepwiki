@@ -29,6 +29,12 @@ theorem monotone_liftEReal {f : ℝ≥0 → ℝ≥0} (hmono : Monotone f) :
     Monotone (liftEReal f) :=
   fun _ _ hab => by exact_mod_cast hmono hab
 
+/-- `liftEReal` is monotone in its argument: a pointwise `≤` between
+`ℝ≥0`-curves lifts to a pointwise `≤` between their `EReal` lifts. -/
+theorem liftEReal_le_liftEReal {f g : ℝ≥0 → ℝ≥0} (h : ∀ t, f t ≤ g t)
+    (t : ℝ≥0) : liftEReal f t ≤ liftEReal g t := by
+  exact_mod_cast h t
+
 /-- `liftEReal` transports left-continuity: `liftEReal f` is left-continuous
 when `f` is. -/
 theorem isLeftContinuous_liftEReal {f : ℝ≥0 → ℝ≥0}

@@ -71,6 +71,15 @@ theorem isNonneg_concatConv {ι : Type*} {β : ι → ℝ≥0 → EReal}
   | nil => exact isNonneg_convUnitEReal
   | cons h hs ih => exact (hnn h).conv ih
 
+/-- The convolution fold is monotone in the per-server curves: pointwise
+larger service curves give a pointwise larger end-to-end convolution. -/
+theorem concatConv_mono {ι : Type*} {β₁ β₂ : ι → ℝ≥0 → EReal}
+    (h : ∀ k t, β₁ k t ≤ β₂ k t) (hs : List ι) :
+    ∀ t, concatConv β₁ hs t ≤ concatConv β₂ hs t := by
+  induction hs with
+  | nil => intro t; exact le_refl _
+  | cons k hs ih => intro t; exact minConv_le_minConv (h k) ih t
+
 /-- The identity relation offers the convolution unit `δ₀` as its
 min-plus service curve. -/
 theorem isMinimalServiceCurve_eq_convUnitEReal :

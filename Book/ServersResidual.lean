@@ -68,6 +68,20 @@ theorem residualCurve_mono_of_monotone {β α : ℝ≥0 → ℝ≥0}
     (hβ : Monotone β) : Monotone (residualCurve β α) :=
   residualCurve_mono (closureBddAbove_tsub_of_monotone hβ)
 
+/-- `residualCurve β ·` is antitone in the subtracted aggregate (for
+non-decreasing `β`): a smaller cross-traffic bound leaves a larger
+residual. This is what makes a tighter aggregate yield a better service
+guarantee. -/
+theorem residualCurve_le_residualCurve_of_le {β α₁ α₂ : ℝ≥0 → ℝ≥0}
+    (hβ : Monotone β) (hα : ∀ v, α₂ v ≤ α₁ v) (t : ℝ≥0) :
+    residualCurve β α₁ t ≤ residualCurve β α₂ t := by
+  apply residualCurve_le
+  intro v hvt
+  calc β v - α₁ v ≤ β v - α₂ v := tsub_le_tsub_left (hα v) _
+    _ ≤ residualCurve β α₂ v :=
+        le_ndClosure _ (closureBddAbove_tsub_of_monotone hβ) v
+    _ ≤ residualCurve β α₂ t := residualCurve_mono_of_monotone hβ hvt
+
 /-- The `ℝ≥0` cancellation core of the residual-service proofs: an
 aggregate step of at least `b` minus a cross-traffic consumption of at
 most `c` leaves the clamped difference to the tagged flow. -/
