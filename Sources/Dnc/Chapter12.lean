@@ -164,14 +164,17 @@ rate bounded, in turn, by the cross-flows' source rates via causal-output
 conservation). -/
 alias prop_12_residualLocalStable := isLocallyStableServer_residualCurve_of_rate_lt
 
-/-- **Long-term rate of the rate curve** (§12.1.1 worked rate): `λ_R = R·t` has
-both long-term arrival and service rate `R` — after dividing by `t` it is the
-constant `R`. The library's `longTermServiceRate_rate` / `longTermArrivalRate_rate`.
-(The rate-latency and token-bucket rates `R(β_{R,T}) = R`, `r(γ_{r,b}) = r` need
-the `T/t → 0` / burst-washout limits and are not yet formalized.) -/
-theorem prop_12_rateCurveRate (R : ℝ≥0) :
-    longTermServiceRate (rate R) = (R : ℝ≥0∞) ∧ longTermArrivalRate (rate R) = (R : ℝ≥0∞) :=
-  ⟨longTermServiceRate_rate R, longTermArrivalRate_rate R⟩
+/-- **Long-term rates of the canonical curves** (§12.1.1 worked rates): the rate
+curve `λ_R = R·t` has both arrival and service rate `R`; the rate-latency
+service curve `β_{R,T} = R·(t − T)` has service rate `R` (latency washes out);
+the affine token-bucket arrival curve `γ_{r,b} = r·t + b` has arrival rate `r`
+(burst washes out). The library's `longTermServiceRate_rate`,
+`longTermServiceRate_rateLatency`, `longTermArrivalRate_affine`. -/
+theorem prop_12_canonicalRates (R T r b : ℝ≥0) :
+    longTermServiceRate (rate R) = (R : ℝ≥0∞)
+      ∧ longTermServiceRate (rateLatency R T) = (R : ℝ≥0∞)
+      ∧ longTermArrivalRate (fun t => r * t + b) = (r : ℝ≥0∞) :=
+  ⟨longTermServiceRate_rate R, longTermServiceRate_rateLatency R T, longTermArrivalRate_affine r b⟩
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
