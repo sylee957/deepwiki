@@ -251,6 +251,26 @@ theorem thm_12_5_gpsPath {ι : Type*} [Fintype ι] {n : ℕ}
     ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
   isGloballyStable_gpsPath hcaus hβf hgps proc αs hchain harr0 hprop hstab
 
+/-- **Theorem 12.5**, critical-flow path stability in the book setting (§12.3.3,
+p.279): a token-bucket flow `γ_{r,b}` crossing a path of GPS servers with
+rate-latency aggregate service `β_{Rₖ,Tₖ}` (shared weights `φ`) is globally stable
+at *every* server on its path, from local stability alone (`r < (φᵢ/∑ⱼφⱼ)·Rₖ`). The
+per-hop propagation is closed-form (burst `+r·∑Tⱼ`), so no extra hypotheses beyond
+local stability. The library's `isGloballyStable_gpsPath_tokenBucket` — the
+substantive per-flow content of Theorem 12.5 (the cyclic peeling assembly over the
+whole network is the remaining unformalized piece). -/
+theorem thm_12_5_gpsPath_tokenBucket {ι : Type*} [Fintype ι] {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
+    {R T : ℕ → ℝ≥0} (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k)) (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (Sf k) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ (φ i / ∑ j, φ j) * R k)
+    (hstab : ∀ k, k < n → r < (φ i / ∑ j, φ j) * R k) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
+  isGloballyStable_gpsPath_tokenBucket hcaus hβf hgps proc hchain harr0 hr hstab
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,

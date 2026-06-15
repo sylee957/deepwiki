@@ -6,6 +6,8 @@ import Mathlib.Data.Real.Basic
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
+import DeepWiki.NetworkCalculus.RealCurvesDeconv
+import DeepWiki.NetworkCalculus.RealCurvesRates
 
 /-! # GPS networks with constant rates: the peelable critical flow (Lemma 12.5)
 In a network of GPS servers where each flow `j` keeps one weight `φⱼ > 0` along its
@@ -116,5 +118,49 @@ theorem isGloballyStable_gpsPath {ι : Type*} [Fintype ι] {n : ℕ}
     (fun k => isCausal_residualServer (hcaus k) i)
     (fun k => isStrictMinimalServiceCurve_residualServer_of_isGps (hcaus k) (hβf k) (hgps k))
     id proc αs hchain harr0 hprop hstab
+
+/-- **Critical-flow path stability, book setting** (Theorem 12.5, step B made
+unconditional): a token-bucket flow `γ_{r,b}` crossing a path of GPS servers whose
+aggregate offers the rate-latency service `β_{Rₖ,Tₖ}` (shared weights `φ`) is
+globally stable at *every* server on its path, provided only its rate stays below
+its GPS share, `r < (φᵢ/∑ⱼφⱼ)·Rₖ`. The per-hop propagation is closed-form (the
+ingress affine bound `r·t + b` deconvolves to `r·t + (b + r·∑Tⱼ)` at hop `k`,
+`minDeconv_affine_rateLatencyNN`), so the `αs`/`hprop`/`hstab` of `isGloballyStable_gpsPath`
+are discharged from local stability alone. -/
+theorem isGloballyStable_gpsPath_tokenBucket {ι : Type*} [Fintype ι] {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
+    {R T : ℕ → ℝ≥0} (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k)) (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (Sf k) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ (φ i / ∑ j, φ j) * R k)
+    (hstab : ∀ k, k < n → r < (φ i / ∑ j, φ j) * R k) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) := by
+  set sh : ℝ≥0 := φ i / ∑ j, φ j with hsh
+  refine isGloballyStable_gpsPath hcaus hβf hgps proc
+    (fun k t => r * t + (b + r * ∑ j ∈ Finset.range k, T j)) hchain ?_ ?_ ?_
+  · simpa using harr0
+  · intro k hk
+    have hres : Deviation.liftENN (fun v => sh * rateLatency (R k) (T k) v)
+        = rateLatencyNN (sh * R k) (T k) := by
+      funext v
+      rw [rateLatencyNN_coe]
+      show ((sh * (R k * (v - T k)) : ℝ≥0) : ℝ≥0∞) = (((sh * R k) * (v - T k) : ℝ≥0) : ℝ≥0∞)
+      rw [mul_assoc]
+    have hαk : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, T j))
+        = affine r (b + r * ∑ j ∈ Finset.range k, T j) := by
+      funext t; rw [affine_coe]
+    rw [hres, hαk, minDeconv_affine_rateLatencyNN r _ (sh * R k) (T k) (hr k hk)]
+    have hαk1 : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range (k + 1), T j))
+        = affine r (b + r * ∑ j ∈ Finset.range k, T j + r * T k) := by
+      funext t; rw [affine_coe, Finset.sum_range_succ]; push_cast; ring_nf
+    rw [hαk1]
+  · intro k hk
+    show longTermArrivalRate (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, T j))
+        < longTermServiceRate (fun v => sh * rateLatency (R k) (T k) v)
+    rw [longTermArrivalRate_affine, longTermServiceRate_const_mul, longTermServiceRate_rateLatency,
+      ← ENNReal.coe_mul]
+    exact_mod_cast hstab k hk
 
 end DeepWiki
