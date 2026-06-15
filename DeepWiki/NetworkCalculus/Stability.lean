@@ -211,4 +211,24 @@ theorem exists_linearFixpoint_iff {c d : ℝ≥0} (hd : 0 < d) :
       _ = c * (d / (1 - c)) + (d / (1 - c) - c * (d / (1 - c))) := by rw [mul_comm (d / (1 - c)) c]
       _ = d / (1 - c) := add_tsub_cancel_of_le hcle
 
+/-- **The §12.4.2 scaling-instability boundary**: the cyclic two-server scaling network's per-flow
+burst gain `m₂m₄/((1−m₂)(1−m₄))` is below `1` iff `m₂ + m₄ < 1` (`m₂, m₄ < 1`). -/
+theorem scaling_gain_lt_one_iff {m2 m4 : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) :
+    m2 * m4 / ((1 - m2) * (1 - m4)) < 1 ↔ m2 + m4 < 1 := by
+  have hden : (0 : ℝ≥0) < (1 - m2) * (1 - m4) := mul_pos (tsub_pos_of_lt h2) (tsub_pos_of_lt h4)
+  rw [div_lt_one hden, ← NNReal.coe_lt_coe, ← NNReal.coe_lt_coe]
+  push_cast [NNReal.coe_sub h2.le, NNReal.coe_sub h4.le]
+  constructor
+  · intro h; nlinarith [h]
+  · intro h; nlinarith [h]
+
+/-- **The §12.4.2 cyclic scaling network's fix-point converges iff `m₂ + m₄ < 1`**: combining the
+linear fix-point criterion with the scaling-gain boundary. The book's point: this is *strictly
+stronger* than the local stability `m₁ + m₄ < 1 ∧ m₂ + m₃ < 1`, so a locally stable scaling network
+can have a diverging fix-point (no finite network-calculus bound) — local stability is not sufficient
+for the cyclic network's stability. -/
+theorem exists_scalingFixpoint_iff {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) (hd : 0 < d) :
+    (∃ σ : ℝ≥0, σ = m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d) ↔ m2 + m4 < 1 := by
+  rw [exists_linearFixpoint_iff hd, scaling_gain_lt_one_iff h2 h4]
+
 end DeepWiki
