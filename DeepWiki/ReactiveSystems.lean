@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.Traces
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.HmlRecursion
 
 /-! # Reactive Systems
 Autoformalization of the classic theory of reactive systems (concurrency
