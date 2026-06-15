@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualSfa
 import DeepWiki.NetworkCalculus.ServersResidualSfaDelay
+import DeepWiki.NetworkCalculus.ServersResidualGfaDelay
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
@@ -114,6 +115,16 @@ alias sfa_end_to_end_backlog := backlog_le_sfa_rateLatency
 
 /-- **Theorem 7** (§10.4.3, p.250): Algorithm 7 (Generic Group Flow Analysis, GFA): subtract a grouped cross-traffic aggregate η⁽ʰ⁾ (arc-wise flow partition, shaper-capped output arrival (η⊘β)∧σ) rather than the flat ∑_{j≠i}αⱼ; end-to-end β̃ᵢ = ∗_{h∈pᵢ}[β⁽ʰ⁾ − η⁽ʰ⁾]⁺. -/
 alias alg_7_gfa := isMinimalServiceCurve_concatConv_groupResidual
+
+/-- **GFA end-to-end delay/backlog** (performance consequence of Algorithm 7, §10.4.3): rate-latency
+servers with grouped affine cross-traffic η⁽ʰ⁾ = ρ h·v+bc h ⟹ end-to-end folds to β_{⨅(R h−ρ h),∑T'_h},
+so a token-bucket flow has delay ≤ ∑T'_h + b/⨅(R h−ρ h) and backlog ≤ r·∑T'_h+b over arbitrary `List`
+routing (smaller than SFA when the grouped η is tighter). The library's `delay_le_gfa_rateLatency` /
+`backlog_le_gfa_rateLatency`. -/
+alias gfa_end_to_end_delay := delay_le_gfa_rateLatency
+
+@[inherit_doc gfa_end_to_end_delay]
+alias gfa_end_to_end_backlog := backlog_le_gfa_rateLatency
 
 /-- **Theorem 7** (§10.4.3, p.250): GFA refines SFA: when the grouped aggregate η⁽ʰ⁾ ≤ ∑_{j≠i}αⱼ⁽ʰ⁾ at every server, the GFA end-to-end service curve dominates the SFA one (residual antitone in subtracted aggregate, path convolution monotone). -/
 alias alg_7_gfa_dominates_sfa := concatConv_residualCurve_sfa_le_gfa
