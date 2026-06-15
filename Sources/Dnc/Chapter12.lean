@@ -367,6 +367,16 @@ lighter flows already bounded), against which it is locally stable. The library'
 `GpsNetwork.Traj.isFlowGloballyStable` — the GPS analogue of `thm_12_3_perFlow`. -/
 alias thm_12_5_perFlow := GpsNetwork.Traj.isFlowGloballyStable
 
+/-- **Per-flow delay bounds** (library, quantitative companions of the per-flow stability theorems):
+in a locally stable network each flow's virtual delay at a crossed server is finite, bounded by
+`T' + B'/R'` of its residual rate-latency service (`flowResidualBound` + the server delay bound
+`delay_le_of_strictRateLatency_affine`). The library's `SpNetwork.Traj.isFlowDelayBounded` (static
+priority) and `GpsNetwork.Traj.isFlowDelayBounded` (GPS). -/
+alias thm_12_3_perFlowDelay := SpNetwork.Traj.isFlowDelayBounded
+
+@[inherit_doc thm_12_3_perFlowDelay]
+alias thm_12_5_perFlowDelay := GpsNetwork.Traj.isFlowDelayBounded
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,

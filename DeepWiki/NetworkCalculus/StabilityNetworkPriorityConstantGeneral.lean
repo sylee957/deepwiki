@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.RealCurvesRates
+import DeepWiki.NetworkCalculus.DeviationsBoundsServerRateLatency
 
 /-! # Theorem 12.3 (static priority / FDF), general network
 The fully general static-priority network stability theorem — arbitrary per-flow routing
@@ -300,14 +301,16 @@ theorem isGloballyStable (t : Traj κ ι) :
   exact t.net.isGloballyStable_of_perFlow_bounds t.S t.Ain t.Dout σ
     t.hcaus (fun h => by rw [t.hservice h]; exact t.hβ h) t.hp hbound hagg
 
-/-- **Per-flow global stability**: in a locally stable static-priority network, *each individual
-flow* `i` has a bounded backlogged period at every server `h` it crosses (the per-flow form of
-global stability, stronger than the per-server aggregate `isGloballyStable`). Flow `i` sees the SP
-residual `β_{R^(h) − ∑_{j<i, j∈Fl h} rⱼ, ·}` (the higher-priority crossing flows bounded by
-`allBound`), against which its own token-bucket arrival is locally stable since
-`∑_{j≤i, j∈Fl h} rⱼ ≤ ∑_{Fl h} rⱼ < R^(h)`. -/
-theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
-    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+/-- **Per-flow SP residual**: at a crossed server `h`, flow `i` is served by a strict rate-latency
+residual `β_{R',T'}` with reduced rate `R' = R^(h) − ∑_{j<i, j∈Fl h} rⱼ`, its input is token-bucket
+`(rᵢ·s + B')`-bounded, and `rᵢ < R'`. The shared core of the per-flow stability and delay bounds:
+the strictly-higher-priority crossing flows (bounded by `allBound`) feed the SP peel step, and
+`∑_{j≤i, j∈Fl h} rⱼ ≤ ∑_{Fl h} rⱼ < R^(h)` keeps `rᵢ` below the residual rate. -/
+theorem flowResidualBound (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    ∃ (R' T' B' : ℝ≥0) (Si : Curve → Curve → Prop),
+      IsCausal Si ∧ IsStrictMinimalServiceCurve (rateLatency R' T') Si ∧
+        Si (t.Ain h i) (t.Dout h i) ∧
+        IsMaximalArrivalBound (⇑(t.Ain h i)) (fun s => t.r i * s + B') ∧ t.r i < R' := by
   classical
   obtain ⟨Bi, hBin, _⟩ := t.allBound i
   have hch : ∀ j : ι, ∃ Bj : ℝ≥0, j < i → j ∈ t.net.flowsThrough h →
@@ -343,24 +346,38 @@ theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.ne
     · simp only [if_neg hjc]
       rw [show t.Ain h j = 0 from t.hoff h j hjc, isMaximalArrivalBound_iff_increment]
       intro s d; simp only [Curve.zero_apply, zero_add]; positivity
-  have hstab' : IsLocallyStableServer (fun s => t.r i * s + Bi h)
-      (rateLatency (t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j)
-        ((t.R h * t.T h + ∑ j ∈ Finset.univ.filter (fun j => j < i), b' j)
-          / (t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j))) := by
-    show longTermArrivalRate (fun s => t.r i * s + Bi h) < longTermServiceRate _
-    rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
-    have hlt : t.r i < t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j := by
-      rw [hsum, lt_tsub_iff_right]
-      calc t.r i + ∑ j ∈ Finset.univ.filter (fun j => j < i ∧ j ∈ t.net.flowsThrough h), t.r j
-          = ∑ j ∈ insert i (Finset.univ.filter
-              (fun j => j < i ∧ j ∈ t.net.flowsThrough h)), t.r j := by
-            rw [Finset.sum_insert (by simp)]
-        _ ≤ ∑ j ∈ t.net.flowsThrough h, t.r j :=
-            Finset.sum_le_sum_of_subset (Finset.insert_subset hh hsubF)
-        _ < t.R h := t.hstab h
-    exact_mod_cast hlt
-  exact isGloballyStableServer_of_isLocallyStableServer
-    (isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i) hβ hpair (hBin h hh) hstab'
+  have hlt : t.r i < t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j := by
+    rw [hsum, lt_tsub_iff_right]
+    calc t.r i + ∑ j ∈ Finset.univ.filter (fun j => j < i ∧ j ∈ t.net.flowsThrough h), t.r j
+        = ∑ j ∈ insert i (Finset.univ.filter
+            (fun j => j < i ∧ j ∈ t.net.flowsThrough h)), t.r j := by
+          rw [Finset.sum_insert (by simp)]
+      _ ≤ ∑ j ∈ t.net.flowsThrough h, t.r j :=
+          Finset.sum_le_sum_of_subset (Finset.insert_subset hh hsubF)
+      _ < t.R h := t.hstab h
+  exact ⟨_, _, Bi h, _,
+    isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i, hβ, hpair, hBin h hh, hlt⟩
+
+/-- **Per-flow global stability**: in a locally stable static-priority network, *each individual
+flow* `i` has a bounded backlogged period at every server `h` it crosses (the per-flow form of
+global stability, stronger than the per-server aggregate `isGloballyStable`); flow `i` is locally
+stable against its SP residual (`flowResidualBound`). -/
+theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+  obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
+  refine isGloballyStableServer_of_isLocallyStableServer hc hβ hp harr ?_
+  show longTermArrivalRate (fun s => t.r i * s + B') < longTermServiceRate (rateLatency R' T')
+  rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
+  exact_mod_cast hlt
+
+/-- **Per-flow delay bound**: flow `i`'s virtual delay at a crossed server `h` is finite — bounded
+by `T' + B'/R'` of its SP residual (`flowResidualBound`). The quantitative companion of
+`isFlowGloballyStable`. -/
+theorem isFlowDelayBounded (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    ∃ d : ℝ≥0, Deviation.delay (⇑(t.Ain h i)) (⇑(t.Dout h i)) ≤ (d : ℝ≥0∞) := by
+  obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
+  exact ⟨T' + B' / R', delay_le_of_strictRateLatency_affine hc hβ hp harr
+    (lt_of_le_of_lt (zero_le' (a := t.r i)) hlt) (le_of_lt hlt)⟩
 
 end Traj
 

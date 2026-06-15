@@ -1,6 +1,7 @@
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.StabilityNetwork
+import DeepWiki.NetworkCalculus.DeviationsBoundsServerRateLatency
 
 /-! # Theorem 12.5 (GPS constant rates: local ⟹ global stability), general network
 The fully general cyclic-peeling assembly: an arbitrary GPS-constant network with per-flow
@@ -536,16 +537,19 @@ theorem isGloballyStable (t : Traj κ ι) :
     (fun h => by rw [t.hservice h]; exact t.hβ h)
     t.hp hbound hagg
 
-/-- **Per-flow global stability (GPS)**: in a locally stable GPS-constant network *each individual
-flow* `i` has a bounded backlogged period at every server `h` it crosses (stronger than the
-per-server aggregate `isGloballyStable`). Flow `i` is `r/φ`-minimal in the active set
-`J = {j : rᵢφⱼ ≤ rⱼφᵢ}` (i and the heavier-per-weight flows), so the GPS peel step leaves it the
-residual `β_{(φᵢ/∑_{Fl h∩J}φ)(R^(h) − ∑_{Fl h\J}r), ·}` (the lighter flows `Fl h\J` already bounded
-by `allBound`, aggregated by `peeledAggregate`), and `gps_share_lt_of_cross` places its token-bucket
-rate below the residual rate. Unlike the static-priority `SpNetwork.Traj.isFlowGloballyStable`, the
-active set is selected per flow by the `r/φ` order rather than a fixed priority. -/
-theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
-    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+/-- **Per-flow GPS residual**: at a crossed server `h`, flow `i` is served by a strict rate-latency
+residual `β_{R',T'}` with share rate `R' = (φᵢ/∑_{Fl h∩J}φ)(R^(h) − ∑_{Fl h\J}r)`, its input is
+token-bucket `(rᵢ·s + B')`-bounded, and `rᵢ < R'`. Flow `i` is `r/φ`-minimal in the active set
+`J = {j : rᵢφⱼ ≤ rⱼφᵢ}` (i and the heavier-per-weight flows), so the GPS peel step leaves it that
+share (the lighter flows `Fl h\J` already bounded by `allBound`, aggregated by `peeledAggregate`),
+and `gps_share_lt_of_cross` places its rate below it. The shared core of the per-flow stability and
+delay bounds; unlike the static-priority `SpNetwork.Traj.flowResidualBound`, the active set is
+selected per flow by the `r/φ` order rather than a fixed priority. -/
+theorem flowResidualBound (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    ∃ (R' T' B' : ℝ≥0) (Si : Curve → Curve → Prop),
+      IsCausal Si ∧ IsStrictMinimalServiceCurve (rateLatency R' T') Si ∧
+        Si (t.Ain h i) (t.Dout h i) ∧
+        IsMaximalArrivalBound (⇑(t.Ain h i)) (fun s => t.r i * s + B') ∧ t.r i < R' := by
   classical
   -- the active set: i and the flows at least as heavy per weight (`rᵢφⱼ ≤ rⱼφᵢ`)
   set J : Finset ι := Finset.univ.filter (fun j => t.r i * t.φ j ≤ t.r j * t.φ i) with hJ
@@ -605,14 +609,30 @@ theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.ne
       NNReal.coe_sub (le_of_lt hρR), NNReal.coe_sum, div_mul_eq_mul_div]
     exact gps_share_lt_of_cross (fun j => (t.r j : ℝ)) (fun j => (t.φ j : ℝ))
       (fun j => by exact_mod_cast t.hφ j) hiJh hcross hstabℝ
-  have hstab' : IsLocallyStableServer (fun s => t.r i * s + Bi h)
-      (rateLatency ((t.φ i / ∑ j ∈ t.net.flowsThrough h ∩ J, t.φ j) * (t.R h - ρ))
-        ((t.R h * t.T h + bb) / (t.R h - ρ))) := by
-    show longTermArrivalRate (fun s => t.r i * s + Bi h) < longTermServiceRate _
-    rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
-    exact_mod_cast hshare
-  exact isGloballyStableServer_of_isLocallyStableServer
-    (isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i) hβ hpair (hBin h hh) hstab'
+  exact ⟨_, _, Bi h, _,
+    isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i, hβ, hpair, hBin h hh, hshare⟩
+
+/-- **Per-flow global stability (GPS)**: in a locally stable GPS-constant network, *each individual
+flow* `i` has a bounded backlogged period at every server `h` it crosses (stronger than the
+per-server aggregate `isGloballyStable`); flow `i` is locally stable against its GPS residual
+(`flowResidualBound`). Unlike the static-priority `SpNetwork.Traj.isFlowGloballyStable`, the active
+set is selected per flow by the `r/φ` order rather than a fixed priority. -/
+theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+  obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
+  refine isGloballyStableServer_of_isLocallyStableServer hc hβ hp harr ?_
+  show longTermArrivalRate (fun s => t.r i * s + B') < longTermServiceRate (rateLatency R' T')
+  rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
+  exact_mod_cast hlt
+
+/-- **Per-flow delay bound (GPS)**: flow `i`'s virtual delay at a crossed server `h` is finite —
+bounded by `T' + B'/R'` of its GPS residual (`flowResidualBound`). The quantitative companion of
+`isFlowGloballyStable`. -/
+theorem isFlowDelayBounded (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    ∃ d : ℝ≥0, Deviation.delay (⇑(t.Ain h i)) (⇑(t.Dout h i)) ≤ (d : ℝ≥0∞) := by
+  obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
+  exact ⟨T' + B' / R', delay_le_of_strictRateLatency_affine hc hβ hp harr
+    (lt_of_le_of_lt (zero_le' (a := t.r i)) hlt) (le_of_lt hlt)⟩
 
 end Traj
 
