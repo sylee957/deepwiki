@@ -4,6 +4,7 @@ import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Finset.Max
 import Mathlib.Data.Real.Basic
 import DeepWiki.NetworkCalculus.StabilityNetwork
+import DeepWiki.NetworkCalculus.StabilityNetworkGps
 
 /-! # GPS networks with constant rates: the peelable critical flow (Lemma 12.5)
 In a network of GPS servers where each flow `j` keeps one weight `φⱼ > 0` along its
@@ -66,5 +67,28 @@ theorem Network.exists_flow_below_gpsShare {κ ι : Type*} [Fintype ι] [Nonempt
   refine ⟨i, fun h hih => ?_⟩
   rw [hr i, hR h, ← ENNReal.coe_mul, ENNReal.coe_lt_coe, div_mul_eq_mul_div]
   exact_mod_cast hi h hih
+
+/-- **Per-server GPS stability of the critical flow** (Theorem 12.5, step B at one
+server): at a server `h` whose flows `Fl(h)` are served by a GPS relation `S`
+(strict aggregate service `β^(h) = net.service h`, weights `φ`), a flow `i ∈ Fl(h)`
+whose ingress rate stays below its GPS share `(φᵢ/∑_{j∈Fl(h)} φⱼ)·R^(h)` — the
+conclusion of `Network.exists_flow_below_gpsShare` — is globally stable at `h`. The
+per-server GPS is indexed by the subtype `{j // j ∈ Fl(h)}`, so its share
+denominator `∑ⱼ φⱼ` is exactly `∑_{j∈Fl(h)} φⱼ` (`Finset.sum_coe_sort`). -/
+theorem Network.isGloballyStableServer_gps_critical {κ ι : Type*} [Fintype ι]
+    [DecidableEq κ] (net : Network κ ι) (φ : ι → ℝ≥0) (h : κ)
+    {S : ({j // j ∈ net.flowsThrough h} → Curve) →
+      ({j // j ∈ net.flowsThrough h} → Curve) → Prop}
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve (net.service h) (aggregateServer S))
+    (hgps : IsGpsServerN (fun j => φ j.val) S)
+    {As Ds : {j // j ∈ net.flowsThrough h} → Curve} (hp : S As Ds)
+    {i : {j // j ∈ net.flowsThrough h}}
+    (harr : IsMaximalArrivalBound (⇑(As i)) (net.arrivalCurve i.val))
+    (hrate : longTermArrivalRate (net.arrivalCurve i.val)
+      < (↑(φ i.val / ∑ j ∈ net.flowsThrough h, φ j) : ℝ≥0∞) * net.serviceRate h) :
+    IsGloballyStableServer (⇑(As i)) (⇑(Ds i)) := by
+  refine isGloballyStableServer_gps_of_rate_lt hcaus hβ hgps hp harr ?_
+  rwa [Finset.sum_coe_sort (net.flowsThrough h) φ]
 
 end DeepWiki
