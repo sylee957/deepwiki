@@ -15,6 +15,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantEndToEnd
+import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -395,6 +396,13 @@ rate-latency residual along its path — the per-hop trajectory realizes the `co
 (`concatComp_of_chain`), cross-traffic bounds come from `allBound`, stability from `∑_{Fl h}r < R^(h)`.
 The library's `SpNetwork.Traj.isFlowEndToEndDelayBounded`. -/
 alias thm_12_3_endToEndDelay := SpNetwork.Traj.isFlowEndToEndDelayBounded
+
+/-- **Per-flow END-TO-END delay in a stable GPS network** (library capstone, unifying Thm 12.5 with
+the §10.4 SFA end-to-end analysis): in a locally stable GPS-constant network, every flow with a
+nonempty path has a *finite end-to-end delay*, via the SFA blind-multiplexing end-to-end bound (which
+needs only the strict rate-latency aggregate, so it covers GPS). The library's
+`GpsNetwork.Traj.isFlowEndToEndDelayBounded`. -/
+alias thm_12_5_endToEndDelay := GpsNetwork.Traj.isFlowEndToEndDelayBounded
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
