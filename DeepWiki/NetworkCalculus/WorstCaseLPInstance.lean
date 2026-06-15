@@ -1,5 +1,7 @@
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
+import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.RealCurvesDeviations
+import DeepWiki.NetworkCalculus.RealCurvesConv
 
 /-! # Concrete worst-case delay and backlog: token-bucket through rate-latency
 The canonical network-calculus instance. The worst-case delay (resp. backlog) of a
@@ -72,5 +74,22 @@ theorem worstCaseServerBacklog_tokenBucketNN_rateLatencyNN (r b R T : ℝ≥0)
       (tokenBucketArrival_nullAtOrigin r b) (tokenBucketArrival_subadditive r b)
       (rateLatencyNN_zero_eq R T), liftENN_tokenBucketArrival]
   exact vDev_tokenBucketNN_rateLatencyNN r b R T hrR hT
+
+/-- **Tandem worst-case delay = `T₁ + T₂ + b/(R₁ ⊓ R₂)`** — the canonical
+end-to-end delay of a token-bucket flow through two rate-latency servers in series
+(`R₁,R₂ > 0`, `b > 0`, `r ≤ R₁`, `r ≤ R₂`). The tandem collapses to the
+concatenated server `β_{R₁⊓R₂, T₁+T₂}` (`conv_rateLatencyNN_rateLatencyNN`), whose
+worst-case delay is the textbook bound. -/
+theorem worstCaseTandemDelay_tokenBucketNN_rateLatencyNN (r b R₁ T₁ R₂ T₂ : ℝ≥0)
+    (hR₁ : 0 < R₁) (hR₂ : 0 < R₂) (hb : 0 < b) (hr₁ : r ≤ R₁) (hr₂ : r ≤ R₂) :
+    worstCaseTandemDelay (tokenBucketArrival r b) (rateLatencyNN R₁ T₁) (rateLatencyNN R₂ T₂)
+      = ((T₁ + T₂ + b / (R₁ ⊓ R₂) : ℝ≥0) : ℝ≥0∞) := by
+  rw [worstCaseTandemDelay_eq_hDev_conv (tokenBucketArrival_mono r b)
+      (tokenBucketArrival_nullAtOrigin r b) (tokenBucketArrival_subadditive r b)
+      (rateLatencyNN_mono R₁ T₁) (rateLatencyNN_mono R₂ T₂)
+      (rateLatencyNN_zero_eq R₁ T₁) (rateLatencyNN_zero_eq R₂ T₂),
+    liftENN_tokenBucketArrival, conv_rateLatencyNN_rateLatencyNN]
+  exact hDevENN_tokenBucketNN_rateLatencyNN r b (R₁ ⊓ R₂) (T₁ + T₂)
+    (lt_inf_iff.mpr ⟨hR₁, hR₂⟩) hb (le_inf_iff.mpr ⟨hr₁, hr₂⟩)
 
 end DeepWiki

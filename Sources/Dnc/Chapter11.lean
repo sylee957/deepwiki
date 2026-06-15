@@ -128,6 +128,17 @@ theorem example_11_tokenBucketRateLatency_backlog (r b R T : ℝ≥0)
       = ((r * T + b : ℝ≥0) : ℝ≥0∞) :=
   worstCaseServerBacklog_tokenBucketNN_rateLatencyNN r b R T hrR hT
 
+/-- **Worked instance, two-server tandem** (§11.1.1): the canonical end-to-end
+worst-case delay of a `γ_{r,b}` flow through two rate-latency servers in series,
+`β_{R₁,T₁}` then `β_{R₂,T₂}` (`R₁,R₂ > 0`, `b > 0`, `r ≤ R₁,R₂`), is exactly
+`T₁ + T₂ + b/(R₁ ⊓ R₂)`. The library's
+`worstCaseTandemDelay_tokenBucketNN_rateLatencyNN`. -/
+theorem example_11_tokenBucketRateLatency_tandem (r b R₁ T₁ R₂ T₂ : ℝ≥0)
+    (hR₁ : 0 < R₁) (hR₂ : 0 < R₂) (hb : 0 < b) (hr₁ : r ≤ R₁) (hr₂ : r ≤ R₂) :
+    worstCaseTandemDelay (tokenBucketArrival r b) (rateLatencyNN R₁ T₁) (rateLatencyNN R₂ T₂)
+      = ((T₁ + T₂ + b / (R₁ ⊓ R₂) : ℝ≥0) : ℝ≥0∞) :=
+  worstCaseTandemDelay_tokenBucketNN_rateLatencyNN r b R₁ T₁ R₂ T₂ hR₁ hR₂ hb hr₁ hr₂
+
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
 `x₁<x₂ ⟹ b=0 ∧ y₁≤y₂` and `x₂<x₁ ⟹ b=1 ∧ y₂≤y₁`. The library's `bigM_ordering`. -/
