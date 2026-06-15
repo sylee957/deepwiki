@@ -53,6 +53,41 @@ theorem iSup_add_coe {ι : Sort*} (r : ℝ) (x : ι → EReal) :
   simp only [add_comm _ (r : EReal)]
   exact coe_add_iSup r x
 
+/-- Addition distributes over a (nonempty) supremum on the left, for *any*
+shift `c` — including `±∞`: `c + ⨆ i, b i = ⨆ i, (c + b i)`. (For `c = ⊤` the
+`≤` direction uses that a non-`⊥` supremum has a non-`⊥` witness.) -/
+theorem add_iSup {ι : Sort*} [Nonempty ι] (c : EReal) (b : ι → EReal) :
+    c + ⨆ i, b i = ⨆ i, (c + b i) := by
+  apply le_antisymm
+  · induction c using EReal.rec with
+    | bot => rw [EReal.bot_add]; exact bot_le
+    | coe r => exact le_of_eq (coe_add_iSup r b)
+    | top =>
+      rcases eq_or_ne (⨆ i, b i) ⊥ with hsup | hsup
+      · rw [hsup, EReal.add_bot]; exact bot_le
+      · obtain ⟨j, hj⟩ : ∃ j, b j ≠ ⊥ := by
+          by_contra h
+          push Not at h
+          exact hsup (by simp only [h, iSup_const])
+        rw [EReal.top_add_of_ne_bot hsup]
+        exact le_iSup_of_le j (le_of_eq (EReal.top_add_of_ne_bot hj).symm)
+  · exact iSup_le fun i => add_le_add le_rfl (le_iSup b i)
+
+/-- Addition distributes over a (nonempty) supremum on the right:
+`(⨆ i, a i) + c = ⨆ i, (a i + c)`. -/
+theorem iSup_add {ι : Sort*} [Nonempty ι] (a : ι → EReal) (c : EReal) :
+    (⨆ i, a i) + c = ⨆ i, (a i + c) := by
+  rw [add_comm, add_iSup]
+  exact iSup_congr fun i => add_comm c (a i)
+
+/-- The sum of two (nonempty) suprema is the supremum of the pairwise sums:
+`(⨆ i, a i) + (⨆ j, b j) = ⨆ i, ⨆ j, (a i + b j)`. -/
+theorem iSup_add_iSup {ι κ : Sort*} [Nonempty ι] [Nonempty κ]
+    (a : ι → EReal) (b : κ → EReal) :
+    (⨆ i, a i) + (⨆ j, b j) = ⨆ i, ⨆ j, (a i + b j) := by
+  rw [iSup_add]
+  exact iSup_congr fun i => add_iSup (a i) b
+
 /-- A finite value minus an infimum is the supremum of the differences:
 `↑r − ⨅ i, x i = ⨆ i, (↑r − x i)`. -/
 theorem coe_sub_iInf {ι : Sort*} (r : ℝ) (x : ι → EReal) :
