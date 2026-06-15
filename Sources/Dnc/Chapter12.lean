@@ -229,6 +229,28 @@ theorem lemma_12_5 {ι σ : Type*} [Fintype ι] [Nonempty ι]
     ∃ i, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) :=
   exists_flow_below_gps_share r φ hφ R Fl hstab
 
+/-- **Theorem 12.5**, step B / per-flow path stability (§12.3.3, p.279): the GPS
+analogue of the residual-path stability — a flow `i` crossing a path of GPS servers
+(shared weights `φ`, strict aggregate service per hop), each offering it the share
+`(φᵢ/∑ⱼφⱼ)·βf`, is globally stable at *every* server on its path once its propagated
+arrival curve is locally stable against that share at each hop. The library's
+`isGloballyStable_gpsPath`. (This is the peeled critical flow's stability — the
+substantive content; the full cyclic induction over the network, and the
+variable-per-server flow population, are not assembled.) -/
+theorem thm_12_5_gpsPath {ι : Type*} [Fintype ι] {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {βf : ℕ → ℝ≥0 → ℝ≥0} {φ : ι → ℝ≥0} {i : ι}
+    (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (βf k) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k))
+    (proc : ℕ → Curve) (αs : ℕ → ℝ≥0 → ℝ≥0)
+    (hchain : ∀ k, k < n → residualServer (Sf k) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (αs 0))
+    (hprop : ∀ k, k < n → minDeconv (Deviation.liftENN (αs k))
+      (Deviation.liftENN (fun v => (φ i / ∑ j, φ j) * βf k v)) ≤ Deviation.liftENN (αs (k + 1)))
+    (hstab : ∀ k, k < n → IsLocallyStableServer (αs k) (fun v => (φ i / ∑ j, φ j) * βf k v)) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
+  isGloballyStable_gpsPath hcaus hβf hgps proc αs hchain harr0 hprop hstab
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,

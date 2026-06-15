@@ -5,6 +5,7 @@ import Mathlib.Data.Finset.Max
 import Mathlib.Data.Real.Basic
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
+import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 
 /-! # GPS networks with constant rates: the peelable critical flow (Lemma 12.5)
 In a network of GPS servers where each flow `j` keeps one weight `φⱼ > 0` along its
@@ -90,5 +91,30 @@ theorem Network.isGloballyStableServer_gps_critical {κ ι : Type*} [Fintype ι]
     IsGloballyStableServer (⇑(As i)) (⇑(Ds i)) := by
   refine isGloballyStableServer_gps_of_rate_lt hcaus hβ hgps hp harr ?_
   rwa [Finset.sum_coe_sort (net.flowsThrough h) φ]
+
+/-- **GPS per-flow path stability** (Theorem 12.5, step B along a path) — the GPS
+analogue of `isGloballyStable_residualPath` for a fixed flow population `ι`. Flow
+`i` crosses a sequence of GPS servers `Sf 0, Sf 1, …` (each with strict aggregate
+service `βf k` and shared weights `φ`); it sees the residual share
+`(φᵢ/∑ⱼ φⱼ)·βf k` at hop `k`. If its propagated arrival curve stays locally stable
+against that share at every hop (and the per-hop output bound propagates), flow `i`
+has a bounded backlogged period at *every* server on its path. -/
+theorem isGloballyStable_gpsPath {ι : Type*} [Fintype ι] {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {βf : ℕ → ℝ≥0 → ℝ≥0} {φ : ι → ℝ≥0} {i : ι}
+    (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (βf k) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k))
+    (proc : ℕ → Curve) (αs : ℕ → ℝ≥0 → ℝ≥0)
+    (hchain : ∀ k, k < n → residualServer (Sf k) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (αs 0))
+    (hprop : ∀ k, k < n → minDeconv (Deviation.liftENN (αs k))
+      (Deviation.liftENN (fun v => (φ i / ∑ j, φ j) * βf k v)) ≤ Deviation.liftENN (αs (k + 1)))
+    (hstab : ∀ k, k < n → IsLocallyStableServer (αs k) (fun v => (φ i / ∑ j, φ j) * βf k v)) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
+  isGloballyStable_path (S := fun k => residualServer (Sf k) i)
+    (β := fun k => fun v => (φ i / ∑ j, φ j) * βf k v)
+    (fun k => isCausal_residualServer (hcaus k) i)
+    (fun k => isStrictMinimalServiceCurve_residualServer_of_isGps (hcaus k) (hβf k) (hgps k))
+    id proc αs hchain harr0 hprop hstab
 
 end DeepWiki
