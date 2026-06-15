@@ -1,15 +1,35 @@
 import DeepWiki.ReactiveSystems.Bisimulation
+import DeepWiki.ReactiveSystems.BisimulationWeak
+import DeepWiki.ReactiveSystems.Traces
+import DeepWiki.ReactiveSystems.Ccs
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
-Book-numbered restatements for Chapter 3 (strong bisimilarity), discharged by
-the `DeepWiki.ReactiveSystems` library. -/
+Book-numbered restatements for Chapter 3 (trace equivalence, strong and weak
+bisimilarity), discharged by the `DeepWiki.ReactiveSystems` library, with solved
+exercises. -/
 
 namespace DeepWiki.Rs
 
 open DeepWiki.ReactiveSystems
+open DeepWiki.ReactiveSystems.LTS
 
 variable {Proc Act : Type*}
+
+/-! ## §3.2 Trace equivalence -/
+
+/-- **§3.2** (p.34), the trace set of a process: the action sequences it can
+perform. The library's `LTS.Traces`. -/
+abbrev traces := @LTS.Traces
+
+/-- **Definition 3.1** (§3.2, p.34). Trace equivalence: equal trace sets. The
+library's `LTS.TraceEquiv`. -/
+abbrev def_3_1 := @LTS.TraceEquiv
+
+/-- **§3.2** (p.34–36). Strong bisimilarity implies trace equivalence (the
+converse fails). -/
+theorem bisimilar_traceEquiv (L : LTS Proc Act) {p q : Proc} (h : Bisimilar L p q) :
+    TraceEquiv L p q := h.traceEquiv
 
 /-! ## §3.3 Strong bisimilarity -/
 
@@ -35,12 +55,135 @@ theorem thm_3_1_largest (L : LTS Proc Act) :
   ⟨LTS.isBisimulation_bisimilar, fun _ hR => hR.le_bisimilar⟩
 
 /-- **Theorem 3.1**, part 3 (§3.3, p.42, eq. 3.3). `~` satisfies the
-bisimulation transfer property: `p ~ q` iff every move of one side is matched by
-a `~`-related move of the other. Discharged by `LTS.bisimilar_iff`. -/
+bisimulation transfer property. Discharged by `LTS.bisimilar_iff`. -/
 theorem thm_3_1_transfer (L : LTS Proc Act) (p q : Proc) :
     LTS.Bisimilar L p q ↔
       (∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ LTS.Bisimilar L p' q') ∧
       (∀ a q', L.step q a q' → ∃ p', L.step p a p' ∧ LTS.Bisimilar L p' q') :=
   LTS.bisimilar_iff p q
+
+/-! ## §3.4 Weak bisimilarity -/
+
+/-- **Definition 3.3** (§3.4, p.56), weak transition `p =α⇒ q`: silent steps
+around an observable `α` (or just silent steps when `α = τ`). The library's
+`LTS.WeakStep`. -/
+abbrev def_3_3 := @LTS.WeakStep
+
+/-- **Definition 3.4** (§3.4, p.57). A weak bisimulation matches each concrete
+move by a weak transition. The library's `LTS.IsWeakBisimulation`. -/
+abbrev def_3_4 := @LTS.IsWeakBisimulation
+
+/-- **Definition 3.4** (§3.4, p.57), weak bisimilarity / observational
+equivalence `≈`. The library's `LTS.WeaklyBisimilar`. -/
+abbrev def_3_4_weaklyBisimilar := @LTS.WeaklyBisimilar
+
+/-- **§3.4** (p.57). Weak bisimilarity is an equivalence relation. -/
+theorem weaklyBisimilar_equivalence (L : LTS Proc Act) (tau : Act) :
+    Equivalence (LTS.WeaklyBisimilar L tau) := LTS.equivalence_weaklyBisimilar
+
+/-- **§3.4** (p.57). Strong bisimilarity refines weak bisimilarity: `~ ⊆ ≈`. -/
+theorem bisimilar_weaklyBisimilar (L : LTS Proc Act) (tau : Act) {p q : Proc}
+    (h : LTS.Bisimilar L p q) : LTS.WeaklyBisimilar L tau p q := h.weaklyBisimilar
+
+/-! ## Solved exercises
+
+Channel names `a, b, c` for the worked CCS exercises. -/
+
+/-- Channel names `a, b, c` for the Chapter 3 CCS exercises. -/
+inductive Chan | a | b | c
+  deriving DecidableEq
+
+/-- Empty definition environment (no process constants). -/
+def noDefs : Empty → CCS Chan Empty := fun e => e.elim
+
+/-- `a.(b.0 + c.0)` — process `P` of Exercise 3.4. -/
+def ex34P : CCS Chan Empty :=
+  .pre (.name .a) (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
+
+/-- `a.b.0 + a.c.0` — process `Q` of Exercise 3.4. -/
+def ex34Q : CCS Chan Empty :=
+  .choice (.pre (.name .a) (.pre (.name .b) .nil)) (.pre (.name .a) (.pre (.name .c) .nil))
+
+/-- **Exercise 3.4** (§3.3, p.41). `a.(b.0+c.0)` and `a.b.0+a.c.0` are *not*
+strongly bisimilar: after the common `a`, one side can still do both `b` and
+`c`, the other has already committed. -/
+theorem ex_3_4 : ¬ Bisimilar (ccsLTS noDefs) ex34P ex34Q := by
+  intro h
+  have hPa : Step noDefs ex34P (.name .a)
+      (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil)) := Step.act _ _
+  obtain ⟨Q', hQ', hbis⟩ := ((bisimilar_iff _ _).mp h).1 (.name .a) _ hPa
+  simp only [ccsLTS_step, ex34Q, step_choice_iff, step_pre_iff] at hQ'
+  rcases hQ' with ⟨_, rfl⟩ | ⟨_, rfl⟩
+  · have hc : Step noDefs (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
+        (.name .c) (.nil : CCS Chan Empty) := Step.sumr (Step.act _ _)
+    obtain ⟨q'', hq'', _⟩ := ((bisimilar_iff _ _).mp hbis).1 (.name .c) _ hc
+    simp only [ccsLTS_step, step_pre_iff] at hq''
+    exact absurd hq''.1 (by decide)
+  · have hb : Step noDefs (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
+        (.name .b) (.nil : CCS Chan Empty) := Step.suml (Step.act _ _)
+    obtain ⟨q'', hq'', _⟩ := ((bisimilar_iff _ _).mp hbis).1 (.name .b) _ hb
+    simp only [ccsLTS_step, step_pre_iff] at hq''
+    exact absurd hq''.1 (by decide)
+
+/-- Process constants for Exercise 3.3. -/
+inductive Ex33K | P | P₁ | Q | Q₁ | Q₂ | Q₃
+  deriving DecidableEq
+
+/-- The recursive process definitions of Exercise 3.3: `P ≝ a.P₁`,
+`P₁ ≝ b.P + c.P`, `Q ≝ a.Q₁`, `Q₁ ≝ b.Q₂ + c.Q`, `Q₂ ≝ a.Q₃`,
+`Q₃ ≝ b.Q + c.Q₂`. -/
+def ex33defn : Ex33K → CCS Chan Ex33K
+  | .P => .pre (.name .a) (.const .P₁)
+  | .P₁ => .choice (.pre (.name .b) (.const .P)) (.pre (.name .c) (.const .P))
+  | .Q => .pre (.name .a) (.const .Q₁)
+  | .Q₁ => .choice (.pre (.name .b) (.const .Q₂)) (.pre (.name .c) (.const .Q))
+  | .Q₂ => .pre (.name .a) (.const .Q₃)
+  | .Q₃ => .choice (.pre (.name .b) (.const .Q)) (.pre (.name .c) (.const .Q₂))
+
+/-- A strong bisimulation witnessing `P ~ Q` for Exercise 3.3. -/
+def ex33R : CCS Chan Ex33K → CCS Chan Ex33K → Prop := fun p q =>
+  (p = .const .P ∧ q = .const .Q) ∨ (p = .const .P ∧ q = .const .Q₂) ∨
+  (p = .const .P₁ ∧ q = .const .Q₁) ∨ (p = .const .P₁ ∧ q = .const .Q₃)
+
+/-- **Exercise 3.3** (§3.3, p.41). The processes `P ≝ a.P₁`, `P₁ ≝ b.P + c.P`
+and `Q ≝ a.Q₁`, `Q₁ ≝ b.Q₂ + c.Q`, `Q₂ ≝ a.Q₃`, `Q₃ ≝ b.Q + c.Q₂` are strongly
+bisimilar, witnessed by `ex33R = {(P,Q),(P,Q₂),(P₁,Q₁),(P₁,Q₃)}`. -/
+theorem ex_3_3 : Bisimilar (ccsLTS ex33defn) (.const Ex33K.P) (.const Ex33K.Q) := by
+  refine ⟨ex33R, ?_, Or.inl ⟨rfl, rfl⟩⟩
+  intro p q hpq
+  simp only [ex33R] at hpq
+  rcases hpq with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  · refine ⟨fun α p' hstep => ?_, fun α q' hstep => ?_⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_pre_iff] at hstep
+      obtain ⟨rfl, rfl⟩ := hstep
+      exact ⟨.const Ex33K.Q₁, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_pre_iff] at hstep
+      obtain ⟨rfl, rfl⟩ := hstep
+      exact ⟨.const Ex33K.P₁, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+  · refine ⟨fun α p' hstep => ?_, fun α q' hstep => ?_⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_pre_iff] at hstep
+      obtain ⟨rfl, rfl⟩ := hstep
+      exact ⟨.const Ex33K.Q₃, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_pre_iff] at hstep
+      obtain ⟨rfl, rfl⟩ := hstep
+      exact ⟨.const Ex33K.P₁, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+  · refine ⟨fun α p' hstep => ?_, fun α q' hstep => ?_⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_choice_iff, step_pre_iff] at hstep
+      rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · exact ⟨.const Ex33K.Q₂, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+      · exact ⟨.const Ex33K.Q, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_choice_iff, step_pre_iff] at hstep
+      rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+      · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+  · refine ⟨fun α p' hstep => ?_, fun α q' hstep => ?_⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_choice_iff, step_pre_iff] at hstep
+      rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · exact ⟨.const Ex33K.Q, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+      · exact ⟨.const Ex33K.Q₂, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+    · simp only [ccsLTS_step, step_const_iff, ex33defn, step_choice_iff, step_pre_iff] at hstep
+      rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+      · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+      · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
 
 end DeepWiki.Rs

@@ -18,6 +18,7 @@ inductive Act (Name : Type*)
   | tau : Act Name
   | name : Name → Act Name
   | coname : Name → Act Name
+  deriving DecidableEq
 
 namespace Act
 
@@ -119,5 +120,32 @@ def ccsLTS (defn : K → CCS Name K) : LTS (CCS Name K) (Act Name) := ⟨Step de
 /-- The inactive process `nil` (`0`) has no transitions. -/
 @[simp] theorem not_step_nil {defn : K → CCS Name K} {α : Act Name} {P' : CCS Name K} :
     ¬ Step defn CCS.nil α P' := by intro h; cases h
+
+variable {defn : K → CCS Name K}
+
+/-- Inversion for prefixing: `α.P —β→ P'` iff `β = α` and `P' = P`. -/
+@[simp] theorem step_pre_iff {α β : Act Name} {P P' : CCS Name K} :
+    Step defn (CCS.pre α P) β P' ↔ β = α ∧ P' = P := by
+  constructor
+  · rintro h; cases h; exact ⟨rfl, rfl⟩
+  · rintro ⟨rfl, rfl⟩; exact Step.act _ _
+
+/-- Inversion for choice: a move of `P + Q` is a move of `P` or of `Q`. -/
+@[simp] theorem step_choice_iff {P Q P' : CCS Name K} {α : Act Name} :
+    Step defn (CCS.choice P Q) α P' ↔ Step defn P α P' ∨ Step defn Q α P' := by
+  constructor
+  · rintro h; cases h with
+    | suml h => exact Or.inl h
+    | sumr h => exact Or.inr h
+  · rintro (h | h)
+    · exact Step.suml h
+    · exact Step.sumr h
+
+/-- Inversion for a process constant: it moves exactly as its body does. -/
+theorem step_const_iff {K0 : K} {α : Act Name} {P' : CCS Name K} :
+    Step defn (CCS.const K0) α P' ↔ Step defn (defn K0) α P' := by
+  constructor
+  · rintro h; cases h; assumption
+  · exact Step.con
 
 end DeepWiki.ReactiveSystems
