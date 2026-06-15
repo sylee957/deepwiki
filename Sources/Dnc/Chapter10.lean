@@ -7,6 +7,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPmoo
 import DeepWiki.NetworkCalculus.ServersResidualPmooChain
 import DeepWiki.NetworkCalculus.ServersResidualPmooPath
 import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
+import DeepWiki.NetworkCalculus.ServersResidualPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualSfa
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
@@ -57,6 +58,16 @@ alias ex_10_1 := pmooResidualChain_rateLatency
 
 /-- **Example 10.1** (§10.3.2, p.238): Supporting fact for Example 10.1: the chain convolution of rate-latency curves β_{Rₕ,Tₕ} over hops 0..n equals the single rate-latency curve β_{⊓ₕRₕ, ∑ₕTₕ} (slowest rate, summed latencies). -/
 alias ex_10_1_chainConv := chainConv_rateLatency
+
+/-- **PMOO end-to-end delay/backlog** (performance consequence of Example 10.1, §10.3.2): a
+token-bucket flow `γ_{r,b}` (with `r ≤ (⊓ₕRₕ)−∑rₐ`) crossing the PMOO rate-latency tandem has
+end-to-end delay `≤ T' + b/R'` and backlog `≤ r·T' + b` (`R' = (⊓ₕRₕ)−∑rₐ`, `T'` the folded
+latency) — each cross flow's burst paid once across the whole tandem, not per hop. The library's
+`delay_le_pmooChain_rateLatency` / `backlog_le_pmooChain_rateLatency`. -/
+alias pmoo_end_to_end_delay := delay_le_pmooChain_rateLatency
+
+@[inherit_doc pmoo_end_to_end_delay]
+alias pmoo_end_to_end_backlog := backlog_le_pmooChain_rateLatency
 
 /-- **Remark 10** (§10.3.3, p.239): Service policies are not stable under composition: a system composed of two GPS servers (with given weights) is not itself a GPS server — the cross-flow is backlogged end-to-end yet receives strictly less than its equal share. -/
 alias remark_10_gps_composition := not_forall_isGps_comp
