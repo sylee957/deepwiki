@@ -414,6 +414,15 @@ alias thm_12_3_endToEndBacklog := SpNetwork.Traj.isFlowEndToEndBacklogBounded
 @[inherit_doc thm_12_3_endToEndBacklog]
 alias thm_12_5_endToEndBacklog := GpsNetwork.Traj.isFlowEndToEndBacklogBounded
 
+/-- **Per-flow END-TO-END output burstiness** (library capstone, compositionality): in a locally
+stable SP / GPS network, a flow's egress (last-server departure) is again token-bucket bounded — the
+stable network preserves token-bucket burstiness, so the flow can feed a downstream network. The
+library's `SpNetwork.Traj.isFlowEndToEndOutputBounded` and `GpsNetwork.Traj.isFlowEndToEndOutputBounded`. -/
+alias thm_12_3_endToEndOutput := SpNetwork.Traj.isFlowEndToEndOutputBounded
+
+@[inherit_doc thm_12_3_endToEndOutput]
+alias thm_12_5_endToEndOutput := GpsNetwork.Traj.isFlowEndToEndOutputBounded
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,
