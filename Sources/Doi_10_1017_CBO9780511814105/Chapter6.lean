@@ -1,4 +1,6 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
+import DeepWiki.ReactiveSystems.HmlRecursionSystems
+import DeepWiki.ReactiveSystems.HmlCharacteristic
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 6: HML with recursion
@@ -10,7 +12,7 @@ namespace DeepWiki.Rs
 open DeepWiki.ReactiveSystems
 open DeepWiki.ReactiveSystems.LTS
 
-variable {Proc Act : Type*}
+variable {Proc V Act : Type*}
 
 /-! ## §6.2 Syntax and semantics of HML with recursion -/
 
@@ -48,5 +50,73 @@ its least and greatest fixed points exist (Tarski); introducing negation would
 break monotonicity. -/
 theorem ex_6_5 (L : LTS Proc Act) (F : HMLR Act) : Monotone (LTS.denotR L F) :=
   LTS.denotR_mono L F
+
+/-! ## §6.5 Mutually recursive equational systems -/
+
+/-- **§6.5** (p.122). HML with recursion over a variable set `V`. The library's
+`HMLV`. -/
+abbrev hmlv := @HMLV
+
+/-- **Definition 6.1, multivariable** (§6.5, p.123). The semantic function `O_F`
+over an environment of variable interpretations. The library's `LTS.denotV`. -/
+abbrev denotV := @LTS.denotV
+
+/-- **Equation 6.9** (§6.5, p.122). The semantic function `⟦D⟧` of a declaration
+on the product complete lattice `V → 2^Proc`. The library's `LTS.sysFun`. -/
+abbrev eq_6_9 := @LTS.sysFun
+
+/-- **§6.5** (p.122). The largest solution of an equational system (gfp of
+`⟦D⟧`). The library's `LTS.sysMax`. -/
+abbrev sysMax := @LTS.sysMax
+
+/-- **§6.5** (p.122). The least solution of an equational system (lfp of `⟦D⟧`).
+The library's `LTS.sysMin`. -/
+abbrev sysMin := @LTS.sysMin
+
+/-- **Exercise 6.8(1)** (§6.5, p.124). The product domain `(2^Proc)^V`, ordered
+componentwise, is a complete lattice. -/
+theorem ex_6_8_1 : Nonempty (CompleteLattice (V → Set Proc)) :=
+  LTS.ex_6_8_completeLattice
+
+/-- **Exercise 6.8(2)** (§6.5, p.124). The declaration's semantic function `⟦D⟧`
+is monotone. -/
+theorem ex_6_8_2 (L : LTS Proc Act) (D : V → HMLV V Act) : Monotone (LTS.sysFun L D) :=
+  LTS.ex_6_8_mono L D
+
+/-! ## §6.6 Characteristic properties -/
+
+/-- **Equation 6.15** (§6.6, p.130). The characteristic-property functional. The
+library's `LTS.charFun` (its greatest fixed point is the characteristic property
+`X_p`). -/
+abbrev eq_6_15 := @LTS.charFun
+
+/-- **Lemma 6.1** (§6.6, p.131). `{(p,q) | q ⊨ X_p}` is a strong bisimulation. -/
+theorem lemma_6_1 (L : LTS Proc Act) :
+    LTS.IsBisimulation L (fun p q => q ∈ LTS.charProp L p) := LTS.charProp_isBisimulation L
+
+/-- **Lemma 6.2** (§6.6, p.133). Each state satisfies its own characteristic
+formula (bisimilarity is below the characteristic property). -/
+theorem lemma_6_2 (L : LTS Proc Act) :
+    (fun p => {q | p ~[L] q}) ≤ LTS.charProp L := LTS.bisimilar_le_charProp L
+
+/-- **Theorem 6.4** (§6.6, p.130). The characteristic property of `p` is exactly
+its strong-bisimilarity class: `q ⊨ X_p` iff `p ~ q`. -/
+theorem thm_6_4 (L : LTS Proc Act) (p q : Proc) :
+    q ∈ LTS.charProp L p ↔ (p ~[L] q) := LTS.charProp_eq_bisimilar L p q
+
+/-! ## §6.7 Mixing largest and least fixed points -/
+
+/-- **Definition 6.2** (§6.7, p.137), the kind of a fixed-point equation
+(`max`/`ν` or `min`/`μ`). The library's `FpKind`. -/
+abbrev fpKind := @FpKind
+
+/-- **§6.7** (p.135). The livelock property `LivelockNow =ν ⟨τ⟩LivelockNow`. The
+library's `LTS.LivelockNow`. -/
+abbrev livelockNow := @LTS.LivelockNow
+
+/-- **Exercise 6.15** (§6.7, p.135). The least solution of `X = ⟨τ⟩X` is empty —
+only the largest fixed point captures livelock. -/
+theorem ex_6_15 (L : LTS Proc Act) (tau : Act) : (LTS.livelockFun L tau).lfp = ∅ :=
+  LTS.ex_6_15 L tau
 
 end DeepWiki.Rs
