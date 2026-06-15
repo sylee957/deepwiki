@@ -359,6 +359,14 @@ bounds aggregate to local stability against each server, discharging global stab
 tandem `thm_12_5_tandem`. -/
 alias thm_12_5 := GpsNetwork.Traj.isGloballyStable
 
+/-- **Theorem 12.5, per-flow form** (library strengthening): in a locally stable GPS-constant
+network *each individual flow* `i` has a bounded backlogged period at every server it crosses — not
+merely the per-server aggregate. Flow `i` is `r/φ`-minimal in the active set `J = {j : rᵢφⱼ ≤ rⱼφᵢ}`,
+so the GPS peel step leaves it the residual `β_{(φᵢ/∑_{Fl h∩J}φ)(R^(h) − ∑_{Fl h\J}r), ·}` (the
+lighter flows already bounded), against which it is locally stable. The library's
+`GpsNetwork.Traj.isFlowGloballyStable` — the GPS analogue of `thm_12_3_perFlow`. -/
+alias thm_12_5_perFlow := GpsNetwork.Traj.isFlowGloballyStable
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,

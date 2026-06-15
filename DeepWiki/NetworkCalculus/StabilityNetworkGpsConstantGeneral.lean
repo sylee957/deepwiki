@@ -536,6 +536,84 @@ theorem isGloballyStable (t : Traj κ ι) :
     (fun h => by rw [t.hservice h]; exact t.hβ h)
     t.hp hbound hagg
 
+/-- **Per-flow global stability (GPS)**: in a locally stable GPS-constant network *each individual
+flow* `i` has a bounded backlogged period at every server `h` it crosses (stronger than the
+per-server aggregate `isGloballyStable`). Flow `i` is `r/φ`-minimal in the active set
+`J = {j : rᵢφⱼ ≤ rⱼφᵢ}` (i and the heavier-per-weight flows), so the GPS peel step leaves it the
+residual `β_{(φᵢ/∑_{Fl h∩J}φ)(R^(h) − ∑_{Fl h\J}r), ·}` (the lighter flows `Fl h\J` already bounded
+by `allBound`, aggregated by `peeledAggregate`), and `gps_share_lt_of_cross` places its token-bucket
+rate below the residual rate. Unlike the static-priority `SpNetwork.Traj.isFlowGloballyStable`, the
+active set is selected per flow by the `r/φ` order rather than a fixed priority. -/
+theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+  classical
+  -- the active set: i and the flows at least as heavy per weight (`rᵢφⱼ ≤ rⱼφᵢ`)
+  set J : Finset ι := Finset.univ.filter (fun j => t.r i * t.φ j ≤ t.r j * t.φ i) with hJ
+  have hiJ : i ∈ J := by rw [hJ]; simp
+  have hiJh : i ∈ t.net.flowsThrough h ∩ J := Finset.mem_inter.mpr ⟨hh, hiJ⟩
+  -- the lighter (peeled) crossing flows `Fl h ∩ Jᶜ = Fl h \ J` are bounded (allBound)
+  obtain ⟨bb, hbb⟩ := t.peeledAggregate J (fun j _ => t.allBound j) h
+  set ρ : ℝ≥0 := ∑ j ∈ t.net.flowsThrough h ∩ Jᶜ, t.r j with hρ
+  -- `∑_{Fl h∩J} r + ρ = ∑_{Fl h} r`
+  have hpart : (∑ j ∈ t.net.flowsThrough h ∩ J, t.r j) + ρ = ∑ j ∈ t.net.flowsThrough h, t.r j := by
+    rw [hρ, ← Finset.sum_inter_add_sum_diff (t.net.flowsThrough h) J]
+    congr 1
+    apply Finset.sum_congr _ (fun _ _ => rfl)
+    ext j; simp [Finset.mem_sdiff, Finset.mem_inter, Finset.mem_compl]
+  have hρR : ρ < t.R h := by
+    have : ρ ≤ ∑ j ∈ t.net.flowsThrough h, t.r j := by rw [← hpart]; exact le_add_self
+    exact lt_of_le_of_lt this (t.hstab h)
+  -- the GPS peel step: flow `i` sees its residual rate-latency share
+  have hβ := isStrictMinimalServiceCurve_residualServer_gpsPeel
+    (S := t.S h) (φ := t.φ) (R := t.R h) (T := t.T h) (ρ := ρ) (b := bb)
+    (J := t.net.flowsThrough h ∩ J) (i := i) hiJh hρR (t.hcaus h) (t.hβ h) (t.hgps h)
+  -- the served pair: rewrite the peeled departure sum to `peeledAggregate`'s `Fl h ∩ Jᶜ` form
+  have hsetEq : (fun x => ∑ j ∈ (t.net.flowsThrough h ∩ J)ᶜ, (t.Dout h j) x)
+      = (fun x => ∑ j ∈ t.net.flowsThrough h ∩ Jᶜ, (t.Dout h j) x) := by
+    funext x
+    symm
+    apply Finset.sum_subset
+    · intro j hj
+      obtain ⟨hjF, hjc⟩ := Finset.mem_inter.mp hj
+      exact Finset.mem_compl.mpr fun hin => (Finset.mem_compl.mp hjc) (Finset.mem_inter.mp hin).2
+    · intro j hjc hjnotin
+      have hjnotF : j ∉ t.net.flowsThrough h := by
+        intro hjF
+        have hjnotJ : j ∉ J := fun hjJ =>
+          (Finset.mem_compl.mp hjc) (Finset.mem_inter.mpr ⟨hjF, hjJ⟩)
+        exact hjnotin (Finset.mem_inter.mpr ⟨hjF, Finset.mem_compl.mpr hjnotJ⟩)
+      rw [t.Dout_off h j hjnotF, Curve.zero_apply]
+  have hpair : residualServer (fun A D => t.S h A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ (t.net.flowsThrough h ∩ J)ᶜ, (D j) x) (fun v => ρ * v + bb)) i
+      (t.Ain h i) (t.Dout h i) := by
+    refine ⟨t.Ain h, t.Dout h, ⟨t.hp h, ?_⟩, rfl, rfl⟩
+    rw [hsetEq]; exact hbb
+  -- flow `i`'s own arrival bound at `h`
+  obtain ⟨Bi, hBin, _⟩ := t.allBound i
+  -- local stability: `r i < (φ i / ∑_{Fl h∩J} φ)(R h − ρ)`
+  have hshare : t.r i < (t.φ i / ∑ j ∈ t.net.flowsThrough h ∩ J, t.φ j) * (t.R h - ρ) := by
+    have hcross : ∀ j ∈ t.net.flowsThrough h ∩ J, (t.r i : ℝ) * (t.φ j : ℝ)
+        ≤ (t.r j : ℝ) * (t.φ i : ℝ) := by
+      intro j hj
+      have := (Finset.mem_filter.mp (Finset.mem_inter.mp hj).2).2
+      exact_mod_cast this
+    have hstabℝ : (∑ j ∈ t.net.flowsThrough h ∩ J, (t.r j : ℝ)) < (t.R h : ℝ) - (ρ : ℝ) := by
+      have : (∑ j ∈ t.net.flowsThrough h ∩ J, (t.r j : ℝ)) + (ρ : ℝ) < (t.R h : ℝ) := by
+        rw [← NNReal.coe_sum, ← NNReal.coe_add, hpart]; exact_mod_cast t.hstab h
+      linarith
+    rw [← NNReal.coe_lt_coe, NNReal.coe_mul, NNReal.coe_div,
+      NNReal.coe_sub (le_of_lt hρR), NNReal.coe_sum, div_mul_eq_mul_div]
+    exact gps_share_lt_of_cross (fun j => (t.r j : ℝ)) (fun j => (t.φ j : ℝ))
+      (fun j => by exact_mod_cast t.hφ j) hiJh hcross hstabℝ
+  have hstab' : IsLocallyStableServer (fun s => t.r i * s + Bi h)
+      (rateLatency ((t.φ i / ∑ j ∈ t.net.flowsThrough h ∩ J, t.φ j) * (t.R h - ρ))
+        ((t.R h * t.T h + bb) / (t.R h - ρ))) := by
+    show longTermArrivalRate (fun s => t.r i * s + Bi h) < longTermServiceRate _
+    rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
+    exact_mod_cast hshare
+  exact isGloballyStableServer_of_isLocallyStableServer
+    (isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i) hβ hpair (hBin h hh) hstab'
+
 end Traj
 
 /-! ## Faithfulness checks (Theorem 12.5, fully general) -/
