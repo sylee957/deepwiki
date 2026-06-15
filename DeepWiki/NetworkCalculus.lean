@@ -73,6 +73,7 @@ import DeepWiki.NetworkCalculus.DeviationsBounds
 import DeepWiki.NetworkCalculus.ServiceCurveMinimal
 import DeepWiki.NetworkCalculus.CurveENN
 import DeepWiki.NetworkCalculus.DeviationsBoundsServer
+import DeepWiki.NetworkCalculus.DeviationsBoundsServerRateLatency
 import DeepWiki.NetworkCalculus.DeviationsRestricted
 import DeepWiki.NetworkCalculus.ServersBacklog
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
