@@ -12,6 +12,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
+import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -216,7 +217,16 @@ alias thm_12_2 := isGloballyStableServer_staticPriority_of_rate_lt
 
 /-! **Example 12.2** (§12.3.2, p.278): For the Figure 12.1 network under FDF: in server 3 flow 1 has highest priority, then flow 2; flows 2 and 3 share the same priority; in server 2 flows 4 and 3 are highest and flow 1 lowest. Not formalized in the library. -/
 
-/-! **Theorem 12.3** (§12.3.2, p.278): Furthest destination first (FDF): the local stability condition is sufficient for global stability under FDF. FDF assigns each server a *static priority order* (by remaining distance to destination), so the per-flow stability is exactly `thm_12_2` instantiated at the FDF order — `isGloballyStableServer_staticPriority_of_rate_lt`. Only the topology-driven definition of the FDF ordering (and the network-wide quantification) is unformalized. -/
+/-- **Theorem 12.3** (§12.3.2, p.278), shared-path tandem: under a preemptive static-priority
+policy a locally stable shared-path tandem is globally stable at every hop. All flows
+(priority-ordered) traverse the same line of SP rate-latency servers, each a token bucket at
+ingress, with total local stability `∑ⱼ rⱼ < R^(h)`. The library's
+`SpTandem.isGloballyStable_sharedPath_tandem` — the static-priority analogue of `thm_12_5_tandem`,
+proved by inducting on the priority order (the strictly-higher-priority flows are bounded first,
+feeding flow `i`'s SP residual `β_{R − ∑_{j<i} rⱼ, ·}`), then aggregating. FDF is this at the
+topology-derived (remaining-distance) priority order; the variable-per-server-population general
+SP network (the list-path↔hop bridge) is the remaining generalization. -/
+alias thm_12_3_tandem := SpTandem.isGloballyStable_sharedPath_tandem
 
 /-- **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters — under aggregate
 local stability `∑_{j∈Fl(h)} rⱼ < R^(h)` at every server, there is a flow `i` (the
