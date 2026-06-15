@@ -410,6 +410,14 @@ theorem rateLatencyNN_coe (R T u : ℝ≥0) :
     rateLatencyNN R T u = ((R*(u-T):ℝ≥0):ℝ≥0∞) := by
   simp only [rateLatencyNN]; push_cast; ring
 
+/-- **Scaling a rate-latency curve scales its rate**: `c·β_{R,T} = β_{c·R,T}`
+(same latency `T`). In particular the GPS share `(φᵢ/∑φ)·β_{R,T}` of a
+rate-latency server is the rate-latency curve `β_{(φᵢ/∑φ)·R, T}`. -/
+@[simp] theorem const_mul_rateLatencyNN (c R T : ℝ≥0) :
+    (fun u => (c : ℝ≥0∞) * rateLatencyNN R T u) = rateLatencyNN (c * R) T := by
+  funext u
+  rw [rateLatencyNN_coe, rateLatencyNN_coe, ← ENNReal.coe_mul, mul_assoc]
+
 /-- `tokenBucketNN` as the pointwise `(r·t + b) ⊓ delayNN 0` over `ℝ≥0`. -/
 theorem tokenBucketNN_eq (r b : ℝ≥0) :
     tokenBucketNN r b = (fun t : ℝ≥0 => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0 := by
