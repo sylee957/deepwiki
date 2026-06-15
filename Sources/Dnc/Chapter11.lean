@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
+import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import Sources.Dnc.Source
@@ -46,6 +47,17 @@ theorem thm_11_1_singleNode {α : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0
     (hβmono : Monotone β) (hβ0 : β 0 = 0) :
     worstCaseServerDelay α β = (hDev (Deviation.liftENN α) β : ℝ≥0∞) :=
   worstCaseServerDelay_eq_hDev hαmono hα0 hαsub hβmono hβ0
+
+/-- **Theorem 11.1, single-node backlog form** (§11.1/§11.2.1, the "resp. backlog"):
+the worst-case backlog `worstCaseServerBacklog α β` (the optimum of the backlog
+over all feasible trajectories) equals the closed-form vertical deviation
+`vDev(α, β)`. The bound `b ≤ vDev` holds on every feasible trajectory and the
+greedy pair `(α, α∗β)` attains it. The library's `worstCaseServerBacklog_eq_vDev`. -/
+theorem thm_11_1_singleNode_backlog {α : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0∞}
+    (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
+    (hβ0 : β 0 = 0) :
+    worstCaseServerBacklog α β = (vDev (Deviation.liftENN α) β : ℝ≥0∞) :=
+  worstCaseServerBacklog_eq_vDev hαmono hα0 hαsub hβ0
 
 /-- **Theorem 11.1, two-node single-flow specialization** (§11.1.3, n=2) — the
 optimum-equals-worst-case for a *single* flow through two servers in series: the
