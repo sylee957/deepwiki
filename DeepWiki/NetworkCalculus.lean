@@ -18,6 +18,7 @@ import DeepWiki.NetworkCalculus.ClosuresNdRegularity
 import DeepWiki.NetworkCalculus.Concave
 import DeepWiki.NetworkCalculus.RealCurves
 import DeepWiki.NetworkCalculus.RealCurvesRegularity
+import DeepWiki.NetworkCalculus.RealCurvesRates
 import DeepWiki.NetworkCalculus.RealCurvesAdditivity
 import DeepWiki.NetworkCalculus.RealCurvesConv
 import DeepWiki.NetworkCalculus.RealCurvesDeconv

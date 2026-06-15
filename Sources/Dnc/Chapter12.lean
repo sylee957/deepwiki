@@ -5,6 +5,7 @@ import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.StabilityResidualRate
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
+import DeepWiki.NetworkCalculus.RealCurvesRates
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -162,6 +163,15 @@ free curve parameter into a quantity whose *rate* alone drives stability (its
 rate bounded, in turn, by the cross-flows' source rates via causal-output
 conservation). -/
 alias prop_12_residualLocalStable := isLocallyStableServer_residualCurve_of_rate_lt
+
+/-- **Long-term rate of the rate curve** (§12.1.1 worked rate): `λ_R = R·t` has
+both long-term arrival and service rate `R` — after dividing by `t` it is the
+constant `R`. The library's `longTermServiceRate_rate` / `longTermArrivalRate_rate`.
+(The rate-latency and token-bucket rates `R(β_{R,T}) = R`, `r(γ_{r,b}) = r` need
+the `T/t → 0` / burst-washout limits and are not yet formalized.) -/
+theorem prop_12_rateCurveRate (R : ℝ≥0) :
+    longTermServiceRate (rate R) = (R : ℝ≥0∞) ∧ longTermArrivalRate (rate R) = (R : ℝ≥0∞) :=
+  ⟨longTermServiceRate_rate R, longTermArrivalRate_rate R⟩
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
