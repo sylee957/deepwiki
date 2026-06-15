@@ -51,4 +51,28 @@ alias bisim_iff_post_fixed := LTS.isBisimulation_iff_le_bisimFunctional
 bisimulation functional `F`. -/
 alias bisimilar_eq_gfp := LTS.bisimilar_eq_gfp
 
+/-! ## Solved exercises -/
+
+/-- **Exercise 4.10(1)** (Kleene's fixed-point theorem, §4.2, p.83). For an
+ω-(Scott-)continuous monotone map on a complete lattice, the least fixed point
+is `⨆ₙ fⁿ(⊥)`. Reuses Mathlib's `fixedPoints.lfp_eq_sSup_iterate`. -/
+alias ex_4_10_1 := fixedPoints.lfp_eq_sSup_iterate
+
+/-- **Exercise 4.10(3a)** (§4.2, p.84). The supremum of a set of post-fixed
+points (`x ≤ f x`) of a monotone map is again a post-fixed point. -/
+theorem ex_4_10_3a {D : Type*} [CompleteLattice D] (f : D →o D) (X : Set D)
+    (hX : ∀ x ∈ X, x ≤ f x) : sSup X ≤ f (sSup X) :=
+  sSup_le fun x hx => (hX x hx).trans (f.mono (le_sSup hx))
+
+/-- **Exercise 4.10(4a)** (§4.2, p.84). The infimum of a set of pre-fixed points
+(`f x ≤ x`) of a monotone map is again a pre-fixed point. -/
+theorem ex_4_10_4a {D : Type*} [CompleteLattice D] (f : D →o D) (X : Set D)
+    (hX : ∀ x ∈ X, f x ≤ x) : f (sInf X) ≤ sInf X :=
+  le_sInf fun x hx => (f.mono (sInf_le hx)).trans (hX x hx)
+
+/-- **Exercise 4.10(5)** (§4.2, p.84). The monotone self-maps of a complete
+lattice, ordered pointwise, again form a complete lattice. -/
+theorem ex_4_10_5 (D : Type*) [CompleteLattice D] : Nonempty (CompleteLattice (D →o D)) :=
+  ⟨inferInstance⟩
+
 end DeepWiki.Rs

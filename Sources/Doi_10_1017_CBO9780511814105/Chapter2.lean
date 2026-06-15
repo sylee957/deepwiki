@@ -68,4 +68,39 @@ example : Step (Name := Bool) (K := Empty) (fun e => e.elim)
     Act.tau (CCS.nil.par CCS.nil) :=
   Step.com3 (by rintro ⟨⟩) (Step.act _ _) (Step.act _ _)
 
+/-! ## Solved exercises -/
+
+/-- Channel names `a, b` for Exercise 2.8. -/
+inductive Ex2Name | a | b
+  deriving DecidableEq
+
+/-- Process constants `A, B` for Exercise 2.8 (`A ≝ b.a.B`). -/
+inductive Ex28K | A | B
+  deriving DecidableEq
+
+/-- Exercise 2.8 definition environment: `A ≝ b.a.B` (and `B ≝ 0`). -/
+def ex28defn : Ex28K → CCS Ex2Name Ex28K
+  | .A => .pre (.name .b) (.pre (.name .a) (.const .B))
+  | .B => .nil
+
+/-- **Exercise 2.8** (§2.2.2, p.26). With `A ≝ b.a.B`, the SOS rules derive the
+synchronisation `(A ∣ b̄.0)∖{b} —τ→ (a.B ∣ 0)∖{b}` (COM3+RES), its relabelling
+`(A ∣ b̄.0)[f] —f(b)→ (a.B ∣ b̄.0)[f]` (REL), and the plain left move
+`(A ∣ b̄.0) —b→ (a.B ∣ b̄.0)` (COM1+CON+ACT). -/
+theorem ex_2_8 :
+    Step ex28defn
+        (.restrict (.par (.const .A) (.pre (.coname .b) .nil)) {Act.name Ex2Name.b}) Act.tau
+        (.restrict (.par (.pre (.name .a) (.const .B)) .nil) {Act.name Ex2Name.b}) ∧
+    (∀ f : Act Ex2Name → Act Ex2Name, Step ex28defn
+        (.relabel (.par (.const .A) (.pre (.coname .b) .nil)) f) (f (.name .b))
+        (.relabel (.par (.pre (.name .a) (.const .B)) (.pre (.coname .b) .nil)) f)) ∧
+    Step ex28defn
+        (.par (.const .A) (.pre (.coname .b) .nil)) (.name .b)
+        (.par (.pre (.name .a) (.const .B)) (.pre (.coname .b) .nil)) := by
+  refine ⟨?_, fun f => Step.rel (Step.com1 (Step.con (Step.act _ _))),
+    Step.com1 (Step.con (Step.act _ _))⟩
+  refine Step.res ?_ ?_ (Step.com3 (by rintro ⟨⟩) (Step.con (Step.act _ _)) (Step.act _ _))
+  · rintro ⟨⟩
+  · rintro ⟨⟩
+
 end DeepWiki.Rs
