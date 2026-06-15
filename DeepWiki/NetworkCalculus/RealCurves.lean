@@ -418,6 +418,15 @@ rate-latency server is the rate-latency curve `β_{(φᵢ/∑φ)·R, T}`. -/
   funext u
   rw [rateLatencyNN_coe, rateLatencyNN_coe, ← ENNReal.coe_mul, mul_assoc]
 
+/-- **Scaling a rate-latency curve scales its rate** (`ℝ≥0`): `c·β_{R,T} = β_{c·R,T}`
+(same latency `T`) — the `ℝ≥0` reading of `const_mul_rateLatencyNN`, used for the GPS
+share `(φᵢ/∑φ)·β_{R,T}` of a rate-latency server. -/
+theorem const_mul_rateLatency (c R T : ℝ≥0) :
+    (fun v => c * rateLatency R T v) = rateLatency (c * R) T := by
+  funext v
+  show c * (R * (v - T)) = c * R * (v - T)
+  rw [mul_assoc]
+
 /-- `tokenBucketNN` as the pointwise `(r·t + b) ⊓ delayNN 0` over `ℝ≥0`. -/
 theorem tokenBucketNN_eq (r b : ℝ≥0) :
     tokenBucketNN r b = (fun t : ℝ≥0 => (r : ℝ≥0∞) * t + b) ⊓ delayNN 0 := by

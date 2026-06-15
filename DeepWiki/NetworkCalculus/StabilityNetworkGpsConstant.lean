@@ -118,6 +118,38 @@ theorem residualCurve_rateLatency_affine (R T ρ b : ℝ≥0) (hρR : ρ < R) :
       exact hle.trans_eq (by ring)
   rw [key, ndClosure_eq_self (rateLatency_mono _ _)]
 
+/-- **One peeling step at a server** (the Theorem 12.5 induction step, relation form):
+at a GPS server with full strict rate-latency aggregate `β_{R,T}` and weights `φ`, restrict
+to families whose already-peeled flows `∑_{j∉J} Dⱼ` are token-bucket `ρ·v+b`-constrained
+(`ρ` their summed rate, `ρ < R`). Then the not-yet-peeled critical flow `i ∈ J` is served
+by the rate-latency strict service curve `β_{(φᵢ/∑_{j∈J}φ)(R−ρ), (R·T+b)/(R−ρ)}`: the
+blind residual leaves the `J`-aggregate the reduced-rate rate-latency `β_{R−ρ,·}`
+(`isStrictMinimalServiceCurve_aggregateServerOn_residual` + `residualCurve_rateLatency_affine`),
+and the GPS share carves flow `i`'s slice of it
+(`isStrictMinimalServiceCurve_residualServer_of_isGps_on` + `const_mul_rateLatency`). The
+rate `(φᵢ/∑_{j∈J}φ)(R−ρ)` exceeds `rᵢ` exactly by `exists_flow_below_residual_share`. -/
+theorem isStrictMinimalServiceCurve_residualServer_gpsPeel {ι : Type*} [Fintype ι]
+    [DecidableEq ι] {S : (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0}
+    {R T ρ b : ℝ≥0} {J : Finset ι} {i : ι} (hi : i ∈ J) (hρR : ρ < R)
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve (rateLatency R T) (aggregateServer S))
+    (hgps : IsGpsServerN φ S) :
+    IsStrictMinimalServiceCurve
+      (rateLatency ((φ i / ∑ j ∈ J, φ j) * (R - ρ)) ((R * T + b) / (R - ρ)))
+      (residualServer (fun A D => S A D ∧ IsMaximalArrivalBound
+        (fun x => ∑ j ∈ Jᶜ, (D j) x) (fun v => ρ * v + b)) i) := by
+  have hcaus' : IsCausalN (fun A D => S A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Jᶜ, (D j) x) (fun v => ρ * v + b)) :=
+    fun A D hAD => hcaus A D hAD.1
+  have hgps' : IsGpsServerN φ (fun A D => S A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Jᶜ, (D j) x) (fun v => ρ * v + b)) :=
+    fun As Ds hAD => hgps As Ds hAD.1
+  have hres := isStrictMinimalServiceCurve_aggregateServerOn_residual (S := S)
+    (α := fun v => ρ * v + b) (J := J) hcaus hβ
+  rw [residualCurve_rateLatency_affine R T ρ b hρR] at hres
+  have hshare := isStrictMinimalServiceCurve_residualServer_of_isGps_on hi hcaus' hres hgps'
+  rwa [const_mul_rateLatency] at hshare
+
 /-- **Lemma 12.5 in the network model**: for a GPS-constant network with positive
 weights `φ`, per-flow long-term rates `r` and finite per-server service rates `R`
 (`longTermArrivalRate αⱼ = rⱼ`, `R^(h) = R h`), aggregate local stability
