@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.LegendreFenchel
+import DeepWiki.NetworkCalculus.LegendreFenchelMoreau
 import DeepWiki.NetworkCalculus.LegendreFenchelConv
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.LegendreFenchelConvExamples
@@ -234,11 +235,22 @@ theorem prop_3_15_convex {f : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) :
 
 /-- **Proposition 3.15**, biconjugate below (§3.3.2, p.54): `𝓛(𝓛 f) ≤ f`
 pointwise — the always-true half of the Fenchel–Moreau involution. The library's
-`legendre_legendre_le`. (The reverse `f ≤ 𝓛(𝓛 f)`, giving `𝓛(𝓛 f) = f` for
-convex non-decreasing `f`, is not yet formalized.) -/
+`legendre_legendre_le`. (The reverse half is `prop_3_15_involution`, reduced to
+supporting-line existence.) -/
 theorem prop_3_15_biconjugate_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
     legendre (legendre f) u ≤ f u :=
   legendre_legendre_le f u
+
+/-- **Proposition 3.15**, the Fenchel–Moreau involution (§3.3.2, p.55):
+`𝓛(𝓛 f) = f` for a curve that is finite everywhere and admits a supporting line
+at every point — the book's supporting-line proof, reduced to subgradient
+existence. For convex non-decreasing `f` those supporting lines exist by the
+standard argument (the "alert reader" step), which is not formalized. The
+library's `legendre_legendre_eq_of_forall_hasSupportingLine`. -/
+theorem prop_3_15_involution {f : ℝ≥0 → EReal}
+    (hfin : ∀ x, f x ≠ ⊤ ∧ f x ≠ ⊥) (hsupp : ∀ x, ∃ ρ, HasSupportingLineAt f x ρ) :
+    legendre (legendre f) = f :=
+  legendre_legendre_eq_of_forall_hasSupportingLine hfin hsupp
 
 /-- **Proposition 3.15**, idempotence on the range (§3.3.2, p.54): `𝓛` is
 idempotent on its image, `𝓛(𝓛(𝓛 g)) = 𝓛 g`, so every transform `𝓛 g` is its
