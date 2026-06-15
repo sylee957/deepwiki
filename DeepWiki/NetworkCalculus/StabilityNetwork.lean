@@ -149,6 +149,30 @@ theorem Network.IsLocallyStable.restrict [DecidableEq ι] {net : Network κ ι}
     net.aggregateArrivalRateOn J h < net.serviceRate h :=
   lt_of_le_of_lt (net.aggregateArrivalRateOn_le J h) (hstab h)
 
+/-- **Peel a flow**: zero out flow `i`'s arrival curve (routing, other flows, and
+all service curves unchanged) — the network the induction recurses on after the
+critical flow of Lemma 12.5 has been removed. -/
+noncomputable def Network.zeroFlow [DecidableEq ι] (net : Network κ ι) (i : ι) :
+    Network κ ι :=
+  { net with arrivalCurve := Function.update net.arrivalCurve i 0 }
+
+/-- Zeroing a flow only decreases each server's aggregate rate (its routing — hence
+`flowsThrough` — is unchanged, and the zeroed flow contributes `0 ≤` its old rate). -/
+theorem Network.aggregateArrivalRate_zeroFlow_le [DecidableEq ι] (net : Network κ ι)
+    (i : ι) (h : κ) :
+    (net.zeroFlow i).aggregateArrivalRate h ≤ net.aggregateArrivalRate h := by
+  refine Finset.sum_le_sum fun j _ => longTermArrivalRate_mono fun t => ?_
+  rcases eq_or_ne j i with rfl | hji
+  · simp [Network.zeroFlow, Function.update_self]
+  · simp [Network.zeroFlow, Function.update_of_ne hji]
+
+/-- **Peeling preserves local stability**: zeroing a flow keeps every server
+locally stable (its service rate is unchanged and its aggregate rate only drops) —
+the recursion step of the Theorem 12.5 induction. -/
+theorem Network.IsLocallyStable.zeroFlow [DecidableEq ι] {net : Network κ ι}
+    (hstab : net.IsLocallyStable) (i : ι) : (net.zeroFlow i).IsLocallyStable :=
+  fun h => lt_of_le_of_lt (net.aggregateArrivalRate_zeroFlow_le i h) (hstab h)
+
 /-! ## Network topology classes (Definition 10.1)
 The modular-analysis topology classes of `NetworkTopology`, read off a
 network's routing `paths`. -/
