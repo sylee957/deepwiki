@@ -1,0 +1,123 @@
+import DeepWiki.ReactiveSystems.LabelledTransitionSystems
+import Mathlib.Data.Set.Basic
+
+/-! # CCS: syntax and operational semantics
+Milner's Calculus of Communicating Systems. Actions are `Act = L ∪ {τ}` with
+`L = A ∪ Ā` (names and complementary co-names); CCS expressions are built from
+`nil`, prefixing, choice, parallel composition, restriction, relabelling and
+process constants; and the SOS rules (Table 2.2) inductively generate the
+transition relation of the LTS whose states are CCS expressions. The book's
+general indexed sum `Σᵢ∈I Pᵢ` is taken via its instances `nil` (`0`) and binary
+`choice` (`+`), exactly as the development uses it. -/
+
+namespace DeepWiki.ReactiveSystems
+
+/-- CCS actions over channel names `Name`: the silent action `τ`, an input name
+`a`, or an output co-name `ā`. (`Act = L ∪ {τ}` with `L = A ∪ Ā`.) -/
+inductive Act (Name : Type*)
+  | tau : Act Name
+  | name : Name → Act Name
+  | coname : Name → Act Name
+
+namespace Act
+
+variable {Name : Type*}
+
+/-- Complementation `·̄` on actions: swaps a name and its co-name, fixes `τ`. -/
+def co : Act Name → Act Name
+  | tau => tau
+  | name a => coname a
+  | coname a => name a
+
+@[simp] theorem co_tau : (tau : Act Name).co = tau := rfl
+
+@[simp] theorem co_name (a : Name) : (name a).co = coname a := rfl
+
+@[simp] theorem co_coname (a : Name) : (coname a).co = name a := rfl
+
+/-- Complementation is an involution: `ᾱ̄ = α`. -/
+@[simp] theorem co_co (a : Act Name) : a.co.co = a := by cases a <;> rfl
+
+/-- `a` is a label (an element of `L`): a name or co-name, not `τ`. -/
+def IsLabel (a : Act Name) : Prop := a ≠ tau
+
+/-- The complement of a label is a label. -/
+theorem IsLabel.co {a : Act Name} (h : a.IsLabel) : a.co.IsLabel := by
+  cases a <;> simp_all [IsLabel]
+
+end Act
+
+/-- A relabelling function (Definition 2.3): it fixes `τ` and commutes with
+complementation, `f(ᾱ) = f(α)‾`. -/
+structure IsRelabelling {Name : Type*} (f : Act Name → Act Name) : Prop where
+  /-- A relabelling preserves the silent action. -/
+  map_tau : f Act.tau = Act.tau
+  /-- A relabelling commutes with complementation. -/
+  map_co : ∀ a, f a.co = (f a).co
+
+/-- CCS process expressions over channel names `Name` and process constants `K`
+(Definition 2.3). The book's indexed sum `Σᵢ∈I Pᵢ` is represented by its
+instances `nil` (empty sum) and binary `choice` (two-element sum). -/
+inductive CCS (Name K : Type*)
+  /-- The inactive process `0` (empty sum). -/
+  | nil : CCS Name K
+  /-- A process constant `K`, with body supplied by a definition environment. -/
+  | const : K → CCS Name K
+  /-- Action prefixing `a.P`. -/
+  | pre : Act Name → CCS Name K → CCS Name K
+  /-- Binary choice `P + Q`. -/
+  | choice : CCS Name K → CCS Name K → CCS Name K
+  /-- Parallel composition `P | Q`. -/
+  | par : CCS Name K → CCS Name K → CCS Name K
+  /-- Restriction `P \ L`. -/
+  | restrict : CCS Name K → Set (Act Name) → CCS Name K
+  /-- Relabelling `P[f]`. -/
+  | relabel : CCS Name K → (Act Name → Act Name) → CCS Name K
+
+/-- The CCS SOS transition relation (Table 2.2), parametrised by a definition
+environment `defn` giving each process constant `K0` its body `K0 ≝ defn K0`.
+`Step defn P α P'` means `P —α→ P'`. -/
+inductive Step {Name K : Type*} (defn : K → CCS Name K) :
+    CCS Name K → Act Name → CCS Name K → Prop
+  /-- ACT: `α.P —α→ P`. -/
+  | act (α : Act Name) (P : CCS Name K) : Step defn (.pre α P) α P
+  /-- SUM (left summand): a move of `P` is a move of `P + Q`. -/
+  | suml {P P' Q : CCS Name K} {α : Act Name} :
+      Step defn P α P' → Step defn (.choice P Q) α P'
+  /-- SUM (right summand): a move of `Q` is a move of `P + Q`. -/
+  | sumr {P Q Q' : CCS Name K} {α : Act Name} :
+      Step defn Q α Q' → Step defn (.choice P Q) α Q'
+  /-- COM1: `P` moves on its own inside `P | Q`. -/
+  | com1 {P P' Q : CCS Name K} {α : Act Name} :
+      Step defn P α P' → Step defn (.par P Q) α (.par P' Q)
+  /-- COM2: `Q` moves on its own inside `P | Q`. -/
+  | com2 {P Q Q' : CCS Name K} {α : Act Name} :
+      Step defn Q α Q' → Step defn (.par P Q) α (.par P Q')
+  /-- COM3: synchronisation of complementary labels into a `τ`-move. -/
+  | com3 {P P' Q Q' : CCS Name K} {ℓ : Act Name} :
+      ℓ.IsLabel → Step defn P ℓ P' → Step defn Q ℓ.co Q' →
+      Step defn (.par P Q) Act.tau (.par P' Q')
+  /-- RES: a move surviving restriction (`α, ᾱ ∉ L`). -/
+  | res {P P' : CCS Name K} {α : Act Name} {L : Set (Act Name)} :
+      α ∉ L → α.co ∉ L → Step defn P α P' → Step defn (.restrict P L) α (.restrict P' L)
+  /-- REL: a move under relabelling, `P[f] —f(α)→ P'[f]`. -/
+  | rel {P P' : CCS Name K} {α : Act Name} {f : Act Name → Act Name} :
+      Step defn P α P' → Step defn (.relabel P f) (f α) (.relabel P' f)
+  /-- CON: a constant `K0` moves as its body does (`K0 ≝ defn K0`). -/
+  | con {K0 : K} {α : Act Name} {P' : CCS Name K} :
+      Step defn (defn K0) α P' → Step defn (.const K0) α P'
+
+variable {Name K : Type*}
+
+/-- The labelled transition system generated by the CCS SOS rules under a
+definition environment: states are CCS expressions, labels are actions. -/
+def ccsLTS (defn : K → CCS Name K) : LTS (CCS Name K) (Act Name) := ⟨Step defn⟩
+
+@[simp] theorem ccsLTS_step (defn : K → CCS Name K) (P : CCS Name K) (α : Act Name)
+    (P' : CCS Name K) : (ccsLTS defn).step P α P' ↔ Step defn P α P' := Iff.rfl
+
+/-- The inactive process `nil` (`0`) has no transitions. -/
+@[simp] theorem not_step_nil {defn : K → CCS Name K} {α : Act Name} {P' : CCS Name K} :
+    ¬ Step defn CCS.nil α P' := by intro h; cases h
+
+end DeepWiki.ReactiveSystems

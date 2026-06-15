@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.LabelledTransitionSystems
+import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 
