@@ -98,6 +98,7 @@ import DeepWiki.NetworkCalculus.Packetizer
 import DeepWiki.NetworkCalculus.ServiceCurveMaximal
 import DeepWiki.NetworkCalculus.ServersConcatenation
 import DeepWiki.NetworkCalculus.ServersConcatenationChain
+import DeepWiki.NetworkCalculus.ServersConcatenationRateLatency
 import DeepWiki.NetworkCalculus.ServersConcatenationStrict
 import DeepWiki.NetworkCalculus.ServersSystemClosure
 import DeepWiki.NetworkCalculus.ServiceCurveStrictTandem
