@@ -49,6 +49,21 @@ theorem isLUB_programOptimum {ι : Type*} (Feasible : ι → Prop) (obj : ι →
       (programOptimum Feasible obj) :=
   isLUB_iSup
 
+/-- The optimum is monotone in the objective: a pointwise-larger objective has a
+larger worst case (e.g. a larger realized delay function). -/
+theorem programOptimum_mono {ι : Type*} {Feasible : ι → Prop} {obj obj' : ι → EReal}
+    (h : ∀ c, obj c ≤ obj' c) :
+    programOptimum Feasible obj ≤ programOptimum Feasible obj' :=
+  iSup_mono fun c => h c.1
+
+/-- The optimum is monotone in the feasible set: enlarging the feasible
+configurations only enlarges the worst case (so *adding* constraints — shrinking
+the feasible set — can only lower it, the LP-refines-NC direction). -/
+theorem programOptimum_mono_feasible {ι : Type*} {Feasible Feasible' : ι → Prop}
+    {obj : ι → EReal} (h : ∀ c, Feasible c → Feasible' c) :
+    programOptimum Feasible obj ≤ programOptimum Feasible' obj :=
+  iSup_le fun c => le_programOptimum (h c.1 c.2)
+
 open scoped NNReal ENNReal
 
 /-- A feasible single-server trajectory for a flow with arrival curve `α` under
