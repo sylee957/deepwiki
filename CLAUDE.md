@@ -5,134 +5,128 @@ Guidance for working in this repository.
 ## What this project is
 
 **DeepWiki** — an AI-generated wiki of autoformalized mathematics (lake package
-`deepwiki`). The first entry is a Lean 4 + Mathlib formalization of the
-**(min,plus) dioid algebra** (the algebra behind deterministic network calculus);
-further topics are added as additional chapters.
+`deepwiki`). The first topic is a Lean 4 + Mathlib formalization of the **(min,plus)
+dioid algebra** and **deterministic network calculus**; further topics are added as
+sibling chapter sets.
 
-The formalization is a **plain Lean library**: the real
-`def`/`theorem`/`instance` declarations live in the `DeepWiki/NetworkCalculus/*.lean` chapter files
-as ordinary top-level Lean, each carrying a concise one-line `/-- … -/`
-docstring, with a `/-! … -/` module docstring per file. `DeepWiki/NetworkCalculus.lean`
-is the topic aggregator that imports every chapter (and `DeepWiki.lean` is the
-library root that imports it). Rendered docs are produced by **doc-gen4**
-(standard Lean API documentation).
+It is a **plain Lean library**: real `def`/`theorem`/`instance` declarations live in
+`DeepWiki/NetworkCalculus/*.lean` chapter files as ordinary top-level Lean, each with a
+concise one-line `/-- … -/` docstring and a `/-! … -/` module docstring per file.
+`DeepWiki/NetworkCalculus.lean` is the topic aggregator (imports every chapter in
+dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
+**doc-gen4** (standard Lean API documentation).
 
-**Two-layer architecture.** The repo is a single lake package with two libs:
-the **topic library** `DeepWiki/NetworkCalculus/` (the book-number-free general
-theory — this is what the chapter files below are) and the **source catalogs**
-`Sources/<slug>/` (per-book, DOI-keyed: one declaration per book item, named by
-its book number — `Dnc.prop_10_1`, `Dnc.def_2_7` — `alias`/`abbrev`-linked to the
-library, with §/page in the docstring and the DOI in `Sources/<slug>/Source.lean`).
-Book numbers live **only** in the catalog; the library stays number-free. A second
-topic gets `DeepWiki/<Topic>/` over the same `Sources/` layer.
+**Two-layer architecture** (one lake package, two libs):
+- **Topic library** `DeepWiki/NetworkCalculus/` — the book-number-free general theory
+  (the chapter files).
+- **Source catalogs** `Sources/<slug>/` — per-book, DOI-keyed. One `alias`/`abbrev` per
+  book item, named by its book number (`Dnc.prop_10_1`, `Dnc.def_2_7`), linking to the
+  library, with §/page in the docstring and the DOI in `Sources/<slug>/Source.lean`. The
+  folder is named by the **sanitized DOI** (`Sources/Doi_10_1002_9781119440284/` — `/`
+  and `.` → `_`, `Doi_` prefix because Lean module names can't start with a digit); the
+  declaration namespace stays a short slug (`DeepWiki.Dnc`). Book numbers live **only** in
+  the catalog — the library stays number-free. A second topic gets `DeepWiki/<Topic>/` over
+  the same `Sources/` layer.
 
-> **History:** this used to be a Verso "Manual"-genre book where declarations
-> lived inside elaborated ` ```lean ` code blocks interleaved with prose, and the
-> Verso book *was* the source of truth. Verso was removed (the per-block
-> interpreted elaboration was ~70 ms/block, ~539 blocks) in favour of plain Lean
-> + doc-gen4. The conversion was mechanical and verified code-identical to the
-> Verso originals; the last Verso state is in git history. Do **not** reintroduce
-> Verso, `#doc`, ` ```lean ` blocks, or `import VersoManual`. If `Main.lean`,
-> `VersoParse.lean`, an `Introduction.lean`, or `"<Chapter> 2.lean"` duplicates
-> reappear, they are stale — delete them.
+**Do not reintroduce Verso.** This was once a Verso "Manual" book (declarations inside
+elaborated ` ```lean ` blocks); Verso was removed in favour of plain Lean + doc-gen4. No
+`import VersoManual`, `#doc`, or ` ```lean ` blocks. If `Main.lean`, `VersoParse.lean`, an
+`Introduction.lean`, or `"<Chapter> 2.lean"` duplicates reappear, they are stale — delete
+them.
 
-## Toolchain & build
+## The autoformalization loop
 
-- Lean toolchain: `leanprover/lean4:v4.30.0` (see `lean-toolchain`). `elan`/`lake`
-  are on PATH via `~/.zshrc`: prepend `export PATH="$HOME/.elan/bin:$PATH"` in any
-  fresh `Bash` invocation (the shell is non-interactive and may not load it).
-- Dependencies (pinned to `v4.30.0`, matching the toolchain): `mathlib`,
-  `doc-gen4`. (Verso is gone.)
-- `lakefile.toml` has two libs: `DeepWiki` (lean_lib, root `DeepWiki.lean`, the
-  topic library) and `Sources` (the DOI catalogs); `defaultTargets = ["DeepWiki", "Sources"]`.
+When the user posts a capture/screenshot of a book passage or points at PDF pages in
+`references/`, formalize it into the appropriate chapter:
 
-Commands:
-- Build one chapter: `lake build DeepWiki.NetworkCalculus.<Chapter>` (e.g.
-  `DeepWiki.NetworkCalculus.Dioids`).
-- Build everything: `lake build`. Must be warning-free and `sorry`-free.
-- **Proof-result gate (agent loop): `scripts/check.sh [DeepWiki.NetworkCalculus.<Chapter>]`.** Runs the
-  full `lake build` and returns a single verdict — exit `0` = `GATE: PASS`, exit `1`
-  = `GATE: FAIL`. Crucially it treats `warning:`/`error:`/`declaration uses 'sorry'`
-  as failure *even when lake itself exits 0* (lake exits 0 on `sorry`), enforcing the
-  warning-/sorry-free requirement. Pass a chapter target for faster mid-iteration
-  feedback; run with no arg (all default targets) as the final gate. Timing on a warm filesystem
-  cache: ~2.4s no-op (lake's manifest-parse + olean-stat floor over the ~1500-job
-  dependency closure — intrinsic, not network/elan/reservoir), plus 0–3s when a
-  chapter actually recompiles (the heaviest real-curve chapters elaborate in
-  ~1–2s each). The first build after idle is colder (~5–7s). Don't expect below ~2.4s
-  without bypassing lake.
-- Render API docs to HTML (doc-gen4): `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs`.
-  Output lands in `.lake/build/doc/` (gitignored). doc-gen expects a
-  `references.bib` at the doc root — if rendering fails on a missing
-  `.lake/build/doc/references.bib`, `touch` an empty one. If doc-gen "Replays"
-  stale HTML instead of regenerating, remove its facet markers
-  (`.lake/build/doc-data/DeepWiki--library.docs_built*`) and the `.lake/build/doc`
-  tree, then rebuild.
+1. **Read by OCR, never text extraction.** Transcribe theorem/definition statements only
+   from *rendered* pages — the Read tool's PDF rendering (`pages` param, ≤20 pages/request),
+   or if it errors on `pdftoppm` (stale extension PATH; poppler is installed) render
+   manually: `pdftoppm -png -r 110 -f <p> -l <p> <pdf> /tmp/page` then Read the PNGs. Raw
+   `pdftotext`/content scraping garbles math glyphs and statement *shape* (it has caused a
+   misread quantifier structure); use `pdftotext -layout` only to grep for which page holds
+   a passage. `references/` is a **gitignored** local dump; its PDFs are named by DOI
+   (`references/10.1002_9781119440284.pdf` is the DNC source book).
+2. **Search before writing.** Use `scripts/wiki` (below) to find the lemmas/definitions to
+   build on — reuse and extend rather than redefine.
+3. **Write** in the right chapter, in `namespace DeepWiki`, following the chapter DAG and
+   the math orientation, gotchas, docstring, and naming/style conventions below. Mind the
+   numeric-vs-dioid order inversion when transcribing inequalities.
+4. **Gate** with `scripts/check.sh` (warning-/sorry-free).
+5. **Restate** each new theorem as an anonymous `example` with its expected type against
+   the book's wording — "it compiled" ≠ "it says the right thing".
+6. **Catalog** the book item in `Sources/<slug>/Chapter*.lean` (alias/abbrev + §/page
+   docstring). The catalog file must `import` the chapter that defines the aliased
+   declaration, or the build fails.
 
-## Navigating the library (`scripts/wiki`)
+## Build & gate
 
-A local graph-RAG CLI over the compiled library lives at `scripts/wiki`
-(`lake exe wiki`; sources in `tools/WikiRAG/`, with its own `README.md`). It extracts
-the `DeepWiki`+`Sources` environment into `.wiki/graph.db` (gitignored): ≈3,150 decl
-nodes, the *exact* intra-library `uses` edges (`ConstantInfo.getUsedConstantsAsSet`, over
-type and value), a derived module graph, and optional local Ollama embeddings. **Prefer
-it over `grep` for structural questions** — it answers them exactly rather than by text
-match:
+- Toolchain `leanprover/lean4:v4.30.0` (`lean-toolchain`). Prepend
+  `export PATH="$HOME/.elan/bin:$PATH"` to every `Bash` invocation (the shell is
+  non-interactive and may not load `~/.zshrc`). Deps pinned to `v4.30.0`: `mathlib`,
+  `doc-gen4`.
+- `lakefile.toml`: libs `DeepWiki` (root `DeepWiki.lean`) and `Sources`;
+  `defaultTargets = ["DeepWiki", "Sources"]`.
+- Build one chapter: `lake build DeepWiki.NetworkCalculus.<Chapter>`. Everything: `lake build`.
+- **Gate: `scripts/check.sh [DeepWiki.NetworkCalculus.<Chapter>]`** — runs the full
+  `lake build`, exit `0` = `GATE: PASS`, `1` = `GATE: FAIL`. Treats
+  `warning:`/`error:`/`declaration uses 'sorry'` as failure *even when lake itself exits 0*
+  (lake exits 0 on `sorry`), enforcing the warning-/sorry-free requirement. Pass a chapter
+  target for fast mid-iteration feedback; run bare (all default targets) as the final gate.
+  Floor ~2.4s no-op (lake's manifest/olean-stat over the ~1500-job closure), +0–3s per
+  recompiled chapter, ~5–7s cold.
+- Render docs: `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs` → `.lake/build/doc/`
+  (gitignored). Needs a `references.bib` at the doc root (`touch` an empty one if rendering
+  fails on it missing). If doc-gen "Replays" stale HTML, remove its facet markers
+  (`.lake/build/doc-data/DeepWiki--library.docs_built*`) and the `.lake/build/doc` tree,
+  then rebuild.
 
-- `scripts/wiki rdeps <name> [--depth D]` — dependents / impact set; run *before*
-  changing or renaming a declaration.
-- `scripts/wiki deps <name> [--depth D]` — what a declaration builds on (proof context).
-- `scripts/wiki path <a> <b>` — a shortest `uses`-path between two declarations.
-- `scripts/wiki search <q>` (lexical) and `scripts/wiki context <q>` (lexical + semantic)
-  — locate declarations by meaning; `show <name>` gives signature + docstring + immediate
-  uses/used-by. Short names auto-resolve; ambiguous ones list candidates. `--json` for
-  machine output.
+## Navigating with `scripts/wiki`
 
-Maintenance: re-run `scripts/wiki build` after library changes (it preserves embeddings
-for declarations whose name/kind/signature/docstring are unchanged), then
-`scripts/wiki index` re-embeds only the new/changed ones (needs a local Ollama server;
-default model `nomic-embed-text`). To change embedding model use `scripts/wiki reindex`
-(clears + re-embeds all — `index` refuses to mix models, tracked in a `meta` table that
-also carries the auto-applied schema version). The `WikiRAG` lib and `wiki` exe are kept
-out of `defaultTargets`, so the warning-/sorry-free `lake build` gate is untouched.
+A local graph-RAG CLI over the compiled library (`lake exe wiki`; sources in
+`tools/WikiRAG/`, own `README.md`). Extracts the `DeepWiki`+`Sources` environment into
+`.wiki/graph.db` (gitignored): ≈3,150 decl nodes, the *exact* intra-library `uses` edges
+(`ConstantInfo.getUsedConstantsAsSet`, over type and value), a module graph, and optional
+local Ollama embeddings. **Prefer it over `grep` for structural questions** — it answers
+exactly rather than by text match.
 
-## Chapter structure (`DeepWiki/NetworkCalculus/`)
+- `rdeps <name> [--depth D]` — dependents / impact set; run *before* changing or renaming a
+  declaration.
+- `deps <name> [--depth D]` — what a declaration builds on (proof context).
+- `path <a> <b>` — a shortest `uses`-path between two declarations.
+- `search <q>` (lexical) / `context <q>` (lexical + semantic) — locate by meaning;
+  `show <name>` gives signature + docstring + immediate uses/used-by. Short names
+  auto-resolve; `--json` for machine output.
 
-Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
-then declarations in `namespace DeepWiki`, each with a `/-- … -/` docstring.
-Chapters `import` earlier chapters to form the dependency DAG;
-`DeepWiki/NetworkCalculus.lean` imports them all in dependency order — it is the
-live chapter list (do not maintain a copy of it here).
+Maintenance: `scripts/wiki build` after library changes (preserves embeddings for decls
+whose name/kind/signature/docstring are unchanged), then `scripts/wiki index` re-embeds the
+new/changed ones (needs a local Ollama server; default `nomic-embed-text`); `reindex` to
+change model. `WikiRAG`/`wiki` are out of `defaultTargets`, so the gate is untouched.
 
-All declarations live in `namespace DeepWiki` (sub-namespace `Deviation` for
-the backlog/delay theory, whose short names would clash with the curve
-catalog).
+## Chapter structure & naming (`DeepWiki/NetworkCalculus/`)
 
-**Chapter naming:** base concept first, qualifiers appended as suffixes —
-`ServiceCurveStrict`, `ArrivalCurvesShaper`, `ArrivalCurvesShaperGreedy` — so
-related chapters sort together alphabetically. When a chapter grows a distinct
-sub-theory, split it into a suffixed sibling rather than growing the file.
-Counterexample-ladder chapters take the suffix `Strict`
-(`ServersConcatenationStrict`, `ServiceCurveVariableCapacityStrict`); when the
-parent name already ends in `Strict` or contains it as the concept term, use
-`Strictness` (`ServersResidualStrictness`, `ServiceCurveWeaklyStrictStrictness`).
+Each chapter: imports first, then a `/-! … -/` module docstring, then declarations in
+`namespace DeepWiki` (sub-namespace `Deviation` for the backlog/delay theory, whose short
+names would clash with the curve catalog). Chapters `import` earlier chapters to form the
+dependency DAG; `DeepWiki/NetworkCalculus.lean` is the live ordered chapter list (don't
+duplicate it here). **Flat layout** — no subdirectories; a second topic gets its own sibling
+`DeepWiki/<Topic>/` library (module renames touch every import and doc-gen URL, so this is
+done once per topic, not per chapter).
 
-**Singular vs plural:** plural when the chapter is the theory of a class of
-objects (`Dioids`, `Servers`, `RealCurves`, `ArrivalCurves`, `Deviations`,
-`Closures`); singular when it names one operation, property, or
-distinguished concept (`Deconvolution`, `Continuity`, `PseudoInverse`,
-`ConvolutionMinimum`), including compounds where the concept is the
-qualified head (`SubDioid`, `ConcaveDioid`). Whichever number a family head
-gets, it is frozen verbatim across every sibling — the prefix is an
-identifier, not prose (`ArrivalCurves*` throughout, never a mixed
-`ArrivalCurve*`/`ArrivalCurves*` family). `ServiceCurve*` predates the rule
-and stays singular: within-family uniformity is the binding part.
-
-**Flat layout:** chapters stay flat in `DeepWiki/NetworkCalculus/`, organized by the prefix
-families above — no subdirectories. The topic partition is already in place
-(`NetworkCalculus` is the first topic); a second wiki topic gets its own
-sibling `DeepWiki/<Topic>/` library (module renames touch every import and
-doc-gen URL, so this is done once per topic, not per chapter).
+- **Chapter names:** base concept first, qualifiers appended as suffixes so siblings sort
+  together alphabetically — `ServiceCurveStrict`, `ArrivalCurvesShaper`,
+  `ArrivalCurvesShaperGreedy`. Grow a distinct sub-theory into a suffixed sibling, not a
+  bigger file. Counterexample-ladder chapters take suffix `Strict`
+  (`ServersConcatenationStrict`, `ServiceCurveVariableCapacityStrict`); when the parent name
+  already ends in or contains `Strict`, use `Strictness` (`ServersResidualStrictness`,
+  `ServiceCurveWeaklyStrictStrictness`).
+- **Singular vs plural:** plural for the theory of a class of objects (`Dioids`, `Servers`,
+  `RealCurves`, `ArrivalCurves`, `Deviations`, `Closures`); singular for one operation,
+  property, or distinguished concept (`Deconvolution`, `Continuity`, `PseudoInverse`,
+  `ConvolutionMinimum`, `SubDioid`, `ConcaveDioid`). A family head is frozen verbatim across
+  every sibling — the prefix is an identifier, not prose (`ArrivalCurves*` throughout, never a
+  mixed `ArrivalCurve*`/`ArrivalCurves*` family). `ServiceCurve*` predates the rule and stays
+  singular: within-family uniformity is the binding part.
 
 ## The mathematics (orientation — get this right or proofs invert)
 
@@ -204,16 +198,14 @@ doc-gen URL, so this is done once per topic, not per chapter).
 - Anonymous `example`s carry no docstring (and don't appear in doc-gen output).
 - Each file opens with a `/-! … -/` module docstring (1–3 short lines) **after the
   imports** — imports must come first or Lean errors `invalid 'import' command`.
-- The math/order conventions still matter for *accuracy*: a docstring on a
-  dioid-order (`≼`) statement must not be read in the reverse numeric order. The
-  carrier files are where order-inversion mistakes hide — see the math section.
+- A docstring on a dioid-order (`≼`) statement must not be read in the reverse numeric
+  order — the carrier files are where order-inversion mistakes hide (see the math section).
 - **The `-/` trap:** any `-/` substring *inside* a docstring closes the comment
   early, even mid-word ("sub-/super", "left-/lower"). Write "sub- and super-".
   Audit with `grep -n -- '-/' file.lean | grep -vE -- '-/\s*$'`.
-- Treat all linter warnings (unused variables, deprecations) as errors; the build
-  must be warning-free and `sorry`-free.
+- Treat all linter warnings (unused variables, deprecations) as errors.
 
-## Style preferences
+## Naming & style conventions
 
 How declarations should be shaped (these reflect repeated authoring decisions,
 not just defaults):
@@ -350,48 +342,19 @@ not just defaults):
   the failure a citable general fact (`ServersConcatenationStrict` is the
   model).
 
-## Autoformalizing from source PDFs (`references/`)
+## Workflow & CI
 
-- `references/` is a **gitignored** local dump of the source books/papers being
-  formalized. Claude reads PDFs there directly with the Read tool (use the
-  `pages` parameter; ≤20 pages per request).
-- **Read statements by OCR, never by text extraction.** Transcribe
-  theorem/definition statements only from *rendered pages*: the Read tool's PDF
-  rendering, or — if it errors about `pdftoppm` (stale extension PATH; poppler
-  is installed) — render manually with
-  `pdftoppm -png -r 110 -f <p> -l <p> <pdf> /tmp/page` and Read the PNGs.
-  Raw text extraction (`pdftotext`, content-stream scraping) garbles math
-  glyphs and statement *shape* (it has caused a misread quantifier structure);
-  use `pdftotext -layout` only to grep for which page holds a passage.
-- **The autoformalization workflow:** when the user posts a capture/screenshot of
-  a book passage (or points at pages of a PDF in `references/`), formalize that
-  passage in the appropriate `DeepWiki/NetworkCalculus/*.lean` chapter. Before writing anything new,
-  search the existing library for the lemmas/definitions it should build on —
-  reuse and extend rather than redefine; new statements go in `namespace DeepWiki`
-  following the chapter DAG, docstring conventions, and style preferences above.
-  Mind the order inversion (numeric vs dioid order) when transcribing inequalities.
-  Finish with `scripts/check.sh` and `example`-restatements of the new theorems
-  against the book's wording.
-
-## Workflow conventions
-
-- Verify before claiming done: build the affected chapter, then `lake build`, and for
-  theorems re-state each with its expected type (an `example`) to confirm signatures
-  match the math — don't trust that "it compiled" means "it says the right thing".
-- Commit or push only when asked.
-- The repo is on macOS (`darwin`); `nm` shows Mach-O symbols. doc-gen4 needs a clean
-  native `MD4Lean` build (cross-platform `.lake` contamination caused a link failure
-  once).
-- **Stale `"<File> 2.lean"` duplicates:** macOS file-sync/lock collisions can leave
-  ` 2.lean` copies of chapters (stale Verso versions). They are never imported; if
-  they appear untracked, delete them. The editor may keep a stale tab open on a
-  deleted one and show phantom LSP errors — close the tab.
-- **CI builds and deploys to GitHub Pages.** The GitHub Actions workflow
-  (`.github/workflows/ci.yml`) runs `lake build` and
-  `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs` on push/PR to `main`; on pushes (not
-  PRs) it then publishes `.lake/build/doc` to Pages
-  (https://sylee957.github.io/deepwiki/) via `upload-pages-artifact` +
-  `deploy-pages`. The artifact is small: doc-gen4 renders HTML for the DeepWiki
-  + Sources libraries only — its long docInfo pass over Mathlib feeds cross-reference data,
-  not published pages. CI uses `lake exe cache get` for Mathlib's prebuilt
-  oleans so only `DeepWiki/NetworkCalculus/*.lean` recompiles.
+- **Commit or push only when asked.** Verify before claiming done: build the affected
+  chapter, then `lake build`, and restate theorems as `example`s — don't trust that "it
+  compiled" means "it says the right thing".
+- The repo is on macOS (`darwin`); doc-gen4 needs a clean native `MD4Lean` build
+  (cross-platform `.lake` contamination once caused a link failure). Stale `" 2.lean"`
+  duplicates from macOS file-sync/lock collisions are never imported — delete them if they
+  appear untracked, and close the phantom editor tab that shows LSP errors on a deleted one.
+- **CI** (`.github/workflows/ci.yml`): on push/PR to `main` runs `lake build` and
+  `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs`; on pushes (not PRs) it publishes
+  `.lake/build/doc` to GitHub Pages (https://sylee957.github.io/deepwiki/) via
+  `upload-pages-artifact` + `deploy-pages`. doc-gen4 renders HTML for the DeepWiki + Sources
+  libraries only (its long docInfo pass over Mathlib feeds cross-reference data, not
+  published pages). CI uses `lake exe cache get` for Mathlib's prebuilt oleans so only our
+  chapters recompile.
