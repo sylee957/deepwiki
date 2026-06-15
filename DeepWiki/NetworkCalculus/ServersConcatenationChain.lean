@@ -32,6 +32,24 @@ theorem concatComp_cons {ι : Type*} (S : ι → Curve → Curve → Prop)
     (h : ι) (hs : List ι) :
     concatComp S (h :: hs) = Relation.Comp (S h) (concatComp S hs) := rfl
 
+/-- Build a `concatComp` witness from a step-chain `g`: if `S (path[k]) (g k) (g (k+1))` holds at
+every hop, the path composition relates `g 0` to `g path.length`. The converse of `concatComp` —
+the way a flow's per-hop trajectory through a routing path realizes the path-composition relation. -/
+theorem concatComp_of_chain {ι : Type*} (S : ι → Curve → Curve → Prop) :
+    ∀ (path : List ι) (g : ℕ → Curve),
+      (∀ k (hk : k < path.length), S (path.get ⟨k, hk⟩) (g k) (g (k + 1))) →
+      concatComp S path (g 0) (g path.length) := by
+  intro path
+  induction path with
+  | nil => intro g _; rfl
+  | cons h hs ih =>
+    intro g hstep
+    refine ⟨g 1, hstep 0 (by simp), ?_⟩
+    have hih := ih (fun k => g (k + 1)) (fun k hk => by
+      have := hstep (k + 1) (by simp only [List.length_cons]; omega)
+      simpa using this)
+    simpa [List.length_cons] using hih
+
 /-- Convolution fold of service curves along a path: the empty path is
 the unit `δ₀` (`convUnitEReal`), and `h :: hs` convolves `β h` with the
 rest. -/
