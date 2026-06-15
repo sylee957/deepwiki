@@ -11,6 +11,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantTandem
+import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -223,7 +224,7 @@ one minimizing `rⱼ/φⱼ`) below its GPS share at every server it crosses,
 `rᵢ < φᵢ·R^(h)/(∑_{j∈Fl(h)} φⱼ)`. This is the flow peeled off in the induction for
 Theorem 12.5 (local ⟹ global stability under GPS). The combinatorial core, abstract
 over flows/servers; the library's `exists_flow_below_gps_share`. (The full Theorem
-12.5 induction over the network is not formalized.) -/
+12.5 network induction is formalized — `thm_12_5` below.) -/
 theorem lemma_12_5 {ι σ : Type*} [Fintype ι] [Nonempty ι]
     (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j) (R : σ → ℝ) (Fl : σ → Finset ι)
     (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
@@ -250,8 +251,8 @@ analogue of the residual-path stability — a flow `i` crossing a path of GPS se
 `(φᵢ/∑ⱼφⱼ)·βf`, is globally stable at *every* server on its path once its propagated
 arrival curve is locally stable against that share at each hop. The library's
 `isGloballyStable_gpsPath`. (This is the peeled critical flow's stability — the
-substantive content; the full cyclic induction over the network, and the
-variable-per-server flow population, are not assembled.) -/
+per-flow induction body; the full cyclic induction over the network, with the
+variable-per-server flow population, is assembled in `thm_12_5`.) -/
 theorem thm_12_5_gpsPath {ι : Type*} [Fintype ι] {n : ℕ}
     {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {βf : ℕ → ℝ≥0 → ℝ≥0} {φ : ι → ℝ≥0} {i : ι}
     (hcaus : ∀ k, IsCausalN (Sf k))
@@ -273,7 +274,7 @@ at *every* server on its path, from local stability alone (`r < (φᵢ/∑ⱼφ�
 per-hop propagation is closed-form (burst `+r·∑Tⱼ`), so no extra hypotheses beyond
 local stability. The library's `isGloballyStable_gpsPath_tokenBucket` — the
 substantive per-flow content of Theorem 12.5 (the cyclic peeling assembly over the
-whole network is the remaining unformalized piece). -/
+whole network is `thm_12_5`). -/
 theorem thm_12_5_gpsPath_tokenBucket {ι : Type*} [Fintype ι] {n : ℕ}
     {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
     {R T : ℕ → ℝ≥0} (hcaus : ∀ k, IsCausalN (Sf k))
@@ -311,6 +312,23 @@ structure is aggregate local stability `∑ᵢ rᵢ < R^(h)`. The library's
 per-flow bound) network-level instance of Theorem 12.5. The general variable-per-server-
 population network (the list-path↔hop-index bridge) is the remaining generalization. -/
 alias thm_12_5_tandem := GpsTandem.isGloballyStable_sharedPath_tandem
+
+/-- **Theorem 12.5** (§12.3.3, p.279–280), the full general theorem: a locally stable
+GPS-constant network — arbitrary per-flow routing `net.paths i : List κ`, variable
+per-server populations `net.flowsThrough h`, each server offering a strict rate-latency
+aggregate `β_{R h, T h}` to its GPS relation (shared weights `φ`), each flow a token bucket
+at ingress — is globally stable at every server: the aggregate input/output has a bounded
+backlogged period. The whole cyclic-peeling proof, end to end and fully derived (nothing
+assumed beyond the GPS-network trajectory + aggregate local stability `∑_{Fl h} rⱼ < R^(h)`):
+peel flows in increasing `rⱼ/φⱼ` order (`exists_flow_below_residual_share`), the active-set
+critical flow being below its GPS share of the residual capacity, hence — by the list-path↔
+hop-index `bridge` over the per-flow engine body — token-bucket bounded along its path; the
+outer strong induction (`GpsNetwork.Traj.peelInduction`) bounds every flow, and the per-flow
+bounds aggregate to local stability against each server, discharging global stability through
+`Network.isGloballyStable_of_perFlow_bounds`. The library's `GpsNetwork.Traj.isGloballyStable`
+(over the trajectory model `GpsNetwork.Traj` wrapping a `Network`). Subsumes the shared-path
+tandem `thm_12_5_tandem`. -/
+alias thm_12_5 := GpsNetwork.Traj.isGloballyStable
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
