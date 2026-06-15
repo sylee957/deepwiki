@@ -215,11 +215,17 @@ theorem prop_3_15_inf (f g : ℝ≥0 → EReal) :
 
 /-- **Proposition 3.15**, convex (§3.3.2, p.54): `𝓛(f)` is convex for a proper
 curve `f` (never `⊥`) — a supremum of affine slices. The library's
-`legendre_convex`. (The remaining properties — `𝓛(f∗g)=𝓛(f)+𝓛(g)` and the
-Fenchel–Moreau involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not
-yet formalized.) -/
+`legendre_convex`. -/
 theorem prop_3_15_convex {f : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) :
     IsConvexEReal (legendre f) :=
   legendre_convex hf
+
+/-- **Proposition 3.15**, biconjugate below (§3.3.2, p.54): `𝓛(𝓛 f) ≤ f`
+pointwise — the always-true half of the Fenchel–Moreau involution. The library's
+`legendre_legendre_le`. (The reverse `f ≤ 𝓛(𝓛 f)`, giving `𝓛(𝓛 f) = f` for
+convex non-decreasing `f`, and `𝓛(f∗g) = 𝓛(f)+𝓛(g)` are not yet formalized.) -/
+theorem prop_3_15_biconjugate_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
+    legendre (legendre f) u ≤ f u :=
+  legendre_legendre_le f u
 
 end DeepWiki.Dnc

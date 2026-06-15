@@ -104,6 +104,30 @@ theorem legendre_antitone {f g : ℝ≥0 → EReal} (h : ∀ x, f x ≤ g x) (t 
   refine iSup_mono fun u => ?_
   exact EReal.sub_le_sub (le_refl _) (h u)
 
+/-- **The biconjugate lies below the function**: `𝓛(𝓛 f) ≤ f` pointwise — always,
+with no convexity hypothesis (the reverse `f ≤ 𝓛(𝓛 f)`, completing the
+Fenchel–Moreau involution `𝓛(𝓛 f) = f`, needs `f` convex non-decreasing and is
+not formalized). Each slice `↑(u·s) − 𝓛(f) s ≤ f u` by `le_legendre`. -/
+theorem legendre_legendre_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
+    legendre (legendre f) u ≤ f u := by
+  rw [legendre_apply]
+  refine iSup_le fun s => ?_
+  have h : (((s * u : ℝ≥0) : ℝ) : EReal) - f u ≤ legendre f s := le_legendre f s u
+  have key : (((s * u : ℝ≥0) : ℝ) : EReal)
+      - ((((s * u : ℝ≥0) : ℝ) : EReal) - f u) = f u := by
+    rcases eq_or_ne (f u) ⊤ with hf | hf
+    · rw [hf, EReal.sub_top, EReal.coe_sub_bot]
+    · rcases eq_or_ne (f u) ⊥ with hb | hb
+      · rw [hb, EReal.coe_sub_bot, EReal.sub_top]
+      · obtain ⟨c, hc⟩ : ∃ c : ℝ, f u = (c : EReal) :=
+          ⟨(f u).toReal, (EReal.coe_toReal hf hb).symm⟩
+        rw [hc, ← EReal.coe_sub, ← EReal.coe_sub, sub_sub_cancel]
+  rw [show (((u * s : ℝ≥0) : ℝ) : EReal) = (((s * u : ℝ≥0) : ℝ) : EReal) by rw [mul_comm]]
+  calc (((s * u : ℝ≥0) : ℝ) : EReal) - legendre f s
+      ≤ (((s * u : ℝ≥0) : ℝ) : EReal) - ((((s * u : ℝ≥0) : ℝ) : EReal) - f u) :=
+        EReal.sub_le_sub (le_refl _) h
+    _ = f u := key
+
 /-- The Legendre–Fenchel transform turns the pointwise `min` into a `max`:
 `𝓛(f ⊓ g) = 𝓛(f) ⊔ 𝓛(g)`. Subtracting the smaller of `f u, g u` gives the
 larger of the two slices, and the supremum distributes over the join. -/
