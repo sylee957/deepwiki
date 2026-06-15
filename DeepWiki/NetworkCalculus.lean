@@ -44,6 +44,7 @@ import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.ERealSupInf
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelMoreau
+import DeepWiki.NetworkCalculus.LegendreFenchelMoreauConvex
 import DeepWiki.NetworkCalculus.LegendreFenchelConv
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.LegendreFenchelConvExamples
