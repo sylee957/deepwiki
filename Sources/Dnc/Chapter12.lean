@@ -377,6 +377,16 @@ alias thm_12_3_perFlowDelay := SpNetwork.Traj.isFlowDelayBounded
 @[inherit_doc thm_12_3_perFlowDelay]
 alias thm_12_5_perFlowDelay := GpsNetwork.Traj.isFlowDelayBounded
 
+/-- **Per-flow backlog bounds** (library, companions of the per-flow delay bounds): in a locally
+stable network each flow's backlog at a crossed server is finite, bounded by `rᵢ·T' + B'` of its
+residual rate-latency service (`flowResidualBound` + the latency-free server backlog bound
+`backlog_le_of_strictRateLatency_affine`). The library's `SpNetwork.Traj.isFlowBacklogBounded`
+(static priority) and `GpsNetwork.Traj.isFlowBacklogBounded` (GPS). -/
+alias thm_12_3_perFlowBacklog := SpNetwork.Traj.isFlowBacklogBounded
+
+@[inherit_doc thm_12_3_perFlowBacklog]
+alias thm_12_5_perFlowBacklog := GpsNetwork.Traj.isFlowBacklogBounded
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,

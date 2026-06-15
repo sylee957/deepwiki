@@ -41,12 +41,12 @@ theorem delay_le_of_strictRateLatency_tokenBucket
 
 /-- **Backlog bound** (`β_{R,T}` strict service, `γ_{r,b}` arrival): a pair served by `S` with
 strict rate-latency service `β_{R,T}` whose input is token-bucket `γ_{r,b}`-constrained has backlog
-at most `r·T + b` (`r ≤ R`, `0 < T`). -/
+at most `r·T + b` (`r ≤ R`; valid for every `T`, including `T = 0`). -/
 theorem backlog_le_of_strictRateLatency_tokenBucket
     {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve (rateLatency R T) S)
     (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (tokenBucketArrival r b))
-    (hr : r ≤ R) (hT : 0 < T) :
+    (hr : r ≤ R) :
     Deviation.backlog (⇑A) (⇑D) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) := by
   have harrlift : IsMaximalArrivalBound (liftENN ⇑A) (tokenBucketNN r b) := by
     rw [← liftENN_tokenBucketArrival]
@@ -56,8 +56,7 @@ theorem backlog_le_of_strictRateLatency_tokenBucket
   have hbk := Deviation.backlog_le_vDev_of_isMinimalServiceCurve (hβ.isMinimalServiceCurve hc) hp
     (isNonneg_liftEReal _) harrlift
   rw [hbridge] at hbk
-  refine le_trans hbk ?_
-  rw [vDev_tokenBucketNN_rateLatencyNN r b R T hr hT]
+  exact le_trans hbk (vDev_tokenBucketNN_rateLatencyNN_le r b R T hr)
 
 /-- An affine increment bound `A(t+d) ≤ A(t) + (r·d + b)` is a token-bucket arrival curve: the two
 agree for `d > 0`, and the `d = 0` increment `A(t) ≤ A(t)` is vacuous. Lets the affine bounds
@@ -94,9 +93,9 @@ theorem backlog_le_of_strictRateLatency_affine
     {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
     (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve (rateLatency R T) S)
     (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (fun s => r * s + b))
-    (hr : r ≤ R) (hT : 0 < T) :
+    (hr : r ≤ R) :
     Deviation.backlog (⇑A) (⇑D) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) :=
   backlog_le_of_strictRateLatency_tokenBucket hc hβ hp
-    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hr hT
+    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hr
 
 end DeepWiki

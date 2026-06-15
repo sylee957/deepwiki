@@ -634,6 +634,14 @@ theorem isFlowDelayBounded (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.
   exact ⟨T' + B' / R', delay_le_of_strictRateLatency_affine hc hβ hp harr
     (lt_of_le_of_lt (zero_le' (a := t.r i)) hlt) (le_of_lt hlt)⟩
 
+/-- **Per-flow backlog bound (GPS)**: flow `i`'s backlog at a crossed server `h` is finite —
+bounded by `rᵢ·T' + B'` of its GPS residual (`flowResidualBound`). The backlog companion of
+`isFlowDelayBounded`. -/
+theorem isFlowBacklogBounded (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    ∃ c : ℝ≥0, Deviation.backlog (⇑(t.Ain h i)) (⇑(t.Dout h i)) ≤ (c : ℝ≥0∞) := by
+  obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
+  exact ⟨t.r i * T' + B', backlog_le_of_strictRateLatency_affine hc hβ hp harr (le_of_lt hlt)⟩
+
 end Traj
 
 /-! ## Faithfulness checks (Theorem 12.5, fully general) -/

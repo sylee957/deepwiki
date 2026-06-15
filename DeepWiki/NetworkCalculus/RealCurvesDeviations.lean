@@ -451,6 +451,26 @@ theorem vDev_tokenBucketNN_rateLatencyNN (r b R T : ℝ≥0)
     minDeconv_tokenBucketNN_rateLatencyNN r b R T h hT,
     affine_zero_eq, add_comm b (r*T)]
 
+/-- `vDev (tokenBucketNN r b) βRT ≤ r*T + b` (`r ≤ R`), valid for every `T` including `T = 0`
+(where the backlog bound is the burst `b`) — the latency-free `≤` companion of the equality, which
+needs `0 < T`. Proved by the pointwise vertical bound `r*t ≤ R*(t-T) + r*T` (via `le_tsub_add`). -/
+theorem vDev_tokenBucketNN_rateLatencyNN_le (r b R T : ℝ≥0) (h : r ≤ R) :
+    vDev (tokenBucketNN r b) (rateLatencyNN R T) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) := by
+  refine vDev_le fun t => ?_
+  show tokenBucketNN r b t - rateLatencyNN R T t ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞)
+  rw [tsub_le_iff_right, rateLatencyNN_coe]
+  calc tokenBucketNN r b t
+      ≤ ((r * t + b : ℝ≥0) : ℝ≥0∞) := by rw [tokenBucketNN_apply]; exact inf_le_left
+    _ ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) + ((R * (t - T) : ℝ≥0) : ℝ≥0∞) := by
+        rw [← ENNReal.coe_add]
+        refine ENNReal.coe_le_coe.mpr ?_
+        have hrt : r * t ≤ R * (t - T) + r * T := by
+          calc r * t ≤ r * (t - T + T) := by gcongr; exact le_tsub_add
+            _ = r * (t - T) + r * T := by rw [mul_add]
+            _ ≤ R * (t - T) + r * T := by gcongr
+        calc r * t + b ≤ (R * (t - T) + r * T) + b := by gcongr
+          _ = r * T + b + R * (t - T) := by ring
+
 /-- `vDev (tokenBucketNN r b) βRT = ⊤` when `R < r` (unstable). -/
 theorem vDev_tokenBucketNN_rateLatencyNN_top
     (r b R T : ℝ≥0) (hRr : R < r) :
