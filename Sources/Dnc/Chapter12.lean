@@ -7,6 +7,7 @@ import DeepWiki.NetworkCalculus.StabilityResidualRate
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import DeepWiki.NetworkCalculus.RealCurvesRates
 import DeepWiki.NetworkCalculus.StabilityNetworkInstance
+import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -197,7 +198,16 @@ theorem thm_12_1 {V : Type*} [CompleteLattice V] (F : V →o V) :
       IsGreatest {α | α ≤ F α} (canonicalArrivalAssignment F) :=
   ⟨map_canonicalArrivalAssignment F, isGreatest_canonicalArrivalAssignment F⟩
 
-/-! **Theorem 12.2** (§12.3.1, p.276): Static priority policies: a network where flows have fixed priorities and a strict priority order (each flow a different priority) is stable if and only if it is locally stable. Not formalized in the library. -/
+/-- **Theorem 12.2** (§12.3.1, p.276), per-flow sufficient direction: under a
+preemptive static-priority policy with (monotone, left-continuous) strict
+aggregate service `β`, flow `i` is globally stable as soon as its rate plus the
+higher-priority rates stays below the service rate, `r(αᵢ) + ∑_{j<i} r(αⱼ) < R(β)`
+— the local-stability condition for `i`. Flow `i` sees the residual
+`β ⊖ ∑_{j<i} αⱼ` and the residual-rate bound discharges its local stability. The
+library's `isGloballyStableServer_staticPriority_of_rate_lt`. (The network-wide
+"stable ⟺ locally stable" with the full priority order quantifies this over all
+flows; that quantification is not formalized.) -/
+alias thm_12_2 := isGloballyStableServer_staticPriority_of_rate_lt
 
 /-! **Example 12.2** (§12.3.2, p.278): For the Figure 12.1 network under FDF: in server 3 flow 1 has highest priority, then flow 2; flows 2 and 3 share the same priority; in server 2 flows 4 and 3 are highest and flow 1 lowest. Not formalized in the library. -/
 
