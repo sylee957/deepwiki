@@ -372,4 +372,64 @@ theorem isMaximalArrivalBound_gpsPathOn_tokenBucket {ι : Type*} {n : ℕ}
     funext t; rw [affine_coe, Finset.sum_range_succ]; push_cast; ring_nf
   rw [hαk1]
 
+/-- **Peeled critical flow's path stability** (the Theorem 12.5 induction body): the
+peeled critical flow `i` — crossing GPS rate-latency servers `β_{Rₖ,Tₖ}` whose
+already-peeled flows `∑_{j∉J k} Dⱼ` are token-bucket `ρₖ·v+bbₖ`-bounded (`ρₖ < Rₖ`) — sees
+the reduced-rate rate-latency residual `β_{Rₖ−ρₖ,·}` at every hop, and is globally stable
+along its whole path given only `r < (φᵢ/∑_{J k}φ)(Rₖ−ρₖ)`. Composes the set-form blind
+residual + closed-form residual rate-latency (the reduced-rate aggregate service) with
+`isGloballyStable_gpsPathOn_tokenBucket` (the per-flow path stability). One step of the
+peeling recursion: peel `i`, with the lighter flows already removed and bounded. -/
+theorem isGloballyStable_gpsPeelPath_tokenBucket {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {n : ℕ} {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
+    {R T ρ bb : ℕ → ℝ≥0} {J : ℕ → Finset ι} (hi : ∀ k, i ∈ J k) (hρ : ∀ k, ρ k < R k)
+    (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k)) (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (fun A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ (J k)ᶜ, (D j) x) (fun v => ρ k * v + bb k)) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ (φ i / ∑ j ∈ J k, φ j) * (R k - ρ k))
+    (hstab : ∀ k, k < n → r < (φ i / ∑ j ∈ J k, φ j) * (R k - ρ k)) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) := by
+  refine isGloballyStable_gpsPathOn_tokenBucket
+    (Sf := fun k A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ (J k)ᶜ, (D j) x) (fun v => ρ k * v + bb k))
+    (R := fun k => R k - ρ k) (T := fun k => (R k * T k + bb k) / (R k - ρ k))
+    hi (fun k A D hAD => hcaus k A D hAD.1) ?_ (fun k As Ds hAD => hgps k As Ds hAD.1)
+    proc hchain harr0 hr hstab
+  intro k
+  have hres := isStrictMinimalServiceCurve_aggregateServerOn_residual (S := Sf k)
+    (α := fun v => ρ k * v + bb k) (J := J k) (hcaus k) (hβf k)
+  rwa [residualCurve_rateLatency_affine (R k) (T k) (ρ k) (bb k) (hρ k)] at hres
+
+/-- **Peeled critical flow's per-server arrival bound** (the `σ` the network aggregation
+consumes for the peeled flow): along its path of GPS rate-latency servers with the
+already-peeled flows token-bucket bounded, the peeled critical flow `i` (with
+`r ≤` its reduced share at each hop) has arrival curve `r·t + (b + r·∑_{j<k} T'ⱼ)` at every
+server `k`, where `T'ⱼ = (Rⱼ·Tⱼ + bbⱼ)/(Rⱼ−ρⱼ)` is the reduced-residual latency. Pure
+propagation companion of `isGloballyStable_gpsPeelPath_tokenBucket`. -/
+theorem isMaximalArrivalBound_gpsPeelPath_tokenBucket {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {n : ℕ} {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
+    {R T ρ bb : ℕ → ℝ≥0} {J : ℕ → Finset ι} (hi : ∀ k, i ∈ J k) (hρ : ∀ k, ρ k < R k)
+    (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServer (Sf k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k)) (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (fun A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ (J k)ᶜ, (D j) x) (fun v => ρ k * v + bb k)) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ (φ i / ∑ j ∈ J k, φ j) * (R k - ρ k)) :
+    ∀ k, k ≤ n → IsMaximalArrivalBound (⇑(proc k))
+      (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, (R j * T j + bb j) / (R j - ρ j))) := by
+  refine isMaximalArrivalBound_gpsPathOn_tokenBucket
+    (Sf := fun k A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ (J k)ᶜ, (D j) x) (fun v => ρ k * v + bb k))
+    (R := fun k => R k - ρ k) (T := fun k => (R k * T k + bb k) / (R k - ρ k))
+    hi (fun k A D hAD => hcaus k A D hAD.1) ?_ (fun k As Ds hAD => hgps k As Ds hAD.1)
+    proc hchain harr0 hr
+  intro k
+  have hres := isStrictMinimalServiceCurve_aggregateServerOn_residual (S := Sf k)
+    (α := fun v => ρ k * v + bb k) (J := J k) (hcaus k) (hβf k)
+  rwa [residualCurve_rateLatency_affine (R k) (T k) (ρ k) (bb k) (hρ k)] at hres
+
 end DeepWiki
