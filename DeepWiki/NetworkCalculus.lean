@@ -152,6 +152,7 @@ import DeepWiki.NetworkCalculus.ServersResidualDrr
 import DeepWiki.NetworkCalculus.ServersResidualDrrRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualWrrRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualTdma
+import DeepWiki.NetworkCalculus.ServersResidualTdmaRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualWrr
 import DeepWiki.NetworkCalculus.ServersResidualWrrPackets
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler

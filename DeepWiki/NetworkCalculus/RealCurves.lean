@@ -330,6 +330,20 @@ theorem staircaseFun_le_affine {T : ℝ≥0} (hT : 0 < T) (b t : ℝ≥0) :
       ≤ (b : ℝ) * ((t : ℝ) / T + 1) := hb
     _ = (b : ℝ) / T * t + b := by ring
 
+/-- The ceiling staircase dominates its long-term rate-latency: `β_{b/T, d} ≤ ν_{T,b,d}`
+(`⌈x⌉ ≥ x`), the lower-bound companion of `staircaseFun_le_affine`. -/
+theorem rateLatency_le_staircaseFun (T b d : ℝ≥0) :
+    rateLatency (b / T) d ≤ staircaseFun T b d := by
+  intro t
+  rw [staircaseFun_apply]
+  show b / T * (t - d) ≤ b * (⌈((t : ℝ) - d) / T⌉₊ : ℝ≥0)
+  rcases le_or_gt t d with htd | htd
+  · rw [tsub_eq_zero_of_le htd, mul_zero]; positivity
+  · rw [← NNReal.coe_le_coe]
+    push_cast [NNReal.coe_sub htd.le]
+    rw [div_mul_eq_mul_div, mul_div_assoc]
+    exact mul_le_mul_of_nonneg_left (Nat.le_ceil _) b.coe_nonneg
+
 /-- Degenerate period: `staircaseFun 0 b d` is constantly `0`. -/
 theorem staircaseFun_period_zero (b d : ℝ≥0) :
     staircaseFun 0 b d = fun _ => 0 := by
