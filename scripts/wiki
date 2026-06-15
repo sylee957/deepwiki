@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# wiki — graph-RAG CLI over the DeepWiki Lean library.
+# Thin wrapper around `lake exe wiki`; run from anywhere.
+#
+#   scripts/wiki build                          (re)extract the graph
+#   scripts/wiki index                          compute Ollama embeddings
+#   scripts/wiki search <query> [-k N] [--json]
+#   scripts/wiki show <name> [--json]
+#   scripts/wiki deps <name> [--depth D]
+#   scripts/wiki rdeps <name> [--depth D]
+#   scripts/wiki path <a> <b>
+#   scripts/wiki context <query> [-k N] [--depth D]
+set -euo pipefail
+export PATH="$HOME/.elan/bin:$PATH"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec lake exe wiki "$@"

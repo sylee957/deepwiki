@@ -16,3 +16,14 @@ name = "DeepWiki"
 
 [[lean_lib]]
 name = "Sources"
+
+# Graph-RAG tooling — kept out of `defaultTargets` so the warning-/sorry-free
+# `lake build` gate over the math library is untouched. Build with `lake build wiki`.
+[[lean_lib]]
+name = "WikiRAG"
+srcDir = "tools"
+
+[[lean_exe]]
+name = "wiki"
+srcDir = "tools"
+root = "WikiRAG.Main"
