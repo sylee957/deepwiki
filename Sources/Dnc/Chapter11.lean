@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
+import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -44,6 +45,20 @@ theorem thm_11_1_singleNode {α : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0
     (hβmono : Monotone β) (hβ0 : β 0 = 0) :
     worstCaseServerDelay α β = (hDev (Deviation.liftENN α) β : ℝ≥0∞) :=
   worstCaseServerDelay_eq_hDev hαmono hα0 hαsub hβmono hβ0
+
+/-- **Theorem 11.1, two-node tandem instance** (§11.1.1/§11.1.3) — the
+optimum-equals-worst-case for a single flow through two servers in series: the
+worst-case end-to-end delay `worstCaseTandemDelay α β₁ β₂` (the optimum over all
+feasible tandem trajectories) equals the closed-form `hDev(α, β₁ ∗ β₂)` against
+the concatenated service curve. The service constraints collapse by `minConv`
+associativity to a single concatenated server, and the greedy trajectory
+`(α, α∗β₁, α∗(β₁∗β₂))` attains the bound. The library's
+`worstCaseTandemDelay_eq_hDev_conv`. -/
+theorem thm_11_1_tandem {α : ℝ≥0 → ℝ≥0} {β₁ β₂ : ℝ≥0 → ℝ≥0∞}
+    (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
+    (hβ₁mono : Monotone β₁) (hβ₂mono : Monotone β₂) (hβ₁0 : β₁ 0 = 0) (hβ₂0 : β₂ 0 = 0) :
+    worstCaseTandemDelay α β₁ β₂ = (hDev (Deviation.liftENN α) (minConv β₁ β₂) : ℝ≥0∞) :=
+  worstCaseTandemDelay_eq_hDev_conv hαmono hα0 hαsub hβ₁mono hβ₂mono hβ₁0 hβ₂0
 
 /-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
 
