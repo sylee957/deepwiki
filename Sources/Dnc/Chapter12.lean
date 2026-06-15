@@ -462,4 +462,10 @@ the cyclic network. The library's `exists_scalingFixpoint_iff` (and the gain bou
 `scaling_gain_lt_one_iff`), resting on the linear fix-point criterion `exists_linearFixpoint_iff`. -/
 alias ex_12_scalingInstability := exists_scalingFixpoint_iff
 
+/-- **§12.4.2 instability, dynamic form** (p.284–285): in the unstable regime `m₂ + m₄ ≥ 1` the cyclic
+scaling network's per-flow burst *iteration* `σₙ₊₁ = (m₂m₄/((1−m₂)(1−m₄)))·σₙ + d` is unbounded — the
+network-calculus method's fixed-point iteration diverges, yielding no finite end-to-end bound. The
+library's `scalingIterate_unbounded` (and the general `linearIterate_unbounded`). -/
+alias ex_12_scalingInstability_iterate := scalingIterate_unbounded
+
 end DeepWiki.Dnc
