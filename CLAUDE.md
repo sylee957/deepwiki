@@ -69,6 +69,31 @@ Commands:
   (`.lake/build/doc-data/DeepWiki--library.docs_built*`) and the `.lake/build/doc`
   tree, then rebuild.
 
+## Navigating the library (`scripts/wiki`)
+
+A local graph-RAG CLI over the compiled library lives at `scripts/wiki`
+(`lake exe wiki`; sources in `tools/WikiRAG/`, with its own `README.md`). It extracts
+the `DeepWiki`+`Sources` environment into `.wiki/graph.db` (gitignored): ≈3,150 decl
+nodes, the *exact* intra-library `uses` edges (`ConstantInfo.getUsedConstantsAsSet`, over
+type and value), a derived module graph, and optional local Ollama embeddings. **Prefer
+it over `grep` for structural questions** — it answers them exactly rather than by text
+match:
+
+- `scripts/wiki rdeps <name> [--depth D]` — dependents / impact set; run *before*
+  changing or renaming a declaration.
+- `scripts/wiki deps <name> [--depth D]` — what a declaration builds on (proof context).
+- `scripts/wiki path <a> <b>` — a shortest `uses`-path between two declarations.
+- `scripts/wiki search <q>` (lexical) and `scripts/wiki context <q>` (lexical + semantic)
+  — locate declarations by meaning; `show <name>` gives signature + docstring + immediate
+  uses/used-by. Short names auto-resolve; ambiguous ones list candidates. `--json` for
+  machine output.
+
+Maintenance: re-run `scripts/wiki build` after library changes (it preserves embeddings
+for declarations whose name/kind/signature/docstring are unchanged), then
+`scripts/wiki index` re-embeds only the new/changed ones (needs a local Ollama server;
+default model `nomic-embed-text`). The `WikiRAG` lib and `wiki` exe are kept out of
+`defaultTargets`, so the warning-/sorry-free `lake build` gate is untouched.
+
 ## Chapter structure (`DeepWiki/NetworkCalculus/`)
 
 Each chapter is plain Lean: imports first, then a `/-! … -/` module docstring,
