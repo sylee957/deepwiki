@@ -9,6 +9,7 @@ import DeepWiki.NetworkCalculus.RealCurvesRates
 import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
+import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -215,7 +216,18 @@ alias thm_12_2 := isGloballyStableServer_staticPriority_of_rate_lt
 
 /-! **Theorem 12.3** (§12.3.2, p.278): Furthest destination first (FDF): the local stability condition is sufficient for global stability under FDF. FDF assigns each server a *static priority order* (by remaining distance to destination), so the per-flow stability is exactly `thm_12_2` instantiated at the FDF order — `isGloballyStableServer_staticPriority_of_rate_lt`. Only the topology-driven definition of the FDF ordering (and the network-wide quantification) is unformalized. -/
 
-/-! **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters: with αᵢ=γ_{rᵢ,bᵢ} arrival curves and β^(h)=β_{R^(h),T^(h)} strict service, there is a flow i such that for every server h∈p(i): rᵢ < φᵢ · R^(h)/(∑_{j∈Fl(h)} φⱼ). Not formalized in the library. -/
+/-- **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters — under aggregate
+local stability `∑_{j∈Fl(h)} rⱼ < R^(h)` at every server, there is a flow `i` (the
+one minimizing `rⱼ/φⱼ`) below its GPS share at every server it crosses,
+`rᵢ < φᵢ·R^(h)/(∑_{j∈Fl(h)} φⱼ)`. This is the flow peeled off in the induction for
+Theorem 12.5 (local ⟹ global stability under GPS). The combinatorial core, abstract
+over flows/servers; the library's `exists_flow_below_gps_share`. (The full Theorem
+12.5 induction over the network is not formalized.) -/
+theorem lemma_12_5 {ι σ : Type*} [Fintype ι] [Nonempty ι]
+    (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j) (R : σ → ℝ) (Fl : σ → Finset ι)
+    (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
+    ∃ i, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) :=
+  exists_flow_below_gps_share r φ hφ R Fl hstab
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
