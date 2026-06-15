@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.LegendreFenchel
+import DeepWiki.NetworkCalculus.LegendreFenchelConv
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.ConvolutionContinuity
 import DeepWiki.NetworkCalculus.ConvolutionMinimum
@@ -233,9 +234,16 @@ theorem prop_3_15_convex {f : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) :
 /-- **Proposition 3.15**, biconjugate below (§3.3.2, p.54): `𝓛(𝓛 f) ≤ f`
 pointwise — the always-true half of the Fenchel–Moreau involution. The library's
 `legendre_legendre_le`. (The reverse `f ≤ 𝓛(𝓛 f)`, giving `𝓛(𝓛 f) = f` for
-convex non-decreasing `f`, and `𝓛(f∗g) = 𝓛(f)+𝓛(g)` are not yet formalized.) -/
+convex non-decreasing `f`, is not yet formalized.) -/
 theorem prop_3_15_biconjugate_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
     legendre (legendre f) u ≤ f u :=
   legendre_legendre_le f u
+
+/-- **Proposition 3.15**, convolution-to-sum (§3.3.2, p.54): the Legendre–Fenchel
+transform turns inf-convolution into addition, `𝓛(f ⊗ g) = 𝓛(f) + 𝓛(g)`, for
+proper curves `f`, `g` (never `⊥`). The library's `legendre_legendreConv`. -/
+theorem prop_3_15_conv {f g : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) (hg : ∀ v, g v ≠ ⊥) :
+    legendre (legendreConv f g) = legendre f + legendre g :=
+  legendre_legendreConv hf hg
 
 end DeepWiki.Dnc

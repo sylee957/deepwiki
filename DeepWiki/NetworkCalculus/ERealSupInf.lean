@@ -95,4 +95,18 @@ theorem coe_sub_iInf {ι : Sort*} (r : ℝ) (x : ι → EReal) :
   rw [sub_eq_add_neg, neg_iInf, coe_add_iSup]
   simp only [sub_eq_add_neg]
 
+/-- Regrouping a finite sum minus a paired sum, valid when neither subtrahend
+is `⊥` (so the only `±∞` case is `⊤`, where both sides collapse to `⊥`):
+`↑x + ↑y − (c + d) = (↑x − c) + (↑y − d)`. -/
+theorem coe_add_coe_sub_add {x y : ℝ} {c d : EReal} (hc : c ≠ ⊥) (hd : d ≠ ⊥) :
+    (x : EReal) + (y : EReal) - (c + d) = ((x : EReal) - c) + ((y : EReal) - d) := by
+  rcases eq_or_ne c ⊤ with rfl | hc'
+  · rw [EReal.top_add_of_ne_bot hd, EReal.sub_top, EReal.sub_top, EReal.bot_add]
+  · rcases eq_or_ne d ⊤ with rfl | hd'
+    · rw [EReal.add_top_of_ne_bot hc, EReal.sub_top, EReal.sub_top, EReal.add_bot]
+    · obtain ⟨c', rfl⟩ : ∃ c' : ℝ, c = (c' : EReal) := ⟨c.toReal, (EReal.coe_toReal hc' hc).symm⟩
+      obtain ⟨d', rfl⟩ : ∃ d' : ℝ, d = (d' : EReal) := ⟨d.toReal, (EReal.coe_toReal hd' hd).symm⟩
+      have : x + y - (c' + d') = (x - c') + (y - d') := by ring
+      exact_mod_cast this
+
 end DeepWiki
