@@ -110,4 +110,15 @@ theorem pathMinRate_pos (R : κ → ℝ≥0) (h : κ) (hs : List κ)
     simp only [List.mem_cons] at hj ⊢
     tauto
 
+/-- A value below every hop's rate along the path is below `pathMinRate`. -/
+theorem le_pathMinRate (R : κ → ℝ≥0) (c : ℝ≥0) (h : κ) (hs : List κ)
+    (hle : ∀ k ∈ h :: hs, c ≤ R k) : c ≤ pathMinRate R h hs := by
+  induction hs generalizing h with
+  | nil => exact hle h (List.mem_singleton.mpr rfl)
+  | cons k ks ih =>
+    rw [pathMinRate, le_inf_iff]
+    refine ⟨hle h (by simp), ih k (fun j hj => hle j ?_)⟩
+    simp only [List.mem_cons] at hj ⊢
+    tauto
+
 end DeepWiki
