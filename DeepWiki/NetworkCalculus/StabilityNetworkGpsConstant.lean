@@ -3,6 +3,7 @@ import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Finset.Max
 import Mathlib.Data.Real.Basic
+import DeepWiki.NetworkCalculus.StabilityNetwork
 
 /-! # GPS networks with constant rates: the peelable critical flow (Lemma 12.5)
 In a network of GPS servers where each flow `j` keeps one weight `φⱼ > 0` along its
@@ -15,7 +16,7 @@ the flow that can be peeled off in the induction proving local ⟹ global stabil
 
 namespace DeepWiki
 
-open scoped BigOperators
+open scoped BigOperators NNReal ENNReal
 
 /-- **Lemma 12.5** (GPS with constant rates): with flows `ι`, servers `σ`, positive
 weights `φ`, per-server rates `R`, and flow sets `Fl h` (`i ∈ Fl h ⇔ flow `i` crosses
@@ -40,5 +41,30 @@ theorem exists_flow_below_gps_share {ι σ : Type*} [Fintype ι] [Nonempty ι]
         Finset.sum_le_sum fun j _ => (hcross j).trans_eq (mul_comm _ _)
     _ = φ i * ∑ j ∈ Fl h, r j := by rw [← Finset.mul_sum]
     _ < φ i * R h := mul_lt_mul_of_pos_left (hstab h) (hφ i)
+
+/-- **Lemma 12.5 in the network model**: for a GPS-constant network with positive
+weights `φ`, per-flow long-term rates `r` and finite per-server service rates `R`
+(`longTermArrivalRate αⱼ = rⱼ`, `R^(h) = R h`), aggregate local stability
+`∑_{j∈Fl(h)} rⱼ < R^(h)` yields a flow `i` whose rate stays below its GPS share
+`(φᵢ/∑_{j∈Fl(h)} φⱼ)·R^(h)` at every server it crosses — the per-server
+GPS local-stability condition of `isGloballyStableServer_gps_of_rate_lt`, ready
+for the peeling step of Theorem 12.5. -/
+theorem Network.exists_flow_below_gpsShare {κ ι : Type*} [Fintype ι] [Nonempty ι]
+    [DecidableEq κ] (net : Network κ ι) (φ : ι → ℝ≥0) (hφ : ∀ j, 0 < φ j)
+    (r : ι → ℝ≥0) (R : κ → ℝ≥0)
+    (hr : ∀ j, longTermArrivalRate (net.arrivalCurve j) = (r j : ℝ≥0∞))
+    (hR : ∀ h, net.serviceRate h = (R h : ℝ≥0∞))
+    (hstab : ∀ h, ∑ j ∈ net.flowsThrough h, r j < R h) :
+    ∃ i, ∀ h, i ∈ net.flowsThrough h →
+      longTermArrivalRate (net.arrivalCurve i)
+        < (↑(φ i / ∑ j ∈ net.flowsThrough h, φ j) : ℝ≥0∞) * net.serviceRate h := by
+  obtain ⟨i, hi⟩ := exists_flow_below_gps_share (fun j => (r j : ℝ)) (fun j => (φ j : ℝ))
+    (fun j => by exact_mod_cast hφ j) (fun h => (R h : ℝ)) net.flowsThrough
+    (fun h => by
+      show ∑ j ∈ net.flowsThrough h, (r j : ℝ) < (R h : ℝ)
+      rw [← NNReal.coe_sum]; exact_mod_cast hstab h)
+  refine ⟨i, fun h hih => ?_⟩
+  rw [hr i, hR h, ← ENNReal.coe_mul, ENNReal.coe_lt_coe, div_mul_eq_mul_div]
+  exact_mod_cast hi h hih
 
 end DeepWiki
