@@ -115,9 +115,18 @@ the textbook bound `T + b/R` — the optimum is attained, not just bounded. The
 library's `worstCaseServerDelay_tokenBucketNN_rateLatencyNN`. -/
 theorem example_11_tokenBucketRateLatency (r b R T : ℝ≥0)
     (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
-    worstCaseServerDelay (fun t => (tokenBucketNN r b t).toNNReal) (rateLatencyNN R T)
+    worstCaseServerDelay (tokenBucketArrival r b) (rateLatencyNN R T)
       = ((T + b / R : ℝ≥0) : ℝ≥0∞) :=
   worstCaseServerDelay_tokenBucketNN_rateLatencyNN r b R T hR hb hrR
+
+/-- **Worked instance, backlog form** (§11.2.1): the worst-case backlog of the same
+`γ_{r,b}` flow (`r ≤ R`, `T > 0`) through `β_{R,T}`, over all feasible trajectories,
+is exactly `r·T + b`. The library's `worstCaseServerBacklog_tokenBucketNN_rateLatencyNN`. -/
+theorem example_11_tokenBucketRateLatency_backlog (r b R T : ℝ≥0)
+    (hrR : r ≤ R) (hT : 0 < T) :
+    worstCaseServerBacklog (tokenBucketArrival r b) (rateLatencyNN R T)
+      = ((r * T + b : ℝ≥0) : ℝ≥0∞) :=
+  worstCaseServerBacklog_tokenBucketNN_rateLatencyNN r b R T hrR hT
 
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
