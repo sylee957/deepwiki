@@ -81,6 +81,43 @@ theorem exists_flow_below_residual_share {ι σ : Type*} [DecidableEq ι]
       have hsplit := Finset.sum_inter_add_sum_diff (Fl h) J r
       linarith [hstab h])
 
+/-- **Closed-form residual of a rate-latency by a token bucket**: removing a flow whose
+arrival is the token bucket `ρ·v + b` from a rate-latency server `β_{R,T}` (`ρ < R`) leaves
+the blind residual `residualCurve β_{R,T} (ρ·v+b) = β_{R−ρ, (R·T+b)/(R−ρ)}` — again a
+rate-latency, with the rate reduced by the removed flow's rate. The clamped difference is
+already non-decreasing (it *is* that reduced rate-latency), so the non-decreasing closure
+is the identity. This keeps the Theorem 12.5 peeling inside the rate-latency world: the
+not-yet-peeled aggregate sees a rate-latency curve whose rate is `R` minus the summed
+rates of the already-peeled flows. -/
+theorem residualCurve_rateLatency_affine (R T ρ b : ℝ≥0) (hρR : ρ < R) :
+    residualCurve (rateLatency R T) (fun v => ρ * v + b)
+      = rateLatency (R - ρ) ((R * T + b) / (R - ρ)) := by
+  have hD : (0 : ℝ≥0) < R - ρ := tsub_pos_of_lt hρR
+  have hDne : R - ρ ≠ 0 := ne_of_gt hD
+  have hDvs : (R - ρ) * ((R * T + b) / (R - ρ)) = R * T + b := mul_div_cancel₀ _ hDne
+  set vs : ℝ≥0 := (R * T + b) / (R - ρ) with hvs
+  have hTvs : T ≤ vs := by
+    rw [hvs, le_div_iff₀ hD]
+    calc T * (R - ρ) ≤ T * R := mul_le_mul_right tsub_le_self T
+      _ = R * T := mul_comm T R
+      _ ≤ R * T + b := le_self_add
+  have key : residualCurve (rateLatency R T) (fun v => ρ * v + b)
+      = ndClosure (rateLatency (R - ρ) vs) := by
+    unfold residualCurve
+    congr 1
+    funext v
+    show R * (v - T) - (ρ * v + b) = (R - ρ) * (v - vs)
+    rcases le_total vs v with hvsv | hvvs
+    · rw [mul_tsub, mul_tsub, hDvs, tsub_mul, tsub_tsub, tsub_tsub]
+      congr 1
+      ring
+    · rw [tsub_eq_zero_of_le hvvs, mul_zero, tsub_eq_zero_iff_le, mul_tsub, tsub_le_iff_right]
+      have hle : (R - ρ) * v ≤ R * T + b := by
+        rw [← hDvs]; exact mul_le_mul_right hvvs (R - ρ)
+      rw [tsub_mul, tsub_le_iff_right] at hle
+      exact hle.trans_eq (by ring)
+  rw [key, ndClosure_eq_self (rateLatency_mono _ _)]
+
 /-- **Lemma 12.5 in the network model**: for a GPS-constant network with positive
 weights `φ`, per-flow long-term rates `r` and finite per-server service rates `R`
 (`longTermArrivalRate αⱼ = rⱼ`, `R^(h) = R h`), aggregate local stability
