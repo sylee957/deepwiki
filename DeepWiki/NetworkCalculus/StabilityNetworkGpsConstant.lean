@@ -22,6 +22,23 @@ namespace DeepWiki
 
 open scoped BigOperators NNReal ENNReal
 
+/-- **GPS-share inequality from cross-minimality**: if flow `i ∈ F` is `r/φ`-minimal over `F` in
+cross-multiplied form (`r i · φ j ≤ r j · φ i` for every `j ∈ F`) and `∑_{F} r < R`, then `i` is
+below its GPS share `φ i · R / ∑_{F} φ`. The calc core of `exists_flow_below_gps_share_on`, factored
+out so a *given* minimal flow (not only the argmin) can be placed below its share — the form the
+per-flow stability theorem needs on the active set `{j : r i · φ j ≤ r j · φ i}`. -/
+theorem gps_share_lt_of_cross {ι : Type*} (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j) {F : Finset ι}
+    {i : ι} (hi : i ∈ F) {R : ℝ} (hcross : ∀ j ∈ F, r i * φ j ≤ r j * φ i)
+    (hstab : ∑ j ∈ F, r j < R) : r i < φ i * R / (∑ j ∈ F, φ j) := by
+  have hsumφ : 0 < ∑ j ∈ F, φ j := Finset.sum_pos (fun j _ => hφ j) ⟨i, hi⟩
+  rw [lt_div_iff₀ hsumφ]
+  calc r i * ∑ j ∈ F, φ j
+      = ∑ j ∈ F, r i * φ j := by rw [Finset.mul_sum]
+    _ ≤ ∑ j ∈ F, φ i * r j :=
+        Finset.sum_le_sum fun j hj => (hcross j hj).trans_eq (mul_comm _ _)
+    _ = φ i * ∑ j ∈ F, r j := by rw [← Finset.mul_sum]
+    _ < φ i * R := mul_lt_mul_of_pos_left hstab (hφ i)
+
 /-- **Lemma 12.5, active-set form**: the same statement with the argmin taken over an
 arbitrary nonempty set `K` of candidate flows containing every server's population
 (`Fl h ⊆ K`). The witness is the `K`-minimizer of `r j / φ j`; it lies below its GPS
@@ -33,18 +50,9 @@ theorem exists_flow_below_gps_share_on {ι σ : Type*} (K : Finset ι) (hK : K.N
     (hsub : ∀ h, Fl h ⊆ K) (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
     ∃ i ∈ K, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) := by
   obtain ⟨i, hiK, himin⟩ := K.exists_min_image (fun j => r j / φ j) hK
-  refine ⟨i, hiK, fun h hi => ?_⟩
-  have hsumφ : 0 < ∑ j ∈ Fl h, φ j := Finset.sum_pos (fun j _ => hφ j) ⟨i, hi⟩
   -- the minimality `r i / φ i ≤ r j / φ j` cross-multiplies to `r i · φ j ≤ r j · φ i`
-  have hcross : ∀ j ∈ Fl h, r i * φ j ≤ r j * φ i := fun j hj =>
-    (div_le_div_iff₀ (hφ i) (hφ j)).mp (himin j (hsub h hj))
-  rw [lt_div_iff₀ hsumφ]
-  calc r i * ∑ j ∈ Fl h, φ j
-      = ∑ j ∈ Fl h, r i * φ j := by rw [Finset.mul_sum]
-    _ ≤ ∑ j ∈ Fl h, φ i * r j :=
-        Finset.sum_le_sum fun j hj => (hcross j hj).trans_eq (mul_comm _ _)
-    _ = φ i * ∑ j ∈ Fl h, r j := by rw [← Finset.mul_sum]
-    _ < φ i * R h := mul_lt_mul_of_pos_left (hstab h) (hφ i)
+  exact ⟨i, hiK, fun h hi => gps_share_lt_of_cross r φ hφ hi
+    (fun j hj => (div_le_div_iff₀ (hφ i) (hφ j)).mp (himin j (hsub h hj))) (hstab h)⟩
 
 /-- **Lemma 12.5** (GPS with constant rates): with flows `ι`, servers `σ`, positive
 weights `φ`, per-server rates `R`, and flow sets `Fl h` (`i ∈ Fl h ⇔ flow `i` crosses
