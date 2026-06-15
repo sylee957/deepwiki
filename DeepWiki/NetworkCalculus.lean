@@ -41,6 +41,7 @@ import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveSubadditive
 import DeepWiki.NetworkCalculus.Convex
+import DeepWiki.NetworkCalculus.ERealSupInf
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.Stability
