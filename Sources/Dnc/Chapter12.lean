@@ -435,4 +435,12 @@ of the scaled flow `m·A` is `m` times that of `A`. The library's
 `longTermArrivalRate_scaledFlow`. -/
 alias prop_12_scaledRate := longTermArrivalRate_scaledFlow
 
+/-- **§12.4.2 instability boundary** (p.284–285): the cyclic two-server scaling network's per-flow
+burst fix-point `σ₁' = … + (m₂m₄/((1−m₂)(1−m₄)))·σ₁'` has a finite solution iff `m₂ + m₄ < 1` — which
+is *strictly stronger* than the local stability `m₁+m₄ < 1 ∧ m₂+m₃ < 1`, so a locally stable scaling
+network can have a diverging fix-point (no finite NC bound): local stability is not sufficient for
+the cyclic network. The library's `exists_scalingFixpoint_iff` (and the gain boundary
+`scaling_gain_lt_one_iff`), resting on the linear fix-point criterion `exists_linearFixpoint_iff`. -/
+alias ex_12_scalingInstability := exists_scalingFixpoint_iff
+
 end DeepWiki.Dnc
