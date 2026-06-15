@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
+import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -295,6 +296,21 @@ flow `i`'s slice. The library's `isStrictMinimalServiceCurve_residualServer_gpsP
 rate exceeds `rᵢ` by `lemma_12_5_residual`. This is the induction step at one server; the
 cyclic induction over the whole network remains unformalized. -/
 alias thm_12_5_peelStep := isStrictMinimalServiceCurve_residualServer_gpsPeel
+
+/-- **Theorem 12.5**, the network-level theorem for the shared-path tandem (§12.3.3,
+p.279–280): a locally stable GPS-constant tandem in which every flow traverses the *same*
+line of `m` GPS rate-latency servers (shared weights `φ`, token-bucket ingress) is globally
+stable at every hop — the aggregate input/output at each server has a bounded backlogged
+period. The whole cyclic-peeling proof: peel flows in increasing `rⱼ/φⱼ` order, the
+active-set critical flow being below its GPS share of the residual capacity
+(`exists_flow_below_residual_share`) hence stable + token-bucket bounded along the line (the
+per-flow induction body `isMaximalArrivalBound_gpsPeelPath_tokenBucket`), recurse, then
+aggregate (`Network.isGloballyStable_of_perFlow_bounds`). The only hypothesis beyond the GPS
+structure is aggregate local stability `∑ᵢ rᵢ < R^(h)`. The library's
+`GpsTandem.isGloballyStable_sharedPath_tandem` — the first *fully derived* (no assumed
+per-flow bound) network-level instance of Theorem 12.5. The general variable-per-server-
+population network (the list-path↔hop-index bridge) is the remaining generalization. -/
+alias thm_12_5_tandem := GpsTandem.isGloballyStable_sharedPath_tandem
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
