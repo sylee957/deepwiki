@@ -182,4 +182,33 @@ theorem isMaximalArrivalBound_scaledFlow {A α : ℝ≥0 → ℝ≥0} (m : ℝ�
     _ = m * A t + m * α d := mul_add m (A t) (α d)
     _ = scaledFlow m A t + scaledFlow m α d := rfl
 
+/-- **Linear fix-point convergence criterion**: a positive-offset linear recursion `σ = c·σ + d`
+(`d > 0`) has a solution in `ℝ≥0` iff the gain `c < 1`. This is the boundary `c = 1` of
+network-calculus fix-point iterations (the §12.1 fix-point method; the cyclic scaling instability of
+§12.4.2, where the per-flow burst recursion has gain `m₂m₄/((1−m₂)(1−m₄))`): below it the bound
+`d/(1−c)` converges, at or above it the iteration diverges and no finite bound exists — local
+stability of the constituent servers is *not* sufficient to make the network's fix-point converge. -/
+theorem exists_linearFixpoint_iff {c d : ℝ≥0} (hd : 0 < d) :
+    (∃ σ : ℝ≥0, σ = c * σ + d) ↔ c < 1 := by
+  constructor
+  · rintro ⟨σ, hσ⟩
+    by_contra hcon
+    rw [not_lt] at hcon
+    have hσle : σ ≤ c * σ := le_mul_of_one_le_left (zero_le') hcon
+    have hcontra : σ + d ≤ σ := by
+      calc σ + d ≤ c * σ + d := by gcongr
+        _ = σ := hσ.symm
+    exact absurd hcontra (not_le.mpr (lt_add_of_pos_right σ hd))
+  · intro hc
+    have h1c : (0 : ℝ≥0) < 1 - c := tsub_pos_of_lt hc
+    refine ⟨d / (1 - c), ?_⟩
+    have hu : d / (1 - c) * (1 - c) = d := div_mul_cancel₀ d h1c.ne'
+    have hcle : c * (d / (1 - c)) ≤ d / (1 - c) := mul_le_of_le_one_left (zero_le') hc.le
+    rw [eq_comm]
+    calc c * (d / (1 - c)) + d
+        = c * (d / (1 - c)) + d / (1 - c) * (1 - c) := by rw [hu]
+      _ = c * (d / (1 - c)) + (d / (1 - c) - d / (1 - c) * c) := by rw [mul_tsub, mul_one]
+      _ = c * (d / (1 - c)) + (d / (1 - c) - c * (d / (1 - c))) := by rw [mul_comm (d / (1 - c)) c]
+      _ = d / (1 - c) := add_tsub_cancel_of_le hcle
+
 end DeepWiki
