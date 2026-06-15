@@ -118,4 +118,19 @@ theorem isFlowEndToEndBacklogBounded (t : Traj κ ι) (i : ι) (hne : t.net.path
     (fun h => isLeftContinuous_of_continuous _ (rateLatency_continuous (t.R h) (t.T h)))
     t.hβ t.hSP hcross hstabρ hp harr hr⟩
 
+/-- **Per-flow end-to-end output burstiness**: a flow's egress (last-server departure) from a stable
+SP network is again token-bucket `(rᵢ·s + B)`-bounded — the network preserves token-bucket
+burstiness, so the flow can feed a downstream network (compositionality). Immediate from the
+departure half of `allBound` at the last hop. -/
+theorem isFlowEndToEndOutputBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
+    ∃ B : ℝ≥0, IsMaximalArrivalBound (⇑(t.proc i (t.net.paths i).length)) (fun s => t.r i * s + B) := by
+  obtain ⟨B, _, hBout⟩ := t.allBound i
+  have hlast : (t.net.paths i).length - 1 < (t.net.paths i).length :=
+    Nat.sub_lt (List.length_pos_of_ne_nil hne) one_pos
+  refine ⟨B (t.hopServer i ((t.net.paths i).length - 1)), ?_⟩
+  rw [show t.proc i (t.net.paths i).length
+        = t.Dout (t.hopServer i ((t.net.paths i).length - 1)) i by
+      simp only [proc, lt_self_iff_false, if_false]]
+  exact hBout (t.hopServer i ((t.net.paths i).length - 1)) (mem_flowsThrough_hopServer t i hlast)
+
 end DeepWiki.SpNetwork.Traj

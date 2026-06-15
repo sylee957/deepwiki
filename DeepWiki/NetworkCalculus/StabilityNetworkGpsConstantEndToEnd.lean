@@ -117,4 +117,18 @@ theorem isFlowEndToEndBacklogBounded (t : Traj κ ι) (i : ι) (hne : t.net.path
   exact ⟨_, backlog_le_sfa_rateLatency (S := t.S) (R := t.R) (T := t.T) (α := α) (i := i)
     (ρ := ρ) (bc := bc) (r := t.r i) (b := t.b i) t.hcaus t.hβ hcross hstabρ hp harr hr⟩
 
+/-- **Per-flow end-to-end output burstiness**: a flow's egress (last-server departure) from a stable
+GPS network is again token-bucket `(rᵢ·s + B)`-bounded — the network preserves token-bucket
+burstiness (compositionality). Immediate from the departure half of `allBound` at the last hop. -/
+theorem isFlowEndToEndOutputBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
+    ∃ B : ℝ≥0, IsMaximalArrivalBound (⇑(t.proc i (t.net.paths i).length)) (fun s => t.r i * s + B) := by
+  obtain ⟨B, _, hBout⟩ := t.allBound i
+  have hlast : (t.net.paths i).length - 1 < (t.net.paths i).length :=
+    Nat.sub_lt (List.length_pos_of_ne_nil hne) one_pos
+  refine ⟨B (t.hopServer i ((t.net.paths i).length - 1)), ?_⟩
+  rw [show t.proc i (t.net.paths i).length
+        = t.Dout (t.hopServer i ((t.net.paths i).length - 1)) i by
+      simp only [proc, lt_self_iff_false, if_false]]
+  exact hBout (t.hopServer i ((t.net.paths i).length - 1)) (mem_flowsThrough_hopServer t i hlast)
+
 end DeepWiki.GpsNetwork.Traj
