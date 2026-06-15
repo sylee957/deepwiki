@@ -230,6 +230,20 @@ theorem minDeconv_tokenBucketNN_rateLatencyNN
     rw [hbeta, tsub_zero]
     simp only [affine]; push_cast; ring_nf; rfl
 
+/-- `affine r b ⊘ β_{R,T} = affine r (b + r*T)` for `r ≤ R`: deconvolving an affine
+curve by a rate-latency server keeps it affine, growing the constant by `r·T` — the
+per-hop output propagation for a flow already shaped affine (the second and later
+hops of a rate-latency chain). -/
+theorem minDeconv_affine_rateLatencyNN (r b R T : ℝ≥0) (h : r ≤ R) :
+    minDeconv (affine r b) (rateLatencyNN R T) = affine r (b + r * T) := by
+  funext t
+  apply le_antisymm
+  · refine iSup_le (fun u => tsub_le_iff_right.mpr (affine_shift_bound r b R T t u h))
+  · refine le_iSup_of_le T (le_of_eq ?_)
+    have hbeta : rateLatencyNN R T T = 0 := by simp only [rateLatencyNN, tsub_self]; simp
+    rw [hbeta, tsub_zero]
+    simp only [affine]; push_cast; ring
+
 /-- The closure of the deconvolved token bucket is again a token bucket:
 `(γ_{r,b} ⊘ β_{R,T})* = tokenBucketNN r (b + r*T)` (`r ≤ R`, `T > 0`). -/
 theorem subadditiveClosureENN_minDeconv_tokenBucketNN_rateLatencyNN
