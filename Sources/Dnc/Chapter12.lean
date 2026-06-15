@@ -404,6 +404,16 @@ needs only the strict rate-latency aggregate, so it covers GPS). The library's
 `GpsNetwork.Traj.isFlowEndToEndDelayBounded`. -/
 alias thm_12_5_endToEndDelay := GpsNetwork.Traj.isFlowEndToEndDelayBounded
 
+/-- **Per-flow END-TO-END backlog in a stable network** (library capstone, backlog parallel of the
+end-to-end delay capstones): in a locally stable SP / GPS network, every flow with a nonempty path
+has a *finite end-to-end backlog* (ingress to egress), via the SP-PMOO / SFA end-to-end bound. The
+library's `SpNetwork.Traj.isFlowEndToEndBacklogBounded` (static priority) and
+`GpsNetwork.Traj.isFlowEndToEndBacklogBounded` (GPS). -/
+alias thm_12_3_endToEndBacklog := SpNetwork.Traj.isFlowEndToEndBacklogBounded
+
+@[inherit_doc thm_12_3_endToEndBacklog]
+alias thm_12_5_endToEndBacklog := GpsNetwork.Traj.isFlowEndToEndBacklogBounded
+
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,
