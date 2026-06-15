@@ -201,6 +201,16 @@ theorem prop_3_14_rateLatency (R T : ℝ≥0) :
     legendre (rateLatencyEReal R T) = rateEReal T ⊔ delayEReal R :=
   legendre_rateLatencyEReal R T
 
+/-- **Fenchel–Moreau involution on the catalog curves** (a corollary of the
+Prop 3.14 duality): the biconjugate recovers the curve, `𝓛(𝓛(δ_d)) = δ_d` and
+`𝓛(𝓛(λ_R)) = λ_R`. The library's `legendre_legendre_delayEReal` /
+`legendre_legendre_rateEReal`. (The general involution for convex non-decreasing
+curves is not formalized; here it is verified on the base curves.) -/
+theorem prop_3_14_involution (d : ℝ≥0) :
+    legendre (legendre (delayEReal d)) = delayEReal d ∧
+      legendre (legendre (rateEReal d)) = rateEReal d :=
+  ⟨legendre_legendre_delayEReal d, legendre_legendre_rateEReal d⟩
+
 /-- **Proposition 3.15**, non-decreasing (§3.3.2, p.54): `𝓛(f)` is
 non-decreasing (`monotone_legendre`); also antitone in `f`
 (`legendre_antitone`). -/

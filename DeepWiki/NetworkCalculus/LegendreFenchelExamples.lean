@@ -116,4 +116,18 @@ theorem legendre_rateLatencyEReal (R T : ℝ≥0) :
       push_cast
       nlinarith [hbig, hδ]
 
+/-- **The Fenchel–Moreau involution on the burst-delay**: `𝓛(𝓛(δ_d)) = δ_d` —
+the biconjugate recovers `δ_d`, by composing the duality `𝓛(δ_d) = λ_d` and
+`𝓛(λ_d) = δ_d`. (The general involution `𝓛(𝓛 f) = f` for convex non-decreasing
+`f` is not formalized; here it is verified on the catalog curve.) -/
+theorem legendre_legendre_delayEReal (d : ℝ≥0) :
+    legendre (legendre (delayEReal d)) = delayEReal d := by
+  rw [legendre_delayEReal, legendre_rateEReal]
+
+/-- **The Fenchel–Moreau involution on the rate curve**: `𝓛(𝓛(λ_R)) = λ_R` —
+the biconjugate recovers `λ_R`, by composing `𝓛(λ_R) = δ_R` and `𝓛(δ_R) = λ_R`. -/
+theorem legendre_legendre_rateEReal (R : ℝ≥0) :
+    legendre (legendre (rateEReal R)) = rateEReal R := by
+  rw [legendre_rateEReal, legendre_delayEReal]
+
 end DeepWiki
