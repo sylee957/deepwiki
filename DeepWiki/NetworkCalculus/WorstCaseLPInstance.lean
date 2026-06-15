@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.RealCurvesDeviations
 import DeepWiki.NetworkCalculus.RealCurvesConv
 
@@ -91,5 +92,23 @@ theorem worstCaseTandemDelay_tokenBucketNN_rateLatencyNN (r b R₁ T₁ R₂ T�
     liftENN_tokenBucketArrival, conv_rateLatencyNN_rateLatencyNN]
   exact hDevENN_tokenBucketNN_rateLatencyNN r b (R₁ ⊓ R₂) (T₁ + T₂)
     (lt_inf_iff.mpr ⟨hR₁, hR₂⟩) hb (le_inf_iff.mpr ⟨hr₁, hr₂⟩)
+
+/-- **Tandem worst-case backlog = `r·(T₁+T₂) + b`** — the canonical end-to-end
+backlog (total in-flight data) of a token-bucket flow through two rate-latency
+servers in series (`r ≤ R₁,R₂`, `0 < T₁+T₂`), via the chain of `[β_{R₂,T₂}]` past
+the head `β_{R₁,T₁}`, collapsing to `β_{R₁⊓R₂, T₁+T₂}`. -/
+theorem worstCaseChainBacklog_tokenBucketNN_two_rateLatencyNN (r b R₁ T₁ R₂ T₂ : ℝ≥0)
+    (hr₁ : r ≤ R₁) (hr₂ : r ≤ R₂) (hT : 0 < T₁ + T₂) :
+    worstCaseChainBacklog (tokenBucketArrival r b) (rateLatencyNN R₁ T₁) [rateLatencyNN R₂ T₂]
+      = ((r * (T₁ + T₂) + b : ℝ≥0) : ℝ≥0∞) := by
+  rw [worstCaseChainBacklog_eq_vDev_minConvChain (tokenBucketArrival_mono r b)
+      (tokenBucketArrival_nullAtOrigin r b) (tokenBucketArrival_subadditive r b)
+      (rateLatencyNN_zero_eq R₁ T₁)
+      (fun γ hγ => by rw [List.mem_singleton] at hγ; exact hγ ▸ rateLatencyNN_zero_eq R₂ T₂),
+    liftENN_tokenBucketArrival,
+    show minConvChain (rateLatencyNN R₁ T₁) [rateLatencyNN R₂ T₂]
+        = rateLatencyNN (R₁ ⊓ R₂) (T₁ + T₂) by
+      rw [minConvChain_cons, minConvChain_nil, conv_rateLatencyNN_rateLatencyNN]]
+  exact vDev_tokenBucketNN_rateLatencyNN r b (R₁ ⊓ R₂) (T₁ + T₂) (le_inf_iff.mpr ⟨hr₁, hr₂⟩) hT
 
 end DeepWiki
