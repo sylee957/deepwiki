@@ -229,6 +229,20 @@ theorem lemma_12_5 {ι σ : Type*} [Fintype ι] [Nonempty ι]
     ∃ i, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) :=
   exists_flow_below_gps_share r φ hφ R Fl hstab
 
+/-- **Theorem 12.5**, the induction step's residual-capacity form (§12.3.3, p.279–280):
+on the active (not-yet-peeled) flow set `J`, local stability gives a flow `i ∈ J` below its
+GPS share of the *residual* capacity `R^(h) − ∑_{j∈Fl(h)\J} rⱼ` left after the already-peeled
+flows are removed — `rᵢ < φᵢ·(R^(h)−∑_{Fl(h)\J}r)/(∑_{Fl(h)∩J}φ)` at each server it crosses.
+Peeling the lighter flows shrinks the share denominator and raises the capacity, so the
+next-critical flow is again below its (now larger) share. The library's
+`exists_flow_below_residual_share` (`lemma_12_5` is the `J = univ`, no-peeled-flows case). -/
+theorem lemma_12_5_residual {ι σ : Type*} [DecidableEq ι]
+    (J : Finset ι) (hJ : J.Nonempty) (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j)
+    (R : σ → ℝ) (Fl : σ → Finset ι) (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
+    ∃ i ∈ J, ∀ h, i ∈ Fl h ∩ J →
+      r i < φ i * (R h - ∑ j ∈ Fl h \ J, r j) / (∑ j ∈ Fl h ∩ J, φ j) :=
+  exists_flow_below_residual_share J hJ r φ hφ R Fl hstab
+
 /-- **Theorem 12.5**, step B / per-flow path stability (§12.3.3, p.279): the GPS
 analogue of the residual-path stability — a flow `i` crossing a path of GPS servers
 (shared weights `φ`, strict aggregate service per hop), each offering it the share
@@ -270,6 +284,17 @@ theorem thm_12_5_gpsPath_tokenBucket {ι : Type*} [Fintype ι] {n : ℕ}
     (hstab : ∀ k, k < n → r < (φ i / ∑ j, φ j) * R k) :
     ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
   isGloballyStable_gpsPath_tokenBucket hcaus hβf hgps proc hchain harr0 hr hstab
+
+/-- **Theorem 12.5**, the per-server peeling step (§12.3.3, p.279–280): at a GPS server with
+strict rate-latency aggregate `β_{R,T}` and weights `φ`, once the already-peeled flows
+`∑_{j∉J} Dⱼ` carry a token-bucket bound `ρ·v+b` (`ρ` their summed rate, `ρ < R`), the
+not-yet-peeled critical flow `i ∈ J` is served by the rate-latency strict service curve
+`β_{(φᵢ/∑_{j∈J}φ)(R−ρ), (R·T+b)/(R−ρ)}` — the blind residual leaves the `J`-aggregate the
+reduced rate `R−ρ` (`residualCurve β_{R,T} (ρ·v+b) = β_{R−ρ,·}`), and the GPS share carves
+flow `i`'s slice. The library's `isStrictMinimalServiceCurve_residualServer_gpsPeel`; its
+rate exceeds `rᵢ` by `lemma_12_5_residual`. This is the induction step at one server; the
+cyclic induction over the whole network remains unformalized. -/
+alias thm_12_5_peelStep := isStrictMinimalServiceCurve_residualServer_gpsPeel
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
