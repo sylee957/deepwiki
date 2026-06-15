@@ -76,6 +76,7 @@ def usage : String := String.intercalate "\n"
   , "  wiki context <query> [-k N] [--depth D]  seeds + neighborhood bundle"
   , "  wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html|--3d]  graph a neighborhood"
   , "  wiki dot --modules [--html|--3d]         graph the module dependency DAG"
+  , "  wiki dot --all [--html|--3d]             graph every declaration (~3k nodes; use --3d)"
   , ""
   , "Env: WIKI_DB, WIKI_OLLAMA_URL, WIKI_EMBED_MODEL" ]
 
@@ -160,6 +161,12 @@ def dotCmd (rest : List String) : IO Unit := do
   let html := o.pos.contains "--html"
   let three := o.pos.contains "--3d"
   let mermaid := o.pos.contains "--mermaid"
+  -- Render decl nodes + (pre-filtered) edges in the chosen format.
+  let emit := fun (root : String) (nodes : Array Hit) (edges : Array (String × String)) =>
+    if three then neighborhood3d root nodes edges
+    else if html then neighborhoodHtml root nodes edges
+    else if mermaid then neighborhoodMermaid root nodes edges
+    else neighborhoodDot root nodes edges
   let db ← openExisting
   if o.pos.contains "--modules" then
     let nodes ← moduleNodes db
@@ -169,8 +176,14 @@ def dotCmd (rest : List String) : IO Unit := do
       else if html then moduleHtml nodes edges
       else moduleDot nodes edges
     return
+  if o.pos.contains "--all" then
+    let nodes ← allDecls db
+    let edges ← allEdges db   -- already pruned to decls in `build`, so every edge is valid
+    IO.eprintln s!"Full graph: {nodes.size} nodes, {edges.size} edges — prefer --3d (2D/DOT are heavy at this size)."
+    IO.println (emit "" nodes edges)
+    return
   let some name := (o.pos.filter (fun a => ! a.startsWith "-")).toList.head? | do
-    IO.eprintln "usage: wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html|--3d]   |   wiki dot --modules [--html|--3d]"
+    IO.eprintln "usage: wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html|--3d]   |   wiki dot --modules|--all [--html|--3d]"
     return
   match (← resolveOne db name) with
   | none => pure ()
@@ -178,12 +191,9 @@ def dotCmd (rest : List String) : IO Unit := do
     let rev := o.pos.contains "--rev"
     let both := o.pos.contains "--both"
     let nodes ← neighborhood db h.name o.depth (!rev || both) (rev || both)
-    let edges ← allEdges db
-    IO.println <|
-      if three then neighborhood3d h.name nodes edges
-      else if html then neighborhoodHtml h.name nodes edges
-      else if mermaid then neighborhoodMermaid h.name nodes edges
-      else neighborhoodDot h.name nodes edges
+    let nodeNames := nodes.map (·.name)
+    let edges := (← allEdges db).filter (fun (a, b) => nodeNames.contains a && nodeNames.contains b)
+    IO.println (emit h.name nodes edges)
 
 def pathCmd (a b : String) : IO Unit := do
   let db ← openExisting

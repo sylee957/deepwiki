@@ -25,14 +25,12 @@ def moduleLabel (m : String) : String :=
 /-- Graphviz DOT for a decl neighborhood: nodes labelled by short name (full signature in
 the tooltip), the focus node highlighted, edges = `uses` among the node set. -/
 def neighborhoodDot (root : String) (nodes : Array Hit) (edges : Array (String × String)) : String := Id.run do
-  let names := nodes.map (·.name)
   let mut out := "digraph wiki {\n  rankdir=LR;\n  node [shape=box, style=\"rounded,filled\", fontname=\"monospace\", fontsize=10];\n  edge [color=\"#888888\", arrowsize=0.7];\n"
   for h in nodes do
     let color := if h.name == root then "#ffcc66" else kindColor h.kind
     out := out ++ s!"  \"{h.name}\" [label=\"{dotEscape h.short}\", fillcolor=\"{color}\", tooltip=\"{dotEscape h.signature}\"];\n"
   for (a, b) in edges do
-    if names.contains a && names.contains b then
-      out := out ++ s!"  \"{a}\" -> \"{b}\";\n"
+    out := out ++ s!"  \"{a}\" -> \"{b}\";\n"
   return out ++ "}\n"
 
 /-- Mermaid `graph` for a decl neighborhood (for inline rendering in Markdown/IDEs). -/
@@ -44,8 +42,7 @@ def neighborhoodMermaid (root : String) (nodes : Array Hit) (edges : Array (Stri
     let cls := if h.name == root then ":::root" else ""
     out := out ++ s!"  {idOf h.name}[\"{h.short}\"]{cls}\n"
   for (a, b) in edges do
-    if names.contains a && names.contains b then
-      out := out ++ s!"  {idOf a} --> {idOf b}\n"
+    out := out ++ s!"  {idOf a} --> {idOf b}\n"
   return out ++ "  classDef root fill:#ffcc66,stroke:#cc8800;\n"
 
 /-- Graphviz DOT for the module dependency graph; edge thickness grows with √(use count). -/
@@ -77,7 +74,6 @@ def graphHtml (title nodesJS edgesJS : String) : String :=
 
 /-- Interactive HTML for a decl neighborhood (node colour by kind, signature on hover). -/
 def neighborhoodHtml (root : String) (nodes : Array Hit) (edges : Array (String × String)) : String := Id.run do
-  let names := nodes.map (·.name)
   let mut ns := ""
   for h in nodes do
     let color := if h.name == root then "#ffcc66" else kindColor h.kind
@@ -85,8 +81,7 @@ def neighborhoodHtml (root : String) (nodes : Array Hit) (edges : Array (String 
       ++ "\",title:\"" ++ jsEscape (h.kind ++ "  " ++ h.signature) ++ "\",color:\"" ++ color ++ "\"},"
   let mut es := ""
   for (a, b) in edges do
-    if names.contains a && names.contains b then
-      es := es ++ "{from:\"" ++ jsEscape a ++ "\",to:\"" ++ jsEscape b ++ "\"},"
+    es := es ++ "{from:\"" ++ jsEscape a ++ "\",to:\"" ++ jsEscape b ++ "\"},"
   return graphHtml ("uses-graph: " ++ root) ns es
 
 /-- Interactive HTML for the module dependency graph. -/
@@ -113,7 +108,6 @@ def graph3dHtml (title nodesJS linksJS : String) : String :=
 
 /-- Interactive 3D graph for a decl neighborhood (node colour by kind, focus enlarged). -/
 def neighborhood3d (root : String) (nodes : Array Hit) (edges : Array (String × String)) : String := Id.run do
-  let names := nodes.map (·.name)
   let mut ns := ""
   for h in nodes do
     let color := if h.name == root then "#ffcc66" else kindColor h.kind
@@ -122,8 +116,7 @@ def neighborhood3d (root : String) (nodes : Array Hit) (edges : Array (String ×
       ++ "\",color:\"" ++ color ++ "\",val:" ++ val ++ "},"
   let mut es := ""
   for (a, b) in edges do
-    if names.contains a && names.contains b then
-      es := es ++ "{source:\"" ++ jsEscape a ++ "\",target:\"" ++ jsEscape b ++ "\"},"
+    es := es ++ "{source:\"" ++ jsEscape a ++ "\",target:\"" ++ jsEscape b ++ "\"},"
   return graph3dHtml ("uses-graph 3D: " ++ root) ns es
 
 /-- Interactive 3D graph for the module dependency graph. -/

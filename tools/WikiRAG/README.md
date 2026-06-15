@@ -46,16 +46,18 @@ Add `--json` to `search`/`show`/`deps`/`rdeps` for machine-readable output.
 
 ### Visualizing
 
-`wiki dot` exports a subgraph in three formats. Two readable scales: a **decl
-neighborhood** (`<name>`, with `--depth`, `--rev` for dependents, `--both`) and the
-**module DAG** (`--modules`, ~170 nodes). The full 3k-node decl graph is a hairball, so
-it isn't offered.
+`wiki dot` exports a subgraph in several formats, at three scales: a **decl
+neighborhood** (`<name>`, with `--depth`, `--rev` for dependents, `--both`), the **module
+DAG** (`--modules`, ~170 nodes), and **the entire declaration graph** (`--all`, ~3.2k
+nodes / ~16k edges). The full graph is a hairball in 2D — use `--3d`, where it's actually
+navigable.
 
 ```bash
 # Interactive, zero-install (CDN — opens in any browser):
 scripts/wiki dot --modules --html > modules.html && open modules.html   # 2D (vis-network)
 scripts/wiki dot --modules --3d   > modules3d.html && open modules3d.html # 3D (three.js)
 scripts/wiki dot IsMaximalArrivalCurve --both --html > nbr.html && open nbr.html
+scripts/wiki dot --all --3d > all.html && open all.html                   # every decl, 3D
 
 # Graphviz (best static quality; brew install graphviz):
 scripts/wiki dot --modules | dot -Tsvg -o modules.svg && open modules.svg

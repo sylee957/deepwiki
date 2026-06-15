@@ -116,6 +116,13 @@ def findPath (db : SQLite) (a b : String) (maxd : Nat := 12) : IO (Option String
   s.bindText 3 b
   if (← s.step) then return some (← s.columnText 0) else return none
 
+/-- Every declaration node. -/
+def allDecls (db : SQLite) : IO (Array Hit) := do
+  let s ← db.prepare s!"SELECT {declCols} FROM decls"
+  let mut acc : Array Hit := #[]
+  while (← s.step) do acc := acc.push (← readDecl s)
+  return acc
+
 /-- Every `uses` edge `(src, dst)` in the graph. -/
 def allEdges (db : SQLite) : IO (Array (String × String)) := do
   let s ← db.prepare "SELECT src, dst FROM edges"
