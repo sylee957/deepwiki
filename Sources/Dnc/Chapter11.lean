@@ -46,14 +46,17 @@ theorem thm_11_1_singleNode {α : ℝ≥0 → ℝ≥0} {β : ℝ≥0 → ℝ≥0
     worstCaseServerDelay α β = (hDev (Deviation.liftENN α) β : ℝ≥0∞) :=
   worstCaseServerDelay_eq_hDev hαmono hα0 hαsub hβmono hβ0
 
-/-- **Theorem 11.1, two-node tandem instance** (§11.1.1/§11.1.3) — the
-optimum-equals-worst-case for a single flow through two servers in series: the
+/-- **Theorem 11.1, two-node single-flow specialization** (§11.1.3, n=2) — the
+optimum-equals-worst-case for a *single* flow through two servers in series: the
 worst-case end-to-end delay `worstCaseTandemDelay α β₁ β₂` (the optimum over all
 feasible tandem trajectories) equals the closed-form `hDev(α, β₁ ∗ β₂)` against
 the concatenated service curve. The service constraints collapse by `minConv`
 associativity to a single concatenated server, and the greedy trajectory
 `(α, α∗β₁, α∗(β₁∗β₂))` attains the bound. The library's
-`worstCaseTandemDelay_eq_hDev_conv`. -/
+`worstCaseTandemDelay_eq_hDev_conv`. (Single flow, no cross-traffic — here the
+concatenation `β₁ ∗ β₂` is already tight; the *multi-flow* tandem of Example 11.1
+under arbitrary multiplexing, where the LP optimum is strictly below the
+curve-composition bound, needs the finite-LP construction and is not formalized.) -/
 theorem thm_11_1_tandem {α : ℝ≥0 → ℝ≥0} {β₁ β₂ : ℝ≥0 → ℝ≥0∞}
     (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
     (hβ₁mono : Monotone β₁) (hβ₂mono : Monotone β₂) (hβ₁0 : β₁ 0 = 0) (hβ₂0 : β₂ 0 = 0) :
