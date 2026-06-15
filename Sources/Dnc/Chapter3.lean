@@ -239,6 +239,14 @@ theorem prop_3_15_biconjugate_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
     legendre (legendre f) u ≤ f u :=
   legendre_legendre_le f u
 
+/-- **Proposition 3.15**, idempotence on the range (§3.3.2, p.54): `𝓛` is
+idempotent on its image, `𝓛(𝓛(𝓛 g)) = 𝓛 g`, so every transform `𝓛 g` is its
+own biconjugate — the Fenchel–Moreau fixed points are exactly the transforms
+(no convexity needed). The library's `legendre_legendre_legendre`. -/
+theorem prop_3_15_idempotent (g : ℝ≥0 → EReal) :
+    legendre (legendre (legendre g)) = legendre g :=
+  legendre_legendre_legendre g
+
 /-- **Proposition 3.15**, convolution-to-sum (§3.3.2, p.54): the Legendre–Fenchel
 transform turns inf-convolution into addition, `𝓛(f ⊗ g) = 𝓛(f) + 𝓛(g)`, for
 proper curves `f`, `g` (never `⊥`). The library's `legendre_legendreConv`. -/

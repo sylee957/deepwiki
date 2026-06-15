@@ -128,6 +128,17 @@ theorem legendre_legendre_le (f : ℝ≥0 → EReal) (u : ℝ≥0) :
         EReal.sub_le_sub (le_refl _) h
     _ = f u := key
 
+/-- **The Legendre–Fenchel transform is idempotent on its range**:
+`𝓛(𝓛(𝓛 g)) = 𝓛 g`. So every transform `𝓛 g` is its own biconjugate — the
+Fenchel–Moreau fixed points are exactly the transforms. (No convexity needed:
+`≤` is `legendre_legendre_le` at `𝓛 g`; `≥` applies the antitone `𝓛` to
+`𝓛(𝓛 g) ≤ g`.) -/
+theorem legendre_legendre_legendre (g : ℝ≥0 → EReal) :
+    legendre (legendre (legendre g)) = legendre g := by
+  funext u
+  exact le_antisymm (legendre_legendre_le (legendre g) u)
+    (legendre_antitone (legendre_legendre_le g) u)
+
 /-- The Legendre–Fenchel transform turns the pointwise `min` into a `max`:
 `𝓛(f ⊓ g) = 𝓛(f) ⊔ 𝓛(g)`. Subtracting the smaller of `f u, g u` gives the
 larger of the two slices, and the supremum distributes over the join. -/
