@@ -488,4 +488,20 @@ network-calculus method's fixed-point iteration diverges, yielding no finite end
 library's `scalingIterate_unbounded` (and the general `linearIterate_unbounded`). -/
 alias ex_12_scalingInstability_iterate := scalingIterate_unbounded
 
+/-! ### §12.4 instability — coverage boundary
+
+**§12.4.2 (scaling instability, Fig 12.5)** is formalized to the extent the book develops it: the
+fix-point method (`ex_12_scalingInstability` single / `ex_12_scalingInstability_pair` coupled), its
+divergence (`ex_12_scalingInstability_iterate`), the separation from local stability
+(`ex_12_localStability_not_sufficient`), and the recursion's grounding in the residual + output
+operations (`ex_12_scalingBurst_grounded`). The book derives instability by showing this NC bound
+*diverges*; the explicit cumulative-function trajectory proving the network is literally not globally
+stable is deferred by the book to the reference [FID 06b] (which the book cites for the "more details"
+of this constant-scaling instability), so it is out of this book's scope rather than a gap here.
+
+**§12.4.1 (adversarial methods: SDF / FIFO, p.280–283)** presents in-book phase-by-phase adversarial
+trajectories whose backlog grows geometrically; their per-phase burst recursion shares the divergence
+engine `linearIterate_unbounded`, but the full piecewise-cumulative-function constructions are not yet
+formalized. -/
+
 end DeepWiki.Dnc
