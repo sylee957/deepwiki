@@ -131,6 +131,28 @@ theorem Network.isGloballyStable_mimo_of_aggregateBound (net : Network κ ι)
     ∀ h, IsGloballyStableServer ⇑(∑ i, Ain h i) ⇑(∑ i, Dout h i) := fun h =>
   isGloballyStableServer_aggregateServer (hc h) (hβ h) (hp h) (harr h) (hstab h)
 
+omit [DecidableEq κ] in
+/-- **Network global stability from per-flow arrival bounds**: if at each server `h`
+every flow `i`'s input `Ain h i` is bounded by a curve `σ h i`, and the aggregate
+bound `∑ᵢ σ h i` is locally stable against the server's strict service, then every
+server's aggregate is globally stable. The aggregation half of the GPS peeling
+assembly — once the peeling establishes the per-flow propagated bounds `σ`, this
+discharges global stability (`harr` via `isMaximalArrivalBound_sum`, then
+`isGloballyStable_mimo_of_aggregateBound`). Policy-agnostic. -/
+theorem Network.isGloballyStable_of_perFlow_bounds (net : Network κ ι)
+    (S : κ → (ι → Curve) → (ι → Curve) → Prop) (Ain Dout : κ → ι → Curve)
+    (σ : κ → ι → ℝ≥0 → ℝ≥0)
+    (hc : ∀ h, IsCausalN (S h))
+    (hβ : ∀ h, IsStrictMinimalServiceCurve (net.service h) (aggregateServer (S h)))
+    (hp : ∀ h, S h (Ain h) (Dout h))
+    (hbound : ∀ h i, IsMaximalArrivalBound (⇑(Ain h i)) (σ h i))
+    (hstab : ∀ h, IsLocallyStableServer (fun t => ∑ i, σ h i t) (net.service h)) :
+    ∀ h, IsGloballyStableServer ⇑(∑ i, Ain h i) ⇑(∑ i, Dout h i) :=
+  net.isGloballyStable_mimo_of_aggregateBound S Ain Dout (fun h t => ∑ i, σ h i t)
+    hc hβ hp (fun h => by
+      rw [Curve.coe_sum]
+      exact isMaximalArrivalBound_sum Finset.univ (fun i _ => hbound h i)) hstab
+
 /-! ## Two-server feed-forward stability, downstream bound DERIVED
 The genuine harr-discharge for a tandem: the second server's arrival bound is
 not assumed — it is the first server's output bound, obtained from the
