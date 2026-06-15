@@ -16,6 +16,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantEndToEnd
+import DeepWiki.NetworkCalculus.StabilityNetworkScalingInstability
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -467,6 +468,13 @@ inter-server burstinesses solve `σ₁' = 1 + m₄σ₂'/(1−m₄)` and `σ₂'
 Thm 7.1 / Lemma 12.6) in `ℝ≥0` iff `m₂ + m₄ < 1`. The faithful coupled-system form of the boundary;
 eliminating `σ₂'` recovers `ex_12_scalingInstability`. The library's `exists_scalingFixpointPair_iff`. -/
 alias ex_12_scalingInstability_pair := exists_scalingFixpointPair_iff
+
+/-- **§12.4.2 burst recursion grounded in NC output** (p.284, the derivation of the `σ'` equations): the
+`σ₁' = 1 + m₄σ₂'/(1−m₄)` recursion *is* the per-flow output burstiness — the descaled output of the
+scaled flow `m₁γ_{1,1}` through its residual rate-latency `β_{1−m₄, m₄σ/(1−m₄)}` (Lemma 12.6 residual
+`scalingResidual_rateLatency` + Theorem 7.1 output `input ⊘ service`) has burst `1 + m₄σ/(1−m₄)`, with
+`m₁` cancelling under the `1/m₁` descaling. The library's `descaledOutputBurst_scalingResidual`. -/
+alias ex_12_scalingBurst_grounded := descaledOutputBurst_scalingResidual
 
 /-- **§12.4.2 punchline** (p.284–285): local stability is *not sufficient* for the cyclic scaling
 network — there is a locally stable parameter choice (`m₁+m₄<1 ∧ m₂+m₃<1`, witness `m₁=m₃=0`,
