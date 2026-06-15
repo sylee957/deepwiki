@@ -84,6 +84,41 @@ theorem Network.isGloballyStable_mimo (net : Network κ ι)
   isGloballyStableServer_aggregateServer (hc h) (hβ h) (hp h) (harr h)
     (net.isLocallyStableServer_of_isLocallyStable hstab h)
 
+/-! ## Two-server feed-forward stability, downstream bound DERIVED
+The genuine harr-discharge for a tandem: the second server's arrival bound is
+not assumed — it is the first server's output bound, obtained from the
+propagation engine and read back to `ℝ≥0` through the `liftENN` carrier bridge
+(`isMaximalArrivalBound_liftENN_iff`). -/
+
+open Deviation in
+/-- **Two-server feed-forward global stability** (single flow, downstream bound
+derived). A flow with ingress maximal arrival curve `α` crosses a causal
+strict-service server `S₁` (curve `β₁`) and then `S₂` (curve `β₂`), the output
+`M` of the first being the input of the second. If the propagated output bound
+`α ⊘ β₁` is dominated by a curve `α₂` (the witness for the derived downstream
+constraint) and both servers are locally stable, then **both** servers have a
+bounded backlogged period. The downstream arrival bound on `M` is *derived*
+(`isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve` + the carrier
+bridge), not assumed. -/
+theorem isGloballyStable_tandem
+    {S₁ S₂ : Curve → Curve → Prop} {β₁ β₂ α α₂ : ℝ≥0 → ℝ≥0}
+    (hc₁ : IsCausal S₁) (hβ₁ : IsStrictMinimalServiceCurve β₁ S₁)
+    (hc₂ : IsCausal S₂) (hβ₂ : IsStrictMinimalServiceCurve β₂ S₂)
+    {A M D : Curve} (hp₁ : S₁ A M) (hp₂ : S₂ M D)
+    (harr : IsMaximalArrivalBound (⇑A) α)
+    (hprop : minDeconv (liftENN α) (liftENN β₁) ≤ liftENN α₂)
+    (hstab₁ : IsLocallyStableServer α β₁)
+    (hstab₂ : IsLocallyStableServer α₂ β₂) :
+    IsGloballyStableServer ⇑A ⇑M ∧ IsGloballyStableServer ⇑M ⇑D := by
+  refine ⟨isGloballyStableServer_of_isLocallyStableServer hc₁ hβ₁ hp₁ harr hstab₁, ?_⟩
+  -- `M`'s output bound `α ⊘ β₁`, derived by propagation, dominated by `α₂`
+  have hMprop : IsMaximalArrivalBound (liftENN ⇑M) (minDeconv (liftENN α) (liftENN β₁)) :=
+    isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve hc₁ hβ₁ hp₁
+      (isMaximalArrivalBound_liftENN_iff.mpr harr)
+  have hMα₂ : IsMaximalArrivalBound (⇑M) α₂ :=
+    isMaximalArrivalBound_liftENN_iff.mp (hMprop.mono hprop)
+  exact isGloballyStableServer_of_isLocallyStableServer hc₂ hβ₂ hp₂ hMα₂ hstab₂
+
 /-! ## Book restatement (multiplexing ⟹ aggregate global stability)
 A server multiplexing flows `As` to `Ds` (`n`-server `S`), offering a strict
 service curve `β` to the aggregate, with the aggregate input

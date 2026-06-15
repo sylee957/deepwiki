@@ -113,6 +113,15 @@ arrival-curve propagation along each flow's path — `arrivalProp_chain` summed
 over a server's flows — is the remaining topological/fix-point step.) -/
 alias thm_12_mimoStable := isGloballyStableServer_aggregateServer
 
+/-- **Two-server feed-forward global stability** (single flow, downstream bound
+*derived*): a flow crossing two causal strict-service servers in series is
+globally stable at *both*, with the second server's arrival bound obtained from
+the first's output by propagation (`α ⊘ β₁`, read back through the `liftENN`
+carrier bridge) rather than assumed. The library's `isGloballyStable_tandem`.
+This is the harr-discharge for the tandem case — the engine behind the §12.2
+feed-forward transformation (Example 12.1) at two hops. -/
+alias thm_12_tandemStable := isGloballyStable_tandem
+
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
 assignment `α̂ = sSup {α | α ≤ F α}` (`canonicalArrivalAssignment`) is a fixed
