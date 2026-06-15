@@ -44,7 +44,9 @@ scripts/wiki context "residual service curve"      # seeds + neighborhood bundle
 
 Add `--json` to `search`/`show`/`deps`/`rdeps` for machine-readable output.
 Short names (`minConv`) auto-resolve; ambiguous ones list their candidates.
-Re-run `scripts/wiki build` after changing the library.
+Re-run `scripts/wiki build` after changing the library — it **preserves embeddings**
+for declarations whose name, kind, signature and docstring are unchanged, so only
+new/changed decls need a follow-up `scripts/wiki index` (it reports how many).
 
 ## Embeddings (optional, local)
 

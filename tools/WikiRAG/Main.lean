@@ -93,14 +93,15 @@ unsafe def buildCmd : IO Unit := do
   Lean.enableInitializersExecution
   withImportModules #[{module := `DeepWiki}, {module := `Sources}] {} (trustLevel := 1024) fun env => do
     let db ← openDb dbPath
-    createTables db
     let coreCtx : Core.Context := { fileName := "<wiki>", fileMap := default }
     let coreState : Core.State := { env := env }
     IO.println "Walking declarations…"
     let ((metas, edges), _) ← Core.CoreM.toIO gather.run' (ctx := coreCtx) (s := coreState)
     IO.println s!"  {metas.size} declarations, {edges.size} raw use-edges."
-    insertGraph db metas edges
-    IO.println s!"Wrote graph to {dbPath}."
+    buildGraph db metas edges
+    let nTot ← countWhere db "SELECT COUNT(*) FROM decls"
+    let nEmb ← countWhere db "SELECT COUNT(*) FROM decls WHERE embedding IS NOT NULL"
+    IO.println s!"Wrote graph to {dbPath}: {nTot} decls, {nEmb} embeddings preserved, {nTot - nEmb} to (re)index."
 
 def indexCmd : IO Unit := do indexAll (← openExisting)
 
