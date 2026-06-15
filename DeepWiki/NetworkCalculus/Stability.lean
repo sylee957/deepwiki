@@ -231,4 +231,34 @@ theorem exists_scalingFixpoint_iff {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 
     (∃ σ : ℝ≥0, σ = m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d) ↔ m2 + m4 < 1 := by
   rw [exists_linearFixpoint_iff hd, scaling_gain_lt_one_iff h2 h4]
 
+/-- **The diverging fix-point iteration**: with gain `c ≥ 1` and positive offset `d > 0`, the
+network-calculus fix-point iteration `σₙ₊₁ = c·σₙ + d` is unbounded (every `M` is exceeded) — it
+grows at least linearly (`σₙ ≥ n·d`), so no finite bound exists. The dynamic counterpart of
+`exists_linearFixpoint_iff` (which rules out a *static* fixed point). -/
+theorem linearIterate_unbounded {c d : ℝ≥0} (hc : 1 ≤ c) (hd : 0 < d) (σ₀ M : ℝ≥0) :
+    ∃ n : ℕ, M ≤ (fun σ => c * σ + d)^[n] σ₀ := by
+  have hge : ∀ n : ℕ, (n : ℝ≥0) * d ≤ (fun σ => c * σ + d)^[n] σ₀ := by
+    intro n; induction n with
+    | zero => simp
+    | succ k ih =>
+      rw [Function.iterate_succ_apply']
+      have h1 : (fun σ => c * σ + d)^[k] σ₀ ≤ c * (fun σ => c * σ + d)^[k] σ₀ :=
+        le_mul_of_one_le_left (zero_le') hc
+      calc ((k + 1 : ℕ) : ℝ≥0) * d = (k : ℝ≥0) * d + d := by push_cast; ring
+        _ ≤ (fun σ => c * σ + d)^[k] σ₀ + d := by gcongr
+        _ ≤ c * (fun σ => c * σ + d)^[k] σ₀ + d := by gcongr
+  obtain ⟨n, hn⟩ := exists_nat_ge (M / d)
+  refine ⟨n, le_trans ?_ (hge n)⟩
+  calc M = M / d * d := (div_mul_cancel₀ M (ne_of_gt hd)).symm
+    _ ≤ (n : ℝ≥0) * d := by gcongr
+
+/-- **The §12.4.2 cyclic scaling network's NC iteration diverges when `m₂ + m₄ ≥ 1`**: in the unstable
+regime the per-flow burst iteration is unbounded, so the network-calculus method yields no finite
+end-to-end bound — even where local stability `m₁ + m₄ < 1 ∧ m₂ + m₃ < 1` may still hold. -/
+theorem scalingIterate_unbounded {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1)
+    (hge : 1 ≤ m2 + m4) (hd : 0 < d) (σ₀ M : ℝ≥0) :
+    ∃ n : ℕ, M ≤ (fun σ => m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d)^[n] σ₀ :=
+  linearIterate_unbounded (not_lt.mp fun h => absurd ((scaling_gain_lt_one_iff h2 h4).mp h)
+    (not_lt.mpr hge)) hd σ₀ M
+
 end DeepWiki
