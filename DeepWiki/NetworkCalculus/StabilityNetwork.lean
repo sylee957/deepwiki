@@ -173,6 +173,15 @@ theorem Network.IsLocallyStable.zeroFlow [DecidableEq ι] {net : Network κ ι}
     (hstab : net.IsLocallyStable) (i : ι) : (net.zeroFlow i).IsLocallyStable :=
   fun h => lt_of_le_of_lt (net.aggregateArrivalRate_zeroFlow_le i h) (hstab h)
 
+omit [Fintype ι] [DecidableEq κ] in
+/-- The peeled flow itself carries zero rate in the peeled network — so it is
+trivially (locally, hence globally) stable, leaving only the induction hypothesis
+on the rest. -/
+theorem Network.longTermArrivalRate_zeroFlow_self [DecidableEq ι] (net : Network κ ι)
+    (i : ι) : longTermArrivalRate ((net.zeroFlow i).arrivalCurve i) = 0 := by
+  rw [show (net.zeroFlow i).arrivalCurve i = 0 from Function.update_self i 0 net.arrivalCurve,
+    longTermArrivalRate_zero]
+
 /-! ## Network topology classes (Definition 10.1)
 The modular-analysis topology classes of `NetworkTopology`, read off a
 network's routing `paths`. -/

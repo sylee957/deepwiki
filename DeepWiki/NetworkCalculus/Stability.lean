@@ -88,6 +88,12 @@ theorem longTermArrivalRate_sum_le {ι : Type*} (s : Finset ι) (A : ι → ℝ�
           longTermArrivalRate_add_le (A a) (fun t => ∑ i ∈ s, A i t)
       _ ≤ longTermArrivalRate (A a) + ∑ i ∈ s, longTermArrivalRate (A i) := by gcongr
 
+/-- The empty flow has zero long-term rate: `r(0) = 0` (every ratio `0/t` is `0`,
+so the `limsup` is `0`). -/
+@[simp] theorem longTermArrivalRate_zero : longTermArrivalRate 0 = 0 := by
+  unfold longTermArrivalRate
+  simp only [Pi.zero_apply, ENNReal.coe_zero, ENNReal.zero_div, Filter.limsup_const]
+
 /-- The long-term arrival rate is monotone under pointwise domination: a flow
 dominated by another has no larger long-term rate (`A ≤ B ⟹ r(A) ≤ r(B)`). -/
 theorem longTermArrivalRate_mono {A B : ℝ≥0 → ℝ≥0} (h : ∀ t, A t ≤ B t) :
