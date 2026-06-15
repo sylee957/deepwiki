@@ -122,6 +122,15 @@ This is the harr-discharge for the tandem case — the engine behind the §12.2
 feed-forward transformation (Example 12.1) at two hops. -/
 alias thm_12_tandemStable := isGloballyStable_tandem
 
+/-- **Single-flow feed-forward path global stability** (every hop's bound
+derived): a flow crossing any number of causal strict-service servers in series
+is globally stable at *every* server on its path, with each hop's arrival bound
+obtained by propagating the ingress curve along the prefix (the induction
+invariant), not assumed. The library's `isGloballyStable_path` — the n-hop
+generalization of `thm_12_tandemStable` and the per-flow feed-forward engine of
+§12.2. -/
+alias thm_12_pathStable := isGloballyStable_path
+
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
 assignment `α̂ = sSup {α | α ≤ F α}` (`canonicalArrivalAssignment`) is a fixed
