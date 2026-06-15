@@ -146,6 +146,7 @@ import DeepWiki.NetworkCalculus.ServersResidualGpsStrict
 import DeepWiki.NetworkCalculus.ServersResidualPmoo
 import DeepWiki.NetworkCalculus.ServersResidualPmooChain
 import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
+import DeepWiki.NetworkCalculus.ServersResidualPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualPmooPath
 import DeepWiki.NetworkCalculus.ServersResidualPgps
 import DeepWiki.NetworkCalculus.ServersResidualDrr

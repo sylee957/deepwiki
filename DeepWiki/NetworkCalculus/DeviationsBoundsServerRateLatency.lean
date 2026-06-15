@@ -98,4 +98,65 @@ theorem backlog_le_of_strictRateLatency_affine
   backlog_le_of_strictRateLatency_tokenBucket hc hβ hp
     (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hr
 
+/-! ## Min-service-curve forms
+The end-to-end (concatenated) service curve of a tandem is a *minimal* service curve, not a strict
+one. These take `IsMinimalServiceCurve (liftEReal β_{R,T}) S` directly — the form the chain
+composition (`isMinimalServiceCurve_pmooResidualChain_of_strict_chain`) produces. -/
+
+/-- **Delay bound from a min-plus rate-latency service** (`γ_{r,b}` arrival): delay `≤ T + b/R`. -/
+theorem delay_le_of_minRateLatency_tokenBucket
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hβ : IsMinimalServiceCurve (liftEReal (rateLatency R T)) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (tokenBucketArrival r b))
+    (hR : 0 < R) (hr : r ≤ R) :
+    Deviation.delay (⇑A) (⇑D) ≤ ((T + b / R : ℝ≥0) : ℝ≥0∞) := by
+  have harrlift : IsMaximalArrivalBound (liftENN ⇑A) (tokenBucketNN r b) := by
+    rw [← liftENN_tokenBucketArrival]
+    exact isMaximalArrivalBound_liftENN_iff.mpr harr
+  have hbridge : toENN (liftEReal (rateLatency R T)) = rateLatencyNN R T := by
+    rw [toENN_liftEReal]; funext t; exact (rateLatencyNN_coe R T t).symm
+  have hdelay := delay_le_hDev_of_isMinimalServiceCurve hβ hp
+    (isNonneg_liftEReal _) (monotone_liftEReal (rateLatency_mono R T)) harrlift
+  rw [hbridge] at hdelay
+  refine le_trans hdelay ?_
+  show hDevENN (tokenBucketNN r b) (rateLatencyNN R T) ≤ _
+  exact hDevENN_tokenBucketNN_rateLatencyNN_le r b R T hR hr
+
+/-- **Backlog bound from a min-plus rate-latency service** (`γ_{r,b}` arrival): backlog `≤ r·T + b`. -/
+theorem backlog_le_of_minRateLatency_tokenBucket
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hβ : IsMinimalServiceCurve (liftEReal (rateLatency R T)) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (tokenBucketArrival r b))
+    (hr : r ≤ R) :
+    Deviation.backlog (⇑A) (⇑D) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) := by
+  have harrlift : IsMaximalArrivalBound (liftENN ⇑A) (tokenBucketNN r b) := by
+    rw [← liftENN_tokenBucketArrival]
+    exact isMaximalArrivalBound_liftENN_iff.mpr harr
+  have hbridge : toENN (liftEReal (rateLatency R T)) = rateLatencyNN R T := by
+    rw [toENN_liftEReal]; funext t; exact (rateLatencyNN_coe R T t).symm
+  have hbk := Deviation.backlog_le_vDev_of_isMinimalServiceCurve hβ hp
+    (isNonneg_liftEReal _) harrlift
+  rw [hbridge] at hbk
+  exact le_trans hbk (vDev_tokenBucketNN_rateLatencyNN_le r b R T hr)
+
+/-- Affine-arrival form of `delay_le_of_minRateLatency_tokenBucket`. -/
+theorem delay_le_of_minRateLatency_affine
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hβ : IsMinimalServiceCurve (liftEReal (rateLatency R T)) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (fun s => r * s + b))
+    (hR : 0 < R) (hr : r ≤ R) :
+    Deviation.delay (⇑A) (⇑D) ≤ ((T + b / R : ℝ≥0) : ℝ≥0∞) :=
+  delay_le_of_minRateLatency_tokenBucket hβ hp
+    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hR hr
+
+/-- Affine-arrival form of `backlog_le_of_minRateLatency_tokenBucket`. -/
+theorem backlog_le_of_minRateLatency_affine
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hβ : IsMinimalServiceCurve (liftEReal (rateLatency R T)) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (fun s => r * s + b))
+    (hr : r ≤ R) :
+    Deviation.backlog (⇑A) (⇑D) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) :=
+  backlog_le_of_minRateLatency_tokenBucket hβ hp
+    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hr
+
 end DeepWiki
