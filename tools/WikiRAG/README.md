@@ -43,6 +43,29 @@ scripts/wiki context "residual service curve"      # seeds + neighborhood bundle
 ```
 
 Add `--json` to `search`/`show`/`deps`/`rdeps` for machine-readable output.
+
+### Visualizing
+
+`wiki dot` exports a subgraph in three formats. Two readable scales: a **decl
+neighborhood** (`<name>`, with `--depth`, `--rev` for dependents, `--both`) and the
+**module DAG** (`--modules`, ~170 nodes). The full 3k-node decl graph is a hairball, so
+it isn't offered.
+
+```bash
+# Interactive, zero-install (vis-network via CDN — opens in any browser):
+scripts/wiki dot --modules --html > modules.html && open modules.html
+scripts/wiki dot IsMaximalArrivalCurve --both --html > nbr.html && open nbr.html
+
+# Graphviz (best static quality; brew install graphviz):
+scripts/wiki dot --modules | dot -Tsvg -o modules.svg && open modules.svg
+scripts/wiki dot DeepWiki.minConv --rev --depth 2 | sfdp -Tsvg -o impact.svg
+
+# Mermaid (paste into Markdown / GitHub / a Mermaid-aware IDE preview):
+scripts/wiki dot IsMaximalArrivalCurve --both --mermaid
+```
+
+HTML nodes are coloured by kind, carry the full signature on hover, and the focus
+node is highlighted; `dot` neighborhoods carry signatures as Graphviz tooltips.
 Short names (`minConv`) auto-resolve; ambiguous ones list their candidates.
 Re-run `scripts/wiki build` after changing the library — it **preserves embeddings**
 for declarations whose name, kind, signature and docstring are unchanged, so only

@@ -3,6 +3,7 @@ import WikiRAG.Basic
 import WikiRAG.Extract
 import WikiRAG.Embed
 import WikiRAG.Query
+import WikiRAG.Viz
 
 /-! # `wiki` — graph-RAG CLI over the Lean library
 Subcommands: `build` (extract the graph), `index` (Ollama embeddings),
@@ -73,6 +74,8 @@ def usage : String := String.intercalate "\n"
   , "  wiki rdeps <name> [--depth D] [--json]   what uses <name> (impact set)"
   , "  wiki path <a> <b>                        a shortest uses-path a → b"
   , "  wiki context <query> [-k N] [--depth D]  seeds + neighborhood bundle"
+  , "  wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html]  graph a neighborhood"
+  , "  wiki dot --modules [--html]              graph the module dependency DAG"
   , ""
   , "Env: WIKI_DB, WIKI_OLLAMA_URL, WIKI_EMBED_MODEL" ]
 
@@ -152,6 +155,31 @@ def depsCmd (o : Opts) (reverse : Bool) : IO Unit := do
       for (d, x) in rows do
         IO.println s!"  [{d}] {fmtOneLine x}"
 
+def dotCmd (rest : List String) : IO Unit := do
+  let o := parseOpts rest {}
+  let html := o.pos.contains "--html"
+  let mermaid := o.pos.contains "--mermaid"
+  let db ← openExisting
+  if o.pos.contains "--modules" then
+    let nodes ← moduleNodes db
+    let edges ← moduleGraph db
+    IO.println (if html then moduleHtml nodes edges else moduleDot nodes edges)
+    return
+  let some name := (o.pos.filter (fun a => ! a.startsWith "-")).toList.head? | do
+    IO.eprintln "usage: wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html]   |   wiki dot --modules [--html]"
+    return
+  match (← resolveOne db name) with
+  | none => pure ()
+  | some h =>
+    let rev := o.pos.contains "--rev"
+    let both := o.pos.contains "--both"
+    let nodes ← neighborhood db h.name o.depth (!rev || both) (rev || both)
+    let edges ← allEdges db
+    IO.println <|
+      if html then neighborhoodHtml h.name nodes edges
+      else if mermaid then neighborhoodMermaid h.name nodes edges
+      else neighborhoodDot h.name nodes edges
+
 def pathCmd (a b : String) : IO Unit := do
   let db ← openExisting
   let some ha ← resolveOne db a | pure ()
@@ -200,4 +228,5 @@ unsafe def main (args : List String) : IO Unit := do
   | "rdeps" :: rest => depsCmd (parseOpts rest {}) true
   | "path" :: a :: b :: _ => pathCmd a b
   | "context" :: rest => contextCmd (parseOpts rest {})
+  | "dot" :: rest => dotCmd rest
   | cmd :: _ => do IO.eprintln s!"unknown command: {cmd}\n"; IO.println usage

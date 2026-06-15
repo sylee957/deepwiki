@@ -116,4 +116,42 @@ def findPath (db : SQLite) (a b : String) (maxd : Nat := 12) : IO (Option String
   s.bindText 3 b
   if (← s.step) then return some (← s.columnText 0) else return none
 
+/-- Every `uses` edge `(src, dst)` in the graph. -/
+def allEdges (db : SQLite) : IO (Array (String × String)) := do
+  let s ← db.prepare "SELECT src, dst FROM edges"
+  let mut acc : Array (String × String) := #[]
+  while (← s.step) do acc := acc.push (← s.columnText 0, ← s.columnText 1)
+  return acc
+
+/-- Node `Hit`s in the depth-bounded neighborhood of `root`: forward `uses` if `fwd`,
+reverse dependents if `bwd`; always includes `root`, deduplicated by name. -/
+def neighborhood (db : SQLite) (root : String) (depth : Nat) (fwd bwd : Bool) : IO (Array Hit) := do
+  let mut raw : Array Hit := #[]
+  match (← getDecl db root) with
+  | some h => raw := raw.push h
+  | none => pure ()
+  if fwd then for (_, h) in (← transitive db root depth false) do raw := raw.push h
+  if bwd then for (_, h) in (← transitive db root depth true) do raw := raw.push h
+  let mut seen : Array String := #[]
+  let mut out : Array Hit := #[]
+  for h in raw do
+    unless seen.contains h.name do
+      seen := seen.push h.name
+      out := out.push h
+  return out
+
+/-- All module names (graph node set for the module graph). -/
+def moduleNodes (db : SQLite) : IO (Array String) := do
+  let s ← db.prepare "SELECT DISTINCT module FROM decls ORDER BY module"
+  let mut acc : Array String := #[]
+  while (← s.step) do acc := acc.push (← s.columnText 0)
+  return acc
+
+/-- Module dependency edges `(src, dst, weight)` (weight = number of cross-module uses). -/
+def moduleGraph (db : SQLite) : IO (Array (String × String × Nat)) := do
+  let s ← db.prepare "SELECT src, dst, weight FROM module_edges"
+  let mut acc : Array (String × String × Nat) := #[]
+  while (← s.step) do acc := acc.push (← s.columnText 0, ← s.columnText 1, (← s.columnText 2).toNat!)
+  return acc
+
 end WikiRAG
