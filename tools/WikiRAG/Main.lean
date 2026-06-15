@@ -74,8 +74,8 @@ def usage : String := String.intercalate "\n"
   , "  wiki rdeps <name> [--depth D] [--json]   what uses <name> (impact set)"
   , "  wiki path <a> <b>                        a shortest uses-path a → b"
   , "  wiki context <query> [-k N] [--depth D]  seeds + neighborhood bundle"
-  , "  wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html]  graph a neighborhood"
-  , "  wiki dot --modules [--html]              graph the module dependency DAG"
+  , "  wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html|--3d]  graph a neighborhood"
+  , "  wiki dot --modules [--html|--3d]         graph the module dependency DAG"
   , ""
   , "Env: WIKI_DB, WIKI_OLLAMA_URL, WIKI_EMBED_MODEL" ]
 
@@ -158,15 +158,19 @@ def depsCmd (o : Opts) (reverse : Bool) : IO Unit := do
 def dotCmd (rest : List String) : IO Unit := do
   let o := parseOpts rest {}
   let html := o.pos.contains "--html"
+  let three := o.pos.contains "--3d"
   let mermaid := o.pos.contains "--mermaid"
   let db ← openExisting
   if o.pos.contains "--modules" then
     let nodes ← moduleNodes db
     let edges ← moduleGraph db
-    IO.println (if html then moduleHtml nodes edges else moduleDot nodes edges)
+    IO.println <|
+      if three then module3d nodes edges
+      else if html then moduleHtml nodes edges
+      else moduleDot nodes edges
     return
   let some name := (o.pos.filter (fun a => ! a.startsWith "-")).toList.head? | do
-    IO.eprintln "usage: wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html]   |   wiki dot --modules [--html]"
+    IO.eprintln "usage: wiki dot <name> [--depth D] [--rev|--both] [--mermaid|--html|--3d]   |   wiki dot --modules [--html|--3d]"
     return
   match (← resolveOne db name) with
   | none => pure ()
@@ -176,7 +180,8 @@ def dotCmd (rest : List String) : IO Unit := do
     let nodes ← neighborhood db h.name o.depth (!rev || both) (rev || both)
     let edges ← allEdges db
     IO.println <|
-      if html then neighborhoodHtml h.name nodes edges
+      if three then neighborhood3d h.name nodes edges
+      else if html then neighborhoodHtml h.name nodes edges
       else if mermaid then neighborhoodMermaid h.name nodes edges
       else neighborhoodDot h.name nodes edges
 

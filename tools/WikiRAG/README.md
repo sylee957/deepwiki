@@ -52,8 +52,9 @@ neighborhood** (`<name>`, with `--depth`, `--rev` for dependents, `--both`) and 
 it isn't offered.
 
 ```bash
-# Interactive, zero-install (vis-network via CDN — opens in any browser):
-scripts/wiki dot --modules --html > modules.html && open modules.html
+# Interactive, zero-install (CDN — opens in any browser):
+scripts/wiki dot --modules --html > modules.html && open modules.html   # 2D (vis-network)
+scripts/wiki dot --modules --3d   > modules3d.html && open modules3d.html # 3D (three.js)
 scripts/wiki dot IsMaximalArrivalCurve --both --html > nbr.html && open nbr.html
 
 # Graphviz (best static quality; brew install graphviz):

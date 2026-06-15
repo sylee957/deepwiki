@@ -99,4 +99,41 @@ def moduleHtml (nodes : Array String) (edges : Array (String × String × Nat)) 
     es := es ++ "{from:\"" ++ jsEscape a ++ "\",to:\"" ++ jsEscape b ++ "\",value:" ++ toString w ++ "},"
   return graphHtml "module dependency graph" ns es
 
+/-- Self-contained 3D force-graph page (Three.js via `3d-force-graph`, CDN). -/
+def graph3dHtml (title nodesJS linksJS : String) : String :=
+  "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>" ++ title ++ "</title>\n" ++
+  "<script src=\"https://unpkg.com/3d-force-graph\"></script>\n" ++
+  "<style>body{margin:0;background:#0b0e14}#h{position:fixed;top:8px;left:12px;z-index:1;color:#9aa7b8;font-family:monospace}#g{width:100vw;height:100vh}</style></head>\n" ++
+  "<body><div id=\"h\">" ++ title ++ "</div><div id=\"g\"></div>\n<script>\n" ++
+  "const data={nodes:[" ++ nodesJS ++ "],links:[" ++ linksJS ++ "]};\n" ++
+  "ForceGraph3D()(document.getElementById('g')).backgroundColor('#0b0e14').graphData(data)" ++
+  ".nodeLabel('name').nodeColor('color').nodeVal('val')" ++
+  ".linkColor(()=>'#44506a').linkOpacity(0.45).linkDirectionalArrowLength(2.5).linkDirectionalArrowRelPos(1);\n" ++
+  "</script></body></html>\n"
+
+/-- Interactive 3D graph for a decl neighborhood (node colour by kind, focus enlarged). -/
+def neighborhood3d (root : String) (nodes : Array Hit) (edges : Array (String × String)) : String := Id.run do
+  let names := nodes.map (·.name)
+  let mut ns := ""
+  for h in nodes do
+    let color := if h.name == root then "#ffcc66" else kindColor h.kind
+    let val := if h.name == root then "10" else "3"
+    ns := ns ++ "{id:\"" ++ jsEscape h.name ++ "\",name:\"" ++ jsEscape (h.kind ++ " " ++ h.short ++ " — " ++ h.signature)
+      ++ "\",color:\"" ++ color ++ "\",val:" ++ val ++ "},"
+  let mut es := ""
+  for (a, b) in edges do
+    if names.contains a && names.contains b then
+      es := es ++ "{source:\"" ++ jsEscape a ++ "\",target:\"" ++ jsEscape b ++ "\"},"
+  return graph3dHtml ("uses-graph 3D: " ++ root) ns es
+
+/-- Interactive 3D graph for the module dependency graph. -/
+def module3d (nodes : Array String) (edges : Array (String × String × Nat)) : String := Id.run do
+  let mut ns := ""
+  for m in nodes do
+    ns := ns ++ "{id:\"" ++ jsEscape m ++ "\",name:\"" ++ jsEscape (moduleLabel m) ++ "\",color:\"#7fb0ff\",val:3},"
+  let mut es := ""
+  for (a, b, w) in edges do
+    es := es ++ "{source:\"" ++ jsEscape a ++ "\",target:\"" ++ jsEscape b ++ "\",value:" ++ toString w ++ "},"
+  return graph3dHtml "module dependency graph 3D" ns es
+
 end WikiRAG
