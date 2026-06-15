@@ -122,6 +122,33 @@ theorem Network.isGloballyStable_of_isLocallyStable (net : Network κ ι)
   isGloballyStableServer_of_isLocallyStableServer (hc h) (hβ h) (hp h) (harr h)
     (net.isLocallyStableServer_of_isLocallyStable hstab h)
 
+/-! ## Flow removal (the induction carrier for the policy-specific theorems)
+The peeling proofs of Theorems 12.2–12.5 remove one flow (the critical flow of
+Lemma 12.5, say) and recurse on the rest. The aggregate rate restricted to a
+surviving flow set only decreases, so a locally stable network stays locally
+stable after removing flows. -/
+
+/-- The aggregate long-term arrival rate at `h` restricted to a surviving flow
+set `J`: `∑_{i∈Fl(h)∩J} rᵢ`. -/
+noncomputable def Network.aggregateArrivalRateOn [DecidableEq ι] (net : Network κ ι)
+    (J : Finset ι) (h : κ) : ℝ≥0∞ :=
+  ∑ i ∈ net.flowsThrough h ∩ J, longTermArrivalRate (net.arrivalCurve i)
+
+/-- Removing flows only decreases the aggregate rate:
+`∑_{i∈Fl(h)∩J} rᵢ ≤ ∑_{i∈Fl(h)} rᵢ`. -/
+theorem Network.aggregateArrivalRateOn_le [DecidableEq ι] (net : Network κ ι)
+    (J : Finset ι) (h : κ) :
+    net.aggregateArrivalRateOn J h ≤ net.aggregateArrivalRate h :=
+  Finset.sum_le_sum_of_subset Finset.inter_subset_left
+
+/-- **Flow removal preserves local stability**: a locally stable network stays
+locally stable on any surviving flow set `J`, `∑_{i∈Fl(h)∩J} rᵢ < R^(h)` — the
+induction-hypothesis carrier for the peeling proofs of Theorems 12.2–12.5. -/
+theorem Network.IsLocallyStable.restrict [DecidableEq ι] {net : Network κ ι}
+    (hstab : net.IsLocallyStable) (J : Finset ι) (h : κ) :
+    net.aggregateArrivalRateOn J h < net.serviceRate h :=
+  lt_of_le_of_lt (net.aggregateArrivalRateOn_le J h) (hstab h)
+
 /-! ## Network topology classes (Definition 10.1)
 The modular-analysis topology classes of `NetworkTopology`, read off a
 network's routing `paths`. -/
