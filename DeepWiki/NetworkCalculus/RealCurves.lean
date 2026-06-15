@@ -388,6 +388,15 @@ noncomputable def rateEReal (C : ℝ≥0) : ℝ≥0 → EReal :=
 @[simp] theorem rateEReal_apply (C u : ℝ≥0) :
     rateEReal C u = (((C * u : ℝ≥0) : ℝ) : EReal) := rfl
 
+/-- The `EReal`-valued rate-latency curve `u ↦ R·(u − T)` (the `ℝ≥0` truncated
+subtraction embedded through `ℝ`). -/
+noncomputable def rateLatencyEReal (R T : ℝ≥0) : ℝ≥0 → EReal :=
+  fun u => ((R * (u - T) : ℝ≥0) : ℝ)
+
+/-- `rateLatencyEReal R T u = ↑(R · (u − T))`. -/
+@[simp] theorem rateLatencyEReal_apply (R T u : ℝ≥0) :
+    rateLatencyEReal R T u = (((R * (u - T) : ℝ≥0) : ℝ) : EReal) := rfl
+
 /-! ## Agreements and base values -/
 
 /-- `rateLatencyNN` is `rateLatencyENN` on coerced inputs (subtraction commutes with

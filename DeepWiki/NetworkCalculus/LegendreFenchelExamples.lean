@@ -65,4 +65,55 @@ theorem legendre_delayEReal (d : ℝ≥0) : legendre (delayEReal d) = rateEReal 
     rw [show delayEReal d d = 0 from delay_eq_zero d (le_refl d), sub_zero]
     exact_mod_cast (mul_comm d t)
 
+/-- **𝓛(β_{R,T}) = λ_T ∨ δ_R** (Proposition 3.14): the rate-latency curve's
+Legendre–Fenchel transform is the max of the rate curve `λ_T` and the
+burst-delay `δ_R`. For `s ≤ R` the supremum is `↑(s·T)` (witness `u = T`); for
+`s > R` it is unbounded (`⊤`). -/
+theorem legendre_rateLatencyEReal (R T : ℝ≥0) :
+    legendre (rateLatencyEReal R T) = rateEReal T ⊔ delayEReal R := by
+  funext s
+  rw [legendre_apply, Pi.sup_apply, rateEReal_apply]
+  rcases le_or_gt s R with hs | hs
+  · -- `s ≤ R`: `δ_R s = 0`, so the join is `↑(T·s)`, the supremum at `u = T`
+    rw [show delayEReal R s = 0 from delay_eq_zero R hs,
+      sup_eq_left.mpr (show (0 : EReal) ≤ (((T * s : ℝ≥0) : ℝ) : EReal) by
+        exact_mod_cast (T * s).coe_nonneg)]
+    apply le_antisymm
+    · refine iSup_le fun u => ?_
+      rw [rateLatencyEReal_apply, ← EReal.coe_sub, EReal.coe_le_coe_iff]
+      rcases le_or_gt u T with hu | hu
+      · rw [tsub_eq_zero_of_le hu]
+        push_cast
+        nlinarith [mul_nonneg s.coe_nonneg (sub_nonneg.mpr (show (u : ℝ) ≤ T by exact_mod_cast hu))]
+      · push_cast [NNReal.coe_sub hu.le]
+        nlinarith [mul_nonneg (sub_nonneg.mpr (show (s : ℝ) ≤ R by exact_mod_cast hs))
+          (sub_nonneg.mpr (show (T : ℝ) ≤ u by exact_mod_cast hu.le))]
+    · refine le_trans (le_of_eq ?_) (le_iSup _ T)
+      rw [rateLatencyEReal_apply, tsub_self, mul_zero, NNReal.coe_zero, EReal.coe_zero, sub_zero]
+      norm_cast; ring
+  · -- `s > R`: `δ_R s = ⊤`, so the join is `⊤`; the supremum is unbounded
+    rw [show delayEReal R s = ⊤ from delay_eq_top R hs, sup_top_eq, iSup_eq_top]
+    intro b hb
+    rcases eq_or_ne b ⊥ with hbot | hbot
+    · refine ⟨T, ?_⟩
+      rw [hbot, rateLatencyEReal_apply, tsub_self, mul_zero, NNReal.coe_zero,
+        EReal.coe_zero, sub_zero]
+      exact EReal.bot_lt_coe _
+    · obtain ⟨M, rfl⟩ : ∃ M : ℝ, b = (M : EReal) :=
+        ⟨b.toReal, (EReal.coe_toReal hb.ne hbot).symm⟩
+      have hδ : (0 : ℝ) < (s : ℝ) - (R : ℝ) := by
+        have : (R : ℝ) < (s : ℝ) := by exact_mod_cast hs
+        linarith
+      refine ⟨Real.toNNReal ((M - (s : ℝ) * (T : ℝ)) / ((s : ℝ) - (R : ℝ))) + 1 + T, ?_⟩
+      rw [rateLatencyEReal_apply, add_tsub_cancel_right, ← EReal.coe_sub, EReal.coe_lt_coe_iff]
+      have hn : (M - (s : ℝ) * (T : ℝ)) / ((s : ℝ) - (R : ℝ))
+          ≤ (Real.toNNReal ((M - (s : ℝ) * (T : ℝ)) / ((s : ℝ) - (R : ℝ))) : ℝ) :=
+        Real.le_coe_toNNReal _
+      have hbig : M - (s : ℝ) * (T : ℝ)
+          ≤ (Real.toNNReal ((M - (s : ℝ) * (T : ℝ)) / ((s : ℝ) - (R : ℝ))) : ℝ)
+            * ((s : ℝ) - (R : ℝ)) :=
+        (div_le_iff₀ hδ).mp hn
+      push_cast
+      nlinarith [hbig, hδ]
+
 end DeepWiki
