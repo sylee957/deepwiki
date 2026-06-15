@@ -1,6 +1,7 @@
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.StabilityNetwork
+import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantGeneral
 import DeepWiki.NetworkCalculus.RealCurvesRates
 
 /-! # Theorem 12.3 (static priority / FDF), shared-path tandem
@@ -123,32 +124,49 @@ theorem toNetwork_flowsThrough (t : Tandem ι m) (h : Fin m) :
     (toNetwork t).flowsThrough h = Finset.univ := by
   ext i; simp only [Network.mem_flowsThrough, toNetwork, Finset.mem_univ, List.mem_finRange]
 
+/-- The shared-path SP tandem as a `SpNetwork.Traj` (every flow follows the same `m`-hop line). The
+packaging through which the tandem inherits the general network theorems (stability, end-to-end). -/
+noncomputable def toTraj (t : Tandem ι m) (hm : 0 < m) : SpNetwork.Traj (Fin m) ι where
+  net := toNetwork t
+  h0 := ⟨0, hm⟩
+  S := fun h => t.Sf h.val
+  R := fun h => t.R h.val
+  T := fun h => t.T h.val
+  r := t.r
+  b := t.b
+  Ain := fun h i => t.traj h.val i
+  Dout := fun h i => t.traj (h.val + 1) i
+  hcaus := fun h => t.hcaus h.val
+  hβ := fun h => t.hβf h.val
+  hSP := fun h => t.hSP h.val
+  hp := fun h => t.hchain h.val h.isLt
+  hservice := fun h => rfl
+  hingress := fun i hP => by
+    rw [show ((toNetwork t).paths i).get ⟨0, hP⟩ = (⟨0, hm⟩ : Fin m) by
+      simp [toNetwork, List.getElem_finRange]]
+    rfl
+  hwire := fun i k hk => by
+    have hpath : (toNetwork t).paths i = List.finRange m := rfl
+    have hk' : k + 1 < m := by simpa [hpath] using hk
+    have hk0 : k < m := Nat.lt_of_succ_lt hk'
+    rw [show ((toNetwork t).paths i).get ⟨k + 1, hk⟩ = (⟨k + 1, hk'⟩ : Fin m) by
+        simp [hpath, List.getElem_finRange],
+      show ((toNetwork t).paths i).get ⟨k, Nat.lt_of_succ_lt hk⟩ = (⟨k, hk0⟩ : Fin m) by
+        simp [hpath, List.getElem_finRange]]
+  hoff := fun h i hi => absurd (by rw [toNetwork_flowsThrough]; exact Finset.mem_univ i) hi
+  harr0 := t.harr0
+  hstab := fun h => by rw [toNetwork_flowsThrough]; exact t.hstab h.val
+
 /-- **Theorem 12.3, shared-path tandem**: a locally stable shared-path static-priority tandem is
-globally stable at every hop — each server's aggregate has a bounded backlogged period. Assembled
-by the priority-order induction (`allFlowBound`) feeding `Network.isGloballyStable_of_perFlow_bounds`
-(the per-flow token buckets have rate `rᵢ`, so their aggregate has rate `∑ᵢ rᵢ < R^(h)`). -/
+globally stable at every hop — each server's aggregate has a bounded backlogged period. A corollary
+of the general network theorem `SpNetwork.Traj.isGloballyStable` via the `toTraj` packaging (the
+empty tandem `m = 0` is vacuous), mirroring `GpsTandem.isGloballyStable_sharedPath_tandem`. -/
 theorem isGloballyStable_sharedPath_tandem (t : Tandem ι m) :
     ∀ h : Fin m, IsGloballyStableServer
       (⇑(∑ i, t.traj h.val i)) (⇑(∑ i, t.traj (h.val + 1) i)) := by
-  have hAll : ∀ (h : Fin m) (i : ι), ∃ B : ℝ≥0,
-      IsMaximalArrivalBound (⇑(t.traj h.val i)) (fun s => t.r i * s + B) := fun h i => by
-    obtain ⟨B, hB⟩ := allFlowBound t i
-    exact ⟨B h.val, hB h.val (le_of_lt h.isLt)⟩
-  choose B hB using hAll
-  set σ : Fin m → ι → ℝ≥0 → ℝ≥0 := fun h i => fun s => t.r i * s + B h i with hσdef
-  refine (toNetwork t).isGloballyStable_of_perFlow_bounds (S := fun h => t.Sf h.val)
-    (Ain := fun h i => t.traj h.val i) (Dout := fun h i => t.traj (h.val + 1) i) (σ := σ)
-    (fun h => t.hcaus h.val) (fun h => t.hβf h.val) (fun h => t.hchain h.val h.isLt)
-    (fun h i => hB h i) ?_
-  intro h
-  show IsLocallyStableServer (fun s => ∑ i, σ h i s) (rateLatency (t.R h.val) (t.T h.val))
-  have hcurve : (fun s => ∑ i, σ h i s) = fun s => (∑ i, t.r i) * s + ∑ i, B h i := by
-    funext s; simp only [hσdef]; rw [Finset.sum_add_distrib, ← Finset.sum_mul]
-  rw [hcurve]
-  show longTermArrivalRate (fun s => (∑ i, t.r i) * s + ∑ i, B h i)
-    < longTermServiceRate (rateLatency (t.R h.val) (t.T h.val))
-  rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
-  exact_mod_cast t.hstab h.val
+  rcases Nat.eq_zero_or_pos m with rfl | hm
+  · exact fun h => h.elim0
+  · exact (toTraj t hm).isGloballyStable
 
 /-! ## Book restatement (Theorem 12.3, shared-path tandem)
 A locally stable shared-path static-priority tandem — all flows on the same `m`-hop line, each
