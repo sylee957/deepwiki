@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -92,6 +93,17 @@ theorem thm_11_1_chain {α : ℝ≥0 → ℝ≥0} {β₀ : ℝ≥0 → ℝ≥0�
     (hβ₀0 : β₀ 0 = 0) (hβs0 : ∀ γ ∈ βs, γ 0 = 0) :
     worstCaseChainDelay α β₀ βs = (hDev (Deviation.liftENN α) (minConvChain β₀ βs) : ℝ≥0∞) :=
   worstCaseChainDelay_eq_hDev_minConvChain hαmono hα0 hαsub hβ₀mono hβsmono hβ₀0 hβs0
+
+/-- **Theorem 11.1, n-server tandem backlog form** — the worst-case end-to-end
+backlog (total in-flight data) of a single flow through the tandem `β₀ :: βs`,
+`worstCaseChainBacklog`, equals the vertical deviation `vDev(α, β₀ ∗ β₁ ∗ ⋯)`
+against the chain convolution. The library's
+`worstCaseChainBacklog_eq_vDev_minConvChain`. -/
+theorem thm_11_1_chain_backlog {α : ℝ≥0 → ℝ≥0} {β₀ : ℝ≥0 → ℝ≥0∞} {βs : List (ℝ≥0 → ℝ≥0∞)}
+    (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
+    (hβ₀0 : β₀ 0 = 0) (hβs0 : ∀ γ ∈ βs, γ 0 = 0) :
+    worstCaseChainBacklog α β₀ βs = (vDev (Deviation.liftENN α) (minConvChain β₀ βs) : ℝ≥0∞) :=
+  worstCaseChainBacklog_eq_vDev_minConvChain hαmono hα0 hαsub hβ₀0 hβs0
 
 /-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
 
