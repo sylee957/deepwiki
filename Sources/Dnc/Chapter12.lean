@@ -3,6 +3,7 @@ import DeepWiki.NetworkCalculus.StabilityGlobal
 import DeepWiki.NetworkCalculus.StabilityFixPoint
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
+import DeepWiki.NetworkCalculus.StabilityResidualRate
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import Sources.Dnc.Source
 
@@ -150,6 +151,17 @@ the SFA combination of `thm_12_pathStable` (multi-hop propagation) with
 `isGloballyStable_residualPath`; only the cross-traffic bounds `αcross k`
 (computed by the SFA topological pass over the other flows) are parameters. -/
 alias thm_12_sfaPathStable := isGloballyStable_residualPath
+
+/-- **Residual local stability from the rate sum** (the §12.2 SFA `hstab`,
+*derived* not assumed): under blind multiplexing the residual service rate
+survives subtracting the cross-traffic rate (`R(β) ≤ r(α) + R(β⊖α)`,
+`longTermServiceRate_residualCurve_ge`), so a flow with
+`r(αi) + r(αcross) < R(β)` is locally stable against its residual. The library's
+`isLocallyStableServer_residualCurve_of_rate_lt` — this turns `αcross` from a
+free curve parameter into a quantity whose *rate* alone drives stability (its
+rate bounded, in turn, by the cross-flows' source rates via causal-output
+conservation). -/
+alias prop_12_residualLocalStable := isLocallyStableServer_residualCurve_of_rate_lt
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
