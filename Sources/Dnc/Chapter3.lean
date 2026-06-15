@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.LegendreFenchel
+import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.ConvolutionContinuity
 import DeepWiki.NetworkCalculus.ConvolutionMinimum
 import DeepWiki.NetworkCalculus.PseudoInverse
@@ -181,9 +182,13 @@ alias prop_3_13_sup := IsConvexEReal.sup
 `𝓛(f)(t)=⨆_{u≥0}(t·u−f(u))`. The library's `legendre`. -/
 noncomputable def def_3_6 := @legendre
 
-/-! **Proposition 3.14** (§3.3.2, p.53): examples of Legendre–Fenchel
-transforms (𝓛(λ_R)=δ_R; 𝓛(δ_d)=λ_d; 𝓛(β_{R,T})=λ_T∨δ_R). Not formalized — the
-catalog-curve supremum computations are not done. -/
+/-- **Proposition 3.14** (§3.3.2, p.53): a Legendre–Fenchel transform of a
+catalog curve — the burst-delay transforms to the rate curve, `𝓛(δ_d) = λ_d`.
+The library's `legendre_delayEReal`. (The reverse `𝓛(λ_R) = δ_R` and
+`𝓛(β_{R,T}) = λ_T ∨ δ_R` need the unbounded-supremum computations and are not
+yet formalized.) -/
+theorem prop_3_14_delay (d : ℝ≥0) : legendre (delayEReal d) = rateEReal d :=
+  legendre_delayEReal d
 
 /-- **Proposition 3.15**, non-decreasing (§3.3.2, p.54): `𝓛(f)` is
 non-decreasing (`monotone_legendre`); also antitone in `f`
