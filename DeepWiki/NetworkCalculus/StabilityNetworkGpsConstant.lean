@@ -22,29 +22,64 @@ namespace DeepWiki
 
 open scoped BigOperators NNReal ENNReal
 
-/-- **Lemma 12.5** (GPS with constant rates): with flows `ι`, servers `σ`, positive
-weights `φ`, per-server rates `R`, and flow sets `Fl h` (`i ∈ Fl h ⇔ flow `i` crosses
-server `h`), aggregate local stability `∑_{j∈Fl h} r j < R h` at every server yields a
-flow `i` below its GPS share `φ i · R h / ∑_{j∈Fl h} φ j` at every server it crosses.
-The witness is the flow minimizing `r j / φ j`. -/
-theorem exists_flow_below_gps_share {ι σ : Type*} [Fintype ι] [Nonempty ι]
+/-- **Lemma 12.5, active-set form**: the same statement with the argmin taken over an
+arbitrary nonempty set `K` of candidate flows containing every server's population
+(`Fl h ⊆ K`). The witness is the `K`-minimizer of `r j / φ j`; it lies below its GPS
+share at every server it crosses. Generalizes `exists_flow_below_gps_share` (the
+`K = univ` case) and is the form the peeling recursion uses on the shrinking active set
+— needs neither `Fintype ι` nor `Nonempty ι`, only `K.Nonempty`. -/
+theorem exists_flow_below_gps_share_on {ι σ : Type*} (K : Finset ι) (hK : K.Nonempty)
     (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j) (R : σ → ℝ) (Fl : σ → Finset ι)
-    (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
-    ∃ i, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) := by
-  obtain ⟨i, -, himin⟩ :=
-    Finset.exists_min_image Finset.univ (fun j => r j / φ j) Finset.univ_nonempty
-  refine ⟨i, fun h hi => ?_⟩
+    (hsub : ∀ h, Fl h ⊆ K) (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
+    ∃ i ∈ K, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) := by
+  obtain ⟨i, hiK, himin⟩ := K.exists_min_image (fun j => r j / φ j) hK
+  refine ⟨i, hiK, fun h hi => ?_⟩
   have hsumφ : 0 < ∑ j ∈ Fl h, φ j := Finset.sum_pos (fun j _ => hφ j) ⟨i, hi⟩
   -- the minimality `r i / φ i ≤ r j / φ j` cross-multiplies to `r i · φ j ≤ r j · φ i`
-  have hcross : ∀ j, r i * φ j ≤ r j * φ i := fun j =>
-    (div_le_div_iff₀ (hφ i) (hφ j)).mp (himin j (Finset.mem_univ j))
+  have hcross : ∀ j ∈ Fl h, r i * φ j ≤ r j * φ i := fun j hj =>
+    (div_le_div_iff₀ (hφ i) (hφ j)).mp (himin j (hsub h hj))
   rw [lt_div_iff₀ hsumφ]
   calc r i * ∑ j ∈ Fl h, φ j
       = ∑ j ∈ Fl h, r i * φ j := by rw [Finset.mul_sum]
     _ ≤ ∑ j ∈ Fl h, φ i * r j :=
-        Finset.sum_le_sum fun j _ => (hcross j).trans_eq (mul_comm _ _)
+        Finset.sum_le_sum fun j hj => (hcross j hj).trans_eq (mul_comm _ _)
     _ = φ i * ∑ j ∈ Fl h, r j := by rw [← Finset.mul_sum]
     _ < φ i * R h := mul_lt_mul_of_pos_left (hstab h) (hφ i)
+
+/-- **Lemma 12.5** (GPS with constant rates): with flows `ι`, servers `σ`, positive
+weights `φ`, per-server rates `R`, and flow sets `Fl h` (`i ∈ Fl h ⇔ flow `i` crosses
+server `h`), aggregate local stability `∑_{j∈Fl h} r j < R h` at every server yields a
+flow `i` below its GPS share `φ i · R h / ∑_{j∈Fl h} φ j` at every server it crosses.
+The witness is the flow minimizing `r j / φ j` (the `K = univ` case of
+`exists_flow_below_gps_share_on`). -/
+theorem exists_flow_below_gps_share {ι σ : Type*} [Fintype ι] [Nonempty ι]
+    (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j) (R : σ → ℝ) (Fl : σ → Finset ι)
+    (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
+    ∃ i, ∀ h, i ∈ Fl h → r i < φ i * R h / (∑ j ∈ Fl h, φ j) := by
+  obtain ⟨i, -, hi⟩ := exists_flow_below_gps_share_on Finset.univ Finset.univ_nonempty
+    r φ hφ R Fl (fun _ => Finset.subset_univ _) hstab
+  exact ⟨i, hi⟩
+
+/-- **Lemma 12.5, residual-capacity (peeling) form**: on the active flow set `J`,
+local stability `∑_{j∈Fl h} r j < R h` yields a flow `i ∈ J` whose rate stays below its
+GPS share of the *residual* capacity left after the already-peeled flows `Fl h \ J` are
+removed — `φᵢ·(R h − ∑_{j∈Fl h\J} rⱼ) / ∑_{j∈Fl h∩J} φⱼ` — at every server it crosses.
+This is the induction step of Theorem 12.5: peeling the lighter flows shrinks the share
+denominator and raises the residual capacity (their rates `∑_{Fl h\J} r` are subtracted
+from `R h`, the rate of the blind residual service `β − ∑ peeled α`), so the
+next-critical flow is again below its now-larger residual share. The threshold inequality
+`∑_{Fl h∩J} r < R h − ∑_{Fl h\J} r` is just `∑_{Fl h} r < R h` resplit
+(`Finset.sum_inter_add_sum_diff`). -/
+theorem exists_flow_below_residual_share {ι σ : Type*} [DecidableEq ι]
+    (J : Finset ι) (hJ : J.Nonempty) (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j)
+    (R : σ → ℝ) (Fl : σ → Finset ι) (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
+    ∃ i ∈ J, ∀ h, i ∈ Fl h ∩ J →
+      r i < φ i * (R h - ∑ j ∈ Fl h \ J, r j) / (∑ j ∈ Fl h ∩ J, φ j) :=
+  exists_flow_below_gps_share_on J hJ r φ hφ (fun h => R h - ∑ j ∈ Fl h \ J, r j)
+    (fun h => Fl h ∩ J) (fun _ => Finset.inter_subset_right)
+    (fun h => by
+      have hsplit := Finset.sum_inter_add_sum_diff (Fl h) J r
+      linarith [hstab h])
 
 /-- **Lemma 12.5 in the network model**: for a GPS-constant network with positive
 weights `φ`, per-flow long-term rates `r` and finite per-server service rates `R`
