@@ -28,7 +28,7 @@ abbrev def_3_1 := @LTS.TraceEquiv
 
 /-- **§3.2** (p.34–36). Strong bisimilarity implies trace equivalence (the
 converse fails). -/
-theorem bisimilar_traceEquiv (L : LTS Proc Act) {p q : Proc} (h : Bisimilar L p q) :
+theorem bisimilar_traceEquiv (L : LTS Proc Act) {p q : Proc} (h : p ~[L] q) :
     TraceEquiv L p q := h.traceEquiv
 
 /-! ## §3.3 Strong bisimilarity -/
@@ -51,7 +51,7 @@ theorem thm_3_1_equivalence (L : LTS Proc Act) : Equivalence (LTS.Bisimilar L) :
 it is itself a strong bisimulation, and contains every strong bisimulation. -/
 theorem thm_3_1_largest (L : LTS Proc Act) :
     LTS.IsBisimulation L (LTS.Bisimilar L) ∧
-      ∀ R, LTS.IsBisimulation L R → ∀ ⦃p q⦄, R p q → LTS.Bisimilar L p q :=
+      ∀ R, LTS.IsBisimulation L R → ∀ ⦃p q⦄, R p q → (p ~[L] q) :=
   ⟨LTS.isBisimulation_bisimilar, fun _ hR => hR.le_bisimilar⟩
 
 /-- **Theorem 3.1**, part 3 (§3.3, p.42, eq. 3.3). `~` satisfies the
@@ -108,18 +108,18 @@ strongly bisimilar: after the common `a`, one side can still do both `b` and
 `c`, the other has already committed. -/
 theorem ex_3_4 : ¬ (ex34P ~[ccsLTS noDefs] ex34Q) := by
   intro h
-  have hPa : Step noDefs ex34P (.name .a)
-      (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil)) := Step.act _ _
+  have hPa : (ccsLTS noDefs) ⊢ ex34P ⟶[.name .a] ⟪ (.name .b) ▸ 𝟬 + (.name .c) ▸ 𝟬 ⟫ :=
+    Step.act _ _
   obtain ⟨Q', hQ', hbis⟩ := ((bisimilar_iff _ _).mp h).1 (.name .a) _ hPa
   simp only [ccsLTS_step, ex34Q, step_choice_iff, step_pre_iff] at hQ'
   rcases hQ' with ⟨_, rfl⟩ | ⟨_, rfl⟩
-  · have hc : Step noDefs (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
-        (.name .c) (.nil : CCS Chan Empty) := Step.sumr (Step.act _ _)
+  · have hc : (ccsLTS noDefs) ⊢ ⟪ (.name .b) ▸ 𝟬 + (.name .c) ▸ 𝟬 ⟫ ⟶[.name .c]
+        (⟪ 𝟬 ⟫ : CCS Chan Empty) := Step.sumr (Step.act _ _)
     obtain ⟨q'', hq'', _⟩ := ((bisimilar_iff _ _).mp hbis).1 (.name .c) _ hc
     simp only [ccsLTS_step, step_pre_iff] at hq''
     exact absurd hq''.1 (by decide)
-  · have hb : Step noDefs (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
-        (.name .b) (.nil : CCS Chan Empty) := Step.suml (Step.act _ _)
+  · have hb : (ccsLTS noDefs) ⊢ ⟪ (.name .b) ▸ 𝟬 + (.name .c) ▸ 𝟬 ⟫ ⟶[.name .b]
+        (⟪ 𝟬 ⟫ : CCS Chan Empty) := Step.suml (Step.act _ _)
     obtain ⟨q'', hq'', _⟩ := ((bisimilar_iff _ _).mp hbis).1 (.name .b) _ hb
     simp only [ccsLTS_step, step_pre_iff] at hq''
     exact absurd hq''.1 (by decide)

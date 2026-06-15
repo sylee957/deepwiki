@@ -79,8 +79,8 @@ inductive Ex28K | A | B
 
 /-- Exercise 2.8 definition environment: `A ≝ b.a.B` (and `B ≝ 0`). -/
 def ex28defn : Ex28K → CCS Ex2Name Ex28K
-  | .A => .pre (.name .b) (.pre (.name .a) (.const .B))
-  | .B => .nil
+  | .A => ⟪ (.name .b) ▸ (.name .a) ▸ ‹.const .B› ⟫
+  | .B => ⟪ 𝟬 ⟫
 
 /-- **Exercise 2.8** (§2.2.2, p.26). With `A ≝ b.a.B`, the SOS rules derive the
 synchronisation `(A ∣ b̄.0)∖{b} —τ→ (a.B ∣ 0)∖{b}` (COM3+RES), its relabelling
