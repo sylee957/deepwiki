@@ -18,11 +18,14 @@ variable {Proc Act : Type*} (L : LTS Proc Act)
 symmetrically every `a`-move of `q` is matched by one of `p`. -/
 def IsBisimulation (R : Proc → Proc → Prop) : Prop :=
   ∀ ⦃p q⦄, R p q →
-    (∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ R p' q') ∧
-    (∀ a q', L.step q a q' → ∃ p', L.step p a p' ∧ R p' q')
+    (∀ a p', (L ⊢ p ⟶[a] p') → ∃ q', (L ⊢ q ⟶[a] q') ∧ R p' q') ∧
+    (∀ a q', (L ⊢ q ⟶[a] q') → ∃ p', (L ⊢ p ⟶[a] p') ∧ R p' q')
 
 /-- Strong bisimilarity `p ~ q`: some strong bisimulation relates `p` and `q`. -/
 def Bisimilar (p q : Proc) : Prop := ∃ R, IsBisimulation L R ∧ R p q
+
+/-- Strong bisimilarity `p ~[L] q` (the book's `p ~ q`). -/
+scoped notation:50 p:51 " ~[" L "] " q:51 => LTS.Bisimilar L p q
 
 variable {L}
 
@@ -87,9 +90,9 @@ theorem equivalence_bisimilar : Equivalence (Bisimilar L) :=
 iff every move of one side is matched by a `~`-related move of the other.
 (The book's fixed-point property of `~`.) -/
 theorem bisimilar_iff (p q : Proc) :
-    Bisimilar L p q ↔
-      (∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ Bisimilar L p' q') ∧
-      (∀ a q', L.step q a q' → ∃ p', L.step p a p' ∧ Bisimilar L p' q') := by
+    (p ~[L] q) ↔
+      (∀ a p', (L ⊢ p ⟶[a] p') → ∃ q', (L ⊢ q ⟶[a] q') ∧ (p' ~[L] q')) ∧
+      (∀ a q', (L ⊢ q ⟶[a] q') → ∃ p', (L ⊢ p ⟶[a] p') ∧ (p' ~[L] q')) := by
   constructor
   · exact fun h => isBisimulation_bisimilar h
   · intro h

@@ -32,15 +32,18 @@ theorem tauStar_trans {L : LTS Proc Act} {tau : Act} {p q r : Proc}
 steps; for `α ≠ τ`, silent steps surrounding one `α`-step. -/
 def WeakStep (L : LTS Proc Act) (tau : Act) (p : Proc) (α : Act) (q : Proc) : Prop :=
   (α = tau ∧ tauStar L tau p q) ∨
-  (α ≠ tau ∧ ∃ p' q', tauStar L tau p p' ∧ L.step p' α q' ∧ tauStar L tau q' q)
+  (α ≠ tau ∧ ∃ p' q', tauStar L tau p p' ∧ (L ⊢ p' ⟶[α] q') ∧ tauStar L tau q' q)
+
+/-- Weak transition `L ⊢ p =[α]⇒[τ] q` (the book's `p =α⇒ q`). -/
+scoped notation:40 L:max " ⊢ " p:41 " =[" a "]⇒[" t "] " q:41 => LTS.WeakStep L t p a q
 
 /-- A chain of silent steps is a weak `τ`-transition. -/
 theorem weakStep_tau_of_tauStar {L : LTS Proc Act} {tau : Act} {p q : Proc}
-    (h : tauStar L tau p q) : WeakStep L tau p tau q := Or.inl ⟨rfl, h⟩
+    (h : tauStar L tau p q) : L ⊢ p =[tau]⇒[tau] q := Or.inl ⟨rfl, h⟩
 
 /-- Every concrete transition is a weak transition. -/
 theorem step_weakStep {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : Proc}
-    (h : L.step p α q) : WeakStep L tau p α q := by
+    (h : L ⊢ p ⟶[α] q) : L ⊢ p =[α]⇒[tau] q := by
   by_cases hα : α = tau
   · subst hα; exact Or.inl ⟨rfl, tauStar_single h⟩
   · exact Or.inr ⟨hα, p, q, tauStar_refl L tau p, h, tauStar_refl L tau q⟩
@@ -49,13 +52,17 @@ theorem step_weakStep {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : 
 *weak* transition of the other side into `R` (Definition 3.4). -/
 def IsWeakBisimulation (L : LTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) : Prop :=
   ∀ ⦃p q⦄, R p q →
-    (∀ α p', L.step p α p' → ∃ q', WeakStep L tau q α q' ∧ R p' q') ∧
-    (∀ α q', L.step q α q' → ∃ p', WeakStep L tau p α p' ∧ R p' q')
+    (∀ α p', (L ⊢ p ⟶[α] p') → ∃ q', (L ⊢ q =[α]⇒[tau] q') ∧ R p' q') ∧
+    (∀ α q', (L ⊢ q ⟶[α] q') → ∃ p', (L ⊢ p =[α]⇒[tau] p') ∧ R p' q')
 
 /-- Weak bisimilarity `p ≈ q` (observational equivalence): some weak bisimulation
 relates `p` and `q`. -/
 def WeaklyBisimilar (L : LTS Proc Act) (tau : Act) (p q : Proc) : Prop :=
   ∃ R, IsWeakBisimulation L tau R ∧ R p q
+
+/-- Weak bisimilarity `p ≈[L, τ] q` (observational equivalence, the book's
+`p ≈ q`). -/
+scoped notation:50 p:51 " ≈[" L ", " t "] " q:51 => LTS.WeaklyBisimilar L t p q
 
 variable {L : LTS Proc Act} {tau : Act}
 

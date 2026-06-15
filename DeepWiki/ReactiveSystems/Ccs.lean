@@ -148,4 +148,54 @@ theorem step_const_iff {K0 : K} {α : Act Name} {P' : CCS Name K} :
   · rintro h; cases h; assumption
   · exact Step.con
 
+/-! ## Book notation for CCS process terms
+
+A syntax category `ccs` lets process expressions be written in (almost) the
+book's concrete syntax inside `⟪ … ⟫`, elaborating to `CCS` constructors. The
+prefix uses `▸` for `a.P` (Lean reserves `.` for field projection); `‹t›`
+splices an existing `CCS` term (e.g. a constant or variable). -/
+
+/-- Syntax category for CCS process terms in book-like notation. -/
+declare_syntax_cat ccs
+
+/-- The inactive process `0`. -/
+syntax "𝟬" : ccs
+/-- Parenthesised process. -/
+syntax "(" ccs ")" : ccs
+/-- A spliced `CCS` term (constant or variable). -/
+syntax "‹" term "›" : ccs
+/-- Action prefixing `a ▸ P` (the book's `a.P`). -/
+syntax:65 term:max " ▸ " ccs:65 : ccs
+/-- Choice `P + Q`. -/
+syntax:50 ccs:51 " + " ccs:50 : ccs
+/-- Parallel composition `P ∥ Q`. -/
+syntax:55 ccs:56 " ∥ " ccs:55 : ccs
+/-- Restriction `P ∖ L`. -/
+syntax:60 ccs:60 " ∖ " term:max : ccs
+/-- Relabelling `P⟦f⟧`. -/
+syntax:65 ccs:66 "⟦" term "⟧" : ccs
+
+/-- Elaborate a CCS process term written in book notation. -/
+syntax "⟪" ccs "⟫" : term
+
+macro_rules
+  | `(⟪ 𝟬 ⟫) => `(CCS.nil)
+  | `(⟪ ($p) ⟫) => `(⟪ $p ⟫)
+  | `(⟪ ‹$t› ⟫) => `($t)
+  | `(⟪ $a:term ▸ $p ⟫) => `(CCS.pre $a ⟪ $p ⟫)
+  | `(⟪ $p + $q ⟫) => `(CCS.choice ⟪ $p ⟫ ⟪ $q ⟫)
+  | `(⟪ $p ∥ $q ⟫) => `(CCS.par ⟪ $p ⟫ ⟪ $q ⟫)
+  | `(⟪ $p ∖ $L:term ⟫) => `(CCS.restrict ⟪ $p ⟫ $L)
+  | `(⟪ $p ⟦$f:term⟧ ⟫) => `(CCS.relabel ⟪ $p ⟫ $f)
+
+example {N K : Type} (a : Act N) (P Q : CCS N K) (L : Set (Act N))
+    (f : Act N → Act N) :
+    ((⟪ a ▸ 𝟬 ⟫ : CCS N K) = CCS.pre a CCS.nil) ∧
+    (⟪ ‹P› + ‹Q› ⟫ = CCS.choice P Q) ∧
+    (⟪ ‹P› ∥ ‹Q› ⟫ = CCS.par P Q) ∧
+    (⟪ ‹P› ∖ L ⟫ = CCS.restrict P L) ∧
+    (⟪ ‹P›⟦f⟧ ⟫ = CCS.relabel P f) ∧
+    (⟪ a ▸ ‹P› ∥ ‹Q› ⟫ = CCS.par (CCS.pre a P) Q) :=
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
+
 end DeepWiki.ReactiveSystems

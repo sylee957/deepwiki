@@ -63,9 +63,8 @@ expressions and whose labels are actions. The library's `ccsLTS`. -/
 abbrev ccsLTS := @DeepWiki.ReactiveSystems.ccsLTS
 
 /-- Verification of the synchronisation rule COM3: `(a.0 ∣ ā.0) —τ→ (0 ∣ 0)`. -/
-example : Step (Name := Bool) (K := Empty) (fun e => e.elim)
-    ((CCS.pre (.name true) .nil).par (CCS.pre (.coname true) .nil))
-    Act.tau (CCS.nil.par CCS.nil) :=
+example : (ccsLTS (Name := Bool) (K := Empty) (fun e => e.elim)) ⊢
+    ⟪ (.name true) ▸ 𝟬 ∥ (.coname true) ▸ 𝟬 ⟫ ⟶[Act.tau] ⟪ 𝟬 ∥ 𝟬 ⟫ :=
   Step.com3 (by rintro ⟨⟩) (Step.act _ _) (Step.act _ _)
 
 /-! ## Solved exercises -/
@@ -88,15 +87,15 @@ synchronisation `(A ∣ b̄.0)∖{b} —τ→ (a.B ∣ 0)∖{b}` (COM3+RES), its
 `(A ∣ b̄.0)[f] —f(b)→ (a.B ∣ b̄.0)[f]` (REL), and the plain left move
 `(A ∣ b̄.0) —b→ (a.B ∣ b̄.0)` (COM1+CON+ACT). -/
 theorem ex_2_8 :
-    Step ex28defn
-        (.restrict (.par (.const .A) (.pre (.coname .b) .nil)) {Act.name Ex2Name.b}) Act.tau
-        (.restrict (.par (.pre (.name .a) (.const .B)) .nil) {Act.name Ex2Name.b}) ∧
-    (∀ f : Act Ex2Name → Act Ex2Name, Step ex28defn
-        (.relabel (.par (.const .A) (.pre (.coname .b) .nil)) f) (f (.name .b))
-        (.relabel (.par (.pre (.name .a) (.const .B)) (.pre (.coname .b) .nil)) f)) ∧
-    Step ex28defn
-        (.par (.const .A) (.pre (.coname .b) .nil)) (.name .b)
-        (.par (.pre (.name .a) (.const .B)) (.pre (.coname .b) .nil)) := by
+    ((ccsLTS ex28defn) ⊢
+        ⟪ (‹.const .A› ∥ (.coname .b) ▸ 𝟬) ∖ {Act.name Ex2Name.b} ⟫ ⟶[Act.tau]
+        ⟪ ((.name .a) ▸ ‹.const .B› ∥ 𝟬) ∖ {Act.name Ex2Name.b} ⟫) ∧
+    (∀ f : Act Ex2Name → Act Ex2Name, (ccsLTS ex28defn) ⊢
+        ⟪ (‹.const .A› ∥ (.coname .b) ▸ 𝟬)⟦f⟧ ⟫ ⟶[f (.name .b)]
+        ⟪ ((.name .a) ▸ ‹.const .B› ∥ (.coname .b) ▸ 𝟬)⟦f⟧ ⟫) ∧
+    ((ccsLTS ex28defn) ⊢
+        ⟪ ‹.const .A› ∥ (.coname .b) ▸ 𝟬 ⟫ ⟶[.name .b]
+        ⟪ (.name .a) ▸ ‹.const .B› ∥ (.coname .b) ▸ 𝟬 ⟫) := by
   refine ⟨?_, fun f => Step.rel (Step.com1 (Step.con (Step.act _ _))),
     Step.com1 (Step.con (Step.act _ _))⟩
   refine Step.res ?_ ?_ (Step.com3 (by rintro ⟨⟩) (Step.con (Step.act _ _)) (Step.act _ _))

@@ -16,6 +16,10 @@ structure LTS (Proc Act : Type*) where
   /-- The labelled transition relation: `step p a q` means `p —a→ q`. -/
   step : Proc → Act → Proc → Prop
 
+/-- `L ⊢ p ⟶[a] q`: the transition `p —a→ q` in the LTS `L` (the book's
+`p →ᵃ q`). -/
+scoped notation:40 L:max " ⊢ " p:41 " ⟶[" a "] " q:41 => LTS.step L p a q
+
 namespace LTS
 
 variable {Proc Act : Type*}

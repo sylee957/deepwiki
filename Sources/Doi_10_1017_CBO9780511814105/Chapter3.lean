@@ -57,9 +57,9 @@ theorem thm_3_1_largest (L : LTS Proc Act) :
 /-- **Theorem 3.1**, part 3 (§3.3, p.42, eq. 3.3). `~` satisfies the
 bisimulation transfer property. Discharged by `LTS.bisimilar_iff`. -/
 theorem thm_3_1_transfer (L : LTS Proc Act) (p q : Proc) :
-    LTS.Bisimilar L p q ↔
-      (∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ LTS.Bisimilar L p' q') ∧
-      (∀ a q', L.step q a q' → ∃ p', L.step p a p' ∧ LTS.Bisimilar L p' q') :=
+    (p ~[L] q) ↔
+      (∀ a p', (L ⊢ p ⟶[a] p') → ∃ q', (L ⊢ q ⟶[a] q') ∧ (p' ~[L] q')) ∧
+      (∀ a q', (L ⊢ q ⟶[a] q') → ∃ p', (L ⊢ p ⟶[a] p') ∧ (p' ~[L] q')) :=
   LTS.bisimilar_iff p q
 
 /-! ## §3.4 Weak bisimilarity -/
@@ -83,7 +83,7 @@ theorem weaklyBisimilar_equivalence (L : LTS Proc Act) (tau : Act) :
 
 /-- **§3.4** (p.57). Strong bisimilarity refines weak bisimilarity: `~ ⊆ ≈`. -/
 theorem bisimilar_weaklyBisimilar (L : LTS Proc Act) (tau : Act) {p q : Proc}
-    (h : LTS.Bisimilar L p q) : LTS.WeaklyBisimilar L tau p q := h.weaklyBisimilar
+    (h : p ~[L] q) : p ≈[L, tau] q := h.weaklyBisimilar
 
 /-! ## Solved exercises
 
@@ -97,17 +97,16 @@ inductive Chan | a | b | c
 def noDefs : Empty → CCS Chan Empty := fun e => e.elim
 
 /-- `a.(b.0 + c.0)` — process `P` of Exercise 3.4. -/
-def ex34P : CCS Chan Empty :=
-  .pre (.name .a) (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil))
+def ex34P : CCS Chan Empty := ⟪ (.name .a) ▸ ((.name .b) ▸ 𝟬 + (.name .c) ▸ 𝟬) ⟫
 
 /-- `a.b.0 + a.c.0` — process `Q` of Exercise 3.4. -/
 def ex34Q : CCS Chan Empty :=
-  .choice (.pre (.name .a) (.pre (.name .b) .nil)) (.pre (.name .a) (.pre (.name .c) .nil))
+  ⟪ (.name .a) ▸ (.name .b) ▸ 𝟬 + (.name .a) ▸ (.name .c) ▸ 𝟬 ⟫
 
 /-- **Exercise 3.4** (§3.3, p.41). `a.(b.0+c.0)` and `a.b.0+a.c.0` are *not*
 strongly bisimilar: after the common `a`, one side can still do both `b` and
 `c`, the other has already committed. -/
-theorem ex_3_4 : ¬ Bisimilar (ccsLTS noDefs) ex34P ex34Q := by
+theorem ex_3_4 : ¬ (ex34P ~[ccsLTS noDefs] ex34Q) := by
   intro h
   have hPa : Step noDefs ex34P (.name .a)
       (.choice (.pre (.name .b) .nil) (.pre (.name .c) .nil)) := Step.act _ _
@@ -133,12 +132,12 @@ inductive Ex33K | P | P₁ | Q | Q₁ | Q₂ | Q₃
 `P₁ ≝ b.P + c.P`, `Q ≝ a.Q₁`, `Q₁ ≝ b.Q₂ + c.Q`, `Q₂ ≝ a.Q₃`,
 `Q₃ ≝ b.Q + c.Q₂`. -/
 def ex33defn : Ex33K → CCS Chan Ex33K
-  | .P => .pre (.name .a) (.const .P₁)
-  | .P₁ => .choice (.pre (.name .b) (.const .P)) (.pre (.name .c) (.const .P))
-  | .Q => .pre (.name .a) (.const .Q₁)
-  | .Q₁ => .choice (.pre (.name .b) (.const .Q₂)) (.pre (.name .c) (.const .Q))
-  | .Q₂ => .pre (.name .a) (.const .Q₃)
-  | .Q₃ => .choice (.pre (.name .b) (.const .Q)) (.pre (.name .c) (.const .Q₂))
+  | .P => ⟪ (.name .a) ▸ ‹.const .P₁› ⟫
+  | .P₁ => ⟪ (.name .b) ▸ ‹.const .P› + (.name .c) ▸ ‹.const .P› ⟫
+  | .Q => ⟪ (.name .a) ▸ ‹.const .Q₁› ⟫
+  | .Q₁ => ⟪ (.name .b) ▸ ‹.const .Q₂› + (.name .c) ▸ ‹.const .Q› ⟫
+  | .Q₂ => ⟪ (.name .a) ▸ ‹.const .Q₃› ⟫
+  | .Q₃ => ⟪ (.name .b) ▸ ‹.const .Q› + (.name .c) ▸ ‹.const .Q₂› ⟫
 
 /-- A strong bisimulation witnessing `P ~ Q` for Exercise 3.3. -/
 def ex33R : CCS Chan Ex33K → CCS Chan Ex33K → Prop := fun p q =>
@@ -148,7 +147,7 @@ def ex33R : CCS Chan Ex33K → CCS Chan Ex33K → Prop := fun p q =>
 /-- **Exercise 3.3** (§3.3, p.41). The processes `P ≝ a.P₁`, `P₁ ≝ b.P + c.P`
 and `Q ≝ a.Q₁`, `Q₁ ≝ b.Q₂ + c.Q`, `Q₂ ≝ a.Q₃`, `Q₃ ≝ b.Q + c.Q₂` are strongly
 bisimilar, witnessed by `ex33R = {(P,Q),(P,Q₂),(P₁,Q₁),(P₁,Q₃)}`. -/
-theorem ex_3_3 : Bisimilar (ccsLTS ex33defn) (.const Ex33K.P) (.const Ex33K.Q) := by
+theorem ex_3_3 : (CCS.const Ex33K.P) ~[ccsLTS ex33defn] (CCS.const Ex33K.Q) := by
   refine ⟨ex33R, ?_, Or.inl ⟨rfl, rfl⟩⟩
   intro p q hpq
   simp only [ex33R] at hpq
