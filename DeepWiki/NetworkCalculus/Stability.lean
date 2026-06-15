@@ -231,6 +231,40 @@ theorem exists_scalingFixpoint_iff {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 
     (∃ σ : ℝ≥0, σ = m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d) ↔ m2 + m4 < 1 := by
   rw [exists_linearFixpoint_iff hd, scaling_gain_lt_one_iff h2 h4]
 
+/-- Substituting the `σ₂`-equation into the `σ₁`-equation of the §12.4.2 coupled burst recursion:
+`1 + m₄(1 + m₂σ/(1−m₂))/(1−m₄)` collapses to the single-variable form `c·σ + d` with gain
+`c = m₂m₄/((1−m₂)(1−m₄))` and offset `d = 1 + m₄/(1−m₄)`. The arithmetic is a field identity in the
+positive denominators `1−m₂`, `1−m₄`, proved over `ℝ`. -/
+theorem scalingFixpointPair_substitute {m2 m4 : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) (σ : ℝ≥0) :
+    1 + m4 * (1 + m2 * σ / (1 - m2)) / (1 - m4)
+      = m2 * m4 / ((1 - m2) * (1 - m4)) * σ + (1 + m4 / (1 - m4)) := by
+  have ha : (m2 : ℝ) < 1 := by exact_mod_cast h2
+  have hb : (m4 : ℝ) < 1 := by exact_mod_cast h4
+  rw [← NNReal.coe_inj]
+  push_cast [NNReal.coe_sub h2.le, NNReal.coe_sub h4.le]
+  have ha' : (1 : ℝ) - m2 ≠ 0 := by linarith
+  have hb' : (1 : ℝ) - m4 ≠ 0 := by linarith
+  field_simp
+  ring
+
+/-- **The §12.4.2 coupled burst fix-point system is solvable iff `m₂ + m₄ < 1`** (the book's two
+displayed equations, faithfully): the per-flow burstinesses `σ'₁`, `σ'₂` between the two servers solve
+`σ'₁ = 1 + m₄σ'₂/(1−m₄)` and `σ'₂ = 1 + m₂σ'₁/(1−m₂)` (Corollary 5.3 / Theorem 7.1 / Lemma 12.6, with
+`αᵢ = γ_{1,1}`) in `ℝ≥0` iff `m₂ + m₄ < 1`. Eliminating `σ'₂` collapses the system to the
+single-variable fix-point of `exists_scalingFixpoint_iff`; below the threshold both bursts converge,
+at or above it no finite pair exists. -/
+theorem exists_scalingFixpointPair_iff {m2 m4 : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) :
+    (∃ σ1 σ2 : ℝ≥0, σ1 = 1 + m4 * σ2 / (1 - m4) ∧ σ2 = 1 + m2 * σ1 / (1 - m2)) ↔ m2 + m4 < 1 := by
+  have hd : (0 : ℝ≥0) < 1 + m4 / (1 - m4) := by positivity
+  constructor
+  · rintro ⟨σ1, σ2, h1, h2eq⟩
+    rw [h2eq, scalingFixpointPair_substitute h2 h4 σ1] at h1
+    exact (scaling_gain_lt_one_iff h2 h4).mp ((exists_linearFixpoint_iff hd).mp ⟨σ1, h1⟩)
+  · intro hlt
+    obtain ⟨σ1, hσ1⟩ :=
+      (exists_linearFixpoint_iff hd).mpr ((scaling_gain_lt_one_iff h2 h4).mpr hlt)
+    exact ⟨σ1, 1 + m2 * σ1 / (1 - m2), by rw [scalingFixpointPair_substitute h2 h4 σ1]; exact hσ1, rfl⟩
+
 /-- **The diverging fix-point iteration**: with gain `c ≥ 1` and positive offset `d > 0`, the
 network-calculus fix-point iteration `σₙ₊₁ = c·σₙ + d` is unbounded (every `M` is exceeded) — it
 grows at least linearly (`σₙ ≥ n·d`), so no finite bound exists. The dynamic counterpart of
@@ -260,5 +294,11 @@ theorem scalingIterate_unbounded {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1)
     ∃ n : ℕ, M ≤ (fun σ => m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d)^[n] σ₀ :=
   linearIterate_unbounded (not_lt.mp fun h => absurd ((scaling_gain_lt_one_iff h2 h4).mp h)
     (not_lt.mpr hge)) hd σ₀ M
+
+/-- Faithfulness check against the book's §12.4.2 display: the coupled burst system
+`σ₁' = 1 + m₄σ₂'/(1−m₄)`, `σ₂' = 1 + m₂σ₁'/(1−m₂)` is solvable iff `m₂ + m₄ < 1`. -/
+example {m2 m4 : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) :
+    (∃ σ1 σ2 : ℝ≥0, σ1 = 1 + m4 * σ2 / (1 - m4) ∧ σ2 = 1 + m2 * σ1 / (1 - m2)) ↔ m2 + m4 < 1 :=
+  exists_scalingFixpointPair_iff h2 h4
 
 end DeepWiki

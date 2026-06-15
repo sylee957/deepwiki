@@ -462,6 +462,12 @@ the cyclic network. The library's `exists_scalingFixpoint_iff` (and the gain bou
 `scaling_gain_lt_one_iff`), resting on the linear fix-point criterion `exists_linearFixpoint_iff`. -/
 alias ex_12_scalingInstability := exists_scalingFixpoint_iff
 
+/-- **§12.4.2 coupled burst fix-point** (p.284, the two displayed equations): with `αᵢ = γ_{1,1}` the
+inter-server burstinesses solve `σ₁' = 1 + m₄σ₂'/(1−m₄)` and `σ₂' = 1 + m₂σ₁'/(1−m₂)` (via Cor 5.3 /
+Thm 7.1 / Lemma 12.6) in `ℝ≥0` iff `m₂ + m₄ < 1`. The faithful coupled-system form of the boundary;
+eliminating `σ₂'` recovers `ex_12_scalingInstability`. The library's `exists_scalingFixpointPair_iff`. -/
+alias ex_12_scalingInstability_pair := exists_scalingFixpointPair_iff
+
 /-- **§12.4.2 instability, dynamic form** (p.284–285): in the unstable regime `m₂ + m₄ ≥ 1` the cyclic
 scaling network's per-flow burst *iteration* `σₙ₊₁ = (m₂m₄/((1−m₂)(1−m₄)))·σₙ + d` is unbounded — the
 network-calculus method's fixed-point iteration diverges, yielding no finite end-to-end bound. The
