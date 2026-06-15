@@ -161,6 +161,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import DeepWiki.NetworkCalculus.ServersResidualSfa
 import DeepWiki.NetworkCalculus.ServersResidualSfaDelay
 import DeepWiki.NetworkCalculus.ServersResidualGfa
+import DeepWiki.NetworkCalculus.ServersResidualGfaDelay
 import DeepWiki.NetworkCalculus.ServersResidualGfaTightness
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersResidualFifoPmooConcat
