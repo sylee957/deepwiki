@@ -91,8 +91,10 @@ match:
 Maintenance: re-run `scripts/wiki build` after library changes (it preserves embeddings
 for declarations whose name/kind/signature/docstring are unchanged), then
 `scripts/wiki index` re-embeds only the new/changed ones (needs a local Ollama server;
-default model `nomic-embed-text`). The `WikiRAG` lib and `wiki` exe are kept out of
-`defaultTargets`, so the warning-/sorry-free `lake build` gate is untouched.
+default model `nomic-embed-text`). To change embedding model use `scripts/wiki reindex`
+(clears + re-embeds all — `index` refuses to mix models, tracked in a `meta` table that
+also carries the auto-applied schema version). The `WikiRAG` lib and `wiki` exe are kept
+out of `defaultTargets`, so the warning-/sorry-free `lake build` gate is untouched.
 
 ## Chapter structure (`DeepWiki/NetworkCalculus/`)
 

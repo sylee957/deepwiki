@@ -14,12 +14,14 @@ open Lean WikiRAG SQLite
 /-- Database path (`WIKI_DB`, default `.wiki/graph.db`). -/
 def dbPathFromEnv : IO String := return (← IO.getEnv "WIKI_DB").getD WikiRAG.defaultDbPath
 
-/-- Open the graph DB, erroring helpfully if it has not been built yet. -/
+/-- Open the graph DB (applying schema migrations), erroring if it has not been built yet. -/
 def openExisting : IO SQLite := do
   let path ← dbPathFromEnv
   if !(← System.FilePath.pathExists path) then
     throw (IO.userError s!"no graph at {path}; run `wiki build` first")
-  openDb path
+  let db ← openDb path
+  migrate db
+  return db
 
 /-- Truncate to `n` chars with an ellipsis. -/
 def truncate (s : String) (n : Nat) : String :=
@@ -63,7 +65,8 @@ def usage : String := String.intercalate "\n"
   [ "wiki — graph-RAG over the Lean library"
   , ""
   , "  wiki build                 (re)extract the declaration graph into the DB"
-  , "  wiki index                 compute Ollama embeddings for all declarations"
+  , "  wiki index                 embed decls lacking a vector (same model)"
+  , "  wiki reindex               switch embedding model: clear all + re-embed"
   , "  wiki search <query> [-k N] [--json]"
   , "  wiki show <name> [--json]"
   , "  wiki deps <name> [--depth D] [--json]    what <name> uses (transitively)"
@@ -93,6 +96,7 @@ unsafe def buildCmd : IO Unit := do
   Lean.enableInitializersExecution
   withImportModules #[{module := `DeepWiki}, {module := `Sources}] {} (trustLevel := 1024) fun env => do
     let db ← openDb dbPath
+    migrate db
     let coreCtx : Core.Context := { fileName := "<wiki>", fileMap := default }
     let coreState : Core.State := { env := env }
     IO.println "Walking declarations…"
@@ -104,6 +108,8 @@ unsafe def buildCmd : IO Unit := do
     IO.println s!"Wrote graph to {dbPath}: {nTot} decls, {nEmb} embeddings preserved, {nTot - nEmb} to (re)index."
 
 def indexCmd : IO Unit := do indexAll (← openExisting)
+
+def reindexCmd : IO Unit := do reindexAll (← openExisting)
 
 def searchCmd (o : Opts) : IO Unit := do
   if o.query == "" then IO.eprintln "usage: wiki search <query> [-k N] [--json]"; return
@@ -187,6 +193,7 @@ unsafe def main (args : List String) : IO Unit := do
   | [] => IO.println usage
   | "build" :: _ => buildCmd
   | "index" :: _ => indexCmd
+  | "reindex" :: _ => reindexCmd
   | "search" :: rest => searchCmd (parseOpts rest {})
   | "show" :: rest => showCmd (parseOpts rest {})
   | "deps" :: rest => depsCmd (parseOpts rest {}) false

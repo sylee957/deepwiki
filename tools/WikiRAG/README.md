@@ -53,11 +53,28 @@ new/changed decls need a follow-up `scripts/wiki index` (it reports how many).
 ```bash
 brew install ollama && ollama serve &
 ollama pull nomic-embed-text
-scripts/wiki index        # embeds every decl; safe to re-run (only fills gaps)
+scripts/wiki index        # embed decls lacking a vector (only fills gaps)
 ```
 
 Without Ollama, `context` falls back to lexical seeds only; everything else is
 unaffected. Configure via env: `WIKI_DB`, `WIKI_OLLAMA_URL`, `WIKI_EMBED_MODEL`.
+
+### State model: migrate / update / switch
+
+The DB carries a `meta` table (`schema_version`, `embed_model`, `embed_dim`) and
+maintains one invariant: **every stored embedding came from the single recorded
+model** (mixing vector spaces in one column silently corrupts cosine scores). Three
+transitions keep it true:
+
+- **migrate** — the schema evolves; applied automatically on open and idempotent. A
+  pre-`meta` DB is detected and its existing vectors are back-filled with the model/dim.
+- **update** — the library changed: `scripts/wiki build` re-extracts (preserving
+  embeddings for unchanged decls), then `scripts/wiki index` embeds the new/changed ones
+  *with the same model*. `index` **refuses** if `WIKI_EMBED_MODEL` differs from the
+  recorded model.
+- **switch** — change the embedding model:
+  `WIKI_EMBED_MODEL=<m> scripts/wiki reindex` clears all vectors and re-embeds everything
+  with `<m>` — the only safe way to change models.
 
 ## Layout
 

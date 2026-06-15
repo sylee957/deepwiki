@@ -44,6 +44,31 @@ def countWhere (db : SQLite) (sql : String) : IO Nat := do
   let s ← db.prepare sql
   if (← s.step) then return (← s.columnText 0).toNat! else return 0
 
+/-- Current on-disk schema version (bump when `migrate` gains a step). -/
+def schemaVersion : Nat := 2
+
+/-- Ensure the `meta` key/value table exists (schema version, embedding model + dim). -/
+def ensureMeta (db : SQLite) : IO Unit :=
+  db.exec "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);"
+
+/-- Read a `meta` value. -/
+def getMeta (db : SQLite) (key : String) : IO (Option String) := do
+  let s ← db.prepare "SELECT value FROM meta WHERE key = ?"
+  s.bindText 1 key
+  if (← s.step) then return some (← s.columnText 0) else return none
+
+/-- Write a `meta` value. -/
+def setMeta (db : SQLite) (key val : String) : IO Unit := do
+  let s ← db.prepare "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
+  s.bindText 1 key
+  s.bindText 2 val
+  s.exec
+
+/-- Drop every embedding and forget the recorded model/dim (used by a model *switch*). -/
+def clearEmbeddings (db : SQLite) : IO Unit := do
+  db.exec "UPDATE decls SET embedding = NULL;"
+  db.exec "DELETE FROM meta WHERE key IN ('embed_model', 'embed_dim');"
+
 /-- Ensure the persistent `decls` table exists; embeddings survive across rebuilds. -/
 def ensureDeclTable (db : SQLite) : IO Unit :=
   db.exec "CREATE TABLE IF NOT EXISTS decls (name TEXT PRIMARY KEY, short TEXT, kind TEXT, module TEXT, line INTEGER, signature TEXT, doc TEXT, embedding BLOB);"
@@ -55,6 +80,7 @@ decls — the rest need no re-`index`. Edges and the module graph carry no embed
 are rebuilt outright. -/
 def buildGraph (db : SQLite) (metas : Array DeclMeta) (edges : Array (String × String)) : IO Unit := do
   ensureDeclTable db
+  ensureMeta db
   -- Stage fresh nodes (embeddings filled by the carry-over below, else left NULL).
   db.exec "DROP TABLE IF EXISTS decls_new;"
   db.exec "CREATE TABLE decls_new (name TEXT PRIMARY KEY, short TEXT, kind TEXT, module TEXT, line INTEGER, signature TEXT, doc TEXT, embedding BLOB);"
