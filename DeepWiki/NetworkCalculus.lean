@@ -62,6 +62,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
+import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.Servers
 import DeepWiki.NetworkCalculus.ClosuresReal
 import DeepWiki.NetworkCalculus.ArrivalCurves

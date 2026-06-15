@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
+import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
@@ -106,6 +107,17 @@ theorem thm_11_1_chain_backlog {α : ℝ≥0 → ℝ≥0} {β₀ : ℝ≥0 → �
   worstCaseChainBacklog_eq_vDev_minConvChain hαmono hα0 hαsub hβ₀0 hβs0
 
 /-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
+
+/-- **Worked instance of Theorem 11.1 on the canonical curves** (§11.2.1): the
+worst-case delay of a token-bucket flow `γ_{r,b}` (`r ≤ R`) through a rate-latency
+server `β_{R,T}` (`R > 0`, `b > 0`), over *all* feasible trajectories, is exactly
+the textbook bound `T + b/R` — the optimum is attained, not just bounded. The
+library's `worstCaseServerDelay_tokenBucketNN_rateLatencyNN`. -/
+theorem example_11_tokenBucketRateLatency (r b R T : ℝ≥0)
+    (hR : 0 < R) (hb : 0 < b) (hrR : r ≤ R) :
+    worstCaseServerDelay (fun t => (tokenBucketNN r b t).toNNReal) (rateLatencyNN R T)
+      = ((T + b / R : ℝ≥0) : ℝ≥0∞) :=
+  worstCaseServerDelay_tokenBucketNN_rateLatencyNN r b R T hR hb hrR
 
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
