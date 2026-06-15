@@ -9,6 +9,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPmooPath
 import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualSfa
+import DeepWiki.NetworkCalculus.ServersResidualSfaDelay
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
@@ -100,6 +101,16 @@ alias alg_6_sfa := isMinimalServiceCurve_concatConv_residualServer
 
 /-- **Example 10.5** (§10.4.2, p.247): SFA worked on the table of Figure 10.1 (top): explicit per-server residual and output arrival curves, then the path convolution giving each flow's end-to-end service curve. -/
 alias ex_10_5 := DeepWiki.isMinimalServiceCurve_concatConv_residualServer
+
+/-- **SFA end-to-end delay/backlog** (performance consequence of Algorithm 6, §10.4.2): for
+rate-latency servers β_{R h,T h} with per-hop cross-traffic aggregating to affine ρ h·v+bc h, the SFA
+end-to-end service curve folds to the single rate-latency β_{⨅(R h−ρ h), ∑T'_h}, so a token-bucket
+flow γ_{r,b} with r ≤ ⨅(R h−ρ h) has end-to-end delay ≤ ∑T'_h + b/⨅(R h−ρ h) and backlog ≤ r·∑T'_h+b
+over arbitrary `List` routing. The library's `delay_le_sfa_rateLatency` / `backlog_le_sfa_rateLatency`. -/
+alias sfa_end_to_end_delay := delay_le_sfa_rateLatency
+
+@[inherit_doc sfa_end_to_end_delay]
+alias sfa_end_to_end_backlog := backlog_le_sfa_rateLatency
 
 /-- **Theorem 7** (§10.4.3, p.250): Algorithm 7 (Generic Group Flow Analysis, GFA): subtract a grouped cross-traffic aggregate η⁽ʰ⁾ (arc-wise flow partition, shaper-capped output arrival (η⊘β)∧σ) rather than the flat ∑_{j≠i}αⱼ; end-to-end β̃ᵢ = ∗_{h∈pᵢ}[β⁽ʰ⁾ − η⁽ʰ⁾]⁺. -/
 alias alg_7_gfa := isMinimalServiceCurve_concatConv_groupResidual
