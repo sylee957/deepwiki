@@ -110,6 +110,24 @@ theorem isStrictMinimalServiceCurve_residualServer_of_isGps {ι : Type*}
     (hgps As Ds hp) ?_ (Finset.mem_univ i) hst hbl
   exact hβ.sum_strict hp
 
+/-- **`J`-restricted GPS residual** (relation form): a GPS `n`-server whose
+`J`-aggregate is served by a strict service curve `β` offers `(φᵢ/∑_{j∈J} φⱼ)·β` as
+a strict service curve to the residual server of any flow `i ∈ J` — the per-server
+share residual with the denominator over the flows actually present at the server
+(`Fl(h)`), as the network's variable per-server populations require. Generalizes
+`isStrictMinimalServiceCurve_residualServer_of_isGps` (the `J = univ` case) and needs
+no `Fintype ι`. -/
+theorem isStrictMinimalServiceCurve_residualServer_of_isGps_on {ι : Type*}
+    {S : (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {β : ℝ≥0 → ℝ≥0}
+    {J : Finset ι} {i : ι} (hi : i ∈ J) (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServerOn S J))
+    (hgps : IsGpsServerN φ S) :
+    IsStrictMinimalServiceCurve (fun v => (φ i / ∑ j ∈ J, φ j) * β v)
+      (residualServer S i) := by
+  rintro Ai Di ⟨As, Ds, hp, rfl, rfl⟩ s t hst hbl
+  exact add_div_mul_le_of_isGps (fun j _ => hcaus As Ds hp j)
+    (hgps As Ds hp) (hβ.sum_strict_on hp) hi hst hbl
+
 /-! ## Book restatement (GPS residual service)
 A GPS `n`-server offering a strict service curve `β` with non-null
 weights `φ₁,…,φₙ` (the formal theorem needs no positivity at all — null
