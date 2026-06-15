@@ -83,4 +83,31 @@ theorem concatConv_liftEReal_rateLatency (R T : κ → ℝ≥0) (h : κ) (hs : L
     rfl
   | cons k ks ih => rw [concatConv_cons, ih k, minConv_liftEReal_rateLatency]; rfl
 
+/-- `pathSumLatency` is the sum of the per-hop latencies along the path `h :: hs`. -/
+theorem pathSumLatency_eq_sum (T : κ → ℝ≥0) (h : κ) (hs : List κ) :
+    pathSumLatency T h hs = ((h :: hs).map T).sum := by
+  induction hs generalizing h with
+  | nil => simp [pathSumLatency]
+  | cons k ks ih =>
+    rw [pathSumLatency, ih k]
+    simp only [List.map_cons, List.sum_cons]
+
+/-- `pathMinRate` is below the head hop's rate. -/
+theorem pathMinRate_le_head (R : κ → ℝ≥0) (h : κ) (hs : List κ) :
+    pathMinRate R h hs ≤ R h := by
+  cases hs with
+  | nil => exact le_refl _
+  | cons k ks => exact inf_le_left
+
+/-- `pathMinRate` is positive when every hop's rate along the path is. -/
+theorem pathMinRate_pos (R : κ → ℝ≥0) (h : κ) (hs : List κ)
+    (hpos : ∀ k ∈ h :: hs, 0 < R k) : 0 < pathMinRate R h hs := by
+  induction hs generalizing h with
+  | nil => exact hpos h (List.mem_singleton.mpr rfl)
+  | cons k ks ih =>
+    rw [pathMinRate, lt_inf_iff]
+    refine ⟨hpos h (by simp), ih k (fun j hj => hpos j ?_)⟩
+    simp only [List.mem_cons] at hj ⊢
+    tauto
+
 end DeepWiki
