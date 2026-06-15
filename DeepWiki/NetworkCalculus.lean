@@ -149,6 +149,8 @@ import DeepWiki.NetworkCalculus.ServersResidualPmooRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualPmooPath
 import DeepWiki.NetworkCalculus.ServersResidualPgps
 import DeepWiki.NetworkCalculus.ServersResidualDrr
+import DeepWiki.NetworkCalculus.ServersResidualDrrRateLatency
+import DeepWiki.NetworkCalculus.ServersResidualWrrRateLatency
 import DeepWiki.NetworkCalculus.ServersResidualTdma
 import DeepWiki.NetworkCalculus.ServersResidualWrr
 import DeepWiki.NetworkCalculus.ServersResidualWrrPackets
