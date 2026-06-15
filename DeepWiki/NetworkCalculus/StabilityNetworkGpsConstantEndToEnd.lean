@@ -1,12 +1,12 @@
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
 import DeepWiki.NetworkCalculus.ServersResidualSfaDelay
 
-/-! # Per-flow end-to-end delay in a stable GPS network (capstone)
-The GPS analogue of `SpNetwork.Traj.isFlowEndToEndDelayBounded`: a locally stable GPS-constant
-network `Traj` yields a finite end-to-end delay for every flow, via the SFA blind-multiplexing
-end-to-end bound (which needs only the strict rate-latency aggregate, so it applies to GPS).
-The bridge is `concatComp_of_chain` over flow `i`'s per-hop trajectory `proc`; cross-traffic from
-`allBound`; stability from `∑_{Fl h} r < R^(h)`. -/
+/-! # Per-flow end-to-end delay / backlog in a stable GPS network (capstone)
+The GPS analogue of the static-priority capstone: a locally stable GPS-constant network `Traj` yields
+*finite end-to-end delay and backlog* for every flow, via the SFA blind-multiplexing end-to-end bound
+(which needs only the strict rate-latency aggregate, so it applies to GPS). The bridge is
+`concatComp_of_chain` over flow `i`'s per-hop trajectory `proc`; cross-traffic from `allBound`;
+stability from `∑_{Fl h} r < R^(h)`. The shared assembly is `sfaEndToEndSetup`. -/
 
 open DeepWiki
 open scoped Classical NNReal ENNReal BigOperators
@@ -15,14 +15,21 @@ namespace DeepWiki.GpsNetwork.Traj
 
 variable {κ ι : Type*} [Fintype ι] [DecidableEq κ]
 
-/-- **Per-flow end-to-end delay in a stable GPS network**: in a locally stable GPS-constant network
-trajectory, every flow `i` with a nonempty path has a *finite end-to-end delay* (ingress to egress),
-via the SFA blind-multiplexing end-to-end bound (policy-agnostic — it needs only the strict
-rate-latency aggregate, so it covers GPS). The per-hop trajectory realizes the `concatComp` chain
-(`concatComp_of_chain`); cross-traffic bounds come from `allBound`; stability `rᵢ < R^(h) − ρ^(h)`
-(with `ρ^(h) = ∑_{j≠i, j∈Fl h} rⱼ`) from `∑_{Fl h} r < R^(h)`. -/
-theorem isFlowEndToEndDelayBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
-    ∃ d : ℝ≥0, Deviation.delay (⇑(t.proc i 0)) (⇑(t.proc i (t.net.paths i).length)) ≤ (d : ℝ≥0∞) := by
+/-- **The SFA blind-multiplexing end-to-end setup for a stable GPS network**: flow `i`'s per-hop
+trajectory realizes the SFA `concatComp` chain along its path, with affine cross-traffic, per-server
+stability, and a token-bucket ingress — everything `delay_le_sfa_rateLatency` /
+`backlog_le_sfa_rateLatency` need (`ρ^(h) = ∑_{j≠i, j∈Fl h} rⱼ`). -/
+theorem sfaEndToEndSetup (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
+    ∃ (α : κ → ι → ℝ≥0 → ℝ≥0) (ρ bc : κ → ℝ≥0) (head : κ) (tail : List κ),
+      t.net.paths i = head :: tail ∧
+      (∀ h, (fun v => ∑ j ∈ Finset.univ.erase i, α h j v) = fun v => ρ h * v + bc h) ∧
+      (∀ h, ρ h < t.R h) ∧
+      concatComp (fun h => residualServer (fun A D => t.S h A D ∧
+        ∀ j, j ≠ i → IsMaximalArrivalBound (⇑(A j)) (α h j)) i) (head :: tail)
+        (t.proc i 0) (t.proc i (head :: tail).length) ∧
+      IsMaximalArrivalBound (⇑(t.proc i 0)) (fun s => t.r i * s + t.b i) ∧
+      0 < pathMinRate (fun h => t.R h - ρ h) head tail ∧
+      t.r i ≤ pathMinRate (fun h => t.R h - ρ h) head tail := by
   classical
   obtain ⟨head, tail, hpath⟩ := List.exists_cons_of_ne_nil hne
   have hlen : 0 < (t.net.paths i).length := by rw [hpath]; simp
@@ -90,9 +97,24 @@ theorem isFlowEndToEndDelayBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths 
     rw [proc_zero t i hlen]; exact t.harr0 i
   have hstabρ : ∀ h, ρ h < t.R h := fun h => by
     rw [hρdef]; exact lt_of_le_of_lt (Finset.sum_le_sum_of_subset (hsubF h)) (t.hstab h)
+  exact ⟨α, ρ, bc, head, tail, hpath, hcross, hstabρ, hp, harr, hRpos, hr⟩
+
+/-- **Per-flow end-to-end delay in a stable GPS network**: every flow with a nonempty path has a
+*finite end-to-end delay* (ingress to egress), via `sfaEndToEndSetup` + `delay_le_sfa_rateLatency`. -/
+theorem isFlowEndToEndDelayBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
+    ∃ d : ℝ≥0, Deviation.delay (⇑(t.proc i 0)) (⇑(t.proc i (t.net.paths i).length)) ≤ (d : ℝ≥0∞) := by
+  obtain ⟨α, ρ, bc, head, tail, hpath, hcross, hstabρ, hp, harr, hRpos, hr⟩ := t.sfaEndToEndSetup i hne
   rw [hpath]
   exact ⟨_, delay_le_sfa_rateLatency (S := t.S) (R := t.R) (T := t.T) (α := α) (i := i)
-    (ρ := ρ) (bc := bc) (r := t.r i) (b := t.b i)
-    t.hcaus t.hβ hcross hstabρ hp harr hRpos hr⟩
+    (ρ := ρ) (bc := bc) (r := t.r i) (b := t.b i) t.hcaus t.hβ hcross hstabρ hp harr hRpos hr⟩
+
+/-- **Per-flow end-to-end backlog in a stable GPS network**: every flow with a nonempty path has a
+*finite end-to-end backlog*, via `sfaEndToEndSetup` + `backlog_le_sfa_rateLatency`. -/
+theorem isFlowEndToEndBacklogBounded (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ []) :
+    ∃ c : ℝ≥0, Deviation.backlog (⇑(t.proc i 0)) (⇑(t.proc i (t.net.paths i).length)) ≤ (c : ℝ≥0∞) := by
+  obtain ⟨α, ρ, bc, head, tail, hpath, hcross, hstabρ, hp, harr, _hRpos, hr⟩ := t.sfaEndToEndSetup i hne
+  rw [hpath]
+  exact ⟨_, backlog_le_sfa_rateLatency (S := t.S) (R := t.R) (T := t.T) (α := α) (i := i)
+    (ρ := ρ) (bc := bc) (r := t.r i) (b := t.b i) t.hcaus t.hβ hcross hstabρ hp harr hr⟩
 
 end DeepWiki.GpsNetwork.Traj
