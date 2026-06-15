@@ -291,6 +291,61 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
       ≤ (Ds i) s + ((Ds i) t - (Ds i) s) := add_le_add le_rfl hsup
     _ = (Ds i) t := add_tsub_cancel_of_le ((Ds i).mono hst)
 
+/-- **Strict residual service, set form**: the `J`-aggregate analogue of
+`add_residualCurve_le_of_strict_aggregate`. If the *full* aggregate obeys a strict
+service inequality for `β` and the complement departures `∑_{j∉J} Dⱼ` are
+`α`-constrained, then the `J`-aggregate obeys the strict inequality for
+`residualCurve β α` on its own backlogged periods (which sit inside the full
+aggregate's). The single-removed-flow case is `J = {i}ᶜ`; the peeling assembly uses it
+with `J` the not-yet-peeled flows and the complement the already-peeled ones (their
+summed token-bucket bound `α`). -/
+theorem add_residualCurve_le_of_strict_aggregate_on {ι : Type*} [Fintype ι]
+    [DecidableEq ι] {As Ds : ι → Curve} {β α : ℝ≥0 → ℝ≥0} {J : Finset ι}
+    (hc : ∀ j, Ds j ≤ As j)
+    (hstrict : ∀ s t, s ≤ t →
+      IsBacklogged (fun x => ∑ j, (As j) x) (fun x => ∑ j, (Ds j) x)
+        (Set.Ioc s t) →
+      (∑ j, (Ds j) s) + β (t - s) ≤ ∑ j, (Ds j) t)
+    (hdep : IsMaximalArrivalBound (fun x => ∑ j ∈ Jᶜ, (Ds j) x) α)
+    {s t : ℝ≥0} (hst : s ≤ t)
+    (hbl : IsBacklogged (fun x => ∑ j ∈ J, (As j) x)
+      (fun x => ∑ j ∈ J, (Ds j) x) (Set.Ioc s t)) :
+    (∑ j ∈ J, (Ds j) s) + residualCurve β α (t - s) ≤ ∑ j ∈ J, (Ds j) t := by
+  -- a `J`-aggregate backlog is a full-aggregate backlog
+  have hblfull : IsBacklogged (fun x => ∑ j, (As j) x)
+      (fun x => ∑ j, (Ds j) x) (Set.Ioc s t) :=
+    isBacklogged_sum_of_isBacklogged_subset (fun j _ x => hc j x)
+      (Finset.subset_univ J) hbl
+  have hv : ∀ v : ℝ≥0, v ≤ t - s →
+      β v - α v ≤ (∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s := by
+    intro v hvle
+    have hut : s + v ≤ t := by
+      calc s + v ≤ s + (t - s) := add_le_add le_rfl hvle
+        _ = t := add_tsub_cancel_of_le hst
+    rcases eq_zero_or_pos v with rfl | hvpos
+    · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
+      exact zero_le'
+    · have hbl' : IsBacklogged (fun x => ∑ j, (As j) x)
+          (fun x => ∑ j, (Ds j) x) (Set.Ioc s (s + v)) := fun u hu =>
+        hblfull u ⟨hu.1, hu.2.trans hut⟩
+      have hstr := hstrict s (s + v) le_self_add hbl'
+      rw [add_tsub_cancel_left,
+        ← Finset.sum_add_sum_compl J (fun j => (Ds j) s),
+        ← Finset.sum_add_sum_compl J (fun j => (Ds j) (s + v))] at hstr
+      have hcross : ∑ j ∈ Jᶜ, (Ds j) (s + v) ≤ (∑ j ∈ Jᶜ, (Ds j) s) + α v :=
+        (isMaximalArrivalBound_iff_increment _ _).mp hdep s v
+      exact tsub_le_of_aggregate_step hstr hcross
+        (Finset.sum_le_sum fun j _ => (Ds j).mono hut)
+        (Finset.sum_le_sum fun j _ => (Ds j).mono hst)
+  have hsup : residualCurve β α (t - s)
+      ≤ (∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s :=
+    ciSup_le fun v => hv v.1 v.2
+  calc (∑ j ∈ J, (Ds j) s) + residualCurve β α (t - s)
+      ≤ (∑ j ∈ J, (Ds j) s) + ((∑ j ∈ J, (Ds j) t) - ∑ j ∈ J, (Ds j) s) :=
+        add_le_add le_rfl hsup
+    _ = ∑ j ∈ J, (Ds j) t :=
+        add_tsub_cancel_of_le (Finset.sum_le_sum fun j _ => (Ds j).mono hst)
+
 /-- A strict aggregate service curve gives the plain-function sum form
 of the strict service inequality on each served family — the `hstrict`
 premise of the pair-level residual theorems. -/
@@ -369,6 +424,26 @@ theorem isStrictMinimalServiceCurve_residualServer {ι : Type*} [Fintype ι]
   rintro Ai Di ⟨As, Ds, ⟨hp, hdep⟩, rfl, rfl⟩ s t hst hbl
   exact add_residualCurve_le_of_strict_aggregate
     (fun j => hcaus As Ds hp j) (hβ.sum_strict hp) hdep hst hbl
+
+/-- **The `J`-aggregate offers the blind residual** (relation form, set version of
+`isStrictMinimalServiceCurve_residualServer`): restricting an `n`-server with a strict
+aggregate curve `β` to pairs whose complement departures `∑_{j∉J} Dⱼ` are
+`α`-constrained, the `J`-restricted aggregate offers `residualCurve β α` as a strict
+service curve. The peeling step of Theorem 12.5: `J` the not-yet-peeled flows, `α` the
+summed token-bucket bounds of the already-peeled ones, so the remaining aggregate keeps
+the strict service `β` minus the peeled flows' arrivals. -/
+theorem isStrictMinimalServiceCurve_aggregateServerOn_residual {ι : Type*} [Fintype ι]
+    [DecidableEq ι] {S : (ι → Curve) → (ι → Curve) → Prop} {β α : ℝ≥0 → ℝ≥0}
+    {J : Finset ι} (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve β (aggregateServer S)) :
+    IsStrictMinimalServiceCurve (residualCurve β α)
+      (aggregateServerOn (fun A D => S A D ∧ IsMaximalArrivalBound
+        (fun x => ∑ j ∈ Jᶜ, (D j) x) α) J) := by
+  rintro A D ⟨As, Ds, ⟨hp, hdep⟩, rfl, rfl⟩ s t hst hbl
+  rw [Curve.sum_apply, Curve.sum_apply]
+  rw [Curve.coe_sum, Curve.coe_sum] at hbl
+  exact add_residualCurve_le_of_strict_aggregate_on (fun j => hcaus As Ds hp j)
+    (hβ.sum_strict hp) hdep hst hbl
 
 /-- **The residual server offers the residual curve** (the book's
 residual-service-curve reading of blind multiplexing): restricting an
