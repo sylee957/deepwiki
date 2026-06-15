@@ -6,6 +6,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.StabilityResidualRate
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import DeepWiki.NetworkCalculus.RealCurvesRates
+import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -175,6 +176,13 @@ theorem prop_12_canonicalRates (R T r b : ℝ≥0) :
       ∧ longTermServiceRate (rateLatency R T) = (R : ℝ≥0∞)
       ∧ longTermArrivalRate (fun t => r * t + b) = (r : ℝ≥0∞) :=
   ⟨longTermServiceRate_rate R, longTermServiceRate_rateLatency R T, longTermArrivalRate_affine r b⟩
+
+/-- **Worked instance** (§12.1 on the canonical curves): two token-bucket flows
+`γ_{r₁,b₁}`, `γ_{r₂,b₂}` sharing a rate-latency server `β_{R,T}` under blind
+multiplexing — with `r₁ + r₂ < R`, a flow is locally stable against its residual.
+The single rate inequality discharges every hypothesis (closed-form rates +
+residual-rate bound). The library's `isLocallyStableServer_tokenBucket_rateLatency`. -/
+alias example_12_tokenBucketRateLatency := isLocallyStableServer_tokenBucket_rateLatency
 
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate

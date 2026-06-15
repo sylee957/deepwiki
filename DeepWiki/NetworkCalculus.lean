@@ -112,6 +112,7 @@ import DeepWiki.NetworkCalculus.ServersMimo
 import DeepWiki.NetworkCalculus.StabilityNetworkTrajectory
 import DeepWiki.NetworkCalculus.ServersResidual
 import DeepWiki.NetworkCalculus.StabilityResidualRate
+import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import DeepWiki.NetworkCalculus.ServersResidualWeaklyStrict
 import DeepWiki.NetworkCalculus.ServersResidualFifo
 import DeepWiki.NetworkCalculus.ServersResidualFifoPmoo
