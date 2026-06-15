@@ -13,6 +13,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstant
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantTandem
+import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -223,10 +224,21 @@ policy a locally stable shared-path tandem is globally stable at every hop. All 
 ingress, with total local stability `∑ⱼ rⱼ < R^(h)`. The library's
 `SpTandem.isGloballyStable_sharedPath_tandem` — the static-priority analogue of `thm_12_5_tandem`,
 proved by inducting on the priority order (the strictly-higher-priority flows are bounded first,
-feeding flow `i`'s SP residual `β_{R − ∑_{j<i} rⱼ, ·}`), then aggregating. FDF is this at the
-topology-derived (remaining-distance) priority order; the variable-per-server-population general
-SP network (the list-path↔hop bridge) is the remaining generalization. -/
+feeding flow `i`'s SP residual `β_{R − ∑_{j<i} rⱼ, ·}`), then aggregating. A corollary-in-spirit of
+the general `thm_12_3` below (the variable-per-server-population network). -/
 alias thm_12_3_tandem := SpTandem.isGloballyStable_sharedPath_tandem
+
+/-- **Theorem 12.3** (§12.3.2, p.278), the general theorem: under a preemptive static-priority
+policy a locally stable network is globally stable at every server — arbitrary per-flow routing
+`net.paths i : List κ`, variable per-server populations `net.flowsThrough h`, flows priority-ordered
+by `<`, each server a strict rate-latency aggregate, each flow a token bucket at ingress, local
+stability `∑_{Fl h} rⱼ < R^(h)`. The library's `SpNetwork.Traj.isGloballyStable` — the
+static-priority analogue of the GPS general `thm_12_5`, proved by well-founded induction on the
+priority order (the strictly-higher-priority crossing flows `{j<i} ∩ Fl(h)` bounded first, feeding
+flow `i`'s per-hop SP residual along its list path), then aggregating via
+`Network.isGloballyStable_of_perFlow_bounds`. FDF is this at the topology-derived
+(remaining-distance) priority order. -/
+alias thm_12_3 := SpNetwork.Traj.isGloballyStable
 
 /-- **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters — under aggregate
 local stability `∑_{j∈Fl(h)} rⱼ < R^(h)` at every server, there is a flow `i` (the
