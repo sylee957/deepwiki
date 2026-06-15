@@ -300,6 +300,68 @@ theorem isGloballyStable (t : Traj κ ι) :
   exact t.net.isGloballyStable_of_perFlow_bounds t.S t.Ain t.Dout σ
     t.hcaus (fun h => by rw [t.hservice h]; exact t.hβ h) t.hp hbound hagg
 
+/-- **Per-flow global stability**: in a locally stable static-priority network, *each individual
+flow* `i` has a bounded backlogged period at every server `h` it crosses (the per-flow form of
+global stability, stronger than the per-server aggregate `isGloballyStable`). Flow `i` sees the SP
+residual `β_{R^(h) − ∑_{j<i, j∈Fl h} rⱼ, ·}` (the higher-priority crossing flows bounded by
+`allBound`), against which its own token-bucket arrival is locally stable since
+`∑_{j≤i, j∈Fl h} rⱼ ≤ ∑_{Fl h} rⱼ < R^(h)`. -/
+theorem isFlowGloballyStable (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.flowsThrough h) :
+    IsGloballyStableServer (⇑(t.Ain h i)) (⇑(t.Dout h i)) := by
+  classical
+  obtain ⟨Bi, hBin, _⟩ := t.allBound i
+  have hch : ∀ j : ι, ∃ Bj : ℝ≥0, j < i → j ∈ t.net.flowsThrough h →
+      IsMaximalArrivalBound (⇑(t.Ain h j)) (fun s => t.r j * s + Bj) := by
+    intro j
+    by_cases hj : j < i
+    · obtain ⟨Bj, hjin, _⟩ := t.allBound j; exact ⟨Bj h, fun _ hjF => hjin h hjF⟩
+    · exact ⟨0, fun hcon => absurd hcon hj⟩
+  choose Bhp hBhp using hch
+  set r' : ι → ℝ≥0 := fun j => if j ∈ t.net.flowsThrough h then t.r j else 0 with hr'
+  set b' : ι → ℝ≥0 := fun j => if j ∈ t.net.flowsThrough h then Bhp j else 0 with hb'
+  have hsum : (∑ j ∈ Finset.univ.filter (fun j => j < i), r' j)
+      = ∑ j ∈ Finset.univ.filter (fun j => j < i ∧ j ∈ t.net.flowsThrough h), t.r j := by
+    rw [Finset.sum_filter, Finset.sum_filter]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    simp only [hr']
+    by_cases hj : j < i <;> by_cases hjc : j ∈ t.net.flowsThrough h <;> simp [hj, hjc]
+  have hsubF : Finset.univ.filter (fun j => j < i ∧ j ∈ t.net.flowsThrough h)
+      ⊆ t.net.flowsThrough h := fun j hj => (Finset.mem_filter.mp hj).2.2
+  have hρ : (∑ j ∈ Finset.univ.filter (fun j => j < i), r' j) < t.R h := by
+    rw [hsum]; exact lt_of_le_of_lt (Finset.sum_le_sum_of_subset hsubF) (t.hstab h)
+  have hβ := isStrictMinimalServiceCurve_residualServer_spPeel
+    (S := t.S h) (R := t.R h) (T := t.T h) (r := r') (b := b') (i := i)
+    (t.hcaus h) (t.hβ h) (t.hSP h) hρ
+  have hpair : residualServer (fun As Ds => t.S h As Ds ∧
+      ∀ j, j < i → IsMaximalArrivalBound (⇑(As j)) (fun v => r' j * v + b' j)) i
+      (t.Ain h i) (t.Dout h i) := by
+    refine ⟨t.Ain h, t.Dout h, ⟨t.hp h, ?_⟩, rfl, rfl⟩
+    intro j hj
+    simp only [hr', hb']
+    by_cases hjc : j ∈ t.net.flowsThrough h
+    · simp only [if_pos hjc]; exact hBhp j hj hjc
+    · simp only [if_neg hjc]
+      rw [show t.Ain h j = 0 from t.hoff h j hjc, isMaximalArrivalBound_iff_increment]
+      intro s d; simp only [Curve.zero_apply, zero_add]; positivity
+  have hstab' : IsLocallyStableServer (fun s => t.r i * s + Bi h)
+      (rateLatency (t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j)
+        ((t.R h * t.T h + ∑ j ∈ Finset.univ.filter (fun j => j < i), b' j)
+          / (t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j))) := by
+    show longTermArrivalRate (fun s => t.r i * s + Bi h) < longTermServiceRate _
+    rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
+    have hlt : t.r i < t.R h - ∑ j ∈ Finset.univ.filter (fun j => j < i), r' j := by
+      rw [hsum, lt_tsub_iff_right]
+      calc t.r i + ∑ j ∈ Finset.univ.filter (fun j => j < i ∧ j ∈ t.net.flowsThrough h), t.r j
+          = ∑ j ∈ insert i (Finset.univ.filter
+              (fun j => j < i ∧ j ∈ t.net.flowsThrough h)), t.r j := by
+            rw [Finset.sum_insert (by simp)]
+        _ ≤ ∑ j ∈ t.net.flowsThrough h, t.r j :=
+            Finset.sum_le_sum_of_subset (Finset.insert_subset hh hsubF)
+        _ < t.R h := t.hstab h
+    exact_mod_cast hlt
+  exact isGloballyStableServer_of_isLocallyStableServer
+    (isCausal_residualServer (fun A D hAD => t.hcaus h A D hAD.1) i) hβ hpair (hBin h hh) hstab'
+
 end Traj
 
 end DeepWiki.SpNetwork

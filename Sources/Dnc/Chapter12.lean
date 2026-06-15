@@ -240,6 +240,13 @@ flow `i`'s per-hop SP residual along its list path), then aggregating via
 (remaining-distance) priority order. -/
 alias thm_12_3 := SpNetwork.Traj.isGloballyStable
 
+/-- **Theorem 12.3, per-flow form** (library strengthening): in a locally stable static-priority
+network *each individual flow* `i` has a bounded backlogged period at every server it crosses — not
+merely the per-server aggregate. Flow `i` sees the SP residual `β_{R^(h) − ∑_{j<i, j∈Fl h} rⱼ, ·}`
+and is locally stable against it (`∑_{j≤i, j∈Fl h} rⱼ ≤ ∑_{Fl h} rⱼ < R^(h)`). The library's
+`SpNetwork.Traj.isFlowGloballyStable`. -/
+alias thm_12_3_perFlow := SpNetwork.Traj.isFlowGloballyStable
+
 /-- **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters — under aggregate
 local stability `∑_{j∈Fl(h)} rⱼ < R^(h)` at every server, there is a flow `i` (the
 one minimizing `rⱼ/φⱼ`) below its GPS share at every server it crosses,
