@@ -12,7 +12,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPriority
 import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
 import DeepWiki.NetworkCalculus.ServiceCurveMinimal
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 7: Multiple Flows Crossing One Server
 Book-numbered catalog entries for this chapter, each linked to the

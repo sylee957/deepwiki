@@ -1,6 +1,6 @@
 /-! # Source: Deterministic Network Calculus
 Metadata for the source book that the `DeepWiki.NetworkCalculus` library
-formalizes. Its catalog files (`Sources.Dnc.*`) restate each book item —
+formalizes. Its catalog files (`Sources.Doi_10_1002_9781119440284.*`) restate each book item —
 named by its book number — and discharge it with the library. -/
 
 namespace DeepWiki.Dnc

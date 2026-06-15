@@ -4,7 +4,7 @@ import DeepWiki.NetworkCalculus.DioidFunctions
 import DeepWiki.NetworkCalculus.Closures
 import DeepWiki.NetworkCalculus.Additivity
 import DeepWiki.NetworkCalculus.Deconvolution
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 2: The (min,plus) Functions Semi-ring
 Each numbered item of the book's Chapter 2 is one declaration named by its
@@ -12,7 +12,7 @@ book number: a `theorem` (the book-faithful statement, discharged by the
 `DeepWiki` library) for theorems/propositions/lemmas, and an `abbrev`
 aliasing the library declaration for definitions. The book numbering lives
 here in the catalog, never in the library; the citation (section, page) is
-in each docstring, the source's DOI in `Sources.Dnc.Source`.
+in each docstring, the source's DOI in `Sources.Doi_10_1002_9781119440284.Source`.
 
 (Library import paths are `Book.…` until the topic rename to
 `DeepWiki.NetworkCalculus.…`.) -/

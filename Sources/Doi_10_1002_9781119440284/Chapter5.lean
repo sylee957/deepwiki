@@ -18,7 +18,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveMinimal
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
 import DeepWiki.NetworkCalculus.ServiceCurveStrictMinimal
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 5: Network Calculus Basics: a Server Crossed by a Single Flow
 Book-numbered catalog entries for this chapter, each linked to the

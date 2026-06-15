@@ -18,7 +18,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkScalingInstability
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
 Book-numbered catalog entries for this chapter, each linked to the

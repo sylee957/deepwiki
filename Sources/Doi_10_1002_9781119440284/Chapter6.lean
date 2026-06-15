@@ -5,7 +5,7 @@ import DeepWiki.NetworkCalculus.ServersControlFeedbackWindow
 import DeepWiki.NetworkCalculus.ServersControlTandem
 import DeepWiki.NetworkCalculus.ServersJitter
 import DeepWiki.NetworkCalculus.ServiceCurveStrictTandem
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 6: Single Flow Crossing Several Servers
 Book-numbered catalog entries for this chapter, each linked to the

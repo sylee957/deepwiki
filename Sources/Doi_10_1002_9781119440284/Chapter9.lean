@@ -17,7 +17,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
 Book-numbered catalog entries for this chapter, each linked to the

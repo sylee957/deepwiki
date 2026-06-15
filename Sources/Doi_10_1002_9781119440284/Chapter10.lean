@@ -16,7 +16,7 @@ import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
 import DeepWiki.NetworkCalculus.NetworkTopology
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
 Book-numbered catalog entries for this chapter, each linked to the

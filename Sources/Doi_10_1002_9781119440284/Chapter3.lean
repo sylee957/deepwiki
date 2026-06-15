@@ -18,7 +18,7 @@ import DeepWiki.NetworkCalculus.RealCurvesAdditivity
 import DeepWiki.NetworkCalculus.RealCurvesConv
 import DeepWiki.NetworkCalculus.RealCurvesDeconv
 import DeepWiki.NetworkCalculus.RealCurvesDeviations
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 3: Sub-classes of Functions
 Book-numbered catalog entries for this chapter, each linked to the

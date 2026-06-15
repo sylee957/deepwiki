@@ -4,7 +4,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
-import Sources.Dnc.Source
+import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
 Book-numbered catalog entries for this chapter, each linked to the
