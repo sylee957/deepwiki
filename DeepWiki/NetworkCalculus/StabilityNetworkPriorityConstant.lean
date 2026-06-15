@@ -102,4 +102,53 @@ theorem isGloballyStable_spPath_tokenBucket {ι : Type*} [Fintype ι] [LinearOrd
     rw [longTermArrivalRate_affine, longTermServiceRate_rateLatency]
     exact_mod_cast hstab k hk
 
+/-- **SP per-flow arrival bound (book setting)**: the propagation companion of
+`isGloballyStable_spPath_tokenBucket` — a token-bucket flow `γ_{r,b}` crossing a path of SP
+rate-latency servers (strictly-higher-priority flows token-bucket bounded per hop) has arrival
+curve `r·t + (b + r·∑_{j<k} T'ⱼ)` at every server `k` on its path, with `T'ⱼ` the reduced-residual
+latency `(Rⱼ·Tⱼ + ∑_{l<i}bHP ⱼ l)/(Rⱼ − ∑_{l<i}rHP l)`. Pure propagation
+(`isMaximalArrivalBound_path`), no local-stability hypothesis — this is the per-flow output bound
+the SP network assembly feeds downstream as the higher-priority constraint of lower-priority flows. -/
+theorem isMaximalArrivalBound_spPath_tokenBucket {ι : Type*} [Fintype ι] [LinearOrder ι] {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {i : ι} {r b : ℝ≥0}
+    {R T : ℕ → ℝ≥0} {rHP : ι → ℝ≥0} {bHP : ℕ → ι → ℝ≥0}
+    (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServer (Sf k)))
+    (hSP : ∀ k, IsStaticPriorityServerN (Sf k))
+    (hρ : ∀ k, (∑ j ∈ Finset.univ.filter (fun j => j < i), rHP j) < R k)
+    (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (fun As Ds => Sf k As Ds ∧
+      ∀ j, j < i → IsMaximalArrivalBound (⇑(As j)) (fun v => rHP j * v + bHP k j)) i
+      (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ R k - ∑ j ∈ Finset.univ.filter (fun j => j < i), rHP j) :
+    ∀ k, k ≤ n → IsMaximalArrivalBound (⇑(proc k))
+      (fun t => r * t + (b + r * ∑ j ∈ Finset.range k,
+        (R j * T j + ∑ l ∈ Finset.univ.filter (fun l => l < i), bHP j l)
+          / (R j - ∑ l ∈ Finset.univ.filter (fun l => l < i), rHP l))) := by
+  set Rred : ℕ → ℝ≥0 := fun k => R k - ∑ j ∈ Finset.univ.filter (fun j => j < i), rHP j with hRred
+  set Tred : ℕ → ℝ≥0 := fun k => (R k * T k + ∑ j ∈ Finset.univ.filter (fun j => j < i), bHP k j)
+    / (R k - ∑ j ∈ Finset.univ.filter (fun j => j < i), rHP j) with hTred
+  refine isMaximalArrivalBound_path
+    (S := fun k => residualServer (fun As Ds => Sf k As Ds ∧
+      ∀ j, j < i → IsMaximalArrivalBound (⇑(As j)) (fun v => rHP j * v + bHP k j)) i)
+    (β := fun k => rateLatency (Rred k) (Tred k))
+    (fun k => isCausal_residualServer (fun A D hAD => hcaus k A D hAD.1) i)
+    (fun k => isStrictMinimalServiceCurve_residualServer_spPeel (hcaus k) (hβf k) (hSP k) (hρ k))
+    id proc (fun k t => r * t + (b + r * ∑ j ∈ Finset.range k, Tred j)) hchain
+    (by simpa using harr0) ?_
+  intro k hk
+  show minDeconv (Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, Tred j)))
+      (Deviation.liftENN (rateLatency (Rred k) (Tred k)))
+    ≤ Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range (k + 1), Tred j))
+  have hres : Deviation.liftENN (rateLatency (Rred k) (Tred k)) = rateLatencyNN (Rred k) (Tred k) := by
+    funext v; rw [rateLatencyNN_coe]; rfl
+  have hαk : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, Tred j))
+      = affine r (b + r * ∑ j ∈ Finset.range k, Tred j) := by funext t; rw [affine_coe]
+  rw [hres, hαk, minDeconv_affine_rateLatencyNN r _ (Rred k) (Tred k) (hr k hk)]
+  have hαk1 : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range (k + 1), Tred j))
+      = affine r (b + r * ∑ j ∈ Finset.range k, Tred j + r * Tred k) := by
+    funext t; rw [affine_coe, Finset.sum_range_succ]; push_cast; ring_nf
+  rw [hαk1]
+
 end DeepWiki
