@@ -36,6 +36,13 @@ theorem le_legendre (f : ℝ≥0 → EReal) (t u : ℝ≥0) :
     (((t * u : ℝ≥0) : ℝ) : EReal) - f u ≤ legendre f t :=
   le_iSup (fun u => (((t * u : ℝ≥0) : ℝ) : EReal) - f u) u
 
+/-- **Fenchel–Young inequality**: `↑(t·u) ≤ 𝓛(f) t + f u` for every finite
+`f u` — rearranging the defining lower bound `le_legendre`. -/
+theorem fenchel_young (f : ℝ≥0 → EReal) (t u : ℝ≥0) (hb : f u ≠ ⊥) (ht : f u ≠ ⊤) :
+    (((t * u : ℝ≥0) : ℝ) : EReal) ≤ legendre f t + f u := by
+  have h := le_legendre f t u
+  rwa [EReal.sub_le_iff_le_add (.inl hb) (.inl ht)] at h
+
 /-- **The Legendre–Fenchel transform is convex** (for a proper curve `f`, never
 `⊥`): it is the pointwise supremum of the affine slices `t ↦ ↑(t·u) − f u`, and
 a supremum of affine maps is convex. For each `u` the slice lies below the
