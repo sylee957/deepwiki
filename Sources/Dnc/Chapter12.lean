@@ -9,6 +9,7 @@ import DeepWiki.NetworkCalculus.RealCurvesRates
 import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import DeepWiki.NetworkCalculus.StabilityNetworkGps
+import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -224,6 +225,13 @@ flow `i` the share `(φᵢ/∑ⱼ φⱼ)·β` independent of cross-traffic). The
 `isGloballyStableServer_gps_of_rate_lt`. (The network-wide statement quantifies
 this over all flows and servers; not formalized.) -/
 alias thm_12_4 := isGloballyStableServer_gps_of_rate_lt
+
+/-! **Beyond the book's SP/FDF/GPS** (library extension, no separate book number): the
+same compose-the-residual argument gives per-flow global stability under the frame/fair
+schedulers whose residual service curves are formalized in Chapter 8 — DRR
+(`isGloballyStableServer_drr`, via `drrResidual`), WRR (`isGloballyStableServer_wrr`, via
+`wrrResidual`), and TDMA (`isGloballyStableServer_tdma`, via `tdmaResidual`): a flow
+locally stable against its scheduler residual is globally stable. -/
 
 /-- **Definition 12.4** (§12.4.2, p.284): the scaled flow `m·A` of a
 cumulative process `A` with factor `m ∈ ℝ≥0`. The library's `scaledFlow`. -/
