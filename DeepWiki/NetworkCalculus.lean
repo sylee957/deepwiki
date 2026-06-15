@@ -59,6 +59,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import DeepWiki.NetworkCalculus.PacketCurves
 import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.Servers
 import DeepWiki.NetworkCalculus.ClosuresReal
 import DeepWiki.NetworkCalculus.ArrivalCurves

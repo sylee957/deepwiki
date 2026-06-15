@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -62,6 +63,23 @@ theorem thm_11_1_tandem {α : ℝ≥0 → ℝ≥0} {β₁ β₂ : ℝ≥0 → �
     (hβ₁mono : Monotone β₁) (hβ₂mono : Monotone β₂) (hβ₁0 : β₁ 0 = 0) (hβ₂0 : β₂ 0 = 0) :
     worstCaseTandemDelay α β₁ β₂ = (hDev (Deviation.liftENN α) (minConv β₁ β₂) : ℝ≥0∞) :=
   worstCaseTandemDelay_eq_hDev_conv hαmono hα0 hαsub hβ₁mono hβ₂mono hβ₁0 hβ₂0
+
+/-- **Theorem 11.1, n-server single-flow specialization** (§11.1.3, arbitrary path
+length) — the worst-case end-to-end delay of a single flow through a tandem of
+servers `β₀ :: βs` (`worstCaseChainDelay`, the optimum over all feasible chain
+trajectories) equals the closed-form `hDev(α, β₀ ∗ β₁ ∗ ⋯)` against the chain
+convolution. The per-hop service constraints collapse inductively (by `minConv`
+associativity) to one concatenated server; the greedy chain attains the bound. The
+library's `worstCaseChainDelay_eq_hDev_minConvChain` (recovers `thm_11_1_singleNode`
+at `βs = []` and `thm_11_1_tandem` at `βs = [β₂]`). (Single flow, no cross-traffic;
+the multi-flow strict improvement of §11.1 needs the finite-LP construction and is
+not formalized.) -/
+theorem thm_11_1_chain {α : ℝ≥0 → ℝ≥0} {β₀ : ℝ≥0 → ℝ≥0∞} {βs : List (ℝ≥0 → ℝ≥0∞)}
+    (hαmono : Monotone α) (hα0 : IsNullAtOrigin α) (hαsub : IsSubadditive α)
+    (hβ₀mono : Monotone β₀) (hβsmono : ∀ γ ∈ βs, Monotone γ)
+    (hβ₀0 : β₀ 0 = 0) (hβs0 : ∀ γ ∈ βs, γ 0 = 0) :
+    worstCaseChainDelay α β₀ βs = (hDev (Deviation.liftENN α) (minConvChain β₀ βs) : ℝ≥0∞) :=
+  worstCaseChainDelay_eq_hDev_minConvChain hαmono hα0 hαsub hβ₀mono hβsmono hβ₀0 hβs0
 
 /-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
 
