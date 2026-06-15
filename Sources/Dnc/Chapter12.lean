@@ -8,6 +8,7 @@ import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 import DeepWiki.NetworkCalculus.RealCurvesRates
 import DeepWiki.NetworkCalculus.StabilityNetworkInstance
 import DeepWiki.NetworkCalculus.StabilityNetworkPriority
+import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import Sources.Dnc.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -215,7 +216,14 @@ alias thm_12_2 := isGloballyStableServer_staticPriority_of_rate_lt
 
 /-! **Lemma 12.5** (§12.3.3, p.279): GPS with fixed parameters: with αᵢ=γ_{rᵢ,bᵢ} arrival curves and β^(h)=β_{R^(h),T^(h)} strict service, there is a flow i such that for every server h∈p(i): rᵢ < φᵢ · R^(h)/(∑_{j∈Fl(h)} φⱼ). Not formalized in the library. -/
 
-/-! **Theorem 12.4** (§12.3.3, p.279): GPS with constant rates: the local stability condition is a sufficient condition for global stability. Not formalized in the library. -/
+/-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
+with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
+as soon as its rate stays below its weighted service share,
+`r(αᵢ) < (φᵢ/∑ⱼ φⱼ)·R(β)` — the local-stability condition for `i` (GPS gives
+flow `i` the share `(φᵢ/∑ⱼ φⱼ)·β` independent of cross-traffic). The library's
+`isGloballyStableServer_gps_of_rate_lt`. (The network-wide statement quantifies
+this over all flows and servers; not formalized.) -/
+alias thm_12_4 := isGloballyStableServer_gps_of_rate_lt
 
 /-- **Definition 12.4** (§12.4.2, p.284): the scaled flow `m·A` of a
 cumulative process `A` with factor `m ∈ ℝ≥0`. The library's `scaledFlow`. -/

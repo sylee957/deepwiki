@@ -121,6 +121,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkPriority
 import DeepWiki.NetworkCalculus.ServersResidualPriorityStrict
 import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
 import DeepWiki.NetworkCalculus.ServersResidualGps
+import DeepWiki.NetworkCalculus.StabilityNetworkGps
 import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
 import DeepWiki.NetworkCalculus.ServersResidualGpsStrict
 import DeepWiki.NetworkCalculus.ServersResidualPmoo

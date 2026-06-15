@@ -42,6 +42,15 @@ theorem longTermServiceRate_mono {β₁ β₂ : ℝ≥0 → ℝ≥0} (h : ∀ t,
   gcongr
   exact_mod_cast h t
 
+/-- Scaling the service curve scales its long-term rate:
+`R(c·β) = c · R(β)` (the constant factors out of the `liminf`). -/
+theorem longTermServiceRate_const_mul (c : ℝ≥0) (β : ℝ≥0 → ℝ≥0) :
+    longTermServiceRate (fun t => c * β t) = (c : ℝ≥0∞) * longTermServiceRate β := by
+  simp only [longTermServiceRate]
+  rw [← ENNReal.liminf_const_mul_of_ne_top (a := (c : ℝ≥0∞)) ENNReal.coe_ne_top]
+  refine Filter.liminf_congr (Filter.Eventually.of_forall fun t => ?_)
+  rw [ENNReal.coe_mul, mul_div_assoc]
+
 /-- A truncated difference splits the service rate below: `R(β) ≤ r(α) + R(β − α)`.
 Pointwise `β t ≤ α t + (β t − α t)`, so `R(β) = liminf (β/t) ≤ liminf (α/t +
 (β−α)/t) ≤ limsup (α/t) + liminf ((β−α)/t)` by the mixed bound. -/
