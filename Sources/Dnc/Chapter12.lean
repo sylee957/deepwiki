@@ -295,7 +295,7 @@ not-yet-peeled critical flow `i ∈ J` is served by the rate-latency strict serv
 reduced rate `R−ρ` (`residualCurve β_{R,T} (ρ·v+b) = β_{R−ρ,·}`), and the GPS share carves
 flow `i`'s slice. The library's `isStrictMinimalServiceCurve_residualServer_gpsPeel`; its
 rate exceeds `rᵢ` by `lemma_12_5_residual`. This is the induction step at one server; the
-cyclic induction over the whole network remains unformalized. -/
+whole-network cyclic induction is assembled in `thm_12_5`. -/
 alias thm_12_5_peelStep := isStrictMinimalServiceCurve_residualServer_gpsPeel
 
 /-- **Theorem 12.5**, the network-level theorem for the shared-path tandem (§12.3.3,
@@ -308,9 +308,9 @@ active-set critical flow being below its GPS share of the residual capacity
 per-flow induction body `isMaximalArrivalBound_gpsPeelPath_tokenBucket`), recurse, then
 aggregate (`Network.isGloballyStable_of_perFlow_bounds`). The only hypothesis beyond the GPS
 structure is aggregate local stability `∑ᵢ rᵢ < R^(h)`. The library's
-`GpsTandem.isGloballyStable_sharedPath_tandem` — the first *fully derived* (no assumed
-per-flow bound) network-level instance of Theorem 12.5. The general variable-per-server-
-population network (the list-path↔hop-index bridge) is the remaining generalization. -/
+`GpsTandem.isGloballyStable_sharedPath_tandem` — a *fully derived* (no assumed per-flow bound)
+network-level instance of Theorem 12.5, a corollary of the general `thm_12_5` (arbitrary
+variable-per-server-population routing) specialized to the shared-path line. -/
 alias thm_12_5_tandem := GpsTandem.isGloballyStable_sharedPath_tandem
 
 /-- **Theorem 12.5** (§12.3.3, p.279–280), the full general theorem: a locally stable
@@ -335,8 +335,9 @@ with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
 as soon as its rate stays below its weighted service share,
 `r(αᵢ) < (φᵢ/∑ⱼ φⱼ)·R(β)` — the local-stability condition for `i` (GPS gives
 flow `i` the share `(φᵢ/∑ⱼ φⱼ)·β` independent of cross-traffic). The library's
-`isGloballyStableServer_gps_of_rate_lt`. (The network-wide statement quantifies
-this over all flows and servers; not formalized.) -/
+`isGloballyStableServer_gps_of_rate_lt`. (The network-wide statement — quantified
+over all flows and servers, with the peeling that handles flows above their raw
+share — is `thm_12_5`.) -/
 alias thm_12_4 := isGloballyStableServer_gps_of_rate_lt
 
 /-! **Beyond the book's SP/FDF/GPS** (library extension, no separate book number): the
