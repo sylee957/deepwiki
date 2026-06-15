@@ -14,6 +14,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantGeneral
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantTandem
 import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantGeneral
+import DeepWiki.NetworkCalculus.StabilityNetworkPriorityConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import Sources.Dnc.Source
 
@@ -386,6 +387,14 @@ alias thm_12_3_perFlowBacklog := SpNetwork.Traj.isFlowBacklogBounded
 
 @[inherit_doc thm_12_3_perFlowBacklog]
 alias thm_12_5_perFlowBacklog := GpsNetwork.Traj.isFlowBacklogBounded
+
+/-- **Per-flow END-TO-END delay in a stable SP network** (library capstone, unifying Thm 12.3 with
+the §10.3.4 SP-PMOO end-to-end analysis): in a locally stable static-priority network, every flow
+with a nonempty path has a *finite end-to-end delay* (ingress → egress), via the SP-PMOO end-to-end
+rate-latency residual along its path — the per-hop trajectory realizes the `concatComp` chain
+(`concatComp_of_chain`), cross-traffic bounds come from `allBound`, stability from `∑_{Fl h}r < R^(h)`.
+The library's `SpNetwork.Traj.isFlowEndToEndDelayBounded`. -/
+alias thm_12_3_endToEndDelay := SpNetwork.Traj.isFlowEndToEndDelayBounded
 
 /-- **Theorem 12.4** (§12.3.3, p.279), per-flow sufficient direction: under GPS
 with strict aggregate service `β` and weights `φ`, flow `i` is globally stable
