@@ -168,6 +168,33 @@ theorem isGloballyStable_tandem
 
 open Deviation in
 omit [DecidableEq κ] in
+/-- **Arrival-bound propagation along a path**: the per-hop arrival bound
+`IsMaximalArrivalBound ⇑(proc k) (αs k)`, maintained as an induction invariant by
+propagating the ingress bound `αs 0` along the prefix (each hop's output bound
+`αs k ⊘ β(h k)` dominated by the next witness `αs (k+1)`). The `hinv` of
+`isGloballyStable_path`, exposed so the network assembly can read off each flow's
+arrival curve at every server it crosses (for `harr` aggregation). -/
+theorem isMaximalArrivalBound_path {n : ℕ}
+    {S : κ → Curve → Curve → Prop} {β : κ → ℝ≥0 → ℝ≥0}
+    (hc : ∀ h, IsCausal (S h)) (hβ : ∀ h, IsStrictMinimalServiceCurve (β h) (S h))
+    (h : ℕ → κ) (proc : ℕ → Curve) (αs : ℕ → ℝ≥0 → ℝ≥0)
+    (hchain : ∀ k, k < n → S (h k) (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (αs 0))
+    (hprop : ∀ k, k < n → minDeconv (liftENN (αs k)) (liftENN (β (h k))) ≤ liftENN (αs (k + 1))) :
+    ∀ k, k ≤ n → IsMaximalArrivalBound (⇑(proc k)) (αs k) := by
+  intro k
+  induction k with
+  | zero => intro _; exact harr0
+  | succ m ih =>
+    intro hm
+    have hmlt : m < n := Nat.lt_of_succ_le hm
+    have hout := isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve
+      (hc (h m)) (hβ (h m)) (hchain m hmlt)
+      (isMaximalArrivalBound_liftENN_iff.mpr (ih hmlt.le))
+    exact isMaximalArrivalBound_liftENN_iff.mp (hout.mono (hprop m hmlt))
+
+open Deviation in
+omit [DecidableEq κ] in
 /-- **Single-flow feed-forward path global stability** (every hop's bound
 derived). A flow crosses servers `h 0, h 1, …, h (n-1)` in series (`proc k` is
 its process entering hop `k`, served by `S (h k)` to `proc (k+1)`), with ingress
@@ -186,17 +213,7 @@ theorem isGloballyStable_path {n : ℕ}
     (hprop : ∀ k, k < n → minDeconv (liftENN (αs k)) (liftENN (β (h k))) ≤ liftENN (αs (k + 1)))
     (hstab : ∀ k, k < n → IsLocallyStableServer (αs k) (β (h k))) :
     ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) := by
-  have hinv : ∀ k, k ≤ n → IsMaximalArrivalBound (⇑(proc k)) (αs k) := by
-    intro k
-    induction k with
-    | zero => intro _; exact harr0
-    | succ m ih =>
-      intro hm
-      have hmlt : m < n := Nat.lt_of_succ_le hm
-      have hout := isMaximalArrivalBound_output_of_isStrictMinimalServiceCurve
-        (hc (h m)) (hβ (h m)) (hchain m hmlt)
-        (isMaximalArrivalBound_liftENN_iff.mpr (ih hmlt.le))
-      exact isMaximalArrivalBound_liftENN_iff.mp (hout.mono (hprop m hmlt))
+  have hinv := isMaximalArrivalBound_path hc hβ h proc αs hchain harr0 hprop
   intro k hk
   exact isGloballyStableServer_of_isLocallyStableServer (hc (h k)) (hβ (h k))
     (hchain k hk) (hinv k hk.le) (hstab k hk)
