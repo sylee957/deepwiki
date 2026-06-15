@@ -6,6 +6,7 @@ import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelConv
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
+import DeepWiki.NetworkCalculus.LegendreFenchelConvExamples
 import DeepWiki.NetworkCalculus.ConvolutionContinuity
 import DeepWiki.NetworkCalculus.ConvolutionMinimum
 import DeepWiki.NetworkCalculus.PseudoInverse
@@ -253,5 +254,27 @@ proper curves `f`, `g` (never `⊥`). The library's `legendre_legendreConv`. -/
 theorem prop_3_15_conv {f g : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) (hg : ∀ v, g v ≠ ⊥) :
     legendre (legendreConv f g) = legendre f + legendre g :=
   legendre_legendreConv hf hg
+
+/-- **Proposition 3.15**, applied to the rate-latency curve (§3.3.2, p.54): the
+EReal/Legendre-domain decomposition `β_{R,T} = λ_R ⊗ δ_T` (the inf-convolution
+sibling of `prop_3_4_rateLatency`). The library's `rateLatencyEReal_eq_legendreConv`. -/
+theorem prop_3_15_rateLatency_legendreConv (R T : ℝ≥0) :
+    rateLatencyEReal R T = legendreConv (rateEReal R) (delayEReal T) :=
+  rateLatencyEReal_eq_legendreConv R T
+
+/-- **Proposition 3.15**, applied to the rate-latency curve (§3.3.2, p.54):
+`𝓛(β_{R,T}) = 𝓛(λ_R) + 𝓛(δ_T)` via the convolution-to-sum identity on
+`β_{R,T} = λ_R ⊗ δ_T`. The library's `legendre_rateLatencyEReal_eq_add`. -/
+theorem prop_3_15_rateLatency_transform (R T : ℝ≥0) :
+    legendre (rateLatencyEReal R T)
+      = legendre (rateEReal R) + legendre (delayEReal T) :=
+  legendre_rateLatencyEReal_eq_add R T
+
+/-- **Proposition 3.15**, consistency cross-check (§3.3.2, p.54): the two ways of
+computing `𝓛(β_{R,T})` agree, forcing `δ_R + λ_T = λ_T ⊔ δ_R`. The library's
+`delayEReal_add_rateEReal_eq_sup`. -/
+theorem prop_3_15_rateLatency_consistency (R T : ℝ≥0) :
+    delayEReal R + rateEReal T = rateEReal T ⊔ delayEReal R :=
+  delayEReal_add_rateEReal_eq_sup R T
 
 end DeepWiki.Dnc

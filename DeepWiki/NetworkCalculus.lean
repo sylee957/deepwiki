@@ -45,6 +45,7 @@ import DeepWiki.NetworkCalculus.ERealSupInf
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelConv
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
+import DeepWiki.NetworkCalculus.LegendreFenchelConvExamples
 import DeepWiki.NetworkCalculus.Stability
 import DeepWiki.NetworkCalculus.StabilityRates
 import DeepWiki.NetworkCalculus.StabilityGlobal
