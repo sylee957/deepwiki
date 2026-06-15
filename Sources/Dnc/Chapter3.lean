@@ -182,13 +182,17 @@ alias prop_3_13_sup := IsConvexEReal.sup
 `𝓛(f)(t)=⨆_{u≥0}(t·u−f(u))`. The library's `legendre`. -/
 noncomputable def def_3_6 := @legendre
 
-/-- **Proposition 3.14** (§3.3.2, p.53): a Legendre–Fenchel transform of a
-catalog curve — the burst-delay transforms to the rate curve, `𝓛(δ_d) = λ_d`.
-The library's `legendre_delayEReal`. (The reverse `𝓛(λ_R) = δ_R` and
-`𝓛(β_{R,T}) = λ_T ∨ δ_R` need the unbounded-supremum computations and are not
-yet formalized.) -/
+/-- **Proposition 3.14** (§3.3.2, p.53): Legendre–Fenchel transforms of the
+catalog curves form a duality between burst-delay and rate: `𝓛(δ_d) = λ_d`
+(`legendre_delayEReal`) and `𝓛(λ_R) = δ_R` (`legendre_rateEReal`). (The
+remaining `𝓛(β_{R,T}) = λ_T ∨ δ_R` is not yet formalized.) -/
 theorem prop_3_14_delay (d : ℝ≥0) : legendre (delayEReal d) = rateEReal d :=
   legendre_delayEReal d
+
+/-- **Proposition 3.14** (§3.3.2, p.53), rate direction: `𝓛(λ_R) = δ_R` — the
+rate curve's transform is the burst-delay. The library's `legendre_rateEReal`. -/
+theorem prop_3_14_rate (R : ℝ≥0) : legendre (rateEReal R) = delayEReal R :=
+  legendre_rateEReal R
 
 /-- **Proposition 3.15**, non-decreasing (§3.3.2, p.54): `𝓛(f)` is
 non-decreasing (`monotone_legendre`); also antitone in `f`

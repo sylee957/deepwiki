@@ -10,6 +10,42 @@ back to the burst-delay `δ_R`. Each is a supremum of affine slices computed by
 namespace DeepWiki
 
 open scoped Classical NNReal ENNReal
+open Filter
+
+/-- **𝓛(λ_R) = δ_R** (Proposition 3.14): the rate curve's Legendre–Fenchel
+transform is the burst-delay. For `t ≤ R` every slice `↑((t−R)·u)` is `≤ 0`
+(supremum `0` at `u = 0`); for `t > R` the slices `↑((t−R)·u)` are unbounded
+(supremum `⊤`). -/
+theorem legendre_rateEReal (R : ℝ≥0) : legendre (rateEReal R) = delayEReal R := by
+  funext t
+  rw [legendre_apply]
+  rcases le_or_gt t R with ht | ht
+  · rw [show delayEReal R t = 0 from delay_eq_zero R ht]
+    apply le_antisymm
+    · refine iSup_le fun u => ?_
+      rw [rateEReal_apply, ← EReal.coe_sub, EReal.coe_nonpos]
+      have h : ((t * u : ℝ≥0) : ℝ) ≤ ((R * u : ℝ≥0) : ℝ) := by
+        exact_mod_cast mul_le_mul' ht (le_refl u)
+      linarith
+    · refine le_trans (le_of_eq ?_) (le_iSup _ (0 : ℝ≥0))
+      rw [rateEReal_apply]; simp
+  · rw [show delayEReal R t = ⊤ from delay_eq_top R ht, iSup_eq_top]
+    intro b hb
+    rcases eq_or_ne b ⊥ with hbot | hbot
+    · refine ⟨0, ?_⟩
+      rw [hbot, rateEReal_apply]; simp
+    · obtain ⟨M, rfl⟩ : ∃ M : ℝ, b = (M : EReal) :=
+        ⟨b.toReal, (EReal.coe_toReal hb.ne hbot).symm⟩
+      have hδ : (0 : ℝ) < (t : ℝ) - (R : ℝ) := by
+        have : (R : ℝ) < (t : ℝ) := by exact_mod_cast ht
+        linarith
+      refine ⟨Real.toNNReal (M / ((t : ℝ) - (R : ℝ))) + 1, ?_⟩
+      rw [rateEReal_apply, ← EReal.coe_sub, EReal.coe_lt_coe_iff]
+      have hM : M ≤ ((t : ℝ) - (R : ℝ)) * (Real.toNNReal (M / ((t : ℝ) - (R : ℝ))) : ℝ) := by
+        rw [mul_comm]
+        exact (div_le_iff₀ hδ).mp (Real.le_coe_toNNReal _)
+      push_cast
+      nlinarith [hM, hδ]
 
 /-- **𝓛(δ_d) = λ_d** (Proposition 3.14): the burst-delay's Legendre–Fenchel
 transform is the rate curve. The slices `↑(t·u) − δ_d(u)` are `↑(t·u)` for
