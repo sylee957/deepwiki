@@ -228,4 +228,44 @@ theorem isGloballyStable_gpsPathOn_tokenBucket {ι : Type*} {n : ℕ}
       ← ENNReal.coe_mul]
     exact_mod_cast hstab k hk
 
+/-- **The critical flow's per-server arrival bound** (the `σ` the network harr
+aggregation consumes): along a path of GPS servers with rate-latency aggregate
+service and `Fl(h)`-shares, a token-bucket flow `γ_{r,b}` (with `r ≤` its share at
+each hop) has arrival curve `r·t + (b + r·∑_{j<k} Tⱼ)` at every server `k` on its
+path — the ingress burst grown by the accumulated `r·∑T`. Pure propagation
+(`isMaximalArrivalBound_path`), no local-stability hypothesis. -/
+theorem isMaximalArrivalBound_gpsPathOn_tokenBucket {ι : Type*} {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {φ : ι → ℝ≥0} {i : ι} {r b : ℝ≥0}
+    {R T : ℕ → ℝ≥0} {J : ℕ → Finset ι} (hi : ∀ k, i ∈ J k) (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (rateLatency (R k) (T k)) (aggregateServerOn (Sf k) (J k)))
+    (hgps : ∀ k, IsGpsServerN φ (Sf k)) (proc : ℕ → Curve)
+    (hchain : ∀ k, k < n → residualServer (Sf k) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (fun t => r * t + b))
+    (hr : ∀ k, k < n → r ≤ (φ i / ∑ j ∈ J k, φ j) * R k) :
+    ∀ k, k ≤ n → IsMaximalArrivalBound (⇑(proc k))
+      (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, T j)) := by
+  refine isMaximalArrivalBound_path (S := fun k => residualServer (Sf k) i)
+    (β := fun k => fun v => (φ i / ∑ j ∈ J k, φ j) * rateLatency (R k) (T k) v)
+    (fun k => isCausal_residualServer (hcaus k) i)
+    (fun k => isStrictMinimalServiceCurve_residualServer_of_isGps_on (hi k) (hcaus k) (hβf k) (hgps k))
+    id proc (fun k t => r * t + (b + r * ∑ j ∈ Finset.range k, T j)) hchain (by simpa using harr0) ?_
+  intro k hk
+  show minDeconv (Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, T j)))
+      (Deviation.liftENN (fun v => (φ i / ∑ j ∈ J k, φ j) * rateLatency (R k) (T k) v))
+    ≤ Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range (k + 1), T j))
+  have hres : Deviation.liftENN (fun v => (φ i / ∑ j ∈ J k, φ j) * rateLatency (R k) (T k) v)
+      = rateLatencyNN ((φ i / ∑ j ∈ J k, φ j) * R k) (T k) := by
+    funext v
+    rw [rateLatencyNN_coe]
+    show (((φ i / ∑ j ∈ J k, φ j) * (R k * (v - T k)) : ℝ≥0) : ℝ≥0∞)
+      = ((((φ i / ∑ j ∈ J k, φ j) * R k) * (v - T k) : ℝ≥0) : ℝ≥0∞)
+    rw [mul_assoc]
+  have hαk : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range k, T j))
+      = affine r (b + r * ∑ j ∈ Finset.range k, T j) := by funext t; rw [affine_coe]
+  rw [hres, hαk, minDeconv_affine_rateLatencyNN r _ ((φ i / ∑ j ∈ J k, φ j) * R k) (T k) (hr k hk)]
+  have hαk1 : Deviation.liftENN (fun t => r * t + (b + r * ∑ j ∈ Finset.range (k + 1), T j))
+      = affine r (b + r * ∑ j ∈ Finset.range k, T j + r * T k) := by
+    funext t; rw [affine_coe, Finset.sum_range_succ]; push_cast; ring_nf
+  rw [hαk1]
+
 end DeepWiki
