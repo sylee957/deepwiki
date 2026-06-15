@@ -10,3 +10,8 @@ import Sources.Doi_10_1002_9781119440284.Chapter9
 import Sources.Doi_10_1002_9781119440284.Chapter10
 import Sources.Doi_10_1002_9781119440284.Chapter11
 import Sources.Doi_10_1002_9781119440284.Chapter12
+
+import Sources.Doi_10_1017_CBO9780511814105.Source
+import Sources.Doi_10_1017_CBO9780511814105.Chapter2
+import Sources.Doi_10_1017_CBO9780511814105.Chapter3
+import Sources.Doi_10_1017_CBO9780511814105.Chapter4
