@@ -11,6 +11,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualSfa
 import DeepWiki.NetworkCalculus.ServersResidualSfaDelay
 import DeepWiki.NetworkCalculus.ServersResidualGfaDelay
+import DeepWiki.NetworkCalculus.ServersResidualSpPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
@@ -76,6 +77,17 @@ alias remark_10_gps_composition := not_forall_isGps_comp
 
 /-- **Theorem 3** (§10.3.4.1, p.241): Algorithm 3 (PMOO for static-priority, nested tandems): recursively β̃ᵢ over the nesting order; the building block formalized is that the chain of per-server static-priority residual servers offers flow i the end-to-end convolution β̃ᵢ = ∗_{h∈pᵢ}[β⁽ʰ⁾ − ∑_{j<i}αⱼ⁽ʰ⁾]⁺. -/
 alias alg_3_sp_pmoo := isMinimalServiceCurve_concatConv_spResidual
+
+/-- **SP-PMOO end-to-end delay/backlog** (performance consequence of Algorithm 3, §10.3.4.1): for
+left-continuous strict rate-latency static-priority servers with higher-priority cross-traffic
+aggregating to affine `∑_{j<i}αⱼ⁽ʰ⁾ = ρ h·v+bc h`, the chain folds to `β_{⨅(R h−ρ h),∑T'_h}`, so a
+token-bucket flow `γ_{r,b}` with `r ≤ ⨅(R h−ρ h)` has end-to-end delay ≤ ∑T'_h + b/⨅(R h−ρ h) and
+backlog ≤ r·∑T'_h+b over arbitrary `List` routing. The library's `delay_le_spPmoo_rateLatency` /
+`backlog_le_spPmoo_rateLatency`. -/
+alias spPmoo_end_to_end_delay := delay_le_spPmoo_rateLatency
+
+@[inherit_doc spPmoo_end_to_end_delay]
+alias spPmoo_end_to_end_backlog := backlog_le_spPmoo_rateLatency
 
 /-! **Example 10.2** (§10.3.4.1, p.241): SP-PMOO worked on the nested tandem of Figure 10.1 (bottom): computing β̃₂ = β⁽²⁾, β̃₃ = β⁽³⁾, β̃₁ = (β⁽¹⁾∗β⁽²⁾∗β⁽³⁾ − [β̃₂−α₂]⁺ − [β̃₃−α₃]⁺ …)⁺. Not formalized in the library. -/
 
