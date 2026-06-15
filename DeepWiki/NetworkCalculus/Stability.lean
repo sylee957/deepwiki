@@ -295,6 +295,18 @@ theorem scalingIterate_unbounded {m2 m4 d : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1)
   linearIterate_unbounded (not_lt.mp fun h => absurd ((scaling_gain_lt_one_iff h2 h4).mp h)
     (not_lt.mpr hge)) hd σ₀ M
 
+/-- **Local stability does not imply cyclic fix-point convergence** (§12.4.2, the punchline): for every
+threshold `M` there is a *locally stable* parameter choice (`m₁+m₄ < 1 ∧ m₂+m₃ < 1`) whose per-flow
+burst iteration `σₙ₊₁ = (m₂m₄/((1−m₂)(1−m₄)))·σₙ + d` exceeds `M` — so the network-calculus method has
+no finite end-to-end bound even though every server is locally stable. Witness `m₁ = m₃ = 0`,
+`m₂ = m₄ = ½` (gain `= 1`): local stability `m₁+m₄ < 1 ∧ m₂+m₃ < 1` is strictly weaker than the
+fix-point convergence `m₂+m₄ < 1`. -/
+theorem exists_locallyStable_scalingIterate_unbounded (d σ₀ M : ℝ≥0) (hd : 0 < d) :
+    ∃ m1 m2 m3 m4 : ℝ≥0, (m1 + m4 < 1 ∧ m2 + m3 < 1) ∧ m2 < 1 ∧ m4 < 1 ∧
+      ∃ n : ℕ, M ≤ (fun σ => m2 * m4 / ((1 - m2) * (1 - m4)) * σ + d)^[n] σ₀ := by
+  refine ⟨0, 1 / 2, 0, 1 / 2, ⟨by norm_num, by norm_num⟩, by norm_num, by norm_num, ?_⟩
+  exact scalingIterate_unbounded (by norm_num) (by norm_num) (by norm_num) hd σ₀ M
+
 /-- Faithfulness check against the book's §12.4.2 display: the coupled burst system
 `σ₁' = 1 + m₄σ₂'/(1−m₄)`, `σ₂' = 1 + m₂σ₁'/(1−m₂)` is solvable iff `m₂ + m₄ < 1`. -/
 example {m2 m4 : ℝ≥0} (h2 : m2 < 1) (h4 : m4 < 1) :

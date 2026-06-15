@@ -468,6 +468,12 @@ Thm 7.1 / Lemma 12.6) in `ℝ≥0` iff `m₂ + m₄ < 1`. The faithful coupled-s
 eliminating `σ₂'` recovers `ex_12_scalingInstability`. The library's `exists_scalingFixpointPair_iff`. -/
 alias ex_12_scalingInstability_pair := exists_scalingFixpointPair_iff
 
+/-- **§12.4.2 punchline** (p.284–285): local stability is *not sufficient* for the cyclic scaling
+network — there is a locally stable parameter choice (`m₁+m₄<1 ∧ m₂+m₃<1`, witness `m₁=m₃=0`,
+`m₂=m₄=½`) whose per-flow burst iteration diverges past every threshold, so the network-calculus
+method yields no finite end-to-end bound. The library's `exists_locallyStable_scalingIterate_unbounded`. -/
+alias ex_12_localStability_not_sufficient := exists_locallyStable_scalingIterate_unbounded
+
 /-- **§12.4.2 instability, dynamic form** (p.284–285): in the unstable regime `m₂ + m₄ ≥ 1` the cyclic
 scaling network's per-flow burst *iteration* `σₙ₊₁ = (m₂m₄/((1−m₂)(1−m₄)))·σₙ + d` is unbounded — the
 network-calculus method's fixed-point iteration diverges, yielding no finite end-to-end bound. The
