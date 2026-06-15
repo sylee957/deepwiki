@@ -3,10 +3,11 @@ import DeepWiki.NetworkCalculus.Convex
 /-! # The Legendre–Fenchel transform
 The (min,plus) Legendre–Fenchel transform `𝓛(f)(t) = ⨆_{u≥0} (t·u − f(u))`
 on curves `ℝ≥0 → EReal`. It is the pointwise supremum of the affine maps
-`t ↦ t·u − f(u)`, so it is non-decreasing and convex, and it turns the
-pointwise `min` into a `max`. (Its examples on the catalog curves and the
-biconjugate involution `𝓛(𝓛 f) = f` on convex non-decreasing curves are the
-deeper Fenchel–Moreau content, not formalized here.) -/
+`t ↦ t·u − f(u)`, so it is non-decreasing (`monotone_legendre`) and convex
+(`legendre_convex`, for a proper `f`), and it turns the pointwise `min` into a
+`max` (`legendre_inf`). (Its examples on the catalog curves and the biconjugate
+involution `𝓛(𝓛 f) = f` on convex non-decreasing curves are the deeper
+Fenchel–Moreau content, not formalized here.) -/
 
 namespace DeepWiki
 
@@ -34,6 +35,60 @@ theorem monotone_legendre (f : ℝ≥0 → EReal) : Monotone (legendre f) := by
 theorem le_legendre (f : ℝ≥0 → EReal) (t u : ℝ≥0) :
     (((t * u : ℝ≥0) : ℝ) : EReal) - f u ≤ legendre f t :=
   le_iSup (fun u => (((t * u : ℝ≥0) : ℝ) : EReal) - f u) u
+
+/-- **The Legendre–Fenchel transform is convex** (for a proper curve `f`, never
+`⊥`): it is the pointwise supremum of the affine slices `t ↦ ↑(t·u) − f u`, and
+a supremum of affine maps is convex. For each `u` the slice lies below the
+convex combination of `𝓛(f) s` and `𝓛(f) t` (via `le_legendre`), and the
+supremum inherits the bound. -/
+theorem legendre_convex {f : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) :
+    IsConvexEReal (legendre f) := by
+  intro s t p hp
+  rw [legendre_apply]
+  refine iSup_le fun u => ?_
+  have hP0 : (0 : EReal) ≤ ((p : ℝ) : EReal) := by exact_mod_cast p.coe_nonneg
+  have hQ0 : (0 : EReal) ≤ (((1 - p : ℝ≥0) : ℝ) : EReal) := by
+    exact_mod_cast (1 - p : ℝ≥0).coe_nonneg
+  have hPtop : ((p : ℝ) : EReal) ≠ ⊤ := EReal.coe_ne_top _
+  have hQtop : (((1 - p : ℝ≥0) : ℝ) : EReal) ≠ ⊤ := EReal.coe_ne_top _
+  rcases eq_or_ne (f u) ⊤ with hCtop | hCtop
+  · rw [hCtop, EReal.sub_top]; exact bot_le
+  · obtain ⟨c, hc⟩ : ∃ c : ℝ, f u = (c : EReal) :=
+      ⟨(f u).toReal, (EReal.coe_toReal hCtop (hf u)).symm⟩
+    have hhead : ((((p * s + (1 - p) * t) * u : ℝ≥0) : ℝ) : EReal)
+        = ((p : ℝ) : EReal) * (((s * u : ℝ≥0) : ℝ) : EReal)
+          + (((1 - p : ℝ≥0) : ℝ) : EReal) * (((t * u : ℝ≥0) : ℝ) : EReal) := by
+      rw [← EReal.coe_mul, ← EReal.coe_mul, ← EReal.coe_add]
+      congr 1
+      push_cast [NNReal.coe_sub hp]
+      ring
+    have hAs : (((s * u : ℝ≥0) : ℝ) : EReal) ≤ legendre f s + (c : EReal) := by
+      have h := le_legendre f s u
+      rw [hc, EReal.sub_le_iff_le_add (.inl (EReal.coe_ne_bot c)) (.inl (EReal.coe_ne_top c))] at h
+      exact h
+    have hBt : (((t * u : ℝ≥0) : ℝ) : EReal) ≤ legendre f t + (c : EReal) := by
+      have h := le_legendre f t u
+      rw [hc, EReal.sub_le_iff_le_add (.inl (EReal.coe_ne_bot c)) (.inl (EReal.coe_ne_top c))] at h
+      exact h
+    rw [hhead, hc]
+    refine (EReal.sub_le_iff_le_add (.inl (EReal.coe_ne_bot c)) (.inl (EReal.coe_ne_top c))).mpr ?_
+    calc ((p : ℝ) : EReal) * (((s * u : ℝ≥0) : ℝ) : EReal)
+          + (((1 - p : ℝ≥0) : ℝ) : EReal) * (((t * u : ℝ≥0) : ℝ) : EReal)
+        ≤ ((p : ℝ) : EReal) * (legendre f s + (c : EReal))
+          + (((1 - p : ℝ≥0) : ℝ) : EReal) * (legendre f t + (c : EReal)) :=
+          add_le_add (mul_le_mul_of_nonneg_left hAs hP0)
+            (mul_le_mul_of_nonneg_left hBt hQ0)
+      _ = (((p : ℝ) : EReal) * legendre f s + (((1 - p : ℝ≥0) : ℝ) : EReal) * legendre f t)
+          + (((p : ℝ) : EReal) * (c : EReal) + (((1 - p : ℝ≥0) : ℝ) : EReal) * (c : EReal)) := by
+          rw [EReal.left_distrib_of_nonneg_of_ne_top hP0 hPtop,
+            EReal.left_distrib_of_nonneg_of_ne_top hQ0 hQtop, add_add_add_comm]
+      _ = (((p : ℝ) : EReal) * legendre f s + (((1 - p : ℝ≥0) : ℝ) : EReal) * legendre f t)
+          + (c : EReal) := by
+          congr 1
+          rw [← EReal.coe_mul, ← EReal.coe_mul, ← EReal.coe_add]
+          congr 1
+          push_cast [NNReal.coe_sub hp]
+          ring
 
 /-- `𝓛` is antitone: a pointwise-larger curve has a pointwise-smaller
 transform (the subtracted term grows). -/

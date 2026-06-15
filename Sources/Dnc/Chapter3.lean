@@ -192,11 +192,18 @@ theorem prop_3_15_mono (f : ℝ≥0 → EReal) : Monotone (legendre f) :=
   monotone_legendre f
 
 /-- **Proposition 3.15**, min-to-max (§3.3.2, p.54): `𝓛(f∧g)=𝓛(f)∨𝓛(g)`.
-The remaining properties — `𝓛(f)` convex, `𝓛(f∗g)=𝓛(f)+𝓛(g)`, and the
-Fenchel–Moreau involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not
-yet formalized. -/
+The library's `legendre_inf`. -/
 theorem prop_3_15_inf (f g : ℝ≥0 → EReal) :
     legendre (f ⊓ g) = legendre f ⊔ legendre g :=
   legendre_inf f g
+
+/-- **Proposition 3.15**, convex (§3.3.2, p.54): `𝓛(f)` is convex for a proper
+curve `f` (never `⊥`) — a supremum of affine slices. The library's
+`legendre_convex`. (The remaining properties — `𝓛(f∗g)=𝓛(f)+𝓛(g)` and the
+Fenchel–Moreau involution `𝓛(𝓛 f)=f` for convex non-decreasing `f` — are not
+yet formalized.) -/
+theorem prop_3_15_convex {f : ℝ≥0 → EReal} (hf : ∀ u, f u ≠ ⊥) :
+    IsConvexEReal (legendre f) :=
+  legendre_convex hf
 
 end DeepWiki.Dnc
