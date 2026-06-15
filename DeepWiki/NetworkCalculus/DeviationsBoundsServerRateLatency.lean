@@ -59,4 +59,44 @@ theorem backlog_le_of_strictRateLatency_tokenBucket
   refine le_trans hbk ?_
   rw [vDev_tokenBucketNN_rateLatencyNN r b R T hr hT]
 
+/-- An affine increment bound `A(t+d) ≤ A(t) + (r·d + b)` is a token-bucket arrival curve: the two
+agree for `d > 0`, and the `d = 0` increment `A(t) ≤ A(t)` is vacuous. Lets the affine bounds
+produced by the network arrival propagation feed the `tokenBucketArrival` server bounds. -/
+theorem isMaximalArrivalBound_tokenBucketArrival_of_affine {A : Curve} {r b : ℝ≥0}
+    (h : IsMaximalArrivalBound (⇑A) (fun s => r * s + b)) :
+    IsMaximalArrivalBound (⇑A) (tokenBucketArrival r b) := by
+  rw [isMaximalArrivalBound_iff_increment] at h ⊢
+  intro t d
+  rcases eq_or_ne d 0 with hd | hd
+  · subst hd
+    have h0 : tokenBucketArrival r b 0 = 0 := by
+      simp [tokenBucketArrival, tokenBucketNN_apply, delayNN, delay_apply]
+    rw [h0]; simp
+  · have hval : tokenBucketArrival r b d = r * d + b := by
+      simp only [tokenBucketArrival, tokenBucketNN_apply_pos r b d hd]
+      rw [← ENNReal.coe_mul, ← ENNReal.coe_add, ENNReal.toNNReal_coe]
+    rw [hval]; exact h t d
+
+/-- **Delay bound, affine arrival**: the delay bound `T + b/R` for an input bounded by the affine
+increment `r·d + b` (the form the network arrival propagation produces). -/
+theorem delay_le_of_strictRateLatency_affine
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve (rateLatency R T) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (fun s => r * s + b))
+    (hR : 0 < R) (hr : r ≤ R) :
+    Deviation.delay (⇑A) (⇑D) ≤ ((T + b / R : ℝ≥0) : ℝ≥0∞) :=
+  delay_le_of_strictRateLatency_tokenBucket hc hβ hp
+    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hR hr
+
+/-- **Backlog bound, affine arrival**: the backlog bound `r·T + b` for an input bounded by the
+affine increment `r·d + b`. -/
+theorem backlog_le_of_strictRateLatency_affine
+    {S : Curve → Curve → Prop} {R T r b : ℝ≥0} {A D : Curve}
+    (hc : IsCausal S) (hβ : IsStrictMinimalServiceCurve (rateLatency R T) S)
+    (hp : S A D) (harr : IsMaximalArrivalBound (⇑A) (fun s => r * s + b))
+    (hr : r ≤ R) (hT : 0 < T) :
+    Deviation.backlog (⇑A) (⇑D) ≤ ((r * T + b : ℝ≥0) : ℝ≥0∞) :=
+  backlog_le_of_strictRateLatency_tokenBucket hc hβ hp
+    (isMaximalArrivalBound_tokenBucketArrival_of_affine harr) hr hT
+
 end DeepWiki
