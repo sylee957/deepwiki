@@ -181,6 +181,38 @@ theorem isGloballyStable_path {n : ℕ}
   exact isGloballyStableServer_of_isLocallyStableServer (hc (h k)) (hβ (h k))
     (hchain k hk) (hinv k hk.le) (hstab k hk)
 
+open Deviation in
+/-- **Separated-flow per-flow path stability** (multi-flow, multi-server,
+cross-traffic): flow `i` crosses a chain of `n`-servers `Sf 0, …, Sf (n-1)`,
+each with strict aggregate service `βf k`; at hop `k` its cross-traffic
+departures are `αcross k`-constrained, so it sees the residual
+`residualCurve (βf k) (αcross k)`. With its ingress curve `αs 0` propagated
+along the residual chain (the witness invariant `αs k`) and each hop locally
+stable, flow `i` has a bounded backlogged period at *every* server on its path.
+The residual-is-strict-service and the per-hop arrival bound are both derived
+(`isGloballyStable_path` over residual servers); only the cross-traffic bounds
+`αcross k` (computed by propagating the other flows in the SFA topological pass)
+are parameters. -/
+theorem isGloballyStable_residualPath {n : ℕ}
+    {Sf : ℕ → (ι → Curve) → (ι → Curve) → Prop} {βf αcross : ℕ → ℝ≥0 → ℝ≥0}
+    {i : ι} (hcaus : ∀ k, IsCausalN (Sf k))
+    (hβf : ∀ k, IsStrictMinimalServiceCurve (βf k) (aggregateServer (Sf k)))
+    (proc : ℕ → Curve) (αs : ℕ → ℝ≥0 → ℝ≥0)
+    (hchain : ∀ k, k < n → residualServer (fun A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Finset.univ.erase i, (D j) x) (αcross k)) i (proc k) (proc (k + 1)))
+    (harr0 : IsMaximalArrivalBound (⇑(proc 0)) (αs 0))
+    (hprop : ∀ k, k < n → minDeconv (liftENN (αs k))
+      (liftENN (residualCurve (βf k) (αcross k))) ≤ liftENN (αs (k + 1)))
+    (hstab : ∀ k, k < n → IsLocallyStableServer (αs k) (residualCurve (βf k) (αcross k))) :
+    ∀ k, k < n → IsGloballyStableServer (⇑(proc k)) (⇑(proc (k + 1))) :=
+  isGloballyStable_path
+    (S := fun k => residualServer (fun A D => Sf k A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Finset.univ.erase i, (D j) x) (αcross k)) i)
+    (β := fun k => residualCurve (βf k) (αcross k))
+    (fun k => isCausal_residualServer (fun A D hAD => hcaus k A D hAD.1) i)
+    (fun k => isStrictMinimalServiceCurve_residualServer (hcaus k) (hβf k))
+    id proc αs hchain harr0 hprop hstab
+
 /-! ## Book restatement (multiplexing ⟹ aggregate global stability)
 A server multiplexing flows `As` to `Ds` (`n`-server `S`), offering a strict
 service curve `β` to the aggregate, with the aggregate input

@@ -141,6 +141,16 @@ residual-service stability the SFA cross-traffic analysis composes along a path.
 fix-point step.) -/
 alias thm_12_residualStable := isGloballyStableServer_residual
 
+/-- **Separated-flow per-flow path stability** (multi-flow, multi-server, with
+cross-traffic): a flow crossing a chain of `n`-servers, each with strict
+aggregate service and `αcross`-constrained cross-traffic at that hop, sees the
+residual service curve at every hop and is globally stable at *all* of them —
+the SFA combination of `thm_12_pathStable` (multi-hop propagation) with
+`thm_12_residualStable` (blind-multiplexing residual). The library's
+`isGloballyStable_residualPath`; only the cross-traffic bounds `αcross k`
+(computed by the SFA topological pass over the other flows) are parameters. -/
+alias thm_12_sfaPathStable := isGloballyStable_residualPath
+
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
 assignment `α̂ = sSup {α | α ≤ F α}` (`canonicalArrivalAssignment`) is a fixed
