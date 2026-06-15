@@ -78,6 +78,14 @@ theorem isCausal_aggregateServer {ι : Type*} [Fintype ι]
   rw [Curve.sum_apply, Curve.sum_apply]
   exact Finset.sum_le_sum fun i _ => hc As Ds hp i t
 
+/-- **The residual server of a per-flow-causal `n`-server is causal**: flow
+`i`'s projected output never exceeds its projected input. -/
+theorem isCausal_residualServer {ι : Type*}
+    {S : (ι → Curve) → (ι → Curve) → Prop} (hc : IsCausalN S) (i : ι) :
+    IsCausal (residualServer S i) := by
+  rintro A D ⟨As, Ds, hp, rfl, rfl⟩
+  exact hc As Ds hp i
+
 /-- **The aggregate of an `n`-server is a server**: causality sums, and
 an input decomposes by loading it onto one flow. -/
 theorem isServer_aggregateServer {ι : Type*} [Fintype ι] [Nonempty ι]

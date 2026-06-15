@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.ServersMimo
+import DeepWiki.NetworkCalculus.ServersResidual
 import DeepWiki.NetworkCalculus.ArrivalCurvesOutputChain
 
 /-! # Per-flow trajectory wiring for network stability
@@ -40,6 +41,32 @@ theorem isGloballyStableServer_aggregateServer {ι : Type*} [Fintype ι]
     IsGloballyStableServer ⇑(∑ i, As i) ⇑(∑ i, Ds i) :=
   isGloballyStableServer_of_isLocallyStableServer
     (isCausal_aggregateServer hc) hβ (aggregateServer_sum hp) harr hstab
+
+/-- **Per-flow global stability under blind multiplexing** (the residual /
+cross-traffic case): in an `n`-server whose aggregate offers a strict service
+curve `βf`, flow `i` — with its cross-traffic departures `∑_{j≠i} Dⱼ`
+constrained by `αcross` and its own arrival constrained by `αi` — sees the
+*residual* service curve `residualCurve βf αcross`. If flow `i` is locally
+stable against that residual, it is globally stable. The residual being a strict
+service curve (`isStrictMinimalServiceCurve_residualServer`) and the residual
+server's causality (`isCausal_residualServer`) are derived; this is the genuine
+per-flow stability under arbitrary multiplexing. -/
+theorem isGloballyStableServer_residual {ι : Type*} [Fintype ι]
+    {S : (ι → Curve) → (ι → Curve) → Prop} {βf αcross αi : ℝ≥0 → ℝ≥0} {i : ι}
+    (hcaus : IsCausalN S)
+    (hβ : IsStrictMinimalServiceCurve βf (aggregateServer S))
+    {As Ds : ι → Curve} (hp : S As Ds)
+    (hcross : IsMaximalArrivalBound (fun x => ∑ j ∈ Finset.univ.erase i, (Ds j) x) αcross)
+    (harr : IsMaximalArrivalBound (⇑(As i)) αi)
+    (hstab : IsLocallyStableServer αi (residualCurve βf αcross)) :
+    IsGloballyStableServer (⇑(As i)) (⇑(Ds i)) :=
+  have hcaus' : IsCausalN (fun A D => S A D ∧ IsMaximalArrivalBound
+      (fun x => ∑ j ∈ Finset.univ.erase i, (D j) x) αcross) :=
+    fun A D hAD => hcaus A D hAD.1
+  isGloballyStableServer_of_isLocallyStableServer
+    (isCausal_residualServer hcaus' i)
+    (isStrictMinimalServiceCurve_residualServer hcaus hβ)
+    ⟨As, Ds, ⟨hp, hcross⟩, rfl, rfl⟩ harr hstab
 
 /-- **Rate conservation**: a causal server's output never has a larger
 long-term rate than its input (`D ≤ A`, so `r(D) ≤ r(A)`). The rate does not

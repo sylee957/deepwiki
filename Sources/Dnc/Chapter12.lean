@@ -131,6 +131,16 @@ generalization of `thm_12_tandemStable` and the per-flow feed-forward engine of
 §12.2. -/
 alias thm_12_pathStable := isGloballyStable_path
 
+/-- **Per-flow global stability under blind (arbitrary) multiplexing**: in an
+`n`-server with strict aggregate service `βf`, a flow whose cross-traffic
+departures are `αcross`-constrained sees the residual service curve
+`βf ⊖ αcross` (`residualCurve`); if locally stable against it, the flow is
+globally stable. The library's `isGloballyStableServer_residual` — the
+residual-service stability the SFA cross-traffic analysis composes along a path.
+(Deriving `αcross` by propagating the other flows' curves is the topological /
+fix-point step.) -/
+alias thm_12_residualStable := isGloballyStableServer_residual
+
 /-- **Theorem 12.1** (§12.2.3, p.275), fix-point sufficient condition — the
 Knaster–Tarski kernel: for a monotone propagation operator `F`, the candidate
 assignment `α̂ = sSup {α | α ≤ F α}` (`canonicalArrivalAssignment`) is a fixed
