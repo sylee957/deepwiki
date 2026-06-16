@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilner
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -81,6 +82,23 @@ theorem mt_soundness (T : TLTS Proc Act) {p q : Proc}
     (h : TLTS.TimedBisimilar T p q) (F : Mt Act D) :
     TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
   TLTS.timedBisimilar_mtSatState h F
+
+/-! ## §12.2 Negation in HML with time -/
+
+/-- **Proposition 12.1** (§12.2, p.229). The *negation* `Fᶜ` of a timed HML
+formula (De Morgan duality; negating `x = n` needs the disjunction `x < n ∨
+x > n`). The library's `Mt.neg`. -/
+abbrev mtNeg := @Mt.neg
+
+/-- **Proposition 12.1** (§12.2, p.229). `Fᶜ` exactly complements `F`:
+`(p, u) ⊨ Fᶜ` iff `(p, u) ⊭ F`, i.e. `⟦Fᶜ⟧ = ES(Proc) ∖ ⟦F⟧`. -/
+theorem prop_12_1 (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
+    TLTS.MtSat T p u F.neg ↔ ¬ TLTS.MtSat T p u F := TLTS.mtSat_neg T F p u
+
+/-- **Exercise 12.6(2)** (§12.2, p.229). Double negation: `(Fᶜ)ᶜ` and `F` are
+satisfied by the same extended states. -/
+theorem ex_12_6 (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
+    TLTS.MtSat T p u F.neg.neg ↔ TLTS.MtSat T p u F := TLTS.mtSat_neg_neg T F p u
 
 /-! ## §12.4 Recursion in HML with time -/
 
