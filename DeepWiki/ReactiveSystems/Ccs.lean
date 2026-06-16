@@ -148,6 +148,44 @@ theorem step_const_iff {K0 : K} {α : Act Name} {P' : CCS Name K} :
   · rintro h; cases h; assumption
   · exact Step.con
 
+/-- Inversion for parallel composition: a move of `P ∣ Q` is a move of `P` alone
+(COM1), of `Q` alone (COM2), or a synchronisation of complementary labels (COM3). -/
+theorem step_par_iff {P Q : CCS Name K} {α : Act Name} {R : CCS Name K} :
+    Step defn (CCS.par P Q) α R ↔
+      (∃ P', Step defn P α P' ∧ R = CCS.par P' Q) ∨
+      (∃ Q', Step defn Q α Q' ∧ R = CCS.par P Q') ∨
+      (∃ ℓ P' Q', α = Act.tau ∧ ℓ.IsLabel ∧
+        Step defn P ℓ P' ∧ Step defn Q ℓ.co Q' ∧ R = CCS.par P' Q') := by
+  constructor
+  · rintro h
+    cases h with
+    | com1 hP => exact Or.inl ⟨_, hP, rfl⟩
+    | com2 hQ => exact Or.inr (Or.inl ⟨_, hQ, rfl⟩)
+    | com3 hℓ hP hQ => exact Or.inr (Or.inr ⟨_, _, _, rfl, hℓ, hP, hQ, rfl⟩)
+  · rintro (⟨P', hP, rfl⟩ | ⟨Q', hQ, rfl⟩ | ⟨ℓ, P', Q', rfl, hℓ, hP, hQ, rfl⟩)
+    · exact Step.com1 hP
+    · exact Step.com2 hQ
+    · exact Step.com3 hℓ hP hQ
+
+/-- Inversion for restriction: `P ∖ L` moves only via a move of `P` on an action
+`α` with `α, ᾱ ∉ L`. -/
+theorem step_restrict_iff {P : CCS Name K} {L : Set (Act Name)} {α : Act Name}
+    {R : CCS Name K} :
+    Step defn (CCS.restrict P L) α R ↔
+      ∃ P', α ∉ L ∧ α.co ∉ L ∧ Step defn P α P' ∧ R = CCS.restrict P' L := by
+  constructor
+  · rintro h; cases h with | res h1 h2 hP => exact ⟨_, h1, h2, hP, rfl⟩
+  · rintro ⟨P', h1, h2, hP, rfl⟩; exact Step.res h1 h2 hP
+
+/-- Inversion for relabelling: `P[f]` moves on `f α` exactly when `P` moves on `α`. -/
+theorem step_relabel_iff {P : CCS Name K} {f : Act Name → Act Name} {β : Act Name}
+    {R : CCS Name K} :
+    Step defn (CCS.relabel P f) β R ↔
+      ∃ α P', β = f α ∧ Step defn P α P' ∧ R = CCS.relabel P' f := by
+  constructor
+  · rintro h; cases h with | rel hP => exact ⟨_, _, rfl, hP, rfl⟩
+  · rintro ⟨α, P', rfl, hP, rfl⟩; exact Step.rel hP
+
 /-! ## Book notation for CCS process terms
 
 A syntax category `ccs` lets process expressions be written in (almost) the

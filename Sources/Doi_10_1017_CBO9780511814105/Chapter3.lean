@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.Traces
 import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.Ccs
+import DeepWiki.ReactiveSystems.CcsCongruence
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -73,6 +74,34 @@ theorem thm_3_1_transfer (L : LTS Proc Act) (p q : Proc) :
       (∀ a p', (L ⊢ p ⟶[a] p') → ∃ q', (L ⊢ q ⟶[a] q') ∧ (p' ~[L] q')) ∧
       (∀ a q', (L ⊢ q ⟶[a] q') → ∃ p', (L ⊢ p ⟶[a] p') ∧ (p' ~[L] q')) :=
   LTS.bisimilar_iff p q
+
+/-! ## §3.3 Strong bisimilarity is a congruence (Theorem 3.2) -/
+
+/-- **Theorem 3.2** (§3.3), prefix congruence: `P ~ P' → a.P ~ a.P'`. -/
+theorem thm_3_2_pre {Name K : Type*} {defn : K → CCS Name K} {a}
+    {P P' : CCS Name K} (h : P ~[ccsLTS defn] P') :
+    (CCS.pre a P) ~[ccsLTS defn] (CCS.pre a P') := LTS.bisimilar_pre h
+
+/-- **Theorem 3.2** (§3.3), choice congruence: `P ~ P' → Q ~ Q' → P+Q ~ P'+Q'`. -/
+theorem thm_3_2_choice {Name K : Type*} {defn : K → CCS Name K} {P P' Q Q' : CCS Name K}
+    (hP : P ~[ccsLTS defn] P') (hQ : Q ~[ccsLTS defn] Q') :
+    (CCS.choice P Q) ~[ccsLTS defn] (CCS.choice P' Q') := LTS.bisimilar_choice hP hQ
+
+/-- **Theorem 3.2** (§3.3), parallel congruence: `P ~ P' → Q ~ Q' → P∣Q ~ P'∣Q'`
+(the hard case, via the SOS synchronisation rule). -/
+theorem thm_3_2_par {Name K : Type*} {defn : K → CCS Name K} {P P' Q Q' : CCS Name K}
+    (hP : P ~[ccsLTS defn] P') (hQ : Q ~[ccsLTS defn] Q') :
+    (CCS.par P Q) ~[ccsLTS defn] (CCS.par P' Q') := LTS.bisimilar_par hP hQ
+
+/-- **Theorem 3.2** (§3.3), restriction congruence: `P ~ P' → P∖L ~ P'∖L`. -/
+theorem thm_3_2_restrict {Name K : Type*} {defn : K → CCS Name K} {Lr}
+    {P P' : CCS Name K} (h : P ~[ccsLTS defn] P') :
+    (CCS.restrict P Lr) ~[ccsLTS defn] (CCS.restrict P' Lr) := LTS.bisimilar_restrict Lr h
+
+/-- **Theorem 3.2** (§3.3), relabelling congruence: `P ~ P' → P[f] ~ P'[f]`. -/
+theorem thm_3_2_relabel {Name K : Type*} {defn : K → CCS Name K} {f}
+    {P P' : CCS Name K} (h : P ~[ccsLTS defn] P') :
+    (CCS.relabel P f) ~[ccsLTS defn] (CCS.relabel P' f) := LTS.bisimilar_relabel f h
 
 /-! ## §3.3 Simulation and the simulation preorder (Exercises 3.17–3.18) -/
 

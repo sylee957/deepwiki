@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
+import DeepWiki.ReactiveSystems.CcsCongruence
 import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.Traces
 import DeepWiki.ReactiveSystems.BisimulationWeak
