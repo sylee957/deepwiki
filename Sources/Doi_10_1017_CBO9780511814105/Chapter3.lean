@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.Traces
 import DeepWiki.ReactiveSystems.Simulation
+import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsCongruence
 import Sources.Doi_10_1017_CBO9780511814105.Source
@@ -184,6 +185,30 @@ theorem thm_3_3_largest (L : LTS Proc Act) (tau : Act) :
 theorem ex_3_27 (L : LTS Proc Act) (tau : Act) {p q : Proc}
     (hpq : LTS.tauStar L tau p q) (hqp : LTS.tauStar L tau q p) : p ≈[L, tau] q :=
   LTS.weaklyBisimilar_of_tauStar hpq hqp
+
+/-! ## §3.5 The bisimulation game (Definitions 3.5–3.6, Propositions 3.3–3.4) -/
+
+/-- **Definition 3.5** (§3.5, p.65). A defender winning strategy in the strong
+bisimulation game: an invariant set of configurations in which every attacker
+challenge can be answered. The library's `LTS.DefenderStrategy`. -/
+abbrev def_3_5 := @LTS.DefenderStrategy
+
+/-- **Definition 3.6** (§3.5). A defender winning strategy in the weak
+bisimulation game (answers by weak transitions). The library's
+`LTS.DefenderStrategyWeak`. -/
+abbrev def_3_6 := @LTS.DefenderStrategyWeak
+
+/-- **Proposition 3.3 / Exercise 3.38** (§3.5, p.66). The defender has a winning
+strategy in the strong bisimulation game from `(p, q)` iff `p ~ q` (and, by
+determinacy, the attacker has one iff `p ≁ q`). -/
+theorem prop_3_3 (L : LTS Proc Act) (p q : Proc) :
+    LTS.DefenderWins L p q ↔ (p ~[L] q) := LTS.defenderWins_iff_bisimilar L p q
+
+/-- **Proposition 3.4** (§3.5). The defender has a winning strategy in the weak
+bisimulation game from `(p, q)` iff `p ≈ q`. -/
+theorem prop_3_4 (L : LTS Proc Act) (tau : Act) (p q : Proc) :
+    LTS.DefenderWinsWeak L tau p q ↔ (p ≈[L, tau] q) :=
+  LTS.defenderWinsWeak_iff_weaklyBisimilar L tau p q
 
 /-! ## Solved exercises
 

@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
 import DeepWiki.ReactiveSystems.CcsCongruence
 import DeepWiki.ReactiveSystems.Simulation
+import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Traces
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.HennessyMilner
