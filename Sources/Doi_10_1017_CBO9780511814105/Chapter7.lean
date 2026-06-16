@@ -4,6 +4,7 @@ import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.CcsTesting
 import DeepWiki.ReactiveSystems.CcsTestingSafety
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
+import DeepWiki.ReactiveSystems.CcsMutexMonitor
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -175,5 +176,47 @@ theorem thm_7_1 {Name K : Type*} (defn : K → CCS Name K) (bad : Name)
     LTS.WSat (ccsLTS defn) DeepWiki.ReactiveSystems.Act.tau s F.toHML ↔
       LTS.Passes defn bad s (LTS.testOf bad F) :=
   LTS.testOf_correct F hF s hbf
+
+/-! ## §7.3 The mutual-exclusion monitor (Proposition 7.2) -/
+
+/-- **§7.3** (p.153). The monitor process `MutexTest = enter₁.MutexTest₁ +
+enter₂.MutexTest₂`, `MutexTestᵢ = exitᵢ.MutexTest + enterⱼ.bad.0`, that observes a
+process and emits `bad` on two `enter`s without an intervening `exit`. The
+library's `mtDefn`. -/
+abbrev mutexTest := @DeepWiki.ReactiveSystems.mtDefn
+
+/-- **§7.3** (p.153). The collection `(enter₁ exit₁ + enter₂ exit₂)*` of
+well-matched action sequences. The library's `WellMatched`. -/
+abbrev mutexWellMatched := @DeepWiki.ReactiveSystems.WellMatched
+
+/-- **Proposition 7.2** (§7.3, p.153), soundness ("if") direction. If a process
+`P` can, after a well-matched run `σ ∈ (enter₁ exit₁ + enter₂ exit₂)*`, perform two
+`enter`s in a row (`enter₁` then `enter₂`, or `enter₂` then `enter₁`), then the
+monitored system `(P ∣ MutexTest) ∖ L` can perform the reject action `bad`: the
+monitor detects every mutual-exclusion violation. Discharged by the library's
+`prop_7_2_if`. (The converse — completeness — is the book's Exercise 7.12.) -/
+theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSystems.MtChan)}
+    {P P₁ P₂ P₃ : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.ReactiveSystems.MtK}
+    (hσ : DeepWiki.ReactiveSystems.WellMatched σ)
+    (hpath : LTS.WeakPath (ccsLTS DeepWiki.ReactiveSystems.mtDefn)
+      DeepWiki.ReactiveSystems.Act.tau P σ P₁)
+    (hviol :
+      ((ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢ P₁
+          =[DeepWiki.ReactiveSystems.Act.coname DeepWiki.ReactiveSystems.MtChan.enter1]⇒[
+            DeepWiki.ReactiveSystems.Act.tau] P₂ ∧
+        (ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢ P₂
+          =[DeepWiki.ReactiveSystems.Act.coname DeepWiki.ReactiveSystems.MtChan.enter2]⇒[
+            DeepWiki.ReactiveSystems.Act.tau] P₃) ∨
+      ((ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢ P₁
+          =[DeepWiki.ReactiveSystems.Act.coname DeepWiki.ReactiveSystems.MtChan.enter2]⇒[
+            DeepWiki.ReactiveSystems.Act.tau] P₂ ∧
+        (ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢ P₂
+          =[DeepWiki.ReactiveSystems.Act.coname DeepWiki.ReactiveSystems.MtChan.enter1]⇒[
+            DeepWiki.ReactiveSystems.Act.tau] P₃)) :
+    ∃ Q, (ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢
+      DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest
+        =[DeepWiki.ReactiveSystems.Act.name DeepWiki.ReactiveSystems.MtChan.bad]⇒[
+          DeepWiki.ReactiveSystems.Act.tau] Q :=
+  DeepWiki.ReactiveSystems.prop_7_2_if hσ hpath hviol
 
 end DeepWiki.Rs
