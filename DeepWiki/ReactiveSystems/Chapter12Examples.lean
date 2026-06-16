@@ -40,6 +40,41 @@ theorem witnessTLTS_B_unsat_mt1213 : ¬ TLTS.MtSatState witnessTLTS .B mt1213 :=
     simp only [satisfies, Cmp.holds, hv, Nat.cast_one] at hguard
     exact absurd hguard (not_lt.mpr hdelay)
 
+/-! ## Exercise 12.10 — distinguishing the Figure 10.2 automata -/
+
+/-- The distinguishing formula `y in ∃∃(y > 1)` of Exercise 12.10. -/
+def mt1210 : Mt Unit Unit := .reset () (.existsDelay (.guard (.atom () .gt 1)))
+
+/-- The freely-delaying automaton (`A`) satisfies `y in ∃∃(y > 1)` (delay `2`). -/
+theorem witnessTLTS_A_sat_mt1210 : TLTS.MtSatState witnessTLTS .A mt1210 := by
+  have hv : ((Valuation.reset {()} (fun _ => (0 : ℝ≥0))).add 2) () = 2 := by
+    rw [Valuation.add_apply, Valuation.reset_mem (show () ∈ ({()} : Set Unit) from rfl), zero_add]
+  refine ⟨2, .A, trivial, ?_⟩
+  show satisfies _ (ClockConstraint.atom () Cmp.gt 1)
+  simp only [satisfies, Cmp.holds, hv]
+  norm_num
+
+/-- The bounded automaton (`B`, delays `≤ 1`) does not satisfy `y in ∃∃(y > 1)`. -/
+theorem witnessTLTS_B_unsat_mt1210 : ¬ TLTS.MtSatState witnessTLTS .B mt1210 := by
+  rintro ⟨d, p', hdelay, hguard⟩
+  cases p' with
+  | A => exact hdelay
+  | Stop => exact hdelay
+  | B =>
+    have hv : ((Valuation.reset {()} (fun _ => (0 : ℝ≥0))).add d) () = d := by
+      rw [Valuation.add_apply, Valuation.reset_mem (show () ∈ ({()} : Set Unit) from rfl), zero_add]
+    change satisfies _ (ClockConstraint.atom () Cmp.gt 1) at hguard
+    simp only [satisfies, Cmp.holds, hv, Nat.cast_one] at hguard
+    exact absurd hguard (not_lt.mpr hdelay)
+
+/-- **Exercise 12.10** (§12.3, p.233). The two automata of Figure 10.2 are not timed
+bisimilar, and `y in ∃∃(y > 1)` distinguishes them (the freely-delaying one
+satisfies it; the one bounded by `1` does not). -/
+theorem ex_12_10 :
+    ¬ witnessTLTS.TimedBisimilar .A .B ∧
+      TLTS.MtSatState witnessTLTS .A mt1210 ∧ ¬ TLTS.MtSatState witnessTLTS .B mt1210 :=
+  ⟨not_A_timedBisimilar_B, witnessTLTS_A_sat_mt1210, witnessTLTS_B_unsat_mt1210⟩
+
 /-- **Exercise 12.13** (§12.3, p.234). Theorem 12.3 fails for merely *untimed*
 bisimilar states: there is a TLTS with untimed-bisimilar `p, q` and an `Mt` formula
 satisfied by one but not the other. -/

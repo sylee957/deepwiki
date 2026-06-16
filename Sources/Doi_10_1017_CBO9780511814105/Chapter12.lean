@@ -201,4 +201,13 @@ theorem ex_12_13 :
       ∃ F : Mt Unit Unit, TLTS.MtSatState T p F ∧ ¬ TLTS.MtSatState T q F :=
   DeepWiki.ReactiveSystems.ex_12_13
 
+/-- **Exercise 12.10** (§12.3, p.233). The two timed automata of Figure 10.2 are not
+timed bisimilar, and `y in ∃∃(y > 1)` distinguishes them (the freely-delaying one
+satisfies it; the `1`-bounded one does not). The library's `ex_12_10`. -/
+theorem ex_12_10 :
+    ¬ DeepWiki.ReactiveSystems.witnessTLTS.TimedBisimilar .A .B ∧
+      TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .A DeepWiki.ReactiveSystems.mt1210 ∧
+      ¬ TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .B DeepWiki.ReactiveSystems.mt1210 :=
+  DeepWiki.ReactiveSystems.ex_12_10
+
 end DeepWiki.Rs
