@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
+import DeepWiki.ReactiveSystems.SimulationWeak
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -55,14 +56,44 @@ abbrev petDefn := @DeepWiki.ReactiveSystems.petDefn
 `peterson`. -/
 abbrev peterson := @DeepWiki.ReactiveSystems.peterson
 
-/-- **§7.2** (7.1, p.149). The CCS specification of mutual exclusion,
+/-- **§7.2** (eq. 7.1, p.149). The CCS specification of mutual exclusion,
 `MutexSpec = enter₁.exit₁.MutexSpec + enter₂.exit₂.MutexSpec`. The library's
-`mutexSpec`. (As §7.2 notes, `peterson` is *not* observationally equivalent to
-`mutexSpec` — the right correctness statement is the §7.1 mutual-exclusion
-invariant, checked externally with the CWB; the system has 69 states.) -/
-abbrev def_7_1 := @DeepWiki.ReactiveSystems.mutexSpec
+`mutexSpec`. (This is the displayed equation (7.1), *not* book Definition 7.1.
+As §7.2 notes, `peterson` is *not* observationally equivalent to `mutexSpec` —
+the right correctness statement is the §7.1 mutual-exclusion invariant, checked
+externally with the CWB; the system has 69 states.) -/
+abbrev ccsMutexSpec := @DeepWiki.ReactiveSystems.mutexSpec
 
-/-! **§7.3 Testing mutual exclusion** (p.152) develops a testing methodology over
-the same `peterson` model; the testing equivalence is not catalogued here. -/
+/-! ## §7.3 Testing mutual exclusion: weak traces and weak simulation -/
+
+/-- **Definition 7.1** (§7.3, p.151). A *weak trace* of a process: a sequence of
+visible actions performed via weak transitions (silent steps absorbed). The
+library's `LTS.WeakTraces`. -/
+abbrev def_7_1 := @LTS.WeakTraces
+
+/-- **Definition 7.1** (§7.3, p.151). *Weak trace equivalence*: equal weak-trace
+sets. The library's `LTS.WeakTraceEquiv`. -/
+abbrev def_7_1_equiv := @LTS.WeakTraceEquiv
+
+/-- **Definition 7.2** (§7.3, p.152). A *weak simulation* `R`: every concrete move
+`s₁ —α→ s₁'` (any `α`, including `τ`) is answered by a weak transition `s₂ =α⇒
+s₂'` with `s₁' R s₂'`. The library's `LTS.IsWeakSimulation`. -/
+abbrev def_7_2 := @LTS.IsWeakSimulation
+
+/-- **Definition 7.2** (§7.3, p.152). `s'` *weakly simulates* `s`: some weak
+simulation relates them. The library's `LTS.WeaklySimulates`. -/
+abbrev def_7_2_simulates := @LTS.WeaklySimulates
+
+/-- **Proposition 7.1** (§7.3, p.152). The weak-simulation preorder is reflexive
+(1) and transitive (2), and weak simulation preserves weak traces (3): if `s'`
+weakly simulates `s`, every weak trace of `s` is a weak trace of `s'`. -/
+theorem prop_7_1 (L : LTS Proc Act) (tau : Act) :
+    (∀ s, LTS.WeaklySimulates L tau s s) ∧
+    (∀ s s' s'', LTS.WeaklySimulates L tau s'' s' → LTS.WeaklySimulates L tau s' s →
+      LTS.WeaklySimulates L tau s'' s) ∧
+    (∀ s s', LTS.WeaklySimulates L tau s' s →
+      LTS.WeakTraces L tau s ⊆ LTS.WeakTraces L tau s') :=
+  ⟨LTS.weaklySimulates_refl, fun _ _ _ h1 h2 => h1.trans h2,
+   fun _ _ h => h.weakTraces_subset⟩
 
 end DeepWiki.Rs
