@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsProcessGraph
 import DeepWiki.ReactiveSystems.CcsBuffer
+import DeepWiki.ReactiveSystems.Chapter2Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 2: The language CCS
@@ -146,5 +147,33 @@ theorem ex_2_12_cell_behaviour {D : Type*} [Fintype D]
       ∃ v, a = DeepWiki.ReactiveSystems.Act.name (DeepWiki.ReactiveSystems.CellChan.inp v) ∧
         R = CCS.const (DeepWiki.ReactiveSystems.CellK.cellVal v) :=
   DeepWiki.ReactiveSystems.cell_input_iff a R
+
+/-- **Exercise 2.5** (§2.2.1, p.21). In the Figure 2.6 LTS, every state is
+reachable from `p₂` (the reachable set is the full `{p, p₁, p₂}`). The library's
+`fig26_reachable_from_p2`; the contrast `p₂` unreachable from `p` is
+`fig26_p_not_reach_p2`. -/
+theorem ex_2_5 (q : DeepWiki.ReactiveSystems.Fig26) :
+    (DeepWiki.ReactiveSystems.fig26).Reachable .p2 q :=
+  DeepWiki.ReactiveSystems.fig26_reachable_from_p2 q
+
+/-- **Exercise 2.7** (§2.1/§2.2, p.16/p.20). The SOS rules derive the LTS of
+`SmUni = (CM ∣ CS) ∖ {coin, coffee}`: `SmUni —pub→ (CM∣CS₁)∖L —τ→ (CM₁∣CS₂)∖L
+—τ→ (CM∣CS)∖L`. The library's `smUni_lts`. -/
+theorem ex_2_7 :
+    ((ccsLTS DeepWiki.ReactiveSystems.smuniDefn) ⊢ DeepWiki.ReactiveSystems.smUni
+        ⟶[Act.name DeepWiki.ReactiveSystems.SmuniName.pub]
+      (CCS.restrict (CCS.par (CCS.const .CM) (CCS.const .CS1))
+        DeepWiki.ReactiveSystems.smuniRestrict)) ∧
+    ((ccsLTS DeepWiki.ReactiveSystems.smuniDefn) ⊢
+        (CCS.restrict (CCS.par (CCS.const .CM) (CCS.const .CS1))
+          DeepWiki.ReactiveSystems.smuniRestrict) ⟶[Act.tau]
+      (CCS.restrict (CCS.par (CCS.const .CM1) (CCS.const .CS2))
+        DeepWiki.ReactiveSystems.smuniRestrict)) ∧
+    ((ccsLTS DeepWiki.ReactiveSystems.smuniDefn) ⊢
+        (CCS.restrict (CCS.par (CCS.const .CM1) (CCS.const .CS2))
+          DeepWiki.ReactiveSystems.smuniRestrict) ⟶[Act.tau]
+      (CCS.restrict (CCS.par (CCS.const .CM) (CCS.const .CS))
+        DeepWiki.ReactiveSystems.smuniRestrict)) :=
+  DeepWiki.ReactiveSystems.smUni_lts
 
 end DeepWiki.Rs

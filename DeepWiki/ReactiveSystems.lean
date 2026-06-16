@@ -32,6 +32,7 @@ import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import DeepWiki.ReactiveSystems.CcsMutexMonitor
+import DeepWiki.ReactiveSystems.Chapter2Examples
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces
