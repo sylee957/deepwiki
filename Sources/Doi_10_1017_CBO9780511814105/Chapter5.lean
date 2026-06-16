@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
 import DeepWiki.ReactiveSystems.HennessyMilnerSharp
+import DeepWiki.ReactiveSystems.Chapter5Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 5: Hennessy–Milner logic
@@ -107,5 +108,46 @@ theorem ex_5_13 :
     ∃ (P : Type) (L : LTS P Unit) (p q : P),
       ¬ LTS.ImageFinite L ∧ LTS.HMLEquiv L p q ∧ ¬ (p ~[L] q) :=
   hennessyMilner_needs_imageFinite
+
+/-- **Exercise 5.4** (§5.1, p.96). The everlasting clock `Clock ≝ tick.Clock`
+satisfies `[tick](⟨tick⟩tt ∧ [tock]ff)`. The library's `ex_5_4_box`. -/
+theorem ex_5_4_box :
+    (CCS.const DeepWiki.ReactiveSystems.ClockK.clk)
+      ⊨[ccsLTS DeepWiki.ReactiveSystems.clockDefn]
+      (HML.box (DeepWiki.ReactiveSystems.Act.name .tick)
+        (HML.and (HML.dia (DeepWiki.ReactiveSystems.Act.name .tick) HML.tt) (HML.box (DeepWiki.ReactiveSystems.Act.name .tock) HML.ff))) :=
+  DeepWiki.ReactiveSystems.ex_5_4_box
+
+/-- **Exercise 5.4** (§5.1, p.96). For every `n`, `Clock ⊨ ⟨tick⟩ⁿtt`. The library's
+`ex_5_4_dia_iter`. -/
+theorem ex_5_4_dia (n : ℕ) :
+    (CCS.const DeepWiki.ReactiveSystems.ClockK.clk)
+      ⊨[ccsLTS DeepWiki.ReactiveSystems.clockDefn]
+      (DeepWiki.ReactiveSystems.diaIter (DeepWiki.ReactiveSystems.Act.name .tick) n) :=
+  DeepWiki.ReactiveSystems.ex_5_4_dia_iter n
+
+/-- **Exercise 5.5** (§5.1, p.96). Two pairs of non-bisimilar CCS processes, each
+separated by an HML formula (`⟨a⟩[b]ff` and `⟨a⟩[b]⟨c⟩tt`). The library's
+`ex_5_5`. -/
+theorem ex_5_5 :
+    (∃ F : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
+      (DeepWiki.ReactiveSystems.p55a ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] F) ∧
+      ¬ (DeepWiki.ReactiveSystems.p55b ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] F)) ∧
+    (∃ G : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
+      (DeepWiki.ReactiveSystems.p55c ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] G) ∧
+      ¬ (DeepWiki.ReactiveSystems.p55d ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] G)) :=
+  DeepWiki.ReactiveSystems.ex_5_5
+
+/-- **Exercise 5.7** (§5.1, p.96). An LTS whose initial state satisfies three given
+HML formulae simultaneously. The library's `ex_5_7`. -/
+theorem ex_5_7 :
+    (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
+      HML.dia .a (HML.and (HML.dia .b (HML.dia .c HML.tt)) (HML.dia .c HML.tt))) ∧
+    (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
+      HML.dia .a (HML.dia .b (HML.and (HML.box .a HML.ff)
+        (HML.and (HML.box .b HML.ff) (HML.box .c HML.ff))))) ∧
+    (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
+      HML.box .a (HML.dia .b (HML.and (HML.box .c HML.ff) (HML.dia .a HML.tt)))) :=
+  DeepWiki.ReactiveSystems.ex_5_7
 
 end DeepWiki.Rs
