@@ -1,6 +1,8 @@
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
+import DeepWiki.ReactiveSystems.BisimulationApprox
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
+import Mathlib.Order.Bounds.Basic
 
 /-! # Reactive Systems catalog — Chapter 4: Theory of fixed points and bisimulation
 Book-numbered restatements for Chapter 4. The order-theoretic background
@@ -74,5 +76,47 @@ theorem ex_4_10_4a {D : Type*} [CompleteLattice D] (f : D →o D) (X : Set D)
 lattice, ordered pointwise, again form a complete lattice. -/
 theorem ex_4_10_5 (D : Type*) [CompleteLattice D] : Nonempty (CompleteLattice (D →o D)) :=
   ⟨inferInstance⟩
+
+/-! ## Order-theoretic gaps and the bisimilarity approximants -/
+
+/-- **Definition 4.2** (§4.1, p.77), least upper bound. Reuses Mathlib's `IsLUB`. -/
+abbrev def_4_2_lub := @IsLUB
+
+/-- **Definition 4.2** (§4.1, p.77), greatest lower bound. Reuses Mathlib's `IsGLB`. -/
+abbrev def_4_2_glb := @IsGLB
+
+/-- **Definition 4.5** (§4.2, p.82), function iteration `fⁿ` (`f^[n]`). Reuses
+Mathlib's `Nat.iterate`. -/
+abbrev def_4_5 := @Nat.iterate
+
+/-- **Theorem 4.1** (§4.2, p.80), other half: the fixed points of a monotone map
+on a complete lattice themselves form a complete lattice (Knaster–Tarski).
+Reuses Mathlib's `fixedPoints.completeLattice`. -/
+abbrev thm_4_1_fixedPoints_lattice := @fixedPoints.completeLattice
+
+/-- **Exercise 4.3** (§4.1). A least upper bound is unique. -/
+alias ex_4_3 := IsLUB.unique
+
+/-- **Exercise 4.10(2)** (§4.2). The greatest fixed point is `⨅ₙ fⁿ(⊤)` (dual of
+Kleene's theorem). Reuses Mathlib's `fixedPoints.gfp_eq_sInf_iterate`. -/
+alias ex_4_10_2 := fixedPoints.gfp_eq_sInf_iterate
+
+/-- **Exercise 4.14** (§4.2). The bisimilarity approximants `∼ᵢ = Fⁱ(⊤)`. The
+library's `LTS.bisimApprox`. -/
+abbrev ex_4_14 := @LTS.bisimApprox
+
+/-- **Exercise 4.14** (§4.2). Each approximant `∼ᵢ` is an equivalence relation. -/
+theorem ex_4_14_equivalence {Proc Act : Type*} (L : LTS Proc Act) (i : ℕ) :
+    Equivalence (LTS.bisimApprox L i) := LTS.bisimApprox_equivalence L i
+
+/-- **Exercise 4.14** (§4.2). The approximants form a decreasing chain
+`∼_{i+1} ⊆ ∼ᵢ`. -/
+theorem ex_4_14_antitone {Proc Act : Type*} (L : LTS Proc Act) (i : ℕ) :
+    LTS.bisimApprox L (i + 1) ≤ LTS.bisimApprox L i := LTS.bisimApprox_antitone L i
+
+/-- **Exercise 4.14** (§4.2). Strong bisimilarity refines every approximant
+`∼ ⊆ ∼ᵢ`. -/
+theorem ex_4_14_bisimilar_le {Proc Act : Type*} (L : LTS Proc Act) (i : ℕ) :
+    LTS.Bisimilar L ≤ LTS.bisimApprox L i := LTS.bisimilar_le_bisimApprox L i
 
 end DeepWiki.Rs

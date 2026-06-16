@@ -124,6 +124,21 @@ theorem ex_3_17 (L : LTS Proc Act) :
 ready sets. The library's `LTS.IsReadySimulation`. -/
 abbrev ex_3_18 := @LTS.IsReadySimulation
 
+/-- **Exercise 3.6** (§3.3). The identity relation, the inverse of a strong
+bisimulation, and the composition of two strong bisimulations are all strong
+bisimulations. -/
+theorem ex_3_6 (L : LTS Proc Act) :
+    LTS.IsBisimulation L (· = ·) ∧
+      (∀ {R}, LTS.IsBisimulation L R → LTS.IsBisimulation L (fun p q => R q p)) ∧
+      (∀ {R S}, LTS.IsBisimulation L R → LTS.IsBisimulation L S →
+        LTS.IsBisimulation L (fun p r => ∃ q, R p q ∧ S q r)) :=
+  ⟨LTS.isBisimulation_eq, fun h => h.inv, fun hR hS => hR.comp hS⟩
+
+/-- **Exercise 3.7** (§3.3). The union of all strong bisimulations — strong
+bisimilarity — is itself a strong bisimulation. -/
+theorem ex_3_7 (L : LTS Proc Act) : LTS.IsBisimulation L (LTS.Bisimilar L) :=
+  LTS.isBisimulation_bisimilar
+
 /-! ## §3.4 Weak bisimilarity -/
 
 /-- **Definition 3.3** (§3.4, p.56), weak transition `p =α⇒ q`: silent steps

@@ -78,4 +78,19 @@ complement: `⟦F̄⟧ = ⟦F⟧ᶜ`. -/
 theorem ex_5_8 (L : LTS Proc Act) (F : HML Act) :
     LTS.denot L F.neg = (LTS.denot L F)ᶜ := LTS.denot_neg L F
 
+/-- **Exercise 5.8(2)** (§5.1, p.97), expressibility form: negation is definable
+in HML — every formula has one whose denotation is its complement. -/
+theorem ex_5_8_expressible (L : LTS Proc Act) (F : HML Act) :
+    ∃ G, LTS.denot L G = (LTS.denot L F)ᶜ := ⟨F.neg, LTS.denot_neg L F⟩
+
+/-- **Exercise 5.6** (§5.1). The operational satisfaction relation `p ⊨ F` and
+membership in the denotation `⟦F⟧` coincide. -/
+theorem ex_5_6 (L : LTS Proc Act) (p : Proc) (F : HML Act) :
+    (p ⊨[L] F) ↔ p ∈ LTS.denot L F := Iff.rfl
+
+/-! **Exercise 5.12** (`~ = ⋂ᵢ ∼ᵢ` on image-finite LTSs) and **Exercise 5.13**
+(the non-image-finite counterexample showing the Hennessy–Milner theorem's
+hypothesis is sharp) require, respectively, an infinite-pigeonhole/König argument
+over the finite successor set and a modal-depth construction; they are deferred. -/
+
 end DeepWiki.Rs
