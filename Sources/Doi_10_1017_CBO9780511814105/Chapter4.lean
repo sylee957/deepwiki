@@ -3,6 +3,8 @@ import DeepWiki.ReactiveSystems.BisimulationApprox
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.Bounds.Basic
+import Mathlib.Order.CompleteLattice.Basic
+import Mathlib.Data.Set.Insert
 import Mathlib.Data.ENNReal.Basic
 
 /-! # Reactive Systems catalog — Chapter 4: Theory of fixed points and bisimulation
@@ -166,5 +168,26 @@ theorem ex_4_14_antitone {Proc Act : Type*} (L : LTS Proc Act) (i : ℕ) :
 `∼ ⊆ ∼ᵢ`. -/
 theorem ex_4_14_bisimilar_le {Proc Act : Type*} (L : LTS Proc Act) (i : ℕ) :
     LTS.Bisimilar L ≤ LTS.bisimApprox L i := LTS.bisimilar_le_bisimApprox L i
+
+/-- **Definition 4.4** (§4.2, p.79). A *monotonic* function `f : D → D`
+(`d ≼ d' ⇒ f d ≼ f d'`). Reuses Mathlib's bundled `OrderHom` (`D →o D`). -/
+abbrev def_4_4_monotonic := @OrderHom
+
+/-- **Definition 4.4** (§4.2, p.79). A *fixed point* of `f` (`d = f d`). Reuses
+Mathlib's `Function.IsFixedPt`. -/
+abbrev def_4_4_fixedPoint := @Function.IsFixedPt
+
+/-- **Exercise 4.5** (§4.1, p.78). In a complete lattice the join of the empty set
+is the bottom element (`sSup ∅ = ⊥`). Reuses Mathlib's `sSup_empty`. -/
+alias ex_4_5_sSup := sSup_empty
+
+/-- **Exercise 4.5** (§4.1, p.78). Dually, the meet of the empty set is the top
+element (`sInf ∅ = ⊤`). Reuses Mathlib's `sInf_empty`. -/
+alias ex_4_5_sInf := sInf_empty
+
+/-- **Exercise 4.6** (§4.2, p.79). The fixed points of `f X = X ∪ {1,2}` on the
+powerset `2^ℕ` are exactly the supersets of `{1,2}`: `X ∪ {1,2} = X ↔ {1,2} ⊆ X`.
+(So besides `{1,2}` itself, e.g. `univ` is a fixed point.) -/
+theorem ex_4_6 (X : Set ℕ) : X ∪ {1, 2} = X ↔ {1, 2} ⊆ X := Set.union_eq_left
 
 end DeepWiki.Rs
