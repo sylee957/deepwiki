@@ -13,3 +13,6 @@
 # Source-book PDFs for autoformalization (local only, readable by Claude)
 /references/
 .wiki/
+
+# Local git worktrees (agent isolation scratch)
+.claude/worktrees/

@@ -1,16 +1,18 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedRegions
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
-Book-numbered restatements for §11.2 (timed bisimilarity), discharged by the
-`DeepWiki.ReactiveSystems` library. (§11.4–11.5, region and zone graphs, are
-future work.) -/
+Book-numbered restatements for §11.2 (timed bisimilarity) and §11.4 (the region
+construction), discharged by the `DeepWiki.ReactiveSystems` library. (§11.5, zone
+graphs, and the substantive halves of Theorem 11.3 — finite index and
+same-region/timed-bisimilarity — are future work.) -/
 
 namespace DeepWiki.Rs
 
 open DeepWiki.ReactiveSystems
 
-variable {Proc Act : Type*}
+variable {Proc Act : Type*} {C : Type*}
 
 /-! ## §11.2 Timed and untimed bisimilarity -/
 
@@ -32,5 +34,39 @@ theorem def_11_5_transfer (T : TLTS Proc Act) (p q : Proc) :
 /-- **§11.2** (p.195). Timed bisimilarity is an equivalence relation. -/
 theorem timedBisimilar_equivalence (T : TLTS Proc Act) :
     Equivalence (TLTS.TimedBisimilar T) := TLTS.timedBisimilar_equivalence T
+
+/-! ## §11.4 The region construction -/
+
+/-- **Definition 11.11** (§11.4, p.205). Integer part `⌊d⌋` of a clock value. -/
+noncomputable abbrev intPart := @DeepWiki.ReactiveSystems.intPart
+
+/-- **Definition 11.11** (§11.4, p.205). Fractional part `frac(d) = d − ⌊d⌋`. -/
+noncomputable abbrev fracPart := @DeepWiki.ReactiveSystems.fracPart
+
+/-- **Definition 11.12** (§11.4, p.207), verbatim. Two clock valuations are
+equivalent when their integer parts agree up to `cₓ`, they agree on which clocks
+have a zero fractional part, and the ordering of fractional parts agrees. The
+library's `RegionEquiv`. -/
+abbrev def_11_12 := @DeepWiki.ReactiveSystems.RegionEquiv
+
+/-- **Definition 11.12** is **not** symmetric as literally stated (the asymmetric
+guard `v x ≤ cₓ` only catches differing fractional parts at an integer boundary
+in one direction); the genuine region equivalence underlying Theorem 11.3 uses
+the clamped floor `RegionEq`. -/
+theorem def_11_12_not_symmetric :
+    ¬ Symmetric (DeepWiki.ReactiveSystems.RegionEquiv (C := Unit) (fun _ => 0)) :=
+  DeepWiki.ReactiveSystems.not_symmetric_regionEquiv
+
+/-- **Theorem 11.3** (§11.4, p.209), equivalence-relation part. Region
+equivalence partitions the clock valuations — here the corrected `RegionEq` is a
+genuine `Equivalence`. (The finite-index and same-region/timed-bisimilarity
+claims of Theorem 11.3 remain future work.) -/
+theorem thm_11_3_equivalence (cmax : C → ℕ) :
+    Equivalence (DeepWiki.ReactiveSystems.RegionEq cmax) :=
+  DeepWiki.ReactiveSystems.regionEq_equivalence cmax
+
+/-- **Definition 11.13** (§11.4, p.209). A *region* is an `≡`-equivalence class
+`[v]_≡` of clock valuations. The library's `Region`. -/
+abbrev def_11_13 := @DeepWiki.ReactiveSystems.Region
 
 end DeepWiki.Rs
