@@ -76,6 +76,66 @@ theorem not_timedBisimilar_sqrt2 :
   cases hq' with
   | aA h => exact absurd h (lt_irrefl _)
 
+/-! ### Past the boundary `A` and `B` agree (Exercise 12.12, statements 1–2) -/
+
+/-- A state that can no longer perform `a`: `A d` with `c ≤ d`, `B e` with `c < e`,
+or `End`. Such states can only delay (into other `a`-disabled states). -/
+def aDisabled (c : ℝ≥0) : Sq2 → Prop
+  | .A d => c ≤ d
+  | .B e => c < e
+  | .End => True
+
+/-- An `a`-disabled state has no `a`-move. -/
+theorem aDisabled.no_act {c : ℝ≥0} {x x' : Sq2} {α : Sq2Act} (hx : aDisabled c x)
+    (h : Sq2Step c x (Sum.inl α) x') : False := by
+  cases h with
+  | aA hlt => exact absurd hlt (not_lt.mpr hx)
+  | aB hle => exact absurd hle (not_le.mpr hx)
+
+/-- Every state has, for each delay, a unique-shape delay successor; `a`-disabled
+states stay `a`-disabled under delay. -/
+theorem aDisabled.delay_succ {c : ℝ≥0} {x : Sq2} (hx : aDisabled c x) (d' : ℝ≥0) :
+    ∃ x', Sq2Step c x (Sum.inr d') x' ∧ aDisabled c x' := by
+  cases x with
+  | A d => exact ⟨.A (d + d'), Sq2Step.delA, le_trans hx (le_self_add)⟩
+  | B e => exact ⟨.B (e + d'), Sq2Step.delB, lt_of_lt_of_le hx le_self_add⟩
+  | End => exact ⟨.End, Sq2Step.delEnd, trivial⟩
+
+/-- A delay step out of an `a`-disabled state lands in an `a`-disabled state. -/
+theorem aDisabled.delay_pres {c : ℝ≥0} {x x' : Sq2} {d' : ℝ≥0} (hx : aDisabled c x)
+    (h : Sq2Step c x (Sum.inr d') x') : aDisabled c x' := by
+  cases h with
+  | delA => exact le_trans hx le_self_add
+  | delB => exact lt_of_lt_of_le hx le_self_add
+  | delEnd => trivial
+
+/-- Relating any two `a`-disabled states. -/
+def pastRel (c : ℝ≥0) (x y : Sq2) : Prop := aDisabled c x ∧ aDisabled c y
+
+/-- **Exercise 12.12** (§12.3). The `a`-disabled states form a timed bisimulation:
+past the boundary every state behaves identically (only delays, never `a`). -/
+theorem isBisimulation_pastRel : LTS.IsBisimulation (sq2TLTS c) (pastRel c) := by
+  rintro x y ⟨hx, hy⟩
+  refine ⟨fun l x' hstep => ?_, fun l y' hstep => ?_⟩
+  · cases l with
+    | inl _a => exact absurd hstep (fun h => hx.no_act h)
+    | inr d' =>
+      obtain ⟨y', hy', hy'd⟩ := hy.delay_succ d'
+      exact ⟨y', hy', hx.delay_pres hstep, hy'd⟩
+  · cases l with
+    | inl _a => exact absurd hstep (fun h => hy.no_act h)
+    | inr d' =>
+      obtain ⟨x', hx', hx'd⟩ := hx.delay_succ d'
+      exact ⟨x', hx', hx'd, hy.delay_pres hstep⟩
+
+/-- **Exercise 12.12** (§12.3, statements 1–2). Past the boundary the two states
+agree: `(A,d)` with `c ≤ d` and `(B,e)` with `c < e` are timed bisimilar (both can
+only delay). In particular `(A,c) ~ (B,e)` for `e > c` — so `(A,0)` and `(B,0)`
+differ *only* at the boundary crossing (cf. `not_timedBisimilar_sqrt2`). -/
+theorem timedBisimilar_past_boundary {d e : ℝ≥0} (hd : c ≤ d) (he : c < e) :
+    TLTS.TimedBisimilar (sq2TLTS c) (Sq2.A d) (Sq2.B e) :=
+  (isBisimulation_pastRel c).le_bisimilar ⟨hd, he⟩
+
 /-- The separating behaviour at the boundary: after the same `c`-delay, `(B,c)`
 can still do `a` (`c ≤ c`) but `(A,c)` cannot (it would need `c < c`). -/
 example :

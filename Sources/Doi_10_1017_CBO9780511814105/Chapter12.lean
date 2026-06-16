@@ -97,6 +97,15 @@ theorem prop_12_2_not_bisim (c : ℝ≥0) :
       (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) :=
   DeepWiki.ReactiveSystems.not_timedBisimilar_sqrt2 c
 
+/-- **Exercise 12.12** (§12.3, statements 1–2). Past the boundary the `√2`-example
+states agree: `(A,d)` (`c ≤ d`) and `(B,e)` (`c < e`) are timed bisimilar — both
+can henceforth only delay. So `(A,0)` and `(B,0)` differ *only* at the boundary
+crossing. Discharged by the library's `timedBisimilar_past_boundary`. -/
+theorem ex_12_12_past_boundary (c : ℝ≥0) {d e : ℝ≥0} (hd : c ≤ d) (he : c < e) :
+    TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.sq2TLTS c)
+      (DeepWiki.ReactiveSystems.Sq2.A d) (DeepWiki.ReactiveSystems.Sq2.B e) :=
+  DeepWiki.ReactiveSystems.timedBisimilar_past_boundary c hd he
+
 /-! ## §12.2 Negation in HML with time -/
 
 /-- **Proposition 12.1** (§12.2, p.229). The *negation* `Fᶜ` of a timed HML
