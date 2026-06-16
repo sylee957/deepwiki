@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsProcessGraph
+import DeepWiki.ReactiveSystems.CcsBuffer
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 2: The language CCS
@@ -120,5 +121,24 @@ theorem ex_2_3 {Q A : Type*} (delta : Q → DeepWiki.ReactiveSystems.Act A → L
     ((ccsLTS (graphToCCS delta allActs)) ⊢ CCS.const q ⟶[a] R) ↔
       ∃ q', q' ∈ delta q a ∧ R = CCS.const q' :=
   graphToCCS_step_iff delta allActs q a R ha
+
+/-- **Exercise 2.12** (§2.2, p.34). The one-place buffer `Cell = in(x).Cell(x)`,
+`Cell(x) = out(x).Cell`, with value passing over a finite data domain encoded as
+action families `inᵥ`/`outᵥ`. The library's `cellDefn`. -/
+noncomputable abbrev ex_2_12_cell := @DeepWiki.ReactiveSystems.cellDefn
+
+/-- **Exercise 2.12** (§2.2, p.34). A two-place bag built from `Cell`: two cells
+in parallel. The library's `twoBag`. -/
+noncomputable abbrev ex_2_12_bag := @DeepWiki.ReactiveSystems.twoBag
+
+/-- **Exercise 2.12**, faithfulness: the empty cell's only moves are inputs —
+`Cell —a→ R` iff `a = inᵥ` and `R = Cell(v)` for some value `v`. -/
+theorem ex_2_12_cell_behaviour {D : Type*} [Fintype D]
+    (a : DeepWiki.ReactiveSystems.Act (DeepWiki.ReactiveSystems.CellChan D))
+    (R : CCS (DeepWiki.ReactiveSystems.CellChan D) (DeepWiki.ReactiveSystems.CellK D)) :
+    Step DeepWiki.ReactiveSystems.cellDefn (CCS.const DeepWiki.ReactiveSystems.CellK.cell) a R ↔
+      ∃ v, a = DeepWiki.ReactiveSystems.Act.name (DeepWiki.ReactiveSystems.CellChan.inp v) ∧
+        R = CCS.const (DeepWiki.ReactiveSystems.CellK.cellVal v) :=
+  DeepWiki.ReactiveSystems.cell_input_iff a R
 
 end DeepWiki.Rs
