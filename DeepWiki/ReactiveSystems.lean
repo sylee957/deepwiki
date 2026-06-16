@@ -15,6 +15,7 @@ import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedAutomata
+import DeepWiki.ReactiveSystems.TimedHennessyMilner
 
 /-! # Reactive Systems
 Autoformalization of the classic theory of reactive systems (concurrency
