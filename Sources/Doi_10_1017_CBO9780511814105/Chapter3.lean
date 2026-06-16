@@ -44,6 +44,15 @@ converse fails). -/
 theorem bisimilar_traceEquiv (L : LTS Proc Act) {p q : Proc} (h : p ~[L] q) :
     TraceEquiv L p q := h.traceEquiv
 
+/-- **Exercise 3.2** (§3.2), completed traces: traces ending in a deadlocked
+state. The library's `LTS.CompletedTraces` / `LTS.CompletedTraceEquiv`. -/
+abbrev ex_3_2 := @LTS.CompletedTraces
+
+/-- **Exercise 3.2** (§3.2). Strong bisimilarity implies completed-trace
+equivalence (a finer equivalence than ordinary trace equivalence). -/
+theorem ex_3_2_bisimilar (L : LTS Proc Act) {p q : Proc} (h : p ~[L] q) :
+    LTS.CompletedTraceEquiv L p q := h.completedTraceEquiv
+
 /-! ## §3.3 Strong bisimilarity -/
 
 /-- **Definition 3.2** (§3.3, p.37). A strong bisimulation `R`: whenever `R p q`,
@@ -169,6 +178,12 @@ theorem thm_3_3_largest (L : LTS Proc Act) (tau : Act) :
     LTS.IsWeakBisimulation L tau (LTS.WeaklyBisimilar L tau) ∧
       ∀ R, LTS.IsWeakBisimulation L tau R → ∀ ⦃p q⦄, R p q → p ≈[L, tau] q :=
   ⟨LTS.isWeakBisimulation_weaklyBisimilar, fun _ hR => hR.le_weaklyBisimilar⟩
+
+/-- **Exercise 3.27** (§3.4). Mutually `τ`-reachable states are weakly bisimilar:
+`p ⇒ q` and `q ⇒ p` imply `p ≈ q`. -/
+theorem ex_3_27 (L : LTS Proc Act) (tau : Act) {p q : Proc}
+    (hpq : LTS.tauStar L tau p q) (hqp : LTS.tauStar L tau q p) : p ≈[L, tau] q :=
+  LTS.weaklyBisimilar_of_tauStar hpq hqp
 
 /-! ## Solved exercises
 

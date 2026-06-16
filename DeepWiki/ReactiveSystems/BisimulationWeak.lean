@@ -162,6 +162,21 @@ theorem IsBisimulation.isWeakBisimulation {R : Proc → Proc → Prop} (h : IsBi
 theorem Bisimilar.weaklyBisimilar {p q : Proc} (h : Bisimilar L p q) :
     WeaklyBisimilar L tau p q := let ⟨_, hR, hpq⟩ := h; ⟨_, hR.isWeakBisimulation, hpq⟩
 
+/-- Mutually `τ`-reachable states are weakly bisimilar (Exercise 3.27): the
+relation "each `τ`-reaches the other" is a weak bisimulation. -/
+theorem weaklyBisimilar_of_tauStar {p q : Proc}
+    (hpq : tauStar L tau p q) (hqp : tauStar L tau q p) : WeaklyBisimilar L tau p q := by
+  refine ⟨fun x y => tauStar L tau x y ∧ tauStar L tau y x, ?_, hpq, hqp⟩
+  rintro x y ⟨hxy, hyx⟩
+  refine ⟨fun α x' hstep => ⟨x', ?_, tauStar_refl L tau x', tauStar_refl L tau x'⟩,
+          fun α y' hstep => ⟨y', ?_, tauStar_refl L tau y', tauStar_refl L tau y'⟩⟩
+  · by_cases hα : α = tau
+    · subst hα; exact Or.inl ⟨rfl, tauStar_trans hyx (tauStar_single hstep)⟩
+    · exact Or.inr ⟨hα, x, x', hyx, hstep, tauStar_refl L tau x'⟩
+  · by_cases hα : α = tau
+    · subst hα; exact Or.inl ⟨rfl, tauStar_trans hxy (tauStar_single hstep)⟩
+    · exact Or.inr ⟨hα, y, y', hxy, hstep, tauStar_refl L tau y'⟩
+
 end LTS
 
 end DeepWiki.ReactiveSystems

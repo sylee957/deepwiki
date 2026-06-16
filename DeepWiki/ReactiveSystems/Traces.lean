@@ -50,6 +50,37 @@ theorem Bisimilar.traces_eq {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q
 theorem Bisimilar.traceEquiv {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q) :
     TraceEquiv L p q := h.traces_eq
 
+/-- A state is deadlocked when it affords no transition. -/
+def Deadlocked (L : LTS Proc Act) (p : Proc) : Prop := ∀ a q, ¬ L.step p a q
+
+/-- `CompletedTraces L p`: the action sequences from `p` ending in a deadlocked
+state (Exercise 3.2). -/
+def CompletedTraces (L : LTS Proc Act) (p : Proc) : Set (List Act) :=
+  {s | ∃ q, Path L p s q ∧ Deadlocked L q}
+
+/-- Completed-trace equivalence (Exercise 3.2): equal completed-trace sets. -/
+def CompletedTraceEquiv (L : LTS Proc Act) (p q : Proc) : Prop :=
+  CompletedTraces L p = CompletedTraces L q
+
+/-- Bisimilarity preserves deadlock. -/
+theorem Bisimilar.deadlocked {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q)
+    (hp : Deadlocked L p) : Deadlocked L q := by
+  intro a q' hstep
+  obtain ⟨p', hp', _⟩ := ((bisimilar_iff p q).mp h).2 a q' hstep
+  exact hp a p' hp'
+
+/-- Strong bisimilarity implies completed-trace equivalence. -/
+theorem Bisimilar.completedTraceEquiv {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q) :
+    CompletedTraceEquiv L p q := by
+  ext s
+  constructor
+  · rintro ⟨p', hpath, hdead⟩
+    obtain ⟨q', hq, hb⟩ := h.path_forward hpath
+    exact ⟨q', hq, hb.deadlocked hdead⟩
+  · rintro ⟨q', hpath, hdead⟩
+    obtain ⟨p', hp, hb⟩ := h.symm.path_forward hpath
+    exact ⟨p', hp, hb.deadlocked hdead⟩
+
 end LTS
 
 end DeepWiki.ReactiveSystems
