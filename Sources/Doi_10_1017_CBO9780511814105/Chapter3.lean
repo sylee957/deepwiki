@@ -6,6 +6,7 @@ import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsCongruence
 import DeepWiki.ReactiveSystems.CcsWeakCongruence
+import DeepWiki.ReactiveSystems.CcsBufferTwo
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -311,6 +312,17 @@ theorem ex_3_3 : (CCS.const Ex33K.P) ~[ccsLTS ex33defn] (CCS.const Ex33K.Q) := b
       rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+
+/-- **Figure 3.2 / Proposition 3.2** (§3.3, p.51), the `n = 2` case. A two-place
+buffer is strongly bisimilar to two one-place buffers in parallel:
+`B²₀ ~ B¹₀ ∣ B¹₀`. (The general `n`-buffer statement `Bⁿ₀ ~ (B¹₀)ⁿ` is a
+parallel-bag bisimulation over `n` components.) Discharged by the library's
+`buffer_two`. -/
+theorem prop_3_2_two :
+    (CCS.const DeepWiki.ReactiveSystems.BufK.Two0) ~[ccsLTS DeepWiki.ReactiveSystems.bufDefn]
+      (CCS.par (CCS.const DeepWiki.ReactiveSystems.BufK.One0)
+        (CCS.const DeepWiki.ReactiveSystems.BufK.One0)) :=
+  DeepWiki.ReactiveSystems.buffer_two
 
 /-! ## Exercise 3.26: Milner's τ-laws
 
