@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
+import DeepWiki.ReactiveSystems.TimedRegionGraph
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -155,5 +156,50 @@ theorem thm_11_3_untimedBisimilar_fintype {Loc : Type*} [Fintype C]
 /-- **Definition 11.13** (§11.4, p.209). A *region* is an `≡`-equivalence class
 `[v]_≡` of clock valuations. The library's `Region`. -/
 abbrev def_11_13 := @DeepWiki.ReactiveSystems.Region
+
+/-- **Definition 11.14** (§11.4, p.212). The *region graph* `Tᵣ(A)`: the quotient
+of the untimed transition system by region equivalence on configurations, with
+action labels lifted and a single `ε`-label for "some delay". The library's
+`TimedAutomaton.regionGraph` (`Tᵤ(A).quot (regionConfigSetoid cmax)`). -/
+noncomputable abbrev def_11_14 := @DeepWiki.ReactiveSystems.TimedAutomaton.regionGraph
+
+/-- **Theorem 11.4** (§11.4, p.213), finiteness part. The region graph of a timed
+automaton (finitely many locations and clocks) has finitely many symbolic
+states. -/
+theorem thm_11_4_finite {Loc : Type*} [Finite Loc] [Finite C] (cmax : C → ℕ) :
+    Finite (Quotient (DeepWiki.ReactiveSystems.regionConfigSetoid (Loc := Loc) cmax)) :=
+  DeepWiki.ReactiveSystems.regionGraph_finite cmax
+
+/-- **Theorem 11.4** (§11.4, p.213), bisimilarity part (unconditional for finite
+clock sets). A configuration `(ℓ,v)` of the untimed transition system `Tᵤ(A)` is
+strongly bisimilar to its symbolic state `(ℓ,[v]_≡)` in the region graph `Tᵣ(A)`. -/
+theorem thm_11_4_bisimilar {Loc : Type*} [Fintype C] (A : TimedAutomaton Loc Act C)
+    {cmax : C → ℕ} (wf : A.WellFormed cmax) (c : Loc × Valuation C) :
+    LTS.CrossBisimilar A.tlts.untimedLTS (A.regionGraph cmax) c
+      (DeepWiki.ReactiveSystems.symbolicState cmax c) :=
+  A.regionGraph_crossBisimilar_fintype wf c
+
+/-- **Corollary 11.1** (§11.4, p.213). Untimed bisimilarity is decidable: two
+configurations are untimed bisimilar iff their symbolic states are strongly
+bisimilar in the *finite* region graph. -/
+theorem cor_11_1 {Loc : Type*} [Fintype C] (A : TimedAutomaton Loc Act C)
+    {cmax : C → ℕ} (wf : A.WellFormed cmax) (c₁ c₂ : Loc × Valuation C) :
+    A.tlts.UntimedBisimilar c₁ c₂ ↔
+      LTS.Bisimilar (A.regionGraph cmax)
+        (DeepWiki.ReactiveSystems.symbolicState cmax c₁)
+        (DeepWiki.ReactiveSystems.symbolicState cmax c₂) :=
+  A.untimedBisimilar_iff_regionGraph_fintype wf c₁ c₂
+
+/-- **Lemma 11.2 / Corollary 11.2** (§11.4, p.214). The reachability problem is
+decidable: a symbolic state `t` is reachable in the region graph from `⟦c₀⟧` iff
+`A` reaches some configuration in the class `t`, reducing reachability in the
+infinite timed system to reachability in the finite region graph. -/
+theorem lemma_11_2 {Loc : Type*} [Fintype C] (A : TimedAutomaton Loc Act C)
+    {cmax : C → ℕ} (wf : A.WellFormed cmax) (c₀ : Loc × Valuation C)
+    (t : Quotient (DeepWiki.ReactiveSystems.regionConfigSetoid cmax)) :
+    (A.regionGraph cmax).Reachable (DeepWiki.ReactiveSystems.symbolicState cmax c₀) t ↔
+      ∃ c, DeepWiki.ReactiveSystems.symbolicState cmax c = t ∧
+        A.tlts.untimedLTS.Reachable c₀ c :=
+  A.reachable_iff_regionGraph_fintype wf c₀ t
 
 end DeepWiki.Rs
