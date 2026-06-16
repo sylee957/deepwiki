@@ -29,6 +29,7 @@ import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
