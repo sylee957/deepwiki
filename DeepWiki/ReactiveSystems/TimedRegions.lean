@@ -546,4 +546,629 @@ theorem RegionEq.timeSuccessor_zero {cmax : C → ℕ} {v v' : Valuation C}
   have e : ∀ w : Valuation C, w.add 0 = w := fun w => by funext x; simp
   rw [e, e]; exact h
 
+/-! ## The general time-successor (finite clock sets)
+
+The general multi-clock time-successor is reduced to two pieces, then assembled:
+adding an integer delay preserves region equivalence (`regionEq_add_natCast` —
+fractional parts are unchanged); and a sub-unit delay `δ ∈ [0,1)` is matched by a
+sub-unit delay `δ'` (`RegionEq.timeSuccessor_frac`), constructed by transporting
+the wrap threshold `1 − δ` across the (shared) fractional order of the bounded
+clocks (`threshold_transport`) and feeding the matched wrap/integer-hit bits to
+the region-equivalence reduction `regionEq_add_of_match`. Combining via
+`d = ⌊d⌋ + frac d` gives `timeSuccessor_of_fintype`. -/
+
+/-- `fracPart (r + 1) = fracPart r`: the integer shift leaves the fractional part fixed. -/
+theorem fracPart_add_one (r : ℝ≥0) : fracPart (r + 1) = fracPart r := by
+  unfold fracPart; push_cast; exact Int.fract_add_one _
+
+/-- `⌊r + 1⌋₊ = ⌊r⌋₊ + 1` on `ℝ≥0`. -/
+theorem floor_add_one_nnreal (r : ℝ≥0) : ⌊r + 1⌋₊ = ⌊r⌋₊ + 1 :=
+  Nat.floor_add_one (zero_le' (a := r))
+
+/-- `r + 1 ≤ cmax` characterized by `⌊r⌋₊` and whether `r` is integral. -/
+theorem add_one_le_iff_of_frac {cmax : ℕ} (r : ℝ≥0) :
+    (r + 1 ≤ (cmax : ℝ≥0)) ↔
+      (if fracPart r = 0 then ⌊r⌋₊ + 1 ≤ cmax else ⌊r⌋₊ + 2 ≤ cmax) := by
+  have hcast : (r + 1 ≤ (cmax : ℝ≥0)) ↔ ((r:ℝ) + 1 ≤ (cmax:ℝ)) := by
+    constructor
+    · intro h; have : ((r+1:ℝ≥0):ℝ) ≤ ((cmax:ℝ≥0):ℝ) := by exact_mod_cast h
+      push_cast at this; linarith
+    · intro h
+      have h2 : ((r+1:ℝ≥0):ℝ) ≤ ((cmax:ℝ≥0):ℝ) := by push_cast; push_cast at h; linarith
+      exact_mod_cast h2
+  rw [hcast]
+  have hfloor : (⌊r⌋₊ : ℝ) ≤ (r:ℝ) := by
+    have := Nat.floor_le (zero_le' (a := r)); exact_mod_cast this
+  have hceil : (r:ℝ) < (⌊r⌋₊ : ℝ) + 1 := by
+    have h := Nat.lt_floor_add_one (a := r)
+    have h2 : (r:ℝ) < ((⌊r⌋₊ : ℝ≥0) + 1 : ℝ≥0) := by exact_mod_cast h
+    push_cast at h2; linarith
+  by_cases hf : fracPart r = 0
+  · simp only [hf, if_true]
+    have heq : (⌊r⌋₊ : ℝ) = (r:ℝ) := by
+      have := (fracPart_eq_zero_iff r).mp hf; exact_mod_cast this
+    constructor
+    · intro h; have hh : (⌊r⌋₊ : ℝ) + 1 ≤ (cmax:ℝ) := by rw [heq]; linarith
+      exact_mod_cast hh
+    · intro h; have hc : (⌊r⌋₊ : ℝ) + 1 ≤ (cmax:ℝ) := by exact_mod_cast h
+      rw [← heq]; linarith
+  · simp only [hf, if_false]
+    have hlt : (⌊r⌋₊ : ℝ) < (r:ℝ) := by
+      have := (fracPart_ne_zero_iff r).mp hf; exact_mod_cast this
+    constructor
+    · intro h; have : (⌊r⌋₊ : ℝ) + 1 < (cmax:ℝ) := by linarith
+      have : ⌊r⌋₊ + 1 < cmax := by exact_mod_cast this
+      omega
+    · intro h; have hc : (⌊r⌋₊ : ℝ) + 2 ≤ (cmax:ℝ) := by exact_mod_cast h
+      linarith
+
+/-- If `r + 1 ≤ cmax` then `r ≤ cmax`. -/
+theorem le_cmax_of_add_one_le {cmax : ℕ} {r : ℝ≥0} (h : r + 1 ≤ (cmax : ℝ≥0)) :
+    r ≤ (cmax : ℝ≥0) := le_trans le_self_add h
+
+/-- If `(v.add 1) x ≤ cmax x` then `v x ≤ cmax x`. -/
+theorem le_cmax_of_add_one_le' {cmax : C → ℕ} {v : Valuation C} {x : C}
+    (h : (v.add 1) x ≤ (cmax x : ℝ≥0)) : v x ≤ (cmax x : ℝ≥0) := by
+  simp only [Valuation.add_apply] at h; exact le_cmax_of_add_one_le h
+
+/-- Region floors agree after the unit shift when they agree before. -/
+theorem regionFloor_add_one_eq {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') (x : C) :
+    regionFloor cmax (v.add 1) x = regionFloor cmax (v'.add 1) x := by
+  obtain ⟨h1, h2, _⟩ := h
+  have hb := bounded_iff_regionFloor (h1 x)
+  rw [regionFloor_add, regionFloor_add]
+  simp only [floor_add_one_nnreal]
+  by_cases hvb : v x ≤ (cmax x : ℝ≥0)
+  · have hv'b : v' x ≤ (cmax x : ℝ≥0) := hb.mp hvb
+    have hfloors : (⌊v x⌋₊ : ℕ) = ⌊v' x⌋₊ := by
+      have := h1 x; rw [regionFloor, regionFloor] at this
+      simp only [hvb, hv'b, if_true] at this; exact this
+    have hfrac : fracPart (v x) = 0 ↔ fracPart (v' x) = 0 := h2 x hvb
+    have hguard : (v x + 1 ≤ (cmax x : ℝ≥0)) ↔ (v' x + 1 ≤ (cmax x : ℝ≥0)) := by
+      rw [add_one_le_iff_of_frac, add_one_le_iff_of_frac, hfloors]
+      by_cases hfz : fracPart (v x) = 0
+      · rw [if_pos hfz, if_pos (hfrac.mp hfz)]
+      · rw [if_neg hfz, if_neg (fun c => hfz (hfrac.mpr c))]
+    by_cases hg : v x + 1 ≤ (cmax x : ℝ≥0)
+    · rw [if_pos hg, if_pos (hguard.mp hg), hfloors]
+    · rw [if_neg hg, if_neg (fun c => hg (hguard.mpr c))]
+  · have hv'b : ¬ v' x ≤ (cmax x : ℝ≥0) := fun c => hvb (hb.mpr c)
+    have hg : ¬ (v x + 1 ≤ (cmax x : ℝ≥0)) := fun c => hvb (le_cmax_of_add_one_le c)
+    have hg' : ¬ (v' x + 1 ≤ (cmax x : ℝ≥0)) := fun c => hv'b (le_cmax_of_add_one_le c)
+    rw [if_neg hg, if_neg hg']
+
+/-- `RegionEq` is preserved by adding the unit delay. -/
+theorem regionEq_add_one {cmax : C → ℕ} {v v' : Valuation C} (h : RegionEq cmax v v') :
+    RegionEq cmax (v.add 1) (v'.add 1) := by
+  refine ⟨fun x => regionFloor_add_one_eq h x, ?_, ?_⟩
+  · intro x hx
+    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le' hx
+    simp only [Valuation.add_apply, fracPart_add_one]
+    exact h.2.1 x hvx
+  · intro x y hx hy
+    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le' hx
+    have hvy : v y ≤ (cmax y : ℝ≥0) := le_cmax_of_add_one_le' hy
+    simp only [Valuation.add_apply, fracPart_add_one]
+    exact h.2.2 x y hvx hvy
+
+/-- `RegionEq` is preserved by adding any natural-number delay. -/
+theorem regionEq_add_natCast {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') (N : ℕ) :
+    RegionEq cmax (v.add (N : ℝ≥0)) (v'.add (N : ℝ≥0)) := by
+  induction N with
+  | zero =>
+    have e : ∀ w : Valuation C, w.add ((0 : ℕ) : ℝ≥0) = w := by
+      intro w; funext x; simp [Valuation.add_apply]
+    rw [e, e]; exact h
+  | succ n ih =>
+    have e : ∀ w : Valuation C, w.add (((n + 1 : ℕ) : ℝ≥0)) = (w.add (n : ℝ≥0)).add 1 := by
+      intro w; funext x; simp only [Valuation.add_apply]; push_cast; ring
+    rw [e, e]; exact regionEq_add_one ih
+
+/-- A clock value over `ℝ` decomposes as `⌊a⌋₊ + fracPart a`. -/
+theorem coe_eq_floor_add_fracPart (a : ℝ≥0) : (a : ℝ) = (⌊a⌋₊ : ℝ) + fracPart a := by
+  unfold fracPart
+  have hbridge : ((⌊a⌋₊ : ℝ≥0) : ℝ) = (⌊(a : ℝ)⌋ : ℝ) := by
+    have e1 : ((⌊a⌋₊ : ℝ≥0) : ℝ) = (⌊(a : ℝ)⌋₊ : ℝ) := by push_cast; congr 1
+    have e2 : ((⌊(a : ℝ)⌋₊ : ℤ) : ℝ) = (⌊(a : ℝ)⌋ : ℝ) := by
+      rw [Int.natCast_floor_eq_floor a.coe_nonneg]
+    rw [e1]; push_cast at e2 ⊢; exact e2
+  push_cast at hbridge ⊢
+  rw [hbridge]
+  linarith [Int.fract_add_floor (a : ℝ)]
+
+/-- `fracPart a < 1`. -/
+theorem fracPart_lt_one (a : ℝ≥0) : fracPart a < 1 := Int.fract_lt_one _
+
+/-- `0 ≤ fracPart a`. -/
+theorem fracPart_nonneg (a : ℝ≥0) : 0 ≤ fracPart a := Int.fract_nonneg _
+
+/-- **No wrap.** A delay keeping the fractional part below `1` adds to it and fixes the
+integer part. -/
+theorem fracPart_add_of_no_wrap {a δ : ℝ≥0} (h : fracPart a + (δ : ℝ) < 1) :
+    fracPart (a + δ) = fracPart a + (δ : ℝ) ∧ ⌊a + δ⌋₊ = ⌊a⌋₊ := by
+  have hdecomp := coe_eq_floor_add_fracPart a
+  have hfr : fracPart (a + δ) = fracPart a + (δ : ℝ) := by
+    unfold fracPart
+    push_cast
+    rw [Int.fract_eq_iff]
+    refine ⟨by have := fracPart_nonneg a; positivity, h, ⌊(a : ℝ)⌋, ?_⟩
+    have hf := Int.self_sub_fract (a : ℝ)
+    unfold fracPart at hdecomp
+    linarith [hf]
+  refine ⟨hfr, ?_⟩
+  apply floor_eq_of_mem
+  · exact le_trans (Nat.floor_le (zero_le' (a := a))) le_self_add
+  · have : ((a + δ : ℝ≥0) : ℝ) < (⌊a⌋₊ : ℝ) + 1 := by
+      push_cast
+      have : (a : ℝ) + δ = (⌊a⌋₊ : ℝ) + (fracPart a + δ) := by rw [hdecomp]; ring
+      rw [this]; linarith
+    exact_mod_cast this
+
+/-- **Wrap.** A sub-unit delay carrying the fractional part to `1` or beyond drops it by `1`
+and raises the integer part by `1`. -/
+theorem fracPart_add_of_wrap {a δ : ℝ≥0} (hδ : (δ : ℝ) < 1) (h : 1 ≤ fracPart a + (δ : ℝ)) :
+    fracPart (a + δ) = fracPart a + (δ : ℝ) - 1 ∧ ⌊a + δ⌋₊ = ⌊a⌋₊ + 1 := by
+  have hdecomp := coe_eq_floor_add_fracPart a
+  have hfrac1 : 1 ≤ Int.fract (a : ℝ) + (δ : ℝ) := h
+  have hfr : fracPart (a + δ) = fracPart a + (δ : ℝ) - 1 := by
+    unfold fracPart
+    push_cast
+    rw [Int.fract_eq_iff]
+    refine ⟨by linarith, by linarith [Int.fract_lt_one (a : ℝ)], ⌊(a : ℝ)⌋ + 1, ?_⟩
+    have hf := Int.self_sub_fract (a : ℝ)
+    unfold fracPart at hdecomp
+    push_cast
+    linarith [hf]
+  refine ⟨hfr, ?_⟩
+  apply floor_eq_of_mem
+  · have h2 : (⌊a⌋₊ : ℝ) + 1 ≤ ((a + δ : ℝ≥0) : ℝ) := by
+      push_cast
+      have hd : (a : ℝ) + δ = (⌊a⌋₊ : ℝ) + (fracPart a + δ) := by rw [hdecomp]; ring
+      rw [hd]; linarith
+    rw [Nat.cast_add, Nat.cast_one]; exact_mod_cast h2
+  · have h2 : ((a + δ : ℝ≥0) : ℝ) < (((⌊a⌋₊ + 1 : ℕ) : ℝ≥0) : ℝ) + 1 := by
+      push_cast
+      have hd : (a : ℝ) + δ = (⌊a⌋₊ : ℝ) + (fracPart a + δ) := by rw [hdecomp]; ring
+      rw [hd]; linarith [fracPart_lt_one a]
+    exact_mod_cast h2
+
+/-- For a clock bounded in `v` and a strictly positive delay `δ < 1`, the clamped floor
+after delay is a function of the integer part, the maximal constant, and the wrap/hit bits:
+no wrap keeps the integer part (collapsing to `cₓ+1` only at the top band); a wrap raises it
+by one, surviving the clamp exactly when below the top band or landing on the integer. -/
+theorem regionFloor_add_pos {cmax : C → ℕ} {v : Valuation C} {x : C}
+    (hvb : v x ≤ cmax x) {δ : ℝ≥0} (hδ0 : (0 : ℝ) < δ) (hδ1 : (δ : ℝ) < 1) :
+    regionFloor cmax (v.add δ) x =
+      (if 1 ≤ fracPart (v x) + (δ : ℝ) then
+        (if ⌊v x⌋₊ + 1 < cmax x then ⌊v x⌋₊ + 1
+         else if fracPart (v x) + (δ : ℝ) = 1 ∧ ⌊v x⌋₊ + 1 = cmax x then ⌊v x⌋₊ + 1
+         else cmax x + 1)
+      else (if ⌊v x⌋₊ < cmax x then ⌊v x⌋₊ else cmax x + 1)) := by
+  have hflcmax : ⌊v x⌋₊ ≤ cmax x := floor_le_of_le_cmax hvb
+  rw [regionFloor_add]
+  have hdecomp := coe_eq_floor_add_fracPart (v x)
+  by_cases hw : 1 ≤ fracPart (v x) + (δ : ℝ)
+  · rw [if_pos hw]
+    obtain ⟨_, hfl⟩ := fracPart_add_of_wrap hδ1 hw
+    have hval : ((v x + δ : ℝ≥0) : ℝ) = (⌊v x⌋₊ : ℝ) + 1 + (fracPart (v x) + δ - 1) := by
+      push_cast; rw [hdecomp]; ring
+    by_cases hlt : ⌊v x⌋₊ + 1 < cmax x
+    · rw [if_pos hlt]
+      have hbnd : v x + δ ≤ cmax x := by
+        have hv2 : ((v x + δ : ℝ≥0) : ℝ) < (⌊v x⌋₊ : ℝ) + 1 + 1 := by
+          rw [hval]; linarith [fracPart_lt_one (v x)]
+        have hc2 : (⌊v x⌋₊ : ℝ) + 1 + 1 ≤ cmax x := by
+          exact_mod_cast (by omega : ⌊v x⌋₊ + 1 + 1 ≤ cmax x)
+        have : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by linarith
+        exact_mod_cast this
+      rw [if_pos hbnd, hfl]
+    · rw [if_neg hlt]
+      by_cases hh : fracPart (v x) + (δ : ℝ) = 1
+      · -- hit
+        have hvalint : ((v x + δ : ℝ≥0) : ℝ) = (⌊v x⌋₊ : ℝ) + 1 := by rw [hval, hh]; ring
+        by_cases heq : ⌊v x⌋₊ + 1 = cmax x
+        · have hbnd : v x + δ ≤ cmax x := by
+            have : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by
+              rw [hvalint]; have : (⌊v x⌋₊ : ℝ) + 1 = cmax x := by exact_mod_cast heq
+              linarith
+            exact_mod_cast this
+          rw [if_pos hbnd, hfl, if_pos ⟨hh, heq⟩]
+        · have hgt : cmax x < ⌊v x⌋₊ + 1 := by omega
+          have hub : ¬ v x + δ ≤ cmax x := by
+            intro hc
+            have hcr : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by exact_mod_cast hc
+            rw [hvalint] at hcr
+            have : (cmax x : ℝ) + 1 ≤ ⌊v x⌋₊ + 1 := by exact_mod_cast Nat.succ_le_of_lt hgt
+            linarith
+          rw [if_neg hub, if_neg (by tauto)]
+      · -- strict wrap
+        have hsw : (⌊v x⌋₊ : ℝ) + 1 < ((v x + δ : ℝ≥0) : ℝ) := by
+          rw [hval]
+          have : 0 < fracPart (v x) + (δ : ℝ) - 1 := by
+            rcases lt_or_eq_of_le hw with h | h
+            · linarith
+            · exact absurd h.symm hh
+          linarith
+        have hge : cmax x ≤ ⌊v x⌋₊ + 1 := by omega
+        have hub : ¬ v x + δ ≤ cmax x := by
+          intro hc
+          have hcr : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by exact_mod_cast hc
+          have hge' : (cmax x : ℝ) ≤ ⌊v x⌋₊ + 1 := by exact_mod_cast hge
+          linarith
+        rw [if_neg hub, if_neg (by tauto)]
+  · rw [if_neg hw]
+    push Not at hw
+    obtain ⟨_, hfl⟩ := fracPart_add_of_no_wrap hw
+    have hval : ((v x + δ : ℝ≥0) : ℝ) = (⌊v x⌋₊ : ℝ) + (fracPart (v x) + δ) := by
+      push_cast; rw [hdecomp]; ring
+    by_cases hlt : ⌊v x⌋₊ < cmax x
+    · rw [if_pos hlt]
+      have hbnd : v x + δ ≤ cmax x := by
+        have hv2 : ((v x + δ : ℝ≥0) : ℝ) < (⌊v x⌋₊ : ℝ) + 1 := by rw [hval]; linarith
+        have hc2 : (⌊v x⌋₊ : ℝ) + 1 ≤ cmax x := by exact_mod_cast Nat.succ_le_of_lt hlt
+        have : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by linarith
+        exact_mod_cast this
+      rw [if_pos hbnd, hfl]
+    · rw [if_neg hlt]
+      have heq : ⌊v x⌋₊ = cmax x := le_antisymm hflcmax (by omega)
+      have hub : ¬ v x + δ ≤ cmax x := by
+        intro hc
+        have hcr : ((v x + δ : ℝ≥0) : ℝ) ≤ (cmax x : ℝ) := by exact_mod_cast hc
+        rw [hval, heq] at hcr
+        have : 0 < fracPart (v x) + (δ : ℝ) := by linarith [fracPart_nonneg (v x)]
+        linarith
+      rw [if_neg hub]
+
+/-- Fractional part after a positive sub-unit delay: the sum, dropping `1` on a wrap. -/
+theorem fracPart_add_value {a δ : ℝ≥0} (hδ1 : (δ : ℝ) < 1) :
+    fracPart (a + δ) = if 1 ≤ fracPart a + (δ : ℝ) then fracPart a + (δ : ℝ) - 1
+      else fracPart a + (δ : ℝ) := by
+  by_cases hw : 1 ≤ fracPart a + (δ : ℝ)
+  · rw [if_pos hw]; exact (fracPart_add_of_wrap hδ1 hw).1
+  · rw [if_neg hw]; exact (fracPart_add_of_no_wrap (by push Not at hw; exact hw)).1
+
+/-- After a positive sub-unit delay, the fractional part is zero exactly at an integer hit
+(`fracPart a + δ = 1`). -/
+theorem fracPart_add_eq_zero_iff {a δ : ℝ≥0} (hδ0 : (0 : ℝ) < δ) (hδ1 : (δ : ℝ) < 1) :
+    fracPart (a + δ) = 0 ↔ fracPart a + (δ : ℝ) = 1 := by
+  rw [fracPart_add_value hδ1]
+  by_cases hw : 1 ≤ fracPart a + (δ : ℝ)
+  · rw [if_pos hw]
+    constructor
+    · intro h; linarith
+    · intro h; linarith
+  · rw [if_neg hw]
+    constructor
+    · intro h
+      have := fracPart_nonneg a
+      linarith
+    · intro h
+      push Not at hw; linarith
+
+/-- **Reduction step.** Given region-equivalent valuations and positive sub-unit delays
+`δ, δ'` that match the *wrap* bit (whether a bounded clock's fractional part reaches the
+next integer) and the *integer-hit* bit (whether it lands exactly on it) at every clock
+bounded in `v`, the delayed valuations are again region-equivalent. The clamped floor,
+fractional-zero set and fractional order after the delay are all determined by the integer
+parts (shared) together with these two matched bits. -/
+theorem regionEq_add_of_match {cmax : C → ℕ} {v v' : Valuation C} (h : RegionEq cmax v v')
+    {δ δ' : ℝ≥0} (hδ0 : (0 : ℝ) < δ) (hδ1 : (δ : ℝ) < 1)
+    (hδ'0 : (0 : ℝ) < δ') (hδ'1 : (δ' : ℝ) < 1)
+    (hwrap : ∀ x, v x ≤ cmax x →
+      (1 ≤ fracPart (v x) + (δ : ℝ) ↔ 1 ≤ fracPart (v' x) + (δ' : ℝ)))
+    (hhit : ∀ x, v x ≤ cmax x →
+      (fracPart (v x) + (δ : ℝ) = 1 ↔ fracPart (v' x) + (δ' : ℝ) = 1)) :
+    RegionEq cmax (v.add δ) (v'.add δ') := by
+  obtain ⟨h1, h2, h3⟩ := h
+  -- shared integer parts on bounded clocks
+  have hfleq : ∀ x, v x ≤ cmax x → ⌊v x⌋₊ = ⌊v' x⌋₊ := by
+    intro x hx
+    have hx' : v' x ≤ cmax x := (bounded_iff_regionFloor (h1 x)).mp hx
+    have := h1 x; unfold regionFloor at this
+    rw [if_pos hx, if_pos hx'] at this; exact this
+  refine ⟨?_, ?_, ?_⟩
+  · -- C1: clamped floors agree after delay
+    intro x
+    by_cases hx : v x ≤ cmax x
+    · have hx' : v' x ≤ cmax x := (bounded_iff_regionFloor (h1 x)).mp hx
+      rw [regionFloor_add_pos hx hδ0 hδ1, regionFloor_add_pos hx' hδ'0 hδ'1, ← hfleq x hx]
+      by_cases hw : 1 ≤ fracPart (v x) + (δ : ℝ)
+      · have hw' : 1 ≤ fracPart (v' x) + (δ' : ℝ) := (hwrap x hx).mp hw
+        rw [if_pos hw, if_pos hw']
+        by_cases hlt : ⌊v x⌋₊ + 1 < cmax x
+        · rw [if_pos hlt]; rw [if_pos hlt]
+        · rw [if_neg hlt, if_neg hlt]
+          by_cases heq : ⌊v x⌋₊ + 1 = cmax x
+          · by_cases hh : fracPart (v x) + (δ : ℝ) = 1
+            · have hh' : fracPart (v' x) + (δ' : ℝ) = 1 := (hhit x hx).mp hh
+              rw [if_pos ⟨hh, heq⟩, if_pos ⟨hh', heq⟩]
+            · have hh' : ¬ fracPart (v' x) + (δ' : ℝ) = 1 := fun c => hh ((hhit x hx).mpr c)
+              rw [if_neg (by tauto), if_neg (by tauto)]
+          · rw [if_neg (by tauto), if_neg (by tauto)]
+      · have hw' : ¬ 1 ≤ fracPart (v' x) + (δ' : ℝ) := fun c => hw ((hwrap x hx).mpr c)
+        rw [if_neg hw, if_neg hw']
+    · -- unbounded in v (hence in v'): stays unbounded
+      have hx' : ¬ v' x ≤ cmax x := fun hc => hx ((bounded_iff_regionFloor (h1 x)).mpr hc)
+      have hgt : (cmax x : ℝ≥0) < v x := not_le.mp hx
+      have hgt' : (cmax x : ℝ≥0) < v' x := not_le.mp hx'
+      have hub : ¬ (v.add δ) x ≤ cmax x := by
+        simp only [Valuation.add_apply]
+        exact not_le.mpr (lt_of_lt_of_le hgt le_self_add)
+      have hub' : ¬ (v'.add δ') x ≤ cmax x := by
+        simp only [Valuation.add_apply]
+        exact not_le.mpr (lt_of_lt_of_le hgt' le_self_add)
+      unfold regionFloor; rw [if_neg hub, if_neg hub']
+  · -- C2: frac-zero agreement after delay, on clocks bounded-after
+    intro x hxa
+    simp only [Valuation.add_apply] at hxa
+    have hx : v x ≤ cmax x := le_trans le_self_add hxa
+    have hx' : v' x ≤ cmax x := (bounded_iff_regionFloor (h1 x)).mp hx
+    simp only [Valuation.add_apply]
+    rw [fracPart_add_eq_zero_iff hδ0 hδ1, fracPart_add_eq_zero_iff hδ'0 hδ'1]
+    exact hhit x hx
+  · -- C3: frac-order agreement after delay, on clocks bounded-after
+    intro x y hxa hya
+    simp only [Valuation.add_apply] at hxa hya
+    have hx : v x ≤ cmax x := le_trans le_self_add hxa
+    have hy : v y ≤ cmax y := le_trans le_self_add hya
+    simp only [Valuation.add_apply]
+    rw [fracPart_add_value hδ1, fracPart_add_value hδ1, fracPart_add_value hδ'1,
+      fracPart_add_value hδ'1]
+    have hfx := fracPart_lt_one (v x); have hfy := fracPart_lt_one (v y)
+    have hfx' := fracPart_lt_one (v' x); have hfy' := fracPart_lt_one (v' y)
+    have hnx := fracPart_nonneg (v x); have hny := fracPart_nonneg (v y)
+    have hnx' := fracPart_nonneg (v' x); have hny' := fracPart_nonneg (v' y)
+    by_cases hwx : 1 ≤ fracPart (v x) + (δ : ℝ) <;> by_cases hwy : 1 ≤ fracPart (v y) + (δ : ℝ)
+    · -- both wrap
+      have hwx' : 1 ≤ fracPart (v' x) + (δ' : ℝ) := (hwrap x hx).mp hwx
+      have hwy' : 1 ≤ fracPart (v' y) + (δ' : ℝ) := (hwrap y hy).mp hwy
+      rw [if_pos hwx, if_pos hwy, if_pos hwx', if_pos hwy']
+      rw [show (fracPart (v x) + (δ:ℝ) - 1 ≤ fracPart (v y) + (δ:ℝ) - 1) ↔
+        (fracPart (v x) ≤ fracPart (v y)) by constructor <;> intro <;> linarith,
+        show (fracPart (v' x) + (δ':ℝ) - 1 ≤ fracPart (v' y) + (δ':ℝ) - 1) ↔
+        (fracPart (v' x) ≤ fracPart (v' y)) by constructor <;> intro <;> linarith]
+      exact h3 x y hx hy
+    · -- x wrap, y no-wrap : both sides True
+      have hwx' : 1 ≤ fracPart (v' x) + (δ' : ℝ) := (hwrap x hx).mp hwx
+      have hwy' : ¬ 1 ≤ fracPart (v' y) + (δ' : ℝ) := fun c => hwy ((hwrap y hy).mpr c)
+      rw [if_pos hwx, if_neg hwy, if_pos hwx', if_neg hwy']
+      exact iff_of_true (by linarith) (by linarith)
+    · -- x no-wrap, y wrap : both sides False
+      have hwx' : ¬ 1 ≤ fracPart (v' x) + (δ' : ℝ) := fun c => hwx ((hwrap x hx).mpr c)
+      have hwy' : 1 ≤ fracPart (v' y) + (δ' : ℝ) := (hwrap y hy).mp hwy
+      rw [if_neg hwx, if_pos hwy, if_neg hwx', if_pos hwy']
+      exact iff_of_false (by linarith) (by linarith)
+    · -- both no-wrap
+      have hwx' : ¬ 1 ≤ fracPart (v' x) + (δ' : ℝ) := fun c => hwx ((hwrap x hx).mpr c)
+      have hwy' : ¬ 1 ≤ fracPart (v' y) + (δ' : ℝ) := fun c => hwy ((hwrap y hy).mpr c)
+      rw [if_neg hwx, if_neg hwy, if_neg hwx', if_neg hwy']
+      rw [show (fracPart (v x) + (δ:ℝ) ≤ fracPart (v y) + (δ:ℝ)) ↔
+        (fracPart (v x) ≤ fracPart (v y)) by constructor <;> intro <;> linarith,
+        show (fracPart (v' x) + (δ':ℝ) ≤ fracPart (v' y) + (δ':ℝ)) ↔
+        (fracPart (v' x) ≤ fracPart (v' y)) by constructor <;> intro <;> linarith]
+      exact h3 x y hx hy
+
+open Classical in
+/-- **Threshold transport.** On a finite index set `B`, given two `[0,1)`-valued families
+agreeing on which entries are zero and on their order, any threshold `t ∈ (0,1)` for the
+first family is matched by a threshold `t' ∈ (0,1)` for the second: the entries weakly
+above the threshold, and exactly at it, are the same. -/
+theorem threshold_transport [Fintype C] (B : Finset C) (f f' : C → ℝ)
+    (hf' : ∀ x ∈ B, 0 ≤ f' x ∧ f' x < 1)
+    (hzero : ∀ x ∈ B, f x = 0 ↔ f' x = 0)
+    (horder : ∀ x ∈ B, ∀ y ∈ B, f x ≤ f y ↔ f' x ≤ f' y)
+    (t : ℝ) (ht0 : 0 < t) (ht1 : t < 1) :
+    ∃ t', 0 < t' ∧ t' < 1 ∧ (∀ x ∈ B, (t ≤ f x ↔ t' ≤ f' x)) ∧
+      (∀ x ∈ B, (f x = t ↔ f' x = t')) := by
+  -- strict order transfer from order + zero agreement
+  have hstrict : ∀ x ∈ B, ∀ y ∈ B, f x < f y → f' x < f' y := by
+    intro x hx y hy hlt
+    have h1 : f' x ≤ f' y := (horder x hx y hy).mp hlt.le
+    have h2 : ¬ f' y ≤ f' x := fun c => absurd ((horder y hy x hx).mpr c) (not_le.mpr hlt)
+    exact lt_of_le_not_ge h1 h2
+  have hpos : ∀ x ∈ B, 0 < f x → 0 < f' x := by
+    intro x hx hfx
+    have : f' x ≠ 0 := fun c => absurd ((hzero x hx).mpr c) (ne_of_gt hfx)
+    exact lt_of_le_of_ne (hf' x hx).1 (Ne.symm this)
+  by_cases hhit : ∃ x0 ∈ B, f x0 = t
+  · -- hit case
+    obtain ⟨x0, hx0B, hx0eq⟩ := hhit
+    refine ⟨f' x0, hpos x0 hx0B (hx0eq ▸ ht0), (hf' x0 hx0B).2, ?_, ?_⟩
+    · intro x hxB
+      rw [← hx0eq]; exact horder x0 hx0B x hxB
+    · intro x hxB
+      constructor
+      · intro h
+        rw [← hx0eq] at h
+        exact le_antisymm ((horder x hxB x0 hx0B).mp h.le) ((horder x0 hx0B x hxB).mp h.ge)
+      · intro h
+        rw [← hx0eq]
+        exact le_antisymm ((horder x hxB x0 hx0B).mpr h.le) ((horder x0 hx0B x hxB).mpr h.ge)
+  · -- no-hit case: every x∈B has f x ≠ t
+    push Not at hhit
+    by_cases hBne : B.Nonempty
+    · -- partition B by f x vs t
+      set Hi := B.filter (fun x => t < f x) with hHi
+      set Lo := B.filter (fun x => f x < t) with hLo
+      have hpart : ∀ x ∈ B, x ∈ Hi ∨ x ∈ Lo := by
+        intro x hxB
+        rcases lt_trichotomy (f x) t with h | h | h
+        · right; rw [hLo, Finset.mem_filter]; exact ⟨hxB, h⟩
+        · exact absurd h (hhit x hxB)
+        · left; rw [hHi, Finset.mem_filter]; exact ⟨hxB, h⟩
+      by_cases hHine : Hi.Nonempty
+      · by_cases hLone : Lo.Nonempty
+        · -- mixed
+          obtain ⟨xh, hxhHi, hxhmin⟩ := Finset.exists_min_image Hi f' hHine
+          obtain ⟨xl, hxlLo, hxlmax⟩ := Finset.exists_max_image Lo f' hLone
+          have hxhB : xh ∈ B := (Finset.mem_filter.mp hxhHi).1
+          have hxhgt : t < f xh := (Finset.mem_filter.mp hxhHi).2
+          have hxlB : xl ∈ B := (Finset.mem_filter.mp hxlLo).1
+          have hxllt : f xl < t := (Finset.mem_filter.mp hxlLo).2
+          have hlt' : f' xl < f' xh := hstrict xl hxlB xh hxhB (lt_trans hxllt hxhgt)
+          have hfxhpos : 0 < f' xh := hpos xh hxhB (lt_trans ht0 hxhgt)
+          refine ⟨(f' xl + f' xh) / 2, by linarith [(hf' xl hxlB).1], by linarith [(hf' xh hxhB).2],
+            ?_, ?_⟩
+          · intro x hxB
+            rcases hpart x hxB with hxHi | hxLo
+            · have hge : f' xh ≤ f' x := hxhmin x hxHi
+              have hgt : t < f x := (Finset.mem_filter.mp hxHi).2
+              constructor
+              · intro _; linarith
+              · intro _; exact hgt.le
+            · have hle : f' x ≤ f' xl := hxlmax x hxLo
+              have hlt : f x < t := (Finset.mem_filter.mp hxLo).2
+              constructor
+              · intro h; linarith
+              · intro h; linarith
+          · intro x hxB
+            rcases hpart x hxB with hxHi | hxLo
+            · have hge : f' xh ≤ f' x := hxhmin x hxHi
+              have hgt : t < f x := (Finset.mem_filter.mp hxHi).2
+              constructor
+              · intro h; exact absurd h (ne_of_gt hgt)
+              · intro h; linarith
+            · have hle : f' x ≤ f' xl := hxlmax x hxLo
+              have hlt : f x < t := (Finset.mem_filter.mp hxLo).2
+              constructor
+              · intro h; exact absurd h (ne_of_lt hlt)
+              · intro h; linarith
+        · -- Lo empty: all of B is Hi
+          obtain ⟨xh, hxhB, hxhmin⟩ := Finset.exists_min_image B f' hBne
+          have hxhgt : t < f xh := by
+            rcases hpart xh hxhB with h | h
+            · exact (Finset.mem_filter.mp h).2
+            · exact absurd ⟨xh, h⟩ hLone
+          have hfxhpos : 0 < f' xh := hpos xh hxhB (lt_trans ht0 hxhgt)
+          refine ⟨f' xh / 2, by linarith, by linarith [(hf' xh hxhB).2], ?_, ?_⟩
+          · intro x hxB
+            have hge : f' xh ≤ f' x := hxhmin x hxB
+            have hgt : t < f x := by
+              rcases hpart x hxB with h | h
+              · exact (Finset.mem_filter.mp h).2
+              · exact absurd ⟨x, h⟩ hLone
+            constructor
+            · intro _; linarith
+            · intro _; exact hgt.le
+          · intro x hxB
+            have hge : f' xh ≤ f' x := hxhmin x hxB
+            have hgt : t < f x := by
+              rcases hpart x hxB with h | h
+              · exact (Finset.mem_filter.mp h).2
+              · exact absurd ⟨x, h⟩ hLone
+            constructor
+            · intro h; exact absurd h (ne_of_gt hgt)
+            · intro h; linarith
+      · -- Hi empty: all of B is Lo
+        obtain ⟨xl, hxlB, hxlmax⟩ := Finset.exists_max_image B f' hBne
+        refine ⟨(f' xl + 1) / 2, by linarith [(hf' xl hxlB).1], by linarith [(hf' xl hxlB).2],
+          ?_, ?_⟩
+        · intro x hxB
+          have hle : f' x ≤ f' xl := hxlmax x hxB
+          have hlt : f x < t := by
+            rcases hpart x hxB with h | h
+            · exact absurd ⟨x, h⟩ hHine
+            · exact (Finset.mem_filter.mp h).2
+          have hf'le1 : f' xl < 1 := (hf' xl hxlB).2
+          constructor
+          · intro h; linarith
+          · intro h; linarith
+        · intro x hxB
+          have hle : f' x ≤ f' xl := hxlmax x hxB
+          have hlt : f x < t := by
+            rcases hpart x hxB with h | h
+            · exact absurd ⟨x, h⟩ hHine
+            · exact (Finset.mem_filter.mp h).2
+          have hf'le1 : f' xl < 1 := (hf' xl hxlB).2
+          constructor
+          · intro h; exact absurd h (ne_of_lt hlt)
+          · intro h; linarith
+    · -- B empty
+      rw [Finset.not_nonempty_iff_eq_empty] at hBne
+      refine ⟨1 / 2, by norm_num, by norm_num, ?_, ?_⟩ <;>
+        (intro x hxB; rw [hBne] at hxB; exact absurd hxB (Finset.notMem_empty x))
+
+open Classical in
+/-- **Alur–Dill time-successor, fractional fragment.** For a finite clock set and a delay
+`δ < 1`, advancing region-equivalent valuations by `δ` on the left is matched by some delay
+`δ'` on the right, landing in region-equivalent valuations. As `δ` grows in `[0,1)` the
+bounded clocks cross their next integer in decreasing order of fractional part; since the
+fractional order and the integer-hit set are shared, a single matching threshold — and hence
+a single matching delay — exists. This is the combinatorial core of the general
+time-successor (the full delay `d = N + δ` reduces to this case via the integer shift). -/
+theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') {δ : ℝ≥0} (hδ : δ < 1) :
+    ∃ δ', RegionEq cmax (v.add δ) (v'.add δ') := by
+  -- δ = 0 is reflexivity; otherwise δ ∈ (0,1)
+  rcases eq_or_lt_of_le (zero_le' (a := δ)) with hδ0 | hδ0
+  · exact ⟨0, by
+      have e : ∀ w : Valuation C, w.add (0 : ℝ≥0) = w := fun w => by funext x; simp
+      rw [← hδ0]; rw [e, e]; exact h⟩
+  · have hδ0r : (0 : ℝ) < δ := by exact_mod_cast hδ0
+    have hδ1r : (δ : ℝ) < 1 := by exact_mod_cast hδ
+    obtain ⟨h1, h2, h3⟩ := h
+    -- bounded clocks of v (equivalently of v')
+    set B := Finset.univ.filter (fun x => v x ≤ cmax x) with hB
+    have hmemB : ∀ x, x ∈ B ↔ v x ≤ cmax x := by
+      intro x; rw [hB, Finset.mem_filter]; simp
+    -- apply the threshold transport at t = 1 - δ
+    obtain ⟨t', ht'0, ht'1, htle, hteq⟩ :=
+      threshold_transport B (fun x => fracPart (v x)) (fun x => fracPart (v' x))
+        (fun x _ => ⟨fracPart_nonneg _, fracPart_lt_one _⟩)
+        (fun x hx => h2 x ((hmemB x).mp hx))
+        (fun x hx y hy => h3 x y ((hmemB x).mp hx) ((hmemB y).mp hy))
+        (1 - (δ : ℝ)) (by linarith) (by linarith [hδ0r])
+    -- δ' := 1 - t' ∈ (0,1)
+    set δ' : ℝ≥0 := ⟨1 - t', by linarith⟩ with hδ'def
+    have hδ'val : (δ' : ℝ) = 1 - t' := rfl
+    refine ⟨δ', ?_⟩
+    apply regionEq_add_of_match ⟨h1, h2, h3⟩ hδ0r hδ1r
+      (by rw [hδ'val]; linarith) (by rw [hδ'val]; linarith)
+    · -- wrap match
+      intro x hx
+      have hxB : x ∈ B := (hmemB x).mpr hx
+      rw [hδ'val]
+      have hl := htle x hxB
+      constructor
+      · intro hw; have : (1 - (δ:ℝ)) ≤ fracPart (v x) := by linarith
+        have := hl.mp this; linarith
+      · intro hw; have : t' ≤ fracPart (v' x) := by linarith
+        have := hl.mpr this; linarith
+    · -- hit match
+      intro x hx
+      have hxB : x ∈ B := (hmemB x).mpr hx
+      rw [hδ'val]
+      have he := hteq x hxB
+      constructor
+      · intro hh; have : fracPart (v x) = 1 - (δ:ℝ) := by linarith
+        have := he.mp this; linarith
+      · intro hh; have : fracPart (v' x) = t' := by linarith
+        have := he.mpr this; linarith
+
+theorem Valuation.add_add (v : Valuation C) (a b : ℝ≥0) : (v.add a).add b = v.add (a + b) := by
+  funext x; simp only [Valuation.add_apply]; ring
+
+/-- **General time-successor for a finite clock set** (Theorem 11.3's delay case,
+multi-clock). Writing `d = N + δ` with `N = ⌊d⌋` and `δ ∈ [0,1)`, the integer
+shift by `N` preserves region equivalence (`regionEq_add_natCast`) and the
+fractional remainder is matched by `RegionEq.timeSuccessor_frac`. -/
+theorem timeSuccessor_of_fintype [Fintype C] (cmax : C → ℕ) : TimeSuccessor cmax := by
+  intro v v' h d
+  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le' (a := d))
+  set δ := d - (⌊d⌋₊ : ℝ≥0) with hδdef
+  have hsum : (⌊d⌋₊ : ℝ≥0) + δ = d := add_tsub_cancel_of_le hNd
+  have hδ1 : δ < 1 := by
+    have hadd : δ + (⌊d⌋₊ : ℝ≥0) = d := by rw [hδdef]; exact tsub_add_cancel_of_le hNd
+    have hlt : δ + (⌊d⌋₊ : ℝ≥0) < 1 + (⌊d⌋₊ : ℝ≥0) := by
+      rw [hadd, add_comm]; exact Nat.lt_floor_add_one d
+    exact lt_of_add_lt_add_right hlt
+  obtain ⟨δ', hδ'⟩ := RegionEq.timeSuccessor_frac (regionEq_add_natCast h ⌊d⌋₊) hδ1
+  refine ⟨(⌊d⌋₊ : ℝ≥0) + δ', ?_⟩
+  have e1 : (v.add (⌊d⌋₊ : ℝ≥0)).add δ = v.add d := by rw [Valuation.add_add, hsum]
+  rw [e1, Valuation.add_add] at hδ'
+  exact hδ'
+
+
 end DeepWiki.ReactiveSystems

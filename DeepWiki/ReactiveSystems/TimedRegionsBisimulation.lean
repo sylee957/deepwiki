@@ -95,4 +95,14 @@ theorem regionEq_untimedBisimilar_of_subsingleton {Loc Act C : Type*} [Subsingle
     A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
   regionEq_untimedBisimilar A wf (timeSuccessor_of_subsingleton cmax) h
 
+/-- **Theorem 11.3** (untimed-bisimilarity part), **unconditional for finite clock
+sets**. A timed automaton has finitely many clocks, so the general region
+time-successor property (`timeSuccessor_of_fintype`) holds, and region-equivalent
+valuations at the same location are untimed bisimilar — no extra hypothesis. -/
+theorem regionEq_untimedBisimilar_of_fintype {Loc Act C : Type*} [Fintype C]
+    (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
+    {ℓ : Loc} {v v' : Valuation C} (h : RegionEq cmax v v') :
+    A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
+  regionEq_untimedBisimilar A wf (timeSuccessor_of_fintype cmax) h
+
 end DeepWiki.ReactiveSystems
