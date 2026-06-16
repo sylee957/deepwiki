@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
+import DeepWiki.ReactiveSystems.Chapter12Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -189,5 +190,15 @@ theorem ex_12_11 (T : TLTS Proc Act) {p q : Proc} (h : TLTS.TimedBisimilar T p q
 `P(ES(Proc)) = Set (Proc × (D → ℝ≥0))`, ordered by `⊆`, is a complete lattice (the
 lattice on which the operator `O_F` acts). Reuses Mathlib's `Set` complete lattice. -/
 theorem ex_12_18 : Nonempty (CompleteLattice (Set (Proc × Valuation D))) := ⟨inferInstance⟩
+
+/-- **Exercise 12.13** (§12.3, p.234). Theorem 12.3 would fail if `p, q` were only
+*untimed* bisimilar: the §11.2 witness TLTS has untimed-bisimilar states `A, B`
+distinguished by the `Mt` formula `y in ∃∃(y > 1 ∧ ⟨a⟩tt)` (so the answer to the
+exercise is "no"). The library's `ex_12_13`. -/
+theorem ex_12_13 :
+    ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
+      TLTS.UntimedBisimilar T p q ∧
+      ∃ F : Mt Unit Unit, TLTS.MtSatState T p F ∧ ¬ TLTS.MtSatState T q F :=
+  DeepWiki.ReactiveSystems.ex_12_13
 
 end DeepWiki.Rs
