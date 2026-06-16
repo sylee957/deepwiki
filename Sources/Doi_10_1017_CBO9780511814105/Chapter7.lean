@@ -123,13 +123,21 @@ abbrev def_7_4_tests := @LTS.Tests
 
 /-- **Proposition 7.3(1)** (§7.3, p.157). The formula `⟨a⟩tt` is **not testable**:
 no test tests for it (the testing preorder cannot observe existential branching).
-Discharged by `LTS.dia_tt_not_testable`. (Proposition 7.3(2), `[a]ff ∨ [b]ff` not
-testable, needs a weak-transition decomposition of the restricted composite and is
-left for future work.) -/
+Discharged by `LTS.dia_tt_not_testable`. -/
 theorem prop_7_3_1 {Name K : Type*} (a bad : Name) (defn : K → CCS Name K)
     (test : CCS Name K)
     (h : LTS.Tests defn bad test (HML.dia (DeepWiki.ReactiveSystems.Act.name a) HML.tt)) :
     False :=
   LTS.dia_tt_not_testable a bad defn test h
+
+/-- **Proposition 7.3(2)** (§7.3, p.157). For distinct actions `a ≠ b`, the
+formula `[a]ff ∨ [b]ff` is **not testable** (the testing preorder cannot observe
+disjunctive/branching refusal). Discharged by `LTS.boxff_or_not_testable`. -/
+theorem prop_7_3_2 {Name K : Type*} (a b bad : Name) (hab : a ≠ b) (defn : K → CCS Name K)
+    (test : CCS Name K)
+    (h : LTS.Tests defn bad test
+      (HML.or (HML.box (DeepWiki.ReactiveSystems.Act.name a) HML.ff)
+        (HML.box (DeepWiki.ReactiveSystems.Act.name b) HML.ff))) : False :=
+  LTS.boxff_or_not_testable a b bad hab defn test h
 
 end DeepWiki.Rs
