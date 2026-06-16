@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
+import DeepWiki.ReactiveSystems.TimedBisimulationWeak
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
@@ -95,6 +96,32 @@ theorem untimedBisimilar_not_imp_timedBisimilar :
     ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
       T.UntimedBisimilar p q ∧ ¬ T.TimedBisimilar p q :=
   DeepWiki.ReactiveSystems.untimedBisimilar_not_imp_timedBisimilar
+
+/-! ## §11.3 Weak timed bisimilarity -/
+
+/-- **Definition 11.8** (§11.3, p.201). The weak action transition `s =a⇒ t`
+(`τ*` for `a = τ`, `τ*·a·τ*` for visible `a`). The library's `TLTS.wact`. -/
+abbrev def_11_8_wact := @TLTS.wact
+
+/-- **Definition 11.8** (§11.3, p.201). The weak delay transition `s =d⇒ t`: a run
+of `τ`-actions and delays summing to `d`. The library's `TLTS.wdelay`. -/
+abbrev def_11_8_wdelay := @TLTS.wdelay
+
+/-- **Definition 11.9** (§11.3, p.201). A *weak timed bisimulation*: each concrete
+action/delay step is matched by a weak timed transition. The library's
+`TLTS.IsWeakTimedBisimulation`. -/
+abbrev def_11_9 := @TLTS.IsWeakTimedBisimulation
+
+/-- **Definition 11.10** (§11.3, p.201). *Weak timed bisimilarity* `≈`: some weak
+timed bisimulation relates the states. The library's `TLTS.WeaklyTimedBisimilar`. -/
+abbrev def_11_10 := @TLTS.WeaklyTimedBisimilar
+
+/-- **Exercise 11.8** (§11.3, p.202). Timed bisimilarity refines weak timed
+bisimilarity: `s ~ s'` implies `s ≈ s'` (a concrete step is a one-step weak
+transition). -/
+theorem ex_11_8 (T : TLTS Proc Act) (tau : Act) {s s' : Proc}
+    (h : TLTS.TimedBisimilar T s s') : TLTS.WeaklyTimedBisimilar T tau s s' :=
+  TLTS.TimedBisimilar.weaklyTimedBisimilar h
 
 /-! ## §11.4 The region construction -/
 

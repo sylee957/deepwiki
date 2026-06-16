@@ -32,6 +32,7 @@ import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
+import DeepWiki.ReactiveSystems.TimedBisimulationWeak
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
