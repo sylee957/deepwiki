@@ -17,6 +17,7 @@ import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedHennessyMilner
+import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 
 /-! # Reactive Systems
 Autoformalization of the classic theory of reactive systems (concurrency
