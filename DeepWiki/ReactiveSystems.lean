@@ -15,6 +15,7 @@ import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.BisimulationQuotient
 import DeepWiki.ReactiveSystems.CcsBufferTwo
 import DeepWiki.ReactiveSystems.CcsCounter
+import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.HennessyMilnerWeak
 import DeepWiki.ReactiveSystems.CcsTesting

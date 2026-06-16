@@ -8,6 +8,7 @@ import DeepWiki.ReactiveSystems.CcsCongruence
 import DeepWiki.ReactiveSystems.CcsWeakCongruence
 import DeepWiki.ReactiveSystems.CcsBufferTwo
 import DeepWiki.ReactiveSystems.CcsCounter
+import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -341,6 +342,16 @@ theorem prop_3_2_two :
       (CCS.par (CCS.const DeepWiki.ReactiveSystems.BufK.One0)
         (CCS.const DeepWiki.ReactiveSystems.BufK.One0)) :=
   DeepWiki.ReactiveSystems.buffer_two
+
+/-- **Proposition 3.2** (§3.3, p.51). For every `n`, a capacity-`n` buffer is
+strongly bisimilar to `n` one-place buffers composed in parallel:
+`Bⁿ₀ ~ B¹₀ ∣ ⋯ ∣ B¹₀` (`n` copies, written as the bag over `replicate n false`).
+Discharged by the library's `bufN_bisim`. -/
+theorem prop_3_2 (n : ℕ) :
+    (CCS.const (DeepWiki.ReactiveSystems.BufNK.nbuf n 0)) ~[ccsLTS
+      DeepWiki.ReactiveSystems.bufNDefn]
+      (DeepWiki.ReactiveSystems.bufBag (List.replicate n false)) :=
+  DeepWiki.ReactiveSystems.bufN_bisim n
 
 /-! ## Exercise 3.26: Milner's τ-laws
 
