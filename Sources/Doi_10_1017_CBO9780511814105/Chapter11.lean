@@ -1,14 +1,14 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
-Book-numbered restatements for §11.2 (timed bisimilarity) and §11.4 (the region
-construction), discharged by the `DeepWiki.ReactiveSystems` library. (§11.5, zone
-graphs, and the substantive halves of Theorem 11.3 — finite index and
-same-region/timed-bisimilarity — are future work.) -/
+Book-numbered restatements for §11.1 (timed/untimed trace equivalence), §11.2
+(timed/untimed bisimilarity) and §11.4 (the region construction), discharged by
+the `DeepWiki.ReactiveSystems` library. (§11.5, zone graphs, is future work.) -/
 
 namespace DeepWiki.Rs
 
@@ -16,7 +16,36 @@ open DeepWiki.ReactiveSystems
 
 variable {Proc Act : Type*} {C : Type*}
 
+/-! ## §11.1 Timed and untimed trace equivalence -/
+
+/-- **Definition 11.1** (§11.1, p.193). A timed trace records the absolute time of
+each action along a delay/action run. The library's `TLTS.TimedTrace`. -/
+abbrev def_11_1 := @TLTS.TimedTrace
+
+/-- **Definition 11.2** (§11.1, p.194). The timed language `L(A)` — the set of
+finite timed traces. The library's `TLTS.timedLang`. -/
+abbrev def_11_2 := @TLTS.timedLang
+
+/-- **Definition 11.3** (§11.1, p.194). An untimed trace: the action projection of
+a timed trace. The library's `TLTS.UntimedTrace`. -/
+abbrev def_11_3 := @TLTS.UntimedTrace
+
+/-- **Definition 11.4** (§11.1, p.194). The untimed language `Lᵤ(A)`. The library's
+`TLTS.untimedLang`. -/
+abbrev def_11_4 := @TLTS.untimedLang
+
+/-- **Theorem 11.1** (§11.1, p.194). Timed-language equivalence implies
+untimed-language equivalence. -/
+theorem thm_11_1 {T₁ T₂ : TLTS Proc Act} {s₁ s₂ : Proc}
+    (h : T₁.timedLang s₁ = T₂.timedLang s₂) : T₁.untimedLang s₁ = T₂.untimedLang s₂ :=
+  TLTS.timedLang_eq_untimedLang_eq h
+
 /-! ## §11.2 Timed and untimed bisimilarity -/
+
+/-- **Theorem 11.2** (§11.2, p.196). Timed bisimilar processes are untimed
+bisimilar. The library's `TLTS.TimedBisimilar.untimedBisimilar`. -/
+theorem thm_11_2 (T : TLTS Proc Act) {p q : Proc} (h : TLTS.TimedBisimilar T p q) :
+    TLTS.UntimedBisimilar T p q := TLTS.TimedBisimilar.untimedBisimilar h
 
 /-- **Definition 11.5** (§11.2, p.195). Timed bisimilarity: a timed bisimulation
 matches both visible actions and time-delay steps. The library's

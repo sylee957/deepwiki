@@ -22,6 +22,7 @@ import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
 import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedRegions
