@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
+import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
@@ -43,6 +44,30 @@ abbrev inv := @LTS.Inv
 which every reachable state satisfies `F`. -/
 theorem thm_6_1 (L : LTS Proc Act) (F : HML Act) :
     LTS.Inv L F = {p | ∀ p', L.Reachable p p' → p' ∈ LTS.denot L F} := LTS.Inv_eq L F
+
+/-! ## §6.4 A game characterization for HML with recursion -/
+
+/-- **§6.4** (p.115). The model-checking game functional for HML with one
+recursion variable `X` (body `F`): the one-step defender-favourable condition on
+configurations `(state, subformula)`. The library's `LTS.defGameFun`. -/
+abbrev defGameFun := @LTS.defGameFun
+
+/-- **Theorem 6.3** (§6.4, p.116), largest-fixed-point case. For `X =ν F`, the
+defender wins the game from `(s, G)` iff `s` satisfies `G` under the greatest
+fixed point — i.e. `s ∈ O_G(recMax F)`. (The book defers the operational
+infinite-play proof to Stirling 2001; this is the fixed-point characterization of
+the defender's winning region, a safety game whose winning strategies are
+post-fixed-point invariants `DefenderInvariant`.) -/
+theorem thm_6_3_max (L : LTS Proc Act) (F : HMLR Act) (s : Proc) (G : HMLR Act) :
+    LTS.DefenderWinsMax L F s G ↔ s ∈ LTS.denotR L G (LTS.recMax L F) :=
+  LTS.defenderWinsMax_iff L F s G
+
+/-- **Theorem 6.3** (§6.4, p.116), least-fixed-point case. For `X =μ F`, the
+defender's winning region is the least fixed point of the game functional, equal
+to the satisfaction set at `recMin F` (a reachability game). -/
+theorem thm_6_3_min (L : LTS Proc Act) (F : HMLR Act) (s : Proc) (G : HMLR Act) :
+    (s, G) ∈ (LTS.defGameFun L F).lfp ↔ s ∈ LTS.denotR L G (LTS.recMin L F) :=
+  LTS.game_characterization_min L F s G
 
 /-! ## Solved exercises -/
 
