@@ -10,6 +10,7 @@ import DeepWiki.ReactiveSystems.CcsBufferTwo
 import DeepWiki.ReactiveSystems.CcsCounter
 import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.CcsTauLaws
+import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -426,5 +427,40 @@ theorem thm_3_4_restrict {Name K : Type*} (defn : K → CCS Name K) {P Q : CCS N
     (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
     CCS.restrict P Lr ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.restrict Q Lr :=
   DeepWiki.ReactiveSystems.weak_cong_restrict defn Lr htau h
+
+/-! ## §3.3 Structural laws of CCS up to `~` (Exercises 3.10, 3.12) -/
+
+/-- **Exercise 3.10** (§3.3, p.45). A constant is strongly bisimilar to its
+defining body: if `K ≝ P` then `K ~ P`. The library's `const_bisim_body`. -/
+theorem ex_3_10 {Name K : Type*} (defn : K → CCS Name K) (K0 : K) :
+    (CCS.const K0) ~[ccsLTS defn] (defn K0) :=
+  DeepWiki.ReactiveSystems.const_bisim_body K0
+
+/-- **Exercise 3.12** (§3.3, p.46, eq. 3.4). Parallel composition is commutative:
+`P ∣ Q ~ Q ∣ P`. The library's `par_comm`. -/
+theorem ex_3_12_comm {Name K : Type*} (defn : K → CCS Name K) (P Q : CCS Name K) :
+    (CCS.par P Q) ~[ccsLTS defn] (CCS.par Q P) :=
+  DeepWiki.ReactiveSystems.par_comm P Q
+
+/-- **Exercise 3.12** (§3.3, p.46, eq. 3.5). `0` is a unit for parallel
+composition: `P ∣ 0 ~ P`. The library's `par_unit`. -/
+theorem ex_3_12_unit {Name K : Type*} (defn : K → CCS Name K) (P : CCS Name K) :
+    (CCS.par P CCS.nil) ~[ccsLTS defn] P :=
+  DeepWiki.ReactiveSystems.par_unit P
+
+/-- **Exercise 3.12** (§3.3, p.46, eq. 3.6). Parallel composition is associative:
+`(P ∣ Q) ∣ R ~ P ∣ (Q ∣ R)`. The library's `par_assoc`. -/
+theorem ex_3_12_assoc {Name K : Type*} (defn : K → CCS Name K) (P Q R : CCS Name K) :
+    (CCS.par (CCS.par P Q) R) ~[ccsLTS defn] (CCS.par P (CCS.par Q R)) :=
+  DeepWiki.ReactiveSystems.par_assoc P Q R
+
+/-- **Exercise 3.12** (§3.3, p.46). A witness that `+` distributes over `∣` in a
+degenerate case: `(0 + 0) ∣ 0 ~ (0 ∣ 0) + (0 ∣ 0)` (both deadlocked). The
+library's `par_choice_distrib_nil`. -/
+theorem ex_3_12_distrib {Name : Type*} :
+    (CCS.par (CCS.choice CCS.nil CCS.nil) CCS.nil)
+      ~[ccsLTS (DeepWiki.ReactiveSystems.noDefs (Name := Name))]
+      (CCS.choice (CCS.par CCS.nil CCS.nil) (CCS.par CCS.nil CCS.nil)) :=
+  DeepWiki.ReactiveSystems.par_choice_distrib_nil
 
 end DeepWiki.Rs
