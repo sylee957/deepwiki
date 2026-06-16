@@ -59,11 +59,18 @@ theorem def_11_12_not_symmetric :
 
 /-- **Theorem 11.3** (§11.4, p.209), equivalence-relation part. Region
 equivalence partitions the clock valuations — here the corrected `RegionEq` is a
-genuine `Equivalence`. (The finite-index and same-region/timed-bisimilarity
-claims of Theorem 11.3 remain future work.) -/
+genuine `Equivalence`. -/
 theorem thm_11_3_equivalence (cmax : C → ℕ) :
     Equivalence (DeepWiki.ReactiveSystems.RegionEq cmax) :=
   DeepWiki.ReactiveSystems.regionEq_equivalence cmax
+
+/-- **Theorem 11.3** (§11.4, p.209), finite-index part. Over a finite clock set,
+region equivalence has finitely many classes — the region quotient is finite.
+(The remaining same-region/timed-bisimilarity claim of Theorem 11.3 is future
+work.) -/
+theorem thm_11_3_finite [Finite C] (cmax : C → ℕ) :
+    Finite (DeepWiki.ReactiveSystems.Region cmax) :=
+  DeepWiki.ReactiveSystems.Region.finite cmax
 
 /-- **Definition 11.13** (§11.4, p.209). A *region* is an `≡`-equivalence class
 `[v]_≡` of clock valuations. The library's `Region`. -/

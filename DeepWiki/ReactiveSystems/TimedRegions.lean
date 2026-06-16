@@ -174,4 +174,67 @@ theorem region_eq_iff {cmax : C → ℕ} {v v' : Valuation C} :
     region cmax v = region cmax v' ↔ RegionEq cmax v v' :=
   Quotient.eq
 
+/-! ## Finiteness of the region quotient (Theorem 11.3, finite-index part) -/
+
+open Classical in
+/-- The **region fingerprint** of a clock valuation: the clamped floor of every
+clock (an element of `Fin (cₓ+2)`), which bounded clocks have a zero fractional
+part, and the ordering of fractional parts among bounded clocks. Region-equivalent
+valuations share a fingerprint, and the fingerprint ranges over a finite type, so
+there are only finitely many regions. -/
+noncomputable def regionFingerprint (cmax : C → ℕ) (v : Valuation C) :
+    (∀ x, Fin (cmax x + 2)) × (C → Bool) × (C → C → Bool) :=
+  (fun x => ⟨regionFloor cmax v x, by have := regionFloor_le cmax v x; omega⟩,
+   fun x => decide (v x ≤ cmax x ∧ fracPart (v x) = 0),
+   fun x y => decide (v x ≤ cmax x ∧ v y ≤ cmax y ∧ fracPart (v x) ≤ fracPart (v y)))
+
+/-- Region equivalence is exactly equality of region fingerprints. -/
+theorem regionEq_iff_fingerprint (cmax : C → ℕ) (v v' : Valuation C) :
+    RegionEq cmax v v' ↔ regionFingerprint cmax v = regionFingerprint cmax v' := by
+  simp only [regionFingerprint, Prod.ext_iff, funext_iff, Fin.mk.injEq, decide_eq_decide]
+  unfold RegionEq
+  constructor
+  · rintro ⟨h1, h2, h3⟩
+    refine ⟨h1, ?_, ?_⟩
+    · intro x
+      have hb := bounded_iff_regionFloor (h1 x)
+      exact ⟨fun ⟨hx, hz⟩ => ⟨hb.mp hx, (h2 x hx).mp hz⟩,
+        fun ⟨hx', hz'⟩ => ⟨hb.mpr hx', (h2 x (hb.mpr hx')).mpr hz'⟩⟩
+    · intro x y
+      have hbx := bounded_iff_regionFloor (h1 x)
+      have hby := bounded_iff_regionFloor (h1 y)
+      exact ⟨fun ⟨hx, hy, ho⟩ => ⟨hbx.mp hx, hby.mp hy, (h3 x y hx hy).mp ho⟩,
+        fun ⟨hx', hy', ho'⟩ =>
+          ⟨hbx.mpr hx', hby.mpr hy', (h3 x y (hbx.mpr hx') (hby.mpr hy')).mpr ho'⟩⟩
+  · rintro ⟨h1, h2, h3⟩
+    refine ⟨h1, ?_, ?_⟩
+    · intro x hx
+      have hb := bounded_iff_regionFloor (h1 x)
+      exact ⟨fun hz => ((h2 x).mp ⟨hx, hz⟩).2, fun hz' => ((h2 x).mpr ⟨hb.mp hx, hz'⟩).2⟩
+    · intro x y hx hy
+      have hbx := bounded_iff_regionFloor (h1 x)
+      have hby := bounded_iff_regionFloor (h1 y)
+      exact ⟨fun ho => ((h3 x y).mp ⟨hx, hy, ho⟩).2.2,
+        fun ho' => ((h3 x y).mpr ⟨hbx.mp hx, hby.mp hy, ho'⟩).2.2⟩
+
+/-- The fingerprint descends to the region quotient. -/
+noncomputable def Region.fingerprint (cmax : C → ℕ) :
+    Region cmax → (∀ x, Fin (cmax x + 2)) × (C → Bool) × (C → C → Bool) :=
+  Quotient.lift (regionFingerprint cmax)
+    (fun v v' h => (regionEq_iff_fingerprint cmax v v').mp h)
+
+/-- Distinct regions have distinct fingerprints. -/
+theorem Region.fingerprint_injective (cmax : C → ℕ) :
+    Function.Injective (Region.fingerprint cmax) := by
+  intro a b
+  induction a using Quotient.ind with | _ v =>
+  induction b using Quotient.ind with | _ v' =>
+  exact fun h => Quotient.sound ((regionEq_iff_fingerprint cmax v v').mpr h)
+
+/-- **Theorem 11.3** (finite-index part). For a finite clock set, region
+equivalence partitions the clock valuations into only finitely many classes:
+the region quotient is finite. -/
+instance Region.finite [Finite C] (cmax : C → ℕ) : Finite (Region cmax) :=
+  Finite.of_injective _ (Region.fingerprint_injective cmax)
+
 end DeepWiki.ReactiveSystems
