@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.CcsTesting
 import DeepWiki.ReactiveSystems.CcsTestingSafety
+import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -57,6 +58,13 @@ abbrev petDefn := @DeepWiki.ReactiveSystems.petDefn
 `(P₁ | P₂ | B1f | B2f | K1) \ L` (with `k` initially `1`). The library's
 `peterson`. -/
 abbrev peterson := @DeepWiki.ReactiveSystems.peterson
+
+/-- **Exercise 7.3** (§7, p.146). Hyman's (1966) 'mutual exclusion' algorithm as a
+CCS process, over the same shared variables as Peterson: `(P₁ | P₂ | B1f | B2f |
+K1) \ L`, each `Pᵢ` running `bᵢ:=true; while k≠j do {while bⱼ do skip; k:=i};
+critical; bᵢ:=false`. The library's `hyman` (validated by `hyman_tau_writes_b1`).
+(Hyman's algorithm is not correct — the safety analysis is Exercise 7.4.) -/
+abbrev ex_7_3 := @DeepWiki.ReactiveSystems.hyman
 
 /-- **§7.2** (eq. 7.1, p.149). The CCS specification of mutual exclusion,
 `MutexSpec = enter₁.exit₁.MutexSpec + enter₂.exit₂.MutexSpec`. The library's
