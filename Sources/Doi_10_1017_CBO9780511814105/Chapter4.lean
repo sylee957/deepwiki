@@ -1,9 +1,12 @@
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
+import DeepWiki.ReactiveSystems.WeakBisimulationFixedPoint
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.Bounds.Basic
 import Mathlib.Order.CompleteLattice.Basic
+import Mathlib.Order.Iterate
+import Mathlib.Order.OrderIsoNat
 import Mathlib.Data.Set.Insert
 import Mathlib.Data.ENNReal.Basic
 
@@ -189,5 +192,55 @@ alias ex_4_5_sInf := sInf_empty
 powerset `2^ℕ` are exactly the supersets of `{1,2}`: `X ∪ {1,2} = X ↔ {1,2} ⊆ X`.
 (So besides `{1,2}` itself, e.g. `univ` is a fixed point.) -/
 theorem ex_4_6 (X : Set ℕ) : X ∪ {1, 2} = X ↔ {1, 2} ⊆ X := Set.union_eq_left
+
+/-- **Theorem 4.2** (§4.2, p.82). On a *finite* complete lattice, the least fixed
+point of a monotone `f` is reached by finite iteration from `⊥`: `lfp f = fᵐ(⊥)`
+for some `m` (the ascending chain `⊥ ≼ f⊥ ≼ f²⊥ ≼ ⋯` is eventually constant, and
+its limit is the lfp). -/
+theorem thm_4_2_lfp {D : Type*} [CompleteLattice D] [Finite D] (f : D →o D) :
+    ∃ m, OrderHom.lfp f = f^[m] ⊥ := by
+  have hmono : Monotone (fun n => f^[n] (⊥ : D)) := f.mono.monotone_iterate_of_le_map bot_le
+  obtain ⟨m, hm⟩ := WellFoundedGT.monotone_chain_condition ⟨_, hmono⟩
+  have heq : f^[m] (⊥ : D) = f (f^[m] ⊥) := by
+    have := hm (m + 1) (Nat.le_succ m)
+    simpa [Function.iterate_succ_apply', OrderHom.coe_mk] using this
+  have hle : ∀ k, f^[k] (⊥ : D) ≤ OrderHom.lfp f := by
+    intro k
+    induction k with
+    | zero => exact bot_le
+    | succ n ih =>
+        rw [Function.iterate_succ_apply']
+        exact (f.mono ih).trans (OrderHom.map_lfp f).le
+  exact ⟨m, le_antisymm (f.lfp_le heq.ge) (hle m)⟩
+
+/-- **Theorem 4.2** (§4.2, p.82). Dually, the greatest fixed point is reached by
+finite iteration from `⊤`: `gfp f = fᴹ(⊤)` for some `M`. -/
+theorem thm_4_2_gfp {D : Type*} [CompleteLattice D] [Finite D] (f : D →o D) :
+    ∃ M, OrderHom.gfp f = f^[M] ⊤ := by
+  have hanti : Antitone (fun n => f^[n] (⊤ : D)) := f.mono.antitone_iterate_of_map_le le_top
+  obtain ⟨M, hM⟩ := WellFoundedLT.antitone_chain_condition hanti
+  have heq : f^[M] (⊤ : D) = f (f^[M] ⊤) := by
+    have := hM (M + 1) (Nat.le_succ M)
+    simpa [Function.iterate_succ_apply'] using this
+  have hge : ∀ k, OrderHom.gfp f ≤ f^[k] (⊤ : D) := by
+    intro k
+    induction k with
+    | zero => exact le_top
+    | succ n ih =>
+        rw [Function.iterate_succ_apply']
+        exact (OrderHom.map_gfp f).ge.trans (f.mono ih)
+  exact ⟨M, le_antisymm (hge M) (f.le_gfp heq.le)⟩
+
+/-- **Exercise 4.15(1)** (§4.3, p.86). The weak (observational) bisimulation
+functional `G`, whose post-fixed points are the weak bisimulations. The library's
+`LTS.weakBisimFunctional`. -/
+abbrev ex_4_15_functional := @LTS.weakBisimFunctional
+
+/-- **Exercise 4.15(1)** (§4.3, p.86). Observational equivalence `≈` is the
+greatest fixed point of the weak bisimulation functional `G` (the analogue of
+`bisimilar_eq_gfp` for `~`). The library's `LTS.weaklyBisimilar_eq_gfp`. -/
+theorem ex_4_15 {Proc Act : Type*} (L : LTS Proc Act) (tau : Act) :
+    LTS.WeaklyBisimilar L tau = (LTS.weakBisimFunctional L tau).gfp :=
+  LTS.weaklyBisimilar_eq_gfp
 
 end DeepWiki.Rs
