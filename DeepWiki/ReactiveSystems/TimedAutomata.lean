@@ -59,6 +59,25 @@ def satisfies {C : Type*} (v : Valuation C) : ClockConstraint C → Prop
   | .atom x c n => c.holds (v x) n
   | .and g₁ g₂ => satisfies v g₁ ∧ satisfies v g₂
 
+/-- **Definition 10.3** (§10.1, p.177). Two clock constraints are *equivalent* iff
+they are satisfied by exactly the same valuations. -/
+def ConstraintEquiv {C : Type*} (g₁ g₂ : ClockConstraint C) : Prop :=
+  ∀ v : Valuation C, satisfies v g₁ ↔ satisfies v g₂
+
+/-- Constraint equivalence is an equivalence relation. -/
+theorem constraintEquiv_equivalence {C : Type*} : Equivalence (@ConstraintEquiv C) :=
+  ⟨fun _ _ => Iff.rfl, fun h v => (h v).symm, fun h₁ h₂ v => (h₁ v).trans (h₂ v)⟩
+
+/-- A constraint satisfied by *every* valuation: `tt` (Exercise 10.2). -/
+theorem satisfies_true_all {C : Type*} (v : Valuation C) :
+    satisfies v (ClockConstraint.true_ : ClockConstraint C) := trivial
+
+/-- A constraint satisfied by *no* valuation: `x < 0` (impossible over `ℝ≥0`,
+Exercise 10.2). -/
+theorem not_satisfies_lt_zero {C : Type*} (x : C) (v : Valuation C) :
+    ¬ satisfies v (ClockConstraint.atom x Cmp.lt 0) := by
+  simp [satisfies, Cmp.holds]
+
 /-- A timed automaton (Definition 10.4) over locations `Loc`, actions `Act` and
 clocks `C`: an initial location, an edge relation `ℓ —g,a,r→ ℓ'` carrying a
 guard, action and reset set, and a location-invariant assignment. -/

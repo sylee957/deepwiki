@@ -176,4 +176,18 @@ theorem tInv_unfold (T : TLTS Proc Act) (F : Mt Act D) (q : Proc × Valuation D)
       (∀ d p', T.delay q.1 d p' → (p', q.2.add d) ∈ TLTS.mtInv T F) :=
   TLTS.mtInv_unfold T F q
 
+/-- **Exercise 12.11** (§12.3, p.234). If `p` and `q` are timed bisimilar and every
+`Mt` formula satisfied by `p` is also satisfied by `q`, then they satisfy the same
+`Mt` formulae. (Timed bisimilarity alone already forces the biconditional — the
+extra one-directional hypothesis is redundant; discharged by `timedBisimilar_mtIff`.) -/
+theorem ex_12_11 (T : TLTS Proc Act) {p q : Proc} (h : TLTS.TimedBisimilar T p q)
+    (_hsub : ∀ (u : Valuation D) (F : Mt Act D), TLTS.MtSat T p u F → TLTS.MtSat T q u F)
+    (u : Valuation D) (F : Mt Act D) : TLTS.MtSat T p u F ↔ TLTS.MtSat T q u F :=
+  TLTS.timedBisimilar_mtIff h u F
+
+/-- **Exercise 12.18** (§12.4, p.240). The powerset of extended states
+`P(ES(Proc)) = Set (Proc × (D → ℝ≥0))`, ordered by `⊆`, is a complete lattice (the
+lattice on which the operator `O_F` acts). Reuses Mathlib's `Set` complete lattice. -/
+theorem ex_12_18 : Nonempty (CompleteLattice (Set (Proc × Valuation D))) := ⟨inferInstance⟩
+
 end DeepWiki.Rs

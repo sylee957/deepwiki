@@ -76,4 +76,13 @@ theorem tccs_tau_urgent {Name K : Type*} (defn : K → TCCS Name K) (P : TCCS Na
     ¬ ∃ Q, (DeepWiki.ReactiveSystems.tccsTLTS defn).delay (.pre DeepWiki.ReactiveSystems.Act.tau P) d Q :=
   DeepWiki.ReactiveSystems.tccs_tau_maximalProgress defn P d hd
 
+/-- **Definition 9.2** (§9.3, p.166). Guardedness of a TCCS expression: every
+constant occurrence lies within an action or positive-delay prefix. The library's
+`IsGuarded` (process-level: `IsGuardedDefn`). -/
+abbrev def_9_2 := @DeepWiki.ReactiveSystems.IsGuarded
+
+/-- **Definition 9.2** (§9.3, p.166). A guarded definition environment. The
+library's `IsGuardedDefn`. -/
+abbrev def_9_2_defn := @DeepWiki.ReactiveSystems.IsGuardedDefn
+
 end DeepWiki.Rs

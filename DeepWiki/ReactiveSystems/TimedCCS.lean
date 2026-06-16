@@ -30,6 +30,23 @@ inductive TCCS (Name K : Type*)
 
 variable {Name K : Type*}
 
+/-- **Definition 9.2** (§9.3, p.166). An occurrence of a constant in a TCCS
+expression is *guarded* if it lies within an action prefix `α.Q` or a positive
+delay prefix `ε(d).Q` (`d > 0`). `IsGuarded P` holds when every constant
+occurrence in `P` is guarded (a top-level bare constant is *not* guarded). -/
+def IsGuarded : TCCS Name K → Prop
+  | .nil => True
+  | .const _ => False
+  | .pre _ _ => True
+  | .eps d P => 0 < d ∨ IsGuarded P
+  | .choice P Q => IsGuarded P ∧ IsGuarded Q
+  | .restrict P _ => IsGuarded P
+  | .relabel P _ => IsGuarded P
+
+/-- **Definition 9.2** (§9.3, p.166). A TCCS definition environment is *guarded*
+when every defining equation's body has only guarded constant occurrences. -/
+def IsGuardedDefn (defn : K → TCCS Name K) : Prop := ∀ K0, IsGuarded (defn K0)
+
 /-- **Action SOS for TCCS** (§9.3): the CCS action rules, plus the transparency of
 a zero delay `ε(0).P —α→ P'` (since `ε(0).P` is identified with `P`). A
 delay-prefix `ε(d).P` with `d > 0` has no action transition — time must pass

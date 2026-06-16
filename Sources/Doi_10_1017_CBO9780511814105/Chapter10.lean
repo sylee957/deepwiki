@@ -77,4 +77,20 @@ theorem def_10_7_sync {Chan Ord C L₁ L₂ : Type*}
       ((ℓ₁', ℓ₂'), Valuation.reset (r₁ ∪ r₂) v) :=
   networkTLTS_sync A₁ A₂ h₁ h₂ hg hinv
 
+/-- **Definition 10.3** (§10.1, p.177). Two clock constraints are equivalent iff
+satisfied by the same valuations. The library's `ConstraintEquiv` (an equivalence
+relation, `constraintEquiv_equivalence`). -/
+abbrev def_10_3 := @DeepWiki.ReactiveSystems.ConstraintEquiv
+
+/-- **Exercise 10.2** (§10.1, p.177). There is a clock constraint satisfied by
+every valuation (`tt`) and one satisfied by no valuation (`x < 0`, impossible over
+`ℝ≥0`). -/
+theorem ex_10_2 {C : Type*} (x : C) :
+    (∃ g : DeepWiki.ReactiveSystems.ClockConstraint C,
+        ∀ v, DeepWiki.ReactiveSystems.satisfies v g) ∧
+    (∃ g : DeepWiki.ReactiveSystems.ClockConstraint C,
+        ∀ v, ¬ DeepWiki.ReactiveSystems.satisfies v g) :=
+  ⟨⟨.true_, DeepWiki.ReactiveSystems.satisfies_true_all⟩,
+   ⟨.atom x .lt 0, DeepWiki.ReactiveSystems.not_satisfies_lt_zero x⟩⟩
+
 end DeepWiki.Rs
