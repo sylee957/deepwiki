@@ -131,6 +131,12 @@ noncomputable abbrev ex_2_12_cell := @DeepWiki.ReactiveSystems.cellDefn
 in parallel. The library's `twoBag`. -/
 noncomputable abbrev ex_2_12_bag := @DeepWiki.ReactiveSystems.twoBag
 
+/-- **Exercise 2.12** (§2.2, p.34). A two-place FIFO queue built from `Cell` by
+the linking combinator: the first cell's output is renamed (relabelling) to an
+internal link feeding the second cell's input, then restricted. The library's
+`fifoQueue`. -/
+noncomputable abbrev ex_2_12_queue := @DeepWiki.ReactiveSystems.fifoQueue
+
 /-- **Exercise 2.12**, faithfulness: the empty cell's only moves are inputs —
 `Cell —a→ R` iff `a = inᵥ` and `R = Cell(v)` for some value `v`. -/
 theorem ex_2_12_cell_behaviour {D : Type*} [Fintype D]

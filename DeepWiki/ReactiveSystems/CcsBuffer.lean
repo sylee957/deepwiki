@@ -8,9 +8,9 @@ The book's value-passing one-place buffer `Cell = in(x).Cell(x)`,
 `Cell(x) = out(x).Cell`. Since this is the *pure* CCS calculus, value passing is
 encoded over a finite data domain `D`: `in(x)`/`out(x)` become action families
 `inᵥ`/`outᵥ` indexed by `v : D`, and `Cell` is the finite choice-sum
-`Σ_{v∈D} inᵥ.Cell(v)`. A two-place bag is two cells in parallel. (The FIFO-queue
-variant needs the linking combinator over an enlarged channel type and is left as
-further work.) -/
+`Σ_{v∈D} inᵥ.Cell(v)`. A two-place bag is two cells in parallel; a two-place FIFO
+queue chains two cells via the linking combinator (relabel the first cell's output
+to an internal `link` channel feeding the second's input, then restrict it). -/
 
 open DeepWiki.ReactiveSystems
 
@@ -41,6 +41,9 @@ inductive CellChan (D : Type*)
   | inp : D → CellChan D
   /-- The output channel carrying value `d`. -/
   | out : D → CellChan D
+  /-- The internal link channel carrying value `d` (used to chain two cells into
+  a FIFO queue). -/
+  | link : D → CellChan D
   deriving DecidableEq
 
 /-- Process constants for the buffer: the empty cell `Cell` and the full cell
@@ -101,5 +104,48 @@ theorem twoBag_input {D : Type*} [Fintype D] (v : D) :
     Step cellDefn twoBag (Act.name (CellChan.inp v))
       (CCS.par (CCS.const (CellK.cellVal v)) (CCS.const CellK.cell)) := by
   exact Step.com1 (cell_input v)
+
+/-! ## A two-place FIFO queue via the linking combinator -/
+
+/-- Relabelling for the *left* cell of the queue: its output channel `outᵥ` is
+renamed to the internal link `linkᵥ`; everything else is unchanged. -/
+def relOut {D : Type*} : Act (CellChan D) → Act (CellChan D)
+  | Act.name (CellChan.out v) => Act.name (CellChan.link v)
+  | Act.coname (CellChan.out v) => Act.coname (CellChan.link v)
+  | a => a
+
+/-- Relabelling for the *right* cell of the queue: its input channel `inᵥ` is
+renamed to the *complementary* internal link, so it consumes the left cell's link
+output; everything else is unchanged. -/
+def relIn {D : Type*} : Act (CellChan D) → Act (CellChan D)
+  | Act.name (CellChan.inp v) => Act.coname (CellChan.link v)
+  | Act.coname (CellChan.inp v) => Act.name (CellChan.link v)
+  | a => a
+
+/-- The internal link channels, restricted away in the queue. -/
+def linkChans (D : Type*) : Set (Act (CellChan D)) :=
+  {a | ∃ v, a = Act.name (CellChan.link v) ∨ a = Act.coname (CellChan.link v)}
+
+/-- A **two-place FIFO queue** built from two cells by the linking combinator: the
+left cell's output is renamed to an internal link feeding the right cell's input,
+which is then restricted. The queue's external interface is the left cell's input
+and the right cell's output. -/
+def fifoQueue {D : Type*} [Fintype D] : CCS (CellChan D) (CellK D) :=
+  CCS.restrict
+    (CCS.par (CCS.relabel (CCS.const CellK.cell) relOut)
+      (CCS.relabel (CCS.const CellK.cell) relIn))
+    (linkChans D)
+
+/-- The queue can input value `v` (into its left cell), an externally observable
+`inᵥ` action surviving the link restriction. -/
+theorem fifoQueue_input {D : Type*} [Fintype D] (v : D) :
+    Step cellDefn fifoQueue (Act.name (CellChan.inp v))
+      (CCS.restrict
+        (CCS.par (CCS.relabel (CCS.const (CellK.cellVal v)) relOut)
+          (CCS.relabel (CCS.const CellK.cell) relIn))
+        (linkChans D)) := by
+  refine Step.res ?_ ?_ (Step.com1 (Step.rel (cell_input v)))
+  · rintro ⟨w, hw | hw⟩ <;> simp at hw
+  · rintro ⟨w, hw | hw⟩ <;> simp [Act.co] at hw
 
 end DeepWiki.ReactiveSystems
