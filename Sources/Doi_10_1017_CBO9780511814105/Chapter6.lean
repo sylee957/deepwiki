@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
+import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 6: HML with recursion
@@ -103,6 +104,22 @@ theorem lemma_6_2 (L : LTS Proc Act) :
 its strong-bisimilarity class: `q ⊨ X_p` iff `p ~ q`. -/
 theorem thm_6_4 (L : LTS Proc Act) (p q : Proc) :
     q ∈ LTS.charProp L p ↔ (p ~[L] q) := LTS.charProp_eq_bisimilar L p q
+
+/-- **§6.6** (Eq. 6.15, p.128), the *syntactic* characteristic formula: the
+characteristic equation system assigns each state `p` the recursive formula
+`(⋀_a ⋀_{p'∈Der a p} ⟨a⟩X_{p'}) ∧ (⋀_a [a]⋁_{p'∈Der a p} X_{p'})` — "every move
+of `p` is matchable" and "no `a`-move escapes `p`'s `a`-successors". The library's
+`LTS.charSys`. -/
+noncomputable abbrev charSys := @LTS.charSys
+
+/-- **Theorem 6.4** (§6.6, p.130), syntactic form. On a finite LTS, the greatest
+solution of the characteristic equation system is exactly the strong-bisimilarity
+class: `q ⊨ X_p` iff `p ~ q`. This realises the semantic characteristic property
+as an explicit Hennessy–Milner formula with recursion. -/
+theorem thm_6_4_syntactic (L : LTS Proc Act) [Fintype Act] [Fintype Proc]
+    [∀ p a p', Decidable (L.step p a p')] (p q : Proc) :
+    q ∈ LTS.sysMax L (LTS.charSys L) p ↔ (p ~[L] q) :=
+  LTS.charSys_characterizes L p q
 
 /-! ## §6.7 Mixing largest and least fixed points -/
 

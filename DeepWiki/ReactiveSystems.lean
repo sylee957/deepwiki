@@ -16,6 +16,7 @@ import DeepWiki.ReactiveSystems.HennessyMilnerSharp
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
+import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
 import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
