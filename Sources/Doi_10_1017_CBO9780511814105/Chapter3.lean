@@ -13,6 +13,7 @@ import DeepWiki.ReactiveSystems.CcsTauLaws
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
+import DeepWiki.ReactiveSystems.Chapter3Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -508,5 +509,29 @@ sequences via `⇒`) coincides with weak bisimilarity `≈`. The library's
 theorem ex_3_31 {Proc Act : Type*} (L : LTS Proc Act) (tau : Act) (p q : Proc) :
     LTS.WeaklyStringBisimilar L tau p q ↔ LTS.WeaklyBisimilar L tau p q :=
   LTS.weaklyStringBisimilar_iff_weaklyBisimilar p q
+
+/-- **Exercise 3.5** (§3.3, p.42). The states `s, t` of the given two LTSs are
+strongly bisimilar, `s ~ t`, witnessed by the explicit relation `R35`. The
+library's `ex_3_5_bisim`. -/
+theorem ex_3_5 :
+    (DeepWiki.ReactiveSystems.S35.s) ~[DeepWiki.ReactiveSystems.lts35]
+      (DeepWiki.ReactiveSystems.S35.t) :=
+  DeepWiki.ReactiveSystems.ex_3_5_bisim
+
+/-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be reflexive,
+symmetric, or transitive — three counterexamples (over transition-free LTSs). The
+library's `ex_3_8_not_reflexive`/`_not_symmetric`/`_not_transitive`. -/
+theorem ex_3_8 :
+    (∃ R : Bool → Bool → Prop,
+      LTS.IsBisimulation (DeepWiki.ReactiveSystems.emptyLTS Bool Unit) R ∧ ¬ (∀ x, R x x)) ∧
+    (∃ R : Bool → Bool → Prop,
+      LTS.IsBisimulation (DeepWiki.ReactiveSystems.emptyLTS Bool Unit) R ∧
+        ¬ (∀ x y, R x y → R y x)) ∧
+    (∃ R : Fin 3 → Fin 3 → Prop,
+      LTS.IsBisimulation (DeepWiki.ReactiveSystems.emptyLTS (Fin 3) Unit) R ∧
+        ¬ (∀ x y z, R x y → R y z → R x z)) :=
+  ⟨DeepWiki.ReactiveSystems.ex_3_8_not_reflexive,
+   DeepWiki.ReactiveSystems.ex_3_8_not_symmetric,
+   DeepWiki.ReactiveSystems.ex_3_8_not_transitive⟩
 
 end DeepWiki.Rs
