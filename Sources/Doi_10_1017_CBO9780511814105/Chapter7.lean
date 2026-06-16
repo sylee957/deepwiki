@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.CcsTesting
+import DeepWiki.ReactiveSystems.CcsTestingSafety
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -144,5 +145,27 @@ theorem prop_7_3_2 {Name K : Type*} (a b bad : Name) (hab : a ≠ b) (defn : K �
       (HML.or (HML.box (DeepWiki.ReactiveSystems.Act.name a) HML.ff)
         (HML.box (DeepWiki.ReactiveSystems.Act.name b) HML.ff))) : False :=
   LTS.boxff_or_not_testable a b bad hab defn test h
+
+/-- **§7.3** (p.157). Recursion-free *safety HML* — `tt`, `ff`, `∧`, `[a]` (no
+`∨`, no `⟨a⟩`, no recursion). The library's `LTS.SafetyF`. -/
+abbrev safetyHML := @LTS.SafetyF
+
+/-- **Exercise 7.15** (§7.3, p.157). The test built from a safety formula
+(`tt ↦ 0`, `ff ↦ bad̄.0`, `∧ ↦ +`, `[a] ↦ ā.·`). The library's `LTS.testOf`. -/
+abbrev safetyTestOf := @LTS.testOf
+
+/-- **Theorem 7.1 / Exercise 7.15** (§7.3, p.155–158), recursion-free fragment.
+Every recursion-free safety HML formula (with real, non-`bad` actions) is
+**testable**: a bad-free process weakly satisfies `F` iff it passes the
+constructed test `testOf bad F` — e.g. the test for `[a]ff` is `ā.bad̄.0`
+(Example 7.1). Discharged by `LTS.testOf_correct`. (The book's full Theorem 7.1
+adds `ν`-recursion and the converse "every testable HML property lies in safety
+HML", from Aceto–Ingólfsdóttir 1999 — external.) -/
+theorem thm_7_1 {Name K : Type*} (defn : K → CCS Name K) (bad : Name)
+    (F : LTS.SafetyF Name) (hF : F.NoBadAction bad) (s : CCS Name K)
+    (hbf : LTS.BadFree defn bad s) :
+    LTS.WSat (ccsLTS defn) DeepWiki.ReactiveSystems.Act.tau s F.toHML ↔
+      LTS.Passes defn bad s (LTS.testOf bad F) :=
+  LTS.testOf_correct F hF s hbf
 
 end DeepWiki.Rs

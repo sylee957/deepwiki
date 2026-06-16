@@ -230,6 +230,194 @@ theorem tests_box {defn : K → CCS Name K} {bad a : Name} {TG : CCS Name K} {G 
     exact (not_passes_iff_canRej defn bad s _).mpr
       (box_backward hws ((not_passes_iff_canRej defn bad s' TG).mp hnp)) hp
 
+/-! ### Conjunctive case: the test `T_F + T_G` -/
+
+/-- A test built by `testOf` has no `τ`-move (its actions are all `bad̄`/`ā`). -/
+theorem testOf_no_tau {defn : K → CCS Name K} {bad : Name} (F : SafetyF Name) :
+    ∀ q : CCS Name K, ¬ Step defn (testOf bad F) Act.tau q := by
+  induction F with
+  | tt => intro q h; rw [testOf] at h; cases h
+  | ff => intro q h; rw [testOf, step_pre_iff] at h; exact absurd h.1 (by simp)
+  | and F G ihF ihG =>
+      intro q h; rw [testOf, step_choice_iff] at h
+      rcases h with h | h
+      · exact ihF _ h
+      · exact ihG _ h
+  | box a F _ => intro q h; rw [testOf, step_pre_iff] at h; exact absurd h.1 (by simp)
+
+/-- A `τ`-move of `s` lifts to `(s ∣ T) ∖ L` (one step, test fixed). -/
+theorem interact_com1_tau {defn : K → CCS Name K} {bad : Name} {s s' test : CCS Name K}
+    (h : Step defn s Act.tau s') :
+    Step defn (interact bad s test) Act.tau (interact bad s' test) :=
+  Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad) (Step.com1 h)
+
+/-- **Forward choice decomposition.** A reject of `(s ∣ T_F + T_G) ∖ L` (bad-free
+`s`, `τ`-free `T_F`/`T_G`) is a reject of `(s ∣ T_F) ∖ L` or `(s ∣ T_G) ∖ L`: the
+choice resolves to one branch on its first move (a `bad̄` reject or a sync). -/
+theorem and_forward {defn : K → CCS Name K} {bad : Name} {s TF TG : CCS Name K}
+    (hTFnt : ∀ q, ¬ Step defn TF Act.tau q) (hTGnt : ∀ q, ¬ Step defn TG Act.tau q)
+    (hbf : BadFree defn bad s)
+    (h : CanRej defn bad (interact bad s (CCS.choice TF TG))) :
+    CanRej defn bad (interact bad s TF) ∨ CanRej defn bad (interact bad s TG) := by
+  obtain ⟨Y, W, htau, hstep⟩ := h
+  refine Relation.ReflTransGen.head_induction_on htau
+    (motive := fun Z _ => ∀ t, Z = interact bad t (CCS.choice TF TG) → BadFree defn bad t →
+      CanRej defn bad (interact bad t TF) ∨ CanRej defn bad (interact bad t TG))
+    ?refl ?head s rfl hbf
+  case refl =>
+    rintro t rfl hbft
+    rw [interact, step_restrict_iff] at hstep
+    obtain ⟨Y', hcb1, hcb2, hpar, _⟩ := hstep
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨q, ht, _⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, _, _, heq, _, _, _, _⟩
+    · exact absurd ht (hbft t Relation.ReflTransGen.refl q)
+    · rw [step_choice_iff] at hT
+      rcases hT with hF | hG
+      · exact Or.inl ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com2 hF)⟩
+      · exact Or.inr ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com2 hG)⟩
+    · exact absurd heq (by simp)
+  case head =>
+    rintro Z c h' hc ih t rfl hbft
+    rw [ccsLTS_step, interact, step_restrict_iff] at h'
+    obtain ⟨Y', _, _, hpar, rfl⟩ := h'
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨t', ht, rfl⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, t', q', _, hℓ, ht, hT, rfl⟩
+    · rcases ih t' rfl (hbft.step ht) with hL | hR
+      · exact Or.inl (hL.tau_prefix (interact_com1_tau ht))
+      · exact Or.inr (hR.tau_prefix (interact_com1_tau ht))
+    · rw [step_choice_iff] at hT
+      rcases hT with hF | hG
+      · exact absurd hF (hTFnt q')
+      · exact absurd hG (hTGnt q')
+    · rw [step_choice_iff] at hT
+      rcases hT with hF | hG
+      · exact Or.inl (CanRej.tau_prefix
+          (Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad)
+            (Step.com3 hℓ ht hF)) ⟨Y, W, hc, hstep⟩)
+      · exact Or.inr (CanRej.tau_prefix
+          (Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad)
+            (Step.com3 hℓ ht hG)) ⟨Y, W, hc, hstep⟩)
+
+/-- **Backward choice construction (left).** A reject of `(s ∣ T_F) ∖ L` lifts to a
+reject of `(s ∣ T_F + T_G) ∖ L`. -/
+theorem and_backward_left {defn : K → CCS Name K} {bad : Name} {s TF TG : CCS Name K}
+    (hTFnt : ∀ q, ¬ Step defn TF Act.tau q)
+    (h : CanRej defn bad (interact bad s TF)) :
+    CanRej defn bad (interact bad s (CCS.choice TF TG)) := by
+  obtain ⟨Y, W, htau, hstep⟩ := h
+  refine Relation.ReflTransGen.head_induction_on htau
+    (motive := fun Z _ => ∀ t, Z = interact bad t TF →
+      CanRej defn bad (interact bad t (CCS.choice TF TG)))
+    ?refl ?head s rfl
+  case refl =>
+    rintro t rfl
+    rw [interact, step_restrict_iff] at hstep
+    obtain ⟨Y', hcb1, hcb2, hpar, _⟩ := hstep
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨q, hs, rfl⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, _, _, heq, _, _, _, _⟩
+    · exact ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com1 hs)⟩
+    · exact ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com2 (Step.suml hT))⟩
+    · exact absurd heq (by simp)
+  case head =>
+    rintro Z c h' hc ih t rfl
+    rw [ccsLTS_step, interact, step_restrict_iff] at h'
+    obtain ⟨Y', _, _, hpar, rfl⟩ := h'
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨t', hs, rfl⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, t', q', _, hℓ, hs, hT, rfl⟩
+    · exact (ih t' rfl).tau_prefix (interact_com1_tau hs)
+    · exact absurd hT (hTFnt q')
+    · exact CanRej.tau_prefix
+        (Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad)
+          (Step.com3 hℓ hs (Step.suml hT))) ⟨Y, W, hc, hstep⟩
+
+/-- **Backward choice construction (right).** A reject of `(s ∣ T_G) ∖ L` lifts to
+a reject of `(s ∣ T_F + T_G) ∖ L`. -/
+theorem and_backward_right {defn : K → CCS Name K} {bad : Name} {s TF TG : CCS Name K}
+    (hTGnt : ∀ q, ¬ Step defn TG Act.tau q)
+    (h : CanRej defn bad (interact bad s TG)) :
+    CanRej defn bad (interact bad s (CCS.choice TF TG)) := by
+  obtain ⟨Y, W, htau, hstep⟩ := h
+  refine Relation.ReflTransGen.head_induction_on htau
+    (motive := fun Z _ => ∀ t, Z = interact bad t TG →
+      CanRej defn bad (interact bad t (CCS.choice TF TG)))
+    ?refl ?head s rfl
+  case refl =>
+    rintro t rfl
+    rw [interact, step_restrict_iff] at hstep
+    obtain ⟨Y', hcb1, hcb2, hpar, _⟩ := hstep
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨q, hs, rfl⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, _, _, heq, _, _, _, _⟩
+    · exact ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com1 hs)⟩
+    · exact ⟨_, _, tauStar_refl _ _ _, Step.res hcb1 hcb2 (Step.com2 (Step.sumr hT))⟩
+    · exact absurd heq (by simp)
+  case head =>
+    rintro Z c h' hc ih t rfl
+    rw [ccsLTS_step, interact, step_restrict_iff] at h'
+    obtain ⟨Y', _, _, hpar, rfl⟩ := h'
+    rw [step_par_iff] at hpar
+    rcases hpar with ⟨t', hs, rfl⟩ | ⟨q', hT, rfl⟩ | ⟨ℓ, t', q', _, hℓ, hs, hT, rfl⟩
+    · exact (ih t' rfl).tau_prefix (interact_com1_tau hs)
+    · exact absurd hT (hTGnt q')
+    · exact CanRej.tau_prefix
+        (Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad)
+          (Step.com3 hℓ hs (Step.sumr hT))) ⟨Y, W, hc, hstep⟩
+
+/-- **Exercise 7.15, `∧` case.** Given `T_F`/`T_G` test for `F`/`G` (and are
+`τ`-free), the test `T_F + T_G` tests for `F ∧ G`. -/
+theorem tests_and {defn : K → CCS Name K} {bad : Name} {TF TG : CCS Name K}
+    {F G : SafetyF Name}
+    (hTF : ∀ s', BadFree defn bad s' →
+      (WSat (ccsLTS defn) Act.tau s' F.toHML ↔ Passes defn bad s' TF))
+    (hTG : ∀ s', BadFree defn bad s' →
+      (WSat (ccsLTS defn) Act.tau s' G.toHML ↔ Passes defn bad s' TG))
+    (hTFnt : ∀ q, ¬ Step defn TF Act.tau q) (hTGnt : ∀ q, ¬ Step defn TG Act.tau q)
+    (s : CCS Name K) (hbf : BadFree defn bad s) :
+    WSat (ccsLTS defn) Act.tau s (SafetyF.and F G).toHML ↔
+      Passes defn bad s (CCS.choice TF TG) := by
+  rw [SafetyF.toHML, wsat_and]
+  constructor
+  · rintro ⟨hF, hG⟩
+    by_contra hnp
+    rcases and_forward hTFnt hTGnt hbf ((not_passes_iff_canRej defn bad s _).mp hnp) with hcr | hcr
+    · exact (not_passes_iff_canRej defn bad s TF).mpr hcr ((hTF s hbf).mp hF)
+    · exact (not_passes_iff_canRej defn bad s TG).mpr hcr ((hTG s hbf).mp hG)
+  · intro hp
+    refine ⟨?_, ?_⟩
+    · rw [hTF s hbf]; by_contra hnp
+      exact (not_passes_iff_canRej defn bad s _).mpr
+        (and_backward_left hTFnt ((not_passes_iff_canRej defn bad s TF).mp hnp)) hp
+    · rw [hTG s hbf]; by_contra hnp
+      exact (not_passes_iff_canRej defn bad s _).mpr
+        (and_backward_right hTGnt ((not_passes_iff_canRej defn bad s TG).mp hnp)) hp
+
+/-! ### Theorem 7.1 (recursion-free fragment): every safety formula is testable -/
+
+/-- A safety formula uses no `box` on the reject channel `bad` (its actions are
+real observable actions). -/
+def SafetyF.NoBadAction (bad : Name) : SafetyF Name → Prop
+  | .tt => True
+  | .ff => True
+  | .and F G => F.NoBadAction bad ∧ G.NoBadAction bad
+  | .box a F => a ≠ bad ∧ F.NoBadAction bad
+
+/-- **Exercise 7.15 / Theorem 7.1 (recursion-free).** Every recursion-free safety
+HML formula `F` (with real, non-`bad` actions) is **testable**: a bad-free process
+weakly satisfies `F` iff it passes the constructed test `testOf bad F`. Proved by
+structural induction — `tests_tt`/`tests_ff` (base), `tests_box` (modal),
+`tests_and` (conjunction). -/
+theorem testOf_correct {defn : K → CCS Name K} {bad : Name} (F : SafetyF Name) :
+    F.NoBadAction bad → ∀ s, BadFree defn bad s →
+      (WSat (ccsLTS defn) Act.tau s F.toHML ↔ Passes defn bad s (testOf bad F)) := by
+  induction F with
+  | tt => intro _ s hbf; exact tests_tt defn bad s hbf
+  | ff => intro _ s _; exact tests_ff defn bad s
+  | and F G ihF ihG =>
+      rintro ⟨hFn, hGn⟩ s hbf
+      exact tests_and (ihF hFn) (ihG hGn) (testOf_no_tau F) (testOf_no_tau G) s hbf
+  | box a F ihF =>
+      rintro ⟨hab, hFn⟩ s hbf
+      exact tests_box (ihF hFn) hab s hbf
+
 end LTS
 
 end DeepWiki.ReactiveSystems
