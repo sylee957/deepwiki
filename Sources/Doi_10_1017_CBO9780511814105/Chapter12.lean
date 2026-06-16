@@ -100,6 +100,21 @@ satisfied by the same extended states. -/
 theorem ex_12_6 (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
     TLTS.MtSat T p u F.neg.neg ↔ TLTS.MtSat T p u F := TLTS.mtSat_neg_neg T F p u
 
+/-- **Exercise 12.5** (§12.2, p.229). The formula `∀∀[a]ff ∨ a in ∃∃(a = 1 ∧
+⟨a⟩tt)` over one action and one formula clock (both `Unit`). Its negation
+`Mt.neg` computes — by `rfl` — to the De Morgan dual `∃∃⟨a⟩tt ∧ a in ∀∀((a < 1 ∨
+a > 1) ∨ [a]ff)`, exactly as the book negates the analogous `y in ∃∃(y = 2 ∧
+⟨a⟩tt)` in Example 12.1 (note `¬(a = 1)` becomes `a < 1 ∨ a > 1`). -/
+theorem ex_12_5 :
+    (Mt.or (Mt.forallDelay (Mt.box () Mt.ff))
+        (Mt.reset () (Mt.existsDelay (Mt.and (Mt.guard (.atom () .eq 1)) (Mt.dia () Mt.tt))))
+      : Mt Unit Unit).neg =
+    Mt.and (Mt.existsDelay (Mt.dia () Mt.tt))
+      (Mt.reset () (Mt.forallDelay
+        (Mt.or (Mt.or (Mt.guard (.atom () .lt 1)) (Mt.guard (.atom () .gt 1)))
+          (Mt.box () Mt.ff)))) :=
+  rfl
+
 /-! ## §12.4 Recursion in HML with time -/
 
 /-- **Definition 12.6** (§12.4, p.240). The semantic functional `O_F(S)` of a
