@@ -1,0 +1,91 @@
+import DeepWiki.ReactiveSystems.TimedTransitionSystems
+
+/-! # Timed bisimilarity is strictly finer than timed-HML equivalence (§12.3)
+The converse of Theorem 12.3 *fails* over arbitrary TLTSs: there are states that
+satisfy the same timed-HML (`Mt`) formulae yet are not timed bisimilar. The book's
+witness (§12.3, p.234) is the `√2` TLTS: states `(A,d)`, `(B,d)` (`d : ℝ≥0`) and
+`End`, where `(A,d) —a→ End` for `d < c`, `(B,d) —a→ End` for `d ≤ c`, and every
+state delays freely; the book takes the boundary `c = √2`. Since `Mt`'s clock
+constraints only compare against integers, `Mt` cannot express "after delaying
+exactly `√2` an `a` is enabled", so `(A,0)` and `(B,0)` are `Mt`-equivalent (the
+keenest-reader Exercise 12.12). They are nonetheless *not* timed bisimilar:
+`(B,0) —c→ (B,c) —a→ End`, while after the same `c`-delay `(A,0)` only reaches
+`(A,c)`, from which no `a` is possible. We formalise this separating fact —
+`¬ (A,0) ~ (B,0)` — for an arbitrary boundary `c` (the argument needs nothing of
+`√2` but its being a real). -/
+
+namespace DeepWiki.ReactiveSystems
+
+open scoped NNReal
+
+/-- The single observable action of the `√2` example. -/
+inductive Sq2Act | a
+  deriving DecidableEq
+
+/-- States of the `√2` TLTS: `A d`, `B d` (parameterised by elapsed time `d`) and
+the sink `End`. -/
+inductive Sq2 | A (d : ℝ≥0) | B (d : ℝ≥0) | End
+
+variable (c : ℝ≥0)
+
+/-- The SOS of the `√2` TLTS (§12.3, p.234), with boundary `c`: `A d` does `a`
+strictly below `c`, `B d` does `a` up to and including `c`, and every state delays
+freely. -/
+inductive Sq2Step (c : ℝ≥0) : Sq2 → (Sq2Act ⊕ ℝ≥0) → Sq2 → Prop
+  /-- `A d —a→ End` for `d < c`. -/
+  | aA {d : ℝ≥0} (h : d < c) : Sq2Step c (.A d) (.inl .a) .End
+  /-- `B d —a→ End` for `d ≤ c` (note the boundary `d = c` is included). -/
+  | aB {d : ℝ≥0} (h : d ≤ c) : Sq2Step c (.B d) (.inl .a) .End
+  /-- `A d` delays freely. -/
+  | delA {d d' : ℝ≥0} : Sq2Step c (.A d) (.inr d') (.A (d + d'))
+  /-- `B d` delays freely. -/
+  | delB {d d' : ℝ≥0} : Sq2Step c (.B d) (.inr d') (.B (d + d'))
+  /-- `End` delays to itself. -/
+  | delEnd {d' : ℝ≥0} : Sq2Step c .End (.inr d') .End
+
+/-- The `√2` timed LTS with boundary `c`. -/
+def sq2TLTS (c : ℝ≥0) : TLTS Sq2 Sq2Act := ⟨Sq2Step c⟩
+
+@[simp] theorem sq2_act {c : ℝ≥0} {p q : Sq2} {α : Sq2Act} :
+    (sq2TLTS c).act p α q ↔ Sq2Step c p (Sum.inl α) q := Iff.rfl
+
+@[simp] theorem sq2_delay {c : ℝ≥0} {p q : Sq2} {d : ℝ≥0} :
+    (sq2TLTS c).delay p d q ↔ Sq2Step c p (Sum.inr d) q := Iff.rfl
+
+/-- **§12.3** (p.234). `(A,0)` and `(B,0)` are **not** timed bisimilar — the
+witnessing fact that the converse of Theorem 12.3 fails over arbitrary TLTSs.
+(With the boundary `c = √2` they nonetheless satisfy the same `Mt` formulae; that
+is the keenest-reader Exercise 12.12.) -/
+theorem not_timedBisimilar_sqrt2 :
+    ¬ TLTS.TimedBisimilar (sq2TLTS c) (Sq2.A 0) (Sq2.B 0) := by
+  intro h
+  -- Match `(B,0) —c→ (B,c)` with a `c`-delay from `(A,0)`; it can only reach `(A,c)`.
+  obtain ⟨-, -, -, hdel⟩ := (TLTS.timedBisimilar_iff (sq2TLTS c) (Sq2.A 0) (Sq2.B 0)).1 h
+  have hBdelay : (sq2TLTS c).delay (Sq2.B 0) c (Sq2.B c) := by
+    have hb := @Sq2Step.delB c 0 c
+    rw [zero_add] at hb
+    exact hb
+  obtain ⟨p', hp', hbis⟩ := hdel c (Sq2.B c) hBdelay
+  rw [sq2_delay] at hp'
+  cases hp'
+  rw [zero_add] at hbis
+  -- `(B,c) —a→ End`, but `(A,c)` has no `a`-move (it would need `c < c`).
+  obtain ⟨-, hact, -, -⟩ := (TLTS.timedBisimilar_iff (sq2TLTS c) (Sq2.A c) (Sq2.B c)).1 hbis
+  obtain ⟨q', hq', -⟩ := hact Sq2Act.a Sq2.End (sq2_act.mpr (Sq2Step.aB le_rfl))
+  rw [sq2_act] at hq'
+  cases hq' with
+  | aA h => exact absurd h (lt_irrefl _)
+
+/-- The separating behaviour at the boundary: after the same `c`-delay, `(B,c)`
+can still do `a` (`c ≤ c`) but `(A,c)` cannot (it would need `c < c`). -/
+example :
+    (sq2TLTS c).delay (Sq2.A 0) c (Sq2.A c) ∧
+    (sq2TLTS c).delay (Sq2.B 0) c (Sq2.B c) ∧
+    (sq2TLTS c).act (Sq2.B c) Sq2Act.a Sq2.End ∧
+    ¬ ∃ q, (sq2TLTS c).act (Sq2.A c) Sq2Act.a q := by
+  refine ⟨?_, ?_, sq2_act.mpr (Sq2Step.aB le_rfl), ?_⟩
+  · have := @Sq2Step.delA c 0 c; rwa [zero_add] at this
+  · have := @Sq2Step.delB c 0 c; rwa [zero_add] at this
+  · rintro ⟨q, hq⟩; rw [sq2_act] at hq; cases hq with | aA h => exact absurd h (lt_irrefl _)
+
+end DeepWiki.ReactiveSystems

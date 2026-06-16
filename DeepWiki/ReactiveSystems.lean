@@ -48,6 +48,7 @@ import DeepWiki.ReactiveSystems.TimedHennessyMilner
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
+import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.FischerMutualExclusion
 
 /-! # Reactive Systems

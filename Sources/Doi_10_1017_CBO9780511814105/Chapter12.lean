@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.TimedHennessyMilner
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
+import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -13,6 +14,7 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 namespace DeepWiki.Rs
 
 open DeepWiki.ReactiveSystems
+open scoped NNReal
 
 variable {Proc Act D : Type*}
 
@@ -82,6 +84,18 @@ theorem mt_soundness (T : TLTS Proc Act) {p q : Proc}
     (h : TLTS.TimedBisimilar T p q) (F : Mt Act D) :
     TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
   TLTS.timedBisimilar_mtSatState h F
+
+/-- **§12.3 / Proposition 12.2** (p.234), the separating witness. The converse of
+Theorem 12.3 **fails** over arbitrary TLTSs: the book's `√2` TLTS (boundary `c`)
+has `(A,0)` and `(B,0)` *not* timed bisimilar — `(B,0) —c→ (B,c) —a→ End` has no
+match from `(A,0)`, which only reaches `(A,c)` (no `a` there). Discharged by the
+library's `not_timedBisimilar_sqrt2`. (With `c = √2` the two states are
+nonetheless `Mt`-equivalent — Proposition 12.2 / the keenest-reader Exercise
+12.12 — so timed bisimilarity is *strictly* finer than `Mt`-equivalence on TLTSs.) -/
+theorem prop_12_2_not_bisim (c : ℝ≥0) :
+    ¬ TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.sq2TLTS c)
+      (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) :=
+  DeepWiki.ReactiveSystems.not_timedBisimilar_sqrt2 c
 
 /-! ## §12.2 Negation in HML with time -/
 
