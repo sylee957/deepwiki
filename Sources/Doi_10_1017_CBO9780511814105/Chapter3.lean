@@ -11,6 +11,7 @@ import DeepWiki.ReactiveSystems.CcsCounter
 import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
+import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -462,5 +463,35 @@ theorem ex_3_12_distrib {Name : Type*} :
       ~[ccsLTS (DeepWiki.ReactiveSystems.noDefs (Name := Name))]
       (CCS.choice (CCS.par CCS.nil CCS.nil) (CCS.par CCS.nil CCS.nil)) :=
   DeepWiki.ReactiveSystems.par_choice_distrib_nil
+
+/-- **Exercise 3.13** (§3.3, p.46). Restriction does **not** distribute over
+parallel composition — `(a.0 ∣ ā.0) ∖ {a}` synchronises (`τ`) but
+`(a.0 ∖ {a}) ∣ (ā.0 ∖ {a})` is deadlocked. The `¬∀` form, discharged by the
+library's `not_restrict_distrib_par`. (Relabelling, being a homomorphism on
+labels, *does* distribute.) -/
+theorem ex_3_13 :
+    ¬ ∀ (P Q : CCS DeepWiki.ReactiveSystems.RChan Empty),
+      (CCS.restrict (CCS.par P Q) DeepWiki.ReactiveSystems.rcRestrict)
+        ~[ccsLTS DeepWiki.ReactiveSystems.noDefs]
+        (CCS.par (CCS.restrict P DeepWiki.ReactiveSystems.rcRestrict)
+          (CCS.restrict Q DeepWiki.ReactiveSystems.rcRestrict)) :=
+  DeepWiki.ReactiveSystems.not_restrict_distrib_par
+
+/-- **Exercise 3.29** (§3.4, p.61). Restricting away every observable action makes
+a process observationally equivalent to `0`: `P ∖ (Act ∖ {τ}) ≈ 0`. The library's
+`restrict_observable_weaklyBisimilar_nil`. -/
+theorem ex_3_29_weak {Name K : Type*} (defn : K → CCS Name K) (P : CCS Name K) :
+    (CCS.restrict P (DeepWiki.ReactiveSystems.observable Name))
+      ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.nil :=
+  DeepWiki.ReactiveSystems.restrict_observable_weaklyBisimilar_nil defn P
+
+/-- **Exercise 3.29** (§3.4, p.61). The same fails up to *strong* bisimilarity:
+`(τ.0) ∖ (Act ∖ {τ}) ≁ 0` (a surviving `τ`-step). The library's
+`not_restrict_observable_bisimilar_nil`. -/
+theorem ex_3_29_not_strong {Name : Type*} :
+    ¬ (CCS.restrict (CCS.pre DeepWiki.ReactiveSystems.Act.tau CCS.nil)
+        (DeepWiki.ReactiveSystems.observable Name))
+      ~[ccsLTS DeepWiki.ReactiveSystems.noDefs] CCS.nil :=
+  DeepWiki.ReactiveSystems.not_restrict_observable_bisimilar_nil
 
 end DeepWiki.Rs
