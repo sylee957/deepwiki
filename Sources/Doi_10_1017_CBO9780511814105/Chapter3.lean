@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsCongruence
+import DeepWiki.ReactiveSystems.CcsWeakCongruence
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -341,5 +342,48 @@ theorem ex_3_26_3 {Name K : Type*} (defn : K → CCS Name K) {α : RsAct Name} (
       CCS.choice (CCS.pre α (CCS.choice P (CCS.pre DeepWiki.ReactiveSystems.Act.tau Q)))
         (CCS.pre α Q) :=
   tau_law_3 defn P Q
+
+/-! ## §3.4 Weak bisimilarity is a congruence (Theorem 3.4)
+
+Observational equivalence `≈` is preserved by prefixing, parallel composition,
+relabelling and restriction (but *not* by choice — `0 ≈ τ.0` yet
+`a.0 + 0 ≉ a.0 + τ.0`). Discharged by the library's `weak_cong_*`. -/
+
+/-- **Theorem 3.4** (§3.4, p.62), prefix congruence: `P ≈ Q → α.P ≈ α.Q`. -/
+theorem thm_3_4_pre {Name K : Type*} (defn : K → CCS Name K) {a : RsAct Name}
+    {P Q : CCS Name K} (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
+    CCS.pre a P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.pre a Q :=
+  DeepWiki.ReactiveSystems.weak_cong_pre defn h
+
+/-- **Theorem 3.4** (§3.4, p.62), parallel congruence on the left: `P ≈ Q →
+P∣R ≈ Q∣R` (the hard case — a weak visible move synchronises with a single
+complementary step into a weak `τ`-move). -/
+theorem thm_3_4_par_left {Name K : Type*} (defn : K → CCS Name K) {P Q : CCS Name K}
+    (R : CCS Name K) (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
+    CCS.par P R ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.par Q R :=
+  DeepWiki.ReactiveSystems.weak_cong_par_left defn R h
+
+/-- **Theorem 3.4** (§3.4, p.62), parallel congruence on the right: `P ≈ Q →
+R∣P ≈ R∣Q`. -/
+theorem thm_3_4_par_right {Name K : Type*} (defn : K → CCS Name K) {P Q : CCS Name K}
+    (R : CCS Name K) (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
+    CCS.par R P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.par R Q :=
+  DeepWiki.ReactiveSystems.weak_cong_par_right defn R h
+
+/-- **Theorem 3.4** (§3.4, p.62), relabelling congruence: `P ≈ Q → P[f] ≈ Q[f]`
+for a genuine relabelling `f` (which fixes `τ`). -/
+theorem thm_3_4_relabel {Name K : Type*} (defn : K → CCS Name K) {P Q : CCS Name K}
+    (f : RsAct Name → RsAct Name) (hf : IsRelabelling f)
+    (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
+    CCS.relabel P f ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.relabel Q f :=
+  DeepWiki.ReactiveSystems.weak_cong_relabel defn f hf h
+
+/-- **Theorem 3.4** (§3.4, p.62), restriction congruence: `P ≈ Q → P∖L ≈ Q∖L`
+when `τ` is not restricted. -/
+theorem thm_3_4_restrict {Name K : Type*} (defn : K → CCS Name K) {P Q : CCS Name K}
+    (Lr : Set (RsAct Name)) (htau : DeepWiki.ReactiveSystems.Act.tau ∉ Lr)
+    (h : P ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] Q) :
+    CCS.restrict P Lr ≈[ccsLTS defn, DeepWiki.ReactiveSystems.Act.tau] CCS.restrict Q Lr :=
+  DeepWiki.ReactiveSystems.weak_cong_restrict defn Lr htau h
 
 end DeepWiki.Rs

@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
 import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
 import DeepWiki.ReactiveSystems.CcsCongruence
+import DeepWiki.ReactiveSystems.CcsWeakCongruence
 import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Traces
