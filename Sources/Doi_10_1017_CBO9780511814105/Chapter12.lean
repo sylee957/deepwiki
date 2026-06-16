@@ -48,6 +48,22 @@ abbrev def_12_4 := @TimedAutomaton.SatisfiesMt
 
 /-! ## §12.3 Timed bisimilarity versus HML with time -/
 
+/-- **Theorem 12.3** (§12.3, p.233). In any TLTS, if `p` and `q` are timed
+bisimilar then for every formula-clock valuation `u` the extended states `(p, u)`
+and `(q, u)` satisfy exactly the same `Mt` formulae (both closed and open). Proved
+by structural induction on the formula. -/
+theorem thm_12_3 (T : TLTS Proc Act) {p q : Proc} (h : TLTS.TimedBisimilar T p q)
+    (u : Valuation D) (F : Mt Act D) : TLTS.MtSat T p u F ↔ TLTS.MtSat T q u F :=
+  TLTS.timedBisimilar_mtIff h u F
+
+/-- **Corollary 12.1** (§12.3, p.234). Timed-bisimilar states satisfy exactly the
+same `Mt` formulae at the state level (Definition 12.3) — the instantiation of
+Theorem 12.3 at the all-zero formula-clock valuation, applied to the TLTSs giving
+semantics to timed automata. -/
+theorem cor_12_1 (T : TLTS Proc Act) {p q : Proc} (h : TLTS.TimedBisimilar T p q)
+    (F : Mt Act D) : TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
+  TLTS.timedBisimilar_mtSatState h F
+
 /-- **§12.3** (soundness; the timed analogue of Theorem 5.1, simplified
 fragment). Timed-bisimilar states satisfy the same fragment formulae. (This
 direction holds for every TLTS; the converse uses the region abstraction of
