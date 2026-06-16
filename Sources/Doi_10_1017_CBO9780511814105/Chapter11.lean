@@ -4,6 +4,7 @@ import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
+import DeepWiki.ReactiveSystems.TimedZones
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -14,6 +15,7 @@ the `DeepWiki.ReactiveSystems` library. (§11.5, zone graphs, is future work.) -
 namespace DeepWiki.Rs
 
 open DeepWiki.ReactiveSystems
+open scoped NNReal
 
 variable {Proc Act : Type*} {C : Type*}
 
@@ -201,5 +203,50 @@ theorem lemma_11_2 {Loc : Type*} [Fintype C] (A : TimedAutomaton Loc Act C)
       ∃ c, DeepWiki.ReactiveSystems.symbolicState cmax c = t ∧
         A.tlts.untimedLTS.Reachable c₀ c :=
   A.reachable_iff_regionGraph_fintype wf c₀ t
+
+/-! ## §11.5 Zones and reachability graphs -/
+
+/-- **Definition 11.15** (§11.5, p.215). The *future* `Z↑ = {v + d | v ∈ Z,
+d ≥ 0}` of a zone. The library's `zoneUp`. -/
+abbrev def_11_15_up := @DeepWiki.ReactiveSystems.zoneUp
+
+/-- **Definition 11.15** (§11.5, p.215). The *reset* `Z[r] = {v[r] | v ∈ Z}` of a
+zone. The library's `zoneReset`. -/
+abbrev def_11_15_reset := @DeepWiki.ReactiveSystems.zoneReset
+
+/-- **Definition 11.16** (§11.5, p.216). The symbolic transition relation `⤳` over
+symbolic states `(ℓ, Z)`: a delay step `(ℓ,Z) ⤳ (ℓ, Z↑ ∧ I(ℓ))` and an action
+step `(ℓ,Z) ⤳ (ℓ', (Z ∧ g)[r] ∧ I(ℓ'))` per edge `ℓ —g,a,r→ ℓ'`. The library's
+`SymStep` (curried in the symbolic-state components). -/
+abbrev def_11_16 := @DeepWiki.ReactiveSystems.SymStep
+
+/-- **Theorem 11.5** (§11.5, p.216), soundness. Every valuation in the target of a
+symbolic transition `(ℓ,Z) ⤳ (ℓ',Z')` is reached by a concrete transition from
+some valuation of `Z` (the delay case needs `Z` to respect the invariant of `ℓ`,
+which holds for all reachable symbolic states). -/
+theorem thm_11_5_sound {Loc : Type*} (A : TimedAutomaton Loc Act C) {ℓ ℓ' : Loc}
+    {Z Z' : Set (Valuation C)} (hstep : DeepWiki.ReactiveSystems.SymStep A ℓ Z ℓ' Z')
+    (hZinv : Z ⊆ DeepWiki.ReactiveSystems.zoneGuard (A.inv ℓ)) {v' : Valuation C}
+    (hv' : v' ∈ Z') : ∃ v ∈ Z, ∃ lab, A.tlts.untimedLTS.step (ℓ, v) lab (ℓ', v') :=
+  DeepWiki.ReactiveSystems.symStep_sound A hstep hZinv hv'
+
+/-- **Theorem 11.5** (§11.5, p.216), completeness for action steps. A concrete
+action transition from `v ∈ Z` is matched by a symbolic transition whose target
+contains the resulting valuation. -/
+theorem thm_11_5_complete_act {Loc : Type*} (A : TimedAutomaton Loc Act C) {ℓ ℓ' : Loc}
+    {Z : Set (Valuation C)} {v v' : Valuation C} {a : Act} (hv : v ∈ Z)
+    (hstep : A.tlts.act (ℓ, v) a (ℓ', v')) :
+    ∃ Z', DeepWiki.ReactiveSystems.SymStep A ℓ Z ℓ' Z' ∧ v' ∈ Z' :=
+  DeepWiki.ReactiveSystems.symStep_complete_act A hv hstep
+
+/-- **Theorem 11.5** (§11.5, p.216), completeness for delay steps. A concrete
+delay transition from `v ∈ Z` is matched by the symbolic delay step. Together
+with `thm_11_5_complete_act`, the symbolic semantics is sound and complete for
+reachability (Corollary 11.2's zone-based decision procedure). -/
+theorem thm_11_5_complete_delay {Loc : Type*} (A : TimedAutomaton Loc Act C) {ℓ : Loc}
+    {Z : Set (Valuation C)} {v v' : Valuation C} {d : ℝ≥0} (hv : v ∈ Z)
+    (hstep : A.tlts.delay (ℓ, v) d (ℓ, v')) :
+    ∃ Z', DeepWiki.ReactiveSystems.SymStep A ℓ Z ℓ Z' ∧ v' ∈ Z' :=
+  DeepWiki.ReactiveSystems.symStep_complete_delay A hv hstep
 
 end DeepWiki.Rs
