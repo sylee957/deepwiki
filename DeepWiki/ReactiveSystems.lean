@@ -13,6 +13,7 @@ import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.MutualExclusion
+import DeepWiki.ReactiveSystems.TimedTransitionSystems
 
 /-! # Reactive Systems
 Autoformalization of the classic theory of reactive systems (concurrency
