@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsCongruence
 import DeepWiki.ReactiveSystems.CcsWeakCongruence
 import DeepWiki.ReactiveSystems.CcsBufferTwo
+import DeepWiki.ReactiveSystems.CcsCounter
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -312,6 +313,23 @@ theorem ex_3_3 : (CCS.const Ex33K.P) ~[ccsLTS ex33defn] (CCS.const Ex33K.Q) := b
       rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+
+/-- **Proposition 3.1** (§3.3, p.50). The relating relation of the unbounded
+counter (the book's `R`, pairing `C ∣ Πᵢ Pᵢ` with `Counterₙ` when exactly `n` of
+the `Pᵢ` are `down.0`) is a strong bisimulation. Discharged by the library's
+`isBisimulation_counterRel`. -/
+theorem prop_3_1 :
+    DeepWiki.ReactiveSystems.LTS.IsBisimulation (ccsLTS DeepWiki.ReactiveSystems.ctrDefn)
+      DeepWiki.ReactiveSystems.counterRel :=
+  DeepWiki.ReactiveSystems.isBisimulation_counterRel
+
+/-- **Proposition 3.1 / §3.3** (p.49). The headline consequence: the unbounded
+counter `C = up.(C ∣ down.0)` is strongly bisimilar to its specification
+`Counter₀`. Discharged by the library's `counter_bisim`. -/
+theorem prop_3_1_bisim :
+    (CCS.const DeepWiki.ReactiveSystems.CtrK.impl) ~[ccsLTS DeepWiki.ReactiveSystems.ctrDefn]
+      (CCS.const (DeepWiki.ReactiveSystems.CtrK.counter 0)) :=
+  DeepWiki.ReactiveSystems.counter_bisim
 
 /-- **Figure 3.2 / Proposition 3.2** (§3.3, p.51), the `n = 2` case. A two-place
 buffer is strongly bisimilar to two one-place buffers in parallel:
