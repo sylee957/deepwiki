@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedRegions
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -35,6 +36,23 @@ theorem def_11_5_transfer (T : TLTS Proc Act) (p q : Proc) :
 theorem timedBisimilar_equivalence (T : TLTS Proc Act) :
     Equivalence (TLTS.TimedBisimilar T) := TLTS.timedBisimilar_equivalence T
 
+/-- **Definition 11.7** (§11.2, p.197). Untimed (time-abstract) bisimilarity:
+actions are matched exactly, delays by *some* delay of possibly different
+duration. The library's `TLTS.UntimedBisimilar` (strong bisimilarity on the
+untimed LTS). -/
+abbrev def_11_7 := @TLTS.UntimedBisimilar
+
+/-- **§11.2** (p.197). Untimed bisimilarity is an equivalence relation. -/
+theorem untimedBisimilar_equivalence (T : TLTS Proc Act) :
+    Equivalence (TLTS.UntimedBisimilar T) := TLTS.untimedBisimilar_equivalence T
+
+/-- **§11.2** (p.197). Timed bisimilarity refines untimed bisimilarity:
+timed-bisimilar states are untimed bisimilar (durations are forgotten, so the
+converse fails). -/
+theorem timedBisimilar_untimedBisimilar (T : TLTS Proc Act) {p q : Proc}
+    (h : TLTS.TimedBisimilar T p q) : TLTS.UntimedBisimilar T p q :=
+  TLTS.TimedBisimilar.untimedBisimilar h
+
 /-! ## §11.4 The region construction -/
 
 /-- **Definition 11.11** (§11.4, p.205). Integer part `⌊d⌋` of a clock value. -/
@@ -66,8 +84,10 @@ theorem thm_11_3_equivalence (cmax : C → ℕ) :
 
 /-- **Theorem 11.3** (§11.4, p.209), finite-index part. Over a finite clock set,
 region equivalence has finitely many classes — the region quotient is finite.
-(The remaining same-region/timed-bisimilarity claim of Theorem 11.3 is future
-work.) -/
+(The remaining claim of Theorem 11.3 — region-equivalent configurations `(ℓ, v)`,
+`(ℓ, v')` are **untimed** bisimilar, `def_11_7` — needs the region time-successor
+lemma and is future work; it is *untimed*, not timed: equal delays do not
+preserve regions.) -/
 theorem thm_11_3_finite [Finite C] (cmax : C → ℕ) :
     Finite (DeepWiki.ReactiveSystems.Region cmax) :=
   DeepWiki.ReactiveSystems.Region.finite cmax
