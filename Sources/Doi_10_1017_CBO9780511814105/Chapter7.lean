@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.MutualExclusion
 import DeepWiki.ReactiveSystems.Peterson
 import DeepWiki.ReactiveSystems.SimulationWeak
+import DeepWiki.ReactiveSystems.CcsTesting
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -102,5 +103,33 @@ each weakly simulates the other, so their weak-trace sets coincide. -/
 theorem weaklyBisimilar_weakTraceEquiv (L : LTS Proc Act) (tau : Act) {p q : Proc}
     (h : p ≈[L, tau] q) : LTS.WeakTraceEquiv L tau p q :=
   LTS.WeaklyBisimilar.weakTraceEquiv h
+
+/-! ## §7.3 Testing and testable formulae (Definitions 7.3–7.4, Proposition 7.3) -/
+
+/-- **Definition 7.3 / 7.4** (§7.3, p.155). The interaction `(s ∣ T) ∖ L` of a
+process with a test, hiding every observable channel except the reject channel
+`bad` (a test is a regular CCS process over `Act ∪ {bad}`). The library's
+`LTS.interact`. -/
+abbrev def_7_3 := @LTS.interact
+
+/-- **Definition 7.4** (§7.3, p.155). `s` *passes* test `T`: the composite cannot
+weakly perform the reject action `bad̄`. The library's `LTS.Passes`. -/
+abbrev def_7_4 := @LTS.Passes
+
+/-- **Definition 7.4** (§7.3, p.156). `T` *tests for* `F` (so `F` is *testable*):
+satisfying `F` coincides with passing `T`, for every process. The library's
+`LTS.Tests`. -/
+abbrev def_7_4_tests := @LTS.Tests
+
+/-- **Proposition 7.3(1)** (§7.3, p.157). The formula `⟨a⟩tt` is **not testable**:
+no test tests for it (the testing preorder cannot observe existential branching).
+Discharged by `LTS.dia_tt_not_testable`. (Proposition 7.3(2), `[a]ff ∨ [b]ff` not
+testable, needs a weak-transition decomposition of the restricted composite and is
+left for future work.) -/
+theorem prop_7_3_1 {Name K : Type*} (a bad : Name) (defn : K → CCS Name K)
+    (test : CCS Name K)
+    (h : LTS.Tests defn bad test (HML.dia (DeepWiki.ReactiveSystems.Act.name a) HML.tt)) :
+    False :=
+  LTS.dia_tt_not_testable a bad defn test h
 
 end DeepWiki.Rs
