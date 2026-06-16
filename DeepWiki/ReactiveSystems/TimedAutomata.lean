@@ -36,10 +36,22 @@ abbrev Valuation (C : Type*) := C → ℝ≥0
 /-- `v + d`: increase every clock value by the delay `d`. -/
 def Valuation.add {C : Type*} (v : Valuation C) (d : ℝ≥0) : Valuation C := fun x => v x + d
 
+/-- `(v + d) x = v x + d` pointwise. -/
+@[simp] theorem Valuation.add_apply {C : Type*} (v : Valuation C) (d : ℝ≥0) (x : C) :
+    v.add d x = v x + d := rfl
+
 open Classical in
 /-- `v[r]`: reset the clocks in `r` to zero, leaving the others unchanged. -/
 noncomputable def Valuation.reset {C : Type*} (r : Set C) (v : Valuation C) : Valuation C :=
   fun x => if x ∈ r then 0 else v x
+
+/-- A reset clock reads zero. -/
+theorem Valuation.reset_mem {C : Type*} {r : Set C} {x : C} (h : x ∈ r) (v : Valuation C) :
+    Valuation.reset r v x = 0 := by unfold Valuation.reset; exact if_pos h
+
+/-- An unreset clock keeps its value. -/
+theorem Valuation.reset_not_mem {C : Type*} {r : Set C} {x : C} (h : x ∉ r) (v : Valuation C) :
+    Valuation.reset r v x = v x := by unfold Valuation.reset; exact if_neg h
 
 /-- Evaluation of a clock constraint under a valuation (Definition 10.2). -/
 def satisfies {C : Type*} (v : Valuation C) : ClockConstraint C → Prop

@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
+import Mathlib.Tactic.FinCases
 
 /-! # Fischer's mutual-exclusion algorithm (§13.2)
 Fischer's algorithm achieves mutual exclusion for `n` processes through *timing*
@@ -88,12 +89,13 @@ theorem satisfies_fischerInv {n c : ℕ} (ℓ : FischerLoc n) (v : Valuation (Fi
   rw [fischerInv, aux]
   simp
 
-/-- The edge relation of the Fischer network (Figure 13.1): some process `i`
-takes one of its five steps. With `id` folded into the location, the register
-guards and assignments become conditions on the global location; the clock guard
-`g` and reset set `r` carry the timing (`xᵢ ≥ c` before re-checking, `xᵢ := 0` on
-the two writing steps). -/
-def fischerEdge (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
+/-- The edge relation of the Fischer network: some process `i` takes one of its
+five steps, with the node-`2` re-check guard `xᵢ ⋈ c` using comparison `cmp`.
+With `id` folded into the location, the register guards and assignments become
+conditions on the global location; the clock guard `g` and reset set `r` carry
+the timing. Figure 13.1 (correct) uses `cmp = >` (strictly more than `c`);
+Figure 13.2 (erroneous) uses `cmp = ≥` (exactly `c` suffices). -/
+def fischerEdgeWith (cmp : Cmp) (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
     (g : ClockConstraint (Fin n)) (_a : Unit) (r : Set (Fin n)) (ℓ' : FischerLoc n) : Prop :=
   ∃ i : Fin n,
     -- L → 1 : id = 0, reset xᵢ
@@ -102,11 +104,11 @@ def fischerEdge (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
     -- 1 → 2 : id := i, reset xᵢ
     (ℓ.ctrl i = .setting ∧ g = .true_ ∧ r = {i} ∧
         ℓ' = ⟨Function.update ℓ.ctrl i .testing, some i⟩) ∨
-    -- 2 → CS : id = i ∧ xᵢ ≥ c
-    (ℓ.ctrl i = .testing ∧ ℓ.id = some i ∧ g = .atom i .ge c ∧ r = ∅ ∧
+    -- 2 → CS : id = i ∧ xᵢ ⋈ c
+    (ℓ.ctrl i = .testing ∧ ℓ.id = some i ∧ g = .atom i cmp c ∧ r = ∅ ∧
         ℓ' = ⟨Function.update ℓ.ctrl i .critical, ℓ.id⟩) ∨
-    -- 2 → L : id ≠ i ∧ xᵢ ≥ c
-    (ℓ.ctrl i = .testing ∧ ℓ.id ≠ some i ∧ g = .atom i .ge c ∧ r = ∅ ∧
+    -- 2 → L : id ≠ i ∧ xᵢ ⋈ c
+    (ℓ.ctrl i = .testing ∧ ℓ.id ≠ some i ∧ g = .atom i cmp c ∧ r = ∅ ∧
         ℓ' = ⟨Function.update ℓ.ctrl i .wait, ℓ.id⟩) ∨
     -- CS → L : id := 0 (release)
     (ℓ.ctrl i = .critical ∧ g = .true_ ∧ r = ∅ ∧
@@ -114,11 +116,21 @@ def fischerEdge (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
 
 /-- **§13.2.** Fischer's mutual-exclusion algorithm modelled as a network of `n`
 timed automata (Figure 13.1): the shared register `id` is folded into the global
-location, with one clock `xᵢ` per process and bound `c`. The initial location has
+location, with one clock `xᵢ` per process and bound `c`; the node-`2` re-check
+requires `xᵢ > c` (strictly more than `c` time elapsed). The initial location has
 every process waiting and the register free. -/
 def fischer (n c : ℕ) : TimedAutomaton (FischerLoc n) Unit (Fin n) where
   initial := ⟨fun _ => .wait, none⟩
-  edge := fischerEdge c
+  edge := fischerEdgeWith .gt c
+  inv := fischerInv c
+
+/-- **§13.2.** The *erroneous* version of Fischer's algorithm (Figure 13.2): the
+node-`2` re-check guard is weakened to `xᵢ ≥ c`, allowing a process to proceed
+after a delay of *exactly* `c`. This version does not preserve mutual exclusion
+(`not_fischerErroneous_mutualExclusion`). -/
+def fischerErroneous (n c : ℕ) : TimedAutomaton (FischerLoc n) Unit (Fin n) where
+  initial := ⟨fun _ => .wait, none⟩
+  edge := fischerEdgeWith .ge c
   inv := fischerInv c
 
 /-- The Fischer network is **safe** when mutual exclusion holds at every reachable
@@ -134,5 +146,82 @@ theorem fischer_initial_mutualExclusion (n c : ℕ) :
     (fischer n c).initial.MutualExclusion := by
   intro i _ hi _
   simp [fischer] at hi
+
+/-! ## The erroneous version violates mutual exclusion (Exercise 13.3)
+
+A concrete run of the erroneous two-process network reaches a global location with
+both processes in their critical sections. The run lets process `0` write `id`,
+delay exactly `c`, and enter; then process `1` (still writing) overwrites `id`,
+delays exactly `c`, and also enters — the erroneous `xᵢ ≥ c` guard admits both
+entries at exactly `c`, which the correct strict `xᵢ > c` guard would forbid. -/
+
+/-- One action step of the erroneous two-process network. -/
+private theorem err_act (c : ℕ) {ℓ ℓ' : FischerLoc 2} {v v' : Valuation (Fin 2)}
+    {g : ClockConstraint (Fin 2)} {r : Set (Fin 2)}
+    (hedge : fischerEdgeWith .ge c ℓ g () r ℓ') (hg : satisfies v g)
+    (hv : v' = Valuation.reset r v) (hinv : ∀ i, ℓ'.ctrl i = .setting → v' i ≤ c) :
+    (fischerErroneous 2 c).tlts.step (ℓ, v) (Sum.inl ()) (ℓ', v') := by
+  show (fischerErroneous 2 c).tlts.act (ℓ, v) () (ℓ', v')
+  rw [TimedAutomaton.tlts_act_iff]
+  exact ⟨g, r, hedge, hg, hv, (satisfies_fischerInv ℓ' v').mpr hinv⟩
+
+/-- One delay step of the erroneous two-process network. -/
+private theorem err_delay (c : ℕ) {ℓ : FischerLoc 2} {v : Valuation (Fin 2)} (d : ℝ≥0)
+    (hb : ∀ i, ℓ.ctrl i = .setting → v i ≤ c)
+    (ha : ∀ i, ℓ.ctrl i = .setting → (v.add d) i ≤ c) :
+    (fischerErroneous 2 c).tlts.step (ℓ, v) (Sum.inr d) (ℓ, v.add d) := by
+  show (fischerErroneous 2 c).tlts.delay (ℓ, v) d (ℓ, v.add d)
+  rw [TimedAutomaton.tlts_delay_iff]
+  exact ⟨rfl, rfl, (satisfies_fischerInv ℓ v).mpr hb, (satisfies_fischerInv ℓ (v.add d)).mpr ha⟩
+
+/-- **Exercise 13.3.** The *erroneous* version of Fischer's algorithm (Figure
+13.2, guard `xᵢ ≥ c`) does **not** preserve mutual exclusion: the two-process
+network reaches a global location in which both processes are in their critical
+sections. (With the correct strict guard `xᵢ > c` of Figure 13.1 this run is
+blocked — neither process can enter after a delay of *exactly* `c`.) -/
+theorem not_fischerErroneous_mutualExclusion (c : ℕ) :
+    ∃ s, (fischerErroneous 2 c).tlts.Reachable
+        ((fischerErroneous 2 c).initial, fun _ => 0) s ∧ ¬ s.1.MutualExclusion := by
+  -- uniform discharge of an invariant condition `∀ i, ctrl i = setting → v i ≤ c`
+  -- (and likewise guards): evaluate the concrete control and clock values
+  have h0 := LTS.reachable_tail _
+    (LTS.reachable_refl (fischerErroneous 2 c).tlts
+      ((fischerErroneous 2 c).initial, (fun _ => 0 : Valuation (Fin 2))))
+    (err_act c ⟨0, .inl ⟨rfl, rfl, rfl, rfl, rfl⟩⟩ trivial rfl
+      (by intro i hi; fin_cases i <;>
+        simp_all [fischerErroneous, Function.update, Valuation.reset]))
+  have h1 := LTS.reachable_tail _ h0
+    (err_act c ⟨1, .inl ⟨rfl, rfl, rfl, rfl, rfl⟩⟩ trivial rfl
+      (by intro i hi; fin_cases i <;>
+        simp_all [fischerErroneous, Function.update, Valuation.reset, Set.mem_singleton_iff]))
+  have h2 := LTS.reachable_tail _ h1
+    (err_act c ⟨0, .inr (.inl ⟨rfl, rfl, rfl, rfl⟩)⟩ trivial rfl
+      (by intro i hi; fin_cases i <;>
+        simp_all [fischerErroneous, Function.update, Valuation.reset, Set.mem_singleton_iff]))
+  have h3 := LTS.reachable_tail _ h2
+    (err_delay c (c : ℝ≥0)
+      (by intro i hi; fin_cases i <;>
+        simp_all [Function.update, Valuation.reset, Set.mem_singleton_iff])
+      (by intro i hi; fin_cases i <;>
+        simp_all [Function.update, Valuation.reset, Valuation.add, Set.mem_singleton_iff]))
+  have h4 := LTS.reachable_tail _ h3
+    (err_act c ⟨0, .inr (.inr (.inl ⟨rfl, rfl, rfl, rfl, rfl⟩))⟩
+      (by simp [satisfies, Cmp.holds, Valuation.add, Valuation.reset, Set.mem_singleton_iff]) rfl
+      (by intro i hi; fin_cases i <;>
+        simp_all [Function.update, Valuation.reset, Valuation.add, Set.mem_singleton_iff]))
+  have h5 := LTS.reachable_tail _ h4
+    (err_act c ⟨1, .inr (.inl ⟨rfl, rfl, rfl, rfl⟩)⟩ trivial rfl
+      (by intro i hi; fin_cases i <;> simp_all [Function.update]))
+  have h6 := LTS.reachable_tail _ h5
+    (err_delay c (c : ℝ≥0)
+      (by intro i hi; fin_cases i <;> simp_all [Function.update])
+      (by intro i hi; fin_cases i <;> simp_all [Function.update]))
+  have h7 := LTS.reachable_tail _ h6
+    (err_act c ⟨1, .inr (.inr (.inl ⟨rfl, rfl, rfl, rfl, rfl⟩))⟩
+      (by simp [satisfies, Cmp.holds, Valuation.add, Valuation.reset, Set.mem_singleton_iff]) rfl
+      (by intro i hi; fin_cases i <;> simp_all [Function.update]))
+  refine ⟨_, h7, ?_⟩
+  intro hme
+  exact absurd (hme 0 1 (by simp [Function.update]) (by simp [Function.update])) (by decide)
 
 end DeepWiki.ReactiveSystems

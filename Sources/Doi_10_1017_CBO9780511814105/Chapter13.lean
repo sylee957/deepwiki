@@ -36,4 +36,18 @@ theorem fischer_initial_mutex (n c : ℕ) :
     (fischer n c).initial.MutualExclusion :=
   fischer_initial_mutualExclusion n c
 
+/-- **§13.2** (Figure 13.2, p.256). The *erroneous* version of Fischer's
+algorithm, whose node-`2` re-check guard is weakened from `xᵢ > c` to `xᵢ ≥ c`.
+The library's `fischerErroneous`. -/
+abbrev fig_13_2 := @fischerErroneous
+
+/-- **Exercise 13.3** (p.257). The erroneous version does **not** preserve mutual
+exclusion: the two-process network reaches a global location where both processes
+are in their critical sections (each having entered after a delay of *exactly*
+`c`, which the correct strict guard would forbid). -/
+theorem ex_13_3 (c : ℕ) :
+    ∃ s, (fischerErroneous 2 c).tlts.Reachable
+        ((fischerErroneous 2 c).initial, fun _ => 0) s ∧ ¬ s.1.MutualExclusion :=
+  not_fischerErroneous_mutualExclusion c
+
 end DeepWiki.Rs
