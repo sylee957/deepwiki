@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilner
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -80,5 +81,43 @@ theorem mt_soundness (T : TLTS Proc Act) {p q : Proc}
     (h : TLTS.TimedBisimilar T p q) (F : Mt Act D) :
     TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
   TLTS.timedBisimilar_mtSatState h F
+
+/-! ## §12.4 Recursion in HML with time -/
+
+/-- **Definition 12.6** (§12.4, p.240). The semantic functional `O_F(S)` of a
+recursive timed-HML formula over the powerset lattice of extended states, with the
+variable interpreted as `S`. The library's `TLTS.denotMtR`. -/
+abbrev def_12_6 := @TLTS.denotMtR
+
+/-- **§12.4** (eq. 12.5, p.241). The meaning of `X =ν F`: the greatest fixed point
+of `O_F` (Tarski, `O_F` monotone). The library's `TLTS.recMax`. -/
+abbrev def_12_6_recMax := @TLTS.recMax
+
+/-- **§12.4** (p.241). The meaning of `X =μ F`: the least fixed point of `O_F`.
+The library's `TLTS.recMin`. -/
+abbrev def_12_6_recMin := @TLTS.recMin
+
+/-- **Exercise 12.17** (§12.4, p.240). `O_F` is monotone in the variable's
+interpretation, so its greatest and least fixed points exist. -/
+theorem ex_12_17 (T : TLTS Proc Act) (F : MtR Act D) : Monotone (TLTS.denotMtR T F) :=
+  TLTS.denotMtR_mono T F
+
+/-- **§12.4.2** (p.245). The real-time *invariant* operator `Inv(F) =ν
+F ∧ [Act]X ∧ ∀∀X`. The library's `TLTS.mtInv`. -/
+abbrev tInv := @TLTS.mtInv
+
+/-- **§12.4.2** (p.245). The real-time *weak until* `F until G =ν
+G ∨ (F ∧ [Act]X ∧ ∀∀X)`. The library's `TLTS.mtUntil`. -/
+abbrev tUntil := @TLTS.mtUntil
+
+/-- **§12.4.2** (p.245). Fixed-point unfolding of `Inv(F)`: an extended state is
+invariant for `F` iff it satisfies `F` now and stays invariant after every action
+(clocks kept) and every delay (clocks advanced). -/
+theorem tInv_unfold (T : TLTS Proc Act) (F : Mt Act D) (q : Proc × Valuation D) :
+    q ∈ TLTS.mtInv T F ↔
+      T.MtSat q.1 q.2 F ∧
+      (∀ a p', T.act q.1 a p' → (p', q.2) ∈ TLTS.mtInv T F) ∧
+      (∀ d p', T.delay q.1 d p' → (p', q.2.add d) ∈ TLTS.mtInv T F) :=
+  TLTS.mtInv_unfold T F q
 
 end DeepWiki.Rs

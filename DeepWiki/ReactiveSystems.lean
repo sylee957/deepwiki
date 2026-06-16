@@ -34,6 +34,7 @@ import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
 import DeepWiki.ReactiveSystems.TimedHennessyMilner
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.FischerMutualExclusion
 
 /-! # Reactive Systems
