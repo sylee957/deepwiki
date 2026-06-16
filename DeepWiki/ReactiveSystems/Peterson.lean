@@ -84,4 +84,20 @@ def peterson : CCS PetChan PetK :=
 enters its critical section the other cannot enter until the first exits. -/
 def mutexSpec : CCS PetChan PetK := .const MutexSpec
 
+/-- Sanity check on the model: Peterson's first internal step is `P1` writing
+`true` to `b1` by synchronising with the register `B1f` (which moves to `B1t`) —
+an internal `τ`-transition. This exercises the model end to end: a `coname`
+output of `P1` meets the complementary `name` input of `B1f` (rule `com3`) deep
+inside the parallel composition, and the resulting `τ` survives the restriction. -/
+theorem peterson_tau_writes_b1 :
+    Step petDefn peterson Act.tau
+      (.restrict (.par (.par (.par (.par (.pre (.coname kw2) (.const P11)) (.const P2))
+        (.const B1t)) (.const B2f)) (.const K1)) petRestrict) := by
+  unfold peterson
+  refine Step.res ?_ ?_ (Step.com1 (Step.com1 (Step.com3 (by simp [Act.IsLabel])
+    (Step.com1 (Step.con (Step.act _ _)))
+    (Step.con (Step.sumr (Step.sumr (Step.act _ _)))))))
+  · simp [petRestrict]
+  · simp [petRestrict]
+
 end DeepWiki.ReactiveSystems
