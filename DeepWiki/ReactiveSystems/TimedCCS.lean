@@ -112,4 +112,23 @@ theorem light_delay (defn : K → TCCS Name K) (t d : ℝ≥0) (h : d ≤ t) (P 
     (tccsTLTS defn).delay (.eps t P) d (.eps (t - d) P) :=
   TDelay.epsPartial h
 
+/-- A `τ`-prefix is **urgent**: `τ.P` cannot let any time elapse (the patience
+rule excludes `τ`). This is the maximal-progress assumption at its source. -/
+theorem TDelay.tau_urgent (defn : K → TCCS Name K) (P : TCCS Name K) (d : ℝ≥0)
+    (Q : TCCS Name K) : ¬ TDelay defn (.pre Act.tau P) d Q := by
+  rintro h
+  cases h with
+  | prePatient hne _ => exact hne rfl
+
+/-- `τ.P` can perform its silent action. -/
+theorem TAct.tau_pre (defn : K → TCCS Name K) (P : TCCS Name K) :
+    TAct defn (.pre Act.tau P) Act.tau P := TAct.act _ _
+
+/-- The silent prefix `τ.P` witnesses the maximal-progress assumption: it can do
+`τ` yet cannot delay any positive amount of time. -/
+theorem tccs_tau_maximalProgress (defn : K → TCCS Name K) (P : TCCS Name K) (d : ℝ≥0)
+    (_hd : 0 < d) : ¬ ∃ Q, (tccsTLTS defn).delay (.pre Act.tau P) d Q := by
+  rintro ⟨Q, hQ⟩
+  exact TDelay.tau_urgent defn P d Q hQ
+
 end DeepWiki.ReactiveSystems

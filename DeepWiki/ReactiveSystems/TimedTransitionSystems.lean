@@ -46,6 +46,12 @@ def TimeAdditive (T : TLTS Proc Act) : Prop :=
   ∀ ⦃p p' : Proc⦄ ⦃d₁ d₂ : ℝ≥0⦄,
     T.delay p (d₁ + d₂) p' ↔ ∃ p'', T.delay p d₁ p'' ∧ T.delay p'' d₂ p'
 
+/-- The **maximal-progress assumption** (§9.4): an action entirely under a
+process's own control (the silent action `τ`) is *urgent* — a state able to
+perform `τ` cannot let any positive amount of time elapse. -/
+def MaximalProgress (T : TLTS Proc Act) (tau : Act) : Prop :=
+  ∀ ⦃p⦄, (∃ r, T.act p tau r) → ∀ ⦃d⦄, 0 < d → ¬ ∃ q, T.delay p d q
+
 /-- Timed (strong) bisimilarity (§11.2): bisimilarity over the combined
 action/delay labels. -/
 abbrev TimedBisimilar (T : TLTS Proc Act) : Proc → Proc → Prop := LTS.Bisimilar T

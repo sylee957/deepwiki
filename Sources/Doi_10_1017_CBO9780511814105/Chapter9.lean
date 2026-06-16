@@ -60,4 +60,20 @@ theorem tccs_eps_delay {Name K : Type*} (defn : K → TCCS Name K) (t d : ℝ≥
     (DeepWiki.ReactiveSystems.tccsTLTS defn).delay (.eps t P) d (.eps (t - d) P) :=
   DeepWiki.ReactiveSystems.light_delay defn t d h P
 
+/-! ## §9.4 Parallel composition: the maximal-progress assumption -/
+
+/-- **§9.4** (p.170). The *maximal-progress assumption*: the silent action `τ` is
+urgent — a state able to perform `τ` cannot let positive time elapse. The
+library's `TLTS.MaximalProgress`. (This is the side condition forcing
+synchronisations in a parallel composition to happen without delay; the full
+parallel SOS with its `NoSync` premise is noted in the library.) -/
+abbrev maximalProgress := @TLTS.MaximalProgress
+
+/-- **§9.4** (p.170). The TCCS `τ`-prefix witnesses maximal progress: `τ.P` can
+perform `τ` yet cannot delay any positive amount of time. -/
+theorem tccs_tau_urgent {Name K : Type*} (defn : K → TCCS Name K) (P : TCCS Name K)
+    (d : ℝ≥0) (hd : 0 < d) :
+    ¬ ∃ Q, (DeepWiki.ReactiveSystems.tccsTLTS defn).delay (.pre DeepWiki.ReactiveSystems.Act.tau P) d Q :=
+  DeepWiki.ReactiveSystems.tccs_tau_maximalProgress defn P d hd
+
 end DeepWiki.Rs
