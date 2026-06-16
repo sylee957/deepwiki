@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedRegions
+import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -83,14 +84,33 @@ theorem thm_11_3_equivalence (cmax : C → ℕ) :
   DeepWiki.ReactiveSystems.regionEq_equivalence cmax
 
 /-- **Theorem 11.3** (§11.4, p.209), finite-index part. Over a finite clock set,
-region equivalence has finitely many classes — the region quotient is finite.
-(The remaining claim of Theorem 11.3 — region-equivalent configurations `(ℓ, v)`,
-`(ℓ, v')` are **untimed** bisimilar, `def_11_7` — needs the region time-successor
-lemma and is future work; it is *untimed*, not timed: equal delays do not
-preserve regions.) -/
+region equivalence has finitely many classes — the region quotient is finite. -/
 theorem thm_11_3_finite [Finite C] (cmax : C → ℕ) :
     Finite (DeepWiki.ReactiveSystems.Region cmax) :=
   DeepWiki.ReactiveSystems.Region.finite cmax
+
+/-- **Theorem 11.3** (§11.4, p.209), untimed-bisimilarity part (modular form). In
+a well-formed timed automaton (guards/invariants bounded by `cmax`) with the
+region time-successor property, region-equivalent configurations `(ℓ, v)`,
+`(ℓ, v')` are **untimed** bisimilar (`def_11_7`) — note *untimed*, not timed:
+equal delays do not preserve regions. Built from guard invariance
+(`regionEq_satisfies`) and reset preservation (`RegionEq.reset`). -/
+theorem thm_11_3_untimedBisimilar {Loc : Type*} (A : TimedAutomaton Loc Act C)
+    {cmax : C → ℕ} (wf : A.WellFormed cmax) (hts : DeepWiki.ReactiveSystems.TimeSuccessor cmax)
+    {ℓ : Loc} {v v' : Valuation C} (h : DeepWiki.ReactiveSystems.RegionEq cmax v v') :
+    A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
+  DeepWiki.ReactiveSystems.regionEq_untimedBisimilar A wf hts h
+
+/-- **Theorem 11.3** for single-clock timed automata (unconditional): the region
+time-successor property holds outright for a subsingleton clock set, so
+region-equivalent configurations are untimed bisimilar with no extra hypothesis.
+(The general multi-clock time-successor — the cross-clock fractional-order
+combinatorics — remains open.) -/
+theorem thm_11_3_untimedBisimilar_single_clock {Loc : Type*} [Subsingleton C]
+    (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
+    {ℓ : Loc} {v v' : Valuation C} (h : DeepWiki.ReactiveSystems.RegionEq cmax v v') :
+    A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
+  DeepWiki.ReactiveSystems.regionEq_untimedBisimilar_of_subsingleton A wf h
 
 /-- **Definition 11.13** (§11.4, p.209). A *region* is an `≡`-equivalence class
 `[v]_≡` of clock valuations. The library's `Region`. -/

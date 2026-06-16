@@ -237,4 +237,313 @@ the region quotient is finite. -/
 instance Region.finite [Finite C] (cmax : C → ℕ) : Finite (Region cmax) :=
   Finite.of_injective _ (Region.fingerprint_injective cmax)
 
+/-! ## Toward Theorem 11.3: guard invariance, reset preservation, time-successor
+
+The substantive half of Theorem 11.3 — region-equivalent configurations are
+*untimed* bisimilar — rests on three facts about how region equivalence interacts
+with the timed-automaton semantics. Guard invariance (region-equivalent
+valuations satisfy the same bounded clock constraints) and reset preservation are
+fully general; the delay-matching *time-successor* property is the Alur–Dill
+combinatorial core, proved here for single-clock automata (and two general
+fragments — all-clocks-above-`cₓ` and zero-delay), with the general multi-clock
+case left open (it needs the cross-clock fractional-order combinatorics). -/
+
+/-- A clock constraint is bounded by `cmax` when every atomic bound `n` in a
+comparison `x ⋈ n` satisfies `n ≤ cmax x`. -/
+def ClockConstraint.BoundedBy (cmax : C → ℕ) : ClockConstraint C → Prop
+  | .true_ => True
+  | .atom x _ n => n ≤ cmax x
+  | .and g₁ g₂ => ClockConstraint.BoundedBy cmax g₁ ∧ ClockConstraint.BoundedBy cmax g₂
+
+/-- A clock value has zero fractional part iff it equals its own integer part. -/
+theorem fracPart_eq_zero_iff (a : ℝ≥0) : fracPart a = 0 ↔ (⌊a⌋₊ : ℝ≥0) = a := by
+  unfold fracPart
+  have hbridge : ((⌊a⌋₊ : ℝ≥0) : ℝ) = (⌊(a : ℝ)⌋ : ℝ) := by
+    have e1 : ((⌊a⌋₊ : ℝ≥0) : ℝ) = (⌊(a : ℝ)⌋₊ : ℝ) := by push_cast; congr 1
+    have e2 : ((⌊(a : ℝ)⌋₊ : ℤ) : ℝ) = (⌊(a : ℝ)⌋ : ℝ) := by
+      rw [Int.natCast_floor_eq_floor a.coe_nonneg]
+    rw [e1]; push_cast at e2 ⊢; exact e2
+  rw [← NNReal.coe_inj, hbridge]
+  constructor
+  · intro hz
+    have := Int.self_sub_fract (a : ℝ)
+    rw [hz, sub_zero] at this
+    exact this.symm
+  · intro h
+    rw [← h, Int.fract_intCast]
+
+/-- A comparison `r ⋈ n` against an integer bound is decided by the integer part
+`⌊r⌋₊` and whether `r` lands exactly on an integer (`fracPart r = 0`). -/
+theorem Cmp.holds_congr (cmp : Cmp) {a b : ℝ≥0} (n : ℕ)
+    (hfl : ⌊a⌋₊ = ⌊b⌋₊) (hz : fracPart a = 0 ↔ fracPart b = 0) :
+    cmp.holds a n ↔ cmp.holds b n := by
+  have hLT : a < (n : ℝ≥0) ↔ b < (n : ℝ≥0) := by
+    rw [(Nat.floor_lt (zero_le' (a := a))).symm, (Nat.floor_lt (zero_le' (a := b))).symm, hfl]
+  have heq_a : a = (n : ℝ≥0) ↔ (⌊a⌋₊ = n ∧ fracPart a = 0) := by
+    constructor
+    · intro h; subst h; exact ⟨Nat.floor_natCast n, fracPart_natCast n⟩
+    · rintro ⟨h1, h2⟩; rw [(fracPart_eq_zero_iff a).mp h2 |>.symm, h1]
+  have heq_b : b = (n : ℝ≥0) ↔ (⌊b⌋₊ = n ∧ fracPart b = 0) := by
+    constructor
+    · intro h; subst h; exact ⟨Nat.floor_natCast n, fracPart_natCast n⟩
+    · rintro ⟨h1, h2⟩; rw [(fracPart_eq_zero_iff b).mp h2 |>.symm, h1]
+  have hEQ : a = (n : ℝ≥0) ↔ b = (n : ℝ≥0) := by rw [heq_a, heq_b, hfl, hz]
+  cases cmp <;> simp only [Cmp.holds]
+  · rw [le_iff_lt_or_eq, le_iff_lt_or_eq, hLT, hEQ]
+  · exact hLT
+  · exact hEQ
+  · rw [gt_iff_lt, gt_iff_lt, ← not_le, ← not_le, le_iff_lt_or_eq, le_iff_lt_or_eq, hLT, hEQ]
+  · rw [ge_iff_le, ge_iff_le, ← not_lt, ← not_lt, hLT]
+
+/-- When both values strictly exceed the integer bound `n`, every comparison
+`· ⋈ n` agrees on them (the saturated region above `cₓ`). -/
+theorem Cmp.holds_congr_of_lt (cmp : Cmp) {a b : ℝ≥0} {n : ℕ}
+    (ha : (n : ℝ≥0) < a) (hb : (n : ℝ≥0) < b) :
+    cmp.holds a n ↔ cmp.holds b n := by
+  cases cmp <;> simp only [Cmp.holds]
+  · exact iff_of_false (not_le.mpr ha) (not_le.mpr hb)
+  · exact iff_of_false (not_lt.mpr ha.le) (not_lt.mpr hb.le)
+  · exact iff_of_false (fun h => (lt_irrefl _ (h ▸ ha))) (fun h => (lt_irrefl _ (h ▸ hb)))
+  · exact iff_of_true ha hb
+  · exact iff_of_true ha.le hb.le
+
+/-- Region-equivalent valuations agree on every comparison `v x ⋈ n` whose bound
+satisfies `n ≤ cmax x`: below the clamp the integer-part/fractional-zero data
+decide it, above it both values saturate. -/
+theorem regionEq_cmp_holds {cmax : C → ℕ} {v v' : Valuation C} (cmp : Cmp) {x : C} {n : ℕ}
+    (h : RegionEq cmax v v') (hn : n ≤ cmax x) :
+    cmp.holds (v x) n ↔ cmp.holds (v' x) n := by
+  obtain ⟨h1, h2, _⟩ := h
+  have hrf := h1 x
+  have hbi := bounded_iff_regionFloor hrf
+  by_cases hx : v x ≤ cmax x
+  · have hx' : v' x ≤ cmax x := hbi.mp hx
+    have hfl : ⌊v x⌋₊ = ⌊v' x⌋₊ := by
+      unfold regionFloor at hrf; rw [if_pos hx, if_pos hx'] at hrf; exact hrf
+    exact Cmp.holds_congr cmp n hfl (h2 x hx)
+  · have hx' : ¬ v' x ≤ cmax x := fun hc => hx (hbi.mpr hc)
+    have hcn : (n : ℝ≥0) ≤ (cmax x : ℝ≥0) := by exact_mod_cast hn
+    have ha : (n : ℝ≥0) < v x := lt_of_le_of_lt hcn (not_le.mp hx)
+    have hb : (n : ℝ≥0) < v' x := lt_of_le_of_lt hcn (not_le.mp hx')
+    exact Cmp.holds_congr_of_lt cmp ha hb
+
+/-- **Guard invariance** (the substance of Theorem 11.3's action steps):
+region-equivalent valuations satisfy exactly the same clock constraints whose
+constants stay within the clamp `cmax`. -/
+theorem regionEq_satisfies {cmax : C → ℕ} {v v' : Valuation C} {g : ClockConstraint C}
+    (h : RegionEq cmax v v') (hg : g.BoundedBy cmax) :
+    satisfies v g ↔ satisfies v' g := by
+  induction g with
+  | true_ => exact Iff.rfl
+  | atom x c n => exact regionEq_cmp_holds c h hg
+  | and g₁ g₂ ih₁ ih₂ => exact and_congr (ih₁ hg.1) (ih₂ hg.2)
+
+/-- `frac(0) = 0`. -/
+theorem fracPart_zero : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
+
+/-- `frac(d) ≤ 0 ↔ frac(d) = 0`, since fractional parts are nonnegative. -/
+theorem fracPart_le_zero_iff (d : ℝ≥0) : fracPart d ≤ 0 ↔ fracPart d = 0 :=
+  ⟨fun h => le_antisymm h (Int.fract_nonneg _), fun h => h.le⟩
+
+/-- The clamped floor of a reset clock is `0`. -/
+theorem regionFloor_reset_mem {cmax : C → ℕ} {r : Set C} {x : C} (h : x ∈ r)
+    (v : Valuation C) : regionFloor cmax (Valuation.reset r v) x = 0 := by
+  unfold regionFloor
+  rw [Valuation.reset_mem h]
+  simp
+
+/-- **Reset preservation.** Region equivalence is preserved by clock resets. -/
+theorem RegionEq.reset {cmax : C → ℕ} {v v' : Valuation C} (r : Set C)
+    (h : RegionEq cmax v v') : RegionEq cmax (Valuation.reset r v) (Valuation.reset r v') := by
+  obtain ⟨h1, h2, h3⟩ := h
+  refine ⟨fun x => ?_, fun x hx => ?_, fun x y hx hy => ?_⟩
+  · by_cases hxr : x ∈ r
+    · rw [regionFloor_reset_mem hxr, regionFloor_reset_mem hxr]
+    · unfold regionFloor
+      rw [Valuation.reset_not_mem hxr v, Valuation.reset_not_mem hxr v']
+      exact h1 x
+  · by_cases hxr : x ∈ r
+    · rw [Valuation.reset_mem hxr v, Valuation.reset_mem hxr v', fracPart_zero]
+    · rw [Valuation.reset_not_mem hxr v] at hx
+      rw [Valuation.reset_not_mem hxr v, Valuation.reset_not_mem hxr v']
+      exact h2 x hx
+  · by_cases hxr : x ∈ r
+    · by_cases hyr : y ∈ r
+      · rw [Valuation.reset_mem hxr v, Valuation.reset_mem hyr v,
+          Valuation.reset_mem hxr v', Valuation.reset_mem hyr v', fracPart_zero]
+      · rw [Valuation.reset_not_mem hyr v] at hy
+        rw [Valuation.reset_mem hxr v, Valuation.reset_not_mem hyr v,
+          Valuation.reset_mem hxr v', Valuation.reset_not_mem hyr v', fracPart_zero]
+        exact iff_of_true (Int.fract_nonneg _) (Int.fract_nonneg _)
+    · by_cases hyr : y ∈ r
+      · rw [Valuation.reset_not_mem hxr v] at hx
+        rw [Valuation.reset_not_mem hxr v, Valuation.reset_mem hyr v,
+          Valuation.reset_not_mem hxr v', Valuation.reset_mem hyr v', fracPart_zero,
+          fracPart_le_zero_iff, fracPart_le_zero_iff]
+        exact h2 x hx
+      · rw [Valuation.reset_not_mem hxr v] at hx
+        rw [Valuation.reset_not_mem hyr v] at hy
+        rw [Valuation.reset_not_mem hxr v, Valuation.reset_not_mem hyr v,
+          Valuation.reset_not_mem hxr v', Valuation.reset_not_mem hyr v']
+        exact h3 x y hx hy
+
+/-- `fracPart T ≠ 0` exactly when `T` lies strictly above its integer part. -/
+theorem fracPart_ne_zero_iff (T : ℝ≥0) : fracPart T ≠ 0 ↔ ((⌊T⌋₊ : ℝ≥0) < T) := by
+  rw [show (fracPart T ≠ 0) ↔ ¬ (fracPart T = 0) from Iff.rfl, fracPart_eq_zero_iff]
+  exact ⟨fun h => lt_of_le_of_ne (Nat.floor_le (zero_le' (a := T))) h, fun h => ne_of_lt h⟩
+
+/-- Closed form of the clamped floor after a uniform delay `e` on clock `x`. -/
+theorem regionFloor_add (cmax : C → ℕ) (w : Valuation C) (e : ℝ≥0) (x : C) :
+    regionFloor cmax (w.add e) x = if w x + e ≤ cmax x then ⌊w x + e⌋₊ else cmax x + 1 := by
+  unfold regionFloor; simp only [Valuation.add_apply]
+
+/-- A value strictly inside `[n, n+1)` has `Nat.floor` equal to `n`. -/
+theorem floor_eq_of_mem {S : ℝ≥0} {n : ℕ} (h1 : (n : ℝ≥0) ≤ S) (h2 : S < (n : ℝ≥0) + 1) :
+    ⌊S⌋₊ = n := by
+  rw [Nat.floor_eq_iff (zero_le' (a := S))]
+  exact ⟨h1, by exact_mod_cast h2⟩
+
+/-- **Per-clock time-successor.** If a single clock `x` agrees on clamped floor and
+on frac-zero status between `v` and `v'`, then after delaying `v` by `d` there is a
+delay `d'` reproducing the same clamped floor and frac-zero status for `v'`. The
+witness is constructed explicitly: an integer target (`d' = ⌊v x + d⌋ − v' x`), an
+open-interval target (`d'` reaching `max (v' x) (v x + d)`), or an above-`cₓ`
+target (`d' = cₓ + 1`). -/
+theorem exists_delay_match_clock {cmax : C → ℕ} {v v' : Valuation C} {x : C}
+    (hfloor : regionFloor cmax v x = regionFloor cmax v' x)
+    (hfrac : v x ≤ cmax x → (fracPart (v x) = 0 ↔ fracPart (v' x) = 0))
+    (d : ℝ≥0) :
+    ∃ d', regionFloor cmax (v.add d) x = regionFloor cmax (v'.add d') x ∧
+      ((v.add d) x ≤ cmax x → (fracPart ((v.add d) x) = 0 ↔ fracPart ((v'.add d') x) = 0)) := by
+  set T := v x + d with hT
+  by_cases hTb : T ≤ cmax x
+  · have hvb : v x ≤ cmax x := le_trans le_self_add hTb
+    have hv'b : v' x ≤ cmax x := (bounded_iff_regionFloor hfloor).mp hvb
+    have hflv : (⌊v x⌋₊ : ℕ) = ⌊v' x⌋₊ := by
+      unfold regionFloor at hfloor; rw [if_pos hvb, if_pos hv'b] at hfloor; exact hfloor
+    set n := ⌊T⌋₊ with hn
+    have hnle : n ≤ cmax x := (Nat.floor_mono hTb).trans_eq (Nat.floor_natCast _)
+    have hv'len : ⌊v' x⌋₊ ≤ n := by rw [← hflv]; exact Nat.floor_mono le_self_add
+    have hv'lt : v' x < (n : ℝ≥0) + 1 := by
+      calc v' x < (⌊v' x⌋₊ : ℝ≥0) + 1 := Nat.lt_floor_add_one _
+        _ ≤ (n : ℝ≥0) + 1 := by gcongr
+    by_cases hfz : fracPart T = 0
+    · have hTn : (n : ℝ≥0) = T := (fracPart_eq_zero_iff T).mp hfz
+      have hv'len' : v' x ≤ (n : ℝ≥0) := by
+        rcases lt_or_eq_of_le hv'len with hlt | heq
+        · have h1 : v' x < (⌊v' x⌋₊ : ℝ≥0) + 1 := Nat.lt_floor_add_one _
+          have h2 : (⌊v' x⌋₊ : ℝ≥0) + 1 ≤ (n : ℝ≥0) := by exact_mod_cast (hlt : ⌊v' x⌋₊ + 1 ≤ n)
+          exact le_of_lt (lt_of_lt_of_le h1 h2)
+        · have hflvn : ⌊v x⌋₊ = n := by rw [hflv, heq]
+          have hvxge : (n : ℝ≥0) ≤ v x := by rw [← hflvn]; exact Nat.floor_le (zero_le' (a := v x))
+          have hvxle : v x ≤ (n : ℝ≥0) := by rw [hTn]; exact le_self_add
+          have hvxn : v x = (n : ℝ≥0) := le_antisymm hvxle hvxge
+          have hfvx0 : fracPart (v x) = 0 := by rw [fracPart_eq_zero_iff, hvxn, Nat.floor_natCast]
+          have hfv'0 : fracPart (v' x) = 0 := (hfrac hvb).mp hfvx0
+          have hv'eq : (⌊v' x⌋₊ : ℝ≥0) = v' x := (fracPart_eq_zero_iff (v' x)).mp hfv'0
+          rw [← hv'eq]; exact_mod_cast (heq : ⌊v' x⌋₊ = n).le
+      have hsum : v' x + ((n : ℝ≥0) - v' x) = (n : ℝ≥0) := add_tsub_cancel_of_le hv'len'
+      refine ⟨(n : ℝ≥0) - v' x, ?_, ?_⟩
+      · rw [regionFloor_add, regionFloor_add, hsum, ← hT, hTn]
+      · intro _
+        simp only [Valuation.add_apply]; rw [hsum, hTn, ← hT, hfz]
+    · have hTgt : (n : ℝ≥0) < T := (fracPart_ne_zero_iff T).mp hfz
+      have hTlt : T < (n : ℝ≥0) + 1 := Nat.lt_floor_add_one T
+      have hncmax : n < cmax x := by
+        have : (n : ℝ≥0) < cmax x := lt_of_lt_of_le hTgt hTb
+        exact_mod_cast this
+      set M := max (v' x) T with hM
+      have hnM : (n : ℝ≥0) < M := lt_of_lt_of_le hTgt (le_max_right _ _)
+      have hMlt : M < (n : ℝ≥0) + 1 := max_lt hv'lt hTlt
+      have hv'leM : v' x ≤ M := le_max_left _ _
+      have hsum : v' x + (M - v' x) = M := add_tsub_cancel_of_le hv'leM
+      have hMfloor : ⌊M⌋₊ = n := floor_eq_of_mem (le_of_lt hnM) hMlt
+      have hMb : M ≤ cmax x := by
+        have hn1 : (n : ℝ≥0) + 1 ≤ cmax x := by exact_mod_cast Nat.succ_le_of_lt hncmax
+        exact le_of_lt (lt_of_lt_of_le hMlt hn1)
+      refine ⟨M - v' x, ?_, ?_⟩
+      · rw [regionFloor_add, regionFloor_add, hsum, ← hT, if_pos hTb, if_pos hMb, hMfloor]
+      · intro _
+        simp only [Valuation.add_apply]; rw [hsum]
+        constructor
+        · intro h; exact absurd h hfz
+        · intro h
+          have : (n : ℝ≥0) = M := by rw [← hMfloor]; exact (fracPart_eq_zero_iff M).mp h
+          exact absurd this (ne_of_lt hnM)
+  · have hTgt : (cmax x : ℝ≥0) < T := not_le.mp hTb
+    refine ⟨(cmax x : ℝ≥0) + 1, ?_, ?_⟩
+    · have hv' : ¬ v' x + ((cmax x : ℝ≥0) + 1) ≤ cmax x := by
+        intro hc
+        have : (cmax x : ℝ≥0) + 1 ≤ cmax x := le_trans le_add_self hc
+        simp at this
+      rw [regionFloor_add, regionFloor_add, ← hT, if_neg hTb, if_neg hv']
+    · intro hc
+      exact absurd hc (by rw [Valuation.add_apply, ← hT]; exact hTb)
+
+/-- The region **time-successor** property: from region-equivalent valuations, any
+delay on the left is matched by *some* delay on the right into region-equivalent
+valuations. This is the delay-matching ingredient of Theorem 11.3's untimed
+bisimulation. -/
+def TimeSuccessor (cmax : C → ℕ) : Prop :=
+  ∀ ⦃v v' : Valuation C⦄, RegionEq cmax v v' → ∀ d : ℝ≥0, ∃ d', RegionEq cmax (v.add d) (v'.add d')
+
+/-- **Alur–Dill time-successor, single-clock fragment.** For a subsingleton clock
+set there is no cross-clock fractional-ordering constraint, so the per-clock
+construction at the unique clock yields the matching delay. This is the *full*
+time-successor for one-clock automata. -/
+theorem RegionEq.timeSuccessor_subsingleton [Subsingleton C] {cmax : C → ℕ}
+    {v v' : Valuation C} (h : RegionEq cmax v v') (d : ℝ≥0) :
+    ∃ d', RegionEq cmax (v.add d) (v'.add d') := by
+  obtain ⟨h1, h2, _⟩ := h
+  rcases isEmpty_or_nonempty C with hC | hne
+  · exact ⟨d, fun x => (hC.false x).elim, fun x => (hC.false x).elim,
+      fun x => (hC.false x).elim⟩
+  · obtain ⟨x0⟩ := hne
+    obtain ⟨d', hd'floor, hd'frac⟩ := exists_delay_match_clock (h1 x0) (h2 x0) d
+    refine ⟨d', ?_, ?_, ?_⟩
+    · intro x; rw [Subsingleton.elim x x0]; exact hd'floor
+    · intro x hx; rw [Subsingleton.elim x x0]; rw [Subsingleton.elim x x0] at hx; exact hd'frac hx
+    · intro x y _ _
+      rw [Subsingleton.elim x y]
+      exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
+
+/-- For a subsingleton clock set the time-successor property holds outright. -/
+theorem timeSuccessor_of_subsingleton [Subsingleton C] (cmax : C → ℕ) : TimeSuccessor cmax :=
+  fun _ _ h d => RegionEq.timeSuccessor_subsingleton h d
+
+/-- **Time-successor when every clock already exceeds `cₓ`:** take `d' = d`. Every
+clock stays above `cₓ`, so all clamped floors are `cₓ+1` and conditions 2–3 are
+vacuous. -/
+theorem RegionEq.timeSuccessor_allUnbounded {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') (d : ℝ≥0)
+    (hub : ∀ x, (cmax x : ℝ≥0) < v x) :
+    ∃ d', RegionEq cmax (v.add d) (v'.add d') := by
+  obtain ⟨h1, _, _⟩ := h
+  have hub' : ∀ x, (cmax x : ℝ≥0) < v' x := by
+    intro x
+    by_contra hc
+    have hv'b : v' x ≤ cmax x := not_lt.mp hc
+    have hvb : v x ≤ cmax x := (bounded_iff_regionFloor (h1 x)).mpr hv'b
+    exact absurd hvb (not_le.mpr (hub x))
+  refine ⟨d, ?_, ?_, ?_⟩
+  · intro x
+    have hvub : ¬ v x + d ≤ cmax x := not_le.mpr (lt_of_lt_of_le (hub x) le_self_add)
+    have hv'ub : ¬ v' x + d ≤ cmax x := not_le.mpr (lt_of_lt_of_le (hub' x) le_self_add)
+    rw [regionFloor_add, regionFloor_add, if_neg hvub, if_neg hv'ub]
+  · intro x hx
+    simp only [Valuation.add_apply] at hx
+    exact absurd hx (not_le.mpr (lt_of_lt_of_le (hub x) le_self_add))
+  · intro x _ hx _
+    simp only [Valuation.add_apply] at hx
+    exact absurd hx (not_le.mpr (lt_of_lt_of_le (hub x) le_self_add))
+
+/-- **Time-successor with zero delay:** take `d' = 0` (region equivalence is
+reflexive). -/
+theorem RegionEq.timeSuccessor_zero {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') :
+    ∃ d', RegionEq cmax (v.add 0) (v'.add d') := by
+  refine ⟨0, ?_⟩
+  have e : ∀ w : Valuation C, w.add 0 = w := fun w => by funext x; simp
+  rw [e, e]; exact h
+
 end DeepWiki.ReactiveSystems
