@@ -96,4 +96,11 @@ theorem prop_7_1 (L : LTS Proc Act) (tau : Act) :
   ⟨LTS.weaklySimulates_refl, fun _ _ _ h1 h2 => h1.trans h2,
    fun _ _ h => h.weakTraces_subset⟩
 
+/-- **§7.3** (weak analogue of "bisimilarity refines trace equivalence").
+Observationally equivalent (weakly bisimilar) states are weak trace equivalent:
+each weakly simulates the other, so their weak-trace sets coincide. -/
+theorem weaklyBisimilar_weakTraceEquiv (L : LTS Proc Act) (tau : Act) {p q : Proc}
+    (h : p ≈[L, tau] q) : LTS.WeakTraceEquiv L tau p q :=
+  LTS.WeaklyBisimilar.weakTraceEquiv h
+
 end DeepWiki.Rs

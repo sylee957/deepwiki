@@ -143,6 +143,24 @@ theorem WeaklySimulates.weakTraces_subset {s s' : Proc} (h : WeaklySimulates L t
   rintro w ⟨q, hpath⟩
   exact hR.weakPath hpath hRss'
 
+/-! ## Weak bisimilarity refines the weak-simulation preorder and weak traces -/
+
+/-- Weakly bisimilar states weakly simulate each other (each direction is the
+forward half of a weak bisimulation). -/
+theorem WeaklyBisimilar.weaklySimulates {p q : Proc} (h : WeaklyBisimilar L tau p q) :
+    WeaklySimulates L tau q p :=
+  let ⟨R, hR, hpq⟩ := h; ⟨R, hR.isWeakSimulation, hpq⟩
+
+/-- **Weak bisimilarity refines weak trace equivalence** (the weak analogue of
+`Bisimilar.traceEquiv`): observationally equivalent states have the same weak
+traces. -/
+theorem WeaklyBisimilar.weakTraceEquiv {p q : Proc} (h : WeaklyBisimilar L tau p q) :
+    WeakTraceEquiv L tau p q := by
+  show WeakTraces L tau p = WeakTraces L tau q
+  ext w
+  exact ⟨fun hw => h.weaklySimulates.weakTraces_subset hw,
+         fun hw => h.symm.weaklySimulates.weakTraces_subset hw⟩
+
 end LTS
 
 end DeepWiki.ReactiveSystems
