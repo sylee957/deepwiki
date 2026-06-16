@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.BisimulationApprox
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.Bounds.Basic
+import Mathlib.Data.ENNReal.Basic
 
 /-! # Reactive Systems catalog — Chapter 4: Theory of fixed points and bisimulation
 Book-numbered restatements for Chapter 4. The order-theoretic background
@@ -12,6 +13,7 @@ discharged by the `DeepWiki.ReactiveSystems` library. -/
 namespace DeepWiki.Rs
 
 open DeepWiki.ReactiveSystems
+open scoped ENNReal
 
 /-! ## §4.1 Posets and complete lattices -/
 
@@ -71,6 +73,52 @@ theorem ex_4_10_3a {D : Type*} [CompleteLattice D] (f : D →o D) (X : Set D)
 theorem ex_4_10_4a {D : Type*} [CompleteLattice D] (f : D →o D) (X : Set D)
     (hX : ∀ x ∈ X, f x ≤ x) : f (sInf X) ≤ sInf X :=
   le_sInf fun x hx => (f.mono (sInf_le hx)).trans (hX x hx)
+
+/-- **Exercise 4.10(3b)** (§4.2, p.84). The dual of 3(a) fails: the *infimum* of a
+set of post-fixed points of a monotone map need not be post-fixed. Witness:
+`ℝ≥0∞` with the monotone `f x = if x ≤ 1 then 0 else x`; every `x > 1` is
+post-fixed, but `⨅ (Ioi 1) = 1` is not (`f 1 = 0 < 1`). -/
+theorem ex_4_10_3b : ∃ (D : Type) (_ : CompleteLattice D) (f : D →o D) (X : Set D),
+    (∀ x ∈ X, x ≤ f x) ∧ ¬ (sInf X ≤ f (sInf X)) := by
+  refine ⟨ℝ≥0∞, inferInstance, ⟨fun x => if x ≤ 1 then 0 else x, ?_⟩, Set.Ioi 1, ?_, ?_⟩
+  · intro x y hxy
+    by_cases hy : y ≤ 1
+    · simp [le_trans hxy hy, hy]
+    · by_cases hx : x ≤ 1 <;> simp [hx, hy, hxy]
+  · intro x hx
+    rw [Set.mem_Ioi] at hx
+    simp [not_le.mpr hx]
+  · have hinf : sInf (Set.Ioi (1 : ℝ≥0∞)) = 1 := by
+      apply le_antisymm
+      · by_contra h
+        push Not at h
+        obtain ⟨z, h1z, hzs⟩ := exists_between h
+        exact absurd (sInf_le (Set.mem_Ioi.mpr h1z)) (not_le.mpr hzs)
+      · exact le_sInf (fun x hx => le_of_lt hx)
+    rw [hinf]; simp
+
+/-- **Exercise 4.10(4b)** (§4.2, p.84). Dually, the *supremum* of a set of
+pre-fixed points of a monotone map need not be pre-fixed. Witness: `ℝ≥0∞` with
+`f x = if 1 ≤ x then ⊤ else x`; every `x < 1` is pre-fixed, but
+`⨆ (Iio 1) = 1` is not (`f 1 = ⊤ > 1`). -/
+theorem ex_4_10_4b : ∃ (D : Type) (_ : CompleteLattice D) (f : D →o D) (X : Set D),
+    (∀ x ∈ X, f x ≤ x) ∧ ¬ (f (sSup X) ≤ sSup X) := by
+  refine ⟨ℝ≥0∞, inferInstance, ⟨fun x => if 1 ≤ x then ⊤ else x, ?_⟩, Set.Iio 1, ?_, ?_⟩
+  · intro x y hxy
+    by_cases hx : 1 ≤ x
+    · simp [hx, le_trans hx hxy]
+    · by_cases hy : 1 ≤ y <;> simp [hx, hy, hxy]
+  · intro x hx
+    rw [Set.mem_Iio] at hx
+    simp [not_le.mpr hx]
+  · have hsup : sSup (Set.Iio (1 : ℝ≥0∞)) = 1 := by
+      apply le_antisymm
+      · exact sSup_le (fun x hx => le_of_lt hx)
+      · by_contra h
+        push Not at h
+        obtain ⟨z, hsz, hz1⟩ := exists_between h
+        exact absurd (le_sSup (Set.mem_Iio.mpr hz1)) (not_le.mpr hsz)
+    rw [hsup]; simp
 
 /-- **Exercise 4.10(5)** (§4.2, p.84). The monotone self-maps of a complete
 lattice, ordered pointwise, again form a complete lattice. -/
