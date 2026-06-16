@@ -12,6 +12,7 @@ import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.CcsTauLaws
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
+import DeepWiki.ReactiveSystems.StringBisimulation
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -493,5 +494,19 @@ theorem ex_3_29_not_strong {Name : Type*} :
         (DeepWiki.ReactiveSystems.observable Name))
       ~[ccsLTS DeepWiki.ReactiveSystems.noDefs] CCS.nil :=
   DeepWiki.ReactiveSystems.not_restrict_observable_bisimilar_nil
+
+/-- **Exercise 3.9** (§3.3, p.45). String bisimilarity (matching whole action
+sequences) coincides with strong bisimilarity. The library's
+`LTS.stringBisimilar_iff_bisimilar`. -/
+theorem ex_3_9 {Proc Act : Type*} (L : LTS Proc Act) (p q : Proc) :
+    LTS.StringBisimilar L p q ↔ LTS.Bisimilar L p q :=
+  LTS.stringBisimilar_iff_bisimilar p q
+
+/-- **Exercise 3.31** (§3.4, p.61). Weak string bisimilarity (matching observable
+sequences via `⇒`) coincides with weak bisimilarity `≈`. The library's
+`LTS.weaklyStringBisimilar_iff_weaklyBisimilar`. -/
+theorem ex_3_31 {Proc Act : Type*} (L : LTS Proc Act) (tau : Act) (p q : Proc) :
+    LTS.WeaklyStringBisimilar L tau p q ↔ LTS.WeaklyBisimilar L tau p q :=
+  LTS.weaklyStringBisimilar_iff_weaklyBisimilar p q
 
 end DeepWiki.Rs

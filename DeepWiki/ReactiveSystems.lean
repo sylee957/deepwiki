@@ -35,6 +35,7 @@ import DeepWiki.ReactiveSystems.CcsMutexMonitor
 import DeepWiki.ReactiveSystems.Chapter2Examples
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
+import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces
