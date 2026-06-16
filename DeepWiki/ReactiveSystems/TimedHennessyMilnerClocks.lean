@@ -115,4 +115,11 @@ example (a : Act) : Mt Act Unit :=
 
 end TLTS
 
+/-- **Definition 12.4.** A timed automaton `A` satisfies a formula `F ∈ Mt` when
+its initial extended state — initial location with all automaton clocks zero, and
+all formula clocks zero — satisfies `F`. -/
+noncomputable def TimedAutomaton.SatisfiesMt {Loc Act C D : Type*}
+    (A : TimedAutomaton Loc Act C) (F : Mt Act D) : Prop :=
+  A.tlts.MtSatState (A.initial, fun _ => 0) F
+
 end DeepWiki.ReactiveSystems

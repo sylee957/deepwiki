@@ -41,6 +41,11 @@ state with every formula clock zero does: `(p, u₀) ⊨ F`. The library's
 `TLTS.MtSatState`. -/
 abbrev def_12_3 := @TLTS.MtSatState
 
+/-- **Definition 12.4** (§12.1, p.225). A timed automaton `A` satisfies `F ∈ Mt`
+when its initial extended state (initial location, all automaton and formula
+clocks zero) satisfies `F`. The library's `TimedAutomaton.SatisfiesMt`. -/
+abbrev def_12_4 := @TimedAutomaton.SatisfiesMt
+
 /-! ## §12.3 Timed bisimilarity versus HML with time -/
 
 /-- **§12.3** (soundness; the timed analogue of Theorem 5.1, simplified
