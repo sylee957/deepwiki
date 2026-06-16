@@ -1,4 +1,6 @@
 import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
+import DeepWiki.ReactiveSystems.HennessyMilnerSharp
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 5: Hennessy–Milner logic
@@ -88,9 +90,22 @@ membership in the denotation `⟦F⟧` coincide. -/
 theorem ex_5_6 (L : LTS Proc Act) (p : Proc) (F : HML Act) :
     (p ⊨[L] F) ↔ p ∈ LTS.denot L F := Iff.rfl
 
-/-! **Exercise 5.12** (`~ = ⋂ᵢ ∼ᵢ` on image-finite LTSs) and **Exercise 5.13**
-(the non-image-finite counterexample showing the Hennessy–Milner theorem's
-hypothesis is sharp) require, respectively, an infinite-pigeonhole/König argument
-over the finite successor set and a modal-depth construction; they are deferred. -/
+/-- **Exercise 5.12** (§5.2, p.99). On an image-finite LTS, strong bisimilarity is
+the intersection of the stratified approximants `∼ᵢ` (Exercise 4.14):
+`p ~ q ↔ ∀ i, p ∼ᵢ q`. The hard direction is an infinite-pigeonhole/König argument
+over the finite set of `a`-successors. -/
+theorem ex_5_12 (L : LTS Proc Act) (hfin : LTS.ImageFinite L) (p q : Proc) :
+    (p ~[L] q) ↔ ∀ i, bisimApprox L i p q :=
+  LTS.bisimilar_iff_forall_bisimApprox L hfin p q
+
+/-- **Exercise 5.13** (§5.2, p.99). The Hennessy–Milner theorem (Theorem 5.1) is
+sharp: without image-finiteness it fails. There is an image-infinite LTS with two
+states (`A<ω` and `Aω + A<ω`) that satisfy exactly the same HML formulae yet are
+not strongly bisimilar — every formula has finite modal depth and so cannot see
+the infinite branch. The library's `hennessyMilner_needs_imageFinite`. -/
+theorem ex_5_13 :
+    ∃ (P : Type) (L : LTS P Unit) (p q : P),
+      ¬ LTS.ImageFinite L ∧ LTS.HMLEquiv L p q ∧ ¬ (p ~[L] q) :=
+  hennessyMilner_needs_imageFinite
 
 end DeepWiki.Rs
