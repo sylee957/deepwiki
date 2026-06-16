@@ -116,9 +116,14 @@ abbrev def_7_3 := @LTS.interact
 weakly perform the reject action `bad̄`. The library's `LTS.Passes`. -/
 abbrev def_7_4 := @LTS.Passes
 
+/-- **§7.3** (p.151). Weak (observational) HML satisfaction `⊨w`, the satisfaction
+relevant to testing (`[a]ff` holds of processes affording no weak `=a⇒`
+transition, Example 7.1). The library's `LTS.WSat`. -/
+abbrev wsat := @LTS.WSat
+
 /-- **Definition 7.4** (§7.3, p.156). `T` *tests for* `F` (so `F` is *testable*):
-satisfying `F` coincides with passing `T`, for every process. The library's
-`LTS.Tests`. -/
+*weakly* satisfying `F` coincides with passing `T`, for every process. The
+library's `LTS.Tests` (over `LTS.WSat`). -/
 abbrev def_7_4_tests := @LTS.Tests
 
 /-- **Proposition 7.3(1)** (§7.3, p.157). The formula `⟨a⟩tt` is **not testable**:

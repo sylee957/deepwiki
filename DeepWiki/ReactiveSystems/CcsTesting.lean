@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.HennessyMilnerWeak
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
 /-! # Testing and testable formulae (§7.3)
@@ -52,9 +53,11 @@ def Passes (defn : K → CCS Name K) (bad : Name) (s test : CCS Name K) : Prop :
   ∀ X, ¬ ((ccsLTS defn) ⊢ interact bad s test =[Act.coname bad]⇒[Act.tau] X)
 
 /-- **Definition 7.4.** Test `T` *tests for* `F` (so `F` is *testable*): a process
-satisfies `F` iff it passes `T`. -/
+*weakly* satisfies `F` iff it passes `T`. (Satisfaction is the weak/observational
+reading `WSat`, since testing observes behaviour up to `τ` — e.g. `[a]ff` holds of
+the processes affording no weak `=a⇒` transition, Example 7.1.) -/
 def Tests (defn : K → CCS Name K) (bad : Name) (test : CCS Name K) (F : HML (Act Name)) : Prop :=
-  ∀ s, (s ⊨[ccsLTS defn] F) ↔ Passes defn bad s test
+  ∀ s, WSat (ccsLTS defn) Act.tau s F ↔ Passes defn bad s test
 
 /-- A weak `α`-transition (`α ≠ τ`) can be prefixed by one concrete `τ`-step. -/
 theorem weakStep_tau_prefix {defn : K → CCS Name K} {X Y Z : CCS Name K} {α : Act Name}
@@ -75,17 +78,25 @@ composite can reject) and `a.0 + τ.0` (satisfies `⟨a⟩tt`, yet `τ`-reduces 
 theorem dia_tt_not_testable (a bad : Name)
     (defn : K → CCS Name K) (test : CCS Name K)
     (h : Tests defn bad test (HML.dia (Act.name a) HML.tt)) : False := by
-  -- `0` does not satisfy `⟨a⟩tt`, so `0` fails the test: a weak reject exists.
-  have hnil : ¬ ((CCS.nil : CCS Name K) ⊨[ccsLTS defn] HML.dia (Act.name a) HML.tt) := by
-    rw [sat_dia_tt]; rintro ⟨p', hp'⟩; rw [ccsLTS_step] at hp'; cases hp'
+  -- `0` does not weakly satisfy `⟨a⟩tt`, so `0` fails the test: a weak reject exists.
+  have hnil : ¬ WSat (ccsLTS defn) Act.tau (CCS.nil : CCS Name K)
+      (HML.dia (Act.name a) HML.tt) := by
+    rw [wsat_dia_tt]
+    rintro ⟨p', hp'⟩
+    rcases hp' with ⟨heq, _⟩ | ⟨_, p1, p2, htau, hstep, _⟩
+    · simp at heq
+    · obtain rfl := tauStar_eq_of_no_tau (fun q hq => by rw [ccsLTS_step] at hq; cases hq) htau
+      rw [ccsLTS_step] at hstep; cases hstep
   have hnilFail : ¬ Passes defn bad CCS.nil test := fun hp => hnil ((h CCS.nil).2 hp)
   -- extract the witnessing weak reject of `(0 ∣ T) ∖ L`
   simp only [Passes, not_forall, not_not] at hnilFail
   obtain ⟨X, hX⟩ := hnilFail
-  -- `a.0 + τ.0` satisfies `⟨a⟩tt`, so it must pass the test
+  -- `a.0 + τ.0` weakly satisfies `⟨a⟩tt`, so it must pass the test
   set P : CCS Name K := CCS.choice (CCS.pre (Act.name a) CCS.nil) (CCS.pre Act.tau CCS.nil) with hP
-  have hPsat : P ⊨[ccsLTS defn] HML.dia (Act.name a) HML.tt := by
-    rw [sat_dia_tt]; exact ⟨CCS.nil, by rw [ccsLTS_step, hP]; exact Step.suml (Step.act _ _)⟩
+  have hPsat : WSat (ccsLTS defn) Act.tau P (HML.dia (Act.name a) HML.tt) := by
+    rw [wsat_dia_tt]
+    refine ⟨CCS.nil, step_weakStep ?_⟩
+    rw [hP, ccsLTS_step]; exact Step.suml (Step.act _ _)
   have hPpass : Passes defn bad P test := (h P).1 hPsat
   -- but `(P ∣ T) ∖ L —τ→ (0 ∣ T) ∖ L`, so the reject of `0` lifts to `P`
   have hτ : Step defn (interact bad P test) Act.tau (interact bad CCS.nil test) := by
@@ -229,25 +240,34 @@ theorem boxff_or_not_testable (a b bad : Name) (hab : a ≠ b)
     HML.or (HML.box (Act.name a) HML.ff) (HML.box (Act.name b) HML.ff) with hF
   set P2 : CCS Name K :=
     CCS.choice (CCS.pre (Act.name a) CCS.nil) (CCS.pre (Act.name b) CCS.nil) with hP2
-  have hP2F : ¬ (P2 ⊨[ccsLTS defn] F) := by
+  have hP2F : ¬ WSat (ccsLTS defn) Act.tau P2 F := by
     rw [hF]
-    simp only [sat_or, sat_box_ff, refuses_iff, not_or, not_forall, not_not]
-    exact ⟨⟨CCS.nil, by rw [hP2, ccsLTS_step]; exact Step.suml (Step.act _ _)⟩,
-           ⟨CCS.nil, by rw [hP2, ccsLTS_step]; exact Step.sumr (Step.act _ _)⟩⟩
+    simp only [wsat_or, wsat_box_ff, not_or, not_forall, not_not]
+    refine ⟨⟨CCS.nil, step_weakStep ?_⟩, ⟨CCS.nil, step_weakStep ?_⟩⟩
+    · rw [hP2, ccsLTS_step]; exact Step.suml (Step.act _ _)
+    · rw [hP2, ccsLTS_step]; exact Step.sumr (Step.act _ _)
   have hCanRej : CanRej defn bad (interact bad P2 test) :=
     (not_passes_iff_canRej defn bad P2 test).mp (fun hpass => hP2F ((h P2).2 hpass))
   rcases reject_decomp defn test hCanRej with hA | hB
-  · have hSaF : (CCS.pre (Act.name a) CCS.nil) ⊨[ccsLTS defn] F := by
-      rw [hF, sat_or]; right
-      rw [sat_box_ff, refuses_iff]
-      intro q hq; rw [ccsLTS_step, step_pre_iff] at hq
-      exact hab (Act.name.inj hq.1).symm
+  · have hSaF : WSat (ccsLTS defn) Act.tau (CCS.pre (Act.name a) CCS.nil) F := by
+      rw [hF, wsat_or]; right
+      rw [wsat_box_ff]
+      rintro p' (⟨heq, _⟩ | ⟨_, p1, p2, htau, hstep, _⟩)
+      · simp at heq
+      · obtain rfl := tauStar_eq_of_no_tau
+          (fun q hq => by rw [ccsLTS_step, step_pre_iff] at hq; simp at hq) htau
+        rw [ccsLTS_step, step_pre_iff] at hstep
+        exact hab (Act.name.inj hstep.1).symm
     exact (not_passes_iff_canRej _ _ _ _).mpr hA ((h _).1 hSaF)
-  · have hSbF : (CCS.pre (Act.name b) CCS.nil) ⊨[ccsLTS defn] F := by
-      rw [hF, sat_or]; left
-      rw [sat_box_ff, refuses_iff]
-      intro q hq; rw [ccsLTS_step, step_pre_iff] at hq
-      exact hab (Act.name.inj hq.1)
+  · have hSbF : WSat (ccsLTS defn) Act.tau (CCS.pre (Act.name b) CCS.nil) F := by
+      rw [hF, wsat_or]; left
+      rw [wsat_box_ff]
+      rintro p' (⟨heq, _⟩ | ⟨_, p1, p2, htau, hstep, _⟩)
+      · simp at heq
+      · obtain rfl := tauStar_eq_of_no_tau
+          (fun q hq => by rw [ccsLTS_step, step_pre_iff] at hq; simp at hq) htau
+        rw [ccsLTS_step, step_pre_iff] at hstep
+        exact hab (Act.name.inj hstep.1)
     exact (not_passes_iff_canRej _ _ _ _).mpr hB ((h _).1 hSbF)
 
 end LTS
