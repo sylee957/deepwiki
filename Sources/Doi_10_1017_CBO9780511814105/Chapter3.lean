@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.Traces
+import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.Ccs
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -16,15 +17,26 @@ open DeepWiki.ReactiveSystems.LTS
 
 variable {Proc Act : Type*}
 
+/-! ## §3.1 Criteria for good behavioural equivalence -/
+
+/-- **Definition 3.1** (§3.1, p.32). An equivalence relation: reflexive,
+symmetric and transitive. Reuses Mathlib's `Equivalence`. -/
+abbrev def_3_1 := @Equivalence
+
+/-- **Definition 3.1** (§3.1, p.32), preorder: a reflexive and transitive
+relation. Reuses Mathlib's `Preorder`. -/
+abbrev def_3_1_preorder := @Preorder
+
 /-! ## §3.2 Trace equivalence -/
 
 /-- **§3.2** (p.34), the trace set of a process: the action sequences it can
 perform. The library's `LTS.Traces`. -/
 abbrev traces := @LTS.Traces
 
-/-- **Definition 3.1** (§3.2, p.34). Trace equivalence: equal trace sets. The
-library's `LTS.TraceEquiv`. -/
-abbrev def_3_1 := @LTS.TraceEquiv
+/-- **§3.2** (p.35, eq. 3.1). Trace equivalence: equal trace sets. (This is the
+unnumbered equation 3.1 of §3.2 — *not* book Definition 3.1.) The library's
+`LTS.TraceEquiv`. -/
+abbrev traceEquiv := @LTS.TraceEquiv
 
 /-- **§3.2** (p.34–36). Strong bisimilarity implies trace equivalence (the
 converse fails). -/
@@ -62,6 +74,27 @@ theorem thm_3_1_transfer (L : LTS Proc Act) (p q : Proc) :
       (∀ a q', (L ⊢ q ⟶[a] q') → ∃ p', (L ⊢ p ⟶[a] p') ∧ (p' ~[L] q')) :=
   LTS.bisimilar_iff p q
 
+/-! ## §3.3 Simulation and the simulation preorder (Exercises 3.17–3.18) -/
+
+/-- **Exercise 3.17** (§3.3). A simulation: a one-sided bisimulation. The
+library's `LTS.IsSimulation`. -/
+abbrev simulation := @LTS.IsSimulation
+
+/-- **Exercise 3.17** (§3.3), the simulation preorder `⊑`. The library's
+`LTS.Simulated`. -/
+abbrev simulationPreorder := @LTS.Simulated
+
+/-- **Exercise 3.17** (§3.3). The simulation preorder is a preorder (reflexive
+and transitive), and strong bisimilarity refines it (`p ~ q → p ⊑ q`). -/
+theorem ex_3_17 (L : LTS Proc Act) :
+    ((∀ p, p ⊑[L] p) ∧ (∀ p q r, (p ⊑[L] q) → (q ⊑[L] r) → (p ⊑[L] r))) ∧
+      (∀ p q, p ~[L] q → p ⊑[L] q) :=
+  ⟨LTS.simulated_preorder L, fun _ _ h => h.simulated⟩
+
+/-- **Exercise 3.18** (§3.3), ready simulation: a simulation that also preserves
+ready sets. The library's `LTS.IsReadySimulation`. -/
+abbrev ex_3_18 := @LTS.IsReadySimulation
+
 /-! ## §3.4 Weak bisimilarity -/
 
 /-- **Definition 3.3** (§3.4, p.56), weak transition `p =α⇒ q`: silent steps
@@ -84,6 +117,14 @@ theorem weaklyBisimilar_equivalence (L : LTS Proc Act) (tau : Act) :
 /-- **§3.4** (p.57). Strong bisimilarity refines weak bisimilarity: `~ ⊆ ≈`. -/
 theorem bisimilar_weaklyBisimilar (L : LTS Proc Act) (tau : Act) {p q : Proc}
     (h : p ~[L] q) : p ≈[L, tau] q := h.weaklyBisimilar
+
+/-- **Theorem 3.3 / Exercise 3.30** (§3.4). Observational equivalence `≈` is the
+largest weak bisimulation: it is itself a weak bisimulation and contains every
+weak bisimulation. -/
+theorem thm_3_3_largest (L : LTS Proc Act) (tau : Act) :
+    LTS.IsWeakBisimulation L tau (LTS.WeaklyBisimilar L tau) ∧
+      ∀ R, LTS.IsWeakBisimulation L tau R → ∀ ⦃p q⦄, R p q → p ≈[L, tau] q :=
+  ⟨LTS.isWeakBisimulation_weaklyBisimilar, fun _ hR => hR.le_weaklyBisimilar⟩
 
 /-! ## Solved exercises
 
