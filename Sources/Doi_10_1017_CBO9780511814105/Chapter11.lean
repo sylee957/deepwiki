@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedTraces
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
+import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
@@ -85,6 +86,15 @@ converse fails). -/
 theorem timedBisimilar_untimedBisimilar (T : TLTS Proc Act) {p q : Proc}
     (h : TLTS.TimedBisimilar T p q) : TLTS.UntimedBisimilar T p q :=
   TLTS.TimedBisimilar.untimedBisimilar h
+
+/-- **§11.2** (p.197), strictness. The refinement is *strict*: there are
+untimed-bisimilar states that are **not** timed bisimilar (durations matter).
+Witnessed by a state idling for any delay versus one idling only for delays `≤ 1`
+— the converse of `timedBisimilar_untimedBisimilar` fails. -/
+theorem untimedBisimilar_not_imp_timedBisimilar :
+    ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
+      T.UntimedBisimilar p q ∧ ¬ T.TimedBisimilar p q :=
+  DeepWiki.ReactiveSystems.untimedBisimilar_not_imp_timedBisimilar
 
 /-! ## §11.4 The region construction -/
 
