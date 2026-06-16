@@ -534,4 +534,19 @@ theorem ex_3_8 :
    DeepWiki.ReactiveSystems.ex_3_8_not_symmetric,
    DeepWiki.ReactiveSystems.ex_3_8_not_transitive⟩
 
+/-- **Exercise 3.37** (§3.4, p.69). For the four LTSs: `s ≁ t`, `s ~ u`, `s ≁ v`.
+The positive case `s ~ u` has an explicit bisimulation; the negatives are refuted
+by a two-move attacker strategy (reach a `{a,b}`-enabling state the defender
+cannot match). The library's `ex_3_37_s_bisim_u`/`_s_not_bisim_t`/`_s_not_bisim_v`. -/
+theorem ex_3_37 :
+    ¬ ((DeepWiki.ReactiveSystems.S37.s) ~[DeepWiki.ReactiveSystems.lts37]
+        (DeepWiki.ReactiveSystems.S37.t)) ∧
+    ((DeepWiki.ReactiveSystems.S37.s) ~[DeepWiki.ReactiveSystems.lts37]
+        (DeepWiki.ReactiveSystems.S37.u)) ∧
+    ¬ ((DeepWiki.ReactiveSystems.S37.s) ~[DeepWiki.ReactiveSystems.lts37]
+        (DeepWiki.ReactiveSystems.S37.v)) :=
+  ⟨DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_t,
+   DeepWiki.ReactiveSystems.ex_3_37_s_bisim_u,
+   DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_v⟩
+
 end DeepWiki.Rs

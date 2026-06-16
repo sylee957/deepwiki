@@ -101,4 +101,85 @@ theorem ex_3_8_not_transitive :
     rcases h 0 1 2 (Or.inl ⟨rfl, rfl⟩) (Or.inr ⟨rfl, rfl⟩) with ⟨_, h2⟩ | ⟨h2, _⟩ <;>
       exact absurd h2 (by decide)⟩
 
+/-! ## Exercise 3.37 — deciding `s ~ t`, `s ~ u`, `s ~ v` -/
+
+/-- States of the four LTSs of Exercise 3.37. -/
+inductive S37
+  | s | s1 | s2 | t | t1 | t2 | u | u1 | u2 | u3 | v | v1 | v2 | v3
+  deriving DecidableEq, Fintype
+
+/-- Edges of the four LTSs of Exercise 3.37 (over actions `a`/`b = A35`). -/
+def edge37 : S37 → A35 → S37 → Bool
+  | .s, .a, .s1 => true
+  | .s1, .b, .s2 => true
+  | .s2, .b, .s2 => true
+  | .s2, .a, .s => true
+  | .t, .a, .t1 => true
+  | .t1, .b, .t1 => true
+  | .t1, .b, .t2 => true
+  | .t2, .a, .t => true
+  | .u, .a, .u1 => true
+  | .u1, .b, .u3 => true
+  | .u3, .a, .u => true
+  | .u3, .b, .u2 => true
+  | .u2, .b, .u2 => true
+  | .u2, .a, .u => true
+  | .v, .a, .v1 => true
+  | .v1, .b, .v2 => true
+  | .v1, .b, .v3 => true
+  | .v3, .b, .v3 => true
+  | .v3, .b, .v2 => true
+  | .v2, .a, .v => true
+  | _, _, _ => false
+
+/-- The LTS of Exercise 3.37 (reducible, so step facts are decidable). -/
+abbrev lts37 : LTS S37 A35 := ⟨fun p x q => edge37 p x q = true⟩
+
+/-- The witness `{(s,u),(s₁,u₁),(s₂,u₃),(s₂,u₂)}` for `s ~ u`. -/
+def rel37 : S37 → S37 → Bool
+  | .s, .u => true
+  | .s1, .u1 => true
+  | .s2, .u3 => true
+  | .s2, .u2 => true
+  | _, _ => false
+
+/-- The witness relation for `s ~ u` is a strong bisimulation. -/
+theorem isBisimulation_rel37 : IsBisimulation lts37 (fun p q => rel37 p q = true) := by
+  show ∀ p q, rel37 p q = true →
+    (∀ x p', edge37 p x p' = true → ∃ q', edge37 q x q' = true ∧ rel37 p' q' = true) ∧
+    (∀ x q', edge37 q x q' = true → ∃ p', edge37 p x p' = true ∧ rel37 p' q' = true)
+  decide
+
+/-- **Exercise 3.37** (§3.4, p.69). `s ~ u` (positive case), witnessed by `rel37`. -/
+theorem ex_3_37_s_bisim_u : (S37.s) ~[lts37] (S37.u) :=
+  isBisimulation_rel37.le_bisimilar rfl
+
+/-- **Exercise 3.37** (§3.4, p.69). `s ≁ t`: the attacker plays `s —a→ s₁ —b→ s₂`
+(where `s₂` enables both `a` and `b`); the defender's `t` must reply
+`t —a→ t₁ —b→ {t₁, t₂}`, but `t₁` enables only `b` and `t₂` only `a`. -/
+theorem ex_3_37_s_not_bisim_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
+  intro h
+  obtain ⟨q1, hq1, hb1⟩ := ((bisimilar_iff _ _).mp h).1 A35.a S37.s1 (by decide)
+  obtain rfl : q1 = S37.t1 := (by decide : ∀ q, lts37.step S37.t A35.a q → q = S37.t1) q1 hq1
+  obtain ⟨q2, hq2, hb2⟩ := ((bisimilar_iff _ _).mp hb1).1 A35.b S37.s2 (by decide)
+  rcases (by decide : ∀ q, lts37.step S37.t1 A35.b q → q = S37.t1 ∨ q = S37.t2) q2 hq2 with rfl | rfl
+  · obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).1 A35.a S37.s (by decide)
+    exact absurd hq3 ((by decide : ∀ q, ¬ lts37.step S37.t1 A35.a q) q3)
+  · obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).1 A35.b S37.s2 (by decide)
+    exact absurd hq3 ((by decide : ∀ q, ¬ lts37.step S37.t2 A35.b q) q3)
+
+/-- **Exercise 3.37** (§3.4, p.69). `s ≁ v`: same shape as `s ≁ t` — after
+`s —a→ s₁ —b→ s₂` the defender's `v₁` goes to `v₂` (only `a`) or `v₃` (only `b`),
+neither matching `s₂`'s `{a, b}`. -/
+theorem ex_3_37_s_not_bisim_v : ¬ ((S37.s) ~[lts37] (S37.v)) := by
+  intro h
+  obtain ⟨q1, hq1, hb1⟩ := ((bisimilar_iff _ _).mp h).1 A35.a S37.s1 (by decide)
+  obtain rfl : q1 = S37.v1 := (by decide : ∀ q, lts37.step S37.v A35.a q → q = S37.v1) q1 hq1
+  obtain ⟨q2, hq2, hb2⟩ := ((bisimilar_iff _ _).mp hb1).1 A35.b S37.s2 (by decide)
+  rcases (by decide : ∀ q, lts37.step S37.v1 A35.b q → q = S37.v2 ∨ q = S37.v3) q2 hq2 with rfl | rfl
+  · obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).1 A35.b S37.s2 (by decide)
+    exact absurd hq3 ((by decide : ∀ q, ¬ lts37.step S37.v2 A35.b q) q3)
+  · obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).1 A35.a S37.s (by decide)
+    exact absurd hq3 ((by decide : ∀ q, ¬ lts37.step S37.v3 A35.a q) q3)
+
 end DeepWiki.ReactiveSystems
