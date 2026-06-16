@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
+import DeepWiki.ReactiveSystems.CcsProcessGraph
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 2: The language CCS
@@ -101,5 +102,23 @@ theorem ex_2_8 :
   refine Step.res ?_ ?_ (Step.com3 (by rintro ⟨⟩) (Step.con (Step.act _ _)) (Step.act _ _))
   · rintro ⟨⟩
   · rintro ⟨⟩
+
+/-! ## Solved exercises -/
+
+/-- **Exercise 2.3** (§2.2, p.21). The CCS process describing a finite process
+graph `(Q, A, δ, q₀)` (with `δ : Q → Act A → List Q`): each state becomes a
+process constant whose body is the choice-sum of `a.(const q')` over the
+graph's transitions. The library's `graphToCCS`. -/
+abbrev ex_2_3_encoding := @graphToCCS
+
+/-- **Exercise 2.3** (§2.2, p.21), faithfulness: the encoding `const q` has
+exactly the transitions of the graph — `const q —a→ R` iff `R = const q'` for
+some successor `q' ∈ δ q a`. The library's `graphToCCS_step_iff`. -/
+theorem ex_2_3 {Q A : Type*} (delta : Q → DeepWiki.ReactiveSystems.Act A → List Q)
+    (allActs : List (DeepWiki.ReactiveSystems.Act A)) (q : Q)
+    (a : DeepWiki.ReactiveSystems.Act A) (R : CCS A Q) (ha : a ∈ allActs) :
+    ((ccsLTS (graphToCCS delta allActs)) ⊢ CCS.const q ⟶[a] R) ↔
+      ∃ q', q' ∈ delta q a ∧ R = CCS.const q' :=
+  graphToCCS_step_iff delta allActs q a R ha
 
 end DeepWiki.Rs

@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
+import DeepWiki.ReactiveSystems.CcsProcessGraph
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
