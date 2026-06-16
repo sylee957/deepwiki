@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.Simulation
 import DeepWiki.ReactiveSystems.BisimulationGame
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsCongruence
+import DeepWiki.ReactiveSystems.CcsTauLaws
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -309,5 +310,36 @@ theorem ex_3_3 : (CCS.const Ex33K.P) ~[ccsLTS ex33defn] (CCS.const Ex33K.Q) := b
       rcases hstep with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
       · exact ⟨.const Ex33K.P, by simp [step_const_iff, ex33defn], by simp [ex33R]⟩
+
+/-! ## Exercise 3.26: Milner's τ-laws
+
+(The CCS action type is written `RsAct` below — a local alias for
+`DeepWiki.ReactiveSystems.Act` — because the chapter's section variable `Act`
+shadows the inductive.) -/
+
+/-- Local alias for the CCS action type, since the section variable `Act` shadows
+the inductive `DeepWiki.ReactiveSystems.Act`. -/
+abbrev RsAct := @DeepWiki.ReactiveSystems.Act
+
+/-- **Exercise 3.26** (3.9, §3.4, p.61). `α.τ.P ≈ α.P`: a silent step guarded by
+an action is unobservable. -/
+theorem ex_3_26_1 {Name K : Type*} (defn : K → CCS Name K) {α : RsAct Name} (P : CCS Name K) :
+    CCS.pre α (CCS.pre DeepWiki.ReactiveSystems.Act.tau P) ≈[ccsLTS defn,
+      DeepWiki.ReactiveSystems.Act.tau] CCS.pre α P :=
+  tau_law_1 defn P
+
+/-- **Exercise 3.26** (3.10, §3.4, p.61). `P + τ.P ≈ τ.P`. -/
+theorem ex_3_26_2 {Name K : Type*} (defn : K → CCS Name K) (P : CCS Name K) :
+    CCS.choice P (CCS.pre DeepWiki.ReactiveSystems.Act.tau P) ≈[ccsLTS defn,
+      DeepWiki.ReactiveSystems.Act.tau] CCS.pre DeepWiki.ReactiveSystems.Act.tau P :=
+  tau_law_2 defn P
+
+/-- **Exercise 3.26** (3.11, §3.4, p.61). `α.(P + τ.Q) ≈ α.(P + τ.Q) + α.Q`. -/
+theorem ex_3_26_3 {Name K : Type*} (defn : K → CCS Name K) {α : RsAct Name} (P Q : CCS Name K) :
+    CCS.pre α (CCS.choice P (CCS.pre DeepWiki.ReactiveSystems.Act.tau Q)) ≈[ccsLTS defn,
+      DeepWiki.ReactiveSystems.Act.tau]
+      CCS.choice (CCS.pre α (CCS.choice P (CCS.pre DeepWiki.ReactiveSystems.Act.tau Q)))
+        (CCS.pre α Q) :=
+  tau_law_3 defn P Q
 
 end DeepWiki.Rs
