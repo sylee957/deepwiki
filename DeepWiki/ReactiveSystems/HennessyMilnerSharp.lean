@@ -14,9 +14,11 @@ namespace DeepWiki.ReactiveSystems
 
 open LTS
 
+/-- States of the image-infinite counterexample: finite chains `chain n`, the infinite chain `omega`, and the two HML-equivalent yet non-bisimilar states `lt`/`top`. -/
 inductive HMState | chain : ℕ → HMState | omega : HMState | lt : HMState | top : HMState
   deriving DecidableEq
 
+/-- Step relation: `chain (n+1) → chain n`, `omega → omega`, `lt → chain _`, and `top → omega`/`top → chain _`. -/
 def hmStep : HMState → Unit → HMState → Prop
   | .chain (n+1), _, .chain m => m = n
   | .omega, _, .omega => True
@@ -25,6 +27,7 @@ def hmStep : HMState → Unit → HMState → Prop
   | .top, _, .chain _ => True
   | _, _, _ => False
 
+/-- The image-infinite LTS over `HMState` with transitions `hmStep`. -/
 def hmLTS : LTS HMState Unit := ⟨hmStep⟩
 
 /-- Modal depth of an HML formula: the maximal nesting of modalities `⟨a⟩`/`[a]`. -/

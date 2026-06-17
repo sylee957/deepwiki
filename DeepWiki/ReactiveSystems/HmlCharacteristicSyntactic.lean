@@ -70,6 +70,7 @@ def Der (L : LTS Proc Act) [Fintype Proc] [∀ p a p', Decidable (L.step p a p')
     (a : Act) (p : Proc) : Finset Proc :=
   Finset.univ.filter (fun p' => L.step p a p')
 
+/-- `p' ∈ Der L a p ↔ L.step p a p'`: membership in the successor `Finset` is the step relation. -/
 @[simp] theorem mem_Der (L : LTS Proc Act) [Fintype Proc]
     [∀ p a p', Decidable (L.step p a p')]
     {a : Act} {p p' : Proc} :

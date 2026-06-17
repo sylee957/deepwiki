@@ -27,9 +27,11 @@ def defn96 : K96 → TCCS Name96 K96
   | .M3 => .eps 3 (.choice (.eps 2 (.pre (.name .a) (.const .M3))) (.pre Act.tau (.const .M3)))
   | .M4 => .choice (.eps 5 (.pre (.name .a) (.const .M4))) (.eps 3 (.pre Act.tau (.const .M4)))
 
+/-- `(2 : ℝ≥0) - 1 = 1`: truncated `ℝ≥0` subtraction. -/
 private theorem sub_two_one : (2 : ℝ≥0) - 1 = 1 := by
   rw [← NNReal.coe_inj, NNReal.coe_sub (by norm_num)]; norm_num
 
+/-- `(5 : ℝ≥0) - 4 = 1`: truncated `ℝ≥0` subtraction. -/
 private theorem sub_five_four : (5 : ℝ≥0) - 4 = 1 := by
   rw [← NNReal.coe_inj, NNReal.coe_sub (by norm_num)]; norm_num
 

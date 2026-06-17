@@ -29,14 +29,20 @@ def WSat (L : LTS Proc Act) (tau : Act) (p : Proc) : HML Act → Prop
 
 variable {L : LTS Proc Act} {tau : Act}
 
+/-- `p ⊨w tt` always holds. -/
 @[simp] theorem wsat_tt (p : Proc) : (p ⊨w[L, tau] HML.tt) ↔ True := Iff.rfl
+/-- `p ⊨w ff` never holds. -/
 @[simp] theorem wsat_ff (p : Proc) : (p ⊨w[L, tau] HML.ff) ↔ False := Iff.rfl
+/-- `p ⊨w F.and G` unfolds to `(p ⊨w F) ∧ (p ⊨w G)`. -/
 @[simp] theorem wsat_and (p : Proc) (F G : HML Act) :
     (p ⊨w[L, tau] F.and G) ↔ (p ⊨w[L, tau] F) ∧ (p ⊨w[L, tau] G) := Iff.rfl
+/-- `p ⊨w F.or G` unfolds to `(p ⊨w F) ∨ (p ⊨w G)`. -/
 @[simp] theorem wsat_or (p : Proc) (F G : HML Act) :
     (p ⊨w[L, tau] F.or G) ↔ (p ⊨w[L, tau] F) ∨ (p ⊨w[L, tau] G) := Iff.rfl
+/-- `p ⊨w ⟨a⟩F` unfolds to: some weak `a`-successor `p'` satisfies `F`. -/
 @[simp] theorem wsat_dia (p : Proc) (a : Act) (F : HML Act) :
     (p ⊨w[L, tau] HML.dia a F) ↔ ∃ p', WeakStep L tau p a p' ∧ (p' ⊨w[L, tau] F) := Iff.rfl
+/-- `p ⊨w [a]F` unfolds to: every weak `a`-successor `p'` satisfies `F`. -/
 @[simp] theorem wsat_box (p : Proc) (a : Act) (F : HML Act) :
     (p ⊨w[L, tau] HML.box a F) ↔ ∀ p', WeakStep L tau p a p' → (p' ⊨w[L, tau] F) := Iff.rfl
 

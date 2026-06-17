@@ -105,9 +105,11 @@ def tccsTLTS (defn : K → TCCS Name K) : TLTS (TCCS Name K) (Act Name) :=
     | .inl α => TAct defn P α Q
     | .inr d => TDelay defn P d Q⟩
 
+/-- An action step of `tccsTLTS defn` unfolds to `TAct defn P α Q`. -/
 @[simp] theorem tccsTLTS_act (defn : K → TCCS Name K) (P : TCCS Name K) (α : Act Name)
     (Q : TCCS Name K) : (tccsTLTS defn).act P α Q ↔ TAct defn P α Q := Iff.rfl
 
+/-- A delay step of `tccsTLTS defn` unfolds to `TDelay defn P d Q`. -/
 @[simp] theorem tccsTLTS_delay (defn : K → TCCS Name K) (P : TCCS Name K) (d : ℝ≥0)
     (Q : TCCS Name K) : (tccsTLTS defn).delay P d Q ↔ TDelay defn P d Q := Iff.rfl
 

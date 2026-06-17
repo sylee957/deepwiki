@@ -24,6 +24,7 @@ def Traces (L : LTS Proc Act) (p : Proc) : Set (List Act) := {s | ∃ q, Path L 
 /-- Trace equivalence: `p` and `q` have equal trace sets. -/
 def TraceEquiv (L : LTS Proc Act) (p q : Proc) : Prop := Traces L p = Traces L q
 
+/-- `s ∈ Traces L p ↔ ∃ q, Path L p s q`: membership in the trace set unfolds to a path. -/
 theorem mem_traces {L : LTS Proc Act} {p : Proc} {s : List Act} :
     s ∈ Traces L p ↔ ∃ q, Path L p s q := Iff.rfl
 

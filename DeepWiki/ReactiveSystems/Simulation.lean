@@ -34,9 +34,11 @@ theorem IsSimulation.comp {L : LTS Proc Act} {R S : Proc → Proc → Prop}
   obtain ⟨r', hr', hqr'⟩ := hS hqr a q' hq'
   exact ⟨r', hr', q', hpq', hqr'⟩
 
+/-- The simulation preorder is reflexive: `p ⊑ p`. -/
 @[refl] theorem simulated_refl (L : LTS Proc Act) (p : Proc) : Simulated L p p :=
   ⟨(· = ·), isSimulation_eq L, rfl⟩
 
+/-- The simulation preorder is transitive: `p ⊑ q → q ⊑ r → p ⊑ r`. -/
 theorem Simulated.trans {L : LTS Proc Act} {p q r : Proc}
     (hpq : Simulated L p q) (hqr : Simulated L q r) : Simulated L p r :=
   let ⟨_, hR, hpq⟩ := hpq; let ⟨_, hS, hqr⟩ := hqr; ⟨_, hR.comp hS, q, hpq, hqr⟩

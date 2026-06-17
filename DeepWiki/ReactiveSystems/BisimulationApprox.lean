@@ -20,8 +20,10 @@ theorem bisimFunctional_refl (L : LTS Proc Act) {R : Proc → Proc → Prop}
 def bisimApprox (L : LTS Proc Act) (i : ℕ) : Proc → Proc → Prop :=
   (bisimFunctional L)^[i] ⊤
 
+/-- The base approximant `∼₀ = ⊤` relates all processes. -/
 @[simp] theorem bisimApprox_zero (L : LTS Proc Act) : bisimApprox L 0 = ⊤ := rfl
 
+/-- The successor approximant `∼_{i+1} = F(∼ᵢ)` applies the bisimulation functional. -/
 theorem bisimApprox_succ (L : LTS Proc Act) (i : ℕ) :
     bisimApprox L (i + 1) = bisimFunctional L (bisimApprox L i) :=
   Function.iterate_succ_apply' _ _ _

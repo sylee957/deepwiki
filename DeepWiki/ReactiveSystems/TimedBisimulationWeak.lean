@@ -22,12 +22,15 @@ variable {Proc Act : Type*}
 def wtau (T : TLTS Proc Act) (tau : Act) : Proc → Proc → Prop :=
   Relation.ReflTransGen (fun s t => T.act s tau t)
 
+/-- `τ*` is reflexive: `wtau T tau s s`. -/
 theorem wtau_refl (T : TLTS Proc Act) (tau : Act) (s : Proc) : wtau T tau s s :=
   Relation.ReflTransGen.refl
 
+/-- A single `τ`-step is a `τ*` reachability. -/
 theorem wtau_single {T : TLTS Proc Act} {tau : Act} {s t : Proc} (h : T.act s tau t) :
     wtau T tau s t := Relation.ReflTransGen.single h
 
+/-- `τ*` is transitive: compose `wtau T tau s u` and `wtau T tau u t`. -/
 theorem wtau_trans {T : TLTS Proc Act} {tau : Act} {s u t : Proc}
     (h₁ : wtau T tau s u) (h₂ : wtau T tau u t) : wtau T tau s t :=
   Relation.ReflTransGen.trans h₁ h₂

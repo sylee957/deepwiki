@@ -1146,6 +1146,7 @@ theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valua
       · intro hh; have : fracPart (v' x) = t' := by linarith
         have := he.mpr this; linarith
 
+/-- Delaying a valuation by `a` then `b` equals delaying once by `a + b`. -/
 theorem Valuation.add_add (v : Valuation C) (a b : ℝ≥0) : (v.add a).add b = v.add (a + b) := by
   funext x; simp only [Valuation.add_apply]; ring
 

@@ -28,6 +28,7 @@ theorem tauStar_par_left {P P' : CCS Name K} (R : CCS Name K)
       exact tauStar_trans ih (tauStar_single (by
         rw [ccsLTS_step] at hstep ⊢; exact Step.com1 hstep))
 
+/-- A silent run `P ⟹ P'` lifts through `par` on the right: `R ∥ P ⟹ R ∥ P'`. -/
 theorem tauStar_par_right {P P' : CCS Name K} (R : CCS Name K)
     (h : tauStar (ccsLTS defn) Act.tau P P') :
     tauStar (ccsLTS defn) Act.tau (CCS.par R P) (CCS.par R P') := by
@@ -37,6 +38,7 @@ theorem tauStar_par_right {P P' : CCS Name K} (R : CCS Name K)
       exact tauStar_trans ih (tauStar_single (by
         rw [ccsLTS_step] at hstep ⊢; exact Step.com2 hstep))
 
+/-- A weak `α`-transition `P =[α]⇒ P'` lifts through `par` on the left: `P ∥ R =[α]⇒ P' ∥ R`. -/
 theorem weakStep_par_left {P : CCS Name K} {α : Act Name} {P' : CCS Name K} (R : CCS Name K)
     (h : (ccsLTS defn) ⊢ P =[α]⇒[Act.tau] P') :
     (ccsLTS defn) ⊢ CCS.par P R =[α]⇒[Act.tau] CCS.par P' R := by
@@ -46,6 +48,7 @@ theorem weakStep_par_left {P : CCS Name K} {α : Act Name} {P' : CCS Name K} (R 
       tauStar_par_left defn R h₂⟩
     rw [ccsLTS_step] at hstep ⊢; exact Step.com1 hstep
 
+/-- A weak `α`-transition `P =[α]⇒ P'` lifts through `par` on the right: `R ∥ P =[α]⇒ R ∥ P'`. -/
 theorem weakStep_par_right {P : CCS Name K} {α : Act Name} {P' : CCS Name K} (R : CCS Name K)
     (h : (ccsLTS defn) ⊢ P =[α]⇒[Act.tau] P') :
     (ccsLTS defn) ⊢ CCS.par R P =[α]⇒[Act.tau] CCS.par R P' := by
@@ -68,6 +71,8 @@ theorem tauStar_relabel {P P' : CCS Name K} (f : Act Name → Act Name)
       have : f Act.tau = Act.tau := hf.map_tau
       rw [← this]; exact Step.rel hstep
 
+/-- A weak `α`-transition lifts through `relabel f` (for a relabelling `f`) to a weak
+`f α`-transition: `P =[α]⇒ P'` gives `relabel P f =[f α]⇒ relabel P' f`. -/
 theorem weakStep_relabel {P : CCS Name K} {α : Act Name} {P' : CCS Name K}
     (f : Act Name → Act Name) (hf : IsRelabelling f)
     (h : (ccsLTS defn) ⊢ P =[α]⇒[Act.tau] P') :
@@ -98,6 +103,8 @@ theorem tauStar_restrict {P P' : CCS Name K} (Lr : Set (Act Name))
       rw [ccsLTS_step] at hstep ⊢
       exact Step.res htau (by rw [Act.co_tau]; exact htau) hstep
 
+/-- A weak `α`-transition lifts through `restrict Lr` when `α`, `α.co` and `τ` avoid `Lr`:
+`P =[α]⇒ P'` gives `restrict P Lr =[α]⇒ restrict P' Lr`. -/
 theorem weakStep_restrict {P : CCS Name K} {α : Act Name} {P' : CCS Name K} (Lr : Set (Act Name))
     (htau : Act.tau ∉ Lr) (hαL : α ∉ Lr) (hαcoL : α.co ∉ Lr)
     (h : (ccsLTS defn) ⊢ P =[α]⇒[Act.tau] P') :
@@ -129,6 +136,7 @@ theorem weak_cong_pre {a : Act Name} {P Q : CCS Name K}
     exact ⟨fun α x' hs => (h1 α x' hs).imp fun _ hy => ⟨hy.1, Or.inr hy.2⟩,
            fun α y' hs => (h2 α y' hs).imp fun _ hx => ⟨hx.1, Or.inr hx.2⟩⟩
 
+/-- `≈` is a left congruence for `par`: `P ≈ Q` implies `P ∥ R ≈ Q ∥ R`. -/
 theorem weak_cong_par_left {P Q : CCS Name K} (R : CCS Name K)
     (h : P ≈[ccsLTS defn, Act.tau] Q) :
     CCS.par P R ≈[ccsLTS defn, Act.tau] CCS.par Q R := by
@@ -170,6 +178,7 @@ theorem weak_cong_par_left {P Q : CCS Name K} (R : CCS Name K)
         refine tauStar_trans (tauStar_single ?_) (tauStar_par_left defn S' hA2)
         rw [ccsLTS_step]; exact Step.com3 hℓ hAstep hsS
 
+/-- `≈` is a right congruence for `par`: `P ≈ Q` implies `R ∥ P ≈ R ∥ Q`. -/
 theorem weak_cong_par_right {P Q : CCS Name K} (R : CCS Name K)
     (h : P ≈[ccsLTS defn, Act.tau] Q) :
     CCS.par R P ≈[ccsLTS defn, Act.tau] CCS.par R Q := by
@@ -211,6 +220,8 @@ theorem weak_cong_par_right {P Q : CCS Name K} (R : CCS Name K)
         refine tauStar_trans (tauStar_single ?_) (tauStar_par_right defn S' hA2)
         rw [ccsLTS_step]; exact Step.com3 hℓ hsS hAstep
 
+/-- `≈` is a congruence for `relabel` by a relabelling `f`: `P ≈ Q` implies
+`relabel P f ≈ relabel Q f`. -/
 theorem weak_cong_relabel {P Q : CCS Name K} (f : Act Name → Act Name)
     (hf : IsRelabelling f) (h : P ≈[ccsLTS defn, Act.tau] Q) :
     CCS.relabel P f ≈[ccsLTS defn, Act.tau] CCS.relabel Q f := by
@@ -232,6 +243,8 @@ theorem weak_cong_relabel {P Q : CCS Name K} (f : Act Name → Act Name)
     obtain ⟨A', hwA, hb'⟩ := hbwd α B' hsB
     exact ⟨CCS.relabel A' f, weakStep_relabel defn f hf hwA, A', B', rfl, rfl, hb'⟩
 
+/-- `≈` is a congruence for `restrict Lr` when `τ ∉ Lr`: `P ≈ Q` implies
+`restrict P Lr ≈ restrict Q Lr`. -/
 theorem weak_cong_restrict {P Q : CCS Name K} (Lr : Set (Act Name)) (htau : Act.tau ∉ Lr)
     (h : P ≈[ccsLTS defn, Act.tau] Q) :
     CCS.restrict P Lr ≈[ccsLTS defn, Act.tau] CCS.restrict Q Lr := by

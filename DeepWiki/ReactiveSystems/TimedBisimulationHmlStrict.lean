@@ -46,9 +46,11 @@ inductive Sq2Step (c : ℝ≥0) : Sq2 → (Sq2Act ⊕ ℝ≥0) → Sq2 → Prop
 /-- The `√2` timed LTS with boundary `c`. -/
 def sq2TLTS (c : ℝ≥0) : TLTS Sq2 Sq2Act := ⟨Sq2Step c⟩
 
+/-- An `α`-action in `sq2TLTS c` unfolds to `Sq2Step c p (Sum.inl α) q`. -/
 @[simp] theorem sq2_act {c : ℝ≥0} {p q : Sq2} {α : Sq2Act} :
     (sq2TLTS c).act p α q ↔ Sq2Step c p (Sum.inl α) q := Iff.rfl
 
+/-- A `d`-delay in `sq2TLTS c` unfolds to `Sq2Step c p (Sum.inr d) q`. -/
 @[simp] theorem sq2_delay {c : ℝ≥0} {p q : Sq2} {d : ℝ≥0} :
     (sq2TLTS c).delay p d q ↔ Sq2Step c p (Sum.inr d) q := Iff.rfl
 

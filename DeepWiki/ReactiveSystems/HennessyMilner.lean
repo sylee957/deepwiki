@@ -40,14 +40,20 @@ def Sat (L : LTS Proc Act) (p : Proc) : HML Act → Prop
 
 @[inherit_doc] scoped notation:40 p:41 " ⊨[" L "] " F:41 => LTS.Sat L p F
 
+/-- `p ⊨ tt` always holds. -/
 @[simp] theorem sat_tt (L : LTS Proc Act) (p : Proc) : (p ⊨[L] HML.tt) ↔ True := Iff.rfl
+/-- `p ⊨ ff` never holds. -/
 @[simp] theorem sat_ff (L : LTS Proc Act) (p : Proc) : (p ⊨[L] HML.ff) ↔ False := Iff.rfl
+/-- `p ⊨ F.and G ↔ p ⊨ F ∧ p ⊨ G`. -/
 @[simp] theorem sat_and (L : LTS Proc Act) (p : Proc) (F G : HML Act) :
     (p ⊨[L] F.and G) ↔ (p ⊨[L] F) ∧ (p ⊨[L] G) := Iff.rfl
+/-- `p ⊨ F.or G ↔ p ⊨ F ∨ p ⊨ G`. -/
 @[simp] theorem sat_or (L : LTS Proc Act) (p : Proc) (F G : HML Act) :
     (p ⊨[L] F.or G) ↔ (p ⊨[L] F) ∨ (p ⊨[L] G) := Iff.rfl
+/-- `p ⊨ ⟨a⟩F` iff some `a`-successor `p'` satisfies `F`. -/
 @[simp] theorem sat_dia (L : LTS Proc Act) (p : Proc) (a : Act) (F : HML Act) :
     (p ⊨[L] HML.dia a F) ↔ ∃ p', (L ⊢ p ⟶[a] p') ∧ (p' ⊨[L] F) := Iff.rfl
+/-- `p ⊨ [a]F` iff every `a`-successor `p'` satisfies `F`. -/
 @[simp] theorem sat_box (L : LTS Proc Act) (p : Proc) (a : Act) (F : HML Act) :
     (p ⊨[L] HML.box a F) ↔ ∀ p', (L ⊢ p ⟶[a] p') → (p' ⊨[L] F) := Iff.rfl
 
@@ -111,6 +117,7 @@ def _root_.DeepWiki.ReactiveSystems.HML.bigAnd {Act : Type*} : List (HML Act) �
   | [] => .tt
   | F :: Fs => .and F (HML.bigAnd Fs)
 
+/-- `p ⊨ bigAnd Fs` iff `p` satisfies every formula in the list `Fs`. -/
 @[simp] theorem sat_bigAnd (L : LTS Proc Act) (p : Proc) (Fs : List (HML Act)) :
     (p ⊨[L] HML.bigAnd Fs) ↔ ∀ F ∈ Fs, (p ⊨[L] F) := by
   induction Fs with

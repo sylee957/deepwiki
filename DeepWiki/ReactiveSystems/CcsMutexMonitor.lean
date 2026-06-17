@@ -77,18 +77,27 @@ theorem sync_step {a : MtChan} {P P' : CCS MtChan MtK} {M M' : MtK}
 theorem mt_enter1 : Step mtDefn (.const MutexTest) (Act.name enter1) (.const MutexTest1) :=
   Step.con (Step.suml (Step.act _ _))
 
+/-- `MutexTest --enter₂--> MutexTest₂`: an `enter₂` input enters the second round. -/
 theorem mt_enter2 : Step mtDefn (.const MutexTest) (Act.name enter2) (.const MutexTest2) :=
   Step.con (Step.sumr (Step.act _ _))
 
+/-- `MutexTest₁ --exit₁--> MutexTest`: a matching `exit₁` closes the first round, returning
+to the initial state. -/
 theorem mt1_exit1 : Step mtDefn (.const MutexTest1) (Act.name exit1) (.const MutexTest) :=
   Step.con (Step.suml (Step.act _ _))
 
+/-- `MutexTest₁ --enter₂--> Bad0`: a second `enter` (here `enter₂`) with no intervening `exit₁`
+is a mutual-exclusion violation, driving to `Bad0`. -/
 theorem mt1_enter2 : Step mtDefn (.const MutexTest1) (Act.name enter2) (.const Bad0) :=
   Step.con (Step.sumr (Step.act _ _))
 
+/-- `MutexTest₂ --exit₂--> MutexTest`: a matching `exit₂` closes the second round, returning
+to the initial state. -/
 theorem mt2_exit2 : Step mtDefn (.const MutexTest2) (Act.name exit2) (.const MutexTest) :=
   Step.con (Step.suml (Step.act _ _))
 
+/-- `MutexTest₂ --enter₁--> Bad0`: a second `enter` (here `enter₁`) with no intervening `exit₂`
+is a mutual-exclusion violation, driving to `Bad0`. -/
 theorem mt2_enter1 : Step mtDefn (.const MutexTest2) (Act.name enter1) (.const Bad0) :=
   Step.con (Step.sumr (Step.act _ _))
 
@@ -117,6 +126,8 @@ theorem mutex_round1 {P P₁ P₂ : CCS MtChan MtK}
     tauStar (ccsLTS mtDefn) Act.tau (monitored P MutexTest) (monitored P₂ MutexTest) :=
   tauStar_trans (sync_step h1 mt_enter1) (sync_step h2 mt1_exit1)
 
+/-- A matched `enter₂.exit₂` round leaves the monitor back in its initial state,
+observed as a sequence of `τ`-steps of the system. -/
 theorem mutex_round2 {P P₁ P₂ : CCS MtChan MtK}
     (h1 : (ccsLTS mtDefn) ⊢ P =[Act.coname enter2]⇒[Act.tau] P₁)
     (h2 : (ccsLTS mtDefn) ⊢ P₁ =[Act.coname exit2]⇒[Act.tau] P₂) :

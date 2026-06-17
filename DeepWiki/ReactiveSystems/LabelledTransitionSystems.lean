@@ -27,6 +27,7 @@ variable {Proc Act : Type*}
 /-- `L.Refuses p a` (the book's `p ↛ᵃ`): no `a`-labelled transition leaves `p`. -/
 def Refuses (L : LTS Proc Act) (p : Proc) (a : Act) : Prop := ∀ q, ¬ L.step p a q
 
+/-- `L.Refuses p a` unfolds to `∀ q, ¬ L.step p a q`: no `a`-transition leaves `p`. -/
 @[simp] theorem refuses_iff (L : LTS Proc Act) (p : Proc) (a : Act) :
     L.Refuses p a ↔ ∀ q, ¬ L.step p a q := Iff.rfl
 

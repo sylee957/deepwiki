@@ -18,12 +18,15 @@ variable {Proc Act : Type*}
 def tauStar (L : LTS Proc Act) (tau : Act) : Proc → Proc → Prop :=
   Relation.ReflTransGen fun p q => L.step p tau q
 
+/-- Silent reachability `tauStar` is reflexive: `p ⟶τ* p`. -/
 theorem tauStar_refl (L : LTS Proc Act) (tau : Act) (p : Proc) : tauStar L tau p p :=
   Relation.ReflTransGen.refl
 
+/-- A single silent step `p ⟶τ q` gives `tauStar L tau p q`. -/
 theorem tauStar_single {L : LTS Proc Act} {tau : Act} {p q : Proc} (h : L.step p tau q) :
     tauStar L tau p q := Relation.ReflTransGen.single h
 
+/-- Silent reachability `tauStar` is transitive. -/
 theorem tauStar_trans {L : LTS Proc Act} {tau : Act} {p q r : Proc}
     (h₁ : tauStar L tau p q) (h₂ : tauStar L tau q r) : tauStar L tau p r :=
   Relation.ReflTransGen.trans h₁ h₂
@@ -142,12 +145,15 @@ theorem IsWeakBisimulation.le_weaklyBisimilar {R : Proc → Proc → Prop}
     (h : IsWeakBisimulation L tau R) : ∀ ⦃p q⦄, R p q → WeaklyBisimilar L tau p q :=
   fun _ _ hpq => ⟨R, h, hpq⟩
 
+/-- Weak bisimilarity `≈` is reflexive: `p ≈ p`. -/
 @[refl] theorem weaklyBisimilar_refl (p : Proc) : WeaklyBisimilar L tau p p :=
   ⟨(· = ·), isWeakBisimulation_eq, rfl⟩
 
+/-- Weak bisimilarity `≈` is symmetric: `p ≈ q` implies `q ≈ p`. -/
 theorem WeaklyBisimilar.symm {p q : Proc} (h : WeaklyBisimilar L tau p q) :
     WeaklyBisimilar L tau q p := let ⟨_, hR, hpq⟩ := h; ⟨_, hR.inv, hpq⟩
 
+/-- Weak bisimilarity `≈` is transitive: `p ≈ q` and `q ≈ r` give `p ≈ r`. -/
 theorem WeaklyBisimilar.trans {p q r : Proc} (hpq : WeaklyBisimilar L tau p q)
     (hqr : WeaklyBisimilar L tau q r) : WeaklyBisimilar L tau p r :=
   let ⟨_, hR, hpq⟩ := hpq; let ⟨_, hS, hqr⟩ := hqr; ⟨_, hR.comp hS, _, hpq, hqr⟩

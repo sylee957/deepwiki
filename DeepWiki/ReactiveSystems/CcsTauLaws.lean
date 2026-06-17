@@ -68,6 +68,7 @@ theorem tau_law_1 {α : Act Name} (P : CCS Name K) :
     exact ⟨fun b p' hstep => ⟨p', step_weakStep hstep, Or.inr (Or.inr rfl)⟩,
            fun b q' hstep => ⟨q', step_weakStep hstep, Or.inr (Or.inr rfl)⟩⟩
 
+/-- The second `τ`-law: `P + τ.P ≈ τ.P` — a `τ`-summand absorbs the other branch. -/
 theorem tau_law_2 (P : CCS Name K) :
     CCS.choice P (CCS.pre Act.tau P) ≈[ccsLTS defn, Act.tau] CCS.pre Act.tau P := by
   have key : IsWeakBisimulation (ccsLTS defn) Act.tau

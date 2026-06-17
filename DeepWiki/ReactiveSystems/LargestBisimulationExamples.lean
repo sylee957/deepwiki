@@ -72,6 +72,7 @@ def rel411 : P411 → P411 → Bool
   | .p2, .p1 => true
   | x, y => decide (x = y)
 
+/-- `rel411` (identifying `P₁` with `P₂`, plus the diagonal) is a bisimulation on `lts411`. -/
 theorem isBisimulation_rel411 : IsBisimulation lts411 (fun p q => rel411 p q = true) := by
   show ∀ p q, rel411 p q = true →
     (∀ x p', edge411 p x p' = true → ∃ q', edge411 q x q' = true ∧ rel411 p' q' = true) ∧

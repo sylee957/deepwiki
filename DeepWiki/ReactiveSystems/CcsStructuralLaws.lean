@@ -31,6 +31,7 @@ theorem const_bisim_body (K0 : K) : (CCS.const K0) ~[ccsLTS defn] (defn K0) := b
 def parCommRel (_defn : K → CCS Name K) : CCS Name K → CCS Name K → Prop :=
   fun x y => ∃ A B, x = CCS.par A B ∧ y = CCS.par B A
 
+/-- `parCommRel` is a strong bisimulation: it relates `A ∣ B` to `B ∣ A`. -/
 theorem isBisimulation_parCommRel : IsBisimulation (ccsLTS defn) (parCommRel defn) := by
   rintro x y ⟨A, B, rfl, rfl⟩
   refine ⟨fun α x' hx => ?_, fun α y' hy => ?_⟩
@@ -56,6 +57,7 @@ theorem par_comm (A B : CCS Name K) : (CCS.par A B) ~[ccsLTS defn] (CCS.par B A)
 def parUnitRel (_defn : K → CCS Name K) : CCS Name K → CCS Name K → Prop :=
   fun x y => ∃ A, x = CCS.par A CCS.nil ∧ y = A
 
+/-- `parUnitRel` is a strong bisimulation: it relates `A ∣ 0` to `A`. -/
 theorem isBisimulation_parUnitRel : IsBisimulation (ccsLTS defn) (parUnitRel defn) := by
   rintro x y ⟨A, rfl, rfl⟩
   refine ⟨fun α x' hx => ?_, fun α y' hy => ?_⟩
@@ -75,6 +77,7 @@ theorem par_unit (A : CCS Name K) : (CCS.par A CCS.nil) ~[ccsLTS defn] A :=
 def parAssocRel (_defn : K → CCS Name K) : CCS Name K → CCS Name K → Prop :=
   fun x y => ∃ A B C, x = CCS.par (CCS.par A B) C ∧ y = CCS.par A (CCS.par B C)
 
+/-- `parAssocRel` is a strong bisimulation: it relates `(A ∣ B) ∣ C` to `A ∣ (B ∣ C)`. -/
 theorem isBisimulation_parAssocRel : IsBisimulation (ccsLTS defn) (parAssocRel defn) := by
   rintro x y ⟨A, B, C, rfl, rfl⟩
   refine ⟨fun α x' hx => ?_, fun α y' hy => ?_⟩

@@ -30,10 +30,13 @@ def co : Act Name → Act Name
   | name a => coname a
   | coname a => name a
 
+/-- `τ̄ = τ`: complementation fixes the silent action. -/
 @[simp] theorem co_tau : (tau : Act Name).co = tau := rfl
 
+/-- `ā = ā`: complementation sends a name to its co-name. -/
 @[simp] theorem co_name (a : Name) : (name a).co = coname a := rfl
 
+/-- `co (coname a) = name a`: complementation sends a co-name to its name. -/
 @[simp] theorem co_coname (a : Name) : (coname a).co = name a := rfl
 
 /-- Complementation is an involution: `ᾱ̄ = α`. -/
@@ -114,6 +117,7 @@ variable {Name K : Type*}
 definition environment: states are CCS expressions, labels are actions. -/
 def ccsLTS (defn : K → CCS Name K) : LTS (CCS Name K) (Act Name) := ⟨Step defn⟩
 
+/-- `(ccsLTS defn).step` unfolds to the CCS SOS relation `Step defn`. -/
 @[simp] theorem ccsLTS_step (defn : K → CCS Name K) (P : CCS Name K) (α : Act Name)
     (P' : CCS Name K) : (ccsLTS defn).step P α P' ↔ Step defn P α P' := Iff.rfl
 

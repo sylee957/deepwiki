@@ -70,12 +70,15 @@ largest strong bisimulation. -/
 theorem IsBisimulation.le_bisimilar {R : Proc → Proc → Prop} (h : IsBisimulation L R) :
     ∀ ⦃p q⦄, R p q → Bisimilar L p q := fun _ _ hpq => ⟨R, h, hpq⟩
 
+/-- Strong bisimilarity is reflexive: `p ~ p`. -/
 @[refl] theorem bisimilar_refl (p : Proc) : Bisimilar L p p :=
   ⟨(· = ·), isBisimulation_eq, rfl⟩
 
+/-- Strong bisimilarity is symmetric: `p ~ q → q ~ p`. -/
 theorem Bisimilar.symm {p q : Proc} (h : Bisimilar L p q) : Bisimilar L q p :=
   let ⟨_, hR, hpq⟩ := h; ⟨_, hR.inv, hpq⟩
 
+/-- Strong bisimilarity is transitive: `p ~ q → q ~ r → p ~ r`. -/
 theorem Bisimilar.trans {p q r : Proc}
     (hpq : Bisimilar L p q) (hqr : Bisimilar L q r) : Bisimilar L p r :=
   let ⟨_, hR, hpq⟩ := hpq
