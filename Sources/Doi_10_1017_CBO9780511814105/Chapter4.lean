@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
-import DeepWiki.ReactiveSystems.WeakBisimulationFixedPoint
+import DeepWiki.ReactiveSystems.BisimulationWeakFixedPoint
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
 import DeepWiki.ReactiveSystems.LargestBisimulationExamples
 import Sources.Doi_10_1017_CBO9780511814105.Source

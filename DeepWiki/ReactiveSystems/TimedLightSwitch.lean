@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedCCS
+import DeepWiki.ReactiveSystems.TimedCcs
 
 /-! # The timed light switch: guardedness and a delay transition
 The timed-CCS light switch: `Off ≝ press.Light`, `Bright ≝ press.Off`,

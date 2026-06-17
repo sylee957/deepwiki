@@ -1,5 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
-import DeepWiki.ReactiveSystems.TimedCCS
+import DeepWiki.ReactiveSystems.TimedCcs
 import DeepWiki.ReactiveSystems.TimedCcsDelayExamples
 import DeepWiki.ReactiveSystems.TimedLightSwitch
 import Sources.Doi_10_1017_CBO9780511814105.Source

@@ -14,7 +14,7 @@ import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.BisimulationExamples
-import DeepWiki.ReactiveSystems.WeakBisimulationExample
+import DeepWiki.ReactiveSystems.BisimulationWeakExample
 import DeepWiki.ReactiveSystems.SmallUniversitySpec
 import DeepWiki.ReactiveSystems.FaultyMachineSpec
 import Sources.Doi_10_1017_CBO9780511814105.Source

@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedCCS
+import DeepWiki.ReactiveSystems.TimedCcs
 
 /-! # Which timed-CCS agents can delay by 4
 Four recursive TCCS agents (`a, b` visible, `τ` silent):

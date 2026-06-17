@@ -6,7 +6,7 @@ import DeepWiki.ReactiveSystems.CcsTestingSafety
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import DeepWiki.ReactiveSystems.CcsMutexMonitor
 import DeepWiki.ReactiveSystems.RecursiveSafetyExample
-import DeepWiki.ReactiveSystems.WeakSimulationCongruence
+import DeepWiki.ReactiveSystems.SimulationWeakCongruence
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
