@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
 import DeepWiki.ReactiveSystems.WeakBisimulationFixedPoint
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
+import DeepWiki.ReactiveSystems.Chapter4Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.Bounds.Basic
@@ -220,6 +221,15 @@ theorem ex_4_9_gfp : OrderHom.gfp g49 = {1, 2} := by
     show ({1, 2} : Set (Fin 3)) ⊆ (({1, 2} : Set (Fin 3)) ∩ {1}) ∪ {2}
     intro x hx
     fin_cases x <;> simp_all
+
+/-- **Exercise 4.12** (§4.3, p.87). On the Example 3.7 LTS the iterative algorithm
+gives `s ≁ t` (the largest bisimulation excludes the pair `(s,t)`): after
+`s —a→ s₁ —b→ s₃` the dead `s₃` cannot match `t₁`'s repeated `b`. The library's
+`ex_4_12_s_not_bisim_t`. -/
+theorem ex_4_12 :
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.e37
+        DeepWiki.ReactiveSystems.E37S.s DeepWiki.ReactiveSystems.E37S.t :=
+  DeepWiki.ReactiveSystems.ex_4_12_s_not_bisim_t
 
 /-- **Theorem 4.2** (§4.2, p.82). On a *finite* complete lattice, the least fixed
 point of a monotone `f` is reached by finite iteration from `⊥`: `lfp f = fᵐ(⊥)`
