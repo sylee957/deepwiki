@@ -383,6 +383,29 @@ theorem RegionEqAll.trans {v v' v'' : Valuation C}
     (h : RegionEqAll v v') (h' : RegionEqAll v' v'') : RegionEqAll v v'' :=
   fun cmax => (regionEq_equivalence cmax).trans (h cmax) (h' cmax)
 
+/-- **Region equivalence pulls back along any reindexing of clocks.** If `V, V'` are
+region-equivalent over `C'`, their restrictions along `f : C → C'` are region-equivalent
+over `C` with the pulled-back clamp `cmax' ∘ f` — `regionFloor` is per-clock and the
+frac conditions over `C` are a sub-family of those over `C'`. -/
+theorem RegionEq.precomp {C' : Type*} {cmax' : C' → ℕ} {V V' : Valuation C'}
+    (f : C → C') (h : RegionEq cmax' V V') :
+    RegionEq (fun x => cmax' (f x)) (fun x => V (f x)) (fun x => V' (f x)) := by
+  obtain ⟨h1, h2, h3⟩ := h
+  exact ⟨fun x => h1 (f x), fun x hx => h2 (f x) hx, fun x y hx hy => h3 (f x) (f y) hx hy⟩
+
+/-- **`RegionEqAll` restricts along any injection of clocks.** Forgetting a sub-family of
+clocks (e.g. an auxiliary process clock) preserves unbounded region equivalence: every
+clamp over `C` extends, along the injection `f`, to a clamp over `C'`. -/
+theorem RegionEqAll.precomp {C' : Type*} {V V' : Valuation C'}
+    {f : C → C'} (hf : Function.Injective f) (h : RegionEqAll V V') :
+    RegionEqAll (fun x => V (f x)) (fun x => V' (f x)) := by
+  classical
+  intro cmax
+  have hfe : (fun x => Function.extend f cmax (fun _ => 0) (f x)) = cmax :=
+    funext fun x => hf.extend_apply cmax (fun _ => 0) x
+  rw [← hfe]
+  exact RegionEq.precomp f (h (Function.extend f cmax (fun _ => 0)))
+
 /-- Unbounded-region-equivalent valuations satisfy exactly the same clock constraints
 (of any constant size) — the guard-agreement an `Mt`-bisimulation needs. -/
 theorem regionEqAll_satisfies {v v' : Valuation C} (h : RegionEqAll v v')
