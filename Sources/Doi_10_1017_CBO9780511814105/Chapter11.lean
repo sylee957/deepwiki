@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
+import DeepWiki.ReactiveSystems.Chapter11Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -285,5 +286,16 @@ theorem thm_11_5_complete_delay {Loc : Type*} (A : TimedAutomaton Loc Act C) {�
     (hstep : A.tlts.delay (ℓ, v) d (ℓ, v')) :
     ∃ Z', DeepWiki.ReactiveSystems.SymStep A ℓ Z ℓ Z' ∧ v' ∈ Z' :=
   DeepWiki.ReactiveSystems.symStep_complete_delay A hv hstep
+
+/-- **Exercise 11.2** (§11.1, p.195). The two single-location timed automata of
+Example 11.2 (`a`-self-loops with guards `x ≤ 1` resp. `x = 1`) are **not**
+timed-language equivalent: `(0, a)` is a timed trace of (a) but not of (b). The
+library's `ex_11_2`. -/
+theorem ex_11_2 :
+    DeepWiki.ReactiveSystems.taA.tlts.timedLang
+        (DeepWiki.ReactiveSystems.taA.initial, fun _ => (0 : ℝ≥0)) ≠
+      DeepWiki.ReactiveSystems.taB.tlts.timedLang
+        (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0)) :=
+  DeepWiki.ReactiveSystems.ex_11_2
 
 end DeepWiki.Rs
