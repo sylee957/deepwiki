@@ -14,6 +14,7 @@ import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.Chapter3Examples
+import DeepWiki.ReactiveSystems.Chapter3WeakBisim
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -548,5 +549,21 @@ theorem ex_3_37 :
   ⟨DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_t,
    DeepWiki.ReactiveSystems.ex_3_37_s_bisim_u,
    DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_v⟩
+
+/-- **Exercise 3.20** (§3.4, p.58), the headline claim `a.0 ≈ a.τ.0`: a leading
+silent step is unobservable (an instance of τ-law (3.9), `tau_law_1`, symmetrised).
+The companion SmUni ≈ Spec / Start ≉ Spec claims rest on the Figure 3.3 model. -/
+theorem ex_3_20 {Name K : Type*} (defn : K → CCS Name K) (a₀ : Name) :
+    CCS.pre (DeepWiki.ReactiveSystems.Act.name a₀) CCS.nil ≈[ccsLTS defn,
+        DeepWiki.ReactiveSystems.Act.tau]
+      CCS.pre (DeepWiki.ReactiveSystems.Act.name a₀) (CCS.pre DeepWiki.ReactiveSystems.Act.tau CCS.nil) :=
+  (DeepWiki.ReactiveSystems.tau_law_1 defn CCS.nil).symm
+
+/-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`, witnessed by the weak bisimulation
+`{(s,t),(s₁,t),(s₂,t),(s₃,t₂),(s₄,t₃),(s₅,t₁)}`. The library's `ex_3_25`. -/
+theorem ex_3_25 :
+    DeepWiki.ReactiveSystems.St325.s ≈[DeepWiki.ReactiveSystems.lts325,
+      DeepWiki.ReactiveSystems.A325.tau] DeepWiki.ReactiveSystems.St325.t :=
+  DeepWiki.ReactiveSystems.ex_3_25
 
 end DeepWiki.Rs
