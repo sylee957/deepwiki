@@ -10,6 +10,7 @@ import Mathlib.Order.Iterate
 import Mathlib.Order.OrderIsoNat
 import Mathlib.Data.Set.Insert
 import Mathlib.Data.ENNReal.Basic
+import Mathlib.Tactic.FinCases
 
 /-! # Reactive Systems catalog — Chapter 4: Theory of fixed points and bisimulation
 Book-numbered restatements for Chapter 4. The order-theoretic background
@@ -193,6 +194,32 @@ alias ex_4_5_sInf := sInf_empty
 powerset `2^ℕ` are exactly the supersets of `{1,2}`: `X ∪ {1,2} = X ↔ {1,2} ⊆ X`.
 (So besides `{1,2}` itself, e.g. `univ` is a fixed point.) -/
 theorem ex_4_6 (X : Set ℕ) : X ∪ {1, 2} = X ↔ {1, 2} ⊆ X := Set.union_eq_left
+
+/-- The monotone map `g X = (X ∩ {1}) ∪ {2}` on `Set (Fin 3)` (Exercise 4.9). -/
+def g49 : Set (Fin 3) →o Set (Fin 3) where
+  toFun X := (X ∩ {1}) ∪ {2}
+  monotone' _ _ h := Set.union_subset_union_left _ (Set.inter_subset_inter_left _ h)
+
+/-- **Exercise 4.9** (§4.2, p.83). The least fixed point of `g X = (X ∩ {1}) ∪ {2}`
+is `{2}` (using Theorem 4.2: `g(∅) = {2}`, `g({2}) = {2}`). -/
+theorem ex_4_9_lfp : OrderHom.lfp g49 = {2} := by
+  apply le_antisymm
+  · exact g49.lfp_le (Set.union_subset Set.inter_subset_left (le_refl _))
+  · have h : ({2} : Set (Fin 3)) ⊆ g49 (OrderHom.lfp g49) := Set.subset_union_right
+    rwa [OrderHom.map_lfp] at h
+
+/-- **Exercise 4.9** (§4.2, p.83). The greatest fixed point of `g X = (X ∩ {1}) ∪ {2}`
+is `{1, 2}` (`g({0,1,2}) = {1,2}`, `g({1,2}) = {1,2}`). -/
+theorem ex_4_9_gfp : OrderHom.gfp g49 = {1, 2} := by
+  apply le_antisymm
+  · have h : g49 (OrderHom.gfp g49) ⊆ ({1, 2} : Set (Fin 3)) :=
+      Set.union_subset (Set.inter_subset_right.trans (by intro x hx; simp_all))
+        (by intro x hx; simp_all)
+    rwa [OrderHom.map_gfp] at h
+  · refine g49.le_gfp ?_
+    show ({1, 2} : Set (Fin 3)) ⊆ (({1, 2} : Set (Fin 3)) ∩ {1}) ∪ {2}
+    intro x hx
+    fin_cases x <;> simp_all
 
 /-- **Theorem 4.2** (§4.2, p.82). On a *finite* complete lattice, the least fixed
 point of a monotone `f` is reached by finite iteration from `⊥`: `lfp f = fᵐ(⊥)`
