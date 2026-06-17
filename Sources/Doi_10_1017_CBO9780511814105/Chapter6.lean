@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
+import DeepWiki.ReactiveSystems.FiniteLatticeIterate
 import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
@@ -40,10 +41,26 @@ abbrev recMin := @LTS.recMin
 library's `LTS.Inv`. -/
 abbrev inv := @LTS.Inv
 
-/-- **Theorem 6.1** (§6.3, p.114). `Inv(F)` is exactly the set of states from
-which every reachable state satisfies `F`. -/
-theorem thm_6_1 (L : LTS Proc Act) (F : HML Act) :
+/-- **Theorem 6.2** (§6.3, p.114). `Inv(F) = FIX I`: `Inv(F)` is exactly the set of
+states from which every reachable state satisfies `F`. (This is book Theorem 6.2,
+not 6.1 — the genuine Theorem 6.1 is the finite-iteration fixed-point result
+`thm_6_1` below.) -/
+theorem thm_6_2 (L : LTS Proc Act) (F : HML Act) :
     LTS.Inv L F = {p | ∀ p', L.Reachable p p' → p' ∈ LTS.denot L F} := LTS.Inv_eq L F
+
+/-- **Theorem 6.1** (§6.3, p.111). On a *finite* state space, the greatest solution
+of a recursive property is reached by finite iteration: `recMax F = O_Fᴹ(⊤)` for
+some `M` (and dually `recMin F = O_Fᵐ(∅)` for some `m`). A direct consequence of
+Theorem 4.2 applied to the monotone semantic functional `O_F = denotRHom`. -/
+theorem thm_6_1_max [Finite Proc] (L : LTS Proc Act) (F : HMLR Act) :
+    ∃ M, LTS.recMax L F = (LTS.denotRHom L F)^[M] ⊤ :=
+  DeepWiki.ReactiveSystems.gfp_eq_iterate_top (LTS.denotRHom L F)
+
+/-- **Theorem 6.1** (§6.3, p.111). The least-solution form: `recMin F = O_Fᵐ(∅)`
+for some `m`. -/
+theorem thm_6_1_min [Finite Proc] (L : LTS Proc Act) (F : HMLR Act) :
+    ∃ m, LTS.recMin L F = (LTS.denotRHom L F)^[m] ⊥ :=
+  DeepWiki.ReactiveSystems.lfp_eq_iterate_bot (LTS.denotRHom L F)
 
 /-! ## §6.4 A game characterization for HML with recursion -/
 

@@ -40,6 +40,7 @@ import DeepWiki.ReactiveSystems.Chapter3Examples
 import DeepWiki.ReactiveSystems.WeakBisimulationFixedPoint
 import DeepWiki.ReactiveSystems.Chapter5Examples
 import DeepWiki.ReactiveSystems.Chapter12Examples
+import DeepWiki.ReactiveSystems.FiniteLatticeIterate
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces

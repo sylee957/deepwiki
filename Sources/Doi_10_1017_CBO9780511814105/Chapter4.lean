@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 import DeepWiki.ReactiveSystems.BisimulationApprox
 import DeepWiki.ReactiveSystems.WeakBisimulationFixedPoint
+import DeepWiki.ReactiveSystems.FiniteLatticeIterate
 import Sources.Doi_10_1017_CBO9780511814105.Source
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.Bounds.Basic
@@ -198,38 +199,12 @@ point of a monotone `f` is reached by finite iteration from `⊥`: `lfp f = fᵐ
 for some `m` (the ascending chain `⊥ ≼ f⊥ ≼ f²⊥ ≼ ⋯` is eventually constant, and
 its limit is the lfp). -/
 theorem thm_4_2_lfp {D : Type*} [CompleteLattice D] [Finite D] (f : D →o D) :
-    ∃ m, OrderHom.lfp f = f^[m] ⊥ := by
-  have hmono : Monotone (fun n => f^[n] (⊥ : D)) := f.mono.monotone_iterate_of_le_map bot_le
-  obtain ⟨m, hm⟩ := WellFoundedGT.monotone_chain_condition ⟨_, hmono⟩
-  have heq : f^[m] (⊥ : D) = f (f^[m] ⊥) := by
-    have := hm (m + 1) (Nat.le_succ m)
-    simpa [Function.iterate_succ_apply', OrderHom.coe_mk] using this
-  have hle : ∀ k, f^[k] (⊥ : D) ≤ OrderHom.lfp f := by
-    intro k
-    induction k with
-    | zero => exact bot_le
-    | succ n ih =>
-        rw [Function.iterate_succ_apply']
-        exact (f.mono ih).trans (OrderHom.map_lfp f).le
-  exact ⟨m, le_antisymm (f.lfp_le heq.ge) (hle m)⟩
+    ∃ m, OrderHom.lfp f = f^[m] ⊥ := DeepWiki.ReactiveSystems.lfp_eq_iterate_bot f
 
 /-- **Theorem 4.2** (§4.2, p.82). Dually, the greatest fixed point is reached by
 finite iteration from `⊤`: `gfp f = fᴹ(⊤)` for some `M`. -/
 theorem thm_4_2_gfp {D : Type*} [CompleteLattice D] [Finite D] (f : D →o D) :
-    ∃ M, OrderHom.gfp f = f^[M] ⊤ := by
-  have hanti : Antitone (fun n => f^[n] (⊤ : D)) := f.mono.antitone_iterate_of_map_le le_top
-  obtain ⟨M, hM⟩ := WellFoundedLT.antitone_chain_condition hanti
-  have heq : f^[M] (⊤ : D) = f (f^[M] ⊤) := by
-    have := hM (M + 1) (Nat.le_succ M)
-    simpa [Function.iterate_succ_apply'] using this
-  have hge : ∀ k, OrderHom.gfp f ≤ f^[k] (⊤ : D) := by
-    intro k
-    induction k with
-    | zero => exact le_top
-    | succ n ih =>
-        rw [Function.iterate_succ_apply']
-        exact (OrderHom.map_gfp f).ge.trans (f.mono ih)
-  exact ⟨M, le_antisymm (hge M) (f.le_gfp heq.le)⟩
+    ∃ M, OrderHom.gfp f = f^[M] ⊤ := DeepWiki.ReactiveSystems.gfp_eq_iterate_top f
 
 /-- **Exercise 4.15(1)** (§4.3, p.86). The weak (observational) bisimulation
 functional `G`, whose post-fixed points are the weak bisimulations. The library's
