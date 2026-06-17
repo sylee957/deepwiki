@@ -16,6 +16,7 @@ import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.Chapter3Examples
 import DeepWiki.ReactiveSystems.Chapter3WeakBisim
 import DeepWiki.ReactiveSystems.Chapter3SmUniSpec
+import DeepWiki.ReactiveSystems.Chapter3StartSpec
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -567,6 +568,15 @@ theorem ex_3_20_smuni :
     DeepWiki.ReactiveSystems.smUni ≈[ccsLTS DeepWiki.ReactiveSystems.smuniDefn,
       DeepWiki.ReactiveSystems.Act.tau] DeepWiki.ReactiveSystems.smSpec :=
   DeepWiki.ReactiveSystems.ex_3_20_smuni
+
+/-- **Exercise 3.20** (§3.4, p.58), the `Start ≉ Spec` claim: with a faulty coffee
+machine, `Start = (CMb ∣ CS) ∖ {coin, coffee}` can silently reach a deadlock, so it
+is **not** observationally equivalent to `Spec ≝ pub̄.Spec`. The library's
+`ex_3_20_start_not_spec`. -/
+theorem ex_3_20_start_not_spec :
+    ¬ (DeepWiki.ReactiveSystems.badStart ≈[ccsLTS DeepWiki.ReactiveSystems.badDefn,
+        DeepWiki.ReactiveSystems.Act.tau] DeepWiki.ReactiveSystems.badSpec) :=
+  DeepWiki.ReactiveSystems.ex_3_20_start_not_spec
 
 /-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`, witnessed by the weak bisimulation
 `{(s,t),(s₁,t),(s₂,t),(s₃,t₂),(s₄,t₃),(s₅,t₁)}`. The library's `ex_3_25`. -/
