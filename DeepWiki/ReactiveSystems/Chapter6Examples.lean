@@ -80,6 +80,79 @@ theorem ex_6_6 : recMin L66 FY66 = Set.univ := by
   | s => exact hS (Or.inr (Or.inl ⟨.s2, Step66.sa2, hs2⟩))
   | t => exact hS (Or.inr (Or.inl ⟨.s2, Step66.ta2, hs2⟩))
 
+/-! ## Exercise 6.7 — recMax / recMin / livelock on one LTS -/
+
+/-- States of the Exercise 6.7 LTS. -/
+inductive S67 | s | s1 | s2 | t | t1
+  deriving DecidableEq
+
+/-- Transitions: `s —a→ s₁`, `s₁ —b→ s₂`, `s₂ —b→ s₁` (a `b`-loop), `t —a→ t₁`,
+`t₁ —a→ t₁` (an `a`-loop with no `b`). -/
+inductive Step67 : S67 → Lab62 → S67 → Prop
+  | sa1 : Step67 .s .a .s1
+  | s1b : Step67 .s1 .b .s2
+  | s2b : Step67 .s2 .b .s1
+  | ta1 : Step67 .t .a .t1
+  | t1a : Step67 .t1 .a .t1
+
+/-- The Exercise 6.7 LTS. -/
+def L67 : LTS S67 Lab62 := ⟨Step67⟩
+
+/-- `X =ν ⟨b⟩tt ∧ [b]X`. -/
+def F67 : HMLR Lab62 := .and (.dia .b .tt) (.box .b .var)
+
+/-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`. -/
+def FY67 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
+
+/-- **Exercise 6.7(1)** (§6.3). `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`: `{s₁, s₂}` is a
+post-fixed point (each has a `b`-move staying inside). -/
+theorem ex_6_7_1 : S67.s1 ∈ recMax L67 F67 := by
+  have h : ({S67.s1, S67.s2} : Set S67) ≤ recMax L67 F67 := by
+    refine (denotRHom L67 F67).le_gfp ?_
+    intro x hx
+    rcases (show x = .s1 ∨ x = .s2 by simpa using hx) with rfl | rfl
+    · exact ⟨⟨.s2, Step67.s1b, trivial⟩, by intro p' hstep; cases hstep; simp [denotR]⟩
+    · exact ⟨⟨.s1, Step67.s2b, trivial⟩, by intro p' hstep; cases hstep; simp [denotR]⟩
+  exact h (show S67.s1 ∈ ({S67.s1, S67.s2} : Set S67) by simp)
+
+/-- **Exercise 6.7(2)** (§6.3). For `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`: `s ⊨ Y` (it reaches a
+`b`-state) but `t ⊭ Y` (the `t`-component has no `b`-move). -/
+theorem ex_6_7_2 : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recMin L67 FY67 := by
+  have hfix : denotR L67 FY67 (recMin L67 FY67) = recMin L67 FY67 :=
+    OrderHom.map_lfp (denotRHom L67 FY67)
+  refine ⟨?_, ?_⟩
+  · have hs1 : S67.s1 ∈ recMin L67 FY67 := hfix ▸ (Or.inl ⟨.s2, Step67.s1b, trivial⟩)
+    exact hfix ▸ (Or.inr (Or.inl ⟨.s1, Step67.sa1, hs1⟩))
+  · intro ht
+    have hsub : recMin L67 FY67 ⊆ ({S67.s, S67.s1, S67.s2} : Set S67) :=
+      (denotRHom L67 FY67).lfp_le (by
+        intro x hx
+        cases x with
+        | s => simp
+        | s1 => simp
+        | s2 => simp
+        | t =>
+            rcases hx with ⟨_, hs, _⟩ | ⟨_, hs, hm⟩ | ⟨_, hs, _⟩
+            · cases hs
+            · cases hs; simp [denotR] at hm
+            · cases hs
+        | t1 =>
+            rcases hx with ⟨_, hs, _⟩ | ⟨_, hs, hm⟩ | ⟨_, hs, _⟩
+            · cases hs
+            · cases hs; simp [denotR] at hm
+            · cases hs)
+    have := hsub ht
+    simp at this
+
+/-- **Exercise 6.7(3)** (§6.3). `t` is livelocked on `a`: `t ⊨ Z =ν ⟨a⟩Z`. -/
+theorem ex_6_7_3 : S67.t ∈ LivelockNow L67 .a :=
+  (livelockFun L67 .a).le_gfp (a := {S67.t, S67.t1}) (by
+    intro x hx
+    rcases (show x = .t ∨ x = .t1 by simpa using hx) with rfl | rfl
+    · exact ⟨.t1, Step67.ta1, by simp⟩
+    · exact ⟨.t1, Step67.t1a, by simp⟩)
+    (by simp)
+
 /-! ## Exercise 6.9 — largest solution of an equational system -/
 
 /-- The two variables `X, Y` of the equational system. -/

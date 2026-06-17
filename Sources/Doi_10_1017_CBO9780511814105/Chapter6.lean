@@ -215,4 +215,18 @@ theorem ex_6_6 :
     LTS.recMin DeepWiki.ReactiveSystems.L66 DeepWiki.ReactiveSystems.FY66 = Set.univ :=
   DeepWiki.ReactiveSystems.ex_6_6
 
+/-- **Exercise 6.7** (§6.3, p.111). On one LTS: `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`;
+`s ⊨ Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` but `t ⊭ Y`; and `t` is `a`-livelocked
+(`t ⊨ Z =ν ⟨a⟩Z`). The library's `ex_6_7_1`/`_2`/`_3`. -/
+theorem ex_6_7 :
+    (DeepWiki.ReactiveSystems.S67.s1 ∈
+      LTS.recMax DeepWiki.ReactiveSystems.L67 DeepWiki.ReactiveSystems.F67) ∧
+    (DeepWiki.ReactiveSystems.S67.s ∈
+      LTS.recMin DeepWiki.ReactiveSystems.L67 DeepWiki.ReactiveSystems.FY67 ∧
+      DeepWiki.ReactiveSystems.S67.t ∉
+      LTS.recMin DeepWiki.ReactiveSystems.L67 DeepWiki.ReactiveSystems.FY67) ∧
+    (DeepWiki.ReactiveSystems.S67.t ∈ LTS.LivelockNow DeepWiki.ReactiveSystems.L67 .a) :=
+  ⟨DeepWiki.ReactiveSystems.ex_6_7_1, DeepWiki.ReactiveSystems.ex_6_7_2,
+   DeepWiki.ReactiveSystems.ex_6_7_3⟩
+
 end DeepWiki.Rs
