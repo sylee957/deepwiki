@@ -192,4 +192,12 @@ theorem ex_6_17 :
     LTS.LivelockNow DeepWiki.ReactiveSystems.L617 .tau = Set.univ :=
   DeepWiki.ReactiveSystems.ex_6_17
 
+/-- **Exercise 6.4** (§6.2, p.110). On the Figure 6.2 LTS, the semantic functional
+evaluates to `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`. The library's `ex_6_4`. -/
+theorem ex_6_4 :
+    LTS.denotR DeepWiki.ReactiveSystems.L62
+        (HMLR.and (HMLR.box .b HMLR.ff) (HMLR.box .a HMLR.var)) {DeepWiki.ReactiveSystems.S62.p2}
+      = {DeepWiki.ReactiveSystems.S62.p2} :=
+  DeepWiki.ReactiveSystems.ex_6_4
+
 end DeepWiki.Rs
