@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.Chapter12Examples
 import DeepWiki.ReactiveSystems.Chapter12Closed
+import DeepWiki.ReactiveSystems.Chapter12Equiv
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -226,5 +227,21 @@ theorem ex_12_1_not_general :
     ∃ (T : TLTS Unit Unit) (p : Unit) (F : Mt Unit Unit) (u u' : Valuation Unit),
       ¬ (TLTS.MtSat T p u F ↔ TLTS.MtSat T p u' F) :=
   DeepWiki.ReactiveSystems.not_mtSat_valuation_indep_general
+
+/-- **Exercise 12.3** (§12.1, p.227). Algebraic `Mt`-equivalences holding by the
+satisfaction clauses: `y in (y = 0) ≡ tt` and `y in (y > 0) ≡ ff` (a just-reset
+clock reads `0`); `[a]tt ≡ tt`; and reset commutation `x in (y in F) ≡ y in (x in F)`.
+The library's `ex_12_3_1a`/`_1b`/`_3`/`_5`. -/
+theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : Act)
+    (F : Mt Act D) :
+    (TLTS.MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.eq 0))) ↔
+      TLTS.MtSat T p u Mt.tt) ∧
+    (TLTS.MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.gt 0))) ↔
+      TLTS.MtSat T p u Mt.ff) ∧
+    (TLTS.MtSat T p u (Mt.box a Mt.tt) ↔ TLTS.MtSat T p u Mt.tt) ∧
+    (TLTS.MtSat T p u (Mt.reset x (Mt.reset y F)) ↔
+      TLTS.MtSat T p u (Mt.reset y (Mt.reset x F))) :=
+  ⟨DeepWiki.ReactiveSystems.ex_12_3_1a T p u y, DeepWiki.ReactiveSystems.ex_12_3_1b T p u y,
+   DeepWiki.ReactiveSystems.ex_12_3_3 T p u a, DeepWiki.ReactiveSystems.ex_12_3_5 T p u x y F⟩
 
 end DeepWiki.Rs
