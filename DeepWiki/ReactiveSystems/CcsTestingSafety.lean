@@ -111,20 +111,6 @@ theorem tests_tt (defn : K → CCS Name K) (bad : Name) (s : CCS Name K)
 
 /-! ### Reachability/bad-freeness transport along weak transitions -/
 
-/-- A silent run is a reachability run. -/
-theorem tauStar_reachable {defn : K → CCS Name K} {p q : CCS Name K}
-    (h : tauStar (ccsLTS defn) Act.tau p q) : (ccsLTS defn).Reachable p q := by
-  induction h with
-  | refl => exact Relation.ReflTransGen.refl
-  | @tail b c _ hstep ih => exact ih.tail ⟨Act.tau, hstep⟩
-
-/-- A weak transition is a reachability run. -/
-theorem weakStep_reachable {defn : K → CCS Name K} {p : CCS Name K} {α : Act Name}
-    {q : CCS Name K} (h : (ccsLTS defn) ⊢ p =[α]⇒[Act.tau] q) : (ccsLTS defn).Reachable p q := by
-  rcases h with ⟨_, hts⟩ | ⟨_, p1, p2, h1, hstep, h2⟩
-  · exact tauStar_reachable hts
-  · exact ((tauStar_reachable h1).tail ⟨α, hstep⟩).trans (tauStar_reachable h2)
-
 /-- Bad-freeness is preserved along reachability. -/
 theorem BadFree.reachable {defn : K → CCS Name K} {bad : Name} {s s' : CCS Name K}
     (h : BadFree defn bad s) (hr : (ccsLTS defn).Reachable s s') : BadFree defn bad s' :=

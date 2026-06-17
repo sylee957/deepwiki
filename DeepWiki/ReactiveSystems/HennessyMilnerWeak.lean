@@ -56,14 +56,6 @@ variable {L : LTS Proc Act} {tau : Act}
     (p ⊨w[L, tau] HML.box a HML.ff) ↔ ∀ p', ¬ WeakStep L tau p a p' := by
   simp [WSat]
 
-/-- A state with no silent move admits only the trivial silent path: `tauStar`
-from it reaches only itself. -/
-theorem tauStar_eq_of_no_tau {p p' : Proc} (hp : ∀ q, ¬ L.step p tau q)
-    (h : tauStar L tau p p') : p' = p := by
-  rcases Relation.ReflTransGen.cases_head h with rfl | ⟨c, hc, _⟩
-  · rfl
-  · exact absurd hc (hp c)
-
 end LTS
 
 end DeepWiki.ReactiveSystems

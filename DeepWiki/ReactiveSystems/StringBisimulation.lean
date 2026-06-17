@@ -59,13 +59,6 @@ theorem stringBisimilar_iff_bisimilar (p q : Proc) :
 
 variable {tau : Act}
 
-/-- A weak `α`-transition absorbs a trailing chain of silent steps. -/
-theorem weakStep_trans_tauStar {p : Proc} {α : Act} {p₁ p' : Proc}
-    (hw : WeakStep L tau p α p₁) (ht : tauStar L tau p₁ p') : WeakStep L tau p α p' := by
-  rcases hw with ⟨hα, hts⟩ | ⟨hα, a, b, h₁, hstep, h₂⟩
-  · exact Or.inl ⟨hα, tauStar_trans hts ht⟩
-  · exact Or.inr ⟨hα, a, b, h₁, hstep, tauStar_trans h₂ ht⟩
-
 /-- A weak bisimulation transports a weak path, keeping the endpoints related. -/
 theorem IsWeakBisimulation.matchWeakPath {R : Proc → Proc → Prop}
     (hR : IsWeakBisimulation L tau R) :

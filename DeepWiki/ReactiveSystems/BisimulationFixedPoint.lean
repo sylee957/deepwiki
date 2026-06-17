@@ -28,6 +28,11 @@ def bisimFunctional : (Proc → Proc → Prop) →o (Proc → Proc → Prop) whe
     · obtain ⟨q', hq', hr⟩ := h1 a p' hp; exact ⟨q', hq', hRS _ _ hr⟩
     · obtain ⟨p', hp', hr⟩ := h2 a q' hq; exact ⟨p', hp', hRS _ _ hr⟩
 
+/-- The bisimulation functional `F` preserves reflexivity. -/
+theorem bisimFunctional_refl {R : Proc → Proc → Prop}
+    (hR : ∀ p, R p p) : ∀ p, bisimFunctional L R p p :=
+  fun _ => ⟨fun _ p' hp => ⟨p', hp, hR p'⟩, fun _ q' hq => ⟨q', hq, hR q'⟩⟩
+
 variable {L}
 
 /-- A relation is a strong bisimulation exactly when it is a post-fixed point of

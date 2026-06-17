@@ -11,11 +11,6 @@ namespace LTS
 
 variable {Proc Act : Type*}
 
-/-- `F` preserves reflexivity. -/
-theorem bisimFunctional_refl (L : LTS Proc Act) {R : Proc → Proc → Prop}
-    (hR : ∀ p, R p p) : ∀ p, bisimFunctional L R p p :=
-  fun _ => ⟨fun _ p' hp => ⟨p', hp, hR p'⟩, fun _ q' hq => ⟨q', hq, hR q'⟩⟩
-
 /-- The `i`-th bisimilarity approximant `∼ᵢ = Fⁱ(⊤)`. -/
 def bisimApprox (L : LTS Proc Act) (i : ℕ) : Proc → Proc → Prop :=
   (bisimFunctional L)^[i] ⊤
@@ -57,6 +52,17 @@ theorem bisimApprox_antitone (L : LTS Proc Act) (i : ℕ) :
       rw [bisimApprox_succ]
       conv_rhs => rw [bisimApprox_succ]
       exact (bisimFunctional L).monotone ih
+
+/-- The approximant chain is antitone in the strong sense: `∼ᵢ ⊆ ∼ⱼ` whenever
+`j ≤ i`. -/
+theorem bisimApprox_le_of_le (L : LTS Proc Act) {i j : ℕ} (h : j ≤ i) :
+    bisimApprox L i ≤ bisimApprox L j := by
+  induction i with
+  | zero => obtain rfl : j = 0 := Nat.le_zero.mp h; exact le_rfl
+  | succ n ih =>
+      rcases Nat.lt_succ_iff_lt_or_eq.mp (Nat.lt_succ_of_le h) with h' | rfl
+      · exact (bisimApprox_antitone L n).trans (ih (Nat.lt_succ_iff.mp h'))
+      · exact le_rfl
 
 /-- Strong bisimilarity refines every approximant: `∼ ⊆ ∼ᵢ`. -/
 theorem bisimilar_le_bisimApprox (L : LTS Proc Act) (i : ℕ) :

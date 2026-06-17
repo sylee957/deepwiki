@@ -145,6 +145,13 @@ variable {defn : K → CCS Name K}
     · exact Step.suml h
     · exact Step.sumr h
 
+/-- A `choice`-fold over a list of CCS terms moves iff one of its summands moves. -/
+theorem step_foldr_choice_iff {l : List (CCS Name K)} {a : Act Name} {R : CCS Name K} :
+    Step defn (l.foldr CCS.choice CCS.nil) a R ↔ ∃ t ∈ l, Step defn t a R := by
+  induction l with
+  | nil => simp
+  | cons t ts ih => simp [List.foldr_cons, step_choice_iff, ih]
+
 /-- Inversion for a process constant: it moves exactly as its body does. -/
 theorem step_const_iff {K0 : K} {α : Act Name} {P' : CCS Name K} :
     Step defn (CCS.const K0) α P' ↔ Step defn (defn K0) α P' := by

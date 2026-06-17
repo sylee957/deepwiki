@@ -14,13 +14,6 @@ open TLTS
 
 variable {Proc Act D : Type*}
 
-/-- Two single-clock resets commute: `u[y][x] = u[x][y]`. -/
-theorem Valuation.reset_comm {C : Type*} (x y : C) (u : Valuation C) :
-    Valuation.reset {x} (Valuation.reset {y} u) = Valuation.reset {y} (Valuation.reset {x} u) := by
-  funext z
-  by_cases hx : z = x <;> by_cases hy : z = y <;>
-    simp [Valuation.reset, Set.mem_singleton_iff, hx, hy]
-
 /-- `y in (y = 0) ≡ tt`: a just-reset clock always reads `0`. -/
 theorem resetClockZero_equiv_tt (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (y : D) :
     MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.eq 0))) ↔ MtSat T p u Mt.tt := by

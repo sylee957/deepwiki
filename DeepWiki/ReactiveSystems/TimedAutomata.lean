@@ -40,6 +40,11 @@ def Valuation.add {C : Type*} (v : Valuation C) (d : ℝ≥0) : Valuation C := f
 @[simp] theorem Valuation.add_apply {C : Type*} (v : Valuation C) (d : ℝ≥0) (x : C) :
     v.add d x = v x + d := rfl
 
+/-- Delaying a valuation by `a` then `b` equals delaying once by `a + b`. -/
+theorem Valuation.add_add {C : Type*} (v : Valuation C) (a b : ℝ≥0) :
+    (v.add a).add b = v.add (a + b) := by
+  funext x; simp only [Valuation.add_apply]; ring
+
 open Classical in
 /-- `v[r]`: reset the clocks in `r` to zero, leaving the others unchanged. -/
 noncomputable def Valuation.reset {C : Type*} (r : Set C) (v : Valuation C) : Valuation C :=
@@ -52,6 +57,13 @@ theorem Valuation.reset_mem {C : Type*} {r : Set C} {x : C} (h : x ∈ r) (v : V
 /-- An unreset clock keeps its value. -/
 theorem Valuation.reset_not_mem {C : Type*} {r : Set C} {x : C} (h : x ∉ r) (v : Valuation C) :
     Valuation.reset r v x = v x := by unfold Valuation.reset; exact if_neg h
+
+/-- Two single-clock resets commute: `u[y][x] = u[x][y]`. -/
+theorem Valuation.reset_comm {C : Type*} (x y : C) (u : Valuation C) :
+    Valuation.reset {x} (Valuation.reset {y} u) = Valuation.reset {y} (Valuation.reset {x} u) := by
+  funext z
+  by_cases hx : z = x <;> by_cases hy : z = y <;>
+    simp [Valuation.reset, Set.mem_singleton_iff, hx, hy]
 
 /-- Evaluation of a clock constraint under a valuation. -/
 def satisfies {C : Type*} (v : Valuation C) : ClockConstraint C → Prop

@@ -16,17 +16,6 @@ namespace LTS
 
 variable {Proc Act : Type*}
 
-/-- The approximant chain is antitone in the strong sense: `∼ᵢ ⊆ ∼ⱼ` whenever
-`j ≤ i`. -/
-theorem bisimApprox_le_of_le (L : LTS Proc Act) {i j : ℕ} (h : j ≤ i) :
-    bisimApprox L i ≤ bisimApprox L j := by
-  induction i with
-  | zero => obtain rfl : j = 0 := Nat.le_zero.mp h; exact le_rfl
-  | succ n ih =>
-      rcases Nat.lt_succ_iff_lt_or_eq.mp (Nat.lt_succ_of_le h) with h' | rfl
-      · exact (bisimApprox_antitone L n).trans (ih (Nat.lt_succ_iff.mp h'))
-      · exact le_rfl
-
 /-- On an image-finite LTS, strong bisimilarity equals the
 intersection of the stratified approximants: `p ~ q` iff `p ∼ᵢ q` for every `i`. -/
 theorem bisimilar_iff_forall_bisimApprox (L : LTS Proc Act)

@@ -31,6 +31,21 @@ theorem tauStar_trans {L : LTS Proc Act} {tau : Act} {p q r : Proc}
     (h₁ : tauStar L tau p q) (h₂ : tauStar L tau q r) : tauStar L tau p r :=
   Relation.ReflTransGen.trans h₁ h₂
 
+/-- A state with no silent move admits only the trivial silent path: `tauStar`
+from it reaches only itself. -/
+theorem tauStar_eq_of_no_tau {L : LTS Proc Act} {tau : Act} {p p' : Proc}
+    (hp : ∀ q, ¬ L.step p tau q) (h : tauStar L tau p p') : p' = p := by
+  rcases Relation.ReflTransGen.cases_head h with rfl | ⟨c, hc, _⟩
+  · rfl
+  · exact absurd hc (hp c)
+
+/-- A silent run is a reachability run. -/
+theorem tauStar_reachable {L : LTS Proc Act} {tau : Act} {p q : Proc}
+    (h : tauStar L tau p q) : L.Reachable p q := by
+  induction h with
+  | refl => exact Relation.ReflTransGen.refl
+  | @tail b c _ hstep ih => exact ih.tail ⟨tau, hstep⟩
+
 /-- Weak transition `p =α⇒ q`: for `α = τ`, a chain of silent
 steps; for `α ≠ τ`, silent steps surrounding one `α`-step. -/
 def WeakStep (L : LTS Proc Act) (tau : Act) (p : Proc) (α : Act) (q : Proc) : Prop :=
@@ -56,6 +71,21 @@ theorem step_weakStep {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : 
   by_cases hα : α = tau
   · subst hα; exact Or.inl ⟨rfl, tauStar_single h⟩
   · exact Or.inr ⟨hα, p, q, tauStar_refl L tau p, h, tauStar_refl L tau q⟩
+
+/-- A weak `α`-transition absorbs a trailing chain of silent steps. -/
+theorem weakStep_trans_tauStar {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act}
+    {p₁ p' : Proc} (hw : WeakStep L tau p α p₁) (ht : tauStar L tau p₁ p') :
+    WeakStep L tau p α p' := by
+  rcases hw with ⟨hα, hts⟩ | ⟨hα, a, b, h₁, hstep, h₂⟩
+  · exact Or.inl ⟨hα, tauStar_trans hts ht⟩
+  · exact Or.inr ⟨hα, a, b, h₁, hstep, tauStar_trans h₂ ht⟩
+
+/-- A weak transition is a reachability run. -/
+theorem weakStep_reachable {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : Proc}
+    (h : L ⊢ p =[α]⇒[tau] q) : L.Reachable p q := by
+  rcases h with ⟨_, hts⟩ | ⟨_, p1, p2, h1, hstep, h2⟩
+  · exact tauStar_reachable hts
+  · exact ((tauStar_reachable h1).tail ⟨α, hstep⟩).trans (tauStar_reachable h2)
 
 /-- `IsWeakBisimulation L τ R`: each concrete move of one side is matched by a
 *weak* transition of the other side into `R`. -/

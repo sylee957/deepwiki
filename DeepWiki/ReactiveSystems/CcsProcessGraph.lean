@@ -22,14 +22,6 @@ def graphBody (delta : Q → Act A → List Q) (allActs : List (Act A)) (q : Q) 
 def graphToCCS (delta : Q → Act A → List Q) (allActs : List (Act A)) : Q → CCS A Q :=
   graphBody delta allActs
 
-/-- A `choice`-fold over a list of CCS terms moves iff one of its summands moves. -/
-theorem step_foldr_choice_iff {defn : Q → CCS A Q} {l : List (CCS A Q)} {a : Act A}
-    {R : CCS A Q} :
-    Step defn (l.foldr CCS.choice CCS.nil) a R ↔ ∃ t ∈ l, Step defn t a R := by
-  induction l with
-  | nil => simp
-  | cons t ts ih => simp [List.foldr_cons, step_choice_iff, ih]
-
 /-- Faithfulness of the encoding: the CCS constant `const q` has exactly the
 transitions of the graph — `const q —a→ R` iff `R = const q'` for some
 successor `q' ∈ delta q a` (for any label `a` present in `allActs`). -/
