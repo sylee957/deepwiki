@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedHml
 
 /-! # Timed bisimilarity is strictly finer than timed-HML equivalence
 The converse direction *fails* over arbitrary TLTSs: there are states that
@@ -149,5 +150,91 @@ example :
   · have := @Sq2Step.delA c 0 c; rwa [zero_add] at this
   · have := @Sq2Step.delB c 0 c; rwa [zero_add] at this
   · rintro ⟨q, hq⟩; rw [sq2_act] at hq; cases hq with | aA h => exact absurd h (lt_irrefl _)
+
+/-! ### `(A,0)` and `(B,0)` are basic-timed-HML equivalent (Prop 12.2 strictness)
+
+Basic timed HML's delay quantifiers `∃∃`/`∀∀` only quantify over the *existence* /
+*universality* of a delay, never its duration — exactly the duration-forgetting
+matching of untimed bisimilarity. So it suffices to show `(A,0)` and `(B,0)` are
+untimed bisimilar (no irrationality of `c` needed, only `0 < c`); they are *not*
+timed bisimilar, so timed bisimilarity is strictly finer than basic-timed-HML
+equivalence. (The book's full-`Mt`-logic version needs `c = √2` irrational.) -/
+
+/-- Every state can delay past the boundary into an `a`-disabled state. -/
+theorem exists_aDisabled_delay (y : Sq2) :
+    ∃ d' y', Sq2Step c y (Sum.inr d') y' ∧ aDisabled c y' := by
+  cases y with
+  | A d => exact ⟨c, Sq2.A (d + c), Sq2Step.delA, le_add_self⟩
+  | B e =>
+      refine ⟨c + 1, Sq2.B (e + (c + 1)), Sq2Step.delB, ?_⟩
+      have h : c < e + c + 1 := lt_of_le_of_lt le_add_self (lt_add_of_pos_right _ one_pos)
+      rwa [add_assoc] at h
+  | End => exact ⟨0, Sq2.End, Sq2Step.delEnd, trivial⟩
+
+/-- Every state can delay (by `0`) staying in the same `a`-enabledness class. -/
+theorem exists_sameClass_delay (y : Sq2) :
+    ∃ d' y', Sq2Step c y (Sum.inr d') y' ∧ (aDisabled c y' ↔ aDisabled c y) := by
+  cases y with
+  | A e => exact ⟨0, Sq2.A (e + 0), Sq2Step.delA, by simp only [aDisabled, add_zero]⟩
+  | B e => exact ⟨0, Sq2.B (e + 0), Sq2Step.delB, by simp only [aDisabled, add_zero]⟩
+  | End => exact ⟨0, Sq2.End, Sq2Step.delEnd, Iff.rfl⟩
+
+/-- The `a`-enabledness classes form an *untimed* bisimulation: `a`-moves go to the
+dead sink `End`, and any delay can be matched by a same-class delay (duration is
+forgotten). -/
+theorem isBisimulation_sq2_aClass :
+    LTS.IsBisimulation (sq2TLTS c).untimedLTS (fun x y => aDisabled c x ↔ aDisabled c y) := by
+  have key : ∀ {x y : Sq2}, (aDisabled c x ↔ aDisabled c y) → ∀ {l : Option Sq2Act} {x' : Sq2},
+      (sq2TLTS c).untimedLTS.step x l x' →
+      ∃ y', (sq2TLTS c).untimedLTS.step y l y' ∧ (aDisabled c x' ↔ aDisabled c y') := by
+    intro x y hxy l x' hstep
+    cases l with
+    | some act =>
+        change Sq2Step c x (Sum.inl act) x' at hstep
+        have hxlive : ¬ aDisabled c x := by
+          cases hstep with
+          | aA hd => exact not_le.mpr hd
+          | aB he => exact not_lt.mpr he
+        have hylive : ¬ aDisabled c y := fun hy => hxlive (hxy.mpr hy)
+        obtain rfl : x' = Sq2.End := by cases hstep <;> rfl
+        refine ⟨Sq2.End, ?_, Iff.rfl⟩
+        show Sq2Step c y (Sum.inl act) Sq2.End
+        cases y with
+        | A e => exact Sq2Step.aA (not_le.mp hylive)
+        | B e => exact Sq2Step.aB (not_lt.mp hylive)
+        | End => exact absurd trivial hylive
+    | none =>
+        change ∃ d, Sq2Step c x (Sum.inr d) x' at hstep
+        obtain ⟨d, hd⟩ := hstep
+        by_cases hx' : aDisabled c x'
+        · obtain ⟨d', y', hy', hyd'⟩ := exists_aDisabled_delay c y
+          exact ⟨y', ⟨d', hy'⟩, iff_of_true hx' hyd'⟩
+        · have hxlive : ¬ aDisabled c x := fun hx => hx' (aDisabled.delay_pres hx hd)
+          have hylive : ¬ aDisabled c y := fun hy => hxlive (hxy.mpr hy)
+          obtain ⟨d', y', hy', hyiff⟩ := exists_sameClass_delay c y
+          exact ⟨y', ⟨d', hy'⟩, iff_of_false hx' (fun h => hylive (hyiff.mp h))⟩
+  intro x y hxy
+  exact ⟨fun _l _x' h => key hxy h, fun _l _y' h => by
+    obtain ⟨x', hx', hiff⟩ := key hxy.symm h
+    exact ⟨x', hx', hiff.symm⟩⟩
+
+/-- `(A,0)` and `(B,0)` are untimed bisimilar (for any positive boundary `c`). -/
+theorem untimedBisimilar_sq2 (hc : 0 < c) :
+    (sq2TLTS c).UntimedBisimilar (Sq2.A 0) (Sq2.B 0) :=
+  (isBisimulation_sq2_aClass c).le_bisimilar
+    (iff_of_false (not_le.mpr hc) (not_lt.mpr zero_le))
+
+/-- `(A,0)` and `(B,0)` satisfy the same basic timed-HML formulae. -/
+theorem timedHmlEquiv_sq2 (hc : 0 < c) :
+    (sq2TLTS c).TimedHMLEquiv (Sq2.A 0) (Sq2.B 0) :=
+  TLTS.untimedBisimilar_timedHmlEquiv (untimedBisimilar_sq2 c hc)
+
+/-- **Prop 12.2 (basic-logic form): timed bisimilarity is strictly finer than
+basic-timed-HML equivalence.** `(A,0)` and `(B,0)` satisfy the same `TimedHML`
+formulae yet are not timed bisimilar. -/
+theorem timedHmlEquiv_and_not_timedBisimilar_sq2 (hc : 0 < c) :
+    (sq2TLTS c).TimedHMLEquiv (Sq2.A 0) (Sq2.B 0) ∧
+    ¬ (sq2TLTS c).TimedBisimilar (Sq2.A 0) (Sq2.B 0) :=
+  ⟨timedHmlEquiv_sq2 c hc, not_timedBisimilar_sqrt2 c⟩
 
 end DeepWiki.ReactiveSystems

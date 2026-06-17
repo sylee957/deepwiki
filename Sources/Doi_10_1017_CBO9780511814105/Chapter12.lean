@@ -109,6 +109,21 @@ theorem ex_12_12_past_boundary (c : ℝ≥0) {d e : ℝ≥0} (hd : c ≤ d) (he 
       (DeepWiki.ReactiveSystems.Sq2.A d) (DeepWiki.ReactiveSystems.Sq2.B e) :=
   DeepWiki.ReactiveSystems.timedBisimilar_past_boundary c hd he
 
+/-- **Proposition 12.2** (§12.3, p.234), strictness — *basic-`TimedHML` form*. For
+any positive boundary `c`, `(A,0)` and `(B,0)` satisfy the same basic timed-HML
+formulae (the `∃∃`/`∀∀` fragment without clock constraints) yet are *not* timed
+bisimilar, so timed bisimilarity is strictly finer than basic-timed-HML equivalence.
+Discharged by the library's `timedHmlEquiv_and_not_timedBisimilar_sq2`. (No
+irrationality of `c` is needed here; the book's stronger statement — same formulae
+of the *full* `Mt` logic, with clock guards — is what requires `c = √2` irrational,
+and is left open. See `prop_12_2_not_bisim` for the non-bisimilarity alone.) -/
+theorem prop_12_2_strict_basic (c : ℝ≥0) (hc : 0 < c) :
+    (DeepWiki.ReactiveSystems.sq2TLTS c).TimedHMLEquiv
+        (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) ∧
+    ¬ TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.sq2TLTS c)
+        (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) :=
+  DeepWiki.ReactiveSystems.timedHmlEquiv_and_not_timedBisimilar_sq2 c hc
+
 /-! ## §12.2 Negation in HML with time -/
 
 /-- **Proposition 12.1** (§12.2, p.229). The *negation* `Fᶜ` of a timed HML

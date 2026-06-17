@@ -1,4 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
+import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 
 /-! # Hennessy–Milner logic with time (basic logic)
 The basic timed logic adds to HML two *delay quantifiers*: `∃∃F` (the process can
@@ -102,6 +103,43 @@ converse uses the region abstraction). -/
 theorem timedBisimilar_timedHmlEquiv {T : TLTS Proc Act} {p q : Proc}
     (h : TimedBisimilar T p q) : TimedHMLEquiv T p q :=
   fun F => ⟨timedBisimilar_tsat F h, timedBisimilar_tsat F h.symm⟩
+
+/-- Untimed-bisimilar states satisfy the same timed formula (one implication). The
+delay quantifiers `∃∃`/`∀∀` only quantify over the *existence*/*universality* of a
+delay, never its duration, so the duration-forgetting untimed matching suffices. -/
+theorem untimedBisimilar_tsat {T : TLTS Proc Act} (F : TimedHML Act) :
+    ∀ {p q}, T.UntimedBisimilar p q → (p ⊨ₜ[T] F) → (q ⊨ₜ[T] F) := by
+  induction F with
+  | tt => exact fun _ _ => trivial
+  | ff => exact fun _ h => h
+  | and F G ihF ihG => exact fun hb hp => ⟨ihF hb hp.1, ihG hb hp.2⟩
+  | or F G ihF ihG => exact fun hb hp => hp.imp (ihF hb) (ihG hb)
+  | dia a F ihF =>
+      intro p q hb hp
+      obtain ⟨p', hstep, hsat⟩ := hp
+      obtain ⟨q', hq', hb'⟩ := ((untimedBisimilar_iff T p q).mp hb).1 a p' hstep
+      exact ⟨q', hq', ihF hb' hsat⟩
+  | box a F ihF =>
+      intro p q hb hp q' hq'
+      obtain ⟨p', hp', hb'⟩ := ((untimedBisimilar_iff T p q).mp hb).2.1 a q' hq'
+      exact ihF hb' (hp p' hp')
+  | existsDelay F ihF =>
+      intro p q hb hp
+      obtain ⟨d, p', hstep, hsat⟩ := hp
+      obtain ⟨d', q', hq', hb'⟩ := ((untimedBisimilar_iff T p q).mp hb).2.2.1 d p' hstep
+      exact ⟨d', q', hq', ihF hb' hsat⟩
+  | forallDelay F ihF =>
+      intro p q hb hp d q' hq'
+      obtain ⟨d', p', hp', hb'⟩ := ((untimedBisimilar_iff T p q).mp hb).2.2.2 d q' hq'
+      exact ihF hb' (hp d' p' hp')
+
+/-- **Untimed bisimilarity implies basic-timed-HML equivalence.** Since basic timed
+HML cannot measure delay durations, the duration-abstract untimed bisimilarity already
+equates states for it (a coarser sufficient condition than `TimedBisimilar`). -/
+theorem untimedBisimilar_timedHmlEquiv {T : TLTS Proc Act} {p q : Proc}
+    (h : T.UntimedBisimilar p q) : TimedHMLEquiv T p q :=
+  fun F => ⟨untimedBisimilar_tsat F h,
+    untimedBisimilar_tsat F ((untimedBisimilar_equivalence T).symm h)⟩
 
 end TLTS
 
