@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.Chapter9Examples
+import DeepWiki.ReactiveSystems.Chapter9LightTimed
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 9: CCS with time delays
@@ -100,5 +101,20 @@ theorem ex_9_6 :
     (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M3) 4 Q) ∧
     (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M4) 4 Q) :=
   DeepWiki.ReactiveSystems.ex_9_6
+
+/-- **Exercise 9.1** (§9.3, p.166). The timed light-switch specification
+`Light ≝ ε(1.4).τ.press.Off + press.Bright` (with `Off ≝ press.Light`,
+`Bright ≝ press.Off`) is guarded. The library's `ex_9_1`. -/
+theorem ex_9_1 : IsGuardedDefn DeepWiki.ReactiveSystems.lightDefn :=
+  DeepWiki.ReactiveSystems.ex_9_1
+
+/-- **Exercise 9.2** (§9.3, p.168). From the `Light` state a delay `d ≤ 1.4` counts
+the delay-prefix down: `Light —d→ ε(1.4−d).τ.press.Off + press.Bright`. The library's
+`ex_9_2`. -/
+theorem ex_9_2 {d : ℝ≥0} (h : d ≤ 1.4) :
+    (tccsTLTS DeepWiki.ReactiveSystems.lightDefn).delay (.const .Light) d
+      (.choice (.eps (1.4 - d) (.pre Act.tau (.pre (.name .press) (.const .Off))))
+        (.pre (.name .press) (.const .Bright))) :=
+  DeepWiki.ReactiveSystems.ex_9_2 h
 
 end DeepWiki.Rs
