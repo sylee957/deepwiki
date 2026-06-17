@@ -241,7 +241,7 @@ theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : 
     (TLTS.MtSat T p u (Mt.box a Mt.tt) ↔ TLTS.MtSat T p u Mt.tt) ∧
     (TLTS.MtSat T p u (Mt.reset x (Mt.reset y F)) ↔
       TLTS.MtSat T p u (Mt.reset y (Mt.reset x F))) :=
-  ⟨DeepWiki.ReactiveSystems.resetClockZero_equiv_tt T p u y, DeepWiki.ReactiveSystems.resetClockPos_equiv_ff T p u y,
-   DeepWiki.ReactiveSystems.box_tt_equiv_tt T p u a, DeepWiki.ReactiveSystems.reset_comm_mt T p u x y F⟩
+  ⟨DeepWiki.ReactiveSystems.resetClockZero_equiv_tt y T p u, DeepWiki.ReactiveSystems.resetClockPos_equiv_ff y T p u,
+   DeepWiki.ReactiveSystems.box_tt_equiv_tt a T p u, DeepWiki.ReactiveSystems.reset_comm_mt x y F T p u⟩
 
 end DeepWiki.Rs

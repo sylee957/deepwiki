@@ -62,6 +62,9 @@ in every TLTS. -/
 def MtEquiv (F G : Mt Act D) : Prop :=
   ∀ {Q : Type*} (T : TLTS Q Act) (p : Q) (u : Valuation D), MtSat T p u F ↔ MtSat T p u G
 
+/-- `≡` is reflexive: `F ≡ F`. -/
+@[refl] theorem MtEquiv.refl (F : Mt Act D) : MtEquiv F F := fun _ _ _ => Iff.rfl
+
 /-- Timed-bisimilar states satisfy the same `Mt` formula under every
 formula-clock valuation (one implication). The reset and guard cases touch only
 the formula clocks, so they transfer for free; the modal cases use timed
