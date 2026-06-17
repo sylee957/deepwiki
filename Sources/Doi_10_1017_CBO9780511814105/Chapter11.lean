@@ -231,6 +231,21 @@ theorem cor_11_1 {Loc : Type*} [Fintype C] (A : TimedAutomaton Loc Act C)
         (DeepWiki.ReactiveSystems.symbolicState cmax c₂) :=
   A.untimedBisimilar_iff_regionGraph_fintype wf c₁ c₂
 
+/-- **§11.4 (Hennessy–Milner via the region graph).** Composing Corollary 11.1 with
+the Hennessy–Milner theorem on the *finite* (hence image-finite) region graph: two
+configurations are untimed bisimilar iff their symbolic states satisfy the same HML
+formulae over the region graph — reducing (untimed) timed equivalence to logical
+equivalence on a finite system (the region-graph route to the timed Hennessy–Milner
+characterization). Discharged by `untimedBisimilar_iff_regionGraph_hmlEquiv`. -/
+theorem cor_11_1_hmlEquiv {Loc : Type*} [Finite Loc] [Fintype C]
+    (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
+    (c₁ c₂ : Loc × Valuation C) :
+    A.tlts.UntimedBisimilar c₁ c₂ ↔
+      LTS.HMLEquiv (A.regionGraph cmax)
+        (DeepWiki.ReactiveSystems.symbolicState cmax c₁)
+        (DeepWiki.ReactiveSystems.symbolicState cmax c₂) :=
+  A.untimedBisimilar_iff_regionGraph_hmlEquiv wf c₁ c₂
+
 /-- **Lemma 11.2 / Corollary 11.2** (§11.4, p.214). The reachability problem is
 decidable: a symbolic state `t` is reachable in the region graph from `⟦c₀⟧` iff
 `A` reaches some configuration in the class `t`, reducing reachability in the

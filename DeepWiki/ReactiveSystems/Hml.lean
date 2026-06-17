@@ -154,6 +154,10 @@ theorem bisimilar_hmlEquiv {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q)
 `a`-successors, for each action `a`. -/
 def ImageFinite (L : LTS Proc Act) : Prop := ∀ (p : Proc) (a : Act), {p' | L.step p a p'}.Finite
 
+/-- Any LTS over a finite state type is image finite. -/
+theorem imageFinite_of_finite [Finite Proc] (L : LTS Proc Act) : ImageFinite L :=
+  fun _ _ => Set.toFinite _
+
 /-- If two states are not HML-equivalent, a formula holds of the first and fails
 of the second (orienting via the dual). -/
 theorem exists_distinguish {L : LTS Proc Act} {p q : Proc}

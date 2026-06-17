@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.BisimulationQuotient
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
+import DeepWiki.ReactiveSystems.Hml
 
 /-! # The region graph and decidability
 The *region graph* `Tᵣ(A)` is the quotient of the untimed
@@ -127,6 +128,21 @@ theorem TimedAutomaton.untimedBisimilar_iff_regionGraph_fintype [Fintype C]
     A.tlts.UntimedBisimilar c₁ c₂ ↔
       LTS.Bisimilar (A.regionGraph cmax) (symbolicState cmax c₁) (symbolicState cmax c₂) :=
   A.untimedBisimilar_iff_regionGraph wf (timeSuccessor_of_fintype cmax) c₁ c₂
+
+/-- **Hennessy–Milner characterization via the region graph.** For a timed automaton
+with finitely many locations and clocks, two configurations are untimed bisimilar iff
+their symbolic states satisfy the same HML formulae over the *finite* region graph.
+Composing the region-graph reduction (`untimedBisimilar_iff_regionGraph`) with the
+Hennessy–Milner theorem on the finite (hence image-finite) region graph, this reduces
+(untimed) timed equivalence to logical equivalence on a finite system — the
+region-graph route to a logical characterization of timed equivalence. -/
+theorem TimedAutomaton.untimedBisimilar_iff_regionGraph_hmlEquiv [Finite Loc] [Fintype C]
+    (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
+    (c₁ c₂ : Loc × Valuation C) :
+    A.tlts.UntimedBisimilar c₁ c₂ ↔
+      LTS.HMLEquiv (A.regionGraph cmax) (symbolicState cmax c₁) (symbolicState cmax c₂) := by
+  rw [A.untimedBisimilar_iff_regionGraph_fintype wf c₁ c₂]
+  exact LTS.hennessyMilner (LTS.imageFinite_of_finite _) _ _
 
 /-! ## The reachability problem is decidable -/
 
