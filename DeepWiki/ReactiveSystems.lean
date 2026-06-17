@@ -52,6 +52,7 @@ import DeepWiki.ReactiveSystems.Chapter12Equiv
 import DeepWiki.ReactiveSystems.Chapter9Examples
 import DeepWiki.ReactiveSystems.Chapter11Examples
 import DeepWiki.ReactiveSystems.Chapter3WeakBisim
+import DeepWiki.ReactiveSystems.Chapter6PosReach
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces

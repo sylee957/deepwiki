@@ -6,6 +6,7 @@ import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
 import DeepWiki.ReactiveSystems.Chapter6Characteristic
+import DeepWiki.ReactiveSystems.Chapter6PosReach
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 6: HML with recursion
@@ -240,5 +241,17 @@ theorem ex_6_13 :
     sysMax DeepWiki.ReactiveSystems.L61 (charSys DeepWiki.ReactiveSystems.L61)
         DeepWiki.ReactiveSystems.P61.q = {DeepWiki.ReactiveSystems.P61.q} :=
   ⟨DeepWiki.ReactiveSystems.ex_6_13_p, DeepWiki.ReactiveSystems.ex_6_13_q⟩
+
+/-- **Exercise 6.18** (§6.7, p.138). On the Exercise 6.17 LTS, the formula
+`⟨Act⟩Pos(LivelockNow)` (the states from which a livelock is reachable, with `Pos`
+the least-fixed-point reachability template (6.17)) denotes the whole state space —
+every state is livelocked and can move. The library's `ex_6_18` (with `diaAll`/`posOf`
+the `⟨Act⟩` and `Pos` set operators). -/
+theorem ex_6_18 :
+    DeepWiki.ReactiveSystems.diaAll DeepWiki.ReactiveSystems.L617
+      (DeepWiki.ReactiveSystems.posOf DeepWiki.ReactiveSystems.L617
+        (LTS.LivelockNow DeepWiki.ReactiveSystems.L617 DeepWiki.ReactiveSystems.Act6.tau)) =
+      Set.univ :=
+  DeepWiki.ReactiveSystems.ex_6_18
 
 end DeepWiki.Rs
