@@ -11,11 +11,11 @@ namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-- Actions `a`/`b` for Exercise 7.13. -/
+/-- Actions `a`/`b` for the recursive-safety LTS. -/
 inductive Lab713 | a | b
   deriving DecidableEq, Fintype
 
-/-- States of the Exercise 7.13 LTS. -/
+/-- States of the recursive-safety LTS. -/
 inductive S713 | p | q | r | s
   deriving DecidableEq, Fintype
 
@@ -28,17 +28,17 @@ def edge713 : S713 → Lab713 → S713 → Bool
   | .r, .b, .r => true
   | _, _, _ => false
 
-/-- The Exercise 7.13 LTS (reducible, so step facts are decidable). -/
+/-- The recursive-safety LTS (reducible, so step facts are decidable). -/
 abbrev L713 : LTS S713 Lab713 := ⟨fun u y v => edge713 u y v = true⟩
 
 /-- `F =ν [a]ff ∧ [b]F`: no `a` now, and the property persists through every `b`. -/
 def F713 : HMLR Lab713 := .and (.box .a .ff) (.box .b .var)
 
-/-- **Exercise 7.13** (§7.2, p.156). The set of states satisfying the recursive
+/-- The set of states satisfying the recursive
 safety property `F =ν [a]ff ∧ [b]F` is `{p, r, s}`: `q` is excluded because
 `q —a→ s`, while `p`, `r`, `s` reach no `a` along any `b`-path. (The companion
 question — which states pass the test `X ≝ ā.bad.0 + b̄.X` — has the same answer
-`{p, r, s}` by the testing characterization, Definition 7.4.) -/
+`{p, r, s}` by the testing characterization.) -/
 theorem safeStates_L713_eq : recMax L713 F713 = {S713.p, S713.r, S713.s} := by
   -- `{p, r, s}` is a fixed point of the denotation functional `denotR F`.
   have hcomp : denotR L713 F713 {S713.p, S713.r, S713.s} = {S713.p, S713.r, S713.s} := by

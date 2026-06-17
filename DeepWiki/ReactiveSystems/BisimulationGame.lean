@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
 /-! # The bisimulation game
-The strong/weak bisimulation games (§3.5): from a configuration `(p, q)` the
+The strong/weak bisimulation games: from a configuration `(p, q)` the
 attacker challenges with a move of one side, and the defender must answer with a
 matching move (a concrete one in the strong game, a weak transition `=α⇒` in the
 weak game) on the other side; the new configuration is the pair of targets. The
@@ -11,8 +11,8 @@ stuck; the attacker wins when the defender is stuck.
 
 A positional defender winning strategy is exactly an invariant set of
 configurations in which every attacker challenge can be answered — i.e. a
-(weak) bisimulation. This yields Propositions 3.3 and 3.4: the defender has a
-winning strategy from `(p, q)` iff `p ~ q` (resp. `p ≈ q`). -/
+(weak) bisimulation. So the defender has a winning strategy from `(p, q)` iff
+`p ~ q` (resp. `p ≈ q`). -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -25,7 +25,7 @@ abbrev GameConfig (Proc : Type*) := Proc × Proc
 
 /-- One round of the strong bisimulation game leads from `c` to `c'` when both
 states move under a common action — the attacker challenges on one side, the
-defender matches on the other (Definition 3.5). -/
+defender matches on the other. -/
 def GameRound (L : LTS Proc Act) (c c' : GameConfig Proc) : Prop :=
   ∃ a, L.step c.1 a c'.1 ∧ L.step c.2 a c'.2
 
@@ -34,9 +34,9 @@ defender win. -/
 def AttackerStuck (L : LTS Proc Act) (c : GameConfig Proc) : Prop :=
   (∀ a p', ¬ L.step c.1 a p') ∧ (∀ a q', ¬ L.step c.2 a q')
 
-/-- A defender winning strategy in the strong game (Definition 3.5; the invariant
-of Exercise 3.38): a set `R` of configurations in which, from any `(p, q) ∈ R`,
-every attacker challenge can be answered on the other side, staying in `R`. -/
+/-- A defender winning strategy in the strong game: a set `R` of configurations
+in which, from any `(p, q) ∈ R`, every attacker challenge can be answered on the
+other side, staying in `R`. -/
 def DefenderStrategy (L : LTS Proc Act) (R : Proc → Proc → Prop) : Prop :=
   ∀ ⦃p q⦄, R p q →
     (∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ R p' q') ∧
@@ -75,20 +75,20 @@ theorem DefenderStrategy.not_stuck {L : LTS Proc Act} {R : Proc → Proc → Pro
   · simp only [not_or, not_exists] at h
     exact Or.inl h
 
-/-- **Proposition 3.3** (§3.5). The defender has a winning strategy in the strong
+/-- The defender has a winning strategy in the strong
 bisimulation game from `(p, q)` iff `p ~ q`. -/
 theorem defenderWins_iff_bisimilar (L : LTS Proc Act) (p q : Proc) :
     DefenderWins L p q ↔ Bisimilar L p q := Iff.rfl
 
-/-- **Proposition 3.3**, attacker side. By determinacy, the attacker has a winning
+/-- Attacker side. By determinacy, the attacker has a winning
 strategy — i.e. there is no defender winning strategy — exactly when `p ≁ q`. -/
 theorem no_defenderWins_iff_not_bisimilar (L : LTS Proc Act) (p q : Proc) :
     ¬ DefenderWins L p q ↔ ¬ Bisimilar L p q :=
   not_congr (defenderWins_iff_bisimilar L p q)
 
-/-! ## The weak bisimulation game (Definition 3.6) -/
+/-! ## The weak bisimulation game -/
 
-/-- A defender winning strategy in the weak game (Definition 3.6): each concrete
+/-- A defender winning strategy in the weak game: each concrete
 attacker move is answered by a *weak* transition `=α⇒` on the other side, staying
 in `R`. -/
 def DefenderStrategyWeak (L : LTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) : Prop :=
@@ -104,7 +104,7 @@ def DefenderWinsWeak (L : LTS Proc Act) (tau : Act) (p q : Proc) : Prop :=
 theorem defenderStrategyWeak_iff (L : LTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) :
     DefenderStrategyWeak L tau R ↔ IsWeakBisimulation L tau R := Iff.rfl
 
-/-- **Proposition 3.4** (§3.5). The defender has a winning strategy in the weak
+/-- The defender has a winning strategy in the weak
 bisimulation game from `(p, q)` iff `p ≈ q`. -/
 theorem defenderWinsWeak_iff_weaklyBisimilar (L : LTS Proc Act) (tau : Act) (p q : Proc) :
     DefenderWinsWeak L tau p q ↔ WeaklyBisimilar L tau p q := Iff.rfl

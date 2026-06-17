@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # The unbounded counter `C ~ Counter₀` (Proposition 3.1)
+/-! # The unbounded counter `C ~ Counter₀`
 The book's headline infinite-state example: the recursively-defined process
 `C = up.(C ∣ down.0)` is strongly bisimilar to the counter specification
 `Counter₀ = up.Counter₁`, `Counterₙ = up.Counterₙ₊₁ + down.Counterₙ₋₁` (`n > 0`).
@@ -11,8 +11,8 @@ The reachable states of `C` are parallel products `C ∣ Π Pᵢ` with each `P�
 head being the outermost component and `C` at the deep end. An `up` appends a
 fresh `down.0` next to `C`; a `down` flips one `down.0` to `0`; the number of
 `down.0` components (`bs.count true`) is the counter's value. The relating
-relation `counterRel` is the book's `R`; it is a strong bisimulation
-(Proposition 3.1), whence `C ~ Counter₀`. -/
+relation `counterRel` is the book's `R`; it is a strong bisimulation,
+whence `C ~ Counter₀`. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -29,7 +29,7 @@ inductive CtrK | impl | counter (n : ℕ)
 
 open CtrChan CtrK
 
-/-- The defining environment (§3.3, p.49): `C = up.(C ∣ down.0)`,
+/-- The defining environment: `C = up.(C ∣ down.0)`,
 `Counter₀ = up.Counter₁`, `Counterₙ₊₁ = up.Counterₙ₊₂ + down.Counterₙ`. -/
 def ctrDefn : CtrK → CCS CtrChan CtrK
   | impl => .pre (.name up) (.par (.const impl) (.pre (.name down) .nil))
@@ -147,12 +147,12 @@ theorem count_flip (pre suf : List Bool) :
   have h2 : (true :: suf).count true = suf.count true + 1 := by simp
   rw [List.count_append, List.count_append, h1, h2]; omega
 
-/-- **The book's relation `R`** (§3.3, p.49): a comb (a `C`-with-bag product) is
+/-- **The book's relation `R`**: a comb (a `C`-with-bag product) is
 related to the counter holding as many units as the bag has `down.0` components. -/
 def counterRel : CCS CtrChan CtrK → CCS CtrChan CtrK → Prop := fun p q =>
   ∃ bs : List Bool, p = comb bs ∧ q = .const (counter (bs.count true))
 
-/-- **Proposition 3.1** (§3.3, p.50). The relation `counterRel` (the book's `R`)
+/-- The relation `counterRel` (the book's `R`)
 is a strong bisimulation. -/
 theorem isBisimulation_counterRel : IsBisimulation (ccsLTS ctrDefn) counterRel := by
   rintro p q ⟨bs, rfl, rfl⟩
@@ -181,7 +181,7 @@ theorem isBisimulation_counterRel : IsBisimulation (ccsLTS ctrDefn) counterRel :
         exact Or.inr ⟨rfl, pre, suf, rfl, rfl⟩
       · rw [← count_flip]; simp
 
-/-- **Proposition 3.1 / §3.3** (p.49). The unbounded counter implementation is
+/-- The unbounded counter implementation is
 strongly bisimilar to its specification: `C ~ Counter₀`. -/
 theorem counter_bisim : (CCS.const impl) ~[ccsLTS ctrDefn] (CCS.const (counter 0)) :=
   isBisimulation_counterRel.le_bisimilar ⟨[], rfl, rfl⟩

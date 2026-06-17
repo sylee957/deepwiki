@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedTraces
 
 /-! # Two timed automata: untimed-language equivalent but not timed-equivalent
-The two single-location automata of Example 11.2 (one clock `x`, one action `a`,
+Two single-location automata (one clock `x`, one action `a`,
 self-loops resetting `x`): automaton (a) has guard `x ≤ 1`, automaton (b) has guard
 `x = 1`. The timed trace `(0, a)` is afforded by (a) but not by (b) — at time `0`
 the clock reads `0`, which satisfies `x ≤ 1` but not `x = 1` — so the two are **not**
@@ -44,7 +44,7 @@ theorem taB_no_trace : ¬ TimedTrace taB.tlts (taB.initial, fun _ => (0 : ℝ≥
   obtain ⟨_, _, ⟨rfl, _⟩, hsat, _⟩ := ha
   simp [satisfies, Cmp.holds, Valuation.add_apply] at hsat
 
-/-- **Exercise 11.2** (§11.1, p.195). The automata (a) and (b) of Example 11.2 are not
+/-- The automata (a) and (b) are not
 timed-language equivalent: `(0, a)` is a timed trace of (a) but not of (b). -/
 theorem taA_not_timedLangEq_taB :
     taA.tlts.timedLang (taA.initial, fun _ => (0 : ℝ≥0)) ≠
@@ -55,7 +55,7 @@ theorem taA_not_timedLangEq_taB :
   rw [h] at hmem
   exact hmem
 
-/-! ## The untimed-language-equivalence half (converse of Theorem 11.1 fails) -/
+/-! ## The untimed-language-equivalence half (the converse fails) -/
 
 /-- Resetting the single clock yields the all-zero valuation. -/
 theorem reset_unit (v : Valuation Unit) : Valuation.reset {()} v = fun _ => (0 : ℝ≥0) := by
@@ -110,7 +110,7 @@ theorem taA_untimedLangEq_taB :
       taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0)) :=
   taA_untimed_univ.trans taB_untimed_univ.symm
 
-/-- **Exercise 11.2 / the converse of Theorem 11.1 fails.** Untimed-language
+/-- Untimed-language
 equivalence does **not** imply timed-language equivalence: (a) and (b) are
 untimed-language equivalent yet not timed-language equivalent. -/
 theorem taA_taB_untimedEq_not_timedEq :

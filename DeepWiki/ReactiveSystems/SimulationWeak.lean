@@ -1,14 +1,13 @@
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
-/-! # Weak simulation, the weak-simulation preorder, and weak traces (§7.3)
+/-! # Weak simulation, the weak-simulation preorder, and weak traces
 The one-sided weak analogue of bisimulation: a *weak simulation* answers each
-concrete move of one state by a *weak* transition of the other (Definition 7.2),
-and `s'` *weakly simulates* `s` when some weak simulation relates them. The
-weak-simulation preorder is reflexive and transitive, and weak simulation
-preserves weak traces — a *weak trace* being a sequence of visible actions
-performed via weak transitions (Definition 7.1). These are exactly the three
-parts of Proposition 7.1. A weak bisimulation is in particular a weak simulation,
-so observational equivalence refines the weak-simulation preorder both ways. -/
+concrete move of one state by a *weak* transition of the other, and `s'` *weakly
+simulates* `s` when some weak simulation relates them. The weak-simulation
+preorder is reflexive and transitive, and weak simulation preserves weak traces —
+a *weak trace* being a sequence of visible actions performed via weak transitions.
+A weak bisimulation is in particular a weak simulation, so observational
+equivalence refines the weak-simulation preorder both ways. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -16,16 +15,16 @@ namespace LTS
 
 variable {Proc Act : Type*}
 
-/-! ## Definition 7.2: weak simulation and the weak-simulation preorder -/
+/-! ## Weak simulation and the weak-simulation preorder -/
 
-/-- **Definition 7.2.** `IsWeakSimulation L τ R`: whenever `R s₁ s₂` and `s₁ —α→
+/-- `IsWeakSimulation L τ R`: whenever `R s₁ s₂` and `s₁ —α→
 s₁'` for any action `α` (including `τ`), there is a *weak* transition `s₂ =α⇒ s₂'`
 with `R s₁' s₂'`. -/
 def IsWeakSimulation (L : LTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) : Prop :=
   ∀ ⦃s₁ s₂⦄, R s₁ s₂ →
     ∀ α s₁', (L ⊢ s₁ ⟶[α] s₁') → ∃ s₂', (L ⊢ s₂ =[α]⇒[tau] s₂') ∧ R s₁' s₂'
 
-/-- **Definition 7.2.** `s'` *weakly simulates* `s` (`WeaklySimulates L τ s' s`):
+/-- `s'` *weakly simulates* `s` (`WeaklySimulates L τ s' s`):
 some weak simulation `R` relates the simulated `s` to the simulator `s'`. -/
 def WeaklySimulates (L : LTS Proc Act) (tau : Act) (s' s : Proc) : Prop :=
   ∃ R, IsWeakSimulation L tau R ∧ R s s'
@@ -81,11 +80,11 @@ theorem IsWeakBisimulation.isWeakSimulation {R : Proc → Proc → Prop}
     (h : IsWeakBisimulation L tau R) : IsWeakSimulation L tau R :=
   fun _ _ hpq α p' hp => (h hpq).1 α p' hp
 
-/-- **Proposition 7.1(1).** Every state weakly simulates itself. -/
+/-- Every state weakly simulates itself. -/
 theorem weaklySimulates_refl (s : Proc) : WeaklySimulates L tau s s :=
   ⟨(· = ·), isWeakSimulation_eq, rfl⟩
 
-/-- **Proposition 7.1(2).** The weak-simulation preorder is transitive: if `s''`
+/-- The weak-simulation preorder is transitive: if `s''`
 weakly simulates `s'` and `s'` weakly simulates `s`, then `s''` weakly simulates
 `s`. -/
 theorem WeaklySimulates.trans {s s' s'' : Proc}
@@ -95,7 +94,7 @@ theorem WeaklySimulates.trans {s s' s'' : Proc}
   obtain ⟨S, hS, hSs⟩ := h2
   exact ⟨fun b a => ∃ m, S b m ∧ R m a, hS.comp hR, s', hSs, hRs⟩
 
-/-! ## Definition 7.1: weak traces and weak trace equivalence -/
+/-! ## Weak traces and weak trace equivalence -/
 
 /-- A *weak path* `WeakPath L τ p w q`: from `p`, the list `w` of *visible*
 actions is performed via weak transitions ending at `q` (the empty list allows
@@ -104,12 +103,12 @@ def WeakPath (L : LTS Proc Act) (tau : Act) : Proc → List Act → Proc → Pro
   | p, [], q => tauStar L tau p q
   | p, a :: w, q => a ≠ tau ∧ ∃ p', (L ⊢ p =[a]⇒[tau] p') ∧ WeakPath L tau p' w q
 
-/-- **Definition 7.1.** The *weak traces* of `p`: the sequences of visible actions
+/-- The *weak traces* of `p`: the sequences of visible actions
 `p` can perform via weak transitions. -/
 def WeakTraces (L : LTS Proc Act) (tau : Act) (p : Proc) : Set (List Act) :=
   {w | ∃ q, WeakPath L tau p w q}
 
-/-- **Definition 7.1.** *Weak trace equivalence*: equal weak-trace sets. -/
+/-- *Weak trace equivalence*: equal weak-trace sets. -/
 def WeakTraceEquiv (L : LTS Proc Act) (tau : Act) (p q : Proc) : Prop :=
   WeakTraces L tau p = WeakTraces L tau q
 
@@ -135,7 +134,7 @@ theorem IsWeakSimulation.weakPath {R : Proc → Proc → Prop} (hR : IsWeakSimul
       obtain ⟨q', hpath'⟩ := ih hrest hRp't'
       exact ⟨q', hane, t', hwt, hpath'⟩
 
-/-- **Proposition 7.1(3).** If `s'` weakly simulates `s`, then every weak trace of
+/-- If `s'` weakly simulates `s`, then every weak trace of
 `s` is also a weak trace of `s'`. -/
 theorem WeaklySimulates.weakTraces_subset {s s' : Proc} (h : WeaklySimulates L tau s' s) :
     WeakTraces L tau s ⊆ WeakTraces L tau s' := by

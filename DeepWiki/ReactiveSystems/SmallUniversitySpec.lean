@@ -144,7 +144,7 @@ theorem isWeakBisimulation_smRel : IsWeakBisimulation (ccsLTS smuniDefn) Act.tau
       exact ⟨smB, Or.inr ⟨by decide, smUni, smB, tauStar_single hCA, hAB,
         tauStar_refl _ _ _⟩, ⟨Or.inr (Or.inl rfl), rfl⟩⟩
 
-/-- **Exercise 3.20** (§3.4, p.58). `SmUni ≈ Spec`: the Small University is
+/-- `SmUni ≈ Spec`: the Small University is
 observationally equivalent to `Spec ≝ pub.Spec` (the two internal `coin`/`coffee`
 handshakes are unobservable). -/
 theorem smUni_weaklyBisimilar_smSpec : smUni ≈[ccsLTS smuniDefn, Act.tau] smSpec :=

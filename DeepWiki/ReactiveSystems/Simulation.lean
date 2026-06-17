@@ -3,8 +3,7 @@ import DeepWiki.ReactiveSystems.Bisimulation
 /-! # Simulation and the simulation preorder
 A one-sided bisimulation: every move of the simulated state must be matched, but
 not necessarily conversely. Similarity `⊑` is a preorder coarser than strong
-bisimilarity, and ready simulation refines it by also preserving ready sets
-(Exercises 3.17–3.18). -/
+bisimilarity, and ready simulation refines it by also preserving ready sets. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -42,8 +41,7 @@ theorem Simulated.trans {L : LTS Proc Act} {p q r : Proc}
     (hpq : Simulated L p q) (hqr : Simulated L q r) : Simulated L p r :=
   let ⟨_, hR, hpq⟩ := hpq; let ⟨_, hS, hqr⟩ := hqr; ⟨_, hR.comp hS, q, hpq, hqr⟩
 
-/-- The simulation preorder is a preorder: reflexive and transitive
-(Exercise 3.17). -/
+/-- The simulation preorder is a preorder: reflexive and transitive. -/
 theorem simulated_preorder (L : LTS Proc Act) :
     (∀ p, Simulated L p p) ∧
       (∀ p q r, Simulated L p q → Simulated L q r → Simulated L p r) :=
@@ -60,8 +58,7 @@ theorem Bisimilar.simulated {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q
 /-- The ready set (set of initial actions) of a state. -/
 def initials (L : LTS Proc Act) (p : Proc) : Set Act := {a | ∃ p', L.step p a p'}
 
-/-- `IsReadySimulation L R`: a simulation that additionally preserves ready sets
-(Exercise 3.18). -/
+/-- `IsReadySimulation L R`: a simulation that additionally preserves ready sets. -/
 def IsReadySimulation (L : LTS Proc Act) (R : Proc → Proc → Prop) : Prop :=
   IsSimulation L R ∧ ∀ ⦃p q⦄, R p q → initials L p = initials L q
 

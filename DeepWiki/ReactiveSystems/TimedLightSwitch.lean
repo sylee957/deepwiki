@@ -1,9 +1,9 @@
 import DeepWiki.ReactiveSystems.TimedCCS
 
 /-! # The timed light switch: guardedness and a delay transition
-The timed-CCS light switch (eq. 9.1): `Off ≝ press.Light`, `Bright ≝ press.Off`,
-`Light ≝ ε(1.4).τ.press.Off + press.Bright`. It is guarded (Ex 9.1), and from the
-`Light` state a delay of `d ≤ 1.4` counts the delay-prefix down (Ex 9.2). -/
+The timed-CCS light switch: `Off ≝ press.Light`, `Bright ≝ press.Off`,
+`Light ≝ ε(1.4).τ.press.Off + press.Bright`. It is guarded, and from the
+`Light` state a delay of `d ≤ 1.4` counts the delay-prefix down. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -17,7 +17,7 @@ inductive LightChan | press
 inductive LightK | Light | Off | Bright
   deriving DecidableEq
 
-/-- Equation (9.1): `Off ≝ press.Light`, `Bright ≝ press.Off`,
+/-- The light-switch definitions: `Off ≝ press.Light`, `Bright ≝ press.Off`,
 `Light ≝ ε(1.4).τ.press.Off + press.Bright`. -/
 def lightDefn : LightK → TCCS LightChan LightK
   | .Off => .pre (.name .press) (.const .Light)
@@ -25,7 +25,7 @@ def lightDefn : LightK → TCCS LightChan LightK
   | .Light => .choice (.eps 1.4 (.pre Act.tau (.pre (.name .press) (.const .Off))))
       (.pre (.name .press) (.const .Bright))
 
-/-- **Exercise 9.1** (§9.3, p.166). The light-switch specification is guarded: every
+/-- The light-switch specification is guarded: every
 constant occurrence lies under an action prefix or the positive delay `ε(1.4)`. -/
 theorem lightDefn_isGuarded : IsGuardedDefn lightDefn := by
   intro K
@@ -34,7 +34,7 @@ theorem lightDefn_isGuarded : IsGuardedDefn lightDefn := by
   | Off => trivial
   | Bright => trivial
 
-/-- **Exercise 9.2** (§9.3, p.168). From the `Light` state a delay `d ≤ 1.4` counts the
+/-- From the `Light` state a delay `d ≤ 1.4` counts the
 delay-prefix down: `Light —d→ ε(1.4−d).τ.press.Off + press.Bright` (the action-prefixed
 summand `press.Bright` idles patiently). -/
 theorem lightDefn_light_delayReduces {d : ℝ≥0} (h : d ≤ 1.4) :

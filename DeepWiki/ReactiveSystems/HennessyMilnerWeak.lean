@@ -4,7 +4,7 @@ import DeepWiki.ReactiveSystems.BisimulationWeak
 /-! # Weak (observational) Hennessy–Milner satisfaction
 The *weak* reading of HML: the modalities `⟨a⟩` / `[a]` range over *weak*
 transitions `=a⇒` (silent steps absorbed) rather than concrete ones. This is the
-satisfaction relevant to testing (§7.3): for example `[a]ff` holds of exactly the
+satisfaction relevant to testing: for example `[a]ff` holds of exactly the
 processes that afford no `=a⇒` transition. We record the inductive definition,
 its `simp` unfoldings, and that a `τ`-free state has only the trivial weak path
 (used to compute the weak transitions of small processes). -/

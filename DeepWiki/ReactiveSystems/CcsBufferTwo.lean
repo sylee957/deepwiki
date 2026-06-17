@@ -1,14 +1,13 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # A two-place buffer equals two one-place buffers (Figure 3.2 / Prop 3.2, n=2)
-The book's worked example before Proposition 3.2: a capacity-two buffer is
-strongly bisimilar to two capacity-one buffers in parallel,
-`B²₀ ~ B¹₀ ∣ B¹₀`. The one-place buffer is `B¹₀ = in.B¹₁`, `B¹₁ = out.B¹₀`; the
-two-place buffer is `B²₀ = in.B²₁`, `B²₁ = in.B²₂ + out.B²₀`, `B²₂ = out.B²₁`.
-The bisimulation relates `B²ᵢ` to a parallel pair of one-place buffers exactly `i`
-of which are full (Figure 3.2). (The general `n`-buffer statement is Proposition
-3.2, a parallel-bag bisimulation over `n` components.) -/
+/-! # A two-place buffer equals two one-place buffers
+A capacity-two buffer is strongly bisimilar to two capacity-one buffers in
+parallel, `B²₀ ~ B¹₀ ∣ B¹₀`. The one-place buffer is `B¹₀ = in.B¹₁`,
+`B¹₁ = out.B¹₀`; the two-place buffer is `B²₀ = in.B²₁`,
+`B²₁ = in.B²₂ + out.B²₀`, `B²₂ = out.B²₁`. The bisimulation relates `B²ᵢ` to a
+parallel pair of one-place buffers exactly `i` of which are full. (The general
+`n`-buffer statement is a parallel-bag bisimulation over `n` components.) -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -34,16 +33,16 @@ def bufDefn : BufK → CCS BufChan BufK
   | Two1 => .choice (.pre (.name bin) (.const Two2)) (.pre (.name bout) (.const Two0))
   | Two2 => .pre (.name bout) (.const Two1)
 
-/-- The bisimulation of Figure 3.2: `B²ᵢ` is related to a parallel pair of
-one-place buffers exactly `i` of which are full. -/
+/-- The bisimulation: `B²ᵢ` is related to a parallel pair of one-place buffers
+exactly `i` of which are full. -/
 def bufRel : CCS BufChan BufK → CCS BufChan BufK → Prop := fun p q =>
   (p = .const Two0 ∧ q = .par (.const One0) (.const One0)) ∨
   (p = .const Two1 ∧ q = .par (.const One1) (.const One0)) ∨
   (p = .const Two1 ∧ q = .par (.const One0) (.const One1)) ∨
   (p = .const Two2 ∧ q = .par (.const One1) (.const One1))
 
-/-- **Figure 3.2 / Proposition 3.2 (n = 2)** (§3.3, p.51). A two-place buffer is
-strongly bisimilar to two one-place buffers in parallel: `B²₀ ~ B¹₀ ∣ B¹₀`. -/
+/-- A two-place buffer is strongly bisimilar to two one-place buffers in
+parallel: `B²₀ ~ B¹₀ ∣ B¹₀`. -/
 theorem buffer_two : (CCS.const Two0) ~[ccsLTS bufDefn]
     (CCS.par (CCS.const One0) (CCS.const One0)) := by
   refine ⟨bufRel, ?_, Or.inl ⟨rfl, rfl⟩⟩

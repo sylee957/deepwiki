@@ -1,16 +1,16 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
 
-/-! # Networks of timed automata (§10.4)
+/-! # Networks of timed automata
 A *network* of timed automata is a parallel composition `A₁ ∣ A₂ ∣ … ∣ Aₙ` of
 components over a shared clock set, communicating by hand-shake synchronisation on
 channels `c!`/`c?` (always forced — channels are restricted) and otherwise moving
-independently on ordinary actions `N` (Definition 10.6). We model the **binary**
+independently on ordinary actions `N`. We model the **binary**
 composition (the general `n`-ary case iterates it; the book's examples are
 binary): a location pair `(ℓ₁, ℓ₂)`, the conjoined invariant `I₁(ℓ₁) ∧ I₂(ℓ₂)`,
 and edges that are either an independent `N`-move of one component or a `τ`
 synchronisation of complementary channel edges (with conjoined guards and unioned
 resets). Realised as an ordinary `TimedAutomaton` over `L₁ × L₂`, so its TLTS
-`T(A)` (Definition 10.7) is just `.tlts` — the simultaneous-delay rule falls out
+`T(A)` is just `.tlts` — the simultaneous-delay rule falls out
 of the conjoined invariant. -/
 
 namespace DeepWiki.ReactiveSystems
@@ -36,7 +36,7 @@ def NetAct.IsN {Chan Ord : Type*} : NetAct Chan Ord → Prop
 
 variable {Chan Ord C L₁ L₂ : Type*}
 
-/-- **Definition 10.6 / 10.7.** The binary network `A₁ ∣ A₂` as a timed automaton
+/-- The binary network `A₁ ∣ A₂` as a timed automaton
 over location pairs `L₁ × L₂`: the invariant of `(ℓ₁, ℓ₂)` is `I₁(ℓ₁) ∧ I₂(ℓ₂)`,
 and an edge is either an independent `N`-move of one component (the other staying
 put) or a `τ`-synchronisation of complementary channel edges (`c!` in one, `c?` in
@@ -58,14 +58,14 @@ def networkAutomaton (A₁ : TimedAutomaton L₁ (NetAct Chan Ord) C)
       g = ClockConstraint.and g₁ g₂ ∧ r = r₁ ∪ r₂)
   inv p := ClockConstraint.and (A₁.inv p.1) (A₂.inv p.2)
 
-/-- The TLTS `T(A)` of a network (Definition 10.7): the timed LTS of the network
+/-- The TLTS `T(A)` of a network: the timed LTS of the network
 automaton; states pair the component locations with the shared valuation. -/
 noncomputable def networkTLTS (A₁ : TimedAutomaton L₁ (NetAct Chan Ord) C)
     (A₂ : TimedAutomaton L₂ (NetAct Chan Ord) C) :
     TLTS ((L₁ × L₂) × Valuation C) (NetAct Chan Ord) :=
   (networkAutomaton A₁ A₂).tlts
 
-/-- **Definition 10.7**, synchronisation rule. When `A₁` can take an `out c` edge
+/-- The network synchronisation rule. When `A₁` can take an `out c` edge
 and `A₂` a complementary `inp c` edge, with both guards holding and the resulting
 valuation respecting both invariants, the network performs an internal `τ`-move. -/
 theorem networkTLTS_sync (A₁ : TimedAutomaton L₁ (NetAct Chan Ord) C)
@@ -80,7 +80,7 @@ theorem networkTLTS_sync (A₁ : TimedAutomaton L₁ (NetAct Chan Ord) C)
   exact ⟨ClockConstraint.and g₁ g₂, r₁ ∪ r₂,
     Or.inr (Or.inr ⟨rfl, c, g₁, r₁, g₂, r₂, Or.inl ⟨h₁, h₂⟩, rfl, rfl⟩), hg, rfl, hinv⟩
 
-/-- **Definition 10.7**, simultaneous-delay rule (consequence of the conjoined
+/-- The network simultaneous-delay rule (consequence of the conjoined
 invariant): the network delays `d` iff both components' invariants hold before and
 after — both clocks advance by the same `d`. -/
 theorem networkTLTS_delay_iff (A₁ : TimedAutomaton L₁ (NetAct Chan Ord) C)

@@ -1,14 +1,14 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 
-/-! # Timed bisimilarity is strictly finer than timed-HML equivalence (§12.3)
-The converse of Theorem 12.3 *fails* over arbitrary TLTSs: there are states that
+/-! # Timed bisimilarity is strictly finer than timed-HML equivalence
+The converse direction *fails* over arbitrary TLTSs: there are states that
 satisfy the same timed-HML (`Mt`) formulae yet are not timed bisimilar. The book's
-witness (§12.3, p.234) is the `√2` TLTS: states `(A,d)`, `(B,d)` (`d : ℝ≥0`) and
+witness is the `√2` TLTS: states `(A,d)`, `(B,d)` (`d : ℝ≥0`) and
 `End`, where `(A,d) —a→ End` for `d < c`, `(B,d) —a→ End` for `d ≤ c`, and every
 state delays freely; the book takes the boundary `c = √2`. Since `Mt`'s clock
 constraints only compare against integers, `Mt` cannot express "after delaying
-exactly `√2` an `a` is enabled", so `(A,0)` and `(B,0)` are `Mt`-equivalent (the
-keenest-reader Exercise 12.12). They are nonetheless *not* timed bisimilar:
+exactly `√2` an `a` is enabled", so `(A,0)` and `(B,0)` are `Mt`-equivalent. They
+are nonetheless *not* timed bisimilar:
 `(B,0) —c→ (B,c) —a→ End`, while after the same `c`-delay `(A,0)` only reaches
 `(A,c)`, from which no `a` is possible. We formalise this separating fact —
 `¬ (A,0) ~ (B,0)` — for an arbitrary boundary `c` (the argument needs nothing of
@@ -28,7 +28,7 @@ inductive Sq2 | A (d : ℝ≥0) | B (d : ℝ≥0) | End
 
 variable (c : ℝ≥0)
 
-/-- The SOS of the `√2` TLTS (§12.3, p.234), with boundary `c`: `A d` does `a`
+/-- The SOS of the `√2` TLTS with boundary `c`: `A d` does `a`
 strictly below `c`, `B d` does `a` up to and including `c`, and every state delays
 freely. -/
 inductive Sq2Step (c : ℝ≥0) : Sq2 → (Sq2Act ⊕ ℝ≥0) → Sq2 → Prop
@@ -52,10 +52,10 @@ def sq2TLTS (c : ℝ≥0) : TLTS Sq2 Sq2Act := ⟨Sq2Step c⟩
 @[simp] theorem sq2_delay {c : ℝ≥0} {p q : Sq2} {d : ℝ≥0} :
     (sq2TLTS c).delay p d q ↔ Sq2Step c p (Sum.inr d) q := Iff.rfl
 
-/-- **§12.3** (p.234). `(A,0)` and `(B,0)` are **not** timed bisimilar — the
-witnessing fact that the converse of Theorem 12.3 fails over arbitrary TLTSs.
-(With the boundary `c = √2` they nonetheless satisfy the same `Mt` formulae; that
-is the keenest-reader Exercise 12.12.) -/
+/-- `(A,0)` and `(B,0)` are **not** timed bisimilar — the
+witnessing fact that the converse (timed-HML equivalence implies timed bisimilarity)
+fails over arbitrary TLTSs. (With the boundary `c = √2` they nonetheless satisfy
+the same `Mt` formulae.) -/
 theorem not_timedBisimilar_sqrt2 :
     ¬ TLTS.TimedBisimilar (sq2TLTS c) (Sq2.A 0) (Sq2.B 0) := by
   intro h
@@ -76,7 +76,7 @@ theorem not_timedBisimilar_sqrt2 :
   cases hq' with
   | aA h => exact absurd h (lt_irrefl _)
 
-/-! ### Past the boundary `A` and `B` agree (Exercise 12.12, statements 1–2) -/
+/-! ### Past the boundary `A` and `B` agree -/
 
 /-- A state that can no longer perform `a`: `A d` with `c ≤ d`, `B e` with `c < e`,
 or `End`. Such states can only delay (into other `a`-disabled states). -/
@@ -112,7 +112,7 @@ theorem aDisabled.delay_pres {c : ℝ≥0} {x x' : Sq2} {d' : ℝ≥0} (hx : aDi
 /-- Relating any two `a`-disabled states. -/
 def pastRel (c : ℝ≥0) (x y : Sq2) : Prop := aDisabled c x ∧ aDisabled c y
 
-/-- **Exercise 12.12** (§12.3). The `a`-disabled states form a timed bisimulation:
+/-- The `a`-disabled states form a timed bisimulation:
 past the boundary every state behaves identically (only delays, never `a`). -/
 theorem isBisimulation_pastRel : LTS.IsBisimulation (sq2TLTS c) (pastRel c) := by
   rintro x y ⟨hx, hy⟩
@@ -128,7 +128,7 @@ theorem isBisimulation_pastRel : LTS.IsBisimulation (sq2TLTS c) (pastRel c) := b
       obtain ⟨x', hx', hx'd⟩ := hx.delay_succ d'
       exact ⟨x', hx', hx'd, hy.delay_pres hstep⟩
 
-/-- **Exercise 12.12** (§12.3, statements 1–2). Past the boundary the two states
+/-- Past the boundary the two states
 agree: `(A,d)` with `c ≤ d` and `(B,e)` with `c < e` are timed bisimilar (both can
 only delay). In particular `(A,c) ~ (B,e)` for `e > c` — so `(A,0)` and `(B,0)`
 differ *only* at the boundary crossing (cf. `not_timedBisimilar_sqrt2`). -/

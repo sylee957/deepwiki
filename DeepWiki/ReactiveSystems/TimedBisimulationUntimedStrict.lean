@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 
-/-! # Timed bisimilarity is strictly finer than untimed (§11.2)
+/-! # Timed bisimilarity is strictly finer than untimed
 Timed bisimilarity refines untimed bisimilarity (`TimedBisimilar.untimedBisimilar`);
 this file shows the refinement is *strict* — the converse fails. The witness is a
 two-state TLTS: state `A` may idle for *any* delay, while `B` may idle only for
@@ -112,11 +112,11 @@ theorem isBisimulation_witnessRel :
     exact ⟨fun a x' hx => ⟨x', hx, Or.inr (Or.inr rfl)⟩,
            fun a y' hy => ⟨y', hy, Or.inr (Or.inr rfl)⟩⟩
 
-/-- **§11.2.** `A` and `B` are untimed bisimilar (durations forgotten). -/
+/-- `A` and `B` are untimed bisimilar (durations forgotten). -/
 theorem A_untimedBisimilar_B : witnessTLTS.UntimedBisimilar .A .B :=
   ⟨witnessRel, isBisimulation_witnessRel, Or.inl ⟨rfl, rfl⟩⟩
 
-/-- **§11.2.** `A` and `B` are **not** timed bisimilar: `A` can delay `2` but `B`
+/-- `A` and `B` are **not** timed bisimilar: `A` can delay `2` but `B`
 (idling only for delays `≤ 1`) cannot match it. -/
 theorem not_A_timedBisimilar_B : ¬ witnessTLTS.TimedBisimilar .A .B := by
   intro h
@@ -125,7 +125,7 @@ theorem not_A_timedBisimilar_B : ¬ witnessTLTS.TimedBisimilar .A .B := by
   -- `hq' : witnessTLTS.delay B 2 q'` forces `q' = B ∧ (2 : ℝ≥0) ≤ 1`, impossible
   cases q' <;> simp [TLTS.delay, witnessTLTS] at hq'
 
-/-- **§11.2** (strictness). Timed bisimilarity is *strictly* finer than untimed:
+/-- Timed bisimilarity is *strictly* finer than untimed:
 untimed-bisimilar states need not be timed bisimilar. -/
 theorem untimedBisimilar_not_imp_timedBisimilar :
     ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q), T.UntimedBisimilar p q ∧ ¬ T.TimedBisimilar p q :=

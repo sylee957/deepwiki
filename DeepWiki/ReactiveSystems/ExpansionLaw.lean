@@ -6,7 +6,7 @@ import DeepWiki.ReactiveSystems.HennessyMilnerExamples
 /-! # The expansion law `a.0 ∣ b.0 ~ a.b.0 + b.a.0` and distinguishing formulae
 Over the alphabet `Fin 4` (`a = 0, b = 1, c = 2, d = 3`), no constants:
 - `b.a.0 + b.0 ≁ b.(a.0 + b.0)`, separated by `⟨b⟩⟨b⟩tt`;
-- `a.(b.c.0 + b.d.0) ≁ a.b.c.0 + a.b.d.0` (the second pair of Exercise 5.5);
+- `a.(b.c.0 + b.d.0) ≁ a.b.c.0 + a.b.d.0`;
 - `a.0 ∣ b.0 ~ a.b.0 + b.a.0` (the expansion law), via an explicit four-pair
   bisimulation;
 - `(a.0 ∣ b.0) + c.a.0 ≁ a.0 ∣ (b.0 + c.0)`, separated by `⟨a⟩⟨c⟩tt`. -/
@@ -154,14 +154,14 @@ theorem isBisimulation_expRel : IsBisimulation (ccsLTS d511) expRel := by
       · exact absurd hA not_step_nil
     · rw [ccsLTS_step] at hy; exact absurd hy not_step_nil
 
-/-- **Exercise 5.11**, expansion law (§5.1, p.100). `a.0 ∣ b.0 ~ a.b.0 + b.a.0`:
+/-- Expansion law `a.0 ∣ b.0 ~ a.b.0 + b.a.0`:
 parallel composition of two prefixes is bisimilar to their interleaving sum. -/
 theorem exp_law : q3a ~[ccsLTS d511] q3b :=
   isBisimulation_expRel.le_bisimilar (Or.inl ⟨rfl, rfl⟩)
 
-/-- **Exercise 5.11** (§5.1, p.100). For the four CCS pairs: pairs 1, 2 and 4 are
-not strongly bisimilar (each separated by an HML formula — pair 2 is the second
-pair of Exercise 5.5), while pair 3 is bisimilar (the expansion law). -/
+/-- For the four CCS pairs: pairs 1, 2 and 4 are
+not strongly bisimilar (each separated by an HML formula), while pair 3 is
+bisimilar (the expansion law). -/
 theorem ccs_pairs_expansionLaw_and_distinguishing :
     (∃ F : HML (Act (Fin 4)), (q1b ⊨[ccsLTS d511] F) ∧ ¬ (q1a ⊨[ccsLTS d511] F)) ∧
     (∃ G : HML (Act (Fin 4)), (p55c ⊨[ccsLTS d55] G) ∧ ¬ (p55d ⊨[ccsLTS d55] G)) ∧

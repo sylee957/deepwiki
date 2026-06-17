@@ -1,13 +1,13 @@
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # Peterson's mutual-exclusion algorithm in CCS (§7)
+/-! # Peterson's mutual-exclusion algorithm in CCS
 Peterson's two-process mutual-exclusion algorithm, modelled in CCS following the
-book's §7 (pp. 142–146). Shared variables become processes: the boolean
+book. Shared variables become processes: the boolean
 variables `b1`, `b2` and the integer `k` are registers offering read/write
 synchronisations on `name` channels; the two protocol processes `P1`, `P2`
 synchronise with them via the complementary `coname` channels and perform the
 observable `enterᵢ`/`exitᵢ` actions. The whole system restricts all read/write
-channels, leaving only the critical-section actions observable. §7.2 also gives
+channels, leaving only the critical-section actions observable. The book also gives
 the CCS specification `MutexSpec`. Full correctness (mutual exclusion) is checked
 externally (the CWB; the system has 69 states); here we give the faithful model
 and specification. -/
@@ -28,7 +28,7 @@ inductive PetChan
 /-- Process constants of Peterson's algorithm: the two states of each variable
 (`B1f`/`B1t` for `b1`, similarly `b2`, and `K1`/`K2` for `k`), the control states
 of the two protocol processes (`P1`, `P11`, `P12` and the symmetric `P2`, `P21`,
-`P22`), and the mutual-exclusion specification `MutexSpec` of §7.2. -/
+`P22`), and the mutual-exclusion specification `MutexSpec`. -/
 inductive PetK
   | B1f | B1t | B2f | B2t | K1 | K2
   | P1 | P11 | P12 | P2 | P21 | P22
@@ -37,10 +37,10 @@ inductive PetK
 
 open PetChan PetK
 
-/-- The defining environment for Peterson's algorithm (§7, pp. 144–146). The
+/-- The defining environment for Peterson's algorithm. The
 registers (`B…`, `K…`) offer their read/write ports on `name` channels; the
 protocol processes (`P…`) read/write via the complementary `coname` channels and
-perform `enterᵢ`/`exitᵢ` on `name` channels. `MutexSpec` (§7.2) ignores the
+perform `enterᵢ`/`exitᵢ` on `name` channels. `MutexSpec` ignores the
 registers. -/
 def petDefn : PetK → CCS PetChan PetK
   | B1f => .choice (.pre (.name b1rf) (.const B1f))
@@ -68,18 +68,18 @@ def petDefn : PetK → CCS PetChan PetK
   | MutexSpec => .choice (.pre (.name enter1) (.pre (.name exit1) (.const MutexSpec)))
             (.pre (.name enter2) (.pre (.name exit2) (.const MutexSpec)))
 
-/-- The restricted channel set `L` (§7, p.146): all read/write ports — i.e. every
+/-- The restricted channel set `L`: all read/write ports — i.e. every
 channel except the observable critical-section actions. -/
 def petRestrict : Set (Act PetChan) :=
   { a | ∃ c : PetChan, a = Act.name c ∧ c ∉ ({enter1, exit1, enter2, exit2} : Set PetChan) }
 
-/-- **§7** (p.146). Peterson's algorithm as a CCS process, with `k` initially `1`:
+/-- Peterson's algorithm as a CCS process, with `k` initially `1`:
 `Peterson = (P₁ | P₂ | B1f | B2f | K1) \ L`. -/
 def peterson : CCS PetChan PetK :=
   .restrict (.par (.par (.par (.par (.const P1) (.const P2)) (.const B1f))
     (.const B2f)) (.const K1)) petRestrict
 
-/-- **§7.2** (7.1, p.149). The CCS specification of a mutual-exclusion algorithm:
+/-- The CCS specification of a mutual-exclusion algorithm:
 `MutexSpec = enter₁.exit₁.MutexSpec + enter₂.exit₂.MutexSpec`. Once one process
 enters its critical section the other cannot enter until the first exits. -/
 def mutexSpec : CCS PetChan PetK := .const MutexSpec

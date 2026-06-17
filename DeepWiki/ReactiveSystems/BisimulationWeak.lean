@@ -28,7 +28,7 @@ theorem tauStar_trans {L : LTS Proc Act} {tau : Act} {p q r : Proc}
     (h₁ : tauStar L tau p q) (h₂ : tauStar L tau q r) : tauStar L tau p r :=
   Relation.ReflTransGen.trans h₁ h₂
 
-/-- Weak transition `p =α⇒ q` (Definition 3.3): for `α = τ`, a chain of silent
+/-- Weak transition `p =α⇒ q`: for `α = τ`, a chain of silent
 steps; for `α ≠ τ`, silent steps surrounding one `α`-step. -/
 def WeakStep (L : LTS Proc Act) (tau : Act) (p : Proc) (α : Act) (q : Proc) : Prop :=
   (α = tau ∧ tauStar L tau p q) ∨
@@ -55,7 +55,7 @@ theorem step_weakStep {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : 
   · exact Or.inr ⟨hα, p, q, tauStar_refl L tau p, h, tauStar_refl L tau q⟩
 
 /-- `IsWeakBisimulation L τ R`: each concrete move of one side is matched by a
-*weak* transition of the other side into `R` (Definition 3.4). -/
+*weak* transition of the other side into `R`. -/
 def IsWeakBisimulation (L : LTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) : Prop :=
   ∀ ⦃p q⦄, R p q →
     (∀ α p', (L ⊢ p ⟶[α] p') → ∃ q', (L ⊢ q =[α]⇒[tau] q') ∧ R p' q') ∧
@@ -168,7 +168,7 @@ theorem IsBisimulation.isWeakBisimulation {R : Proc → Proc → Prop} (h : IsBi
 theorem Bisimilar.weaklyBisimilar {p q : Proc} (h : Bisimilar L p q) :
     WeaklyBisimilar L tau p q := let ⟨_, hR, hpq⟩ := h; ⟨_, hR.isWeakBisimulation, hpq⟩
 
-/-- Mutually `τ`-reachable states are weakly bisimilar (Exercise 3.27): the
+/-- Mutually `τ`-reachable states are weakly bisimilar: the
 relation "each `τ`-reaches the other" is a weak bisimulation. -/
 theorem weaklyBisimilar_of_tauStar {p q : Proc}
     (hpq : tauStar L tau p q) (hqp : tauStar L tau q p) : WeaklyBisimilar L tau p q := by

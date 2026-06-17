@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.BisimulationFixedPoint
 
 /-! # Bisimilarity approximants
-The stratified approximants `∼ᵢ = Fⁱ(⊤)` of strong bisimilarity (Exercise 4.14):
+The stratified approximants `∼ᵢ = Fⁱ(⊤)` of strong bisimilarity:
 each is an equivalence relation, they form a decreasing chain, and strong
 bisimilarity refines every one of them (being the greatest fixed point of `F`). -/
 
@@ -16,7 +16,7 @@ theorem bisimFunctional_refl (L : LTS Proc Act) {R : Proc → Proc → Prop}
     (hR : ∀ p, R p p) : ∀ p, bisimFunctional L R p p :=
   fun _ => ⟨fun _ p' hp => ⟨p', hp, hR p'⟩, fun _ q' hq => ⟨q', hq, hR q'⟩⟩
 
-/-- The `i`-th bisimilarity approximant `∼ᵢ = Fⁱ(⊤)` (Exercise 4.14). -/
+/-- The `i`-th bisimilarity approximant `∼ᵢ = Fⁱ(⊤)`. -/
 def bisimApprox (L : LTS Proc Act) (i : ℕ) : Proc → Proc → Prop :=
   (bisimFunctional L)^[i] ⊤
 
@@ -26,7 +26,7 @@ theorem bisimApprox_succ (L : LTS Proc Act) (i : ℕ) :
     bisimApprox L (i + 1) = bisimFunctional L (bisimApprox L i) :=
   Function.iterate_succ_apply' _ _ _
 
-/-- Each approximant is an equivalence relation (Exercise 4.14). -/
+/-- Each approximant is an equivalence relation. -/
 theorem bisimApprox_equivalence (L : LTS Proc Act) (i : ℕ) :
     Equivalence (bisimApprox L i) := by
   induction i with
@@ -46,7 +46,7 @@ theorem bisimApprox_equivalence (L : LTS Proc Act) (i : ℕ) :
           obtain ⟨p', hp', h1⟩ := hpq.2 a q' hq'
           exact ⟨p', hp', ih.trans h1 h2⟩
 
-/-- The approximants form a decreasing chain: `∼_{i+1} ⊆ ∼ᵢ` (Exercise 4.14). -/
+/-- The approximants form a decreasing chain: `∼_{i+1} ⊆ ∼ᵢ`. -/
 theorem bisimApprox_antitone (L : LTS Proc Act) (i : ℕ) :
     bisimApprox L (i + 1) ≤ bisimApprox L i := by
   induction i with
@@ -56,7 +56,7 @@ theorem bisimApprox_antitone (L : LTS Proc Act) (i : ℕ) :
       conv_rhs => rw [bisimApprox_succ]
       exact (bisimFunctional L).monotone ih
 
-/-- Strong bisimilarity refines every approximant: `∼ ⊆ ∼ᵢ` (Exercise 4.14). -/
+/-- Strong bisimilarity refines every approximant: `∼ ⊆ ∼ᵢ`. -/
 theorem bisimilar_le_bisimApprox (L : LTS Proc Act) (i : ℕ) :
     Bisimilar L ≤ bisimApprox L i := by
   rw [bisimilar_eq_gfp]

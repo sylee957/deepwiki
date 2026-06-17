@@ -3,21 +3,20 @@ import Mathlib.Tactic.DeriveFintype
 
 /-! # Concrete strong-bisimulation examples on finite LTSs
 A finite LTS with a decidable step relation makes `IsBisimulation` decidable, so a
-witness bisimulation is checked by `decide`. Exercise 3.5 exhibits `s ~ t`;
-Exercise 3.8 exhibits strong bisimulations that are not reflexive / symmetric /
-transitive. -/
+witness bisimulation is checked by `decide`. One example exhibits `s ~ t`; another
+exhibits strong bisimulations that are not reflexive, symmetric, or transitive. -/
 
 namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-! ## Exercise 3.5 — a 10-state bisimulation `s ~ t` -/
+/-! ## A 10-state bisimulation `s ~ t` -/
 
-/-- States of the two LTSs of Exercise 3.5. -/
+/-- States of the two LTSs. -/
 inductive S35 | s | s1 | s2 | s3 | s4 | t | t1 | t2 | t3 | t4
   deriving DecidableEq, Fintype
 
-/-- Actions of Exercise 3.5. -/
+/-- Actions of the LTS. -/
 inductive A35 | a | b
   deriving DecidableEq, Fintype
 
@@ -39,7 +38,7 @@ def edge35 : S35 → A35 → S35 → Bool
   | .t2, .a, .t => true
   | _, _, _ => false
 
-/-- The LTS of Exercise 3.5. -/
+/-- The LTS with the two state machines side by side. -/
 def lts35 : LTS S35 A35 := ⟨fun p x q => edge35 p x q = true⟩
 
 /-- The witnessing relation `{(s,t),(s₁,t₁),(s₂,t₃),(s₃,t₂),(s₄,t₂),(s₄,t₄)}`. -/
@@ -63,12 +62,11 @@ theorem isBisimulation_R35 : IsBisimulation lts35 R35 := by
     (∀ x q', edge35 q x q' = true → ∃ p', edge35 p x p' = true ∧ rel35 p' q' = true)
   decide
 
-/-- **Exercise 3.5** (§3.3, p.42). `s ~ t` in the LTS of Exercise 3.5, witnessed by
-the bisimulation `R35`. -/
+/-- `s ~ t` in `lts35`, witnessed by the bisimulation `R35`. -/
 theorem lts35_s_bisimilar_t : (S35.s) ~[lts35] (S35.t) :=
   isBisimulation_R35.le_bisimilar rfl
 
-/-! ## Exercise 3.8 — bisimulations need not be equivalences -/
+/-! ## Bisimulations need not be equivalences -/
 
 /-- The empty (transition-free) LTS: every relation is vacuously a bisimulation. -/
 def emptyLTS (Proc Act : Type*) : LTS Proc Act := ⟨fun _ _ _ => False⟩
@@ -78,20 +76,20 @@ theorem isBisimulation_emptyLTS {Proc Act : Type*} (R : Proc → Proc → Prop) 
     IsBisimulation (emptyLTS Proc Act) R :=
   fun _ _ _ => ⟨fun _ _ h => h.elim, fun _ _ h => h.elim⟩
 
-/-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be reflexive: the
+/-- A strong bisimulation need not be reflexive: the
 empty relation is a bisimulation but not reflexive on an inhabited LTS. -/
 theorem bisimulation_not_reflexive :
     ∃ R : Bool → Bool → Prop, IsBisimulation (emptyLTS Bool Unit) R ∧ ¬ (∀ x, R x x) :=
   ⟨fun _ _ => False, isBisimulation_emptyLTS _, fun h => h true⟩
 
-/-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be symmetric:
+/-- A strong bisimulation need not be symmetric:
 `{(true, false)}` is a bisimulation but not symmetric. -/
 theorem bisimulation_not_symmetric :
     ∃ R : Bool → Bool → Prop, IsBisimulation (emptyLTS Bool Unit) R ∧ ¬ (∀ x y, R x y → R y x) :=
   ⟨fun x y => x = true ∧ y = false, isBisimulation_emptyLTS _,
     fun h => absurd (h true false ⟨rfl, rfl⟩).1 (by decide)⟩
 
-/-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be transitive:
+/-- A strong bisimulation need not be transitive:
 `{(0,1),(1,2)}` is a bisimulation but not transitive (it omits `(0,2)`). -/
 theorem bisimulation_not_transitive :
     ∃ R : Fin 3 → Fin 3 → Prop,
@@ -101,14 +99,14 @@ theorem bisimulation_not_transitive :
     rcases h 0 1 2 (Or.inl ⟨rfl, rfl⟩) (Or.inr ⟨rfl, rfl⟩) with ⟨_, h2⟩ | ⟨h2, _⟩ <;>
       exact absurd h2 (by decide)⟩
 
-/-! ## Exercise 3.37 — deciding `s ~ t`, `s ~ u`, `s ~ v` -/
+/-! ## Deciding `s ~ t`, `s ~ u`, `s ~ v` -/
 
-/-- States of the four LTSs of Exercise 3.37. -/
+/-- States of the four LTSs. -/
 inductive S37
   | s | s1 | s2 | t | t1 | t2 | u | u1 | u2 | u3 | v | v1 | v2 | v3
   deriving DecidableEq, Fintype
 
-/-- Edges of the four LTSs of Exercise 3.37 (over actions `a`/`b = A35`). -/
+/-- Edges of the four LTSs (over actions `a`, `b = A35`). -/
 def edge37 : S37 → A35 → S37 → Bool
   | .s, .a, .s1 => true
   | .s1, .b, .s2 => true
@@ -132,7 +130,7 @@ def edge37 : S37 → A35 → S37 → Bool
   | .v2, .a, .v => true
   | _, _, _ => false
 
-/-- The LTS of Exercise 3.37 (reducible, so step facts are decidable). -/
+/-- The LTS (reducible, so step facts are decidable). -/
 abbrev lts37 : LTS S37 A35 := ⟨fun p x q => edge37 p x q = true⟩
 
 /-- The witness `{(s,u),(s₁,u₁),(s₂,u₃),(s₂,u₂)}` for `s ~ u`. -/
@@ -150,11 +148,11 @@ theorem isBisimulation_rel37 : IsBisimulation lts37 (fun p q => rel37 p q = true
     (∀ x q', edge37 q x q' = true → ∃ p', edge37 p x p' = true ∧ rel37 p' q' = true)
   decide
 
-/-- **Exercise 3.37** (§3.4, p.69). `s ~ u` (positive case), witnessed by `rel37`. -/
+/-- `s ~ u` (positive case), witnessed by `rel37`. -/
 theorem lts37_s_bisimilar_u : (S37.s) ~[lts37] (S37.u) :=
   isBisimulation_rel37.le_bisimilar rfl
 
-/-- **Exercise 3.37** (§3.4, p.69). `s ≁ t`: the attacker plays `s —a→ s₁ —b→ s₂`
+/-- `s ≁ t`: the attacker plays `s —a→ s₁ —b→ s₂`
 (where `s₂` enables both `a` and `b`); the defender's `t` must reply
 `t —a→ t₁ —b→ {t₁, t₂}`, but `t₁` enables only `b` and `t₂` only `a`. -/
 theorem lts37_s_not_bisimilar_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
@@ -168,7 +166,7 @@ theorem lts37_s_not_bisimilar_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
   · obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).1 A35.b S37.s2 (by decide)
     exact absurd hq3 ((by decide : ∀ q, ¬ lts37.step S37.t2 A35.b q) q3)
 
-/-- **Exercise 3.37** (§3.4, p.69). `s ≁ v`: same shape as `s ≁ t` — after
+/-- `s ≁ v`: same shape as `s ≁ t` — after
 `s —a→ s₁ —b→ s₂` the defender's `v₁` goes to `v₂` (only `a`) or `v₃` (only `b`),
 neither matching `s₂`'s `{a, b}`. -/
 theorem lts37_s_not_bisimilar_v : ¬ ((S37.s) ~[lts37] (S37.v)) := by

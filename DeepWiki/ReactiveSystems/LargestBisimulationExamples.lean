@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.Bisimulation
 import Mathlib.Tactic.DeriveFintype
 
 /-! # Largest-bisimulation and non-bisimilarity examples on finite LTSs
-The Example 3.7 LTS: `s —a→ s₁/s₂`, `s₁ —b→ s₃`; `t —a→ t₁`, `t₁ —b→ t₁/t₂`. The
+The LTS `s —a→ s₁/s₂`, `s₁ —b→ s₃`; `t —a→ t₁`, `t₁ —b→ t₁/t₂`. The
 attacker wins from `(s, t)`: after `s —a→ s₁ —b→ s₃` the state `s₃` is dead, but
 `t₁` can keep doing `b`, so `s` and `t` are not bisimilar. -/
 
@@ -10,11 +10,11 @@ namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-- States of the Example 3.7 LTS. -/
+/-- States of the LTS. -/
 inductive E37S | s | s1 | s2 | s3 | t | t1 | t2
   deriving DecidableEq, Fintype
 
-/-- Actions of Example 3.7. -/
+/-- Actions of the LTS. -/
 inductive E37A | a | b
   deriving DecidableEq, Fintype
 
@@ -28,10 +28,10 @@ def edge412 : E37S → E37A → E37S → Bool
   | .t1, .b, .t2 => true
   | _, _, _ => false
 
-/-- The Example 3.7 LTS (reducible, so step facts are decidable). -/
+/-- The LTS (reducible, so step facts are decidable). -/
 abbrev e37 : LTS E37S E37A := ⟨fun p x q => edge412 p x q = true⟩
 
-/-- **Exercise 4.12** (§4.3, p.87). In the Example 3.7 LTS, `s ≁ t`: the attacker
+/-- In this LTS, `s ≁ t`: the attacker
 plays `s —a→ s₁` (forcing `t —a→ t₁`), then `t₁ —b→ t₁` (forcing `s₁ —b→ s₃`),
 then `t₁ —b→ t₁` again, which `s₃` (dead) cannot match. -/
 theorem e37_s_not_bisim_t : ¬ ((E37S.s) ~[e37] (E37S.t)) := by
@@ -43,7 +43,7 @@ theorem e37_s_not_bisim_t : ¬ ((E37S.s) ~[e37] (E37S.t)) := by
   obtain ⟨q3, hq3, _⟩ := ((bisimilar_iff _ _).mp hb2).2 E37A.b E37S.t1 (by decide)
   exact absurd hq3 ((by decide : ∀ q, ¬ e37.step E37S.s3 E37A.b q) q3)
 
-/-! ## Exercise 4.11 — the largest bisimulation of `P₁..P₅` -/
+/-! ## The largest bisimulation of `P₁..P₅` -/
 
 /-- States `P₁..P₅`: `P₁=a.P₂`, `P₂=a.P₁`, `P₃=a.P₂+a.P₄`, `P₄=a.P₃+a.P₅`, `P₅=0`. -/
 inductive P411 | p1 | p2 | p3 | p4 | p5
@@ -82,7 +82,7 @@ theorem isBisimulation_rel411 : IsBisimulation lts411 (fun p q => rel411 p q = t
 theorem not_bisim_p5 {x x' : P411} (hx : lts411.step x A411.a x') : ¬ (x ~[lts411] P411.p5) :=
   not_bisim_dead_of_step hx (by decide)
 
-/-- **Exercise 4.11** (§4.3, p.86). The largest bisimulation of `P₁..P₅` identifies
+/-- The largest bisimulation of `P₁..P₅` identifies
 exactly `P₁` and `P₂`: `P₁ ~ P₂`, while `P₃, P₄, P₅` are pairwise distinct and
 distinct from `P₁`. -/
 theorem lts411_only_p1_p2_bisimilar :

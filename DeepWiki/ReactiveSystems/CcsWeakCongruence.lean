@@ -1,9 +1,9 @@
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # Weak bisimilarity is a congruence (Theorem 3.4)
+/-! # Weak bisimilarity is a congruence
 Observational equivalence `≈` is a congruence for prefixing, parallel
-composition, relabelling and restriction (but *not* for choice — see §3.4). Each
+composition, relabelling and restriction (but *not* for choice). Each
 case lifts a weak transition through the operator: `tauStar`/`WeakStep` lift
 through `par`, `relabel` (for a genuine relabelling, fixing `τ`) and `restrict`
 (when `τ` is not restricted), and the weak bisimulation is the operator applied to
@@ -108,7 +108,7 @@ theorem weakStep_restrict {P : CCS Name K} {α : Act Name} {P' : CCS Name K} (Lr
       tauStar_restrict defn Lr htau h₁, ?_, tauStar_restrict defn Lr htau h₂⟩
     rw [ccsLTS_step] at hstep ⊢; exact Step.res hαL hαcoL hstep
 
-/-! ### Theorem 3.4: weak bisimilarity is a congruence (not for choice) -/
+/-! ### Weak bisimilarity is a congruence (not for choice) -/
 
 theorem weak_cong_pre {a : Act Name} {P Q : CCS Name K}
     (h : P ≈[ccsLTS defn, Act.tau] Q) : CCS.pre a P ≈[ccsLTS defn, Act.tau] CCS.pre a Q := by

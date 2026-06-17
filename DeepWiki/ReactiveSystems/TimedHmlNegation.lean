@@ -1,8 +1,8 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 
-/-! # Negation of timed HML formulae (Proposition 12.1)
+/-! # Negation of timed HML formulae
 The timed logic `Mt` is closed under negation: every formula `F` has a *negation*
-`Fᶜ` with `⟦Fᶜ⟧ = ES(Proc) \ ⟦F⟧` (Proposition 12.1). The construction pushes
+`Fᶜ` with `⟦Fᶜ⟧ = ES(Proc) \ ⟦F⟧`. The construction pushes
 negation inwards by De Morgan duality — `tt ↔ ff`, `∧ ↔ ∨`, `⟨a⟩ ↔ [a]`,
 `∃∃ ↔ ∀∀`, fixing `x in`. The one subtlety is negating an atomic clock constraint:
 `¬(x = n)` is `x < n ∨ x > n` (not a single constraint), so guard negation lands
@@ -31,7 +31,7 @@ def negGuard : ClockConstraint D → Mt Act D
   | .atom x c n => negAtom x c n
   | .and g₁ g₂ => .or (negGuard g₁) (negGuard g₂)
 
-/-- **Proposition 12.1.** The *negation* `Fᶜ` of a timed HML formula. -/
+/-- The *negation* `Fᶜ` of a timed HML formula. -/
 def Mt.neg : Mt Act D → Mt Act D
   | .tt => .ff
   | .ff => .tt
@@ -66,7 +66,7 @@ theorem mtSat_negGuard (T : TLTS Proc Act) (p : Proc) (u : Valuation D)
   | atom x c n => exact mtSat_negAtom T p u x c n
   | and g₁ g₂ ih₁ ih₂ => simp only [negGuard, MtSat, satisfies, not_and_or]; rw [ih₁, ih₂]
 
-/-- **Proposition 12.1** (§12.2, p.229). The negation `Fᶜ` exactly complements
+/-- The negation `Fᶜ` exactly complements
 `F`: `(p, u) ⊨ Fᶜ` iff `(p, u) ⊭ F`, i.e. `⟦Fᶜ⟧ = ES(Proc) \ ⟦F⟧`. Proved by
 structural induction (classically, for the modal dualities). -/
 theorem mtSat_neg (T : TLTS Proc Act) (F : Mt Act D) :
@@ -89,8 +89,8 @@ theorem mtSat_neg (T : TLTS Proc Act) (F : Mt Act D) :
   | reset x F ihF => intro p u; simp only [Mt.neg, MtSat, ihF]
   | guard g => intro p u; exact mtSat_negGuard T p u g
 
-/-- **Proposition 12.1**, double negation: `(Fᶜ)ᶜ` and `F` are satisfied by the
-same extended states (Exercise 12.6(2)). -/
+/-- Double negation: `(Fᶜ)ᶜ` and `F` are satisfied by the
+same extended states. -/
 theorem mtSat_neg_neg (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
     MtSat T p u F.neg.neg ↔ MtSat T p u F := by
   rw [mtSat_neg T F.neg p u, mtSat_neg T F p u, not_not]

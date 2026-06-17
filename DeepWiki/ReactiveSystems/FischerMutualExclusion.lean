@@ -1,12 +1,12 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
 import Mathlib.Tactic.FinCases
 
-/-! # Fischer's mutual-exclusion algorithm (§13.2)
+/-! # Fischer's mutual-exclusion algorithm
 Fischer's algorithm achieves mutual exclusion for `n` processes through *timing*
 rather than atomic test-and-set: each process writes its index into a shared
 register `id`, waits long enough for any competing write to settle, and enters
 its critical section only if it still owns `id`. The book models it as a network
-of timed automata, one per process (Figure 13.1, the automaton `Aᵢ` with control
+of timed automata, one per process (the automaton `Aᵢ` with control
 locations `L → 1 → 2 → CS`, a clock `xᵢ`, and the bound `c`).
 
 Here the network is a single `TimedAutomaton` over a *global* location that folds
@@ -14,14 +14,14 @@ the shared register `id` (so the register guards `id = 0` / `id = i` / `id ≠ i
 and assignments `id := i` / `id := 0` become conditions on the location) together
 with one clock per process. Mutual exclusion is the safety property that no two
 processes occupy their critical sections simultaneously. Its correctness
-(Lynch–Shavit, Theorem 4.6) rests on the timing assumptions and is verified
+(Lynch–Shavit) rests on the timing assumptions and is verified
 externally (UPPAAL); we formalize the model and the specification. -/
 
 namespace DeepWiki.ReactiveSystems
 
 open scoped NNReal
 
-/-- The four control locations of Fischer's process automaton `Aᵢ` (Figure 13.1):
+/-- The four control locations of Fischer's process automaton `Aᵢ`:
 the waiting loop `L`, the write location `1` (invariant `xᵢ ≤ c`), the post-write
 test location `2`, and the critical section `CS`. -/
 inductive FischerCtrl
@@ -93,8 +93,8 @@ theorem satisfies_fischerInv {n c : ℕ} (ℓ : FischerLoc n) (v : Valuation (Fi
 five steps, with the node-`2` re-check guard `xᵢ ⋈ c` using comparison `cmp`.
 With `id` folded into the location, the register guards and assignments become
 conditions on the global location; the clock guard `g` and reset set `r` carry
-the timing. Figure 13.1 (correct) uses `cmp = >` (strictly more than `c`);
-Figure 13.2 (erroneous) uses `cmp = ≥` (exactly `c` suffices). -/
+the timing. The correct version uses `cmp = >` (strictly more than `c`);
+the erroneous version uses `cmp = ≥` (exactly `c` suffices). -/
 def fischerEdgeWith (cmp : Cmp) (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
     (g : ClockConstraint (Fin n)) (_a : Unit) (r : Set (Fin n)) (ℓ' : FischerLoc n) : Prop :=
   ∃ i : Fin n,
@@ -114,8 +114,8 @@ def fischerEdgeWith (cmp : Cmp) (c : ℕ) {n : ℕ} (ℓ : FischerLoc n)
     (ℓ.ctrl i = .critical ∧ g = .true_ ∧ r = ∅ ∧
         ℓ' = ⟨Function.update ℓ.ctrl i .wait, none⟩)
 
-/-- **§13.2.** Fischer's mutual-exclusion algorithm modelled as a network of `n`
-timed automata (Figure 13.1): the shared register `id` is folded into the global
+/-- Fischer's mutual-exclusion algorithm modelled as a network of `n`
+timed automata: the shared register `id` is folded into the global
 location, with one clock `xᵢ` per process and bound `c`; the node-`2` re-check
 requires `xᵢ > c` (strictly more than `c` time elapsed). The initial location has
 every process waiting and the register free. -/
@@ -124,7 +124,7 @@ def fischer (n c : ℕ) : TimedAutomaton (FischerLoc n) Unit (Fin n) where
   edge := fischerEdgeWith .gt c
   inv := fischerInv c
 
-/-- **§13.2.** The *erroneous* version of Fischer's algorithm (Figure 13.2): the
+/-- The *erroneous* version of Fischer's algorithm: the
 node-`2` re-check guard is weakened to `xᵢ ≥ c`, allowing a process to proceed
 after a delay of *exactly* `c`. This version does not preserve mutual exclusion
 (`not_fischerErroneous_mutualExclusion`). -/
@@ -134,7 +134,7 @@ def fischerErroneous (n c : ℕ) : TimedAutomaton (FischerLoc n) Unit (Fin n) wh
   inv := fischerInv c
 
 /-- The Fischer network is **safe** when mutual exclusion holds at every reachable
-global location. (Theorem 4.6 of Lynch–Shavit: this holds under the timing
+global location. (Lynch–Shavit: this holds under the timing
 assumptions; the proof is delegated to external verification.) -/
 def FischerSafe (n c : ℕ) : Prop :=
   ∀ s, (fischer n c).tlts.Reachable ((fischer n c).initial, fun _ => 0) s →
@@ -147,7 +147,7 @@ theorem fischer_initial_mutualExclusion (n c : ℕ) :
   intro i _ hi _
   simp [fischer] at hi
 
-/-! ## The erroneous version violates mutual exclusion (Exercise 13.3)
+/-! ## The erroneous version violates mutual exclusion
 
 A concrete run of the erroneous two-process network reaches a global location with
 both processes in their critical sections. The run lets process `0` write `id`,
@@ -174,10 +174,10 @@ private theorem err_delay (c : ℕ) {ℓ : FischerLoc 2} {v : Valuation (Fin 2)}
   rw [TimedAutomaton.tlts_delay_iff]
   exact ⟨rfl, rfl, (satisfies_fischerInv ℓ v).mpr hb, (satisfies_fischerInv ℓ (v.add d)).mpr ha⟩
 
-/-- **Exercise 13.3.** The *erroneous* version of Fischer's algorithm (Figure
-13.2, guard `xᵢ ≥ c`) does **not** preserve mutual exclusion: the two-process
+/-- The *erroneous* version of Fischer's algorithm (guard `xᵢ ≥ c`)
+does **not** preserve mutual exclusion: the two-process
 network reaches a global location in which both processes are in their critical
-sections. (With the correct strict guard `xᵢ > c` of Figure 13.1 this run is
+sections. (With the correct strict guard `xᵢ > c` this run is
 blocked — neither process can enter after a delay of *exactly* `c`.) -/
 theorem not_fischerErroneous_mutualExclusion (c : ℕ) :
     ∃ s, (fischerErroneous 2 c).tlts.Reachable

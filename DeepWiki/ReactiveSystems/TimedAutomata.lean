@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 
 /-! # Timed automata
-Finite automata extended with real-valued clocks (Chapter 10): edges carry a
+Finite automata extended with real-valued clocks: edges carry a
 guard (clock constraint), an action, and a set of clocks to reset; locations
 carry invariants. A timed automaton denotes a timed LTS whose states are
 location/valuation pairs — action transitions follow a guarded edge (resetting
@@ -23,7 +23,7 @@ def Cmp.holds : Cmp → ℝ≥0 → ℕ → Prop
   | .gt, r, n => r > n
   | .ge, r, n => r ≥ n
 
-/-- Clock constraints / guards over a set of clocks `C` (Definition 10.1):
+/-- Clock constraints / guards over a set of clocks `C`:
 `g ::= tt ∣ x ⋈ n ∣ g₁ ∧ g₂`. -/
 inductive ClockConstraint (C : Type*)
   | true_ : ClockConstraint C
@@ -53,13 +53,13 @@ theorem Valuation.reset_mem {C : Type*} {r : Set C} {x : C} (h : x ∈ r) (v : V
 theorem Valuation.reset_not_mem {C : Type*} {r : Set C} {x : C} (h : x ∉ r) (v : Valuation C) :
     Valuation.reset r v x = v x := by unfold Valuation.reset; exact if_neg h
 
-/-- Evaluation of a clock constraint under a valuation (Definition 10.2). -/
+/-- Evaluation of a clock constraint under a valuation. -/
 def satisfies {C : Type*} (v : Valuation C) : ClockConstraint C → Prop
   | .true_ => True
   | .atom x c n => c.holds (v x) n
   | .and g₁ g₂ => satisfies v g₁ ∧ satisfies v g₂
 
-/-- **Definition 10.3** (§10.1, p.177). Two clock constraints are *equivalent* iff
+/-- Two clock constraints are *equivalent* iff
 they are satisfied by exactly the same valuations. -/
 def ConstraintEquiv {C : Type*} (g₁ g₂ : ClockConstraint C) : Prop :=
   ∀ v : Valuation C, satisfies v g₁ ↔ satisfies v g₂
@@ -68,17 +68,16 @@ def ConstraintEquiv {C : Type*} (g₁ g₂ : ClockConstraint C) : Prop :=
 theorem constraintEquiv_equivalence {C : Type*} : Equivalence (@ConstraintEquiv C) :=
   ⟨fun _ _ => Iff.rfl, fun h v => (h v).symm, fun h₁ h₂ v => (h₁ v).trans (h₂ v)⟩
 
-/-- A constraint satisfied by *every* valuation: `tt` (Exercise 10.2). -/
+/-- A constraint satisfied by *every* valuation: `tt`. -/
 theorem satisfies_true_all {C : Type*} (v : Valuation C) :
     satisfies v (ClockConstraint.true_ : ClockConstraint C) := trivial
 
-/-- A constraint satisfied by *no* valuation: `x < 0` (impossible over `ℝ≥0`,
-Exercise 10.2). -/
+/-- A constraint satisfied by *no* valuation: `x < 0` (impossible over `ℝ≥0`). -/
 theorem not_satisfies_lt_zero {C : Type*} (x : C) (v : Valuation C) :
     ¬ satisfies v (ClockConstraint.atom x Cmp.lt 0) := by
   simp [satisfies, Cmp.holds]
 
-/-- A timed automaton (Definition 10.4) over locations `Loc`, actions `Act` and
+/-- A timed automaton over locations `Loc`, actions `Act` and
 clocks `C`: an initial location, an edge relation `ℓ —g,a,r→ ℓ'` carrying a
 guard, action and reset set, and a location-invariant assignment. -/
 structure TimedAutomaton (Loc Act C : Type*) where
@@ -93,7 +92,7 @@ namespace TimedAutomaton
 
 variable {Loc Act C : Type*}
 
-/-- The timed LTS denoted by a timed automaton (Definition 10.5): states are
+/-- The timed LTS denoted by a timed automaton: states are
 location/valuation pairs; an action transition follows an edge whose guard holds,
 resetting its clocks into a state respecting the target invariant; a delay `d`
 advances all clocks provided the current location's invariant holds before and
@@ -119,8 +118,8 @@ theorem tlts_delay_iff (A : TimedAutomaton Loc Act C) (ℓ : Loc) (v : Valuation
     A.tlts.delay (ℓ, v) d (ℓ', v') ↔
       ℓ' = ℓ ∧ v' = v.add d ∧ satisfies v (A.inv ℓ) ∧ satisfies (v.add d) (A.inv ℓ) := Iff.rfl
 
-/-- Delay transitions of a timed automaton are deterministic (time determinism,
-axiom 9.2): the post-delay state `(ℓ, v + d)` is uniquely determined. -/
+/-- Delay transitions of a timed automaton are deterministic (time determinism):
+the post-delay state `(ℓ, v + d)` is uniquely determined. -/
 theorem timeDeterministic (A : TimedAutomaton Loc Act C) : A.tlts.TimeDeterministic := by
   rintro p d q q' ⟨hℓ, hv, _, _⟩ ⟨hℓ', hv', _, _⟩
   exact Prod.ext (hℓ.trans hℓ'.symm) (hv.trans hv'.symm)

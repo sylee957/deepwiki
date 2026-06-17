@@ -1,10 +1,10 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # Structural laws of CCS up to strong bisimilarity (§3.3, Exercises 3.10, 3.12)
+/-! # Structural laws of CCS up to strong bisimilarity
 The monoid laws of parallel composition and the constant-unfolding law, each a
-strong bisimulation: `K ~ defn K` (Exercise 3.10); `P ∣ Q ~ Q ∣ P`,
-`P ∣ 0 ~ P`, `(P ∣ Q) ∣ R ~ P ∣ (Q ∣ R)` (Exercise 3.12); plus a witness that
+strong bisimulation: `K ~ defn K`; `P ∣ Q ~ Q ∣ P`,
+`P ∣ 0 ~ P`, `(P ∣ Q) ∣ R ~ P ∣ (Q ∣ R)`; plus a witness that
 `+` *does* distribute over `∣` in a degenerate case. -/
 
 namespace DeepWiki.ReactiveSystems
@@ -13,9 +13,9 @@ open LTS
 
 variable {Name K : Type*} {defn : K → CCS Name K}
 
-/-! ## Exercise 3.10 — a constant is bisimilar to its body -/
+/-! ## A constant is bisimilar to its body -/
 
-/-- **Exercise 3.10** (§3.3, p.45). If `K ≝ P` then `K ~ P`: a process constant
+/-- If `K ≝ P` then `K ~ P`: a process constant
 and its defining body have identical successor sets (the `con` SOS rule). -/
 theorem const_bisim_body (K0 : K) : (CCS.const K0) ~[ccsLTS defn] (defn K0) := by
   rw [bisimilar_iff]
@@ -25,7 +25,7 @@ theorem const_bisim_body (K0 : K) : (CCS.const K0) ~[ccsLTS defn] (defn K0) := b
   · rw [ccsLTS_step] at h
     exact ⟨q', by rw [ccsLTS_step, step_const_iff]; exact h, bisimilar_refl _⟩
 
-/-! ## Exercise 3.12 — parallel composition is a commutative monoid up to `~` -/
+/-! ## Parallel composition is a commutative monoid up to `~` -/
 
 /-- The relation `{(A ∣ B, B ∣ A)}` underlying commutativity. -/
 def parCommRel (_defn : K → CCS Name K) : CCS Name K → CCS Name K → Prop :=
@@ -47,7 +47,7 @@ theorem isBisimulation_parCommRel : IsBisimulation (ccsLTS defn) (parCommRel def
     · exact ⟨CCS.par A' B', by rw [ccsLTS_step]; exact Step.com3 hℓ.co hA (by rw [Act.co_co]; exact hB),
         _, _, rfl, rfl⟩
 
-/-- **Exercise 3.12** (§3.3, p.46, eq. 3.4). Parallel composition is commutative:
+/-- Parallel composition is commutative:
 `P ∣ Q ~ Q ∣ P`. -/
 theorem par_comm (A B : CCS Name K) : (CCS.par A B) ~[ccsLTS defn] (CCS.par B A) :=
   isBisimulation_parCommRel.le_bisimilar ⟨A, B, rfl, rfl⟩
@@ -66,7 +66,7 @@ theorem isBisimulation_parUnitRel : IsBisimulation (ccsLTS defn) (parUnitRel def
     · exact absurd hB not_step_nil
   · exact ⟨CCS.par y' CCS.nil, by rw [ccsLTS_step]; exact Step.com1 hy, _, rfl, rfl⟩
 
-/-- **Exercise 3.12** (§3.3, p.46, eq. 3.5). `0` is a unit for parallel
+/-- `0` is a unit for parallel
 composition: `P ∣ 0 ~ P`. -/
 theorem par_unit (A : CCS Name K) : (CCS.par A CCS.nil) ~[ccsLTS defn] A :=
   isBisimulation_parUnitRel.le_bisimilar ⟨A, rfl, rfl⟩
@@ -118,7 +118,7 @@ theorem isBisimulation_parAssocRel : IsBisimulation (ccsLTS defn) (parAssocRel d
           _, _, _, rfl, rfl⟩
       · exact absurd hτ hℓ.co
 
-/-- **Exercise 3.12** (§3.3, p.46, eq. 3.6). Parallel composition is associative:
+/-- Parallel composition is associative:
 `(P ∣ Q) ∣ R ~ P ∣ (Q ∣ R)`. -/
 theorem par_assoc (A B C : CCS Name K) :
     (CCS.par (CCS.par A B) C) ~[ccsLTS defn] (CCS.par A (CCS.par B C)) :=
@@ -127,7 +127,7 @@ theorem par_assoc (A B C : CCS Name K) :
 /-- The empty definition environment (no constants). -/
 def noDefs : Empty → CCS Name Empty := fun e => e.elim
 
-/-- **Exercise 3.12** (§3.3, p.46). `+` need not distribute over `∣` in general,
+/-- `+` need not distribute over `∣` in general,
 but it *does* in the degenerate all-`0` case: `(0 + 0) ∣ 0 ~ (0 ∣ 0) + (0 ∣ 0)`
 (both are deadlocked). -/
 theorem par_choice_distrib_nil :

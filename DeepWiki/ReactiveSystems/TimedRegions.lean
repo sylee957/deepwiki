@@ -1,18 +1,18 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
 
-/-! # Clock regions (§11.4)
+/-! # Clock regions
 The region construction abstracts the uncountably-branching timed transition
 system of a timed automaton into a finite quotient. Each clock `x` is compared
 against a maximal constant `cₓ`; two valuations are *region equivalent* when they
 agree on the integer parts of all clocks (up to `cₓ`), on which clocks have a
 zero fractional part, and on the ordering of the fractional parts.
 
-The book's Definition 11.12 states three conditions verbatim; taken literally
-they are **not** symmetric at integer boundaries (`not_symmetric_regionEquiv`):
+The book's verbatim three conditions, taken literally, are
+**not** symmetric at integer boundaries (`not_symmetric_regionEquiv`):
 a value just above `cₓ` and the integer `cₓ` share a floor, so condition 1
 holds, while the asymmetric guard `v x ≤ cₓ` of condition 2 only detects the
 differing fractional parts in one direction. The genuine equivalence relation
-underlying Theorem 11.3 replaces the bare floor comparison by a *clamped* floor
+underlying the finiteness theorem replaces the bare floor comparison by a *clamped* floor
 (`regionFloor`) collapsing everything above `cₓ` to one bucket; this `RegionEq`
 is a true `Equivalence` and refines the book's `≡`. -/
 
@@ -22,11 +22,10 @@ open scoped NNReal
 
 variable {C : Type*}
 
-/-- Integer part `⌊d⌋₊` of a clock value (Definition 11.11). -/
+/-- Integer part `⌊d⌋₊` of a clock value. -/
 noncomputable def intPart (d : ℝ≥0) : ℕ := ⌊d⌋₊
 
-/-- Fractional part `frac(d) = d − ⌊d⌋`, read in `ℝ` via the coercion
-(Definition 11.11). -/
+/-- Fractional part `frac(d) = d − ⌊d⌋`, read in `ℝ` via the coercion. -/
 noncomputable def fracPart (d : ℝ≥0) : ℝ := Int.fract (d : ℝ)
 
 /-- `fracPart` of an integer-valued clock is `0`. -/
@@ -37,7 +36,7 @@ open Classical in
 /-- Clamped integer part used by region equivalence: a clock above its maximal
 constant `cₓ` collapses to the single bucket `cₓ + 1`, so a value just above an
 integer `cₓ` is separated from `cₓ` itself — fixing the boundary gap in
-Definition 11.12's bare floor comparison. -/
+the book's bare floor comparison. -/
 noncomputable def regionFloor (cmax : C → ℕ) (v : Valuation C) (x : C) : ℕ :=
   if v x ≤ cmax x then ⌊v x⌋₊ else cmax x + 1
 
@@ -73,7 +72,7 @@ theorem bounded_iff_regionFloor {cmax : C → ℕ} {v v' : Valuation C} {x : C}
     have := floor_le_of_le_cmax hx'
     omega
 
-/-- **Definition 11.12** (region equivalence, verbatim). Two clock valuations are
+/-- Region equivalence (the book's verbatim conditions). Two clock valuations are
 equivalent when (1) for each clock either both exceed its maximal constant `cₓ`
 or their integer parts agree, (2) for each clock at most `cₓ` the two agree on
 having a zero fractional part, and (3) the ordering of fractional parts (among
@@ -84,7 +83,7 @@ def RegionEquiv (cmax : C → ℕ) (v v' : Valuation C) : Prop :=
   (∀ x y, v x ≤ cmax x → v y ≤ cmax y →
       (fracPart (v x) ≤ fracPart (v y) ↔ fracPart (v' x) ≤ fracPart (v' y)))
 
-/-- **Region equivalence** as used by Theorem 11.3: Definition 11.12 with the
+/-- **Region equivalence** (the working relation): the book's conditions with the
 bare floor comparison (condition 1) replaced by agreement of the *clamped* floor
 `regionFloor`. This is a genuine equivalence relation. -/
 def RegionEq (cmax : C → ℕ) (v v' : Valuation C) : Prop :=
@@ -93,7 +92,7 @@ def RegionEq (cmax : C → ℕ) (v v' : Valuation C) : Prop :=
   (∀ x y, v x ≤ cmax x → v y ≤ cmax y →
       (fracPart (v x) ≤ fracPart (v y) ↔ fracPart (v' x) ≤ fracPart (v' y)))
 
-/-- **Theorem 11.3** (equivalence part). Region equivalence is an equivalence
+/-- Region equivalence is an equivalence
 relation on clock valuations. -/
 theorem regionEq_equivalence (cmax : C → ℕ) : Equivalence (RegionEq cmax) where
   refl _ := ⟨fun _ => rfl, fun _ _ => Iff.rfl, fun _ _ _ _ => Iff.rfl⟩
@@ -116,7 +115,7 @@ theorem regionEq_equivalence (cmax : C → ℕ) : Equivalence (RegionEq cmax) wh
           ((bounded_iff_regionFloor (h1 y)).mp hy))
 
 /-- `RegionEq` refines the book's verbatim `RegionEquiv`: agreement of clamped
-floors entails condition 1 of Definition 11.12 (and conditions 2–3 coincide). -/
+floors entails condition 1 (and conditions 2–3 coincide). -/
 theorem RegionEq.regionEquiv {cmax : C → ℕ} {v v' : Valuation C}
     (h : RegionEq cmax v v') : RegionEquiv cmax v v' := by
   obtain ⟨h1, h2, h3⟩ := h
@@ -132,11 +131,11 @@ theorem RegionEq.regionEquiv {cmax : C → ℕ} {v v' : Valuation C}
   · left
     exact ⟨not_le.mp hx, not_le.mp fun c => hx (hb.mpr c)⟩
 
-/-- The book's verbatim **Definition 11.12 is not symmetric**: with one clock and
+/-- The book's verbatim region equivalence **is not symmetric**: with one clock and
 `cₓ = 0`, the valuations `v(x) = ½` and `v'(x) = 0` satisfy the three conditions
 in the order `(v, v')` (condition 1 holds — equal floors `0`; conditions 2–3 are
 vacuous since `½ ≰ 0`), but fail them in the order `(v', v)` (condition 2 now
-fires at `0 ≤ 0` and `frac 0 = 0 ↮ frac ½ = 0`). Theorem 11.3 needs a genuine
+fires at `0 ≤ 0` and `frac 0 = 0 ↮ frac ½ = 0`). The finiteness theorem needs a genuine
 equivalence; `RegionEq` supplies it. -/
 theorem not_symmetric_regionEquiv :
     ¬ Symmetric (RegionEquiv (C := Unit) (fun _ => 0)) := by
@@ -162,7 +161,7 @@ def regionSetoid (cmax : C → ℕ) : Setoid (Valuation C) where
   r := RegionEq cmax
   iseqv := regionEq_equivalence cmax
 
-/-- **Definition 11.13.** A *region* is an equivalence class `[v]_≡` of clock
+/-- A *region* is an equivalence class `[v]_≡` of clock
 valuations under region equivalence. -/
 def Region (cmax : C → ℕ) : Type _ := Quotient (regionSetoid cmax)
 
@@ -174,7 +173,7 @@ theorem region_eq_iff {cmax : C → ℕ} {v v' : Valuation C} :
     region cmax v = region cmax v' ↔ RegionEq cmax v v' :=
   Quotient.eq
 
-/-! ## Finiteness of the region quotient (Theorem 11.3, finite-index part) -/
+/-! ## Finiteness of the region quotient -/
 
 open Classical in
 /-- The **region fingerprint** of a clock valuation: the clamped floor of every
@@ -231,15 +230,15 @@ theorem Region.fingerprint_injective (cmax : C → ℕ) :
   induction b using Quotient.ind with | _ v' =>
   exact fun h => Quotient.sound ((regionEq_iff_fingerprint cmax v v').mpr h)
 
-/-- **Theorem 11.3** (finite-index part). For a finite clock set, region
+/-- For a finite clock set, region
 equivalence partitions the clock valuations into only finitely many classes:
 the region quotient is finite. -/
 instance Region.finite [Finite C] (cmax : C → ℕ) : Finite (Region cmax) :=
   Finite.of_injective _ (Region.fingerprint_injective cmax)
 
-/-! ## Toward Theorem 11.3: guard invariance, reset preservation, time-successor
+/-! ## Guard invariance, reset preservation, time-successor
 
-The substantive half of Theorem 11.3 — region-equivalent configurations are
+The substantive half of the region theorem — region-equivalent configurations are
 *untimed* bisimilar — rests on three facts about how region equivalence interacts
 with the timed-automaton semantics. Guard invariance (region-equivalent
 valuations satisfy the same bounded clock constraints) and reset preservation are
@@ -327,7 +326,7 @@ theorem regionEq_cmp_holds {cmax : C → ℕ} {v v' : Valuation C} (cmp : Cmp) {
     have hb : (n : ℝ≥0) < v' x := lt_of_le_of_lt hcn (not_le.mp hx')
     exact Cmp.holds_congr_of_lt cmp ha hb
 
-/-- **Guard invariance** (the substance of Theorem 11.3's action steps):
+/-- **Guard invariance** (the substance of the region theorem's action steps):
 region-equivalent valuations satisfy exactly the same clock constraints whose
 constants stay within the clamp `cmax`. -/
 theorem regionEq_satisfies {cmax : C → ℕ} {v v' : Valuation C} {g : ClockConstraint C}
@@ -482,7 +481,7 @@ theorem exists_delay_match_clock {cmax : C → ℕ} {v v' : Valuation C} {x : C}
 
 /-- The region **time-successor** property: from region-equivalent valuations, any
 delay on the left is matched by *some* delay on the right into region-equivalent
-valuations. This is the delay-matching ingredient of Theorem 11.3's untimed
+valuations. This is the delay-matching ingredient of the region theorem's untimed
 bisimulation. -/
 def TimeSuccessor (cmax : C → ℕ) : Prop :=
   ∀ ⦃v v' : Valuation C⦄, RegionEq cmax v v' → ∀ d : ℝ≥0, ∃ d', RegionEq cmax (v.add d) (v'.add d')
@@ -1150,7 +1149,7 @@ theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valua
 theorem Valuation.add_add (v : Valuation C) (a b : ℝ≥0) : (v.add a).add b = v.add (a + b) := by
   funext x; simp only [Valuation.add_apply]; ring
 
-/-- **General time-successor for a finite clock set** (Theorem 11.3's delay case,
+/-- **General time-successor for a finite clock set** (the delay case,
 multi-clock). Writing `d = N + δ` with `N = ⌊d⌋` and `δ ∈ [0,1)`, the integer
 shift by `N` preserves region equivalence (`regionEq_add_natCast`) and the
 fractional remainder is matched by `RegionEq.timeSuccessor_frac`. -/

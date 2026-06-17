@@ -43,8 +43,7 @@ theorem weakStep_choiceL_or (R : CCS Name K) {Q Q' : CCS Name K} {α : Act Name}
     · -- nonempty leading `τ`: lift its first step onto the `Q`-summand
       exact ⟨Q₁, Q₂, Relation.ReflTransGen.head (step_choiceL hQZ) hZQ₁, hstep, h2⟩
 
-/-- **Exercise 7.10** (§7.3, p.152), first part. If `Q` weakly simulates `P` then
-`Q + R` weakly simulates `P`. -/
+/-- If `Q` weakly simulates `P` then `Q + R` weakly simulates `P`. -/
 theorem weaklySimulates_choiceL {P Q R : CCS Name K}
     (h : WeaklySimulates (ccsLTS defn) Act.tau Q P) :
     WeaklySimulates (ccsLTS defn) Act.tau (CCS.choice Q R) P := by
@@ -59,8 +58,7 @@ theorem weaklySimulates_choiceL {P Q R : CCS Name K}
   · obtain ⟨s₂', hw, hS2⟩ := hSweak hS α s₁' hstep
     exact ⟨s₂', hw, Or.inr hS2⟩
 
-/-- **Exercise 7.10** (§7.3, p.152), second part. If `Q` weakly simulates `P` then
-`Q + R` weakly simulates `P + R`. -/
+/-- If `Q` weakly simulates `P` then `Q + R` weakly simulates `P + R`. -/
 theorem weaklySimulates_choiceLR {P Q R : CCS Name K}
     (h : WeaklySimulates (ccsLTS defn) Act.tau Q P) :
     WeaklySimulates (ccsLTS defn) Act.tau (CCS.choice Q R) (CCS.choice P R) := by

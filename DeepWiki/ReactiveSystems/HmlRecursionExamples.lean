@@ -11,17 +11,17 @@ namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-! ## Exercise 6.4 — evaluating `O_{[b]ff ∧ [a]X}({p₂})` -/
+/-! ## Evaluating `O_{[b]ff ∧ [a]X}({p₂})` -/
 
-/-- Actions `a`/`b` for Exercise 6.4. -/
+/-- Actions `a`/`b`. -/
 inductive Lab62 | a | b
   deriving DecidableEq, Fintype
 
-/-- States of the Figure 6.2 LTS. -/
+/-- States of the three-state LTS. -/
 inductive S62 | p1 | p2 | p3
   deriving DecidableEq, Fintype
 
-/-- Figure 6.2 edges: `p₁ —a→ p₂`, `p₁ —b→ p₃`, `p₃ —a→ p₁`, `p₃ —a→ p₂`; `p₂` dead. -/
+/-- Edges: `p₁ —a→ p₂`, `p₁ —b→ p₃`, `p₃ —a→ p₁`, `p₃ —a→ p₂`; `p₂` dead. -/
 def edge62 : S62 → Lab62 → S62 → Bool
   | .p1, .a, .p2 => true
   | .p1, .b, .p3 => true
@@ -29,10 +29,10 @@ def edge62 : S62 → Lab62 → S62 → Bool
   | .p3, .a, .p2 => true
   | _, _, _ => false
 
-/-- The Figure 6.2 LTS (reducible for decidability). -/
+/-- The three-state LTS (reducible for decidability). -/
 abbrev L62 : LTS S62 Lab62 := ⟨fun p x q => edge62 p x q = true⟩
 
-/-- **Exercise 6.4** (§6.2, p.110). `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`: a single
+/-- `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`: a single
 evaluation of the semantic functional (no fixed point). -/
 theorem denotR_L62_singleton :
     denotR L62 (HMLR.and (HMLR.box .b HMLR.ff) (HMLR.box .a HMLR.var)) {S62.p2}
@@ -43,9 +43,9 @@ theorem denotR_L62_singleton :
       Set.mem_empty_iff_false] <;>
     decide
 
-/-! ## Exercise 6.6 — least solution `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` is everything -/
+/-! ## Least solution `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` is everything -/
 
-/-- States of the Exercise 6.6 LTS. -/
+/-- States of the LTS. -/
 inductive S66 | s | s1 | s2 | t | t1
   deriving DecidableEq
 
@@ -60,13 +60,13 @@ inductive Step66 : S66 → Lab62 → S66 → Prop
   | s2b : Step66 .s2 .b .s2
   | t1b : Step66 .t1 .b .t1
 
-/-- The Exercise 6.6 LTS. -/
+/-- The LTS. -/
 def L66 : LTS S66 Lab62 := ⟨Step66⟩
 
 /-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` (with `⟨{a,b}⟩Y = ⟨a⟩Y ∨ ⟨b⟩Y`). -/
 def FY66 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
 
-/-- **Exercise 6.6** (§6.3, p.111). The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
+/-- The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
 is the whole state space: every state can reach (via `a`/`b`) a `b`-looping state. -/
 theorem lfp_FY66_univ : recMin L66 FY66 = Set.univ := by
   apply le_antisymm (Set.subset_univ _)
@@ -80,9 +80,9 @@ theorem lfp_FY66_univ : recMin L66 FY66 = Set.univ := by
   | s => exact hS (Or.inr (Or.inl ⟨.s2, Step66.sa2, hs2⟩))
   | t => exact hS (Or.inr (Or.inl ⟨.s2, Step66.ta2, hs2⟩))
 
-/-! ## Exercise 6.7 — recMax / recMin / livelock on one LTS -/
+/-! ## recMax / recMin / livelock on one LTS -/
 
-/-- States of the Exercise 6.7 LTS. -/
+/-- States of the LTS. -/
 inductive S67 | s | s1 | s2 | t | t1
   deriving DecidableEq
 
@@ -95,7 +95,7 @@ inductive Step67 : S67 → Lab62 → S67 → Prop
   | ta1 : Step67 .t .a .t1
   | t1a : Step67 .t1 .a .t1
 
-/-- The Exercise 6.7 LTS. -/
+/-- The LTS. -/
 def L67 : LTS S67 Lab62 := ⟨Step67⟩
 
 /-- `X =ν ⟨b⟩tt ∧ [b]X`. -/
@@ -104,7 +104,7 @@ def F67 : HMLR Lab62 := .and (.dia .b .tt) (.box .b .var)
 /-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`. -/
 def FY67 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
 
-/-- **Exercise 6.7(1)** (§6.3). `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`: `{s₁, s₂}` is a
+/-- `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`: `{s₁, s₂}` is a
 post-fixed point (each has a `b`-move staying inside). -/
 theorem s1_mem_gfp_F67 : S67.s1 ∈ recMax L67 F67 := by
   have h : ({S67.s1, S67.s2} : Set S67) ≤ recMax L67 F67 := by
@@ -115,7 +115,7 @@ theorem s1_mem_gfp_F67 : S67.s1 ∈ recMax L67 F67 := by
     · exact ⟨⟨.s1, Step67.s2b, trivial⟩, by intro p' hstep; cases hstep; simp [denotR]⟩
   exact h (show S67.s1 ∈ ({S67.s1, S67.s2} : Set S67) by simp)
 
-/-- **Exercise 6.7(2)** (§6.3). For `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`: `s ⊨ Y` (it reaches a
+/-- For `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`: `s ⊨ Y` (it reaches a
 `b`-state) but `t ⊭ Y` (the `t`-component has no `b`-move). -/
 theorem s_mem_lfp_FY67_and_t_nmem : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recMin L67 FY67 := by
   have hfix : denotR L67 FY67 (recMin L67 FY67) = recMin L67 FY67 :=
@@ -144,7 +144,7 @@ theorem s_mem_lfp_FY67_and_t_nmem : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recM
     have := hsub ht
     simp at this
 
-/-- **Exercise 6.7(3)** (§6.3). `t` is livelocked on `a`: `t ⊨ Z =ν ⟨a⟩Z`. -/
+/-- `t` is livelocked on `a`: `t ⊨ Z =ν ⟨a⟩Z`. -/
 theorem t_livelocked_L67_a : S67.t ∈ LivelockNow L67 .a :=
   (livelockFun L67 .a).le_gfp (a := {S67.t, S67.t1}) (by
     intro x hx
@@ -153,13 +153,13 @@ theorem t_livelocked_L67_a : S67.t ∈ LivelockNow L67 .a :=
     · exact ⟨.t1, Step67.t1a, by simp⟩)
     (by simp)
 
-/-! ## Exercise 6.9 — largest solution of an equational system -/
+/-! ## Largest solution of an equational system -/
 
 /-- The two variables `X, Y` of the equational system. -/
 inductive V69 | X | Y
   deriving DecidableEq
 
-/-- States of the Exercise 6.9 LTS. -/
+/-- States of the LTS. -/
 inductive P69 | p | q | r
   deriving DecidableEq
 
@@ -169,7 +169,7 @@ inductive Step69 : P69 → Unit → P69 → Prop
   | pq : Step69 .p () .q
   | qr : Step69 .q () .r
 
-/-- The Exercise 6.9 LTS. -/
+/-- The LTS. -/
 def L69 : LTS P69 Unit := ⟨Step69⟩
 
 /-- The system `X =ν [a]Y`, `Y =ν ⟨a⟩X`. -/
@@ -182,7 +182,7 @@ def sol69 : V69 → Set P69
   | .X => {P69.p, P69.r}
   | .Y => {P69.p, P69.q}
 
-/-- **Exercise 6.9** (§6.5, p.124). The largest solution of `X =ν [a]Y`,
+/-- The largest solution of `X =ν [a]Y`,
 `Y =ν ⟨a⟩X` over the 3-state LTS is `X = {p, r}`, `Y = {p, q}`. -/
 theorem sysMax_D69_eq_sol69 : sysMax L69 D69 = sol69 := by
   apply le_antisymm
@@ -224,15 +224,15 @@ theorem sysMax_D69_eq_sol69 : sysMax L69 D69 = sol69 := by
         | q => exact ⟨.r, Step69.qr, by simp [denotV, sol69]⟩
         | r => simp [sol69] at hx
 
-/-! ## Exercises 6.16/6.17 — LivelockNow computations -/
+/-! ## LivelockNow computations -/
 
 /-- Actions for the livelock examples. -/
 inductive Act6 | a | tau
   deriving DecidableEq
 
-/-! ## Exercise 6.16 — only the `τ`-self-loop state is livelocked -/
+/-! ## Only the `τ`-self-loop state is livelocked -/
 
-/-- States of the Exercise 6.16 LTS. -/
+/-- States of the LTS. -/
 inductive S616 | s | p | q | r
   deriving DecidableEq
 
@@ -243,10 +243,10 @@ inductive Step616 : S616 → Act6 → S616 → Prop
   | pτq : Step616 .p .tau .q
   | qτr : Step616 .q .tau .r
 
-/-- The Exercise 6.16 LTS. -/
+/-- The LTS. -/
 def L616 : LTS S616 Act6 := ⟨Step616⟩
 
-/-- **Exercise 6.16** (§6.7, p.135). The only livelocked state is `p`:
+/-- The only livelocked state is `p`:
 `LivelockNow = {p}`. -/
 theorem livelockNow_L616_tau_singleton : LivelockNow L616 .tau = {S616.p} := by
   apply le_antisymm
@@ -263,9 +263,9 @@ theorem livelockNow_L616_tau_singleton : LivelockNow L616 .tau = {S616.p} := by
   · exact (livelockFun L616 .tau).le_gfp (by
       intro y hy; cases hy; exact ⟨.p, Step616.pτp, rfl⟩)
 
-/-! ## Exercise 6.17 — every state is livelocked -/
+/-! ## Every state is livelocked -/
 
-/-- States of the Exercise 6.17 LTS. -/
+/-- States of the LTS. -/
 inductive S617 | s | s1 | s2 | s3
   deriving DecidableEq
 
@@ -277,10 +277,10 @@ inductive Step617 : S617 → Act6 → S617 → Prop
   | s2τs3 : Step617 .s2 .tau .s3
   | s3τs3 : Step617 .s3 .tau .s3
 
-/-- The Exercise 6.17 LTS. -/
+/-- The LTS. -/
 def L617 : LTS S617 Act6 := ⟨Step617⟩
 
-/-- **Exercise 6.17** (§6.7, p.135). Every state has an outgoing `τ`, so every state
+/-- Every state has an outgoing `τ`, so every state
 is livelocked: `LivelockNow = univ`. -/
 theorem livelockNow_L617_tau_univ : LivelockNow L617 .tau = Set.univ := by
   apply le_antisymm (Set.subset_univ _)

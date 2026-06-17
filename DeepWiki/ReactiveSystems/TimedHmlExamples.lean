@@ -2,8 +2,8 @@ import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 
 /-! # Untimed bisimilarity does not preserve timed HML
-Theorem 12.3 (timed-bisimilar states satisfy the same `Mt` formulae) would *fail*
-if we only assumed *untimed* bisimilarity. The `√`-free witness is the §11.2 TLTS
+The fact that timed-bisimilar states satisfy the same `Mt` formulae would *fail*
+if we only assumed *untimed* bisimilarity. The `√`-free witness is the TLTS
 (`witnessTLTS`): `A` and `B` are untimed bisimilar, but the formula
 `y in ∃∃(y > 1 ∧ ⟨a⟩tt)` holds at `A` (delay `2`, then act) and fails at `B`
 (which can only delay `≤ 1`). -/
@@ -40,9 +40,9 @@ theorem witnessTLTS_B_unsat_mt1213 : ¬ TLTS.MtSatState witnessTLTS .B mt1213 :=
     simp only [satisfies, Cmp.holds, hv, Nat.cast_one] at hguard
     exact absurd hguard (not_lt.mpr hdelay)
 
-/-! ## Exercise 12.10 — distinguishing the Figure 10.2 automata -/
+/-! ## Distinguishing the freely-delaying and bounded automata -/
 
-/-- The distinguishing formula `y in ∃∃(y > 1)` of Exercise 12.10. -/
+/-- The distinguishing formula `y in ∃∃(y > 1)`. -/
 def mt1210 : Mt Unit Unit := .reset () (.existsDelay (.guard (.atom () .gt 1)))
 
 /-- The freely-delaying automaton (`A`) satisfies `y in ∃∃(y > 1)` (delay `2`). -/
@@ -67,7 +67,7 @@ theorem witnessTLTS_B_unsat_mt1210 : ¬ TLTS.MtSatState witnessTLTS .B mt1210 :=
     simp only [satisfies, Cmp.holds, hv, Nat.cast_one] at hguard
     exact absurd hguard (not_lt.mpr hdelay)
 
-/-- **Exercise 12.10** (§12.3, p.233). The two automata of Figure 10.2 are not timed
+/-- The freely-delaying and bounded automata are not timed
 bisimilar, and `y in ∃∃(y > 1)` distinguishes them (the freely-delaying one
 satisfies it; the one bounded by `1` does not). -/
 theorem witnessTLTS_not_timedBisimilar_and_distinguishing_formula :
@@ -75,7 +75,7 @@ theorem witnessTLTS_not_timedBisimilar_and_distinguishing_formula :
       TLTS.MtSatState witnessTLTS .A mt1210 ∧ ¬ TLTS.MtSatState witnessTLTS .B mt1210 :=
   ⟨not_A_timedBisimilar_B, witnessTLTS_A_sat_mt1210, witnessTLTS_B_unsat_mt1210⟩
 
-/-- **Exercise 12.13** (§12.3, p.234). Theorem 12.3 fails for merely *untimed*
+/-- Timed-HML satisfaction agreement fails for merely *untimed*
 bisimilar states: there is a TLTS with untimed-bisimilar `p, q` and an `Mt` formula
 satisfied by one but not the other. -/
 theorem untimedBisimilar_insufficient_for_timedHML :

@@ -25,7 +25,7 @@ namespace LTS
 
 variable {Proc Act : Type*}
 
-/-- `O_F(S)` (Definition 6.1): the states satisfying `F` when the recursion
+/-- `O_F(S)`: the states satisfying `F` when the recursion
 variable `X` is interpreted as the set `S`. -/
 def denotR (L : LTS Proc Act) : HMLR Act → Set Proc → Set Proc
   | .var => fun S => S
@@ -36,7 +36,7 @@ def denotR (L : LTS Proc Act) : HMLR Act → Set Proc → Set Proc
   | .dia a F => fun S => {p | ∃ p', L.step p a p' ∧ p' ∈ denotR L F S}
   | .box a F => fun S => {p | ∀ p', L.step p a p' → p' ∈ denotR L F S}
 
-/-- **Exercise 6.5** (§6.2, p.110). `O_F` is monotone in `S`, so its least and
+/-- `O_F` is monotone in `S`, so its least and
 greatest fixed points exist (Tarski). (Negation would break monotonicity.) -/
 theorem denotR_mono (L : LTS Proc Act) (F : HMLR Act) : Monotone (denotR L F) := by
   intro S T hST
@@ -69,7 +69,7 @@ theorem denotR_recMax (L : LTS Proc Act) (F : HMLR Act) :
 theorem denotR_recMin (L : LTS Proc Act) (F : HMLR Act) :
     denotR L F (recMin L F) = recMin L F := (denotRHom L F).map_lfp
 
-/-! ## §6.3 Largest fixed points and invariant properties -/
+/-! ## Largest fixed points and invariant properties -/
 
 /-- The semantic function of `Inv(F) = νX. (F ∧ [Act]X)`: `F` holds now and `X`
 holds at every one-step successor. -/
@@ -77,7 +77,7 @@ def invFun (L : LTS Proc Act) (F : HML Act) : Set Proc →o Set Proc where
   toFun S := denot L F ∩ {p | ∀ a p', L.step p a p' → p' ∈ S}
   monotone' := fun _ _ hST _ hp => ⟨hp.1, fun a p' hstep => hST (hp.2 a p' hstep)⟩
 
-/-- `Inv(F)` (§6.3): the greatest fixed point of the invariant functional. -/
+/-- `Inv(F)`: the greatest fixed point of the invariant functional. -/
 def Inv (L : LTS Proc Act) (F : HML Act) : Set Proc := (invFun L F).gfp
 
 /-- Fixed-point unfolding of `Inv(F)`: a state is invariant for `F` iff it
@@ -89,7 +89,7 @@ theorem Inv_unfold (L : LTS Proc Act) (F : HML Act) (x : Proc) :
   conv_lhs => rw [← OrderHom.map_gfp (invFun L F)]
   exact Iff.rfl
 
-/-- **Theorem 6.1** (§6.3, p.114). `Inv(F)` is exactly the set of states from
+/-- `Inv(F)` is exactly the set of states from
 which every reachable state satisfies `F`. -/
 theorem Inv_eq (L : LTS Proc Act) (F : HML Act) :
     Inv L F = {p | ∀ p', L.Reachable p p' → p' ∈ denot L F} := by

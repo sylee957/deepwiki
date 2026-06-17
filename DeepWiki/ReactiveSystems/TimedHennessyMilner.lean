@@ -1,18 +1,18 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 
-/-! # Hennessy–Milner logic with time (basic logic, §12.1)
+/-! # Hennessy–Milner logic with time (basic logic)
 The basic timed logic adds to HML two *delay quantifiers*: `∃∃F` (the process can
 delay for some amount of time to a state satisfying `F`) and `∀∀F` (after every
 delay the resulting state satisfies `F`), alongside the usual action modalities.
 Timed-bisimilar states satisfy the same timed formulae — the soundness half of
 the timed Hennessy–Milner theorem; it holds for every TLTS (the converse needs
-the region abstraction of §11.4, since delay-branching is uncountable). -/
+the region abstraction, since delay-branching is uncountable). -/
 
 namespace DeepWiki.ReactiveSystems
 
 open scoped NNReal
 
-/-- Basic Hennessy–Milner logic with time (§12.1): HML over actions together with
+/-- Basic Hennessy–Milner logic with time: HML over actions together with
 the delay quantifiers `∃∃` and `∀∀`. -/
 inductive TimedHML (Act : Type*)
   | tt : TimedHML Act
@@ -28,7 +28,7 @@ namespace TLTS
 
 variable {Proc Act : Type*}
 
-/-- Satisfaction of a basic timed formula in a TLTS (§12.1): `⟨a⟩`/`[a]` quantify
+/-- Satisfaction of a basic timed formula in a TLTS: `⟨a⟩`/`[a]` quantify
 over `a`-transitions, `∃∃`/`∀∀` over time-delay transitions. -/
 def TSat (T : TLTS Proc Act) (p : Proc) : TimedHML Act → Prop
   | .tt => True
@@ -73,7 +73,7 @@ theorem timedBisimilar_tsat {T : TLTS Proc Act} (F : TimedHML Act) :
       obtain ⟨p', hp', hb'⟩ := ((timedBisimilar_iff T p q).mp hb).2.2.2 d q' hq'
       exact ihF hb' (hp d p' hp')
 
-/-- **Soundness of the timed Hennessy–Milner theorem** (§12.3). Timed-bisimilar
+/-- **Soundness of the timed Hennessy–Milner theorem.** Timed-bisimilar
 states are timed-HML equivalent (this direction holds for every TLTS; the
 converse uses the region abstraction). -/
 theorem timedBisimilar_timedHmlEquiv {T : TLTS Proc Act} {p q : Proc}

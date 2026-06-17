@@ -3,7 +3,7 @@ import DeepWiki.ReactiveSystems.CcsProcessGraph
 import Mathlib.Data.Fintype.Basic
 
 
-/-! # The one-place buffer Cell and a two-place bag (Exercise 2.12)
+/-! # The one-place buffer Cell and a two-place bag
 The book's value-passing one-place buffer `Cell = in(x).Cell(x)`,
 `Cell(x) = out(x).Cell`. Since this is the *pure* CCS calculus, value passing is
 encoded over a finite data domain `D`: `in(x)`/`out(x)` become action families

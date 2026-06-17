@@ -3,18 +3,17 @@ import Mathlib.Order.Iterate
 import Mathlib.Order.OrderIsoNat
 import Mathlib.Data.Fintype.Powerset
 
-/-! # Fixed points by finite iteration (Theorem 4.2 / Theorem 6.1)
+/-! # Fixed points by finite iteration
 On a *finite* complete lattice, the least and greatest fixed points of a monotone
 map are reached by finite iteration from `⊥` and `⊤`: the ascending chain
 `⊥ ≼ f⊥ ≼ ⋯` (resp. descending `⊤ ≽ f⊤ ≽ ⋯`) is eventually constant, and its limit
-is the fixed point. This is the engine behind the model-checking iterations of
-Chapters 4 and 6. -/
+is the fixed point. This is the engine behind the model-checking iterations. -/
 
 namespace DeepWiki.ReactiveSystems
 
 variable {D : Type*} [CompleteLattice D] [Finite D]
 
-/-- **Theorem 4.2** (least fixed point). `lfp f = fᵐ(⊥)` for some `m`. -/
+/-- Least fixed point by finite iteration: `lfp f = fᵐ(⊥)` for some `m`. -/
 theorem lfp_eq_iterate_bot (f : D →o D) : ∃ m, OrderHom.lfp f = f^[m] ⊥ := by
   have hmono : Monotone (fun n => f^[n] (⊥ : D)) := f.mono.monotone_iterate_of_le_map bot_le
   obtain ⟨m, hm⟩ := WellFoundedGT.monotone_chain_condition ⟨_, hmono⟩
@@ -30,7 +29,7 @@ theorem lfp_eq_iterate_bot (f : D →o D) : ∃ m, OrderHom.lfp f = f^[m] ⊥ :=
         exact (f.mono ih).trans (OrderHom.map_lfp f).le
   exact ⟨m, le_antisymm (f.lfp_le heq.ge) (hle m)⟩
 
-/-- **Theorem 4.2** (greatest fixed point). `gfp f = fᴹ(⊤)` for some `M`. -/
+/-- Greatest fixed point by finite iteration: `gfp f = fᴹ(⊤)` for some `M`. -/
 theorem gfp_eq_iterate_top (f : D →o D) : ∃ M, OrderHom.gfp f = f^[M] ⊤ := by
   have hanti : Antitone (fun n => f^[n] (⊤ : D)) := f.mono.antitone_iterate_of_map_le le_top
   obtain ⟨M, hM⟩ := WellFoundedLT.antitone_chain_condition hanti

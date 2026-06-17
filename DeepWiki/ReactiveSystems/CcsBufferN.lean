@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # An `n`-place buffer equals `n` one-place buffers (Proposition 3.2)
+/-! # An `n`-place buffer equals `n` one-place buffers
 The general buffer-implementation result: a capacity-`n` buffer
 `Bⁿ₀ = in.Bⁿ₁`, `Bⁿᵢ = in.Bⁿᵢ₊₁ + out.Bⁿᵢ₋₁` (`0 < i < n`), `Bⁿₙ = out.Bⁿₙ₋₁`
 is strongly bisimilar to the parallel product of `n` one-place buffers
@@ -9,8 +9,8 @@ is strongly bisimilar to the parallel product of `n` one-place buffers
 `bufBag bs` over a bit-list (`true ↦ B¹₁` full, `false ↦ B¹₀` empty); an `in`
 flips some empty component to full, an `out` flips some full to empty, and the
 length stays `n` while the number of full components (`bs.count true`) is the
-buffer's contents. The book's relation `R` (`bufNRel`) is a strong bisimulation
-(Proposition 3.2), whence `Bⁿ₀ ~ (B¹₀)ⁿ`. -/
+buffer's contents. The book's relation `R` (`bufNRel`) is a strong bisimulation,
+whence `Bⁿ₀ ~ (B¹₀)ⁿ`. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -27,7 +27,7 @@ inductive BufNK | one (b : Bool) | nbuf (n i : ℕ)
 
 open BufNChan BufNK
 
-/-- The defining environment (§3.3, p.51): `B¹₀ = in.B¹₁`, `B¹₁ = out.B¹₀`; and
+/-- The defining environment: `B¹₀ = in.B¹₁`, `B¹₁ = out.B¹₀`; and
 `Bⁿᵢ` offers `in.Bⁿᵢ₊₁` exactly when not full (`i < n`) and `out.Bⁿᵢ₋₁` exactly
 when not empty (`0 < i`). -/
 def bufNDefn : BufNK → CCS BufNChan BufNK
@@ -156,14 +156,13 @@ theorem countT_lt_length {bs : List Bool} (h : false ∈ bs) :
     rw [List.count_eq_length] at heq
     exact absurd (heq false h) (by simp)
 
-/-- **The book's relation `R`** (§3.3, p.51): a bag of one-place buffers is
+/-- **The book's relation `R`**: a bag of one-place buffers is
 related to the capacity-`length` buffer holding as many items as the bag has full
 components. -/
 def bufNRel : CCS BufNChan BufNK → CCS BufNChan BufNK → Prop := fun p q =>
   ∃ bs : List Bool, p = bufBag bs ∧ q = .const (nbuf bs.length (bs.count true))
 
-/-- **Proposition 3.2** (§3.3, p.51). The relation `bufNRel` (the book's `R`) is a
-strong bisimulation. -/
+/-- The relation `bufNRel` (the book's `R`) is a strong bisimulation. -/
 theorem isBisimulation_bufNRel : IsBisimulation (ccsLTS bufNDefn) bufNRel := by
   rintro p q ⟨bs, rfl, rfl⟩
   refine ⟨fun α p' hp => ?_, fun α q' hq => ?_⟩
@@ -204,7 +203,7 @@ theorem isBisimulation_bufNRel : IsBisimulation (ccsLTS bufNDefn) bufNRel := by
       · rw [ccsLTS_step, bufBag_step_iff]; exact Or.inr ⟨rfl, pre, suf, rfl, rfl⟩
       · rw [length_flip _ _ false true, countT_flip]; simp
 
-/-- **Proposition 3.2** (§3.3, p.51). A capacity-`n` buffer is strongly bisimilar
+/-- A capacity-`n` buffer is strongly bisimilar
 to `n` one-place buffers in parallel: `Bⁿ₀ ~ (B¹₀)ⁿ`. -/
 theorem bufN_bisim (n : ℕ) :
     (CCS.const (nbuf n 0)) ~[ccsLTS bufNDefn] (bufBag (List.replicate n false)) := by

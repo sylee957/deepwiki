@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.Bisimulation
 
-/-! # Strong bisimilarity is a congruence for CCS (Theorem 3.2)
+/-! # Strong bisimilarity is a congruence for CCS
 Strong bisimilarity over the CCS transition system is preserved by every process
 operator: prefixing, choice, parallel composition, restriction and relabelling.
 Each proof exhibits a bisimulation built from the contextualised pairs (closed

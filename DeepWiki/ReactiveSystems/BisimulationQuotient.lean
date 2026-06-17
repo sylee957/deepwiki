@@ -9,7 +9,7 @@ by side (no transition crosses between them), so a single strong bisimilarity
 with `⟦s⟧ —a→ ⟦s'⟧` iff some representatives step `s —a→ s'`. The key theorem
 (`crossBisimilar_quot`): when the setoid relation is itself a strong bisimulation
 on `L`, every state is bisimilar to its class — the engine behind the region
-graph (Theorem 11.4). Reachability transfers both ways under the same hypothesis
+graph. Reachability transfers both ways under the same hypothesis
 (`reachable_quot_iff`). -/
 
 namespace DeepWiki.ReactiveSystems
@@ -89,8 +89,7 @@ theorem crossBisimilar_of {L₁ : LTS S₁ Act} {L₂ : LTS S₂ Act} {R : S₁ 
 /-! ## The quotient LTS -/
 
 /-- The **quotient LTS** of `L` by a setoid `st`: states are equivalence classes,
-and `⟦s⟧ —a→ ⟦s'⟧` iff some representatives take an `a`-step `s —a→ s'`
-(Definition 11.14's transition shape). -/
+and `⟦s⟧ —a→ ⟦s'⟧` iff some representatives take an `a`-step `s —a→ s'`. -/
 def quot (L : LTS S Act) (st : Setoid S) : LTS (Quotient st) Act where
   step t a t' := ∃ s s', Quotient.mk st s = t ∧ Quotient.mk st s' = t' ∧ L.step s a s'
 

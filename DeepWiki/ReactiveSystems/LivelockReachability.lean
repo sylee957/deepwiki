@@ -3,10 +3,10 @@ import Mathlib.Order.FixedPoints
 
 /-! # Reachability of a livelock via the `Pos` least-fixed-point template
 `Pos(F) =μ F ∨ ⟨Act⟩Pos(F)` describes the states from which a state satisfying `F`
-is reachable. Per the stratified reading of (6.17) (solve the `ν`-block
+is reachable. Per the stratified reading (solve the `ν`-block
 `LivelockNow` first, then the `μ`-block `Pos` over it as a constant), the formula
-`F = ⟨Act⟩Pos(LivelockNow)` over the Exercise 6.17 LTS denotes the whole state
-space: every state is livelocked (Exercise 6.17) and every state can move, so a
+`F = ⟨Act⟩Pos(LivelockNow)` over the `L617` LTS denotes the whole state
+space: every state is livelocked and every state can move, so a
 livelock is reachable from everywhere. -/
 
 namespace DeepWiki.ReactiveSystems
@@ -39,7 +39,7 @@ theorem subset_posOf (L : LTS Proc Act) (S : Set Proc) : S ⊆ posOf L S := by
   rw [← h]
   exact Set.subset_union_left
 
-/-- **Exercise 6.18** (§6.7, p.138). On the Exercise 6.17 LTS, the set of states
+/-- On the `L617` LTS, the set of states
 satisfying `⟨Act⟩Pos(LivelockNow)` is the whole state space: every state is
 livelocked (`livelockNow_L617_tau_univ`), so `Pos(LivelockNow) = univ`, and every state can move, so
 prefixing with `⟨Act⟩` keeps it `univ`. -/

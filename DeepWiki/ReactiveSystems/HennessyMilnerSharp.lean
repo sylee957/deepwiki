@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.HennessyMilner
 
-/-! # Sharpness of the Hennessy–Milner theorem (Exercise 5.13)
+/-! # Sharpness of the Hennessy–Milner theorem
 The Hennessy–Milner theorem (`hennessyMilner`) assumes image-finiteness. This is
 necessary: over the image-infinite LTS below — where `lt` (the process `A<ω`)
 can step to a chain of every finite length, and `top` (`Aω + A<ω`) can in
@@ -159,7 +159,7 @@ theorem hmLTS_not_imageFinite : ¬ hmLTS.ImageFinite := by
     Set.infinite_range_of_injective (fun a b hab => by injection hab)
   exact hinf (hfin.subset hsub)
 
-/-- Exercise 5.13: the Hennessy–Milner theorem fails without image-finiteness. -/
+/-- The Hennessy–Milner theorem fails without image-finiteness. -/
 theorem hennessyMilner_needs_imageFinite :
     ∃ (P : Type) (L : LTS P Unit) (p q : P),
       ¬ L.ImageFinite ∧ L.HMLEquiv p q ∧ ¬ (p ~[L] q) :=

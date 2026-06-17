@@ -1,13 +1,13 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 
-/-! # Untimed (time-abstract) bisimilarity (§11.2)
+/-! # Untimed (time-abstract) bisimilarity
 Untimed bisimilarity abstracts from the *durations* of delays: a delay step is
 matched by *some* delay step (of possibly different duration), while action steps
-are matched exactly (Definition 11.7). Equivalently, it is strong bisimilarity on
+are matched exactly. Equivalently, it is strong bisimilarity on
 the *untimed* LTS obtained by relabelling every time-delay transition with a
 single silent action `ε`. We take this second, equivalent route, so the whole
-strong-bisimilarity theory (Theorem 3.1) transfers for free. Timed bisimilarity
+strong-bisimilarity theory transfers for free. Timed bisimilarity
 refines untimed bisimilarity (`TimedBisimilar.untimedBisimilar`); the converse
 fails, as durations are forgotten. -/
 
@@ -19,7 +19,7 @@ namespace TLTS
 
 variable {Proc Act : Type*}
 
-/-- The **untimed LTS** of a TLTS (§11.2): action transitions are kept, and every
+/-- The **untimed LTS** of a TLTS: action transitions are kept, and every
 time-delay transition is abstracted to a single silent action `ε` (here `none`),
 forgetting its duration. -/
 def untimedLTS (T : TLTS Proc Act) : LTS Proc (Option Act) where
@@ -27,19 +27,19 @@ def untimedLTS (T : TLTS Proc Act) : LTS Proc (Option Act) where
     | some act => T.act p act q
     | none => ∃ d, T.delay p d q
 
-/-- **Definition 11.7.** Untimed (time-abstract) bisimilarity `p ∼u q`: strong
+/-- Untimed (time-abstract) bisimilarity `p ∼u q`: strong
 bisimilarity on the untimed LTS — actions matched exactly, delays matched by
 *some* delay of possibly different duration. -/
 def UntimedBisimilar (T : TLTS Proc Act) (p q : Proc) : Prop :=
   LTS.Bisimilar T.untimedLTS p q
 
 /-- Untimed bisimilarity is an equivalence relation (inherited from strong
-bisimilarity, Theorem 3.1). -/
+bisimilarity). -/
 theorem untimedBisimilar_equivalence (T : TLTS Proc Act) :
     Equivalence T.UntimedBisimilar :=
   LTS.equivalence_bisimilar
 
-/-- **Definition 11.7**, transfer form: untimed bisimilarity matches each action
+/-- Transfer form: untimed bisimilarity matches each action
 transition exactly and each delay transition by *some* delay. -/
 theorem untimedBisimilar_iff (T : TLTS Proc Act) (p q : Proc) :
     T.UntimedBisimilar p q ↔
@@ -93,7 +93,7 @@ theorem isBisimulation_untimedLTS_timedBisimilar (T : TLTS Proc Act) :
         obtain ⟨p', hp', hb⟩ := hd2 d q' hd
         exact ⟨p', ⟨d, hp'⟩, hb⟩
 
-/-- **Timed bisimilarity refines untimed bisimilarity** (§11.2): timed-bisimilar
+/-- **Timed bisimilarity refines untimed bisimilarity**: timed-bisimilar
 states are untimed bisimilar. -/
 theorem TimedBisimilar.untimedBisimilar {T : TLTS Proc Act} {p q : Proc}
     (h : T.TimedBisimilar p q) : T.UntimedBisimilar p q :=

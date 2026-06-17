@@ -1,13 +1,13 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
 
-/-! # Hennessy–Milner logic with time and formula clocks (`Mt`, §12.1)
-The full timed logic `Mt` of Definition 12.1 adds to the action and delay
+/-! # Hennessy–Milner logic with time and formula clocks (`Mt`)
+The full timed logic `Mt` adds to the action and delay
 modalities two constructs over a set of *formula clocks* `D` (disjoint from the
 automaton's own clocks): a reset `x in F` (evaluate `F` after setting clock `x`
 to zero) and an atomic clock constraint `g ∈ B(D)` (the formula-clock valuation
 must satisfy `g`). Formulae are interpreted over *extended states* `(p, u)` — a
 process state `p` together with a formula-clock valuation `u` — and time-delay
-steps advance `u` alongside the process (Definition 12.2). Timed-bisimilar states
+steps advance `u` alongside the process. Timed-bisimilar states
 satisfy the same `Mt` formulae under every formula-clock valuation, the soundness
 half of the timed Hennessy–Milner theorem for the full logic. -/
 
@@ -15,7 +15,7 @@ namespace DeepWiki.ReactiveSystems
 
 open scoped NNReal
 
-/-- **Definition 12.1.** Hennessy–Milner formulae with time, `Mt`, over actions
+/-- Hennessy–Milner formulae with time, `Mt`, over actions
 `Act` and formula clocks `D`: `tt`, `ff`, `∧`, `∨`, the action modalities
 `⟨a⟩`/`[a]`, the delay quantifiers `∃∃`/`∀∀`, the reset `x in F`, and atomic
 clock constraints `g ∈ B(D)`. -/
@@ -35,7 +35,7 @@ namespace TLTS
 
 variable {Proc Act D : Type*}
 
-/-- **Definition 12.2.** Satisfaction of an `Mt` formula at an extended state
+/-- Satisfaction of an `Mt` formula at an extended state
 `(p, u)` — process `p` with formula-clock valuation `u`. Action modalities range
 over `a`-transitions; the delay quantifiers range over time steps and advance the
 formula clocks `u` by the same delay; `x in F` resets `x` to zero; `g` holds when
@@ -52,7 +52,7 @@ def MtSat (T : TLTS Proc Act) (p : Proc) (u : Valuation D) : Mt Act D → Prop
   | .reset x F => MtSat T p (Valuation.reset {x} u) F
   | .guard g => satisfies u g
 
-/-- **Definition 12.3.** A process state satisfies `F` when the extended state
+/-- A process state satisfies `F` when the extended state
 with every formula clock zero satisfies it: `(p, u₀) ⊨ F` with `u₀ ≡ 0`. -/
 def MtSatState (T : TLTS Proc Act) (p : Proc) (F : Mt Act D) : Prop :=
   MtSat T p (fun _ => 0) F
@@ -94,28 +94,28 @@ theorem timedBisimilar_mtSat {T : TLTS Proc Act} (F : Mt Act D) :
   | reset x F ihF => exact fun u hb hp => ihF (Valuation.reset {x} u) hb hp
   | guard g => exact fun _ _ hp => hp
 
-/-- **Soundness for `Mt`** (§12.1). Timed-bisimilar states satisfy the same `Mt`
+/-- **Soundness for `Mt`**. Timed-bisimilar states satisfy the same `Mt`
 formulae at every formula-clock valuation. -/
 theorem timedBisimilar_mtIff {T : TLTS Proc Act} {p q : Proc}
     (h : TimedBisimilar T p q) (u : Valuation D) (F : Mt Act D) :
     MtSat T p u F ↔ MtSat T q u F :=
   ⟨timedBisimilar_mtSat F u h, timedBisimilar_mtSat F u h.symm⟩
 
-/-- **Soundness for `Mt`** at the state level (Definition 12.3): timed-bisimilar
+/-- **Soundness for `Mt`** at the state level: timed-bisimilar
 states satisfy the same `Mt` formulae. -/
 theorem timedBisimilar_mtSatState {T : TLTS Proc Act} {p q : Proc}
     (h : TimedBisimilar T p q) (F : Mt Act D) :
     MtSatState T p F ↔ MtSatState T q F :=
   timedBisimilar_mtIff h (fun _ => 0) F
 
-/-- The book's example formula (p.225) `y in ∃∃(y > 1 ∧ ⟨a⟩tt)`: it is possible
+/-- The book's example formula `y in ∃∃(y > 1 ∧ ⟨a⟩tt)`: it is possible
 to delay for more than one time unit and then perform an `a`-action. -/
 example (a : Act) : Mt Act Unit :=
   .reset () (.existsDelay (.and (.guard (.atom () .gt 1)) (.dia a .tt)))
 
 end TLTS
 
-/-- **Definition 12.4.** A timed automaton `A` satisfies a formula `F ∈ Mt` when
+/-- A timed automaton `A` satisfies a formula `F ∈ Mt` when
 its initial extended state — initial location with all automaton clocks zero, and
 all formula clocks zero — satisfies `F`. -/
 noncomputable def TimedAutomaton.SatisfiesMt {Loc Act C D : Type*}

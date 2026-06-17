@@ -3,8 +3,8 @@ import DeepWiki.ReactiveSystems.BisimulationWeak
 import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.CcsWeakCongruence
 
-/-! # The mutual-exclusion monitor `MutexTest` (Proposition 7.2, soundness)
-The monitor process of §7.3 watches the `enter`/`exit` actions of a process and
+/-! # The mutual-exclusion monitor `MutexTest` (soundness)
+The monitor process watches the `enter`/`exit` actions of a process and
 performs the distinguished reject action `bad` precisely when it sees two `enter`s
 with no intervening `exit` — a mutual-exclusion violation:
 `MutexTest = enter₁.MutexTest₁ + enter₂.MutexTest₂`,
@@ -12,11 +12,10 @@ with no intervening `exit` — a mutual-exclusion violation:
 `MutexTest₂ = exit₂.MutexTest + enter₁.bad.0`.
 The monitored system is `(P ∣ MutexTest) \ L` with `L = {enter₁,enter₂,exit₁,exit₂}`
 (the monitor inputs `enterᵢ`/`exitᵢ` on names; `P` outputs them on co-names, and the
-restriction forces them to synchronise; `bad ∉ L` survives). Proposition 7.2 is a
-biconditional; here we formalise the **soundness** ("if") direction — the one that
+restriction forces them to synchronise; `bad ∉ L` survives). The monitor's correctness
+is a biconditional; here we formalise the **soundness** ("if") direction — the one that
 makes the monitor a sound verification tool: every well-matched run of `P` ending
-in two consecutive `enter`s drives the system to a `bad`-transition. The
-completeness direction is the book's Exercise 7.12. -/
+in two consecutive `enter`s drives the system to a `bad`-transition. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -33,7 +32,7 @@ inductive MtK | MutexTest | MutexTest1 | MutexTest2 | Bad0
 
 open MtChan MtK
 
-/-- The monitor environment (§7.3, p.153). `MutexTest` returns to its initial
+/-- The monitor environment. `MutexTest` returns to its initial
 state on a matched `enterᵢ.exitᵢ`, and reaches `bad.0` on `enterᵢ` then `enterⱼ`
 (`j ≠ i`). The monitor *inputs* (names) the observed actions. -/
 def mtDefn : MtK → CCS MtChan MtK
@@ -143,7 +142,7 @@ theorem monitored_wellMatched {σ : List (Act MtChan)} (hσ : WellMatched σ) :
     obtain ⟨_, P', hPP', _, P'', hP'P'', hpathw⟩ := hpath
     exact tauStar_trans (mutex_round2 hPP' hP'P'') (ih hpathw)
 
-/-- **Proposition 7.2** (§7.3, p.153), soundness direction. If `P`, after a
+/-- Soundness direction. If `P`, after a
 well-matched run `σ`, can perform `enter₁` then `enter₂` (or `enter₂` then
 `enter₁`), then the monitored system `(P ∣ MutexTest) \ L` can perform the reject
 action `bad`. Thus the monitor detects every mutual-exclusion violation. -/

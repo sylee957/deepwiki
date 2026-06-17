@@ -47,7 +47,7 @@ def Mt.ClosedUnder {Act D : Type*} (B : Set D) : Mt Act D → Prop
   | .reset x F => F.ClosedUnder (insert x B)
   | .guard g => ClockConstraint.clocks g ⊆ B
 
-/-- A formula is *closed* (Exercise 12.1) when it is closed under the empty set of
+/-- A formula is *closed* when it is closed under the empty set of
 bound clocks: no guard reads a clock that has not been reset above it. -/
 def Mt.Closed {Act D : Type*} (F : Mt Act D) : Prop := F.ClosedUnder ∅
 
@@ -102,13 +102,13 @@ theorem mtSat_valuation_indep (T : TLTS Proc Act) (F : Mt Act D) :
       simp only [MtSat]
       exact satisfies_congr fun z hz => hag z (hC hz)
 
-/-- **Exercise 12.1** (§12.1, p.226). If `F` is closed, the extended states satisfying
+/-- If `F` is closed, the extended states satisfying
 it are independent of the formula-clock valuation `u`: `(p, u) ⊨ F ↔ (p, u') ⊨ F`. -/
 theorem mtSat_closed_valuation_indep (T : TLTS Proc Act) {F : Mt Act D} (hF : F.Closed)
     (p : Proc) (u u' : Valuation D) : MtSat T p u F ↔ MtSat T p u' F :=
   mtSat_valuation_indep T F ∅ hF p u u' fun z hz => ((Set.mem_empty_iff_false z).mp hz).elim
 
-/-- **Exercise 12.1** (§12.1, p.226), second part. The valuation-independence fails for
+/-- The valuation-independence fails for
 *arbitrary* (non-closed) formulae: the guard `y = 1` is satisfied under the valuation
 `y ↦ 1` but not under `y ↦ 0`. -/
 theorem not_mtSat_valuation_indep_general :

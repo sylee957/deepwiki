@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # Encoding finite process graphs as CCS (Exercise 2.3)
+/-! # Encoding finite process graphs as CCS
 A finite process graph (states `Q`, labelled transition function
 `δ : Q → Act A → List Q`) is encoded as a CCS process by taking the states as
 process constants: each state `q` becomes the choice-sum, over every label and

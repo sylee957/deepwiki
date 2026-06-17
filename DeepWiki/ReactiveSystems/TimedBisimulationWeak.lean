@@ -1,13 +1,13 @@
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 
-/-! # Weak timed bisimilarity (§11.3)
+/-! # Weak timed bisimilarity
 The *weak* timed equivalence abstracts from the silent action `τ` while keeping
-the time-delays observable. The weak timed transitions (Definition 11.8): `=τ⇒`
+the time-delays observable. The weak timed transitions: `=τ⇒`
 is a chain of `τ`-actions, `=a⇒` (visible `a`) is `τ*·a·τ*`, and `=d⇒` (delay
 `d`) is a run of `τ`-actions and delays whose durations sum to `d`. A *weak timed
-bisimulation* matches each concrete action/delay step by a weak timed transition
-(Definition 11.9), and `≈` (weak timed bisimilarity) is the existence of one
-(Definition 11.10). Timed bisimilarity refines it (Exercise 11.8): a concrete step
+bisimulation* matches each concrete action/delay step by a weak timed transition,
+and `≈` (weak timed bisimilarity) is the existence of one.
+Timed bisimilarity refines it: a concrete step
 is a one-step weak transition. -/
 
 namespace DeepWiki.ReactiveSystems
@@ -32,7 +32,7 @@ theorem wtau_trans {T : TLTS Proc Act} {tau : Act} {s u t : Proc}
     (h₁ : wtau T tau s u) (h₂ : wtau T tau u t) : wtau T tau s t :=
   Relation.ReflTransGen.trans h₁ h₂
 
-/-- **Definition 11.8**, weak action transition `s =a⇒ t`: for `a = τ` a chain of
+/-- Weak action transition `s =a⇒ t`: for `a = τ` a chain of
 silent steps, for visible `a` silent steps around one `a`-step. -/
 def wact (T : TLTS Proc Act) (tau : Act) (s : Proc) (a : Act) (t : Proc) : Prop :=
   (a = tau ∧ wtau T tau s t) ∨
@@ -45,7 +45,7 @@ theorem act_wact {T : TLTS Proc Act} {tau : Act} {s : Proc} {a : Act} {t : Proc}
   · exact Or.inl ⟨ha, ha ▸ wtau_single h⟩
   · exact Or.inr ⟨ha, s, t, wtau_refl T tau s, h, wtau_refl T tau t⟩
 
-/-- **Definition 11.8**, weak delay transition `s =d⇒ t`: a run of `τ`-actions and
+/-- Weak delay transition `s =d⇒ t`: a run of `τ`-actions and
 delays whose durations sum to `d` (`=0⇒` is just `τ*`). -/
 inductive wdelay (T : TLTS Proc Act) (tau : Act) : Proc → ℝ≥0 → Proc → Prop
   /-- `τ*` alone is a weak delay of `0`. -/
@@ -62,7 +62,7 @@ theorem delay_wdelay {T : TLTS Proc Act} {tau : Act} {s : Proc} {d : ℝ≥0} {t
     wdelay.cons (wdelay.refl (wtau_refl T tau s)) h (wtau_refl T tau t)
   rwa [zero_add] at this
 
-/-- **Definition 11.9.** A *weak timed bisimulation*: each concrete action step is
+/-- A *weak timed bisimulation*: each concrete action step is
 matched by a weak action transition, and each concrete delay step by a weak delay
 transition, on both sides. -/
 def IsWeakTimedBisimulation (T : TLTS Proc Act) (tau : Act) (R : Proc → Proc → Prop) : Prop :=
@@ -72,7 +72,7 @@ def IsWeakTimedBisimulation (T : TLTS Proc Act) (tau : Act) (R : Proc → Proc �
     (∀ a s₂', T.act s₂ a s₂' → ∃ s₁', wact T tau s₁ a s₁' ∧ R s₁' s₂') ∧
     (∀ d s₂', T.delay s₂ d s₂' → ∃ s₁', wdelay T tau s₁ d s₁' ∧ R s₁' s₂')
 
-/-- **Definition 11.10.** `s ≈ s'`: *weakly timed bisimilar* — some weak timed
+/-- `s ≈ s'`: *weakly timed bisimilar* — some weak timed
 bisimulation relates them. -/
 def WeaklyTimedBisimilar (T : TLTS Proc Act) (tau : Act) (s s' : Proc) : Prop :=
   ∃ R, IsWeakTimedBisimulation T tau R ∧ R s s'
@@ -89,7 +89,7 @@ theorem isWeakTimedBisimulation_of_timedBisimilar (T : TLTS Proc Act) (tau : Act
   · obtain ⟨s₁', hs₁', hb⟩ := ha2 a s₂' hs; exact ⟨s₁', act_wact hs₁', hb⟩
   · obtain ⟨s₁', hs₁', hb⟩ := hd2 d s₂' hs; exact ⟨s₁', delay_wdelay hs₁', hb⟩
 
-/-- **Exercise 11.8** (§11.3). Timed bisimilarity refines weak timed bisimilarity:
+/-- Timed bisimilarity refines weak timed bisimilarity:
 `s ~ s'` implies `s ≈ s'`. -/
 theorem TimedBisimilar.weaklyTimedBisimilar {T : TLTS Proc Act} {tau : Act} {s s' : Proc}
     (h : TimedBisimilar T s s') : WeaklyTimedBisimilar T tau s s' :=

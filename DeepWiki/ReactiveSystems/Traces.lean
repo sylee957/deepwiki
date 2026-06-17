@@ -18,10 +18,10 @@ inductive Path (L : LTS Proc Act) : Proc → List Act → Proc → Prop
   | cons {p p' q : Proc} {a : Act} {s : List Act} :
       L.step p a p' → Path L p' s q → Path L p (a :: s) q
 
-/-- `Traces L p`: the set of action sequences `p` can perform (§3.2). -/
+/-- `Traces L p`: the set of action sequences `p` can perform. -/
 def Traces (L : LTS Proc Act) (p : Proc) : Set (List Act) := {s | ∃ q, Path L p s q}
 
-/-- Trace equivalence (Definition 3.1): `p` and `q` have equal trace sets. -/
+/-- Trace equivalence: `p` and `q` have equal trace sets. -/
 def TraceEquiv (L : LTS Proc Act) (p q : Proc) : Prop := Traces L p = Traces L q
 
 theorem mem_traces {L : LTS Proc Act} {p : Proc} {s : List Act} :
@@ -54,11 +54,11 @@ theorem Bisimilar.traceEquiv {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p 
 def Deadlocked (L : LTS Proc Act) (p : Proc) : Prop := ∀ a q, ¬ L.step p a q
 
 /-- `CompletedTraces L p`: the action sequences from `p` ending in a deadlocked
-state (Exercise 3.2). -/
+state. -/
 def CompletedTraces (L : LTS Proc Act) (p : Proc) : Set (List Act) :=
   {s | ∃ q, Path L p s q ∧ Deadlocked L q}
 
-/-- Completed-trace equivalence (Exercise 3.2): equal completed-trace sets. -/
+/-- Completed-trace equivalence: equal completed-trace sets. -/
 def CompletedTraceEquiv (L : LTS Proc Act) (p q : Proc) : Prop :=
   CompletedTraces L p = CompletedTraces L q
 

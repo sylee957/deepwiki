@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.BisimulationWeak
 import Mathlib.Order.FixedPoints
 import Mathlib.Order.CompleteLattice.Basic
 
-/-! # Observational equivalence as a greatest fixed point (Exercise 4.15)
+/-! # Observational equivalence as a greatest fixed point
 The weak analogue of `bisimFunctional`/`bisimilar_eq_gfp`: a monotone functional
 `G` on the lattice of relations whose post-fixed points are exactly the weak
 bisimulations, with weak bisimilarity `≈` its greatest fixed point. -/
@@ -28,12 +28,12 @@ def weakBisimFunctional : (Proc → Proc → Prop) →o (Proc → Proc → Prop)
 
 variable {L tau}
 
-/-- **Exercise 4.15(1)** (§4.3). A relation is a weak bisimulation exactly when it
+/-- A relation is a weak bisimulation exactly when it
 is a post-fixed point of `G`: `R` is a weak bisimulation iff `R ≤ G R`. -/
 theorem isWeakBisimulation_iff_le_weakBisimFunctional (R : Proc → Proc → Prop) :
     IsWeakBisimulation L tau R ↔ R ≤ weakBisimFunctional L tau R := Iff.rfl
 
-/-- **Exercise 4.15(1)** (§4.3). Weak bisimilarity (observational equivalence) `≈`
+/-- Weak bisimilarity (observational equivalence) `≈`
 is the greatest fixed point of the weak bisimulation functional `G`. -/
 theorem weaklyBisimilar_eq_gfp :
     WeaklyBisimilar L tau = (weakBisimFunctional L tau).gfp := by

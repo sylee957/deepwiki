@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import Mathlib.Tactic.Set
 
-/-! # Milner's τ-laws (Exercise 3.26)
+/-! # Milner's τ-laws
 The three τ-laws of observational (weak) equivalence over CCS: a silent step
 guarded by an action is unobservable, a process is weakly equivalent to itself
 prefixed by an absorbed τ-summand, and the third τ-law on action-guarded choice.
@@ -14,7 +14,7 @@ open LTS
 
 variable {Name K : Type*} (defn : K → CCS Name K)
 
-/-- τ-law (3.9): `α.τ.P ≈ α.P` — a leading silent step after `α` is unobservable. -/
+/-- τ-law: `α.τ.P ≈ α.P` — a leading silent step after `α` is unobservable. -/
 theorem tau_law_1 {α : Act Name} (P : CCS Name K) :
     CCS.pre α (CCS.pre Act.tau P) ≈[ccsLTS defn, Act.tau] CCS.pre α P := by
   refine IsWeakBisimulation.le_weaklyBisimilar
@@ -120,7 +120,7 @@ theorem tau_law_2 (P : CCS Name K) :
         exact ⟨q', step_weakStep hstep, Or.inr rfl⟩
   exact key.le_weaklyBisimilar (Or.inl ⟨rfl, rfl⟩)
 
-/-- The third `τ`-law (3.11): `α.(P + τ.Q) ≈ α.(P + τ.Q) + α.Q`. -/
+/-- The third `τ`-law: `α.(P + τ.Q) ≈ α.(P + τ.Q) + α.Q`. -/
 theorem tau_law_3 {α : Act Name} (P Q : CCS Name K) :
     CCS.pre α (CCS.choice P (CCS.pre Act.tau Q)) ≈[ccsLTS defn, Act.tau]
       CCS.choice (CCS.pre α (CCS.choice P (CCS.pre Act.tau Q))) (CCS.pre α Q) := by

@@ -1,20 +1,20 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import Mathlib.Order.FixedPoints
 
-/-! # Recursion in Hennessy–Milner logic with time (§12.4)
+/-! # Recursion in Hennessy–Milner logic with time
 Extending the timed logic `Mt` with a recursion variable `X` lets formulae
 express ongoing real-time properties. A formula `F` with one variable induces a
 monotone semantic function `O_F` on the powerset lattice of *extended states*
-`(p, u)` (Definition 12.6); the meaning of `X =ν F` (resp. `X =μ F`) is the
+`(p, u)`; the meaning of `X =ν F` (resp. `X =μ F`) is the
 greatest (resp. least) fixed point of `O_F`, which exists by Tarski. We add a
-box/diamond over *all* actions (the book's `[Act]`/`⟨Act⟩`, used informally in
-§12.4) and embed the recursion-free logic `Mt`, then define the derived
-real-time operators `Inv` and `until` (§12.4.2) as largest fixed points. -/
+box/diamond over *all* actions (the book's `[Act]`/`⟨Act⟩`) and embed the
+recursion-free logic `Mt`, then define the derived real-time operators `Inv`
+and `until` as largest fixed points. -/
 
 namespace DeepWiki.ReactiveSystems
 
-/-- Timed HML with one recursion variable `X` (`var`): `Mt` (Definition 12.1)
-plus the box/diamond over *all* actions (`boxAll`/`diaAll`, the book's
+/-- Timed HML with one recursion variable `X` (`var`): `Mt` plus the
+box/diamond over *all* actions (`boxAll`/`diaAll`, the book's
 `[Act]`/`⟨Act⟩`). -/
 inductive MtR (Act D : Type*)
   | var : MtR Act D
@@ -31,7 +31,7 @@ inductive MtR (Act D : Type*)
   | reset : D → MtR Act D → MtR Act D
   | guard : ClockConstraint D → MtR Act D
 
-/-- Embed a recursion-free `Mt` formula (Definition 12.1) into `MtR`. -/
+/-- Embed a recursion-free `Mt` formula into `MtR`. -/
 def Mt.toMtR {Act D : Type*} : Mt Act D → MtR Act D
   | .tt => .tt
   | .ff => .ff
@@ -48,10 +48,10 @@ namespace TLTS
 
 variable {Proc Act D : Type*}
 
-/-- **Definition 12.6.** `O_F(S)`: the set of extended states `(p, u)` satisfying
-`F` when the recursion variable `X` is interpreted as the set `S`. Action
-modalities keep the formula clocks, delay modalities advance them, `x in F`
-resets `x`, and `g` reads the formula-clock valuation. -/
+/-- `O_F(S)`: the set of extended states `(p, u)` satisfying `F` when the
+recursion variable `X` is interpreted as the set `S`. Action modalities keep
+the formula clocks, delay modalities advance them, `x in F` resets `x`, and `g`
+reads the formula-clock valuation. -/
 def denotMtR (T : TLTS Proc Act) : MtR Act D → Set (Proc × Valuation D) → Set (Proc × Valuation D)
   | .var => fun S => S
   | .tt => fun _ => Set.univ
@@ -67,8 +67,8 @@ def denotMtR (T : TLTS Proc Act) : MtR Act D → Set (Proc × Valuation D) → S
   | .reset x F => fun S => {q | (q.1, Valuation.reset {x} q.2) ∈ denotMtR T F S}
   | .guard g => fun _ => {q | satisfies q.2 g}
 
-/-- **Exercise 12.17** (§12.4). `O_F` is monotone in `S`, so by Tarski its least
-and greatest fixed points exist. -/
+/-- `O_F` is monotone in `S`, so by Tarski its least and greatest fixed points
+exist. -/
 theorem denotMtR_mono (T : TLTS Proc Act) (F : MtR Act D) : Monotone (denotMtR T F) := by
   intro S S' hSS'
   induction F with
@@ -86,9 +86,8 @@ theorem denotMtR_mono (T : TLTS Proc Act) (F : MtR Act D) : Monotone (denotMtR T
   | reset x F ihF => exact fun q hq => ihF hq
   | guard g => exact le_refl _
 
-/-- The recursion-free embedding satisfies `(p, u) ∈ O_{ofMt F}(S) ↔ (p, u) ⊨ F`
-(Definition 12.2), independently of `S`: the recursion semantics extends the plain
-`Mt` semantics. -/
+/-- The recursion-free embedding satisfies `(p, u) ∈ O_{ofMt F}(S) ↔ (p, u) ⊨ F`,
+independently of `S`: the recursion semantics extends the plain `Mt` semantics. -/
 theorem mem_denotMtR_toMtR (T : TLTS Proc Act) (F : Mt Act D) (S : Set (Proc × Valuation D))
     (q : Proc × Valuation D) : q ∈ denotMtR T F.toMtR S ↔ T.MtSat q.1 q.2 F := by
   induction F generalizing q with
@@ -113,8 +112,7 @@ def denotMtRHom (T : TLTS Proc Act) (F : MtR Act D) :
     Set (Proc × Valuation D) →o Set (Proc × Valuation D) :=
   ⟨denotMtR T F, denotMtR_mono T F⟩
 
-/-- Meaning of `X =ν F` (Definition 12.6, eq. 12.5): the greatest fixed point of
-`O_F`. -/
+/-- Meaning of `X =ν F`: the greatest fixed point of `O_F`. -/
 def recMax (T : TLTS Proc Act) (F : MtR Act D) : Set (Proc × Valuation D) :=
   (denotMtRHom T F).gfp
 
@@ -130,23 +128,22 @@ theorem denotMtR_recMax (T : TLTS Proc Act) (F : MtR Act D) :
 theorem denotMtR_recMin (T : TLTS Proc Act) (F : MtR Act D) :
     denotMtR T F (recMin T F) = recMin T F := (denotMtRHom T F).map_lfp
 
-/-! ## §12.4.2 Real-time temporal operators -/
+/-! ## Real-time temporal operators -/
 
-/-- **§12.4.2.** The invariant body `F ∧ [Act]X ∧ ∀∀X`; `Inv(F) =ν` this. -/
+/-- The invariant body `F ∧ [Act]X ∧ ∀∀X`; `Inv(F) =ν` this. -/
 def mtInvBody (F : Mt Act D) : MtR Act D :=
   .and F.toMtR (.and (.boxAll .var) (.forallDelay .var))
 
-/-- **§12.4.2.** `Inv(F)` (always `F`): the greatest fixed point of `F ∧ [Act]X ∧
+/-- `Inv(F)` (always `F`): the greatest fixed point of `F ∧ [Act]X ∧
 ∀∀X` — `F` holds now, and persists after every action and every delay. -/
 def mtInv (T : TLTS Proc Act) (F : Mt Act D) : Set (Proc × Valuation D) :=
   recMax T (mtInvBody F)
 
-/-- **§12.4.2.** The weak-until body `G ∨ (F ∧ [Act]X ∧ ∀∀X)`; `F until G =ν`
-this. -/
+/-- The weak-until body `G ∨ (F ∧ [Act]X ∧ ∀∀X)`; `F until G =ν` this. -/
 def mtUntilBody (F G : Mt Act D) : MtR Act D :=
   .or G.toMtR (.and F.toMtR (.and (.boxAll .var) (.forallDelay .var)))
 
-/-- **§12.4.2.** `F until G` (a *weak* until): the greatest fixed point of
+/-- `F until G` (a *weak* until): the greatest fixed point of
 `G ∨ (F ∧ [Act](F until G) ∧ ∀∀(F until G))` — `F` holds at least until `G`,
 through every action and delay. -/
 def mtUntil (T : TLTS Proc Act) (F G : Mt Act D) : Set (Proc × Valuation D) :=

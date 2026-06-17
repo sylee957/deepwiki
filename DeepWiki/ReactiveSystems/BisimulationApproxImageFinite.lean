@@ -3,9 +3,9 @@ import DeepWiki.ReactiveSystems.HennessyMilner
 import Mathlib.Data.Set.Finite.Lattice
 import Mathlib.Order.Interval.Finset.Nat
 
-/-! # Bisimilarity as the intersection of approximants (Exercise 5.12)
+/-! # Bisimilarity as the intersection of approximants
 Over an image-finite LTS, strong bisimilarity coincides with the intersection of
-the stratified approximants `∼ᵢ` of Exercise 4.14: `p ~ q` iff `p ∼ᵢ q` for all
+the stratified approximants `∼ᵢ`: `p ~ q` iff `p ∼ᵢ q` for all
 `i`. The non-trivial direction is a König/pigeonhole argument — image-finiteness
 makes the set of `a`-successors of `q` finite, so a single successor matches `p'`
 at infinitely many (hence, by antitonicity, all) approximant levels. -/
@@ -27,7 +27,7 @@ theorem bisimApprox_le_of_le (L : LTS Proc Act) {i j : ℕ} (h : j ≤ i) :
       · exact (bisimApprox_antitone L n).trans (ih (Nat.lt_succ_iff.mp h'))
       · exact le_rfl
 
-/-- **Exercise 5.12.** On an image-finite LTS, strong bisimilarity equals the
+/-- On an image-finite LTS, strong bisimilarity equals the
 intersection of the stratified approximants: `p ~ q` iff `p ∼ᵢ q` for every `i`. -/
 theorem bisimilar_iff_forall_bisimApprox (L : LTS Proc Act)
     (hfin : L.ImageFinite) (p q : Proc) :

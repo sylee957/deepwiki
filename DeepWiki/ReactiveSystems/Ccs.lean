@@ -5,7 +5,7 @@ import Mathlib.Data.Set.Basic
 Milner's Calculus of Communicating Systems. Actions are `Act = L ∪ {τ}` with
 `L = A ∪ Ā` (names and complementary co-names); CCS expressions are built from
 `nil`, prefixing, choice, parallel composition, restriction, relabelling and
-process constants; and the SOS rules (Table 2.2) inductively generate the
+process constants; and the SOS rules inductively generate the
 transition relation of the LTS whose states are CCS expressions. The book's
 general indexed sum `Σᵢ∈I Pᵢ` is taken via its instances `nil` (`0`) and binary
 `choice` (`+`), exactly as the development uses it. -/
@@ -48,7 +48,7 @@ theorem IsLabel.co {a : Act Name} (h : a.IsLabel) : a.co.IsLabel := by
 
 end Act
 
-/-- A relabelling function (Definition 2.3): it fixes `τ` and commutes with
+/-- A relabelling function: it fixes `τ` and commutes with
 complementation, `f(ᾱ) = f(α)‾`. -/
 structure IsRelabelling {Name : Type*} (f : Act Name → Act Name) : Prop where
   /-- A relabelling preserves the silent action. -/
@@ -56,8 +56,8 @@ structure IsRelabelling {Name : Type*} (f : Act Name → Act Name) : Prop where
   /-- A relabelling commutes with complementation. -/
   map_co : ∀ a, f a.co = (f a).co
 
-/-- CCS process expressions over channel names `Name` and process constants `K`
-(Definition 2.3). The book's indexed sum `Σᵢ∈I Pᵢ` is represented by its
+/-- CCS process expressions over channel names `Name` and process constants `K`.
+The book's indexed sum `Σᵢ∈I Pᵢ` is represented by its
 instances `nil` (empty sum) and binary `choice` (two-element sum). -/
 inductive CCS (Name K : Type*)
   /-- The inactive process `0` (empty sum). -/
@@ -75,7 +75,7 @@ inductive CCS (Name K : Type*)
   /-- Relabelling `P[f]`. -/
   | relabel : CCS Name K → (Act Name → Act Name) → CCS Name K
 
-/-- The CCS SOS transition relation (Table 2.2), parametrised by a definition
+/-- The CCS SOS transition relation, parametrised by a definition
 environment `defn` giving each process constant `K0` its body `K0 ≝ defn K0`.
 `Step defn P α P'` means `P —α→ P'`. -/
 inductive Step {Name K : Type*} (defn : K → CCS Name K) :

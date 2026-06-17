@@ -13,11 +13,11 @@ namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-- States of the Exercise 3.25 LTS. -/
+/-- States of the LTS. -/
 inductive St325 | s | s1 | s2 | s3 | s4 | s5 | t | t1 | t2 | t3
   deriving DecidableEq, Fintype
 
-/-- Actions of Exercise 3.25. -/
+/-- Actions of the LTS. -/
 inductive A325 | a | b | tau
   deriving DecidableEq, Fintype
 
@@ -37,7 +37,7 @@ def edge325 : St325 → A325 → St325 → Bool
   | .t, .b, .t3 => true
   | _, _, _ => false
 
-/-- The Exercise 3.25 LTS (reducible, so step facts are decidable). -/
+/-- The LTS (reducible, so step facts are decidable). -/
 abbrev lts325 : LTS St325 A325 := ⟨fun p x q => edge325 p x q = true⟩
 
 /-! ## The silent (`τ*`) reachabilities used to build the weak transitions -/
@@ -184,7 +184,7 @@ theorem isWeakBisimulation_R325 : IsWeakBisimulation lts325 A325.tau R325 := by
       α q' hstep with ⟨rfl, rfl⟩
     exact ⟨St325.s5, w_refl _, Or.inr (Or.inr (Or.inr ⟨rfl, rfl⟩))⟩
 
-/-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`: the relation `R325` is a weak
+/-- `s ≈ t`: the relation `R325` is a weak
 bisimulation containing `(s, t)`. -/
 theorem s_weaklyBisimilar_t : St325.s ≈[lts325, A325.tau] St325.t :=
   isWeakBisimulation_R325.le_weaklyBisimilar (Or.inl ⟨Or.inl rfl, rfl⟩)

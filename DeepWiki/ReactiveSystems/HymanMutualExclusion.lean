@@ -1,9 +1,9 @@
 import DeepWiki.ReactiveSystems.Peterson
 
-/-! # Hyman's mutual-exclusion algorithm in CCS (Exercise 7.3)
-Hyman's 1966 'mutual exclusion' algorithm, modelled in CCS following the book's
-Exercise 7.3 (§7, p.146). It uses the *same* shared variables as Peterson's —
-the booleans `b1`, `b2` and the integer `k` — so we reuse the channel set
+/-! # Hyman's mutual-exclusion algorithm in CCS
+Hyman's 1966 'mutual exclusion' algorithm, modelled in CCS. It uses the *same*
+shared variables as Peterson's — the booleans `b1`, `b2` and the integer `k` —
+so we reuse the channel set
 `PetChan` and the register processes. Each process `Pᵢ` runs
 
     bᵢ := true;
@@ -13,8 +13,7 @@ the booleans `b1`, `b2` and the integer `k` — so we reuse the channel set
 (with `j` the other index). The outer loop `while k ≠ j` is read by trying the
 two `k`-read ports; the inner busy-wait `while bⱼ do skip` loops on reading
 `bⱼ = true` and falls through on `bⱼ = false`. (Hyman's algorithm is *not* a
-correct mutual-exclusion algorithm — that analysis is Exercise 7.4; here we only
-give the faithful model.) -/
+correct mutual-exclusion algorithm; here we only give the faithful model.) -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -72,7 +71,7 @@ all channels except the observable critical-section actions), reusing Peterson's
 `petRestrict`. -/
 def hymanRestrict : Set (Act PetChan) := petRestrict
 
-/-- **Exercise 7.3** (§7, p.146). Hyman's algorithm as a CCS process, with `k`
+/-- Hyman's algorithm as a CCS process, with `k`
 initially `1`: `Hyman = (P₁ ∣ P₂ ∣ B1f ∣ B2f ∣ K1) ∖ L`. -/
 def hyman : CCS PetChan HymanK :=
   .restrict (.par (.par (.par (.par (.const H1) (.const H2)) (.const B1f))

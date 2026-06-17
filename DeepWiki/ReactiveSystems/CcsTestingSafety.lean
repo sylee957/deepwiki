@@ -1,10 +1,10 @@
 import DeepWiki.ReactiveSystems.CcsTesting
 
-/-! # Testability of safety HML (Exercise 7.15 / Theorem 7.1)
-The *positive* counterpart to Proposition 7.3: every formula in *recursion-free
+/-! # Testability of safety HML
+The *positive* counterpart to the untestability result: every formula in *recursion-free
 safety HML* (`tt`, `ff`, `∧`, `[a]` — no `∨`, no `⟨a⟩`, no recursion) is testable.
 A test is built by structural induction — `tt ↦ 0`, `ff ↦ bad̄.0`, `F ∧ G ↦
-T_F + T_G`, `[a]F ↦ ā.T_F` (Example 7.1) — and a *bad-free* process weakly
+T_F + T_G`, `[a]F ↦ ā.T_F` — and a *bad-free* process weakly
 satisfies `F` iff it passes `T_F` (`testOf_correct`). Each operator needs a
 weak-transition decomposition of the composite `(s ∣ T_F) ∖ L`: the `0`/`bad̄.0`
 base cases here, the `ā.T_F` sync decomposition and the `T_F + T_G` choice
@@ -17,7 +17,7 @@ namespace LTS
 variable {Name K : Type*}
 
 /-- Recursion-free **safety HML**: `tt`, `ff`, `∧`, `[a]` (no `∨`, no `⟨a⟩`, no
-recursion) — exactly the fragment Exercise 7.15 builds tests for. -/
+recursion) — exactly the fragment tests are built for. -/
 inductive SafetyF (Name : Type*)
   | tt : SafetyF Name
   | ff : SafetyF Name
@@ -31,7 +31,7 @@ def SafetyF.toHML : SafetyF Name → HML (Act Name)
   | .and F G => .and F.toHML G.toHML
   | .box a F => .box (Act.name a) F.toHML
 
-/-- The **test** built from a safety formula (Exercise 7.15): `tt ↦ 0`,
+/-- The **test** built from a safety formula: `tt ↦ 0`,
 `ff ↦ bad̄.0`, `F ∧ G ↦ T_F + T_G`, `[a]F ↦ ā.T_F`. -/
 def testOf (bad : Name) : SafetyF Name → CCS Name K
   | .tt => CCS.nil
@@ -50,7 +50,7 @@ theorem BadFree.step {defn : K → CCS Name K} {bad : Name} {s s' : CCS Name K} 
   intro s'' hreach q hq
   exact h s'' (Relation.ReflTransGen.head ⟨μ, hstep⟩ hreach) q hq
 
-/-- **Exercise 7.15, `ff` case.** `bad̄.0` tests for `ff`: every process fails it
+/-- **`ff` case.** `bad̄.0` tests for `ff`: every process fails it
 (the test rejects immediately), and no process satisfies `ff`. -/
 theorem tests_ff (defn : K → CCS Name K) (bad : Name) (s : CCS Name K) :
     WSat (ccsLTS defn) Act.tau s SafetyF.ff.toHML ↔
@@ -95,7 +95,7 @@ theorem interact_nil_cobad {defn : K → CCS Name K} {bad : Name} {s' W : CCS Na
   · cases hn
   · exact absurd heq (by simp)
 
-/-- **Exercise 7.15, `tt` case.** `0` tests for `tt`: every bad-free process passes
+/-- **`tt` case.** `0` tests for `tt`: every bad-free process passes
 (it can never reject), and every process satisfies `tt`. -/
 theorem tests_tt (defn : K → CCS Name K) (bad : Name) (s : CCS Name K)
     (hbf : BadFree defn bad s) :
@@ -206,7 +206,7 @@ theorem box_backward {defn : K → CCS Name K} {bad a : Name} {s s' TG : CCS Nam
     refine tauStar_trans (tauStar_single hsync) ?_
     exact tauStar_trans (interact_com1_tauStar TG h2) htauY
 
-/-- **Exercise 7.15, `[a]` case.** Given the test `T_G` tests for `G`, the test
+/-- **`[a]` case.** Given the test `T_G` tests for `G`, the test
 `ā.T_G` tests for `[a]G` (for bad-free processes, `a ≠ bad`). -/
 theorem tests_box {defn : K → CCS Name K} {bad a : Name} {TG : CCS Name K} {G : SafetyF Name}
     (hTG : ∀ s', BadFree defn bad s' →
@@ -362,7 +362,7 @@ theorem and_backward_right {defn : K → CCS Name K} {bad : Name} {s TF TG : CCS
         (Step.res (tau_not_restrictNonBad bad) (tau_not_restrictNonBad bad)
           (Step.com3 hℓ hs (Step.sumr hT))) ⟨Y, W, hc, hstep⟩
 
-/-- **Exercise 7.15, `∧` case.** Given `T_F`/`T_G` test for `F`/`G` (and are
+/-- **`∧` case.** Given `T_F`/`T_G` test for `F`/`G` (and are
 `τ`-free), the test `T_F + T_G` tests for `F ∧ G`. -/
 theorem tests_and {defn : K → CCS Name K} {bad : Name} {TF TG : CCS Name K}
     {F G : SafetyF Name}
@@ -390,7 +390,7 @@ theorem tests_and {defn : K → CCS Name K} {bad : Name} {TF TG : CCS Name K}
       exact (not_passes_iff_canRej defn bad s _).mpr
         (and_backward_right hTGnt ((not_passes_iff_canRej defn bad s TG).mp hnp)) hp
 
-/-! ### Theorem 7.1 (recursion-free fragment): every safety formula is testable -/
+/-! ### Recursion-free fragment: every safety formula is testable -/
 
 /-- A safety formula uses no `box` on the reject channel `bad` (its actions are
 real observable actions). -/
@@ -400,7 +400,7 @@ def SafetyF.NoBadAction (bad : Name) : SafetyF Name → Prop
   | .and F G => F.NoBadAction bad ∧ G.NoBadAction bad
   | .box a F => a ≠ bad ∧ F.NoBadAction bad
 
-/-- **Exercise 7.15 / Theorem 7.1 (recursion-free).** Every recursion-free safety
+/-- Every recursion-free safety
 HML formula `F` (with real, non-`bad` actions) is **testable**: a bad-free process
 weakly satisfies `F` iff it passes the constructed test `testOf bad F`. Proved by
 structural induction — `tests_tt`/`tests_ff` (base), `tests_box` (modal),

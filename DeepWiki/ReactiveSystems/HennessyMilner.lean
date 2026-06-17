@@ -11,7 +11,7 @@ two states satisfy the same formulae iff they are bisimilar. -/
 
 namespace DeepWiki.ReactiveSystems
 
-/-- Hennessy–Milner logic formulae over actions `Act` (Definition 5.1):
+/-- Hennessy–Milner logic formulae over actions `Act`:
 `tt`, `ff`, conjunction, disjunction, and the modalities `⟨a⟩` and `[a]`. -/
 inductive HML (Act : Type*)
   | tt : HML Act
@@ -27,7 +27,7 @@ namespace LTS
 
 variable {Proc Act : Type*}
 
-/-- Satisfaction `p ⊨ F` (Definition 5.2): when state `p` of `L` satisfies the
+/-- Satisfaction `p ⊨ F`: when state `p` of `L` satisfies the
 HML formula `F`. `⟨a⟩F` needs some `a`-successor satisfying `F`; `[a]F` needs all
 of them to. -/
 def Sat (L : LTS Proc Act) (p : Proc) : HML Act → Prop
@@ -59,7 +59,7 @@ theorem sat_dia_tt (L : LTS Proc Act) (p : Proc) (a : Act) :
 theorem sat_box_ff (L : LTS Proc Act) (p : Proc) (a : Act) :
     (p ⊨[L] HML.box a HML.ff) ↔ L.Refuses p a := Iff.rfl
 
-/-- `⟦F⟧` (Definition 5.2): the set of states of `L` satisfying `F`. -/
+/-- `⟦F⟧`: the set of states of `L` satisfying `F`. -/
 def denot (L : LTS Proc Act) (F : HML Act) : Set Proc := {p | p ⊨[L] F}
 
 /-- Two states are HML-equivalent when they satisfy exactly the same formulae. -/
@@ -143,7 +143,7 @@ theorem bisimilar_hmlEquiv {L : LTS Proc Act} {p q : Proc} (h : Bisimilar L p q)
 
 /-! ## Hard direction: HML-equivalence is a bisimulation on image-finite LTSs -/
 
-/-- An LTS is image finite (Definition 5.3) when every state has finitely many
+/-- An LTS is image finite when every state has finitely many
 `a`-successors, for each action `a`. -/
 def ImageFinite (L : LTS Proc Act) : Prop := ∀ (p : Proc) (a : Act), {p' | L.step p a p'}.Finite
 
@@ -196,7 +196,7 @@ theorem hmlEquiv_bisimilar {L : LTS Proc Act} (hfin : ImageFinite L) {p q : Proc
     (h : HMLEquiv L p q) : Bisimilar L p q :=
   (hmlEquiv_isBisimulation hfin).le_bisimilar h
 
-/-- **Theorem 5.3** (Hennessy–Milner theorem). On an image-finite LTS, strong
+/-- Hennessy–Milner theorem. On an image-finite LTS, strong
 bisimilarity coincides with HML-equivalence: `p ~ q` iff `p` and `q` satisfy
 exactly the same Hennessy–Milner formulae. -/
 theorem hennessyMilner {L : LTS Proc Act} (hfin : ImageFinite L) (p q : Proc) :

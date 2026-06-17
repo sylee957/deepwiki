@@ -71,20 +71,19 @@ theorem p55d_unsat : ¬ (p55d ⊨[ccsLTS d55] g55) := by
   rw [ccsLTS_step, step_pre_iff] at hq
   exact absurd hq.1 (by decide)
 
-/-- **Exercise 5.5** (§5.1, p.96). Each pair of non-bisimilar CCS processes is
-separated by an HML formula. -/
+/-- Each pair of non-bisimilar CCS processes is separated by an HML formula. -/
 theorem hmlDistinguishes_nonBisimilarProcessPairs :
     (∃ F : HML (Act (Fin 4)), (p55a ⊨[ccsLTS d55] F) ∧ ¬ (p55b ⊨[ccsLTS d55] F)) ∧
     (∃ G : HML (Act (Fin 4)), (p55c ⊨[ccsLTS d55] G) ∧ ¬ (p55d ⊨[ccsLTS d55] G)) :=
   ⟨⟨f55, p55a_sat, p55b_unsat⟩, ⟨g55, p55c_sat, p55d_unsat⟩⟩
 
-/-! ## Exercise 5.7 — an LTS satisfying three given HML formulae -/
+/-! ## An LTS satisfying three given HML formulae -/
 
-/-- States of the witnessing LTS for Exercise 5.7. -/
+/-- States of the witnessing LTS. -/
 inductive S57 | s | s1 | s2 | s3 | s4 | s5 | s6 | s7
   deriving DecidableEq, Fintype
 
-/-- Actions of Exercise 5.7. -/
+/-- Actions of the witnessing LTS. -/
 inductive A57 | a | b | c
   deriving DecidableEq, Fintype
 
@@ -100,10 +99,10 @@ def edge57 : S57 → A57 → S57 → Bool
   | .s1, .b, .s4 => true
   | _, _, _ => false
 
-/-- The Exercise 5.7 LTS (reducible, so satisfaction is decidable). -/
+/-- The witnessing LTS (reducible, so satisfaction is decidable). -/
 abbrev lts57 : LTS S57 A57 := ⟨fun p x q => edge57 p x q = true⟩
 
-/-- **Exercise 5.7** (§5.1, p.96). The state `s` satisfies all three formulae:
+/-- The state `s` satisfies all three formulae:
 `⟨a⟩(⟨b⟩⟨c⟩tt ∧ ⟨c⟩tt)`, `⟨a⟩⟨b⟩([a]ff ∧ [b]ff ∧ [c]ff)`, and
 `[a]⟨b⟩([c]ff ∧ ⟨a⟩tt)`. -/
 theorem s57_satisfiesThreeFormulae :
@@ -115,7 +114,7 @@ theorem s57_satisfiesThreeFormulae :
   refine ⟨?_, ?_, ?_⟩ <;>
     simp only [sat_dia, sat_box, sat_and, sat_tt, sat_ff] <;> decide
 
-/-! ## Exercise 5.4 — the everlasting `Clock` -/
+/-! ## The everlasting `Clock` -/
 
 /-- Channels of `Clock`. -/
 inductive ClockChan | tick | tock
@@ -139,7 +138,7 @@ theorem clock_tick :
     (ccsLTS clockDefn) ⊢ (CCS.const ClockK.clk) ⟶[Act.name .tick] (CCS.const ClockK.clk) := by
   rw [ccsLTS_step]; exact clock_step_iff.2 ⟨rfl, rfl⟩
 
-/-- **Exercise 5.4** (§5.1, p.96). `Clock ⊨ [tick](⟨tick⟩tt ∧ [tock]ff)`: after any
+/-- `Clock ⊨ [tick](⟨tick⟩tt ∧ [tock]ff)`: after any
 `tick`, another `tick` is possible but `tock` is refused. -/
 theorem clock_boxProperty :
     (CCS.const ClockK.clk) ⊨[ccsLTS clockDefn]
@@ -158,7 +157,7 @@ def diaIter (a : Act ClockChan) : ℕ → HML (Act ClockChan)
   | 0 => HML.tt
   | n + 1 => HML.dia a (diaIter a n)
 
-/-- **Exercise 5.4** (§5.1, p.96). For every `n`, `Clock ⊨ ⟨tick⟩ⁿtt`: the clock
+/-- For every `n`, `Clock ⊨ ⟨tick⟩ⁿtt`: the clock
 can tick arbitrarily many times. -/
 theorem clock_canIterateDiamond (n : ℕ) :
     (CCS.const ClockK.clk) ⊨[ccsLTS clockDefn] (diaIter (Act.name .tick) n) := by

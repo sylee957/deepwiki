@@ -127,7 +127,7 @@ theorem badBad_no_weak_pub :
   · obtain rfl := tauStar_badBad h1
     exact badBad_no_step hstep
 
-/-- **Exercise 3.20** (§3.4, p.58). `Start ≉ Spec`: `Start` can publish and then
+/-- `Start ≉ Spec`: `Start` can publish and then
 silently reach the deadlocked `Bad`, which (unlike `Spec`) refuses `pub̄`, so no weak
 bisimulation relates `Start` and `Spec`. -/
 theorem badStart_not_weakBisim_badSpec : ¬ (badStart ≈[ccsLTS badDefn, Act.tau] badSpec) := by

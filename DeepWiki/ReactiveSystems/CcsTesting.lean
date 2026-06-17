@@ -3,13 +3,13 @@ import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.HennessyMilnerWeak
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
-/-! # Testing and testable formulae (§7.3)
+/-! # Testing and testable formulae
 A *test* is a (regular CCS) process over the actions plus a distinguished reject
-channel `bad` (Definition 7.3). A process `s` *passes* a test `T` when the
+channel `bad`. A process `s` *passes* a test `T` when the
 composite `(s ∣ T) ∖ L` — hiding every observable channel except `bad` — cannot
 perform a weak `bad`-transition; `T` *tests for* a formula `F` (and `F` is
-*testable*) when passing `T` coincides with satisfying `F`, for every process
-(Definition 7.4). Proposition 7.3 gives two *negative* results: the very simple
+*testable*) when passing `T` coincides with satisfying `F`, for every process.
+Two *negative* results: the very simple
 HML formulae `⟨a⟩tt` and `[a]ff ∨ [b]ff` are **not** testable — the testing
 preorder cannot see existential or disjunctive branching the way HML can. -/
 
@@ -42,20 +42,20 @@ theorem nameBad_not_restrictNonBad (bad : Name) :
   · exact hc (Act.name.inj h).symm
   · simp at h
 
-/-- **Definition 7.4.** The composite `(s ∣ T) ∖ L` of a process `s` with a test
+/-- The composite `(s ∣ T) ∖ L` of a process `s` with a test
 `T`, hiding every observable channel except the reject channel `bad`. -/
 def interact (bad : Name) (s test : CCS Name K) : CCS Name K :=
   CCS.restrict (CCS.par s test) (restrictNonBad bad)
 
-/-- **Definition 7.4.** `s` *passes* test `T`: the composite `(s ∣ T) ∖ L` cannot
+/-- `s` *passes* test `T`: the composite `(s ∣ T) ∖ L` cannot
 perform a weak `bad̄`-transition (the test never reaches its reject signal). -/
 def Passes (defn : K → CCS Name K) (bad : Name) (s test : CCS Name K) : Prop :=
   ∀ X, ¬ ((ccsLTS defn) ⊢ interact bad s test =[Act.coname bad]⇒[Act.tau] X)
 
-/-- **Definition 7.4.** Test `T` *tests for* `F` (so `F` is *testable*): a process
+/-- Test `T` *tests for* `F` (so `F` is *testable*): a process
 *weakly* satisfies `F` iff it passes `T`. (Satisfaction is the weak/observational
 reading `WSat`, since testing observes behaviour up to `τ` — e.g. `[a]ff` holds of
-the processes affording no weak `=a⇒` transition, Example 7.1.) -/
+the processes affording no weak `=a⇒` transition.) -/
 def Tests (defn : K → CCS Name K) (bad : Name) (test : CCS Name K) (F : HML (Act Name)) : Prop :=
   ∀ s, WSat (ccsLTS defn) Act.tau s F ↔ Passes defn bad s test
 
@@ -67,9 +67,9 @@ theorem weakStep_tau_prefix {defn : K → CCS Name K} {X Y Z : CCS Name K} {α :
   · exact absurd heq hα
   · exact Or.inr ⟨hα, p1, p2, tauStar_trans (tauStar_single hxy) hY1, hstep, h2⟩
 
-/-! ## Proposition 7.3: two negative results -/
+/-! ## Two negative results -/
 
-/-- **Proposition 7.3(1)** (§7.3, p.157). For every action `a` (in particular
+/-- For every action `a` (in particular
 every observable `a ≠ bad`), the formula `⟨a⟩tt` is **not testable**: no test `T`
 over any process system tests for it. The witnesses are `0` (fails `⟨a⟩tt`, so the
 composite can reject) and `a.0 + τ.0` (satisfies `⟨a⟩tt`, yet `τ`-reduces to
@@ -106,7 +106,7 @@ theorem dia_tt_not_testable (a bad : Name)
   have hne : (Act.coname bad : Act Name) ≠ Act.tau := by simp
   exact hPpass X (weakStep_tau_prefix hne hτ hX)
 
-/-! ## Proposition 7.3(2): `[a]ff ∨ [b]ff` is not testable -/
+/-! ## `[a]ff ∨ [b]ff` is not testable -/
 
 /-- `Z` can weakly reach a state that performs the reject action `bad̄`. -/
 def CanRej (defn : K → CCS Name K) (bad : Name) (Z : CCS Name K) : Prop :=
@@ -227,7 +227,7 @@ theorem reject_decomp {a b bad : Name} (defn : K → CCS Name K) (test : CCS Nam
     · exact Or.inl (CanRej.tau_prefix (interact_sync (Step.act _ _) hT) ⟨Y, W, hc, hstep⟩)
     · exact Or.inr (CanRej.tau_prefix (interact_sync (Step.act _ _) hT) ⟨Y, W, hc, hstep⟩)
 
-/-- **Proposition 7.3(2)** (§7.3, p.157). For distinct actions `a ≠ b`, the
+/-- For distinct actions `a ≠ b`, the
 formula `[a]ff ∨ [b]ff` is **not testable**. The witness `a.0 + b.0` fails it (it
 can do both `a` and `b`) so it can reject; by `reject_decomp` either `a.0` or
 `b.0` can then reject — yet `a.0 ⊨ [b]ff` and `b.0 ⊨ [a]ff`, so both satisfy the

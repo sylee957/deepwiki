@@ -1,16 +1,16 @@
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 
-/-! # Theorem 11.3: region equivalence and untimed bisimilarity
-The substantive half of Theorem 11.3: in a *well-formed* timed automaton (all
-guards and invariants compare clocks only against constants within the clamp
-`cmax`), region-equivalent valuations at the same location are **untimed
-bisimilar**. The relation "same location, region-equivalent valuations" is an
-untimed bisimulation: action steps are matched using guard invariance and reset
-preservation (`regionEq_satisfies`, `RegionEq.reset`), and delay steps using the
-region time-successor property (`TimeSuccessor`). The theorem is stated modularly
-in the time-successor hypothesis — which holds outright for single-clock automata
-(`timeSuccessor_of_subsingleton`), giving an unconditional Theorem 11.3 there. -/
+/-! # Region equivalence and untimed bisimilarity
+In a *well-formed* timed automaton (all guards and invariants compare clocks only
+against constants within the clamp `cmax`), region-equivalent valuations at the
+same location are **untimed bisimilar**. The relation "same location,
+region-equivalent valuations" is an untimed bisimulation: action steps are matched
+using guard invariance and reset preservation (`regionEq_satisfies`,
+`RegionEq.reset`), and delay steps using the region time-successor property
+(`TimeSuccessor`). The theorem is stated modularly in the time-successor hypothesis
+— which holds outright for single-clock automata (`timeSuccessor_of_subsingleton`),
+giving the unconditional result there. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -77,28 +77,28 @@ theorem regionEq_untimedBisimulation {Loc Act C : Type*} (A : TimedAutomaton Loc
                 (regionEq_satisfies hreg' (wfi ℓ')).mp hinva⟩⟩,
           rfl, (regionEq_equivalence cmax).symm hreg'⟩
 
-/-- **Theorem 11.3** (untimed-bisimilarity part), modular form. In a well-formed
-timed automaton with the region time-successor property, region-equivalent
-valuations at the same location are untimed bisimilar. -/
+/-- Untimed-bisimilarity result, modular form. In a well-formed timed automaton
+with the region time-successor property, region-equivalent valuations at the same
+location are untimed bisimilar. -/
 theorem regionEq_untimedBisimilar {Loc Act C : Type*} (A : TimedAutomaton Loc Act C)
     {cmax : C → ℕ} (wf : A.WellFormed cmax) (hts : TimeSuccessor cmax)
     {ℓ : Loc} {v v' : Valuation C} (h : RegionEq cmax v v') :
     A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
   (regionEq_untimedBisimulation A wf hts).le_bisimilar ⟨rfl, h⟩
 
-/-- **Theorem 11.3** for single-clock timed automata (unconditional): the region
-time-successor property holds outright when there is at most one clock, so
-region-equivalent valuations at the same location are untimed bisimilar. -/
+/-- Single-clock timed automata (unconditional): the region time-successor
+property holds outright when there is at most one clock, so region-equivalent
+valuations at the same location are untimed bisimilar. -/
 theorem regionEq_untimedBisimilar_of_subsingleton {Loc Act C : Type*} [Subsingleton C]
     (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
     {ℓ : Loc} {v v' : Valuation C} (h : RegionEq cmax v v') :
     A.tlts.UntimedBisimilar (ℓ, v) (ℓ, v') :=
   regionEq_untimedBisimilar A wf (timeSuccessor_of_subsingleton cmax) h
 
-/-- **Theorem 11.3** (untimed-bisimilarity part), **unconditional for finite clock
-sets**. A timed automaton has finitely many clocks, so the general region
-time-successor property (`timeSuccessor_of_fintype`) holds, and region-equivalent
-valuations at the same location are untimed bisimilar — no extra hypothesis. -/
+/-- Untimed-bisimilarity result, **unconditional for finite clock sets**. A timed
+automaton has finitely many clocks, so the general region time-successor property
+(`timeSuccessor_of_fintype`) holds, and region-equivalent valuations at the same
+location are untimed bisimilar — no extra hypothesis. -/
 theorem regionEq_untimedBisimilar_of_fintype {Loc Act C : Type*} [Fintype C]
     (A : TimedAutomaton Loc Act C) {cmax : C → ℕ} (wf : A.WellFormed cmax)
     {ℓ : Loc} {v v' : Valuation C} (h : RegionEq cmax v v') :

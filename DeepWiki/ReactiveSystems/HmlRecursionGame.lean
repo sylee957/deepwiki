@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
 
-/-! # A game characterisation for HML with recursion (§6.4)
-The model-checking game (Theorem 6.3) for Hennessy–Milner logic with one
+/-! # A game characterisation for HML with recursion
+The model-checking game for Hennessy–Milner logic with one
 recursion variable `X` (defined `X =max F` or `X =min F`). Game configurations
 are `(state, subformula)` pairs; the attacker tries to refute `s ⊨ F`, the
 defender to establish it. The book defers the operational (infinite-play)
@@ -73,7 +73,7 @@ theorem defGameFun_satConfig (L : LTS Proc Act) (F : HMLR Act) {S : Set Proc}
 
 /-! ## MAX characterisation (greatest fixed point) -/
 
-/-- **Theorem 6.3** (max, §6.4). The defender's winning region — the greatest
+/-- The defender's winning region — the greatest
 fixed point of the game functional — is exactly the satisfaction set at the
 greatest fixed point `recMax` of the body. -/
 theorem gfp_defGameFun_eq (L : LTS Proc Act) (F : HMLR Act) :
@@ -127,7 +127,7 @@ theorem gfp_defGameFun_eq (L : LTS Proc Act) (F : HMLR Act) :
       defGameFun_satConfig L F (denotR_recMax L F)
     exact (defGameFun L F).le_gfp (le_of_eq hfp.symm)
 
-/-- **Theorem 6.3** (max, headline). The defender wins the game from `(s, G)` for
+/-- The defender wins the game from `(s, G)` for
 `X =max F` iff `s` satisfies `G` under the greatest-fixed-point interpretation of
 `X`. -/
 theorem game_characterization_max (L : LTS Proc Act) (F : HMLR Act) (s : Proc)
@@ -149,7 +149,7 @@ def DefenderWinsMax (L : LTS Proc Act) (F : HMLR Act) (s : Proc) (G : HMLR Act) 
     Prop :=
   ∃ W, DefenderInvariant L F W ∧ (s, G) ∈ W
 
-/-- **Theorem 6.3** (max, strategy form, mirrors `DefenderWins`). The defender has
+/-- Strategy form, mirrors `DefenderWins`. The defender has
 a winning invariant from `(s, G)` iff `s ∈ O_G(recMax F)`. -/
 theorem defenderWinsMax_iff (L : LTS Proc Act) (F : HMLR Act) (s : Proc)
     (G : HMLR Act) :
@@ -167,7 +167,7 @@ theorem defenderWinsMax_iff (L : LTS Proc Act) (F : HMLR Act) (s : Proc)
 
 /-! ## MIN characterisation (least fixed point) -/
 
-/-- **Theorem 6.3** (min, §6.4). The dual: the least fixed point of the game
+/-- The dual: the least fixed point of the game
 functional is the satisfaction set at the least fixed point `recMin` of the body. -/
 theorem lfp_defGameFun_eq (L : LTS Proc Act) (F : HMLR Act) :
     (defGameFun L F).lfp = satConfig L F (recMin L F) := by
@@ -213,7 +213,7 @@ theorem lfp_defGameFun_eq (L : LTS Proc Act) (F : HMLR Act) :
     have : s ∈ denotR L G V := denotR_mono L G hrecMinV hc
     exact key G s this
 
-/-- **Theorem 6.3** (min, headline). For `X =min F`: `(s, G)` is in the least
+/-- For `X =min F`: `(s, G)` is in the least
 fixed point of the game functional iff `s` satisfies `G` under the
 least-fixed-point interpretation of `X`. -/
 theorem game_characterization_min (L : LTS Proc Act) (F : HMLR Act) (s : Proc)

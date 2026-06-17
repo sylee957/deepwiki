@@ -4,17 +4,17 @@ import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import Mathlib.Data.Set.Insert
 
-/-! # Restriction laws of CCS (§3.3, Exercises 3.13, 3.29)
+/-! # Restriction laws of CCS
 Restriction does *not* distribute over parallel composition — `(P ∣ Q) ∖ a` can
-synchronise internally where `(P ∖ a) ∣ (Q ∖ a)` cannot (Exercise 3.13). And
+synchronise internally where `(P ∖ a) ∣ (Q ∖ a)` cannot. And
 restricting away every visible action makes a process observationally equivalent
-to `0`, but *not* strongly bisimilar to it (a surviving `τ`-loop), Exercise 3.29. -/
+to `0`, but *not* strongly bisimilar to it (a surviving `τ`-loop). -/
 
 namespace DeepWiki.ReactiveSystems
 
 open LTS
 
-/-! ## Exercise 3.13 — restriction does not distribute over `∣` -/
+/-! ## Restriction does not distribute over `∣` -/
 
 /-- A two-channel alphabet for the counterexample. -/
 inductive RChan | a | b
@@ -23,7 +23,7 @@ inductive RChan | a | b
 /-- The restricted set `{a, ā}`. -/
 def rcRestrict : Set (Act RChan) := {Act.name RChan.a, Act.coname RChan.a}
 
-/-- **Exercise 3.13** (§3.3, p.46). Restriction does **not** distribute over
+/-- Restriction does **not** distribute over
 parallel composition: there are `P, Q` with `(P ∣ Q) ∖ {a} ≁ (P ∖ {a}) ∣ (Q ∖ {a})`.
 Witness `P = a.0`, `Q = ā.0`: the left can synchronise (`τ`) while the right is
 deadlocked (both `a` and `ā` are restricted away from the components). -/
@@ -42,12 +42,12 @@ theorem not_restrict_distrib_par :
   rw [ccsLTS_step, step_par_iff] at hq'
   simp [step_restrict_iff, step_pre_iff, rcRestrict] at hq'
 
-/-! ## Exercise 3.29 — restricting away every visible action -/
+/-! ## Restricting away every visible action -/
 
 /-- The set of all *observable* actions (every action except `τ`). -/
 def observable (Name : Type*) : Set (Act Name) := {α | α ≠ Act.tau}
 
-/-- **Exercise 3.29** (§3.4, p.61). For every process `P`, restricting away all
+/-- For every process `P`, restricting away all
 observable actions yields a process observationally equivalent to `0`:
 `P ∖ (Act ∖ {τ}) ≈ 0`. (Only `τ`-moves survive the restriction, and they relate
 the residual back to `0`.) -/
@@ -66,7 +66,7 @@ theorem restrict_observable_weaklyBisimilar_nil {Name K : Type*} (defn : K → C
     exact ⟨CCS.nil, weakStep_tau_of_tauStar (tauStar_refl _ _ _), ⟨A', rfl⟩, rfl⟩
   · rw [ccsLTS_step] at hy; exact absurd hy not_step_nil
 
-/-- **Exercise 3.29** (§3.4, p.61). The same does *not* hold up to strong
+/-- The same does *not* hold up to strong
 bisimilarity: `(τ.0) ∖ (Act ∖ {τ}) ≁ 0`, since the restricted process still
 performs a `τ`-step that `0` cannot match. -/
 theorem not_restrict_observable_bisimilar_nil {Name : Type*} :

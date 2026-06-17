@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 
-/-! # The syntactic characteristic formula (§6.6)
+/-! # The syntactic characteristic formula
 For a *finite* LTS, the strong-bisimilarity class of each state is characterised
 by a single Hennessy–Milner formula with recursion: the characteristic equation
 system `charSys` assigns to each state `p` (a variable `X_p`) the formula
@@ -9,7 +9,7 @@ system `charSys` assigns to each state `p` (a variable `X_p`) the formula
 of `p` is matchable" and "no `a`-move leaves `p`'s `a`-successors". Its greatest
 solution `sysMax (charSys)` equals the semantic characteristic property
 `charProp`, hence the bisimilarity class: `q ⊨ X_p` iff `p ~ q`. This realises
-the semantic `charProp`/Theorem 6.4 as an explicit recursive formula. -/
+the semantic `charProp` as an explicit recursive formula. -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -76,7 +76,7 @@ def Der (L : LTS Proc Act) [Fintype Proc] [∀ p a p', Decidable (L.step p a p')
     p' ∈ Der L a p ↔ L.step p a p' := by
   simp [Der]
 
-/-- The characteristic equation system of a finite LTS (Equation 6.15, §6.6):
+/-- The characteristic equation system of a finite LTS:
 each state `p` gets a variable (`V := Proc`) whose formula says "every move of `p`
 is matchable into the named successor" (`⋀_a ⋀_{p'∈Der a p} ⟨a⟩ p'`) and "every
 `a`-move lands among `p`'s `a`-successors" (`⋀_a [a] ⋁_{p'∈Der a p} p'`). -/
@@ -114,7 +114,7 @@ theorem sysMax_charSys_eq_charProp (L : LTS Proc Act) [Fintype Act] [Fintype Pro
     [∀ p a p', Decidable (L.step p a p')] : sysMax L (charSys L) = charProp L := by
   rw [sysMax, charProp, sysFun_charSys_eq_orderHom]
 
-/-- **Theorem 6.4 / Eq. 6.15** (§6.6). The largest solution of the syntactic
+/-- The largest solution of the syntactic
 characteristic equation system of a finite LTS is the strong-bisimilarity class:
 `q ∈ ⟦charSys p⟧` iff `p ~ q`. -/
 theorem charSys_characterizes (L : LTS Proc Act) [Fintype Act] [Fintype Proc]
