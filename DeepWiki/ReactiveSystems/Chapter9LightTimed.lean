@@ -27,7 +27,7 @@ def lightDefn : LightK → TCCS LightChan LightK
 
 /-- **Exercise 9.1** (§9.3, p.166). The light-switch specification is guarded: every
 constant occurrence lies under an action prefix or the positive delay `ε(1.4)`. -/
-theorem ex_9_1 : IsGuardedDefn lightDefn := by
+theorem lightDefn_isGuarded : IsGuardedDefn lightDefn := by
   intro K
   cases K with
   | Light => exact ⟨Or.inl (by rw [← NNReal.coe_pos]; push_cast; norm_num), trivial⟩
@@ -37,7 +37,7 @@ theorem ex_9_1 : IsGuardedDefn lightDefn := by
 /-- **Exercise 9.2** (§9.3, p.168). From the `Light` state a delay `d ≤ 1.4` counts the
 delay-prefix down: `Light —d→ ε(1.4−d).τ.press.Off + press.Bright` (the action-prefixed
 summand `press.Bright` idles patiently). -/
-theorem ex_9_2 {d : ℝ≥0} (h : d ≤ 1.4) :
+theorem lightDefn_light_delayReduces {d : ℝ≥0} (h : d ≤ 1.4) :
     (tccsTLTS lightDefn).delay (.const .Light) d
       (.choice (.eps (1.4 - d) (.pre Act.tau (.pre (.name .press) (.const .Off))))
         (.pre (.name .press) (.const .Bright))) :=

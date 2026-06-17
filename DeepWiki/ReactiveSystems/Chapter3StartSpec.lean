@@ -130,7 +130,7 @@ theorem badBad_no_weak_pub :
 /-- **Exercise 3.20** (§3.4, p.58). `Start ≉ Spec`: `Start` can publish and then
 silently reach the deadlocked `Bad`, which (unlike `Spec`) refuses `pub̄`, so no weak
 bisimulation relates `Start` and `Spec`. -/
-theorem ex_3_20_start_not_spec : ¬ (badStart ≈[ccsLTS badDefn, Act.tau] badSpec) := by
+theorem badStart_not_weakBisim_badSpec : ¬ (badStart ≈[ccsLTS badDefn, Act.tau] badSpec) := by
   intro h
   -- Start —pub̄→ M is matched by BSpec =pub̄⇒ BSpec, giving M ≈ BSpec.
   obtain ⟨q1, hq1, hM⟩ :=

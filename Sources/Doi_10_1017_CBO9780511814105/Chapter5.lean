@@ -111,25 +111,25 @@ theorem ex_5_13 :
   hennessyMilner_needs_imageFinite
 
 /-- **Exercise 5.4** (§5.1, p.96). The everlasting clock `Clock ≝ tick.Clock`
-satisfies `[tick](⟨tick⟩tt ∧ [tock]ff)`. The library's `ex_5_4_box`. -/
+satisfies `[tick](⟨tick⟩tt ∧ [tock]ff)`. The library's `clock_boxProperty`. -/
 theorem ex_5_4_box :
     (CCS.const DeepWiki.ReactiveSystems.ClockK.clk)
       ⊨[ccsLTS DeepWiki.ReactiveSystems.clockDefn]
       (HML.box (DeepWiki.ReactiveSystems.Act.name .tick)
         (HML.and (HML.dia (DeepWiki.ReactiveSystems.Act.name .tick) HML.tt) (HML.box (DeepWiki.ReactiveSystems.Act.name .tock) HML.ff))) :=
-  DeepWiki.ReactiveSystems.ex_5_4_box
+  DeepWiki.ReactiveSystems.clock_boxProperty
 
 /-- **Exercise 5.4** (§5.1, p.96). For every `n`, `Clock ⊨ ⟨tick⟩ⁿtt`. The library's
-`ex_5_4_dia_iter`. -/
+`clock_canIterateDiamond`. -/
 theorem ex_5_4_dia (n : ℕ) :
     (CCS.const DeepWiki.ReactiveSystems.ClockK.clk)
       ⊨[ccsLTS DeepWiki.ReactiveSystems.clockDefn]
       (DeepWiki.ReactiveSystems.diaIter (DeepWiki.ReactiveSystems.Act.name .tick) n) :=
-  DeepWiki.ReactiveSystems.ex_5_4_dia_iter n
+  DeepWiki.ReactiveSystems.clock_canIterateDiamond n
 
 /-- **Exercise 5.5** (§5.1, p.96). Two pairs of non-bisimilar CCS processes, each
 separated by an HML formula (`⟨a⟩[b]ff` and `⟨a⟩[b]⟨c⟩tt`). The library's
-`ex_5_5`. -/
+`hmlDistinguishes_nonBisimilarProcessPairs`. -/
 theorem ex_5_5 :
     (∃ F : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
       (DeepWiki.ReactiveSystems.p55a ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] F) ∧
@@ -137,10 +137,10 @@ theorem ex_5_5 :
     (∃ G : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
       (DeepWiki.ReactiveSystems.p55c ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] G) ∧
       ¬ (DeepWiki.ReactiveSystems.p55d ⊨[ccsLTS DeepWiki.ReactiveSystems.d55] G)) :=
-  DeepWiki.ReactiveSystems.ex_5_5
+  DeepWiki.ReactiveSystems.hmlDistinguishes_nonBisimilarProcessPairs
 
 /-- **Exercise 5.7** (§5.1, p.96). An LTS whose initial state satisfies three given
-HML formulae simultaneously. The library's `ex_5_7`. -/
+HML formulae simultaneously. The library's `s57_satisfiesThreeFormulae`. -/
 theorem ex_5_7 :
     (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
       HML.dia .a (HML.and (HML.dia .b (HML.dia .c HML.tt)) (HML.dia .c HML.tt))) ∧
@@ -149,12 +149,12 @@ theorem ex_5_7 :
         (HML.and (HML.box .b HML.ff) (HML.box .c HML.ff))))) ∧
     (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
       HML.box .a (HML.dia .b (HML.and (HML.box .c HML.ff) (HML.dia .a HML.tt)))) :=
-  DeepWiki.ReactiveSystems.ex_5_7
+  DeepWiki.ReactiveSystems.s57_satisfiesThreeFormulae
 
 /-- **Exercise 5.11** (§5.1, p.100). Four CCS pairs: `b.a.0+b.0 ≁ b.(a.0+b.0)`
 (`⟨b⟩⟨b⟩tt`), `a.(b.c.0+b.d.0) ≁ a.b.c.0+a.b.d.0` (= Exercise 5.5), the expansion
 law `a.0∣b.0 ~ a.b.0+b.a.0`, and `(a.0∣b.0)+c.a.0 ≁ a.0∣(b.0+c.0)` (`⟨a⟩⟨c⟩tt`).
-The library's `ex_5_11`. -/
+The library's `ccs_pairs_expansionLaw_and_distinguishing`. -/
 theorem ex_5_11 :
     (∃ F : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
       (q1b ⊨[ccsLTS d511] F) ∧ ¬ (q1a ⊨[ccsLTS d511] F)) ∧
@@ -163,6 +163,6 @@ theorem ex_5_11 :
     (q3a ~[ccsLTS d511] q3b) ∧
     (∃ H : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
       (q4b ⊨[ccsLTS d511] H) ∧ ¬ (q4a ⊨[ccsLTS d511] H)) :=
-  DeepWiki.ReactiveSystems.ex_5_11
+  DeepWiki.ReactiveSystems.ccs_pairs_expansionLaw_and_distinguishing
 
 end DeepWiki.Rs

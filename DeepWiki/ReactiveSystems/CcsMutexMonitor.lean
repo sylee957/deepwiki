@@ -147,7 +147,7 @@ theorem monitored_wellMatched {σ : List (Act MtChan)} (hσ : WellMatched σ) :
 well-matched run `σ`, can perform `enter₁` then `enter₂` (or `enter₂` then
 `enter₁`), then the monitored system `(P ∣ MutexTest) \ L` can perform the reject
 action `bad`. Thus the monitor detects every mutual-exclusion violation. -/
-theorem prop_7_2_if {σ : List (Act MtChan)} {P P₁ P₂ P₃ : CCS MtChan MtK}
+theorem monitored_bad_of_wellMatched_violation {σ : List (Act MtChan)} {P P₁ P₂ P₃ : CCS MtChan MtK}
     (hσ : WellMatched σ) (hpath : WeakPath (ccsLTS mtDefn) Act.tau P σ P₁)
     (hviol :
       ((ccsLTS mtDefn) ⊢ P₁ =[Act.coname enter1]⇒[Act.tau] P₂ ∧

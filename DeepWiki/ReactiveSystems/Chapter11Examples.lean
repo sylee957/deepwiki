@@ -46,7 +46,7 @@ theorem taB_no_trace : ¬ TimedTrace taB.tlts (taB.initial, fun _ => (0 : ℝ≥
 
 /-- **Exercise 11.2** (§11.1, p.195). The automata (a) and (b) of Example 11.2 are not
 timed-language equivalent: `(0, a)` is a timed trace of (a) but not of (b). -/
-theorem ex_11_2 :
+theorem taA_not_timedLangEq_taB :
     taA.tlts.timedLang (taA.initial, fun _ => (0 : ℝ≥0)) ≠
       taB.tlts.timedLang (taB.initial, fun _ => (0 : ℝ≥0)) := by
   intro h
@@ -105,7 +105,7 @@ theorem taB_untimed_univ : taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ�
 
 /-- The automata (a) and (b) **are** untimed-language equivalent (both accept every
 untimed trace, differing only in *when* the `a`s happen). -/
-theorem ex_11_2_untimed_equiv :
+theorem taA_untimedLangEq_taB :
     taA.tlts.untimedLang (taA.initial, fun _ => (0 : ℝ≥0)) =
       taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0)) :=
   taA_untimed_univ.trans taB_untimed_univ.symm
@@ -113,11 +113,11 @@ theorem ex_11_2_untimed_equiv :
 /-- **Exercise 11.2 / the converse of Theorem 11.1 fails.** Untimed-language
 equivalence does **not** imply timed-language equivalence: (a) and (b) are
 untimed-language equivalent yet not timed-language equivalent. -/
-theorem ex_11_2_untimed_eq_not_timed_eq :
+theorem taA_taB_untimedEq_not_timedEq :
     (taA.tlts.untimedLang (taA.initial, fun _ => (0 : ℝ≥0)) =
       taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0))) ∧
     (taA.tlts.timedLang (taA.initial, fun _ => (0 : ℝ≥0)) ≠
       taB.tlts.timedLang (taB.initial, fun _ => (0 : ℝ≥0))) :=
-  ⟨ex_11_2_untimed_equiv, ex_11_2⟩
+  ⟨taA_untimedLangEq_taB, taA_not_timedLangEq_taB⟩
 
 end DeepWiki.ReactiveSystems

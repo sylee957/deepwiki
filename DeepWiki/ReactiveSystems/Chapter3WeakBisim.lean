@@ -186,7 +186,7 @@ theorem isWeakBisimulation_R325 : IsWeakBisimulation lts325 A325.tau R325 := by
 
 /-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`: the relation `R325` is a weak
 bisimulation containing `(s, t)`. -/
-theorem ex_3_25 : St325.s ≈[lts325, A325.tau] St325.t :=
+theorem s_weaklyBisimilar_t : St325.s ≈[lts325, A325.tau] St325.t :=
   isWeakBisimulation_R325.le_weaklyBisimilar (Or.inl ⟨Or.inl rfl, rfl⟩)
 
 end DeepWiki.ReactiveSystems

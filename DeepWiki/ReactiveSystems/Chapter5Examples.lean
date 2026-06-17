@@ -73,7 +73,7 @@ theorem p55d_unsat : ¬ (p55d ⊨[ccsLTS d55] g55) := by
 
 /-- **Exercise 5.5** (§5.1, p.96). Each pair of non-bisimilar CCS processes is
 separated by an HML formula. -/
-theorem ex_5_5 :
+theorem hmlDistinguishes_nonBisimilarProcessPairs :
     (∃ F : HML (Act (Fin 4)), (p55a ⊨[ccsLTS d55] F) ∧ ¬ (p55b ⊨[ccsLTS d55] F)) ∧
     (∃ G : HML (Act (Fin 4)), (p55c ⊨[ccsLTS d55] G) ∧ ¬ (p55d ⊨[ccsLTS d55] G)) :=
   ⟨⟨f55, p55a_sat, p55b_unsat⟩, ⟨g55, p55c_sat, p55d_unsat⟩⟩
@@ -106,7 +106,7 @@ abbrev lts57 : LTS S57 A57 := ⟨fun p x q => edge57 p x q = true⟩
 /-- **Exercise 5.7** (§5.1, p.96). The state `s` satisfies all three formulae:
 `⟨a⟩(⟨b⟩⟨c⟩tt ∧ ⟨c⟩tt)`, `⟨a⟩⟨b⟩([a]ff ∧ [b]ff ∧ [c]ff)`, and
 `[a]⟨b⟩([c]ff ∧ ⟨a⟩tt)`. -/
-theorem ex_5_7 :
+theorem s57_satisfiesThreeFormulae :
     (S57.s ⊨[lts57] HML.dia .a (HML.and (HML.dia .b (HML.dia .c HML.tt)) (HML.dia .c HML.tt))) ∧
     (S57.s ⊨[lts57]
       HML.dia .a (HML.dia .b (HML.and (HML.box .a HML.ff)
@@ -141,7 +141,7 @@ theorem clock_tick :
 
 /-- **Exercise 5.4** (§5.1, p.96). `Clock ⊨ [tick](⟨tick⟩tt ∧ [tock]ff)`: after any
 `tick`, another `tick` is possible but `tock` is refused. -/
-theorem ex_5_4_box :
+theorem clock_boxProperty :
     (CCS.const ClockK.clk) ⊨[ccsLTS clockDefn]
       (HML.box (Act.name .tick)
         (HML.and (HML.dia (Act.name .tick) HML.tt) (HML.box (Act.name .tock) HML.ff))) := by
@@ -160,7 +160,7 @@ def diaIter (a : Act ClockChan) : ℕ → HML (Act ClockChan)
 
 /-- **Exercise 5.4** (§5.1, p.96). For every `n`, `Clock ⊨ ⟨tick⟩ⁿtt`: the clock
 can tick arbitrarily many times. -/
-theorem ex_5_4_dia_iter (n : ℕ) :
+theorem clock_canIterateDiamond (n : ℕ) :
     (CCS.const ClockK.clk) ⊨[ccsLTS clockDefn] (diaIter (Act.name .tick) n) := by
   induction n with
   | zero => trivial

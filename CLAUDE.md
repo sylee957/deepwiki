@@ -229,6 +229,20 @@ not just defaults):
   for the same object across a related group (e.g. `apply` for `f t` across the
   four `*_of_*` inversion lemmas).
 
+- **The library is book-number-free; book numbers live ONLY in `Sources/`.**
+  No declaration under `DeepWiki/<Topic>/` may be named after a book pointer
+  (`ex_3_25`, `thm_7_1`, `prop_7_2_if`, `def_9_2`, `eq_9_4`, or any
+  `…_<chapter>_<item>` book index). Name library declarations *semantically* for
+  what they state — including example/exercise content (a worked exercise is a
+  theorem about concrete objects, so name it after those objects and the claim:
+  `s325_weaklyBisimilar_t`, `e37_s_not_bisim_t`, `expansionLaw`, `lightDelay`).
+  The book number appears exactly once, as the `alias`/`abbrev`/restatement in the
+  `Sources/<slug>/Chapter*.lean` catalog (`ex_3_25 := …`), whose docstring carries
+  the §/page. When formalizing an exercise, put the proof under a semantic name in
+  the library and add the `ex_X_Y` catalog entry pointing to it — never the reverse.
+  (Docstrings in the library likewise cite the math, not the book number; the
+  catalog docstring is where "**Exercise 3.25**" belongs.)
+
 - **Naming conventions** (codified; legacy names migrate gradually):
   - Predicates are `Is<Concept>` with the curve argument first
     (`IsMinimalServiceCurve beta S`); transport lemmas use dot notation on the

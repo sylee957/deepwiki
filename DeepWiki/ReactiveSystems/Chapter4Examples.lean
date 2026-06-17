@@ -34,7 +34,7 @@ abbrev e37 : LTS E37S E37A := ⟨fun p x q => edge412 p x q = true⟩
 /-- **Exercise 4.12** (§4.3, p.87). In the Example 3.7 LTS, `s ≁ t`: the attacker
 plays `s —a→ s₁` (forcing `t —a→ t₁`), then `t₁ —b→ t₁` (forcing `s₁ —b→ s₃`),
 then `t₁ —b→ t₁` again, which `s₃` (dead) cannot match. -/
-theorem ex_4_12_s_not_bisim_t : ¬ ((E37S.s) ~[e37] (E37S.t)) := by
+theorem e37_s_not_bisim_t : ¬ ((E37S.s) ~[e37] (E37S.t)) := by
   intro h
   obtain ⟨q1, hq1, hb1⟩ := ((bisimilar_iff _ _).mp h).1 E37A.a E37S.s1 (by decide)
   obtain rfl : q1 = E37S.t1 := (by decide : ∀ q, e37.step E37S.t E37A.a q → q = E37S.t1) q1 hq1
@@ -85,7 +85,7 @@ theorem not_bisim_p5 {x x' : P411} (hx : lts411.step x A411.a x') : ¬ (x ~[lts4
 /-- **Exercise 4.11** (§4.3, p.86). The largest bisimulation of `P₁..P₅` identifies
 exactly `P₁` and `P₂`: `P₁ ~ P₂`, while `P₃, P₄, P₅` are pairwise distinct and
 distinct from `P₁`. -/
-theorem ex_4_11 :
+theorem lts411_only_p1_p2_bisimilar :
     (P411.p1 ~[lts411] P411.p2) ∧ ¬ (P411.p1 ~[lts411] P411.p3) ∧
     ¬ (P411.p1 ~[lts411] P411.p4) ∧ ¬ (P411.p1 ~[lts411] P411.p5) ∧
     ¬ (P411.p3 ~[lts411] P411.p4) ∧ ¬ (P411.p3 ~[lts411] P411.p5) ∧

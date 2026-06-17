@@ -62,14 +62,14 @@ theorem bisim_q_iff (s : P61) : (P61.q ~[L61] s) ↔ s = P61.q := by
 /-- **Exercise 6.13** (§6.6, p.134). The characteristic formula of `p` in Figure 6.1
 is satisfied by exactly `p`: `⟦charSys p⟧ = {p}` (since `p` is bisimilar to no other
 state). -/
-theorem ex_6_13_p : sysMax L61 (charSys L61) P61.p = {P61.p} := by
+theorem charSys_p61_p_singleton : sysMax L61 (charSys L61) P61.p = {P61.p} := by
   ext s
   rw [Set.mem_singleton_iff, charSys_characterizes]
   exact bisim_p_iff s
 
 /-- **Exercise 6.13** (§6.6, p.134). The characteristic formula of `q` in Figure 6.1
 is satisfied by exactly `q`: `⟦charSys q⟧ = {q}`. -/
-theorem ex_6_13_q : sysMax L61 (charSys L61) P61.q = {P61.q} := by
+theorem charSys_p61_q_singleton : sysMax L61 (charSys L61) P61.q = {P61.q} := by
   ext s
   rw [Set.mem_singleton_iff, charSys_characterizes]
   exact bisim_q_iff s

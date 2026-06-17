@@ -162,11 +162,11 @@ theorem exp_law : q3a ~[ccsLTS d511] q3b :=
 /-- **Exercise 5.11** (§5.1, p.100). For the four CCS pairs: pairs 1, 2 and 4 are
 not strongly bisimilar (each separated by an HML formula — pair 2 is the second
 pair of Exercise 5.5), while pair 3 is bisimilar (the expansion law). -/
-theorem ex_5_11 :
+theorem ccs_pairs_expansionLaw_and_distinguishing :
     (∃ F : HML (Act (Fin 4)), (q1b ⊨[ccsLTS d511] F) ∧ ¬ (q1a ⊨[ccsLTS d511] F)) ∧
     (∃ G : HML (Act (Fin 4)), (p55c ⊨[ccsLTS d55] G) ∧ ¬ (p55d ⊨[ccsLTS d55] G)) ∧
     (q3a ~[ccsLTS d511] q3b) ∧
     (∃ H : HML (Act (Fin 4)), (q4b ⊨[ccsLTS d511] H) ∧ ¬ (q4a ⊨[ccsLTS d511] H)) :=
-  ⟨⟨f511_1, q1b_sat, q1a_unsat⟩, ex_5_5.2, exp_law, ⟨f511_4, q4b_sat, q4a_unsat⟩⟩
+  ⟨⟨f511_1, q1b_sat, q1a_unsat⟩, hmlDistinguishes_nonBisimilarProcessPairs.2, exp_law, ⟨f511_4, q4b_sat, q4a_unsat⟩⟩
 
 end DeepWiki.ReactiveSystems

@@ -41,13 +41,13 @@ theorem subset_posOf (L : LTS Proc Act) (S : Set Proc) : S ⊆ posOf L S := by
 
 /-- **Exercise 6.18** (§6.7, p.138). On the Exercise 6.17 LTS, the set of states
 satisfying `⟨Act⟩Pos(LivelockNow)` is the whole state space: every state is
-livelocked (`ex_6_17`), so `Pos(LivelockNow) = univ`, and every state can move, so
+livelocked (`livelockNow_L617_tau_univ`), so `Pos(LivelockNow) = univ`, and every state can move, so
 prefixing with `⟨Act⟩` keeps it `univ`. -/
-theorem ex_6_18 :
+theorem diaAll_posOf_livelockNow_eq_univ_L617 :
     diaAll L617 (posOf L617 (LivelockNow L617 Act6.tau)) = Set.univ := by
   have hpos : posOf L617 (LivelockNow L617 Act6.tau) = Set.univ := by
     apply le_antisymm (Set.subset_univ _)
-    rw [ex_6_17]
+    rw [livelockNow_L617_tau_univ]
     exact subset_posOf L617 Set.univ
   rw [hpos]
   refine le_antisymm (Set.subset_univ _) (fun p _ => ?_)

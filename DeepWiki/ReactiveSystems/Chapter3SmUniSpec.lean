@@ -147,7 +147,7 @@ theorem isWeakBisimulation_smRel : IsWeakBisimulation (ccsLTS smuniDefn) Act.tau
 /-- **Exercise 3.20** (§3.4, p.58). `SmUni ≈ Spec`: the Small University is
 observationally equivalent to `Spec ≝ pub.Spec` (the two internal `coin`/`coffee`
 handshakes are unobservable). -/
-theorem ex_3_20_smuni : smUni ≈[ccsLTS smuniDefn, Act.tau] smSpec :=
+theorem smUni_weaklyBisimilar_smSpec : smUni ≈[ccsLTS smuniDefn, Act.tau] smSpec :=
   isWeakBisimulation_smRel.le_weaklyBisimilar ⟨Or.inl rfl, rfl⟩
 
 end DeepWiki.ReactiveSystems

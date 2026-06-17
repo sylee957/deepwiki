@@ -65,7 +65,7 @@ theorem isBisimulation_R35 : IsBisimulation lts35 R35 := by
 
 /-- **Exercise 3.5** (§3.3, p.42). `s ~ t` in the LTS of Exercise 3.5, witnessed by
 the bisimulation `R35`. -/
-theorem ex_3_5_bisim : (S35.s) ~[lts35] (S35.t) :=
+theorem lts35_s_bisimilar_t : (S35.s) ~[lts35] (S35.t) :=
   isBisimulation_R35.le_bisimilar rfl
 
 /-! ## Exercise 3.8 — bisimulations need not be equivalences -/
@@ -80,20 +80,20 @@ theorem isBisimulation_emptyLTS {Proc Act : Type*} (R : Proc → Proc → Prop) 
 
 /-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be reflexive: the
 empty relation is a bisimulation but not reflexive on an inhabited LTS. -/
-theorem ex_3_8_not_reflexive :
+theorem bisimulation_not_reflexive :
     ∃ R : Bool → Bool → Prop, IsBisimulation (emptyLTS Bool Unit) R ∧ ¬ (∀ x, R x x) :=
   ⟨fun _ _ => False, isBisimulation_emptyLTS _, fun h => h true⟩
 
 /-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be symmetric:
 `{(true, false)}` is a bisimulation but not symmetric. -/
-theorem ex_3_8_not_symmetric :
+theorem bisimulation_not_symmetric :
     ∃ R : Bool → Bool → Prop, IsBisimulation (emptyLTS Bool Unit) R ∧ ¬ (∀ x y, R x y → R y x) :=
   ⟨fun x y => x = true ∧ y = false, isBisimulation_emptyLTS _,
     fun h => absurd (h true false ⟨rfl, rfl⟩).1 (by decide)⟩
 
 /-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be transitive:
 `{(0,1),(1,2)}` is a bisimulation but not transitive (it omits `(0,2)`). -/
-theorem ex_3_8_not_transitive :
+theorem bisimulation_not_transitive :
     ∃ R : Fin 3 → Fin 3 → Prop,
       IsBisimulation (emptyLTS (Fin 3) Unit) R ∧ ¬ (∀ x y z, R x y → R y z → R x z) :=
   ⟨fun x y => (x = 0 ∧ y = 1) ∨ (x = 1 ∧ y = 2), isBisimulation_emptyLTS _, by
@@ -151,13 +151,13 @@ theorem isBisimulation_rel37 : IsBisimulation lts37 (fun p q => rel37 p q = true
   decide
 
 /-- **Exercise 3.37** (§3.4, p.69). `s ~ u` (positive case), witnessed by `rel37`. -/
-theorem ex_3_37_s_bisim_u : (S37.s) ~[lts37] (S37.u) :=
+theorem lts37_s_bisimilar_u : (S37.s) ~[lts37] (S37.u) :=
   isBisimulation_rel37.le_bisimilar rfl
 
 /-- **Exercise 3.37** (§3.4, p.69). `s ≁ t`: the attacker plays `s —a→ s₁ —b→ s₂`
 (where `s₂` enables both `a` and `b`); the defender's `t` must reply
 `t —a→ t₁ —b→ {t₁, t₂}`, but `t₁` enables only `b` and `t₂` only `a`. -/
-theorem ex_3_37_s_not_bisim_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
+theorem lts37_s_not_bisimilar_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
   intro h
   obtain ⟨q1, hq1, hb1⟩ := ((bisimilar_iff _ _).mp h).1 A35.a S37.s1 (by decide)
   obtain rfl : q1 = S37.t1 := (by decide : ∀ q, lts37.step S37.t A35.a q → q = S37.t1) q1 hq1
@@ -171,7 +171,7 @@ theorem ex_3_37_s_not_bisim_t : ¬ ((S37.s) ~[lts37] (S37.t)) := by
 /-- **Exercise 3.37** (§3.4, p.69). `s ≁ v`: same shape as `s ≁ t` — after
 `s —a→ s₁ —b→ s₂` the defender's `v₁` goes to `v₂` (only `a`) or `v₃` (only `b`),
 neither matching `s₂`'s `{a, b}`. -/
-theorem ex_3_37_s_not_bisim_v : ¬ ((S37.s) ~[lts37] (S37.v)) := by
+theorem lts37_s_not_bisimilar_v : ¬ ((S37.s) ~[lts37] (S37.v)) := by
   intro h
   obtain ⟨q1, hq1, hb1⟩ := ((bisimilar_iff _ _).mp h).1 A35.a S37.s1 (by decide)
   obtain rfl : q1 = S37.v1 := (by decide : ∀ q, lts37.step S37.v A35.a q → q = S37.v1) q1 hq1

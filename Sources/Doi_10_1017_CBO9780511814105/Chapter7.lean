@@ -196,7 +196,7 @@ abbrev mutexWellMatched := @DeepWiki.ReactiveSystems.WellMatched
 `enter`s in a row (`enter₁` then `enter₂`, or `enter₂` then `enter₁`), then the
 monitored system `(P ∣ MutexTest) ∖ L` can perform the reject action `bad`: the
 monitor detects every mutual-exclusion violation. Discharged by the library's
-`prop_7_2_if`. (The converse — completeness — is the book's Exercise 7.12.) -/
+`monitored_bad_of_wellMatched_violation`. (The converse — completeness — is the book's Exercise 7.12.) -/
 theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSystems.MtChan)}
     {P P₁ P₂ P₃ : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.ReactiveSystems.MtK}
     (hσ : DeepWiki.ReactiveSystems.WellMatched σ)
@@ -219,7 +219,7 @@ theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSy
       DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest
         =[DeepWiki.ReactiveSystems.Act.name DeepWiki.ReactiveSystems.MtChan.bad]⇒[
           DeepWiki.ReactiveSystems.Act.tau] Q :=
-  DeepWiki.ReactiveSystems.prop_7_2_if hσ hpath hviol
+  DeepWiki.ReactiveSystems.monitored_bad_of_wellMatched_violation hσ hpath hviol
 
 /-- **Exercise 7.10** (§7.3, p.152). The weak-simulation preorder is a choice
 congruence: if `Q` weakly simulates `P`, then `Q + R` weakly simulates both `P`
@@ -237,11 +237,11 @@ theorem ex_7_10 {Name K : Type*} {defn : K → CCS Name K} {P Q R : CCS Name K}
 `q —a→ s`, `r ↺b` (`s` dead), the set of states satisfying the recursive safety
 property `F =ν [a]ff ∧ [b]F` is `{p, r, s}`; only `q` is excluded (it can perform
 `a`). The companion test `X ≝ ā.bad.0 + b̄.X` is passed by the same states. The
-library's `ex_7_13`. -/
+library's `safeStates_L713_eq`. -/
 theorem ex_7_13 :
     recMax DeepWiki.ReactiveSystems.L713 DeepWiki.ReactiveSystems.F713 =
       {DeepWiki.ReactiveSystems.S713.p, DeepWiki.ReactiveSystems.S713.r,
         DeepWiki.ReactiveSystems.S713.s} :=
-  DeepWiki.ReactiveSystems.ex_7_13
+  DeepWiki.ReactiveSystems.safeStates_L713_eq
 
 end DeepWiki.Rs

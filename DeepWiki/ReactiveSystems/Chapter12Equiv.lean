@@ -23,25 +23,25 @@ theorem Valuation.reset_comm {C : Type*} (x y : C) (u : Valuation C) :
 
 /-- **Exercise 12.3(1)** (§12.1, p.227). `y in (y = 0) ≡ tt`: a just-reset clock
 always reads `0`. -/
-theorem ex_12_3_1a (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (y : D) :
+theorem resetClockZero_equiv_tt (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (y : D) :
     MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.eq 0))) ↔ MtSat T p u Mt.tt := by
   simp [MtSat, satisfies, Cmp.holds, Valuation.reset_mem (show y ∈ ({y} : Set D) by simp)]
 
 /-- **Exercise 12.3(1)** (§12.1, p.227). `y in (y > 0) ≡ ff`: a just-reset clock is
 never strictly positive. -/
-theorem ex_12_3_1b (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (y : D) :
+theorem resetClockPos_equiv_ff (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (y : D) :
     MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.gt 0))) ↔ MtSat T p u Mt.ff := by
   simp [MtSat, satisfies, Cmp.holds, Valuation.reset_mem (show y ∈ ({y} : Set D) by simp)]
 
 /-- **Exercise 12.3(3)** (§12.1, p.227). `[a]tt ≡ tt`: a box over the trivially-true
 formula holds everywhere. -/
-theorem ex_12_3_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (a : Act) :
+theorem box_tt_equiv_tt (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (a : Act) :
     MtSat T p u (Mt.box a Mt.tt) ↔ MtSat T p u Mt.tt := by
   simp [MtSat]
 
 /-- **Exercise 12.3(5)** (§12.1, p.227). Reset commutation: `x in (y in F) ≡ y in
 (x in F)` for every formula `F`. -/
-theorem ex_12_3_5 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (F : Mt Act D) :
+theorem reset_comm_mt (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (F : Mt Act D) :
     MtSat T p u (Mt.reset x (Mt.reset y F)) ↔ MtSat T p u (Mt.reset y (Mt.reset x F)) := by
   simp only [MtSat]
   rw [Valuation.reset_comm]

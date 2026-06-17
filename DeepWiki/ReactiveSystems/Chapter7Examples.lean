@@ -39,7 +39,7 @@ safety property `F =ν [a]ff ∧ [b]F` is `{p, r, s}`: `q` is excluded because
 `q —a→ s`, while `p`, `r`, `s` reach no `a` along any `b`-path. (The companion
 question — which states pass the test `X ≝ ā.bad.0 + b̄.X` — has the same answer
 `{p, r, s}` by the testing characterization, Definition 7.4.) -/
-theorem ex_7_13 : recMax L713 F713 = {S713.p, S713.r, S713.s} := by
+theorem safeStates_L713_eq : recMax L713 F713 = {S713.p, S713.r, S713.s} := by
   -- `{p, r, s}` is a fixed point of the denotation functional `denotR F`.
   have hcomp : denotR L713 F713 {S713.p, S713.r, S713.s} = {S713.p, S713.r, S713.s} := by
     ext x

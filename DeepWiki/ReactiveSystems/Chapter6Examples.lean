@@ -34,7 +34,7 @@ abbrev L62 : LTS S62 Lab62 := ⟨fun p x q => edge62 p x q = true⟩
 
 /-- **Exercise 6.4** (§6.2, p.110). `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`: a single
 evaluation of the semantic functional (no fixed point). -/
-theorem ex_6_4 :
+theorem denotR_L62_singleton :
     denotR L62 (HMLR.and (HMLR.box .b HMLR.ff) (HMLR.box .a HMLR.var)) {S62.p2}
       = {S62.p2} := by
   ext x
@@ -68,7 +68,7 @@ def FY66 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
 
 /-- **Exercise 6.6** (§6.3, p.111). The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
 is the whole state space: every state can reach (via `a`/`b`) a `b`-looping state. -/
-theorem ex_6_6 : recMin L66 FY66 = Set.univ := by
+theorem lfp_FY66_univ : recMin L66 FY66 = Set.univ := by
   apply le_antisymm (Set.subset_univ _)
   refine (denotRHom L66 FY66).le_lfp ?_
   intro S hS x _
@@ -106,7 +106,7 @@ def FY67 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
 
 /-- **Exercise 6.7(1)** (§6.3). `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`: `{s₁, s₂}` is a
 post-fixed point (each has a `b`-move staying inside). -/
-theorem ex_6_7_1 : S67.s1 ∈ recMax L67 F67 := by
+theorem s1_mem_gfp_F67 : S67.s1 ∈ recMax L67 F67 := by
   have h : ({S67.s1, S67.s2} : Set S67) ≤ recMax L67 F67 := by
     refine (denotRHom L67 F67).le_gfp ?_
     intro x hx
@@ -117,7 +117,7 @@ theorem ex_6_7_1 : S67.s1 ∈ recMax L67 F67 := by
 
 /-- **Exercise 6.7(2)** (§6.3). For `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`: `s ⊨ Y` (it reaches a
 `b`-state) but `t ⊭ Y` (the `t`-component has no `b`-move). -/
-theorem ex_6_7_2 : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recMin L67 FY67 := by
+theorem s_mem_lfp_FY67_and_t_nmem : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recMin L67 FY67 := by
   have hfix : denotR L67 FY67 (recMin L67 FY67) = recMin L67 FY67 :=
     OrderHom.map_lfp (denotRHom L67 FY67)
   refine ⟨?_, ?_⟩
@@ -145,7 +145,7 @@ theorem ex_6_7_2 : S67.s ∈ recMin L67 FY67 ∧ S67.t ∉ recMin L67 FY67 := by
     simp at this
 
 /-- **Exercise 6.7(3)** (§6.3). `t` is livelocked on `a`: `t ⊨ Z =ν ⟨a⟩Z`. -/
-theorem ex_6_7_3 : S67.t ∈ LivelockNow L67 .a :=
+theorem t_livelocked_L67_a : S67.t ∈ LivelockNow L67 .a :=
   (livelockFun L67 .a).le_gfp (a := {S67.t, S67.t1}) (by
     intro x hx
     rcases (show x = .t ∨ x = .t1 by simpa using hx) with rfl | rfl
@@ -184,7 +184,7 @@ def sol69 : V69 → Set P69
 
 /-- **Exercise 6.9** (§6.5, p.124). The largest solution of `X =ν [a]Y`,
 `Y =ν ⟨a⟩X` over the 3-state LTS is `X = {p, r}`, `Y = {p, q}`. -/
-theorem ex_6_9 : sysMax L69 D69 = sol69 := by
+theorem sysMax_D69_eq_sol69 : sysMax L69 D69 = sol69 := by
   apply le_antisymm
   · -- sysMax ≤ sol69, by coinduction: any post-fixed point is ≤ sol69
     have key : ∀ σ : V69 → Set P69, σ ≤ sysFun L69 D69 σ → σ ≤ sol69 := by
@@ -248,7 +248,7 @@ def L616 : LTS S616 Act6 := ⟨Step616⟩
 
 /-- **Exercise 6.16** (§6.7, p.135). The only livelocked state is `p`:
 `LivelockNow = {p}`. -/
-theorem ex_6_16 : LivelockNow L616 .tau = {S616.p} := by
+theorem livelockNow_L616_tau_singleton : LivelockNow L616 .tau = {S616.p} := by
   apply le_antisymm
   · intro x hx
     obtain ⟨x', hstep, hx'⟩ := (OrderHom.map_gfp (livelockFun L616 .tau)).ge hx
@@ -282,7 +282,7 @@ def L617 : LTS S617 Act6 := ⟨Step617⟩
 
 /-- **Exercise 6.17** (§6.7, p.135). Every state has an outgoing `τ`, so every state
 is livelocked: `LivelockNow = univ`. -/
-theorem ex_6_17 : LivelockNow L617 .tau = Set.univ := by
+theorem livelockNow_L617_tau_univ : LivelockNow L617 .tau = Set.univ := by
   apply le_antisymm (Set.subset_univ _)
   exact (livelockFun L617 .tau).le_gfp (by
     intro x _

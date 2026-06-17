@@ -196,21 +196,21 @@ theorem ex_12_18 : Nonempty (CompleteLattice (Set (Proc × Valuation D))) := ⟨
 /-- **Exercise 12.13** (§12.3, p.234). Theorem 12.3 would fail if `p, q` were only
 *untimed* bisimilar: the §11.2 witness TLTS has untimed-bisimilar states `A, B`
 distinguished by the `Mt` formula `y in ∃∃(y > 1 ∧ ⟨a⟩tt)` (so the answer to the
-exercise is "no"). The library's `ex_12_13`. -/
+exercise is "no"). The library's `untimedBisimilar_insufficient_for_timedHML`. -/
 theorem ex_12_13 :
     ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
       TLTS.UntimedBisimilar T p q ∧
       ∃ F : Mt Unit Unit, TLTS.MtSatState T p F ∧ ¬ TLTS.MtSatState T q F :=
-  DeepWiki.ReactiveSystems.ex_12_13
+  DeepWiki.ReactiveSystems.untimedBisimilar_insufficient_for_timedHML
 
 /-- **Exercise 12.10** (§12.3, p.233). The two timed automata of Figure 10.2 are not
 timed bisimilar, and `y in ∃∃(y > 1)` distinguishes them (the freely-delaying one
-satisfies it; the `1`-bounded one does not). The library's `ex_12_10`. -/
+satisfies it; the `1`-bounded one does not). The library's `witnessTLTS_not_timedBisimilar_and_distinguishing_formula`. -/
 theorem ex_12_10 :
     ¬ DeepWiki.ReactiveSystems.witnessTLTS.TimedBisimilar .A .B ∧
       TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .A DeepWiki.ReactiveSystems.mt1210 ∧
       ¬ TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .B DeepWiki.ReactiveSystems.mt1210 :=
-  DeepWiki.ReactiveSystems.ex_12_10
+  DeepWiki.ReactiveSystems.witnessTLTS_not_timedBisimilar_and_distinguishing_formula
 
 /-- **Exercise 12.1** (§12.1, p.226). If `F` is a closed `Mt` formula (every guard
 clock is within the scope of a reset binding it), the extended states satisfying `F`
@@ -231,7 +231,7 @@ theorem ex_12_1_not_general :
 /-- **Exercise 12.3** (§12.1, p.227). Algebraic `Mt`-equivalences holding by the
 satisfaction clauses: `y in (y = 0) ≡ tt` and `y in (y > 0) ≡ ff` (a just-reset
 clock reads `0`); `[a]tt ≡ tt`; and reset commutation `x in (y in F) ≡ y in (x in F)`.
-The library's `ex_12_3_1a`/`_1b`/`_3`/`_5`. -/
+The library's `resetClockZero_equiv_tt`/`_1b`/`_3`/`_5`. -/
 theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : Act)
     (F : Mt Act D) :
     (TLTS.MtSat T p u (Mt.reset y (Mt.guard (ClockConstraint.atom y Cmp.eq 0))) ↔
@@ -241,7 +241,7 @@ theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : 
     (TLTS.MtSat T p u (Mt.box a Mt.tt) ↔ TLTS.MtSat T p u Mt.tt) ∧
     (TLTS.MtSat T p u (Mt.reset x (Mt.reset y F)) ↔
       TLTS.MtSat T p u (Mt.reset y (Mt.reset x F))) :=
-  ⟨DeepWiki.ReactiveSystems.ex_12_3_1a T p u y, DeepWiki.ReactiveSystems.ex_12_3_1b T p u y,
-   DeepWiki.ReactiveSystems.ex_12_3_3 T p u a, DeepWiki.ReactiveSystems.ex_12_3_5 T p u x y F⟩
+  ⟨DeepWiki.ReactiveSystems.resetClockZero_equiv_tt T p u y, DeepWiki.ReactiveSystems.resetClockPos_equiv_ff T p u y,
+   DeepWiki.ReactiveSystems.box_tt_equiv_tt T p u a, DeepWiki.ReactiveSystems.reset_comm_mt T p u x y F⟩
 
 end DeepWiki.Rs

@@ -90,7 +90,7 @@ abbrev def_9_2_defn := @DeepWiki.ReactiveSystems.IsGuardedDefn
 /-- **Exercise 9.6** (§9.4, p.171). Of the four TCCS agents `M₁ ≝ ε(3).(ε(2).a.M₁+b.M₁)`,
 `M₂ ≝ ε(5).a.M₂+ε(3).b.M₂`, `M₃ ≝ ε(3).(ε(2).a.M₃+τ.M₃)`, `M₄ ≝ ε(5).a.M₄+ε(3).τ.M₄`,
 exactly `M₁` and `M₂` can delay by `4` (the `b`-prefix idles); `M₃`, `M₄` cannot, as
-a `τ` becomes urgent after `3` units (maximal progress). The library's `ex_9_6`. -/
+a `τ` becomes urgent after `3` units (maximal progress). The library's `tccsAgents_delay4_characterization`. -/
 theorem ex_9_6 :
     TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M1) 4
         (TCCS.choice (TCCS.eps 1 (TCCS.pre (Act.name .a) (TCCS.const .M1)))
@@ -100,21 +100,21 @@ theorem ex_9_6 :
           (TCCS.pre (Act.name .b) (TCCS.const .M2))) ∧
     (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M3) 4 Q) ∧
     (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M4) 4 Q) :=
-  DeepWiki.ReactiveSystems.ex_9_6
+  DeepWiki.ReactiveSystems.tccsAgents_delay4_characterization
 
 /-- **Exercise 9.1** (§9.3, p.166). The timed light-switch specification
 `Light ≝ ε(1.4).τ.press.Off + press.Bright` (with `Off ≝ press.Light`,
-`Bright ≝ press.Off`) is guarded. The library's `ex_9_1`. -/
+`Bright ≝ press.Off`) is guarded. The library's `lightDefn_isGuarded`. -/
 theorem ex_9_1 : IsGuardedDefn DeepWiki.ReactiveSystems.lightDefn :=
-  DeepWiki.ReactiveSystems.ex_9_1
+  DeepWiki.ReactiveSystems.lightDefn_isGuarded
 
 /-- **Exercise 9.2** (§9.3, p.168). From the `Light` state a delay `d ≤ 1.4` counts
 the delay-prefix down: `Light —d→ ε(1.4−d).τ.press.Off + press.Bright`. The library's
-`ex_9_2`. -/
+`lightDefn_light_delayReduces`. -/
 theorem ex_9_2 {d : ℝ≥0} (h : d ≤ 1.4) :
     (tccsTLTS DeepWiki.ReactiveSystems.lightDefn).delay (.const .Light) d
       (.choice (.eps (1.4 - d) (.pre Act.tau (.pre (.name .press) (.const .Off))))
         (.pre (.name .press) (.const .Bright))) :=
-  DeepWiki.ReactiveSystems.ex_9_2 h
+  DeepWiki.ReactiveSystems.lightDefn_light_delayReduces h
 
 end DeepWiki.Rs

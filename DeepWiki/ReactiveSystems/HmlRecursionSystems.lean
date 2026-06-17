@@ -73,10 +73,10 @@ def sysSolution (L : LTS Proc Act) (D : V → HMLV V Act) : FpKind → (V → Se
 
 /-- **Exercise 6.8(1)** (§6.5, p.124). The product domain (here `V → 2^Proc`),
 ordered componentwise, is a complete lattice. -/
-theorem ex_6_8_completeLattice : Nonempty (CompleteLattice (V → Set Proc)) := ⟨inferInstance⟩
+theorem sysEnv_completeLattice : Nonempty (CompleteLattice (V → Set Proc)) := ⟨inferInstance⟩
 
 /-- **Exercise 6.8(2)** (§6.5, p.124). `⟦D⟧` is monotone. -/
-theorem ex_6_8_mono (L : LTS Proc Act) (D : V → HMLV V Act) : Monotone (sysFun L D) :=
+theorem sysFun_monotone (L : LTS Proc Act) (D : V → HMLV V Act) : Monotone (sysFun L D) :=
   (sysFun L D).monotone
 
 /-! ## §6.7 Mixing fixed points: the livelock property -/
@@ -92,7 +92,7 @@ def LivelockNow (L : LTS Proc Act) (tau : Act) : Set Proc := (livelockFun L tau)
 
 /-- **Exercise 6.15** (§6.7, p.135). The *least* solution of `X = ⟨τ⟩X` is empty
 (only the largest fixed point captures livelock). -/
-theorem ex_6_15 (L : LTS Proc Act) (tau : Act) : (livelockFun L tau).lfp = ∅ := by
+theorem livelockFun_lfp_empty (L : LTS Proc Act) (tau : Act) : (livelockFun L tau).lfp = ∅ := by
   refine le_antisymm ((livelockFun L tau).lfp_le ?_) (Set.empty_subset _)
   rintro p ⟨_, _, hp'⟩; exact hp'.elim
 

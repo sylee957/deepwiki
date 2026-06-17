@@ -70,7 +70,7 @@ theorem witnessTLTS_B_unsat_mt1210 : ¬ TLTS.MtSatState witnessTLTS .B mt1210 :=
 /-- **Exercise 12.10** (§12.3, p.233). The two automata of Figure 10.2 are not timed
 bisimilar, and `y in ∃∃(y > 1)` distinguishes them (the freely-delaying one
 satisfies it; the one bounded by `1` does not). -/
-theorem ex_12_10 :
+theorem witnessTLTS_not_timedBisimilar_and_distinguishing_formula :
     ¬ witnessTLTS.TimedBisimilar .A .B ∧
       TLTS.MtSatState witnessTLTS .A mt1210 ∧ ¬ TLTS.MtSatState witnessTLTS .B mt1210 :=
   ⟨not_A_timedBisimilar_B, witnessTLTS_A_sat_mt1210, witnessTLTS_B_unsat_mt1210⟩
@@ -78,7 +78,7 @@ theorem ex_12_10 :
 /-- **Exercise 12.13** (§12.3, p.234). Theorem 12.3 fails for merely *untimed*
 bisimilar states: there is a TLTS with untimed-bisimilar `p, q` and an `Mt` formula
 satisfied by one but not the other. -/
-theorem ex_12_13 :
+theorem untimedBisimilar_insufficient_for_timedHML :
     ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
       T.UntimedBisimilar p q ∧
       ∃ F : Mt Unit Unit, T.MtSatState p F ∧ ¬ T.MtSatState q F :=

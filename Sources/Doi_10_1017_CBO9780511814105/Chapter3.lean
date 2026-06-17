@@ -515,15 +515,15 @@ theorem ex_3_31 {Proc Act : Type*} (L : LTS Proc Act) (tau : Act) (p q : Proc) :
 
 /-- **Exercise 3.5** (§3.3, p.42). The states `s, t` of the given two LTSs are
 strongly bisimilar, `s ~ t`, witnessed by the explicit relation `R35`. The
-library's `ex_3_5_bisim`. -/
+library's `lts35_s_bisimilar_t`. -/
 theorem ex_3_5 :
     (DeepWiki.ReactiveSystems.S35.s) ~[DeepWiki.ReactiveSystems.lts35]
       (DeepWiki.ReactiveSystems.S35.t) :=
-  DeepWiki.ReactiveSystems.ex_3_5_bisim
+  DeepWiki.ReactiveSystems.lts35_s_bisimilar_t
 
 /-- **Exercise 3.8** (§3.3, p.44). A strong bisimulation need not be reflexive,
 symmetric, or transitive — three counterexamples (over transition-free LTSs). The
-library's `ex_3_8_not_reflexive`/`_not_symmetric`/`_not_transitive`. -/
+library's `bisimulation_not_reflexive`/`_not_symmetric`/`_not_transitive`. -/
 theorem ex_3_8 :
     (∃ R : Bool → Bool → Prop,
       LTS.IsBisimulation (DeepWiki.ReactiveSystems.emptyLTS Bool Unit) R ∧ ¬ (∀ x, R x x)) ∧
@@ -533,14 +533,14 @@ theorem ex_3_8 :
     (∃ R : Fin 3 → Fin 3 → Prop,
       LTS.IsBisimulation (DeepWiki.ReactiveSystems.emptyLTS (Fin 3) Unit) R ∧
         ¬ (∀ x y z, R x y → R y z → R x z)) :=
-  ⟨DeepWiki.ReactiveSystems.ex_3_8_not_reflexive,
-   DeepWiki.ReactiveSystems.ex_3_8_not_symmetric,
-   DeepWiki.ReactiveSystems.ex_3_8_not_transitive⟩
+  ⟨DeepWiki.ReactiveSystems.bisimulation_not_reflexive,
+   DeepWiki.ReactiveSystems.bisimulation_not_symmetric,
+   DeepWiki.ReactiveSystems.bisimulation_not_transitive⟩
 
 /-- **Exercise 3.37** (§3.4, p.69). For the four LTSs: `s ≁ t`, `s ~ u`, `s ≁ v`.
 The positive case `s ~ u` has an explicit bisimulation; the negatives are refuted
 by a two-move attacker strategy (reach a `{a,b}`-enabling state the defender
-cannot match). The library's `ex_3_37_s_bisim_u`/`_s_not_bisim_t`/`_s_not_bisim_v`. -/
+cannot match). The library's `lts37_s_bisimilar_u`/`_s_not_bisim_t`/`_s_not_bisim_v`. -/
 theorem ex_3_37 :
     ¬ ((DeepWiki.ReactiveSystems.S37.s) ~[DeepWiki.ReactiveSystems.lts37]
         (DeepWiki.ReactiveSystems.S37.t)) ∧
@@ -548,9 +548,9 @@ theorem ex_3_37 :
         (DeepWiki.ReactiveSystems.S37.u)) ∧
     ¬ ((DeepWiki.ReactiveSystems.S37.s) ~[DeepWiki.ReactiveSystems.lts37]
         (DeepWiki.ReactiveSystems.S37.v)) :=
-  ⟨DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_t,
-   DeepWiki.ReactiveSystems.ex_3_37_s_bisim_u,
-   DeepWiki.ReactiveSystems.ex_3_37_s_not_bisim_v⟩
+  ⟨DeepWiki.ReactiveSystems.lts37_s_not_bisimilar_t,
+   DeepWiki.ReactiveSystems.lts37_s_bisimilar_u,
+   DeepWiki.ReactiveSystems.lts37_s_not_bisimilar_v⟩
 
 /-- **Exercise 3.20** (§3.4, p.58), the headline claim `a.0 ≈ a.τ.0`: a leading
 silent step is unobservable (an instance of τ-law (3.9), `tau_law_1`, symmetrised).
@@ -563,26 +563,26 @@ theorem ex_3_20 {Name K : Type*} (defn : K → CCS Name K) (a₀ : Name) :
 
 /-- **Exercise 3.20** (§3.4, p.58), the `SmUni ≈ Spec` claim: the Small University
 `(CM ∣ CS) ∖ {coin, coffee}` is observationally equivalent to `Spec ≝ pub.Spec`
-(its two internal handshakes are unobservable). The library's `ex_3_20_smuni`. -/
+(its two internal handshakes are unobservable). The library's `smUni_weaklyBisimilar_smSpec`. -/
 theorem ex_3_20_smuni :
     DeepWiki.ReactiveSystems.smUni ≈[ccsLTS DeepWiki.ReactiveSystems.smuniDefn,
       DeepWiki.ReactiveSystems.Act.tau] DeepWiki.ReactiveSystems.smSpec :=
-  DeepWiki.ReactiveSystems.ex_3_20_smuni
+  DeepWiki.ReactiveSystems.smUni_weaklyBisimilar_smSpec
 
 /-- **Exercise 3.20** (§3.4, p.58), the `Start ≉ Spec` claim: with a faulty coffee
 machine, `Start = (CMb ∣ CS) ∖ {coin, coffee}` can silently reach a deadlock, so it
 is **not** observationally equivalent to `Spec ≝ pub̄.Spec`. The library's
-`ex_3_20_start_not_spec`. -/
+`badStart_not_weakBisim_badSpec`. -/
 theorem ex_3_20_start_not_spec :
     ¬ (DeepWiki.ReactiveSystems.badStart ≈[ccsLTS DeepWiki.ReactiveSystems.badDefn,
         DeepWiki.ReactiveSystems.Act.tau] DeepWiki.ReactiveSystems.badSpec) :=
-  DeepWiki.ReactiveSystems.ex_3_20_start_not_spec
+  DeepWiki.ReactiveSystems.badStart_not_weakBisim_badSpec
 
 /-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`, witnessed by the weak bisimulation
-`{(s,t),(s₁,t),(s₂,t),(s₃,t₂),(s₄,t₃),(s₅,t₁)}`. The library's `ex_3_25`. -/
+`{(s,t),(s₁,t),(s₂,t),(s₃,t₂),(s₄,t₃),(s₅,t₁)}`. The library's `s_weaklyBisimilar_t`. -/
 theorem ex_3_25 :
     DeepWiki.ReactiveSystems.St325.s ≈[DeepWiki.ReactiveSystems.lts325,
       DeepWiki.ReactiveSystems.A325.tau] DeepWiki.ReactiveSystems.St325.t :=
-  DeepWiki.ReactiveSystems.ex_3_25
+  DeepWiki.ReactiveSystems.s_weaklyBisimilar_t
 
 end DeepWiki.Rs

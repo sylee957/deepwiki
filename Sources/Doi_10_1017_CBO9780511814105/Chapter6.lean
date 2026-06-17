@@ -122,12 +122,12 @@ abbrev sysMin := @LTS.sysMin
 /-- **Exercise 6.8(1)** (§6.5, p.124). The product domain `(2^Proc)^V`, ordered
 componentwise, is a complete lattice. -/
 theorem ex_6_8_1 : Nonempty (CompleteLattice (V → Set Proc)) :=
-  LTS.ex_6_8_completeLattice
+  LTS.sysEnv_completeLattice
 
 /-- **Exercise 6.8(2)** (§6.5, p.124). The declaration's semantic function `⟦D⟧`
 is monotone. -/
 theorem ex_6_8_2 (L : LTS Proc Act) (D : V → HMLV V Act) : Monotone (LTS.sysFun L D) :=
-  LTS.ex_6_8_mono L D
+  LTS.sysFun_monotone L D
 
 /-! ## §6.6 Characteristic properties -/
 
@@ -179,47 +179,47 @@ abbrev livelockNow := @LTS.LivelockNow
 /-- **Exercise 6.15** (§6.7, p.135). The least solution of `X = ⟨τ⟩X` is empty —
 only the largest fixed point captures livelock. -/
 theorem ex_6_15 (L : LTS Proc Act) (tau : Act) : (LTS.livelockFun L tau).lfp = ∅ :=
-  LTS.ex_6_15 L tau
+  LTS.livelockFun_lfp_empty L tau
 
 /-- **Exercise 6.16** (§6.7, p.135). On the given 4-state LTS, the only livelocked
-state is the `τ`-self-loop `p`: `LivelockNow = {p}`. The library's `ex_6_16`. -/
+state is the `τ`-self-loop `p`: `LivelockNow = {p}`. The library's `livelockNow_L616_tau_singleton`. -/
 theorem ex_6_16 :
     LTS.LivelockNow DeepWiki.ReactiveSystems.L616 .tau = {DeepWiki.ReactiveSystems.S616.p} :=
-  DeepWiki.ReactiveSystems.ex_6_16
+  DeepWiki.ReactiveSystems.livelockNow_L616_tau_singleton
 
 /-- **Exercise 6.17** (§6.7, p.135). On the given 4-state LTS every state has an
 outgoing `τ`, so every state is livelocked: `LivelockNow = univ`. The library's
-`ex_6_17`. -/
+`livelockNow_L617_tau_univ`. -/
 theorem ex_6_17 :
     LTS.LivelockNow DeepWiki.ReactiveSystems.L617 .tau = Set.univ :=
-  DeepWiki.ReactiveSystems.ex_6_17
+  DeepWiki.ReactiveSystems.livelockNow_L617_tau_univ
 
 /-- **Exercise 6.4** (§6.2, p.110). On the Figure 6.2 LTS, the semantic functional
-evaluates to `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`. The library's `ex_6_4`. -/
+evaluates to `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`. The library's `denotR_L62_singleton`. -/
 theorem ex_6_4 :
     LTS.denotR DeepWiki.ReactiveSystems.L62
         (HMLR.and (HMLR.box .b HMLR.ff) (HMLR.box .a HMLR.var)) {DeepWiki.ReactiveSystems.S62.p2}
       = {DeepWiki.ReactiveSystems.S62.p2} :=
-  DeepWiki.ReactiveSystems.ex_6_4
+  DeepWiki.ReactiveSystems.denotR_L62_singleton
 
 /-- **Exercise 6.9** (§6.5, p.124). The largest solution of the equational system
 `X =ν [a]Y`, `Y =ν ⟨a⟩X` over the 3-state LTS is `X = {p, r}`, `Y = {p, q}`. The
-library's `ex_6_9`. -/
+library's `sysMax_D69_eq_sol69`. -/
 theorem ex_6_9 :
     LTS.sysMax DeepWiki.ReactiveSystems.L69 DeepWiki.ReactiveSystems.D69
       = DeepWiki.ReactiveSystems.sol69 :=
-  DeepWiki.ReactiveSystems.ex_6_9
+  DeepWiki.ReactiveSystems.sysMax_D69_eq_sol69
 
 /-- **Exercise 6.6** (§6.3, p.111). The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
 on the given 5-state LTS is the whole state space (every state reaches a `b`-looping
-state). The library's `ex_6_6`. -/
+state). The library's `lfp_FY66_univ`. -/
 theorem ex_6_6 :
     LTS.recMin DeepWiki.ReactiveSystems.L66 DeepWiki.ReactiveSystems.FY66 = Set.univ :=
-  DeepWiki.ReactiveSystems.ex_6_6
+  DeepWiki.ReactiveSystems.lfp_FY66_univ
 
 /-- **Exercise 6.7** (§6.3, p.111). On one LTS: `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`;
 `s ⊨ Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` but `t ⊭ Y`; and `t` is `a`-livelocked
-(`t ⊨ Z =ν ⟨a⟩Z`). The library's `ex_6_7_1`/`_2`/`_3`. -/
+(`t ⊨ Z =ν ⟨a⟩Z`). The library's `s1_mem_gfp_F67`/`_2`/`_3`. -/
 theorem ex_6_7 :
     (DeepWiki.ReactiveSystems.S67.s1 ∈
       LTS.recMax DeepWiki.ReactiveSystems.L67 DeepWiki.ReactiveSystems.F67) ∧
@@ -228,30 +228,30 @@ theorem ex_6_7 :
       DeepWiki.ReactiveSystems.S67.t ∉
       LTS.recMin DeepWiki.ReactiveSystems.L67 DeepWiki.ReactiveSystems.FY67) ∧
     (DeepWiki.ReactiveSystems.S67.t ∈ LTS.LivelockNow DeepWiki.ReactiveSystems.L67 .a) :=
-  ⟨DeepWiki.ReactiveSystems.ex_6_7_1, DeepWiki.ReactiveSystems.ex_6_7_2,
-   DeepWiki.ReactiveSystems.ex_6_7_3⟩
+  ⟨DeepWiki.ReactiveSystems.s1_mem_gfp_F67, DeepWiki.ReactiveSystems.s_mem_lfp_FY67_and_t_nmem,
+   DeepWiki.ReactiveSystems.t_livelocked_L67_a⟩
 
 /-- **Exercise 6.13** (§6.6, p.134). The characteristic formulae for the processes
 `p` and `q` of Figure 6.1 (`p —a→ p`; `q —a→ q`, `q —a→ r`; `r` dead) are satisfied
 by exactly `p` and `q` respectively: `⟦charSys p⟧ = {p}`, `⟦charSys q⟧ = {q}`, since
-the three states are pairwise non-bisimilar. The library's `ex_6_13_p`/`ex_6_13_q`. -/
+the three states are pairwise non-bisimilar. The library's `charSys_p61_p_singleton`/`charSys_p61_q_singleton`. -/
 theorem ex_6_13 :
     sysMax DeepWiki.ReactiveSystems.L61 (charSys DeepWiki.ReactiveSystems.L61)
         DeepWiki.ReactiveSystems.P61.p = {DeepWiki.ReactiveSystems.P61.p} ∧
     sysMax DeepWiki.ReactiveSystems.L61 (charSys DeepWiki.ReactiveSystems.L61)
         DeepWiki.ReactiveSystems.P61.q = {DeepWiki.ReactiveSystems.P61.q} :=
-  ⟨DeepWiki.ReactiveSystems.ex_6_13_p, DeepWiki.ReactiveSystems.ex_6_13_q⟩
+  ⟨DeepWiki.ReactiveSystems.charSys_p61_p_singleton, DeepWiki.ReactiveSystems.charSys_p61_q_singleton⟩
 
 /-- **Exercise 6.18** (§6.7, p.138). On the Exercise 6.17 LTS, the formula
 `⟨Act⟩Pos(LivelockNow)` (the states from which a livelock is reachable, with `Pos`
 the least-fixed-point reachability template (6.17)) denotes the whole state space —
-every state is livelocked and can move. The library's `ex_6_18` (with `diaAll`/`posOf`
+every state is livelocked and can move. The library's `diaAll_posOf_livelockNow_eq_univ_L617` (with `diaAll`/`posOf`
 the `⟨Act⟩` and `Pos` set operators). -/
 theorem ex_6_18 :
     DeepWiki.ReactiveSystems.diaAll DeepWiki.ReactiveSystems.L617
       (DeepWiki.ReactiveSystems.posOf DeepWiki.ReactiveSystems.L617
         (LTS.LivelockNow DeepWiki.ReactiveSystems.L617 DeepWiki.ReactiveSystems.Act6.tau)) =
       Set.univ :=
-  DeepWiki.ReactiveSystems.ex_6_18
+  DeepWiki.ReactiveSystems.diaAll_posOf_livelockNow_eq_univ_L617
 
 end DeepWiki.Rs

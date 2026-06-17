@@ -297,7 +297,7 @@ abbrev def_11_6 := @DeepWiki.ReactiveSystems.TimedAutomaton.TimedBisimilar
 Example 11.2 (`a`-self-loops with guards `x ≤ 1` resp. `x = 1`) are
 untimed-language equivalent yet **not** timed-language equivalent — so the converse
 of Theorem 11.1 fails. (`(0, a)` is a timed trace of (a) but not (b), while both
-accept every untimed trace.) The library's `ex_11_2_untimed_eq_not_timed_eq`. -/
+accept every untimed trace.) The library's `taA_taB_untimedEq_not_timedEq`. -/
 theorem ex_11_2 :
     (DeepWiki.ReactiveSystems.taA.tlts.untimedLang
         (DeepWiki.ReactiveSystems.taA.initial, fun _ => (0 : ℝ≥0)) =
@@ -307,6 +307,6 @@ theorem ex_11_2 :
         (DeepWiki.ReactiveSystems.taA.initial, fun _ => (0 : ℝ≥0)) ≠
       DeepWiki.ReactiveSystems.taB.tlts.timedLang
         (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) :=
-  DeepWiki.ReactiveSystems.ex_11_2_untimed_eq_not_timed_eq
+  DeepWiki.ReactiveSystems.taA_taB_untimedEq_not_timedEq
 
 end DeepWiki.Rs

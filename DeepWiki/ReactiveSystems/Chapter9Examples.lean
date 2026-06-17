@@ -92,7 +92,7 @@ theorem M4_not_delay4 : ¬ ∃ Q, TDelay defn96 (.const .M4) 4 Q := by
 /-- **Exercise 9.6** (§9.4, p.171). Of the four agents, exactly `M₁` and `M₂` can
 delay by `4` time units (with the indicated targets); `M₃` and `M₄` cannot, because
 a `τ` becomes enabled after `3` units and maximal progress halts time. -/
-theorem ex_9_6 :
+theorem tccsAgents_delay4_characterization :
     TDelay defn96 (.const .M1) 4
         (.choice (.eps 1 (.pre (.name .a) (.const .M1))) (.pre (.name .b) (.const .M1))) ∧
     TDelay defn96 (.const .M2) 4
