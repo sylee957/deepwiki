@@ -1184,6 +1184,110 @@ theorem threshold_transport [Fintype C] (B : Finset C) (f f' : C → ℝ)
         (intro x hxB; rw [hBne] at hxB; exact absurd hxB (Finset.notMem_empty x))
 
 open Classical in
+/-- **Interval form of `threshold_transport`** (the no-hit case). When no bounded entry of
+`f` sits exactly at the threshold `t`, the matching thresholds `t'` form a *nonempty open
+interval* `(lo, hi) ⊆ [0,1]`: every `t' ∈ Ioo lo hi` preserves the wrap-set
+(`t ≤ f x ↔ t' ≤ f' x` for `x ∈ B`) and lands strictly off every `f' x` (so it is itself a
+no-hit threshold). This freedom in choosing `t'` is what lets a downstream delay be slid
+across an *irrational* boundary while staying region-equivalent. -/
+theorem threshold_transport_Ioo [Fintype C] (B : Finset C) (f f' : C → ℝ)
+    (hf' : ∀ x ∈ B, 0 ≤ f' x ∧ f' x < 1)
+    (hzero : ∀ x ∈ B, f x = 0 ↔ f' x = 0)
+    (horder : ∀ x ∈ B, ∀ y ∈ B, f x ≤ f y ↔ f' x ≤ f' y)
+    (t : ℝ) (ht0 : 0 < t)
+    (hnohit : ∀ x ∈ B, f x ≠ t) :
+    ∃ lo hi : ℝ, 0 ≤ lo ∧ lo < hi ∧ hi ≤ 1 ∧
+      ∀ t' ∈ Set.Ioo lo hi,
+        (∀ x ∈ B, (t ≤ f x ↔ t' ≤ f' x)) ∧ (∀ x ∈ B, f' x ≠ t') := by
+  -- strict order transfer from the weak-order agreement
+  have hstrict : ∀ x ∈ B, ∀ y ∈ B, f x < f y → f' x < f' y := by
+    intro x hx y hy hlt
+    have h1 : f' x ≤ f' y := (horder x hx y hy).mp hlt.le
+    have h2 : ¬ f' y ≤ f' x := fun c => absurd ((horder y hy x hx).mpr c) (not_le.mpr hlt)
+    exact lt_of_le_not_ge h1 h2
+  have hpos : ∀ x ∈ B, 0 < f x → 0 < f' x := by
+    intro x hx hfx
+    have : f' x ≠ 0 := fun c => absurd ((hzero x hx).mpr c) (ne_of_gt hfx)
+    exact lt_of_le_of_ne (hf' x hx).1 (Ne.symm this)
+  -- partition B into entries strictly above / below the threshold (no-hit ⇒ exhaustive)
+  set Hi := B.filter (fun x => t < f x) with hHi
+  set Lo := B.filter (fun x => f x < t) with hLo
+  have hpart : ∀ x ∈ B, x ∈ Hi ∨ x ∈ Lo := by
+    intro x hxB
+    rcases lt_trichotomy (f x) t with h | h | h
+    · right; rw [hLo, Finset.mem_filter]; exact ⟨hxB, h⟩
+    · exact absurd h (hnohit x hxB)
+    · left; rw [hHi, Finset.mem_filter]; exact ⟨hxB, h⟩
+  by_cases hHine : Hi.Nonempty
+  · by_cases hLone : Lo.Nonempty
+    · -- mixed: lo = max f' over Lo, hi = min f' over Hi
+      obtain ⟨xh, hxhHi, hxhmin⟩ := Finset.exists_min_image Hi f' hHine
+      obtain ⟨xl, hxlLo, hxlmax⟩ := Finset.exists_max_image Lo f' hLone
+      have hxhB : xh ∈ B := (Finset.mem_filter.mp hxhHi).1
+      have hxhgt : t < f xh := (Finset.mem_filter.mp hxhHi).2
+      have hxlB : xl ∈ B := (Finset.mem_filter.mp hxlLo).1
+      have hxllt : f xl < t := (Finset.mem_filter.mp hxlLo).2
+      have hlt' : f' xl < f' xh := hstrict xl hxlB xh hxhB (lt_trans hxllt hxhgt)
+      refine ⟨f' xl, f' xh, (hf' xl hxlB).1, hlt', (hf' xh hxhB).2.le, ?_⟩
+      rintro t' ⟨htlo, hthi⟩
+      refine ⟨fun x hxB => ?_, fun x hxB => ?_⟩
+      · rcases hpart x hxB with hxHi | hxLo
+        · have hge : f' xh ≤ f' x := hxhmin x hxHi
+          have hgt : t < f x := (Finset.mem_filter.mp hxHi).2
+          exact ⟨fun _ => by linarith, fun _ => hgt.le⟩
+        · have hle : f' x ≤ f' xl := hxlmax x hxLo
+          have hlt : f x < t := (Finset.mem_filter.mp hxLo).2
+          exact ⟨fun h => by linarith, fun h => by linarith⟩
+      · rcases hpart x hxB with hxHi | hxLo
+        · have hge : f' xh ≤ f' x := hxhmin x hxHi
+          exact fun h => by rw [h] at hge; linarith
+        · have hle : f' x ≤ f' xl := hxlmax x hxLo
+          exact fun h => by rw [h] at hle; linarith
+    · -- Lo empty: all of B is above; lo = 0, hi = min f' over Hi
+      obtain ⟨xh, hxhHi, hxhmin⟩ := Finset.exists_min_image Hi f' hHine
+      have hxhB : xh ∈ B := (Finset.mem_filter.mp hxhHi).1
+      have hxhgt : t < f xh := (Finset.mem_filter.mp hxhHi).2
+      have hfxhpos : 0 < f' xh := hpos xh hxhB (lt_trans ht0 hxhgt)
+      refine ⟨0, f' xh, le_rfl, hfxhpos, (hf' xh hxhB).2.le, ?_⟩
+      rintro t' ⟨htlo, hthi⟩
+      have hHiall : ∀ x ∈ B, t < f x := by
+        intro x hxB
+        rcases hpart x hxB with h | h
+        · exact (Finset.mem_filter.mp h).2
+        · exact absurd ⟨x, h⟩ hLone
+      refine ⟨fun x hxB => ?_, fun x hxB => ?_⟩
+      · have hge : f' xh ≤ f' x := hxhmin x (by rw [hHi, Finset.mem_filter]; exact ⟨hxB, hHiall x hxB⟩)
+        exact ⟨fun _ => by linarith, fun _ => (hHiall x hxB).le⟩
+      · have hge : f' xh ≤ f' x :=
+          hxhmin x (by rw [hHi, Finset.mem_filter]; exact ⟨hxB, hHiall x hxB⟩)
+        exact fun h => by rw [h] at hge; linarith
+  · -- Hi empty: all of B is below; hi = 1, lo = max f' over Lo (or 0 if Lo empty)
+    by_cases hLone : Lo.Nonempty
+    · obtain ⟨xl, hxlLo, hxlmax⟩ := Finset.exists_max_image Lo f' hLone
+      have hxlB : xl ∈ B := (Finset.mem_filter.mp hxlLo).1
+      have hLoall : ∀ x ∈ B, f x < t := by
+        intro x hxB
+        rcases hpart x hxB with h | h
+        · exact absurd ⟨x, h⟩ hHine
+        · exact (Finset.mem_filter.mp h).2
+      refine ⟨f' xl, 1, (hf' xl hxlB).1, (hf' xl hxlB).2, le_rfl, ?_⟩
+      rintro t' ⟨htlo, hthi⟩
+      refine ⟨fun x hxB => ?_, fun x hxB => ?_⟩
+      · have hle : f' x ≤ f' xl := hxlmax x (by rw [hLo, Finset.mem_filter]; exact ⟨hxB, hLoall x hxB⟩)
+        exact ⟨fun h => by linarith [hLoall x hxB], fun h => by linarith⟩
+      · have hle : f' x ≤ f' xl :=
+          hxlmax x (by rw [hLo, Finset.mem_filter]; exact ⟨hxB, hLoall x hxB⟩)
+        exact fun h => by rw [h] at hle; linarith
+    · -- both empty: B empty, everything vacuous; lo = 0, hi = 1
+      have hempty : ∀ x ∈ B, False := by
+        intro x hxB
+        rcases hpart x hxB with h | h
+        · exact hHine ⟨x, h⟩
+        · exact hLone ⟨x, h⟩
+      exact ⟨0, 1, le_rfl, by norm_num, le_rfl, fun t' _ =>
+        ⟨fun x hxB => (hempty x hxB).elim, fun x hxB => (hempty x hxB).elim⟩⟩
+
+open Classical in
 /-- **Alur–Dill time-successor, fractional fragment.** For a finite clock set and a delay
 `δ < 1`, advancing region-equivalent valuations by `δ` on the left is matched by some delay
 `δ'` on the right, landing in region-equivalent valuations. As `δ` grows in `[0,1)` the
@@ -1240,6 +1344,62 @@ theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valua
         have := he.mp this; linarith
       · intro hh; have : fracPart (v' x) = t' := by linarith
         have := he.mpr this; linarith
+
+/-- **Interval form of the fractional time-successor.** When the left delay `δ ∈ (0,1)` is
+*generic* — no bounded clock of `v` lands exactly on its next integer — the matching delays
+`δ'` form a nonempty interval `(lo, hi) ⊆ [0,1]`: every `δ' ∈ (lo, hi)` lands in a valuation
+region-equivalent to `v.add δ`. The slack `hi - lo` is the room to additionally slide `δ'`
+across a boundary the integer regions cannot see (e.g. an irrational threshold). -/
+theorem RegionEq.timeSuccessor_frac_Ioo [Fintype C] {cmax : C → ℕ} {v v' : Valuation C}
+    (h : RegionEq cmax v v') {δ : ℝ≥0} (hδ0 : 0 < δ) (hδ : δ < 1)
+    (hnohit : ∀ x, v x ≤ cmax x → fracPart (v x) + (δ : ℝ) ≠ 1) :
+    ∃ lo hi : ℝ≥0, lo < hi ∧ hi ≤ 1 ∧
+      ∀ δ' : ℝ≥0, lo < δ' → δ' < hi → RegionEq cmax (v.add δ) (v'.add δ') := by
+  have hδ0r : (0 : ℝ) < δ := by exact_mod_cast hδ0
+  have hδ1r : (δ : ℝ) < 1 := by exact_mod_cast hδ
+  obtain ⟨h1, h2, h3⟩ := h
+  set B := Finset.univ.filter (fun x => v x ≤ cmax x) with hB
+  have hmemB : ∀ x, x ∈ B ↔ v x ≤ cmax x := by
+    intro x; rw [hB, Finset.mem_filter]; simp
+  obtain ⟨loT, hiT, hlo0, hloT, hhiT1, hprop⟩ :=
+    threshold_transport_Ioo B (fun x => fracPart (v x)) (fun x => fracPart (v' x))
+      (fun x _ => ⟨fracPart_nonneg _, fracPart_lt_one _⟩)
+      (fun x hx => h2 x ((hmemB x).mp hx))
+      (fun x hx y hy => h3 x y ((hmemB x).mp hx) ((hmemB y).mp hy))
+      (1 - (δ : ℝ)) (by linarith)
+      (fun x hx hc => by
+        have hc' : fracPart (v x) = 1 - (δ : ℝ) := hc
+        exact hnohit x ((hmemB x).mp hx) (by rw [hc']; ring))
+  refine ⟨⟨1 - hiT, by linarith⟩, ⟨1 - loT, by linarith⟩, ?_, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]; exact (show (1 : ℝ) - hiT < 1 - loT by linarith)
+  · rw [← NNReal.coe_le_coe]; exact (show (1 : ℝ) - loT ≤ (1 : ℝ) by linarith)
+  · intro δ' hloδ hhiδ
+    have hloδr : (1 : ℝ) - hiT < (δ' : ℝ) := by
+      rw [← NNReal.coe_lt_coe] at hloδ; exact hloδ
+    have hhiδr : (δ' : ℝ) < 1 - loT := by
+      rw [← NNReal.coe_lt_coe] at hhiδ; exact hhiδ
+    set t' : ℝ := 1 - (δ' : ℝ) with ht'def
+    have ht'mem : t' ∈ Set.Ioo loT hiT :=
+      ⟨by rw [ht'def]; linarith, by rw [ht'def]; linarith⟩
+    obtain ⟨htle, htne⟩ := hprop t' ht'mem
+    have hδ'0r : (0 : ℝ) < δ' := by linarith
+    have hδ'1r : (δ' : ℝ) < 1 := by linarith
+    apply regionEq_add_of_match ⟨h1, h2, h3⟩ hδ0r hδ1r hδ'0r hδ'1r
+    · intro x hx
+      have hxB : x ∈ B := (hmemB x).mpr hx
+      have hl := htle x hxB
+      constructor
+      · intro hw
+        have hge : (1 - (δ:ℝ)) ≤ fracPart (v x) := by linarith
+        have := hl.mp hge; rw [ht'def] at this; linarith
+      · intro hw
+        have hge : t' ≤ fracPart (v' x) := by rw [ht'def]; linarith
+        have := hl.mpr hge; linarith
+    · intro x hx
+      have hxB : x ∈ B := (hmemB x).mpr hx
+      refine ⟨fun hh => absurd hh (hnohit x hx), fun hh => ?_⟩
+      have heq : fracPart (v' x) = t' := by rw [ht'def]; linarith
+      exact absurd heq (htne x hxB)
 
 /-- **General time-successor for a finite clock set** (the delay case,
 multi-clock). Writing `d = N + δ` with `N = ⌊d⌋` and `δ ∈ [0,1)`, the integer
