@@ -221,6 +221,25 @@ theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSy
           DeepWiki.ReactiveSystems.Act.tau] Q :=
   DeepWiki.ReactiveSystems.monitored_bad_of_wellMatched_violation hσ hpath hviol
 
+/-- **Exercise 7.12** (§7.3), completeness — weak level. The companion to `prop_7_2_if`:
+a `bad`-free process `P` (using only `enter`/`exit` channels) drives the monitored system
+to a (weak) `bad`-transition *only* after silently reaching the monitor's `Bad0` state —
+which (by `monitor_into_Bad0`) means a genuine double-`enter` violation occurred. So the
+monitor signals `bad` exactly on real mutual-exclusion violations (no false alarms).
+Discharged by `monitored_weakBad_imp_Bad0`. (Reconstructing the full `WellMatched σ` prefix
+of the run is the remaining part of Ex 7.12.) -/
+theorem ex_7_12_weak {P Q : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.ReactiveSystems.MtK}
+    (hbf : DeepWiki.ReactiveSystems.BadFreeProc P)
+    (h : (ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢
+      DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest
+        =[DeepWiki.ReactiveSystems.Act.name DeepWiki.ReactiveSystems.MtChan.bad]⇒[
+          DeepWiki.ReactiveSystems.Act.tau] Q) :
+    ∃ P', DeepWiki.ReactiveSystems.LTS.tauStar (ccsLTS DeepWiki.ReactiveSystems.mtDefn)
+      DeepWiki.ReactiveSystems.Act.tau
+      (DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest)
+      (DeepWiki.ReactiveSystems.monitored P' DeepWiki.ReactiveSystems.MtK.Bad0) :=
+  DeepWiki.ReactiveSystems.monitored_weakBad_imp_Bad0 hbf h
+
 /-- **Exercise 7.10** (§7.3, p.152). The weak-simulation preorder is a choice
 congruence: if `Q` weakly simulates `P`, then `Q + R` weakly simulates both `P`
 and `P + R`, for every CCS process `R`. The library's `weaklySimulates_choiceL`

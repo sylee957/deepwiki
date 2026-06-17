@@ -308,6 +308,43 @@ theorem monitored_tau_step {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
     · exact Or.inr (Or.inl ⟨a, P', M', hP, hQ, rfl⟩)
     · subst haeq; exact Or.inr (Or.inr ⟨P', hP, rfl⟩)
 
+/-- `P` never offers the reject channel `bad` from any reachable state — the modelling
+assumption that the observed process uses only the `enter`/`exit` channels. -/
+def BadFreeProc (P : CCS MtChan MtK) : Prop :=
+  ∀ P', (ccsLTS mtDefn).Reachable P P' →
+    (∀ R, ¬ Step mtDefn P' (Act.name bad) R) ∧ (∀ R, ¬ Step mtDefn P' (Act.coname bad) R)
+
+/-- Under `BadFreeProc`, every `τ`-reachable state of the monitored system keeps the
+`(P' ∣ M')\L` shape with `P'` reachable from `P` (no degenerate `bad`-sync occurs). -/
+theorem monitored_tauStar_form {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
+    (hbf : BadFreeProc P) (h : tauStar (ccsLTS mtDefn) Act.tau (monitored P M) X) :
+    ∃ P' M', X = monitored P' M' ∧ (ccsLTS mtDefn).Reachable P P' := by
+  induction h with
+  | refl => exact ⟨P, M, rfl, Relation.ReflTransGen.refl⟩
+  | tail _ hlast ih =>
+      obtain ⟨P', M', rfl, hreach⟩ := ih
+      rw [ccsLTS_step] at hlast
+      rcases monitored_tau_step hlast with ⟨P'', hP, rfl⟩ | ⟨a, P'', M'', hP, _, rfl⟩ | ⟨P'', hP, _⟩
+      · exact ⟨P'', M', rfl, hreach.tail ⟨Act.tau, hP⟩⟩
+      · exact ⟨P'', M'', rfl, hreach.tail ⟨Act.coname a, hP⟩⟩
+      · exact absurd hP ((hbf P' hreach).2 P'')
+
+/-- **Completeness of the mutex monitor (weak level).** A `bad`-free process `P` drives the
+monitored system to a (weak) `bad`-transition only after silently reaching the monitor's
+`Bad0` state — which (by `monitor_into_Bad0`) means a genuine double-`enter` violation
+occurred. So the monitor signals `bad` exactly on real mutual-exclusion violations. -/
+theorem monitored_weakBad_imp_Bad0 {P Q : CCS MtChan MtK} (hbf : BadFreeProc P)
+    (h : (ccsLTS mtDefn) ⊢ monitored P MutexTest =[Act.name bad]⇒[Act.tau] Q) :
+    ∃ P', tauStar (ccsLTS mtDefn) Act.tau (monitored P MutexTest) (monitored P' Bad0) := by
+  rcases h with ⟨hc, _⟩ | ⟨_, _, Z, hpre, hbad, _⟩
+  · exact absurd hc (by decide)
+  · obtain ⟨P', M', rfl, hreach⟩ := monitored_tauStar_form hbf hpre
+    rw [ccsLTS_step] at hbad
+    have hM' : M' = Bad0 :=
+      (monitored_bad_inv hbad).resolve_left (fun ⟨P'', hb⟩ => (hbf P' hreach).1 P'' hb)
+    subst hM'
+    exact ⟨P', hpre⟩
+
 /-- Faithfulness: the bare violation `enter₁` then `enter₂` (no preceding run) is
 detected — `MutexTest ⟶enter₁⟶ MutexTest₁ ⟶enter₂⟶ Bad0 ⟶bad⟶`. -/
 example :
