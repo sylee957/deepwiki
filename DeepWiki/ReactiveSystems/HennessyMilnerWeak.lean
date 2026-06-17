@@ -25,27 +25,29 @@ def WSat (L : LTS Proc Act) (tau : Act) (p : Proc) : HML Act → Prop
   | .dia a F => ∃ p', WeakStep L tau p a p' ∧ WSat L tau p' F
   | .box a F => ∀ p', WeakStep L tau p a p' → WSat L tau p' F
 
+@[inherit_doc] scoped notation:40 p:41 " ⊨w[" L ", " tau "] " F:41 => LTS.WSat L tau p F
+
 variable {L : LTS Proc Act} {tau : Act}
 
-@[simp] theorem wsat_tt (p : Proc) : WSat L tau p HML.tt ↔ True := Iff.rfl
-@[simp] theorem wsat_ff (p : Proc) : WSat L tau p HML.ff ↔ False := Iff.rfl
+@[simp] theorem wsat_tt (p : Proc) : (p ⊨w[L, tau] HML.tt) ↔ True := Iff.rfl
+@[simp] theorem wsat_ff (p : Proc) : (p ⊨w[L, tau] HML.ff) ↔ False := Iff.rfl
 @[simp] theorem wsat_and (p : Proc) (F G : HML Act) :
-    WSat L tau p (F.and G) ↔ WSat L tau p F ∧ WSat L tau p G := Iff.rfl
+    (p ⊨w[L, tau] F.and G) ↔ (p ⊨w[L, tau] F) ∧ (p ⊨w[L, tau] G) := Iff.rfl
 @[simp] theorem wsat_or (p : Proc) (F G : HML Act) :
-    WSat L tau p (F.or G) ↔ WSat L tau p F ∨ WSat L tau p G := Iff.rfl
+    (p ⊨w[L, tau] F.or G) ↔ (p ⊨w[L, tau] F) ∨ (p ⊨w[L, tau] G) := Iff.rfl
 @[simp] theorem wsat_dia (p : Proc) (a : Act) (F : HML Act) :
-    WSat L tau p (HML.dia a F) ↔ ∃ p', WeakStep L tau p a p' ∧ WSat L tau p' F := Iff.rfl
+    (p ⊨w[L, tau] HML.dia a F) ↔ ∃ p', WeakStep L tau p a p' ∧ (p' ⊨w[L, tau] F) := Iff.rfl
 @[simp] theorem wsat_box (p : Proc) (a : Act) (F : HML Act) :
-    WSat L tau p (HML.box a F) ↔ ∀ p', WeakStep L tau p a p' → WSat L tau p' F := Iff.rfl
+    (p ⊨w[L, tau] HML.box a F) ↔ ∀ p', WeakStep L tau p a p' → (p' ⊨w[L, tau] F) := Iff.rfl
 
 /-- `⟨a⟩tt` holds weakly iff the state affords a weak `a`-transition. -/
 @[simp] theorem wsat_dia_tt (p : Proc) (a : Act) :
-    WSat L tau p (HML.dia a HML.tt) ↔ ∃ p', WeakStep L tau p a p' := by
+    (p ⊨w[L, tau] HML.dia a HML.tt) ↔ ∃ p', WeakStep L tau p a p' := by
   simp [WSat]
 
 /-- `[a]ff` holds weakly iff the state affords *no* weak `a`-transition. -/
 @[simp] theorem wsat_box_ff (p : Proc) (a : Act) :
-    WSat L tau p (HML.box a HML.ff) ↔ ∀ p', ¬ WeakStep L tau p a p' := by
+    (p ⊨w[L, tau] HML.box a HML.ff) ↔ ∀ p', ¬ WeakStep L tau p a p' := by
   simp [WSat]
 
 /-- A state with no silent move admits only the trivial silent path: `tauStar`

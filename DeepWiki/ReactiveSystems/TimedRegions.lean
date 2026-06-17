@@ -606,8 +606,8 @@ theorem add_one_le_iff_of_frac {cmax : ℕ} (r : ℝ≥0) :
 theorem le_cmax_of_add_one_le {cmax : ℕ} {r : ℝ≥0} (h : r + 1 ≤ (cmax : ℝ≥0)) :
     r ≤ (cmax : ℝ≥0) := le_trans le_self_add h
 
-/-- If `(v.add 1) x ≤ cmax x` then `v x ≤ cmax x`. -/
-theorem le_cmax_of_add_one_le' {cmax : C → ℕ} {v : Valuation C} {x : C}
+/-- If `(v.add 1) x ≤ cmax x` then `v x ≤ cmax x` (pointwise valuation form). -/
+theorem le_cmax_of_add_one_le_apply {cmax : C → ℕ} {v : Valuation C} {x : C}
     (h : (v.add 1) x ≤ (cmax x : ℝ≥0)) : v x ≤ (cmax x : ℝ≥0) := by
   simp only [Valuation.add_apply] at h; exact le_cmax_of_add_one_le h
 
@@ -643,12 +643,12 @@ theorem regionEq_add_one {cmax : C → ℕ} {v v' : Valuation C} (h : RegionEq c
     RegionEq cmax (v.add 1) (v'.add 1) := by
   refine ⟨fun x => regionFloor_add_one_eq h x, ?_, ?_⟩
   · intro x hx
-    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le' hx
+    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le_apply hx
     simp only [Valuation.add_apply, fracPart_add_one]
     exact h.2.1 x hvx
   · intro x y hx hy
-    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le' hx
-    have hvy : v y ≤ (cmax y : ℝ≥0) := le_cmax_of_add_one_le' hy
+    have hvx : v x ≤ (cmax x : ℝ≥0) := le_cmax_of_add_one_le_apply hx
+    have hvy : v y ≤ (cmax y : ℝ≥0) := le_cmax_of_add_one_le_apply hy
     simp only [Valuation.add_apply, fracPart_add_one]
     exact h.2.2 x y hvx hvy
 

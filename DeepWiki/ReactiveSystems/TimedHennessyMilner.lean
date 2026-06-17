@@ -40,9 +40,11 @@ def TSat (T : TLTS Proc Act) (p : Proc) : TimedHML Act → Prop
   | .existsDelay F => ∃ d p', T.delay p d p' ∧ TSat T p' F
   | .forallDelay F => ∀ d p', T.delay p d p' → TSat T p' F
 
+@[inherit_doc] scoped notation:40 p:41 " ⊨ₜ[" T "] " F:41 => TLTS.TSat T p F
+
 /-- Two states are timed-HML equivalent when they satisfy the same timed
 formulae. -/
-def TimedHMLEquiv (T : TLTS Proc Act) (p q : Proc) : Prop := ∀ F, TSat T p F ↔ TSat T q F
+def TimedHMLEquiv (T : TLTS Proc Act) (p q : Proc) : Prop := ∀ F, (p ⊨ₜ[T] F) ↔ (q ⊨ₜ[T] F)
 
 /-- Timed-bisimilar states satisfy the same timed formula (one implication). -/
 theorem timedBisimilar_tsat {T : TLTS Proc Act} (F : TimedHML Act) :

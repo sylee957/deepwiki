@@ -15,7 +15,7 @@ variable {Proc Act : Type*}
 /-- `IsSimulation L R`: whenever `R p q`, every `a`-move of `p` is matched by an
 `a`-move of `q` into `R` (the forward half of a bisimulation only). -/
 def IsSimulation (L : LTS Proc Act) (R : Proc → Proc → Prop) : Prop :=
-  ∀ ⦃p q⦄, R p q → ∀ a p', L.step p a p' → ∃ q', L.step q a q' ∧ R p' q'
+  ∀ ⦃p q⦄, R p q → ∀ a p', (L ⊢ p ⟶[a] p') → ∃ q', (L ⊢ q ⟶[a] q') ∧ R p' q'
 
 /-- `Simulated L p q` (`p ⊑ q`): `q` simulates `p` — some simulation relates them. -/
 def Simulated (L : LTS Proc Act) (p q : Proc) : Prop := ∃ R, IsSimulation L R ∧ R p q
