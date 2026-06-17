@@ -176,6 +176,91 @@ theorem monitored_bad_of_wellMatched_violation {σ : List (Act MtChan)} {P P₁ 
     exact tauStar_trans hpre
       (tauStar_trans (sync_step he2 mt_enter2) (sync_step he1 mt2_enter1))
 
+/-! ### Completeness core: the monitor flags `bad` only on a genuine violation -/
+
+/-- The monitor performs only *name* actions (it inputs the observed channels); it
+never does `τ` or a co-name. -/
+theorem monitor_action_name {M : MtK} {α : Act MtChan} {X : CCS MtChan MtK}
+    (h : Step mtDefn (.const M) α X) : ∃ a, α = Act.name a := by
+  rw [step_const_iff] at h
+  cases M with
+  | MutexTest =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact ⟨_, h.1⟩)
+  | MutexTest1 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact ⟨_, h.1⟩)
+  | MutexTest2 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact ⟨_, h.1⟩)
+  | Bad0 =>
+      simp only [mtDefn] at h
+      rw [step_pre_iff] at h; exact ⟨_, h.1⟩
+
+/-- A `name bad` move of the monitor comes only from its `Bad0` state. -/
+theorem monitor_bad_step {M : MtK} {X : CCS MtChan MtK}
+    (h : Step mtDefn (.const M) (Act.name bad) X) : M = Bad0 := by
+  rw [step_const_iff] at h
+  cases M with
+  | MutexTest =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; simp at h)
+  | MutexTest1 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; simp at h)
+  | MutexTest2 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; simp at h)
+  | Bad0 => rfl
+
+/-- The monitor enters `Bad0` only on a *second* `enter` on the channel opposite to
+the one in progress — `MutexTest₁ —enter₂→ Bad0` or `MutexTest₂ —enter₁→ Bad0` — a
+genuine mutual-exclusion violation (two `enter`s with no intervening matching `exit`). -/
+theorem monitor_into_Bad0 {M : MtK} {α : Act MtChan}
+    (h : Step mtDefn (.const M) α (.const Bad0)) :
+    (M = MutexTest1 ∧ α = Act.name enter2) ∨ (M = MutexTest2 ∧ α = Act.name enter1) := by
+  rw [step_const_iff] at h
+  cases M with
+  | MutexTest =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; simp at h)
+  | MutexTest1 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h
+      · rw [step_pre_iff] at h; simp at h
+      · rw [step_pre_iff] at h; exact Or.inl ⟨rfl, h.1⟩
+  | MutexTest2 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h
+      · rw [step_pre_iff] at h; simp at h
+      · rw [step_pre_iff] at h; exact Or.inr ⟨rfl, h.1⟩
+  | Bad0 =>
+      simp only [mtDefn] at h
+      rw [step_pre_iff] at h; simp at h
+
+/-- A `bad`-transition of the monitored system is either `P`'s own `bad` action or
+the monitor (in `Bad0`) firing — the monitor never synchronises a `bad`. -/
+theorem monitored_bad_inv {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
+    (h : Step mtDefn (monitored P M) (Act.name bad) X) :
+    (∃ P', Step mtDefn P (Act.name bad) P') ∨ M = Bad0 := by
+  unfold monitored at h
+  rw [step_restrict_iff] at h
+  obtain ⟨R, _, _, hpar, rfl⟩ := h
+  rw [step_par_iff] at hpar
+  rcases hpar with ⟨P', hP, rfl⟩ | ⟨Q', hQ, rfl⟩ | ⟨ℓ, P', Q', hτ, _, _, _, rfl⟩
+  · exact Or.inl ⟨P', hP⟩
+  · exact Or.inr (monitor_bad_step hQ)
+  · simp at hτ
+
+/-- **Completeness core (no false alarms).** A process `P` that never itself performs
+the reject action `bad` drives the monitored system to a `bad`-transition only when the
+monitor is in its `Bad0` state — which (by `monitor_into_Bad0`) is reached only on a
+genuine mutual-exclusion violation. So the monitor never raises a false alarm. -/
+theorem monitored_bad_imp_Bad0 {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
+    (hP : ∀ P', ¬ Step mtDefn P (Act.name bad) P')
+    (h : Step mtDefn (monitored P M) (Act.name bad) X) : M = Bad0 :=
+  (monitored_bad_inv h).resolve_left (fun ⟨P', hP'⟩ => hP P' hP')
+
 /-- Faithfulness: the bare violation `enter₁` then `enter₂` (no preceding run) is
 detected — `MutexTest ⟶enter₁⟶ MutexTest₁ ⟶enter₂⟶ Bad0 ⟶bad⟶`. -/
 example :
