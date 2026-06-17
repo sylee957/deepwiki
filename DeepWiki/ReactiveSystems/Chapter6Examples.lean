@@ -43,6 +43,43 @@ theorem ex_6_4 :
       Set.mem_empty_iff_false] <;>
     decide
 
+/-! ## Exercise 6.6 — least solution `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` is everything -/
+
+/-- States of the Exercise 6.6 LTS. -/
+inductive S66 | s | s1 | s2 | t | t1
+  deriving DecidableEq
+
+/-- Transitions: `s —a→ s₁/s₂`, `t —a→ s₂/t₁`, `s₁ —b→ s₂`, `s₂ —b→ s₂`,
+`t₁ —b→ t₁`. -/
+inductive Step66 : S66 → Lab62 → S66 → Prop
+  | sa1 : Step66 .s .a .s1
+  | sa2 : Step66 .s .a .s2
+  | ta2 : Step66 .t .a .s2
+  | tt1 : Step66 .t .a .t1
+  | s1b : Step66 .s1 .b .s2
+  | s2b : Step66 .s2 .b .s2
+  | t1b : Step66 .t1 .b .t1
+
+/-- The Exercise 6.6 LTS. -/
+def L66 : LTS S66 Lab62 := ⟨Step66⟩
+
+/-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` (with `⟨{a,b}⟩Y = ⟨a⟩Y ∨ ⟨b⟩Y`). -/
+def FY66 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
+
+/-- **Exercise 6.6** (§6.3, p.111). The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
+is the whole state space: every state can reach (via `a`/`b`) a `b`-looping state. -/
+theorem ex_6_6 : recMin L66 FY66 = Set.univ := by
+  apply le_antisymm (Set.subset_univ _)
+  refine (denotRHom L66 FY66).le_lfp ?_
+  intro S hS x _
+  have hs2 : S66.s2 ∈ S := hS (Or.inl ⟨.s2, Step66.s2b, trivial⟩)
+  cases x with
+  | s2 => exact hs2
+  | s1 => exact hS (Or.inl ⟨.s2, Step66.s1b, trivial⟩)
+  | t1 => exact hS (Or.inl ⟨.t1, Step66.t1b, trivial⟩)
+  | s => exact hS (Or.inr (Or.inl ⟨.s2, Step66.sa2, hs2⟩))
+  | t => exact hS (Or.inr (Or.inl ⟨.s2, Step66.ta2, hs2⟩))
+
 /-! ## Exercise 6.9 — largest solution of an equational system -/
 
 /-- The two variables `X, Y` of the equational system. -/

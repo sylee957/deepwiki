@@ -208,4 +208,11 @@ theorem ex_6_9 :
       = DeepWiki.ReactiveSystems.sol69 :=
   DeepWiki.ReactiveSystems.ex_6_9
 
+/-- **Exercise 6.6** (§6.3, p.111). The least solution of `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`
+on the given 5-state LTS is the whole state space (every state reaches a `b`-looping
+state). The library's `ex_6_6`. -/
+theorem ex_6_6 :
+    LTS.recMin DeepWiki.ReactiveSystems.L66 DeepWiki.ReactiveSystems.FY66 = Set.univ :=
+  DeepWiki.ReactiveSystems.ex_6_6
+
 end DeepWiki.Rs
