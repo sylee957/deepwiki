@@ -1,7 +1,7 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
-import DeepWiki.ReactiveSystems.HennessyMilnerExamples
+import DeepWiki.ReactiveSystems.HmlExamples
 
 /-! # The expansion law `a.0 ∣ b.0 ~ a.b.0 + b.a.0` and distinguishing formulae
 Over the alphabet `Fin 4` (`a = 0, b = 1, c = 2, d = 3`), no constants:

@@ -17,12 +17,12 @@ import DeepWiki.ReactiveSystems.CcsBufferTwo
 import DeepWiki.ReactiveSystems.CcsCounter
 import DeepWiki.ReactiveSystems.CcsBufferN
 import DeepWiki.ReactiveSystems.SimulationWeak
-import DeepWiki.ReactiveSystems.HennessyMilnerWeak
+import DeepWiki.ReactiveSystems.HmlWeak
 import DeepWiki.ReactiveSystems.CcsTesting
 import DeepWiki.ReactiveSystems.CcsTestingSafety
 import DeepWiki.ReactiveSystems.CcsTauLaws
-import DeepWiki.ReactiveSystems.HennessyMilner
-import DeepWiki.ReactiveSystems.HennessyMilnerSharp
+import DeepWiki.ReactiveSystems.Hml
+import DeepWiki.ReactiveSystems.HmlSharp
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
@@ -38,7 +38,7 @@ import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.BisimulationExamples
 import DeepWiki.ReactiveSystems.BisimulationWeakFixedPoint
-import DeepWiki.ReactiveSystems.HennessyMilnerExamples
+import DeepWiki.ReactiveSystems.HmlExamples
 import DeepWiki.ReactiveSystems.ExpansionLaw
 import DeepWiki.ReactiveSystems.TimedHmlExamples
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
@@ -69,8 +69,8 @@ import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
-import DeepWiki.ReactiveSystems.TimedHennessyMilner
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHml
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict

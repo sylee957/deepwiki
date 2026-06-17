@@ -1,7 +1,7 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
-import DeepWiki.ReactiveSystems.HennessyMilnerSharp
-import DeepWiki.ReactiveSystems.HennessyMilnerExamples
+import DeepWiki.ReactiveSystems.HmlSharp
+import DeepWiki.ReactiveSystems.HmlExamples
 import DeepWiki.ReactiveSystems.ExpansionLaw
 import Sources.Doi_10_1017_CBO9780511814105.Source
 

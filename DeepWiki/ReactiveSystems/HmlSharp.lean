@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 
 /-! # Sharpness of the Hennessy–Milner theorem
 The Hennessy–Milner theorem (`hennessyMilner`) assumes image-finiteness. This is

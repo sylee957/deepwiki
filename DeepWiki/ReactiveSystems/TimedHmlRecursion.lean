@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 import Mathlib.Order.FixedPoints
 
 /-! # Recursion in Hennessy–Milner logic with time

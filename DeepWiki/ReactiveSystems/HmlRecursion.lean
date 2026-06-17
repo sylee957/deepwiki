@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import Mathlib.Order.FixedPoints
 
 /-! # Hennessy–Milner logic with recursion

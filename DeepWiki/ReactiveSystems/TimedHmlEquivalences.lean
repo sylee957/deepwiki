@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 import Mathlib.Data.Set.Insert
 
 /-! # Algebraic equivalences between `Mₜ` formulae

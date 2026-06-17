@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 
 /-! # Negation of timed HML formulae
 The timed logic `Mt` is closed under negation: every formula `F` has a *negation*

@@ -1,5 +1,5 @@
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 
 /-! # Untimed bisimilarity does not preserve timed HML
 The fact that timed-bisimilar states satisfy the same `Mt` formulae would *fail*

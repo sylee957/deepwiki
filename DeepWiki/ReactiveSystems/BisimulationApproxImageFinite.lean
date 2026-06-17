@@ -1,5 +1,5 @@
 import DeepWiki.ReactiveSystems.BisimulationApprox
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import Mathlib.Data.Set.Finite.Lattice
 import Mathlib.Order.Interval.Finset.Nat
 

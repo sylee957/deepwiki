@@ -1,5 +1,5 @@
-import DeepWiki.ReactiveSystems.TimedHennessyMilner
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHml
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict

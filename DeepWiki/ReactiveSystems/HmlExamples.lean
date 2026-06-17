@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import DeepWiki.ReactiveSystems.Ccs
 import Mathlib.Tactic.DeriveFintype
 

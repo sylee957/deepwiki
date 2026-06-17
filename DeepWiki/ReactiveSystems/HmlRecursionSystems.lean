@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import Mathlib.Order.FixedPoints
 
 /-! # Mutually recursive HML systems, and mixing fixed points

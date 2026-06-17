@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.Ccs
-import DeepWiki.ReactiveSystems.HennessyMilner
-import DeepWiki.ReactiveSystems.HennessyMilnerWeak
+import DeepWiki.ReactiveSystems.Hml
+import DeepWiki.ReactiveSystems.HmlWeak
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
 /-! # Testing and testable formulae

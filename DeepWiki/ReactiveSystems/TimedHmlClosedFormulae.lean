@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
+import DeepWiki.ReactiveSystems.TimedHmlClocks
 import Mathlib.Data.Set.Insert
 
 /-! # Closed `Mₜ` formulae are valuation-independent

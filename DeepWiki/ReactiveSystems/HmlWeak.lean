@@ -1,4 +1,4 @@
-import DeepWiki.ReactiveSystems.HennessyMilner
+import DeepWiki.ReactiveSystems.Hml
 import DeepWiki.ReactiveSystems.BisimulationWeak
 
 /-! # Weak (observational) Hennessy–Milner satisfaction
