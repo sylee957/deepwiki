@@ -337,6 +337,59 @@ theorem regionEq_satisfies {cmax : C → ℕ} {v v' : Valuation C} {g : ClockCon
   | atom x c n => exact regionEq_cmp_holds c h hg
   | and g₁ g₂ ih₁ ih₂ => exact and_congr (ih₁ hg.1) (ih₂ hg.2)
 
+/-! ### Unbounded region equivalence
+
+`Mt`-equivalence quantifies over clock constraints with *unbounded* constants, so no
+single clamp `cmax` makes `RegionEq cmax` agree on every guard. `RegionEqAll` —
+region-equivalence at *every* clamp — is the right notion for it, and is the guard-agreement
+component of an `Mt`-bisimulation. -/
+
+/-- `BoundedBy` is monotone in the clamp. -/
+theorem ClockConstraint.boundedBy_mono {cmax cmax' : C → ℕ} (hle : ∀ x, cmax x ≤ cmax' x) :
+    ∀ {g : ClockConstraint C}, g.BoundedBy cmax → g.BoundedBy cmax' := by
+  intro g
+  induction g with
+  | true_ => exact fun _ => trivial
+  | atom x cmp n => exact fun h => le_trans h (hle x)
+  | and g₁ g₂ ih₁ ih₂ => exact fun h => ⟨ih₁ h.1, ih₂ h.2⟩
+
+/-- A clock constraint is bounded by some uniform clamp `(fun _ => N)`. -/
+theorem ClockConstraint.exists_boundedBy (g : ClockConstraint C) :
+    ∃ N : ℕ, g.BoundedBy (fun _ => N) := by
+  induction g with
+  | true_ => exact ⟨0, trivial⟩
+  | atom x cmp n => exact ⟨n, le_refl n⟩
+  | and g₁ g₂ ih₁ ih₂ =>
+      obtain ⟨N₁, h₁⟩ := ih₁
+      obtain ⟨N₂, h₂⟩ := ih₂
+      refine ⟨max N₁ N₂, ?_, ?_⟩
+      · exact ClockConstraint.boundedBy_mono (fun _ => le_max_left N₁ N₂) h₁
+      · exact ClockConstraint.boundedBy_mono (fun _ => le_max_right N₁ N₂) h₂
+
+/-- **Unbounded region equivalence**: region-equivalent at *every* clamp `cmax`. It
+equates valuations for clock constraints of arbitrary size. -/
+def RegionEqAll (v v' : Valuation C) : Prop := ∀ cmax : C → ℕ, RegionEq cmax v v'
+
+/-- `RegionEqAll` is reflexive. -/
+@[refl] theorem RegionEqAll.refl (v : Valuation C) : RegionEqAll v v :=
+  fun cmax => (regionEq_equivalence cmax).refl v
+
+/-- `RegionEqAll` is symmetric. -/
+theorem RegionEqAll.symm {v v' : Valuation C} (h : RegionEqAll v v') : RegionEqAll v' v :=
+  fun cmax => (regionEq_equivalence cmax).symm (h cmax)
+
+/-- `RegionEqAll` is transitive. -/
+theorem RegionEqAll.trans {v v' v'' : Valuation C}
+    (h : RegionEqAll v v') (h' : RegionEqAll v' v'') : RegionEqAll v v'' :=
+  fun cmax => (regionEq_equivalence cmax).trans (h cmax) (h' cmax)
+
+/-- Unbounded-region-equivalent valuations satisfy exactly the same clock constraints
+(of any constant size) — the guard-agreement an `Mt`-bisimulation needs. -/
+theorem regionEqAll_satisfies {v v' : Valuation C} (h : RegionEqAll v v')
+    (g : ClockConstraint C) : satisfies v g ↔ satisfies v' g := by
+  obtain ⟨N, hN⟩ := g.exists_boundedBy
+  exact regionEq_satisfies (h (fun _ => N)) hN
+
 /-- `frac(0) = 0`. -/
 theorem fracPart_zero : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
 
