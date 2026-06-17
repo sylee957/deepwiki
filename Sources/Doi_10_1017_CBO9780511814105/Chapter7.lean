@@ -6,6 +6,7 @@ import DeepWiki.ReactiveSystems.CcsTestingSafety
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import DeepWiki.ReactiveSystems.CcsMutexMonitor
 import DeepWiki.ReactiveSystems.Chapter7Examples
+import DeepWiki.ReactiveSystems.Chapter7WeakSimCongruence
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -219,6 +220,18 @@ theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSy
         =[DeepWiki.ReactiveSystems.Act.name DeepWiki.ReactiveSystems.MtChan.bad]⇒[
           DeepWiki.ReactiveSystems.Act.tau] Q :=
   DeepWiki.ReactiveSystems.prop_7_2_if hσ hpath hviol
+
+/-- **Exercise 7.10** (§7.3, p.152). The weak-simulation preorder is a choice
+congruence: if `Q` weakly simulates `P`, then `Q + R` weakly simulates both `P`
+and `P + R`, for every CCS process `R`. The library's `weaklySimulates_choiceL`
+and `weaklySimulates_choiceLR`. -/
+theorem ex_7_10 {Name K : Type*} {defn : K → CCS Name K} {P Q R : CCS Name K}
+    (h : LTS.WeaklySimulates (ccsLTS defn) DeepWiki.ReactiveSystems.Act.tau Q P) :
+    LTS.WeaklySimulates (ccsLTS defn) DeepWiki.ReactiveSystems.Act.tau (CCS.choice Q R) P ∧
+    LTS.WeaklySimulates (ccsLTS defn) DeepWiki.ReactiveSystems.Act.tau
+      (CCS.choice Q R) (CCS.choice P R) :=
+  ⟨DeepWiki.ReactiveSystems.weaklySimulates_choiceL h,
+   DeepWiki.ReactiveSystems.weaklySimulates_choiceLR h⟩
 
 /-- **Exercise 7.13** (§7.2, p.156). On the LTS `p ↺b`, `q —b→ p`, `q —b→ r`,
 `q —a→ s`, `r ↺b` (`s` dead), the set of states satisfying the recursive safety
