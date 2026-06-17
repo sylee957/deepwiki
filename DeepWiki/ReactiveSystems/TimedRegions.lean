@@ -1193,12 +1193,12 @@ a single matching delay — exists. This is the combinatorial core of the genera
 time-successor (the full delay `d = N + δ` reduces to this case via the integer shift). -/
 theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valuation C}
     (h : RegionEq cmax v v') {δ : ℝ≥0} (hδ : δ < 1) :
-    ∃ δ', RegionEq cmax (v.add δ) (v'.add δ') := by
+    ∃ δ', δ' < 1 ∧ RegionEq cmax (v.add δ) (v'.add δ') := by
   -- δ = 0 is reflexivity; otherwise δ ∈ (0,1)
   rcases eq_or_lt_of_le (zero_le' (a := δ)) with hδ0 | hδ0
-  · exact ⟨0, by
-      have e : ∀ w : Valuation C, w.add (0 : ℝ≥0) = w := fun w => by funext x; simp
-      rw [← hδ0]; rw [e, e]; exact h⟩
+  · refine ⟨0, by norm_num, ?_⟩
+    have e : ∀ w : Valuation C, w.add (0 : ℝ≥0) = w := fun w => by funext x; simp
+    rw [← hδ0]; rw [e, e]; exact h
   · have hδ0r : (0 : ℝ) < δ := by exact_mod_cast hδ0
     have hδ1r : (δ : ℝ) < 1 := by exact_mod_cast hδ
     obtain ⟨h1, h2, h3⟩ := h
@@ -1216,7 +1216,8 @@ theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valua
     -- δ' := 1 - t' ∈ (0,1)
     set δ' : ℝ≥0 := ⟨1 - t', by linarith⟩ with hδ'def
     have hδ'val : (δ' : ℝ) = 1 - t' := rfl
-    refine ⟨δ', ?_⟩
+    refine ⟨δ', ?_, ?_⟩
+    · rw [← NNReal.coe_lt_coe, hδ'val, NNReal.coe_one]; linarith [ht'0]
     apply regionEq_add_of_match ⟨h1, h2, h3⟩ hδ0r hδ1r
       (by rw [hδ'val]; linarith) (by rw [hδ'val]; linarith)
     · -- wrap match
@@ -1254,9 +1255,82 @@ theorem timeSuccessor_of_fintype [Fintype C] (cmax : C → ℕ) : TimeSuccessor 
     have hlt : δ + (⌊d⌋₊ : ℝ≥0) < 1 + (⌊d⌋₊ : ℝ≥0) := by
       rw [hadd, add_comm]; exact Nat.lt_floor_add_one d
     exact lt_of_add_lt_add_right hlt
-  obtain ⟨δ', hδ'⟩ := RegionEq.timeSuccessor_frac (regionEq_add_natCast h ⌊d⌋₊) hδ1
+  obtain ⟨δ', _, hδ'⟩ := RegionEq.timeSuccessor_frac (regionEq_add_natCast h ⌊d⌋₊) hδ1
   refine ⟨(⌊d⌋₊ : ℝ≥0) + δ', ?_⟩
   have e1 : (v.add (⌊d⌋₊ : ℝ≥0)).add δ = v.add d := by rw [Valuation.add_add, hsum]
+  rw [e1, Valuation.add_add] at hδ'
+  exact hδ'
+
+/-! ### Unbounded time-successor
+
+Lifting the (clamped) time-successor to `RegionEqAll`: the integer part adds the same
+shift on both sides; the sub-unit part has a successor `δ' < 1` (from
+`timeSuccessor_frac`), so picking a clamp above all values lets us read off exact
+region data and rebuild `RegionEqAll`. -/
+
+/-- Adding the same natural delay preserves `RegionEqAll`. -/
+theorem regionEqAll_add_natCast {u u' : Valuation C} (h : RegionEqAll u u') (N : ℕ) :
+    RegionEqAll (u.add (N : ℝ≥0)) (u'.add (N : ℝ≥0)) :=
+  fun cmax => regionEq_add_natCast (h cmax) N
+
+/-- Region equivalence at a clamp strictly above all clock values is exact: the clamped
+floors are the true floors, so the integer parts agree (and the frac conditions hold for
+every clock). -/
+theorem RegionEq.exact_of_lt {cmax : C → ℕ} {v v' : Valuation C}
+    (hv : ∀ x, v x < (cmax x : ℝ≥0)) (hv' : ∀ x, v' x < (cmax x : ℝ≥0))
+    (h : RegionEq cmax v v') :
+    (∀ x, ⌊v x⌋₊ = ⌊v' x⌋₊) ∧ (∀ x, fracPart (v x) = 0 ↔ fracPart (v' x) = 0) ∧
+      (∀ x y, fracPart (v x) ≤ fracPart (v y) ↔ fracPart (v' x) ≤ fracPart (v' y)) := by
+  obtain ⟨h1, h2, h3⟩ := h
+  refine ⟨fun x => ?_, fun x => h2 x (hv x).le, fun x y => h3 x y (hv x).le (hv y).le⟩
+  have e1 : regionFloor cmax v x = ⌊v x⌋₊ := by unfold regionFloor; rw [if_pos (hv x).le]
+  have e2 : regionFloor cmax v' x = ⌊v' x⌋₊ := by unfold regionFloor; rw [if_pos (hv' x).le]
+  rw [← e1, ← e2]; exact h1 x
+
+/-- For finitely many clocks, some natural number strictly bounds two valuations. -/
+theorem exists_nat_bound [Fintype C] (u u' : Valuation C) :
+    ∃ N : ℕ, ∀ x, u x < (N : ℝ≥0) ∧ u' x < (N : ℝ≥0) := by
+  set f : C → ℕ := fun x => max ⌈u x⌉₊ ⌈u' x⌉₊ with hf
+  refine ⟨Finset.univ.sup f + 1, fun x => ⟨?_, ?_⟩⟩
+  · have hsup : ⌈u x⌉₊ ≤ Finset.univ.sup f :=
+      le_trans (le_max_left _ _) (Finset.le_sup (f := f) (Finset.mem_univ x))
+    refine lt_of_le_of_lt (Nat.le_ceil (u x)) ?_
+    exact_mod_cast Nat.lt_succ_of_le hsup
+  · have hsup : ⌈u' x⌉₊ ≤ Finset.univ.sup f :=
+      le_trans (le_max_right _ _) (Finset.le_sup (f := f) (Finset.mem_univ x))
+    refine lt_of_le_of_lt (Nat.le_ceil (u' x)) ?_
+    exact_mod_cast Nat.lt_succ_of_le hsup
+
+/-- **Unbounded fractional time-successor**: for `δ < 1`, a sub-unit delay `δ'` matches
+it across `RegionEqAll`. -/
+theorem regionEqAll_timeSuccessor_frac [Fintype C] {u u' : Valuation C}
+    (h : RegionEqAll u u') {δ : ℝ≥0} (hδ : δ < 1) :
+    ∃ δ', δ' < 1 ∧ RegionEqAll (u.add δ) (u'.add δ') := by
+  obtain ⟨N, hN⟩ := exists_nat_bound (u.add δ) u'
+  obtain ⟨δ', hδ'lt, hδ'⟩ := RegionEq.timeSuccessor_frac (h (fun _ => N + 1)) hδ
+  refine ⟨δ', hδ'lt, ?_⟩
+  have hb1 : ∀ x, (u.add δ) x < ((N + 1 : ℕ) : ℝ≥0) := fun x => by
+    rw [Nat.cast_add, Nat.cast_one]; exact lt_of_lt_of_le (hN x).1 le_self_add
+  have hb2 : ∀ x, (u'.add δ') x < ((N + 1 : ℕ) : ℝ≥0) := fun x => by
+    rw [Nat.cast_add, Nat.cast_one, Valuation.add_apply]; exact add_lt_add (hN x).2 hδ'lt
+  obtain ⟨hf, hz, ho⟩ := RegionEq.exact_of_lt hb1 hb2 hδ'
+  exact regionEqAll_of_exact hf hz ho
+
+/-- **Unbounded time-successor**: across `RegionEqAll`, any delay `δ` of one side is
+matched by some delay `δ'` of the other (the duration-abstract matching `∃∃`/`∀∀` need). -/
+theorem regionEqAll_timeSuccessor [Fintype C] {u u' : Valuation C}
+    (h : RegionEqAll u u') (d : ℝ≥0) : ∃ d', RegionEqAll (u.add d) (u'.add d') := by
+  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le' (a := d))
+  set δ := d - (⌊d⌋₊ : ℝ≥0) with hδdef
+  have hsum : (⌊d⌋₊ : ℝ≥0) + δ = d := add_tsub_cancel_of_le hNd
+  have hδ1 : δ < 1 := by
+    have hadd : δ + (⌊d⌋₊ : ℝ≥0) = d := by rw [hδdef]; exact tsub_add_cancel_of_le hNd
+    have hlt : δ + (⌊d⌋₊ : ℝ≥0) < 1 + (⌊d⌋₊ : ℝ≥0) := by
+      rw [hadd, add_comm]; exact Nat.lt_floor_add_one d
+    exact lt_of_add_lt_add_right hlt
+  obtain ⟨δ', _, hδ'⟩ := regionEqAll_timeSuccessor_frac (regionEqAll_add_natCast h ⌊d⌋₊) hδ1
+  refine ⟨(⌊d⌋₊ : ℝ≥0) + δ', ?_⟩
+  have e1 : (u.add (⌊d⌋₊ : ℝ≥0)).add δ = u.add d := by rw [Valuation.add_add, hsum]
   rw [e1, Valuation.add_add] at hδ'
   exact hδ'
 
