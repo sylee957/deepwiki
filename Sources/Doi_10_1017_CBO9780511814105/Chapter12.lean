@@ -4,6 +4,7 @@ import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.Chapter12Examples
+import DeepWiki.ReactiveSystems.Chapter12Closed
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -209,5 +210,21 @@ theorem ex_12_10 :
       TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .A DeepWiki.ReactiveSystems.mt1210 ∧
       ¬ TLTS.MtSatState DeepWiki.ReactiveSystems.witnessTLTS .B DeepWiki.ReactiveSystems.mt1210 :=
   DeepWiki.ReactiveSystems.ex_12_10
+
+/-- **Exercise 12.1** (§12.1, p.226). If `F` is a closed `Mt` formula (every guard
+clock is within the scope of a reset binding it), the extended states satisfying `F`
+are independent of the formula-clock valuation `u`. The library's
+`mtSat_closed_valuation_indep`. -/
+theorem ex_12_1 (T : TLTS Proc Act) {F : Mt Act D} (hF : F.Closed)
+    (p : Proc) (u u' : Valuation D) : TLTS.MtSat T p u F ↔ TLTS.MtSat T p u' F :=
+  DeepWiki.ReactiveSystems.mtSat_closed_valuation_indep T hF p u u'
+
+/-- **Exercise 12.1** (§12.1, p.226), second part. Valuation-independence does **not**
+hold for arbitrary (non-closed) formulae: the guard `y = 1` is satisfied under `y ↦ 1`
+but not `y ↦ 0`. The library's `not_mtSat_valuation_indep_general`. -/
+theorem ex_12_1_not_general :
+    ∃ (T : TLTS Unit Unit) (p : Unit) (F : Mt Unit Unit) (u u' : Valuation Unit),
+      ¬ (TLTS.MtSat T p u F ↔ TLTS.MtSat T p u' F) :=
+  DeepWiki.ReactiveSystems.not_mtSat_valuation_indep_general
 
 end DeepWiki.Rs

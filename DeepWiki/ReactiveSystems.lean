@@ -47,6 +47,7 @@ import DeepWiki.ReactiveSystems.Chapter4Examples
 import DeepWiki.ReactiveSystems.Chapter7Examples
 import DeepWiki.ReactiveSystems.Chapter6Characteristic
 import DeepWiki.ReactiveSystems.Chapter7WeakSimCongruence
+import DeepWiki.ReactiveSystems.Chapter12Closed
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces
