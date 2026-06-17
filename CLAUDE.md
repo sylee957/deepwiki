@@ -27,6 +27,15 @@ dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
   declaration namespace stays a short slug (`DeepWiki.Dnc`). Book numbers live **only** in
   the catalog — the library stays number-free. A second topic gets `DeepWiki/<Topic>/` over
   the same `Sources/` layer.
+- **Per-paper source catalogs.** A result the library takes from (or a book *defers to*) an
+  individual **paper** gets its **own** `Sources/Doi_<sanitized-doi>/` catalog — a
+  `Source.lean` (paper DOI + title + authors, short author-slug namespace, e.g.
+  `DeepWiki.Llw`) plus catalog files pointing at the library theorems derived from it. Add
+  this paper pointer **even when the book already references the paper** ("double
+  reference"): the paper catalog is what lets a reader go straight to the *individual paper*
+  (DOI in hand) rather than only the book. Collected reference papers live (gitignored) in
+  `references/`, named freely; their DOI is recorded in the paper's `Source.lean`. Same
+  sanitized-DOI folder rule as books (`Sources/Doi_10_7146_brics_v2i2_19504/`).
 
 **Do not reintroduce Verso.** This was once a Verso "Manual" book (declarations inside
 elaborated ` ```lean ` blocks); Verso was removed in favour of plain Lean + doc-gen4. No
