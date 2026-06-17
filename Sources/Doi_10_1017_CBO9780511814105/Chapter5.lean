@@ -2,6 +2,7 @@ import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
 import DeepWiki.ReactiveSystems.HennessyMilnerSharp
 import DeepWiki.ReactiveSystems.Chapter5Examples
+import DeepWiki.ReactiveSystems.Chapter5ExpansionLaw
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 5: Hennessy–Milner logic
@@ -149,5 +150,19 @@ theorem ex_5_7 :
     (DeepWiki.ReactiveSystems.S57.s ⊨[DeepWiki.ReactiveSystems.lts57]
       HML.box .a (HML.dia .b (HML.and (HML.box .c HML.ff) (HML.dia .a HML.tt)))) :=
   DeepWiki.ReactiveSystems.ex_5_7
+
+/-- **Exercise 5.11** (§5.1, p.100). Four CCS pairs: `b.a.0+b.0 ≁ b.(a.0+b.0)`
+(`⟨b⟩⟨b⟩tt`), `a.(b.c.0+b.d.0) ≁ a.b.c.0+a.b.d.0` (= Exercise 5.5), the expansion
+law `a.0∣b.0 ~ a.b.0+b.a.0`, and `(a.0∣b.0)+c.a.0 ≁ a.0∣(b.0+c.0)` (`⟨a⟩⟨c⟩tt`).
+The library's `ex_5_11`. -/
+theorem ex_5_11 :
+    (∃ F : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
+      (q1b ⊨[ccsLTS d511] F) ∧ ¬ (q1a ⊨[ccsLTS d511] F)) ∧
+    (∃ G : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
+      (p55c ⊨[ccsLTS d55] G) ∧ ¬ (p55d ⊨[ccsLTS d55] G)) ∧
+    (q3a ~[ccsLTS d511] q3b) ∧
+    (∃ H : HML (DeepWiki.ReactiveSystems.Act (Fin 4)),
+      (q4b ⊨[ccsLTS d511] H) ∧ ¬ (q4a ⊨[ccsLTS d511] H)) :=
+  DeepWiki.ReactiveSystems.ex_5_11
 
 end DeepWiki.Rs
