@@ -390,6 +390,42 @@ theorem regionEqAll_satisfies {v v' : Valuation C} (h : RegionEqAll v v')
   obtain ⟨N, hN⟩ := g.exists_boundedBy
   exact regionEq_satisfies (h (fun _ => N)) hN
 
+/-- **Constructing `RegionEqAll` from exact (unclamped) region data**: equal integer
+parts, matching zero-fractional-parts, and matching fractional order — for *all*
+clocks — give region equivalence at every clamp. -/
+theorem regionEqAll_of_exact {u u' : Valuation C}
+    (hfloor : ∀ x, ⌊u x⌋₊ = ⌊u' x⌋₊)
+    (hzero : ∀ x, fracPart (u x) = 0 ↔ fracPart (u' x) = 0)
+    (horder : ∀ x y, fracPart (u x) ≤ fracPart (u y) ↔ fracPart (u' x) ≤ fracPart (u' y)) :
+    RegionEqAll u u' := by
+  -- A clock bounded by `cmax` on one side is bounded on the other (same floor + zero-frac).
+  have hbound : ∀ {v w : Valuation C} (x : C), (∀ y, ⌊v y⌋₊ = ⌊w y⌋₊) →
+      (∀ y, fracPart (v y) = 0 ↔ fracPart (w y) = 0) → ∀ {cmax : C → ℕ},
+      v x ≤ (cmax x : ℝ≥0) → w x ≤ (cmax x : ℝ≥0) := by
+    intro v w x hf hz cmax hvx
+    by_cases hzc : fracPart (v x) = 0
+    · have e1 : (⌊v x⌋₊ : ℝ≥0) = v x := (fracPart_eq_zero_iff (v x)).mp hzc
+      have e2 : (⌊w x⌋₊ : ℝ≥0) = w x := (fracPart_eq_zero_iff (w x)).mp ((hz x).mp hzc)
+      rw [← e2, ← hf x, e1]; exact hvx
+    · have hlt : ⌊v x⌋₊ < cmax x := by
+        by_contra hge
+        push Not at hge
+        have hle2 : v x ≤ (⌊v x⌋₊ : ℝ≥0) := le_trans hvx (by exact_mod_cast hge)
+        exact hzc ((fracPart_eq_zero_iff (v x)).mpr
+          (le_antisymm (Nat.floor_le zero_le) hle2))
+      refine le_of_lt ?_
+      calc w x < (⌊w x⌋₊ : ℝ≥0) + 1 := Nat.lt_floor_add_one (w x)
+        _ = (⌊v x⌋₊ : ℝ≥0) + 1 := by rw [hf x]
+        _ ≤ (cmax x : ℝ≥0) := by exact_mod_cast Nat.succ_le_of_lt hlt
+  intro cmax
+  refine ⟨fun x => ?_, fun x _ => hzero x, fun x y _ _ => horder x y⟩
+  unfold regionFloor
+  by_cases hux : u x ≤ (cmax x : ℝ≥0)
+  · rw [if_pos hux, if_pos (hbound x hfloor hzero hux), hfloor x]
+  · have hux' : ¬ u' x ≤ (cmax x : ℝ≥0) := fun h =>
+      hux (hbound x (fun y => (hfloor y).symm) (fun y => (hzero y).symm) h)
+    rw [if_neg hux, if_neg hux']
+
 /-- `frac(0) = 0`. -/
 theorem fracPart_zero : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
 
@@ -438,6 +474,11 @@ theorem RegionEq.reset {cmax : C → ℕ} {v v' : Valuation C} (r : Set C)
         rw [Valuation.reset_not_mem hxr v, Valuation.reset_not_mem hyr v,
           Valuation.reset_not_mem hxr v', Valuation.reset_not_mem hyr v']
         exact h3 x y hx hy
+
+/-- `RegionEqAll` is preserved by resetting a set of clocks. -/
+theorem RegionEqAll.reset {u u' : Valuation C} (h : RegionEqAll u u') (r : Set C) :
+    RegionEqAll (Valuation.reset r u) (Valuation.reset r u') :=
+  fun cmax => RegionEq.reset r (h cmax)
 
 /-- `fracPart T ≠ 0` exactly when `T` lies strictly above its integer part. -/
 theorem fracPart_ne_zero_iff (T : ℝ≥0) : fracPart T ≠ 0 ↔ ((⌊T⌋₊ : ℝ≥0) < T) := by
