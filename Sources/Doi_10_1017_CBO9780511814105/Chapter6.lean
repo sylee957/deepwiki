@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
+import DeepWiki.ReactiveSystems.Chapter6Examples
 import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
@@ -177,5 +178,18 @@ abbrev livelockNow := @LTS.LivelockNow
 only the largest fixed point captures livelock. -/
 theorem ex_6_15 (L : LTS Proc Act) (tau : Act) : (LTS.livelockFun L tau).lfp = ∅ :=
   LTS.ex_6_15 L tau
+
+/-- **Exercise 6.16** (§6.7, p.135). On the given 4-state LTS, the only livelocked
+state is the `τ`-self-loop `p`: `LivelockNow = {p}`. The library's `ex_6_16`. -/
+theorem ex_6_16 :
+    LTS.LivelockNow DeepWiki.ReactiveSystems.L616 .tau = {DeepWiki.ReactiveSystems.S616.p} :=
+  DeepWiki.ReactiveSystems.ex_6_16
+
+/-- **Exercise 6.17** (§6.7, p.135). On the given 4-state LTS every state has an
+outgoing `τ`, so every state is livelocked: `LivelockNow = univ`. The library's
+`ex_6_17`. -/
+theorem ex_6_17 :
+    LTS.LivelockNow DeepWiki.ReactiveSystems.L617 .tau = Set.univ :=
+  DeepWiki.ReactiveSystems.ex_6_17
 
 end DeepWiki.Rs
