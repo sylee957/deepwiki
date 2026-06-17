@@ -55,4 +55,69 @@ theorem ex_11_2 :
   rw [h] at hmem
   exact hmem
 
+/-! ## The untimed-language-equivalence half (converse of Theorem 11.1 fails) -/
+
+/-- Resetting the single clock yields the all-zero valuation. -/
+theorem reset_unit (v : Valuation Unit) : Valuation.reset {()} v = fun _ => (0 : ℝ≥0) := by
+  funext x; exact Valuation.reset_mem (by simp) v
+
+/-- Automaton (a) affords every untimed trace (it can do `a` at any time, looping back
+to the initial state). -/
+theorem taA_real : ∀ u : List Unit,
+    ∃ w, w ∈ taA.tlts.timedLang (taA.initial, fun _ => (0 : ℝ≥0)) ∧ w.map Prod.snd = u := by
+  intro u
+  induction u with
+  | nil => exact ⟨[], trivial, rfl⟩
+  | cons hd tl ih =>
+      obtain ⟨w', hw', hmap'⟩ := ih
+      refine ⟨((0 : ℝ≥0), ()) :: w', ⟨(taA.initial, Valuation.add (fun (_ : Unit) => (0 : ℝ≥0)) (0 - 0)),
+        (taA.initial, fun _ => 0), le_refl _, ⟨rfl, rfl, trivial, trivial⟩,
+        ⟨ClockConstraint.atom () Cmp.le 1, {()}, ⟨rfl, rfl⟩,
+          by simp [satisfies, Cmp.holds, Valuation.add_apply], (reset_unit _).symm, trivial⟩,
+        hw'⟩, ?_⟩
+      cases hd; simp [hmap']
+
+/-- Automaton (b) affords every untimed trace too (it does `a` after waiting one unit,
+looping back to the initial state). -/
+theorem taB_real : ∀ (now : ℝ≥0) (u : List Unit),
+    ∃ w, TimedTraceFrom taB.tlts (taB.initial, fun _ => (0 : ℝ≥0)) now w ∧ w.map Prod.snd = u := by
+  intro now u
+  induction u generalizing now with
+  | nil => exact ⟨[], trivial, rfl⟩
+  | cons hd tl ih =>
+      obtain ⟨w', hw', hmap'⟩ := ih (now + 1)
+      refine ⟨(now + 1, ()) :: w',
+        ⟨(taB.initial, Valuation.add (fun (_ : Unit) => (0 : ℝ≥0)) ((now + 1) - now)),
+        (taB.initial, fun _ => 0), le_self_add, ⟨rfl, rfl, trivial, trivial⟩,
+        ⟨ClockConstraint.atom () Cmp.eq 1, {()}, ⟨rfl, rfl⟩, ?_, (reset_unit _).symm, trivial⟩,
+        hw'⟩, ?_⟩
+      · show Cmp.holds Cmp.eq _ 1
+        simp only [Cmp.holds, Valuation.add_apply, Nat.cast_one, zero_add, add_tsub_cancel_left]
+      · cases hd; simp [hmap']
+
+/-- Automaton (a) accepts every untimed trace. -/
+theorem taA_untimed_univ : taA.tlts.untimedLang (taA.initial, fun _ => (0 : ℝ≥0)) = Set.univ :=
+  Set.eq_univ_iff_forall.mpr taA_real
+
+/-- Automaton (b) accepts every untimed trace. -/
+theorem taB_untimed_univ : taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0)) = Set.univ :=
+  Set.eq_univ_iff_forall.mpr fun u => taB_real 0 u
+
+/-- The automata (a) and (b) **are** untimed-language equivalent (both accept every
+untimed trace, differing only in *when* the `a`s happen). -/
+theorem ex_11_2_untimed_equiv :
+    taA.tlts.untimedLang (taA.initial, fun _ => (0 : ℝ≥0)) =
+      taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0)) :=
+  taA_untimed_univ.trans taB_untimed_univ.symm
+
+/-- **Exercise 11.2 / the converse of Theorem 11.1 fails.** Untimed-language
+equivalence does **not** imply timed-language equivalence: (a) and (b) are
+untimed-language equivalent yet not timed-language equivalent. -/
+theorem ex_11_2_untimed_eq_not_timed_eq :
+    (taA.tlts.untimedLang (taA.initial, fun _ => (0 : ℝ≥0)) =
+      taB.tlts.untimedLang (taB.initial, fun _ => (0 : ℝ≥0))) ∧
+    (taA.tlts.timedLang (taA.initial, fun _ => (0 : ℝ≥0)) ≠
+      taB.tlts.timedLang (taB.initial, fun _ => (0 : ℝ≥0))) :=
+  ⟨ex_11_2_untimed_equiv, ex_11_2⟩
+
 end DeepWiki.ReactiveSystems

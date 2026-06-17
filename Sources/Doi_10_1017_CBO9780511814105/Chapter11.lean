@@ -294,14 +294,19 @@ union of the TLTSs they generate. The library's `TimedAutomaton.TimedBisimilar`.
 abbrev def_11_6 := @DeepWiki.ReactiveSystems.TimedAutomaton.TimedBisimilar
 
 /-- **Exercise 11.2** (§11.1, p.195). The two single-location timed automata of
-Example 11.2 (`a`-self-loops with guards `x ≤ 1` resp. `x = 1`) are **not**
-timed-language equivalent: `(0, a)` is a timed trace of (a) but not of (b). The
-library's `ex_11_2`. -/
+Example 11.2 (`a`-self-loops with guards `x ≤ 1` resp. `x = 1`) are
+untimed-language equivalent yet **not** timed-language equivalent — so the converse
+of Theorem 11.1 fails. (`(0, a)` is a timed trace of (a) but not (b), while both
+accept every untimed trace.) The library's `ex_11_2_untimed_eq_not_timed_eq`. -/
 theorem ex_11_2 :
-    DeepWiki.ReactiveSystems.taA.tlts.timedLang
+    (DeepWiki.ReactiveSystems.taA.tlts.untimedLang
+        (DeepWiki.ReactiveSystems.taA.initial, fun _ => (0 : ℝ≥0)) =
+      DeepWiki.ReactiveSystems.taB.tlts.untimedLang
+        (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) ∧
+    (DeepWiki.ReactiveSystems.taA.tlts.timedLang
         (DeepWiki.ReactiveSystems.taA.initial, fun _ => (0 : ℝ≥0)) ≠
       DeepWiki.ReactiveSystems.taB.tlts.timedLang
-        (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0)) :=
-  DeepWiki.ReactiveSystems.ex_11_2
+        (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) :=
+  DeepWiki.ReactiveSystems.ex_11_2_untimed_eq_not_timed_eq
 
 end DeepWiki.Rs

@@ -19,6 +19,7 @@ variable {Proc Act : Type*}
 def diaAll (L : LTS Proc Act) (X : Set Proc) : Set Proc :=
   {p | ∃ a p', L.step p a p' ∧ p' ∈ X}
 
+/-- The `⟨Act⟩` modality is monotone in its argument set. -/
 theorem diaAll_mono (L : LTS Proc Act) : Monotone (diaAll L) :=
   fun _ _ h _ hp => let ⟨a, p', hs, hp'⟩ := hp; ⟨a, p', hs, h hp'⟩
 

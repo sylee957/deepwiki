@@ -80,8 +80,7 @@ theorem isBisimulation_rel411 : IsBisimulation lts411 (fun p q => rel411 p q = t
 
 /-- States with an outgoing `a`-move are never bisimilar to the dead `P₅`. -/
 theorem not_bisim_p5 {x x' : P411} (hx : lts411.step x A411.a x') : ¬ (x ~[lts411] P411.p5) :=
-  fun h => let ⟨q, hq, _⟩ := ((bisimilar_iff _ _).mp h).1 A411.a x' hx
-    (by decide : ∀ q, ¬ lts411.step P411.p5 A411.a q) q hq
+  not_bisim_dead_of_step hx (by decide)
 
 /-- **Exercise 4.11** (§4.3, p.86). The largest bisimulation of `P₁..P₅` identifies
 exactly `P₁` and `P₂`: `P₁ ~ P₂`, while `P₃, P₄, P₅` are pairwise distinct and

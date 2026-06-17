@@ -42,21 +42,28 @@ abbrev lts325 : LTS St325 A325 := ⟨fun p x q => edge325 p x q = true⟩
 
 /-! ## The silent (`τ*`) reachabilities used to build the weak transitions -/
 
+/-- `s ⟶τ* s₁`. -/
 theorem ts_s_s1 : tauStar lts325 A325.tau St325.s St325.s1 :=
   tauStar_single (show lts325.step St325.s A325.tau St325.s1 by decide)
+/-- `s₁ ⟶τ* s`. -/
 theorem ts_s1_s : tauStar lts325 A325.tau St325.s1 St325.s :=
   tauStar_single (show lts325.step St325.s1 A325.tau St325.s by decide)
+/-- `s₂ ⟶τ* s₁`. -/
 theorem ts_s2_s1 : tauStar lts325 A325.tau St325.s2 St325.s1 :=
   tauStar_single (show lts325.step St325.s2 A325.tau St325.s1 by decide)
+/-- `s₂ ⟶τ* s`. -/
 theorem ts_s2_s : tauStar lts325 A325.tau St325.s2 St325.s :=
   tauStar_trans ts_s2_s1 ts_s1_s
+/-- `s ⟶τ* s₅`. -/
 theorem ts_s_s5 : tauStar lts325 A325.tau St325.s St325.s5 :=
   tauStar_trans ts_s_s1 (tauStar_trans (tauStar_single
     (show lts325.step St325.s1 A325.tau St325.s2 by decide))
     (tauStar_single (show lts325.step St325.s2 A325.tau St325.s5 by decide)))
+/-- `s₁ ⟶τ* s₅`. -/
 theorem ts_s1_s5 : tauStar lts325 A325.tau St325.s1 St325.s5 :=
   tauStar_trans (tauStar_single (show lts325.step St325.s1 A325.tau St325.s2 by decide))
     (tauStar_single (show lts325.step St325.s2 A325.tau St325.s5 by decide))
+/-- `s₂ ⟶τ* s₅`. -/
 theorem ts_s2_s5 : tauStar lts325 A325.tau St325.s2 St325.s5 :=
   tauStar_single (show lts325.step St325.s2 A325.tau St325.s5 by decide)
 
@@ -66,32 +73,44 @@ theorem ts_s2_s5 : tauStar lts325 A325.tau St325.s2 St325.s5 :=
 theorem w_refl (x : St325) : lts325 ⊢ x =[A325.tau]⇒[A325.tau] x :=
   weakStep_tau_of_tauStar (tauStar_refl _ _ _)
 
+/-- `s =[a]⇒ s₃`. -/
 theorem w_s_a : lts325 ⊢ St325.s =[A325.a]⇒[A325.tau] St325.s3 :=
   step_weakStep (show lts325.step St325.s A325.a St325.s3 by decide)
+/-- `s =[b]⇒ s₄`. -/
 theorem w_s_b : lts325 ⊢ St325.s =[A325.b]⇒[A325.tau] St325.s4 :=
-  Or.inr ⟨by decide, St325.s1, St325.s4, ts_s_s1,
-    (show lts325.step St325.s1 A325.b St325.s4 by decide), tauStar_refl _ _ _⟩
+  weakStep_visible (by decide) ts_s_s1
+    (show lts325.step St325.s1 A325.b St325.s4 by decide) (tauStar_refl _ _ _)
+/-- `s₁ =[a]⇒ s₃`. -/
 theorem w_s1_a : lts325 ⊢ St325.s1 =[A325.a]⇒[A325.tau] St325.s3 :=
-  Or.inr ⟨by decide, St325.s, St325.s3, ts_s1_s,
-    (show lts325.step St325.s A325.a St325.s3 by decide), tauStar_refl _ _ _⟩
+  weakStep_visible (by decide) ts_s1_s
+    (show lts325.step St325.s A325.a St325.s3 by decide) (tauStar_refl _ _ _)
+/-- `s₁ =[b]⇒ s₄`. -/
 theorem w_s1_b : lts325 ⊢ St325.s1 =[A325.b]⇒[A325.tau] St325.s4 :=
   step_weakStep (show lts325.step St325.s1 A325.b St325.s4 by decide)
+/-- `s₂ =[a]⇒ s₃`. -/
 theorem w_s2_a : lts325 ⊢ St325.s2 =[A325.a]⇒[A325.tau] St325.s3 :=
-  Or.inr ⟨by decide, St325.s, St325.s3, ts_s2_s,
-    (show lts325.step St325.s A325.a St325.s3 by decide), tauStar_refl _ _ _⟩
+  weakStep_visible (by decide) ts_s2_s
+    (show lts325.step St325.s A325.a St325.s3 by decide) (tauStar_refl _ _ _)
+/-- `s₂ =[b]⇒ s₄`. -/
 theorem w_s2_b : lts325 ⊢ St325.s2 =[A325.b]⇒[A325.tau] St325.s4 :=
-  Or.inr ⟨by decide, St325.s1, St325.s4, ts_s2_s1,
-    (show lts325.step St325.s1 A325.b St325.s4 by decide), tauStar_refl _ _ _⟩
+  weakStep_visible (by decide) ts_s2_s1
+    (show lts325.step St325.s1 A325.b St325.s4 by decide) (tauStar_refl _ _ _)
+/-- `s =[τ]⇒ s₅`. -/
 theorem w_s_tau_s5 : lts325 ⊢ St325.s =[A325.tau]⇒[A325.tau] St325.s5 :=
   weakStep_tau_of_tauStar ts_s_s5
+/-- `s₁ =[τ]⇒ s₅`. -/
 theorem w_s1_tau_s5 : lts325 ⊢ St325.s1 =[A325.tau]⇒[A325.tau] St325.s5 :=
   weakStep_tau_of_tauStar ts_s1_s5
+/-- `s₂ =[τ]⇒ s₅`. -/
 theorem w_s2_tau_s5 : lts325 ⊢ St325.s2 =[A325.tau]⇒[A325.tau] St325.s5 :=
   weakStep_tau_of_tauStar ts_s2_s5
+/-- `t =[a]⇒ t₂`. -/
 theorem w_t_a : lts325 ⊢ St325.t =[A325.a]⇒[A325.tau] St325.t2 :=
   step_weakStep (show lts325.step St325.t A325.a St325.t2 by decide)
+/-- `t =[b]⇒ t₃`. -/
 theorem w_t_b : lts325 ⊢ St325.t =[A325.b]⇒[A325.tau] St325.t3 :=
   step_weakStep (show lts325.step St325.t A325.b St325.t3 by decide)
+/-- `t =[τ]⇒ t₁`. -/
 theorem w_t_tau_t1 : lts325 ⊢ St325.t =[A325.tau]⇒[A325.tau] St325.t1 :=
   weakStep_tau_of_tauStar (tauStar_single (show lts325.step St325.t A325.tau St325.t1 by decide))
 
@@ -102,6 +121,7 @@ def R325 : St325 → St325 → Prop := fun x y =>
   (x = St325.s3 ∧ y = St325.t2) ∨ (x = St325.s4 ∧ y = St325.t3) ∨
   (x = St325.s5 ∧ y = St325.t1)
 
+/-- `R325` is a weak bisimulation. -/
 theorem isWeakBisimulation_R325 : IsWeakBisimulation lts325 A325.tau R325 := by
   intro p q hR
   rcases hR with ⟨hx, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩

@@ -104,6 +104,11 @@ theorem bisimilar_iff (p q : Proc) :
     · exact ⟨fun a x' hx => (h.1 a x' hx).imp fun _ => And.imp_right Or.inl,
              fun a y' hy => (h.2 a y' hy).imp fun _ => And.imp_right Or.inl⟩
 
+/-- A state with an outgoing transition is never bisimilar to a deadlocked state. -/
+theorem not_bisim_dead_of_step {x y x' : Proc} {a : Act} (hx : L ⊢ x ⟶[a] x')
+    (hy : ∀ a' y', ¬ (L ⊢ y ⟶[a'] y')) : ¬ (x ~[L] y) :=
+  fun h => let ⟨y', hstep, _⟩ := ((bisimilar_iff x y).mp h).1 a x' hx; hy a y' hstep
+
 end LTS
 
 end DeepWiki.ReactiveSystems

@@ -34,8 +34,7 @@ abbrev L61 : LTS P61 A61 := ⟨fun u y v => edge61 u y v = true⟩
 
 /-- A state with an outgoing `a` is never bisimilar to the dead `r`. -/
 theorem not_bisim_r {x x' : P61} (h : L61.step x A61.a x') : ¬ (x ~[L61] P61.r) :=
-  fun hb => let ⟨z, hz, _⟩ := ((bisimilar_iff _ _).mp hb).1 A61.a x' h
-    (by decide : ∀ z, ¬ L61.step P61.r A61.a z) z hz
+  not_bisim_dead_of_step h (by decide)
 
 /-- `p ≁ q`: `q —a→ r` forces `p —a→ p` with `p ~ r`, impossible. -/
 theorem not_bisim_pq : ¬ (P61.p ~[L61] P61.q) := by

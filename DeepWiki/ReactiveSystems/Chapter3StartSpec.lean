@@ -58,9 +58,11 @@ theorem badSpec_step_iff {α : Act SmuniName} {P' : CCS SmuniName BadK} :
   rw [ccsLTS_step, step_const_iff]
   simp only [badDefn, step_pre_iff]
 
+/-- `BSpec` cannot perform `τ`. -/
 theorem badSpec_no_tau {P' : CCS SmuniName BadK} : ¬ (ccsLTS badDefn).step badSpec Act.tau P' :=
   fun h => absurd (badSpec_step_iff.mp h).1 (by decide)
 
+/-- `BSpec ⟶τ* q` forces `q = BSpec` (`BSpec` is `τ`-free). -/
 theorem tauStar_badSpec {q : CCS SmuniName BadK}
     (h : tauStar (ccsLTS badDefn) Act.tau badSpec q) : q = badSpec := by
   rcases Relation.ReflTransGen.cases_head h with heq | ⟨_, hZ, _⟩
@@ -110,6 +112,7 @@ theorem badBad_no_step {α : Act SmuniName} {P' : CCS SmuniName BadK} :
     rw [hℓ] at hB
     exact absurd hB.1 (by decide)
 
+/-- `Bad ⟶τ* q` forces `q = Bad` (`Bad` is deadlocked). -/
 theorem tauStar_badBad {q : CCS SmuniName BadK}
     (h : tauStar (ccsLTS badDefn) Act.tau badBad q) : q = badBad := by
   rcases Relation.ReflTransGen.cases_head h with heq | ⟨_, hZ, _⟩

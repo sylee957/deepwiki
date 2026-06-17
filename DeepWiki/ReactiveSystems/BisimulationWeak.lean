@@ -41,6 +41,12 @@ scoped notation:40 L:max " ⊢ " p:41 " =[" a "]⇒[" t "] " q:41 => LTS.WeakSte
 theorem weakStep_tau_of_tauStar {L : LTS Proc Act} {tau : Act} {p q : Proc}
     (h : tauStar L tau p q) : L ⊢ p =[tau]⇒[tau] q := Or.inl ⟨rfl, h⟩
 
+/-- Intro for a *visible* weak transition: `p ⟶τ* p' ⟶α q' ⟶τ* q` with `α ≠ τ`
+gives `p =[α]⇒ q`. -/
+theorem weakStep_visible {L : LTS Proc Act} {tau α : Act} {p p' q' q : Proc} (hα : α ≠ tau)
+    (h1 : tauStar L tau p p') (h2 : L ⊢ p' ⟶[α] q') (h3 : tauStar L tau q' q) :
+    L ⊢ p =[α]⇒[tau] q := Or.inr ⟨hα, p', q', h1, h2, h3⟩
+
 /-- Every concrete transition is a weak transition. -/
 theorem step_weakStep {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : Proc}
     (h : L ⊢ p ⟶[α] q) : L ⊢ p =[α]⇒[tau] q := by

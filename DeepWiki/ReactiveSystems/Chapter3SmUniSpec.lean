@@ -25,6 +25,7 @@ abbrev smSpec : CCS SmuniName SmuniK := .const .Spec
 
 /-! ## Each reachable state has exactly one transition -/
 
+/-- `SmUni` has exactly one transition: `pub` to `(CM∣CS₁)∖L`. -/
 theorem smUni_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     (ccsLTS smuniDefn).step smUni α P' ↔ (α = Act.name SmuniName.pub ∧ P' = smB) := by
   constructor
@@ -48,6 +49,7 @@ theorem smUni_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     exact Step.res (by simp [smuniRestrict]) (by simp [smuniRestrict])
       (Step.com2 (Step.con (Step.act _ _)))
 
+/-- `(CM∣CS₁)∖L` has exactly one transition: a `τ` (coin handshake) to `(CM₁∣CS₂)∖L`. -/
 theorem smB_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     (ccsLTS smuniDefn).step smB α P' ↔ (α = Act.tau ∧ P' = smC) := by
   constructor
@@ -72,6 +74,7 @@ theorem smB_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     exact Step.res (by simp [smuniRestrict]) (by simp [smuniRestrict])
       (Step.com3 (by rintro ⟨⟩) (Step.con (Step.act _ _)) (Step.con (Step.act _ _)))
 
+/-- `(CM₁∣CS₂)∖L` has exactly one transition: a `τ` (coffee handshake) back to `SmUni`. -/
 theorem smC_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     (ccsLTS smuniDefn).step smC α P' ↔ (α = Act.tau ∧ P' = smUni) := by
   constructor
@@ -97,6 +100,7 @@ theorem smC_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     exact Step.res (by simp [smuniRestrict]) (by simp [smuniRestrict])
       (Step.com3 (by rintro ⟨⟩) (Step.con (Step.act _ _)) (Step.con (Step.act _ _)))
 
+/-- `Spec` has exactly one transition: `pub` back to itself. -/
 theorem smSpec_step_iff {α : Act SmuniName} {P' : CCS SmuniName SmuniK} :
     (ccsLTS smuniDefn).step smSpec α P' ↔ (α = Act.name SmuniName.pub ∧ P' = smSpec) := by
   rw [ccsLTS_step, step_const_iff]
@@ -109,6 +113,7 @@ relates to `Spec`. -/
 def smRel : CCS SmuniName SmuniK → CCS SmuniName SmuniK → Prop := fun x y =>
   (x = smUni ∨ x = smB ∨ x = smC) ∧ y = smSpec
 
+/-- `smRel` is a weak bisimulation. -/
 theorem isWeakBisimulation_smRel : IsWeakBisimulation (ccsLTS smuniDefn) Act.tau smRel := by
   have hAB : (ccsLTS smuniDefn).step smUni (Act.name SmuniName.pub) smB := smUni_step_iff.mpr ⟨rfl, rfl⟩
   have hBC : (ccsLTS smuniDefn).step smB Act.tau smC := smB_step_iff.mpr ⟨rfl, rfl⟩

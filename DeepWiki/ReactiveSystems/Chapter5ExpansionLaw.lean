@@ -100,6 +100,7 @@ def expRel : CCS (Fin 4) Empty → CCS (Fin 4) Empty → Prop :=
     (x = .par (.pre (.name 0) .nil) .nil ∧ y = .pre (.name 0) .nil) ∨
     (x = .par .nil .nil ∧ y = .nil)
 
+/-- `expRel` is a bisimulation (the basis of the expansion law `a.0∣b.0 ~ a.b.0+b.a.0`). -/
 theorem isBisimulation_expRel : IsBisimulation (ccsLTS d511) expRel := by
   rintro x y (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩)
   · -- (a.0 ∣ b.0, a.b.0 + b.a.0)
