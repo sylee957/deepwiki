@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
+import DeepWiki.ReactiveSystems.Chapter6Characteristic
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 6: HML with recursion
@@ -228,5 +229,16 @@ theorem ex_6_7 :
     (DeepWiki.ReactiveSystems.S67.t ∈ LTS.LivelockNow DeepWiki.ReactiveSystems.L67 .a) :=
   ⟨DeepWiki.ReactiveSystems.ex_6_7_1, DeepWiki.ReactiveSystems.ex_6_7_2,
    DeepWiki.ReactiveSystems.ex_6_7_3⟩
+
+/-- **Exercise 6.13** (§6.6, p.134). The characteristic formulae for the processes
+`p` and `q` of Figure 6.1 (`p —a→ p`; `q —a→ q`, `q —a→ r`; `r` dead) are satisfied
+by exactly `p` and `q` respectively: `⟦charSys p⟧ = {p}`, `⟦charSys q⟧ = {q}`, since
+the three states are pairwise non-bisimilar. The library's `ex_6_13_p`/`ex_6_13_q`. -/
+theorem ex_6_13 :
+    sysMax DeepWiki.ReactiveSystems.L61 (charSys DeepWiki.ReactiveSystems.L61)
+        DeepWiki.ReactiveSystems.P61.p = {DeepWiki.ReactiveSystems.P61.p} ∧
+    sysMax DeepWiki.ReactiveSystems.L61 (charSys DeepWiki.ReactiveSystems.L61)
+        DeepWiki.ReactiveSystems.P61.q = {DeepWiki.ReactiveSystems.P61.q} :=
+  ⟨DeepWiki.ReactiveSystems.ex_6_13_p, DeepWiki.ReactiveSystems.ex_6_13_q⟩
 
 end DeepWiki.Rs
