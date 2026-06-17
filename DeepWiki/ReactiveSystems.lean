@@ -44,6 +44,7 @@ import DeepWiki.ReactiveSystems.Chapter12Examples
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
 import DeepWiki.ReactiveSystems.Chapter6Examples
 import DeepWiki.ReactiveSystems.Chapter4Examples
+import DeepWiki.ReactiveSystems.Chapter7Examples
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
 import DeepWiki.ReactiveSystems.TimedTraces

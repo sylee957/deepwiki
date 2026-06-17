@@ -5,6 +5,7 @@ import DeepWiki.ReactiveSystems.CcsTesting
 import DeepWiki.ReactiveSystems.CcsTestingSafety
 import DeepWiki.ReactiveSystems.HymanMutualExclusion
 import DeepWiki.ReactiveSystems.CcsMutexMonitor
+import DeepWiki.ReactiveSystems.Chapter7Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 7: Modelling mutual exclusion algorithms
@@ -218,5 +219,16 @@ theorem prop_7_2_if {σ : List (DeepWiki.ReactiveSystems.Act DeepWiki.ReactiveSy
         =[DeepWiki.ReactiveSystems.Act.name DeepWiki.ReactiveSystems.MtChan.bad]⇒[
           DeepWiki.ReactiveSystems.Act.tau] Q :=
   DeepWiki.ReactiveSystems.prop_7_2_if hσ hpath hviol
+
+/-- **Exercise 7.13** (§7.2, p.156). On the LTS `p ↺b`, `q —b→ p`, `q —b→ r`,
+`q —a→ s`, `r ↺b` (`s` dead), the set of states satisfying the recursive safety
+property `F =ν [a]ff ∧ [b]F` is `{p, r, s}`; only `q` is excluded (it can perform
+`a`). The companion test `X ≝ ā.bad.0 + b̄.X` is passed by the same states. The
+library's `ex_7_13`. -/
+theorem ex_7_13 :
+    recMax DeepWiki.ReactiveSystems.L713 DeepWiki.ReactiveSystems.F713 =
+      {DeepWiki.ReactiveSystems.S713.p, DeepWiki.ReactiveSystems.S713.r,
+        DeepWiki.ReactiveSystems.S713.s} :=
+  DeepWiki.ReactiveSystems.ex_7_13
 
 end DeepWiki.Rs
