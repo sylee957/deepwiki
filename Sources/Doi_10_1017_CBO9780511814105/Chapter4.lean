@@ -231,6 +231,27 @@ theorem ex_4_12 :
         DeepWiki.ReactiveSystems.E37S.s DeepWiki.ReactiveSystems.E37S.t :=
   DeepWiki.ReactiveSystems.ex_4_12_s_not_bisim_t
 
+/-- **Exercise 4.11** (§4.3, p.86). The largest bisimulation over `P₁..P₅`
+(`P₁=a.P₂`, `P₂=a.P₁`, `P₃=a.P₂+a.P₄`, `P₄=a.P₃+a.P₅`, `P₅=0`) identifies exactly
+`P₁` and `P₂`; `P₃, P₄, P₅` are pairwise distinct and distinct from `P₁`. The
+library's `ex_4_11`. -/
+theorem ex_4_11 :
+    LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p1 DeepWiki.ReactiveSystems.P411.p2 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p1 DeepWiki.ReactiveSystems.P411.p3 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p1 DeepWiki.ReactiveSystems.P411.p4 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p1 DeepWiki.ReactiveSystems.P411.p5 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p3 DeepWiki.ReactiveSystems.P411.p4 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p3 DeepWiki.ReactiveSystems.P411.p5 ∧
+    ¬ LTS.Bisimilar DeepWiki.ReactiveSystems.lts411
+        DeepWiki.ReactiveSystems.P411.p4 DeepWiki.ReactiveSystems.P411.p5 :=
+  DeepWiki.ReactiveSystems.ex_4_11
+
 /-- **Theorem 4.2** (§4.2, p.82). On a *finite* complete lattice, the least fixed
 point of a monotone `f` is reached by finite iteration from `⊥`: `lfp f = fᵐ(⊥)`
 for some `m` (the ascending chain `⊥ ≼ f⊥ ≼ f²⊥ ≼ ⋯` is eventually constant, and
