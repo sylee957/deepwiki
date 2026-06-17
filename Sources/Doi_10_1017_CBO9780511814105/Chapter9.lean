@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
+import DeepWiki.ReactiveSystems.Chapter9Examples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 9: CCS with time delays
@@ -84,5 +85,20 @@ abbrev def_9_2 := @DeepWiki.ReactiveSystems.IsGuarded
 /-- **Definition 9.2** (§9.3, p.166). A guarded definition environment. The
 library's `IsGuardedDefn`. -/
 abbrev def_9_2_defn := @DeepWiki.ReactiveSystems.IsGuardedDefn
+
+/-- **Exercise 9.6** (§9.4, p.171). Of the four TCCS agents `M₁ ≝ ε(3).(ε(2).a.M₁+b.M₁)`,
+`M₂ ≝ ε(5).a.M₂+ε(3).b.M₂`, `M₃ ≝ ε(3).(ε(2).a.M₃+τ.M₃)`, `M₄ ≝ ε(5).a.M₄+ε(3).τ.M₄`,
+exactly `M₁` and `M₂` can delay by `4` (the `b`-prefix idles); `M₃`, `M₄` cannot, as
+a `τ` becomes urgent after `3` units (maximal progress). The library's `ex_9_6`. -/
+theorem ex_9_6 :
+    TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M1) 4
+        (TCCS.choice (TCCS.eps 1 (TCCS.pre (Act.name .a) (TCCS.const .M1)))
+          (TCCS.pre (Act.name .b) (TCCS.const .M1))) ∧
+    TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M2) 4
+        (TCCS.choice (TCCS.eps 1 (TCCS.pre (Act.name .a) (TCCS.const .M2)))
+          (TCCS.pre (Act.name .b) (TCCS.const .M2))) ∧
+    (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M3) 4 Q) ∧
+    (¬ ∃ Q, TDelay DeepWiki.ReactiveSystems.defn96 (TCCS.const .M4) 4 Q) :=
+  DeepWiki.ReactiveSystems.ex_9_6
 
 end DeepWiki.Rs

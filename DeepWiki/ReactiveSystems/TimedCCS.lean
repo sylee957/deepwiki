@@ -148,4 +148,48 @@ theorem tccs_tau_maximalProgress (defn : K → TCCS Name K) (P : TCCS Name K) (d
   rintro ⟨Q, hQ⟩
   exact TDelay.tau_urgent defn P d Q hQ
 
+/-! ## Inversion lemmas for delay transitions (Table 9.1) -/
+
+section Inversion
+variable {Name K : Type*} {defn : K → TCCS Name K}
+
+/-- Inversion for a delay of a delay-prefix: either the prefix counts down (`t ≤ d`,
+reaching `ε(d−t).P`), or it is fully consumed and the body proceeds (`t = d + d'`). -/
+theorem tDelay_eps_iff {d t : ℝ≥0} {P Q : TCCS Name K} :
+    TDelay defn (.eps d P) t Q ↔
+      (t ≤ d ∧ Q = .eps (d - t) P) ∨ (∃ d', t = d + d' ∧ TDelay defn P d' Q) := by
+  constructor
+  · intro h
+    cases h with
+    | epsConsume hP => exact Or.inr ⟨_, rfl, hP⟩
+    | epsPartial hle => exact Or.inl ⟨hle, rfl⟩
+  · rintro (⟨hle, rfl⟩ | ⟨d', rfl, hP⟩)
+    · exact TDelay.epsPartial hle
+    · exact TDelay.epsConsume hP
+
+/-- Inversion for a delay of a choice: both summands delay by the same amount. -/
+theorem tDelay_choice_iff {P Q R : TCCS Name K} {t : ℝ≥0} :
+    TDelay defn (.choice P Q) t R ↔
+      ∃ P' Q', TDelay defn P t P' ∧ TDelay defn Q t Q' ∧ R = .choice P' Q' := by
+  constructor
+  · intro h; cases h with | choice hP hQ => exact ⟨_, _, hP, hQ, rfl⟩
+  · rintro ⟨P', Q', hP, hQ, rfl⟩; exact TDelay.choice hP hQ
+
+/-- Inversion for a delay of a constant: it delays exactly as its body. -/
+theorem tDelay_const_iff {Kc : K} {t : ℝ≥0} {Q : TCCS Name K} :
+    TDelay defn (.const Kc) t Q ↔ TDelay defn (defn Kc) t Q := by
+  constructor
+  · intro h; cases h with | con hP => exact hP
+  · exact TDelay.con
+
+/-- Inversion for a delay of an action-prefix: only non-`τ` prefixes delay, and they
+idle in place (maximal progress makes `τ` urgent). -/
+theorem tDelay_pre_iff {α : Act Name} {P Q : TCCS Name K} {t : ℝ≥0} :
+    TDelay defn (.pre α P) t Q ↔ α ≠ Act.tau ∧ Q = .pre α P := by
+  constructor
+  · intro h; cases h with | prePatient hα _ => exact ⟨hα, rfl⟩
+  · rintro ⟨hα, rfl⟩; exact TDelay.prePatient hα t
+
+end Inversion
+
 end DeepWiki.ReactiveSystems
