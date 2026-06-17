@@ -9,6 +9,7 @@ import Mathlib.Order.Bounds.Basic
 import Mathlib.Order.CompleteLattice.Basic
 import Mathlib.Order.Iterate
 import Mathlib.Order.OrderIsoNat
+import Mathlib.Order.OmegaCompletePartialOrder
 import Mathlib.Data.Set.Insert
 import Mathlib.Data.ENNReal.Basic
 import Mathlib.Tactic.FinCases
@@ -70,6 +71,20 @@ Theorem 4.2: for an ω-(Scott-)continuous monotone map on a complete lattice the
 least fixed point is `⨆ₙ fⁿ(⊥)`. (Not a separately-numbered book item; the §4.2
 iterative algorithm.) Reuses Mathlib's `fixedPoints.lfp_eq_sSup_iterate`. -/
 alias kleene_lfp_eq_iSup_iterate := fixedPoints.lfp_eq_sSup_iterate
+
+/-- **Exercise 4.10(1)** (§4.2, p.83). If `(D, ⊑)` is a cpo and `f` is
+ω-(Scott-)continuous, then the fixed points `{x | f x = x}` form a cpo: an ω-chain
+of fixed points has a least upper bound (its `ωSup`, which is again a fixed point by
+continuity). Built on Mathlib's `OmegaCompletePartialOrder`. -/
+theorem ex_4_10_1 {D : Type*} [OmegaCompletePartialOrder D] {f : D → D}
+    (hf : OmegaCompletePartialOrder.ωScottContinuous f) :
+    Nonempty (OmegaCompletePartialOrder {x // f x = x}) :=
+  ⟨OmegaCompletePartialOrder.subtype (fun x => f x = x) (by
+    intro c hc
+    rw [hf.map_ωSup c]
+    congr 1
+    ext n
+    exact hc (c n) ⟨n, rfl⟩)⟩
 
 /-- **Exercise 4.10(3a)** (§4.2, p.84). The supremum of a set of post-fixed
 points (`x ≤ f x`) of a monotone map is again a post-fixed point. -/
