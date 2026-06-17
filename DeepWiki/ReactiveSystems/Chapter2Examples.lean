@@ -62,19 +62,22 @@ theorem fig26_p_not_reach_p2 : ¬ fig26.Reachable .p .p2 := by
 inductive SmuniName | coin | coffee | pub
   deriving DecidableEq
 
-/-- Constants: coffee machine `CM`/`CM1` and student `CS`/`CS1`/`CS2`. -/
-inductive SmuniK | CM | CM1 | CS | CS1 | CS2
+/-- Constants: coffee machine `CM`/`CM1`, student `CS`/`CS1`/`CS2`, and the
+publication specification `Spec` (§3.4). -/
+inductive SmuniK | CM | CM1 | CS | CS1 | CS2 | Spec
   deriving DecidableEq
 
 /-- §2.1 environment: `CM ≝ coin.CM₁`, `CM₁ ≝ c̄offee.CM`; `CS ≝ pub.CS₁`,
 `CS₁ ≝ c̄oin.CS₂`, `CS₂ ≝ coffee.CS`. The machine inputs the coin and outputs the
-coffee; the student does the complementary actions (plus the free `pub`). -/
+coffee; the student does the complementary actions (plus the free `pub`). The
+specification `Spec ≝ pub.Spec` (§3.4) just publishes repeatedly. -/
 def smuniDefn : SmuniK → CCS SmuniName SmuniK
   | .CM => .pre (.name .coin) (.const .CM1)
   | .CM1 => .pre (.coname .coffee) (.const .CM)
   | .CS => .pre (.name .pub) (.const .CS1)
   | .CS1 => .pre (.coname .coin) (.const .CS2)
   | .CS2 => .pre (.name .coffee) (.const .CS)
+  | .Spec => .pre (.name .pub) (.const .Spec)
 
 /-- The restricted channels `L = {coin, coffee}` (their co-names are blocked
 through the `α.co ∉ L` side of RES; `pub` and `τ` pass). -/

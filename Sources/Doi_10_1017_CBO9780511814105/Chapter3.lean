@@ -15,6 +15,7 @@ import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
 import DeepWiki.ReactiveSystems.Chapter3Examples
 import DeepWiki.ReactiveSystems.Chapter3WeakBisim
+import DeepWiki.ReactiveSystems.Chapter3SmUniSpec
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
@@ -558,6 +559,14 @@ theorem ex_3_20 {Name K : Type*} (defn : K → CCS Name K) (a₀ : Name) :
         DeepWiki.ReactiveSystems.Act.tau]
       CCS.pre (DeepWiki.ReactiveSystems.Act.name a₀) (CCS.pre DeepWiki.ReactiveSystems.Act.tau CCS.nil) :=
   (DeepWiki.ReactiveSystems.tau_law_1 defn CCS.nil).symm
+
+/-- **Exercise 3.20** (§3.4, p.58), the `SmUni ≈ Spec` claim: the Small University
+`(CM ∣ CS) ∖ {coin, coffee}` is observationally equivalent to `Spec ≝ pub.Spec`
+(its two internal handshakes are unobservable). The library's `ex_3_20_smuni`. -/
+theorem ex_3_20_smuni :
+    DeepWiki.ReactiveSystems.smUni ≈[ccsLTS DeepWiki.ReactiveSystems.smuniDefn,
+      DeepWiki.ReactiveSystems.Act.tau] DeepWiki.ReactiveSystems.smSpec :=
+  DeepWiki.ReactiveSystems.ex_3_20_smuni
 
 /-- **Exercise 3.25** (§3.4, p.60). `s ≈ t`, witnessed by the weak bisimulation
 `{(s,t),(s₁,t),(s₂,t),(s₃,t₂),(s₄,t₃),(s₅,t₁)}`. The library's `ex_3_25`. -/
