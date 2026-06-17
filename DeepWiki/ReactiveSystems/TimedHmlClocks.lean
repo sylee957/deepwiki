@@ -65,44 +65,87 @@ def MtEquiv (F G : Mt Act D) : Prop :=
 /-- `≡` is reflexive: `F ≡ F`. -/
 @[refl] theorem MtEquiv.refl (F : Mt Act D) : MtEquiv F F := fun _ _ _ => Iff.rfl
 
-/-- Timed-bisimilar states satisfy the same `Mt` formula under every
-formula-clock valuation (one implication). The reset and guard cases touch only
-the formula clocks, so they transfer for free; the modal cases use timed
-bisimilarity. -/
-theorem timedBisimilar_mtSat {T : TLTS Proc Act} (F : Mt Act D) :
-    ∀ {p q} (u : Valuation D), TimedBisimilar T p q → MtSat T p u F → MtSat T q u F := by
+/-- `R` is an **`Mt`-bisimulation** on extended states `(p, u)`: the valuations agree
+on every guard and survive a clock reset, action moves are matched (valuation
+unchanged), and delay moves are matched by *some* delay (each side advancing its own
+valuation). This is the back-and-forth that preserves `Mt` satisfaction; unlike timed
+bisimilarity it lets the two sides delay by *different* amounts — matching the logic's
+`∃∃`/`∀∀`, which never measure a duration directly. -/
+def IsMtBisimulation (T : TLTS Proc Act)
+    (R : Proc → Valuation D → Proc → Valuation D → Prop) : Prop :=
+  ∀ ⦃p u q u'⦄, R p u q u' →
+    (∀ g : ClockConstraint D, satisfies u g ↔ satisfies u' g) ∧
+    (∀ x, R p (Valuation.reset {x} u) q (Valuation.reset {x} u')) ∧
+    (∀ a p', T.act p a p' → ∃ q', T.act q a q' ∧ R p' u q' u') ∧
+    (∀ a q', T.act q a q' → ∃ p', T.act p a p' ∧ R p' u q' u') ∧
+    (∀ d p', T.delay p d p' → ∃ d' q', T.delay q d' q' ∧ R p' (u.add d) q' (u'.add d')) ∧
+    (∀ d q', T.delay q d q' → ∃ d' p', T.delay p d' p' ∧ R p' (u.add d') q' (u'.add d))
+
+/-- **`Mt`-bisimulation soundness.** Extended states related by an `Mt`-bisimulation
+satisfy exactly the same `Mt` formulae. -/
+theorem IsMtBisimulation.mtSat {T : TLTS Proc Act}
+    {R : Proc → Valuation D → Proc → Valuation D → Prop} (hR : IsMtBisimulation T R) :
+    ∀ (F : Mt Act D) {p u q u'}, R p u q u' → (MtSat T p u F ↔ MtSat T q u' F) := by
+  intro F
   induction F with
-  | tt => exact fun _ _ _ => trivial
-  | ff => exact fun _ _ h => h
-  | and F G ihF ihG => exact fun u hb hp => ⟨ihF u hb hp.1, ihG u hb hp.2⟩
-  | or F G ihF ihG => exact fun u hb hp => hp.imp (ihF u hb) (ihG u hb)
+  | tt => intro _ _ _ _ _; exact Iff.rfl
+  | ff => intro _ _ _ _ _; exact Iff.rfl
+  | and F G ihF ihG => intro _ _ _ _ h; exact and_congr (ihF h) (ihG h)
+  | or F G ihF ihG => intro _ _ _ _ h; exact or_congr (ihF h) (ihG h)
+  | guard g => intro _ _ _ _ h; exact (hR h).1 g
+  | reset x F ihF => intro _ _ _ _ h; exact ihF ((hR h).2.1 x)
   | dia a F ihF =>
-      intro p q u hb hp
-      obtain ⟨p', hstep, hsat⟩ := hp
-      obtain ⟨q', hq', hb'⟩ := ((timedBisimilar_iff T p q).mp hb).1 a p' hstep
-      exact ⟨q', hq', ihF u hb' hsat⟩
+      intro _ _ _ _ h
+      refine ⟨fun hp => ?_, fun hq => ?_⟩
+      · obtain ⟨p', hstep, hsat⟩ := hp
+        obtain ⟨q', hq', hr⟩ := (hR h).2.2.1 a p' hstep
+        exact ⟨q', hq', (ihF hr).mp hsat⟩
+      · obtain ⟨q', hstep, hsat⟩ := hq
+        obtain ⟨p', hp', hr⟩ := (hR h).2.2.2.1 a q' hstep
+        exact ⟨p', hp', (ihF hr).mpr hsat⟩
   | box a F ihF =>
-      intro p q u hb hp q' hq'
-      obtain ⟨p', hp', hb'⟩ := ((timedBisimilar_iff T p q).mp hb).2.1 a q' hq'
-      exact ihF u hb' (hp p' hp')
+      intro _ _ _ _ h
+      refine ⟨fun hp q' hq' => ?_, fun hq p' hp' => ?_⟩
+      · obtain ⟨p', hp', hr⟩ := (hR h).2.2.2.1 a q' hq'
+        exact (ihF hr).mp (hp p' hp')
+      · obtain ⟨q', hq', hr⟩ := (hR h).2.2.1 a p' hp'
+        exact (ihF hr).mpr (hq q' hq')
   | existsDelay F ihF =>
-      intro p q u hb hp
-      obtain ⟨d, p', hstep, hsat⟩ := hp
-      obtain ⟨q', hq', hb'⟩ := ((timedBisimilar_iff T p q).mp hb).2.2.1 d p' hstep
-      exact ⟨d, q', hq', ihF (u.add d) hb' hsat⟩
+      intro _ _ _ _ h
+      refine ⟨fun hp => ?_, fun hq => ?_⟩
+      · obtain ⟨d, p', hstep, hsat⟩ := hp
+        obtain ⟨d', q', hq', hr⟩ := (hR h).2.2.2.2.1 d p' hstep
+        exact ⟨d', q', hq', (ihF hr).mp hsat⟩
+      · obtain ⟨d, q', hstep, hsat⟩ := hq
+        obtain ⟨d', p', hp', hr⟩ := (hR h).2.2.2.2.2 d q' hstep
+        exact ⟨d', p', hp', (ihF hr).mpr hsat⟩
   | forallDelay F ihF =>
-      intro p q u hb hp d q' hq'
-      obtain ⟨p', hp', hb'⟩ := ((timedBisimilar_iff T p q).mp hb).2.2.2 d q' hq'
-      exact ihF (u.add d) hb' (hp d p' hp')
-  | reset x F ihF => exact fun u hb hp => ihF (Valuation.reset {x} u) hb hp
-  | guard g => exact fun _ _ hp => hp
+      intro _ _ _ _ h
+      refine ⟨fun hp d q' hq' => ?_, fun hq d p' hp' => ?_⟩
+      · obtain ⟨d', p', hp', hr⟩ := (hR h).2.2.2.2.2 d q' hq'
+        exact (ihF hr).mp (hp d' p' hp')
+      · obtain ⟨d', q', hq', hr⟩ := (hR h).2.2.2.2.1 d p' hp'
+        exact (ihF hr).mpr (hq d' q' hq')
+
+/-- Timed bisimilarity (with equal formula valuations) is an `Mt`-bisimulation. -/
+theorem timedBisimilar_isMtBisimulation (T : TLTS Proc Act) :
+    IsMtBisimulation T
+      (fun (p : Proc) (u : Valuation D) (q : Proc) (u' : Valuation D) =>
+        TimedBisimilar T p q ∧ u = u') := by
+  rintro p u q u' ⟨hb, rfl⟩
+  obtain ⟨ha1, ha2, hd1, hd2⟩ := (timedBisimilar_iff T p q).mp hb
+  refine ⟨fun _ => Iff.rfl, fun _ => ⟨hb, rfl⟩, ?_, ?_, ?_, ?_⟩
+  · intro a p' hstep; obtain ⟨q', hq', hb'⟩ := ha1 a p' hstep; exact ⟨q', hq', hb', rfl⟩
+  · intro a q' hstep; obtain ⟨p', hp', hb'⟩ := ha2 a q' hstep; exact ⟨p', hp', hb', rfl⟩
+  · intro d p' hstep; obtain ⟨q', hq', hb'⟩ := hd1 d p' hstep; exact ⟨d, q', hq', hb', rfl⟩
+  · intro d q' hstep; obtain ⟨p', hp', hb'⟩ := hd2 d q' hstep; exact ⟨d, p', hp', hb', rfl⟩
 
 /-- **Soundness for `Mt`**. Timed-bisimilar states satisfy the same `Mt`
-formulae at every formula-clock valuation. -/
+formulae at every formula-clock valuation (via `Mt`-bisimulation soundness). -/
 theorem timedBisimilar_mtIff {T : TLTS Proc Act} {p q : Proc}
     (h : TimedBisimilar T p q) (u : Valuation D) (F : Mt Act D) :
     MtSat T p u F ↔ MtSat T q u F :=
-  ⟨timedBisimilar_mtSat F u h, timedBisimilar_mtSat F u h.symm⟩
+  (timedBisimilar_isMtBisimulation T).mtSat F ⟨h, rfl⟩
 
 /-- **Soundness for `Mt`** at the state level: timed-bisimilar
 states satisfy the same `Mt` formulae. -/
