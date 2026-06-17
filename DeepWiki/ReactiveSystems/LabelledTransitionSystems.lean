@@ -59,6 +59,15 @@ theorem reachable_tail (L : LTS Proc Act) {p q r : Proc} {a : Act}
 action set are finite. -/
 def IsFinite (_L : LTS Proc Act) : Prop := Finite Proc ∧ Finite Act
 
+/-- The LTS built from a `Bool`-valued edge relation: `p —a→ q` iff `e p a q`.
+Reducible so finite example LTSs built with it keep decidable step facts. -/
+@[reducible] def ofBool (e : Proc → Act → Proc → Bool) : LTS Proc Act :=
+  ⟨fun p a q => e p a q = true⟩
+
+/-- `(ofBool e).step p a q ↔ e p a q = true`: the step relation of a `Bool`-edge LTS. -/
+@[simp] theorem ofBool_step (e : Proc → Act → Proc → Bool) (p : Proc) (a : Act) (q : Proc) :
+    (ofBool e).step p a q ↔ e p a q = true := Iff.rfl
+
 end LTS
 
 end DeepWiki.ReactiveSystems

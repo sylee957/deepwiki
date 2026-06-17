@@ -39,7 +39,7 @@ def edge35 : S35 → A35 → S35 → Bool
   | _, _, _ => false
 
 /-- The LTS with the two state machines side by side. -/
-def lts35 : LTS S35 A35 := ⟨fun p x q => edge35 p x q = true⟩
+def lts35 : LTS S35 A35 := .ofBool edge35
 
 /-- The witnessing relation `{(s,t),(s₁,t₁),(s₂,t₃),(s₃,t₂),(s₄,t₂),(s₄,t₄)}`. -/
 def rel35 : S35 → S35 → Bool
@@ -131,7 +131,7 @@ def edge37 : S37 → A35 → S37 → Bool
   | _, _, _ => false
 
 /-- The LTS (reducible, so step facts are decidable). -/
-abbrev lts37 : LTS S37 A35 := ⟨fun p x q => edge37 p x q = true⟩
+abbrev lts37 : LTS S37 A35 := .ofBool edge37
 
 /-- The witness `{(s,u),(s₁,u₁),(s₂,u₃),(s₂,u₂)}` for `s ~ u`. -/
 def rel37 : S37 → S37 → Bool

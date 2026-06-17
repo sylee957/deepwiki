@@ -100,7 +100,7 @@ def edge57 : S57 → A57 → S57 → Bool
   | _, _, _ => false
 
 /-- The witnessing LTS (reducible, so satisfaction is decidable). -/
-abbrev lts57 : LTS S57 A57 := ⟨fun p x q => edge57 p x q = true⟩
+abbrev lts57 : LTS S57 A57 := .ofBool edge57
 
 /-- The state `s` satisfies all three formulae:
 `⟨a⟩(⟨b⟩⟨c⟩tt ∧ ⟨c⟩tt)`, `⟨a⟩⟨b⟩([a]ff ∧ [b]ff ∧ [c]ff)`, and

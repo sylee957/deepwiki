@@ -30,7 +30,7 @@ def edge62 : S62 → Lab62 → S62 → Bool
   | _, _, _ => false
 
 /-- The three-state LTS (reducible for decidability). -/
-abbrev L62 : LTS S62 Lab62 := ⟨fun p x q => edge62 p x q = true⟩
+abbrev L62 : LTS S62 Lab62 := .ofBool edge62
 
 /-- `O_{[b]ff ∧ [a]X}({p₂}) = {p₂}`: a single
 evaluation of the semantic functional (no fixed point). -/
@@ -101,8 +101,8 @@ def L67 : LTS S67 Lab62 := ⟨Step67⟩
 /-- `X =ν ⟨b⟩tt ∧ [b]X`. -/
 def F67 : HMLR Lab62 := .and (.dia .b .tt) (.box .b .var)
 
-/-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y`. -/
-def FY67 : HMLR Lab62 := .or (.dia .b .tt) (.or (.dia .a .var) (.dia .b .var))
+/-- `Y =μ ⟨b⟩tt ∨ ⟨{a,b}⟩Y` (the same formula as `FY66`). -/
+abbrev FY67 : HMLR Lab62 := FY66
 
 /-- `s₁ ⊨ X =ν ⟨b⟩tt ∧ [b]X`: `{s₁, s₂}` is a
 post-fixed point (each has a `b`-move staying inside). -/

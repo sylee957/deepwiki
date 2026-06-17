@@ -38,7 +38,7 @@ def edge325 : St325 → A325 → St325 → Bool
   | _, _, _ => false
 
 /-- The LTS (reducible, so step facts are decidable). -/
-abbrev lts325 : LTS St325 A325 := ⟨fun p x q => edge325 p x q = true⟩
+abbrev lts325 : LTS St325 A325 := .ofBool edge325
 
 /-! ## The silent (`τ*`) reachabilities used to build the weak transitions -/
 

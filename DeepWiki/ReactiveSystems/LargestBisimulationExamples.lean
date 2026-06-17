@@ -29,7 +29,7 @@ def edge412 : E37S → E37A → E37S → Bool
   | _, _, _ => false
 
 /-- The LTS (reducible, so step facts are decidable). -/
-abbrev e37 : LTS E37S E37A := ⟨fun p x q => edge412 p x q = true⟩
+abbrev e37 : LTS E37S E37A := .ofBool edge412
 
 /-- In this LTS, `s ≁ t`: the attacker
 plays `s —a→ s₁` (forcing `t —a→ t₁`), then `t₁ —b→ t₁` (forcing `s₁ —b→ s₃`),
@@ -64,7 +64,7 @@ def edge411 : P411 → A411 → P411 → Bool
   | _, _, _ => false
 
 /-- The `P₁..P₅` LTS. -/
-abbrev lts411 : LTS P411 A411 := ⟨fun p x q => edge411 p x q = true⟩
+abbrev lts411 : LTS P411 A411 := .ofBool edge411
 
 /-- The candidate largest bisimulation `{(P₁,P₂),(P₂,P₁)} ∪ Δ`. -/
 def rel411 : P411 → P411 → Bool

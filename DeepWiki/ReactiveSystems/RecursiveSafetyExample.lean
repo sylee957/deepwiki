@@ -29,7 +29,7 @@ def edge713 : S713 → Lab713 → S713 → Bool
   | _, _, _ => false
 
 /-- The recursive-safety LTS (reducible, so step facts are decidable). -/
-abbrev L713 : LTS S713 Lab713 := ⟨fun u y v => edge713 u y v = true⟩
+abbrev L713 : LTS S713 Lab713 := .ofBool edge713
 
 /-- `F =ν [a]ff ∧ [b]F`: no `a` now, and the property persists through every `b`. -/
 def F713 : HMLR Lab713 := .and (.box .a .ff) (.box .b .var)

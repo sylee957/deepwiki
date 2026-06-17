@@ -30,7 +30,7 @@ def edge61 : P61 → A61 → P61 → Bool
 
 /-- The LTS (reducible, so the characteristic-formula machinery has
 its decidable-step instance and step facts are decidable). -/
-abbrev L61 : LTS P61 A61 := ⟨fun u y v => edge61 u y v = true⟩
+abbrev L61 : LTS P61 A61 := .ofBool edge61
 
 /-- A state with an outgoing `a` is never bisimilar to the dead `r`. -/
 theorem not_bisim_r {x x' : P61} (h : L61.step x A61.a x') : ¬ (x ~[L61] P61.r) :=
