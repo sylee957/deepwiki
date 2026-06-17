@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 12.3 — equivalences between `Mₜ` formulae
+/-! # Algebraic equivalences between `Mₜ` formulae
 The algebraic equivalences of Exercise 12.3 that hold by the satisfaction clauses
 alone: `y in (y = 0) ≡ tt` and `y in (y > 0) ≡ ff` (a just-reset clock is exactly
 `0`); `[a]tt ≡ tt`; and reset commutation `x in (y in F) ≡ y in (x in F)`. (Part 2,

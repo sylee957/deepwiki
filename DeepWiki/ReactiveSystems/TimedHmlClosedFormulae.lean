@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 12.1 — closed `Mₜ` formulae are valuation-independent
+/-! # Closed `Mₜ` formulae are valuation-independent
 A formula `F ∈ Mₜ` is *closed* when every formula clock occurring in a guard is
 within the scope of a reset `x in ·` that binds it. For a closed `F`, satisfaction
 `(p, u) ⊨ F` does not depend on the formula-clock valuation `u`; for non-closed

@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
 import DeepWiki.ReactiveSystems.CcsProcessGraph
 import DeepWiki.ReactiveSystems.CcsBuffer
-import DeepWiki.ReactiveSystems.Chapter2Examples
+import DeepWiki.ReactiveSystems.SmallUniversity
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 2: The language CCS

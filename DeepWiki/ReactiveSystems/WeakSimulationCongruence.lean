@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.SimulationWeak
 import DeepWiki.ReactiveSystems.Ccs
 
-/-! # Exercise 7.10 — choice congruence of the weak-simulation preorder
+/-! # Choice congruence of the weak-simulation preorder
 If `Q` weakly simulates `P`, then `Q + R` weakly simulates both `P` and `P + R`,
 for every CCS process `R`. The witnessing weak simulations extend the given one
 `S` (with `S P Q`) by relating to `Q + R` everything `S`-related to `Q` — this

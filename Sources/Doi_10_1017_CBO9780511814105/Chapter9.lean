@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCCS
-import DeepWiki.ReactiveSystems.Chapter9Examples
-import DeepWiki.ReactiveSystems.Chapter9LightTimed
+import DeepWiki.ReactiveSystems.TimedCcsDelayExamples
+import DeepWiki.ReactiveSystems.TimedLightSwitch
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 9: CCS with time delays

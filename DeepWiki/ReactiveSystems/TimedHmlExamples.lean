@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
 import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 
-/-! # Untimed bisimilarity does not preserve timed-HML (Exercise 12.13)
+/-! # Untimed bisimilarity does not preserve timed HML
 Theorem 12.3 (timed-bisimilar states satisfy the same `Mt` formulae) would *fail*
 if we only assumed *untimed* bisimilarity. The `√`-free witness is the §11.2 TLTS
 (`witnessTLTS`): `A` and `B` are untimed bisimilar, but the formula

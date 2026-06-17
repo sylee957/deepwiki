@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import Mathlib.Tactic.DeriveFintype
 
-/-! # Exercise 3.25 — a weak bisimulation showing `s ≈ t`
+/-! # A weak bisimulation showing `s ≈ t`
 The LTS: left component `s ⇄ s₁ ⇄ s₂` (a `τ`-cycle), with `s —a→ s₃`, `s₁ —b→ s₄`,
 `s₂ —τ→ s₅` (`s₃,s₄,s₅` dead); right component `t —τ→ t₁` (with `t₁ —τ→ t₁`),
 `t —a→ t₂`, `t —b→ t₃` (`t₁,t₂,t₃` dead). The relation

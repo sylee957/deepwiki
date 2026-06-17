@@ -3,9 +3,9 @@ import DeepWiki.ReactiveSystems.TimedHennessyMilnerClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
-import DeepWiki.ReactiveSystems.Chapter12Examples
-import DeepWiki.ReactiveSystems.Chapter12Closed
-import DeepWiki.ReactiveSystems.Chapter12Equiv
+import DeepWiki.ReactiveSystems.TimedHmlExamples
+import DeepWiki.ReactiveSystems.TimedHmlClosedFormulae
+import DeepWiki.ReactiveSystems.TimedHmlEquivalences
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time

@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.BisimulationQuotient
 
-/-! # Definition 11.6 — timed bisimilarity of timed automata
+/-! # Timed bisimilarity lifted to whole timed automata
 Lifting timed bisimilarity (Definition 11.5, on TLTS states) to whole automata: two
 timed automata are timed bisimilar iff their initial states (all clocks zero) are
 timed bisimilar in the *union* of the timed transition systems they generate. -/

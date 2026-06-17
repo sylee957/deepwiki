@@ -7,8 +7,8 @@ import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
-import DeepWiki.ReactiveSystems.Chapter11Examples
-import DeepWiki.ReactiveSystems.Chapter11TaTimedBisim
+import DeepWiki.ReactiveSystems.TimedLanguageExample
+import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences

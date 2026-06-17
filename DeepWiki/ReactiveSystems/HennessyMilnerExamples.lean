@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.Ccs
 import Mathlib.Tactic.DeriveFintype
 
-/-! # Distinguishing HML formulae (Exercise 5.5)
+/-! # Distinguishing Hennessy–Milner formulae and the everlasting clock
 Two pairs of finite CCS processes that are *not* bisimilar, each separated by an
 explicit HML formula (over the alphabet `Fin 4`, `a = 0, b = 1, c = 2, d = 3`):
 `⟨a⟩[b]ff` separates `a.b.0 + a.c.0` from `a.(b.0 + c.0)`, and `⟨a⟩[b]⟨c⟩tt`

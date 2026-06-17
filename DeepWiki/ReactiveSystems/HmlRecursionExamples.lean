@@ -3,7 +3,7 @@ import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import Mathlib.Tactic.DeriveFintype
 import Mathlib.Data.Set.Insert
 
-/-! # HML-with-recursion computations (Exercises 6.4, 6.16, 6.17)
+/-! # HML-with-recursion fixed-point computations
 Concrete evaluations of the semantic functional `O_F = denotR` and of
 `LivelockNow` (greatest solution of `X =ν ⟨τ⟩X`) on small LTSs. -/
 

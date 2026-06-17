@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.HmlRecursion
 import Mathlib.Tactic.DeriveFintype
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 7.13 — the recursive safety property `F =ν [a]ff ∧ [b]F`
+/-! # The recursive safety property `F =ν [a]ff ∧ [b]F`
 The LTS `p ↺b`, `q —b→ p`, `q —b→ r`, `q —a→ s`, `r ↺b`, `s` dead. The greatest
 solution of `F =ν [a]ff ∧ [b]F` (no `a` is reachable along any `b`-path) is
 `{p, r, s}`: only `q` can perform `a`. -/

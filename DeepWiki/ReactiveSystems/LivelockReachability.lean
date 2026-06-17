@@ -1,7 +1,7 @@
-import DeepWiki.ReactiveSystems.Chapter6Examples
+import DeepWiki.ReactiveSystems.HmlRecursionExamples
 import Mathlib.Order.FixedPoints
 
-/-! # Exercise 6.18 — reachability of a livelock via the `Pos` template
+/-! # Reachability of a livelock via the `Pos` least-fixed-point template
 `Pos(F) =μ F ∨ ⟨Act⟩Pos(F)` describes the states from which a state satisfying `F`
 is reachable. Per the stratified reading of (6.17) (solve the `ν`-block
 `LivelockNow` first, then the `μ`-block `Pos` over it as a constant), the formula

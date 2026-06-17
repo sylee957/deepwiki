@@ -3,7 +3,7 @@ import DeepWiki.ReactiveSystems.Bisimulation
 import Mathlib.Tactic.DeriveFintype
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 6.13 — characteristic formulae for Figure 6.1
+/-! # Characteristic formulae pin a process up to bisimilarity
 Figure 6.1 is the LTS `p —a→ p`, `q —a→ q`, `q —a→ r` (`r` dead). The three states
 are pairwise non-bisimilar (`p` loops forever, `q` may reach the dead `r`, `r` is
 dead), so each characteristic formula `charSys` pins down exactly its own state:

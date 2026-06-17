@@ -1,8 +1,8 @@
-import DeepWiki.ReactiveSystems.Chapter2Examples
+import DeepWiki.ReactiveSystems.SmallUniversity
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 3.20 — `Start ≉ Spec`
+/-! # `Start ≉ Spec`: a faulty coffee machine fails its specification
 With a *faulty* coffee machine `CMb ≝ coin.coffeē.CMb + coin.CMb` (it may pocket the
 coin without delivering coffee), the process `Start = (CMb ∣ CS) ∖ {coin, coffee}`
 can, after publishing once, silently reach the **deadlocked** state

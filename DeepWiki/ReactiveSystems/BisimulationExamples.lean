@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import Mathlib.Tactic.DeriveFintype
 
-/-! # Concrete bisimulation examples of Chapter 3 (Exercises 3.5, 3.8)
+/-! # Concrete strong-bisimulation examples on finite LTSs
 A finite LTS with a decidable step relation makes `IsBisimulation` decidable, so a
 witness bisimulation is checked by `decide`. Exercise 3.5 exhibits `s ~ t`;
 Exercise 3.8 exhibits strong bisimulations that are not reflexive / symmetric /

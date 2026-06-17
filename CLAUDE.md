@@ -230,9 +230,13 @@ not just defaults):
   four `*_of_*` inversion lemmas).
 
 - **The library is book-number-free; book numbers live ONLY in `Sources/`.**
-  No declaration under `DeepWiki/<Topic>/` may be named after a book pointer
-  (`ex_3_25`, `thm_7_1`, `prop_7_2_if`, `def_9_2`, `eq_9_4`, or any
-  `…_<chapter>_<item>` book index). Name library declarations *semantically* for
+  Neither a declaration NOR a module/file under `DeepWiki/<Topic>/` may be named
+  after a book pointer — not `ex_3_25`/`thm_7_1`/`prop_7_2_if`/`def_9_2`/`eq_9_4`
+  (decls), and not `Chapter2Examples`/`Chapter12Closed` (modules). Library modules
+  are concept-named like the theory files (`ExpansionLaw`, `WeakBisimulationExample`,
+  `TimedLightSwitch`, `CharacteristicFormulaExample`) with the module-docstring title
+  matching; `Chapter<N>.lean` is the *catalog* (`Sources/`) file-naming, never the
+  library's. Name library declarations *semantically* for
   what they state — including example/exercise content (a worked exercise is a
   theorem about concrete objects, so name it after those objects and the claim:
   `s325_weaklyBisimilar_t`, `e37_s_not_bisim_t`, `expansionLaw`, `lightDelay`).

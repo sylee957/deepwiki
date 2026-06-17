@@ -1,9 +1,9 @@
 import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.Bisimulation
 import DeepWiki.ReactiveSystems.Ccs
-import DeepWiki.ReactiveSystems.Chapter5Examples
+import DeepWiki.ReactiveSystems.HennessyMilnerExamples
 
-/-! # Exercise 5.11 — bisimilarity of CCS expressions, and distinguishing formulae
+/-! # The expansion law `a.0 ∣ b.0 ~ a.b.0 + b.a.0` and distinguishing formulae
 Over the alphabet `Fin 4` (`a = 0, b = 1, c = 2, d = 3`), no constants:
 - `b.a.0 + b.0 ≁ b.(a.0 + b.0)`, separated by `⟨b⟩⟨b⟩tt`;
 - `a.(b.c.0 + b.d.0) ≁ a.b.c.0 + a.b.d.0` (the second pair of Exercise 5.5);

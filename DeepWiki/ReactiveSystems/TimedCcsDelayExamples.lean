@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedCCS
 
-/-! # Exercise 9.6 — which TCCS agents can delay by 4?
+/-! # Which timed-CCS agents can delay by 4
 Four recursive TCCS agents (`a, b` visible, `τ` silent):
 `M₁ ≝ ε(3).(ε(2).a.M₁ + b.M₁)`, `M₂ ≝ ε(5).a.M₂ + ε(3).b.M₂`,
 `M₃ ≝ ε(3).(ε(2).a.M₃ + τ.M₃)`, `M₄ ≝ ε(5).a.M₄ + ε(3).τ.M₄`.

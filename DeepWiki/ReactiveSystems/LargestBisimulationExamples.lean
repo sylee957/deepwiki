@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.Bisimulation
 import Mathlib.Tactic.DeriveFintype
 
-/-! # Example 3.7 — `s ≁ t` (Exercise 4.12)
+/-! # Largest-bisimulation and non-bisimilarity examples on finite LTSs
 The Example 3.7 LTS: `s —a→ s₁/s₂`, `s₁ —b→ s₃`; `t —a→ t₁`, `t₁ —b→ t₁/t₂`. The
 attacker wins from `(s, t)`: after `s —a→ s₁ —b→ s₃` the state `s₃` is dead, but
 `t₁` can keep doing `b`, so `s` and `t` are not bisimilar. -/

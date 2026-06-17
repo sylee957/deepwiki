@@ -1,12 +1,12 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.FiniteLatticeIterate
-import DeepWiki.ReactiveSystems.Chapter6Examples
+import DeepWiki.ReactiveSystems.HmlRecursionExamples
 import DeepWiki.ReactiveSystems.HmlRecursionGame
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import DeepWiki.ReactiveSystems.HmlCharacteristic
 import DeepWiki.ReactiveSystems.HmlCharacteristicSyntactic
-import DeepWiki.ReactiveSystems.Chapter6Characteristic
-import DeepWiki.ReactiveSystems.Chapter6PosReach
+import DeepWiki.ReactiveSystems.CharacteristicFormulaExample
+import DeepWiki.ReactiveSystems.LivelockReachability
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 6: HML with recursion

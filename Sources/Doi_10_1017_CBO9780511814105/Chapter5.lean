@@ -1,8 +1,8 @@
 import DeepWiki.ReactiveSystems.HennessyMilner
 import DeepWiki.ReactiveSystems.BisimulationApproxImageFinite
 import DeepWiki.ReactiveSystems.HennessyMilnerSharp
-import DeepWiki.ReactiveSystems.Chapter5Examples
-import DeepWiki.ReactiveSystems.Chapter5ExpansionLaw
+import DeepWiki.ReactiveSystems.HennessyMilnerExamples
+import DeepWiki.ReactiveSystems.ExpansionLaw
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 5: Hennessy–Milner logic

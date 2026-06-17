@@ -1,8 +1,8 @@
-import DeepWiki.ReactiveSystems.Chapter2Examples
+import DeepWiki.ReactiveSystems.SmallUniversity
 import DeepWiki.ReactiveSystems.BisimulationWeak
 import Mathlib.Data.Set.Insert
 
-/-! # Exercise 3.20 — `SmUni ≈ Spec`
+/-! # `SmUni ≈ Spec`: the Small University meets its specification
 The Small University `SmUni = (CM ∣ CS) ∖ {coin, coffee}` is observationally
 equivalent to `Spec ≝ pub.Spec`. Restriction blocks the `coin`/`coffee`
 handshakes, so each of the three reachable states has exactly one transition:

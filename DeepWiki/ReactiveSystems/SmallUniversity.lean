@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.LabelledTransitionSystems
 import DeepWiki.ReactiveSystems.Ccs
 import Mathlib.Data.Set.Insert
 
-/-! # Worked examples of Chapter 2 (Exercises 2.5, 2.7)
+/-! # The Small University — a CCS coffee-machine / publication model
 The concrete labelled transition system of Figure 2.6 (reachability, Exercise
 2.5) and the "Small University" CCS process `SmUni = (CM ∣ CS) ∖ {coin, coffee}`
 (the coffee-machine/student of §2.1, whose LTS is Exercise 2.7). -/

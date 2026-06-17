@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedCCS
 
-/-! # Exercises 9.1–9.2 — the timed light switch
+/-! # The timed light switch: guardedness and a delay transition
 The timed-CCS light switch (eq. 9.1): `Off ≝ press.Light`, `Bright ≝ press.Off`,
 `Light ≝ ε(1.4).τ.press.Off + press.Bright`. It is guarded (Ex 9.1), and from the
 `Light` state a delay of `d ≤ 1.4` counts the delay-prefix down (Ex 9.2). -/

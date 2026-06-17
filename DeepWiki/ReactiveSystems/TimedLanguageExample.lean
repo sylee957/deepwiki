@@ -1,7 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.TimedTraces
 
-/-! # Exercise 11.2 — two timed-language-inequivalent automata
+/-! # Two timed automata: untimed-language equivalent but not timed-equivalent
 The two single-location automata of Example 11.2 (one clock `x`, one action `a`,
 self-loops resetting `x`): automaton (a) has guard `x ≤ 1`, automaton (b) has guard
 `x = 1`. The timed trace `(0, a)` is afforded by (a) but not by (b) — at time `0`

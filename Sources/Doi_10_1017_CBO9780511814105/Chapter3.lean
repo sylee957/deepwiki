@@ -13,10 +13,10 @@ import DeepWiki.ReactiveSystems.CcsTauLaws
 import DeepWiki.ReactiveSystems.CcsStructuralLaws
 import DeepWiki.ReactiveSystems.CcsRestrictionLaws
 import DeepWiki.ReactiveSystems.StringBisimulation
-import DeepWiki.ReactiveSystems.Chapter3Examples
-import DeepWiki.ReactiveSystems.Chapter3WeakBisim
-import DeepWiki.ReactiveSystems.Chapter3SmUniSpec
-import DeepWiki.ReactiveSystems.Chapter3StartSpec
+import DeepWiki.ReactiveSystems.BisimulationExamples
+import DeepWiki.ReactiveSystems.WeakBisimulationExample
+import DeepWiki.ReactiveSystems.SmallUniversitySpec
+import DeepWiki.ReactiveSystems.FaultyMachineSpec
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 3: Behavioural equivalences
