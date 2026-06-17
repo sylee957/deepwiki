@@ -65,10 +65,11 @@ alias bisimilar_eq_gfp := LTS.bisimilar_eq_gfp
 
 /-! ## Solved exercises -/
 
-/-- **Exercise 4.10(1)** (Kleene's fixed-point theorem, §4.2, p.83). For an
-ω-(Scott-)continuous monotone map on a complete lattice, the least fixed point
-is `⨆ₙ fⁿ(⊥)`. Reuses Mathlib's `fixedPoints.lfp_eq_sSup_iterate`. -/
-alias ex_4_10_1 := fixedPoints.lfp_eq_sSup_iterate
+/-- **Kleene's fixed-point theorem** (§4.2, p.83). The continuous strengthening of
+Theorem 4.2: for an ω-(Scott-)continuous monotone map on a complete lattice the
+least fixed point is `⨆ₙ fⁿ(⊥)`. (Not a separately-numbered book item; the §4.2
+iterative algorithm.) Reuses Mathlib's `fixedPoints.lfp_eq_sSup_iterate`. -/
+alias kleene_lfp_eq_iSup_iterate := fixedPoints.lfp_eq_sSup_iterate
 
 /-- **Exercise 4.10(3a)** (§4.2, p.84). The supremum of a set of post-fixed
 points (`x ≤ f x`) of a monotone map is again a post-fixed point. -/
@@ -153,9 +154,11 @@ abbrev thm_4_1_fixedPoints_lattice := @fixedPoints.completeLattice
 /-- **Exercise 4.3** (§4.1). A least upper bound is unique. -/
 alias ex_4_3 := IsLUB.unique
 
-/-- **Exercise 4.10(2)** (§4.2). The greatest fixed point is `⨅ₙ fⁿ(⊤)` (dual of
-Kleene's theorem). Reuses Mathlib's `fixedPoints.gfp_eq_sInf_iterate`. -/
-alias ex_4_10_2 := fixedPoints.gfp_eq_sInf_iterate
+/-- **Kleene's fixed-point theorem** (§4.2, dual). The continuous strengthening of
+Theorem 4.2: on a complete lattice the greatest fixed point of a monotone map is
+`⨅ₙ fⁿ(⊤)`. (Not a separately-numbered book item; the §4.2 iterative algorithm.)
+Reuses Mathlib's `fixedPoints.gfp_eq_sInf_iterate`. -/
+alias kleene_gfp_eq_iInf_iterate := fixedPoints.gfp_eq_sInf_iterate
 
 /-- **Exercise 4.14** (§4.2). The bisimilarity approximants `∼ᵢ = Fⁱ(⊤)`. The
 library's `LTS.bisimApprox`. -/
@@ -196,6 +199,26 @@ powerset `2^ℕ` are exactly the supersets of `{1,2}`: `X ∪ {1,2} = X ↔ {1,2
 (So besides `{1,2}` itself, e.g. `univ` is a fixed point.) -/
 theorem ex_4_6 (X : Set ℕ) : X ∪ {1, 2} = X ↔ {1, 2} ⊆ X := Set.union_eq_left
 
+/-- Exercise 4.7's variant of `f X = X ∪ {1,2}`: identical except it sends `{2}`
+to `{1,2,3}`. -/
+noncomputable def g47 : Set ℕ → Set ℕ :=
+  fun X => if X = {2} then {1, 2, 3} else X ∪ {1, 2}
+
+/-- **Exercise 4.7** (§4.2, p.79). The map `g` (= `f` but `{2} ↦ {1,2,3}`) is **not**
+monotonic: `{2} ⊆ {1,2}` yet `g {2} = {1,2,3} ⊄ {1,2} = g {1,2}`. -/
+theorem ex_4_7 : ¬ Monotone g47 := fun h => by
+  have hsub : ({2} : Set ℕ) ⊆ ({1, 2} : Set ℕ) := by
+    intro x hx; simp only [Set.mem_singleton_iff] at hx; subst hx; simp
+  have e1 : g47 {2} = {1, 2, 3} := if_pos rfl
+  have e2 : g47 ({1, 2} : Set ℕ) = ({1, 2} : Set ℕ) := by
+    unfold g47
+    rw [if_neg (by intro h2; rw [Set.ext_iff] at h2; simpa using (h2 1).mp (by simp))]
+    exact Set.union_self _
+  have hle := h hsub
+  rw [e1, e2] at hle
+  have h3 : (3 : ℕ) ∈ ({1, 2} : Set ℕ) := hle (by simp)
+  simp at h3
+
 /-- The monotone map `g X = (X ∩ {1}) ∪ {2}` on `Set (Fin 3)` (Exercise 4.9). -/
 def g49 : Set (Fin 3) →o Set (Fin 3) where
   toFun X := (X ∩ {1}) ∪ {2}
@@ -221,6 +244,52 @@ theorem ex_4_9_gfp : OrderHom.gfp g49 = {1, 2} := by
     show ({1, 2} : Set (Fin 3)) ⊆ (({1, 2} : Set (Fin 3)) ∩ {1}) ∪ {2}
     intro x hx
     fin_cases x <;> simp_all
+
+open Classical in
+/-- The witness map for Exercise 4.10(2) on the complete lattice `Set (Fin 3)`:
+`f X = univ` once `{0,1} ⊆ X`, else `f X = X` (so `f` is identity below the join
+`{0,1}` and jumps to the top on and above it). -/
+noncomputable def f410 : Set (Fin 3) →o Set (Fin 3) where
+  toFun X := if ({0, 1} : Set (Fin 3)) ⊆ X then Set.univ else X
+  monotone' X Y hXY := by
+    dsimp only
+    by_cases hX : ({0, 1} : Set (Fin 3)) ⊆ X
+    · rw [if_pos hX, if_pos (hX.trans hXY)]
+    · rw [if_neg hX]
+      by_cases hY : ({0, 1} : Set (Fin 3)) ⊆ Y
+      · rw [if_pos hY]; exact le_top
+      · rw [if_neg hY]; exact hXY
+
+open Classical in
+/-- **Exercise 4.10(2)** (§4.2, p.83). On the complete lattice `Set (Fin 3)`, the
+monotone `f410` has `{0}` and `{1}` as fixed points, yet their join
+`{0} ⊔ {1} = {0,1}` is **not** a fixed point (`f410 {0,1} = univ ≠ {0,1}`): the
+join of two fixed points need not be a fixed point. -/
+theorem ex_4_10_2 :
+    ∃ x y : Set (Fin 3),
+      f410 x = x ∧ f410 y = y ∧ f410 (x ⊔ y) ≠ x ⊔ y := by
+  refine ⟨{0}, {1}, ?_, ?_, ?_⟩
+  · -- f410 {0} = {0}: ¬ {0,1} ⊆ {0}
+    show (if ({0, 1} : Set (Fin 3)) ⊆ {0} then Set.univ else {0}) = {0}
+    rw [if_neg]
+    intro h; have h1 : (1 : Fin 3) ∈ ({0} : Set (Fin 3)) := h (by simp)
+    simp only [Set.mem_singleton_iff] at h1; exact absurd h1 (by decide)
+  · -- f410 {1} = {1}: ¬ {0,1} ⊆ {1}
+    show (if ({0, 1} : Set (Fin 3)) ⊆ {1} then Set.univ else {1}) = {1}
+    rw [if_neg]
+    intro h; have h0 : (0 : Fin 3) ∈ ({1} : Set (Fin 3)) := h (by simp)
+    simp only [Set.mem_singleton_iff] at h0; exact absurd h0 (by decide)
+  · -- {0} ⊔ {1} = {0,1}, and f410 {0,1} = univ ≠ {0,1}
+    have hjoin : (({0} : Set (Fin 3)) ⊔ {1}) = {0, 1} := by
+      ext z
+      simp only [Set.sup_eq_union, Set.mem_union, Set.mem_insert_iff, Set.mem_singleton_iff]
+    rw [hjoin]
+    show (if ({0, 1} : Set (Fin 3)) ⊆ {0, 1} then Set.univ else {0, 1}) ≠ {0, 1}
+    rw [if_pos subset_rfl]
+    intro h
+    have h2 : (2 : Fin 3) ∈ ({0, 1} : Set (Fin 3)) := h ▸ Set.mem_univ 2
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at h2
+    rcases h2 with h2 | h2 <;> exact absurd h2 (by decide)
 
 /-- **Exercise 4.12** (§4.3, p.87). On the Example 3.7 LTS the iterative algorithm
 gives `s ≁ t` (the largest bisimulation excludes the pair `(s,t)`): after
