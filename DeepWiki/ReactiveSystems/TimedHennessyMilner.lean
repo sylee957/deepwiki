@@ -42,6 +42,29 @@ def TSat (T : TLTS Proc Act) (p : Proc) : TimedHML Act → Prop
 
 @[inherit_doc] scoped notation:40 p:41 " ⊨ₜ[" T "] " F:41 => TLTS.TSat T p F
 
+/-- `p ⊨ₜ tt` always holds. -/
+@[simp] theorem tsat_tt (T : TLTS Proc Act) (p : Proc) : (p ⊨ₜ[T] TimedHML.tt) ↔ True := Iff.rfl
+/-- `p ⊨ₜ ff` never holds. -/
+@[simp] theorem tsat_ff (T : TLTS Proc Act) (p : Proc) : (p ⊨ₜ[T] TimedHML.ff) ↔ False := Iff.rfl
+/-- `p ⊨ₜ F ∧ G` unfolds to satisfying both conjuncts. -/
+@[simp] theorem tsat_and (T : TLTS Proc Act) (p : Proc) (F G : TimedHML Act) :
+    (p ⊨ₜ[T] F.and G) ↔ (p ⊨ₜ[T] F) ∧ (p ⊨ₜ[T] G) := Iff.rfl
+/-- `p ⊨ₜ F ∨ G` unfolds to satisfying either disjunct. -/
+@[simp] theorem tsat_or (T : TLTS Proc Act) (p : Proc) (F G : TimedHML Act) :
+    (p ⊨ₜ[T] F.or G) ↔ (p ⊨ₜ[T] F) ∨ (p ⊨ₜ[T] G) := Iff.rfl
+/-- `p ⊨ₜ ⟨a⟩F` unfolds to some `a`-successor satisfying `F`. -/
+@[simp] theorem tsat_dia (T : TLTS Proc Act) (p : Proc) (a : Act) (F : TimedHML Act) :
+    (p ⊨ₜ[T] TimedHML.dia a F) ↔ ∃ p', T.act p a p' ∧ (p' ⊨ₜ[T] F) := Iff.rfl
+/-- `p ⊨ₜ [a]F` unfolds to every `a`-successor satisfying `F`. -/
+@[simp] theorem tsat_box (T : TLTS Proc Act) (p : Proc) (a : Act) (F : TimedHML Act) :
+    (p ⊨ₜ[T] TimedHML.box a F) ↔ ∀ p', T.act p a p' → (p' ⊨ₜ[T] F) := Iff.rfl
+/-- `p ⊨ₜ ∃∃F` unfolds to some delay reaching a state satisfying `F`. -/
+@[simp] theorem tsat_existsDelay (T : TLTS Proc Act) (p : Proc) (F : TimedHML Act) :
+    (p ⊨ₜ[T] TimedHML.existsDelay F) ↔ ∃ d p', T.delay p d p' ∧ (p' ⊨ₜ[T] F) := Iff.rfl
+/-- `p ⊨ₜ ∀∀F` unfolds to every delay reaching a state satisfying `F`. -/
+@[simp] theorem tsat_forallDelay (T : TLTS Proc Act) (p : Proc) (F : TimedHML Act) :
+    (p ⊨ₜ[T] TimedHML.forallDelay F) ↔ ∀ d p', T.delay p d p' → (p' ⊨ₜ[T] F) := Iff.rfl
+
 /-- Two states are timed-HML equivalent when they satisfy the same timed
 formulae. -/
 def TimedHMLEquiv (T : TLTS Proc Act) (p q : Proc) : Prop := ∀ F, (p ⊨ₜ[T] F) ↔ (q ⊨ₜ[T] F)

@@ -80,6 +80,30 @@ bisimulation relates them. -/
 def WeaklyTimedBisimilar (T : TLTS Proc Act) (tau : Act) (s s' : Proc) : Prop :=
   ∃ R, IsWeakTimedBisimulation T tau R ∧ R s s'
 
+/-- The identity relation is a weak timed bisimulation. -/
+theorem isWeakTimedBisimulation_eq (T : TLTS Proc Act) (tau : Act) :
+    IsWeakTimedBisimulation T tau (· = ·) := by
+  rintro s _ rfl
+  exact ⟨fun a s' h => ⟨s', act_wact h, rfl⟩, fun d s' h => ⟨s', delay_wdelay h, rfl⟩,
+         fun a s' h => ⟨s', act_wact h, rfl⟩, fun d s' h => ⟨s', delay_wdelay h, rfl⟩⟩
+
+/-- The converse of a weak timed bisimulation is a weak timed bisimulation. -/
+theorem IsWeakTimedBisimulation.symm {T : TLTS Proc Act} {tau : Act} {R : Proc → Proc → Prop}
+    (h : IsWeakTimedBisimulation T tau R) : IsWeakTimedBisimulation T tau (fun s t => R t s) := by
+  intro s₁ s₂ hr
+  obtain ⟨ha1, hd1, ha2, hd2⟩ := h hr
+  exact ⟨ha2, hd2, ha1, hd1⟩
+
+/-- Weak timed bisimilarity is reflexive: `s ≈ s`. -/
+theorem weaklyTimedBisimilar_refl (T : TLTS Proc Act) (tau : Act) (s : Proc) :
+    WeaklyTimedBisimilar T tau s s :=
+  ⟨(· = ·), isWeakTimedBisimulation_eq T tau, rfl⟩
+
+/-- Weak timed bisimilarity is symmetric: `s ≈ s' → s' ≈ s`. -/
+theorem WeaklyTimedBisimilar.symm {T : TLTS Proc Act} {tau : Act} {s s' : Proc}
+    (h : WeaklyTimedBisimilar T tau s s') : WeaklyTimedBisimilar T tau s' s :=
+  let ⟨_, hR, hr⟩ := h; ⟨_, hR.symm, hr⟩
+
 /-- A timed bisimulation is a weak timed bisimulation (concrete steps are one-step
 weak transitions). -/
 theorem isWeakTimedBisimulation_of_timedBisimilar (T : TLTS Proc Act) (tau : Act) :
