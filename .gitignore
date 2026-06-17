@@ -14,5 +14,8 @@
 /references/
 .wiki/
 
+# Never track PDFs anywhere (papers belong in the gitignored /references/)
+*.pdf
+
 # Local git worktrees (agent isolation scratch)
 .claude/worktrees/
