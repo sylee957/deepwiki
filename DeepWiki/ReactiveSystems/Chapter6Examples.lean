@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.HmlRecursion
 import DeepWiki.ReactiveSystems.HmlRecursionSystems
 import Mathlib.Tactic.DeriveFintype
+import Mathlib.Data.Set.Insert
 
 /-! # HML-with-recursion computations (Exercises 6.4, 6.16, 6.17)
 Concrete evaluations of the semantic functional `O_F = denotR` and of
@@ -41,6 +42,77 @@ theorem ex_6_4 :
     simp only [denotR, Set.mem_inter_iff, Set.mem_setOf_eq, Set.mem_singleton_iff,
       Set.mem_empty_iff_false] <;>
     decide
+
+/-! ## Exercise 6.9 — largest solution of an equational system -/
+
+/-- The two variables `X, Y` of the equational system. -/
+inductive V69 | X | Y
+  deriving DecidableEq
+
+/-- States of the Exercise 6.9 LTS. -/
+inductive P69 | p | q | r
+  deriving DecidableEq
+
+/-- Transitions (single action): `p —a→ p`, `p —a→ q`, `q —a→ r`; `r` dead. -/
+inductive Step69 : P69 → Unit → P69 → Prop
+  | pp : Step69 .p () .p
+  | pq : Step69 .p () .q
+  | qr : Step69 .q () .r
+
+/-- The Exercise 6.9 LTS. -/
+def L69 : LTS P69 Unit := ⟨Step69⟩
+
+/-- The system `X =ν [a]Y`, `Y =ν ⟨a⟩X`. -/
+def D69 : V69 → HMLV V69 Unit
+  | .X => .box () (.var .Y)
+  | .Y => .dia () (.var .X)
+
+/-- The claimed largest solution: `X ↦ {p, r}`, `Y ↦ {p, q}`. -/
+def sol69 : V69 → Set P69
+  | .X => {P69.p, P69.r}
+  | .Y => {P69.p, P69.q}
+
+/-- **Exercise 6.9** (§6.5, p.124). The largest solution of `X =ν [a]Y`,
+`Y =ν ⟨a⟩X` over the 3-state LTS is `X = {p, r}`, `Y = {p, q}`. -/
+theorem ex_6_9 : sysMax L69 D69 = sol69 := by
+  apply le_antisymm
+  · -- sysMax ≤ sol69, by coinduction: any post-fixed point is ≤ sol69
+    have key : ∀ σ : V69 → Set P69, σ ≤ sysFun L69 D69 σ → σ ≤ sol69 := by
+      intro σ hσ
+      have hY : σ .Y ⊆ ({P69.p, P69.q} : Set P69) := by
+        intro x hx
+        obtain ⟨x', hstep, _⟩ := hσ .Y hx
+        cases x with
+        | p => simp
+        | q => simp
+        | r => cases hstep
+      intro v x hx
+      cases v with
+      | Y => exact hY hx
+      | X =>
+          have hbox := hσ .X hx
+          cases x with
+          | p => simp [sol69]
+          | r => simp [sol69]
+          | q => exact absurd (hY (hbox P69.r Step69.qr)) (by simp)
+    exact key _ (OrderHom.map_gfp (sysFun L69 D69)).ge
+  · -- sol69 ≤ sysMax, since sol69 is a post-fixed point
+    refine (sysFun L69 D69).le_gfp ?_
+    intro v x hx
+    cases v with
+    | X =>
+        -- x ∈ {p,r} ⊆ denotV sol69 (box () (var Y)) = {x | ∀ a-succ ∈ {p,q}}
+        intro p' hstep
+        cases x with
+        | p => cases hstep <;> simp [denotV, sol69]
+        | r => cases hstep
+        | q => simp [sol69] at hx
+    | Y =>
+        -- x ∈ {p,q} ⊆ denotV sol69 (dia () (var X)) = {x | ∃ a-succ ∈ {p,r}}
+        cases x with
+        | p => exact ⟨.p, Step69.pp, by simp [denotV, sol69]⟩
+        | q => exact ⟨.r, Step69.qr, by simp [denotV, sol69]⟩
+        | r => simp [sol69] at hx
 
 /-! ## Exercises 6.16/6.17 — LivelockNow computations -/
 

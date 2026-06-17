@@ -200,4 +200,12 @@ theorem ex_6_4 :
       = {DeepWiki.ReactiveSystems.S62.p2} :=
   DeepWiki.ReactiveSystems.ex_6_4
 
+/-- **Exercise 6.9** (§6.5, p.124). The largest solution of the equational system
+`X =ν [a]Y`, `Y =ν ⟨a⟩X` over the 3-state LTS is `X = {p, r}`, `Y = {p, q}`. The
+library's `ex_6_9`. -/
+theorem ex_6_9 :
+    LTS.sysMax DeepWiki.ReactiveSystems.L69 DeepWiki.ReactiveSystems.D69
+      = DeepWiki.ReactiveSystems.sol69 :=
+  DeepWiki.ReactiveSystems.ex_6_9
+
 end DeepWiki.Rs
