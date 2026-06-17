@@ -261,6 +261,53 @@ theorem monitored_bad_imp_Bad0 {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan Mt
     (h : Step mtDefn (monitored P M) (Act.name bad) X) : M = Bad0 :=
   (monitored_bad_inv h).resolve_left (fun ⟨P', hP'⟩ => hP P' hP')
 
+/-- A `name a` move of the monitor lands in another monitor constant — except the
+final `name bad` from `Bad0`, which goes to `0`. -/
+theorem monitor_name_target {M : MtK} {a : MtChan} {Y : CCS MtChan MtK}
+    (h : Step mtDefn (.const M) (Act.name a) Y) :
+    (∃ M', Y = .const M') ∨ (M = Bad0 ∧ a = bad ∧ Y = .nil) := by
+  rw [step_const_iff] at h
+  cases M with
+  | MutexTest =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact Or.inl ⟨_, h.2⟩)
+  | MutexTest1 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact Or.inl ⟨_, h.2⟩)
+  | MutexTest2 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> (rw [step_pre_iff] at h; exact Or.inl ⟨_, h.2⟩)
+  | Bad0 =>
+      simp only [mtDefn] at h
+      rw [step_pre_iff] at h
+      exact Or.inr ⟨rfl, Act.name.inj h.1, h.2⟩
+
+/-- **τ-step structure of the monitored system.** A `τ`-step of `(P ∣ M)\L` is either an
+internal `τ` of `P` (monitor unchanged), a synchronisation advancing the monitor
+`M → M'` on a matched `co a`/`name a`, or the degenerate `bad`-synchronisation
+(`P` outputs `co bad`, the monitor in `Bad0` inputs it) — the only sync leaving the
+`(P ∣ M)\L` shape. -/
+theorem monitored_tau_step {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
+    (h : Step mtDefn (monitored P M) Act.tau X) :
+    (∃ P', Step mtDefn P Act.tau P' ∧ X = monitored P' M) ∨
+    (∃ a P' M', Step mtDefn P (Act.coname a) P' ∧
+        Step mtDefn (.const M) (Act.name a) (.const M') ∧ X = monitored P' M') ∨
+    (∃ P', Step mtDefn P (Act.coname bad) P' ∧ X = .restrict (.par P' .nil) mtRestrict) := by
+  unfold monitored at h
+  rw [step_restrict_iff] at h
+  obtain ⟨R, _, _, hpar, rfl⟩ := h
+  rw [step_par_iff] at hpar
+  rcases hpar with ⟨P', hP, rfl⟩ | ⟨Q', hQ, rfl⟩ | ⟨ℓ, P', Q', _, _, hP, hQ, rfl⟩
+  · exact Or.inl ⟨P', hP, rfl⟩
+  · obtain ⟨a, ha⟩ := monitor_action_name hQ; simp at ha
+  · obtain ⟨a, ha⟩ := monitor_action_name hQ
+    have hℓa : ℓ = Act.coname a := by rw [← Act.co_co ℓ, ha]; rfl
+    subst hℓa
+    rw [Act.co_coname] at hQ
+    rcases monitor_name_target hQ with ⟨M', rfl⟩ | ⟨_, haeq, rfl⟩
+    · exact Or.inr (Or.inl ⟨a, P', M', hP, hQ, rfl⟩)
+    · subst haeq; exact Or.inr (Or.inr ⟨P', hP, rfl⟩)
+
 /-- Faithfulness: the bare violation `enter₁` then `enter₂` (no preceding run) is
 detected — `MutexTest ⟶enter₁⟶ MutexTest₁ ⟶enter₂⟶ Bad0 ⟶bad⟶`. -/
 example :
