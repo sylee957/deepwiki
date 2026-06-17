@@ -1499,6 +1499,27 @@ theorem regionEqAll_timeSuccessor_frac [Fintype C] {u u' : Valuation C}
   obtain ⟨hf, hz, ho⟩ := RegionEq.exact_of_lt hb1 hb2 hδ'
   exact regionEqAll_of_exact hf hz ho
 
+/-- **Interval form of the unbounded fractional time-successor.** For a generic `δ ∈ (0,1)`
+— no clock of `u` hits its next integer — the matching delays `δ'` fill a nonempty interval
+`(lo,hi) ⊆ [0,1]`, each landing region-equivalent (`RegionEqAll`) to `u.add δ`. The slack is
+room to additionally place a carried clock relative to a boundary the integer guards miss. -/
+theorem regionEqAll_timeSuccessor_frac_Ioo [Fintype C] {u u' : Valuation C}
+    (h : RegionEqAll u u') {δ : ℝ≥0} (hδ0 : 0 < δ) (hδ : δ < 1)
+    (hnohit : ∀ x, fracPart (u x) + (δ : ℝ) ≠ 1) :
+    ∃ lo hi : ℝ≥0, lo < hi ∧ hi ≤ 1 ∧
+      ∀ δ' : ℝ≥0, lo < δ' → δ' < hi → RegionEqAll (u.add δ) (u'.add δ') := by
+  obtain ⟨N, hN⟩ := exists_nat_bound (u.add δ) u'
+  obtain ⟨lo, hi, hlohi, hhi1, hmatch⟩ :=
+    RegionEq.timeSuccessor_frac_Ioo (h (fun _ => N + 1)) hδ0 hδ (fun x _ => hnohit x)
+  refine ⟨lo, hi, hlohi, hhi1, fun δ' hlo hhi => ?_⟩
+  have hb1 : ∀ x, (u.add δ) x < ((N + 1 : ℕ) : ℝ≥0) := fun x => by
+    rw [Nat.cast_add, Nat.cast_one]; exact lt_of_lt_of_le (hN x).1 le_self_add
+  have hb2 : ∀ x, (u'.add δ') x < ((N + 1 : ℕ) : ℝ≥0) := fun x => by
+    rw [Nat.cast_add, Nat.cast_one, Valuation.add_apply]
+    exact add_lt_add (hN x).2 (lt_of_lt_of_le hhi hhi1)
+  obtain ⟨hf, hz, ho⟩ := RegionEq.exact_of_lt hb1 hb2 (hmatch δ' hlo hhi)
+  exact regionEqAll_of_exact hf hz ho
+
 /-- **Unbounded time-successor**: across `RegionEqAll`, any delay `δ` of one side is
 matched by some delay `δ'` of the other (the duration-abstract matching `∃∃`/`∀∀` need). -/
 theorem regionEqAll_timeSuccessor [Fintype C] {u u' : Valuation C}
