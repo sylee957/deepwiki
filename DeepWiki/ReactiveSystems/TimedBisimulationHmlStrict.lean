@@ -57,8 +57,10 @@ def sq2TLTS (c : ℝ≥0) : TLTS Sq2 Sq2Act := ⟨Sq2Step c⟩
 
 /-- `(A,0)` and `(B,0)` are **not** timed bisimilar — the
 witnessing fact that the converse (timed-HML equivalence implies timed bisimilarity)
-fails over arbitrary TLTSs. (With the boundary `c = √2` they nonetheless satisfy
-the same `Mt` formulae.) -/
+fails over arbitrary TLTSs. They satisfy the same *basic* timed-HML formulae for any
+`0 < c` (`timedHmlEquiv_sq2`, giving strictness `timedHmlEquiv_and_not_timedBisimilar_sq2`);
+that they satisfy the same *full* `Mt` formulae (with clock guards) is the book's
+Prop 12.2 and needs `c = √2` irrational — not formalized here. -/
 theorem not_timedBisimilar_sqrt2 :
     ¬ TLTS.TimedBisimilar (sq2TLTS c) (Sq2.A 0) (Sq2.B 0) := by
   intro h
