@@ -52,6 +52,14 @@ theorem ex_1_3_1 [IsFiniteMeasure μ] {A B : Ω → ℝ} {θ σ2 : ℝ}
     acvf (cosProcess A B θ) μ r s = σ2 * Real.cos (θ * ((r : ℝ) - (s : ℝ))) :=
   cosProcess_acvf hA hB hVA hVB hAB r s
 
+/-- **Example 1.3.4** (§1.3, p.14), the random walk `Sₜ = X₁ + ⋯ + Xₜ` of a
+zero-mean uncorrelated sequence with `σ² > 0` is not (covariance) stationary, since
+`Var(Sₜ)` grows with `t`. The library's `randomWalk`, `randomWalk_not_stationary`. -/
+theorem ex_1_3_4 [IsFiniteMeasure μ] {Xs : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (hX : ∀ i, MemLp (Xs i) 2 μ) (huc : ∀ i j, cov[Xs i, Xs j; μ] = if i = j then σ2 else 0)
+    (hσ : 0 < σ2) : ¬ IsWeaklyStationary (randomWalk Xs) μ :=
+  randomWalk_not_stationary hX huc hσ
+
 /-! ## §1.5 The Autocovariance Function of a Stationary Process -/
 
 /-- **Proposition 1.5.1** (§1.5, p.26), elementary properties of the autocovariance

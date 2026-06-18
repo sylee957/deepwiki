@@ -58,4 +58,40 @@ theorem cosProcess_acvf_shift [IsFiniteMeasure μ] {A B : Ω → ℝ} {θ σ2 : 
   push_cast
   ring
 
+/-! ## The random walk (Example 1.3.4) -/
+
+/-- **Example 1.3.4**: the random walk `Sₜ = X₁ + ⋯ + Xₜ` of a sequence `{Xₜ}`. -/
+noncomputable def randomWalk (X : ℤ → Ω → ℝ) : ℤ → Ω → ℝ :=
+  fun t => ∑ i ∈ Finset.Icc 1 t, X i
+
+/-- For a zero-mean uncorrelated sequence with variance `σ²`, the random walk has
+`Var(Sₜ) = Cov(Sₜ, Sₜ) = card(Icc 1 t) · σ²` — increasing in `t`. -/
+theorem randomWalk_self_covariance [IsFiniteMeasure μ] {X : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (hX : ∀ i, MemLp (X i) 2 μ) (huc : ∀ i j, cov[X i, X j; μ] = if i = j then σ2 else 0)
+    (t : ℤ) :
+    cov[randomWalk X t, randomWalk X t; μ] = (Finset.Icc 1 t).card • σ2 := by
+  simp only [randomWalk]
+  rw [covariance_sum_sum' (fun i _ => hX i) (fun j _ => hX j)]
+  calc ∑ i ∈ Finset.Icc 1 t, ∑ j ∈ Finset.Icc 1 t, cov[X i, X j; μ]
+      = ∑ i ∈ Finset.Icc 1 t, ∑ j ∈ Finset.Icc 1 t, (if i = j then σ2 else 0) := by
+        simp only [huc]
+    _ = ∑ _i ∈ Finset.Icc 1 t, σ2 := by
+        refine Finset.sum_congr rfl fun i hi => ?_
+        rw [Finset.sum_ite_eq (Finset.Icc 1 t) i (fun _ => σ2), if_pos hi]
+    _ = (Finset.Icc 1 t).card • σ2 := by rw [Finset.sum_const]
+
+/-- **Example 1.3.4**: the random walk of a zero-mean uncorrelated sequence with
+`σ² > 0` is **not** (covariance) stationary, because `Var(Sₜ)` grows with `t`. -/
+theorem randomWalk_not_stationary [IsFiniteMeasure μ] {X : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (hX : ∀ i, MemLp (X i) 2 μ) (huc : ∀ i j, cov[X i, X j; μ] = if i = j then σ2 else 0)
+    (hσ : 0 < σ2) : ¬ IsWeaklyStationary (randomWalk X) μ := by
+  intro hstat
+  have hshift := hstat.acvf_shift 1 1 1
+  rw [show (1 : ℤ) + 1 = 2 from by norm_num,
+      randomWalk_self_covariance hX huc, randomWalk_self_covariance hX huc] at hshift
+  have c1 : (Finset.Icc (1 : ℤ) 1).card = 1 := by rw [Int.card_Icc]; rfl
+  have c2 : (Finset.Icc (1 : ℤ) 2).card = 2 := by rw [Int.card_Icc]; rfl
+  rw [c1, c2, one_smul, two_smul] at hshift
+  linarith [hσ]
+
 end DeepWiki.TimeSeries
