@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
+import DeepWiki.TimeSeries.ProcessExamples
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -13,8 +14,15 @@ library; the citation (section, page) is in each docstring, the source's DOI in
 namespace DeepWiki.Ts
 
 open DeepWiki.TimeSeries
+open MeasureTheory ProbabilityTheory
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : MeasureTheory.Measure Ω} {X : ℤ → Ω → ℝ}
+
+/-! ## §1.2 Stochastic Processes -/
+
+/-- **Definition 1.2.2** (§1.2, p.9), a realization (sample path) `t ↦ Xₜ(ω)` of a
+process `X`. The library's `realization`. -/
+abbrev def_1_2_2 := @DeepWiki.TimeSeries.realization
 
 /-! ## §1.3 Stationarity and Strict Stationarity -/
 
@@ -32,6 +40,17 @@ abbrev def_1_3_2 := @DeepWiki.TimeSeries.IsWeaklyStationary
 of `(X_{t₁},…,X_{tₖ})` and `(X_{t₁+h},…,X_{tₖ+h})` agree for all `k, t, h`. The
 library's `IsStrictlyStationary`. -/
 abbrev def_1_3_3 := @DeepWiki.TimeSeries.IsStrictlyStationary
+
+/-- **Example 1.3.1** (§1.3, p.13), the cosine process `Xₜ = A cos(θt) + B sin(θt)`
+with `A`, `B` uncorrelated, mean zero, common variance `σ²` has autocovariance
+`γ(r,s) = σ² cos(θ(r − s))` (hence is stationary). The library's `cosProcess`,
+`cosProcess_acvf`. -/
+theorem ex_1_3_1 [IsFiniteMeasure μ] {A B : Ω → ℝ} {θ σ2 : ℝ}
+    (hA : MemLp A 2 μ) (hB : MemLp B 2 μ)
+    (hVA : cov[A, A; μ] = σ2) (hVB : cov[B, B; μ] = σ2) (hAB : cov[A, B; μ] = 0)
+    (r s : ℤ) :
+    acvf (cosProcess A B θ) μ r s = σ2 * Real.cos (θ * ((r : ℝ) - (s : ℝ))) :=
+  cosProcess_acvf hA hB hVA hVB hAB r s
 
 /-! ## §1.5 The Autocovariance Function of a Stationary Process -/
 
