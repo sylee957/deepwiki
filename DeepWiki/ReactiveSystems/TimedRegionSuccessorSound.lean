@@ -58,4 +58,30 @@ theorem regionFingerprint_add_of_allUnbounded {cmax : C → ℕ} {w : Valuation 
       decide_eq_false_iff_not.mpr (fun hc => hub x hc.1),
       decide_eq_false_iff_not.mpr (fun hc => hub0 x hc.1)]
 
+/-! ## Orbit-structure lemmas (for the completeness induction) -/
+
+omit [DecidableEq C] in
+/-- The starting region is the head of its own orbit. -/
+theorem mem_regionCodeOrbit_self {cmax : C → ℕ} (fuel : ℕ) (γ : RegionCode cmax) :
+    γ ∈ regionCodeOrbit fuel γ := by
+  cases fuel with
+  | zero => simp [regionCodeOrbit]
+  | succ n => simp only [regionCodeOrbit]; split <;> simp
+
+omit [DecidableEq C] in
+/-- The orbit of the next region is contained in the orbit of `γ` (its tail), when `γ` is
+not already a fixpoint. -/
+theorem regionCodeOrbit_step_subset {cmax : C → ℕ} (fuel : ℕ) {γ : RegionCode cmax}
+    (h : regionCodeStep γ ≠ γ) :
+    regionCodeOrbit fuel (regionCodeStep γ) ⊆ regionCodeOrbit (fuel + 1) γ := by
+  simp only [regionCodeOrbit, if_neg h]
+  exact List.subset_cons_self _ _
+
+omit [DecidableEq C] in
+/-- The next region is in `γ`'s orbit (when `γ` is not a fixpoint). -/
+theorem step_mem_regionCodeOrbit {cmax : C → ℕ} (fuel : ℕ) {γ : RegionCode cmax}
+    (h : regionCodeStep γ ≠ γ) :
+    regionCodeStep γ ∈ regionCodeOrbit (fuel + 1) γ :=
+  regionCodeOrbit_step_subset fuel h (mem_regionCodeOrbit_self fuel _)
+
 end DeepWiki.ReactiveSystems
