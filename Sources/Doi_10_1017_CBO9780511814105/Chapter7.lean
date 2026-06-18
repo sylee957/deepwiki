@@ -226,8 +226,8 @@ a `bad`-free process `P` (using only `enter`/`exit` channels) drives the monitor
 to a (weak) `bad`-transition *only* after silently reaching the monitor's `Bad0` state —
 which (by `monitor_into_Bad0`) means a genuine double-`enter` violation occurred. So the
 monitor signals `bad` exactly on real mutual-exclusion violations (no false alarms).
-Discharged by `monitored_weakBad_imp_Bad0`. (Reconstructing the full `WellMatched σ` prefix
-of the run is the remaining part of Ex 7.12.) -/
+Discharged by `monitored_weakBad_imp_Bad0`. (The full `WellMatched σ` run reconstruction — the
+exact converse of the soundness direction — is `ex_7_12`.) -/
 theorem ex_7_12_weak {P Q : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.ReactiveSystems.MtK}
     (hbf : DeepWiki.ReactiveSystems.BadFreeProc P)
     (h : (ccsLTS DeepWiki.ReactiveSystems.mtDefn) ⊢
@@ -239,6 +239,22 @@ theorem ex_7_12_weak {P Q : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.Reactiv
       (DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest)
       (DeepWiki.ReactiveSystems.monitored P' DeepWiki.ReactiveSystems.MtK.Bad0) :=
   DeepWiki.ReactiveSystems.monitored_weakBad_imp_Bad0 hbf h
+
+/-- **Exercise 7.12** (§7.3), completeness — full reconstruction. The exact converse of the
+soundness run `monitored_wellMatched`: if a `bad`-free process `P` drives the monitored system
+back to its initial monitor state `MutexTest` by `τ`-steps, those steps come from `P` performing a
+genuine well-matched run `σ ∈ (enter₁ exit₁ + enter₂ exit₂)*`. Discharged by
+`wellMatched_of_monitored_tauStar`. -/
+theorem ex_7_12 {P Q : CCS DeepWiki.ReactiveSystems.MtChan DeepWiki.ReactiveSystems.MtK}
+    (hbf : DeepWiki.ReactiveSystems.BadFreeProc P)
+    (h : DeepWiki.ReactiveSystems.LTS.tauStar (ccsLTS DeepWiki.ReactiveSystems.mtDefn)
+      DeepWiki.ReactiveSystems.Act.tau
+      (DeepWiki.ReactiveSystems.monitored P DeepWiki.ReactiveSystems.MtK.MutexTest)
+      (DeepWiki.ReactiveSystems.monitored Q DeepWiki.ReactiveSystems.MtK.MutexTest)) :
+    ∃ σ, DeepWiki.ReactiveSystems.WellMatched σ ∧
+      DeepWiki.ReactiveSystems.LTS.WeakPath (ccsLTS DeepWiki.ReactiveSystems.mtDefn)
+        DeepWiki.ReactiveSystems.Act.tau P σ Q :=
+  DeepWiki.ReactiveSystems.wellMatched_of_monitored_tauStar hbf h
 
 /-- **Exercise 7.10** (§7.3, p.152). The weak-simulation preorder is a choice
 congruence: if `Q` weakly simulates `P`, then `Q + R` weakly simulates both `P`
