@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.BackshiftOperator
+import DeepWiki.TimeSeries.StationaryProcesses
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -12,6 +13,47 @@ library; the citation (section, page) is in each docstring, the source's DOI in
 namespace DeepWiki.Ts
 
 open DeepWiki.TimeSeries
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : MeasureTheory.Measure Ω} {X : ℤ → Ω → ℝ}
+
+/-! ## §1.3 Stationarity and Strict Stationarity -/
+
+/-- **Definition 1.3.1** (§1.3, p.11), the autocovariance function
+`γ_X(r,s) = Cov(Xᵣ, Xₛ)` of a process with finite second moments. The library's
+`acvf`. -/
+noncomputable abbrev def_1_3_1 := @DeepWiki.TimeSeries.acvf
+
+/-- **Definition 1.3.2** (§1.3, p.12), (weak) stationarity: `E|Xₜ|² < ∞`, the mean
+`E[Xₜ]` is constant, and `γ_X(r,s) = γ_X(r+t, s+t)`. The library's
+`IsWeaklyStationary`. -/
+abbrev def_1_3_2 := @DeepWiki.TimeSeries.IsWeaklyStationary
+
+/-- **Definition 1.3.3** (§1.3, p.12), strict stationarity: the joint distributions
+of `(X_{t₁},…,X_{tₖ})` and `(X_{t₁+h},…,X_{tₖ+h})` agree for all `k, t, h`. The
+library's `IsStrictlyStationary`. -/
+abbrev def_1_3_3 := @DeepWiki.TimeSeries.IsStrictlyStationary
+
+/-! ## §1.5 The Autocovariance Function of a Stationary Process -/
+
+/-- **Proposition 1.5.1** (§1.5, p.26), elementary properties of the autocovariance
+`γ` of a stationary process: `γ(0) ≥ 0` (1.5.1), `|γ(h)| ≤ γ(0)` (1.5.2), and `γ`
+is even, `γ(h) = γ(−h)` (1.5.3). -/
+theorem prop_1_5_1 [MeasureTheory.IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ) :
+    0 ≤ acvfStat X μ 0 ∧
+      (∀ h : ℤ, |acvfStat X μ h| ≤ acvfStat X μ 0) ∧
+      (∀ h : ℤ, acvfStat X μ h = acvfStat X μ (-h)) :=
+  ⟨hX.acvfStat_zero_nonneg, hX.abs_acvfStat_le, fun h => (hX.acvfStat_neg h).symm⟩
+
+/-- **Definition 1.5.1** (§1.5, p.26), non-negative definiteness of a function
+`κ : ℤ → ℝ`: `∑ᵢⱼ aᵢ aⱼ κ(tᵢ − tⱼ) ≥ 0`. The library's `IsNonnegDefinite`. -/
+abbrev def_1_5_1 := @DeepWiki.TimeSeries.IsNonnegDefinite
+
+/-- **§1.5** (p.26): the autocovariance function of a stationary process is
+non-negative definite (the property of Definition 1.5.1). The library's
+`IsWeaklyStationary.isNonnegDefinite_acvfStat`. -/
+theorem acvf_nonnegDefinite [MeasureTheory.IsProbabilityMeasure μ]
+    (hX : IsWeaklyStationary X μ) : IsNonnegDefinite (acvfStat X μ) :=
+  hX.isNonnegDefinite_acvfStat
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
