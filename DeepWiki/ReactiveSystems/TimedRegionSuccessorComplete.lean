@@ -51,4 +51,23 @@ theorem satisfiesMt_iff_decideFull_delaySucc {Loc Act C D : Type*}
     (succSound_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
     (succComplete_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
 
+/-! ## Worked demonstration: the full checker decides delay quantifiers by computation
+On `demoAuto` (one self-loop `a` guarded `x ≤ 1`, resetting `x`, invariant `x ≤ 2`), the
+delay quantifiers `∃∃`/`∀∀` are now decided by *running* the region successor — `decide`
+elaborates the whole region orbit. -/
+
+-- `∃∃ [a]ff`: after **some** delay `a` is disabled — a delay carrying `x` past `1` (still
+-- within the invariant `x ≤ 2`) reaches a region where the guard `x ≤ 1` fails.
+set_option maxRecDepth 100000 in
+example :
+    demoAuto.toTimedAutomaton.SatisfiesMt (Mt.existsDelay (Mt.box () Mt.ff) : Mt Unit (Fin 1)) := by
+  rw [satisfiesMt_iff_decideFull_delaySucc demoAuto]; decide
+
+-- `∀∀ ⟨a⟩tt`: it is **not** the case that every delay keeps `a` enabled — a delay past
+-- `x = 1` disables it, so the decision procedure refutes satisfaction.
+set_option maxRecDepth 100000 in
+example :
+    ¬ demoAuto.toTimedAutomaton.SatisfiesMt (Mt.forallDelay (Mt.dia () Mt.tt) : Mt Unit (Fin 1)) := by
+  rw [satisfiesMt_iff_decideFull_delaySucc demoAuto]; decide
+
 end DeepWiki.ReactiveSystems
