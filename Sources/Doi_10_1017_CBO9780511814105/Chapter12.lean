@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.TimedHmlExamples
 import DeepWiki.ReactiveSystems.TimedHmlClosedFormulae
 import DeepWiki.ReactiveSystems.TimedHmlEquivalences
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
+import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -323,5 +324,21 @@ theorem ex_12_20 {c : ℕ} {q : TLTS.Once} {d : ℝ≥0} :
     (TLTS.onceTLTS c).MtSat q (fun _ => d) (TLTS.charA c) ↔
       TLTS.TimedBisimilar (TLTS.onceTLTS c) q (TLTS.Once.A d) :=
   TLTS.mtSat_charA_iff
+
+/-- **Exercise 12.21** (§12.4.1, p.245), the definition. A *timed simulation* is the
+forward half of a timed bisimulation — simulation over the combined action/delay
+labels; `s₁` is timed simulated by `s₂` when one relates them. The library's
+`TLTS.TimedSimulated`. -/
+abbrev def_12_21_timedSimulated := @TLTS.TimedSimulated
+
+/-- **Exercise 12.21** (§12.4.1, p.245). The characteristic formula for the running
+example *modulo timed simulation*: `TLTS.charSimFormula` is the bisimulation
+characteristic formula with the universal `[a]` conjunct dropped. The simulation
+analogue of Theorem 12.5 holds — an extended state satisfies it iff the running
+example's clock-`u(y)` state is timed simulated by it. The library's
+`TLTS.mem_charSimFormula_iff_simulated`. -/
+theorem ex_12_21 {q : ℝ≥0 × Valuation Unit} :
+    q ∈ TLTS.charSimFormula ↔ TLTS.TimedSimulated TLTS.runTLTS (q.2 ()) q.1 :=
+  TLTS.mem_charSimFormula_iff_simulated
 
 end DeepWiki.Rs
