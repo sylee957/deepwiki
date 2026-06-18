@@ -282,6 +282,36 @@ theorem monitor_name_target {M : MtK} {a : MtChan} {Y : CCS MtChan MtK}
       rw [step_pre_iff] at h
       exact Or.inr ⟨rfl, Act.name.inj h.1, h.2⟩
 
+/-- **The monitor's sync-transition table.** A `name a` step of the monitor *into another monitor
+constant* `M'` is exactly one of the six edges: `MutexTest —enterᵢ→ MutexTestᵢ`,
+`MutexTestᵢ —exitᵢ→ MutexTest`, or the violating `MutexTestᵢ —enter_{3−i}→ Bad0`. -/
+theorem monitor_sync_target {M M' : MtK} {a : MtChan}
+    (h : Step mtDefn (.const M) (Act.name a) (.const M')) :
+    (M = MutexTest ∧ ((a = enter1 ∧ M' = MutexTest1) ∨ (a = enter2 ∧ M' = MutexTest2))) ∨
+    (M = MutexTest1 ∧ ((a = exit1 ∧ M' = MutexTest) ∨ (a = enter2 ∧ M' = Bad0))) ∨
+    (M = MutexTest2 ∧ ((a = exit2 ∧ M' = MutexTest) ∨ (a = enter1 ∧ M' = Bad0))) := by
+  rw [step_const_iff] at h
+  cases M with
+  | MutexTest =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> rw [step_pre_iff] at h
+      · exact Or.inl ⟨rfl, Or.inl ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩
+      · exact Or.inl ⟨rfl, Or.inr ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩
+  | MutexTest1 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> rw [step_pre_iff] at h
+      · exact Or.inr (Or.inl ⟨rfl, Or.inl ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩)
+      · exact Or.inr (Or.inl ⟨rfl, Or.inr ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩)
+  | MutexTest2 =>
+      simp only [mtDefn] at h
+      rcases step_choice_iff.mp h with h | h <;> rw [step_pre_iff] at h
+      · exact Or.inr (Or.inr ⟨rfl, Or.inl ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩)
+      · exact Or.inr (Or.inr ⟨rfl, Or.inr ⟨Act.name.inj h.1, CCS.const.inj h.2⟩⟩)
+  | Bad0 =>
+      simp only [mtDefn] at h
+      rw [step_pre_iff] at h
+      simp at h
+
 /-- **τ-step structure of the monitored system.** A `τ`-step of `(P ∣ M)\L` is either an
 internal `τ` of `P` (monitor unchanged), a synchronisation advancing the monitor
 `M → M'` on a matched `co a`/`name a`, or the degenerate `bad`-synchronisation
@@ -352,5 +382,113 @@ example :
     Step mtDefn (.const MutexTest1) (Act.name enter2) (.const Bad0) ∧
     Step mtDefn (.const Bad0) (Act.name bad) .nil :=
   ⟨mt_enter1, mt1_enter2, Step.con (Step.act _ _)⟩
+
+/-! ### Full completeness (Exercise 7.12): reconstructing the well-matched run -/
+
+/-- The monitor's synchronisation walk `M --σ--> N`: a sequence of `name`-steps of the monitor
+constants, recording the matched `P`-conames `σ` (each step pairs `P`'s `coname a` with the
+monitor's `name a`). -/
+inductive MonitorWalk : MtK → List (Act MtChan) → MtK → Prop
+  | nil {M} : MonitorWalk M [] M
+  | cons {M M' N : MtK} {a : MtChan} {σ : List (Act MtChan)} :
+      Step mtDefn (.const M) (Act.name a) (.const M') → MonitorWalk M' σ N →
+      MonitorWalk M (Act.coname a :: σ) N
+
+/-- `Bad0` is a dead end for the walk: its only `name`-step (`bad`) leaves the constants (to `0`),
+so any walk starting at `Bad0` is empty and stays at `Bad0`. -/
+theorem monitorWalk_from_bad0 {σ : List (Act MtChan)} {N : MtK}
+    (h : MonitorWalk Bad0 σ N) : N = Bad0 := by
+  cases h with
+  | nil => rfl
+  | cons hstep _ =>
+      rcases monitor_sync_target hstep with ⟨h, _⟩ | ⟨h, _⟩ | ⟨h, _⟩ <;> exact absurd h (by decide)
+
+/-- A monitor walk that returns to `MutexTest` records a **well-matched** coname sequence: the
+monitor reaches `MutexTest` only by completing `enterᵢ.exitᵢ` rounds — it can never pass through
+the dead-end `Bad0`. -/
+theorem wellMatched_of_monitorWalk {σ : List (Act MtChan)}
+    (h : MonitorWalk MutexTest σ MutexTest) : WellMatched σ := by
+  suffices H : ∀ (σ' : List (Act MtChan)) (M : MtK), MonitorWalk M σ' MutexTest →
+      (M = MutexTest → WellMatched σ') ∧
+      (M = MutexTest1 → ∃ τ, σ' = Act.coname exit1 :: τ ∧ WellMatched τ) ∧
+      (M = MutexTest2 → ∃ τ, σ' = Act.coname exit2 :: τ ∧ WellMatched τ) from
+    (H σ MutexTest h).1 rfl
+  intro σ'
+  induction σ' with
+  | nil =>
+      intro M hw
+      cases hw with
+      | nil => exact ⟨fun _ => WellMatched.nil, fun h => absurd h (by decide),
+          fun h => absurd h (by decide)⟩
+  | cons a σ'' ih =>
+      intro M hw
+      cases hw with
+      | cons hstep hrest =>
+          rcases monitor_sync_target hstep with ⟨rfl, ha⟩ | ⟨rfl, ha⟩ | ⟨rfl, ha⟩
+          · rcases ha with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+            · obtain ⟨τ, rfl, hwm⟩ := (ih MutexTest1 hrest).2.1 rfl
+              exact ⟨fun _ => WellMatched.round1 hwm, fun h => absurd h (by decide),
+                fun h => absurd h (by decide)⟩
+            · obtain ⟨τ, rfl, hwm⟩ := (ih MutexTest2 hrest).2.2 rfl
+              exact ⟨fun _ => WellMatched.round2 hwm, fun h => absurd h (by decide),
+                fun h => absurd h (by decide)⟩
+          · rcases ha with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+            · exact ⟨fun h => absurd h (by decide), fun _ => ⟨_, rfl, (ih MutexTest hrest).1 rfl⟩,
+                fun h => absurd h (by decide)⟩
+            · exact absurd (monitorWalk_from_bad0 hrest) (by decide)
+          · rcases ha with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+            · exact ⟨fun h => absurd h (by decide), fun h => absurd h (by decide),
+                fun _ => ⟨_, rfl, (ih MutexTest hrest).1 rfl⟩⟩
+            · exact absurd (monitorWalk_from_bad0 hrest) (by decide)
+
+/-- Monitor walks compose, concatenating their coname lists. -/
+theorem monitorWalk_append {M N R : MtK} {σ σ' : List (Act MtChan)}
+    (h1 : MonitorWalk M σ N) (h2 : MonitorWalk N σ' R) : MonitorWalk M (σ ++ σ') R := by
+  induction h1 with
+  | nil => exact h2
+  | cons hstep _ ih => exact MonitorWalk.cons hstep (ih h2)
+
+/-- `monitored` is injective in both arguments. -/
+theorem monitored_inj {P P' : CCS MtChan MtK} {M M' : MtK}
+    (h : monitored P M = monitored P' M') : P = P' ∧ M = M' := by
+  unfold monitored at h
+  obtain ⟨hpar, -⟩ := CCS.restrict.inj h
+  obtain ⟨hP, hM⟩ := CCS.par.inj hpar
+  exact ⟨hP, CCS.const.inj hM⟩
+
+/-- **Label-recording form of `monitored_tauStar_form`.** Under `BadFreeProc P`, every `τ`-run of
+the monitored system `(P ∣ M)\L` keeps the `(Q ∣ N)\L` shape, *and* records the matched coname
+sequence `σ`: `P` performs the weak path `σ` to `Q` while the monitor walks `M --σ--> N`. -/
+theorem monitored_tauStar_label {P : CCS MtChan MtK} {M : MtK} {X : CCS MtChan MtK}
+    (hbf : BadFreeProc P)
+    (h : tauStar (ccsLTS mtDefn) Act.tau (monitored P M) X) :
+    ∃ (Q : CCS MtChan MtK) (N : MtK) (σ : List (Act MtChan)),
+      X = monitored Q N ∧ WeakPath (ccsLTS mtDefn) Act.tau P σ Q ∧
+        MonitorWalk M σ N ∧ (ccsLTS mtDefn).Reachable P Q := by
+  induction h with
+  | refl =>
+      exact ⟨P, M, [], rfl, tauStar_refl _ _ _, MonitorWalk.nil, Relation.ReflTransGen.refl⟩
+  | tail _ hlast ih =>
+      obtain ⟨Q, N, σ, rfl, hwp, hmw, hreach⟩ := ih
+      rw [ccsLTS_step] at hlast
+      rcases monitored_tau_step hlast with ⟨Q', hP, rfl⟩ | ⟨a, Q', N', hP, hmon, rfl⟩ | ⟨Q', hP, _⟩
+      · exact ⟨Q', N, σ, rfl, weakPath_tauStar_right hwp (tauStar_single hP), hmw,
+          hreach.tail ⟨Act.tau, hP⟩⟩
+      · exact ⟨Q', N', σ ++ [Act.coname a], rfl,
+          weakPath_append hwp (weakPath_cons (by simp) (step_weakStep hP) (tauStar_refl _ _ _)),
+          monitorWalk_append hmw (MonitorWalk.cons hmon MonitorWalk.nil),
+          hreach.tail ⟨Act.coname a, hP⟩⟩
+      · exact absurd hP ((hbf Q hreach).2 Q')
+
+/-- **Completeness of the mutex monitor (Exercise 7.12, full reconstruction).** If a `bad`-free
+process `P` drives the monitored system back to its initial monitor state `MutexTest` by `τ`-steps,
+then those steps come from `P` performing a genuine **well-matched** run `σ ∈ (enter₁exit₁ +
+enter₂exit₂)*`. The exact converse of `monitored_wellMatched`. -/
+theorem wellMatched_of_monitored_tauStar {P Q : CCS MtChan MtK} (hbf : BadFreeProc P)
+    (h : tauStar (ccsLTS mtDefn) Act.tau (monitored P MutexTest) (monitored Q MutexTest)) :
+    ∃ σ, WellMatched σ ∧ WeakPath (ccsLTS mtDefn) Act.tau P σ Q := by
+  obtain ⟨Q', N, σ, hX, hwp, hmw, _⟩ := monitored_tauStar_label hbf h
+  obtain ⟨rfl, rfl⟩ := monitored_inj hX
+  exact ⟨σ, wellMatched_of_monitorWalk hmw, hwp⟩
 
 end DeepWiki.ReactiveSystems
