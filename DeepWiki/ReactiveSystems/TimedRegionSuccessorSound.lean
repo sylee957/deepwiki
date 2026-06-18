@@ -35,4 +35,27 @@ theorem regionCodeStep_sound_allUnbounded {cmax : C → ℕ} {w : Valuation C}
   unfold regionCodeStep
   rw [if_pos hcond]
 
+omit [Fintype C] [DecidableEq C] in
+open Classical in
+/-- **Saturated states stay put.** If every clock already exceeds its clamp, the region is
+unchanged by any delay — `fp (w + t) = fp w`. (The fixpoint base case of completeness: a
+saturated region is its own only time-successor.) -/
+theorem regionFingerprint_add_of_allUnbounded {cmax : C → ℕ} {w : Valuation C}
+    (h : ∀ x, (cmax x : ℝ≥0) < w x) (t : ℝ≥0) :
+    regionFingerprint cmax (w.add t) = regionFingerprint cmax w := by
+  have hub : ∀ x, ¬ ((w.add t) x ≤ (cmax x : ℝ≥0)) := fun x => by
+    rw [Valuation.add_apply]; exact not_le.mpr (lt_of_lt_of_le (h x) le_self_add)
+  have hub0 : ∀ x, ¬ (w x ≤ (cmax x : ℝ≥0)) := fun x => not_le.mpr (h x)
+  rw [Prod.ext_iff, Prod.ext_iff]
+  refine ⟨funext fun x => ?_, funext fun x => ?_, funext fun x => funext fun y => ?_⟩
+  · apply Fin.ext
+    show regionFloor cmax (w.add t) x = regionFloor cmax w x
+    unfold regionFloor; rw [if_neg (hub x), if_neg (hub0 x)]
+  · rw [regionFingerprint_fracZero, regionFingerprint_fracZero,
+      decide_eq_false_iff_not.mpr (fun hc => hub x hc.1),
+      decide_eq_false_iff_not.mpr (fun hc => hub0 x hc.1)]
+  · rw [regionFingerprint_fracOrder, regionFingerprint_fracOrder,
+      decide_eq_false_iff_not.mpr (fun hc => hub x hc.1),
+      decide_eq_false_iff_not.mpr (fun hc => hub0 x hc.1)]
+
 end DeepWiki.ReactiveSystems
