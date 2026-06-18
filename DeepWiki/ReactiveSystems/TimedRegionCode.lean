@@ -124,4 +124,111 @@ theorem regionCode_satisfies_iff {cmax : C → ℕ} (v : Valuation C) :
       simp only [RegionCode.satisfies, satisfies, Bool.and_eq_true]
       exact and_congr (ih₁ hg.1) (ih₂ hg.2)
 
+/-! ## Computable clock reset on region codes
+
+Resetting the clocks `{x | p x}` in a region code: floor `0`, frac-zero, and the
+frac-order bits recomputed (a reset clock has fractional part `0`, minimal). The
+boundedness bit `RegionCode.bounded` (the clamped floor stays `≤ cmax`) is needed to
+recompute frac-order against a non-reset clock. `reset_fingerprint` proves the
+computable reset matches `regionFingerprint` after the real reset. -/
+
+/-- Whether clock `x` is bounded by its clamp, read off a region code (clamped floor
+`≤ cmax x`). -/
+def RegionCode.bounded {cmax : C → ℕ} (γ : RegionCode cmax) (x : C) : Bool :=
+  decide ((γ.1 x).val ≤ cmax x)
+
+/-- Reset the clocks `{x | p x}` in a region code: floor `0`, frac-zero set, frac-order
+recomputed (a reset clock has fractional part `0`, below every clock). -/
+def RegionCode.reset {cmax : C → ℕ} (p : C → Bool) (γ : RegionCode cmax) : RegionCode cmax :=
+  (fun x => if p x = true then ⟨0, by omega⟩ else γ.1 x,
+   fun x => if p x = true then true else γ.2.1 x,
+   fun x y => if p x = true then (if p y = true then true else RegionCode.bounded γ y)
+              else (if p y = true then γ.2.1 x else γ.2.2 x y))
+
+/-- The clamped floor stays `≤ cmax x` exactly when the clock is bounded. -/
+theorem regionFloor_le_clamp_iff {cmax : C → ℕ} (v : Valuation C) (x : C) :
+    regionFloor cmax v x ≤ cmax x ↔ v x ≤ (cmax x : ℝ≥0) := by
+  unfold regionFloor
+  by_cases hb : v x ≤ cmax x
+  · rw [if_pos hb]; exact ⟨fun _ => hb, fun _ => floor_le_of_le_cmax hb⟩
+  · rw [if_neg hb]; exact ⟨fun h => absurd h (by omega), fun h => absurd h hb⟩
+
+open Classical in
+/-- `regionFingerprint`'s frac-order bit is the classical decision of joint boundedness
+and fractional-order. -/
+theorem regionFingerprint_fracOrder (cmax : C → ℕ) (v : Valuation C) (x y : C) :
+    (regionFingerprint cmax v).2.2 x y =
+      decide (v x ≤ cmax x ∧ v y ≤ cmax y ∧ fracPart (v x) ≤ fracPart (v y)) := rfl
+
+open Classical in
+/-- The boundedness bit on `regionFingerprint cmax v` decides `v x ≤ cmax x`. -/
+theorem bounded_fingerprint {cmax : C → ℕ} (v : Valuation C) (x : C) :
+    RegionCode.bounded (regionFingerprint cmax v) x = decide (v x ≤ cmax x) := by
+  unfold RegionCode.bounded
+  rw [regionFingerprint_floor, decide_eq_decide]
+  exact regionFloor_le_clamp_iff v x
+
+open Classical in
+/-- **Reset agreement.** The computable region-code reset matches the fingerprint of the
+real reset: `RegionCode.reset p (fp v) = fp (v[{x | p x}])`. -/
+theorem reset_fingerprint {cmax : C → ℕ} (p : C → Bool) (v : Valuation C) :
+    RegionCode.reset p (regionFingerprint cmax v)
+      = regionFingerprint cmax (Valuation.reset {x | p x = true} v) := by
+  set w := Valuation.reset {x | p x = true} v with hw
+  have memb : ∀ {z : C}, p z = true → z ∈ {x | p x = true} := fun h => h
+  have nmemb : ∀ {z : C}, p z = false → z ∉ {x | p x = true} := fun h hc => by simp [h] at hc
+  rw [Prod.ext_iff, Prod.ext_iff]
+  refine ⟨funext fun x => ?_, funext fun x => ?_, funext fun x => funext fun y => ?_⟩
+  · -- floor
+    apply Fin.ext
+    cases hpx : p x
+    · have hwx : w x = v x := Valuation.reset_not_mem (nmemb hpx) v
+      simp only [RegionCode.reset, hpx, Bool.false_eq_true, if_false]
+      rw [regionFingerprint_floor, regionFingerprint_floor]
+      unfold regionFloor; rw [hwx]
+    · simp only [RegionCode.reset, hpx, if_true]
+      rw [regionFingerprint_floor]
+      show (0 : ℕ) = regionFloor cmax w x
+      exact (regionFloor_reset_mem (memb hpx) v).symm
+  · -- frac-zero
+    cases hpx : p x
+    · have hwx : w x = v x := Valuation.reset_not_mem (nmemb hpx) v
+      simp only [RegionCode.reset, hpx, Bool.false_eq_true, if_false]
+      rw [regionFingerprint_fracZero, regionFingerprint_fracZero, hwx]
+    · have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
+      simp only [RegionCode.reset, hpx, if_true]
+      rw [regionFingerprint_fracZero, hwx]
+      exact (decide_eq_true_iff.mpr ⟨zero_le', fracPart_zero⟩).symm
+  · -- frac-order
+    cases hpx : p x <;> cases hpy : p y
+    · -- p x = false, p y = false
+      have hwx : w x = v x := Valuation.reset_not_mem (nmemb hpx) v
+      have hwy : w y = v y := Valuation.reset_not_mem (nmemb hpy) v
+      simp only [RegionCode.reset, hpx, hpy, Bool.false_eq_true, if_false]
+      rw [regionFingerprint_fracOrder, regionFingerprint_fracOrder, hwx, hwy]
+    · -- p x = false, p y = true
+      have hwx : w x = v x := Valuation.reset_not_mem (nmemb hpx) v
+      have hwy : w y = 0 := Valuation.reset_mem (memb hpy) v
+      simp only [RegionCode.reset, hpx, hpy, Bool.false_eq_true, if_false, if_true]
+      rw [regionFingerprint_fracZero, regionFingerprint_fracOrder, hwx, hwy, fracPart_zero,
+        decide_eq_decide]
+      constructor
+      · rintro ⟨h1, h2⟩; exact ⟨h1, zero_le', (fracPart_le_zero_iff (v x)).mpr h2⟩
+      · rintro ⟨h1, _, h3⟩; exact ⟨h1, (fracPart_le_zero_iff (v x)).mp h3⟩
+    · -- p x = true, p y = false
+      have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
+      have hwy : w y = v y := Valuation.reset_not_mem (nmemb hpy) v
+      simp only [RegionCode.reset, hpx, hpy, Bool.false_eq_true, if_true, if_false]
+      rw [bounded_fingerprint, regionFingerprint_fracOrder, hwx, hwy, fracPart_zero,
+        decide_eq_decide]
+      constructor
+      · intro h; exact ⟨zero_le', h, fracPart_nonneg _⟩
+      · rintro ⟨_, h2, _⟩; exact h2
+    · -- p x = true, p y = true
+      have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
+      have hwy : w y = 0 := Valuation.reset_mem (memb hpy) v
+      simp only [RegionCode.reset, hpx, hpy, if_true]
+      rw [regionFingerprint_fracOrder, hwx, hwy, fracPart_zero]
+      exact (decide_eq_true_iff.mpr ⟨zero_le', zero_le', le_refl _⟩).symm
+
 end DeepWiki.ReactiveSystems
