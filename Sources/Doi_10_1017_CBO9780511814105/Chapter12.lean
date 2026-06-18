@@ -11,6 +11,7 @@ import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.SymbolicModelChecking
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingDecidable
+import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -261,6 +262,19 @@ theorem thm_12_2 {Loc C : Type*} [Fintype C] [Fintype D]
         (DeepWiki.ReactiveSystems.Mt.boundedByD_formulaCmax F) ℓ
         (DeepWiki.ReactiveSystems.region _ (DeepWiki.ReactiveSystems.combineVal v u)) :=
   DeepWiki.ReactiveSystems.mtSat_iff_symSatBoundedRegion_formulaCmax A wf F ℓ v u
+
+/-- **Theorem 12.2** (§12.2, p.231), *executable* decision procedure (delay-free
+fragment). For a finite-data automaton `A` and a delay-free formula `F`, satisfaction
+`A ⊨ F` reduces to a `Classical`-free Bool computation `SymSatCode` on the all-zero
+initial region code — a genuine, `#eval`-able decision procedure. The library's
+`satisfiesMt_iff_decide` (with the constructive `Decidable` instance `decSatisfiesMt`). -/
+theorem thm_12_2_executable {Loc C : Type*} [Fintype Loc] [DecidableEq Loc] [DecidableEq Act]
+    [DecidableEq C] [DecidableEq D] (A : DeepWiki.ReactiveSystems.FinAutomaton Loc Act C)
+    (F : Mt Act D) (hF : F.DelayFree) :
+    A.toTimedAutomaton.SatisfiesMt F ↔
+      DeepWiki.ReactiveSystems.SymSatCode A (Sum.elim A.cmax F.formulaCmax) A.initial
+        (DeepWiki.ReactiveSystems.RegionCode.initial _) F = true :=
+  DeepWiki.ReactiveSystems.satisfiesMt_iff_decide A F hF
 
 /-- **Exercise 12.8** (§12.2, p.231). For the one-location automaton with invariant
 `x ≤ 2` and an `a`-self-loop guarded `x ≤ 1` (resetting `x`), the initial symbolic
