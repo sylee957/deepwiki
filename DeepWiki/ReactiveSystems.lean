@@ -57,6 +57,7 @@ import DeepWiki.ReactiveSystems.SmallUniversitySpec
 import DeepWiki.ReactiveSystems.FaultyMachineSpec
 import DeepWiki.ReactiveSystems.TimedLightSwitch
 import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
+import DeepWiki.ReactiveSystems.FourTimedAutomataBisim
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCcs
 import DeepWiki.ReactiveSystems.TimedCcsDeterminacy

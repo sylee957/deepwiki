@@ -9,6 +9,7 @@ import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
 import DeepWiki.ReactiveSystems.TimedLanguageExample
 import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
+import DeepWiki.ReactiveSystems.FourTimedAutomataBisim
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarity
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarityStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationTimeAbstracted
@@ -340,6 +341,29 @@ theorem ex_11_2 :
       DeepWiki.ReactiveSystems.taB.tlts.timedLang
         (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) :=
   DeepWiki.ReactiveSystems.taA_taB_untimedEq_not_timedEq
+
+/-- **Exercise 11.5** (§11.2, p.199). The four single-action, single-clock timed
+automata `A` (`a[y≤1, y:=0]` twice), `X` (`a[y≤2]` twice), `U` (`a[true]` then
+`a[y≤2]`) and `D` (`a[y≤2]` then `a[y≤2]`, plus an `a[y>2]` branch), as the combined
+TLTS `tlts115`. The classification of the six pairs of initial states (all at
+`y=0`): `U` and `D` are **timed bisimilar**; `A` and `X` are **untimed bisimilar but
+not timed bisimilar**; and `A`–`U`, `A`–`D`, `X`–`U`, `X`–`D` are **neither** (`U`,
+`D` can always fire `a`, while `A`, `X` cannot after a large enough delay). -/
+theorem ex_11_5 :
+    TLTS.TimedBisimilar tlts115 (.U, 0) (.D, 0) ∧
+    (TLTS.UntimedBisimilar tlts115 (.A, 0) (.X, 0) ∧
+      ¬ TLTS.TimedBisimilar tlts115 (.A, 0) (.X, 0)) ∧
+    ¬ TLTS.UntimedBisimilar tlts115 (.A, 0) (.U, 0) ∧
+    ¬ TLTS.UntimedBisimilar tlts115 (.A, 0) (.D, 0) ∧
+    ¬ TLTS.UntimedBisimilar tlts115 (.X, 0) (.U, 0) ∧
+    ¬ TLTS.UntimedBisimilar tlts115 (.X, 0) (.D, 0) :=
+  ⟨DeepWiki.ReactiveSystems.u_timedBisimilar_d,
+    ⟨DeepWiki.ReactiveSystems.a_untimedBisimilar_x,
+      DeepWiki.ReactiveSystems.a_not_timedBisimilar_x⟩,
+    DeepWiki.ReactiveSystems.a_not_untimedBisimilar_u,
+    DeepWiki.ReactiveSystems.a_not_untimedBisimilar_d,
+    DeepWiki.ReactiveSystems.x_not_untimedBisimilar_u,
+    DeepWiki.ReactiveSystems.x_not_untimedBisimilar_d⟩
 
 /-- **Exercise 11.6**, claim 1 (§11.2, p.197), positive. If two timed automata are
 timed bisimilar then they are timed-trace equivalent: timed bisimilarity preserves
