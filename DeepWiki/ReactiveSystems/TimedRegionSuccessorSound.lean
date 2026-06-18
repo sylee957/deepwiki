@@ -166,6 +166,21 @@ theorem regionCodeStep_caseB_snd {cmax : C → ℕ} {γ : RegionCode cmax}
   unfold regionCodeStep
   rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_pos (by rw [decide_eq_true_iff]; exact hB)]
 
+omit [DecidableEq C] in
+/-- In case B, the elapse step's frac-order bit at `(x, y)`: newly-saturated clocks lose all
+order, the small (integral, below-`cmax`) clocks become least, others keep `γ`'s order. -/
+theorem regionCodeStep_caseB_thd {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ∃ x, γ.2.1 x = true) (x y : C) :
+    (regionCodeStep γ).2.2 x y =
+      (if ((decide ((γ.1 x).val = cmax x + 1) || (γ.2.1 x && decide ((γ.1 x).val = cmax x))) ||
+           (decide ((γ.1 y).val = cmax y + 1) || (γ.2.1 y && decide ((γ.1 y).val = cmax y)))) = true
+         then false
+       else if (γ.2.1 x && decide ((γ.1 x).val < cmax x)) = true then true
+       else if (γ.2.1 y && decide ((γ.1 y).val < cmax y)) = true then false
+       else γ.2.2 x y) := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_pos (by rw [decide_eq_true_iff]; exact hB)]
+
 /-! ## The "at δ" wrap-matching (the "after" half of the key lemma) -/
 
 omit [DecidableEq C] in
@@ -343,6 +358,164 @@ theorem regionFingerprint_add_eq_step_caseC {cmax : C → ℕ} {w : Valuation C}
     · -- x unbounded
       rw [if_pos (by rw [husatT x hbx, Bool.true_or])]
       exact decide_eq_false_iff_not.mpr (fun ⟨hb, _, _⟩ => hub x hbx hb)
+
+omit [DecidableEq C] in
+open Classical in
+/-- **At any small delay, an integral region steps.** With some bounded clock integral
+(case B) and a delay `δ` positive but carrying no bounded clock past the next integer, the
+integral clocks gain a tiny positive fraction (those at `cmax` saturate), and `fp (w + δ) =
+regionCodeStep (fp w)`. The case-B analogue of `regionFingerprint_add_eq_step_caseC`. -/
+theorem regionFingerprint_add_eq_step_caseB {cmax : C → ℕ} {w : Valuation C}
+    (hI : ∃ x, w x ≤ (cmax x : ℝ≥0) ∧ fracPart (w x) = 0)
+    {δ : ℝ≥0} (hδ0 : (0 : ℝ) < δ)
+    (hnw : ∀ x, w x ≤ (cmax x : ℝ≥0) → fracPart (w x) + (δ : ℝ) < 1) :
+    regionFingerprint cmax (w.add δ) = regionCodeStep (regionFingerprint cmax w) := by
+  set γ := regionFingerprint cmax w with hγ
+  have hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1 := by
+    obtain ⟨x, hbx, _⟩ := hI
+    intro hall; have h1 := hall x; rw [hγ, regionFingerprint_floor] at h1
+    have := (regionFloor_le_clamp_iff w x).mpr hbx; omega
+  have hB : ∃ x, γ.2.1 x = true := by
+    obtain ⟨x, hbx, hfx⟩ := hI
+    exact ⟨x, by rw [hγ, regionFingerprint_fracZero, decide_eq_true_iff]; exact ⟨hbx, hfx⟩⟩
+  have hvalγ : ∀ x, w x ≤ (cmax x : ℝ≥0) → (γ.1 x).val = ⌊w x⌋₊ := by
+    intro x hbx; rw [hγ, regionFingerprint_floor]; unfold regionFloor; rw [if_pos hbx]
+  have hvalγU : ∀ x, ¬ w x ≤ (cmax x : ℝ≥0) → (γ.1 x).val = cmax x + 1 := by
+    intro x hbx; rw [hγ, regionFingerprint_floor]; unfold regionFloor; rw [if_neg hbx]
+  have hfzγ : ∀ x, w x ≤ (cmax x : ℝ≥0) → γ.2.1 x = decide (fracPart (w x) = 0) := by
+    intro x hbx; rw [hγ, regionFingerprint_fracZero, decide_eq_decide]; exact and_iff_right hbx
+  -- unbounded clocks stay unbounded
+  have hub : ∀ x, ¬ w x ≤ (cmax x : ℝ≥0) → ¬ (w.add δ) x ≤ (cmax x : ℝ≥0) := by
+    intro x hbx; rw [Valuation.add_apply]; exact fun hc => hbx (le_trans le_self_add hc)
+  -- integral-at-`cmax` clocks become unbounded
+  have hcat : ∀ x, w x = (cmax x : ℝ≥0) → ¬ (w.add δ) x ≤ (cmax x : ℝ≥0) := by
+    intro x hwx hc; rw [Valuation.add_apply, hwx] at hc
+    have := (NNReal.coe_le_coe.mpr hc); push_cast at this; linarith
+  -- all other bounded clocks stay bounded, floor unchanged, fraction shifted by `δ`
+  have hother : ∀ x, w x ≤ (cmax x : ℝ≥0) → w x ≠ (cmax x : ℝ≥0) →
+      (w.add δ) x ≤ (cmax x : ℝ≥0) ∧ regionFloor cmax (w.add δ) x = ⌊w x⌋₊ ∧
+        fracPart ((w.add δ) x) = fracPart (w x) + (δ : ℝ) := by
+    intro x hbx hne
+    obtain ⟨hfr, hfl⟩ := fracPart_add_of_no_wrap (hnw x hbx)
+    have hdecomp := coe_eq_floor_add_fracPart (w x)
+    have hlt : (w x : ℝ) < cmax x := by
+      rcases lt_or_eq_of_le (show (w x : ℝ) ≤ cmax x from by exact_mod_cast hbx) with h | h
+      · exact h
+      · exact absurd (by exact_mod_cast h : w x = (cmax x : ℝ≥0)) hne
+    have hfllt : ⌊w x⌋₊ < cmax x := by
+      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le' (a := w x))) hlt
+      exact_mod_cast h2
+    have hbnd : (w.add δ) x ≤ (cmax x : ℝ≥0) := by
+      rw [Valuation.add_apply]
+      have hval : ((w x + δ : ℝ≥0) : ℝ) < (⌊w x⌋₊ : ℝ) + 1 := by
+        rw [show ((w x + δ : ℝ≥0) : ℝ) = (w x : ℝ) + δ by push_cast; ring, hdecomp]
+        have := hnw x hbx; linarith
+      have h2 : (⌊w x⌋₊ : ℝ) + 1 ≤ cmax x := by exact_mod_cast Nat.succ_le_of_lt hfllt
+      have : ((w x + δ : ℝ≥0) : ℝ) ≤ cmax x := by linarith
+      exact_mod_cast this
+    refine ⟨hbnd, ?_, by rw [Valuation.add_apply]; exact hfr⟩
+    unfold regionFloor; rw [if_pos hbnd, Valuation.add_apply, hfl]
+  -- bounded-after clocks: bounded before, not at `cmax`
+  have hbb : ∀ x, (w.add δ) x ≤ (cmax x : ℝ≥0) →
+      w x ≤ (cmax x : ℝ≥0) ∧ w x ≠ (cmax x : ℝ≥0) := by
+    intro x hb
+    have hbef : w x ≤ (cmax x : ℝ≥0) := by
+      rw [Valuation.add_apply] at hb; exact le_trans le_self_add hb
+    exact ⟨hbef, fun heq => hcat x heq hb⟩
+  -- `nowSat` characterizes exactly the clocks unbounded after the delay
+  have hnowSat : ∀ x,
+      ((decide ((γ.1 x).val = cmax x + 1) || (γ.2.1 x && decide ((γ.1 x).val = cmax x))) = true
+        ↔ ¬ (w.add δ) x ≤ (cmax x : ℝ≥0)) := by
+    intro x
+    rw [Bool.or_eq_true, decide_eq_true_iff, Bool.and_eq_true, decide_eq_true_iff]
+    by_cases hbx : w x ≤ (cmax x : ℝ≥0)
+    · rw [hvalγ x hbx]
+      have hflle : ⌊w x⌋₊ ≤ cmax x := floor_le_of_le_cmax hbx
+      constructor
+      · rintro (h | ⟨h1, h2⟩)
+        · exact absurd h (by omega)
+        · have hfrac : fracPart (w x) = 0 := by
+            rw [hfzγ x hbx] at h1; exact decide_eq_true_iff.mp h1
+          have hwx : w x = (cmax x : ℝ≥0) := by
+            rw [← (fracPart_eq_zero_iff (w x)).mp hfrac, h2]
+          exact hcat x hwx
+      · intro hub_after
+        have hwx : w x = (cmax x : ℝ≥0) := by
+          by_contra hne; exact hub_after (hother x hbx hne).1
+        refine Or.inr ⟨?_, ?_⟩
+        · rw [hfzγ x hbx, hwx]; exact decide_eq_true_iff.mpr (fracPart_natCast (cmax x))
+        · rw [hwx]; exact Nat.floor_natCast (cmax x)
+    · refine ⟨fun _ => hub x hbx, fun _ => Or.inl (hvalγU x hbx)⟩
+  -- `nowSmall` characterizes the bounded-after integral (below-`cmax`) clocks
+  have hnowSmall : ∀ x, (w.add δ) x ≤ (cmax x : ℝ≥0) →
+      ((γ.2.1 x && decide ((γ.1 x).val < cmax x)) = true ↔ fracPart (w x) = 0) := by
+    intro x hb
+    obtain ⟨hbx, hne⟩ := hbb x hb
+    have hfllt : ⌊w x⌋₊ < cmax x := by
+      have hlt : (w x : ℝ) < cmax x := by
+        rcases lt_or_eq_of_le (show (w x : ℝ) ≤ cmax x from by exact_mod_cast hbx) with h | h
+        · exact h
+        · exact absurd (by exact_mod_cast h : w x = (cmax x : ℝ≥0)) hne
+      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le' (a := w x))) hlt
+      exact_mod_cast h2
+    rw [Bool.and_eq_true, decide_eq_true_iff, hfzγ x hbx, hvalγ x hbx, decide_eq_true_iff]
+    exact and_iff_left hfllt
+  -- bounded-after clocks: fraction is exactly `frac (w x) + δ`
+  have hfrAfter : ∀ x, (w.add δ) x ≤ (cmax x : ℝ≥0) →
+      fracPart ((w.add δ) x) = fracPart (w x) + (δ : ℝ) := by
+    intro x hb; obtain ⟨hbx, hne⟩ := hbb x hb; exact (hother x hbx hne).2.2
+  rw [Prod.ext_iff, Prod.ext_iff]
+  refine ⟨funext fun x => ?_, funext fun x => ?_, funext fun x => funext fun y => ?_⟩
+  · -- floor component
+    apply Fin.ext
+    rw [regionFingerprint_floor, regionCodeStep_caseB_fst hA hB x]
+    by_cases hb : (w.add δ) x ≤ (cmax x : ℝ≥0)
+    · rw [if_neg (fun h => (hnowSat x).mp h hb)]
+      obtain ⟨hbx, hne⟩ := hbb x hb
+      rw [(hother x hbx hne).2.1, hvalγ x hbx]
+    · rw [if_pos ((hnowSat x).mpr hb)]
+      show regionFloor cmax (w.add δ) x = min (cmax x + 1) (cmax x + 1)
+      unfold regionFloor; rw [if_neg hb]; omega
+  · -- frac-zero component
+    rw [regionFingerprint_fracZero, regionCodeStep_caseB_snd hA hB x]
+    refine decide_eq_false_iff_not.mpr ?_
+    rintro ⟨hb, hz⟩
+    rw [hfrAfter x hb] at hz
+    have := fracPart_nonneg (w x); linarith
+  · -- frac-order component
+    rw [regionFingerprint_fracOrder, regionCodeStep_caseB_thd hA hB x y]
+    by_cases hbx : (w.add δ) x ≤ (cmax x : ℝ≥0)
+    · by_cases hby : (w.add δ) y ≤ (cmax y : ℝ≥0)
+      · rw [if_neg (by
+          rw [Bool.or_eq_true]
+          rintro (h | h)
+          · exact (hnowSat x).mp h hbx
+          · exact (hnowSat y).mp h hby)]
+        have hfx := hfrAfter x hbx
+        have hfy := hfrAfter y hby
+        by_cases hsx : fracPart (w x) = 0
+        · rw [if_pos ((hnowSmall x hbx).mpr hsx)]
+          refine decide_eq_true_iff.mpr ⟨hbx, hby, ?_⟩
+          rw [hfx, hfy, hsx]; have := fracPart_nonneg (w y); linarith
+        · rw [if_neg (fun h => hsx ((hnowSmall x hbx).mp h))]
+          by_cases hsy : fracPart (w y) = 0
+          · rw [if_pos ((hnowSmall y hby).mpr hsy)]
+            refine decide_eq_false_iff_not.mpr ?_
+            rintro ⟨_, _, hle⟩; rw [hfx, hfy, hsy] at hle
+            have hpos : 0 < fracPart (w x) := lt_of_le_of_ne (fracPart_nonneg _) (Ne.symm hsx)
+            linarith
+          · rw [if_neg (fun h => hsy ((hnowSmall y hby).mp h)), hγ, regionFingerprint_fracOrder,
+              decide_eq_decide]
+            obtain ⟨hbx', _⟩ := hbb x hbx
+            obtain ⟨hby', _⟩ := hbb y hby
+            constructor
+            · rintro ⟨_, _, hle⟩; rw [hfx, hfy] at hle; exact ⟨hbx', hby', by linarith⟩
+            · rintro ⟨_, _, hle⟩; refine ⟨hbx, hby, ?_⟩; rw [hfx, hfy]; linarith
+      · rw [if_pos (by
+          rw [Bool.or_eq_true]; exact Or.inr ((hnowSat y).mpr hby))]
+        exact decide_eq_false_iff_not.mpr (fun ⟨_, hb, _⟩ => hby hb)
+    · rw [if_pos (by rw [Bool.or_eq_true]; exact Or.inl ((hnowSat x).mpr hbx))]
+      exact decide_eq_false_iff_not.mpr (fun ⟨hb, _, _⟩ => hbx hb)
 
 omit [Fintype C] [DecidableEq C] in
 open Classical in
