@@ -10,6 +10,7 @@ import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.SymbolicModelChecking
+import DeepWiki.ReactiveSystems.SymbolicModelCheckingDecidable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -230,6 +231,36 @@ theorem thm_12_2_regionDetermined {Loc C : Type*} [Fintype C] [Fintype D]
     {w w' : Valuation (C ⊕ D)} (h : DeepWiki.ReactiveSystems.RegionEqAll w w') :
     DeepWiki.ReactiveSystems.SymSat A ℓ w F ↔ DeepWiki.ReactiveSystems.SymSat A ℓ w' F :=
   DeepWiki.ReactiveSystems.symSat_congr A F h
+
+/-- **Theorem 12.2** (§12.2, p.231), *bounded* region-determinedness — the finite core
+of decidability. When a single finite clamp `cmax` bounds the automaton
+(`A.WellFormed (cmax ∘ Sum.inl)`) and the formula's guards (`F.BoundedByD (cmax ∘
+Sum.inr)`), region equivalence *at that one clamp* already determines symbolic
+satisfaction. This is what `thm_12_2_regionDetermined` needs to descend to the *finite*
+quotient `Region cmax`. The library's `symSat_congr_bounded`. -/
+theorem thm_12_2_bounded {Loc C : Type*} [Fintype C] [Fintype D]
+    (A : TimedAutomaton Loc Act C) {cmax : C ⊕ D → ℕ}
+    (wf : A.WellFormed (cmax ∘ Sum.inl)) (F : Mt Act D)
+    (hF : F.BoundedByD (cmax ∘ Sum.inr)) {ℓ : Loc} {w w' : Valuation (C ⊕ D)}
+    (h : DeepWiki.ReactiveSystems.RegionEq cmax w w') :
+    DeepWiki.ReactiveSystems.SymSat A ℓ w F ↔ DeepWiki.ReactiveSystems.SymSat A ℓ w' F :=
+  DeepWiki.ReactiveSystems.symSat_congr_bounded A wf F hF h
+
+/-- **Theorem 12.2** (§12.2, p.231), *decidability* form. For any automaton `A`
+well-formed for `cmaxC` and any formula `F`, taking the formula clamp `F.formulaCmax`
+gives a finite combined clamp under which concrete satisfaction `((ℓ,v),u) ⊨ F` agrees
+with symbolic satisfaction on the **finite** bounded region quotient `Region` — so
+model checking `F` against `A` reduces to a finite question. The library's
+`mtSat_iff_symSatBoundedRegion_formulaCmax`. -/
+theorem thm_12_2 {Loc C : Type*} [Fintype C] [Fintype D]
+    (A : TimedAutomaton Loc Act C) {cmaxC : C → ℕ} (wf : A.WellFormed cmaxC)
+    (F : Mt Act D) (ℓ : Loc) (v : Valuation C) (u : Valuation D) :
+    A.tlts.MtSat (ℓ, v) u F ↔
+      DeepWiki.ReactiveSystems.SymSatBoundedRegion A
+        (cmax := Sum.elim cmaxC F.formulaCmax) wf F
+        (DeepWiki.ReactiveSystems.Mt.boundedByD_formulaCmax F) ℓ
+        (DeepWiki.ReactiveSystems.region _ (DeepWiki.ReactiveSystems.combineVal v u)) :=
+  DeepWiki.ReactiveSystems.mtSat_iff_symSatBoundedRegion_formulaCmax A wf F ℓ v u
 
 /-- **Exercise 12.8** (§12.2, p.231). For the one-location automaton with invariant
 `x ≤ 2` and an `a`-self-loop guarded `x ≤ 1` (resetting `x`), the initial symbolic
