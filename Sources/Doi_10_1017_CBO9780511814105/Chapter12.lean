@@ -219,6 +219,17 @@ theorem ex_12_9 {Loc C : Type*} (A : TimedAutomaton Loc Act C) (F : Mt Act D)
       DeepWiki.ReactiveSystems.SymSat A ℓ (DeepWiki.ReactiveSystems.combineVal v u) F :=
   DeepWiki.ReactiveSystems.mtSat_iff_symSat A F ℓ v u
 
+/-- **Theorem 12.2** (§12.2, p.231), region-determinedness (the decidability core).
+Symbolic satisfaction `[ℓ, γ] ⊢ F` depends on the combined valuation only through its
+region: region-equivalent valuations satisfy the same `Mt` formulae symbolically. With
+finitely many regions (Theorem 11.3) this is what makes timed model checking decidable.
+The library's `symSat_congr`. -/
+theorem thm_12_2_regionDetermined {Loc C : Type*} [Fintype C] [Fintype D]
+    (A : TimedAutomaton Loc Act C) (F : Mt Act D) {ℓ : Loc}
+    {w w' : Valuation (C ⊕ D)} (h : DeepWiki.ReactiveSystems.RegionEqAll w w') :
+    DeepWiki.ReactiveSystems.SymSat A ℓ w F ↔ DeepWiki.ReactiveSystems.SymSat A ℓ w' F :=
+  DeepWiki.ReactiveSystems.symSat_congr A F h
+
 /-! ## §12.4 Recursion in HML with time -/
 
 /-- **Definition 12.6** (§12.4, p.240). The semantic functional `O_F(S)` of a

@@ -166,4 +166,65 @@ theorem satisfiesMtState_iff_symSat (A : TimedAutomaton Loc Act C) (ℓ : Loc)
     A.tlts.MtSatState (ℓ, v) F ↔ SymSat A ℓ (combineVal v (fun _ => 0)) F :=
   mtSat_iff_symSat A F ℓ v (fun _ => 0)
 
+/-! ## Symbolic satisfaction is region-determined
+
+`SymSat` depends on its combined valuation only through that valuation's region —
+the finiteness fact underlying the *symbolic* (region-quotient) reading of Def 12.5
+and the decidability of timed model checking (Theorem 12.2). -/
+
+variable [Fintype C] [Fintype D]
+
+/-- **`SymSat` is invariant under region equivalence of the combined valuation.**
+Region-equivalent valuations (over `C ⊕ D`) satisfy exactly the same `Mt` formulae
+symbolically, so `[ℓ, γ] ⊢ F` descends to the region `γ`. The guard/reset clauses use
+`regionEqAll_satisfies`/`RegionEqAll.reset` (restricted to `C`/`D` via
+`RegionEqAll.precomp`); the delay clauses use the region time-successor
+`regionEqAll_timeSuccessor` to match each delay by a region-preserving one. -/
+theorem symSat_congr (A : TimedAutomaton Loc Act C) (F : Mt Act D) :
+    ∀ {ℓ : Loc} {w w' : Valuation (C ⊕ D)}, RegionEqAll w w' →
+      (SymSat A ℓ w F ↔ SymSat A ℓ w' F) := by
+  induction F with
+  | tt => intro _ _ _ _; exact Iff.rfl
+  | ff => intro _ _ _ _; exact Iff.rfl
+  | and F G ihF ihG => intro _ _ _ h; exact and_congr (ihF h) (ihG h)
+  | or F G ihF ihG => intro _ _ _ h; exact or_congr (ihF h) (ihG h)
+  | guard g => intro _ _ _ h; exact regionEqAll_satisfies (h.precomp Sum.inr_injective) g
+  | reset x F ihF => intro _ _ _ h; exact ihF (h.reset {Sum.inr x})
+  | dia a F ihF =>
+      intro ℓ w w' h
+      refine exists_congr fun ℓ' => exists_congr fun g => exists_congr fun r =>
+        and_congr Iff.rfl (and_congr ?_ (and_congr ?_ (ihF (h.reset (Sum.inl '' r)))))
+      · exact regionEqAll_satisfies (h.precomp Sum.inl_injective) g
+      · exact regionEqAll_satisfies ((h.reset (Sum.inl '' r)).precomp Sum.inl_injective) (A.inv ℓ')
+  | box a F ihF =>
+      intro ℓ w w' h
+      refine forall_congr' fun ℓ' => forall_congr' fun g => forall_congr' fun r =>
+        imp_congr Iff.rfl (imp_congr ?_ (imp_congr ?_ (ihF (h.reset (Sum.inl '' r)))))
+      · exact regionEqAll_satisfies (h.precomp Sum.inl_injective) g
+      · exact regionEqAll_satisfies ((h.reset (Sum.inl '' r)).precomp Sum.inl_injective) (A.inv ℓ')
+  | existsDelay F ihF =>
+      intro ℓ w w' h
+      constructor
+      · rintro ⟨t, hpre, hpost, hsym⟩
+        obtain ⟨t', ht'⟩ := regionEqAll_timeSuccessor h t
+        exact ⟨t', (regionEqAll_satisfies (h.precomp Sum.inl_injective) (A.inv ℓ)).mp hpre,
+          (regionEqAll_satisfies (ht'.precomp Sum.inl_injective) (A.inv ℓ)).mp hpost,
+          (ihF ht').mp hsym⟩
+      · rintro ⟨t', hpre, hpost, hsym⟩
+        obtain ⟨t, ht⟩ := regionEqAll_timeSuccessor h.symm t'
+        exact ⟨t, (regionEqAll_satisfies (h.precomp Sum.inl_injective) (A.inv ℓ)).mpr hpre,
+          (regionEqAll_satisfies (ht.precomp Sum.inl_injective) (A.inv ℓ)).mp hpost,
+          (ihF ht).mp hsym⟩
+  | forallDelay F ihF =>
+      intro ℓ w w' h
+      constructor
+      · intro hall t' hpre hpost
+        obtain ⟨t, ht⟩ := regionEqAll_timeSuccessor h.symm t'
+        exact (ihF ht).mpr (hall t ((regionEqAll_satisfies (h.precomp Sum.inl_injective) (A.inv ℓ)).mpr hpre)
+          ((regionEqAll_satisfies (ht.precomp Sum.inl_injective) (A.inv ℓ)).mp hpost))
+      · intro hall t hpre hpost
+        obtain ⟨t', ht'⟩ := regionEqAll_timeSuccessor h t
+        exact (ihF ht').mpr (hall t' ((regionEqAll_satisfies (h.precomp Sum.inl_injective) (A.inv ℓ)).mp hpre)
+          ((regionEqAll_satisfies (ht'.precomp Sum.inl_injective) (A.inv ℓ)).mp hpost))
+
 end DeepWiki.ReactiveSystems
