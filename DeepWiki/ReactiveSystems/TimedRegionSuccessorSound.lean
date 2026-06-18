@@ -134,4 +134,30 @@ theorem step_mem_regionCodeOrbit {cmax : C → ℕ} (fuel : ℕ) {γ : RegionCod
     regionCodeStep γ ∈ regionCodeOrbit (fuel + 1) γ :=
   regionCodeOrbit_step_subset fuel h (mem_regionCodeOrbit_self fuel _)
 
+/-! ## The well-founded measure for the orbit -/
+
+/-- The **descent measure** of a region code: `2·Σ(room below saturation) + #(integral
+clocks)`. It strictly decreases along `regionCodeStep` (case C bumps a floor — room down 1,
+weight 2 — while only adding one integral clock; case B clears an integral bit), bounding the
+orbit length and well-founding the completeness induction. -/
+def codeMeasure {cmax : C → ℕ} (γ : RegionCode cmax) : ℕ :=
+  2 * (∑ x, (cmax x + 1 - (γ.1 x).val)) + (Finset.univ.filter (fun x => γ.2.1 x = true)).card
+
+omit [DecidableEq C] in
+/-- A region of zero descent measure is fully saturated (no room, no integral clocks). -/
+theorem codeMeasure_eq_zero_imp {cmax : C → ℕ} {w : Valuation C}
+    (h : codeMeasure (regionFingerprint cmax w) = 0) : ∀ x, (cmax x : ℝ≥0) < w x := by
+  intro x
+  have hsum : (∑ y, (cmax y + 1 - ((regionFingerprint cmax w).1 y).val)) = 0 := by
+    unfold codeMeasure at h; omega
+  have hroom : cmax x + 1 - ((regionFingerprint cmax w).1 x).val = 0 :=
+    (Finset.sum_eq_zero_iff).mp hsum x (Finset.mem_univ x)
+  rw [regionFingerprint_floor] at hroom
+  have hfl : regionFloor cmax w x ≤ cmax x + 1 := regionFloor_le cmax w x
+  have hsat : regionFloor cmax w x = cmax x + 1 := by omega
+  by_contra hb
+  rw [not_lt] at hb
+  have := (regionFloor_le_clamp_iff w x).mpr hb
+  omega
+
 end DeepWiki.ReactiveSystems
