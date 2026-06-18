@@ -108,6 +108,44 @@ theorem regionCodeStep_eq_self_imp_allUnbounded {cmax : C → ℕ} {w : Valuatio
     rw [hval] at heq
     omega
 
+/-! ## Case-C dispatch (the step's components when no clock is integral) -/
+
+omit [DecidableEq C] in
+/-- In case C (not all saturated, no integral clock), the elapse step's floor at `x`. -/
+theorem regionCodeStep_caseC_fst {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ¬ ∃ x, γ.2.1 x = true) (x : C) :
+    (regionCodeStep γ).1 x =
+      if (decide ((γ.1 x).val ≤ cmax x) &&
+          decide (∀ y, (γ.1 y).val ≤ cmax y → γ.2.2 y x = true)) = true then
+        bumpFloor cmax x ((γ.1 x).val + 1) else γ.1 x := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_neg (by rw [decide_eq_true_iff]; exact hB)]
+
+omit [DecidableEq C] in
+/-- In case C, the elapse step's frac-zero bit at `x` (the maximal-fraction clocks become
+integral). -/
+theorem regionCodeStep_caseC_snd {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ¬ ∃ x, γ.2.1 x = true) (x : C) :
+    (regionCodeStep γ).2.1 x =
+      (decide ((γ.1 x).val ≤ cmax x) &&
+        decide (∀ y, (γ.1 y).val ≤ cmax y → γ.2.2 y x = true)) := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_neg (by rw [decide_eq_true_iff]; exact hB)]
+
+omit [DecidableEq C] in
+/-- In case C, the elapse step's frac-order bit at `(x, y)`. -/
+theorem regionCodeStep_caseC_thd {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ¬ ∃ x, γ.2.1 x = true) (x y : C) :
+    (regionCodeStep γ).2.2 x y =
+      (if (decide ((γ.1 x).val = cmax x + 1) || decide ((γ.1 y).val = cmax y + 1)) = true then false
+       else if (decide ((γ.1 x).val ≤ cmax x) &&
+            decide (∀ z, (γ.1 z).val ≤ cmax z → γ.2.2 z x = true)) = true then true
+       else if (decide ((γ.1 y).val ≤ cmax y) &&
+            decide (∀ z, (γ.1 z).val ≤ cmax z → γ.2.2 z y = true)) = true then false
+       else γ.2.2 x y) := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_neg (by rw [decide_eq_true_iff]; exact hB)]
+
 /-! ## Small delays keep the region (the "before" half of the key lemma) -/
 
 omit [Fintype C] [DecidableEq C] in
