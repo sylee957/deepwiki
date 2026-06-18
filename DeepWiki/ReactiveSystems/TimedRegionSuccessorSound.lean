@@ -266,6 +266,78 @@ orbit length and well-founding the completeness induction. -/
 def codeMeasure {cmax : C → ℕ} (γ : RegionCode cmax) : ℕ :=
   2 * (∑ x, (cmax x + 1 - (γ.1 x).val)) + (Finset.univ.filter (fun x => γ.2.1 x = true)).card
 
+/-! ## The descent measure strictly decreases (case C) -/
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Case C decreases the measure.** When some clock is bounded and none is integral, the
+elapse step bumps the maximal-fraction clocks' floors (room down by 1 each, weight 2) while
+adding exactly those as integral (count up by `#maxFrac`), a net drop of `#maxFrac ≥ 1`. -/
+theorem codeMeasure_step_lt_caseC {cmax : C → ℕ} {w : Valuation C}
+    (hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0))
+    (hNI : ∀ x, w x ≤ (cmax x : ℝ≥0) → fracPart (w x) ≠ 0) :
+    codeMeasure (regionCodeStep (regionFingerprint cmax w))
+      < codeMeasure (regionFingerprint cmax w) := by
+  set γ := regionFingerprint cmax w with hγ
+  set isMaxB : C → Bool := fun x => decide ((γ.1 x).val ≤ cmax x) &&
+    decide (∀ y, (γ.1 y).val ≤ cmax y → γ.2.2 y x = true) with hisMaxB
+  have hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1 := by
+    obtain ⟨x, hx⟩ := hbnd
+    intro hall; have h1 := hall x; rw [hγ, regionFingerprint_floor] at h1
+    have h2 := (regionFloor_le_clamp_iff w x).mpr hx; omega
+  have hB : ¬ ∃ x, γ.2.1 x = true := by
+    rintro ⟨x, hx⟩
+    rw [hγ, regionFingerprint_fracZero, decide_eq_true_iff] at hx
+    exact hNI x hx.1 hx.2
+  -- the integral filter of γ is empty
+  have hintγ : (Finset.univ.filter (fun x => γ.2.1 x = true)) = ∅ := by
+    rw [Finset.filter_eq_empty_iff]
+    intro x _
+    rw [hγ, regionFingerprint_fracZero, decide_eq_true_iff]
+    rintro ⟨hbx, hfx⟩; exact hNI x hbx hfx
+  -- per-clock room identity
+  have hroom : ∀ x, cmax x + 1 - (γ.1 x).val =
+      (cmax x + 1 - ((regionCodeStep γ).1 x).val) + (if isMaxB x = true then 1 else 0) := by
+    intro x
+    rw [regionCodeStep_caseC_fst hA hB x]
+    by_cases hm : isMaxB x = true
+    · have hbx : (γ.1 x).val ≤ cmax x := by
+        rw [hisMaxB, Bool.and_eq_true] at hm; exact decide_eq_true_iff.mp hm.1
+      rw [if_pos hm, if_pos hm]
+      have : (bumpFloor cmax x ((γ.1 x).val + 1)).val = min ((γ.1 x).val + 1) (cmax x + 1) := rfl
+      rw [this]; omega
+    · rw [if_neg hm, if_neg hm]; omega
+  -- step's integral filter equals the maxFrac filter
+  have hintstep : (Finset.univ.filter (fun x => (regionCodeStep γ).2.1 x = true)) =
+      Finset.univ.filter (fun x => isMaxB x = true) := by
+    apply Finset.filter_congr
+    intro x _; rw [regionCodeStep_caseC_snd hA hB x]
+  -- the maxFrac filter is nonempty
+  have hpos : 0 < (Finset.univ.filter (fun x => isMaxB x = true)).card := by
+    obtain ⟨x₀, hx₀⟩ := hbnd
+    obtain ⟨x₁, hx₁S, hx₁max⟩ :=
+      (Finset.univ.filter (fun x => w x ≤ (cmax x : ℝ≥0))).exists_max_image (fun x => fracPart (w x))
+        ⟨x₀, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hx₀⟩⟩
+    have hbnd1 : w x₁ ≤ (cmax x₁ : ℝ≥0) := (Finset.mem_filter.mp hx₁S).2
+    rw [Finset.card_pos]
+    refine ⟨x₁, Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩⟩
+    rw [hisMaxB, Bool.and_eq_true, decide_eq_true_iff, decide_eq_true_iff]
+    refine ⟨by rw [hγ, regionFingerprint_floor]; exact (regionFloor_le_clamp_iff w x₁).mpr hbnd1,
+      fun y hy => ?_⟩
+    have hbndy : w y ≤ (cmax y : ℝ≥0) := by
+      rw [hγ, regionFingerprint_floor] at hy; exact (regionFloor_le_clamp_iff w y).mp hy
+    rw [hγ, regionFingerprint_fracOrder, decide_eq_true_iff]
+    exact ⟨hbndy, hbnd1, hx₁max y (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hbndy⟩)⟩
+  -- assemble
+  have hsum : (∑ x, (cmax x + 1 - (γ.1 x).val)) =
+      (∑ x, (cmax x + 1 - ((regionCodeStep γ).1 x).val)) +
+        (Finset.univ.filter (fun x => isMaxB x = true)).card := by
+    rw [Finset.card_filter, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl (fun x _ => hroom x)
+  unfold codeMeasure
+  rw [hintγ, Finset.card_empty, hintstep, hsum]
+  omega
+
 omit [DecidableEq C] in
 /-- A region of zero descent measure is fully saturated (no room, no integral clocks). -/
 theorem codeMeasure_eq_zero_imp {cmax : C → ℕ} {w : Valuation C}
