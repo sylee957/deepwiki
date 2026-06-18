@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ServersMimo
 import DeepWiki.NetworkCalculus.ServersResidual
 import DeepWiki.NetworkCalculus.ServersResidualEdf
 import DeepWiki.NetworkCalculus.ServersResidualFifo
+import DeepWiki.NetworkCalculus.ServersResidualFifoOutput
 import DeepWiki.NetworkCalculus.ServersResidualGps
 import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
 import DeepWiki.NetworkCalculus.ServersResidualMinimal
@@ -91,7 +92,11 @@ alias thm_7_4 := apply_tsub_le_of_isFifo
 /-- **Theorem 7.5** (§7.3.1.3, p.166): FIFO residual service curves (θ-family): a FIFO server with min-plus aggregate β and cross arrival curves α_j offers flow i the residual β_i^θ = [β − ∑_{j≠i} α_j ∗ δ_θ]⁺ ∧ δ_θ for every offset θ. -/
 alias thm_7_5 := minConv_fifoResidual_le_of_isFifo
 
-/-! **Corollary 7.2** (§7.3.1.3, p.167): FIFO departure arrival curve: an arrival curve for the departure process of flow i is inf_{θ≥0} (α_i^θ ⊘ β_i^θ) using the θ-family residual; the per-θ FIFO output infimum is not formalized. Not formalized in the library. -/
+/-- **Corollary 7.2** (§7.3.1.3, p.167): FIFO departure arrival curve: an arrival curve for the
+departure process of flow i is `⨅_{θ≥0} (α_i ⊘ β_i^θ)` using the θ-family residual — proved by
+applying the deconvolution output bound (Thm 5.3) per offset θ and taking the infimum (Prop 5.2).
+The library's `isMaximalArrivalBound_fifoOutput_iInf`. -/
+alias cor_7_2 := isMaximalArrivalBound_fifoOutput_iInf
 
 /-! **Example 7.1** (§7.3.1.3, p.167): A 2-flow FIFO server with rate-latency aggregate β_{R,T} and token-bucket cross-flow α_2 = γ_{r2,b2}: the optimal residual rate-latency service curve for flow 1. Not formalized in the library. -/
 
