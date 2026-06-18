@@ -103,6 +103,38 @@ def WeakPath (L : LTS Proc Act) (tau : Act) : Proc → List Act → Proc → Pro
   | p, [], q => tauStar L tau p q
   | p, a :: w, q => a ≠ tau ∧ ∃ p', (L ⊢ p =[a]⇒[tau] p') ∧ WeakPath L tau p' w q
 
+/-- Cons intro for a weak path: a visible weak `a`-step then a weak path. -/
+theorem weakPath_cons {a : Act} {p p' q : Proc} {w : List Act} (ha : a ≠ tau)
+    (hstep : L ⊢ p =[a]⇒[tau] p') (hpath : WeakPath L tau p' w q) :
+    WeakPath L tau p (a :: w) q := ⟨ha, p', hstep, hpath⟩
+
+/-- A weak path absorbs a *leading* chain of silent steps. -/
+theorem weakPath_tauStar_left {p p₀ q : Proc} {w : List Act} (ht : tauStar L tau p p₀)
+    (hw : WeakPath L tau p₀ w q) : WeakPath L tau p w q := by
+  cases w with
+  | nil => exact tauStar_trans ht hw
+  | cons a w =>
+      obtain ⟨ha, p', hstep, hpath⟩ := hw
+      exact ⟨ha, p', tauStar_trans_weakStep ht hstep, hpath⟩
+
+/-- A weak path absorbs a *trailing* chain of silent steps. -/
+theorem weakPath_tauStar_right {p q q' : Proc} {w : List Act} (hw : WeakPath L tau p w q)
+    (ht : tauStar L tau q q') : WeakPath L tau p w q' := by
+  induction w generalizing p with
+  | nil => exact tauStar_trans hw ht
+  | cons a w ih =>
+      obtain ⟨ha, p', hstep, hpath⟩ := hw
+      exact ⟨ha, p', hstep, ih hpath⟩
+
+/-- Weak paths compose, concatenating their action lists. -/
+theorem weakPath_append {p q r : Proc} {w w' : List Act} (h1 : WeakPath L tau p w q)
+    (h2 : WeakPath L tau q w' r) : WeakPath L tau p (w ++ w') r := by
+  induction w generalizing p with
+  | nil => exact weakPath_tauStar_left h1 h2
+  | cons a w ih =>
+      obtain ⟨ha, p', hstep, hpath⟩ := h1
+      exact ⟨ha, p', hstep, ih hpath⟩
+
 /-- The *weak traces* of `p`: the sequences of visible actions
 `p` can perform via weak transitions. -/
 def WeakTraces (L : LTS Proc Act) (tau : Act) (p : Proc) : Set (List Act) :=

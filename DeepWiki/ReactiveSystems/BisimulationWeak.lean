@@ -80,6 +80,14 @@ theorem weakStep_trans_tauStar {L : LTS Proc Act} {tau : Act} {p : Proc} {α : A
   · exact Or.inl ⟨hα, tauStar_trans hts ht⟩
   · exact Or.inr ⟨hα, a, b, h₁, hstep, tauStar_trans h₂ ht⟩
 
+/-- A weak `α`-transition absorbs a *leading* chain of silent steps. -/
+theorem tauStar_trans_weakStep {L : LTS Proc Act} {tau : Act} {p p₀ : Proc} {α : Act}
+    {q : Proc} (ht : tauStar L tau p p₀) (hw : WeakStep L tau p₀ α q) :
+    WeakStep L tau p α q := by
+  rcases hw with ⟨hα, hts⟩ | ⟨hα, a, b, h₁, hstep, h₂⟩
+  · exact Or.inl ⟨hα, tauStar_trans ht hts⟩
+  · exact Or.inr ⟨hα, a, b, tauStar_trans ht h₁, hstep, h₂⟩
+
 /-- A weak transition is a reachability run. -/
 theorem weakStep_reachable {L : LTS Proc Act} {tau : Act} {p : Proc} {α : Act} {q : Proc}
     (h : L ⊢ p =[α]⇒[tau] q) : L.Reachable p q := by
