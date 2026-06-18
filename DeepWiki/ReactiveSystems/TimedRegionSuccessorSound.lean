@@ -803,4 +803,98 @@ theorem codeMeasure_eq_zero_imp {cmax : C → ℕ} {w : Valuation C}
   have := (regionFloor_le_clamp_iff w x).mpr hb
   omega
 
+/-! ## Reachability of every delayed region (the completeness induction) -/
+
+omit [DecidableEq C] in
+/-- The maximal fractional part among the bounded clocks is achieved and bounds them all. -/
+theorem exists_max_fracPart {cmax : C → ℕ} {w : Valuation C}
+    (hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0)) :
+    ∃ M : ℝ, (∃ xM, w xM ≤ (cmax xM : ℝ≥0) ∧ fracPart (w xM) = M) ∧
+      (∀ x, w x ≤ (cmax x : ℝ≥0) → fracPart (w x) ≤ M) := by
+  obtain ⟨x₀, hx₀⟩ := hbnd
+  obtain ⟨xM, hxMS, hxMmax⟩ :=
+    (Finset.univ.filter (fun x => w x ≤ (cmax x : ℝ≥0))).exists_max_image
+      (fun x => fracPart (w x)) ⟨x₀, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hx₀⟩⟩
+  refine ⟨fracPart (w xM), ⟨xM, (Finset.mem_filter.mp hxMS).2, rfl⟩, fun x hx => ?_⟩
+  exact hxMmax x (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hx⟩)
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Step-or-stay.** From a non-fixpoint region, any delay `t` either keeps the region
+(`fp (w + t) = fp w`) or there is an earlier delay `δ ≤ t` already realizing the elapse step
+(`fp (w + δ) = regionCodeStep (fp w)`). The bridge from the per-case at-`δ`/small-delay lemmas
+to the orbit reachability induction; picks `δ = 1 − M` (case C) or a tiny `δ` (case B). -/
+theorem regionFingerprint_add_step_or_stay {cmax : C → ℕ} {w : Valuation C}
+    (hns : regionCodeStep (regionFingerprint cmax w) ≠ regionFingerprint cmax w) (t : ℝ≥0) :
+    regionFingerprint cmax (w.add t) = regionFingerprint cmax w ∨
+      ∃ δ : ℝ≥0, δ ≤ t ∧
+        regionFingerprint cmax (w.add δ) = regionCodeStep (regionFingerprint cmax w) := by
+  have hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0) := by
+    by_contra hc
+    simp only [not_exists, not_le] at hc
+    exact hns ((regionCodeStep_sound_allUnbounded hc).symm.trans (by rw [Valuation.add_zero]))
+  obtain ⟨M, ⟨xM, hxMb, hxMf⟩, hMmax⟩ := exists_max_fracPart hbnd
+  have hM1 : M < 1 := by rw [← hxMf]; exact fracPart_lt_one (w xM)
+  by_cases hI : ∃ x, w x ≤ (cmax x : ℝ≥0) ∧ fracPart (w x) = 0
+  · -- case B: a positive but tiny delay reaches the step (`t = 0` keeps the region)
+    by_cases ht0 : t = 0
+    · left; rw [ht0, Valuation.add_zero]
+    · right
+      have htpos : (0 : ℝ) < (t : ℝ) := by exact_mod_cast (pos_iff_ne_zero.mpr ht0 : (0 : ℝ≥0) < t)
+      set r : ℝ := min (t : ℝ) ((1 - M) / 2) with hr
+      have hpos : (0 : ℝ) < r := lt_min htpos (by linarith)
+      refine ⟨r.toNNReal, ?_, ?_⟩
+      · rw [← NNReal.coe_le_coe, Real.coe_toNNReal r hpos.le, hr]; exact min_le_left _ _
+      · apply regionFingerprint_add_eq_step_caseB hI
+        · rw [Real.coe_toNNReal r hpos.le]; exact hpos
+        · intro x hx
+          rw [Real.coe_toNNReal r hpos.le]
+          have hr2 : r ≤ (1 - M) / 2 := by rw [hr]; exact min_le_right _ _
+          have := hMmax x hx; linarith
+  · -- case C: stay below the integer-crossing time `1 − M`, else step at exactly `1 − M`
+    simp only [not_exists, not_and] at hI
+    have hM0 : 0 < M := by
+      rw [← hxMf]; exact lt_of_le_of_ne (fracPart_nonneg _) (Ne.symm (hI xM hxMb))
+    by_cases ht : (t : ℝ) < 1 - M
+    · left
+      apply regionFingerprint_add_eq_of_small hI
+      intro x hx; have := hMmax x hx; linarith
+    · right
+      rw [not_lt] at ht
+      refine ⟨(1 - M).toNNReal, ?_, ?_⟩
+      · rw [← NNReal.coe_le_coe, Real.coe_toNNReal _ (by linarith)]; exact ht
+      · exact regionFingerprint_add_eq_step_caseC ⟨xM, hxMb, hxMf⟩ hMmax hI
+          (by rw [Real.coe_toNNReal _ (by linarith)])
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Every delayed region lies in the orbit.** If the descent measure of `fp w` is at most
+`n`, then for every delay `t` the region `fp (w + t)` is among the first `n` elapse steps from
+`fp w`. By induction on `n`: a fixpoint (or measure-0) region stays put; otherwise step-or-stay
+either keeps the region or splits the delay at the step, and the measure drops by at least 1. -/
+theorem fp_add_mem_orbit {cmax : C → ℕ} : ∀ (n : ℕ) (w : Valuation C),
+    codeMeasure (regionFingerprint cmax w) ≤ n → ∀ (t : ℝ≥0),
+      regionFingerprint cmax (w.add t) ∈ regionCodeOrbit n (regionFingerprint cmax w) := by
+  intro n
+  induction n with
+  | zero =>
+    intro w hmeas t
+    rw [regionFingerprint_add_of_allUnbounded (codeMeasure_eq_zero_imp (Nat.le_zero.mp hmeas))]
+    exact mem_regionCodeOrbit_self 0 _
+  | succ n ih =>
+    intro w hmeas t
+    by_cases hfix : regionCodeStep (regionFingerprint cmax w) = regionFingerprint cmax w
+    · rw [regionFingerprint_add_of_allUnbounded (regionCodeStep_eq_self_imp_allUnbounded hfix)]
+      exact mem_regionCodeOrbit_self (n + 1) _
+    · rcases regionFingerprint_add_step_or_stay hfix t with hstay | ⟨δ, hδt, hstep⟩
+      · rw [hstay]; exact mem_regionCodeOrbit_self (n + 1) _
+      · have hmeas' : codeMeasure (regionFingerprint cmax (w.add δ)) ≤ n := by
+          rw [hstep]; have := codeMeasure_step_lt hfix; omega
+        have hsplit : w.add t = (w.add δ).add (t - δ) := by
+          rw [Valuation.add_add, add_tsub_cancel_of_le hδt]
+        rw [hsplit]
+        have hmem := ih (w.add δ) hmeas' (t - δ)
+        rw [hstep] at hmem
+        exact regionCodeOrbit_step_subset n hfix hmem
+
 end DeepWiki.ReactiveSystems
