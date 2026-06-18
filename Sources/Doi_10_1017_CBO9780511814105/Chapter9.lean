@@ -1,6 +1,7 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCcs
 import DeepWiki.ReactiveSystems.TimedCcsDeterminacy
+import DeepWiki.ReactiveSystems.TimedAlarmTimer
 import DeepWiki.ReactiveSystems.TimedCcsDelayExamples
 import DeepWiki.ReactiveSystems.TimedLightSwitch
 import Sources.Doi_10_1017_CBO9780511814105.Source
@@ -137,5 +138,22 @@ theorem ex_9_3_persistency {Name K : Type*} {defn : K → TCCS Name K} {P : TCCS
     (hcf : IsConstantFree P) {a : Act Name} {Q : TCCS Name K} {d : ℝ≥0}
     (ha : ∃ P', TAct defn P a P') (hd : TDelay defn P d Q) : ∃ Q', TAct defn Q a Q' :=
   tAct_persistent_through_delay hcf ha hd
+
+/-- **Exercise 9.4** (§9.3, p.168). An alarm timer modelled as a TCCS agent
+(`alarmDefn`): `Idle` is set to a period by `set5`/`set10`/`set30`, each `Armed_d`
+counts `d` down and signals the time-out by `t̄o`, and a new `set` re-arms it at any
+moment. Representative behaviour for the 5-period — it arms (`Idle —set5→ Armed5`),
+times out after `5` (`Armed5 —5→ · —t̄o→ Idle`), and can be reset mid-wait
+(`Armed5 —d→ · —set10→ Armed10` for `d ≤ 5`). -/
+theorem ex_9_4 :
+    (tccsTLTS alarmDefn).act (.const .Idle) (Act.name .set5) (.const .Armed5) ∧
+    (tccsTLTS alarmDefn).delay (.const .Armed5) 5
+        (.choice (.eps 0 (.pre (.coname .to) (.const .Idle))) alarmSet) ∧
+    (tccsTLTS alarmDefn).act
+        (.choice (.eps 0 (.pre (.coname .to) (.const .Idle))) alarmSet)
+        (Act.coname .to) (.const .Idle) ∧
+    (∀ d : ℝ≥0, d ≤ 5 → ∃ Y, (tccsTLTS alarmDefn).delay (.const .Armed5) d Y ∧
+        (tccsTLTS alarmDefn).act Y (Act.name .set10) (.const .Armed10)) :=
+  ⟨alarm_idle_arms, alarm5_countdown, alarm5_timeOut, fun _ h => alarm5_reset h⟩
 
 end DeepWiki.Rs
