@@ -107,6 +107,67 @@ theorem charFormula_sound {q : ℝ≥0 × Valuation Unit}
           | delay => rw [Valuation.add_apply]; exact hq'b
   exact (denotMtRHom runTLTS charBody).le_gfp key hb
 
+/-! ### Completeness: satisfaction implies timed bisimilarity (Exercise 12.19) -/
+
+/-- **Completeness (Theorem 12.5, ⇒; Exercise 12.19).** If `(p, u)` satisfies the
+characteristic formula `X`, then `p` is timed bisimilar to the running example's clock-`u(y)`
+state. Proved by exhibiting the satisfaction relation `R a b := (a, [y = b]) ⊨ X` as a timed
+bisimulation (read off from `mem_charFormula`). -/
+theorem charFormula_complete {q : ℝ≥0 × Valuation Unit} (hq : q ∈ charFormula) :
+    TimedBisimilar runTLTS q.1 (q.2 ()) := by
+  have hr0 : ∀ c : ℝ≥0, Valuation.reset {()} (fun _ : Unit => c) = (fun _ => (0 : ℝ≥0)) := by
+    intro c; funext u; cases u; exact Valuation.reset_mem rfl (fun _ : Unit => c)
+  have hadd : ∀ c t : ℝ≥0, Valuation.add (fun _ : Unit => c) t = (fun _ => c + t) := by
+    intro c t; funext u; rw [Valuation.add_apply]
+  have hR : LTS.IsBisimulation runTLTS
+      (fun a b : ℝ≥0 => (a, fun _ : Unit => b) ∈ charFormula) := by
+    rintro a b hab
+    obtain ⟨hC1, hC2, hC3⟩ := mem_charFormula.1 hab
+    dsimp only at hC1 hC2 hC3
+    refine ⟨fun l a' hstep => ?_, fun l b' hstep => ?_⟩
+    · -- forth
+      cases l with
+      | inl u =>
+          obtain rfl : u = () := rfl
+          cases hstep with
+          | act ha1 =>
+              obtain ⟨hb1, hmem⟩ := hC2 0 (RunStep.act ha1)
+              refine ⟨0, RunStep.act hb1, ?_⟩
+              rwa [hr0] at hmem
+      | inr t =>
+          cases hstep with
+          | delay =>
+              refine ⟨b + t, RunStep.delay b t, ?_⟩
+              have hm := hC3 t (a + t) (RunStep.delay a t)
+              rwa [hadd] at hm
+    · -- back
+      cases l with
+      | inl u =>
+          obtain rfl : u = () := rfl
+          cases hstep with
+          | act hb1 =>
+              rcases hC1 with h1 | ⟨p', hp', hmem⟩
+              · exact absurd h1 (not_lt.mpr hb1)
+              · cases hp' with
+                | act ha1 =>
+                    refine ⟨0, RunStep.act ha1, ?_⟩
+                    rwa [hr0] at hmem
+      | inr t =>
+          cases hstep with
+          | delay =>
+              refine ⟨a + t, RunStep.delay a t, ?_⟩
+              have hm := hC3 t (a + t) (RunStep.delay a t)
+              rwa [hadd] at hm
+  have hq2 : q.2 = fun _ : Unit => q.2 () := by funext u; cases u; rfl
+  exact hR.le_bisimilar (by rw [← hq2]; exact hq)
+
+/-- **Theorem 12.5 / Corollary 12.2 (for the running example).** A state `(p, u)` satisfies the
+characteristic formula `X` iff it is timed bisimilar to the running example's clock-`u(y)`
+state. -/
+theorem mem_charFormula_iff_timedBisimilar {q : ℝ≥0 × Valuation Unit} :
+    q ∈ charFormula ↔ TimedBisimilar runTLTS q.1 (q.2 ()) :=
+  ⟨charFormula_complete, charFormula_sound⟩
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
