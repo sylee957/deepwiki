@@ -64,6 +64,7 @@ import DeepWiki.ReactiveSystems.TimedBisimulationUntimed
 import DeepWiki.ReactiveSystems.TimedBisimulationUntimedStrict
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarity
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarityStrict
+import DeepWiki.ReactiveSystems.TimedBisimulationTimeAbstracted
 import DeepWiki.ReactiveSystems.TimedBisimulationWeak
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.NetworkTimedAutomata

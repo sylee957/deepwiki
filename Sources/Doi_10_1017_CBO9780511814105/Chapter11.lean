@@ -11,6 +11,7 @@ import DeepWiki.ReactiveSystems.TimedLanguageExample
 import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarity
 import DeepWiki.ReactiveSystems.TimedTracesBisimilarityStrict
+import DeepWiki.ReactiveSystems.TimedBisimulationTimeAbstracted
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -364,5 +365,26 @@ theorem ex_11_6_timedTrace_not_untimedBisim :
     ∃ (Q A : Type) (T : TLTS Q A) (p q : Q),
       T.timedLang p = T.timedLang q ∧ ¬ T.UntimedBisimilar p q :=
   DeepWiki.ReactiveSystems.timedLangEq_not_imp_untimedBisimilar
+
+/-- **Definition 11.6′ / Exercise 11.7** (§11.2, p.197). *Time-abstracted
+bisimilarity*: replace every time-delay step by `τ` (the untimed LTS) and take
+*weak* bisimilarity. The library's `TLTS.TimeAbstractedBisimilar`. -/
+abbrev def_11_7_timeAbstracted := @TLTS.TimeAbstractedBisimilar
+
+/-- **Exercise 11.7** (§11.2, p.197), the holding direction. Untimed bisimilarity
+implies time-abstracted bisimilarity: strong bisimilarity on the untimed LTS
+refines weak bisimilarity on it. -/
+theorem ex_11_7_imp {T : TLTS Proc Act} {p q : Proc} (h : T.UntimedBisimilar p q) :
+    T.TimeAbstractedBisimilar p q :=
+  TLTS.UntimedBisimilar.timeAbstractedBisimilar h
+
+/-- **Exercise 11.7** (§11.2, p.197), the answer: **no**, time-abstracted
+bisimilarity is *not* equivalent to untimed bisimilarity. The converse of `ex_11_7_imp`
+fails — a state delaying into a deadlock (`s →delay→ stop`) is time-abstracted
+bisimilar to the deadlock (the delay is silent) but not untimed bisimilar to it. -/
+theorem ex_11_7 :
+    ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
+      T.TimeAbstractedBisimilar p q ∧ ¬ T.UntimedBisimilar p q :=
+  DeepWiki.ReactiveSystems.timeAbstracted_not_imp_untimedBisimilar
 
 end DeepWiki.Rs
