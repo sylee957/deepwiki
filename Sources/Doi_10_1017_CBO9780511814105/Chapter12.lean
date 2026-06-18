@@ -9,6 +9,7 @@ import DeepWiki.ReactiveSystems.TimedHmlEquivalences
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
+import DeepWiki.ReactiveSystems.SymbolicModelChecking
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -189,6 +190,34 @@ theorem ex_12_7_forall (a b : ℕ) (F : Mt Act D) (T : TLTS Proc Act) (p : Proc)
       ∀ d p', (a : ℝ≥0) < d → d < b → T.delay p d p' →
         TLTS.MtSat T p' (Valuation.add (fun x => v (some x)) d) F :=
   TLTS.mtSat_forallInterval a b F T p v
+
+/-! ## §12.2 Symbolic model checking over regions -/
+
+/-- **Definition 12.5** (§12.2, p.230). *Symbolic satisfaction* `[ℓ, γ] ⊢ F`: an `Mt`
+formula checked against a symbolic state — a location `ℓ` and a region `γ` over the
+combined clock set `C ⊎ D` (modelled by a representative combined valuation
+`Sum.elim v u`). The library's `SymSat`. (The book prints 8 clauses; the `x in F`
+reset and atomic guard `g` are the natural `D`-side region operations, and the
+action/delay clauses carry the target/pre invariants to match the TLTS semantics.) -/
+abbrev def_12_5 := @DeepWiki.ReactiveSystems.SymSat
+
+/-- **Theorem 12.1** (§12.2, p.231). *Symbolic model checking agrees with concrete
+model checking*: `((ℓ,v), u) ⊨ F ↔ [ℓ, vu] ⊢ F`, where `vu` combines the automaton
+clocks `v` and the formula clocks `u`. The library's `mtSat_iff_symSat`. -/
+theorem thm_12_1 {Loc C : Type*} (A : TimedAutomaton Loc Act C) (F : Mt Act D)
+    (ℓ : Loc) (v : Valuation C) (u : Valuation D) :
+    A.tlts.MtSat (ℓ, v) u F ↔
+      DeepWiki.ReactiveSystems.SymSat A ℓ (DeepWiki.ReactiveSystems.combineVal v u) F :=
+  DeepWiki.ReactiveSystems.mtSat_iff_symSat A F ℓ v u
+
+/-- **Exercise 12.9** (§12.2, p.231, *for the keenest*). Theorem 12.1 is proved by
+structural induction on the formula `F` — exactly how `mtSat_iff_symSat` is
+established. -/
+theorem ex_12_9 {Loc C : Type*} (A : TimedAutomaton Loc Act C) (F : Mt Act D)
+    (ℓ : Loc) (v : Valuation C) (u : Valuation D) :
+    A.tlts.MtSat (ℓ, v) u F ↔
+      DeepWiki.ReactiveSystems.SymSat A ℓ (DeepWiki.ReactiveSystems.combineVal v u) F :=
+  DeepWiki.ReactiveSystems.mtSat_iff_symSat A F ℓ v u
 
 /-! ## §12.4 Recursion in HML with time -/
 
