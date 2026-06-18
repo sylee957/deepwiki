@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPFifoNode
+import DeepWiki.NetworkCalculus.WorstCaseLPArbMuxNode
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
@@ -149,6 +150,21 @@ theorem example_11_tokenBucketRateLatency_tandem_backlog (r b R₁ T₁ R₂ T�
     worstCaseChainBacklog (tokenBucketArrival r b) (rateLatencyNN R₁ T₁) [rateLatencyNN R₂ T₂]
       = ((r * (T₁ + T₂) + b : ℝ≥0) : ℝ≥0∞) :=
   worstCaseChainBacklog_tokenBucketNN_two_rateLatencyNN r b R₁ T₁ R₂ T₂ hr₁ hr₂ hT
+
+/-- **Table 11.1** (§11.1.1, p.259): the explicit linear program for the worst-case delay of one
+server under *arbitrary (blind) multiplexing*, crossed by two token-bucket flows `γ_{bᵢ,rᵢ}` under
+a strict rate-latency curve `β_{R,T}` — the feasible set over the dates `t₀≤u≤t₁` and sampled
+cumulative values, with the monotonicity, backlogged-start, causality, arrival, aggregate-service
+and `u`-insertion constraints (no FIFO coupling). The library's `ArbMuxNodeFeasible`. -/
+abbrev table_11_1_singleNode := @DeepWiki.ArbMuxNodeFeasible
+
+/-- **Theorem 11.1, single node under arbitrary multiplexing** (§11.1.3, p.261): the optimum of
+the Table 11.1 program (n=1) equals `(R·T+b₁+b₂)/(R−r₂)`, the exact worst-case blind-multiplexing
+delay of the tagged flow 1 — its residual-service delay `hDev(γ_{b₁,r₁}, β_{R,T} ⊖ γ_{b₂,r₂})`.
+The aggregate burst `b₁+b₂` is cleared at the residual rate `R−r₂` (cross traffic can be served
+ahead of the tagged bit), so the LP optimum is *larger* than the FIFO `T+(b₁+b₂)/R`. Both bounds
+are linear arithmetic on the program variables. The library's `arbMuxNode_programOptimum`. -/
+alias thm_11_1_arbMuxNode := DeepWiki.arbMuxNode_programOptimum
 
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
