@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.WorstCaseLP
+import DeepWiki.NetworkCalculus.WorstCaseLPFifoNode
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
@@ -154,6 +155,25 @@ FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
 `x₁<x₂ ⟹ b=0 ∧ y₁≤y₂` and `x₂<x₁ ⟹ b=1 ∧ y₂≤y₁`. The library's `bigM_ordering`. -/
 alias lemma_11_1 := bigM_ordering
 
-/-! **Theorem 11.2** (§11.2.2, p.265): FIFO tandem equivalence — the worst-case delay is the optimum of the MILP whose feasible set adds the Boolean FIFO-ordering constraints (`bigM_ordering`) to the LP. As with Theorem 11.1 the optimum-as-worst-case is `isLUB_programOptimum` (over the MILP-feasible set); the finite-MILP construction with its `0/1` ordering variables is the modeling content, not formalized. -/
+/-- **Table 11.2** (§11.2.1, p.263): the explicit linear program for the worst-case delay of one
+FIFO server crossed by two token-bucket flows `γ_{bᵢ,rᵢ}` under a rate-latency curve `β_{R,T}` —
+the feasible set over the dates `t₁≥t₂≥t₃` and sampled cumulative values, with the monotonicity,
+arrival, service and FIFO (`Dᵢ(t₁)=Aᵢ(t₂)`) constraints. The library's `FifoNodeFeasible`. -/
+abbrev table_11_2 := @DeepWiki.FifoNodeFeasible
+
+/-- **Theorem 11.2, single FIFO node** (§11.2.1–11.2.2, p.263–265): the optimum of the Table 11.2
+program equals `T + (b₁+b₂)/R`, the exact worst-case FIFO delay of the aggregate. Both bounds are
+linear arithmetic on the program variables (the `≤` from the constraints, the `≥` from an explicit
+feasible point), so the finite LP itself — not just its abstract optimum — computes the worst case.
+The library's `fifoNode_programOptimum`. -/
+alias thm_11_2_fifoNode := DeepWiki.fifoNode_programOptimum
+
+/-! **Theorem 11.2, general FIFO tandem** (§11.2.2, p.265): for an `n`-server FIFO tandem the
+worst-case delay is the optimum of a *mixed-integer* LP — the Table 11.2 constraints over the
+exponentially many backward-doubling dates `t₁,…,t_{2^{n+1}−1}`, plus the Boolean monotonicity
+gadgets (`bigM_ordering`/`lemma_11_1`) that totally order the partially-ordered dates. The
+single-node base case is `thm_11_2_fifoNode` and the optimum-as-worst-case is
+`isLUB_programOptimum`; the full exponential MILP construction with its `0/1` ordering variables
+and the trajectory-from-solution reconstruction is the remaining modeling content, not formalized. -/
 
 end DeepWiki.Dnc
