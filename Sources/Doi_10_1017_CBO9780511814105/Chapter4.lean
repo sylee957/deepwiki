@@ -169,6 +169,16 @@ abbrev thm_4_1_fixedPoints_lattice := @fixedPoints.completeLattice
 /-- **Exercise 4.3** (§4.1). A least upper bound is unique. -/
 alias ex_4_3 := IsLUB.unique
 
+/-- **Exercise 4.4(1)** (§4.1, p.77). In the powerset lattice `2^S` (ordered by `⊆`), the least
+upper bound of a family `X ⊆ 2^S` is its union `⋃₀ X`. -/
+theorem ex_4_4_lub {S : Type*} (X : Set (Set S)) : IsLUB X (⋃₀ X) :=
+  ⟨fun _s hs => Set.subset_sUnion_of_mem hs, fun _u hu => Set.sUnion_subset fun _t ht => hu ht⟩
+
+/-- **Exercise 4.4(1)** (§4.1, p.77). Dually, the greatest lower bound of `X ⊆ 2^S` is its
+intersection `⋂₀ X`. -/
+theorem ex_4_4_glb {S : Type*} (X : Set (Set S)) : IsGLB X (⋂₀ X) :=
+  ⟨fun _s hs => Set.sInter_subset_of_mem hs, fun _u hu => Set.subset_sInter fun _t ht => hu ht⟩
+
 /-- **Kleene's fixed-point theorem** (§4.2, dual). The continuous strengthening of
 Theorem 4.2: on a complete lattice the greatest fixed point of a monotone map is
 `⨅ₙ fⁿ(⊤)`. (Not a separately-numbered book item; the §4.2 iterative algorithm.)
