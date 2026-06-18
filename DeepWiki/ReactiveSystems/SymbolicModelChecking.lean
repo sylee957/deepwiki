@@ -227,4 +227,38 @@ theorem symSat_congr (A : TimedAutomaton Loc Act C) (F : Mt Act D) :
         exact (ihF ht').mpr (hall t' ((regionEqAll_satisfies (h.precomp Sum.inl_injective) (A.inv ℓ)).mp hpre)
           ((regionEqAll_satisfies (ht'.precomp Sum.inl_injective) (A.inv ℓ)).mp hpost))
 
+/-! ## The region-quotient form of Def 12.5
+
+`symSat_congr` says `SymSat` factors through region equivalence, so it descends to a
+genuine relation on region classes — the verbatim reading of Def 12.5 where `[ℓ, γ]`
+has `γ` a region of `C ⊕ D`. (Decidability of model checking — Theorem 12.2 — uses in
+addition that the *bounded* region quotient `Region cmax` is finite; that bounded
+descent and its `Decidable` instance are left as the remaining mechanical step.) -/
+
+/-- The setoid of combined valuations under unbounded region equivalence. -/
+def regionAllSetoid (C : Type*) : Setoid (Valuation C) where
+  r := RegionEqAll
+  iseqv := ⟨RegionEqAll.refl, RegionEqAll.symm, RegionEqAll.trans⟩
+
+/-- **Definition 12.5, region form.** Symbolic satisfaction `[ℓ, γ] ⊢ F` with `γ` a
+genuine *region* — an equivalence class of combined valuations over `C ⊕ D` — as
+`SymSat` descended to the region quotient (well-defined by `symSat_congr`). -/
+def SymSatRegion (A : TimedAutomaton Loc Act C) (ℓ : Loc)
+    (γ : Quotient (regionAllSetoid (C ⊕ D))) (F : Mt Act D) : Prop :=
+  Quotient.liftOn γ (fun w => SymSat A ℓ w F) (fun _ _ h => propext (symSat_congr A F h))
+
+/-- `[ℓ, ⟦w⟧] ⊢ F` reduces to `SymSat` on the representative `w`. -/
+@[simp] theorem symSatRegion_mk (A : TimedAutomaton Loc Act C) (ℓ : Loc)
+    (w : Valuation (C ⊕ D)) (F : Mt Act D) :
+    SymSatRegion A ℓ (Quotient.mk (regionAllSetoid (C ⊕ D)) w) F ↔ SymSat A ℓ w F :=
+  Iff.rfl
+
+/-- **Theorem 12.1, region form.** `((ℓ,v), u) ⊨ F ↔ [ℓ, ⟦vu⟧] ⊢ F`, with `⟦vu⟧` the
+region of the combined valuation. -/
+theorem mtSat_iff_symSatRegion (A : TimedAutomaton Loc Act C) (F : Mt Act D)
+    (ℓ : Loc) (v : Valuation C) (u : Valuation D) :
+    A.tlts.MtSat (ℓ, v) u F ↔
+      SymSatRegion A ℓ (Quotient.mk (regionAllSetoid (C ⊕ D)) (combineVal v u)) F :=
+  mtSat_iff_symSat A F ℓ v u
+
 end DeepWiki.ReactiveSystems

@@ -242,6 +242,22 @@ theorem ex_12_8 :
       DeepWiki.ReactiveSystems.boundedLoopFormula :=
   DeepWiki.ReactiveSystems.boundedLoop_symSat
 
+/-- **Definition 12.5, verbatim region form** (§12.2, p.230). Symbolic satisfaction
+`[ℓ, γ] ⊢ F` with `γ` a genuine *region* (an equivalence class of combined `C ⊕ D`
+valuations) — `SymSat` descended to the region quotient, well-defined because it is
+region-invariant (`thm_12_2_regionDetermined`). The library's `SymSatRegion`. -/
+abbrev def_12_5_region := @DeepWiki.ReactiveSystems.SymSatRegion
+
+/-- **Theorem 12.1, region form** (§12.2, p.231). `((ℓ,v), u) ⊨ F` iff the region
+symbolic state `[ℓ, ⟦vu⟧]` satisfies `F`. The library's `mtSat_iff_symSatRegion`. -/
+theorem thm_12_1_region {Loc C : Type*} [Fintype C] [Fintype D]
+    (A : TimedAutomaton Loc Act C) (F : Mt Act D) (ℓ : Loc) (v : Valuation C) (u : Valuation D) :
+    A.tlts.MtSat (ℓ, v) u F ↔
+      DeepWiki.ReactiveSystems.SymSatRegion A ℓ
+        (Quotient.mk (DeepWiki.ReactiveSystems.regionAllSetoid (C ⊕ D))
+          (DeepWiki.ReactiveSystems.combineVal v u)) F :=
+  DeepWiki.ReactiveSystems.mtSat_iff_symSatRegion A F ℓ v u
+
 /-! ## §12.4 Recursion in HML with time -/
 
 /-- **Definition 12.6** (§12.4, p.240). The semantic functional `O_F(S)` of a
