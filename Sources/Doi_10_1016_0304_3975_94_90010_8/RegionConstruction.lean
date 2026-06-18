@@ -1,6 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionGraph
-import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutableFull
+import DeepWiki.ReactiveSystems.TimedRegionSuccessorComplete
 import Sources.Doi_10_1016_0304_3975_94_90010_8.Source
 
 /-! # Alur–Dill region construction — catalog
@@ -9,8 +9,9 @@ The library defines region equivalence as a one-field fingerprint (clamped floor
 bits, frac-order), matching Definition 4.3 verbatim, and builds the finite region quotient
 and region automaton on it. The **time-successor** (Definition 4.6) is the chain
 `α → β → …` of clock regions reachable as time elapses; the library has its *classical
-existence* (`timeSuccessor_of_fintype`) and isolates the constructive enumeration as
-`SuccSound`/`SuccComplete` (the §4.3 construction). -/
+existence* (`timeSuccessor_of_fintype`) and the **constructive enumeration**
+`regionCodeDelaySucc` (the §4.3 deterministic elapse chain), *proved* sound and complete
+(`succSound`/`succComplete` are the obligations, now discharged). -/
 
 namespace DeepWiki.Ad
 
@@ -42,11 +43,30 @@ noncomputable abbrev def_4_8 := @DeepWiki.ReactiveSystems.TimedAutomaton.regionG
 
 /-- **§4.3 construction** (p.204): soundness of an enumerated time-successor — every region
 code listed by `succ` is realized by some delay. The library's `SuccSound` (the obligation
-the constructive Alur–Dill successor must satisfy). -/
+the constructive Alur–Dill successor must satisfy, now discharged by `succSoundRegionDelaySucc`). -/
 abbrev succSound := @DeepWiki.ReactiveSystems.SuccSound
 
 /-- **§4.3 construction** (p.204): completeness of an enumerated time-successor — every
-region code reachable by a delay is listed by `succ`. The library's `SuccComplete`. -/
+region code reachable by a delay is listed by `succ`. The library's `SuccComplete` (discharged
+by `succCompleteRegionDelaySucc`). -/
 abbrev succComplete := @DeepWiki.ReactiveSystems.SuccComplete
+
+/-- **§4.3 construction** (p.204): the constructive time-successor — the deterministic finite
+elapse chain `γ → step γ → …` of a region code until saturation. The library's
+`regionCodeDelaySucc`. -/
+abbrev regionDelaySucc := @DeepWiki.ReactiveSystems.regionCodeDelaySucc
+
+/-- **§4.3 construction** (p.204): the constructive successor is **sound** — every code it lists
+is `fp (w + t)` for a delay `t`. The library's `succSound_regionCodeDelaySucc`. -/
+abbrev succSoundRegionDelaySucc := @DeepWiki.ReactiveSystems.succSound_regionCodeDelaySucc
+
+/-- **§4.3 construction** (p.204): the constructive successor is **complete** — every
+delay-reachable code is listed. The library's `succComplete_regionCodeDelaySucc`. -/
+abbrev succCompleteRegionDelaySucc := @DeepWiki.ReactiveSystems.succComplete_regionCodeDelaySucc
+
+/-- **§4.3–4.4** (decidability via the region automaton): the resulting *unconditional*
+executable decision procedure for the full timed logic — `A ⊨ F` iff the symbolic check on the
+constructive region successor returns `true`. The library's `satisfiesMt_iff_decideFull_delaySucc`. -/
+abbrev decideFullDelaySucc := @DeepWiki.ReactiveSystems.satisfiesMt_iff_decideFull_delaySucc
 
 end DeepWiki.Ad
