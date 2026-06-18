@@ -290,6 +290,122 @@ theorem mtSat_charB_iff {c : ℕ} {q : Once} {u : Valuation Unit} :
       exact (OnceDead.no_act (q := Once.B 0) trivial) hq'
   | B d => trivial
 
+/-! #### The live-location characterization `charA`
+
+`charA c` is characteristic for `A`'s timed-bisimilarity classes. The key is that in this
+automaton the *only* observable distinction between states is the **act-profile** — the set of
+delays after which `a` is still enabled — because every action goes to the single dead class
+and delays are free and deterministic. -/
+
+/-- The unique delay successor of a state by `t`. -/
+def adv : Once → ℝ≥0 → Once
+  | .A e, t => .A (e + t)
+  | .B e, t => .B (e + t)
+
+@[simp] theorem adv_zero (q : Once) : adv q 0 = q := by cases q <;> simp [adv]
+
+theorem adv_adv (q : Once) (t s : ℝ≥0) : adv (adv q t) s = adv q (t + s) := by
+  cases q <;> simp [adv, add_assoc]
+
+/-- Delays are deterministic: the successor is `adv q t`. -/
+theorem onceStep_delay_eq {c : ℕ} {q r : Once} {t : ℝ≥0}
+    (h : OnceStep c q (Sum.inr t) r) : r = adv q t := by
+  cases h with
+  | delayA e t => rfl
+  | delayB e t => rfl
+
+theorem onceStep_delay_adv {c : ℕ} (q : Once) (t : ℝ≥0) :
+    OnceStep c q (Sum.inr t) (adv q t) := by
+  cases q with
+  | A e => exact OnceStep.delayA e t
+  | B e => exact OnceStep.delayB e t
+
+/-- Every action leads to the dead location `B 0`. -/
+theorem onceStep_act_eq {c : ℕ} {q r : Once} (h : OnceStep c q (Sum.inl ()) r) :
+    r = Once.B 0 := by cases h with | act _ => rfl
+
+/-- A state can fire `a` now. -/
+def canAct (c : ℕ) (q : Once) : Prop := ∃ q', OnceStep c q (Sum.inl ()) q'
+
+theorem canAct_A {c : ℕ} {e : ℝ≥0} : canAct c (Once.A e) ↔ e ≤ (c : ℝ≥0) :=
+  ⟨fun ⟨_, h⟩ => by cases h with | act hh => exact hh, fun h => ⟨_, OnceStep.act h⟩⟩
+
+/-- **Timed bisimilarity in the Example 11.4 automaton is exactly act-profile equality**: two
+states are timed bisimilar iff, after every delay, they agree on whether `a` is enabled. -/
+theorem timedBisimilar_once_iff {c : ℕ} {q q' : Once} :
+    TimedBisimilar (onceTLTS c) q q' ↔ ∀ t, (canAct c (adv q t) ↔ canAct c (adv q' t)) := by
+  constructor
+  · intro hbis t
+    obtain ⟨_, _, hdf, _⟩ := (timedBisimilar_iff (onceTLTS c) q q').mp hbis
+    obtain ⟨r, hr, hrb⟩ := hdf t (adv q t) (onceStep_delay_adv q t)
+    rw [onceStep_delay_eq hr] at hrb
+    obtain ⟨haf, hab, _, _⟩ := (timedBisimilar_iff (onceTLTS c) (adv q t) (adv q' t)).mp hrb
+    exact ⟨fun ⟨w, hw⟩ => let ⟨w', hw', _⟩ := haf () w hw; ⟨w', hw'⟩,
+           fun ⟨w, hw⟩ => let ⟨w', hw', _⟩ := hab () w hw; ⟨w', hw'⟩⟩
+  · intro hprof
+    have hbis : LTS.IsBisimulation (onceTLTS c)
+        (fun a b => ∀ t, canAct c (adv a t) ↔ canAct c (adv b t)) := by
+      rintro a b hab
+      refine ⟨fun l a' hstep => ?_, fun l b' hstep => ?_⟩
+      · cases l with
+        | inl u =>
+            obtain ⟨⟩ := u
+            have hb : canAct c b := by
+              have h0 : canAct c (adv b 0) := (hab 0).mp (by rw [adv_zero]; exact ⟨a', hstep⟩)
+              rwa [adv_zero] at h0
+            obtain ⟨b', hb'⟩ := hb
+            refine ⟨b', hb', ?_⟩
+            rw [onceStep_act_eq hstep, onceStep_act_eq hb']; exact fun _ => Iff.rfl
+        | inr t =>
+            rw [onceStep_delay_eq hstep]
+            refine ⟨adv b t, onceStep_delay_adv b t, fun s => ?_⟩
+            rw [adv_adv, adv_adv]; exact hab (t + s)
+      · cases l with
+        | inl u =>
+            obtain ⟨⟩ := u
+            have ha : canAct c a := by
+              have h0 : canAct c (adv a 0) := (hab 0).mpr (by rw [adv_zero]; exact ⟨b', hstep⟩)
+              rwa [adv_zero] at h0
+            obtain ⟨a', ha'⟩ := ha
+            refine ⟨a', ha', ?_⟩
+            rw [onceStep_act_eq hstep, onceStep_act_eq ha']; exact fun _ => Iff.rfl
+        | inr t =>
+            rw [onceStep_delay_eq hstep]
+            refine ⟨adv a t, onceStep_delay_adv a t, fun s => ?_⟩
+            rw [adv_adv, adv_adv]; exact hab (t + s)
+    exact hbis.le_bisimilar hprof
+
+/-- `charA c` (at formula clock `y = d`) is satisfied exactly when the state's act-profile is
+that of `A d`: after every delay `t`, `a` is enabled iff `d + t ≤ c`. -/
+theorem mtSat_charA {c : ℕ} {q : Once} {d : ℝ≥0} :
+    (onceTLTS c).MtSat q (fun _ => d) (charA c) ↔
+      ∀ t, (canAct c (adv q t) ↔ d + t ≤ (c : ℝ≥0)) := by
+  constructor
+  · intro h t
+    obtain ⟨hC1, hC2⟩ := h t (adv q t) (onceStep_delay_adv q t)
+    refine ⟨fun ⟨w, hw⟩ => ?_, fun hle => ?_⟩
+    · exact (hC2 w hw).1
+    · rcases hC1 with hgt | ⟨w, hw, _⟩
+      · exact absurd hle (not_le.mpr (show (c : ℝ≥0) < d + t from hgt))
+      · exact ⟨w, hw⟩
+  · intro h t q' hdel
+    rw [onceStep_delay_eq hdel]
+    refine ⟨?_, fun w hw => ⟨?_, by rw [onceStep_act_eq hw]; exact mtSat_charB.mpr trivial⟩⟩
+    · by_cases hle : d + t ≤ (c : ℝ≥0)
+      · obtain ⟨w, hw⟩ := (h t).mpr hle
+        exact Or.inr ⟨w, hw, by rw [onceStep_act_eq hw]; exact mtSat_charB.mpr trivial⟩
+      · exact Or.inl (show (c : ℝ≥0) < d + t from not_le.mp hle)
+    · exact (h t).mp ⟨w, hw⟩
+
+/-- **`charA` is characteristic for the live location** (the book's Theorem-12.5 analogue for
+Example 11.4, no recursion): `(q, [y = d])` satisfies `charA c` iff `q` is timed bisimilar to
+`A d`. -/
+theorem mtSat_charA_iff {c : ℕ} {q : Once} {d : ℝ≥0} :
+    (onceTLTS c).MtSat q (fun _ => d) (charA c) ↔ TimedBisimilar (onceTLTS c) q (Once.A d) := by
+  rw [mtSat_charA, timedBisimilar_once_iff]
+  refine forall_congr' (fun t => ?_)
+  rw [show adv (Once.A d) t = Once.A (d + t) from rfl, canAct_A]
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
