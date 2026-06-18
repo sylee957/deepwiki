@@ -192,6 +192,30 @@ theorem tDelay_pre_iff {α : Act Name} {P Q : TCCS Name K} {t : ℝ≥0} :
   · intro h; cases h with | prePatient hα _ => exact ⟨hα, rfl⟩
   · rintro ⟨hα, rfl⟩; exact TDelay.prePatient hα t
 
+/-- Inversion for a delay through restriction: the body delays and the restriction
+persists. -/
+theorem tDelay_restrict_iff {P Q : TCCS Name K} {L : Set (Act Name)} {t : ℝ≥0} :
+    TDelay defn (.restrict P L) t Q ↔ ∃ P', TDelay defn P t P' ∧ Q = .restrict P' L := by
+  constructor
+  · intro h; cases h with | res hP => exact ⟨_, hP, rfl⟩
+  · rintro ⟨P', hP, rfl⟩; exact TDelay.res hP
+
+/-- Inversion for a delay through relabelling: the body delays and the relabelling
+persists. -/
+theorem tDelay_relabel_iff {P Q : TCCS Name K} {f : Act Name → Act Name} {t : ℝ≥0} :
+    TDelay defn (.relabel P f) t Q ↔ ∃ P', TDelay defn P t P' ∧ Q = .relabel P' f := by
+  constructor
+  · intro h; cases h with | rel hP => exact ⟨_, hP, rfl⟩
+  · rintro ⟨P', hP, rfl⟩; exact TDelay.rel hP
+
+/-- Inversion for a delay of `nil`: `nil` has no delay transition (it is
+time-stuck). -/
+theorem tDelay_nil_iff {Q : TCCS Name K} {t : ℝ≥0} :
+    TDelay defn .nil t Q ↔ False := by
+  constructor
+  · intro h; cases h
+  · exact False.elim
+
 end Inversion
 
 end DeepWiki.ReactiveSystems

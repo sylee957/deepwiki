@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCcs
+import DeepWiki.ReactiveSystems.TimedCcsDeterminacy
 import DeepWiki.ReactiveSystems.TimedCcsDelayExamples
 import DeepWiki.ReactiveSystems.TimedLightSwitch
 import Sources.Doi_10_1017_CBO9780511814105.Source
@@ -116,5 +117,25 @@ theorem ex_9_2 {d : ℝ≥0} (h : d ≤ 1.4) :
       (.choice (.eps (1.4 - d) (.pre Act.tau (.pre (.name .press) (.const .Off))))
         (.pre (.name .press) (.const .Bright))) :=
   DeepWiki.ReactiveSystems.lightDefn_light_delayReduces h
+
+/-- **Exercise 9.3**, determinacy of delay (§9.3, p.168). For constant-free TCCS
+terms, a delay leads to a unique state *up to* the identification `ε(0).P = P`: if
+`P —d→ P'` and `P —d→ P''` then `P'` and `P''` are `ε(0)`-congruent. (Literal
+equality fails — `ε(1).a.0` delays `1` to both `ε(0).a.0` and `a.0` — which is
+exactly the reason the book does not distinguish `P` from `ε(0).P`.) The library's
+`tDelay_determinacy_epsCong`. -/
+theorem ex_9_3_determinacy {Name K : Type*} {defn : K → TCCS Name K} {P : TCCS Name K}
+    (hcf : IsConstantFree P) {d : ℝ≥0} {P' P'' : TCCS Name K}
+    (h₁ : TDelay defn P d P') (h₂ : TDelay defn P d P'') : EpsCong P' P'' :=
+  tDelay_determinacy_epsCong hcf h₁ h₂
+
+/-- **Exercise 9.3**, persistency of action (§9.3, p.168). For constant-free TCCS
+terms, a time delay never disables a visible action: if `P` can perform `a` and
+`P —d→ Q`, then `Q` can still perform `a`. The library's
+`tAct_persistent_through_delay`. -/
+theorem ex_9_3_persistency {Name K : Type*} {defn : K → TCCS Name K} {P : TCCS Name K}
+    (hcf : IsConstantFree P) {a : Act Name} {Q : TCCS Name K} {d : ℝ≥0}
+    (ha : ∃ P', TAct defn P a P') (hd : TDelay defn P d Q) : ∃ Q', TAct defn Q a Q' :=
+  tAct_persistent_through_delay hcf ha hd
 
 end DeepWiki.Rs
