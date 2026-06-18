@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.TimedHmlExamples
 import DeepWiki.ReactiveSystems.TimedHmlClosedFormulae
 import DeepWiki.ReactiveSystems.TimedHmlEquivalences
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
+import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -156,6 +157,37 @@ theorem ex_12_5 :
         (Mt.or (Mt.or (Mt.guard (.atom () .lt 1)) (Mt.guard (.atom () .gt 1)))
           (Mt.box () Mt.ff)))) :=
   rfl
+
+/-- **Exercise 12.7** (§12.2, p.230), the interval-decorated existential delay
+operator `∃∃[a,b)F` ("a delay `d` with `a ≤ d < b` is possible, after which `F`
+holds"). It is *definable in `Mt`* — the library's `Mt.existsInterval`, which resets
+a fresh formula clock to measure the delay against the bounds. -/
+abbrev def_12_7_existsInterval := @Mt.existsInterval
+
+/-- **Exercise 12.7** (§12.2, p.230), the interval-decorated universal delay
+operator `∀∀(a,b)F` ("`F` holds after every delay strictly between `a` and `b`"),
+definable in `Mt`. The library's `Mt.forallInterval`. -/
+abbrev def_12_7_forallInterval := @Mt.forallInterval
+
+/-- **Exercise 12.7** (§12.2, p.230), expressibility of `∃∃[a,b)`. The `Mt` encoding
+holds exactly when some delay `d ∈ [a,b)` reaches a state satisfying `F`, so the
+decorated operator adds no expressive power over `Mt`. -/
+theorem ex_12_7_exists (a b : ℕ) (F : Mt Act D) (T : TLTS Proc Act) (p : Proc)
+    (v : Valuation (Option D)) :
+    TLTS.MtSat T p v (Mt.existsInterval a b F) ↔
+      ∃ d p', (a : ℝ≥0) ≤ d ∧ d < b ∧ T.delay p d p' ∧
+        TLTS.MtSat T p' (Valuation.add (fun x => v (some x)) d) F :=
+  TLTS.mtSat_existsInterval a b F T p v
+
+/-- **Exercise 12.7** (§12.2, p.230), expressibility of `∀∀(a,b)`. The `Mt` encoding
+holds exactly when every delay `d` strictly between `a` and `b` reaches a state
+satisfying `F`. -/
+theorem ex_12_7_forall (a b : ℕ) (F : Mt Act D) (T : TLTS Proc Act) (p : Proc)
+    (v : Valuation (Option D)) :
+    TLTS.MtSat T p v (Mt.forallInterval a b F) ↔
+      ∀ d p', (a : ℝ≥0) < d → d < b → T.delay p d p' →
+        TLTS.MtSat T p' (Valuation.add (fun x => v (some x)) d) F :=
+  TLTS.mtSat_forallInterval a b F T p v
 
 /-! ## §12.4 Recursion in HML with time -/
 

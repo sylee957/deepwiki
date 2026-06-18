@@ -76,6 +76,7 @@ import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
 import DeepWiki.ReactiveSystems.TimedHml
 import DeepWiki.ReactiveSystems.TimedHmlClocks
+import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
