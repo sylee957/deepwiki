@@ -29,6 +29,8 @@ import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter1
 
 -- Per-paper source catalogs (papers the book defers to; see CLAUDE.md)
 import Sources.Doi_10_7146_brics_v2i2_19504.Source
+import Sources.Doi_10_7146_brics_v2i2_19504.TimedHmlCharacterization
 import Sources.Doi_10_1109_REAL_1992_242681.Source
+import Sources.Doi_10_1109_REAL_1992_242681.MutualExclusionCorrectness
 import Sources.Doi_10_1016_0304_3975_94_90010_8.Source
 import Sources.Doi_10_1016_0304_3975_94_90010_8.RegionConstruction
