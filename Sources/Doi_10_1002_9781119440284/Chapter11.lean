@@ -171,6 +171,12 @@ FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
 `x₁<x₂ ⟹ b=0 ∧ y₁≤y₂` and `x₂<x₁ ⟹ b=1 ∧ y₂≤y₁`. The library's `bigM_ordering`. -/
 alias lemma_11_1 := bigM_ordering
 
+/-- **Lemma 11.1, boxed equivalence** (§11.2.2, p.264): the full content — with values boxed in
+`[0,M]`, the four big-M constraints are *equivalent* to the selector `b` consistently ordering both
+pairs (`b=0 → x₁≤x₂ ∧ y₁≤y₂`, `b=1 → x₂≤x₁ ∧ y₂≤y₁`), so the linearization is faithful, not merely
+sound. The library's `bigM_ordering_iff`. -/
+alias lemma_11_1_boxed := DeepWiki.bigM_ordering_iff
+
 /-- **Table 11.2** (§11.2.1, p.263): the explicit linear program for the worst-case delay of one
 FIFO server crossed by two token-bucket flows `γ_{bᵢ,rᵢ}` under a rate-latency curve `β_{R,T}` —
 the feasible set over the dates `t₁≥t₂≥t₃` and sampled cumulative values, with the monotonicity,
@@ -191,5 +197,15 @@ gadgets (`bigM_ordering`/`lemma_11_1`) that totally order the partially-ordered 
 single-node base case is `thm_11_2_fifoNode` and the optimum-as-worst-case is
 `isLUB_programOptimum`; the full exponential MILP construction with its `0/1` ordering variables
 and the trajectory-from-solution reconstruction is the remaining modeling content, not formalized. -/
+
+/-- **§11.2.3 upper bound** (p.267): relaxing the MILP by dropping the Boolean variables enlarges
+the feasible set, so the relaxed LP's optimum is a (polynomial-time) upper bound on the worst-case
+delay. The library's `milpOptimum_le_relaxationOptimum`. -/
+alias bound_11_2_3_upper := DeepWiki.milpOptimum_le_relaxationOptimum
+
+/-- **§11.2.3 lower bound** (p.267): adding date-merging equality constraints shrinks the feasible
+set, so the reduced LP's optimum is a (polynomial-time) lower bound on the worst-case delay. The
+library's `reducedOptimum_le_milpOptimum`. -/
+alias bound_11_2_3_lower := DeepWiki.reducedOptimum_le_milpOptimum
 
 end DeepWiki.Dnc

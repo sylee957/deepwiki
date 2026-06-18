@@ -132,4 +132,44 @@ theorem bigM_ordering {x₁ x₂ y₁ y₂ M b : ℝ}
   · exact ⟨fun _ => ⟨rfl, h4⟩, fun hlt => absurd h2 (not_le.mpr hlt)⟩
   · exact ⟨fun hlt => absurd h1 (not_le.mpr hlt), fun _ => ⟨rfl, h3⟩⟩
 
+/-- **Lemma 11.1, the boxed equivalence.** With all values boxed in `[0,M]` and `b ∈ {0,1}`, the
+four big-M ordering constraints are *equivalent* to the selector `b` consistently ordering both
+pairs: `b = 0` forces `x₁ ≤ x₂ ∧ y₁ ≤ y₂` and `b = 1` forces `x₂ ≤ x₁ ∧ y₂ ≤ y₁` (and conversely
+either chosen order is realizable, the off-selector big-M constraint being non-binding because the
+values lie in `[0,M]`). This is the full content of Lemma 11.1 — the linearization is faithful,
+not merely sound in the strict-order direction. -/
+theorem bigM_ordering_iff {x₁ x₂ y₁ y₂ M b : ℝ}
+    (hx₁ : 0 ≤ x₁) (hx₁M : x₁ ≤ M) (hx₂ : 0 ≤ x₂) (hx₂M : x₂ ≤ M)
+    (hy₁ : 0 ≤ y₁) (hy₁M : y₁ ≤ M) (hy₂ : 0 ≤ y₂) (hy₂M : y₂ ≤ M)
+    (hb : b = 0 ∨ b = 1) :
+    (x₁ + (1 - b) * M ≥ x₂ ∧ x₂ + b * M ≥ x₁ ∧ y₁ + (1 - b) * M ≥ y₂ ∧ y₂ + b * M ≥ y₁)
+      ↔ ((b = 0 → x₁ ≤ x₂ ∧ y₁ ≤ y₂) ∧ (b = 1 → x₂ ≤ x₁ ∧ y₂ ≤ y₁)) := by
+  rcases hb with rfl | rfl
+  · refine ⟨fun ⟨_, h2, _, h4⟩ =>
+      ⟨fun _ => ⟨by nlinarith, by nlinarith⟩, fun h => absurd h (by norm_num)⟩, fun ⟨h, _⟩ => ?_⟩
+    obtain ⟨hx, hy⟩ := h rfl
+    exact ⟨by nlinarith, by nlinarith, by nlinarith, by nlinarith⟩
+  · refine ⟨fun ⟨h1, _, h3, _⟩ =>
+      ⟨fun h => absurd h (by norm_num), fun _ => ⟨by nlinarith, by nlinarith⟩⟩, fun ⟨_, h⟩ => ?_⟩
+    obtain ⟨hx, hy⟩ := h rfl
+    exact ⟨by nlinarith, by nlinarith, by nlinarith, by nlinarith⟩
+
+/-- **§11.2.3 upper bound (LP relaxation).** Dropping the Boolean ordering variables of a MILP
+enlarges its feasible set, so the relaxed LP's optimum upper-bounds the MILP optimum — hence the
+worst-case delay. (`MilpFeasible ⊆ RelaxFeasible` ⟹ optima ordered, by `programOptimum_mono_feasible`.) -/
+theorem milpOptimum_le_relaxationOptimum {ι : Type*}
+    {MilpFeasible RelaxFeasible : ι → Prop} {obj : ι → EReal}
+    (hrelax : ∀ c, MilpFeasible c → RelaxFeasible c) :
+    programOptimum MilpFeasible obj ≤ programOptimum RelaxFeasible obj :=
+  programOptimum_mono_feasible hrelax
+
+/-- **§11.2.3 lower bound (date reduction).** Adding equality constraints that merge dates shrinks
+the feasible set, so the reduced LP's optimum lower-bounds the MILP optimum — a polynomial-time
+lower bound on the worst-case delay. (`ReducedFeasible ⊆ MilpFeasible` ⟹ optima ordered.) -/
+theorem reducedOptimum_le_milpOptimum {ι : Type*}
+    {ReducedFeasible MilpFeasible : ι → Prop} {obj : ι → EReal}
+    (hsub : ∀ c, ReducedFeasible c → MilpFeasible c) :
+    programOptimum ReducedFeasible obj ≤ programOptimum MilpFeasible obj :=
+  programOptimum_mono_feasible hsub
+
 end DeepWiki
