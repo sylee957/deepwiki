@@ -166,6 +166,12 @@ ahead of the tagged bit), so the LP optimum is *larger* than the FIFO `T+(b₁+b
 are linear arithmetic on the program variables. The library's `arbMuxNode_programOptimum`. -/
 alias thm_11_1_arbMuxNode := DeepWiki.arbMuxNode_programOptimum
 
+/-- **§11.1.2, backlog objective** (p.260–261): the single-server program with the aggregate
+backlog objective `max ∑(Aᵢ−Dᵢ)(t₁)` has optimum `(b₁+b₂)+(r₁+r₂)·T`, the aggregate vertical
+deviation `vDev(γ_{b₁+b₂,r₁+r₂}, β_{R,T})` (policy-independent). The library's
+`arbMuxNodeBacklog_programOptimum`. -/
+alias thm_11_1_arbMuxNode_backlog := DeepWiki.arbMuxNodeBacklog_programOptimum
+
 /-- **Lemma 11.1** (§11.2.2, p.264): the big-M Boolean ordering linearizing the
 FIFO date order — given the four big-M constraints and `b ∈ {0,1}`,
 `x₁<x₂ ⟹ b=0 ∧ y₁≤y₂` and `x₂<x₁ ⟹ b=1 ∧ y₂≤y₁`. The library's `bigM_ordering`. -/
