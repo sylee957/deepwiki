@@ -14,6 +14,7 @@ import DeepWiki.ReactiveSystems.SymbolicModelCheckingDecidable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutableFull
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
+import DeepWiki.ReactiveSystems.TimedRegionSuccessorComplete
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -294,6 +295,31 @@ theorem thm_12_2_executable_full {Loc C : Type*} [Fintype Loc] [DecidableEq Loc]
       DeepWiki.ReactiveSystems.SymSatCodeFull A succ A.initial
         (DeepWiki.ReactiveSystems.RegionCode.initial _) F = true :=
   DeepWiki.ReactiveSystems.satisfiesMt_iff_decideFull A F succ hsound hcomplete
+
+/-- **Theorem 12.2** (§12.2, p.231), *unconditional* executable decision for the FULL logic.
+The conditional `thm_12_2_executable_full`'s sole open step — a constructive sound + complete
+region successor — is now discharged by the Alur–Dill `regionCodeDelaySucc`, so `A ⊨ F` (any `F`)
+reduces to the Bool computation `SymSatCodeFull A regionCodeDelaySucc …` with NO hypotheses. The
+library's `satisfiesMt_iff_decideFull_delaySucc`. -/
+theorem thm_12_2_executable_full_unconditional {Loc C : Type*}
+    [Fintype Loc] [Fintype C] [Fintype D]
+    [DecidableEq Loc] [DecidableEq Act] [DecidableEq C] [DecidableEq D]
+    (A : DeepWiki.ReactiveSystems.FinAutomaton Loc Act C) (F : Mt Act D) :
+    A.toTimedAutomaton.SatisfiesMt F ↔
+      DeepWiki.ReactiveSystems.SymSatCodeFull A
+        (cmax := Sum.elim A.cmax F.formulaCmax) DeepWiki.ReactiveSystems.regionCodeDelaySucc
+        A.initial (DeepWiki.ReactiveSystems.RegionCode.initial _) F = true :=
+  DeepWiki.ReactiveSystems.satisfiesMt_iff_decideFull_delaySucc A F
+
+/-- **Theorem 12.2** (§12.2, p.231), *decidability* corollary. Satisfaction of any timed
+formula `F` by a finite timed automaton is decidable — the region method packaged as a
+`Decidable` instance. The library's `decSatisfiesMtFull`. -/
+def thm_12_2_decidable {Loc C : Type*}
+    [Fintype Loc] [Fintype C] [Fintype D]
+    [DecidableEq Loc] [DecidableEq Act] [DecidableEq C] [DecidableEq D]
+    (A : DeepWiki.ReactiveSystems.FinAutomaton Loc Act C) (F : Mt Act D) :
+    Decidable (A.toTimedAutomaton.SatisfiesMt F) :=
+  DeepWiki.ReactiveSystems.decSatisfiesMtFull A F
 
 /-- **Exercise 12.8** (§12.2, p.231). For the one-location automaton with invariant
 `x ≤ 2` and an `a`-self-loop guarded `x ≤ 1` (resetting `x`), the initial symbolic
