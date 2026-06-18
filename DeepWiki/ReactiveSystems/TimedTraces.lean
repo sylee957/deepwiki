@@ -57,6 +57,41 @@ theorem timedLang_eq_untimedLang_eq {T₁ T₂ : TLTS Proc Act} {s₁ s₂ : Pro
     (h : T₁.timedLang s₁ = T₂.timedLang s₂) : T₁.untimedLang s₁ = T₂.untimedLang s₂ := by
   rw [untimedLang_eq_image, untimedLang_eq_image, h]
 
+/-! ## Timed bisimilarity preserves the timed language -/
+
+/-- Timed bisimilarity transports a timed run: if `p` is timed bisimilar to `q`
+and `p` realises `w` from time `now`, then so does `q` (delay-then-action transfer
+at each step). -/
+theorem timedTraceFrom_of_timedBisimilar {T : TLTS Proc Act} :
+    ∀ {w : List (ℝ≥0 × Act)} {p q : Proc} {now : ℝ≥0},
+      TimedBisimilar T p q → T.TimedTraceFrom p now w → T.TimedTraceFrom q now w := by
+  intro w
+  induction w with
+  | nil => exact fun _ _ => trivial
+  | cons hd tl ih =>
+      obtain ⟨t, a⟩ := hd
+      intro p q now h hw
+      obtain ⟨s1, s2, hle, hdel, hact, hrest⟩ := hw
+      rw [timedBisimilar_iff] at h
+      obtain ⟨q1, hq1, hb1⟩ := h.2.2.1 _ _ hdel
+      rw [timedBisimilar_iff] at hb1
+      obtain ⟨q2, hq2, hb2⟩ := hb1.1 _ _ hact
+      exact ⟨q1, q2, hle, hq1, hq2, ih hb2 hrest⟩
+
+/-- **Timed bisimilarity implies timed-trace equivalence**: timed bisimilar states
+have the same timed language. -/
+theorem timedLang_eq_of_timedBisimilar {T : TLTS Proc Act} {p q : Proc}
+    (h : TimedBisimilar T p q) : T.timedLang p = T.timedLang q := by
+  ext w
+  exact ⟨fun hw => timedTraceFrom_of_timedBisimilar h hw,
+         fun hw => timedTraceFrom_of_timedBisimilar ((timedBisimilar_equivalence T).symm h) hw⟩
+
+/-- **Timed bisimilarity implies untimed-trace equivalence**: forget the
+time-stamps of the equal timed languages. -/
+theorem untimedLang_eq_of_timedBisimilar {T : TLTS Proc Act} {p q : Proc}
+    (h : TimedBisimilar T p q) : T.untimedLang p = T.untimedLang q :=
+  timedLang_eq_untimedLang_eq (timedLang_eq_of_timedBisimilar h)
+
 end TLTS
 
 end DeepWiki.ReactiveSystems

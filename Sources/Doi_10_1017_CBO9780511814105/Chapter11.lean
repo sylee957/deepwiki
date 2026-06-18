@@ -9,6 +9,8 @@ import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
 import DeepWiki.ReactiveSystems.TimedLanguageExample
 import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
+import DeepWiki.ReactiveSystems.TimedTracesBisimilarity
+import DeepWiki.ReactiveSystems.TimedTracesBisimilarityStrict
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
@@ -323,5 +325,44 @@ theorem ex_11_2 :
       DeepWiki.ReactiveSystems.taB.tlts.timedLang
         (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) :=
   DeepWiki.ReactiveSystems.taA_taB_untimedEq_not_timedEq
+
+/-- **Exercise 11.6**, claim 1 (§11.2, p.197), positive. If two timed automata are
+timed bisimilar then they are timed-trace equivalent: timed bisimilarity preserves
+the timed language. -/
+theorem ex_11_6_timedBisim_timedTrace {T : TLTS Proc Act} {p q : Proc}
+    (h : T.TimedBisimilar p q) : T.timedLang p = T.timedLang q :=
+  TLTS.timedLang_eq_of_timedBisimilar h
+
+/-- **Exercise 11.6**, claim 2 (§11.2, p.197), positive. If two timed automata are
+timed bisimilar then they are untimed-trace equivalent (forget the time-stamps of
+the equal timed languages). -/
+theorem ex_11_6_timedBisim_untimedTrace {T : TLTS Proc Act} {p q : Proc}
+    (h : T.TimedBisimilar p q) : T.untimedLang p = T.untimedLang q :=
+  TLTS.untimedLang_eq_of_timedBisimilar h
+
+/-- **Exercise 11.6**, claim 3 (§11.2, p.197), positive. If two timed automata are
+untimed bisimilar then they are untimed-trace equivalent: untimed bisimilarity
+(delays matched by *some* delay) preserves the untimed language. -/
+theorem ex_11_6_untimedBisim_untimedTrace {T : TLTS Proc Act} {p q : Proc}
+    (h : T.UntimedBisimilar p q) : T.untimedLang p = T.untimedLang q :=
+  TLTS.untimedLang_eq_of_untimedBisimilar h
+
+/-- **Exercise 11.6**, claim 4 (§11.2, p.197), negative. Untimed bisimilarity does
+**not** imply timed-trace equivalence: two states acting once after fixed delays
+`1` resp. `2` are untimed bisimilar (durations forgotten) yet the timed trace
+`[(1, *)]` separates their timed languages. -/
+theorem ex_11_6_untimedBisim_not_timedTrace :
+    ∃ (Q : Type) (T : TLTS Q Unit) (p q : Q),
+      T.UntimedBisimilar p q ∧ T.timedLang p ≠ T.timedLang q :=
+  DeepWiki.ReactiveSystems.untimedBisimilar_not_imp_timedLangEq
+
+/-- **Exercise 11.6**, claim 5 (§11.2, p.197), negative. Timed-trace equivalence
+does **not** imply untimed bisimilarity: `a.(b + c)` and `a.b + a.c` with no time
+delays have the same (empty-only) timed language but are not untimed bisimilar
+(branching is lost by trace equivalence). -/
+theorem ex_11_6_timedTrace_not_untimedBisim :
+    ∃ (Q A : Type) (T : TLTS Q A) (p q : Q),
+      T.timedLang p = T.timedLang q ∧ ¬ T.UntimedBisimilar p q :=
+  DeepWiki.ReactiveSystems.timedLangEq_not_imp_untimedBisimilar
 
 end DeepWiki.Rs
