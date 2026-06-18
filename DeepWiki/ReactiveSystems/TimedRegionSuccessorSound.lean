@@ -108,6 +108,91 @@ theorem regionCodeStep_eq_self_imp_allUnbounded {cmax : C → ℕ} {w : Valuatio
     rw [hval] at heq
     omega
 
+/-! ## Small delays keep the region (the "before" half of the key lemma) -/
+
+omit [Fintype C] [DecidableEq C] in
+open Classical in
+/-- **A small delay keeps the region.** If no bounded clock is integral and the delay `s`
+carries no bounded clock past the next integer, then `fp (w + s) = fp w` — floors, frac-zero
+bits and frac-order are all preserved. (Used with `s` below the first integer-crossing time in
+case C.) -/
+theorem regionFingerprint_add_eq_of_small {cmax : C → ℕ} {w : Valuation C} {s : ℝ≥0}
+    (hNI : ∀ x, w x ≤ (cmax x : ℝ≥0) → fracPart (w x) ≠ 0)
+    (hsmall : ∀ x, w x ≤ (cmax x : ℝ≥0) → fracPart (w x) + (s : ℝ) < 1) :
+    regionFingerprint cmax (w.add s) = regionFingerprint cmax w := by
+  -- bounded clocks stay bounded with unchanged floor and frac increased by `s`
+  have hkey : ∀ x, w x ≤ (cmax x : ℝ≥0) →
+      (w.add s) x ≤ (cmax x : ℝ≥0) ∧ ⌊(w.add s) x⌋₊ = ⌊w x⌋₊ ∧
+        fracPart ((w.add s) x) = fracPart (w x) + (s : ℝ) := by
+    intro x hx
+    obtain ⟨hfr, hfl⟩ := fracPart_add_of_no_wrap (hsmall x hx)
+    have hdecomp := coe_eq_floor_add_fracPart (w x)
+    have hflcmax : ⌊w x⌋₊ ≤ cmax x := floor_le_of_le_cmax hx
+    have hfllt : ⌊w x⌋₊ < cmax x := by
+      rcases lt_or_eq_of_le hflcmax with h | h
+      · exact h
+      · exfalso; apply hNI x hx
+        have hreal : (w x : ℝ) = cmax x := by
+          have hle : (w x : ℝ) ≤ cmax x := by exact_mod_cast hx
+          have hge : (cmax x : ℝ) ≤ w x := by
+            rw [hdecomp, h]; have := fracPart_nonneg (w x); linarith
+          linarith
+        have hwx : w x = (cmax x : ℝ≥0) := by exact_mod_cast hreal
+        rw [hwx]; exact fracPart_natCast (cmax x)
+    have hbnd : (w.add s) x ≤ (cmax x : ℝ≥0) := by
+      rw [Valuation.add_apply]
+      have : ((w x + s : ℝ≥0) : ℝ) < (⌊w x⌋₊ : ℝ) + 1 := by
+        rw [show ((w x + s : ℝ≥0):ℝ) = (w x:ℝ) + s by push_cast; ring, hdecomp]
+        have := hsmall x hx; linarith
+      have h2 : (⌊w x⌋₊ : ℝ) + 1 ≤ cmax x := by exact_mod_cast Nat.succ_le_of_lt hfllt
+      have : ((w x + s : ℝ≥0) : ℝ) ≤ cmax x := by linarith
+      exact_mod_cast this
+    exact ⟨hbnd, hfl, hfr⟩
+  rw [Prod.ext_iff, Prod.ext_iff]
+  refine ⟨funext fun x => ?_, funext fun x => ?_, funext fun x => funext fun y => ?_⟩
+  · apply Fin.ext
+    show regionFloor cmax (w.add s) x = regionFloor cmax w x
+    by_cases hx : w x ≤ (cmax x : ℝ≥0)
+    · obtain ⟨hbnd, hfl, _⟩ := hkey x hx
+      unfold regionFloor; rw [if_pos hbnd, if_pos hx, hfl]
+    · have hx' : ¬ (w.add s) x ≤ (cmax x : ℝ≥0) := by
+        rw [Valuation.add_apply]; exact fun hc => hx (le_trans le_self_add hc)
+      unfold regionFloor; rw [if_neg hx', if_neg hx]
+  · rw [regionFingerprint_fracZero, regionFingerprint_fracZero]
+    by_cases hx : w x ≤ (cmax x : ℝ≥0)
+    · obtain ⟨hbnd, _, hfr⟩ := hkey x hx
+      have hnz : fracPart ((w.add s) x) ≠ 0 := by
+        rw [hfr]; have := fracPart_nonneg (w x); have := hNI x hx
+        have hpos : 0 < fracPart (w x) := lt_of_le_of_ne (fracPart_nonneg _) (Ne.symm (hNI x hx))
+        positivity
+      rw [decide_eq_false_iff_not.mpr (fun hc => hnz hc.2),
+        decide_eq_false_iff_not.mpr (fun hc => hNI x hx hc.2)]
+    · have hx' : ¬ (w.add s) x ≤ (cmax x : ℝ≥0) := by
+        rw [Valuation.add_apply]; exact fun hc => hx (le_trans le_self_add hc)
+      rw [decide_eq_false_iff_not.mpr (fun hc => hx' hc.1),
+        decide_eq_false_iff_not.mpr (fun hc => hx hc.1)]
+  · rw [regionFingerprint_fracOrder, regionFingerprint_fracOrder]
+    by_cases hx : w x ≤ (cmax x : ℝ≥0) <;> by_cases hy : w y ≤ (cmax y : ℝ≥0)
+    · obtain ⟨hbx, _, hfrx⟩ := hkey x hx
+      obtain ⟨hby, _, hfry⟩ := hkey y hy
+      rw [decide_eq_decide]
+      rw [hfrx, hfry]
+      constructor
+      · rintro ⟨_, _, h3⟩; exact ⟨hx, hy, by linarith⟩
+      · rintro ⟨_, _, h3⟩; exact ⟨hbx, hby, by linarith⟩
+    · have hy' : ¬ (w.add s) y ≤ (cmax y : ℝ≥0) := by
+        rw [Valuation.add_apply]; exact fun hc => hy (le_trans le_self_add hc)
+      rw [decide_eq_false_iff_not.mpr (fun hc => hy' hc.2.1),
+        decide_eq_false_iff_not.mpr (fun hc => hy hc.2.1)]
+    · have hx' : ¬ (w.add s) x ≤ (cmax x : ℝ≥0) := by
+        rw [Valuation.add_apply]; exact fun hc => hx (le_trans le_self_add hc)
+      rw [decide_eq_false_iff_not.mpr (fun hc => hx' hc.1),
+        decide_eq_false_iff_not.mpr (fun hc => hx hc.1)]
+    · have hx' : ¬ (w.add s) x ≤ (cmax x : ℝ≥0) := by
+        rw [Valuation.add_apply]; exact fun hc => hx (le_trans le_self_add hc)
+      rw [decide_eq_false_iff_not.mpr (fun hc => hx' hc.1),
+        decide_eq_false_iff_not.mpr (fun hc => hx hc.1)]
+
 /-! ## Orbit-structure lemmas (for the completeness induction) -/
 
 omit [DecidableEq C] in
