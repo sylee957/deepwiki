@@ -55,6 +55,15 @@ theorem acvf_nonnegDefinite [MeasureTheory.IsProbabilityMeasure μ]
     (hX : IsWeaklyStationary X μ) : IsNonnegDefinite (acvfStat X μ) :=
   hX.isNonnegDefinite_acvfStat
 
+/-- **Theorem 1.5.2** (§1.5, p.27), characterization of autocovariance functions
+(forward direction): the autocovariance of a stationary process is even and
+non-negative definite. The converse (every such function is an ACVF, via
+Kolmogorov's theorem) is not formalized. The library's
+`IsWeaklyStationary.even_and_isNonnegDefinite_acvfStat`. -/
+theorem thm_1_5_2 [MeasureTheory.IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ) :
+    (∀ h : ℤ, acvfStat X μ h = acvfStat X μ (-h)) ∧ IsNonnegDefinite (acvfStat X μ) :=
+  hX.even_and_isNonnegDefinite_acvfStat
+
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
 /-- **§1.4** (p.20), the backshift operator `B`: `B Xₜ = X_{t−1}`. The library's

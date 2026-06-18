@@ -125,6 +125,16 @@ theorem IsWeaklyStationary.isNonnegDefinite_acvfStat [IsProbabilityMeasure μ]
     (hX : IsWeaklyStationary X μ) : IsNonnegDefinite (acvfStat X μ) :=
   fun _ a t => hX.nonneg_definite a t
 
+/-- Characterization of autocovariance functions, forward direction: the
+autocovariance function of a stationary process is even and non-negative definite.
+(The converse — that every even, non-negative-definite function is the ACVF of some
+stationary process — is obtained by constructing a Gaussian process via Kolmogorov's
+existence theorem, and is not formalized here.) -/
+theorem IsWeaklyStationary.even_and_isNonnegDefinite_acvfStat [IsProbabilityMeasure μ]
+    (hX : IsWeaklyStationary X μ) :
+    (∀ h : ℤ, acvfStat X μ h = acvfStat X μ (-h)) ∧ IsNonnegDefinite (acvfStat X μ) :=
+  ⟨fun h => (hX.acvfStat_neg h).symm, hX.isNonnegDefinite_acvfStat⟩
+
 /-- `|γ(h)| ≤ γ(0)`: the autocovariance is dominated by its value at lag 0. Derived
 from non-negative definiteness at two points via the discriminant of the
 non-negative quadratic `λ ↦ γ(0)λ² + 2γ(h)λ + γ(0)`. -/
