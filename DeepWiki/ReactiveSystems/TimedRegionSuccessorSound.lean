@@ -897,4 +897,48 @@ theorem fp_add_mem_orbit {cmax : C → ℕ} : ∀ (n : ℕ) (w : Valuation C),
         rw [hstep] at hmem
         exact regionCodeOrbit_step_subset n hfix hmem
 
+omit [DecidableEq C] in
+open Classical in
+/-- The descent measure never exceeds the orbit fuel `2·∑ₓ(cₓ+1) + |C|` (room is at most
+`cₓ+1` per clock, and at most `|C|` clocks are integral). -/
+theorem codeMeasure_le {cmax : C → ℕ} (w : Valuation C) :
+    codeMeasure (regionFingerprint cmax w) ≤ 2 * (∑ x, (cmax x + 1)) + Fintype.card C := by
+  unfold codeMeasure
+  have h1 : (∑ x, (cmax x + 1 - ((regionFingerprint cmax w).1 x).val)) ≤ ∑ x, (cmax x + 1) :=
+    Finset.sum_le_sum (fun x _ => Nat.sub_le _ _)
+  have h2 : (Finset.univ.filter (fun x => (regionFingerprint cmax w).2.1 x = true)).card
+      ≤ Fintype.card C := le_trans (Finset.card_filter_le _ _) (le_of_eq Finset.card_univ)
+  omega
+
+omit [DecidableEq C] in
+/-- The orbit grows monotonically with fuel: more fuel lists at least as many successors. -/
+theorem regionCodeOrbit_mono {cmax : C → ℕ} : ∀ (m n : ℕ) (γ : RegionCode cmax), m ≤ n →
+    regionCodeOrbit m γ ⊆ regionCodeOrbit n γ := by
+  intro m
+  induction m with
+  | zero =>
+    intro n γ _ a ha
+    simp only [regionCodeOrbit, List.mem_singleton] at ha
+    rw [ha]; exact mem_regionCodeOrbit_self n γ
+  | succ m ih =>
+    intro n γ hmn a ha
+    obtain ⟨n', rfl⟩ : ∃ n', n = n' + 1 := ⟨n - 1, by omega⟩
+    by_cases h : regionCodeStep γ = γ
+    · simp only [regionCodeOrbit, if_pos h, List.mem_singleton] at ha ⊢; exact ha
+    · simp only [regionCodeOrbit, if_neg h, List.mem_cons] at ha ⊢
+      rcases ha with h1 | h2
+      · exact Or.inl h1
+      · exact Or.inr (ih n' (regionCodeStep γ) (by omega) h2)
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Completeness of the region delay-successor (generic `C`).** Every region reachable from
+`w` by a delay is listed by `regionCodeDelaySucc (fp w)` — the orbit fuel dominates the descent
+measure, so by `fp_add_mem_orbit` and fuel-monotonicity it reaches every delayed region. -/
+theorem fp_add_mem_regionCodeDelaySucc {cmax : C → ℕ} (w : Valuation C) (t : ℝ≥0) :
+    regionFingerprint cmax (w.add t) ∈ regionCodeDelaySucc (regionFingerprint cmax w) := by
+  unfold regionCodeDelaySucc
+  exact regionCodeOrbit_mono _ _ _ (codeMeasure_le w)
+    (fp_add_mem_orbit (codeMeasure (regionFingerprint cmax w)) w le_rfl t)
+
 end DeepWiki.ReactiveSystems

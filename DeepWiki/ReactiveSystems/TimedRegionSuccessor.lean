@@ -57,11 +57,11 @@ def regionCodeOrbit {cmax : C → ℕ} : ℕ → RegionCode cmax → List (Regio
       let γ' := regionCodeStep γ
       if γ' = γ then [γ] else γ :: regionCodeOrbit fuel γ'
 
-/-- The **time-successors of a region code**: the finite orbit of the elapse step
-(`Fintype.card`-bounded fuel suffices — the chain saturates in `∑ₓ(2cₓ+2)` steps). The
-computable `succ` enumerator for the full model checker. -/
+/-- The **time-successors of a region code**: the finite orbit of the elapse step. The fuel
+`2·∑ₓ(cₓ+1) + |C|` dominates the descent measure of every code, so the chain always saturates
+within it. The computable `succ` enumerator for the full model checker. -/
 def regionCodeDelaySucc {cmax : C → ℕ} (γ : RegionCode cmax) : List (RegionCode cmax) :=
-  regionCodeOrbit (Fintype.card (RegionCode cmax)) γ
+  regionCodeOrbit (2 * (∑ x, (cmax x + 1)) + Fintype.card C) γ
 
 /-! ## Worked example (Alur–Dill Example 4.7, single clamp) -/
 
