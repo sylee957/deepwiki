@@ -79,4 +79,9 @@ def startCode : RegionCode cmaxEx :=
 set_option maxRecDepth 4000 in
 example : (regionCodeOrbit 10 startCode).length = 5 := by decide
 
+-- The shipped `regionCodeDelaySucc` (its fuel `2·∑(cₓ+1)+|C|` here computes to `10`) reproduces
+-- exactly that Example 4.7 chain — the retuned fuel is adequate on the worked example.
+set_option maxRecDepth 4000 in
+example : (regionCodeDelaySucc startCode).length = 5 := by decide
+
 end DeepWiki.ReactiveSystems
