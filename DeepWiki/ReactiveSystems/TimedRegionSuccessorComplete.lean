@@ -51,6 +51,16 @@ theorem satisfiesMt_iff_decideFull_delaySucc {Loc Act C D : Type*}
     (succSound_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
     (succComplete_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
 
+/-- **Decidability of full timed-logic satisfaction.** For a finite timed automaton, `A ⊨ F`
+is decidable for *every* timed formula `F` (delay quantifiers included) — the region-successor
+decision procedure transported across `satisfiesMt_iff_decideFull_delaySucc`. -/
+def decSatisfiesMtFull {Loc Act C D : Type*}
+    [DecidableEq Loc] [DecidableEq Act] [DecidableEq C] [DecidableEq D]
+    [Fintype Loc] [Fintype C] [Fintype D]
+    (A : FinAutomaton Loc Act C) (F : Mt Act D) :
+    Decidable (A.toTimedAutomaton.SatisfiesMt F) :=
+  decidable_of_iff _ (satisfiesMt_iff_decideFull_delaySucc A F).symm
+
 /-! ## Worked demonstration: the full checker decides delay quantifiers by computation
 On `demoAuto` (one self-loop `a` guarded `x ≤ 1`, resetting `x`, invariant `x ≤ 2`), the
 delay quantifiers `∃∃`/`∀∀` are now decided by *running* the region successor — `decide`
