@@ -941,4 +941,77 @@ theorem fp_add_mem_regionCodeDelaySucc {cmax : C → ℕ} (w : Valuation C) (t :
   exact regionCodeOrbit_mono _ _ _ (codeMeasure_le w)
     (fp_add_mem_orbit (codeMeasure (regionFingerprint cmax w)) w le_rfl t)
 
+/-! ## Soundness of the delay-successor: every listed code is realized by a delay -/
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Step soundness.** A non-fixpoint region's elapse step is realized by an actual delay:
+`∃ δ, fp (w + δ) = regionCodeStep (fp w)`. The `δ` is `(1−M)/2` (case B) or `1−M` (case C). -/
+theorem regionFingerprint_step_sound {cmax : C → ℕ} {w : Valuation C}
+    (hns : regionCodeStep (regionFingerprint cmax w) ≠ regionFingerprint cmax w) :
+    ∃ δ : ℝ≥0, regionFingerprint cmax (w.add δ) = regionCodeStep (regionFingerprint cmax w) := by
+  have hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0) := by
+    by_contra hc
+    simp only [not_exists, not_le] at hc
+    exact hns ((regionCodeStep_sound_allUnbounded hc).symm.trans (by rw [Valuation.add_zero]))
+  obtain ⟨M, ⟨xM, hxMb, hxMf⟩, hMmax⟩ := exists_max_fracPart hbnd
+  have hM1 : M < 1 := by rw [← hxMf]; exact fracPart_lt_one (w xM)
+  by_cases hI : ∃ x, w x ≤ (cmax x : ℝ≥0) ∧ fracPart (w x) = 0
+  · refine ⟨((1 - M) / 2).toNNReal, regionFingerprint_add_eq_step_caseB hI ?_ ?_⟩
+    · rw [Real.coe_toNNReal _ (by linarith)]; linarith
+    · intro x hx; rw [Real.coe_toNNReal _ (by linarith)]; have := hMmax x hx; linarith
+  · simp only [not_exists, not_and] at hI
+    exact ⟨(1 - M).toNNReal, regionFingerprint_add_eq_step_caseC ⟨xM, hxMb, hxMf⟩ hMmax hI
+      (by rw [Real.coe_toNNReal _ (by linarith)])⟩
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Iterated step soundness.** Each `k`-fold elapse step `regionCodeStep^[k] (fp w)` is the
+fingerprint of `w` after some delay — composing `regionFingerprint_step_sound` along the chain. -/
+theorem iterate_step_sound {cmax : C → ℕ} (w : Valuation C) (k : ℕ) :
+    ∃ t : ℝ≥0, regionFingerprint cmax (w.add t) = (regionCodeStep)^[k] (regionFingerprint cmax w) := by
+  induction k with
+  | zero => exact ⟨0, by rw [Valuation.add_zero, Function.iterate_zero_apply]⟩
+  | succ k ih =>
+    obtain ⟨t, ht⟩ := ih
+    by_cases hfix : regionCodeStep (regionFingerprint cmax (w.add t))
+        = regionFingerprint cmax (w.add t)
+    · exact ⟨t, by rw [Function.iterate_succ_apply', ← ht, hfix]⟩
+    · obtain ⟨δ, hδ⟩ := regionFingerprint_step_sound hfix
+      exact ⟨t + δ, by rw [← Valuation.add_add, hδ, Function.iterate_succ_apply', ht]⟩
+
+omit [DecidableEq C] in
+/-- Every code in the orbit is some finite iterate of the elapse step. -/
+theorem mem_orbit_imp_iterate {cmax : C → ℕ} : ∀ (n : ℕ) (γ a : RegionCode cmax),
+    a ∈ regionCodeOrbit n γ → ∃ k : ℕ, a = (regionCodeStep)^[k] γ := by
+  intro n
+  induction n with
+  | zero =>
+    intro γ a ha
+    simp only [regionCodeOrbit, List.mem_singleton] at ha
+    exact ⟨0, by rw [ha, Function.iterate_zero_apply]⟩
+  | succ n ih =>
+    intro γ a ha
+    by_cases h : regionCodeStep γ = γ
+    · simp only [regionCodeOrbit, if_pos h, List.mem_singleton] at ha
+      exact ⟨0, by rw [ha, Function.iterate_zero_apply]⟩
+    · simp only [regionCodeOrbit, if_neg h, List.mem_cons] at ha
+      rcases ha with h1 | h2
+      · exact ⟨0, by rw [h1, Function.iterate_zero_apply]⟩
+      · obtain ⟨k, hk⟩ := ih (regionCodeStep γ) a h2
+        exact ⟨k + 1, by rw [hk, Function.iterate_succ_apply]⟩
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Soundness of the region delay-successor (generic `C`).** Every code listed by
+`regionCodeDelaySucc (fp w)` is `fp (w + t)` for some delay `t` — orbit codes are step iterates
+(`mem_orbit_imp_iterate`), each realized by a delay (`iterate_step_sound`). -/
+theorem mem_regionCodeDelaySucc_imp_add {cmax : C → ℕ} (w : Valuation C) (γ' : RegionCode cmax)
+    (h : γ' ∈ regionCodeDelaySucc (regionFingerprint cmax w)) :
+    ∃ t : ℝ≥0, regionFingerprint cmax (w.add t) = γ' := by
+  unfold regionCodeDelaySucc at h
+  obtain ⟨k, hk⟩ := mem_orbit_imp_iterate _ _ _ h
+  obtain ⟨t, ht⟩ := iterate_step_sound w k
+  exact ⟨t, by rw [ht, hk]⟩
+
 end DeepWiki.ReactiveSystems

@@ -27,4 +27,28 @@ example {C D : Type*} [Fintype C] [Fintype D] [DecidableEq C] [DecidableEq D]
     regionFingerprint cmax (w.add t) ∈ regionCodeDelaySucc (regionFingerprint cmax w) :=
   succComplete_regionCodeDelaySucc w t
 
+/-- **`regionCodeDelaySucc` is sound.** Every region it lists for `⟦w⟧` is `fp (w + t)` for
+some delay `t` — the `SuccSound` obligation, discharged by `mem_regionCodeDelaySucc_imp_add`. -/
+theorem succSound_regionCodeDelaySucc {C D : Type*} [Fintype C] [Fintype D]
+    [DecidableEq C] [DecidableEq D] {cmax : C ⊕ D → ℕ} :
+    SuccSound (cmax := cmax) regionCodeDelaySucc :=
+  fun w γ' h => mem_regionCodeDelaySucc_imp_add w γ' h
+
+/-- **Unconditional executable full model checking (Alur–Dill).** For a finite timed automaton
+`A` and *any* timed formula `F`, `A ⊨ F` iff the full Bool decision `SymSatCodeFull` — using the
+constructive region successor `regionCodeDelaySucc` — is `true` on the initial region code. This
+removes the soundness/completeness hypotheses of `satisfiesMt_iff_decideFull`: the Alur–Dill
+delay-successor is now *proved* sound and complete, so the full timed logic has a genuine,
+self-contained decision procedure. -/
+theorem satisfiesMt_iff_decideFull_delaySucc {Loc Act C D : Type*}
+    [DecidableEq Loc] [DecidableEq Act] [DecidableEq C] [DecidableEq D]
+    [Fintype Loc] [Fintype C] [Fintype D]
+    (A : FinAutomaton Loc Act C) (F : Mt Act D) :
+    A.toTimedAutomaton.SatisfiesMt F
+      ↔ SymSatCodeFull A (cmax := Sum.elim A.cmax F.formulaCmax) regionCodeDelaySucc
+          A.initial (RegionCode.initial _) F = true :=
+  satisfiesMt_iff_decideFull A F regionCodeDelaySucc
+    (succSound_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
+    (succComplete_regionCodeDelaySucc (cmax := Sum.elim A.cmax F.formulaCmax))
+
 end DeepWiki.ReactiveSystems
