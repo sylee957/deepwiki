@@ -10,6 +10,7 @@ import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.SymbolicModelChecking
+import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -229,6 +230,17 @@ theorem thm_12_2_regionDetermined {Loc C : Type*} [Fintype C] [Fintype D]
     {w w' : Valuation (C ⊕ D)} (h : DeepWiki.ReactiveSystems.RegionEqAll w w') :
     DeepWiki.ReactiveSystems.SymSat A ℓ w F ↔ DeepWiki.ReactiveSystems.SymSat A ℓ w' F :=
   DeepWiki.ReactiveSystems.symSat_congr A F h
+
+/-- **Exercise 12.8** (§12.2, p.231). For the one-location automaton with invariant
+`x ≤ 2` and an `a`-self-loop guarded `x ≤ 1` (resetting `x`), the initial symbolic
+state satisfies `y in ∃∃(y = 2 ∧ [a]ff)`: reset `y`, delay `2` (legal under `x ≤ 2`)
+to reach `y = 2` with `x = 2`, where `[a]ff` holds vacuously since `a` is disabled
+(`x = 2 > 1`). The library's `boundedLoop_symSat`. -/
+theorem ex_12_8 :
+    DeepWiki.ReactiveSystems.SymSat DeepWiki.ReactiveSystems.boundedLoopAuto ()
+      (DeepWiki.ReactiveSystems.combineVal (fun _ => 0) (fun _ => 0))
+      DeepWiki.ReactiveSystems.boundedLoopFormula :=
+  DeepWiki.ReactiveSystems.boundedLoop_symSat
 
 /-! ## §12.4 Recursion in HML with time -/
 
