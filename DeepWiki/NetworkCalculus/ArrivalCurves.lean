@@ -63,6 +63,19 @@ theorem isMaximalArrivalBound_iff_increment {T : Type*} [Add T]
     intro h t
     exact le_minConv fun u s hus => hus ▸ h u s
 
+/-- **The infimum of maximal arrival curves is a maximal arrival curve** (the
+upper-bound companion: a family of upper arrival bounds for one process is met by
+their pointwise infimum). For an `ℝ≥0∞`-valued process bounded by every `g i`, the
+pointwise `⨅ i, g i` is again an arrival bound — each increment `A (t+d) − A t` lies
+below every `g i d`, hence below their infimum. -/
+theorem isMaximalArrivalBound_iInf {ι : Type*} [Nonempty ι] {A : ℝ≥0 → ℝ≥0∞}
+    {g : ι → ℝ≥0 → ℝ≥0∞} (h : ∀ i, IsMaximalArrivalBound A (g i)) :
+    IsMaximalArrivalBound A (fun d => ⨅ i, g i d) := by
+  rw [isMaximalArrivalBound_iff_increment]
+  intro t d
+  rw [ENNReal.add_iInf]
+  exact le_iInf fun i => (isMaximalArrivalBound_iff_increment A (g i)).mp (h i) t d
+
 /-- A sufficient increment condition for a minimal arrival curve: if
 `A t + α d ≤ A (t + d)` for all `t, d`, then `A ≥ A ⊼ α`. This direction holds
 unconditionally on `ℝ≥0`; the converse needs `IsMaxConvBddAbove` (see

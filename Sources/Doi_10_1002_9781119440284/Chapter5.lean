@@ -62,6 +62,10 @@ noncomputable def prop_5_2_4 := @IsMaximalArrivalCurve.subadditiveClosureENN
 alias prop_5_2_5 := IsMaximalArrivalBound.subadditiveClosureMin
 /-- **Proposition 5.2** (linked: `isMaximalArrivalBound_leftLim_of_isLeftContinuous`). -/
 alias prop_5_2_6 := isMaximalArrivalBound_leftLim_of_isLeftContinuous
+/-- **Proposition 5.2** (the infimum facet, §5.1, p.102; cited by the proof of Corollary 7.2):
+the pointwise infimum of a family of maximal arrival curves for one process is again a maximal
+arrival curve. Linked: `isMaximalArrivalBound_iInf`. -/
+alias prop_5_2_7 := isMaximalArrivalBound_iInf
 
 /-! **Corollary 5.1** (§5.1, p.103): If A admits a maximal (resp. minimal) arrival curve it admits a non-decreasing left- (resp. right-) continuous one: the left/right-limit extension is again an arrival curve. -/
 /-- **Corollary 5.1** (linked: `isMaximalArrivalBound_leftLim_of_isLeftContinuous`). -/
