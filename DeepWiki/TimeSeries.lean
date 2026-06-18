@@ -2,3 +2,4 @@ import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.LagPolynomials
 import DeepWiki.TimeSeries.ArmaProcesses
+import DeepWiki.TimeSeries.SeasonalArma
