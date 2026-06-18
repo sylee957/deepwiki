@@ -86,6 +86,20 @@ abbrev def_11_7 := @TLTS.UntimedBisimilar
 theorem untimedBisimilar_equivalence (T : TLTS Proc Act) :
     Equivalence (TLTS.UntimedBisimilar T) := TLTS.untimedBisimilar_equivalence T
 
+/-- **Lemma 11.1 / Exercise 11.4** (§11.2, p.198). Two states are untimed bisimilar
+(actions matched exactly, delays matched by *some* delay — the transfer form) iff
+they are strongly bisimilar in the untimed LTS `Tε` (Definition 3.2), where each
+time-delay step is relabelled `ε`. The library *defines* untimed bisimilarity as
+strong bisimilarity on `Tε` (`TLTS.untimedLTS`), so this is the transfer
+characterization `TLTS.untimedBisimilar_iff`. -/
+theorem lemma_11_1 (T : TLTS Proc Act) (p q : Proc) :
+    ((∀ a p', T.act p a p' → ∃ q', T.act q a q' ∧ T.UntimedBisimilar p' q') ∧
+     (∀ a q', T.act q a q' → ∃ p', T.act p a p' ∧ T.UntimedBisimilar p' q') ∧
+     (∀ d p', T.delay p d p' → ∃ d' q', T.delay q d' q' ∧ T.UntimedBisimilar p' q') ∧
+     (∀ d q', T.delay q d q' → ∃ d' p', T.delay p d' p' ∧ T.UntimedBisimilar p' q'))
+      ↔ LTS.Bisimilar T.untimedLTS p q :=
+  (TLTS.untimedBisimilar_iff T p q).symm
+
 /-- **§11.2** (p.197). Timed bisimilarity refines untimed bisimilarity:
 timed-bisimilar states are untimed bisimilar (durations are forgotten, so the
 converse fails). -/
