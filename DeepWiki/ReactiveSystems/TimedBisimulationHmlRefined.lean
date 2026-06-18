@@ -4,19 +4,27 @@ import DeepWiki.ReactiveSystems.TimedRegions
 import Mathlib.NumberTheory.Real.Irrational
 import Mathlib.Data.Real.Sqrt
 
-/-! # The `√2` example is full-`Mt`-equivalent (Ex 12.12(3) / Prop 12.2)
-The `√2` TLTS states `(A,0)` and `(B,0)` satisfy the same *full* `Mt` formulae (timed
-Hennessy–Milner logic with formula clocks and integer-valued guards) even though they are
-not timed bisimilar. The witnessing `Mt`-bisimulation lives on the **realizable** shape of
-runs: the process clock is never reset while formula clocks are, so along every run from the
-seed each clock equals `T − rx x` for a *shared* reset-epoch vector `rx` — all clocks lie on
-a diagonal. On that diagonal the region of a state is a function of the single elapsed-time
-coordinate, and irrationality of `√2` (no reachable value equals it; it is interior to the
-band `(1,2)`) supplies the room to match a boundary-crossing delay. This file builds the
-`√2`-refined region machinery on the realizable shape and assembles the `Mt`-bisimulation.
+/-! # Toward the `√2` example's full-`Mt`-equivalence (Ex 12.12(3) / Prop 12.2) — partial
+The `√2` TLTS states `(A,0)` and `(B,0)` are conjectured (book Ex 12.12(3)) to satisfy the same
+*full* `Mt` formulae (timed Hennessy–Milner logic with formula clocks and integer guards) even
+though they are not timed bisimilar (`not_timedBisimilar_sqrt2`, `TimedBisimulationHmlStrict`).
+This file develops the machinery toward an `Mt`-bisimulation witness and discharges most of it,
+but the full result is **open** here.
 
-This is the converse-failure refinement of `TimedBisimulationHmlStrict`: there the pair is
-shown *not* timed bisimilar yet basic-`TimedHML`-equivalent; here they are full-`Mt`-equivalent. -/
+The device: convert the irrational boundary `√2` to an integer cut via the augmented clock
+`w = process + (2 − √2)`, so `process < √2 ↔ w < 2`; then the candidate relation `Sq2Rel` is
+ordinary region equivalence on `jointValW` (`w` at `none`, formula clocks at `some x`). Four of
+the six `IsMtBisimulation` clauses are proved (`Sq2Rel.guard`/`reset`/`act_forth`/`act_back`,
+seed `sq2Rel_seed`), and the *generic* delay is matched by the existing region time-successor
+(`jointValW_delay_match`).
+
+WHAT IS OPEN: the delay clause's boundary. `w` crosses integers at `process ∈ {√2−1, √2, √2+1, …}`,
+so this region has *spurious* thin cuts away from `√2`; at the genuine boundary `process = √2`
+(`A` a-disabled, `B` a-enabled — distinguished by `⟨a⟩tt`, so genuinely inequivalent there) the
+static region match forces `B` to exactly `√2`, and `Sq2Rel` is not closed. Closing Ex 12.12(3)
+needs a region cutting the process clock at `√2` *only* (single irrational cut, not periodic) plus
+a coinductive bisimulation finer than any static region relation — genuine research-grade work.
+The lemmas below are true regardless and are the reusable scaffold for that construction. -/
 
 namespace DeepWiki.ReactiveSystems
 
