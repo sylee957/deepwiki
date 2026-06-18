@@ -58,6 +58,56 @@ theorem regionFingerprint_add_of_allUnbounded {cmax : C → ℕ} {w : Valuation 
       decide_eq_false_iff_not.mpr (fun hc => hub x hc.1),
       decide_eq_false_iff_not.mpr (fun hc => hub0 x hc.1)]
 
+/-! ## Fixpoint detection (a non-saturated region genuinely advances) -/
+
+omit [DecidableEq C] in
+open Classical in
+/-- **A region is a `step`-fixpoint only if fully saturated.** If `regionCodeStep (fp w) =
+fp w` then every clock exceeds its clamp — a non-saturated region always advances (case B
+flips an integral clock's frac-zero bit; case C bumps a maximal-fraction clock's floor). -/
+theorem regionCodeStep_eq_self_imp_allUnbounded {cmax : C → ℕ} {w : Valuation C}
+    (h : regionCodeStep (regionFingerprint cmax w) = regionFingerprint cmax w) :
+    ∀ x, (cmax x : ℝ≥0) < w x := by
+  set γ := regionFingerprint cmax w with hγ
+  by_contra hcon
+  simp only [not_forall, not_lt] at hcon
+  obtain ⟨x₀, hx₀⟩ := hcon
+  have hnotA : ¬ (decide (∀ x, (γ.1 x).val = cmax x + 1) = true) := by
+    rw [decide_eq_true_iff]
+    intro hall
+    have he := hall x₀
+    rw [hγ, regionFingerprint_floor] at he
+    have hle : regionFloor cmax w x₀ ≤ cmax x₀ := (regionFloor_le_clamp_iff w x₀).mpr hx₀
+    omega
+  by_cases hdB : decide (∃ x, γ.2.1 x = true) = true
+  · obtain ⟨x₁, hx₁⟩ := decide_eq_true_iff.mp hdB
+    have hstepB : (regionCodeStep γ).2.1 x₁ = false := by
+      unfold regionCodeStep; rw [if_neg hnotA, if_pos hdB]
+    have hcontra : γ.2.1 x₁ = false := h ▸ hstepB
+    rw [hx₁] at hcontra
+    exact absurd hcontra (by decide)
+  · set S : Finset C := Finset.univ.filter (fun x => w x ≤ (cmax x : ℝ≥0)) with hS
+    have hx₀S : x₀ ∈ S := Finset.mem_filter.mpr ⟨Finset.mem_univ _, hx₀⟩
+    obtain ⟨x₁, hx₁S, hx₁max⟩ := S.exists_max_image (fun x => fracPart (w x)) ⟨x₀, hx₀S⟩
+    have hbnd1 : w x₁ ≤ (cmax x₁ : ℝ≥0) := (Finset.mem_filter.mp hx₁S).2
+    have hfl1 : (γ.1 x₁).val ≤ cmax x₁ := by
+      rw [hγ, regionFingerprint_floor]; exact (regionFloor_le_clamp_iff w x₁).mpr hbnd1
+    have hisMax : (decide ((γ.1 x₁).val ≤ cmax x₁) &&
+        decide (∀ y, (γ.1 y).val ≤ cmax y → γ.2.2 y x₁ = true)) = true := by
+      simp only [Bool.and_eq_true, decide_eq_true_iff]
+      refine ⟨hfl1, fun y hy => ?_⟩
+      have hbndy : w y ≤ (cmax y : ℝ≥0) := by
+        rw [hγ, regionFingerprint_floor] at hy; exact (regionFloor_le_clamp_iff w y).mp hy
+      rw [hγ, regionFingerprint_fracOrder, decide_eq_true_iff]
+      exact ⟨hbndy, hbnd1, hx₁max y (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hbndy⟩)⟩
+    have hstepC : (regionCodeStep γ).1 x₁ = bumpFloor cmax x₁ ((γ.1 x₁).val + 1) := by
+      unfold regionCodeStep; rw [if_neg hnotA, if_neg hdB]; exact if_pos hisMax
+    have hval : ((regionCodeStep γ).1 x₁).val = min ((γ.1 x₁).val + 1) (cmax x₁ + 1) := by
+      rw [hstepC]; rfl
+    have heq : (γ.1 x₁).val = ((regionCodeStep γ).1 x₁).val := by rw [h]
+    rw [hval] at heq
+    omega
+
 /-! ## Orbit-structure lemmas (for the completeness induction) -/
 
 omit [DecidableEq C] in
