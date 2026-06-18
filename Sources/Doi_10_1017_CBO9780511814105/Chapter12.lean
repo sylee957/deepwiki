@@ -6,6 +6,7 @@ import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedHmlExamples
 import DeepWiki.ReactiveSystems.TimedHmlClosedFormulae
 import DeepWiki.ReactiveSystems.TimedHmlEquivalences
+import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -258,5 +259,24 @@ theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : 
       TLTS.MtSat T p u (Mt.reset y (Mt.reset x F))) :=
   ⟨DeepWiki.ReactiveSystems.resetClockZero_equiv_tt y T p u, DeepWiki.ReactiveSystems.resetClockPos_equiv_ff y T p u,
    DeepWiki.ReactiveSystems.box_tt_equiv_tt a T p u, DeepWiki.ReactiveSystems.reset_comm_mt x y F T p u⟩
+
+/-! ## §12.4.1 Characteristic properties for timed bisimilarity (recursion in `Mt`) -/
+
+/-- **Theorem 12.5** (§12.4.1, p.243). The recursively defined formula
+`X =max (y ≤ 1 ⇒ ⟨a⟩(y in X)) ∧ [a](y ≤ 1 ∧ (y in X)) ∧ ∀∀X` is characteristic, modulo timed
+bisimilarity, for the running-example timed automaton's location: an extended state `(p, u)`
+satisfies `X` iff `p` is timed bisimilar to the running example's clock-`u(y)` state.
+Discharged by `TLTS.mem_charFormula_iff_timedBisimilar`. -/
+theorem thm_12_5 {q : ℝ≥0 × Valuation Unit} :
+    q ∈ TLTS.charFormula ↔ TLTS.TimedBisimilar TLTS.runTLTS q.1 (q.2 ()) :=
+  TLTS.mem_charFormula_iff_timedBisimilar
+
+/-- **Exercise 12.19** (§12.4.1, p.244, strongly recommended). Completing the proof of
+Theorem 12.5: satisfying the characteristic formula `X` implies timed bisimilarity to the
+running example's clock-`u(y)` state (the satisfaction relation is a timed bisimulation).
+Discharged by `TLTS.charFormula_complete`. -/
+theorem ex_12_19 {q : ℝ≥0 × Valuation Unit} (hq : q ∈ TLTS.charFormula) :
+    TLTS.TimedBisimilar TLTS.runTLTS q.1 (q.2 ()) :=
+  TLTS.charFormula_complete hq
 
 end DeepWiki.Rs
