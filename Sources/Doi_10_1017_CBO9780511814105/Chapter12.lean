@@ -262,11 +262,13 @@ theorem ex_12_3 (T : TLTS Proc Act) (p : Proc) (u : Valuation D) (x y : D) (a : 
 
 /-! ## §12.4.1 Characteristic properties for timed bisimilarity (recursion in `Mt`) -/
 
-/-- **Theorem 12.5** (§12.4.1, p.243). The recursively defined formula
+/-- **Theorem 12.5** (§12.4.1, p.243), running-example instance. The recursively defined formula
 `X =max (y ≤ 1 ⇒ ⟨a⟩(y in X)) ∧ [a](y ≤ 1 ∧ (y in X)) ∧ ∀∀X` is characteristic, modulo timed
 bisimilarity, for the running-example timed automaton's location: an extended state `(p, u)`
-satisfies `X` iff `p` is timed bisimilar to the running example's clock-`u(y)` state.
-Discharged by `TLTS.mem_charFormula_iff_timedBisimilar`. -/
+satisfies `X` iff `p` is timed bisimilar to the running example's clock-`u(y)` state. Here the
+tested state `q.1` is itself a `runTLTS` state — the `A = runTLTS` instance of the book's
+statement (which compares `X_ℓ` against a state of an arbitrary automaton `A`). Discharged by
+`TLTS.mem_charFormula_iff_timedBisimilar`. -/
 theorem thm_12_5 {q : ℝ≥0 × Valuation Unit} :
     q ∈ TLTS.charFormula ↔ TLTS.TimedBisimilar TLTS.runTLTS q.1 (q.2 ()) :=
   TLTS.mem_charFormula_iff_timedBisimilar

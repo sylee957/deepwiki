@@ -71,7 +71,7 @@ theorem mem_charFormula {q : ℝ≥0 × Valuation Unit} :
 
 /-! ### Soundness: timed bisimilarity to the running example implies satisfaction -/
 
-/-- **Soundness (Theorem 12.5, ⇐).** If `(p, u)` is timed bisimilar to the running example's
+/-- **Soundness (Theorem 12.5 for the running example, ⇐).** If `(p, u)` is timed bisimilar to the running example's
 clock-`u(y)` state, then it satisfies the characteristic formula `X`. Proved by coinduction:
 the timed-bisimilarity-to-the-example relation is a post-fixed point of `charBody`. -/
 theorem charFormula_sound {q : ℝ≥0 × Valuation Unit}
@@ -109,7 +109,7 @@ theorem charFormula_sound {q : ℝ≥0 × Valuation Unit}
 
 /-! ### Completeness: satisfaction implies timed bisimilarity (Exercise 12.19) -/
 
-/-- **Completeness (Theorem 12.5, ⇒; Exercise 12.19).** If `(p, u)` satisfies the
+/-- **Completeness (Theorem 12.5 for the running example, ⇒; Exercise 12.19).** If `(p, u)` satisfies the
 characteristic formula `X`, then `p` is timed bisimilar to the running example's clock-`u(y)`
 state. Proved by exhibiting the satisfaction relation `R a b := (a, [y = b]) ⊨ X` as a timed
 bisimulation (read off from `mem_charFormula`). -/
@@ -161,9 +161,10 @@ theorem charFormula_complete {q : ℝ≥0 × Valuation Unit} (hq : q ∈ charFor
   have hq2 : q.2 = fun _ : Unit => q.2 () := by funext u; cases u; rfl
   exact hR.le_bisimilar (by rw [← hq2]; exact hq)
 
-/-- **Theorem 12.5 / Corollary 12.2 (for the running example).** A state `(p, u)` satisfies the
-characteristic formula `X` iff it is timed bisimilar to the running example's clock-`u(y)`
-state. -/
+/-- **Theorem 12.5 (for the running example).** A state `(p, u)` satisfies the characteristic
+formula `X` iff it is timed bisimilar to the running example's clock-`u(y)` state. (Here the
+tested state `p` is itself a `runTLTS` state — the `A = runTLTS` instance of the book's
+statement, which compares `X_ℓ` against a state of an arbitrary automaton `A`.) -/
 theorem mem_charFormula_iff_timedBisimilar {q : ℝ≥0 × Valuation Unit} :
     q ∈ charFormula ↔ TimedBisimilar runTLTS q.1 (q.2 ()) :=
   ⟨charFormula_complete, charFormula_sound⟩
