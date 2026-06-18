@@ -146,6 +146,26 @@ theorem regionCodeStep_caseC_thd {cmax : C → ℕ} {γ : RegionCode cmax}
   unfold regionCodeStep
   rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_neg (by rw [decide_eq_true_iff]; exact hB)]
 
+/-! ## Case-B dispatch (the step's components when some clock is integral) -/
+
+omit [DecidableEq C] in
+/-- In case B (not all saturated, some integral clock), the elapse step's floor at `x`. -/
+theorem regionCodeStep_caseB_fst {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ∃ x, γ.2.1 x = true) (x : C) :
+    (regionCodeStep γ).1 x =
+      if (decide ((γ.1 x).val = cmax x + 1) || (γ.2.1 x && decide ((γ.1 x).val = cmax x))) = true then
+        bumpFloor cmax x (cmax x + 1) else γ.1 x := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_pos (by rw [decide_eq_true_iff]; exact hB)]
+
+omit [DecidableEq C] in
+/-- In case B, the elapse step clears all frac-zero bits. -/
+theorem regionCodeStep_caseB_snd {cmax : C → ℕ} {γ : RegionCode cmax}
+    (hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1) (hB : ∃ x, γ.2.1 x = true) (x : C) :
+    (regionCodeStep γ).2.1 x = false := by
+  unfold regionCodeStep
+  rw [if_neg (by rw [decide_eq_true_iff]; exact hA), if_pos (by rw [decide_eq_true_iff]; exact hB)]
+
 /-! ## Small delays keep the region (the "before" half of the key lemma) -/
 
 omit [Fintype C] [DecidableEq C] in
@@ -337,6 +357,85 @@ theorem codeMeasure_step_lt_caseC {cmax : C → ℕ} {w : Valuation C}
   unfold codeMeasure
   rw [hintγ, Finset.card_empty, hintstep, hsum]
   omega
+
+omit [DecidableEq C] in
+open Classical in
+/-- **Case B decreases the measure.** When some clock is bounded integral, the elapse step
+clears every frac-zero bit (count to `0`) and saturates the integral-at-`cₓ` clocks (room
+down), a strict drop of at least the integral count `≥ 1`. -/
+theorem codeMeasure_step_lt_caseB {cmax : C → ℕ} {w : Valuation C}
+    (hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0))
+    (hI : ∃ x, w x ≤ (cmax x : ℝ≥0) ∧ fracPart (w x) = 0) :
+    codeMeasure (regionCodeStep (regionFingerprint cmax w))
+      < codeMeasure (regionFingerprint cmax w) := by
+  set γ := regionFingerprint cmax w with hγ
+  set intAtMax : C → Bool := fun x => γ.2.1 x && decide ((γ.1 x).val = cmax x) with hiam
+  have hA : ¬ ∀ x, (γ.1 x).val = cmax x + 1 := by
+    obtain ⟨x, hx⟩ := hbnd
+    intro hall; have h1 := hall x; rw [hγ, regionFingerprint_floor] at h1
+    have h2 := (regionFloor_le_clamp_iff w x).mpr hx; omega
+  have hBex : ∃ x, γ.2.1 x = true := by
+    obtain ⟨x, hbx, hfx⟩ := hI
+    exact ⟨x, by rw [hγ, regionFingerprint_fracZero, decide_eq_true_iff]; exact ⟨hbx, hfx⟩⟩
+  have hroom : ∀ x, cmax x + 1 - (γ.1 x).val =
+      (cmax x + 1 - ((regionCodeStep γ).1 x).val) + (if intAtMax x = true then 1 else 0) := by
+    intro x
+    rw [regionCodeStep_caseB_fst hA hBex x]
+    by_cases hns : (decide ((γ.1 x).val = cmax x + 1) ||
+        (γ.2.1 x && decide ((γ.1 x).val = cmax x))) = true
+    · rw [if_pos hns]
+      have hbf : (bumpFloor cmax x (cmax x + 1)).val = min (cmax x + 1) (cmax x + 1) := rfl
+      rw [hbf]
+      by_cases hia : intAtMax x = true
+      · rw [if_pos hia]
+        have hfeq : (γ.1 x).val = cmax x := by
+          rw [hiam, Bool.and_eq_true, decide_eq_true_iff] at hia; exact hia.2
+        omega
+      · rw [if_neg hia]
+        have hsat : (γ.1 x).val = cmax x + 1 := by
+          rw [Bool.or_eq_true, decide_eq_true_iff] at hns
+          rcases hns with h | h
+          · exact h
+          · exact absurd h (by rw [hiam] at hia; exact hia)
+        omega
+    · rw [if_neg hns]
+      have hia : intAtMax x ≠ true := by
+        rw [hiam]; intro hc; exact hns (by rw [Bool.or_eq_true]; exact Or.inr hc)
+      rw [if_neg hia]; omega
+  have hintγ : 0 < (Finset.univ.filter (fun x => γ.2.1 x = true)).card := by
+    rw [Finset.card_pos]; obtain ⟨x, hx⟩ := hBex
+    exact ⟨x, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hx⟩⟩
+  have hintstep : (Finset.univ.filter (fun x => (regionCodeStep γ).2.1 x = true)) = ∅ := by
+    rw [Finset.filter_eq_empty_iff]; intro x _
+    rw [regionCodeStep_caseB_snd hA hBex x]; simp
+  have hsum : (∑ x, (cmax x + 1 - (γ.1 x).val)) =
+      (∑ x, (cmax x + 1 - ((regionCodeStep γ).1 x).val)) +
+        (Finset.univ.filter (fun x => intAtMax x = true)).card := by
+    rw [Finset.card_filter, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl (fun x _ => hroom x)
+  unfold codeMeasure
+  rw [hintstep, Finset.card_empty, hsum]
+  omega
+
+omit [DecidableEq C] in
+/-- **The descent measure strictly decreases at every non-fixpoint region.** Combines cases B
+and C; a non-fixpoint region is bounded somewhere (else it is saturated, a fixpoint), and
+either has an integral clock (case B) or not (case C). -/
+theorem codeMeasure_step_lt {cmax : C → ℕ} {w : Valuation C}
+    (h : regionCodeStep (regionFingerprint cmax w) ≠ regionFingerprint cmax w) :
+    codeMeasure (regionCodeStep (regionFingerprint cmax w))
+      < codeMeasure (regionFingerprint cmax w) := by
+  have hbnd : ∃ x, w x ≤ (cmax x : ℝ≥0) := by
+    by_contra hc
+    apply h
+    simp only [not_exists, not_le] at hc
+    have heq := regionCodeStep_sound_allUnbounded hc
+    rw [Valuation.add_zero] at heq
+    exact heq.symm
+  by_cases hI : ∃ x, w x ≤ (cmax x : ℝ≥0) ∧ fracPart (w x) = 0
+  · exact codeMeasure_step_lt_caseB hbnd hI
+  · simp only [not_exists, not_and] at hI
+    exact codeMeasure_step_lt_caseC hbnd hI
 
 omit [DecidableEq C] in
 /-- A region of zero descent measure is fully saturated (no room, no integral clocks). -/
