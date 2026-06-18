@@ -91,6 +91,7 @@ import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import DeepWiki.ReactiveSystems.TimedAutomataFinite
 import DeepWiki.ReactiveSystems.TimedRegionCode
 import DeepWiki.ReactiveSystems.TimedRegionSuccessor
+import DeepWiki.ReactiveSystems.TimedRegionSuccessorSound
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutableFull
 import DeepWiki.ReactiveSystems.FischerMutualExclusion
