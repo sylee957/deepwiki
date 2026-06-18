@@ -12,6 +12,7 @@ import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.SymbolicModelChecking
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingDecidable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutable
+import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutableFull
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
@@ -275,6 +276,24 @@ theorem thm_12_2_executable {Loc C : Type*} [Fintype Loc] [DecidableEq Loc] [Dec
       DeepWiki.ReactiveSystems.SymSatCode A (Sum.elim A.cmax F.formulaCmax) A.initial
         (DeepWiki.ReactiveSystems.RegionCode.initial _) F = true :=
   DeepWiki.ReactiveSystems.satisfiesMt_iff_decide A F hF
+
+/-- **Theorem 12.2** (§12.2, p.231), *executable* decision for the FULL logic, modulo a
+region successor. Given a sound and complete region time-successor enumerator `succ`, `A ⊨ F`
+(any `F`, delay quantifiers included) reduces to the Bool computation `SymSatCodeFull` — an
+executable decision for the full timed logic. The successor's *existence* is classical
+(`timeSuccessor_of_fintype`); a constructive one (the Alur–Dill successor) is the sole open
+step. The library's `satisfiesMt_iff_decideFull`. -/
+theorem thm_12_2_executable_full {Loc C : Type*} [Fintype Loc] [DecidableEq Loc] [DecidableEq Act]
+    [DecidableEq C] [DecidableEq D] (A : DeepWiki.ReactiveSystems.FinAutomaton Loc Act C)
+    (F : Mt Act D)
+    (succ : DeepWiki.ReactiveSystems.RegionCode (Sum.elim A.cmax F.formulaCmax) →
+      List (DeepWiki.ReactiveSystems.RegionCode (Sum.elim A.cmax F.formulaCmax)))
+    (hsound : DeepWiki.ReactiveSystems.SuccSound succ)
+    (hcomplete : DeepWiki.ReactiveSystems.SuccComplete succ) :
+    A.toTimedAutomaton.SatisfiesMt F ↔
+      DeepWiki.ReactiveSystems.SymSatCodeFull A succ A.initial
+        (DeepWiki.ReactiveSystems.RegionCode.initial _) F = true :=
+  DeepWiki.ReactiveSystems.satisfiesMt_iff_decideFull A F succ hsound hcomplete
 
 /-- **Exercise 12.8** (§12.2, p.231). For the one-location automaton with invariant
 `x ≤ 2` and an `a`-self-loop guarded `x ≤ 1` (resetting `x`), the initial symbolic
