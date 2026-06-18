@@ -19,3 +19,6 @@
 
 # Local git worktrees (agent isolation scratch)
 .claude/worktrees/
+
+# Harness scheduled-task lock (local state, churns constantly)
+.claude/scheduled_tasks.lock

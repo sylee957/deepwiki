@@ -168,6 +168,128 @@ theorem mem_charFormula_iff_timedBisimilar {q : ℝ≥0 × Valuation Unit} :
     q ∈ charFormula ↔ TimedBisimilar runTLTS q.1 (q.2 ()) :=
   ⟨charFormula_complete, charFormula_sound⟩
 
+/-! ### Exercise 12.20: characteristic formulae without recursion (Example 11.4)
+
+When the action graph is *acyclic*, the characteristic formula needs no recursion — a plain
+`Mt` formula suffices. The Example 11.4 automaton (one action `a`, guarded `x ≤ c`, resetting
+`x`, into a dead location; free delays) is such a case. Two instances `c = 1` and `c = 2` are
+the book's two automata, which are not timed bisimilar. -/
+
+/-- States of the Example 11.4 automaton (bound `c`): the live location `A d` (can fire `a`
+while clock `d ≤ c`, reaching the dead location and resetting the clock) and the dead location
+`B d`. Both delay freely. -/
+inductive Once
+  | A (d : ℝ≥0)
+  | B (d : ℝ≥0)
+
+/-- SOS of the Example 11.4 automaton with action guard `x ≤ c`. -/
+inductive OnceStep (c : ℕ) : Once → (Unit ⊕ ℝ≥0) → Once → Prop
+  /-- `A d —a→ B 0` while `d ≤ c` (resetting the clock). -/
+  | act {d : ℝ≥0} (h : d ≤ (c : ℝ≥0)) : OnceStep c (.A d) (.inl ()) (.B 0)
+  /-- `A` delays freely. -/
+  | delayA (d t : ℝ≥0) : OnceStep c (.A d) (.inr t) (.A (d + t))
+  /-- `B` delays freely. -/
+  | delayB (d t : ℝ≥0) : OnceStep c (.B d) (.inr t) (.B (d + t))
+
+/-- The Example 11.4 TLTS with bound `c`. -/
+def onceTLTS (c : ℕ) : TLTS Once Unit := ⟨OnceStep c⟩
+
+@[simp] theorem once_act {c : ℕ} {q q' : Once} :
+    (onceTLTS c).act q () q' ↔ OnceStep c q (Sum.inl ()) q' := Iff.rfl
+
+@[simp] theorem once_delay {c : ℕ} {q q' : Once} {t : ℝ≥0} :
+    (onceTLTS c).delay q t q' ↔ OnceStep c q (Sum.inr t) q' := Iff.rfl
+
+/-- A state can always delay (by any duration). -/
+theorem once_can_delay {c : ℕ} (q : Once) (t : ℝ≥0) :
+    ∃ q', OnceStep c q (Sum.inr t) q' := by
+  cases q with
+  | A d => exact ⟨_, OnceStep.delayA d t⟩
+  | B d => exact ⟨_, OnceStep.delayB d t⟩
+
+/-- A state is *dead* — it can never fire `a`, now or after any delay: `B _`, or `A d` with
+`c < d` (so `d` can only grow past the guard). -/
+def OnceDead (c : ℕ) : Once → Prop
+  | .A d => (c : ℝ≥0) < d
+  | .B _ => True
+
+/-- Dead states have no `a`-move. -/
+theorem OnceDead.no_act {c : ℕ} {q q' : Once} (hq : OnceDead c q) :
+    ¬ OnceStep c q (Sum.inl ()) q' := by
+  intro h
+  cases q with
+  | A d => cases h with | act hd => exact absurd hd (not_le.mpr hq)
+  | B d => cases h
+
+/-- Death is preserved by delay. -/
+theorem OnceDead.delay {c : ℕ} {q q' : Once} {t : ℝ≥0} (hq : OnceDead c q)
+    (h : OnceStep c q (Sum.inr t) q') : OnceDead c q' := by
+  cases h with
+  | delayA d t => exact lt_of_lt_of_le hq le_self_add
+  | delayB d t => trivial
+
+/-- The characteristic formula of the dead location: `∀∀[a]ff` — no action is ever possible. -/
+def charB : Mt Unit Unit := .forallDelay (.box () .ff)
+
+/-- The characteristic formula of the live location `A` (bound `c`), recursion-free:
+`∀∀((y ≤ c ⇒ ⟨a⟩(y in charB)) ∧ [a](y ≤ c ∧ (y in charB)))` (the implication `y ≤ c ⇒ F`
+written `y > c ∨ F`). No recursion is needed because the action leads to the dead location,
+whose formula `charB` is itself recursion-free. -/
+def charA (c : ℕ) : Mt Unit Unit :=
+  .forallDelay
+    (.and
+      (.or (.guard (.atom () .gt c)) (.dia () (.reset () charB)))
+      (.box () (.and (.guard (.atom () .le c)) (.reset () charB))))
+
+/-- `charB` is satisfied exactly at the dead states (independently of the formula clock). -/
+theorem mtSat_charB {c : ℕ} {q : Once} {u : Valuation Unit} :
+    (onceTLTS c).MtSat q u charB ↔ OnceDead c q := by
+  constructor
+  · intro h
+    cases q with
+    | A d =>
+        by_contra hc
+        simp only [OnceDead, not_lt] at hc
+        have hdel : OnceStep c (Once.A d) (Sum.inr 0) (Once.A d) := by
+          have := OnceStep.delayA (c := c) d 0; rwa [add_zero] at this
+        exact h 0 (Once.A d) hdel (Once.B 0) (OnceStep.act hc)
+    | B d => trivial
+  · intro hq t q' hdel q'' hact
+    exact (hq.delay hdel).no_act hact
+
+/-- All dead states are timed bisimilar to the dead location `B 0`. -/
+theorem onceDead_timedBisimilar {c : ℕ} {q : Once} (hq : OnceDead c q) :
+    TimedBisimilar (onceTLTS c) q (Once.B 0) := by
+  have hbis : LTS.IsBisimulation (onceTLTS c) (fun x y => OnceDead c x ∧ OnceDead c y) := by
+    rintro x y ⟨hx, hy⟩
+    refine ⟨fun l x' hstep => ?_, fun l y' hstep => ?_⟩
+    · cases l with
+      | inl u => obtain ⟨⟩ := u; exact absurd hstep hx.no_act
+      | inr t =>
+          obtain ⟨y', hy'⟩ := once_can_delay (c := c) y t
+          exact ⟨y', hy', hx.delay hstep, hy.delay hy'⟩
+    · cases l with
+      | inl u => obtain ⟨⟩ := u; exact absurd hstep hy.no_act
+      | inr t =>
+          obtain ⟨x', hx'⟩ := once_can_delay (c := c) x t
+          exact ⟨x', hx', hx.delay hx', hy.delay hstep⟩
+  exact hbis.le_bisimilar ⟨hq, trivial⟩
+
+/-- **`charB` is characteristic for the dead location**: a state satisfies `charB` iff it is
+timed bisimilar to `B 0`. -/
+theorem mtSat_charB_iff {c : ℕ} {q : Once} {u : Valuation Unit} :
+    (onceTLTS c).MtSat q u charB ↔ TimedBisimilar (onceTLTS c) q (Once.B 0) := by
+  rw [mtSat_charB]
+  refine ⟨onceDead_timedBisimilar, fun hbis => ?_⟩
+  cases q with
+  | A d =>
+      by_contra hc
+      simp only [OnceDead, not_lt] at hc
+      obtain ⟨haf, _, _, _⟩ := (timedBisimilar_iff (onceTLTS c) (Once.A d) (Once.B 0)).mp hbis
+      obtain ⟨q', hq', _⟩ := haf () (Once.B 0) (OnceStep.act hc)
+      exact (OnceDead.no_act (q := Once.B 0) trivial) hq'
+  | B d => trivial
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
