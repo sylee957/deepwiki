@@ -279,4 +279,15 @@ theorem ex_12_19 {q : ℝ≥0 × Valuation Unit} (hq : q ∈ TLTS.charFormula) :
     TLTS.TimedBisimilar TLTS.runTLTS q.1 (q.2 ()) :=
   TLTS.charFormula_complete hq
 
+/-- **Exercise 12.20** (§12.4.1, p.244). Characteristic formulae for the Example 11.4 automaton
+(action guard `x ≤ c`), with a version of Theorem 12.5 — and *no recursion is needed*, since the
+action graph is acyclic. The live location's formula `charA c` characterizes its
+timed-bisimilarity class: `(q, [y = d]) ⊨ charA c ↔ q ~ A d` (discharged by
+`TLTS.mtSat_charA_iff`); the dead location's `charB := ∀∀[a]ff` characterizes the dead class
+(`TLTS.mtSat_charB_iff`). -/
+theorem ex_12_20 {c : ℕ} {q : TLTS.Once} {d : ℝ≥0} :
+    (TLTS.onceTLTS c).MtSat q (fun _ => d) (TLTS.charA c) ↔
+      TLTS.TimedBisimilar (TLTS.onceTLTS c) q (TLTS.Once.A d) :=
+  TLTS.mtSat_charA_iff
+
 end DeepWiki.Rs
