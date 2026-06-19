@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ServersConcatenation
 import DeepWiki.NetworkCalculus.ArrivalCurvesShaper
 import DeepWiki.NetworkCalculus.ServiceCurveMaximal
 import DeepWiki.NetworkCalculus.Deviations
+import DeepWiki.NetworkCalculus.ServersJitter
 
 /-! # A server followed by a packetizer
 The combined system `S;P`: the packetizer costs one maximal packet on
@@ -207,6 +208,27 @@ theorem exists_backlog_sandwich_of_comp_packetizerRel
   exact ⟨B, hSB,
     (Deviation.backlog_packetizeCurve_sandwich hL ⇑A B).1,
     (Deviation.backlog_packetizeCurve_sandwich hL ⇑A B).2⟩
+
+/-- **Corollary 8.2** (packetizer as a delay): on a `P`-packetized input `A`, the
+system `S;P` adds no delay, so it offers the **pure-delay min-plus service curve**
+`δ_dM` of its `S` stage — given any finite bound `dM` on the `S`-stage delay
+(`∀ B, S A B → delay A B ≤ dM`), the output `C` of `S;P` satisfies
+`A (t − dM) ≤ C t` (the `δ_dM` convolution bound). The arrival `A` is
+left-continuous as a `Curve`, which the bound at the exact delay requires
+(`Deviation.apply_tsub_le_of_delay_le_of_leftCont`; left-continuity is necessary,
+`Deviation.not_forall_apply_tsub_le_of_delay_le`). -/
+theorem apply_tsub_le_of_isPacketized_comp_packetizerRel
+    {S : Curve → Curve → Prop} {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
+    (hL : IsPacketLengthSeq L ll lu) {A C : Curve} {dM : ℝ≥0}
+    (hA : IsPacketized L ⇑A)
+    (hp : Relation.Comp S (packetizerRel L) A C)
+    (hd : ∀ B : Curve, S A B → Deviation.delay ⇑A ⇑B ≤ (dM : ℝ≥0∞))
+    (t : ℝ≥0) :
+    (⇑A) (t - dM) ≤ (⇑C) t := by
+  obtain ⟨B, hSB, hdeq⟩ := exists_delay_eq_of_comp_packetizerRel hL hA hp
+  refine Deviation.apply_tsub_le_of_delay_le_of_leftCont
+    (A.zero : (⇑A) 0 = 0) A.leftCont C.mono ?_ t
+  exact hdeq.le.trans (hd B hSB)
 
 /-! ## Book restatement (the server/packetizer system)
 `S` a server, `P` a packetizer with maximum packet size `ℓᵘ`: the

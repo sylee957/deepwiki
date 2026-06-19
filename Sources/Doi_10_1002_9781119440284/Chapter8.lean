@@ -59,7 +59,8 @@ alias thm_8_2_5 := exists_backlog_sandwich_of_comp_packetizerRel
 /-- **Theorem 8.2** (linked: `exists_delay_eq_of_comp_packetizerRel`). -/
 alias thm_8_2_6 := exists_delay_eq_of_comp_packetizerRel
 
-/-! **Corollary 8.2** (§8.1, p.190): Packetizer as a delay: if a cumulative function A is P-packetized then S;P offers the pure-delay min-plus service curve δ_{d(A,S)} to A (using d(A,S;P) = d(A,S)). Not formalized in the library. -/
+/-- **Corollary 8.2** (§8.1, p.190): Packetizer as a delay: if a cumulative function A is P-packetized then S;P offers the pure-delay min-plus service curve δ_{d(A,S)} to A (using d(A,S;P) = d(A,S)). The library's `DeepWiki.apply_tsub_le_of_isPacketized_comp_packetizerRel`: given a finite delay bound dM on the S-stage, the S;P output satisfies the δ_dM bound `A(t − dM) ≤ C t` — the left-continuity of the `Curve` arrival supplies the bound at the exact delay (`apply_tsub_le_of_delay_le_of_leftCont`). -/
+alias cor_8_2 := apply_tsub_le_of_isPacketized_comp_packetizerRel
 
 /-! **Corollary 8.3** (§8.1, p.190): Arrival curve from a packetizer: if S is a server, P a packetizer with max packet size ℓ^u, (A,C) ∈ S;P, P-packetized, and S maximal-arrival σ^M-shaper, then C has maximal arrival curve ((α ∘ β^M) ∧ (σ + ℓ^u)) ∧ (α ⊘ δ_{hDev(A,S;P)}). Not formalized in the library. -/
 
