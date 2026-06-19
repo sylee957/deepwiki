@@ -14,9 +14,10 @@ open MeasureTheory ProbabilityTheory
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- **Definition 1.2.2**: a realization (sample path) of a process `X` at the
-outcome `ω` is the function `t ↦ Xₜ(ω)`. -/
-def realization (X : ℤ → Ω → ℝ) (ω : Ω) : ℤ → ℝ := fun t => X t ω
+/-- **Definition 1.2.2**: a realization (sample path) of a process `X` at the outcome `ω` is
+the function `t ↦ Xₜ(ω)` on the index set — over an arbitrary index `T` and values `𝒳`, as
+general as the process `X` itself (Def 1.2.1). -/
+def realization {T Ω 𝒳 : Type*} (X : Process T Ω 𝒳) (ω : Ω) : T → 𝒳 := fun t => X t ω
 
 /-- **Example 1.2.1**: the sinusoid with random phase and amplitude
 `Xₜ = r⁻¹ · A · cos(νt + Θ)`, where the amplitude `A ≥ 0` and the phase `Θ` (independent
