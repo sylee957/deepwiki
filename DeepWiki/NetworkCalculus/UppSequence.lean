@@ -120,6 +120,48 @@ theorem evalNat_eventually_le [AddCommGroup V] [LinearOrder V] [IsOrderedAddMono
     _ ≤ ms + q • cs := hkey
     _ ≤ s.evalNat (R + rem) + q • cs := add_le_add_left hmsb _
 
+/-- The denoted sequence is unchanged on the stored transient/period prefix: `f(n) = vals[n]`. -/
+theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) :
+    r.evalNat n = r.vals.get ⟨n, hn⟩ := by
+  conv_lhs => rw [evalNat.eq_def]
+  rw [dif_pos hn]
+
+/-- Vertically shift a UPP sequence by a constant `b` (add `b` to every value); same period and
+increment. -/
+def addConst [Add V] (r : UppSeq V) (b : V) : UppSeq V where
+  vals := r.vals.map (· + b)
+  incr := r.incr
+  period := r.period
+  hperiod := r.hperiod
+  hlen := by rw [List.length_map]; exact r.hlen
+
+/-- `addConst` shifts the denoted sequence by `b`: `(r.addConst b)(n) = r(n) + b`. -/
+theorem evalNat_addConst [AddCommMonoid V] (r : UppSeq V) (b : V) (n : ℕ) :
+    (r.addConst b).evalNat n = r.evalNat n + b := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    by_cases hL : n < r.vals.length
+    · have hL' : n < (r.addConst b).vals.length := by simpa [addConst] using hL
+      rw [evalNat_of_lt _ hL', evalNat_of_lt r hL]; simp [addConst]
+    · have hge : ¬ n < (r.addConst b).vals.length := by simpa [addConst] using hL
+      conv_lhs => rw [evalNat.eq_def]
+      rw [dif_neg hge]
+      show (r.addConst b).evalNat (n - r.period) + r.incr = _
+      rw [ih (n - r.period) (by have := r.hperiod; have := r.hlen; omega)]
+      conv_rhs => rw [evalNat.eq_def]
+      rw [dif_neg hL]; abel
+
+/-- **Offset crossover.** If `r` has strictly smaller asymptotic slope than `s`, then `r` is
+eventually below `s` *by any margin* `b`: `r(n) + b ≤ s(n)` for large `n`. (Derived from
+`evalNat_eventually_le` on `r.addConst b`, whose slope equals `r`'s.) -/
+theorem evalNat_add_const_eventually_le [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V]
+    [Archimedean V] (r s : UppSeq V) (b : V)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            < (Nat.lcm r.period s.period / s.period) • s.incr) :
+    ∃ N, ∀ n, N ≤ n → r.evalNat n + b ≤ s.evalNat n := by
+  obtain ⟨N, hN⟩ := (r.addConst b).evalNat_eventually_le s hslope
+  exact ⟨N, fun n hn => by rw [← evalNat_addConst r b n]; exact hN n hn⟩
+
 /-- **Lemma 4.3, minimum — general case** (the pointwise minimum of two UPP sequences is ultimately
 pseudo-periodic). From some rank, `min(f,g)(n+d) = min(f,g)(n) + min(c_f', c_g')` with `d = lcm` and
 `c_f' = (d/d_f)·c_f` (the per-`d` increments) — the increment is the smaller slope. Covers all three
@@ -188,12 +230,6 @@ theorem max_evalNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid
     refine ⟨max N (max (r.vals.length - r.period) (s.vals.length - s.period)), fun n hn => ?_⟩
     rw [max_eq_left (hN n (by omega)), max_eq_left (hN (n + d) (by omega)),
       hrstep n (by omega), max_eq_left (le_of_lt h)]
-
-/-- The denoted sequence is unchanged on the stored transient/period prefix: `f(n) = vals[n]`. -/
-theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) :
-    r.evalNat n = r.vals.get ⟨n, hn⟩ := by
-  conv_lhs => rw [evalNat.eq_def]
-  rw [dif_pos hn]
 
 /-- `⌊t + n⌋₊ = ⌊t⌋₊ + n` on `ℝ≥0` — proved directly (the ring lemma `Nat.floor_add_natCast` needs
 a ring, which `ℝ≥0` is not). -/
