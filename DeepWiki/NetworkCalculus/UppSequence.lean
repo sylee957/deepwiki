@@ -286,6 +286,49 @@ theorem max_evalNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid
     rw [max_eq_left (hN n (by omega)), max_eq_left (hN (n + d) (by omega)),
       hrstep n (by omega), max_eq_left (le_of_lt h)]
 
+/-- **Lemma 4.3 minimum — explicit-rank form.** Past a crossover `N₀` (where `r ≤ s` holds on a full
+period-window `hwin`, hence everywhere by `evalNat_le_of_window_le`) the slower operand `r` *is* the
+minimum, so `min(f,g)` steps by `min(cr,cs) = cr` per period. Computable rank for `minupp`. -/
+theorem min_evalNat_add_lcm_window [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) ≤ s.evalNat (N₀ + rem))
+    (n : ℕ) (hn : N₀ ≤ n) :
+    Min.min (r.evalNat (n + Nat.lcm r.period s.period))
+            (s.evalNat (n + Nat.lcm r.period s.period))
+      = Min.min (r.evalNat n) (s.evalNat n)
+        + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+                  ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  have hrs : ∀ m, N₀ ≤ m → r.evalNat m ≤ s.evalNat m :=
+    fun m hm => evalNat_le_of_window_le r s hR hle hwin m hm
+  rw [min_eq_left (hrs n hn),
+    min_eq_left (hrs (n + Nat.lcm r.period s.period) (by omega)), min_eq_left hle]
+  simpa using r.evalNat_add_mul_of_dvd (Nat.dvd_lcm_left r.period s.period) 1 (by omega)
+
+/-- **Lemma 4.3 maximum — explicit-rank form.** Dual of `min_evalNat_add_lcm_window`: past the
+crossover the faster operand `s` is the maximum, so `max(f,g)` steps by `max(cr,cs) = cs`. -/
+theorem max_evalNat_add_lcm_window [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) ≤ s.evalNat (N₀ + rem))
+    (n : ℕ) (hn : N₀ ≤ n) :
+    Max.max (r.evalNat (n + Nat.lcm r.period s.period))
+            (s.evalNat (n + Nat.lcm r.period s.period))
+      = Max.max (r.evalNat n) (s.evalNat n)
+        + Max.max ((Nat.lcm r.period s.period / r.period) • r.incr)
+                  ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  have hrs : ∀ m, N₀ ≤ m → r.evalNat m ≤ s.evalNat m :=
+    fun m hm => evalNat_le_of_window_le r s hR hle hwin m hm
+  rw [max_eq_right (hrs n hn),
+    max_eq_right (hrs (n + Nat.lcm r.period s.period) (by omega)), max_eq_right hle]
+  simpa using s.evalNat_add_mul_of_dvd (Nat.dvd_lcm_right r.period s.period) 1 (by omega)
+
 /-- `⌊t + n⌋₊ = ⌊t⌋₊ + n` on `ℝ≥0` — proved directly (the ring lemma `Nat.floor_add_natCast` needs
 a ring, which `ℝ≥0` is not). -/
 private theorem nnFloor_add_nat (t : ℝ≥0) (m : ℕ) : ⌊t + (m : ℝ≥0)⌋₊ = ⌊t⌋₊ + m := by
@@ -835,6 +878,33 @@ theorem convNat_add_lcm_window [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMo
   rw [add_comm (r.evalNat 0)]
   exact evalNat_add_le_of_window_le r s (s.evalNat (r.vals.length - r.period)) (r.evalNat 0)
     hR hle hwin m hm
+
+/-- **Generic sample-and-close constructor.** Build a `UppSeq` denoting `f : ℕ → V` from its prefix
+`f(0 .. T+p-1)`, period `p`, increment `c`. When `T` is a stabilization rank (`f(n+p) = f(n)+c` for
+`n ≥ T`), `evalNat` reproduces `f` exactly (`evalNat_fromSamples`). The composable core behind
+`minUpp`/`maxUpp` (and the shape of `convFrom`). -/
+def fromSamples [Add V] (f : ℕ → V) (c : V) (p : ℕ) (hp : 0 < p) (T : ℕ) : UppSeq V where
+  vals := (List.range (T + p)).map f
+  incr := c
+  period := p
+  hperiod := hp
+  hlen := by rw [List.length_map, List.length_range]; omega
+
+/-- **`fromSamples` is correct**: when `T` is a stabilization rank (`f(n+p) = f(n)+c` for `n ≥ T`),
+the assembled sequence denotes `f` — `(fromSamples f c p hp T).evalNat n = f n` for all `n`. -/
+theorem evalNat_fromSamples [AddCommMonoid V] (f : ℕ → V) (c : V) (p : ℕ) (hp : 0 < p) (T : ℕ)
+    (hstep : ∀ n, T ≤ n → f (n + p) = f n + c) (n : ℕ) :
+    (fromSamples f c p hp T).evalNat n = f n := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    by_cases hL : n < (fromSamples f c p hp T).vals.length
+    · rw [evalNat_of_lt _ hL]; simp [fromSamples]
+    · have hge : T + p ≤ n := by
+        simpa [fromSamples, List.length_map, List.length_range, not_lt] using hL
+      conv_lhs => rw [evalNat.eq_def]
+      rw [dif_neg hL]
+      show (fromSamples f c p hp T).evalNat (n - p) + c = _
+      rw [ih (n - p) (by omega), ← hstep (n - p) (by omega), show n - p + p = n from by omega]
 
 /-- **Composable convolution constructor.** Assemble `r ⊗ s` as an actual `UppSeq`: prefix
 `(r⊗s)(0 .. T+d-1)` (sampled via `convNat`), period `d = lcm`, increment `min(cr,cs)`. `T` is any
