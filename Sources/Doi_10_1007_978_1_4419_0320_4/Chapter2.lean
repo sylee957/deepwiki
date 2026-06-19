@@ -169,6 +169,18 @@ alias thm_2_5_2 := isStarProjection_iff
 every Cauchy sequence converges. Mathlib's `cauchySeq_tendsto_of_complete`. -/
 alias prop_2_2_1 := cauchySeq_tendsto_of_complete
 
+/-- **Example 2.2.1** (§2.2, p.46), Euclidean space `ℝⁿ` is complete, hence a Hilbert space. -/
+theorem ex_2_2_1 (n : ℕ) : CompleteSpace (EuclideanSpace ℝ (Fin n)) := inferInstance
+
+/-! ## §2.6 Linear Regression and the General Linear Model -/
+
+/-- **Equation (2.6.5)** (§2.6, p.61), the normal equations `XᵀX θ̂ = Xᵀy` of the general
+linear model `y = Xθ + ε`: the least-squares fit `ŷ = Xθ̂` is the orthogonal projection of
+`y` onto the column space of `X`, characterized by the residual `y − ŷ` being orthogonal to
+that subspace — the prediction equations (§2.3) at `ℳ = col(X)`. So §2.6 is the regression
+application of the projection theorem; the library's `bestPredictor_sub_mem_orthogonal`. -/
+alias eq_2_6_5 := DeepWiki.TimeSeries.bestPredictor_sub_mem_orthogonal
+
 end DeepWiki.Ts
 
 
