@@ -9,6 +9,7 @@ import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.MultivariateNormal
 import DeepWiki.TimeSeries.KolmogorovApplications
 import Mathlib.Analysis.Matrix.Spectrum
+import Mathlib.Algebra.Group.ForwardDiff
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import Mathlib.Probability.BrownianMotion.Basic
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
@@ -319,6 +320,13 @@ theorem ex_1_2 {a : ℤ → ℝ} {s : Finset ℤ} {k : ℕ}
     ∑ j ∈ s, a j * (∑ r ∈ Finset.range (k + 1), c r * (t - (j : ℝ)) ^ r)
       = ∑ r ∈ Finset.range (k + 1), c r * t ^ r :=
   filter_passes_poly h0 hm c t
+
+/-- **Problem 1.4** (p.40): a polynomial trend `mₜ = ∑_{j=0}^p cⱼ tʲ` of degree `p` is annihilated
+by `p + 1` finite differences — `∇^{p+1} mₜ = 0` — because each difference lowers the degree by one.
+Mathlib's `Polynomial.fwdDiff_iter_degree_add_one_eq_zero` states this for the forward difference
+`Δ_[1] f = f(·+1) − f(·)` iterated `natDegree + 1` times (`Δ_[1]^[p+1] P.eval = 0`); the book's
+backward difference `∇` gives the identical result. -/
+alias ex_1_4 := Polynomial.fwdDiff_iter_degree_add_one_eq_zero
 
 /-- **Problem 1.7(b)** (p.40): `Xₜ = a + b·Z` (a single random variable, the same for all
 `t`) is weakly stationary, with autocovariance `b²·Var(Z)` at every lag — for `Z ~ N(0,σ²)`
