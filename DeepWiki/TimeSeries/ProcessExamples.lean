@@ -26,6 +26,21 @@ continuous-time process `ℝ → Ω → ℝ`. -/
 noncomputable def sinusoidProcess (r ν : ℝ) (A Θ : Ω → ℝ) : ℝ → Ω → ℝ :=
   fun t ω => r⁻¹ * A ω * Real.cos (ν * t + Θ ω)
 
+omit [MeasurableSpace Ω] in
+/-- **Equation (1.2.2)**: the realization of the sinusoid process at the outcome `ω` is the
+pointwise formula `Xₜ(ω) = r⁻¹ A(ω) cos(νt + Θ(ω))`. -/
+theorem sinusoidProcess_apply (r ν : ℝ) (A Θ : Ω → ℝ) (t : ℝ) (ω : Ω) :
+    sinusoidProcess r ν A Θ t ω = r⁻¹ * A ω * Real.cos (ν * t + Θ ω) := rfl
+
+/-- **Example 1.2.1**: on the probability space `(Ω, ℱ, P)` carrying the random variables `A`,
+`Θ` (the book takes them independent with `A ≥ 0` and `Θ ~ Uniform[0, 2π]`), the sinusoid
+`Xₜ = r⁻¹ A cos(νt + Θ)` is a genuine stochastic process: each time-slice
+`sinusoidProcess r ν A Θ t` is `ℱ`-measurable. -/
+theorem measurable_sinusoidProcess (r ν : ℝ) {A Θ : Ω → ℝ}
+    (hA : Measurable A) (hΘ : Measurable Θ) (t : ℝ) :
+    Measurable (sinusoidProcess r ν A Θ t) := by
+  unfold sinusoidProcess; fun_prop
+
 /-- **Example 1.2.4**: the Bienaymé–Galton–Watson branching process: `X₀ = x` (the initial
 population) and `X_{t+1} = ∑_{j < Xₜ} Z t j`, the total offspring of the `Xₜ` individuals
 of generation `t`, where `Z t j` are the (iid, `ℕ`-valued) offspring counts. -/

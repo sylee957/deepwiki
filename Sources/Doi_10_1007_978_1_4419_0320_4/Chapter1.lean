@@ -46,6 +46,13 @@ abbrev def_1_2_2 := @DeepWiki.TimeSeries.realization
 library's `sinusoidProcess`. -/
 noncomputable abbrev ex_1_2_1 := @DeepWiki.TimeSeries.sinusoidProcess
 
+/-- **Equation (1.2.2)** (§1.2, p.9), the realization of the sinusoid process at `ω`,
+`Xₜ(ω) = r⁻¹ A(ω) cos(νt + Θ(ω))`. The library's `sinusoidProcess_apply`; that each `Xₜ` is a
+random variable (so it is a genuine process) is `measurable_sinusoidProcess`. -/
+theorem eq_1_2_2 {Ω : Type*} (r ν : ℝ) (A Θ : Ω → ℝ) (t : ℝ) (ω : Ω) :
+    sinusoidProcess r ν A Θ t ω = r⁻¹ * A ω * Real.cos (ν * t + Θ ω) :=
+  sinusoidProcess_apply r ν A Θ t ω
+
 /-- **Example 1.2.2** (§1.2, p.9), the binary process: an iid sequence of fair `±1`
 flips, `P(Xₜ = 1) = P(Xₜ = -1) = 1/2` (1.2.3) with joint law `2⁻ⁿ` (1.2.4) — its existence
 is guaranteed by Kolmogorov's theorem. The library's `exists_iidBinaryProcess`. -/
