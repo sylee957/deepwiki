@@ -38,3 +38,5 @@ import Sources.Doi_10_1109_REAL_1992_242681.Source
 import Sources.Doi_10_1109_REAL_1992_242681.MutualExclusionCorrectness
 import Sources.Doi_10_1016_0304_3975_94_90010_8.Source
 import Sources.Doi_10_1016_0304_3975_94_90010_8.RegionConstruction
+import Sources.Doi_10_1007_s10626_007_0028_x.Source
+import Sources.Doi_10_1007_s10626_007_0028_x.UppOperatorStability
