@@ -1,5 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Analysis.InnerProductSpace.Continuous
+import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 2: Hilbert Spaces
@@ -34,6 +36,37 @@ alias eq_2_1_4 := norm_inner_le_norm
 /-- **The triangle inequality** (§2.1, p.44, eq 2.1.8): `‖x + y‖ ≤ ‖x‖ + ‖y‖`. Mathlib's
 `norm_add_le`. -/
 alias eq_2_1_8 := norm_add_le
+
+/-- **Proposition 2.1.1** (§2.1, p.45), properties of the norm: `‖x‖ ≥ 0`, `‖a·x‖ = |a|‖x‖`,
+and `‖x‖ = 0 ⟺ x = 0`. Mathlib's `norm_nonneg`, `norm_smul`, `norm_eq_zero`. -/
+theorem prop_2_1_1 {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (a : 𝕜) (x : E) : 0 ≤ ‖x‖ ∧ ‖a • x‖ = ‖a‖ * ‖x‖ ∧ (‖x‖ = 0 ↔ x = 0) :=
+  ⟨norm_nonneg x, norm_smul a x, norm_eq_zero⟩
+
+/-- **The parallelogram law** (§2.1, p.45, eq 2.1.9): `‖x+y‖² + ‖x−y‖² = 2(‖x‖² + ‖y‖²)`.
+Mathlib's `parallelogram_law_with_norm`. -/
+alias eq_2_1_9 := parallelogram_law_with_norm
+
+/-- **Proposition 2.1.2** (§2.1, p.45), continuity of the inner product: `(x,y) ↦ ⟨x,y⟩` is
+continuous, so `xₙ → x` and `yₙ → y` give `⟨xₙ,yₙ⟩ → ⟨x,y⟩`. Mathlib's `continuous_inner`. -/
+alias prop_2_1_2 := continuous_inner
+
+/-! ## §2.2 Hilbert Spaces -/
+
+/-- **Definition 2.2.1** (§2.2, p.46), a Cauchy sequence: `‖xₙ − xₘ‖ → 0` as `m, n → ∞`.
+Mathlib's `CauchySeq`. -/
+abbrev def_2_2_1 := @CauchySeq
+
+/-- **Definition 2.2.2** (§2.2, p.46), a Hilbert space: an inner-product space that is
+complete (every Cauchy sequence converges). Mathlib models it as the pair of instances
+`[InnerProductSpace 𝕜 E] [CompleteSpace E]`; completeness is `CompleteSpace`. -/
+abbrev def_2_2_2 := @CompleteSpace
+
+/-- **Example 2.2.2** (§2.2, p.46–47), the space `L²(Ω,ℱ,P)` of square-integrable random
+variables with inner product `⟨X,Y⟩ = E(XY)` (2.2.1) — the central Hilbert space of time
+series (mean-square convergence is `L²`-norm convergence). Mathlib's `MeasureTheory.Lp` with
+`p = 2` (an `InnerProductSpace`, complete by Riesz–Fischer). -/
+abbrev ex_2_2_2 := @MeasureTheory.Lp
 
 end DeepWiki.Ts
 
