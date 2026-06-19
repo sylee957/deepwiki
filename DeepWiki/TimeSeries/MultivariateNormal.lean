@@ -1,6 +1,7 @@
 import Mathlib.Probability.Moments.Covariance
 import Mathlib.Probability.Moments.Variance
 import Mathlib.LinearAlgebra.Matrix.PosDef
+import Mathlib.LinearAlgebra.Matrix.ToLinearEquiv
 import Mathlib.Tactic
 
 /-! # The mean vector and covariance matrix of a random vector (§1.6)
@@ -57,6 +58,34 @@ theorem posSemidef_covMatrix [IsProbabilityMeasure μ] {n : ℕ} {X : Fin n → 
     rw [covariance_const_mul_left, covariance_const_mul_right]; ring
   rw [hcov, covariance_self hSmem.aestronglyMeasurable.aemeasurable]
   exact variance_nonneg _ _
+
+/-- The quadratic form of the covariance matrix is the variance of the corresponding linear
+combination: `bᵀ Σ b = Var(∑ᵢ bᵢ Xᵢ)` — the identity underlying Proposition 1.6.2. -/
+theorem dotProduct_covMatrix_mulVec [IsProbabilityMeasure μ] {n : ℕ} {X : Fin n → Ω → ℝ}
+    (hX : ∀ i, MemLp (X i) 2 μ) (b : Fin n → ℝ) :
+    b ⬝ᵥ (covMatrix X μ *ᵥ b) = variance (fun ω => ∑ i, b i * X i ω) μ := by
+  have hYmem : ∀ i, MemLp (fun ω => b i * X i ω) 2 μ := fun i => (hX i).const_mul (b i)
+  have hSmem : MemLp (fun ω => ∑ i, b i * X i ω) 2 μ := memLp_finsetSum _ fun i _ => hYmem i
+  have key : b ⬝ᵥ (covMatrix X μ *ᵥ b) = ∑ i, ∑ j, b i * b j * cov[X i, X j; μ] := by
+    simp only [dotProduct, mulVec, covMatrix_apply, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by ring
+  rw [key]
+  have hcov : ∑ i, ∑ j, b i * b j * cov[X i, X j; μ]
+      = cov[fun ω => ∑ i, b i * X i ω, fun ω => ∑ j, b j * X j ω; μ] := by
+    rw [covariance_fun_sum_fun_sum hYmem hYmem]
+    exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by
+      rw [covariance_const_mul_left, covariance_const_mul_right]; ring
+  rw [hcov, covariance_self hSmem.aestronglyMeasurable.aemeasurable]
+
+/-- **Problem 1.17** (forward direction): if the covariance matrix `Σ` of `X` is singular
+(`det Σ = 0`), then some nontrivial linear combination is a.s. constant — there is `b ≠ 0`
+with `Var(∑ᵢ bᵢ Xᵢ) = 0`. (The converse needs that a PSD matrix's quadratic form vanishes
+only on its kernel, `bᵀΣb = 0 → Σb = 0`, which has no direct Mathlib lemma here.) -/
+theorem exists_variance_eq_zero_of_det_eq_zero [IsProbabilityMeasure μ] {n : ℕ}
+    {X : Fin n → Ω → ℝ} (hX : ∀ i, MemLp (X i) 2 μ) (hdet : (covMatrix X μ).det = 0) :
+    ∃ b : Fin n → ℝ, b ≠ 0 ∧ variance (fun ω => ∑ i, b i * X i ω) μ = 0 := by
+  obtain ⟨b, hb, hbz⟩ := Matrix.exists_mulVec_eq_zero_iff.mpr hdet
+  exact ⟨b, hb, by rw [← dotProduct_covMatrix_mulVec hX b, hbz, dotProduct_zero]⟩
 
 /-- The linear transform `Y = a + B·X` of a random vector `X` (`a : Fin m → ℝ`,
 `B : Matrix (Fin m) (Fin n) ℝ`): `Yᵢ = aᵢ + ∑ₖ Bᵢₖ Xₖ`. -/

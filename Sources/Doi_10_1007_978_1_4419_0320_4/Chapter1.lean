@@ -434,4 +434,15 @@ theorem ex_1_18 (ν : Measure ℝ) [IsProbabilityMeasure ν] :
         IsProbabilityMeasure P :=
   exists_iidProcess ν
 
+/-- **Problem 1.17** (p.41, forward direction): if the covariance matrix `Σ` of a random
+vector `X = (X₁,…,Xₙ)` is singular (`det Σ = 0`), then there is a nonzero vector `b` with
+`Var(bᵀX) = 0` — i.e. a nontrivial linear combination `∑ᵢ bᵢ Xᵢ` is almost surely constant
+(`bᵀΣb = Var(∑ᵢ bᵢ Xᵢ)`). The converse (a degenerate combination forces `Σ` singular) needs the
+fact that a positive-semidefinite quadratic form vanishes only on the matrix kernel — no direct
+Mathlib lemma here, deferred. The library's `exists_variance_eq_zero_of_det_eq_zero`. -/
+theorem ex_1_17 [IsProbabilityMeasure μ] {n : ℕ} {X : Fin n → Ω → ℝ}
+    (hX : ∀ i, MemLp (X i) 2 μ) (hdet : (covMatrix X μ).det = 0) :
+    ∃ b : Fin n → ℝ, b ≠ 0 ∧ variance (fun ω => ∑ i, b i * X i ω) μ = 0 :=
+  exists_variance_eq_zero_of_det_eq_zero hX hdet
+
 end DeepWiki.Ts
