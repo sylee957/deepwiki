@@ -40,23 +40,23 @@ theorem thm_4_3_add {V : Type*} [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T�
     (hf : IsUPPWith f T₁ d c₁) (hg : IsUPPWith g T₂ d c₂) :
     IsUPPWith (fun t => f t + g t) (max T₁ T₂) d (c₁ + c₂) := hf.add hg
 
-/-- **Lemma 4.2** (§4.3.2.2, p.75), common-period form: the sum of two ultimately pseudo-periodic
-functions sharing a period `d` is ultimately pseudo-periodic with that period, rank `max T₁ T₂` and
-increment `c₁ + c₂`. The library's `DeepWiki.IsUPPWith.add`. (The book combines distinct periods via
-`lcm`/`gcd`; rescaling to a common period — its WLOG-integer-period setup, `IsUPPWith.nsmul_period` —
-reduces it to this.) -/
-alias lemma_4_2 := IsUPPWith.add
+/-- **Lemma 4.2** (§4.3.2.2, p.75): the sum of two ultimately pseudo-periodic functions is
+ultimately pseudo-periodic from `max(T_f,T_g)` with period `lcm(d_f,d_g)` and increment
+`(d_g c_f + d_f c_g)/gcd(d_f,d_g)`. The library's `DeepWiki.IsUPPWith.add_of_commonPeriod` (general
+commensurable-period form — a common multiple `m•d₁ = n•d₂` with increment `m•c₁ + n•c₂`; the `lcm`
+cofactors give exactly the book's formula). The shared-period special case is `IsUPPWith.add`. -/
+alias lemma_4_2 := IsUPPWith.add_of_commonPeriod
 
-/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum, equal-increment form: the pointwise minimum of two
-ultimately pseudo-periodic functions sharing period `d` and increment `c` is ultimately
-pseudo-periodic with that period and increment — the book's balanced case `d_g c_f = d_f c_g`. The
-library's `DeepWiki.IsUPPWith.min`. (The dominant-slope cases reduce to the faster function via an
-Archimedean argument; not yet formalized.) -/
-alias lemma_4_3_min := IsUPPWith.min
+/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum, balanced case `d_g c_f = d_f c_g`: the minimum of two
+ultimately pseudo-periodic functions with a common period and equal scaled increments is ultimately
+pseudo-periodic. The library's `DeepWiki.IsUPPWith.min_of_commonPeriod` (shared-period special case
+`IsUPPWith.min`). The dominant-slope cases reduce to the faster function and need an Archimedean
+argument; not yet formalized. -/
+alias lemma_4_3_min := IsUPPWith.min_of_commonPeriod
 
-/-- **Lemma 4.3** (§4.3.2.2, p.75), maximum, equal-increment form. The library's
-`DeepWiki.IsUPPWith.max`. -/
-alias lemma_4_3_max := IsUPPWith.max
+/-- **Lemma 4.3** (§4.3.2.2, p.75), maximum, balanced case. The library's
+`DeepWiki.IsUPPWith.max_of_commonPeriod`. -/
+alias lemma_4_3_max := IsUPPWith.max_of_commonPeriod
 
 /-! **Lemma 4.4** (§4.3.2.2, p.76): If f,g are ultimately pseudo-periodic, then f ∗ g is ultimately pseudo-periodic from T = T_f + T_g + d with period d = lcm(d_f,d_g) and increment c = min(d_f c_f, d_g c_g). Not formalized in the library. -/
 

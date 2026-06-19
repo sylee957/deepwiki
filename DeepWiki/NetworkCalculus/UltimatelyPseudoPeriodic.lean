@@ -100,4 +100,33 @@ theorem IsUPPWith.max [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
   · rw [max_eq_right h, max_eq_right (add_le_add_left h c)]
   · rw [max_eq_left h, max_eq_left (add_le_add_left h c)]
 
+/-- **Lemma 4.2** (addition), general commensurable-period form. If the periods have a common
+multiple `m • d₁ = n • d₂` (positive `m, n` — automatic when `d₁/d₂` is rational, the book's plain
+restriction), the sum is pseudo-periodic with that common period and increment `m • c₁ + n • c₂`.
+Taking `m, n` the `lcm` cofactors, `m • c₁ + n • c₂ = (d₂ c₁ + d₁ c₂) / gcd(d₁, d₂)` — exactly the
+book's increment over `lcm(d₁, d₂)`. -/
+theorem IsUPPWith.add_of_commonPeriod [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T₂ d₁ d₂ c₁ c₂}
+    (hf : IsUPPWith f T₁ d₁ c₁) (hg : IsUPPWith g T₂ d₂ c₂)
+    {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) (hcomm : m • d₁ = n • d₂) :
+    IsUPPWith (fun t => f t + g t) (Max.max T₁ T₂) (m • d₁) (m • c₁ + n • c₂) :=
+  (hf.nsmul_period hm).add (by rw [hcomm]; exact hg.nsmul_period hn)
+
+/-- **Lemma 4.3** (minimum), general commensurable-period balanced form. With a common period
+`m • d₁ = n • d₂` and equal scaled increments `m • c₁ = n • c₂` (the book's case `d_g c_f = d_f c_g`),
+the minimum is pseudo-periodic with that period and increment. -/
+theorem IsUPPWith.min_of_commonPeriod [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    {f g : ℝ≥0 → V} {T₁ T₂ d₁ d₂ c₁ c₂}
+    (hf : IsUPPWith f T₁ d₁ c₁) (hg : IsUPPWith g T₂ d₂ c₂)
+    {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) (hcomm : m • d₁ = n • d₂) (hcinc : m • c₁ = n • c₂) :
+    IsUPPWith (fun t => Min.min (f t) (g t)) (Max.max T₁ T₂) (m • d₁) (m • c₁) :=
+  (hf.nsmul_period hm).min (by rw [hcomm, hcinc]; exact hg.nsmul_period hn)
+
+/-- **Lemma 4.3** (maximum), general commensurable-period balanced form. -/
+theorem IsUPPWith.max_of_commonPeriod [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    {f g : ℝ≥0 → V} {T₁ T₂ d₁ d₂ c₁ c₂}
+    (hf : IsUPPWith f T₁ d₁ c₁) (hg : IsUPPWith g T₂ d₂ c₂)
+    {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) (hcomm : m • d₁ = n • d₂) (hcinc : m • c₁ = n • c₂) :
+    IsUPPWith (fun t => Max.max (f t) (g t)) (Max.max T₁ T₂) (m • d₁) (m • c₁) :=
+  (hf.nsmul_period hm).max (by rw [hcomm, hcinc]; exact hg.nsmul_period hn)
+
 end DeepWiki
