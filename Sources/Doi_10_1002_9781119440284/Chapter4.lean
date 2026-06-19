@@ -3,6 +3,7 @@ import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
+import DeepWiki.NetworkCalculus.UppSequence
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 4: Efficient Computations for (min,plus) Operators
@@ -58,7 +59,14 @@ alias lemma_4_3_min := IsUPPWith.min_of_commonPeriod
 `DeepWiki.IsUPPWith.max_of_commonPeriod`. -/
 alias lemma_4_3_max := IsUPPWith.max_of_commonPeriod
 
-/-! **Lemma 4.4** (§4.3.2.2, p.76): If f,g are ultimately pseudo-periodic, then f ∗ g is ultimately pseudo-periodic from T = T_f + T_g + d with period d = lcm(d_f,d_g) and increment c = min(d_f c_f, d_g c_g). Not formalized in the library. -/
+/-- **Lemma 4.4** (§4.3.2.2, p.76): `f ∗ g` is ultimately pseudo-periodic with period `d = lcm(d_f,d_g)`
+from rank `T_f + T_g + d`. The library's `DeepWiki.UppSeq.convNat_add_lcm_of_balanced` proves the
+pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` in the **balanced case** — equal asymptotic slopes
+`(d/d_f)c_f = (d/d_g)c_g` — matching the book's rank and increment (both bounds via the convolution
+minimizer `convNat_eq`). The non-balanced case (increment = the smaller slope) needs the dominant-slope
+crossover / general min-of-UPP and is deferred. The pointwise convolution is `DeepWiki.UppSeq.convNat`
+(`convNat_le`/`convNat_eq`); the `minplus` CLI's `conv` samples it. -/
+alias lemma_4_4 := UppSeq.convNat_add_lcm_of_balanced
 
 /-! **Lemma 4.5** (§4.3.2.2, p.77): If f,g are ultimately pseudo-periodic, then the deconvolution f ⊘ g is ultimately pseudo-periodic from T_f with period d_f and increment c_f. Not formalized in the library. -/
 

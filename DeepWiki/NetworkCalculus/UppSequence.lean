@@ -235,9 +235,74 @@ theorem convNat_eq [Add V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) :
     ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩ (fun k => r.evalNat k + s.evalNat (n - k))
   exact ⟨k, Nat.lt_succ_iff.mp (Finset.mem_range.mp hk), heq⟩
 
+/-- **Lemma 4.4, balanced case** — the convolution is ultimately pseudo-periodic. When the two
+operands have equal asymptotic slope (`(d/d_f)·c_f = (d/d_g)·c_g = c`, the book's balanced case),
+their (min,plus) convolution satisfies the pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` with
+`d = lcm(d_f,d_g)` from the rank `T = T_f + T_g + d` onward — the book's rank and increment. (The
+non-balanced case needs the dominant-slope crossover / general min-of-UPP, deferred.)
+
+Proof: both bounds via the minimizer (`convNat_eq`) — push the `+d` time-shift into whichever
+operand's *periodic* part is reachable (`evalNat_add_mul_period`); since `n ≥ T_f + T_g`, at least one
+side is always in its periodic régime, and balancedness makes both shifts equal `c`. -/
+theorem convNat_add_lcm_of_balanced [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V)
+    (hbal : (Nat.lcm r.period s.period / r.period) • r.incr
+          = (Nat.lcm r.period s.period / s.period) • s.incr)
+    {n : ℕ} (hn : (r.vals.length - r.period) + (s.vals.length - s.period)
+      + Nat.lcm r.period s.period ≤ n) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + (Nat.lcm r.period s.period / r.period) • r.incr := by
+  set d := Nat.lcm r.period s.period with hd
+  set c := (d / r.period) • r.incr with hc
+  have hrshift : ∀ m, r.vals.length - r.period ≤ m → r.evalNat (m + d) = r.evalNat m + c := by
+    intro m hm
+    have h := r.evalNat_add_mul_period (d / r.period) (n := m) hm
+    rwa [Nat.div_mul_cancel (hd ▸ Nat.dvd_lcm_left r.period s.period)] at h
+  have hsshift : ∀ m, s.vals.length - s.period ≤ m → s.evalNat (m + d) = s.evalNat m + c := by
+    intro m hm
+    have h := s.evalNat_add_mul_period (d / s.period) (n := m) hm
+    rw [Nat.div_mul_cancel (hd ▸ Nat.dvd_lcm_right r.period s.period)] at h
+    rw [h, hbal]
+  refine le_antisymm ?_ ?_
+  · obtain ⟨j, hj, hje⟩ := r.convNat_eq s n
+    by_cases hjf : r.vals.length - r.period ≤ j
+    · calc r.convNat s (n + d)
+          ≤ r.evalNat (j + d) + s.evalNat (n + d - (j + d)) := r.convNat_le s (by omega)
+        _ = r.evalNat (j + d) + s.evalNat (n - j) := by rw [show n + d - (j + d) = n - j from by omega]
+        _ = r.evalNat j + c + s.evalNat (n - j) := by rw [hrshift j hjf]
+        _ = r.convNat s n + c := by rw [hje]; abel
+    · calc r.convNat s (n + d)
+          ≤ r.evalNat j + s.evalNat (n + d - j) := r.convNat_le s (by omega)
+        _ = r.evalNat j + s.evalNat (n - j + d) := by rw [show n + d - j = n - j + d from by omega]
+        _ = r.evalNat j + (s.evalNat (n - j) + c) := by rw [hsshift (n - j) (by omega)]
+        _ = r.convNat s n + c := by rw [hje]; abel
+  · obtain ⟨k, hk, hke⟩ := r.convNat_eq s (n + d)
+    by_cases hkf : r.vals.length - r.period + d ≤ k
+    · have hconv : r.convNat s n ≤ r.evalNat (k - d) + s.evalNat (n - (k - d)) :=
+        r.convNat_le s (by omega)
+      have e1 : r.evalNat (k - d) + c = r.evalNat k := by
+        rw [← hrshift (k - d) (by omega), show k - d + d = k from by omega]
+      calc r.convNat s n + c
+          ≤ (r.evalNat (k - d) + s.evalNat (n - (k - d))) + c := add_le_add_left hconv _
+        _ = (r.evalNat (k - d) + c) + s.evalNat (n - (k - d)) := by abel
+        _ = r.evalNat k + s.evalNat (n + d - k) := by rw [e1, show n - (k - d) = n + d - k from by omega]
+        _ = r.convNat s (n + d) := hke.symm
+    · have hconv : r.convNat s n ≤ r.evalNat k + s.evalNat (n - k) := r.convNat_le s (by omega)
+      calc r.convNat s n + c
+          ≤ (r.evalNat k + s.evalNat (n - k)) + c := add_le_add_left hconv _
+        _ = r.evalNat k + (s.evalNat (n - k) + c) := by abel
+        _ = r.evalNat k + s.evalNat (n + d - k) := by
+            rw [← hsshift (n - k) (by omega), show n - k + d = n + d - k from by omega]
+        _ = r.convNat s (n + d) := hke.symm
+
 /-- Sanity check (gate-verified): `(demoSeq ⊗ demoSeq)(3) = 3` and `(·)(5) = 6`
 (`f = 0,1,2,4,5,7,…`; e.g. at `n=3` the min is `f(1)+f(2) = 1+2`). -/
 example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by native_decide
+
+/-- Sanity (gate-verified): the convolution's pseudo-period step from rank `T = 4`
+(`demoSeq` balanced with itself, `d = 2`, `c = 3`): `(f⊗f)(n+2) = (f⊗f)(n) + 3` for `n ≥ 4`. -/
+example : ∀ n ∈ Finset.range 4,
+    demoSeq.convNat demoSeq (n + 4 + 2) = demoSeq.convNat demoSeq (n + 4) + 3 := by native_decide
 
 end UppSeq
 end DeepWiki
