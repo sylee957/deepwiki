@@ -255,6 +255,68 @@ theorem isMaximalArrivalBound_output_comp_packetizerRel
     (hβM.comp_packetizerRel hL) hnnM (hsh.comp_packetizerRel hL)
     (fun d => add_nonneg (hnnσ d) (by exact_mod_cast lu.coe_nonneg)) hp harru
 
+/-- **Corollary 8.3**, third term (the optional delay-based refinement, via Cor 8.2):
+on a `P`-packetized input with the `S`-stage delay bounded by `dM` (and `S` causal),
+the output `C` of `S;P` carries the maximal arrival curve `α ⊘ δ_dM` — the
+deconvolution of the pure-delay service curve `δ_dM`. With `dM = hDev(α, βᵐ)` this is
+the book's third Cor 8.3 term, which `⊓`-refines the main bound
+(`isMaximalArrivalBound_output_comp_packetizerRel`). -/
+theorem isMaximalArrivalBound_output_delay_comp_packetizerRel
+    {S : Curve → Curve → Prop} {αu : ℝ≥0 → ℝ≥0∞} {dM : ℝ≥0}
+    {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
+    (hSc : IsCausal S) {A C : Curve} (hA : IsPacketized L ⇑A)
+    (hp : Relation.Comp S (packetizerRel L) A C)
+    (hd : ∀ B : Curve, S A B → Deviation.delay ⇑A ⇑B ≤ (dM : ℝ≥0∞))
+    (harru : IsMaximalArrivalBound (Deviation.liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (Deviation.liftENN ⇑C) (minDeconv αu (delayNN dM)) := by
+  have hCA : C ≤ A := by
+    obtain ⟨B, hSB, hBC⟩ := hp
+    rw [(packetizerRel_iff_eq_packetizeCurve hL).mp hBC]
+    exact Curve.le_def.mpr fun t =>
+      le_trans (Curve.le_def.mp (packetizeCurve_le hL B) t) (Curve.le_def.mp (hSc A B hSB) t)
+  set betam : ℝ≥0 → EReal := fun v => ((delayNN dM v : ℝ≥0∞) : EReal) with hbetam
+  have hnnm : IsNonneg betam := fun v => EReal.coe_ennreal_nonneg _
+  have htoenn : Deviation.toENN betam = delayNN dM := by
+    funext v; exact EReal.toENNReal_coe
+  set S' : Curve → Curve → Prop := fun A' D' => A = A' ∧ C = D' with hS'
+  have hc : IsCausal S' := by rintro A' D' ⟨rfl, rfl⟩; exact hCA
+  have hβm : IsMinimalServiceCurve betam S' := by
+    rintro A' D' ⟨rfl, rfl⟩ t
+    rw [← Deviation.coe_minConv_toENN A hnnm t, htoenn,
+      conv_delayNN (Deviation.liftENN ⇑A) (Deviation.monotone_liftENN A.mono) dM]
+    calc ((Deviation.liftENN ⇑A (t - dM) : ℝ≥0∞) : EReal)
+        ≤ ((C t : ℝ≥0∞) : EReal) := by
+          exact_mod_cast apply_tsub_le_of_isPacketized_comp_packetizerRel hL hA hp hd t
+      _ = curveEReal C t := by rw [curveEReal]; rfl
+  have hout := isMaximalArrivalBound_output_of_isMinimalServiceCurve hc hβm hnnm
+    (A := A) (D := C) ⟨rfl, rfl⟩ harru
+  rwa [htoenn] at hout
+
+/-- **Corollary 8.3** (combined arrival curve from a packetizer), full three-term
+bound: the output `C` of `S;P` (causal `S`, `P`-packetized input, `S`-stage delay
+bounded by `dM`) carries the maximal arrival curve
+`((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ) ∧ (α ⊘ δ_dM)` — the meet of the main bound
+(`isMaximalArrivalBound_output_comp_packetizerRel`) and the delay refinement
+(`isMaximalArrivalBound_output_delay_comp_packetizerRel`), with `dM = hDev(α, βᵐ)`. -/
+theorem isMaximalArrivalBound_output_full_comp_packetizerRel
+    {S : Curve → Curve → Prop} {βm βM σ : ℝ≥0 → EReal} {αu : ℝ≥0 → ℝ≥0∞} {dM : ℝ≥0}
+    {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu) (hSc : IsCausal S)
+    (hβm : IsMinimalServiceCurve βm S)
+    (hnnm' : IsNonneg (fun v => βm v - ((lu : ℝ) : EReal)))
+    (hβM : IsMaximalServiceCurve βM S) (hnnM : IsNonneg βM)
+    (hsh : IsShaper σ S) (hnnσ : IsNonneg σ)
+    {A C : Curve} (hA : IsPacketized L ⇑A)
+    (hp : Relation.Comp S (packetizerRel L) A C)
+    (hd : ∀ B : Curve, S A B → Deviation.delay ⇑A ⇑B ≤ (dM : ℝ≥0∞))
+    (harru : IsMaximalArrivalBound (Deviation.liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (Deviation.liftENN ⇑C)
+      ((minDeconv (minConv αu (Deviation.toENN βM))
+            (Deviation.toENN (fun v => βm v - ((lu : ℝ) : EReal)))
+          ⊓ Deviation.toENN (fun d => σ d + ((lu : ℝ) : EReal)))
+        ⊓ minDeconv αu (delayNN dM)) :=
+  (isMaximalArrivalBound_output_comp_packetizerRel hL hβm hnnm' hβM hnnM hsh hnnσ hp harru).inf
+    (isMaximalArrivalBound_output_delay_comp_packetizerRel hL hSc hA hp hd harru)
+
 /-! ## Book restatement (the server/packetizer system)
 `S` a server, `P` a packetizer with maximum packet size `ℓᵘ`: the
 combined system `S;P` is a server; if `S` offers a min-plus minimal

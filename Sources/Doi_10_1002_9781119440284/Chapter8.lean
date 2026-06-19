@@ -62,8 +62,14 @@ alias thm_8_2_6 := exists_delay_eq_of_comp_packetizerRel
 /-- **Corollary 8.2** (§8.1, p.190): Packetizer as a delay: if a cumulative function A is P-packetized then S;P offers the pure-delay min-plus service curve δ_{d(A,S)} to A (using d(A,S;P) = d(A,S)). The library's `DeepWiki.apply_tsub_le_of_isPacketized_comp_packetizerRel`: given a finite delay bound dM on the S-stage, the S;P output satisfies the δ_dM bound `A(t − dM) ≤ C t` — the left-continuity of the `Curve` arrival supplies the bound at the exact delay (`apply_tsub_le_of_delay_le_of_leftCont`). -/
 alias cor_8_2 := apply_tsub_le_of_isPacketized_comp_packetizerRel
 
-/-- **Corollary 8.3** (§8.1, p.190): Arrival curve from a packetizer: the output `C` of `S;P` has maximal arrival curve `((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ) ∧ (α ⊘ δ_{hDev(α,βᵐ)})`. The library's `DeepWiki.isMaximalArrivalBound_output_comp_packetizerRel` formalizes the **main bound** (first two terms `((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ)`), routing the `S;P` service properties (Theorem 8.2: min-plus `βᵐ − ℓᵘ`, maximal `βᴹ`, `(σ + ℓᵘ)`-shaper) through `isMaximalArrivalBound_output`. The third term `α ⊘ δ_{hDev(α,βᵐ)}` — the book's optional delay-based refinement via Corollary 8.2 (now unblocked, cor_8_2) — is not yet combined in. -/
+/-- **Corollary 8.3** (§8.1, p.190): Arrival curve from a packetizer: the output `C` of `S;P` has maximal arrival curve `((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ) ∧ (α ⊘ δ_{hDev(α,βᵐ)})` (all three terms). The library's `DeepWiki.isMaximalArrivalBound_output_full_comp_packetizerRel`: the meet of the main bound `isMaximalArrivalBound_output_comp_packetizerRel` (terms 1∧2, via `isMaximalArrivalBound_output` fed the `S;P` Theorem-8.2 service props) and the delay refinement `isMaximalArrivalBound_output_delay_comp_packetizerRel` (term 3 `α ⊘ δ_dM`, via the singleton-server + Corollary 8.2, `dM = hDev(α,βᵐ)`). -/
+alias cor_8_3 := isMaximalArrivalBound_output_full_comp_packetizerRel
+
+/-- **Corollary 8.3** (main bound, terms 1∧2): `DeepWiki.isMaximalArrivalBound_output_comp_packetizerRel`. -/
 alias cor_8_3_mainBound := isMaximalArrivalBound_output_comp_packetizerRel
+
+/-- **Corollary 8.3** (third term, delay refinement `α ⊘ δ_dM`): `DeepWiki.isMaximalArrivalBound_output_delay_comp_packetizerRel`. -/
+alias cor_8_3_delayTerm := isMaximalArrivalBound_output_delay_comp_packetizerRel
 
 /-- **Definition 8.3.1** (§8.2.1, p.191): Non-preemptive static priority (NP-SP): a backlogged higher-or-equal-priority flow is served except for at most one in-service lower-priority packet (≤ max packet size of lower priorities). -/
 abbrev def_8_3_1_npsp := @IsNpsp
