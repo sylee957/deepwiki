@@ -130,6 +130,24 @@ abbrev def_2_4_2 := @Orthonormal
 `{eᵢ}` and any `x`, `∑ᵢ |⟨x,eᵢ⟩|² ≤ ‖x‖²`. Mathlib's `Orthonormal.sum_inner_products_le`. -/
 alias cor_2_4_1 := Orthonormal.sum_inner_products_le
 
+/-- **Theorem 2.4.1** (§2.4, p.55, eq 2.4.4): the orthogonal projection onto the span of a
+finite orthonormal basis `{eᵢ}` is `P x = ∑ᵢ ⟨x,eᵢ⟩ eᵢ`. Mathlib's
+`OrthonormalBasis.orthogonalProjectionOnto_apply_eq_sum`. -/
+alias thm_2_4_1 := OrthonormalBasis.orthogonalProjectionOnto_apply_eq_sum
+
+/-- **Definition 2.4.3** (§2.4, p.56), a complete orthonormal set (orthonormal basis): an
+orthonormal set whose closed span is all of `ℋ`. Mathlib's `OrthonormalBasis`. -/
+abbrev def_2_4_3 := @OrthonormalBasis
+
+/-- **Definition 2.4.4** (§2.4, p.56), separability: `ℋ` has a countable complete orthonormal
+set (equivalently a countable dense subset). Mathlib's `TopologicalSpace.SeparableSpace`. -/
+abbrev def_2_4_4 := @TopologicalSpace.SeparableSpace
+
+/-- **Theorem 2.4.2 / Parseval's identity** (§2.4, p.57, eq 2.4.10): for a complete
+orthonormal set `{eᵢ}`, `⟨x,y⟩ = ∑ᵢ ⟨x,eᵢ⟩⟨eᵢ,y⟩` (so `‖x‖² = ∑ᵢ |⟨x,eᵢ⟩|²`). Mathlib's
+`OrthonormalBasis.sum_inner_mul_inner`. -/
+alias thm_2_4_2 := OrthonormalBasis.sum_inner_mul_inner
+
 end DeepWiki.Ts
 
 
