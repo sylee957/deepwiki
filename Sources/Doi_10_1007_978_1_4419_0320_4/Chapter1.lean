@@ -5,6 +5,7 @@ import DeepWiki.TimeSeries.GaussianTimeSeries
 import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.StationaryGaussianProcess
 import DeepWiki.TimeSeries.FiniteDimensionalDistributions
+import DeepWiki.TimeSeries.SampleAutocovariance
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -167,6 +168,12 @@ theorem thm_1_5_1 (κ : ℤ → ℝ) :
         ∀ h, acvfStat X ν h = κ h)
       ↔ (∀ h, κ (-h) = κ h) ∧ IsNonnegDefinite κ :=
   isACVF_iff_even_and_isNonnegDefinite κ
+
+/-- **Definition 1.5.2** (§1.5, p.28–29), the sample autocovariance function
+`γ̂(h) = n⁻¹ ∑_{t<n−h} (x_{t+h} − x̄)(xₜ − x̄)` of an observed series `x₀, …, x_{n−1}`,
+and the sample autocorrelation function `ρ̂(h) = γ̂(h)/γ̂(0)`. The library's `sampleACVF`
+(companion `sampleACF`). -/
+noncomputable abbrev def_1_5_2 := @DeepWiki.TimeSeries.sampleACVF
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
