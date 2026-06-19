@@ -2,6 +2,7 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.Continuous
 import Mathlib.Analysis.InnerProductSpace.Orthogonal
+import Mathlib.Analysis.InnerProductSpace.Orthonormal
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import DeepWiki.TimeSeries.BestLinearPredictor
@@ -113,6 +114,21 @@ stationary process: the best linear predictor of `X` from a closed subspace `ℳ
 which minimizes `E(X − ·)² = ‖X − ·‖²` (`bestPredictor_minimal`) and solves the prediction
 equations (`bestPredictor_sub_mem_orthogonal`). The library's `bestPredictor`. -/
 noncomputable abbrev ex_2_3_3 := @DeepWiki.TimeSeries.bestPredictor
+
+/-! ## §2.4 Orthonormal Sets -/
+
+/-- **Definition 2.4.1** (§2.4, p.54), the closed span `sp̄{xₜ, t ∈ T}` of a family: the
+smallest closed subspace containing every `xₜ`, i.e. `(span 𝕜 (range x)).topologicalClosure`.
+The library's `predictorSpan` (the closed span onto which the best linear predictor projects). -/
+noncomputable abbrev def_2_4_1 := @DeepWiki.TimeSeries.predictorSpan
+
+/-- **Definition 2.4.2** (§2.4, p.55), an orthonormal set `{eₜ}`: `⟨eₛ,eₜ⟩ = 1` if `s = t`
+and `0` otherwise (2.4.3). Mathlib's `Orthonormal`. -/
+abbrev def_2_4_2 := @Orthonormal
+
+/-- **Corollary 2.4.1** (Bessel's inequality, §2.4, p.56, eq 2.4.8): for an orthonormal set
+`{eᵢ}` and any `x`, `∑ᵢ |⟨x,eᵢ⟩|² ≤ ‖x‖²`. Mathlib's `Orthonormal.sum_inner_products_le`. -/
+alias cor_2_4_1 := Orthonormal.sum_inner_products_le
 
 end DeepWiki.Ts
 
