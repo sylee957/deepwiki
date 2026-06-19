@@ -6,6 +6,7 @@ import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.StationaryGaussianProcess
 import DeepWiki.TimeSeries.FiniteDimensionalDistributions
 import DeepWiki.TimeSeries.SampleAutocovariance
+import DeepWiki.TimeSeries.MultivariateNormal
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -174,6 +175,28 @@ theorem thm_1_5_1 (κ : ℤ → ℝ) :
 and the sample autocorrelation function `ρ̂(h) = γ̂(h)/γ̂(0)`. The library's `sampleACVF`
 (companion `sampleACF`). -/
 noncomputable abbrev def_1_5_2 := @DeepWiki.TimeSeries.sampleACVF
+
+/-! ## §1.6 The Multivariate Normal Distribution -/
+
+/-- **Equation (1.6.1)** (§1.6, p.32), the mean vector `EX = (EX₁, …, EXₙ)ᵀ` of a random
+vector `X = (X₁, …, Xₙ)`. The library's `meanVector`. -/
+noncomputable abbrev eq_1_6_1 := @DeepWiki.TimeSeries.meanVector
+
+/-- **Equation (1.6.2)** (§1.6, p.32), the covariance matrix `Σ_XX = [Cov(Xᵢ, Xⱼ)]` of a
+random vector. The library's `covMatrix`. -/
+noncomputable abbrev eq_1_6_2 := @DeepWiki.TimeSeries.covMatrix
+
+/-- **Proposition 1.6.2** (§1.6, p.33), the covariance matrix of a square-integrable
+random vector is symmetric and positive semidefinite (`bᵀ Σ b = Var(∑ bᵢ Xᵢ) ≥ 0`).
+The library's `posSemidef_covMatrix`. -/
+theorem prop_1_6_2 [MeasureTheory.IsProbabilityMeasure μ] {n : ℕ} {Y : Fin n → Ω → ℝ}
+    (hY : ∀ i, MeasureTheory.MemLp (Y i) 2 μ) : (covMatrix Y μ).PosSemidef :=
+  posSemidef_covMatrix hY
+
+/-- **Definition 1.6.1** (§1.6, p.33–34), the multivariate normal distribution `N(μ, Σ)`:
+the law of `X = a + BZ` for a standard normal vector `Z` (mean `μ`, covariance matrix `Σ`).
+Mathlib's `ProbabilityTheory.multivariateGaussian μ S` on `EuclideanSpace ℝ ι`. -/
+noncomputable abbrev def_1_6_1 := @ProbabilityTheory.multivariateGaussian
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
