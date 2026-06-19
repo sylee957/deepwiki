@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.ScalarDioids
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.DioidFunctions
 import DeepWiki.NetworkCalculus.Closures
+import DeepWiki.NetworkCalculus.KleeneStarLeast
 import DeepWiki.NetworkCalculus.Additivity
 import DeepWiki.NetworkCalculus.Deconvolution
 import Sources.Doi_10_1002_9781119440284.Source
@@ -116,10 +117,14 @@ alias lemma_2_4_idem := closure_idem
 /-- **Lemma 2.4**, power below star (§2.2.1, p.24): `aⁱ ≼ a⋆`. -/
 alias lemma_2_4_pow_le := convPow_le_closure
 
-/-! **Theorem 2.3** (Kleene star theorem, §2.2.1, p.24): `a⋆b` is the least
-solution of `x = ax ⊕ b`. The library provides the least-solution (`≤`)
-direction in feedback-control form (`minConv_subadditiveClosureENN_le_of_inf_le`);
-the clean abstract fixpoint statement is not separately formalized. -/
+/-- **Theorem 2.3** (Kleene star theorem, §2.2.1, p.24): `a⋆b` is the least
+solution of `x = ax ⊕ b`. In the `(min,plus)` function dioid the sum `⊕` is
+`⊓` and the order is the reverse of the numeric one, so the dioid-least
+solution is the numeric-greatest fixpoint `minConv a⋆ b`. The library's
+`isGreatest_minConv_subadditiveClosureENN` (fixpoint half
+`minConv_subadditiveClosureENN_fixpoint`; bound from the feedback lemma
+`le_minConv_subadditiveClosureENN_of_le_inf`). -/
+alias thm_2_3 := isGreatest_minConv_subadditiveClosureENN
 
 /-! ## §2.2.2 Sub-additive closure -/
 

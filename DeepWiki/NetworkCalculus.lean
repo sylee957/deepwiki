@@ -11,6 +11,7 @@ import DeepWiki.NetworkCalculus.ClosuresNd
 import DeepWiki.NetworkCalculus.Additivity
 import DeepWiki.NetworkCalculus.Deconvolution
 import DeepWiki.NetworkCalculus.Closures
+import DeepWiki.NetworkCalculus.KleeneStarLeast
 import DeepWiki.NetworkCalculus.Limits
 import DeepWiki.NetworkCalculus.Continuity
 import DeepWiki.NetworkCalculus.ContinuityClosure
