@@ -157,5 +157,60 @@ theorem evalNat_add [AddCommMonoid V] (r s : UppSeq V) (n : ℕ) :
 example : ∀ n ∈ Finset.range 12,
     (demoSeq.add demoSeq).evalNat n = demoSeq.evalNat n + demoSeq.evalNat n := by native_decide
 
+/-! ## Executable pointwise minimum (Lemma 4.3, balanced case) -/
+
+/-- **Executable pointwise minimum** (Lemma 4.3): common period `lcm`, prefix the pointwise min
+recomputed via `evalNat`, increment `(D/d_f)·c_f`. Correct in the **balanced** case where the scaled
+increments agree (the book's `d_g c_f = d_f c_g`); native-compilable. (The dominant-slope cases —
+where the slower function eventually wins — need an Archimedean crossover bound, not yet formalized.) -/
+def min [AddMonoid V] [LinearOrder V] (r s : UppSeq V) : UppSeq V where
+  vals := (List.range (max r.vals.length s.vals.length + Nat.lcm r.period s.period)).map
+    (fun n => Min.min (r.evalNat n) (s.evalNat n))
+  incr := (Nat.lcm r.period s.period / r.period) • r.incr
+  period := Nat.lcm r.period s.period
+  hperiod := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  hlen := by rw [List.length_map, List.length_range]; exact Nat.le_add_left _ _
+
+/-- **Correctness of `min`** in the balanced case: when the scaled increments agree, the executable
+minimum denotes the pointwise minimum, `evalNat (min r s) n = Min.min (evalNat r n) (evalNat s n)`. -/
+theorem evalNat_min [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V] (r s : UppSeq V)
+    (hbal : (Nat.lcm r.period s.period / r.period) • r.incr
+          = (Nat.lcm r.period s.period / s.period) • s.incr) (n : ℕ) :
+    (r.min s).evalNat n = Min.min (r.evalNat n) (s.evalNat n) := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    by_cases hL : n < (r.min s).vals.length
+    · rw [evalNat_of_lt _ hL]; simp [min]
+    · rw [not_lt] at hL
+      have hlen : (r.min s).vals.length
+          = max r.vals.length s.vals.length + Nat.lcm r.period s.period := by simp [min]
+      have hDpos : 0 < Nat.lcm r.period s.period :=
+        Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+      have hDn : Nat.lcm r.period s.period ≤ n := by omega
+      have hrec : (r.min s).evalNat n
+          = (r.min s).evalNat (n - Nat.lcm r.period s.period) + (r.min s).incr := by
+        conv_lhs => rw [evalNat.eq_def]
+        rw [dif_neg (not_lt.mpr hL)]; rfl
+      have hrn : r.evalNat n = r.evalNat (n - Nat.lcm r.period s.period)
+          + (Nat.lcm r.period s.period / r.period) • r.incr := by
+        have key := r.evalNat_add_mul_period (Nat.lcm r.period s.period / r.period)
+          (n := n - Nat.lcm r.period s.period) (by omega)
+        rwa [Nat.div_mul_cancel (Nat.dvd_lcm_left _ _), Nat.sub_add_cancel hDn] at key
+      have hsn : s.evalNat n = s.evalNat (n - Nat.lcm r.period s.period)
+          + (Nat.lcm r.period s.period / s.period) • s.incr := by
+        have key := s.evalNat_add_mul_period (Nat.lcm r.period s.period / s.period)
+          (n := n - Nat.lcm r.period s.period) (by omega)
+        rwa [Nat.div_mul_cancel (Nat.dvd_lcm_right _ _), Nat.sub_add_cancel hDn] at key
+      have hincr : (r.min s).incr = (Nat.lcm r.period s.period / r.period) • r.incr := rfl
+      rw [hrec, ih (n - Nat.lcm r.period s.period) (by omega), hincr, hrn, hsn, hbal]
+      rcases le_total (r.evalNat (n - Nat.lcm r.period s.period))
+        (s.evalNat (n - Nat.lcm r.period s.period)) with h | h
+      · rw [min_eq_left h, min_eq_left (add_le_add_left h _)]
+      · rw [min_eq_right h, min_eq_right (add_le_add_left h _)]
+
+/-- Sanity check (gate-verified): `min` of a sequence with itself is itself (balanced). -/
+example : ∀ n ∈ Finset.range 12,
+    (demoSeq.min demoSeq).evalNat n = demoSeq.evalNat n := by native_decide
+
 end UppSeq
 end DeepWiki
