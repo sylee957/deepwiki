@@ -2,6 +2,7 @@ import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
 import DeepWiki.TimeSeries.GaussianTimeSeries
+import DeepWiki.TimeSeries.LinearFilters
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -160,5 +161,17 @@ example (X : ℤ → ℝ) (d : ℕ) : eq_1_4_19 d X = X - backshift^[d] X :=
 -- §1.4 trend elimination: `∇` reduces a linear trend `a·t + b` to the constant `a`.
 example (a b : ℝ) : difference (fun t : ℤ => a * (t : ℝ) + b) = fun _ => a :=
   difference_linear a b
+
+/-! ## Problems -/
+
+/-- **Problem 1.2** (p.39), sufficiency: a linear filter `{aⱼ}` whose weights
+satisfy `∑ⱼ aⱼ = 1` and `∑ⱼ jʳ aⱼ = 0` for `r = 1,…,k` passes every polynomial
+trend of degree `≤ k` without distortion. The library's `filter_passes_poly`. -/
+theorem ex_1_2 {a : ℤ → ℝ} {s : Finset ℤ} {k : ℕ}
+    (h0 : ∑ j ∈ s, a j = 1) (hm : ∀ r, 1 ≤ r → r ≤ k → ∑ j ∈ s, (j : ℝ) ^ r * a j = 0)
+    (c : ℕ → ℝ) (t : ℝ) :
+    ∑ j ∈ s, a j * (∑ r ∈ Finset.range (k + 1), c r * (t - (j : ℝ)) ^ r)
+      = ∑ r ∈ Finset.range (k + 1), c r * t ^ r :=
+  filter_passes_poly h0 hm c t
 
 end DeepWiki.Ts
