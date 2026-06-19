@@ -79,6 +79,42 @@ theorem fdd_apply_Iic_eq_distFn (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) 
   rw [fdd_Iic hX]
   rfl
 
+/-- **Theorem 1.2.1 (Kolmogorov), consistency direction, in the book's exact notation (eq
+1.2.8)**: the distribution functions of a process are **consistent** — letting the `i`-th
+argument tend to `+∞` recovers the distribution function with the `i`-th coordinate deleted,
+`lim_{xᵢ → ∞} F_t(x) = F_{t(i)}(x(i))`, with `t(i)`, `x(i)` (`Fin.removeNth i`) the time- and
+argument-tuples with their `i`-th component removed. Sending the threshold `xᵢ` to `+∞` drops the
+constraint `X_{tᵢ} ≤ xᵢ`, and continuity from below of `μ` yields the marginal. This is the
+distribution-**function** form of the projective consistency `isProjectiveMeasureFamily_fdd`;
+together with the existence theorem `exists_process_fdd_eq` it is the full equivalence (1.2.8) of
+Theorem 1.2.1. -/
+theorem distFn_tendsto_marginal {T : Type*} (X : T → Ω → ℝ) {n : ℕ} (t : Fin (n + 1) → T)
+    (x : Fin (n + 1) → ℝ) (i : Fin (n + 1)) :
+    Filter.Tendsto (fun c => distFn X μ t (Function.update x i c)) Filter.atTop
+      (nhds (distFn X μ (i.removeNth t) (i.removeNth x))) := by
+  have key : ⋃ c : ℝ, {ω | ∀ j, X (t j) ω ≤ Function.update x i c j}
+      = {ω | ∀ j, X (i.removeNth t j) ω ≤ i.removeNth x j} := by
+    ext ω
+    rw [Set.mem_iUnion]
+    constructor
+    · rintro ⟨c, hc⟩ j
+      have hcj := hc (i.succAbove j)
+      rwa [Function.update_of_ne (Fin.succAbove_ne i j)] at hcj
+    · intro h
+      refine ⟨X (t i) ω, fun j => ?_⟩
+      rcases eq_or_ne j i with rfl | hj
+      · simp
+      · rw [Function.update_of_ne hj]
+        obtain ⟨k, rfl⟩ := Fin.exists_succAbove_eq hj
+        exact h k
+  have hmono : Monotone fun c : ℝ => {ω | ∀ j, X (t j) ω ≤ Function.update x i c j} := by
+    intro c c' hcc' ω hω j
+    refine (hω j).trans ?_
+    rcases eq_or_ne j i with rfl | hj
+    · simpa using hcc'
+    · simp [Function.update_of_ne hj]
+  simpa only [distFn, key, Function.comp_def] using tendsto_measure_iUnion_atTop (μ := μ) hmono
+
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/
 theorem isProjectiveMeasureFamily_fdd (hX : ∀ t, AEMeasurable (X t) μ) :

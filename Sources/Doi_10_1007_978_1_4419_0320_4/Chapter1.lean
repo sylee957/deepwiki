@@ -74,14 +74,23 @@ noncomputable abbrev eq_1_2_7 := @DeepWiki.TimeSeries.distFn
 /-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11): a family of finite-dimensional
 distribution functions arises from some stochastic process iff it satisfies the consistency
 conditions (1.2.8). The existence (`if`) direction: a consistent (projective) family `P` is
-realized by the coordinate process `(t, ω) ↦ ω t` on the projective limit; the consistency
-(`only if`) direction is `isProjectiveMeasureFamily_fdd`. The library's `exists_process_fdd_eq`. -/
+realized by the coordinate process `(t, ω) ↦ ω t` on the projective limit. The consistency
+(`only if`) direction has two forms: the measure form `isProjectiveMeasureFamily_fdd` and the
+book's distribution-function form `lim_{xᵢ→∞} F_t(x) = F_{t(i)}(x(i))` (1.2.8, `eq_1_2_8`). The
+library's `exists_process_fdd_eq`. -/
 theorem thm_1_2_1 (P : ∀ I : Finset ℤ, MeasureTheory.Measure (↥I → ℝ))
     [∀ I, MeasureTheory.IsProbabilityMeasure (P I)]
     (hP : MeasureTheory.IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) P) :
     ∃ ν : MeasureTheory.Measure (ℤ → ℝ), MeasureTheory.IsProbabilityMeasure ν ∧
       ∀ I, fdd (fun t ω => ω t) ν I = P I :=
   exists_process_fdd_eq P hP
+
+/-- **Consistency condition (1.2.8)** (§1.2, p.11), the `only if` half of Theorem 1.2.1 in the
+book's notation: the distribution functions of a process satisfy
+`lim_{xᵢ → ∞} F_t(x) = F_{t(i)}(x(i))` — sending the `i`-th argument to `+∞` recovers the
+distribution function with the `i`-th time and argument (`Fin.removeNth i`) deleted. The
+library's `distFn_tendsto_marginal`. -/
+abbrev eq_1_2_8 := @DeepWiki.TimeSeries.distFn_tendsto_marginal
 
 /-! ## §1.3 Stationarity and Strict Stationarity -/
 
