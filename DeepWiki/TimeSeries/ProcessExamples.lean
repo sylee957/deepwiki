@@ -54,33 +54,49 @@ iid sequence `(Xₜ)` of fair `±1` coin flips — each `Xₜ` has the Bernoulli
 finite-dimensional laws alone) is guaranteed by Kolmogorov's theorem; concretely it is the
 coordinate process on the infinite product of the fair Bernoulli measure on `{1, -1}`. -/
 theorem exists_iidBinaryProcess :
-    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
-      (∀ t, Measurable (X t)) ∧
-      (∀ t, HasLaw (X t)
-        (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩) P) ∧
-      iIndepFun X P ∧ IsProbabilityMeasure P :=
-  exists_iid ℤ (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩)
+    ∃ (Ω : Type) (_ : MeasureSpace Ω), IsProbabilityMeasure (ℙ : Measure Ω) ∧
+      ∃ X : ℤ → Ω → ℝ, (∀ t, Measurable (X t)) ∧
+        (∀ t, HasLaw (X t)
+          (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩) ℙ) ∧
+        iIndepFun X ℙ := by
+  obtain ⟨Ω, mΩ, P, X, hmeas, hlaw, hindep, hprob⟩ :=
+    exists_iid ℤ (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩)
+  letI inst : MeasureSpace Ω := { toMeasurableSpace := mΩ, volume := P }
+  exact ⟨Ω, inst, hprob, X, hmeas, hlaw, hindep⟩
 
-/-- **Example 1.2.2** (1.2.3, the marginal directly): there exists a probability space
-carrying an iid sequence `(Xₜ)` whose every marginal is the fair `±1` coin flip stated as
-the textbook does — `P(Xₜ = 1) = 1/2` and `P(Xₜ = -1) = 1/2` — read off the Bernoulli law of
-`exists_iidBinaryProcess` via `HasLaw.measureReal_eq`. -/
-theorem exists_iidBinaryProcess_marginal :
-    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
-      (∀ t, Measurable (X t)) ∧ iIndepFun X P ∧ IsProbabilityMeasure P ∧
-      (∀ t, P.real {ω | X t ω = 1} = 1 / 2) ∧ (∀ t, P.real {ω | X t ω = -1} = 1 / 2) := by
+/-- **Equation (1.2.3)**: on a probability space `(Ω, ℱ, ℙ)` (a `MeasureSpace`), a random
+variable `X` carrying the fair `±1` Bernoulli law has marginals `ℙ(X = 1) = ℙ(X = -1) = 1/2`.
+This is the equation read off a *given* law — no existence needed; the non-obvious part of
+Example 1.2.2 (that such a space exists at all) is `exists_iidBinaryProcess`, by Kolmogorov. -/
+theorem measureReal_fairBernoulli {Ω : Type*} [MeasureSpace Ω] {X : Ω → ℝ}
+    (hlaw : HasLaw X (bernoulliMeasure (1 : ℝ) (-1)
+      ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩) ℙ) :
+    (ℙ : Measure Ω).real {ω | X ω = 1} = 1 / 2 ∧ (ℙ : Measure Ω).real {ω | X ω = -1} = 1 / 2 := by
   classical
-  obtain ⟨Ω, mΩ, P, X, hmeas, hlaw, hindep, hprob⟩ := exists_iidBinaryProcess
-  refine ⟨Ω, mΩ, P, X, hmeas, hindep, hprob, fun t => ?_, fun t => ?_⟩
-  · rw [show {ω | X t ω = 1} = {ω | X t ω ∈ ({1} : Set ℝ)} from by ext ω; simp,
-      (hlaw t).measureReal_eq (p := fun x => x ∈ ({1} : Set ℝ)) (measurableSet_singleton 1),
+  refine ⟨?_, ?_⟩
+  · rw [show {ω | X ω = 1} = {ω | X ω ∈ ({1} : Set ℝ)} from by ext ω; simp,
+      hlaw.measureReal_eq (p := fun x => x ∈ ({1} : Set ℝ)) (measurableSet_singleton 1),
       Set.setOf_mem_eq,
       bernoulliMeasure_real_apply_of_mem_of_notMem _ (measurableSet_singleton 1) rfl (by norm_num)]
-  · rw [show {ω | X t ω = -1} = {ω | X t ω ∈ ({-1} : Set ℝ)} from by ext ω; simp,
-      (hlaw t).measureReal_eq (p := fun x => x ∈ ({-1} : Set ℝ)) (measurableSet_singleton (-1)),
+  · rw [show {ω | X ω = -1} = {ω | X ω ∈ ({-1} : Set ℝ)} from by ext ω; simp,
+      hlaw.measureReal_eq (p := fun x => x ∈ ({-1} : Set ℝ)) (measurableSet_singleton (-1)),
       Set.setOf_mem_eq,
       bernoulliMeasure_real_apply_of_notMem_of_mem _ (measurableSet_singleton (-1)) (by norm_num) rfl]
     norm_num
+
+/-- **Example 1.2.2** (1.2.3, with explicit marginals): there exists a probability space
+carrying an iid sequence `(Xₜ)` whose every marginal is the fair `±1` coin flip stated as the
+textbook does — `P(Xₜ = 1) = 1/2`, `P(Xₜ = -1) = 1/2`. Combines `exists_iidBinaryProcess`
+(existence, by Kolmogorov) with `measureReal_fairBernoulli` (reading off the marginals). -/
+theorem exists_iidBinaryProcess_marginal :
+    ∃ (Ω : Type) (_ : MeasureSpace Ω), IsProbabilityMeasure (ℙ : Measure Ω) ∧
+      ∃ X : ℤ → Ω → ℝ, (∀ t, Measurable (X t)) ∧ iIndepFun X ℙ ∧
+        (∀ t, (ℙ : Measure Ω).real {ω | X t ω = 1} = 1 / 2) ∧
+        (∀ t, (ℙ : Measure Ω).real {ω | X t ω = -1} = 1 / 2) := by
+  obtain ⟨Ω, instΩ, hprob, X, hmeas, hlaw, hindep⟩ := exists_iidBinaryProcess
+  letI := instΩ
+  exact ⟨Ω, instΩ, hprob, X, hmeas, hindep,
+    fun t => (measureReal_fairBernoulli (hlaw t)).1, fun t => (measureReal_fairBernoulli (hlaw t)).2⟩
 
 /-- **Problem 1.18**: for any probability measure `ν` on `ℝ` (the law associated with a
 distribution function `F`), there exists a probability space carrying an iid sequence `(Xₜ)`
