@@ -162,6 +162,33 @@ theorem evalNat_add_const_eventually_le [AddCommGroup V] [LinearOrder V] [IsOrde
   obtain ⟨N, hN⟩ := (r.addConst b).evalNat_eventually_le s hslope
   exact ⟨N, fun n hn => by rw [← evalNat_addConst r b n]; exact hN n hn⟩
 
+/-- **Crossover window reduction** — makes the crossover rank *computable*. If `N₀` is past the
+periodic threshold (`max(rank_r, rank_s) ≤ N₀`) and the slower sequence satisfies `r ≤ s` on one full
+period-window `[N₀, N₀+d)`, then `r ≤ s` for **all** `n ≥ N₀` — each `+d` step preserves it because
+`cr ≤ cs`. The hypothesis `hwin` is a finite check (decidable for concrete sequences), so a valid
+crossover rank can be found by search + `decide`, with no `Archimedean` argument. -/
+theorem evalNat_le_of_window_le [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) ≤ s.evalNat (N₀ + rem))
+    (n : ℕ) (hn : N₀ ≤ n) : r.evalNat n ≤ s.evalNat n := by
+  set d := Nat.lcm r.period s.period with hd
+  have hd0 : 0 < d := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  set rem := (n - N₀) % d with hrem
+  set q := (n - N₀) / d with hq
+  have hremlt : rem < d := Nat.mod_lt _ hd0
+  have hsplit : d * q + rem = n - N₀ := Nat.div_add_mod (n - N₀) d
+  have hdecomp : n = (N₀ + rem) + q * d := by rw [mul_comm q d]; omega
+  have hrn : r.evalNat n = r.evalNat (N₀ + rem) + q • ((d / r.period) • r.incr) := by
+    rw [hdecomp]; exact r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) q (by omega)
+  have hsn : s.evalNat n = s.evalNat (N₀ + rem) + q • ((d / s.period) • s.incr) := by
+    rw [hdecomp]; exact s.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_right r.period s.period) q (by omega)
+  rw [hrn, hsn]
+  exact add_le_add (hwin rem hremlt) (by gcongr)
+
 /-- **Lemma 4.3, minimum — general case** (the pointwise minimum of two UPP sequences is ultimately
 pseudo-periodic). From some rank, `min(f,g)(n+d) = min(f,g)(n) + min(c_f', c_g')` with `d = lcm` and
 `c_f' = (d/d_f)·c_f` (the per-`d` increments) — the increment is the smaller slope. Covers all three
@@ -707,6 +734,13 @@ example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by 
 purely periodic — steps by `min(1,2)=1` per period (`d = lcm 1 1 = 1`): `(r⊗s)(n+1) = (r⊗s)(n)+1`. -/
 example : ∀ n ∈ Finset.range 5, rate1.convNat rate2 (n + 1) = rate1.convNat rate2 n + 1 := by
   native_decide
+
+/-- Sanity (gate-verified): the window reduction makes the crossover **decidable** — `rate1 (n)=n ≤
+rate2 (n)=2n` for every `n`, discharged from the single-point window check at `N₀ = 0` (`d = lcm 1 1
+= 1`) by `decide`/`native_decide`, with no `Archimedean` argument. -/
+example (n : ℕ) : rate1.evalNat n ≤ rate2.evalNat n :=
+  evalNat_le_of_window_le rate1 rate2 (N₀ := 0) (by decide) (by native_decide)
+    (by native_decide) n (Nat.zero_le n)
 
 /-- Sanity (gate-verified): the convolution's pseudo-period step from rank `T = 4`
 (`demoSeq` balanced with itself, `d = 2`, `c = 3`): `(f⊗f)(n+2) = (f⊗f)(n) + 3` for `n ≥ 4`. -/
