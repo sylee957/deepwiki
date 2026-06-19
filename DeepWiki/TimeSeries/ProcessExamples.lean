@@ -1,5 +1,7 @@
 import DeepWiki.TimeSeries.StationaryProcesses
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Probability.HasLawExists
+import Mathlib.Probability.Distributions.Bernoulli
 import Mathlib.Tactic
 
 /-! # Worked examples of stochastic processes (§1.2–§1.3)
@@ -29,6 +31,19 @@ of generation `t`, where `Z t j` are the (iid, `ℕ`-valued) offspring counts. -
 def branchingProcess (x : ℕ) (Z : ℕ → ℕ → Ω → ℕ) : ℕ → Ω → ℕ
   | 0 => fun _ => x
   | (t + 1) => fun ω => ∑ j ∈ Finset.range (branchingProcess x Z t ω), Z t j ω
+
+/-- **Example 1.2.2** (the binary process): there exists a probability space carrying an
+iid sequence `(Xₜ)` of fair `±1` coin flips — each `Xₜ` has the Bernoulli law
+`P(Xₜ = 1) = P(Xₜ = -1) = 1/2` (1.2.3, 1.2.4). Its existence (not evident from the
+finite-dimensional laws alone) is guaranteed by Kolmogorov's theorem; concretely it is the
+coordinate process on the infinite product of the fair Bernoulli measure on `{1, -1}`. -/
+theorem exists_iidBinaryProcess :
+    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
+      (∀ t, Measurable (X t)) ∧
+      (∀ t, HasLaw (X t)
+        (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩) P) ∧
+      iIndepFun X P ∧ IsProbabilityMeasure P :=
+  exists_iid ℤ (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩)
 
 /-- Bilinear expansion of the covariance of two linear combinations of `A`, `B`. -/
 private theorem covariance_lin_comb [IsFiniteMeasure μ] {A B : Ω → ℝ}

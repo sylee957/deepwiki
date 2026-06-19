@@ -38,6 +38,11 @@ abbrev def_1_2_2 := @DeepWiki.TimeSeries.realization
 library's `sinusoidProcess`. -/
 noncomputable abbrev ex_1_2_1 := @DeepWiki.TimeSeries.sinusoidProcess
 
+/-- **Example 1.2.2** (§1.2, p.9), the binary process: an iid sequence of fair `±1`
+flips, `P(Xₜ = 1) = P(Xₜ = -1) = 1/2` (1.2.3) with joint law `2⁻ⁿ` (1.2.4) — its existence
+is guaranteed by Kolmogorov's theorem. The library's `exists_iidBinaryProcess`. -/
+alias ex_1_2_2 := DeepWiki.TimeSeries.exists_iidBinaryProcess
+
 /-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
 sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
 its non-stationarity is **Example 1.3.4**. -/
