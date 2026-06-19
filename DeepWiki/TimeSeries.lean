@@ -13,6 +13,7 @@ import DeepWiki.TimeSeries.SpectralDensity
 import DeepWiki.TimeSeries.YuleWalker
 import DeepWiki.TimeSeries.Periodogram
 import DeepWiki.TimeSeries.MultivariateTimeSeries
+import DeepWiki.TimeSeries.StateSpace
 import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.LagPolynomials
 import DeepWiki.TimeSeries.ArmaProcesses
