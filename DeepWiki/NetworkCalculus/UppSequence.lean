@@ -126,6 +126,34 @@ theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) 
   conv_lhs => rw [evalNat.eq_def]
   rw [dif_pos hn]
 
+/-- **`evalNat` is monotone** (a UPP sequence is nondecreasing) from two *decidable* checks: the
+stored prefix is nondecreasing (`hsorted`) and the wrap step `f(len-1) ≤ f(len)` holds (`hwrap`);
+induction extends it past the prefix (each `+period` adds `incr`, cancelling). Discharges the
+`Monotone` hypotheses of the general Lemma 4.4 for concrete sequences by `decide`. -/
+theorem evalNat_monotone [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V] (r : UppSeq V)
+    (hsorted : ∀ i, i < r.vals.length - 1 → r.evalNat i ≤ r.evalNat (i + 1))
+    (hwrap : r.evalNat (r.vals.length - 1) ≤ r.evalNat r.vals.length) :
+    Monotone r.evalNat := by
+  apply monotone_nat_of_le_succ
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    rcases lt_trichotomy (n + 1) r.vals.length with hlt | heq | hgt
+    · exact hsorted n (by omega)
+    · rw [heq, show n = r.vals.length - 1 from by omega]; exact hwrap
+    · have hnL : ¬ n < r.vals.length := by omega
+      have hn1L : ¬ n + 1 < r.vals.length := by omega
+      have hper := r.hperiod
+      have hlenle := r.hlen
+      have hen : r.evalNat n = r.evalNat (n - r.period) + r.incr := by
+        conv_lhs => rw [evalNat.eq_def]
+        rw [dif_neg hnL]
+      have hen1 : r.evalNat (n + 1) = r.evalNat (n + 1 - r.period) + r.incr := by
+        conv_lhs => rw [evalNat.eq_def]
+        rw [dif_neg hn1L]
+      rw [hen, hen1, show n + 1 - r.period = (n - r.period) + 1 from by omega]
+      exact add_le_add_left (ih (n - r.period) (by omega)) r.incr
+
 /-- Vertically shift a UPP sequence by a constant `b` (add `b` to every value); same period and
 increment. -/
 def addConst [Add V] (r : UppSeq V) (b : V) : UppSeq V where
@@ -860,6 +888,15 @@ rate2 (n)=2n` for every `n`, discharged from the single-point window check at `N
 example (n : ℕ) : rate1.evalNat n ≤ rate2.evalNat n :=
   evalNat_le_of_window_le rate1 rate2 (N₀ := 0) (by decide) (by native_decide)
     (by native_decide) n (Nat.zero_le n)
+
+/-- Sanity (gate-verified): `evalNat_monotone` discharges monotonicity of `rate1 (n)=n` purely by
+`decide` — the sorted-prefix check (vacuous, length 1) and the wrap `f(0) ≤ f(1)`. -/
+example : Monotone rate1.evalNat := evalNat_monotone rate1 (by decide) (by native_decide)
+
+/-- Sanity (gate-verified): the composable constructor `convFrom` computes the convolution correctly —
+`(rate1.convFrom rate2 1)` denotes `rate1 ⊗ rate2` (`= n`), agreeing on the sampled prefix. -/
+example : ∀ n ∈ Finset.range 6, (rate1.convFrom rate2 1).evalNat n = rate1.convNat rate2 n := by
+  native_decide
 
 /-- Sanity (gate-verified): the convolution's pseudo-period step from rank `T = 4`
 (`demoSeq` balanced with itself, `d = 2`, `c = 3`): `(f⊗f)(n+2) = (f⊗f)(n) + 3` for `n ≥ 4`. -/
