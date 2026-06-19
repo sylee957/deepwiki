@@ -4,6 +4,8 @@ import Mathlib.Analysis.InnerProductSpace.Continuous
 import Mathlib.Analysis.InnerProductSpace.Orthogonal
 import Mathlib.Analysis.InnerProductSpace.Orthonormal
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+import Mathlib.Analysis.InnerProductSpace.GramSchmidtOrtho
+import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import DeepWiki.TimeSeries.BestLinearPredictor
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
@@ -147,6 +149,25 @@ abbrev def_2_4_4 := @TopologicalSpace.SeparableSpace
 orthonormal set `{eᵢ}`, `⟨x,y⟩ = ∑ᵢ ⟨x,eᵢ⟩⟨eᵢ,y⟩` (so `‖x‖² = ∑ᵢ |⟨x,eᵢ⟩|²`). Mathlib's
 `OrthonormalBasis.sum_inner_mul_inner`. -/
 alias thm_2_4_2 := OrthonormalBasis.sum_inner_mul_inner
+
+/-! ## §2.5 Projection in ℝⁿ -/
+
+/-- **§2.5** (p.58), the Gram–Schmidt orthogonalization procedure: it converts a sequence
+into an orthogonal/orthonormal one with the same closed span (so every finite-dimensional
+subspace has an orthonormal basis). Mathlib's `gramSchmidt` (and `gramSchmidtOrthonormalBasis`). -/
+noncomputable abbrev gramSchmidtProcedure := @InnerProductSpace.gramSchmidt
+
+/-- **Theorem 2.5.2** (§2.5, p.59): a matrix/operator `M` is an (orthogonal) projection iff
+it is symmetric and idempotent, `Mᵀ = M ∧ M² = M`. Mathlib's `isStarProjection_iff`
+(`IsStarProjection ↔ IsIdempotentElem ∧ IsSelfAdjoint`). Theorem 2.5.1 (the least-squares form
+`P_ℳ = X(XᵀX)⁻¹Xᵀ` with normal equations `XᵀX β = Xᵀx`) is a derived matrix computation. -/
+alias thm_2_5_2 := isStarProjection_iff
+
+/-! ## §2.2 (deferred item) -/
+
+/-- **Proposition 2.2.1** (§2.2, p.48), the Cauchy criterion: in a Hilbert space (complete),
+every Cauchy sequence converges. Mathlib's `cauchySeq_tendsto_of_complete`. -/
+alias prop_2_2_1 := cauchySeq_tendsto_of_complete
 
 end DeepWiki.Ts
 
