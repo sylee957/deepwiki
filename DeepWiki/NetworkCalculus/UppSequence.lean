@@ -600,6 +600,31 @@ theorem deconvNat_isGreatest [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoi
   · rintro _ ⟨k, rfl⟩
     exact deconvNat_ge r s hle n k
 
+/-- **Deconvolution is ultimately pseudo-periodic** (Lemma 4.5): for `n ≥ rank_f` (and
+`slope_f ≤ slope_g`), `(f⊘g)(n + d_f) = (f⊘g)(n) + c_f` — shifting `n` by `f`'s period `d_f` shifts
+every term `f(n+k) - g(k)` by `c_f` (since `n+k ≥ rank_f` for all `k`), so the whole supremum shifts
+by `c_f`. The deconvolution thus has `f`'s period `d_f` and increment `c_f`. -/
+theorem deconvNat_add_period [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] (r s : UppSeq V)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    {n : ℕ} (hn : r.vals.length - r.period ≤ n) :
+    r.deconvNat s (n + r.period) = r.deconvNat s n + r.incr := by
+  have hper : ∀ k, r.evalNat (n + r.period + k) = r.evalNat (n + k) + r.incr := by
+    intro k
+    rw [show n + r.period + k = (n + k) + r.period from by omega]
+    exact r.evalNat_add_period (by omega)
+  refine le_antisymm ?_ ?_
+  · obtain ⟨k, _, heq⟩ := deconvNat_eq r s (n + r.period)
+    rw [heq, hper k]
+    calc r.evalNat (n + k) + r.incr - s.evalNat k
+        = (r.evalNat (n + k) - s.evalNat k) + r.incr := by abel
+      _ ≤ r.deconvNat s n + r.incr := by gcongr; exact deconvNat_ge r s hle n k
+  · obtain ⟨k, _, heq⟩ := deconvNat_eq r s n
+    rw [heq]
+    calc r.evalNat (n + k) - s.evalNat k + r.incr
+        = r.evalNat (n + r.period + k) - s.evalNat k := by rw [hper k]; abel
+      _ ≤ r.deconvNat s (n + r.period) := deconvNat_ge r s hle (n + r.period) k
+
 /-- **Lemma 4.4, balanced case** — the convolution is ultimately pseudo-periodic. When the two
 operands have equal asymptotic slope (`(d/d_f)·c_f = (d/d_g)·c_g = c`, the book's balanced case),
 their (min,plus) convolution satisfies the pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` with
