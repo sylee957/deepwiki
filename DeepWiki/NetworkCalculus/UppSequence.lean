@@ -689,6 +689,73 @@ theorem convNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] 
   exact ⟨max N ((r.vals.length - r.period) + (s.vals.length - s.period) + Nat.lcm r.period s.period),
     fun n hn => le_antisymm (hN n (by omega)) (convNat_add_lcm_ge r s (by omega))⟩
 
+/-- **Minimizer-region lemma — explicit-rank form.** Same as `convNat_minimizer_periodic` but takes
+the crossover as a hypothesis `hcross` at an explicit rank `N₀` (stated subtraction-free, so no group
+or `Archimedean` is needed) rather than producing it from `Archimedean.arch`. For concrete sequences
+`hcross` is discharged by `evalNat_le_of_window_le` + `decide`, making the stabilization rank
+`max N₀ rank_r + rank_r` computable. -/
+theorem convNat_minimizer_periodic_from [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat) {N₀ : ℕ}
+    (hcross : ∀ m, N₀ ≤ m →
+      r.evalNat m + s.evalNat (r.vals.length - r.period) ≤ r.evalNat 0 + s.evalNat m)
+    (n : ℕ) (hn : max N₀ (r.vals.length - r.period) + (r.vals.length - r.period) ≤ n) :
+    ∃ k, r.vals.length - r.period ≤ k ∧ k ≤ n ∧
+      r.convNat s n = r.evalNat k + s.evalNat (n - k) := by
+  set Tr := r.vals.length - r.period with hTr
+  have hnTr : Tr ≤ n := by omega
+  have hn2 : Tr ≤ n - Tr := by omega
+  have hm0 : N₀ ≤ n - Tr := by omega
+  have hIcc : (Finset.Icc Tr n).Nonempty := ⟨Tr, Finset.mem_Icc.mpr ⟨le_rfl, hnTr⟩⟩
+  obtain ⟨k, hkmem, hkeq⟩ := Finset.exists_mem_eq_inf' hIcc (fun k => r.evalNat k + s.evalNat (n - k))
+  rw [Finset.mem_Icc] at hkmem
+  refine ⟨k, hkmem.1, hkmem.2, le_antisymm (r.convNat_le s hkmem.2) ?_⟩
+  obtain ⟨j, hj, hje⟩ := r.convNat_eq s n
+  rw [hje]
+  by_cases hjT : Tr ≤ j
+  · rw [← hkeq]; exact Finset.inf'_le _ (Finset.mem_Icc.mpr ⟨hjT, hj⟩)
+  · rw [not_le] at hjT
+    have hcomp : r.evalNat k + s.evalNat (n - k) ≤ r.evalNat (n - Tr) + s.evalNat Tr := by
+      rw [← hkeq]
+      have h2 := Finset.inf'_le (fun k => r.evalNat k + s.evalNat (n - k))
+        (show n - Tr ∈ Finset.Icc Tr n from Finset.mem_Icc.mpr ⟨hn2, by omega⟩)
+      simpa [show n - (n - Tr) = Tr from by omega] using h2
+    calc r.evalNat k + s.evalNat (n - k)
+        ≤ r.evalNat (n - Tr) + s.evalNat Tr := hcomp
+      _ ≤ r.evalNat 0 + s.evalNat (n - Tr) := hcross (n - Tr) hm0
+      _ ≤ r.evalNat j + s.evalNat (n - j) := add_le_add (hrmono (Nat.zero_le j)) (hsmono (by omega))
+
+/-- **Lemma 4.4, `=` — explicit-rank form.** Same as `convNat_add_lcm` but from an explicit,
+*computable* stabilization rank: combining the explicit-rank minimizer-region (`≤`) with the general
+`≥` (`convNat_add_lcm_ge`). With `hcross` discharged by `evalNat_le_of_window_le` + `decide`, this
+gives a concrete rank for `convFrom`. -/
+theorem convNat_add_lcm_from [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat) {N₀ : ℕ}
+    (hcross : ∀ m, N₀ ≤ m →
+      r.evalNat m + s.evalNat (r.vals.length - r.period) ≤ r.evalNat 0 + s.evalNat m)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (n : ℕ) (hn : max (max N₀ (r.vals.length - r.period) + (r.vals.length - r.period))
+        ((r.vals.length - r.period) + (s.vals.length - s.period) + Nat.lcm r.period s.period) ≤ n) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  have hub : r.convNat s (n + Nat.lcm r.period s.period)
+      ≤ r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+    obtain ⟨k, hkT, hkn, hkeq⟩ := convNat_minimizer_periodic_from r s hrmono hsmono hcross n (by omega)
+    set d := Nat.lcm r.period s.period with hd
+    set cr := (d / r.period) • r.incr with hcr
+    have hrstep : r.evalNat (k + d) = r.evalNat k + cr := by
+      simpa using r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) 1 hkT
+    rw [min_eq_left hle]
+    calc r.convNat s (n + d)
+        ≤ r.evalNat (k + d) + s.evalNat ((n + d) - (k + d)) := r.convNat_le s (by omega)
+      _ = r.evalNat (k + d) + s.evalNat (n - k) := by rw [show (n + d) - (k + d) = n - k from by omega]
+      _ = (r.evalNat k + cr) + s.evalNat (n - k) := by rw [hrstep]
+      _ = (r.evalNat k + s.evalNat (n - k)) + cr := by abel
+      _ = r.convNat s n + cr := by rw [hkeq]
+  exact le_antisymm hub (convNat_add_lcm_ge r s (by omega))
+
 /-- **Composable convolution constructor.** Assemble `r ⊗ s` as an actual `UppSeq`: prefix
 `(r⊗s)(0 .. T+d-1)` (sampled via `convNat`), period `d = lcm`, increment `min(cr,cs)`. `T` is any
 stabilization rank past which the pseudo-period step holds. Computable (`convNat` is), so convolution
