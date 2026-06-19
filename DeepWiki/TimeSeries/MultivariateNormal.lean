@@ -58,4 +58,46 @@ theorem posSemidef_covMatrix [IsProbabilityMeasure μ] {n : ℕ} {X : Fin n → 
   rw [hcov, covariance_self hSmem.aestronglyMeasurable.aemeasurable]
   exact variance_nonneg _ _
 
+/-- The linear transform `Y = a + B·X` of a random vector `X` (`a : Fin m → ℝ`,
+`B : Matrix (Fin m) (Fin n) ℝ`): `Yᵢ = aᵢ + ∑ₖ Bᵢₖ Xₖ`. -/
+noncomputable def linTransform {m n : ℕ} (a : Fin m → ℝ) (B : Matrix (Fin m) (Fin n) ℝ)
+    (X : Fin n → Ω → ℝ) : Fin m → Ω → ℝ := fun i ω => a i + ∑ k, B i k * X k ω
+
+/-- **Proposition 1.6.1** (mean, 1.6.4): `E(a + B·X) = a + B·(EX)`. -/
+theorem meanVector_linTransform [IsProbabilityMeasure μ] {m n : ℕ} (a : Fin m → ℝ)
+    (B : Matrix (Fin m) (Fin n) ℝ) {X : Fin n → Ω → ℝ} (hX : ∀ k, Integrable (X k) μ) :
+    meanVector (linTransform a B X) μ = a + B *ᵥ meanVector X μ := by
+  funext i
+  have hint : ∀ k, Integrable (fun ω => B i k * X k ω) μ := fun k => (hX k).const_mul _
+  have hrhs : (a + B *ᵥ meanVector X μ) i = a i + ∑ k, B i k * meanVector X μ k := by
+    simp [Matrix.mulVec, dotProduct]
+  rw [hrhs]
+  have hconst : ∫ _ : Ω, a i ∂μ = a i := by simp
+  show ∫ ω, (a i + ∑ k, B i k * X k ω) ∂μ = a i + ∑ k, B i k * meanVector X μ k
+  rw [integral_add (integrable_const _) (integrable_finsetSum _ fun k _ => hint k), hconst,
+    integral_finsetSum _ fun k _ => hint k]
+  simp only [integral_const_mul, meanVector]
+
+/-- **Proposition 1.6.1** (covariance, 1.6.5): `Cov(a + B·X) = B · Σ_XX · Bᵀ`. -/
+theorem covMatrix_linTransform [IsProbabilityMeasure μ] {m n : ℕ} (a : Fin m → ℝ)
+    (B : Matrix (Fin m) (Fin n) ℝ) {X : Fin n → Ω → ℝ} (hX : ∀ k, MemLp (X k) 2 μ) :
+    covMatrix (linTransform a B X) μ = B * covMatrix X μ * Bᵀ := by
+  have hmem : ∀ (c : ℝ) (k : Fin n), MemLp (fun ω => c * X k ω) 2 μ := fun c k => (hX k).const_mul c
+  have hint : ∀ (c : ℝ) (k : Fin n), Integrable (fun ω => c * X k ω) μ :=
+    fun c k => (hmem c k).integrable (by norm_num)
+  ext i j
+  simp only [covMatrix_apply]
+  show cov[fun ω => a i + ∑ k, B i k * X k ω, fun ω => a j + ∑ l, B j l * X l ω; μ]
+      = (B * covMatrix X μ * Bᵀ) i j
+  rw [covariance_const_add_left (integrable_finsetSum _ fun k _ => hint (B i k) k),
+    covariance_const_add_right (integrable_finsetSum _ fun l _ => hint (B j l) l),
+    covariance_fun_sum_fun_sum (fun k => hmem (B i k) k) (fun l => hmem (B j l) l)]
+  have hmat : (B * covMatrix X μ * Bᵀ) i j = ∑ k, ∑ l, B i k * B j l * cov[X k, X l; μ] := by
+    simp only [Matrix.mul_apply, Matrix.transpose_apply, covMatrix_apply, Finset.sum_mul]
+    rw [Finset.sum_comm]
+    exact Finset.sum_congr rfl fun k _ => Finset.sum_congr rfl fun l _ => by ring
+  rw [hmat]
+  refine Finset.sum_congr rfl fun k _ => Finset.sum_congr rfl fun l _ => ?_
+  rw [covariance_const_mul_left, covariance_const_mul_right]; ring
+
 end DeepWiki.TimeSeries

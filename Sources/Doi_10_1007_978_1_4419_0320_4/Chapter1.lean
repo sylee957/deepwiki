@@ -186,6 +186,18 @@ noncomputable abbrev eq_1_6_1 := @DeepWiki.TimeSeries.meanVector
 random vector. The library's `covMatrix`. -/
 noncomputable abbrev eq_1_6_2 := @DeepWiki.TimeSeries.covMatrix
 
+open Matrix in
+/-- **Proposition 1.6.1** (§1.6, p.33), the linear transform `Y = a + B·X` of a random
+vector has mean `EY = a + B·(EX)` (1.6.4) and covariance matrix `Σ_YY = B·Σ_XX·Bᵀ`
+(1.6.5). The library's `meanVector_linTransform`, `covMatrix_linTransform`. -/
+theorem prop_1_6_1 [MeasureTheory.IsProbabilityMeasure μ] {m n : ℕ} (a : Fin m → ℝ)
+    (B : Matrix (Fin m) (Fin n) ℝ) {Y : Fin n → Ω → ℝ}
+    (hY : ∀ k, MeasureTheory.MemLp (Y k) 2 μ) :
+    meanVector (linTransform a B Y) μ = a + B *ᵥ meanVector Y μ ∧
+      covMatrix (linTransform a B Y) μ = B * covMatrix Y μ * Bᵀ :=
+  ⟨meanVector_linTransform a B fun k => (hY k).integrable (by norm_num),
+    covMatrix_linTransform a B hY⟩
+
 /-- **Proposition 1.6.2** (§1.6, p.33), the covariance matrix of a square-integrable
 random vector is symmetric and positive semidefinite (`bᵀ Σ b = Var(∑ bᵢ Xᵢ) ≥ 0`).
 The library's `posSemidef_covMatrix`. -/
