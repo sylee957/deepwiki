@@ -3,6 +3,7 @@ import DeepWiki.NetworkCalculus.Concave
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.Convex
+import DeepWiki.NetworkCalculus.ConvexConvolution
 import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelMoreau
 import DeepWiki.NetworkCalculus.LegendreFenchelMoreauConvex
@@ -177,10 +178,12 @@ abbrev def_3_5 := @IsConvexEReal
 /-- **Proposition 3.13**, sum (§3.3.2, p.51): `f+g` is convex when `f,g` are. -/
 alias prop_3_13_add := IsConvexEReal.add
 
-/-- **Proposition 3.13**, max (§3.3.2, p.51): `f∨g` is convex when `f,g` are.
-(The convolution part `f∗g` convex is not separately formalized — the infimal
-convolution of convex curves, needing an attained-or-ε split argument.) -/
+/-- **Proposition 3.13**, max (§3.3.2, p.51): `f∨g` is convex when `f,g` are. -/
 alias prop_3_13_sup := IsConvexEReal.sup
+
+/-- **Proposition 3.13**, convolution (§3.3.2, p.51): `f∗g` is convex when `f,g` are — for
+nonnegative curves (the book's `ℱ`). The library's `isConvexEReal_minConv`. -/
+alias prop_3_13_conv := isConvexEReal_minConv
 
 /-- **Definition 3.6** (§3.3.2, p.53): the Legendre–Fenchel transform
 `𝓛(f)(t)=⨆_{u≥0}(t·u−f(u))`. The library's `legendre`. -/
