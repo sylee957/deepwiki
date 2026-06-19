@@ -118,6 +118,41 @@ def add [AddMonoid V] (r s : UppSeq V) : UppSeq V where
   hperiod := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
   hlen := by rw [List.length_map, List.length_range]; exact Nat.le_add_left _ _
 
+/-- **Correctness of `add`** (Lemma 4.2): the executable sum denotes the pointwise sum,
+`evalNat (add r s) n = evalNat r n + evalNat s n`, for every `n`. By strong induction: on the stored
+prefix it reads the recomputed value; past it, the `lcm` recurrence matches `r`'s and `s`'s own
+period-multiple steps (`evalNat_add_mul_period`). -/
+theorem evalNat_add [AddCommMonoid V] (r s : UppSeq V) (n : ℕ) :
+    (r.add s).evalNat n = r.evalNat n + s.evalNat n := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    by_cases hL : n < (r.add s).vals.length
+    · rw [evalNat_of_lt _ hL]; simp [add]
+    · rw [not_lt] at hL
+      have hlen : (r.add s).vals.length
+          = max r.vals.length s.vals.length + Nat.lcm r.period s.period := by simp [add]
+      have hDpos : 0 < Nat.lcm r.period s.period :=
+        Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+      have hDn : Nat.lcm r.period s.period ≤ n := by omega
+      have hrec : (r.add s).evalNat n
+          = (r.add s).evalNat (n - Nat.lcm r.period s.period) + (r.add s).incr := by
+        conv_lhs => rw [evalNat.eq_def]
+        rw [dif_neg (not_lt.mpr hL)]; rfl
+      have hrn : r.evalNat n = r.evalNat (n - Nat.lcm r.period s.period)
+          + (Nat.lcm r.period s.period / r.period) • r.incr := by
+        have key := r.evalNat_add_mul_period (Nat.lcm r.period s.period / r.period)
+          (n := n - Nat.lcm r.period s.period) (by omega)
+        rwa [Nat.div_mul_cancel (Nat.dvd_lcm_left _ _), Nat.sub_add_cancel hDn] at key
+      have hsn : s.evalNat n = s.evalNat (n - Nat.lcm r.period s.period)
+          + (Nat.lcm r.period s.period / s.period) • s.incr := by
+        have key := s.evalNat_add_mul_period (Nat.lcm r.period s.period / s.period)
+          (n := n - Nat.lcm r.period s.period) (by omega)
+        rwa [Nat.div_mul_cancel (Nat.dvd_lcm_right _ _), Nat.sub_add_cancel hDn] at key
+      have hincr : (r.add s).incr = (Nat.lcm r.period s.period / r.period) • r.incr
+          + (Nat.lcm r.period s.period / s.period) • s.incr := rfl
+      rw [hrec, ih (n - Nat.lcm r.period s.period) (by omega), hincr, hrn, hsn]
+      abel
+
 /-- Sanity check (gate-verified): `add` computes the pointwise sum across the period boundary. -/
 example : ∀ n ∈ Finset.range 12,
     (demoSeq.add demoSeq).evalNat n = demoSeq.evalNat n + demoSeq.evalNat n := by native_decide
