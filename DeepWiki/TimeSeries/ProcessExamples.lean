@@ -46,6 +46,27 @@ theorem exists_iidBinaryProcess :
       iIndepFun X P ∧ IsProbabilityMeasure P :=
   exists_iid ℤ (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩)
 
+/-- **Example 1.2.2** (1.2.3, the marginal directly): there exists a probability space
+carrying an iid sequence `(Xₜ)` whose every marginal is the fair `±1` coin flip stated as
+the textbook does — `P(Xₜ = 1) = 1/2` and `P(Xₜ = -1) = 1/2` — read off the Bernoulli law of
+`exists_iidBinaryProcess` via `HasLaw.measureReal_eq`. -/
+theorem exists_iidBinaryProcess_marginal :
+    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
+      (∀ t, Measurable (X t)) ∧ iIndepFun X P ∧ IsProbabilityMeasure P ∧
+      (∀ t, P.real {ω | X t ω = 1} = 1 / 2) ∧ (∀ t, P.real {ω | X t ω = -1} = 1 / 2) := by
+  classical
+  obtain ⟨Ω, mΩ, P, X, hmeas, hlaw, hindep, hprob⟩ := exists_iidBinaryProcess
+  refine ⟨Ω, mΩ, P, X, hmeas, hindep, hprob, fun t => ?_, fun t => ?_⟩
+  · rw [show {ω | X t ω = 1} = {ω | X t ω ∈ ({1} : Set ℝ)} from by ext ω; simp,
+      (hlaw t).measureReal_eq (p := fun x => x ∈ ({1} : Set ℝ)) (measurableSet_singleton 1),
+      Set.setOf_mem_eq,
+      bernoulliMeasure_real_apply_of_mem_of_notMem _ (measurableSet_singleton 1) rfl (by norm_num)]
+  · rw [show {ω | X t ω = -1} = {ω | X t ω ∈ ({-1} : Set ℝ)} from by ext ω; simp,
+      (hlaw t).measureReal_eq (p := fun x => x ∈ ({-1} : Set ℝ)) (measurableSet_singleton (-1)),
+      Set.setOf_mem_eq,
+      bernoulliMeasure_real_apply_of_notMem_of_mem _ (measurableSet_singleton (-1)) (by norm_num) rfl]
+    norm_num
+
 /-- **Problem 1.18**: for any probability measure `ν` on `ℝ` (the law associated with a
 distribution function `F`), there exists a probability space carrying an iid sequence `(Xₜ)`
 each with law `ν`. The existence (not evident from the finite-dimensional laws alone) is

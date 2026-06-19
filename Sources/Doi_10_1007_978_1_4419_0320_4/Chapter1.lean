@@ -51,6 +51,10 @@ flips, `P(Xₜ = 1) = P(Xₜ = -1) = 1/2` (1.2.3) with joint law `2⁻ⁿ` (1.2.
 is guaranteed by Kolmogorov's theorem. The library's `exists_iidBinaryProcess`. -/
 alias ex_1_2_2 := DeepWiki.TimeSeries.exists_iidBinaryProcess
 
+/-- **Equation (1.2.3)** (§1.2, p.9), the binary process stated by its marginal directly:
+`P(Xₜ = 1) = P(Xₜ = -1) = 1/2`. The library's `exists_iidBinaryProcess_marginal`. -/
+alias eq_1_2_3 := DeepWiki.TimeSeries.exists_iidBinaryProcess_marginal
+
 /-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
 sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
 its non-stationarity is **Example 1.3.4**. -/
