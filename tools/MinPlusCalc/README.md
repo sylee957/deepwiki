@@ -27,6 +27,7 @@ lake exe minplus            # usage
 | `minplus addupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f+g` **as a UPP sequence** (`UppSeq.add` / `evalNat_add`) |
 | `minplus minupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊓g` **as a UPP sequence** (`minUpp`; `min_evalNat_add_lcm_window`) |
 | `minplus maxupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊔g` **as a UPP sequence** (`maxUpp`; `max_evalNat_add_lcm_window`) |
+| `minplus deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊘g)(0..k−1)` — the deconvolution `⨆_{k≥0} f(n+k)−g(k)`; finite (and computed) only when `slope_f ≤ slope_g`, else refused (`deconvNat`/`deconvNat_isGreatest`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -48,8 +49,13 @@ operation once the prefix reaches a stabilization rank: `convupp` via `convFrom`
 slower operand *is* the min, the faster *is* the max). The crossover rank for `min`/`max` is found by
 a finite plain-`≤` window search (`findCrossoverLe`), valid by `evalNat_le_of_window_le`; the
 convolution uses the *offset* search (`findCrossover`). So each printed quadruplet is the genuine UPP
-closed form, ready to feed into another operator. (Deconvolution and sub-additive closure are future
-work.)
+closed form, ready to feed into another operator.
+
+**`deconv` is the genuine deconvolution**, not just a window max: `deconvNat` is proved to be the
+*greatest* of all terms `f(n+k)−g(k)` over every `k ≥ 0` (`deconvNat_isGreatest`), because past the
+search window the terms are non-increasing per period (`deconvNat_ge`). It is finite only when
+`slope_f ≤ slope_g`; the CLI refuses otherwise (the deconvolution is `+∞`). Returning the
+deconvolution as a UPP sequence (its UPP-ness, Lemma 4.5) and sub-additive closure are future work.
 
 ## Example
 
@@ -65,4 +71,5 @@ minplus convupp 0,1,2 2 3 0,1,2 2 3  # 0, 1, 2, 3, 4, 6  period=2  incr=3   (dem
 minplus minupp 0,2 1 2 3,4 1 1    # 0, 2, 4, 6  period=1  incr=1   (2n ⊓ (n+3) → n+3 past crossover)
 minplus maxupp 0,2 1 2 3,4 1 1    # 3, 4, 5, 6  period=1  incr=2   (2n ⊔ (n+3) → 2n past crossover)
 minplus addupp 0 1 1 0 1 2        # 0, 3  period=1  incr=3   (n + 2n = 3n)
+minplus deconv 0 1 1 0 1 2 6      # 0, 1, 2, 3, 4, 5   (n ⊘ 2n = n; slope 1 ≤ 2, finite)
 ```

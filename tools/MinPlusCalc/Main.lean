@@ -49,7 +49,8 @@ def usage : String := String.intercalate "\n"
     "    convupp <v1> <p1> <c1> <v2> <p2> <c2>           print f⊗g AS A UPP SEQUENCE  [composable; convFrom/evalNat_convFrom]",
     "    addupp <v1> <p1> <c1> <v2> <p2> <c2>            print f+g AS A UPP SEQUENCE  [UppSeq.add / evalNat_add]",
     "    minupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊓g AS A UPP SEQUENCE  [minUpp; min_evalNat_add_lcm_window]",
-    "    maxupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊔g AS A UPP SEQUENCE  [maxUpp; max_evalNat_add_lcm_window]" ]
+    "    maxupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊔g AS A UPP SEQUENCE  [maxUpp; max_evalNat_add_lcm_window]",
+    "    deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>        print (f⊘g)(0..k-1)   [⨆_k f(n+k)-g(k); needs slope f ≤ slope g; deconvNat_isGreatest]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -94,4 +95,12 @@ def main (args : List String) : IO Unit := do
       let u1 ← reqUpp v1 p1 c1
       let u2 ← reqUpp v2 p2 c2
       IO.println (renderUpp (maxUpp u1 u2))
+  | ["deconv", v1, p1, c1, v2, p2, c2, k] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      -- finite only when slope(f) ≤ slope(g); otherwise f ⊘ g = +∞ (not representable)
+      if slope u1 u2 ≤ slope u2 u1 then
+        IO.println (fmt ((List.range (← reqNat k)).map (fun n => u1.deconvNat u2 n)))
+      else
+        throw (IO.userError "deconv f ⊘ g requires slope(f) ≤ slope(g) (else the deconvolution is +∞)")
   | _ => IO.println usage
