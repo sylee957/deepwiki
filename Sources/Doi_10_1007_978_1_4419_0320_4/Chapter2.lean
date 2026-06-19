@@ -1,6 +1,8 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.Continuous
+import Mathlib.Analysis.InnerProductSpace.Orthogonal
+import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
@@ -67,6 +69,37 @@ variables with inner product `⟨X,Y⟩ = E(XY)` (2.2.1) — the central Hilbert
 series (mean-square convergence is `L²`-norm convergence). Mathlib's `MeasureTheory.Lp` with
 `p = 2` (an `InnerProductSpace`, complete by Riesz–Fischer). -/
 abbrev ex_2_2_2 := @MeasureTheory.Lp
+
+/-! ## §2.3 The Projection Theorem -/
+
+/-- **Definition 2.3.1** (§2.3, p.50), a closed subspace of a Hilbert space: a linear
+subspace containing all of its limit points. Mathlib's `ClosedSubmodule` (a `Submodule`
+that is topologically closed). -/
+abbrev def_2_3_1 := @ClosedSubmodule
+
+/-- **Definition 2.3.2** (§2.3, p.50), the orthogonal complement
+`ℳ⊥ = {x : ⟨x,y⟩ = 0 for all y ∈ ℳ}` (2.3.4). Mathlib's `Submodule.orthogonal` (`Kᗮ`). -/
+abbrev def_2_3_2 := @Submodule.orthogonal
+
+/-- **Proposition 2.3.1** (§2.3, p.50): the orthogonal complement `ℳ⊥` of any subset is a
+closed subspace. Mathlib's `Submodule.isClosed_orthogonal`. -/
+alias prop_2_3_1 := Submodule.isClosed_orthogonal
+
+/-- **Theorem 2.3.1** (The Projection Theorem, §2.3, p.51): for a closed subspace `K` of a
+Hilbert space and any `x`, the orthogonal projection `x̂ = K.starProjection x` is the unique
+element of `K` minimizing the distance `‖x − ·‖` (2.3.5), characterized by `(x − x̂) ⊥ K`.
+The library's `Submodule.starProjection` with `starProjection_apply_mem` (`x̂ ∈ K`),
+`starProjection_minimal` (2.3.5), `sub_starProjection_mem_orthogonal` (orthogonality), and
+`eq_starProjection_of_mem_orthogonal` (uniqueness). -/
+theorem thm_2_3_1 {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (x : E) :
+    K.starProjection x ∈ K ∧
+      ‖x - K.starProjection x‖ = ⨅ y : K, ‖x - (y : E)‖ ∧
+      x - K.starProjection x ∈ Kᗮ ∧
+      ∀ y ∈ K, x - y ∈ Kᗮ → K.starProjection x = y :=
+  ⟨K.starProjection_apply_mem x, Submodule.starProjection_minimal (U := K) x,
+    K.sub_starProjection_mem_orthogonal x,
+    fun _ hy hyo => K.eq_starProjection_of_mem_orthogonal hy hyo⟩
 
 end DeepWiki.Ts
 
