@@ -1182,5 +1182,21 @@ def rateWT : UppSeq (WithTop ℤ) := ⟨[0], 1, 1, by decide, by decide⟩
 `(rate)* = rate` — since `rate ⊗ rate = rate`, so `⨅ₘ rate^⊗m = δ₀ ⊓ rate = rate`. -/
 example : ∀ n ∈ Finset.range 5, closureApproxNat rateWT 3 n = rateWT.evalNat n := by native_decide
 
+/-- `f^⊗1 = f`: one iteration is the identity convolution (`f ⊗ δ₀ = f`, by `convNat_delta0`). -/
+theorem iterConvNat_one (f : UppSeq (WithTop ℤ)) (n : ℕ) : iterConvNat f 1 n = f.evalNat n := by
+  have h : iterConvNat f 1 n = f.convNat delta0 n := rfl
+  rw [h, convNat_comm, convNat_delta0]
+
+/-- The closure approximant is `≤ δ₀` (the `m = 0` term `f^⊗0 = δ₀`). -/
+theorem closureApproxNat_le_delta0 (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+    closureApproxNat f N n ≤ delta0.evalNat n :=
+  Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (Nat.succ_pos N))
+
+/-- The closure approximant is `≤ f` (for `N ≥ 1`, the `m = 1` term `f^⊗1 = f`). -/
+theorem closureApproxNat_le_self (f : UppSeq (WithTop ℤ)) {N : ℕ} (hN : 1 ≤ N) (n : ℕ) :
+    closureApproxNat f N n ≤ f.evalNat n := by
+  rw [← iterConvNat_one f n]
+  exact Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (by omega))
+
 end UppSeq
 end DeepWiki
