@@ -515,6 +515,41 @@ theorem convNat_comm [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (n : ℕ
       _ = s.evalNat (n - k) + r.evalNat k := by rw [show n - (n - k) = k from by omega]
       _ = r.evalNat k + s.evalNat (n - k) := by rw [add_comm]
 
+/-- Search bound for `deconvNat`: past `max(rank_r,rank_s) + d` the deconvolution terms
+`f(n+k) - g(k)` are non-increasing per period (when `slope_f ≤ slope_g`), so the supremum over all
+`k ≥ 0` is attained within `[0, deconvBound)`. -/
+def deconvBound (r s : UppSeq V) : ℕ :=
+  max (r.vals.length - r.period) (s.vals.length - s.period) + Nat.lcm r.period s.period
+
+/-- `deconvBound` is positive (it is `≥ lcm ≥ 1`), so the search window is nonempty. -/
+theorem deconvBound_pos (r s : UppSeq V) : 0 < deconvBound r s := by
+  have := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  unfold deconvBound; omega
+
+/-- The discrete **(min,plus) deconvolution** at `n`: `(f ⊘ g)(n) = ⨆_{k≥0} f(n+k) - g(k)`, computed
+as the `Finset.sup'` over the finite window `[0, deconvBound)`. When `slope_f ≤ slope_g` (the
+deconvolution is then finite) this window captures the true supremum — the terms peak, then decrease
+per period; `slope_f > slope_g` gives `+∞`, not represented here. -/
+def deconvNat [Add V] [Sub V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) : V :=
+  (Finset.range (deconvBound r s)).sup' ⟨0, Finset.mem_range.mpr (deconvBound_pos r s)⟩
+    (fun k => r.evalNat (n + k) - s.evalNat k)
+
+/-- `deconvNat` upper-bounds every in-window deconvolution term `f(n+k) - g(k)` (`k < deconvBound`). -/
+theorem le_deconvNat [Add V] [Sub V] [LinearOrder V] (r s : UppSeq V) {n k : ℕ}
+    (hk : k < deconvBound r s) : r.evalNat (n + k) - s.evalNat k ≤ r.deconvNat s n :=
+  Finset.le_sup' (fun k => r.evalNat (n + k) - s.evalNat k) (Finset.mem_range.mpr hk)
+
+/-- `deconvNat` is attained at some `k < deconvBound` — it is exactly the maximum over the window. -/
+theorem deconvNat_eq [Add V] [Sub V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) :
+    ∃ k < deconvBound r s, r.deconvNat s n = r.evalNat (n + k) - s.evalNat k := by
+  obtain ⟨k, hk, heq⟩ := Finset.exists_mem_eq_sup' (s := Finset.range (deconvBound r s))
+    ⟨0, Finset.mem_range.mpr (deconvBound_pos r s)⟩ (fun k => r.evalNat (n + k) - s.evalNat k)
+  exact ⟨k, Finset.mem_range.mp hk, heq⟩
+
+/-- Sanity (gate-verified): `(rate1 ⊘ rate2)(n) = n` — deconvolving `n` by `2n` (slower by faster,
+finite) recovers `n` (`⨆_k (n+k) - 2k` is maximal at `k=0`). -/
+example : ∀ n ∈ Finset.range 5, rate1.deconvNat rate2 n = n := by native_decide
+
 /-- **Lemma 4.4, balanced case** — the convolution is ultimately pseudo-periodic. When the two
 operands have equal asymptotic slope (`(d/d_f)·c_f = (d/d_g)·c_g = c`, the book's balanced case),
 their (min,plus) convolution satisfies the pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` with
