@@ -262,4 +262,75 @@ theorem cosScaleProcess_not_stationary [IsProbabilityMeasure μ] {c : ℝ} {Z : 
     · linarith
   rw [sq]; exact hcc
 
+/-! ## Problem 1.7(a): the MA(2)-type process -/
+
+/-- Bilinear expansion of `cov[b•U + c•V, b•W + c•Y]` over four functions. -/
+private theorem cov_bc_four [IsFiniteMeasure μ] {U V W Y : Ω → ℝ}
+    (hU : MemLp U 2 μ) (hV : MemLp V 2 μ) (hW : MemLp W 2 μ) (hY : MemLp Y 2 μ) (b c : ℝ) :
+    cov[b • U + c • V, b • W + c • Y; μ]
+      = b * b * cov[U, W; μ] + b * c * cov[U, Y; μ]
+        + c * b * cov[V, W; μ] + c * c * cov[V, Y; μ] := by
+  rw [covariance_add_left (hU.const_smul b) (hV.const_smul c)
+        ((hW.const_smul b).add (hY.const_smul c)),
+      covariance_add_right (hU.const_smul b) (hW.const_smul b) (hY.const_smul c),
+      covariance_add_right (hV.const_smul c) (hW.const_smul b) (hY.const_smul c),
+      covariance_smul_left, covariance_smul_left, covariance_smul_left, covariance_smul_left,
+      covariance_smul_right, covariance_smul_right, covariance_smul_right, covariance_smul_right]
+  ring
+
+/-- **Problem 1.7(a)**: the process `Xₜ = a + b Zₜ + c Zₜ₋₂` (mean `a`, MA(2)-type). -/
+noncomputable def maProcess2 (a b c : ℝ) (Z : ℤ → Ω → ℝ) : ℤ → Ω → ℝ :=
+  fun t ω => a + (b • Z t + c • Z (t - 2)) ω
+
+/-- The autocovariance of `Xₜ = a + bZₜ + cZₜ₋₂` (the constant `a` drops out). -/
+theorem maProcess2_cov [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (r s : ℤ) :
+    cov[maProcess2 a b c Z r, maProcess2 a b c Z s; μ]
+      = b * b * (if r = s then σ2 else 0) + b * c * (if r = s - 2 then σ2 else 0)
+        + c * b * (if r - 2 = s then σ2 else 0) + c * c * (if r - 2 = s - 2 then σ2 else 0) := by
+  have hL : ∀ t : ℤ, Integrable (b • Z t + c • Z (t - 2)) μ := fun t =>
+    (((hZ t).const_smul b).add ((hZ (t - 2)).const_smul c)).integrable (by norm_num)
+  show cov[fun ω => a + (b • Z r + c • Z (r - 2)) ω,
+      fun ω => a + (b • Z s + c • Z (s - 2)) ω; μ] = _
+  rw [covariance_const_add_left (hL r), covariance_const_add_right (hL s),
+      cov_bc_four (hZ r) (hZ (r - 2)) (hZ s) (hZ (s - 2)),
+      huc r s, huc r (s - 2), huc (r - 2) s, huc (r - 2) (s - 2)]
+
+/-- **Problem 1.7(a)**: the MA(2)-type variance `γ(0) = (b² + c²) σ²`. -/
+theorem maProcess2_acvf_zero [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) : cov[maProcess2 a b c Z s, maProcess2 a b c Z s; μ] = (b ^ 2 + c ^ 2) * σ2 := by
+  rw [maProcess2_cov hZ huc, if_pos (rfl : s = s), if_neg (show ¬(s = s - 2) by omega),
+    if_neg (show ¬(s - 2 = s) by omega), if_pos (rfl : s - 2 = s - 2)]
+  ring
+
+/-- **Problem 1.7(a)**: the lag-1 autocovariance vanishes, `γ(1) = 0`. -/
+theorem maProcess2_acvf_one [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) : cov[maProcess2 a b c Z (s + 1), maProcess2 a b c Z s; μ] = 0 := by
+  rw [maProcess2_cov hZ huc, if_neg (show ¬(s + 1 = s) by omega),
+    if_neg (show ¬(s + 1 = s - 2) by omega), if_neg (show ¬(s + 1 - 2 = s) by omega),
+    if_neg (show ¬(s + 1 - 2 = s - 2) by omega)]
+  ring
+
+/-- **Problem 1.7(a)**: the lag-2 autocovariance `γ(2) = b c σ²`. -/
+theorem maProcess2_acvf_two [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) : cov[maProcess2 a b c Z (s + 2), maProcess2 a b c Z s; μ] = b * c * σ2 := by
+  rw [maProcess2_cov hZ huc, if_neg (show ¬(s + 2 = s) by omega),
+    if_neg (show ¬(s + 2 = s - 2) by omega), if_pos (show s + 2 - 2 = s by omega),
+    if_neg (show ¬(s + 2 - 2 = s - 2) by omega)]
+  ring
+
+/-- **Problem 1.7(a)**: the autocovariance vanishes at lags `≥ 3`. -/
+theorem maProcess2_acvf_ge_three [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s h : ℤ) (hh : 3 ≤ h) :
+    cov[maProcess2 a b c Z (s + h), maProcess2 a b c Z s; μ] = 0 := by
+  rw [maProcess2_cov hZ huc, if_neg (show ¬(s + h = s) by omega),
+    if_neg (show ¬(s + h = s - 2) by omega), if_neg (show ¬(s + h - 2 = s) by omega),
+    if_neg (show ¬(s + h - 2 = s - 2) by omega)]
+  ring
+
 end DeepWiki.TimeSeries

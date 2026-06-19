@@ -322,6 +322,19 @@ theorem ex_1_7_c [IsFiniteMeasure μ] {Z₁ Z₂ : Ω → ℝ} {c σ2 : ℝ}
     acvf (cosProcess Z₁ Z₂ c) μ r s = σ2 * Real.cos (c * ((r : ℝ) - (s : ℝ))) :=
   cosProcess_acvf h1 h2 hv1 hv2 h12 r s
 
+/-- **Problem 1.7(a)** (p.40): `Xₜ = a + bZₜ + cZₜ₋₂` is stationary with mean `a` and
+autocovariance `γ(0) = (b²+c²)σ²`, `γ(±2) = bcσ²`, and `γ(h) = 0` for other lags `≠ 0, ±2`.
+The library's `maProcess2`, `maProcess2_acvf_zero`/`_one`/`_two`/`_ge_three`. -/
+theorem ex_1_7_a [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Zs : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MeasureTheory.MemLp (Zs i) 2 μ)
+    (huc : ∀ i j, cov[Zs i, Zs j; μ] = if i = j then σ2 else 0) (s : ℤ) :
+    cov[maProcess2 a b c Zs s, maProcess2 a b c Zs s; μ] = (b ^ 2 + c ^ 2) * σ2 ∧
+      cov[maProcess2 a b c Zs (s + 2), maProcess2 a b c Zs s; μ] = b * c * σ2 ∧
+      cov[maProcess2 a b c Zs (s + 1), maProcess2 a b c Zs s; μ] = 0 ∧
+      (∀ h, 3 ≤ h → cov[maProcess2 a b c Zs (s + h), maProcess2 a b c Zs s; μ] = 0) :=
+  ⟨maProcess2_acvf_zero hZ huc s, maProcess2_acvf_two hZ huc s, maProcess2_acvf_one hZ huc s,
+    fun h hh => maProcess2_acvf_ge_three hZ huc s h hh⟩
+
 /-- **Problem 1.7(e)** (p.40): `Xₜ = Z·cos(ct)` is **not** (covariance) stationary when
 `cos²c ≠ 1` and `Var(Z) > 0`, since its variance `cos²(ct)·Var(Z)` is not constant in `t`.
 The library's `cosScaleProcess`, `cosScaleProcess_not_stationary`. -/
