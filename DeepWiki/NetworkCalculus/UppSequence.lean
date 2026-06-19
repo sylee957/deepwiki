@@ -235,6 +235,21 @@ theorem convNat_eq [Add V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) :
     ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩ (fun k => r.evalNat k + s.evalNat (n - k))
   exact ⟨k, Nat.lt_succ_iff.mp (Finset.mem_range.mp hk), heq⟩
 
+/-- **(min,plus) convolution is commutative**: `(f ⊗ g)(n) = (g ⊗ f)(n)`. -/
+theorem convNat_comm [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) :
+    r.convNat s n = s.convNat r n := by
+  refine le_antisymm ?_ ?_
+  · obtain ⟨k, hk, hke⟩ := s.convNat_eq r n
+    rw [hke]
+    calc r.convNat s n ≤ r.evalNat (n - k) + s.evalNat (n - (n - k)) := r.convNat_le s (by omega)
+      _ = r.evalNat (n - k) + s.evalNat k := by rw [show n - (n - k) = k from by omega]
+      _ = s.evalNat k + r.evalNat (n - k) := by rw [add_comm]
+  · obtain ⟨k, hk, hke⟩ := r.convNat_eq s n
+    rw [hke]
+    calc s.convNat r n ≤ s.evalNat (n - k) + r.evalNat (n - (n - k)) := s.convNat_le r (by omega)
+      _ = s.evalNat (n - k) + r.evalNat k := by rw [show n - (n - k) = k from by omega]
+      _ = r.evalNat k + s.evalNat (n - k) := by rw [add_comm]
+
 /-- **Lemma 4.4, balanced case** — the convolution is ultimately pseudo-periodic. When the two
 operands have equal asymptotic slope (`(d/d_f)·c_f = (d/d_g)·c_g = c`, the book's balanced case),
 their (min,plus) convolution satisfies the pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` with
