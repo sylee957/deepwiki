@@ -77,12 +77,20 @@ density** `f(λ) = (σ²/2π) |θ(e^{-iλ})|² / |φ(e^{-iλ})|²` (eq 4.4.5).
 Both proofs run through the `MA(∞)` representation and the spectral representation of the
 process (infra-blocked). The spectral-density **formula** itself is the algebraic
 `armaSpectralDensity` below, with its non-negativity and the white-noise case (`φ = θ = 1`,
-constant `σ²/2π`) proved; **Example 4.4.1** (the MA(1) density `(σ²/2π)(1 + 2θcos λ + θ²)`) is a
-concrete `normSq (1 + θe^{-iλ})` computation, deferred. -/
+constant `σ²/2π`), and **Example 4.4.1** (the MA(1) density `(σ²/2π)(1 + 2θ₁cos λ + θ₁²)`) all
+proved. -/
 
 /-- **§4.4, Theorem 4.4.2 (eq 4.4.5)**: the rational spectral density of an ARMA(p,q) process,
 `f(λ) = (σ²/2π) · |θ(e^{-iλ})|² / |φ(e^{-iλ})|²`. The library's `armaSpectralDensity` (with
 `armaSpectralDensity_nonneg` and `armaSpectralDensity_one_one`, the white-noise constant). -/
 noncomputable abbrev thm_4_4_2 := @DeepWiki.TimeSeries.armaSpectralDensity
+
+/-- **Example 4.4.1** (§4.4, p.123): the spectral density of an `MA(1)` process
+`Xₜ = Zₜ + θ₁Zₜ₋₁` (`φ = 1`, `θ = 1 + θ₁z`) is `(σ²/2π)(1 + 2θ₁ cos λ + θ₁²)`. The library's
+`armaSpectralDensity_ma1`. -/
+theorem ex_4_4_1 (θ1 σ2 lam : ℝ) :
+    armaSpectralDensity 1 (1 + Polynomial.C θ1 * Polynomial.X) σ2 lam
+      = σ2 / (2 * Real.pi) * (1 + 2 * θ1 * Real.cos lam + θ1 ^ 2) :=
+  armaSpectralDensity_ma1 θ1 σ2 lam
 
 end DeepWiki.Ts

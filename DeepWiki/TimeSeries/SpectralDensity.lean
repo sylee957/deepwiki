@@ -37,4 +37,30 @@ theorem armaSpectralDensity_one_one (σ2 lam : ℝ) :
     armaSpectralDensity 1 1 σ2 lam = σ2 / (2 * Real.pi) := by
   simp [armaSpectralDensity, Complex.normSq_one]
 
+/-- `|1 + θ₁ e^{-iλ}|² = 1 + 2θ₁ cos λ + θ₁²` — the squared modulus of the MA(1) transfer
+function (`e^{-iλ} = cos λ − i sin λ`). -/
+theorem normSq_one_add_ofReal_mul_expNegI (θ1 lam : ℝ) :
+    Complex.normSq (1 + (θ1 : ℂ) * Complex.exp (-Complex.I * (lam : ℂ)))
+      = 1 + 2 * θ1 * Real.cos lam + θ1 ^ 2 := by
+  have hzre : (Complex.exp (-Complex.I * (lam : ℂ))).re = Real.cos lam := by
+    rw [Complex.exp_re]; simp [Real.cos_neg]
+  have hzim : (Complex.exp (-Complex.I * (lam : ℂ))).im = -Real.sin lam := by
+    rw [Complex.exp_im]; simp [Real.sin_neg]
+  rw [Complex.normSq_apply]
+  simp only [Complex.add_re, Complex.add_im, Complex.one_re, Complex.one_im, Complex.mul_re,
+    Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, hzre, hzim]
+  nlinarith [Real.sin_sq_add_cos_sq lam]
+
+/-- **Example 4.4.1**: the spectral density of an `MA(1)` process `Xₜ = Zₜ + θ₁Zₜ₋₁`
+(`φ = 1`, `θ = 1 + θ₁z`) is `f(λ) = (σ²/2π)(1 + 2θ₁ cos λ + θ₁²)`. -/
+theorem armaSpectralDensity_ma1 (θ1 σ2 lam : ℝ) :
+    armaSpectralDensity 1 (1 + Polynomial.C θ1 * Polynomial.X) σ2 lam
+      = σ2 / (2 * Real.pi) * (1 + 2 * θ1 * Real.cos lam + θ1 ^ 2) := by
+  rw [armaSpectralDensity, map_one, Complex.normSq_one, div_one]
+  congr 1
+  rw [show aeval (Complex.exp (-Complex.I * (lam : ℂ))) (1 + Polynomial.C θ1 * Polynomial.X)
+        = 1 + (θ1 : ℂ) * Complex.exp (-Complex.I * (lam : ℂ)) by
+      simp [map_add, map_mul, aeval_C, aeval_X, Complex.coe_algebraMap]]
+  exact normSq_one_add_ofReal_mul_expNegI θ1 lam
+
 end DeepWiki.TimeSeries
