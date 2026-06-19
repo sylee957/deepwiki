@@ -97,6 +97,23 @@ theorem IsWeaklyStationary.acvfStat_neg (hX : IsWeaklyStationary X μ) (h : ℤ)
   rw [e1, e2] at hs
   rw [acvfStat_apply, acvfStat_apply, hs, covariance_comm]
 
+/-- `Finset` form of non-negative definiteness: `∑_{i,j ∈ s} xᵢ xⱼ κ(i − j) ≥ 0`
+for any finite set of integer points `s` and reals `x`. -/
+theorem IsNonnegDefinite.finset {κ : ℤ → ℝ} (h : IsNonnegDefinite κ) (s : Finset ℤ)
+    (x : ℤ → ℝ) : 0 ≤ ∑ i ∈ s, ∑ j ∈ s, x i * x j * κ (i - j) := by
+  have key := h s.card (fun k => x ↑(s.equivFin.symm k)) (fun k => (↑(s.equivFin.symm k) : ℤ))
+  rw [show (∑ i ∈ s, ∑ j ∈ s, x i * x j * κ (i - j))
+        = ∑ k, ∑ l, x ↑(s.equivFin.symm k) * x ↑(s.equivFin.symm l)
+            * κ (↑(s.equivFin.symm k) - ↑(s.equivFin.symm l)) from ?_]
+  · exact key
+  · rw [← Finset.sum_coe_sort s (fun i => ∑ j ∈ s, x i * x j * κ (i - j)),
+        ← Equiv.sum_comp s.equivFin.symm
+          (fun i : s => ∑ j ∈ s, x ↑i * x j * κ (↑i - j))]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    rw [← Finset.sum_coe_sort s
+          (fun j => x ↑(s.equivFin.symm k) * x j * κ (↑(s.equivFin.symm k) - j)),
+        ← Equiv.sum_comp s.equivFin.symm]
+
 /-- **Non-negative definiteness** (§1.5): for any finite collection of lags `t i`
 and reals `a i`, `∑ᵢⱼ aᵢ aⱼ γ(tᵢ − tⱼ) ≥ 0`. It is the variance of the linear
 combination `∑ᵢ aᵢ X_{tᵢ}`, expanded by bilinearity of the covariance. -/
