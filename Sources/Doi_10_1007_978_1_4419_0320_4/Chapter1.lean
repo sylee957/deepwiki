@@ -3,6 +3,7 @@ import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
 import DeepWiki.TimeSeries.GaussianTimeSeries
 import DeepWiki.TimeSeries.LinearFilters
+import DeepWiki.TimeSeries.StationaryGaussianProcess
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -110,14 +111,17 @@ theorem acvf_nonnegDefinite [MeasureTheory.IsProbabilityMeasure μ]
     (hX : IsWeaklyStationary X μ) : IsNonnegDefinite (acvfStat X μ) :=
   hX.isNonnegDefinite_acvfStat
 
-/-- **Theorem 1.5.2** (§1.5, p.27), characterization of autocovariance functions
-(forward direction): the autocovariance of a stationary process is even and
-non-negative definite. The converse (every such function is an ACVF, via
-Kolmogorov's theorem) is not formalized. The library's
-`IsWeaklyStationary.even_and_isNonnegDefinite_acvfStat`. -/
-theorem thm_1_5_2 [MeasureTheory.IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ) :
-    (∀ h : ℤ, acvfStat X μ h = acvfStat X μ (-h)) ∧ IsNonnegDefinite (acvfStat X μ) :=
-  hX.even_and_isNonnegDefinite_acvfStat
+/-- **Theorem 1.5.2** (§1.5, p.27), characterization of autocovariance functions: a
+function `κ : ℤ → ℝ` is the autocovariance of a stationary process iff it is even
+and non-negative definite. The converse (existence) is constructed from a Gaussian
+projective family via the Kolmogorov extension theorem (vendored in
+`DeepWiki/MeasureTheory/`). The library's `isACVF_iff_even_and_isNonnegDefinite`. -/
+theorem thm_1_5_2 (κ : ℤ → ℝ) :
+    (∃ (ν : MeasureTheory.Measure (ℤ → ℝ)) (X : ℤ → (ℤ → ℝ) → ℝ),
+        MeasureTheory.IsProbabilityMeasure ν ∧ IsWeaklyStationary X ν ∧
+        ∀ h, acvfStat X ν h = κ h)
+      ↔ (∀ h, κ (-h) = κ h) ∧ IsNonnegDefinite κ :=
+  isACVF_iff_even_and_isNonnegDefinite κ
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
