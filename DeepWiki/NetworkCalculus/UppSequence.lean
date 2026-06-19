@@ -259,6 +259,12 @@ theorem isUPPWith_toFun [AddMonoid V] (r : UppSeq V) :
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
 def demoSeq : UppSeq ℕ := ⟨[0, 1, 2], 3, 2, by decide, by decide⟩
 
+/-- Purely-periodic rate sequence `f(n) = n` (no transient: `vals.length = period = 1`, increment `1`). -/
+def rate1 : UppSeq ℕ := ⟨[0], 1, 1, by decide, by decide⟩
+
+/-- Purely-periodic rate sequence `f(n) = 2n` (no transient: `vals.length = period = 1`, increment `2`). -/
+def rate2 : UppSeq ℕ := ⟨[0], 2, 1, by decide, by decide⟩
+
 example : demoSeq.evalNat 2 = 2 := by native_decide
 example : demoSeq.evalNat 3 = 4 := by native_decide  -- f(1) + 3
 example : demoSeq.evalNat 4 = 5 := by native_decide  -- f(2) + 3
@@ -511,9 +517,159 @@ theorem convNat_add_lcm_ge [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid
             rw [← hsstep (n - k) (by omega), show n - k + d = n + d - k from by omega]
     exact le_trans (add_le_add_right (min_le_right cr cs) _) hbound
 
+/-- **Lemma 4.4, `≤` direction — no-transient slower operand.** When the smaller-increment operand
+`r` (`cr ≤ cs`) has no transient (`r.vals.length ≤ r.period`, so `r` is pseudo-periodic from index
+`0`), the convolution grows by at most `min(cr,cs) = cr` per common period: `(f⊗g)(n+d) ≤ (f⊗g)(n) +
+cr`. The minimizer of `(f⊗g)(n)` lies in `r`'s periodic région automatically (rank `= 0`), so the
+`+d` time-shift pushes straight into `r` — no dominant-slope crossover needed. (The general `≤`,
+where the minimizer can sit in `r`'s transient, is the deferred hard case.) -/
+theorem convNat_add_lcm_le_of_noTransient [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hrf : r.vals.length ≤ r.period)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            ≤ (Nat.lcm r.period s.period / s.period) • s.incr) (n : ℕ) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      ≤ r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  set d := Nat.lcm r.period s.period with hd
+  set cr := (d / r.period) • r.incr with hcr
+  have hrstep : ∀ m, r.evalNat (m + d) = r.evalNat m + cr := fun m => by
+    simpa using r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) 1 (by omega)
+  obtain ⟨k, hk, hke⟩ := r.convNat_eq s n
+  rw [min_eq_left hslope]
+  calc r.convNat s (n + d)
+      ≤ r.evalNat (k + d) + s.evalNat ((n + d) - (k + d)) := r.convNat_le s (by omega)
+    _ = r.evalNat (k + d) + s.evalNat (n - k) := by rw [show (n + d) - (k + d) = n - k from by omega]
+    _ = (r.evalNat k + cr) + s.evalNat (n - k) := by rw [hrstep k]
+    _ = (r.evalNat k + s.evalNat (n - k)) + cr := by abel
+    _ = r.convNat s n + cr := by rw [hke]
+
+/-- **Lemma 4.4 (`=`) — no-transient slower operand.** Combining the general `≥`
+(`convNat_add_lcm_ge`) with the no-transient `≤`: when the smaller-increment operand `r` (`cr ≤ cs`)
+has no transient, the convolution is exactly pseudo-periodic past rank `T_s + d`, with the book's
+increment `min(cr,cs)`: `(f⊗g)(n+d) = (f⊗g)(n) + min(cr,cs)`. -/
+theorem convNat_add_lcm_of_noTransient [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hrf : r.vals.length ≤ r.period)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    {n : ℕ} (hn : (s.vals.length - s.period) + Nat.lcm r.period s.period ≤ n) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) :=
+  le_antisymm (convNat_add_lcm_le_of_noTransient r s hrf hslope n)
+    (convNat_add_lcm_ge r s (by omega))
+
+/-- **Lemma 4.4 (`=`) — no-transient slower operand on the right.** Symmetric to
+`convNat_add_lcm_of_noTransient` via commutativity (`convNat_comm`): when the smaller-increment
+operand is `s` (the second, `cs ≤ cr`) and `s` has no transient, the convolution is exactly
+pseudo-periodic past rank `T_r + d`, with increment `min(cr,cs)`. -/
+theorem convNat_add_lcm_of_noTransient_right [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hsf : s.vals.length ≤ s.period)
+    (hslope : (Nat.lcm r.period s.period / s.period) • s.incr
+            ≤ (Nat.lcm r.period s.period / r.period) • r.incr)
+    {n : ℕ} (hn : (r.vals.length - r.period) + Nat.lcm r.period s.period ≤ n) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  have hlcm : Nat.lcm s.period r.period = Nat.lcm r.period s.period := Nat.lcm_comm s.period r.period
+  have key := convNat_add_lcm_of_noTransient s r hsf (by rw [hlcm]; exact hslope)
+    (n := n) (by rw [hlcm]; exact hn)
+  rw [hlcm] at key
+  rw [convNat_comm r s (n + Nat.lcm r.period s.period), convNat_comm r s n, min_comm]
+  exact key
+
+/-- **Minimizer-region lemma** — the crux of the general non-balanced Lemma 4.4. When `r` has
+strictly smaller asymptotic slope than `s` (`cr < cs`) and both are nondecreasing, the convolution
+`(r⊗s)(n)` is, for large `n`, attained at some `k` in `r`'s *periodic* région (`rank_r ≤ k`): a
+transient index `k₀ < rank_r` forces `s(n-k₀) ~ slope_s·n`, which the periodic-region competitor
+`k = n - rank_r` (giving `r(n-rank_r)+s(rank_r) ~ slope_r·n`) eventually beats. Both sides of that
+comparison land at the *same* index `n - rank_r`, so the offset crossover
+(`evalNat_add_const_eventually_le`) closes it directly. -/
+theorem convNat_minimizer_periodic [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V]
+    [Archimedean V] (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            < (Nat.lcm r.period s.period / s.period) • s.incr) :
+    ∃ N, ∀ n, N ≤ n → ∃ k, r.vals.length - r.period ≤ k ∧ k ≤ n ∧
+      r.convNat s n = r.evalNat k + s.evalNat (n - k) := by
+  set Tr := r.vals.length - r.period with hTr
+  obtain ⟨N0, hN0⟩ := evalNat_add_const_eventually_le r s (s.evalNat Tr - r.evalNat 0) hslope
+  refine ⟨max N0 Tr + Tr, fun n hn => ?_⟩
+  have hnTr : Tr ≤ n := by omega
+  have hn2 : Tr ≤ n - Tr := by omega
+  have hm0 : N0 ≤ n - Tr := by omega
+  have hIcc : (Finset.Icc Tr n).Nonempty := ⟨Tr, Finset.mem_Icc.mpr ⟨le_rfl, hnTr⟩⟩
+  obtain ⟨k, hkmem, hkeq⟩ := Finset.exists_mem_eq_inf' hIcc (fun k => r.evalNat k + s.evalNat (n - k))
+  rw [Finset.mem_Icc] at hkmem
+  refine ⟨k, hkmem.1, hkmem.2, le_antisymm (r.convNat_le s hkmem.2) ?_⟩
+  obtain ⟨j, hj, hje⟩ := r.convNat_eq s n
+  rw [hje]
+  by_cases hjT : Tr ≤ j
+  · rw [← hkeq]; exact Finset.inf'_le _ (Finset.mem_Icc.mpr ⟨hjT, hj⟩)
+  · rw [not_le] at hjT
+    have hcomp : r.evalNat k + s.evalNat (n - k) ≤ r.evalNat (n - Tr) + s.evalNat Tr := by
+      rw [← hkeq]
+      have h2 := Finset.inf'_le (fun k => r.evalNat k + s.evalNat (n - k))
+        (show n - Tr ∈ Finset.Icc Tr n from Finset.mem_Icc.mpr ⟨hn2, by omega⟩)
+      simpa [show n - (n - Tr) = Tr from by omega] using h2
+    have hcross : r.evalNat (n - Tr) + s.evalNat Tr ≤ r.evalNat 0 + s.evalNat (n - Tr) := by
+      have h := hN0 (n - Tr) hm0
+      calc r.evalNat (n - Tr) + s.evalNat Tr
+          = (r.evalNat (n - Tr) + (s.evalNat Tr - r.evalNat 0)) + r.evalNat 0 := by abel
+        _ ≤ s.evalNat (n - Tr) + r.evalNat 0 := by gcongr
+        _ = r.evalNat 0 + s.evalNat (n - Tr) := by abel
+    calc r.evalNat k + s.evalNat (n - k)
+        ≤ r.evalNat (n - Tr) + s.evalNat Tr := hcomp
+      _ ≤ r.evalNat 0 + s.evalNat (n - Tr) := hcross
+      _ ≤ r.evalNat j + s.evalNat (n - j) := add_le_add (hrmono (Nat.zero_le j)) (hsmono (by omega))
+
+/-- **Lemma 4.4, `≤` direction — general (non-balanced) case.** For nondecreasing `r, s` with `r`
+strictly slower (`cr < cs`), the convolution grows by at most `min(cr,cs) = cr` per common period,
+eventually: `∃ N, ∀ n ≥ N, (r⊗s)(n+d) ≤ (r⊗s)(n) + cr`. Via the minimizer-region lemma the minimizer
+of `(r⊗s)(n)` lies in `r`'s periodic région, so the `+d` time-shift pushes straight into `r`. -/
+theorem convNat_add_lcm_le [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]
+    (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            < (Nat.lcm r.period s.period / s.period) • s.incr) :
+    ∃ N, ∀ n, N ≤ n → r.convNat s (n + Nat.lcm r.period s.period)
+      ≤ r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  obtain ⟨N, hN⟩ := convNat_minimizer_periodic r s hrmono hsmono hslope
+  refine ⟨N, fun n hn => ?_⟩
+  obtain ⟨k, hkT, hkn, hkeq⟩ := hN n hn
+  set d := Nat.lcm r.period s.period with hd
+  set cr := (d / r.period) • r.incr with hcr
+  have hrstep : r.evalNat (k + d) = r.evalNat k + cr := by
+    simpa using r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) 1 hkT
+  rw [min_eq_left (le_of_lt hslope)]
+  calc r.convNat s (n + d)
+      ≤ r.evalNat (k + d) + s.evalNat ((n + d) - (k + d)) := r.convNat_le s (by omega)
+    _ = r.evalNat (k + d) + s.evalNat (n - k) := by rw [show (n + d) - (k + d) = n - k from by omega]
+    _ = (r.evalNat k + cr) + s.evalNat (n - k) := by rw [hrstep]
+    _ = (r.evalNat k + s.evalNat (n - k)) + cr := by abel
+    _ = r.convNat s n + cr := by rw [hkeq]
+
+/-- **Lemma 4.4, `=` — general (non-balanced) closed form.** For nondecreasing `r, s` with `r`
+strictly slower, the convolution is ultimately pseudo-periodic with period `d = lcm` and the book's
+increment `min(cr,cs)`: `∃ N, ∀ n ≥ N, (r⊗s)(n+d) = (r⊗s)(n) + min(cr,cs)`. Combines the general `≤`
+(minimizer-region) with the general `≥` (`convNat_add_lcm_ge`) — the headline Chapter 4 result. -/
+theorem convNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]
+    (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            < (Nat.lcm r.period s.period / s.period) • s.incr) :
+    ∃ N, ∀ n, N ≤ n → r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  obtain ⟨N, hN⟩ := convNat_add_lcm_le r s hrmono hsmono hslope
+  exact ⟨max N ((r.vals.length - r.period) + (s.vals.length - s.period) + Nat.lcm r.period s.period),
+    fun n hn => le_antisymm (hN n (by omega)) (convNat_add_lcm_ge r s (by omega))⟩
+
 /-- Sanity check (gate-verified): `(demoSeq ⊗ demoSeq)(3) = 3` and `(·)(5) = 6`
 (`f = 0,1,2,4,5,7,…`; e.g. at `n=3` the min is `f(1)+f(2) = 1+2`). -/
 example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by native_decide
+
+/-- Sanity (gate-verified): the no-transient closed form on `rate1 (n)=n` ⊗ `rate2 (n)=2n` — both
+purely periodic — steps by `min(1,2)=1` per period (`d = lcm 1 1 = 1`): `(r⊗s)(n+1) = (r⊗s)(n)+1`. -/
+example : ∀ n ∈ Finset.range 5, rate1.convNat rate2 (n + 1) = rate1.convNat rate2 n + 1 := by
+  native_decide
 
 /-- Sanity (gate-verified): the convolution's pseudo-period step from rank `T = 4`
 (`demoSeq` balanced with itself, `d = 2`, `c = 3`): `(f⊗f)(n+2) = (f⊗f)(n) + 3` for `n ≥ 4`. -/
