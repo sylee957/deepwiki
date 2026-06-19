@@ -7,6 +7,8 @@ import DeepWiki.TimeSeries.StationaryGaussianProcess
 import DeepWiki.TimeSeries.FiniteDimensionalDistributions
 import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.MultivariateNormal
+import Mathlib.Analysis.Matrix.Spectrum
+import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -205,10 +207,21 @@ theorem prop_1_6_2 [MeasureTheory.IsProbabilityMeasure μ] {n : ℕ} {Y : Fin n 
     (hY : ∀ i, MeasureTheory.MemLp (Y i) 2 μ) : (covMatrix Y μ).PosSemidef :=
   posSemidef_covMatrix hY
 
+/-- **Proposition 1.6.3** (§1.6, p.33), spectral decomposition: a symmetric (Hermitian)
+matrix factors as `Σ = PΛPᵀ` with `P` orthogonal and `Λ = diag(eigenvalues)` (1.6.7) — a
+standard matrix-theory result. Mathlib's `Matrix.IsHermitian.spectral_theorem`
+(`P = eigenvectorUnitary`, the conjugation `conjStarAlgAut` of `diagonal eigenvalues`). -/
+alias prop_1_6_3 := Matrix.IsHermitian.spectral_theorem
+
 /-- **Definition 1.6.1** (§1.6, p.33–34), the multivariate normal distribution `N(μ, Σ)`:
 the law of `X = a + BZ` for a standard normal vector `Z` (mean `μ`, covariance matrix `Σ`).
 Mathlib's `ProbabilityTheory.multivariateGaussian μ S` on `EuclideanSpace ℝ ι`. -/
 noncomputable abbrev def_1_6_1 := @ProbabilityTheory.multivariateGaussian
+
+/-- **Proposition 1.6.4** (§1.6, p.34), the characteristic function of the multivariate
+normal `N(μ, Σ)` is `φ_Y(u) = exp(iu'μ − ½ u'Σu)` (1.6.11). Mathlib's
+`charFun_multivariateGaussian`. -/
+alias prop_1_6_4 := ProbabilityTheory.charFun_multivariateGaussian
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
