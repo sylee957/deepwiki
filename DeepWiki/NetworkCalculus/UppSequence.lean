@@ -1198,5 +1198,42 @@ theorem closureApproxNat_le_self (f : UppSeq (WithTop ℤ)) {N : ℕ} (hN : 1 �
   rw [← iterConvNat_one f n]
   exact Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (by omega))
 
+/-- For an **idempotent** (sub-additive) `f` — `f ⊗ f = f` — every iterate collapses: `f^⊗ᵐ = f`
+for all `m ≥ 1` (induction: `f^⊗(m+1) = f ⊗ f^⊗ᵐ = f ⊗ f = f`). -/
+theorem iterConvNat_eq_self_of_idem (f : UppSeq (WithTop ℤ))
+    (hidem : ∀ n, f.convNat f n = f.evalNat n) :
+    ∀ m, 1 ≤ m → ∀ n, iterConvNat f m n = f.evalNat n := by
+  intro m
+  induction m with
+  | zero => intro h; omega
+  | succ k ih =>
+    intro _ n
+    rcases Nat.eq_zero_or_pos k with rfl | hk1
+    · exact iterConvNat_one f n
+    · rw [show iterConvNat f (k + 1) n
+            = (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+                (fun j => f.evalNat j + iterConvNat f k (n - j)) from rfl,
+        show (fun j => f.evalNat j + iterConvNat f k (n - j))
+            = (fun j => f.evalNat j + f.evalNat (n - j)) from
+          funext fun j => by rw [ih hk1 (n - j)]]
+      exact hidem n
+
+/-- **Sub-additive closure of an idempotent `f`**: `f* = δ₀ ⊓ f`. For `f ⊗ f = f` (e.g. a
+sub-additive service curve) the closure stabilizes at one iteration — `⨅_{m≤N} f^⊗ᵐ = δ₀ ⊓ f` for
+every `N ≥ 1` — so the closure is computed exactly with no iteration bound needed. (The general
+non-idempotent case, where the iterates genuinely descend, needs the stabilization theory of Lemma
+4.7–4.9 and remains open.) -/
+theorem closureApproxNat_idem (f : UppSeq (WithTop ℤ)) (hidem : ∀ n, f.convNat f n = f.evalNat n)
+    {N : ℕ} (hN : 1 ≤ N) (n : ℕ) :
+    closureApproxNat f N n = Min.min (delta0.evalNat n) (f.evalNat n) := by
+  refine le_antisymm
+    (le_min (closureApproxNat_le_delta0 f N n) (closureApproxNat_le_self f hN n)) ?_
+  apply Finset.le_inf'
+  intro m _
+  rcases Nat.eq_zero_or_pos m with rfl | hm1
+  · exact min_le_left _ _
+  · rw [iterConvNat_eq_self_of_idem f hidem m hm1 n]
+    exact min_le_right _ _
+
 end UppSeq
 end DeepWiki
