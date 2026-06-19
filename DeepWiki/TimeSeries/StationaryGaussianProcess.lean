@@ -94,6 +94,19 @@ lemma isProjectiveMeasureFamily_gaussianProjectiveFamily
   · exact Finset.measurable_restrict₂ _
   · fun_prop
 
+/-- The covariance of two coordinate evaluations under `gaussianProjectiveFamily κ I`
+is `κ(i − j)`. -/
+lemma covariance_eval_gaussianProjectiveFamily (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) (I : Finset ℤ) (i j : I) :
+    cov[fun x => x i, fun x => x j; gaussianProjectiveFamily κ I] = κ ((i : ℤ) - j) := by
+  rw [gaussianProjectiveFamily, covariance_map_equiv,
+    show ((fun x : I → ℝ => x i) ∘ ⇑(MeasurableEquiv.toLp 2 (I → ℝ)).symm)
+        = (fun y : EuclideanSpace ℝ I => y i) from rfl,
+    show ((fun x : I → ℝ => x j) ∘ ⇑(MeasurableEquiv.toLp 2 (I → ℝ)).symm)
+        = (fun y : EuclideanSpace ℝ I => y j) from rfl,
+    covariance_eval_multivariateGaussian (posSemidef_acvfCovMatrix heven hnd I),
+    acvfCovMatrix_apply]
+
 /-! ## The stationary Gaussian process measure (Kolmogorov extension) -/
 
 /-- The law on `ℤ → ℝ` of a process whose finite-dimensional distributions are the
@@ -115,5 +128,19 @@ lemma isProjectiveLimit_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) 
 instance isProbabilityMeasure_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
     (hnd : IsNonnegDefinite κ) : IsProbabilityMeasure (stationaryGaussianMeasure heven hnd) :=
   isProbabilityMeasure_projectiveLimit _
+
+/-- The autocovariance of the coordinate process under `stationaryGaussianMeasure` is
+`κ`: `Cov(ω ↦ ω r, ω ↦ ω s) = κ(r − s)`. The covariance is pushed through the
+projective-limit marginal over `{r, s}` to the finite-dimensional Gaussian. -/
+lemma covariance_coordinate_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) (r s : ℤ) :
+    cov[fun ω => ω r, fun ω => ω s; stationaryGaussianMeasure heven hnd] = κ (r - s) := by
+  have hr : r ∈ ({r, s} : Finset ℤ) := Finset.mem_insert_self r {s}
+  have hs : s ∈ ({r, s} : Finset ℤ) := Finset.mem_insert_of_mem (Finset.mem_singleton_self s)
+  have hpl := isProjectiveLimit_stationaryGaussianMeasure heven hnd ({r, s} : Finset ℤ)
+  have key := covariance_eval_gaussianProjectiveFamily heven hnd ({r, s} : Finset ℤ) ⟨r, hr⟩ ⟨s, hs⟩
+  rw [← hpl, covariance_map (measurable_pi_apply _).aestronglyMeasurable
+      (measurable_pi_apply _).aestronglyMeasurable (by fun_prop)] at key
+  exact key
 
 end DeepWiki.TimeSeries
