@@ -226,4 +226,23 @@ theorem exists_isWeaklyStationary_acvfStat_eq (heven : ∀ h : ℤ, κ (-h) = κ
     isWeaklyStationary_stationaryGaussianMeasure heven hnd,
     acvfStat_stationaryGaussianMeasure heven hnd⟩
 
+/-- **Theorem 1.5.2** (full characterization): a function `κ : ℤ → ℝ` is the
+autocovariance function of a stationary process if and only if it is even and
+non-negative definite. -/
+theorem isACVF_iff_even_and_isNonnegDefinite (κ : ℤ → ℝ) :
+    (∃ (μ : Measure (ℤ → ℝ)) (X : ℤ → (ℤ → ℝ) → ℝ), IsProbabilityMeasure μ ∧
+        IsWeaklyStationary X μ ∧ ∀ h, acvfStat X μ h = κ h)
+      ↔ (∀ h, κ (-h) = κ h) ∧ IsNonnegDefinite κ := by
+  constructor
+  · rintro ⟨μ, X, hμ, hstat, hacvf⟩
+    haveI := hμ
+    have hfun : acvfStat X μ = κ := funext hacvf
+    obtain ⟨heven, hnd⟩ := hstat.even_and_isNonnegDefinite_acvfStat
+    rw [hfun] at heven hnd
+    exact ⟨fun h => (heven h).symm, hnd⟩
+  · rintro ⟨heven, hnd⟩
+    exact ⟨stationaryGaussianMeasure heven hnd, fun t ω => ω t, inferInstance,
+      isWeaklyStationary_stationaryGaussianMeasure heven hnd,
+      acvfStat_stationaryGaussianMeasure heven hnd⟩
+
 end DeepWiki.TimeSeries
