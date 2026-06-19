@@ -91,4 +91,48 @@ theorem eq_backlog_of_isRtcGreedy {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : 
     b t = A 0 t - D 0 t := by
   have := hg.2.2 0 t; rw [hb0] at this; linarith
 
+/-- A constant minus a bounded supremum is the infimum of the constant minus each
+term (the antitone map `x ↦ c − x` turns `⨆` into `⨅`), over `ℝ`. -/
+theorem real_sub_ciSup {ι : Type*} [Nonempty ι] (c : ℝ) (g : ι → ℝ)
+    (hbdd : BddAbove (Set.range g)) :
+    c - ⨆ i, g i = ⨅ i, (c - g i) := by
+  have hbb : BddBelow (Set.range fun i => c - g i) := by
+    obtain ⟨M, hM⟩ := hbdd
+    exact ⟨c - M, by rintro _ ⟨i, rfl⟩; exact sub_le_sub_left (hM ⟨i, rfl⟩) c⟩
+  refine le_antisymm (le_ciInf fun i => sub_le_sub_left (le_ciSup hbdd i) c) ?_
+  rw [le_sub_comm]
+  refine ciSup_le fun i => ?_
+  rw [le_sub_comm]
+  exact ciInf_le hbb i
+
+/-- **Theorem 9.2** (RTC→NC, forward direction): the univariate readings of an RTC
+greedy processor (Chasles, `b 0 = 0`, with the residual sets bounded above) satisfy
+the variable-capacity node equations [9.7]–[9.9]. The output half [9.7] is the
+`⨆`-to-`⨅` step (`real_sub_ciSup`) after absorbing the `⊔ 0` (the `u = 0` split
+contributes `0`). -/
+theorem isVarCapacityEqns_of_isRtcGreedy
+    {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
+    (hA : IsChasles A) (hC : IsChasles C) (hb0 : b 0 = 0) (hg : IsRtcGreedy A C D C' b)
+    (hbdd : ∀ t : ℝ≥0,
+      BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - A 0 u.1)) :
+    IsVarCapacityEqns (fun t => A 0 t) (fun t => C 0 t) (fun t => D 0 t)
+      (fun t => C' 0 t) b := by
+  refine ⟨fun t => ?_, fun t => eq_residual_of_isRtcGreedy hg t,
+    fun t => eq_backlog_of_isRtcGreedy hg hb0 t⟩
+  haveI : Nonempty {u : ℝ≥0 // u ≤ t} := ⟨⟨t, le_rfl⟩⟩
+  have hC00 : C 0 0 = 0 := by have := hC 0 0 0 le_rfl le_rfl; linarith
+  have hA00 : A 0 0 = 0 := by have := hA 0 0 0 le_rfl le_rfl; linarith
+  have hequiv : (⨆ u : {u : ℝ≥0 // 0 ≤ u ∧ u ≤ t}, (C 0 u.1 - A 0 u.1 - b 0))
+      = ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) := by
+    rw [hb0]
+    exact Equiv.iSup_congr
+      (Equiv.subtypeEquivRight fun u => ⟨And.right, fun h => ⟨zero_le, h⟩⟩) (fun u => by simp)
+  have hg0mem : (0 : ℝ) ≤ ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) :=
+    le_ciSup_of_le (hbdd t) ⟨0, zero_le⟩ (by simp [hC00, hA00])
+  have hC' : C' 0 t = ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) := by
+    rw [hg.2.1 0 t, hequiv, sup_eq_left.mpr hg0mem]
+  show D 0 t = ⨅ u : {u : ℝ≥0 // u ≤ t}, (C 0 t - C 0 u.1 + A 0 u.1)
+  rw [hg.1 0 t, hC', real_sub_ciSup (C 0 t) _ (hbdd t)]
+  exact iInf_congr fun u => by ring
+
 end DeepWiki
