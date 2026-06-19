@@ -155,6 +155,40 @@ theorem min_evalNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid
     rw [min_eq_right (hN n (by omega)), min_eq_right (hN (n + d) (by omega)),
       hsstep n (by omega), min_eq_right (le_of_lt h)]
 
+/-- **Lemma 4.3, maximum — general case** (the pointwise maximum of two UPP sequences is ultimately
+pseudo-periodic). Dual of `min_evalNat_add_lcm`: `max(f,g)(n+d) = max(f,g)(n) + max(c_f', c_g')` —
+the increment is the *larger* slope; past the crossover (`evalNat_eventually_le`) the faster function
+*is* the max. -/
+theorem max_evalNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]
+    (r s : UppSeq V) :
+    ∃ N, ∀ n, N ≤ n →
+      Max.max (r.evalNat (n + Nat.lcm r.period s.period))
+              (s.evalNat (n + Nat.lcm r.period s.period))
+        = Max.max (r.evalNat n) (s.evalNat n)
+          + Max.max ((Nat.lcm r.period s.period / r.period) • r.incr)
+                    ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  set d := Nat.lcm r.period s.period with hd
+  set cr := (d / r.period) • r.incr with hcr
+  set cs := (d / s.period) • s.incr with hcs
+  have hrstep : ∀ n, r.vals.length - r.period ≤ n → r.evalNat (n + d) = r.evalNat n + cr := by
+    intro n hn; simpa using r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) 1 hn
+  have hsstep : ∀ n, s.vals.length - s.period ≤ n → s.evalNat (n + d) = s.evalNat n + cs := by
+    intro n hn; simpa using s.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_right r.period s.period) 1 hn
+  rcases lt_trichotomy cr cs with h | h | h
+  · obtain ⟨N, hN⟩ := r.evalNat_eventually_le s h
+    refine ⟨max N (max (r.vals.length - r.period) (s.vals.length - s.period)), fun n hn => ?_⟩
+    rw [max_eq_right (hN n (by omega)), max_eq_right (hN (n + d) (by omega)),
+      hsstep n (by omega), max_eq_right (le_of_lt h)]
+  · refine ⟨max (r.vals.length - r.period) (s.vals.length - s.period), fun n hn => ?_⟩
+    rw [hrstep n (by omega), hsstep n (by omega), h, max_self]
+    rcases le_total (r.evalNat n) (s.evalNat n) with hle | hle
+    · rw [max_eq_right hle, max_eq_right (add_le_add_left hle cs)]
+    · rw [max_eq_left hle, max_eq_left (add_le_add_left hle cs)]
+  · obtain ⟨N, hN⟩ := s.evalNat_eventually_le r (by rw [Nat.lcm_comm s.period r.period]; exact h)
+    refine ⟨max N (max (r.vals.length - r.period) (s.vals.length - s.period)), fun n hn => ?_⟩
+    rw [max_eq_left (hN n (by omega)), max_eq_left (hN (n + d) (by omega)),
+      hrstep n (by omega), max_eq_left (le_of_lt h)]
+
 /-- The denoted sequence is unchanged on the stored transient/period prefix: `f(n) = vals[n]`. -/
 theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) :
     r.evalNat n = r.vals.get ⟨n, hn⟩ := by

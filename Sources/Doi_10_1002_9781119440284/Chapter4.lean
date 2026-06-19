@@ -34,9 +34,10 @@ abbrev def_4_upp := @IsUPP
 
 /-- **Theorem 4.3** (§4.3.2.2, p.74): the class of plain ultimately pseudo-periodic functions of
 `F[ℚ,ℚ]` is stable under min, max, +, −, convolution, deconvolution and sub-additive closure. The
-library formalizes the UPP class (`def_4_upp`) and its stability under `+`/`⊓`/`⊔`
-(`lemma_4_2`/`lemma_4_3_min`/`lemma_4_3_max` below, common-period forms); the convolution,
-deconvolution and sub-additive-closure parts are not yet formalized. -/
+library formalizes the UPP class (`def_4_upp`) and its stability under `+` (`lemma_4_2`, all common
+periods), `⊓`/`⊔` (`lemma_4_3_min`/`lemma_4_3_max`, **all slope cases** via the Archimedean crossover),
+and the **balanced** case of convolution `∗` (`lemma_4_4`). The non-balanced convolution, deconvolution
+and sub-additive-closure parts are not yet formalized. -/
 theorem thm_4_3_add {V : Type*} [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T₂ d c₁ c₂}
     (hf : IsUPPWith f T₁ d c₁) (hg : IsUPPWith g T₂ d c₂) :
     IsUPPWith (fun t => f t + g t) (max T₁ T₂) d (c₁ + c₂) := hf.add hg
@@ -48,24 +49,19 @@ commensurable-period form — a common multiple `m•d₁ = n•d₂` with incre
 cofactors give exactly the book's formula). The shared-period special case is `IsUPPWith.add`. -/
 alias lemma_4_2 := IsUPPWith.add_of_commonPeriod
 
-/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum, balanced case `d_g c_f = d_f c_g`: the minimum of two
-ultimately pseudo-periodic functions with a common period and equal scaled increments is ultimately
-pseudo-periodic. The library's `DeepWiki.IsUPPWith.min_of_commonPeriod` (shared-period special case
-`IsUPPWith.min`). The dominant-slope cases reduce to the faster function and need an Archimedean
-argument; not yet formalized. -/
-alias lemma_4_3_min := IsUPPWith.min_of_commonPeriod
-
-/-- **Lemma 4.3** (§4.3.2.2, p.75), maximum, balanced case. The library's
-`DeepWiki.IsUPPWith.max_of_commonPeriod`. -/
-alias lemma_4_3_max := IsUPPWith.max_of_commonPeriod
-
-/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum — **general case** (all slope relations): the pointwise
+/-- **Lemma 4.3** (§4.3.2.2, p.75), **minimum** — general case (all slope relations): the pointwise
 minimum of two UPP sequences is ultimately pseudo-periodic, `min(f,g)(n+d) = min(f,g)(n) + min(c_f',c_g')`
-with `d = lcm` and the increment the smaller per-`d` slope. The library's
-`DeepWiki.UppSeq.min_evalNat_add_lcm` — covering the dominant-slope cases via the Archimedean crossover
-`evalNat_eventually_le` (the slower function is the min past the crossover). Requires `V` an
-Archimedean ordered group. -/
-alias lemma_4_3 := UppSeq.min_evalNat_add_lcm
+with `d = lcm` and the increment the *smaller* per-`d` slope. The library's
+`DeepWiki.UppSeq.min_evalNat_add_lcm` — the dominant-slope cases close via the Archimedean crossover
+`evalNat_eventually_le` (the slower function is the min past the crossover), the balanced case via
+`min`-distributes-over-`+`. (The balanced common-period form over any ordered monoid is
+`IsUPPWith.min_of_commonPeriod`.) Requires `V` an Archimedean ordered group. -/
+alias lemma_4_3_min := UppSeq.min_evalNat_add_lcm
+
+/-- **Lemma 4.3** (§4.3.2.2, p.75), **maximum** — general case. Dual of `lemma_4_3_min`: the increment
+is the *larger* slope (past the crossover the faster function is the max). The library's
+`DeepWiki.UppSeq.max_evalNat_add_lcm` (balanced common-period form: `IsUPPWith.max_of_commonPeriod`). -/
+alias lemma_4_3_max := UppSeq.max_evalNat_add_lcm
 
 /-- **Lemma 4.4** (§4.3.2.2, p.76): `f ∗ g` is ultimately pseudo-periodic with period `d = lcm(d_f,d_g)`
 from rank `T_f + T_g + d`. The library's `DeepWiki.UppSeq.convNat_add_lcm_of_balanced` proves the
