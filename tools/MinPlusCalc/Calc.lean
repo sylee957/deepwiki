@@ -149,4 +149,13 @@ server is the deconvolution `α ⊘ β`. A token-bucket `α_{1,2}` through a rat
 example : ∀ n ∈ Finset.range 6,
     (tokenBucket 1 2).deconvNat (betaRL 2 1) n = (n : Int) + 3 := by native_decide
 
+/-- The **backlog bound** `sup_t (α(t) − β(t))` — the maximum vertical deviation of arrival `α` above
+service `β`, i.e. the worst-case buffer occupancy — is exactly `(α ⊘ β)(0)`, the genuine supremum by
+`deconvNat_isGreatest`. The canonical network-calculus buffer bound. Finite when `slope_α ≤ slope_β`. -/
+def backlogBound (α β : UppSeq Int) : Int := α.deconvNat β 0
+
+/-- **Network-calculus application (gate-verified):** the backlog bound of a token bucket `α_{1,2}`
+through a rate-latency server `β_{2,1}` is the classic `b + r·T = 2 + 1·1 = 3`. -/
+example : backlogBound (tokenBucket 1 2) (betaRL 2 1) = 3 := by native_decide
+
 end MinPlusCalc

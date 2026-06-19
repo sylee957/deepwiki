@@ -29,6 +29,7 @@ lake exe minplus            # usage
 | `minplus maxupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊔g` **as a UPP sequence** (`maxUpp`; `max_evalNat_add_lcm_window`) |
 | `minplus deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊘g)(0..k−1)` — the deconvolution `⨆_{k≥0} f(n+k)−g(k)`; finite (and computed) only when `slope_f ≤ slope_g`, else refused (`deconvNat`/`deconvNat_isGreatest`) |
 | `minplus deconvupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊘g` **as a UPP sequence** — period `d_f`, increment `c_f` (`deconvUpp`; `deconvNat_add_period`, Lemma 4.5); needs `slope_f ≤ slope_g` |
+| `minplus backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **backlog bound** `supₜ(α(t)−β(t)) = (α⊘β)(0)` — worst-case buffer; needs `slope_α ≤ slope_β` (`backlogBound`/`deconvNat_isGreatest`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -89,3 +90,6 @@ The calculator computes real deterministic-network-calculus results on rate-late
 - **Output arrival curve** `α ⊘ β` — a flow's bound after a server; the burst inflates by `r·T`:
   `α_{1,2} ⊘ β_{2,1}` is a token bucket of rate `1`, burst `2+1·1 = 3`.
   `minplus deconvupp 0,3 1 1 0,0 1 2` → `3, 4  period=1  incr=1` (`= n+3`).
+- **Backlog bound** `supₜ(α(t)−β(t))` — the worst-case buffer occupancy, equal to `(α⊘β)(0)`; for a
+  token bucket through a rate-latency server it is the classic `b + r·T`.
+  `minplus backlog 0,3 1 1 0,0 1 2` → `backlog bound = 3`.
