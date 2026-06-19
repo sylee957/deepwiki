@@ -40,6 +40,14 @@ theorem spectralACVF_hermitian (μ : MeasureTheory.Measure ℝ) (h : ℤ) :
 spectral distribution `μ` (a finite measure on `(−π, π]`). The library's `spectralACVF`. -/
 noncomputable abbrev eq_4_2_6 := @DeepWiki.TimeSeries.spectralACVF
 
+/-- **§4.3 (Theorem 4.3.1, Herglotz — forward direction)**: for a finite spectral measure `μ`,
+the autocovariance `spectralACVF μ` is non-negative definite, since
+`∑ᵢⱼ aᵢ conj(aⱼ) γ(tᵢ − tⱼ) = ∫ |∑ᵢ aᵢ e^{itᵢν}|² dμ ≥ 0`. The library's
+`isComplexNonnegDefinite_spectralACVF`. (The converse is infra-blocked; see the note below.) -/
+theorem thm_4_3_1_forward {μ : MeasureTheory.Measure ℝ} [MeasureTheory.IsFiniteMeasure μ] :
+    IsComplexNonnegDefinite (spectralACVF μ) :=
+  isComplexNonnegDefinite_spectralACVF
+
 /-! ## §4.2 The Spectral Distribution (pp.116–117) and §4.3 Herglotz's Theorem (pp.117–118)
 
 The **spectral distribution function** `F` (eq 4.2.4, a right-continuous non-decreasing bounded
@@ -48,10 +56,9 @@ density** `f` (when `F(λ) = ∫₋π^λ f`). **Theorem 4.3.1 (Herglotz)**: a fu
 non-negative definite iff `γ(h) = ∫ e^{ihν} dF(ν)` for a bounded distribution function `F`.
 
 The **forward** direction — a `γ` of the form `eq_4_2_6 = spectralACVF μ` is non-negative
-definite, since `∑ⱼₖ aⱼ conj(aₖ) γ(j − k) = ∫ |∑ⱼ aⱼ e^{ijν}|² dμ ≥ 0` — is formalizable from
-`spectralACVF` and is the cleanly-doable next nugget. The **converse** (constructing the spectral
-measure `F` from a non-negative definite sequence, via a Fejér-kernel weak limit) needs a
-measure-from-positive-definite-sequence theorem (Herglotz/Bochner on the circle) absent in this
+definite — is now FORMALIZED as `thm_4_3_1_forward` above. The **converse** (constructing the
+spectral measure `F` from a non-negative definite sequence, via a Fejér-kernel weak limit) needs
+a measure-from-positive-definite-sequence theorem (Herglotz/Bochner on the circle) absent in this
 Mathlib — infra-blocked.
 
 The **spectral representation of the process itself**, `Xₜ = ∫ e^{itν} dZ(ν)` (eq 4.2.5, a
