@@ -1,4 +1,4 @@
-import Mathlib.Data.NNReal.Basic
+import DeepWiki.NetworkCalculus.FunctionDioids
 
 /-! # Sufficiently-strict service curves (s3c)
 The s3c service curve of [SCH 11], introduced to handle non-FIFO flows: a pair
@@ -44,5 +44,37 @@ theorem IsSufficientlyStrict.mono_beta {β β' dw A D : ℝ≥0 → ℝ≥0}
   refine ⟨h.1, h.2.1, fun t => ?_⟩
   calc A (t - dw t) + β' (dw t) ≤ A (t - dw t) + β (dw t) := by gcongr; exact hβ (dw t)
     _ ≤ D t := h.2.2 t
+
+/-- **Theorem 9.8** (s3c concatenation): two s3c servers in tandem — `(A, M)` s3c
+for `β₁` with dwell `dw₁`, then `(M, D)` s3c for `β₂` with dwell `dw₂` — compose
+to an s3c server `(A, D)` for the convolution `β₁ ∗ β₂` with the **composed dwell**
+`dw'(t) = dw₂ t + dw₁ (t − dw₂ t)`. The service part chains the two s3c bounds and
+folds the two `β`-increments into the convolution at the split `dw₁(t−dw₂ t) + dw₂ t`. -/
+theorem IsSufficientlyStrict.comp {β₁ β₂ dw₁ dw₂ A M D : ℝ≥0 → ℝ≥0}
+    (h₁ : IsSufficientlyStrict β₁ dw₁ A M) (h₂ : IsSufficientlyStrict β₂ dw₂ M D) :
+    IsSufficientlyStrict (minConv β₁ β₂) (fun t => dw₂ t + dw₁ (t - dw₂ t)) A D := by
+  refine ⟨fun t => (h₂.causal t).trans (h₁.causal t), fun t => ?_, fun t => ?_⟩
+  · -- the composed dwell never exceeds the elapsed time
+    calc dw₂ t + dw₁ (t - dw₂ t) ≤ dw₂ t + (t - dw₂ t) := by gcongr; exact h₁.dwell_le _
+      _ = t := add_tsub_cancel_of_le (h₂.dwell_le t)
+  · -- the s3c service bound for `β₁ ∗ β₂` at the composed dwell
+    have e1 : t - (dw₂ t + dw₁ (t - dw₂ t)) = (t - dw₂ t) - dw₁ (t - dw₂ t) := by
+      rw [tsub_tsub]
+    have hmc : minConv β₁ β₂ (dw₂ t + dw₁ (t - dw₂ t))
+        ≤ β₁ (dw₁ (t - dw₂ t)) + β₂ (dw₂ t) :=
+      minConv_le_add β₁ β₂ (add_comm (dw₁ (t - dw₂ t)) (dw₂ t))
+    calc A (t - (dw₂ t + dw₁ (t - dw₂ t))) + minConv β₁ β₂ (dw₂ t + dw₁ (t - dw₂ t))
+        ≤ A ((t - dw₂ t) - dw₁ (t - dw₂ t)) + (β₁ (dw₁ (t - dw₂ t)) + β₂ (dw₂ t)) := by
+          rw [e1]; exact add_le_add le_rfl hmc
+      _ = (A ((t - dw₂ t) - dw₁ (t - dw₂ t)) + β₁ (dw₁ (t - dw₂ t))) + β₂ (dw₂ t) := by ring
+      _ ≤ M (t - dw₂ t) + β₂ (dw₂ t) := by gcongr; exact h₁.service_bound (t - dw₂ t)
+      _ ≤ D t := h₂.service_bound t
+
+-- Restatement (book Thm 9.8): s3c servers concatenate, convolving service curves
+-- and composing dwells; the relation-composition `s3c(β₂)∘s3c(β₁) ⊆ s3c(β₁∗β₂)`.
+example (β₁ β₂ dw₁ dw₂ A D : ℝ≥0 → ℝ≥0)
+    (h : ∃ M, IsSufficientlyStrict β₁ dw₁ A M ∧ IsSufficientlyStrict β₂ dw₂ M D) :
+    IsSufficientlyStrict (minConv β₁ β₂) (fun t => dw₂ t + dw₁ (t - dw₂ t)) A D :=
+  let ⟨_, h₁, h₂⟩ := h; h₁.comp h₂
 
 end DeepWiki
