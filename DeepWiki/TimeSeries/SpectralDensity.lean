@@ -63,4 +63,18 @@ theorem armaSpectralDensity_ma1 (θ1 σ2 lam : ℝ) :
       simp [map_add, map_mul, aeval_C, aeval_X, Complex.coe_algebraMap]]
   exact normSq_one_add_ofReal_mul_expNegI θ1 lam
 
+/-- **Example 4.4.2**: the spectral density of an `AR(1)` process `Xₜ = φ₁Xₜ₋₁ + Zₜ`
+(`φ = 1 − φ₁z`, `θ = 1`) is `f(λ) = (σ²/2π) / (1 − 2φ₁ cos λ + φ₁²)`. -/
+theorem armaSpectralDensity_ar1 (φ1 σ2 lam : ℝ) :
+    armaSpectralDensity (1 - Polynomial.C φ1 * Polynomial.X) 1 σ2 lam
+      = σ2 / (2 * Real.pi) / (1 - 2 * φ1 * Real.cos lam + φ1 ^ 2) := by
+  rw [armaSpectralDensity, map_one, Complex.normSq_one,
+    show aeval (Complex.exp (-Complex.I * (lam : ℂ))) (1 - Polynomial.C φ1 * Polynomial.X)
+        = 1 + ((-φ1 : ℝ) : ℂ) * Complex.exp (-Complex.I * (lam : ℂ)) by
+      rw [map_sub, map_one, map_mul, aeval_C, aeval_X, Complex.coe_algebraMap]; push_cast; ring,
+    normSq_one_add_ofReal_mul_expNegI (-φ1) lam,
+    show 1 + 2 * -φ1 * Real.cos lam + (-φ1) ^ 2
+        = 1 - 2 * φ1 * Real.cos lam + φ1 ^ 2 by ring,
+    mul_one_div]
+
 end DeepWiki.TimeSeries

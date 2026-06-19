@@ -93,4 +93,12 @@ theorem ex_4_4_1 (θ1 σ2 lam : ℝ) :
       = σ2 / (2 * Real.pi) * (1 + 2 * θ1 * Real.cos lam + θ1 ^ 2) :=
   armaSpectralDensity_ma1 θ1 σ2 lam
 
+/-- **Example 4.4.2** (§4.4, p.125): the spectral density of an `AR(1)` process
+`Xₜ = φ₁Xₜ₋₁ + Zₜ` (`φ = 1 − φ₁z`, `θ = 1`) is `(σ²/2π) / (1 − 2φ₁ cos λ + φ₁²)`. The library's
+`armaSpectralDensity_ar1`. -/
+theorem ex_4_4_2 (φ1 σ2 lam : ℝ) :
+    armaSpectralDensity (1 - Polynomial.C φ1 * Polynomial.X) 1 σ2 lam
+      = σ2 / (2 * Real.pi) / (1 - 2 * φ1 * Real.cos lam + φ1 ^ 2) :=
+  armaSpectralDensity_ar1 φ1 σ2 lam
+
 end DeepWiki.Ts
