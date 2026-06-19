@@ -1120,11 +1120,38 @@ and `δ₀` is representable there — this de-risks the closure arc. -/
 `n ≥ 1` (the closure's neutral element `f^⊗0`). -/
 def delta0 : UppSeq (WithTop ℤ) := ⟨[0, ⊤], ⊤, 1, by decide, by decide⟩
 
+/-- `δ₀(0) = 0`. -/
+theorem delta0_zero : delta0.evalNat 0 = 0 := by rw [evalNat_of_lt delta0 (by decide)]; rfl
+
+/-- `δ₀(k) = ⊤` for `k ≥ 1` (the identity is `+∞` off the origin). -/
+theorem delta0_pos {k : ℕ} (hk : 1 ≤ k) : delta0.evalNat k = ⊤ := by
+  have hlen : delta0.vals.length = 2 := rfl
+  rcases lt_or_ge k 2 with h | h
+  · obtain rfl : k = 1 := by omega
+    rw [evalNat_of_lt delta0 (by decide)]; rfl
+  · conv_lhs => rw [evalNat.eq_def]
+    rw [dif_neg (by omega)]
+    show delta0.evalNat (k - 1) + (⊤ : WithTop ℤ) = ⊤
+    exact WithTop.add_top _
+
+/-- **`δ₀` is the (min,plus) convolution identity**: `δ₀ ⊗ f = f` for every `f` over `WithTop ℤ`. The
+`k = 0` term is `0 + f(n) = f(n)`; every `k ≥ 1` term is `⊤ + f(n-k) = ⊤ ≥ f(n)`, so the infimum is
+`f(n)`. This is `f^⊗0 ⊗ f = f`, the base of the closure iteration. -/
+theorem convNat_delta0 (f : UppSeq (WithTop ℤ)) (n : ℕ) : delta0.convNat f n = f.evalNat n := by
+  refine le_antisymm ?_ ?_
+  · calc delta0.convNat f n ≤ delta0.evalNat 0 + f.evalNat (n - 0) := delta0.convNat_le f (Nat.zero_le n)
+      _ = f.evalNat n := by rw [delta0_zero, Nat.sub_zero, zero_add]
+  · obtain ⟨k, hk, heq⟩ := delta0.convNat_eq f n
+    rw [heq]
+    rcases Nat.eq_zero_or_pos k with rfl | hk1
+    · simp [delta0_zero]
+    · rw [delta0_pos hk1, WithTop.top_add]; exact le_top
+
 /-- A ⊤-extended demo sequence over `WithTop ℤ` (to exercise the closure carrier). -/
 def demoWT : UppSeq (WithTop ℤ) := ⟨[0, 1, 2], 3, 2, by decide, by decide⟩
 
-/-- Sanity (gate-verified): `δ₀` is the **convolution identity** — `δ₀ ⊗ f = f` — over `WithTop ℤ`,
-confirming the ⊤-extended carrier (the basis for sub-additive closure) computes correctly. -/
+/-- Sanity (gate-verified): `δ₀ ⊗ f = f` computed natively over `WithTop ℤ` (the general proof is
+`convNat_delta0`), confirming the ⊤-extended carrier evaluates correctly. -/
 example : ∀ n ∈ Finset.range 6, delta0.convNat demoWT n = demoWT.evalNat n := by native_decide
 
 end UppSeq
