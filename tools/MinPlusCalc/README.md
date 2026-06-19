@@ -98,6 +98,8 @@ The calculator computes real deterministic-network-calculus results on rate-late
   same token bucket and server it is the classic `T + b/R`.
   `minplus delay 0,3 1 1 0,0 1 2` → `delay bound = 2`.
 
-(`backlog` is fully proved via `deconvNat_isGreatest`; `delay` is a finite search whose faithfulness —
-the gap `α(t)−β(t+d)` is non-increasing per period, so the window is decisive — reduces to
-`evalNat_le_of_window_le` on `β` advanced by `d`, a short follow-up.)
+(`backlog` is fully proved via `deconvNat_isGreatest`. `delay` is a finite search whose decisive-window
+property is now the proved lemma `evalNat_le_shift_of_window`: if `α(t) ≤ β(t+d)` on one period-window
+past the transient it holds for all `t`, since the gap `α(t)−β(t+d)` is non-increasing per period. The
+search over `[0, deconvBound)` thus covers the transient directly and the periodic tail by descent —
+the only remaining mechanical step is that `List.find?` returns the least such `d`.)
