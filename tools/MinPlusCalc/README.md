@@ -76,3 +76,16 @@ minplus addupp 0 1 1 0 1 2        # 0, 3  period=1  incr=3   (n + 2n = 3n)
 minplus deconv 0 1 1 0 1 2 6      # 0, 1, 2, 3, 4, 5   (n ⊘ 2n = n; slope 1 ≤ 2, finite)
 minplus deconvupp 5,6 1 1 0 1 2   # 5, 6  period=1  incr=1   ((n+5) ⊘ 2n = n+5, as a UPP sequence)
 ```
+
+## Network-calculus applications
+
+The calculator computes real deterministic-network-calculus results on rate-latency service curves
+`β_{R,T}(t) = R(t−T)₊` and token-bucket arrival curves `α_{r,b}(t) = b+rt` (both gate-verified in
+`Calc.lean`):
+
+- **Server concatenation** `β₁ ⊗ β₂` — the end-to-end service curve is rate-latency with the minimum
+  rate and the summed latency: `β_{1,2} ⊗ β_{2,1} = β_{1,3}`.
+  `minplus convupp 0,0,0 1 1 0,0 1 2` → `0, 0, 0, 0, 1  period=1  incr=1` (`= max(n−3,0)`).
+- **Output arrival curve** `α ⊘ β` — a flow's bound after a server; the burst inflates by `r·T`:
+  `α_{1,2} ⊘ β_{2,1}` is a token bucket of rate `1`, burst `2+1·1 = 3`.
+  `minplus deconvupp 0,3 1 1 0,0 1 2` → `3, 4  period=1  incr=1` (`= n+3`).

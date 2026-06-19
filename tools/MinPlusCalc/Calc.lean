@@ -137,4 +137,16 @@ theorem on the integer samples (`min(1,2)=1`, `2+1=3`). -/
 example : ∀ n ∈ Finset.range 8,
     (betaRL 1 2).convNat (betaRL 2 1) n = (betaRL 1 3).evalNat n := by native_decide
 
+/-- Token-bucket arrival curve `α_{r,b}(t) = b + r·t` for `t > 0` (`0` at `t=0`) as a UPP sequence:
+`α(0)=0`, `α(1)=b+r`, then period `1`, increment `r`. -/
+def tokenBucket (r b : Int) : UppSeq Int :=
+  ⟨[0, b + r], r, 1, by decide, by simp⟩
+
+/-- **Network-calculus application (gate-verified):** the **output arrival curve** of a flow through a
+server is the deconvolution `α ⊘ β`. A token-bucket `α_{1,2}` through a rate-latency server `β_{2,1}`
+(rate `2 ≥ 1`, so stable) emerges as a token bucket of the *same rate* with burst inflated by `r·T`:
+`(α_{1,2} ⊘ β_{2,1})(n) = (2 + 1·1) + 1·n = n + 3`. The calculator's `deconvNat` reproduces it. -/
+example : ∀ n ∈ Finset.range 6,
+    (tokenBucket 1 2).deconvNat (betaRL 2 1) n = (n : Int) + 3 := by native_decide
+
 end MinPlusCalc
