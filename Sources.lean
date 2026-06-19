@@ -35,6 +35,7 @@ import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter7
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter8
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter9
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter10
+import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter11
 
 -- Per-paper source catalogs (papers the book defers to; see CLAUDE.md)
 import Sources.Doi_10_7146_brics_v2i2_19504.Source
