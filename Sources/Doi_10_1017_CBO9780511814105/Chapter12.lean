@@ -398,6 +398,14 @@ abbrev def_12_6_recMax := @TLTS.recMax
 The library's `TLTS.recMin`. -/
 abbrev def_12_6_recMin := @TLTS.recMin
 
+/-- **Exercise 12.16** (§12.4, p.240). Calculating one application of `O_F` (Definition 12.6) of
+the characteristic-formula body `charBody` — the RHS of equation (12.3) — on the singleton
+`{((ℓ, [x=0]), [y=0])} = {(0, y↦0)}` yields `∅`: the `∀∀X` conjunct forces every delay successor
+into the set, which no one-element set can satisfy. The library's `TLTS.denotMtR_charBody_initial`. -/
+theorem ex_12_16 :
+    TLTS.denotMtR TLTS.runTLTS TLTS.charBody {((0 : ℝ≥0), (fun _ => (0 : ℝ≥0)))} = ∅ :=
+  TLTS.denotMtR_charBody_initial
+
 /-- **Exercise 12.17** (§12.4, p.240). `O_F` is monotone in the variable's
 interpretation, so its greatest and least fixed points exist. -/
 theorem ex_12_17 (T : TLTS Proc Act) (F : MtR Act D) : Monotone (TLTS.denotMtR T F) :=

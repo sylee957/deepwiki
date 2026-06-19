@@ -69,6 +69,20 @@ theorem mem_charFormula {q : ℝ≥0 × Valuation Unit} :
   simp only [charBody, denotMtR, Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq, satisfies,
     Cmp.holds, Nat.cast_one, and_assoc]
 
+/-- **Exercise 12.16** (§12.4, p.240). One application of the operator `O_F` (Definition 12.6) of
+the characteristic formula's body (`charBody`, the RHS of equation (12.3)) to the *singleton*
+`{((ℓ, [x=0]), [y=0])} = {(0, y↦0)}` is `∅`: the `∀∀X` conjunct demands that *every* delay
+successor lie in the set, but no one-element set is closed under delay — delaying by `1` already
+escapes it (`r + 1 ≠ 0`). -/
+theorem denotMtR_charBody_initial :
+    denotMtR runTLTS charBody {((0 : ℝ≥0), (fun _ => (0 : ℝ≥0)))} = ∅ := by
+  rw [Set.eq_empty_iff_forall_notMem]
+  rintro ⟨r, u⟩ hmem
+  simp only [charBody, denotMtR, Set.mem_inter_iff, Set.mem_setOf_eq] at hmem
+  have hcon := hmem.2 1 (r + 1) (RunStep.delay r 1)
+  rw [Set.mem_singleton_iff, Prod.ext_iff] at hcon
+  exact absurd hcon.1 (by positivity)
+
 /-! ### Soundness: timed bisimilarity to the running example implies satisfaction -/
 
 /-- **Soundness (Theorem 12.5 for the running example, ⇐).** If `(p, u)` is timed bisimilar to the running example's
