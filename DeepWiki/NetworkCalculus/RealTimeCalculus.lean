@@ -62,10 +62,10 @@ service `C`, departure `D`, residual `C'` and (univariate) backlog `b`:
 `D = C − C'`, `C' s t = (⨆_{s≤u≤t} (C s u − A s u − b s)) ⊔ 0`, and
 `b t − b s = A s t − D s t`. -/
 def IsRtcGreedy (A C D C' : ℝ≥0 → ℝ≥0 → ℝ) (b : ℝ≥0 → ℝ) : Prop :=
-  (∀ s t, D s t = C s t - C' s t) ∧
-  (∀ s t, C' s t
+  (∀ s t, s ≤ t → D s t = C s t - C' s t) ∧
+  (∀ s t, s ≤ t → C' s t
       = (⨆ u : {u : ℝ≥0 // s ≤ u ∧ u ≤ t}, (C s u.1 - A s u.1 - b s)) ⊔ 0) ∧
-  (∀ s t, b t - b s = A s t - D s t)
+  (∀ s t, s ≤ t → b t - b s = A s t - D s t)
 
 /-- **The variable-capacity node equations [9.7]–[9.9]** for univariate cumulative
 functions `A, C, D, C'` (the readings `Â, Ĉ, D̂, Ĉ'`) and backlog `b`:
@@ -82,14 +82,14 @@ equation [9.4] at `s = 0`. -/
 theorem eq_residual_of_isRtcGreedy {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
     (hg : IsRtcGreedy A C D C' b) (t : ℝ≥0) :
     C' 0 t = C 0 t - D 0 t := by
-  have := hg.1 0 t; linarith
+  have := hg.1 0 t zero_le; linarith
 
 /-- **Theorem 9.2** (RTC→NC, backlog half [9.9]): with `b 0 = 0`, the backlog is
 the univariate gap `b = Â − D̂`, directly from equation [9.6] at `s = 0`. -/
 theorem eq_backlog_of_isRtcGreedy {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
     (hg : IsRtcGreedy A C D C' b) (hb0 : b 0 = 0) (t : ℝ≥0) :
     b t = A 0 t - D 0 t := by
-  have := hg.2.2 0 t; rw [hb0] at this; linarith
+  have := hg.2.2 0 t zero_le; rw [hb0] at this; linarith
 
 /-- A constant minus a bounded supremum is the infimum of the constant minus each
 term (the antitone map `x ↦ c − x` turns `⨆` into `⨅`), over `ℝ`. -/
@@ -130,9 +130,9 @@ theorem isVarCapacityEqns_of_isRtcGreedy
   have hg0mem : (0 : ℝ) ≤ ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) :=
     le_ciSup_of_le (hbdd t) ⟨0, zero_le⟩ (by simp [hC00, hA00])
   have hC' : C' 0 t = ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) := by
-    rw [hg.2.1 0 t, hequiv, sup_eq_left.mpr hg0mem]
+    rw [hg.2.1 0 t zero_le, hequiv, sup_eq_left.mpr hg0mem]
   show D 0 t = ⨅ u : {u : ℝ≥0 // u ≤ t}, (C 0 t - C 0 u.1 + A 0 u.1)
-  rw [hg.1 0 t, hC', real_sub_ciSup (C 0 t) _ (hbdd t)]
+  rw [hg.1 0 t zero_le, hC', real_sub_ciSup (C 0 t) _ (hbdd t)]
   exact iInf_congr fun u => by ring
 
 end DeepWiki
