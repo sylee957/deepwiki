@@ -36,6 +36,38 @@ on which Kolmogorov's existence theorem `exists_process_fdd_eq` (Thm 1.2.1) is s
 noncomputable def fdd (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) : Measure (↥I → ℝ) :=
   μ.map (fun ω => I.restrict (fun t => X t ω))
 
+/-! ### `distFn` (distribution-function form) versus `fdd` (joint-law form)
+Both are the finite-dimensional distribution of Definition 1.2.3: `distFn` is the distribution
+**function** `F_t(x)` (a lower-orthant probability) for an ordered `n`-tuple of times, while
+`fdd` is the joint **law** of `(Xₜ)_{t∈I}` for a finite index set `I` (the object Kolmogorov's
+theorem is stated on). Each is the lower-orthant CDF of a pushforward `ω ↦ (Xₜ(ω))ₜ`. -/
+
+/-- `distFn` is the lower-orthant CDF of the joint law `μ.map (ω ↦ (X_{tᵢ}(ω))ᵢ)` of the tuple
+`(X_{t₁}, …, X_{tₙ})` — exhibiting the distribution function as the CDF of a finite-dimensional
+law, the same kind of object as `fdd`. -/
+theorem distFn_eq_map_Iic {T : Type*} (X : T → Ω → ℝ) {n : ℕ} {t : Fin n → T}
+    (hX : ∀ i, Measurable (X (t i))) (x : Fin n → ℝ) :
+    distFn X μ t x
+      = (μ.map fun ω => fun i => X (t i) ω) (Set.univ.pi fun i => Set.Iic (x i)) := by
+  rw [distFn, Measure.map_apply (measurable_pi_lambda _ hX)
+      (MeasurableSet.univ_pi fun _ => measurableSet_Iic)]
+  congr 1
+  ext ω
+  simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Iic, Set.mem_setOf_eq]
+
+/-- The lower-orthant CDF of the joint law `fdd X μ I` is the distribution-function value
+`P(Xₜ ≤ xₜ for all t ∈ I)` — i.e. `distFn` (Def 1.2.3) is exactly the CDF of `fdd`, here in the
+`Finset`-indexed form `x : ↥I → ℝ`. -/
+theorem fdd_Iic (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → ℝ) :
+    fdd X μ I (Set.univ.pi fun i => Set.Iic (x i)) = μ {ω | ∀ i : ↥I, X i ω ≤ x i} := by
+  have hmeas : Measurable (fun ω => I.restrict (fun t => X t ω)) :=
+    measurable_pi_lambda _ fun i => hX i.1
+  rw [fdd, Measure.map_apply hmeas (MeasurableSet.univ_pi fun _ => measurableSet_Iic)]
+  congr 1
+  ext ω
+  simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Iic, Set.mem_setOf_eq]
+  exact ⟨fun h i => h i, fun h i => h i⟩
+
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/
 theorem isProjectiveMeasureFamily_fdd (hX : ∀ t, AEMeasurable (X t) μ) :
