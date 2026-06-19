@@ -53,6 +53,20 @@ advance the formula clocks `u`, `x in F` resets `x`, and `g` reads `u`. The
 library's `TLTS.MtSat`. -/
 abbrev def_12_2 := @TLTS.MtSat
 
+/-- **Definition 12.2** (§12.1, p.224), denotational form. The satisfaction *set*
+`⟦F⟧ ⊆ ES(Proc)`, defined compositionally with the action/delay set operators (`⟨a·⟩`/`[a·]`,
+`⟨ε·⟩`/`[ε·]`) — the book's primary presentation of `Mt`'s semantics, of which `def_12_2`
+(`MtSat`) is the equivalent structural-relation form (p.228). The library's `TLTS.denotMt`. -/
+abbrev def_12_2_denot := @TLTS.denotMt
+
+/-- **Exercise 12.4** (§12.1, p.228). The structural satisfaction relation (p.228) is equivalent
+to Definition 12.2's denotational `⟦F⟧`: an extended state satisfies `F` iff it lies in `⟦F⟧`,
+`(p, u) ∈ ⟦F⟧ ↔ (p, u) ⊨ F`, by induction on the formula. The library's
+`TLTS.mem_denotMt_iff_mtSat`. -/
+theorem ex_12_4 (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
+    (p, u) ∈ TLTS.denotMt T F ↔ TLTS.MtSat T p u F :=
+  TLTS.mem_denotMt_iff_mtSat T F p u
+
 /-- **Definition 12.3** (§12.1, p.225). A state satisfies `F` when the extended
 state with every formula clock zero does: `(p, u₀) ⊨ F`. The library's
 `TLTS.MtSatState`. -/
@@ -360,6 +374,16 @@ theorem thm_12_1_region {Loc C : Type*} [Fintype C] [Fintype D]
   DeepWiki.ReactiveSystems.mtSat_iff_symSatRegion A F ℓ v u
 
 /-! ## §12.4 Recursion in HML with time -/
+
+/-- **§12.4, equation (12.2)** (p.237). The running-example property
+`TwoAs := [a](y in ∀∀[a](y ≤ 1))` — however the automaton performs two `a`-actions in a row, the
+delay between them is at most one time unit — and the running automaton *satisfies* it (the book's
+encouraged check), discharged here *by the executable decision procedure* (`decide` through
+`satisfiesMt_iff_decideFull_delaySucc`). The library's `twoAsFormula` / `loopAuto_satisfies_twoAs`. -/
+theorem eq_12_2 :
+    DeepWiki.ReactiveSystems.loopAuto.toTimedAutomaton.SatisfiesMt
+      DeepWiki.ReactiveSystems.twoAsFormula :=
+  DeepWiki.ReactiveSystems.loopAuto_satisfies_twoAs
 
 /-- **Definition 12.6** (§12.4, p.240). The semantic functional `O_F(S)` of a
 recursive timed-HML formula over the powerset lattice of extended states, with the

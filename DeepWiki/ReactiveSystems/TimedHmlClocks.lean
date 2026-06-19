@@ -52,6 +52,39 @@ def MtSat (T : TLTS Proc Act) (p : Proc) (u : Valuation D) : Mt Act D → Prop
   | .reset x F => MtSat T p (Valuation.reset {x} u) F
   | .guard g => satisfies u g
 
+/-- **Definition 12.2** (denotational form). The set `⟦F⟧ ⊆ ES(Proc)` of extended states that
+satisfy `F`, defined compositionally with the book's action/delay set operators (`⟨a·⟩`/`[a·]`
+for actions, `⟨ε·⟩`/`[ε·]` for delays). This is the book's primary semantics of `Mt`; `MtSat` is
+its structural-relation presentation (p.228). -/
+def denotMt (T : TLTS Proc Act) : Mt Act D → Set (Proc × Valuation D)
+  | .tt => Set.univ
+  | .ff => ∅
+  | .and F G => denotMt T F ∩ denotMt T G
+  | .or F G => denotMt T F ∪ denotMt T G
+  | .dia a F => {q | ∃ p', T.act q.1 a p' ∧ (p', q.2) ∈ denotMt T F}
+  | .box a F => {q | ∀ p', T.act q.1 a p' → (p', q.2) ∈ denotMt T F}
+  | .existsDelay F => {q | ∃ d p', T.delay q.1 d p' ∧ (p', q.2.add d) ∈ denotMt T F}
+  | .forallDelay F => {q | ∀ d p', T.delay q.1 d p' → (p', q.2.add d) ∈ denotMt T F}
+  | .reset x F => {q | (q.1, Valuation.reset {x} q.2) ∈ denotMt T F}
+  | .guard g => {q | satisfies q.2 g}
+
+/-- **Exercise 12.4** (§12.1, p.228). The denotational semantics `⟦F⟧` (Definition 12.2) and the
+structural satisfaction relation `MtSat` agree: `(p, u) ∈ ⟦F⟧ ↔ (p, u) ⊨ F`. Proved by induction
+on `F` — the two presentations of `Mt`'s satisfaction relation are equivalent. -/
+theorem mem_denotMt_iff_mtSat (T : TLTS Proc Act) (F : Mt Act D) (p : Proc) (u : Valuation D) :
+    (p, u) ∈ denotMt T F ↔ MtSat T p u F := by
+  induction F generalizing p u with
+  | tt => simp [denotMt, MtSat]
+  | ff => simp [denotMt, MtSat]
+  | and F G ihF ihG => simp [denotMt, MtSat, ihF, ihG]
+  | or F G ihF ihG => simp [denotMt, MtSat, ihF, ihG]
+  | dia a F ihF => simp [denotMt, MtSat, ihF]
+  | box a F ihF => simp [denotMt, MtSat, ihF]
+  | existsDelay F ihF => simp [denotMt, MtSat, ihF]
+  | forallDelay F ihF => simp [denotMt, MtSat, ihF]
+  | reset x F ihF => simp [denotMt, MtSat, ihF]
+  | guard g => simp [denotMt, MtSat]
+
 /-- A process state satisfies `F` when the extended state
 with every formula clock zero satisfies it: `(p, u₀) ⊨ F` with `u₀ ≡ 0`. -/
 def MtSatState (T : TLTS Proc Act) (p : Proc) (F : Mt Act D) : Prop :=
