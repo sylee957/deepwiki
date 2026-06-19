@@ -46,6 +46,16 @@ theorem exists_iidBinaryProcess :
       iIndepFun X P ∧ IsProbabilityMeasure P :=
   exists_iid ℤ (bernoulliMeasure (1 : ℝ) (-1) ⟨1 / 2, Set.mem_Icc.mpr ⟨by norm_num, by norm_num⟩⟩)
 
+/-- **Problem 1.18**: for any probability measure `ν` on `ℝ` (the law associated with a
+distribution function `F`), there exists a probability space carrying an iid sequence `(Xₜ)`
+each with law `ν`. The existence (not evident from the finite-dimensional laws alone) is
+Kolmogorov's theorem; concretely it is the coordinate process on the infinite product of `ν`.
+Generalizes `exists_iidBinaryProcess` from the fair `±1` law to an arbitrary marginal. -/
+theorem exists_iidProcess (ν : Measure ℝ) [IsProbabilityMeasure ν] :
+    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
+      (∀ t, Measurable (X t)) ∧ (∀ t, HasLaw (X t) ν P) ∧ iIndepFun X P ∧ IsProbabilityMeasure P :=
+  exists_iid ℤ ν
+
 /-- Bilinear expansion of the covariance of two linear combinations of `A`, `B`. -/
 private theorem covariance_lin_comb [IsFiniteMeasure μ] {A B : Ω → ℝ}
     (hA : MemLp A 2 μ) (hB : MemLp B 2 μ) (c₁ d₁ c₂ d₂ : ℝ) :

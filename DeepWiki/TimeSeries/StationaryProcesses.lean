@@ -224,4 +224,42 @@ theorem IsWeaklyStationary.abs_acvfStat_le [IsProbabilityMeasure μ]
   have hsq : acvfStat X μ h ^ 2 ≤ acvfStat X μ 0 ^ 2 := by nlinarith [hd]
   exact abs_le_of_sq_le_sq hsq hX.acvfStat_zero_nonneg
 
+/-! ## Problem 1.12: recognizing autocovariance functions -/
+
+/-- Problem 1.12(a) candidate: `κ(0) = 1`, `κ(h) = 1/h` for `h ≠ 0`. -/
+noncomputable def lagRecip (h : ℤ) : ℝ := if h = 0 then 1 else 1 / (h : ℝ)
+
+/-- **Problem 1.12(a)**: `lagRecip` is **not even** (`κ(-1) = -1 ≠ 1 = κ(1)`), hence — by the
+characterization of autocovariance functions — not the autocovariance of any stationary
+process. -/
+theorem lagRecip_not_even : ¬ (∀ h : ℤ, lagRecip (-h) = lagRecip h) := by
+  intro heven
+  have h1 := heven 1
+  norm_num [lagRecip] at h1
+
+/-- `(-1)^h` is self-inverse: `((-1)^h)⁻¹ = (-1)^h` (its square is `((-1)·(-1))^h = 1`). -/
+theorem neg_one_zpow_self_inv (h : ℤ) : ((-1 : ℝ) ^ h)⁻¹ = (-1) ^ h := by
+  have hsq : (-1 : ℝ) ^ h * (-1) ^ h = 1 := by rw [← mul_zpow]; norm_num
+  exact inv_eq_of_mul_eq_one_left hsq
+
+/-- **Problem 1.12(b)**: `κ(h) = (-1)^h` is even, `κ(-h) = κ(h)`. -/
+theorem neg_one_zpow_even (h : ℤ) : (-1 : ℝ) ^ (-h) = (-1) ^ h := by
+  rw [zpow_neg, neg_one_zpow_self_inv]
+
+/-- **Problem 1.12(b)**: `κ(h) = (-1)^h` is non-negative definite —
+`∑ᵢⱼ aᵢaⱼ(-1)^(tᵢ-tⱼ) = (∑ᵢ aᵢ(-1)^(tᵢ))² ≥ 0` — hence (with evenness) is the autocovariance
+of a stationary process. -/
+theorem isNonnegDefinite_neg_one_zpow : IsNonnegDefinite (fun h => (-1 : ℝ) ^ h) := by
+  intro n a t
+  have key : ∀ i j : Fin n, (-1 : ℝ) ^ (t i - t j) = (-1) ^ (t i) * (-1) ^ (t j) := by
+    intro i j
+    rw [zpow_sub₀ (by norm_num : (-1 : ℝ) ≠ 0), div_eq_mul_inv, neg_one_zpow_self_inv]
+  have expand : ∑ i, ∑ j, a i * a j * (-1 : ℝ) ^ (t i - t j)
+      = (∑ i, a i * (-1) ^ (t i)) ^ 2 := by
+    rw [sq, Finset.sum_mul_sum]
+    exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by rw [key i j]; ring
+  show 0 ≤ ∑ i, ∑ j, a i * a j * (-1 : ℝ) ^ (t i - t j)
+  rw [expand]
+  positivity
+
 end DeepWiki.TimeSeries

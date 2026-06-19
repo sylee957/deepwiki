@@ -400,4 +400,38 @@ theorem ex_1_11 [IsFiniteMeasure μ] {X Y : ℤ → Ω → ℝ}
   ⟨hX.add_of_uncorrelated hY hXY,
     fun h => acvfStat_add_of_uncorrelated hX.memLp hY.memLp hXY h⟩
 
+/-- **Problem 1.12(a)** (p.41): the function `κ(0) = 1`, `κ(h) = 1/h` (`h ≠ 0`) is **not** the
+autocovariance function of any stationary time series — it is not even (`κ(-1) = -1 ≠ 1 =
+κ(1)`), and autocovariance functions must be even (Theorem 1.5.1). The library's `lagRecip`,
+`lagRecip_not_even`. -/
+theorem ex_1_12_a :
+    ¬ (∃ (ν : Measure (ℤ → ℝ)) (X : ℤ → (ℤ → ℝ) → ℝ), IsProbabilityMeasure ν ∧
+        IsWeaklyStationary X ν ∧ ∀ h, acvfStat X ν h = lagRecip h) := fun hex =>
+  lagRecip_not_even ((isACVF_iff_even_and_isNonnegDefinite lagRecip).mp hex).1
+
+/-- **Problem 1.12(b)** (p.41): the function `κ(h) = (-1)^h` **is** the autocovariance function
+of a stationary time series — it is even and non-negative definite (`∑ᵢⱼ aᵢaⱼ(-1)^(tᵢ-tⱼ) =
+(∑ᵢ aᵢ(-1)^(tᵢ))² ≥ 0`), so Theorem 1.5.1 constructs a stationary process realizing it. The
+library's `neg_one_zpow_even`, `isNonnegDefinite_neg_one_zpow`. -/
+theorem ex_1_12_b :
+    ∃ (ν : Measure (ℤ → ℝ)) (X : ℤ → (ℤ → ℝ) → ℝ), IsProbabilityMeasure ν ∧
+      IsWeaklyStationary X ν ∧ ∀ h, acvfStat X ν h = (-1 : ℝ) ^ h :=
+  (isACVF_iff_even_and_isNonnegDefinite (fun h => (-1 : ℝ) ^ h)).mpr
+    ⟨neg_one_zpow_even, isNonnegDefinite_neg_one_zpow⟩
+
+/-- **Problem 1.15** (p.41): "Prove Proposition 1.6.3" — the spectral decomposition of a
+symmetric matrix. This is exactly `prop_1_6_3` (Mathlib's
+`Matrix.IsHermitian.spectral_theorem`). -/
+alias ex_1_15 := Matrix.IsHermitian.spectral_theorem
+
+/-- **Problem 1.18** (p.41): given any distribution function `F` — equivalently, a probability
+law `ν` on `ℝ` — there exists a sequence of independent identically distributed random
+variables with common distribution `F`, by Kolmogorov's theorem. The library's
+`exists_iidProcess`. -/
+theorem ex_1_18 (ν : Measure ℝ) [IsProbabilityMeasure ν] :
+    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (P : Measure Ω) (X : ℤ → Ω → ℝ),
+      (∀ t, Measurable (X t)) ∧ (∀ t, HasLaw (X t) ν P) ∧ iIndepFun X P ∧
+        IsProbabilityMeasure P :=
+  exists_iidProcess ν
+
 end DeepWiki.Ts
