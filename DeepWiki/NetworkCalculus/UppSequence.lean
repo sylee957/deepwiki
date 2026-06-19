@@ -435,6 +435,46 @@ theorem convNat_add_lcm_of_balanced [AddCommMonoid V] [LinearOrder V] [IsOrdered
             rw [← hsshift (n - k) (by omega), show n - k + d = n + d - k from by omega]
         _ = r.convNat s (n + d) := hke.symm
 
+/-- **Lemma 4.4, lower bound** (general — all slope cases, no Archimedean needed). The convolution
+grows at least by the smaller per-`d` slope: `(f⊗g)(n) + min(c_f', c_g') ≤ (f⊗g)(n+d)` from rank
+`T_f + T_g + d`. (The matching upper bound — full Lemma 4.4 — needs the dominant-slope minimizer to
+stay in the periodic region, the remaining open step.) Proof: the minimizer `k` of `(f⊗g)(n+d)` lands
+either deep enough to shift `+d` out of `f` (giving `+c_f'`) or far enough that the `g`-argument is
+periodic (giving `+c_g'`); `min` is below both. -/
+theorem convNat_add_lcm_ge [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V] (r s : UppSeq V)
+    {n : ℕ} (hn : (r.vals.length - r.period) + (s.vals.length - s.period)
+      + Nat.lcm r.period s.period ≤ n) :
+    r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+        ((Nat.lcm r.period s.period / s.period) • s.incr)
+      ≤ r.convNat s (n + Nat.lcm r.period s.period) := by
+  set d := Nat.lcm r.period s.period with hd
+  set cr := (d / r.period) • r.incr with hcr
+  set cs := (d / s.period) • s.incr with hcs
+  have hrstep : ∀ m, r.vals.length - r.period ≤ m → r.evalNat (m + d) = r.evalNat m + cr := by
+    intro m hm; simpa using r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) 1 hm
+  have hsstep : ∀ m, s.vals.length - s.period ≤ m → s.evalNat (m + d) = s.evalNat m + cs := by
+    intro m hm; simpa using s.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_right r.period s.period) 1 hm
+  obtain ⟨k, hk, hke⟩ := r.convNat_eq s (n + d)
+  by_cases hkf : r.vals.length - r.period + d ≤ k
+  · have hconv : r.convNat s n ≤ r.evalNat (k - d) + s.evalNat (n - (k - d)) := r.convNat_le s (by omega)
+    have e1 : r.evalNat (k - d) + cr = r.evalNat k := by
+      rw [← hrstep (k - d) (by omega), show k - d + d = k from by omega]
+    have hbound : r.convNat s n + cr ≤ r.convNat s (n + d) := by
+      rw [hke]
+      calc r.convNat s n + cr ≤ (r.evalNat (k - d) + s.evalNat (n - (k - d))) + cr :=
+            add_le_add_left hconv _
+        _ = (r.evalNat (k - d) + cr) + s.evalNat (n - (k - d)) := by abel
+        _ = r.evalNat k + s.evalNat (n + d - k) := by rw [e1, show n - (k - d) = n + d - k from by omega]
+    exact le_trans (add_le_add_right (min_le_left cr cs) _) hbound
+  · have hconv : r.convNat s n ≤ r.evalNat k + s.evalNat (n - k) := r.convNat_le s (by omega)
+    have hbound : r.convNat s n + cs ≤ r.convNat s (n + d) := by
+      rw [hke]
+      calc r.convNat s n + cs ≤ (r.evalNat k + s.evalNat (n - k)) + cs := add_le_add_left hconv _
+        _ = r.evalNat k + (s.evalNat (n - k) + cs) := by abel
+        _ = r.evalNat k + s.evalNat (n + d - k) := by
+            rw [← hsstep (n - k) (by omega), show n - k + d = n + d - k from by omega]
+    exact le_trans (add_le_add_right (min_le_right cr cs) _) hbound
+
 /-- Sanity check (gate-verified): `(demoSeq ⊗ demoSeq)(3) = 3` and `(·)(5) = 6`
 (`f = 0,1,2,4,5,7,…`; e.g. at `n=3` the min is `f(1)+f(2) = 1+2`). -/
 example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by native_decide
