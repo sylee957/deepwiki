@@ -10,6 +10,8 @@ pseudo-periodicity. (The step-function reading `ℝ≥0 → V` that ties this to
 
 namespace DeepWiki
 
+open scoped NNReal
+
 /-- A finite representation of a discrete ultimately-pseudo-periodic sequence: the stored prefix
 `vals` (`= f(0), …, f(vals.length-1)`, the transient part plus one full period), a positive
 `period`, and the per-period `incr`-ement. The invariants `0 < period ≤ vals.length` guarantee one
@@ -54,6 +56,29 @@ theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) 
     r.evalNat n = r.vals.get ⟨n, hn⟩ := by
   conv_lhs => rw [evalNat.eq_def]
   rw [dif_pos hn]
+
+/-- `⌊t + n⌋₊ = ⌊t⌋₊ + n` on `ℝ≥0` — proved directly (the ring lemma `Nat.floor_add_natCast` needs
+a ring, which `ℝ≥0` is not). -/
+private theorem nnFloor_add_nat (t : ℝ≥0) (m : ℕ) : ⌊t + (m : ℝ≥0)⌋₊ = ⌊t⌋₊ + m := by
+  rw [Nat.floor_eq_iff zero_le]
+  refine ⟨?_, ?_⟩
+  · calc ((⌊t⌋₊ + m : ℕ) : ℝ≥0) = (⌊t⌋₊ : ℝ≥0) + m := by push_cast; ring
+      _ ≤ t + m := by gcongr; exact Nat.floor_le zero_le
+  · calc t + (m : ℝ≥0) < ((⌊t⌋₊ : ℝ≥0) + 1) + m := by gcongr; exact Nat.lt_floor_add_one t
+      _ = ((⌊t⌋₊ + m : ℕ) : ℝ≥0) + 1 := by push_cast; ring
+
+/-- The step-function reading `f : ℝ≥0 → V`, sampling the sequence at `⌊t⌋`. -/
+noncomputable def toFun [Add V] (r : UppSeq V) : ℝ≥0 → V := fun t => r.evalNat ⌊t⌋₊
+
+/-- **The finite representation is genuinely UPP.** Its step-function reading `toFun` is ultimately
+pseudo-periodic (`IsUPPWith`) with rank `vals.length - period`, period `period` and increment
+`incr` — tying the computable `UppSeq` to the semantic layer of the (min,plus) calculus. -/
+theorem isUPPWith_toFun [AddMonoid V] (r : UppSeq V) :
+    IsUPPWith r.toFun (↑(r.vals.length - r.period)) (↑r.period) r.incr := by
+  refine ⟨by exact_mod_cast r.hperiod, fun t ht => ?_⟩
+  show r.evalNat ⌊t + (↑r.period : ℝ≥0)⌋₊ = r.evalNat ⌊t⌋₊ + r.incr
+  rw [nnFloor_add_nat]
+  exact r.evalNat_add_period (Nat.le_floor ht)
 
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
