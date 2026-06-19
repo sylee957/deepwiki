@@ -2,6 +2,7 @@ import DeepWiki.TimeSeries.StationaryProcesses
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Data.Matrix.Mul
 import Mathlib.Probability.BrownianMotion.GaussianProjectiveFamily
+import Mathlib.Probability.Distributions.Gaussian.IsGaussianProcess.Def
 import DeepWiki.MeasureTheory.KolmogorovExtension
 import Mathlib.Tactic
 
@@ -142,5 +143,15 @@ lemma covariance_coordinate_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (
   rw [← hpl, covariance_map (measurable_pi_apply _).aestronglyMeasurable
       (measurable_pi_apply _).aestronglyMeasurable (by fun_prop)] at key
   exact key
+
+/-- The coordinate process `t ↦ ω t` under `stationaryGaussianMeasure` is a Gaussian
+process: every finite-dimensional marginal is multivariate Gaussian (Def 1.3.4). -/
+lemma isGaussianProcess_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) :
+    IsGaussianProcess (fun (t : ℤ) (ω : ℤ → ℝ) => ω t) (stationaryGaussianMeasure heven hnd) := by
+  refine ⟨fun I => ⟨?_⟩⟩
+  rw [show (stationaryGaussianMeasure heven hnd).map (fun ω => I.restrict (fun t => ω t))
+        = gaussianProjectiveFamily κ I from isProjectiveLimit_stationaryGaussianMeasure heven hnd I]
+  infer_instance
 
 end DeepWiki.TimeSeries
