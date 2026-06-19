@@ -2,7 +2,7 @@ import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedHmlClocks
 import DeepWiki.ReactiveSystems.TimedRegions
 import Mathlib.NumberTheory.Real.Irrational
-import Mathlib.Data.Real.Sqrt
+import Mathlib.Analysis.Real.Sqrt
 
 /-! # Toward the `√2` example's full-`Mt`-equivalence (Ex 12.12(3) / Prop 12.2) — partial
 The `√2` TLTS states `(A,0)` and `(B,0)` are conjectured (book Ex 12.12(3)) to satisfy the same

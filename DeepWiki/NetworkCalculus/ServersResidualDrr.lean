@@ -96,9 +96,9 @@ theorem add_drrResidual_le_of_isDrr {ι : Type*} [Fintype ι]
       (Finset.mem_univ i)] at hstr
   -- the constants are exact truncated differences
   have hQle : Q i ≤ ∑ j, Q j :=
-    Finset.single_le_sum (fun j _ => zero_le') (Finset.mem_univ i)
+    Finset.single_le_sum (fun j _ => zero_le) (Finset.mem_univ i)
   have hlle : lmax i ≤ ∑ j, lmax j :=
-    Finset.single_le_sum (fun j _ => zero_le') (Finset.mem_univ i)
+    Finset.single_le_sum (fun j _ => zero_le) (Finset.mem_univ i)
   have hQerase := sum_tsub_eq_sum_erase Q i
   have hlerase := sum_tsub_eq_sum_erase lmax i
   rcases eq_zero_or_pos (∑ j, Q j) with hF | hF

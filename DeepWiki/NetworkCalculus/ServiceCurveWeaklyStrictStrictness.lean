@@ -4,7 +4,7 @@ import DeepWiki.NetworkCalculus.ServersRate
 import DeepWiki.NetworkCalculus.ArrivalCurvesShaperGreedy
 import DeepWiki.NetworkCalculus.ServiceCurveMonotony
 import DeepWiki.NetworkCalculus.ServiceCurvePackets
-import Mathlib.Data.Real.Sqrt
+import Mathlib.Analysis.Real.Sqrt
 
 /-! # Weakly strict is strictly weaker than strict
 The middle inclusion of the hierarchy is strict: a server may grant
@@ -29,9 +29,9 @@ theorem wsBurst_mono : Monotone wsBurst := by
   by_cases ha : a = 0
   · subst ha
     simp only [wsBurst, if_pos]
-    exact zero_le'
+    exact zero_le
   · have hb : b ≠ 0 := fun hb =>
-      ha (le_antisymm (hb ▸ hab) zero_le')
+      ha (le_antisymm (hb ▸ hab) zero_le)
     simp only [wsBurst, if_neg ha, if_neg hb]
     exact le_rfl
 
@@ -75,7 +75,7 @@ noncomputable def wsWitnessDeparture : Curve where
   zero := by
     show min (2 * 0) (min ((2 * 0 + 2) / 3) (4 / 3)) = 0
     rw [mul_zero]
-    exact min_eq_left zero_le'
+    exact min_eq_left zero_le
   pwc := by
     refine isPiecewiseContinuous_of_continuous _ ?_
     exact (continuous_const.mul continuous_id).min
@@ -113,8 +113,8 @@ theorem wsWitnessDeparture_le_wsWitnessArrival :
   by_cases ht : t = 0
   · subst ht
     show min (2 * 0) _ ≤ _
-    rw [mul_zero, min_eq_left zero_le']
-    exact zero_le'
+    rw [mul_zero, min_eq_left zero_le]
+    exact zero_le
   · show min (2 * t) (min ((2 * t + 2) / 3) (4 / 3))
       ≤ if t = 0 then 0 else 4 / 3
     rw [if_neg ht]
@@ -174,7 +174,7 @@ theorem wsWitness_mem_weaklyStrictServiceRel :
           · exact h
           · exact absurd (h.trans hut) (not_le.mpr ht)
         · rintro rfl
-          exact ⟨zero_le', wsWitness_eq_iff.mpr (Or.inl rfl)⟩
+          exact ⟨zero_le, wsWitness_eq_iff.mpr (Or.inl rfl)⟩
       rw [hset, csSup_singleton]
     have hD0 : wsWitnessDeparture 0 = 0 := wsWitnessDeparture.zero
     rw [hstart, hD0, zero_add, tsub_zero]
@@ -324,8 +324,8 @@ theorem start_rateCurve_rateConvCurve_eq_zero {β : ℝ≥0 → ℝ≥0}
     (ht₀ : 0 < t₀) (hts : t₀ ≤ s) (hβs : 0 < β s) (t : ℝ≥0) :
     start ⇑(rateCurve (β s / s))
       ⇑(rateConvCurve β (β s / s) hmono (hvan 0 ht₀)) t = 0 := by
-  refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_)
-    zero_le'
+  refine le_antisymm (csSup_le ⟨0, zero_le, ?_⟩ fun u hu => ?_)
+    zero_le
   · have hA0 : rateCurve (β s / s) 0 = 0 := (rateCurve _).zero
     have hD0 : rateConvCurve β (β s / s) hmono (hvan 0 ht₀) 0 = 0 :=
       (rateConvCurve β (β s / s) hmono (hvan 0 ht₀)).zero
@@ -472,7 +472,7 @@ theorem wsmpDep_le_arr (b : ℝ≥0) (hb1 : b ≤ 1) (t : ℝ≥0) :
     wsmpDep b t ≤ rateCurve 1 t := by
   show max (min t 1) (b * t) ≤ rateCurve 1 t
   rw [rateCurve_apply, one_mul]
-  exact max_le (min_le_left _ _) (mul_le_of_le_one_left zero_le' hb1)
+  exact max_le (min_le_left _ _) (mul_le_of_le_one_left zero_le hb1)
 
 /-- The pair's equality points are exactly `[0, 1]` (for `b < 1`). -/
 theorem wsmp_eq_iff (b : ℝ≥0) (hb1 : b < 1) {u : ℝ≥0} :
@@ -489,7 +489,7 @@ theorem wsmp_eq_iff (b : ℝ≥0) (hb1 : b < 1) {u : ℝ≥0} :
     · rw [max_eq_right h2] at h
       exact absurd h (ne_of_gt (mul_lt_of_lt_one_left hupos hb1))
   · intro h
-    rw [min_eq_left h, max_eq_left (mul_le_of_le_one_left zero_le' hb1.le)]
+    rw [min_eq_left h, max_eq_left (mul_le_of_le_one_left zero_le hb1.le)]
 
 /-- The pair is min-plus served at `λ_b` (`b ≤ 1`): the `(0, t)` split bounds
 the convolution by `λ_b(t) ≤ D(t)`. -/
@@ -605,7 +605,7 @@ theorem wsmpGen_eq_iff {β : ℝ≥0 → ℝ≥0} {ρ s : ℝ≥0} {hmono hlc hp
     · rw [max_eq_left h2] at h
       exact absurd h (ne_of_gt (mul_lt_mul_of_pos_left hu hρ))
     · rw [max_eq_right h2] at h
-      exact absurd h (ne_of_gt (hlt u (lt_of_le_of_lt zero_le' hu)))
+      exact absurd h (ne_of_gt (hlt u (lt_of_le_of_lt zero_le hu)))
   · intro h
     rw [min_eq_left (by gcongr), max_eq_left (hle u)]
 
@@ -663,7 +663,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_subRate
   have hle : ∀ t, β t ≤ ρ * t := fun t => by
     rcases eq_or_ne t 0 with rfl | ht
     · rw [h0, mul_zero]
-    · exact (hlt t (lt_of_le_of_ne zero_le' (Ne.symm ht))).le
+    · exact (hlt t (lt_of_le_of_ne zero_le (Ne.symm ht))).le
   refine lt_of_le_of_ne (weaklyStrictServiceRel_le_minimalServiceRel _) fun heq => ?_
   refine wsmpGen_not_mem (hmono := hmono) (hlc := hlc) (hpwc := hpwc) (h0 := h0)
     hρ hpos hlt hle ts hts1 hts2 ?_
@@ -741,7 +741,7 @@ theorem wsmpSup_not_mem (β : Curve) {ρ : ℝ≥0}
         by_contra hu0
         exact absurd heq.symm (ne_of_lt (wsmpSupDep_lt β hbelow (zero_lt_iff.mpr hu0)))
       · rintro rfl
-        refine ⟨zero_le', ?_⟩
+        refine ⟨zero_le, ?_⟩
         rw [rateCurve_apply, mul_zero]
         exact ((wsmpSupDep β ρ).zero).symm
     rw [hset, csSup_singleton]
@@ -854,7 +854,7 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_strictSubadditive
   have hDapp : ∀ u, D u = min (β u) (β t + 1) := fun _ => rfl
   have hA_zero : A 0 = 0 := by
     rw [hAapp, if_neg (lt_irrefl 0),
-      if_neg (not_lt.mpr (zero_le' : (0 : ℝ≥0) ≤ a)), add_zero]
+      if_neg (not_lt.mpr (zero_le : (0 : ℝ≥0) ≤ a)), add_zero]
   have hA_mid : ∀ u, 0 < u → u ≤ a → A u = β a := fun u h0u hua => by
     rw [hAapp, if_pos h0u, if_neg (not_lt.mpr hua), add_zero]
   have hA_hi : ∀ u, a < u → A u = β t + 1 := fun u hu => by
@@ -862,15 +862,15 @@ theorem weaklyStrictServiceRel_lt_minimalServiceRel_of_strictSubadditive
   have hA_le_M : ∀ u, A u ≤ β t + 1 := by
     intro u
     rcases le_or_gt u a with hua | hua
-    · rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ u) with h0u | h0u
-      · rw [← h0u, hA_zero]; exact zero_le'
+    · rcases eq_or_lt_of_le (zero_le : (0 : ℝ≥0) ≤ u) with h0u | h0u
+      · rw [← h0u, hA_zero]; exact zero_le
       · rw [hA_mid u h0u hua]; exact hβaM.le
     · rw [hA_hi u hua]
   have hcaus : D ≤ A := by
     intro u
     rcases le_or_gt u a with hua | hua
-    · rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ u) with h0u | h0u
-      · rw [← h0u, hDapp, h0, hA_zero, min_eq_left (zero_le' : (0 : ℝ≥0) ≤ β t + 1)]
+    · rcases eq_or_lt_of_le (zero_le : (0 : ℝ≥0) ≤ u) with h0u | h0u
+      · rw [← h0u, hDapp, h0, hA_zero, min_eq_left (zero_le : (0 : ℝ≥0) ≤ β t + 1)]
       · rw [hA_mid u h0u hua, hDapp]
         exact (min_le_left _ _).trans (hmono hua)
     · rw [hA_hi u hua, hDapp]; exact min_le_right _ _
@@ -999,8 +999,8 @@ noncomputable def rlDep : Curve where
   mono := fun _ _ h => min_le_min (min_le_min (by gcongr) (by gcongr)) le_rfl
   zero := by
     show min (min (4 * 0) (0 + 3)) 8 = 0
-    rw [mul_zero, zero_add, min_eq_left (zero_le' : (0 : ℝ≥0) ≤ 3),
-      min_eq_left (zero_le' : (0 : ℝ≥0) ≤ 8)]
+    rw [mul_zero, zero_add, min_eq_left (zero_le : (0 : ℝ≥0) ≤ 3),
+      min_eq_left (zero_le : (0 : ℝ≥0) ≤ 8)]
   pwc := isPiecewiseContinuous_of_continuous _
     (((continuous_const.mul continuous_id).min
       (continuous_id.add continuous_const)).min continuous_const)
@@ -1045,7 +1045,7 @@ theorem rlDep_lt_eight_of_lt {t : ℝ≥0} (h : t < 5) : rlDep t < 8 := by
 theorem rlDep_le_burst : rlDep ≤ burstCurve 8 := by
   intro t
   rcases eq_or_ne t 0 with rfl | ht
-  · rw [rlDep_zero]; exact zero_le'
+  · rw [rlDep_zero]; exact zero_le
   · rw [burstCurve_apply, burstFun_apply_of_ne 8 ht, rlDep_apply]
     exact min_le_right _ _
 
@@ -1053,7 +1053,7 @@ theorem rlDep_le_burst : rlDep ≤ burstCurve 8 := by
 origin. -/
 theorem rl_start_lt_five {t : ℝ≥0} (ht : t < 5) :
     start ⇑(burstCurve 8) ⇑rlDep t = 0 := by
-  refine le_antisymm (csSup_le ⟨0, ⟨zero_le', ?_⟩⟩ fun u hu => ?_) zero_le'
+  refine le_antisymm (csSup_le ⟨0, ⟨zero_le, ?_⟩⟩ fun u hu => ?_) zero_le
   · show burstCurve 8 0 = rlDep 0
     rw [burstCurve_apply, burstFun_zero_eq, rlDep_zero]
   · by_contra hu0

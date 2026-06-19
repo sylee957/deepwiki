@@ -153,7 +153,7 @@ theorem delayAt_packetizeCurve_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
       push_cast; rfl]
     refine hDevAt_le ?_
     rcases eq_zero_or_pos t with rfl | ht
-    · exact (A.zero : A 0 = 0).trans_le zero_le'
+    · exact (A.zero : A 0 = 0).trans_le zero_le
     · obtain ⟨n, hPn, _, _, _⟩ :=
         exists_packetize_eq hL A.mono A.leftCont ht
       have hAt : A t = L n := by
@@ -295,7 +295,7 @@ theorem pkWitness_stair_leftCont :
   · have hx : (0 : ℝ≥0) < t - 1 := tsub_pos_of_lt h1
     have hk1 : 1 ≤ ⌈(t - 1 : ℝ≥0)⌉₊ := Nat.one_le_ceil_iff.mpr hx
     have hkt : ((⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)) < t := by
-      have h := Nat.ceil_lt_add_one (zero_le' : (0 : ℝ≥0) ≤ t - 1)
+      have h := Nat.ceil_lt_add_one (zero_le : (0 : ℝ≥0) ≤ t - 1)
       rwa [tsub_add_cancel_of_le h1.le] at h
     show Filter.Tendsto _ (𝓝[<] t) (𝓝 ((⌈(t - 1 : ℝ≥0)⌉₊ : ℝ≥0)))
     refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
@@ -387,7 +387,7 @@ theorem pkWitness_strict :
           calc (m : ℝ≥0) + 2 = ((m : ℝ≥0) + 1) + 1 := by ring
             _ ≤ ((s - 1) + 1) + 1 := by
               exact add_le_add (add_le_add
-                (Nat.floor_le zero_le') le_rfl) le_rfl
+                (Nat.floor_le zero_le) le_rfl) le_rfl
             _ = s + 1 := by rw [tsub_add_cancel_of_le hs1]
       have hb := hbl _ hmem
       rw [pkWitnessB_apply, pkWitnessA_apply,
@@ -403,7 +403,7 @@ theorem pkWitness_strict :
         refine max_eq_left ?_
         rcases le_total (t - s) 2⁻¹ with hc | hc
         · rw [tsub_eq_zero_of_le hc, mul_zero]
-          exact zero_le'
+          exact zero_le
         · have hx1 : t - s ≤ 1 := by
             rw [tsub_le_iff_right, add_comm]
             exact hts1
@@ -438,7 +438,7 @@ theorem pkWitness_packetize_lt {t : ℝ≥0} (ht : 1 < t) :
     rcases le_or_gt u 1 with h1u | h1u
     · rw [tsub_eq_zero_of_le h1u] at hn
       have hn' : (n : ℝ≥0) ≤ 0 := hn
-      have hn0 : n = 0 := by exact_mod_cast le_antisymm hn' zero_le'
+      have hn0 : n = 0 := by exact_mod_cast le_antisymm hn' zero_le
       rw [hn0]
       exact Nat.one_le_ceil_iff.mpr (tsub_pos_of_lt ht)
     · have hn' : (n : ℝ≥0) ≤ u - 1 := hn
@@ -452,7 +452,7 @@ theorem pkWitness_packetize_lt {t : ℝ≥0} (ht : 1 < t) :
 /-- The packetizer has released nothing by time `1`. -/
 theorem pkWitness_packetize_one :
     packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 1 = 0 := by
-  refine le_antisymm ?_ zero_le'
+  refine le_antisymm ?_ zero_le
   have h : packetize (fun n => (n : ℝ≥0)) ⇑pkWitnessB 1 ≤ pkWitnessB 1 :=
     packetize_le pkWitnessB.mono _ 1
   rwa [pkWitnessB_apply, tsub_self] at h

@@ -37,7 +37,7 @@ theorem gatedResidual_le_apply (β α : ℝ≥0 → ℝ≥0) (T v : ℝ≥0) :
   · rw [gatedResidual_apply_of_le h]
     exact tsub_le_self
   · rw [gatedResidual_apply_of_lt h]
-    exact zero_le'
+    exact zero_le
 
 /-- Peeling from an already-gated residual collapses to one gate:
 for a later gate the subtractions merge,
@@ -57,7 +57,7 @@ curve itself. -/
 theorem gatedResidual_zero (β : ℝ≥0 → ℝ≥0) :
     gatedResidual β (fun _ => 0) 0 = β := by
   funext v
-  rw [gatedResidual_apply_of_le zero_le', tsub_zero]
+  rw [gatedResidual_apply_of_le zero_le, tsub_zero]
 
 /-- A convex function nonpositive at the origin and nonnegative at a
 positive gate is nonnegative and non-decreasing past the gate: the
@@ -211,9 +211,9 @@ theorem div_mul_sub_le_div_mul_of_weighted {ι : Type*} [Fintype ι] [DecidableE
     (hΦ : 0 < ∑ j, φ j) (hw : φ k * b ≤ (∑ j, φ j) * a) :
     (φ i / ∑ j ∈ Finset.univ.erase k, φ j) * (b - a) ≤ (φ i / ∑ j, φ j) * b := by
   rcases le_or_gt b a with hba | hba
-  · rw [tsub_eq_zero_of_le hba, mul_zero]; exact zero_le'
-  rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ ∑ j ∈ Finset.univ.erase k, φ j) with hΦ1 | hΦ1
-  · rw [← hΦ1, div_zero, zero_mul]; exact zero_le'
+  · rw [tsub_eq_zero_of_le hba, mul_zero]; exact zero_le
+  rcases eq_or_lt_of_le (zero_le : (0 : ℝ≥0) ≤ ∑ j ∈ Finset.univ.erase k, φ j) with hΦ1 | hΦ1
+  · rw [← hΦ1, div_zero, zero_mul]; exact zero_le
   rw [← NNReal.coe_le_coe]
   push_cast [NNReal.coe_sub hba.le]
   rw [div_mul_eq_mul_div, div_mul_eq_mul_div,
@@ -302,7 +302,7 @@ theorem add_gatedResidual_le_of_isGps {ι : Type*} [DecidableEq ι]
   have hαβ : α (t - s) ≤ β (t - s) := by
     refine le_of_mul_le_mul_left (le_trans (hcross (t - s) hT) ?_) hΦ
     exact mul_le_mul_left
-      (Finset.single_le_sum (fun j _ => zero_le') hk) (β (t - s))
+      (Finset.single_le_sum (fun j _ => zero_le) hk) (β (t - s))
   -- totals split over `k` and the rest
   have hsplit : ∀ x, (∑ j ∈ J, (Ds j) x)
       = (Ds k) x + ∑ j ∈ J.erase k, (Ds j) x :=
@@ -452,7 +452,7 @@ theorem add_max_div_mul_le_of_isGps_ungated {ι : Type*} [Fintype ι] [Decidable
     rcases le_or_gt T (t - s) with hT | hT
     · rw [gatedResidual_apply_of_le hT]
     · rw [gatedResidual_apply_of_lt hT, mul_zero, max_eq_left (hgate (t - s) hT),
-        max_eq_left zero_le']
+        max_eq_left zero_le]
   rw [heq]; exact hgated
 
 /-- Relation form, ungated: with the pre-crossing ordering `hgate`, flow `i ≠ k` is offered the

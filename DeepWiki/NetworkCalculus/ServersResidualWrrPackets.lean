@@ -43,7 +43,7 @@ theorem isWrrPackets_zero {ι : Type*} {w : ι → ℕ}
     {Ll Lu : ι → ℕ → ℝ≥0} (hLl0 : ∀ i, Ll i 0 = 0) :
     IsWrrPackets w Ll Lu (fun _ _ => 0) (fun _ _ => 0) := by
   intro i s t hst hbl
-  refine ⟨0, ?_, fun j hj => zero_le'⟩
+  refine ⟨0, ?_, fun j hj => zero_le⟩
   simp [hLl0 i]
 
 /-- The linear packet curves `n ↦ n·ℓ` recover the constant-length
@@ -275,7 +275,7 @@ theorem wrrResidualStaircase_le_wrrResidualPackets {ι : Type*}
       refine le_trans (minConv_le_add _ _ (zero_add _)) ?_
       rw [rate_apply, mul_zero, hq, staircaseFun_apply, zero_mul,
         zero_add]
-      exact zero_le'
+      exact zero_le
     · -- extract the floor round count from the admissible supremum
       rw [wrrPacketsPrice_apply] at hu
       have hsup : (⨆ (p : ℕ)
@@ -323,7 +323,7 @@ theorem wrrResidualStaircase_le_wrrResidualPackets {ι : Type*}
               * ((w i : ℝ≥0) * lmin i)
             ≤ (tv / ((w i : ℝ≥0) * lmin i))
               * ((w i : ℝ≥0) * lmin i) :=
-              mul_le_mul' (Nat.floor_le zero_le') le_rfl
+              mul_le_mul' (Nat.floor_le zero_le) le_rfl
           _ = tv := div_mul_cancel₀ tv hq.ne'
       exact minConv_rate_one_staircaseFun_le hb hpq
   have hne : pseudoInv

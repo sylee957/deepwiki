@@ -216,7 +216,7 @@ theorem regionFingerprint_add_eq_step_caseC {cmax : C → ℕ} {w : Valuation C}
     · exact h
     · exfalso; apply hNI x hbx
       have hwx : w x = (cmax x : ℝ≥0) :=
-        le_antisymm hbx (by rw [← h]; exact_mod_cast Nat.floor_le (zero_le' (a := w x)))
+        le_antisymm hbx (by rw [← h]; exact_mod_cast Nat.floor_le (zero_le (a := w x)))
       rw [hwx]; exact fracPart_natCast (cmax x)
   -- the code-level `isMax` predicate on a bounded clock means maximal fraction
   have hisMaxChar : ∀ x, w x ≤ (cmax x : ℝ≥0) →
@@ -403,7 +403,7 @@ theorem regionFingerprint_add_eq_step_caseB {cmax : C → ℕ} {w : Valuation C}
       · exact h
       · exact absurd (by exact_mod_cast h : w x = (cmax x : ℝ≥0)) hne
     have hfllt : ⌊w x⌋₊ < cmax x := by
-      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le' (a := w x))) hlt
+      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le (a := w x))) hlt
       exact_mod_cast h2
     have hbnd : (w.add δ) x ≤ (cmax x : ℝ≥0) := by
       rw [Valuation.add_apply]
@@ -456,7 +456,7 @@ theorem regionFingerprint_add_eq_step_caseB {cmax : C → ℕ} {w : Valuation C}
         rcases lt_or_eq_of_le (show (w x : ℝ) ≤ cmax x from by exact_mod_cast hbx) with h | h
         · exact h
         · exact absurd (by exact_mod_cast h : w x = (cmax x : ℝ≥0)) hne
-      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le' (a := w x))) hlt
+      have h2 : (⌊w x⌋₊ : ℝ) < cmax x := lt_of_le_of_lt (Nat.floor_le (zero_le (a := w x))) hlt
       exact_mod_cast h2
     rw [Bool.and_eq_true, decide_eq_true_iff, hfzγ x hbx, hvalγ x hbx, decide_eq_true_iff]
     exact and_iff_left hfllt

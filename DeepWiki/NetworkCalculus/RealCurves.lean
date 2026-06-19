@@ -81,7 +81,7 @@ theorem delayENN_zero_eq (d : ℝ≥0∞) : delayENN d 0 = 0 := by
 
 /-- `delayEReal d 0 = 0`. -/
 theorem delayEReal_zero_eq (d : ℝ≥0) : delayEReal d 0 = 0 :=
-  delay_eq_zero d zero_le'
+  delay_eq_zero d zero_le
 
 /-- On finite arguments, `delayENN ↑d` agrees with `delayNN d`. -/
 theorem delayENN_coe (d t : ℝ≥0) :
@@ -232,7 +232,7 @@ theorem staircaseFun_eq_zero_of_le {T b d t : ℝ≥0} (h : t ≤ d) :
 
 /-- `staircaseFun T b d 0 = 0`. -/
 theorem staircaseFun_zero_eq (T b d : ℝ≥0) : staircaseFun T b d 0 = 0 :=
-  staircaseFun_eq_zero_of_le zero_le'
+  staircaseFun_eq_zero_of_le zero_le
 
 /-- `staircaseFun T b d` is nondecreasing. -/
 theorem staircaseFun_mono (T b d : ℝ≥0) : Monotone (staircaseFun T b d) := by
@@ -262,7 +262,7 @@ theorem burstFun_apply_of_ne (c : ℝ≥0) {t : ℝ≥0} (hne : t ≠ 0) :
 theorem burstFun_le (c t : ℝ≥0) : burstFun c t ≤ c := by
   rcases eq_or_ne t 0 with rfl | ht
   · rw [burstFun_zero_eq]
-    exact zero_le'
+    exact zero_le
   · rw [burstFun_apply_of_ne c ht]
 
 /-- `burstFun c` is monotone. -/
@@ -270,8 +270,8 @@ theorem burstFun_mono (c : ℝ≥0) : Monotone (burstFun c) := by
   intro a b hab
   rcases eq_or_ne a 0 with rfl | ha
   · rw [burstFun_zero_eq]
-    exact zero_le'
-  · have hb : b ≠ 0 := fun hb => ha (le_antisymm (hb ▸ hab) zero_le')
+    exact zero_le
+  · have hb : b ≠ 0 := fun hb => ha (le_antisymm (hb ▸ hab) zero_le)
     rw [burstFun_apply_of_ne c ha, burstFun_apply_of_ne c hb]
 
 /-- Larger delay, smaller process: `staircaseFun T b d' ≤ staircaseFun T b d`
@@ -375,7 +375,7 @@ theorem window_mono (w : ℝ≥0∞) : Monotone (window w) := by
     · rw [ha, hb]
     · rw [ha, window_zero_eq, show window w b = ⊤ from if_neg hb]
       exact le_top
-  · have hb : b ≠ 0 := fun hb0 => ha (le_antisymm (hb0 ▸ hab) zero_le')
+  · have hb : b ≠ 0 := fun hb0 => ha (le_antisymm (hb0 ▸ hab) zero_le)
     rw [show window w a = ⊤ from if_neg ha,
       show window w b = ⊤ from if_neg hb]
 
@@ -427,7 +427,7 @@ theorem rateLatencyNN_coe (R T u : ℝ≥0) :
 /-- **Scaling a rate-latency curve scales its rate**: `c·β_{R,T} = β_{c·R,T}`
 (same latency `T`). In particular the GPS share `(φᵢ/∑φ)·β_{R,T}` of a
 rate-latency server is the rate-latency curve `β_{(φᵢ/∑φ)·R, T}`. -/
-@[simp] theorem const_mul_rateLatencyNN (c R T : ℝ≥0) :
+theorem const_mul_rateLatencyNN (c R T : ℝ≥0) :
     (fun u => (c : ℝ≥0∞) * rateLatencyNN R T u) = rateLatencyNN (c * R) T := by
   funext u
   rw [rateLatencyNN_coe, rateLatencyNN_coe, ← ENNReal.coe_mul, mul_assoc]

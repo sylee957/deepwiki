@@ -54,7 +54,7 @@ theorem hDevAt_eq_pseudoInv_sub {V : Type*} [LinearOrder V]
   · have h1 : (hDevAt f g t : ℝ≥0∞) ≤ 0 :=
       hDevAt_le (d := 0) (by rwa [add_zero])
     rw [tsub_eq_zero_of_le (pseudoInv_le_of_le_apply hle)]
-    exact le_antisymm h1 zero_le'
+    exact le_antisymm h1 zero_le
   · exact hDevAt_eq_pseudoInv_sub_of_lt hg ht hgt
 
 /-- **The horizontal deviation is a deconvolution**:
@@ -69,14 +69,14 @@ theorem hDev_eq_deconv_pseudoInv_zero {V : Type*} [LinearOrder V]
   apply le_antisymm
   · refine iSup_le fun t => ?_
     rcases eq_or_ne t ⊤ with rfl | ht
-    · exact le_trans (hDevAt_le (d := 0) (by rwa [add_zero])) zero_le'
+    · exact le_trans (hDevAt_le (d := 0) (by rwa [add_zero])) zero_le
     · rw [hDevAt_eq_pseudoInv_sub hg ht]
       have h := sub_le_minDeconv (pseudoInv g ∘ f) (rateENN 1) 0 t
       rwa [zero_add, Function.comp_apply, hrate] at h
   · refine minDeconv_le fun s => ?_
     rcases eq_or_ne s ⊤ with rfl | hs
     · rw [hrate, ENNReal.sub_top]
-      exact zero_le'
+      exact zero_le
     · rw [zero_add, Function.comp_apply, hrate,
         ← hDevAt_eq_pseudoInv_sub hg hs]
       exact hDevAt_le_hDev f g s

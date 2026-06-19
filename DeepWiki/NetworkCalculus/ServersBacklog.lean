@@ -31,7 +31,7 @@ theorem Curve.zero_eq (A D : Curve) : A 0 = D 0 := by
 /-- The set defining `start` is nonempty (`0` belongs when `A 0 = D 0`). -/
 theorem start_set_nonempty {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0) (t : ℝ≥0) :
     { u | u ≤ t ∧ A u = D u }.Nonempty :=
-  ⟨0, zero_le', h0⟩
+  ⟨0, zero_le, h0⟩
 
 /-- `start A D t ≤ t` (`sSup ∅ = 0` covers an empty equality set). -/
 theorem start_le (A D : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
@@ -49,9 +49,9 @@ theorem start_eq_start_of_le {A D : ℝ≥0 → ℝ≥0} (h0 : A 0 = D 0)
   have hbw : BddAbove { u | u ≤ w ∧ A u = D u } :=
     ⟨w, fun x hx => hx.1⟩
   refine le_antisymm ?_ ?_
-  · refine csSup_le ⟨0, zero_le', h0⟩ fun v hv => ?_
+  · refine csSup_le ⟨0, zero_le, h0⟩ fun v hv => ?_
     exact le_csSup hbt ⟨hv.1.trans hwt, hv.2⟩
-  · refine csSup_le ⟨0, zero_le', h0⟩ fun v hv => ?_
+  · refine csSup_le ⟨0, zero_le, h0⟩ fun v hv => ?_
     have hvw : v ≤ w := le_trans (le_csSup hbt hv) hsw
     exact le_csSup hbw ⟨hvw, hv.2⟩
 
@@ -175,7 +175,7 @@ theorem leftLim_start_eq_of_ne {A D : ℝ≥0 → ℝ≥0}
     rcases eq_zero_or_pos s with h | h
     · refine absurd ?_ hsE
       rw [h]
-      exact ⟨zero_le', h0⟩
+      exact ⟨zero_le, h0⟩
     · exact h
   have hbot : 𝓝[<] s ≠ ⊥ := (nhdsLT_neBot_of_exists_lt ⟨0, hs0⟩).ne
   rw [hAmono.leftLim_eq_sSup hbot, hDmono.leftLim_eq_sSup hbot]
@@ -301,7 +301,7 @@ private theorem stepOut_mono :
   show (if a < 1 then (0 : ℝ≥0) else 1) ≤ if b < 1 then 0 else 1
   by_cases ha : a < 1
   · rw [if_pos ha]
-    exact zero_le'
+    exact zero_le
   · rw [if_neg ha, if_neg fun hb => ha (lt_of_le_of_lt hab hb)]
 
 /-- The step output `1_{[1,∞)}` is right-continuous. -/
@@ -343,7 +343,7 @@ theorem exists_rightContinuous_apply_start_eq_not_leftLim_start_eq :
       ∧ leftLim A (start A D 2) ≠ leftLim D (start A D 2) := by
   have hstart : start id (fun y : ℝ≥0 => if y < 1 then (0 : ℝ≥0) else 1) 2
       = 1 := by
-    refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) ?_
+    refine le_antisymm (csSup_le ⟨0, zero_le, ?_⟩ fun u hu => ?_) ?_
     · show (0 : ℝ≥0) = if (0 : ℝ≥0) < 1 then 0 else 1
       rw [if_pos zero_lt_one]
     · by_contra h1u
@@ -363,7 +363,7 @@ theorem exists_rightContinuous_apply_start_eq_not_leftLim_start_eq :
     show (if x < 1 then (0 : ℝ≥0) else 1) ≤ id x
     by_cases hx : x < 1
     · rw [if_pos hx]
-      exact zero_le'
+      exact zero_le
     · rw [if_neg hx]
       exact not_lt.mp hx
   · rw [hstart]
@@ -418,7 +418,7 @@ theorem exists_rightContinuous_not_apply_start_eq :
   · show (if (0 : ℝ≥0) < 1 then (0 : ℝ≥0) else 1) = 0
     rw [if_pos zero_lt_one]
   · intro x
-    exact zero_le'
+    exact zero_le
   · rw [hstart]
     show (if (1 : ℝ≥0) < 1 then (0 : ℝ≥0) else 1) ≠ 0
     rw [if_neg (lt_irrefl 1)]

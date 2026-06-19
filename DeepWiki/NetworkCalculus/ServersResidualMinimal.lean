@@ -61,11 +61,11 @@ theorem mpWitness_causal :
     · rw [if_pos h2]
       exact le_trans (min_le_right _ _) tsub_le_self
     · rw [if_neg h2]
-      exact zero_le'
+      exact zero_le
   · intro u
     show zeroCurve u ≤ stepCurve 0 1 u
     rw [zeroCurve_apply]
-    exact zero_le'
+    exact zero_le
 
 /-- The rate flow is constrained by the identity arrival curve. -/
 theorem mpWitnessRate_arrivalBound :

@@ -136,7 +136,7 @@ theorem IsStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0} {S : Curve
   rw [tsub_self] at h
   have h0 : beta 0 ≤ 0 :=
     le_of_add_le_add_left (a := D 0) (by rwa [add_zero])
-  exact le_antisymm h0 zero_le'
+  exact le_antisymm h0 zero_le
 
 /-- The join `beta ⊔ beta'` of two strict service curves is offered. -/
 theorem IsStrictMinimalServiceCurve.sup

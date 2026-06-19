@@ -18,7 +18,7 @@ is `q • τ + r` with `r < τ`. -/
 theorem exists_eq_nsmul_add_lt_of_pos {τ : ℝ≥0} (hτ : 0 < τ) (t : ℝ≥0) :
     ∃ (q : ℕ) (r : ℝ≥0), t = q • τ + r ∧ r < τ := by
   have hle : (⌊t / τ⌋₊ : ℝ≥0) * τ ≤ t :=
-    (le_div_iff₀ hτ).mp (Nat.floor_le zero_le')
+    (le_div_iff₀ hτ).mp (Nat.floor_le zero_le)
   refine ⟨⌊t / τ⌋₊, t - (⌊t / τ⌋₊ : ℝ≥0) * τ, ?_, ?_⟩
   · rw [nsmul_eq_mul, add_tsub_cancel_of_le hle]
   · rw [tsub_lt_iff_left hle]
@@ -124,7 +124,7 @@ theorem iSup_eq_biSup_sInf_of_vanishing_gap {F : ℝ≥0 → ℝ≥0∞} {S : Se
     have hC : ∀ τ ∈ S, (⨆ t, F t) ≤ C τ := fun τ hτ =>
       (le_sup_iff.mp (hsplit τ hτ)).resolve_left (not_le.mpr h)
     rw [hvanish _ hC]
-    exact zero_le'
+    exact zero_le
 
 /-- An `ℝ≥0∞` value below every truncated gap `f τ - c` over a nonempty set
 on which `⨅ τ ∈ S, f τ ≤ c` is zero. -/
@@ -136,12 +136,12 @@ theorem eq_zero_of_forall_le_tsub_of_iInf_le {ι : Type*} {S : Set ι}
   · obtain ⟨τ, hτ⟩ := hne
     have hxτ := hle τ hτ
     rw [ENNReal.sub_top] at hxτ
-    exact le_antisymm hxτ zero_le'
+    exact le_antisymm hxτ zero_le
   · by_cases hlt : ∃ τ ∈ S, f τ < c
     · obtain ⟨τ, hτ, hfτ⟩ := hlt
       have hxτ := hle τ hτ
       rw [tsub_eq_zero_of_le hfτ.le] at hxτ
-      exact le_antisymm hxτ zero_le'
+      exact le_antisymm hxτ zero_le
     · have hcf : ∀ τ ∈ S, c ≤ f τ := fun τ hτ =>
         not_lt.mp fun h => hlt ⟨τ, hτ, h⟩
       have hxc : x + c ≤ 0 + c := by
@@ -150,7 +150,7 @@ theorem eq_zero_of_forall_le_tsub_of_iInf_le {ι : Type*} {S : Set ι}
           ((ENNReal.cancel_of_ne hcne).le_tsub_iff_right (hcf τ hτ)).mp
             (hle τ hτ)).trans hinf
       exact le_antisymm
-        ((ENNReal.cancel_of_ne hcne).add_le_add_iff_right.mp hxc) zero_le'
+        ((ENNReal.cancel_of_ne hcne).add_le_add_iff_right.mp hxc) zero_le
 
 /-- **Restricting the vertical-deviation domain at the first crossing.**
 For monotone sub-additive `α` against super-additive `β` with a nonempty

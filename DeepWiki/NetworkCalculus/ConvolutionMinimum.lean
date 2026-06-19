@@ -93,7 +93,7 @@ theorem minConv_eq_splitMap_of_isMinOn
     rintro ⟨⟨u, s⟩, (hus : u + s = t)⟩
     have hut : u ≤ t := hus ▸ le_self_add
     have hsu : t - u = s := by rw [← hus, add_tsub_cancel_left]
-    have := hmin (show u ∈ Set.Icc (0 : ℝ≥0) t from ⟨zero_le', hut⟩)
+    have := hmin (show u ∈ Set.Icc (0 : ℝ≥0) t from ⟨zero_le, hut⟩)
     simpa [splitMap, hsu] using this
 
 /-- For nondecreasing left-continuous curves `g, h`, the convolution
@@ -122,7 +122,7 @@ theorem exists_minConvProj_eq {g h : ℝ≥0 → ℝ≥0}
     (lowerSemicontinuous_of_mono_isLeftContinuous g hgmono hglc)
     hcont.lowerSemicontinuous t
   have hterm : ∀ u, u ≤ t → g v + h (t - v) ≤ g u + h (t - u) :=
-    fun u hu => (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le', hu⟩)
+    fun u hu => (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le, hu⟩)
   refine ⟨v, (Set.mem_Icc.mp hv).2, hterm, le_antisymm
     (minConvProj_le_add
       (add_tsub_cancel_of_le (Set.mem_Icc.mp hv).2)) ?_⟩

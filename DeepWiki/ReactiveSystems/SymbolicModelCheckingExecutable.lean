@@ -68,9 +68,9 @@ theorem initial_fingerprint {cmax : C → ℕ} :
     show regionFloor cmax (fun _ => (0 : ℝ≥0)) x = 0
     unfold regionFloor; simp
   · rw [regionFingerprint_fracZero]
-    exact decide_eq_true_iff.mpr ⟨zero_le', fracPart_zero⟩
+    exact decide_eq_true_iff.mpr ⟨zero_le, fracPart_zero⟩
   · rw [regionFingerprint_fracOrder]
-    exact decide_eq_true_iff.mpr ⟨zero_le', zero_le', le_refl _⟩
+    exact decide_eq_true_iff.mpr ⟨zero_le, zero_le, le_refl _⟩
 
 /-! ## The executable decision procedure -/
 

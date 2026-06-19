@@ -283,7 +283,7 @@ theorem isNonneg_of_monotone_of_nullAtOrigin {D T : Type*}
     [_root_.AddCommMonoid D] [PartialOrder D] [CanonicallyOrderedAdd D]
     [Zero T] [Preorder T] {f : D → T}
     (hmono : Monotone f) (h0 : IsNullAtOrigin f) : IsNonneg f :=
-  fun _ => h0 ▸ hmono zero_le'
+  fun _ => h0 ▸ hmono zero_le
 
 example {α β : Type*} [Preorder α] [Preorder β]
     (f : α → β) :
@@ -601,7 +601,7 @@ theorem minConvProj_mono {g h : ℝ≥0 → ℝ≥0}
     exact tsub_le_iff_left.mpr (huv ▸ hab)
   · refine ciInf_le_of_le (OrderBot.bddBelow _)
       ⟨(a, 0), add_zero a⟩ ?_
-    exact add_le_add (hg hua) (hh zero_le')
+    exact add_le_add (hg hua) (hh zero_le)
 
 /-- `minConvProj A` is monotone in its right argument. -/
 theorem minConvProj_mono_right (A : ℝ≥0 → ℝ≥0)

@@ -162,7 +162,7 @@ guard `v x ≤ cₓ` only catches differing fractional parts at an integer bound
 in one direction); the genuine region equivalence underlying Theorem 11.3 uses
 the clamped floor `RegionEq`. -/
 theorem def_11_12_not_symmetric :
-    ¬ Symmetric (DeepWiki.ReactiveSystems.RegionEquiv (C := Unit) (fun _ => 0)) :=
+    ¬ Std.Symm (DeepWiki.ReactiveSystems.RegionEquiv (C := Unit) (fun _ => 0)) :=
   DeepWiki.ReactiveSystems.not_symmetric_regionEquiv
 
 /-- **Theorem 11.3** (§11.4, p.209), equivalence-relation part. Region

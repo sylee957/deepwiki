@@ -77,7 +77,7 @@ denominator and raises the residual capacity (their rates `∑_{Fl h\J} r` are s
 from `R h`, the rate of the blind residual service `β − ∑ peeled α`), so the
 next-critical flow is again below its now-larger residual share. The threshold inequality
 `∑_{Fl h∩J} r < R h − ∑_{Fl h\J} r` is just `∑_{Fl h} r < R h` resplit
-(`Finset.sum_inter_add_sum_diff`). -/
+(`Finset.sum_inter_add_sum_sdiff`). -/
 theorem exists_flow_below_residual_share {ι σ : Type*} [DecidableEq ι]
     (J : Finset ι) (hJ : J.Nonempty) (r φ : ι → ℝ) (hφ : ∀ j, 0 < φ j)
     (R : σ → ℝ) (Fl : σ → Finset ι) (hstab : ∀ h, ∑ j ∈ Fl h, r j < R h) :
@@ -86,7 +86,7 @@ theorem exists_flow_below_residual_share {ι σ : Type*} [DecidableEq ι]
   exists_flow_below_gps_share_on J hJ r φ hφ (fun h => R h - ∑ j ∈ Fl h \ J, r j)
     (fun h => Fl h ∩ J) (fun _ => Finset.inter_subset_right)
     (fun h => by
-      have hsplit := Finset.sum_inter_add_sum_diff (Fl h) J r
+      have hsplit := Finset.sum_inter_add_sum_sdiff (Fl h) J r
       linarith [hstab h])
 
 /-- **Closed-form residual of a rate-latency by a token bucket**: removing a flow whose

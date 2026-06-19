@@ -77,7 +77,7 @@ theorem regionCode_holds_iff {cmax : C → ℕ} (v : Valuation C) (x : C) (cmp :
   · rw [show regionFloor cmax v x = ⌊v x⌋₊ from by unfold regionFloor; rw [if_pos hb]]
     rw [show decide (v x ≤ cmax x ∧ fracPart (v x) = 0) = decide (fracPart (v x) = 0) from by
       rw [decide_eq_decide]; exact and_iff_right hb]
-    have flt : (⌊v x⌋₊ < n) ↔ (v x < (n : ℝ≥0)) := Nat.floor_lt (zero_le')
+    have flt : (⌊v x⌋₊ < n) ↔ (v x < (n : ℝ≥0)) := Nat.floor_lt (zero_le)
     have feq : (v x = (n : ℝ≥0)) ↔ (⌊v x⌋₊ = n ∧ fracPart (v x) = 0) := by
       constructor
       · intro h; rw [h]; exact ⟨Nat.floor_natCast n, fracPart_natCast n⟩
@@ -198,7 +198,7 @@ theorem reset_fingerprint {cmax : C → ℕ} (p : C → Bool) (v : Valuation C) 
     · have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
       simp only [RegionCode.reset, hpx, if_true]
       rw [regionFingerprint_fracZero, hwx]
-      exact (decide_eq_true_iff.mpr ⟨zero_le', fracPart_zero⟩).symm
+      exact (decide_eq_true_iff.mpr ⟨zero_le, fracPart_zero⟩).symm
   · -- frac-order
     cases hpx : p x <;> cases hpy : p y
     · -- p x = false, p y = false
@@ -213,7 +213,7 @@ theorem reset_fingerprint {cmax : C → ℕ} (p : C → Bool) (v : Valuation C) 
       rw [regionFingerprint_fracZero, regionFingerprint_fracOrder, hwx, hwy, fracPart_zero,
         decide_eq_decide]
       constructor
-      · rintro ⟨h1, h2⟩; exact ⟨h1, zero_le', (fracPart_le_zero_iff (v x)).mpr h2⟩
+      · rintro ⟨h1, h2⟩; exact ⟨h1, zero_le, (fracPart_le_zero_iff (v x)).mpr h2⟩
       · rintro ⟨h1, _, h3⟩; exact ⟨h1, (fracPart_le_zero_iff (v x)).mp h3⟩
     · -- p x = true, p y = false
       have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
@@ -222,13 +222,13 @@ theorem reset_fingerprint {cmax : C → ℕ} (p : C → Bool) (v : Valuation C) 
       rw [bounded_fingerprint, regionFingerprint_fracOrder, hwx, hwy, fracPart_zero,
         decide_eq_decide]
       constructor
-      · intro h; exact ⟨zero_le', h, fracPart_nonneg _⟩
+      · intro h; exact ⟨zero_le, h, fracPart_nonneg _⟩
       · rintro ⟨_, h2, _⟩; exact h2
     · -- p x = true, p y = true
       have hwx : w x = 0 := Valuation.reset_mem (memb hpx) v
       have hwy : w y = 0 := Valuation.reset_mem (memb hpy) v
       simp only [RegionCode.reset, hpx, hpy, if_true]
       rw [regionFingerprint_fracOrder, hwx, hwy, fracPart_zero]
-      exact (decide_eq_true_iff.mpr ⟨zero_le', zero_le', le_refl _⟩).symm
+      exact (decide_eq_true_iff.mpr ⟨zero_le, zero_le, le_refl _⟩).symm
 
 end DeepWiki.ReactiveSystems

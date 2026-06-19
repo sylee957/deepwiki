@@ -85,7 +85,7 @@ first conjunct, and `zeroCurve` gives left-totality. -/
 theorem isServer_shaperRel {sigma : ℝ≥0 → EReal} (hnn : IsNonneg sigma) :
     IsServer (shaperRel sigma) :=
   ⟨fun _ _ hp => hp.1,
-    fun _ => ⟨zeroCurve, fun _ => zero_le',
+    fun _ => ⟨zeroCurve, fun _ => zero_le,
       isMaximalArrivalBound_zeroCurve hnn⟩⟩
 
 /-- A causal `S` is a shaper for `sigma` iff its pairs lie in

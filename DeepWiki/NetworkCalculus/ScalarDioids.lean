@@ -1,6 +1,6 @@
 import DeepWiki.NetworkCalculus.CompleteDioids
 import Mathlib.Data.Real.Basic
-import Mathlib.Data.Real.Archimedean
+import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Algebra.Order.Ring.WithTop
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 import Mathlib.Order.Hom.WithTopBot

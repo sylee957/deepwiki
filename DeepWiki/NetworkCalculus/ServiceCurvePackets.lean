@@ -30,7 +30,7 @@ theorem afterFun_mono (T : ℝ≥0) {g : ℝ≥0 → ℝ≥0} (hg : Monotone g) 
   · rw [if_pos hu, if_pos (lt_of_lt_of_le hu huv)]
     exact hg huv
   · rw [if_neg hu]
-    exact zero_le'
+    exact zero_le
 
 /-- `afterFun T g` vanishes at the origin. -/
 theorem afterFun_zero (T : ℝ≥0) (g : ℝ≥0 → ℝ≥0) :
@@ -299,7 +299,7 @@ theorem rushCurve_lt_of_lt {T b c C v : ℝ≥0} (hcb : c < b) (hC : C ≠ 0)
       rwa [mul_div_cancel₀ _ hC] at h1
     exact max_lt hcb (lt_of_le_of_lt (min_le_right _ _) hCvT)
   · rw [if_neg hTv]
-    exact lt_of_le_of_lt zero_le' hcb
+    exact lt_of_le_of_lt zero_le hcb
 
 /-- **No strict guarantee from min-plus service.** The rush server violates the
 strict per-packet bound on the last packet, so it does not offer `λ_C` as a

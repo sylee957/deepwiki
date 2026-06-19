@@ -231,7 +231,7 @@ example {P s R T J : ℝ≥0} (hP : 0 < P) (hs : 0 < s) (hst : s / P < R) :
     hDevENN (tokenBucketNN (s / P) (s * (P + J) / P)) (rateLatencyNN R T)
       = ((T + s * (P + J) / (R * P) : ℝ≥0) : ℝ≥0∞) := by
   rw [hDevENN_tokenBucketNN_rateLatencyNN _ _ _ _
-      (lt_of_le_of_lt zero_le' hst)
+      (lt_of_le_of_lt zero_le hst)
       (div_pos (mul_pos hs (lt_of_lt_of_le hP le_self_add)) hP) hst.le,
     ENNReal.coe_inj, div_div, mul_comm P R]
 

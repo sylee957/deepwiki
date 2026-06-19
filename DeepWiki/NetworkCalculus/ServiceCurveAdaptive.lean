@@ -78,7 +78,7 @@ theorem adaptiveServiceRel_le_minimalServiceRel
       ≤ minimalServiceRel (liftEReal beta) := by
   rintro A D ⟨hc, hb⟩
   refine ⟨curveEReal_mono hc, fun t => ?_⟩
-  have hbt := hb t 0 zero_le'
+  have hbt := hb t 0 zero_le
   rcases min_le_iff.mp hbt with hcase | hcase
   · -- strict branch: `D 0 + β̃ t ≤ D t`, and the convolution sits
     -- below `β t ≤ β̃ t` via the `(0, t)` split
@@ -95,7 +95,7 @@ theorem adaptiveServiceRel_le_minimalServiceRel
     by_contra hcon
     rw [not_le] at hcon
     haveI : Nonempty {u : ℝ≥0 // 0 ≤ u ∧ u ≤ t} :=
-      ⟨⟨0, zero_le', zero_le'⟩⟩
+      ⟨⟨0, zero_le, zero_le⟩⟩
     obtain ⟨c, hc1, hc2⟩ := EReal.exists_between_coe_real hcon
     have hεpos : (0 : ℝ) < c - (D t : ℝ) := by
       refine sub_pos.mpr ?_

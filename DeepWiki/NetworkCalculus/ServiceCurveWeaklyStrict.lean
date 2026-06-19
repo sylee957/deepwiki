@@ -70,10 +70,10 @@ theorem IsWeaklyStrictMinimalServiceCurve.zero {beta : ℝ≥0 → ℝ≥0}
     (hp : S A D) : beta 0 = 0 := by
   have h := hβ A D hp 0
   rw [show start ⇑A ⇑D 0 = 0 from
-      le_antisymm (start_le ⇑A ⇑D 0) zero_le', tsub_self] at h
+      le_antisymm (start_le ⇑A ⇑D 0) zero_le, tsub_self] at h
   have h0 : beta 0 ≤ 0 :=
     le_of_add_le_add_left (a := D 0) (by rwa [add_zero])
-  exact le_antisymm h0 zero_le'
+  exact le_antisymm h0 zero_le
 
 /-- The zero curve is a weakly strict service curve for every server:
 the bound is monotonicity of `D` from the start. -/

@@ -70,7 +70,7 @@ theorem sum_lt_zero (f : Fin 2 → ℝ≥0) :
 /-- `spM0 s < spA0 s` forces `1 < s`: the high-priority flow is backlogged
 at the first server only past time `1`. -/
 theorem one_lt_of_spM0_lt_spA0 {s : ℝ≥0} (h : spM0 s < spA0 s) : 1 < s := by
-  rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ s - 1) with h0 | h0
+  rcases eq_or_lt_of_le (zero_le : (0 : ℝ≥0) ≤ s - 1) with h0 | h0
   · exfalso; rw [spM0, spA0, ← h0] at h; simp at h
   · exact tsub_pos_iff_lt.mp h0
 

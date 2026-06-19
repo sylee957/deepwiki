@@ -55,7 +55,7 @@ theorem minConv_eq_minConv_leftLim_of_cont
     have hut : u ≤ t := hus ▸ le_self_add
     have hsu : s = t - u := by rw [← hus, add_tsub_cancel_left]
     subst hsu
-    rcases eq_or_lt_of_le (zero_le' (a := u)) with hu0 | hu0
+    rcases eq_or_lt_of_le (zero_le (a := u)) with hu0 | hu0
     · -- `u = 0`: `leftLim f 0 = f 0`, so the target is an `f`-summand.
       have h0 : leftLim f u = f u := by
         have : u = 0 := hu0.symm

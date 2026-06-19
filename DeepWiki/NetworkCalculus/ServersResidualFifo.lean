@@ -161,7 +161,7 @@ theorem fifoResidual_apply (β α : ℝ≥0 → ℝ≥0∞) (θ v : ℝ≥0) :
 
 /-- `fifoResidual β α θ 0 = 0`. -/
 theorem fifoResidual_zero_eq (β α : ℝ≥0 → ℝ≥0∞) (θ : ℝ≥0) :
-    fifoResidual β α θ 0 = 0 := if_pos zero_le'
+    fifoResidual β α θ 0 = 0 := if_pos zero_le
 
 /-- For monotone `α` the FIFO residual is the book's wedge
 `[β − α ∗ δ_θ]⁺ ∧ δ_θ` pointwise. -/
@@ -177,7 +177,7 @@ theorem fifoResidual_eq_min_conv_delayNN {β α : ℝ≥0 → ℝ≥0∞} {θ : 
   rw [hconv]
   by_cases hv : v ≤ θ
   · rw [if_pos hv, show delayNN θ v = 0 from delay_eq_zero θ hv,
-      min_eq_right zero_le']
+      min_eq_right zero_le]
   · rw [if_neg hv, show delayNN θ v = ⊤ from delay_eq_top θ (not_le.mp hv),
       min_eq_left le_top]
 
@@ -258,7 +258,7 @@ theorem minConv_fifoResidual_le_of_isFifo {ι : Type*} [Fintype ι]
               tsub_le_tsub_left hcase t
             _ ≤ θ := tsub_tsub_le
         · rw [hu'def, min_eq_right htu, tsub_self]
-          exact zero_le'
+          exact zero_le
       refine le_trans (minConv_le_add _ _ (add_tsub_cancel_of_le hu't)) ?_
       rw [show fifoResidual β _ θ (t - u') = 0 from if_pos hres0, add_zero]
       have : (As i) u' ≤ (Ds i) t :=
@@ -287,7 +287,7 @@ theorem minConv_fifoResidual_le_of_isFifo {ι : Type*} [Fintype ι]
         forall_le_of_le_sum_of_isFifo hfifo (habove (t - θ) hcase).le
       have hsθ : s ≤ t - θ := le_of_lt (lt_of_le_of_lt hsu hcase)
       have hθt : θ ≤ t :=
-        (tsub_pos_iff_lt.mp (lt_of_le_of_lt zero_le' hcase)).le
+        (tsub_pos_iff_lt.mp (lt_of_le_of_lt zero_le hcase)).le
       have hθts : θ < t - s := by
         refine lt_tsub_iff_left.mpr ?_
         calc s + θ < (t - θ) + θ :=

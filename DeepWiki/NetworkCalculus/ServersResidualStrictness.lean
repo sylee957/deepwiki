@@ -40,7 +40,7 @@ theorem flipWitnessDBurst_apply (u : ℝ≥0) :
   rw [flipWitnessDBurst, afterCurve_apply]
   rcases eq_zero_or_pos u with rfl | hu
   · rw [if_neg (lt_irrefl 0), mul_zero]
-    exact (min_eq_left zero_le').symm
+    exact (min_eq_left zero_le).symm
   · rw [if_pos hu]
 
 /-- The flip-priority output of flow `1`: nothing while flow `0` has
@@ -99,7 +99,7 @@ theorem flipWitness_sum_eq (x : ℝ≥0) :
       calc 2 * x ≤ 2 * 1 := mul_le_mul_right h1 2
         _ = 2 := mul_one 2
     rw [min_eq_left (le_trans h2x (le_max_left 2 x)),
-      tsub_eq_zero_of_le h1, mul_zero, min_eq_left zero_le', add_zero]
+      tsub_eq_zero_of_le h1, mul_zero, min_eq_left zero_le, add_zero]
   · have h1x : (1 : ℝ≥0) ≤ x := (not_le.mp h1).le
     by_cases h2 : x ≤ 2
     · -- flow `0` is frozen at `2`; flow `1` catches up at rate `2`
@@ -287,10 +287,10 @@ plain residual is not a *weakly strict* curve on the residual server
 burst the only equality points of `(A₀, D₀)` are `0` and `1`. -/
 theorem flipWitness_start_eq :
     start ⇑flipWitnessA ⇑flipWitnessDBurst 2 = 1 := by
-  refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) ?_
+  refine le_antisymm (csSup_le ⟨0, zero_le, ?_⟩ fun u hu => ?_) ?_
   · show flipWitnessA 0 = flipWitnessDBurst 0
     rw [flipWitnessA_apply, if_neg (lt_irrefl 0), flipWitnessDBurst_apply,
-      mul_zero, min_eq_left zero_le']
+      mul_zero, min_eq_left zero_le]
   · by_contra h1u
     rw [not_le] at h1u
     exact absurd hu.2.symm
@@ -326,7 +326,7 @@ theorem flipWitnessA_arrivalBound :
   · rw [if_neg (lt_irrefl 0), zero_add, zero_add]
     split
     · exact le_rfl
-    · exact zero_le'
+    · exact zero_le
   · rw [if_pos (pos_of_ne_zero ht),
       if_pos (lt_of_lt_of_le (pos_of_ne_zero ht) le_self_add)]
     calc t + d + 1 = (t + 1) + d := by ring

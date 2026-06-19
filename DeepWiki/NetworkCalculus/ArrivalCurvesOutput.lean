@@ -416,7 +416,7 @@ theorem isMaximalArrivalBound_output_add_vDev_tsub
   · -- `d = 0`: the `δ₀` component zeroes the increment
     subst hd
     rw [Pi.inf_apply, show delayNN 0 0 = 0 from delayNN_zero_eq 0,
-      inf_eq_right.mpr zero_le', add_zero, add_zero]
+      inf_eq_right.mpr zero_le, add_zero, add_zero]
   · have hd' : 0 < d := pos_of_ne_zero hd
     rw [Pi.inf_apply, show delayNN 0 d = ⊤ from delay_eq_top 0 hd',
       inf_top_eq]

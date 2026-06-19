@@ -39,7 +39,7 @@ theorem variableCapacityOutput_zero_eq (A C : ℝ≥0 → ℝ≥0) :
   refine le_antisymm ?_ (le_variableCapacityOutput fun s hs => ?_)
   · have h := variableCapacityOutput_le_add (A := A) (C := C) (le_refl 0)
     rwa [tsub_self, add_zero] at h
-  · have hs0 : s = 0 := le_antisymm hs zero_le'
+  · have hs0 : s = 0 := le_antisymm hs zero_le
     subst hs0
     exact le_self_add
 
@@ -54,7 +54,7 @@ theorem variableCapacityOutput_le_apply (A C : ℝ≥0 → ℝ≥0) (t : ℝ≥0
 `variableCapacityOutput A C t ≤ C t` (the `s = 0` split). -/
 theorem variableCapacityOutput_le_capacity {A C : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0)
     (t : ℝ≥0) : variableCapacityOutput A C t ≤ C t := by
-  refine le_trans (variableCapacityOutput_le_add zero_le') ?_
+  refine le_trans (variableCapacityOutput_le_add zero_le) ?_
   rw [h0, zero_add]
   exact tsub_le_self
 
@@ -184,7 +184,7 @@ theorem ndClosure_le_capacity {beta : ℝ≥0 → ℝ≥0} {C : Curve}
     ∀ s t, s ≤ t → ndClosure beta (t - s) ≤ C t - C s := by
   intro s t hst
   unfold ndClosure
-  haveI : Nonempty {v // v ≤ t - s} := ⟨⟨0, zero_le'⟩⟩
+  haveI : Nonempty {v // v ≤ t - s} := ⟨⟨0, zero_le⟩⟩
   refine ciSup_le fun v => ?_
   obtain ⟨v, (hv : v ≤ t - s)⟩ := v
   have hsv : s + v ≤ t := by

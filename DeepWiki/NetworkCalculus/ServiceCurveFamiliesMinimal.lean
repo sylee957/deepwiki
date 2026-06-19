@@ -84,9 +84,9 @@ theorem forcingArrFun_finite_image (β' : ℝ≥0 → ℝ≥0) (v : ι → ℝ�
 `β' T − β' T = 0`) and all `v i ≤ T` (so every term is the finite branch). -/
 theorem forcingArrFun_zero (β' : ℝ≥0 → ℝ≥0) (v : ι → ℝ≥0) (T : ℝ≥0)
     {i₀ : ι} (hi₀ : v i₀ = T) : forcingArrFun β' v T 0 = 0 := by
-  refine le_antisymm (le_trans (Finset.inf'_le _ (Finset.mem_univ i₀)) (le_of_eq ?_)) zero_le'
+  refine le_antisymm (le_trans (Finset.inf'_le _ (Finset.mem_univ i₀)) (le_of_eq ?_)) zero_le
   simp only [forcingStep]
-  rw [if_pos zero_le', hi₀, tsub_self]
+  rw [if_pos zero_le, hi₀, tsub_self]
 
 /-- At `T − vᵢ` the staircase is at most `β'(T) − β'(vᵢ)` (the `i`-th step bounds the inf). -/
 theorem forcingArrFun_le_step (β' : ℝ≥0 → ℝ≥0) (v : ι → ℝ≥0) (T : ℝ≥0) (i : ι) :
@@ -251,7 +251,7 @@ theorem isPiecewiseContinuous_min_shift_const (cb : ℝ≥0 → EReal)
     exact htd (hltcont t (not_le.mp hlt))
   have hcbd : (t - sh) ∈ discontSet cb := fun hcon => htd (hcont t hcon)
   have htsI : (t - sh) ∈ Set.Icc (0 : ℝ≥0) T' :=
-    ⟨zero_le', le_trans tsub_le_self htI.2⟩
+    ⟨zero_le, le_trans tsub_le_self htI.2⟩
   exact ⟨t - sh, ⟨hcbd, htsI⟩, tsub_add_cancel_of_le htge⟩
 
 /-! ## Assembly -/
@@ -264,7 +264,7 @@ theorem curveEReal_forcingArr_eq (bp : Curve) (v : ι → ℝ≥0) (T : ℝ≥0)
           (fun i => forcingStepEReal (⇑bp) (v i) T u) := by
   funext u
   rw [curveEReal_apply, forcingArr_apply, forcingArrFun]
-  rw [Finset.comp_inf'_eq_inf'_comp Finset.univ_nonempty
+  rw [Finset.apply_inf'_eq_inf'_comp Finset.univ_nonempty
     (g := fun x : ℝ≥0 => ((x : ℝ) : EReal)) (fun x y => by
       show ((((min x y : ℝ≥0) : ℝ)) : EReal) = min (((x : ℝ) : EReal)) (((y : ℝ) : EReal))
       rw [NNReal.coe_min]

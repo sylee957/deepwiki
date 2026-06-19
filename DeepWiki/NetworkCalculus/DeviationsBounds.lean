@@ -28,7 +28,7 @@ theorem monotone_liftENN {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) :
 theorem liftENN_sum {ι : Type*} (s : Finset ι) (A : ι → ℝ≥0 → ℝ≥0) :
     liftENN (fun t => ∑ i ∈ s, A i t) = fun t => ∑ i ∈ s, liftENN (A i) t := by
   funext t
-  exact ENNReal.coe_finsetSum
+  exact ENNReal.ofNNReal_finsetSum s _
 
 /-- `liftENN` transports null-at-origin: `liftENN A 0 = 0` when `A 0 = 0`. -/
 theorem _root_.DeepWiki.IsNullAtOrigin.liftENN {A : ℝ≥0 → ℝ≥0}

@@ -36,13 +36,13 @@ theorem residualCurveDeconv_zero_eq (β αc αi : ℝ≥0 → ℝ≥0) :
   refine le_antisymm (ciSup_le fun v => ?_) ?_
   · show maxDeconv (residualCurve β αc) αi v.1
         ≤ maxDeconv (residualCurve β αc) αi 0
-    rw [show v.1 = 0 from le_antisymm v.2 zero_le']
+    rw [show v.1 = 0 from le_antisymm v.2 zero_le]
   · refine le_ciSup_of_le
       ⟨maxDeconv (residualCurve β αc) αi 0, ?_⟩ ⟨0, le_rfl⟩ le_rfl
     rintro y ⟨v, rfl⟩
     show maxDeconv (residualCurve β αc) αi v.1
         ≤ maxDeconv (residualCurve β αc) αi 0
-    rw [show v.1 = 0 from le_antisymm v.2 zero_le']
+    rw [show v.1 = 0 from le_antisymm v.2 zero_le]
 
 /-- Intro: each deconvolved residual below `t` bounds
 `residualCurveDeconv β αc αi t` from below (under

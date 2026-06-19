@@ -31,7 +31,7 @@ private theorem tsub_le_tsub_of_add_le {a b c d : ℝ≥0}
       have hac : a + b ≤ c + b := le_trans h (by gcongr)
       rw [tsub_le_iff_right, zero_add]
       exact le_of_add_le_add_right hac
-  · rw [tsub_eq_zero_of_le hca]; exact zero_le'
+  · rw [tsub_eq_zero_of_le hca]; exact zero_le
 
 /-! ## The refined curves are arrival curves -/
 
@@ -106,7 +106,7 @@ theorem isMinimalArrivalBound_le_isMaximalArrivalBound {A αu αl : ℝ≥0 → 
 defining `ηˡ 0` vanishes. -/
 theorem etaMin_zero {αu αl : ℝ≥0 → ℝ≥0} (hle : αl ≤ αu) :
     minDeconv αl αu 0 = 0 := by
-  refine le_antisymm (minDeconv_le fun s => ?_) zero_le'
+  refine le_antisymm (minDeconv_le fun s => ?_) zero_le
   rw [zero_add]
   exact (tsub_eq_zero_of_le (hle s)).le
 
@@ -114,7 +114,7 @@ theorem etaMin_zero {αu αl : ℝ≥0 → ℝ≥0} (hle : αl ≤ αu) :
 `ηᵘ 0` is `0`, and `ℝ≥0` infima are nonnegative. -/
 theorem etaMax_zero {αu αl : ℝ≥0 → ℝ≥0} (hu0 : αu 0 = 0) (hl0 : αl 0 = 0) :
     maxDeconv αu αl 0 = 0 := by
-  refine le_antisymm ?_ zero_le'
+  refine le_antisymm ?_ zero_le
   have h := maxDeconv_le_sub αu αl 0 0
   rwa [zero_add, hu0, hl0, tsub_zero] at h
 
@@ -233,7 +233,7 @@ private theorem etaMin_fixpoint_term {au al : ℝ≥0 → ℝ≥0}
   rcases le_total (au v) (al (t + u + v)) with hv | hv
   · rw [← NNReal.coe_le_coe, NNReal.coe_sub hv]
     push_cast [NNReal.coe_sub hwle]; linarith
-  · rw [tsub_eq_zero_of_le hv]; exact zero_le'
+  · rw [tsub_eq_zero_of_le hv]; exact zero_le
 
 /-- The supremum defining `ηˡ s = ⨆_z αˡ (s+z) - αᵘ z` is bounded above by
 `αᵘ s`: `αˡ (s+z) ≤ αᵘ (s+z) ≤ αᵘ s + αᵘ z` (sub-additivity), so each term is
@@ -302,7 +302,7 @@ theorem etaMin_le_etaMax {A αu αl : ℝ≥0 → ℝ≥0}
       hsub.coe_real (t + w) z
     have h3 : (αl (t + w + z) : ℝ) ≤ αu (t + w + z) := by exact_mod_cast hle _
     linarith
-  · rw [tsub_eq_zero_of_le hz]; exact zero_le'
+  · rw [tsub_eq_zero_of_le hz]; exact zero_le
 
 /-- `c ≤ ⨅ a, G a + ⨅ b, H b` from a per-pair bound `c ≤ G a + H b`, on `ℝ≥0`
 (where `le_ciInf_add_ciInf` does not apply — `ℝ≥0` is not an `AddGroup`). -/

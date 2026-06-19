@@ -87,7 +87,7 @@ theorem Dout_off (h : κ) (i : ι) (hi : i ∉ t.net.flowsThrough h) : t.Dout h 
   ext s
   have : (t.Dout h i) s ≤ (0 : Curve) s := hle s
   rw [Curve.zero_apply] at this
-  simpa using le_antisymm this (zero_le' (a := (t.Dout h i) s))
+  simpa using le_antisymm this (zero_le (a := (t.Dout h i) s))
 
 /-- The server at hop `k` of flow `i`'s path (junk default `h0` past the path's end). -/
 def hopServer (i : ι) (k : ℕ) : κ := (t.net.paths i).getD k t.h0
@@ -377,7 +377,7 @@ theorem isFlowDelayBounded (t : Traj κ ι) (i : ι) (h : κ) (hh : i ∈ t.net.
     ∃ d : ℝ≥0, Deviation.delay (⇑(t.Ain h i)) (⇑(t.Dout h i)) ≤ (d : ℝ≥0∞) := by
   obtain ⟨R', T', B', Si, hc, hβ, hp, harr, hlt⟩ := t.flowResidualBound i h hh
   exact ⟨T' + B' / R', delay_le_of_strictRateLatency_affine hc hβ hp harr
-    (lt_of_le_of_lt (zero_le' (a := t.r i)) hlt) (le_of_lt hlt)⟩
+    (lt_of_le_of_lt (zero_le (a := t.r i)) hlt) (le_of_lt hlt)⟩
 
 /-- **Per-flow backlog bound**: flow `i`'s backlog at a crossed server `h` is finite — bounded by
 `rᵢ·T' + B'` of its SP residual (`flowResidualBound`). The backlog companion of

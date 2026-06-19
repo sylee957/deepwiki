@@ -68,7 +68,7 @@ theorem spPmooEndToEndSetup (t : Traj κ ι) (i : ι) (hne : t.net.paths i ≠ [
       _ < t.R h := t.hstab h
   have hRpos : 0 < pathMinRate (fun h => t.R h - ρ h) head tail := by
     apply pathMinRate_pos
-    rw [← hpath]; exact fun h hh => lt_of_le_of_lt (zero_le' (a := t.r i)) (hkey h hh)
+    rw [← hpath]; exact fun h hh => lt_of_le_of_lt (zero_le (a := t.r i)) (hkey h hh)
   have hr : t.r i ≤ pathMinRate (fun h => t.R h - ρ h) head tail := by
     apply le_pathMinRate
     rw [← hpath]; exact fun h hh => (hkey h hh).le

@@ -194,7 +194,7 @@ theorem exists_linearFixpoint_iff {c d : ℝ≥0} (hd : 0 < d) :
   · rintro ⟨σ, hσ⟩
     by_contra hcon
     rw [not_lt] at hcon
-    have hσle : σ ≤ c * σ := le_mul_of_one_le_left (zero_le') hcon
+    have hσle : σ ≤ c * σ := le_mul_of_one_le_left (zero_le) hcon
     have hcontra : σ + d ≤ σ := by
       calc σ + d ≤ c * σ + d := by gcongr
         _ = σ := hσ.symm
@@ -203,7 +203,7 @@ theorem exists_linearFixpoint_iff {c d : ℝ≥0} (hd : 0 < d) :
     have h1c : (0 : ℝ≥0) < 1 - c := tsub_pos_of_lt hc
     refine ⟨d / (1 - c), ?_⟩
     have hu : d / (1 - c) * (1 - c) = d := div_mul_cancel₀ d h1c.ne'
-    have hcle : c * (d / (1 - c)) ≤ d / (1 - c) := mul_le_of_le_one_left (zero_le') hc.le
+    have hcle : c * (d / (1 - c)) ≤ d / (1 - c) := mul_le_of_le_one_left (zero_le) hc.le
     rw [eq_comm]
     calc c * (d / (1 - c)) + d
         = c * (d / (1 - c)) + d / (1 - c) * (1 - c) := by rw [hu]
@@ -277,7 +277,7 @@ theorem linearIterate_unbounded {c d : ℝ≥0} (hc : 1 ≤ c) (hd : 0 < d) (σ�
     | succ k ih =>
       rw [Function.iterate_succ_apply']
       have h1 : (fun σ => c * σ + d)^[k] σ₀ ≤ c * (fun σ => c * σ + d)^[k] σ₀ :=
-        le_mul_of_one_le_left (zero_le') hc
+        le_mul_of_one_le_left (zero_le) hc
       calc ((k + 1 : ℕ) : ℝ≥0) * d = (k : ℝ≥0) * d + d := by push_cast; ring
         _ ≤ (fun σ => c * σ + d)^[k] σ₀ + d := by gcongr
         _ ≤ c * (fun σ => c * σ + d)^[k] σ₀ + d := by gcongr

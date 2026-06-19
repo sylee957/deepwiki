@@ -30,7 +30,7 @@ theorem minConv_liftEReal_rateLatency (R T R' T' : ℝ≥0) :
         show R' * ((t - min t T) - T') = 0
         rw [tsub_eq_zero_of_le ?_, mul_zero]
         rcases le_total t T with h | h
-        · rw [min_eq_left h, tsub_self]; exact zero_le'
+        · rw [min_eq_left h, tsub_self]; exact zero_le
         · rw [min_eq_right h, tsub_le_iff_left]; exact htle
       have e3 : rateLatency (R ⊓ R') (T + T') t = 0 := by
         show (R ⊓ R') * (t - (T + T')) = 0; rw [tsub_eq_zero_of_le htle, mul_zero]

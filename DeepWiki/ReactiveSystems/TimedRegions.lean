@@ -138,7 +138,7 @@ vacuous since `½ ≰ 0`), but fail them in the order `(v', v)` (condition 2 now
 fires at `0 ≤ 0` and `frac 0 = 0 ↮ frac ½ = 0`). The finiteness theorem needs a genuine
 equivalence; `RegionEq` supplies it. -/
 theorem not_symmetric_regionEquiv :
-    ¬ Symmetric (RegionEquiv (C := Unit) (fun _ => 0)) := by
+    ¬ Std.Symm (RegionEquiv (C := Unit) (fun _ => 0)) := by
   have hcoe : ((1 / 2 : ℝ≥0) : ℝ) = 1 / 2 := by push_cast; ring
   have hfrac : fracPart (1 / 2 : ℝ≥0) = 1 / 2 := by
     rw [fracPart, hcoe, Int.fract_eq_self.mpr ⟨by norm_num, by norm_num⟩]
@@ -150,7 +150,7 @@ theorem not_symmetric_regionEquiv :
       norm_num
     · exact absurd hx (by norm_num)
     · exact absurd hx (by norm_num)
-  obtain ⟨_, h2, _⟩ := hsymm hv
+  obtain ⟨_, h2, _⟩ := hsymm.symm _ _ hv
   have key : fracPart (0 : ℝ≥0) = 0 ↔ fracPart (1 / 2 : ℝ≥0) = 0 := h2 () (by norm_num)
   have h0 : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
   rw [hfrac] at key
@@ -277,7 +277,7 @@ theorem Cmp.holds_congr (cmp : Cmp) {a b : ℝ≥0} (n : ℕ)
     (hfl : ⌊a⌋₊ = ⌊b⌋₊) (hz : fracPart a = 0 ↔ fracPart b = 0) :
     cmp.holds a n ↔ cmp.holds b n := by
   have hLT : a < (n : ℝ≥0) ↔ b < (n : ℝ≥0) := by
-    rw [(Nat.floor_lt (zero_le' (a := a))).symm, (Nat.floor_lt (zero_le' (a := b))).symm, hfl]
+    rw [(Nat.floor_lt (zero_le (a := a))).symm, (Nat.floor_lt (zero_le (a := b))).symm, hfl]
   have heq_a : a = (n : ℝ≥0) ↔ (⌊a⌋₊ = n ∧ fracPart a = 0) := by
     constructor
     · intro h; subst h; exact ⟨Nat.floor_natCast n, fracPart_natCast n⟩
@@ -506,7 +506,7 @@ theorem RegionEqAll.reset {u u' : Valuation C} (h : RegionEqAll u u') (r : Set C
 /-- `fracPart T ≠ 0` exactly when `T` lies strictly above its integer part. -/
 theorem fracPart_ne_zero_iff (T : ℝ≥0) : fracPart T ≠ 0 ↔ ((⌊T⌋₊ : ℝ≥0) < T) := by
   rw [show (fracPart T ≠ 0) ↔ ¬ (fracPart T = 0) from Iff.rfl, fracPart_eq_zero_iff]
-  exact ⟨fun h => lt_of_le_of_ne (Nat.floor_le (zero_le' (a := T))) h, fun h => ne_of_lt h⟩
+  exact ⟨fun h => lt_of_le_of_ne (Nat.floor_le (zero_le (a := T))) h, fun h => ne_of_lt h⟩
 
 /-- Closed form of the clamped floor after a uniform delay `e` on clock `x`. -/
 theorem regionFloor_add (cmax : C → ℕ) (w : Valuation C) (e : ℝ≥0) (x : C) :
@@ -516,7 +516,7 @@ theorem regionFloor_add (cmax : C → ℕ) (w : Valuation C) (e : ℝ≥0) (x : 
 /-- A value strictly inside `[n, n+1)` has `Nat.floor` equal to `n`. -/
 theorem floor_eq_of_mem {S : ℝ≥0} {n : ℕ} (h1 : (n : ℝ≥0) ≤ S) (h2 : S < (n : ℝ≥0) + 1) :
     ⌊S⌋₊ = n := by
-  rw [Nat.floor_eq_iff (zero_le' (a := S))]
+  rw [Nat.floor_eq_iff (zero_le (a := S))]
   exact ⟨h1, by exact_mod_cast h2⟩
 
 /-- **Per-clock time-successor.** If a single clock `x` agrees on clamped floor and
@@ -551,7 +551,7 @@ theorem exists_delay_match_clock {cmax : C → ℕ} {v v' : Valuation C} {x : C}
           have h2 : (⌊v' x⌋₊ : ℝ≥0) + 1 ≤ (n : ℝ≥0) := by exact_mod_cast (hlt : ⌊v' x⌋₊ + 1 ≤ n)
           exact le_of_lt (lt_of_lt_of_le h1 h2)
         · have hflvn : ⌊v x⌋₊ = n := by rw [hflv, heq]
-          have hvxge : (n : ℝ≥0) ≤ v x := by rw [← hflvn]; exact Nat.floor_le (zero_le' (a := v x))
+          have hvxge : (n : ℝ≥0) ≤ v x := by rw [← hflvn]; exact Nat.floor_le (zero_le (a := v x))
           have hvxle : v x ≤ (n : ℝ≥0) := by rw [hTn]; exact le_self_add
           have hvxn : v x = (n : ℝ≥0) := le_antisymm hvxle hvxge
           have hfvx0 : fracPart (v x) = 0 := by rw [fracPart_eq_zero_iff, hvxn, Nat.floor_natCast]
@@ -679,7 +679,7 @@ theorem fracPart_add_one (r : ℝ≥0) : fracPart (r + 1) = fracPart r := by
 
 /-- `⌊r + 1⌋₊ = ⌊r⌋₊ + 1` on `ℝ≥0`. -/
 theorem floor_add_one_nnreal (r : ℝ≥0) : ⌊r + 1⌋₊ = ⌊r⌋₊ + 1 :=
-  Nat.floor_add_one (zero_le' (a := r))
+  Nat.floor_add_one (zero_le (a := r))
 
 /-- `r + 1 ≤ cmax` characterized by `⌊r⌋₊` and whether `r` is integral. -/
 theorem add_one_le_iff_of_frac {cmax : ℕ} (r : ℝ≥0) :
@@ -690,11 +690,11 @@ theorem add_one_le_iff_of_frac {cmax : ℕ} (r : ℝ≥0) :
     · intro h; have : ((r+1:ℝ≥0):ℝ) ≤ ((cmax:ℝ≥0):ℝ) := by exact_mod_cast h
       push_cast at this; linarith
     · intro h
-      have h2 : ((r+1:ℝ≥0):ℝ) ≤ ((cmax:ℝ≥0):ℝ) := by push_cast; push_cast at h; linarith
+      have h2 : ((r+1:ℝ≥0):ℝ) ≤ ((cmax:ℝ≥0):ℝ) := by push_cast; linarith
       exact_mod_cast h2
   rw [hcast]
   have hfloor : (⌊r⌋₊ : ℝ) ≤ (r:ℝ) := by
-    have := Nat.floor_le (zero_le' (a := r)); exact_mod_cast this
+    have := Nat.floor_le (zero_le (a := r)); exact_mod_cast this
   have hceil : (r:ℝ) < (⌊r⌋₊ : ℝ) + 1 := by
     have h := Nat.lt_floor_add_one (a := r)
     have h2 : (r:ℝ) < ((⌊r⌋₊ : ℝ≥0) + 1 : ℝ≥0) := by exact_mod_cast h
@@ -815,7 +815,7 @@ theorem fracPart_add_of_no_wrap {a δ : ℝ≥0} (h : fracPart a + (δ : ℝ) < 
     linarith [hf]
   refine ⟨hfr, ?_⟩
   apply floor_eq_of_mem
-  · exact le_trans (Nat.floor_le (zero_le' (a := a))) le_self_add
+  · exact le_trans (Nat.floor_le (zero_le (a := a))) le_self_add
   · have : ((a + δ : ℝ≥0) : ℝ) < (⌊a⌋₊ : ℝ) + 1 := by
       push_cast
       have : (a : ℝ) + δ = (⌊a⌋₊ : ℝ) + (fracPart a + δ) := by rw [hdecomp]; ring
@@ -1322,7 +1322,7 @@ theorem RegionEq.timeSuccessor_frac [Fintype C] {cmax : C → ℕ} {v v' : Valua
     (h : RegionEq cmax v v') {δ : ℝ≥0} (hδ : δ < 1) :
     ∃ δ', δ' < 1 ∧ RegionEq cmax (v.add δ) (v'.add δ') := by
   -- δ = 0 is reflexivity; otherwise δ ∈ (0,1)
-  rcases eq_or_lt_of_le (zero_le' (a := δ)) with hδ0 | hδ0
+  rcases eq_or_lt_of_le (zero_le (a := δ)) with hδ0 | hδ0
   · refine ⟨0, by norm_num, ?_⟩
     have e : ∀ w : Valuation C, w.add (0 : ℝ≥0) = w := fun w => by funext x; simp
     rw [← hδ0]; rw [e, e]; exact h
@@ -1430,7 +1430,7 @@ shift by `N` preserves region equivalence (`regionEq_add_natCast`) and the
 fractional remainder is matched by `RegionEq.timeSuccessor_frac`. -/
 theorem timeSuccessor_of_fintype [Fintype C] (cmax : C → ℕ) : TimeSuccessor cmax := by
   intro v v' h d
-  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le' (a := d))
+  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le (a := d))
   set δ := d - (⌊d⌋₊ : ℝ≥0) with hδdef
   have hsum : (⌊d⌋₊ : ℝ≥0) + δ = d := add_tsub_cancel_of_le hNd
   have hδ1 : δ < 1 := by
@@ -1524,7 +1524,7 @@ theorem regionEqAll_timeSuccessor_frac_Ioo [Fintype C] {u u' : Valuation C}
 matched by some delay `δ'` of the other (the duration-abstract matching `∃∃`/`∀∀` need). -/
 theorem regionEqAll_timeSuccessor [Fintype C] {u u' : Valuation C}
     (h : RegionEqAll u u') (d : ℝ≥0) : ∃ d', RegionEqAll (u.add d) (u'.add d') := by
-  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le' (a := d))
+  have hNd : (⌊d⌋₊ : ℝ≥0) ≤ d := Nat.floor_le (zero_le (a := d))
   set δ := d - (⌊d⌋₊ : ℝ≥0) with hδdef
   have hsum : (⌊d⌋₊ : ℝ≥0) + δ = d := add_tsub_cancel_of_le hNd
   have hδ1 : δ < 1 := by

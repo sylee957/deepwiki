@@ -80,7 +80,7 @@ closure takes the fallback value, `leftLim f 0 = f 0` (the book, over `ℝ`
 with curves null on negatives, reads `f(0−) = 0` instead). -/
 theorem leftLim_zero_eq {X : Type*} [TopologicalSpace X] (f : ℝ≥0 → X) :
     leftLim f 0 = f 0 :=
-  leftLim_eq_of_isBot fun _ => zero_le'
+  leftLim_eq_of_isBot fun _ => zero_le
 
 /-- For non-decreasing `f`, the closure value `leftLim f t` is a left limit
 of `f` at every `t`: `TendstoLeft f t (leftLim f t)` — monotonicity replaces

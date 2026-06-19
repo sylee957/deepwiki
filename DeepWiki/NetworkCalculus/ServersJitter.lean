@@ -59,7 +59,7 @@ theorem le_apply_tsub_of_le_delayAt {A D : ℝ≥0 → ℝ≥0} {dm : ℝ≥0}
       rw [zero_add] at h
       rw [heq]
       exact h
-    · exact (hlt 0 t (by rwa [zero_add]) zero_le').le
+    · exact (hlt 0 t (by rwa [zero_add]) zero_le).le
   · calc D t = D ((t - dm) + dm) := by rw [tsub_add_cancel_of_le htd.le]
       _ ≤ A (t - dm) := key (t - dm)
 
@@ -75,7 +75,7 @@ theorem apply_tsub_le_of_delay_le {A D : ℝ≥0 → ℝ≥0} {dM : ℝ≥0∞}
     A (t - d) ≤ D t := by
   rcases le_or_gt t d with htd | htd
   · rw [tsub_eq_zero_of_le htd, hA0]
-    exact zero_le'
+    exact zero_le
   · have h := le_of_hDev_lt hDmono (lt_of_le_of_lt hdel hd) (t - d)
     rwa [tsub_add_cancel_of_le htd.le] at h
 
@@ -90,7 +90,7 @@ theorem apply_tsub_le_of_delay_le_of_leftCont {A D : ℝ≥0 → ℝ≥0} {dM : 
     A (t - dM) ≤ D t := by
   rcases le_or_gt t dM with htd | htd
   · rw [tsub_eq_zero_of_le htd, hA0]
-    exact zero_le'
+    exact zero_le
   -- every `s` strictly before `t − dM` is served by `t`
   have key : ∀ s, s < t - dM → A s ≤ D t := by
     intro s hs
@@ -122,14 +122,14 @@ theorem not_forall_apply_tsub_le_of_delay_le :
       dsimp only
       split_ifs with ha hb hb
       · exact le_rfl
-      · exact zero_le'
+      · exact zero_le
       · exact absurd (lt_of_le_of_lt hab hb) ha
       · exact le_rfl)
     (fun a b hab => by
       dsimp only
       split_ifs with ha hb hb
       · exact le_rfl
-      · exact zero_le'
+      · exact zero_le
       · exact absurd (le_trans hab hb) ha
       · exact le_rfl)
     ?_ 2
@@ -141,10 +141,9 @@ theorem not_forall_apply_tsub_le_of_delay_le :
     refine ENNReal.le_of_forall_pos_le_add fun ε hε _ => ?_
     refine hDev_le fun t => ?_
     refine le_trans (hDevAt_le (d := 1 + ε) ?_) ?_
-    · dsimp only
-      by_cases ht : t < 1
+    · by_cases ht : t < 1
       · rw [if_pos ht]
-        exact zero_le'
+        exact zero_le
       · -- `t ≥ 1` forces `t + (1 + ε) > 2`
         have h2 : (2 : ℝ≥0) < t + (1 + ε) :=
           calc (2 : ℝ≥0) = 1 + 1 := by norm_num

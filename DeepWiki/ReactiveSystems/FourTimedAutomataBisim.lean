@@ -186,6 +186,14 @@ def rAX : Loc115 × ℝ≥0 → Loc115 × ℝ≥0 → Prop := fun p q =>
   (p.1 = .B ∧ q.1 = .Y ∧ ((p.2 ≤ 1 ∧ q.2 ≤ 2) ∨ (1 < p.2 ∧ 2 < q.2))) ∨
   (p.1 = .C ∧ q.1 = .Z)
 
+/-- The zero-delay self-loop `(ℓ, y) —0→ (ℓ, y)` in the combined TLTS (the
+`Step115.delay` step at `d = 0`, with `y + 0` rewritten to `y`). -/
+private theorem delay_zero (ℓ : Loc115) (y : ℝ≥0) :
+    tlts115.delay (ℓ, y) 0 (ℓ, y) := by
+  show Step115 (ℓ, y) (.inr 0) (ℓ, y)
+  have h := Step115.delay ℓ y 0
+  rwa [add_zero] at h
+
 /-- `rAX` is an untimed bisimulation (a bisimulation on the untimed LTS): each `a`
 is matched exactly, and each delay is matched by *some* delay landing in the
 corresponding region. -/
@@ -197,11 +205,11 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
     · cases l with
       | some _ =>
           cases hstep with
-          | aA _ => exact ⟨(.Y, yq), Step115.aX h2, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨zero_le', h2⟩⟩)⟩
+          | aA _ => exact ⟨(.Y, yq), Step115.aX h2, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨zero_le, h2⟩⟩)⟩
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
           by_cases hlow : yp + d ≤ 1
-          · exact ⟨(.X, yq), ⟨0, by simpa using Step115.delay .X yq 0⟩, Or.inl ⟨rfl, rfl, Or.inl ⟨hlow, h2⟩⟩⟩
+          · exact ⟨(.X, yq), ⟨0, delay_zero .X yq⟩, Or.inl ⟨rfl, rfl, Or.inl ⟨hlow, h2⟩⟩⟩
           · exact ⟨(.X, yq + 3), ⟨3, Step115.delay .X yq 3⟩, Or.inl ⟨rfl, rfl, Or.inr ⟨not_le.mp hlow, (by norm_num : (2:ℝ≥0) < 3).trans_le le_add_self⟩⟩⟩
     · cases l with
       | some _ =>
@@ -210,7 +218,7 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
           by_cases hlow : yq + d ≤ 2
-          · exact ⟨(.A, yp), ⟨0, by simpa using Step115.delay .A yp 0⟩, Or.inl ⟨rfl, rfl, Or.inl ⟨h1, hlow⟩⟩⟩
+          · exact ⟨(.A, yp), ⟨0, delay_zero .A yp⟩, Or.inl ⟨rfl, rfl, Or.inl ⟨h1, hlow⟩⟩⟩
           · exact ⟨(.A, yp + 2), ⟨2, Step115.delay .A yp 2⟩, Or.inl ⟨rfl, rfl, Or.inr ⟨(by norm_num : (1:ℝ≥0) < 2).trans_le le_add_self, not_le.mp hlow⟩⟩⟩
   · -- A ~ X, high region (1 < yp, 2 < yq): no `a`, delays stay high
     refine ⟨fun l p' hstep => ?_, fun l q' hstep => ?_⟩
@@ -218,13 +226,13 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
       | some _ => cases hstep with | aA hle => exact absurd hle (not_le.mpr h1)
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
-          exact ⟨(.X, yq), ⟨0, by simpa using Step115.delay .X yq 0⟩,
+          exact ⟨(.X, yq), ⟨0, delay_zero .X yq⟩,
             Or.inl ⟨rfl, rfl, Or.inr ⟨h1.trans_le le_self_add, h2⟩⟩⟩
     · cases l with
       | some _ => cases hstep with | aX hle => exact absurd hle (not_le.mpr h2)
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
-          exact ⟨(.A, yp), ⟨0, by simpa using Step115.delay .A yp 0⟩,
+          exact ⟨(.A, yp), ⟨0, delay_zero .A yp⟩,
             Or.inl ⟨rfl, rfl, Or.inr ⟨h1, h2.trans_le le_self_add⟩⟩⟩
   · -- B ~ Y, low region
     refine ⟨fun l p' hstep => ?_, fun l q' hstep => ?_⟩
@@ -235,7 +243,7 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
           by_cases hlow : yp + d ≤ 1
-          · exact ⟨(.Y, yq), ⟨0, by simpa using Step115.delay .Y yq 0⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨hlow, h2⟩⟩)⟩
+          · exact ⟨(.Y, yq), ⟨0, delay_zero .Y yq⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨hlow, h2⟩⟩)⟩
           · exact ⟨(.Y, yq + 3), ⟨3, Step115.delay .Y yq 3⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inr ⟨not_le.mp hlow, (by norm_num : (2:ℝ≥0) < 3).trans_le le_add_self⟩⟩)⟩
     · cases l with
       | some _ =>
@@ -244,7 +252,7 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
           by_cases hlow : yq + d ≤ 2
-          · exact ⟨(.B, yp), ⟨0, by simpa using Step115.delay .B yp 0⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨h1, hlow⟩⟩)⟩
+          · exact ⟨(.B, yp), ⟨0, delay_zero .B yp⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inl ⟨h1, hlow⟩⟩)⟩
           · exact ⟨(.B, yp + 2), ⟨2, Step115.delay .B yp 2⟩, Or.inr (Or.inl ⟨rfl, rfl, Or.inr ⟨(by norm_num : (1:ℝ≥0) < 2).trans_le le_add_self, not_le.mp hlow⟩⟩)⟩
   · -- B ~ Y, high region
     refine ⟨fun l p' hstep => ?_, fun l q' hstep => ?_⟩
@@ -252,13 +260,13 @@ theorem isBisimulation_rAX : LTS.IsBisimulation tlts115.untimedLTS rAX := by
       | some _ => cases hstep with | aB hle => exact absurd hle (not_le.mpr h1)
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
-          exact ⟨(.Y, yq), ⟨0, by simpa using Step115.delay .Y yq 0⟩,
+          exact ⟨(.Y, yq), ⟨0, delay_zero .Y yq⟩,
             Or.inr (Or.inl ⟨rfl, rfl, Or.inr ⟨h1.trans_le le_self_add, h2⟩⟩)⟩
     · cases l with
       | some _ => cases hstep with | aY hle => exact absurd hle (not_le.mpr h2)
       | none =>
           obtain ⟨d, hd⟩ := hstep; cases hd
-          exact ⟨(.B, yp), ⟨0, by simpa using Step115.delay .B yp 0⟩,
+          exact ⟨(.B, yp), ⟨0, delay_zero .B yp⟩,
             Or.inr (Or.inl ⟨rfl, rfl, Or.inr ⟨h1, h2.trans_le le_self_add⟩⟩)⟩
   · -- C ~ Z, both dead
     refine ⟨fun l p' hstep => ?_, fun l q' hstep => ?_⟩

@@ -42,8 +42,8 @@ theorem staircaseFun_length_le_of_isBacklogged
       (Set.Ioc s t)) :
     t - s ≤ δ := by
   rcases eq_or_lt_of_le hst with rfl | hlt
-  · rw [tsub_self]; exact zero_le'
-  have hT : 0 < T := lt_of_le_of_lt zero_le' hδT
+  · rw [tsub_self]; exact zero_le
+  have hT : 0 < T := lt_of_le_of_lt zero_le hδT
   have hT' : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hT
   have hδT' : (δ : ℝ) < (T : ℝ) := NNReal.coe_lt_coe.mpr hδT
   -- the endpoint is backlogged: the delayed ceiling falls strictly below
@@ -121,7 +121,7 @@ theorem staircaseCurve_strictServiceRel
   have hlen : t - s ≤ δ :=
     staircaseFun_length_le_of_isBacklogged hδT hst hbl
   have hβ0 : β (t - s) = 0 :=
-    le_antisymm (hβδ ▸ hβmono hlen) zero_le'
+    le_antisymm (hβδ ▸ hβmono hlen) zero_le
   show staircaseFun T b (d + δ) s + β (t - s) ≤ staircaseFun T b (d + δ) t
   rw [hβ0, add_zero]
   exact staircaseFun_mono T b (d + δ) hst
@@ -208,11 +208,11 @@ theorem IsStrictMinimalServiceCurve.eq_zero_of_comp
     have hbl : IsBacklogged (⇑(staircaseCurve T b 0))
         (⇑(staircaseCurve T b (T₁ + T₂))) (Set.Ioc 0 t) :=
       staircaseFun_isBacklogged_Ioc_zero hTpos hb hTsum.le t
-    have hbound := hβ _ _ ⟨staircaseCurve T b T₁, hAB, hBC⟩ 0 t zero_le' hbl
+    have hbound := hβ _ _ ⟨staircaseCurve T b T₁, hAB, hBC⟩ 0 t zero_le hbl
     simp only [staircaseCurve_apply] at hbound
     rw [staircaseFun_zero_eq, zero_add, tsub_zero] at hbound
     calc β t ≤ staircaseFun T b (T₁ + T₂) t := hbound
-      _ ≤ staircaseFun T b 0 t := staircaseFun_anti T b zero_le' t
+      _ ≤ staircaseFun T b 0 t := staircaseFun_anti T b zero_le t
       _ ≤ b / T * t + b := staircaseFun_le_affine hTpos b t
   -- in the real reading: `β t ≤ b·(t/T + 1)` for every `b > 0`
   have hT0 : (0 : ℝ) < (T : ℝ) := NNReal.coe_pos.mpr hTpos
@@ -296,7 +296,7 @@ theorem strict_chain_rate_bound
       have h2w : (C σ + ε) + (w + w) = C s + r * (σ - s) := by
         rw [hw, add_halves]
         exact add_tsub_cancel_of_le hcon.le
-      have hσpos : 0 < σ := lt_of_le_of_lt zero_le' hsσlt
+      have hσpos : 0 < σ := lt_of_le_of_lt zero_le hsσlt
       have hwr : 0 < w / r := div_pos hwpos hrpos
       obtain ⟨τ', hτ'mem, hττ'⟩ :=
         exists_lt_of_lt_csSup hne (tsub_lt_self hσpos hwr)

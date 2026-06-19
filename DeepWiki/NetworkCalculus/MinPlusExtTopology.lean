@@ -226,10 +226,11 @@ theorem continuousAt_conjAdd {a b : WithTop (WithBot ℝ)}
   have hadd : ContinuousAt (fun p : WithTop (WithBot ℝ) × WithTop (WithBot ℝ) =>
       toEReal p.1 + toEReal p.2) (a, b) := by
     have := hEReal.comp (x := (a, b)) hpair.continuousAt
-    simpa [Function.comp] using this
+    simpa [Function.comp_def] using this
   have := (toERealHomeo.symm.continuous.continuousAt
     (x := toEReal a + toEReal b)).comp (x := (a, b)) hadd
-  simpa [conjAdd, Function.comp] using this
+  show ContinuousAt (fun p => ofEReal (toEReal p.1 + toEReal p.2)) (a, b)
+  simpa [Function.comp_def] using this
 
 /-- Top-absorbing `R̄min` addition is continuous at any `AddDefinedExt` pair,
 proved by conjugation through the `EReal` cast (no from-scratch case analysis):

@@ -28,9 +28,9 @@ theorem vcnStepCapacity_mono : Monotone vcnStepCapacity := by
   by_cases ha : a = 0
   · subst ha
     simp only [vcnStepCapacity, if_pos]
-    exact zero_le'
+    exact zero_le
   · have hb : b ≠ 0 := fun hb =>
-      ha (le_antisymm (hb ▸ hab) zero_le')
+      ha (le_antisymm (hb ▸ hab) zero_le)
     simp only [vcnStepCapacity, if_neg ha, if_neg hb]
     exact le_rfl
 
@@ -52,7 +52,7 @@ theorem variableCapacityOutput_id_stepCapacity_eq (t : ℝ≥0) :
   rcases eq_or_ne t 0 with rfl | ht
   · rw [variableCapacityOutput_zero_eq]
     rfl
-  · refine le_antisymm ?_ zero_le'
+  · refine le_antisymm ?_ zero_le
     refine le_of_forall_pos_le_add fun ε hε => ?_
     rw [zero_add]
     have hmin : 0 < min ε t := lt_min hε (pos_of_ne_zero ht)
@@ -71,7 +71,7 @@ theorem start_id_stepCapacity_eq (t : ℝ≥0) :
     ext u
     simp only [Set.mem_setOf_eq, Set.mem_singleton_iff,
       variableCapacityOutput_id_stepCapacity_eq, id_eq]
-    exact ⟨fun h => h.2, fun h => ⟨h ▸ zero_le', h⟩⟩
+    exact ⟨fun h => h.2, fun h => ⟨h ▸ zero_le, h⟩⟩
   rw [hset, csSup_singleton]
 
 /-- The closed form fails at `t = 1`: the output is `0`, the
@@ -151,7 +151,7 @@ theorem variableCapacityOutput_half_ceil_eq {t : ℝ≥0} {k : ℕ} (hk : ⌈t�
     rw [add_div]
     refine add_le_add le_rfl ?_
     rw [div_le_iff₀ (by norm_num : (0 : ℝ≥0) < 2)]
-    exact le_mul_of_one_le_right zero_le' (by norm_num)
+    exact le_mul_of_one_le_right zero_le (by norm_num)
   · show (k : ℝ≥0) / 2 ≤ s / 2 + (vcnCeilCapacity t - vcnCeilCapacity s)
     have hj2 : ⌈s⌉₊ ≤ k + 1 := hk ▸ Nat.ceil_mono hs
     simp only [vcnCeilCapacity, hk]
@@ -160,7 +160,7 @@ theorem variableCapacityOutput_half_ceil_eq {t : ℝ≥0} {k : ℕ} (hk : ⌈t�
       (show ((⌈s⌉₊ : ℕ) : ℝ≥0) ≤ (k : ℝ≥0) + 1 from by
         exact_mod_cast hj2)]
     have hj1 : ((⌈s⌉₊ : ℕ) : ℝ) < (s : ℝ) + 1 := by
-      exact_mod_cast (Nat.ceil_lt_add_one zero_le' :
+      exact_mod_cast (Nat.ceil_lt_add_one zero_le :
         (⌈s⌉₊ : ℝ≥0) < s + 1)
     have hj2R : ((⌈s⌉₊ : ℕ) : ℝ) ≤ (k : ℝ) + 1 := by
       exact_mod_cast hj2
@@ -191,7 +191,7 @@ theorem vcnCeilCapacity_dominates :
   rw [one_mul]
   rcases le_total (t - s) 1 with h1 | h1
   · rw [tsub_eq_zero_of_le h1]
-    exact zero_le'
+    exact zero_le
   · have hcle : ⌈s⌉₊ ≤ ⌈t⌉₊ := Nat.ceil_mono hst
     simp only [vcnCeilCapacity]
     rw [← NNReal.coe_le_coe]
@@ -201,7 +201,7 @@ theorem vcnCeilCapacity_dominates :
     have h2 : (t : ℝ) ≤ ((⌈t⌉₊ : ℕ) : ℝ) := by
       exact_mod_cast (Nat.le_ceil t : (t : ℝ≥0) ≤ (⌈t⌉₊ : ℝ≥0))
     have h3 : ((⌈s⌉₊ : ℕ) : ℝ) < (s : ℝ) + 1 := by
-      exact_mod_cast (Nat.ceil_lt_add_one zero_le' :
+      exact_mod_cast (Nat.ceil_lt_add_one zero_le :
         (⌈s⌉₊ : ℝ≥0) < s + 1)
     linarith
 
@@ -317,7 +317,7 @@ theorem start_half_ceil_eq (t : ℝ≥0) :
       rw [← heq] at hbl
       exact lt_irrefl _ hbl
     · rintro rfl
-      refine ⟨zero_le', ?_⟩
+      refine ⟨zero_le, ?_⟩
       rw [variableCapacityOutput_zero_eq]
   rw [hset, csSup_singleton]
 

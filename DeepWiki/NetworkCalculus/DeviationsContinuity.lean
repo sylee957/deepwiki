@@ -143,8 +143,8 @@ theorem vDev_leftLim_eq_vDev_rightLim {f g : ℝ≥0 → ℝ≥0∞}
   · refine iSup_le fun t => ?_
     rcases eq_or_ne t 0 with rfl | ht
     · show leftLim f 0 - leftLim g 0 ≤ _
-      rw [leftLim_eq_of_isBot (f := f) fun b => zero_le', hf0, zero_tsub]
-      exact zero_le'
+      rw [leftLim_eq_of_isBot (f := f) fun b => zero_le, hf0, zero_tsub]
+      exact zero_le
     · show leftLim f t - leftLim g t ≤ _
       rw [hf.leftLim_eq_sSup
           (nhdsLT_neBot_of_exists_lt ⟨0, pos_iff_ne_zero.mpr ht⟩).ne,

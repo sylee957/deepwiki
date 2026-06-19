@@ -49,10 +49,10 @@ theorem ndClosure_eq_zero_iff {f : ℝ≥0 → ℝ≥0}
     funext t
     have hle := le_ndClosure f hbdd t
     rw [h] at hle
-    exact le_antisymm hle zero_le'
+    exact le_antisymm hle zero_le
   · rintro rfl
     funext t
-    refine le_antisymm ?_ zero_le'
+    refine le_antisymm ?_ zero_le
     exact ndClosure_le (monotone_const : Monotone (0 : ℝ≥0 → ℝ≥0))
       (fun _ => le_rfl) t
 
@@ -132,14 +132,14 @@ theorem maxConvPow_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) (n : ℕ)
   | zero => exact h0
   | succ n ih =>
     show maxConv (maxConvPow g n) (maxConvPow g n) 0 = 0
-    refine le_antisymm (maxConv_le fun u s hus => ?_) zero_le'
+    refine le_antisymm (maxConv_le fun u s hus => ?_) zero_le
     obtain ⟨rfl, rfl⟩ := add_eq_zero.mp hus
     rw [ih, add_zero]
 
 /-- The `ℝ≥0∞` super-additive closure vanishes at the origin when `g 0 = 0`. -/
 theorem superadditiveClosureMaxNN_zero_eq {g : ℝ≥0 → ℝ≥0∞} (h0 : g 0 = 0) :
     superadditiveClosureMaxNN g 0 = 0 := by
-  refine le_antisymm (iSup_le fun n => ?_) zero_le'
+  refine le_antisymm (iSup_le fun n => ?_) zero_le
   rw [maxConvPow_zero_eq h0 n]
 
 /-- The `ℝ≥0∞` iterates are non-decreasing in the index: the `(t, 0)`

@@ -311,7 +311,7 @@ theorem nsmul_le_minConvPow {D : Type} [_root_.AddCommMonoid D]
   induction n generalizing t with
   | zero =>
       rw [zero_smul]
-      exact zero_le'
+      exact zero_le
   | succ n ih =>
       rw [minConvPow_succ]
       refine le_minConv fun u v huv => ?_
@@ -356,7 +356,7 @@ theorem monotone_minConvPow {g : ℝ≥0 → ℝ≥0∞} (hmono : Monotone g)
       split_ifs with ha hb hb
       · exact le_rfl
       · exact le_top
-      · exact absurd (le_antisymm (hb ▸ hab) zero_le') ha
+      · exact absurd (le_antisymm (hb ▸ hab) zero_le) ha
       · exact le_rfl
   | succ n ih => exact monotone_minConv ih hmono
 
@@ -397,7 +397,7 @@ theorem subadditiveClosureENN_zero_eq {D : Type}
   le_antisymm (by
     rw [subadditiveClosureENN_eq_iInf]
     exact iInf_le_of_le 0 (by rw [minConvPow_zero, if_pos rfl]))
-    zero_le'
+    zero_le
 
 /-- Convolving with a closure stays below the curve: `(f ∗ g⋆) t ≤ f t`
 (the closure vanishes at the origin). -/
@@ -522,7 +522,7 @@ theorem subadditiveClosureENN_min {D : Type} [_root_.AddCommMonoid D]
       le_antisymm
         ((minConv_le_add _ _ (add_zero 0)).trans_eq (by
           rw [subadditiveClosureENN_zero_eq, subadditiveClosureENN_zero_eq, add_zero]))
-        zero_le'
+        zero_le
     refine le_subadditiveClosureENN_of_isSubadditive hsub h0 (fun r => ?_) t
     exact le_min
       ((minConv_le_left _ (subadditiveClosureENN_zero_eq τ) r).trans
@@ -547,7 +547,7 @@ theorem minConv_subadditiveClosureENN_le_of_inf_le
     | zero =>
         intro u
         rw [zero_smul]
-        exact inf_le_right.trans zero_le'
+        exact inf_le_right.trans zero_le
     | succ n ih =>
         intro u
         refine le_trans (le_inf ?_ ?_) (hx u)

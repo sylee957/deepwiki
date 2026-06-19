@@ -121,7 +121,7 @@ theorem start1_untimedBisimilar_start2 : tlts.UntimedBisimilar .start1 .start2 :
 theorem start1_timedLang_ne_start2 : tlts.timedLang .start1 ≠ tlts.timedLang .start2 := by
   intro heq
   have hp : [((1 : ℝ≥0), ())] ∈ tlts.timedLang .start1 := by
-    refine ⟨.ready1, .stop, zero_le', ?_, Step.act1, trivial⟩
+    refine ⟨.ready1, .stop, zero_le, ?_, Step.act1, trivial⟩
     rw [tsub_zero]; exact Step.delay1
   rw [heq] at hp
   obtain ⟨s1, s2, -, hdel, -, -⟩ := hp

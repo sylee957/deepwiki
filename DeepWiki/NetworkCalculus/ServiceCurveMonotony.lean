@@ -27,7 +27,7 @@ theorem clipFun_apply (β : ℝ≥0 → ℝ≥0) (M t : ℝ≥0) :
 theorem clipFun_zero_eq {β : ℝ≥0 → ℝ≥0} (M : ℝ≥0) (h0 : β 0 = 0) :
     clipFun β M 0 = 0 := by
   rw [clipFun_apply, h0]
-  exact min_eq_left zero_le'
+  exact min_eq_left zero_le
 
 /-- The clip stays below the curve. -/
 theorem clipFun_le_apply (β : ℝ≥0 → ℝ≥0) (M t : ℝ≥0) :
@@ -90,7 +90,7 @@ theorem start_burst_clip_eq_zero {β : ℝ≥0 → ℝ≥0} {M : ℝ≥0}
     (hpwc : IsPiecewiseContinuous β) (h0 : β 0 = 0) {t : ℝ≥0}
     (hM : β t < M) :
     start ⇑(burstCurve M) ⇑(clipCurve β M hmono hlc hpwc h0) t = 0 := by
-  refine le_antisymm (csSup_le ⟨0, zero_le', ?_⟩ fun u hu => ?_) zero_le'
+  refine le_antisymm (csSup_le ⟨0, zero_le, ?_⟩ fun u hu => ?_) zero_le
   · show burstFun M 0 = clipFun β M 0
     rw [burstFun_zero_eq, clipFun_zero_eq M h0]
   · by_contra hu0
@@ -108,7 +108,7 @@ theorem start_burst_clip_eq_self {β : ℝ≥0 → ℝ≥0} {M : ℝ≥0}
     (hM : M ≤ β t) :
     start ⇑(burstCurve M) ⇑(clipCurve β M hmono hlc hpwc h0) t = t := by
   rcases eq_or_ne t 0 with rfl | hne
-  · exact le_antisymm (start_le _ _ 0) zero_le'
+  · exact le_antisymm (start_le _ _ 0) zero_le
   · exact start_eq_of_apply_eq (by
       show burstFun M t = clipFun β M t
       rw [burstFun_apply_of_ne M hne, clipFun_eq_of_le hM])
@@ -256,7 +256,7 @@ theorem clip_mem_strictServiceRel {β : ℝ≥0 → ℝ≥0} (M : ℝ≥0)
   rcases eq_or_lt_of_le hst with rfl | hlt
   · show clipFun β M s + β (s - s) ≤ clipFun β M s
     rw [tsub_self, h0, add_zero]
-  · have htpos : 0 < t := lt_of_le_of_lt (zero_le' : (0 : ℝ≥0) ≤ s) hlt
+  · have htpos : 0 < t := lt_of_le_of_lt (zero_le : (0 : ℝ≥0) ≤ s) hlt
     have hbt : clipFun β M t < burstFun M t := hbl t ⟨hlt, le_rfl⟩
     rw [burstFun_apply_of_ne M (ne_of_gt htpos)] at hbt
     have hβtM : β t < M := by
@@ -288,7 +288,7 @@ theorem le_of_strictServiceRel_le {β β' : ℝ≥0 → ℝ≥0}
     show clipFun β' (β' t + 1) u < burstFun (β' t + 1) u
     rw [burstFun_apply_of_ne _ (ne_of_gt hu.1), clipFun_eq_of_lt hβuM]
     exact hβuM
-  have hbound := hp.2 0 t (zero_le' : (0 : ℝ≥0) ≤ t) hbl
+  have hbound := hp.2 0 t (zero_le : (0 : ℝ≥0) ≤ t) hbl
   have e0 : (clipCurve β' (β' t + 1) hmono hlc hpwc h0) 0 = 0 :=
     clipFun_zero_eq _ h0
   have et : (clipCurve β' (β' t + 1) hmono hlc hpwc h0) t = β' t :=
@@ -550,7 +550,7 @@ theorem monotone_convUnitEReal : Monotone convUnitEReal := by
   rcases eq_or_ne a 0 with rfl | ha
   · rw [show convUnitEReal 0 = 0 from if_pos rfl]; exact isNonneg_convUnitEReal b
   · rw [show convUnitEReal a = ⊤ from if_neg ha,
-      show convUnitEReal b = ⊤ from if_neg (fun hb => ha (le_antisymm (hb ▸ hab) zero_le'))]
+      show convUnitEReal b = ⊤ from if_neg (fun hb => ha (le_antisymm (hb ▸ hab) zero_le))]
 
 /-- The closure-converse witness `β'`: `0` on `{0} ∪ (1,∞)`, `+∞` on `(0,1]`. -/
 noncomputable def monoCexBetaC : ℝ≥0 → EReal := fun t => if t = 0 ∨ 1 < t then 0 else ⊤

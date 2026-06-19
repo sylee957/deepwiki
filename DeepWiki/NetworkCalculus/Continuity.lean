@@ -232,7 +232,7 @@ limit of the dominated values `A (x − ε)` (and `A 0 = A (0 − ε)` directly)
 theorem le_of_forall_sub_pos_le_of_isLeftContinuous {A : ℝ≥0 → ℝ≥0}
     (hA : IsLeftContinuous A) {x c : ℝ≥0}
     (h : ∀ ε : ℝ≥0, 0 < ε → A (x - ε) ≤ c) : A x ≤ c := by
-  rcases eq_or_lt_of_le (zero_le' : (0 : ℝ≥0) ≤ x) with hx | hx
+  rcases eq_or_lt_of_le (zero_le : (0 : ℝ≥0) ≤ x) with hx | hx
   · subst hx
     have h0 := h 1 one_pos
     rwa [zero_tsub] at h0

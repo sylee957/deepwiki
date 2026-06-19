@@ -258,7 +258,7 @@ theorem wrrResidual_le_wrrResidualStaircase {ι : Type*} [Fintype ι]
   rcases eq_zero_or_pos ((w i : ℝ≥0) * lmin i
       + ∑ j ∈ Finset.univ.erase i, (w j : ℝ≥0) * lmax j) with hq | hq
   · rw [hq, div_zero, zero_mul]
-    exact zero_le'
+    exact zero_le
   refine le_minConv fun u v huv => ?_
   rw [← huv]
   have hqR : (0 : ℝ) < (((w i : ℝ≥0) * lmin i
@@ -311,7 +311,7 @@ theorem minConv_rate_one_staircaseFun_le {q Q b tv : ℝ≥0} {p : ℕ}
   rcases le_total b Q with hd | hd
   · rw [tsub_eq_zero_of_le hd, minConv_apply_zero, staircaseFun_zero_eq,
       add_zero, rate_apply, mul_zero]
-    exact zero_le'
+    exact zero_le
   rcases le_total (b - Q) ((p : ℝ≥0) * (q + Q)) with hyT | hyT
   · refine le_trans (minConv_le_add _ _ (zero_add (b - Q))) ?_
     rw [rate_apply, mul_zero, zero_add]

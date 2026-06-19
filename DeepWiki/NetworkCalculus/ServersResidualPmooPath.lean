@@ -80,7 +80,7 @@ theorem pmooPathResidual_zero_eq {ι : Type*} [Fintype ι] {n : ℕ}
     {β : ℕ → ℝ≥0 → ℝ≥0} (α : ι → ℝ≥0 → ℝ≥0) (fst lst : ι → ℕ)
     (hβ0 : ∀ h, β h 0 = 0) :
     pmooPathResidual n β α fst lst 0 = 0 := by
-  refine le_antisymm ?_ zero_le'
+  refine le_antisymm ?_ zero_le
   refine le_trans (pmooPathResidual_le (u := fun _ => 0) (by simp)) ?_
   show (∑ h ∈ Finset.range (n + 1), β h 0)
       - (∑ i, α i (∑ _h ∈ pathHops n fst lst i, (0 : ℝ≥0))) ≤ 0

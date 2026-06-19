@@ -203,7 +203,7 @@ theorem isMinimalArrivalBound_rightLim_of_isLeftContinuous
   intro t d
   -- `t = 0` is the boundary row supplied by `hbdry`; for `t > 0` pass
   -- to the left limit `A s → A t` over `s ∈ Iio t`.
-  rcases eq_or_lt_of_le (zero_le' (a := t)) with ht | ht
+  rcases eq_or_lt_of_le (zero_le (a := t)) with ht | ht
   · rw [← ht, zero_add]; exact hbdry d
   have hlim : Tendsto (fun s => A s + Function.rightLim α d)
       (𝓝[<] t) (𝓝 (A t + Function.rightLim α d)) :=

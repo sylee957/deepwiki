@@ -66,7 +66,7 @@ theorem warp_le_self {d r : ℝ≥0} (hr : 0 < r) (hrd : r ≤ d) (τ : ℝ≥0)
   have hφd : (φ : ℝ) < d := warp_frac_lt hd τ
   have key : d / r * (φ - (d - r)) ≤ φ := by
     rcases le_or_gt φ (d - r) with h | h
-    · rw [tsub_eq_zero_of_le h, mul_zero]; exact zero_le'
+    · rw [tsub_eq_zero_of_le h, mul_zero]; exact zero_le
     · rw [← NNReal.coe_le_coe]
       push_cast [NNReal.coe_sub h.le, NNReal.coe_sub hrd]
       have hr' : (0 : ℝ) < (r : ℝ) := NNReal.coe_pos.mpr hr
@@ -84,7 +84,7 @@ theorem warp_mul_nat {d r : ℝ≥0} (hd : 0 < d) (k : ℕ) : warp d r (d * (k :
   have hfloor : ⌊((d * (k : ℝ≥0) : ℝ≥0) : ℝ) / d⌋₊ = k := by
     push_cast
     rw [mul_comm, mul_div_assoc, div_self hd'.ne', mul_one, Nat.floor_natCast]
-  rw [warp_apply, hfloor, tsub_self, tsub_eq_zero_of_le zero_le', mul_zero, add_zero]
+  rw [warp_apply, hfloor, tsub_self, tsub_eq_zero_of_le zero_le, mul_zero, add_zero]
 
 /-- **Catch-up density**: the warp has a fixed point in every window `(x, x + d]` —
 namely the next multiple of the period, `d·(⌊x/d⌋ + 1)`. This is the hypothesis
@@ -279,7 +279,7 @@ theorem IsPiecewiseContinuous.comp_continuous_monotone {A : ℝ≥0 → ℝ≥0}
   have hτdisc : ¬ ContinuousAt (fun τ => A (g τ)) τ := hτ.1
   have hτT : τ ∈ Set.Icc 0 T := hτ.2
   have hgτD : g τ ∈ discontSet A ∩ Set.Icc 0 (g T) :=
-    ⟨fun hcon => hτdisc (hcon.comp hgc.continuousAt), ⟨zero_le', hgm hτT.2⟩⟩
+    ⟨fun hcon => hτdisc (hcon.comp hgc.continuousAt), ⟨zero_le, hgm hτT.2⟩⟩
   have hτS : τ ∈ S (g τ) := ⟨hτT, rfl⟩
   refine Set.mem_biUnion hgτD ?_
   by_contra hcon
@@ -496,7 +496,7 @@ theorem minimalServiceRel_delay_le_systemClosure {T : ℝ≥0} (hT : 0 < T) :
   have hr : (0 : ℝ≥0) < T / ((n : ℝ≥0) * n) := by positivity
   have hrd : T / ((n : ℝ≥0) * n) ≤ T / (n : ℝ≥0) := by
     gcongr
-    exact le_mul_of_one_le_left zero_le' h1n
+    exact le_mul_of_one_le_left zero_le h1n
   have hreal : (T : ℝ) ≤ ε + ((n : ℝ) - 1) * ((T : ℝ) / n - T / (n * n)) := by
     have expand : (ε : ℝ) + ((n : ℝ) - 1) * ((T : ℝ) / n - T / (n * n))
         = (ε * (n * n) + T * ((n : ℝ) - 1) ^ 2) / (n * n) := by field_simp

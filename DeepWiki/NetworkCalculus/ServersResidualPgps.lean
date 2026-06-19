@@ -89,7 +89,7 @@ theorem minConv_pgpsResidualShifted_le_of_isPgpsTracking
     refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
     rw [hA0, zero_add, pgpsResidualShifted_apply,
       tsub_eq_zero_of_le htc, hβ0]
-    exact zero_le'
+    exact zero_le
   · -- split at the reference start of `t − ℓᵘ/R`
     have hsσ : start A D (t - lu / R) ≤ t - lu / R :=
       start_le A D _
@@ -124,7 +124,7 @@ theorem pgpsResidual_le_pgpsResidualShifted {β : ℝ≥0 → ℝ≥0}
   refine le_trans (mul_le_mul' le_rfl tsub_tsub_le) ?_
   rcases eq_zero_or_pos R with rfl | hR
   · rw [zero_mul]
-    exact zero_le'
+    exact zero_le
   · rw [mul_comm]
     exact (div_mul_cancel₀ lu hR.ne').le
 
@@ -190,7 +190,7 @@ theorem minConv_pgpsResidualShifted_le_add_of_close
   · refine le_trans (minConv_le_add _ _ (zero_add t)) ?_
     rw [hA0, zero_add, pgpsResidualShifted_apply,
       tsub_eq_zero_of_le htc, hβ0]
-    exact zero_le'
+    exact zero_le
   · have hsσ : start A D (t - lu / R) ≤ t - lu / R :=
       start_le A D _
     have hσt : start A D (t - lu / R) ≤ t := hsσ.trans tsub_le_self
@@ -479,9 +479,9 @@ theorem not_forall_minConv_pgpsResidual_le_of_closeness :
       (continuous_id.min continuous_const)
   have hβ0 : rate (1 : ℝ≥0) 0 = 0 := rate_zero_eq 1
   have hW := h pgpsWitnessFlow pgpsWitnessFlow (fun _ => 0) (rate 1)
-    1 1 hlc hlc rfl (min_eq_left zero_le') hβ0 (fun x => le_rfl)
+    1 1 hlc hlc rfl (min_eq_left zero_le) hβ0 (fun x => le_rfl)
     (fun s t hst hbl => pgpsWitnessFlow_strict hβ0 s t hst hbl)
-    (fun x => zero_le') (fun x => by
+    (fun x => zero_le) (fun x => by
       rw [zero_add]
       exact min_le_right x 1)
     (rate_lipschitz le_rfl) 2

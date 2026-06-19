@@ -100,19 +100,24 @@ theorem minConv_fifoResidual_le_of_isFifo_group {ι : Type*} [Fintype ι]
     (isFifo_erase_pair hfifo k) hβmono hβlc hserv' (i := 0) harr' θ t
   -- the cross-traffic residual reduces to `α` (only flow `1` is in `erase 0`);
   -- the group-`0` arrival/departure are the aggregates (defeq to `key`'s `![..] 0`)
+  -- `convert` no longer discharges the `![·, ·] 0 = ·` aggregate reductions by
+  -- reducible defeq, so close them explicitly; the middle goal is the genuine
+  -- cross-traffic reduction `∑_{erase 0} ![0, α] = α`.
   convert key using 3
-  funext v
-  have h10 : (1 : Fin 2) ≠ 0 := by decide
-  -- `erase 0 = {1}` over `Fin 2`, regardless of which `DecidableEq` instance
-  -- the underlying theorem baked in
-  have hone : ∀ inst : DecidableEq (Fin 2),
-      (∑ j ∈ @Finset.erase (Fin 2) inst univ 0,
-        (![0, α] : Fin 2 → ℝ≥0 → ℝ≥0) j v) = α v := by
-    intro inst
-    refine Finset.sum_eq_single_of_mem (1 : Fin 2)
-      (Finset.mem_erase.mpr ⟨h10, Finset.mem_univ 1⟩) ?_
-    intro b _ hb1; fin_cases b <;> simp_all
-  exact congrArg (fun x : ℝ≥0 => (x : ℝ≥0∞)) (hone _).symm
+  · simp only [Matrix.cons_val_zero]
+  · funext v
+    have h10 : (1 : Fin 2) ≠ 0 := by decide
+    -- `erase 0 = {1}` over `Fin 2`, regardless of which `DecidableEq` instance
+    -- the underlying theorem baked in
+    have hone : ∀ inst : DecidableEq (Fin 2),
+        (∑ j ∈ @Finset.erase (Fin 2) inst univ 0,
+          (![0, α] : Fin 2 → ℝ≥0 → ℝ≥0) j v) = α v := by
+      intro inst
+      refine Finset.sum_eq_single_of_mem (1 : Fin 2)
+        (Finset.mem_erase.mpr ⟨h10, Finset.mem_univ 1⟩) ?_
+      intro b _ hb1; fin_cases b <;> simp_all
+    exact congrArg (fun x : ℝ≥0 => (x : ℝ≥0∞)) (hone _).symm
+  · simp only [Matrix.cons_val_zero]
 
 /-! ## Book restatement (FIFO and PMOO)
 Where the GPS composition fails (`not_forall_isGps_comp`), FIFO succeeds:

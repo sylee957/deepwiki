@@ -30,7 +30,7 @@ omit [TopologicalSpace β] [OrderTopology β] in
 /-- `ndClosure f 0 = f 0`: the prefix `{s ≤ 0}` is just `{0}`. -/
 theorem ndClosure_zero_eq (f : ℝ≥0 → β) : ndClosure f 0 = f 0 :=
   le_antisymm (iSup_le fun u => le_of_eq (by
-    rw [show (u : ℝ≥0) = 0 from le_antisymm u.2 zero_le'])) (le_ndClosure_apply f le_rfl)
+    rw [show (u : ℝ≥0) = 0 from le_antisymm u.2 zero_le])) (le_ndClosure_apply f le_rfl)
 
 /-- **Left-continuity is preserved by `ndClosure`**: the running sup of a left-continuous
 function is left-continuous. At `t`, a left-jump of `ndClosure f` past `⨆_{s < t} f s`

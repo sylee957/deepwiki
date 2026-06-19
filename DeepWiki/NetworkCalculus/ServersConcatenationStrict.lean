@@ -109,7 +109,7 @@ theorem witness_mem_minimalServiceRel :
       refine le_trans (minConv_le_add _ _ (add_zero t)) ?_
       have hinner : minConv (delayEReal 3) (rateEReal 1) 0 ≤ 0 := by
         refine le_trans (minConv_le_add _ _ (add_zero 0)) ?_
-        rw [show delayEReal 3 0 = 0 from delay_eq_zero 3 zero_le',
+        rw [show delayEReal 3 0 = 0 from delay_eq_zero 3 zero_le,
           rateEReal_zero_eq 1, add_zero]
       refine le_trans (add_le_add le_rfl hinner) ?_
       rw [add_zero]

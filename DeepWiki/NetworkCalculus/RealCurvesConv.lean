@@ -98,7 +98,7 @@ theorem maxDeconv_delayNN (f : ℝ≥0 → ℝ≥0∞) (d : ℝ≥0) :
     rw [show delayNN d (d + 1) = ⊤ by
       simp [delayNN, not_le.mpr (lt_add_one d)]]
     simp
-  · exact zero_le'
+  · exact zero_le
 
 /-- Subadditivity transports to the origin-clamped curve: `delayNN 0 ⊓ h` is
 subadditive when `h` is. -/

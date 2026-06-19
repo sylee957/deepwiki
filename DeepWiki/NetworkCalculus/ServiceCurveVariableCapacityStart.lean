@@ -111,12 +111,12 @@ theorem exists_isMinOn_variableCapacityOutput {A C : ℝ≥0 → ℝ≥0}
       ∧ variableCapacityOutput A C t = A s + (C t - C s) := by
   obtain ⟨s, hs, hmin⟩ :=
     (lowerSemicontinuousOn_sub_of_isJumpDominated hAmono hAlc hCmono
-      hjump t).exists_isMinOn (Set.nonempty_Icc.mpr zero_le')
+      hjump t).exists_isMinOn (Set.nonempty_Icc.mpr zero_le)
       isCompact_Icc
   have hterm : ∀ u, u ≤ t →
       A s + (C t - C s) ≤ A u + (C t - C u) := by
     intro u hu
-    have hg := (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le', hu⟩)
+    have hg := (isMinOn_iff.mp hmin) u (Set.mem_Icc.mpr ⟨zero_le, hu⟩)
     rw [← NNReal.coe_le_coe]
     push_cast [NNReal.coe_sub (hCmono (Set.mem_Icc.mp hs).2),
       NNReal.coe_sub (hCmono hu)]

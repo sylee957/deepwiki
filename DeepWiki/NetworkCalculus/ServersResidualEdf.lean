@@ -115,7 +115,7 @@ theorem truncBefore_leftCont {A : ℝ≥0 → ℝ≥0} (hlc : IsLeftContinuous A
 /-- `truncBefore T A 0 = 0` for null-at-origin `A`. -/
 theorem truncBefore_zero_eq {A : ℝ≥0 → ℝ≥0} (h0 : A 0 = 0) (T : ℝ≥0) :
     truncBefore T A 0 = 0 := by
-  rw [truncBefore, min_eq_left zero_le']
+  rw [truncBefore, min_eq_left zero_le]
   exact h0
 
 /-- The before-`T` departures never exceed the before-`T` arrivals (for
@@ -145,7 +145,7 @@ theorem truncBeforeD_leftCont {A D : ℝ≥0 → ℝ≥0}
 theorem truncBeforeD_zero_eq {A D : ℝ≥0 → ℝ≥0} (h0 : D 0 = 0) (T : ℝ≥0) :
     truncBeforeD T A D 0 = 0 := by
   rw [truncBeforeD, h0]
-  exact min_eq_left zero_le'
+  exact min_eq_left zero_le
 
 /-- `truncAfter` is monotone for monotone `A`. -/
 theorem truncAfter_mono {A : ℝ≥0 → ℝ≥0} (hmono : Monotone A) (T : ℝ≥0) :
@@ -227,7 +227,7 @@ theorem edfResidual_apply {ι : Type*} [Fintype ι] (β : ℝ≥0 → ℝ≥0∞
 /-- `edfResidual β α d i θ 0 = 0`. -/
 theorem edfResidual_zero_eq {ι : Type*} [Fintype ι] (β : ℝ≥0 → ℝ≥0∞)
     (α : ι → ℝ≥0 → ℝ≥0) (d : ι → ℝ≥0) (i : ι) (θ : ℝ≥0) :
-    edfResidual β α d i θ 0 = 0 := if_pos zero_le'
+    edfResidual β α d i θ 0 = 0 := if_pos zero_le
 
 /-- **EDF degenerates to FIFO**: with all deadlines equal, the EDF
 residual is the FIFO residual. -/
@@ -357,10 +357,10 @@ theorem minConv_edfResidual_le_of_isEdf {ι : Type*} [Fintype ι]
     have ht0 : 0 < t := by
       by_contra hcon
       push Not at hcon
-      have ht00 : t = 0 := le_antisymm hcon zero_le'
+      have ht00 : t = 0 := le_antisymm hcon zero_le
       have hA0 : (As i) 0 = 0 := (As i).zero
       rw [ht00, hA0] at hD
-      exact absurd hD (not_lt.mpr zero_le')
+      exact absurd hD (not_lt.mpr zero_le)
     have hθτ : θ ≤ τ := by
       by_contra hcon
       push Not at hcon
@@ -395,8 +395,8 @@ theorem minConv_edfResidual_le_of_isEdf {ι : Type*} [Fintype ι]
                   NNReal.coe_sub hcmp, NNReal.coe_sub hpτ]
                 linarith [hτeq]
               · rw [show X k = 0 from tsub_eq_zero_of_le hdk,
-                  min_eq_right zero_le']
-                exact zero_le'
+                  min_eq_right zero_le]
+                exact zero_le
             · rw [tsub_eq_zero_of_le hcmp, add_zero]
               rcases le_total (d k) (t + d i) with hdk | hdk
               · refine le_trans (min_le_right τ (X k)) ?_
@@ -408,11 +408,10 @@ theorem minConv_edfResidual_le_of_isEdf {ι : Type*} [Fintype ι]
                   have h1 : ((τ - p : ℝ≥0) : ℝ) ≤ (((θ + d k) - d i : ℝ≥0) : ℝ) := by
                     exact_mod_cast hcmp
                   rwa [NNReal.coe_sub hpτ, NNReal.coe_sub hsk] at h1
-                push_cast at hcmp' ⊢
                 linarith [hτeq]
               · rw [show X k = 0 from tsub_eq_zero_of_le hdk,
-                  min_eq_right zero_le']
-                exact zero_le'
+                  min_eq_right zero_le]
+                exact zero_le
         calc FD k τ ≤ (As k) (min τ (X k)) := hFc k τ
           _ ≤ (As k) (p + ((τ - p) - ((θ + d k) - d i))) :=
               (As k).mono hkey
@@ -555,10 +554,10 @@ theorem edfResidual_eq_min_conv_delayNN {ι : Type*} [Fintype ι]
       (hαmono j (Finset.ne_of_mem_erase hj))) _]
   by_cases hv : v ≤ θ
   · rw [if_pos hv, show delayNN θ v = 0 from delay_eq_zero θ hv,
-      min_eq_right zero_le']
+      min_eq_right zero_le]
   · rw [if_neg hv, show delayNN θ v = ⊤ from delay_eq_top θ (not_le.mp hv),
       min_eq_left le_top, Finset.sum_congr rfl hconv,
-      ← ENNReal.coe_finsetSum]
+      ← ENNReal.ofNNReal_finsetSum]
 
 /-! ## Deadline compatibility -/
 
@@ -760,7 +759,7 @@ example {ι : Type*} [Fintype ι]
         Finset.sum_congr rfl fun i _ => by
           rw [conv_delayNN _ (Deviation.monotone_liftENN (hαmono i)) (d i)]
     _ = ((∑ i, α i (s - d i) : ℝ≥0) : ℝ≥0∞) :=
-        (ENNReal.coe_finsetSum).symm
+        (ENNReal.ofNNReal_finsetSum _ _).symm
     _ ≤ β s := sum_apply_tsub_le_of_isDeadlineCompatible hA hgreedy
         hcompat s
 
@@ -787,7 +786,7 @@ example {ι : Type*} [Fintype ι]
     have h := hpoint t
     rw [show (∑ i, minConv (Deviation.liftENN (α i)) (delayNN (d i)) t)
           = ((∑ i, α i (t - d i) : ℝ≥0) : ℝ≥0∞) from by
-        rw [ENNReal.coe_finsetSum]
+        rw [ENNReal.ofNNReal_finsetSum]
         exact Finset.sum_congr rfl fun i _ => by
           rw [conv_delayNN _
             (Deviation.monotone_liftENN (harr i).1) (d i)]] at h

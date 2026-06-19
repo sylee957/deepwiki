@@ -47,7 +47,7 @@ structure ProcessENN where
 /-- A `ProcessENN` is callable as its underlying function. -/
 instance : FunLike ProcessENN ℝ≥0 ℝ≥0∞ where
   coe := ProcessENN.toFun
-  coe_injective' f g h := by cases f; cases g; congr
+  coe_injective f g h := by cases f; cases g; congr
 
 /-- Two extended processes are equal when equal as functions. -/
 @[ext] theorem ProcessENN.ext {A B : ProcessENN} (h : ∀ t, A t = B t) : A = B :=
@@ -100,7 +100,7 @@ theorem variableCapacityOutputExt_zero_eq (A C : ℝ≥0 → ℝ≥0∞) :
   refine le_antisymm ?_ (le_variableCapacityOutputExt fun s hs => ?_)
   · have h := variableCapacityOutputExt_le_add (A := A) (C := C) (le_refl 0)
     rwa [tsub_self, add_zero] at h
-  · rw [le_antisymm hs zero_le']; exact le_self_add
+  · rw [le_antisymm hs zero_le]; exact le_self_add
 
 /-- **The `δ₀`-collapse**: `variableCapacityOutputExt (⇑delay0ENN) C t = C t` for any null-at-origin
 capacity `C`. The origin split gives `C t`; every positive-time split gives `⊤`, so the
@@ -108,7 +108,7 @@ infimum is the capacity itself. -/
 theorem variableCapacityOutputExt_delay0ENN {C : ℝ≥0 → ℝ≥0∞} (h0 : C 0 = 0) (t : ℝ≥0) :
     variableCapacityOutputExt (⇑delay0ENN) C t = C t := by
   refine le_antisymm ?_ ?_
-  · have h := variableCapacityOutputExt_le_add (A := ⇑delay0ENN) (C := C) (s := 0) (t := t) zero_le'
+  · have h := variableCapacityOutputExt_le_add (A := ⇑delay0ENN) (C := C) (s := 0) (t := t) zero_le
     rwa [delay0ENN_zero_eq, zero_add, h0, tsub_zero] at h
   · refine le_iInf fun s : {s // s ≤ t} => ?_
     rcases eq_or_ne s.1 0 with hs | hs
@@ -256,7 +256,7 @@ theorem superadditiveClosureMaxNN_ndClosure_le_of_variableCapacityRelExt_le
     rw [hd, delay0Process_coe, variableCapacityOutputExt_delay0ENN hC0 t]
   intro t
   have hb := superadditiveClosureMaxNN_ndClosure_le_capacityNN hCmono hcap (s := 0) (t := t)
-    zero_le'
+    zero_le
   rw [tsub_zero, hC0, tsub_zero] at hb
   rw [hKeqC t]
   exact hb

@@ -33,8 +33,8 @@ theorem residualCurve_apply (β α : ℝ≥0 → ℝ≥0) (t : ℝ≥0) :
 /-- `residualCurve β α 0 = 0` when `β 0 = 0`. -/
 theorem residualCurve_zero_eq {β : ℝ≥0 → ℝ≥0} (α : ℝ≥0 → ℝ≥0)
     (hβ0 : β 0 = 0) : residualCurve β α 0 = 0 := by
-  refine le_antisymm (ciSup_le fun v => ?_) zero_le'
-  have hv0 : v.1 = 0 := le_antisymm v.2 zero_le'
+  refine le_antisymm (ciSup_le fun v => ?_) zero_le
+  have hv0 : v.1 = 0 := le_antisymm v.2 zero_le
   show β v.1 - α v.1 ≤ 0
   rw [hv0, hβ0, zero_tsub]
 
@@ -108,7 +108,7 @@ theorem beta_zero_eq_of_strict {A D β : ℝ≥0 → ℝ≥0}
       D s + β (t - s) ≤ D t) : β 0 = 0 := by
   have h := hstrict 0 0 le_rfl (fun u hu => absurd hu.2 (not_le.mpr hu.1))
   rw [tsub_zero] at h
-  exact le_antisymm (by rwa [add_le_iff_nonpos_right] at h) zero_le'
+  exact le_antisymm (by rwa [add_le_iff_nonpos_right] at h) zero_le
 
 /-- **The start-anchored residual**: under a weakly strict aggregate,
 flow `i` receives the full residual from the start of the aggregate's
@@ -270,7 +270,7 @@ theorem add_residualCurve_le_of_strict_aggregate {ι : Type*} [Fintype ι]
         _ = t := add_tsub_cancel_of_le hst
     rcases eq_zero_or_pos v with rfl | hvpos
     · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
+      exact zero_le
     · have hbl' : IsBacklogged (fun x => ∑ j, (As j) x)
           (fun x => ∑ j, (Ds j) x) (Set.Ioc s (s + v)) := fun u hu =>
         hblagg u ⟨hu.1, hu.2.trans hut⟩
@@ -324,7 +324,7 @@ theorem add_residualCurve_le_of_strict_aggregate_on {ι : Type*} [Fintype ι]
         _ = t := add_tsub_cancel_of_le hst
     rcases eq_zero_or_pos v with rfl | hvpos
     · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
+      exact zero_le
     · have hbl' : IsBacklogged (fun x => ∑ j, (As j) x)
           (fun x => ∑ j, (Ds j) x) (Set.Ioc s (s + v)) := fun u hu =>
         hblfull u ⟨hu.1, hu.2.trans hut⟩

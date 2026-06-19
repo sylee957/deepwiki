@@ -277,7 +277,7 @@ theorem minConv_residualCurve_le_of_isNpsp {ι : Type*} [Fintype ι]
     intro σ hσ
     rcases eq_zero_or_pos σ with rfl | hσpos
     · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
+      exact zero_le
     set w : ℝ≥0 := p + σ with hw
     have hwt : w ≤ t := by
       calc p + σ ≤ p + (t - p) := add_le_add le_rfl hσ
@@ -533,7 +533,7 @@ theorem add_residualCurve_le_of_isNpspExclusive {ι : Type*} [Fintype ι]
     intro σ hσ
     rcases eq_zero_or_pos σ with rfl | hσpos
     · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
+      exact zero_le
     set w : ℝ≥0 := p + σ with hw
     have hwt : w ≤ t := by
       calc p + σ ≤ p + (t - p) := add_le_add le_rfl hσ

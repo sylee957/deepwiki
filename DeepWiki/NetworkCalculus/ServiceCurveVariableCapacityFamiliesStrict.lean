@@ -33,7 +33,7 @@ noncomputable def rampFamily (i : ℕ) : ℝ≥0 → ℝ≥0 :=
 /-- The ramp capacity `Cᵢ(t) = i·t`: continuous, hence jump-dominated. -/
 noncomputable def rampCapacity (i : ℕ) : Curve :=
   ⟨fun t => (i : ℝ≥0) * t,
-    fun _ _ h => mul_le_mul_of_nonneg_left h (zero_le'),
+    fun _ _ h => mul_le_mul_of_nonneg_left h (zero_le),
     mul_zero _,
     isPiecewiseContinuous_of_continuous _ (continuous_const.mul continuous_id),
     isLeftContinuous_of_continuous _ (continuous_const.mul continuous_id)⟩
@@ -50,7 +50,7 @@ theorem zeroPair_mem_variableCapacityRel_rampFamily (i : ℕ) :
   refine ⟨rampCapacity i, fun t => ?_, fun s t hst => ?_⟩
   · -- the zero output: `A = 0` forces `D t = 0` via the `s = t` split
     show (0 : ℝ≥0) = variableCapacityOutput (⇑(0 : Curve)) (⇑(rampCapacity i)) t
-    refine le_antisymm zero_le' ?_
+    refine le_antisymm zero_le ?_
     have h := variableCapacityOutput_le_apply (⇑(0 : Curve)) (⇑(rampCapacity i)) t
     rwa [Curve.zero_apply] at h
   · -- the capacity domination: `min(i·(t−s), 1) ≤ i·t − i·s`
@@ -108,7 +108,7 @@ theorem not_variableCapacityRel_iSup_rampFamily :
       | zero =>
           intro _
           rw [Nat.cast_zero, zero_mul]
-          exact zero_le'
+          exact zero_le
       | succ k ih =>
           intro hk
           have hstepk : C ((k : ℝ≥0) * δ) + 1 ≤ C (((k : ℝ≥0) + 1) * δ) := by

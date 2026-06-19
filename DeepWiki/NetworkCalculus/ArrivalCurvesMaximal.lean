@@ -253,7 +253,7 @@ theorem isMaximalArrivalBound_leftLim_of_isLeftContinuous
   rw [isMaximalArrivalBound_iff_increment] at h ⊢
   intro t d
   -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
-  rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd
+  rcases eq_or_lt_of_le (zero_le (a := d)) with hd | hd
   · rw [← hd, add_zero]; exact le_self_add
   -- For `s ∈ (t, t + d)` (eventually within `Iio (t+d)`), bound
   -- `A s ≤ A t + (leftLim α) d`, then pass to the left limit `A s → A (t+d)`.
@@ -292,7 +292,7 @@ theorem isMaximalArrivalBound_leftLim_of_isRightContinuous
   rw [isMaximalArrivalBound_iff_increment] at h ⊢
   intro t d
   -- Edge case `d = 0`: `A (t + 0) = A t ≤ A t + (leftLim α) 0`.
-  rcases eq_or_lt_of_le (zero_le' (a := d)) with hd | hd
+  rcases eq_or_lt_of_le (zero_le (a := d)) with hd | hd
   · rw [← hd, add_zero]; exact le_self_add
   -- For `s ∈ (t, t + d)` (eventually within `Ioi t`), bound
   -- `A (t+d) ≤ A s + (leftLim α) d`, then pass `A s → A t` (right limit at `t`).

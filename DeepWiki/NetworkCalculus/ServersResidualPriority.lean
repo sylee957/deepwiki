@@ -159,7 +159,7 @@ theorem add_residualCurve_le_of_isStaticPriority {ι : Type*} [Fintype ι]
     intro σ hσ
     rcases eq_zero_or_pos σ with rfl | hσpos
     · rw [beta_zero_eq_of_strict hstrict, zero_tsub]
-      exact zero_le'
+      exact zero_le
     set w : ℝ≥0 := p + σ with hw
     have hwt : w ≤ t := by
       calc p + σ ≤ p + (t - p) := add_le_add le_rfl hσ
@@ -313,7 +313,7 @@ theorem spWitnessBeta_mono : Monotone spWitnessBeta := by
   · by_cases hb : b < 1
     · rw [if_pos ha, if_pos hb]
     · rw [if_pos ha, if_neg hb]
-      exact zero_le'
+      exact zero_le
   · rw [if_neg ha, if_neg (fun hb => ha (lt_of_le_of_lt hab hb))]
 
 /-- The high-priority witness has departed nothing by time `2`. -/
@@ -372,7 +372,7 @@ theorem spWitness_causal :
     · have hempty : (({0, 1} ∪ Finset.Icc 5 12 : Finset ℕ)).filter
           (fun k : ℕ => (k : ℝ≥0) < u) = ∅ :=
         Finset.filter_eq_empty_iff.mpr fun k _ hlt =>
-          h0 (lt_of_le_of_lt zero_le' hlt)
+          h0 (lt_of_le_of_lt zero_le hlt)
       rw [if_neg h0, hempty]
       simp
 
@@ -432,7 +432,7 @@ theorem spWitness_strict : ∀ s t : ℝ≥0, s ≤ t →
     set k₀ : ℕ := ⌈s⌉₊ with hk₀def
     have hsk₀ : s ≤ (k₀ : ℝ≥0) := Nat.le_ceil s
     have hk₀t : (k₀ : ℝ≥0) < t :=
-      lt_of_lt_of_le (Nat.ceil_lt_add_one zero_le') hs1t
+      lt_of_lt_of_le (Nat.ceil_lt_add_one zero_le) hs1t
     have hk₀range : k₀ ∈ Finset.range 13 := by
       rw [Finset.mem_range]
       have h13 : (k₀ : ℝ≥0) < 13 :=
@@ -474,7 +474,7 @@ theorem spWitness_staticPriority :
       rw [show (![stepCurve 1 3, stepCurve 0 10] 0) s = 0 from by
         show stepCurve 1 3 s = 0
         rw [stepCurve_apply, if_neg (not_lt.mpr hcon)]] at h
-      exact absurd h (not_lt.mpr zero_le')
+      exact absurd h (not_lt.mpr zero_le)
     have ht4 : t ≤ 4 := by
       have h := hprem t ⟨hst, le_rfl⟩
       rw [hfilter, Finset.sum_singleton, Finset.sum_singleton] at h

@@ -108,7 +108,7 @@ theorem lowerSemicontinuous_minConv_of_splitPairLsc
     have hlt1 : ∀ᶠ r in l₀, r < t + 1 :=
       (eventually_lt_nhds (lt_add_of_pos_right t one_pos)).filter_mono hl₀le
     filter_upwards [hlt1] with r hr
-    exact ⟨⟨zero_le', hr.le⟩, ⟨zero_le', (hUmem r).2.trans hr.le⟩⟩
+    exact ⟨⟨zero_le, hr.le⟩, ⟨zero_le, (hUmem r).2.trans hr.le⟩⟩
   have hcompact :
       IsCompact (Set.Icc (0 : ℝ≥0) (t + 1) ×ˢ Set.Icc 0 (t + 1)) :=
     isCompact_Icc.prod isCompact_Icc
@@ -120,7 +120,7 @@ theorem lowerSemicontinuous_minConv_of_splitPairLsc
     have hc1 : ClusterPt p.1 l₀ := by
       have := (hclust.tendsto_comp
         (f := fun q : ℝ≥0 × ℝ≥0 => q.1) continuous_fst.continuousAt)
-      simpa [hwdef, MapClusterPt, Function.comp] using this.clusterPt
+      simpa [hwdef, MapClusterPt, Function.comp_def] using this.clusterPt
     refine eq_of_nhds_neBot (x := p.1) (y := t) ?_
     exact hc1.neBot.mono (inf_le_inf_left _ hl₀le)
   -- the cluster point lies in the closed split-region `u ≤ r`

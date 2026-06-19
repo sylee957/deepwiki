@@ -251,7 +251,7 @@ theorem hDevAtENN_rateLatencyNN_ge_latency (f : ℝ≥0 → ℝ≥0∞)
     ((T - t : ℝ≥0) : ℝ≥0∞) ≤ hDevAtENN f (rateLatencyNN R T) t := by
   refine le_hDevAtENN fun d hd => ?_
   rcases le_total T t with hTt | hTt
-  · rw [tsub_eq_zero_of_le hTt]; exact zero_le'
+  · rw [tsub_eq_zero_of_le hTt]; exact zero_le
   · by_contra hlt
     rw [not_le] at hlt
     have htd : t + d < T := by

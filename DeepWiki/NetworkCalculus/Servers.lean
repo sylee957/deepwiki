@@ -30,7 +30,7 @@ structure Curve where
 /-- A `Curve` is callable as its underlying function: `A t` means `A.toFun t`. -/
 instance : FunLike Curve ℝ≥0 ℝ≥0 where
   coe := Curve.toFun
-  coe_injective' f g h := by cases f; cases g; congr
+  coe_injective f g h := by cases f; cases g; congr
 
 /-- Two curves are equal when equal as functions. -/
 @[ext] theorem Curve.ext {A B : Curve} (h : ∀ t, A t = B t) : A = B :=

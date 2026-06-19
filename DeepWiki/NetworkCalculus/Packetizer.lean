@@ -79,7 +79,7 @@ theorem packetize_zero (L : ℕ → ℝ≥0) (A : ℝ≥0 → ℝ≥0) :
   rw [packetize,
     show packetizeSet L A 0 = ∅ from
       Set.eq_empty_iff_forall_notMem.mpr fun n ⟨u, hu, _⟩ =>
-        absurd hu (not_lt.mpr zero_le'),
+        absurd hu (not_lt.mpr zero_le),
     Set.image_empty, csSup_empty]
   rfl
 
@@ -108,7 +108,7 @@ theorem exists_packetize_eq {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     ∃ n, packetize L A t = L n ∧ (∃ u < t, L n ≤ A u)
       ∧ L n ≤ A t ∧ A t ≤ L (n + 1) := by
   have hne : (packetizeSet L A t).Nonempty :=
-    ⟨0, 0, ht, by rw [hL.1]; exact zero_le'⟩
+    ⟨0, 0, ht, by rw [hL.1]; exact zero_le⟩
   have hbdd : BddAbove (packetizeSet L A t) := by
     refine ⟨⌊A t / ll⌋₊, ?_⟩
     rintro n ⟨u, hu, hLn⟩
@@ -145,7 +145,7 @@ theorem apply_le_packetize_add {L : ℕ → ℝ≥0} {ll lu : ℝ≥0}
     (t : ℝ≥0) : A t ≤ packetize L A t + lu := by
   rcases eq_zero_or_pos t with rfl | ht
   · rw [h0]
-    exact zero_le'
+    exact zero_le
   · obtain ⟨n, hP, _, _, hup⟩ := exists_packetize_eq hL hmono hlc ht
     rw [hP]
     exact le_trans hup (hL.2.2 n).2

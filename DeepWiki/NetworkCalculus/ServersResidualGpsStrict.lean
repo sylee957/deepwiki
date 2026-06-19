@@ -100,7 +100,7 @@ theorem gtM1_upper {s t : ℝ≥0} (hst : s ≤ t) :
       have hs1 : (s : ℝ) ≤ 1 := by exact_mod_cast hs
       linarith
     · rw [tsub_eq_zero_of_le ht, mul_zero]
-      exact zero_le'
+      exact zero_le
 
 /-- On the cross-flow's active window (`1 ≤ s`) the rate-`2` ramp gains
 *exactly* rate `2`: `gtM1 s + 2·(t−s) ≤ gtM1 t`. -/
@@ -122,7 +122,7 @@ theorem gtM0_lower {s t : ℝ≥0} (hst : s ≤ t) :
     rcases eq_or_ne t 0 with rfl | ht
     · rw [if_pos rfl, mul_zero]
     · rw [if_neg ht]; exact self_le_add_left _ _
-  · have ht : t ≠ 0 := fun h => hs (le_antisymm (h ▸ hst) zero_le')
+  · have ht : t ≠ 0 := fun h => hs (le_antisymm (h ▸ hst) zero_le)
     rw [if_neg hs, if_neg ht, ← NNReal.coe_le_coe]
     push_cast [NNReal.coe_sub hst]
     linarith

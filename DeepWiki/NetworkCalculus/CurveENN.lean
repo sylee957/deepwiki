@@ -32,7 +32,7 @@ structure CurveENN where
 /-- A `CurveENN` is callable as its underlying function. -/
 instance : FunLike CurveENN ℝ≥0 ℝ≥0∞ where
   coe := CurveENN.toFun
-  coe_injective' f g h := by cases f; cases g; congr
+  coe_injective f g h := by cases f; cases g; congr
 
 /-- Two extended curves are equal when equal as functions. -/
 @[ext] theorem CurveENN.ext {A B : CurveENN} (h : ∀ t, A t = B t) : A = B :=
@@ -67,7 +67,7 @@ noncomputable def delay0ENN : CurveENN where
     intro a b hab
     by_cases ha : a = 0
     · simp [ha]
-    · have hb : b ≠ 0 := fun h => ha (le_antisymm (h ▸ hab) zero_le')
+    · have hb : b ≠ 0 := fun h => ha (le_antisymm (h ▸ hab) zero_le)
       simp [if_neg ha, if_neg hb]
   zero := if_pos rfl
   pwc := by
