@@ -59,6 +59,14 @@ alias lemma_4_3_min := IsUPPWith.min_of_commonPeriod
 `DeepWiki.IsUPPWith.max_of_commonPeriod`. -/
 alias lemma_4_3_max := IsUPPWith.max_of_commonPeriod
 
+/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum — **general case** (all slope relations): the pointwise
+minimum of two UPP sequences is ultimately pseudo-periodic, `min(f,g)(n+d) = min(f,g)(n) + min(c_f',c_g')`
+with `d = lcm` and the increment the smaller per-`d` slope. The library's
+`DeepWiki.UppSeq.min_evalNat_add_lcm` — covering the dominant-slope cases via the Archimedean crossover
+`evalNat_eventually_le` (the slower function is the min past the crossover). Requires `V` an
+Archimedean ordered group. -/
+alias lemma_4_3 := UppSeq.min_evalNat_add_lcm
+
 /-- **Lemma 4.4** (§4.3.2.2, p.76): `f ∗ g` is ultimately pseudo-periodic with period `d = lcm(d_f,d_g)`
 from rank `T_f + T_g + d`. The library's `DeepWiki.UppSeq.convNat_add_lcm_of_balanced` proves the
 pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` in the **balanced case** — equal asymptotic slopes
