@@ -11,6 +11,7 @@ import DeepWiki.TimeSeries.BestLinearPredictor
 import DeepWiki.TimeSeries.SpectralDistribution
 import DeepWiki.TimeSeries.SpectralDensity
 import DeepWiki.TimeSeries.YuleWalker
+import DeepWiki.TimeSeries.Periodogram
 import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.LagPolynomials
 import DeepWiki.TimeSeries.ArmaProcesses
