@@ -17,9 +17,12 @@ namespace DeepWiki.TimeSeries
 
 open MeasureTheory ProbabilityTheory
 
-/-- **Definition 1.2.1**: a discrete-time, real-valued stochastic process is a family
-`(Xₜ)_{t ∈ ℤ}` of random variables on a probability space — modeled as `X : ℤ → Ω → ℝ`. -/
-abbrev Process (Ω : Type*) [MeasurableSpace Ω] := ℤ → Ω → ℝ
+/-- **Definition 1.2.1**: a stochastic process is a family `(Xₜ)_{t ∈ T}` of random variables
+(measurable maps `Ω → 𝒳`) on a probability space, indexed by an *arbitrary* set `T` — by
+Remark 1, `T` is often `ℤ`, `ℕ`, `[0,∞)` or `ℝ` but need not be a subset of `ℝ`, and the
+values need not be real. Modeled as bare functions `T → Ω → 𝒳` (measurability supplied as a
+hypothesis where used); the discrete-time real theory below is the case `T = ℤ`, `𝒳 = ℝ`. -/
+abbrev Process (T Ω 𝒳 : Type*) := T → Ω → 𝒳
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {X : ℤ → Ω → ℝ}
 

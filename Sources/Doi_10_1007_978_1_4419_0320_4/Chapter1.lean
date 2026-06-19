@@ -30,9 +30,10 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : MeasureTheory.Measure Ω} {X : 
 
 /-! ## §1.2 Stochastic Processes -/
 
-/-- **Definition 1.2.1** (§1.2, p.8), a stochastic process: a family `(Xₜ, t ∈ T)` of
-random variables on a probability space. The library models a real-valued, ℤ-indexed
-process as `X : ℤ → Ω → ℝ` — the abbreviation `Process`. -/
+/-- **Definition 1.2.1** (§1.2, p.8), a stochastic process: a family `(Xₜ, t ∈ T)` of random
+variables on a probability space, over an arbitrary index set `T` (Remark 1: `T` often `ℤ`,
+`ℕ`, `[0,∞)`, `ℝ`, but need not be `⊆ ℝ`). The library's `Process T Ω 𝒳 := T → Ω → 𝒳`; the
+time-series theory specializes to `T = ℤ`, `𝒳 = ℝ` (bare `ℤ → Ω → ℝ`). -/
 abbrev def_1_2_1 := @DeepWiki.TimeSeries.Process
 
 /-- **Definition 1.2.2** (§1.2, p.9), a realization (sample path) `t ↦ Xₜ(ω)` of a
