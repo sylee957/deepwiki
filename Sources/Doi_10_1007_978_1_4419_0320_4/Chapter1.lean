@@ -178,4 +178,23 @@ theorem ex_1_2 {a : ℤ → ℝ} {s : Finset ℤ} {k : ℕ}
       = ∑ r ∈ Finset.range (k + 1), c r * t ^ r :=
   filter_passes_poly h0 hm c t
 
+/-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
+period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
+(Hence for `Yₜ = a + b·t + sₜ + Xₜ`, `∇∇_d Yₜ = ∇∇_d Xₜ`.) Discharged by the
+library's `seasonalDifference`/`difference` and `difference_const`. -/
+theorem ex_1_8 {d : ℕ} (a b : ℝ) {s : ℤ → ℝ} (hper : ∀ t : ℤ, s (t + d) = s t) :
+    difference (seasonalDifference d (fun t : ℤ => a + b * (t : ℝ) + s t)) = 0 := by
+  have hsd : seasonalDifference d (fun t : ℤ => a + b * (t : ℝ) + s t)
+      = fun _ => b * (d : ℝ) := by
+    funext t
+    have hst : s (t - (d : ℤ)) = s t := by
+      have h := hper (t - (d : ℤ))
+      rw [show (t - (d : ℤ)) + (d : ℤ) = t from by ring] at h
+      exact h.symm
+    simp only [seasonalDifference_apply, hst]
+    push_cast
+    ring
+  rw [hsd]
+  exact difference_const _
+
 end DeepWiki.Ts
