@@ -68,8 +68,14 @@ is Chasles too — the library's `isChasles_departure`. (The analogous coherence
 of the remaining capacity `C'` is not separately formalized.) -/
 alias lemma_9_2 := isChasles_departure
 
-/-- **Theorem 9.2** (§9.1.3, p.216), RTC→NC (forward) direction: the univariate readings of an RTC greedy processor (Chasles arrival/service, `b 0 = 0`, residual sets `{C[0,u]−A[0,u] : u≤t}` bounded above) satisfy the variable-capacity node equations [9.7]-[9.9]. The output half [9.7] is the `⨆`-to-`⨅` step (`DeepWiki.real_sub_ciSup` — `c − ⨆ = ⨅(c−·)` over ℝ) after absorbing the `⊔ 0` (the `u=0` split contributes `0`). Framework: [9.4]-[9.6] = `DeepWiki.IsRtcGreedy`, [9.7]-[9.9] = `DeepWiki.IsVarCapacityEqns`; halves `eq_residual_of_isRtcGreedy`/`eq_backlog_of_isRtcGreedy`; Lemma 9.2 = `isChasles_departure`. The reverse direction (reconstruct the bivariate equations for general `s` from `s=0` via Chasles, book p.216-217) is not yet formalized. -/
+/-- **Theorem 9.2** (§9.1.3, p.216): Equivalence RTC-NC. For Chasles bivariate `A,C,D,C'` with `b 0 = 0` and the residual sets `{C[0,u]−A[0,u] : u≤t}` bounded above, the RTC greedy-processor equations [9.4]-[9.6] (`DeepWiki.IsRtcGreedy`, on `0≤s≤t`) hold iff the univariate readings satisfy the variable-capacity node equations [9.7]-[9.9] (`DeepWiki.IsVarCapacityEqns`). The library's `isRtcGreedy_iff_isVarCapacityEqns`; directions `isVarCapacityEqns_of_isRtcGreedy` (RTC→NC, output [9.7] via `real_sub_ciSup`) / `isRtcGreedy_of_isVarCapacityEqns` (NC→RTC, residual [9.5] via the `[0,t]=[0,s]∪[s,t]` sup-split). Lemma 9.2 coherence = `isChasles_departure`. -/
+alias thm_9_2 := isRtcGreedy_iff_isVarCapacityEqns
+
+/-- **Theorem 9.2** (RTC→NC direction): `DeepWiki.isVarCapacityEqns_of_isRtcGreedy`. -/
 alias thm_9_2_forward := isVarCapacityEqns_of_isRtcGreedy
+
+/-- **Theorem 9.2** (NC→RTC direction): `DeepWiki.isRtcGreedy_of_isVarCapacityEqns`. -/
+alias thm_9_2_reverse := isRtcGreedy_of_isVarCapacityEqns
 
 /-- **Definition 9.1** (§9.1.3, p.217): the RTC↔NC conversion underlying the RTC
 arrival/service curves — a univariate cumulative `g` induces the Chasles

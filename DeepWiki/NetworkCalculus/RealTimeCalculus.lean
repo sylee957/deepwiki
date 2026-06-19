@@ -135,4 +135,104 @@ theorem isVarCapacityEqns_of_isRtcGreedy
   rw [hg.1 0 t zero_le, hC', real_sub_ciSup (C 0 t) _ (hbdd t)]
   exact iInf_congr fun u => by ring
 
+/-- A bounded supremum minus a constant is the supremum of each term minus the
+constant (the monotone map `x ↦ x − c` commutes with `⨆`), over `ℝ`. -/
+theorem real_ciSup_sub {ι : Type*} [Nonempty ι] (g : ι → ℝ) (c : ℝ)
+    (hbdd : BddAbove (Set.range g)) :
+    (⨆ i, g i) - c = ⨆ i, (g i - c) := by
+  have hbb : BddAbove (Set.range fun i => g i - c) := by
+    obtain ⟨M, hM⟩ := hbdd
+    exact ⟨M - c, by rintro _ ⟨i, rfl⟩; exact sub_le_sub_right (hM ⟨i, rfl⟩) c⟩
+  refine le_antisymm ?_ (ciSup_le fun i => sub_le_sub_right (le_ciSup hbdd i) c)
+  rw [sub_le_iff_le_add]
+  refine ciSup_le fun i => ?_
+  rw [← sub_le_iff_le_add]
+  exact le_ciSup hbb i
+
+/-- **Theorem 9.2** (NC→RTC, reverse direction): if the univariate readings of
+Chasles bivariate functions (with `b 0 = 0` and the residual sets bounded above)
+satisfy the variable-capacity node equations [9.7]–[9.9], then the bivariate
+functions satisfy the RTC greedy-processor equations [9.4]–[9.6]. The residual
+[9.5] is the delicate half: the `[0,t]` supremum splits as
+`⨆_{[0,t]} = ⨆_{[0,s]} ⊔ ⨆_{[s,t]}`, and `(a ⊔ b) − c` distributes. (Unlike the
+forward direction, `b 0 = 0` is not needed — the node equations already pin `b`.) -/
+theorem isRtcGreedy_of_isVarCapacityEqns
+    {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
+    (hA : IsChasles A) (hC : IsChasles C) (hD : IsChasles D) (hC' : IsChasles C')
+    (hv : IsVarCapacityEqns (fun t => A 0 t) (fun t => C 0 t) (fun t => D 0 t)
+      (fun t => C' 0 t) b)
+    (hbdd : ∀ t : ℝ≥0,
+      BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - A 0 u.1)) :
+    IsRtcGreedy A C D C' b := by
+  have max_sub : ∀ a b c : ℝ, (a ⊔ b) - c = (a - c) ⊔ (b - c) := fun a b c => by
+    rcases le_total a b with h | h
+    · rw [max_eq_right h, max_eq_right (sub_le_sub_right h c)]
+    · rw [max_eq_left h, max_eq_left (sub_le_sub_right h c)]
+  have hC'eq : ∀ t : ℝ≥0, C' 0 t = ⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1) := by
+    intro t
+    haveI : Nonempty {u : ℝ≥0 // u ≤ t} := ⟨⟨t, le_rfl⟩⟩
+    have hDt : D 0 t = ⨅ u : {u : ℝ≥0 // u ≤ t}, (C 0 t - C 0 u.1 + A 0 u.1) := hv.1 t
+    have hC'D : C' 0 t = C 0 t - D 0 t := hv.2.1 t
+    rw [hC'D, hDt,
+      show (⨅ u : {u : ℝ≥0 // u ≤ t}, (C 0 t - C 0 u.1 + A 0 u.1))
+          = ⨅ u : {u : ℝ≥0 // u ≤ t}, (C 0 t - (C 0 u.1 - A 0 u.1)) from
+        iInf_congr fun u => by ring,
+      ← real_sub_ciSup (C 0 t) _ (hbdd t)]
+    ring
+  refine ⟨fun s t hst => ?_, fun s t hst => ?_, fun s t hst => ?_⟩
+  · -- [9.4]
+    have e1 : C' 0 t = C 0 t - D 0 t := hv.2.1 t
+    have e2 : C' 0 s = C 0 s - D 0 s := hv.2.1 s
+    rw [hD.eq_univariate_sub hst, hC.eq_univariate_sub hst, hC'.eq_univariate_sub hst, e1, e2]
+    ring
+  · -- [9.5]
+    haveI : Nonempty {u : ℝ≥0 // s ≤ u ∧ u ≤ t} := ⟨⟨s, le_rfl, hst⟩⟩
+    haveI : Nonempty {u : ℝ≥0 // u ≤ s} := ⟨⟨s, le_rfl⟩⟩
+    haveI : Nonempty {u : ℝ≥0 // u ≤ t} := ⟨⟨t, le_rfl⟩⟩
+    have hbddst : BddAbove
+        (Set.range fun u : {u : ℝ≥0 // s ≤ u ∧ u ≤ t} => C 0 u.1 - A 0 u.1) := by
+      obtain ⟨M, hM⟩ := hbdd t
+      exact ⟨M, by rintro _ ⟨u, rfl⟩; exact hM ⟨⟨u.1, u.2.2⟩, rfl⟩⟩
+    have hbody : ∀ u : {u : ℝ≥0 // s ≤ u ∧ u ≤ t},
+        C s u.1 - A s u.1 - b s = (C 0 u.1 - A 0 u.1) - C' 0 s := by
+      intro u
+      have ebs : b s = A 0 s - D 0 s := hv.2.2 s
+      have eC's : C' 0 s = C 0 s - D 0 s := hv.2.1 s
+      rw [hC.eq_univariate_sub u.2.1, hA.eq_univariate_sub u.2.1, ebs, eC's]
+      ring
+    have hsupsplit : (⨆ u : {u : ℝ≥0 // u ≤ t}, (C 0 u.1 - A 0 u.1))
+        = (⨆ u : {u : ℝ≥0 // u ≤ s}, (C 0 u.1 - A 0 u.1))
+          ⊔ (⨆ u : {u : ℝ≥0 // s ≤ u ∧ u ≤ t}, (C 0 u.1 - A 0 u.1)) := by
+      apply le_antisymm
+      · refine ciSup_le fun u => ?_
+        rcases le_total u.1 s with h | h
+        · exact le_sup_of_le_left (le_ciSup_of_le (hbdd s) ⟨u.1, h⟩ le_rfl)
+        · exact le_sup_of_le_right (le_ciSup_of_le hbddst ⟨u.1, h, u.2⟩ le_rfl)
+      · exact sup_le (ciSup_le fun u => le_ciSup_of_le (hbdd t) ⟨u.1, u.2.trans hst⟩ le_rfl)
+          (ciSup_le fun u => le_ciSup_of_le (hbdd t) ⟨u.1, u.2.2⟩ le_rfl)
+    rw [iSup_congr hbody, ← real_ciSup_sub _ (C' 0 s) hbddst,
+      hC'.eq_univariate_sub hst, hC'eq t, hC'eq s, hsupsplit, max_sub, sub_self]
+    exact sup_comm 0 _
+  · -- [9.6]
+    have e1 : b t = A 0 t - D 0 t := hv.2.2 t
+    have e2 : b s = A 0 s - D 0 s := hv.2.2 s
+    rw [hA.eq_univariate_sub hst, hD.eq_univariate_sub hst, e1, e2]
+    ring
+
+/-- **Theorem 9.2** (Equivalence RTC–NC): for Chasles bivariate `A, C, D, C'` with
+`b 0 = 0` and the residual sets bounded above, the RTC greedy-processor equations
+[9.4]–[9.6] hold iff the univariate readings satisfy the variable-capacity node
+equations [9.7]–[9.9]. -/
+theorem isRtcGreedy_iff_isVarCapacityEqns
+    {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
+    (hA : IsChasles A) (hC : IsChasles C) (hD : IsChasles D) (hC' : IsChasles C')
+    (hb0 : b 0 = 0)
+    (hbdd : ∀ t : ℝ≥0,
+      BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - A 0 u.1)) :
+    IsRtcGreedy A C D C' b ↔
+      IsVarCapacityEqns (fun t => A 0 t) (fun t => C 0 t) (fun t => D 0 t)
+        (fun t => C' 0 t) b :=
+  ⟨fun hg => isVarCapacityEqns_of_isRtcGreedy hA hC hb0 hg hbdd,
+   fun hv => isRtcGreedy_of_isVarCapacityEqns hA hC hD hC' hv hbdd⟩
+
 end DeepWiki
