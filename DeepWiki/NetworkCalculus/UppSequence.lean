@@ -756,6 +756,58 @@ theorem convNat_add_lcm_from [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMono
       _ = r.convNat s n + cr := by rw [hkeq]
   exact le_antisymm hub (convNat_add_lcm_ge r s (by omega))
 
+/-- **Offset crossover window reduction** (generalizes `evalNat_le_of_window_le` with constants
+`a, b`). If `r(·)+a ≤ s(·)+b` holds on one full period-window `[N₀, N₀+d)` past the periodic
+threshold, it holds for all `n ≥ N₀` — each `+d` step preserves it (`cr ≤ cs`). The window check is
+finite/decidable. -/
+theorem evalNat_add_le_of_window_le [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (a b : V) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) + a ≤ s.evalNat (N₀ + rem) + b)
+    (n : ℕ) (hn : N₀ ≤ n) : r.evalNat n + a ≤ s.evalNat n + b := by
+  set d := Nat.lcm r.period s.period with hd
+  have hd0 : 0 < d := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  set rem := (n - N₀) % d with hrem
+  set q := (n - N₀) / d with hq
+  have hremlt : rem < d := Nat.mod_lt _ hd0
+  have hsplit : d * q + rem = n - N₀ := Nat.div_add_mod (n - N₀) d
+  have hdecomp : n = (N₀ + rem) + q * d := by rw [mul_comm q d]; omega
+  have hrn : r.evalNat n = r.evalNat (N₀ + rem) + q • ((d / r.period) • r.incr) := by
+    rw [hdecomp]; exact r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) q (by omega)
+  have hsn : s.evalNat n = s.evalNat (N₀ + rem) + q • ((d / s.period) • s.incr) := by
+    rw [hdecomp]; exact s.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_right r.period s.period) q (by omega)
+  rw [hrn, hsn]
+  calc r.evalNat (N₀ + rem) + q • ((d / r.period) • r.incr) + a
+      = (r.evalNat (N₀ + rem) + a) + q • ((d / r.period) • r.incr) := by abel
+    _ ≤ (s.evalNat (N₀ + rem) + b) + q • ((d / s.period) • s.incr) :=
+        add_le_add (hwin rem hremlt) (by gcongr)
+    _ = s.evalNat (N₀ + rem) + q • ((d / s.period) • s.incr) + b := by abel
+
+/-- **Lemma 4.4, `=` — fully from a decidable window check.** Combines `convNat_add_lcm_from` with the
+offset window reduction: the crossover hypothesis is discharged from a *finite* window check `hwin`
+(plus `hR`, `hle`). So for nondecreasing `r, s`, the convolution closed form follows from
+`decide`-able hypotheses — the computable route to `convFrom`'s stabilization rank. -/
+theorem convNat_add_lcm_window [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (hrmono : Monotone r.evalNat) (hsmono : Monotone s.evalNat) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) + s.evalNat (r.vals.length - r.period)
+        ≤ s.evalNat (N₀ + rem) + r.evalNat 0)
+    (n : ℕ) (hn : max (max N₀ (r.vals.length - r.period) + (r.vals.length - r.period))
+        ((r.vals.length - r.period) + (s.vals.length - s.period) + Nat.lcm r.period s.period) ≤ n) :
+    r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) := by
+  refine convNat_add_lcm_from r s hrmono hsmono (N₀ := N₀) (fun m hm => ?_) hle n hn
+  rw [add_comm (r.evalNat 0)]
+  exact evalNat_add_le_of_window_le r s (s.evalNat (r.vals.length - r.period)) (r.evalNat 0)
+    hR hle hwin m hm
+
 /-- **Composable convolution constructor.** Assemble `r ⊗ s` as an actual `UppSeq`: prefix
 `(r⊗s)(0 .. T+d-1)` (sampled via `convNat`), period `d = lcm`, increment `min(cr,cs)`. `T` is any
 stabilization rank past which the pseudo-period step holds. Computable (`convNat` is), so convolution
