@@ -94,4 +94,80 @@ theorem randomWalk_not_stationary [IsFiniteMeasure μ] {X : ℤ → Ω → ℝ} 
   rw [c1, c2, one_smul, two_smul] at hshift
   linarith [hσ]
 
+/-! ## The MA(1) process (Example 1.3.2) -/
+
+/-- Bilinear expansion of `cov[U + θ•V, W + θ•Y]`. -/
+private theorem cov_two_two [IsFiniteMeasure μ] {U V W Y : Ω → ℝ}
+    (hU : MemLp U 2 μ) (hV : MemLp V 2 μ) (hW : MemLp W 2 μ) (hY : MemLp Y 2 μ) (θ : ℝ) :
+    cov[U + θ • V, W + θ • Y; μ]
+      = cov[U, W; μ] + θ * cov[U, Y; μ] + θ * cov[V, W; μ] + θ ^ 2 * cov[V, Y; μ] := by
+  rw [covariance_add_left hU (hV.const_smul θ) (hW.add (hY.const_smul θ)),
+      covariance_add_right hU hW (hY.const_smul θ),
+      covariance_add_right (hV.const_smul θ) hW (hY.const_smul θ),
+      covariance_smul_right, covariance_smul_left, covariance_smul_left, covariance_smul_right]
+  ring
+
+/-- **Example 1.3.2**: the moving-average process `Xₜ = Zₜ + θ Zₜ₋₁` (MA(1)). -/
+noncomputable def maProcess1 (Z : ℤ → Ω → ℝ) (θ : ℝ) : ℤ → Ω → ℝ :=
+  fun t => Z t + θ • Z (t - 1)
+
+variable {Z : ℤ → Ω → ℝ} {θ σ2 : ℝ}
+
+/-- **Example 1.3.2**: the MA(1) variance is `γ(0) = (1 + θ²) σ²`. -/
+theorem maProcess1_acvf_zero [IsFiniteMeasure μ]
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) : cov[maProcess1 Z θ s, maProcess1 Z θ s; μ] = (1 + θ ^ 2) * σ2 := by
+  simp only [maProcess1]
+  rw [cov_two_two (hZ s) (hZ (s - 1)) (hZ s) (hZ (s - 1)),
+      huc s s, huc s (s - 1), huc (s - 1) s, huc (s - 1) (s - 1),
+      if_pos rfl, if_pos rfl, if_neg (by omega : (s : ℤ) ≠ s - 1),
+      if_neg (by omega : (s : ℤ) - 1 ≠ s)]
+  ring
+
+/-- **Example 1.3.2**: the MA(1) lag-1 autocovariance is `γ(1) = θ σ²`. -/
+theorem maProcess1_acvf_one [IsFiniteMeasure μ]
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) : cov[maProcess1 Z θ (s + 1), maProcess1 Z θ s; μ] = θ * σ2 := by
+  simp only [maProcess1]
+  rw [cov_two_two (hZ (s + 1)) (hZ (s + 1 - 1)) (hZ s) (hZ (s - 1)),
+      huc (s + 1) s, huc (s + 1) (s - 1), huc (s + 1 - 1) s, huc (s + 1 - 1) (s - 1),
+      if_neg (by omega : (s : ℤ) + 1 ≠ s), if_neg (by omega : (s : ℤ) + 1 ≠ s - 1),
+      if_pos (by omega : (s : ℤ) + 1 - 1 = s), if_neg (by omega : (s : ℤ) + 1 - 1 ≠ s - 1)]
+  ring
+
+/-- **Example 1.3.2**: the MA(1) autocovariance vanishes at lags `≥ 2`. -/
+theorem maProcess1_acvf_ge_two [IsFiniteMeasure μ]
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (s h : ℤ) (hh : 2 ≤ h) : cov[maProcess1 Z θ (s + h), maProcess1 Z θ s; μ] = 0 := by
+  simp only [maProcess1]
+  rw [cov_two_two (hZ (s + h)) (hZ (s + h - 1)) (hZ s) (hZ (s - 1)),
+      huc (s + h) s, huc (s + h) (s - 1), huc (s + h - 1) s, huc (s + h - 1) (s - 1),
+      if_neg (by omega), if_neg (by omega), if_neg (by omega), if_neg (by omega)]
+  ring
+
+/-! ## A covariance-stationary series with non-constant mean (Example 1.3.3) -/
+
+/-- **Example 1.3.3**: the process `Xₜ = Zₜ + 1{t odd}` — its autocovariance depends
+only on the lag, but its mean alternates with the parity of `t`. -/
+noncomputable def parityShift (Z : ℤ → Ω → ℝ) : ℤ → Ω → ℝ :=
+  fun t ω => Z t ω + (if Odd t then 1 else 0)
+
+/-- The mean of the parity-shifted process picks up `1` at odd times. -/
+theorem parityShift_mean [IsProbabilityMeasure μ] (hZ : ∀ t, Integrable (Z t) μ) (t : ℤ) :
+    mean (parityShift Z) μ t = mean Z μ t + (if Odd t then 1 else 0) := by
+  simp only [mean, parityShift]
+  rw [integral_add (hZ t) (integrable_const _), integral_const]
+  simp
+
+/-- **Example 1.3.3**: the parity-shifted process is **not** (covariance) stationary,
+because its mean is not constant — even though its autocovariance is lag-only. -/
+theorem parityShift_not_stationary [IsProbabilityMeasure μ]
+    (hZ : ∀ t, Integrable (Z t) μ) (hZmean : mean Z μ 0 = mean Z μ 1) :
+    ¬ IsWeaklyStationary (parityShift Z) μ := by
+  intro hstat
+  have h := hstat.mean_const 0 1
+  rw [parityShift_mean hZ, parityShift_mean hZ,
+      if_neg (by decide : ¬ Odd (0 : ℤ)), if_pos (by decide : Odd (1 : ℤ)), hZmean] at h
+  linarith
+
 end DeepWiki.TimeSeries

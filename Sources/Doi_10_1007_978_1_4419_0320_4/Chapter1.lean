@@ -60,6 +60,27 @@ theorem ex_1_3_4 [IsFiniteMeasure μ] {Xs : ℤ → Ω → ℝ} {σ2 : ℝ}
     (hσ : 0 < σ2) : ¬ IsWeaklyStationary (randomWalk Xs) μ :=
   randomWalk_not_stationary hX huc hσ
 
+/-- **Example 1.3.2** (§1.3, p.13), the MA(1) process `Xₜ = Zₜ + θ Zₜ₋₁` of a
+zero-mean uncorrelated sequence with variance `σ²` has autocovariance
+`γ(0) = (1+θ²)σ²`, `γ(±1) = θσ²`, and `γ(h) = 0` for `|h| > 1`. The library's
+`maProcess1`, `maProcess1_acvf_zero`/`_one`/`_ge_two`. -/
+theorem ex_1_3_2 [IsFiniteMeasure μ] {Zs : ℤ → Ω → ℝ} {θ σ2 : ℝ}
+    (hZ : ∀ i, MemLp (Zs i) 2 μ) (huc : ∀ i j, cov[Zs i, Zs j; μ] = if i = j then σ2 else 0)
+    (s : ℤ) :
+    cov[maProcess1 Zs θ s, maProcess1 Zs θ s; μ] = (1 + θ ^ 2) * σ2 ∧
+      cov[maProcess1 Zs θ (s + 1), maProcess1 Zs θ s; μ] = θ * σ2 ∧
+      (∀ h, 2 ≤ h → cov[maProcess1 Zs θ (s + h), maProcess1 Zs θ s; μ] = 0) :=
+  ⟨maProcess1_acvf_zero hZ huc s, maProcess1_acvf_one hZ huc s,
+    fun h hh => maProcess1_acvf_ge_two hZ huc s h hh⟩
+
+/-- **Example 1.3.3** (§1.3, p.13), the process `Xₜ = Zₜ + 1{t odd}` has lag-only
+autocovariance but a non-constant mean, hence is not (covariance) stationary. The
+library's `parityShift`, `parityShift_not_stationary`. -/
+theorem ex_1_3_3 [IsProbabilityMeasure μ] {Zs : ℤ → Ω → ℝ}
+    (hZ : ∀ t, Integrable (Zs t) μ) (hZmean : mean Zs μ 0 = mean Zs μ 1) :
+    ¬ IsWeaklyStationary (parityShift Zs) μ :=
+  parityShift_not_stationary hZ hZmean
+
 /-! ## §1.5 The Autocovariance Function of a Stationary Process -/
 
 /-- **Proposition 1.5.1** (§1.5, p.26), elementary properties of the autocovariance
