@@ -61,13 +61,8 @@ def main (args : List String) : IO Unit := do
   | ["min", v1, p1, c1, v2, p2, c2, k] =>
       let u1 ← reqUpp v1 p1 c1
       let u2 ← reqUpp v2 p2 c2
-      -- only the balanced case (equal asymptotic slopes c₁/d₁ = c₂/d₂) is proved correct
-      if u1.incr * (u2.period : Int) = u2.incr * (u1.period : Int) then
-        IO.println (fmt (sample (u1.min u2) (← reqNat k)))
-      else
-        throw (IO.userError s!"min: only the balanced case is proved correct, but the slopes \
-{u1.incr}/{u1.period} and {u2.incr}/{u2.period} differ. General min needs the dominant-slope \
-crossover (not yet implemented), so refusing rather than print an unproved result.")
+      -- the pointwise minimum, correct by definition (and UPP by min_evalNat_add_lcm)
+      IO.println (fmt ((List.range (← reqNat k)).map (fun n => Min.min (u1.evalNat n) (u2.evalNat n))))
   | ["conv", v1, p1, c1, v2, p2, c2, k] =>
       let u1 ← reqUpp v1 p1 c1
       let u2 ← reqUpp v2 p2 c2

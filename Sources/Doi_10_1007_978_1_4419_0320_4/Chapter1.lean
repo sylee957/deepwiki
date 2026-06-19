@@ -61,15 +61,15 @@ library's `branchingProcess`. -/
 abbrev ex_1_2_4 := @DeepWiki.TimeSeries.branchingProcess
 
 /-- **Definition 1.2.3** (§1.2, p.11), the (finite-dimensional) distribution functions
-`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7) of a process. The library's `fdd`, the
-joint law of `(Xₜ)_{t ∈ I}` on a finite index set `I`, whose CDF is the book's `F_t`. -/
-noncomputable abbrev def_1_2_3 := @DeepWiki.TimeSeries.fdd
+`{F_t, t ∈ 𝒯}` of a process `X : T → Ω → ℝ`: for an `n`-tuple of times
+`t = (t₁,…,tₙ) ∈ Tⁿ` (`t : Fin n → T`) and `x = (x₁,…,xₙ) ∈ ℝⁿ` (`x : Fin n → ℝ`),
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7). The library's `distFn`. -/
+noncomputable abbrev def_1_2_3 := @DeepWiki.TimeSeries.distFn
 
-/-- **Equation (1.2.7)** (§1.2, p.11), the distribution function itself,
-`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` — the CDF of the finite-dimensional distribution
-`fdd`; `fddCDF_eq_measure` confirms it equals the probability of the event
-`{Xₜ ≤ xₜ for all t ∈ I}`. The library's `fddCDF`. -/
-noncomputable abbrev eq_1_2_7 := @DeepWiki.TimeSeries.fddCDF
+/-- **Equation (1.2.7)** (§1.2, p.11), the distribution-function formula
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` — by definition the probability of the lower-orthant
+event `{ω | X_{tᵢ}(ω) ≤ xᵢ for all i}`. The library's `distFn`. -/
+noncomputable abbrev eq_1_2_7 := @DeepWiki.TimeSeries.distFn
 
 /-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11): a family of finite-dimensional
 distribution functions arises from some stochastic process iff it satisfies the consistency

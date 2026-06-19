@@ -14,30 +14,27 @@ open scoped ENNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {X : ℤ → Ω → ℝ}
 
-/-- **Definition 1.2.3**: the finite-dimensional distribution of the process `X` on the
-finite index set `I` — the joint law of `(Xₜ)_{t ∈ I}`, i.e. the pushforward
-`μ.map (ω ↦ I.restrict (X · ω))`. The book's distribution function
-`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7) is the CDF of this law. -/
+/-- **Definition 1.2.3** (eq 1.2.7), book form: the finite-dimensional distribution function
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` of a process `X : T → Ω → ℝ` over an arbitrary index
+set `T` (the book's `T ⊆ ℝ`; instantiates to `ℝ`, `ℤ`, …). It is a function of an `n`-tuple of
+times `t = (t₁, …, tₙ)` (`t : Fin n → T`, the book's `t ∈ Tⁿ`) and an argument
+`x = (x₁, …, xₙ) ∈ ℝⁿ` (`x : Fin n → ℝ`), equal to the probability of the lower-orthant event
+`{ω | Xₜᵢ(ω) ≤ xᵢ for all i}`. The book indexes the family by the strictly increasing tuples
+`t₁ < ⋯ < tₙ` (the set `𝒯`); the value `F_t(x)` is well-defined for any tuple. -/
+noncomputable def distFn {T Ω : Type*} [MeasurableSpace Ω] (X : T → Ω → ℝ) (μ : Measure Ω)
+    {n : ℕ} (t : Fin n → T) (x : Fin n → ℝ) : ℝ≥0∞ :=
+  μ {ω | ∀ i, X (t i) ω ≤ x i}
+
+-- **Equation (1.2.7)** holds by definition: `F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)`.
+example {T : Type*} (X : T → Ω → ℝ) {n : ℕ} (t : Fin n → T) (x : Fin n → ℝ) :
+    distFn X μ t x = μ {ω | ∀ i, X (t i) ω ≤ x i} := rfl
+
+/-- The finite-dimensional (joint) **law** of `X` on a finite index set `I` — the pushforward
+`μ.map (ω ↦ I.restrict (X · ω))`, the joint distribution of `(Xₜ)_{t ∈ I}`. This is the
+measure-valued reformulation of the distribution functions `distFn` (Def 1.2.3), and the object
+on which Kolmogorov's existence theorem `exists_process_fdd_eq` (Thm 1.2.1) is stated. -/
 noncomputable def fdd (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) : Measure (↥I → ℝ) :=
   μ.map (fun ω => I.restrict (fun t => X t ω))
-
-/-- **Definition 1.2.3** in distribution-function form (eq 1.2.7): the distribution function
-`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` of `(Xₜ)_{t ∈ I}` — the CDF of the law `fdd`, i.e.
-the measure of the lower orthant `{y : yᵢ ≤ xᵢ for all i}`. -/
-noncomputable def fddCDF (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) (x : ↥I → ℝ) : ℝ≥0∞ :=
-  fdd X μ I (Set.univ.pi fun i => Set.Iic (x i))
-
-/-- The distribution function `F_t(x)` (1.2.7) is the probability of the event
-`{Xₜ ≤ xₜ for all t ∈ I}`. -/
-theorem fddCDF_eq_measure (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → ℝ) :
-    fddCDF X μ I x = μ {ω | ∀ i : I, X i ω ≤ x i} := by
-  have hmeas : Measurable (fun ω => I.restrict (fun t => X t ω)) :=
-    measurable_pi_lambda _ fun i => hX i.1
-  rw [fddCDF, fdd, Measure.map_apply hmeas (MeasurableSet.univ_pi fun i => measurableSet_Iic)]
-  congr 1
-  ext ω
-  simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Iic, Set.mem_setOf_eq]
-  exact ⟨fun h i => h i, fun h i => h i⟩
 
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/
