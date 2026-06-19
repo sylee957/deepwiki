@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
+import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 4: Efficient Computations for (min,plus) Operators
@@ -24,11 +25,38 @@ open scoped NNReal ENNReal
 
 /-! **Theorem 4.2** (§4.2.2.2, p.70): Convolution of a convex by a concave PWL function: the convolution of a convex function with a concave function can be computed segment-wise (the concave g splits the time axis into intervals; the result picks the right segment combination). Mathematical core (convolution of two concave functions = their min up to a constant) is IsConcaveEReal.minConv. Library: IsConcaveEReal.minConv, IsConcaveEReal.inf. -/
 
-/-! **Theorem 4.3** (§4.3.2.2, p.74): The class of plain ultimately pseudo-periodic functions of F[Q,Q] is stable under minimum, maximum, addition, subtraction, convolution, deconvolution and sub-additive closure. Not formalized in the library. -/
+/-- **Definition** (§4.3.2, p.74): the class of **ultimately pseudo-periodic** functions — beyond a
+rank `T`, advancing time by a period `d` raises the value by an increment `c`. The library's
+`DeepWiki.IsUPP` (`IsUPPWith` carries the explicit `(T, d, c)`). The basis of finite representation
+and the algorithmic (min,plus) calculus. -/
+abbrev def_4_upp := @IsUPP
 
-/-! **Lemma 4.2** (§4.3.2.2, p.75): If f,g are ultimately pseudo-periodic, then f+g (resp. f−g) is ultimately pseudo-periodic from T=max(T_f,T_g) with period c=lcm(d_f,d_g) and increment c·(d_f c_f + d_g c_g)/(gcd(d_f,d_g)) (resp. minus). Not formalized in the library. -/
+/-- **Theorem 4.3** (§4.3.2.2, p.74): the class of plain ultimately pseudo-periodic functions of
+`F[ℚ,ℚ]` is stable under min, max, +, −, convolution, deconvolution and sub-additive closure. The
+library formalizes the UPP class (`def_4_upp`) and its stability under `+`/`⊓`/`⊔`
+(`lemma_4_2`/`lemma_4_3_min`/`lemma_4_3_max` below, common-period forms); the convolution,
+deconvolution and sub-additive-closure parts are not yet formalized. -/
+theorem thm_4_3_add {V : Type*} [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T₂ d c₁ c₂}
+    (hf : IsUPPWith f T₁ d c₁) (hg : IsUPPWith g T₂ d c₂) :
+    IsUPPWith (fun t => f t + g t) (max T₁ T₂) d (c₁ + c₂) := hf.add hg
 
-/-! **Lemma 4.3** (§4.3.2.2, p.75): If f,g are ultimately pseudo-periodic then min(f,g) (resp. max) is ultimately pseudo-periodic; period and rank determined by the asymptotic slopes ρ_f,ρ_g and lcm of the periods. Not formalized in the library. -/
+/-- **Lemma 4.2** (§4.3.2.2, p.75), common-period form: the sum of two ultimately pseudo-periodic
+functions sharing a period `d` is ultimately pseudo-periodic with that period, rank `max T₁ T₂` and
+increment `c₁ + c₂`. The library's `DeepWiki.IsUPPWith.add`. (The book combines distinct periods via
+`lcm`/`gcd`; rescaling to a common period — its WLOG-integer-period setup, `IsUPPWith.nsmul_period` —
+reduces it to this.) -/
+alias lemma_4_2 := IsUPPWith.add
+
+/-- **Lemma 4.3** (§4.3.2.2, p.75), minimum, equal-increment form: the pointwise minimum of two
+ultimately pseudo-periodic functions sharing period `d` and increment `c` is ultimately
+pseudo-periodic with that period and increment — the book's balanced case `d_g c_f = d_f c_g`. The
+library's `DeepWiki.IsUPPWith.min`. (The dominant-slope cases reduce to the faster function via an
+Archimedean argument; not yet formalized.) -/
+alias lemma_4_3_min := IsUPPWith.min
+
+/-- **Lemma 4.3** (§4.3.2.2, p.75), maximum, equal-increment form. The library's
+`DeepWiki.IsUPPWith.max`. -/
+alias lemma_4_3_max := IsUPPWith.max
 
 /-! **Lemma 4.4** (§4.3.2.2, p.76): If f,g are ultimately pseudo-periodic, then f ∗ g is ultimately pseudo-periodic from T = T_f + T_g + d with period d = lcm(d_f,d_g) and increment c = min(d_f c_f, d_g c_g). Not formalized in the library. -/
 

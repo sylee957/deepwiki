@@ -8,6 +8,7 @@ import DeepWiki.NetworkCalculus.ScalarDioids
 import DeepWiki.NetworkCalculus.DioidFunctions
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.ClosuresNd
+import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
 import DeepWiki.NetworkCalculus.Additivity
 import DeepWiki.NetworkCalculus.Deconvolution
 import DeepWiki.NetworkCalculus.Closures
