@@ -4,6 +4,7 @@ import DeepWiki.TimeSeries.ProcessExamples
 import DeepWiki.TimeSeries.GaussianTimeSeries
 import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.StationaryGaussianProcess
+import DeepWiki.TimeSeries.FiniteDimensionalDistributions
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -23,9 +24,36 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : MeasureTheory.Measure Ω} {X : 
 
 /-! ## §1.2 Stochastic Processes -/
 
+/-- **Definition 1.2.1** (§1.2, p.8), a stochastic process: a family `(Xₜ, t ∈ T)` of
+random variables on a probability space. The library models a real-valued, ℤ-indexed
+process as `X : ℤ → Ω → ℝ` — the abbreviation `Process`. -/
+abbrev def_1_2_1 := @DeepWiki.TimeSeries.Process
+
 /-- **Definition 1.2.2** (§1.2, p.9), a realization (sample path) `t ↦ Xₜ(ω)` of a
 process `X`. The library's `realization`. -/
 abbrev def_1_2_2 := @DeepWiki.TimeSeries.realization
+
+/-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
+sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
+its non-stationarity is **Example 1.3.4**. -/
+noncomputable abbrev ex_1_2_3 := @DeepWiki.TimeSeries.randomWalk
+
+/-- **Definition 1.2.3** (§1.2, p.11), the (finite-dimensional) distribution functions
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7) of a process. The library's `fdd`, the
+joint law of `(Xₜ)_{t ∈ I}` on a finite index set `I`, whose CDF is the book's `F_t`. -/
+noncomputable abbrev def_1_2_3 := @DeepWiki.TimeSeries.fdd
+
+/-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11): a family of finite-dimensional
+distribution functions arises from some stochastic process iff it satisfies the consistency
+conditions (1.2.8). The existence (`if`) direction: a consistent (projective) family `P` is
+realized by the coordinate process `(t, ω) ↦ ω t` on the projective limit; the consistency
+(`only if`) direction is `isProjectiveMeasureFamily_fdd`. The library's `exists_process_fdd_eq`. -/
+theorem thm_1_2_1 (P : ∀ I : Finset ℤ, MeasureTheory.Measure (↥I → ℝ))
+    [∀ I, MeasureTheory.IsProbabilityMeasure (P I)]
+    (hP : MeasureTheory.IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) P) :
+    ∃ ν : MeasureTheory.Measure (ℤ → ℝ), MeasureTheory.IsProbabilityMeasure ν ∧
+      ∀ I, fdd (fun t ω => ω t) ν I = P I :=
+  exists_process_fdd_eq P hP
 
 /-! ## §1.3 Stationarity and Strict Stationarity -/
 
