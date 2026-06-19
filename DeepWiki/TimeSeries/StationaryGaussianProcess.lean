@@ -1,6 +1,8 @@
 import DeepWiki.TimeSeries.StationaryProcesses
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Data.Matrix.Mul
+import Mathlib.Probability.BrownianMotion.GaussianProjectiveFamily
+import DeepWiki.MeasureTheory.KolmogorovExtension
 import Mathlib.Tactic
 
 /-! # The autocovariance covariance matrix (toward the converse of Theorem 1.5.2)
@@ -51,5 +53,67 @@ theorem posSemidef_acvfCovMatrix (heven : ∀ h : ℤ, κ (-h) = κ h)
             (fun j : I => x (I.equivFin.symm k) * κ ((↑(I.equivFin.symm k) : ℤ) - j) * x j)]
       refine Finset.sum_congr rfl fun l _ => ?_
       ring
+
+/-! ## The Gaussian projective family with autocovariance `κ` -/
+
+open MeasureTheory ProbabilityTheory NormedSpace WithLp
+
+/-- The finite-dimensional centered Gaussian distribution with covariance matrix
+`[κ(i − j)]`, as a measure on `I → ℝ` (the form used by the Kolmogorov extension). -/
+noncomputable def gaussianProjectiveFamily (κ : ℤ → ℝ) (I : Finset ℤ) : Measure (I → ℝ) :=
+  multivariateGaussian 0 (acvfCovMatrix κ I) |>.map (MeasurableEquiv.toLp 2 (I → ℝ)).symm
+
+/-- `gaussianProjectiveFamily κ I` is, up to the `ofLp` equivalence, the centered
+multivariate Gaussian with covariance `acvfCovMatrix κ I`. -/
+lemma measurePreserving_ofLp_gaussianProjectiveFamily (κ : ℤ → ℝ) (I : Finset ℤ) :
+    MeasurePreserving ofLp (multivariateGaussian 0 (acvfCovMatrix κ I))
+      (gaussianProjectiveFamily κ I) where
+  measurable := by fun_prop
+  map_eq := rfl
+
+instance isGaussian_gaussianProjectiveFamily (κ : ℤ → ℝ) (I : Finset ℤ) :
+    IsGaussian (gaussianProjectiveFamily κ I) := by
+  rw [gaussianProjectiveFamily,
+    show ⇑(MeasurableEquiv.toLp 2 (I → ℝ)).symm = ⇑(EuclideanSpace.equiv I ℝ) from rfl]
+  infer_instance
+
+/-- For an even, non-negative-definite `κ`, the family `gaussianProjectiveFamily κ`
+is a projective measure family (consistent under restriction) — the hypothesis of
+the Kolmogorov extension theorem. -/
+lemma isProjectiveMeasureFamily_gaussianProjectiveFamily
+    (heven : ∀ h : ℤ, κ (-h) = κ h) (hnd : IsNonnegDefinite κ) :
+    IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) (gaussianProjectiveFamily κ) := by
+  intro I J hJI
+  nth_rw 2 [gaussianProjectiveFamily]
+  rw [Measure.map_map]
+  · have : (Finset.restrict₂ (π := fun _ : ℤ => ℝ) hJI ∘ (MeasurableEquiv.toLp 2 (I → ℝ)).symm)
+        = ofLp ∘ (EuclideanSpace.restrict₂ hJI) := by ext; simp
+    rw [this, ((measurePreserving_ofLp_gaussianProjectiveFamily κ J).comp
+        (measurePreserving_restrict₂_multivariateGaussian
+          (posSemidef_acvfCovMatrix heven hnd I) hJI)).map_eq]
+  · exact Finset.measurable_restrict₂ _
+  · fun_prop
+
+/-! ## The stationary Gaussian process measure (Kolmogorov extension) -/
+
+/-- The law on `ℤ → ℝ` of a process whose finite-dimensional distributions are the
+centered Gaussians with covariance `[κ(i − j)]`, obtained by applying the Kolmogorov
+extension theorem to `gaussianProjectiveFamily κ`. Requires `κ` even and
+non-negative definite. -/
+noncomputable def stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) : Measure (ℤ → ℝ) :=
+  projectiveLimit (gaussianProjectiveFamily κ)
+    (isProjectiveMeasureFamily_gaussianProjectiveFamily heven hnd)
+
+/-- `stationaryGaussianMeasure` is the projective limit of the Gaussian family: its
+finite-dimensional marginals are exactly `gaussianProjectiveFamily κ`. -/
+lemma isProjectiveLimit_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) :
+    IsProjectiveLimit (stationaryGaussianMeasure heven hnd) (gaussianProjectiveFamily κ) :=
+  isProjectiveLimit_projectiveLimit _
+
+instance isProbabilityMeasure_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) : IsProbabilityMeasure (stationaryGaussianMeasure heven hnd) :=
+  isProbabilityMeasure_projectiveLimit _
 
 end DeepWiki.TimeSeries
