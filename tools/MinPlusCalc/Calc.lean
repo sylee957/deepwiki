@@ -125,4 +125,16 @@ def r2 : UppSeq Int := ⟨[0], 2, 1, by decide, by decide⟩
 example : ∀ n ∈ Finset.range 6,
     (minUpp (convUpp r1 r2) r2).evalNat n = r1.evalNat n := by native_decide
 
+/-- Rate-latency service curve `β_{R,T}(t) = R·(t−T)₊` as a UPP sequence: `T+1` leading zeros
+(`β = 0` on `[0,T]`), then period `1`, increment `R`. -/
+def betaRL (R : Int) (T : Nat) : UppSeq Int :=
+  ⟨List.replicate (T + 1) 0, R, 1, by decide, by rw [List.length_replicate]; omega⟩
+
+/-- **Network-calculus application (gate-verified):** end-to-end **server concatenation**. The
+convolution of two rate-latency service curves is again rate-latency, with the *minimum rate* and the
+*summed latency*: `β_{1,2} ⊗ β_{2,1} = β_{1,3}`. Here the calculator's `convNat` reproduces this DNC
+theorem on the integer samples (`min(1,2)=1`, `2+1=3`). -/
+example : ∀ n ∈ Finset.range 8,
+    (betaRL 1 2).convNat (betaRL 2 1) n = (betaRL 1 3).evalNat n := by native_decide
+
 end MinPlusCalc
