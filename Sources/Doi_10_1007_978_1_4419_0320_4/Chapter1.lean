@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
+import DeepWiki.TimeSeries.GaussianTimeSeries
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -40,6 +41,11 @@ abbrev def_1_3_2 := @DeepWiki.TimeSeries.IsWeaklyStationary
 of `(X_{t₁},…,X_{tₖ})` and `(X_{t₁+h},…,X_{tₖ+h})` agree for all `k, t, h`. The
 library's `IsStrictlyStationary`. -/
 abbrev def_1_3_3 := @DeepWiki.TimeSeries.IsStrictlyStationary
+
+/-- **Definition 1.3.4** (§1.3, p.13), a Gaussian time series: a process all of whose
+finite-dimensional distributions are multivariate normal. The library's
+`IsGaussianTimeSeries` (Mathlib's `IsGaussianProcess`). -/
+abbrev def_1_3_4 := @DeepWiki.TimeSeries.IsGaussianTimeSeries
 
 /-- **Example 1.3.1** (§1.3, p.13), the cosine process `Xₜ = A cos(θt) + B sin(θt)`
 with `A`, `B` uncorrelated, mean zero, common variance `σ²` has autocovariance

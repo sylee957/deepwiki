@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
+import DeepWiki.TimeSeries.GaussianTimeSeries
 import DeepWiki.TimeSeries.LagPolynomials
 import DeepWiki.TimeSeries.ArmaProcesses
 import DeepWiki.TimeSeries.SeasonalArma
