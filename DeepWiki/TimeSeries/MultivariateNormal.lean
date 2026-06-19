@@ -100,4 +100,27 @@ theorem covMatrix_linTransform [IsProbabilityMeasure μ] {m n : ℕ} (a : Fin m 
   refine Finset.sum_congr rfl fun k _ => Finset.sum_congr rfl fun l _ => ?_
   rw [covariance_const_mul_left, covariance_const_mul_right]; ring
 
+/-- **Example 1.6.1**: the covariance matrix `[[σ₁², ρσ₁σ₂], [ρσ₁σ₂, σ₂²]]` of a bivariate
+normal vector (1.6.14). The bivariate normal is `multivariateGaussian m (bivariateCovMatrix
+σ₁ σ₂ ρ)`, with characteristic function `prop_1_6_4` specialized to `n = 2` (1.6.15). -/
+def bivariateCovMatrix (σ₁ σ₂ ρ : ℝ) : Matrix (Fin 2) (Fin 2) ℝ :=
+  !![σ₁ ^ 2, ρ * σ₁ * σ₂; ρ * σ₁ * σ₂, σ₂ ^ 2]
+
+/-- The bivariate covariance matrix is positive semidefinite when `|ρ| ≤ 1` —
+`bᵀ Σ b = (σ₁b₀ + ρσ₂b₁)² + (1−ρ²)σ₂²b₁² ≥ 0`. -/
+theorem posSemidef_bivariateCovMatrix {σ₁ σ₂ ρ : ℝ} (hρ : |ρ| ≤ 1) :
+    (bivariateCovMatrix σ₁ σ₂ ρ).PosSemidef := by
+  obtain ⟨hl, hu⟩ := abs_le.mp hρ
+  have hρ2 : ρ ^ 2 ≤ 1 := by nlinarith
+  rw [Matrix.posSemidef_iff_dotProduct_mulVec]
+  refine ⟨?_, fun b => ?_⟩
+  · ext i j
+    fin_cases i <;> fin_cases j <;> simp [bivariateCovMatrix, Matrix.conjTranspose_apply]
+  · have hq : star b ⬝ᵥ (bivariateCovMatrix σ₁ σ₂ ρ *ᵥ b)
+        = σ₁ ^ 2 * b 0 ^ 2 + 2 * ρ * σ₁ * σ₂ * (b 0 * b 1) + σ₂ ^ 2 * b 1 ^ 2 := by
+      simp [dotProduct, Matrix.mulVec, bivariateCovMatrix, Fin.sum_univ_two]; ring
+    rw [hq]
+    nlinarith [sq_nonneg (σ₁ * b 0 + ρ * σ₂ * b 1),
+      mul_nonneg (sub_nonneg.2 hρ2) (sq_nonneg (σ₂ * b 1))]
+
 end DeepWiki.TimeSeries

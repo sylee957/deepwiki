@@ -9,6 +9,7 @@ import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.MultivariateNormal
 import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
+import Mathlib.Probability.BrownianMotion.Basic
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 1: Stationary Time Series
@@ -222,6 +223,20 @@ noncomputable abbrev def_1_6_1 := @ProbabilityTheory.multivariateGaussian
 normal `N(μ, Σ)` is `φ_Y(u) = exp(iu'μ − ½ u'Σu)` (1.6.11). Mathlib's
 `charFun_multivariateGaussian`. -/
 alias prop_1_6_4 := ProbabilityTheory.charFun_multivariateGaussian
+
+/-- **Example 1.6.1** (§1.6, p.35), the bivariate normal distribution: mean `μ` and
+covariance matrix `[[σ₁², ρσ₁σ₂], [ρσ₁σ₂, σ₂²]]` (1.6.14, positive semidefinite for
+`|ρ| ≤ 1`). It is `multivariateGaussian μ (bivariateCovMatrix σ₁ σ₂ ρ)`; the library's
+`bivariateCovMatrix`, `posSemidef_bivariateCovMatrix`. -/
+abbrev ex_1_6_1 := @DeepWiki.TimeSeries.bivariateCovMatrix
+
+/-! ## §1.7 Applications of Kolmogorov's Theorem -/
+
+/-- **Definition 1.7.1** (§1.7, p.38), standard Brownian motion `{B(t), t ≥ 0}`: `B(0) = 0`,
+independent increments, and `B(t) − B(s) ~ N(0, t − s)` for `t ≥ s` — its existence follows
+from Kolmogorov's theorem (Thm 1.2.1). Mathlib's `ProbabilityTheory.IsBrownianReal` (the
+conditions, sans continuity, are `IsPreBrownianReal`). -/
+abbrev def_1_7_1 := @ProbabilityTheory.IsBrownianReal
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
