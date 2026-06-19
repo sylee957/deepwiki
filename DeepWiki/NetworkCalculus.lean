@@ -58,6 +58,7 @@ import DeepWiki.NetworkCalculus.NetworkTopology
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
 import DeepWiki.NetworkCalculus.PacketCurves
 import DeepWiki.NetworkCalculus.WorstCaseLP
 import DeepWiki.NetworkCalculus.WorstCaseLPFifoNode

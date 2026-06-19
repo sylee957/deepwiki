@@ -17,6 +17,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
+import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
@@ -173,5 +174,15 @@ def def_9_types_s3c_family := @IsSufficientlyStrictFamily
 
 /-- **Theorem 9.8** (§9.3.2, p.228), dwell-family form: `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂, Dw')` with `Dw'` the composed dwell family (`DeepWiki.composedDwellFamily`). The library's `DeepWiki.IsSufficientlyStrictFamily.comp` — the book's statement over the dwell-period classes. -/
 alias thm_9_8_family := IsSufficientlyStrictFamily.comp
+
+/-- **Theorem 9.8** (§9.3.2, p.228), 2nd bullet — the blind/FIFO-multiplexing residual: if a server
+offers s3c service `S_s3c(β, Dw)` to the aggregate of two flows and flow 2 is `α₂`-constrained, then
+flow 1 is guaranteed `S_s3c((β − α₂)↑, Dw)` (the non-decreasing closure `(β − α₂)↑`, `ndClosure`).
+The library's `DeepWiki.isSufficientlyStrict_ndClosure_residual_of_windowed`, which takes the
+*windowed* (continuous-backlog / maximum-achievable-dwell) reading of s3c — the aggregate provides
+`β s` at every prefix `s ≤ Dw(t)` of the dwell window — under which the closure form follows
+(prefix-by-prefix flow decomposition, supremum over the window). The book's `Dw(t) = t − Start(t)`
+MADP is exactly this continuous-backlog window. -/
+alias thm_9_8_residual := isSufficientlyStrict_ndClosure_residual_of_windowed
 
 end DeepWiki.Dnc

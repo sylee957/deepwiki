@@ -45,37 +45,40 @@ theorem IsSufficientlyStrict.mono_beta {β β' dw A D : ℝ≥0 → ℝ≥0}
   calc A (t - dw t) + β' (dw t) ≤ A (t - dw t) + β (dw t) := by gcongr; exact hβ (dw t)
     _ ≤ D t := h.2.2 t
 
+/-- **Flow-decomposition core.** From the *aggregate* bound `(A₁+A₂)(t-s)+β s ≤ (D₁+D₂) t` at a
+window-prefix `s ≤ t`, with flow `2` causal (`D₂ ≤ A₂`) and `α₂`-constrained
+(`A₂ t ≤ A₂ s + α₂ (t-s)`), flow `1` satisfies `A₁ (t-s) + β s ≤ D₁ t + α₂ s` — its
+arrival-plus-service over the window is dominated by its departure plus flow `2`'s burst. -/
+theorem flow1_add_le_at {β α₂ A₁ A₂ D₁ D₂ : ℝ≥0 → ℝ≥0}
+    (hcausal2 : ∀ t, D₂ t ≤ A₂ t) (harr2 : ∀ s t, s ≤ t → A₂ t ≤ A₂ s + α₂ (t - s))
+    {s t : ℝ≥0} (hst : s ≤ t) (hagg : (A₁ + A₂) (t - s) + β s ≤ (D₁ + D₂) t) :
+    A₁ (t - s) + β s ≤ D₁ t + α₂ s := by
+  simp only [Pi.add_apply] at hagg
+  have ha2 : A₂ t ≤ A₂ (t - s) + α₂ s := by
+    have h := harr2 (t - s) t tsub_le_self
+    rwa [tsub_tsub_cancel_of_le hst] at h
+  have key : (A₁ (t - s) + β s) + A₂ (t - s) ≤ (D₁ t + α₂ s) + A₂ (t - s) :=
+    calc (A₁ (t - s) + β s) + A₂ (t - s) = A₁ (t - s) + A₂ (t - s) + β s := by ring
+      _ ≤ D₁ t + D₂ t := hagg
+      _ ≤ D₁ t + (A₂ (t - s) + α₂ s) := by gcongr; exact (hcausal2 t).trans ha2
+      _ = (D₁ t + α₂ s) + A₂ (t - s) := by ring
+  exact le_of_add_le_add_right key
+
 /-- **Blind-multiplexing residual, additive form.** When the aggregate `(A₁+A₂, D₁+D₂)` is s3c
-for `β` with dwell `dw`, flow `2` is causal (`D₂ ≤ A₂`) and `α₂`-constrained
-(`A₂ t ≤ A₂ s + α₂ (t-s)`), flow `1` satisfies `A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t)` — the
-arrival-plus-service of flow `1` over the dwell window is dominated by its departure plus flow `2`'s
-burst. (The flow-decomposition core: in `ℝ≥0` this is `(A₁(t-dw)+β(dw)) - α₂(dw) ≤ D₁ t`; turning it
-into an s3c bound for `β - α₂` needs `α₂(dw) ≤ β(dw)`, see `residual_flow1_of_dom`.) -/
+for `β` with dwell `dw`, flow `2` causal and `α₂`-constrained, flow `1` satisfies
+`A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t)` — `flow1_add_le_at` at the dwell value. -/
 theorem IsSufficientlyStrict.flow1_add_le {β α₂ A₁ A₂ D₁ D₂ dw : ℝ≥0 → ℝ≥0}
     (hagg : IsSufficientlyStrict β dw (A₁ + A₂) (D₁ + D₂))
     (hcausal2 : ∀ t, D₂ t ≤ A₂ t)
     (harr2 : ∀ s t, s ≤ t → A₂ t ≤ A₂ s + α₂ (t - s)) (t : ℝ≥0) :
-    A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t) := by
-  have hdw : dw t ≤ t := hagg.dwell_le t
-  have hs := hagg.service_bound t
-  simp only [Pi.add_apply] at hs
-  have ha2 : A₂ t ≤ A₂ (t - dw t) + α₂ (dw t) := by
-    have h := harr2 (t - dw t) t tsub_le_self
-    rwa [tsub_tsub_cancel_of_le hdw] at h
-  have key : (A₁ (t - dw t) + β (dw t)) + A₂ (t - dw t)
-      ≤ (D₁ t + α₂ (dw t)) + A₂ (t - dw t) :=
-    calc (A₁ (t - dw t) + β (dw t)) + A₂ (t - dw t)
-        = A₁ (t - dw t) + A₂ (t - dw t) + β (dw t) := by ring
-      _ ≤ D₁ t + D₂ t := hs
-      _ ≤ D₁ t + (A₂ (t - dw t) + α₂ (dw t)) := by gcongr; exact (hcausal2 t).trans ha2
-      _ = (D₁ t + α₂ (dw t)) + A₂ (t - dw t) := by ring
-  exact le_of_add_le_add_right key
+    A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t) :=
+  flow1_add_le_at hcausal2 harr2 (hagg.dwell_le t) (hagg.service_bound t)
 
 /-- **Blind-multiplexing residual for flow 1** (plain difference form). Under the additive bound of
 `flow1_add_le` plus `α₂ (dw t) ≤ β (dw t)` (flow `2`'s burst never exceeds the service over the
-dwell window), flow `1` is s3c for the residual `β - α₂` with the *same* dwell `dw`. (The book's
-result strengthens `β - α₂` to its non-decreasing closure `(β - α₂)↑`, which is *not* obtainable
-from a single dwell — that step needs the maximum-achievable-dwell backlog semantics.) -/
+dwell window), flow `1` is s3c for the residual `β - α₂` with the *same* dwell `dw`. (The
+non-decreasing-closure form `(β - α₂)↑` — and dropping the domination hypothesis — needs the
+windowed/continuous-backlog strengthening; see `isSufficientlyStrict_ndClosure_residual_of_windowed`.) -/
 theorem IsSufficientlyStrict.residual_flow1_of_dom {β α₂ A₁ A₂ D₁ D₂ dw : ℝ≥0 → ℝ≥0}
     (hagg : IsSufficientlyStrict β dw (A₁ + A₂) (D₁ + D₂))
     (hcausal1 : ∀ t, D₁ t ≤ A₁ t) (hcausal2 : ∀ t, D₂ t ≤ A₂ t)
