@@ -334,4 +334,74 @@ theorem maProcess2_acvf_ge_three [IsProbabilityMeasure μ] {a b c σ2 : ℝ} {Z 
     if_neg (show ¬(s + h - 2 = s - 2) by omega)]
   ring
 
+/-! ## Problem 1.7(d): a non-stationary cosine-lag process -/
+
+/-- Bilinear expansion of `cov[p•U + q•V, p'•W + q'•Y]` over four functions. -/
+private theorem cov_lin4 [IsFiniteMeasure μ] {U V W Y : Ω → ℝ}
+    (hU : MemLp U 2 μ) (hV : MemLp V 2 μ) (hW : MemLp W 2 μ) (hY : MemLp Y 2 μ)
+    (p q p' q' : ℝ) :
+    cov[p • U + q • V, p' • W + q' • Y; μ]
+      = p * p' * cov[U, W; μ] + p * q' * cov[U, Y; μ]
+        + q * p' * cov[V, W; μ] + q * q' * cov[V, Y; μ] := by
+  rw [covariance_add_left (hU.const_smul p) (hV.const_smul q)
+        ((hW.const_smul p').add (hY.const_smul q')),
+      covariance_add_right (hU.const_smul p) (hW.const_smul p') (hY.const_smul q'),
+      covariance_add_right (hV.const_smul q) (hW.const_smul p') (hY.const_smul q'),
+      covariance_smul_left, covariance_smul_left, covariance_smul_left, covariance_smul_left,
+      covariance_smul_right, covariance_smul_right, covariance_smul_right, covariance_smul_right]
+  ring
+
+/-- **Problem 1.7(d)**: the process `Xₜ = Zₜ cos(ct) + Zₜ₋₁ sin(ct)` (the same lag structure
+as MA(1) but with time-dependent, deterministic coefficients). -/
+noncomputable def cosLagProcess (c : ℝ) (Z : ℤ → Ω → ℝ) : ℤ → Ω → ℝ :=
+  fun t => Real.cos (c * (t : ℝ)) • Z t + Real.sin (c * (t : ℝ)) • Z (t - 1)
+
+/-- The lag-1 autocovariance of `cosLagProcess` at times `(1, 0)` is `σ² sin c`. -/
+theorem cosLagProcess_cov_one_zero [IsProbabilityMeasure μ] {c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0) :
+    cov[cosLagProcess c Z 1, cosLagProcess c Z 0; μ] = σ2 * Real.sin c := by
+  simp only [cosLagProcess]
+  rw [cov_lin4 (hZ 1) (hZ (1 - 1)) (hZ 0) (hZ (0 - 1)),
+      huc 1 0, huc 1 (0 - 1), huc (1 - 1) 0, huc (1 - 1) (0 - 1),
+      if_neg (by decide : ¬((1 : ℤ) = 0)), if_neg (by decide : ¬((1 : ℤ) = 0 - 1)),
+      if_pos (by decide : (1 : ℤ) - 1 = 0), if_neg (by decide : ¬((1 : ℤ) - 1 = 0 - 1))]
+  simp only [show ((1 : ℤ) : ℝ) = 1 by norm_num, show ((0 : ℤ) : ℝ) = 0 by norm_num,
+    mul_zero, mul_one, Real.cos_zero, add_zero, zero_add]
+  ring
+
+/-- The lag-1 autocovariance of `cosLagProcess` at times `(2, 1)` is `2σ² sin c cos²c`. -/
+theorem cosLagProcess_cov_two_one [IsProbabilityMeasure μ] {c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0) :
+    cov[cosLagProcess c Z 2, cosLagProcess c Z 1; μ]
+      = 2 * σ2 * Real.sin c * Real.cos c ^ 2 := by
+  simp only [cosLagProcess]
+  rw [cov_lin4 (hZ 2) (hZ (2 - 1)) (hZ 1) (hZ (1 - 1)),
+      huc 2 1, huc 2 (1 - 1), huc (2 - 1) 1, huc (2 - 1) (1 - 1),
+      if_neg (by decide : ¬((2 : ℤ) = 1)), if_neg (by decide : ¬((2 : ℤ) = 1 - 1)),
+      if_pos (by decide : (2 : ℤ) - 1 = 1), if_neg (by decide : ¬((2 : ℤ) - 1 = 1 - 1))]
+  simp only [show ((2 : ℤ) : ℝ) = 2 by norm_num, show ((1 : ℤ) : ℝ) = 1 by norm_num,
+    mul_zero, mul_one, add_zero, zero_add]
+  rw [show c * 2 = 2 * c by ring, Real.sin_two_mul]
+  ring
+
+/-- **Problem 1.7(d)**: `Xₜ = Zₜ cos(ct) + Zₜ₋₁ sin(ct)` is **not** (covariance) stationary
+when `σ² > 0`, `sin c ≠ 0`, and `2 cos²c ≠ 1` — its lag-1 autocovariance is not constant in
+`t` (`Cov(X₁,X₀) = σ² sin c` but `Cov(X₂,X₁) = 2σ² sin c cos²c`), even though its mean and
+variance are. -/
+theorem cosLagProcess_not_stationary [IsProbabilityMeasure μ] {c σ2 : ℝ} {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Z i) 2 μ) (huc : ∀ i j, cov[Z i, Z j; μ] = if i = j then σ2 else 0)
+    (hσ : 0 < σ2) (hsin : Real.sin c ≠ 0) (hcos : 2 * Real.cos c ^ 2 ≠ 1) :
+    ¬ IsWeaklyStationary (cosLagProcess c Z) μ := by
+  intro hstat
+  have h := hstat.acvf_shift 1 0 1
+  rw [show (1 : ℤ) + 1 = 2 from by norm_num, show (0 : ℤ) + 1 = 1 from by norm_num,
+      cosLagProcess_cov_one_zero hZ huc, cosLagProcess_cov_two_one hZ huc] at h
+  apply hcos
+  have key : σ2 * Real.sin c * (1 - 2 * Real.cos c ^ 2) = 0 := by linear_combination h
+  rcases mul_eq_zero.mp key with h1 | h2
+  · rcases mul_eq_zero.mp h1 with h1a | h1b
+    · exact absurd h1a hσ.ne'
+    · exact absurd h1b hsin
+  · linarith
+
 end DeepWiki.TimeSeries

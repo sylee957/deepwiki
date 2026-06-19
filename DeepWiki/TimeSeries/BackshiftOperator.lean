@@ -120,6 +120,29 @@ theorem difference_linear {R : Type*} [CommRing R] (a b : R) :
   push_cast
   ring
 
+/-- **Problem 1.8(b)**: the second seasonal difference `∇_d²` annihilates a linearly
+modulated period-`d` seasonal component: `∇_d (∇_d ((a + b·t)·sₜ)) = 0` when `{sₜ}` has
+period `d`. One `∇_d` turns `(a + b·t)·sₜ` into the period-`d` series `b·d·sₜ`; the second
+`∇_d` kills it. -/
+theorem seasonalDifference_sq_linear_periodic {d : ℕ} (a b : ℝ) {s : ℤ → ℝ}
+    (hper : ∀ t : ℤ, s (t + d) = s t) :
+    seasonalDifference d (seasonalDifference d (fun t : ℤ => (a + b * (t : ℝ)) * s t)) = 0 := by
+  have hg : seasonalDifference d (fun t : ℤ => (a + b * (t : ℝ)) * s t)
+      = fun t => b * (d : ℝ) * s t := by
+    funext t
+    have hst : s (t - (d : ℤ)) = s t := by
+      have h := hper (t - (d : ℤ))
+      rw [show (t - (d : ℤ)) + (d : ℤ) = t from by ring] at h
+      exact h.symm
+    simp only [seasonalDifference_apply, hst]
+    push_cast
+    ring
+  rw [hg]
+  apply seasonalDifference_periodic
+  intro t
+  show b * (d : ℝ) * s (t + (d : ℤ)) = b * (d : ℝ) * s t
+  rw [hper t]
+
 /-- The book's caution (§1.4, p.24): the lag-`d` difference `∇_d` is **not** the
 iterate `∇^[d] = (1 − B)^[d]`. Already at `d = 2` they disagree — on the trend
 `x t = t`, `∇_2 x = 2` (constant) while `∇^[2] x = 0`. -/

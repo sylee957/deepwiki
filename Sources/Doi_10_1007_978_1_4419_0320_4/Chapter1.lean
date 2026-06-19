@@ -350,6 +350,17 @@ theorem ex_1_7_e [IsProbabilityMeasure μ] {c : ℝ} {Z : Ω → ℝ}
     ¬ IsWeaklyStationary (cosScaleProcess c Z) μ :=
   cosScaleProcess_not_stationary hc hpos
 
+/-- **Problem 1.7(d)** (p.40): `Xₜ = Zₜ cos(ct) + Zₜ₋₁ sin(ct)` is **not** (covariance)
+stationary in general — although its mean (`0`) and variance (`σ²`) are constant, the lag-1
+autocovariance depends on `t`: `Cov(X₁,X₀) = σ² sin c` but `Cov(X₂,X₁) = 2σ² sin c cos²c`,
+which differ when `σ² > 0`, `sin c ≠ 0`, and `2 cos²c ≠ 1`. The library's `cosLagProcess`,
+`cosLagProcess_not_stationary`. -/
+theorem ex_1_7_d [IsProbabilityMeasure μ] {c σ2 : ℝ} {Zs : ℤ → Ω → ℝ}
+    (hZ : ∀ i, MemLp (Zs i) 2 μ) (huc : ∀ i j, cov[Zs i, Zs j; μ] = if i = j then σ2 else 0)
+    (hσ : 0 < σ2) (hsin : Real.sin c ≠ 0) (hcos : 2 * Real.cos c ^ 2 ≠ 1) :
+    ¬ IsWeaklyStationary (cosLagProcess c Zs) μ :=
+  cosLagProcess_not_stationary hZ huc hσ hsin hcos
+
 /-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
 period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
 (Hence for `Yₜ = a + b·t + sₜ + Xₜ`, `∇∇_d Yₜ = ∇∇_d Xₜ`.) Discharged by the
@@ -368,5 +379,13 @@ theorem ex_1_8 {d : ℕ} (a b : ℝ) {s : ℤ → ℝ} (hper : ∀ t : ℤ, s (t
     ring
   rw [hsd]
   exact difference_const _
+
+/-- **Problem 1.8(b)** (p.40): `∇_d²` annihilates a linearly modulated period-`d` seasonal
+component: `∇_d(∇_d((a + b·t)·sₜ)) = 0` for `{sₜ}` of period `d`. (Hence for
+`Xₜ = (a + b·t)·sₜ + Yₜ` with `{Yₜ}` stationary, `∇_d² Xₜ = ∇_d² Yₜ`.) The library's
+`seasonalDifference_sq_linear_periodic`. -/
+theorem ex_1_8_b {d : ℕ} (a b : ℝ) {s : ℤ → ℝ} (hper : ∀ t : ℤ, s (t + d) = s t) :
+    seasonalDifference d (seasonalDifference d (fun t : ℤ => (a + b * (t : ℝ)) * s t)) = 0 :=
+  seasonalDifference_sq_linear_periodic a b hper
 
 end DeepWiki.Ts
