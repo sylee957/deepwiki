@@ -58,9 +58,11 @@ flips, `P(Xₜ = 1) = P(Xₜ = -1) = 1/2` (1.2.3) with joint law `2⁻ⁿ` (1.2.
 is guaranteed by Kolmogorov's theorem. The library's `exists_iidBinaryProcess`. -/
 alias ex_1_2_2 := DeepWiki.TimeSeries.exists_iidBinaryProcess
 
-/-- **Equation (1.2.3)** (§1.2, p.9), the binary process stated by its marginal directly:
-`P(Xₜ = 1) = P(Xₜ = -1) = 1/2`. The library's `exists_iidBinaryProcess_marginal`. -/
-alias eq_1_2_3 := DeepWiki.TimeSeries.exists_iidBinaryProcess_marginal
+/-- **Equation (1.2.3)** (§1.2, p.9), the binary process's marginal law, stated directly as a
+property on a probability space: a variable with the fair `±1` Bernoulli law has
+`P(X = 1) = P(X = -1) = 1/2`. The library's `measureReal_fairBernoulli`; the iid existence form
+is `exists_iidBinaryProcess_marginal`. -/
+alias eq_1_2_3 := DeepWiki.TimeSeries.measureReal_fairBernoulli
 
 /-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
 sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
@@ -388,6 +390,17 @@ theorem ex_1_7_d [IsProbabilityMeasure μ] {c σ2 : ℝ} {Zs : ℤ → Ω → �
     (hσ : 0 < σ2) (hsin : Real.sin c ≠ 0) (hcos : 2 * Real.cos c ^ 2 ≠ 1) :
     ¬ IsWeaklyStationary (cosLagProcess c Zs) μ :=
   cosLagProcess_not_stationary hZ huc hσ hsin hcos
+
+/-! **Problem 1.7(f)** (p.40): `Xₜ = Zₜ·Zₜ₋₁` (the lag product of an iid mean-zero, variance-`σ²`
+sequence) is weakly stationary, with mean `0` and autocovariance `γ(0) = σ⁴` and `γ(h) = 0` for
+`h ≠ 0`. This is **tractable but deferred** as a laborious mini-project. Establishing the white
+covariance `Cov(Xᵢ, Xⱼ) = σ⁴·[i = j]` for all integer lags needs a three-way case split on the
+index multiset `{i, i−1, j, j−1}` (the cases `i = j`; one shared index when the lags differ by one;
+and four distinct indices otherwise), each grouping the four factors into independent blocks via
+`ProbabilityTheory.iIndepFun.indepFun_finset` composed with the product map and
+`IndepFun.integral_mul_eq_mul_integral`, together with the `L²` membership of the products `ZₜZₜ₋₁`
+(needed for `cov` to be defined). The supporting Mathlib tools all exist; the casework and the
+product-integrability bookkeeping are the cost. -/
 
 /-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
 period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
