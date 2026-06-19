@@ -20,17 +20,20 @@ lake exe minplus            # usage
 | `minplus eval <vals> <period> <incr> <n>` | `f(n)` |
 | `minplus seq  <vals> <period> <incr> <k>` | `f(0), …, f(k−1)` |
 | `minplus add  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f+g)(0..k−1)` — **proved correct** (`evalNat_add`) |
-| `minplus min  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊓g)(0..k−1)` — proved correct in the **balanced** case |
+| `minplus min  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊓g)(0..k−1)` — pointwise min; the result is UPP (`min_evalNat_add_lcm`) |
 | `minplus conv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊗g)(0..k−1)` — the (min,plus) convolution `⨅_{k≤n} f(k)+g(n−k)` (`convNat_le`/`convNat_eq`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
 ## Soundness
 
-`add` is proved correct for all inputs. `min` is proved correct only in the **balanced** case (equal
-asymptotic slopes `c₁/d₁ = c₂/d₂`, the book's `d_g c_f = d_f c_g`); for unequal slopes the calculator
-**refuses** rather than print an unproved result — the dominant-slope case needs an Archimedean
-crossover bound (not yet formalized). Convolution and deconvolution are future work.
+Each command computes its result via the Lean functions proved in `UppSequence.lean`. `add` denotes
+the pointwise sum (`evalNat_add`); `min`/`conv` sample the pointwise minimum / `(min,plus)`
+convolution directly (correct by definition). Beyond merely sampling, the *results are themselves
+ultimately pseudo-periodic*: `min`/`max` by `min_evalNat_add_lcm`/`max_evalNat_add_lcm` (Lemma 4.3,
+all slope cases, via the Archimedean crossover `evalNat_eventually_le`); `add` by `IsUPPWith.add`;
+convolution by `convNat_add_lcm_of_balanced` in the balanced case (the general closed form, Lemma 4.4,
+and deconvolution are future work).
 
 ## Example
 
@@ -39,5 +42,6 @@ minplus seq 0,1,2 2 3 8           # 0, 1, 2, 4, 5, 7, 8, 10   (period 2, +3)
 minplus eval 0,1,2 2 3 5          # 7
 minplus add 0,1,2 2 3 0,1,2 2 3 8 # 0, 2, 4, 8, 10, 14, 16, 20   (doubled)
 minplus min 0,1,2 2 3 0,1,2 2 3 8 # 0, 1, 2, 4, 5, 7, 8, 10   (balanced: f ⊓ f = f)
-minplus min 0,2 1 2 3,4 1 1 8     # refused: slopes 2/1 and 1/1 differ
+minplus min 0,2 1 2 3,4 1 1 8     # 0, 2, 4, 6, 7, 8, 9, 10   (2n ⊓ (n+3), different slopes)
+minplus conv 0 1 1 2 1 1 6        # 2, 3, 4, 5, 6, 7   (rate-1 latencies add)
 ```

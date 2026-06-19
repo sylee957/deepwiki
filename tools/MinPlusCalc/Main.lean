@@ -43,7 +43,7 @@ def usage : String := String.intercalate "\n"
     "    eval <vals> <period> <incr> <n>                 print f(n)",
     "    seq  <vals> <period> <incr> <k>                 print f(0..k-1)",
     "    add  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f+g)(0..k-1)   [proved: evalNat_add]",
-    "    min  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊓g)(0..k-1)   [proved (balanced): evalNat_min]",
+    "    min  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊓g)(0..k-1)   [pointwise; UPP by min_evalNat_add_lcm]",
     "    conv <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊗g)(0..k-1)   [⨅ k≤n f(k)+g(n-k); proved: convNat_le/_eq]" ]
 
 def main (args : List String) : IO Unit := do
