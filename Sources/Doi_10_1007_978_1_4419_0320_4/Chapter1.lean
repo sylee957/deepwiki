@@ -154,12 +154,14 @@ theorem acvf_nonnegDefinite [MeasureTheory.IsProbabilityMeasure μ]
     (hX : IsWeaklyStationary X μ) : IsNonnegDefinite (acvfStat X μ) :=
   hX.isNonnegDefinite_acvfStat
 
-/-- **Theorem 1.5.2** (§1.5, p.27), characterization of autocovariance functions: a
+/-- **Theorem 1.5.1** (§1.5, p.27), characterization of autocovariance functions: a
 function `κ : ℤ → ℝ` is the autocovariance of a stationary process iff it is even
-and non-negative definite. The converse (existence) is constructed from a Gaussian
-projective family via the Kolmogorov extension theorem (vendored in
-`DeepWiki/MeasureTheory/`). The library's `isACVF_iff_even_and_isNonnegDefinite`. -/
-theorem thm_1_5_2 (κ : ℤ → ℝ) :
+and non-negative definite. (Propositions, Definitions and Theorems carry separate §1.5
+counters, so this Theorem 1.5.1 coexists with Proposition 1.5.1 and Definition 1.5.1.)
+The converse (existence) is constructed from a Gaussian projective family via the
+Kolmogorov extension theorem (vendored in `DeepWiki/MeasureTheory/`). The library's
+`isACVF_iff_even_and_isNonnegDefinite`. -/
+theorem thm_1_5_1 (κ : ℤ → ℝ) :
     (∃ (ν : MeasureTheory.Measure (ℤ → ℝ)) (X : ℤ → (ℤ → ℝ) → ℝ),
         MeasureTheory.IsProbabilityMeasure ν ∧ IsWeaklyStationary X ν ∧
         ∀ h, acvfStat X ν h = κ h)
