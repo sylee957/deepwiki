@@ -36,8 +36,8 @@ abbrev def_4_upp := @IsUPP
 `F[ℚ,ℚ]` is stable under min, max, +, −, convolution, deconvolution and sub-additive closure. The
 library formalizes the UPP class (`def_4_upp`) and its stability under `+` (`lemma_4_2`, all common
 periods), `⊓`/`⊔` (`lemma_4_3_min`/`lemma_4_3_max`, **all slope cases** via the Archimedean crossover),
-and the **balanced** case of convolution `∗` (`lemma_4_4`). The non-balanced convolution, deconvolution
-and sub-additive-closure parts are not yet formalized. -/
+and convolution `∗` (`lemma_4_4`, the **general** closed form including the non-balanced case via the
+minimizer-region lemma). Deconvolution and sub-additive-closure parts are not yet formalized. -/
 theorem thm_4_3_add {V : Type*} [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T₂ d c₁ c₂}
     (hf : IsUPPWith f T₁ d c₁) (hg : IsUPPWith g T₂ d c₂) :
     IsUPPWith (fun t => f t + g t) (max T₁ T₂) d (c₁ + c₂) := hf.add hg
@@ -64,13 +64,16 @@ is the *larger* slope (past the crossover the faster function is the max). The l
 alias lemma_4_3_max := UppSeq.max_evalNat_add_lcm
 
 /-- **Lemma 4.4** (§4.3.2.2, p.76): `f ∗ g` is ultimately pseudo-periodic with period `d = lcm(d_f,d_g)`
-from rank `T_f + T_g + d`. The library's `DeepWiki.UppSeq.convNat_add_lcm_of_balanced` proves the
-pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` in the **balanced case** — equal asymptotic slopes
-`(d/d_f)c_f = (d/d_g)c_g` — matching the book's rank and increment (both bounds via the convolution
-minimizer `convNat_eq`). The non-balanced case (increment = the smaller slope) needs the dominant-slope
-crossover / general min-of-UPP and is deferred. The pointwise convolution is `DeepWiki.UppSeq.convNat`
+from rank `T_f + T_g + d`, increment `min((d/d_f)c_f, (d/d_g)c_g)` (the *smaller* asymptotic slope).
+The library's `DeepWiki.UppSeq.convNat_add_lcm` proves the **general** pseudo-period step
+`(f⊗g)(n+d) = (f⊗g)(n) + min(c_f',c_g')` for nondecreasing `f,g` of distinct slope — via the
+minimizer-region lemma `convNat_minimizer_periodic` (the minimizer of `(f⊗g)(n)` eventually lies in
+the slower operand's periodic région, so the `+d` shift pushes into it). The `≥` half is
+`convNat_add_lcm_ge`, the `≤` half `convNat_add_lcm_le`. The balanced case (equal slopes, no
+monotonicity needed) is `convNat_add_lcm_of_balanced`; the no-transient case
+`convNat_add_lcm_of_noTransient`. The pointwise convolution is `DeepWiki.UppSeq.convNat`
 (`convNat_le`/`convNat_eq`); the `minplus` CLI's `conv` samples it. -/
-alias lemma_4_4 := UppSeq.convNat_add_lcm_of_balanced
+alias lemma_4_4 := UppSeq.convNat_add_lcm
 
 /-! **Lemma 4.5** (§4.3.2.2, p.77): If f,g are ultimately pseudo-periodic, then the deconvolution f ⊘ g is ultimately pseudo-periodic from T_f with period d_f and increment c_f. Not formalized in the library. -/
 
