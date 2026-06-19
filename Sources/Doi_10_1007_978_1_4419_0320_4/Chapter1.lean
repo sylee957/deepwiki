@@ -7,6 +7,7 @@ import DeepWiki.TimeSeries.StationaryGaussianProcess
 import DeepWiki.TimeSeries.FiniteDimensionalDistributions
 import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.MultivariateNormal
+import DeepWiki.TimeSeries.KolmogorovApplications
 import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import Mathlib.Probability.BrownianMotion.Basic
@@ -237,6 +238,16 @@ independent increments, and `B(t) − B(s) ~ N(0, t − s)` for `t ≥ s` — it
 from Kolmogorov's theorem (Thm 1.2.1). Mathlib's `ProbabilityTheory.IsBrownianReal` (the
 conditions, sans continuity, are `IsPreBrownianReal`). -/
 abbrev def_1_7_1 := @ProbabilityTheory.IsBrownianReal
+
+/-- **Definition 1.7.2** (§1.7, p.38), Brownian motion with drift: `Y(t) = x + μt + σB(t)`
+for a standard Brownian motion `B` (drift `μ`, scale `σ`, initial level `x`). The library's
+`brownianWithDrift`. -/
+noncomputable abbrev def_1_7_2 := @DeepWiki.TimeSeries.brownianWithDrift
+
+/-- **Definition 1.7.3** (§1.7, p.38), the Poisson process with mean rate `λ`: `N(0) = 0`,
+independent increments, and `N(t) − N(s) ~ Poisson(λ(t − s))` for `t ≥ s` — its existence
+again follows from Kolmogorov's theorem. The library's `IsPoissonProcess`. -/
+abbrev def_1_7_3 := @DeepWiki.TimeSeries.IsPoissonProcess
 
 /-! ## §1.4 The Estimation and Elimination of Trend and Seasonal Components -/
 
