@@ -44,6 +44,7 @@ def usage : String := String.intercalate "\n"
     "    seq  <vals> <period> <incr> <k>                 print f(0..k-1)",
     "    add  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f+g)(0..k-1)   [proved: evalNat_add]",
     "    min  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊓g)(0..k-1)   [pointwise; UPP by min_evalNat_add_lcm]",
+    "    max  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊔g)(0..k-1)   [pointwise; UPP by max_evalNat_add_lcm]",
     "    conv <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊗g)(0..k-1)   [⨅ k≤n f(k)+g(n-k); proved: convNat_le/_eq]" ]
 
 def main (args : List String) : IO Unit := do
@@ -63,6 +64,11 @@ def main (args : List String) : IO Unit := do
       let u2 ← reqUpp v2 p2 c2
       -- the pointwise minimum, correct by definition (and UPP by min_evalNat_add_lcm)
       IO.println (fmt ((List.range (← reqNat k)).map (fun n => Min.min (u1.evalNat n) (u2.evalNat n))))
+  | ["max", v1, p1, c1, v2, p2, c2, k] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      -- the pointwise maximum, correct by definition (and UPP by max_evalNat_add_lcm)
+      IO.println (fmt ((List.range (← reqNat k)).map (fun n => Max.max (u1.evalNat n) (u2.evalNat n))))
   | ["conv", v1, p1, c1, v2, p2, c2, k] =>
       let u1 ← reqUpp v1 p1 c1
       let u2 ← reqUpp v2 p2 c2
