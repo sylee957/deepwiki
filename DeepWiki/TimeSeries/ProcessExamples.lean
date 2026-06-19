@@ -71,8 +71,7 @@ does — `ℙ(Xₜ = 1) = 1/2`, `ℙ(Xₜ = -1) = 1/2` — read off the Bernoull
 theorem exists_iidBinaryProcess_marginal :
     ∃ (Ω : Type) (_ : MeasureSpace Ω), IsProbabilityMeasure (ℙ : Measure Ω) ∧
       ∃ X : ℤ → Ω → ℝ, (∀ t, Measurable (X t)) ∧ iIndepFun X ℙ ∧
-        (∀ t, (ℙ : Measure Ω).real {ω | X t ω = 1} = 1 / 2) ∧
-        (∀ t, (ℙ : Measure Ω).real {ω | X t ω = -1} = 1 / 2) := by
+        (∀ t, (ℙ).real {ω | X t ω = 1} = 1 / 2) ∧ (∀ t, (ℙ).real {ω | X t ω = -1} = 1 / 2) := by
   classical
   obtain ⟨Ω, instΩ, hprob, X, hmeas, hlaw, hindep⟩ := exists_iidBinaryProcess
   letI := instΩ
