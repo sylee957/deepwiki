@@ -217,6 +217,34 @@ theorem evalNat_le_of_window_le [AddCommMonoid V] [LinearOrder V] [IsOrderedAddM
   rw [hrn, hsn]
   exact add_le_add (hwin rem hremlt) (by gcongr)
 
+/-- **Shifted window-descent** — the faithfulness core of the delay bound. If `r(t) ≤ s(t+d)` holds on
+one full period-window `[N₀, N₀+L)` past the periodic threshold (`L = lcm`), it holds for *all* `t ≥
+N₀`: the gap `r(t) − s(t+d)` is non-increasing per period when `slope_r ≤ slope_s`. So whether a shift
+`d` makes `s(·+d)` dominate `r` — the predicate the delay bound searches — is decided by a finite
+window. -/
+theorem evalNat_le_shift_of_window [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (r s : UppSeq V) (d : ℕ) {N₀ : ℕ}
+    (hR : max (r.vals.length - r.period) (s.vals.length - s.period) ≤ N₀)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            ≤ (Nat.lcm r.period s.period / s.period) • s.incr)
+    (hwin : ∀ rem, rem < Nat.lcm r.period s.period →
+      r.evalNat (N₀ + rem) ≤ s.evalNat (N₀ + rem + d))
+    (n : ℕ) (hn : N₀ ≤ n) : r.evalNat n ≤ s.evalNat (n + d) := by
+  set L := Nat.lcm r.period s.period with hL
+  have hL0 : 0 < L := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  set rem := (n - N₀) % L with hrem
+  set q := (n - N₀) / L with hq
+  have hremlt : rem < L := Nat.mod_lt _ hL0
+  have hsplit : L * q + rem = n - N₀ := Nat.div_add_mod (n - N₀) L
+  have hdecomp : n = (N₀ + rem) + q * L := by rw [mul_comm q L]; omega
+  have hrn : r.evalNat n = r.evalNat (N₀ + rem) + q • ((L / r.period) • r.incr) := by
+    rw [hdecomp]; exact r.evalNat_add_mul_of_dvd (hL ▸ Nat.dvd_lcm_left r.period s.period) q (by omega)
+  have hsn : s.evalNat (n + d) = s.evalNat (N₀ + rem + d) + q • ((L / s.period) • s.incr) := by
+    rw [show n + d = (N₀ + rem + d) + q * L from by rw [mul_comm q L]; omega]
+    exact s.evalNat_add_mul_of_dvd (hL ▸ Nat.dvd_lcm_right r.period s.period) q (by omega)
+  rw [hrn, hsn]
+  exact add_le_add (hwin rem hremlt) (by gcongr)
+
 /-- **Lemma 4.3, minimum — general case** (the pointwise minimum of two UPP sequences is ultimately
 pseudo-periodic). From some rank, `min(f,g)(n+d) = min(f,g)(n) + min(c_f', c_g')` with `d = lcm` and
 `c_f' = (d/d_f)·c_f` (the per-`d` increments) — the increment is the smaller slope. Covers all three
