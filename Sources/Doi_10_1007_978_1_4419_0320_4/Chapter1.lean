@@ -230,6 +230,24 @@ theorem ex_1_2 {a : ℤ → ℝ} {s : Finset ℤ} {k : ℕ}
       = ∑ r ∈ Finset.range (k + 1), c r * t ^ r :=
   filter_passes_poly h0 hm c t
 
+/-- **Problem 1.7(b)** (p.40): `Xₜ = a + b·Z` (a single random variable, the same for all
+`t`) is weakly stationary, with autocovariance `b²·Var(Z)` at every lag — for `Z ~ N(0,σ²)`
+this is mean `a` and autocovariance `b²σ²`. The library's `constProcess`,
+`constProcess_isWeaklyStationary`, `constProcess_acvfStat`. -/
+theorem ex_1_7_b [IsProbabilityMeasure μ] {a b : ℝ} {Z : Ω → ℝ} (hZ : MemLp Z 2 μ) :
+    IsWeaklyStationary (constProcess a b Z) μ ∧
+      ∀ h : ℤ, acvfStat (constProcess a b Z) μ h = b ^ 2 * cov[Z, Z; μ] :=
+  ⟨constProcess_isWeaklyStationary hZ, fun h => constProcess_acvfStat hZ h⟩
+
+/-- **Problem 1.7(c)** (p.40): `Xₜ = Z₁ cos(ct) + Z₂ sin(ct)` (with `Z₁, Z₂` uncorrelated,
+mean `0`, common variance `σ²`) is stationary with `γ(h) = σ² cos(ch)`. It is the cosine
+process of Example 1.3.1 — the library's `cosProcess`, `cosProcess_acvf`. -/
+theorem ex_1_7_c [IsFiniteMeasure μ] {Z₁ Z₂ : Ω → ℝ} {c σ2 : ℝ}
+    (h1 : MemLp Z₁ 2 μ) (h2 : MemLp Z₂ 2 μ) (hv1 : cov[Z₁, Z₁; μ] = σ2)
+    (hv2 : cov[Z₂, Z₂; μ] = σ2) (h12 : cov[Z₁, Z₂; μ] = 0) (r s : ℤ) :
+    acvf (cosProcess Z₁ Z₂ c) μ r s = σ2 * Real.cos (c * ((r : ℝ) - (s : ℝ))) :=
+  cosProcess_acvf h1 h2 hv1 hv2 h12 r s
+
 /-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
 period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
 (Hence for `Yₜ = a + b·t + sₜ + Xₜ`, `∇∇_d Yₜ = ∇∇_d Xₜ`.) Discharged by the

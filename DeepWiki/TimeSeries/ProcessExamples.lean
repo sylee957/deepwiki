@@ -199,4 +199,34 @@ theorem parityShift_not_stationary [IsProbabilityMeasure μ]
       if_neg (by decide : ¬ Odd (0 : ℤ)), if_pos (by decide : Odd (1 : ℤ)), hZmean] at h
   linarith
 
+/-! ## Problem 1.7(b): the constant process -/
+
+/-- **Problem 1.7(b)**: the (degenerate) constant process `Xₜ = a + b·Z`, the same
+random variable for every `t`. -/
+noncomputable def constProcess (a b : ℝ) (Z : Ω → ℝ) : ℤ → Ω → ℝ := fun _ ω => a + b * Z ω
+
+/-- The autocovariance of `Xₜ = a + b·Z` is `b²·Var(Z)` at every pair of times. -/
+theorem constProcess_acvf [IsProbabilityMeasure μ] {a b : ℝ} {Z : Ω → ℝ}
+    (hZ : MemLp Z 2 μ) (r s : ℤ) :
+    acvf (constProcess a b Z) μ r s = b ^ 2 * cov[Z, Z; μ] := by
+  have hint : Integrable (fun ω => b * Z ω) μ := (hZ.integrable (by norm_num)).const_mul b
+  show cov[fun ω => a + b * Z ω, fun ω => a + b * Z ω; μ] = b ^ 2 * cov[Z, Z; μ]
+  rw [covariance_const_add_left hint, covariance_const_add_right hint,
+      covariance_const_mul_left, covariance_const_mul_right]
+  ring
+
+/-- **Problem 1.7(b)**: the constant process `Xₜ = a + b·Z` is (weakly) stationary — its
+mean and autocovariance are trivially shift-invariant since `Xₜ` does not depend on `t`. -/
+theorem constProcess_isWeaklyStationary [IsFiniteMeasure μ] {a b : ℝ} {Z : Ω → ℝ}
+    (hZ : MemLp Z 2 μ) : IsWeaklyStationary (constProcess a b Z) μ where
+  memLp _ := (memLp_const a).add (hZ.const_mul b)
+  mean_const _ _ := rfl
+  acvf_shift _ _ _ := rfl
+
+/-- The lag-only autocovariance of the constant process is `b²·Var(Z)` at every lag. -/
+theorem constProcess_acvfStat [IsProbabilityMeasure μ] {a b : ℝ} {Z : Ω → ℝ}
+    (hZ : MemLp Z 2 μ) (h : ℤ) :
+    acvfStat (constProcess a b Z) μ h = b ^ 2 * cov[Z, Z; μ] := by
+  rw [acvfStat_apply]; exact constProcess_acvf hZ h 0
+
 end DeepWiki.TimeSeries
