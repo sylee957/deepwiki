@@ -3,6 +3,7 @@ import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Data.Matrix.Mul
 import Mathlib.Probability.BrownianMotion.GaussianProjectiveFamily
 import Mathlib.Probability.Distributions.Gaussian.IsGaussianProcess.Def
+import Mathlib.Probability.Distributions.Gaussian.IsGaussianProcess.Basic
 import DeepWiki.MeasureTheory.KolmogorovExtension
 import Mathlib.Tactic
 
@@ -108,6 +109,27 @@ lemma covariance_eval_gaussianProjectiveFamily (heven : ∀ h : ℤ, κ (-h) = �
     covariance_eval_multivariateGaussian (posSemidef_acvfCovMatrix heven hnd I),
     acvfCovMatrix_apply]
 
+/-- Integration against `gaussianProjectiveFamily κ I` reduces to the multivariate
+Gaussian via the `ofLp` equivalence. -/
+lemma integral_gaussianProjectiveFamily {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (I : Finset ℤ) (f : (I → ℝ) → E) :
+    ∫ x, f x ∂(gaussianProjectiveFamily κ I)
+      = ∫ x, f (ofLp x) ∂(multivariateGaussian 0 (acvfCovMatrix κ I)) := by
+  simp [gaussianProjectiveFamily, integral_map_equiv]
+
+/-- `gaussianProjectiveFamily κ I` is centered: `∫ x = 0`. -/
+@[simp] lemma integral_id_gaussianProjectiveFamily (I : Finset ℤ) :
+    ∫ x, x ∂(gaussianProjectiveFamily κ I) = 0 := by
+  rw [integral_gaussianProjectiveFamily, ← PiLp.coe_continuousLinearEquiv 2 ℝ,
+    ContinuousLinearEquiv.integral_comp_id_comm, integral_id_multivariateGaussian, map_zero]
+
+/-- Each coordinate has mean zero under `gaussianProjectiveFamily κ I`. -/
+@[simp] lemma integral_eval_gaussianProjectiveFamily (I : Finset ℤ) (i : I) :
+    ∫ x, x i ∂(gaussianProjectiveFamily κ I) = 0 := by
+  conv => enter [1, 2]; change fun x => ContinuousLinearMap.proj (R := ℝ) i x
+  rw [ContinuousLinearMap.integral_comp_id_comm, integral_id_gaussianProjectiveFamily, map_zero]
+  exact IsGaussian.integrable_id
+
 /-! ## The stationary Gaussian process measure (Kolmogorov extension) -/
 
 /-- The law on `ℤ → ℝ` of a process whose finite-dimensional distributions are the
@@ -153,5 +175,55 @@ lemma isGaussianProcess_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) 
   rw [show (stationaryGaussianMeasure heven hnd).map (fun ω => I.restrict (fun t => ω t))
         = gaussianProjectiveFamily κ I from isProjectiveLimit_stationaryGaussianMeasure heven hnd I]
   infer_instance
+
+/-- The coordinate process under `stationaryGaussianMeasure` has mean zero. -/
+lemma integral_eval_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) (t : ℤ) :
+    ∫ ω, ω t ∂(stationaryGaussianMeasure heven hnd) = 0 := by
+  have ht : t ∈ ({t} : Finset ℤ) := Finset.mem_singleton_self t
+  have hpl := isProjectiveLimit_stationaryGaussianMeasure heven hnd ({t} : Finset ℤ)
+  rw [show (∫ ω, ω t ∂(stationaryGaussianMeasure heven hnd))
+        = ∫ x, x ⟨t, ht⟩ ∂(gaussianProjectiveFamily κ {t}) from ?_]
+  · exact integral_eval_gaussianProjectiveFamily (κ := κ) {t} ⟨t, ht⟩
+  · rw [← hpl]
+    exact (integral_map
+      (Finset.measurable_restrict (X := fun _ : ℤ => ℝ) ({t} : Finset ℤ)).aemeasurable
+      (measurable_pi_apply (⟨t, ht⟩ : ({t} : Finset ℤ))).aestronglyMeasurable).symm
+
+/-- **Theorem 1.5.2 converse (witness)**: the coordinate process `t ↦ ω t` under
+`stationaryGaussianMeasure` is weakly stationary (when `κ` is even and non-negative
+definite). -/
+lemma isWeaklyStationary_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) :
+    IsWeaklyStationary (fun (t : ℤ) (ω : ℤ → ℝ) => ω t) (stationaryGaussianMeasure heven hnd) where
+  memLp t := ((isGaussianProcess_stationaryGaussianMeasure heven hnd).hasGaussianLaw_eval t).memLp_two
+  mean_const s t := by
+    simp only [mean]
+    rw [integral_eval_stationaryGaussianMeasure heven hnd s,
+      integral_eval_stationaryGaussianMeasure heven hnd t]
+  acvf_shift r s h := by
+    rw [covariance_coordinate_stationaryGaussianMeasure heven hnd r s,
+      covariance_coordinate_stationaryGaussianMeasure heven hnd (r + h) (s + h)]
+    congr 1
+    ring
+
+/-- **Theorem 1.5.2 converse**: the autocovariance of the witness process is `κ`. -/
+lemma acvfStat_stationaryGaussianMeasure (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) (h : ℤ) :
+    acvfStat (fun (t : ℤ) (ω : ℤ → ℝ) => ω t) (stationaryGaussianMeasure heven hnd) h = κ h := by
+  rw [acvfStat_apply, covariance_coordinate_stationaryGaussianMeasure]
+  congr 1
+  ring
+
+/-- **Theorem 1.5.2 (converse)**: every even, non-negative-definite function
+`κ : ℤ → ℝ` is the autocovariance function of a (Gaussian) weakly stationary
+process — namely the coordinate process under `stationaryGaussianMeasure`. -/
+theorem exists_isWeaklyStationary_acvfStat_eq (heven : ∀ h : ℤ, κ (-h) = κ h)
+    (hnd : IsNonnegDefinite κ) :
+    ∃ (Ω : Type) (_ : MeasurableSpace Ω) (μ : Measure Ω) (X : ℤ → Ω → ℝ),
+      IsWeaklyStationary X μ ∧ ∀ h, acvfStat X μ h = κ h :=
+  ⟨ℤ → ℝ, inferInstance, stationaryGaussianMeasure heven hnd, fun t ω => ω t,
+    isWeaklyStationary_stationaryGaussianMeasure heven hnd,
+    acvfStat_stationaryGaussianMeasure heven hnd⟩
 
 end DeepWiki.TimeSeries
