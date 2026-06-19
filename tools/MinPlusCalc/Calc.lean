@@ -47,6 +47,19 @@ def findCrossover (r s : UppSeq Int) (threshold fuel : Nat) : Nat :=
   | 0 => threshold
   | fuel + 1 => if windowOk r s threshold then threshold else findCrossover r s (threshold + 1) fuel
 
+/-- Plain crossover window check: does `r ≤ s` hold across one full period `[N₀, N₀+d)`? This is the
+`min`/`max` crossover (`min_evalNat_add_lcm_window`'s `hwin`) — distinct from the *offset* `windowOk`
+that the convolution's minimizer-region needs. -/
+def windowLeOk (r s : UppSeq Int) (N₀ : Nat) : Bool :=
+  (List.range (Nat.lcm r.period s.period)).all (fun rem =>
+    decide (r.evalNat (N₀ + rem) ≤ s.evalNat (N₀ + rem)))
+
+/-- Smallest rank `N₀ ≥ threshold` (within `fuel`) where `r ≤ s` holds on a full period. -/
+def findCrossoverLe (r s : UppSeq Int) (threshold fuel : Nat) : Nat :=
+  match fuel with
+  | 0 => threshold
+  | fuel + 1 => if windowLeOk r s threshold then threshold else findCrossoverLe r s (threshold + 1) fuel
+
 /-- Assemble the (min,plus) **convolution** `r ⊗ s` as a `UppSeq` (the composable closed form,
 Lemma 4.4): orient so the smaller-slope operand leads, find a crossover rank, and build `convFrom`
 at the stabilization rank `max (max N₀ rank + rank) (rank_r+rank_s+d)`. The result is a finite UPP
@@ -65,6 +78,31 @@ def convUpp (r s : UppSeq Int) : UppSeq Int :=
   else
     let N₀ := findCrossover s r (max tr ts) 1000
     s.convFrom r (max (max N₀ ts + ts) (ts + tr + d))
+
+/-- Stabilization rank for `min`/`max` of two UPP sequences: balanced (equal slopes) stabilizes at
+`max(rank_r,rank_s)`; otherwise at the crossover `N₀` where the slower operand becomes the min
+(`min_evalNat_add_lcm_window`). -/
+def stableRank (r s : UppSeq Int) : Nat :=
+  let tr := r.vals.length - r.period
+  let ts := s.vals.length - s.period
+  if slope r s = slope s r then max tr ts
+  else if slope r s ≤ slope s r then findCrossoverLe r s (max tr ts) 1000
+  else findCrossoverLe s r (max tr ts) 1000
+
+/-- The pointwise **minimum** `f ⊓ g` as a `UppSeq` (Lemma 4.3): prefix sampled, period `d = lcm`,
+increment the smaller slope `min(cr,cs)`. Correct by `fromSamples`/`evalNat_fromSamples` with
+`min_evalNat_add_lcm_window`. -/
+def minUpp (r s : UppSeq Int) : UppSeq Int :=
+  UppSeq.fromSamples (fun n => Min.min (r.evalNat n) (s.evalNat n))
+    (Min.min (slope r s) (slope s r)) (Nat.lcm r.period s.period)
+    (Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')) (stableRank r s)
+
+/-- The pointwise **maximum** `f ⊔ g` as a `UppSeq` (Lemma 4.3): increment the larger slope
+`max(cr,cs)`. Correct by `fromSamples`/`evalNat_fromSamples` with `max_evalNat_add_lcm_window`. -/
+def maxUpp (r s : UppSeq Int) : UppSeq Int :=
+  UppSeq.fromSamples (fun n => Max.max (r.evalNat n) (s.evalNat n))
+    (Max.max (slope r s) (slope s r)) (Nat.lcm r.period s.period)
+    (Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')) (stableRank r s)
 
 /-- Render a `UppSeq ℤ` as its UPP quadruplet: `v0,v1,… period=d incr=c`. -/
 def renderUpp (u : UppSeq Int) : String :=

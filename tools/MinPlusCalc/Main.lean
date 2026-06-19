@@ -46,7 +46,10 @@ def usage : String := String.intercalate "\n"
     "    min  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊓g)(0..k-1)   [pointwise; UPP by min_evalNat_add_lcm]",
     "    max  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊔g)(0..k-1)   [pointwise; UPP by max_evalNat_add_lcm]",
     "    conv <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊗g)(0..k-1)   [⨅ k≤n f(k)+g(n-k); proved: convNat_le/_eq]",
-    "    convupp <v1> <p1> <c1> <v2> <p2> <c2>           print f⊗g AS A UPP SEQUENCE  [composable; convFrom/evalNat_convFrom]" ]
+    "    convupp <v1> <p1> <c1> <v2> <p2> <c2>           print f⊗g AS A UPP SEQUENCE  [composable; convFrom/evalNat_convFrom]",
+    "    addupp <v1> <p1> <c1> <v2> <p2> <c2>            print f+g AS A UPP SEQUENCE  [UppSeq.add / evalNat_add]",
+    "    minupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊓g AS A UPP SEQUENCE  [minUpp; min_evalNat_add_lcm_window]",
+    "    maxupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊔g AS A UPP SEQUENCE  [maxUpp; max_evalNat_add_lcm_window]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -79,4 +82,16 @@ def main (args : List String) : IO Unit := do
       let u2 ← reqUpp v2 p2 c2
       -- the convolution as an actual UPP sequence (prefix, period, increment) — composable
       IO.println (renderUpp (convUpp u1 u2))
+  | ["addupp", v1, p1, c1, v2, p2, c2] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      IO.println (renderUpp (u1.add u2))
+  | ["minupp", v1, p1, c1, v2, p2, c2] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      IO.println (renderUpp (minUpp u1 u2))
+  | ["maxupp", v1, p1, c1, v2, p2, c2] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      IO.println (renderUpp (maxUpp u1 u2))
   | _ => IO.println usage

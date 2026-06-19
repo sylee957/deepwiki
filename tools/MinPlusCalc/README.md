@@ -24,6 +24,9 @@ lake exe minplus            # usage
 | `minplus max  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊔g)(0..k−1)` — pointwise max; the result is UPP (`max_evalNat_add_lcm`) |
 | `minplus conv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊗g)(0..k−1)` — the (min,plus) convolution `⨅_{k≤n} f(k)+g(n−k)` (`convNat_le`/`convNat_eq`) |
 | `minplus convupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊗g` **as a UPP sequence** `vals period=d incr=c` — the composable closed form, Lemma 4.4 (`convUpp` via `convFrom`/`evalNat_convFrom`) |
+| `minplus addupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f+g` **as a UPP sequence** (`UppSeq.add` / `evalNat_add`) |
+| `minplus minupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊓g` **as a UPP sequence** (`minUpp`; `min_evalNat_add_lcm_window`) |
+| `minplus maxupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊔g` **as a UPP sequence** (`maxUpp`; `max_evalNat_add_lcm_window`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -36,13 +39,17 @@ themselves ultimately pseudo-periodic*: `min`/`max` by `min_evalNat_add_lcm`/`ma
 (Lemma 4.3, all slope cases, via the Archimedean crossover `evalNat_eventually_le`); `add` by
 `IsUPPWith.add`; convolution by the general closed form `convNat_add_lcm` (Lemma 4.4, all slope cases).
 
-**`convupp` returns the convolution as an actual UPP sequence** — the *composable* form. It assembles
-`convFrom r s T`, whose `evalNat` provably reproduces `convNat` (`evalNat_convFrom`) once `T` is a
-genuine stabilization rank. For the balanced case `T = rank_r+rank_s+d` (the book's rank); for the
-strict-slope case `T` is read off a crossover `N₀` found by a finite window search (`findCrossover`)
-whose validity is exactly `evalNat_add_le_of_window_le` + `convNat_add_lcm_window`. So the printed
-quadruplet is the genuine UPP closed form of `f⊗g`, ready to feed into another operator.
-(Deconvolution and sub-additive closure are future work.)
+**The `*upp` commands return the result as an actual UPP sequence** — the *composable* form, so
+operators chain. Each assembles a `UppSeq` whose `evalNat` provably reproduces the pointwise
+operation once the prefix reaches a stabilization rank: `convupp` via `convFrom`/`evalNat_convFrom`
+(rank `rank_r+rank_s+d` balanced, else a minimizer-region crossover, `convNat_add_lcm_window`);
+`addupp` via `UppSeq.add` (always periodic past `max(rank_r,rank_s)`); `minupp`/`maxupp` via
+`fromSamples`/`evalNat_fromSamples` with `min`/`max_evalNat_add_lcm_window` (past the crossover the
+slower operand *is* the min, the faster *is* the max). The crossover rank for `min`/`max` is found by
+a finite plain-`≤` window search (`findCrossoverLe`), valid by `evalNat_le_of_window_le`; the
+convolution uses the *offset* search (`findCrossover`). So each printed quadruplet is the genuine UPP
+closed form, ready to feed into another operator. (Deconvolution and sub-additive closure are future
+work.)
 
 ## Example
 
@@ -55,4 +62,7 @@ minplus min 0,2 1 2 3,4 1 1 8     # 0, 2, 4, 6, 7, 8, 9, 10   (2n ⊓ (n+3), dif
 minplus conv 0 1 1 2 1 1 6        # 2, 3, 4, 5, 6, 7   (rate-1 latencies add)
 minplus convupp 0 1 1 0 1 2       # 0, 1  period=1  incr=1   (n ⊗ 2n = n, as a UPP sequence)
 minplus convupp 0,1,2 2 3 0,1,2 2 3  # 0, 1, 2, 3, 4, 6  period=2  incr=3   (demoSeq ⊗ demoSeq)
+minplus minupp 0,2 1 2 3,4 1 1    # 0, 2, 4, 6  period=1  incr=1   (2n ⊓ (n+3) → n+3 past crossover)
+minplus maxupp 0,2 1 2 3,4 1 1    # 3, 4, 5, 6  period=1  incr=2   (2n ⊔ (n+3) → 2n past crossover)
+minplus addupp 0 1 1 0 1 2        # 0, 3  period=1  incr=3   (n + 2n = 3n)
 ```
