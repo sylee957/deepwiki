@@ -28,6 +28,7 @@ lake exe minplus            # usage
 | `minplus minupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊓g` **as a UPP sequence** (`minUpp`; `min_evalNat_add_lcm_window`) |
 | `minplus maxupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊔g` **as a UPP sequence** (`maxUpp`; `max_evalNat_add_lcm_window`) |
 | `minplus deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊘g)(0..k−1)` — the deconvolution `⨆_{k≥0} f(n+k)−g(k)`; finite (and computed) only when `slope_f ≤ slope_g`, else refused (`deconvNat`/`deconvNat_isGreatest`) |
+| `minplus deconvupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊘g` **as a UPP sequence** — period `d_f`, increment `c_f` (`deconvUpp`; `deconvNat_add_period`, Lemma 4.5); needs `slope_f ≤ slope_g` |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -54,8 +55,9 @@ closed form, ready to feed into another operator.
 **`deconv` is the genuine deconvolution**, not just a window max: `deconvNat` is proved to be the
 *greatest* of all terms `f(n+k)−g(k)` over every `k ≥ 0` (`deconvNat_isGreatest`), because past the
 search window the terms are non-increasing per period (`deconvNat_ge`). It is finite only when
-`slope_f ≤ slope_g`; the CLI refuses otherwise (the deconvolution is `+∞`). Returning the
-deconvolution as a UPP sequence (its UPP-ness, Lemma 4.5) and sub-additive closure are future work.
+`slope_f ≤ slope_g`; the CLI refuses otherwise (the deconvolution is `+∞`). `deconvupp` returns it as
+a UPP sequence (period `d_f`, increment `c_f` — its UPP-ness is `deconvNat_add_period`, Lemma 4.5), so
+deconvolution composes too. Sub-additive closure (Lemma 4.7–4.9) is future work.
 
 ## Example
 
@@ -72,4 +74,5 @@ minplus minupp 0,2 1 2 3,4 1 1    # 0, 2, 4, 6  period=1  incr=1   (2n ⊓ (n+3)
 minplus maxupp 0,2 1 2 3,4 1 1    # 3, 4, 5, 6  period=1  incr=2   (2n ⊔ (n+3) → 2n past crossover)
 minplus addupp 0 1 1 0 1 2        # 0, 3  period=1  incr=3   (n + 2n = 3n)
 minplus deconv 0 1 1 0 1 2 6      # 0, 1, 2, 3, 4, 5   (n ⊘ 2n = n; slope 1 ≤ 2, finite)
+minplus deconvupp 5,6 1 1 0 1 2   # 5, 6  period=1  incr=1   ((n+5) ⊘ 2n = n+5, as a UPP sequence)
 ```

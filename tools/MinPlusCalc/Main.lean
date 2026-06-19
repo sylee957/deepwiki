@@ -50,7 +50,8 @@ def usage : String := String.intercalate "\n"
     "    addupp <v1> <p1> <c1> <v2> <p2> <c2>            print f+g AS A UPP SEQUENCE  [UppSeq.add / evalNat_add]",
     "    minupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊓g AS A UPP SEQUENCE  [minUpp; min_evalNat_add_lcm_window]",
     "    maxupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊔g AS A UPP SEQUENCE  [maxUpp; max_evalNat_add_lcm_window]",
-    "    deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>        print (f⊘g)(0..k-1)   [⨆_k f(n+k)-g(k); needs slope f ≤ slope g; deconvNat_isGreatest]" ]
+    "    deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>        print (f⊘g)(0..k-1)   [⨆_k f(n+k)-g(k); needs slope f ≤ slope g; deconvNat_isGreatest]",
+    "    deconvupp <v1> <p1> <c1> <v2> <p2> <c2>         print f⊘g AS A UPP SEQUENCE  [deconvUpp; deconvNat_add_period; needs slope f ≤ slope g]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -103,4 +104,11 @@ def main (args : List String) : IO Unit := do
         IO.println (fmt ((List.range (← reqNat k)).map (fun n => u1.deconvNat u2 n)))
       else
         throw (IO.userError "deconv f ⊘ g requires slope(f) ≤ slope(g) (else the deconvolution is +∞)")
+  | ["deconvupp", v1, p1, c1, v2, p2, c2] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      if slope u1 u2 ≤ slope u2 u1 then
+        IO.println (renderUpp (deconvUpp u1 u2))
+      else
+        throw (IO.userError "deconvupp f ⊘ g requires slope(f) ≤ slope(g) (else the deconvolution is +∞)")
   | _ => IO.println usage

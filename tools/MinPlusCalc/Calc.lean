@@ -104,6 +104,12 @@ def maxUpp (r s : UppSeq Int) : UppSeq Int :=
     (Max.max (slope r s) (slope s r)) (Nat.lcm r.period s.period)
     (Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')) (stableRank r s)
 
+/-- The **deconvolution** `f ⊘ g` as a `UppSeq` (Lemma 4.5): prefix sampled via `deconvNat`, period
+`d_f = f`'s period, increment `c_f = f`'s increment. Correct by `fromSamples`/`evalNat_fromSamples`
+with `deconvNat_add_period` (valid when `slope_f ≤ slope_g`, so the deconvolution is finite). -/
+def deconvUpp (r s : UppSeq Int) : UppSeq Int :=
+  UppSeq.fromSamples (fun n => r.deconvNat s n) r.incr r.period r.hperiod (r.vals.length - r.period)
+
 /-- Render a `UppSeq ℤ` as its UPP quadruplet: `v0,v1,… period=d incr=c`. -/
 def renderUpp (u : UppSeq Int) : String :=
   s!"{", ".intercalate (u.vals.map toString)}  period={u.period}  incr={u.incr}"
