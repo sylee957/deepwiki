@@ -45,7 +45,8 @@ def usage : String := String.intercalate "\n"
     "    add  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f+g)(0..k-1)   [proved: evalNat_add]",
     "    min  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊓g)(0..k-1)   [pointwise; UPP by min_evalNat_add_lcm]",
     "    max  <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊔g)(0..k-1)   [pointwise; UPP by max_evalNat_add_lcm]",
-    "    conv <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊗g)(0..k-1)   [⨅ k≤n f(k)+g(n-k); proved: convNat_le/_eq]" ]
+    "    conv <v1> <p1> <c1> <v2> <p2> <c2> <k>          print (f⊗g)(0..k-1)   [⨅ k≤n f(k)+g(n-k); proved: convNat_le/_eq]",
+    "    convupp <v1> <p1> <c1> <v2> <p2> <c2>           print f⊗g AS A UPP SEQUENCE  [composable; convFrom/evalNat_convFrom]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -73,4 +74,9 @@ def main (args : List String) : IO Unit := do
       let u1 ← reqUpp v1 p1 c1
       let u2 ← reqUpp v2 p2 c2
       IO.println (fmt ((List.range (← reqNat k)).map (fun n => u1.convNat u2 n)))
+  | ["convupp", v1, p1, c1, v2, p2, c2] =>
+      let u1 ← reqUpp v1 p1 c1
+      let u2 ← reqUpp v2 p2 c2
+      -- the convolution as an actual UPP sequence (prefix, period, increment) — composable
+      IO.println (renderUpp (convUpp u1 u2))
   | _ => IO.println usage
