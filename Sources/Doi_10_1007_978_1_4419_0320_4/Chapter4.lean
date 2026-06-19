@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.SpectralDistribution
+import DeepWiki.TimeSeries.SpectralDensity
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 4: The Spectral Representation of a Stationary Process
@@ -64,5 +65,24 @@ Mathlib — infra-blocked.
 The **spectral representation of the process itself**, `Xₜ = ∫ e^{itν} dZ(ν)` (eq 4.2.5, a
 stochastic integral against an orthogonal-increment process, developed in §4.7), needs `L²`
 stochastic-integration infrastructure absent in this Mathlib — infra-blocked. -/
+
+/-! ## §4.4 Spectral Densities and ARMA Processes (pp.122–123)
+
+**Theorem 4.4.1**: a time-invariant linear filter `ψ(B) = ∑ⱼ ψⱼ Bʲ` (`∑|ψⱼ| < ∞`) applied to a
+stationary process multiplies its spectral measure by the **power transfer function**
+`|ψ(e^{-iλ})|²`, i.e. `f_X(λ) = |∑ⱼ ψⱼ e^{-ijλ}|² f_Y(λ)` (eq 4.4.3). **Theorem 4.4.2**: an
+ARMA(p,q) process (no common zeroes, `φ(z) ≠ 0` on `|z| = 1`) has the **rational spectral
+density** `f(λ) = (σ²/2π) |θ(e^{-iλ})|² / |φ(e^{-iλ})|²` (eq 4.4.5).
+
+Both proofs run through the `MA(∞)` representation and the spectral representation of the
+process (infra-blocked). The spectral-density **formula** itself is the algebraic
+`armaSpectralDensity` below, with its non-negativity and the white-noise case (`φ = θ = 1`,
+constant `σ²/2π`) proved; **Example 4.4.1** (the MA(1) density `(σ²/2π)(1 + 2θcos λ + θ²)`) is a
+concrete `normSq (1 + θe^{-iλ})` computation, deferred. -/
+
+/-- **§4.4, Theorem 4.4.2 (eq 4.4.5)**: the rational spectral density of an ARMA(p,q) process,
+`f(λ) = (σ²/2π) · |θ(e^{-iλ})|² / |φ(e^{-iλ})|²`. The library's `armaSpectralDensity` (with
+`armaSpectralDensity_nonneg` and `armaSpectralDensity_one_one`, the white-noise constant). -/
+noncomputable abbrev thm_4_4_2 := @DeepWiki.TimeSeries.armaSpectralDensity
 
 end DeepWiki.Ts
