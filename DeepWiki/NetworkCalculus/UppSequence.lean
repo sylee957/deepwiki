@@ -51,6 +51,19 @@ theorem evalNat_add_period [Add V] (r : UppSeq V) {n : ℕ}
   conv_lhs => rw [evalNat.eq_def]
   rw [dif_neg hge, Nat.add_sub_cancel]
 
+/-- Iterated pseudo-period: `f(n + k·period) = f(n) + k·incr` past the rank — `period` scaled by any
+`k`, the discrete analogue of `IsUPPWith.iterate`. Lets sequences with commensurable periods be put
+on a common period (their `lcm`). -/
+theorem evalNat_add_mul_period [AddMonoid V] (r : UppSeq V) (k : ℕ) {n : ℕ}
+    (hn : r.vals.length - r.period ≤ n) :
+    r.evalNat (n + k * r.period) = r.evalNat n + k • r.incr := by
+  induction k with
+  | zero => simp
+  | succ j ih =>
+    have hjn : r.vals.length - r.period ≤ n + j * r.period := le_trans hn (Nat.le_add_right _ _)
+    have e : n + (j + 1) * r.period = (n + j * r.period) + r.period := by ring
+    rw [e, r.evalNat_add_period hjn, ih, succ_nsmul, add_assoc]
+
 /-- The denoted sequence is unchanged on the stored transient/period prefix: `f(n) = vals[n]`. -/
 theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) :
     r.evalNat n = r.vals.get ⟨n, hn⟩ := by
@@ -90,6 +103,24 @@ example : demoSeq.evalNat 3 = 4 := by native_decide  -- f(1) + 3
 example : demoSeq.evalNat 4 = 5 := by native_decide  -- f(2) + 3
 example : demoSeq.evalNat 5 = 7 := by native_decide  -- f(3) + 3
 example : demoSeq.evalNat 7 = 10 := by native_decide -- f(5) + 3
+
+/-! ## Executable pointwise addition (Lemma 4.2) -/
+
+/-- **Executable pointwise sum** (Lemma 4.2): common period `lcm(d_f, d_g)`, prefix recomputed via
+`evalNat` over a long-enough range, increment `(D/d_f)·c_f + (D/d_g)·c_g`. Native-compilable; its
+correctness `evalNat (add r s) = evalNat r + evalNat s` is the next step. -/
+def add [AddMonoid V] (r s : UppSeq V) : UppSeq V where
+  vals := (List.range (max r.vals.length s.vals.length + Nat.lcm r.period s.period)).map
+    (fun n => r.evalNat n + s.evalNat n)
+  incr := (Nat.lcm r.period s.period / r.period) • r.incr
+        + (Nat.lcm r.period s.period / s.period) • s.incr
+  period := Nat.lcm r.period s.period
+  hperiod := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  hlen := by rw [List.length_map, List.length_range]; exact Nat.le_add_left _ _
+
+/-- Sanity check (gate-verified): `add` computes the pointwise sum across the period boundary. -/
+example : ∀ n ∈ Finset.range 12,
+    (demoSeq.add demoSeq).evalNat n = demoSeq.evalNat n + demoSeq.evalNat n := by native_decide
 
 end UppSeq
 end DeepWiki
