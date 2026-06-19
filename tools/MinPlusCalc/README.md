@@ -21,6 +21,7 @@ lake exe minplus            # usage
 | `minplus seq  <vals> <period> <incr> <k>` | `f(0), …, f(k−1)` |
 | `minplus add  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f+g)(0..k−1)` — **proved correct** (`evalNat_add`) |
 | `minplus min  <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊓g)(0..k−1)` — proved correct in the **balanced** case |
+| `minplus conv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊗g)(0..k−1)` — the (min,plus) convolution `⨅_{k≤n} f(k)+g(n−k)` (`convNat_le`/`convNat_eq`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 

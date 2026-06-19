@@ -212,5 +212,32 @@ theorem evalNat_min [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V] (r 
 example : ∀ n ∈ Finset.range 12,
     (demoSeq.min demoSeq).evalNat n = demoSeq.evalNat n := by native_decide
 
+/-! ## Pointwise (min,plus) convolution -/
+
+/-- The discrete **(min,plus) convolution** at `n`: `(f ⊗ g)(n) = ⨅_{k ≤ n} f(k) + g(n-k)`, the
+`Finset.inf'` over `k ∈ {0,…,n}`. Native-compilable; this is the convolution *by definition*
+(`convNat_le` + `convNat_eq` certify it is exactly the minimum). The UPP closed form — that the
+result is again a `UppSeq`, Lemma 4.4 — is future work. -/
+def convNat [Add V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) : V :=
+  (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+    (fun k => r.evalNat k + s.evalNat (n - k))
+
+/-- `convNat` lower-bounds every convolution term `f(k) + g(n-k)` (`k ≤ n`). -/
+theorem convNat_le [Add V] [LinearOrder V] (r s : UppSeq V) {n k : ℕ} (hk : k ≤ n) :
+    r.convNat s n ≤ r.evalNat k + s.evalNat (n - k) :=
+  Finset.inf'_le _ (Finset.mem_range.mpr (Nat.lt_succ_of_le hk))
+
+/-- `convNat` is attained at some `k ≤ n` — so it is exactly the minimum, the (min,plus)
+convolution value `⨅_{k ≤ n} f(k) + g(n-k)`. -/
+theorem convNat_eq [Add V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) :
+    ∃ k ≤ n, r.convNat s n = r.evalNat k + s.evalNat (n - k) := by
+  obtain ⟨k, hk, heq⟩ := Finset.exists_mem_eq_inf' (s := Finset.range (n + 1))
+    ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩ (fun k => r.evalNat k + s.evalNat (n - k))
+  exact ⟨k, Nat.lt_succ_iff.mp (Finset.mem_range.mp hk), heq⟩
+
+/-- Sanity check (gate-verified): `(demoSeq ⊗ demoSeq)(3) = 3` and `(·)(5) = 6`
+(`f = 0,1,2,4,5,7,…`; e.g. at `n=3` the min is `f(1)+f(2) = 1+2`). -/
+example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by native_decide
+
 end UppSeq
 end DeepWiki
