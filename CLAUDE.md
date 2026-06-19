@@ -70,9 +70,9 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
 
 ## Build & gate
 
-- Toolchain `leanprover/lean4:v4.30.0` (`lean-toolchain`). Prepend
+- Toolchain `leanprover/lean4:v4.31.0` (`lean-toolchain`). Prepend
   `export PATH="$HOME/.elan/bin:$PATH"` to every `Bash` invocation (the shell is
-  non-interactive and may not load `~/.zshrc`). Deps pinned to `v4.30.0`: `mathlib`,
+  non-interactive and may not load `~/.zshrc`). Deps pinned to `v4.31.0`: `mathlib`,
   `doc-gen4`.
 - `lakefile.toml`: libs `DeepWiki` (root `DeepWiki.lean`) and `Sources`;
   `defaultTargets = ["DeepWiki", "Sources"]`.
