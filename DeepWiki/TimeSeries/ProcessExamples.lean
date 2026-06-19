@@ -2,6 +2,8 @@ import DeepWiki.TimeSeries.StationaryProcesses
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Probability.HasLawExists
 import Mathlib.Probability.Distributions.Bernoulli
+import Mathlib.Probability.ConditionalProbability
+import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 import Mathlib.Tactic
 
 /-! # Worked examples of stochastic processes (§1.2–§1.3)
@@ -40,6 +42,45 @@ theorem measurable_sinusoidProcess (r ν : ℝ) {A Θ : Ω → ℝ}
     (hA : Measurable A) (hΘ : Measurable Θ) (t : ℝ) :
     Measurable (sinusoidProcess r ν A Θ t) := by
   unfold sinusoidProcess; fun_prop
+
+/-- **Example 1.2.1** (existence, stated like Example 1.2.2): for any amplitude law `νA`
+concentrated on `[0, ∞)`, there is a probability space `(Ω, ℱ, ℙ)` carrying independent random
+variables `A`, `Θ` with `A ~ νA` (so `A ≥ 0` a.s.) and `Θ` uniform on `[0, 2π]` (its `ℙ`-law is
+`volume[|[0, 2π]]`, Lebesgue conditioned on the interval); on it the sinusoid
+`Xₜ = r⁻¹ A cos(νt + Θ)` is a stochastic process (each `Xₜ` measurable). Unlike Example 1.2.2,
+the book *takes* `A`, `Θ` as given rather than asserting existence — this is the parallel
+iid-style companion to `measurable_sinusoidProcess`. -/
+theorem exists_sinusoidProcess (r ν : ℝ) (νA : Measure ℝ) [IsProbabilityMeasure νA]
+    (hA : νA (Set.Ici 0) = 1) :
+    ∃ (Ω : Type) (_ : MeasureSpace Ω), IsProbabilityMeasure (ℙ : Measure Ω) ∧
+      ∃ A Θ : Ω → ℝ, Measurable A ∧ Measurable Θ ∧ IndepFun A Θ ℙ ∧
+        HasLaw A νA ℙ ∧ HasLaw Θ (volume[|Set.Icc (0 : ℝ) (2 * Real.pi)]) ℙ ∧
+        (∀ᵐ ω ∂(ℙ : Measure Ω), 0 ≤ A ω) ∧
+        (∀ t, Measurable (sinusoidProcess r ν A Θ t)) := by
+  classical
+  have hpos : volume (Set.Icc (0 : ℝ) (2 * Real.pi)) ≠ 0 := by
+    rw [Real.volume_Icc, sub_zero]; exact (ENNReal.ofReal_pos.mpr Real.two_pi_pos).ne'
+  haveI hunif : IsProbabilityMeasure (volume[|Set.Icc (0 : ℝ) (2 * Real.pi)]) :=
+    cond_isProbabilityMeasure_of_finite hpos (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top)
+  haveI : ∀ b : Bool, IsProbabilityMeasure
+      (bif b then νA else volume[|Set.Icc (0 : ℝ) (2 * Real.pi)]) := by
+    intro b; cases b
+    · exact hunif
+    · assumption
+  obtain ⟨Ω, mΩ, P, Y, hmeas, hlaw, hindep, hprob⟩ :=
+    exists_hasLaw_indepFun (fun _ : Bool => ℝ)
+      (fun b => bif b then νA else volume[|Set.Icc (0 : ℝ) (2 * Real.pi)])
+  letI inst : MeasureSpace Ω := { toMeasurableSpace := mΩ, volume := P }
+  have hlawA : HasLaw (Y true) νA ℙ := hlaw true
+  have hlawΘ : HasLaw (Y false) (volume[|Set.Icc (0 : ℝ) (2 * Real.pi)]) ℙ := hlaw false
+  refine ⟨Ω, inst, hprob, Y true, Y false, hmeas true, hmeas false,
+    hindep.indepFun (by decide), hlawA, hlawΘ, ?_,
+    fun t => measurable_sinusoidProcess r ν (hmeas true) (hmeas false) t⟩
+  rw [ae_iff,
+    show {ω | ¬ 0 ≤ Y true ω} = {ω | Y true ω ∈ Set.Iio (0 : ℝ)} from by ext ω; simp [not_le],
+    hlawA.measure_eq (p := fun x => x ∈ Set.Iio (0 : ℝ)) measurableSet_Iio, Set.setOf_mem_eq,
+    show Set.Iio (0 : ℝ) = (Set.Ici 0)ᶜ from by ext x; simp,
+    measure_compl measurableSet_Ici (measure_ne_top νA _), measure_univ, hA, tsub_self]
 
 /-- **Example 1.2.4**: the Bienaymé–Galton–Watson branching process: `X₀ = x` (the initial
 population) and `X_{t+1} = ∑_{j < Xₜ} Z t j`, the total offspring of the `Xₜ` individuals
