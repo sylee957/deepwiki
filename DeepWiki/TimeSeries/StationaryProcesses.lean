@@ -42,6 +42,12 @@ theorem acvf_comm (X : ℤ → Ω → ℝ) (μ : Measure Ω) (r s : ℤ) :
     acvf X μ r s = acvf X μ s r := by
   simp only [acvf_apply]; exact covariance_comm (X r) (X s)
 
+/-- **Definition 1.3.1** in the book's explicit centered-product form:
+`γ_X(r,s) = E[(Xᵣ − EXᵣ)(Xₛ − EXₛ)]`, written with the process mean `mean` (`= EXₜ`). This is
+the definition of `cov` Mathlib uses, so it holds by `rfl`. -/
+theorem acvf_eq_integral (X : ℤ → Ω → ℝ) (μ : Measure Ω) (r s : ℤ) :
+    acvf X μ r s = ∫ ω, (X r ω - mean X μ r) * (X s ω - mean X μ s) ∂μ := rfl
+
 /-! ## Stationarity -/
 
 /-- **Definition 1.3.2**: (weak / second-order) stationarity — each `Xₜ` is square
