@@ -81,6 +81,53 @@ theorem IsWeaklyStationary.acvf_eq_acvfStat (hX : IsWeaklyStationary X μ) (r s 
   rw [acvfStat_apply]
   exact hs
 
+/-! ## Problem 1.11: sums of uncorrelated stationary processes -/
+
+/-- The covariance of two summed processes splits when the cross-covariances vanish:
+`Cov(Xₚ + Yₚ, X_q + Y_q) = Cov(Xₚ, X_q) + Cov(Yₚ, Y_q)` when `Cov(Xᵣ, Yₛ) = 0`. -/
+private theorem cov_add_add_of_uncorrelated [IsFiniteMeasure μ] {X Y : ℤ → Ω → ℝ}
+    (hX : ∀ t, MemLp (X t) 2 μ) (hY : ∀ t, MemLp (Y t) 2 μ)
+    (hXY : ∀ r s : ℤ, cov[X r, Y s; μ] = 0) (p q : ℤ) :
+    cov[X p + Y p, X q + Y q; μ] = cov[X p, X q; μ] + cov[Y p, Y q; μ] := by
+  rw [covariance_add_left (hX p) (hY p) ((hX q).add (hY q)),
+      covariance_add_right (hX p) (hX q) (hY q),
+      covariance_add_right (hY p) (hX q) (hY q),
+      hXY p q, covariance_comm (Y p) (X q), hXY q p]
+  ring
+
+/-- **Problem 1.11**: the sum of two uncorrelated weakly stationary processes — `X`, `Y`
+stationary with `Cov(Xᵣ, Yₛ) = 0` for all `r, s` — is weakly stationary. -/
+theorem IsWeaklyStationary.add_of_uncorrelated [IsFiniteMeasure μ] {X Y : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (hY : IsWeaklyStationary Y μ)
+    (hXY : ∀ r s : ℤ, cov[X r, Y s; μ] = 0) :
+    IsWeaklyStationary (fun t ω => X t ω + Y t ω) μ where
+  memLp t := (hX.memLp t).add (hY.memLp t)
+  mean_const s t := by
+    simp only [mean]
+    rw [integral_add ((hX.memLp s).integrable (by norm_num))
+          ((hY.memLp s).integrable (by norm_num)),
+        integral_add ((hX.memLp t).integrable (by norm_num))
+          ((hY.memLp t).integrable (by norm_num))]
+    have hmX := hX.mean_const s t
+    have hmY := hY.mean_const s t
+    simp only [mean] at hmX hmY
+    rw [hmX, hmY]
+  acvf_shift r s h := by
+    show cov[X r + Y r, X s + Y s; μ]
+      = cov[X (r + h) + Y (r + h), X (s + h) + Y (s + h); μ]
+    rw [cov_add_add_of_uncorrelated hX.memLp hY.memLp hXY,
+        cov_add_add_of_uncorrelated hX.memLp hY.memLp hXY,
+        hX.acvf_shift r s h, hY.acvf_shift r s h]
+
+/-- **Problem 1.11**: the autocovariance of the sum of uncorrelated processes is the sum of
+the autocovariances, `γ_{X+Y}(h) = γ_X(h) + γ_Y(h)`. -/
+theorem acvfStat_add_of_uncorrelated [IsFiniteMeasure μ] {X Y : ℤ → Ω → ℝ}
+    (hX : ∀ t, MemLp (X t) 2 μ) (hY : ∀ t, MemLp (Y t) 2 μ)
+    (hXY : ∀ r s : ℤ, cov[X r, Y s; μ] = 0) (h : ℤ) :
+    acvfStat (fun t ω => X t ω + Y t ω) μ h = acvfStat X μ h + acvfStat Y μ h := by
+  simp only [acvfStat_apply]
+  exact cov_add_add_of_uncorrelated hX hY hXY h 0
+
 /-- A function `κ : ℤ → ℝ` is **non-negative definite** if
 `∑ᵢⱼ aᵢ aⱼ κ(tᵢ − tⱼ) ≥ 0` for every finite collection of integer points `t i`
 and reals `a i`. -/

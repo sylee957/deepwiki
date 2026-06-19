@@ -388,4 +388,16 @@ theorem ex_1_8_b {d : ℕ} (a b : ℝ) {s : ℤ → ℝ} (hper : ∀ t : ℤ, s 
     seasonalDifference d (seasonalDifference d (fun t : ℤ => (a + b * (t : ℝ)) * s t)) = 0 :=
   seasonalDifference_sq_linear_periodic a b hper
 
+/-- **Problem 1.11** (p.41): if `{Xₜ}` and `{Yₜ}` are uncorrelated stationary sequences
+(`Cov(Xᵣ, Yₛ) = 0` for all `r, s`), then `{Xₜ + Yₜ}` is stationary with autocovariance equal
+to the sum of the two autocovariance functions, `γ_{X+Y}(h) = γ_X(h) + γ_Y(h)`. The library's
+`IsWeaklyStationary.add_of_uncorrelated`, `acvfStat_add_of_uncorrelated`. -/
+theorem ex_1_11 [IsFiniteMeasure μ] {X Y : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (hY : IsWeaklyStationary Y μ)
+    (hXY : ∀ r s : ℤ, cov[X r, Y s; μ] = 0) :
+    IsWeaklyStationary (fun t ω => X t ω + Y t ω) μ ∧
+      ∀ h : ℤ, acvfStat (fun t ω => X t ω + Y t ω) μ h = acvfStat X μ h + acvfStat Y μ h :=
+  ⟨hX.add_of_uncorrelated hY hXY,
+    fun h => acvfStat_add_of_uncorrelated hX.memLp hY.memLp hXY h⟩
+
 end DeepWiki.Ts
