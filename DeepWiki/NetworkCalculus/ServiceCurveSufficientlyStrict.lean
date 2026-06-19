@@ -45,6 +45,48 @@ theorem IsSufficientlyStrict.mono_beta {β β' dw A D : ℝ≥0 → ℝ≥0}
   calc A (t - dw t) + β' (dw t) ≤ A (t - dw t) + β (dw t) := by gcongr; exact hβ (dw t)
     _ ≤ D t := h.2.2 t
 
+/-- **Blind-multiplexing residual, additive form.** When the aggregate `(A₁+A₂, D₁+D₂)` is s3c
+for `β` with dwell `dw`, flow `2` is causal (`D₂ ≤ A₂`) and `α₂`-constrained
+(`A₂ t ≤ A₂ s + α₂ (t-s)`), flow `1` satisfies `A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t)` — the
+arrival-plus-service of flow `1` over the dwell window is dominated by its departure plus flow `2`'s
+burst. (The flow-decomposition core: in `ℝ≥0` this is `(A₁(t-dw)+β(dw)) - α₂(dw) ≤ D₁ t`; turning it
+into an s3c bound for `β - α₂` needs `α₂(dw) ≤ β(dw)`, see `residual_flow1_of_dom`.) -/
+theorem IsSufficientlyStrict.flow1_add_le {β α₂ A₁ A₂ D₁ D₂ dw : ℝ≥0 → ℝ≥0}
+    (hagg : IsSufficientlyStrict β dw (A₁ + A₂) (D₁ + D₂))
+    (hcausal2 : ∀ t, D₂ t ≤ A₂ t)
+    (harr2 : ∀ s t, s ≤ t → A₂ t ≤ A₂ s + α₂ (t - s)) (t : ℝ≥0) :
+    A₁ (t - dw t) + β (dw t) ≤ D₁ t + α₂ (dw t) := by
+  have hdw : dw t ≤ t := hagg.dwell_le t
+  have hs := hagg.service_bound t
+  simp only [Pi.add_apply] at hs
+  have ha2 : A₂ t ≤ A₂ (t - dw t) + α₂ (dw t) := by
+    have h := harr2 (t - dw t) t tsub_le_self
+    rwa [tsub_tsub_cancel_of_le hdw] at h
+  have key : (A₁ (t - dw t) + β (dw t)) + A₂ (t - dw t)
+      ≤ (D₁ t + α₂ (dw t)) + A₂ (t - dw t) :=
+    calc (A₁ (t - dw t) + β (dw t)) + A₂ (t - dw t)
+        = A₁ (t - dw t) + A₂ (t - dw t) + β (dw t) := by ring
+      _ ≤ D₁ t + D₂ t := hs
+      _ ≤ D₁ t + (A₂ (t - dw t) + α₂ (dw t)) := by gcongr; exact (hcausal2 t).trans ha2
+      _ = (D₁ t + α₂ (dw t)) + A₂ (t - dw t) := by ring
+  exact le_of_add_le_add_right key
+
+/-- **Blind-multiplexing residual for flow 1** (plain difference form). Under the additive bound of
+`flow1_add_le` plus `α₂ (dw t) ≤ β (dw t)` (flow `2`'s burst never exceeds the service over the
+dwell window), flow `1` is s3c for the residual `β - α₂` with the *same* dwell `dw`. (The book's
+result strengthens `β - α₂` to its non-decreasing closure `(β - α₂)↑`, which is *not* obtainable
+from a single dwell — that step needs the maximum-achievable-dwell backlog semantics.) -/
+theorem IsSufficientlyStrict.residual_flow1_of_dom {β α₂ A₁ A₂ D₁ D₂ dw : ℝ≥0 → ℝ≥0}
+    (hagg : IsSufficientlyStrict β dw (A₁ + A₂) (D₁ + D₂))
+    (hcausal1 : ∀ t, D₁ t ≤ A₁ t) (hcausal2 : ∀ t, D₂ t ≤ A₂ t)
+    (harr2 : ∀ s t, s ≤ t → A₂ t ≤ A₂ s + α₂ (t - s))
+    (hdom : ∀ t, α₂ (dw t) ≤ β (dw t)) :
+    IsSufficientlyStrict (fun s => β s - α₂ s) dw A₁ D₁ := by
+  refine ⟨hcausal1, hagg.dwell_le, fun t => ?_⟩
+  show A₁ (t - dw t) + (β (dw t) - α₂ (dw t)) ≤ D₁ t
+  rw [← add_tsub_assoc_of_le (hdom t), tsub_le_iff_right]
+  exact hagg.flow1_add_le hcausal2 harr2 t
+
 /-- **Theorem 9.8** (s3c concatenation): two s3c servers in tandem — `(A, M)` s3c
 for `β₁` with dwell `dw₁`, then `(M, D)` s3c for `β₂` with dwell `dw₂` — compose
 to an s3c server `(A, D)` for the convolution `β₁ ∗ β₂` with the **composed dwell**

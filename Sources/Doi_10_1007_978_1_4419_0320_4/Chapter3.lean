@@ -85,4 +85,28 @@ theorem ar1_causal_iff (φ₁ : ℝ) :
     IsCausalPoly (1 - Polynomial.C φ₁ * Polynomial.X) ↔ |φ₁| < 1 :=
   isCausalPoly_ar1 φ₁
 
+/-! ### §3.1 (existence) and §3.2–§3.3 (MA(∞), the ARMA autocovariance), pp.88–93 — infra-blocked
+
+**Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
+unique stationary solution `Xₜ = ∑_{j=-∞}^{∞} ψⱼ Zₜ₋ⱼ`, with `ψ` the Laurent expansion of
+`θ/φ` on an annulus `r⁻¹ < |z| < r` (eq 3.1.21).
+
+**§3.2 (MA(∞) processes).** **Definition 3.2.1** (`Xₜ = ∑_{j≥0} ψⱼ Zₜ₋ⱼ`, `∑|ψⱼ| < ∞`),
+**Examples 3.2.1–3.2.3** (MA(q); causal AR(1) as `ψⱼ = φⱼ`; causal ARMA as `ψ = θ/φ`),
+**Proposition 3.2.1** (a zero-mean stationary process that is `q`-correlated — `γ(h) = 0` for
+`|h| > q`, `γ(q) ≠ 0` — is an MA(q), via the `L²` innovations/projection argument of §2.3–§2.4),
+and **Theorem 3.2.1** (the MA(∞) autocovariance `γ(h) = σ² ∑_{j≥0} ψⱼ ψ_{j+|h|}`).
+
+**§3.3 (computing the ARMA autocovariance).** The `ψ`-weight method (`γ(k) = σ² ∑ⱼ ψⱼ ψ_{j+|k|}`,
+`ψ = θ/φ`, with the recursion 3.3.3 for `ψⱼ`) and the homogeneous-difference-equation method.
+
+All of this rests on the MA(∞) representation and the absolute / mean-square convergence of
+`∑ⱼ ψⱼ Zₜ₋ⱼ` (`∑|ψⱼ| < ∞`) — and, for §3.3, the power-series reciprocal `θ/φ`; that analytic
+layer is **not yet formalized** (infra-blocked, like the deferred analytic items elsewhere in
+the project). The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the one
+algebraically-finite special case; it additionally needs the `lagPoly`-as-finite-sum expansion
+`(p(B) x) t = ∑ₖ p.coeff k • x (t − k)` and a `q`-fold double-sum covariance computation, and is
+deferred with those. The concrete low-order cases — the MA(1) and MA(2) autocovariances — are
+proved in `DeepWiki.TimeSeries.ProcessExamples` (`maProcess1`, `maProcess2`). -/
+
 end DeepWiki.Ts
