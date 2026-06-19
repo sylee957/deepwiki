@@ -68,7 +68,7 @@ is Chasles too — the library's `isChasles_departure`. (The analogous coherence
 of the remaining capacity `C'` is not separately formalized.) -/
 alias lemma_9_2 := isChasles_departure
 
-/-! **Theorem 9.2** (§9.1.3, p.216): Equivalence RTC-NC: bivariate non-negative (Â,Ĉ,D̂,Ĉ',b̂) satisfy the variable-capacity equations [9.7]-[9.9] iff (A,C,D,C',b) satisfy the RTC equations [9.4]-[9.6]. The Chasles-coherence half is `isChasles_departure`; the full variable-capacity equivalence is not formalized. -/
+/-! **Theorem 9.2** (§9.1.3, p.216): Equivalence RTC-NC: bivariate non-negative (Â,Ĉ,D̂,Ĉ',b̂) satisfy the variable-capacity equations [9.7]-[9.9] iff (A,C,D,C',b) satisfy the RTC equations [9.4]-[9.6]. Framework: the RTC greedy-processor equations [9.4]-[9.6] are `DeepWiki.IsRtcGreedy`, the variable-capacity equations [9.7]-[9.9] are `DeepWiki.IsVarCapacityEqns`. The RTC→NC residual [9.8] and backlog [9.9] halves are `DeepWiki.eq_residual_of_isRtcGreedy` / `DeepWiki.eq_backlog_of_isRtcGreedy` (at `s = 0`, with `b 0 = 0`); the Chasles-coherence (Lemma 9.2) is `isChasles_departure`. The output [9.7] sup↔inf equivalence (`C' = (⨆ …)⊔0 ↔ D = ⨅ …`, needing `BddAbove` of the residual set and the antitone `c − ⨆ = ⨅(c − ·)` identity over `ℝ`) and the full reverse direction are not yet formalized. -/
 
 /-- **Definition 9.1** (§9.1.3, p.217): the RTC↔NC conversion underlying the RTC
 arrival/service curves — a univariate cumulative `g` induces the Chasles

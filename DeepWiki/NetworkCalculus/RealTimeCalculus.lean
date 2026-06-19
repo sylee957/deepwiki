@@ -55,4 +55,40 @@ theorem isChasles_departure {A : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → �
   rw [hD, hD, hD, hA s u t hsu hut]
   ring
 
+/-! ## The RTC greedy processor and the variable-capacity node (Thm 9.2 framework) -/
+
+/-- **The RTC greedy-processor equations [9.4]–[9.6]** for bivariate arrival `A`,
+service `C`, departure `D`, residual `C'` and (univariate) backlog `b`:
+`D = C − C'`, `C' s t = (⨆_{s≤u≤t} (C s u − A s u − b s)) ⊔ 0`, and
+`b t − b s = A s t − D s t`. -/
+def IsRtcGreedy (A C D C' : ℝ≥0 → ℝ≥0 → ℝ) (b : ℝ≥0 → ℝ) : Prop :=
+  (∀ s t, D s t = C s t - C' s t) ∧
+  (∀ s t, C' s t
+      = (⨆ u : {u : ℝ≥0 // s ≤ u ∧ u ≤ t}, (C s u.1 - A s u.1 - b s)) ⊔ 0) ∧
+  (∀ s t, b t - b s = A s t - D s t)
+
+/-- **The variable-capacity node equations [9.7]–[9.9]** for univariate cumulative
+functions `A, C, D, C'` (the readings `Â, Ĉ, D̂, Ĉ'`) and backlog `b`:
+`D t = ⨅_{u≤t} (C t − C u + A u)` (the variable-capacity output), `C' = C − D`
+(residual service), and `b = A − D` (backlog). -/
+def IsVarCapacityEqns (A C D C' b : ℝ≥0 → ℝ) : Prop :=
+  (∀ t, D t = ⨅ u : {u : ℝ≥0 // u ≤ t}, (C t - C u.1 + A u.1)) ∧
+  (∀ t, C' t = C t - D t) ∧
+  (∀ t, b t = A t - D t)
+
+/-- **Theorem 9.2** (RTC→NC, residual half [9.8]): the univariate reading of the
+RTC residual `C'` is the variable-capacity residual `Ĉ' = Ĉ − D̂`, directly from
+equation [9.4] at `s = 0`. -/
+theorem eq_residual_of_isRtcGreedy {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
+    (hg : IsRtcGreedy A C D C' b) (t : ℝ≥0) :
+    C' 0 t = C 0 t - D 0 t := by
+  have := hg.1 0 t; linarith
+
+/-- **Theorem 9.2** (RTC→NC, backlog half [9.9]): with `b 0 = 0`, the backlog is
+the univariate gap `b = Â − D̂`, directly from equation [9.6] at `s = 0`. -/
+theorem eq_backlog_of_isRtcGreedy {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ}
+    (hg : IsRtcGreedy A C D C' b) (hb0 : b 0 = 0) (t : ℝ≥0) :
+    b t = A 0 t - D 0 t := by
+  have := hg.2.2 0 t; rw [hb0] at this; linarith
+
 end DeepWiki
