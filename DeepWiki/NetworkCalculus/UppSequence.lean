@@ -1111,5 +1111,21 @@ example : ∀ n ∈ Finset.range 6, (rate1.convFrom rate2 1).evalNat n = rate1.c
 example : ∀ n ∈ Finset.range 4,
     demoSeq.convNat demoSeq (n + 4 + 2) = demoSeq.convNat demoSeq (n + 4) + 3 := by native_decide
 
+/-! ## Sub-additive-closure foundation — the ⊤-extended carrier `WithTop ℤ`
+The closure `f* = ⨅ₙ f^⊗ⁿ` needs the convolution identity `f^⊗0 = δ₀` (`0` at `0`, `+∞` elsewhere),
+which `UppSeq` over ℤ cannot hold. `convNat` is generic, so it works over `WithTop ℤ` (where `⊤ = +∞`),
+and `δ₀` is representable there — this de-risks the closure arc. -/
+
+/-- The (min,plus) **convolution identity** `δ₀` over `WithTop ℤ`: `δ₀(0) = 0`, `δ₀(n) = ⊤` for
+`n ≥ 1` (the closure's neutral element `f^⊗0`). -/
+def delta0 : UppSeq (WithTop ℤ) := ⟨[0, ⊤], ⊤, 1, by decide, by decide⟩
+
+/-- A ⊤-extended demo sequence over `WithTop ℤ` (to exercise the closure carrier). -/
+def demoWT : UppSeq (WithTop ℤ) := ⟨[0, 1, 2], 3, 2, by decide, by decide⟩
+
+/-- Sanity (gate-verified): `δ₀` is the **convolution identity** — `δ₀ ⊗ f = f` — over `WithTop ℤ`,
+confirming the ⊤-extended carrier (the basis for sub-additive closure) computes correctly. -/
+example : ∀ n ∈ Finset.range 6, delta0.convNat demoWT n = demoWT.evalNat n := by native_decide
+
 end UppSeq
 end DeepWiki
