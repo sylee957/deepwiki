@@ -153,8 +153,10 @@ alias thm_9_6_4 := not_forall_iInf_variableCapacityRel_le_iSup
 /-- **Lemma 9.5** (§9.3.1, p.226): For T ∈ ℝ₊, the closure of the union of n-fold strict-δ_{T/n} tandems equals the min-plus pure-delay server: S̄(⋃ₙ (S_strict(δ_{T/n}))ⁿ) = S_mp(δ_T). -/
 alias lemma_9_5 := systemClosure_delayTandemUnion_eq
 
-/-- **Theorem 9.7** (§9.3.1, p.227): For each convex piecewise linear β, there is a system S of strict-service servers such that S_strict(β) ⊆ S̄ ⊆ S_mp(β), and if β=β̃₁∗β̃₂ are convex PL then ∀β, S̄(β̃)=S_mp(β) — no good intermediate type of service curve exists (the book does not prove the general theorem; only the δ_T dilution lemma is formalized). -/
-alias thm_9_7 := systemClosure_delayTandemUnion_eq
+/-! **Theorem 9.7** (§9.3.1, p.227): for each convex piecewise-linear β there is a system S of
+strict-service servers with `S_strict(β) ⊆ S̄ ⊆ S_mp(β)` — "no good intermediate type of service
+curve exists". The book does not prove the general theorem; only its δ_T special case is formalized,
+as `lemma_9_5` (`systemClosure_delayTandemUnion_eq`). The general Theorem 9.7 is not formalized. -/
 
 /-! **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`, and FIFO multiplexing with flow 1 arrival-α₂-constrained gives `S_s3c((β−α₂)⁺,Dw)`. The s3c relation is `DeepWiki.IsSufficientlyStrict` (def_9_types_s3c); the dwell-composition concatenation theorem itself is not formalized. -/
 
