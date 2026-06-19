@@ -77,4 +77,28 @@ example (β₁ β₂ dw₁ dw₂ A D : ℝ≥0 → ℝ≥0)
     IsSufficientlyStrict (minConv β₁ β₂) (fun t => dw₂ t + dw₁ (t - dw₂ t)) A D :=
   let ⟨_, h₁, h₂⟩ := h; h₁.comp h₂
 
+/-- The book's s3c service-curve **class** `S_s3c(β, Dw)`: a pair `(A, D)` is s3c for
+`β` with *some* dwell drawn from the family `Dw` (the book quantifies over a set of
+possible dwell periods, not a single fixed one). -/
+def IsSufficientlyStrictFamily (β : ℝ≥0 → ℝ≥0) (Dw : Set (ℝ≥0 → ℝ≥0))
+    (A D : ℝ≥0 → ℝ≥0) : Prop :=
+  ∃ dw ∈ Dw, IsSufficientlyStrict β dw A D
+
+/-- The composed dwell family for s3c concatenation:
+`{t ↦ dw₂ t + dw₁ (t − dw₂ t) | dw₁ ∈ Dw₁, dw₂ ∈ Dw₂}`. -/
+def composedDwellFamily (Dw₁ Dw₂ : Set (ℝ≥0 → ℝ≥0)) : Set (ℝ≥0 → ℝ≥0) :=
+  {dw | ∃ dw₁ ∈ Dw₁, ∃ dw₂ ∈ Dw₂, dw = fun t => dw₂ t + dw₁ (t - dw₂ t)}
+
+/-- **Theorem 9.8** (s3c concatenation, dwell-family form): the relation composition
+`S_s3c(β₂, Dw₂) ∘ S_s3c(β₁, Dw₁) ⊆ S_s3c(β₁ ∗ β₂, Dw')` where `Dw'` is the composed
+dwell family — exactly the book's statement over the dwell-period classes. -/
+theorem IsSufficientlyStrictFamily.comp {β₁ β₂ : ℝ≥0 → ℝ≥0}
+    {Dw₁ Dw₂ : Set (ℝ≥0 → ℝ≥0)} {A M D : ℝ≥0 → ℝ≥0}
+    (h₁ : IsSufficientlyStrictFamily β₁ Dw₁ A M)
+    (h₂ : IsSufficientlyStrictFamily β₂ Dw₂ M D) :
+    IsSufficientlyStrictFamily (minConv β₁ β₂) (composedDwellFamily Dw₁ Dw₂) A D := by
+  obtain ⟨dw₁, hdw₁, hs₁⟩ := h₁
+  obtain ⟨dw₂, hdw₂, hs₂⟩ := h₂
+  exact ⟨_, ⟨dw₁, hdw₁, dw₂, hdw₂, rfl⟩, hs₁.comp hs₂⟩
+
 end DeepWiki

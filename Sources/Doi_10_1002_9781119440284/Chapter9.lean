@@ -165,7 +165,13 @@ strict-service servers with `S_strict(β) ⊆ S̄ ⊆ S_mp(β)` — "no good int
 curve exists". The book does not prove the general theorem; only its δ_T special case is formalized,
 as `lemma_9_5` (`systemClosure_delayTandemUnion_eq`). The general Theorem 9.7 is not formalized. -/
 
-/-- **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`. The library's `DeepWiki.IsSufficientlyStrict.comp` (cumulative-pair form: tandem s3c servers `(A,M)`/`(M,D)` compose to an s3c server `(A,D)` for `β₁ ∗ β₂` at the composed dwell). The s3c relation is `IsSufficientlyStrict` (def_9_types_s3c). The book's dwell-family wrapper `S_s3c(β,Dw)` (Dw a set of possible dwells) and the FIFO-multiplexing `(β−α₂)⁺` residual build on this. -/
+/-- **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`. The library's `DeepWiki.IsSufficientlyStrict.comp` (cumulative-pair form: tandem s3c servers `(A,M)`/`(M,D)` compose to an s3c server `(A,D)` for `β₁ ∗ β₂` at the composed dwell). The s3c relation is `IsSufficientlyStrict` (def_9_types_s3c). The FIFO-multiplexing `(β−α₂)⁺` residual builds on this. -/
 alias thm_9_8 := IsSufficientlyStrict.comp
+
+/-- **Definition** (§9.3.2, p.227): the s3c service-curve class `S_s3c(β, Dw)` quantifying over a family `Dw` of possible dwell periods — `DeepWiki.IsSufficientlyStrictFamily` (`∃ dw ∈ Dw, IsSufficientlyStrict β dw A D`). -/
+def def_9_types_s3c_family := @IsSufficientlyStrictFamily
+
+/-- **Theorem 9.8** (§9.3.2, p.228), dwell-family form: `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂, Dw')` with `Dw'` the composed dwell family (`DeepWiki.composedDwellFamily`). The library's `DeepWiki.IsSufficientlyStrictFamily.comp` — the book's statement over the dwell-period classes. -/
+alias thm_9_8_family := IsSufficientlyStrictFamily.comp
 
 end DeepWiki.Dnc
