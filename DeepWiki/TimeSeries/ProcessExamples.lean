@@ -229,4 +229,37 @@ theorem constProcess_acvfStat [IsProbabilityMeasure μ] {a b : ℝ} {Z : Ω → 
     acvfStat (constProcess a b Z) μ h = b ^ 2 * cov[Z, Z; μ] := by
   rw [acvfStat_apply]; exact constProcess_acvf hZ h 0
 
+/-! ## Problem 1.7(e): a deterministically modulated single variable -/
+
+/-- **Problem 1.7(e)**: the process `Xₜ = Z·cos(ct)` — a single random variable `Z`
+modulated by the deterministic factor `cos(ct)`. -/
+noncomputable def cosScaleProcess (c : ℝ) (Z : Ω → ℝ) : ℤ → Ω → ℝ :=
+  fun t ω => Real.cos (c * (t : ℝ)) * Z ω
+
+/-- The autocovariance of `Xₜ = Z·cos(ct)` is `cos(cr)·cos(cs)·Var(Z)`. -/
+theorem cosScaleProcess_cov [IsProbabilityMeasure μ] {c : ℝ} {Z : Ω → ℝ} (r s : ℤ) :
+    cov[cosScaleProcess c Z r, cosScaleProcess c Z s; μ]
+      = Real.cos (c * (r : ℝ)) * Real.cos (c * (s : ℝ)) * cov[Z, Z; μ] := by
+  show cov[fun ω => Real.cos (c * (r : ℝ)) * Z ω, fun ω => Real.cos (c * (s : ℝ)) * Z ω; μ] = _
+  rw [covariance_const_mul_left, covariance_const_mul_right]; ring
+
+/-- **Problem 1.7(e)**: `Xₜ = Z·cos(ct)` is **not** (covariance) stationary when `cos²c ≠ 1`
+and `Var(Z) > 0` — its variance `cos²(ct)·Var(Z)` is not constant in `t`. -/
+theorem cosScaleProcess_not_stationary [IsProbabilityMeasure μ] {c : ℝ} {Z : Ω → ℝ}
+    (hc : Real.cos c ^ 2 ≠ 1) (hpos : 0 < cov[Z, Z; μ]) :
+    ¬ IsWeaklyStationary (cosScaleProcess c Z) μ := by
+  intro hstat
+  have h := hstat.acvf_shift 0 0 1
+  rw [cosScaleProcess_cov, cosScaleProcess_cov] at h
+  push_cast at h
+  simp only [mul_zero, Real.cos_zero, mul_one, one_mul] at h
+  -- h : cov[Z, Z; μ] = Real.cos c * Real.cos c * cov[Z, Z; μ]
+  apply hc
+  have hcc : Real.cos c * Real.cos c = 1 := by
+    have key : cov[Z, Z; μ] * (1 - Real.cos c * Real.cos c) = 0 := by linear_combination h
+    rcases mul_eq_zero.mp key with h1 | h2
+    · exact absurd h1 hpos.ne'
+    · linarith
+  rw [sq]; exact hcc
+
 end DeepWiki.TimeSeries

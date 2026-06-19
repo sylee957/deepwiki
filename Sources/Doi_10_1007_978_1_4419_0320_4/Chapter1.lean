@@ -322,6 +322,14 @@ theorem ex_1_7_c [IsFiniteMeasure μ] {Z₁ Z₂ : Ω → ℝ} {c σ2 : ℝ}
     acvf (cosProcess Z₁ Z₂ c) μ r s = σ2 * Real.cos (c * ((r : ℝ) - (s : ℝ))) :=
   cosProcess_acvf h1 h2 hv1 hv2 h12 r s
 
+/-- **Problem 1.7(e)** (p.40): `Xₜ = Z·cos(ct)` is **not** (covariance) stationary when
+`cos²c ≠ 1` and `Var(Z) > 0`, since its variance `cos²(ct)·Var(Z)` is not constant in `t`.
+The library's `cosScaleProcess`, `cosScaleProcess_not_stationary`. -/
+theorem ex_1_7_e [IsProbabilityMeasure μ] {c : ℝ} {Z : Ω → ℝ}
+    (hc : Real.cos c ^ 2 ≠ 1) (hpos : 0 < cov[Z, Z; μ]) :
+    ¬ IsWeaklyStationary (cosScaleProcess c Z) μ :=
+  cosScaleProcess_not_stationary hc hpos
+
 /-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
 period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
 (Hence for `Yₜ = a + b·t + sₜ + Xₜ`, `∇∇_d Yₜ = ∇∇_d Xₜ`.) Discharged by the
