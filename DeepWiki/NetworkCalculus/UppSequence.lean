@@ -1154,5 +1154,33 @@ def demoWT : UppSeq (WithTop ℤ) := ⟨[0, 1, 2], 3, 2, by decide, by decide⟩
 `convNat_delta0`), confirming the ⊤-extended carrier evaluates correctly. -/
 example : ∀ n ∈ Finset.range 6, delta0.convNat demoWT n = demoWT.evalNat n := by native_decide
 
+/-- One (min,plus) convolution by a function null at the origin can only **decrease**: if `f(0) = 0`
+then `(f ⊗ g)(n) ≤ g(n)` (take `k = 0` in the infimum). Hence the closure iterates `f^⊗ⁿ` are
+non-increasing in `n` — the structural basis of `f* = ⨅ₙ f^⊗ⁿ`. -/
+theorem convNat_le_of_zero [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (h0 : r.evalNat 0 = 0)
+    (n : ℕ) : r.convNat s n ≤ s.evalNat n := by
+  calc r.convNat s n ≤ r.evalNat 0 + s.evalNat (n - 0) := r.convNat_le s (Nat.zero_le n)
+    _ = s.evalNat n := by rw [h0, Nat.sub_zero, zero_add]
+
+/-- The `m`-fold (min,plus) self-convolution `f^⊗m` at `n` over `WithTop ℤ`: `f^⊗0 = δ₀`,
+`f^⊗(m+1) = f ⊗ f^⊗m`. The building block of the sub-additive closure. -/
+def iterConvNat (f : UppSeq (WithTop ℤ)) : ℕ → ℕ → WithTop ℤ
+  | 0, n => delta0.evalNat n
+  | (m + 1), n => (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+      (fun k => f.evalNat k + iterConvNat f m (n - k))
+
+/-- The **sub-additive-closure approximant** `⨅_{m=0}^{N} f^⊗m` at `n` — the closure truncated to `N`
+iterations. The true closure `f* = ⨅ₘ f^⊗m` is reached at finite `N` for UPP `f` (Lemma 4.7); the
+stabilization bound and UPP-ness of `f*` are future work (the research-grade part). -/
+def closureApproxNat (f : UppSeq (WithTop ℤ)) (N n : ℕ) : WithTop ℤ :=
+  (Finset.range (N + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos N)⟩ (fun m => iterConvNat f m n)
+
+/-- Pure rate `f(n) = n` over `WithTop ℤ` (null at the origin). -/
+def rateWT : UppSeq (WithTop ℤ) := ⟨[0], 1, 1, by decide, by decide⟩
+
+/-- Sanity (gate-verified): the sub-additive closure of a pure rate function is itself,
+`(rate)* = rate` — since `rate ⊗ rate = rate`, so `⨅ₘ rate^⊗m = δ₀ ⊓ rate = rate`. -/
+example : ∀ n ∈ Finset.range 5, closureApproxNat rateWT 3 n = rateWT.evalNat n := by native_decide
+
 end UppSeq
 end DeepWiki
