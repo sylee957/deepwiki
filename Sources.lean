@@ -28,6 +28,7 @@ import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter1
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter2
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter3
+import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter4
 import Sources.Doi_10_1007_978_1_4419_0320_4.Chapter9
 
 -- Per-paper source catalogs (papers the book defers to; see CLAUDE.md)
