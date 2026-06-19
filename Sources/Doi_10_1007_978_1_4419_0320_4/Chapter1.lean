@@ -33,10 +33,20 @@ abbrev def_1_2_1 := @DeepWiki.TimeSeries.Process
 process `X`. The library's `realization`. -/
 abbrev def_1_2_2 := @DeepWiki.TimeSeries.realization
 
+/-- **Example 1.2.1** (§1.2, p.9), the sinusoid with random phase and amplitude
+`Xₜ = r⁻¹ A cos(νt + Θ)` (1.2.1), with `A ≥ 0` and `Θ ~ Uniform[0,2π]` independent. The
+library's `sinusoidProcess`. -/
+noncomputable abbrev ex_1_2_1 := @DeepWiki.TimeSeries.sinusoidProcess
+
 /-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
 sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
 its non-stationarity is **Example 1.3.4**. -/
 noncomputable abbrev ex_1_2_3 := @DeepWiki.TimeSeries.randomWalk
+
+/-- **Example 1.2.4** (§1.2, p.10), the Bienaymé–Galton–Watson branching process `X₀ = x`,
+`X_{t+1} = ∑_{j < Xₜ} Z_{t,j}` (1.2.6), the offspring totals of an iid family. The
+library's `branchingProcess`. -/
+abbrev ex_1_2_4 := @DeepWiki.TimeSeries.branchingProcess
 
 /-- **Definition 1.2.3** (§1.2, p.11), the (finite-dimensional) distribution functions
 `F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7) of a process. The library's `fdd`, the

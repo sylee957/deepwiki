@@ -16,6 +16,20 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 outcome `ω` is the function `t ↦ Xₜ(ω)`. -/
 def realization (X : ℤ → Ω → ℝ) (ω : Ω) : ℤ → ℝ := fun t => X t ω
 
+/-- **Example 1.2.1**: the sinusoid with random phase and amplitude
+`Xₜ = r⁻¹ · A · cos(νt + Θ)`, where the amplitude `A ≥ 0` and the phase `Θ` (independent
+of `A`, uniform on `[0, 2π]`) are random; `ν ≥ 0` and `r > 0` are constants. A
+continuous-time process `ℝ → Ω → ℝ`. -/
+noncomputable def sinusoidProcess (r ν : ℝ) (A Θ : Ω → ℝ) : ℝ → Ω → ℝ :=
+  fun t ω => r⁻¹ * A ω * Real.cos (ν * t + Θ ω)
+
+/-- **Example 1.2.4**: the Bienaymé–Galton–Watson branching process: `X₀ = x` (the initial
+population) and `X_{t+1} = ∑_{j < Xₜ} Z t j`, the total offspring of the `Xₜ` individuals
+of generation `t`, where `Z t j` are the (iid, `ℕ`-valued) offspring counts. -/
+def branchingProcess (x : ℕ) (Z : ℕ → ℕ → Ω → ℕ) : ℕ → Ω → ℕ
+  | 0 => fun _ => x
+  | (t + 1) => fun ω => ∑ j ∈ Finset.range (branchingProcess x Z t ω), Z t j ω
+
 /-- Bilinear expansion of the covariance of two linear combinations of `A`, `B`. -/
 private theorem covariance_lin_comb [IsFiniteMeasure μ] {A B : Ω → ℝ}
     (hA : MemLp A 2 μ) (hB : MemLp B 2 μ) (c₁ d₁ c₂ d₂ : ℝ) :
