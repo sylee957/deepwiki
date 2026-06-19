@@ -25,6 +25,17 @@ autocovariance) is formalizable by building a complex-process layer over `Lp ℂ
 work), and the converse (existence of a process with a given such autocovariance) needs the
 complex Gaussian construction, infra-blocked like the real converse. -/
 
+/-- **§4.1 (eq 4.1.6, the condition in Theorem 4.1.1)**: complex non-negative definiteness of a
+function `K : ℤ → ℂ` — `∑ᵢⱼ aᵢ conj(aⱼ) K(tᵢ − tⱼ) ≥ 0` (a non-negative real). The library's
+`IsComplexNonnegDefinite`. -/
+abbrev eq_4_1_6 := @DeepWiki.TimeSeries.IsComplexNonnegDefinite
+
+/-- **§4.1 (eq 4.1.5)**: the autocovariance `spectralACVF μ` is Hermitian, `γ(−h) = conj γ(h)`.
+The library's `spectralACVF_neg`. -/
+theorem spectralACVF_hermitian (μ : MeasureTheory.Measure ℝ) (h : ℤ) :
+    spectralACVF μ (-h) = (starRingEnd ℂ) (spectralACVF μ h) :=
+  spectralACVF_neg μ h
+
 /-- **§4.2–§4.3, eq 4.2.6**: the autocovariance function `γ(h) = ∫ e^{ihν} dμ(ν)` determined by a
 spectral distribution `μ` (a finite measure on `(−π, π]`). The library's `spectralACVF`. -/
 noncomputable abbrev eq_4_2_6 := @DeepWiki.TimeSeries.spectralACVF
