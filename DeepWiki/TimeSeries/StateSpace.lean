@@ -34,6 +34,10 @@ observation-noise sequence `W`. -/
 def obs (M : StateSpaceModel w v) (X : ℕ → Fin v → ℝ) (W : ℕ → Fin w → ℝ) (t : ℕ) : Fin w → ℝ :=
   M.G *ᵥ X t + W t
 
+/-- The observation equation `Yₜ = G Xₜ + Wₜ` (eq 12.1.1), pointwise. -/
+theorem obs_apply (M : StateSpaceModel w v) (X : ℕ → Fin v → ℝ) (W : ℕ → Fin w → ℝ) (t : ℕ) :
+    M.obs X W t = M.G *ᵥ X t + W t := rfl
+
 /-- The state equation `X_{t+1} = F Xₜ + Vₜ` (eq 12.1.2). -/
 theorem state_succ (M : StateSpaceModel w v) (x₁ : Fin v → ℝ) (V : ℕ → Fin v → ℝ) (t : ℕ) :
     M.state x₁ V (t + 1) = M.F *ᵥ M.state x₁ V t + V t := rfl
