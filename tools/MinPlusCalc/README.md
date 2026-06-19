@@ -30,6 +30,7 @@ lake exe minplus            # usage
 | `minplus deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊘g)(0..k−1)` — the deconvolution `⨆_{k≥0} f(n+k)−g(k)`; finite (and computed) only when `slope_f ≤ slope_g`, else refused (`deconvNat`/`deconvNat_isGreatest`) |
 | `minplus deconvupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊘g` **as a UPP sequence** — period `d_f`, increment `c_f` (`deconvUpp`; `deconvNat_add_period`, Lemma 4.5); needs `slope_f ≤ slope_g` |
 | `minplus backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **backlog bound** `supₜ(α(t)−β(t)) = (α⊘β)(0)` — worst-case buffer; needs `slope_α ≤ slope_β` (`backlogBound`/`deconvNat_isGreatest`) |
+| `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay; needs `slope_α ≤ slope_β` (`delayBound`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -93,3 +94,10 @@ The calculator computes real deterministic-network-calculus results on rate-late
 - **Backlog bound** `supₜ(α(t)−β(t))` — the worst-case buffer occupancy, equal to `(α⊘β)(0)`; for a
   token bucket through a rate-latency server it is the classic `b + r·T`.
   `minplus backlog 0,3 1 1 0,0 1 2` → `backlog bound = 3`.
+- **Delay bound** `min{d : ∀t α(t)≤β(t+d)}` — the worst-case delay (max horizontal deviation); for the
+  same token bucket and server it is the classic `T + b/R`.
+  `minplus delay 0,3 1 1 0,0 1 2` → `delay bound = 2`.
+
+(`backlog` is fully proved via `deconvNat_isGreatest`; `delay` is a finite search whose faithfulness —
+the gap `α(t)−β(t+d)` is non-increasing per period, so the window is decisive — reduces to
+`evalNat_le_of_window_le` on `β` advanced by `d`, a short follow-up.)

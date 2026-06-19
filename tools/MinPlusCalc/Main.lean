@@ -52,7 +52,8 @@ def usage : String := String.intercalate "\n"
     "    maxupp <v1> <p1> <c1> <v2> <p2> <c2>            print f⊔g AS A UPP SEQUENCE  [maxUpp; max_evalNat_add_lcm_window]",
     "    deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>        print (f⊘g)(0..k-1)   [⨆_k f(n+k)-g(k); needs slope f ≤ slope g; deconvNat_isGreatest]",
     "    deconvupp <v1> <p1> <c1> <v2> <p2> <c2>         print f⊘g AS A UPP SEQUENCE  [deconvUpp; deconvNat_add_period; needs slope f ≤ slope g]",
-    "    backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>           print the backlog bound supₜ(α(t)-β(t)) = (α⊘β)(0)  [needs slope α ≤ slope β]" ]
+    "    backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>           print the backlog bound supₜ(α(t)-β(t)) = (α⊘β)(0)  [needs slope α ≤ slope β]",
+    "    delay <vα> <pα> <cα> <vβ> <pβ> <cβ>             print the delay bound min{d : ∀t α(t)≤β(t+d)}  [needs slope α ≤ slope β]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -119,4 +120,11 @@ def main (args : List String) : IO Unit := do
         IO.println s!"backlog bound = {backlogBound a b}"
       else
         throw (IO.userError "backlog requires slope(α) ≤ slope(β) (else the backlog is unbounded)")
+  | ["delay", va, pa, ca, vb, pb, cb] =>
+      let a ← reqUpp va pa ca
+      let b ← reqUpp vb pb cb
+      if slope a b ≤ slope b a then
+        IO.println s!"delay bound = {delayBound a b}"
+      else
+        throw (IO.userError "delay requires slope(α) ≤ slope(β) (else the delay is unbounded)")
   | _ => IO.println usage

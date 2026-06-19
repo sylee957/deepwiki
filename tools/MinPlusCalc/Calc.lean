@@ -158,4 +158,19 @@ def backlogBound (α β : UppSeq Int) : Int := α.deconvNat β 0
 through a rate-latency server `β_{2,1}` is the classic `b + r·T = 2 + 1·1 = 3`. -/
 example : backlogBound (tokenBucket 1 2) (betaRL 2 1) = 3 := by native_decide
 
+/-- The **delay bound** `h(α,β) = min{d : ∀ t, α(t) ≤ β(t+d)}` — the maximum horizontal deviation
+(worst-case delay): the smallest right-shift of the service curve `β` that dominates the arrival `α`.
+Searched over `d`, each candidate tested on a finite `t`-window `[0, deconvBound)` (past which the gap
+`α(t)−β(t+d)` is non-increasing per period, so the window is decisive). Finite when `slope_α ≤
+slope_β`; its faithfulness reduces to `evalNat_le_of_window_le` on `β` advanced by `d`. -/
+def delayBound (α β : UppSeq Int) : Nat :=
+  let K := α.deconvBound β
+  let fuel := (backlogBound α β).toNat + K + 1
+  ((List.range (fuel + 1)).find? fun d =>
+    (List.range K).all fun t => decide (α.evalNat t ≤ β.evalNat (t + d))).getD fuel
+
+/-- **Network-calculus application (gate-verified):** the delay bound of a token bucket `α_{1,2}`
+through a rate-latency server `β_{2,1}` is the classic `T + b/R = 1 + 2/2 = 2`. -/
+example : delayBound (tokenBucket 1 2) (betaRL 2 1) = 2 := by native_decide
+
 end MinPlusCalc
