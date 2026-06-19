@@ -38,3 +38,14 @@ srcDir = "tools"
 name = "tlts"
 srcDir = "tools"
 root = "TltsCheck.Main"
+
+# Executable (min,plus) calculator over UPP sequences (DeepWiki.NetworkCalculus.UppSequence).
+# Out of `defaultTargets` like the other tooling. Build with `lake build minplus`; run `lake exe minplus`.
+[[lean_lib]]
+name = "MinPlusCalc"
+srcDir = "tools"
+
+[[lean_exe]]
+name = "minplus"
+srcDir = "tools"
+root = "MinPlusCalc.Main"
