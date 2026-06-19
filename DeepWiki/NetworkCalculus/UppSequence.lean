@@ -64,6 +64,62 @@ theorem evalNat_add_mul_period [AddMonoid V] (r : UppSeq V) (k : ℕ) {n : ℕ}
     have e : n + (j + 1) * r.period = (n + j * r.period) + r.period := by ring
     rw [e, r.evalNat_add_period hjn, ih, succ_nsmul, add_assoc]
 
+/-- `evalNat` over a multiple of any period-divisor: if `r.period ∣ e`, then
+`f(m + q·e) = f(m) + q·((e/d_f)·c_f)` past the rank (generalises `evalNat_add_mul_period` to any
+common period `e`, e.g. an `lcm`). -/
+theorem evalNat_add_mul_of_dvd [AddMonoid V] (r : UppSeq V) {e : ℕ} (he : r.period ∣ e) (q : ℕ)
+    {m : ℕ} (hm : r.vals.length - r.period ≤ m) :
+    r.evalNat (m + q * e) = r.evalNat m + q • ((e / r.period) • r.incr) := by
+  have h1 : q * e = q * (e / r.period) * r.period := by rw [mul_assoc, Nat.div_mul_cancel he]
+  rw [h1, r.evalNat_add_mul_period (q * (e / r.period)) hm, mul_smul]
+
+/-- **Dominant-slope crossover.** If `r` has strictly smaller asymptotic slope than `s`
+(`(d/d_r)·c_r < (d/d_s)·c_s` over the common period `d = lcm`), then `r` is eventually pointwise
+`≤ s`. Needs `V` Archimedean: the linearly-growing slope gap eventually dominates the bounded
+transient window `[R, R+d)`. The kernel of general `min`-of-UPP (and the non-balanced Lemma 4.4). -/
+theorem evalNat_eventually_le [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]
+    (r s : UppSeq V)
+    (hslope : (Nat.lcm r.period s.period / r.period) • r.incr
+            < (Nat.lcm r.period s.period / s.period) • s.incr) :
+    ∃ N, ∀ n, N ≤ n → r.evalNat n ≤ s.evalNat n := by
+  set d := Nat.lcm r.period s.period with hd
+  have hd0 : 0 < d := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  set cr := (d / r.period) • r.incr with hcr
+  set cs := (d / s.period) • s.incr with hcs
+  set R := max (r.vals.length - r.period) (s.vals.length - s.period) with hR
+  have hwin : (Finset.range d).Nonempty := ⟨0, Finset.mem_range.mpr hd0⟩
+  set M := (Finset.range d).sup' hwin (fun rem => r.evalNat (R + rem)) with hM
+  set ms := (Finset.range d).inf' hwin (fun rem => s.evalNat (R + rem)) with hms
+  have hδ : 0 < cs - cr := sub_pos.mpr hslope
+  obtain ⟨Q, hQ⟩ := Archimedean.arch (M - ms) hδ
+  refine ⟨R + Q * d, fun n hn => ?_⟩
+  have hRn : R ≤ n := by omega
+  set rem := (n - R) % d with hrem
+  set q := (n - R) / d with hq
+  have hremlt : rem < d := Nat.mod_lt _ hd0
+  have hsplit : d * q + rem = n - R := Nat.div_add_mod (n - R) d
+  have hdecomp : n = (R + rem) + q * d := by rw [mul_comm q d]; omega
+  have hqQ : Q ≤ q := by rw [hq]; exact (Nat.le_div_iff_mul_le hd0).mpr (by omega)
+  have hrn : r.evalNat n = r.evalNat (R + rem) + q • cr := by
+    rw [hdecomp]
+    exact r.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_left r.period s.period) q (by omega)
+  have hsn : s.evalNat n = s.evalNat (R + rem) + q • cs := by
+    rw [hdecomp]
+    exact s.evalNat_add_mul_of_dvd (hd ▸ Nat.dvd_lcm_right r.period s.period) q (by omega)
+  have hMb : r.evalNat (R + rem) ≤ M :=
+    Finset.le_sup' (fun rem => r.evalNat (R + rem)) (Finset.mem_range.mpr hremlt)
+  have hmsb : ms ≤ s.evalNat (R + rem) :=
+    Finset.inf'_le (fun rem => s.evalNat (R + rem)) (Finset.mem_range.mpr hremlt)
+  have hqδ : M - ms ≤ q • (cs - cr) := le_trans hQ (nsmul_le_nsmul_left (le_of_lt hδ) hqQ)
+  have hkey : M + q • cr ≤ ms + q • cs := by
+    have h2 : M - ms ≤ q • cs - q • cr := by rw [← smul_sub]; exact hqδ
+    have h3 : M + q • cr ≤ q • cs + ms := sub_le_sub_iff.mp h2
+    rwa [add_comm (q • cs) ms] at h3
+  rw [hrn, hsn]
+  calc r.evalNat (R + rem) + q • cr ≤ M + q • cr := add_le_add_left hMb _
+    _ ≤ ms + q • cs := hkey
+    _ ≤ s.evalNat (R + rem) + q • cs := add_le_add_left hmsb _
+
 /-- The denoted sequence is unchanged on the stored transient/period prefix: `f(n) = vals[n]`. -/
 theorem evalNat_of_lt [Add V] (r : UppSeq V) {n : ℕ} (hn : n < r.vals.length) :
     r.evalNat n = r.vals.get ⟨n, hn⟩ := by
