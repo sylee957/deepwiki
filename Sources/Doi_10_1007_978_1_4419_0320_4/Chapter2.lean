@@ -4,6 +4,7 @@ import Mathlib.Analysis.InnerProductSpace.Continuous
 import Mathlib.Analysis.InnerProductSpace.Orthogonal
 import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
+import DeepWiki.TimeSeries.BestLinearPredictor
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 2: Hilbert Spaces
@@ -100,6 +101,18 @@ theorem thm_2_3_1 {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerPr
   ⟨K.starProjection_apply_mem x, Submodule.starProjection_minimal (U := K) x,
     K.sub_starProjection_mem_orthogonal x,
     fun _ hy hyo => K.eq_starProjection_of_mem_orthogonal hy hyo⟩
+
+/-- **The Prediction Equations** (§2.3, p.53, eq 2.3.8): the best approximation `x̂` to `x`
+in a closed subspace `ℳ` is characterized by `(x − x̂) ⊥ ℳ` — `⟨x − x̂, y⟩ = 0` for all
+`y ∈ ℳ`. The library's `bestPredictor_sub_mem_orthogonal`. -/
+alias eq_2_3_8 := DeepWiki.TimeSeries.bestPredictor_sub_mem_orthogonal
+
+/-- **Example 2.3.3** (§2.3, p.53), minimum-mean-square-error linear prediction of a
+stationary process: the best linear predictor of `X` from a closed subspace `ℳ` (e.g.
+`ℳ = sp̄{X₁,…,Xₙ}`, `predictorSpan`) is the orthogonal projection `X̂ = bestPredictor ℳ X`,
+which minimizes `E(X − ·)² = ‖X − ·‖²` (`bestPredictor_minimal`) and solves the prediction
+equations (`bestPredictor_sub_mem_orthogonal`). The library's `bestPredictor`. -/
+noncomputable abbrev ex_2_3_3 := @DeepWiki.TimeSeries.bestPredictor
 
 end DeepWiki.Ts
 
