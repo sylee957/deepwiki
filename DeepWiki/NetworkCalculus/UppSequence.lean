@@ -550,6 +550,56 @@ theorem deconvNat_eq [Add V] [Sub V] [LinearOrder V] (r s : UppSeq V) (n : ℕ) 
 finite) recovers `n` (`⨆_k (n+k) - 2k` is maximal at `k=0`). -/
 example : ∀ n ∈ Finset.range 5, rate1.deconvNat rate2 n = n := by native_decide
 
+/-- **Deconvolution faithfulness.** When `slope_f ≤ slope_g` (`cr' ≤ cs'`, so the deconvolution is
+finite), the finite-window `deconvNat` upper-bounds the deconvolution term at *every* `k ≥ 0`, not
+just `k < deconvBound`: past the window the terms are non-increasing per period
+(`term(k) = term(k-d) + (cr'-cs') ≤ term(k-d)`), so any `k` descends into the window. Together with
+`deconvNat_eq` this gives `deconvNat r s n = ⨆_{k≥0} f(n+k) - g(k)` — the genuine deconvolution. -/
+theorem deconvNat_ge [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] (r s : UppSeq V)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr) (n k : ℕ) :
+    r.evalNat (n + k) - s.evalNat k ≤ r.deconvNat s n := by
+  have hd0 : 0 < Nat.lcm r.period s.period :=
+    Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  induction k using Nat.strong_induction_on with
+  | _ k ih =>
+    by_cases hk : k < deconvBound r s
+    · exact le_deconvNat r s hk
+    · simp only [deconvBound, not_lt] at hk
+      have hr : r.evalNat (n + k) = r.evalNat (n + (k - Nat.lcm r.period s.period))
+          + (Nat.lcm r.period s.period / r.period) • r.incr := by
+        rw [show n + k = (n + (k - Nat.lcm r.period s.period)) + Nat.lcm r.period s.period from by omega]
+        simpa using r.evalNat_add_mul_of_dvd (Nat.dvd_lcm_left r.period s.period) 1 (by omega)
+      have hs : s.evalNat k = s.evalNat (k - Nat.lcm r.period s.period)
+          + (Nat.lcm r.period s.period / s.period) • s.incr := by
+        rw [show k = (k - Nat.lcm r.period s.period) + Nat.lcm r.period s.period from by omega]
+        simpa using s.evalNat_add_mul_of_dvd (Nat.dvd_lcm_right r.period s.period) 1 (by omega)
+      have hc : (Nat.lcm r.period s.period / r.period) • r.incr
+              - (Nat.lcm r.period s.period / s.period) • s.incr ≤ 0 := sub_nonpos.mpr hle
+      calc r.evalNat (n + k) - s.evalNat k
+          = (r.evalNat (n + (k - Nat.lcm r.period s.period))
+              - s.evalNat (k - Nat.lcm r.period s.period))
+            + ((Nat.lcm r.period s.period / r.period) • r.incr
+               - (Nat.lcm r.period s.period / s.period) • s.incr) := by rw [hr, hs]; abel
+        _ ≤ (r.evalNat (n + (k - Nat.lcm r.period s.period))
+              - s.evalNat (k - Nat.lcm r.period s.period)) + 0 := by gcongr
+        _ = r.evalNat (n + (k - Nat.lcm r.period s.period))
+              - s.evalNat (k - Nat.lcm r.period s.period) := add_zero _
+        _ ≤ r.deconvNat s n := ih (k - Nat.lcm r.period s.period) (by omega)
+
+/-- **`deconvNat` is the genuine (min,plus) deconvolution** (when `slope_f ≤ slope_g`): it is the
+*greatest* of all deconvolution terms `f(n+k) - g(k)` over `k ≥ 0` — i.e. `⨆_{k≥0} f(n+k) - g(k)`.
+Combines `deconvNat_eq` (attained in the window) with `deconvNat_ge` (bounds every `k`). -/
+theorem deconvNat_isGreatest [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] (r s : UppSeq V)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr) (n : ℕ) :
+    IsGreatest (Set.range (fun k => r.evalNat (n + k) - s.evalNat k)) (r.deconvNat s n) := by
+  refine ⟨?_, ?_⟩
+  · obtain ⟨k, _, heq⟩ := deconvNat_eq r s n
+    exact ⟨k, heq.symm⟩
+  · rintro _ ⟨k, rfl⟩
+    exact deconvNat_ge r s hle n k
+
 /-- **Lemma 4.4, balanced case** — the convolution is ultimately pseudo-periodic. When the two
 operands have equal asymptotic slope (`(d/d_f)·c_f = (d/d_g)·c_g = c`, the book's balanced case),
 their (min,plus) convolution satisfies the pseudo-period step `(f⊗g)(n+d) = (f⊗g)(n) + c` with
