@@ -27,3 +27,14 @@ srcDir = "tools"
 name = "wiki"
 srcDir = "tools"
 root = "WikiRAG.Main"
+
+# Verified timed model checker CLI (DeepWiki.ReactiveSystems). Out of `defaultTargets`
+# like the RAG tooling. Build with `lake build tlts`; run with `lake exe tlts`.
+[[lean_lib]]
+name = "TltsCheck"
+srcDir = "tools"
+
+[[lean_exe]]
+name = "tlts"
+srcDir = "tools"
+root = "TltsCheck.Main"
