@@ -65,6 +65,12 @@ abbrev ex_1_2_4 := @DeepWiki.TimeSeries.branchingProcess
 joint law of `(Xₜ)_{t ∈ I}` on a finite index set `I`, whose CDF is the book's `F_t`. -/
 noncomputable abbrev def_1_2_3 := @DeepWiki.TimeSeries.fdd
 
+/-- **Equation (1.2.7)** (§1.2, p.11), the distribution function itself,
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` — the CDF of the finite-dimensional distribution
+`fdd`; `fddCDF_eq_measure` confirms it equals the probability of the event
+`{Xₜ ≤ xₜ for all t ∈ I}`. The library's `fddCDF`. -/
+noncomputable abbrev eq_1_2_7 := @DeepWiki.TimeSeries.fddCDF
+
 /-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11): a family of finite-dimensional
 distribution functions arises from some stochastic process iff it satisfies the consistency
 conditions (1.2.8). The existence (`if`) direction: a consistent (projective) family `P` is

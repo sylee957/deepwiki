@@ -10,6 +10,7 @@ projective limit. -/
 namespace DeepWiki.TimeSeries
 
 open MeasureTheory ProbabilityTheory
+open scoped ENNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {X : ℤ → Ω → ℝ}
 
@@ -19,6 +20,24 @@ finite index set `I` — the joint law of `(Xₜ)_{t ∈ I}`, i.e. the pushforwa
 `F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` (1.2.7) is the CDF of this law. -/
 noncomputable def fdd (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) : Measure (↥I → ℝ) :=
   μ.map (fun ω => I.restrict (fun t => X t ω))
+
+/-- **Definition 1.2.3** in distribution-function form (eq 1.2.7): the distribution function
+`F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` of `(Xₜ)_{t ∈ I}` — the CDF of the law `fdd`, i.e.
+the measure of the lower orthant `{y : yᵢ ≤ xᵢ for all i}`. -/
+noncomputable def fddCDF (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) (x : ↥I → ℝ) : ℝ≥0∞ :=
+  fdd X μ I (Set.univ.pi fun i => Set.Iic (x i))
+
+/-- The distribution function `F_t(x)` (1.2.7) is the probability of the event
+`{Xₜ ≤ xₜ for all t ∈ I}`. -/
+theorem fddCDF_eq_measure (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → ℝ) :
+    fddCDF X μ I x = μ {ω | ∀ i : I, X i ω ≤ x i} := by
+  have hmeas : Measurable (fun ω => I.restrict (fun t => X t ω)) :=
+    measurable_pi_lambda _ fun i => hX i.1
+  rw [fddCDF, fdd, Measure.map_apply hmeas (MeasurableSet.univ_pi fun i => measurableSet_Iic)]
+  congr 1
+  ext ω
+  simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Iic, Set.mem_setOf_eq]
+  exact ⟨fun h i => h i, fun h i => h i⟩
 
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/
