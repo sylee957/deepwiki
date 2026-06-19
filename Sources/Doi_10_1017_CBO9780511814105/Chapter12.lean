@@ -15,6 +15,7 @@ import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutable
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExecutableFull
 import DeepWiki.ReactiveSystems.SymbolicModelCheckingExample
 import DeepWiki.ReactiveSystems.TimedRegionSuccessorComplete
+import DeepWiki.ReactiveSystems.TimedModelCheckingExamples
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 12: Hennessy–Milner logic with time
@@ -331,6 +332,16 @@ theorem ex_12_8 :
       (DeepWiki.ReactiveSystems.combineVal (fun _ => 0) (fun _ => 0))
       DeepWiki.ReactiveSystems.boundedLoopFormula :=
   DeepWiki.ReactiveSystems.boundedLoop_symSat
+
+/-- **Exercise 12.8, via the executable decision procedure.** The same satisfaction —
+`y in ∃∃(y = 2 ∧ [a]ff)` on the bounded loop automaton — discharged *by computation* instead of
+by hand: `demoAuto` is the `FinAutomaton` form of `boundedLoopAuto`, and the goal closes by
+`decide` through the verified executable checker (`satisfiesMt_iff_decideFull_delaySucc`), with no
+region argument. The library's `demoAuto_satisfies_boundedLoopFormula`. -/
+theorem ex_12_8_executable :
+    DeepWiki.ReactiveSystems.demoAuto.toTimedAutomaton.SatisfiesMt
+      DeepWiki.ReactiveSystems.boundedLoopFormula :=
+  DeepWiki.ReactiveSystems.demoAuto_satisfies_boundedLoopFormula
 
 /-- **Definition 12.5, verbatim region form** (§12.2, p.230). Symbolic satisfaction
 `[ℓ, γ] ⊢ F` with `γ` a genuine *region* (an equivalence class of combined `C ⊕ D`
