@@ -46,10 +46,25 @@ theorem prediction_mse_minimal :
 
 **Proposition 5.2.1 (the Durbin–Levinson algorithm)** computes the prediction coefficients `φₙⱼ`
 and the mean-square errors `vₙ = E‖X_{n+1} − X̂_{n+1}‖²` by the recursion
-`φₙₙ = [γ(n) − ∑_{j<n} φ_{n-1,j} γ(n−j)] / v_{n-1}`, `v₀ = γ(0)`, with the **innovations algorithm**
-as the companion recursion (§5.3). These are algebraic recurrences (definable as recursive
-functions over `ℕ`); proving they compute the §5.1 projection requires the Hilbert-projection
-theory plus induction on `n`, and is deferred. The **Wold decomposition** (`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ + Vₜ`,
-deterministic-plus-purely-nondeterministic) needs closed-subspace limits and is infra-blocked. -/
+`φₙₙ = [γ(n) − ∑_{j<n} φ_{n-1,j} γ(n−j)] / v_{n-1}`, `v₀ = γ(0)`, `φₙⱼ = φ_{n-1,j} − φₙₙ φ_{n-1,n-j}`
+(5.2.4), `vₙ = v_{n-1}(1 − φₙₙ²)` (5.2.5). **Proposition 5.2.2 (the innovations algorithm)** is the
+companion recursion `X̂_{n+1} = ∑ⱼ θₙⱼ (X_{n+1-j} − X̂_{n+1-j})` (5.2.15), valid for any process with
+finite second moments. These are algebraic recurrences (definable as recursive functions over
+`ℕ`); proving they compute the §5.1 projection needs the Hilbert-projection theory plus induction
+on `n`, and is deferred (it would build on the closed span of past values in `L²` plus the
+orthogonality `eq_5_1_5`). -/
+
+/-! ## §5.3 Recursive Prediction of an ARMA(p,q) Process (pp.177–182)
+
+Applying §5.2 to ARMA processes gives explicit predictors: **Example 5.3.1** (AR(p)):
+`X̂_{n+1} = φ₁Xₙ + ⋯ + φₚX_{n+1-p}` for `n ≥ p` — the predictor is just the autoregressive
+recursion, since the innovation `Z_{n+1}` is orthogonal to the past (causality). **Example 5.3.2**
+(MA(q)) and **Example 5.3.3** (ARMA(1,1), `X̂_{n+1} = φXₙ + θₙ₁(Xₙ − X̂ₙ)`) use the innovations
+form, and the chapter continues with `h`-step prediction (5.3.22–5.3.24). Each is a concrete
+instance of the §5.1 projection; formalizing them faithfully needs the `L²` embedding of the
+process, the span of its past, and the causal orthogonality `Z_{n+1} ⊥ sp{Xₛ : s ≤ n}` — the same
+projection-plus-causality layer deferred above. The **Wold decomposition**
+(`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ + Vₜ`, purely-nondeterministic plus deterministic) needs closed-subspace limits
+and is infra-blocked. -/
 
 end DeepWiki.Ts
