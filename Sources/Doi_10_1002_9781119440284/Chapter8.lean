@@ -62,7 +62,8 @@ alias thm_8_2_6 := exists_delay_eq_of_comp_packetizerRel
 /-- **Corollary 8.2** (§8.1, p.190): Packetizer as a delay: if a cumulative function A is P-packetized then S;P offers the pure-delay min-plus service curve δ_{d(A,S)} to A (using d(A,S;P) = d(A,S)). The library's `DeepWiki.apply_tsub_le_of_isPacketized_comp_packetizerRel`: given a finite delay bound dM on the S-stage, the S;P output satisfies the δ_dM bound `A(t − dM) ≤ C t` — the left-continuity of the `Curve` arrival supplies the bound at the exact delay (`apply_tsub_le_of_delay_le_of_leftCont`). -/
 alias cor_8_2 := apply_tsub_le_of_isPacketized_comp_packetizerRel
 
-/-! **Corollary 8.3** (§8.1, p.190): Arrival curve from a packetizer: if S is a server, P a packetizer with max packet size ℓ^u, (A,C) ∈ S;P, P-packetized, and S maximal-arrival σ^M-shaper, then C has maximal arrival curve ((α ∘ β^M) ∧ (σ + ℓ^u)) ∧ (α ⊘ δ_{hDev(A,S;P)}). Not formalized in the library. -/
+/-- **Corollary 8.3** (§8.1, p.190): Arrival curve from a packetizer: the output `C` of `S;P` has maximal arrival curve `((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ) ∧ (α ⊘ δ_{hDev(α,βᵐ)})`. The library's `DeepWiki.isMaximalArrivalBound_output_comp_packetizerRel` formalizes the **main bound** (first two terms `((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ)`), routing the `S;P` service properties (Theorem 8.2: min-plus `βᵐ − ℓᵘ`, maximal `βᴹ`, `(σ + ℓᵘ)`-shaper) through `isMaximalArrivalBound_output`. The third term `α ⊘ δ_{hDev(α,βᵐ)}` — the book's optional delay-based refinement via Corollary 8.2 (now unblocked, cor_8_2) — is not yet combined in. -/
+alias cor_8_3_mainBound := isMaximalArrivalBound_output_comp_packetizerRel
 
 /-- **Definition 8.3.1** (§8.2.1, p.191): Non-preemptive static priority (NP-SP): a backlogged higher-or-equal-priority flow is served except for at most one in-service lower-priority packet (≤ max packet size of lower priorities). -/
 abbrev def_8_3_1_npsp := @IsNpsp

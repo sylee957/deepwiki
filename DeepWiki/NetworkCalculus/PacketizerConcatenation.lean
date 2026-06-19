@@ -5,6 +5,7 @@ import DeepWiki.NetworkCalculus.ArrivalCurvesShaper
 import DeepWiki.NetworkCalculus.ServiceCurveMaximal
 import DeepWiki.NetworkCalculus.Deviations
 import DeepWiki.NetworkCalculus.ServersJitter
+import DeepWiki.NetworkCalculus.ArrivalCurvesOutput
 
 /-! # A server followed by a packetizer
 The combined system `S;P`: the packetizer costs one maximal packet on
@@ -229,6 +230,30 @@ theorem apply_tsub_le_of_isPacketized_comp_packetizerRel
   refine Deviation.apply_tsub_le_of_delay_le_of_leftCont
     (A.zero : (⇑A) 0 = 0) A.leftCont C.mono ?_ t
   exact hdeq.le.trans (hd B hSB)
+
+/-- **Corollary 8.3** (combined arrival curve from a packetizer), main bound: the
+output `D` of the system `S;P` carries the maximal arrival curve
+`((α ∗ βᴹ) ⊘ (βᵐ − ℓᵘ)) ∧ (σ + ℓᵘ)` — the first two of the three book terms, from
+the `S;P` service properties (`S;P` offers min-plus `βᵐ − ℓᵘ`, maximal `βᴹ`, and is
+a `(σ + ℓᵘ)`-shaper, Theorem 8.2) fed through the output-arrival theorem
+`isMaximalArrivalBound_output`. The book's third term `α ⊘ δ_{hDev(α,βᵐ)}` (the
+optional delay-based refinement, from Corollary 8.2) sharpens this further. -/
+theorem isMaximalArrivalBound_output_comp_packetizerRel
+    {S : Curve → Curve → Prop} {βm βM σ : ℝ≥0 → EReal} {αu : ℝ≥0 → ℝ≥0∞}
+    {L : ℕ → ℝ≥0} {ll lu : ℝ≥0} (hL : IsPacketLengthSeq L ll lu)
+    (hβm : IsMinimalServiceCurve βm S)
+    (hnnm' : IsNonneg (fun v => βm v - ((lu : ℝ) : EReal)))
+    (hβM : IsMaximalServiceCurve βM S) (hnnM : IsNonneg βM)
+    (hsh : IsShaper σ S) (hnnσ : IsNonneg σ)
+    {A D : Curve} (hp : Relation.Comp S (packetizerRel L) A D)
+    (harru : IsMaximalArrivalBound (Deviation.liftENN ⇑A) αu) :
+    IsMaximalArrivalBound (Deviation.liftENN ⇑D)
+      (minDeconv (minConv αu (Deviation.toENN βM))
+          (Deviation.toENN (fun v => βm v - ((lu : ℝ) : EReal)))
+        ⊓ Deviation.toENN (fun d => σ d + ((lu : ℝ) : EReal))) :=
+  isMaximalArrivalBound_output (hβm.comp_packetizerRel hL) hnnm'
+    (hβM.comp_packetizerRel hL) hnnM (hsh.comp_packetizerRel hL)
+    (fun d => add_nonneg (hnnσ d) (by exact_mod_cast lu.coe_nonneg)) hp harru
 
 /-! ## Book restatement (the server/packetizer system)
 `S` a server, `P` a packetizer with maximum packet size `ℓᵘ`: the
