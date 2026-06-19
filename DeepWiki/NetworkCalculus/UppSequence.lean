@@ -662,6 +662,43 @@ theorem convNat_add_lcm [AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] 
   exact ⟨max N ((r.vals.length - r.period) + (s.vals.length - s.period) + Nat.lcm r.period s.period),
     fun n hn => le_antisymm (hN n (by omega)) (convNat_add_lcm_ge r s (by omega))⟩
 
+/-- **Composable convolution constructor.** Assemble `r ⊗ s` as an actual `UppSeq`: prefix
+`(r⊗s)(0 .. T+d-1)` (sampled via `convNat`), period `d = lcm`, increment `min(cr,cs)`. `T` is any
+stabilization rank past which the pseudo-period step holds. Computable (`convNat` is), so convolution
+results chain through further operators — the heart of the executable (min,plus) calculator. -/
+def convFrom [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (T : ℕ) : UppSeq V where
+  vals := (List.range (T + Nat.lcm r.period s.period)).map (fun n => r.convNat s n)
+  incr := Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+      ((Nat.lcm r.period s.period / s.period) • s.incr)
+  period := Nat.lcm r.period s.period
+  hperiod := Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+  hlen := by rw [List.length_map, List.length_range]; omega
+
+/-- **`convFrom` is correct**: when `T` is a genuine stabilization rank (the pseudo-period step
+`(r⊗s)(n+d) = (r⊗s)(n) + min(cr,cs)` holds for `n ≥ T`), the assembled `UppSeq` denotes exactly the
+convolution — `(r.convFrom s T).evalNat n = (r⊗s)(n)` for all `n`. -/
+theorem evalNat_convFrom [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (T : ℕ)
+    (hstep : ∀ n, T ≤ n → r.convNat s (n + Nat.lcm r.period s.period)
+      = r.convNat s n + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr))
+    (n : ℕ) : (r.convFrom s T).evalNat n = r.convNat s n := by
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    by_cases hL : n < (r.convFrom s T).vals.length
+    · rw [evalNat_of_lt _ hL]; simp [convFrom]
+    · have hge : T + Nat.lcm r.period s.period ≤ n := by
+        simpa [convFrom, List.length_map, List.length_range, not_lt] using hL
+      have hd0 : 0 < Nat.lcm r.period s.period :=
+        Nat.pos_of_ne_zero (Nat.lcm_ne_zero r.hperiod.ne' s.hperiod.ne')
+      conv_lhs => rw [evalNat.eq_def]
+      rw [dif_neg hL]
+      show (r.convFrom s T).evalNat (n - Nat.lcm r.period s.period)
+        + Min.min ((Nat.lcm r.period s.period / r.period) • r.incr)
+          ((Nat.lcm r.period s.period / s.period) • s.incr) = _
+      rw [ih (n - Nat.lcm r.period s.period) (by omega),
+        ← hstep (n - Nat.lcm r.period s.period) (by omega),
+        show n - Nat.lcm r.period s.period + Nat.lcm r.period s.period = n from by omega]
+
 /-- Sanity check (gate-verified): `(demoSeq ⊗ demoSeq)(3) = 3` and `(·)(5) = 6`
 (`f = 0,1,2,4,5,7,…`; e.g. at `n=3` the min is `f(1)+f(2) = 1+2`). -/
 example : demoSeq.convNat demoSeq 3 = 3 ∧ demoSeq.convNat demoSeq 5 = 6 := by native_decide
