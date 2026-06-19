@@ -108,4 +108,15 @@ def maxUpp (r s : UppSeq Int) : UppSeq Int :=
 def renderUpp (u : UppSeq Int) : String :=
   s!"{", ".intercalate (u.vals.map toString)}  period={u.period}  incr={u.incr}"
 
+/-- Demo sequences for composition checks (ℤ): `r1(n) = n`, `r2(n) = 2n`. -/
+def r1 : UppSeq Int := ⟨[0], 1, 1, by decide, by decide⟩
+/-- Demo sequence `r2(n) = 2n` (ℤ). -/
+def r2 : UppSeq Int := ⟨[0], 2, 1, by decide, by decide⟩
+
+/-- **Composition (gate-verified by `native_decide`):** operators chain — the `UppSeq` produced by
+`convUpp` is fed straight into `minUpp`. `(r1 ⊗ r2) ⊓ r2` denotes `n`: `convUpp r1 r2` denotes `n`
+(`r1` is the slower operand), and `min(n, 2n) = n = r1`. -/
+example : ∀ n ∈ Finset.range 6,
+    (minUpp (convUpp r1 r2) r2).evalNat n = r1.evalNat n := by native_decide
+
 end MinPlusCalc
