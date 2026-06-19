@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.LagPolynomials
 import DeepWiki.TimeSeries.StationaryProcesses
+import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Tactic
 
 /-! # ARMA processes
@@ -59,5 +60,50 @@ theorem IsAR.eq {φ : ℝ[X]} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsAR �
     lagPoly φ X = Z := by
   have hd := h.diffEq
   rwa [lagPoly_one, Module.End.one_apply] at hd
+
+/-- **§3.1 (Theorem 3.1.1, causality criterion).** The autoregressive polynomial `φ`
+satisfies the **causality condition** when it has no zero in the closed complex unit disk:
+`φ(z) ≠ 0` for all `‖z‖ ≤ 1`. By Theorem 3.1.1 this is equivalent to the existence of an
+absolutely-summable causal `MA(∞)` representation `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` with `∑ⱼ |ψⱼ| < ∞`; that
+equivalence is the analytic content of the theorem and needs `PowerSeries`-reciprocal and
+mean-square summability infrastructure not developed here. -/
+def IsCausalPoly (φ : ℝ[X]) : Prop := ∀ z : ℂ, ‖z‖ ≤ 1 → Polynomial.aeval z φ ≠ 0
+
+/-- **§3.1 (Theorem 3.1.2, invertibility criterion).** The moving-average polynomial `θ`
+satisfies the **invertibility condition** when `θ(z) ≠ 0` for all `‖z‖ ≤ 1`; by Theorem 3.1.2
+this is equivalent to an absolutely-summable `AR(∞)` representation `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` (same
+analytic caveat as causality). -/
+def IsInvertiblePoly (θ : ℝ[X]) : Prop := ∀ z : ℂ, ‖z‖ ≤ 1 → Polynomial.aeval z θ ≠ 0
+
+/-- The AR(1) autoregressive polynomial `1 - φ₁ z` evaluated at `z : ℂ`. -/
+theorem aeval_ar1 (φ₁ : ℝ) (z : ℂ) :
+    Polynomial.aeval z (1 - Polynomial.C φ₁ * Polynomial.X) = 1 - (φ₁ : ℂ) * z := by
+  simp only [map_sub, map_one, map_mul, Polynomial.aeval_C, Polynomial.aeval_X,
+    Complex.coe_algebraMap]
+
+/-- **§3.1**: the `AR(1)` process is causal iff `|φ₁| < 1` — its autoregressive polynomial
+`1 - φ₁ z` has its only root `1/φ₁` strictly outside the closed unit disk. -/
+theorem isCausalPoly_ar1 (φ₁ : ℝ) :
+    IsCausalPoly (1 - Polynomial.C φ₁ * Polynomial.X) ↔ |φ₁| < 1 := by
+  constructor
+  · intro h
+    by_contra hle
+    rw [not_lt] at hle
+    have hφ₁ : φ₁ ≠ 0 := fun h0 => by rw [h0, abs_zero] at hle; norm_num at hle
+    have hz : ‖(φ₁ : ℂ)⁻¹‖ ≤ 1 := by
+      rw [norm_inv, Complex.norm_real, Real.norm_eq_abs]
+      exact inv_le_one_of_one_le₀ hle
+    have key := h (φ₁ : ℂ)⁻¹ hz
+    rw [aeval_ar1, mul_inv_cancel₀ (by exact_mod_cast hφ₁ : (φ₁ : ℂ) ≠ 0)] at key
+    exact key (sub_self 1)
+  · intro h z hz
+    rw [aeval_ar1]
+    intro hcontra
+    rw [sub_eq_zero] at hcontra
+    have h1 : ‖(φ₁ : ℂ) * z‖ = 1 := by rw [← hcontra, norm_one]
+    rw [norm_mul, Complex.norm_real, Real.norm_eq_abs] at h1
+    have hb : |φ₁| * ‖z‖ ≤ |φ₁| := by
+      simpa using mul_le_mul_of_nonneg_left hz (abs_nonneg φ₁)
+    linarith
 
 end DeepWiki.TimeSeries

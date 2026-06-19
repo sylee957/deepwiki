@@ -55,4 +55,34 @@ example {φ : ℝ[X]} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsAR φ Xp Z 
     lagPoly φ Xp = Z :=
   h.eq
 
+/-! ### §3.1 causality and invertibility (pp.83–86)
+
+The book's **Definition 3.1.3** (causal: `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` with `∑ⱼ |ψⱼ| < ∞`),
+**Definition 3.1.4** (invertible: `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` with `∑ⱼ |πⱼ| < ∞`), **Theorem 3.1.1**
+(causal `⟺ φ(z) ≠ 0` for `|z| ≤ 1`, with `ψ(z) = θ(z)/φ(z)`), **Theorem 3.1.2** (invertible
+`⟺ θ(z) ≠ 0` for `|z| ≤ 1`), and **Propositions 3.1.1/3.1.2** (absolute / mean-square
+convergence of `∑ⱼ ψⱼ Xₜ₋ⱼ` and stationarity of the filtered process) all rest on the
+mean-square convergence of `∑ⱼ ψⱼ Zₜ₋ⱼ` and the power-series reciprocal `1/φ`. That analytic
+layer is **not yet formalized** — infra-blocked, like the deferred analytic items elsewhere
+in the project (it needs `PowerSeries`-reciprocal, `∑|ψⱼ| < ∞` summability, and `L²`-limit
+infrastructure). What *is* formalized: the **root conditions** (the right-hand sides of
+Theorems 3.1.1/3.1.2) as predicates, and the concrete `AR(1)` causality criterion. -/
+
+/-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
+zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
+(The full equivalence "causal `⟺` this" — Theorem 3.1.1 — is infra-blocked; see the note.) -/
+abbrev thm_3_1_1 := @DeepWiki.TimeSeries.IsCausalPoly
+
+/-- **Theorem 3.1.2** root condition (§3.1, p.86): the moving-average polynomial `θ` has no
+zero in the closed complex unit disk, `θ(z) ≠ 0` for `|z| ≤ 1`. The library's
+`IsInvertiblePoly`. (The full equivalence "invertible `⟺` this" is infra-blocked.) -/
+abbrev thm_3_1_2 := @DeepWiki.TimeSeries.IsInvertiblePoly
+
+/-- **§3.1** (AR(1) causality, p.81): the `AR(1)` process `Xₜ = φ₁Xₜ₋₁ + Zₜ` is causal iff
+`|φ₁| < 1` — its autoregressive polynomial `1 − φ₁z` has its only root `1/φ₁` outside the
+closed unit disk. The library's `isCausalPoly_ar1`. -/
+theorem ar1_causal_iff (φ₁ : ℝ) :
+    IsCausalPoly (1 - Polynomial.C φ₁ * Polynomial.X) ↔ |φ₁| < 1 :=
+  isCausalPoly_ar1 φ₁
+
 end DeepWiki.Ts
