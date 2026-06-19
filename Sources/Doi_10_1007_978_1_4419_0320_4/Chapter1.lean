@@ -440,6 +440,24 @@ theorem ex_1_12_b :
   (isACVF_iff_even_and_isNonnegDefinite (fun h => (-1 : ℝ) ^ h)).mpr
     ⟨neg_one_zpow_even, isNonnegDefinite_neg_one_zpow⟩
 
+/-- **Problem 1.13** (p.41): for the random walk with constant drift `Sₜ = μt + ∑_{i≤t} Xᵢ`
+(`S₀ = 0`) of iid increments `Xᵢ` with mean `a` and variance `b`, the **differenced** process
+`∇Sₜ = Sₜ − Sₜ₋₁ = μ + Xₜ` is weakly stationary, with mean `μ + a` and autocovariance
+`γ(h) = b·[h = 0]`. The increments are white noise (`isWeaklyStationary_of_whiteCov`), and adding
+the drift constant `μ` preserves stationarity and the autocovariance (`IsWeaklyStationary.const_add`,
+`acvfStat_const_add`). -/
+theorem ex_1_13 [IsProbabilityMeasure μ] {Xs : ℤ → Ω → ℝ} {drift a b : ℝ}
+    (hmem : ∀ t, MemLp (Xs t) 2 μ) (ha : ∀ t, mean Xs μ t = a)
+    (hcov : ∀ i j, cov[Xs i, Xs j; μ] = if i = j then b else 0) :
+    IsWeaklyStationary (fun t ω => drift + Xs t ω) μ ∧
+      (∀ t, mean (fun t ω => drift + Xs t ω) μ t = drift + a) ∧
+      (∀ h, acvfStat (fun t ω => drift + Xs t ω) μ h = if h = 0 then b else 0) := by
+  have hstat : IsWeaklyStationary Xs μ :=
+    isWeaklyStationary_of_whiteCov hmem (fun s t => (ha s).trans (ha t).symm) hcov
+  refine ⟨hstat.const_add drift, fun t => ?_, fun h => ?_⟩
+  · rw [mean_const_add hmem drift t, ha t]
+  · rw [acvfStat_const_add hmem drift h, acvfStat_apply, hcov h 0]
+
 /-- **Problem 1.15** (p.41): "Prove Proposition 1.6.3" — the spectral decomposition of a
 symmetric matrix. This is exactly `prop_1_6_3` (Mathlib's
 `Matrix.IsHermitian.spectral_theorem`). -/

@@ -134,6 +134,57 @@ theorem acvfStat_add_of_uncorrelated [IsFiniteMeasure μ] {X Y : ℤ → Ω → 
   simp only [acvfStat_apply]
   exact cov_add_add_of_uncorrelated hX hY hXY h 0
 
+/-! ## Problem 1.13: a constant plus a stationary process -/
+
+/-- Adding a constant `c` to a weakly stationary process keeps it weakly stationary, with the
+**same** autocovariance (only the mean shifts, by `c`). This is why a differenced random walk
+`∇Sₜ = μ + Xₜ` is stationary (Problem 1.13). -/
+theorem IsWeaklyStationary.const_add [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (c : ℝ) :
+    IsWeaklyStationary (fun t ω => c + X t ω) μ where
+  memLp t := (memLp_const c).add (hX.memLp t)
+  mean_const s t := by
+    simp only [mean]
+    rw [integral_add (integrable_const c) ((hX.memLp s).integrable (by norm_num)),
+        integral_add (integrable_const c) ((hX.memLp t).integrable (by norm_num))]
+    have h := hX.mean_const s t
+    simp only [mean] at h
+    rw [h]
+  acvf_shift r s h := by
+    show cov[fun ω => c + X r ω, fun ω => c + X s ω; μ]
+      = cov[fun ω => c + X (r + h) ω, fun ω => c + X (s + h) ω; μ]
+    rw [covariance_const_add_left ((hX.memLp r).integrable (by norm_num)) c,
+        covariance_const_add_right ((hX.memLp s).integrable (by norm_num)) c,
+        covariance_const_add_left ((hX.memLp (r + h)).integrable (by norm_num)) c,
+        covariance_const_add_right ((hX.memLp (s + h)).integrable (by norm_num)) c]
+    exact hX.acvf_shift r s h
+
+/-- Adding a constant does not change the autocovariance function: `γ_{c+X}(h) = γ_X(h)`. -/
+theorem acvfStat_const_add [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : ∀ t, MemLp (X t) 2 μ) (c : ℝ) (h : ℤ) :
+    acvfStat (fun t ω => c + X t ω) μ h = acvfStat X μ h := by
+  simp only [acvfStat_apply]
+  rw [covariance_const_add_left ((hX h).integrable (by norm_num)) c,
+      covariance_const_add_right ((hX 0).integrable (by norm_num)) c]
+
+/-- The mean of `c + X` shifts by `c`: `E[c + Xₜ] = c + E[Xₜ]`. -/
+theorem mean_const_add [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ} (hX : ∀ t, MemLp (X t) 2 μ)
+    (c : ℝ) (t : ℤ) : mean (fun s ω => c + X s ω) μ t = c + mean X μ t := by
+  simp only [mean]
+  rw [integral_add (integrable_const c) ((hX t).integrable (by norm_num)), integral_const]
+  simp
+
+/-- **White noise is weakly stationary**: a square-integrable process with constant mean whose
+autocovariance is `Cov(Xᵢ, Xⱼ) = v·[i = j]` (uncorrelated, common variance `v`) is weakly
+stationary — the lag shift `i, j ↦ i+h, j+h` preserves `i = j`. -/
+theorem isWeaklyStationary_of_whiteCov {X : ℤ → Ω → ℝ} {v : ℝ}
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hmean : ∀ s t, mean X μ s = mean X μ t)
+    (hcov : ∀ i j, cov[X i, X j; μ] = if i = j then v else 0) :
+    IsWeaklyStationary X μ where
+  memLp := hmem
+  mean_const := hmean
+  acvf_shift r s h := by simp only [hcov, add_left_inj]
+
 /-- A function `κ : ℤ → ℝ` is **non-negative definite** if
 `∑ᵢⱼ aᵢ aⱼ κ(tᵢ − tⱼ) ≥ 0` for every finite collection of integer points `t i`
 and reals `a i`. -/
