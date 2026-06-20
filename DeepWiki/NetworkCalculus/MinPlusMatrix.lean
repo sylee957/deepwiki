@@ -590,6 +590,55 @@ theorem untrop_pow_mul_eq_of_tight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ
     congr 1; push_cast; ring
   · exact untrop_pow_diag_ge A μ hμ i (k * p)
 
+/-- **Scaled lower bound** (the cross-multiplied rational rate `λ = a/b`): if `a·|l₀| ≤ b·weight` holds
+on short circuits, it holds on all closed walks. Same strong induction as `walkWeight_ge_of_short`, with
+the right-hand side scaled by `b` (`nsmul_add` distributes the scaling over the circuit split). Lets the
+*rational* eigenvalue be used integrally — `λ·|l| ≤ weight` becomes `a·|l| ≤ b·weight`. -/
+theorem walkWeight_ge_of_short_scaled {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (a : ℤ) (b : ℕ)
+    (hsh : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(a * l₀.length) : WithTop ℤ) ≤ b • walkWeight A v l₀) :
+    ∀ (i : Fin n) (l : List (Fin n)), l.getLastD i = i →
+      (↑(a * l.length) : WithTop ℤ) ≤ b • walkWeight A i l := by
+  suffices H : ∀ N (i : Fin n) (l : List (Fin n)), l.length = N → l.getLastD i = i →
+      (↑(a * l.length) : WithTop ℤ) ≤ b • walkWeight A i l by
+    intro i l hcl; exact H l.length i l rfl hcl
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro i l hN hcl
+    by_cases hle : l.length ≤ n
+    · exact hsh i l hcl hle
+    · rw [not_le] at hle
+      obtain ⟨l', lc, v, hl'len, hlclen, hl'end, hcv, hsum, hwt⟩ :=
+        exists_walkWeight_shorter_proper A i l hle
+      have hcl' : l'.getLastD i = i := by rw [hl'end]; exact hcl
+      have ih1 := ih l'.length (by omega) i l' rfl hcl'
+      have ih2 := ih lc.length (by omega) v lc rfl hcv
+      have hsum' : a * (l.length : ℤ) = a * l'.length + a * lc.length := by
+        have : (l.length : ℤ) = l'.length + lc.length := by exact_mod_cast hsum.symm
+        rw [this]; ring
+      rw [hwt, nsmul_add]
+      calc (↑(a * l.length) : WithTop ℤ)
+          = ↑(a * l'.length) + ↑(a * lc.length) := by rw [← WithTop.coe_add]; exact_mod_cast hsum'
+        _ ≤ b • walkWeight A i l' + b • walkWeight A v lc := add_le_add ih1 ih2
+
+/-- **Scaled diagonal lower bound** (matrix form): with the cross-multiplied rate `a/b` valid on short
+circuits (`1 ≤ b`), `a·k ≤ b·(Aᵏ)ᵢᵢ` — i.e. `(Aᵏ)ᵢᵢ ≥ (a/b)·k` integrally, the *sharp* (rational-rate)
+diagonal growth bound. The `+∞` entry is bounded by `b·⊤ = ⊤` (`b ≥ 1`); a finite entry by the scaled
+walk bound on its attaining circuit. -/
+theorem untrop_pow_diag_ge_scaled {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (a : ℤ) (b : ℕ) (hb : 1 ≤ b)
+    (hsh : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(a * l₀.length) : WithTop ℤ) ≤ b • walkWeight A v l₀)
+    (i : Fin n) (k : ℕ) :
+    (↑(a * (k : ℤ)) : WithTop ℤ) ≤ b • ((A ^ k) i i).untrop := by
+  by_cases htop : ((A ^ k) i i).untrop = ⊤
+  · obtain ⟨b', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : b ≠ 0)
+    rw [htop, succ_nsmul, add_top]; exact le_top
+  · obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A k i i htop
+    have hge := walkWeight_ge_of_short_scaled A a b hsh i l hend
+    rw [hlen, hw] at hge
+    exact hge
+
 /-! ### The min-plus eigenvalue, as the minimum mean cycle
 The growth rate `λ` characterized abstractly by the bounds above is, concretely, the minimum mean over
 circuits. By the reduction `walkWeight_reduce_of_nonneg`/`exists_lt_untrop_pow_le`, only circuits of
