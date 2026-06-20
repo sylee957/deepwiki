@@ -177,6 +177,15 @@ theorem ex_1_3_2 [IsFiniteMeasure μ] {Zs : ℤ → Ω → ℝ} {θ σ2 : ℝ}
   ⟨maProcess1_acvf_zero hZ huc s, maProcess1_acvf_one hZ huc s,
     fun h hh => maProcess1_acvf_ge_two hZ huc s h hh⟩
 
+omit [MeasurableSpace Ω] in
+/-- **Example 1.3.2 connected to §3.1**: the MA(1) process `Xₜ = Zₜ + θ Zₜ₋₁` is exactly the
+lag-polynomial moving average `θ(B) Z` with `θ(z) = 1 + θ z` (eqs 3.1.5–3.1.7) — linking the
+concrete Example 1.3.2 to the general ARMA/MA difference-equation form (`IsMA`). The library's
+`maProcess1_eq_lagPoly`. -/
+theorem ex_1_3_2_lagPoly (Zs : ℤ → Ω → ℝ) (θ : ℝ) :
+    maProcess1 Zs θ = lagPoly (1 + Polynomial.C θ * Polynomial.X) Zs :=
+  maProcess1_eq_lagPoly Zs θ
+
 /-- **Example 1.3.3** (§1.3, p.13), the process `Xₜ = Zₜ + 1{t odd}` has lag-only
 autocovariance but a non-constant mean, hence is not (covariance) stationary. The
 library's `parityShift`, `parityShift_not_stationary`. -/

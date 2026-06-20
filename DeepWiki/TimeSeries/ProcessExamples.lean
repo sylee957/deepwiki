@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.StationaryProcesses
+import DeepWiki.TimeSeries.LagPolynomials
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Probability.HasLawExists
 import Mathlib.Probability.Distributions.Bernoulli
@@ -270,6 +271,18 @@ theorem maProcess1_acvf_ge_two [IsFiniteMeasure μ]
       huc (s + h) s, huc (s + h) (s - 1), huc (s + h - 1) s, huc (s + h - 1) (s - 1),
       if_neg (by omega), if_neg (by omega), if_neg (by omega), if_neg (by omega)]
   ring
+
+omit [MeasurableSpace Ω] in
+/-- **Example 1.3.2 connected to the general MA form**: the MA(1) process `Xₜ = Zₜ + θ Zₜ₋₁` is the
+lag-polynomial moving average with `θ(z) = 1 + θ z`, i.e. `maProcess1 Z θ = (1 + θB) Z = θ(B) Z`
+(`lagPoly`) — tying the concrete Example 1.3.2 to the ARMA/MA difference-equation form (`IsMA`,
+`IsMA.eq_apply`). -/
+theorem maProcess1_eq_lagPoly (Z : ℤ → Ω → ℝ) (θ : ℝ) :
+    maProcess1 Z θ = lagPoly (1 + Polynomial.C θ * Polynomial.X) Z := by
+  rw [lagPoly_add, lagPoly_one]
+  funext t
+  simp only [LinearMap.add_apply, Module.End.one_apply, lagPoly_mul_apply, lagPoly_X,
+    lagPoly_C_apply, backshiftL_coe, backshift_apply, maProcess1, Pi.add_apply, Pi.smul_apply]
 
 /-! ## A covariance-stationary series with non-constant mean (Example 1.3.3) -/
 
