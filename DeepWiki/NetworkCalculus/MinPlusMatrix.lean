@@ -286,28 +286,67 @@ theorem getLastD_drop_take {α : Type*} (i x : α) (l : List α) (A B : ℕ)
         List.getElem?_cons_succ, show A + (k - A) = k by omega]
   rw [getLastD_take x (l.drop A) (k + 1 - A) (by rw [List.length_drop]; omega), key]
 
+/-- **Circuit extraction core** (index form): given a repeated vertex at positions `a < b` of the
+walk `i :: l` (`(i::l)[a]? = (i::l)[b]?`), split the tail as `prefix ++ circuit ++ suffix` with the
+prefix `= l.take a` ending at the repeated vertex `v` and the circuit nonempty and returning to `v`.
+Assembles the pigeonhole-free pieces; exposing `lp = l.take a` lets callers force `lp ≠ []` via `a`. -/
+theorem circuit_extraction_core {n : ℕ} (i : Fin n) (l : List (Fin n)) (a b : ℕ)
+    (hab : a < b) (hb : b ≤ l.length) (hval : (i :: l)[a]? = (i :: l)[b]?) :
+    ∃ (lp lc ls : List (Fin n)) (v : Fin n),
+      l = lp ++ lc ++ ls ∧ lp = l.take a ∧ lc ≠ [] ∧ lp.getLastD i = v ∧ lc.getLastD v = v := by
+  refine ⟨l.take a, (l.drop a).take (b - a), l.drop b, ((i :: l)[a]?).getD i,
+    (take_take_drop_drop l a b (le_of_lt hab)).symm, rfl, ?_, ?_, ?_⟩
+  · have : 0 < ((l.drop a).take (b - a)).length := by
+      rw [List.length_take, List.length_drop]; omega
+    exact List.ne_nil_of_length_pos this
+  · rw [getLastD_take i l a (by omega)]
+  · have ha : a < (i :: l).length := by simp only [List.length_cons]; omega
+    rw [getLastD_drop_take i (((i :: l)[a]?).getD i) l a b hab hb, ← hval,
+        List.getElem?_eq_getElem ha]
+    rfl
+
 /-- **Single-circuit extraction**: any walk `i ⤳ …` with at least `n` edges (so `> n` vertices)
 splits as `prefix ++ circuit ++ suffix`, where the prefix ends at some vertex `v`, and the circuit is
-nonempty and returns to `v`. The pigeonhole supplies the repeated vertex; the list/weight helpers do
-the bookkeeping. With `walkWeight_circuit_decomp` this is the inductive step that peels a circuit off
-a long walk — repeated, it reduces any walk to a simple path plus circuits (the lower-bound engine). -/
+nonempty and returns to `v`. The pigeonhole supplies the repeated vertex; `circuit_extraction_core`
+does the bookkeeping. With `walkWeight_circuit_decomp` this peels a circuit off a long walk. -/
 theorem exists_circuit_extraction {n : ℕ} (i : Fin n) (l : List (Fin n)) (hl : n ≤ l.length) :
     ∃ (lp lc ls : List (Fin n)) (v : Fin n),
       l = lp ++ lc ++ ls ∧ lc ≠ [] ∧ lp.getLastD i = v ∧ lc.getLastD v = v := by
   obtain ⟨a, b, hab, hval⟩ := exists_lt_repeated_vertex i l hl
-  have hAB : a.val < b.val := hab
-  have hBlen : b.val ≤ l.length := by
-    have hb := b.isLt; simp only [List.length_cons] at hb; omega
-  have hAlen : a.val ≤ l.length := by omega
-  refine ⟨l.take a.val, (l.drop a.val).take (b.val - a.val), l.drop b.val, (i :: l).get a,
-    (take_take_drop_drop l a.val b.val (le_of_lt hAB)).symm, ?_, ?_, ?_⟩
-  · have : 0 < ((l.drop a.val).take (b.val - a.val)).length := by
-      rw [List.length_take, List.length_drop]; omega
-    exact List.ne_nil_of_length_pos this
-  · rw [getLastD_take i l a.val hAlen, List.getElem?_eq_getElem a.isLt]; rfl
-  · rw [getLastD_drop_take i ((i :: l).get a) l a.val b.val hAB hBlen,
-        List.getElem?_eq_getElem b.isLt]
-    exact hval.symm
+  have hve : (i :: l)[a.val]? = (i :: l)[b.val]? := by
+    rw [List.getElem?_eq_getElem a.isLt, List.getElem?_eq_getElem b.isLt]
+    exact congrArg some hval
+  obtain ⟨lp, lc, ls, v, hsplit, _, hlc, hpv, hcv⟩ :=
+    circuit_extraction_core i l a.val b.val hab
+      (by have := b.isLt; simp only [List.length_cons] at this; omega) hve
+  exact ⟨lp, lc, ls, v, hsplit, hlc, hpv, hcv⟩
+
+/-- **Proper circuit extraction** (nonempty prefix): for `l` *longer* than the vertex count
+(`n < l.length`), pigeonholing the interior vertices yields a split where **both** the prefix and the
+circuit are nonempty. Hence the shortened walk `prefix ++ suffix` *and* the circuit are each strictly
+shorter than `l` — the version that lets the lower-bound strong induction recurse on both pieces
+(avoiding the degenerate closed-walk split where the circuit is the whole walk). -/
+theorem exists_circuit_extraction_proper {n : ℕ} (i : Fin n) (l : List (Fin n)) (hl : n < l.length) :
+    ∃ (lp lc ls : List (Fin n)) (v : Fin n),
+      l = lp ++ lc ++ ls ∧ lp ≠ [] ∧ lc ≠ [] ∧ lp.getLastD i = v ∧ lc.getLastD v = v := by
+  obtain ⟨a, b, hab, hval⟩ := Fintype.exists_ne_map_eq_of_card_lt l.get (by simpa using hl)
+  have hve : ∀ p q : Fin l.length, l.get p = l.get q →
+      (i :: l)[p.val + 1]? = (i :: l)[q.val + 1]? := by
+    intro p q hpq
+    rw [List.getElem?_cons_succ, List.getElem?_cons_succ,
+        List.getElem?_eq_getElem p.isLt, List.getElem?_eq_getElem q.isLt]
+    exact congrArg some hpq
+  rcases lt_or_gt_of_ne (show a.val ≠ b.val from fun h => hab (Fin.ext h)) with h | h
+  · obtain ⟨lp, lc, ls, v, hsplit, hlp, hlc, hpv, hcv⟩ :=
+      circuit_extraction_core i l (a.val + 1) (b.val + 1) (by omega) (by omega) (hve a b hval)
+    refine ⟨lp, lc, ls, v, hsplit, ?_, hlc, hpv, hcv⟩
+    rw [hlp]
+    exact List.ne_nil_of_length_pos (by rw [List.length_take]; have := a.isLt; omega)
+  · obtain ⟨lp, lc, ls, v, hsplit, hlp, hlc, hpv, hcv⟩ :=
+      circuit_extraction_core i l (b.val + 1) (a.val + 1) (by omega) (by omega) (hve b a hval.symm)
+    refine ⟨lp, lc, ls, v, hsplit, ?_, hlc, hpv, hcv⟩
+    rw [hlp]
+    exact List.ne_nil_of_length_pos (by rw [List.length_take]; have := b.isLt; omega)
 
 /-- **Extraction, weight form** (the lower-bound recursion step): a walk `i ⤳ …` with at least `n`
 edges has a *strictly shorter* walk `l'` with the **same endpoint** (`l'.getLastD i = l.getLastD i`)
