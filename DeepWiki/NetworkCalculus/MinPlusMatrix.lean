@@ -23,11 +23,18 @@ Built here, toward BCOQ "Synchronization and Linearity" Thm 3.112:
   (`exists_lt_untrop_pow_le`): the sub-additive closure `f* = ⨁ₘ f^⊗ᵐ` stabilizes at rank `n`.
 * **Linear growth** — the deflated generalization to any rate `μ` (`walkWeight_reduce_of_rate`,
   `exists_le_untrop_pow_deflate`): `(Aᵏ)ᵢⱼ ≥ μ·k + C`, the eigenvalue's lower linear envelope.
-* **Cyclicity predicate** — `IsPseudoPeriodicPow` (`Aᵏ⁺ᶜ = Aᵏ ⊗ trop(c·λ)`) with the stabilizing-powers
-  case, eigenvalue uniqueness, closure under multiples, and concrete witnesses.
+* **The eigenvalue** — `minMeanCycle A = λ` (the minimum mean over circuits, in `WithTop ℚ`),
+  characterized as the min (`minMeanCycle_le`) and attained by a short circuit (`minMeanCycle_eq`); it
+  governs diagonal growth, `(Aᵏ)ᵢᵢ ≥ λ·k` (`untrop_pow_diag_ge_minMeanCycle`) with equality on critical
+  circuits (`untrop_pow_mul_eq_minMeanCycle`).
+* **Cyclicity** — `IsPseudoPeriodicPow` (`Aᵏ⁺ᶜ = Aᵏ ⊗ trop(c·λ)`) with the stabilizing-powers case,
+  eigenvalue uniqueness, closure under multiples; and the recurrence *realized at a critical vertex* for
+  any matrix with a circuit (`untrop_pow_critical_cyclicity`, `exists_critical_cyclicity`). Plus
+  `IsIrreducible` and reachability-within-`n`.
 
-Remaining (research-scale): a canonical ℚ-valued eigenvalue, the upper linear envelope (needs
-irreducibility), and the full cyclicity period (critical graph + spectral projector). -/
+Cataloged against the source in `Sources.Isbn_047193609X` (BCOQ Thm 3.20 / 3.23 / 3.112, (max,plus) dual).
+Remaining (research-scale): the *full* cyclicity period — the recurrence at all entries past a finite
+rank, with the minimal cyclicity — which needs the critical-graph and spectral-projector theory. -/
 
 namespace DeepWiki.MinPlusMatrix
 
