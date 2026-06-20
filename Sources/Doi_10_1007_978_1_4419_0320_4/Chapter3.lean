@@ -32,6 +32,15 @@ abbrev def_3_1_1 := @DeepWiki.TimeSeries.IsWhiteNoise
 `θ(z) = 1 + θ₁z + ⋯ + θ_qz^q` (3.1.7). The library's `IsARMA`. -/
 abbrev def_3_1_2 := @DeepWiki.TimeSeries.IsARMA
 
+/-- **Equation (3.1.4)** (§3.1, p.78), the ARMA difference equation written out:
+`Xₜ − φ₁X_{t−1} − ⋯ − φₚX_{t−p} = Zₜ + θ₁Z_{t−1} + ⋯ + θ_q Z_{t−q}`, i.e.
+`∑ⱼ φⱼ X_{t−j} = ∑ⱼ θⱼ Z_{t−j}`. The library's `IsARMA.diffEq_apply` — the explicit-lag-sum reading
+of the operator form, via `lagPoly_apply`. -/
+theorem eq_3_1_4 {φ θ : ℝ[X]} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsARMA φ θ Xp Z μ σ2) (t : ℤ) :
+    ∑ j ∈ Finset.range (φ.natDegree + 1), φ.coeff j • Xp (t - j)
+      = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) :=
+  h.diffEq_apply t
+
 /-- **Equation (3.1.5)** (§3.1, p.78), the compact ARMA difference equation
 `φ(B)X = θ(B)Z`. The library's `IsARMA.diffEq`. -/
 abbrev eq_3_1_5 := @DeepWiki.TimeSeries.IsARMA.diffEq
@@ -45,6 +54,12 @@ abbrev ex_3_1_1 := @DeepWiki.TimeSeries.IsMA
 theorem ex_3_1_1_eq {θ : ℝ[X]} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ}
     (h : IsMA θ Xp Z μ σ2) : Xp = lagPoly θ Z :=
   h.eq
+
+/-- **Example 3.1.1** (§3.1, p.78), the MA(q) process written out:
+`Xₜ = Zₜ + θ₁Z_{t−1} + ⋯ + θ_q Z_{t−q} = ∑_{j=0}^q θⱼ Z_{t−j}`. The library's `IsMA.eq_apply`. -/
+theorem ex_3_1_1_eq_apply {θ : ℝ[X]} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsMA θ Xp Z μ σ2) (t : ℤ) :
+    Xp t = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) :=
+  h.eq_apply t
 
 -- Book-faithful restatement (step 5): white noise is uncorrelated at nonzero lags.
 example {Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsWhiteNoise Z μ σ2) {k : ℤ} (hk : k ≠ 0) :
@@ -104,9 +119,11 @@ All of this rests on the MA(∞) representation and the absolute / mean-square c
 `∑ⱼ ψⱼ Zₜ₋ⱼ` (`∑|ψⱼ| < ∞`) — and, for §3.3, the power-series reciprocal `θ/φ`; that analytic
 layer is **not yet formalized** (infra-blocked, like the deferred analytic items elsewhere in
 the project). The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the one
-algebraically-finite special case; it additionally needs the `lagPoly`-as-finite-sum expansion
-`(p(B) x) t = ∑ₖ p.coeff k • x (t − k)` and a `q`-fold double-sum covariance computation, and is
-deferred with those. The concrete low-order cases — the MA(1) and MA(2) autocovariances — are
-proved in `DeepWiki.TimeSeries.ProcessExamples` (`maProcess1`, `maProcess2`). -/
+algebraically-finite special case; the `lagPoly`-as-finite-sum expansion it needs,
+`(p(B) x) t = ∑ₖ p.coeff k • x (t − k)`, is now available (`lagPoly_apply`, surfaced here as the
+expanded ARMA and MA equations `eq_3_1_4` and `ex_3_1_1_eq_apply`), leaving only the `q`-fold
+double-sum covariance computation, which is deferred. The concrete low-order cases — the MA(1) and
+MA(2) autocovariances — are proved in `DeepWiki.TimeSeries.ProcessExamples` (`maProcess1`,
+`maProcess2`). -/
 
 end DeepWiki.Ts

@@ -61,6 +61,23 @@ theorem IsAR.eq {φ : ℝ[X]} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsAR �
   have hd := h.diffEq
   rwa [lagPoly_one, Module.End.one_apply] at hd
 
+/-- **Equation (3.1.4)**, the ARMA difference equation written out: at every time `t`,
+`∑ⱼ φⱼ X_{t−j} = ∑ⱼ θⱼ Z_{t−j}`, i.e. `Xₜ − φ₁X_{t−1} − ⋯ − φₚX_{t−p} = Zₜ + θ₁Z_{t−1} + ⋯ +
+θ_q Z_{t−q}` (with `φ(z) = 1 − φ₁z − ⋯` and `θ(z) = 1 + θ₁z + ⋯`). The expanded reading of the
+operator form `φ(B) X = θ(B) Z` (`IsARMA.diffEq`), via `lagPoly_apply`. -/
+theorem IsARMA.diffEq_apply {φ θ : ℝ[X]} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsARMA φ θ X Z μ σ2)
+    (t : ℤ) :
+    ∑ j ∈ Finset.range (φ.natDegree + 1), φ.coeff j • X (t - j)
+      = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) := by
+  have hd := congrFun h.diffEq t
+  rwa [lagPoly_apply, lagPoly_apply] at hd
+
+/-- **Example 3.1.1**, the MA(q) process written out: `Xₜ = ∑_{j=0}^q θⱼ Z_{t−j} = Zₜ + θ₁Z_{t−1}
++ ⋯ + θ_q Z_{t−q}`, the expanded reading of `X = θ(B) Z` (`IsMA.eq`). -/
+theorem IsMA.eq_apply {θ : ℝ[X]} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsMA θ X Z μ σ2) (t : ℤ) :
+    X t = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) := by
+  rw [h.eq, lagPoly_apply]
+
 /-- **§3.1 (Theorem 3.1.1, causality criterion).** The autoregressive polynomial `φ`
 satisfies the **causality condition** when it has no zero in the closed complex unit disk:
 `φ(z) ≠ 0` for all `‖z‖ ≤ 1`. By Theorem 3.1.1 this is equivalent to the existence of an

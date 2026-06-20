@@ -61,6 +61,15 @@ theorem lagPoly_mul_apply (p q : K[X]) (x : ℤ → M) :
     lagPoly (p * q) x = lagPoly p (lagPoly q x) := by
   rw [lagPoly_mul]; rfl
 
+/-- **Lag polynomial as an explicit lag sum**: `p(B) x` at time `t` is `∑ⱼ pⱼ · x_{t−j}`, the
+expansion the book writes out for an AR/MA difference equation (e.g. `φ(B)Xₜ = Xₜ − φ₁X_{t−1} − ⋯`,
+eq 3.1.4) — each backshift power `Bʲ` shifts by `j`. -/
+theorem lagPoly_apply (p : K[X]) (x : ℤ → M) (t : ℤ) :
+    lagPoly p x t = ∑ j ∈ Finset.range (p.natDegree + 1), p.coeff j • x (t - j) := by
+  rw [lagPoly, aeval_eq_sum_range]
+  simp only [LinearMap.sum_apply, Finset.sum_apply, LinearMap.smul_apply, Module.End.pow_apply,
+    backshiftL_coe, Pi.smul_apply, backshift_iterate_apply]
+
 /-! ## The difference operators as lag polynomials (§1.4) -/
 
 /-- The lag polynomial `1 − z` is the difference operator `∇ = 1 − B`. -/
