@@ -568,6 +568,24 @@ theorem exists_le_untrop_pow_deflate {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (
       _ ≤ walkWeight A i l + ↑(μ * (l'.length : ℤ)) := hl'inv
       _ = ((A ^ k) i j).untrop + ↑(μ * (l'.length : ℤ)) := by rw [hw]
 
+/-- **The eigenvalue is attained on a tight circuit** (upper meets lower): if some length-`p` circuit
+at `i` is *tight* for the rate `μ` (`(Aᵖ)ᵢᵢ = μ·p`, i.e. its mean is exactly `μ`), then along its
+multiples the diagonal is exactly linear, `(Aᵏᵖ)ᵢᵢ = μ·kp`. The `≤` repeats the tight circuit
+(`untrop_pow_mul_le_nsmul`); the `≥` is the lower bound (`untrop_pow_diag_ge`). So when `μ` is the min
+mean circuit, the growth rate `μ` is genuinely achieved — the min-plus eigenvalue, exactly. -/
+theorem untrop_pow_mul_eq_of_tight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : ℤ)
+    (hμ : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(μ * l₀.length) : WithTop ℤ) ≤ walkWeight A v l₀)
+    (i : Fin n) (p : ℕ) (htight : ((A ^ p) i i).untrop = (↑(μ * (p : ℤ)) : WithTop ℤ)) (k : ℕ) :
+    ((A ^ (k * p)) i i).untrop = (↑(μ * ((k * p : ℕ) : ℤ)) : WithTop ℤ) := by
+  apply le_antisymm
+  · have h := untrop_pow_mul_le_nsmul A p i k
+    rw [htight] at h
+    refine h.trans (le_of_eq ?_)
+    rw [← WithTop.coe_nsmul, nsmul_eq_mul]
+    congr 1; push_cast; ring
+  · exact untrop_pow_diag_ge A μ hμ i (k * p)
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
