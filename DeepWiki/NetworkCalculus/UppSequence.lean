@@ -1229,6 +1229,48 @@ theorem iterConvNat_eq_self_of_idem (f : UppSeq (WithTop ℤ))
           funext fun j => by rw [ih hk1 (n - j)]]
       exact hidem n
 
+/-- Lower-bound the closure approximant: `x ≤ ⨅_{m≤N} f^⊗ᵐ` from `x ≤ f^⊗ᵐ` for every `m ≤ N`. -/
+theorem le_closureApproxNat {x : WithTop ℤ} (f : UppSeq (WithTop ℤ)) {N n : ℕ}
+    (h : ∀ m, m < N + 1 → x ≤ iterConvNat f m n) : x ≤ closureApproxNat f N n :=
+  Finset.le_inf' _ _ (fun m hm => h m (Finset.mem_range.mp hm))
+
+/-- **Closure iteration recurrence**: `closureApprox(N+1) = δ₀ ⊓ (f ⊗ closureApprox(N))` (pointwise) —
+splitting off `f^⊗0 = δ₀` and pulling `f` out of the remaining iterates. This realizes the closure as
+an actual fixed-point iteration `g_{N+1} = δ₀ ⊓ (f ⊗ g_N)`, and gives "fixed point ⟹ stable" for free
+(`closureApproxNat_stable`). -/
+theorem closureApproxNat_succ (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+    closureApproxNat f (N + 1) n = Min.min (delta0.evalNat n)
+      ((Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+        (fun k => f.evalNat k + closureApproxNat f N (n - k))) := by
+  refine le_antisymm (le_min (closureApproxNat_le_delta0 f (N + 1) n) ?_) ?_
+  · apply Finset.le_inf'
+    intro k hk
+    obtain ⟨m, hm, hmeq⟩ := Finset.exists_mem_eq_inf' (s := Finset.range (N + 1))
+      ⟨0, Finset.mem_range.mpr (Nat.succ_pos N)⟩ (fun m => iterConvNat f m (n - k))
+    have hmle : m < N + 1 := Finset.mem_range.mp hm
+    have hmeq' : closureApproxNat f N (n - k) = iterConvNat f m (n - k) := hmeq
+    calc closureApproxNat f (N + 1) n
+        ≤ iterConvNat f (m + 1) n := Finset.inf'_le _ (Finset.mem_range.mpr (by omega))
+      _ ≤ f.evalNat k + iterConvNat f m (n - k) := Finset.inf'_le _ hk
+      _ = f.evalNat k + closureApproxNat f N (n - k) := by rw [hmeq']
+  · apply le_closureApproxNat
+    intro m hmr
+    rcases Nat.eq_zero_or_pos m with rfl | hm1
+    · exact min_le_left _ _
+    · obtain ⟨m', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : m ≠ 0)
+      have hm'le : m' < N + 1 := by omega
+      refine le_trans (min_le_right _ _) ?_
+      show (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+          (fun k => f.evalNat k + closureApproxNat f N (n - k)) ≤ iterConvNat f (m' + 1) n
+      apply Finset.le_inf'
+      intro j hj
+      calc (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
+            (fun k => f.evalNat k + closureApproxNat f N (n - k))
+          ≤ f.evalNat j + closureApproxNat f N (n - j) := Finset.inf'_le _ hj
+        _ ≤ f.evalNat j + iterConvNat f m' (n - j) := by
+            gcongr
+            exact Finset.inf'_le _ (Finset.mem_range.mpr hm'le)
+
 /-- **Sub-additive closure of an idempotent `f`**: `f* = δ₀ ⊓ f`. For `f ⊗ f = f` (e.g. a
 sub-additive service curve) the closure stabilizes at one iteration — `⨅_{m≤N} f^⊗ᵐ = δ₀ ⊓ f` for
 every `N ≥ 1` — so the closure is computed exactly with no iteration bound needed. (The general
