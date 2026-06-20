@@ -437,6 +437,38 @@ theorem untrop_pow_diag_ge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : ℤ)
     rw [hw] at hge
     exact hge
 
+/-- **Nonnegative circuits collapse walks to simple ones** — the route to closure termination. If
+every short closed walk has nonnegative weight (so, by `walkWeight_ge_of_short`, *every* circuit does),
+then any walk `i ⤳ j` has a walk of length `< n` with the **same endpoints** and weight `≤` it: a
+circuit can always be deleted without raising the weight (`le_add_of_nonneg_right`), and deletion
+shrinks length. Hence the min-weight `i ⤳ j` walk is attained at length `< n` — the (min,plus) Kleene
+star `⨁ₖ Aᵏ` is the finite truncation `⨁_{k<n} Aᵏ`, i.e. the sub-additive closure terminates. -/
+theorem walkWeight_reduce_of_nonneg {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hnn : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (0 : WithTop ℤ) ≤ walkWeight A v l₀) :
+    ∀ (i : Fin n) (l : List (Fin n)),
+      ∃ l', l'.length < n ∧ l'.getLastD i = l.getLastD i ∧ walkWeight A i l' ≤ walkWeight A i l := by
+  have hall : ∀ (w : Fin n) (lc : List (Fin n)), lc.getLastD w = w →
+      (0 : WithTop ℤ) ≤ walkWeight A w lc := by
+    intro w lc hcl
+    have := walkWeight_ge_of_short A 0 (fun v l₀ h1 h2 => by simpa using hnn v l₀ h1 h2) w lc hcl
+    simpa using this
+  suffices H : ∀ N (i : Fin n) (l : List (Fin n)), l.length = N →
+      ∃ l', l'.length < n ∧ l'.getLastD i = l.getLastD i ∧ walkWeight A i l' ≤ walkWeight A i l by
+    intro i l; exact H l.length i l rfl
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro i l hN
+    by_cases hlt : l.length < n
+    · exact ⟨l, hlt, rfl, le_refl _⟩
+    · rw [not_lt] at hlt
+      obtain ⟨l₁, lc, v, hl1len, hl1end, hlcne, hcv, hwt⟩ := exists_walkWeight_shorter A i l hlt
+      obtain ⟨l', hl'len, hl'end, hl'wt⟩ := ih l₁.length (by omega) i l₁ rfl
+      refine ⟨l', hl'len, by rw [hl'end, hl1end], ?_⟩
+      calc walkWeight A i l' ≤ walkWeight A i l₁ := hl'wt
+        _ ≤ walkWeight A i l := by rw [hwt]; exact le_add_of_nonneg_right (hall v lc hcv)
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
