@@ -754,6 +754,26 @@ theorem minMeanCycle_rate_le_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP
         _ = p₀ • ((A ^ l₀.length) v v).untrop := by rw [← hz, ← WithTop.coe_nsmul, nsmul_eq_mul]
         _ ≤ p₀ • walkWeight A v l₀ := nsmul_le_nsmul_right hle p₀
 
+/-- **Existence of a critical circuit**: if `A` has a circuit (`λ(A) ≠ +∞`), the eigenvalue is attained
+by an explicit short one — `v₀`, length `1 ≤ p₀ ≤ n`, weight `(Aᵖ⁰)ᵥ₀ᵥ₀ = w₀`, with `λ(A) = w₀/p₀`.
+The shared setup (`minMeanCycle_eq` + finiteness extraction) behind the rate/cyclicity theorems. -/
+theorem exists_critical_circuit {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hlam_ne : minMeanCycle A ≠ ⊤) :
+    ∃ (v₀ : Fin n) (p₀ : ℕ) (w₀ : ℤ), 1 ≤ p₀ ∧ p₀ ≤ n ∧
+      ((A ^ p₀) v₀ v₀).untrop = (w₀ : WithTop ℤ) ∧
+      minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) := by
+  have hn : 1 ≤ n := by
+    rcases Nat.eq_zero_or_pos n with h | h
+    · exfalso; apply hlam_ne; subst h
+      rw [minMeanCycle, Finset.Icc_eq_empty (by omega : ¬ (1:ℕ) ≤ 0), Finset.product_empty,
+        Finset.inf_empty]
+    · exact h
+  obtain ⟨v₀, p₀, hp1, hpn, heq⟩ := minMeanCycle_eq A hn
+  have hfin : ((A ^ p₀) v₀ v₀).untrop ≠ ⊤ :=
+    fun htop => hlam_ne (by rw [heq, cycleMean_top A v₀ p₀ htop])
+  obtain ⟨w₀, hw₀⟩ := WithTop.ne_top_iff_exists.mp hfin
+  exact ⟨v₀, p₀, w₀, hp1, hpn, hw₀.symm, by rw [heq, cycleMean_coe A v₀ p₀ w₀ hw₀.symm]⟩
+
 /-- **The eigenvalue governs diagonal growth** (the dynamical capstone): if `A` has a circuit
 (`λ(A) ≠ +∞`), then `λ(A) = w₀/p₀` for an explicit short critical circuit, and the diagonal grows at
 least at rate `λ` — `w₀·k ≤ p₀·(Aᵏ)ᵢᵢ`, i.e. `(Aᵏ)ᵢᵢ ≥ λ·k`, for every `i, k`. Combines the achieved
@@ -765,18 +785,7 @@ theorem untrop_pow_diag_ge_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP
     ∃ (w₀ : ℤ) (p₀ : ℕ), 1 ≤ p₀ ∧ p₀ ≤ n ∧
       minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) ∧
       ∀ (i : Fin n) (k : ℕ), (↑(w₀ * (k : ℤ)) : WithTop ℤ) ≤ p₀ • ((A ^ k) i i).untrop := by
-  have hn : 1 ≤ n := by
-    rcases Nat.eq_zero_or_pos n with h | h
-    · exfalso; apply hlam_ne; subst h
-      rw [minMeanCycle, Finset.Icc_eq_empty (by omega : ¬ (1:ℕ) ≤ 0), Finset.product_empty,
-        Finset.inf_empty]
-    · exact h
-  obtain ⟨v₀, p₀, hp1, hpn, heq⟩ := minMeanCycle_eq A hn
-  have hfin : ((A ^ p₀) v₀ v₀).untrop ≠ ⊤ :=
-    fun htop => hlam_ne (by rw [heq, cycleMean_top A v₀ p₀ htop])
-  obtain ⟨w₀, hw₀⟩ := WithTop.ne_top_iff_exists.mp hfin
-  have hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) := by
-    rw [heq, cycleMean_coe A v₀ p₀ w₀ hw₀.symm]
+  obtain ⟨_v₀, p₀, w₀, hp1, hpn, _htight, hlam⟩ := exists_critical_circuit A hlam_ne
   have hsh := minMeanCycle_rate_le_walkWeight A w₀ p₀ hp1 hlam
   exact ⟨w₀, p₀, hp1, hpn, hlam, fun i k => untrop_pow_diag_ge_scaled A w₀ p₀ hp1 hsh i k⟩
 
@@ -824,6 +833,21 @@ theorem untrop_pow_critical_cyclicity {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) 
     untrop_pow_mul_eq_minMeanCycle A w₀ p₀ hp1 v₀ htight hlam k, Tropical.untrop_trop,
     ← WithTop.coe_add]
   congr 1; push_cast; ring
+
+/-- **Cyclicity is realized at a critical vertex** (general form): every matrix with a circuit
+(`λ(A) ≠ +∞`) has a vertex `v₀` and period `p₀ ≤ n` where the powers are exactly pseudo-periodic on
+multiples — `(A^((k+1)p₀))ᵥ₀ᵥ₀ = (A^(kp₀))ᵥ₀ᵥ₀ ⊗ trop(w₀)`, with `λ = w₀/p₀`. The general statement that
+the cyclicity recurrence (`Aᵐ⁺ᶜ = Aᵐ ⊗ trop(c·λ)`) holds *somewhere* — combining `exists_critical_circuit`
+with `untrop_pow_critical_cyclicity`. (Period `p₀` is *a* cyclicity; the minimal one is the critical-graph
+gcd, and the full theorem extends this to all entries past a rank.) -/
+theorem exists_critical_cyclicity {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hlam_ne : minMeanCycle A ≠ ⊤) :
+    ∃ (v₀ : Fin n) (p₀ : ℕ) (w₀ : ℤ), 1 ≤ p₀ ∧ p₀ ≤ n ∧
+      minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) ∧
+      ∀ k, (A ^ ((k + 1) * p₀)) v₀ v₀ = (A ^ (k * p₀)) v₀ v₀ * Tropical.trop (w₀ : WithTop ℤ) := by
+  obtain ⟨v₀, p₀, w₀, hp1, hpn, htight, hlam⟩ := exists_critical_circuit A hlam_ne
+  exact ⟨v₀, p₀, w₀, hp1, hpn, hlam,
+    fun k => untrop_pow_critical_cyclicity A w₀ p₀ hp1 v₀ htight hlam k⟩
 
 /-! ### Irreducibility, toward the two-sided growth bound
 The lower envelope `(Aᵐ)ᵢᵢ ≥ λ·m` holds unconditionally; the matching *upper* envelope
