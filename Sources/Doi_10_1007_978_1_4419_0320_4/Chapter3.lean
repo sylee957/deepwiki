@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.ArmaProcesses
 import DeepWiki.TimeSeries.LinearProcess
+import DeepWiki.TimeSeries.LinearProcessExamples
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 3: Stationary ARMA Processes
@@ -166,6 +167,17 @@ example {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → MeasureTheory.Lp ℝ
     (t h : ℤ) :
     inner ℝ (linearProcessLp ψ Z (t + h)) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k * ψ (k + h) :=
   linearProcessLp_inner hψ hZb hZorth t h
+
+/-- **Example 3.2.2** (§3.2, p.89): the causal `AR(1)` process `Xₜ = φXₜ₋₁ + Zₜ` with `|φ| < 1` is
+an `MA(∞)` with weights `ψⱼ = φʲ` (`j ≥ 0`) — the filter `ar1Filter φ` is absolutely summable (a
+geometric series `∑_{j≥0}|φ|ʲ < ∞`), so `Xₜ = ∑_{j≥0} φʲ Zₜ₋ⱼ` is a well-defined `MA(∞)` (Definition
+3.2.1). The library's `summable_ar1Filter` (the weights are `ar1Filter`). -/
+alias ex_3_2_2 := DeepWiki.TimeSeries.summable_ar1Filter
+
+/-- **§3.3 (the AR(1) variance):** the causal `AR(1)` linear process of Example 3.2.2 (`|φ| < 1`,
+innovations orthogonal up to `σ²`) has variance `γ(0) = ⟪Xₜ, Xₜ⟫ = σ²/(1 − φ²)` — `σ² ∑_{j≥0} φ^{2j}`
+via the squared geometric weights. The library's `ar1_linearProcess_variance`. -/
+alias ar1_variance := DeepWiki.TimeSeries.ar1_linearProcess_variance
 
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
