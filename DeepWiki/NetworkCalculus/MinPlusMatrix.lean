@@ -706,6 +706,36 @@ theorem minMeanCycle_eq_top_iff {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
     simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and] at hmem
     exact cycleMean_top A vp.1 vp.2 (h vp.1 vp.2 hmem.1 hmem.2)
 
+/-- **Critical rate is valid on every short circuit** (the cross-multiplication bridge): if
+`λ(A) = w₀/p₀` (a critical circuit's mean), then `w₀·|l₀| ≤ p₀·weight` for every short circuit `l₀` —
+the scaled-rate hypothesis, discharged from `minMeanCycle_le` (`λ ≤ cycleMean`) by clearing the
+denominator. The `+∞` circuit is trivial; a finite one cross-multiplies in `ℚ`. -/
+theorem minMeanCycle_rate_le_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (w₀ : ℤ) (p₀ : ℕ)
+    (hp1 : 1 ≤ p₀) (hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ)) :
+    ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(w₀ * l₀.length) : WithTop ℤ) ≤ p₀ • walkWeight A v l₀ := by
+  intro v l₀ hcl hp
+  rcases Nat.eq_zero_or_pos l₀.length with h0 | hpos
+  · obtain rfl := List.length_eq_zero_iff.mp h0; simp
+  · have hle : ((A ^ l₀.length) v v).untrop ≤ walkWeight A v l₀ := by
+      have h := untrop_pow_le_walkWeight A v l₀; rwa [hcl] at h
+    by_cases htop : ((A ^ l₀.length) v v).untrop = ⊤
+    · obtain ⟨p', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : p₀ ≠ 0)
+      have hwt : walkWeight A v l₀ = ⊤ := top_le_iff.mp (htop ▸ hle)
+      rw [hwt, succ_nsmul, add_top]; exact le_top
+    · obtain ⟨z, hz⟩ := WithTop.ne_top_iff_exists.mp htop
+      have hml := minMeanCycle_le A v l₀.length hpos hp
+      rw [hlam, cycleMean_coe A v l₀.length z hz.symm, WithTop.coe_le_coe] at hml
+      have hcross : w₀ * (l₀.length : ℤ) ≤ z * (p₀ : ℤ) := by
+        have hp0 : (0:ℚ) < (p₀ : ℚ) := by exact_mod_cast hp1
+        have hlen : (0:ℚ) < (l₀.length : ℚ) := by exact_mod_cast hpos
+        rw [div_le_iff₀ hp0, div_mul_eq_mul_div, le_div_iff₀ hlen] at hml
+        exact_mod_cast hml
+      calc (↑(w₀ * l₀.length) : WithTop ℤ) ≤ ↑((p₀ : ℤ) * z) := by
+            rw [WithTop.coe_le_coe, mul_comm (p₀ : ℤ) z]; exact hcross
+        _ = p₀ • ((A ^ l₀.length) v v).untrop := by rw [← hz, ← WithTop.coe_nsmul, nsmul_eq_mul]
+        _ ≤ p₀ • walkWeight A v l₀ := nsmul_le_nsmul_right hle p₀
+
 /-- **The eigenvalue governs diagonal growth** (the dynamical capstone): if `A` has a circuit
 (`λ(A) ≠ +∞`), then `λ(A) = w₀/p₀` for an explicit short critical circuit, and the diagonal grows at
 least at rate `λ` — `w₀·k ≤ p₀·(Aᵏ)ᵢᵢ`, i.e. `(Aᵏ)ᵢᵢ ≥ λ·k`, for every `i, k`. Combines the achieved
@@ -729,32 +759,37 @@ theorem untrop_pow_diag_ge_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP
   obtain ⟨w₀, hw₀⟩ := WithTop.ne_top_iff_exists.mp hfin
   have hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) := by
     rw [heq, cycleMean_coe A v₀ p₀ w₀ hw₀.symm]
-  have hsh : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
-      (↑(w₀ * l₀.length) : WithTop ℤ) ≤ p₀ • walkWeight A v l₀ := by
-    intro v l₀ hcl hp
-    rcases Nat.eq_zero_or_pos l₀.length with h0 | hpos
-    · obtain rfl := List.length_eq_zero_iff.mp h0
-      simp
-    · have hle : ((A ^ l₀.length) v v).untrop ≤ walkWeight A v l₀ := by
-        have h := untrop_pow_le_walkWeight A v l₀; rwa [hcl] at h
-      by_cases htop : ((A ^ l₀.length) v v).untrop = ⊤
-      · obtain ⟨p', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : p₀ ≠ 0)
-        have hwt : walkWeight A v l₀ = ⊤ := top_le_iff.mp (htop ▸ hle)
-        rw [hwt, succ_nsmul, add_top]; exact le_top
-      · obtain ⟨z, hz⟩ := WithTop.ne_top_iff_exists.mp htop
-        have hml := minMeanCycle_le A v l₀.length hpos hp
-        rw [hlam, cycleMean_coe A v l₀.length z hz.symm, WithTop.coe_le_coe] at hml
-        have hcross : w₀ * (l₀.length : ℤ) ≤ z * (p₀ : ℤ) := by
-          have hp0 : (0:ℚ) < (p₀ : ℚ) := by exact_mod_cast hp1
-          have hlen : (0:ℚ) < (l₀.length : ℚ) := by exact_mod_cast hpos
-          rw [div_le_iff₀ hp0, div_mul_eq_mul_div, le_div_iff₀ hlen] at hml
-          exact_mod_cast hml
-        calc (↑(w₀ * l₀.length) : WithTop ℤ) ≤ ↑((p₀ : ℤ) * z) := by
-              rw [WithTop.coe_le_coe, mul_comm (p₀ : ℤ) z]; exact hcross
-          _ = p₀ • ((A ^ l₀.length) v v).untrop := by
-              rw [← hz, ← WithTop.coe_nsmul, nsmul_eq_mul]
-          _ ≤ p₀ • walkWeight A v l₀ := nsmul_le_nsmul_right hle p₀
+  have hsh := minMeanCycle_rate_le_walkWeight A w₀ p₀ hp1 hlam
   exact ⟨w₀, p₀, hp1, hpn, hlam, fun i k => untrop_pow_diag_ge_scaled A w₀ p₀ hp1 hsh i k⟩
+
+/-- **Exact growth on a critical circuit** (upper meets lower): if `(Aᵖ⁰)ᵢᵢ = w₀` is a *critical*
+circuit (`λ(A) = w₀/p₀`), then along its multiples the diagonal is exactly linear at rate `λ`:
+`(Aᵏᵖ⁰)ᵢᵢ = k·w₀`. The `≤` repeats the circuit (`untrop_pow_mul_le_nsmul`); the `≥` is the scaled
+lower bound; the two meet, cancelled in `ℤ`. So the eigenvalue rate is genuinely *achieved*, not just
+a lower bound — "powers grow at exactly the eigenvalue". -/
+theorem untrop_pow_mul_eq_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (w₀ : ℤ) (p₀ : ℕ)
+    (hp1 : 1 ≤ p₀) (i : Fin n) (htight : ((A ^ p₀) i i).untrop = (w₀ : WithTop ℤ))
+    (hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ)) (k : ℕ) :
+    ((A ^ (k * p₀)) i i).untrop = ((k : ℤ) * w₀ : ℤ) := by
+  have hup : ((A ^ (k * p₀)) i i).untrop ≤ ((k : ℤ) * w₀ : WithTop ℤ) := by
+    have h := untrop_pow_mul_le_nsmul A p₀ i k
+    rw [htight] at h
+    refine h.trans (le_of_eq ?_)
+    rw [← WithTop.coe_nsmul, nsmul_eq_mul]
+  have hlow := untrop_pow_diag_ge_scaled A w₀ p₀ hp1
+    (minMeanCycle_rate_le_walkWeight A w₀ p₀ hp1 hlam) i (k * p₀)
+  obtain ⟨x, hx⟩ := WithTop.ne_top_iff_exists.mp (ne_top_of_le_ne_top (WithTop.coe_ne_top) hup)
+  rw [← hx] at hup hlow ⊢
+  rw [WithTop.coe_le_coe] at hup
+  rw [← WithTop.coe_nsmul, nsmul_eq_mul, WithTop.coe_le_coe] at hlow
+  have h2 : (k : ℤ) * w₀ ≤ x := by
+    have hpos : (0:ℤ) < (p₀ : ℤ) := by exact_mod_cast hp1
+    have hlow' : w₀ * ((k : ℤ) * p₀) ≤ (p₀ : ℤ) * x := by push_cast at hlow; exact hlow
+    have hh : (p₀ : ℤ) * ((k : ℤ) * w₀) ≤ (p₀ : ℤ) * x :=
+      calc (p₀ : ℤ) * ((k : ℤ) * w₀) = w₀ * ((k : ℤ) * p₀) := by ring
+        _ ≤ (p₀ : ℤ) * x := hlow'
+    exact le_of_mul_le_mul_left hh hpos
+  exact_mod_cast le_antisymm hup h2
 
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
