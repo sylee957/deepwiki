@@ -630,6 +630,32 @@ theorem minMeanCycle_eq {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (hn : 1 ≤ n)
   rw [minMeanCycle, ← Finset.inf'_eq_inf hne]
   exact heq
 
+/-- `cycleMean` reads as `+∞` exactly where there is no length-`p` circuit at `v`. -/
+theorem cycleMean_top {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) (p : ℕ)
+    (h : ((A ^ p) v v).untrop = ⊤) : cycleMean A v p = ⊤ := by
+  rw [cycleMean, h, WithTop.map_top]
+
+/-- `cycleMean` of a finite circuit (`(Aᵖ)ᵥᵥ = z`) is its mean `z / p` in `ℚ`. -/
+theorem cycleMean_coe {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) (p : ℕ) (z : ℤ)
+    (h : ((A ^ p) v v).untrop = (z : WithTop ℤ)) :
+    cycleMean A v p = (((z : ℚ) / (p : ℚ) : ℚ) : WithTop ℚ) := by
+  rw [cycleMean, h, WithTop.map_coe]
+
+/-- `λ(A) = +∞` exactly when `A` is acyclic on short lengths: no `v` has a length-`p` circuit for any
+`1 ≤ p ≤ n`. (By the reduction lemmas, that means no circuit at all.) -/
+theorem minMeanCycle_eq_top_iff {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
+    minMeanCycle A = ⊤ ↔ ∀ v p, 1 ≤ p → p ≤ n → ((A ^ p) v v).untrop = ⊤ := by
+  rw [minMeanCycle, Finset.inf_eq_top_iff]
+  constructor
+  · intro h v p hp1 hpn
+    have hvp := h (v, p) (by
+      simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and]; exact ⟨hp1, hpn⟩)
+    rw [cycleMean] at hvp
+    exact WithTop.map_eq_top_iff.mp hvp
+  · intro h vp hmem
+    simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and] at hmem
+    exact cycleMean_top A vp.1 vp.2 (h vp.1 vp.2 hmem.1 hmem.2)
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
