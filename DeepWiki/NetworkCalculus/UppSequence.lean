@@ -1271,20 +1271,24 @@ theorem closureApproxNat_succ (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
             gcongr
             exact Finset.inf'_le _ (Finset.mem_range.mpr hm'le)
 
-/-- **Fixed point ⟹ stable** (from the recurrence): if the approximant stops changing at step `N`
-(`closureApprox(N+1) = closureApprox(N)`), the next step is unchanged too. Since
-`closureApprox(N+2) = δ₀ ⊓ (f ⊗ closureApprox(N+1)) = δ₀ ⊓ (f ⊗ closureApprox(N)) = closureApprox(N+1)`,
-detecting one fixed step certifies convergence — so the closure is computable by iterate-to-fixpoint. -/
+/-- **Fixed point ⟹ stable** (from the recurrence): *if* the approximant stops changing at step `N`
+(`closureApprox(N+1) = closureApprox(N)` pointwise everywhere), the next step is unchanged too —
+`closureApprox(N+2) = δ₀ ⊓ (f ⊗ closureApprox(N+1)) = δ₀ ⊓ (f ⊗ closureApprox(N)) = closureApprox(N+1)`.
+Caveat: this *global* hypothesis holds for **idempotent** `f` (at `N = 1`, `closureApproxNat_idem`) but
+**not** for general `f` — e.g. `β_{1,2}` has `closureApprox(N) = β_{1,2N}`, which never globally
+stabilizes (`f^⊗ᵐ` does not reach `f*` at finite `N`). The general closure needs the min-plus matrix
+cyclicity theorem (`Aᵏ⁺ᵈ = Aᵏ + λd`, BCOQ Thm 3.112), not truncated convolution. -/
 theorem closureApproxNat_stable_step (f : UppSeq (WithTop ℤ)) {N : ℕ}
     (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) (n : ℕ) :
     closureApproxNat f (N + 2) n = closureApproxNat f (N + 1) n := by
   rw [show N + 2 = N + 1 + 1 from rfl, closureApproxNat_succ f (N + 1) n, closureApproxNat_succ f N n]
   simp only [h]
 
-/-- **Once stable, converged.** If `closureApprox(N+1) = closureApprox(N)` then `closureApprox(N+j) =
-closureApprox(N)` for *every* `j` — the approximant is constant from `N` on, so `closureApprox(N)` is
-the true closure `f*`. (Induction via the recurrence: `closureApprox(N+i+1) = δ₀ ⊓ f⊗closureApprox(N+i)
-= δ₀ ⊓ f⊗closureApprox(N) = closureApprox(N+1) = closureApprox(N)`.) -/
+/-- **Once stable, stays stable.** If `closureApprox(N+1) = closureApprox(N)` (pointwise everywhere)
+then `closureApprox(N+j) = closureApprox(N)` for *every* `j` — the approximant is constant from `N` on,
+hence equals `f*`. (Induction via the recurrence.) Same caveat as `closureApproxNat_stable_step`: the
+global hypothesis is met only for **idempotent** `f`; for general `f` the truncated approximant never
+globally stabilizes, so this does not yield the general closure (which needs matrix cyclicity). -/
 theorem closureApproxNat_eq_of_stable (f : UppSeq (WithTop ℤ)) {N : ℕ}
     (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) :
     ∀ j n, closureApproxNat f (N + j) n = closureApproxNat f N n := by
@@ -1319,12 +1323,14 @@ theorem closureApproxNat_idem (f : UppSeq (WithTop ℤ)) (hidem : ∀ n, f.convN
 (`β ⊗ β = β_{1,4} ≠ β`, super-additive), to exercise the *general* closure iteration. -/
 def betaWT : UppSeq (WithTop ℤ) := ⟨[0, 0, 0], 1, 1, by decide, by decide⟩
 
-/-- Sanity (gate-verified): the **general (non-idempotent) closure converges** — the iteration on
-`β_{1,2}` genuinely descends (`β^⊗ᵐ = β_{1,2m}` shrinks) then stabilizes: `closureApprox(2) =
-closureApprox(3)` on `[0,4)`. This is the iterate-to-fixpoint behaviour `closureApproxNat_stable_step`
-certifies; here it is observed computationally on a curve that is *not* sub-additive. -/
-example : ∀ n ∈ Finset.range 4, closureApproxNat betaWT 2 n = closureApproxNat betaWT 3 n := by
-  native_decide
+/-- Gate-verified **caution** — why the truncated approximant is *not* the general closure. For the
+non-idempotent `β_{1,2}`, `closureApprox(N) = β_{1,2N}` (rate 1, latency `2N`), which never converges
+globally: it agrees with the next step on a small window (`closureApprox(2) = closureApprox(3)` on
+`[0,4)`, both `0` there) yet **differs** at `n = 5` (`1 ≠ 0`). So a finite-window fixpoint check gives
+a false positive, and `closureApproxNat_stable_step`'s global hypothesis fails here — the general
+closure genuinely requires min-plus matrix cyclicity (BCOQ Thm 3.112), not truncated convolution. -/
+example : (∀ n ∈ Finset.range 4, closureApproxNat betaWT 2 n = closureApproxNat betaWT 3 n)
+    ∧ closureApproxNat betaWT 2 5 ≠ closureApproxNat betaWT 3 5 := by native_decide
 
 end UppSeq
 end DeepWiki
