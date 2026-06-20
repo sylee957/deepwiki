@@ -112,12 +112,41 @@ theorem untrop_pow_le_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
 
-/-! ### The cyclicity phenomenon, witnessed concretely
+/-! ### Cyclicity: the predicate, a general case, and concrete witnesses
 The cyclicity theorem (BCOQ Thm 3.112) states that an irreducible min-plus matrix's powers become
 *pseudo-periodic*: `Aᵏ⁺ᶜ = (c·λ) ⊗ Aᵏ` past a finite rank, with cyclicity `c` and eigenvalue `λ`.
-The 2-cycle below realizes a **nontrivial** instance (`λ = 1`, `c = 2`) — unlike the idempotent
-`exA` (`λ = 0`, `c = 1`) — so the eigenvalue increment is genuinely exercised. These gate-verified
-witnesses pin the exact statement shape the general theorem must produce. -/
+We record this conclusion as `IsPseudoPeriodicPow`, prove the **idempotent case in full generality**
+(`exA`, `λ = 0`, `c = 1`), and pin the **nontrivial** shape (`λ = 1`, `c = 2`) with gate-verified
+witnesses on the 2-cycle below — there the eigenvalue increment is genuinely exercised. -/
+
+/-- **Ultimate pseudo-periodicity of the powers** — the conclusion of the cyclicity theorem (BCOQ
+Thm 3.112) as a predicate: past rank `K`, advancing by `c` multiplies each entry by the eigenvalue
+increment, `(Aᵏ⁺ᶜ)ᵢⱼ = (Aᵏ)ᵢⱼ ⊗ trop(c·λ)` (tropical `⊗ = +`). The general theorem asserts such
+`c, K, λ` exist for any irreducible `A`; we record the predicate and prove the instances we can. -/
+def IsPseudoPeriodicPow {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (c K : ℕ) (lam : ℤ) : Prop :=
+  0 < c ∧ ∀ k, K ≤ k → ∀ i j,
+    (A ^ (k + c)) i j = (A ^ k) i j * Tropical.trop (((c : ℤ) * lam : ℤ) : WithTop ℤ)
+
+/-- `exA` is multiplicatively idempotent (`exA ⊗ exA = exA`): its `0`-weight self-loops make it a
+closure operator. -/
+theorem exA_mul_self : exA * exA = exA := by native_decide
+
+/-- Powers of the idempotent `exA` collapse: `exAᵏ⁺¹ = exA` for every `k`. -/
+theorem exA_pow_succ (k : ℕ) : exA ^ (k + 1) = exA := by
+  induction k with
+  | zero => rw [pow_one]
+  | succ k ih => rw [pow_succ, ih, exA_mul_self]
+
+/-- **First general (∀ k) cyclicity result**: the idempotent `exA` is pseudo-periodic with cyclicity
+`c = 1`, rank `K = 1`, eigenvalue `λ = 0` — `exAᵏ⁺¹ = exAᵏ` for every `k ≥ 1` (both equal `exA`). The
+idempotent case is exactly the sub-additive-closure case already computed closed-form in
+`DeepWiki.UppSeq`; this is its matrix face. -/
+theorem isPseudoPeriodicPow_exA : IsPseudoPeriodicPow exA 1 1 0 := by
+  refine ⟨one_pos, ?_⟩
+  rintro (_ | m) hk i j
+  · simp at hk
+  · rw [exA_pow_succ (m + 1), exA_pow_succ m]
+    norm_num
 
 /-- A 2-state min-plus matrix realizing a nontrivial cyclicity: the bidirectional edge `0 ↔ 1` of
 weight `1`, diagonal `+∞ = 𝟘`. Its only circuit `0→1→0` has weight `2` over length `2`, so the
