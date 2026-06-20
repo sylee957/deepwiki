@@ -545,4 +545,22 @@ theorem ex_1_17 [IsProbabilityMeasure μ] {n : ℕ} {X : Fin n → Ω → ℝ}
     ∃ b : Fin n → ℝ, b ≠ 0 ∧ variance (fun ω => ∑ i, b i * X i ω) μ = 0 :=
   exists_variance_eq_zero_of_det_eq_zero hX hdet
 
+/-! ## Chapter 1 problems beyond the present algebraic and Hilbert-space core
+The end-of-chapter problems not formalized above, each blocked by machinery outside this
+development (the algebraic, covariance, and Kolmogorov-existence layers):
+* **Problem 1.1** — the joint moment generating function of the `MA(1)` process and the deduction
+  of strict stationarity from it (moment-generating-function machinery).
+* **Problem 1.5** — designing a symmetric moving-average filter eliminating a period-`2` seasonal
+  component while passing a quadratic trend (a construction; the trend-passing half is the
+  condition of `ex_1_2`).
+* **Problem 1.9** — a numerical classical-decomposition analysis of the accidental-deaths data
+  with the PEST package (a data and software exercise, not a formal statement).
+* **Problem 1.10** — the autocovariance of a `(2q+1)`-term moving average of the process
+  `Xₜ = a + b Yₜ + Yₜ₋₁` (a finite but `q`-parametrised double-sum; tractable, deferred).
+* **Problem 1.14** — a process whose autocorrelation `ρ(h)` tends to `1` (an asymptotic statement).
+* **Problem 1.16** — the chi-squared distribution of `Z²`, of sums of squared standard normals, and
+  of the Mahalanobis form (moment-generating-function and chi-squared-distribution machinery).
+The remaining problems (1.2, 1.3, 1.4, 1.6, 1.7, 1.8, 1.11, 1.12, 1.13, 1.15, 1.17, 1.18) are
+formalized above. -/
+
 end DeepWiki.Ts
