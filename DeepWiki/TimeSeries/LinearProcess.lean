@@ -2,6 +2,7 @@ import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Complete
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Probability.Moments.Covariance
 import Mathlib.Tactic
 
 /-! # The linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` (§3.1, §3.2)
@@ -13,7 +14,8 @@ object underlying causality (Thm 3.1.1), the `MA(∞)` processes (§3.2), and th
 
 namespace DeepWiki.TimeSeries
 
-open MeasureTheory
+open MeasureTheory ProbabilityTheory
+open scoped ProbabilityTheory
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
@@ -85,5 +87,24 @@ theorem linearProcessLp_inner {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ �
   rw [real_inner_smul_right, linearProcessLp_inner_single hψ hZb hZorth (t + h) (t - k),
     show t + h - (t - k) = k + h from by omega]
   ring
+
+/-! ## White-noise bridge: the `L²(ℝ)` inner product as an integral / covariance -/
+
+/-- The real `L²` inner product is the integral of the pointwise product: `⟪f, g⟫ = ∫ f·g`
+(`L2.inner_def` with the real pointwise inner `⟪x, y⟫_ℝ = x·y`). -/
+theorem inner_eq_integral_mul (f g : Lp ℝ 2 μ) :
+    inner ℝ f g = ∫ ω, f ω * g ω ∂μ := by
+  rw [L2.inner_def]
+  exact integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+    simp only [RCLike.inner_apply', RCLike.conj_to_real])
+
+/-- **White-noise bridge:** for a mean-zero `f` (`𝔼 f = 0`) the `L²` inner product is the
+covariance, `⟪f, g⟫ = cov(f, g)`. Hence the orthogonality hypothesis `⟪Zₐ, Z_b⟫ = σ²·[a=b]` of
+`linearProcessLp_inner` holds exactly for mean-zero white noise with `cov(Zₐ, Z_b) = σ²·[a=b]`. -/
+theorem inner_eq_covariance [IsProbabilityMeasure μ] {f g : Lp ℝ 2 μ}
+    (hf : μ[(f : Ω → ℝ)] = 0) :
+    inner ℝ f g = cov[(f : Ω → ℝ), (g : Ω → ℝ); μ] := by
+  rw [inner_eq_integral_mul, covariance_eq_sub (Lp.memLp f) (Lp.memLp g), hf, zero_mul, sub_zero]
+  rfl
 
 end DeepWiki.TimeSeries
