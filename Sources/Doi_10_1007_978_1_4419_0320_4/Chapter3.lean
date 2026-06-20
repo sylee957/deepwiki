@@ -219,6 +219,13 @@ alias eq_3_3_3 := DeepWiki.TimeSeries.armaPsi_coeff_recursion
 agrees with the explicit `ar1Filter` of Example 3.2.2. The library's `coeff_armaPsi_ar1`. -/
 alias ar1_psi_weights := DeepWiki.TimeSeries.coeff_armaPsi_ar1
 
+/-- **§3.3 Second Method** (§3.3, p.92), the homogeneous difference equation for the autocovariance:
+the causal-ARMA acvf `γ(m) = σ² ∑ⱼ ψⱼ ψ_{j+m}` satisfies `∑_{k=0}^p φₖ γ(h−k) = 0` once the
+`φ`-convolution of the `ψ`-weights vanishes (`ψⱼ · ∑ₖ φₖ ψ_{j+(h−k)} = 0` for all `j`) — which the
+recursion (`eq_3_3_3`, `∑ₖ φₖ ψ_{m−k} = θ_m = 0` for `m > deg θ`) supplies for `h > deg θ`. The
+library's `acvf_homogeneous`. -/
+alias acvf_secondMethod := DeepWiki.TimeSeries.acvf_homogeneous
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
@@ -242,8 +249,11 @@ algebraic level: the formula `γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3
 series `ψ = θ/φ` (eq 3.3.2, `eq_3_3_2`) with the Cauchy recursion `∑_{k≤j} φₖ ψ_{j−k} = θⱼ`
 (eq 3.3.3, `eq_3_3_3`). What remains infra-blocked is the *analytic* link: the absolute convergence
 `∑ⱼ |ψⱼ| < ∞` of the `ψ`-weights (the decay `|ψⱼ| = O(rʲ)` forced by causality `φ ≠ 0` on `|z| ≤ 1`),
-which is what lets the algebraic `ψ = θ/φ` actually drive an `L²` `MA(∞)`; and the
-homogeneous-difference-equation (Second) method for `γ`.
+which is what lets the algebraic `ψ = θ/φ` actually drive an `L²` `MA(∞)`. The
+homogeneous-difference-equation (Second) method `∑_{k=0}^p φₖ γ(h−k) = 0` is now formalized
+(`acvf_secondMethod`) given the `φ`-convolution-vanishing of the `ψ`-weights; fully discharging that
+vanishing from `armaPsi` (the `ℤ`-extended `ψ`-filter + the recursion lift, plus `θ_m = 0` for
+`m > deg θ`) is the remaining algebraic plumbing.
 
 The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the algebraically-finite special
 case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
