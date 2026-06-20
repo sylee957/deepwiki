@@ -96,4 +96,38 @@ theorem lagProductProcess_cov_succ [IsProbabilityMeasure μ] (hindep : iIndepFun
         hind.integral_mul_eq_mul_integral haesmB (hmem (s + 1)).aestronglyMeasurable
     _ = 0 := by rw [hmean (s + 1), mul_zero]
 
+/-- **Problem 1.7(f)**: the full white autocovariance `Cov(Xᵢ, Xⱼ) = σ⁴ · [i = j]` — assembling
+the lag-`0` (`= σ⁴`), lag-`±1` (`= 0`), and `|i − j| ≥ 2` (`= 0`) cases. -/
+theorem lagProductProcess_cov [IsProbabilityMeasure μ] (hindep : iIndepFun Z μ)
+    (hmem : ∀ t, MemLp (Z t) 4 μ) (hmean : ∀ t, ∫ ω, Z t ω ∂μ = 0)
+    (hvar : ∀ t, ∫ ω, (Z t ω) ^ 2 ∂μ = σ2) (i j : ℤ) :
+    cov[lagProductProcess Z i, lagProductProcess Z j; μ] = if i = j then σ2 ^ 2 else 0 := by
+  rcases eq_or_ne i j with rfl | hne
+  · rw [if_pos rfl]; exact lagProductProcess_acvf_zero hindep hmem hmean hvar i
+  rw [if_neg hne]
+  rcases eq_or_ne i (j + 1) with rfl | h1
+  · exact lagProductProcess_cov_succ hindep hmem hmean j
+  rcases eq_or_ne j (i + 1) with rfl | h2
+  · rw [covariance_comm]; exact lagProductProcess_cov_succ hindep hmem hmean i
+  exact lagProductProcess_cov_of_disjoint hindep hmem hne (by omega) (by omega)
+
+/-- **Problem 1.7(f)**: `Xₜ = Zₜ Zₜ₋₁` is **weakly stationary** — it is white noise (mean `0`,
+autocovariance `σ⁴` at lag `0` and `0` elsewhere). -/
+theorem lagProductProcess_isWeaklyStationary [IsProbabilityMeasure μ] (hindep : iIndepFun Z μ)
+    (hmem : ∀ t, MemLp (Z t) 4 μ) (hmean : ∀ t, ∫ ω, Z t ω ∂μ = 0)
+    (hvar : ∀ t, ∫ ω, (Z t ω) ^ 2 ∂μ = σ2) :
+    IsWeaklyStationary (lagProductProcess Z) μ :=
+  isWeaklyStationary_of_whiteCov (v := σ2 ^ 2) (fun t => memLp_lagProductProcess hmem t)
+    (fun s t => by
+      simp only [mean]
+      rw [lagProductProcess_mean hindep hmem hmean s, lagProductProcess_mean hindep hmem hmean t])
+    (fun i j => lagProductProcess_cov hindep hmem hmean hvar i j)
+
+/-- **Problem 1.7(f)**: the autocovariance function `γ(h) = σ⁴ · [h = 0]` of `Xₜ = Zₜ Zₜ₋₁`. -/
+theorem lagProductProcess_acvfStat [IsProbabilityMeasure μ] (hindep : iIndepFun Z μ)
+    (hmem : ∀ t, MemLp (Z t) 4 μ) (hmean : ∀ t, ∫ ω, Z t ω ∂μ = 0)
+    (hvar : ∀ t, ∫ ω, (Z t ω) ^ 2 ∂μ = σ2) (h : ℤ) :
+    acvfStat (lagProductProcess Z) μ h = if h = 0 then σ2 ^ 2 else 0 := by
+  rw [acvfStat_apply, lagProductProcess_cov hindep hmem hmean hvar h 0]
+
 end DeepWiki.TimeSeries
