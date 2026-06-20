@@ -1198,6 +1198,17 @@ theorem closureApproxNat_le_self (f : UppSeq (WithTop ℤ)) {N : ℕ} (hN : 1 �
   rw [← iterConvNat_one f n]
   exact Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (by omega))
 
+/-- The closure approximant is **antitone in `N`** — `⨅_{m≤N+1} f^⊗ᵐ ≤ ⨅_{m≤N} f^⊗ᵐ` (one more term
+can only lower the infimum). So the approximants form a non-increasing sequence and converge
+pointwise; the closure is their limit. -/
+theorem closureApproxNat_antitone (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+    closureApproxNat f (N + 1) n ≤ closureApproxNat f N n := by
+  unfold closureApproxNat
+  apply Finset.le_inf'
+  intro m hm
+  exact Finset.inf'_le _ (Finset.mem_range.mpr
+    (lt_trans (Finset.mem_range.mp hm) (Nat.lt_succ_self _)))
+
 /-- For an **idempotent** (sub-additive) `f` — `f ⊗ f = f` — every iterate collapses: `f^⊗ᵐ = f`
 for all `m ≥ 1` (induction: `f^⊗(m+1) = f ⊗ f^⊗ᵐ = f ⊗ f = f`). -/
 theorem iterConvNat_eq_self_of_idem (f : UppSeq (WithTop ℤ))
