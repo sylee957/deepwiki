@@ -58,4 +58,32 @@ theorem hasSum_inner_left {f : ℤ → Lp ℝ 2 μ} {a : Lp ℝ 2 μ} (y : Lp �
   rw [e, real_inner_comm y a]
   exact h
 
+/-! ## The `L²` autocovariance `γ(h) = σ² ∑ₖ ψₖ ψ_{k+h}` -/
+
+/-- **Inner product of the linear process with a single innovation:** for innovations orthogonal up
+to `σ²` (`⟪Zₐ, Z_b⟫ = σ²·[a=b]`), `⟪Xₛ, Z_b⟫ = σ²·ψ_{s−b}` — only the `j = s−b` summand survives. -/
+theorem linearProcessLp_inner_single {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0)
+    (s b : ℤ) : inner ℝ (linearProcessLp ψ Z s) (Z b) = σ2 * ψ (s - b) := by
+  rw [← (hasSum_inner_left (Z b) (hasSum_linearProcessLp hψ hZb s)).tsum_eq,
+    tsum_eq_single (s - b) (fun j hj => by
+      rw [real_inner_smul_left, hZorth (s - j) b, if_neg (by omega), mul_zero]),
+    show s - (s - b) = b from by omega, real_inner_smul_left, hZorth b b, if_pos rfl]
+  ring
+
+/-- **§3.3: the linear-process autocovariance.** For innovations with `⟪Zₐ, Z_b⟫ = σ²·[a=b]`,
+`⟪X_{t+h}, Xₜ⟫ = σ² ∑ₖ ψₖ ψ_{k+h}` — the stationary autocovariance `γ(h)` of the linear process,
+obtained by expanding only the right factor `Xₜ` and collapsing each `⟪X_{t+h}, Z_{t−k}⟫`. -/
+theorem linearProcessLp_inner {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0)
+    (t h : ℤ) :
+    inner ℝ (linearProcessLp ψ Z (t + h)) (linearProcessLp ψ Z t)
+      = σ2 * ∑' k, ψ k * ψ (k + h) := by
+  rw [← (hasSum_inner_right (linearProcessLp ψ Z (t + h))
+    (hasSum_linearProcessLp hψ hZb t)).tsum_eq, ← tsum_mul_left]
+  refine tsum_congr (fun k => ?_)
+  rw [real_inner_smul_right, linearProcessLp_inner_single hψ hZb hZorth (t + h) (t - k),
+    show t + h - (t - k) = k + h from by omega]
+  ring
+
 end DeepWiki.TimeSeries
