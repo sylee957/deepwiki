@@ -1281,6 +1281,23 @@ theorem closureApproxNat_stable_step (f : UppSeq (WithTop ℤ)) {N : ℕ}
   rw [show N + 2 = N + 1 + 1 from rfl, closureApproxNat_succ f (N + 1) n, closureApproxNat_succ f N n]
   simp only [h]
 
+/-- **Once stable, converged.** If `closureApprox(N+1) = closureApprox(N)` then `closureApprox(N+j) =
+closureApprox(N)` for *every* `j` — the approximant is constant from `N` on, so `closureApprox(N)` is
+the true closure `f*`. (Induction via the recurrence: `closureApprox(N+i+1) = δ₀ ⊓ f⊗closureApprox(N+i)
+= δ₀ ⊓ f⊗closureApprox(N) = closureApprox(N+1) = closureApprox(N)`.) -/
+theorem closureApproxNat_eq_of_stable (f : UppSeq (WithTop ℤ)) {N : ℕ}
+    (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) :
+    ∀ j n, closureApproxNat f (N + j) n = closureApproxNat f N n := by
+  intro j
+  induction j with
+  | zero => intro n; rfl
+  | succ i ih =>
+    intro n
+    have hstep : closureApproxNat f (N + i + 1) n = closureApproxNat f (N + 1) n := by
+      rw [closureApproxNat_succ f (N + i) n, closureApproxNat_succ f N n]
+      simp only [ih]
+    rw [show N + (i + 1) = N + i + 1 from rfl, hstep, h]
+
 /-- **Sub-additive closure of an idempotent `f`**: `f* = δ₀ ⊓ f`. For `f ⊗ f = f` (e.g. a
 sub-additive service curve) the closure stabilizes at one iteration — `⨅_{m≤N} f^⊗ᵐ = δ₀ ⊓ f` for
 every `N ≥ 1` — so the closure is computed exactly with no iteration bound needed. (The general
