@@ -213,6 +213,24 @@ theorem untrop_pow_mul_le_nsmul {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p : �
     rw [Nat.succ_mul, succ_nsmul]
     exact le_trans (untrop_pow_add_le_diag A (k * p) p i) (by gcongr)
 
+/-- **Offset diagonal upper bound**: from any starting power `m`, looping a length-`p` circuit `k`
+times adds at most `k • (Aᵖ)ᵢᵢ` — `(Aᵐ⁺ᵏᵖ)ᵢᵢ ≤ (Aᵐ)ᵢᵢ + k • (Aᵖ)ᵢᵢ` (the `m = 0` case is
+`untrop_pow_mul_le_nsmul`). With a critical circuit (`(Aᵖ⁰)ᵢᵢ = λ·p₀`) the diagonal grows by at most
+`λ·p₀` per period — the upper rate `λ`, complementing the lower bound `untrop_pow_diag_ge`. -/
+theorem untrop_pow_add_mul_le_nsmul {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m p : ℕ) (i : Fin n)
+    (k : ℕ) :
+    ((A ^ (m + k * p)) i i).untrop ≤ ((A ^ m) i i).untrop + k • ((A ^ p) i i).untrop := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    calc ((A ^ (m + (k + 1) * p)) i i).untrop
+        = ((A ^ ((m + k * p) + p)) i i).untrop := by
+          rw [show m + (k + 1) * p = (m + k * p) + p from by ring]
+      _ ≤ ((A ^ (m + k * p)) i i).untrop + ((A ^ p) i i).untrop :=
+          untrop_pow_add_le_diag A (m + k * p) p i
+      _ ≤ ((A ^ m) i i).untrop + k • ((A ^ p) i i).untrop + ((A ^ p) i i).untrop := by gcongr
+      _ = ((A ^ m) i i).untrop + (k + 1) • ((A ^ p) i i).untrop := by rw [add_assoc, ← succ_nsmul]
+
 /-- **Eigenvalue upper bound via an explicit circuit**: any circuit `l` at `i` (length `p`, returning
 to `i`, weight `w`) caps the diagonal growth — `(Aᵏᵖ)ᵢᵢ ≤ k • w` (traverse the circuit `k` times).
 So the min-plus eigenvalue `λ = limₖ (Aᵏᵖ)ᵢᵢ / (kp)` is `≤ w / p`, the circuit's mean weight: every
