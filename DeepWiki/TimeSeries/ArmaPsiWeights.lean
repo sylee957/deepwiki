@@ -40,4 +40,23 @@ theorem armaPsi_coeff_recursion {φ θ : Polynomial ℝ}
   rw [← h]
   exact Finset.sum_congr rfl fun k _ => by rw [Polynomial.coeff_coe]
 
+/-- The geometric series `∑ⱼ aʲ Xʲ` is the inverse of `1 − a X` in `ℝ⟦X⟧`. -/
+theorem inv_one_sub_C_mul_X (a : ℝ) :
+    (1 - C a * X : PowerSeries ℝ)⁻¹ = mk fun j => a ^ j := by
+  have hc : constantCoeff (1 - C a * X : PowerSeries ℝ) ≠ 0 := by simp
+  rw [inv_eq_iff_mul_eq_one hc]
+  ext n
+  rw [mul_sub, mul_one, map_sub, coeff_one, mul_comm (mk fun j => a ^ j) (C a * X),
+    mul_assoc, coeff_C_mul, coeff_mk]
+  cases n with
+  | zero => simp
+  | succ m => rw [coeff_succ_X_mul, coeff_mk, if_neg (Nat.succ_ne_zero m), pow_succ]; ring
+
+/-- **Example 3.2.2 ↔ §3.3:** the `ψ`-weights of the `AR(1)` process (`φ(z) = 1 − φ₁z`, `θ = 1`) are
+the geometric weights `ψⱼ = φ₁ʲ` — the abstract `ψ = θ/φ` agrees with the explicit `ar1Filter`. -/
+theorem coeff_armaPsi_ar1 (φ₁ : ℝ) (j : ℕ) :
+    coeff j (armaPsi (1 - Polynomial.C φ₁ * Polynomial.X) 1) = φ₁ ^ j := by
+  rw [armaPsi, Polynomial.coe_one, mul_one, Polynomial.coe_sub, Polynomial.coe_one,
+    Polynomial.coe_mul, Polynomial.coe_C, Polynomial.coe_X, inv_one_sub_C_mul_X, coeff_mk]
+
 end DeepWiki.TimeSeries

@@ -214,6 +214,11 @@ with `φ₀ = 1` this is the book's `ψⱼ − ∑_{0<k≤j} φ'ₖ ψ_{j−k} =
 `armaPsi_coeff_recursion`. -/
 alias eq_3_3_3 := DeepWiki.TimeSeries.armaPsi_coeff_recursion
 
+/-- **Example 3.2.2 ↔ §3.3:** the `AR(1)` `ψ`-weights computed via the abstract reciprocal
+`ψ = θ/φ` (`φ(z) = 1 − φ₁z`, `θ = 1`) are the geometric weights `ψⱼ = φ₁ʲ` — confirming `armaPsi`
+agrees with the explicit `ar1Filter` of Example 3.2.2. The library's `coeff_armaPsi_ar1`. -/
+alias ar1_psi_weights := DeepWiki.TimeSeries.coeff_armaPsi_ar1
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
