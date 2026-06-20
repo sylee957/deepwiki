@@ -1,15 +1,18 @@
 import DeepWiki.TimeSeries.LinearProcess
 import Mathlib.Analysis.SpecificLimits.Normed
+import Mathlib.Algebra.Polynomial.Degree.Lemmas
 
-/-! # Example 3.2.2: the `AR(1)` process as an `MA(∞)` linear process
-The causal `AR(1)` process `Xₜ = φ Xₜ₋₁ + Zₜ` with `|φ| < 1` is the moving average of infinite
-order with weights `ψⱼ = φʲ` (`j ≥ 0`): `Xₜ = ∑_{j≥0} φʲ Zₜ₋ⱼ`. Its filter is absolutely summable
-(a geometric series), so the `L²` linear process `linearProcessLp` is well-defined and `MA(∞)`
-(Definition 3.2.1). -/
+/-! # `§3.2` examples: `MA(q)` and `AR(1)` as `MA(∞)` linear processes
+**Example 3.2.1** — the `MA(q)` process `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` is an `MA(∞)` with the finite
+filter `ψⱼ = θⱼ` (vacuously summable), and its linear process collapses to that finite sum.
+**Example 3.2.2** — the causal `AR(1)` process `Xₜ = φ Xₜ₋₁ + Zₜ` with `|φ| < 1` is an `MA(∞)`
+with `ψⱼ = φʲ` (a geometric, hence absolutely summable, filter), with variance `σ²/(1−φ²)` and
+autocovariance `σ² φ^|h|/(1−φ²)`. -/
 
 namespace DeepWiki.TimeSeries
 
 open MeasureTheory
+open scoped Polynomial
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
@@ -102,5 +105,48 @@ theorem ar1_linearProcess_acvf {φ σ2 : ℝ} (hφ : |φ| < 1) {Z : ℤ → Lp �
       = ∑' k, φ ^ h.toNat * ar1Filter (φ ^ 2) k := tsum_congr (ar1Filter_mul_shift hh)
     _ = φ ^ h.toNat * ∑' k, ar1Filter (φ ^ 2) k := tsum_mul_left
     _ = φ ^ h.toNat * (1 - φ ^ 2)⁻¹ := by rw [tsum_ar1Filter hφ2]
+
+/-! ## Example 3.2.1: the `MA(q)` process as an `MA(∞)` -/
+
+/-- The `MA(q)` filter `ψⱼ = θⱼ` (`0 ≤ j ≤ q`), else `0` — the coefficient sequence of the
+moving-average polynomial `θ`, as a one-sided finite filter on `ℤ`. -/
+noncomputable def maqFilter (θ : ℝ[X]) : ℤ → ℝ := fun j => if 0 ≤ j then θ.coeff j.toNat else 0
+
+/-- `maqFilter θ` at a nonnegative integer `↑n` is the coefficient `θₙ`. -/
+@[simp] theorem maqFilter_natCast (θ : ℝ[X]) (n : ℕ) : maqFilter θ (n : ℤ) = θ.coeff n := by
+  simp [maqFilter]
+
+/-- `maqFilter θ` vanishes at negative indices. -/
+theorem maqFilter_neg (θ : ℝ[X]) {j : ℤ} (hj : j < 0) : maqFilter θ j = 0 := by
+  simp only [maqFilter]; exact if_neg (not_le.mpr hj)
+
+/-- **Example 3.2.1:** the `MA(q)` filter `ψⱼ = θⱼ` is (absolutely) summable — it is finitely
+supported (`ψⱼ = 0` for `j > deg θ`), so the `MA(q)` is trivially an `MA(∞)` (Definition 3.2.1). -/
+theorem summable_maqFilter (θ : ℝ[X]) : Summable (maqFilter θ) :=
+  summable_of_ne_finset_zero (s := Finset.Icc 0 (θ.natDegree : ℤ)) (fun j hj => by
+    rw [Finset.mem_Icc, not_and_or, not_le, not_le] at hj
+    rcases hj with h | h
+    · exact maqFilter_neg θ h
+    · simp only [maqFilter]
+      rw [if_pos (by omega : (0 : ℤ) ≤ j)]
+      exact Polynomial.coeff_eq_zero_of_natDegree_lt (by omega))
+
+/-- **Example 3.2.1:** the `MA(∞)` linear process with the finite `MA(q)` filter collapses to the
+finite moving average `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` (the `MA(q)` defining sum `θ(B) Z`). -/
+theorem linearProcessLp_maqFilter_eq (θ : ℝ[X]) (Z : ℤ → Lp ℝ 2 μ) (t : ℤ) :
+    linearProcessLp (maqFilter θ) Z t
+      = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) := by
+  have hsupp : Function.support (fun j : ℤ => maqFilter θ j • Z (t - j)) ⊆
+      Set.range (Nat.cast : ℕ → ℤ) := by
+    intro x hx
+    rw [Function.mem_support] at hx
+    rcases lt_or_ge x 0 with h | h
+    · exact absurd (by rw [maqFilter_neg θ h, zero_smul]) hx
+    · exact ⟨x.toNat, Int.toNat_of_nonneg h⟩
+  rw [linearProcessLp, ← Function.Injective.tsum_eq Nat.cast_injective hsupp]
+  simp only [maqFilter_natCast]
+  refine tsum_eq_sum fun n hn => ?_
+  rw [Finset.mem_range, not_lt] at hn
+  rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul]
 
 end DeepWiki.TimeSeries

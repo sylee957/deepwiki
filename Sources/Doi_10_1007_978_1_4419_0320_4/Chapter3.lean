@@ -175,6 +175,16 @@ example {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → MeasureTheory.Lp ℝ
     inner ℝ (linearProcessLp ψ Z (t + h)) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k * ψ (k + h) :=
   linearProcessLp_inner hψ hZb hZorth t h
 
+/-- **Example 3.2.1** (§3.2, p.89): the `MA(q)` process `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` is an `MA(∞)` with
+the finite filter `ψⱼ = θⱼ` — vacuously absolutely summable (finite support), so an `MA(∞)`
+(Definition 3.2.1). The library's `summable_maqFilter` (the filter is `maqFilter`). -/
+alias ex_3_2_1 := DeepWiki.TimeSeries.summable_maqFilter
+
+/-- **Example 3.2.1** (§3.2, p.89): the `MA(∞)` linear process with the finite `MA(q)` filter is the
+finite moving average `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` (`= θ(B) Z`). The library's
+`linearProcessLp_maqFilter_eq`. -/
+alias ex_3_2_1_eq := DeepWiki.TimeSeries.linearProcessLp_maqFilter_eq
+
 /-- **Example 3.2.2** (§3.2, p.89): the causal `AR(1)` process `Xₜ = φXₜ₋₁ + Zₜ` with `|φ| < 1` is
 an `MA(∞)` with weights `ψⱼ = φʲ` (`j ≥ 0`) — the filter `ar1Filter φ` is absolutely summable (a
 geometric series `∑_{j≥0}|φ|ʲ < ∞`), so `Xₜ = ∑_{j≥0} φʲ Zₜ₋ⱼ` is a well-defined `MA(∞)` (Definition
@@ -199,11 +209,14 @@ on an annulus `r⁻¹ < |z| < r` (eq 3.1.21). The *solution form* `∑ⱼ ψⱼ 
 convergence are now `linearProcessLp` / `hasSum_linearProcessLp`; what remains infra-blocked is the
 **Laurent/power-series reciprocal** producing the `ψ`-weights from `θ, φ`.
 
-**§3.2 remainder.** **Examples 3.2.1–3.2.3** (MA(q) as `ψⱼ = θⱼ`; causal AR(1) as `ψⱼ = φʲ`; causal
-ARMA as `∑ψⱼzʲ = θ(z)/φ(z)`) and **Proposition 3.2.1** (a zero-mean stationary `q`-correlated process
-— `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q), via the `L²` innovations/projection argument of
-§2.3–§2.4) remain unformalized: the ARMA examples need the `θ/φ` reciprocal, and Prop 3.2.1 needs the
-innovations algorithm.
+**§3.2 remainder.** **Examples 3.2.1** (MA(q), `ψⱼ = θⱼ`) and **3.2.2** (causal AR(1), `ψⱼ = φʲ`) are
+now formalized (`ex_3_2_1`/`ex_3_2_2` above). Still unformalized: **Example 3.2.3** (causal ARMA as
+`∑ψⱼzʲ = θ(z)/φ(z)`) — the `MA(∞)` weights exist algebraically as the formal power series `θ/φ`
+(`PowerSeries.inv`, `φ(0) = 1` a unit), but the `L²` representation needs `∑ⱼ |ψⱼ| < ∞`, which follows
+only from the *analytic* decay `|ψⱼ| = O(rʲ)` forced by causality (`φ ≠ 0` on `|z| ≤ 1`) — an estimate
+not in scope (infra-blocked); and **Proposition 3.2.1** (a zero-mean stationary `q`-correlated process
+— `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q)), which needs the `L²` innovations/projection
+algorithm of §2.3–§2.4.
 
 **§3.3 (computing the ARMA autocovariance).** The **First Method** formula
 `γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1 (`thm_3_2_1`) specialized to the
