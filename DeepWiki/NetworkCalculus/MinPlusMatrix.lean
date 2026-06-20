@@ -233,6 +233,25 @@ theorem isPseudoPeriodicPow_of_pow_succ_eq {n : ℕ} {A : Matrix (Fin n) (Fin n)
   rw [key k hk]
   norm_num
 
+/-- **The eigenvalue is well-defined**: for a fixed cyclicity `c`, the eigenvalue `λ` is unique —
+any two pseudo-periodic descriptions `IsPseudoPeriodicPow A c K λ₁/λ₂` agree on `λ` as soon as some
+diagonal entry `(Aᴷ)ᵢᵢ` is finite (a genuine circuit through `i` exists). At that entry both give
+`(Aᴷ⁺ᶜ)ᵢᵢ = (Aᴷ)ᵢᵢ ⊗ trop(c·λ)`; cancelling the finite `(Aᴷ)ᵢᵢ` and the positive `c` pins `λ`. -/
+theorem IsPseudoPeriodicPow.lam_unique {n : ℕ} {A : Matrix (Fin n) (Fin n) MP} {c K : ℕ}
+    {lam₁ lam₂ : ℤ} (h₁ : IsPseudoPeriodicPow A c K lam₁) (h₂ : IsPseudoPeriodicPow A c K lam₂)
+    {i : Fin n} (hi : (A ^ K) i i ≠ 0) : lam₁ = lam₂ := by
+  have e : (A ^ K) i i * Tropical.trop (((c : ℤ) * lam₁ : ℤ) : WithTop ℤ)
+         = (A ^ K) i i * Tropical.trop (((c : ℤ) * lam₂ : ℤ) : WithTop ℤ) :=
+    (h₁.2 K le_rfl i i).symm.trans (h₂.2 K le_rfl i i)
+  have hu : ((A ^ K) i i).untrop ≠ ⊤ :=
+    fun ht => hi (Tropical.untrop_injective (by rw [ht]; rfl))
+  have e2 : (((c : ℤ) * lam₁ : ℤ) : WithTop ℤ) = (((c : ℤ) * lam₂ : ℤ) : WithTop ℤ) := by
+    apply WithTop.add_left_cancel hu
+    have huntrop := congrArg Tropical.untrop e
+    simpa [Tropical.untrop_mul, Tropical.untrop_trop] using huntrop
+  have e3 : (c : ℤ) * lam₁ = (c : ℤ) * lam₂ := by exact_mod_cast e2
+  exact mul_left_cancel₀ (by exact_mod_cast h₁.1.ne') e3
+
 /-- `exA` is multiplicatively idempotent (`exA ⊗ exA = exA`): its `0`-weight self-loops make it a
 closure operator. -/
 theorem exA_mul_self : exA * exA = exA := by native_decide
