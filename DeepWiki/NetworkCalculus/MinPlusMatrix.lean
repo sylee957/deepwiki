@@ -809,6 +809,22 @@ theorem untrop_pow_mul_eq_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
     exact le_of_mul_le_mul_left hh hpos
   exact_mod_cast le_antisymm hup h2
 
+/-- **Cyclicity realized at the critical vertex**: on the diagonal at a critical vertex `v₀`, the
+powers are *exactly* pseudo-periodic on multiples of `p₀` — `(A^((k+1)p₀))ᵥ₀ᵥ₀ = (A^(kp₀))ᵥ₀ᵥ₀ ⊗ trop(w₀)`,
+the cyclicity relation `Aᵐ⁺ᶜ = Aᵐ ⊗ trop(c·λ)` with `c = p₀`, increment `c·λ = w₀`. A corollary of the
+exact growth `untrop_pow_mul_eq_minMeanCycle`; the genuine periodic recurrence, realized where the
+eigenvalue is attained. (The *full* cyclicity — all entries, all `k` past a rank — additionally needs
+the critical graph's period; this is the piece that the eigenvalue alone delivers.) -/
+theorem untrop_pow_critical_cyclicity {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (w₀ : ℤ) (p₀ : ℕ)
+    (hp1 : 1 ≤ p₀) (v₀ : Fin n) (htight : ((A ^ p₀) v₀ v₀).untrop = (w₀ : WithTop ℤ))
+    (hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ)) (k : ℕ) :
+    (A ^ ((k + 1) * p₀)) v₀ v₀ = (A ^ (k * p₀)) v₀ v₀ * Tropical.trop (w₀ : WithTop ℤ) := by
+  apply Tropical.untrop_injective
+  rw [Tropical.untrop_mul, untrop_pow_mul_eq_minMeanCycle A w₀ p₀ hp1 v₀ htight hlam (k + 1),
+    untrop_pow_mul_eq_minMeanCycle A w₀ p₀ hp1 v₀ htight hlam k, Tropical.untrop_trop,
+    ← WithTop.coe_add]
+  congr 1; push_cast; ring
+
 /-! ### Irreducibility, toward the two-sided growth bound
 The lower envelope `(Aᵐ)ᵢᵢ ≥ λ·m` holds unconditionally; the matching *upper* envelope
 `(Aᵐ)ᵢⱼ ≤ λ·m + C` needs the graph to be **strongly connected** (irreducible) so every pair is
