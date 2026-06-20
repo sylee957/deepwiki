@@ -2,6 +2,7 @@ import DeepWiki.TimeSeries.ArmaProcesses
 import DeepWiki.TimeSeries.LinearProcess
 import DeepWiki.TimeSeries.LinearProcessExamples
 import DeepWiki.TimeSeries.LinearProcessArma
+import DeepWiki.TimeSeries.ArmaPsiWeights
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 3: Stationary ARMA Processes
@@ -201,6 +202,18 @@ alias ar1_variance := DeepWiki.TimeSeries.ar1_linearProcess_variance
 evenness. The standard `AR(1)` ACVF. The library's `ar1_linearProcess_acvf`. -/
 alias ar1_acvf := DeepWiki.TimeSeries.ar1_linearProcess_acvf
 
+/-! ### §3.3 First Method: the `ψ`-weight recursion `ψ = θ/φ` -/
+
+/-- **Equation (3.3.2)** (§3.3, p.91): the `ψ`-weight power series `ψ(z) = θ(z)/φ(z)` of an ARMA
+process, as a formal power series (`PowerSeries ℝ`). The library's `armaPsi`. -/
+noncomputable abbrev eq_3_3_2 := @DeepWiki.TimeSeries.armaPsi
+
+/-- **Equation (3.3.3)** (§3.3, p.91): the `ψ`-weight recursion. When `φ(0) ≠ 0` (e.g. `φ(0) = 1`),
+the coefficients of `ψ = θ/φ` satisfy `∑_{k=0}^j φₖ ψ_{j−k} = θⱼ` (the `zʲ`-coefficient of `φ ψ = θ`;
+with `φ₀ = 1` this is the book's `ψⱼ − ∑_{0<k≤j} φ'ₖ ψ_{j−k} = θⱼ`). The library's
+`armaPsi_coeff_recursion`. -/
+alias eq_3_3_3 := DeepWiki.TimeSeries.armaPsi_coeff_recursion
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
@@ -218,11 +231,14 @@ not in scope (infra-blocked); and **Proposition 3.2.1** (a zero-mean stationary 
 — `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q)), which needs the `L²` innovations/projection
 algorithm of §2.3–§2.4.
 
-**§3.3 (computing the ARMA autocovariance).** The **First Method** formula
-`γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1 (`thm_3_2_1`) specialized to the
-ARMA `ψ`-weights — the formula is now proved. What remains infra-blocked is the determination of
-those weights: the reciprocal `ψ(z) = θ(z)/φ(z)` (eq 3.3.2) with its recursion
-`ψⱼ − ∑_{0<k≤j} φₖ ψⱼ₋ₖ = θⱼ` (eq 3.3.3), and the homogeneous-difference-equation (Second) method.
+**§3.3 (computing the ARMA autocovariance).** The **First Method** is now formalized at the
+algebraic level: the formula `γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1
+(`thm_3_2_1`) specialized to the ARMA `ψ`-weights, and the weights themselves are the formal power
+series `ψ = θ/φ` (eq 3.3.2, `eq_3_3_2`) with the Cauchy recursion `∑_{k≤j} φₖ ψ_{j−k} = θⱼ`
+(eq 3.3.3, `eq_3_3_3`). What remains infra-blocked is the *analytic* link: the absolute convergence
+`∑ⱼ |ψⱼ| < ∞` of the `ψ`-weights (the decay `|ψⱼ| = O(rʲ)` forced by causality `φ ≠ 0` on `|z| ≤ 1`),
+which is what lets the algebraic `ψ = θ/φ` actually drive an `L²` `MA(∞)`; and the
+homogeneous-difference-equation (Second) method for `γ`.
 
 The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the algebraically-finite special
 case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
