@@ -99,6 +99,29 @@ def walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n) : List (Fin
     (rest : List (Fin n)) :
     walkWeight A i (j :: rest) = (A i j).untrop + walkWeight A j rest := rfl
 
+/-- **Weight is additive over concatenation**: a walk `i ⤳ (end of l₁) ⤳ (end of l₂)` splits into its
+two legs, `walkWeight A i (l₁ ++ l₂) = walkWeight A i l₁ + walkWeight A (l₁.getLastD i) l₂`. The
+algebraic backbone of every walk-decomposition argument (toward the eigenvalue lower bound). -/
+theorem walkWeight_append {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n)
+    (l₁ l₂ : List (Fin n)) :
+    walkWeight A i (l₁ ++ l₂) = walkWeight A i l₁ + walkWeight A (l₁.getLastD i) l₂ := by
+  induction l₁ generalizing i with
+  | nil => simp [walkWeight]
+  | cons a t ih =>
+    simp only [List.cons_append, walkWeight_cons, List.getLastD_cons]
+    rw [ih, add_assoc]
+
+/-- **Repeating a circuit scales its weight**: traversing a circuit `l` at `i` (`l.getLastD i = i`)
+`k` times is the walk `(replicate k l).flatten`, of weight `k • walkWeight A i l`. The explicit walk
+witnessing the diagonal bound `untrop_pow_mul_le_nsmul_walkWeight`. -/
+theorem walkWeight_replicate_circuit {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n)
+    (l : List (Fin n)) (hl : l.getLastD i = i) (k : ℕ) :
+    walkWeight A i (List.replicate k l).flatten = k • walkWeight A i l := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [List.replicate_succ, List.flatten_cons, walkWeight_append, hl, ih, succ_nsmul, add_comm]
+
 /-- **Walk interpretation, upper half**: the matrix-power entry `(Aᵐ)ᵢⱼ` lower-bounds the weight of
 *every* explicit length-`m` walk `i ⤳ j` — the optimum is at least as good as any concrete walk.
 By induction on the vertex list, peeling the first edge (`A^(m+1) = A * Aᵐ`) and relaxing the
