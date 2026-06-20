@@ -45,4 +45,25 @@ theorem acvf_homogeneous {ψ : ℤ → ℝ} (hψ : Summable ψ) (φ : Polynomial
       = σ2 * ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ∑' j : ℤ, ψ j * ψ (j + (h - k)) from by
     rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun k _ => by ring, hzero, mul_zero]
 
+/-- **§3.3 Second Method for a causal `ARMA(p,q)`:** if the `ψ`-weights are summable (the causal
+`∑ⱼ |ψⱼ| < ∞`), one-sided (`ψⱼ = 0` for `j < 0`), and satisfy the recursion-vanishing
+`∑ₖ φₖ ψ_{m−k} = 0` for every `m > q` (eq 3.3.3 with `θ_m = 0`, `q = deg θ`), then the autocovariance
+`γ(m) = σ² ∑ⱼ ψⱼ ψ_{j+m}` satisfies the homogeneous difference equation `∑_{k=0}^p φₖ γ(h−k) = 0` at
+every lag `h > q`. The summability is the analytic content that causality (`φ ≠ 0` on `|z| ≤ 1`)
+would supply (here a hypothesis, as that estimate is out of scope). -/
+theorem arma_acvf_homogeneous {ψ : ℤ → ℝ} (hψ : Summable ψ) (φ : Polynomial ℝ) (σ2 : ℝ) {q : ℕ}
+    (hpos : ∀ j : ℤ, j < 0 → ψ j = 0)
+    (hrec : ∀ m : ℤ, (q : ℤ) < m →
+      ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (m - k) = 0)
+    {h : ℤ} (hh : (q : ℤ) < h) :
+    ∑ k ∈ Finset.range (φ.natDegree + 1),
+      φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + (h - k))) = 0 := by
+  refine acvf_homogeneous hψ φ σ2 h fun j => ?_
+  rcases lt_or_ge j 0 with hj | hj
+  · rw [hpos j hj, zero_mul]
+  · have hconv : ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (j + (h - k)) = 0 := by
+      simp_rw [show ∀ k : ℕ, j + (h - (k : ℤ)) = (j + h) - k from fun k => by ring]
+      exact hrec (j + h) (by omega)
+    rw [hconv, mul_zero]
+
 end DeepWiki.TimeSeries

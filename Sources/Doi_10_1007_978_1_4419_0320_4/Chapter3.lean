@@ -226,6 +226,13 @@ recursion (`eq_3_3_3`, `∑ₖ φₖ ψ_{m−k} = θ_m = 0` for `m > deg θ`) su
 library's `acvf_homogeneous`. -/
 alias acvf_secondMethod := DeepWiki.TimeSeries.acvf_homogeneous
 
+/-- **§3.3 Second Method for a causal `ARMA(p,q)`** (§3.3, p.92): if the `ψ`-weights are summable
+(the causal `∑ⱼ |ψⱼ| < ∞`), one-sided (`ψⱼ = 0`, `j < 0`), and satisfy the recursion-vanishing
+`∑ₖ φₖ ψ_{m−k} = 0` for `m > deg θ` (eq 3.3.3 with `θ_m = 0`), then `∑_{k=0}^p φₖ γ(h−k) = 0` for all
+`h > deg θ`. The summability is the analytic content causality would supply (a hypothesis, as that
+estimate is out of scope). The library's `arma_acvf_homogeneous`. -/
+alias arma_acvf_secondMethod := DeepWiki.TimeSeries.arma_acvf_homogeneous
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
@@ -250,10 +257,12 @@ series `ψ = θ/φ` (eq 3.3.2, `eq_3_3_2`) with the Cauchy recursion `∑_{k≤j
 (eq 3.3.3, `eq_3_3_3`). What remains infra-blocked is the *analytic* link: the absolute convergence
 `∑ⱼ |ψⱼ| < ∞` of the `ψ`-weights (the decay `|ψⱼ| = O(rʲ)` forced by causality `φ ≠ 0` on `|z| ≤ 1`),
 which is what lets the algebraic `ψ = θ/φ` actually drive an `L²` `MA(∞)`. The
-homogeneous-difference-equation (Second) method `∑_{k=0}^p φₖ γ(h−k) = 0` is now formalized
-(`acvf_secondMethod`) given the `φ`-convolution-vanishing of the `ψ`-weights; fully discharging that
-vanishing from `armaPsi` (the `ℤ`-extended `ψ`-filter + the recursion lift, plus `θ_m = 0` for
-`m > deg θ`) is the remaining algebraic plumbing.
+homogeneous-difference-equation (Second) method `∑_{k=0}^p φₖ γ(h−k) = 0` is now formalized — the
+abstract form `acvf_secondMethod` (given the `φ`-convolution-vanishing) and the `ARMA` form
+`arma_acvf_secondMethod` (given summable + one-sided + recursion-vanishing `ψ`-weights, with
+summability the honest stand-in for the analytic decay). The only piece left is connecting those
+hypotheses to `armaPsi` itself: the `ℤ`-extended `ψ`-filter and the lift of eq 3.3.3 to its
+`ℤ`-convolution form supply the recursion-vanishing, while summability remains the analytic block.
 
 The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the algebraically-finite special
 case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
