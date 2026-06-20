@@ -41,6 +41,12 @@ noncomputable def lagPoly (p : K[X]) : Module.End K (ℤ → M) := aeval backshi
 @[simp] theorem lagPoly_one : lagPoly (1 : K[X]) = (1 : Module.End K (ℤ → M)) := by
   simp [lagPoly]
 
+/-- **Equation (3.1.8)**: the backshift power `Bʲ` shifts by `j` — `(zʲ)(B) x` at time `t` is
+`x_{t−j}`, i.e. `Bʲ xₜ = x_{t−j}`. -/
+theorem lagPoly_X_pow_apply (j : ℕ) (x : ℤ → M) (t : ℤ) :
+    lagPoly (X ^ j : K[X]) x t = x (t - j) := by
+  rw [lagPoly, map_pow, aeval_X, Module.End.pow_apply, backshiftL_coe, backshift_iterate_apply]
+
 /-- `(C c)(B) = c • id`: a constant polynomial acts by scalar multiplication. -/
 @[simp] theorem lagPoly_C_apply (c : K) (x : ℤ → M) : lagPoly (C c) x = c • x := by
   rw [lagPoly, aeval_C, Module.algebraMap_end_apply]

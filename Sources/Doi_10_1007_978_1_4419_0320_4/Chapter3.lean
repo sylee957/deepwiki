@@ -22,6 +22,11 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : MeasureTheory.Measure Ω}
 `lagPoly`. -/
 noncomputable abbrev lagPoly := @DeepWiki.TimeSeries.lagPoly
 
+/-- **Equation (3.1.8)** (§3.1, p.78), the backshift power rule `Bʲ Xₜ = X_{t−j}` — the backshift
+operator raised to power `j` shifts the time index by `j` (so `B⁰ = id`). The library's
+`lagPoly_X_pow_apply`. -/
+alias eq_3_1_8 := DeepWiki.TimeSeries.lagPoly_X_pow_apply
+
 /-- **Definition 3.1.1** (§3.1, p.78), white noise `WN(0,σ²)`: a stationary process
 with mean zero and autocovariance `γ(h) = σ²` if `h = 0` else `0`. The library's
 `IsWhiteNoise`. -/
