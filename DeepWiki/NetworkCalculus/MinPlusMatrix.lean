@@ -419,6 +419,24 @@ theorem walkWeight_ge_of_short {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : �
           = ↑(μ * l'.length) + ↑(μ * lc.length) := by rw [← WithTop.coe_add]; exact_mod_cast hsum'
         _ ≤ walkWeight A i l' + walkWeight A v lc := add_le_add ih1 ih2
 
+/-- **Eigenvalue lower bound, matrix form**: with a rate `μ` valid on all short closed walks, the
+diagonal power entry is bounded below linearly, `μ · m ≤ (Aᵐ)ᵢᵢ`. The `+∞` entry is bounded trivially;
+a finite entry is the weight of a length-`m` closed walk (`exists_walkWeight_eq` at `j = i`), which
+`walkWeight_ge_of_short` bounds. Paired with `untrop_pow_mul_le_nsmul_walkWeight` (the upper bound,
+`(Aᵏᵖ)ᵢᵢ ≤ k·weight`), this pins the diagonal growth rate — the min-plus eigenvalue. -/
+theorem untrop_pow_diag_ge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : ℤ)
+    (hshort : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(μ * l₀.length) : WithTop ℤ) ≤ walkWeight A v l₀)
+    (i : Fin n) (m : ℕ) :
+    (↑(μ * m) : WithTop ℤ) ≤ ((A ^ m) i i).untrop := by
+  by_cases htop : ((A ^ m) i i).untrop = ⊤
+  · rw [htop]; exact le_top
+  · obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A m i i htop
+    have hge := walkWeight_ge_of_short A μ hshort i l hend
+    rw [hlen] at hge
+    rw [hw] at hge
+    exact hge
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
