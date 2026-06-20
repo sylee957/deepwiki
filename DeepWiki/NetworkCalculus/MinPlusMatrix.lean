@@ -615,6 +615,21 @@ theorem minMeanCycle_le {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) (p
     simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and]; exact ⟨hp1, hpn⟩
   exact Finset.inf_le hmem
 
+/-- **`λ(A)` is attained** by a short circuit (`n ≥ 1`): some `v` and length `1 ≤ p ≤ n` have
+`λ(A) = cycleMean A v p` — the argmin of the finite circuit-mean set. With `minMeanCycle_le` this is
+the textbook characterization: `λ(A)` is the minimum mean over circuits, achieved. -/
+theorem minMeanCycle_eq {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (hn : 1 ≤ n) :
+    ∃ v p, 1 ≤ p ∧ p ≤ n ∧ minMeanCycle A = cycleMean A v p := by
+  have hne : (Finset.univ ×ˢ Finset.Icc 1 n : Finset (Fin n × ℕ)).Nonempty := by
+    refine ⟨(⟨0, hn⟩, 1), ?_⟩
+    simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and]
+    exact ⟨le_refl 1, hn⟩
+  obtain ⟨⟨v, p⟩, hmem, heq⟩ := Finset.exists_mem_eq_inf' hne (fun vp => cycleMean A vp.1 vp.2)
+  simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and] at hmem
+  refine ⟨v, p, hmem.1, hmem.2, ?_⟩
+  rw [minMeanCycle, ← Finset.inf'_eq_inf hne]
+  exact heq
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
