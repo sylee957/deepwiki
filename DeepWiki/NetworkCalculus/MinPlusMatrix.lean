@@ -14,15 +14,19 @@ Built here, toward BCOQ "Synchronization and Linearity" Thm 3.112:
 * **Walk interpretation** — `(Aᵐ)ᵢⱼ` is the minimum weight of a length-`m` walk `i ⤳ j`
   (`untrop_pow_le_walkWeight` and `exists_walkWeight_eq`), with finiteness `untrop_pow_ne_top_iff`.
 * **Eigenvalue bounds** — upper `untrop_pow_mul_le_nsmul_walkWeight` (iterating a circuit) and lower
-  `walkWeight_ge_of_short` / `untrop_pow_diag_ge` (an integer rate valid on short circuits propagates),
-  the latter via circuit extraction (`exists_circuit_extraction(_proper)`).
+  `walkWeight_ge_of_short` / `untrop_pow_diag_ge` (an integer rate valid on short circuits propagates,
+  via circuit extraction `exists_circuit_extraction(_proper)`); they meet on a tight circuit, where the
+  rate is exactly attained, `untrop_pow_mul_eq_of_tight` (`(Aᵏᵖ)ᵢᵢ = μ·kp`).
 * **Closure termination** — with nonnegative circuits, walks collapse to length `< n`
   (`walkWeight_reduce_of_nonneg`), so the Kleene star is the finite truncation `⨁_{k<n} Aᵏ`
   (`exists_lt_untrop_pow_le`): the sub-additive closure `f* = ⨁ₘ f^⊗ᵐ` stabilizes at rank `n`.
+* **Linear growth** — the deflated generalization to any rate `μ` (`walkWeight_reduce_of_rate`,
+  `exists_le_untrop_pow_deflate`): `(Aᵏ)ᵢⱼ ≥ μ·k + C`, the eigenvalue's lower linear envelope.
 * **Cyclicity predicate** — `IsPseudoPeriodicPow` (`Aᵏ⁺ᶜ = Aᵏ ⊗ trop(c·λ)`) with the stabilizing-powers
   case, eigenvalue uniqueness, closure under multiples, and concrete witnesses.
 
-Remaining (research-scale): the general eigenvalue normalization and the full cyclicity period. -/
+Remaining (research-scale): a canonical ℚ-valued eigenvalue, the upper linear envelope (needs
+irreducibility), and the full cyclicity period (critical graph + spectral projector). -/
 
 namespace DeepWiki.MinPlusMatrix
 
