@@ -239,6 +239,32 @@ theorem walkWeight_circuit_decomp {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i v
   rw [List.append_assoc, walkWeight_append, hpv, walkWeight_append, hcv, walkWeight_append, hpv,
     add_comm (walkWeight A v lc) (walkWeight A v ls), ← add_assoc]
 
+/-- **List helper**: the last vertex of a length-`a` prefix of the walk `i :: l` is its `a`-th vertex,
+`(l.take a).getLastD i = (i :: l)[a]` (as `getElem?`-with-default). Turns the pigeonhole's index `a`
+into the endpoint condition `prefix.getLastD i = vᵃ` that `walkWeight_circuit_decomp` consumes. -/
+theorem getLastD_take {α : Type*} (i : α) (l : List α) (a : ℕ) (ha : a ≤ l.length) :
+    (l.take a).getLastD i = ((i :: l)[a]?).getD i := by
+  induction a generalizing i l with
+  | zero => simp
+  | succ a ih =>
+    cases l with
+    | nil => simp at ha
+    | cons x l' =>
+      simp only [List.length_cons, Nat.succ_le_succ_iff] at ha
+      simp only [List.take_succ_cons, List.getLastD_cons, List.getElem?_cons_succ]
+      rw [ih x l' ha, List.getElem?_eq_getElem (show a < (x :: l').length by
+        simp only [List.length_cons]; omega)]
+      rfl
+
+/-- **List helper**: the `prefix ++ circuit ++ suffix` split of a walk's tail at indices `a ≤ b`
+reassembles to the whole, `l.take a ++ (l.drop a).take (b - a) ++ l.drop b = l`. The structural side of
+circuit extraction (the weight side is `walkWeight_circuit_decomp`). -/
+theorem take_take_drop_drop {α : Type*} (l : List α) (a b : ℕ) (hab : a ≤ b) :
+    l.take a ++ (l.drop a).take (b - a) ++ l.drop b = l := by
+  rw [List.append_assoc,
+    show l.drop b = (l.drop a).drop (b - a) from by rw [List.drop_drop]; congr 1; omega,
+    List.take_append_drop, List.take_append_drop]
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
