@@ -170,6 +170,22 @@ theorem exists_walkWeight_eq {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
     · rw [List.getLastD_cons]; exact hend'
     · rw [walkWeight_cons, hw', ← hk₀]
 
+/-- **Reachability = finiteness** (both walk-interpretation halves at once): the entry `(Aᵐ)ᵢⱼ` is
+finite (`≠ +∞`) iff some length-`m` walk `i ⤳ j` has finite weight. Forward by `exists_walkWeight_eq`
+(the optimum is a concrete finite walk); backward by `untrop_pow_le_walkWeight` (the entry is `≤` that
+walk, hence finite). A `0/∞` reachability test for matrix powers via explicit walks. -/
+theorem untrop_pow_ne_top_iff {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ) (i j : Fin n) :
+    ((A ^ m) i j).untrop ≠ ⊤ ↔
+      ∃ l : List (Fin n), l.length = m ∧ l.getLastD i = j ∧ walkWeight A i l ≠ ⊤ := by
+  constructor
+  · intro h
+    obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A m i j h
+    exact ⟨l, hlen, hend, by rw [hw]; exact h⟩
+  · rintro ⟨l, hlen, hend, hw⟩
+    have hle := untrop_pow_le_walkWeight A i l
+    rw [hlen, hend] at hle
+    exact ne_top_of_le_ne_top hw hle
+
 /-- **Diagonal grows at most linearly** (the subadditive Fekete estimate, integer form): iterating a
 length-`p` loop at `i` `k` times bounds the diagonal, `(Aᵏᵖ)ᵢᵢ ≤ k • (Aᵖ)ᵢᵢ`. By induction on `k`
 from `untrop_pow_add_le_diag`. No analysis needed — the `•` is `ℕ`-scaling on `WithTop ℤ`. -/
