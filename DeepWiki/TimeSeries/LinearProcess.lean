@@ -1,5 +1,7 @@
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.LpSpace.Complete
+import Mathlib.MeasureTheory.Function.L2Space
+import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Tactic
 
 /-! # The linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` (§3.1, §3.2)
@@ -37,5 +39,23 @@ theorem hasSum_linearProcessLp {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ �
     (hZ : ∀ t, ‖Z t‖ ≤ C) (t : ℤ) :
     HasSum (fun j : ℤ => ψ j • Z (t - j)) (linearProcessLp ψ Z t) :=
   (summable_lagSmul hψ hZ t).hasSum
+
+/-! ## Inner product through a convergent series (for the L² autocovariance) -/
+
+/-- The `L²` inner product passes through a convergent series in the right argument:
+`⟪x, ∑ⱼ fⱼ⟫ = ∑ⱼ ⟪x, fⱼ⟫` (`⟪x, ·⟫` is the continuous linear functional `innerSL ℝ x`). -/
+theorem hasSum_inner_right {f : ℤ → Lp ℝ 2 μ} {a : Lp ℝ 2 μ} (x : Lp ℝ 2 μ) (hf : HasSum f a) :
+    HasSum (fun j => (inner ℝ x (f j) : ℝ)) (inner ℝ x a) := by
+  simpa only [coe_innerSL_apply] using (innerSL ℝ x).hasSum hf
+
+/-- The `L²` inner product passes through a convergent series in the left argument:
+`⟪∑ⱼ fⱼ, y⟫ = ∑ⱼ ⟪fⱼ, y⟫` (via the right version and symmetry of the real inner product). -/
+theorem hasSum_inner_left {f : ℤ → Lp ℝ 2 μ} {a : Lp ℝ 2 μ} (y : Lp ℝ 2 μ) (hf : HasSum f a) :
+    HasSum (fun j => (inner ℝ (f j) y : ℝ)) (inner ℝ a y) := by
+  have h := hasSum_inner_right y hf
+  have e : (fun j => (inner ℝ (f j) y : ℝ)) = (fun j => inner ℝ y (f j)) :=
+    funext fun j => real_inner_comm y (f j)
+  rw [e, real_inner_comm y a]
+  exact h
 
 end DeepWiki.TimeSeries
