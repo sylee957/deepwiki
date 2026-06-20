@@ -1298,5 +1298,16 @@ theorem closureApproxNat_idem (f : UppSeq (WithTop ℤ)) (hidem : ∀ n, f.convN
   · rw [iterConvNat_eq_self_of_idem f hidem m hm1 n]
     exact min_le_right _ _
 
+/-- The rate-latency curve `β_{1,2}(n) = (n-2)₊` over `WithTop ℤ` — a **non-idempotent** `f`
+(`β ⊗ β = β_{1,4} ≠ β`, super-additive), to exercise the *general* closure iteration. -/
+def betaWT : UppSeq (WithTop ℤ) := ⟨[0, 0, 0], 1, 1, by decide, by decide⟩
+
+/-- Sanity (gate-verified): the **general (non-idempotent) closure converges** — the iteration on
+`β_{1,2}` genuinely descends (`β^⊗ᵐ = β_{1,2m}` shrinks) then stabilizes: `closureApprox(2) =
+closureApprox(3)` on `[0,4)`. This is the iterate-to-fixpoint behaviour `closureApproxNat_stable_step`
+certifies; here it is observed computationally on a curve that is *not* sub-additive. -/
+example : ∀ n ∈ Finset.range 4, closureApproxNat betaWT 2 n = closureApproxNat betaWT 3 n := by
+  native_decide
+
 end UppSeq
 end DeepWiki
