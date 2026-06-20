@@ -985,4 +985,18 @@ relation one step on, confirming it is the steady pseudo-periodic regime, not a 
 theorem twoCycleMP_cyclicity_at_two :
     ∀ i j, (twoCycleMP ^ 4) i j = (twoCycleMP ^ 2) i j * Tropical.trop 2 := by native_decide
 
+/-- **The eigenvalue is computable**: `λ(twoCycleMP) = 1` (its only circuit `0→1→0` has mean
+`2/2 = 1`), evaluated by `native_decide` — `minMeanCycle` runs as a finite `WithTop ℚ` computation. -/
+theorem twoCycleMP_minMeanCycle : minMeanCycle twoCycleMP = ((1 : ℚ) : WithTop ℚ) := by native_decide
+
+/-- **Abstract theory, concrete instance**: the general `untrop_pow_critical_cyclicity` applied to
+`twoCycleMP` at its critical circuit (`v₀ = 0`, `p₀ = 2`, `w₀ = 2`, `λ = 1`) gives the exact periodic
+recurrence `(twoCycleMP^((k+1)·2))₀₀ = (twoCycleMP^(k·2))₀₀ ⊗ trop 2` for all `k` — the eigenvalue and
+both hypotheses discharged by `native_decide`. The spectral theory, instantiated and computed. -/
+theorem twoCycleMP_critical_cyclicity (k : ℕ) :
+    (twoCycleMP ^ ((k + 1) * 2)) 0 0
+      = (twoCycleMP ^ (k * 2)) 0 0 * Tropical.trop ((2 : ℤ) : WithTop ℤ) :=
+  untrop_pow_critical_cyclicity twoCycleMP 2 2 (by norm_num) 0
+    (by native_decide) (by native_decide) k
+
 end DeepWiki.MinPlusMatrix
