@@ -30,7 +30,7 @@ lake exe minplus            # usage
 | `minplus deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>` | `(f⊘g)(0..k−1)` — the deconvolution `⨆_{k≥0} f(n+k)−g(k)`; finite (and computed) only when `slope_f ≤ slope_g`, else refused (`deconvNat`/`deconvNat_isGreatest`) |
 | `minplus deconvupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊘g` **as a UPP sequence** — period `d_f`, increment `c_f` (`deconvUpp`; `deconvNat_add_period`, Lemma 4.5); needs `slope_f ≤ slope_g` |
 | `minplus backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **backlog bound** `supₜ(α(t)−β(t)) = (α⊘β)(0)` — worst-case buffer; needs `slope_α ≤ slope_β` (`backlogBound`/`deconvNat_isGreatest`) |
-| `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay; needs `slope_α ≤ slope_β` (`delayBound`) |
+| `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay, proved to be the *least* dominating shift (`delayBound`/`delayBound_least`); needs `slope_α ≤ slope_β` |
 | `minplus closure <vals> <period> <incr> <k>` | the **sub-additive closure** `f*(0..k−1) = δ₀ ⊓ f ⊓ f² ⊓ ⋯` via `closureApproxNat f n n`; exact for `f(0)=0`; refuses `f(0)<0` (where `f* = −∞`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
@@ -109,5 +109,7 @@ The calculator computes real deterministic-network-calculus results on rate-late
 (`backlog` is fully proved via `deconvNat_isGreatest`. `delay` is a finite search whose decisive-window
 property is now the proved lemma `evalNat_le_shift_of_window`: if `α(t) ≤ β(t+d)` on one period-window
 past the transient it holds for all `t`, since the gap `α(t)−β(t+d)` is non-increasing per period. The
-search over `[0, deconvBound)` thus covers the transient directly and the periodic tail by descent —
-the only remaining mechanical step is that `List.find?` returns the least such `d`.)
+search over `[0, deconvBound)` thus covers the transient directly and the periodic tail by descent.
+That `List.find?` returns the *least* such `d` — so the reported bound is the genuine `min` — is now
+the proved `delayBound_least` (via `find?_range_least`), with a concrete witness that `d=2` is least
+for the canonical pair. So the delay bound is verified-minimal whenever the search succeeds.)

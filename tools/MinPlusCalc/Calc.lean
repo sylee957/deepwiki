@@ -158,20 +158,58 @@ def backlogBound (α β : UppSeq Int) : Int := α.deconvNat β 0
 through a rate-latency server `β_{2,1}` is the classic `b + r·T = 2 + 1·1 = 3`. -/
 example : backlogBound (tokenBucket 1 2) (betaRL 2 1) = 3 := by native_decide
 
+/-- The shift `d` makes `β(·+d)` dominate `α` on the decisive window `[0, deconvBound)` — the
+predicate the delay search tests. Past the crossover (`evalNat_le_shift_of_window`) this finite
+window settles dominance for *all* `t`, so the bound it yields is the true `min{d : ∀ t, α(t) ≤ β(t+d)}`. -/
+def delayDominates (α β : UppSeq Int) (d : Nat) : Bool :=
+  (List.range (α.deconvBound β)).all fun t => decide (α.evalNat t ≤ β.evalNat (t + d))
+
 /-- The **delay bound** `h(α,β) = min{d : ∀ t, α(t) ≤ β(t+d)}` — the maximum horizontal deviation
 (worst-case delay): the smallest right-shift of the service curve `β` that dominates the arrival `α`.
-Searched over `d`, each candidate tested on a finite `t`-window `[0, deconvBound)` (past which the gap
-`α(t)−β(t+d)` is non-increasing per period, so the window is decisive). Finite when `slope_α ≤
-slope_β`; its faithfulness reduces to `evalNat_le_of_window_le` on `β` advanced by `d`. -/
+Searched over `d` via `List.find?` (so the *first*, hence least, satisfying `d` is returned — see
+`delayBound_least`); each candidate tested by `delayDominates` on the finite window `[0, deconvBound)`.
+Finite when `slope_α ≤ slope_β`; its faithfulness reduces to `evalNat_le_of_window_le` on `β` shifted. -/
 def delayBound (α β : UppSeq Int) : Nat :=
-  let K := α.deconvBound β
-  let fuel := (backlogBound α β).toNat + K + 1
-  ((List.range (fuel + 1)).find? fun d =>
-    (List.range K).all fun t => decide (α.evalNat t ≤ β.evalNat (t + d))).getD fuel
+  let fuel := (backlogBound α β).toNat + α.deconvBound β + 1
+  ((List.range (fuel + 1)).find? (delayDominates α β)).getD fuel
+
+/-- `List.find?` over `List.range n` returns the **least** satisfying element: the result `d`
+satisfies `p`, and every `d' < d` fails it. The arithmetic backing the delay bound's minimality. -/
+theorem find?_range_least {p : ℕ → Bool} {n d : ℕ}
+    (h : (List.range n).find? p = some d) :
+    p d = true ∧ ∀ d', d' < d → p d' = false := by
+  rw [List.find?_eq_some_iff_getElem] at h
+  obtain ⟨hpd, i, _, hidx, hlt⟩ := h
+  rw [List.getElem_range] at hidx
+  subst hidx
+  refine ⟨hpd, fun d' hd' => ?_⟩
+  have hj := hlt d' hd'
+  rw [List.getElem_range] at hj
+  simpa using hj
+
+/-- **Delay-bound minimality (gate-verified).** When the search succeeds (`find? = some d`), the
+delay bound *equals* that `d`, `d` makes `β(·+d)` dominate `α` on the window, and **every smaller
+shift `d' < d` fails** — i.e. `delayBound` is the least dominating shift, the defining `min` of
+`h(α,β)`. (`find?` returns the first match; `find?_range_least` turns "first" into "least".) -/
+theorem delayBound_least (α β : UppSeq Int) {d : Nat}
+    (hfind : (List.range (((backlogBound α β).toNat + α.deconvBound β + 1) + 1)).find?
+              (delayDominates α β) = some d) :
+    delayBound α β = d ∧ delayDominates α β d = true ∧
+      ∀ d', d' < d → delayDominates α β d' = false := by
+  refine ⟨?_, find?_range_least hfind⟩
+  simp only [delayBound]
+  rw [hfind]
+  rfl
 
 /-- **Network-calculus application (gate-verified):** the delay bound of a token bucket `α_{1,2}`
 through a rate-latency server `β_{2,1}` is the classic `T + b/R = 1 + 2/2 = 2`. -/
 example : delayBound (tokenBucket 1 2) (betaRL 2 1) = 2 := by native_decide
+
+/-- **Delay-bound minimality, concretely (gate-verified):** for that same pair the shift `d = 1`
+fails (`β(·+1)` does not dominate `α`) while `d = 2` succeeds — so `2` is genuinely the *least*
+dominating shift, witnessing `delayBound_least`. -/
+example : delayDominates (tokenBucket 1 2) (betaRL 2 1) 1 = false := by native_decide
+example : delayDominates (tokenBucket 1 2) (betaRL 2 1) 2 = true := by native_decide
 
 /-- Lift an integer UPP sequence to `WithTop ℤ` — the sub-additive closure needs `δ₀`'s `⊤`. -/
 def liftUpp (f : UppSeq Int) : UppSeq (WithTop ℤ) :=
