@@ -123,6 +123,18 @@ noncomputable abbrev def_1_3_1 := @DeepWiki.TimeSeries.acvf
 `IsWeaklyStationary`. -/
 abbrev def_1_3_2 := @DeepWiki.TimeSeries.IsWeaklyStationary
 
+/-- **§1.3, Remark 2 after Definition 1.3.2** (p.12), the **autocorrelation function**
+`ρ_X(h) = γ_X(h)/γ_X(0) = Corr(X_{t+h}, Xₜ)` of a stationary process — the lag-`0`-normalized
+autocovariance, with `ρ(0) = 1` (`acfStat_zero`) and `|ρ(h)| ≤ 1`
+(`IsWeaklyStationary.abs_acfStat_le_one`). The population analogue of the sample autocorrelation
+`ρ̂` (`sampleACF`). The library's `acfStat`. -/
+noncomputable abbrev acf := @DeepWiki.TimeSeries.acfStat
+
+-- Book-faithful restatement (step 5): `ρ(0) = 1` and `|ρ(h)| ≤ 1` for a stationary process.
+example [MeasureTheory.IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ)
+    (h0 : acvfStat X μ 0 ≠ 0) (h : ℤ) : acfStat X μ 0 = 1 ∧ |acfStat X μ h| ≤ 1 :=
+  ⟨acfStat_zero h0, hX.abs_acfStat_le_one h⟩
+
 /-- **Definition 1.3.3** (§1.3, p.12), strict stationarity: the joint distributions
 of `(X_{t₁},…,X_{tₖ})` and `(X_{t₁+h},…,X_{tₖ+h})` agree for all `k, t, h`. The
 library's `IsStrictlyStationary`. -/

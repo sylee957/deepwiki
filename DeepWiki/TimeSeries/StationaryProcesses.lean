@@ -281,6 +281,34 @@ theorem IsWeaklyStationary.abs_acvfStat_le [IsProbabilityMeasure μ]
   have hsq : acvfStat X μ h ^ 2 ≤ acvfStat X μ 0 ^ 2 := by nlinarith [hd]
   exact abs_le_of_sq_le_sq hsq hX.acvfStat_zero_nonneg
 
+/-! ## The autocorrelation function (Definition 1.3.2, Remark 2) -/
+
+/-- **Definition 1.3.2, Remark 2**: the **autocorrelation function**
+`ρ_X(h) = γ_X(h) / γ_X(0) = Corr(X_{t+h}, Xₜ)` of a stationary process — its autocovariance
+normalized by the value at lag `0`. The population analogue of the sample autocorrelation
+`sampleACF`. -/
+noncomputable def acfStat (X : ℤ → Ω → ℝ) (μ : Measure Ω) (h : ℤ) : ℝ :=
+  acvfStat X μ h / acvfStat X μ 0
+
+theorem acfStat_apply (X : ℤ → Ω → ℝ) (μ : Measure Ω) (h : ℤ) :
+    acfStat X μ h = acvfStat X μ h / acvfStat X μ 0 := rfl
+
+/-- The autocorrelation at lag `0` is `1` (when `γ(0) ≠ 0`): `ρ(0) = γ(0)/γ(0) = 1`. -/
+theorem acfStat_zero {X : ℤ → Ω → ℝ} {μ : Measure Ω} (h0 : acvfStat X μ 0 ≠ 0) :
+    acfStat X μ 0 = 1 := div_self h0
+
+/-- `|ρ(h)| ≤ 1`: the autocorrelation is bounded by one in absolute value, since
+`|γ(h)| ≤ γ(0)`. -/
+theorem IsWeaklyStationary.abs_acfStat_le_one [IsProbabilityMeasure μ]
+    (hX : IsWeaklyStationary X μ) (h : ℤ) : |acfStat X μ h| ≤ 1 := by
+  have hnn := hX.acvfStat_zero_nonneg
+  have hb := hX.abs_acvfStat_le h
+  rcases eq_or_ne (acvfStat X μ 0) 0 with h0 | h0
+  · rw [acfStat_apply, h0, div_zero, abs_zero]; norm_num
+  · rw [acfStat_apply, abs_div, abs_of_nonneg hnn,
+      div_le_one (lt_of_le_of_ne hnn (Ne.symm h0))]
+    exact hb
+
 /-! ## Problem 1.12: recognizing autocovariance functions -/
 
 /-- Problem 1.12(a) candidate: `κ(0) = 1`, `κ(h) = 1/h` for `h ≠ 0`. -/
