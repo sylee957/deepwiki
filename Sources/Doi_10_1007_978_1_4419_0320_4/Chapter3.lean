@@ -179,6 +179,11 @@ innovations orthogonal up to `σ²`) has variance `γ(0) = ⟪Xₜ, Xₜ⟫ = σ
 via the squared geometric weights. The library's `ar1_linearProcess_variance`. -/
 alias ar1_variance := DeepWiki.TimeSeries.ar1_linearProcess_variance
 
+/-- **§3.3 (the AR(1) autocovariance):** the causal `AR(1)` linear process of Example 3.2.2
+(`|φ| < 1`) has autocovariance `γ(h) = σ² φʰ/(1 − φ²)` for `h ≥ 0` — hence `σ² φ^|h|/(1 − φ²)` by
+evenness. The standard `AR(1)` ACVF. The library's `ar1_linearProcess_acvf`. -/
+alias ar1_acvf := DeepWiki.TimeSeries.ar1_linearProcess_acvf
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the

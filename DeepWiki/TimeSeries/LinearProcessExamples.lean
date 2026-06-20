@@ -75,4 +75,32 @@ theorem ar1_linearProcess_variance {φ σ2 : ℝ} (hφ : |φ| < 1) {Z : ℤ → 
       = σ2 * (1 - φ ^ 2)⁻¹ := by
   rw [linearProcessLp_inner_self (summable_ar1Filter hφ) hZb hZorth, tsum_ar1Filter_sq hφ]
 
+/-- The lag-`h` product of `AR(1)` weights (`h ≥ 0`): `ψₖ ψ_{k+h} = φʰ · (ar1Filter φ² k)` — the
+`φʰ` factor pulls out, leaving the squared filter. -/
+theorem ar1Filter_mul_shift {φ : ℝ} {h : ℤ} (hh : 0 ≤ h) (k : ℤ) :
+    ar1Filter φ k * ar1Filter φ (k + h) = φ ^ h.toNat * ar1Filter (φ ^ 2) k := by
+  rcases lt_or_ge k 0 with hk | hk
+  · rw [ar1Filter_neg φ hk, ar1Filter_neg (φ ^ 2) hk]; ring
+  · lift k to ℕ using hk
+    lift h to ℕ using hh
+    rw [show (k : ℤ) + (h : ℤ) = ((k + h : ℕ) : ℤ) by push_cast; ring]
+    simp only [ar1Filter_natCast, Int.toNat_natCast]
+    ring
+
+/-- **Example 3.2.2 (autocovariance, `h ≥ 0`):** the causal `AR(1)` linear process driven by
+innovations orthogonal up to `σ²` (`|φ| < 1`) has autocovariance `γ(h) = σ² φʰ/(1 − φ²)` for
+`h ≥ 0` (so `γ(h) = σ² φ^|h|/(1 − φ²)` by evenness). -/
+theorem ar1_linearProcess_acvf {φ σ2 : ℝ} (hφ : |φ| < 1) {Z : ℤ → Lp ℝ 2 μ} {C : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0)
+    (t : ℤ) {h : ℤ} (hh : 0 ≤ h) :
+    inner ℝ (linearProcessLp (ar1Filter φ) Z (t + h)) (linearProcessLp (ar1Filter φ) Z t)
+      = σ2 * (φ ^ h.toNat * (1 - φ ^ 2)⁻¹) := by
+  have hφ2 : |φ ^ 2| < 1 := by rw [abs_pow]; nlinarith [abs_nonneg φ, hφ]
+  rw [linearProcessLp_inner (summable_ar1Filter hφ) hZb hZorth]
+  congr 1
+  calc ∑' k, ar1Filter φ k * ar1Filter φ (k + h)
+      = ∑' k, φ ^ h.toNat * ar1Filter (φ ^ 2) k := tsum_congr (ar1Filter_mul_shift hh)
+    _ = φ ^ h.toNat * ∑' k, ar1Filter (φ ^ 2) k := tsum_mul_left
+    _ = φ ^ h.toNat * (1 - φ ^ 2)⁻¹ := by rw [tsum_ar1Filter hφ2]
+
 end DeepWiki.TimeSeries
