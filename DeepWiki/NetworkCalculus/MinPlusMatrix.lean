@@ -265,6 +265,41 @@ theorem take_take_drop_drop {α : Type*} (l : List α) (a b : ℕ) (hab : a ≤ 
     show l.drop b = (l.drop a).drop (b - a) from by rw [List.drop_drop]; congr 1; omega,
     List.take_append_drop, List.take_append_drop]
 
+/-- **List helper**: the last vertex of the circuit segment `(l.drop A).take (B - A)` (for `A < B ≤
+length`) is the `B`-th walk vertex `(i :: l)[B]`, independent of the default — the segment is nonempty
+so `getLastD` returns its genuine last element. Supplies the circuit's return-vertex condition. -/
+theorem getLastD_drop_take {α : Type*} (i x : α) (l : List α) (A B : ℕ)
+    (hAB : A < B) (hB : B ≤ l.length) :
+    ((l.drop A).take (B - A)).getLastD x = (i :: l)[B]?.getD x := by
+  obtain ⟨k, rfl⟩ : ∃ k, B = k + 1 := ⟨B - 1, by omega⟩
+  have key : (x :: l.drop A)[k + 1 - A]? = (i :: l)[k + 1]? := by
+    rw [show k + 1 - A = (k - A) + 1 by omega, List.getElem?_cons_succ, List.getElem?_drop,
+        List.getElem?_cons_succ, show A + (k - A) = k by omega]
+  rw [getLastD_take x (l.drop A) (k + 1 - A) (by rw [List.length_drop]; omega), key]
+
+/-- **Single-circuit extraction**: any walk `i ⤳ …` with at least `n` edges (so `> n` vertices)
+splits as `prefix ++ circuit ++ suffix`, where the prefix ends at some vertex `v`, and the circuit is
+nonempty and returns to `v`. The pigeonhole supplies the repeated vertex; the list/weight helpers do
+the bookkeeping. With `walkWeight_circuit_decomp` this is the inductive step that peels a circuit off
+a long walk — repeated, it reduces any walk to a simple path plus circuits (the lower-bound engine). -/
+theorem exists_circuit_extraction {n : ℕ} (i : Fin n) (l : List (Fin n)) (hl : n ≤ l.length) :
+    ∃ (lp lc ls : List (Fin n)) (v : Fin n),
+      l = lp ++ lc ++ ls ∧ lc ≠ [] ∧ lp.getLastD i = v ∧ lc.getLastD v = v := by
+  obtain ⟨a, b, hab, hval⟩ := exists_lt_repeated_vertex i l hl
+  have hAB : a.val < b.val := hab
+  have hBlen : b.val ≤ l.length := by
+    have hb := b.isLt; simp only [List.length_cons] at hb; omega
+  have hAlen : a.val ≤ l.length := by omega
+  refine ⟨l.take a.val, (l.drop a.val).take (b.val - a.val), l.drop b.val, (i :: l).get a,
+    (take_take_drop_drop l a.val b.val (le_of_lt hAB)).symm, ?_, ?_, ?_⟩
+  · have : 0 < ((l.drop a.val).take (b.val - a.val)).length := by
+      rw [List.length_take, List.length_drop]; omega
+    exact List.ne_nil_of_length_pos this
+  · rw [getLastD_take i l a.val hAlen, List.getElem?_eq_getElem a.isLt]; rfl
+  · rw [getLastD_drop_take i ((i :: l).get a) l a.val b.val hAB hBlen,
+        List.getElem?_eq_getElem b.isLt]
+    exact hval.symm
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
