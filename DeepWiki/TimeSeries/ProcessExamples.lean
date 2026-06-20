@@ -185,6 +185,11 @@ theorem cosProcess_acvf_shift [IsFiniteMeasure μ] {A B : Ω → ℝ} {θ σ2 : 
 noncomputable def randomWalk (X : ℤ → Ω → ℝ) : ℤ → Ω → ℝ :=
   fun t => ∑ i ∈ Finset.Icc 1 t, X i
 
+/-- **Example 1.2.3** (`S₀ = 0`): the random walk starts at the origin — the empty sum over
+`Finset.Icc 1 0`. -/
+@[simp] theorem randomWalk_zero {Ω : Type*} (X : ℤ → Ω → ℝ) : randomWalk X 0 = 0 := by
+  rw [randomWalk, Finset.Icc_eq_empty (by omega), Finset.sum_empty]
+
 /-- For a zero-mean uncorrelated sequence with variance `σ²`, the random walk has
 `Var(Sₜ) = Cov(Sₜ, Sₜ) = card(Icc 1 t) · σ²` — increasing in `t`. -/
 theorem randomWalk_self_covariance [IsFiniteMeasure μ] {X : ℤ → Ω → ℝ} {σ2 : ℝ}

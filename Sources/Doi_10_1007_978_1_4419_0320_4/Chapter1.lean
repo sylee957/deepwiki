@@ -62,9 +62,10 @@ alias ex_1_2_2 := DeepWiki.TimeSeries.exists_iidBinaryProcess
 `P(Xₜ = 1) = P(Xₜ = -1) = 1/2`. The library's `exists_iidBinaryProcess_marginal`. -/
 alias eq_1_2_3 := DeepWiki.TimeSeries.exists_iidBinaryProcess_marginal
 
-/-- **Example 1.2.3** (§1.2, p.10), the random walk `Sₜ = X₁ + ⋯ + Xₜ` built from an iid
-sequence (its existence guaranteed by Kolmogorov's theorem). The library's `randomWalk`;
-its non-stationarity is **Example 1.3.4**. -/
+/-- **Example 1.2.3** (§1.2, p.10), the random walk `S₀ = 0`, `Sₜ = X₁ + ⋯ + Xₜ` for `t ≥ 1`
+(1.2.5), built from an iid sequence (its existence guaranteed by Kolmogorov's theorem). The
+library's `randomWalk`, with the initial condition `S₀ = 0` as `randomWalk_zero`; its
+non-stationarity is **Example 1.3.4**. -/
 noncomputable abbrev ex_1_2_3 := @DeepWiki.TimeSeries.randomWalk
 
 /-- **Example 1.2.4** (§1.2, p.10), the Bienaymé–Galton–Watson branching process `X₀ = x`,
