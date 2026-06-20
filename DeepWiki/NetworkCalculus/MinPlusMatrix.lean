@@ -2,6 +2,7 @@ import Mathlib.Algebra.Tropical.Basic
 import Mathlib.Algebra.Tropical.BigOperators
 import Mathlib.Data.Matrix.Mul
 import Mathlib.LinearAlgebra.Matrix.Notation
+import Mathlib.Data.Fintype.Pigeonhole
 
 /-! # Min-plus matrices — foundation for the sub-additive-closure cyclicity theorem
 The min-plus semiring `(ℤ ∪ {+∞}, min, +)` is Mathlib's `Tropical (WithTop ℤ)`: addition is `min`,
@@ -210,6 +211,33 @@ theorem untrop_pow_mul_le_nsmul_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n)
   calc ((A ^ (k * l.length)) i i).untrop
       ≤ k • ((A ^ l.length) i i).untrop := untrop_pow_mul_le_nsmul A l.length i k
     _ ≤ k • walkWeight A i l := by gcongr
+
+/-! ### Toward the eigenvalue lower bound: circuit extraction
+The lower bound `(Aᵐ)ᵢᵢ ≥ m·λ` rests on decomposing a long walk into a short path plus circuits. The
+two pieces below are its scaffolding: a *pigeonhole* (a walk longer than the vertex count repeats a
+vertex) and the *weight bookkeeping* (a `prefix ++ circuit ++ suffix` split decomposes additively into
+the shortened walk plus the circuit). Assembling these into the full extraction is the next step. -/
+
+/-- **Pigeonhole on walk vertices**: a walk `i ⤳ …` whose vertex count `l.length + 1` exceeds `n`
+repeats a vertex — there are positions `a < b` in the vertex list `i :: l` with the same vertex. The
+gap `[a, b]` is the circuit the lower-bound argument extracts. -/
+theorem exists_lt_repeated_vertex {n : ℕ} (i : Fin n) (l : List (Fin n)) (h : n ≤ l.length) :
+    ∃ a b : Fin (i :: l).length, a < b ∧ (i :: l).get a = (i :: l).get b := by
+  obtain ⟨a, b, hab, hval⟩ := Fintype.exists_ne_map_eq_of_card_lt (i :: l).get
+    (by simp only [Fintype.card_fin, List.length_cons]; omega)
+  rcases lt_or_gt_of_ne hab with h1 | h1
+  · exact ⟨a, b, h1, hval⟩
+  · exact ⟨b, a, h1, hval.symm⟩
+
+/-- **Circuit extraction, weight bookkeeping**: if a walk splits as `prefix ++ circuit ++ suffix` with
+the prefix ending at `v` (`lp.getLastD i = v`) and the circuit returning to `v` (`lc.getLastD v = v`),
+its weight is the shortened walk `prefix ++ suffix` plus the circuit weight. Pure `walkWeight_append`
+algebra — the additive core of removing a circuit from a walk. -/
+theorem walkWeight_circuit_decomp {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i v : Fin n)
+    (lp lc ls : List (Fin n)) (hpv : lp.getLastD i = v) (hcv : lc.getLastD v = v) :
+    walkWeight A i (lp ++ lc ++ ls) = walkWeight A i (lp ++ ls) + walkWeight A v lc := by
+  rw [List.append_assoc, walkWeight_append, hpv, walkWeight_append, hcv, walkWeight_append, hpv,
+    add_comm (walkWeight A v lc) (walkWeight A v ls), ← add_assoc]
 
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
