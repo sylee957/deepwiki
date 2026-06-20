@@ -1,4 +1,7 @@
 import Mathlib.Probability.Process.FiniteDimensionalLaws
+import Mathlib.Analysis.Complex.Trigonometric
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
+import Mathlib.MeasureTheory.Function.SpecialFunctions.Basic
 import DeepWiki.MeasureTheory.KolmogorovExtension
 
 /-! # Finite-dimensional distributions and Kolmogorov's existence theorem
@@ -114,6 +117,61 @@ theorem distFn_tendsto_marginal {T : Type*} (X : T → Ω → ℝ) {n : ℕ} (t 
     · simpa using hcc'
     · simp [Function.update_of_ne hj]
   simpa only [distFn, key, Function.comp_def] using tendsto_measure_iUnion_atTop (μ := μ) hmono
+
+/-! ### Characteristic-function form of the consistency condition (1.2.9) -/
+
+/-- **Equation (1.2.9)** setup: the characteristic function
+`φ_t(u) = ∫_{ℝⁿ} e^{i u'x} F_t(dx)` of the finite-dimensional distribution at the times `t`,
+written as the equivalent integral `∫ exp(i ∑ⱼ uⱼ X_{tⱼ}(ω)) dμ` over `(Ω, μ)` — the
+characteristic function of the joint law of `(X_{tⱼ})`. -/
+noncomputable def charFunFdd {T Ω : Type*} [MeasurableSpace Ω] (X : T → Ω → ℝ) (μ : Measure Ω)
+    {n : ℕ} (t : Fin n → T) (u : Fin n → ℝ) : ℂ :=
+  ∫ ω, Complex.exp (((∑ j, u j * X (t j) ω : ℝ) : ℂ) * Complex.I) ∂μ
+
+/-- Zeroing the `i`-th frequency marginalizes the characteristic function:
+`φ_t(u)|_{uᵢ = 0} = φ_{t(i)}(u(i))` — the `i`-th summand drops out of the exponent
+(`t(i)`, `u(i)` are `Fin.removeNth i`). -/
+theorem charFunFdd_update_zero {T : Type*} (X : T → Ω → ℝ) {n : ℕ} (t : Fin (n + 1) → T)
+    (u : Fin (n + 1) → ℝ) (i : Fin (n + 1)) :
+    charFunFdd X μ t (Function.update u i 0) = charFunFdd X μ (i.removeNth t) (i.removeNth u) := by
+  simp only [charFunFdd]
+  refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+  have hsum : (∑ j, Function.update u i 0 j * X (t j) ω)
+      = ∑ j, i.removeNth u j * X (i.removeNth t j) ω := by
+    rw [Fin.sum_univ_succAbove (fun j => Function.update u i 0 j * X (t j) ω) i]
+    simp only [Function.update_self, zero_mul, zero_add]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Function.update_of_ne (Fin.succAbove_ne i j), Fin.removeNth_apply, Fin.removeNth_apply]
+  simp only [hsum]
+
+/-- **Equation (1.2.9)**: the characteristic functions of a process are **consistent** — letting
+the `i`-th frequency `uᵢ → 0` recovers the characteristic function with the `i`-th time deleted,
+`lim_{uᵢ → 0} φ_t(u) = φ_{t(i)}(u(i))`. This is the characteristic-function form of the
+distribution-function consistency `distFn_tendsto_marginal`; together they are the two equivalent
+statements of the consistency condition of Theorem 1.2.1. -/
+theorem charFunFdd_tendsto_marginal [IsFiniteMeasure μ] {T : Type*} (X : T → Ω → ℝ)
+    (hX : ∀ s, Measurable (X s)) {n : ℕ} (t : Fin (n + 1) → T) (u : Fin (n + 1) → ℝ)
+    (i : Fin (n + 1)) :
+    Filter.Tendsto (fun c => charFunFdd X μ t (Function.update u i c)) (nhds 0)
+      (nhds (charFunFdd X μ (i.removeNth t) (i.removeNth u))) := by
+  rw [← charFunFdd_update_zero X t u i]
+  have hcont : Continuous fun c : ℝ => charFunFdd X μ t (Function.update u i c) := by
+    unfold charFunFdd
+    refine continuous_of_dominated (bound := fun _ => 1) (fun c => ?_) (fun c => ?_)
+      (integrable_const 1) (Filter.Eventually.of_forall fun ω => ?_)
+    · exact (Complex.continuous_exp.measurable.comp
+        ((Complex.measurable_ofReal.comp
+          (Finset.measurable_sum _ fun j _ => measurable_const.mul (hX (t j)))).mul
+            measurable_const)).aestronglyMeasurable
+    · filter_upwards with ω
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I _)
+    · refine Complex.continuous_exp.comp ((Complex.continuous_ofReal.comp ?_).mul continuous_const)
+      refine continuous_finsetSum _ fun j _ =>
+        (?_ : Continuous fun c => Function.update u i c j).mul continuous_const
+      rcases eq_or_ne j i with rfl | hj
+      · simpa only [Function.update_self] using continuous_id'
+      · simpa only [Function.update_of_ne hj] using continuous_const
+  exact hcont.tendsto 0
 
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/

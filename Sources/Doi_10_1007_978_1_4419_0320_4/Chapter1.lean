@@ -105,6 +105,12 @@ distribution function with the `i`-th time and argument (`Fin.removeNth i`) dele
 library's `distFn_tendsto_marginal`. -/
 abbrev eq_1_2_8 := @DeepWiki.TimeSeries.distFn_tendsto_marginal
 
+/-- **Equation (1.2.9)** (§1.2, p.12), the characteristic-function form of the consistency
+condition: with `φ_t(u) = ∫ e^{i u'x} F_t(dx)` the CF of the fdd, letting the `i`-th frequency
+`uᵢ → 0` recovers the CF with the `i`-th time deleted, `lim_{uᵢ → 0} φ_t(u) = φ_{t(i)}(u(i))`.
+The library's `charFunFdd` (the CF `φ_t`) and `charFunFdd_tendsto_marginal`. -/
+abbrev eq_1_2_9 := @DeepWiki.TimeSeries.charFunFdd_tendsto_marginal
+
 /-! ## §1.3 Stationarity and Strict Stationarity -/
 
 /-- **Definition 1.3.1** (§1.3, p.11), the autocovariance function
