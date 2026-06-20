@@ -93,6 +93,15 @@ zero in the closed complex unit disk, `θ(z) ≠ 0` for `|z| ≤ 1`. The library
 `IsInvertiblePoly`. (The full equivalence "invertible `⟺` this" is infra-blocked.) -/
 abbrev thm_3_1_2 := @DeepWiki.TimeSeries.IsInvertiblePoly
 
+/-- **§3.1** (AR(1) process, p.81): an `AR(1)` process with autoregressive polynomial
+`φ(z) = 1 − φ₁z`, i.e. `(1 − φ₁B)X = Z`, satisfies the autoregressive recursion
+`Xₜ − φ₁ Xₜ₋₁ = Zₜ` (equivalently `Xₜ = φ₁ Xₜ₋₁ + Zₜ`) — the expanded reading of the operator
+difference equation. The library's `IsAR.ar1_apply`. -/
+theorem ar1_difference_eq {φ₁ : ℝ} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (h : IsAR (1 - Polynomial.C φ₁ * Polynomial.X) Xp Z μ σ2) (t : ℤ) :
+    Xp t - φ₁ • Xp (t - 1) = Z t :=
+  h.ar1_apply t
+
 /-- **§3.1** (AR(1) causality, p.81): the `AR(1)` process `Xₜ = φ₁Xₜ₋₁ + Zₜ` is causal iff
 `|φ₁| < 1` — its autoregressive polynomial `1 − φ₁z` has its only root `1/φ₁` outside the
 closed unit disk. The library's `isCausalPoly_ar1`. -/

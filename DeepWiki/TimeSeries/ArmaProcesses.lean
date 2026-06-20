@@ -78,6 +78,15 @@ theorem IsMA.eq_apply {θ : ℝ[X]} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : 
     X t = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) := by
   rw [h.eq, lagPoly_apply]
 
+/-- **The AR(1) difference equation written out**: an AR(1) process with autoregressive
+polynomial `φ(z) = 1 − φ₁ z`, i.e. `(1 − φ₁B) X = Z`, satisfies `Xₜ − φ₁ Xₜ₋₁ = Zₜ` — equivalently
+the autoregressive recursion `Xₜ = φ₁ Xₜ₋₁ + Zₜ`. -/
+theorem IsAR.ar1_apply {φ₁ : ℝ} {X Z : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (h : IsAR (1 - Polynomial.C φ₁ * Polynomial.X) X Z μ σ2) (t : ℤ) :
+    X t - φ₁ • X (t - 1) = Z t := by
+  have hd := congrFun h.eq t
+  rwa [lagPoly_one_sub_C_mul_X_apply] at hd
+
 /-- **§3.1 (Theorem 3.1.1, causality criterion).** The autoregressive polynomial `φ`
 satisfies the **causality condition** when it has no zero in the closed complex unit disk:
 `φ(z) ≠ 0` for all `‖z‖ ≤ 1`. By Theorem 3.1.1 this is equivalent to the existence of an

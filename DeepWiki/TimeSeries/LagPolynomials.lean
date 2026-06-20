@@ -70,6 +70,19 @@ theorem lagPoly_apply (p : K[X]) (x : ℤ → M) (t : ℤ) :
   simp only [LinearMap.sum_apply, Finset.sum_apply, LinearMap.smul_apply, Module.End.pow_apply,
     backshiftL_coe, Pi.smul_apply, backshift_iterate_apply]
 
+/-- The first-order lag polynomial `1 − c z` acts as `1 − c B`. -/
+theorem lagPoly_one_sub_C_mul_X (c : K) :
+    lagPoly (1 - C c * X : K[X]) = (1 : Module.End K (ℤ → M)) - c • backshiftL := by
+  rw [lagPoly, map_sub, map_one, map_mul, aeval_C, aeval_X, Algebra.smul_def]
+
+/-- `(1 − c z)(B) x` at time `t` is `xₜ − c x_{t−1}` — the first-order autoregressive form
+(`φ(z) = 1 − φ₁ z` gives `Xₜ − φ₁ X_{t−1}`). -/
+theorem lagPoly_one_sub_C_mul_X_apply (c : K) (x : ℤ → M) (t : ℤ) :
+    lagPoly (1 - C c * X : K[X]) x t = x t - c • x (t - 1) := by
+  rw [lagPoly_one_sub_C_mul_X]
+  simp only [LinearMap.sub_apply, Module.End.one_apply, LinearMap.smul_apply, backshiftL_apply,
+    Pi.sub_apply, Pi.smul_apply]
+
 /-! ## The difference operators as lag polynomials (§1.4) -/
 
 /-- The lag polynomial `1 − z` is the difference operator `∇ = 1 − B`. -/
