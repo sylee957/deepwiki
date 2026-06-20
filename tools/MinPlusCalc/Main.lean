@@ -36,6 +36,10 @@ def reqUpp (vals period incr : String) : IO (UppSeq Int) := do
 /-- Render a sampled sequence. -/
 def fmt (xs : List Int) : String := ", ".intercalate (xs.map toString)
 
+/-- Render a sampled `WithTop ℤ` sequence, printing the top element `⊤` (`+∞`) as `inf`. -/
+def fmtWT (xs : List (WithTop ℤ)) : String :=
+  ", ".intercalate (xs.map fun x => match x with | none => "inf" | some z => toString z)
+
 def usage : String := String.intercalate "\n"
   [ "usage: minplus <command>   (executable, proved-correct (min,plus) calculator over ℤ UPP sequences)",
     "  a UPP sequence is  <vals> <period> <incr>  where <vals>=v0,v1,…  and  f(n)=f(n-period)+incr",
@@ -53,7 +57,8 @@ def usage : String := String.intercalate "\n"
     "    deconv <v1> <p1> <c1> <v2> <p2> <c2> <k>        print (f⊘g)(0..k-1)   [⨆_k f(n+k)-g(k); needs slope f ≤ slope g; deconvNat_isGreatest]",
     "    deconvupp <v1> <p1> <c1> <v2> <p2> <c2>         print f⊘g AS A UPP SEQUENCE  [deconvUpp; deconvNat_add_period; needs slope f ≤ slope g]",
     "    backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>           print the backlog bound supₜ(α(t)-β(t)) = (α⊘β)(0)  [needs slope α ≤ slope β]",
-    "    delay <vα> <pα> <cα> <vβ> <pβ> <cβ>             print the delay bound min{d : ∀t α(t)≤β(t+d)}  [needs slope α ≤ slope β]" ]
+    "    delay <vα> <pα> <cα> <vβ> <pβ> <cβ>             print the delay bound min{d : ∀t α(t)≤β(t+d)}  [needs slope α ≤ slope β]",
+    "    closure <vals> <period> <incr> <k>              print the sub-additive closure f*(0..k-1) = ⨅ₘ f^⊗ᵐ  [closureApproxNat; exact for f(0)=0]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -127,4 +132,11 @@ def main (args : List String) : IO Unit := do
         IO.println s!"delay bound = {delayBound a b}"
       else
         throw (IO.userError "delay requires slope(α) ≤ slope(β) (else the delay is unbounded)")
+  | ["closure", v, p, c, k] =>
+      let u ← reqUpp v p c
+      -- exact closure needs f(0) ≥ 0 (else f* = -∞ from iterating the negative origin step)
+      if u.evalNat 0 < 0 then
+        throw (IO.userError "closure requires f(0) ≥ 0 (else the sub-additive closure is -∞)")
+      else
+        IO.println (fmtWT (closureSample u (← reqNat k)))
   | _ => IO.println usage

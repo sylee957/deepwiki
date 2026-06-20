@@ -173,4 +173,23 @@ def delayBound (α β : UppSeq Int) : Nat :=
 through a rate-latency server `β_{2,1}` is the classic `T + b/R = 1 + 2/2 = 2`. -/
 example : delayBound (tokenBucket 1 2) (betaRL 2 1) = 2 := by native_decide
 
+/-- Lift an integer UPP sequence to `WithTop ℤ` — the sub-additive closure needs `δ₀`'s `⊤`. -/
+def liftUpp (f : UppSeq Int) : UppSeq (WithTop ℤ) :=
+  ⟨f.vals.map WithTop.some, (f.incr : WithTop ℤ), f.period, f.hperiod,
+   by rw [List.length_map]; exact f.hlen⟩
+
+/-- Sample the **sub-additive closure** `f* = δ₀ ⊓ f ⊓ f² ⊓ ⋯` at `0..k-1` via
+`closureApproxNat f n n = ⨅_{m≤n} f^⊗ᵐ(n)`. **Exact** when `f(0) = 0` (the standard service/arrival
+curve case): an `m`-fold convolution with `m > n` is forced to use `m − n` zero-steps, which (as
+`f(0)=0`) cannot lower the value, so convolutions beyond rank `n` never improve `f*(n)`. Each
+`closureApproxNat` term is the proved truncated closure (`closureApproxNat_idem`,
+`closureApproxNat_eq_of_stable`). -/
+def closureSample (f : UppSeq Int) (k : Nat) : List (WithTop ℤ) :=
+  (List.range k).map (fun n => UppSeq.closureApproxNat (liftUpp f) n n)
+
+/-- **Sub-additive closure (gate-verified):** a sub-additive curve `f = [0,4,5,6,…]` (`f(0)=0`) is
+its own closure, `f* = f` — convolving it with itself never lowers any value. -/
+example : closureSample ⟨[0, 4], 1, 1, by decide, by decide⟩ 4 = [(0 : WithTop ℤ), 4, 5, 6] := by
+  native_decide
+
 end MinPlusCalc

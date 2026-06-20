@@ -31,6 +31,7 @@ lake exe minplus            # usage
 | `minplus deconvupp <v1> <p1> <c1> <v2> <p2> <c2>` | `f⊘g` **as a UPP sequence** — period `d_f`, increment `c_f` (`deconvUpp`; `deconvNat_add_period`, Lemma 4.5); needs `slope_f ≤ slope_g` |
 | `minplus backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **backlog bound** `supₜ(α(t)−β(t)) = (α⊘β)(0)` — worst-case buffer; needs `slope_α ≤ slope_β` (`backlogBound`/`deconvNat_isGreatest`) |
 | `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay; needs `slope_α ≤ slope_β` (`delayBound`) |
+| `minplus closure <vals> <period> <incr> <k>` | the **sub-additive closure** `f*(0..k−1) = δ₀ ⊓ f ⊓ f² ⊓ ⋯` via `closureApproxNat f n n`; exact for `f(0)=0`; refuses `f(0)<0` (where `f* = −∞`) |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -59,7 +60,14 @@ closed form, ready to feed into another operator.
 search window the terms are non-increasing per period (`deconvNat_ge`). It is finite only when
 `slope_f ≤ slope_g`; the CLI refuses otherwise (the deconvolution is `+∞`). `deconvupp` returns it as
 a UPP sequence (period `d_f`, increment `c_f` — its UPP-ness is `deconvNat_add_period`, Lemma 4.5), so
-deconvolution composes too. Sub-additive closure (Lemma 4.7–4.9) is future work.
+deconvolution composes too. The **sub-additive closure** `f* = δ₀ ⊓ f ⊓ f² ⊓ ⋯` (Lemma 4.7–4.9)
+is sampled by `closureApproxNat f n n = ⨅_{m≤n} f^⊗ᵐ(n)` — the proved truncated closure
+(`UppSeq.closureApproxNat`, with `closureApproxNat_idem`/`_eq_of_stable`). This is **exact** when
+`f(0)=0` (the standard service/arrival-curve case): any `m`-fold convolution with `m > n` must spend
+`m−n` zero-steps, which at `f(0)=0` cost nothing, so ranks beyond `n` never lower `f*(n)`. The CLI
+refuses `f(0)<0`, where the closure diverges to `−∞`. Returning the closure *as a single UPP sequence*
+(rather than a finite sample) remains future work — it needs the stabilization rank from
+`closureApproxNat_eq_of_stable` lifted to a period/increment.
 
 ## Example
 
