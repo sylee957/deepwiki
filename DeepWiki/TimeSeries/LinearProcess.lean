@@ -88,6 +88,14 @@ theorem linearProcessLp_inner {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ �
     show t + h - (t - k) = k + h from by omega]
   ring
 
+/-- **§3.3: the linear-process variance** `γ(0) = ⟪Xₜ, Xₜ⟫ = σ² ∑ₖ ψₖ²` — the `h = 0` case of the
+autocovariance (eq 3.2.4 at lag `0`). -/
+theorem linearProcessLp_inner_self {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0)
+    (t : ℤ) :
+    inner ℝ (linearProcessLp ψ Z t) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k ^ 2 := by
+  simpa [pow_two] using linearProcessLp_inner hψ hZb hZorth t 0
+
 /-! ## White-noise bridge: the `L²(ℝ)` inner product as an integral / covariance -/
 
 /-- The real `L²` inner product is the integral of the pointwise product: `⟪f, g⟫ = ∫ f·g`
