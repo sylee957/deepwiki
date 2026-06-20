@@ -59,4 +59,41 @@ theorem lagProductProcess_acvf_zero [IsProbabilityMeasure μ] (hindep : iIndepFu
         ((hindep.indepFun hne).comp hsq hsq).integral_mul_eq_mul_integral (haesm t) (haesm (t - 1))
     _ = σ2 ^ 2 := by rw [e t, e (t - 1)]; ring
 
+/-- **Problem 1.7(f)**: the autocovariance vanishes when the index pairs are disjoint, i.e.
+`{i, i−1} ∩ {j, j−1} = ∅` — then `Xᵢ = Zᵢ Zᵢ₋₁` and `Xⱼ = Zⱼ Zⱼ₋₁` are independent, so `γ = 0`.
+This covers all lags `|i − j| ≥ 2`. -/
+theorem lagProductProcess_cov_of_disjoint [IsProbabilityMeasure μ] (hindep : iIndepFun Z μ)
+    (hmem : ∀ t, MemLp (Z t) 4 μ) {i j : ℤ}
+    (h1 : i ≠ j) (h2 : i ≠ j - 1) (h3 : i - 1 ≠ j) :
+    cov[lagProductProcess Z i, lagProductProcess Z j; μ] = 0 := by
+  have haem : ∀ t, AEMeasurable (Z t) μ := fun t => (hmem t).aestronglyMeasurable.aemeasurable
+  have hpp := hindep.indepFun_prodMk_prodMk₀ haem i (i - 1) j (j - 1) h1 h2 h3 (by omega)
+  have hXY : IndepFun (lagProductProcess Z i) (lagProductProcess Z j) μ :=
+    hpp.comp (measurable_fst.mul measurable_snd) (measurable_fst.mul measurable_snd)
+  exact hXY.covariance_eq_zero (memLp_lagProductProcess hmem i) (memLp_lagProductProcess hmem j)
+
+/-- **Problem 1.7(f)**: the lag-`1` autocovariance vanishes, `γ(1) = 0`. Although `X_{s+1}` and `Xₛ`
+share the factor `Zₛ`, the product `X_{s+1} Xₛ = Z_{s+1} · (Zₛ² Zₛ₋₁)` still has the lone factor
+`Z_{s+1}` (independent of `Zₛ, Zₛ₋₁`, mean `0`), so `E[X_{s+1} Xₛ] = E[Z_{s+1}] · E[Zₛ² Zₛ₋₁] = 0`. -/
+theorem lagProductProcess_cov_succ [IsProbabilityMeasure μ] (hindep : iIndepFun Z μ)
+    (hmem : ∀ t, MemLp (Z t) 4 μ) (hmean : ∀ t, ∫ ω, Z t ω ∂μ = 0) (s : ℤ) :
+    cov[lagProductProcess Z (s + 1), lagProductProcess Z s; μ] = 0 := by
+  have haem : ∀ t, AEMeasurable (Z t) μ := fun t => (hmem t).aestronglyMeasurable.aemeasurable
+  have hg : Measurable (fun p : ℝ × ℝ => p.1 * p.1 * p.2) :=
+    (measurable_fst.mul measurable_fst).mul measurable_snd
+  have hind := (hindep.indepFun_prodMk₀ haem s (s - 1) (s + 1) (by omega) (by omega)).comp
+    hg (measurable_id : Measurable (id : ℝ → ℝ))
+  have haesmB : AEStronglyMeasurable (fun ω => Z s ω * Z s ω * Z (s - 1) ω) μ :=
+    ((hmem s).aestronglyMeasurable.mul (hmem s).aestronglyMeasurable).mul
+      (hmem (s - 1)).aestronglyMeasurable
+  rw [covariance_eq_sub (memLp_lagProductProcess hmem (s + 1)) (memLp_lagProductProcess hmem s),
+    lagProductProcess_mean hindep hmem hmean (s + 1), zero_mul, sub_zero]
+  calc ∫ ω, (lagProductProcess Z (s + 1) * lagProductProcess Z s) ω ∂μ
+      = ∫ ω, (Z s ω * Z s ω * Z (s - 1) ω) * Z (s + 1) ω ∂μ :=
+        integral_congr_ae (.of_forall fun ω => by
+          simp only [lagProductProcess, Pi.mul_apply, show (s : ℤ) + 1 - 1 = s from by omega]; ring)
+    _ = (∫ ω, Z s ω * Z s ω * Z (s - 1) ω ∂μ) * (∫ ω, Z (s + 1) ω ∂μ) :=
+        hind.integral_mul_eq_mul_integral haesmB (hmem (s + 1)).aestronglyMeasurable
+    _ = 0 := by rw [hmean (s + 1), mul_zero]
+
 end DeepWiki.TimeSeries
