@@ -27,6 +27,16 @@ operator raised to power `j` shifts the time index by `j` (so `B⁰ = id`). The 
 `lagPoly_X_pow_apply`. -/
 alias eq_3_1_8 := DeepWiki.TimeSeries.lagPoly_X_pow_apply
 
+/-- **§1.4 ↔ §3.1 bridge**: the difference operator `∇ = 1 − B` of §1.4 (trend elimination) is the
+lag polynomial `1 − z` evaluated at the backshift — `(1 − z)(B) x = ∇ x` — placing `∇` inside the
+ARMA lag-polynomial framework (§3.1, eqs 3.1.5–3.1.8). The library's `lagPoly_one_sub_X_apply`. -/
+alias difference_eq_lagPoly := DeepWiki.TimeSeries.lagPoly_one_sub_X_apply
+
+/-- **§1.4 ↔ §3.1 bridge**: the lag-`d` difference operator `∇_d = 1 − Bᵈ` (eq 1.4.19) is the lag
+polynomial `1 − zᵈ` at the backshift — `(1 − zᵈ)(B) x = ∇_d x`. The library's
+`lagPoly_one_sub_X_pow_apply`. -/
+alias seasonalDifference_eq_lagPoly := DeepWiki.TimeSeries.lagPoly_one_sub_X_pow_apply
+
 /-- **Definition 3.1.1** (§3.1, p.78), white noise `WN(0,σ²)`: a stationary process
 with mean zero and autocovariance `γ(h) = σ²` if `h = 0` else `0`. The library's
 `IsWhiteNoise`. -/
