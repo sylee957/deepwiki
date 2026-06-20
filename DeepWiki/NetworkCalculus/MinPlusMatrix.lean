@@ -875,6 +875,25 @@ theorem exists_criticalVertex {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
   obtain ⟨v₀, p₀, w₀, hp1, hpn, htight, hlam⟩ := exists_critical_circuit A hlam_ne
   exact ⟨v₀, p₀, hp1, hpn, by rw [cycleMean_coe A v₀ p₀ w₀ htight, ← hlam]⟩
 
+/-- **A critical vertex carries the cyclicity recurrence**: at a critical vertex `v` (with a circuit
+present, `λ ≠ +∞`) the powers are exactly pseudo-periodic on multiples of its critical length `p₀` —
+`(A^((k+1)p₀))ᵥᵥ = (A^(kp₀))ᵥᵥ ⊗ trop(w₀)`, `λ = w₀/p₀`. Connects `IsCriticalVertex` to
+`untrop_pow_critical_cyclicity` (the eigenvalue-attaining circuit at `v` is the cyclic one). -/
+theorem IsCriticalVertex.cyclicity {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) {v : Fin n}
+    (hv : IsCriticalVertex A v) (hlam_ne : minMeanCycle A ≠ ⊤) :
+    ∃ (p₀ : ℕ) (w₀ : ℤ), 1 ≤ p₀ ∧ p₀ ≤ n ∧
+      minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) ∧
+      ∀ k, (A ^ ((k + 1) * p₀)) v v = (A ^ (k * p₀)) v v * Tropical.trop (w₀ : WithTop ℤ) := by
+  obtain ⟨p, hp1, hpn, hmean⟩ := hv
+  have hfin : ((A ^ p) v v).untrop ≠ ⊤ := by
+    intro htop
+    rw [cycleMean_top A v p htop] at hmean
+    exact hlam_ne hmean.symm
+  obtain ⟨w, hw⟩ := WithTop.ne_top_iff_exists.mp hfin
+  have hlam : minMeanCycle A = (((w : ℚ) / (p : ℚ) : ℚ) : WithTop ℚ) := by
+    rw [← hmean, cycleMean_coe A v p w hw.symm]
+  exact ⟨p, w, hp1, hpn, hlam, fun k => untrop_pow_critical_cyclicity A w p hp1 v hw.symm hlam k⟩
+
 /-! ### Irreducibility, toward the two-sided growth bound
 The lower envelope `(Aᵐ)ᵢᵢ ≥ λ·m` holds unconditionally; the matching *upper* envelope
 `(Aᵐ)ᵢⱼ ≤ λ·m + C` needs the graph to be **strongly connected** (irreducible) so every pair is
