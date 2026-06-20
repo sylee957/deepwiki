@@ -856,6 +856,25 @@ theorem exists_critical_cyclicity {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
   exact ⟨v₀, p₀, w₀, hp1, hpn, hlam,
     fun k => untrop_pow_critical_cyclicity A w₀ p₀ hp1 v₀ htight hlam k⟩
 
+/-! ### Critical vertices, toward the critical graph
+The full cyclicity period (BCOQ Thm 3.112) is governed by the **critical graph** — the union of circuits
+whose mean attains the eigenvalue `λ`. Its first ingredient is the set of critical vertices (those on a
+`λ`-achieving circuit), recorded here; the deeper structure (the critical graph's strongly-connected
+components and their cyclicity, the spectral projector) is BCOQ §3.7.1–3.7.3 and is not formalized. -/
+
+/-- A vertex is **critical** if it lies on a circuit whose mean weight attains the eigenvalue —
+`cycleMean A v p = λ(A)` for some `1 ≤ p ≤ n`. The critical vertices are where the cyclicity recurrence
+is realized (`untrop_pow_critical_cyclicity`). -/
+def IsCriticalVertex {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) : Prop :=
+  ∃ p, 1 ≤ p ∧ p ≤ n ∧ cycleMean A v p = minMeanCycle A
+
+/-- **A critical vertex exists** whenever the matrix has a circuit (`λ(A) ≠ +∞`): the eigenvalue-attaining
+circuit of `minMeanCycle_eq` sits at one. -/
+theorem exists_criticalVertex {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hlam_ne : minMeanCycle A ≠ ⊤) : ∃ v, IsCriticalVertex A v := by
+  obtain ⟨v₀, p₀, w₀, hp1, hpn, htight, hlam⟩ := exists_critical_circuit A hlam_ne
+  exact ⟨v₀, p₀, hp1, hpn, by rw [cycleMean_coe A v₀ p₀ w₀ htight, ← hlam]⟩
+
 /-! ### Irreducibility, toward the two-sided growth bound
 The lower envelope `(Aᵐ)ᵢᵢ ≥ λ·m` holds unconditionally; the matching *upper* envelope
 `(Aᵐ)ᵢⱼ ≤ λ·m + C` needs the graph to be **strongly connected** (irreducible) so every pair is
