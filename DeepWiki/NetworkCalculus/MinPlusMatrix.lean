@@ -214,6 +214,25 @@ def IsPseudoPeriodicPow {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (c K : ℕ) (l
   0 < c ∧ ∀ k, K ≤ k → ∀ i j,
     (A ^ (k + c)) i j = (A ^ k) i j * Tropical.trop (((c : ℤ) * lam : ℤ) : WithTop ℤ)
 
+/-- **Stabilizing powers are pseudo-periodic** (the trivial-eigenvalue cyclicity, in full generality):
+if the powers stabilize at rank `K` (`Aᴷ⁺¹ = Aᴷ`) then `A` is pseudo-periodic with cyclicity `c = 1`,
+rank `K`, eigenvalue `λ = 0`. Once one step stabilizes, all do (`Nat.le_induction`), and `λ = 0` means
+the increment `trop(1·0) = 𝟙` is trivial. This is the general face of the idempotent case below. -/
+theorem isPseudoPeriodicPow_of_pow_succ_eq {n : ℕ} {A : Matrix (Fin n) (Fin n) MP} {K : ℕ}
+    (h : A ^ (K + 1) = A ^ K) : IsPseudoPeriodicPow A 1 K 0 := by
+  refine ⟨one_pos, ?_⟩
+  have key : ∀ k, K ≤ k → A ^ (k + 1) = A ^ k := by
+    intro k hk
+    induction k, hk using Nat.le_induction with
+    | base => exact h
+    | succ k hk ih =>
+      calc A ^ (k + 1 + 1) = A ^ (k + 1) * A := pow_succ A (k + 1)
+        _ = A ^ k * A := by rw [ih]
+        _ = A ^ (k + 1) := (pow_succ A k).symm
+  intro k hk i j
+  rw [key k hk]
+  norm_num
+
 /-- `exA` is multiplicatively idempotent (`exA ⊗ exA = exA`): its `0`-weight self-loops make it a
 closure operator. -/
 theorem exA_mul_self : exA * exA = exA := by native_decide
@@ -224,16 +243,12 @@ theorem exA_pow_succ (k : ℕ) : exA ^ (k + 1) = exA := by
   | zero => rw [pow_one]
   | succ k ih => rw [pow_succ, ih, exA_mul_self]
 
-/-- **First general (∀ k) cyclicity result**: the idempotent `exA` is pseudo-periodic with cyclicity
-`c = 1`, rank `K = 1`, eigenvalue `λ = 0` — `exAᵏ⁺¹ = exAᵏ` for every `k ≥ 1` (both equal `exA`). The
-idempotent case is exactly the sub-additive-closure case already computed closed-form in
-`DeepWiki.UppSeq`; this is its matrix face. -/
-theorem isPseudoPeriodicPow_exA : IsPseudoPeriodicPow exA 1 1 0 := by
-  refine ⟨one_pos, ?_⟩
-  rintro (_ | m) hk i j
-  · simp at hk
-  · rw [exA_pow_succ (m + 1), exA_pow_succ m]
-    norm_num
+/-- **A concrete cyclicity instance**: the idempotent `exA` is pseudo-periodic with cyclicity `c = 1`,
+rank `K = 1`, eigenvalue `λ = 0` — a corollary of `isPseudoPeriodicPow_of_pow_succ_eq` (its powers
+stabilize: `exA² = exA¹`). The idempotent case is exactly the sub-additive-closure case already
+computed closed-form in `DeepWiki.UppSeq`; this is its matrix face. -/
+theorem isPseudoPeriodicPow_exA : IsPseudoPeriodicPow exA 1 1 0 :=
+  isPseudoPeriodicPow_of_pow_succ_eq (by simp [exA_pow_succ])
 
 /-- A 2-state min-plus matrix realizing a nontrivial cyclicity: the bidirectional edge `0 ↔ 1` of
 weight `1`, diagonal `+∞ = 𝟘`. Its only circuit `0→1→0` has weight `2` over length `2`, so the
