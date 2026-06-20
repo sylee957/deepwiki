@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Tropical.Basic
+import Mathlib.Algebra.Tropical.BigOperators
 import Mathlib.Data.Matrix.Mul
 import Mathlib.LinearAlgebra.Matrix.Notation
 
@@ -46,5 +47,18 @@ example : (exA ^ 2) 0 0 = Tropical.trop 0 := by native_decide
 
 /-- Sanity (gate-verified): `(A²)₀₁ = min(0+1, 1+0) = 1`. -/
 example : (exA ^ 2) 0 1 = Tropical.trop 1 := by native_decide
+
+/-- **Min-plus matrix power recursion**: `(Aᵐ⁺¹)ᵢⱼ = ⨅ₖ ((Aᵐ)ᵢₖ + Aₖⱼ)` on the underlying
+`WithTop ℤ` values — the "relax over the last edge" step (matrix product `∑ = ⨅`, `⊗ = +`). The basic
+tool for the walk/circuit analysis underlying the cyclicity theorem. -/
+theorem untrop_pow_succ_apply {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ) (i j : Fin n) :
+    ((A ^ (m + 1)) i j).untrop
+      = Finset.univ.inf (fun k => ((A ^ m) i k).untrop + (A k j).untrop) := by
+  rw [pow_succ, Matrix.mul_apply, Finset.untrop_sum']
+  rfl
+
+/-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
+(`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
+def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
 
 end DeepWiki.MinPlusMatrix
