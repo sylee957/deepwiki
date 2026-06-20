@@ -590,6 +590,31 @@ theorem untrop_pow_mul_eq_of_tight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ
     congr 1; push_cast; ring
   · exact untrop_pow_diag_ge A μ hμ i (k * p)
 
+/-! ### The min-plus eigenvalue, as the minimum mean cycle
+The growth rate `λ` characterized abstractly by the bounds above is, concretely, the minimum mean over
+circuits. By the reduction `walkWeight_reduce_of_nonneg`/`exists_lt_untrop_pow_le`, only circuits of
+length `≤ n` matter, so the minimum is over a finite set and lands in `WithTop ℚ` (`⊤` iff the matrix
+is acyclic). -/
+
+/-- Mean weight of the minimum-weight length-`p` circuit at `v`, in `WithTop ℚ` (`⊤` when there is no
+length-`p` circuit at `v`, i.e. `(Aᵖ)ᵥᵥ = +∞`): the diagonal entry divided by the length. -/
+def cycleMean {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) (p : ℕ) : WithTop ℚ :=
+  WithTop.map (fun z : ℤ => (z : ℚ) / (p : ℚ)) ((A ^ p) v v).untrop
+
+/-- The **min-plus eigenvalue** `λ(A)`: the minimum mean over short circuits (lengths `1..n`), in
+`WithTop ℚ`. Only short circuits are needed — longer ones never beat them (`exists_lt_untrop_pow_le`).
+`λ = ⊤` exactly when `A` is acyclic. -/
+def minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) : WithTop ℚ :=
+  (Finset.univ ×ˢ Finset.Icc 1 n).inf (fun vp => cycleMean A vp.1 vp.2)
+
+/-- `λ(A)` is a lower bound for every short circuit's mean (it is their minimum). -/
+theorem minMeanCycle_le {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (v : Fin n) (p : ℕ)
+    (hp1 : 1 ≤ p) (hpn : p ≤ n) : minMeanCycle A ≤ cycleMean A v p := by
+  unfold minMeanCycle
+  have hmem : ((v, p) : Fin n × ℕ) ∈ Finset.univ ×ˢ Finset.Icc 1 n := by
+    simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and]; exact ⟨hp1, hpn⟩
+  exact Finset.inf_le hmem
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
