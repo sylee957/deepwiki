@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.ArmaProcesses
 import DeepWiki.TimeSeries.LinearProcess
 import DeepWiki.TimeSeries.LinearProcessExamples
+import DeepWiki.TimeSeries.LinearProcessArma
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 3: Stationary ARMA Processes
@@ -159,6 +160,12 @@ identifies the `linearProcessLp_inner` value `σ² ∑ₖ ψₖ ψ_{k+h}` with t
 shows the orthogonality hypothesis `⟪Zₐ,Z_b⟫ = σ²·[a=b]` is exactly mean-zero white noise with
 `cov(Zₐ,Z_b) = σ²·[a=b]`. The library's `inner_eq_covariance`. -/
 alias innerProduct_eq_autocovariance := DeepWiki.TimeSeries.inner_eq_covariance
+
+/-- **Theorem 3.2.1** (§3.2, p.91), the book-faithful endpoint: a linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ`
+(`∑ⱼ |ψⱼ| < ∞`) driven by a genuine `WN(0,σ²)` (Definition 3.1.1, `IsWhiteNoise`) has autocovariance
+`γ(h) = σ² ∑ₖ ψₖ ψ_{k+h}` — starting from the book's white-noise predicate, not an abstract
+`L²`-orthogonality hypothesis. The library's `isWhiteNoise_linearProcess_acvf`. -/
+alias thm_3_2_1_whiteNoise := DeepWiki.TimeSeries.isWhiteNoise_linearProcess_acvf
 
 -- Book-faithful restatement (step 5): Theorem 3.2.1's autocovariance γ(k)=σ²∑ⱼψⱼψ_{j+|k|}
 -- (eq 3.2.4), in the two-sided L² inner-product form at lag h.

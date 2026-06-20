@@ -27,6 +27,18 @@ structure IsWhiteNoise (Z : ℤ → Ω → ℝ) (μ : Measure Ω) (σ2 : ℝ) : 
   /-- The autocovariance is `σ²` at lag 0 and `0` at all nonzero lags. -/
   acvf_eq : ∀ h : ℤ, acvfStat Z μ h = if h = 0 then σ2 else 0
 
+/-- The (uncentered) second moments of white noise: `E[Zₐ Z_b] = σ²·[a=b]`. Being mean zero, the
+second moment is the covariance `Cov(Zₐ, Z_b) = γ(a − b) = σ²·[a=b]`. This is the orthogonality
+hypothesis the `L²` linear-process bridge (`inner_toLpSeq`) consumes. -/
+theorem IsWhiteNoise.integral_mul [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ} {σ2 : ℝ}
+    (hmem : ∀ t, MemLp (Z t) 2 μ) (hwn : IsWhiteNoise Z μ σ2) (a b : ℤ) :
+    ∫ ω, Z a ω * Z b ω ∂μ = if a = b then σ2 else 0 := by
+  have ha : μ[Z a] = 0 := hwn.mean_zero a
+  have hcov : cov[Z a, Z b; μ] = ∫ ω, Z a ω * Z b ω ∂μ := by
+    rw [covariance_eq_sub (hmem a) (hmem b), ha, zero_mul, sub_zero]; rfl
+  rw [← hcov, hwn.stationary.acvf_eq_acvfStat, hwn.acvf_eq]
+  simp only [sub_eq_zero]
+
 /-- **Definition 3.1.2**: `X` is an **ARMA(p,q) process** with autoregressive
 polynomial `φ` and moving-average polynomial `θ`, driven by white noise
 `Z ~ WN(0, σ²)`, if `X` is stationary and satisfies the difference equation
