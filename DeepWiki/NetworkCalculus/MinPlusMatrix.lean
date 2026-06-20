@@ -265,6 +265,15 @@ theorem take_take_drop_drop {α : Type*} (l : List α) (a b : ℕ) (hab : a ≤ 
     show l.drop b = (l.drop a).drop (b - a) from by rw [List.drop_drop]; congr 1; omega,
     List.take_append_drop, List.take_append_drop]
 
+/-- **List helper**: the last element of `l₁ ++ l₂` is `l₂`'s last, falling back through `l₁`'s last
+to the default — `(l₁ ++ l₂).getLastD d = l₂.getLastD (l₁.getLastD d)`. Lets circuit extraction keep
+the walk's endpoint (`prefix ++ suffix` ends where `prefix ++ circuit ++ suffix` does). -/
+theorem getLastD_append {α : Type*} (l₁ l₂ : List α) (d : α) :
+    (l₁ ++ l₂).getLastD d = l₂.getLastD (l₁.getLastD d) := by
+  induction l₁ generalizing d with
+  | nil => simp
+  | cons a t ih => rw [List.cons_append, List.getLastD_cons, ih, List.getLastD_cons]
+
 /-- **List helper**: the last vertex of the circuit segment `(l.drop A).take (B - A)` (for `A < B ≤
 length`) is the `B`-th walk vertex `(i :: l)[B]`, independent of the default — the segment is nonempty
 so `getLastD` returns its genuine last element. Supplies the circuit's return-vertex condition. -/
@@ -299,6 +308,23 @@ theorem exists_circuit_extraction {n : ℕ} (i : Fin n) (l : List (Fin n)) (hl :
   · rw [getLastD_drop_take i ((i :: l).get a) l a.val b.val hAB hBlen,
         List.getElem?_eq_getElem b.isLt]
     exact hval.symm
+
+/-- **Extraction, weight form** (the lower-bound recursion step): a walk `i ⤳ …` with at least `n`
+edges has a *strictly shorter* walk `l'` with the **same endpoint** (`l'.getLastD i = l.getLastD i`)
+plus a nonempty circuit `lc` at some `v`, decomposing the weight additively: `walkWeight A i l =
+walkWeight A i l' + walkWeight A v lc`. Strong induction on this peels a walk down to a simple path
+plus circuits — each circuit's weight bounded below by `λ·(length)` gives `(Aᵐ)ᵢᵢ ≥ m·λ`. -/
+theorem exists_walkWeight_shorter {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n)
+    (l : List (Fin n)) (hl : n ≤ l.length) :
+    ∃ (l' lc : List (Fin n)) (v : Fin n),
+      l'.length < l.length ∧ l'.getLastD i = l.getLastD i ∧ lc ≠ [] ∧ lc.getLastD v = v ∧
+      walkWeight A i l = walkWeight A i l' + walkWeight A v lc := by
+  obtain ⟨lp, lc, ls, v, hsplit, hlc, hpv, hcv⟩ := exists_circuit_extraction i l hl
+  refine ⟨lp ++ ls, lc, v, ?_, ?_, hlc, hcv, ?_⟩
+  · have : 0 < lc.length := List.length_pos_of_ne_nil hlc
+    rw [hsplit]; simp only [List.length_append]; omega
+  · rw [hsplit, getLastD_append, getLastD_append, getLastD_append, hpv, hcv]
+  · rw [hsplit]; exact walkWeight_circuit_decomp A i v lp lc ls hpv hcv
 
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
