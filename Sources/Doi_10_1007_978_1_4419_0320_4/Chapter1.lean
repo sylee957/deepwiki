@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.BackshiftOperator
 import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
+import DeepWiki.TimeSeries.LagProductProcess
 import DeepWiki.TimeSeries.GaussianTimeSeries
 import DeepWiki.TimeSeries.LinearFilters
 import DeepWiki.TimeSeries.StationaryGaussianProcess
@@ -427,16 +428,20 @@ theorem ex_1_7_d [IsProbabilityMeasure μ] {c σ2 : ℝ} {Zs : ℤ → Ω → �
     ¬ IsWeaklyStationary (cosLagProcess c Zs) μ :=
   cosLagProcess_not_stationary hZ huc hσ hsin hcos
 
-/-! **Problem 1.7(f)** (p.40): `Xₜ = Zₜ·Zₜ₋₁` (the lag product of an iid mean-zero, variance-`σ²`
-sequence) is weakly stationary, with mean `0` and autocovariance `γ(0) = σ⁴` and `γ(h) = 0` for
-`h ≠ 0`. This is **tractable but deferred** as a laborious mini-project. Establishing the white
-covariance `Cov(Xᵢ, Xⱼ) = σ⁴·[i = j]` for all integer lags needs a three-way case split on the
-index multiset `{i, i−1, j, j−1}` (the cases `i = j`; one shared index when the lags differ by one;
-and four distinct indices otherwise), each grouping the four factors into independent blocks via
-`ProbabilityTheory.iIndepFun.indepFun_finset` composed with the product map and
-`IndepFun.integral_mul_eq_mul_integral`, together with the `L²` membership of the products `ZₜZₜ₋₁`
-(needed for `cov` to be defined). The supporting Mathlib tools all exist; the casework and the
-product-integrability bookkeeping are the cost. -/
+/-- **Problem 1.7(f)** (p.40): `Xₜ = Zₜ Zₜ₋₁`, the lag product of an iid mean-zero sequence `Z`
+(with finite fourth moments and variance `σ²`), **is** weakly stationary — it is white noise, with
+mean `0` and autocovariance `γ(h) = σ⁴ · [h = 0]` (`γ(0) = σ⁴`, `γ(h) = 0` for `h ≠ 0`). The
+library's `lagProductProcess`, `lagProductProcess_isWeaklyStationary`, `lagProductProcess_mean`,
+`lagProductProcess_acvfStat`. -/
+theorem ex_1_7_f [IsProbabilityMeasure μ] {Zs : ℤ → Ω → ℝ} {σ2 : ℝ} (hindep : iIndepFun Zs μ)
+    (hmem : ∀ t, MemLp (Zs t) 4 μ) (hmean : ∀ t, ∫ ω, Zs t ω ∂μ = 0)
+    (hvar : ∀ t, ∫ ω, (Zs t ω) ^ 2 ∂μ = σ2) :
+    IsWeaklyStationary (lagProductProcess Zs) μ ∧
+      (∀ t, ∫ ω, lagProductProcess Zs t ω ∂μ = 0) ∧
+      (∀ h, acvfStat (lagProductProcess Zs) μ h = if h = 0 then σ2 ^ 2 else 0) :=
+  ⟨lagProductProcess_isWeaklyStationary hindep hmem hmean hvar,
+   fun t => lagProductProcess_mean hindep hmem hmean t,
+   fun h => lagProductProcess_acvfStat hindep hmem hmean hvar h⟩
 
 /-- **Problem 1.8(a)** (p.40): the operator `∇ ∇_d` annihilates a linear trend plus a
 period-`d` seasonal component: `∇(∇_d (a + b·t + sₜ)) = 0` when `{sₜ}` has period `d`.
