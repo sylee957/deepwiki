@@ -15,7 +15,7 @@ namespace DeepWiki.TimeSeries
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal
 
-variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {X : ℤ → Ω → ℝ}
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {T : Type*} {X : T → Ω → ℝ}
 
 /-- **Definition 1.2.3** (eq 1.2.7), book form: the finite-dimensional distribution function
 `F_t(x) = P(X_{t₁} ≤ x₁, …, X_{tₙ} ≤ xₙ)` of a process `X : T → Ω → ℝ` over an arbitrary index
@@ -33,10 +33,12 @@ example {T : Type*} (X : T → Ω → ℝ) {n : ℕ} (t : Fin n → T) (x : Fin 
     distFn X μ t x = μ {ω | ∀ i, X (t i) ω ≤ x i} := rfl
 
 /-- The finite-dimensional (joint) **law** of `X` on a finite index set `I` — the pushforward
-`μ.map (ω ↦ I.restrict (X · ω))`, the joint distribution of `(Xₜ)_{t ∈ I}`. This is the
+`μ.map (ω ↦ I.restrict (X · ω))`, the joint distribution of `(Xₜ)_{t ∈ I}`, over an arbitrary
+index set `T` (the book's `T ⊆ ℝ`; the time series specializes to `T = ℤ`). This is the
 measure-valued reformulation of the distribution functions `distFn` (Def 1.2.3), and the object
 on which Kolmogorov's existence theorem `exists_process_fdd_eq` (Thm 1.2.1) is stated. -/
-noncomputable def fdd (X : ℤ → Ω → ℝ) (μ : Measure Ω) (I : Finset ℤ) : Measure (↥I → ℝ) :=
+noncomputable def fdd {T : Type*} (X : T → Ω → ℝ) (μ : Measure Ω) (I : Finset T) :
+    Measure (↥I → ℝ) :=
   μ.map (fun ω => I.restrict (fun t => X t ω))
 
 /-! ### `distFn` (distribution-function form) versus `fdd` (joint-law form)
@@ -63,7 +65,7 @@ theorem distFn_eq_map_Iic {T ι : Type*} [Fintype ι] (X : T → Ω → ℝ) {t 
 /-- The lower-orthant CDF of the joint law `fdd X μ I` is the distribution-function value
 `P(Xₜ ≤ xₜ for all t ∈ I)` — i.e. `distFn` (Def 1.2.3) is exactly the CDF of `fdd`, here in the
 `Finset`-indexed form `x : ↥I → ℝ`. -/
-theorem fdd_Iic (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → ℝ) :
+theorem fdd_Iic (hX : ∀ t, Measurable (X t)) (I : Finset T) (x : ↥I → ℝ) :
     fdd X μ I (Set.univ.pi fun i => Set.Iic (x i)) = μ {ω | ∀ i : ↥I, X i ω ≤ x i} := by
   have hmeas : Measurable (fun ω => I.restrict (fun t => X t ω)) :=
     measurable_pi_lambda _ fun i => hX i.1
@@ -77,7 +79,7 @@ theorem fdd_Iic (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → �
 exactly `distFn` over the index `ι = ↥I` with the inclusion tuple `(Subtype.val : ↥I → ℤ)`. So
 the book's distribution function (Def 1.2.3, `distFn`) is literally the CDF of the
 finite-dimensional law `fdd`. -/
-theorem fdd_apply_Iic_eq_distFn (hX : ∀ t, Measurable (X t)) (I : Finset ℤ) (x : ↥I → ℝ) :
+theorem fdd_apply_Iic_eq_distFn (hX : ∀ t, Measurable (X t)) (I : Finset T) (x : ↥I → ℝ) :
     fdd X μ I (Set.univ.pi fun i => Set.Iic (x i)) = distFn X μ (Subtype.val) x := by
   rw [fdd_Iic hX]
   rfl
@@ -176,22 +178,23 @@ theorem charFunFdd_tendsto_marginal [IsFiniteMeasure μ] {T : Type*} (X : T → 
 /-- The finite-dimensional distributions of a process satisfy Kolmogorov's consistency
 conditions (1.2.8): they form a projective measure family. -/
 theorem isProjectiveMeasureFamily_fdd (hX : ∀ t, AEMeasurable (X t) μ) :
-    IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) (fun I => fdd X μ I) :=
+    IsProjectiveMeasureFamily (α := fun _ : T => ℝ) (fun I => fdd X μ I) :=
   isProjectiveMeasureFamily_map_restrict hX
 
 /-- The law of a process is the projective limit of its finite-dimensional distributions. -/
 theorem isProjectiveLimit_fdd (hX : AEMeasurable (fun ω => (X · ω)) μ) :
-    IsProjectiveLimit (α := fun _ : ℤ => ℝ) (μ.map (fun ω => (X · ω))) (fun I => fdd X μ I) :=
+    IsProjectiveLimit (α := fun _ : T => ℝ) (μ.map (fun ω => (X · ω))) (fun I => fdd X μ I) :=
   isProjectiveLimit_map hX
 
 /-- **Theorem 1.2.1** (Kolmogorov's existence theorem): a family `P` of finite-dimensional
 distributions satisfying the consistency conditions (1.2.8) is the finite-dimensional
 distribution family of some process — the coordinate process `(t, ω) ↦ ω t` on the
-projective-limit probability space `(ℤ → ℝ, projectiveLimit P hP)`. -/
-theorem exists_process_fdd_eq (P : ∀ I : Finset ℤ, Measure (↥I → ℝ))
+projective-limit probability space `(T → ℝ, projectiveLimit P hP)`. The index set `T` is
+arbitrary (`Nonempty`): the book's `T ⊆ ℝ` and the time series' `T = ℤ` are both instances. -/
+theorem exists_process_fdd_eq {T : Type*} [Nonempty T] (P : ∀ I : Finset T, Measure (↥I → ℝ))
     [∀ I, IsProbabilityMeasure (P I)]
-    (hP : IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) P) :
-    ∃ ν : Measure (ℤ → ℝ), IsProbabilityMeasure ν ∧
+    (hP : IsProjectiveMeasureFamily (α := fun _ : T => ℝ) P) :
+    ∃ ν : Measure (T → ℝ), IsProbabilityMeasure ν ∧
       ∀ I, fdd (fun t ω => ω t) ν I = P I := by
   refine ⟨projectiveLimit P hP, isProbabilityMeasure_projectiveLimit hP, fun I => ?_⟩
   exact isProjectiveLimit_projectiveLimit hP I

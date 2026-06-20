@@ -84,28 +84,29 @@ noncomputable abbrev def_1_2_3 := @DeepWiki.TimeSeries.distFn
 event `{ω | X_{tᵢ}(ω) ≤ xᵢ for all i}`. The library's `distFn`. -/
 noncomputable abbrev eq_1_2_7 := @DeepWiki.TimeSeries.distFn
 
-/-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11), the book's *if and only if*: a family
-`P` of finite-dimensional distributions — one probability measure `P I` per finite set of times
-`I`, whose distribution functions are the book's `F_t` —
+/-- **Theorem 1.2.1** (Kolmogorov's theorem, §1.2, p.11), the book's *if and only if*, over an
+arbitrary index set `T` (the book's real times `T ⊆ ℝ`; the time series specializes to `T = ℤ`):
+a family `P` of finite-dimensional distributions — one probability measure `P I` per finite set
+of times `I : Finset T`, whose distribution functions are the book's `F_t` —
 
 `{F_t} are the distribution functions of some stochastic process  ⟺  the {F_t} are consistent`.
 
 "Are the distribution functions of some process" = realized by the coordinate process
-`(t, ω) ↦ ω t` on a probability space `(ℤ → ℝ, ν)`, i.e. `∀ I, fdd (·) ν I = P I`.
+`(t, ω) ↦ ω t` on a probability space `(T → ℝ, ν)`, i.e. `∀ I, fdd (·) ν I = P I`.
 "Consistent" = `IsProjectiveMeasureFamily P`, the measure form of the book's condition (1.2.8)
 `lim_{xᵢ → ∞} F_t(x) = F_{t(i)}(x(i))` (its F-function rendering is `distFn_tendsto_marginal`,
 `eq_1_2_8`). The `←` (existence) half is Kolmogorov's theorem (`exists_process_fdd_eq`); the `→`
 (consistency) half is `isProjectiveMeasureFamily_fdd`, that an actual process's distributions are
 always consistent. -/
-theorem thm_1_2_1 (P : ∀ I : Finset ℤ, MeasureTheory.Measure (↥I → ℝ))
+theorem thm_1_2_1 {T : Type*} [Nonempty T] (P : ∀ I : Finset T, MeasureTheory.Measure (↥I → ℝ))
     [∀ I, MeasureTheory.IsProbabilityMeasure (P I)] :
-    (∃ ν : MeasureTheory.Measure (ℤ → ℝ), MeasureTheory.IsProbabilityMeasure ν ∧
-        ∀ I, fdd (fun t ω => ω t) ν I = P I)
-      ↔ MeasureTheory.IsProjectiveMeasureFamily (α := fun _ : ℤ => ℝ) P := by
+    (∃ ν : MeasureTheory.Measure (T → ℝ), MeasureTheory.IsProbabilityMeasure ν ∧
+        ∀ I : Finset T, fdd (fun (t : T) (ω : T → ℝ) => ω t) ν I = P I)
+      ↔ MeasureTheory.IsProjectiveMeasureFamily (α := fun _ : T => ℝ) P := by
   refine ⟨fun ⟨ν, _, hfdd⟩ => ?_, fun hP => exists_process_fdd_eq P hP⟩
-  have h := isProjectiveMeasureFamily_fdd (μ := ν) (X := fun t ω => ω t)
+  have h := isProjectiveMeasureFamily_fdd (μ := ν) (X := fun (t : T) (ω : T → ℝ) => ω t)
     (fun t => (measurable_pi_apply t).aemeasurable)
-  rwa [(funext hfdd : (fun I => fdd (fun t ω => ω t) ν I) = P)] at h
+  rwa [(funext hfdd : (fun I => fdd (fun (t : T) (ω : T → ℝ) => ω t) ν I) = P)] at h
 
 /-- **Consistency condition (1.2.8)** (§1.2, p.11), the `only if` half of Theorem 1.2.1 in the
 book's notation: the distribution functions of a process satisfy
