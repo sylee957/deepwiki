@@ -1271,6 +1271,16 @@ theorem closureApproxNat_succ (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
             gcongr
             exact Finset.inf'_le _ (Finset.mem_range.mpr hm'le)
 
+/-- **Fixed point ⟹ stable** (from the recurrence): if the approximant stops changing at step `N`
+(`closureApprox(N+1) = closureApprox(N)`), the next step is unchanged too. Since
+`closureApprox(N+2) = δ₀ ⊓ (f ⊗ closureApprox(N+1)) = δ₀ ⊓ (f ⊗ closureApprox(N)) = closureApprox(N+1)`,
+detecting one fixed step certifies convergence — so the closure is computable by iterate-to-fixpoint. -/
+theorem closureApproxNat_stable_step (f : UppSeq (WithTop ℤ)) {N : ℕ}
+    (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) (n : ℕ) :
+    closureApproxNat f (N + 2) n = closureApproxNat f (N + 1) n := by
+  rw [show N + 2 = N + 1 + 1 from rfl, closureApproxNat_succ f (N + 1) n, closureApproxNat_succ f N n]
+  simp only [h]
+
 /-- **Sub-additive closure of an idempotent `f`**: `f* = δ₀ ⊓ f`. For `f ⊗ f = f` (e.g. a
 sub-additive service curve) the closure stabilizes at one iteration — `⨅_{m≤N} f^⊗ᵐ = δ₀ ⊓ f` for
 every `N ≥ 1` — so the closure is computed exactly with no iteration bound needed. (The general
