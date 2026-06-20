@@ -78,4 +78,32 @@ theorem untrop_pow_add_le_diag {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p q : 
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
 
+/-! ### The cyclicity phenomenon, witnessed concretely
+The cyclicity theorem (BCOQ Thm 3.112) states that an irreducible min-plus matrix's powers become
+*pseudo-periodic*: `Aᵏ⁺ᶜ = (c·λ) ⊗ Aᵏ` past a finite rank, with cyclicity `c` and eigenvalue `λ`.
+The 2-cycle below realizes a **nontrivial** instance (`λ = 1`, `c = 2`) — unlike the idempotent
+`exA` (`λ = 0`, `c = 1`) — so the eigenvalue increment is genuinely exercised. These gate-verified
+witnesses pin the exact statement shape the general theorem must produce. -/
+
+/-- A 2-state min-plus matrix realizing a nontrivial cyclicity: the bidirectional edge `0 ↔ 1` of
+weight `1`, diagonal `+∞ = 𝟘`. Its only circuit `0→1→0` has weight `2` over length `2`, so the
+min-plus eigenvalue is `λ = 1` and the cyclicity is `c = 2`. -/
+def twoCycleMP : Matrix (Fin 2) (Fin 2) MP :=
+  !![0, Tropical.trop 1; Tropical.trop 1, 0]
+
+/-- Sanity (gate-verified): `twoCycleMP² = diag 2` — the length-2 circuit weight lands on the
+diagonal, off-diagonal is `+∞` (no length-2 walk between the two distinct vertices). -/
+example : twoCycleMP ^ 2 = !![Tropical.trop 2, 0; 0, Tropical.trop 2] := by native_decide
+
+/-- **Cyclicity witnessed** at rank 1 (BCOQ Thm 3.112, concrete): `A³ᵢⱼ = A¹ᵢⱼ ⊗ trop 2`, i.e.
+`Aᵏ⁺ᶜ = (c·λ) ⊗ Aᵏ` with `c = 2`, `λ = 1` — every finite entry grows by `c·λ = 2` per period
+(tropical `⊗ = +`; `+∞` stays `+∞`). -/
+theorem twoCycleMP_cyclicity_at_one :
+    ∀ i j, (twoCycleMP ^ 3) i j = twoCycleMP i j * Tropical.trop 2 := by native_decide
+
+/-- **Cyclicity witnessed** at rank 2: `A⁴ᵢⱼ = A²ᵢⱼ ⊗ trop 2` — the same period-2, increment-2
+relation one step on, confirming it is the steady pseudo-periodic regime, not a coincidence at `k=1`. -/
+theorem twoCycleMP_cyclicity_at_two :
+    ∀ i j, (twoCycleMP ^ 4) i j = (twoCycleMP ^ 2) i j * Tropical.trop 2 := by native_decide
+
 end DeepWiki.MinPlusMatrix
