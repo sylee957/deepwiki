@@ -74,6 +74,40 @@ theorem untrop_pow_add_le_diag {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p q : 
     ((A ^ (p + q)) i i).untrop ≤ ((A ^ p) i i).untrop + ((A ^ q) i i).untrop :=
   untrop_pow_add_le A p q i i i
 
+/-- **Weight of a walk** starting at `i` and visiting the vertices of `l` in order: `l` lists the
+vertices *after* the start, so the walk has `l.length` edges and ends at `l`'s last element (or at
+`i` when `l = []`). The weight is the sum of the traversed edge weights on the underlying values. -/
+def walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n) : List (Fin n) → WithTop ℤ
+  | [] => 0
+  | j :: rest => (A i j).untrop + walkWeight A j rest
+
+/-- The empty walk has weight `0` (the multiplicative unit). -/
+@[simp] theorem walkWeight_nil {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i : Fin n) :
+    walkWeight A i [] = 0 := rfl
+
+/-- Peeling the first edge: `walkWeight A i (j :: rest) = Aᵢⱼ + walkWeight A j rest`. -/
+@[simp] theorem walkWeight_cons {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n)
+    (rest : List (Fin n)) :
+    walkWeight A i (j :: rest) = (A i j).untrop + walkWeight A j rest := rfl
+
+/-- **Walk interpretation, upper half**: the matrix-power entry `(Aᵐ)ᵢⱼ` lower-bounds the weight of
+*every* explicit length-`m` walk `i ⤳ j` — the optimum is at least as good as any concrete walk.
+By induction on the vertex list, peeling the first edge (`A^(m+1) = A * Aᵐ`) and relaxing the
+leading `inf` to the chosen next vertex. The matching attainment (some walk meets it) is the
+converse half. -/
+theorem untrop_pow_le_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (i : Fin n) (l : List (Fin n)) :
+    ((A ^ l.length) i (l.getLastD i)).untrop ≤ walkWeight A i l := by
+  induction l generalizing i with
+  | nil => simp [Matrix.one_apply_eq]
+  | cons j rest ih =>
+    rw [List.getLastD_cons, List.length_cons, pow_succ', Matrix.mul_apply, Finset.untrop_sum']
+    refine le_trans (Finset.inf_le (Finset.mem_univ j)) ?_
+    show (A i j).untrop + ((A ^ rest.length) j (rest.getLastD j)).untrop
+        ≤ (A i j).untrop + walkWeight A j rest
+    gcongr
+    exact ih j
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
