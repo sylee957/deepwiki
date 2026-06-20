@@ -115,4 +115,31 @@ theorem inner_eq_covariance [IsProbabilityMeasure μ] {f g : Lp ℝ 2 μ}
   rw [inner_eq_integral_mul, covariance_eq_sub (Lp.memLp f) (Lp.memLp g), hf, zero_mul, sub_zero]
   rfl
 
+/-! ## Applying the acvf to a genuine random-noise sequence `Z : ℤ → Ω → ℝ` -/
+
+/-- Embed a square-integrable real process `Z : ℤ → Ω → ℝ` (`Zₜ ∈ L²(μ)`) into the Hilbert space
+`Lp ℝ 2 μ`, as `toLpSeq Z hZ t = (Zₜ : Lp)`. -/
+noncomputable def toLpSeq (Z : ℤ → Ω → ℝ) (hZ : ∀ t, MemLp (Z t) 2 μ) (t : ℤ) : Lp ℝ 2 μ :=
+  (hZ t).toLp (Z t)
+
+/-- **White-noise orthogonality in `L²`:** if the (uncentered) second moments are
+`E[Zₐ Z_b] = σ²·[a=b]` (so for a mean-zero process, the white-noise covariance), the embedded
+sequence is orthogonal up to `σ²`: `⟪Zₐ, Z_b⟫ = σ²·[a=b]` — exactly the hypothesis that
+`linearProcessLp_inner` consumes. -/
+theorem inner_toLpSeq {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) {σ2 : ℝ}
+    (hmom : ∀ a b, ∫ ω, Z a ω * Z b ω ∂μ = if a = b then σ2 else 0) (a b : ℤ) :
+    inner ℝ (toLpSeq Z hZ a) (toLpSeq Z hZ b) = if a = b then σ2 else 0 := by
+  rw [inner_eq_integral_mul, ← hmom a b]
+  exact integral_congr_ae ((hZ a).coeFn_toLp.mul (hZ b).coeFn_toLp)
+
+/-- **Theorem 3.2.1 for a genuine `WN(0,σ²)`:** the linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` driven by a
+square-integrable mean-zero white noise `Z` (second moments `E[Zₐ Z_b] = σ²·[a=b]`, uniformly
+`L²`-bounded after embedding) has autocovariance `γ(h) = ⟪X_{t+h}, Xₜ⟫ = σ² ∑ₖ ψₖ ψ_{k+h}`. -/
+theorem linearProcessLp_inner_toLpSeq {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ t, MemLp (Z t) 2 μ) {C σ2 : ℝ} (hZb : ∀ t, ‖toLpSeq Z hZ t‖ ≤ C)
+    (hmom : ∀ a b, ∫ ω, Z a ω * Z b ω ∂μ = if a = b then σ2 else 0) (t h : ℤ) :
+    inner ℝ (linearProcessLp ψ (toLpSeq Z hZ) (t + h)) (linearProcessLp ψ (toLpSeq Z hZ) t)
+      = σ2 * ∑' k, ψ k * ψ (k + h) :=
+  linearProcessLp_inner hψ hZb (inner_toLpSeq hZ hmom) t h
+
 end DeepWiki.TimeSeries
