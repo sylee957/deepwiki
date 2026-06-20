@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.ArmaProcesses
+import DeepWiki.TimeSeries.LinearProcess
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 3: Stationary ARMA Processes
@@ -124,30 +125,70 @@ theorem ar1_causal_iff (φ₁ : ℝ) :
     IsCausalPoly (1 - Polynomial.C φ₁ * Polynomial.X) ↔ |φ₁| < 1 :=
   isCausalPoly_ar1 φ₁
 
-/-! ### §3.1 (existence) and §3.2–§3.3 (MA(∞), the ARMA autocovariance), pp.88–93 — infra-blocked
+/-! ## §3.2 Moving Average Processes of Infinite Order (MA(∞)), pp.89–91
+
+The `L²` mean-square convergence of `∑ⱼ ψⱼ Zₜ₋ⱼ` and the resulting autocovariance — the analytic
+layer formerly flagged infra-blocked — **are now formalized** in `DeepWiki.TimeSeries.LinearProcess`
+(built over the complete space `Lp ℝ 2 μ`). The library's `linearProcessLp` is the *two-sided*
+general linear process `∑_{j∈ℤ} ψⱼ Zₜ₋ⱼ`; Definition 3.2.1's one-sided `MA(∞)` is the special case
+`ψⱼ = 0` for `j < 0`. -/
+
+/-- **Definition 3.2.1** (§3.2, p.89, eq 3.2.1), the moving average process of infinite order
+`MA(∞)`: `Xₜ = ∑_{j=0}^∞ ψⱼ Zₜ₋ⱼ` with `∑_{j=0}^∞ |ψⱼ| < ∞` and `Z ~ WN(0,σ²)`. The library's
+`linearProcessLp` (the two-sided `L²` `tsum` `∑_{j∈ℤ} ψⱼ Zₜ₋ⱼ`; the `MA(∞)` is the causal case
+`ψⱼ = 0` for `j < 0`). -/
+noncomputable abbrev def_3_2_1 := @DeepWiki.TimeSeries.linearProcessLp
+
+/-- **Definition 3.2.1 / Theorem 3.2.1** convergence (§3.2, pp.89–91): the defining series
+`∑ⱼ ψⱼ Zₜ₋ⱼ` converges in mean square (`L²`) when `∑ⱼ |ψⱼ| < ∞` and `Z` is uniformly `L²`-bounded,
+since `∑ⱼ ‖ψⱼ Zₜ₋ⱼ‖ ≤ C ∑ⱼ |ψⱼ| < ∞` and `Lp ℝ 2 μ` is complete. The library's
+`hasSum_linearProcessLp`. -/
+alias thm_3_2_1_conv := DeepWiki.TimeSeries.hasSum_linearProcessLp
+
+/-- **Theorem 3.2.1** (§3.2, p.91, eq 3.2.4), the `MA(∞)` autocovariance: the linear process is
+stationary with mean zero and `γ(k) = σ² ∑_{j=0}^∞ ψⱼ ψ_{j+|k|}`. The library's
+`linearProcessLp_inner` proves the two-sided `L²` form `⟪X_{t+h}, Xₜ⟫ = σ² ∑_{k∈ℤ} ψₖ ψ_{k+h}` for
+innovations orthogonal up to `σ²` (`⟪Zₐ,Z_b⟫ = σ²·[a=b]`); for a one-sided causal `ψ` this is
+`σ² ∑_{k≥0} ψₖ ψ_{k+|h|}` (eq 3.2.4), as `γ(h) = γ(−h)`. -/
+alias thm_3_2_1 := DeepWiki.TimeSeries.linearProcessLp_inner
+
+/-- **§2.7 ↔ §3.2 bridge** (the `L²` geometry behind eq 3.2.4): for a mean-zero process embedded in
+`L²`, the autocovariance is the inner product, `γ(h) = cov(X_{t+h}, Xₜ) = ⟪X_{t+h}, Xₜ⟫`. This
+identifies the `linearProcessLp_inner` value `σ² ∑ₖ ψₖ ψ_{k+h}` with the autocovariance `γ(h)`, and
+shows the orthogonality hypothesis `⟪Zₐ,Z_b⟫ = σ²·[a=b]` is exactly mean-zero white noise with
+`cov(Zₐ,Z_b) = σ²·[a=b]`. The library's `inner_eq_covariance`. -/
+alias innerProduct_eq_autocovariance := DeepWiki.TimeSeries.inner_eq_covariance
+
+-- Book-faithful restatement (step 5): Theorem 3.2.1's autocovariance γ(k)=σ²∑ⱼψⱼψ_{j+|k|}
+-- (eq 3.2.4), in the two-sided L² inner-product form at lag h.
+example {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → MeasureTheory.Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0)
+    (t h : ℤ) :
+    inner ℝ (linearProcessLp ψ Z (t + h)) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k * ψ (k + h) :=
+  linearProcessLp_inner hψ hZb hZorth t h
+
+/-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
-unique stationary solution `Xₜ = ∑_{j=-∞}^{∞} ψⱼ Zₜ₋ⱼ`, with `ψ` the Laurent expansion of
-`θ/φ` on an annulus `r⁻¹ < |z| < r` (eq 3.1.21).
+unique stationary solution `Xₜ = ∑_{j=-∞}^{∞} ψⱼ Zₜ₋ⱼ`, with `ψ` the Laurent expansion of `θ/φ`
+on an annulus `r⁻¹ < |z| < r` (eq 3.1.21). The *solution form* `∑ⱼ ψⱼ Zₜ₋ⱼ` and its `L²`
+convergence are now `linearProcessLp` / `hasSum_linearProcessLp`; what remains infra-blocked is the
+**Laurent/power-series reciprocal** producing the `ψ`-weights from `θ, φ`.
 
-**§3.2 (MA(∞) processes).** **Definition 3.2.1** (`Xₜ = ∑_{j≥0} ψⱼ Zₜ₋ⱼ`, `∑|ψⱼ| < ∞`),
-**Examples 3.2.1–3.2.3** (MA(q); causal AR(1) as `ψⱼ = φⱼ`; causal ARMA as `ψ = θ/φ`),
-**Proposition 3.2.1** (a zero-mean stationary process that is `q`-correlated — `γ(h) = 0` for
-`|h| > q`, `γ(q) ≠ 0` — is an MA(q), via the `L²` innovations/projection argument of §2.3–§2.4),
-and **Theorem 3.2.1** (the MA(∞) autocovariance `γ(h) = σ² ∑_{j≥0} ψⱼ ψ_{j+|h|}`).
+**§3.2 remainder.** **Examples 3.2.1–3.2.3** (MA(q) as `ψⱼ = θⱼ`; causal AR(1) as `ψⱼ = φʲ`; causal
+ARMA as `∑ψⱼzʲ = θ(z)/φ(z)`) and **Proposition 3.2.1** (a zero-mean stationary `q`-correlated process
+— `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q), via the `L²` innovations/projection argument of
+§2.3–§2.4) remain unformalized: the ARMA examples need the `θ/φ` reciprocal, and Prop 3.2.1 needs the
+innovations algorithm.
 
-**§3.3 (computing the ARMA autocovariance).** The `ψ`-weight method (`γ(k) = σ² ∑ⱼ ψⱼ ψ_{j+|k|}`,
-`ψ = θ/φ`, with the recursion 3.3.3 for `ψⱼ`) and the homogeneous-difference-equation method.
+**§3.3 (computing the ARMA autocovariance).** The **First Method** formula
+`γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1 (`thm_3_2_1`) specialized to the
+ARMA `ψ`-weights — the formula is now proved. What remains infra-blocked is the determination of
+those weights: the reciprocal `ψ(z) = θ(z)/φ(z)` (eq 3.3.2) with its recursion
+`ψⱼ − ∑_{0<k≤j} φₖ ψⱼ₋ₖ = θⱼ` (eq 3.3.3), and the homogeneous-difference-equation (Second) method.
 
-All of this rests on the MA(∞) representation and the absolute / mean-square convergence of
-`∑ⱼ ψⱼ Zₜ₋ⱼ` (`∑|ψⱼ| < ∞`) — and, for §3.3, the power-series reciprocal `θ/φ`; that analytic
-layer is **not yet formalized** (infra-blocked, like the deferred analytic items elsewhere in
-the project). The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the one
-algebraically-finite special case; the `lagPoly`-as-finite-sum expansion it needs,
-`(p(B) x) t = ∑ₖ p.coeff k • x (t − k)`, is now available (`lagPoly_apply`, surfaced here as the
-expanded ARMA and MA equations `eq_3_1_4` and `ex_3_1_1_eq_apply`), leaving only the `q`-fold
-double-sum covariance computation, which is deferred. The concrete low-order cases — the MA(1) and
-MA(2) autocovariances — are proved in `DeepWiki.TimeSeries.ProcessExamples` (`maProcess1`,
-`maProcess2`). -/
+The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the algebraically-finite special
+case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
+(`maProcess1`, `maProcess2`). -/
 
 end DeepWiki.Ts
