@@ -40,6 +40,16 @@ theorem armaPsi_coeff_recursion {φ θ : Polynomial ℝ}
   rw [← h]
   exact Finset.sum_congr rfl fun k _ => by rw [Polynomial.coeff_coe]
 
+/-- For a pure `AR(p)` process (`θ = 1`), the `ψ`-weight series is the reciprocal `ψ = 1/φ`. -/
+@[simp] theorem armaPsi_one (φ : Polynomial ℝ) : armaPsi φ 1 = (φ : PowerSeries ℝ)⁻¹ := by
+  rw [armaPsi, Polynomial.coe_one, mul_one]
+
+/-- The leading `ψ`-weight `ψ₀ = θ₀/φ₀` (the `j = 0` base case of the recursion). -/
+theorem constantCoeff_armaPsi (φ θ : Polynomial ℝ) :
+    constantCoeff (armaPsi φ θ) = (φ.coeff 0)⁻¹ * θ.coeff 0 := by
+  rw [armaPsi, map_mul, constantCoeff_inv, Polynomial.constantCoeff_coe,
+    Polynomial.constantCoeff_coe]
+
 /-- The geometric series `∑ⱼ aʲ Xʲ` is the inverse of `1 − a X` in `ℝ⟦X⟧`. -/
 theorem inv_one_sub_C_mul_X (a : ℝ) :
     (1 - C a * X : PowerSeries ℝ)⁻¹ = mk fun j => a ^ j := by
