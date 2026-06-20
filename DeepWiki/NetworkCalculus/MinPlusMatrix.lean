@@ -268,6 +268,36 @@ theorem IsPseudoPeriodicPow.lam_unique {n : ℕ} {A : Matrix (Fin n) (Fin n) MP}
   have e3 : (c : ℤ) * lam₁ = (c : ℤ) * lam₂ := by exact_mod_cast e2
   exact mul_left_cancel₀ (by exact_mod_cast h₁.1.ne') e3
 
+/-- **Cyclicity is closed under positive multiples**: if `A` is pseudo-periodic with cyclicity `c`
+(rank `K`, eigenvalue `λ`) then it is also pseudo-periodic with cyclicity `m·c` for any `m ≥ 1` — the
+same eigenvalue, the increment scaling to `(m·c)·λ`. Proved by applying the `c`-step relation `m`
+times (`Nat.le_induction`, tropical `trop a · trop b = trop (a+b)`). The cyclicity is *a* period, not
+the minimal one; this records that any multiple works. -/
+theorem IsPseudoPeriodicPow.mul_left {n : ℕ} {A : Matrix (Fin n) (Fin n) MP} {c K : ℕ}
+    {lam : ℤ} (h : IsPseudoPeriodicPow A c K lam) :
+    ∀ m, 0 < m → IsPseudoPeriodicPow A (m * c) K lam := by
+  intro m hm
+  induction m, hm using Nat.le_induction with
+  | base => rw [Nat.succ_mul, Nat.zero_mul, Nat.zero_add]; exact h
+  | succ m hm ih =>
+    refine ⟨Nat.mul_pos (Nat.succ_pos m) h.1, fun k hk i j => ?_⟩
+    have hstep := h.2 (k + m * c) (le_trans hk (Nat.le_add_right k (m * c))) i j
+    have hih := ih.2 k hk i j
+    have hcast : (((m * c : ℕ) : ℤ) * lam : WithTop ℤ) + (((c : ℕ) : ℤ) * lam : WithTop ℤ)
+               = ((((m + 1) * c : ℕ) : ℤ) * lam : WithTop ℤ) := by
+      rw [← WithTop.coe_add]; congr 1; push_cast; ring
+    calc (A ^ (k + (m + 1) * c)) i j
+        = (A ^ (k + m * c + c)) i j := by rw [show k + (m + 1) * c = k + m * c + c by ring]
+      _ = (A ^ (k + m * c)) i j * Tropical.trop (((c : ℤ) * lam : ℤ) : WithTop ℤ) := hstep
+      _ = (A ^ k) i j * Tropical.trop ((((m * c : ℕ) : ℤ) * lam : ℤ) : WithTop ℤ)
+            * Tropical.trop (((c : ℤ) * lam : ℤ) : WithTop ℤ) := by rw [hih]
+      _ = (A ^ k) i j * (Tropical.trop ((((m * c : ℕ) : ℤ) * lam : ℤ) : WithTop ℤ)
+            * Tropical.trop (((c : ℤ) * lam : ℤ) : WithTop ℤ)) := by rw [mul_assoc]
+      _ = (A ^ k) i j * Tropical.trop (((((m * c : ℕ) : ℤ) * lam : ℤ) : WithTop ℤ)
+            + (((c : ℤ) * lam : ℤ) : WithTop ℤ)) := by rw [← Tropical.trop_add]
+      _ = (A ^ k) i j * Tropical.trop (((((m + 1) * c : ℕ) : ℤ) * lam : ℤ) : WithTop ℤ) := by
+            rw [hcast]
+
 /-- `exA` is multiplicatively idempotent (`exA ⊗ exA = exA`): its `0`-weight self-loops make it a
 closure operator. -/
 theorem exA_mul_self : exA * exA = exA := by native_decide
