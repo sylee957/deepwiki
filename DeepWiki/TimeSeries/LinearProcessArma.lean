@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.LinearProcess
+import DeepWiki.TimeSeries.LinearProcessExamples
 import DeepWiki.TimeSeries.ArmaProcesses
 
 /-! # The linear process over ARMA white noise (Theorem 3.2.1)
@@ -65,5 +66,21 @@ theorem arma_acvf_homogeneous {ψ : ℤ → ℝ} (hψ : Summable ψ) (φ : Polyn
       simp_rw [show ∀ k : ℕ, j + (h - (k : ℤ)) = (j + h) - k from fun k => by ring]
       exact hrec (j + h) (by omega)
     rw [hconv, mul_zero]
+
+/-- **Example 3.2.1 (faithful `MA(q) = MA(∞)`):** the `L²` linear process built from the finite
+`MA(q)` filter over embedded square-integrable noise agrees, almost everywhere, with the book's
+`MA(q)` process `θ(B) Z = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` — connecting the abstract `Lp` `MA(∞)` construction to
+the random-variable process. -/
+theorem coeFn_linearProcessLp_maqFilter {Z : ℤ → Ω → ℝ} (hmem : ∀ t, MemLp (Z t) 2 μ)
+    (θ : Polynomial ℝ) (t : ℤ) :
+    (linearProcessLp (maqFilter θ) (toLpSeq Z hmem) t : Ω → ℝ) =ᵐ[μ] (lagPoly θ Z) t := by
+  rw [linearProcessLp_maqFilter_eq, lagPoly_apply]
+  refine (Lp.coeFn_finsetSum _ _).trans ?_
+  have h : ∀ i ∈ Finset.range (θ.natDegree + 1),
+      (⇑(θ.coeff i • toLpSeq Z hmem (t - i)) : Ω → ℝ) =ᵐ[μ] θ.coeff i • Z (t - i) :=
+    fun i _ => (Lp.coeFn_smul _ _).trans ((MemLp.coeFn_toLp _).const_smul (θ.coeff i))
+  filter_upwards [(Filter.eventually_all_finset _).mpr fun i hi => h i hi] with ω hω
+  simp only [Finset.sum_apply]
+  exact Finset.sum_congr rfl fun i hi => hω i hi
 
 end DeepWiki.TimeSeries
