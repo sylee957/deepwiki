@@ -57,6 +57,23 @@ theorem untrop_pow_succ_apply {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ
   rw [pow_succ, Matrix.mul_apply, Finset.untrop_sum']
   rfl
 
+/-- **Concatenation bound**: splitting a length-`p+q` walk `i ⤳ j` through any *fixed* intermediate
+vertex `k` (as `i ⤳ k` of length `p`, then `k ⤳ j` of length `q`) over-estimates the optimum:
+`(Aᵖ⁺ᵠ)ᵢⱼ ≤ (Aᵖ)ᵢₖ + (Aᵠ)ₖⱼ` on underlying values. Immediate from `A^(p+q) = A^p * A^q` (`pow_add`)
+and `inf ≤ term`. The workhorse for the super- and sub-additivity arguments behind the eigenvalue. -/
+theorem untrop_pow_add_le {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p q : ℕ) (i j k : Fin n) :
+    ((A ^ (p + q)) i j).untrop ≤ ((A ^ p) i k).untrop + ((A ^ q) k j).untrop := by
+  rw [pow_add, Matrix.mul_apply, Finset.untrop_sum']
+  exact Finset.inf_le (Finset.mem_univ k)
+
+/-- **Diagonal subadditivity** (Fekete-ready): the underlying diagonal weights `aₘ := (Aᵐ)ᵢᵢ` are
+subadditive, `aₚ₊ᵩ ≤ aₚ + aᵩ` — concatenating a length-`p` circuit at `i` with a length-`q` circuit
+at `i` yields a length-`p+q` circuit at `i`. By Fekete's lemma `infₘ aₘ/m` then exists; it is the
+min mean circuit weight through `i`, i.e. the min-plus eigenvalue. -/
+theorem untrop_pow_add_le_diag {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p q : ℕ) (i : Fin n) :
+    ((A ^ (p + q)) i i).untrop ≤ ((A ^ p) i i).untrop + ((A ^ q) i i).untrop :=
+  untrop_pow_add_le A p q i i i
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
