@@ -500,6 +500,74 @@ theorem exists_lt_untrop_pow_le {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
       _ ≤ walkWeight A i l := hl'wt
       _ = ((A ^ k) i j).untrop := hw
 
+/-- **Rate-`μ` reduction** (general growth, the deflation generalizing `walkWeight_reduce_of_nonneg`):
+for *any* integer rate `μ` valid on short circuits (`μ ≤ min mean`), every walk has one of length `≤ n`
+with the same endpoints whose `μ`-*deflated* weight is no larger — stated subtraction-free as
+`walkWeight l' + μ·|l| ≤ walkWeight l + μ·|l'|` (i.e. `weight l' − μ·|l'| ≤ weight l − μ·|l|`). Deleting a
+circuit drops the deflated weight (its weight is `≥ μ·length`), and deflated weight is non-increasing. -/
+theorem walkWeight_reduce_of_rate {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : ℤ)
+    (hμ : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(μ * l₀.length) : WithTop ℤ) ≤ walkWeight A v l₀) :
+    ∀ (i : Fin n) (l : List (Fin n)),
+      ∃ l', l'.length ≤ n ∧ l'.getLastD i = l.getLastD i ∧
+        walkWeight A i l' + (↑(μ * (l.length : ℤ)) : WithTop ℤ)
+          ≤ walkWeight A i l + (↑(μ * (l'.length : ℤ)) : WithTop ℤ) := by
+  have hall := walkWeight_ge_of_short A μ hμ
+  suffices H : ∀ N (i : Fin n) (l : List (Fin n)), l.length = N →
+      ∃ l', l'.length ≤ n ∧ l'.getLastD i = l.getLastD i ∧
+        walkWeight A i l' + (↑(μ * (l.length : ℤ)) : WithTop ℤ)
+          ≤ walkWeight A i l + (↑(μ * (l'.length : ℤ)) : WithTop ℤ) by
+    intro i l; exact H l.length i l rfl
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro i l hN
+    by_cases hle : l.length ≤ n
+    · exact ⟨l, hle, rfl, le_refl _⟩
+    · rw [not_le] at hle
+      obtain ⟨l₁, lc, v, hl1len, hlclen, hl1end, hcv, hsum, hwt⟩ :=
+        exists_walkWeight_shorter_proper A i l hle
+      obtain ⟨l', hl'len, hl'end, hl'inv⟩ := ih l₁.length (by omega) i l₁ rfl
+      refine ⟨l', hl'len, by rw [hl'end, hl1end], ?_⟩
+      have hcoe : (↑(μ * (l₁.length : ℤ)) : WithTop ℤ) + ↑(μ * (lc.length : ℤ))
+          = ↑(μ * (l.length : ℤ)) := by
+        rw [← WithTop.coe_add]; congr 1
+        have : (l.length : ℤ) = l₁.length + lc.length := by exact_mod_cast hsum.symm
+        rw [this]; ring
+      have step1 : walkWeight A i l₁ + (↑(μ * (lc.length : ℤ)) : WithTop ℤ) ≤ walkWeight A i l := by
+        rw [hwt]; gcongr; exact hall v lc hcv
+      calc walkWeight A i l' + (↑(μ * (l.length : ℤ)) : WithTop ℤ)
+          = walkWeight A i l' + ↑(μ * (l₁.length : ℤ)) + ↑(μ * (lc.length : ℤ)) := by
+            rw [add_assoc, hcoe]
+        _ ≤ walkWeight A i l₁ + ↑(μ * (l'.length : ℤ)) + ↑(μ * (lc.length : ℤ)) := by gcongr
+        _ = walkWeight A i l₁ + ↑(μ * (lc.length : ℤ)) + ↑(μ * (l'.length : ℤ)) := by
+            rw [add_right_comm]
+        _ ≤ walkWeight A i l + ↑(μ * (l'.length : ℤ)) := by gcongr
+
+/-- **Rate-`μ` Kleene finiteness** (matrix form of the general growth bound): with rate `μ` valid on
+short circuits, for every power `k` some power `m ≤ n` deflation-beats it,
+`(Aᵐ)ᵢⱼ − μ·m ≤ (Aᵏ)ᵢⱼ − μ·k` (subtraction-free: `(Aᵐ)ᵢⱼ + μ·k ≤ (Aᵏ)ᵢⱼ + μ·m`). So `(Aᵏ)ᵢⱼ ≥ μ·k + C`
+for a constant `C` (the min deflated power below `n`): the powers grow at least linearly at rate `μ`.
+Taking `μ` the min mean circuit, this is the min-plus eigenvalue's linear-growth lower envelope. -/
+theorem exists_le_untrop_pow_deflate {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (μ : ℤ)
+    (hμ : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(μ * l₀.length) : WithTop ℤ) ≤ walkWeight A v l₀)
+    (i j : Fin n) (k : ℕ) :
+    ∃ m, m ≤ n ∧ ((A ^ m) i j).untrop + (↑(μ * (k : ℤ)) : WithTop ℤ)
+      ≤ ((A ^ k) i j).untrop + (↑(μ * (m : ℤ)) : WithTop ℤ) := by
+  by_cases htop : ((A ^ k) i j).untrop = ⊤
+  · exact ⟨0, Nat.zero_le n, by rw [htop, top_add]; exact le_top⟩
+  · obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A k i j htop
+    obtain ⟨l', hl'len, hl'end, hl'inv⟩ := walkWeight_reduce_of_rate A μ hμ i l
+    refine ⟨l'.length, hl'len, ?_⟩
+    have hle := untrop_pow_le_walkWeight A i l'
+    rw [hl'end, hend] at hle
+    calc ((A ^ l'.length) i j).untrop + (↑(μ * (k : ℤ)) : WithTop ℤ)
+        ≤ walkWeight A i l' + ↑(μ * (k : ℤ)) := by gcongr
+      _ = walkWeight A i l' + ↑(μ * (l.length : ℤ)) := by rw [hlen]
+      _ ≤ walkWeight A i l + ↑(μ * (l'.length : ℤ)) := hl'inv
+      _ = ((A ^ k) i j).untrop + ↑(μ * (l'.length : ℤ)) := by rw [hw]
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
