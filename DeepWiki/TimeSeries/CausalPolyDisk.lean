@@ -42,6 +42,13 @@ theorem IsCausalPoly.exists_radius_gt_one {φ : ℝ[X]} (hφ : IsCausalPoly φ) 
 
 open scoped NNReal ENNReal
 
+/-- `z ↦ φ(z)` is complex-differentiable for a real polynomial `φ` — it is a polynomial function
+`∑ᵢ φᵢ zⁱ`, differentiated term by term. -/
+theorem differentiable_aeval_ofReal (φ : ℝ[X]) :
+    Differentiable ℂ (fun z : ℂ => Polynomial.aeval z φ) := by
+  simp_rw [Polynomial.aeval_eq_sum_range]
+  exact Differentiable.fun_sum fun i _ => (differentiable_pow i).const_smul (φ.coeff i)
+
 /-- **Causal ⟹ `∑|ψⱼ| < ∞` (analytic `ψ`-weights):** the Cauchy power-series (Taylor) coefficients
 of `1/φ` at `0` are absolutely summable. This is the `MA(∞)` weight summability — the analytic
 content that the formal `armaPsi = θ/φ` lacked. `1/φ` is analytic on a disk of radius `R > 1`
@@ -56,14 +63,33 @@ theorem summable_norm_cauchyPowerSeries_inv_aeval {φ : ℝ[X]} (hφ : IsCausalP
   refine ⟨⟨R₀, hR0⟩, by exact_mod_cast hR1, ?_⟩
   set R : ℝ≥0 := ⟨R₀, hR0⟩ with hRdef
   set g : ℂ → ℂ := fun z => (Polynomial.aeval z φ)⁻¹ with hg
-  have hdiff : Differentiable ℂ (fun z : ℂ => Polynomial.aeval z φ) := by
-    simp_rw [Polynomial.aeval_eq_sum_range]
-    exact Differentiable.fun_sum fun i _ => (differentiable_pow i).const_smul (φ.coeff i)
   have hd : DifferentiableOn ℂ g (Metric.closedBall 0 (R : ℝ)) := by
-    apply DifferentiableOn.inv hdiff.differentiableOn
+    apply DifferentiableOn.inv (differentiable_aeval_ofReal φ).differentiableOn
     intro z hz
     rw [Metric.mem_closedBall, dist_zero_right] at hz
     exact hr0 z (lt_of_le_of_lt hz hRr)
+  have hball := hd.hasFPowerSeriesOnBall (show (0 : ℝ≥0) < R by exact_mod_cast (by linarith : (0:ℝ) < R₀))
+  have hrad : ((1 : ℝ≥0) : ℝ≥0∞) < (cauchyPowerSeries g 0 R).radius :=
+    lt_of_lt_of_le (by exact_mod_cast hR1) hball.r_le
+  simpa using (cauchyPowerSeries g 0 R).summable_norm_mul_pow hrad
+
+/-- **Causal ⟹ `∑|ψⱼ| < ∞` for the full `ARMA(p,q)` weights `ψ = θ/φ`:** the Cauchy (Taylor)
+coefficients of `θ(z)/φ(z)` at `0` are absolutely summable. Same argument as the `1/φ` case —
+`θ/φ = θ · (1/φ)` is analytic on the zero-free disk of radius `> 1`. -/
+theorem summable_norm_cauchyPowerSeries_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ Summable fun n : ℕ =>
+      ‖cauchyPowerSeries (fun z : ℂ => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) 0 R n‖ := by
+  obtain ⟨r, hr1, hr0⟩ := hφ.exists_radius_gt_one
+  obtain ⟨R₀, hR1, hRr⟩ := exists_between hr1
+  have hR0 : (0 : ℝ) ≤ R₀ := by linarith
+  refine ⟨⟨R₀, hR0⟩, by exact_mod_cast hR1, ?_⟩
+  set R : ℝ≥0 := ⟨R₀, hR0⟩ with hRdef
+  set g : ℂ → ℂ := fun z => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹ with hg
+  have hd : DifferentiableOn ℂ g (Metric.closedBall 0 (R : ℝ)) :=
+    (differentiable_aeval_ofReal θ).differentiableOn.mul
+      (DifferentiableOn.inv (differentiable_aeval_ofReal φ).differentiableOn fun z hz => by
+        rw [Metric.mem_closedBall, dist_zero_right] at hz
+        exact hr0 z (lt_of_le_of_lt hz hRr))
   have hball := hd.hasFPowerSeriesOnBall (show (0 : ℝ≥0) < R by exact_mod_cast (by linarith : (0:ℝ) < R₀))
   have hrad : ((1 : ℝ≥0) : ℝ≥0∞) < (cauchyPowerSeries g 0 R).radius :=
     lt_of_lt_of_le (by exact_mod_cast hR1) hball.r_le
