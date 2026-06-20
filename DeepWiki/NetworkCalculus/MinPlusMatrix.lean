@@ -4,15 +4,25 @@ import Mathlib.Data.Matrix.Mul
 import Mathlib.LinearAlgebra.Matrix.Notation
 import Mathlib.Data.Fintype.Pigeonhole
 
-/-! # Min-plus matrices — foundation for the sub-additive-closure cyclicity theorem
+/-! # Min-plus matrices — spectral theory toward the sub-additive-closure cyclicity theorem
 The min-plus semiring `(ℤ ∪ {+∞}, min, +)` is Mathlib's `Tropical (WithTop ℤ)`: addition is `min`,
 multiplication is `+`, `𝟘 = +∞ = ⊤`, `𝟙 = (0 : ℤ)`. Matrices over it inherit the (non-commutative)
-semiring product `(A * B)ᵢⱼ = ⨁ₖ Aᵢₖ ⊗ Bₖⱼ = ⨅ₖ (Aᵢₖ + Bₖⱼ)` and powers `Aᵏ` from Mathlib.
+semiring product `(A * B)ᵢⱼ = ⨁ₖ Aᵢₖ ⊗ Bₖⱼ = ⨅ₖ (Aᵢₖ + Bₖⱼ)` and powers `Aᵏ` from Mathlib (`WithTop ℤ`
+has no `InfSet`, so the product `⨅` is spelled with `Finset.inf` via `Finset.untrop_sum'`).
 
-This is the first step toward the **cyclicity theorem** (`Aᵏ⁺ᵈ = Aᵏ + λd` past a finite rank, BCOQ
-"Synchronization and Linearity" Thm 3.112), which computes the sub-additive closure `f* = ⨅ₘ f^⊗ᵐ`
-(the closure is *not* a finite truncation of `f^⊗ᵐ` — see `DeepWiki.UppSeq` — but a matrix power that
-genuinely stabilizes). A research-scale arc; this file builds the algebraic substrate. -/
+Built here, toward BCOQ "Synchronization and Linearity" Thm 3.112:
+* **Walk interpretation** — `(Aᵐ)ᵢⱼ` is the minimum weight of a length-`m` walk `i ⤳ j`
+  (`untrop_pow_le_walkWeight` and `exists_walkWeight_eq`), with finiteness `untrop_pow_ne_top_iff`.
+* **Eigenvalue bounds** — upper `untrop_pow_mul_le_nsmul_walkWeight` (iterating a circuit) and lower
+  `walkWeight_ge_of_short` / `untrop_pow_diag_ge` (an integer rate valid on short circuits propagates),
+  the latter via circuit extraction (`exists_circuit_extraction(_proper)`).
+* **Closure termination** — with nonnegative circuits, walks collapse to length `< n`
+  (`walkWeight_reduce_of_nonneg`), so the Kleene star is the finite truncation `⨁_{k<n} Aᵏ`
+  (`exists_lt_untrop_pow_le`): the sub-additive closure `f* = ⨁ₘ f^⊗ᵐ` stabilizes at rank `n`.
+* **Cyclicity predicate** — `IsPseudoPeriodicPow` (`Aᵏ⁺ᶜ = Aᵏ ⊗ trop(c·λ)`) with the stabilizing-powers
+  case, eigenvalue uniqueness, closure under multiples, and concrete witnesses.
+
+Remaining (research-scale): the general eigenvalue normalization and the full cyclicity period. -/
 
 namespace DeepWiki.MinPlusMatrix
 
