@@ -791,6 +791,41 @@ theorem untrop_pow_mul_eq_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
     exact le_of_mul_le_mul_left hh hpos
   exact_mod_cast le_antisymm hup h2
 
+/-! ### Irreducibility, toward the two-sided growth bound
+The lower envelope `(Aᵐ)ᵢᵢ ≥ λ·m` holds unconditionally; the matching *upper* envelope
+`(Aᵐ)ᵢⱼ ≤ λ·m + C` needs the graph to be **strongly connected** (irreducible) so every pair is
+joined and the critical circuit can be routed through. These record irreducibility and the basic
+reachability fact (joined pairs are joined within `< n` steps). -/
+
+/-- **Irreducible** min-plus matrix: every ordered pair `(i, j)` is joined by a finite-weight walk
+(some power `(Aᵐ)ᵢⱼ` is finite) — the (min,plus) form of strong connectivity. -/
+def IsIrreducible {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) : Prop :=
+  ∀ i j, ∃ m, ((A ^ m) i j).untrop ≠ ⊤
+
+/-- **Reachability within `n` steps**: if any walk joins `i ⤳ j` (some `(Aᵐ)ᵢⱼ` finite), then one of
+length `< n` does. A length-`≥ n` walk repeats a vertex; deleting the circuit keeps it finite-weight
+and shorter (`exists_walkWeight_shorter`), so it reduces to a simple path. -/
+theorem exists_lt_untrop_pow_ne_top {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) :
+    ∀ m, ((A ^ m) i j).untrop ≠ ⊤ → ∃ m', m' < n ∧ ((A ^ m') i j).untrop ≠ ⊤ := by
+  intro m
+  induction m using Nat.strong_induction_on with
+  | _ m ih =>
+    intro h
+    by_cases hm : m < n
+    · exact ⟨m, hm, h⟩
+    · rw [not_lt] at hm
+      obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A m i j h
+      have hml : n ≤ l.length := by rw [hlen]; exact hm
+      obtain ⟨l', lc, v, hl'len, hl'end, hlcne, hcv, hwt⟩ := exists_walkWeight_shorter A i l hml
+      have hsum_ne : walkWeight A i l' + walkWeight A v lc ≠ ⊤ := by rw [← hwt, hw]; exact h
+      have hl'fin : walkWeight A i l' ≠ ⊤ := (WithTop.add_ne_top.mp hsum_ne).1
+      have hpfin : ((A ^ l'.length) i j).untrop ≠ ⊤ := by
+        have hle := untrop_pow_le_walkWeight A i l'
+        rw [hl'end, hend] at hle
+        exact ne_top_of_le_ne_top hl'fin hle
+      rw [hlen] at hl'len
+      exact ih l'.length hl'len hpfin
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
