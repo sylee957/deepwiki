@@ -469,6 +469,27 @@ theorem walkWeight_reduce_of_nonneg {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
       calc walkWeight A i l' ≤ walkWeight A i l₁ := hl'wt
         _ ≤ walkWeight A i l := by rw [hwt]; exact le_add_of_nonneg_right (hall v lc hcv)
 
+/-- **Kleene-star finiteness** (matrix form of closure termination): with nonnegative circuits, for
+every power `k` some power `m < n` is entrywise at least as good, `(Aᵐ)ᵢⱼ ≤ (Aᵏ)ᵢⱼ`. So the (min,plus)
+star `⨁ₖ Aᵏ = ⨁_{m<n} Aᵏ` is reached by powers below `n` — the sub-additive closure stabilizes at rank
+`n`. The `+∞` entry takes `m = 0`; a finite entry's optimal length-`k` walk reduces (by
+`walkWeight_reduce_of_nonneg`) to a length-`< n` walk of no greater weight, which `(Aᵐ)ᵢⱼ` underbids. -/
+theorem exists_lt_untrop_pow_le {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hnn : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (0 : WithTop ℤ) ≤ walkWeight A v l₀)
+    (i j : Fin n) (k : ℕ) :
+    ∃ m, m < n ∧ ((A ^ m) i j).untrop ≤ ((A ^ k) i j).untrop := by
+  by_cases htop : ((A ^ k) i j).untrop = ⊤
+  · exact ⟨0, i.pos, by rw [htop]; exact le_top⟩
+  · obtain ⟨l, hlen, hend, hw⟩ := exists_walkWeight_eq A k i j htop
+    obtain ⟨l', hl'len, hl'end, hl'wt⟩ := walkWeight_reduce_of_nonneg A hnn i l
+    refine ⟨l'.length, hl'len, ?_⟩
+    have hle := untrop_pow_le_walkWeight A i l'
+    rw [hl'end, hend] at hle
+    calc ((A ^ l'.length) i j).untrop ≤ walkWeight A i l' := hle
+      _ ≤ walkWeight A i l := hl'wt
+      _ = ((A ^ k) i j).untrop := hw
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
