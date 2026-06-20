@@ -147,6 +147,31 @@ theorem exists_walkWeight_eq {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
     · rw [List.getLastD_cons]; exact hend'
     · rw [walkWeight_cons, hw', ← hk₀]
 
+/-- **Diagonal grows at most linearly** (the subadditive Fekete estimate, integer form): iterating a
+length-`p` loop at `i` `k` times bounds the diagonal, `(Aᵏᵖ)ᵢᵢ ≤ k • (Aᵖ)ᵢᵢ`. By induction on `k`
+from `untrop_pow_add_le_diag`. No analysis needed — the `•` is `ℕ`-scaling on `WithTop ℤ`. -/
+theorem untrop_pow_mul_le_nsmul {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (p : ℕ) (i : Fin n) (k : ℕ) :
+    ((A ^ (k * p)) i i).untrop ≤ k • ((A ^ p) i i).untrop := by
+  induction k with
+  | zero => simp [Matrix.one_apply_eq]
+  | succ k ih =>
+    rw [Nat.succ_mul, succ_nsmul]
+    exact le_trans (untrop_pow_add_le_diag A (k * p) p i) (by gcongr)
+
+/-- **Eigenvalue upper bound via an explicit circuit**: any circuit `l` at `i` (length `p`, returning
+to `i`, weight `w`) caps the diagonal growth — `(Aᵏᵖ)ᵢᵢ ≤ k • w` (traverse the circuit `k` times).
+So the min-plus eigenvalue `λ = limₖ (Aᵏᵖ)ᵢᵢ / (kp)` is `≤ w / p`, the circuit's mean weight: every
+circuit's mean is an upper bound for `λ`. Combines `untrop_pow_mul_le_nsmul` with the walk bound. -/
+theorem untrop_pow_mul_le_nsmul_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (i : Fin n) (l : List (Fin n)) (hl : l.getLastD i = i) (k : ℕ) :
+    ((A ^ (k * l.length)) i i).untrop ≤ k • walkWeight A i l := by
+  have hc : ((A ^ l.length) i i).untrop ≤ walkWeight A i l := by
+    have h := untrop_pow_le_walkWeight A i l
+    rwa [hl] at h
+  calc ((A ^ (k * l.length)) i i).untrop
+      ≤ k • ((A ^ l.length) i i).untrop := untrop_pow_mul_le_nsmul A l.length i k
+    _ ≤ k • walkWeight A i l := by gcongr
+
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
 def HasEdge {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (i j : Fin n) : Prop := A i j ≠ 0
