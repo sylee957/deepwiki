@@ -3,6 +3,7 @@ import Mathlib.Algebra.Tropical.BigOperators
 import Mathlib.Data.Matrix.Mul
 import Mathlib.LinearAlgebra.Matrix.Notation
 import Mathlib.Data.Fintype.Pigeonhole
+import Mathlib.Algebra.Order.Field.Rat
 
 /-! # Min-plus matrices — spectral theory toward the sub-additive-closure cyclicity theorem
 The min-plus semiring `(ℤ ∪ {+∞}, min, +)` is Mathlib's `Tropical (WithTop ℤ)`: addition is `min`,
@@ -704,6 +705,56 @@ theorem minMeanCycle_eq_top_iff {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
   · intro h vp hmem
     simp only [Finset.mem_product, Finset.mem_univ, Finset.mem_Icc, true_and] at hmem
     exact cycleMean_top A vp.1 vp.2 (h vp.1 vp.2 hmem.1 hmem.2)
+
+/-- **The eigenvalue governs diagonal growth** (the dynamical capstone): if `A` has a circuit
+(`λ(A) ≠ +∞`), then `λ(A) = w₀/p₀` for an explicit short critical circuit, and the diagonal grows at
+least at rate `λ` — `w₀·k ≤ p₀·(Aᵏ)ᵢᵢ`, i.e. `(Aᵏ)ᵢᵢ ≥ λ·k`, for every `i, k`. Combines the achieved
+eigenvalue (`minMeanCycle_eq`) with the scaled lower bound (`untrop_pow_diag_ge_scaled`), discharging
+its hypothesis by cross-multiplying `λ ≤ cycleMean` (`minMeanCycle_le`). The sharp, rational-rate form
+of "powers grow linearly at the eigenvalue". -/
+theorem untrop_pow_diag_ge_minMeanCycle {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
+    (hlam_ne : minMeanCycle A ≠ ⊤) :
+    ∃ (w₀ : ℤ) (p₀ : ℕ), 1 ≤ p₀ ∧ p₀ ≤ n ∧
+      minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) ∧
+      ∀ (i : Fin n) (k : ℕ), (↑(w₀ * (k : ℤ)) : WithTop ℤ) ≤ p₀ • ((A ^ k) i i).untrop := by
+  have hn : 1 ≤ n := by
+    rcases Nat.eq_zero_or_pos n with h | h
+    · exfalso; apply hlam_ne; subst h
+      rw [minMeanCycle, Finset.Icc_eq_empty (by omega : ¬ (1:ℕ) ≤ 0), Finset.product_empty,
+        Finset.inf_empty]
+    · exact h
+  obtain ⟨v₀, p₀, hp1, hpn, heq⟩ := minMeanCycle_eq A hn
+  have hfin : ((A ^ p₀) v₀ v₀).untrop ≠ ⊤ :=
+    fun htop => hlam_ne (by rw [heq, cycleMean_top A v₀ p₀ htop])
+  obtain ⟨w₀, hw₀⟩ := WithTop.ne_top_iff_exists.mp hfin
+  have hlam : minMeanCycle A = (((w₀ : ℚ) / (p₀ : ℚ) : ℚ) : WithTop ℚ) := by
+    rw [heq, cycleMean_coe A v₀ p₀ w₀ hw₀.symm]
+  have hsh : ∀ (v : Fin n) (l₀ : List (Fin n)), l₀.getLastD v = v → l₀.length ≤ n →
+      (↑(w₀ * l₀.length) : WithTop ℤ) ≤ p₀ • walkWeight A v l₀ := by
+    intro v l₀ hcl hp
+    rcases Nat.eq_zero_or_pos l₀.length with h0 | hpos
+    · obtain rfl := List.length_eq_zero_iff.mp h0
+      simp
+    · have hle : ((A ^ l₀.length) v v).untrop ≤ walkWeight A v l₀ := by
+        have h := untrop_pow_le_walkWeight A v l₀; rwa [hcl] at h
+      by_cases htop : ((A ^ l₀.length) v v).untrop = ⊤
+      · obtain ⟨p', rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : p₀ ≠ 0)
+        have hwt : walkWeight A v l₀ = ⊤ := top_le_iff.mp (htop ▸ hle)
+        rw [hwt, succ_nsmul, add_top]; exact le_top
+      · obtain ⟨z, hz⟩ := WithTop.ne_top_iff_exists.mp htop
+        have hml := minMeanCycle_le A v l₀.length hpos hp
+        rw [hlam, cycleMean_coe A v l₀.length z hz.symm, WithTop.coe_le_coe] at hml
+        have hcross : w₀ * (l₀.length : ℤ) ≤ z * (p₀ : ℤ) := by
+          have hp0 : (0:ℚ) < (p₀ : ℚ) := by exact_mod_cast hp1
+          have hlen : (0:ℚ) < (l₀.length : ℚ) := by exact_mod_cast hpos
+          rw [div_le_iff₀ hp0, div_mul_eq_mul_div, le_div_iff₀ hlen] at hml
+          exact_mod_cast hml
+        calc (↑(w₀ * l₀.length) : WithTop ℤ) ≤ ↑((p₀ : ℤ) * z) := by
+              rw [WithTop.coe_le_coe, mul_comm (p₀ : ℤ) z]; exact hcross
+          _ = p₀ • ((A ^ l₀.length) v v).untrop := by
+              rw [← hz, ← WithTop.coe_nsmul, nsmul_eq_mul]
+          _ ≤ p₀ • walkWeight A v l₀ := nsmul_le_nsmul_right hle p₀
+  exact ⟨w₀, p₀, hp1, hpn, hlam, fun i k => untrop_pow_diag_ge_scaled A w₀ p₀ hp1 hsh i k⟩
 
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
