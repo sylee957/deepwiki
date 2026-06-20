@@ -96,6 +96,17 @@ theorem linearProcessLp_inner_self {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : �
     inner ℝ (linearProcessLp ψ Z t) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k ^ 2 := by
   simpa [pow_two] using linearProcessLp_inner hψ hZb hZorth t 0
 
+/-- An absolutely summable real sequence has summable lag products: `∑ⱼ |ψⱼ ψ_{j+c}| < ∞`
+(bound `|ψ_{j+c}| ≤ ∑ᵢ |ψᵢ|`). Underlies the autocovariance recursions. -/
+theorem summable_mul_shift {ψ : ℤ → ℝ} (hψ : Summable ψ) (c : ℤ) :
+    Summable (fun j => ψ j * ψ (j + c)) := by
+  have habs : Summable (fun j => |ψ j|) := summable_abs_iff.mpr hψ
+  refine Summable.of_norm_bounded (g := fun j => (∑' i, |ψ i|) * |ψ j|)
+    (habs.mul_left _) (fun j => ?_)
+  rw [Real.norm_eq_abs, abs_mul, mul_comm]
+  exact mul_le_mul_of_nonneg_right (le_hasSum habs.hasSum (j + c) fun i _ => abs_nonneg _)
+    (abs_nonneg _)
+
 /-! ## White-noise bridge: the `L²(ℝ)` inner product as an integral / covariance -/
 
 /-- The real `L²` inner product is the integral of the pointwise product: `⟪f, g⟫ = ∫ f·g`
