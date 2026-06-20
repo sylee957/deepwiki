@@ -48,13 +48,22 @@ example : (exA ^ 2) 0 0 = Tropical.trop 0 := by native_decide
 /-- Sanity (gate-verified): `(A²)₀₁ = min(0+1, 1+0) = 1`. -/
 example : (exA ^ 2) 0 1 = Tropical.trop 1 := by native_decide
 
-/-- **Min-plus matrix power recursion**: `(Aᵐ⁺¹)ᵢⱼ = ⨅ₖ ((Aᵐ)ᵢₖ + Aₖⱼ)` on the underlying
-`WithTop ℤ` values — the "relax over the last edge" step (matrix product `∑ = ⨅`, `⊗ = +`). The basic
-tool for the walk/circuit analysis underlying the cyclicity theorem. -/
-theorem untrop_pow_succ_apply {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ) (i j : Fin n) :
+/-- **Min-plus matrix power recursion, last edge**: `(Aᵐ⁺¹)ᵢⱼ = ⨅ₖ ((Aᵐ)ᵢₖ + Aₖⱼ)` on the underlying
+`WithTop ℤ` values — relax over the *last* edge `k → j` (matrix product `∑ = ⨅`, `⊗ = +`, via
+`A^(m+1) = Aᵐ * A`). A basic tool for the walk/circuit analysis underlying the cyclicity theorem. -/
+theorem untrop_pow_succ_apply_last {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ) (i j : Fin n) :
     ((A ^ (m + 1)) i j).untrop
       = Finset.univ.inf (fun k => ((A ^ m) i k).untrop + (A k j).untrop) := by
   rw [pow_succ, Matrix.mul_apply, Finset.untrop_sum']
+  rfl
+
+/-- **Min-plus matrix power recursion, first edge**: `(Aᵐ⁺¹)ᵢⱼ = ⨅ₖ (Aᵢₖ + (Aᵐ)ₖⱼ)` — the dual,
+relaxing over the *first* edge `i → k` (via `A^(m+1) = A * Aᵐ`). This is the form that splits a walk
+at its head, used to construct an optimal walk vertex by vertex. -/
+theorem untrop_pow_succ_apply_first {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) (m : ℕ) (i j : Fin n) :
+    ((A ^ (m + 1)) i j).untrop
+      = Finset.univ.inf (fun k => (A i k).untrop + ((A ^ m) k j).untrop) := by
+  rw [pow_succ', Matrix.mul_apply, Finset.untrop_sum']
   rfl
 
 /-- **Concatenation bound**: splitting a length-`p+q` walk `i ⤳ j` through any *fixed* intermediate
@@ -107,6 +116,36 @@ theorem untrop_pow_le_walkWeight {n : ℕ} (A : Matrix (Fin n) (Fin n) MP)
         ≤ (A i j).untrop + walkWeight A j rest
     gcongr
     exact ih j
+
+/-- **Walk interpretation, attainment half**: whenever `(Aᵐ)ᵢⱼ` is finite (`≠ +∞`, i.e. some walk
+exists) the optimum is *attained* — there is an explicit length-`m` walk `i ⤳ j` whose weight equals
+`(Aᵐ)ᵢⱼ`. Built vertex by vertex: the first-edge recursion's leading `inf` is attained at some `k₀`
+(finite linear order), whose tail entry stays finite, so the induction supplies the rest of the walk.
+Together with `untrop_pow_le_walkWeight` this says `(Aᵐ)ᵢⱼ` *is* the minimum walk weight. -/
+theorem exists_walkWeight_eq {n : ℕ} (A : Matrix (Fin n) (Fin n) MP) :
+    ∀ (m : ℕ) (i j : Fin n), ((A ^ m) i j).untrop ≠ ⊤ →
+      ∃ l : List (Fin n), l.length = m ∧ l.getLastD i = j ∧
+        walkWeight A i l = ((A ^ m) i j).untrop := by
+  intro m
+  induction m with
+  | zero =>
+    intro i j h
+    by_cases hij : i = j
+    · subst hij
+      exact ⟨[], rfl, rfl, by simp [walkWeight, Matrix.one_apply_eq]⟩
+    · exact absurd (by rw [pow_zero, Matrix.one_apply_ne hij]; rfl) h
+  | succ m ih =>
+    intro i j h
+    haveI : Nonempty (Fin n) := ⟨i⟩
+    have heq := untrop_pow_succ_apply_first A m i j
+    obtain ⟨k₀, -, hk₀⟩ := Finset.exists_mem_eq_inf' Finset.univ_nonempty
+      (fun k => (A i k).untrop + ((A ^ m) k j).untrop)
+    rw [Finset.inf'_eq_inf, ← heq] at hk₀
+    have hfin : ((A ^ m) k₀ j).untrop ≠ ⊤ := fun htop => h (by rw [hk₀, htop, WithTop.add_top])
+    obtain ⟨l', hlen', hend', hw'⟩ := ih k₀ j hfin
+    refine ⟨k₀ :: l', by simp [hlen'], ?_, ?_⟩
+    · rw [List.getLastD_cons]; exact hend'
+    · rw [walkWeight_cons, hw', ← hk₀]
 
 /-- The **precedence graph** of a min-plus matrix: an edge `i → j` exists iff the entry is finite
 (`≠ 𝟘 = +∞`). Its circuits carry the spectral theory (eigenvalue = min mean circuit, cyclicity). -/
