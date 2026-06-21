@@ -470,8 +470,15 @@ theorem cor_1_4_2 {K : Type*} [Field K] {f g : K[X]} :
     Polynomial.resultant f g = 0 ↔ (f ≠ 0 ∨ g ≠ 0) ∧ ¬ IsCoprime f g :=
   Polynomial.resultant_eq_zero_iff
 
--- **Deferred — not in Mathlib (library work):** Corollary 1.4.1 (`res = 0 ⟺` common root in the
--- algebraic closure — derivable from `thm_1_4_1_prod`), Theorem 1.4.2 (`res ∈ (A,B)`, i.e.
+/-- **Corollary 1.4.1** (§1.4, p.19): for nonzero `A` that splits, `res(A, B) = 0` iff `A` and `B`
+have a common root (some root `α` of `A` with `B(α) = 0`) — the vanishing of `res = lc(A)^{deg B}·∏
+B(αᵢ)` in a domain. -/
+theorem cor_1_4_1 {R : Type*} [CommRing R] [IsDomain R] {f g : R[X]} (n : ℕ)
+    (hg : g.natDegree ≤ n) (hf : f.Splits) (hf0 : f ≠ 0) :
+    Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 :=
+  resultant_eq_zero_iff_exists_root n hg hf hf0
+
+-- **Deferred — not in Mathlib (library work):** Theorem 1.4.2 (`res ∈ (A,B)`, i.e.
 -- `res = SA + TB`), and the entire *subresultant* theory: Definition 1.4.2 (`Sⱼ(A,B)` from
 -- Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring homomorphisms),
 -- and §1.5 polynomial remainder sequences.

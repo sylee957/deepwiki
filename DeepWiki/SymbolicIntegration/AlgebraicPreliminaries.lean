@@ -1,11 +1,13 @@
 import Mathlib.Algebra.GCDMonoid.Basic
+import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.Tactic
 
-/-! # Algebraic preliminaries — the gcd predicate
+/-! # Algebraic preliminaries — the gcd predicate and the resultant–root corollary
 Bronstein's Chapter 1 is standard constructive algebra, almost all of which is Mathlib's. The
 one notion the book states as a *predicate* — rather than a chosen operation, as in Mathlib's
 `GCDMonoid` — is the greatest common divisor of Definition 1.1.4. We add it here with its
-satellite API and the uniqueness-up-to-units property (Theorem 1.1.1). -/
+satellite API and the uniqueness-up-to-units property (Theorem 1.1.1), together with the
+resultant–root corollary of §1.4 (`res = 0 ⟺` a common root). -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -34,5 +36,16 @@ pair are `Associated`). -/
 theorem IsGCD.associated [IsCancelMulZero R] {x y z t : R} (hz : IsGCD x y z) (ht : IsGCD x y t) :
     Associated z t :=
   associated_of_dvd_dvd (ht.dvd hz.dvd_left hz.dvd_right) (hz.dvd ht.dvd_left ht.dvd_right)
+
+open Polynomial in
+/-- **Corollary 1.4.1** (§1.4): for a nonzero `f` that splits, `res(f, g) = 0` iff `f` and `g`
+share a root — some root `α` of `f` has `g(α) = 0`. Falls out of `res = lc(f)ⁿ·∏_α g(α)`
+(`resultant_eq_prod_eval`) since `lc(f)ⁿ ≠ 0` in a domain and a product vanishes iff a factor does. -/
+theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] {f g : S[X]}
+    (n : ℕ) (hg : g.natDegree ≤ n) (hf : f.Splits) (hf0 : f ≠ 0) :
+    Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 := by
+  rw [Polynomial.resultant_eq_prod_eval f g n hg hf, mul_eq_zero,
+    or_iff_right (pow_ne_zero n (leadingCoeff_ne_zero.mpr hf0)),
+    Multiset.prod_eq_zero_iff, Multiset.mem_map]
 
 end DeepWiki.SymbolicIntegration
