@@ -15,13 +15,32 @@ The data `x ∈ ℂⁿ` is expanded in the orthonormal Fourier basis `eⱼ` (Pro
 10.1.4) at the Fourier frequencies `ωⱼ = 2πj/n`, `j ∈ Fₙ` (eq 10.1.5), with coefficients the
 discrete Fourier transform `aⱼ = ⟨x, eⱼ⟩ = n^{-1/2} ∑ₜ xₜ e^{-itωⱼ}` (Definition 10.1.1, eq
 10.1.7). The **periodogram** is `Iₙ(ωⱼ) = |aⱼ|²` (Definition 10.1.2, eq 10.1.8), and Parseval's
-identity gives the analysis of variance `‖x‖² = ∑_{j∈Fₙ} Iₙ(ωⱼ)` (eq 10.1.9). -/
+identity gives the analysis of variance `‖x‖² = ∑_{j∈Fₙ} Iₙ(ωⱼ)` (eq 10.1.9). The orthonormality
+(**Proposition 10.1.1**) and the analysis of variance (**eq 10.1.9**) are now FORMALIZED — pure
+linear algebra over the discrete Fourier basis, built on the root-of-unity orthogonality
+`sum_range_exp_two_pi_mul_I`. -/
 
 /-- **§10.1 (Definition 10.1.2, eq 10.1.8)**: the **periodogram** `Iₙ(λ) = n⁻¹ |∑ₜ xₜ e^{-itλ}|²`,
 the squared modulus of the discrete Fourier transform of the data normalized by `n` — the basic
 nonparametric spectral estimator (non-negative, `periodogram_nonneg`; `Iₙ(0) = n⁻¹(∑ₜxₜ)²`,
 `periodogram_zero_eq`). The library's `periodogram`. -/
 noncomputable abbrev def_10_1_2 := @DeepWiki.TimeSeries.periodogram
+
+/-- **Proposition 10.1.1 (eq 10.1.4)**: the Fourier vectors `eⱼ(t) = n^{−1/2} e^{itωⱼ}`
+(`ωⱼ = 2πj/n`) are orthonormal — `⟨eⱼ, eₖ⟩ = n⁻¹ ∑_{t<n} e^{it(ωⱼ−ωₖ)}` is `1` when `n ∣ (j−k)` and
+`0` otherwise. The library's `fourier_inner_eq`. -/
+theorem prop_10_1_1 (n : ℕ) (hn : 0 < n) (j k : ℤ) :
+    (∑ t ∈ Finset.range n,
+        Complex.exp (2 * Real.pi * Complex.I * ((j - k : ℤ) : ℂ) * t / n)) / n
+      = if (n : ℤ) ∣ (j - k) then 1 else 0 :=
+  DeepWiki.TimeSeries.fourier_inner_eq n hn j k
+
+/-- **§10.1 (eq 10.1.9, analysis of variance / Parseval)**: the periodogram ordinates at the Fourier
+frequencies sum to the total sum of squares — `∑_{j<n} Iₙ(2πj/n) = ∑_{t<n} xₜ²`. The library's
+`periodogram_sum_eq`. -/
+theorem eq_10_1_9 (n : ℕ) (hn : 0 < n) (x : ℕ → ℝ) :
+    ∑ j ∈ Finset.range n, periodogram n x (2 * Real.pi * j / n) = ∑ t ∈ Finset.range n, (x t) ^ 2 :=
+  DeepWiki.TimeSeries.periodogram_sum_eq n hn x
 
 /-! ## §10.2 Testing for the Presence of Hidden Periodicities (p.336)
 Fisher's test and related procedures detect a deterministic periodic component by comparing the
