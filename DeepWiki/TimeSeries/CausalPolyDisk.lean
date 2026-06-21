@@ -185,4 +185,130 @@ theorem summable_norm_cauchyPowerSeries_div_aeval {φ θ : ℝ[X]} (hφ : IsCaus
     lt_of_lt_of_le (by exact_mod_cast hR1) hball.r_le
   simpa using (cauchyPowerSeries g 0 R).summable_norm_mul_pow hrad
 
+/-- The `m`-th antidiagonal term of the Cauchy product `φ(z) · (∑ ψⱼ zʲ)` factors as `cₘ · zᵐ`,
+with `cₘ = ∑_{i+j=m} φᵢ ψⱼ`: `∑_{i+j=m} (φᵢ zⁱ)(zʲ ψⱼ) = (∑_{i+j=m} φᵢ ψⱼ) zᵐ`. -/
+theorem antidiagonal_term_eq (φ : ℝ[X]) (ψ : ℕ → ℂ) (z : ℂ) (m : ℕ) :
+    (∑ q ∈ Finset.antidiagonal m, ((φ.coeff q.1 : ℝ) • z ^ q.1) * (z ^ q.2 * ψ q.2))
+      = (∑ q ∈ Finset.antidiagonal m, (φ.coeff q.1 : ℝ) • ψ q.2) • z ^ m := by
+  rw [Finset.sum_smul]
+  refine Finset.sum_congr rfl fun q hq => ?_
+  rw [Finset.mem_antidiagonal] at hq
+  rw [← hq]
+  simp only [Complex.real_smul, smul_eq_mul, pow_add]
+  ring
+
+/-- **Package a uniformly-convergent scalar power series as a `HasFPowerSeriesAt`:** if the scalar
+series `∑ₙ aₙ zⁿ` converges to `θ(z)` on the disk `‖z‖ < ρ` and `∑ₙ ‖aₙ‖ ρⁿ < ∞`, then `ofScalars ℂ a`
+is the power-series expansion of `z ↦ θ(z)` at `0`. The bridge from a bare `HasSum` to the
+formal-multilinear-series machinery (radius from `le_radius_of_summable`, terms from
+`ofScalars_apply_eq`). -/
+theorem hasFPowerSeriesAt_ofScalars_aeval (θ : ℝ[X]) (a : ℕ → ℂ) (ρ : ℝ≥0) (hρ : 0 < ρ)
+    (hsum : Summable fun n => ‖a n‖ * (ρ : ℝ) ^ n)
+    (hhs : ∀ z : ℂ, ‖z‖ < (ρ : ℝ) → HasSum (fun n => a n • z ^ n) (Polynomial.aeval z θ)) :
+    HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
+      (FormalMultilinearSeries.ofScalars ℂ a) 0 := by
+  refine ⟨ρ, { r_le := ?_, r_pos := by exact_mod_cast hρ, hasSum := ?_ }⟩
+  · refine FormalMultilinearSeries.le_radius_of_summable _ (hsum.congr fun n => ?_)
+    rw [FormalMultilinearSeries.ofScalars_norm]
+  · intro y hy
+    rw [Metric.mem_eball, edist_zero_right, enorm_lt_coe] at hy
+    have hy' : ‖y‖ < (ρ : ℝ) := by exact_mod_cast hy
+    simpa only [zero_add, FormalMultilinearSeries.ofScalars_apply_eq] using hhs y hy'
+
+/-- **`θ(z) = ∑ₘ cₘ zᵐ` as a power-series expansion** (`cₘ = ∑_{i+j=m} φᵢ ψⱼ`, the `φ`-convolution
+of the `MA(∞)` weights): the Cauchy product `φ · (θ/φ)` is the power series of `z ↦ θ(z)` at `0`. The
+analytic carrier of the `ψ`-weight recursion: its coefficient uniqueness gives eq (3.3.3). -/
+theorem hasFPowerSeriesAt_conv_div {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
+      (FormalMultilinearSeries.ofScalars ℂ (fun m : ℕ => ∑ q ∈ Finset.antidiagonal m,
+        (φ.coeff q.1 : ℝ) • (cauchyPowerSeries
+          (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2)) 0 := by
+  obtain ⟨R, hR1, hne, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
+  refine ⟨R, hR1, ?_⟩
+  set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R with hp
+  set cseq : ℕ → ℂ := fun m => ∑ q ∈ Finset.antidiagonal m, (φ.coeff q.1 : ℝ) • p.coeff q.2 with hcseq
+  have hcoeff_le : ∀ n, ‖p.coeff n‖ ≤ ‖p n‖ := fun n => by
+    have h := (p n).le_opNorm (1 : Fin n → ℂ)
+    simp only [Pi.one_apply, norm_one, Finset.prod_const_one, mul_one] at h
+    exact h
+  -- the Cauchy product converges to `θ(z)` on the whole disk `‖z‖ < R`
+  have hconv : ∀ z : ℂ, ‖z‖ < (R : ℝ) → HasSum (fun m : ℕ => cseq m • z ^ m)
+      (Polynomial.aeval z θ) := by
+    intro z hz
+    have hmem : z ∈ Metric.eball (0 : ℂ) R := by
+      rw [Metric.mem_eball, edist_zero_right, enorm_lt_coe]; exact_mod_cast hz
+    have hg : HasSum (fun n => z ^ n * p.coeff n)
+        (Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) := by
+      simpa only [zero_add, FormalMultilinearSeries.apply_eq_pow_smul_coeff, smul_eq_mul] using
+        hball.hasSum hmem
+    have hf : HasSum (fun k => (φ.coeff k : ℝ) • z ^ k) (Polynomial.aeval z φ) :=
+      hasSum_aeval_smul φ z
+    have hfn : Summable (fun k => ‖(φ.coeff k : ℝ) • z ^ k‖) :=
+      summable_of_ne_finset_zero (s := Finset.range (φ.natDegree + 1)) fun k hk => by
+        rw [Finset.mem_range, not_lt] at hk
+        rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul, norm_zero]
+    have hrad : (‖z‖₊ : ℝ≥0∞) < p.radius := lt_of_lt_of_le (by exact_mod_cast hz) hball.r_le
+    have hgn : Summable (fun n => ‖z ^ n * p.coeff n‖) := by
+      refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
+        (p.summable_norm_mul_pow hrad)
+      rw [norm_mul, norm_pow, mul_comm]
+      exact mul_le_mul_of_nonneg_right (hcoeff_le n) (by positivity)
+    have hsummable :=
+      summable_sum_mul_antidiagonal_of_summable_norm' hfn hf.summable hgn hg.summable
+    have hval : ∑' m, ∑ q ∈ Finset.antidiagonal m,
+        ((φ.coeff q.1 : ℝ) • z ^ q.1) * (z ^ q.2 * p.coeff q.2) = Polynomial.aeval z θ := by
+      rw [← tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hfn hgn, hf.tsum_eq, hg.tsum_eq,
+        mul_comm (Polynomial.aeval z θ), mul_inv_cancel_left₀ (hne z hz)]
+    have hterm : (fun m => ∑ q ∈ Finset.antidiagonal m,
+        ((φ.coeff q.1 : ℝ) • z ^ q.1) * (z ^ q.2 * p.coeff q.2)) = fun m => cseq m • z ^ m :=
+      funext fun m => antidiagonal_term_eq φ p.coeff z m
+    rw [hterm] at hsummable hval
+    rw [← hval]; exact hsummable.hasSum
+  -- choose `1 < ρ < R`; the convolution norms are summable at radius `ρ`, giving radius `≥ ρ > 0`
+  obtain ⟨ρ, hρ1, hρR⟩ := exists_between hR1
+  have hρ0 : (0 : ℝ≥0) < ρ := lt_trans (by norm_num) hρ1
+  have hzr : ‖((ρ : ℝ) : ℂ)‖ = (ρ : ℝ) := by simp [abs_of_nonneg ρ.coe_nonneg]
+  have hBsum : Summable (fun n => ‖cseq n‖ * (ρ : ℝ) ^ n) := by
+    have hF : Summable (fun k => ‖(φ.coeff k : ℝ) • ((ρ : ℝ) : ℂ) ^ k‖) :=
+      summable_of_ne_finset_zero (s := Finset.range (φ.natDegree + 1)) fun k hk => by
+        rw [Finset.mem_range, not_lt] at hk
+        rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul, norm_zero]
+    have hradρ : (‖((ρ : ℝ) : ℂ)‖₊ : ℝ≥0∞) < p.radius := by
+      refine lt_of_lt_of_le ?_ hball.r_le
+      rw [ENNReal.coe_lt_coe, ← NNReal.coe_lt_coe, coe_nnnorm, hzr]
+      exact_mod_cast hρR
+    have hG : Summable (fun k => ‖((ρ : ℝ) : ℂ) ^ k * p.coeff k‖) := by
+      refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_)
+        (p.summable_norm_mul_pow hradρ)
+      rw [norm_mul, norm_pow, mul_comm]
+      exact mul_le_mul_of_nonneg_right (hcoeff_le n) (by positivity)
+    refine (summable_norm_sum_mul_antidiagonal_of_summable_norm hF hG).congr fun n => ?_
+    rw [antidiagonal_term_eq φ p.coeff ((ρ : ℝ) : ℂ) n, norm_smul, norm_pow, hzr]
+  refine hasFPowerSeriesAt_ofScalars_aeval θ cseq ρ hρ0 hBsum (fun z hz => hconv z ?_)
+  exact lt_trans hz (by exact_mod_cast hρR)
+
+/-- **The `ψ`-weight recursion, coefficient form (eq 3.3.3):** the Cauchy convolution of the AR
+coefficients `φₖ` with the `MA(∞)` weights `ψⱼ` (the Taylor coefficients of `θ/φ`) reproduces the MA
+coefficients — `∑_{i+j=m} φᵢ ψⱼ = θ_m` for every `m` — by the uniqueness of power-series
+coefficients applied to `φ(z) · (θ(z)/φ(z)) = θ(z)`. In particular `∑_{i+j=m} φᵢ ψⱼ = 0` for
+`m > deg θ`. -/
+theorem conv_coeff_div_eq_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ ∀ m : ℕ,
+      (∑ q ∈ Finset.antidiagonal m, (φ.coeff q.1 : ℝ) • (cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2)
+      = (θ.coeff m : ℂ) := by
+  obtain ⟨R, hR1, hB⟩ := hasFPowerSeriesAt_conv_div (θ := θ) hφ
+  refine ⟨R, hR1, fun m => ?_⟩
+  have hA : HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
+      (FormalMultilinearSeries.ofScalars ℂ (fun n : ℕ => (θ.coeff n : ℂ))) 0 := by
+    refine hasFPowerSeriesAt_ofScalars_aeval θ (fun n => (θ.coeff n : ℂ)) 1 one_pos ?_ (fun z _ => ?_)
+    · refine summable_of_ne_finset_zero (s := Finset.range (θ.natDegree + 1)) fun k hk => ?_
+      rw [Finset.mem_range, not_lt] at hk
+      rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)]; simp
+    · have heq : (fun n => (θ.coeff n : ℂ) • z ^ n) = fun n => (θ.coeff n : ℝ) • z ^ n := by
+        funext n; simp only [Complex.real_smul, smul_eq_mul]
+      rw [heq]; exact hasSum_aeval_smul θ z
+  exact congrFun (FormalMultilinearSeries.ofScalars_series_injective ℂ ℂ
+    (hB.eq_formalMultilinearSeries hA)) m
+
 end DeepWiki.TimeSeries
