@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import DeepWiki.SymbolicIntegration.PseudoDivision
 import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
@@ -229,9 +230,8 @@ The classical `PolyDivide` algorithm divides `A` by `B ≠ 0` over a field `K`, 
 quotient and remainder with `A = BQ + R` and `R = 0` or `deg R < deg B`. We catalog the
 degree-bounded division of Mathlib (`divByMonic`/`modByMonic`); over a field a general `B ≠ 0`
 is `lc(B)` times a monic polynomial, so the monic case is the essential content. The
-*pseudo-division* of an integral domain (`PolyPseudoDivide`, Ex 1.2.2) is genuinely new — not in
-Mathlib — and is deferred to its own iteration (a `DeepWiki.SymbolicIntegration` library
-definition with its `bᵈ⁺¹A = BQ + R` specification). -/
+*pseudo-division* of an integral domain (`PolyPseudoDivide`) is genuinely new — not in Mathlib —
+and is proved in the `DeepWiki.SymbolicIntegration` library (`pseudoDivision_exists`). -/
 
 /-- **`PolyDivide` quotient** (§1.2, p.8): the quotient `A /ₘ B` of Euclidean division by a monic
 divisor. -/
@@ -249,6 +249,15 @@ theorem thm_1_2_polyDivide {K : Type*} [Field K] (A B : Polynomial K) (hB : B.Mo
   · rcases eq_or_ne (A %ₘ B) 0 with h | h
     · exact Or.inl h
     · exact Or.inr (Polynomial.degree_modByMonic_lt A hB)
+
+/-- **Pseudo-division** `PolyPseudoDivide` (§1.2, p.9): over an integral domain, for `B ≠ 0`
+there is a power `n`, a pseudo-quotient `Q` and pseudo-remainder `Rem` with
+`lc(B)ⁿ · A = B·Q + Rem` and `deg Rem < deg B`. (The minimal `n` is `max(0, deg A − deg B + 1)`,
+the `bᵈ⁺¹` of the book.) -/
+theorem thm_1_2_pseudoDivide {R : Type*} [CommRing R] [IsDomain R] (A B : R[X]) (hB : B ≠ 0) :
+    ∃ (n : ℕ) (Q Rem : R[X]),
+      Polynomial.C B.leadingCoeff ^ n * A = B * Q + Rem ∧ Rem.degree < B.degree :=
+  pseudoDivision_exists A B hB
 
 /-! ## §1.3 The Euclidean Algorithm -/
 
@@ -303,7 +312,6 @@ abbrev def_1_7_1 := @Squarefree
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
 -- dedicated iterations:**
---   • §1.2 pseudo-division `PolyPseudoDivide` + spec `bᵈ⁺¹A = BQ + R` (Ex 1.2.2).
 --   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
 --     sequence and Cor 1.4.1/1.4.2 linking it to the resultant are not).
 --   • §1.5 polynomial remainder sequences (Examples 1.5.1/1.5.2).
