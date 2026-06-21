@@ -134,4 +134,81 @@ def IsPRS (A B : R[X]) (Rs : ℕ → R[X]) (β : ℕ → R) : Prop :=
             β (i + 1) ≠ 0 ∧ IsPseudoRemainder (Rs i) (Rs (i + 1)) (C (β (i + 1)) * Rs (i + 2)))
       ∧ (Rs (i + 1) = 0 → C (β (i + 1)) * Rs (i + 2) = 0)
 
+/-- Associated polynomials are similar (the unit is a constant in `R[X]` over a domain). -/
+theorem IsSimilar.of_associated {x y : R[X]} (h : Associated x y) : IsSimilar x y := by
+  obtain ⟨u, rfl⟩ := h
+  obtain ⟨r, hr, hru⟩ := Polynomial.isUnit_iff.mp u.isUnit
+  exact ⟨r, 1, hr.ne_zero, one_ne_zero, by rw [← hru, map_one]; ring⟩
+
+/-- **PRS gcd-invariance step** (§1.5, the core of Theorem 1.5.1): consecutive gcds of a PRS are
+similar, `gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. From `lc(Rᵢ₊₁)ᵏ·Rᵢ = Rᵢ₊₁·Q + β·Rᵢ₊₂` one gets
+`H ∣ lc·G` and `G ∣ β·H`; cancelling shows the two cofactors multiply to a nonzero constant, so
+each is a nonzero constant, giving the scalar similarity. -/
+theorem isSimilar_gcd_step [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}
+    (hprs : IsPRS A B Rs β) {i : ℕ} (hi : Rs (i + 1) ≠ 0) :
+    IsSimilar (gcd (Rs i) (Rs (i + 1))) (gcd (Rs (i + 1)) (Rs (i + 2))) := by
+  obtain ⟨_, _, hrec⟩ := hprs
+  obtain ⟨hβ, k, Q, hEq, _⟩ := (hrec i).1 hi
+  set G := gcd (Rs i) (Rs (i + 1)) with hGdef
+  set H := gcd (Rs (i + 1)) (Rs (i + 2)) with hHdef
+  set cα := (Rs (i + 1)).leadingCoeff ^ k with hcαdef
+  have hlc : (Rs (i + 1)).leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hi
+  have hcα0 : cα ≠ 0 := pow_ne_zero _ hlc
+  have hEq' : C cα * Rs i = Rs (i + 1) * Q + C (β (i + 1)) * Rs (i + 2) := by
+    rw [hcαdef, C_pow]; exact hEq
+  have hHG : H ∣ C cα * G := by
+    have h1 : H ∣ C cα * Rs i := by
+      rw [hEq']
+      exact dvd_add ((gcd_dvd_left _ _).mul_right Q) ((gcd_dvd_right _ _).mul_left _)
+    have h2 : H ∣ C cα * Rs (i + 1) := (gcd_dvd_left _ _).mul_left _
+    exact (dvd_gcd h1 h2).trans (gcd_mul_left' (C cα) (Rs i) (Rs (i + 1))).dvd
+  have hGH : G ∣ C (β (i + 1)) * H := by
+    have h1 : G ∣ C (β (i + 1)) * Rs (i + 2) := by
+      have hsub : C (β (i + 1)) * Rs (i + 2) = C cα * Rs i - Rs (i + 1) * Q := by rw [hEq']; ring
+      rw [hsub]
+      exact dvd_sub ((gcd_dvd_left _ _).mul_left _) ((gcd_dvd_right _ _).mul_right Q)
+    have h2 : G ∣ C (β (i + 1)) * Rs (i + 1) := (gcd_dvd_right _ _).mul_left _
+    exact (dvd_gcd h2 h1).trans (gcd_mul_left' (C (β (i + 1))) (Rs (i + 1)) (Rs (i + 2))).dvd
+  obtain ⟨Q₁, hQ₁⟩ := hHG
+  obtain ⟨Q₂, hQ₂⟩ := hGH
+  have hG0 : G ≠ 0 := fun h => hi ((gcd_eq_zero_iff _ _).mp h).2
+  have key : G * C (cα * β (i + 1)) = G * (Q₁ * Q₂) := by
+    have e1 : C (β (i + 1)) * (C cα * G) = G * (Q₁ * Q₂) := by
+      rw [hQ₁, show C (β (i + 1)) * (H * Q₁) = C (β (i + 1)) * H * Q₁ by ring, hQ₂]; ring
+    rw [← e1, C_mul]; ring
+  have hQ₁Q₂ : C (cα * β (i + 1)) = Q₁ * Q₂ := mul_left_cancel₀ hG0 key
+  have hconst : C (cα * β (i + 1)) ≠ 0 := by rw [Ne, C_eq_zero]; exact mul_ne_zero hcα0 hβ
+  have hQ₁0 : Q₁ ≠ 0 := by rintro rfl; rw [zero_mul] at hQ₁Q₂; exact hconst hQ₁Q₂
+  have hQ₂0 : Q₂ ≠ 0 := by rintro rfl; rw [mul_zero] at hQ₁Q₂; exact hconst hQ₁Q₂
+  have hdeg : (Q₁ * Q₂).natDegree = 0 := by rw [← hQ₁Q₂]; exact natDegree_C _
+  have hQ₁deg : Q₁.natDegree = 0 := by rw [natDegree_mul hQ₁0 hQ₂0] at hdeg; omega
+  have hQ₁C : Q₁ = C (Q₁.coeff 0) := eq_C_of_natDegree_eq_zero hQ₁deg
+  refine ⟨cα, Q₁.coeff 0, hcα0, ?_, ?_⟩
+  · intro h; exact hQ₁0 (by rw [hQ₁C, h, map_zero])
+  · rw [hQ₁]; nth_rewrite 1 [hQ₁C]; ring
+
+/-- **Theorem 1.5.1** (§1.5): the last nonzero element `Rₖ` of a PRS of `A, B` is similar to
+`gcd(A, B)`. The consecutive gcds form a similarity chain from `gcd(A,B) = gcd(R₀,R₁)` to
+`gcd(Rₖ, Rₖ₊₁) = gcd(Rₖ, 0) ~ Rₖ`, using `isSimilar_gcd_step` at each link. -/
+theorem IsPRS.isSimilar_gcd [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}
+    (hprs : IsPRS A B Rs β) {k : ℕ} (hk1 : Rs (k + 1) = 0)
+    (hpos : ∀ j, 1 ≤ j → j ≤ k → Rs j ≠ 0) :
+    IsSimilar (Rs k) (gcd A B) := by
+  have hAB : gcd A B = gcd (Rs 0) (Rs 1) := by rw [hprs.1, hprs.2.1]
+  have chain : ∀ i, i ≤ k → IsSimilar (gcd (Rs 0) (Rs 1)) (gcd (Rs i) (Rs (i + 1))) := by
+    intro i
+    induction i with
+    | zero => intro _; exact IsSimilar.refl _
+    | succ n ih =>
+      intro hn
+      exact (ih (Nat.le_of_succ_le hn)).trans
+        (isSimilar_gcd_step hprs (hpos (n + 1) (Nat.le_add_left 1 n) hn))
+  have hchaink := chain k le_rfl
+  have hend : IsSimilar (gcd (Rs k) (Rs (k + 1))) (Rs k) := by
+    rw [hk1]
+    exact IsSimilar.of_associated
+      (associated_of_dvd_dvd (gcd_dvd_left _ _) (dvd_gcd dvd_rfl (dvd_zero _)))
+  rw [hAB]
+  exact hend.symm.trans hchaink.symm
+
 end DeepWiki.SymbolicIntegration
