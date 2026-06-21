@@ -106,6 +106,17 @@ theorem IsNormal.of_dvd {p q : R} (h : IsNormal p) (hq : q ∣ p) : IsNormal q :
   obtain ⟨r, rfl⟩ := hq
   exact h.of_mul_left
 
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
+coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
+gives `p ∣ p′` only when `p ⊥ q`.) -/
+theorem IsSpecial.of_mul_coprime {p q : R} (h : IsSpecial (p * q)) (hco : IsCoprime p q) :
+    IsSpecial p := by
+  have h0 : (p * q) ∣ ((p * q)′) := h
+  rw [deriv_mul_eq] at h0
+  have hp1 : p ∣ (p * q′ + q * p′) := (dvd_mul_right p q).trans h0
+  have hp2 : p ∣ q * p′ := (dvd_add_right (dvd_mul_right p q′)).mp hp1
+  exact hco.dvd_of_dvd_mul_left hp2
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/

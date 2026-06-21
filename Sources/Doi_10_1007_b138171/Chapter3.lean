@@ -185,11 +185,16 @@ theorem thm_3_4_1_ii_prod {R : Type*} [CommRing R] [Differential R] {ι : Type*}
     (f : ι → R) (hf : ∀ i ∈ s, IsSpecial (f i)) : IsSpecial (∏ i ∈ s, f i) :=
   IsSpecial.prod s f hf
 
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: a coprime factor of a special polynomial
+is special — if `p·q` is special and `p ⊥ q` then `p` is special. -/
+theorem thm_3_4_1_iii_coprime {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : IsSpecial (p * q)) (hco : IsCoprime p q) : IsSpecial p :=
+  IsSpecial.of_mul_coprime h hco
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
 --   • Lemma 3.4.2 (degree bound `deg(Dp) ≤ deg p + max(0, δ(t)−1)`, with equality in the
---     nonlinear case), Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula), Theorem 3.4.1(iii)
---     (factors of a special polynomial are special) and the "factor of a normal is normal" half
---     of 3.4.1(i) (both rest on Lemma 3.4.4).
+--     nonlinear case), Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula); Theorem 3.4.1(iii)
+--     for a *general* (non-coprime) factor of a special polynomial rests on Lemma 3.4.4.
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).
