@@ -24,14 +24,17 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 unbounded (invariant-free) locations `[external]` (Laroussinie–Larsen–Weise 1995). The
-  characteristic-formula construction is mechanized for general timed automata — nondeterministic,
-  multi-clock, multi-action, general-guard, *conjunctive* location invariants, *target-invariant-gated*
-  actions, *arbitrary* resets, all in one construction `TimedGeneralCharacteristic.fchar_iff` (subsuming
-  the per-axis `TimedConjInvCharacteristic.cchar_iff` / `TimedTargetInvCharacteristic.gchar_iff` /
-  `TimedFullCharacteristic.uchar_iff`). The one remaining case is locations with **no** invariant (`inv ℓ =
-  []`, unbounded delays): the boundary-disjunction forcing is vacuous there, so such a location needs a
-  separate pure-`∀∀X_ℓ` body branch (no forcing) — the construction currently assumes `inv ℓ ≠ []` (`hne`).
+§12.3: Thm 12.4 invariant-free locations require the region graph `[research]` (Laroussinie–Larsen–Weise
+  1995). The characteristic-formula construction is mechanized for general timed automata —
+  nondeterministic, multi-clock, multi-action, general-guard, *conjunctive* location invariants,
+  *target-invariant-gated* actions, *arbitrary* resets, all in one `TimedGeneralCharacteristic.fchar_iff`
+  (subsuming the per-axis `TimedConjInvCharacteristic.cchar_iff` / `TimedTargetInvCharacteristic.gchar_iff` /
+  `TimedFullCharacteristic.uchar_iff`), under the hypothesis that every location has a bound (`inv ℓ ≠ []`).
+  The complementary case — locations with **no** invariant (unbounded delays) — is *provably* outside the
+  location-indexed framework (`TimedUnboundedObstruction`: no forcing is too weak to separate, any single
+  boundary-forcing is too strong to admit the genuine state), so it needs the region-graph abstraction —
+  which is already available unconditionally via the executable complete checker
+  `decSatisfiesMtFull` / `satisfiesMt_iff_decideFull_delaySucc`.
 Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
   + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
   Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]`. -/
