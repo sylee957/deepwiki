@@ -76,4 +76,9 @@ is this with the two products shown equal (the reduced/subresultant p.r.s. coeff
 library's `subresultant_prs_closed_top`. -/
 abbrev thm_1b_closed := @subresultant_prs_closed_top
 
+/-- **Theorem 1 normal-case keystone** (§p.133, the `lc`-power collapse forcing `ηᵢ = 1`): with the normal
+reduced/subresultant p.r.s. coefficients substituted and the signs cancelled, the `αₘ`-product equals the
+`(lc²·βₗ)`-product in `subresultant_prs_closed_top`. The library's `lc_prod_collapse_normal`. -/
+abbrev thm_1_normal_collapse := @lc_prod_collapse_normal
+
 end DeepWiki.Col

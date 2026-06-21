@@ -290,6 +290,39 @@ theorem subresultant_prs_closed_top [IsDomain R] (F : ℕ → R[X]) (α β : ℕ
         * C (β l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))) with hPdef
   linear_combination C (α m) * htel + Prhs * htop
 
+section NormalCollapse
+
+variable {M : Type*} [CommRing M]
+
+open Finset in
+/-- **Leading-coefficient product collapse** — the keystone of Collins's Theorem 1 in the normal case
+(`δ=1`), which forces `ηᵢ = 1`. In `subresultant_prs_closed_top`, the normal reduced/subresultant p.r.s.
+coefficients are `αₗ = (lc F_{l+1})²` and `βₗ = (lc Fₗ)²` (`β₀ = 1`); after the signs cancel
+(`(-1)^(k(k+1)) = 1`), the `αₘ`-product on the left equals the `(lc² · βₗ)`-product on the right —
+peeling the last `α`-factor (`prod_range_succ`) against the first `β`-factor (`prod_range_succ'`, where
+`β₀ = 1` drops out) reindexes the two product tails to the same value. -/
+theorem lc_prod_collapse_normal (c : ℕ → M) (n : ℕ) :
+    ∏ l ∈ range (n + 1), (c (l + 1)) ^ (2 * (n + 1 - l + 1))
+      = (c (n + 1)) ^ 2 * (∏ l ∈ range (n + 1), (c (l + 1)) ^ 2)
+        * ∏ l ∈ range (n + 1), (if l = 0 then (1 : M) else (c l) ^ 2) ^ (n + 1 - l + 1) := by
+  rw [prod_range_succ (f := fun l => (c (l + 1)) ^ (2 * (n + 1 - l + 1))),
+    prod_range_succ (f := fun l => (c (l + 1)) ^ 2), prod_range_succ']
+  simp only [Nat.succ_ne_zero, if_false, if_true, one_pow, mul_one]
+  rw [show 2 * (n + 1 - n + 1) = 4 from by omega]
+  have hcomb : (∏ x ∈ range n, (c (x + 1)) ^ 2)
+        * (∏ x ∈ range n, ((c (x + 1)) ^ 2) ^ (n + 1 - (x + 1) + 1))
+      = ∏ x ∈ range n, (c (x + 1)) ^ (2 * (n + 1 - x + 1)) := by
+    rw [← prod_mul_distrib]
+    refine prod_congr rfl (fun x hx => ?_)
+    rw [← pow_mul, ← pow_add]
+    rw [mem_range] at hx
+    congr 1
+    omega
+  rw [← hcomb]
+  ring
+
+end NormalCollapse
+
 section SubresPRSCoeff
 
 variable {K : Type*} [Field K]
