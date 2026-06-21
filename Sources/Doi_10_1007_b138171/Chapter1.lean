@@ -1139,42 +1139,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.2 [infra, in progress] (Fundamental PRS Theorem — the explicit subresultant↔PRS
-  similarity coefficients ηᵢ/τᵢ of eq 1.9/1.10); Thm 1.5.3 [infra, in progress] (the
-  subresultant-PRS specialization ηᵢ=1). Bronstein proves neither, citing [39 Ch.7], [60], [16 §7],
-  [23]; built from Geddes–Czapor–Labahn [39] §7.3 Thm 7.4. Foundations DONE: scaling law
-  `subresultant_C_mul`; the polynomial-column determinant form `subresultant_eq_det_polyCol`
-  (eq 7.12); the row-reduction engines `det_updateCol_sum'`/`det_updateRow_add_sum_smul_self`; and
-  BOTH halves of Lemma 7.1 in full: (a) ROW REDUCTION — `subresultant_add_monomial_mul` (single
-  monomial `A + a·Xᵈ·B`, unipotent transvection `1 + a•P`), `subresultant_add_const_mul` (constant),
-  `subresultant_add_mul` (`Sⱼ(A + B·p, B) = Sⱼ(A,B)`, any `p` with `deg p + m ≤ n`; `p = −Q` gives
-  `Sⱼ(A,B) = Sⱼ(rem(A,B),B)`); (b) SWAP-WITH-SIGN — `subresultant_swap`
-  (`Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,A)`), via the block-swap permutation `bSylvester_swap` +
-  `bSylvester_submatrix_det_swap` whose sign is read off `(finRotate (n+m-2j))^(m-j)` (keystone
-  `finRotate_pow_val`). Both halves combine in `subresultant_rem` (Lemma 7.1's engine): for a division
-  step `A = Rem + B·Q`, `Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,Rem)`. The DEGREE PADDING is also DONE:
-  `subresultant_pad_step`/`subresultant_padding` (`Sⱼ(B,Rem; m,n) = (lc B)^(n-k)·Sⱼ(B,Rem; m,k)`, by
-  cofactor-expanding each `ⱼSᵢ` along its first column = `lc B · e₀`), assembled in `subresultant_rem_lt`
-  = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
-  true degree `k`. The degenerate case `j=γ-1` (Brown–Traub eq 15) is also DONE:
-  `subresultant_deg_sub_one`/`subresultant_rem_eq_15` (`S_{γ-1}(A,B) = (-1)^(φ-γ+1)·(lc B)^(φ-γ+1)·Rem`,
-  via the upper-triangular `ⱼSᵢ` det — `Rem`-row `= [0,…,0,Rem.coeff i]`, `B`-block triangular with
-  `lc B` diagonal). **All of Brown–Traub Lemma 1 (the single division step) is now COMPLETE**: the
-  unified degenerate formula `subresultant_deg_ge` (`Sⱼ(B,Rem;γ,φ) = (lc B)^(φ-j)·(Rem.coeff j)^(γ-j-1)·Rem`
-  for `deg Rem ≤ j < γ`, via the shared upper-triangular `ⱼSᵢ` det `subresultant_deg_ge_upperTri` +
-  the diagonal product) yields eq 13 (`subresultant_rem_eq_13`, `j=η`), eq 14 (`subresultant_rem_eq_14`,
-  `=0`), eq 15 (`subresultant_rem_eq_15`, `j=γ-1`); with the `0≤j<η` case `subresultant_rem_lt` (eq 12),
-  every subresultant of a division step is now computed. Lemma 2's main single-step PRS relation (eq 21,
-  `0≤j<nᵢ`) is also DONE: `subresultant_prs_step` (`α^(b-j)·Sⱼ(F_{i-2},F_{i-1}) = (-1)^(…)·(lc F_{i-1})^(…)·
-  β^(b-j)·Sⱼ(F_{i-1},Fᵢ)`, composing `subresultant_rem_lt` + `subresultant_C_mul`). **All of Lemma 2 is
-  now DONE**: eq 21 (`subresultant_prs_step`, `0≤j<nᵢ`), eq 22 (`subresultant_prs_step_deg`, `j=nᵢ`),
-  eq 23 (`subresultant_prs_step_gap`, `nᵢ<j<nᵢ₋₁-1`, `=0`), eq 24 (`subresultant_prs_step_top`,
-  `j=nᵢ₋₁-1`) — each composes the corresponding Lemma 1 case (eq 12/13/14/15) with the scaling law.
-  **The Fundamental Theorem is now DONE** (`subresultant_prs_telescope`, in `SubresultantPRS.lean`):
-  telescoping eq 21 down a PRS shows `Sⱼ(F₀,F₁)` is `IsSimilar` to `Sⱼ(Fₘ,F_{m+1})` for every step `m`
-  (the subresultant counterpart of the gcd-based Thm 1.5.1 `IsPRS.isSimilar_gcd`), via the per-step
-  `subresultant_prs_similar`. Remaining: only Bronstein Thm 1.5.2/1.5.3's fully explicit `ηᵢ/τᵢ`
-  similarity coefficients (the exact constants; the similarity itself is established).
+§1.5: Thm 1.5.2's exact rational coefficient form `Sⱼ(A,B) = ηᵢRᵢ` / `τᵢRᵢ` (eq 1.9/1.10) [infra]:
+  `ηᵢ` is rational (it divides by `rⱼ` powers), so this is a `Frac(D)`-level statement — the integral
+  content (`Sⱼ` similar to a PRS element, the explicit `D[x]` products, the vanishing branch) is
+  formalized under `thm_1_5_2_elt`/`thm_1_5_2_explicit`/`thm_1_5_2_zero`.
+§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` (via the `βᵢ = −lc(Rᵢ)·γᵢ₊₁^(δᵢ+1)`
+  coefficient recursion) [infra]: needs the same `Frac(D)` PRS-coefficient machinery.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
