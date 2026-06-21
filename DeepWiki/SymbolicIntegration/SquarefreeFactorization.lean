@@ -698,6 +698,55 @@ theorem gcd_squarefreePart_deflation (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A
       (sqfreeFactPart A k) := hcop.symm.of_isCoprime_of_dvd_left (gcd_dvd_right _ _)
   exact hgc.dvd_of_dvd_mul_left (gcd_dvd_left _ _)
 
+/-- Musser's squarefree-factorization loop (§1.7, p.29), as an executable recursion on `fuel`. From
+`S* = (A⁻⁽ᵏ⁻¹⁾)*` and `S⁻ = A⁻ᵏ`, while `S⁻` is non-constant it sets `Y = gcd(S*, S⁻)`, emits
+`Aₖ = S*/Y`, and recurses on `(Y, S⁻/Y)`; the constant `S⁻` case emits the final `S*`. -/
+noncomputable def squarefreeLoop (Sstar Sminus : K[X]) : ℕ → List K[X]
+  | 0 => [Sstar]
+  | (n + 1) =>
+    if Sminus.natDegree = 0 then [Sstar]
+    else (Sstar / gcd Sstar Sminus)
+      :: squarefreeLoop (gcd Sstar Sminus) (Sminus / gcd Sstar Sminus) n
+
+/-- Musser's `Squarefree(A)` algorithm: the squarefree-factorization parts of `A`, computed from
+`S⁻ ← gcd(pp A, d pp A/dx)` (`= A⁻¹`) and `S* ← pp A / S⁻` (`= A*`) by `squarefreeLoop`. -/
+noncomputable def squarefreeFactorization (A : K[X]) : List K[X] :=
+  squarefreeLoop (A.primPart / gcd A.primPart (derivative A.primPart))
+    (gcd A.primPart (derivative A.primPart)) A.primPart.natDegree
+
+/-- Division by an associate, up to associates: for `Y ∣ X` (`Y ≠ 0`), `X/Y ~ c ↔ X ~ Y·c`. -/
+theorem associated_div_iff {X Y c : K[X]} (hY : Y ≠ 0) (hdvd : Y ∣ X) :
+    Associated (X / Y) c ↔ Associated X (Y * c) := by
+  have hmul : Y * (X / Y) = X := EuclideanDomain.mul_div_cancel' hY hdvd
+  constructor
+  · intro h; exact hmul ▸ h.mul_left Y
+  · intro h; exact (hmul.symm ▸ h).of_mul_left (Associated.refl Y) hY
+
+/-- Loop body, emitted part: `Aₖ = S*/Y` is the `k`-th squarefree-factorization part — at
+`S* = (A⁻⁽ᵏ⁻¹⁾)*`, `Y = gcd(S*, A⁻ᵏ) = (A⁻ᵏ)*`, so `S*/Y = (A⁻⁽ᵏ⁻¹⁾)*/(A⁻ᵏ)* = Aₖ` (1.15, eq 1.15). -/
+theorem squarefreeLoop_head_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
+    Associated (squarefreePart (deflation A (k - 1))
+        / gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
+      (sqfreeFactPart A k) := by
+  have hYass := gcd_squarefreePart_deflation A k hk hA
+  have hY : gcd (squarefreePart (deflation A (k - 1))) (deflation A k) ≠ 0 :=
+    fun h => deflation_ne_zero A k (eq_zero_of_zero_dvd (h ▸ gcd_dvd_right _ _))
+  have hsplit := squarefreePart_deflation_mul_sqfreeFactPart A k hk hA
+  rw [associated_div_iff hY (hYass.dvd.trans ⟨sqfreeFactPart A k, hsplit.symm⟩)]
+  exact hsplit ▸ hYass.symm.mul_right (sqfreeFactPart A k)
+
+/-- Loop body, updated deflation: `S⁻/Y = A⁻ᵏ/(A⁻ᵏ)* = A⁻⁽ᵏ⁺¹⁾` (1.13), the next iteration's `S⁻`. -/
+theorem squarefreeLoop_tail_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
+    Associated (deflation A k
+        / gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
+      (deflation A (k + 1)) := by
+  have hYass := gcd_squarefreePart_deflation A k hk hA
+  have hY : gcd (squarefreePart (deflation A (k - 1))) (deflation A k) ≠ 0 :=
+    fun h => deflation_ne_zero A k (eq_zero_of_zero_dvd (h ▸ gcd_dvd_right _ _))
+  have h13 := squarefreePart_mul_deflation_succ A k hA
+  rw [associated_div_iff hY (hYass.dvd.trans ((dvd_mul_right _ _).trans h13.dvd))]
+  exact h13.symm.trans (hYass.symm.mul_right (deflation A (k + 1)))
+
 end SquarefreeAlgorithm
 
 end DeepWiki.SymbolicIntegration
