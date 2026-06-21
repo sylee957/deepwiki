@@ -311,6 +311,20 @@ theorem thm_1_6_1_i {R : Type*} [CommRing R] {A P G : R[X]} {n : ℕ} (h : P ^ (
     (hG : IsGCD A (derivative A) G) : P ^ n ∣ G :=
   pow_dvd_gcd_of_pow_succ_dvd h hG
 
+/-- **Theorem 1.6.1(ii)** (§1.6, p.27): the characteristic-`0` converse — for a prime `P` of
+positive degree and `n > 0`, if `Pⁿ` divides both `A` and `dA/dx` then `Pⁿ⁺¹ ∣ A`. -/
+theorem thm_1_6_1_ii {R : Type*} [CommRing R] [IsDomain R] [CharZero R] {A P : R[X]} {n : ℕ}
+    (hn : 0 < n) (hP : Prime P) (hPdeg : 0 < P.natDegree) (hA : P ^ n ∣ A)
+    (hA' : P ^ n ∣ derivative A) : P ^ (n + 1) ∣ A :=
+  pow_succ_dvd_of_pow_dvd_derivative hn hP hPdeg hA hA'
+
+/-- **Theorem 1.6.1** (§1.6, p.27), combined: in characteristic `0`, for a prime `P` of positive
+degree and `n > 0`, `Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ A ∧ Pⁿ ∣ dA/dx`. -/
+theorem thm_1_6_1 {R : Type*} [CommRing R] [IsDomain R] [CharZero R] {A P : R[X]} {n : ℕ}
+    (hn : 0 < n) (hP : Prime P) (hPdeg : 0 < P.natDegree) :
+    P ^ (n + 1) ∣ A ↔ P ^ n ∣ A ∧ P ^ n ∣ derivative A :=
+  pow_succ_dvd_iff hn hP hPdeg
+
 /-! ## §1.7 Squarefree Factorization -/
 
 /-- **Definition 1.7.1** (§1.7, p.28): `A` is *squarefree* if no non-unit `B` satisfies
@@ -323,9 +337,8 @@ abbrev def_1_7_1 := @Squarefree
 --     sequence and Cor 1.4.1/1.4.2 linking it to the resultant are not).
 --   • §1.5 polynomial remainder sequences (Examples 1.5.1/1.5.2).
 --   • §1.6 the deflation theory — squarefree part `A*`, `k`-deflations `A⁻ᵏ` (Def 1.6.2),
---     relations (1.11)–(1.14), and Theorem 1.6.1(ii) — the char-`0` converse
---     (`Pⁿ ∣ gcd(A, dA/dx) ⟹ Pⁿ⁺¹ ∣ A`) and eq (1.14) `A⁻ = gcd(A, dA/dx)`.
---     [Theorem 1.6.1(i) is done — `thm_1_6_1_i`.]
+--     relations (1.11)–(1.13), and eq (1.14) `A⁻ = gcd(A, dA/dx)` (needs the `A⁻` definition).
+--     [Theorem 1.6.1 — both parts and the combined iff — is done: `thm_1_6_1_i`/`_ii`/`thm_1_6_1`.]
 --   • §1.7 squarefree factorization (Def 1.7.2), Lemmas 1.7.1/1.7.2, and the Musser/Yun
 --     `Squarefree` algorithm (Example 1.7.1) — the squarefree-factorization routine the
 --     integration algorithm uses.
