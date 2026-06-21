@@ -755,6 +755,18 @@ theorem ex_1_3_5 :
     simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat, eval_neg,
       eval_one]; ring
 
+/-- **Example 1.3.7** (§1.3, p.17): the complete partial fraction decomposition of
+`f = (x²+3x)/(x³−x²−x+1)` over `ℚ(x)`. The denominator factors as `(x+1)(x−1)²`, and
+`f = −(1/2)/(x+1) + 2/(x−1)² + (3/2)/(x−1)` — equivalently, clearing denominators,
+`x² + 3x = (−1/2)(x−1)² + 2(x+1) + (3/2)(x−1)(x+1)`. -/
+theorem ex_1_3_7 :
+    (X ^ 3 - X ^ 2 - X + 1 : ℚ[X]) = (X + 1) * (X - 1) ^ 2
+      ∧ (X ^ 2 + 3 * X : ℚ[X])
+        = C (-1/2) * (X - 1) ^ 2 + 2 * (X + 1) + C (3/2) * (X - 1) * (X + 1) := by
+  refine ⟨by ring, ?_⟩
+  apply Polynomial.funext; intro x
+  simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat, eval_one]; ring
+
 /-- **Exercise 1.4** (§1, p.33): the gcd of `2x³ − (19/5)x² − x + 6/5 = (x−2)(2x²+(1/5)x−3/5)` and
 `x² + (1/3)x − 14/3 = (x−2)(x+7/3)` in `ℚ[x]` is `x − 2` (the cofactors `2x²+(1/5)x−3/5` and
 `x+7/3` are coprime — they share no root). The fractional-coefficient identities are discharged
@@ -876,7 +888,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
+Examples: Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7; Ex 1.14. -/
 
