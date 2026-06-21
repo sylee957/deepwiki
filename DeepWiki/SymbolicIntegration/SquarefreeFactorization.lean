@@ -118,6 +118,32 @@ theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
   rw [Finset.prod_congr rfl h, ← Finset.prod_multiset_count]
   exact factors_prod hA
 
+omit [IsDomain D] in
+open Classical in
+/-- **`A⁻⁰ = pp(A)`** (§1.6, the note preceding relation 1.11): the `0`-deflation recovers the
+primitive part (up to associates), since `∏ Pᵢ^(eᵢ−0) = ∏ Pᵢ^eᵢ`. -/
+theorem deflation_zero (A : D[X]) (hA : A.primPart ≠ 0) : Associated (deflation A 0) A.primPart := by
+  rw [deflation]; simp only [Nat.sub_zero]
+  rw [← Finset.prod_multiset_count]; exact factors_prod hA
+
+omit [IsDomain D] in
+open Classical in
+/-- Every deflation divides the primitive part: `A⁻ᵏ ∣ pp(A)` (each `Pᵢ^(eᵢ−k) ∣ Pᵢ^eᵢ`). -/
+theorem deflation_dvd_primPart (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    deflation A k ∣ A.primPart := by
+  have hdvd : deflation A k ∣ deflation A 0 := by
+    rw [deflation, deflation]
+    exact Finset.prod_dvd_prod_of_dvd _ _ (fun P _ => pow_dvd_pow P (by omega))
+  exact hdvd.trans (deflation_zero A hA).dvd
+
+omit [IsDomain D] in
+open Classical in
+/-- Every deflation is primitive: `A⁻ᵏ` is a divisor of the primitive `pp(A)`. (Used to identify
+`pp(A⁻ᵏ)` with `A⁻ᵏ` when iterating the deflation, e.g. for relation 1.13.) -/
+theorem deflation_isPrimitive (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    (deflation A k).IsPrimitive :=
+  isPrimitive_of_dvd (isPrimitive_primPart A) (deflation_dvd_primPart A k hA)
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
