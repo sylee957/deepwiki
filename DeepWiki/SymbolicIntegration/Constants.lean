@@ -58,6 +58,46 @@ theorem iterDeriv_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (i : ℕ) (f
   | empty => simp
   | insert a s ha ih => rw [Finset.sum_insert ha, iterDeriv_add, ih, Finset.sum_insert ha]
 
+open Finset in
+/-- **General Leibniz rule** for iterated derivatives: `Dⁿ(a·b) = ∑ₖ C(n,k)·Dⁿ⁻ᵏa·Dᵏb`
+(`iterDeriv`-form). Adapts Mathlib's `Polynomial.iterate_derivative_mul` to an abstract
+differential field via `Derivation.leibniz`. -/
+theorem iterDeriv_mul (n : ℕ) (a b : F) :
+    iterDeriv n (a * b)
+      = ∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k) a * iterDeriv k b) := by
+  have hmul : ∀ p q : F, (p * q)′ = p′ * q + p * q′ := fun p q => by
+    rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]; ring
+  induction n with
+  | zero => simp [iterDeriv]
+  | succ n IH =>
+    calc
+      iterDeriv (n + 1) (a * b)
+          = (∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k) a * iterDeriv k b))′ := by
+            rw [iterDeriv_succ, IH]
+      _ = (∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k + 1) a * iterDeriv k b)) +
+            ∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k) a * iterDeriv (k + 1) b) := by
+        simp_rw [map_sum, map_nsmul, hmul, ← iterDeriv_succ, smul_add, sum_add_distrib]
+      _ = (∑ k ∈ range n.succ, n.choose k.succ • (iterDeriv (n - k) a * iterDeriv (k + 1) b)) +
+              1 • (iterDeriv (n + 1) a * iterDeriv 0 b) +
+            ∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k) a * iterDeriv (k + 1) b) := ?_
+      _ = ((∑ k ∈ range n.succ, n.choose k • (iterDeriv (n - k) a * iterDeriv (k + 1) b)) +
+              ∑ k ∈ range n.succ, n.choose k.succ • (iterDeriv (n - k) a * iterDeriv (k + 1) b)) +
+            1 • (iterDeriv (n + 1) a * iterDeriv 0 b) := by rw [add_comm, add_assoc]
+      _ = (∑ i ∈ range n.succ,
+              (n + 1).choose (i + 1) • (iterDeriv (n + 1 - (i + 1)) a * iterDeriv (i + 1) b)) +
+            1 • (iterDeriv (n + 1) a * iterDeriv 0 b) := by
+        simp_rw [Nat.choose_succ_succ, Nat.succ_sub_succ, add_smul, sum_add_distrib]
+      _ = ∑ k ∈ range n.succ.succ, n.succ.choose k • (iterDeriv (n.succ - k) a * iterDeriv k b) := by
+        rw [sum_range_succ' _ n.succ, Nat.choose_zero_right, tsub_zero]
+    congr
+    refine (sum_range_succ' _ _).trans (congr_arg₂ (· + ·) ?_ ?_)
+    · rw [sum_range_succ, Nat.choose_succ_self, zero_smul, add_zero]
+      refine sum_congr rfl fun k hk => ?_
+      rw [mem_range] at hk
+      congr
+      omega
+    · rw [Nat.choose_zero_right, tsub_zero]
+
 /-- **Definition 3.3.1** (§3.3): the Wronskian `W(y₁,…,yₙ) = det(Dⁱ⁻¹ yⱼ)`. -/
 noncomputable def wronskian {n : ℕ} (y : Fin n → F) : F :=
   (Matrix.of fun (i j : Fin n) => iterDeriv (i : ℕ) (y j)).det

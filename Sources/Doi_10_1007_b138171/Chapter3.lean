@@ -173,8 +173,9 @@ theorem lem_3_3_5_converse_field {F : Type*} [Field F] [Differential F] {n : ℕ
 --     induction on `n`. Infrastructure in place: `wronskian_eq_zero_dependent_iterDeriv` (foundation,
 --     a kernel vector annihilating all rows), `deriv_dependent_iterDeriv` (the differentiate-row
 --     recurrence), and `linearDependent_of_div_deriv_dependent` (the division-reduction inductive
---     step). The one remaining piece is the determinant reduction `W(y₁,…,yₙ) = y₁ⁿ·W((y₂/y₁)′,…)`
---     that lets the `(n−1)` induction hypothesis apply.
+--     step), plus `iterDeriv_mul` (the general Leibniz rule `Dⁿ(ab) = ∑ₖ C(n,k)·Dⁿ⁻ᵏa·Dᵏb`, the
+--     algebraic engine of the column reduction). The one remaining piece is the determinant
+--     reduction `W(y₁,…,yₙ) = y₁ⁿ·W((y₂/y₁)′,…)` that lets the `(n−1)` induction hypothesis apply.
 
 /-! ## §3.4 Monomial Extensions -/
 
