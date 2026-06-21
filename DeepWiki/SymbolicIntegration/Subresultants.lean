@@ -187,4 +187,29 @@ theorem subresultant_eq_det_polyCol (A B : R[X]) (n m j : ℕ) (hlt : 2 * j < m 
       rw [hsub]
   rw [hcol, ← RingHom.mapMatrix_apply, ← RingHom.map_det]; exact mul_comm _ _
 
+/-- Determinant is unchanged when a `Finset`-sum of (scalar multiples of) *other* rows is added to a
+row — the iterated transvection that drives the Fundamental-PRS-Theorem row reduction (subtracting
+`Q`-multiples of the `B`-rows from the `A`-rows). -/
+theorem det_updateRow_add_sum_smul_self {N : Type*} [DecidableEq N] [Fintype N] (M : Matrix N N R)
+    (i : N) {ι : Type*} [DecidableEq ι] (s : Finset ι) (c : ι → R) (f : ι → N)
+    (hf : ∀ k ∈ s, f k ≠ i) :
+    (M.updateRow i (M i + ∑ k ∈ s, c k • M (f k))).det = M.det := by
+  induction s using Finset.induction with
+  | empty => simp
+  | insert a s ha ih =>
+    have hfa : f a ≠ i := hf a (Finset.mem_insert_self a s)
+    have hsub : ∀ k ∈ s, f k ≠ i := fun k hk => hf k (Finset.mem_insert_of_mem hk)
+    set M' := M.updateRow i (M i + ∑ k ∈ s, c k • M (f k)) with hM'
+    have hMi' : M' i = M i + ∑ k ∈ s, c k • M (f k) := by rw [hM']; exact Matrix.updateRow_self
+    have hMfa' : M' (f a) = M (f a) := by rw [hM']; exact Matrix.updateRow_ne hfa
+    have h1 := Matrix.det_updateRow_add_smul_self M' hfa.symm (c a)
+    rw [hMi', hMfa'] at h1
+    rw [Finset.sum_insert ha]
+    rw [show M i + (c a • M (f a) + ∑ k ∈ s, c k • M (f k))
+        = (M i + ∑ k ∈ s, c k • M (f k)) + c a • M (f a) by abel]
+    rw [show M.updateRow i ((M i + ∑ k ∈ s, c k • M (f k)) + c a • M (f a))
+        = M'.updateRow i ((M i + ∑ k ∈ s, c k • M (f k)) + c a • M (f a)) by
+      rw [hM', Matrix.updateRow_idem]]
+    rw [h1, hM', ih hsub]
+
 end DeepWiki.SymbolicIntegration
