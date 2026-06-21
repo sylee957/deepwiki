@@ -266,6 +266,14 @@ of `θ(z)/φ(z)` at `0`) are absolutely summable, `∑ⱼ |ψⱼ| < ∞`. This i
 power-series radius estimate. The library's `summable_norm_cauchyPowerSeries_div_aeval`. -/
 alias ex_3_2_3_summable := DeepWiki.TimeSeries.summable_norm_cauchyPowerSeries_div_aeval
 
+/-- **The analytic and formal `ψ`-weights coincide** (§3.2/§3.3, the eq 3.3.2 bridge): for a causal
+ARMA, the Taylor coefficients of `θ(z)/φ(z)` (the analytic `MA(∞)` weights) are *exactly* the
+coefficients of the formal power series `armaPsi φ θ = θ/φ` (`eq_3_3_2`), cast `ℝ → ℂ`. So the
+analytic weights are real, and the formal reciprocal `ψ = θ/φ` is their genuine value — not merely a
+formal stand-in. By uniqueness of `↑φ · ψ = ↑θ` in the domain `ℂ⟦X⟧`. The library's
+`cauchyCoeff_div_aeval_eq_armaPsi`. -/
+alias eq_3_3_2_analytic := DeepWiki.TimeSeries.cauchyCoeff_div_aeval_eq_armaPsi
+
 /-- **Equation (3.3.3), analytic (Taylor-coefficient) form** (§3.3, p.91): for a causal ARMA, the
 `MA(∞)` weights `ψⱼ` (Taylor coefficients of `θ/φ`) satisfy the Cauchy convolution
 `∑_{i+j=m} φᵢ ψⱼ = θ_m` for every `m` — the coefficient-uniqueness identity for `φ(z)·(θ(z)/φ(z)) = θ(z)`,

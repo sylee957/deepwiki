@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.ArmaProcesses
+import DeepWiki.TimeSeries.ArmaPsiWeights
 import Mathlib.Topology.Algebra.Polynomial
 import Mathlib.Topology.MetricSpace.Thickening
 import Mathlib.Analysis.Normed.Module.FiniteDimension
@@ -340,5 +341,43 @@ theorem conv_coeff_arInv_eq_coeff {φ θ : ℝ[X]} (hθ : IsInvertiblePoly θ) :
         (fun w : ℂ => Polynomial.aeval w φ * (Polynomial.aeval w θ)⁻¹) 0 R).coeff q.2)
       = (φ.coeff m : ℂ) :=
   conv_coeff_div_eq_coeff (φ := θ) (θ := φ) hθ
+
+/-- **The analytic `MA(∞)` weights ARE the formal `θ/φ` weights** (eq 3.3.2 bridge): for a causal
+ARMA, the Taylor coefficients of `θ(z)/φ(z)` equal the coefficients of the formal power series
+`armaPsi φ θ = (↑φ)⁻¹ ↑θ` (cast `ℝ → ℂ`) — in particular they are *real*. By uniqueness of the
+solution of `↑φ · ψ = ↑θ` in the integral domain `ℂ⟦X⟧` (`↑φ ≠ 0`, since `φ(0) ≠ 0` for a causal
+`φ`): both the analytic `ψ`-weights and the formal `armaPsi` solve it, so they agree. -/
+theorem cauchyCoeff_div_aeval_eq_armaPsi {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ ∀ n : ℕ,
+      (cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff n
+      = ((PowerSeries.coeff n (armaPsi φ θ) : ℝ) : ℂ) := by
+  obtain ⟨R, hR1, _hsum, hrec⟩ := conv_coeff_div_eq_coeff (φ := φ) (θ := θ) hφ
+  refine ⟨R, hR1, fun n => ?_⟩
+  set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R
+    with hp
+  have hφ0 : PowerSeries.constantCoeff (φ : PowerSeries ℝ) ≠ 0 := by
+    rw [Polynomial.constantCoeff_coe]
+    exact fun h0 => hφ 0 (by simp)
+      (by rw [Polynomial.aeval_def, Polynomial.eval₂_at_zero, h0, map_zero])
+  set F : PowerSeries ℝ →+* PowerSeries ℂ := PowerSeries.map Complex.ofRealHom with hF
+  set Q : PowerSeries ℂ := PowerSeries.mk fun k => p.coeff k with hQ
+  -- `Q` solves `↑φ · Q = ↑θ` (the analytic recursion), as does `F (armaPsi)` (the formal identity)
+  have hmulQ : F (φ : PowerSeries ℝ) * Q = F (θ : PowerSeries ℝ) := by
+    ext m
+    simp only [hF, hQ, PowerSeries.coeff_mul, PowerSeries.coeff_map, Polynomial.coeff_coe,
+      PowerSeries.coeff_mk, Complex.ofRealHom_eq_coe]
+    rw [← hrec m]
+    exact Finset.sum_congr rfl fun q _ => by rw [Complex.real_smul]
+  have hmulψ : F (φ : PowerSeries ℝ) * F (armaPsi φ θ) = F (θ : PowerSeries ℝ) := by
+    rw [← map_mul, coe_mul_armaPsi hφ0]
+  have hφF : F (φ : PowerSeries ℝ) ≠ 0 := by
+    intro h
+    apply hφ0
+    have h0 := congrArg (PowerSeries.coeff 0) h
+    rw [hF, PowerSeries.coeff_map, map_zero, Complex.ofRealHom_eq_coe] at h0
+    rw [Polynomial.constantCoeff_coe]
+    exact_mod_cast h0
+  have hcoeff := congrArg (PowerSeries.coeff n) (mul_left_cancel₀ hφF (hmulQ.trans hmulψ.symm))
+  rwa [hQ, PowerSeries.coeff_mk, hF, PowerSeries.coeff_map, Complex.ofRealHom_eq_coe] at hcoeff
 
 end DeepWiki.TimeSeries
