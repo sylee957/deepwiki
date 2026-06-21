@@ -179,6 +179,83 @@ theorem sq2CoupledRel_seed {D : Type*} :
       · simp only [combShift_inr, hcombVal_inr]
         exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
 
+/-- **The combined reset preserves region equivalence.** Resetting clock `x` sends the combined
+valuation's `inl x` coordinate to `0` and its `inr (some x)` coordinate to `τ = V (inr none)`
+(`cv_reset_self`), leaving the rest unchanged; so it reduces to the original match under the remap
+`inr (some x) ↦ inr none`, with the frac-`0` `inl x` coordinate handled by frac-zero. -/
+theorem combReset_regionEqAll {D : Type*} [DecidableEq D] {d e η : ℝ≥0} {u u' : Valuation D} (x : D)
+    (hr : RegionEqAll (combShift d u η) (combVal e u')) :
+    RegionEqAll (combShift d (Valuation.reset {x} u) η) (combVal e (Valuation.reset {x} u')) := by
+  have hWlx : combShift d (Valuation.reset {x} u) η (Sum.inl x) = 0 := by
+    rw [combShift_inl, Valuation.reset_mem (Set.mem_singleton x)]
+  have hW'lx : combVal e (Valuation.reset {x} u') (Sum.inl x) = 0 := by
+    rw [combVal_inl, Valuation.reset_mem (Set.mem_singleton x)]
+  have hWsx : combShift d (Valuation.reset {x} u) η (Sum.inr (some x))
+      = combShift d u η (Sum.inr none) := by
+    simp only [combShift_inr, combVal_inr_some, combVal_inr_none, cv_reset_self]
+  have hW'sx : combVal e (Valuation.reset {x} u') (Sum.inr (some x)) = combVal e u' (Sum.inr none) := by
+    simp only [combVal_inr_some, combVal_inr_none, cv_reset_self]
+  have hWnone : combShift d (Valuation.reset {x} u) η (Sum.inr none) = combShift d u η (Sum.inr none) := by
+    simp only [combShift_inr, combVal_inr_none]
+  have hW'none : combVal e (Valuation.reset {x} u') (Sum.inr none) = combVal e u' (Sum.inr none) := by
+    simp only [combVal_inr_none]
+  have hWy : ∀ y, y ≠ x →
+      combShift d (Valuation.reset {x} u) η (Sum.inl y) = combShift d u η (Sum.inl y)
+      ∧ combVal e (Valuation.reset {x} u') (Sum.inl y) = combVal e u' (Sum.inl y) := by
+    intro y hy
+    have hy' : y ∉ ({x} : Set D) := fun h => hy (Set.mem_singleton_iff.mp h)
+    simp only [combShift_inl, combVal_inl, Valuation.reset_not_mem hy', and_self]
+  have hWsy : ∀ y, y ≠ x →
+      combShift d (Valuation.reset {x} u) η (Sum.inr (some y)) = combShift d u η (Sum.inr (some y))
+      ∧ combVal e (Valuation.reset {x} u') (Sum.inr (some y)) = combVal e u' (Sum.inr (some y)) := by
+    intro y hy
+    have hy' : y ∉ ({x} : Set D) := fun h => hy (Set.mem_singleton_iff.mp h)
+    simp only [combShift_inr, combVal_inr_some, cv_apply, Valuation.reset_not_mem hy', and_self]
+  -- Per-coordinate floor and frac-zero match.
+  have hfl : ∀ i, ⌊combShift d (Valuation.reset {x} u) η i⌋₊ = ⌊combVal e (Valuation.reset {x} u') i⌋₊ := by
+    intro i; obtain (y | (_ | y)) := i
+    · by_cases hy : y = x
+      · subst hy; rw [hWlx, hW'lx]
+      · rw [(hWy y hy).1, (hWy y hy).2]; exact regionEqAll_floor_eq hr (Sum.inl y)
+    · rw [hWnone, hW'none]; exact regionEqAll_floor_eq hr (Sum.inr none)
+    · by_cases hy : y = x
+      · subst hy; rw [hWsx, hW'sx]; exact regionEqAll_floor_eq hr (Sum.inr none)
+      · rw [(hWsy y hy).1, (hWsy y hy).2]; exact regionEqAll_floor_eq hr (Sum.inr (some y))
+  have hz : ∀ i, fracPart (combShift d (Valuation.reset {x} u) η i) = 0
+      ↔ fracPart (combVal e (Valuation.reset {x} u') i) = 0 := by
+    intro i; obtain (y | (_ | y)) := i
+    · by_cases hy : y = x
+      · subst hy; rw [hWlx, hW'lx]
+      · rw [(hWy y hy).1, (hWy y hy).2]; exact regionEqAll_fracPart_zero_iff hr (Sum.inl y)
+    · rw [hWnone, hW'none]; exact regionEqAll_fracPart_zero_iff hr (Sum.inr none)
+    · by_cases hy : y = x
+      · subst hy; rw [hWsx, hW'sx]; exact regionEqAll_fracPart_zero_iff hr (Sum.inr none)
+      · rw [(hWsy y hy).1, (hWsy y hy).2]; exact regionEqAll_fracPart_zero_iff hr (Sum.inr (some y))
+  -- frac-value: `W` reduces to `V` under the remap `inr (some x) ↦ inr none`, except `inl x → 0`.
+  have hfrac : ∀ i, (∃ j, fracPart (combShift d (Valuation.reset {x} u) η i) = fracPart (combShift d u η j)
+      ∧ fracPart (combVal e (Valuation.reset {x} u') i) = fracPart (combVal e u' j))
+      ∨ (fracPart (combShift d (Valuation.reset {x} u) η i) = 0
+        ∧ fracPart (combVal e (Valuation.reset {x} u') i) = 0) := by
+    intro i; obtain (y | (_ | y)) := i
+    · by_cases hy : y = x
+      · subst hy; exact Or.inr ⟨by rw [hWlx]; simp [fracPart], by rw [hW'lx]; simp [fracPart]⟩
+      · exact Or.inl ⟨Sum.inl y, by rw [(hWy y hy).1], by rw [(hWy y hy).2]⟩
+    · exact Or.inl ⟨Sum.inr none, by rw [hWnone], by rw [hW'none]⟩
+    · by_cases hy : y = x
+      · subst hy; exact Or.inl ⟨Sum.inr none, by rw [hWsx], by rw [hW'sx]⟩
+      · exact Or.inl ⟨Sum.inr (some y), by rw [(hWsy y hy).1], by rw [(hWsy y hy).2]⟩
+  apply regionEqAll_of_exact hfl hz
+  intro i j
+  rcases hfrac i with ⟨ji, hWi, hW'i⟩ | ⟨hWi0, hW'i0⟩
+  · rcases hfrac j with ⟨jj, hWj, hW'j⟩ | ⟨hWj0, hW'j0⟩
+    · rw [hWi, hWj, hW'i, hW'j]; exact regionEqAll_fracOrder hr ji jj
+    · rw [hWi, hWj0, hW'i, hW'j0]
+      have hzji := regionEqAll_fracPart_zero_iff hr ji
+      exact ⟨fun h => le_of_eq (hzji.mp (le_antisymm h (fracPart_nonneg _))),
+        fun h => le_of_eq (hzji.mpr (le_antisymm h (fracPart_nonneg _)))⟩
+  · rw [hWi0, hW'i0]
+    exact ⟨fun _ => fracPart_nonneg _, fun _ => fracPart_nonneg _⟩
+
 /-- **Forget the coupling**: the coupled live relation implies `Sq2FRel`. The `inl` part of the
 combined region gives the clock region; the `inr` parts give the asymmetric crossing-match and
 τ-match via `asymMatch_of_floor_shift` (`⌊cv − η⌋₊ = ⌊cv'⌋₊` for all small `η`). So the five proven
@@ -217,6 +294,21 @@ theorem Sq2CoupledRel.regionEqAll {D : Type*} {p q : Sq2} {u u' : Valuation D}
 theorem Sq2CoupledRel.guard {D : Type*} {p q : Sq2} {u u' : Valuation D}
     (h : Sq2CoupledRel p u q u') (g : ClockConstraint D) : satisfies u g ↔ satisfies u' g :=
   regionEqAll_satisfies h.regionEqAll g
+
+/-- **Reset clause** (live regime): the coupling is preserved by resetting a clock. -/
+theorem Sq2CoupledFRel.reset {D : Type*} [DecidableEq D] {d e : ℝ≥0} {u u' : Valuation D}
+    (h : Sq2CoupledFRel d u e u') (x : D) :
+    Sq2CoupledFRel d (Valuation.reset {x} u) e (Valuation.reset {x} u') := by
+  obtain ⟨hd, he, η₀, hη₀, hreg⟩ := h
+  exact ⟨hd, he, η₀, hη₀, fun η hηpos hηlt => combReset_regionEqAll x (hreg η hηpos hηlt)⟩
+
+/-- **Reset clause** for the coupled relation: resetting clock `x` preserves it (both regimes). -/
+theorem Sq2CoupledRel.reset {D : Type*} [DecidableEq D] {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') (x : D) :
+    Sq2CoupledRel p (Valuation.reset {x} u) q (Valuation.reset {x} u') := by
+  rcases h with ⟨hpd, hqd, hr⟩ | ⟨d, e, hp, hq, hfr⟩
+  · exact Or.inl ⟨hpd, hqd, hr.reset {x}⟩
+  · exact Or.inr ⟨d, e, hp, hq, hfr.reset x⟩
 
 end TLTS
 
