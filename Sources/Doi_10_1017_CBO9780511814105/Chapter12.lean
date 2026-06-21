@@ -36,9 +36,12 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   subsuming the running (`Loc=Unit`) and alternating (`Loc=Bool`) examples. Extended to **multi-clock**
   in `TimedMultiClockCharacteristic` (`mgenChar_iff`): a deterministic single-action automaton over any
   `Loc` and clock set `C` (`DetTA`: guard `gclock ℓ ≤ gbound ℓ`, reset list `rst ℓ`, `succ ℓ`) with the
-  reset-list machinery (`resetAll`/`denotSys_resetAll`) — `(p,v) ⊨ X_ℓ ↔ p ~ (ℓ,v)`. Remaining:
-  multi-edge (nondeterministic) automata with invariants (bodies folding over a finite edge presentation,
-  per-action boxes over a finite `Act`, guard complementation).
+  reset-list machinery (`resetAll`/`denotSys_resetAll`) — `(p,v) ⊨ X_ℓ ↔ p ~ (ℓ,v)`. Extended to
+  **nondeterminism** in `TimedNondetCharacteristic` (`ndChar_iff`): `NDetTA` = a finite *list* of
+  single-action `a`-edges per location (single-atom `GuardCmp` guards `⋈ ∈ {≤,<,≥,>}` so negation is an
+  atom), the body folding a readiness conjunction `⋀ₑ(gₑ ⇒ ⟨a⟩…)` and a safety box `[a](⋁ₑ(gₑ ∧ …))` over
+  the edge list (`bigAnd`/`bigOr` denotations + `GuardCmp.holds_neg`) — full iff again. Remaining:
+  multiple actions (per-action boxes over a finite `Act`) and location invariants.
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
