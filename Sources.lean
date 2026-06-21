@@ -63,3 +63,7 @@ import Sources.Doi_10_1016_0304_3975_94_90010_8.Source
 import Sources.Doi_10_1016_0304_3975_94_90010_8.RegionConstruction
 import Sources.Doi_10_1007_s10626_007_0028_x.Source
 import Sources.Doi_10_1007_s10626_007_0028_x.UppOperatorStability
+import Sources.Doi_10_1007_b102438.Source
+import Sources.Doi_10_1007_b102438.Chapter7
+import Sources.Doi_10_1145_321662_321665.Source
+import Sources.Doi_10_1145_321662_321665.Subresultants
