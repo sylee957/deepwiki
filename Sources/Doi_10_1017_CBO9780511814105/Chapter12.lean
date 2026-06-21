@@ -24,11 +24,12 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 fully-general unconditional case `[external]` (Laroussinie–Larsen–Weise 1995) — a
-  single characteristic construction combining *all* features at once: nondeterministic, multi-clock,
-  multi-action, general-guard, AND with location invariants. Each feature is formalized as a full iff
-  separately in the `DeepWiki.ReactiveSystems.Timed*Characteristic` family (e.g. the no-invariant generic
-  `mgChar_iff`; edges + invariants via delay-forcing `ichar_iff`); the unified construction is what remains open.
+§12.3: Thm 12.4 textbook-general invariants `[external]` (Laroussinie–Larsen–Weise 1995). The unified
+  construction combining *all* features is done (`TimedFullCharacteristic.uchar_iff`: nondeterministic,
+  multi-clock, multi-action, general-guard edges AND a location invariant, via delay-forcing) for a single
+  upper-bound invariant gating delays with on-entry reset of the invariant clock. What remains is the
+  textbook-general invariant handling: conjunctive invariants (boundary-disjunction forcing), action-gating
+  target invariants, and arbitrary edge resets (dropping the on-entry-reset hypothesis).
 Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
   + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
   Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]`. -/
