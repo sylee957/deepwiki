@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Coprime.Lemmas
+import Mathlib.Algebra.Polynomial.Derivative
 
 /-! # Monomial extensions — normal and special polynomials (Bronstein §3.4)
 A *monomial* `t` over a differential field `k` is a transcendental element with `Dt ∈ k[t]`, so
@@ -132,5 +133,37 @@ theorem IsSpecial.splittingFactorization {p : R} (hp : IsSpecial p) :
 theorem IsNormal.splittingFactorization {p : R} (hp : IsNormal p) :
     IsSplittingFactorization p 1 p :=
   ⟨(one_mul p).symm, isSpecial_one, hp⟩
+
+open Polynomial in
+/-- **Lemma 3.4.2(i)** (§3.4, p.91): the monomial-derivation degree bound. For the derivation
+`D = κ_D + v·d/dX` on `k[X]` with `Dt = v` (so the `D`-degree is `δ(t) = deg v`),
+`deg(D p) ≤ deg p + max(0, δ(t) − 1)`. -/
+theorem natDegree_implicitDeriv_le (v p : R[X]) :
+    (Differential.implicitDeriv v p).natDegree ≤ p.natDegree + max 0 (v.natDegree - 1) := by
+  have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have h1 : (Differential.mapCoeffs p).natDegree ≤ p.natDegree := by
+    apply natDegree_le_iff_coeff_eq_zero.mpr
+    intro N hN
+    rw [Differential.coeff_mapCoeffs, coeff_eq_zero_of_natDegree_lt hN]
+    simp
+  rw [happly]
+  rcases eq_or_ne (derivative p) 0 with hdp | hdp
+  · rw [hdp, mul_zero, add_zero]
+    exact h1.trans (Nat.le_add_right _ _)
+  · have hp1 : 1 ≤ p.natDegree := by
+      rcases Nat.eq_zero_or_pos p.natDegree with h0 | h0
+      · rw [Polynomial.natDegree_eq_zero] at h0
+        obtain ⟨c, rfl⟩ := h0
+        simp at hdp
+      · exact h0
+    have h2 : (v * derivative p).natDegree ≤ v.natDegree + (p.natDegree - 1) := by
+      calc (v * derivative p).natDegree ≤ v.natDegree + (derivative p).natDegree := natDegree_mul_le
+        _ ≤ v.natDegree + (p.natDegree - 1) := by gcongr; exact natDegree_derivative_le p
+    calc (Differential.mapCoeffs p + v * derivative p).natDegree
+        ≤ max (Differential.mapCoeffs p).natDegree (v * derivative p).natDegree :=
+          natDegree_add_le _ _
+      _ ≤ max p.natDegree (v.natDegree + (p.natDegree - 1)) := max_le_max h1 h2
+      _ ≤ p.natDegree + max 0 (v.natDegree - 1) := by omega
 
 end DeepWiki.SymbolicIntegration

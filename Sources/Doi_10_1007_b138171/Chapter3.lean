@@ -191,10 +191,16 @@ theorem thm_3_4_1_iii_coprime {R : Type*} [CommRing R] [Differential R] {p q : R
     (h : IsSpecial (p * q)) (hco : IsCoprime p q) : IsSpecial p :=
   IsSpecial.of_mul_coprime h hco
 
+/-- **Lemma 3.4.2(i)** (§3.4, p.91): the degree bound for a monomial derivation `D = κ_D + v·d/dX`
+on `k[X]` (`Dt = v`, `D`-degree `δ(t) = deg v`): `deg(D p) ≤ deg p + max(0, δ(t) − 1)`. -/
+theorem lem_3_4_2 {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :
+    (Differential.implicitDeriv v p).natDegree ≤ p.natDegree + max 0 (v.natDegree - 1) :=
+  natDegree_implicitDeriv_le v p
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Lemma 3.4.2 (degree bound `deg(Dp) ≤ deg p + max(0, δ(t)−1)`, with equality in the
---     nonlinear case), Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula); Theorem 3.4.1(iii)
---     for a *general* (non-coprime) factor of a special polynomial rests on Lemma 3.4.4.
+--   • Lemma 3.4.2 equality in the nonlinear case; Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product
+--     formula); Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
+--     (rests on Lemma 3.4.4).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).
