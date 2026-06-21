@@ -449,6 +449,30 @@ theorem toFunPWL_mono (r : UppSeq ℚ) (hmono : Monotone (fun n => (r.evalNat n 
   · have hmid : (r.evalNat (⌊s⌋₊ + 1) : ℝ) ≤ (r.evalNat ⌊t⌋₊ : ℝ) := hmono (by omega)
     linarith [hs_mem.2, hmid, ht_mem.1]
 
+/-- **`toFunPWL` is affine on each unit interval**: on `[n, n+1]` it coincides with the single affine
+map `f(n) + (t−n)·(f(n+1)−f(n))` — at the right endpoint `t=n+1` both equal `f(n+1)`, so the two
+adjacent pieces glue. The piecewise-affine characterization underlying continuity. -/
+theorem toFunPWL_eqOn_Icc (r : UppSeq ℚ) (n : ℕ) :
+    Set.EqOn r.toFunPWL
+      (fun t => (r.evalNat n : ℝ) + ((t : ℝ) - n) * ((r.evalNat (n + 1) : ℝ) - r.evalNat n))
+      (Set.Icc (n : ℝ≥0) ((n : ℝ≥0) + 1)) := by
+  intro t ht
+  obtain ⟨hl, hr⟩ := ht
+  rcases eq_or_lt_of_le hr with rfl | hlt
+  · have hfl : ⌊(n : ℝ≥0) + 1⌋₊ = n + 1 := by
+      rw [show ((n : ℝ≥0) + 1) = ((n + 1 : ℕ) : ℝ≥0) by push_cast; ring, Nat.floor_natCast]
+    simp only [toFunPWL, hfl]; push_cast; ring
+  · have hfl : ⌊t⌋₊ = n := by rw [Nat.floor_eq_iff zero_le]; exact ⟨hl, hlt⟩
+    simp only [toFunPWL, hfl]; push_cast; ring
+
+/-- `toFunPWL` is continuous on each unit interval `[n, n+1]` (it is affine there). -/
+theorem toFunPWL_continuousOn_Icc (r : UppSeq ℚ) (n : ℕ) :
+    ContinuousOn r.toFunPWL (Set.Icc (n : ℝ≥0) ((n : ℝ≥0) + 1)) := by
+  have hcont : Continuous
+      (fun t : ℝ≥0 => (r.evalNat n : ℝ) + ((t : ℝ) - n) * ((r.evalNat (n + 1) : ℝ) - r.evalNat n)) := by
+    fun_prop
+  exact hcont.continuousOn.congr (toFunPWL_eqOn_Icc r n)
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
