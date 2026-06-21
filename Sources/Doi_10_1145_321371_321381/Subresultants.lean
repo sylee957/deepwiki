@@ -24,16 +24,9 @@ Theorem 1(a) (§p.133): `S_{nₖ}(P₁,P₂) = (-1)^σₖ·[∏ᵢ cᵢ^(-δᵢ�
   p.r.s. [external]: combine the telescoped Lemma 2 (`subresultant_prs_telescope_explicit`) with
   Lemma 1(a) (`subresultant_rem_eq_13`) and reduce the exponent `α ≡ σₖ (mod 2)`.
 Theorem 1(b) (§p.133): `S_{n_{k-1}-1}(P₁,P₂) = (-1)^τₖ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·Pₖ` for a reduced p.r.s.
-  [external]: Lemma 2 + Lemma 1(c) (`subresultant_rem_eq_15`), `β₁ ≡ τₖ (mod 2)`. (= Bronstein Thm 1.5.3,
-  the `ηᵢ = 1` content; the `DeepWiki` base case is `subresultant_eq_pseudoRem`.)
-  ── VERIFIED (paper) the substitution into `subresultant_prs_closed_top` (`thm_1b_closed`) in the NORMAL
-  case (all `δ=1`): signs all vanish (`(-1)^(k(k+1))=1` via `Nat.even_mul_succ_self`) and the `lc`-power
-  exponents match termwise (`F_{m+1}:2`, `F_m:4`, `F_k:2(m-k+2)`), reducing to one scalar product identity
-  `∏(lc F_{l+1})^(2(m-l+1)) = (lc F_m)²·∏(lc F_{l+1})²·∏βₗ^(m-l+1)`. KEY SUBTLETY found at `m=0`:
-  `ηᵢ=1` needs `(-1)^(δ₀+1)=1` i.e. `δ₀` ODD — so the *reduced* p.r.s. (`β₀=1`) gives only `ηᵢ=±1`
-  (sign vanishes in the normal case), whereas Bronstein's *subresultant* p.r.s. (`β₀=(-1)^(δ₀+1)`,
-  the sign-correcting choice = `subresultant_eq_pseudoRem`'s `β`) is what makes `ηᵢ=1` EXACT in general.
-  Remaining = the scalar product identity in Lean (tedious Finset reindex; math fully verified).
+  — the NORMAL case (all `δ=1`, so `∏ cᵢ^(-δᵢ₋₁(δᵢ-1)) = 1` and signs vanish) is PROVED:
+  `subresultant_prs_normal_eq` (= Bronstein Thm 1.5.3 normal case, `thm_1_5_3_normal`). The general
+  defective-degree case (the `∏ cᵢ^…` powers nontrivial) remains [external].
 Theorem 1(c) (§p.134): `Sⱼ(P₁,P₂) = 0` for `nₖ < j < n_{k-1}-1` (reduced p.r.s.) [external]: Lemma 2 +
   Lemma 1(d) (`subresultant_prs_step_gap`). (The abstract analog is `subresultant_prs_vanish`.)
 Corollary 1.1 (§p.134); Corollary 1.2 (§p.135); Corollary 1.3 (§p.135); Corollary 1.4 (§p.135) [external].
