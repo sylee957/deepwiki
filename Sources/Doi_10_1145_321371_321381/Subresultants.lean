@@ -10,6 +10,16 @@ paper) are formalized; the closed-form **Theorem 1** and the generalized **Lemma
 arithmetic over those, and are tracked below.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+Reduced p.r.s. (§p.131, the coefficient choice the closed forms specialize): `cᵢ = lc Pᵢ`,
+  `δᵢ = nᵢ − nᵢ₊₁`, `δ₀ = −1`, and `c_{i+1}^(δᵢ+1)·Pᵢ = P_{i+1}·Qᵢ + cᵢ^(δ_{i-1}+1)·P_{i+2}` (so `i=1`
+  divides by `c₁⁰=1`, i.e. `P₃ = prem(P₁,P₂)`). In the `DeepWiki` abstract PRS (relation
+  `C αₗ·Fₗ = C βₗ·F_{l+2} + F_{l+1}·Qₗ`, with `Pᵢ = F_{i-1}`): `αₗ = (lc F_{l+1})^(δₗ+1)`,
+  `βₗ = (lc Fₗ)^(δ_{l-1}+1)`. The remaining closed-form items substitute these into
+  `subresultant_prs_closed_top` (`thm_1b_closed`) and match the two product sides.
+Lemma 2 (§p.132): the reduced-p.r.s.-specialized telescope `Sⱼ(P₁,P₂) = (-1)^σᵣ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·
+  c_r^(-(δᵣ₋₁+1)(n_{r+1}-j))·Sⱼ(Pᵣ,P_{r+1})`, `σᵣ = ∑(nᵢ-j)(n_{i+1}-j)` [external]: the abstract
+  `subresultant_prs_telescope_explicit` with `αₗ,βₗ` above substituted and the `c`-powers collected (negative
+  exponents ⇒ over `Frac`).
 Theorem 1(a) (§p.133): `S_{nₖ}(P₁,P₂) = (-1)^σₖ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·cₖ^(δₖ₋₁-1)·Pₖ` for a reduced
   p.r.s. [external]: combine the telescoped Lemma 2 (`subresultant_prs_telescope_explicit`) with
   Lemma 1(a) (`subresultant_rem_eq_13`) and reduce the exponent `α ≡ σₖ (mod 2)`.
