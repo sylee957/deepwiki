@@ -88,6 +88,41 @@ theorem hasSum_coeff_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
   have h := hball.hasSum hmem
   simpa only [zero_add, FormalMultilinearSeries.apply_eq_pow_smul_coeff, smul_eq_mul] using h
 
+/-- **The Cauchy product `φ·(θ/φ) = θ`:** on the disk, `θ(z) = ∑ₘ ∑_{i+j=m} φᵢ zⁱ · (zʲ ψⱼ)` — the
+product of the polynomial `φ(z) = ∑φₖzᵏ` and the series `θ/φ = ∑ψₙzⁿ`, via the `tsum` Cauchy
+product. The coefficient form of this is the `ψ`-weight recursion. -/
+theorem aeval_eq_tsum_cauchy {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ ∀ z : ℂ, ‖z‖ < (R : ℝ) →
+      Polynomial.aeval z θ = ∑' m : ℕ, ∑ q ∈ Finset.antidiagonal m,
+        ((φ.coeff q.1 : ℝ) • z ^ q.1) * (z ^ q.2 *
+          (cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2) := by
+  obtain ⟨R, hR1, hne, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
+  refine ⟨R, hR1, fun z hz => ?_⟩
+  set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R with hp
+  have hmem : z ∈ Metric.eball (0 : ℂ) R := by
+    rw [Metric.mem_eball, edist_zero_right, enorm_lt_coe]; exact_mod_cast hz
+  have hg : HasSum (fun n => z ^ n * p.coeff n) (Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) := by
+    simpa only [zero_add, FormalMultilinearSeries.apply_eq_pow_smul_coeff, smul_eq_mul] using
+      hball.hasSum hmem
+  have hf : HasSum (fun k => (φ.coeff k : ℝ) • z ^ k) (Polynomial.aeval z φ) := hasSum_aeval_smul φ z
+  have hsumf : Summable (fun k => ‖(φ.coeff k : ℝ) • z ^ k‖) :=
+    summable_of_ne_finset_zero (s := Finset.range (φ.natDegree + 1)) fun k hk => by
+      rw [Finset.mem_range, not_lt] at hk
+      rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul, norm_zero]
+  have hrad : (‖z‖₊ : ℝ≥0∞) < p.radius := lt_of_lt_of_le (by exact_mod_cast hz) hball.r_le
+  have hcoeff_le : ∀ n, ‖p.coeff n‖ ≤ ‖p n‖ := fun n => by
+    have h := (p n).le_opNorm (1 : Fin n → ℂ)
+    simp only [Pi.one_apply, norm_one, Finset.prod_const_one, mul_one] at h
+    exact h
+  have hsumg : Summable (fun n => ‖z ^ n * p.coeff n‖) := by
+    refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_) (p.summable_norm_mul_pow hrad)
+    rw [norm_mul, norm_pow, mul_comm]
+    exact mul_le_mul_of_nonneg_right (hcoeff_le n) (by positivity)
+  have hcauchy := tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hsumf hsumg
+  rw [hf.tsum_eq, hg.tsum_eq] at hcauchy
+  rw [← hcauchy, mul_comm (Polynomial.aeval z θ) (Polynomial.aeval z φ)⁻¹,
+    mul_inv_cancel_left₀ (hne z hz)]
+
 /-- **Causal ⟹ `∑|ψⱼ| < ∞` (analytic `ψ`-weights):** the Cauchy power-series (Taylor) coefficients
 of `1/φ` at `0` are absolutely summable. This is the `MA(∞)` weight summability — the analytic
 content that the formal `armaPsi = θ/φ` lacked. `1/φ` is analytic on a disk of radius `R > 1`
