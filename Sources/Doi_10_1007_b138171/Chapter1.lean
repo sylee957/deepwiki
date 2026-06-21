@@ -13,6 +13,8 @@ import Mathlib.RingTheory.Nullstellensatz
 import Mathlib.Algebra.EuclideanDomain.Int
 import Mathlib.Algebra.EuclideanDomain.Basic
 import Mathlib.Algebra.Polynomial.Div
+import Mathlib.RingTheory.Polynomial.Content
+import Mathlib.Algebra.Squarefree.Basic
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 1: Algebraic Preliminaries
@@ -269,5 +271,46 @@ theorem thm_1_3_euclidean {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b :
 theorem thm_1_3_extended {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b : R) :
     EuclideanDomain.gcd a b = a * EuclideanDomain.gcdA a b + b * EuclideanDomain.gcdB a b :=
   EuclideanDomain.gcd_eq_gcd_ab a b
+
+/-! ## §1.6 Primitive Polynomials -/
+
+/-- **Definition 1.6.1** (§1.6, p.25), the *content* `content(A) = gcd(a₀, …, aₙ)` of a
+polynomial over a UFD. -/
+abbrev def_1_6_1_content := @Polynomial.content
+
+/-- **Definition 1.6.1**: `A` is *primitive* if `content(A)` is a unit. -/
+abbrev def_1_6_1_primitive := @Polynomial.IsPrimitive
+
+/-- **Definition 1.6.1**: the *primitive part* `pp(A) = A / content(A)`. -/
+noncomputable abbrev def_1_6_1_primPart := @Polynomial.primPart
+
+/-- **Definition 1.6.1**: the decomposition `A = content(A) · pp(A)`. -/
+theorem def_1_6_1_decomp {R : Type*} [CommRing R] [NormalizedGCDMonoid R] (A : R[X]) :
+    A = Polynomial.C A.content * A.primPart :=
+  Polynomial.eq_C_content_mul_primPart A
+
+/-- **Lemma 1.6.1** (§1.6, p.26), Gauss's Lemma: the content is multiplicative,
+`content(AB) = content(A) · content(B)`. -/
+theorem lem_1_6_1 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] (A B : R[X]) :
+    (A * B).content = A.content * B.content :=
+  Polynomial.content_mul
+
+/-! ## §1.7 Squarefree Factorization -/
+
+/-- **Definition 1.7.1** (§1.7, p.28): `A` is *squarefree* if no non-unit `B` satisfies
+`B² ∣ A`. -/
+abbrev def_1_7_1 := @Squarefree
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
+-- dedicated iterations:**
+--   • §1.2 pseudo-division `PolyPseudoDivide` + spec `bᵈ⁺¹A = BQ + R` (Ex 1.2.2).
+--   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
+--     sequence and Cor 1.4.1/1.4.2 linking it to the resultant are not).
+--   • §1.5 polynomial remainder sequences (Examples 1.5.1/1.5.2).
+--   • §1.6 the deflation theory — squarefree part `A*`, `k`-deflations `A⁻ᵏ` (Def 1.6.2),
+--     relations (1.11)–(1.14), and Theorem 1.6.1 (`Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ gcd(A, dA/dx)`).
+--   • §1.7 squarefree factorization (Def 1.7.2), Lemmas 1.7.1/1.7.2, and the Musser/Yun
+--     `Squarefree` algorithm (Example 1.7.1) — the squarefree-factorization routine the
+--     integration algorithm uses.
 
 end DeepWiki.Si
