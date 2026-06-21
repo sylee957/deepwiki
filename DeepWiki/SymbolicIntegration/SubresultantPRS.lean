@@ -464,7 +464,8 @@ exactly Collins's coefficient `∏ c (l+1) ^ (δ l · (δ_{l+1} − 1))` — i.e
 reindexes (`shift_prod`, `beta_fold`) to a common `∏_{k ∈ Ico 1 (m+1)}`, and one `prod_congr` discharges it
 via the per-`k` identity `(δ_{k-1}+1)·E_{k-1} = (δ_{k-1}+1)·E_k + (δ_{k-1}+δ_k) + δ_{k-1}(δ_k−1)`. -/
 theorem lc_collapse_defective (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m)
-    (hE : ∀ k, E k = E (k + 1) + δ (k + 1)) (hδ : ∀ k, 1 ≤ δ k) (hEm : E m = 1) :
+    (hE : ∀ k, k < m → E k = E (k + 1) + δ (k + 1)) (hδ : ∀ k, 0 < k → k ≤ m → 1 ≤ δ k)
+    (hEm : E m = 1) :
     ∏ l ∈ range m, (c (l + 1)) ^ ((δ l + 1) * E l)
       = (c m) ^ (δ (m - 1) + 1)
         * (∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
@@ -489,8 +490,8 @@ theorem lc_collapse_defective (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm
   congr 1
   simp only [show (k - 1) + 1 = k from by omega]
   have hEk : E (k - 1) = E k + δ k := by
-    have h := hE (k - 1); rwa [show k - 1 + 1 = k from by omega] at h
-  have hb := hδ k
+    have h := hE (k - 1) (by omega); rwa [show k - 1 + 1 = k from by omega] at h
+  have hb := hδ k (by omega) (by omega)
   rw [hEk]
   rcases hd : δ k with _ | p
   · omega
