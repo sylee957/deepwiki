@@ -202,6 +202,54 @@ theorem regionEqAll_exists_add_above {D : Type*} [Fintype D] (W : Valuation D)
       have hxle : b ≤ 1 - fracPart (W x) := by rw [hb]; exact hx₀ x (Finset.mem_univ x)
       linarith
 
+/-- **No wrap (downward).** Subtracting `ε` below the fractional part drops the fractional part by `ε`
+and leaves the integer part unchanged — the dual of `fracPart_add_of_no_wrap`. -/
+theorem fracPart_sub_of_no_wrap {a ε : ℝ≥0} (hε : (ε : ℝ) < fracPart a) :
+    fracPart (a - ε) = fracPart a - (ε : ℝ) ∧ ⌊a - ε⌋₊ = ⌊a⌋₊ := by
+  have hεnn : (0 : ℝ) ≤ (ε : ℝ) := ε.coe_nonneg
+  have hd : (a : ℝ) = (⌊a⌋₊ : ℝ) + fracPart a := coe_eq_floor_add_fracPart a
+  have h1 : fracPart a < 1 := fracPart_lt_one a
+  have hfle : fracPart a ≤ (a : ℝ) := by
+    have h0 : (0 : ℝ) ≤ (⌊a⌋₊ : ℝ) := by positivity
+    linarith
+  have hεa : ε ≤ a := by
+    have : (ε : ℝ) ≤ (a : ℝ) := le_of_lt (lt_of_lt_of_le hε hfle); exact_mod_cast this
+  have hcoe : ((a - ε : ℝ≥0) : ℝ) = (a : ℝ) - (ε : ℝ) := NNReal.coe_sub hεa
+  have hfr : fracPart (a - ε) = fracPart a - (ε : ℝ) := by
+    unfold fracPart
+    rw [hcoe, Int.fract_eq_iff]
+    refine ⟨?_, ?_, ⌊(a : ℝ)⌋, ?_⟩
+    · show (0 : ℝ) ≤ Int.fract (a : ℝ) - (ε : ℝ)
+      have : (ε : ℝ) < Int.fract (a : ℝ) := hε
+      linarith
+    · show Int.fract (a : ℝ) - (ε : ℝ) < 1
+      have : Int.fract (a : ℝ) < 1 := h1
+      linarith
+    · have hf := Int.self_sub_fract (a : ℝ); linarith [hf]
+  refine ⟨hfr, ?_⟩
+  apply floor_eq_of_mem
+  · have hle : (⌊a⌋₊ : ℝ) ≤ ((a - ε : ℝ≥0) : ℝ) := by rw [hcoe]; linarith
+    exact_mod_cast hle
+  · have hlt : ((a - ε : ℝ≥0) : ℝ) < (⌊a⌋₊ : ℝ) + 1 := by rw [hcoe]; linarith
+    exact_mod_cast hlt
+
+/-- **Small retreat preserves the region.** Dual of `regionEqAll_add_small`: if no clock of `W` sits on
+an integer and `ε` is below every clock's fractional part (no clock wraps down its previous integer),
+then `W` and `W − ε` are region-equivalent. -/
+theorem regionEqAll_sub_small {D : Type*} [Fintype D] (W : Valuation D)
+    (hno : ∀ x, fracPart (W x) ≠ 0) {ε : ℝ≥0} (hε : ∀ x, (ε : ℝ) < fracPart (W x)) :
+    RegionEqAll W (fun x => W x - ε) := by
+  apply regionEqAll_of_exact
+  · intro x; exact (fracPart_sub_of_no_wrap (hε x)).2.symm
+  · intro x
+    show fracPart (W x) = 0 ↔ fracPart (W x - ε) = 0
+    rw [(fracPart_sub_of_no_wrap (hε x)).1]
+    exact ⟨fun h => absurd h (hno x), fun h => absurd h (by have := hε x; intro hh; linarith)⟩
+  · intro x y
+    show fracPart (W x) ≤ fracPart (W y) ↔ fracPart (W x - ε) ≤ fracPart (W y - ε)
+    rw [(fracPart_sub_of_no_wrap (hε x)).1, (fracPart_sub_of_no_wrap (hε y)).1]
+    constructor <;> intro h <;> linarith
+
 /-- `fracPart` as value minus floor (real-valued). -/
 theorem fracPart_eq_sub_floor (v : ℝ≥0) : fracPart v = (v : ℝ) - ((⌊v⌋₊ : ℝ≥0) : ℝ) := by
   have hbridge : (((⌊v⌋₊ : ℝ≥0)) : ℝ) = (⌊(v : ℝ)⌋ : ℝ) := by
