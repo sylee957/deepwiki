@@ -111,4 +111,35 @@ theorem minConv_toFunPWL_eq_convNat (r s : UppSeq ℚ) (n : ℕ) :
     minConv r.toFunPWL s.toFunPWL (n : ℝ≥0) = (r.convNat s n : ℝ) :=
   le_antisymm (minConv_toFunPWL_le_convNat r s n) (convNat_le_minConv_toFunPWL r s n)
 
+/-- **The discrete-to-continuous deconvolution bridge, as an equality.** When `slope_r ≤ slope_s` (so
+the deconvolution is finite — the same hypothesis the CLI's `deconv`/`backlog`/`delay` commands guard
+on), the continuous (min,+) deconvolution of the PWL readings equals the discrete `deconvNat` at every
+integer: `minDeconv (toFunPWL r) (toFunPWL s) n = deconvNat r s n`. Each continuous term is `≤ deconvNat`
+(`toFunPWL_sub_le` bounds it by bracketing integer terms, `deconvNat_ge` bounds those) — which gives both
+the `≤` direction (`minDeconv_le`) and boundedness above; the `≥` direction reads off the maximizing
+integer term (`deconvNat_eq`) as a term of the supremum. -/
+theorem minDeconv_toFunPWL_eq_deconvNat (r s : UppSeq ℚ) (n : ℕ)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr) :
+    minDeconv r.toFunPWL s.toFunPWL (n : ℝ≥0) = (r.deconvNat s n : ℝ) := by
+  have hterm_le : ∀ x : ℝ≥0, r.toFunPWL ((n : ℝ≥0) + x) - s.toFunPWL x ≤ (r.deconvNat s n : ℝ) := by
+    intro x
+    have hsub := toFunPWL_sub_le r s n x
+    have hT0 : (r.evalNat (n + ⌊x⌋₊) : ℝ) - (s.evalNat ⌊x⌋₊ : ℝ) ≤ (r.deconvNat s n : ℝ) := by
+      exact_mod_cast r.deconvNat_ge s hle n ⌊x⌋₊
+    have hT1 : (r.evalNat (n + ⌊x⌋₊ + 1) : ℝ) - (s.evalNat (⌊x⌋₊ + 1) : ℝ) ≤ (r.deconvNat s n : ℝ) := by
+      exact_mod_cast r.deconvNat_ge s hle n (⌊x⌋₊ + 1)
+    exact le_trans hsub (max_le hT0 hT1)
+  refine le_antisymm (minDeconv_le hterm_le) ?_
+  have hbdd : BddAbove (Set.range fun x : ℝ≥0 => r.toFunPWL ((n : ℝ≥0) + x) - s.toFunPWL x) :=
+    ⟨(r.deconvNat s n : ℝ), by rintro y ⟨x, rfl⟩; exact hterm_le x⟩
+  obtain ⟨k, hk, hke⟩ := r.deconvNat_eq s n
+  rw [hke]
+  have hterm : ((r.evalNat (n + k) - s.evalNat k : ℚ) : ℝ)
+      = r.toFunPWL ((n : ℝ≥0) + (k : ℝ≥0)) - s.toFunPWL (k : ℝ≥0) := by
+    rw [show (n : ℝ≥0) + (k : ℝ≥0) = ((n + k : ℕ) : ℝ≥0) by push_cast; ring,
+      toFunPWL_natCast, toFunPWL_natCast]; push_cast; ring
+  rw [hterm]
+  exact le_ciSup hbdd (k : ℝ≥0)
+
 end DeepWiki.UppSeq
