@@ -82,11 +82,20 @@ stationary process multiplies its spectral measure by the **power transfer funct
 ARMA(p,q) process (no common zeroes, `φ(z) ≠ 0` on `|z| = 1`) has the **rational spectral
 density** `f(λ) = (σ²/2π) |θ(e^{-iλ})|² / |φ(e^{-iλ})|²` (eq 4.4.5).
 
-Both proofs run through the `MA(∞)` representation and the spectral representation of the
-process (infra-blocked). The spectral-density **formula** itself is the algebraic
+The **frequency-domain core** of Theorem 4.4.1 — that a linear filter `ψ(B)` (`∑|ψⱼ| < ∞`)
+transforms the autocovariance's Fourier series by `|ψ̂(e^{-iλ})|²` — is now formalized
+(`thm_4_4_1` below: `∑ₙ e^{-inλ} ∑ₖ ψₖ ψ_{k+n} = (∑ₖ ψₖ e^{ikλ})(∑ₘ ψₘ e^{-imλ})`). What remains
+infra-blocked is its packaging as a statement about spectral *measures* (and the process spectral
+representation `Xₜ = ∫ e^{itν} dZ`). The spectral-density **formula** itself is the algebraic
 `armaSpectralDensity` below, with its non-negativity and the white-noise case (`φ = θ = 1`,
 constant `σ²/2π`), and **Example 4.4.1** (the MA(1) density `(σ²/2π)(1 + 2θ₁cos λ + θ₁²)`) all
 proved. -/
+
+/-- **§4.4, Theorem 4.4.1 (eq 4.4.3, frequency-domain core)**: a linear filter `ψ(B)` with
+`∑ⱼ |ψⱼ| < ∞` transforms the autocovariance's Fourier series by the squared transfer function
+`|ψ̂(e^{-iλ})|²` — `∑ₙ e^{-inλ} ∑ₖ ψₖ ψ_{k+n} = (∑ₖ ψₖ e^{ikλ})(∑ₘ ψₘ e^{-imλ})` (the two factors are
+conjugate since `ψ` is real). The library's `fourier_tsum_mul_shift`. -/
+alias thm_4_4_1 := DeepWiki.TimeSeries.fourier_tsum_mul_shift
 
 /-- **§4.4, Theorem 4.4.2 (eq 4.4.5)**: the rational spectral density of an ARMA(p,q) process,
 `f(λ) = (σ²/2π) · |θ(e^{-iλ})|² / |φ(e^{-iλ})|²`. The library's `armaSpectralDensity` (with
