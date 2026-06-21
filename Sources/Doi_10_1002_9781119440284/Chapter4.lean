@@ -37,7 +37,9 @@ abbrev def_4_upp := @IsUPP
 library formalizes the UPP class (`def_4_upp`) and its stability under `+` (`lemma_4_2`, all common
 periods), `⊓`/`⊔` (`lemma_4_3_min`/`lemma_4_3_max`, **all slope cases** via the Archimedean crossover),
 and convolution `∗` (`lemma_4_4`, the **general** closed form including the non-balanced case via the
-minimizer-region lemma). Deconvolution and sub-additive-closure parts are not yet formalized. -/
+minimizer-region lemma), deconvolution (`lemma_4_5`, the deconvolution sequence is UPP), and the
+sub-additive-closure **approximant** (`UppSeq.closureApproxNat`, idempotent closed form `f* = δ₀ ⊓ f`
+in `UppSeq.closureApproxNat_idem`). See `Coverage.lean` for the precise closure / containers status. -/
 theorem thm_4_3_add {V : Type*} [AddCommMonoid V] {f g : ℝ≥0 → V} {T₁ T₂ d c₁ c₂}
     (hf : IsUPPWith f T₁ d c₁) (hg : IsUPPWith g T₂ d c₂) :
     IsUPPWith (fun t => f t + g t) (max T₁ T₂) d (c₁ + c₂) := hf.add hg
@@ -75,7 +77,11 @@ monotonicity needed) is `convNat_add_lcm_of_balanced`; the no-transient case
 (`convNat_le`/`convNat_eq`); the `minplus` CLI's `conv` samples it. -/
 alias lemma_4_4 := UppSeq.convNat_add_lcm
 
-/-! **Lemma 4.5** (§4.3.2.2, p.77): If f,g are ultimately pseudo-periodic, then the deconvolution f ⊘ g is ultimately pseudo-periodic from T_f with period d_f and increment c_f. Not formalized in the library. -/
+/-- **Lemma 4.5** (§4.3.2.2, p.77): if `f,g` are ultimately pseudo-periodic, the deconvolution `f ⊘ g`
+is ultimately pseudo-periodic from `T_f` with period `d_f` and increment `c_f`. The library's
+`DeepWiki.UppSeq.deconvNat_add_period`: the deconvolution sequence advances by `c_f` each period `d_f`
+(the `minplus` CLI's `deconvupp` builds the UPP quadruplet from it). -/
+alias lemma_4_5 := UppSeq.deconvNat_add_period
 
 /-! **Lemma 4.6** (§4.3.2.2, p.78): Deconvolution of two segments f (on [I,J]) and g (on interval): f ⊘ g is computed in closed form over three subcases according to the relative endpoints and slopes (default −∞ outside the interval). Not formalized in the library. -/
 
