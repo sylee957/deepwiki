@@ -39,6 +39,34 @@ theorem natCast_ne_sqrt2NN (m : ℕ) : (m : ℝ≥0) ≠ sqrt2NN := by
 theorem asymMatch_sqrt2_self : AsymMatch sqrt2NN sqrt2NN := fun m =>
   ⟨le_of_lt, fun h => lt_of_le_of_ne h (natCast_ne_sqrt2NN m)⟩
 
+/-- **The process τ-match collapses to a single threshold in the live regime.** Because `√2 − e ≥ 0`
+always (truncated subtraction) the `m = 0` clause is vacuous, and because `√2 − d < 2` the `m ≥ 2`
+clauses are vacuous; so `AsymMatch (√2−d) (√2−e)` is just the `m = 1` condition — the `√2−1` cut
+`d + 1 < √2 ↔ e + 1 ≤ √2`. -/
+theorem asymMatch_tau_live {d e : ℝ≥0} (hd : d < sqrt2NN) (he : e ≤ sqrt2NN) :
+    AsymMatch (sqrt2NN - d) (sqrt2NN - e) ↔ (d + 1 < sqrt2NN ↔ e + 1 ≤ sqrt2NN) := by
+  have e1 : ((1 : ℝ≥0) < sqrt2NN - d) ↔ (d + 1 < sqrt2NN) := by
+    rw [← NNReal.coe_lt_coe, ← NNReal.coe_lt_coe, NNReal.coe_sub (le_of_lt hd), NNReal.coe_add]
+    push_cast; constructor <;> intro <;> linarith
+  have e2 : ((1 : ℝ≥0) ≤ sqrt2NN - e) ↔ (e + 1 ≤ sqrt2NN) := by
+    rw [← NNReal.coe_le_coe, ← NNReal.coe_le_coe, NNReal.coe_sub he, NNReal.coe_add]
+    push_cast; constructor <;> intro <;> linarith
+  constructor
+  · intro h
+    have h1 := h 1; rw [Nat.cast_one, e1, e2] at h1; exact h1
+  · intro h m
+    match m with
+    | 0 => rw [Nat.cast_zero]; exact ⟨fun _ => zero_le, fun _ => tsub_pos_of_lt hd⟩
+    | 1 => rw [Nat.cast_one, e1, e2]; exact h
+    | (n + 2) =>
+      have hslt : sqrt2NN < ((n + 2 : ℕ) : ℝ≥0) := by
+        rw [← NNReal.coe_lt_coe]; push_cast
+        have hn : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
+        linarith [sqrt2NN_lt_two]
+      exact iff_of_false
+        (not_lt.mpr (le_of_lt (lt_of_le_of_lt tsub_le_self hslt)))
+        (not_le.mpr (lt_of_le_of_lt tsub_le_self hslt))
+
 /-- `crossVal d 0 = √2 − d`. -/
 @[simp] theorem crossVal_zero (d : ℝ≥0) : crossVal d 0 = sqrt2NN - d := by
   simp [crossVal]
