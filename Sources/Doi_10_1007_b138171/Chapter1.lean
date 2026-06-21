@@ -919,6 +919,40 @@ for `A = x⁸ + 6x⁶ + 12x⁴ + 8x²` is `A = x²·(x²+2)³`. -/
 theorem ex_1_7_1 :
     (X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : ℚ[X]) = X ^ 2 * (X ^ 2 + 2) ^ 3 := by ring
 
+/-- **Example 1.7.2** (§1.7, p.32): a step-by-step execution of *Yun's* squarefree-factorization algorithm
+on `A = x⁸ + 6x⁶ + 12x⁴ + 8x²`. The trace (`k`; `S*`, `Y`, `Z`, `Aⱼ`): `S' = dA/dx = 8x⁷+36x⁵+48x³+16x`,
+`S⁻ = gcd(S,S') = x⁵+4x³+4x`, `S* = S/S⁻ = x³+2x`, `Y₁ = S'/S⁻ = 8x²+4`; then `Z = Y − dS*/dx` gives
+`Z₁ = 5x²+2` (`A₁ = 1`), `Z₂ = 2x²` (`A₂ = x`), `Z₃ = 0` (`A₃ = x²+2`), terminating — the `Z`-column has
+smaller degrees than Musser's `S⁻`-column (Example 1.7.1). Each step is verified as a polynomial identity. -/
+theorem ex_1_7_2 :
+    -- S' = dA/dx
+    derivative (X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : ℚ[X])
+        = 8 * X ^ 7 + 36 * X ^ 5 + 48 * X ^ 3 + 16 * X
+    -- S = S⁻ · S* :  A = (x⁵+4x³+4x)·(x³+2x)
+    ∧ (X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : ℚ[X]) = (X ^ 5 + 4 * X ^ 3 + 4 * X) * (X ^ 3 + 2 * X)
+    -- S' = S⁻ · Y₁ :  Y₁ = 8x²+4
+    ∧ (8 * X ^ 7 + 36 * X ^ 5 + 48 * X ^ 3 + 16 * X : ℚ[X]) = (X ^ 5 + 4 * X ^ 3 + 4 * X) * (8 * X ^ 2 + 4)
+    -- k=1: Z₁ = Y₁ − (S*)′ = 5x²+2  (A₁ = gcd(S*,Z₁) = 1)
+    ∧ (8 * X ^ 2 + 4 : ℚ[X]) - derivative (X ^ 3 + 2 * X) = 5 * X ^ 2 + 2
+    -- k=2: Z₂ = Y₂ − (S*)′ = 2x²   (Y₂ = Z₁ since A₁ = 1)
+    ∧ (5 * X ^ 2 + 2 : ℚ[X]) - derivative (X ^ 3 + 2 * X) = 2 * X ^ 2
+    -- A₂ = x:  S* = A₂·(x²+2),  Z₂ = A₂·(2x)
+    ∧ (X ^ 3 + 2 * X : ℚ[X]) = X * (X ^ 2 + 2)
+    ∧ (2 * X ^ 2 : ℚ[X]) = X * (2 * X)
+    -- k=3: Z₃ = Y₃ − (S*)′ = 0 (loop terminates),  A₃ = x²+2
+    ∧ (2 * X : ℚ[X]) - derivative (X ^ 2 + 2) = 0
+    -- resulting squarefree factorization (= ex_1_7_1)
+    ∧ (X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : ℚ[X]) = X ^ 2 * (X ^ 2 + 2) ^ 3 := by
+  have hd1 : derivative (X ^ 3 + 2 * X : ℚ[X]) = 3 * X ^ 2 + 2 := by
+    simp only [derivative_add, derivative_mul, derivative_X_pow, derivative_ofNat, derivative_X,
+      Nat.cast_ofNat, map_ofNat]; ring
+  have hd2 : derivative (X ^ 2 + 2 : ℚ[X]) = 2 * X := by
+    simp only [derivative_add, derivative_X_pow, derivative_ofNat, Nat.cast_ofNat, map_ofNat]; ring
+  refine ⟨?_, by ring, by ring, by rw [hd1]; ring, by rw [hd1]; ring, by ring, by ring,
+    by rw [hd2]; ring, by ring⟩
+  simp only [derivative_add, derivative_mul, derivative_X_pow, derivative_ofNat, Nat.cast_ofNat,
+    map_ofNat]; ring
+
 /-- **Exercise 1.9** (§1, p.33): the squarefree factorization of `x⁸ − 5x⁶ + 6x⁴ + 4x² − 8` is
 `(x²+1)·(x²−2)³` (squarefree parts `x²+1` at multiplicity 1, `x²−2` at multiplicity 3). -/
 theorem ex_1_9 :
@@ -1177,8 +1211,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
-  factorization is `ex_1_7_1`.
 Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials
   (concrete multivariate PRS arithmetic; the book supplies the worked answer). -/
 
