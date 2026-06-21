@@ -627,6 +627,30 @@ theorem ex_1_5 :
   have h2 : (3 * X ^ 2 - 7 : ℤ[X]).natDegree = 2 := by compute_degree!
   rw [h2]; compute_degree!
 
+/-- **Exercise 1.8** (§1, p.33): the gcd of `4x⁴ + 13x³ + 15x² + 7x + 1 = (x+1)³(4x+1)` and
+`2x³ + x² − 4x − 3 = (x+1)²(2x−3)` in `ℚ[x]` is `(x+1)²` (the cofactors `(x+1)(4x+1)` and
+`2x−3` are coprime, via Bézout `2·(x+1)(4x+1) + (−4x−11)(2x−3) = 35`). -/
+theorem ex_1_8 :
+    Associated
+      (gcd (4 * X ^ 4 + 13 * X ^ 3 + 15 * X ^ 2 + 7 * X + 1 : ℚ[X]) (2 * X ^ 3 + X ^ 2 - 4 * X - 3))
+      ((X + 1) ^ 2) := by
+  have hf : (4 * X ^ 4 + 13 * X ^ 3 + 15 * X ^ 2 + 7 * X + 1 : ℚ[X])
+      = (X + 1) ^ 2 * ((X + 1) * (4 * X + 1)) := by ring
+  have hg : (2 * X ^ 3 + X ^ 2 - 4 * X - 3 : ℚ[X]) = (X + 1) ^ 2 * (2 * X - 3) := by ring
+  have hcop : IsCoprime ((X + 1) * (4 * X + 1) : ℚ[X]) (2 * X - 3) := by
+    refine ⟨C (1 / 35) * 2, C (1 / 35) * (-4 * X - 11), ?_⟩
+    have hb : (2 : ℚ[X]) * ((X + 1) * (4 * X + 1)) + (-4 * X - 11) * (2 * X - 3) = 35 := by ring
+    calc C (1 / 35) * 2 * ((X + 1) * (4 * X + 1)) + C (1 / 35) * (-4 * X - 11) * (2 * X - 3)
+        = C (1 / 35) * ((2 : ℚ[X]) * ((X + 1) * (4 * X + 1)) + (-4 * X - 11) * (2 * X - 3)) := by ring
+      _ = C (1 / 35) * 35 := by rw [hb]
+      _ = 1 := by rw [← map_ofNat C 35, ← C_mul]; norm_num
+  have hu : IsUnit (gcd ((X + 1) * (4 * X + 1) : ℚ[X]) (2 * X - 3)) :=
+    hcop.isUnit_of_dvd' (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+  have hg1 : gcd ((X + 1) * (4 * X + 1) : ℚ[X]) (2 * X - 3) = 1 :=
+    (normalize_gcd _ _).symm.trans (normalize_eq_one.mpr hu)
+  rw [hf, hg, gcd_mul_left, hg1, mul_one]
+  exact normalize_associated _
+
 /-- **Exercise 1.3** (§1, p.33): the inverse of `14` in `ℤ/37` is `8` (i.e. `14·8 ≡ 1`). -/
 theorem ex_1_3 : (14 : ZMod 37) * 8 = 1 := by decide
 
@@ -697,6 +721,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.4; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.11; Ex 1.14. -/
+Exercises: Ex 1.4; Ex 1.6; Ex 1.7; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
