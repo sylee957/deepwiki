@@ -164,4 +164,48 @@ theorem subresultant_prs_similar_elt [IsDomain R] (F : ℕ → R[X]) (α β : �
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) hC (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
+/-- `IsSimilar p q` over a domain lifts to an exact rational scalar over the field of fractions:
+`p = C η · q` in `Frac(D)[x]` for some nonzero `η ∈ Frac(D)` (namely `η = b/a` from the witnesses
+`C a · p = C b · q`). -/
+theorem IsSimilar.exists_fractionRing {D : Type*} [CommRing D] [IsDomain D] {p q : D[X]}
+    (h : IsSimilar p q) :
+    ∃ η : FractionRing D, η ≠ 0 ∧
+      p.map (algebraMap D (FractionRing D)) = C η * q.map (algebraMap D (FractionRing D)) := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  have hinj := IsFractionRing.injective D (FractionRing D)
+  have hφa : algebraMap D (FractionRing D) a ≠ 0 := (map_ne_zero_iff _ hinj).mpr ha
+  have hφb : algebraMap D (FractionRing D) b ≠ 0 := (map_ne_zero_iff _ hinj).mpr hb
+  refine ⟨algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a,
+    div_ne_zero hφb hφa, ?_⟩
+  have key : C (algebraMap D (FractionRing D) a) * p.map (algebraMap D (FractionRing D))
+      = C (algebraMap D (FractionRing D) b) * q.map (algebraMap D (FractionRing D)) := by
+    rw [← Polynomial.map_C, ← Polynomial.map_C, ← Polynomial.map_mul, ← Polynomial.map_mul, hab]
+  calc p.map (algebraMap D (FractionRing D))
+      = C ((algebraMap D (FractionRing D) a)⁻¹) * (C (algebraMap D (FractionRing D) a)
+          * p.map (algebraMap D (FractionRing D))) := by
+        rw [← mul_assoc, ← map_mul, inv_mul_cancel₀ hφa, map_one, one_mul]
+    _ = C ((algebraMap D (FractionRing D) a)⁻¹) * (C (algebraMap D (FractionRing D) b)
+          * q.map (algebraMap D (FractionRing D))) := by rw [key]
+    _ = C (algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a)
+          * q.map (algebraMap D (FractionRing D)) := by rw [div_eq_mul_inv, map_mul]; ring
+/-- **Theorem 1.5.2** (Bronstein §1.5, p.23) — exact rational coefficient form over `Frac(D)`: at a
+regular index `j = deg F_{m+2}`, the subresultant equals an explicit nonzero rational multiple `ηᵢ` of
+the PRS element, `Sⱼ(F₀,F₁) = ηᵢ · F_{m+2}` in `Frac(D)[x]`. (The structural `D[x]` similarity is
+`subresultant_prs_similar_elt`; here it is lifted to the exact scalar `ηᵢ ∈ Frac(D)` via
+`IsSimilar.exists_fractionRing`.) -/
+theorem subresultant_prs_eq_fractionRing {D : Type*} [CommRing D] [IsDomain D]
+    (F : ℕ → D[X]) (α β : ℕ → D) (Q : ℕ → D[X]) (m : ℕ)
+    (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
+    (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, (F (m + 2)).natDegree < (F (l + 2)).natDegree)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l)
+    (hC : F (m + 2) ≠ 0) :
+    ∃ η : FractionRing D, η ≠ 0 ∧
+      (subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree (F (m + 2)).natDegree).map
+          (algebraMap D (FractionRing D))
+        = C η * (F (m + 2)).map (algebraMap D (FractionRing D)) :=
+  (subresultant_prs_similar_elt F α β Q m hα hβ hlc hcb hj hQ hrel hC).exists_fractionRing
+
 end DeepWiki.SymbolicIntegration

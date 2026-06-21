@@ -607,6 +607,11 @@ abbrev thm_1_5_2_explicit := @subresultant_prs_telescope_explicit
 `subresultant_prs_similar_elt`. -/
 abbrev thm_1_5_2_elt := @subresultant_prs_similar_elt
 
+/-- **Theorem 1.5.2** (§1.5, p.23) — exact rational coefficient form: over `Frac(D)`, at a regular index
+`Sⱼ(A,B) = ηᵢ·Rᵢ` for an explicit nonzero `ηᵢ ∈ Frac(D)` (eq 1.9). `subresultant_prs_eq_fractionRing`,
+lifting the `D[x]` similarity (`thm_1_5_2_elt`) to the scalar via `IsSimilar.exists_fractionRing`. -/
+abbrev thm_1_5_2_frac := @subresultant_prs_eq_fractionRing
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
@@ -1139,10 +1144,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.2's exact rational coefficient form `Sⱼ(A,B) = ηᵢRᵢ` / `τᵢRᵢ` (eq 1.9/1.10) [infra]:
-  `ηᵢ` is rational (it divides by `rⱼ` powers), so this is a `Frac(D)`-level statement — the integral
-  content (`Sⱼ` similar to a PRS element, the explicit `D[x]` products, the vanishing branch) is
-  formalized under `thm_1_5_2_elt`/`thm_1_5_2_explicit`/`thm_1_5_2_zero`.
 §1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` (via the `βᵢ = −lc(Rᵢ)·γᵢ₊₁^(δᵢ+1)`
   coefficient recursion) [infra]: needs the same `Frac(D)` PRS-coefficient machinery.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
