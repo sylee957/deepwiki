@@ -25,10 +25,10 @@ aliases the Mathlib concept for each book definition and discharges each book th
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
 predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
 
-A few concrete worked examples that need substantial bespoke computation are still deferred
-(noted inline): the `ℤ[√−5]` facts (Ex 1.1.5 domain — Mathlib's `Nonsquare` is ℕ-keyed and does
-not resolve for `-5 : ℤ` — and the failure of unique factorization / gcd, Ex 1.1.6, 1.1.7), and
-the non-principal ideal `(X,Y)` (Ex 1.1.10). -/
+A few concrete worked examples that need substantial bespoke number theory are still deferred
+(noted inline): the failure of unique factorization in `ℤ[√−5]` (Ex 1.1.6 — `6` and `2+2√−5`
+have no gcd — and Ex 1.1.7 — `2, 3, 1±√−5` irreducible), and the non-principal ideal `(X,Y)`
+(Ex 1.1.10). -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -232,6 +232,17 @@ example : CharP (ZMod 6) 6 := inferInstance
 /-- **Example 1.1.4**: the zero divisors of `ℤ₆`. -/
 theorem ex_1_1_4_zero_divisors :
     (2 : ZMod 6) * 3 = 0 ∧ (2 : ZMod 6) ≠ 0 ∧ (3 : ZMod 6) ≠ 0 := by decide
+
+/-- **Example 1.1.5** (§1.1, p.3): `ℤ[√−5] = Zsqrtd (-5)` is an integral domain. (Mathlib's
+`Zsqrtd` `IsDomain` instance is keyed to *positive* nonsquare `d`; for `d = -5` we get it from
+the norm `N(a + b√−5) = a² + 5b²`, which is multiplicative and vanishes only at `0`.) -/
+example : IsDomain (Zsqrtd (-5)) := by
+  haveI : NoZeroDivisors (Zsqrtd (-5)) := ⟨fun {a b} hab => by
+    have h : a.norm * b.norm = 0 := by rw [← Zsqrtd.norm_mul, hab, Zsqrtd.norm_zero]
+    rcases mul_eq_zero.mp h with h | h
+    · exact Or.inl ((Zsqrtd.norm_eq_zero_iff (by norm_num) a).mp h)
+    · exact Or.inr ((Zsqrtd.norm_eq_zero_iff (by norm_num) b).mp h)⟩
+  exact NoZeroDivisors.to_isDomain _
 
 /-- **Example 1.1.8** (§1.1, p.4): `ℚ[X, Y]` (here `ℚ[X][Y]`) is a unique factorization
 domain. -/
