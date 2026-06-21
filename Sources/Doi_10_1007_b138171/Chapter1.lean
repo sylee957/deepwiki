@@ -654,6 +654,18 @@ theorem ex_1_13 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natDeg
       ∧ f * p + g * q = C (Polynomial.resultant f g m n) :=
   thm_1_4_2 f g m n hf hg H
 
+/-- **Exercise 1.14** (§1, p.33): correctness of the Extended Euclidean algorithm via its loop
+invariant. The cofactor relations `a₁·A + a₂·B = a` and `b₁·A + b₂·B = b` are established by the
+initialization `(a₁,a₂,b₁,b₂) = (1,0,0,1)` and preserved by one Euclidean-division step
+`a = q·b + r` (the new lower row is `(a₁ − q·b₁, a₂ − q·b₂)`), so on termination the returned
+cofactors express `gcd(A,B) = s·A + t·B`. -/
+theorem ex_1_14 {R : Type*} [CommRing R] (A B : R) :
+    ((1 : R) * A + 0 * B = A ∧ (0 : R) * A + 1 * B = B)
+    ∧ (∀ a b q r a₁ a₂ b₁ b₂ : R, a₁ * A + a₂ * B = a → b₁ * A + b₂ * B = b → a = q * b + r →
+        b₁ * A + b₂ * B = b ∧ (a₁ - q * b₁) * A + (a₂ - q * b₂) * B = r) := by
+  refine ⟨⟨by ring, by ring⟩, fun a b q r a₁ a₂ b₁ b₂ ha hb hdiv => ⟨hb, ?_⟩⟩
+  linear_combination ha - q * hb + hdiv
+
 /-- **Example 1.7.1 / 1.7.2** (§1.7, p.30–32): the squarefree factorization Yun's algorithm computes
 for `A = x⁸ + 6x⁶ + 12x⁴ + 8x²` is `A = x²·(x²+2)³`. -/
 theorem ex_1_7_1 :
@@ -924,6 +936,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.7; Ex 1.14. -/
+Exercises: Ex 1.7. -/
 
 end DeepWiki.Si
