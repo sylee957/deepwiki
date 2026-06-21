@@ -3,6 +3,7 @@ import DeepWiki.ReactiveSystems.TimedHmlClocks
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
+import DeepWiki.ReactiveSystems.TimedSqrt2Distinguish
 import DeepWiki.ReactiveSystems.TimedHmlExamples
 import DeepWiki.ReactiveSystems.TimedHmlClosedFormulae
 import DeepWiki.ReactiveSystems.TimedHmlEquivalences
@@ -37,9 +38,13 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   strong (excludes the genuine unbounded state) — so no finite set of boundary constants works. This needs
   the region-graph abstraction, already available unconditionally via the executable complete checker
   `decSatisfiesMtFull` / `satisfiesMt_iff_decideFull_delaySucc`.
-Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
-  + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
-  Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]`. -/
+Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
+  Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]` — solvable by the same
+  irrational-outer-delay + integer-clock trick now used in `prop_12_2_refuted`.
+
+NB: Exercise 12.12 statement 3 — and Proposition 12.2 itself, the claim that `(A,0)` and `(B,0)`
+satisfy the same *full* `Mt` formulae — is **refuted** below (`prop_12_2_refuted`), so there is no
+remaining open item there. -/
 
 namespace DeepWiki.Rs
 
@@ -180,15 +185,39 @@ any positive boundary `c`, `(A,0)` and `(B,0)` satisfy the same basic timed-HML
 formulae (the `∃∃`/`∀∀` fragment without clock constraints) yet are *not* timed
 bisimilar, so timed bisimilarity is strictly finer than basic-timed-HML equivalence.
 Discharged by the library's `timedHmlEquiv_and_not_timedBisimilar_sq2`. (No
-irrationality of `c` is needed here; the book's stronger statement — same formulae
-of the *full* `Mt` logic, with clock guards — is what requires `c = √2` irrational,
-and is left open. See `prop_12_2_not_bisim` for the non-bisimilarity alone.) -/
+irrationality of `c` is needed here. The book's *stronger* claim — that `(A,0)` and `(B,0)`
+satisfy the same formulae of the **full** `Mt` logic, with clock guards — is the content of
+Proposition 12.2, and it turns out to be **false**: see `prop_12_2_refuted`. So the genuine
+strictness gap exhibited by the `√2` example is with *basic* timed HML, not full `Mt`.) -/
 theorem prop_12_2_strict_basic (c : ℝ≥0) (hc : 0 < c) :
     (DeepWiki.ReactiveSystems.sq2TLTS c).TimedHMLEquiv
         (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) ∧
     ¬ TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.sq2TLTS c)
         (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) :=
   DeepWiki.ReactiveSystems.timedHmlEquiv_and_not_timedBisimilar_sq2 c hc
+
+/-- **Proposition 12.2 (full-`Mt` form) / Exercise 12.12(3) — refuted.** The book asserts
+that the `√2`-example states `(A,0)` and `(B,0)` satisfy the same *full* `Mt` formulae (clock
+guards included), so that timed bisimilarity would be strictly finer than `Mt`-equivalence
+over TLTSs; Exercise 12.12(3) is an auxiliary lemma toward that claim. The assertion is
+**false**. The formula
+`∃∃ ( x in ( ∀∀((x ≥ 1) ∨ ⟨a⟩tt)  ∧  ∀∀((x ≠ 1) ∨ [a]ff) ) )`
+separates the two states: the outer `∃∃` delays by the *irrational* amount `√2 − 1` — legal,
+since Definition 12.2's `·ε·` quantifies over `∃ d ∈ ℝ≥0` with no restriction — after which a
+freshly reset clock `x` measures `process − (√2−1)`, and the *integer* guard `x = 1` pins the
+process to exactly `√2` without ever naming it. There `A` is `a`-disabled (`d < √2`, open) so
+`[a]ff` holds, while `B` is still `a`-enabled (`d ≤ √2`, closed); the two conjuncts then have
+disjoint outer-delay ranges for `B`. The book's intuition ("`Mt` cannot express irrational
+delays") overlooks that the existential delay quantifier can absorb the irrational offset. So
+the `Mt`-bisimulation the book's argument would require cannot exist. Discharged by the
+library's `sq2_not_mtEquiv`. -/
+theorem prop_12_2_refuted :
+    ∃ F : Mt DeepWiki.ReactiveSystems.Sq2Act Unit,
+      TLTS.MtSatState (DeepWiki.ReactiveSystems.sq2TLTS DeepWiki.ReactiveSystems.sqrt2NN)
+        (DeepWiki.ReactiveSystems.Sq2.A 0) F ∧
+      ¬ TLTS.MtSatState (DeepWiki.ReactiveSystems.sq2TLTS DeepWiki.ReactiveSystems.sqrt2NN)
+        (DeepWiki.ReactiveSystems.Sq2.B 0) F :=
+  DeepWiki.ReactiveSystems.sq2_not_mtEquiv
 
 /-! ## §12.2 Properties of the Example 11.4 automata -/
 
