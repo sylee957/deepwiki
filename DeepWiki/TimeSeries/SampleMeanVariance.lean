@@ -126,4 +126,57 @@ theorem sum_range_sum_range_sub (f : ℤ → ℝ) (n : ℕ) :
     rw [hdrop]
     linarith [hbdry, hsplit]
 
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+
+/-- **Theorem 7.1.1 (asymptotic variance of the sample mean):** for a weakly stationary process whose
+autocovariance `γ` is summable, the rescaled variance of the sample mean converges to the sum of all
+autocovariances, `n · Var(X̄ₙ) → ∑ⱼ γ(j)`. Combines the variance-of-sum identity
+`n · Var(X̄ₙ) = ∑_{|h|<n} (1 − |h|/n) γ(h)` (via `variance_fun_sum'`, `acvf_eq_acvfStat`, and the
+counting kernel `sum_range_sum_range_sub`) with the Cesàro limit `tendsto_tsum_triangular`. -/
+theorem tendsto_nsmul_variance_sampleMean [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (hsum : Summable (acvfStat X μ)) :
+    Tendsto (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ) atTop
+      (𝓝 (∑' h : ℤ, acvfStat X μ h)) := by
+  have hkey : ∀ n : ℕ, (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ
+      = ∑' h : ℤ, if |(h : ℝ)| < n then (1 - |(h : ℝ)| / n) * acvfStat X μ h else 0 := by
+    intro n
+    have hvar : variance (fun ω => sampleMean n (fun t => X t ω)) μ
+        = ((n : ℝ)⁻¹) ^ 2
+          * ∑ s ∈ Finset.range n, ∑ t ∈ Finset.range n, acvfStat X μ ((s : ℤ) - t) := by
+      simp only [sampleMean]
+      rw [variance_const_mul,
+        variance_fun_sum' (X := fun t : ℕ => X (t : ℤ)) (fun t _ => hX.memLp t)]
+      congr 1
+      exact Finset.sum_congr rfl fun s _ =>
+        Finset.sum_congr rfl fun t _ => hX.acvf_eq_acvfStat _ _
+    rw [hvar, sum_range_sum_range_sub]
+    rw [tsum_eq_sum (s := Finset.Icc (-(n : ℤ)) n) ?_]
+    · rw [Finset.mul_sum, Finset.mul_sum]
+      refine Finset.sum_congr rfl fun h hh => ?_
+      rw [Finset.mem_Icc] at hh
+      have habs : |(h : ℝ)| = ((|h| : ℤ) : ℝ) := Int.cast_abs.symm
+      have hub : ((|h| : ℤ) : ℝ) ≤ (n : ℝ) := by exact_mod_cast abs_le.mpr ⟨by omega, by omega⟩
+      rcases eq_or_ne (n : ℝ) 0 with hn0 | hn0
+      · have hh0 : h = 0 := by
+          rw [hn0] at hub; simp only [Nat.cast_eq_zero] at hn0
+          rcases abs_cases h with ⟨e, _⟩ | ⟨e, _⟩ <;> omega
+        subst hh0; simp [hn0]
+      · split_ifs with hlt
+        · rw [habs] at hlt ⊢
+          have hnpos : (0 : ℝ) < n := lt_of_le_of_ne (by positivity) (Ne.symm hn0)
+          field_simp
+        · rw [habs, not_lt] at hlt
+          have : ((|h| : ℤ) : ℝ) = (n : ℝ) := le_antisymm hub hlt
+          rw [this]; ring
+    · intro h hh
+      rw [Finset.mem_Icc] at hh
+      have hge : (n : ℤ) ≤ |h| := by rcases abs_cases h with ⟨e, _⟩ | ⟨e, _⟩ <;> omega
+      have hc : ¬ |(h : ℝ)| < (n : ℝ) := by
+        rw [← Int.cast_abs, not_lt]; exact_mod_cast hge
+      rw [if_neg hc]
+  rw [show (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ)
+        = fun n : ℕ => ∑' h : ℤ, if |(h : ℝ)| < n then (1 - |(h : ℝ)| / n) * acvfStat X μ h else 0
+      from funext hkey]
+  exact tendsto_tsum_triangular hsum
+
 end DeepWiki.TimeSeries

@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.SampleAutocovariance
+import DeepWiki.TimeSeries.SampleMeanVariance
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 7: Estimation of the Mean and the Autocovariance Function
@@ -10,12 +11,24 @@ limit theorem and are infra-blocked. -/
 namespace DeepWiki.Ts
 
 open DeepWiki.TimeSeries
+open MeasureTheory ProbabilityTheory Filter Topology
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
 /-! ## §7.1 Estimation of μ (p.218)
 The process mean `μ` is estimated by the sample mean `X̄ₙ = n⁻¹ ∑ₜ Xₜ` (the library's
-`sampleMean`). **Theorems 7.1.1 and 7.1.2** (its asymptotic variance `n·Var(X̄ₙ) → ∑ⱼ γ(j)` and
-asymptotic normality) are infra-blocked — they need the time-series central limit theorem
-(§6.4). -/
+`sampleMean`). **Theorem 7.1.1** (asymptotic variance `n·Var(X̄ₙ) → ∑ⱼ γ(j)`, `eq_7_1_1`) is now
+formalized; **Theorem 7.1.2** (asymptotic normality of `X̄ₙ`) needs the linear-process central limit
+theorem (the iid base case is the library's `iidNoise_sampleMean_clt`). -/
+
+/-- **Theorem 7.1.1 (asymptotic variance of the sample mean)**: for a weakly stationary process with
+summable autocovariance `γ`, `n · Var(X̄ₙ) → ∑ⱼ γ(j)` — the rescaled sample-mean variance converges
+to the sum of all autocovariances. The library's `tendsto_nsmul_variance_sampleMean`. -/
+theorem eq_7_1_1 [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ} (hX : IsWeaklyStationary X μ)
+    (hsum : Summable (acvfStat X μ)) :
+    Tendsto (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ) atTop
+      (𝓝 (∑' h : ℤ, acvfStat X μ h)) :=
+  tendsto_nsmul_variance_sampleMean hX hsum
 
 /-! ## §7.2 Estimation of γ(·) and ρ(·) (p.220) -/
 
@@ -42,8 +55,7 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§7.1: Theorem 7.1.1 (asymptotic variance of the sample mean, `n·Var(X̄ₙ) → ∑ⱼ γ(j)`) [infra]; Theorem
-7.1.2 (asymptotic normality of the sample mean) [infra]
+§7.1: Theorem 7.1.2 (asymptotic normality of the sample mean) [infra]
 §7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, Bartlett's formula) [infra]; Theorem 7.2.2
 (Bartlett's formula, general case) [infra]
 (Dominant blocker: the time-series central limit theorem of §6.4. The estimators eq 7.2.1/7.2.2 and
