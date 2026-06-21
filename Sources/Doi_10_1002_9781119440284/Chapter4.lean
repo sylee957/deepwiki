@@ -1,6 +1,7 @@
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
+import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -13,7 +14,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Definition 4.1 (concave PWL normal form) `[infra]`; Proposition 4.1 (normal-form properties) `[infra]`; Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Proposition 4.1 — items 2–4 only `[infra]` (the burst sequence `bᵢ` increasing, the intersection-point sequence `tᵢ` increasing, and the explicit per-interval `γ` formula need the segment/intersection layer; item 1, concavity, is `prop_4_1_concave`); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -79,6 +80,25 @@ is ultimately pseudo-periodic from `T_f` with period `d_f` and increment `c_f`. 
 `DeepWiki.UppSeq.deconvNat_add_period`: the deconvolution sequence advances by `c_f` each period `d_f`
 (the `minplus` CLI's `deconvupp` builds the UPP quadruplet from it). -/
 alias lemma_4_5 := UppSeq.deconvNat_add_period
+
+/-- **Definition 4.1** (§4.2.1, p.63): a concave piecewise-linear function in *normal form* —
+`f = ⋀ᵢ γ_{rᵢ,bᵢ}` (an infimum of token-buckets, `concaveNFEval`) where the rates are strictly
+decreasing along the list (`i<j ⟹ rᵢ>rⱼ`, eq. [4.2]) and no token-bucket is redundant (each is the
+strict minimum at some positive time, eq. [4.3]). The library's `DeepWiki.IsConcaveNormalForm`
+(over a `List (ℝ≥0 × ℝ≥0)` of `(rate, burst)` parameters). -/
+abbrev def_4_1 := @IsConcaveNormalForm
+
+/-- **Definition 4.1** (§4.2.1, p.63), the evaluation: `⋀ᵢ γ_{rᵢ,bᵢ}` as an `EReal` curve, the
+pointwise infimum of the token-bucket curves `γ_{r,b} = (r·t + b) ⊓ convUnit` (`DeepWiki.tbEReal`).
+The library's `DeepWiki.concaveNFEval`. -/
+noncomputable def def_4_1_eval := @concaveNFEval
+
+/-- **Proposition 4.1, item 1** (§4.2.1, p.63): a concave piecewise-linear function in normal
+form *is concave*. The library's `DeepWiki.isConcaveEReal_concaveNFEval` (the infimum of the
+concave token-buckets is concave; items 2–4 — `bᵢ`/`tᵢ` increasing and the per-interval formula —
+need the intersection-point layer, see the chapter's `## NOT YET FORMALIZED` block). -/
+theorem prop_4_1_concave (l : List (ℝ≥0 × ℝ≥0)) : IsConcaveEReal (concaveNFEval l) :=
+  isConcaveEReal_concaveNFEval l
 
 /-- **Theorem 4.1** (§4.2.2, p.65), the transform-domain computation principle. For finite,
 convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution is computed by
