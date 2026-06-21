@@ -40,6 +40,33 @@ namespace DeepWiki.ReactiveSystems
 
 open scoped NNReal
 
+/-- **`AsymMatch` from a floor-shift family.** If for every sufficiently small `η > 0` the shifted
+floor `⌊c − η⌋₊` equals `⌊c'⌋₊` (and `c > 0`), then `AsymMatch c c'`. This is the bridge from the
+coupled relation's `∃ small η, RegionEqAll (combShift …)` to `Sq2FRel`'s `AsymMatch`: the floor of
+`c − η` is `⌊c⌋` off integers and `⌊c⌋ − 1` at integers, exactly `AsymMatch`'s content. -/
+theorem asymMatch_of_floor_shift {c c' : ℝ≥0} {η₀ : ℝ≥0} (hc : 0 < c) (hη₀ : 0 < η₀)
+    (h : ∀ η : ℝ≥0, 0 < η → η < η₀ → ⌊c - η⌋₊ = ⌊c'⌋₊) : AsymMatch c c' := by
+  have hη₁pos : (0 : ℝ≥0) < η₀ / 2 := half_pos hη₀
+  have hfl₁ : ⌊c - η₀ / 2⌋₊ = ⌊c'⌋₊ := h _ hη₁pos (NNReal.half_lt_self hη₀.ne')
+  intro m
+  refine ⟨fun hm => ?_, fun hm => ?_⟩
+  · obtain ⟨η, hηpos, hηlt, hηcm⟩ :
+        ∃ η : ℝ≥0, 0 < η ∧ η < η₀ ∧ η ≤ c - (m : ℝ≥0) := by
+      have hmpos : (0 : ℝ≥0) < min η₀ (c - (m : ℝ≥0)) := lt_min hη₀ (tsub_pos_of_lt hm)
+      refine ⟨min η₀ (c - (m : ℝ≥0)) / 2, half_pos hmpos, ?_, ?_⟩
+      · exact lt_of_lt_of_le (NNReal.half_lt_self hmpos.ne') (min_le_left _ _)
+      · exact le_of_lt (lt_of_lt_of_le (NNReal.half_lt_self hmpos.ne') (min_le_right _ _))
+    have hsum : (m : ℝ≥0) + η ≤ c := by
+      calc (m : ℝ≥0) + η ≤ (m : ℝ≥0) + (c - (m : ℝ≥0)) := by gcongr
+        _ = c := add_tsub_cancel_of_le (le_of_lt hm)
+    have hmf : m ≤ ⌊c - η⌋₊ := Nat.le_floor (le_tsub_of_add_le_right hsum)
+    rw [h η hηpos hηlt] at hmf
+    exact le_trans (by exact_mod_cast hmf) (Nat.floor_le zero_le)
+  · have hmf : m ≤ ⌊c'⌋₊ := Nat.le_floor hm
+    rw [← hfl₁] at hmf
+    exact lt_of_le_of_lt (le_trans (by exact_mod_cast hmf) (Nat.floor_le zero_le))
+      (tsub_lt_self hc hη₁pos)
+
 namespace TLTS
 
 /-- The **combined valuation** over `D ⊕ Option D`: the formula clocks (`inl y ↦ u y`), the per-clock
@@ -141,6 +168,45 @@ theorem sq2CoupledRel_seed {D : Type*} :
           fun h => absurd (lt_of_lt_of_le hfrpos2 h) (lt_irrefl _)⟩
       · simp only [combShift_inr, hcombVal_inr]
         exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
+
+/-- **Forget the coupling**: the coupled live relation implies `Sq2FRel`. The `inl` part of the
+combined region gives the clock region; the `inr` parts give the asymmetric crossing-match and
+τ-match via `asymMatch_of_floor_shift` (`⌊cv − η⌋₊ = ⌊cv'⌋₊` for all small `η`). So the five proven
+`Sq2FullRel` clauses transfer. -/
+theorem Sq2CoupledFRel.toFRel {D : Type*} {d e : ℝ≥0} {u u' : Valuation D}
+    (h : Sq2CoupledFRel d u e u') : Sq2FRel d u e u' := by
+  obtain ⟨hd, he, η₀, hη₀, hreg⟩ := h
+  refine ⟨?_, hd, he, ?_, ?_⟩
+  · exact RegionEqAll.precomp (f := Sum.inl) Sum.inl_injective
+      (hreg (η₀ / 2) (half_pos hη₀) (NNReal.half_lt_self hη₀.ne'))
+  · refine asymMatch_of_floor_shift (by rw [crossVal_zero]; exact tsub_pos_of_lt hd) hη₀ ?_
+    intro η hηpos hηlt
+    have hfe := regionEqAll_floor_eq (hreg η hηpos hηlt) (Sum.inr none)
+    simp only [combShift_inr, combVal_inr_none] at hfe
+    simp only [crossVal_zero]; exact hfe
+  · intro y
+    refine asymMatch_of_floor_shift (lt_of_lt_of_le (tsub_pos_of_lt hd) le_add_self) hη₀ ?_
+    intro η hηpos hηlt
+    have hfe := regionEqAll_floor_eq (hreg η hηpos hηlt) (Sum.inr (some y))
+    simp only [combShift_inr, combVal_inr_some] at hfe
+    exact hfe
+
+/-- **Forget the coupling** (state level): every coupled state is a `Sq2FullRel` state. -/
+theorem Sq2CoupledRel.toFullRel {D : Type*} {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') : Sq2FullRel p u q u' := by
+  rcases h with hpast | ⟨d, e, hp, hq, hfr⟩
+  · exact Or.inl hpast
+  · exact Or.inr ⟨d, e, hp, hq, hfr.toFRel⟩
+
+/-- Both regimes give region-equivalent formula clocks. -/
+theorem Sq2CoupledRel.regionEqAll {D : Type*} {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') : RegionEqAll u u' :=
+  h.toFullRel.regionEqAll
+
+/-- **Guard clause** for the coupled relation. -/
+theorem Sq2CoupledRel.guard {D : Type*} {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') (g : ClockConstraint D) : satisfies u g ↔ satisfies u' g :=
+  regionEqAll_satisfies h.regionEqAll g
 
 end TLTS
 
