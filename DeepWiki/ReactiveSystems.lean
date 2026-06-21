@@ -93,6 +93,7 @@ import DeepWiki.ReactiveSystems.TimedInvariantObstruction
 import DeepWiki.ReactiveSystems.TimedInvariantDelayForcing
 import DeepWiki.ReactiveSystems.TimedInvariantCharacteristic
 import DeepWiki.ReactiveSystems.TimedFullCharacteristic
+import DeepWiki.ReactiveSystems.TimedTargetInvCharacteristic
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlRefined
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
