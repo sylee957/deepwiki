@@ -485,6 +485,28 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K
     exact IsSpecial.prod s (fun a => X - C a)
       (fun a ha => (dvd_X_sub_C_implicitDeriv_iff v a).mpr (h a ha))
 
+/-- **Theorem 3.4.3** (§3.4, p.93), full multiplicity form: a polynomial `∏_{a∈s}(X − a)^{eₐ}`
+(each `eₐ ≥ 1`, characteristic `0`) is special w.r.t. the monomial derivation `D` (`Dt = v`) iff
+`Dα = Hₜ(α)` at every root — `∀ a ∈ s, v(a) = a′`. Backward: `IsSpecial.prod` over the special
+prime powers; forward: each `(X − a)^{eₐ}` is a coprime factor (`IsSpecial.of_mul_coprime`). -/
+theorem dvd_prod_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
+    (v : K[X]) (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    (∏ a ∈ s, (X - C a) ^ e a) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)
+      ↔ ∀ a ∈ s, v.eval a = a′ := by
+  classical
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  constructor
+  · intro hsp a ha
+    rw [← Finset.mul_prod_erase s (fun b => (X - C b) ^ e b) ha] at hsp
+    have hcop : IsCoprime ((X - C a) ^ e a) (∏ b ∈ s.erase a, (X - C b) ^ e b) :=
+      IsCoprime.pow_left (IsCoprime.prod_right fun b hb => IsCoprime.pow_right
+        (isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]
+                                       exact sub_ne_zero.mpr (Finset.ne_of_mem_erase hb).symm)))
+    exact (dvd_X_sub_C_pow_implicitDeriv_iff v a (he a ha)).mp (IsSpecial.of_mul_coprime hsp hcop)
+  · intro h
+    exact IsSpecial.prod s (fun a => (X - C a) ^ e a)
+      (fun a ha => (dvd_X_sub_C_pow_implicitDeriv_iff v a (he a ha)).mpr (h a ha))
+
 open Classical in
 /-- **§3.5** splitting factorization of a squarefree polynomial: `∏_{a∈s}(X − a)` factors as its
 special part (roots with `v(a) = a′`) times its normal part (roots with `v(a) ≠ a′`), the first

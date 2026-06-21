@@ -311,6 +311,16 @@ theorem thm_3_4_3_pow {K : Type*} [Field K] [CharZero K] [Differential K] (v : K
     (X - C a) ^ n ∣ Differential.implicitDeriv v ((X - C a) ^ n) ↔ v.eval a = a′ :=
   dvd_X_sub_C_pow_implicitDeriv_iff v a hn
 
+/-- **Theorem 3.4.3** (§3.4, p.93), full multiplicity form: `∏_{a∈s}(X − a)^{eₐ}` (each `eₐ ≥ 1`,
+char `0`) is special w.r.t. the monomial derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` at
+every root — `∀ a ∈ s, v(a) = a′`. (Generalizes `thm_3_4_3` from squarefree to arbitrary
+multiplicities.) -/
+theorem thm_3_4_3_mult {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X]) (s : Finset K)
+    (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    (∏ a ∈ s, (X - C a) ^ e a) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)
+      ↔ ∀ a ∈ s, v.eval a = a′ :=
+  dvd_prod_X_sub_C_pow_implicitDeriv_iff v s e he
+
 /-- **Theorem 3.4.3** (§3.4, p.93), full squarefree form: a squarefree polynomial `∏_{a∈s}(X − a)`
 is special w.r.t. the monomial derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` at every
 root — `∀ a ∈ s, v(a) = a′`. -/
