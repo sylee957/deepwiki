@@ -425,6 +425,30 @@ theorem toFunPWL_mem_uIcc (r : UppSeq ℚ) (t : ℝ≥0) :
   · right; exact ⟨by nlinarith [mul_nonneg (by linarith : (0:ℝ) ≤ 1 - f) (sub_nonneg.mpr h)],
       by nlinarith [mul_nonneg h0 (sub_nonneg.mpr h)]⟩
 
+/-- **The PWL reading of a non-decreasing sequence is monotone** — a wide-sense increasing
+continuous-time curve, as network-calculus arrival/service curves are. Within a unit interval the
+lerp grows with the weight; across intervals it chains through the shared sample band
+(`toFunPWL s ≤ f(⌊s⌋+1) ≤ f(⌊t⌋) ≤ toFunPWL t`). -/
+theorem toFunPWL_mono (r : UppSeq ℚ) (hmono : Monotone (fun n => (r.evalNat n : ℝ))) :
+    Monotone r.toFunPWL := by
+  intro s t hst
+  have hfloor : ⌊s⌋₊ ≤ ⌊t⌋₊ := Nat.floor_mono hst
+  have hs_mem : r.toFunPWL s ∈ Set.Icc (r.evalNat ⌊s⌋₊ : ℝ) (r.evalNat (⌊s⌋₊ + 1) : ℝ) := by
+    have := toFunPWL_mem_uIcc r s
+    rwa [Set.uIcc_of_le (hmono (Nat.le_succ _))] at this
+  have ht_mem : r.toFunPWL t ∈ Set.Icc (r.evalNat ⌊t⌋₊ : ℝ) (r.evalNat (⌊t⌋₊ + 1) : ℝ) := by
+    have := toFunPWL_mem_uIcc r t
+    rwa [Set.uIcc_of_le (hmono (Nat.le_succ _))] at this
+  rcases eq_or_lt_of_le hfloor with heq | hlt
+  · rw [toFunPWL_eq_lerp, toFunPWL_eq_lerp, ← heq]
+    have hw : (s - (⌊s⌋₊ : ℝ≥0) : ℝ) ≤ (t - (⌊s⌋₊ : ℝ≥0) : ℝ) := by
+      have : (s : ℝ) ≤ (t : ℝ) := by exact_mod_cast hst
+      linarith
+    have hfle : (r.evalNat ⌊s⌋₊ : ℝ) ≤ (r.evalNat (⌊s⌋₊ + 1) : ℝ) := hmono (Nat.le_succ _)
+    nlinarith [hw, hfle, mul_le_mul_of_nonneg_right hw (sub_nonneg.mpr hfle)]
+  · have hmid : (r.evalNat (⌊s⌋₊ + 1) : ℝ) ≤ (r.evalNat ⌊t⌋₊ : ℝ) := hmono (by omega)
+    linarith [hs_mem.2, hmid, ht_mem.1]
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
