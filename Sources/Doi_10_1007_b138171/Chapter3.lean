@@ -291,8 +291,15 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
   associated_gcd_deriv_prod s f hco
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
---     (the book derives it from Lemma 3.4.4, now available as `lem_3_4_4`).
+--   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial. Plan
+--     (all tools now in the library): (1) prime factor `π` of special `p` is special — write
+--     `p = π^e·h` with `¬π∣h` (`FiniteMultiplicity.of_prime_left` + `exists_eq_pow_mul_and_not_dvd`,
+--     needs `[WfDvdMonoid R]`), apply `lem_3_4_4_base` to `(π^e, h)` and `lem_3_4_4_pow` to `π^e`
+--     against `p` special (`isSpecial_iff_associated_gcd`), cancel `π^{e-1}`, and use that a prime's
+--     divisor `gcd(π,Dπ)∣π` is a unit or `~π` (the unit case contradicts `π` non-unit); (2) a
+--     general factor `q∣p` is a product of `p`'s prime factors (each special by (1)), special by
+--     `IsSpecial.mul`. Needs the char-`0` `IsUnit ((e:R))` hypothesis (`lem_3_4_4_pow`).
+--     (Associate-invariance `IsNormal/IsSpecial.of_associated` is in place.)
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).

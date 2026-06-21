@@ -240,6 +240,20 @@ theorem IsNormal.unit_mul_iff {u : R} (hu : IsUnit u) (p : R) :
   rw [deriv_mul_eq, isCoprime_mul_unit_left_left hu, IsCoprime.add_mul_left_right_iff,
     isCoprime_mul_unit_left_right hu]
 
+/-- Specialness is an associate invariant: `Associated p q → IsSpecial p → IsSpecial q`. -/
+theorem IsSpecial.of_associated {p q : R} (h : Associated p q) (hp : IsSpecial p) :
+    IsSpecial q := by
+  obtain ⟨u, rfl⟩ := h
+  rw [mul_comm]
+  exact (IsSpecial.unit_mul_iff u.isUnit p).mpr hp
+
+/-- Normality is an associate invariant: `Associated p q → IsNormal p → IsNormal q`. -/
+theorem IsNormal.of_associated {p q : R} (h : Associated p q) (hp : IsNormal p) :
+    IsNormal q := by
+  obtain ⟨u, rfl⟩ := h
+  rw [mul_comm]
+  exact (IsNormal.unit_mul_iff u.isUnit p).mpr hp
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
