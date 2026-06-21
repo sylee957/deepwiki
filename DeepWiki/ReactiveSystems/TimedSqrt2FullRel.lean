@@ -111,6 +111,24 @@ theorem Sq2FullRel.act_back {D : Type*} {p q : Sq2} {u u' : Valuation D}
     cases hstep with
     | aB _ => exact ⟨Sq2.End, sq2_act.mpr (Sq2Step.aA hd), Or.inl ⟨trivial, trivial, hr⟩⟩
 
+/-- **Delay clause, past regime.** Both `a`-disabled: the formula-clock region time-successor matches a
+left delay by a right delay, landing again `a`-disabled and region-equivalent. -/
+theorem Sq2FullRel.delay_past {D : Type*} [Fintype D] {p q : Sq2} {u u' : Valuation D}
+    (hpd : aDisabled sqrt2NN p) (hqd : aDisabled sqrt2NN q) (hr : RegionEqAll u u')
+    (d : ℝ≥0) (p' : Sq2) (hstep : (sq2TLTS sqrt2NN).delay p d p') :
+    ∃ d' q', (sq2TLTS sqrt2NN).delay q d' q' ∧ Sq2FullRel p' (u.add d) q' (u'.add d') := by
+  rw [sq2_delay] at hstep
+  obtain ⟨d', hr'⟩ := regionEqAll_timeSuccessor hr d
+  obtain ⟨q', hqstep, hq'd⟩ := hqd.delay_succ d'
+  exact ⟨d', q', sq2_delay.mpr hqstep, Or.inl ⟨hpd.delay_pres hstep, hq'd, hr'⟩⟩
+
+/-- The per-clock crossing-values are **auto-carried** under a live delay (`d + δ ≤ √2`): the
+crossing-value match needs no re-establishment, only the process τ-match and the clocks region do
+(`clock_at_sqrt2_delay_invariant`). -/
+theorem crossVal_live_invariant {d δ v : ℝ≥0} (h : d + δ ≤ sqrt2NN) :
+    crossVal (d + δ) (v + δ) = crossVal d v :=
+  clock_at_sqrt2_delay_invariant h
+
 /-- The seed: `(A 0) ~ (B 0)` at the all-zero formula valuation. -/
 theorem sq2FullRel_seed {D : Type*} :
     Sq2FullRel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) := by
