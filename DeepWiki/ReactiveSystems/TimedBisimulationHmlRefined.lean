@@ -223,4 +223,70 @@ theorem sq2Rel_seed {D : Type*} :
     Sq2Rel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) :=
   Or.inr ⟨0, 0, rfl, rfl, zero_lt_sqrt2NN, zero_lt_sqrt2NN, RegionEqAll.refl _⟩
 
+/-! ### The irrationality wiggle-room (the crux of Ex 12.12(3))
+
+The genuine resolution of Ex 12.12(3) is *not* the augmented clock above (whose integer cut on `w`
+introduces spurious periodic cuts at `√2 ± n` and over-discriminates). The correct mechanism is the
+**single irrational cut**: because `√2` is irrational it lies strictly *inside* the integer region
+`(1, 2)`, so it never coincides with an integer region boundary of the *formula* clocks. Hence,
+whenever `A` sits exactly at the boundary `process = √2` (`a`-disabled), `B` can be placed at a
+process value strictly past `√2` (also `a`-disabled) that is *still region-equivalent* to `√2` — there
+is open wiggle-room on the far side of `√2` within its integer region. The two lemmas below isolate
+this fact; they are the reusable core for the eventual single-irrational-cut bisimulation.
+
+THE REMAINING OBSTRUCTION (sharpened): a *constant* process-shift `σ` between `A` and `B` cannot work
+(`σ = 0` mismatches at `process = √2`, any `σ > 0` mismatches just below `√2`), and a formula clock
+reset at `process = √2 − m` reads the integer `m` exactly when `process = √2` — a *singleton* region
+with no wiggle-room. Closing the gap therefore needs a region that tracks each clock's reset offset
+against the single irrational cut (and a coinductive, not static, bisimulation) — genuine
+research-grade work. -/
+
+/-- Region equivalence of two *constant* valuations reduces to agreement of floor and zero-fraction
+(the fractional ordering is trivial when all clocks share one value). -/
+theorem RegionEqAll.const {D : Type*} {a b : ℝ≥0} (hfloor : ⌊a⌋₊ = ⌊b⌋₊)
+    (hzero : fracPart a = 0 ↔ fracPart b = 0) :
+    RegionEqAll (fun _ : D => a) (fun _ : D => b) :=
+  regionEqAll_of_exact (fun _ => hfloor) (fun _ => hzero)
+    (fun _ _ => ⟨fun _ => le_rfl, fun _ => le_rfl⟩)
+
+/-- A value strictly between `1` and `2` has floor `1` and nonzero fractional part. -/
+theorem floor_eq_one_of {x : ℝ≥0} (h1 : 1 < x) (h2 : x < 2) : ⌊x⌋₊ = 1 := by
+  rw [Nat.floor_eq_iff zero_le, Nat.cast_one]
+  exact ⟨le_of_lt h1, by rwa [show (1 : ℝ≥0) + 1 = 2 from by norm_num]⟩
+
+/-- `⌊√2⌋₊ = 1`. -/
+theorem floor_sqrt2NN : ⌊sqrt2NN⌋₊ = 1 :=
+  floor_eq_one_of (by rw [← NNReal.coe_lt_coe]; push_cast; exact one_lt_sqrt2NN)
+    (by rw [← NNReal.coe_lt_coe]; push_cast; exact sqrt2NN_lt_two)
+
+/-- `√2` has nonzero fractional part (it is not a natural number). -/
+theorem fracPart_sqrt2NN_ne_zero : fracPart sqrt2NN ≠ 0 := by
+  rw [Ne, fracPart_eq_zero_iff, floor_sqrt2NN, Nat.cast_one]
+  intro h
+  rw [← NNReal.coe_inj, NNReal.coe_one, coe_sqrt2NN] at h
+  exact absurd h.symm (ne_of_gt Real.one_lt_sqrt_two)
+
+/-- **The irrationality wiggle-room.** There is a process value `b` *strictly past* `√2` that is
+nonetheless region-equivalent to `√2` (for any formula-clock type): the far side of `√2` within its
+integer region `(1, 2)` is open and nonempty. This is exactly why an `a`-disabled `A` at the boundary
+`process = √2` can be matched by an `a`-disabled `B` strictly past `√2`, which no integer-region check
+can tell apart — the heart of why `(A,0)` and `(B,0)` are full-`Mt`-equivalent. -/
+theorem sqrt2_wiggle_past {D : Type*} :
+    ∃ b : ℝ≥0, sqrt2NN < b ∧ RegionEqAll (fun _ : D => sqrt2NN) (fun _ : D => b) := by
+  refine ⟨(sqrt2NN + 2) / 2, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]; push_cast [coe_sqrt2NN]
+    have := sqrt2NN_lt_two; rw [coe_sqrt2NN] at this; linarith
+  · have hb1 : (1 : ℝ≥0) < (sqrt2NN + 2) / 2 := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_sqrt2NN]
+      have := one_lt_sqrt2NN; have := sqrt2NN_lt_two; rw [coe_sqrt2NN] at *; linarith
+    have hb2 : (sqrt2NN + 2) / 2 < 2 := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_sqrt2NN]
+      have := sqrt2NN_lt_two; rw [coe_sqrt2NN] at this; linarith
+    refine RegionEqAll.const (by rw [floor_sqrt2NN, floor_eq_one_of hb1 hb2]) ?_
+    constructor
+    · intro h; exact absurd h fracPart_sqrt2NN_ne_zero
+    · intro h
+      rw [fracPart_eq_zero_iff, floor_eq_one_of hb1 hb2, Nat.cast_one] at h
+      exact absurd h.symm (ne_of_gt hb1)
+
 end DeepWiki.ReactiveSystems
