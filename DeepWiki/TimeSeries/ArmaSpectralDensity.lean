@@ -89,4 +89,24 @@ theorem tsum_armaPsiZ_fourier_eq_div {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) (l
   congr 2
   push_cast; ring
 
+/-- **Theorem 4.4.2 (eq 4.4.5):** the Fourier-series spectral density of the autocovariance
+`γ(h) = σ² ∑ₖ ψ̃ₖ ψ̃_{k+h}` of a causal `ARMA(p,q)` process equals the rational spectral density
+`(σ²/2π) · |θ(e^{-iλ})|² / |φ(e^{-iλ})|²` (`armaSpectralDensity`). Combines the squared-modulus form
+of Theorem 4.4.1 (`fourier_tsum_mul_shift_eq_normSq`) with the transfer function `ψ̂ = θ/φ`
+(`tsum_armaPsiZ_fourier_eq_div`). -/
+theorem fourierSpectralDensity_armaAcvf {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) (σ2 lam : ℝ) :
+    fourierSpectralDensity
+        (fun n : ℤ => (σ2 : ℂ) * ∑' k : ℤ, (armaPsiZ φ θ k : ℂ) * (armaPsiZ φ θ (k + n) : ℂ)) lam
+      = (armaSpectralDensity φ θ σ2 lam : ℂ) := by
+  rw [fourierSpectralDensity]
+  have hpull : (∑' n : ℤ, Complex.exp (-(n : ℂ) * lam * Complex.I) *
+        ((σ2 : ℂ) * ∑' k : ℤ, (armaPsiZ φ θ k : ℂ) * (armaPsiZ φ θ (k + n) : ℂ)))
+      = (σ2 : ℂ) * ∑' n : ℤ, Complex.exp (-(n : ℂ) * lam * Complex.I) *
+          ∑' k : ℤ, (armaPsiZ φ θ k : ℂ) * (armaPsiZ φ θ (k + n) : ℂ) := by
+    rw [← tsum_mul_left]; exact tsum_congr fun n => by ring
+  rw [hpull, fourier_tsum_mul_shift_eq_normSq (summable_abs_armaPsiZ hφ) lam,
+    tsum_armaPsiZ_fourier_eq_div hφ lam, Complex.normSq_div, armaSpectralDensity]
+  push_cast
+  ring
+
 end DeepWiki.TimeSeries
