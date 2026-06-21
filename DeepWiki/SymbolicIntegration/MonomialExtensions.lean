@@ -126,6 +126,19 @@ theorem IsNormal.squarefree {p : R} (hp : IsNormal p) : Squarefree p := by
     rw [e]; exact dvd_mul_right x _
   exact IsCoprime.isUnit_of_dvd' hp hxp hxp'
 
+variable [GCDMonoid R] in
+/-- **Definition 3.4.2** (§3.4, p.92), gcd form: `p` is special iff `gcd(p, Dp) ~ p`
+(the `gcd(p, Dp) = p` of the book, up to the unit ambiguity of `gcd`). -/
+theorem isSpecial_iff_associated_gcd {p : R} : IsSpecial p ↔ Associated (gcd p p′) p :=
+  ⟨fun h => associated_of_dvd_dvd (gcd_dvd_left p p′) (dvd_gcd dvd_rfl h),
+   fun h => h.symm.dvd.trans (gcd_dvd_right p p′)⟩
+
+variable [GCDMonoid R] in
+/-- **Definition 3.4.2** (§3.4, p.92), gcd form: a normal `p` has `gcd(p, Dp)` a unit
+(the book's `gcd(p, Dp) = 1`). -/
+theorem IsNormal.isUnit_gcd {p : R} (h : IsNormal p) : IsUnit (gcd p p′) :=
+  gcd_isUnit_iff_isRelPrime.mpr h.isRelPrime
+
 variable [NormalizedGCDMonoid R] in
 /-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b` (unit `gcd a b`),
 `gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. Expand `D(a·b) = a·Db + b·Da`, split the gcd over

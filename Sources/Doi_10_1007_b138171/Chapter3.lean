@@ -186,6 +186,12 @@ abbrev def_3_4_2_normal := @IsNormal
 /-- **Definition 3.4.2** (§3.4, p.92): `p` is *special* w.r.t. `D` if `p ∣ Dp`. -/
 abbrev def_3_4_2_special := @IsSpecial
 
+/-- **Definition 3.4.2** (§3.4, p.92), gcd forms: `p` is special iff `gcd(p, Dp) = p`, and a
+normal `p` has `gcd(p, Dp) = 1` (up to the unit ambiguity of `gcd`). -/
+theorem def_3_4_2_gcd {R : Type*} [CommRing R] [GCDMonoid R] [Differential R] {p : R} :
+    (IsSpecial p ↔ Associated (gcd p p′) p) ∧ (IsNormal p → IsUnit (gcd p p′)) :=
+  ⟨isSpecial_iff_associated_gcd, IsNormal.isUnit_gcd⟩
+
 /-- **Lemma 3.4.3** (§3.4, p.92): a special polynomial generates a differential ideal `(p)`. -/
 theorem lem_3_4_3 {R : Type*} [CommRing R] [Differential R] {p : R} (hp : IsSpecial p) :
     IsDifferentialIdeal (Ideal.span {p}) :=
