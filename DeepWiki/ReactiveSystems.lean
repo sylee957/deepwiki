@@ -99,6 +99,7 @@ import DeepWiki.ReactiveSystems.TimedGeneralCharacteristic
 import DeepWiki.ReactiveSystems.TimedUnboundedObstruction
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlRefined
+import DeepWiki.ReactiveSystems.TimedSqrt2Bisimulation
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import DeepWiki.ReactiveSystems.TimedSimulation
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
