@@ -524,6 +524,36 @@ theorem toFunPWL_max_natCast (r s : UppSeq ℚ) (n : ℕ) :
     max (r.toFunPWL (n : ℝ≥0)) (s.toFunPWL (n : ℝ≥0)) = (max (r.evalNat n) (s.evalNat n) : ℝ) := by
   rw [toFunPWL_natCast, toFunPWL_natCast]
 
+/-- **Each continuous deconvolution term is dominated by a bracketing integer term.** For an integer
+shift `n` and any real `x`, `toFunPWL r (n+x) − toFunPWL s x` is a convex combination of the two
+integer deconvolution terms at `⌊x⌋` and `⌊x⌋+1` (the weight `x−⌊x⌋` is shared, since `n` is integer),
+hence `≤` their maximum. The deconvolution analog of `convNat_le_toFunPWL_add` — the first step toward
+relating the continuous `maxDeconv` of PWL readings to the discrete `deconvNat`. -/
+theorem toFunPWL_sub_le (r s : UppSeq ℚ) (n : ℕ) (x : ℝ≥0) :
+    r.toFunPWL ((n : ℝ≥0) + x) - s.toFunPWL x ≤
+      max ((r.evalNat (n + ⌊x⌋₊) : ℝ) - (s.evalNat ⌊x⌋₊ : ℝ))
+          ((r.evalNat (n + ⌊x⌋₊ + 1) : ℝ) - (s.evalNat (⌊x⌋₊ + 1) : ℝ)) := by
+  have hfl : ⌊(n : ℝ≥0) + x⌋₊ = n + ⌊x⌋₊ := by rw [add_comm, nnFloor_add_nat, add_comm]
+  set w := (x : ℝ) - (⌊x⌋₊ : ℕ) with hw
+  have hw0 : 0 ≤ w := by
+    rw [hw]; have : ((⌊x⌋₊ : ℕ) : ℝ) ≤ (x : ℝ) := by exact_mod_cast Nat.floor_le zero_le
+    linarith
+  have hw1 : w ≤ 1 := by
+    rw [hw]; have : (x : ℝ) < ((⌊x⌋₊ : ℕ) : ℝ) + 1 := by exact_mod_cast Nat.lt_floor_add_one x
+    linarith
+  have hru : r.toFunPWL ((n : ℝ≥0) + x)
+      = (1 - w) * (r.evalNat (n + ⌊x⌋₊) : ℝ) + w * (r.evalNat (n + ⌊x⌋₊ + 1) : ℝ) := by
+    rw [toFunPWL_eq_lerp, hfl, hw]; push_cast; ring
+  have hsx : s.toFunPWL x = (1 - w) * (s.evalNat ⌊x⌋₊ : ℝ) + w * (s.evalNat (⌊x⌋₊ + 1) : ℝ) := by
+    rw [toFunPWL_eq_lerp, hw]; push_cast; ring
+  rw [hru, hsx]
+  have hmax0 := le_max_left ((r.evalNat (n + ⌊x⌋₊) : ℝ) - (s.evalNat ⌊x⌋₊ : ℝ))
+      ((r.evalNat (n + ⌊x⌋₊ + 1) : ℝ) - (s.evalNat (⌊x⌋₊ + 1) : ℝ))
+  have hmax1 := le_max_right ((r.evalNat (n + ⌊x⌋₊) : ℝ) - (s.evalNat ⌊x⌋₊ : ℝ))
+      ((r.evalNat (n + ⌊x⌋₊ + 1) : ℝ) - (s.evalNat (⌊x⌋₊ + 1) : ℝ))
+  nlinarith [mul_nonneg hw0 (sub_nonneg.mpr hmax1),
+    mul_nonneg (by linarith : (0:ℝ) ≤ 1 - w) (sub_nonneg.mpr hmax0)]
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
