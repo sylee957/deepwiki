@@ -289,4 +289,42 @@ theorem sqrt2_wiggle_past {D : Type*} :
       rw [fracPart_eq_zero_iff, floor_eq_one_of hb1 hb2, Nat.cast_one] at h
       exact absurd h.symm (ne_of_gt hb1)
 
+/-! ### Process-side placement within a region-valid delay window
+
+The formula-clock time-successor `regionEqAll_timeSuccessor_frac_Ioo` yields, when no formula clock
+hits an integer during the delay, an *open window* `(lo, hi)` of delays all landing in the matching
+region. The two lemmas below are the complementary process-side tool: when that window's `e`-shifted
+image straddles a threshold `c` (here `c = √2`), `B`'s delay can be chosen *within the window* to land
+strictly past — or strictly before — `c`. Together they let the bisimulation match `A`'s √2-crossing
+while keeping the formula clocks region-equivalent (the boundary `a`-action being matched on the right
+side). The remaining obstruction is exactly the singleton case the window lemma excludes — a formula
+clock at an integer when the process is at `√2` — which needs the per-clock-offset irrational-cut
+region. -/
+
+/-- Inside an open delay-window `(lo, hi)` whose `e`-shift straddles `c`, a delay lands strictly
+**past** `c`. -/
+theorem exists_delay_past {c lo hi e : ℝ≥0} (hlo : e + lo < c) (hhi : c < e + hi) :
+    ∃ δ', lo < δ' ∧ δ' < hi ∧ c < e + δ' := by
+  have hec : e ≤ c := le_of_lt (lt_of_le_of_lt le_self_add hlo)
+  refine ⟨((c - e) + hi) / 2, ?_, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hlo hhi; push_cast at hlo hhi; linarith
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hhi; push_cast at hhi; linarith
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hlo hhi; push_cast at hlo hhi; linarith
+
+/-- Inside an open delay-window `(lo, hi)` whose `e`-shift straddles `c`, a delay lands strictly
+**before** `c`. -/
+theorem exists_delay_before {c lo hi e : ℝ≥0} (hlo : e + lo < c) (hhi : c < e + hi) :
+    ∃ δ', lo < δ' ∧ δ' < hi ∧ e + δ' < c := by
+  have hec : e ≤ c := le_of_lt (lt_of_le_of_lt le_self_add hlo)
+  refine ⟨(lo + (c - e)) / 2, ?_, ?_, ?_⟩
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hlo hhi; push_cast at hlo hhi; linarith
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hlo hhi; push_cast at hlo hhi; linarith
+  · rw [← NNReal.coe_lt_coe]; push_cast [NNReal.coe_sub hec]
+    rw [← NNReal.coe_lt_coe] at hlo hhi; push_cast at hlo hhi; linarith
+
 end DeepWiki.ReactiveSystems
