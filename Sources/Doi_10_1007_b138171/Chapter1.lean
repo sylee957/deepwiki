@@ -1,0 +1,197 @@
+import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import Mathlib.Data.ZMod.Basic
+import Mathlib.NumberTheory.Zsqrtd.Basic
+import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
+import Mathlib.RingTheory.PrincipalIdealDomain
+import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
+import Mathlib.RingTheory.Algebraic.Basic
+import Mathlib.FieldTheory.IsAlgClosed.Basic
+import Mathlib.RingTheory.Localization.FractionRing
+import Mathlib.Algebra.EuclideanDomain.Int
+import Sources.Doi_10_1007_b138171.Source
+
+/-! # Symbolic Integration catalog — Chapter 1: Algebraic Preliminaries
+Chapter 1 is standard constructive algebra, almost all of it already in Mathlib; the catalog
+aliases the Mathlib concept for each book definition and discharges each book theorem with
+Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
+predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
+
+A few concrete worked examples that need substantial bespoke computation are deferred (noted
+inline): the non-commutativity of `GL₂(ℚ)`/`M₂(ℚ)` (Ex 1.1.1, 1.1.3), the `ℤ[√−5]` facts (Ex 1.1.5
+domain — Mathlib's `Nonsquare` is ℕ-keyed and does not resolve for `-5 : ℤ` — and the failure
+of unique factorization / gcd, Ex 1.1.6, 1.1.7), and the non-principal ideal `(X,Y)`
+(Ex 1.1.10). -/
+
+open Polynomial DeepWiki.SymbolicIntegration
+
+namespace DeepWiki.Si
+
+/-! ## §1.1 Groups, Rings and Fields -/
+
+/-- **Definition 1.1.1** (§1.1, p.1), a *group* `(G, ∘)`: associative, with identity and
+inverses. A *commutative (abelian) group* is `CommGroup`. -/
+abbrev def_1_1_1 := @Group
+
+/-- **Definition 1.1.2** (§1.1, p.2), a *ring* (with multiplicative identity); a *commutative
+ring* is `CommRing`, its *characteristic* is `ringChar`, a *ring homomorphism* is `RingHom`. -/
+abbrev def_1_1_2 := @Ring
+
+/-- **Definition 1.1.2**: the characteristic of a ring. -/
+noncomputable abbrev def_1_1_2_char := @ringChar
+
+/-- **Definition 1.1.2**: a ring homomorphism. -/
+abbrev def_1_1_2_hom := @RingHom
+
+/-- **Definition 1.1.3** (§1.1, p.3), an *integral domain*: a commutative ring with `0 ≠ 1` and
+no zero divisors. -/
+abbrev def_1_1_3 := @IsDomain
+
+/-- **Definition 1.1.4** (§1.1, p.3): `x` *divides* `y`. -/
+abbrev def_1_1_4_dvd := @Dvd.dvd
+
+/-- **Definition 1.1.4**: `x` is a *unit* (`R*` is the group of units `Units`). -/
+abbrev def_1_1_4_unit := @IsUnit
+
+/-- **Definition 1.1.4**: the group of units `R* = Units R`. -/
+abbrev def_1_1_4_units := @Units
+
+/-- **Definition 1.1.4**, a *greatest common divisor* (as the library predicate `IsGCD`). -/
+abbrev def_1_1_4_gcd := @IsGCD
+
+/-- **Theorem 1.1.1** (§1.1, p.4): a gcd is unique up to a unit factor (`Associated`). -/
+theorem thm_1_1_1 {R : Type*} [CommMonoidWithZero R] [IsCancelMulZero R] {x y z t : R}
+    (hz : IsGCD x y z) (ht : IsGCD x y t) : Associated z t :=
+  hz.associated ht
+
+/-- **Definition 1.1.5** (§1.1, p.4): `p` is *prime* if `p ∣ ab → p ∣ a ∨ p ∣ b`. -/
+abbrev def_1_1_5_prime := @Prime
+
+/-- **Definition 1.1.5**: `p` is *irreducible* if `p = ab → IsUnit a ∨ IsUnit b`. -/
+abbrev def_1_1_5_irreducible := @Irreducible
+
+/-- **Definition 1.1.6** (§1.1, p.4), a *unique factorization domain* (UFD). -/
+abbrev def_1_1_6 := @UniqueFactorizationMonoid
+
+/-- **Theorem 1.1.2** (§1.1, p.4), forward: in any integral domain a prime is irreducible. -/
+theorem thm_1_1_2_prime_irreducible {R : Type*} [CommMonoidWithZero R] [IsCancelMulZero R]
+    {p : R} (hp : Prime p) : Irreducible p :=
+  hp.irreducible
+
+/-- **Theorem 1.1.2**, converse: in a UFD an irreducible element is prime. -/
+theorem thm_1_1_2_irreducible_prime {R : Type*} [CommMonoidWithZero R]
+    [UniqueFactorizationMonoid R] {p : R} (hp : Irreducible p) : Prime p :=
+  UniqueFactorizationMonoid.irreducible_iff_prime.mp hp
+
+/-- **Theorem 1.1.3** (§1.1, p.4): in a UFD any two elements have a gcd. -/
+theorem thm_1_1_3 {R : Type*} [CommRing R] [IsDomain R] [UniqueFactorizationMonoid R]
+    (x y : R) : ∃ z, IsGCD x y z := by
+  classical
+  letI := UniqueFactorizationMonoid.toGCDMonoid R
+  exact ⟨gcd x y, gcd_dvd_left x y, gcd_dvd_right x y, fun t h1 h2 => dvd_gcd h1 h2⟩
+
+/-- **Theorem 1.1.4** (§1.1, p.5): if `R` is a UFD then so is the polynomial ring `R[X]`
+(hence, by iteration, `R[X₁,…,Xₙ]`). -/
+theorem thm_1_1_4 {R : Type*} [CommRing R] [IsDomain R] [UniqueFactorizationMonoid R] :
+    UniqueFactorizationMonoid R[X] :=
+  inferInstance
+
+/-- **Definition 1.1.7** (§1.1, p.5), a *subgroup* `H ⊆ G`. -/
+abbrev def_1_1_7 := @Subgroup
+
+/-- **Definition 1.1.8** (§1.1, p.6), an *ideal* `I ⊆ R`; an ideal is *principal* if generated
+by one element (`Submodule.IsPrincipal`). -/
+abbrev def_1_1_8 := @Ideal
+
+/-- **Definition 1.1.8**: a principal ideal. -/
+abbrev def_1_1_8_principal := @Submodule.IsPrincipal
+
+/-- **Theorem 1.1.5** (§1.1, p.6): the ideal generated by `x₁,…,xₙ` is the set of all
+`R`-linear combinations `∑ aᵢxᵢ`. -/
+theorem thm_1_1_5 {R : Type*} [CommRing R] (s : Finset R) (y : R) :
+    y ∈ Ideal.span (s : Set R) ↔
+      ∃ f : R → R, Function.support f ⊆ s ∧ ∑ i ∈ s, f i * i = y :=
+  Submodule.mem_span_finset
+
+/-- **Definition 1.1.9** (§1.1, p.6), a *principal ideal domain* (PID): an integral domain in
+which every ideal is principal. -/
+abbrev def_1_1_9 := @IsPrincipalIdealRing
+
+/-- **Definition 1.1.10** (§1.1, p.6), a *Euclidean domain*: an integral domain with a size
+function `ν` admitting Euclidean division. -/
+abbrev def_1_1_10 := @EuclideanDomain
+
+/-- **Theorem 1.1.6** (§1.1, p.7): every Euclidean domain is a PID. -/
+theorem thm_1_1_6 {R : Type*} [EuclideanDomain R] : IsPrincipalIdealRing R :=
+  inferInstance
+
+/-- **Theorem 1.1.7** (§1.1, p.7): every PID is a UFD. -/
+theorem thm_1_1_7 {R : Type*} [CommRing R] [IsDomain R] [IsPrincipalIdealRing R] :
+    UniqueFactorizationMonoid R :=
+  inferInstance
+
+/-- **Theorem 1.1.8** (§1.1, p.7): in a PID the ideal `(x, y)` is generated by `gcd(x, y)`. -/
+theorem thm_1_1_8 {R : Type*} [CommRing R] [IsDomain R] [IsBezout R] (x y : R) :
+    Ideal.span ({x, y} : Set R) = Ideal.span {IsBezout.gcd x y} :=
+  (IsBezout.span_gcd x y).symm
+
+/-- **Definition 1.1.11** (§1.1, p.7), a *field*: a commutative ring whose nonzero elements form
+a group under multiplication. -/
+abbrev def_1_1_11 := @Field
+
+/-- **Definition 1.1.12** (§1.1, p.7): `α` is *algebraic* over `F` if `p(α) = 0` for some
+nonzero `p ∈ F[X]`; *transcendental* otherwise; `E` is an *algebraic extension* of `F` if every
+element of `E` is algebraic over `F`. -/
+abbrev def_1_1_12_algebraic := @IsAlgebraic
+
+/-- **Definition 1.1.12**: a transcendental element. -/
+abbrev def_1_1_12_transcendental := @Transcendental
+
+/-- **Definition 1.1.12**: an algebraic extension. -/
+abbrev def_1_1_12_extension := @Algebra.IsAlgebraic
+
+/-- **Definition 1.1.13** (§1.1, p.7), an *algebraically closed* field; an *algebraic closure*. -/
+abbrev def_1_1_13_algClosed := @IsAlgClosed
+
+/-- **Definition 1.1.13**: an algebraic closure. -/
+abbrev def_1_1_13_algClosure := @IsAlgClosure
+
+/-! ### Worked examples (§1.1) -/
+
+/-- **Example 1.1.2** (§1.1, p.2): the 2×2 rational matrices form a commutative group under
+addition. -/
+example : AddCommGroup (Matrix (Fin 2) (Fin 2) ℚ) := inferInstance
+
+/-- **Example 1.1.4** (§1.1, p.3): `ℤ₆ = ZMod 6` is a commutative ring of characteristic `6`
+with zero divisors — `2 · 3 = 0` while `2 ≠ 0` and `3 ≠ 0`. -/
+example : CharP (ZMod 6) 6 := inferInstance
+
+/-- **Example 1.1.4**: the zero divisors of `ℤ₆`. -/
+theorem ex_1_1_4_zero_divisors :
+    (2 : ZMod 6) * 3 = 0 ∧ (2 : ZMod 6) ≠ 0 ∧ (3 : ZMod 6) ≠ 0 := by decide
+
+/-- **Example 1.1.8** (§1.1, p.4): `ℚ[X, Y]` (here `ℚ[X][Y]`) is a unique factorization
+domain. -/
+example : UniqueFactorizationMonoid (Polynomial (Polynomial ℚ)) := inferInstance
+
+/-- **Example 1.1.9** (§1.1, p.5): `SL₂(ℚ)` embeds in `GL₂(ℚ)` (a subgroup) via the injective
+group homomorphism `toGL`. -/
+example : Function.Injective (Matrix.SpecialLinearGroup.toGL (n := Fin 2) (R := ℚ)) :=
+  Matrix.SpecialLinearGroup.toGL_injective
+
+/-- **Example 1.1.11** (§1.1, p.6): `ℚ[X]` is a principal ideal domain. -/
+example : IsPrincipalIdealRing (Polynomial ℚ) := inferInstance
+
+/-- **Example 1.1.12** (§1.1, p.6): `ℤ` is a Euclidean domain (size function `ν a = |a|`). -/
+example : EuclideanDomain ℤ := inferInstance
+
+/-- **Example 1.1.13** (§1.1, p.7): `ℤ₅ = ZMod 5` is a field. -/
+example : Field (ZMod 5) := by
+  haveI : Fact (Nat.Prime 5) := ⟨by norm_num⟩
+  infer_instance
+
+/-- **Example 1.1.14** (§1.1, p.7): the *quotient field* of an integral domain is a field; e.g.
+the quotient field of `ℤ` is (isomorphic to) `ℚ`. -/
+noncomputable example : Field (FractionRing ℤ) := inferInstance
+
+end DeepWiki.Si
