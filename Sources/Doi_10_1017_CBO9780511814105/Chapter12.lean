@@ -24,10 +24,14 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 — the general characteristic-`Mt`-formula construction for an arbitrary timed
-  automaton (over its finite region graph) `[external]` (Laroussinie–Larsen–Weise 1995). The
-  completeness *reduction* (`thm_12_4`) and an unconditional instance (`thm_12_4_once`) are
-  formalized; only the region-graph `χ`-construction remains. Ex 12.12 statement 3 (full-`Mt` strictness
+§12.3: Thm 12.4 — wiring an arbitrary timed automaton's finite region graph into a characteristic
+  equation system `[external]` (Laroussinie–Larsen–Weise 1995). Formalized: the completeness
+  *reduction* (`thm_12_4`) + unconditional instance (`thm_12_4_once`); and the **mutual-recursion
+  logic** (`TimedHmlMutualRecursion`: indexed-variable `MtRSys`, product-lattice `recMaxSys`,
+  equation-system coinduction) with a worked **multi-location** characteristic example
+  (`TimedAlternatingCharacteristic`: two locations with bounds 1/2, soundness + the explicit mutual
+  equations). Remaining: the generic region-graph→equation-system construction and its completeness.
+  Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
   [0,√2] from [0,√2)) `[research]`. -/

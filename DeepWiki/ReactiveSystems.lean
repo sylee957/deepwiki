@@ -82,6 +82,8 @@ import DeepWiki.ReactiveSystems.TimedHmlClocks
 import DeepWiki.ReactiveSystems.TimedHmlIntervalDelay
 import DeepWiki.ReactiveSystems.TimedHmlNegation
 import DeepWiki.ReactiveSystems.TimedHmlRecursion
+import DeepWiki.ReactiveSystems.TimedHmlMutualRecursion
+import DeepWiki.ReactiveSystems.TimedAlternatingCharacteristic
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlRefined
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
