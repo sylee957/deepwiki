@@ -66,6 +66,19 @@ theorem hasFPowerSeriesOnBall_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ)
       exact hr0 z (lt_of_le_of_lt hz hRr))).hasFPowerSeriesOnBall
       (show (0 : ℝ≥0) < ⟨R₀, hR0⟩ by exact_mod_cast (by linarith : (0:ℝ) < R₀))
 
+/-- **The `MA(∞)` series representation:** on the disk `‖z‖ < R`, the causal ARMA's `θ(z)/φ(z)`
+equals the convergent series `∑ₙ ψₙ zⁿ` of its Cauchy (`ψ`-weight) coefficients. -/
+theorem hasSum_coeff_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ ∀ z : ℂ, ‖z‖ < (R : ℝ) → HasSum
+      (fun n => z ^ n * (cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹)
+        0 R).coeff n) (Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) := by
+  obtain ⟨R, hR1, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
+  refine ⟨R, hR1, fun z hz => ?_⟩
+  have hmem : z ∈ Metric.eball (0 : ℂ) R := by
+    rw [Metric.mem_eball, edist_zero_right, enorm_lt_coe]; exact_mod_cast hz
+  have h := hball.hasSum hmem
+  simpa only [zero_add, FormalMultilinearSeries.apply_eq_pow_smul_coeff, smul_eq_mul] using h
+
 /-- **Causal ⟹ `∑|ψⱼ| < ∞` (analytic `ψ`-weights):** the Cauchy power-series (Taylor) coefficients
 of `1/φ` at `0` are absolutely summable. This is the `MA(∞)` weight summability — the analytic
 content that the formal `armaPsi = θ/φ` lacked. `1/φ` is analytic on a disk of radius `R > 1`
