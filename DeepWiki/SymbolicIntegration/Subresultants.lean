@@ -571,4 +571,23 @@ theorem subresultant_rem_lt (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m)
   rw [subresultant_rem A B Q Rem n m j hjm (by omega) hB hQ hA,
     subresultant_padding B Rem m Rem.natDegree j hjk hjm hB le_rfl n hkn]
 
+/-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
+degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
+power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,
+`j ≤ deg A`. Composes `subresultant_map` (σ commutes at the original formal degrees) with
+`subresultant_padding` (relating `σ̄B`'s formal degree `deg B` to its true degree `deg σ̄B`, the extra
+rows cofactor-expanding to `lc σ̄A = σ(lc A)`). The degree-preserving case is `subresultant_map`. -/
+theorem subresultant_map_lt {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) (j : ℕ)
+    (hA : (A.map σ).natDegree = A.natDegree) (hj1 : j < (B.map σ).natDegree)
+    (hj2 : j ≤ A.natDegree) :
+    (subresultant A B A.natDegree B.natDegree j).map σ
+      = (C (σ A.leadingCoeff)) ^ (B.natDegree - (B.map σ).natDegree)
+        * subresultant (A.map σ) (B.map σ) (A.map σ).natDegree (B.map σ).natDegree j := by
+  rw [hA, ← subresultant_map σ A B A.natDegree B.natDegree j,
+    subresultant_padding (A.map σ) (B.map σ) A.natDegree (B.map σ).natDegree j hj1 hj2
+      natDegree_map_le (le_refl _) B.natDegree natDegree_map_le]
+  congr 3
+  rw [coeff_map]
+  rfl
+
 end DeepWiki.SymbolicIntegration

@@ -520,6 +520,11 @@ commute with a coefficient ring homomorphism, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,
 `subresultant_map`). -/
 abbrev thm_1_4_3 := @subresultant_map
 
+/-- **Theorem 1.4.3** (§1.4, p.21), general scaling case: when `σ` preserves `deg A` but lowers
+`deg B`, the subresultant specializes up to `σ(lc A)^(deg B − deg σ̄B)` — `σ̄(Sⱼ(A,B)) =
+σ(lc A)^(deg B − deg σ̄B)·Sⱼ(σ̄A, σ̄B)` (the library `subresultant_map_lt`). -/
+abbrev thm_1_4_3_lt := @subresultant_map_lt
+
 /-- **Example 1.4.3** (§1.4, p.21): specializing `t ↦ 1` (`σ : ℤ[t] → ℤ`) sends
 `A = 3tx²−t³−4 ↦ 3x²−5` and `B = x²+t³x−9 ↦ x²+x−9`; by Theorem 1.4.3 (`thm_1_4_3`) their
 subresultants are the specialized ones — `S₀ = res(3x²−5, x²+x−9) = 469` and `S₁ = 3x − 22`. -/
@@ -1113,8 +1118,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.4: Thm 1.4.3 — only the general scaling-factor case `σ(lc A)^(deg B − deg σ̄B)` (degrees
-  lowered, subresultants of different sizes); the degree-preserving case is `thm_1_4_3`.
 §1.5: Thm 1.5.2 [infra, in progress] (Fundamental PRS Theorem — the explicit subresultant↔PRS
   similarity coefficients ηᵢ/τᵢ of eq 1.9/1.10); Thm 1.5.3 [infra, in progress] (the
   subresultant-PRS specialization ηᵢ=1). Bronstein proves neither, citing [39 Ch.7], [60], [16 §7],
