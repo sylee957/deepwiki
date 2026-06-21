@@ -33,8 +33,12 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   **generic** construction `TimedDeterministicCharacteristic` (`genChar_iff`): for a deterministic
   single-clock timed automaton over *any* location graph (`bound : Loc → ℕ`, `succ : Loc → Loc`), the
   per-location equation system characterises timed bisimilarity — `(p,[y=d]) ⊨ X_ℓ ↔ p ~ (ℓ,d)`,
-  subsuming the running (`Loc=Unit`) and alternating (`Loc=Bool`) examples. Remaining: multi-clock /
-  multi-edge / invariant automata (bodies folding over a finite edge presentation).
+  subsuming the running (`Loc=Unit`) and alternating (`Loc=Bool`) examples. Extended to **multi-clock**
+  in `TimedMultiClockCharacteristic` (`mgenChar_iff`): a deterministic single-action automaton over any
+  `Loc` and clock set `C` (`DetTA`: guard `gclock ℓ ≤ gbound ℓ`, reset list `rst ℓ`, `succ ℓ`) with the
+  reset-list machinery (`resetAll`/`denotSys_resetAll`) — `(p,v) ⊨ X_ℓ ↔ p ~ (ℓ,v)`. Remaining:
+  multi-edge (nondeterministic) automata with invariants (bodies folding over a finite edge presentation,
+  per-action boxes over a finite `Act`, guard complementation).
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
