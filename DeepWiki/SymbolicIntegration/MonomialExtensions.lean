@@ -622,6 +622,23 @@ theorem gcd_prod_X_sub_C_pow_derivative {K : Type*} [Field K] [CharZero K] (s : 
   exact (associated_mul_unit_right _ _ hg1).symm
 
 open Classical in
+/-- **§1.6** squarefree part / radical (eq. 1.14): over characteristic `0`, the squarefree part
+`A* = A/gcd(A, dA/dx)` of `A = ∏_{a∈s}(X − a)^{eₐ}` is its radical `∏_{a∈s}(X − a)` — stated
+multiplicatively, `A ~ gcd(A, dA/dx) · ∏(X − a)`. (`gcd(A, dA/dx)` is the multiplicity defect
+`∏(X − a)^{eₐ−1}`; multiplying back the radical recovers `A`.) -/
+theorem prod_X_sub_C_pow_associated_gcd_mul_radical {K : Type*} [Field K] [CharZero K]
+    (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated (∏ a ∈ s, (X - C a) ^ e a)
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a))
+        * ∏ a ∈ s, (X - C a)) := by
+  have hsplit : (∏ a ∈ s, (X - C a) ^ (e a - 1)) * ∏ a ∈ s, (X - C a)
+      = ∏ a ∈ s, (X - C a) ^ e a := by
+    rw [← Finset.prod_mul_distrib]
+    exact Finset.prod_congr rfl fun a ha => by rw [← pow_succ, Nat.sub_add_cancel (he a ha)]
+  have key := (gcd_prod_X_sub_C_pow_derivative s e he).symm.mul_right (∏ a ∈ s, (X - C a))
+  rwa [hsplit] at key
+
+open Classical in
 /-- **Theorem 3.5.1** (§3.5, p.99), the special-part formula `pₛ = gcd(p, Dp)/gcd(p, dp/dt)` in
 multiplicative form: for `p = ∏_{a∈s}(X − a)^{eₐ}` (char `0`),
 `gcd(p, Dp) ~ gcd(p, dp/dt) · ∏_{a : v(a)=a′}(X − a)`. So the special part of `p` (the cofactor

@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.SymbolicIntegration.MonomialExtensions
 import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
@@ -525,6 +526,17 @@ theorem thm_1_6_1 {R : Type*} [CommRing R] [IsDomain R] [CharZero R] {A P : R[X]
     (hn : 0 < n) (hP : Prime P) (hPdeg : 0 < P.natDegree) :
     P ^ (n + 1) ∣ A ↔ P ^ n ∣ A ∧ P ^ n ∣ derivative A :=
   pow_succ_dvd_iff hn hP hPdeg
+
+open Classical Polynomial in
+/-- **Equation 1.14** (§1.6, p.28): the squarefree part `A* = A/gcd(A, dA/dx)` of `A` is its
+radical. For `A = ∏_{a∈s}(X − a)^{eₐ}` (char `0`), stated multiplicatively,
+`A ~ gcd(A, dA/dx) · ∏_{a∈s}(X − a)` — so `A*` is the squarefree product `∏(X − a)`. -/
+theorem eq_1_14 {K : Type*} [Field K] [CharZero K] (s : Finset K) (e : K → ℕ)
+    (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated (∏ a ∈ s, (X - C a) ^ e a)
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a))
+        * ∏ a ∈ s, (X - C a)) :=
+  prod_X_sub_C_pow_associated_gcd_mul_radical s e he
 
 /-! ## §1.7 Squarefree Factorization -/
 
