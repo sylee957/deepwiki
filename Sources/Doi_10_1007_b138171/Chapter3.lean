@@ -303,6 +303,14 @@ theorem thm_3_4_3_linear {K : Type*} [Field K] [Differential K] (v : K[X]) (a : 
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ :=
   dvd_X_sub_C_implicitDeriv_iff v a
 
+/-- **Theorem 3.4.3** (§3.4, p.93), linear-factor power: over characteristic `0`, `(X − a)ⁿ`
+(`n ≥ 1`) is special w.r.t. `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` — `v(a) = a′`; the
+multiplicity `n` is irrelevant. -/
+theorem thm_3_4_3_pow {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X]) (a : K)
+    {n : ℕ} (hn : 1 ≤ n) :
+    (X - C a) ^ n ∣ Differential.implicitDeriv v ((X - C a) ^ n) ↔ v.eval a = a′ :=
+  dvd_X_sub_C_pow_implicitDeriv_iff v a hn
+
 /-- **Theorem 3.4.3** (§3.4, p.93), full squarefree form: a squarefree polynomial `∏_{a∈s}(X − a)`
 is special w.r.t. the monomial derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` at every
 root — `∀ a ∈ s, v(a) = a′`. -/

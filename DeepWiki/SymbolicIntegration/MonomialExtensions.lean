@@ -424,6 +424,24 @@ theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v 
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
   rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
+/-- **Theorem 3.4.3** (§3.4, p.93), linear-factor power: over characteristic `0`, the power
+`(X − a)ⁿ` (`n ≥ 1`) is special w.r.t. the monomial derivation `D` iff `Dα = Hₜ(α)`, i.e.
+`v(a) = a′` — the multiplicity does not matter. (`D((X−a)ⁿ) = n·(X−a)ⁿ⁻¹·D(X−a)`; cancel
+`(X−a)ⁿ⁻¹` and the unit `n`.) -/
+theorem dvd_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
+    (v : K[X]) (a : K) {n : ℕ} (hn : 1 ≤ n) :
+    (X - C a) ^ n ∣ Differential.implicitDeriv v ((X - C a) ^ n) ↔ v.eval a = a′ := by
+  have hnu : IsUnit ((n : K[X])) := by
+    rw [← map_natCast (C : K →+* K[X])]
+    exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by omega)))
+  have hD : Differential.implicitDeriv v ((X - C a) ^ n)
+      = (X - C a) ^ (n - 1) * ((n : K[X]) * (v - C a′)) := by
+    rw [Derivation.leibniz_pow, implicitDeriv_X_sub_C, nsmul_eq_mul, smul_eq_mul]; ring
+  rw [hD, show (X - C a) ^ n = (X - C a) ^ (n - 1) * (X - C a) from by
+        rw [← pow_succ, Nat.sub_add_cancel hn],
+    mul_dvd_mul_iff_left (pow_ne_zero (n - 1) (X_sub_C_ne_zero a)),
+    hnu.dvd_mul_left, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
+
 /-- **Theorem 3.4.2** (§3.4, p.93), full squarefree form: a squarefree polynomial — written as the
 product `∏_{a∈s} (X − a)` of its distinct linear factors — is normal w.r.t. the monomial
 derivation `D` (`Dt = v`) iff `Dα ≠ Hₜ(α)` at *every* root, i.e. `∀ a ∈ s, v(a) ≠ a′`. Forward:
