@@ -278,6 +278,59 @@ theorem primPart_associated_prod_sqfreeFactPart (A : D[X]) (hA : A.primPart ≠ 
   rw [← h]
   exact (deflation_zero A hA).symm
 
+open Classical in
+/-- A squarefree-factorization part is never zero (a product of nonzero primes). -/
+theorem sqfreeFactPart_ne_zero (A : D[X]) (i : ℕ) : sqfreeFactPart A i ≠ 0 := by
+  rw [sqfreeFactPart, Finset.prod_ne_zero_iff]
+  exact fun P hP => (irreducible_of_normalized_factor P
+    (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).ne_zero
+
+open Classical in
+/-- **Lemma 1.7.1 (iii)** (§1.7), squarefree part: each `Aᵢ = ∏_{eₚ = i} P` is squarefree (a product
+of distinct primes). -/
+theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactPart A i) := by
+  rw [sqfreeFactPart]
+  apply Finset.squarefree_prod_of_pairwise_isCoprime
+  · intro P hP Q hQ hPQ
+    have hPm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+    have hQm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hQ).1
+    apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors
+      (fun h => (irreducible_of_normalized_factor P hPm).ne_zero h.1)
+    intro z hz hzP hzQ
+    have hPQa : Associated P Q :=
+      (hz.associated_of_dvd (irreducible_of_normalized_factor P hPm) hzP).symm.trans
+        (hz.associated_of_dvd (irreducible_of_normalized_factor Q hQm) hzQ)
+    apply hPQ
+    have := normalize_eq_normalize_iff_associated.mpr hPQa
+    rwa [normalize_normalized_factor P hPm, normalize_normalized_factor Q hQm] at this
+  · intro P hP
+    exact (irreducible_of_normalized_factor P
+      (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).squarefree
+
+open Classical in
+/-- **Lemma 1.7.1 (iii)** (§1.7), pairwise coprimality: the `Aᵢ` are pairwise coprime in the gcd
+sense — `gcd(Aᵢ, Aⱼ) ∈ D` for `i ≠ j` (stated as `IsRelPrime`, the non-Bézout notion, since `D[X]`
+need not be a Bézout domain). Their prime supports `{eₚ = i}` and `{eₚ = j}` are disjoint. -/
+theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
+    IsRelPrime (sqfreeFactPart A i) (sqfreeFactPart A j) := by
+  apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors (fun h => sqfreeFactPart_ne_zero A i h.1)
+  intro z hz hzi hzj
+  rw [sqfreeFactPart] at hzi hzj
+  obtain ⟨P, hP, hzP⟩ := hz.prime.exists_mem_finset_dvd hzi
+  obtain ⟨Q, hQ, hzQ⟩ := hz.prime.exists_mem_finset_dvd hzj
+  have hPm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+  have hQm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hQ).1
+  have hPQa : Associated P Q :=
+    (hz.associated_of_dvd (irreducible_of_normalized_factor P hPm) hzP).symm.trans
+      (hz.associated_of_dvd (irreducible_of_normalized_factor Q hQm) hzQ)
+  have hPeqQ : P = Q := by
+    have := normalize_eq_normalize_iff_associated.mpr hPQa
+    rwa [normalize_normalized_factor P hPm, normalize_normalized_factor Q hQm] at this
+  have hi := (Finset.mem_filter.mp hP).2
+  have hj := (Finset.mem_filter.mp hQ).2
+  rw [hPeqQ] at hi
+  exact hij (hi.symm.trans hj)
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
