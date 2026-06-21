@@ -63,13 +63,6 @@ theorem jointValW_smallBump {D : Type*} [Fintype D] (T : ℝ≥0) (w : Valuation
       · refine le_trans (min_le_right _ _) ?_
         have h := hx₀ x (Finset.mem_univ x)
         rwa [if_pos hx] at h
-  -- value/floor/frac of a bumped process clock
-  have hval : ∀ a : ℝ≥0, jointValW (T + a) w none = (T + twoSubSqrt2NN) + a := fun a => by
-    rw [jointValW, jointVal_none]; ring
-  have hfa : ∀ a : ℝ≥0, (a : ℝ) < 1 - φ →
-      fracPart ((T + twoSubSqrt2NN) + a) = φ + (a : ℝ)
-        ∧ ⌊(T + twoSubSqrt2NN) + a⌋₊ = ⌊T + twoSubSqrt2NN⌋₊ := fun a ha =>
-    fracPart_add_of_no_wrap (by rw [← hφ]; linarith)
   refine ⟨bnd.toNNReal, by rw [Real.toNNReal_pos]; exact hbnd0, fun a b ha haη hb hbη => ?_⟩
   have hbndax : (a : ℝ) < bnd := by
     have h := NNReal.coe_lt_coe.mpr haη; rwa [Real.coe_toNNReal bnd hbnd0.le] at h
@@ -253,6 +246,52 @@ theorem Sq2CoupledFRel.delayCross {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' 
     exact lt_of_le_of_ne hge (Ne.symm hne)
   · have hp := RegionEqAll.precomp (f := Option.some) (Option.some_injective D) hδ'
     rwa [jointValW_comp_some, jointValW_comp_some] at hp
+
+/-- **Action clause (forth).** A does `a` (so `d < √2`); B matches (`e ≤ √2`), both reaching `End` —
+the past regime. -/
+theorem Sq2CoupledRel.act_forth {D : Type*} {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') (α : Sq2Act) (p' : Sq2)
+    (hstep : (sq2TLTS sqrt2NN).act p α p') :
+    ∃ q', (sq2TLTS sqrt2NN).act q α q' ∧ Sq2CoupledRel p' u q' u' := by
+  rw [sq2_act] at hstep
+  rcases h with ⟨hpd, _, _⟩ | ⟨d, e, hp, hq, hfr⟩
+  · exact absurd hstep (fun hs => hpd.no_act hs)
+  · subst hp; subst hq
+    cases hstep with
+    | aA _ => exact ⟨Sq2.End, sq2_act.mpr (Sq2Step.aB hfr.2.1), Or.inl ⟨trivial, trivial, hfr.regionEqAll⟩⟩
+
+/-- **Action clause (back).** B does `a` (so `e ≤ √2`); A matches (`d < √2`), both reaching `End`. -/
+theorem Sq2CoupledRel.act_back {D : Type*} {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') (α : Sq2Act) (q' : Sq2)
+    (hstep : (sq2TLTS sqrt2NN).act q α q') :
+    ∃ p', (sq2TLTS sqrt2NN).act p α p' ∧ Sq2CoupledRel p' u q' u' := by
+  rw [sq2_act] at hstep
+  rcases h with ⟨_, hqd, _⟩ | ⟨d, e, hp, hq, hfr⟩
+  · exact absurd hstep (fun hs => hqd.no_act hs)
+  · subst hp; subst hq
+    cases hstep with
+    | aB _ => exact ⟨Sq2.End, sq2_act.mpr (Sq2Step.aA hfr.1), Or.inl ⟨trivial, trivial, hfr.regionEqAll⟩⟩
+
+/-- **Delay clause (forth).** Combines the past-regime time-successor, the live-stay delay
+(`delayLiveStay`), and the crossing delay (`delayCross`), wrapping the TLTS `delB` step. -/
+theorem Sq2CoupledRel.delayForth {D : Type*} [Fintype D] {p q : Sq2} {u u' : Valuation D}
+    (h : Sq2CoupledRel p u q u') (δ : ℝ≥0) (p' : Sq2)
+    (hstep : (sq2TLTS sqrt2NN).delay p δ p') :
+    ∃ δ' q', (sq2TLTS sqrt2NN).delay q δ' q' ∧ Sq2CoupledRel p' (u.add δ) q' (u'.add δ') := by
+  rw [sq2_delay] at hstep
+  rcases h with ⟨hpd, hqd, hr⟩ | ⟨d, e, hp, hq, hfr⟩
+  · obtain ⟨δ', hr'⟩ := regionEqAll_timeSuccessor hr δ
+    obtain ⟨q', hqstep, hq'd⟩ := hqd.delay_succ δ'
+    exact ⟨δ', q', sq2_delay.mpr hqstep, Or.inl ⟨hpd.delay_pres hstep, hq'd, hr'⟩⟩
+  · subst hp; subst hq
+    cases hstep with
+    | delA =>
+      by_cases hc : d + δ < sqrt2NN
+      · obtain ⟨δ', hfr'⟩ := hfr.delayLiveStay δ hc
+        exact ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB, Or.inr ⟨d + δ, e + δ', rfl, rfl, hfr'⟩⟩
+      · rw [not_lt] at hc
+        obtain ⟨δ', hBpast, hr'⟩ := hfr.delayCross δ hc
+        exact ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB, Or.inl ⟨hc, hBpast, hr'⟩⟩
 
 end TLTS
 
