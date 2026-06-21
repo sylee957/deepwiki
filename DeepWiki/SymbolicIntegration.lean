@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.MonomialExtensions

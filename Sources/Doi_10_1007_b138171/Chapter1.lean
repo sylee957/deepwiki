@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import Mathlib.Data.ZMod.Basic
@@ -509,10 +510,14 @@ theorem ex_1_4_2 :
       simp [Polynomial.sylvester, Fin.addCases, coeff_X_pow, coeff_sub, coeff_add, coeff_one]
   exact ⟨hS, by rw [Polynomial.resultant, hS]; decide⟩
 
--- **Deferred — not in Mathlib (library work):** the *subresultant* theory: Definition 1.4.2
--- (`Sⱼ(A,B)` from Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring
--- homomorphisms), and §1.5 polynomial remainder sequences. [Theorem 1.4.2 — `res ∈ (A,B)` — is
--- done: `thm_1_4_2`.]
+/-- **Definition 1.4.2** (§1.4, p.20): the `j`-th *subresultant* `Sⱼ(A,B) = ∑_{i=0}^j det(ⱼSᵢ)·xⁱ`
+(the library `subresultant`, on Bronstein's Sylvester layout `bSylvester`). The regular case
+`S₀ = det(Sylvester) = res(A,B)` is `subresultant_zero`. -/
+noncomputable abbrev def_1_4_2 := @subresultant
+
+-- **Deferred — not in Mathlib (library work):** Theorem 1.4.3 (subresultant specialization under
+-- ring homomorphisms). [Theorem 1.4.2 — `res ∈ (A,B)` — is `thm_1_4_2`; Definition 1.4.2 — the
+-- subresultant operator — is `def_1_4_2`.]
 
 /-! ## §1.5 Polynomial Remainder Sequences -/
 
@@ -528,6 +533,26 @@ abbrev def_1_5_2 := @IsSimilar
 `A, B` is similar to `gcd(A, B)` (the library theorem `IsPRS.isSimilar_gcd`; `D[x]` is given its
 `GCDMonoid` structure via `UniqueFactorizationMonoid.toGCDMonoid`). -/
 abbrev thm_1_5_1 := @IsPRS.isSimilar_gcd
+
+/-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
+`S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
+theorem ex_1_5_1 :
+    subresultant (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2 0 = 4
+      ∧ subresultant (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2 1 = -2 := by
+  have hM : bSylvester (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2
+      = !![1, 0, 1, 0; 0, 1, 0, 1; 1, 0, -1, 0; 0, 1, 0, -1] := by
+    ext i l; fin_cases i <;> fin_cases l <;>
+      simp [bSylvester, coeff_X_pow, coeff_sub, coeff_add, coeff_one]
+  refine ⟨?_, ?_⟩
+  · rw [subresultant_zero, hM]; norm_num [show (!![1, 0, 1, 0; 0, 1, 0, 1; 1, 0, -1, 0; 0, 1, 0, -1] :
+      Matrix (Fin 4) (Fin 4) ℤ).det = 4 from by decide]
+  · have hd0 : ((!![1, 0, 1, 0; 0, 1, 0, 1; 1, 0, -1, 0; 0, 1, 0, -1] : Matrix (Fin 4) (Fin 4) ℤ).submatrix
+        (subRow 2 2 1) (subCol 2 2 1 0)).det = -2 := by decide
+    have hd1 : ((!![1, 0, 1, 0; 0, 1, 0, 1; 1, 0, -1, 0; 0, 1, 0, -1] : Matrix (Fin 4) (Fin 4) ℤ).submatrix
+        (subRow 2 2 1) (subCol 2 2 1 1)).det = 0 := by decide
+    simp only [subresultant, Finset.sum_range_succ, Finset.sum_range_zero, zero_add, hM, hd0, hd1,
+      pow_zero, mul_one, pow_one, map_zero, zero_mul, add_zero]
+    norm_num
 
 /-- **Exercise 1.11** (§1, p.33): similarity (Definition 1.5.2) is an equivalence relation on
 `D[x]` when `D` is an integral domain (`isSimilar_equivalence`). -/
@@ -929,13 +954,11 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
-  specialization under ring homomorphisms).
+§1.4: Thm 1.4.3 (subresultant specialization under ring homomorphisms).
 §1.5: Thm 1.5.2; Thm 1.5.3.
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.5.1;
-  Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
+Examples: Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
 end DeepWiki.Si
