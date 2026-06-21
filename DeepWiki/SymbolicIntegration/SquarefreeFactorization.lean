@@ -1,5 +1,7 @@
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.FieldTheory.Perfect
+import Mathlib.RingTheory.Polynomial.GaussLemma
+import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 
 /-! # Squarefree factorization — the derivative criterion (Bronstein §1.6–§1.7)
@@ -81,5 +83,41 @@ to its derivative — `gcd(A, dA/dx) = 1`. (`Squarefree ↔ Separable` on a perf
 theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
     Squarefree A ↔ IsCoprime A (derivative A) :=
   PerfectField.separable_iff_squarefree.symm.trans (separable_def A)
+
+section Deflation
+open UniqueFactorizationMonoid
+variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
+
+open Classical in
+/-- **Squarefree part** (§1.6, Definition 1.6.2): `A* = ∏ Pᵢ`, the product of the distinct prime
+factors of the primitive part `pp(A) = ∏ Pᵢ^eᵢ`. -/
+noncomputable def squarefreePart (A : D[X]) : D[X] :=
+  ∏ P ∈ (factors A.primPart).toFinset, P
+
+open Classical in
+/-- **`k`-deflation** (§1.6, Definition 1.6.2): `A⁻ᵏ = ∏ Pᵢ^max(0, eᵢ−k)` (truncated exponents),
+from `pp(A) = ∏ Pᵢ^eᵢ`. The `1`-deflation `A⁻ = A⁻¹` is the *deflation* of `A`. -/
+noncomputable def deflation (A : D[X]) (k : ℕ) : D[X] :=
+  ∏ P ∈ (factors A.primPart).toFinset, P ^ ((factors A.primPart).count P - k)
+
+omit [IsDomain D] in
+open Classical in
+/-- **Relation (1.11)** (§1.6): `A* · A⁻ = pp(A)` (up to associates) — the squarefree part times
+the deflation recovers the primitive part, since `∏ Pᵢ · ∏ Pᵢ^(eᵢ−1) = ∏ Pᵢ^eᵢ`. -/
+theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
+    Associated (squarefreePart A * deflation A 1) A.primPart := by
+  rw [squarefreePart, deflation, ← Finset.prod_mul_distrib]
+  have h : ∀ P ∈ (factors A.primPart).toFinset,
+      P * P ^ ((factors A.primPart).count P - 1) = P ^ ((factors A.primPart).count P) := by
+    intro P hP
+    rw [← pow_succ']
+    congr 1
+    have hpos : 0 < (factors A.primPart).count P :=
+      Multiset.count_pos.mpr (Multiset.mem_toFinset.mp hP)
+    omega
+  rw [Finset.prod_congr rfl h, ← Finset.prod_multiset_count]
+  exact factors_prod hA
+
+end Deflation
 
 end DeepWiki.SymbolicIntegration

@@ -588,6 +588,17 @@ theorem eq_1_14 {K : Type*} [Field K] [CharZero K] (s : Finset K) (e : K → ℕ
         * ∏ a ∈ s, (X - C a)) :=
   prod_X_sub_C_pow_associated_gcd_mul_radical s e he
 
+/-- **Definition 1.6.2** (§1.6, p.26): the *squarefree part* `A* = ∏ Pᵢ` (the library
+`squarefreePart`). -/
+noncomputable abbrev def_1_6_2_squarefreePart := @squarefreePart
+
+/-- **Definition 1.6.2** (§1.6, p.26): the *`k`-deflation* `A⁻ᵏ = ∏ Pᵢ^max(0,eᵢ−k)` (the library
+`deflation`); the `1`-deflation is the *deflation* `A⁻`. -/
+noncomputable abbrev def_1_6_2_deflation := @deflation
+
+/-- **Relation (1.11)** (§1.6, p.26): `A* · A⁻ = pp(A)` (up to associates). -/
+abbrev rel_1_11 := @squarefreePart_mul_deflation
+
 /-! ## §1.7 Squarefree Factorization -/
 
 /-- **Definition 1.7.1** (§1.7, p.28): `A` is *squarefree* if no non-unit `B` satisfies
@@ -909,8 +920,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
   specialization under ring homomorphisms).
 §1.5: Thm 1.5.2; Thm 1.5.3.
-§1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
-  relation 1.13.
+§1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
