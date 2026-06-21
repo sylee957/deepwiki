@@ -33,6 +33,7 @@ lake exe minplus            # usage
 | `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay, proved to be the *least* dominating shift (`delayBound`/`delayBound_least`); needs `slope_α ≤ slope_β` |
 | `minplus closure <vals> <period> <incr> <k>` | the **sub-additive closure** `f*(0..k−1) = δ₀ ⊓ f ⊓ f² ⊓ ⋯` via `closureApproxNat f n n`; exact for `f(0)=0`; refuses `f(0)<0` (where `f* = −∞`) |
 | `minplus residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>` | the **residual service curve** `[β−α]⁺↑(0..k−1)` — leftover service for a flow after a cross-flow (arrival `α`) is served by `β`; `residualAt` with intro/elim/mono proved |
+| `minplus tandem <α:v p c> <β1:v p c> <β2:v p c>` | **two servers in series**: the end-to-end service curve `β1∗β2` (concatenation thm `IsMinimalServiceCurve.comp`) + end-to-end backlog/delay — "pay bursts only once" |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -110,6 +111,12 @@ The calculator computes real deterministic-network-calculus results on rate-late
   of curve `β`, the service still guaranteed to one flow once a cross-flow constrained by arrival curve
   `α` is served. A rate-2 server carrying a rate-1 cross-flow leaves a rate-1 residual:
   `minplus residual 0,2 1 2 0,1 1 1 6` → `0, 1, 2, 3, 4, 5`.
+- **Tandem (servers in series)** — the *multi-hop* end-to-end analysis: two servers `β1`, `β2` traversed
+  in sequence offer the convolved service curve `β1∗β2` (the concatenation theorem), and the end-to-end
+  delay/backlog are computed against it. For a token bucket `α_{1,2}` through two `β_{2,1}` servers:
+  `minplus tandem 0,3 1 1 0,0 1 2 0,0 1 2` → end-to-end `β1∗β2 = β_{2,2}`, backlog `4`, delay `3`. The
+  delay `3` beats the sum of per-hop delays `2 + 3 = 5` — **pay bursts only once** — a fact gate-verified
+  by `native_decide` in `Calc.lean`.
 
 (`backlog` is fully proved via `deconvNat_isGreatest`. `delay` is a finite search whose decisive-window
 property is now the proved lemma `evalNat_le_shift_of_window`: if `α(t) ≤ β(t+d)` on one period-window

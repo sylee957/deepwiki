@@ -251,6 +251,17 @@ def residualSample (β α : UppSeq Int) (k : Nat) : List Int :=
 example : residualSample ⟨[0, 2], 2, 1, by decide, by decide⟩ ⟨[0, 1], 1, 1, by decide, by decide⟩ 4
     = [0, 1, 2, 3] := by native_decide
 
+/-- **Concatenation / "pay bursts only once" (gate-verified).** Two rate-latency servers `β = β_{2,1}`
+in tandem offer the end-to-end service curve `β ∗ β` (the concatenation theorem
+`IsMinimalServiceCurve.comp`). The end-to-end delay of a token bucket `α_{1,2}` through `β ∗ β` is
+**bounded by the sum of the per-hop delays** — and is in fact strictly smaller (`3 < 2 + 3`), because the
+burst is served only once end-to-end rather than re-paid at each hop. Here the second hop sees the
+inflated output arrival `α ⊘ β`. -/
+example :
+    delayBound (tokenBucket 1 2) (convUpp (betaRL 2 1) (betaRL 2 1))
+      ≤ delayBound (tokenBucket 1 2) (betaRL 2 1)
+        + delayBound (deconvUpp (tokenBucket 1 2) (betaRL 2 1)) (betaRL 2 1) := by native_decide
+
 /-- Lift an integer UPP sequence to `WithTop ℤ` — the sub-additive closure needs `δ₀`'s `⊤`. -/
 def liftUpp (f : UppSeq Int) : UppSeq (WithTop ℤ) :=
   ⟨f.vals.map WithTop.some, (f.incr : WithTop ℤ), f.period, f.hperiod,

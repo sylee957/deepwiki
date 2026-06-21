@@ -59,7 +59,8 @@ def usage : String := String.intercalate "\n"
     "    backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>           print the backlog bound supₜ(α(t)-β(t)) = (α⊘β)(0)  [needs slope α ≤ slope β]",
     "    delay <vα> <pα> <cα> <vβ> <pβ> <cβ>             print the delay bound min{d : ∀t α(t)≤β(t+d)}  [needs slope α ≤ slope β]",
     "    closure <vals> <period> <incr> <k>              print the sub-additive closure f*(0..k-1) = ⨅ₘ f^⊗ᵐ  [closureApproxNat; exact for f(0)=0]",
-    "    residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>      print the residual service curve [β-α]⁺↑(0..k-1)  [leftover service; residualAt, intro/elim/mono proved]" ]
+    "    residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>      print the residual service curve [β-α]⁺↑(0..k-1)  [leftover service; residualAt, intro/elim/mono proved]",
+    "    tandem <α:v p c> <β1:v p c> <β2:v p c>          print end-to-end service curve β1∗β2 + backlog + delay through two tandem servers  [concatenation; pay bursts only once]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -144,4 +145,16 @@ def main (args : List String) : IO Unit := do
       let β ← reqUpp vβ pβ cβ
       let α ← reqUpp vα pα cα
       IO.println (fmt (residualSample β α (← reqNat k)))
+  | ["tandem", va, pa, ca, v1, p1, c1, v2, p2, c2] =>
+      let α ← reqUpp va pa ca
+      let β₁ ← reqUpp v1 p1 c1
+      let β₂ ← reqUpp v2 p2 c2
+      -- end-to-end service curve of the two servers in series (concatenation theorem: β₁∗β₂)
+      let β := convUpp β₁ β₂
+      IO.println s!"end-to-end service curve β₁∗β₂ = {renderUpp β}"
+      if slope α β ≤ slope β α then
+        IO.println s!"end-to-end backlog bound = {backlogBound α β}"
+        IO.println s!"end-to-end delay bound   = {delayBound α β}   (pay bursts only once)"
+      else
+        throw (IO.userError "tandem requires slope(α) ≤ slope(β₁∗β₂) (else backlog/delay unbounded)")
   | _ => IO.println usage
