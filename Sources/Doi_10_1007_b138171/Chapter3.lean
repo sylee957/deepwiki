@@ -261,8 +261,10 @@ theorem lem_3_4_2_eq {F : Type*} [Field F] [CharZero F] [Differential F] (v p : 
   natDegree_implicitDeriv_eq v p hv hp
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product
---     formula); Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
+--   • Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula; its two-factor base case rests on
+--     `associated_gcd_mul_of_isUnit_gcd` — the coprime-factor gcd-multiplicativity now in the
+--     library — plus a gcd-add-multiple and a coprime-cancellation step still to add).
+--   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
 --     (rests on Lemma 3.4.4).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
