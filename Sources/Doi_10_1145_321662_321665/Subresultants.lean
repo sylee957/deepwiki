@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.SymbolicIntegration.SubresultantPRS
 import Sources.Doi_10_1145_321662_321665.Source
 
 /-! # Brown–Traub subresultant theory — catalog
@@ -8,8 +9,7 @@ and `(G,H)` for `F + B·G = H`. Equation (12) (the case `0 ≤ j < deg H`) is fu
 remaining equations of Lemma 1 and the Fundamental Theorem are tracked below.
 
 ## NOT YET FORMALIZED
-- Fundamental Theorem [research]: the telescoping induction (eq 30) over a full PRS `F₁,…,Fₖ` — each
-  `Sⱼ(F₁,F₂)` (`0 ≤ j < n₂`) is similar to some `Fᵢ` or zero. -/
+-/
 
 namespace DeepWiki.Btr
 
@@ -52,5 +52,10 @@ abbrev lemma_2_eq_23 := @subresultant_prs_step_gap
 /-- **Lemma 2**, equation (24) (§5, p.510): the single PRS step at `j = nᵢ₋₁−1`.
 `subresultant_prs_step_top`. -/
 abbrev lemma_2_eq_24 := @subresultant_prs_step_top
+
+/-- **Fundamental Theorem** (§5, p.510, eqs 30–31): for a PRS `F₁,…,Fₖ`, the subresultant `Sⱼ(F₁,F₂)`
+is similar to `Sⱼ(Fₘ,F_{m+1})` for every step `m` (and hence to a later PRS element or zero). The
+library's `subresultant_prs_telescope`, telescoping the per-step similarity `subresultant_prs_similar`. -/
+abbrev fundamental_theorem := @subresultant_prs_telescope
 
 end DeepWiki.Btr

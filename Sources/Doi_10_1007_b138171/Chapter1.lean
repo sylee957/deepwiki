@@ -1149,9 +1149,11 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   now DONE**: eq 21 (`subresultant_prs_step`, `0≤j<nᵢ`), eq 22 (`subresultant_prs_step_deg`, `j=nᵢ`),
   eq 23 (`subresultant_prs_step_gap`, `nᵢ<j<nᵢ₋₁-1`, `=0`), eq 24 (`subresultant_prs_step_top`,
   `j=nᵢ₋₁-1`) — each composes the corresponding Lemma 1 case (eq 12/13/14/15) with the scaling law.
-  Remaining: the telescoping induction over a full PRS (eq 30, needs a PRS data structure
-  `{F₁,…,Fₖ, αᵢ,βᵢ,Qᵢ}` with the division relations) → Bronstein Thm 1.5.2/1.5.3 (explicit `ηᵢ/τᵢ`
-  similarity coefficients).
+  **The Fundamental Theorem is now DONE** (`subresultant_prs_telescope`, in `SubresultantPRS.lean`):
+  telescoping eq 21 down a PRS shows `Sⱼ(F₀,F₁)` is `IsSimilar` to `Sⱼ(Fₘ,F_{m+1})` for every step `m`
+  (the subresultant counterpart of the gcd-based Thm 1.5.1 `IsPRS.isSimilar_gcd`), via the per-step
+  `subresultant_prs_similar`. Remaining: only Bronstein Thm 1.5.2/1.5.3's fully explicit `ηᵢ/τᵢ`
+  similarity coefficients (the exact constants; the similarity itself is established).
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
