@@ -27,8 +27,6 @@ Theorem 1(b) (§p.133): `S_{n_{k-1}-1}(P₁,P₂) = (-1)^τₖ·[∏ᵢ cᵢ^(-�
   — the NORMAL case (all `δ=1`, so `∏ cᵢ^(-δᵢ₋₁(δᵢ-1)) = 1` and signs vanish) is PROVED:
   `subresultant_prs_normal_eq` (= Bronstein Thm 1.5.3 normal case, `thm_1_5_3_normal`). The general
   defective-degree case (the `∏ cᵢ^…` powers nontrivial) remains [external].
-Theorem 1(c) (§p.134): `Sⱼ(P₁,P₂) = 0` for `nₖ < j < n_{k-1}-1` (reduced p.r.s.) [external]: Lemma 2 +
-  Lemma 1(d) (`subresultant_prs_step_gap`). (The abstract analog is `subresultant_prs_vanish`.)
 Corollary 1.1 (§p.134); Corollary 1.2 (§p.135); Corollary 1.3 (§p.135); Corollary 1.4 (§p.135) [external].
 Lemma 3 (§p.135): for an *arbitrary* p.r.s. (coefficient choices `eᵢ, fᵢⱼ`), `Pₖ = (-1)^gₖ·[∏ᵢ cᵢ^hᵢₖ]·Sₖ`
   [external]: generalizes Lemma 1 to an arbitrary p.r.s. (eq 2) and iterates.

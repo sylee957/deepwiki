@@ -465,4 +465,23 @@ theorem subresPRS_gamma_ne_zero (r : ℕ → K) (δ : ℕ → ℕ) (hr : ∀ i, 
 
 end SubresPRSCoeff
 
+/-- **Theorem 1.5.3 / Collins Theorem 1(c), defective (gap) vanishing**: for a PRS, the subresultant
+`Sⱼ(F₀,F₁)` vanishes at every *defective* index strictly inside the last degree gap,
+`deg F_{m+2} < j < deg F_{m+1} − 1`. Telescopes to step `m` (`subresultant_prs_vanish`) where the
+single-step gap subresultant vanishes (`subresultant_prs_step_gap`, Brown–Traub eq 23). -/
+theorem subresultant_prs_gap_zero [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X]) (m j : ℕ)
+    (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
+    (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, j < (F (l + 2)).natDegree)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l)
+    (hlo : (F (m + 2)).natDegree < j) (hhi : j < (F (m + 1)).natDegree - 1) :
+    subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree j = 0 := by
+  apply subresultant_prs_vanish F α β Q j m (fun l hl => hα l (by omega))
+    (fun l hl => hβ l (by omega)) (fun l hl => hcb l (by omega)) hj
+    (fun l hl => hQ l (by omega)) (fun l hl => hrel l (by omega))
+  exact subresultant_prs_step_gap (F m) (F (m + 1)) (F (m + 2)) (Q m) (α m) (β m)
+    (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree j (hα m le_rfl) (hβ m le_rfl)
+    hlo hhi rfl le_rfl (hQ m le_rfl) (hrel m le_rfl)
+
 end DeepWiki.SymbolicIntegration

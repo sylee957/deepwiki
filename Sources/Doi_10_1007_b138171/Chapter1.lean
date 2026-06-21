@@ -635,6 +635,11 @@ abbrev thm_1_5_3_base := @subresultant_eq_pseudoRem
 library's `subresultant_prs_normal_eq` (= Collins 1967 Theorem 1, normal case). -/
 abbrev thm_1_5_3_normal := @subresultant_prs_normal_eq
 
+/-- **Theorem 1.5.3** (§1.5, p.23), defective (gap) vanishing: the subresultant `Sⱼ(A,B)` is zero at every
+defective index strictly inside a degree gap. The library's `subresultant_prs_gap_zero` (= Collins 1967
+Theorem 1(c)). -/
+abbrev thm_1_5_3_gap := @subresultant_prs_gap_zero
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
