@@ -86,4 +86,26 @@ theorem subresultant_prs_telescope_explicit [IsDomain R] (F : ℕ → R[X]) (α 
         * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
         * C (β l ^ ((F (l + 1)).natDegree - j)))) * h21
 
+/-- **Fundamental PRS Theorem, vanishing branch** (Bronstein Thm 1.5.2, the `Sⱼ(A,B) = 0` case): if the
+subresultant at the telescope endpoint vanishes (`Sⱼ(Fₘ,F_{m+1}) = 0` — e.g. a gap index, by
+`subresultant_prs_step_gap`), then `Sⱼ(F₀,F₁) = 0`. The explicit telescope (eq 30) gives
+`Sⱼ(F₀,F₁)·∏ C(αₗ^…) = 0`, and the `α`-product is nonzero in the domain, so `Sⱼ(F₀,F₁) = 0`. -/
+theorem subresultant_prs_vanish [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
+    (j : ℕ) (m : ℕ)
+    (hα : ∀ l < m, α l ≠ 0) (hβ : ∀ l < m, β l ≠ 0)
+    (hcb : ∀ l < m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, j < (F (l + 2)).natDegree)
+    (hQ : ∀ l < m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l < m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l)
+    (hend : subresultant (F m) (F (m + 1)) (F m).natDegree (F (m + 1)).natDegree j = 0) :
+    subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree j = 0 := by
+  have h30 := subresultant_prs_telescope_explicit F α β Q j m hβ hcb hj hQ hrel
+  rw [hend, zero_mul] at h30
+  have hprod : (∏ l ∈ Finset.range m, C (α l ^ ((F (l + 1)).natDegree - j))) ≠ 0 := by
+    rw [Finset.prod_ne_zero_iff]
+    intro l hl
+    rw [Ne, C_eq_zero]
+    exact pow_ne_zero _ (hα l (Finset.mem_range.mp hl))
+  exact (mul_eq_zero.mp h30).resolve_right hprod
+
 end DeepWiki.SymbolicIntegration

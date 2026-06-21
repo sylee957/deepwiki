@@ -593,6 +593,15 @@ division relations, every subresultant `Sⱼ(F₀,F₁)` is *similar* to `Sⱼ(F
 Thm 1.5.2. The fully explicit similarity coefficients `ηᵢ/τᵢ` (eq 1.9/1.10) are the remaining refinement. -/
 abbrev thm_1_5_2_similar := @subresultant_prs_telescope
 
+/-- **Theorem 1.5.2** (§1.5, p.23) — vanishing branch: `Sⱼ(A,B) = 0` whenever the corresponding PRS
+telescope endpoint `Sⱼ(Fₘ,F_{m+1})` vanishes (the `0 otherwise` case). `subresultant_prs_vanish`. -/
+abbrev thm_1_5_2_zero := @subresultant_prs_vanish
+
+/-- **Theorem 1.5.2** (§1.5, p.23) — explicit coefficients: the exact-constant telescoping
+`Sⱼ(F₀,F₁)·∏ αₗ^(…) = Sⱼ(Fₘ,F_{m+1})·∏[(-1)^…·(lc)^…·βₗ^…]`, whose products are the `ηᵢ/τᵢ` of eq 1.9.
+`subresultant_prs_telescope_explicit`. -/
+abbrev thm_1_5_2_explicit := @subresultant_prs_telescope_explicit
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
