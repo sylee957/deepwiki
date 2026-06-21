@@ -818,6 +818,30 @@ theorem subresultant_rem_eq_13 (A B Q Rem : R[X]) (γ φ : ℕ) (hη : Rem.natDe
     Nat.mul_comm (γ - Rem.natDegree) (φ - Rem.natDegree)]
   rfl
 
+/-- **Fundamental PRS Theorem, single step** (Brown–Traub Lemma 2, eq 21, over an integral domain):
+relates consecutive subresultants across one PRS division step `α·A = β·C + B·Q` (`α,β` constants,
+`A,B,C` the three consecutive polynomials with `deg C = c < deg B = b ≤ deg A = a`). For `0 ≤ j < c`,
+`α^(b-j)·Sⱼ(A,B) = (-1)^((a-j)(b-j))·(lc B)^(a-c)·β^(b-j)·Sⱼ(B,C)`. Composes the single-division-step
+relation `subresultant_rem_lt` (eq 12) with the scaling law `subresultant_C_mul` (eq 25, applied to
+unscale `α·A` and `β·C`). The engine of the iterated Fundamental Theorem. -/
+theorem subresultant_prs_step [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c j : ℕ)
+    (hβ : β ≠ 0) (hjc : j < c) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
+    (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
+    (hrel : C α * A = C β * C_poly + B * Q) :
+    C (α ^ (b - j)) * subresultant A B a b j
+      = (-1 : R[X]) ^ ((a - j) * (b - j))
+        * ((C (B.coeff b)) ^ (a - c) * (C (β ^ (b - j)) * subresultant B C_poly b c j)) := by
+  have hRn : (C β * C_poly).natDegree = c := by rw [natDegree_C_mul hβ, hcpoly]
+  have hL : subresultant (C α * A) B a b j = C (α ^ (b - j)) * subresultant A B a b j := by
+    conv_lhs => rw [show B = C (1 : R) * B from by rw [map_one, one_mul]]
+    rw [subresultant_C_mul α 1 A B a b j (by omega) (by omega), one_pow, mul_one]
+  have hR : subresultant B (C β * C_poly) b c j
+      = C (β ^ (b - j)) * subresultant B C_poly b c j := by
+    conv_lhs => rw [show B = C (1 : R) * B from by rw [map_one, one_mul]]
+    rw [subresultant_C_mul 1 β B C_poly b c j (by omega) (by omega), one_pow, one_mul]
+  rw [← hL, subresultant_rem_lt (C α * A) B Q (C β * C_poly) a b j (by omega) (by rw [hRn]; omega)
+      (by rw [hRn]; omega) hB hQ hrel, hRn, hR, mul_comm (b - j) (a - j)]
+
 /-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
 degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
 power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,

@@ -8,8 +8,11 @@ and `(G,H)` for `F + B·G = H`. Equation (12) (the case `0 ≤ j < deg H`) is fu
 remaining equations of Lemma 1 and the Fundamental Theorem are tracked below.
 
 ## NOT YET FORMALIZED
-- Lemma 2 [research]: the subresultant chain of a full PRS.
-- Fundamental Theorem [research]: each `Sⱼ(F₁,F₂)` (`0 ≤ j < n₂`) is similar to some `Fᵢ` or zero. -/
+- Lemma 2, equations (22)–(24) [research]: the single-step PRS relations for `j = nᵢ` (eq 22, via
+  eq 13), `nᵢ < j < nᵢ₋₁−1` (eq 23, via eq 14), `j = nᵢ₋₁−1` (eq 24, via eq 15) — analogous to eq 21
+  (`subresultant_prs_step`, `0 ≤ j < nᵢ`, via eq 12) but built on the other degenerate cases + scaling.
+- Fundamental Theorem [research]: the telescoping induction (eq 30) over a full PRS `F₁,…,Fₖ` — each
+  `Sⱼ(F₁,F₂)` (`0 ≤ j < n₂`) is similar to some `Fᵢ` or zero. -/
 
 namespace DeepWiki.Btr
 
@@ -35,5 +38,11 @@ abbrev lemma_1_eq_14 := @subresultant_rem_eq_14
 `S_η(F,G) = (-1)^((φ-η)(γ-η))·(lc G)^(φ-η)·(lc H)^(γ-η-1)·H` (`j = deg H = η`). The library's
 `subresultant_rem_eq_13`. -/
 abbrev lemma_1_eq_13 := @subresultant_rem_eq_13
+
+/-- **Lemma 2**, equation (21) (§5, p.510): a single PRS division step `α·F_{i-2} = Q·F_{i-1} + β·Fᵢ`
+relates consecutive subresultants — `α^(n_{i-1}-j)·Sⱼ(F_{i-2},F_{i-1}) =
+(-1)^((n_{i-2}-j)(n_{i-1}-j))·(lc F_{i-1})^(δ_{i-2}+δ_{i-1})·β^(n_{i-1}-j)·Sⱼ(F_{i-1},Fᵢ)` for
+`0 ≤ j < nᵢ`. The library's `subresultant_prs_step` (`F_{i-2}=A`, `F_{i-1}=B`, `Fᵢ=C`). -/
+abbrev lemma_2_eq_21 := @subresultant_prs_step
 
 end DeepWiki.Btr

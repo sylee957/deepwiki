@@ -1143,8 +1143,11 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   for `deg Rem ≤ j < γ`, via the shared upper-triangular `ⱼSᵢ` det `subresultant_deg_ge_upperTri` +
   the diagonal product) yields eq 13 (`subresultant_rem_eq_13`, `j=η`), eq 14 (`subresultant_rem_eq_14`,
   `=0`), eq 15 (`subresultant_rem_eq_15`, `j=γ-1`); with the `0≤j<η` case `subresultant_rem_lt` (eq 12),
-  every subresultant of a division step is now computed. Remaining: Lemma 2 (the subresultant chain of a
-  full PRS) → Thm 7.4 (iterate Lemma 1 down the PRS) → Bronstein Thm 1.5.2/1.5.3 (the explicit `ηᵢ/τᵢ`
+  every subresultant of a division step is now computed. Lemma 2's main single-step PRS relation (eq 21,
+  `0≤j<nᵢ`) is also DONE: `subresultant_prs_step` (`α^(b-j)·Sⱼ(F_{i-2},F_{i-1}) = (-1)^(…)·(lc F_{i-1})^(…)·
+  β^(b-j)·Sⱼ(F_{i-1},Fᵢ)`, composing `subresultant_rem_lt` + `subresultant_C_mul`). Remaining: Lemma 2
+  eqs 22–24 (the boundary `j`-ranges, analogous via eqs 13/14/15 + scaling) → the telescoping induction
+  over a full PRS (eq 30, needs a PRS data structure) → Bronstein Thm 1.5.2/1.5.3 (explicit `ηᵢ/τᵢ`
   similarity coefficients).
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
