@@ -515,9 +515,15 @@ theorem ex_1_4_2 :
 `S₀ = det(Sylvester) = res(A,B)` is `subresultant_zero`. -/
 noncomputable abbrev def_1_4_2 := @subresultant
 
--- **Deferred — not in Mathlib (library work):** Theorem 1.4.3 (subresultant specialization under
--- ring homomorphisms). [Theorem 1.4.2 — `res ∈ (A,B)` — is `thm_1_4_2`; Definition 1.4.2 — the
--- subresultant operator — is `def_1_4_2`.]
+/-- **Theorem 1.4.3** (§1.4, p.21), degree-preserving case ("Note in particular"): subresultants
+commute with a coefficient ring homomorphism, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,B))` (the library
+`subresultant_map`). -/
+abbrev thm_1_4_3 := @subresultant_map
+
+-- **Deferred — not in Mathlib (library work):** the *general* Theorem 1.4.3 with the
+-- `σ(lc A)^(deg B − deg σ̄B)` scaling factor when `σ` lowers `deg B` (subresultants of different
+-- sizes). [Theorem 1.4.2 = `thm_1_4_2`; Definition 1.4.2 = `def_1_4_2`; degree-preserving 1.4.3 =
+-- `thm_1_4_3`.]
 
 /-! ## §1.5 Polynomial Remainder Sequences -/
 
@@ -954,7 +960,8 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.4: Thm 1.4.3 (subresultant specialization under ring homomorphisms).
+§1.4: Thm 1.4.3 — only the general scaling-factor case `σ(lc A)^(deg B − deg σ̄B)` (degrees
+  lowered, subresultants of different sizes); the degree-preserving case is `thm_1_4_3`.
 §1.5: Thm 1.5.2; Thm 1.5.3.
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.

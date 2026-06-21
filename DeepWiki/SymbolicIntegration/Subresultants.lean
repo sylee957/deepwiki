@@ -60,4 +60,19 @@ theorem subresultant_zero (A B : R[X]) (n m : ℕ) :
   rw [subresultant, Finset.sum_range_one, subRow_zero, subCol_zero, Matrix.submatrix_id_id,
     pow_zero, mul_one]
 
+/-- **Theorem 1.4.3** (§1.4, degree-preserving case): the subresultant commutes with a coefficient
+ring homomorphism `σ`, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,B))`. This is Bronstein's "Note in particular" form —
+valid whenever `σ` preserves the degree parameters `n, m` (e.g. `A` or `B` monic). The general case
+carries a `σ(lc A)^(deg B − deg σ̄B)` factor when `σ` lowers a degree. -/
+theorem subresultant_map {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) (n m j : ℕ) :
+    subresultant (A.map σ) (B.map σ) n m j = (subresultant A B n m j).map σ := by
+  have hbS : bSylvester (A.map σ) (B.map σ) n m = (bSylvester A B n m).map σ := by
+    ext i l
+    simp only [bSylvester, Matrix.map_apply, Matrix.of_apply, coeff_map]
+    split <;> split <;> simp [map_zero]
+  rw [subresultant, subresultant, Polynomial.map_sum]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [hbS, Matrix.submatrix_map, Polynomial.map_mul, Polynomial.map_pow, Polynomial.map_X,
+    Polynomial.map_C, ← RingHom.mapMatrix_apply, ← RingHom.map_det]
+
 end DeepWiki.SymbolicIntegration
