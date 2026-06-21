@@ -581,4 +581,38 @@ theorem isRelPrime_squarefreePart_Yun (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : 
 
 end GcdField
 
+section SquarefreeAlgorithm
+
+open UniqueFactorizationMonoid
+
+variable {K : Type*} [Field K]
+
+open Classical
+
+/-- Musser's squarefree-factorization algorithm, the loop step `Y ← gcd(S*, S⁻)`: over a field,
+`gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ) = (A⁻ᵏ)*` (up to associates). Since `(A⁻⁽ᵏ⁻¹⁾)* = Aₖ·(A⁻ᵏ)*` (1.15) with `Aₖ`
+coprime to `A⁻ᵏ`, and `(A⁻ᵏ)* ∣ A⁻ᵏ` (1.13), the gcd strips exactly the `Aₖ` factor. With `Aₖ = S*/Y`
+(1.15) and `S⁻/Y = A⁻⁽ᵏ⁺¹⁾` (1.13), this justifies one iteration of the loop. -/
+theorem gcd_squarefreePart_deflation (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
+    Associated (gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
+      (squarefreePart (deflation A k)) := by
+  have hcop : IsCoprime (sqfreeFactPart A k) (deflation A k) := by
+    rw [deflation_eq_prod_sqfreeFactPart A k]
+    refine IsCoprime.prod_right (fun i _ => ?_)
+    by_cases hik : i = k
+    · rw [hik, Nat.sub_self, pow_zero]; exact isCoprime_one_right
+    · exact ((sqfreeFactPart_isRelPrime A (Ne.symm hik)).isCoprime).pow_right
+  have h15 : squarefreePart (deflation A (k - 1))
+      = sqfreeFactPart A k * squarefreePart (deflation A k) := by
+    rw [← squarefreePart_deflation_mul_sqfreeFactPart A k hk hA, mul_comm]
+  have hWdvd : squarefreePart (deflation A k) ∣ deflation A k :=
+    (dvd_mul_right _ (deflation A (k + 1))).trans (squarefreePart_mul_deflation_succ A k hA).dvd
+  rw [h15]
+  refine associated_of_dvd_dvd ?_ (dvd_gcd (dvd_mul_left _ _) hWdvd)
+  have hgc : IsCoprime (gcd (sqfreeFactPart A k * squarefreePart (deflation A k)) (deflation A k))
+      (sqfreeFactPart A k) := hcop.symm.of_isCoprime_of_dvd_left (gcd_dvd_right _ _)
+  exact hgc.dvd_of_dvd_mul_left (gcd_dvd_left _ _)
+
+end SquarefreeAlgorithm
+
 end DeepWiki.SymbolicIntegration
