@@ -51,4 +51,11 @@ abbrev lemma_1_gap := @subresultant_rem_eq_14
 (stated for an abstract PRS with coefficients `αₗ, βₗ`; Collins specializes to the reduced p.r.s.). -/
 abbrev lemma_2 := @subresultant_prs_telescope_explicit
 
+/-- **Theorem 1(b) / Lemma 3, explicit closed form at the η-index** (§p.133): the exact equation that
+the `ηᵢ = 1` claim specializes — `Sⱼ(F₀,F₁)·(αₘ-product) = (sign·lc^·βₘ·F_{m+2})·(rhs-product)` at
+`j = deg F_{m+1} − 1`, combining Lemma 2 (telescope) with Lemma 1(c) (the endpoint). Collins's Theorem 1(b)
+is this with the two products shown equal (the reduced/subresultant p.r.s. coefficient choice). The
+library's `subresultant_prs_closed_top`. -/
+abbrev thm_1b_closed := @subresultant_prs_closed_top
+
 end DeepWiki.Col

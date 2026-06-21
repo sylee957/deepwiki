@@ -254,6 +254,42 @@ theorem subresultant_eq_pseudoRem [IsDomain R] (A B Rem Q : R[X]) (a b c : ℕ)
       from by ring, hsq, one_mul]
   exact mul_left_cancel₀ (pow_ne_zero _ (by rw [Ne, C_eq_zero]; exact hlcB)) key
 
+/-- **Explicit closed form at the η-index** (the equation Bronstein's Thm 1.5.3 / Collins's Theorem 1(b)
+specializes): combining the telescope (eq 30) at `j = deg F_{m+1} − 1` with the endpoint step (eq 24),
+`Sⱼ(F₀,F₁)·(αₘ-product) = (sign·lc^·βₘ·F_{m+2})·(telescope rhs-product)`. The `ηᵢ` of Thm 1.5.2 is the
+ratio of the two products; `ηᵢ = 1` is the assertion that they are equal for the subresultant p.r.s. -/
+theorem subresultant_prs_closed_top [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X]) (m : ℕ)
+    (hβ : ∀ l ≤ m, β l ≠ 0)
+    (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, (F (m + 1)).natDegree - 1 < (F (l + 2)).natDegree)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l) :
+    subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1)
+        * (C (α m)
+          * ∏ l ∈ Finset.range m, C (α l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1))))
+      = ((-1 : R[X]) ^ ((F m).natDegree - (F (m + 1)).natDegree + 1)
+          * (C ((F (m + 1)).coeff (F (m + 1)).natDegree ^ ((F m).natDegree - (F (m + 1)).natDegree + 1))
+             * (C (β m) * F (m + 2))))
+        * ∏ l ∈ Finset.range m,
+            ((-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+                  * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))
+              * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+              * C (β l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))) := by
+  have htel := subresultant_prs_telescope_explicit F α β Q ((F (m + 1)).natDegree - 1) m
+    (fun l hl => hβ l (by omega)) (fun l hl => hcb l (by omega)) hj
+    (fun l hl => hQ l (by omega)) (fun l hl => hrel l (by omega))
+  have htop := subresultant_prs_step_top (F m) (F (m + 1)) (F (m + 2)) (Q m) (α m) (β m)
+    (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hβ m le_rfl) (hcb m le_rfl) rfl
+    le_rfl (hQ m le_rfl) (hrel m le_rfl)
+  set αprod := ∏ l ∈ Finset.range m, C (α l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))
+    with hαdef
+  set Prhs := ∏ l ∈ Finset.range m,
+      ((-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+            * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))
+        * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+        * C (β l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))) with hPdef
+  linear_combination C (α m) * htel + Prhs * htop
+
 section SubresPRSCoeff
 
 variable {K : Type*} [Field K]
