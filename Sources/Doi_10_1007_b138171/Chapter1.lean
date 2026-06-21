@@ -760,6 +760,10 @@ noncomputable abbrev def_yun := @Yun
 `d(A⁻⁽ⁱ⁻¹⁾)/dx = A⁻ⁱ · Yᵢ`. -/
 abbrev lem_1_7_2 := @derivative_deflation_pred
 
+/-- **Lemma 1.7.2** (§1.7, p.30, equation 1.18): `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ · Y_{i+1}` — the
+squarefree-part form of Yun's recurrence. -/
+abbrev lem_1_7_2_eq_18 := @Yun_sub_derivative_squarefreePart
+
 open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
 `A = ∏_{a∈s}(X − a)^{eₐ}`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` is the (squarefree) product of the roots
@@ -1099,9 +1103,9 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
   true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
   triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
-§1.7: Lemma 1.7.2 — equation 1.17's gcd clause `gcd((A⁻⁽ⁱ⁻¹⁾)*, Yᵢ) ∈ D`; equation 1.18
-  `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ·Y_{i+1}`; the Musser/Yun `Squarefree` algorithm. (Yun's `Yₖ` = `def_yun`;
-  eq 1.17's derivative `d(A⁻⁽ⁱ⁻¹⁾) = A⁻ⁱ·Yᵢ` = `lem_1_7_2`. All of Lemma 1.7.1 is done.)
+§1.7: Lemma 1.7.2 — equation 1.17's gcd clause `gcd((A⁻⁽ⁱ⁻¹⁾)*, Yᵢ) ∈ D`; the Musser/Yun
+  `Squarefree` algorithm. (Yun's `Yₖ` = `def_yun`; eq 1.17's derivative `d(A⁻⁽ⁱ⁻¹⁾) = A⁻ⁱ·Yᵢ`
+  = `lem_1_7_2`; eq 1.18 `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ·Y_{i+1}` = `lem_1_7_2_eq_18`. Lemma 1.7.1 done.)
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
