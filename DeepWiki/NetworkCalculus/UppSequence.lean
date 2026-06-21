@@ -397,6 +397,34 @@ theorem toFunPWL_natCast (r : UppSeq ℚ) (n : ℕ) : r.toFunPWL (n : ℝ≥0) =
   rw [sub_self]
   ring
 
+/-- `toFunPWL` is the **linear interpolation** (convex combination) of the two bracketing samples
+`f(⌊t⌋)` and `f(⌊t⌋+1)`, with weight `t − ⌊t⌋`. The lerp form every later PWL property reduces to. -/
+theorem toFunPWL_eq_lerp (r : UppSeq ℚ) (t : ℝ≥0) :
+    r.toFunPWL t = (1 - (t - (⌊t⌋₊ : ℝ≥0) : ℝ)) * (r.evalNat ⌊t⌋₊ : ℝ)
+      + (t - (⌊t⌋₊ : ℝ≥0) : ℝ) * (r.evalNat (⌊t⌋₊ + 1) : ℝ) := by
+  simp only [toFunPWL]; ring
+
+/-- The PWL reading lies **between the two bracketing samples** `f(⌊t⌋)` and `f(⌊t⌋+1)` (it is a
+convex combination of them) — the continuous-time curve is bounded by the discrete samples. -/
+theorem toFunPWL_mem_uIcc (r : UppSeq ℚ) (t : ℝ≥0) :
+    r.toFunPWL t ∈ Set.uIcc (r.evalNat ⌊t⌋₊ : ℝ) (r.evalNat (⌊t⌋₊ + 1) : ℝ) := by
+  rw [toFunPWL_eq_lerp]
+  have h0 : (0 : ℝ) ≤ (t - (⌊t⌋₊ : ℝ≥0) : ℝ) := by
+    have : ((⌊t⌋₊ : ℝ≥0) : ℝ) ≤ (t : ℝ) := by exact_mod_cast Nat.floor_le zero_le
+    linarith
+  have h1 : (t - (⌊t⌋₊ : ℝ≥0) : ℝ) < 1 := by
+    have h2 : (t : ℝ) < ((⌊t⌋₊ : ℝ≥0) : ℝ) + 1 := by exact_mod_cast Nat.lt_floor_add_one t
+    linarith
+  set a : ℝ := (r.evalNat ⌊t⌋₊ : ℝ)
+  set b : ℝ := (r.evalNat (⌊t⌋₊ + 1) : ℝ)
+  set f : ℝ := (t - (⌊t⌋₊ : ℝ≥0) : ℝ)
+  apply Set.mem_uIcc.mpr
+  rcases le_total a b with h | h
+  · left; exact ⟨by nlinarith [mul_nonneg h0 (sub_nonneg.mpr h)],
+      by nlinarith [mul_nonneg (by linarith : (0:ℝ) ≤ 1 - f) (sub_nonneg.mpr h)]⟩
+  · right; exact ⟨by nlinarith [mul_nonneg (by linarith : (0:ℝ) ≤ 1 - f) (sub_nonneg.mpr h)],
+      by nlinarith [mul_nonneg h0 (sub_nonneg.mpr h)]⟩
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
