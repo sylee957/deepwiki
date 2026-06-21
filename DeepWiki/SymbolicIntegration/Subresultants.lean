@@ -447,4 +447,128 @@ theorem subresultant_rem (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn :
     subresultant A B n m j = (-1 : R[X]) ^ ((m - j) * (n - j)) * subresultant B Rem m n j := by
   rw [hA, subresultant_add_mul Rem B Q n m j hjn hB hQ, subresultant_swap Rem B n m j hjm hjn]
 
+/-- Helper for the degree-padding step: when the second polynomial `Rem` has formal degree `d+1`
+but true degree `≤ d`, the minor obtained by deleting the first row and column of the `ⱼSᵢ`
+submatrix of `bSylvester B Rem m (d+1)` is exactly the corresponding `ⱼSᵢ` submatrix of
+`bSylvester B Rem m d` (the column index shifts by one). -/
+private theorem subresultant_pad_entry (B Rem : R[X]) (m d j i : ℕ) (hjd : j < d) (hjm : j ≤ m)
+    (hij : i ≤ j) (hRem : Rem.natDegree ≤ d) (s s' : Fin (d + m - 2 * j)) :
+    (bSylvester B Rem m (d + 1)) (subRow m (d + 1) j ⟨(s : ℕ) + 1, by have := s.isLt; omega⟩)
+        (subCol m (d + 1) j i ⟨(s' : ℕ) + 1, by have := s'.isLt; omega⟩)
+      = (bSylvester B Rem m d) (subRow m d j s) (subCol m d j i s') := by
+  have hs := s.isLt; have hs' := s'.isLt
+  simp only [bSylvester, subRow, subCol, Matrix.of_apply]
+  by_cases hsB : (s : ℕ) + 1 < (d + 1) - j <;>
+    by_cases hcol : (s' : ℕ) + 1 < (d + 1) + m - 2 * j - 1 <;>
+    [ (rw [if_pos hsB, if_pos (show (s : ℕ) < d - j by omega), if_pos hcol,
+          if_pos (show (s' : ℕ) < d + m - 2 * j - 1 by omega),
+          if_pos (show (s : ℕ) + 1 < d + 1 by omega), if_pos (show (s : ℕ) < d by omega)]) ;
+      (rw [if_pos hsB, if_pos (show (s : ℕ) < d - j by omega), if_neg hcol,
+          if_neg (show ¬ (s' : ℕ) < d + m - 2 * j - 1 by omega),
+          if_pos (show (s : ℕ) + 1 < d + 1 by omega), if_pos (show (s : ℕ) < d by omega)]) ;
+      (rw [if_neg hsB, if_neg (show ¬ (s : ℕ) < d - j by omega), if_pos hcol,
+          if_pos (show (s' : ℕ) < d + m - 2 * j - 1 by omega),
+          if_neg (show ¬ (s : ℕ) + 1 + j < d + 1 by omega),
+          if_neg (show ¬ (s : ℕ) + j < d by omega)]) ;
+      (rw [if_neg hsB, if_neg (show ¬ (s : ℕ) < d - j by omega), if_neg hcol,
+          if_neg (show ¬ (s' : ℕ) < d + m - 2 * j - 1 by omega),
+          if_neg (show ¬ (s : ℕ) + 1 + j < d + 1 by omega),
+          if_neg (show ¬ (s : ℕ) + j < d by omega)]) ] <;>
+    (split_ifs <;>
+      first | rfl | rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)] | (congr 1; omega))
+
+/-- Helper for the degree-padding step: column `0` of the `ⱼSᵢ` submatrix of `bSylvester B Rem m
+(d+1)` (with `Rem.natDegree ≤ d`) has the single nonzero entry `B.coeff m` at row `0`. -/
+private theorem subresultant_pad_col0 (B Rem : R[X]) (m d j i : ℕ) (hjd : j < d) (hjm : j ≤ m)
+    (_hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ d) (s c0 : Fin (d + 1 + m - 2 * j))
+    (hc0 : (c0 : ℕ) = 0) :
+    ((bSylvester B Rem m (d + 1)).submatrix (subRow m (d + 1) j) (subCol m (d + 1) j i)) s c0
+      = if (s : ℕ) = 0 then B.coeff m else 0 := by
+  have hs := s.isLt
+  simp only [Matrix.submatrix_apply, subCol, subRow, bSylvester, Matrix.of_apply]
+  rw [hc0, if_pos (show (0 : ℕ) < d + 1 + m - 2 * j - 1 by omega)]
+  by_cases hs0 : (s : ℕ) = 0
+  · rw [hs0]
+    simp only [if_pos (show (0 : ℕ) < (d + 1) - j by omega), if_pos (show (0 : ℕ) < d + 1 by omega),
+      if_pos (show (0 : ℕ) ≤ 0 ∧ (0 : ℕ) ≤ 0 + m by omega)]
+    simp
+  · rw [if_neg hs0]
+    split_ifs <;> first | rfl | rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)]
+
+/-- **Degree-padding, one step** (Geddes §7.3, the leading-coefficient bookkeeping of Lemma 7.1):
+increasing the formal degree of the second polynomial `Rem` from `d` to `d+1` (when its true degree
+is `≤ d`) multiplies every subresultant by the leading coefficient `B.coeff m` of the first —
+`Sⱼ(B, Rem; m, d+1) = (lc B) · Sⱼ(B, Rem; m, d)` (`j < d`, `j ≤ m`, `B.natDegree ≤ m`,
+`Rem.natDegree ≤ d`). Proof: cofactor-expand each `ⱼSᵢ` along its first column, which is `B.coeff m`
+times a unit vector (`subresultant_pad_col0`), and identify the minor (`subresultant_pad_entry`). -/
+theorem subresultant_pad_step (B Rem : R[X]) (m d j : ℕ) (hjd : j < d) (hjm : j ≤ m)
+    (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ d) :
+    subresultant B Rem m (d + 1) j = C (B.coeff m) * subresultant B Rem m d j := by
+  rw [subresultant, subresultant, Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun i hi => ?_)
+  have hij : i ≤ j := by rw [Finset.mem_range] at hi; omega
+  have hdet : ((bSylvester B Rem m (d + 1)).submatrix (subRow m (d + 1) j)
+        (subCol m (d + 1) j i)).det
+      = B.coeff m * ((bSylvester B Rem m d).submatrix (subRow m d j) (subCol m d j i)).det := by
+    set e : Fin ((d + m - 2 * j) + 1) ≃ Fin (d + 1 + m - 2 * j) := finCongr (by omega) with he
+    rw [← Matrix.det_submatrix_equiv_self e, Matrix.det_succ_column_zero,
+      Finset.sum_eq_single (0 : Fin ((d + m - 2 * j) + 1))]
+    · rw [Matrix.submatrix_apply,
+        subresultant_pad_col0 B Rem m d j i hjd hjm hB hRem (e 0) (e 0) (by simp [he])]
+      simp only [Fin.val_zero, pow_zero, one_mul]
+      rw [show ((e 0 : Fin _) : ℕ) = 0 by simp [he], if_pos rfl]
+      congr 1
+      congr 1
+      apply Matrix.ext
+      intro s s'
+      rw [Matrix.submatrix_apply, Matrix.submatrix_apply, Matrix.submatrix_apply]
+      have hrow : e ((0 : Fin ((d + m - 2 * j) + 1)).succAbove s)
+          = (⟨(s : ℕ) + 1, by have := s.isLt; omega⟩ : Fin (d + 1 + m - 2 * j)) := by
+        apply Fin.ext; simp [he]
+      have hcol : e (Fin.succ s')
+          = (⟨(s' : ℕ) + 1, by have := s'.isLt; omega⟩ : Fin (d + 1 + m - 2 * j)) := by
+        apply Fin.ext; simp [he]
+      rw [hrow, hcol, subresultant_pad_entry B Rem m d j i hjd hjm hij hRem s s',
+        Matrix.submatrix_apply]
+    · intro p _ hp
+      have hpne : ((e p : Fin (d + 1 + m - 2 * j)) : ℕ) ≠ 0 := by
+        simp only [he, finCongr_apply, Fin.val_cast]
+        exact fun h => hp (Fin.ext h)
+      rw [Matrix.submatrix_apply,
+        subresultant_pad_col0 B Rem m d j i hjd hjm hB hRem (e p) (e 0) (by simp [he]), if_neg hpne]
+      ring
+    · intro h; exact absurd (Finset.mem_univ _) h
+  rw [hdet, map_mul]; ring
+
+/-- **Degree padding** (Geddes §7.3, Lemma 7.1's leading-coefficient correction): a subresultant
+computed with the second polynomial `Rem` at formal degree `n` equals `(lc B)^(n−k)` times the one
+at `Rem`'s true degree `k`, where `lc B = B.coeff m` — `Sⱼ(B,Rem; m,n) = (B.coeff m)^(n−k) ·
+Sⱼ(B,Rem; m,k)` (`j < k`, `j ≤ m`, `B.natDegree ≤ m`, `Rem.natDegree ≤ k ≤ n`). Iterates
+`subresultant_pad_step`. -/
+theorem subresultant_padding (B Rem : R[X]) (m k j : ℕ) (hjk : j < k) (hjm : j ≤ m)
+    (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ k) :
+    ∀ n, k ≤ n →
+      subresultant B Rem m n j = (C (B.coeff m)) ^ (n - k) * subresultant B Rem m k j := by
+  intro n hn
+  induction n, hn using Nat.le_induction with
+  | base => simp
+  | succ n hn ih =>
+    rw [subresultant_pad_step B Rem m n j (by omega) hjm hB (by omega), ih, ← mul_assoc,
+      ← pow_succ', show n - k + 1 = n + 1 - k from by omega]
+
+/-- **Euclidean-step subresultant relation with degree correction** (Geddes §7.3 Lemma 7.1, the
+case `0 ≤ j < deg(rem)` of the Fundamental PRS Theorem): for a division step `A = Rem + B·Q`, every
+subresultant of `(A,B)` reduces to a genuine subresultant of `(B,Rem)` at `Rem`'s true degree, with
+the swap sign and the leading-coefficient power — `Sⱼ(A,B) = (-1)^((m-j)(n-j)) · (lc B)^(n−k) ·
+Sⱼ(B,Rem)` where `k = Rem.natDegree` (`j ≤ m`, `j < k ≤ n`, `B.natDegree ≤ m`, `Q.natDegree+m ≤ n`).
+Combines `subresultant_rem` and `subresultant_padding`. -/
+theorem subresultant_rem_lt (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m)
+    (hjk : j < Rem.natDegree) (hkn : Rem.natDegree ≤ n) (hB : B.natDegree ≤ m)
+    (hQ : Q.natDegree + m ≤ n) (hA : A = Rem + B * Q) :
+    subresultant A B n m j
+      = (-1 : R[X]) ^ ((m - j) * (n - j)) *
+        ((C (B.coeff m)) ^ (n - Rem.natDegree) * subresultant B Rem m Rem.natDegree j) := by
+  rw [subresultant_rem A B Q Rem n m j hjm (by omega) hB hQ hA,
+    subresultant_padding B Rem m Rem.natDegree j hjk hjm hB le_rfl n hkn]
+
 end DeepWiki.SymbolicIntegration

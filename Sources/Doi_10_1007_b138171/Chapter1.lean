@@ -1055,10 +1055,13 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   `Sⱼ(A,B) = Sⱼ(rem(A,B),B)`); (b) SWAP-WITH-SIGN — `subresultant_swap`
   (`Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,A)`), via the block-swap permutation `bSylvester_swap` +
   `bSylvester_submatrix_det_swap` whose sign is read off `(finRotate (n+m-2j))^(m-j)` (keystone
-  `finRotate_pow_val`). Both halves are now combined in `subresultant_rem` (Lemma 7.1's engine): for a
-  division step `A = Rem + B·Q`, `Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,Rem)`. Remaining: the `b^(m-k)`
-  degree padding (re-index `Sⱼ(B,Rem)` from the formal degree `n` to `Rem`'s true degree `k`, scaling by
-  `lc(B)^(m-k)`) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
+  `finRotate_pow_val`). Both halves combine in `subresultant_rem` (Lemma 7.1's engine): for a division
+  step `A = Rem + B·Q`, `Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,Rem)`. The DEGREE PADDING is also DONE:
+  `subresultant_pad_step`/`subresultant_padding` (`Sⱼ(B,Rem; m,n) = (lc B)^(n-k)·Sⱼ(B,Rem; m,k)`, by
+  cofactor-expanding each `ⱼSᵢ` along its first column = `lc B · e₀`), assembled in `subresultant_rem_lt`
+  = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
+  true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
+  triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
