@@ -10,7 +10,10 @@ time-series limit theorems and are infra-blocked. -/
 namespace DeepWiki.Ts
 
 open DeepWiki.TimeSeries
+open MeasureTheory
 open scoped Polynomial
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
 /-! ## §8.1 The Yule–Walker Equations and AR Estimation (p.239)
 For a causal AR(p) the population coefficients solve the **Yule–Walker equations** `Γₚ φ = γₚ`
@@ -35,6 +38,23 @@ theorem eq_8_1_4 {φ : ℝ[X]} (hφ : IsCausalPoly φ) (σ2 : ℝ) {h : ℤ} (hh
         φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + (h - k))) = 0 :=
   causal_arma_acvf_homogeneous (θ := 1) hφ σ2 (by simpa using hh)
 
+/-- **§8.1 (eq 8.1.5, the Yule–Walker variance equation)**: for a causal `AR(p)` (`φ(B) X = Z`,
+`Z ~ WN(0, σ²)`) the autocovariance and the innovation variance satisfy `∑_{k=0}^p φₖ γ(−k) = σ² ψ₀`
+— the `Z ⊥ past` relation `∑ₖ φₖ ⟪X_{t−k}, Xₜ⟫ = ⟪Zₜ, Xₜ⟫ = σ² ψ₀`, the book's
+`σ² = γ(0) − φ' γₚ` for the normalized `φ(0) = 1` (`ψ₀ = 1`). The library's
+`ar_yule_walker_variance`. -/
+theorem eq_8_1_5 {φ : ℝ[X]} (hφ : IsCausalPoly φ) {Z : ℤ → Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0) (t : ℤ) :
+    ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
+      ∑ k ∈ Finset.range (φ.natDegree + 1),
+        φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + -(k : ℤ))) = σ2 * ψ 0 :=
+  ar_yule_walker_variance hφ hZb hZorth t
+
+/-- **§8.1 (eq 8.1.7)**: the **Yule–Walker estimate of the white-noise variance**
+`σ̂² = γ̂(0) − φ̂' γ̂ₚ`, the sample analogue of eq 8.1.5 (`yuleWalkerVariance_eq` gives the quadratic
+form `γ̂(0) − γ̂' Γ̂⁻¹ γ̂`). The library's `yuleWalkerVariance`. -/
+noncomputable abbrev eq_8_1_7 := @DeepWiki.TimeSeries.yuleWalkerVariance
+
 /-! ## §8.2+ Further estimators (infra-blocked asymptotics)
 The remaining sections develop more efficient estimators — Burg's algorithm, the
 innovations-algorithm preliminary estimators for MA(q) and ARMA(p,q) (built on Proposition 5.2.2),
@@ -44,9 +64,7 @@ efficiency, consistency, and asymptotic-normality results that motivate and just
 on the time-series central limit theorem (Chapter 6) and are infra-blocked. -/
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§8.1: `σ² = γ(0) − φ'γₚ` (eq 8.1.5)
-[deferred]; the Yule–Walker variance estimate `σ̂² = γ̂(0) − φ̂'γ̂ₚ` (eq 8.1.7) [deferred]; Theorem 8.1.1
-(asymptotic normality of `φ̂`) [infra]
+§8.1: Theorem 8.1.1 (asymptotic normality of `φ̂`) [infra]
 §8.2: Burg's algorithm [deferred]
 §8.3: the innovations-algorithm preliminary estimators for `MA(q)` and `ARMA(p,q)` [deferred]; the
 Hannan–Rissanen procedure [deferred]

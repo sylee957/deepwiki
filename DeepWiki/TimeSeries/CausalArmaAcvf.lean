@@ -202,4 +202,28 @@ theorem invertible_arma_linearProcessLp_arInv_eq {φ θ : ℝ[X]} (hθ : IsInver
         = ∑ j ∈ Finset.range (φ.natDegree + 1), φ.coeff j • X (t - j) :=
   causal_arma_linearProcessLp_arma_eq (φ := θ) (θ := φ) hθ hXb
 
+/-- **§8.1 (eq 8.1.5, the Yule–Walker variance equation):** for a causal `AR(p)` process
+`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` (`φ(B) X = Z`, `Z ~ WN(0, σ²)`), the autocovariance and the innovation variance
+satisfy `∑_{k=0}^p φₖ γ(−k) = σ² ψ₀` — the `Z ⊥ past` relation, from applying `⟪·, Xₜ⟫` to the AR
+equation `∑ₖ φₖ X_{t−k} = Zₜ`: `∑ₖ φₖ ⟪X_{t−k}, Xₜ⟫ = ⟪Zₜ, Xₜ⟫ = σ² ψ₀`. For the normalized
+`φ(0) = 1` (so `ψ₀ = 1`) and `γ(−k) = γ(k)`, this is the book's `σ² = γ(0) − ∑_{k≥1} φ'ₖ γ(k)`. -/
+theorem ar_yule_walker_variance {φ : ℝ[X]} (hφ : IsCausalPoly φ) {Z : ℤ → Lp ℝ 2 μ} {C σ2 : ℝ}
+    (hZb : ∀ t, ‖Z t‖ ≤ C) (hZorth : ∀ a b, inner ℝ (Z a) (Z b) = if a = b then σ2 else 0) (t : ℤ) :
+    ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
+      ∑ k ∈ Finset.range (φ.natDegree + 1),
+        φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + -(k : ℤ))) = σ2 * ψ 0 := by
+  obtain ⟨ψ, hψ, hψ0, hop⟩ := causal_arma_linearProcessLp_arma_eq (φ := φ) (θ := 1) hφ hZb
+  refine ⟨ψ, hψ, hψ0, ?_⟩
+  have hopt := hop t
+  simp only [Polynomial.natDegree_one, zero_add, Finset.range_one, Finset.sum_singleton,
+    Polynomial.coeff_one, ↓reduceIte, one_smul, Nat.cast_zero, sub_zero] at hopt
+  have key := congrArg (fun w => (inner ℝ w (linearProcessLp ψ Z t) : ℝ)) hopt
+  simp only [sum_inner, real_inner_smul_left] at key
+  rw [real_inner_comm (linearProcessLp ψ Z t) (Z t),
+    linearProcessLp_inner_single hψ hZb hZorth t t, sub_self] at key
+  rw [← key]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [show t - (k : ℤ) = t + -(k : ℤ) from by ring,
+    linearProcessLp_inner hψ hZb hZorth t (-(k : ℤ))]
+
 end DeepWiki.TimeSeries

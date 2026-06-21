@@ -23,4 +23,15 @@ theorem yuleWalkerEstimator_spec {p : ℕ} {Γ : Matrix (Fin p) (Fin p) ℝ} (h�
     (γ : Fin p → ℝ) : Γ *ᵥ yuleWalkerEstimator Γ γ = γ := by
   rw [yuleWalkerEstimator, mulVec_mulVec, mul_nonsing_inv Γ hΓ, one_mulVec]
 
+/-- **§8.1 (eq 8.1.7)**: the **Yule–Walker estimate of the white-noise variance**
+`σ̂² = γ̂(0) − φ̂' γ̂ₚ`, with `φ̂` the Yule–Walker estimator and `γ̂(0)` the sample variance — the
+sample analogue of the population variance equation `σ² = γ(0) − φ' γₚ` (eq 8.1.5). -/
+noncomputable def yuleWalkerVariance {p : ℕ} (Γ : Matrix (Fin p) (Fin p) ℝ) (γ : Fin p → ℝ)
+    (γ0 : ℝ) : ℝ := γ0 - yuleWalkerEstimator Γ γ ⬝ᵥ γ
+
+/-- The Yule–Walker variance estimate as the quadratic form `σ̂² = γ̂(0) − γ̂' Γ̂⁻¹ γ̂`. -/
+theorem yuleWalkerVariance_eq {p : ℕ} (Γ : Matrix (Fin p) (Fin p) ℝ) (γ : Fin p → ℝ) (γ0 : ℝ) :
+    yuleWalkerVariance Γ γ γ0 = γ0 - γ ⬝ᵥ (Γ⁻¹ *ᵥ γ) := by
+  rw [yuleWalkerVariance, yuleWalkerEstimator, dotProduct_comm]
+
 end DeepWiki.TimeSeries
