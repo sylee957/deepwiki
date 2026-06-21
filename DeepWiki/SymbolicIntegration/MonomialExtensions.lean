@@ -567,6 +567,37 @@ theorem gcd_prod_X_sub_C_implicitDeriv {K : Type*} [Field K] [Differential K] (v
       (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
 
 open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), general gcd formula: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
+`eₐ ≥ 1`, char `0`), `gcd(p, Dp) ~ (∏_a (X − a)^{eₐ−1}) · ∏_{a : v(a)=a′}(X − a)` — the multiplicity
+defect `∏(X − a)^{eₐ−1}` times the squarefree special part. By Lemma 3.4.4 over the prime powers,
+the per-power computation `gcd((X − a)^{eₐ}, D·) ~ (X − a)^{eₐ−1}·gcd(X − a, D(X − a))`, and the
+special/normal collapse of each `gcd(X − a, D(X − a))`. -/
+theorem gcd_prod_X_sub_C_pow_implicitDeriv {K : Type*} [Field K] [CharZero K] [Differential K]
+    (v : K[X]) (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)))
+      ((∏ a ∈ s, (X - C a) ^ (e a - 1)) * ∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  have hunit : ∀ a ∈ s, IsUnit ((e a : K[X])) := by
+    intro a ha
+    rw [← map_natCast (C : K →+* K[X])]
+    exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by have := he a ha; omega)))
+  refine (associated_gcd_deriv_prod s (fun a => (X - C a) ^ e a) (fun a _ b _ hab =>
+    gcd_isUnit_iff_isRelPrime.mpr ((IsCoprime.pow (isCoprime_X_sub_C_iff.mpr
+      (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab))).isRelPrime))).trans ?_
+  refine (Associated.prod s _ _ (fun a ha => associated_gcd_deriv_pow (he a ha) (hunit a ha))).trans ?_
+  rw [Finset.prod_mul_distrib]
+  refine Associated.mul_left _ ?_
+  rw [Finset.prod_filter]
+  refine Associated.prod s _ _ (fun a _ => ?_)
+  by_cases h : v.eval a = a′
+  · rw [if_pos h]
+    exact isSpecial_iff_associated_gcd.mp ((dvd_X_sub_C_implicitDeriv_iff v a).mpr h)
+  · rw [if_neg h]
+    exact associated_one_iff_isUnit.mpr
+      (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
+
+open Classical in
 /-- **§3.5**: the special and normal parts of the squarefree splitting are coprime (`pₛ ⊥ pₙ`) —
 they are products over the disjoint special/normal halves of the root set. -/
 theorem isCoprime_splitting_parts {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :

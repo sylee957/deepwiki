@@ -424,6 +424,17 @@ theorem thm_3_5_1_special_part {K : Type*} [Field K] [CharZero K] [Differential 
               (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a) :=
   isSpecial_special_part v s e he
 
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), general gcd formula: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
+`eₐ ≥ 1`, char `0`), `gcd(p, Dp) ~ (∏_a (X − a)^{eₐ−1}) · ∏_{a : v(a)=a′}(X − a)` — the multiplicity
+defect times the squarefree special part. -/
+theorem thm_3_5_1_gcd_mult {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X])
+    (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)))
+      ((∏ a ∈ s, (X - C a) ^ (e a - 1)) * ∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) :=
+  gcd_prod_X_sub_C_pow_implicitDeriv v s e he
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
 -- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced
