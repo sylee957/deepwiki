@@ -401,6 +401,21 @@ theorem isCoprime_X_sub_C_iff {K : Type*} [Field K] {a : K} {g : K[X]} :
     IsCoprime (X - C a) g ↔ g.eval a ≠ 0 := by
   rw [(prime_X_sub_C a).coprime_iff_not_dvd, dvd_iff_isRoot]; rfl
 
+open Classical in
+/-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* of `A = ∏_{a∈s}(X − a)^{eₐ}`
+is `A = ∏ₖ Aₖᵏ`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` collects the roots of multiplicity exactly `k`
+(grouping the linear factors by multiplicity via fiberwise products). Each `Aₖ` is squarefree and
+the `Aₖ` are pairwise coprime (disjoint roots). -/
+theorem prod_X_sub_C_pow_eq_squarefree_factorization {K : Type*} [CommRing K] (s : Finset K)
+    (e : K → ℕ) :
+    (∏ a ∈ s, (X - C a) ^ e a)
+      = ∏ k ∈ s.image e, (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) ^ k := by
+  rw [← Finset.prod_fiberwise_of_maps_to (t := s.image e)
+        (fun a ha => Finset.mem_image_of_mem e ha)]
+  refine Finset.prod_congr rfl fun k _ => ?_
+  rw [← Finset.prod_pow]
+  exact Finset.prod_congr rfl fun a ha => by rw [(Finset.mem_filter.mp ha).2]
+
 /-- Products of linear factors over *disjoint* root sets are coprime. -/
 theorem isCoprime_prod_X_sub_C_of_disjoint {K : Type*} [Field K] {s t : Finset K}
     (h : Disjoint s t) :

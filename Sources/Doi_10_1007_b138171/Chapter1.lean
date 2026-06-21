@@ -550,6 +550,15 @@ theorem lem_1_7_1 {K : Type*} [Field K] [CharZero K] {A : K[X]} :
     Squarefree A ↔ IsCoprime A (derivative A) :=
   squarefree_iff_isCoprime_derivative
 
+open Classical Polynomial in
+/-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
+`A = ∏_{a∈s}(X − a)^{eₐ}`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` is the (squarefree) product of the roots
+of multiplicity exactly `k`. -/
+theorem def_1_7_2 {K : Type*} [CommRing K] (s : Finset K) (e : K → ℕ) :
+    (∏ a ∈ s, (X - C a) ^ e a)
+      = ∏ k ∈ s.image e, (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) ^ k :=
+  prod_X_sub_C_pow_eq_squarefree_factorization s e
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
 -- dedicated iterations:**
 --   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
