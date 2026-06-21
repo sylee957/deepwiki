@@ -108,6 +108,22 @@ theorem wronskian_eq_zero_imp_linearDependent {n : ℕ} [NeZero n] (y : Fin n �
     iterDeriv_zero] at h0
   simpa [mul_comm] using h0
 
+/-- Foundation for the full **Lemma 3.3.5** converse (induction on `n`): a vanishing Wronskian
+yields a single nonzero `c : Fin n → F` annihilating *every* derivative row,
+`∀ i, ∑ⱼ cⱼ·Dⁱ(yⱼ) = 0` (the kernel vector of `det = 0`). Row `0` is
+`wronskian_eq_zero_imp_linearDependent`; differentiating row `i` (which sends it to row `i+1`
+plus a `Dc`-term) is the step that upgrades the coefficients to constants. -/
+theorem wronskian_eq_zero_dependent_iterDeriv {n : ℕ} [NeZero n] (y : Fin n → F)
+    (h : wronskian y = 0) :
+    ∃ c : Fin n → F, c ≠ 0 ∧ ∀ i : Fin n, ∑ j, c j * iterDeriv (i : ℕ) (y j) = 0 := by
+  rw [wronskian] at h
+  obtain ⟨c, hcne, hmul⟩ := Matrix.exists_mulVec_eq_zero_iff.mpr h
+  refine ⟨c, hcne, fun i => ?_⟩
+  have hi := congrFun hmul i
+  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply, Pi.zero_apply] at hi
+  rw [← hi]
+  exact Finset.sum_congr rfl fun j _ => mul_comm _ _
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration
