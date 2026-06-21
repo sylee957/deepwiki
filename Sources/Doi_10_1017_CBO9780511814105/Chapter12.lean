@@ -24,15 +24,14 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 combined-feature construction `[external]` (Laroussinie–Larsen–Weise 1995). All three
-  textbook-general invariant features are mechanized as full-iff characteristic constructions, each
-  generalising `TimedFullCharacteristic.uchar_iff` along one axis: (i) **conjunctive invariants** — several
-  simultaneous upper bounds per location, the delay-forcing becoming a boundary-*disjunction*
-  `∃∃(⋀ᵢ xᵢ≤cᵢ ∧ ⋁ᵢ xᵢ=cᵢ ∧ X)` (`TimedConjInvCharacteristic.cchar_iff`); (ii)+(iii)
-  **target-invariant-gated actions + arbitrary resets** — standard timed-automata action semantics, dropping
-  the on-entry-reset hypothesis (`TimedTargetInvCharacteristic.gchar_iff`). What remains is purely
-  combinatorial: merging *all* axes into one construction (conjunctive target-invariant gating in the
-  readiness antecedent + arbitrary resets), a mechanical splice of the two existing proofs.
+§12.3: Thm 12.4 unbounded (invariant-free) locations `[external]` (Laroussinie–Larsen–Weise 1995). The
+  characteristic-formula construction is mechanized for general timed automata — nondeterministic,
+  multi-clock, multi-action, general-guard, *conjunctive* location invariants, *target-invariant-gated*
+  actions, *arbitrary* resets, all in one construction `TimedGeneralCharacteristic.fchar_iff` (subsuming
+  the per-axis `TimedConjInvCharacteristic.cchar_iff` / `TimedTargetInvCharacteristic.gchar_iff` /
+  `TimedFullCharacteristic.uchar_iff`). The one remaining case is locations with **no** invariant (`inv ℓ =
+  []`, unbounded delays): the boundary-disjunction forcing is vacuous there, so such a location needs a
+  separate pure-`∀∀X_ℓ` body branch (no forcing) — the construction currently assumes `inv ℓ ≠ []` (`hne`).
 Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
   + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
   Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]`. -/
