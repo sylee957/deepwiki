@@ -21,10 +21,16 @@ identity gives the analysis of variance `‖x‖² = ∑_{j∈Fₙ} Iₙ(ωⱼ)`
 linear algebra over the discrete Fourier basis, built on the root-of-unity orthogonality
 `sum_range_exp_two_pi_mul_I`. -/
 
+/-- **§10.1 (Definition 10.1.1, eq 10.1.7)**: the **discrete Fourier transform** of the data,
+`a(λ) = n^{−1/2} ∑_{t<n} xₜ e^{−itλ}` (`= ⟨x, e_λ⟩`; the coefficient `aⱼ` at a Fourier frequency
+`ωⱼ = 2πj/n`). The library's `dftCoeff`. -/
+noncomputable abbrev def_10_1_1 := @DeepWiki.TimeSeries.dftCoeff
+
 /-- **§10.1 (Definition 10.1.2, eq 10.1.8)**: the **periodogram** `Iₙ(λ) = n⁻¹ |∑ₜ xₜ e^{-itλ}|²`,
 the squared modulus of the discrete Fourier transform of the data normalized by `n` — the basic
 nonparametric spectral estimator (non-negative, `periodogram_nonneg`; `Iₙ(0) = n⁻¹(∑ₜxₜ)²`,
-`periodogram_zero_eq`). The library's `periodogram`. -/
+`periodogram_zero_eq`; and `Iₙ(λ) = |a(λ)|²`, `periodogram_eq_normSq_dftCoeff`). The library's
+`periodogram`. -/
 noncomputable abbrev def_10_1_2 := @DeepWiki.TimeSeries.periodogram
 
 /-- **Proposition 10.1.1 (eq 10.1.4)**: the Fourier vectors `eⱼ(t) = n^{−1/2} e^{itωⱼ}`
@@ -85,8 +91,6 @@ ARMA estimators (deferred from Chapter 8) via a Gram–Schmidt (Cholesky) factor
 covariance matrix (eq 10.8.18); infra-blocked. -/
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§10.1: Definition 10.1.1 (the discrete Fourier transform coefficients `aⱼ = ⟨x, eⱼ⟩` as a named
-object, with the Fourier basis `eⱼ` and frequency set `Fₙ`) [deferred]
 §10.2: Proposition 10.2.1 (null distribution of the order statistics `Mₖ`) [infra]; Corollary 10.2.1
 [infra]; Corollary 10.2.2 [infra]; Fisher's test for hidden periodicities [infra]
 §10.3: Definition 10.3.1 (periodogram extended to all `ω ∈ [−π, π]`) [deferred]; Proposition 10.3.1
