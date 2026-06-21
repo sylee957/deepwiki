@@ -98,6 +98,50 @@ def Sq2CoupledRel {D : Type*} (p : Sq2) (u : Valuation D) (q : Sq2) (u' : Valuat
   (aDisabled sqrt2NN p ∧ aDisabled sqrt2NN q ∧ RegionEqAll u u')
   ∨ (∃ d e : ℝ≥0, p = Sq2.A d ∧ q = Sq2.B e ∧ Sq2CoupledFRel d u e u')
 
+/-- **The seed** `(A 0, 0) ~ (B 0, 0)`: A and B coincide, every crossing-value is `√2`
+(frac `√2 − 1 ≠ 0`, no coincidence), so shifting A's crossings down by any `η < √2 − 1` keeps the
+combined region — the relation relates the initial states. -/
+theorem sq2CoupledRel_seed {D : Type*} :
+    Sq2CoupledRel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) := by
+  have h1lt : (1 : ℝ≥0) < sqrt2NN := by rw [← NNReal.coe_lt_coe]; push_cast; exact one_lt_sqrt2NN
+  have h2 : sqrt2NN < (2 : ℝ≥0) := by
+    rw [← NNReal.coe_lt_coe]; push_cast; exact sqrt2NN_lt_two
+  have hfrac0 : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
+  have hcombVal_inr : ∀ c : Option D, combVal (0 : ℝ≥0) (fun _ : D => 0) (Sum.inr c) = sqrt2NN := by
+    intro c; cases c <;> simp
+  refine Or.inr ⟨0, 0, rfl, rfl, zero_lt_sqrt2NN, le_of_lt zero_lt_sqrt2NN, sqrt2NN - 1, ?_, ?_⟩
+  · rw [tsub_pos_iff_lt]; exact h1lt
+  · intro η _ hη
+    have hgt1 : 1 < sqrt2NN - η := by
+      rw [lt_tsub_iff_right, add_comm]; rw [lt_tsub_iff_right] at hη; exact hη
+    have hlt2 : sqrt2NN - η < 2 := lt_of_le_of_lt tsub_le_self h2
+    have hfloor : ⌊sqrt2NN - η⌋₊ = 1 := by
+      apply floor_eq_of_mem
+      · exact_mod_cast le_of_lt hgt1
+      · rw [Nat.cast_one, show (1 : ℝ≥0) + 1 = 2 from by norm_num]; exact hlt2
+    have hfrne : fracPart (sqrt2NN - η) ≠ 0 := by
+      intro hc; rw [fracPart_eq_zero_iff, hfloor, Nat.cast_one] at hc; exact ne_of_lt hgt1 hc
+    have hfrpos : 0 < fracPart (sqrt2NN - η) := lt_of_le_of_ne (fracPart_nonneg _) (Ne.symm hfrne)
+    have hfrpos2 : 0 < fracPart sqrt2NN :=
+      lt_of_le_of_ne (fracPart_nonneg _) (Ne.symm fracPart_sqrt2NN_ne_zero)
+    apply regionEqAll_of_exact
+    · rintro (y | c)
+      · rfl
+      · simp only [combShift_inr, hcombVal_inr, hfloor, floor_sqrt2NN]
+    · rintro (y | c)
+      · exact Iff.rfl
+      · simp only [combShift_inr, hcombVal_inr]
+        exact ⟨fun h => absurd h hfrne, fun h => absurd h fracPart_sqrt2NN_ne_zero⟩
+    · rintro (y | c) (z | c')
+      · exact Iff.rfl
+      · simp only [combShift_inl, combShift_inr, combVal_inl, hcombVal_inr, hfrac0]
+        exact ⟨fun _ => fracPart_nonneg _, fun _ => fracPart_nonneg _⟩
+      · simp only [combShift_inl, combShift_inr, combVal_inl, hcombVal_inr, hfrac0]
+        exact ⟨fun h => absurd (lt_of_lt_of_le hfrpos h) (lt_irrefl _),
+          fun h => absurd (lt_of_lt_of_le hfrpos2 h) (lt_irrefl _)⟩
+      · simp only [combShift_inr, hcombVal_inr]
+        exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
