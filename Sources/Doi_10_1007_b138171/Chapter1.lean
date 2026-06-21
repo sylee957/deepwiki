@@ -711,6 +711,13 @@ noncomputable abbrev def_1_6_2_deflation := @deflation
 /-- **Relation (1.11)** (§1.6, p.26): `A* · A⁻ = pp(A)` (up to associates). -/
 abbrev rel_1_11 := @squarefreePart_mul_deflation
 
+/-- **Relation (1.12)** (§1.6, p.27): `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻`. -/
+abbrev rel_1_12 := @deflation_succ
+
+/-- **Relation (1.13)** (§1.6, p.27): `A⁻⁽ᵏ⁺¹⁾ = A⁻ᵏ / (A⁻ᵏ)*` (multiplicative form,
+up to associates). -/
+abbrev rel_1_13 := @squarefreePart_mul_deflation_succ
+
 /-! ## §1.7 Squarefree Factorization -/
 
 /-- **Definition 1.7.1** (§1.7, p.28): `A` is *squarefree* if no non-unit `B` satisfies
@@ -1062,12 +1069,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
   true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
   triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
-§1.6: relation 1.12 [infra]; relation 1.13 [infra] — both unfold `deflation (deflation A k) 1` =
-  `factors ((deflation A k).primPart)`, and the `factors`-based `deflation`/`squarefreePart` defs are
-  non-canonical (representatives only up to associates), so the recursion's `toFinset`/`count`
-  bookkeeping needs a refactor to `normalizedFactors`. Satellites DONE: `deflation_zero`
-  (`A⁻⁰ = pp(A)`), `deflation_dvd_primPart`, `deflation_isPrimitive` (the primitivity reduction
-  behind 1.13).
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
