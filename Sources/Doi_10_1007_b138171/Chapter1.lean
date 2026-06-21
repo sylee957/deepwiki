@@ -26,9 +26,7 @@ import Sources.Doi_10_1007_b138171.Source
 Chapter 1 is standard constructive algebra, almost all of it already in Mathlib; the catalog
 aliases the Mathlib concept for each book definition and discharges each book theorem with
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
-predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
-
-All of §1.1 — including the `ℤ[√−5]` and matrix examples — is now formalized. -/
+predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library. -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -590,6 +588,29 @@ theorem def_1_7_2_squarefree {K : Type*} [Field K] (s : Finset K) (e : K → ℕ
     Squarefree (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) :=
   squarefree_prod_X_sub_C _
 
+/-! ## Exercises -/
+
+/-- **Exercise 1.1** (§1, p.32): `gcd(217, 413) = 7` in `ℤ` (Euclidean algorithm). -/
+theorem ex_1_1 : Int.gcd 217 413 = 7 := by decide
+
+/-- **Exercise 1.3** (§1, p.33): the inverse of `14` in `ℤ/37` is `8` (i.e. `14·8 ≡ 1`). -/
+theorem ex_1_3 : (14 : ZMod 37) * 8 = 1 := by decide
+
+/-- **Exercise 1.12** (§1, p.33): in a commutative ring, if `a = q·b + r` then `a, b` and `b, r`
+have the same gcds — `gcd(a, b) = gcd(b, r)` (the invariant driving the Euclidean algorithm). -/
+theorem ex_1_12 {R : Type*} [CommRing R] {a b q r z : R} (h : a = q * b + r) :
+    IsGCD a b z ↔ IsGCD b r z := by
+  have hr : r = a - q * b := by rw [h]; ring
+  constructor
+  · intro hab
+    refine ⟨hab.dvd_right, ?_, fun t htb htr => ?_⟩
+    · rw [hr]; exact dvd_sub hab.dvd_left (hab.dvd_right.mul_left q)
+    · exact hab.dvd (h.symm ▸ dvd_add (htb.mul_left q) htr) htb
+  · intro hbr
+    refine ⟨?_, hbr.dvd_left, fun t hta htb => ?_⟩
+    · rw [h]; exact dvd_add (hbr.dvd_left.mul_left q) hbr.dvd_right
+    · exact hbr.dvd htb (hr ▸ dvd_sub hta (htb.mul_left q))
+
 /- ## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
 Done: §1.1 (Def 1.1.1–1.1.13, Thm 1.1.1–1.1.11, Ex 1.1.1–1.1.14), §1.2 (Euclidean/pseudo-division
 `thm_1_2_*`), §1.3 (Euclidean + extended `thm_1_3_*`), §1.4 (Def 1.4.1 resultant/Sylvester,
@@ -605,6 +626,7 @@ pairwise-coprime parts, Lemma 1.7.1, eq 1.14 radical).
 §1.7 Squarefree Factorization: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm; Ex 1.7.1,
   Ex 1.7.2.
 Worked examples not formalized: 1.2.1, 1.3.1, 1.3.3–1.3.7, 1.4.2, 1.5.1, 1.5.2, 1.7.1, 1.7.2.
-Exercises 1.1–1.16: none formalized. -/
+Exercises: done 1.1, 1.3, 1.12; remaining 1.2, 1.4–1.11, 1.13–1.16 (mostly concrete gcd/
+PRS/squarefree computations + the §1.5 similarity/PRS proofs). -/
 
 end DeepWiki.Si
