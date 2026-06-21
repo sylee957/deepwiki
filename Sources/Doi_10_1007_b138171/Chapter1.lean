@@ -594,6 +594,19 @@ theorem def_1_7_2_squarefree {K : Type*} [Field K] (s : Finset K) (e : K → ℕ
 /-- **Exercise 1.1** (§1, p.32): `gcd(217, 413) = 7` in `ℤ` (Euclidean algorithm). -/
 theorem ex_1_1 : Int.gcd 217 413 = 7 := by decide
 
+/-- **Exercise 1.2** (§1, p.32): the linear Diophantine equations `12x + 19y = 1` and `3x + 2y = 5`
+have integer solutions (`(8, −5)` and `(1, 1)`; found by the Extended Euclidean algorithm). -/
+theorem ex_1_2 : (∃ x y : ℤ, 12 * x + 19 * y = 1) ∧ (∃ x y : ℤ, 3 * x + 2 * y = 5) :=
+  ⟨⟨8, -5, by norm_num⟩, ⟨1, 1, by norm_num⟩⟩
+
+/-- **Exercise 1.13** (§1, p.33): the resultant lies in the ideal `(A, B)` (proved with the
+Extended Euclidean algorithm + Theorem 1.4.1) — this is exactly **Theorem 1.4.2** (`thm_1_4_2`). -/
+theorem ex_1_13 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natDegree ≤ m)
+    (hg : g.natDegree ≤ n) (H : m ≠ 0 ∨ n ≠ 0) :
+    ∃ p q : R[X], p.degree < (n : WithBot ℕ) ∧ q.degree < (m : WithBot ℕ)
+      ∧ f * p + g * q = C (Polynomial.resultant f g m n) :=
+  thm_1_4_2 f g m n hf hg H
+
 /-- **Exercise 1.3** (§1, p.33): the inverse of `14` in `ℤ/37` is `8` (i.e. `14·8 ≡ 1`). -/
 theorem ex_1_3 : (14 : ZMod 37) * 8 = 1 := by decide
 
@@ -664,6 +677,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.1; Ex 1.7.2.
-Exercises: Ex 1.2; Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.13; Ex 1.14. -/
+Exercises: Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
