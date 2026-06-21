@@ -617,6 +617,14 @@ abbrev thm_1_5_2_elt_top := @subresultant_prs_similar_elt_top
 lifting the `D[x]` similarity (`thm_1_5_2_elt`) to the scalar via `IsSimilar.exists_fractionRing`. -/
 abbrev thm_1_5_2_frac := @subresultant_prs_eq_fractionRing
 
+/-- **Theorem 1.5.3** (§1.5, p.23) setup — the subresultant-PRS coefficient recursion `γᵢ` (`γ₁=-1`,
+`γᵢ₊₁=(-lc Rᵢ)^δᵢ·γᵢ^(1-δᵢ)`) over the field of fractions. `subresPRS_gamma`. -/
+noncomputable abbrev def_subresPRS_gamma := @subresPRS_gamma
+
+/-- **Theorem 1.5.3** (§1.5, p.23) setup — the subresultant-PRS coefficient recursion `βᵢ`
+(`β₁=(-1)^(δ₁+1)`, `βᵢ₊₁=-lc Rᵢ·γᵢ₊₁^(δᵢ+1)`). `subresPRS_beta`. -/
+noncomputable abbrev def_subresPRS_beta := @subresPRS_beta
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
@@ -1149,9 +1157,10 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: needs the
-  explicit eq-1.9 `ηᵢ` product formula (only `∃ ηᵢ` is formalized, via `thm_1_5_2_frac`) plus the
-  `Frac(D)` coefficient recursion `βᵢ = −lc(Rᵢ)·γᵢ₊₁^(δᵢ+1)`, `γᵢ₊₁ = (−lc Rᵢ)^δᵢ·γᵢ^(1−δᵢ)`.
+§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: the
+  coefficient recursion `γᵢ/βᵢ` is defined (`def_subresPRS_gamma`/`def_subresPRS_beta`, with
+  `subresPRS_gamma_ne_zero`); remaining is the full `Rᵢ = prem(Rᵢ₋₂,Rᵢ₋₁)/βᵢ` mutual-recursion
+  construction and the `ηᵢ = 1` cancellation identity (research-level; Bronstein cites Collins/Brown).
 Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
   factorization is `ex_1_7_1`.
 Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials

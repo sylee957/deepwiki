@@ -229,4 +229,42 @@ theorem subresultant_prs_similar_elt_top [IsDomain R] (F : ℕ → R[X]) (α β 
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
+section SubresPRSCoeff
+
+variable {K : Type*} [Field K]
+
+/-- The subresultant-PRS coefficient `γᵢ` (Bronstein §1.5, p.23): `γ₁ = -1` and
+`γᵢ₊₁ = (-rᵢ)^δᵢ · γᵢ^(1-δᵢ)`, where `rᵢ = lc Rᵢ` and `δᵢ = deg Rᵢ₋₁ - deg Rᵢ`. The exponent `1-δᵢ`
+is a (possibly negative) integer, so `γ` lives in the field of fractions. -/
+noncomputable def subresPRS_gamma (r : ℕ → K) (δ : ℕ → ℕ) : ℕ → K
+  | 0 => 1
+  | 1 => -1
+  | (i + 2) => (-(r (i + 1))) ^ (δ (i + 1))
+      * (subresPRS_gamma r δ (i + 1)) ^ ((1 : ℤ) - (δ (i + 1) : ℤ))
+
+/-- The subresultant-PRS coefficient `βᵢ` (Bronstein §1.5, p.23): `β₁ = (-1)^(δ₁+1)` and
+`βᵢ₊₁ = -rᵢ · γᵢ₊₁^(δᵢ+1)`. -/
+noncomputable def subresPRS_beta (r : ℕ → K) (δ : ℕ → ℕ) : ℕ → K
+  | 0 => 1
+  | 1 => (-1) ^ (δ 1 + 1)
+  | (i + 2) => -(r (i + 1)) * (subresPRS_gamma r δ (i + 2)) ^ (δ (i + 1) + 1)
+
+/-- The subresultant-PRS coefficients `γᵢ` are nonzero (so the `γᵢ^(1-δᵢ)` division is well-defined),
+provided every `rᵢ = lc Rᵢ` is nonzero. -/
+theorem subresPRS_gamma_ne_zero (r : ℕ → K) (δ : ℕ → ℕ) (hr : ∀ i, r i ≠ 0) :
+    ∀ i, 1 ≤ i → subresPRS_gamma r δ i ≠ 0 := by
+  intro i
+  induction i with
+  | zero => omega
+  | succ n ih =>
+    intro _
+    match n, ih with
+    | 0, _ => simp [subresPRS_gamma]
+    | (k + 1), ih =>
+      rw [subresPRS_gamma]
+      exact mul_ne_zero (pow_ne_zero _ (neg_ne_zero.mpr (hr (k + 1))))
+        (zpow_ne_zero _ (ih (by omega)))
+
+end SubresPRSCoeff
+
 end DeepWiki.SymbolicIntegration
