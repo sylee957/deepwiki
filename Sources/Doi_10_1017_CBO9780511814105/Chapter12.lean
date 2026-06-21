@@ -29,9 +29,12 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   *reduction* (`thm_12_4`) + unconditional instance (`thm_12_4_once`); and the **mutual-recursion
   logic** (`TimedHmlMutualRecursion`: indexed-variable `MtRSys`, product-lattice `recMaxSys`,
   equation-system coinduction) with a worked **multi-location** characteristic example
-  (`TimedAlternatingCharacteristic`: two locations with bounds 1/2 — `altChar_false_iff`/`_true_iff`
-  prove `(p,[y=d]) ⊨ Xᵢ ↔ p` timed bisimilar to `ℓᵢ` at `d`, a **full** characterisation single-variable
-  `MtR` cannot state). Remaining: the *generic* region-graph→equation-system construction.
+  (`TimedAlternatingCharacteristic`: two locations with bounds 1/2 — full iff). Generalized to the
+  **generic** construction `TimedDeterministicCharacteristic` (`genChar_iff`): for a deterministic
+  single-clock timed automaton over *any* location graph (`bound : Loc → ℕ`, `succ : Loc → Loc`), the
+  per-location equation system characterises timed bisimilarity — `(p,[y=d]) ⊨ X_ℓ ↔ p ~ (ℓ,d)`,
+  subsuming the running (`Loc=Unit`) and alternating (`Loc=Bool`) examples. Remaining: multi-clock /
+  multi-edge / invariant automata (bodies folding over a finite edge presentation).
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
