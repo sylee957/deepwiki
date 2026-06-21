@@ -25,11 +25,10 @@ aliases the Mathlib concept for each book definition and discharges each book th
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
 predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
 
-A few concrete worked examples that need substantial bespoke computation are deferred (noted
-inline): the non-commutativity of `GL₂(ℚ)`/`M₂(ℚ)` (Ex 1.1.1, 1.1.3), the `ℤ[√−5]` facts (Ex 1.1.5
-domain — Mathlib's `Nonsquare` is ℕ-keyed and does not resolve for `-5 : ℤ` — and the failure
-of unique factorization / gcd, Ex 1.1.6, 1.1.7), and the non-principal ideal `(X,Y)`
-(Ex 1.1.10). -/
+A few concrete worked examples that need substantial bespoke computation are still deferred
+(noted inline): the `ℤ[√−5]` facts (Ex 1.1.5 domain — Mathlib's `Nonsquare` is ℕ-keyed and does
+not resolve for `-5 : ℤ` — and the failure of unique factorization / gcd, Ex 1.1.6, 1.1.7), and
+the non-principal ideal `(X,Y)` (Ex 1.1.10). -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -183,12 +182,44 @@ theorem thm_1_1_11 {k : Type*} [Field k] [IsAlgClosed k] {σ : Type*} [Finite σ
     MvPolynomial.vanishingIdeal k (MvPolynomial.zeroLocus k I) = I.radical :=
   MvPolynomial.vanishingIdeal_zeroLocus_eq_radical I
 
--- **Theorem 1.1.10** (§1.1, p.8), the weak Nullstellensatz (`V(I) = ∅ ⟺ 1 ∈ I`), is deferred:
--- Mathlib's `MvPolynomial.zeroLocus` carries a separate points-field parameter, so the
--- specialized statement leaves `IsAlgClosed` instance metavariables. The book notes it (like the
--- strong form `thm_1_1_11`) is not needed by the integration algorithm.
+/-- **Theorem 1.1.10** (§1.1, p.8), the weak Nullstellensatz: over an algebraically closed field,
+`V(I) = ∅ ⟺ 1 ∈ I`. -/
+theorem thm_1_1_10 {k : Type*} [Field k] [IsAlgClosed k] {σ : Type*} [Finite σ]
+    (I : Ideal (MvPolynomial σ k)) :
+    MvPolynomial.zeroLocus k I = ∅ ↔ (1 : MvPolynomial σ k) ∈ I := by
+  rw [← Ideal.eq_top_iff_one]
+  constructor
+  · intro h
+    have key : MvPolynomial.vanishingIdeal k (MvPolynomial.zeroLocus k I) = I.radical :=
+      MvPolynomial.vanishingIdeal_zeroLocus_eq_radical I
+    rw [h, MvPolynomial.vanishingIdeal_empty] at key
+    exact Ideal.radical_eq_top.mp key.symm
+  · intro h
+    rw [h, MvPolynomial.zeroLocus_top (K := k), Set.bot_eq_empty]
 
 /-! ### Worked examples (§1.1) -/
+
+open Matrix in
+/-- **Example 1.1.1** (§1.1, p.2): `GL₂(ℚ)` is a group but *not* commutative — e.g.
+`[[1,1],[0,1]]` and `[[0,1],[1,0]]` do not commute. -/
+example : ∃ A B : GL (Fin 2) ℚ, A * B ≠ B * A := by
+  have hne : ∃ S T : SpecialLinearGroup (Fin 2) ℚ, S * T ≠ T * S := by
+    refine ⟨⟨of ![![1, 1], ![0, 1]], by rw [Matrix.det_fin_two]; simp⟩,
+            ⟨of ![![1, 0], ![1, 1]], by rw [Matrix.det_fin_two]; simp⟩, ?_⟩
+    intro h
+    have := congrFun (congrFun (congrArg (·.1) h) 0) 0
+    simp [Matrix.mul_apply, Fin.sum_univ_two, SpecialLinearGroup.coe_mul] at this
+  obtain ⟨S, T, hST⟩ := hne
+  exact ⟨S.toGL, T.toGL,
+    fun h => hST (SpecialLinearGroup.toGL_injective (by rw [map_mul, map_mul, h]))⟩
+
+open Matrix in
+/-- **Example 1.1.3** (§1.1, p.2): `M₂(ℚ)` is a ring but *not* commutative. -/
+example : ∃ A B : Matrix (Fin 2) (Fin 2) ℚ, A * B ≠ B * A := by
+  refine ⟨of ![![0, 1], ![0, 0]], of ![![0, 0], ![1, 0]], ?_⟩
+  intro h
+  have := congrFun (congrFun h 0) 0
+  simp [Matrix.mul_apply, Fin.sum_univ_two] at this
 
 /-- **Example 1.1.2** (§1.1, p.2): the 2×2 rational matrices form a commutative group under
 addition. -/
