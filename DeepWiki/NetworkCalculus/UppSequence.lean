@@ -512,6 +512,18 @@ theorem toFunPWL_ge_finite_inf (r : UppSeq ℚ) (m : ℕ) (u : ℝ≥0) (hu : u 
     Finset.inf'_le _ (Finset.mem_range.mpr (by omega))
   rcases hmem with ⟨h1, _⟩ | ⟨h1, _⟩ <;> linarith
 
+/-- The pointwise **minimum** of two PWL readings agrees with the discrete pointwise minimum at integer
+arguments — the continuous-time meaning of the `min` operator (the readings meet the samples there). -/
+theorem toFunPWL_min_natCast (r s : UppSeq ℚ) (n : ℕ) :
+    min (r.toFunPWL (n : ℝ≥0)) (s.toFunPWL (n : ℝ≥0)) = (min (r.evalNat n) (s.evalNat n) : ℝ) := by
+  rw [toFunPWL_natCast, toFunPWL_natCast]
+
+/-- The pointwise **maximum** of two PWL readings agrees with the discrete pointwise maximum at integer
+arguments — the continuous-time meaning of the `max` operator. -/
+theorem toFunPWL_max_natCast (r s : UppSeq ℚ) (n : ℕ) :
+    max (r.toFunPWL (n : ℝ≥0)) (s.toFunPWL (n : ℝ≥0)) = (max (r.evalNat n) (s.evalNat n) : ℝ) := by
+  rw [toFunPWL_natCast, toFunPWL_natCast]
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
