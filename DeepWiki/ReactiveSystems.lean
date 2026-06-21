@@ -104,6 +104,7 @@ import DeepWiki.ReactiveSystems.TimedSqrt2BisimulationDelay
 import DeepWiki.ReactiveSystems.TimedSqrt2BisimulationCross
 import DeepWiki.ReactiveSystems.TimedSqrt2AsymRegion
 import DeepWiki.ReactiveSystems.TimedSqrt2FullRel
+import DeepWiki.ReactiveSystems.TimedSqrt2CoupledRegion
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
 import DeepWiki.ReactiveSystems.TimedSimulation
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimedSimulation
