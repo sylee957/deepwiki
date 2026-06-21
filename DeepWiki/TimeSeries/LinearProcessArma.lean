@@ -83,4 +83,17 @@ theorem coeFn_linearProcessLp_maqFilter {Z : ℤ → Ω → ℝ} (hmem : ∀ t, 
   simp only [Finset.sum_apply]
   exact Finset.sum_congr rfl fun i hi => hω i hi
 
+/-- **Theorem 3.2.1 for a finite `MA(q)`:** the genuine `MA(q)` process `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` over
+white noise `Z ~ WN(0, σ²)` has autocovariance `γ(h) = σ² ∑_{k=0}^{q−h} θₖ θ_{k+h}` for `0 ≤ h` (and
+`γ(h) = 0` for `h > q`) — the classical closed form, from the white-noise linear-process acvf
+(`isWhiteNoise_linearProcess_acvf`) and the explicit filter sum (`maqFilter_tsum_mul_shift_eq`). -/
+theorem maq_linearProcess_acvf [IsProbabilityMeasure μ] (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ}
+    (hmem : ∀ t, MemLp (Z t) 2 μ) {σ2 : ℝ} (hwn : IsWhiteNoise Z μ σ2) {C : ℝ}
+    (hZb : ∀ t, ‖toLpSeq Z hmem t‖ ≤ C) (t : ℤ) {h : ℤ} (hh : 0 ≤ h) :
+    inner ℝ (linearProcessLp (maqFilter θ) (toLpSeq Z hmem) (t + h))
+        (linearProcessLp (maqFilter θ) (toLpSeq Z hmem) t)
+      = σ2 * ∑ k ∈ Finset.range (θ.natDegree + 1), θ.coeff k * θ.coeff (k + h.toNat) := by
+  rw [isWhiteNoise_linearProcess_acvf (summable_maqFilter θ) hmem hwn hZb,
+    maqFilter_tsum_mul_shift_eq θ hh]
+
 end DeepWiki.TimeSeries
