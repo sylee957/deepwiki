@@ -147,8 +147,20 @@ to `WithTop V`) — are generic over any `[AddCommGroup V] [LinearOrder V] [IsOr
 at the boundary, so every command runs over fractional rates and bursts via the *same* proved-correct
 functions. Integer inputs are the special case `a/1` (fully backward-compatible).
 
-**The one remaining frontier is continuous time** — rational breakpoint *positions* with linear
-interpolation between them. That is a genuinely different model: the operators become infima/suprema
-over a continuous `t`, and tying the discrete `ℕ`-indexed values to the `ℝ≥0`-valued library curves
-(`residualCurve`, `concatConv`) needs the piecewise-linear interpolation bridge. Everything tractable
-over the discrete-time UPP model — integer *and* rational, single- and multi-flow — is done.
+**Continuous-time semantics — proven.** The discrete operators are not just internally correct; they
+*are* the continuous-time `(min,+)` operators. The piecewise-linear reading `UppSeq.toFunPWL` (linear
+interpolation between integer samples — continuous, monotone, affine on each unit interval) carries the
+sequence to the genuine continuous-time curve it denotes, and at every integer point
+(`DeepWiki/NetworkCalculus/PwlMinConv.lean`):
+- `minConv (toFunPWL r) (toFunPWL s) = convNat r s` — the **convolution** bridge, *unconditional* (the
+  PWL interpolation forces every real split to be a convex combination of integer splits);
+- `minDeconv (toFunPWL r) (toFunPWL s) = deconvNat r s` — the **deconvolution** bridge, when
+  `slope_r ≤ slope_s` (the same finiteness guard the CLI uses);
+- pointwise `min`/`max` agree (`toFunPWL_min_natCast`/`_max_natCast`), and the **backlog** bound
+  (deconvolution at 0) is the continuous-time worst-case vertical deviation
+  (`minDeconv_toFunPWL_zero_eq_deconvNat`).
+
+So the integer- and rational-valued discrete calculus the CLI computes is the continuous-time calculus
+at integer points. The remaining genuinely-different model is continuous time with **non-integer
+breakpoint positions** (curves whose values are sampled off `ℕ`); the PWL bridge covers the
+integer-breakpoint case, which is the UPP class the CLI represents.

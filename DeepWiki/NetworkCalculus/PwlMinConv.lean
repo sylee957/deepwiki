@@ -142,4 +142,14 @@ theorem minDeconv_toFunPWL_eq_deconvNat (r s : UppSeq ℚ) (n : ℕ)
   rw [hterm]
   exact le_ciSup hbdd (k : ℝ≥0)
 
+/-- **Continuous-time backlog bound = discrete backlog bound.** The worst-case vertical deviation
+`⨆_τ (toFunPWL r τ − toFunPWL s τ)` of the continuous-time curves equals the computed `deconvNat r s 0`
+(the CLI's `backlog` value) — the deconvolution bridge at the origin (`minDeconv … 0` sups `r(0+τ)−s(τ)
+= r(τ)−s(τ)`). The continuous worst-case buffer occupancy is exactly the discrete bound the CLI reports. -/
+theorem minDeconv_toFunPWL_zero_eq_deconvNat (r s : UppSeq ℚ)
+    (hle : (Nat.lcm r.period s.period / r.period) • r.incr
+         ≤ (Nat.lcm r.period s.period / s.period) • s.incr) :
+    minDeconv r.toFunPWL s.toFunPWL (0 : ℝ≥0) = (r.deconvNat s 0 : ℝ) := by
+  simpa using minDeconv_toFunPWL_eq_deconvNat r s 0 hle
+
 end DeepWiki.UppSeq
