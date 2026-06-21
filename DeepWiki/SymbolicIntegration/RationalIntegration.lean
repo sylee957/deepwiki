@@ -29,4 +29,19 @@ theorem hermite_reduction_step (B C V : F) (hV : V ≠ 0) (m : ℕ) :
   push_cast
   ring
 
+/-- **Bernoulli, rational part** (§2.1): the antiderivative of `tⁿ⁻¹` is `tⁿ/n`, i.e.
+`D(tⁿ/n) = tⁿ⁻¹`, whenever `Dt = 1` (e.g. `t = x − a`) and `n ≠ 0`. This is the closed form
+`∫ (x−a)⁻ᵏ dx = (x−a)¹⁻ᵏ/(1−k)` (the rational part of Bernoulli's algorithm) for `k ≠ 1`. -/
+theorem deriv_zpow_div_self {t : F} (ht : t′ = 1) {n : ℤ} (hn : (n : F) ≠ 0) :
+    (t ^ n / (n : F))′ = t ^ (n - 1) := by
+  have hn0 : ((n : F))′ = 0 := by simp
+  rw [Differential.deriv.leibniz_div_const (t ^ n) (n : F) hn0,
+    smul_eq_mul, deriv_zpow, ht, mul_one, inv_mul_cancel_left₀ hn]
+
+/-- **Bernoulli, logarithmic part** (§2.1): `∫ dx/(x−a) = log(x−a)` — the integrand `1/t` is the
+*logarithmic derivative* of `t` (`logDeriv t = t⁻¹`) when `Dt = 1`, so its antiderivative is a
+logarithm. -/
+theorem logDeriv_eq_inv {t : F} (ht : t′ = 1) : Differential.logDeriv t = t⁻¹ := by
+  rw [Differential.logDeriv, ht, one_div]
+
 end DeepWiki.SymbolicIntegration
