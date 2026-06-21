@@ -107,4 +107,12 @@ theorem fourierSpectralDensity_inversion {K : ℤ → ℂ} (hK : Summable fun n 
       rw [← ENNReal.tsum_mul_left]; exact ENNReal.tsum_le_tsum hbound
     exact ne_top_of_le_ne_top hfin hbsum
 
+/-- **White-noise spectral density (Theorem 4.3.2 applied):** the white-noise autocovariance
+`γ(h) = σ²·[h = 0]` (absolutely summable) has the constant Fourier-series spectral density
+`f(λ) = σ²/(2π)` — the flat spectrum of white noise. -/
+theorem fourierSpectralDensity_kronecker (σ2 : ℝ) (lam : ℝ) :
+    fourierSpectralDensity (fun h => if h = 0 then (σ2 : ℂ) else 0) lam = (σ2 : ℂ) / (2 * π) := by
+  rw [fourierSpectralDensity, tsum_eq_single 0 fun n hn => by simp [hn]]
+  simp [div_eq_inv_mul]
+
 end DeepWiki.TimeSeries
