@@ -24,7 +24,6 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.2: Ex 12.2 (formulate `Mt` properties of the Example 11.4 automata) `[deferred]`.
 §12.3: Thm 12.4 (completeness half of the timed Hennessy–Milner characterisation, general case)
   `[external]` (defers to Laroussinie–Larsen–Weise 1995); Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
@@ -154,6 +153,20 @@ theorem prop_12_2_strict_basic (c : ℝ≥0) (hc : 0 < c) :
     ¬ TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.sq2TLTS c)
         (DeepWiki.ReactiveSystems.Sq2.A 0) (DeepWiki.ReactiveSystems.Sq2.B 0) :=
   DeepWiki.ReactiveSystems.timedHmlEquiv_and_not_timedBisimilar_sq2 c hc
+
+/-! ## §12.2 Properties of the Example 11.4 automata -/
+
+/-- **Exercise 12.2** (§12.2, p.227). Formulate `Mt` properties of the two Example 11.4
+automata (`onceTLTS c`: the single-clock automaton `A —a[x ≤ c, x:=0]→ B`, with `c = 1`
+the left automaton and `c = 2` the right). The distinguishing property `onceActLate`
+— `y in ∃∃(y > 1 ∧ ⟨a⟩tt)`, "after resetting `y`, time can pass beyond `y > 1` with `a`
+still enabled" — holds of the right (`c = 2`) automaton but not the left (`c = 1`); the
+shared property `onceActNow` — `⟨a⟩tt` — is afforded by both. -/
+theorem ex_12_2 :
+    ((TLTS.onceTLTS 2).MtSatState (.A 0) TLTS.onceActLate ∧
+      ¬ (TLTS.onceTLTS 1).MtSatState (.A 0) TLTS.onceActLate) ∧
+    (∀ c, (TLTS.onceTLTS c).MtSatState (.A 0) TLTS.onceActNow) :=
+  ⟨⟨TLTS.onceActLate_two, TLTS.not_onceActLate_one⟩, TLTS.onceActNow_mtSat⟩
 
 /-! ## §12.2 Negation in HML with time -/
 

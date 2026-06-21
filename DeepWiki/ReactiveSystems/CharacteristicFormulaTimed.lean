@@ -243,6 +243,50 @@ theorem OnceDead.delay {c : ℕ} {q q' : Once} {t : ℝ≥0} (hq : OnceDead c q)
   | delayA d t => exact lt_of_lt_of_le hq le_self_add
   | delayB d t => trivial
 
+/-! #### Exercise 12.2: `Mt` properties of the two Example 11.4 automata
+
+The `Mt`-with-clocks formulae below distinguish the two automata (`c = 1` on the left,
+`c = 2` on the right) and exhibit a property both afford. The distinguishing property
+`onceActLate` resets a formula clock `y` and asks for a *later* `a`-move once `y > 1`:
+the `c = 2` automaton can still fire `a` after more than one time unit, the `c = 1` one
+cannot. The shared property `onceActNow` is the immediate `⟨a⟩tt`. -/
+
+/-- "After resetting `y`, time can pass beyond `y > 1` with `a` still enabled":
+`y in ∃∃(y > 1 ∧ ⟨a⟩tt)`. The distinguishing property of Example 11.4. -/
+def onceActLate : Mt Unit Unit :=
+  .reset () (.existsDelay (.and (.guard (.atom () .gt 1)) (.dia () .tt)))
+
+/-- "`a` is possible right now": `⟨a⟩tt`. A property both Example 11.4 automata afford. -/
+def onceActNow : Mt Unit Unit := .dia () .tt
+
+/-- The right automaton (`c = 2`) **has** the property `onceActLate`: delay to `y = 2`
+(still `≤ 2`, so `a` is enabled). -/
+theorem onceActLate_two : MtSatState (onceTLTS 2) (.A 0) onceActLate := by
+  refine ⟨2, _, OnceStep.delayA 0 2, ?_, _, OnceStep.act ?_, trivial⟩
+  · simp only [MtSat, satisfies, Cmp.holds, Valuation.add_apply, Valuation.reset,
+      Set.mem_singleton_iff]
+    norm_num
+  · norm_num
+
+/-- The left automaton (`c = 1`) **lacks** the property `onceActLate`: any delay reaching
+`y > 1` puts the clock past the guard `x ≤ 1`, so `a` is disabled. -/
+theorem not_onceActLate_one : ¬ MtSatState (onceTLTS 1) (.A 0) onceActLate := by
+  intro h
+  obtain ⟨d, p', hdelay, hguard, p'', hact, -⟩ := h
+  cases hdelay with
+  | delayA d t =>
+    cases hact with
+    | act hle =>
+      simp only [MtSat, satisfies, Cmp.holds, Valuation.add_apply, Valuation.reset,
+        Set.mem_singleton_iff] at hguard
+      exact absurd hle (not_le.mpr hguard)
+
+/-- Both Example 11.4 automata **afford** `onceActNow` (`⟨a⟩tt`): at `x = 0` the guard
+`x ≤ c` holds for either bound. -/
+theorem onceActNow_mtSat (c : ℕ) : MtSatState (onceTLTS c) (.A 0) onceActNow := by
+  refine ⟨Once.B 0, OnceStep.act ?_, trivial⟩
+  exact zero_le
+
 /-- The characteristic formula of the dead location: `∀∀[a]ff` — no action is ever possible. -/
 def charB : Mt Unit Unit := .forallDelay (.box () .ff)
 
