@@ -262,6 +262,12 @@ alias maq_acvf_finite_support := DeepWiki.TimeSeries.maqFilter_tsum_mul_shift_eq
 `maqFilter_tsum_mul_shift_eq`. -/
 alias maq_acvf_eq := DeepWiki.TimeSeries.maqFilter_tsum_mul_shift_eq
 
+/-- **Theorem 3.2.1 for a finite `MA(q)` process** (§3.2): the genuine `MA(q)` process
+`Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` over white noise `Z ~ WN(0, σ²)` has autocovariance
+`γ(h) = σ² ∑_{k=0}^{q−h} θₖ θ_{k+h}` for `0 ≤ h` — the classical `MA(q)` closed form, end-to-end from
+the `L²` process. The library's `maq_linearProcess_acvf`. -/
+alias maq_process_acvf := DeepWiki.TimeSeries.maq_linearProcess_acvf
+
 /-- **Example 3.2.1 (faithful `MA(q)` ↔ `θ(B) Z`)** (§3.2, p.89): the `L²` linear process with the
 finite `MA(q)` filter, over square-integrable noise embedded in `Lp`, agrees almost everywhere with
 the book's `MA(q)` random-variable process `θ(B) Z` (`lagPoly θ Z`) — connecting the abstract `Lp`
