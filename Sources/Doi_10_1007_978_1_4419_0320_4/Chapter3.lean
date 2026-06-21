@@ -103,15 +103,23 @@ formalized: the **root conditions** (the right-hand sides of Theorems 3.1.1/3.1.
 summability** underlying both representations: `∑ⱼ |ψⱼ| < ∞` for the causal `MA(∞)` weights `ψ = θ/φ`
 (`ex_3_2_3_summable`) and `∑ⱼ |πⱼ| < ∞` for the invertible `AR(∞)` weights `π = φ/θ`
 (`def_3_1_4_summable`), each with its Cauchy-convolution reciprocal recursion (`eq_3_3_3_analytic` /
-`arInv_weight_recursion`), proven from the polynomial being zero-free on a disk of radius `> 1`. What
-remains is the *representation equivalence* itself — the full `⟺` of Thms 3.1.1/3.1.2 (root condition
-`⟺` existence of the `L²` `MA(∞)`/`AR(∞)` solution), the two-sided Laurent existence (Thm 3.1.3), and
-Props 3.1.1/3.1.2 — which need the `L²`-limit/uniqueness layer. -/
+`arInv_weight_recursion`), proven from the polynomial being zero-free on a disk of radius `> 1`; and — now — the **forward
+direction of Theorem 3.1.1** (`thm_3_1_1_forward`): the causal `MA(∞)` process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ`
+*solves* the ARMA equation `φ(B) X = θ(B) Z`, so the root condition `⟹` an `MA(∞)` solution exists.
+What remains is the *converse* (an ARMA solution `⟹` causal, the other half of the `⟺`, which needs
+`L²` uniqueness), the two-sided Laurent existence (Thm 3.1.3), and Props 3.1.1/3.1.2. -/
 
 /-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
 zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
 (The full equivalence "causal `⟺` this" — Theorem 3.1.1 — is infra-blocked; see the note.) -/
 abbrev thm_3_1_1 := @DeepWiki.TimeSeries.IsCausalPoly
+
+/-- **Theorem 3.1.1, forward direction** (§3.1, p.85): for a causal ARMA, the `L²` linear process
+`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` built from the genuine `MA(∞)` weights `ψ = θ/φ` *solves the ARMA equation*
+`φ(B) X = θ(B) Z`, i.e. `∑_{k=0}^p φₖ X_{t−k} = ∑_{j=0}^q θⱼ Z_{t−j}`. So `φ(z) ≠ 0` on `|z| ≤ 1`
+⟹ an `MA(∞)` solution exists (the existence half of the causal ⟺; the converse needs `L²`
+uniqueness). The library's `causal_arma_linearProcessLp_arma_eq`. -/
+alias thm_3_1_1_forward := DeepWiki.TimeSeries.causal_arma_linearProcessLp_arma_eq
 
 /-- **Theorem 3.1.2** root condition (§3.1, p.86): the moving-average polynomial `θ` has no
 zero in the closed complex unit disk, `θ(z) ≠ 0` for `|z| ≤ 1`. The library's

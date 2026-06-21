@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.CausalPolyDisk
 import DeepWiki.TimeSeries.LinearProcessArma
+import DeepWiki.TimeSeries.LinearProcessFilter
 
 /-! # Causal `ARMA` autocovariance solves the homogeneous AR recursion (§3.3, Second Method)
 The analytic payoff. For a *causal* `ARMA(p,q)` (`φ(z) ≠ 0` on `|z| ≤ 1`) the `MA(∞)` weights
@@ -125,5 +126,67 @@ theorem causal_arma_linearProcess_acvf_homogeneous [IsProbabilityMeasure μ] {φ
   exact ⟨ψ, hψsum, hψ0,
     fun t k => isWhiteNoise_linearProcess_acvf hψsum hmem hwn hZb t k,
     arma_acvf_homogeneous hψsum φ σ2 hψ0 hψrec hh⟩
+
+/-- **Forward Theorem 3.1.1 (causal ⟹ the `MA(∞)` process solves the ARMA equation):** for a causal
+ARMA, the `L²` linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` built from the genuine `MA(∞)` weights `ψ = θ/φ`
+(`armaPsi`, real and summable) satisfies the ARMA difference equation `φ(B) X = θ(B) Z`:
+`∑_{k=0}^p φₖ X_{t−k} = ∑_{j=0}^q θⱼ Z_{t−j}`. The filter `φ(B)` turns `X` into the linear process
+with the convolved weights `∑ₖ φₖ ψ_{·−k}`, which the recursion `eq 3.3.3` identifies with the finite
+`MA(q)` filter `maqFilter θ` — collapsing to `θ(B) Z`. -/
+theorem causal_arma_linearProcessLp_arma_eq {φ θ : ℝ[X]} (hφ : IsCausalPoly φ)
+    {Z : ℤ → Lp ℝ 2 μ} {C : ℝ} (hZb : ∀ t, ‖Z t‖ ≤ C) :
+    ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
+      ∀ t : ℤ, ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k • linearProcessLp ψ Z (t - k)
+        = ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j • Z (t - j) := by
+  set ψ : ℤ → ℝ := fun n => if 0 ≤ n then PowerSeries.coeff n.toNat (armaPsi φ θ) else 0 with hψdef
+  have hψval : ∀ n : ℤ, ψ n = if 0 ≤ n then PowerSeries.coeff n.toNat (armaPsi φ θ) else 0 :=
+    fun _ => rfl
+  have hψ0 : ∀ j : ℤ, j < 0 → ψ j = 0 := fun j hj => by rw [hψval]; exact if_neg (not_le.mpr hj)
+  have hψsum : Summable ψ := by
+    have hcond : ∀ x ∉ Set.range ((↑) : ℕ → ℤ), ψ x = 0 := fun x hx => by
+      rw [hψval]; exact if_neg fun hx0 => hx ⟨x.toNat, Int.toNat_of_nonneg hx0⟩
+    refine (Function.Injective.summable_iff Nat.cast_injective hcond).mp ?_
+    refine (summable_armaPsi_coeff (θ := θ) hφ).congr fun n => ?_
+    rw [Function.comp_apply, hψval, if_pos (Int.natCast_nonneg n), Int.toNat_natCast]
+  have hφc : PowerSeries.constantCoeff (φ : PowerSeries ℝ) ≠ 0 := by
+    rw [Polynomial.constantCoeff_coe]
+    exact fun h0 => hφ 0 (by simp)
+      (by rw [Polynomial.aeval_def, Polynomial.eval₂_at_zero, h0, map_zero])
+  -- the `φ`-convolution of the `ψ`-weights is the finite `MA(q)` filter `maqFilter θ` (eq 3.3.3)
+  have hconv : ∀ m : ℤ,
+      ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (m - k) = maqFilter θ m := by
+    intro m
+    rcases lt_or_ge m 0 with hm | hm
+    · rw [maqFilter_neg θ hm]
+      refine Finset.sum_eq_zero fun k _ => ?_
+      rw [hψval, if_neg (show ¬ (0 : ℤ) ≤ m - ↑k by omega), mul_zero]
+    · obtain ⟨M, rfl⟩ : ∃ M : ℕ, m = (M : ℤ) := ⟨m.toNat, (Int.toNat_of_nonneg hm).symm⟩
+      rw [maqFilter_natCast]
+      have hg1 : ∀ k ∈ Finset.range (φ.natDegree + M + 1), k ∉ Finset.range (φ.natDegree + 1) →
+          φ.coeff k * ψ ((M : ℤ) - ↑k) = 0 := fun k _ hk => by
+        rw [Finset.mem_range, not_lt] at hk
+        rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_mul]
+      have hg2 : ∀ k ∈ Finset.range (φ.natDegree + M + 1), k ∉ Finset.range (M + 1) →
+          φ.coeff k * ψ ((M : ℤ) - ↑k) = 0 := fun k _ hk => by
+        rw [Finset.mem_range, not_lt] at hk
+        rw [hψval, if_neg (show ¬ (0 : ℤ) ≤ (M : ℤ) - ↑k by omega), mul_zero]
+      have hval : ∀ k ∈ Finset.range (M + 1),
+          φ.coeff k * PowerSeries.coeff (M - k) (armaPsi φ θ) = φ.coeff k * ψ ((M : ℤ) - ↑k) :=
+        fun k hk => by
+          rw [Finset.mem_range, Nat.lt_succ_iff] at hk
+          rw [hψval, if_pos (show (0 : ℤ) ≤ (M : ℤ) - ↑k by omega),
+            show ((M : ℤ) - ↑k).toNat = M - k from by omega]
+      calc ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ ((M : ℤ) - ↑k)
+          = ∑ k ∈ Finset.range (φ.natDegree + M + 1), φ.coeff k * ψ ((M : ℤ) - ↑k) :=
+            Finset.sum_subset (by intro x hx; rw [Finset.mem_range] at hx ⊢; omega) hg1
+        _ = ∑ k ∈ Finset.range (M + 1), φ.coeff k * ψ ((M : ℤ) - ↑k) :=
+            (Finset.sum_subset (by intro x hx; rw [Finset.mem_range] at hx ⊢; omega) hg2).symm
+        _ = ∑ k ∈ Finset.range (M + 1), φ.coeff k * PowerSeries.coeff (M - k) (armaPsi φ θ) :=
+            (Finset.sum_congr rfl hval).symm
+        _ = θ.coeff M := armaPsi_coeff_recursion hφc M
+  refine ⟨ψ, hψsum, hψ0, fun t => ?_⟩
+  rw [linearProcessLp_filter_range hψsum hZb φ.coeff (φ.natDegree + 1) t,
+    show (fun m => ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (m - k)) = maqFilter θ from
+      funext hconv, linearProcessLp_maqFilter_eq]
 
 end DeepWiki.TimeSeries
