@@ -96,6 +96,23 @@ theorem linearProcessLp_inner_self {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : �
     inner ℝ (linearProcessLp ψ Z t) (linearProcessLp ψ Z t) = σ2 * ∑' k, ψ k ^ 2 := by
   simpa [pow_two] using linearProcessLp_inner hψ hZb hZorth t 0
 
+/-- **Proposition 3.1.2 (the filtered process is stationary):** the linear filter `Yₜ = ∑ⱼ ψⱼ Xₜ₋ⱼ`
+of a *correlated* stationary `L²` process `X` (covariance `⟪Xₐ, X_b⟫ = γ(a−b)`) has autocovariance
+`⟪Y_{t+h}, Yₜ⟫ = ∑ⱼ ∑ₖ ψⱼ ψₖ γ(h−j+k)` — depending only on the lag `h`, so `Y` is (wide-sense)
+stationary. The general (non-orthogonal) form of `linearProcessLp_inner`, via two applications of the
+inner product's continuity (`hasSum_inner_left`/`hasSum_inner_right`). -/
+theorem linearProcessLp_inner_cov {ψ : ℤ → ℝ} (hψ : Summable ψ) {X : ℤ → Lp ℝ 2 μ} {C : ℝ}
+    (hXb : ∀ t, ‖X t‖ ≤ C) {γ : ℤ → ℝ} (hcov : ∀ a b, inner ℝ (X a) (X b) = γ (a - b)) (t h : ℤ) :
+    inner ℝ (linearProcessLp ψ X (t + h)) (linearProcessLp ψ X t)
+      = ∑' j, ψ j * ∑' k, ψ k * γ (h - j + k) := by
+  rw [← (hasSum_inner_left (linearProcessLp ψ X t) (hasSum_linearProcessLp hψ hXb (t + h))).tsum_eq]
+  refine tsum_congr fun j => ?_
+  rw [real_inner_smul_left]
+  congr 1
+  rw [← (hasSum_inner_right (X (t + h - j)) (hasSum_linearProcessLp hψ hXb t)).tsum_eq]
+  refine tsum_congr fun k => ?_
+  rw [real_inner_smul_right, hcov, show t + h - j - (t - k) = h - j + k from by ring]
+
 /-- An absolutely summable real sequence has summable lag products: `∑ⱼ |ψⱼ ψ_{j+c}| < ∞`
 (bound `|ψ_{j+c}| ≤ ∑ᵢ |ψᵢ|`). Underlies the autocovariance recursions. -/
 theorem summable_mul_shift {ψ : ℤ → ℝ} (hψ : Summable ψ) (c : ℤ) :
