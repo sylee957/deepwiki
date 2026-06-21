@@ -91,6 +91,21 @@ theorem IsNormal.prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → 
     · exact fun i hi j hj hij => hco i (Finset.mem_insert_of_mem hi) j
         (Finset.mem_insert_of_mem hj) hij
 
+/-- If `p · q` is normal then `p` is normal (coprimality with the derivative descends). -/
+theorem IsNormal.of_mul_left {p q : R} (h : IsNormal (p * q)) : IsNormal p := by
+  have h0 : IsCoprime (p * q) ((p * q)′) := h
+  have h1 : IsCoprime p ((p * q)′) := h0.of_mul_left_left
+  rw [deriv_mul_eq] at h1
+  have h2 : IsCoprime p (q * p′) := by
+    have := h1.add_mul_left_right (-q′)
+    rwa [show (p * q′ + q * p′) + p * -q′ = q * p′ from by ring] at this
+  exact h2.of_mul_right_right
+
+/-- **Theorem 3.4.1(i)** (§3.4, p.93), second half: any factor of a normal polynomial is normal. -/
+theorem IsNormal.of_dvd {p q : R} (h : IsNormal p) (hq : q ∣ p) : IsNormal q := by
+  obtain ⟨r, rfl⟩ := hq
+  exact h.of_mul_left
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/

@@ -173,6 +173,12 @@ theorem thm_3_4_1_i_prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} 
     (hco : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (f i) (f j)) : IsNormal (∏ i ∈ s, f i) :=
   IsNormal.prod s f hf hco
 
+/-- **Theorem 3.4.1(i)** (§3.4, p.93), second half: any factor of a normal polynomial is
+normal. -/
+theorem thm_3_4_1_i_factor {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (hp : IsNormal p) (hq : q ∣ p) : IsNormal q :=
+  IsNormal.of_dvd hp hq
+
 /-- **Theorem 3.4.1(ii)** (§3.4, p.93), finite form: a finite product of special polynomials is
 special (`S` is closed under finite products). -/
 theorem thm_3_4_1_ii_prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} (s : Finset ι)
