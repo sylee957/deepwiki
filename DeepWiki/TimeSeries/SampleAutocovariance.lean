@@ -33,4 +33,36 @@ theorem sampleACVF_zero_nonneg (n : ℕ) (x : ℕ → ℝ) : 0 ≤ sampleACVF n 
 theorem sampleACF_zero {n : ℕ} {x : ℕ → ℝ} (h : sampleACVF n x 0 ≠ 0) : sampleACF n x 0 = 1 :=
   div_self h
 
+/-- The centered, zero-padded data `ỹ(m) = xₘ − x̄` for `0 ≤ m < n`, else `0` — extended to `ℤ`. -/
+noncomputable def centeredPad (n : ℕ) (x : ℕ → ℝ) (m : ℤ) : ℝ :=
+  if 0 ≤ m ∧ m < n then x m.toNat - sampleMean n x else 0
+
+/-- **Convolution form of the sample autocovariance** (the key to non-negative definiteness): for
+`j ≤ i < n`, `γ̂(i−j) = n⁻¹ ∑_{k<2n} ỹ(k−i) ỹ(k−j)` with `ỹ` the centered zero-padded data. -/
+theorem sampleACVF_eq_conv (n : ℕ) (x : ℕ → ℝ) {i j : ℕ} (hi : i < n) (hji : j ≤ i) :
+    sampleACVF n x (i - j)
+      = (n : ℝ)⁻¹ * ∑ k ∈ Finset.range (2 * n),
+          centeredPad n x ((k : ℤ) - i) * centeredPad n x ((k : ℤ) - j) := by
+  rw [sampleACVF]
+  congr 1
+  have hsub : Finset.Ico i (j + n) ⊆ Finset.range (2 * n) := by
+    intro k hk; simp only [Finset.mem_Ico] at hk; simp only [Finset.mem_range]; omega
+  have hzero : ∀ k ∈ Finset.range (2 * n), k ∉ Finset.Ico i (j + n) →
+      centeredPad n x ((k : ℤ) - i) * centeredPad n x ((k : ℤ) - j) = 0 := by
+    intro k _ hk
+    simp only [Finset.mem_Ico, not_and, not_lt] at hk
+    simp only [centeredPad]
+    rcases lt_or_ge k i with h | h
+    · rw [if_neg (show ¬((0 : ℤ) ≤ (k : ℤ) - i ∧ (k : ℤ) - i < n) from by omega), zero_mul]
+    · rw [if_neg (show ¬((0 : ℤ) ≤ (k : ℤ) - j ∧ (k : ℤ) - j < n) from by
+        have := hk h; omega), mul_zero]
+  rw [← Finset.sum_subset hsub hzero, Finset.sum_Ico_eq_sum_range]
+  refine Finset.sum_congr (by congr 1; omega) fun t ht => ?_
+  simp only [Finset.mem_range] at ht
+  have h1 : centeredPad n x ((↑(i + t) : ℤ) - i) = x t - sampleMean n x := by
+    simp only [centeredPad]; rw [if_pos (by omega)]; congr 2; omega
+  have h2 : centeredPad n x ((↑(i + t) : ℤ) - j) = x (t + (i - j)) - sampleMean n x := by
+    simp only [centeredPad]; rw [if_pos (by omega)]; congr 2; omega
+  rw [h1, h2]; ring
+
 end DeepWiki.TimeSeries
