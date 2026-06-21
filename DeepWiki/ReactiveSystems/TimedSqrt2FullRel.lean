@@ -129,6 +129,16 @@ theorem cv_delay_invariant {D : Type*} {d δ : ℝ≥0} {u : Valuation D} (h : d
   simp only [cv_apply, Valuation.add_apply]
   exact TLTS.clock_at_sqrt2_delay_invariant h
 
+/-- **The crossing-value match is auto-preserved under a live delay.** Since both crossing-value
+valuations are delay-invariant (for `d+δ ≤ √2`, `e+δ' ≤ √2`), the per-clock `AsymMatch` carries through
+unchanged — the delay clause never has to re-establish the crossing match, only the clocks region and the
+process side. -/
+theorem asymMatch_cv_delay {D : Type*} {d δ e δ' : ℝ≥0} {u u' : Valuation D}
+    (h : ∀ y, AsymMatch (cv d u y) (cv e u' y))
+    (hd : d + δ ≤ sqrt2NN) (he : e + δ' ≤ sqrt2NN) :
+    ∀ y, AsymMatch (cv (d + δ) (u.add δ) y) (cv (e + δ') (u'.add δ') y) := by
+  rw [cv_delay_invariant hd, cv_delay_invariant he]; exact h
+
 namespace TLTS
 
 /-- The live regime's coupling: formula-clock region equivalence, the `√2`-side (open/closed), the
