@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.BestLinearPredictor
+import DeepWiki.TimeSeries.DurbinLevinson
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 5: Prediction of Stationary Processes
@@ -49,10 +50,26 @@ and the mean-square errors `vₙ = E‖X_{n+1} − X̂_{n+1}‖²` by the recurs
 `φₙₙ = [γ(n) − ∑_{j<n} φ_{n-1,j} γ(n−j)] / v_{n-1}`, `v₀ = γ(0)`, `φₙⱼ = φ_{n-1,j} − φₙₙ φ_{n-1,n-j}`
 (5.2.4), `vₙ = v_{n-1}(1 − φₙₙ²)` (5.2.5). **Proposition 5.2.2 (the innovations algorithm)** is the
 companion recursion `X̂_{n+1} = ∑ⱼ θₙⱼ (X_{n+1-j} − X̂_{n+1-j})` (5.2.15), valid for any process with
-finite second moments. These are algebraic recurrences (definable as recursive functions over
-`ℕ`); proving they compute the §5.1 projection needs the Hilbert-projection theory plus induction
-on `n`, and is deferred (it would build on the closed span of past values in `L²` plus the
-orthogonality `eq_5_1_5`). -/
+finite second moments.
+
+**Proposition 5.2.1 is now FORMALIZED** (`prop_5_2_1` below, `dl_correct`): the Durbin–Levinson
+recursion `dl` solves the order-`n` **prediction (normal) equations** `∑ⱼ φₙⱼ γ(k−j) = γ(k)` and the
+error formula `vₙ = γ(0) − ∑ⱼ φₙⱼ γ(j)`, by a joint induction — purely as Toeplitz linear algebra on
+the autocovariance, needing no `L²` layer. (Identifying the normal-equations solution with the §5.1
+projection coefficients additionally uses `eq_5_1_5`; the innovations algorithm **Proposition 5.2.2**
+remains an unformalized algebraic recurrence.) -/
+
+/-- **§5.2 (eqs 5.2.4–5.2.5, the Durbin–Levinson recursion)**: the prediction coefficients `φₙⱼ` and
+mean-square errors `vₙ` computed from the autocovariance. The library's `dlCoeff`/`dlError`, with the
+update laws `dlCoeff_succ_of_le` (`φₙⱼ = φ_{n−1,j} − φₙₙ φ_{n−1,n−j}`) and `dlError_succ`
+(`vₙ = v_{n−1}(1 − φₙₙ²)`). -/
+noncomputable abbrev eq_5_2_4 := @DeepWiki.TimeSeries.dlCoeff
+
+/-- **Proposition 5.2.1 (Durbin–Levinson)**: for an even autocovariance with nonzero prediction
+errors, the recursion's coefficients solve the order-`n` prediction equations
+`∑_{j=1}^n φₙⱼ γ(k−j) = γ(k)` (`k = 1,…,n`) and the error has the form `vₙ = γ(0) − ∑ⱼ φₙⱼ γ(j)`.
+The library's `dl_correct`. -/
+alias prop_5_2_1 := DeepWiki.TimeSeries.dl_correct
 
 /-! ## §5.3 Recursive Prediction of an ARMA(p,q) Process (pp.177–182)
 
