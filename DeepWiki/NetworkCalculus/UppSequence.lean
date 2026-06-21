@@ -473,6 +473,26 @@ theorem toFunPWL_continuousOn_Icc (r : UppSeq ℚ) (n : ℕ) :
     fun_prop
   exact hcont.continuousOn.congr (toFunPWL_eqOn_Icc r n)
 
+/-- **The PWL reading is continuous** on `ℝ≥0` — a genuine continuous-time curve (unlike the step
+reading `toFun`). Glued from per-interval continuity over the locally-finite closed cover by unit
+intervals `[n, n+1]` (whose adjacent pieces agree at the shared endpoints, `toFunPWL_eqOn_Icc`). -/
+theorem toFunPWL_continuous (r : UppSeq ℚ) : Continuous r.toFunPWL := by
+  have hlf : LocallyFinite (fun n : ℕ => Set.Icc (↑n : ℝ≥0) (↑n + 1)) := by
+    intro x
+    refine ⟨Set.Iio (x + 1), Iio_mem_nhds (lt_add_one x), ?_⟩
+    apply Set.Finite.subset (Set.finite_Iio ⌈x + 1⌉₊)
+    intro n hn
+    obtain ⟨y, hy⟩ := hn
+    simp only [Set.mem_Iio]
+    rw [Nat.lt_ceil]
+    calc (↑n : ℝ≥0) ≤ y := hy.1.1
+      _ < x + 1 := hy.2
+  have hcov : ⋃ n : ℕ, Set.Icc (↑n : ℝ≥0) (↑n + 1) = Set.univ := by
+    ext x
+    simp only [Set.mem_iUnion, Set.mem_Icc, Set.mem_univ, iff_true]
+    exact ⟨⌊x⌋₊, Nat.floor_le zero_le, le_of_lt (Nat.lt_floor_add_one x)⟩
+  exact hlf.continuous hcov (fun _ => isClosed_Icc) (fun n => toFunPWL_continuousOn_Icc r n)
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
