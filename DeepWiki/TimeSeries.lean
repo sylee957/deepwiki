@@ -3,6 +3,7 @@ import DeepWiki.TimeSeries.StationaryProcesses
 import DeepWiki.TimeSeries.ProcessExamples
 import DeepWiki.TimeSeries.LagProductProcess
 import DeepWiki.TimeSeries.LinearProcess
+import DeepWiki.TimeSeries.LinearProcessFilter
 import DeepWiki.TimeSeries.LinearProcessExamples
 import DeepWiki.TimeSeries.LinearProcessArma
 import DeepWiki.TimeSeries.ArmaPsiWeights
