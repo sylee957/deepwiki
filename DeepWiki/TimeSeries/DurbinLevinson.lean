@@ -1,6 +1,9 @@
 import Mathlib.Algebra.BigOperators.Intervals
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Data.Real.Basic
+import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Linarith
 
 /-! # §5.2 — The Durbin–Levinson algorithm (Proposition 5.2.1)
 
@@ -109,5 +112,23 @@ theorem sum_reflect_coeff (n : ℕ) (c : ℤ) :
   simp only [Finset.mem_Icc] at hj
   have hc : c - ((n : ℤ) + 1) + ↑(n + 1 - j) = c - j := by omega
   rw [hc]
+
+/-- Expansion of the order-`n+1` prediction sum: split the top term and apply the Levinson update
+(`dlCoeff_succ_of_le`) + the reflected-sum identity to the rest. -/
+theorem dl_sum_expand (n : ℕ) (c : ℤ) :
+    ∑ j ∈ Icc 1 (n + 1), dlCoeff γ (n + 1) j * γ (c - j)
+      = (∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (c - j))
+        - dlCoeff γ (n + 1) (n + 1) *
+            (∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (c - ((n : ℤ) + 1) + j))
+        + dlCoeff γ (n + 1) (n + 1) * γ (c - ((n : ℤ) + 1)) := by
+  rw [Finset.sum_Icc_succ_top (by omega : 1 ≤ n + 1)]
+  have h1 : ∀ j ∈ Icc 1 n, dlCoeff γ (n + 1) j * γ (c - j)
+      = dlCoeff γ n j * γ (c - j)
+        - dlCoeff γ (n + 1) (n + 1) * (dlCoeff γ n (n + 1 - j) * γ (c - j)) := by
+    intro j hj
+    rw [dlCoeff_succ_of_le γ n j (Finset.mem_Icc.mp hj).1 (Finset.mem_Icc.mp hj).2]; ring
+  rw [Finset.sum_congr rfl h1, Finset.sum_sub_distrib, ← Finset.mul_sum, sum_reflect_coeff]
+  push_cast
+  ring
 
 end DeepWiki.TimeSeries
