@@ -78,6 +78,63 @@ theorem Sq2CoupledRel.reset {D : Type*} [DecidableEq D] {p q : Sq2} {u u' : Valu
   · exact Or.inl ⟨hpd, hqd, hr.reset {x}⟩
   · exact Or.inr ⟨d, e, hp, hq, hfr.reset x⟩
 
+/-- **The seed** `(A 0, 0) ~ (B 0, 0)`: A and B coincide; for any `η < √2 − 1` the process clock
+`η + (2−√2)` stays in `(0,1)` (frac `≠ 0`, above the all-zero clocks), so the bumped augmented region
+matches — the relation relates the initial states. -/
+theorem sq2CoupledRel_seed {D : Type*} :
+    Sq2CoupledRel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) := by
+  have h1 : (1 : ℝ≥0) < sqrt2NN := by rw [← NNReal.coe_lt_coe]; push_cast; exact one_lt_sqrt2NN
+  refine Or.inr ⟨0, 0, rfl, rfl, zero_lt_sqrt2NN, le_of_lt zero_lt_sqrt2NN, sqrt2NN - 1, ?_, ?_⟩
+  · rw [tsub_pos_iff_lt]; exact h1
+  · intro η _ hη
+    rw [zero_add]
+    have hs1 : (1 : ℝ) < Real.sqrt 2 := Real.one_lt_sqrt_two
+    have hs2 : Real.sqrt 2 < 2 := by rw [← coe_sqrt2NN]; exact sqrt2NN_lt_two
+    have hηR : (η : ℝ) < Real.sqrt 2 - 1 := by
+      have h := hη
+      rw [← NNReal.coe_lt_coe, NNReal.coe_sub (le_of_lt h1), coe_sqrt2NN, NNReal.coe_one] at h
+      exact h
+    have hVn : (jointValW η (fun _ : D => 0)) none = η + twoSubSqrt2NN := by
+      rw [jointValW, jointVal_none, add_comm]
+    have hV'n : (jointValW (0 : ℝ≥0) (fun _ : D => 0)) none = twoSubSqrt2NN := by
+      rw [jointValW, jointVal_none, zero_add]
+    have hApos : (0 : ℝ≥0) < η + twoSubSqrt2NN := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_twoSubSqrt2NN]; linarith [η.coe_nonneg]
+    have hAlt1 : η + twoSubSqrt2NN < 1 := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_twoSubSqrt2NN]; linarith
+    have hBpos : (0 : ℝ≥0) < twoSubSqrt2NN := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_twoSubSqrt2NN]; linarith
+    have hBlt1 : twoSubSqrt2NN < 1 := by
+      rw [← NNReal.coe_lt_coe]; push_cast [coe_twoSubSqrt2NN]; linarith
+    -- floors are 0, frac = value, frac of clocks (= 0) is 0
+    have hfloorA : ⌊η + twoSubSqrt2NN⌋₊ = 0 := Nat.floor_eq_zero.mpr hAlt1
+    have hfloorB : ⌊twoSubSqrt2NN⌋₊ = 0 := Nat.floor_eq_zero.mpr hBlt1
+    have hfrA : fracPart (η + twoSubSqrt2NN) = ((η + twoSubSqrt2NN : ℝ≥0) : ℝ) :=
+      Int.fract_eq_self.mpr ⟨(η + twoSubSqrt2NN).coe_nonneg, by exact_mod_cast hAlt1⟩
+    have hfrB : fracPart twoSubSqrt2NN = ((twoSubSqrt2NN : ℝ≥0) : ℝ) :=
+      Int.fract_eq_self.mpr ⟨twoSubSqrt2NN.coe_nonneg, by exact_mod_cast hBlt1⟩
+    have hfrApos : 0 < fracPart (η + twoSubSqrt2NN) := by rw [hfrA]; exact_mod_cast hApos
+    have hfrBpos : 0 < fracPart twoSubSqrt2NN := by rw [hfrB]; exact_mod_cast hBpos
+    have hfr0 : fracPart (0 : ℝ≥0) = 0 := by simp [fracPart]
+    apply regionEqAll_of_exact
+    · rintro (_ | x)
+      · rw [hVn, hV'n, hfloorA, hfloorB]
+      · rfl
+    · rintro (_ | x)
+      · rw [hVn, hV'n]
+        exact ⟨fun h => absurd h hfrApos.ne', fun h => absurd h hfrBpos.ne'⟩
+      · rfl
+    · have hsv : ∀ (T : ℝ≥0) (z : D), jointValW T (fun _ : D => 0) (some z) = 0 := fun T z => by
+        rw [jointValW, jointVal_some]
+      rintro (_ | x) (_ | y)
+      · simp only [hVn, hV'n]; exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
+      · simp only [hVn, hV'n, hsv, hfr0]
+        exact ⟨fun h => absurd (lt_of_lt_of_le hfrApos h) (lt_irrefl _),
+          fun h => absurd (lt_of_lt_of_le hfrBpos h) (lt_irrefl _)⟩
+      · simp only [hVn, hV'n, hsv, hfr0]
+        exact ⟨fun _ => le_of_lt hfrBpos, fun _ => le_of_lt hfrApos⟩
+      · simp only [hsv, hfr0]
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
