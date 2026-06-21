@@ -625,6 +625,11 @@ noncomputable abbrev def_subresPRS_gamma := @subresPRS_gamma
 (`β₁=(-1)^(δ₁+1)`, `βᵢ₊₁=-lc Rᵢ·γᵢ₊₁^(δᵢ+1)`). `subresPRS_beta`. -/
 noncomputable abbrev def_subresPRS_beta := @subresPRS_beta
 
+/-- **Theorem 1.5.3, base step** (§1.5, p.23): for the first subresultant-PRS division step, with the
+subresultant choice `β₁ = (-1)^(δ+1)`, the subresultant equals the remainder exactly — `S_{deg B-1}(A,B) =
+Rem` (`ηᵢ = 1` at the base, the `(-1)` factors squaring away). `subresultant_eq_pseudoRem`. -/
+abbrev thm_1_5_3_base := @subresultant_eq_pseudoRem
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
@@ -1157,10 +1162,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: the
-  coefficient recursion `γᵢ/βᵢ` is defined (`def_subresPRS_gamma`/`def_subresPRS_beta`, with
+§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: the base
+  step is PROVED (`thm_1_5_3_base`: `S_{deg B-1}(A,B) = Rem` for the first division step, `β₁=(-1)^(δ+1)`)
+  and the coefficient recursion `γᵢ/βᵢ` is defined (`def_subresPRS_gamma`/`def_subresPRS_beta`, with
   `subresPRS_gamma_ne_zero`); remaining is the full `Rᵢ = prem(Rᵢ₋₂,Rᵢ₋₁)/βᵢ` mutual-recursion
-  construction and the `ηᵢ = 1` cancellation identity (research-level; Bronstein cites Collins/Brown).
+  construction and the GENERAL (telescoped, i>2) `ηᵢ = 1` cancellation identity (research-level; Bronstein
+  cites Collins/Brown — the γ-telescoping is the core).
 Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
   factorization is `ex_1_7_1`.
 Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials

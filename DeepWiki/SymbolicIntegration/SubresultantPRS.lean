@@ -229,6 +229,31 @@ theorem subresultant_prs_similar_elt_top [IsDomain R] (F : ℕ → R[X]) (α β 
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
+/-- **Theorem 1.5.3, base step** (the subresultant-PRS `η=1` at the first division step): for a
+pseudo-division `lc(B)^(δ+1)·A = B·Q + (-1)^(δ+1)·Rem` (the subresultant choice `β = (-1)^(δ+1)`,
+`δ = deg A − deg B`), the subresultant equals the remainder exactly, `S_{deg B-1}(A,B) = Rem`. The two
+`(-1)^(δ+1)` factors square to `1`, so the leading-coefficient powers cancel (`η = 1`). -/
+theorem subresultant_eq_pseudoRem [IsDomain R] (A B Rem Q : R[X]) (a b c : ℕ)
+    (hlcB : B.coeff b ≠ 0) (hcb : c < b) (hcpoly : Rem.natDegree = c) (hB : B.natDegree ≤ b)
+    (hQ : Q.natDegree + b ≤ a)
+    (hrel : C ((B.coeff b) ^ (a - b + 1)) * A
+      = C ((-1 : R) ^ (a - b + 1)) * Rem + B * Q) :
+    subresultant A B a b (b - 1) = Rem := by
+  have hstep := subresultant_prs_step_top A B Rem Q ((B.coeff b) ^ (a - b + 1)) ((-1 : R) ^ (a - b + 1))
+    a b c (pow_ne_zero _ (by norm_num)) hcb hcpoly hB hQ hrel
+  rw [map_pow] at hstep
+  have hsq : (-1 : R[X]) ^ (a - b + 1) * (-1) ^ (a - b + 1) = 1 := by
+    rw [← pow_add, ← two_mul, pow_mul, neg_one_sq, one_pow]
+  have key : (C (B.coeff b)) ^ (a - b + 1) * subresultant A B a b (b - 1)
+      = (C (B.coeff b)) ^ (a - b + 1) * Rem := by
+    rw [hstep]
+    simp only [map_pow, map_neg, map_one]
+    rw [show (-1 : R[X]) ^ (a - b + 1) * ((C (B.coeff b)) ^ (a - b + 1)
+        * ((-1) ^ (a - b + 1) * Rem))
+      = ((-1 : R[X]) ^ (a - b + 1) * (-1) ^ (a - b + 1)) * ((C (B.coeff b)) ^ (a - b + 1) * Rem)
+      from by ring, hsq, one_mul]
+  exact mul_left_cancel₀ (pow_ne_zero _ (by rw [Ne, C_eq_zero]; exact hlcB)) key
+
 section SubresPRSCoeff
 
 variable {K : Type*} [Field K]
