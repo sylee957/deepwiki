@@ -95,6 +95,15 @@ theorem asymMatch_tau_live {d e : ℝ≥0} (hd : d < sqrt2NN) (he : e ≤ sqrt2N
 @[simp] theorem crossVal_zero (d : ℝ≥0) : crossVal d 0 = sqrt2NN - d := by
   simp [crossVal]
 
+/-- **The √2-cut sits at an irrational fractional value.** Within the integer region `(1,2)`,
+`p < √2 ⟺ fracPart p < fracPart √2 = √2 − 1`, and `√2 − 1` is *irrational*. So the cut the
+construction needs is at an irrational frac — which is exactly why standard integer-frac region theory
+does not cover it, and the single-irrational-cut region (with open/closed at this point) is genuinely
+new region machinery. -/
+theorem irrational_fracPart_sqrt2NN : Irrational (fracPart sqrt2NN) := by
+  rw [fracPart_sqrt2NN, ← coe_sqrt2NN]
+  simpa using irrational_sqrt2NN.sub_natCast 1
+
 /-- **Process past `√2` ⟺ clock past its crossing-value.** For any clock value `v`, the process (at
 `d ≤ √2`) is past `√2` after a delay `δ` exactly when `v`'s post-delay value `v + δ` is past its
 crossing-value `crossVal d v`. This reduces the (process-level) `√2`-side condition to a clock-level
