@@ -49,6 +49,12 @@ theorem IsSpecial.mul {p q : R} (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecia
 theorem isSpecial_one : IsSpecial (1 : R) := by
   simp [IsSpecial]
 
+/-- **Theorem 3.4.1(ii)** (§3.4, p.93), finite form: a finite product of special polynomials is
+special. -/
+theorem IsSpecial.prod {ι : Type*} (s : Finset ι) (f : ι → R) (hf : ∀ i ∈ s, IsSpecial (f i)) :
+    IsSpecial (∏ i ∈ s, f i) :=
+  Finset.prod_induction f IsSpecial (fun _ _ ha hb => ha.mul hb) isSpecial_one hf
+
 /-- `1` is normal (`gcd(1, 0) = 1`). -/
 theorem isNormal_one : IsNormal (1 : R) := by
   have h : ((1 : R)′) = 0 := (Differential.deriv : Derivation ℤ R R).map_one_eq_zero

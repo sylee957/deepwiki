@@ -166,6 +166,12 @@ theorem thm_3_4_1_i {R : Type*} [CommRing R] [Differential R] {p q : R}
     (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCoprime p q) : IsNormal (p * q) :=
   hp.mul hq hpq
 
+/-- **Theorem 3.4.1(ii)** (§3.4, p.93), finite form: a finite product of special polynomials is
+special (`S` is closed under finite products). -/
+theorem thm_3_4_1_ii_prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} (s : Finset ι)
+    (f : ι → R) (hf : ∀ i ∈ s, IsSpecial (f i)) : IsSpecial (∏ i ∈ s, f i) :=
+  IsSpecial.prod s f hf
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
 --   • Lemma 3.4.2 (degree bound `deg(Dp) ≤ deg p + max(0, δ(t)−1)`, with equality in the
 --     nonlinear case), Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula), Theorem 3.4.1(iii)
