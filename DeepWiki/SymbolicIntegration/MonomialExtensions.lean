@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Coprime.Lemmas
+import Mathlib.RingTheory.UniqueFactorizationDomain.Multiplicity
 import Mathlib.Algebra.Polynomial.Derivative
 
 /-! # Monomial extensions — normal and special polynomials (Bronstein §3.4)
@@ -191,6 +192,50 @@ theorem associated_gcd_deriv_prod {ι : Type*} [DecidableEq ι] (s : Finset ι) 
     refine (associated_gcd_deriv_mul hu).trans (Associated.mul_left _ (ih ?_))
     intro i hi j hj hij
     exact hco i (Finset.mem_insert_of_mem hi) j (Finset.mem_insert_of_mem hj) hij
+
+variable [IsDomain R] [NormalizedGCDMonoid R] [WfDvdMonoid R] in
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93), key step: a prime factor `π` of a special polynomial `p`
+is itself special. Write `p = πᵉ·h` with `π ∤ h` (`FiniteMultiplicity`); Lemma 3.4.4 gives
+`gcd(p,Dp) ~ πᵉ⁻¹·gcd(π,Dπ)·gcd(h,Dh)`, and `p` special (`gcd(p,Dp) ~ p`) forces, after cancelling
+`πᵉ⁻¹`, `π·h ~ gcd(π,Dπ)·gcd(h,Dh)`; as `π` is prime, `gcd(π,Dπ)` is a unit (impossible: it would
+make `π` a unit) or `~ π`, i.e. `π ∣ Dπ`. Needs the exponent a unit (`IsUnit (eᵉ:R)`, char `0`). -/
+theorem isSpecial_of_prime_dvd {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp0 : p ≠ 0)
+    (hp : IsSpecial p) (he : IsUnit ((multiplicity π p : R))) : IsSpecial π := by
+  have hfin : FiniteMultiplicity π p := FiniteMultiplicity.of_prime_left hπ hp0
+  obtain ⟨h, hph, hnd⟩ := hfin.exists_eq_pow_mul_and_not_dvd
+  have he1 : 1 ≤ multiplicity π p := multiplicity_pos_of_dvd hdvd
+  set e := multiplicity π p with hedef
+  have hh0 : h ≠ 0 := by rintro rfl; rw [mul_zero] at hph; exact hp0 hph
+  have hrp : IsRelPrime π h := by
+    intro d hdπ hdh
+    obtain ⟨k, hk⟩ := hdπ
+    rcases hπ.irreducible.isUnit_or_isUnit hk with hu | hu
+    · exact hu
+    · exact absurd ((show π ∣ d by rw [hk]; exact (associated_mul_unit_right d k hu).symm.dvd).trans
+        hdh) hnd
+  have hcop : IsUnit (gcd (π ^ e) h) :=
+    gcd_isUnit_iff_isRelPrime.mpr ((IsRelPrime.pow_left_iff he1).mpr hrp)
+  have hps : Associated (gcd p p′) p := isSpecial_iff_associated_gcd.mp hp
+  rw [hph] at hps
+  have hchain : Associated (π ^ e * h) (π ^ (e - 1) * gcd π π′ * gcd h h′) :=
+    (hps.symm.trans (associated_gcd_deriv_mul hcop)).trans
+      ((associated_gcd_deriv_pow he1 he).mul_right (gcd h h′))
+  have hpe : π ^ e = π ^ (e - 1) * π := by rw [← pow_succ, Nat.sub_add_cancel he1]
+  rw [hpe, mul_assoc, mul_assoc] at hchain
+  have hcancel : Associated (π * h) (gcd π π′ * gcd h h′) :=
+    Associated.of_mul_left hchain (Associated.refl _) (pow_ne_zero _ hπ.ne_zero)
+  obtain ⟨k, hk⟩ := gcd_dvd_left π π′
+  rcases hπ.irreducible.isUnit_or_isUnit hk with hgu | hku
+  · exfalso
+    have h1 : Associated (π * h) (gcd h h′) :=
+      hcancel.trans (associated_unit_mul_left (gcd h h′) (gcd π π′) hgu)
+    obtain ⟨m, hm⟩ := h1.dvd.trans (gcd_dvd_left h h′)
+    have e2 : h * 1 = h * (π * m) := by linear_combination hm
+    exact hπ.not_unit (isUnit_of_dvd_one ⟨m, mul_left_cancel₀ hh0 e2⟩)
+  · have hgπ : Associated (gcd π π′) π := by
+      have hau := associated_mul_unit_right (gcd π π′) k hku
+      rwa [← hk] at hau
+    exact hgπ.symm.dvd.trans (gcd_dvd_right π π′)
 
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`

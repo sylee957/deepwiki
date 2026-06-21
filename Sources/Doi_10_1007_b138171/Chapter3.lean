@@ -239,6 +239,13 @@ theorem thm_3_4_1_iii_coprime {R : Type*} [CommRing R] [Differential R] {p q : R
     (h : IsSpecial (p * q)) (hco : IsCoprime p q) : IsSpecial p :=
   IsSpecial.of_mul_coprime h hco
 
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93), key step: a *prime* factor of a special polynomial is
+special (over a char-`0` UFD-dioid). The general-factor case follows by factoring into primes. -/
+theorem thm_3_4_1_iii_prime {R : Type*} [CommRing R] [IsDomain R] [NormalizedGCDMonoid R]
+    [WfDvdMonoid R] [Differential R] {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp0 : p ≠ 0)
+    (hp : IsSpecial p) (he : IsUnit ((multiplicity π p : R))) : IsSpecial π :=
+  isSpecial_of_prime_dvd hπ hdvd hp0 hp he
+
 /-- **Theorem 3.4.1** (§3.4, p.93): `p` is *both* normal and special iff it is a unit (so the
 ideal `(p) = (1)`) — the normal-and-special polynomials are exactly the units of `k`. -/
 theorem thm_3_4_1_normal_special_iff_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} :
@@ -291,15 +298,11 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
   associated_gcd_deriv_prod s f hco
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial. Plan
---     (all tools now in the library): (1) prime factor `π` of special `p` is special — write
---     `p = π^e·h` with `¬π∣h` (`FiniteMultiplicity.of_prime_left` + `exists_eq_pow_mul_and_not_dvd`,
---     needs `[WfDvdMonoid R]`), apply `lem_3_4_4_base` to `(π^e, h)` and `lem_3_4_4_pow` to `π^e`
---     against `p` special (`isSpecial_iff_associated_gcd`), cancel `π^{e-1}`, and use that a prime's
---     divisor `gcd(π,Dπ)∣π` is a unit or `~π` (the unit case contradicts `π` non-unit); (2) a
---     general factor `q∣p` is a product of `p`'s prime factors (each special by (1)), special by
---     `IsSpecial.mul`. Needs the char-`0` `IsUnit ((e:R))` hypothesis (`lem_3_4_4_pow`).
---     (Associate-invariance `IsNormal/IsSpecial.of_associated` is in place.)
+--   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial. The key
+--     step — a *prime* factor of a special polynomial is special — is DONE (`thm_3_4_1_iii_prime`).
+--     Remaining: assemble the general factor `q∣p` as a product of `p`'s prime factors (each
+--     special by the prime case), special by `IsSpecial.mul` — needs UFD factorization of `q` and
+--     the char-`0` `IsUnit ((multiplicity:R))` for each prime factor.
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).
