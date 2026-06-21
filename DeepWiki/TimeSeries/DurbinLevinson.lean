@@ -131,4 +131,74 @@ theorem dl_sum_expand (n : ℕ) (c : ℤ) :
   push_cast
   ring
 
+/-- **Proposition 5.2.1 (Durbin–Levinson, correctness):** for an even autocovariance `γ` whose
+prediction errors `vₘ` (`m < n`) are nonzero, the recursively computed coefficients solve the
+order-`n` prediction (normal) equations `∑_{j=1}^n φₙⱼ γ(k−j) = γ(k)` (`k = 1,…,n`), and the
+mean-square error has the closed form `vₙ = γ(0) − ∑_{j=1}^n φₙⱼ γ(j)`. Proved by a joint induction:
+the `k = n+1` prediction equation and the error formula interlock through the reflection coefficient. -/
+theorem dl_correct (heven : ∀ h : ℤ, γ (-h) = γ h) :
+    ∀ n, (∀ m, m < n → dlError γ m ≠ 0) →
+      (∀ k, 1 ≤ k → k ≤ n →
+          ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((k : ℤ) - j) = γ (k : ℤ))
+        ∧ dlError γ n = γ 0 - ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (j : ℤ) := by
+  intro n
+  induction n with
+  | zero => intro _; exact ⟨fun k hk1 hk2 => by omega, by simp [dlError]⟩
+  | succ n ih =>
+    intro hv
+    have hvn : dlError γ n ≠ 0 := hv n (Nat.lt_succ_self n)
+    obtain ⟨ihPE, ihMSE⟩ := ih fun m hm => hv m (Nat.lt_succ_of_lt hm)
+    have hdiag := dlCoeff_diag_mul_error γ n hvn
+    refine ⟨fun k hk1 hk2 => ?_, ?_⟩
+    · rw [dl_sum_expand]
+      rcases eq_or_lt_of_le hk2 with hk | hk
+      · -- k = n + 1
+        subst hk
+        push_cast
+        simp only [sub_self, zero_add]
+        have hv2 : dlCoeff γ (n + 1) (n + 1) * dlError γ n
+            = dlCoeff γ (n + 1) (n + 1) * γ 0
+              - dlCoeff γ (n + 1) (n + 1) * ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (j : ℤ) := by
+          rw [ihMSE]; ring
+        linarith [hdiag, hv2]
+      · -- k ≤ n
+        have hkn : k ≤ n := by omega
+        rw [ihPE k hk1 hkn]
+        have hSR : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((k : ℤ) - ((n : ℤ) + 1) + j)
+            = γ ((k : ℤ) - ((n : ℤ) + 1)) := by
+          have key : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((k : ℤ) - ((n : ℤ) + 1) + j)
+              = ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (((n + 1 - k : ℕ) : ℤ) - j) := by
+            refine Finset.sum_congr rfl fun j hj => ?_
+            simp only [Finset.mem_Icc] at hj
+            congr 1
+            rw [← heven (((n + 1 - k : ℕ) : ℤ) - j)]
+            congr 1
+            omega
+          rw [key, ihPE (n + 1 - k) (by omega) (by omega), ← heven ((k : ℤ) - ((n : ℤ) + 1))]
+          congr 1
+          omega
+        rw [hSR]; ring
+    · -- mean-square error closed form
+      have hconv : ∑ j ∈ Icc 1 (n + 1), dlCoeff γ (n + 1) j * γ (j : ℤ)
+          = ∑ j ∈ Icc 1 (n + 1), dlCoeff γ (n + 1) j * γ ((0 : ℤ) - j) := by
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [show ((0 : ℤ) - j) = -(j : ℤ) by ring, heven]
+      have hA : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((0 : ℤ) - j)
+          = ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (j : ℤ) := by
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [show ((0 : ℤ) - j) = -(j : ℤ) by ring, heven]
+      have hB : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((0 : ℤ) - ((n : ℤ) + 1) + j)
+          = ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((n : ℤ) + 1 - j) := by
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [show ((0 : ℤ) - ((n : ℤ) + 1) + j) = -((n : ℤ) + 1 - j) by ring, heven]
+      have hC : γ ((0 : ℤ) - ((n : ℤ) + 1)) = γ ((n : ℤ) + 1) := by
+        rw [show ((0 : ℤ) - ((n : ℤ) + 1)) = -((n : ℤ) + 1) by ring, heven]
+      have hAval : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (j : ℤ) = γ 0 - dlError γ n := by
+        linarith [ihMSE]
+      have hBval : ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((n : ℤ) + 1 - j)
+          = γ ((n : ℤ) + 1) - dlCoeff γ (n + 1) (n + 1) * dlError γ n := by
+        linarith [hdiag]
+      rw [dlError_succ, hconv, dl_sum_expand, hA, hB, hC, hAval, hBval]
+      ring
+
 end DeepWiki.TimeSeries
