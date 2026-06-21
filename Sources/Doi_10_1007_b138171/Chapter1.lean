@@ -479,10 +479,19 @@ theorem cor_1_4_1 {R : Type*} [CommRing R] [IsDomain R] {f g : R[X]} (n : ℕ)
     Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 :=
   resultant_eq_zero_iff_exists_root n hg hf hf0
 
--- **Deferred — not in Mathlib (library work):** Theorem 1.4.2 (`res ∈ (A,B)`, i.e.
--- `res = SA + TB`), and the entire *subresultant* theory: Definition 1.4.2 (`Sⱼ(A,B)` from
--- Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring homomorphisms),
--- and §1.5 polynomial remainder sequences.
+/-- **Theorem 1.4.2** (§1.4, p.19): the resultant lies in the ideal `(A, B)` — there exist
+`S, T` with `deg S < deg B`, `deg T < deg A` and `A·S + B·T = res(A, B)` (the Bézout/Sylvester
+identity). -/
+theorem thm_1_4_2 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natDegree ≤ m)
+    (hg : g.natDegree ≤ n) (H : m ≠ 0 ∨ n ≠ 0) :
+    ∃ p q : R[X], p.degree < (n : WithBot ℕ) ∧ q.degree < (m : WithBot ℕ)
+      ∧ f * p + g * q = C (Polynomial.resultant f g m n) :=
+  Polynomial.exists_mul_add_mul_eq_C_resultant f g hf hg H
+
+-- **Deferred — not in Mathlib (library work):** the *subresultant* theory: Definition 1.4.2
+-- (`Sⱼ(A,B)` from Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring
+-- homomorphisms), and §1.5 polynomial remainder sequences. [Theorem 1.4.2 — `res ∈ (A,B)` — is
+-- done: `thm_1_4_2`.]
 
 /-! ## §1.6 Primitive Polynomials -/
 
