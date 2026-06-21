@@ -262,6 +262,29 @@ example :
       ≤ delayBound (tokenBucket 1 2) (betaRL 2 1)
         + delayBound (deconvUpp (tokenBucket 1 2) (betaRL 2 1)) (betaRL 2 1) := by native_decide
 
+/-! ## Rational-valued curves — the verified operators are generic over the value type
+`UppSeq V` and its operators (`evalNat`, `convNat`, `deconvNat`, `min`, `max`) are generic over any
+`[AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]`; `ℚ` satisfies all four with
+decidable order. So the *same* proved-correct operators run over **fractional rates and bursts** — the
+discrete-time model with rational values needs no new theorems, only a rational reading at the CLI
+boundary. (Continuous-*time* piecewise-linear curves — rational breakpoint *positions* with linear
+interpolation — are a genuinely different model and remain future work.) -/
+
+/-- **Rational-valued convolution (gate-verified):** a rate-`3/2` curve convolved with a burst-`3`,
+rate-`1/2` curve — the verified `convNat` (correct by `convNat_le`/`convNat_eq`, both generic) computes
+over `ℚ` unchanged. -/
+example :
+    (List.range 5).map
+        (fun n => (⟨[0, 3/2], 3/2, 1, by decide, by decide⟩ : UppSeq ℚ).convNat
+                    ⟨[0, 3], 1/2, 1, by decide, by decide⟩ n)
+      = [0, 3/2, 3, 4, 9/2] := by native_decide
+
+/-- **Rational-valued backlog bound (gate-verified):** `supₜ(α(t)−β(t)) = (α⊘β)(0)` for a burst-`3`,
+rate-`1/2` arrival through a rate-`3/2` server is the fractional `3/2` — `deconvNat` over `ℚ`. -/
+example :
+    (⟨[0, 3], 1/2, 1, by decide, by decide⟩ : UppSeq ℚ).deconvNat
+        ⟨[0, 3/2], 3/2, 1, by decide, by decide⟩ 0 = 3/2 := by native_decide
+
 /-- Lift an integer UPP sequence to `WithTop ℤ` — the sub-additive closure needs `δ₀`'s `⊤`. -/
 def liftUpp (f : UppSeq Int) : UppSeq (WithTop ℤ) :=
   ⟨f.vals.map WithTop.some, (f.incr : WithTop ℤ), f.period, f.hperiod,

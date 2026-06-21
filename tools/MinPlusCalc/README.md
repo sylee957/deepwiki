@@ -131,3 +131,22 @@ for the canonical pair. So the delay bound is verified-minimal whenever the sear
 `residualAt_le`, `residualAt_mono`, `residualAt_nonneg`) proved at the UPP level — so the output is a
 genuine non-decreasing service curve dominating the clamped difference. Equality with the *continuous-time*
 `residualCurve` over `ℝ≥0` would need the piecewise-linear interpolation bridge, which is out of scope.)
+
+## Scope and frontier
+
+The single-flow core (`eval … delay`/`closure`) and both multi-flow analyses (`residual` for
+multiplexing, `tandem` for concatenation) are **verified for the discrete-time, integer-valued UPP
+model** — every operator runs the same Lean function proved correct in `UppSequence`, and the two
+deviation bounds are proved extremal (`deconvNat_isGreatest`, `delayBound_least`).
+
+Two orthogonal generalizations remain:
+
+- **Rational values** (fractional rates/bursts) are *not* a research gap: `UppSeq V` and its operators
+  are generic over any `[AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]`, and
+  `ℚ` satisfies all four with decidable order. The proved-correct `convNat`/`deconvNat`/`min`/`max`
+  already compute over `ℚ` unchanged (gate-verified in `Calc.lean`); exposing them at the CLI needs only
+  a rational reader/printer at the boundary — a mechanical, not foundational, step.
+- **Continuous time** (rational breakpoint *positions* with linear interpolation between them) is a
+  genuinely different model: the operators become infima/suprema over a continuous `t`, and tying the
+  discrete `ℕ`-indexed values to the `ℝ≥0`-valued library curves (`residualCurve`, `concatConv`) needs
+  the piecewise-linear interpolation bridge. This is the real remaining frontier.

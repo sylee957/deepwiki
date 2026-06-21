@@ -61,13 +61,14 @@ theorem hasSum_aeval_smul (φ : ℝ[X]) (z : ℂ) :
 a causal ARMA is analytic on a disk of radius `> 1`, represented there by its Cauchy power series
 (the `MA(∞)` `ψ`-weights). The object underlying both the summability and the recursion. -/
 theorem hasFPowerSeriesOnBall_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
-    ∃ R : ℝ≥0, 1 < R ∧ HasFPowerSeriesOnBall
+    ∃ R : ℝ≥0, 1 < R ∧ (∀ z : ℂ, ‖z‖ < (R : ℝ) → Polynomial.aeval z φ ≠ 0) ∧
+      HasFPowerSeriesOnBall
       (fun z : ℂ => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹)
       (cauchyPowerSeries (fun z : ℂ => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) 0 R) 0 R := by
   obtain ⟨r, hr1, hr0⟩ := hφ.exists_radius_gt_one
   obtain ⟨R₀, hR1, hRr⟩ := exists_between hr1
   have hR0 : (0 : ℝ) ≤ R₀ := by linarith
-  refine ⟨⟨R₀, hR0⟩, by exact_mod_cast hR1, ?_⟩
+  refine ⟨⟨R₀, hR0⟩, by exact_mod_cast hR1, fun z hz => hr0 z (lt_trans hz hRr), ?_⟩
   exact ((differentiable_aeval_ofReal θ).differentiableOn.mul
     (DifferentiableOn.inv (differentiable_aeval_ofReal φ).differentiableOn fun z hz => by
       rw [Metric.mem_closedBall, dist_zero_right] at hz
@@ -80,7 +81,7 @@ theorem hasSum_coeff_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
     ∃ R : ℝ≥0, 1 < R ∧ ∀ z : ℂ, ‖z‖ < (R : ℝ) → HasSum
       (fun n => z ^ n * (cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹)
         0 R).coeff n) (Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) := by
-  obtain ⟨R, hR1, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
+  obtain ⟨R, hR1, _, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
   refine ⟨R, hR1, fun z hz => ?_⟩
   have hmem : z ∈ Metric.eball (0 : ℂ) R := by
     rw [Metric.mem_eball, edist_zero_right, enorm_lt_coe]; exact_mod_cast hz
