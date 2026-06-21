@@ -92,4 +92,22 @@ theorem sum_Icc_reflect {M : Type*} [AddCommMonoid M] (f : ℕ → M) (n : ℕ) 
   · intro a ha; simp only [Finset.mem_Icc] at ha; omega
   · intro _ _; rfl
 
+/-- The defining relation of the reflection coefficient: `φ_{n+1,n+1} · vₙ = γ(n+1) − ∑ⱼ φₙⱼ γ(n+1−j)`
+(eq 5.2.4 cleared of the division, valid when `vₙ ≠ 0`). -/
+theorem dlCoeff_diag_mul_error (n : ℕ) (hvn : dlError γ n ≠ 0) :
+    dlCoeff γ (n + 1) (n + 1) * dlError γ n
+      = γ ((n : ℤ) + 1) - ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ ((n : ℤ) + 1 - j) := by
+  rw [dlCoeff_succ_diag, dlRefl, ← dlError, div_mul_cancel₀ _ hvn]
+  simp only [dlCoeff]
+
+/-- The reflected-coefficient sum: reindexing `j ↦ n+1−j` in `∑ⱼ φ_{n,n+1−j} γ(c−j)`. -/
+theorem sum_reflect_coeff (n : ℕ) (c : ℤ) :
+    ∑ j ∈ Icc 1 n, dlCoeff γ n (n + 1 - j) * γ (c - j)
+      = ∑ j ∈ Icc 1 n, dlCoeff γ n j * γ (c - ((n : ℤ) + 1) + j) := by
+  rw [← sum_Icc_reflect (fun i => dlCoeff γ n i * γ (c - ((n : ℤ) + 1) + i)) n]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  simp only [Finset.mem_Icc] at hj
+  have hc : c - ((n : ℤ) + 1) + ↑(n + 1 - j) = c - j := by omega
+  rw [hc]
+
 end DeepWiki.TimeSeries
