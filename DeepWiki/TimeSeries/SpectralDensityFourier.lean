@@ -27,4 +27,20 @@ theorem integral_exp_int_mul_I (k : ℤ) :
       exact ⟨k, by push_cast; ring⟩
     rw [key, sub_self, zero_div]
 
+/-- **The Fourier-series spectral density** `f(λ) = (1/2π) ∑ₙ e^{−inλ} K(n)` of a function `K` on
+`ℤ` (eq 4.3.7). For an absolutely summable autocovariance `K = γ`, this is its spectral density. -/
+noncomputable def fourierSpectralDensity (K : ℤ → ℂ) (lam : ℝ) : ℂ :=
+  (1 / (2 * π)) * ∑' n : ℤ, Complex.exp (-(n : ℂ) * lam * Complex.I) * K n
+
+/-- `∫_{−π}^{π} e^{ihν} e^{−inν} dν = 2π` if `h = n`, else `0` — orthogonality of the Fourier
+exponentials `{e^{inλ}}`, the `n`-th-term selector for the inversion of Theorem 4.3.2. -/
+theorem integral_exp_mul_exp_neg (h n : ℤ) :
+    (∫ ν in (-π)..π, Complex.exp (h * ν * Complex.I) * Complex.exp (-(n : ℂ) * ν * Complex.I))
+      = if h = n then (2 * π : ℂ) else 0 := by
+  have hfun : (fun ν : ℝ => Complex.exp (h * ν * Complex.I) * Complex.exp (-(n : ℂ) * ν * Complex.I))
+      = fun ν : ℝ => Complex.exp (((h - n : ℤ) : ℂ) * ν * Complex.I) := by
+    funext ν; rw [← Complex.exp_add]; congr 1; push_cast; ring
+  rw [hfun, integral_exp_int_mul_I (h - n)]
+  simp only [sub_eq_zero]
+
 end DeepWiki.TimeSeries
