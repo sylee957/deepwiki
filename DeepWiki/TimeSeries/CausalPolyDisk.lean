@@ -219,18 +219,23 @@ theorem hasFPowerSeriesAt_ofScalars_aeval (θ : ℝ[X]) (a : ℕ → ℂ) (ρ : 
 of the `MA(∞)` weights): the Cauchy product `φ · (θ/φ)` is the power series of `z ↦ θ(z)` at `0`. The
 analytic carrier of the `ψ`-weight recursion: its coefficient uniqueness gives eq (3.3.3). -/
 theorem hasFPowerSeriesAt_conv_div {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
-    ∃ R : ℝ≥0, 1 < R ∧ HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
+    ∃ R : ℝ≥0, 1 < R ∧ Summable (fun n : ℕ => ‖(cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff n‖) ∧
+      HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
       (FormalMultilinearSeries.ofScalars ℂ (fun m : ℕ => ∑ q ∈ Finset.antidiagonal m,
         (φ.coeff q.1 : ℝ) • (cauchyPowerSeries
           (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2)) 0 := by
   obtain ⟨R, hR1, hne, hball⟩ := hasFPowerSeriesOnBall_div_aeval (θ := θ) hφ
-  refine ⟨R, hR1, ?_⟩
   set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R with hp
   set cseq : ℕ → ℂ := fun m => ∑ q ∈ Finset.antidiagonal m, (φ.coeff q.1 : ℝ) • p.coeff q.2 with hcseq
   have hcoeff_le : ∀ n, ‖p.coeff n‖ ≤ ‖p n‖ := fun n => by
     have h := (p n).le_opNorm (1 : Fin n → ℂ)
     simp only [Pi.one_apply, norm_one, Finset.prod_const_one, mul_one] at h
     exact h
+  have hsum_coeff : Summable (fun n => ‖p.coeff n‖) := by
+    have hrad1 : ((1 : ℝ≥0) : ℝ≥0∞) < p.radius := lt_of_lt_of_le (by exact_mod_cast hR1) hball.r_le
+    refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hcoeff_le ?_
+    simpa using p.summable_norm_mul_pow hrad1
   -- the Cauchy product converges to `θ(z)` on the whole disk `‖z‖ < R`
   have hconv : ∀ z : ℂ, ‖z‖ < (R : ℝ) → HasSum (fun m : ℕ => cseq m • z ^ m)
       (Polynomial.aeval z θ) := by
@@ -284,8 +289,8 @@ theorem hasFPowerSeriesAt_conv_div {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
       exact mul_le_mul_of_nonneg_right (hcoeff_le n) (by positivity)
     refine (summable_norm_sum_mul_antidiagonal_of_summable_norm hF hG).congr fun n => ?_
     rw [antidiagonal_term_eq φ p.coeff ((ρ : ℝ) : ℂ) n, norm_smul, norm_pow, hzr]
-  refine hasFPowerSeriesAt_ofScalars_aeval θ cseq ρ hρ0 hBsum (fun z hz => hconv z ?_)
-  exact lt_trans hz (by exact_mod_cast hρR)
+  exact ⟨R, hR1, hsum_coeff, hasFPowerSeriesAt_ofScalars_aeval θ cseq ρ hρ0 hBsum
+    (fun z hz => hconv z (lt_trans hz (by exact_mod_cast hρR)))⟩
 
 /-- **The `ψ`-weight recursion, coefficient form (eq 3.3.3):** the Cauchy convolution of the AR
 coefficients `φₖ` with the `MA(∞)` weights `ψⱼ` (the Taylor coefficients of `θ/φ`) reproduces the MA
@@ -293,12 +298,14 @@ coefficients — `∑_{i+j=m} φᵢ ψⱼ = θ_m` for every `m` — by the uniqu
 coefficients applied to `φ(z) · (θ(z)/φ(z)) = θ(z)`. In particular `∑_{i+j=m} φᵢ ψⱼ = 0` for
 `m > deg θ`. -/
 theorem conv_coeff_div_eq_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
-    ∃ R : ℝ≥0, 1 < R ∧ ∀ m : ℕ,
+    ∃ R : ℝ≥0, 1 < R ∧ Summable (fun n : ℕ => ‖(cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff n‖) ∧
+      ∀ m : ℕ,
       (∑ q ∈ Finset.antidiagonal m, (φ.coeff q.1 : ℝ) • (cauchyPowerSeries
         (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2)
       = (θ.coeff m : ℂ) := by
-  obtain ⟨R, hR1, hB⟩ := hasFPowerSeriesAt_conv_div (θ := θ) hφ
-  refine ⟨R, hR1, fun m => ?_⟩
+  obtain ⟨R, hR1, hsum, hB⟩ := hasFPowerSeriesAt_conv_div (θ := θ) hφ
+  refine ⟨R, hR1, hsum, fun m => ?_⟩
   have hA : HasFPowerSeriesAt (fun z : ℂ => Polynomial.aeval z θ)
       (FormalMultilinearSeries.ofScalars ℂ (fun n : ℕ => (θ.coeff n : ℂ))) 0 := by
     refine hasFPowerSeriesAt_ofScalars_aeval θ (fun n => (θ.coeff n : ℂ)) 1 one_pos ?_ (fun z _ => ?_)
