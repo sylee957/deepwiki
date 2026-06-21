@@ -71,6 +71,23 @@ theorem asymMatch_tau_live {d e : ℝ≥0} (hd : d < sqrt2NN) (he : e ≤ sqrt2N
 @[simp] theorem crossVal_zero (d : ℝ≥0) : crossVal d 0 = sqrt2NN - d := by
   simp [crossVal]
 
+/-- **Process past `√2` ⟺ clock past its crossing-value.** For any clock value `v`, the process (at
+`d ≤ √2`) is past `√2` after a delay `δ` exactly when `v`'s post-delay value `v + δ` is past its
+crossing-value `crossVal d v`. This reduces the (process-level) `√2`-side condition to a clock-level
+comparison, which the clocks-region match and the crossing-value match control. -/
+theorem process_past_iff_clock_past_cross {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤ sqrt2NN) :
+    sqrt2NN < d + δ ↔ crossVal d v < v + δ := by
+  rw [crossVal, add_lt_add_iff_left, ← NNReal.coe_lt_coe, ← NNReal.coe_lt_coe, NNReal.coe_sub hd,
+    NNReal.coe_add]
+  constructor <;> intro <;> linarith
+
+/-- Dually, the process is at-or-below `√2` (`B`'s closed side) iff `v + δ ≤ crossVal d v`. -/
+theorem process_le_iff_clock_le_cross {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤ sqrt2NN) :
+    d + δ ≤ sqrt2NN ↔ v + δ ≤ crossVal d v := by
+  rw [crossVal, add_le_add_iff_left, ← NNReal.coe_le_coe, ← NNReal.coe_le_coe, NNReal.coe_sub hd,
+    NNReal.coe_add]
+  constructor <;> intro <;> linarith
+
 namespace TLTS
 
 /-- The live regime's coupling: formula-clock region equivalence, the `√2`-side (open/closed), the
