@@ -130,4 +130,16 @@ theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Fie
   rw [smul_eq_mul, smul_eq_mul] at key
   exact mul_left_cancel₀ hbne key
 
+/-- **Theorem 3.2.2** (§3.2), uniqueness (polynomial-ring case): a derivation on `R[X]` is
+determined by its values on the constants `C c` and on `X` (`Dt`). So the extension of a
+derivation to a monomial `t` with `Dt` prescribed is unique. -/
+theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Derivation ℤ R[X] R[X]}
+    (hC : ∀ c : R, Δ₁ (Polynomial.C c) = Δ₂ (Polynomial.C c)) (hX : Δ₁ Polynomial.X = Δ₂ Polynomial.X) :
+    Δ₁ = Δ₂ := by
+  refine Derivation.ext fun p => ?_
+  induction p using Polynomial.induction_on with
+  | C a => exact hC a
+  | add p q hp hq => rw [map_add, map_add, hp, hq]
+  | monomial n a ih => rw [pow_succ, ← mul_assoc, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
+
 end DeepWiki.SymbolicIntegration
