@@ -124,6 +124,24 @@ theorem wronskian_eq_zero_dependent_iterDeriv {n : ℕ} [NeZero n] (y : Fin n �
   rw [← hi]
   exact Finset.sum_congr rfl fun j _ => mul_comm _ _
 
+/-- The recurrence driving the **Lemma 3.3.5** induction: if `c` annihilates every derivative
+row (`∀ i, ∑ⱼ cⱼ·Dⁱyⱼ = 0`), then the *derivative* tuple `c′` annihilates each lower row —
+`∑ⱼ (cⱼ)′·Dⁱyⱼ = 0` for `i+1 < n`. (Differentiate row `i`: the `D^{i+1}` part is row `i+1`,
+itself `0`.) Iterating this is what forces some nonzero `c` to be a *constant* tuple. -/
+theorem deriv_dependent_iterDeriv {n : ℕ} (y c : Fin n → F)
+    (hc : ∀ i : Fin n, ∑ j, c j * iterDeriv (i : ℕ) (y j) = 0)
+    (i : Fin n) (hi : (i : ℕ) + 1 < n) :
+    ∑ j, (c j)′ * iterDeriv (i : ℕ) (y j) = 0 := by
+  have hd : (∑ j, c j * iterDeriv (i : ℕ) (y j))′ = 0 := by rw [hc i]; simp
+  rw [map_sum] at hd
+  have hnext : ∑ j, c j * iterDeriv ((i : ℕ) + 1) (y j) = 0 := hc ⟨(i : ℕ) + 1, hi⟩
+  have hterm : ∀ j, (c j * iterDeriv (i : ℕ) (y j))′
+      = (c j)′ * iterDeriv (i : ℕ) (y j) + c j * iterDeriv ((i : ℕ) + 1) (y j) := by
+    intro j
+    rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, iterDeriv_succ]; ring
+  rw [Finset.sum_congr rfl (fun j _ => hterm j), Finset.sum_add_distrib, hnext, add_zero] at hd
+  exact hd
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration
