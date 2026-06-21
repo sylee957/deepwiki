@@ -24,8 +24,10 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 (completeness half of the timed Hennessy–Milner characterisation, general case)
-  `[external]` (defers to Laroussinie–Larsen–Weise 1995); Ex 12.12 statement 3 (full-`Mt` strictness
+§12.3: Thm 12.4 — the general characteristic-`Mt`-formula construction for an arbitrary timed
+  automaton (over its finite region graph) `[external]` (Laroussinie–Larsen–Weise 1995). The
+  completeness *reduction* (`thm_12_4`) and an unconditional instance (`thm_12_4_once`) are
+  formalized; only the region-graph `χ`-construction remains. Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
   [0,√2] from [0,√2)) `[research]`. -/
@@ -117,6 +119,31 @@ theorem mt_soundness (T : TLTS Proc Act) {p q : Proc}
     (h : TLTS.TimedBisimilar T p q) (F : Mt Act D) :
     TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
   TLTS.timedBisimilar_mtSatState h F
+
+/-- **Theorem 12.4** (§12.3, p.234), completeness reduced to characteristic formulae.
+The converse of Theorem 12.3 (`Mt`-equivalent ⇒ timed bisimilar) needs the region
+construction of Laroussinie–Larsen–Weise 1995, which enters through one ingredient: a
+characteristic `Mt` formula `χ` for the state. Given that, `q` is timed bisimilar to `p`
+**iff** it satisfies the same state-level `Mt` formulae — the forward (soundness) half is
+unconditional, the converse is the completeness reduction. The construction of `χ` for an
+arbitrary timed automaton (over its finite region graph) is the remaining external piece. -/
+theorem thm_12_4 (T : TLTS Proc Act) {p : Proc} (χ : Mt Act D)
+    (hχ : TLTS.IsCharacteristicMt T p χ) (q : Proc) :
+    TLTS.TimedBisimilar T p q ↔ ∀ F : Mt Act D, TLTS.MtSatState T p F ↔ TLTS.MtSatState T q F :=
+  TLTS.timedBisimilar_iff_mtEquiv_of_characteristic T χ hχ q
+
+/-- **Theorem 12.4**, an **unconditional** instance. The Example 11.4 automaton has a
+recursion-free characteristic `Mt` formula for its live initial state `A 0` (`charA`), so
+the characteristic-formula hypothesis is discharged with no region construction: a state
+`q` is timed bisimilar to `A 0` iff it satisfies the same state-level `Mt` formulae. -/
+theorem thm_12_4_once {c : ℕ} (q : DeepWiki.ReactiveSystems.TLTS.Once) :
+    TLTS.TimedBisimilar (DeepWiki.ReactiveSystems.TLTS.onceTLTS c)
+        (DeepWiki.ReactiveSystems.TLTS.Once.A 0) q ↔
+      ∀ F : Mt Unit Unit,
+        (DeepWiki.ReactiveSystems.TLTS.onceTLTS c).MtSatState
+          (DeepWiki.ReactiveSystems.TLTS.Once.A 0) F ↔
+        (DeepWiki.ReactiveSystems.TLTS.onceTLTS c).MtSatState q F :=
+  DeepWiki.ReactiveSystems.TLTS.timedBisimilar_A0_iff_mtEquiv q
 
 /-- **§12.3 / Proposition 12.2** (p.234), the separating witness. The converse of
 Theorem 12.3 **fails** over arbitrary TLTSs: the book's `√2` TLTS (boundary `c`)

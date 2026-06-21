@@ -187,6 +187,42 @@ theorem timedBisimilar_mtSatState {T : TLTS Proc Act} {p q : Proc}
     MtSatState T p F ↔ MtSatState T q F :=
   timedBisimilar_mtIff h (fun _ => 0) F
 
+/-! ### The timed Hennessy–Milner theorem (Theorem 12.4), via characteristic formulae
+
+Soundness (`timedBisimilar_mtSatState`) holds for every TLTS. The *converse* —
+`Mt`-equivalent states are timed bisimilar — fails over arbitrary TLTSs (the `√2`
+example), and in general needs the Laroussinie–Larsen–Weise region construction. That
+construction enters through exactly one ingredient: a **characteristic `Mt` formula** for
+each state. Given those, completeness is the standard Hennessy–Milner argument; we record
+that reduction here so the unconditional general case (Theorem 12.4) is isolated to the
+single external hypothesis that characteristic `Mt` formulae exist. -/
+
+/-- `χ` is a *characteristic `Mt` formula* for `p` in `T`: a state-level formula satisfied
+by exactly the timed-bisimilarity class of `p`. -/
+def IsCharacteristicMt (T : TLTS Proc Act) (p : Proc) (χ : Mt Act D) : Prop :=
+  ∀ q, MtSatState T q χ ↔ TimedBisimilar T p q
+
+/-- **Theorem 12.4 (completeness half), reduced to a characteristic formula.** If the
+state `p` has a characteristic `Mt` formula, then any state `q` satisfying the same
+state-level `Mt` formulae as `p` is timed bisimilar to `p`. (Constructing characteristic
+`Mt` formulae for the TLTS of a timed automaton — over its finite region graph — is the
+Laroussinie–Larsen–Weise 1995 result; that is the only piece this reduction leaves open.) -/
+theorem mtEquiv_timedBisimilar_of_characteristic (T : TLTS Proc Act)
+    {p : Proc} (χ : Mt Act D) (hχ : IsCharacteristicMt T p χ) {q : Proc}
+    (hpq : ∀ F : Mt Act D, MtSatState T p F ↔ MtSatState T q F) :
+    TimedBisimilar T p q :=
+  (hχ q).mp ((hpq χ).mp ((hχ p).mpr ((timedBisimilar_equivalence T).refl p)))
+
+/-- **Theorem 12.4** (timed Hennessy–Milner), conditioned on a characteristic formula.
+Given a characteristic `Mt` formula for `p`, a state `q` is timed bisimilar to `p` iff it
+satisfies the same state-level `Mt` formulae. The forward (soundness) direction is
+unconditional (`timedBisimilar_mtSatState`); the converse is the completeness reduction. -/
+theorem timedBisimilar_iff_mtEquiv_of_characteristic (T : TLTS Proc Act)
+    {p : Proc} (χ : Mt Act D) (hχ : IsCharacteristicMt T p χ) (q : Proc) :
+    TimedBisimilar T p q ↔ ∀ F : Mt Act D, MtSatState T p F ↔ MtSatState T q F :=
+  ⟨fun h F => timedBisimilar_mtSatState h F,
+   mtEquiv_timedBisimilar_of_characteristic T χ hχ⟩
+
 /-- The book's example formula `y in ∃∃(y > 1 ∧ ⟨a⟩tt)`: it is possible
 to delay for more than one time unit and then perform an `a`-action. -/
 example (a : Act) : Mt Act Unit :=

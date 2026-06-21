@@ -465,6 +465,27 @@ theorem mtSat_charA_iff {c : ℕ} {q : Once} {d : ℝ≥0} :
   refine forall_congr' (fun t => ?_)
   rw [show adv (Once.A d) t = Once.A (d + t) from rfl, canAct_A]
 
+/-- `charA c` is a characteristic `Mt` formula for the live initial state `A 0` of the
+Example 11.4 automaton — the special case `d = 0` of `mtSat_charA_iff`. This discharges the
+`IsCharacteristicMt` hypothesis of the timed Hennessy–Milner reduction for a concrete
+timed system (no region construction needed, since the action graph is acyclic). -/
+theorem isCharacteristicMt_charA {c : ℕ} :
+    IsCharacteristicMt (onceTLTS c) (Once.A 0) (charA c) := by
+  intro q
+  simp only [MtSatState]
+  rw [mtSat_charA_iff]
+  exact ⟨fun h => (timedBisimilar_equivalence (onceTLTS c)).symm h,
+         fun h => (timedBisimilar_equivalence (onceTLTS c)).symm h⟩
+
+/-- **Timed Hennessy–Milner, unconditionally, for the live state `A 0`** (an instance of
+`timedBisimilar_iff_mtEquiv_of_characteristic` discharged by `isCharacteristicMt_charA`):
+a state `q` of the Example 11.4 automaton is timed bisimilar to `A 0` iff it satisfies the
+same state-level `Mt` formulae. -/
+theorem timedBisimilar_A0_iff_mtEquiv {c : ℕ} (q : Once) :
+    TimedBisimilar (onceTLTS c) (Once.A 0) q ↔
+      ∀ F : Mt Unit Unit, (onceTLTS c).MtSatState (Once.A 0) F ↔ (onceTLTS c).MtSatState q F :=
+  timedBisimilar_iff_mtEquiv_of_characteristic (onceTLTS c) (charA c) isCharacteristicMt_charA q
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
