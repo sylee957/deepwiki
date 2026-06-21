@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.PseudoDivision
+import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
@@ -304,6 +305,12 @@ theorem lem_1_6_1 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] (A B : R[X]) 
     (A * B).content = A.content * B.content :=
   Polynomial.content_mul
 
+/-- **Theorem 1.6.1(i)** (§1.6, p.27): a prime factor divides the derivative one less time —
+if `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ gcd(A, dA/dx)` (for any gcd `G` of `A` and its derivative). -/
+theorem thm_1_6_1_i {R : Type*} [CommRing R] {A P G : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A)
+    (hG : IsGCD A (derivative A) G) : P ^ n ∣ G :=
+  pow_dvd_gcd_of_pow_succ_dvd h hG
+
 /-! ## §1.7 Squarefree Factorization -/
 
 /-- **Definition 1.7.1** (§1.7, p.28): `A` is *squarefree* if no non-unit `B` satisfies
@@ -316,7 +323,9 @@ abbrev def_1_7_1 := @Squarefree
 --     sequence and Cor 1.4.1/1.4.2 linking it to the resultant are not).
 --   • §1.5 polynomial remainder sequences (Examples 1.5.1/1.5.2).
 --   • §1.6 the deflation theory — squarefree part `A*`, `k`-deflations `A⁻ᵏ` (Def 1.6.2),
---     relations (1.11)–(1.14), and Theorem 1.6.1 (`Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ gcd(A, dA/dx)`).
+--     relations (1.11)–(1.14), and Theorem 1.6.1(ii) — the char-`0` converse
+--     (`Pⁿ ∣ gcd(A, dA/dx) ⟹ Pⁿ⁺¹ ∣ A`) and eq (1.14) `A⁻ = gcd(A, dA/dx)`.
+--     [Theorem 1.6.1(i) is done — `thm_1_6_1_i`.]
 --   • §1.7 squarefree factorization (Def 1.7.2), Lemmas 1.7.1/1.7.2, and the Musser/Yun
 --     `Squarefree` algorithm (Example 1.7.1) — the squarefree-factorization routine the
 --     integration algorithm uses.
