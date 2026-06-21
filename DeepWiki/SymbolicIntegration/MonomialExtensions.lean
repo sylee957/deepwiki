@@ -386,4 +386,28 @@ theorem natDegree_implicitDeriv_eq {F : Type*} [Field F] [CharZero F] [Different
     rw [hmul]; omega
   rw [happly, natDegree_add_eq_right_of_natDegree_lt hlt, hmul]; omega
 
+section LinearFactor
+open Polynomial
+
+/-- The monomial derivation of a linear factor: `D(X − a) = v − C(a′)` (with `Dt = v`). This is
+how `D` reaches the root value, the crux of the root characterizations 3.4.2/3.4.3. -/
+theorem implicitDeriv_X_sub_C {A : Type*} [CommRing A] [Differential A] (v : A[X]) (a : A) :
+    Differential.implicitDeriv v (X - C a) = v - C a′ := by
+  rw [map_sub, Differential.implicitDeriv_X, Differential.implicitDeriv_C]
+
+/-- A linear factor is coprime to `g` iff its root is not a root of `g`: `(X − a) ⊥ g ↔ g(a) ≠ 0`
+(over a field; `X − a` is prime, so coprime ↔ not-dvd ↔ not-a-root). -/
+theorem isCoprime_X_sub_C_iff {K : Type*} [Field K] {a : K} {g : K[X]} :
+    IsCoprime (X - C a) g ↔ g.eval a ≠ 0 := by
+  rw [(prime_X_sub_C a).coprime_iff_not_dvd, dvd_iff_isRoot]; rfl
+
+/-- **Theorem 3.4.2** (§3.4, p.93), single linear factor: `X − a` is normal w.r.t. the monomial
+derivation `D` (`Dt = v`) iff `Dα ≠ Hₜ(α)` at its root, i.e. `v(a) ≠ a′`. -/
+theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
+    (a : K) :
+    IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ := by
+  rw [implicitDeriv_X_sub_C, isCoprime_X_sub_C_iff, eval_sub, eval_C, sub_ne_zero]
+
+end LinearFactor
+
 end DeepWiki.SymbolicIntegration

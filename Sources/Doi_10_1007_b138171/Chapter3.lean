@@ -282,6 +282,13 @@ theorem lem_3_4_2_eq {F : Type*} [Field F] [CharZero F] [Differential F] (v p : 
     (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) :=
   natDegree_implicitDeriv_eq v p hv hp
 
+/-- **Theorem 3.4.2** (§3.4, p.93), single linear factor: the linear factor `X − a` is normal
+w.r.t. the monomial derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα ≠ Hₜ(α)` at its root — `v(a) ≠ a′`.
+(The full squarefree statement quantifies this over all roots.) -/
+theorem thm_3_4_2_linear {K : Type*} [Field K] [Differential K] (v : K[X]) (a : K) :
+    IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ :=
+  isCoprime_X_sub_C_implicitDeriv_iff v a
+
 /-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b`,
 `gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. (The general `∏pᵢ^{eᵢ}` form follows by induction on
 the number of factors plus the `pᵢ^{eᵢ}` power computation.) -/
@@ -310,7 +317,10 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
 --   • Theorem 3.4.1(iii) — DONE in full: `thm_3_4_1_iii_prime` (prime-factor key step) and
 --     `thm_3_4_1_iii` (general factor of a special polynomial is special, via prime factorization).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
---     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
+--     for all roots `α`): the single-linear-factor case is DONE (`thm_3_4_2_linear`); the full
+--     statement needs `p` split as `c·∏(X−aᵢ)` (squarefree ⇒ distinct roots) + Lemma 3.4.4
+--     (`pairwise_coprime_X_sub_C`) over the roots — `dvd_iff_isRoot`/`isCoprime_X_sub_C_iff` are
+--     the per-factor tools. Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).
 
 /-! ## §3.5 The Canonical Representation -/
