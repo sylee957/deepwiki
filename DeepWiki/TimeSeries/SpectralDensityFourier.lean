@@ -1,6 +1,8 @@
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.Analysis.Normed.Ring.InfiniteSum
+import Mathlib.Topology.Algebra.InfiniteSum.Constructions
 
 /-! # The Fourier-series spectral density of a summable autocovariance (Theorem 4.3.2)
 For an absolutely summable function `K` on `ℤ` (`∑ₙ |K(n)| < ∞`), the Fourier series
@@ -114,5 +116,49 @@ theorem fourierSpectralDensity_kronecker (σ2 : ℝ) (lam : ℝ) :
     fourierSpectralDensity (fun h => if h = 0 then (σ2 : ℂ) else 0) lam = (σ2 : ℂ) / (2 * π) := by
   rw [fourierSpectralDensity, tsum_eq_single 0 fun n hn => by simp [hn]]
   simp [div_eq_inv_mul]
+
+/-- **Theorem 4.4.1 (Fourier transform of an autocovariance):** for an absolutely summable filter `ψ`
+(`∑ₙ |ψₙ| < ∞`), the Fourier series of the correlation `∑ₖ ψₖ ψ_{k+n}` factors as a product of the
+transfer functions: `∑ₙ e^{−inλ} ∑ₖ ψₖ ψ_{k+n} = (∑ₖ ψₖ e^{ikλ})(∑ₘ ψₘ e^{−imλ})`. Since `ψ` is real
+the two factors are conjugate, so the right side is `|∑ₘ ψₘ e^{−imλ}|²` — the spectral density of a
+linear-filtered process is `|ψ̂(e^{−iλ})|²` times the input's (eq 4.4.3, the basis of the rational
+`ARMA` spectral density). Proven by the shear `(n,k) ↦ (k, k+n)` turning the double Fourier sum into a
+product of single sums. -/
+theorem fourier_tsum_mul_shift {ψ : ℤ → ℝ} (hψ : Summable fun n => |ψ n|) (lam : ℝ) :
+    (∑' n : ℤ, Complex.exp (-(n : ℂ) * lam * Complex.I) * ∑' k : ℤ, (ψ k : ℂ) * (ψ (k + n) : ℂ))
+      = (∑' k : ℤ, (ψ k : ℂ) * Complex.exp ((k : ℂ) * lam * Complex.I)) *
+        (∑' m : ℤ, (ψ m : ℂ) * Complex.exp (-(m : ℂ) * lam * Complex.I)) := by
+  set f : ℤ → ℂ := fun k => (ψ k : ℂ) * Complex.exp ((k : ℂ) * lam * Complex.I) with hf
+  set g : ℤ → ℂ := fun m => (ψ m : ℂ) * Complex.exp (-(m : ℂ) * lam * Complex.I) with hg
+  have hfn : Summable fun k => ‖f k‖ := by
+    have : (fun k => ‖f k‖) = fun k => |ψ k| := by
+      funext k; rw [hf, norm_mul, Complex.norm_exp, Complex.norm_real]; simp
+    rw [this]; exact hψ
+  have hgn : Summable fun m => ‖g m‖ := by
+    have : (fun m => ‖g m‖) = fun m => |ψ m| := by
+      funext m; rw [hg, norm_mul, Complex.norm_exp, Complex.norm_real]; simp
+    rw [this]; exact hψ
+  let e : ℤ × ℤ ≃ ℤ × ℤ :=
+    { toFun := fun p => (p.2, p.2 + p.1)
+      invFun := fun p => (p.2 - p.1, p.1)
+      left_inv := fun p => by obtain ⟨n, k⟩ := p; simp
+      right_inv := fun p => by obtain ⟨a, b⟩ := p; simp }
+  have hcomp : (fun p : ℤ × ℤ =>
+      Complex.exp (-(p.1 : ℂ) * lam * Complex.I) * ((ψ p.2 : ℂ) * (ψ (p.2 + p.1) : ℂ)))
+      = (fun q : ℤ × ℤ => f q.1 * g q.2) ∘ e := by
+    funext p
+    have hxp : Complex.exp ((p.2 : ℂ) * lam * Complex.I) *
+        Complex.exp (-((p.2 + p.1 : ℤ) : ℂ) * lam * Complex.I)
+        = Complex.exp (-(p.1 : ℂ) * lam * Complex.I) := by
+      rw [← Complex.exp_add]; congr 1; push_cast; ring
+    simp only [hf, hg, e, Function.comp, Equiv.coe_fn_mk]
+    rw [mul_mul_mul_comm, hxp]; ring
+  have hFsum : Summable fun p : ℤ × ℤ =>
+      Complex.exp (-(p.1 : ℂ) * lam * Complex.I) * ((ψ p.2 : ℂ) * (ψ (p.2 + p.1) : ℂ)) := by
+    rw [hcomp]; exact e.summable_iff.mpr ((hfn.mul_norm hgn).of_norm)
+  rw [tsum_mul_tsum_of_summable_norm hfn hgn]
+  simp_rw [← tsum_mul_left]
+  rw [← Summable.tsum_prod' hFsum fun n => hFsum.prod_factor n, hcomp]
+  exact e.tsum_eq fun q => f q.1 * g q.2
 
 end DeepWiki.TimeSeries
