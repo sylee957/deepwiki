@@ -14,8 +14,9 @@ the shared register `id` (so the register guards `id = 0` / `id = i` / `id ≠ i
 and assignments `id := i` / `id := 0` become conditions on the location) together
 with one clock per process. Mutual exclusion is the safety property that no two
 processes occupy their critical sections simultaneously. Its correctness
-(Lynch–Shavit) rests on the timing assumptions and is verified
-externally (UPPAAL); we formalize the model and the specification. -/
+(Lynch–Shavit) rests on the timing assumptions; we formalize the model, the
+specification, and a direct proof of safety for *every* `n` (`fischer_safe`), via an
+inductive invariant on reachable configurations (`FischerInv`). -/
 
 namespace DeepWiki.ReactiveSystems
 
@@ -134,8 +135,8 @@ def fischerErroneous (n c : ℕ) : TimedAutomaton (FischerLoc n) Unit (Fin n) wh
   inv := fischerInv c
 
 /-- The Fischer network is **safe** when mutual exclusion holds at every reachable
-global location. (Lynch–Shavit: this holds under the timing
-assumptions; the proof is delegated to external verification.) -/
+global location. (Lynch–Shavit: this holds under the timing assumptions; proved
+directly for every `n` in `fischer_safe`.) -/
 def FischerSafe (n c : ℕ) : Prop :=
   ∀ s, (fischer n c).tlts.Reachable ((fischer n c).initial, fun _ => 0) s →
     s.1.MutualExclusion
@@ -146,6 +147,191 @@ theorem fischer_initial_mutualExclusion (n c : ℕ) :
     (fischer n c).initial.MutualExclusion := by
   intro i _ hi _
   simp [fischer] at hi
+
+/-! ## Safety: Fischer preserves mutual exclusion for every `n`
+
+We verify the model directly rather than delegating to UPPAAL, by exhibiting an inductive
+invariant on the reachable configurations from which mutual exclusion follows. The
+load-bearing clause is `crit_id` — *a process in its critical section owns `id`* — which
+already forces mutual exclusion (two owners of `id` are equal, so two critical processes
+coincide). Keeping `crit_id` inductive is where the **timing** enters: a writer `k` about
+to overwrite `id` (`setting → testing`) cannot do so while another process `i` is critical,
+because a critical `i` has clock `> c` (clause `crit_clock`, from the strict guard `xᵢ > c`)
+yet `i`'s clock is `≤` every concurrent writer's clock (clause `owner_le`), while a writer's
+clock is `≤ c` (the location invariant, clause `setting_le`) — an impossible
+`c < vᵢ ≤ v_k ≤ c`. -/
+
+/-- The inductive safety invariant for the (correct, strict-guard) Fischer network. -/
+structure FischerInv (c : ℕ) {n : ℕ} (ℓ : FischerLoc n) (v : Valuation (Fin n)) : Prop where
+  /-- A process in its critical section owns the register (forces mutual exclusion). -/
+  crit_id : ∀ i, ℓ.ctrl i = .critical → ℓ.id = some i
+  /-- A critical process's clock exceeds `c` (it passed the strict re-check `xᵢ > c`). -/
+  crit_clock : ∀ i, ℓ.ctrl i = .critical → (c : ℝ≥0) < v i
+  /-- A register-owning post-writer's clock is `≤` every concurrent writer's clock. -/
+  owner_le : ∀ i j, (ℓ.ctrl i = .testing ∨ ℓ.ctrl i = .critical) → ℓ.id = some i →
+      ℓ.ctrl j = .setting → v i ≤ v j
+  /-- A writing process must act within `c` (the location invariant). -/
+  setting_le : ∀ i, ℓ.ctrl i = .setting → v i ≤ (c : ℝ≥0)
+
+/-- The initial configuration satisfies the invariant (every process waits, vacuously). -/
+theorem fischerInv_initial (n c : ℕ) :
+    FischerInv c (fischer n c).initial (fun _ => 0) where
+  crit_id i h := by simp [fischer] at h
+  crit_clock i h := by simp [fischer] at h
+  owner_le i j h _ _ := by rcases h with h | h <;> simp [fischer] at h
+  setting_le i h := by simp [fischer] at h
+
+/-- Delay steps preserve the invariant: clocks advance uniformly, the location
+invariant of the post-state is enforced by the semantics. -/
+theorem fischerInv_delay {n c : ℕ} {ℓ ℓ' : FischerLoc n} {v v' : Valuation (Fin n)} {d : ℝ≥0}
+    (hpre : FischerInv c ℓ v) (hstep : (fischer n c).tlts.delay (ℓ, v) d (ℓ', v')) :
+    FischerInv c ℓ' v' := by
+  rw [TimedAutomaton.tlts_delay_iff] at hstep
+  obtain ⟨hℓ, hv, _, hpost⟩ := hstep
+  rw [hℓ, hv]
+  refine ⟨fun i hi => hpre.crit_id i hi, fun i hi => ?_, fun i j hi hid hj => ?_,
+    (satisfies_fischerInv ℓ (v.add d)).mp hpost⟩
+  · have hle : v i ≤ (v.add d) i := by rw [Valuation.add_apply]; exact le_self_add
+    exact lt_of_lt_of_le (hpre.crit_clock i hi) hle
+  · have := hpre.owner_le i j hi hid hj
+    simp only [Valuation.add_apply]; gcongr
+
+/-- Action steps preserve the invariant. The only clause needing the timing argument is
+`crit_id` on the `setting → testing` edge: a write cannot occur while another process is
+critical (`c < vᵢ ≤ v_k ≤ c`). -/
+theorem fischerInv_act {n c : ℕ} {ℓ ℓ' : FischerLoc n} {v v' : Valuation (Fin n)}
+    (hpre : FischerInv c ℓ v) (hstep : (fischer n c).tlts.act (ℓ, v) () (ℓ', v')) :
+    FischerInv c ℓ' v' := by
+  rw [TimedAutomaton.tlts_act_iff] at hstep
+  obtain ⟨g, r, ⟨k, hk⟩, hg, hv', hpost⟩ := hstep
+  rcases hk with ⟨hck, hidk, rfl, rfl, rfl⟩ | ⟨hck, rfl, rfl, rfl⟩ |
+    ⟨hck, hidk, rfl, rfl, rfl⟩ | ⟨hck, hidk, rfl, rfl, rfl⟩ | ⟨hck, rfl, rfl, rfl⟩
+  · -- wait → setting: id unchanged (= none), no new critical/owner facts
+    subst hv'
+    refine ⟨fun i hi => ?_, fun i hi => ?_, fun i j hi hid hj => ?_,
+      (satisfies_fischerInv _ _).mp hpost⟩
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi; exact hpre.crit_id i hi
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        rw [Valuation.reset_not_mem (by simpa using h)]; exact hpre.crit_clock i hi
+    · change ℓ.id = some i at hid; rw [hidk] at hid; exact absurd hid (by simp)
+  · -- setting → testing: id := k. The timing argument lives in `crit_id` here.
+    subst hv'
+    refine ⟨fun i hi => ?_, fun i hi => ?_, fun i j hi hid hj => ?_,
+      (satisfies_fischerInv _ _).mp hpost⟩
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        -- i ≠ k critical while k writes: impossible by timing
+        exfalso
+        have h1 := hpre.crit_clock i hi
+        have h2 := hpre.owner_le i k (Or.inr hi) (hpre.crit_id i hi) hck
+        have h3 := hpre.setting_le k hck
+        exact absurd (lt_of_lt_of_le (lt_of_lt_of_le h1 h2) h3) (lt_irrefl _)
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        rw [Valuation.reset_not_mem (by simpa using h)]; exact hpre.crit_clock i hi
+    · -- owner is k (id = some k); its reset clock 0 ≤ everything
+      change some k = some i at hid
+      have hik : i = k := (Option.some.inj hid).symm
+      rw [hik, Valuation.reset_mem (show k ∈ ({k} : Set (Fin n)) by simp)]
+      exact zero_le
+  · -- testing → critical: guard xₖ > c, id = some k unchanged
+    subst hv'
+    simp only [satisfies, Cmp.holds] at hg
+    refine ⟨fun i hi => ?_, fun i hi => ?_, fun i j hi hid hj => ?_,
+      (satisfies_fischerInv _ _).mp hpost⟩
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · subst h; exact hidk
+      · rw [if_neg h] at hi; exact hpre.crit_id i hi
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · subst h; rw [Valuation.reset_not_mem (by simp)]; exact hg
+      · rw [if_neg h] at hi
+        rw [Valuation.reset_not_mem (by simp)]; exact hpre.crit_clock i hi
+    · change ℓ.id = some i at hid; rw [hidk] at hid
+      have hik : i = k := (Option.some.inj hid).symm
+      simp only [Function.update_apply] at hj
+      by_cases hjk : j = k
+      · rw [if_pos hjk] at hj; exact absurd hj (by decide)
+      · rw [if_neg hjk] at hj
+        rw [hik, Valuation.reset_not_mem (by simp), Valuation.reset_not_mem (by simp)]
+        exact hpre.owner_le k j (Or.inl hck) hidk hj
+  · -- testing → wait: id unchanged
+    subst hv'
+    refine ⟨fun i hi => ?_, fun i hi => ?_, fun i j hi hid hj => ?_,
+      (satisfies_fischerInv _ _).mp hpost⟩
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi; exact hpre.crit_id i hi
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        rw [Valuation.reset_not_mem (by simp)]; exact hpre.crit_clock i hi
+    · have hjk : j ≠ k := by
+        rintro rfl; simp [Function.update] at hj
+      have hik : i ≠ k := by
+        rintro rfl
+        rcases hi with hi | hi <;> simp [Function.update] at hi
+      simp only [Function.update_apply] at hj; rw [if_neg hjk] at hj
+      change ℓ.id = some i at hid
+      rw [Valuation.reset_not_mem (by simp), Valuation.reset_not_mem (by simp)]
+      refine hpre.owner_le i j ?_ hid hj
+      rcases hi with hi | hi <;>
+        (simp only [Function.update_apply] at hi; rw [if_neg hik] at hi)
+      · exact Or.inl hi
+      · exact Or.inr hi
+  · -- critical → wait: id := none
+    subst hv'
+    refine ⟨fun i hi => ?_, fun i hi => ?_, fun i j hi hid hj => ?_,
+      (satisfies_fischerInv _ _).mp hpost⟩
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        exfalso
+        have hki := hpre.crit_id k hck
+        have hii := hpre.crit_id i hi
+        exact h (Option.some.inj (hki.symm.trans hii)).symm
+    · simp only [Function.update_apply] at hi
+      by_cases h : i = k
+      · rw [if_pos h] at hi; exact absurd hi (by decide)
+      · rw [if_neg h] at hi
+        rw [Valuation.reset_not_mem (by simp)]; exact hpre.crit_clock i hi
+    · change (none : Option (Fin n)) = some i at hid; exact absurd hid (by simp)
+
+/-- Every reachable configuration satisfies the invariant. -/
+theorem fischer_reachable_inv (n c : ℕ) {s : FischerLoc n × Valuation (Fin n)}
+    (h : (fischer n c).tlts.Reachable ((fischer n c).initial, fun _ => 0) s) :
+    FischerInv c s.1 s.2 := by
+  induction h with
+  | refl => exact fischerInv_initial n c
+  | tail _ hstep ih =>
+      obtain ⟨l, hl⟩ := hstep
+      cases l with
+      | inl _ => exact fischerInv_act ih hl
+      | inr d => exact fischerInv_delay ih hl
+
+/-- **Theorem 4.6 (Lynch–Shavit): Fischer's algorithm is safe for every `n` and bound `c`.**
+Mutual exclusion holds at every reachable global location — proved directly via the
+inductive invariant `FischerInv`, whose `crit_id` clause forces two critical processes to
+own the same `id`, hence to coincide. -/
+theorem fischer_safe (n c : ℕ) : FischerSafe n c := by
+  intro s hreach i j hi hj
+  have inv := fischer_reachable_inv n c hreach
+  have := (inv.crit_id i hi).symm.trans (inv.crit_id j hj)
+  exact Option.some.inj this
 
 /-! ## The erroneous version violates mutual exclusion
 
