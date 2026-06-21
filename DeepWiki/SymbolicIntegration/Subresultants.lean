@@ -321,4 +321,23 @@ theorem subresultant_add_mul (A B p : R[X]) (n m j : ℕ)
   rw [hsum]
   exact key (p.natDegree + 1) (fun e he => by have := Finset.mem_range.mp he; omega) A
 
+/-- **Sylvester-matrix swap symmetry** (foundation for the swap half of Geddes §7.3 Lemma 7.1):
+swapping the two polynomials reindexes the Sylvester matrix by the block permutation that exchanges
+the `m` `A`-rows with the `n` `B`-rows — `bSylvester B A m n` is `bSylvester A B n m` with rows sent
+by `φ` (`i ↦ m+i` on the `B`-rows `i < n`, `i ↦ i−n` on the `A`-rows) and columns by the
+value-preserving cast. -/
+theorem bSylvester_swap (A B : R[X]) (n m : ℕ) :
+    bSylvester B A m n = (bSylvester A B n m).submatrix
+      (fun i : Fin (n + m) => (⟨if (i : ℕ) < n then m + (i : ℕ) else (i : ℕ) - n,
+        by have := i.isLt; split <;> omega⟩ : Fin (m + n)))
+      (finCongr (Nat.add_comm n m)) := by
+  refine Matrix.ext fun i l => ?_
+  simp only [bSylvester, Matrix.submatrix_apply, Matrix.of_apply, finCongr_apply, Fin.val_cast]
+  by_cases hi : (i : ℕ) < n
+  · simp only [if_pos hi, if_neg (show ¬ m + (i : ℕ) < m by omega),
+      show m + (i : ℕ) - m = (i : ℕ) from by omega, Nat.add_comm (i : ℕ) m]
+  · simp only [if_neg hi, if_pos (show (i : ℕ) - n < m by have := i.isLt; omega),
+      show n + ((i : ℕ) - n) - (l : ℕ) = (i : ℕ) - (l : ℕ) from by omega,
+      show (i : ℕ) - n + n = (i : ℕ) from by omega]
+
 end DeepWiki.SymbolicIntegration
