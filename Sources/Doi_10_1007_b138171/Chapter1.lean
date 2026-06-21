@@ -1055,8 +1055,10 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   `Sⱼ(A,B) = Sⱼ(rem(A,B),B)`); (b) SWAP-WITH-SIGN — `subresultant_swap`
   (`Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,A)`), via the block-swap permutation `bSylvester_swap` +
   `bSylvester_submatrix_det_swap` whose sign is read off `(finRotate (n+m-2j))^(m-j)` (keystone
-  `finRotate_pow_val`). Remaining: assemble into the full Lemma 7.1 statement (the `b^(m-k)` degree
-  padding when `deg(rem) < m-1`) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
+  `finRotate_pow_val`). Both halves are now combined in `subresultant_rem` (Lemma 7.1's engine): for a
+  division step `A = Rem + B·Q`, `Sⱼ(A,B) = (-1)^((m-j)(n-j))·Sⱼ(B,Rem)`. Remaining: the `b^(m-k)`
+  degree padding (re-index `Sⱼ(B,Rem)` from the formal degree `n` to `Rem`'s true degree `k`, scaling by
+  `lc(B)^(m-k)`) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).

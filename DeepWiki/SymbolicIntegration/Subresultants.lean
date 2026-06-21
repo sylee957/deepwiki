@@ -437,4 +437,14 @@ theorem subresultant_swap (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < 
   rw [bSylvester_submatrix_det_swap A B n m j i hjm hjn, map_mul, map_pow, map_neg, map_one,
     ← mul_assoc, ← mul_assoc, ← pow_add, Even.neg_one_pow ⟨_, rfl⟩, one_mul]
 
+/-- **Euclidean-step subresultant relation** (Geddes §7.3 Lemma 7.1, the engine of the Fundamental
+PRS Theorem): for a division step `A = R + B·Q` (so `R = A − B·Q` is the remainder), every
+subresultant of `(A,B)` equals — up to the swap sign — the corresponding subresultant of `(B,R)`:
+`Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,R)` (`j ≤ m`, `j < n`, `B.natDegree ≤ m`, `Q.natDegree + m ≤ n`).
+Combines the row-reduction invariance `subresultant_add_mul` (kill `B·Q`) with `subresultant_swap`. -/
+theorem subresultant_rem (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < n)
+    (hB : B.natDegree ≤ m) (hQ : Q.natDegree + m ≤ n) (hA : A = Rem + B * Q) :
+    subresultant A B n m j = (-1 : R[X]) ^ ((m - j) * (n - j)) * subresultant B Rem m n j := by
+  rw [hA, subresultant_add_mul Rem B Q n m j hjn hB hQ, subresultant_swap Rem B n m j hjm hjn]
+
 end DeepWiki.SymbolicIntegration
