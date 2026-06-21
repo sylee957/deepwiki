@@ -1162,12 +1162,13 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: the base
-  step is PROVED (`thm_1_5_3_base`: `S_{deg B-1}(A,B) = Rem` for the first division step, `β₁=(-1)^(δ+1)`)
-  and the coefficient recursion `γᵢ/βᵢ` is defined (`def_subresPRS_gamma`/`def_subresPRS_beta`, with
-  `subresPRS_gamma_ne_zero`); remaining is the full `Rᵢ = prem(Rᵢ₋₂,Rᵢ₋₁)/βᵢ` mutual-recursion
-  construction and the GENERAL (telescoped, i>2) `ηᵢ = 1` cancellation identity (research-level; Bronstein
-  cites Collins/Brown — the γ-telescoping is the core).
+§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [external]: the proof is
+  Collins 1967 (DOI 10.1145/321371.321381, ref. [23]) **Theorem 1(b)** / **Lemma 3** — see the
+  `Sources/Doi_10_1145_321371_321381` catalog. The engine is formalized (Lemma 1 = the §1.4 single-step
+  eqs; the telescoped Lemma 2 = `subresultant_prs_telescope_explicit`) and the base case is PROVED
+  (`thm_1_5_3_base`), with the coefficient recursion `γᵢ/βᵢ` defined (`def_subresPRS_{gamma,beta}`); the
+  remaining gap is the elementary `(-1)`-exponent arithmetic mod 2 (`α ≡ σₖ`, `β₁ ≡ τₖ`) specializing the
+  telescope to the reduced/subresultant p.r.s.
 Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
   factorization is `ex_1_7_1`.
 Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials
