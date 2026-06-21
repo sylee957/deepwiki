@@ -425,6 +425,17 @@ theorem isCoprime_prod_X_sub_C_of_disjoint {K : Type*} [Field K] {s t : Finset K
   rw [eval_sub, eval_X, eval_C]
   exact sub_ne_zero.mpr (fun hab => (Finset.disjoint_left.mp h ha) (hab ▸ hb))
 
+open Classical in
+/-- **Definition 1.7.2** (§1.7), the parts are pairwise coprime: the squarefree-factorization
+factors `Aₖ = ∏_{a : eₐ=k}(X − a)` for distinct multiplicities `k ≠ k'` are coprime (disjoint
+roots). -/
+theorem squarefree_factorization_pairwise_coprime {K : Type*} [Field K] (s : Finset K) (e : K → ℕ)
+    {k k' : ℕ} (hkk : k ≠ k') :
+    IsCoprime (∏ a ∈ s.filter (fun a => e a = k), (X - C a))
+      (∏ a ∈ s.filter (fun a => e a = k'), (X - C a)) :=
+  isCoprime_prod_X_sub_C_of_disjoint (Finset.disjoint_left.mpr fun _ ha ha' =>
+    hkk ((Finset.mem_filter.mp ha).2.symm.trans (Finset.mem_filter.mp ha').2))
+
 /-- **Theorem 3.4.2** (§3.4, p.93), single linear factor: `X − a` is normal w.r.t. the monomial
 derivation `D` (`Dt = v`) iff `Dα ≠ Hₜ(α)` at its root, i.e. `v(a) ≠ a′`. -/
 theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])

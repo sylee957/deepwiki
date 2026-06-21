@@ -559,6 +559,15 @@ theorem def_1_7_2 {K : Type*} [CommRing K] (s : Finset K) (e : K → ℕ) :
       = ∏ k ∈ s.image e, (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) ^ k :=
   prod_X_sub_C_pow_eq_squarefree_factorization s e
 
+open Classical Polynomial in
+/-- **Definition 1.7.2** (§1.7, p.30): the squarefree-factorization parts `Aₖ` are pairwise
+coprime — `Aₖ ⊥ Aₖ'` for `k ≠ k'` (their roots have distinct multiplicities, hence are disjoint). -/
+theorem def_1_7_2_coprime {K : Type*} [Field K] (s : Finset K) (e : K → ℕ) {k k' : ℕ}
+    (hkk : k ≠ k') :
+    IsCoprime (∏ a ∈ s.filter (fun a => e a = k), (X - C a))
+      (∏ a ∈ s.filter (fun a => e a = k'), (X - C a)) :=
+  squarefree_factorization_pairwise_coprime s e hkk
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
 -- dedicated iterations:**
 --   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
