@@ -16,6 +16,7 @@ import DeepWiki.TimeSeries.KolmogorovApplications
 import DeepWiki.TimeSeries.BestLinearPredictor
 import DeepWiki.TimeSeries.SpectralDistribution
 import DeepWiki.TimeSeries.SpectralDensity
+import DeepWiki.TimeSeries.SpectralDensityFourier
 import DeepWiki.TimeSeries.YuleWalker
 import DeepWiki.TimeSeries.Periodogram
 import DeepWiki.TimeSeries.MultivariateTimeSeries
