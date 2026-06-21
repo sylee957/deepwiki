@@ -1043,11 +1043,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §1.4: Thm 1.4.3 — only the general scaling-factor case `σ(lc A)^(deg B − deg σ̄B)` (degrees
   lowered, subresultants of different sizes); the degree-preserving case is `thm_1_4_3`.
-§1.5: Thm 1.5.2 [external] (Fundamental PRS Theorem — the explicit subresultant↔PRS similarity
-  coefficients ηᵢ/τᵢ of eq 1.9/1.10; Bronstein proves neither, citing [39 Ch.7], [60]); Thm 1.5.3
-  [external] (the subresultant-PRS specialization ηᵢ=1; cites [16 §7], [23], [60]). Both are the
-  Habicht/Collins–Brown subresultant gap-structure theory, absent from Mathlib (which has no
-  subresultants at all beyond `resultant`); a faithful proof is a paper-scale build, not a port.
+§1.5: Thm 1.5.2 [infra, in progress] (Fundamental PRS Theorem — the explicit subresultant↔PRS
+  similarity coefficients ηᵢ/τᵢ of eq 1.9/1.10); Thm 1.5.3 [infra, in progress] (the
+  subresultant-PRS specialization ηᵢ=1). Bronstein proves neither, citing [39 Ch.7], [60], [16 §7],
+  [23]; now being built from Geddes–Czapor–Labahn [39] §7.3 Thm 7.4 (proof mapped: Lemma 7.1 = the
+  Sylvester-row-reduction det identity `Sⱼ(A,B) = ±Sⱼ(B, rem(A,B))` [the crux, next] → Lemma 7.2 =
+  Lemma 7.1 + the scaling law `subresultant_C_mul` [DONE] → Thm 7.4 = iterate down the PRS).
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).

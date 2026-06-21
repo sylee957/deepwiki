@@ -100,4 +100,43 @@ theorem subresultant_map {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) 
   rw [hbS, Matrix.submatrix_map, Polynomial.map_mul, Polynomial.map_pow, Polynomial.map_X,
     Polynomial.map_C, ← RingHom.mapMatrix_apply, ← RingHom.map_det]
 
+open Matrix Finset in
+/-- **Subresultant scaling law** (Geddes–Czapor–Labahn §7.3, used in the proof of the Fundamental
+PRS Theorem): scaling the arguments by constants scales the subresultant,
+`Sⱼ(a·A, b·B) = a^(m−j)·b^(n−j)·Sⱼ(A,B)`. Each `ⱼSᵢ` keeps `m−j` rows of `A` and `n−j` rows of `B`,
+so its determinant scales by `a^(m−j) b^(n−j)` (a uniform factor across `i`). -/
+theorem subresultant_C_mul (a b : R) (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j ≤ n) :
+    subresultant (C a * A) (C b * B) n m j
+      = C (a ^ (m - j) * b ^ (n - j)) * subresultant A B n m j := by
+  rw [subresultant, subresultant, Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  have hentry : ∀ p q, bSylvester (C a * A) (C b * B) n m p q
+      = (if (p : ℕ) < m then a else b) * bSylvester A B n m p q := by
+    intro p q; simp only [bSylvester, Matrix.of_apply, coeff_C_mul]; split <;> (split <;> ring)
+  have hsub : ((bSylvester (C a * A) (C b * B) n m).submatrix (subRow n m j) (subCol n m j i))
+      = Matrix.diagonal (fun t => if (subRow n m j t : ℕ) < m then a else b)
+        * ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)) := by
+    ext t s; simp only [Matrix.submatrix_apply, Matrix.diagonal_mul, hentry]
+  rw [hsub, Matrix.det_mul, Matrix.det_diagonal]
+  have hprod : (∏ t : Fin (m + n - 2 * j), if (subRow n m j t : ℕ) < m then a else b)
+      = a ^ (m - j) * b ^ (n - j) := by
+    have hcond : ∀ t : Fin (m + n - 2 * j), ((subRow n m j t : ℕ) < m ↔ (t : ℕ) < m - j) := by
+      intro t; have := t.isLt; simp only [subRow]; split <;> omega
+    rw [Finset.prod_congr rfl (fun t _ => if_congr (hcond t) rfl rfl), Finset.prod_ite,
+      Finset.prod_const, Finset.prod_const]
+    have hcardA : (Finset.univ.filter (fun t : Fin (m + n - 2 * j) => (t : ℕ) < m - j)).card
+        = m - j := by
+      conv_rhs => rw [← Finset.card_range (m - j)]
+      apply Finset.card_bij (fun (t : Fin (m + n - 2 * j)) _ => (t : ℕ))
+      · intro t ht; rw [Finset.mem_filter] at ht; exact Finset.mem_range.mpr ht.2
+      · intro t₁ _ t₂ _ he; exact Fin.val_injective he
+      · intro x hx; exact ⟨⟨x, by have := Finset.mem_range.mp hx; omega⟩,
+          by rw [Finset.mem_filter]; exact ⟨Finset.mem_univ _, Finset.mem_range.mp hx⟩, rfl⟩
+    have hcardB : (Finset.univ.filter (fun t : Fin (m + n - 2 * j) => ¬(t : ℕ) < m - j)).card
+        = n - j := by
+      rw [Finset.filter_not, Finset.card_sdiff, Finset.inter_univ, Finset.card_univ,
+        Fintype.card_fin, hcardA]; omega
+    rw [hcardA, hcardB]
+  rw [hprod, map_mul]; ring
+
 end DeepWiki.SymbolicIntegration
