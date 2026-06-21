@@ -47,7 +47,10 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   `ClockConstraint` guards (`tt`, atoms with any `⋈` incl. `=`, conjunctions) via `negConstraint`
   (De Morgan + per-atom complement, `=` ↦ `< ∨ >`) for the readiness `g ⇒ ⟨a⟩…` — full iff. Remaining:
   location invariants — they need a *delay-forcing* clause (the safety `∀∀` does not force the candidate to
-  delay as far as the invariant permits), the genuinely subtle part of timed-bisimulation characterisation.
+  delay as far as the invariant permits). `TimedInvariantObstruction` formalises **why**
+  (`naive_invariant_not_characteristic`): two pure-delay states with invariants `x≤2`/`x≤1` are not timed
+  bisimilar yet both satisfy the naive `νX.(x≤2)∧∀∀X` (`mtInv`), so the safety body is *not* characteristic —
+  invariants genuinely require the region-graph delay discretisation of the full LLW construction.
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
