@@ -83,4 +83,34 @@ theorem pseudoDivision_exists (A B : R[X]) (hB : B ≠ 0) :
           _ = (B * Q₁ + R₁) + C b ^ n₁ * q := by rw [hEq]
           _ = B * (Q₁ + C b ^ n₁ * C a * X ^ δ) + R₁ := by rw [hq]; ring
 
+/-- **Similarity** (§1.5): `A` is *similar* to `B` over `D[x]` when `a · A = b · B` for some
+nonzero scalars `a, b ∈ D` (the relation whose classes the PRS gcd-tower preserves). -/
+def IsSimilar (A B : R[X]) : Prop := ∃ a b : R, a ≠ 0 ∧ b ≠ 0 ∧ C a * A = C b * B
+
+/-- `IsSimilar` is reflexive (witnesses `a = b = 1`). -/
+@[refl] theorem IsSimilar.refl (A : R[X]) : IsSimilar A A :=
+  ⟨1, 1, one_ne_zero, one_ne_zero, rfl⟩
+
+omit [IsDomain R] in
+/-- `IsSimilar` is symmetric (swap the witnesses). -/
+theorem IsSimilar.symm {A B : R[X]} (h : IsSimilar A B) : IsSimilar B A :=
+  let ⟨a, b, ha, hb, hab⟩ := h; ⟨b, a, hb, ha, hab.symm⟩
+
+/-- `IsSimilar` is transitive — here `IsDomain R` is essential, so the product witnesses
+`c·a` and `b·d` stay nonzero. -/
+theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimilar B C₀) :
+    IsSimilar A C₀ := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h₁
+  obtain ⟨c, d, hc, hd, hcd⟩ := h₂
+  refine ⟨c * a, b * d, mul_ne_zero hc ha, mul_ne_zero hb hd, ?_⟩
+  calc C (c * a) * A = C c * (C a * A) := by rw [C_mul]; ring
+    _ = C c * (C b * B) := by rw [hab]
+    _ = C b * (C c * B) := by ring
+    _ = C b * (C d * C₀) := by rw [hcd]
+    _ = C (b * d) * C₀ := by rw [C_mul]; ring
+
+/-- **Similarity is an equivalence relation** (§1.5, Exercise 1.11). -/
+theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
+  ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
+
 end DeepWiki.SymbolicIntegration

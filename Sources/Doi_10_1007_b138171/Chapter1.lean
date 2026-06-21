@@ -499,6 +499,17 @@ theorem thm_1_4_2 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natD
 -- homomorphisms), and §1.5 polynomial remainder sequences. [Theorem 1.4.2 — `res ∈ (A,B)` — is
 -- done: `thm_1_4_2`.]
 
+/-! ## §1.5 Polynomial Remainder Sequences -/
+
+/-- **Definition 1.5.2** (§1.5, p.22): `A` is *similar* to `B` over `D[x]` when `a·A = b·B` for
+nonzero scalars `a, b ∈ D` (the library predicate `IsSimilar`). -/
+abbrev def_1_5_2 := @IsSimilar
+
+/-- **Exercise 1.11** (§1, p.33): similarity (Definition 1.5.2) is an equivalence relation on
+`D[x]` when `D` is an integral domain (`isSimilar_equivalence`). -/
+theorem ex_1_11 {R : Type*} [CommRing R] [IsDomain R] : Equivalence (IsSimilar (R := R)) :=
+  isSimilar_equivalence
+
 /-! ## §1.6 Primitive Polynomials -/
 
 /-- **Definition 1.6.1** (§1.6, p.25), the *content* `content(A) = gcd(a₀, …, aₙ)` of a
@@ -775,12 +786,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
   specialization under ring homomorphisms).
-§1.5: Def 1.5.1; Def 1.5.2; Thm 1.5.1; Thm 1.5.2; Thm 1.5.3.
+§1.5: Def 1.5.1; Thm 1.5.1; Thm 1.5.2; Thm 1.5.3.
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.7; Ex 1.11; Ex 1.14. -/
+Exercises: Ex 1.7; Ex 1.14. -/
 
 end DeepWiki.Si
