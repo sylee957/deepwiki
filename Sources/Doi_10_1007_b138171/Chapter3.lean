@@ -170,7 +170,11 @@ theorem lem_3_3_5_converse_field {F : Type*} [Field F] [Differential F] {n : ℕ
 --     algebraic over the initial constant field (needs minimal polynomials + `κ_D`).
 --   • Corollary 3.3.2, Lemmas 3.3.3, 3.3.4, 3.3.6 (constant-field behaviour under extensions).
 --   • **Lemma 3.3.5 converse, general `n`** (`W = 0 ⟹ linearly dependent over constants`) — the
---     induction on `n` (normalize a kernel vector, differentiate, recurse on the `(n−1)`-submatrix).
+--     induction on `n`. Infrastructure in place: `wronskian_eq_zero_dependent_iterDeriv` (foundation,
+--     a kernel vector annihilating all rows), `deriv_dependent_iterDeriv` (the differentiate-row
+--     recurrence), and `linearDependent_of_div_deriv_dependent` (the division-reduction inductive
+--     step). The one remaining piece is the determinant reduction `W(y₁,…,yₙ) = y₁ⁿ·W((y₂/y₁)′,…)`
+--     that lets the `(n−1)` induction hypothesis apply.
 
 /-! ## §3.4 Monomial Extensions -/
 

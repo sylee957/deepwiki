@@ -142,6 +142,27 @@ theorem deriv_dependent_iterDeriv {n : ℕ} (y c : Fin n → F)
   rw [Finset.sum_congr rfl (fun j _ => hterm j), Finset.sum_add_distrib, hnext, add_zero] at hd
   exact hd
 
+/-- Division-reduction step toward the **Lemma 3.3.5** converse: if `y₁ ≠ 0` and the derivatives
+`(gᵢ/y₁)′` are linearly dependent over the constants (constants `dᵢ`, not all `0`), then `y₁`
+together with the `gᵢ` are linearly dependent over the constants — set `c₀ = −∑ᵢ dᵢ(gᵢ/y₁)`, a
+constant by the dependence, with `c₀·y₁ + ∑ᵢ dᵢ·gᵢ = 0`. (This is the inductive step of the
+classical proof; connecting `W(y) = 0` to the dependence of the `(gᵢ/y₁)′` is the determinant
+reduction `W(y₁,…,yₙ) = y₁ⁿ·W((y₂/y₁)′,…)`, still to formalize.) -/
+theorem linearDependent_of_div_deriv_dependent {ι : Type*} [Fintype ι] {y₁ : F} (hy1 : y₁ ≠ 0)
+    (g d : ι → F) (hd : ∀ i, (d i)′ = 0) (hdne : ∃ i, d i ≠ 0)
+    (hdep : ∑ i, d i * (g i / y₁)′ = 0) :
+    ∃ (c₀ : F) (c : ι → F), c₀′ = 0 ∧ (∀ i, (c i)′ = 0) ∧ (c₀ ≠ 0 ∨ ∃ i, c i ≠ 0)
+      ∧ c₀ * y₁ + ∑ i, c i * g i = 0 := by
+  refine ⟨-(∑ i, d i * (g i / y₁)), d, ?_, hd, Or.inr hdne, ?_⟩
+  · rw [map_neg, neg_eq_zero, map_sum]
+    rw [show (0 : F) = ∑ i, d i * (g i / y₁)′ from hdep.symm]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, hd i, mul_zero, add_zero]
+  · rw [neg_mul, Finset.sum_mul,
+      show (∑ i, d i * (g i / y₁) * y₁) = ∑ i, d i * g i from
+        Finset.sum_congr rfl fun i _ => by rw [mul_assoc, div_mul_cancel₀ _ hy1],
+      neg_add_cancel]
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration
