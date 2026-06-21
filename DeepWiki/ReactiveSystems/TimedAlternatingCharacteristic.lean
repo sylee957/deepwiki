@@ -186,6 +186,134 @@ theorem mem_altChar_true {q : Alt × Valuation Unit} :
   simp only [altBody1, denotSys, Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq, satisfies,
     Cmp.holds, Nat.cast_ofNat, and_assoc, gt_iff_lt]
 
+/-! ### Completeness: satisfaction implies timed bisimilarity to a location -/
+
+/-- A `Valuation Unit` is the constant of its only value. -/
+private theorem valUnit (u : Valuation Unit) : (fun _ => u ()) = u :=
+  funext fun x => by cases x; rfl
+
+/-- Resetting the single formula clock of a constant valuation gives the zero valuation. -/
+private theorem reset_unit (d : ℝ≥0) :
+    Valuation.reset ({()} : Set Unit) (fun _ => d) = fun _ => 0 := by
+  funext x; cases x; simp [Valuation.reset]
+
+/-- Advancing a constant `Valuation Unit` by `t` adds `t`. -/
+private theorem add_unit (d t : ℝ≥0) :
+    Valuation.add (fun _ : Unit => d) t = fun _ => d + t := rfl
+
+/-- Every state of the alternating automaton can delay by any duration. -/
+theorem alt_can_delay (a : Alt) (t : ℝ≥0) : ∃ a', altTLTS.delay a t a' := by
+  cases a with
+  | L0 e => exact ⟨_, AltStep.delay0 e t⟩
+  | L1 e => exact ⟨_, AltStep.delay1 e t⟩
+
+/-- The satisfaction relation: relate a state `a` to the canonical `ℓ0`- (resp. `ℓ1`-)
+state at clock `d` exactly when `(a, [y = d])` satisfies `X0` (resp. `X1`). -/
+def altSatRel : Alt → Alt → Prop
+  | a, .L0 d => (a, fun _ => d) ∈ altChar false
+  | a, .L1 d => (a, fun _ => d) ∈ altChar true
+
+/-- The satisfaction relation is a timed bisimulation: read off the back-and-forth from
+the two mutual equations `mem_altChar_false`/`mem_altChar_true`. -/
+theorem isBisimulation_altSatRel : LTS.IsBisimulation altTLTS altSatRel := by
+  rintro a b hab
+  cases b with
+  | L0 d =>
+    simp only [altSatRel] at hab
+    obtain ⟨C1, C2, C3⟩ := mem_altChar_false.mp hab
+    constructor
+    · rintro lbl a' hstep
+      cases lbl with
+      | inl u =>
+        obtain ⟨⟩ := u
+        obtain ⟨hd1, hmem⟩ := C2 a' hstep
+        refine ⟨Alt.L1 0, AltStep.a0 hd1, ?_⟩
+        simp only [altSatRel]; rwa [reset_unit] at hmem
+      | inr t =>
+        refine ⟨Alt.L0 (d + t), AltStep.delay0 d t, ?_⟩
+        simp only [altSatRel]
+        have hc := C3 t a' hstep; rwa [add_unit] at hc
+    · rintro lbl b' hstep
+      cases lbl with
+      | inl u =>
+        obtain ⟨⟩ := u
+        replace hstep := alt_act.mp hstep
+        cases hstep with
+        | a0 hd1 =>
+          rcases C1 with hgt | ⟨p', hp'a, hmem⟩
+          · exact absurd hgt (not_lt.mpr hd1)
+          · refine ⟨p', hp'a, ?_⟩
+            simp only [altSatRel]; rwa [reset_unit] at hmem
+      | inr t =>
+        replace hstep := alt_delay.mp hstep
+        cases hstep with
+        | delay0 =>
+          obtain ⟨a', ha'd⟩ := alt_can_delay a t
+          refine ⟨a', ha'd, ?_⟩
+          simp only [altSatRel]
+          have hc := C3 t a' ha'd; rwa [add_unit] at hc
+  | L1 d =>
+    simp only [altSatRel] at hab
+    obtain ⟨C1, C2, C3⟩ := mem_altChar_true.mp hab
+    constructor
+    · rintro lbl a' hstep
+      cases lbl with
+      | inl u =>
+        obtain ⟨⟩ := u
+        obtain ⟨hd2, hmem⟩ := C2 a' hstep
+        refine ⟨Alt.L0 0, AltStep.a1 hd2, ?_⟩
+        simp only [altSatRel]; rwa [reset_unit] at hmem
+      | inr t =>
+        refine ⟨Alt.L1 (d + t), AltStep.delay1 d t, ?_⟩
+        simp only [altSatRel]
+        have hc := C3 t a' hstep; rwa [add_unit] at hc
+    · rintro lbl b' hstep
+      cases lbl with
+      | inl u =>
+        obtain ⟨⟩ := u
+        replace hstep := alt_act.mp hstep
+        cases hstep with
+        | a1 hd2 =>
+          rcases C1 with hgt | ⟨p', hp'a, hmem⟩
+          · exact absurd hgt (not_lt.mpr hd2)
+          · refine ⟨p', hp'a, ?_⟩
+            simp only [altSatRel]; rwa [reset_unit] at hmem
+      | inr t =>
+        replace hstep := alt_delay.mp hstep
+        cases hstep with
+        | delay1 =>
+          obtain ⟨a', ha'd⟩ := alt_can_delay a t
+          refine ⟨a', ha'd, ?_⟩
+          simp only [altSatRel]
+          have hc := C3 t a' ha'd; rwa [add_unit] at hc
+
+/-- **Completeness for `X0`.** A state satisfying `X0` with formula clock `y = d` is timed
+bisimilar to `ℓ0` at clock `d`. -/
+theorem altChar_false_complete {p : Alt} {u : Valuation Unit}
+    (h : (p, u) ∈ altChar false) : TimedBisimilar altTLTS p (Alt.L0 (u ())) :=
+  isBisimulation_altSatRel.le_bisimilar
+    (show altSatRel p (Alt.L0 (u ())) by simp only [altSatRel]; rwa [valUnit])
+
+/-- **Completeness for `X1`.** A state satisfying `X1` with formula clock `y = d` is timed
+bisimilar to `ℓ1` at clock `d`. -/
+theorem altChar_true_complete {p : Alt} {u : Valuation Unit}
+    (h : (p, u) ∈ altChar true) : TimedBisimilar altTLTS p (Alt.L1 (u ())) :=
+  isBisimulation_altSatRel.le_bisimilar
+    (show altSatRel p (Alt.L1 (u ())) by simp only [altSatRel]; rwa [valUnit])
+
+/-- **`X0` is characteristic** for `ℓ0`: `(p, [y = d]) ⊨ X0` iff `p` is timed bisimilar to
+`ℓ0` at clock `d`. The multi-location characteristic theorem that single-variable `MtR`
+could not state. -/
+theorem altChar_false_iff {p : Alt} {u : Valuation Unit} :
+    (p, u) ∈ altChar false ↔ TimedBisimilar altTLTS p (Alt.L0 (u ())) :=
+  ⟨altChar_false_complete, altChar_false_sound⟩
+
+/-- **`X1` is characteristic** for `ℓ1`: `(p, [y = d]) ⊨ X1` iff `p` is timed bisimilar to
+`ℓ1` at clock `d`. -/
+theorem altChar_true_iff {p : Alt} {u : Valuation Unit} :
+    (p, u) ∈ altChar true ↔ TimedBisimilar altTLTS p (Alt.L1 (u ())) :=
+  ⟨altChar_true_complete, altChar_true_sound⟩
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
