@@ -1046,9 +1046,11 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.5: Thm 1.5.2 [infra, in progress] (Fundamental PRS Theorem — the explicit subresultant↔PRS
   similarity coefficients ηᵢ/τᵢ of eq 1.9/1.10); Thm 1.5.3 [infra, in progress] (the
   subresultant-PRS specialization ηᵢ=1). Bronstein proves neither, citing [39 Ch.7], [60], [16 §7],
-  [23]; now being built from Geddes–Czapor–Labahn [39] §7.3 Thm 7.4 (proof mapped: Lemma 7.1 = the
-  Sylvester-row-reduction det identity `Sⱼ(A,B) = ±Sⱼ(B, rem(A,B))` [the crux, next] → Lemma 7.2 =
-  Lemma 7.1 + the scaling law `subresultant_C_mul` [DONE] → Thm 7.4 = iterate down the PRS).
+  [23]; built from Geddes–Czapor–Labahn [39] §7.3 Thm 7.4. Foundations DONE: scaling law
+  `subresultant_C_mul` and the polynomial-column determinant form `subresultant_eq_det_polyCol`
+  (eq 7.12, derived within our own `bSylvester`/`subCol`). Remaining: Lemma 7.1 (the
+  Sylvester-row-reduction det identity `Sⱼ(A,B) = ±Sⱼ(B, rem(A,B))`, clean in the poly-column form)
+  → Lemma 7.2 (= 7.1 + scaling) → Thm 7.4 (iterate down the PRS).
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).

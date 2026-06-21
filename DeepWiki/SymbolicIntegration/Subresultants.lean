@@ -139,4 +139,52 @@ theorem subresultant_C_mul (a b : R) (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) 
     rw [hcardA, hcardB]
   rw [hprod, map_mul]; ring
 
+/-- Determinant is additive over a `Finset`-sum in a single column. -/
+theorem det_updateCol_sum' {N : Type*} [DecidableEq N] [Fintype N] (M : Matrix N N R) (c : N)
+    {ι : Type*} [DecidableEq ι] (s : Finset ι) (g : ι → N → R) :
+    (M.updateCol c (∑ i ∈ s, g i)).det = ∑ i ∈ s, (M.updateCol c (g i)).det := by
+  induction s using Finset.induction with
+  | empty => rw [Finset.sum_empty, Finset.sum_empty]
+             exact Matrix.det_eq_zero_of_column_eq_zero c (fun i => by simp)
+  | insert a s ha ih => rw [Finset.sum_insert ha, Matrix.det_updateCol_add, ih, Finset.sum_insert ha]
+
+/-- **Subresultant as a single polynomial-column determinant** (Geddes–Czapor–Labahn §7.3, eq 7.12;
+the form in which the Fundamental-PRS-Theorem row reduction is clean). Since all `ⱼSᵢ` share their
+first `m+n−2j−1` columns and differ only in the last (`subCol` index `m+n−i−j−1`),
+`Sⱼ(A,B) = ∑ᵢ C(det ⱼSᵢ)·Xⁱ` equals the determinant of the matrix whose last column is the
+polynomial `∑ᵢ Xⁱ·(that column)` — derived entirely from this library's own `bSylvester`/`subCol`,
+via determinant multilinearity in the last column (`det_updateCol_sum'` + `det_updateCol_smul`) and
+`RingHom.map_det` for the `C`-lift. -/
+theorem subresultant_eq_det_polyCol (A B : R[X]) (n m j : ℕ) (hlt : 2 * j < m + n) :
+    subresultant A B n m j
+      = (Matrix.updateCol
+          (fun (t s : Fin (m + n - 2 * j)) => C (bSylvester A B n m (subRow n m j t) (subCol n m j 0 s)))
+          ⟨m + n - 2 * j - 1, by omega⟩
+          (∑ i ∈ Finset.range (j + 1), fun (t : Fin (m + n - 2 * j)) =>
+            (X : R[X]) ^ i • C (bSylvester A B n m (subRow n m j t)
+              (subCol n m j i ⟨m + n - 2 * j - 1, by omega⟩)))).det := by
+  rw [subresultant, det_updateCol_sum']
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [show (fun (t : Fin (m + n - 2 * j)) => (X : R[X]) ^ i
+        • C (bSylvester A B n m (subRow n m j t) (subCol n m j i ⟨m + n - 2 * j - 1, by omega⟩)))
+      = (X : R[X]) ^ i • (fun (t : Fin (m + n - 2 * j)) =>
+        C (bSylvester A B n m (subRow n m j t) (subCol n m j i ⟨m + n - 2 * j - 1, by omega⟩)))
+      from rfl, Matrix.det_updateCol_smul]
+  have hcol : (Matrix.updateCol
+      (fun (t s : Fin (m + n - 2 * j)) => C (bSylvester A B n m (subRow n m j t) (subCol n m j 0 s)))
+      ⟨m + n - 2 * j - 1, by omega⟩
+      (fun t => C (bSylvester A B n m (subRow n m j t) (subCol n m j i ⟨m + n - 2 * j - 1, by omega⟩))))
+      = ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).map C := by
+    ext t s
+    by_cases hs : s = ⟨m + n - 2 * j - 1, by omega⟩
+    · subst hs; simp [Matrix.submatrix_apply]
+    · rw [Matrix.updateCol_apply, if_neg hs]
+      simp only [Matrix.submatrix_apply, Matrix.map_apply]
+      have hne : (s : ℕ) ≠ m + n - 2 * j - 1 := fun h => hs (Fin.ext h)
+      have hsv : (s : ℕ) < m + n - 2 * j - 1 := by have := s.isLt; omega
+      have hsub : subCol n m j 0 s = subCol n m j i s := by
+        apply Fin.ext; simp only [subCol]; rw [if_pos hsv, if_pos hsv]
+      rw [hsub]
+  rw [hcol, ← RingHom.mapMatrix_apply, ← RingHom.map_det]; exact mul_comm _ _
+
 end DeepWiki.SymbolicIntegration
