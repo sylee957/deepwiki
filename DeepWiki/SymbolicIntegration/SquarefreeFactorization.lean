@@ -9,9 +9,10 @@ The squarefree part and deflations of `A ∈ D[x]` are computed by gcd's with `d
 the fact that a prime factor `P` divides `dA/dx` exactly once less than it divides `A`. Here we
 prove the easy half (Theorem 1.6.1(i), over any commutative ring): if `Pⁿ⁺¹ ∣ A` then `Pⁿ`
 divides both `A` and `dA/dx`, hence `Pⁿ ∣ gcd(A, dA/dx)`; the characteristic-`0` converse
-(Theorem 1.6.1(ii)); and the squarefree criterion of §1.7 (Lemma 1.7.1): over a characteristic-`0`
-field, `A` is squarefree iff `gcd(A, dA/dx) = 1`. The deflation theory and the full
-squarefree-factorization routine are tracked as remaining library work. -/
+(Theorem 1.6.1(ii)); and the §1.7 squarefree criterion: over a characteristic-`0` field, `A` is
+squarefree iff `gcd(A, dA/dx) = 1`. The deflation theory (relations 1.11–1.13) and the
+squarefree-factorization parts (Lemma 1.7.1's equation 1.15) follow; the full Yun/Musser
+squarefree-factorization routine is tracked as remaining library work. -/
 
 open Polynomial
 
@@ -77,7 +78,7 @@ theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
 
 end CharZero
 
-/-- **Lemma 1.7.1** (§1.7): over a characteristic-`0` field, `A` is squarefree iff it is coprime
+/-- The squarefree criterion: over a characteristic-`0` field, `A` is squarefree iff it is coprime
 to its derivative — `gcd(A, dA/dx) = 1`. (`Squarefree ↔ Separable` on a perfect field, and
 `Separable A ↔ IsCoprime A (dA/dx)`.) -/
 theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
@@ -203,6 +204,48 @@ theorem squarefreePart_mul_deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart 
     rw [(deflation_isPrimitive A k hA).primPart_eq]; exact deflation_ne_zero A k
   have h := squarefreePart_mul_deflation (deflation A k) hne
   rwa [(deflation_isPrimitive A k hA).primPart_eq, ← deflation_succ A k hA] at h
+
+open Classical in
+/-- The squarefree part of a deflation is the product of the prime factors of `pp(A)` whose
+multiplicity exceeds `k`: `(A⁻ᵏ)* = ∏_{eₚ > k} P`. -/
+theorem squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A k)
+      = ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
+          (fun P => k < (normalizedFactors A.primPart).count P), P := by
+  rw [squarefreePart, (deflation_isPrimitive A k hA).primPart_eq]
+  apply Finset.prod_congr _ (fun _ _ => rfl)
+  ext P
+  rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation,
+    Finset.mem_filter, Multiset.mem_toFinset, ← Multiset.count_pos]
+  omega
+
+open Classical in
+/-- **Squarefree-factorization part** (§1.7, Lemma 1.7.1): `Aᵢ = ∏_{eₚ = i} P`, the product of the
+prime factors of `pp(A)` of multiplicity exactly `i` (the `i`-th factor of the squarefree
+factorization `pp(A) = ∏ᵢ Aᵢⁱ`). -/
+noncomputable def sqfreeFactPart (A : D[X]) (i : ℕ) : D[X] :=
+  ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
+    (fun P => (normalizedFactors A.primPart).count P = i), P
+
+open Classical in
+/-- **Lemma 1.7.1 (ii)** (§1.7, equation 1.15): `Aᵢ = (A⁻⁽ⁱ⁻¹⁾)* / (A⁻ⁱ)*`, in multiplicative
+form `(A⁻ⁱ)* · Aᵢ = (A⁻⁽ⁱ⁻¹⁾)*` (`1 ≤ i`). The squarefree parts of consecutive deflations differ
+exactly by the factor `Aᵢ` of multiplicity `i`, since `{eₚ > i} ⊔ {eₚ = i} = {eₚ ≥ i}`. -/
+theorem squarefreePart_deflation_mul_sqfreeFactPart (A : D[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A i) * sqfreeFactPart A i = squarefreePart (deflation A (i - 1)) := by
+  have hdisj : Disjoint ((normalizedFactors A.primPart).toFinset.filter
+        (fun P => i < (normalizedFactors A.primPart).count P))
+      ((normalizedFactors A.primPart).toFinset.filter
+        (fun P => (normalizedFactors A.primPart).count P = i)) := by
+    rw [Finset.disjoint_left]; intro P h1 h2
+    rw [Finset.mem_filter] at h1 h2; omega
+  rw [squarefreePart_deflation A i hA, squarefreePart_deflation A (i - 1) hA, sqfreeFactPart,
+    ← Finset.prod_union hdisj, ← Finset.filter_or]
+  apply Finset.prod_congr _ (fun _ _ => rfl)
+  apply Finset.filter_congr
+  intro P _
+  omega
 
 end Deflation
 

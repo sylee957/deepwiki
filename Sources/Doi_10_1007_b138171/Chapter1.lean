@@ -724,11 +724,19 @@ abbrev rel_1_13 := @squarefreePart_mul_deflation_succ
 `B² ∣ A`. -/
 abbrev def_1_7_1 := @Squarefree
 
-/-- **Lemma 1.7.1** (§1.7, p.29): over a characteristic-`0` field, `A` is squarefree iff
-`gcd(A, dA/dx) = 1` — i.e. `A` and its derivative are coprime. -/
-theorem lem_1_7_1 {K : Type*} [Field K] [CharZero K] {A : K[X]} :
+/-- **Squarefree criterion** (§1.7; a consequence of Theorem 1.6.1 over a characteristic-`0` field,
+used to justify the `Squarefree` algorithm): `A` is squarefree iff `gcd(A, dA/dx) = 1` — i.e. `A`
+and its derivative are coprime. -/
+theorem squarefree_iff_coprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
     Squarefree A ↔ IsCoprime A (derivative A) :=
   squarefree_iff_isCoprime_derivative
+
+/-- **Squarefree-factorization part** `Aᵢ = ∏_{eₚ = i} P` (§1.7, Lemma 1.7.1). -/
+noncomputable abbrev def_sqfreeFactPart := @sqfreeFactPart
+
+/-- **Lemma 1.7.1 (ii)** (§1.7, p.28, equation 1.15): `Aᵢ = (A⁻⁽ⁱ⁻¹⁾)* / (A⁻ⁱ)*` — multiplicatively,
+`(A⁻ⁱ)* · Aᵢ = (A⁻⁽ⁱ⁻¹⁾)*`. -/
+abbrev lem_1_7_1_ii := @squarefreePart_deflation_mul_sqfreeFactPart
 
 open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
@@ -1069,7 +1077,9 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
   true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
   triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
-§1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
+§1.7: Lemma 1.7.1 (i) (`A⁻ᵏ = ∏_{i>k} Aᵢ^(i-k)`); Lemma 1.7.1 (iii) (`pp(A) = ∏ᵢ Aᵢⁱ` is a
+  squarefree factorization); Lemma 1.7.2 (Yun's eqs 1.16–1.18); the Musser/Yun `Squarefree`
+  algorithm. (Lemma 1.7.1 (ii) / eq 1.15 is `lem_1_7_1_ii`.)
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
