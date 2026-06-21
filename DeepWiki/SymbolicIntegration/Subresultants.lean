@@ -571,6 +571,90 @@ theorem subresultant_rem_lt (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m)
   rw [subresultant_rem A B Q Rem n m j hjm (by omega) hB hQ hA,
     subresultant_padding B Rem m Rem.natDegree j hjk hjm hB le_rfl n hkn]
 
+/-- Per-minor evaluation for the degenerate index `j = γ-1` (Brown–Traub Lemma 1, eq 15):
+the `ⱼSᵢ` submatrix of `bSylvester B Rem γ φ` is upper-triangular — its single `Rem`-row is
+`[0,…,0, Rem.coeff i]` (since `Rem.coeff(φ-c)=0` on the kept columns, as `φ-c ≥ γ > deg Rem`) and the
+`B`-block is upper-triangular with `lc B = B.coeff γ` on the diagonal — so `det = (lc B)^(φ-γ+1)·Rem.coeff i`. -/
+private theorem subresultant_deg_sub_one_entry (B Rem : R[X]) (γ φ i : ℕ) (hγ : 1 ≤ γ)
+    (hγφ : γ ≤ φ) (hRem : Rem.natDegree < γ) (hi : i < γ) :
+    ((bSylvester B Rem γ φ).submatrix (subRow γ φ (γ - 1)) (subCol γ φ (γ - 1) i)).det
+      = (B.coeff γ) ^ (φ - γ + 1) * Rem.coeff i := by
+  set e : Fin ((φ - γ + 1) + 1) ≃ Fin (φ + γ - 2 * (γ - 1)) := finCongr (by omega) with he
+  rw [← Matrix.det_submatrix_equiv_self e, Matrix.det_of_upperTriangular]
+  · rw [Fin.prod_univ_castSucc]
+    congr 1
+    · rw [Finset.prod_congr rfl (fun t _ => ?_), Finset.prod_const, Finset.card_univ,
+        Fintype.card_fin]
+      have htv : ((e (Fin.castSucc t) : Fin _) : ℕ) = (t : ℕ) := by simp [he]
+      have hti := t.isLt
+      have hrow : (subRow γ φ (γ - 1) (e (Fin.castSucc t)) : ℕ) = (t : ℕ) := by
+        simp only [subRow, htv]; rw [if_pos (show (t : ℕ) < φ - (γ - 1) by omega)]
+      have hcol : (subCol γ φ (γ - 1) i (e (Fin.castSucc t)) : ℕ) = (t : ℕ) := by
+        simp only [subCol, htv]; rw [if_pos (show (t : ℕ) < φ + γ - 2 * (γ - 1) - 1 by omega)]
+      rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+      simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+      rw [if_pos (show (t : ℕ) < φ by omega), if_pos ⟨le_rfl, by omega⟩]
+      congr 1; omega
+    · have hlv : ((e (Fin.last (φ - γ + 1)) : Fin _) : ℕ) = φ - γ + 1 := by simp [he]
+      have hrow : (subRow γ φ (γ - 1) (e (Fin.last (φ - γ + 1))) : ℕ) = φ := by
+        simp only [subRow, hlv]
+        rw [if_neg (show ¬ (φ - γ + 1 < φ - (γ - 1)) by omega)]; omega
+      have hcol : (subCol γ φ (γ - 1) i (e (Fin.last (φ - γ + 1))) : ℕ) = φ - i := by
+        simp only [subCol, hlv]
+        rw [if_neg (show ¬ (φ - γ + 1 < φ + γ - 2 * (γ - 1) - 1) by omega)]; omega
+      rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+      simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+      rw [if_neg (show ¬ (φ < φ) by omega), if_pos ⟨by omega, by omega⟩]
+      congr 1; omega
+  · intro t s hts
+    have hsv : ((e s : Fin _) : ℕ) = (s : ℕ) := by simp [he]
+    have htv : ((e t : Fin _) : ℕ) = (t : ℕ) := by simp [he]
+    have hstn : (s : ℕ) < (t : ℕ) := by simpa using hts
+    have htle := t.isLt
+    rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+    have hcolv : (subCol γ φ (γ - 1) i (e s) : ℕ)
+        = if (s : ℕ) < φ + γ - 2 * (γ - 1) - 1 then (s : ℕ) else φ + γ - i - (γ - 1) - 1 := by
+      simp only [subCol, hsv]
+    have hrowv : (subRow γ φ (γ - 1) (e t) : ℕ)
+        = if (t : ℕ) < φ - (γ - 1) then (t : ℕ) else (t : ℕ) + (γ - 1) := by
+      simp only [subRow, htv]
+    simp only [bSylvester, Matrix.of_apply, hcolv, hrowv]
+    by_cases htB : (t : ℕ) < φ - (γ - 1)
+    · rw [if_pos htB, if_pos (show (s : ℕ) < φ + γ - 2 * (γ - 1) - 1 by omega),
+        if_pos (show (t : ℕ) < φ by omega), if_neg (by omega)]
+    · rw [if_neg htB, if_neg (show ¬ ((t : ℕ) + (γ - 1) < φ) by omega)]
+      by_cases hsB : (s : ℕ) < φ + γ - 2 * (γ - 1) - 1
+      · rw [if_pos hsB, if_pos ⟨by omega, by omega⟩, coeff_eq_zero_of_natDegree_lt (by omega)]
+      · rw [if_neg hsB, if_neg (by omega)]
+
+/-- **Subresultant at index `γ-1`** (Geddes §7.3 / Brown–Traub eq 15): for `deg Rem < γ ≤ φ`,
+`Sⱼ(B,Rem; γ,φ) = (lc B)^(φ-γ+1)·Rem` at `j = γ-1` — summing the per-minor determinants
+(`subresultant_deg_sub_one_entry`) reassembles `Rem` via `as_sum_range'` (`deg Rem < γ`). -/
+theorem subresultant_deg_sub_one (B Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ) (hγφ : γ ≤ φ)
+    (hRem : Rem.natDegree < γ) :
+    subresultant B Rem γ φ (γ - 1) = C ((B.coeff γ) ^ (φ - γ + 1)) * Rem := by
+  rw [subresultant, show (γ - 1) + 1 = γ from by omega]
+  rw [Finset.sum_congr rfl (fun i hi => by
+    rw [subresultant_deg_sub_one_entry B Rem γ φ i hγ hγφ hRem (Finset.mem_range.mp hi), map_mul,
+      mul_assoc]), ← Finset.mul_sum]
+  congr 1
+  simp only [C_mul_X_pow_eq_monomial]
+  exact (Rem.as_sum_range' γ (by omega)).symm
+
+/-- **Fundamental PRS Theorem, degenerate case `j = deg G − 1`** (Brown–Traub Lemma 1, eq 15): for a
+division step `A = Rem + B·Q` with `deg Rem < deg B = γ ≤ deg A = φ`,
+`S_{γ-1}(A,B) = (-1)^(φ-γ+1)·(lc B)^(φ-γ+1)·Rem` — the `(γ-1)`-th subresultant is the remainder up to
+sign and a power of `lc B`. Composes `subresultant_rem` (swap-with-sign) with `subresultant_deg_sub_one`. -/
+theorem subresultant_rem_eq_15 (A B Q Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ) (hγφ : γ ≤ φ)
+    (hB : B.natDegree ≤ γ) (hRem : Rem.natDegree < γ) (hQ : Q.natDegree + γ ≤ φ)
+    (hA : A = Rem + B * Q) :
+    subresultant A B φ γ (γ - 1)
+      = (-1 : R[X]) ^ (φ - γ + 1) * (C ((B.coeff γ) ^ (φ - γ + 1)) * Rem) := by
+  rw [subresultant_rem A B Q Rem φ γ (γ - 1) (by omega) (by omega) hB hQ hA,
+    subresultant_deg_sub_one B Rem γ φ hγ hγφ hRem,
+    show (γ - (γ - 1)) * (φ - (γ - 1)) = φ - γ + 1 from by
+      rw [show γ - (γ - 1) = 1 from by omega, one_mul]; omega]
+
 /-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
 degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
 power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,

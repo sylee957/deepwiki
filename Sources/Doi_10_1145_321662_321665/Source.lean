@@ -5,7 +5,7 @@ polynomial remainder sequence. Bronstein's *Symbolic Integration I* and Geddesâ€
 **Lemma 1** (the single-division-step subresultant relation). The catalog file here points at the
 `DeepWiki.SymbolicIntegration` subresultant machinery formalizing Lemma 1. -/
 
-namespace DeepWiki.Bt
+namespace DeepWiki.Btr
 
 /-- DOI of the source paper. -/
 def doi : String := "10.1145/321662.321665"
@@ -19,4 +19,4 @@ def reference : String := "Journal of the ACM 18(4):505â€“514, 1971"
 /-- Authors of the source paper. -/
 def authors : List String := ["W. S. Brown", "J. F. Traub"]
 
-end DeepWiki.Bt
+end DeepWiki.Btr

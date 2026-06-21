@@ -1135,8 +1135,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   `subresultant_pad_step`/`subresultant_padding` (`Sⱼ(B,Rem; m,n) = (lc B)^(n-k)·Sⱼ(B,Rem; m,k)`, by
   cofactor-expanding each `ⱼSᵢ` along its first column = `lc B · e₀`), assembled in `subresultant_rem_lt`
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
-  true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
-  triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
+  true degree `k`. The degenerate case `j=γ-1` (Brown–Traub eq 15) is also DONE:
+  `subresultant_deg_sub_one`/`subresultant_rem_eq_15` (`S_{γ-1}(A,B) = (-1)^(φ-γ+1)·(lc B)^(φ-γ+1)·Rem`,
+  via the upper-triangular `ⱼSᵢ` det — `Rem`-row `= [0,…,0,Rem.coeff i]`, `B`-block triangular with
+  `lc B` diagonal). Remaining: the degenerate cases `j=η` (eq 13) and `η<j<γ-1` (eq 14, `=0`) — the
+  general triangular det with the `(γ-j)`-row `Rem`-block (diagonal `Rem.coeff j`, `=0` for `j>η`);
+  then Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS) → Thm 1.5.2/1.5.3.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
