@@ -171,4 +171,27 @@ theorem maqFilter_tsum_mul_shift_eq_zero (θ : ℝ[X]) {h : ℤ} (hh : (θ.natDe
     · rw [maqFilter_neg θ hk, zero_mul]
   simp only [hz, tsum_zero]
 
+/-- **The `MA(q)` autocovariance, explicit formula** (`0 ≤ h`): `∑ₖ ψₖ ψ_{k+h} = ∑_{k=0}^q θₖ θ_{k+h}`,
+so by Theorem 3.2.1 the `MA(q)` autocovariance is `γ(h) = σ² ∑_{k=0}^{q−h} θₖ θ_{k+h}` for `0 ≤ h ≤ q`
+(the terms with `k + h > q` vanish), the classical `MA(q)` acvf. -/
+theorem maqFilter_tsum_mul_shift_eq (θ : ℝ[X]) {h : ℤ} (hh : 0 ≤ h) :
+    ∑' k : ℤ, maqFilter θ k * maqFilter θ (k + h)
+      = ∑ k ∈ Finset.range (θ.natDegree + 1), θ.coeff k * θ.coeff (k + h.toNat) := by
+  have key : ∀ n : ℕ, maqFilter θ ((n : ℤ) + h) = θ.coeff (n + h.toNat) := by
+    intro n
+    simp only [maqFilter, if_pos (by omega : (0 : ℤ) ≤ (n : ℤ) + h)]
+    congr 1; omega
+  have hsupp : Function.support (fun k : ℤ => maqFilter θ k * maqFilter θ (k + h)) ⊆
+      Set.range (Nat.cast : ℕ → ℤ) := by
+    intro k hk
+    rw [Function.mem_support] at hk
+    rcases le_or_gt 0 k with h0 | h0
+    · exact ⟨k.toNat, Int.toNat_of_nonneg h0⟩
+    · exact absurd (by rw [maqFilter_neg θ h0, zero_mul]) hk
+  rw [← Function.Injective.tsum_eq Nat.cast_injective hsupp]
+  simp only [maqFilter_natCast, key]
+  refine tsum_eq_sum fun n hn => ?_
+  rw [Finset.mem_range, not_lt] at hn
+  rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega : θ.natDegree < n), zero_mul]
+
 end DeepWiki.TimeSeries
