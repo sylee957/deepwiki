@@ -5,7 +5,11 @@ import Sources.Doi_10_1017_CBO9780511814105.Source
 Book-numbered restatements for the timing-based mutual-exclusion model of §13.2,
 discharged by the `DeepWiki.ReactiveSystems` library. Correctness (Lynch–Shavit,
 Theorem 4.6) rests on the timing assumptions and is verified externally (UPPAAL);
-we formalize the model and its safety specification. -/
+we formalize the model and its safety specification.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+Thm 4.6 (Fischer mutual-exclusion safety, general `n`) `[external]` (UPPAAL/CWB; the model `fischer`
+  and the spec `FischerSafe` are formalized — the safety proof itself is delegated). -/
 
 namespace DeepWiki.Rs
 

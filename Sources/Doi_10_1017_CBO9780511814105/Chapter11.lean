@@ -18,7 +18,11 @@ import Sources.Doi_10_1017_CBO9780511814105.Source
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
 Book-numbered restatements for §11.1 (timed/untimed trace equivalence), §11.2
 (timed/untimed bisimilarity) and §11.4 (the region construction), discharged by
-the `DeepWiki.ReactiveSystems` library. (§11.5, zone graphs, is future work.) -/
+the `DeepWiki.ReactiveSystems` library.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§11.5: zone graphs `[infra]`.
+Ex 11.3: timed parallel composition `[research]` (rests on the §9.4 negative-premise SOS rule, Chapter 9). -/
 
 namespace DeepWiki.Rs
 

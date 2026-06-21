@@ -22,7 +22,14 @@ import Sources.Doi_10_1017_CBO9780511814105.Source
 Book-numbered restatements for the timed logic `Mt` with formula clocks (§12.1,
 Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
-(The completeness half via regions is future work.) -/
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§12.2: Ex 12.2 (formulate `Mt` properties of the Example 11.4 automata) `[deferred]`.
+§12.3: Thm 12.4 (completeness half of the timed Hennessy–Milner characterisation, general case)
+  `[external]` (defers to Laroussinie–Larsen–Weise 1995); Ex 12.12 statement 3 (full-`Mt` strictness
+  at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
+  (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
+  [0,√2] from [0,√2)) `[research]`. -/
 
 namespace DeepWiki.Rs
 

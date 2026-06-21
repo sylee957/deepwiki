@@ -27,6 +27,23 @@ dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
   declaration namespace stays a short slug (`DeepWiki.Dnc`). Book numbers live **only** in
   the catalog — the library stays number-free. A second topic gets `DeepWiki/<Topic>/` over
   the same `Sources/` layer.
+  - **The catalog is the complete coverage map.** A **formalized** book item is an
+    `alias`/`abbrev`; the **still-missing** items of a chapter are listed in a
+    `## NOT YET FORMALIZED` block (a `/-! … -/` section in that `Chapter*.lean`), one item per
+    entry with a reason tag — `[deferred]` (engine exists; needs figure OCR / a judgment call,
+    do with the user), `[infra]` (needs a representation or solver layer not yet built),
+    `[research]` (research-grade / open), `[external]` (proof lives in a cited paper). So
+    scanning a chapter shows exactly what is and isn't done, and **why** for the gaps. The
+    block is **subtractive** (see [[feedback-subtractive-missing-markers]]): when an item is
+    formalized, **delete its line** (no "done" notes, no "Done:" summary) in the same commit —
+    an empty block means the chapter is complete. Enumerate items **one by one, never a range**
+    (`Lemma 4.4.1; Lemma 4.4.2`, not `4.4.1–4.4.4`). The book drives what to record: a research
+    monograph with no exercises records none; an erratum / non-theorem is cataloged as the
+    repaired statement with the misprint noted. **Completion and missing-item status lives in
+    the catalog, never in memory** — memory keeps only what the catalog cannot (correctness
+    adjudications, reusable Lean lessons, project context). (Legacy catalogs that still mark gaps
+    with inline per-item `not formalized` notes — the DNC `Sources/Doi_10_1002_9781119440284`
+    chapters — migrate to a `## NOT YET FORMALIZED` block when you next touch the file.)
 - **Per-paper source catalogs.** A result the library takes from (or a book *defers to*) an
   individual **paper** gets its **own** `Sources/Doi_<sanitized-doi>/` catalog — a
   `Source.lean` (paper DOI + title + authors, short author-slug namespace, e.g.
@@ -66,7 +83,10 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
    the book's wording — "it compiled" ≠ "it says the right thing".
 6. **Catalog** the book item in `Sources/<slug>/Chapter*.lean` (alias/abbrev + §/page
    docstring). The catalog file must `import` the chapter that defines the aliased
-   declaration, or the build fails.
+   declaration, or the build fails. Keep the catalog a **complete subtractive coverage map**
+   (see Two-layer architecture): items you did *not* formalize get a reason-tagged
+   `not formalized` note so the chapter file shows the whole gap list; status lives here, not
+   in memory.
 
 ## Build & gate
 

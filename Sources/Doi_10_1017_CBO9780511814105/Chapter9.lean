@@ -9,8 +9,11 @@ import Sources.Doi_10_1017_CBO9780511814105.Source
 /-! # Reactive Systems catalog — Chapter 9: CCS with time delays
 Book-numbered restatements for the timed transition-system model of §9.2 and the
 syntax and SOS rules of timed CCS (§9.3), discharged by the
-`DeepWiki.ReactiveSystems` library. (§9.4 parallel composition / §9.5 discussion
-are noted in the library.) -/
+`DeepWiki.ReactiveSystems` library.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§9.4: the negative-premise SOS rule for the timed parallel operator `[research]` (needs a stratified /
+  coinductive transition definition); Ex 9.5. (Ex 11.3 in Chapter 11 depends on this.) -/
 
 namespace DeepWiki.Rs
 
