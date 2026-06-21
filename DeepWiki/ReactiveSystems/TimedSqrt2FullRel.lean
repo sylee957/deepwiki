@@ -98,6 +98,23 @@ theorem process_le_iff_clock_le_cross {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤
     NNReal.coe_add]
   constructor <;> intro <;> linarith
 
+/-- The **crossing-value valuation** (clock crossings only): `y ↦ u y + (√2 − d)`, the value clock `y`
+holds when the process reaches `√2`. This is the delay-invariant object; the process's own τ = `√2 − d`
+is *not* invariant and is tracked separately. -/
+noncomputable def cv {D : Type*} (d : ℝ≥0) (u : Valuation D) : Valuation D := fun y => u y + (sqrt2NN - d)
+
+@[simp] theorem cv_apply {D : Type*} (d : ℝ≥0) (u : Valuation D) (y : D) :
+    cv d u y = u y + (sqrt2NN - d) := rfl
+
+/-- **The crossing-value valuation is delay-invariant** (for live delays `d + δ ≤ √2`): advancing the
+process and all clocks together leaves every clock's `√2`-crossing value unchanged. This is what makes
+the crossing-value region match auto-preserved under delay — the structural key to the construction. -/
+theorem cv_delay_invariant {D : Type*} {d δ : ℝ≥0} {u : Valuation D} (h : d + δ ≤ sqrt2NN) :
+    cv (d + δ) (u.add δ) = cv d u := by
+  funext y
+  simp only [cv_apply, Valuation.add_apply]
+  exact TLTS.clock_at_sqrt2_delay_invariant h
+
 namespace TLTS
 
 /-- The live regime's coupling: formula-clock region equivalence, the `√2`-side (open/closed), the
