@@ -579,6 +579,91 @@ theorem isRelPrime_squarefreePart_Yun (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : 
   rw [Yun, ← hI, ← hf, ← Finset.add_sum_erase _ g haI'] at hPY
   exact hga ((dvd_add_left hPS).mp hPY)
 
+/-- Char-`0` multiplicity drop in the derivative: if `Pʲ ∥ p` exactly (`Pʲ ∣ p`, `P^{j+1} ∤ p`) for an
+irreducible `P` and `j ≥ 1`, then `Pʲ ∤ dp/dx`. Writing `p = Pʲ·g` (`P ∤ g`), `dp/dx = P^{j-1}·(j·P'·g
++ P·g')`, and `P` divides neither `j` (nonzero in char `0`), `P'` (separability), nor `g`. -/
+private theorem pow_not_dvd_derivative_aux (p P : K[X]) (j : ℕ) (hj : 1 ≤ j) (hP : Irreducible P)
+    (hdvd : P ^ j ∣ p) (hndvd : ¬ P ^ (j + 1) ∣ p) : ¬ P ^ j ∣ derivative p := by
+  obtain ⟨g, hg⟩ := hdvd
+  have hPg : ¬ P ∣ g := fun ⟨h, hgh⟩ => hndvd ⟨h, by rw [hg, hgh]; ring⟩
+  rw [hg]
+  intro hdvd2
+  rw [derivative_mul, derivative_pow] at hdvd2
+  have hPne : P ^ (j - 1) ≠ 0 := pow_ne_zero _ hP.ne_zero
+  have hsplit : P ^ j = P ^ (j - 1) * P := by rw [← pow_succ]; congr 1; omega
+  have h1 : P ^ j ∣ C (j : K) * P ^ (j - 1) * derivative P * g :=
+    (dvd_add_left (dvd_mul_right (P ^ j) (derivative g))).mp hdvd2
+  rw [show C (j : K) * P ^ (j - 1) * derivative P * g
+      = P ^ (j - 1) * (C (j : K) * derivative P * g) from by ring, hsplit,
+    mul_dvd_mul_iff_left hPne] at h1
+  rcases hP.prime.dvd_mul.mp h1 with h | hg'
+  · rcases hP.prime.dvd_mul.mp h with hcj | hdP
+    · exact hP.prime.not_unit (isUnit_of_dvd_unit hcj
+        (isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by omega)))))
+    · exact hP.prime.not_unit ((hP.separable).isUnit_of_dvd' (dvd_refl P) hdP)
+  · exact hPg hg'
+
+/-- Musser's algorithm initialization `S⁻ ← gcd(S, dS/dx)` (§1.7, eq 1.14), over a characteristic-`0`
+field: `gcd(pp(A), d pp(A)/dx) = A⁻¹` (up to associates). The forward divisibility `A⁻¹ ∣ gcd` holds in
+any characteristic (`pow_sub_one_dvd_derivative_of_pow_dvd` on each `Aᵢ^i ∣ pp`); the reverse uses the
+char-`0` multiplicity drop (`pow_not_dvd_derivative_aux`): a prime `P ∣ Aⱼ` has `Pʲ ∤ pp'`, so the
+cofactor `pp'/A⁻¹` is coprime to `gcd`, forcing `gcd ∣ A⁻¹`. -/
+theorem deflation_one_eq_gcd (A : K[X]) (hA : A.primPart ≠ 0) :
+    Associated (gcd A.primPart (derivative A.primPart)) (deflation A 1) := by
+  set I := (normalizedFactors A.primPart).toFinset.image
+    (fun P => (normalizedFactors A.primPart).count P) with hI
+  set f := sqfreeFactPart A with hf
+  have hfact : Associated A.primPart (∏ i ∈ I, (f i) ^ i) :=
+    primPart_associated_prod_sqfreeFactPart A hA
+  have hD1 : deflation A 1 = ∏ i ∈ I, (f i) ^ (i - 1) := deflation_eq_prod_sqfreeFactPart A 1
+  have hpair : ∀ e : ℕ → ℕ,
+      (↑I : Set ℕ).Pairwise (Function.onFun IsRelPrime fun i => (f i) ^ (e i)) :=
+    fun e i _ j _ hij => (((sqfreeFactPart_isRelPrime A hij).isCoprime).pow_left.pow_right).isRelPrime
+  have hI_dvd : deflation A 1 ∣ derivative A.primPart := by
+    rw [hD1]
+    refine Finset.prod_dvd_of_isRelPrime (hpair (fun i => i - 1)) (fun i hi => ?_)
+    exact pow_sub_one_dvd_derivative_of_pow_dvd
+      ((Finset.dvd_prod_of_mem (fun i => (f i) ^ i) hi).trans hfact.symm.dvd)
+  obtain ⟨s, hs⟩ := id hI_dvd
+  have hgcdne : gcd A.primPart (derivative A.primPart) ≠ 0 :=
+    fun h => hA (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+  have hcop : IsCoprime (gcd A.primPart (derivative A.primPart)) s := by
+    rw [← isRelPrime_iff_isCoprime, isRelPrime_iff_no_prime_factors hgcdne]
+    intro P hPg hPs hPp
+    have hPpp : P ∣ A.primPart := hPg.trans (gcd_dvd_left _ _)
+    have hPprod : P ∣ ∏ i ∈ I, (f i) ^ i := hPpp.trans hfact.dvd
+    rw [hPp.dvd_finsetProd_iff] at hPprod
+    obtain ⟨j, hjI, hPfjpow⟩ := hPprod
+    have hPfj : P ∣ f j := hPp.dvd_of_dvd_pow hPfjpow
+    have hj1 : 1 ≤ j := by
+      rcases Nat.eq_zero_or_pos j with hj0 | hj0
+      · rw [hj0, pow_zero] at hPfjpow; exact absurd (isUnit_of_dvd_one hPfjpow) hPp.not_unit
+      · exact hj0
+    obtain ⟨c, hc⟩ := hPfj
+    have hPc : ¬ P ∣ c := fun ⟨d, hd⟩ =>
+      hPp.not_unit ((sqfreeFactPart_squarefree A j) P ⟨d, by rw [← hf, hc, hd]; ring⟩)
+    have hcoperase : IsCoprime P (∏ i ∈ I.erase j, (f i) ^ i) := by
+      refine IsCoprime.prod_right (fun i hi => ?_)
+      have hij : j ≠ i := fun h => (Finset.mem_erase.mp hi).1 h.symm
+      exact (((sqfreeFactPart_isRelPrime A hij).isCoprime).of_isCoprime_of_dvd_left
+        ⟨c, hc⟩).pow_right
+    have hndvd : ¬ P ^ (j + 1) ∣ A.primPart := by
+      intro hd
+      rw [hfact.dvd_iff_dvd_right, ← Finset.mul_prod_erase I (fun i => (f i) ^ i) hjI] at hd
+      have h2 : P ^ (j + 1) ∣ (f j) ^ j := (hcoperase.pow_left).dvd_of_dvd_mul_right hd
+      rw [hc, mul_pow, pow_succ] at h2
+      exact hPc (hPp.dvd_of_dvd_pow ((mul_dvd_mul_iff_left (pow_ne_zero j hPp.ne_zero)).mp h2))
+    have hdvdj : P ^ j ∣ A.primPart :=
+      ((pow_dvd_pow_of_dvd ⟨c, hc⟩ j).trans
+        (Finset.dvd_prod_of_mem (fun i => (f i) ^ i) hjI)).trans hfact.symm.dvd
+    have hpdvd : P ^ j ∣ derivative A.primPart := by
+      rw [hs, show j = (j - 1) + 1 from by omega, pow_succ]
+      exact mul_dvd_mul ((pow_dvd_pow_of_dvd ⟨c, hc⟩ (j - 1)).trans
+        (hD1 ▸ Finset.dvd_prod_of_mem (fun i => (f i) ^ (i - 1)) hjI)) hPs
+    exact pow_not_dvd_derivative_aux A.primPart P j hj1 hPp.irreducible hdvdj hndvd hpdvd
+  exact associated_of_dvd_dvd (hcop.dvd_of_dvd_mul_right (hs ▸ gcd_dvd_right _ _))
+    (dvd_gcd (deflation_dvd_primPart A 1 hA) ⟨s, hs⟩)
+
 end GcdField
 
 section SquarefreeAlgorithm

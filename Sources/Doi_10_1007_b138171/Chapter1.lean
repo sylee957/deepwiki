@@ -773,6 +773,10 @@ abbrev lem_1_7_2_eq_17_gcd := @isRelPrime_squarefreePart_Yun
 `Aₖ = S*/Y` (1.15) and `S⁻/Y = A⁻⁽ᵏ⁺¹⁾` (1.13) this is one full pass of the loop. -/
 abbrev alg_squarefree_loop_gcd := @gcd_squarefreePart_deflation
 
+/-- **Algorithm `Squarefree`** (§1.7, p.29, Musser): the initialization `S⁻ ← gcd(S, dS/dx)` (eq 1.14)
+over a characteristic-`0` field — `gcd(pp(A), d pp(A)/dx) = A⁻¹` (up to associates). -/
+abbrev alg_squarefree_init_gcd := @deflation_one_eq_gcd
+
 open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
 `A = ∏_{a∈s}(X − a)^{eₐ}`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` is the (squarefree) product of the roots
@@ -1112,12 +1116,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
   true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
   triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
-§1.7: the Musser/Yun `Squarefree` algorithm — initialization `S⁻ ← gcd(S, dS/dx)` (eq 1.14,
-  `A⁻¹ = gcd(pp A, d pp A/dx)`, char-0 derivative-gcd) [infra]; an executable recursive `def` of the
-  loop with a total-correctness theorem [infra]. (Loop step `Y ← gcd(S*, S⁻) = (A⁻ᵏ)*`
-  = `alg_squarefree_loop_gcd`; with `Aₖ = S*/Y` (1.15) and `S⁻/Y = A⁻⁽ᵏ⁺¹⁾` (1.13) one pass is justified.
-  Yun's `Yₖ` = `def_yun`; eq 1.17 deriv = `lem_1_7_2`, gcd = `lem_1_7_2_eq_17_gcd`; eq 1.18
-  = `lem_1_7_2_eq_18`. Lemma 1.7.1 + Lemma 1.7.2 done.)
+§1.7: the Musser/Yun `Squarefree` algorithm — an executable recursive `def` of the loop with a
+  total-correctness theorem [infra]. (All step-correctness lemmas are done: initialization
+  `S⁻ ← gcd(S, dS/dx) = A⁻¹` (eq 1.14, char-0) = `alg_squarefree_init_gcd`; loop step
+  `Y ← gcd(S*, S⁻) = (A⁻ᵏ)*` = `alg_squarefree_loop_gcd`; with `Aₖ = S*/Y` (1.15) and
+  `S⁻/Y = A⁻⁽ᵏ⁺¹⁾` (1.13) each pass is justified. Yun's `Yₖ` = `def_yun`; eq 1.17 deriv = `lem_1_7_2`,
+  gcd = `lem_1_7_2_eq_17_gcd`; eq 1.18 = `lem_1_7_2_eq_18`. Lemma 1.7.1 + Lemma 1.7.2 done.)
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
