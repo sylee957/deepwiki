@@ -212,4 +212,71 @@ theorem det_updateRow_add_sum_smul_self {N : Type*} [DecidableEq N] [Fintype N] 
       rw [hM', Matrix.updateRow_idem]]
     rw [h1, hM', ih hsub]
 
+/-- **Subresultant invariance under `A ↦ A + c·B`** (Geddes §7.3, the single-term/`deg p = 0` case
+of Lemma 7.1's row reduction): every subresultant `Sⱼ(A,B)` is unchanged by adding a constant
+multiple of `B` to `A` (requires `m ≤ n`, `j < n`, `B.natDegree ≤ m`). Proof: per submatrix,
+`ⱼSᵢ(A + c·B) = (1 + c•P)·ⱼSᵢ(A)` where `P` sends each A-row to its B-row source; `1 + c•P` is
+unipotent upper-triangular (`det = 1`), and the product is the coefficient convolution
+`(A + c·B).coeff = A.coeff + c·B.coeff` (the two `if`-ranges agree because `B.coeff` vanishes outside
+the overlapping degree window). -/
+theorem subresultant_add_const_mul (A B : R[X]) (c : R) (n m j : ℕ)
+    (hmn : m ≤ n) (hjn : j < n) (hB : B.natDegree ≤ m) :
+    subresultant (A + C c * B) B n m j = subresultant A B n m j := by
+  rw [subresultant, subresultant]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  congr 1
+  set P : Matrix (Fin (m + n - 2 * j)) (Fin (m + n - 2 * j)) R :=
+    Matrix.of (fun t t' => if (t : ℕ) < m - j ∧ (t' : ℕ) = n - j + (t : ℕ) then 1 else 0) with hP
+  have hTtri : (1 + c • P : Matrix _ _ R).BlockTriangular id := by
+    intro a b hab
+    simp only [Matrix.add_apply, Matrix.smul_apply, hP, Matrix.of_apply, id] at hab ⊢
+    rw [Matrix.one_apply_ne (fun h => absurd (h ▸ hab) (lt_irrefl _)),
+      if_neg (by rintro ⟨_, h⟩; omega), smul_zero, add_zero]
+  have hTdet : (1 + c • P : Matrix _ _ R).det = 1 := by
+    rw [Matrix.det_of_upperTriangular hTtri]
+    refine Finset.prod_eq_one (fun t _ => ?_)
+    simp only [Matrix.add_apply, Matrix.one_apply_eq, Matrix.smul_apply, hP, Matrix.of_apply]
+    rw [if_neg (by rintro ⟨_, h⟩; omega), smul_zero, add_zero]
+  set M := (bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i) with hM
+  have hprod : (bSylvester (A + C c * B) B n m).submatrix (subRow n m j) (subCol n m j i)
+      = (1 + c • P) * M := by
+    ext t s
+    rw [Matrix.add_mul, Matrix.one_mul, Matrix.smul_mul, Matrix.add_apply, Matrix.smul_apply,
+      smul_eq_mul]
+    set l := (subCol n m j i s : ℕ) with hl
+    by_cases ht : (t : ℕ) < m - j
+    · have hb1 : n - j + (t : ℕ) < m + n - 2 * j := by have := t.isLt; omega
+      have hPMt : (P * M) t s = M ⟨n - j + (t : ℕ), hb1⟩ s := by
+        rw [hP, Matrix.mul_apply, Finset.sum_eq_single ⟨n - j + (t : ℕ), hb1⟩]
+        · simp only [Matrix.of_apply, ht, true_and, if_true, one_mul]
+        · intro b _ hb
+          simp only [Matrix.of_apply]; rw [if_neg (fun hc => hb (Fin.ext hc.2)), zero_mul]
+        · intro h; exact absurd (Finset.mem_univ _) h
+      rw [hPMt, hM, Matrix.submatrix_apply, Matrix.submatrix_apply, Matrix.submatrix_apply]
+      have hsr : (subRow n m j t : Fin (m + n)) = ⟨(t : ℕ), by have := t.isLt; omega⟩ := by
+        apply Fin.ext; simp only [subRow]; rw [if_pos ht]
+      have hsr2 : (subRow n m j ⟨n - j + (t : ℕ), hb1⟩ : Fin (m + n))
+          = ⟨n + (t : ℕ), by have := t.isLt; omega⟩ := by
+        apply Fin.ext; simp only [subRow, Fin.val_mk]
+        rw [if_neg (show ¬ (n - j + (t : ℕ) < m - j) by omega)]; omega
+      rw [hsr, hsr2]
+      simp only [bSylvester, Matrix.of_apply, coeff_add, coeff_C_mul, ← hl,
+        if_pos (show (t : ℕ) < m by omega), if_neg (show ¬ n + (t : ℕ) < m by omega)]
+      by_cases hc : (t : ℕ) ≤ l ∧ l ≤ (t : ℕ) + n
+      · by_cases hc2 : n + (t : ℕ) - m ≤ l ∧ l ≤ n + (t : ℕ)
+        · simp only [if_pos hc, if_pos hc2]
+        · rw [Polynomial.coeff_eq_zero_of_natDegree_lt (show B.natDegree < n + (t : ℕ) - l by omega)]
+          simp only [if_pos hc, if_neg hc2, mul_zero, add_zero]
+      · simp only [if_neg hc, if_neg (show ¬ (n + (t : ℕ) - m ≤ l ∧ l ≤ n + (t : ℕ)) by omega),
+          mul_zero, add_zero]
+    · have hPMt : (P * M) t s = 0 := by
+        rw [hP, Matrix.mul_apply]; refine Finset.sum_eq_zero (fun b _ => ?_)
+        simp only [Matrix.of_apply]; rw [if_neg (fun hc => ht hc.1), zero_mul]
+      rw [hPMt, mul_zero, add_zero, hM, Matrix.submatrix_apply, Matrix.submatrix_apply]
+      have hsr : (subRow n m j t : Fin (m + n)) = ⟨(t : ℕ) + j, by have := t.isLt; omega⟩ := by
+        apply Fin.ext; simp only [subRow]; rw [if_neg ht]
+      rw [hsr]
+      simp only [bSylvester, Matrix.of_apply, ← hl, if_neg (show ¬ (t : ℕ) + j < m by omega)]
+  rw [hprod, Matrix.det_mul, hTdet, one_mul]
+
 end DeepWiki.SymbolicIntegration

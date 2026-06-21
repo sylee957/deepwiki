@@ -1047,10 +1047,13 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   similarity coefficients ηᵢ/τᵢ of eq 1.9/1.10); Thm 1.5.3 [infra, in progress] (the
   subresultant-PRS specialization ηᵢ=1). Bronstein proves neither, citing [39 Ch.7], [60], [16 §7],
   [23]; built from Geddes–Czapor–Labahn [39] §7.3 Thm 7.4. Foundations DONE: scaling law
-  `subresultant_C_mul` and the polynomial-column determinant form `subresultant_eq_det_polyCol`
-  (eq 7.12, derived within our own `bSylvester`/`subCol`). Remaining: Lemma 7.1 (the
-  Sylvester-row-reduction det identity `Sⱼ(A,B) = ±Sⱼ(B, rem(A,B))`, clean in the poly-column form)
-  → Lemma 7.2 (= 7.1 + scaling) → Thm 7.4 (iterate down the PRS).
+  `subresultant_C_mul`; the polynomial-column determinant form `subresultant_eq_det_polyCol`
+  (eq 7.12); the row-reduction engines `det_updateCol_sum'`/`det_updateRow_add_sum_smul_self`; and
+  Lemma 7.1's row-reduction CORE for the constant case — `subresultant_add_const_mul`
+  (`Sⱼ(A + c·B, B) = Sⱼ(A,B)`, via the unipotent transvection `1 + c•P` and the coeff convolution).
+  Remaining: general `A ↦ A + B·p` (the `∑_d p_d` convolution; same transvection, multi-term) →
+  Lemma 7.1 full (`Sⱼ(A,B) = ±Sⱼ(B, rem(A,B))` + swap-with-sign + `b^(m-k)` padding) → Lemma 7.2 →
+  Thm 7.4 (iterate down the PRS).
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
