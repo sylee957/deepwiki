@@ -250,6 +250,12 @@ finite moving average `Xₜ = ∑_{j=0}^q θⱼ Zₜ₋ⱼ` (`= θ(B) Z`). The l
 `linearProcessLp_maqFilter_eq`. -/
 alias ex_3_2_1_eq := DeepWiki.TimeSeries.linearProcessLp_maqFilter_eq
 
+/-- **§3.2 (the `MA(q)` autocovariance has finite support)**: `∑ₖ ψₖ ψ_{k+h} = 0` for `|h| > q`, so by
+Theorem 3.2.1 the `MA(q)` autocovariance `γ(h) = σ² ∑ₖ ψₖ ψ_{k+h}` vanishes at every lag beyond the
+order `q = deg θ` — the characterizing property of an `MA(q)`. The library's
+`maqFilter_tsum_mul_shift_eq_zero`. -/
+alias maq_acvf_finite_support := DeepWiki.TimeSeries.maqFilter_tsum_mul_shift_eq_zero
+
 /-- **Example 3.2.1 (faithful `MA(q)` ↔ `θ(B) Z`)** (§3.2, p.89): the `L²` linear process with the
 finite `MA(q)` filter, over square-integrable noise embedded in `Lp`, agrees almost everywhere with
 the book's `MA(q)` random-variable process `θ(B) Z` (`lagPoly θ Z`) — connecting the abstract `Lp`
