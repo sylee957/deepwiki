@@ -26,8 +26,7 @@ aliases the Mathlib concept for each book definition and discharges each book th
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
 predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
 
-One deferred example remains (noted inline): Ex 1.1.6 (in `ℤ[√−5]`, `6` and `2+2√−5` have no
-gcd) — a longer divisibility/norm argument. -/
+All of §1.1 — including the `ℤ[√−5]` and matrix examples — is now formalized. -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -291,6 +290,42 @@ example : Irreducible (⟨1, 1⟩ : Zsqrtd (-5)) :=
   zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
 example : Irreducible (⟨1, -1⟩ : Zsqrtd (-5)) :=
   zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
+
+/-- If `u ∣ v` in `ℤ[√d]` then `N(u) ∣ N(v)` in `ℤ` (norm multiplicativity). -/
+private theorem zsqrtd_norm_dvd_norm {d : ℤ} {u v : Zsqrtd d} (h : u ∣ v) : u.norm ∣ v.norm := by
+  obtain ⟨w, rfl⟩ := h; rw [Zsqrtd.norm_mul]; exact dvd_mul_right _ _
+
+/-- **Example 1.1.6** (§1.1, p.3): `6` and `2 + 2√−5` have *no* gcd in `ℤ[√−5]`. If `z` were a gcd
+then `N(z) ∣ gcd(N 6, N(2+2√−5)) = gcd(36, 24) = 12`; but `2` and `1+√−5` are common divisors, so
+`N(2)=4 ∣ N(z)` and `N(1+√−5)=6 ∣ N(z)`, forcing `N(z) = 12` — impossible, as `a²+5b² = 12` has no
+solution (`12 ≡ 2 (mod 5)`, a non-square). This is the concrete failure of unique factorization. -/
+example : ¬ ∃ z : Zsqrtd (-5), IsGCD (⟨6, 0⟩ : Zsqrtd (-5)) (⟨2, 2⟩ : Zsqrtd (-5)) z := by
+  rintro ⟨z, hzx, hzy, hmax⟩
+  have h2x : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
+    ⟨⟨3, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have h2y : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
+    ⟨⟨1, 1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hsx : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
+    ⟨⟨1, -1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hsy : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
+    ⟨⟨2, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hn36 : z.norm ∣ 36 := by have := zsqrtd_norm_dvd_norm hzx; simpa [Zsqrtd.norm_def] using this
+  have hn24 : z.norm ∣ 24 := by have := zsqrtd_norm_dvd_norm hzy; simpa [Zsqrtd.norm_def] using this
+  have h4n : (4 : ℤ) ∣ z.norm := by
+    have := zsqrtd_norm_dvd_norm (hmax _ h2x h2y); simpa [Zsqrtd.norm_def] using this
+  have h6n : (6 : ℤ) ∣ z.norm := by
+    have := zsqrtd_norm_dvd_norm (hmax _ hsx hsy); simpa [Zsqrtd.norm_def] using this
+  have hge : 0 ≤ z.norm := Zsqrtd.norm_nonneg (by norm_num) z
+  have hn12 : z.norm ∣ 12 := by simpa using dvd_sub hn36 hn24
+  have h12n : (12 : ℤ) ∣ z.norm := by omega
+  have hn : z.norm = 12 := Int.dvd_antisymm hge (by norm_num) hn12 h12n
+  have hmod : (z.norm : ZMod 5) = (z.re : ZMod 5) * (z.re : ZMod 5) := by
+    rw [Zsqrtd.norm_def]; push_cast
+    have h5 : (5 : ZMod 5) = 0 := by decide
+    ring_nf; rw [h5]; ring
+  rw [hn] at hmod
+  have hsq : ∀ a : ZMod 5, a * a ≠ ((12 : ℤ) : ZMod 5) := by decide
+  exact hsq _ hmod.symm
 
 /-- **Example 1.1.8** (§1.1, p.4): `ℚ[X, Y]` (here `ℚ[X][Y]`) is a unique factorization
 domain. -/
