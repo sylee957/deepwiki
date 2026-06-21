@@ -26,9 +26,8 @@ aliases the Mathlib concept for each book definition and discharges each book th
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
 predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
 
-The two remaining deferred examples need substantial bespoke number theory (noted inline): the
-failure of unique factorization in `ℤ[√−5]` — Ex 1.1.6 (`6` and `2+2√−5` have no gcd) and Ex
-1.1.7 (`2, 3, 1±√−5` are irreducible). -/
+One deferred example remains (noted inline): Ex 1.1.6 (in `ℤ[√−5]`, `6` and `2+2√−5` have no
+gcd) — a longer divisibility/norm argument. -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -243,6 +242,55 @@ example : IsDomain (Zsqrtd (-5)) := by
     · exact Or.inl ((Zsqrtd.norm_eq_zero_iff (by norm_num) a).mp h)
     · exact Or.inr ((Zsqrtd.norm_eq_zero_iff (by norm_num) b).mp h)⟩
   exact NoZeroDivisors.to_isDomain _
+
+/-- No element of `ℤ[√−5]` has norm `2` or `3`: `N(a+b√−5) = a² + 5b² ≡ a² (mod 5)`, and `2, 3`
+are not squares mod `5`. -/
+private theorem zsqrtNeg5_norm_ne_two_three (z : Zsqrtd (-5)) : z.norm ≠ 2 ∧ z.norm ≠ 3 := by
+  have hsq : ∀ a : ZMod 5, a * a ≠ 2 ∧ a * a ≠ 3 := by decide
+  have hmod : (z.norm : ZMod 5) = (z.re : ZMod 5) * (z.re : ZMod 5) := by
+    rw [Zsqrtd.norm_def]; push_cast
+    have h5 : (5 : ZMod 5) = 0 := by decide
+    ring_nf; rw [h5]; ring
+  refine ⟨fun h => (hsq (z.re : ZMod 5)).1 ?_, fun h => (hsq (z.re : ZMod 5)).2 ?_⟩ <;>
+    rw [← hmod, h] <;> rfl
+
+/-- An element of `ℤ[√−5]` whose norm is `4`, `6`, or `9` is irreducible: a non-trivial factor
+would have norm `2` or `3`, which is impossible. -/
+private theorem zsqrtNeg5_irreducible_of_norm (z : Zsqrtd (-5))
+    (hN : z.norm = 4 ∨ z.norm = 6 ∨ z.norm = 9) : Irreducible z := by
+  rw [irreducible_iff]
+  refine ⟨?_, ?_⟩
+  · rw [← Zsqrtd.norm_eq_one_iff' (by norm_num : (-5 : ℤ) ≤ 0)]
+    rcases hN with h | h | h <;> omega
+  · intro a b hab
+    by_contra hcon
+    rw [not_or] at hcon
+    obtain ⟨hna, hnb⟩ := hcon
+    have hnorm : z.norm = a.norm * b.norm := by rw [hab, Zsqrtd.norm_mul]
+    have hna1 : a.norm ≠ 1 := fun h => hna ((Zsqrtd.norm_eq_one_iff' (by norm_num) a).mp h)
+    have hnb1 : b.norm ≠ 1 := fun h => hnb ((Zsqrtd.norm_eq_one_iff' (by norm_num) b).mp h)
+    have hna0 : 0 ≤ a.norm := Zsqrtd.norm_nonneg (by norm_num) a
+    have hnb0 : 0 ≤ b.norm := Zsqrtd.norm_nonneg (by norm_num) b
+    obtain ⟨h2a, h2b⟩ := zsqrtNeg5_norm_ne_two_three a
+    obtain ⟨h3a, h3b⟩ := zsqrtNeg5_norm_ne_two_three b
+    have hNz : z.norm ≠ 0 := by rcases hN with h | h | h <;> omega
+    have hanz : a.norm ≠ 0 := by rintro h0; rw [hnorm, h0, zero_mul] at hNz; exact hNz rfl
+    have hbnz : b.norm ≠ 0 := by rintro h0; rw [hnorm, h0, mul_zero] at hNz; exact hNz rfl
+    have ha4 : 4 ≤ a.norm := by omega
+    have hb4 : 4 ≤ b.norm := by omega
+    rcases hN with h | h | h <;> (rw [h] at hnorm; nlinarith [hnorm, ha4, hb4])
+
+/-- **Example 1.1.7** (§1.1, p.4): `2`, `3`, `1+√−5`, `1−√−5` are all irreducible in `ℤ[√−5]`
+(norms `4, 9, 6, 6`); since `6 = 2·3 = (1+√−5)(1−√−5)`, the same element has two genuinely
+different factorizations into irreducibles, so `ℤ[√−5]` is not a UFD. -/
+example : Irreducible (⟨2, 0⟩ : Zsqrtd (-5)) :=
+  zsqrtNeg5_irreducible_of_norm _ (Or.inl (by rw [Zsqrtd.norm_def]; norm_num))
+example : Irreducible (⟨3, 0⟩ : Zsqrtd (-5)) :=
+  zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inr (by rw [Zsqrtd.norm_def]; norm_num)))
+example : Irreducible (⟨1, 1⟩ : Zsqrtd (-5)) :=
+  zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
+example : Irreducible (⟨1, -1⟩ : Zsqrtd (-5)) :=
+  zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
 
 /-- **Example 1.1.8** (§1.1, p.4): `ℚ[X, Y]` (here `ℚ[X][Y]`) is a unique factorization
 domain. -/
