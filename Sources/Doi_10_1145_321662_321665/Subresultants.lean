@@ -8,9 +8,6 @@ and `(G,H)` for `F + B·G = H`. Equation (12) (the case `0 ≤ j < deg H`) is fu
 remaining equations of Lemma 1 and the Fundamental Theorem are tracked below.
 
 ## NOT YET FORMALIZED
-- Lemma 2, equations (22)–(24) [research]: the single-step PRS relations for `j = nᵢ` (eq 22, via
-  eq 13), `nᵢ < j < nᵢ₋₁−1` (eq 23, via eq 14), `j = nᵢ₋₁−1` (eq 24, via eq 15) — analogous to eq 21
-  (`subresultant_prs_step`, `0 ≤ j < nᵢ`, via eq 12) but built on the other degenerate cases + scaling.
 - Fundamental Theorem [research]: the telescoping induction (eq 30) over a full PRS `F₁,…,Fₖ` — each
   `Sⱼ(F₁,F₂)` (`0 ≤ j < n₂`) is similar to some `Fᵢ` or zero. -/
 
@@ -44,5 +41,16 @@ relates consecutive subresultants — `α^(n_{i-1}-j)·Sⱼ(F_{i-2},F_{i-1}) =
 (-1)^((n_{i-2}-j)(n_{i-1}-j))·(lc F_{i-1})^(δ_{i-2}+δ_{i-1})·β^(n_{i-1}-j)·Sⱼ(F_{i-1},Fᵢ)` for
 `0 ≤ j < nᵢ`. The library's `subresultant_prs_step` (`F_{i-2}=A`, `F_{i-1}=B`, `Fᵢ=C`). -/
 abbrev lemma_2_eq_21 := @subresultant_prs_step
+
+/-- **Lemma 2**, equation (22) (§5, p.510): the single PRS step at `j = nᵢ`. `subresultant_prs_step_deg`. -/
+abbrev lemma_2_eq_22 := @subresultant_prs_step_deg
+
+/-- **Lemma 2**, equation (23) (§5, p.510): the vanishing single PRS step for `nᵢ < j < nᵢ₋₁−1`.
+`subresultant_prs_step_gap`. -/
+abbrev lemma_2_eq_23 := @subresultant_prs_step_gap
+
+/-- **Lemma 2**, equation (24) (§5, p.510): the single PRS step at `j = nᵢ₋₁−1`.
+`subresultant_prs_step_top`. -/
+abbrev lemma_2_eq_24 := @subresultant_prs_step_top
 
 end DeepWiki.Btr

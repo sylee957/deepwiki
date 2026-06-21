@@ -842,6 +842,58 @@ theorem subresultant_prs_step [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a 
   rw [← hL, subresultant_rem_lt (C α * A) B Q (C β * C_poly) a b j (by omega) (by rw [hRn]; omega)
       (by rw [hRn]; omega) hB hQ hrel, hRn, hR, mul_comm (b - j) (a - j)]
 
+/-- Unscale the first argument: `Sⱼ(α·A, B) = α^(b-j)·Sⱼ(A,B)` (scaling law, `b_scalar = 1`). -/
+private theorem prs_unscale (A B : R[X]) (α : R) (a b j : ℕ) (hjb : j ≤ b) (hja : j ≤ a) :
+    subresultant (C α * A) B a b j = C (α ^ (b - j)) * subresultant A B a b j := by
+  conv_lhs => rw [show B = C (1 : R) * B from by rw [map_one, one_mul]]
+  rw [subresultant_C_mul α 1 A B a b j hjb hja, one_pow, mul_one]
+
+/-- **Fundamental PRS Theorem, single step at `j = deg G − 1`** (Brown–Traub Lemma 2, eq 24): across a
+PRS step `α·A = β·C + B·Q`, `α·S_{b-1}(A,B) = (-1)^(a-b+1)·(lc B)^(a-b+1)·β·C`. From eq 15 + scaling. -/
+theorem subresultant_prs_step_top [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c : ℕ)
+    (hβ : β ≠ 0) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
+    (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a) (hrel : C α * A = C β * C_poly + B * Q) :
+    C α * subresultant A B a b (b - 1)
+      = (-1 : R[X]) ^ (a - b + 1) * (C ((B.coeff b) ^ (a - b + 1)) * (C β * C_poly)) := by
+  have hRn : (C β * C_poly).natDegree = c := by rw [natDegree_C_mul hβ, hcpoly]
+  have hL := prs_unscale A B α a b (b - 1) (by omega) (by omega)
+  rw [show b - (b - 1) = 1 from by omega, pow_one] at hL
+  rw [← hL, subresultant_rem_eq_15 (C α * A) B Q (C β * C_poly) b a (by omega) (by omega) hB
+      (by rw [hRn]; omega) hQ hrel]
+
+/-- **Fundamental PRS Theorem, vanishing step** (Brown–Traub Lemma 2, eq 23): across a PRS step,
+`Sⱼ(A,B) = 0` for `deg C < j < deg B − 1`. From eq 14 + scaling (`α ≠ 0` cancels in the domain). -/
+theorem subresultant_prs_step_gap [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c j : ℕ)
+    (hα : α ≠ 0) (hβ : β ≠ 0) (hcj : c < j) (hjb : j < b - 1)
+    (hcpoly : C_poly.natDegree = c) (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
+    (hrel : C α * A = C β * C_poly + B * Q) :
+    subresultant A B a b j = 0 := by
+  have hRn : (C β * C_poly).natDegree = c := by rw [natDegree_C_mul hβ, hcpoly]
+  have hL := prs_unscale A B α a b j (by omega) (by omega)
+  have h0 : subresultant (C α * A) B a b j = 0 :=
+    subresultant_rem_eq_14 (C α * A) B Q (C β * C_poly) b a j (by rw [hRn]; omega) (by omega)
+      (by omega) hB hQ hrel
+  rw [hL] at h0
+  rcases mul_eq_zero.mp h0 with h | h
+  · exact absurd h (by rw [C_eq_zero]; exact pow_ne_zero _ hα)
+  · exact h
+
+/-- **Fundamental PRS Theorem, single step at `j = deg H`** (Brown–Traub Lemma 2, eq 22): across a PRS
+step, `α^(b-c)·S_c(A,B) = (-1)^((a-c)(b-c))·(lc B)^(a-c)·(lc βC)^(b-c-1)·βC` at `c = deg C`. From eq 13
++ scaling. -/
+theorem subresultant_prs_step_deg [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c : ℕ)
+    (hβ : β ≠ 0) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
+    (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a) (hrel : C α * A = C β * C_poly + B * Q) :
+    C (α ^ (b - c)) * subresultant A B a b c
+      = (-1 : R[X]) ^ ((a - c) * (b - c))
+        * (C ((B.coeff b) ^ (a - c) * (C β * C_poly).leadingCoeff ^ (b - c - 1)) * (C β * C_poly)) := by
+  have hRn : (C β * C_poly).natDegree = c := by rw [natDegree_C_mul hβ, hcpoly]
+  have hL := prs_unscale A B α a b c (by omega) (by omega)
+  have key := subresultant_rem_eq_13 (C α * A) B Q (C β * C_poly) b a (by rw [hRn]; omega) (by omega)
+    hB hQ hrel
+  rw [hRn] at key
+  rw [← hL, key]
+
 /-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
 degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
 power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,
