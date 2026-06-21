@@ -49,6 +49,14 @@ theorem differentiable_aeval_ofReal (φ : ℝ[X]) :
   simp_rw [Polynomial.aeval_eq_sum_range]
   exact Differentiable.fun_sum fun i _ => (differentiable_pow i).const_smul (φ.coeff i)
 
+/-- A real polynomial `φ` evaluated at `z : ℂ` is the (finite) convergent series `∑ₖ φₖ zᵏ`. -/
+theorem hasSum_aeval_smul (φ : ℝ[X]) (z : ℂ) :
+    HasSum (fun k => (φ.coeff k : ℝ) • z ^ k) (Polynomial.aeval z φ) := by
+  rw [Polynomial.aeval_eq_sum_range]
+  refine hasSum_sum_of_ne_finset_zero fun k hk => ?_
+  rw [Finset.mem_range, not_lt] at hk
+  rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul]
+
 /-- **Causal ⟹ `θ/φ` has a power series on a disk of radius `> 1`:** the rational function `θ/φ` of
 a causal ARMA is analytic on a disk of radius `> 1`, represented there by its Cauchy power series
 (the `MA(∞)` `ψ`-weights). The object underlying both the summability and the recursion. -/
