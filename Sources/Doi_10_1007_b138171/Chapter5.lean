@@ -22,7 +22,7 @@ extensions, the order function and the Rothstein–Trager resultant) and is the 
   Ex 5.10.1, Ex 5.10.2, Ex 5.10.3; algorithm `IntegrateHypertangent`.
 §5.11 The Nonlinear Case with no Specials: Cor 5.11.1; Ex 5.11.1, Ex 5.11.2.
 §5.12 In-Field Integration: Lemma 5.12.1.
-Exercises 5.1–5.6.
+Exercises: Ex 5.1, Ex 5.2, Ex 5.3, Ex 5.4, Ex 5.5, Ex 5.6.
 
 Most of this chapter is **procedural** (the integration algorithms) and would need the
 operational-semantics treatment noted in `Source.lean`. -/

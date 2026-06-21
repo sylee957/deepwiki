@@ -626,22 +626,16 @@ theorem ex_1_10 : Irreducible (2 : Zsqrtd (-5)) ∧ ¬ Prime (2 : Zsqrtd (-5)) :
   · exact absurd (hn4 ▸ hn6p ▸ zsqrtd_norm_dvd_norm h) (by decide)
   · exact absurd (hn4 ▸ hn6m ▸ zsqrtd_norm_dvd_norm h) (by decide)
 
-/- ## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
-Done: §1.1 (Def 1.1.1–1.1.13, Thm 1.1.1–1.1.11, Ex 1.1.1–1.1.14), §1.2 (Euclidean/pseudo-division
-`thm_1_2_*`), §1.3 (Euclidean + extended `thm_1_3_*`), §1.4 (Def 1.4.1 resultant/Sylvester,
-Thm 1.4.1 comm/prod/mul, Cor 1.4.1/1.4.2, Thm 1.4.2 `res ∈ (A,B)`), §1.6 (Def 1.6.1 content/
-primitive/primPart, Lemma 1.6.1 Gauss, Thm 1.6.1), §1.7 (Def 1.7.1, Def 1.7.2 + squarefree +
-pairwise-coprime parts, Lemma 1.7.1, eq 1.14 radical).
-§1.4 Resultants and Subresultants: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices);
-  Thm 1.4.3 (subresultant specialization under ring homomorphisms); Ex 1.4.2.
-§1.5 Polynomial Remainder Sequences (ENTIRE section, not in Mathlib): Def 1.5.1, Def 1.5.2;
-  Thm 1.5.1, Thm 1.5.2, Thm 1.5.3; Ex 1.5.1, Ex 1.5.2.
-§1.6 Primitive Polynomials: Def 1.6.2 (deflations `A⁻ᵏ`, squarefree part `A*`); relations
-  (1.11)–(1.13).
-§1.7 Squarefree Factorization: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm; Ex 1.7.1,
-  Ex 1.7.2.
-Worked examples not formalized: 1.2.1, 1.3.1, 1.3.3–1.3.7, 1.4.2, 1.5.1, 1.5.2, 1.7.1, 1.7.2.
-Exercises: done 1.1, 1.3, 1.10, 1.12; remaining 1.2, 1.4–1.9, 1.11, 1.13–1.16 (mostly concrete
-gcd/PRS/squarefree computations + the §1.5 similarity/PRS proofs). -/
+/- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
+  specialization under ring homomorphisms).
+§1.5: Def 1.5.1; Def 1.5.2; Thm 1.5.1; Thm 1.5.2; Thm 1.5.3.
+§1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
+  relation 1.13.
+§1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
+Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
+  Ex 1.5.2; Ex 1.7.1; Ex 1.7.2.
+Exercises: Ex 1.2; Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.13; Ex 1.14;
+  Ex 1.15; Ex 1.16. -/
 
 end DeepWiki.Si

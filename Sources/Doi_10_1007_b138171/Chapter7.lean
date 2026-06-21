@@ -7,7 +7,8 @@ chapter is **entirely unformalized**.
 
 ## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
 §7.1 The Parametric Risch Differential Equation: Thm 7.1.1, Thm 7.1.2; Cor 7.1.1;
-  Lemma 7.1.1, Lemma 7.1.2; Ex 7.1.1–7.1.6; algorithm `ParamRDE`.
+  Lemma 7.1.1, Lemma 7.1.2; Ex 7.1.1, Ex 7.1.2, Ex 7.1.3, Ex 7.1.4, Ex 7.1.5, Ex 7.1.6;
+  algorithm `ParamRDE`.
 §7.2 The Limited Integration Problem: Thm 7.2.1; Cor 7.2.1; Ex 7.2.1, Ex 7.2.2;
   algorithm `LimitedIntegrate`.
 §7.3 The Parametric Logarithmic Derivative Problem: Lemma 7.3.1; Ex 7.3.1, Ex 7.3.2;

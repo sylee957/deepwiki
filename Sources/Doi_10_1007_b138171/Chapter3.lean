@@ -469,21 +469,16 @@ theorem thm_3_5_1 {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X])
 -- elements of `k⟨t⟩`, needs `RatFunc` numerator/denominator), and Theorem 3.5.2 (the `κ_D`
 -- splitting separates constant from nonconstant roots).
 
-/- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21)
-Done: §3.1 (Def 3.1.1 + constants, Thm 3.1.1 i–vi), §3.2 (Def 3.2.1/3.2.2, Lemma 3.2.1/3.2.2,
-Thm 3.2.1 *uniqueness*, Thm 3.2.2 polynomial-ring case), §3.3 (Lemma 3.3.1, Def 3.3.1 Wronskian,
-Lemma 3.3.5 easy + n=2/field-version converse + foundation/recurrence/Leibniz), §3.4 (Def 3.4.1/
-3.4.2 + gcd-forms, Lemma 3.4.2 ≤/=, Lemma 3.4.3, Lemma 3.4.4 full, Thm 3.4.1/3.4.2/3.4.3 full),
-§3.5 (Def 3.5.1, Thm 3.5.1 squarefree splitting + `pₛ=gcd` + general gcd-formula, `pₛ⊥pₙ`).
-§3.2: Thm 3.2.1 *existence* (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
+/- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
+§3.2: Thm 3.2.1 existence (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
   Thm 3.2.4 (automorphism/trace/norm of separable algebraic extension); Cor 3.2.1.
-§3.3: Lemma 3.3.2 + Cor 3.3.1 (new algebraic constants); Cor 3.3.2; Lemma 3.3.3, 3.3.4, 3.3.6;
-  Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction — last piece).
-§3.4: Def 3.4.3, Def 3.4.4 (special of the first kind); Lemma 3.4.5, Lemma 3.4.8; Thm 3.4.4
+§3.3: Lemma 3.3.2 (new algebraic constants); Cor 3.3.1; Cor 3.3.2; Lemma 3.3.3; Lemma 3.3.4;
+  Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
+§3.4: Def 3.4.3; Def 3.4.4 (special of the first kind); Lemma 3.4.5; Lemma 3.4.8; Thm 3.4.4
   (special of the first kind under algebraic extension); Cor 3.4.1.
 §3.5: Thm 3.5.1 for general (non-squarefree) `p` over `RatFunc`; Thm 3.5.2; Def 3.5.2 (simple/
-  reduced elements of `k⟨t⟩`); the `SplitFactor`/`CanonicalRepresentation` algorithms.
-Worked examples not formalized: 3.1.2, 3.1.3, 3.2.1, 3.2.2, 3.2.3, 3.5.1, 3.5.2.
-Exercises 3.1–3.11: none formalized. -/
+  reduced elements of `k⟨t⟩`); the `SplitFactor` algorithm; the `CanonicalRepresentation` algorithm.
+Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
+Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
 end DeepWiki.Si

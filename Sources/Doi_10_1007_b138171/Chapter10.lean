@@ -9,7 +9,8 @@ The parallel (Risch–Norman) integration method added in the second edition. Th
   Ex 10.1.1, Ex 10.1.2. (`Differential.implicitDeriv` / `Derivation.mapCoeffs` are the relevant
   Mathlib foundation, already used in §3.4.)
 §10.2 Structure of Elementary Antiderivatives: Thm 10.2.1, Thm 10.2.2; Lemma 10.2.1.
-§10.3 The Integration Method: Ex 10.3.1–10.3.4 (the heuristic parallel algorithm).
+§10.3 The Integration Method: the heuristic parallel algorithm; Ex 10.3.1, Ex 10.3.2, Ex 10.3.3,
+  Ex 10.3.4.
 §10.4 Simple Differential Fields: Def 10.4.1; Thm 10.4.1; Cor 10.4.1; Lemma 10.4.1. -/
 
 namespace DeepWiki.Si
