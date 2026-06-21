@@ -10,6 +10,7 @@ import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Algebra.MvPolynomial.Division
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
+import Mathlib.Tactic.ReduceModChar
 import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -627,6 +628,36 @@ theorem ex_1_5 :
   have h2 : (3 * X ^ 2 - 7 : ℤ[X]).natDegree = 2 := by compute_degree!
   rw [h2]; compute_degree!
 
+/-- **Exercise 1.6** (§1, p.33): dividing `7x⁵ + 4x³ + 2x + 1` by `2x³ + 3`. Over the *fields*
+`ℚ`, `ℤ/5`, `ℤ/11` the leading coefficient `2` is a unit, so this is ordinary division with a
+remainder of degree `< 3`: `Q = (7/2)x²+2, R = −(21/2)x²+2x−5` over `ℚ`; `Q = x²+2, R = 2x²+2x`
+over `ℤ/5`; `Q = 9x²+2, R = 6x²+2x+6` over `ℤ/11`. Over the *ring* `ℤ` the coefficient `2` is not
+a unit, so only pseudo-division applies: `2³·A = (2x³+3)(28x²+16) + (−84x²+16x−40)`. -/
+theorem ex_1_6 :
+    ((7 * X ^ 5 + 4 * X ^ 3 + 2 * X + 1 : ℚ[X])
+        = (2 * X ^ 3 + 3) * (C (7 / 2) * X ^ 2 + 2) + (-C (21 / 2) * X ^ 2 + 2 * X - 5)
+      ∧ (-C (21 / 2) * X ^ 2 + 2 * X - 5 : ℚ[X]).natDegree < 3)
+    ∧ ((7 * X ^ 5 + 4 * X ^ 3 + 2 * X + 1 : (ZMod 5)[X])
+        = (2 * X ^ 3 + 3) * (X ^ 2 + 2) + (2 * X ^ 2 + 2 * X)
+      ∧ (2 * X ^ 2 + 2 * X : (ZMod 5)[X]).natDegree < 3)
+    ∧ ((7 * X ^ 5 + 4 * X ^ 3 + 2 * X + 1 : (ZMod 11)[X])
+        = (2 * X ^ 3 + 3) * (9 * X ^ 2 + 2) + (6 * X ^ 2 + 2 * X + 6)
+      ∧ (6 * X ^ 2 + 2 * X + 6 : (ZMod 11)[X]).natDegree < 3)
+    ∧ ((8 : ℤ[X]) * (7 * X ^ 5 + 4 * X ^ 3 + 2 * X + 1)
+        = (2 * X ^ 3 + 3) * (28 * X ^ 2 + 16) + (-84 * X ^ 2 + 16 * X - 40)
+      ∧ (-84 * X ^ 2 + 16 * X - 40 : ℤ[X]).natDegree < 3) := by
+  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
+  · apply Polynomial.funext; intro x
+    simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat, eval_neg,
+      eval_one]; ring
+  · compute_degree!
+  · ring_nf; reduce_mod_char
+  · compute_degree!
+  · ring_nf; reduce_mod_char
+  · compute_degree!
+  · ring
+  · compute_degree!
+
 /-- **Exercise 1.4** (§1, p.33): the gcd of `2x³ − (19/5)x² − x + 6/5 = (x−2)(2x²+(1/5)x−3/5)` and
 `x² + (1/3)x − 14/3 = (x−2)(x+7/3)` in `ℚ[x]` is `x − 2` (the cofactors `2x²+(1/5)x−3/5` and
 `x+7/3` are coprime — they share no root). The fractional-coefficient identities are discharged
@@ -750,6 +781,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.6; Ex 1.7; Ex 1.11; Ex 1.14. -/
+Exercises: Ex 1.7; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
