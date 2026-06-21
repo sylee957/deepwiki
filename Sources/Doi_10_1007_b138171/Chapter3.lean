@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.Constants
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -107,5 +108,30 @@ theorem lem_3_2_2 {R : Type*} [CommRing R] [Differential R] (α : R) (P : R[X]) 
 --     `FractionRing R` — not in Mathlib.]
 --   • **Theorem 3.2.2** (§3.2, p.81): for `t` transcendental over a differential field `F` and any
 --     `w ∈ F(t)`, there is a unique derivation on `F(t)` extending `F`'s with `Δt = w`.
+
+/-! ## §3.3 Constants and Extensions -/
+
+/-- **Lemma 3.3.1** (§3.3, p.85): constants stay constant in a differential extension —
+`Const_D F ⊆ Const_Δ E` (if `c′ = 0` then `(algebraMap F E c)′ = 0`). -/
+theorem lem_3_3_1 {F E : Type*} [Field F] [Field E] [Differential F] [Differential E]
+    [Algebra F E] [DifferentialAlgebra F E] {c : F} (hc : c′ = 0) : (algebraMap F E c)′ = 0 :=
+  deriv_algebraMap_eq_zero hc
+
+/-- **Definition 3.3.1** (§3.3, p.88): the *Wronskian* `W(y₁,…,yₙ) = det(Dⁱ⁻¹ yⱼ)`. -/
+noncomputable abbrev def_3_3_1 := @wronskian
+
+/-- **Lemma 3.3.5** (§3.3, p.88), easy direction: if `y₁,…,yₙ` are linearly dependent over the
+constants then their Wronskian vanishes, `W(y₁,…,yₙ) = 0`. -/
+theorem lem_3_3_5 {F : Type*} [Field F] [Differential F] {n : ℕ} (y c : Fin n → F)
+    (hc : ∀ j, (c j)′ = 0) (hne : c ≠ 0) (hdep : ∑ j, c j * y j = 0) : wronskian y = 0 :=
+  wronskian_eq_zero_of_linearDependent y c hc hne hdep
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work:**
+--   • Theorem 3.2.4 (§3.2, p.85): a field automorphism of a separable algebraic extension commutes
+--     with `D`; trace/norm relations `Tr(Da/a) = D(Tr a)`, etc.
+--   • Lemma 3.3.2 / Corollary 3.3.1 (§3.3): new algebraic constants are exactly the elements
+--     algebraic over the initial constant field (needs minimal polynomials + `κ_D`).
+--   • Corollary 3.3.2, Lemmas 3.3.3, 3.3.4, 3.3.6 (constant-field behaviour under extensions).
+--   • **Lemma 3.3.5 converse** (`W = 0 ⟹ linearly dependent over constants`) — the induction on `n`.
 
 end DeepWiki.Si
