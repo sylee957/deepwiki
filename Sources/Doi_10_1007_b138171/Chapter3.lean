@@ -234,6 +234,13 @@ theorem thm_3_4_1_normal_special_iff_isUnit {R : Type*} [CommRing R] [Differenti
     (IsNormal p ∧ IsSpecial p) ↔ IsUnit p :=
   isNormal_and_isSpecial_iff_isUnit
 
+/-- **Theorem 3.4.1** (§3.4, p.93), corollary: normality and specialness are *associate
+invariants* — multiplying by a unit `u` (a nonzero constant, in `k[t]`) changes neither, which is
+what lets §3.5 normalize a polynomial by its leading coefficient. -/
+theorem thm_3_4_1_unit_mul {R : Type*} [CommRing R] [Differential R] {u : R} (hu : IsUnit u)
+    (p : R) : (IsNormal (u * p) ↔ IsNormal p) ∧ (IsSpecial (u * p) ↔ IsSpecial p) :=
+  ⟨IsNormal.unit_mul_iff hu p, IsSpecial.unit_mul_iff hu p⟩
+
 /-- **Lemma 3.4.2(i)** (§3.4, p.91): the degree bound for a monomial derivation `D = κ_D + v·d/dX`
 on `k[X]` (`Dt = v`, `D`-degree `δ(t) = deg v`): `deg(D p) ≤ deg p + max(0, δ(t) − 1)`. -/
 theorem lem_3_4_2 {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :

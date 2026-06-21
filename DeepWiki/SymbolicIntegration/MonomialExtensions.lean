@@ -143,6 +143,22 @@ theorem isNormal_and_isSpecial_iff_isUnit {p : R} :
   ⟨fun ⟨hn, hs⟩ => isUnit_of_isNormal_of_isSpecial hn hs,
    fun hu => ⟨isNormal_of_isUnit hu, hu.dvd⟩⟩
 
+/-- Specialness is invariant under multiplication by a unit: `IsSpecial (u·p) ↔ IsSpecial p`
+(so it depends only on `p` up to associates — used to normalize by the leading coefficient). -/
+theorem IsSpecial.unit_mul_iff {u : R} (hu : IsUnit u) (p : R) :
+    IsSpecial (u * p) ↔ IsSpecial p := by
+  unfold IsSpecial
+  rw [deriv_mul_eq, hu.mul_left_dvd, add_comm, dvd_add_right (dvd_mul_right p u′),
+    hu.dvd_mul_left]
+
+/-- Normality is invariant under multiplication by a unit: `IsNormal (u·p) ↔ IsNormal p`
+(so it depends only on `p` up to associates — used to normalize by the leading coefficient). -/
+theorem IsNormal.unit_mul_iff {u : R} (hu : IsUnit u) (p : R) :
+    IsNormal (u * p) ↔ IsNormal p := by
+  unfold IsNormal
+  rw [deriv_mul_eq, isCoprime_mul_unit_left_left hu, IsCoprime.add_mul_left_right_iff,
+    isCoprime_mul_unit_left_right hu]
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
