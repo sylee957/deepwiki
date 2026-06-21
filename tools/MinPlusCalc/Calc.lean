@@ -211,6 +211,46 @@ dominating shift, witnessing `delayBound_least`. -/
 example : delayDominates (tokenBucket 1 2) (betaRL 2 1) 1 = false := by native_decide
 example : delayDominates (tokenBucket 1 2) (betaRL 2 1) 2 = true := by native_decide
 
+/-- **Residual service curve at `n`** (multi-flow / blind multiplexing): `maxₘ≤ₙ (β(m) − α(m))₊` —
+the leftover service a server with curve `β` guarantees a flow once a cross-flow constrained by
+arrival curve `α` is served. This is the non-decreasing closure of the clamped difference `[β−α]⁺`
+evaluated on the discrete (`ℕ`-indexed) model; it is the integer-argument value of the library's
+`residualCurve = [β−α]⁺↑`. (Equality with the continuous-time `residualCurve` over `ℝ≥0` needs the
+piecewise-linear interpolation bridge — out of scope here.) -/
+def residualAt (β α : UppSeq Int) (n : Nat) : Int :=
+  (Finset.range (n + 1)).sup' (by simp) (fun m => max (β.evalNat m - α.evalNat m) 0)
+
+/-- Intro: each clamped difference `(β(m)−α(m))₊` with `m ≤ n` lower-bounds the residual. -/
+theorem clampedDiff_le_residualAt (β α : UppSeq Int) {n m : Nat} (hm : m ≤ n) :
+    max (β.evalNat m - α.evalNat m) 0 ≤ residualAt β α n :=
+  Finset.le_sup' (fun m => max (β.evalNat m - α.evalNat m) 0)
+    (Finset.mem_range.mpr (Nat.lt_succ_of_le hm))
+
+/-- Elim: the residual is the *least* bound dominating every clamped difference on `[0, n]`. -/
+theorem residualAt_le (β α : UppSeq Int) {n : Nat} {x : Int}
+    (h : ∀ m, m ≤ n → max (β.evalNat m - α.evalNat m) 0 ≤ x) : residualAt β α n ≤ x :=
+  Finset.sup'_le _ _ (fun m hm => h m (Nat.lt_succ_iff.mp (Finset.mem_range.mp hm)))
+
+/-- The residual is non-negative (a genuine service curve `≥ 0`). -/
+theorem residualAt_nonneg (β α : UppSeq Int) (n : Nat) : 0 ≤ residualAt β α n :=
+  le_trans (le_max_right _ 0) (clampedDiff_le_residualAt β α (Nat.zero_le n))
+
+/-- The residual is non-decreasing in `n` (a wide-sense increasing curve). -/
+theorem residualAt_mono (β α : UppSeq Int) : Monotone (residualAt β α) := by
+  intro a b hab
+  apply Finset.sup'_le
+  intro m hm
+  exact clampedDiff_le_residualAt β α (le_trans (Nat.lt_succ_iff.mp (Finset.mem_range.mp hm)) hab)
+
+/-- Sample the residual service curve `[β−α]⁺↑` at `0..k−1`. -/
+def residualSample (β α : UppSeq Int) (k : Nat) : List Int :=
+  (List.range k).map (residualAt β α)
+
+/-- **Residual service curve (gate-verified):** a rate-`2` server `β` carrying a rate-`1` cross-flow
+`α` leaves a rate-`1` residual `[0,1,2,3,…]` — the leftover bandwidth `2 − 1 = 1`. -/
+example : residualSample ⟨[0, 2], 2, 1, by decide, by decide⟩ ⟨[0, 1], 1, 1, by decide, by decide⟩ 4
+    = [0, 1, 2, 3] := by native_decide
+
 /-- Lift an integer UPP sequence to `WithTop ℤ` — the sub-additive closure needs `δ₀`'s `⊤`. -/
 def liftUpp (f : UppSeq Int) : UppSeq (WithTop ℤ) :=
   ⟨f.vals.map WithTop.some, (f.incr : WithTop ℤ), f.period, f.hperiod,

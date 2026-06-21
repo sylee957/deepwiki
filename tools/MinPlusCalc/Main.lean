@@ -58,7 +58,8 @@ def usage : String := String.intercalate "\n"
     "    deconvupp <v1> <p1> <c1> <v2> <p2> <c2>         print f⊘g AS A UPP SEQUENCE  [deconvUpp; deconvNat_add_period; needs slope f ≤ slope g]",
     "    backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>           print the backlog bound supₜ(α(t)-β(t)) = (α⊘β)(0)  [needs slope α ≤ slope β]",
     "    delay <vα> <pα> <cα> <vβ> <pβ> <cβ>             print the delay bound min{d : ∀t α(t)≤β(t+d)}  [needs slope α ≤ slope β]",
-    "    closure <vals> <period> <incr> <k>              print the sub-additive closure f*(0..k-1) = ⨅ₘ f^⊗ᵐ  [closureApproxNat; exact for f(0)=0]" ]
+    "    closure <vals> <period> <incr> <k>              print the sub-additive closure f*(0..k-1) = ⨅ₘ f^⊗ᵐ  [closureApproxNat; exact for f(0)=0]",
+    "    residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>      print the residual service curve [β-α]⁺↑(0..k-1)  [leftover service; residualAt, intro/elim/mono proved]" ]
 
 def main (args : List String) : IO Unit := do
   match args with
@@ -139,4 +140,8 @@ def main (args : List String) : IO Unit := do
         throw (IO.userError "closure requires f(0) ≥ 0 (else the sub-additive closure is -∞)")
       else
         IO.println (fmtWT (closureSample u (← reqNat k)))
+  | ["residual", vβ, pβ, cβ, vα, pα, cα, k] =>
+      let β ← reqUpp vβ pβ cβ
+      let α ← reqUpp vα pα cα
+      IO.println (fmt (residualSample β α (← reqNat k)))
   | _ => IO.println usage

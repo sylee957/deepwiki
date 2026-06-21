@@ -32,6 +32,7 @@ lake exe minplus            # usage
 | `minplus backlog <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **backlog bound** `supₜ(α(t)−β(t)) = (α⊘β)(0)` — worst-case buffer; needs `slope_α ≤ slope_β` (`backlogBound`/`deconvNat_isGreatest`) |
 | `minplus delay <vα> <pα> <cα> <vβ> <pβ> <cβ>` | the **delay bound** `min{d : ∀t α(t)≤β(t+d)}` — worst-case delay, proved to be the *least* dominating shift (`delayBound`/`delayBound_least`); needs `slope_α ≤ slope_β` |
 | `minplus closure <vals> <period> <incr> <k>` | the **sub-additive closure** `f*(0..k−1) = δ₀ ⊓ f ⊓ f² ⊓ ⋯` via `closureApproxNat f n n`; exact for `f(0)=0`; refuses `f(0)<0` (where `f* = −∞`) |
+| `minplus residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>` | the **residual service curve** `[β−α]⁺↑(0..k−1)` — leftover service for a flow after a cross-flow (arrival `α`) is served by `β`; `residualAt` with intro/elim/mono proved |
 
 `<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
 
@@ -105,6 +106,10 @@ The calculator computes real deterministic-network-calculus results on rate-late
 - **Delay bound** `min{d : ∀t α(t)≤β(t+d)}` — the worst-case delay (max horizontal deviation); for the
   same token bucket and server it is the classic `T + b/R`.
   `minplus delay 0,3 1 1 0,0 1 2` → `delay bound = 2`.
+- **Residual service curve** `[β−α]⁺↑` — the *multi-flow* leftover: with several flows sharing a server
+  of curve `β`, the service still guaranteed to one flow once a cross-flow constrained by arrival curve
+  `α` is served. A rate-2 server carrying a rate-1 cross-flow leaves a rate-1 residual:
+  `minplus residual 0,2 1 2 0,1 1 1 6` → `0, 1, 2, 3, 4, 5`.
 
 (`backlog` is fully proved via `deconvNat_isGreatest`. `delay` is a finite search whose decisive-window
 property is now the proved lemma `evalNat_le_shift_of_window`: if `α(t) ≤ β(t+d)` on one period-window
@@ -112,4 +117,10 @@ past the transient it holds for all `t`, since the gap `α(t)−β(t+d)` is non-
 search over `[0, deconvBound)` thus covers the transient directly and the periodic tail by descent.
 That `List.find?` returns the *least* such `d` — so the reported bound is the genuine `min` — is now
 the proved `delayBound_least` (via `find?_range_least`), with a concrete witness that `d=2` is least
-for the canonical pair. So the delay bound is verified-minimal whenever the search succeeds.)
+for the canonical pair. So the delay bound is verified-minimal whenever the search succeeds.
+
+`residual` computes the integer-argument (discrete, `ℕ`-indexed) values of the library's residual curve
+`residualCurve = [β−α]⁺↑`, with the intro/elim/monotone/nonneg satellites (`clampedDiff_le_residualAt`,
+`residualAt_le`, `residualAt_mono`, `residualAt_nonneg`) proved at the UPP level — so the output is a
+genuine non-decreasing service curve dominating the clamped difference. Equality with the *continuous-time*
+`residualCurve` over `ℝ≥0` would need the piecewise-linear interpolation bridge, which is out of scope.)
