@@ -516,6 +516,10 @@ theorem ex_1_4_2 :
 
 /-! ## §1.5 Polynomial Remainder Sequences -/
 
+/-- **Definition 1.5.1** (§1.5, p.21): a *Polynomial Remainder Sequence* of `A, B` with scalar
+sequence `β` (the library predicate `IsPRS`); the pseudo-remainder step uses `IsPseudoRemainder`. -/
+abbrev def_1_5_1 := @IsPRS
+
 /-- **Definition 1.5.2** (§1.5, p.22): `A` is *similar* to `B` over `D[x]` when `a·A = b·B` for
 nonzero scalars `a, b ∈ D` (the library predicate `IsSimilar`). -/
 abbrev def_1_5_2 := @IsSimilar
@@ -899,7 +903,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
   specialization under ring homomorphisms).
-§1.5: Def 1.5.1; Thm 1.5.1; Thm 1.5.2; Thm 1.5.3.
+§1.5: Thm 1.5.1; Thm 1.5.2; Thm 1.5.3.
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.

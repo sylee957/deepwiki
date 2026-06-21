@@ -113,4 +113,25 @@ theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimil
 theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
   ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
 
+/-- `Rem` is a *pseudo-remainder* of `A` by `B`: `lc(B)ᵏ · A = B·Q + Rem` with `deg Rem < deg B`
+for some power `k` and pseudo-quotient `Q` (the output of `PolyPseudoDivide`, §1.2). -/
+def IsPseudoRemainder (A B Rem : R[X]) : Prop :=
+  ∃ (k : ℕ) (Q : R[X]), C B.leadingCoeff ^ k * A = B * Q + Rem ∧ Rem.degree < B.degree
+
+/-- A pseudo-remainder exists for any nonzero divisor (repackages `pseudoDivision_exists`). -/
+theorem isPseudoRemainder_exists (A B : R[X]) (hB : B ≠ 0) :
+    ∃ Rem, IsPseudoRemainder A B Rem := by
+  obtain ⟨n, Q, Rem, hEq, hdeg⟩ := pseudoDivision_exists A B hB
+  exact ⟨Rem, n, Q, hEq, hdeg⟩
+
+/-- **Polynomial Remainder Sequence** (§1.5, Definition 1.5.1): a sequence `Rs` with `Rs 0 = A`,
+`Rs 1 = B`, where each nonzero `Rs (i+1)` makes `C (β (i+1)) · Rs (i+2)` a pseudo-remainder of
+`Rs i` by `Rs (i+1)` (with the scalar `β (i+1) ≠ 0`), and a zero divisor forces the next term to
+vanish. The choice of the nonzero `β`-sequence selects the PRS variant (Euclidean, primitive, …). -/
+def IsPRS (A B : R[X]) (Rs : ℕ → R[X]) (β : ℕ → R) : Prop :=
+  Rs 0 = A ∧ Rs 1 = B ∧
+    ∀ i, (Rs (i + 1) ≠ 0 →
+            β (i + 1) ≠ 0 ∧ IsPseudoRemainder (Rs i) (Rs (i + 1)) (C (β (i + 1)) * Rs (i + 2)))
+      ∧ (Rs (i + 1) = 0 → C (β (i + 1)) * Rs (i + 2) = 0)
+
 end DeepWiki.SymbolicIntegration
