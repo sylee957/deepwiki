@@ -103,10 +103,18 @@ theorem lem_3_2_2 {R : Type*} [CommRing R] [Differential R] (α : R) (P : R[X]) 
       + P.derivative.eval α * α′ := by
   simpa [smul_eq_mul] using (Differential.deriv : Derivation ℤ R R).apply_eval_eq α P
 
+/-- **Theorem 3.2.1** (§3.2, p.79), uniqueness: a derivation on the quotient field of an integral
+domain is determined by its restriction to the domain (so the extension, if it exists, is
+unique). -/
+theorem thm_3_2_1_unique {R K : Type*} [CommRing R] [IsDomain R] [Field K] [Algebra R K]
+    [IsFractionRing R K] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ :=
+  derivation_ext_fractionRing h
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):**
---   • **Theorem 3.2.1** (§3.2, p.79): a derivation on an integral domain `R` extends *uniquely*
+--   • **Theorem 3.2.1** (§3.2, p.79), *existence*: a derivation on an integral domain `R` extends
 --     to its quotient field (`Δ(a/b) = (b·Da − a·Db)/b²`). [Construct a `Derivation` on
---     `FractionRing R` — not in Mathlib.]
+--     `FractionRing R` — not in Mathlib; uniqueness is `thm_3_2_1_unique`.]
 --   • **Theorem 3.2.2** (§3.2, p.81): for `t` transcendental over a differential field `F` and any
 --     `w ∈ F(t)`, there is a unique derivation on `F(t)` extending `F`'s with `Δt = w`.
 

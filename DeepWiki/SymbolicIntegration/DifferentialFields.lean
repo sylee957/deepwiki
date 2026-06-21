@@ -1,6 +1,7 @@
 import Mathlib.RingTheory.Derivation.DifferentialRing
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.FieldTheory.Differential.Basic
+import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
 /-! # Differential rings and fields — derivations and their basic calculus
@@ -108,5 +109,25 @@ theorem logDeriv_prod_zpow {ι : Type*} (s : Finset ι) (u : ι → F) (e : ι �
   exact Finset.sum_congr rfl (fun i hi => logDeriv_zpow (u i) (e i) (h i hi))
 
 end Field
+
+/-- **Theorem 3.2.1** (§3.2), uniqueness: a derivation on a fraction field `K` of an integral
+domain `R` is determined by its restriction to `R` — if `Δ₁, Δ₂` agree on `algebraMap R K` then
+`Δ₁ = Δ₂`. (Forced by the quotient rule: for `x = a/b`, `Δx = (Δa − x·Δb)/b`.) -/
+theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ := by
+  ext x
+  obtain ⟨⟨a, b, hb⟩, hx⟩ := IsLocalization.surj (nonZeroDivisors R) x
+  have hbne : algebraMap R K b ≠ 0 := by
+    rw [ne_eq, IsFractionRing.to_map_eq_zero_iff]
+    exact nonZeroDivisors.ne_zero hb
+  have e1 := congrArg (⇑Δ₁) hx
+  have e2 := congrArg (⇑Δ₂) hx
+  rw [Derivation.leibniz] at e1 e2
+  rw [h b, h a] at e1
+  have key : algebraMap R K b • Δ₁ x = algebraMap R K b • Δ₂ x :=
+    add_left_cancel (e1.trans e2.symm)
+  rw [smul_eq_mul, smul_eq_mul] at key
+  exact mul_left_cancel₀ hbne key
 
 end DeepWiki.SymbolicIntegration
