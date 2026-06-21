@@ -318,4 +318,27 @@ theorem conv_coeff_div_eq_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
   exact congrFun (FormalMultilinearSeries.ofScalars_series_injective ℂ ℂ
     (hB.eq_formalMultilinearSeries hA)) m
 
+/-- **Invertible ⟹ `∑ⱼ |πⱼ| < ∞` (AR(∞) weights)** (Thm 3.1.2 / Def 3.1.4 analytic content): for an
+*invertible* ARMA — `θ(z) ≠ 0` on `|z| ≤ 1` (`IsInvertiblePoly`) — the `AR(∞)` weights `πⱼ` (the Taylor
+coefficients of `φ(z)/θ(z)`) are absolutely summable. The same zero-free-disk estimate as causality,
+with `φ, θ` swapped: `IsInvertiblePoly θ` is definitionally the same `≠ 0 on |z| ≤ 1` condition as
+`IsCausalPoly θ`, so this is `summable_norm_cauchyPowerSeries_div_aeval` applied to `φ/θ`. -/
+theorem summable_norm_cauchyPowerSeries_arInv {φ θ : ℝ[X]} (hθ : IsInvertiblePoly θ) :
+    ∃ R : ℝ≥0, 1 < R ∧ Summable fun n : ℕ =>
+      ‖cauchyPowerSeries (fun z : ℂ => Polynomial.aeval z φ * (Polynomial.aeval z θ)⁻¹) 0 R n‖ :=
+  summable_norm_cauchyPowerSeries_div_aeval (φ := θ) (θ := φ) hθ
+
+/-- **The `AR(∞)` weight recursion `∑_{i+j=m} θᵢ πⱼ = φ_m`** (the `θ · (φ/θ) = φ` coefficient identity):
+for an invertible ARMA, the `AR(∞)` weights `πⱼ` (Taylor coefficients of `φ/θ`) reproduce `φ` under
+Cauchy convolution with `θ`. The invertibility dual of `conv_coeff_div_eq_coeff` (roles of `φ, θ`
+swapped). -/
+theorem conv_coeff_arInv_eq_coeff {φ θ : ℝ[X]} (hθ : IsInvertiblePoly θ) :
+    ∃ R : ℝ≥0, 1 < R ∧ Summable (fun n : ℕ => ‖(cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w φ * (Polynomial.aeval w θ)⁻¹) 0 R).coeff n‖) ∧
+      ∀ m : ℕ,
+      (∑ q ∈ Finset.antidiagonal m, (θ.coeff q.1 : ℝ) • (cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w φ * (Polynomial.aeval w θ)⁻¹) 0 R).coeff q.2)
+      = (φ.coeff m : ℂ) :=
+  conv_coeff_div_eq_coeff (φ := θ) (θ := φ) hθ
+
 end DeepWiki.TimeSeries

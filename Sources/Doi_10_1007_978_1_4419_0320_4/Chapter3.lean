@@ -96,13 +96,17 @@ example {φ : ℝ[X]} {Xp Z : ℤ → Ω → ℝ} {σ2 : ℝ} (h : IsAR φ Xp Z 
 The book's **Definition 3.1.3** (causal: `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` with `∑ⱼ |ψⱼ| < ∞`),
 **Definition 3.1.4** (invertible: `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` with `∑ⱼ |πⱼ| < ∞`), **Theorem 3.1.1**
 (causal `⟺ φ(z) ≠ 0` for `|z| ≤ 1`, with `ψ(z) = θ(z)/φ(z)`), **Theorem 3.1.2** (invertible
-`⟺ θ(z) ≠ 0` for `|z| ≤ 1`), and **Propositions 3.1.1/3.1.2** (absolute / mean-square
-convergence of `∑ⱼ ψⱼ Xₜ₋ⱼ` and stationarity of the filtered process) all rest on the
-mean-square convergence of `∑ⱼ ψⱼ Zₜ₋ⱼ` and the power-series reciprocal `1/φ`. That analytic
-layer is **not yet formalized** — infra-blocked, like the deferred analytic items elsewhere
-in the project (it needs `PowerSeries`-reciprocal, `∑|ψⱼ| < ∞` summability, and `L²`-limit
-infrastructure). What *is* formalized: the **root conditions** (the right-hand sides of
-Theorems 3.1.1/3.1.2) as predicates, and the concrete `AR(1)` causality criterion. -/
+`⟺ θ(z) ≠ 0` for `|z| ≤ 1`, with `π(z) = φ(z)/θ(z)`), and **Propositions 3.1.1/3.1.2** (absolute /
+mean-square convergence of `∑ⱼ ψⱼ Xₜ₋ⱼ` and stationarity of the filtered process). What is
+formalized: the **root conditions** (the right-hand sides of Theorems 3.1.1/3.1.2) as predicates
+(`thm_3_1_1`/`thm_3_1_2`), the concrete `AR(1)` causality criterion, and — now — the **analytic
+summability** underlying both representations: `∑ⱼ |ψⱼ| < ∞` for the causal `MA(∞)` weights `ψ = θ/φ`
+(`ex_3_2_3_summable`) and `∑ⱼ |πⱼ| < ∞` for the invertible `AR(∞)` weights `π = φ/θ`
+(`def_3_1_4_summable`), each with its Cauchy-convolution reciprocal recursion (`eq_3_3_3_analytic` /
+`arInv_weight_recursion`), proven from the polynomial being zero-free on a disk of radius `> 1`. What
+remains is the *representation equivalence* itself — the full `⟺` of Thms 3.1.1/3.1.2 (root condition
+`⟺` existence of the `L²` `MA(∞)`/`AR(∞)` solution), the two-sided Laurent existence (Thm 3.1.3), and
+Props 3.1.1/3.1.2 — which need the `L²`-limit/uniqueness layer. -/
 
 /-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
 zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
@@ -113,6 +117,18 @@ abbrev thm_3_1_1 := @DeepWiki.TimeSeries.IsCausalPoly
 zero in the closed complex unit disk, `θ(z) ≠ 0` for `|z| ≤ 1`. The library's
 `IsInvertiblePoly`. (The full equivalence "invertible `⟺` this" is infra-blocked.) -/
 abbrev thm_3_1_2 := @DeepWiki.TimeSeries.IsInvertiblePoly
+
+/-- **Definition 3.1.4 / Theorem 3.1.2 analytic content** (§3.1, p.86): for an invertible ARMA
+(`θ(z) ≠ 0` on `|z| ≤ 1`), the `AR(∞)` weights `πⱼ` — the Taylor coefficients of `φ(z)/θ(z)` — are
+absolutely summable, `∑ⱼ |πⱼ| < ∞`. The analytic content behind the `AR(∞)` representation
+`Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ`; the invertibility dual of the causal `ex_3_2_3_summable` (same zero-free-disk
+estimate, `φ, θ` swapped). The library's `summable_norm_cauchyPowerSeries_arInv`. -/
+alias def_3_1_4_summable := DeepWiki.TimeSeries.summable_norm_cauchyPowerSeries_arInv
+
+/-- **The `AR(∞)` weight recursion `∑_{i+j=m} θᵢ πⱼ = φ_m`** (§3.1): for an invertible ARMA, the
+`AR(∞)` weights `π = φ/θ` reproduce `φ` under Cauchy convolution with `θ` — the invertibility dual of
+the `MA(∞)` recursion `eq_3_3_3_analytic`. The library's `conv_coeff_arInv_eq_coeff`. -/
+alias arInv_weight_recursion := DeepWiki.TimeSeries.conv_coeff_arInv_eq_coeff
 
 /-- **§3.1** (AR(1) process, p.81): an `AR(1)` process with autoregressive polynomial
 `φ(z) = 1 − φ₁z`, i.e. `(1 − φ₁B)X = Z`, satisfies the autoregressive recursion
