@@ -630,6 +630,11 @@ subresultant choice `β₁ = (-1)^(δ+1)`, the subresultant equals the remainder
 Rem` (`ηᵢ = 1` at the base, the `(-1)` factors squaring away). `subresultant_eq_pseudoRem`. -/
 abbrev thm_1_5_3_base := @subresultant_eq_pseudoRem
 
+/-- **Theorem 1.5.3** (§1.5, p.23), normal case fully proved: for a normal subresultant/reduced p.r.s.
+(degrees decreasing by one), `S_{deg Rᵢ₋₁ − 1}(A,B) = Rᵢ` exactly — the `ηᵢ = 1` conclusion. The
+library's `subresultant_prs_normal_eq` (= Collins 1967 Theorem 1, normal case). -/
+abbrev thm_1_5_3_normal := @subresultant_prs_normal_eq
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
