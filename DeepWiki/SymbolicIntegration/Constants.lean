@@ -94,6 +94,20 @@ theorem wronskian_two_linearDependent (y₁ y₂ : F) (h : wronskian ![y₁, y�
     · rw [deriv_div, show y₁ * y₂′ - y₂ * y₁′ = (0 : F) from h]; simp
     · field_simp; ring
 
+/-- **Lemma 3.3.5** (§3.3), converse, field-coefficient version (all `n`): a vanishing Wronskian
+forces the `yⱼ` to be linearly dependent over the field `F` (the `0`-th row of the kernel vector
+is the relation). Upgrading the coefficients to *constants* — the full converse — is the deferred
+induction on `n`. -/
+theorem wronskian_eq_zero_imp_linearDependent {n : ℕ} [NeZero n] (y : Fin n → F)
+    (h : wronskian y = 0) : ∃ c : Fin n → F, c ≠ 0 ∧ ∑ j, c j * y j = 0 := by
+  rw [wronskian] at h
+  obtain ⟨c, hcne, hmul⟩ := Matrix.exists_mulVec_eq_zero_iff.mpr h
+  refine ⟨c, hcne, ?_⟩
+  have h0 := congrFun hmul (0 : Fin n)
+  simp only [Matrix.mulVec, dotProduct, Matrix.of_apply, Pi.zero_apply, Fin.val_zero,
+    iterDeriv_zero] at h0
+  simpa [mul_comm] using h0
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration

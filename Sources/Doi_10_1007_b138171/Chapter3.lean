@@ -156,6 +156,13 @@ theorem lem_3_3_5_converse_two {F : Type*} [Field F] [Differential F] (y₁ y₂
     ∃ c₁ c₂ : F, c₁′ = 0 ∧ c₂′ = 0 ∧ (c₁ ≠ 0 ∨ c₂ ≠ 0) ∧ c₁ * y₁ + c₂ * y₂ = 0 :=
   wronskian_two_linearDependent y₁ y₂ h
 
+/-- **Lemma 3.3.5** (§3.3, p.88), converse, field-coefficient version (all `n`): a vanishing
+Wronskian forces linear dependence of `y₁,…,yₙ` over `F` (with field — not yet constant —
+coefficients). The constant-coefficient upgrade is the deferred induction. -/
+theorem lem_3_3_5_converse_field {F : Type*} [Field F] [Differential F] {n : ℕ} [NeZero n]
+    (y : Fin n → F) (h : wronskian y = 0) : ∃ c : Fin n → F, c ≠ 0 ∧ ∑ j, c j * y j = 0 :=
+  wronskian_eq_zero_imp_linearDependent y h
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work:**
 --   • Theorem 3.2.4 (§3.2, p.85): a field automorphism of a separable algebraic extension commutes
 --     with `D`; trace/norm relations `Tr(Da/a) = D(Tr a)`, etc.
