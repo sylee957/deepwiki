@@ -14,17 +14,20 @@ namespace DeepWiki.TimeSeries
 
 open scoped Polynomial
 
-/-- **Causal `ARMA(p,q)` autocovariance solves the homogeneous AR recursion (§3.3):** for a causal
-AR polynomial `φ` (`IsCausalPoly`), there exist real, summable, one-sided `MA(∞)` weights `ψ` (the
-real parts of the Taylor coefficients of `θ/φ`) such that the linear-process autocovariance
-`γ(h) = σ² ∑ⱼ ψⱼ ψ_{j+h}` satisfies `∑_{k=0}^p φₖ γ(h−k) = 0` at every lag `h > q = deg θ`. The
-weight summability — a hypothesis in `arma_acvf_homogeneous` — is here *discharged* by the analytic
-`∑ⱼ |ψⱼ| < ∞` of `CausalPolyDisk`. -/
-theorem causal_arma_acvf_homogeneous {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) (σ2 : ℝ)
-    {h : ℤ} (hh : (θ.natDegree : ℤ) < h) :
+open MeasureTheory
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+
+/-- **Causal `ARMA(p,q)` `MA(∞)` weights (shared construction):** for a causal AR polynomial `φ`
+(`IsCausalPoly`), there exist real, summable, one-sided weights `ψ` (the real parts of the Taylor
+coefficients of `θ/φ`) satisfying the recursion `∑_{k=0}^p φₖ ψ_{m−k} = 0` for every `m > q = deg θ`
+— the real part of the coefficient-uniqueness identity `∑_{i+j=m} φᵢ ψⱼ = θ_m`
+(`conv_coeff_div_eq_coeff`), with summability the analytic `∑ⱼ |ψⱼ| < ∞` of `CausalPolyDisk`. The
+weight construction shared by the §3.3 autocovariance results. -/
+theorem exists_causal_arma_weights {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
     ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
-      ∑ k ∈ Finset.range (φ.natDegree + 1),
-        φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + (h - k))) = 0 := by
+      ∀ m : ℤ, (θ.natDegree : ℤ) < m →
+        ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (m - k) = 0 := by
   obtain ⟨R, hR1, hsum, hrec⟩ := conv_coeff_div_eq_coeff (φ := φ) (θ := θ) hφ
   set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R
     with hp
@@ -87,6 +90,40 @@ theorem causal_arma_acvf_homogeneous {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) (�
       _ = ∑ k ∈ Finset.range (M + 1), φ.coeff k * ρ (M - k) :=
           (Finset.sum_congr rfl hg2_eq).symm
       _ = 0 := hM0
+  exact ⟨ψ, hψsum, hψ0, hψrec⟩
+
+/-- **Causal `ARMA(p,q)` autocovariance solves the homogeneous AR recursion (§3.3):** the
+linear-process autocovariance `γ(h) = σ² ∑ⱼ ψⱼ ψ_{j+h}` of a causal ARMA satisfies
+`∑_{k=0}^p φₖ γ(h−k) = 0` at every lag `h > q = deg θ`. The weight summability — a hypothesis in
+`arma_acvf_homogeneous` — is *discharged* by the analytic `∑ⱼ |ψⱼ| < ∞` of `CausalPolyDisk`. -/
+theorem causal_arma_acvf_homogeneous {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) (σ2 : ℝ)
+    {h : ℤ} (hh : (θ.natDegree : ℤ) < h) :
+    ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
+      ∑ k ∈ Finset.range (φ.natDegree + 1),
+        φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + (h - k))) = 0 := by
+  obtain ⟨ψ, hψsum, hψ0, hψrec⟩ := exists_causal_arma_weights (θ := θ) hφ
   exact ⟨ψ, hψsum, hψ0, arma_acvf_homogeneous hψsum φ σ2 hψ0 hψrec hh⟩
+
+/-- **Example 3.2.3 / Theorem 3.2.1 + §3.3 for the genuine `L²` causal-`ARMA` process:** for a causal
+ARMA over genuine white noise `Z` (Definition 3.1.1, square-integrable and `L²`-bounded after
+embedding), there exist real, summable, one-sided `MA(∞)` weights `ψ` such that the linear process
+`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` (`linearProcessLp`) has the Theorem 3.2.1 autocovariance
+`⟪X_{t+k}, Xₜ⟫ = σ² ∑ⱼ ψⱼ ψ_{j+k}`, and that autocovariance satisfies the §3.3 homogeneous AR
+recursion `∑_{k=0}^p φₖ γ(h−k) = 0` for `h > q`. Both the summability (the analytic `∑ⱼ |ψⱼ| < ∞`)
+and the recursion follow from causality alone — the full `L²`-process form of the closed §3.3
+result. -/
+theorem causal_arma_linearProcess_acvf_homogeneous [IsProbabilityMeasure μ] {φ θ : ℝ[X]}
+    (hφ : IsCausalPoly φ) {Z : ℤ → Ω → ℝ} (hmem : ∀ t, MemLp (Z t) 2 μ) {σ2 : ℝ}
+    (hwn : IsWhiteNoise Z μ σ2) {C : ℝ} (hZb : ∀ t, ‖toLpSeq Z hmem t‖ ≤ C)
+    {h : ℤ} (hh : (θ.natDegree : ℤ) < h) :
+    ∃ ψ : ℤ → ℝ, Summable ψ ∧ (∀ j : ℤ, j < 0 → ψ j = 0) ∧
+      (∀ t k : ℤ, inner ℝ (linearProcessLp ψ (toLpSeq Z hmem) (t + k))
+          (linearProcessLp ψ (toLpSeq Z hmem) t) = σ2 * ∑' j : ℤ, ψ j * ψ (j + k)) ∧
+      ∑ k ∈ Finset.range (φ.natDegree + 1),
+        φ.coeff k * (σ2 * ∑' j : ℤ, ψ j * ψ (j + (h - k))) = 0 := by
+  obtain ⟨ψ, hψsum, hψ0, hψrec⟩ := exists_causal_arma_weights (θ := θ) hφ
+  exact ⟨ψ, hψsum, hψ0,
+    fun t k => isWhiteNoise_linearProcess_acvf hψsum hmem hwn hZb t k,
+    arma_acvf_homogeneous hψsum φ σ2 hψ0 hψrec hh⟩
 
 end DeepWiki.TimeSeries

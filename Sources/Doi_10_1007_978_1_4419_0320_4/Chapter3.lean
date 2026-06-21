@@ -265,6 +265,15 @@ of `eq_3_3_3_analytic`. The closed causal-ARMA §3.3 result. The library's
 `causal_arma_acvf_homogeneous`. -/
 alias arma_acvf_secondMethod_causal := DeepWiki.TimeSeries.causal_arma_acvf_homogeneous
 
+/-- **Example 3.2.3 (causal ARMA `MA(∞)`), `L²`-process form** (§3.2/§3.3, p.91): for a causal ARMA
+over genuine white noise, the `L²` linear process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` (`linearProcessLp`) built from the
+real, summable, one-sided `MA(∞)` weights `ψ = Re(θ/φ)` has the Theorem 3.2.1 autocovariance
+`⟪X_{t+k}, Xₜ⟫ = σ² ∑ⱼ ψⱼ ψ_{j+k}`, and that autocovariance solves the §3.3 homogeneous AR recursion
+`∑ₖ φₖ γ(h−k) = 0` for `h > q` — the full process-level realization, with weight summability
+discharged from causality (`ex_3_2_3_summable`). The library's
+`causal_arma_linearProcess_acvf_homogeneous`. -/
+alias ex_3_2_3 := DeepWiki.TimeSeries.causal_arma_linearProcess_acvf_homogeneous
+
 /-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
@@ -280,8 +289,10 @@ unit) and — now — are genuinely *absolutely summable*, `∑ⱼ |ψⱼ| < ∞
 analytic decay `|ψⱼ| = O(rʲ)` forced by causality (`φ ≠ 0` on `|z| ≤ 1`) is *proven*, no longer out of
 scope: `φ` is zero-free on a disk of radius `> 1` by compactness (`IsCausalPoly.exists_radius_gt_one`),
 so `θ/φ` is analytic there and its Cauchy power-series coefficients (the `ψ`-weights) are absolutely
-summable. The only piece left for the full Example 3.2.3 is reassembling these summable weights into
-the `L²` random-variable process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ`. Still unformalized: **Proposition 3.2.1** (a
+summable. These summable weights are reassembled into the `L²` random-variable process
+`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` over genuine white noise, with the Theorem 3.2.1 autocovariance and the §3.3
+recursion, in `ex_3_2_3` (`causal_arma_linearProcess_acvf_homogeneous`). Still unformalized:
+**Proposition 3.2.1** (a
 zero-mean stationary `q`-correlated process — `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q)),
 which needs the `L²` innovations/projection algorithm of §2.3–§2.4.
 
