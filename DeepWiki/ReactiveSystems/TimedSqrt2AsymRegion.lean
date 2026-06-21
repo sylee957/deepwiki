@@ -159,6 +159,25 @@ theorem clock_at_sqrt2_delay_invariant {d δ v : ℝ≥0} (h : d + δ ≤ sqrt2N
   push_cast [NNReal.coe_sub h, NNReal.coe_sub hd]
   ring
 
+/-- **The crossing-value is the a-availability threshold.** For a process at `d ≤ √2`, `A` still has
+its `a`-move after a delay iff the (post-delay) value of clock `y` is *strictly below* its
+crossing-value `v + (√2 − d)`. (Dually `B`, with its closed threshold, has `a` iff the clock value is
+`≤` the crossing-value.) So the crossing-value `c_y = v + (√2 − d)` is exactly the clock-`y` value at
+which `a` flips — the static datum the asymmetric region must match. -/
+theorem a_avail_iff_lt_crossing {d t : ℝ≥0} (v : ℝ≥0) (hd : d ≤ sqrt2NN) :
+    d + t < sqrt2NN ↔ v + t < v + (sqrt2NN - d) := by
+  rw [add_lt_add_iff_left, ← NNReal.coe_lt_coe, ← NNReal.coe_lt_coe, NNReal.coe_add,
+    NNReal.coe_sub hd]
+  constructor <;> intro h <;> linarith
+
+/-! The precise **asymmetric crossing-value match** (derived, for the relation assembly). Requiring
+`A` and `B` to agree on a-availability at *every* integer clock value `m` — i.e.
+`(c_y > m) ↔ (c'_y ≥ m)` for all `m ∈ ℕ`, where `c_y = u y + (√2 − d)`, `c'_y = u' y + (√2 − e)` —
+unfolds to: if `c_y` is **not** an integer then `⌊c_y⌋ = ⌊c'_y⌋` (standard floor match), and if
+`c_y = m` then `⌊c'_y⌋ = m − 1` (B's crossing-value lies just below, in `[m−1, m)`). This is exactly
+the open/closed asymmetry placing B strictly past `√2` at the double-coincidence, and — being built
+from the *delay-invariant* crossing-values — it is automatically preserved under delay. -/
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
