@@ -149,4 +149,26 @@ theorem linearProcessLp_maqFilter_eq (θ : ℝ[X]) (Z : ℤ → Lp ℝ 2 μ) (t 
   rw [Finset.mem_range, not_lt] at hn
   rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega), zero_smul]
 
+/-- `maqFilter θ` vanishes beyond the degree: `ψₘ = 0` once `deg θ < m`. -/
+theorem maqFilter_eq_zero_of_natDegree_lt (θ : ℝ[X]) {m : ℤ} (hm : (θ.natDegree : ℤ) < m) :
+    maqFilter θ m = 0 := by
+  simp only [maqFilter, if_pos (by omega : (0 : ℤ) ≤ m)]
+  exact Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)
+
+/-- **The `MA(q)` autocovariance has finite support:** `∑ₖ ψₖ ψ_{k+h} = 0` for `|h| > deg θ` — the
+defining property of an `MA(q)` process, that its autocovariance `γ(h) = σ² ∑ₖ ψₖ ψ_{k+h}` vanishes
+at every lag beyond the order `q = deg θ`. A pure consequence of the filter's finite support. -/
+theorem maqFilter_tsum_mul_shift_eq_zero (θ : ℝ[X]) {h : ℤ} (hh : (θ.natDegree : ℤ) < |h|) :
+    ∑' k : ℤ, maqFilter θ k * maqFilter θ (k + h) = 0 := by
+  have hz : ∀ k : ℤ, maqFilter θ k * maqFilter θ (k + h) = 0 := by
+    intro k
+    rcases le_or_gt 0 k with hk | hk
+    · rcases le_or_gt k (θ.natDegree : ℤ) with hkd | hkd
+      · rcases lt_abs.mp hh with hpos | hneg
+        · rw [maqFilter_eq_zero_of_natDegree_lt θ (by omega : (θ.natDegree : ℤ) < k + h), mul_zero]
+        · rw [maqFilter_neg θ (by omega : k + h < 0), mul_zero]
+      · rw [maqFilter_eq_zero_of_natDegree_lt θ hkd, zero_mul]
+    · rw [maqFilter_neg θ hk, zero_mul]
+  simp only [hz, tsum_zero]
+
 end DeepWiki.TimeSeries
