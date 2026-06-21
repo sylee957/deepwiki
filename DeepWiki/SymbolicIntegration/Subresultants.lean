@@ -15,6 +15,31 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
 
+open Matrix Finset in
+/-- Closed-form `4×4` determinant (the `Matrix.det_fin_four` Mathlib lacks): Laplace expansion
+along row `0`, each `3×3` minor expanded along its row `0`. Lets a concrete symbolic `4×4`
+determinant be computed by `rw [det_fin_four]` + entry reduction + `ring`, avoiding the recursive
+`det_succ` blow-up. -/
+theorem det_fin_four (M : Matrix (Fin 4) (Fin 4) R) :
+    M.det =
+      M 0 0 * (M 1 1 * (M 2 2 * M 3 3 - M 2 3 * M 3 2) - M 1 2 * (M 2 1 * M 3 3 - M 2 3 * M 3 1)
+                + M 1 3 * (M 2 1 * M 3 2 - M 2 2 * M 3 1))
+      - M 0 1 * (M 1 0 * (M 2 2 * M 3 3 - M 2 3 * M 3 2) - M 1 2 * (M 2 0 * M 3 3 - M 2 3 * M 3 0)
+                + M 1 3 * (M 2 0 * M 3 2 - M 2 2 * M 3 0))
+      + M 0 2 * (M 1 0 * (M 2 1 * M 3 3 - M 2 3 * M 3 1) - M 1 1 * (M 2 0 * M 3 3 - M 2 3 * M 3 0)
+                + M 1 3 * (M 2 0 * M 3 1 - M 2 1 * M 3 0))
+      - M 0 3 * (M 1 0 * (M 2 1 * M 3 2 - M 2 2 * M 3 1) - M 1 1 * (M 2 0 * M 3 2 - M 2 2 * M 3 0)
+                + M 1 2 * (M 2 0 * M 3 1 - M 2 1 * M 3 0)) := by
+  simp only [det_succ_row_zero, submatrix_apply, Fin.succ_zero_eq_one, submatrix_submatrix,
+    det_unique, Fin.default_eq_zero, Function.comp_apply, Fin.succ_one_eq_two, Fin.sum_univ_succ,
+    Fin.val_zero, Fin.zero_succAbove, univ_unique, Fin.val_succ, Fin.val_eq_zero,
+    Fin.succ_succAbove_zero, sum_singleton, Fin.succ_succAbove_one,
+    show (Fin.succ (2 : Fin 3) : Fin 4) = 3 from rfl,
+    show (Fin.succAbove (1 : Fin 4) 2 : Fin 4) = 3 from rfl,
+    show (Fin.succAbove (2 : Fin 4) 2 : Fin 4) = 3 from rfl,
+    show (Fin.succAbove (3 : Fin 4) 2 : Fin 4) = 2 from rfl]
+  ring
+
 /-- **Sylvester matrix** (§1.4, Bronstein layout): `m` shifted rows of `A` (degree `n`) followed by
 `n` shifted rows of `B` (degree `m`), size `(m+n)×(m+n)`. Row `i < m` is `A` shifted by `i`; row
 `m ≤ i` is `B` shifted by `i − m`. -/

@@ -542,6 +542,25 @@ theorem ex_1_4_3 :
     simp only [pow_zero, mul_one, pow_one, map_neg, map_ofNat]
     ring
 
+/-- **Example 1.4.1** (§1.4, p.18): the Sylvester matrix of `A = 3tx² − t³ − 4` and
+`B = x² + t³x − 9` in `ℤ[t][x]`, and its determinant — the resultant
+`res(A,B) = −3t¹⁰ − 12t⁷ + t⁶ − 54t⁴ + 8t³ + 729t² − 216t + 16`. -/
+theorem ex_1_4_1 :
+    bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
+        = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9]
+      ∧ (bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2).det
+        = -3 * X ^ 10 - 12 * X ^ 7 + X ^ 6 - 54 * X ^ 4 + 8 * X ^ 3 + 729 * X ^ 2 - 216 * X + 16 := by
+  have hM : bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
+      = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] := by
+    refine Matrix.ext fun i l => ?_
+    fin_cases i <;> fin_cases l <;>
+      simp [bSylvester, coeff_sub, coeff_add, coeff_C_mul, coeff_X_pow, coeff_C, coeff_X,
+        -map_mul, -map_pow] <;> ring
+  refine ⟨hM, ?_⟩
+  rw [hM, det_fin_four]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Matrix.of_apply]
+  ring
+
 -- **Deferred — not in Mathlib (library work):** the *general* Theorem 1.4.3 with the
 -- `σ(lc A)^(deg B − deg σ̄B)` scaling factor when `σ` lowers `deg B` (subresultants of different
 -- sizes). [Theorem 1.4.2 = `thm_1_4_2`; Definition 1.4.2 = `def_1_4_2`; degree-preserving 1.4.3 =
@@ -581,6 +600,46 @@ theorem ex_1_5_1 :
     simp only [subresultant, Finset.sum_range_succ, Finset.sum_range_zero, zero_add, hM, hd0, hd1,
       pow_zero, mul_one, pow_one, map_zero, zero_mul, add_zero]
     norm_num
+
+/-- **Example 1.5.2** (§1.5, p.25): the subresultants of `A = 3tx² − t³ − 4` and `B = x² + t³x − 9`
+over `ℤ[t]` are `S₀ = res(A,B) = −3t¹⁰ − 12t⁷ + t⁶ − 54t⁴ + 8t³ + 729t² − 216t + 16` and
+`S₁ = 3t⁴x + t³ − 27t + 4`. The degree-10 `S₀` determinant is computed by `det_fin_four`. -/
+theorem ex_1_5_2 :
+    subresultant (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2 0
+        = C (-3 * X ^ 10 - 12 * X ^ 7 + X ^ 6 - 54 * X ^ 4 + 8 * X ^ 3 + 729 * X ^ 2 - 216 * X + 16)
+      ∧ subresultant (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2 1
+        = C (X ^ 3 - 27 * X + 4) + C (3 * X ^ 4) * X := by
+  have hM : bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
+      = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] := by
+    refine Matrix.ext fun i l => ?_
+    fin_cases i <;> fin_cases l <;>
+      simp [bSylvester, coeff_sub, coeff_add, coeff_C_mul, coeff_X_pow, coeff_C, coeff_X,
+        -map_mul, -map_pow] <;> ring
+  refine ⟨?_, ?_⟩
+  · rw [subresultant_zero, hM]
+    congr 1
+    rw [det_fin_four]
+    simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Matrix.of_apply]
+    ring
+  · simp only [subresultant, Finset.sum_range_succ, Finset.sum_range_zero, zero_add]
+    rw [hM]
+    have hd0 : ((!![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] :
+        Matrix (Fin 4) (Fin 4) (ℤ[X])).submatrix (subRow 2 2 1) (subCol 2 2 1 0)).det
+        = X ^ 3 - 27 * X + 4 := by
+      rw [Matrix.det_fin_two]
+      simp only [Matrix.submatrix_apply, show subRow 2 2 1 0 = (0 : Fin 4) from rfl,
+        show subRow 2 2 1 1 = (2 : Fin 4) from rfl, show subCol 2 2 1 0 0 = (0 : Fin 4) from rfl,
+        show subCol 2 2 1 0 1 = (2 : Fin 4) from rfl, Matrix.cons_val, Matrix.of_apply]
+      ring
+    have hd1 : ((!![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] :
+        Matrix (Fin 4) (Fin 4) (ℤ[X])).submatrix (subRow 2 2 1) (subCol 2 2 1 1)).det = 3 * X ^ 4 := by
+      rw [Matrix.det_fin_two]
+      simp only [Matrix.submatrix_apply, show subRow 2 2 1 0 = (0 : Fin 4) from rfl,
+        show subRow 2 2 1 1 = (2 : Fin 4) from rfl, show subCol 2 2 1 1 0 = (0 : Fin 4) from rfl,
+        show subCol 2 2 1 1 1 = (1 : Fin 4) from rfl, Matrix.cons_val, Matrix.of_apply]
+      ring
+    rw [hd0, hd1]
+    simp only [pow_zero, mul_one, pow_one]
 
 /-- **Exercise 1.11** (§1, p.33): similarity (Definition 1.5.2) is an equivalence relation on
 `D[x]` when `D` is an integral domain (`isSimilar_equivalence`). -/
@@ -987,9 +1046,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.5: Thm 1.5.2; Thm 1.5.3.
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.4.1 (the `ℤ[t]` Sylvester determinant `res(3tx²−t³−4, x²+t³x−9)` — a degree-10
-  symbolic `4×4` det); Ex 1.5.2 (its subresultants `S₀, S₁` over `ℤ[t]`); Ex 1.7.2 (the
-  step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
+Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
 end DeepWiki.Si
