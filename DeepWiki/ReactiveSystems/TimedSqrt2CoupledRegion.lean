@@ -68,6 +68,36 @@ theorem cv_reset_self {D : Type*} [DecidableEq D] (d : ℝ≥0) (u : Valuation D
     cv d (Valuation.reset {x} u) x = sqrt2NN - d := by
   rw [cv_apply, Valuation.reset_mem (Set.mem_singleton x) u, zero_add]
 
+/-- The combined valuation with the crossing/τ coordinates (`inr`) shifted **down** by `η`; the clock
+coordinates (`inl`) are untouched. As `η → 0⁺` this encodes "B's crossings are A's, infinitesimally
+below" — the asymmetric (open A / closed B) √2-cut. -/
+noncomputable def combShift {D : Type*} (d : ℝ≥0) (u : Valuation D) (η : ℝ≥0) : D ⊕ Option D → ℝ≥0
+  | Sum.inl y => u y
+  | Sum.inr c => combVal d u (Sum.inr c) - η
+
+@[simp] theorem combShift_inl {D : Type*} (d : ℝ≥0) (u : Valuation D) (η : ℝ≥0) (y : D) :
+    combShift d u η (Sum.inl y) = u y := rfl
+
+@[simp] theorem combShift_inr {D : Type*} (d : ℝ≥0) (u : Valuation D) (η : ℝ≥0) (c : Option D) :
+    combShift d u η (Sum.inr c) = combVal d u (Sum.inr c) - η := rfl
+
+/-- The **coupled live relation** (single-irrational-cut region, crossing-value coordinates): the
+clock region (via the `inl` part), the asymmetric √2-cuts and the frac-ordering coupling are *all*
+captured by requiring that for every sufficiently small `η > 0`, A's combined valuation with its
+crossings shifted **down** by `η` is region-equivalent to B's combined valuation. The `∀` small-`η`
+form makes the witness robustly infinitesimal (so it implies the asymmetric crossing-match
+`AsymMatch`, by the floor argument: `⌊cv − η⌋ = ⌊cv⌋` off integers, `⌊cv⌋ − 1` at integers). -/
+def Sq2CoupledFRel {D : Type*} (d : ℝ≥0) (u : Valuation D) (e : ℝ≥0) (u' : Valuation D) : Prop :=
+  d < sqrt2NN ∧ e ≤ sqrt2NN ∧
+    ∃ η₀ : ℝ≥0, 0 < η₀ ∧ ∀ η : ℝ≥0, 0 < η → η < η₀ →
+      RegionEqAll (combShift d u η) (combVal e u')
+
+/-- The coupled `√2` relation: past regime (both `a`-disabled, clocks region-equivalent) or the
+coupled live regime. -/
+def Sq2CoupledRel {D : Type*} (p : Sq2) (u : Valuation D) (q : Sq2) (u' : Valuation D) : Prop :=
+  (aDisabled sqrt2NN p ∧ aDisabled sqrt2NN q ∧ RegionEqAll u u')
+  ∨ (∃ d e : ℝ≥0, p = Sq2.A d ∧ q = Sq2.B e ∧ Sq2CoupledFRel d u e u')
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
