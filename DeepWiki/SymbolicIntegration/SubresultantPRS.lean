@@ -55,4 +55,35 @@ theorem subresultant_prs_telescope [IsDomain R] (F : ℕ → R[X]) (α β : ℕ 
       (hα n (by omega)) (hβ n (by omega)) (hlc n (by omega)) (hj n (by omega)) (hcb n (by omega))
       rfl le_rfl (hQ n (by omega)) (hrel n (by omega))
 
+/-- **Fundamental PRS Theorem, explicit product form** (Brown–Traub §5, eq 30): the exact-constant
+telescoping of `subresultant_prs_step` (eq 21) down a PRS. `Sⱼ(F₀,F₁)·∏_{l<m} αₗ^(n_{l+1}-j)` equals
+`Sⱼ(Fₘ,F_{m+1})·∏_{l<m}[(-1)^((nₗ-j)(n_{l+1}-j))·(lc F_{l+1})^(nₗ-n_{l+2})·βₗ^(n_{l+1}-j)]`. The
+explicit `ηᵢ/τᵢ` similarity coefficients (eq 1.9) are read off these products at the regular indices. -/
+theorem subresultant_prs_telescope_explicit [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
+    (j : ℕ) (m : ℕ)
+    (hβ : ∀ l < m, β l ≠ 0)
+    (hcb : ∀ l < m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, j < (F (l + 2)).natDegree)
+    (hQ : ∀ l < m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l < m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l) :
+    subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree j
+        * ∏ l ∈ Finset.range m, C (α l ^ ((F (l + 1)).natDegree - j))
+      = subresultant (F m) (F (m + 1)) (F m).natDegree (F (m + 1)).natDegree j
+        * ∏ l ∈ Finset.range m, ((-1 : R[X]) ^ (((F l).natDegree - j) * ((F (l + 1)).natDegree - j))
+            * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+            * C (β l ^ ((F (l + 1)).natDegree - j))) := by
+  induction m with
+  | zero => simp
+  | succ n ih =>
+    rw [Finset.prod_range_succ, Finset.prod_range_succ, ← mul_assoc,
+      ih (fun l hl => hβ l (by omega)) (fun l hl => hcb l (by omega)) (fun l hl => hj l (by omega))
+        (fun l hl => hQ l (by omega)) (fun l hl => hrel l (by omega))]
+    have h21 := subresultant_prs_step (F n) (F (n + 1)) (F (n + 2)) (Q n) (α n) (β n)
+      (F n).natDegree (F (n + 1)).natDegree (F (n + 2)).natDegree j (hβ n (by omega))
+      (hj n (by omega)) (hcb n (by omega)) rfl le_rfl (hQ n (by omega)) (hrel n (by omega))
+    linear_combination (∏ l ∈ Finset.range n,
+      ((-1 : R[X]) ^ (((F l).natDegree - j) * ((F (l + 1)).natDegree - j))
+        * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+        * C (β l ^ ((F (l + 1)).natDegree - j)))) * h21
+
 end DeepWiki.SymbolicIntegration

@@ -58,4 +58,9 @@ is similar to `Sⱼ(Fₘ,F_{m+1})` for every step `m` (and hence to a later PRS 
 library's `subresultant_prs_telescope`, telescoping the per-step similarity `subresultant_prs_similar`. -/
 abbrev fundamental_theorem := @subresultant_prs_telescope
 
+/-- **Fundamental Theorem, explicit product form** (§5, p.510, eq 30): the exact-constant telescoping —
+`Sⱼ(F₀,F₁)·∏ αₗ^(n_{l+1}-j) = Sⱼ(Fₘ,F_{m+1})·∏[(-1)^…·(lc F_{l+1})^…·βₗ^…]`, from which the explicit
+`ηᵢ/τᵢ` coefficients (eq 1.9) are read off. The library's `subresultant_prs_telescope_explicit`. -/
+abbrev fundamental_theorem_explicit := @subresultant_prs_telescope_explicit
+
 end DeepWiki.Btr
