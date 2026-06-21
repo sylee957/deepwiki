@@ -201,4 +201,14 @@ theorem dl_correct (heven : ∀ h : ℤ, γ (-h) = γ h) :
       rw [dlError_succ, hconv, dl_sum_expand, hA, hB, hC, hAval, hBval]
       ring
 
+/-- **Prediction-error product formula** (iterating eq 5.2.5): `vₙ = γ(0) ∏_{k=1}^n (1 − φₖₖ²)`.
+In particular the one-step error decreases monotonically with the order `n`. -/
+theorem dlError_eq_prod (n : ℕ) :
+    dlError γ n = γ 0 * ∏ k ∈ Icc 1 n, (1 - dlCoeff γ k k ^ 2) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [dlError_succ, ih, Finset.prod_Icc_succ_top (by omega : 1 ≤ n + 1)]
+    ring
+
 end DeepWiki.TimeSeries
