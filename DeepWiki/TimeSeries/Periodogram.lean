@@ -26,4 +26,45 @@ theorem periodogram_zero_eq (n : ℕ) (x : ℕ → ℝ) :
   rw [← Complex.ofReal_sum, Complex.normSq_ofReal]
   ring
 
+open Real (pi)
+
+/-- **Root-of-unity orthogonality (the core of Proposition 10.1.1):** the geometric sum of the
+`n`-th roots of unity `∑_{t<n} e^{2πi m t/n}` is `n` if `n ∣ m` and `0` otherwise. This is the
+orthogonality of the Fourier basis at the Fourier frequencies `ωⱼ = 2πj/n`. -/
+theorem sum_range_exp_two_pi_mul_I (n : ℕ) (hn : 0 < n) (m : ℤ) :
+    ∑ t ∈ Finset.range n, Complex.exp (2 * pi * Complex.I * m * t / n)
+      = if (n : ℤ) ∣ m then (n : ℂ) else 0 := by
+  have hn0 : (n : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr hn.ne'
+  have h2pi : (2 * (pi : ℂ) * Complex.I) ≠ 0 := by
+    simp [Real.pi_ne_zero, Complex.I_ne_zero]
+  have hcast : ∀ t : ℕ, Complex.exp (2 * pi * Complex.I * m * t / n)
+      = Complex.exp (2 * pi * Complex.I * m / n) ^ t := by
+    intro t; rw [← Complex.exp_nat_mul]; congr 1; ring
+  simp_rw [hcast]
+  set ζ := Complex.exp (2 * pi * Complex.I * m / n) with hζdef
+  have hζn : ζ ^ n = 1 := by
+    rw [hζdef, ← Complex.exp_nat_mul,
+      show (n : ℂ) * (2 * pi * Complex.I * m / n) = (m : ℂ) * (2 * pi * Complex.I) by field_simp]
+    exact_mod_cast Complex.exp_int_mul_two_pi_mul_I m
+  by_cases hdvd : (n : ℤ) ∣ m
+  · obtain ⟨q, rfl⟩ := hdvd
+    have hζ1 : ζ = 1 := by
+      rw [hζdef,
+        show (2 * pi * Complex.I * ((n : ℤ) * q : ℤ) / n : ℂ) = (q : ℂ) * (2 * pi * Complex.I) by
+          push_cast; field_simp]
+      exact_mod_cast Complex.exp_int_mul_two_pi_mul_I q
+    rw [if_pos (dvd_mul_right _ _), hζ1]
+    simp
+  · have hζne : ζ ≠ 1 := by
+      intro h
+      rw [hζdef, Complex.exp_eq_one_iff] at h
+      obtain ⟨k, hk⟩ := h
+      apply hdvd
+      rw [div_eq_iff hn0] at hk
+      have heq : (2 * (pi : ℂ) * Complex.I) * (m : ℂ)
+          = (2 * (pi : ℂ) * Complex.I) * ((n : ℂ) * k) := by linear_combination hk
+      have hmn : (m : ℂ) = (n : ℂ) * k := mul_left_cancel₀ h2pi heq
+      exact ⟨k, by exact_mod_cast hmn⟩
+    rw [if_neg hdvd, geom_sum_eq hζne, hζn, sub_self, zero_div]
+
 end DeepWiki.TimeSeries
