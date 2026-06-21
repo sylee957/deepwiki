@@ -41,4 +41,19 @@ theorem linearProcessLp_filter {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ �
   refine (hLHS.congr_fun fun m => ?_).unique (hasSum_linearProcessLp hχ hZb t)
   rw [Finset.sum_smul]
 
+/-- **Finite linear filter, `ℕ`-indexed form:** `∑_{k<N} cₖ X_{t−k} = ∑_m (∑_{k<N} cₖ ψ_{m−k}) Z_{t−m}`
+— the `range N` version of `linearProcessLp_filter`, matching a polynomial filter `∑_{k=0}^{p} φₖ Bᵏ`
+(`c = φ.coeff`, `N = deg φ + 1`). -/
+theorem linearProcessLp_filter_range {ψ : ℤ → ℝ} (hψ : Summable ψ) {Z : ℤ → Lp ℝ 2 μ}
+    {C : ℝ} (hZb : ∀ t, ‖Z t‖ ≤ C) (c : ℕ → ℝ) (N : ℕ) (t : ℤ) :
+    ∑ k ∈ Finset.range N, c k • linearProcessLp ψ Z (t - k)
+      = linearProcessLp (fun m => ∑ k ∈ Finset.range N, c k * ψ (m - k)) Z t := by
+  have hχ : Summable (fun m => ∑ k ∈ Finset.range N, c k * ψ (m - (k : ℤ))) :=
+    summable_sum fun k _ => (((Equiv.subRight (k : ℤ)).summable_iff).mpr hψ).mul_left (c k)
+  have hLHS : HasSum (fun m => ∑ k ∈ Finset.range N, (c k * ψ (m - (k : ℤ))) • Z (t - m))
+      (∑ k ∈ Finset.range N, c k • linearProcessLp ψ Z (t - (k : ℤ))) :=
+    hasSum_sum fun k _ => hasSum_smul_shift_linearProcessLp hψ hZb (c k) (k : ℤ) t
+  refine (hLHS.congr_fun fun m => ?_).unique (hasSum_linearProcessLp hχ hZb t)
+  rw [Finset.sum_smul]
+
 end DeepWiki.TimeSeries

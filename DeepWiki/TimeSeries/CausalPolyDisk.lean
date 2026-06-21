@@ -348,11 +348,12 @@ ARMA, the Taylor coefficients of `θ(z)/φ(z)` equal the coefficients of the for
 solution of `↑φ · ψ = ↑θ` in the integral domain `ℂ⟦X⟧` (`↑φ ≠ 0`, since `φ(0) ≠ 0` for a causal
 `φ`): both the analytic `ψ`-weights and the formal `armaPsi` solve it, so they agree. -/
 theorem cauchyCoeff_div_aeval_eq_armaPsi {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
-    ∃ R : ℝ≥0, 1 < R ∧ ∀ n : ℕ,
+    ∃ R : ℝ≥0, 1 < R ∧ Summable (fun n : ℕ => ‖(cauchyPowerSeries
+        (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff n‖) ∧ ∀ n : ℕ,
       (cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff n
       = ((PowerSeries.coeff n (armaPsi φ θ) : ℝ) : ℂ) := by
-  obtain ⟨R, hR1, _hsum, hrec⟩ := conv_coeff_div_eq_coeff (φ := φ) (θ := θ) hφ
-  refine ⟨R, hR1, fun n => ?_⟩
+  obtain ⟨R, hR1, hsum, hrec⟩ := conv_coeff_div_eq_coeff (φ := φ) (θ := θ) hφ
+  refine ⟨R, hR1, hsum, fun n => ?_⟩
   set p := cauchyPowerSeries (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R
     with hp
   have hφ0 : PowerSeries.constantCoeff (φ : PowerSeries ℝ) ≠ 0 := by
@@ -379,5 +380,16 @@ theorem cauchyCoeff_div_aeval_eq_armaPsi {φ θ : ℝ[X]} (hφ : IsCausalPoly φ
     exact_mod_cast h0
   have hcoeff := congrArg (PowerSeries.coeff n) (mul_left_cancel₀ hφF (hmulQ.trans hmulψ.symm))
   rwa [hQ, PowerSeries.coeff_mk, hF, PowerSeries.coeff_map, Complex.ofRealHom_eq_coe] at hcoeff
+
+/-- **The genuine `MA(∞)` weights `ψ = θ/φ` are absolutely summable** (Example 3.2.3, formal form):
+for a causal ARMA, the coefficients of the formal power series `armaPsi φ θ = (↑φ)⁻¹ ↑θ` satisfy
+`∑ⱼ |ψⱼ| < ∞`. This is the analytic `∑ⱼ |ψⱼ| < ∞` (`summable_norm_cauchyPowerSeries_div_aeval`)
+transported to the *formal* weights via the realness bridge `cauchyCoeff_div_aeval_eq_armaPsi`
+(`|ψⱼ| = ‖(θ/φ)-Taylor-coeffⱼ‖`). -/
+theorem summable_armaPsi_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    Summable (fun n : ℕ => PowerSeries.coeff n (armaPsi φ θ)) := by
+  obtain ⟨R, hR1, hsum, heq⟩ := cauchyCoeff_div_aeval_eq_armaPsi (φ := φ) (θ := θ) hφ
+  refine Summable.of_norm_bounded hsum fun n => le_of_eq ?_
+  rw [heq n, Complex.norm_real]
 
 end DeepWiki.TimeSeries
