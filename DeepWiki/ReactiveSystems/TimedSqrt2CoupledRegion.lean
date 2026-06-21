@@ -67,6 +67,16 @@ theorem asymMatch_of_floor_shift {c c' : ℝ≥0} {η₀ : ℝ≥0} (hc : 0 < c)
     exact lt_of_le_of_lt (le_trans (by exact_mod_cast hmf) (Nat.floor_le zero_le))
       (tsub_lt_self hc hη₁pos)
 
+/-- Fractional orderings agree under region equivalence (unconditional form, via an arbitrarily large
+`cmax`): companion to `regionEqAll_floor_eq`. -/
+theorem regionEqAll_fracOrder {D : Type*} {V V' : Valuation D} (h : RegionEqAll V V') (x y : D) :
+    fracPart (V x) ≤ fracPart (V y) ↔ fracPart (V' x) ≤ fracPart (V' y) := by
+  obtain ⟨_, _, h3⟩ := h (fun z => ⌊V z⌋₊ + ⌊V' z⌋₊ + 1)
+  have hb : ∀ z, V z ≤ ((⌊V z⌋₊ + ⌊V' z⌋₊ + 1 : ℕ) : ℝ≥0) := fun z =>
+    le_of_lt (lt_of_lt_of_le (Nat.lt_floor_add_one (V z))
+      (by exact_mod_cast (Nat.le_add_right (⌊V z⌋₊ + 1) (⌊V' z⌋₊)).trans_eq (by ring)))
+  exact h3 x y (hb x) (hb y)
+
 namespace TLTS
 
 /-- The **combined valuation** over `D ⊕ Option D`: the formula clocks (`inl y ↦ u y`), the per-clock
