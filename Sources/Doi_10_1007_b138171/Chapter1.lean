@@ -1144,9 +1144,12 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` (via the `βᵢ = −lc(Rᵢ)·γᵢ₊₁^(δᵢ+1)`
-  coefficient recursion) [infra]: needs the same `Frac(D)` PRS-coefficient machinery.
-Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.7. -/
+§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ` [infra]: needs the
+  explicit eq-1.9 `ηᵢ` product formula (only `∃ ηᵢ` is formalized, via `thm_1_5_2_frac`) plus the
+  `Frac(D)` coefficient recursion `βᵢ = −lc(Rᵢ)·γᵢ₊₁^(δᵢ+1)`, `γᵢ₊₁ = (−lc Rᵢ)^δᵢ·γᵢ^(1−δᵢ)`.
+Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
+  factorization is `ex_1_7_1`.
+Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials
+  (concrete multivariate PRS arithmetic; the book supplies the worked answer). -/
 
 end DeepWiki.Si
