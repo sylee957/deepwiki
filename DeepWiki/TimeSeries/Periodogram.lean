@@ -78,4 +78,33 @@ theorem fourier_inner_eq (n : ℕ) (hn : 0 < n) (j k : ℤ) :
   · exact div_self (Nat.cast_ne_zero.mpr hn.ne')
   · exact zero_div _
 
+/-- Inner orthogonality of the data-frequency exponentials: for `s, t < n`,
+`∑_{j<n} e^{-itωⱼ} conj(e^{-isωⱼ}) = n` if `s = t`, else `0` (`ωⱼ = 2πj/n`). The diagonal kernel
+behind the periodogram's analysis of variance. -/
+theorem sum_exp_mul_conj_exp (n : ℕ) (hn : 0 < n) (s t : ℕ) (hs : s < n) (ht : t < n) :
+    ∑ j ∈ Finset.range n, Complex.exp (-Complex.I * t * (2 * pi * j / n))
+        * (starRingEnd ℂ) (Complex.exp (-Complex.I * s * (2 * pi * j / n)))
+      = if s = t then (n : ℂ) else 0 := by
+  have hrw : ∀ j : ℕ, Complex.exp (-Complex.I * t * (2 * pi * j / n))
+      * (starRingEnd ℂ) (Complex.exp (-Complex.I * s * (2 * pi * j / n)))
+      = Complex.exp (2 * pi * Complex.I * (((s : ℤ) - t : ℤ) : ℂ) * j / n) := by
+    intro j
+    rw [← Complex.exp_conj, ← Complex.exp_add]
+    congr 1
+    simp only [map_neg, map_mul, map_div₀, Complex.conj_I, Complex.conj_ofReal,
+      Complex.conj_natCast, map_ofNat]
+    push_cast
+    ring
+  simp_rw [hrw]
+  rw [sum_range_exp_two_pi_mul_I n hn ((s : ℤ) - t)]
+  have hiff : ((n : ℤ) ∣ ((s : ℤ) - t)) ↔ s = t := by
+    constructor
+    · intro hd
+      rcases lt_trichotomy ((s : ℤ) - t) 0 with h | h | h
+      · exact absurd (Int.le_of_dvd (by omega) ((dvd_neg).mpr hd)) (by omega)
+      · omega
+      · exact absurd (Int.le_of_dvd h hd) (by omega)
+    · rintro rfl; simp
+  simp only [hiff]
+
 end DeepWiki.TimeSeries
