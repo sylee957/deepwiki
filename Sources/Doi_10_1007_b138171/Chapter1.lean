@@ -520,6 +520,28 @@ commute with a coefficient ring homomorphism, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,
 `subresultant_map`). -/
 abbrev thm_1_4_3 := @subresultant_map
 
+/-- **Example 1.4.3** (§1.4, p.21): specializing `t ↦ 1` (`σ : ℤ[t] → ℤ`) sends
+`A = 3tx²−t³−4 ↦ 3x²−5` and `B = x²+t³x−9 ↦ x²+x−9`; by Theorem 1.4.3 (`thm_1_4_3`) their
+subresultants are the specialized ones — `S₀ = res(3x²−5, x²+x−9) = 469` and `S₁ = 3x − 22`. -/
+theorem ex_1_4_3 :
+    subresultant (C 3 * X ^ 2 - C 5 : ℤ[X]) (X ^ 2 + X - C 9) 2 2 0 = 469
+      ∧ subresultant (C 3 * X ^ 2 - C 5 : ℤ[X]) (X ^ 2 + X - C 9) 2 2 1 = 3 * X - 22 := by
+  have hM : bSylvester (C 3 * X ^ 2 - C 5 : ℤ[X]) (X ^ 2 + X - C 9) 2 2
+      = !![3, 0, -5, 0; 0, 3, 0, -5; 1, 1, -9, 0; 0, 1, 1, -9] := by
+    ext i l; fin_cases i <;> fin_cases l <;>
+      simp [bSylvester, coeff_X_pow, coeff_sub, coeff_add, coeff_X]
+  refine ⟨?_, ?_⟩
+  · rw [subresultant_zero, hM]; norm_num [show (!![3, 0, -5, 0; 0, 3, 0, -5; 1, 1, -9, 0; 0, 1, 1, -9] :
+      Matrix (Fin 4) (Fin 4) ℤ).det = 469 from by decide]
+  · have hd0 : ((!![3, 0, -5, 0; 0, 3, 0, -5; 1, 1, -9, 0; 0, 1, 1, -9] : Matrix (Fin 4) (Fin 4) ℤ).submatrix
+        (subRow 2 2 1) (subCol 2 2 1 0)).det = -22 := by decide
+    have hd1 : ((!![3, 0, -5, 0; 0, 3, 0, -5; 1, 1, -9, 0; 0, 1, 1, -9] : Matrix (Fin 4) (Fin 4) ℤ).submatrix
+        (subRow 2 2 1) (subCol 2 2 1 1)).det = 3 := by decide
+    simp only [subresultant, Finset.sum_range_succ, Finset.sum_range_zero, zero_add]
+    rw [hM, hd0, hd1]
+    simp only [pow_zero, mul_one, pow_one, map_neg, map_ofNat]
+    ring
+
 -- **Deferred — not in Mathlib (library work):** the *general* Theorem 1.4.3 with the
 -- `σ(lc A)^(deg B − deg σ̄B)` scaling factor when `σ` lowers `deg B` (subresultants of different
 -- sizes). [Theorem 1.4.2 = `thm_1_4_2`; Definition 1.4.2 = `def_1_4_2`; degree-preserving 1.4.3 =
@@ -965,7 +987,9 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.5: Thm 1.5.2; Thm 1.5.3.
 §1.6: relation 1.12; relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
+Examples: Ex 1.4.1 (the `ℤ[t]` Sylvester determinant `res(3tx²−t³−4, x²+t³x−9)` — a degree-10
+  symbolic `4×4` det); Ex 1.5.2 (its subresultants `S₀, S₁` over `ℤ[t]`); Ex 1.7.2 (the
+  step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
 end DeepWiki.Si
