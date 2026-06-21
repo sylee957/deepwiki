@@ -626,6 +626,13 @@ theorem ex_1_10 : Irreducible (2 : Zsqrtd (-5)) ∧ ¬ Prime (2 : Zsqrtd (-5)) :
   · exact absurd (hn4 ▸ hn6p ▸ zsqrtd_norm_dvd_norm h) (by decide)
   · exact absurd (hn4 ▸ hn6m ▸ zsqrtd_norm_dvd_norm h) (by decide)
 
+/-- **Exercise 1.16** (§1, p.33): in a UFD, any two elements `x, y` have a least common multiple —
+a common multiple dividing every common multiple (the `lcm` of the UFD's `GCDMonoid` structure). -/
+theorem ex_1_16 {R : Type*} [CommMonoidWithZero R] [UniqueFactorizationMonoid R] (x y : R) :
+    ∃ z, x ∣ z ∧ y ∣ z ∧ ∀ t, x ∣ t → y ∣ t → z ∣ t := by
+  letI := UniqueFactorizationMonoid.toGCDMonoid R
+  exact ⟨lcm x y, dvd_lcm_left x y, dvd_lcm_right x y, fun _ hx hy => lcm_dvd hx hy⟩
+
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
   specialization under ring homomorphisms).
@@ -636,6 +643,6 @@ theorem ex_1_10 : Irreducible (2 : Zsqrtd (-5)) ∧ ¬ Prime (2 : Zsqrtd (-5)) :
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.1; Ex 1.7.2.
 Exercises: Ex 1.2; Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.13; Ex 1.14;
-  Ex 1.15; Ex 1.16. -/
+  Ex 1.15. -/
 
 end DeepWiki.Si
