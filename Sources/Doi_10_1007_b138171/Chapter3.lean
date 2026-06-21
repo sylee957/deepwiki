@@ -303,6 +303,14 @@ theorem thm_3_4_3_linear {K : Type*} [Field K] [Differential K] (v : K[X]) (a : 
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ :=
   dvd_X_sub_C_implicitDeriv_iff v a
 
+/-- **Theorem 3.4.3** (§3.4, p.93), full squarefree form: a squarefree polynomial `∏_{a∈s}(X − a)`
+is special w.r.t. the monomial derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` at every
+root — `∀ a ∈ s, v(a) = a′`. -/
+theorem thm_3_4_3 {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    (∏ a ∈ s, (X - C a)) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a))
+      ↔ ∀ a ∈ s, v.eval a = a′ :=
+  dvd_prod_X_sub_C_implicitDeriv_iff v s
+
 /-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b`,
 `gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. (The general `∏pᵢ^{eᵢ}` form follows by induction on
 the number of factors plus the `pᵢ^{eᵢ}` power computation.) -/
@@ -330,11 +338,11 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
 --   • Theorem 3.4.1(iii) — DONE in full: `thm_3_4_1_iii_prime` (prime-factor key step) and
 --     `thm_3_4_1_iii` (general factor of a special polynomial is special, via prime factorization).
---   • Theorem 3.4.2 — DONE: single linear factor (`thm_3_4_2_linear`) and the full squarefree
---     product form (`thm_3_4_2`, normal ⟺ `v(a)≠a′` at every root). Theorem 3.4.3 special: the
---     single-factor case is done (`thm_3_4_3_linear`); the full product form remains (parallel via
---     `IsSpecial.prod`/`of_mul_coprime`). Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new
---     constants ⇔ special polynomials), Theorem 3.4.4 (special of the first kind).
+--   • Theorems 3.4.2 / 3.4.3 — DONE: single linear factor (`thm_3_4_2_linear`/`thm_3_4_3_linear`)
+--     and the full squarefree product forms (`thm_3_4_2`: normal ⟺ `v(a)≠a′` at every root;
+--     `thm_3_4_3`: special ⟺ `v(a)=a′` at every root). Remaining §3.4: Corollaries 3.4.1 / 3.4.2,
+--     Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special polynomials), Theorem 3.4.4 (special of the
+--     first kind under algebraic extension).
 
 /-! ## §3.5 The Canonical Representation -/
 

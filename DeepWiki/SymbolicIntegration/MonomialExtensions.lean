@@ -435,6 +435,29 @@ theorem isCoprime_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differen
     · exact (isCoprime_X_sub_C_implicitDeriv_iff v a).mpr (h a ha)
     · exact isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)
 
+/-- **Theorem 3.4.3** (§3.4, p.93), full squarefree form: a squarefree polynomial `∏_{a∈s}(X − a)`
+is special w.r.t. the monomial derivation `D` (`Dt = v`) iff `Dα = Hₜ(α)` at *every* root, i.e.
+`∀ a ∈ s, v(a) = a′`. Backward: special is closed under products (`IsSpecial.prod`); forward: each
+`X − a` is a coprime factor of the product, hence special (`IsSpecial.of_mul_coprime`). -/
+theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
+    (s : Finset K) :
+    (∏ a ∈ s, (X - C a)) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a))
+      ↔ ∀ a ∈ s, v.eval a = a′ := by
+  classical
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  constructor
+  · intro hsp a ha
+    rw [← Finset.mul_prod_erase s (fun b => X - C b) ha] at hsp
+    have hcop : IsCoprime (X - C a) (∏ b ∈ s.erase a, (X - C b)) := by
+      rw [isCoprime_X_sub_C_iff, eval_prod]
+      refine Finset.prod_ne_zero_iff.mpr (fun b hb => ?_)
+      rw [eval_sub, eval_X, eval_C]
+      exact sub_ne_zero.mpr (Finset.ne_of_mem_erase hb).symm
+    exact (dvd_X_sub_C_implicitDeriv_iff v a).mp (IsSpecial.of_mul_coprime hsp hcop)
+  · intro h
+    exact IsSpecial.prod s (fun a => X - C a)
+      (fun a ha => (dvd_X_sub_C_implicitDeriv_iff v a).mpr (h a ha))
+
 end LinearFactor
 
 end DeepWiki.SymbolicIntegration
