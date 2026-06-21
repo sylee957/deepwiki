@@ -67,4 +67,15 @@ theorem sum_range_exp_two_pi_mul_I (n : ℕ) (hn : 0 < n) (m : ℤ) :
       exact ⟨k, by exact_mod_cast hmn⟩
     rw [if_neg hdvd, geom_sum_eq hζne, hζn, sub_self, zero_div]
 
+/-- **Proposition 10.1.1 (orthonormality of the Fourier basis):** the Fourier vectors
+`eⱼ(t) = n^{−1/2} e^{itωⱼ}` (frequencies `ωⱼ = 2πj/n`) are orthonormal — their inner product
+`⟨eⱼ, eₖ⟩ = n⁻¹ ∑_{t<n} e^{it(ωⱼ−ωₖ)}` is `1` when `n ∣ (j−k)` (i.e. `ωⱼ = ωₖ`) and `0` otherwise. -/
+theorem fourier_inner_eq (n : ℕ) (hn : 0 < n) (j k : ℤ) :
+    (∑ t ∈ Finset.range n, Complex.exp (2 * pi * Complex.I * ((j - k : ℤ) : ℂ) * t / n)) / n
+      = if (n : ℤ) ∣ (j - k) then 1 else 0 := by
+  rw [sum_range_exp_two_pi_mul_I n hn (j - k)]
+  split_ifs with h
+  · exact div_self (Nat.cast_ne_zero.mpr hn.ne')
+  · exact zero_div _
+
 end DeepWiki.TimeSeries
