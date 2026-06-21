@@ -514,4 +514,71 @@ theorem Yun_sub_derivative_squarefreePart (A : D[X]) (i : ℕ) (hi : 1 ≤ i) (h
 
 end Deflation
 
+section GcdField
+
+open UniqueFactorizationMonoid
+
+variable {K : Type*} [Field K] [CharZero K]
+
+open Classical
+
+/-- Yun's relation 1.17 (gcd clause), over a characteristic-`0` field: `gcd((A⁻⁽ⁱ⁻¹⁾)*, Yᵢ) ∈ K`, i.e.
+`(A⁻⁽ⁱ⁻¹⁾)*` and `Yᵢ` are relatively prime. A prime factor `P` of `(A⁻⁽ⁱ⁻¹⁾)* = ∏_{l≥i} Aₗ` divides
+some `Aₐ`; it then divides every `Yᵢ`-term except the `a`-th (each other term carries the factor `Aₐ`),
+while it misses the `a`-th term because `Aₐ` is squarefree so `P ∤ dAₐ/dx` (separability in char `0`),
+`P ∤ ∏_{l≠a} Aₗ` (the `Aₗ` are pairwise coprime), and `P ∤` the nonzero constant coefficient. Hence
+`P ∤ Yᵢ`. -/
+theorem isRelPrime_squarefreePart_Yun (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
+    IsRelPrime (squarefreePart (deflation A (i - 1))) (Yun A i) := by
+  set I := (normalizedFactors A.primPart).toFinset.image
+    (fun P => (normalizedFactors A.primPart).count P) with hI
+  set f := sqfreeFactPart A with hf
+  have hsp := squarefreePart_deflation_eq_prod A (i - 1) hA
+  rw [← hI, ← hf] at hsp
+  have hne : squarefreePart (deflation A (i - 1)) ≠ 0 := by
+    rw [hsp, Finset.prod_ne_zero_iff]; exact fun l _ => sqfreeFactPart_ne_zero A l
+  rw [isRelPrime_iff_no_prime_factors hne]
+  intro P hPsp hPY hPp
+  rw [hsp, hPp.dvd_finsetProd_iff] at hPsp
+  obtain ⟨a, haI, hPa⟩ := hPsp
+  rw [Finset.mem_filter] at haI
+  have haI' : a ∈ I.filter (fun a => i ≤ a) := Finset.mem_filter.mpr ⟨haI.1, by omega⟩
+  have hPfa' : ¬ P ∣ derivative (f a) := by
+    obtain ⟨m, hm⟩ := hPa
+    have hPm : ¬ P ∣ m := by
+      rintro ⟨n, hmn⟩
+      exact hPp.not_unit ((sqfreeFactPart_squarefree A a) P ⟨n, by rw [← hf, hm, hmn]; ring⟩)
+    have hsep : P.Separable := (hPp.irreducible).separable
+    have hPP' : ¬ P ∣ derivative P := fun h => hPp.not_unit (hsep.isUnit_of_dvd' (dvd_refl P) h)
+    intro hPfad
+    rw [hm, derivative_mul] at hPfad
+    have hd : P ∣ derivative P * m :=
+      (dvd_add_left (dvd_mul_right P (derivative m))).mp hPfad
+    rcases hPp.dvd_mul.mp hd with h | h
+    · exact hPP' h
+    · exact hPm h
+  have hPfl : ∀ l, l ≠ a → ¬ P ∣ f l :=
+    fun l hla hPl => hPp.not_unit (sqfreeFactPart_isRelPrime A hla hPl hPa)
+  set g : ℕ → K[X] := fun b => C ((b - i + 1 : ℕ) : K) * derivative (f b)
+    * ∏ l ∈ (I.filter (fun a => i ≤ a)).erase b, f l with hg
+  have hga : ¬ P ∣ g a := by
+    intro hh
+    rcases hPp.dvd_mul.mp hh with h1 | h2
+    · rcases hPp.dvd_mul.mp h1 with hc | hd
+      · exact hPp.not_unit (isUnit_of_dvd_unit hc
+          (isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by omega)))))
+      · exact hPfa' hd
+    · rw [hPp.dvd_finsetProd_iff] at h2
+      obtain ⟨l, hl, hPl⟩ := h2
+      exact hPfl l (Finset.mem_erase.mp hl).1 hPl
+  have hPS : P ∣ ∑ b ∈ (I.filter (fun a => i ≤ a)).erase a, g b := by
+    refine Finset.dvd_sum (fun b hb => ?_)
+    have hab : a ∈ (I.filter (fun a => i ≤ a)).erase b :=
+      Finset.mem_erase.mpr ⟨((Finset.mem_erase.mp hb).1).symm, haI'⟩
+    exact hg ▸ dvd_mul_of_dvd_right (hPa.trans (Finset.dvd_prod_of_mem f hab)) _
+  rw [Yun, ← hI, ← hf, ← Finset.add_sum_erase _ g haI'] at hPY
+  exact hga ((dvd_add_left hPS).mp hPY)
+
+end GcdField
+
 end DeepWiki.SymbolicIntegration
