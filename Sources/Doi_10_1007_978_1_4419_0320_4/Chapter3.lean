@@ -3,6 +3,8 @@ import DeepWiki.TimeSeries.LinearProcess
 import DeepWiki.TimeSeries.LinearProcessExamples
 import DeepWiki.TimeSeries.LinearProcessArma
 import DeepWiki.TimeSeries.ArmaPsiWeights
+import DeepWiki.TimeSeries.CausalPolyDisk
+import DeepWiki.TimeSeries.CausalArmaAcvf
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 3: Stationary ARMA Processes
@@ -240,7 +242,30 @@ alias acvf_secondMethod := DeepWiki.TimeSeries.acvf_homogeneous
 estimate is out of scope). The library's `arma_acvf_homogeneous`. -/
 alias arma_acvf_secondMethod := DeepWiki.TimeSeries.arma_acvf_homogeneous
 
-/-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation — still infra-blocked
+/-- **Example 3.2.3 analytic content** (§3.2/§3.3, p.91): for a *causal* `ARMA(p,q)` — `φ(z) ≠ 0` on
+the closed unit disk `|z| ≤ 1` (`IsCausalPoly`) — the `MA(∞)` weights `ψⱼ` (the Taylor coefficients
+of `θ(z)/φ(z)` at `0`) are absolutely summable, `∑ⱼ |ψⱼ| < ∞`. This is the analytic decay
+(`|ψⱼ| = O(rʲ)`, `r > 1`) that causality forces and that turns the algebraic `ψ = θ/φ` into a genuine
+`L²` `MA(∞)`; proven from `φ` zero-free on a disk of radius `> 1` (compactness) + the Cauchy
+power-series radius estimate. The library's `summable_norm_cauchyPowerSeries_div_aeval`. -/
+alias ex_3_2_3_summable := DeepWiki.TimeSeries.summable_norm_cauchyPowerSeries_div_aeval
+
+/-- **Equation (3.3.3), analytic (Taylor-coefficient) form** (§3.3, p.91): for a causal ARMA, the
+`MA(∞)` weights `ψⱼ` (Taylor coefficients of `θ/φ`) satisfy the Cauchy convolution
+`∑_{i+j=m} φᵢ ψⱼ = θ_m` for every `m` — the coefficient-uniqueness identity for `φ(z)·(θ(z)/φ(z)) = θ(z)`,
+the analytic realization of the formal recursion `eq_3_3_3`. The library's `conv_coeff_div_eq_coeff`. -/
+alias eq_3_3_3_analytic := DeepWiki.TimeSeries.conv_coeff_div_eq_coeff
+
+/-- **§3.3 Second Method for a causal `ARMA(p,q)`, summability discharged** (§3.3, p.92): for a causal
+AR polynomial `φ` (`IsCausalPoly`), there exist real, summable, one-sided `MA(∞)` weights `ψ` such
+that the autocovariance `γ(h) = σ² ∑ⱼ ψⱼ ψ_{j+h}` satisfies `∑_{k=0}^p φₖ γ(h−k) = 0` at every lag
+`h > q = deg θ`. Unlike `arma_acvf_secondMethod`, the weight summability is *not* a hypothesis here —
+it is the analytic `∑ⱼ |ψⱼ| < ∞` (`ex_3_2_3_summable`), and the recursion-vanishing is the real part
+of `eq_3_3_3_analytic`. The closed causal-ARMA §3.3 result. The library's
+`causal_arma_acvf_homogeneous`. -/
+alias arma_acvf_secondMethod_causal := DeepWiki.TimeSeries.causal_arma_acvf_homogeneous
+
+/-! ### §3.1 existence (Thm 3.1.3) and §3.3 ARMA-specific computation
 
 **Theorem 3.1.3** (§3.1, p.88): when `φ(z) ≠ 0` for all `|z| = 1`, the ARMA equations have the
 unique stationary solution `Xₜ = ∑_{j=-∞}^{∞} ψⱼ Zₜ₋ⱼ`, with `ψ` the Laurent expansion of `θ/φ`
@@ -249,27 +274,31 @@ convergence are now `linearProcessLp` / `hasSum_linearProcessLp`; what remains i
 **Laurent/power-series reciprocal** producing the `ψ`-weights from `θ, φ`.
 
 **§3.2 remainder.** **Examples 3.2.1** (MA(q), `ψⱼ = θⱼ`) and **3.2.2** (causal AR(1), `ψⱼ = φʲ`) are
-now formalized (`ex_3_2_1`/`ex_3_2_2` above). Still unformalized: **Example 3.2.3** (causal ARMA as
-`∑ψⱼzʲ = θ(z)/φ(z)`) — the `MA(∞)` weights exist algebraically as the formal power series `θ/φ`
-(`PowerSeries.inv`, `φ(0) = 1` a unit), but the `L²` representation needs `∑ⱼ |ψⱼ| < ∞`, which follows
-only from the *analytic* decay `|ψⱼ| = O(rʲ)` forced by causality (`φ ≠ 0` on `|z| ≤ 1`) — an estimate
-not in scope (infra-blocked); and **Proposition 3.2.1** (a zero-mean stationary `q`-correlated process
-— `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q)), which needs the `L²` innovations/projection
-algorithm of §2.3–§2.4.
+formalized (`ex_3_2_1`/`ex_3_2_2` above). **Example 3.2.3** (causal ARMA as `∑ψⱼzʲ = θ(z)/φ(z)`): the
+`MA(∞)` weights exist algebraically as the formal power series `θ/φ` (`PowerSeries.inv`, `φ(0) = 1` a
+unit) and — now — are genuinely *absolutely summable*, `∑ⱼ |ψⱼ| < ∞` (`ex_3_2_3_summable`). The
+analytic decay `|ψⱼ| = O(rʲ)` forced by causality (`φ ≠ 0` on `|z| ≤ 1`) is *proven*, no longer out of
+scope: `φ` is zero-free on a disk of radius `> 1` by compactness (`IsCausalPoly.exists_radius_gt_one`),
+so `θ/φ` is analytic there and its Cauchy power-series coefficients (the `ψ`-weights) are absolutely
+summable. The only piece left for the full Example 3.2.3 is reassembling these summable weights into
+the `L²` random-variable process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ`. Still unformalized: **Proposition 3.2.1** (a
+zero-mean stationary `q`-correlated process — `γ(h) = 0` for `|h| > q`, `γ(q) ≠ 0` — is an MA(q)),
+which needs the `L²` innovations/projection algorithm of §2.3–§2.4.
 
-**§3.3 (computing the ARMA autocovariance).** The **First Method** is now formalized at the
-algebraic level: the formula `γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1
-(`thm_3_2_1`) specialized to the ARMA `ψ`-weights, and the weights themselves are the formal power
-series `ψ = θ/φ` (eq 3.3.2, `eq_3_3_2`) with the Cauchy recursion `∑_{k≤j} φₖ ψ_{j−k} = θⱼ`
-(eq 3.3.3, `eq_3_3_3`). What remains infra-blocked is the *analytic* link: the absolute convergence
-`∑ⱼ |ψⱼ| < ∞` of the `ψ`-weights (the decay `|ψⱼ| = O(rʲ)` forced by causality `φ ≠ 0` on `|z| ≤ 1`),
-which is what lets the algebraic `ψ = θ/φ` actually drive an `L²` `MA(∞)`. The
-homogeneous-difference-equation (Second) method `∑_{k=0}^p φₖ γ(h−k) = 0` is now formalized — the
-abstract form `acvf_secondMethod` (given the `φ`-convolution-vanishing) and the `ARMA` form
-`arma_acvf_secondMethod` (given summable + one-sided + recursion-vanishing `ψ`-weights, with
-summability the honest stand-in for the analytic decay). The only piece left is connecting those
-hypotheses to `armaPsi` itself: the `ℤ`-extended `ψ`-filter and the lift of eq 3.3.3 to its
-`ℤ`-convolution form supply the recursion-vanishing, while summability remains the analytic block.
+**§3.3 (computing the ARMA autocovariance).** The **First Method** is formalized at the algebraic
+level: the formula `γ(k) = σ² ∑_{j≥0} ψⱼ ψ_{j+|k|}` (eq 3.3.1) **is** Theorem 3.2.1 (`thm_3_2_1`)
+specialized to the ARMA `ψ`-weights, with weights the formal power series `ψ = θ/φ` (eq 3.3.2,
+`eq_3_3_2`) and the Cauchy recursion `∑_{k≤j} φₖ ψ_{j−k} = θⱼ` (eq 3.3.3, `eq_3_3_3`). The earlier
+*analytic* gap — the absolute convergence `∑ⱼ |ψⱼ| < ∞` — is now **closed** (`ex_3_2_3_summable`), and
+its Taylor-coefficient recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m` is proven (`eq_3_3_3_analytic`, by
+power-series coefficient uniqueness for `φ·(θ/φ) = θ`). The homogeneous-difference-equation (Second)
+method `∑_{k=0}^p φₖ γ(h−k) = 0` is formalized in three forms: the abstract `acvf_secondMethod` (given
+the `φ`-convolution-vanishing), the `ARMA` form `arma_acvf_secondMethod` (given summable + one-sided +
+recursion-vanishing `ψ`-weights), and — the closed endpoint — `arma_acvf_secondMethod_causal`, which
+*discharges* the summability hypothesis from causality alone: it builds the real, summable, one-sided
+weights `ψⱼ = Re(θ/φ)ⱼ` and derives the recursion-vanishing as the real part of `eq_3_3_3_analytic`,
+so a causal `ARMA(p,q)` autocovariance provably satisfies `∑ₖ φₖ γ(h−k) = 0` for `h > q` with no
+analytic side-condition left to assume.
 
 The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the algebraically-finite special
 case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
