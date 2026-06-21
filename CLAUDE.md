@@ -41,9 +41,8 @@ dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
     monograph with no exercises records none; an erratum / non-theorem is cataloged as the
     repaired statement with the misprint noted. **Completion and missing-item status lives in
     the catalog, never in memory** — memory keeps only what the catalog cannot (correctness
-    adjudications, reusable Lean lessons, project context). (Legacy catalogs that still mark gaps
-    with inline per-item `not formalized` notes — the DNC `Sources/Doi_10_1002_9781119440284`
-    chapters — migrate to a `## NOT YET FORMALIZED` block when you next touch the file.)
+    adjudications, reusable Lean lessons, project context). All four topic catalogs use this block
+    format; keep new ones consistent with it.
 - **Per-paper source catalogs.** A result the library takes from (or a book *defers to*) an
   individual **paper** gets its **own** `Sources/Doi_<sanitized-doi>/` catalog — a
   `Source.lean` (paper DOI + title + authors, short author-slug namespace, e.g.
