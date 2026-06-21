@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.Constants
+import DeepWiki.SymbolicIntegration.MonomialExtensions
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -133,5 +134,40 @@ theorem lem_3_3_5 {F : Type*} [Field F] [Differential F] {n : ℕ} (y c : Fin n 
 --     algebraic over the initial constant field (needs minimal polynomials + `κ_D`).
 --   • Corollary 3.3.2, Lemmas 3.3.3, 3.3.4, 3.3.6 (constant-field behaviour under extensions).
 --   • **Lemma 3.3.5 converse** (`W = 0 ⟹ linearly dependent over constants`) — the induction on `n`.
+
+/-! ## §3.4 Monomial Extensions -/
+
+/-- **Definition 3.4.1 / Lemma 3.4.1** (§3.4, p.90–91), the derivation of a *monomial* extension:
+`k[t]` is closed under `D` with `Dt = v ∈ k[t]`. Mathlib's `Differential.implicitDeriv v` is this
+derivation on `k[X]` (`implicitDeriv_X : implicitDeriv v X = v`, `implicitDeriv_C`); `v = H_t`, the
+`D`-degree is `δ(t) = deg v`, the `D`-leading coefficient `λ(t) = lc v`. -/
+noncomputable abbrev def_3_4_1 := @Differential.implicitDeriv
+
+/-- **Definition 3.4.2** (§3.4, p.92): `p` is *normal* w.r.t. `D` if `gcd(p, Dp) = 1`. -/
+abbrev def_3_4_2_normal := @IsNormal
+
+/-- **Definition 3.4.2** (§3.4, p.92): `p` is *special* w.r.t. `D` if `p ∣ Dp`. -/
+abbrev def_3_4_2_special := @IsSpecial
+
+/-- **Lemma 3.4.3** (§3.4, p.92): a special polynomial generates a differential ideal `(p)`. -/
+theorem lem_3_4_3 {R : Type*} [CommRing R] [Differential R] {p : R} (hp : IsSpecial p) :
+    IsDifferentialIdeal (Ideal.span {p}) :=
+  hp.isDifferentialIdeal
+
+/-- **Theorem 3.4.1(ii)** (§3.4, p.93): the special polynomials form a multiplicative monoid
+(closed under products, with unit `1`). -/
+theorem thm_3_4_1_ii {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecial (p * q) :=
+  hp.mul hq
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
+--   • Lemma 3.4.2 (degree bound `deg(Dp) ≤ deg p + max(0, δ(t)−1)`, with equality in the
+--     nonlinear case), Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula), Theorem 3.4.1(i),(iii)
+--     (products of coprime normals are normal; factors of special are special).
+--   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
+--     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
+--     polynomials).
+--   • **§3.5 The Canonical Representation** (the `f = polynomial part + normal/special fractional
+--     parts` decomposition) — entirely deferred.
 
 end DeepWiki.Si
