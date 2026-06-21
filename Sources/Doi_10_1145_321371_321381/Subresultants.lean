@@ -24,9 +24,14 @@ Theorem 1(a) (§p.133): `S_{nₖ}(P₁,P₂) = (-1)^σₖ·[∏ᵢ cᵢ^(-δᵢ�
   p.r.s. [external]: combine the telescoped Lemma 2 (`subresultant_prs_telescope_explicit`) with
   Lemma 1(a) (`subresultant_rem_eq_13`) and reduce the exponent `α ≡ σₖ (mod 2)`.
 Theorem 1(b) (§p.133): `S_{n_{k-1}-1}(P₁,P₂) = (-1)^τₖ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·Pₖ` for a reduced p.r.s.
-  — the NORMAL case (all `δ=1`, so `∏ cᵢ^(-δᵢ₋₁(δᵢ-1)) = 1` and signs vanish) is PROVED:
-  `subresultant_prs_normal_eq` (= Bronstein Thm 1.5.3 normal case, `thm_1_5_3_normal`). The general
-  defective-degree case (the `∏ cᵢ^…` powers nontrivial) remains [external].
+  — NORMAL case PROVED (`subresultant_prs_normal_eq` = `thm_1_5_3_normal`); gap-vanishing PROVED
+  (`subresultant_prs_gap_zero` = `thm_1_5_3_gap`). The general DEFECTIVE nonzero case remains [external]:
+  instantiating `subresultant_prs_closed_top` with the reduced coeffs `αₗ=(lc F_{l+1})^(δₗ+1)`,
+  `βₗ=(lc Fₗ)^(δ_{l-1}+1)` (over a general decreasing degree sequence `n`, with `1 ≤ n(m+1)`) reduces it to a
+  TWO-PART collapse of the cross-multiplied R[X] form `∏cᵢ^(δᵢ₋₁(δᵢ-1))·RHS = (-1)^τ·LHS` (no Frac needed):
+  (a) an `lc`-power identity (general-δ analog of `lc_prod_collapse_normal`, δ-dependent exponents), and
+  (b) a `(-1)`-SIGN mod-2 reduction `∏(-1)^((nₗ-j)(n_{l+1}-j)) = (-1)^τ` (absent in the normal case where every
+  exponent was even). Scaffold (setup + degree-antitone helper + `closed_top` instantiation) verified-compiling.
 Corollary 1.1 (§p.134); Corollary 1.2 (§p.135); Corollary 1.3 (§p.135); Corollary 1.4 (§p.135) [external].
 Lemma 3 (§p.135): for an *arbitrary* p.r.s. (coefficient choices `eᵢ, fᵢⱼ`), `Pₖ = (-1)^gₖ·[∏ᵢ cᵢ^hᵢₖ]·Sₖ`
   [external]: generalizes Lemma 1 to an arbitrary p.r.s. (eq 2) and iterates.
