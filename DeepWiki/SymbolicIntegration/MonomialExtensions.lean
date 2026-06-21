@@ -408,6 +408,13 @@ theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential 
     IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ := by
   rw [implicitDeriv_X_sub_C, isCoprime_X_sub_C_iff, eval_sub, eval_C, sub_ne_zero]
 
+/-- **Theorem 3.4.3** (§3.4, p.93), single linear factor: `X − a` is special w.r.t. the monomial
+derivation `D` (`Dt = v`) iff `Dα = Hₜ(α)` at its root, i.e. `v(a) = a′` — equivalently
+`(X − a) ∣ D(X − a)`. -/
+theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X]) (a : K) :
+    (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
+  rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
+
 end LinearFactor
 
 end DeepWiki.SymbolicIntegration
