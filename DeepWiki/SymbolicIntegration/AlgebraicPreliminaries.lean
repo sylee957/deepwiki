@@ -89,6 +89,17 @@ theorem associated_gcd_mul_left_cancel {a b c : R} (hab : IsUnit (gcd a b)) :
   exact isUnit_of_dvd_unit (dvd_gcd ((gcd_dvd_left _ _).trans (gcd_dvd_left a (b * c)))
     (gcd_dvd_right _ _)) hab
 
+/-- Coprimality is preserved by finite products: if `x` is coprime to each `f i` (`i ∈ s`,
+unit `gcd x (f i)`) then `x` is coprime to `∏ f i`. -/
+theorem isUnit_gcd_prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (x : R) (f : ι → R)
+    (h : ∀ i ∈ s, IsUnit (gcd x (f i))) : IsUnit (gcd x (∏ i ∈ s, f i)) := by
+  induction s using Finset.induction_on with
+  | empty => simp only [Finset.prod_empty]; exact isUnit_of_dvd_one (gcd_dvd_right x 1)
+  | insert a s ha ih =>
+    rw [Finset.prod_insert ha]
+    exact isUnit_of_dvd_unit (gcd_mul_dvd_mul_gcd x (f a) _)
+      ((h a (Finset.mem_insert_self a s)).mul (ih fun i hi => h i (Finset.mem_insert_of_mem hi)))
+
 end GCDMonoid
 
 section GCDRing
