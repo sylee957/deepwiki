@@ -494,6 +494,21 @@ theorem thm_1_4_2 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natD
       ∧ f * p + g * q = C (Polynomial.resultant f g m n) :=
   Polynomial.exists_mul_add_mul_eq_C_resultant f g hf hg H
 
+/-- **Example 1.4.2** (§1.4, p.19): `res(x²+1, x²−1) = 4` in `ℤ[x]`, the determinant of the `4×4`
+Sylvester matrix (here in Mathlib's column layout: the two `x²−1`-columns then the two
+`x²+1`-columns). The first subresultant `S₁ = −2` is *defective* — that part needs the
+subresultant operator (Definition 1.4.2), deferred below. -/
+theorem ex_1_4_2 :
+    Polynomial.sylvester (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2
+        = !![-1, 0, 1, 0; 0, -1, 0, 1; 1, 0, 1, 0; 0, 1, 0, 1]
+      ∧ Polynomial.resultant (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2 = 4 := by
+  have hS : Polynomial.sylvester (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2
+      = !![-1, 0, 1, 0; 0, -1, 0, 1; 1, 0, 1, 0; 0, 1, 0, 1] := by
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      simp [Polynomial.sylvester, Fin.addCases, coeff_X_pow, coeff_sub, coeff_add, coeff_one]
+  exact ⟨hS, by rw [Polynomial.resultant, hS]; decide⟩
+
 -- **Deferred — not in Mathlib (library work):** the *subresultant* theory: Definition 1.4.2
 -- (`Sⱼ(A,B)` from Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring
 -- homomorphisms), and §1.5 polynomial remainder sequences. [Theorem 1.4.2 — `res ∈ (A,B)` — is
@@ -888,7 +903,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.4.2; Ex 1.5.1;
+Examples: Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7; Ex 1.14. -/
 
