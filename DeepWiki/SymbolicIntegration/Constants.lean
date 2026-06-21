@@ -118,6 +118,12 @@ theorem wronskian_eq_zero_of_linearDependent {n : ℕ} (y c : Fin n → F)
     _ = iterDeriv (i : ℕ) (∑ j, c j * y j) := (iterDeriv_sum _ _ _).symm
     _ = 0 := by rw [hdep, iterDeriv_zero_right]
 
+/-- The Wronskian vanishes when two of the functions coincide (two equal columns of `Dⁱyⱼ`). -/
+theorem wronskian_eq_zero_of_eq {n : ℕ} (y : Fin n → F) {i j : Fin n} (hij : i ≠ j)
+    (h : y i = y j) : wronskian y = 0 := by
+  rw [wronskian]
+  exact Matrix.det_zero_of_column_eq hij (fun k => by simp only [Matrix.of_apply]; rw [h])
+
 /-- The 2×2 Wronskian: `W(y₁, y₂) = y₁·y₂′ − y₂·y₁′`. -/
 theorem wronskian_fin_two (y₁ y₂ : F) : wronskian ![y₁, y₂] = y₁ * y₂′ - y₂ * y₁′ := by
   simp [wronskian, Matrix.det_fin_two, iterDeriv_succ, Matrix.cons_val_zero, Matrix.cons_val_one]
