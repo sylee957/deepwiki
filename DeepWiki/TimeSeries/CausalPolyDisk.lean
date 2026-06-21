@@ -123,6 +123,22 @@ theorem aeval_eq_tsum_cauchy {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
   rw [← hcauchy, mul_comm (Polynomial.aeval z θ) (Polynomial.aeval z φ)⁻¹,
     mul_inv_cancel_left₀ (hne z hz)]
 
+/-- **`θ(z) = ∑ₘ z^m c_m`** with `c_m = ∑_{i+j=m} φᵢ ψⱼ`: factoring `z^m` out of the Cauchy product.
+The coefficient sequence `c` is the `φ`-convolution of the `ψ`-weights. -/
+theorem aeval_eq_tsum_zpow_conv {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ ∀ z : ℂ, ‖z‖ < (R : ℝ) →
+      Polynomial.aeval z θ = ∑' m : ℕ, z ^ m * ∑ q ∈ Finset.antidiagonal m,
+        (φ.coeff q.1 : ℝ) • (cauchyPowerSeries
+          (fun w : ℂ => Polynomial.aeval w θ * (Polynomial.aeval w φ)⁻¹) 0 R).coeff q.2 := by
+  obtain ⟨R, hR1, hcauchy⟩ := aeval_eq_tsum_cauchy (θ := θ) hφ
+  refine ⟨R, hR1, fun z hz => ?_⟩
+  rw [hcauchy z hz]
+  refine tsum_congr fun m => ?_
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun q hq => ?_
+  rw [Finset.mem_antidiagonal] at hq
+  rw [smul_mul_assoc, ← mul_assoc, ← pow_add, hq, mul_smul_comm]
+
 /-- **Causal ⟹ `∑|ψⱼ| < ∞` (analytic `ψ`-weights):** the Cauchy power-series (Taylor) coefficients
 of `1/φ` at `0` are absolutely summable. This is the `MA(∞)` weight summability — the analytic
 content that the formal `armaPsi = θ/φ` lacked. `1/φ` is analytic on a disk of radius `R > 1`
