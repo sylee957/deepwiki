@@ -65,4 +65,39 @@ theorem sampleACVF_eq_conv (n : ℕ) (x : ℕ → ℝ) {i j : ℕ} (hi : i < n) 
     simp only [centeredPad]; rw [if_pos (by omega)]; congr 2; omega
   rw [h1, h2]; ring
 
+/-- **§7.2 (eq 7.2.3): the sample covariance matrix `Γ̂ₙ = [γ̂(i−j)]` is non-negative definite.**
+The quadratic form `∑ᵢⱼ aᵢ aⱼ γ̂(|i−j|) = n⁻¹ ∑ₖ (∑ᵢ aᵢ ỹ(k−i))² ≥ 0` (with `ỹ` the centered
+zero-padded data) — a sum of squares. -/
+theorem sampleACVF_quadratic_nonneg (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
+    0 ≤ ∑ i ∈ Finset.range n, ∑ j ∈ Finset.range n,
+        a i * a j * (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i)) := by
+  have hentry : ∀ i ∈ Finset.range n, ∀ j ∈ Finset.range n,
+      a i * a j * (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i))
+        = (n : ℝ)⁻¹ * ∑ k ∈ Finset.range (2 * n),
+            (a i * centeredPad n x ((k : ℤ) - i)) * (a j * centeredPad n x ((k : ℤ) - j)) := by
+    intro i hi j hj
+    simp only [Finset.mem_range] at hi hj
+    have he : (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i))
+        = (n : ℝ)⁻¹ * ∑ k ∈ Finset.range (2 * n),
+            centeredPad n x ((k : ℤ) - i) * centeredPad n x ((k : ℤ) - j) := by
+      split_ifs with h
+      · exact sampleACVF_eq_conv n x hi h
+      · rw [sampleACVF_eq_conv n x hj (by omega : i ≤ j)]
+        exact congr_arg _ (Finset.sum_congr rfl fun k _ => mul_comm _ _)
+    rw [he, mul_left_comm, Finset.mul_sum]
+    congr 1
+    exact Finset.sum_congr rfl fun k _ => by ring
+  rw [Finset.sum_congr rfl fun i hi => Finset.sum_congr rfl (hentry i hi)]
+  have reorder : (∑ i ∈ Finset.range n, ∑ j ∈ Finset.range n, (n : ℝ)⁻¹ *
+        ∑ k ∈ Finset.range (2 * n),
+          (a i * centeredPad n x ((k : ℤ) - i)) * (a j * centeredPad n x ((k : ℤ) - j)))
+      = (n : ℝ)⁻¹ * ∑ k ∈ Finset.range (2 * n),
+          (∑ i ∈ Finset.range n, a i * centeredPad n x ((k : ℤ) - i)) ^ 2 := by
+    simp_rw [← Finset.mul_sum]
+    congr 1
+    rw [Finset.sum_congr rfl fun i _ => Finset.sum_comm, Finset.sum_comm]
+    exact Finset.sum_congr rfl fun k _ => by rw [← Finset.sum_mul_sum]; ring
+  rw [reorder]
+  positivity
+
 end DeepWiki.TimeSeries
