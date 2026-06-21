@@ -260,12 +260,19 @@ theorem lem_3_4_2_eq {F : Type*} [Field F] [CharZero F] [Differential F] (v p : 
     (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) :=
   natDegree_implicitDeriv_eq v p hv hp
 
+/-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b`,
+`gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. (The general `∏pᵢ^{eᵢ}` form follows by induction on
+the number of factors plus the `pᵢ^{eᵢ}` power computation.) -/
+theorem lem_3_4_4_base {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential R]
+    {a b : R} (hab : IsUnit (gcd a b)) :
+    Associated (gcd (a * b) ((a * b)′)) (gcd a a′ * gcd b b′) :=
+  associated_gcd_deriv_mul hab
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product formula; its two-factor base case rests on
---     `associated_gcd_mul_of_isUnit_gcd` — the coprime-factor gcd-multiplicativity now in the
---     library — plus a gcd-add-multiple and a coprime-cancellation step still to add).
---   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
---     (rests on Lemma 3.4.4).
+--   • Lemma 3.4.4 general `∏pᵢ^{eᵢ}` product formula (the two-factor base case `lem_3_4_4_base`
+--     is done; the general form needs the finite-product induction + the `gcd(pᵉ, D pᵉ)` power
+--     computation), and Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special
+--     polynomial (rests on the general Lemma 3.4.4).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).

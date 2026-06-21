@@ -71,6 +71,37 @@ theorem associated_gcd_mul_of_isUnit_gcd {a b : R} (hab : IsUnit (gcd a b)) (c :
       (hcop.mul_left_dvd).mpr dvd_rfl
     exact ((gcd_mul_lcm (gcd a c) (gcd b c)).symm.dvd.trans step1).trans hlcm
 
+/-- Coprime cancellation (divisibility form): if `gcd x b` is a unit and `x ∣ b·c` then `x ∣ c`.
+(`x ∣ gcd (x·c) (b·c) ~ gcd x b · c ~ c`.) -/
+theorem dvd_of_dvd_mul_of_isUnit_gcd {x b c : R} (hxb : IsUnit (gcd x b)) (h : x ∣ b * c) :
+    x ∣ c := by
+  have hx : x ∣ gcd (x * c) (b * c) := dvd_gcd (dvd_mul_right x c) h
+  have e1 : Associated (gcd (x * c) (b * c)) (gcd x b * c) := gcd_mul_right' c x b
+  have e2 : gcd x b * c ∣ c := hxb.mul_left_dvd.mpr dvd_rfl
+  exact (hx.trans e1.dvd).trans e2
+
+/-- Coprime cancellation (gcd form): if `gcd a b` is a unit then `gcd a (b·c) ~ gcd a c`. -/
+theorem associated_gcd_mul_left_cancel {a b c : R} (hab : IsUnit (gcd a b)) :
+    Associated (gcd a (b * c)) (gcd a c) := by
+  refine associated_of_dvd_dvd ?_
+    (dvd_gcd (gcd_dvd_left a c) ((gcd_dvd_right a c).trans (dvd_mul_left c b)))
+  refine dvd_gcd (gcd_dvd_left _ _) (dvd_of_dvd_mul_of_isUnit_gcd (b := b) ?_ (gcd_dvd_right a (b * c)))
+  exact isUnit_of_dvd_unit (dvd_gcd ((gcd_dvd_left _ _).trans (gcd_dvd_left a (b * c)))
+    (gcd_dvd_right _ _)) hab
+
 end GCDMonoid
+
+section GCDRing
+variable {R : Type*} [CommRing R] [NormalizedGCDMonoid R]
+
+/-- gcd absorbs a multiple of its first argument: `gcd a (b + a·c) ~ gcd a b`. -/
+theorem associated_gcd_add_mul (a b c : R) : Associated (gcd a (b + a * c)) (gcd a b) := by
+  refine associated_of_dvd_dvd (dvd_gcd (gcd_dvd_left _ _) ?_) (dvd_gcd (gcd_dvd_left _ _) ?_)
+  · have : gcd a (b + a * c) ∣ (b + a * c) - a * c :=
+      dvd_sub (gcd_dvd_right _ _) ((gcd_dvd_left _ _).mul_right c)
+    rwa [add_sub_cancel_right] at this
+  · exact dvd_add (gcd_dvd_right _ _) ((gcd_dvd_left _ _).mul_right c)
+
+end GCDRing
 
 end DeepWiki.SymbolicIntegration

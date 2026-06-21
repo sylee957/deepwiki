@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Coprime.Lemmas
 import Mathlib.Algebra.Polynomial.Derivative
@@ -124,6 +125,20 @@ theorem IsNormal.squarefree {p : R} (hp : IsNormal p) : Squarefree p := by
       rw [deriv_mul_eq (x * x) r, deriv_mul_eq x x]; ring
     rw [e]; exact dvd_mul_right x _
   exact IsCoprime.isUnit_of_dvd' hp hxp hxp'
+
+variable [NormalizedGCDMonoid R] in
+/-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b` (unit `gcd a b`),
+`gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. Expand `D(a·b) = a·Db + b·Da`, split the gcd over
+the coprime factors (`associated_gcd_mul_of_isUnit_gcd`), drop the absorbed multiples
+(`associated_gcd_add_mul`), and cancel the coprime cofactor (`associated_gcd_mul_left_cancel`). -/
+theorem associated_gcd_deriv_mul {a b : R} (hab : IsUnit (gcd a b)) :
+    Associated (gcd (a * b) ((a * b)′)) (gcd a a′ * gcd b b′) := by
+  have hba : IsUnit (gcd b a) := by rwa [gcd_comm]
+  rw [deriv_mul_eq]
+  refine (associated_gcd_mul_of_isUnit_gcd hab _).trans (Associated.mul_mul ?_ ?_)
+  · rw [add_comm (a * b′) (b * a′)]
+    exact (associated_gcd_add_mul a (b * a′) b′).trans (associated_gcd_mul_left_cancel hab)
+  · exact (associated_gcd_add_mul b (a * b′) a′).trans (associated_gcd_mul_left_cancel hba)
 
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
