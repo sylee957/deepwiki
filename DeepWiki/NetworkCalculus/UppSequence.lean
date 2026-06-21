@@ -1116,28 +1116,30 @@ The closure `f* = ⨅ₙ f^⊗ⁿ` needs the convolution identity `f^⊗0 = δ�
 which `UppSeq` over ℤ cannot hold. `convNat` is generic, so it works over `WithTop ℤ` (where `⊤ = +∞`),
 and `δ₀` is representable there — this de-risks the closure arc. -/
 
-/-- The (min,plus) **convolution identity** `δ₀` over `WithTop ℤ`: `δ₀(0) = 0`, `δ₀(n) = ⊤` for
-`n ≥ 1` (the closure's neutral element `f^⊗0`). -/
-def delta0 : UppSeq (WithTop ℤ) := ⟨[0, ⊤], ⊤, 1, by decide, by decide⟩
+/-- The (min,plus) **convolution identity** `δ₀` over `WithTop V`: `δ₀(0) = 0`, `δ₀(n) = ⊤` for
+`n ≥ 1` (the closure's neutral element `f^⊗0`). Generic over any pointed value type. -/
+def delta0 [Zero V] : UppSeq (WithTop V) := ⟨[0, ⊤], ⊤, 1, by decide, (by decide : (1 : ℕ) ≤ 2)⟩
 
 /-- `δ₀(0) = 0`. -/
-theorem delta0_zero : delta0.evalNat 0 = 0 := by rw [evalNat_of_lt delta0 (by decide)]; rfl
+theorem delta0_zero [AddMonoid V] : (delta0 (V := V)).evalNat 0 = 0 := by
+  rw [evalNat_of_lt delta0 (show (0 : ℕ) < 2 by decide)]; rfl
 
 /-- `δ₀(k) = ⊤` for `k ≥ 1` (the identity is `+∞` off the origin). -/
-theorem delta0_pos {k : ℕ} (hk : 1 ≤ k) : delta0.evalNat k = ⊤ := by
-  have hlen : delta0.vals.length = 2 := rfl
+theorem delta0_pos [AddMonoid V] {k : ℕ} (hk : 1 ≤ k) : (delta0 (V := V)).evalNat k = ⊤ := by
+  have hlen : (delta0 (V := V)).vals.length = 2 := rfl
   rcases lt_or_ge k 2 with h | h
   · obtain rfl : k = 1 := by omega
-    rw [evalNat_of_lt delta0 (by decide)]; rfl
+    rw [evalNat_of_lt delta0 (show (1 : ℕ) < 2 by decide)]; rfl
   · conv_lhs => rw [evalNat.eq_def]
     rw [dif_neg (by omega)]
-    show delta0.evalNat (k - 1) + (⊤ : WithTop ℤ) = ⊤
+    show (delta0 (V := V)).evalNat (k - 1) + (⊤ : WithTop V) = ⊤
     exact WithTop.add_top _
 
-/-- **`δ₀` is the (min,plus) convolution identity**: `δ₀ ⊗ f = f` for every `f` over `WithTop ℤ`. The
+/-- **`δ₀` is the (min,plus) convolution identity**: `δ₀ ⊗ f = f` for every `f` over `WithTop V`. The
 `k = 0` term is `0 + f(n) = f(n)`; every `k ≥ 1` term is `⊤ + f(n-k) = ⊤ ≥ f(n)`, so the infimum is
 `f(n)`. This is `f^⊗0 ⊗ f = f`, the base of the closure iteration. -/
-theorem convNat_delta0 (f : UppSeq (WithTop ℤ)) (n : ℕ) : delta0.convNat f n = f.evalNat n := by
+theorem convNat_delta0 [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (n : ℕ) : delta0.convNat f n = f.evalNat n := by
   refine le_antisymm ?_ ?_
   · calc delta0.convNat f n ≤ delta0.evalNat 0 + f.evalNat (n - 0) := delta0.convNat_le f (Nat.zero_le n)
       _ = f.evalNat n := by rw [delta0_zero, Nat.sub_zero, zero_add]
