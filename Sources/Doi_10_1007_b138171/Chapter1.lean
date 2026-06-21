@@ -602,6 +602,11 @@ abbrev thm_1_5_2_zero := @subresultant_prs_vanish
 `subresultant_prs_telescope_explicit`. -/
 abbrev thm_1_5_2_explicit := @subresultant_prs_telescope_explicit
 
+/-- **Theorem 1.5.2** (§1.5, p.23) — nonzero case: at a regular index `j = deg Rᵢ`, the subresultant
+`Sⱼ(A,B)` is *similar to the PRS element* `Rᵢ` (every nonzero subresultant is similar to a PRS element).
+`subresultant_prs_similar_elt`. -/
+abbrev thm_1_5_2_elt := @subresultant_prs_similar_elt
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
