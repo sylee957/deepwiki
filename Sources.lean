@@ -46,6 +46,7 @@ import Sources.Doi_10_1007_b138171.Source
 import Sources.Doi_10_1007_b138171.Chapter1
 import Sources.Doi_10_1007_b138171.Chapter2
 import Sources.Doi_10_1007_b138171.Chapter3
+import Sources.Doi_10_1007_b138171.Chapter4
 
 -- Per-paper source catalogs (papers the book defers to; see CLAUDE.md)
 import Sources.Doi_10_7146_brics_v2i2_19504.Source
