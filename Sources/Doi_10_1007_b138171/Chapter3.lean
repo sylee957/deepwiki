@@ -207,11 +207,11 @@ theorem thm_3_4_1_iii_coprime {R : Type*} [CommRing R] [Differential R] {p q : R
     (h : IsSpecial (p * q)) (hco : IsCoprime p q) : IsSpecial p :=
   IsSpecial.of_mul_coprime h hco
 
-/-- **Theorem 3.4.1** (§3.4, p.93): the only polynomials that are *both* normal and special are
-the units — `p` normal and special `⟹ IsUnit p` (so the ideal `(p) = (1)`). -/
-theorem thm_3_4_1_normal_special_isUnit {R : Type*} [CommRing R] [Differential R] {p : R}
-    (hn : IsNormal p) (hs : IsSpecial p) : IsUnit p :=
-  isUnit_of_isNormal_of_isSpecial hn hs
+/-- **Theorem 3.4.1** (§3.4, p.93): `p` is *both* normal and special iff it is a unit (so the
+ideal `(p) = (1)`) — the normal-and-special polynomials are exactly the units of `k`. -/
+theorem thm_3_4_1_normal_special_iff_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} :
+    (IsNormal p ∧ IsSpecial p) ↔ IsUnit p :=
+  isNormal_and_isSpecial_iff_isUnit
 
 /-- **Lemma 3.4.2(i)** (§3.4, p.91): the degree bound for a monomial derivation `D = κ_D + v·d/dX`
 on `k[X]` (`Dt = v`, `D`-degree `δ(t) = deg v`): `deg(D p) ≤ deg p + max(0, δ(t) − 1)`. -/

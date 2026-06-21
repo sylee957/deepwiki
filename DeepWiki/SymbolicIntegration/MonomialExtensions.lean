@@ -128,6 +128,17 @@ theorem isUnit_of_isNormal_of_isSpecial {p : R} (hn : IsNormal p) (hs : IsSpecia
   have h : p * (u + v * w) = 1 := by linear_combination huv
   exact isUnit_of_dvd_one ⟨u + v * w, h.symm⟩
 
+/-- A unit is normal (`gcd(p, p′) = 1` since `p` is coprime to everything). -/
+theorem isNormal_of_isUnit {p : R} (hu : IsUnit p) : IsNormal p := by
+  obtain ⟨u, rfl⟩ := hu
+  exact ⟨↑u⁻¹, 0, by simp⟩
+
+/-- **Theorem 3.4.1** (§3.4, p.93): `p` is both normal and special iff it is a unit. -/
+theorem isNormal_and_isSpecial_iff_isUnit {p : R} :
+    (IsNormal p ∧ IsSpecial p) ↔ IsUnit p :=
+  ⟨fun ⟨hn, hs⟩ => isUnit_of_isNormal_of_isSpecial hn hs,
+   fun hu => ⟨isNormal_of_isUnit hu, hu.dvd⟩⟩
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
