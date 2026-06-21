@@ -107,9 +107,11 @@ summability** underlying both representations: `∑ⱼ |ψⱼ| < ∞` for the ca
 direction of both Theorems 3.1.1 and 3.1.2** (`thm_3_1_1_forward`/`thm_3_1_2_forward`): the causal
 `MA(∞)` process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` *solves* `φ(B) X = θ(B) Z`, and dually the invertible `AR(∞)`
 inversion `Wₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` solves `θ(B) W = φ(B) X` — so each root condition `⟹` the corresponding
-`MA(∞)`/`AR(∞)` representation exists. What remains is the *converses* (a representation `⟹` the root
-condition, the other halves of the `⟺`, which need `L²` uniqueness), the two-sided Laurent existence
-(Thm 3.1.3), and Props 3.1.1/3.1.2. -/
+`MA(∞)`/`AR(∞)` representation exists; and the **converse of Theorem 3.1.1** (`thm_3_1_1_converse`),
+closing its causal `⟺`: a coprime `φ, θ` with an `MA(∞)` representation (summable one-sided weights
+satisfying eq 3.3.3) forces `φ(z) ≠ 0` on `|z| ≤ 1` (generating-function `φ(z) ψ̂(z) = θ(z)` + Bézout).
+What remains is the dual converse for Theorem 3.1.2, the two-sided Laurent existence (Thm 3.1.3), and
+Props 3.1.1/3.1.2. -/
 
 /-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
 zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
@@ -122,6 +124,13 @@ abbrev thm_3_1_1 := @DeepWiki.TimeSeries.IsCausalPoly
 ⟹ an `MA(∞)` solution exists (the existence half of the causal ⟺; the converse needs `L²`
 uniqueness). The library's `causal_arma_linearProcessLp_arma_eq`. -/
 alias thm_3_1_1_forward := DeepWiki.TimeSeries.causal_arma_linearProcessLp_arma_eq
+
+/-- **Theorem 3.1.1, converse direction** (§3.1, p.85): if `φ, θ` are coprime and the `MA(∞)`
+weights `ψ` exist (absolutely summable, one-sided, satisfying the recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m`),
+then `φ` is causal — `φ(z) ≠ 0` for `|z| ≤ 1`. By the generating-function identity `φ(z) ψ̂(z) = θ(z)`
+on the closed disk: a root `φ(z₀) = 0` forces `θ(z₀) = 0`, contradicting coprimality. The other half
+of the causal `⟺`; the library's `isCausalPoly_of_summable_recursion`. -/
+alias thm_3_1_1_converse := DeepWiki.TimeSeries.isCausalPoly_of_summable_recursion
 
 /-- **Theorem 3.1.2** root condition (§3.1, p.86): the moving-average polynomial `θ` has no
 zero in the closed complex unit disk, `θ(z) ≠ 0` for `|z| ≤ 1`. The library's
