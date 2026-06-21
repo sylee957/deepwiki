@@ -49,6 +49,23 @@ theorem differentiable_aeval_ofReal (φ : ℝ[X]) :
   simp_rw [Polynomial.aeval_eq_sum_range]
   exact Differentiable.fun_sum fun i _ => (differentiable_pow i).const_smul (φ.coeff i)
 
+/-- **Causal ⟹ `θ/φ` has a power series on a disk of radius `> 1`:** the rational function `θ/φ` of
+a causal ARMA is analytic on a disk of radius `> 1`, represented there by its Cauchy power series
+(the `MA(∞)` `ψ`-weights). The object underlying both the summability and the recursion. -/
+theorem hasFPowerSeriesOnBall_div_aeval {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    ∃ R : ℝ≥0, 1 < R ∧ HasFPowerSeriesOnBall
+      (fun z : ℂ => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹)
+      (cauchyPowerSeries (fun z : ℂ => Polynomial.aeval z θ * (Polynomial.aeval z φ)⁻¹) 0 R) 0 R := by
+  obtain ⟨r, hr1, hr0⟩ := hφ.exists_radius_gt_one
+  obtain ⟨R₀, hR1, hRr⟩ := exists_between hr1
+  have hR0 : (0 : ℝ) ≤ R₀ := by linarith
+  refine ⟨⟨R₀, hR0⟩, by exact_mod_cast hR1, ?_⟩
+  exact ((differentiable_aeval_ofReal θ).differentiableOn.mul
+    (DifferentiableOn.inv (differentiable_aeval_ofReal φ).differentiableOn fun z hz => by
+      rw [Metric.mem_closedBall, dist_zero_right] at hz
+      exact hr0 z (lt_of_le_of_lt hz hRr))).hasFPowerSeriesOnBall
+      (show (0 : ℝ≥0) < ⟨R₀, hR0⟩ by exact_mod_cast (by linarith : (0:ℝ) < R₀))
+
 /-- **Causal ⟹ `∑|ψⱼ| < ∞` (analytic `ψ`-weights):** the Cauchy power-series (Taylor) coefficients
 of `1/φ` at `0` are absolutely summable. This is the `MA(∞)` weight summability — the analytic
 content that the formal `armaPsi = θ/φ` lacked. `1/φ` is analytic on a disk of radius `R > 1`
