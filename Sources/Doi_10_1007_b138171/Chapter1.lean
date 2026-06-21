@@ -617,6 +617,16 @@ theorem ex_1_7_1 :
 theorem ex_1_9 :
     (X ^ 8 - 5 * X ^ 6 + 6 * X ^ 4 + 4 * X ^ 2 - 8 : ℚ[X]) = (X ^ 2 + 1) * (X ^ 2 - 2) ^ 3 := by ring
 
+/-- **Exercise 1.5** (§1, p.33): the pseudo-quotient and pseudo-remainder of `x⁴ − 7x + 7` by
+`3x² − 7` in `ℤ[x]` are `9x² + 21` and `−189x + 336` — i.e. `3³·(x⁴ − 7x + 7) =
+(3x² − 7)(9x² + 21) + (−189x + 336)` with the remainder of degree `< 2`. -/
+theorem ex_1_5 :
+    (27 : ℤ[X]) * (X ^ 4 - 7 * X + 7) = (3 * X ^ 2 - 7) * (9 * X ^ 2 + 21) + (-189 * X + 336)
+      ∧ (-189 * X + 336 : ℤ[X]).natDegree < (3 * X ^ 2 - 7 : ℤ[X]).natDegree := by
+  refine ⟨by ring, ?_⟩
+  have h2 : (3 * X ^ 2 - 7 : ℤ[X]).natDegree = 2 := by compute_degree!
+  rw [h2]; compute_degree!
+
 /-- **Exercise 1.3** (§1, p.33): the inverse of `14` in `ℤ/37` is `8` (i.e. `14·8 ≡ 1`). -/
 theorem ex_1_3 : (14 : ZMod 37) * 8 = 1 := by decide
 
@@ -687,6 +697,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.11; Ex 1.14. -/
+Exercises: Ex 1.4; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
