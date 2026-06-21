@@ -162,6 +162,71 @@ theorem coincidence_past {D : Type*} {e δ' : ℝ≥0} {u' : Valuation D} {y : D
   rw [process_past_iff_clock_past_cross (u' y) he]
   exact hlt
 
+/-- **The dual: a live coincidence stays at-or-below √2.** When the symmetric region match forces B's
+clock `y` to integer `m` and A's crossing-value is strictly above `m` (A still live, `m < cv d u y`),
+`AsymMatch` gives `m ≤ cv e u' y`, so B's process is `≤ √2` (B stays live). Companion to
+`coincidence_past`. -/
+theorem coincidence_live {D : Type*} {e δ' : ℝ≥0} {u' : Valuation D} {y : D} {m : ℕ} {cd : ℝ≥0}
+    (hcv : AsymMatch cd (cv e u' y)) (hm : (m : ℝ≥0) < cd) (hclk : u' y + δ' = (m : ℝ≥0))
+    (he : e ≤ sqrt2NN) : e + δ' ≤ sqrt2NN := by
+  have hle : (m : ℝ≥0) ≤ cv e u' y := (hcv m).mp hm
+  rw [process_le_iff_clock_le_cross (u' y) he, hclk]
+  exact hle
+
+/-- **Controlled small advance.** Strengthening of `regionEqAll_exists_add_small`: when no clock of `W`
+sits on an integer and a real gap `g` is below every clock's distance-to-next-integer (`g < 1 − fracPart
+(W x)`), there is an advance `ε > g` landing in a region-equivalent valuation. Used for the delay-clause
+nudge: `g = √2 − (e + δ')` (the gap to push B past `√2`) is below each distance by `AsymMatch.floor_le`. -/
+theorem regionEqAll_exists_add_above {D : Type*} [Fintype D] (W : Valuation D)
+    (hno : ∀ x, fracPart (W x) ≠ 0) (g : ℝ) (hg : ∀ x, g < 1 - fracPart (W x)) :
+    ∃ ε : ℝ≥0, g < (ε : ℝ) ∧ RegionEqAll W (W.add ε) := by
+  rcases isEmpty_or_nonempty D with hD | hD
+  · refine ⟨(max g 0).toNNReal + 1, ?_, regionEqAll_add_small W hno (by positivity) (fun x => (hD.false x).elim)⟩
+    have : (0 : ℝ) ≤ max g 0 := le_max_right _ _
+    push_cast [Real.coe_toNNReal _ this]
+    calc g ≤ max g 0 := le_max_left _ _
+      _ < max g 0 + 1 := by linarith
+  · obtain ⟨x₀, -, hx₀⟩ := Finset.exists_min_image Finset.univ
+      (fun x => (1 : ℝ) - fracPart (W x)) Finset.univ_nonempty
+    set b := (1 : ℝ) - fracPart (W x₀) with hb
+    have hgb : g < b := hg x₀
+    have hb0 : 0 < b := by have := fracPart_lt_one (W x₀); rw [hb]; linarith
+    have hlo : max g 0 < b := max_lt hgb hb0
+    refine ⟨((max g 0 + b) / 2).toNNReal, ?_, regionEqAll_add_small W hno ?_ ?_⟩
+    · rw [Real.coe_toNNReal _ (by have := le_max_right g 0; linarith)]
+      calc g ≤ max g 0 := le_max_left _ _
+        _ < (max g 0 + b) / 2 := by linarith
+    · rw [Real.toNNReal_pos]; have := le_max_right g 0; linarith
+    · intro x
+      rw [Real.coe_toNNReal _ (by have := le_max_right g 0; linarith)]
+      have hxle : b ≤ 1 - fracPart (W x) := by rw [hb]; exact hx₀ x (Finset.mem_univ x)
+      linarith
+
+/-- `fracPart` as value minus floor (real-valued). -/
+theorem fracPart_eq_sub_floor (v : ℝ≥0) : fracPart v = (v : ℝ) - ((⌊v⌋₊ : ℝ≥0) : ℝ) := by
+  have hbridge : (((⌊v⌋₊ : ℝ≥0)) : ℝ) = (⌊(v : ℝ)⌋ : ℝ) := by
+    have e1 : ((⌊v⌋₊ : ℝ≥0) : ℝ) = (⌊(v : ℝ)⌋₊ : ℝ) := by push_cast; congr 1
+    have e2 : ((⌊(v : ℝ)⌋₊ : ℤ) : ℝ) = (⌊(v : ℝ)⌋ : ℝ) := by
+      rw [Int.natCast_floor_eq_floor v.coe_nonneg]
+    rw [e1]; push_cast at e2 ⊢; exact e2
+  unfold fracPart; rw [Int.fract, hbridge]
+
+/-- Integer parts (`⌊·⌋₊`) agree under region equivalence: at an arbitrarily large `cmax` the clamped
+floor `regionFloor` is the bare floor. -/
+theorem regionEqAll_floor_eq {D : Type*} {V V' : Valuation D} (h : RegionEqAll V V') (x : D) :
+    ⌊V x⌋₊ = ⌊V' x⌋₊ := by
+  obtain ⟨h1, _, _⟩ := h (fun y => ⌊V y⌋₊ + ⌊V' y⌋₊ + 1)
+  have hVx : V x ≤ ((⌊V x⌋₊ + ⌊V' x⌋₊ + 1 : ℕ) : ℝ≥0) := by
+    refine le_of_lt (lt_of_lt_of_le (Nat.lt_floor_add_one (V x)) ?_)
+    exact_mod_cast (Nat.le_add_right (⌊V x⌋₊ + 1) (⌊V' x⌋₊)).trans_eq (by ring)
+  have hV'x : V' x ≤ ((⌊V x⌋₊ + ⌊V' x⌋₊ + 1 : ℕ) : ℝ≥0) := by
+    refine le_of_lt (lt_of_lt_of_le (Nat.lt_floor_add_one (V' x)) ?_)
+    exact_mod_cast (Nat.le_add_left (⌊V' x⌋₊ + 1) (⌊V x⌋₊)).trans_eq (by ring)
+  have hf := h1 x
+  unfold regionFloor at hf
+  rw [if_pos hVx, if_pos hV'x] at hf
+  exact hf
+
 namespace TLTS
 
 /-- The live regime's coupling: formula-clock region equivalence, the `√2`-side (open/closed), the
@@ -270,6 +335,65 @@ theorem Sq2FullRel.delay_exact_coincidence {D : Type*} [Fintype D] {d e : ℝ≥
     coincidence_past (hcoinc ▸ hcross y) (by rw [← huy']; rfl) he
   exact ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB,
     Or.inl ⟨le_of_eq hδ.symm, hpast, hr'⟩⟩
+
+/-- **Delay clause, crossing regime** (`√2 ≤ d + δ`): the general past landing. The formula-clock
+region time-successor `δ'` is taken; if B is already past `√2` we are done, otherwise no clock sits on an
+integer (else `coincidence_past` would put B past `√2`), so a controlled nudge `regionEqAll_exists_add_above`
+advances B strictly past `√2` while preserving the region — the nudge gap `√2 − (e+δ')` is below every
+clock's distance-to-next-integer by `AsymMatch.floor_le` and the clocks-region floor match. Subsumes
+`delay_exact_coincidence`; needs no asymmetric region. -/
+theorem Sq2FullRel.delay_cross {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' : Valuation D}
+    (hr : RegionEqAll u u') (he : e ≤ sqrt2NN)
+    (hcross : ∀ y, AsymMatch (crossVal d (u y)) (crossVal e (u' y)))
+    (δ : ℝ≥0) (hδ : sqrt2NN ≤ d + δ) :
+    ∃ δ' q', (sq2TLTS sqrt2NN).delay (Sq2.B e) δ' q' ∧
+      Sq2FullRel (Sq2.A (d + δ)) (u.add δ) q' (u'.add δ') := by
+  obtain ⟨δ', hr'⟩ := regionEqAll_timeSuccessor hr δ
+  by_cases hpast : sqrt2NN < e + δ'
+  · exact ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB, Or.inl ⟨hδ, hpast, hr'⟩⟩
+  · rw [not_lt] at hpast
+    -- No clock of `u'.add δ'` sits on an integer (else `coincidence_past` contradicts `hpast`).
+    have hno : ∀ z, fracPart ((u'.add δ') z) ≠ 0 := by
+      intro z hzero
+      set m := ⌊(u'.add δ') z⌋₊ with hm
+      have hmval : (m : ℝ≥0) = (u'.add δ') z := (fracPart_eq_zero_iff _).mp hzero
+      have huval : (u.add δ) z = (m : ℝ≥0) := by
+        have hs := regionEqAll_satisfies hr' (ClockConstraint.atom z Cmp.eq m)
+        simp only [satisfies, Cmp.holds] at hs
+        exact hs.mpr hmval.symm
+      have hAle : crossVal d (u z) ≤ (m : ℝ≥0) := by
+        rw [← huval, crossVal, Valuation.add_apply, add_le_add_iff_left, tsub_le_iff_right, add_comm]
+        exact hδ
+      have hElt : crossVal e (u' z) < (m : ℝ≥0) :=
+        not_le.mp (fun hle => absurd ((hcross z m).mpr hle) (not_lt.mpr hAle))
+      have hclk : u' z + δ' = (m : ℝ≥0) := by rw [← Valuation.add_apply]; exact hmval.symm
+      have : sqrt2NN < e + δ' := by
+        rw [process_past_iff_clock_past_cross (u' z) he, hclk]; exact hElt
+      exact absurd this (not_lt.mpr hpast)
+    -- The nudge gap is below every clock's distance to its next integer.
+    have hgbound : ∀ z, (sqrt2NN : ℝ) - (e : ℝ) - (δ' : ℝ) < 1 - fracPart ((u'.add δ') z) := by
+      intro z
+      have hfeq : ⌊(u.add δ) z⌋₊ = ⌊(u'.add δ') z⌋₊ := regionEqAll_floor_eq hr' z
+      have hAle : crossVal d (u z) ≤ (u.add δ) z := by
+        rw [crossVal, Valuation.add_apply, add_le_add_iff_left, tsub_le_iff_right, add_comm]; exact hδ
+      have hf2 : ⌊crossVal e (u' z)⌋₊ ≤ ⌊(u'.add δ') z⌋₊ := by
+        rw [← hfeq]; exact ((hcross z).floor_le).trans (Nat.floor_mono hAle)
+      have hlt : crossVal e (u' z) < (⌊(u'.add δ') z⌋₊ : ℝ≥0) + 1 :=
+        lt_of_lt_of_le (Nat.lt_floor_add_one _) (by exact_mod_cast Nat.add_le_add_right hf2 1)
+      have hltR : (crossVal e (u' z) : ℝ) < ((⌊(u'.add δ') z⌋₊ : ℝ≥0) : ℝ) + 1 := by exact_mod_cast hlt
+      have hcvR : (crossVal e (u' z) : ℝ) = (u' z : ℝ) + (sqrt2NN : ℝ) - (e : ℝ) := by
+        rw [crossVal]; push_cast [NNReal.coe_sub he]; ring
+      have haddR : ((u'.add δ') z : ℝ) = (u' z : ℝ) + (δ' : ℝ) := by
+        rw [Valuation.add_apply]; push_cast; ring
+      rw [fracPart_eq_sub_floor, haddR]; linarith [hltR, hcvR]
+    obtain ⟨ε, hεg, hreg⟩ :=
+      regionEqAll_exists_add_above (u'.add δ') hno ((sqrt2NN : ℝ) - (e : ℝ) - (δ' : ℝ)) hgbound
+    have hadd : (u'.add δ').add ε = u'.add (δ' + ε) := by
+      funext z; simp only [Valuation.add_apply]; ring
+    have hrf : RegionEqAll (u.add δ) (u'.add (δ' + ε)) := by rw [← hadd]; exact hr'.trans hreg
+    have hgt : sqrt2NN < e + (δ' + ε) := by
+      rw [← NNReal.coe_lt_coe]; push_cast; linarith [hεg]
+    exact ⟨δ' + ε, Sq2.B (e + (δ' + ε)), sq2_delay.mpr Sq2Step.delB, Or.inl ⟨hδ, hgt, hrf⟩⟩
 
 /-- The seed: `(A 0) ~ (B 0)` at the all-zero formula valuation. -/
 theorem sq2FullRel_seed {D : Type*} :
