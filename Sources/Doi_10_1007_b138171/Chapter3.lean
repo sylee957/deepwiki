@@ -166,8 +166,28 @@ theorem thm_3_4_1_ii {R : Type*} [CommRing R] [Differential R] {p q : R}
 --     (products of coprime normals are normal; factors of special are special).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
---     polynomials).
---   • **§3.5 The Canonical Representation** (the `f = polynomial part + normal/special fractional
---     parts` decomposition) — entirely deferred.
+--     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).
+
+/-! ## §3.5 The Canonical Representation -/
+
+/-- **Definition 3.5.1** (§3.5, p.99): a *splitting factorization* `p = pₛ·pₙ` of `p` into its
+special part `pₛ` and normal part `pₙ`. -/
+abbrev def_3_5_1 := @IsSplittingFactorization
+
+/-- A special polynomial is its own special part: splitting factorization `(p, 1)`. -/
+theorem isSpecial_splittingFactorization {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsSpecial p) : IsSplittingFactorization p p 1 :=
+  hp.splittingFactorization
+
+/-- A normal polynomial is its own normal part: splitting factorization `(1, p)`. -/
+theorem isNormal_splittingFactorization {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsNormal p) : IsSplittingFactorization p 1 p :=
+  hp.splittingFactorization
+
+-- **Deferred — §3.5 library work:** Theorem 3.5.1 (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)`, the splitting
+-- factorization via gcd's; rests on Lemma 3.4.4 + Thms 3.4.2/3.4.3), the `SplitFactor` /
+-- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced
+-- elements of `k⟨t⟩`, needs `RatFunc` numerator/denominator), and Theorem 3.5.2 (the `κ_D`
+-- splitting separates constant from nonconstant roots).
 
 end DeepWiki.Si

@@ -49,4 +49,26 @@ theorem IsSpecial.mul {p q : R} (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecia
 theorem isSpecial_one : IsSpecial (1 : R) := by
   simp [IsSpecial]
 
+/-- `1` is normal (`gcd(1, 0) = 1`). -/
+theorem isNormal_one : IsNormal (1 : R) := by
+  have h : ((1 : R)′) = 0 := (Differential.deriv : Derivation ℤ R R).map_one_eq_zero
+  rw [IsNormal, h]
+  exact isCoprime_one_left
+
+/-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
+special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
+requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
+def IsSplittingFactorization (p ps pn : R) : Prop :=
+  p = ps * pn ∧ IsSpecial ps ∧ IsNormal pn
+
+/-- A special polynomial splits as `(p, 1)`. -/
+theorem IsSpecial.splittingFactorization {p : R} (hp : IsSpecial p) :
+    IsSplittingFactorization p p 1 :=
+  ⟨(mul_one p).symm, hp, isNormal_one⟩
+
+/-- A normal polynomial splits as `(1, p)`. -/
+theorem IsNormal.splittingFactorization {p : R} (hp : IsNormal p) :
+    IsSplittingFactorization p 1 p :=
+  ⟨(one_mul p).symm, isSpecial_one, hp⟩
+
 end DeepWiki.SymbolicIntegration
