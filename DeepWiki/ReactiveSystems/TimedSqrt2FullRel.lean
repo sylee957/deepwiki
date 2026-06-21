@@ -39,6 +39,16 @@ theorem natCast_ne_sqrt2NN (m : ℕ) : (m : ℝ≥0) ≠ sqrt2NN := by
 theorem asymMatch_sqrt2_self : AsymMatch sqrt2NN sqrt2NN := fun m =>
   ⟨le_of_lt, fun h => lt_of_le_of_ne h (natCast_ne_sqrt2NN m)⟩
 
+/-- **The floor content of `AsymMatch`** (the heart of the straddle): B's crossing-value floor is at
+most A's. Since `AsymMatch c c'` forces `⌊c'⌋ = ⌊c⌋` (for `c ∉ ℤ`) or `⌊c'⌋ = ⌊c⌋ − 1` (for `c ∈ ℤ`),
+in both cases `⌊c'⌋ ≤ ⌊c⌋` — so wherever A's process reaches `√2` before a clock's next integer (a
+crossing-value below that integer), B's does too. This is what makes the clocks-region window straddle
+`√2` consistently between A and B. -/
+theorem AsymMatch.floor_le {c c' : ℝ≥0} (h : AsymMatch c c') : ⌊c'⌋₊ ≤ ⌊c⌋₊ := by
+  have h1 : ((⌊c'⌋₊ : ℕ) : ℝ≥0) ≤ c' := Nat.floor_le zero_le
+  have h2 : ((⌊c'⌋₊ : ℕ) : ℝ≥0) < c := (h ⌊c'⌋₊).mpr h1
+  exact Nat.le_floor (le_of_lt h2)
+
 /-- **The process τ-match collapses to a single threshold in the live regime.** Because `√2 − e ≥ 0`
 always (truncated subtraction) the `m = 0` clause is vacuous, and because `√2 − d < 2` the `m ≥ 2`
 clauses are vacuous; so `AsymMatch (√2−d) (√2−e)` is just the `m = 1` condition — the `√2−1` cut
