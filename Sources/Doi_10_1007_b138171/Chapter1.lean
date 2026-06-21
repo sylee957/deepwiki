@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
+import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Algebra.MvPolynomial.Division
@@ -633,6 +634,27 @@ theorem ex_1_16 {R : Type*} [CommMonoidWithZero R] [UniqueFactorizationMonoid R]
   letI := UniqueFactorizationMonoid.toGCDMonoid R
   exact ⟨lcm x y, dvd_lcm_left x y, dvd_lcm_right x y, fun _ hx hy => lcm_dvd hx hy⟩
 
+/-- **Exercise 1.15** (§1, p.33), Gauss's-lemma consequence: for `A` *primitive* and any `B` in
+`D[x]` (`D` a UFD, `F = Frac(D)`), `A ∣ B` in `D[x]` iff `A ∣ B` in `F[x]`. Forward is
+`map_dvd`; the converse reduces `B` to `content(B)·primPart(B)` — the content maps to a unit of
+`F` — and applies Gauss's lemma to the two primitive polynomials `A, primPart(B)`. -/
+theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
+    [Field K] [Algebra D K] [IsFractionRing D K] {A B : D[X]} (hA : A.IsPrimitive) :
+    A ∣ B ↔ A.map (algebraMap D K) ∣ B.map (algebraMap D K) := by
+  refine ⟨fun h => map_dvd (Polynomial.mapRingHom (algebraMap D K)) h, fun h => ?_⟩
+  rcases eq_or_ne B 0 with rfl | hB0
+  · simp
+  rw [← hA.dvd_primPart_iff_dvd hB0,
+      hA.dvd_iff_fraction_map_dvd_fraction_map K B.isPrimitive_primPart]
+  have hc : IsUnit (C (algebraMap D K B.content)) :=
+    isUnit_C.mpr (Ne.isUnit (by
+      simpa using (IsFractionRing.injective D K).ne (mt content_eq_zero_iff.mp hB0)))
+  have hBeq : B.map (algebraMap D K)
+      = C (algebraMap D K B.content) * (B.primPart).map (algebraMap D K) := by
+    conv_lhs => rw [B.eq_C_content_mul_primPart]
+    rw [Polynomial.map_mul, Polynomial.map_C]
+  rwa [hBeq, hc.dvd_mul_left] at h
+
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §1.4: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices); Thm 1.4.3 (subresultant
   specialization under ring homomorphisms).
@@ -642,7 +664,6 @@ theorem ex_1_16 {R : Type*} [CommMonoidWithZero R] [UniqueFactorizationMonoid R]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.1; Ex 1.7.2.
-Exercises: Ex 1.2; Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.13; Ex 1.14;
-  Ex 1.15. -/
+Exercises: Ex 1.2; Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.13; Ex 1.14. -/
 
 end DeepWiki.Si
