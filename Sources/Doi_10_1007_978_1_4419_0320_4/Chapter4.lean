@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.SpectralDistribution
 import DeepWiki.TimeSeries.SpectralDensity
+import DeepWiki.TimeSeries.SpectralDensityFourier
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 4: The Spectral Representation of a Stationary Process
@@ -48,6 +49,13 @@ the autocovariance `spectralACVF μ` is non-negative definite, since
 theorem thm_4_3_1_forward {μ : MeasureTheory.Measure ℝ} [MeasureTheory.IsFiniteMeasure μ] :
     IsComplexNonnegDefinite (spectralACVF μ) :=
   isComplexNonnegDefinite_spectralACVF
+
+/-- **Theorem 4.3.2** (§4.3, p.120): an absolutely summable `K : ℤ → ℂ` (`∑ₙ |K(n)| < ∞`) is
+recovered from its **Fourier-series spectral density** `f(λ) = (1/2π) ∑ₙ e^{−inλ} K(n)` (eq 4.3.7,
+`fourierSpectralDensity`) by inversion `K(h) = ∫_{−π}^{π} e^{ihν} f(ν) dν` (eq 4.3.5–4.3.6) — so `f`
+is the spectral density of `K`. Used in particular to read off the (rational) spectral density of an
+ARMA process. The library's `fourierSpectralDensity_inversion`. -/
+alias thm_4_3_2 := DeepWiki.TimeSeries.fourierSpectralDensity_inversion
 
 /-! ## §4.2 The Spectral Distribution (pp.116–117) and §4.3 Herglotz's Theorem (pp.117–118)
 
