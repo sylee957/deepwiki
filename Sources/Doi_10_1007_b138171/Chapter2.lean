@@ -7,15 +7,24 @@ sum of logarithms (eq 2.4). The mathematical heart of Hermite's reduction — th
 identity that lowers the power of a squarefree denominator factor — is proved in the
 `DeepWiki.SymbolicIntegration` library and cataloged here.
 
-**Deferred — `DeepWiki.SymbolicIntegration` library/algorithmic work (in book order):**
-  • §2.1 the *arctan* term of Bernoulli (eqn 2.1, `∫ (Bx+C)/(x²+bx+c)ᵏ`) — needs the `arctan`
-    primitive; the rational and logarithmic parts are done below (`eq_2_1_rational`/`eq_2_1_log`).
-  • §2.2 the full `HermiteReduce` algorithm (recursion over the squarefree factorization with
-    `ExtendedEuclidean` finding `B, C`) and Example 2.2.1 — needs §1.7 squarefree factorization.
-  • §2.3 Horowitz–Ostrogradsky, §2.4 Rothstein–Trager, §2.5 Lazard–Rioboo–Trager,
-    §2.6 Czichowski, §2.7 Newton–Leibniz–Bernoulli, §2.8 Rioboo's real algorithm,
-    §2.9 in-field integration — the transcendental part (resultant-based logarithm computation),
-    resting on the §1.4 subresultant/PRS backlog. -/
+## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
+Done: eq 2.1 rational + log parts (`eq_2_1_rational`/`eq_2_1_log`); the §2.2 Hermite-reduction
+differential identity (`hermiteReduce_step`).
+§2.1 The Bernoulli Algorithm: the full algorithm; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs
+  the `arctan` primitive); Ex 2.1.3.
+§2.2 The Hermite Reduction: the full `HermiteReduce` algorithm (recursion over the squarefree
+  factorization, `ExtendedEuclidean` finding `B, C`); Ex 2.2.1, 2.2.2, 2.2.3.
+§2.3 The Horowitz–Ostrogradsky Algorithm: Ex 2.3.1; the algorithm.
+§2.4 The Rothstein–Trager Algorithm: Thm 2.4.1; the algorithm.
+§2.5 The Lazard–Rioboo–Trager Algorithm: Thm 2.5.1; Ex 2.5.1, 2.5.2; the algorithm.
+§2.6 The Czichowski Algorithm: Thm 2.6.1; Ex 2.6.1; the algorithm.
+§2.7 Newton–Leibniz–Bernoulli Revisited: Thm 2.7.1; Ex 2.7.2, 2.7.3.
+§2.8 Rioboo's Algorithm for Real Rational Functions: Thm 2.8.1, 2.8.4; Lemma 2.8.1;
+  Ex 2.8.1, 2.8.2.
+§2.9 In-Field Integration.
+Exercises 2.2–2.7.
+(The transcendental part — §2.3–§2.9 — is resultant/PRS-based and rests on the §1.4 subresultant
+backlog; most of the chapter is procedural and needs operational semantics.) -/
 
 open scoped Differential
 open DeepWiki.SymbolicIntegration

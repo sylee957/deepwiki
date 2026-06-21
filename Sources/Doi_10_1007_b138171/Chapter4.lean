@@ -5,10 +5,16 @@ import Sources.Doi_10_1007_b138171.Source
 The *order* `ν_a(x) = max{n : aⁿ ∣ x}` (with `ν_a(0) = +∞`) is Mathlib's `emultiplicity a x : ℕ∞`.
 We catalog the §4.1 basic properties (Lemma 4.1.1) onto Mathlib's `emultiplicity` lemmas.
 
-**Deferred — library work:** Lemma 4.1.2 / Definition 4.1.2 (extending `ν_a` to the quotient
-field `F` by `ν_a(y/z) = ν_a(y) − ν_a(z)`), Theorem 4.1.1 (the order as an additive valuation on
-`F`), Theorem 4.1.2 (invariance of the order under separable algebraic extension), and §4.2–4.4
-(localizations, the order at infinity, residues and the Rothstein–Trager resultant). -/
+## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
+Done: Def 4.1.1 (`def_4_1_1` = `emultiplicity`), Lemma 4.1.1(i)(ii)(iii) (`lem_4_1_1_*`).
+§4.1 Basic Properties: Def 4.1.2 (extend `ν_a` to the quotient field `F` by
+  `ν_a(y/z) = ν_a(y) − ν_a(z)`); Lemma 4.1.2; Thm 4.1.1 (order as an additive valuation on `F`);
+  Thm 4.1.2 (invariance under separable algebraic extension); Ex 4.1.1.
+§4.2 Localizations: Def 4.2.1, Def 4.2.2; Thm 4.2.1; Lemma 4.2.1; Ex 4.2.1.
+§4.3 The Order at Infinity: Def 4.3.1; Thm 4.3.1.
+§4.4 Residues and the Rothstein–Trager Resultant: Def 4.4.1; Thm 4.4.1–4.4.4;
+  Cor 4.4.1, Cor 4.4.2; Lemma 4.4.2, Lemma 4.4.3.
+Exercises 4.1–4.4. -/
 
 namespace DeepWiki.Si
 

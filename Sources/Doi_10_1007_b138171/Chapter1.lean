@@ -590,16 +590,21 @@ theorem def_1_7_2_squarefree {K : Type*} [Field K] (s : Finset K) (e : K → ℕ
     Squarefree (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) :=
   squarefree_prod_X_sub_C _
 
--- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
--- dedicated iterations:**
---   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
---     sequence Sⱼ and its specialization theorem are not).
---   • §1.5 polynomial remainder sequences (Examples 1.5.1/1.5.2).
---   • §1.6 the deflation theory — squarefree part `A*`, `k`-deflations `A⁻ᵏ` (Def 1.6.2),
---     relations (1.11)–(1.13), and eq (1.14) `A⁻ = gcd(A, dA/dx)` (needs the `A⁻` definition).
---     [Theorem 1.6.1 — both parts and the combined iff — is done: `thm_1_6_1_i`/`_ii`/`thm_1_6_1`.]
---   • §1.7 squarefree factorization (Def 1.7.2), Lemma 1.7.2, and the Musser/Yun
---     `Squarefree` algorithm (Example 1.7.1) — the squarefree-factorization routine the
---     integration algorithm uses. [Lemma 1.7.1 is done: `lem_1_7_1`.]
+/- ## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
+Done: §1.1 (Def 1.1.1–1.1.13, Thm 1.1.1–1.1.11, Ex 1.1.1–1.1.14), §1.2 (Euclidean/pseudo-division
+`thm_1_2_*`), §1.3 (Euclidean + extended `thm_1_3_*`), §1.4 (Def 1.4.1 resultant/Sylvester,
+Thm 1.4.1 comm/prod/mul, Cor 1.4.1/1.4.2, Thm 1.4.2 `res ∈ (A,B)`), §1.6 (Def 1.6.1 content/
+primitive/primPart, Lemma 1.6.1 Gauss, Thm 1.6.1), §1.7 (Def 1.7.1, Def 1.7.2 + squarefree +
+pairwise-coprime parts, Lemma 1.7.1, eq 1.14 radical).
+§1.4 Resultants and Subresultants: Def 1.4.2 (subresultants `Sⱼ(A,B)` from Sylvester submatrices);
+  Thm 1.4.3 (subresultant specialization under ring homomorphisms); Ex 1.4.2.
+§1.5 Polynomial Remainder Sequences (ENTIRE section, not in Mathlib): Def 1.5.1, Def 1.5.2;
+  Thm 1.5.1, Thm 1.5.2, Thm 1.5.3; Ex 1.5.1, Ex 1.5.2.
+§1.6 Primitive Polynomials: Def 1.6.2 (deflations `A⁻ᵏ`, squarefree part `A*`); relations
+  (1.11)–(1.13).
+§1.7 Squarefree Factorization: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm; Ex 1.7.1,
+  Ex 1.7.2.
+Worked examples not formalized: 1.2.1, 1.3.1, 1.3.3–1.3.7, 1.4.2, 1.5.1, 1.5.2, 1.7.1, 1.7.2.
+Exercises 1.1–1.16: none formalized. -/
 
 end DeepWiki.Si
