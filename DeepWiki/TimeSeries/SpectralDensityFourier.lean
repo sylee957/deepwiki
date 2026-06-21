@@ -1,5 +1,6 @@
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
+import Mathlib.Analysis.Real.Pi.Bounds
 
 /-! # The Fourier-series spectral density of a summable autocovariance (Theorem 4.3.2)
 For an absolutely summable function `K` on `ℤ` (`∑ₙ |K(n)| < ∞`), the Fourier series
@@ -42,5 +43,68 @@ theorem integral_exp_mul_exp_neg (h n : ℤ) :
     funext ν; rw [← Complex.exp_add]; congr 1; push_cast; ring
   rw [hfun, integral_exp_int_mul_I (h - n)]
   simp only [sub_eq_zero]
+
+open MeasureTheory in
+/-- **Theorem 4.3.2 (Fourier inversion of a summable autocovariance):** if `∑ₙ |K(n)| < ∞`, then
+`K(h) = ∫_{−π}^{π} e^{ihν} f(ν) dν` for `f = fourierSpectralDensity K` (eq 4.3.5–4.3.7) — so `f` is
+the spectral density of `K`: its Fourier coefficients recover `K`. By term-by-term integration
+(`integral_tsum`, justified by `∑ₙ |K(n)| < ∞`) and the exponential orthogonality. -/
+theorem fourierSpectralDensity_inversion {K : ℤ → ℂ} (hK : Summable fun n => ‖K n‖) (h : ℤ) :
+    (∫ ν in (-π)..π, Complex.exp (h * ν * Complex.I) * fourierSpectralDensity K ν) = K h := by
+  have hle : (-π : ℝ) ≤ π := by linarith [Real.pi_pos]
+  have hπ : (0 : ℝ) < 2 * π := by positivity
+  set g : ℤ → ℝ → ℂ := fun n ν =>
+    Complex.exp (h * ν * Complex.I) * (1 / (2 * π)) * (Complex.exp (-(n : ℂ) * ν * Complex.I) * K n)
+    with hgdef
+  have hgnorm : ∀ n (ν : ℝ), ‖g n ν‖ ≤ ‖K n‖ := fun n ν => by
+    have e1 : ‖Complex.exp ((h : ℂ) * (ν : ℂ) * Complex.I)‖ = 1 := by
+      rw [Complex.norm_exp]; simp
+    have e2 : ‖Complex.exp (-(n : ℂ) * (ν : ℂ) * Complex.I)‖ = 1 := by
+      rw [Complex.norm_exp]; simp
+    have hc : ‖((1 : ℂ) / (2 * π))‖ = 1 / (2 * π) := by
+      rw [norm_div, norm_one, norm_mul, Complex.norm_ofNat, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos Real.pi_pos]
+    have hle1 : (1 : ℝ) / (2 * π) ≤ 1 := by rw [div_le_one hπ]; linarith [Real.pi_gt_three]
+    simp only [hgdef, norm_mul, e1, e2, hc, one_mul]
+    calc 1 / (2 * π) * ‖K n‖ ≤ 1 * ‖K n‖ := mul_le_mul_of_nonneg_right hle1 (norm_nonneg _)
+      _ = ‖K n‖ := one_mul _
+  have hgcont : ∀ n, Continuous (g n) := fun n => by rw [hgdef]; fun_prop
+  have hpt : ∀ ν : ℝ,
+      Complex.exp (h * ν * Complex.I) * fourierSpectralDensity K ν = ∑' n, g n ν := fun ν => by
+    rw [fourierSpectralDensity, ← mul_assoc, ← tsum_mul_left]
+  have hfin : ENNReal.ofReal (2 * π) * ∑' n : ℤ, ‖K n‖ₑ ≠ ⊤ := by
+    refine ENNReal.mul_ne_top ENNReal.ofReal_ne_top ?_
+    have : Summable fun n : ℤ => ‖K n‖₊ :=
+      NNReal.summable_coe.mp (by simpa only [coe_nnnorm] using hK)
+    simpa only [enorm_eq_nnnorm] using (ENNReal.tsum_coe_ne_top_iff_summable.mpr this)
+  simp_rw [hpt]
+  rw [intervalIntegral.integral_of_le hle, integral_tsum
+    (fun n => (hgcont n).aestronglyMeasurable) ?_]
+  · simp_rw [← intervalIntegral.integral_of_le hle]
+    have hterm : ∀ n, (∫ ν in (-π)..π, g n ν)
+        = (1 / (2 * π)) * K n * (if h = n then (2 * π : ℂ) else 0) := by
+      intro n
+      have hcong : (∫ ν in (-π)..π, g n ν) = ∫ ν in (-π)..π, (1 / (2 * π)) * K n *
+          (Complex.exp (h * ν * Complex.I) * Complex.exp (-(n : ℂ) * ν * Complex.I)) := by
+        apply intervalIntegral.integral_congr
+        intro ν _
+        simp only [hgdef]; ring
+      rw [hcong, intervalIntegral.integral_const_mul, integral_exp_mul_exp_neg]
+    simp_rw [hterm]
+    rw [tsum_eq_single h fun n hn => by rw [if_neg (Ne.symm hn), mul_zero], if_pos rfl]
+    field_simp
+  · have hbound : ∀ n : ℤ, ∫⁻ ν in Set.Ioc (-π) π, ‖g n ν‖ₑ ∂volume
+        ≤ ENNReal.ofReal (2 * π) * ‖K n‖ₑ := by
+      intro n
+      calc ∫⁻ ν in Set.Ioc (-π) π, ‖g n ν‖ₑ ∂volume
+          ≤ ∫⁻ _ν in Set.Ioc (-π) π, ‖K n‖ₑ ∂volume :=
+            lintegral_mono fun ν => by
+              rw [enorm_eq_nnnorm, enorm_eq_nnnorm, ENNReal.coe_le_coe]; exact_mod_cast hgnorm n ν
+        _ = ENNReal.ofReal (2 * π) * ‖K n‖ₑ := by
+            rw [setLIntegral_const, Real.volume_Ioc, show (π : ℝ) - -π = 2 * π from by ring, mul_comm]
+    have hbsum : ∑' n : ℤ, ∫⁻ ν in Set.Ioc (-π) π, ‖g n ν‖ₑ ∂volume
+        ≤ ENNReal.ofReal (2 * π) * ∑' n : ℤ, ‖K n‖ₑ := by
+      rw [← ENNReal.tsum_mul_left]; exact ENNReal.tsum_le_tsum hbound
+    exact ne_top_of_le_ne_top hfin hbsum
 
 end DeepWiki.TimeSeries
