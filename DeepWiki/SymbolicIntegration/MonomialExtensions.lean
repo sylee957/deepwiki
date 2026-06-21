@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import Mathlib.RingTheory.Derivation.MapCoeffs
+import Mathlib.RingTheory.Coprime.Lemmas
 
 /-! # Monomial extensions — normal and special polynomials (Bronstein §3.4)
 A *monomial* `t` over a differential field `k` is a transcendental element with `Dt ∈ k[t]`, so
@@ -70,6 +71,25 @@ theorem IsNormal.mul {p q : R} (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCopr
   refine IsCoprime.mul_left ?_ ?_
   · rw [add_comm]; exact (hpq.mul_right hp).add_mul_left_right q′
   · exact (hpq.symm.mul_right hq).add_mul_left_right p′
+
+/-- **Theorem 3.4.1(i)** (§3.4, p.93), finite form: a finite product of pairwise-coprime normal
+polynomials is normal. -/
+theorem IsNormal.prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → R)
+    (hf : ∀ i ∈ s, IsNormal (f i))
+    (hco : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (f i) (f j)) :
+    IsNormal (∏ i ∈ s, f i) := by
+  induction s using Finset.induction with
+  | empty => simpa using isNormal_one
+  | insert a s ha ih =>
+    rw [Finset.prod_insert ha]
+    have hfa : IsNormal (f a) := hf a (Finset.mem_insert_self a s)
+    have hcoa : IsCoprime (f a) (∏ i ∈ s, f i) :=
+      IsCoprime.prod_right fun i hi => hco a (Finset.mem_insert_self a s) i
+        (Finset.mem_insert_of_mem hi) (by rintro rfl; exact ha hi)
+    refine hfa.mul (ih ?_ ?_) hcoa
+    · exact fun i hi => hf i (Finset.mem_insert_of_mem hi)
+    · exact fun i hi j hj hij => hco i (Finset.mem_insert_of_mem hi) j
+        (Finset.mem_insert_of_mem hj) hij
 
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
