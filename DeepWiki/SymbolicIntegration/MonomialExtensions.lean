@@ -118,6 +118,16 @@ theorem IsSpecial.of_mul_coprime {p q : R} (h : IsSpecial (p * q)) (hco : IsCopr
   have hp2 : p ∣ q * p′ := (dvd_add_right (dvd_mul_right p q′)).mp hp1
   exact hco.dvd_of_dvd_mul_left hp2
 
+/-- **Theorem 3.4.1** (§3.4, p.93): a polynomial that is both normal and special is a unit
+(`(p) = (1)`) — the only normal *and* special polynomials are the units of `k`. -/
+theorem isUnit_of_isNormal_of_isSpecial {p : R} (hn : IsNormal p) (hs : IsSpecial p) :
+    IsUnit p := by
+  obtain ⟨w, hw⟩ := hs
+  obtain ⟨u, v, huv⟩ := hn
+  rw [hw] at huv
+  have h : p * (u + v * w) = 1 := by linear_combination huv
+  exact isUnit_of_dvd_one ⟨u + v * w, h.symm⟩
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
