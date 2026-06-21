@@ -268,11 +268,18 @@ theorem lem_3_4_4_base {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differe
     Associated (gcd (a * b) ((a * b)′)) (gcd a a′ * gcd b b′) :=
   associated_gcd_deriv_mul hab
 
+/-- **Lemma 3.4.4** (§3.4, p.94), single-power computation: for `n ≥ 1` with `n` a unit
+(characteristic `0`), `gcd(pⁿ, D(pⁿ)) ~ pⁿ⁻¹·gcd(p, Dp)`. -/
+theorem lem_3_4_4_pow {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential R] {p : R}
+    {n : ℕ} (hn : 1 ≤ n) (he : IsUnit (n : R)) :
+    Associated (gcd (p ^ n) ((p ^ n)′)) (p ^ (n - 1) * gcd p p′) :=
+  associated_gcd_deriv_pow hn he
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Lemma 3.4.4 general `∏pᵢ^{eᵢ}` product formula (the two-factor base case `lem_3_4_4_base`
---     is done; the general form needs the finite-product induction + the `gcd(pᵉ, D pᵉ)` power
---     computation), and Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special
---     polynomial (rests on the general Lemma 3.4.4).
+--   • Lemma 3.4.4 general `∏pᵢ^{eᵢ}` product formula (both ingredients are done — the two-factor
+--     base case `lem_3_4_4_base` and the single-power computation `lem_3_4_4_pow`; the general
+--     form is their finite-product induction over pairwise-coprime factors), and Theorem 3.4.1(iii)
+--     for a *general* (non-coprime) factor of a special polynomial (rests on general Lemma 3.4.4).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).

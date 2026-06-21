@@ -140,6 +140,20 @@ theorem associated_gcd_deriv_mul {a b : R} (hab : IsUnit (gcd a b)) :
     exact (associated_gcd_add_mul a (b * a′) b′).trans (associated_gcd_mul_left_cancel hab)
   · exact (associated_gcd_add_mul b (a * b′) a′).trans (associated_gcd_mul_left_cancel hba)
 
+variable [NormalizedGCDMonoid R] in
+/-- **Lemma 3.4.4** (§3.4, p.94), the single-power computation: when the exponent `n ≥ 1` is a
+unit (characteristic `0`), `gcd(pⁿ, D(pⁿ)) ~ pⁿ⁻¹·gcd(p, Dp)`. Uses `D(pⁿ) = n·pⁿ⁻¹·Dp`
+(`leibniz_pow`), factors out `pⁿ⁻¹`, and cancels the unit `n`. -/
+theorem associated_gcd_deriv_pow {p : R} {n : ℕ} (hn : 1 ≤ n) (he : IsUnit (n : R)) :
+    Associated (gcd (p ^ n) ((p ^ n)′)) (p ^ (n - 1) * gcd p p′) := by
+  have hd : (p ^ n)′ = (n : R) * (p ^ (n - 1) * p′) := by
+    rw [Derivation.leibniz_pow, smul_eq_mul, nsmul_eq_mul]
+  have hpe : p ^ n = p ^ (n - 1) * p := by rw [← pow_succ, Nat.sub_add_cancel hn]
+  rw [hd, hpe, show (n : R) * (p ^ (n - 1) * p′) = p ^ (n - 1) * ((n : R) * p′) from by ring]
+  refine (gcd_mul_left' (p ^ (n - 1)) p ((n : R) * p′)).trans ?_
+  exact Associated.mul_left _
+    (associated_gcd_mul_left_cancel (isUnit_of_dvd_unit (gcd_dvd_right p (n : R)) he))
+
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
 gives `p ∣ p′` only when `p ⊥ q`.) -/
