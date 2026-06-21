@@ -953,6 +953,30 @@ theorem ex_1_7_2 :
   simp only [derivative_add, derivative_mul, derivative_X_pow, derivative_ofNat, Nat.cast_ofNat,
     map_ofNat]; ring
 
+/-- **Exercise 1.7** (§1, p.33): the primitive and subresultant PRS of `A = x⁴+x³−t` and
+`B = x³+2x²+3tx−t+1` in `ℤ[t][x]`. Both are monic in `x`, so pseudo-division by `B` is ordinary
+division. Computing the pseudo-remainder sequence (verified here as `ℤ`-coefficient ring identities, so
+they hold in `ℤ[t][x]`):
+• `R₂ = prem(A,B) = (2−3t)x² + (4t−1)x + (1−2t)`, from `A = (x−1)·B + R₂`;
+• `R₃ = prem(B,R₂) = (27t³−2t²−11t+3)x + (−9t³+t²+4t−1)`, from `(2−3t)²·B = ((2−3t)x+(5−10t))·R₂ + R₃`;
+• `R₄ = prem(R₂,R₃)` is a nonzero element of `ℤ[t]` (degree 0 in `x`) — the last nonzero PRS element —
+  given by the division identity `d²·R₂ = (d(2−3t)x + f)·R₃ + R₄` for `R₃ = d·x + e`, with
+  `f = d(4t−1) − (2−3t)e` and `R₄ = d²(1−2t) − f·e`.
+All gaps are `δᵢ = 1` (a *normal* PRS). The **primitive PRS** is `A, B, R₂, R₃, R₄` since `R₂, R₃` already
+have content `1` (coprime `ℤ[t]`-coefficients). The **subresultant PRS** uses `βᵢ`-scaling
+(`β₁ = (−1)^(δ₁+1) = 1`), coinciding with the primitive sequence up to that normalization in this
+all-gaps-`1` case. -/
+theorem ex_1_7 {R : Type*} [CommRing R] (t x : R) :
+    (x ^ 4 + x ^ 3 - t) = (x - 1) * (x ^ 3 + 2 * x ^ 2 + 3 * t * x + (1 - t))
+        + ((2 - 3 * t) * x ^ 2 + (4 * t - 1) * x + (1 - 2 * t))
+    ∧ (2 - 3 * t) ^ 2 * (x ^ 3 + 2 * x ^ 2 + 3 * t * x + (1 - t))
+        = ((2 - 3 * t) * x + (5 - 10 * t)) * ((2 - 3 * t) * x ^ 2 + (4 * t - 1) * x + (1 - 2 * t))
+          + ((27 * t ^ 3 - 2 * t ^ 2 - 11 * t + 3) * x + (-9 * t ^ 3 + t ^ 2 + 4 * t - 1))
+    ∧ ∀ d e : R, d ^ 2 * ((2 - 3 * t) * x ^ 2 + (4 * t - 1) * x + (1 - 2 * t))
+        = (d * (2 - 3 * t) * x + (d * (4 * t - 1) - (2 - 3 * t) * e)) * (d * x + e)
+          + (d ^ 2 * (1 - 2 * t) - (d * (4 * t - 1) - (2 - 3 * t) * e) * e) :=
+  ⟨by ring, by ring, fun d e => by ring⟩
+
 /-- **Exercise 1.9** (§1, p.33): the squarefree factorization of `x⁸ − 5x⁶ + 6x⁴ + 4x² − 8` is
 `(x²+1)·(x²−2)³` (squarefree parts `x²+1` at multiplicity 1, `x²−2` at multiplicity 3). -/
 theorem ex_1_9 :
@@ -1209,9 +1233,5 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
     conv_lhs => rw [B.eq_C_content_mul_primPart]
     rw [Polynomial.map_mul, Polynomial.map_C]
   rwa [hBeq, hc.dvd_mul_left] at h
-
-/- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials
-  (concrete multivariate PRS arithmetic; the book supplies the worked answer). -/
 
 end DeepWiki.Si
