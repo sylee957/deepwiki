@@ -357,4 +357,84 @@ theorem finRotate_pow_val (N q : ℕ) (r : Fin (N + 1)) :
   | zero => simp [Nat.mod_eq_of_lt r.isLt]
   | succ k ih => rw [pow_succ', Equiv.Perm.mul_apply, hstep, ih, Nat.mod_add_mod]; congr 1
 
+open Matrix Equiv in
+/-- `finRotate_pow_val` for any positive modulus `K` (reduces to the `N+1` form). -/
+theorem finRotate_pow_val_pos (K q : ℕ) (hK : 0 < K) (r : Fin K) :
+    ((finRotate K ^ q) r : ℕ) = (r.val + q) % K := by
+  obtain ⟨N, rfl⟩ : ∃ N, K = N + 1 := ⟨K - 1, by omega⟩
+  exact finRotate_pow_val N q r
+
+open Matrix Equiv in
+/-- **Determinant swap for the subresultant submatrices** (the per-`ⱼSᵢ` heart of the swap half of
+Geddes §7.3 Lemma 7.1): `det ⱼSᵢ(B,A) = (-1)^((m-j)(n-j)) · det ⱼSᵢ(A,B)` (`j ≤ m`, `j < n`). The two
+submatrices share rows and columns (`bSylvester_swap`) up to the block permutation `ρ` exchanging the
+`(m-j)` kept `A`-rows with the `(n-j)` kept `B`-rows; `ρ` is `(finRotate (n+m-2j))^(m-j)`, so its sign
+is `(-1)^((m-j)(n-j))` (`det_permute` + `det_submatrix_equiv_self`). -/
+theorem bSylvester_submatrix_det_swap (A B : R[X]) (n m j i : ℕ) (hjm : j ≤ m) (hjn : j < n) :
+    ((bSylvester B A m n).submatrix (subRow m n j) (subCol m n j i)).det
+      = (-1 : R) ^ ((m - j) * (n - j)) *
+        ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).det := by
+  set ρ : Equiv.Perm (Fin (n + m - 2 * j)) :=
+    { toFun := fun s => ⟨if (s : ℕ) < n - j then (s : ℕ) + (m - j) else (s : ℕ) - (n - j),
+        by have := s.isLt; split <;> omega⟩
+      invFun := fun r => ⟨if (r : ℕ) < m - j then (r : ℕ) + (n - j) else (r : ℕ) - (m - j),
+        by have := r.isLt; split <;> omega⟩
+      left_inv := fun s => by apply Fin.ext; have := s.isLt; dsimp only; split_ifs <;> omega
+      right_inv := fun r => by apply Fin.ext; have := r.isLt; dsimp only; split_ifs <;> omega }
+    with hρ
+  set c : Fin (n + m - 2 * j) ≃ Fin (m + n - 2 * j) := finCongr (by omega) with hc
+  have hentry : (bSylvester B A m n).submatrix (subRow m n j) (subCol m n j i)
+      = (((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).submatrix c c).submatrix
+          ρ id := by
+    rw [bSylvester_swap]
+    refine Matrix.ext fun s s' => ?_
+    simp only [Matrix.submatrix_apply, id_eq]
+    congr 1
+    · apply Fin.ext
+      simp only [hρ, hc, Equiv.coe_fn_mk, finCongr_apply, Fin.val_cast, subRow]
+      have := s.isLt; split_ifs <;> omega
+    · apply Fin.ext
+      simp only [hc, finCongr_apply, Fin.val_cast, subCol]
+      have := s'.isLt; split_ifs <;> omega
+  rw [hentry, Matrix.det_permute, Matrix.det_submatrix_equiv_self]
+  have hsign : (Equiv.Perm.sign ρ : R) = (-1 : R) ^ ((m - j) * (n - j)) := by
+    have heq : ρ = finRotate (n + m - 2 * j) ^ (m - j) := by
+      apply Equiv.ext; intro s; apply Fin.ext
+      rw [finRotate_pow_val_pos _ _ (by omega), hρ]
+      simp only [Equiv.coe_fn_mk]
+      have := s.isLt
+      split_ifs with h
+      · rw [Nat.mod_eq_of_lt (by omega)]
+      · rw [show (s : ℕ) + (m - j) = ((s : ℕ) - (n - j)) + (n + m - 2 * j) from by omega,
+          Nat.add_mod_right, Nat.mod_eq_of_lt (by omega)]
+    rw [heq, map_pow, sign_finRotate]
+    push_cast
+    rw [← pow_mul, show n + m - 2 * j - 1 = (m - j) + (n - j) - 1 from by omega]
+    obtain ⟨p, rfl⟩ : ∃ p, m = j + p := ⟨m - j, by omega⟩
+    obtain ⟨q, rfl⟩ : ∃ q, n = j + q := ⟨n - j, by omega⟩
+    simp only [Nat.add_sub_cancel_left]
+    have key : (p + q - 1) * p = p * q + p * (p - 1) := by
+      cases p with
+      | zero => simp
+      | succ k =>
+        rw [show k + 1 + q - 1 = k + q from by omega, show k + 1 - 1 = k from by omega]; ring
+    have heven : Even (p * (p - 1)) := by
+      cases p with
+      | zero => simp
+      | succ k => rw [Nat.succ_sub_one, mul_comm]; exact Nat.even_mul_succ_self k
+    rw [key, pow_add, heven.neg_one_pow, mul_one, mul_comm p q]
+  rw [hsign]
+
+/-- **Subresultant swap-with-sign** (Geddes §7.3, the swap half of Lemma 7.1): swapping the two
+polynomials multiplies every subresultant by `(-1)^((m-j)(n-j))` —
+`Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,A)` (`j ≤ m`, `j < n`). Each `ⱼSᵢ` determinant picks up the sign
+(`bSylvester_submatrix_det_swap`); since the sign is a square root of unity the factor cancels through
+the `C`-coefficients and the sum. -/
+theorem subresultant_swap (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < n) :
+    subresultant A B n m j = (-1 : R[X]) ^ ((m - j) * (n - j)) * subresultant B A m n j := by
+  rw [subresultant, subresultant, Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [bSylvester_submatrix_det_swap A B n m j i hjm hjn, map_mul, map_pow, map_neg, map_one,
+    ← mul_assoc, ← mul_assoc, ← pow_add, Even.neg_one_pow ⟨_, rfl⟩, one_mul]
+
 end DeepWiki.SymbolicIntegration
