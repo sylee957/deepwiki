@@ -23,7 +23,11 @@ import Sources.Doi_10_1002_9781119440284.Source
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
 Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
-or recorded as a note / unformalized item. -/
+or recorded as a note / unformalized item.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§9.1: the RTC greedy-processor service-curve type (equations [9.4]-[9.6]) `[infra]` (its bivariate Chasles framework is `def_9_1`/`lemma_9_2`; the RTC↔NC equivalence is `thm_9_2`).
+§9.3: Theorem 9.7 (the general intermediate-service-curve construction; only its δ_T case `lemma_9_5` is formalized) `[research]`. -/
 
 namespace DeepWiki.Dnc
 
@@ -44,8 +48,6 @@ noncomputable def def_9_types_vcn := @variableCapacityRel
 
 /-- **Definition 9** (§9.1, p.210): S_asc(β,β̃) = {(A,D) | A ≥ D, ∀ s≤t either D(t)≥D(s)+β̃(t−s) or ∃u∈[s,t] D(t)≥A(u)+β(t−u)}: adaptive service curve. -/
 noncomputable def def_9_types_asc := @adaptiveServiceRel
-
-/-! **Definition 9** (§9.1, p.210): Real-time-calculus greedy processor: a service-curve type defined via RTC bivariate functions (§9.1.3). The bivariate Chasles framework underlying it is `DeepWiki.IsChasles` / `ofUnivariate` (see def_9_1, lemma_9_2); the greedy-processor service-curve type itself (from equations [9.4]-[9.6]) is not separately formalized. -/
 
 /-- **Definition 9** / §9.3.2, p.227: the sufficiently-strict (s3c) service
 curve — `(A,D)` is s3c for `β` with dwell period `dw` when `D ≤ A` and
@@ -164,7 +166,7 @@ alias lemma_9_5 := systemClosure_delayTandemUnion_eq
 /-! **Theorem 9.7** (§9.3.1, p.227): for each convex piecewise-linear β there is a system S of
 strict-service servers with `S_strict(β) ⊆ S̄ ⊆ S_mp(β)` — "no good intermediate type of service
 curve exists". The book does not prove the general theorem; only its δ_T special case is formalized,
-as `lemma_9_5` (`systemClosure_delayTandemUnion_eq`). The general Theorem 9.7 is not formalized. -/
+as `lemma_9_5` (`systemClosure_delayTandemUnion_eq`). -/
 
 /-- **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`. The library's `DeepWiki.IsSufficientlyStrict.comp` (cumulative-pair form: tandem s3c servers `(A,M)`/`(M,D)` compose to an s3c server `(A,D)` for `β₁ ∗ β₂` at the composed dwell). The s3c relation is `IsSufficientlyStrict` (def_9_types_s3c). The FIFO-multiplexing `(β−α₂)⁺` residual builds on this. -/
 alias thm_9_8 := IsSufficientlyStrict.comp

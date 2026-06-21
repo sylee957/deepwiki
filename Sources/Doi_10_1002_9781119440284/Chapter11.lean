@@ -11,7 +11,11 @@ import Sources.Doi_10_1002_9781119440284.Source
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
 Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
-or recorded as a note / unformalized item. -/
+or recorded as a note / unformalized item.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§11.1: Example 11.1 (two-server tandem, figure) `[deferred]`; Remark 11.1 / Table 11.1 (the finite tandem LP construction) `[infra]`.
+§11.2: Example 11.2 (single FIFO node, figure) `[deferred]`; Theorem 11.2 general FIFO tandem (the exponential MILP construction + trajectory-from-solution reconstruction) `[infra]`. -/
 
 namespace DeepWiki.Dnc
 
@@ -21,10 +25,6 @@ open scoped NNReal ENNReal
 /-- **Worst-case value as a program optimum** (the `obj`-over-`Feasible`
 supremum underlying §11.1.2's LP). The library's `programOptimum`. -/
 noncomputable def def_11_optimum := @programOptimum
-
-/-! **Example 11.1** (§11.1.1, p.258): two servers in tandem under arbitrary multiplexing — the worked trajectory example motivating the LP encoding of worst-case end-to-end delay/backlog. Its worst-case value is `programOptimum` of the delay over the feasible trajectories; the concrete two-server numbers are not formalized. -/
-
-/-! **Remark 11.1 / Table 11.1** (§11.1.2, p.259): the linear program for a tandem network — maximize the objective subject to dates ≥ 0, monotonicity, causality, arrival (`α`) and service (`β`) constraints (O(nm) variables, O(mn²) constraints). The objective-over-feasible optimum is `programOptimum`; the finite-LP construction itself is not formalized. -/
 
 /-- **Theorem 11.1** (§11.1.3, p.261), worst-case = optimum (arbitrary
 multiplexing): the worst-case end-to-end delay (resp. backlog) is the
@@ -107,8 +107,6 @@ theorem thm_11_1_chain_backlog {α : ℝ≥0 → ℝ≥0} {β₀ : ℝ≥0 → �
     (hβ₀0 : β₀ 0 = 0) (hβs0 : ∀ γ ∈ βs, γ 0 = 0) :
     worstCaseChainBacklog α β₀ βs = (vDev (Deviation.liftENN α) (minConvChain β₀ βs) : ℝ≥0∞) :=
   worstCaseChainBacklog_eq_vDev_minConvChain hαmono hα0 hαsub hβ₀0 hβs0
-
-/-! **Example 11.2** (§11.2.1, p.263): single FIFO node example + Table 11.2 (the LP for one FIFO server). The single-node worst-case delay is `worstCaseServerDelay`, equal to the closed form `hDev(α, β)` (`thm_11_1_singleNode`); the concrete FIFO-LP numbers are not formalized. -/
 
 /-- **Worked instance of Theorem 11.1 on the canonical curves** (§11.2.1): the
 worst-case delay of a token-bucket flow `γ_{r,b}` (`r ≤ R`) through a rate-latency
@@ -195,14 +193,6 @@ linear arithmetic on the program variables (the `≤` from the constraints, the 
 feasible point), so the finite LP itself — not just its abstract optimum — computes the worst case.
 The library's `fifoNode_programOptimum`. -/
 alias thm_11_2_fifoNode := DeepWiki.fifoNode_programOptimum
-
-/-! **Theorem 11.2, general FIFO tandem** (§11.2.2, p.265): for an `n`-server FIFO tandem the
-worst-case delay is the optimum of a *mixed-integer* LP — the Table 11.2 constraints over the
-exponentially many backward-doubling dates `t₁,…,t_{2^{n+1}−1}`, plus the Boolean monotonicity
-gadgets (`bigM_ordering`/`lemma_11_1`) that totally order the partially-ordered dates. The
-single-node base case is `thm_11_2_fifoNode` and the optimum-as-worst-case is
-`isLUB_programOptimum`; the full exponential MILP construction with its `0/1` ordering variables
-and the trajectory-from-solution reconstruction is the remaining modeling content, not formalized. -/
 
 /-- **§11.2.3 upper bound** (p.267): relaxing the MILP by dropping the Boolean variables enlarges
 the feasible set, so the relaxed LP's optimum is a (polynomial-time) upper bound on the worst-case

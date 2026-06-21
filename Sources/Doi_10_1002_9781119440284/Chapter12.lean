@@ -23,7 +23,12 @@ import Sources.Doi_10_1002_9781119440284.Source
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
 Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
-or recorded as a note / unformalized item. -/
+or recorded as a note / unformalized item.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§12.1: Lemma 12.2 (global stability ⟹ local stability) `[infra]`; Lemma 12.3 (token-bucket / rate-latency local ⟺ global) `[infra]`.
+§12.2: Example 12.1 (the Figure 12.1 feed-forward transformation) `[deferred]`.
+§12.3: Example 12.2 (FDF priorities on the Figure 12.1 network) `[deferred]`. -/
 
 namespace DeepWiki.Dnc
 
@@ -81,10 +86,6 @@ served pair and aggregate arrival bound by cross-traffic propagation, rather
 than assuming them, is the remaining network-model step.) -/
 alias thm_12_localGlobal := Network.isGloballyStable_of_isLocallyStable
 
-/-! **Lemma 12.2** (§12.1.2, p.271): If a network is globally stable then it is locally stable. (Converse direction — not formalized in the library.) -/
-
-/-! **Lemma 12.3** (§12.1.2, p.272): If for a network with token-bucket arrival and rate-latency service curves respecting the local stability conditions the network is globally stable, then local stability for any arrival and service curve is also a sufficient condition for global stability. Not formalized in the library. -/
-
 /-- **Lemma 12.4** (§12.1.2, p.272), per-server form: if a server's arrival is
 maximal-arrival-curve constrained and `ℓmax(α, β) = firstCrossing α β < ∞`,
 then the server is globally stable (its backlogged period is bounded by the
@@ -99,8 +100,6 @@ theorem lemma_12_4 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0}
     (hfin : firstCrossing α β < ⊤) :
     IsGloballyStableServer ⇑A ⇑D :=
   isGloballyStableServer_of_firstCrossing_lt_top hc hβ hp harr hfin
-
-/-! **Example 12.1** (§12.2.1, p.273): The example network of Figure 12.1 (top) is transformed by removing arc h'={(4,2),(2,1)} into an acyclic feed-forward network N^FF; flows splitting into sub-flows (i,k). The concrete Figure-12.1 transformation is not formalized; its engine — feed-forward propagation of arrival curves along a server path — is `arrivalProp_chain` below. -/
 
 /-- **Feed-forward arrival-curve propagation** (the §12.2 engine): a flow
 crossing a chain of causal strict-service servers carries its ingress maximal
@@ -218,8 +217,6 @@ library's `isGloballyStableServer_staticPriority_of_rate_lt`. (The network-wide
 "stable ⟺ locally stable" with the full priority order quantifies this over all
 flows; that quantification is not formalized.) -/
 alias thm_12_2 := isGloballyStableServer_staticPriority_of_rate_lt
-
-/-! **Example 12.2** (§12.3.2, p.278): For the Figure 12.1 network under FDF: in server 3 flow 1 has highest priority, then flow 2; flows 2 and 3 share the same priority; in server 2 flows 4 and 3 are highest and flow 1 lowest. Not formalized in the library. -/
 
 /-- **Theorem 12.3** (§12.3.2, p.278), shared-path tandem: under a preemptive static-priority
 policy a locally stable shared-path tandem is globally stable at every hop. All flows

@@ -18,7 +18,10 @@ import Sources.Doi_10_1002_9781119440284.Source
 /-! # DNC catalog — Chapter 7: Multiple Flows Crossing One Server
 Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
-or recorded as a note / unformalized item. -/
+or recorded as a note / unformalized item.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§7.3: Example 7.1 (FIFO 2-flow residual rate-latency, with figure) `[deferred]`. -/
 
 namespace DeepWiki.Dnc
 
@@ -97,8 +100,6 @@ departure process of flow i is `⨅_{θ≥0} (α_i ⊘ β_i^θ)` using the θ-fa
 applying the deconvolution output bound (Thm 5.3) per offset θ and taking the infimum (Prop 5.2).
 The library's `isMaximalArrivalBound_fifoOutput_iInf`. -/
 alias cor_7_2 := isMaximalArrivalBound_fifoOutput_iInf
-
-/-! **Example 7.1** (§7.3.1.3, p.167): A 2-flow FIFO server with rate-latency aggregate β_{R,T} and token-bucket cross-flow α_2 = γ_{r2,b2}: the optimal residual rate-latency service curve for flow 1. Not formalized in the library. -/
 
 /-- **Definition 7.8** (§7.3.2, p.169): Static priority (preemptive): if the higher-priority aggregate ∑_{j<i} A_j is backlogged on [s,t], flow i is frozen, D_i(t) = D_i(s). -/
 abbrev def_7_8 := @IsStaticPriority

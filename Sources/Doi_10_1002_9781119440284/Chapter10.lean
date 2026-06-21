@@ -21,7 +21,11 @@ import Sources.Doi_10_1002_9781119440284.Source
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
 Book-numbered catalog entries for this chapter, each linked to the
 `DeepWiki` library declaration that formalizes it (`alias`/`abbrev`),
-or recorded as a note / unformalized item. -/
+or recorded as a note / unformalized item.
+
+## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
+§10.3: Example 10.1 (loss of tightness: incomparable feed-forward vs PMOO end-to-end curves, with figure) `[deferred]`; Example 10.2 (SP-PMOO worked on the nested tandem of Figure 10.1) `[deferred]`.
+§10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) `[research]`. -/
 
 namespace DeepWiki.Dnc
 
@@ -41,8 +45,6 @@ def def_10_1_tandem := @IsTandemNetwork
 totally ordered by contiguous-subpath inclusion (the (Nest) condition). The
 library's `IsNestedTandem`. -/
 def def_10_1_nested := @IsNestedTandem
-
-/-! **Example 10** (§10.3.1, p.235): Loss of tightness: on the two-flow two-server network, the two computation methods give incomparable end-to-end service curves β̃₁ (general feed-forward residual) and β̃₂ (PMOO), with neither dominating in general (β₁=β₂ ⇒ β̃₂≤β̃₁; b₁=0,T₁=0,R₂>R₁ ⇒ β̃₁≤β̃₂). Not formalized in the library. -/
 
 /-- **Theorem 10.1** (§10.3.2, p.237): PMOO multi-dimensional operator: in a tandem where flow 1 crosses all servers, each server h offering a strict service curve β⁽ʰ⁾ to its aggregate and each cross-flow i constrained by αᵢ over its sub-path, flow 1 gets the min-plus service curve β = [ inf_{∑uⱼ=t} ∑ⱼβ⁽ʲ⁾(uⱼ) − ∑ᵢαᵢ(∑_{h∈pᵢ}uⱼ) ]⁺. -/
 alias thm_10_1 := isMinimalServiceCurve_pmooPathResidual_of_strict_path
@@ -88,8 +90,6 @@ alias spPmoo_end_to_end_delay := delay_le_spPmoo_rateLatency
 
 @[inherit_doc spPmoo_end_to_end_delay]
 alias spPmoo_end_to_end_backlog := backlog_le_spPmoo_rateLatency
-
-/-! **Example 10.2** (§10.3.4.1, p.241): SP-PMOO worked on the nested tandem of Figure 10.1 (bottom): computing β̃₂ = β⁽²⁾, β̃₃ = β⁽³⁾, β̃₁ = (β⁽¹⁾∗β⁽²⁾∗β⁽³⁾ − [β̃₂−α₂]⁺ − [β̃₃−α₃]⁺ …)⁺. Not formalized in the library. -/
 
 /-- **Proposition 10.1** (§10.3.4.2, p.241): FIFO and PMOO: if a FIFO server (system) offers the aggregate min-plus service curve β and flow k has maximal arrival curve α, then [β − α∗δ_θ]⁺ ∧ δ_θ is a min-plus service curve for the m−1 other flows, for any θ — a direct consequence of the FIFO single-server residual and concatenation. -/
 alias prop_10_1 := minConv_fifoResidual_le_of_isFifo_group
@@ -143,7 +143,5 @@ alias alg_7_gfa_dominates_sfa := concatConv_residualCurve_sfa_le_gfa
 
 /-- **Example 10.6** (§10.4.3, p.249): GFA worked on Figure 10.6 with flow 2 the flow of interest: arc-wise grouping of cross-traffic, the grouped arrival/service curves η and β̃ at each server. -/
 alias ex_10_6 := DeepWiki.isMinimalServiceCurve_concatConv_groupResidual
-
-/-! **Theorem 10.2** (§10.5, p.251): NP-hardness: computing an exact worst-case backlog/delay bound for a feed-forward network with arbitrary multiplexing is NP-hard (reduction from 3-dimensional matching / exact cover, via the transformation of an instance of X3C into a network of Figure 10.7). Not formalized in the library. -/
 
 end DeepWiki.Dnc
