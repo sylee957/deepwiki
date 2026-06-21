@@ -148,6 +148,20 @@ theorem asymMatch_cv_delay {D : Type*} {d δ e δ' : ℝ≥0} {u u' : Valuation 
     ∀ y, AsymMatch (cv (d + δ) (u.add δ) y) (cv (e + δ') (u'.add δ') y) := by
   rw [cv_delay_invariant hd, cv_delay_invariant he]; exact h
 
+/-- **The coincidence is past √2 — no asymmetric region needed.** When the symmetric region match
+forces B's clock `y` to the integer `m` (because A's crossing-value `cv d u y = m` is an integer, A's
+coincidence), `AsymMatch` gives `cv e u' y < m`, which *exactly* means B's process is strictly past `√2`
+(`process_past_iff_clock_past_cross`). So B's clock sits on the integer (matching A's frac-0) while B's
+process is past `√2` — the clock-frac match and the √2-side are decoupled through the reset offset, and
+the standard symmetric region tools suffice. -/
+theorem coincidence_past {D : Type*} {e δ' : ℝ≥0} {u' : Valuation D} {y : D} {m : ℕ}
+    (hcv : AsymMatch ((m : ℝ≥0)) (cv e u' y)) (hclk : u' y + δ' = (m : ℝ≥0))
+    (he : e ≤ sqrt2NN) : sqrt2NN < e + δ' := by
+  have hlt : cv e u' y < (m : ℝ≥0) := not_le.mp (fun h => absurd ((hcv m).mpr h) (lt_irrefl _))
+  rw [← hclk] at hlt
+  rw [process_past_iff_clock_past_cross (u' y) he]
+  exact hlt
+
 namespace TLTS
 
 /-- The live regime's coupling: formula-clock region equivalence, the `√2`-side (open/closed), the
