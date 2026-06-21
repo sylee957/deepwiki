@@ -31,9 +31,11 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   (subsuming the per-axis `TimedConjInvCharacteristic.cchar_iff` / `TimedTargetInvCharacteristic.gchar_iff` /
   `TimedFullCharacteristic.uchar_iff`), under the hypothesis that every location has a bound (`inv ℓ ≠ []`).
   The complementary case — locations with **no** invariant (unbounded delays) — is *provably* outside the
-  location-indexed framework (`TimedUnboundedObstruction`: no forcing is too weak to separate, any single
-  boundary-forcing is too strong to admit the genuine state), so it needs the region-graph abstraction —
-  which is already available unconditionally via the executable complete checker
+  location-indexed framework: `TimedUnboundedObstruction.unbounded_no_location_indexed_characteristic` shows
+  that for the *entire* design space of bodies `∀∀X ∧ ⋀_{c∈S} ∃∃(x=c∧X)` over any finite constant set `S`,
+  the empty `S` is too weak (the whole space, admitting a non-bisimilar impostor) and any nonempty `S` is too
+  strong (excludes the genuine unbounded state) — so no finite set of boundary constants works. This needs
+  the region-graph abstraction, already available unconditionally via the executable complete checker
   `decSatisfiesMtFull` / `satisfiesMt_iff_decideFull_delaySucc`.
 Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
   + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
