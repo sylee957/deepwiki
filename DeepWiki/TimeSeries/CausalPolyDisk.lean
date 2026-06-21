@@ -392,6 +392,14 @@ theorem summable_armaPsi_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
   refine Summable.of_norm_bounded hsum fun n => le_of_eq ?_
   rw [heq n, Complex.norm_real]
 
+/-- **Absolute summability of the `ψ`-weights:** for a causal ARMA, `∑ⱼ |ψⱼ| < ∞`. The `|·|`
+version of `summable_armaPsi_coeff`, needed by `aeval_mul_tsum_psi`. -/
+theorem summable_abs_armaPsi_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
+    Summable (fun n : ℕ => |PowerSeries.coeff n (armaPsi φ θ)|) := by
+  obtain ⟨R, hR1, hsum, heq⟩ := cauchyCoeff_div_aeval_eq_armaPsi (φ := φ) (θ := θ) hφ
+  refine Summable.of_nonneg_of_le (fun _ => abs_nonneg _) (fun n => le_of_eq ?_) hsum
+  rw [heq n, Complex.norm_real, Real.norm_eq_abs]
+
 /-- **Generating-function identity / transfer relation:** for absolutely summable one-sided weights
 `ψ` with the recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m` (eq 3.3.3), at every point `‖z‖ ≤ 1` of the closed
 unit disk the evaluated polynomials satisfy `φ(z) · (∑ₙ ψₙ zⁿ) = θ(z)` — the pointwise form of

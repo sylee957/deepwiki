@@ -40,6 +40,17 @@ theorem armaPsi_coeff_recursion {φ θ : Polynomial ℝ}
   rw [← h]
   exact Finset.sum_congr rfl fun k _ => by rw [Polynomial.coeff_coe]
 
+/-- **Equation 3.3.3, antidiagonal form**: `∑_{(a,b), a+b=j} φₐ ψ_b = θⱼ` — the recursion as an
+`antidiagonal` sum (the shape consumed by `aeval_mul_tsum_psi`/the Cauchy-product transfer relation),
+equivalent to the `range`-form `armaPsi_coeff_recursion`. -/
+theorem armaPsi_coeff_recursion_antidiagonal {φ θ : Polynomial ℝ}
+    (hφ : constantCoeff (φ : PowerSeries ℝ) ≠ 0) (j : ℕ) :
+    ∑ p ∈ Finset.antidiagonal j, φ.coeff p.1 * coeff p.2 (armaPsi φ θ) = θ.coeff j := by
+  have h := congrArg (coeff j) (coe_mul_armaPsi (φ := φ) (θ := θ) hφ)
+  rw [coeff_mul, Polynomial.coeff_coe] at h
+  rw [← h]
+  exact Finset.sum_congr rfl fun p _ => by rw [Polynomial.coeff_coe]
+
 /-- For a pure `AR(p)` process (`θ = 1`), the `ψ`-weight series is the reciprocal `ψ = 1/φ`. -/
 @[simp] theorem armaPsi_one (φ : Polynomial ℝ) : armaPsi φ 1 = (φ : PowerSeries ℝ)⁻¹ := by
   rw [armaPsi, Polynomial.coe_one, mul_one]
