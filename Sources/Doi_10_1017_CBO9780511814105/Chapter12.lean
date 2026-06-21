@@ -24,40 +24,14 @@ Definitions 12.1–12.3) and the soundness half of the timed Hennessy–Milner
 characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.3: Thm 12.4 — wiring an arbitrary timed automaton's finite region graph into a characteristic
-  equation system `[external]` (Laroussinie–Larsen–Weise 1995). Formalized: the completeness
-  *reduction* (`thm_12_4`) + unconditional instance (`thm_12_4_once`); and the **mutual-recursion
-  logic** (`TimedHmlMutualRecursion`: indexed-variable `MtRSys`, product-lattice `recMaxSys`,
-  equation-system coinduction) with a worked **multi-location** characteristic example
-  (`TimedAlternatingCharacteristic`: two locations with bounds 1/2 — full iff). Generalized to the
-  **generic** construction `TimedDeterministicCharacteristic` (`genChar_iff`): for a deterministic
-  single-clock timed automaton over *any* location graph (`bound : Loc → ℕ`, `succ : Loc → Loc`), the
-  per-location equation system characterises timed bisimilarity — `(p,[y=d]) ⊨ X_ℓ ↔ p ~ (ℓ,d)`,
-  subsuming the running (`Loc=Unit`) and alternating (`Loc=Bool`) examples. Extended to **multi-clock**
-  in `TimedMultiClockCharacteristic` (`mgenChar_iff`): a deterministic single-action automaton over any
-  `Loc` and clock set `C` (`DetTA`: guard `gclock ℓ ≤ gbound ℓ`, reset list `rst ℓ`, `succ ℓ`) with the
-  reset-list machinery (`resetAll`/`denotSys_resetAll`) — `(p,v) ⊨ X_ℓ ↔ p ~ (ℓ,v)`. Extended to
-  **nondeterminism** in `TimedNondetCharacteristic` (`ndChar_iff`): `NDetTA` = a finite *list* of
-  single-action `a`-edges per location (single-atom `GuardCmp` guards `⋈ ∈ {≤,<,≥,>}` so negation is an
-  atom), the body folding a readiness conjunction `⋀ₑ(gₑ ⇒ ⟨a⟩…)` and a safety box `[a](⋁ₑ(gₑ ∧ …))` over
-  the edge list (`bigAnd`/`bigOr` denotations + `GuardCmp.holds_neg`) — full iff again. Extended to
-  **multiple actions** in `TimedMultiActionCharacteristic` (`maChar_iff`): `MATA` = labelled edges over a
-  finite `Act`, safety conjoining a `[a]`-box over every `a : Fintype Act` (unused actions → `[a]ff`) —
-  full iff. Extended to **general guards** in `TimedGeneralGuardCharacteristic` (`mgChar_iff`): arbitrary
-  `ClockConstraint` guards (`tt`, atoms with any `⋈` incl. `=`, conjunctions) via `negConstraint`
-  (De Morgan + per-atom complement, `=` ↦ `< ∨ >`) for the readiness `g ⇒ ⟨a⟩…` — full iff. Remaining:
-  location invariants — they need a *delay-forcing* clause (the safety `∀∀` does not force the candidate to
-  delay as far as the invariant permits). `TimedInvariantObstruction` formalises **why**
-  (`naive_invariant_not_characteristic`): two pure-delay states with invariants `x≤2`/`x≤1` are not timed
-  bisimilar yet both satisfy the naive `νX.(x≤2)∧∀∀X` (`mtInv`), so the safety body is *not* characteristic —
-  invariants genuinely require the region-graph delay discretisation of the full LLW construction.
-  `TimedInvariantDelayForcing` then shows the **fix** (`charInvF_separates`): the *delay-forcing* clause
-  `∃∃(x = 2 ∧ X)` — a forceable delay-successor reaching the invariant boundary — *does* separate the two
-  states (`(false,0) ⊨`, `(true,0) ⊭`), the design behind LLW's region step (single-clock pure-delay case).
-  Ex 12.12 statement 3 (full-`Mt` strictness
-  at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
-  (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
-  [0,√2] from [0,√2)) `[research]`. -/
+§12.3: Thm 12.4 fully-general unconditional case `[external]` (Laroussinie–Larsen–Weise 1995) — a
+  single characteristic construction combining *all* features at once: nondeterministic, multi-clock,
+  multi-action, general-guard, AND with location invariants. Each feature is formalized as a full iff
+  separately in the `DeepWiki.ReactiveSystems.Timed*Characteristic` family (e.g. the no-invariant generic
+  `mgChar_iff`; edges + invariants via delay-forcing `ichar_iff`); the unified construction is what remains open.
+Ex 12.12 statement 3 (full-`Mt` strictness at `c=√2`) `[research]` (needs a single-irrational-cut region
+  + coinductive bisimulation); Ex 12.14 (a sublanguage characterizing untimed bisimilarity) `[research]`;
+  Ex 12.15 (`Mt` distinguishes [0,√2] from [0,√2)) `[research]`. -/
 
 namespace DeepWiki.Rs
 
