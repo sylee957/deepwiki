@@ -29,8 +29,16 @@ noncomputable abbrev eq_7_2_1 := @DeepWiki.TimeSeries.sampleACVF
 noncomputable abbrev eq_7_2_2 := @DeepWiki.TimeSeries.sampleACF
 
 /-! §7.2 continued: the sample covariance matrix `Γ̂ₙ = [γ̂(i − j)]` (7.2.3) is non-negative
-definite (an algebraic fact, the sample analogue of `posSemidef_covMatrix`); the asymptotic
+definite — now FORMALIZED (`eq_7_2_3`, the sample analogue of `posSemidef_covMatrix`); the asymptotic
 distribution of `ρ̂` — **Bartlett's formula** (Theorems 7.2.1 and 7.2.2) — is infra-blocked
 (time-series central limit theorem). -/
+
+/-- **§7.2 (eq 7.2.3): the sample covariance matrix `Γ̂ₙ = [γ̂(i − j)]` is non-negative definite** —
+its quadratic form `∑ᵢⱼ aᵢ aⱼ γ̂(|i − j|) ≥ 0` is a sum of squares (`n⁻¹ ∑ₖ (∑ᵢ aᵢ ỹ(k − i))²`). The
+library's `sampleACVF_quadratic_nonneg`. -/
+theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
+    0 ≤ ∑ i ∈ Finset.range n, ∑ j ∈ Finset.range n,
+        a i * a j * (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i)) :=
+  DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 end DeepWiki.Ts
