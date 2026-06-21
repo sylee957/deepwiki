@@ -360,8 +360,23 @@ theorem isNormal_splittingFactorization {R : Type*} [CommRing R] [Differential R
     (hp : IsNormal p) : IsSplittingFactorization p 1 p :=
   hp.splittingFactorization
 
--- **Deferred — §3.5 library work:** Theorem 3.5.1 (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)`, the splitting
--- factorization via gcd's; rests on Lemma 3.4.4 + Thms 3.4.2/3.4.3), the `SplitFactor` /
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), squarefree case: the splitting factorization of a squarefree
+polynomial `∏_{a∈s}(X − a)` — its special part collects the roots with `v(a) = a′`, its normal part
+the roots with `v(a) ≠ a′`; the first is special and the second normal w.r.t. `D` (`Dt = v`). -/
+theorem thm_3_5_1_squarefree {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    (∏ a ∈ s, (X - C a))
+        = (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+          * (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))
+      ∧ (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+          ∣ Differential.implicitDeriv v (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+      ∧ IsCoprime (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))
+          (Differential.implicitDeriv v
+            (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))) :=
+  splittingFactorization_prod_X_sub_C v s
+
+-- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
+-- general `p`; the squarefree case is `thm_3_5_1_squarefree`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced
 -- elements of `k⟨t⟩`, needs `RatFunc` numerator/denominator), and Theorem 3.5.2 (the `κ_D`
 -- splitting separates constant from nonconstant roots).

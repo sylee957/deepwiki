@@ -458,6 +458,25 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K
     exact IsSpecial.prod s (fun a => X - C a)
       (fun a ha => (dvd_X_sub_C_implicitDeriv_iff v a).mpr (h a ha))
 
+open Classical in
+/-- **§3.5** splitting factorization of a squarefree polynomial: `∏_{a∈s}(X − a)` factors as its
+special part (roots with `v(a) = a′`) times its normal part (roots with `v(a) ≠ a′`), the first
+special and the second normal w.r.t. the monomial derivation `D`. Immediate from Thms 3.4.2/3.4.3
+applied to the two halves of the root partition. -/
+theorem splittingFactorization_prod_X_sub_C {K : Type*} [Field K] [Differential K] (v : K[X])
+    (s : Finset K) :
+    (∏ a ∈ s, (X - C a))
+        = (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+          * (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))
+      ∧ (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+          ∣ Differential.implicitDeriv v (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+      ∧ IsCoprime (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))
+          (Differential.implicitDeriv v
+            (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))) :=
+  ⟨(Finset.prod_filter_mul_prod_filter_not s _ _).symm,
+   (dvd_prod_X_sub_C_implicitDeriv_iff v _).mpr fun _ ha => (Finset.mem_filter.mp ha).2,
+   (isCoprime_prod_X_sub_C_implicitDeriv_iff v _).mpr fun _ ha => (Finset.mem_filter.mp ha).2⟩
+
 end LinearFactor
 
 end DeepWiki.SymbolicIntegration
