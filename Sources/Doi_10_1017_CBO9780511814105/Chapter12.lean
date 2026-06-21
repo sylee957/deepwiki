@@ -43,7 +43,11 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   the edge list (`bigAnd`/`bigOr` denotations + `GuardCmp.holds_neg`) — full iff again. Extended to
   **multiple actions** in `TimedMultiActionCharacteristic` (`maChar_iff`): `MATA` = labelled edges over a
   finite `Act`, safety conjoining a `[a]`-box over every `a : Fintype Act` (unused actions → `[a]ff`) —
-  full iff. Remaining: location invariants and conjunctive (multi-atom) guards.
+  full iff. Extended to **general guards** in `TimedGeneralGuardCharacteristic` (`mgChar_iff`): arbitrary
+  `ClockConstraint` guards (`tt`, atoms with any `⋈` incl. `=`, conjunctions) via `negConstraint`
+  (De Morgan + per-atom complement, `=` ↦ `< ∨ >`) for the readiness `g ⇒ ⟨a⟩…` — full iff. Remaining:
+  location invariants — they need a *delay-forcing* clause (the safety `∀∀` does not force the candidate to
+  delay as far as the invariant permits), the genuinely subtle part of timed-bisimulation characterisation.
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
