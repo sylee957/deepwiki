@@ -79,4 +79,33 @@ theorem lem_3_1_1 {R : Type*} [CommRing R] (c : R) (D₁ D₂ : Derivation ℤ R
 `D I ⊆ I`. -/
 abbrev def_3_1_2 := @IsDifferentialIdeal
 
+/-! ## §3.2 Differential Extensions -/
+
+/-- **Definition 3.2.1** (§3.2, p.79), a *differential extension* `(S, Δ)` of `(R, D)`: an algebra
+whose derivation commutes with the structure map (`Δ ∘ algebraMap = algebraMap ∘ D`). Mathlib's
+`DifferentialAlgebra`. -/
+abbrev def_3_2_1 := @DifferentialAlgebra
+
+/-- **Definition 3.2.2** (§3.2, p.80), the *coefficient lifting* `κ_D : R[X] → R[X]`,
+`κ_D(Σ aᵢXⁱ) = Σ (Daᵢ)Xⁱ`; **Lemma 3.2.1** (§3.2, p.80): `κ_D` is a derivation on `R[X]`.
+Mathlib's `Derivation.mapCoeffs` (valued in `PolynomialModule R R ≅ R[X]`) *is* this derivation,
+so being a derivation is automatic from its type. -/
+noncomputable abbrev def_3_2_2 := @Derivation.mapCoeffs
+
+/-- **Lemma 3.2.2** (§3.2, p.81): for a derivation `D` on `R`, `α ∈ R`, `P ∈ R[X]`,
+`D(P(α)) = κ_D(P)(α) + (Dα)·(dP/dX)(α)` — the chain rule for evaluating a polynomial (the general
+form of `thm_3_1_1_vi`, with the `κ_D(P)(α)` term for non-constant coefficients). Mathlib's
+`Derivation.apply_eval_eq`; the `R ⊆ S` extension version is `apply_aeval_eq`. -/
+theorem lem_3_2_2 {R : Type*} [CommRing R] [Differential R] (α : R) (P : R[X]) :
+    (P.eval α)′ = PolynomialModule.eval α ((Differential.deriv : Derivation ℤ R R).mapCoeffs P)
+      + P.derivative.eval α * α′ := by
+  simpa [smul_eq_mul] using (Differential.deriv : Derivation ℤ R R).apply_eval_eq α P
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):**
+--   • **Theorem 3.2.1** (§3.2, p.79): a derivation on an integral domain `R` extends *uniquely*
+--     to its quotient field (`Δ(a/b) = (b·Da − a·Db)/b²`). [Construct a `Derivation` on
+--     `FractionRing R` — not in Mathlib.]
+--   • **Theorem 3.2.2** (§3.2, p.81): for `t` transcendental over a differential field `F` and any
+--     `w ∈ F(t)`, there is a unique derivation on `F(t)` extending `F`'s with `Δt = w`.
+
 end DeepWiki.Si
