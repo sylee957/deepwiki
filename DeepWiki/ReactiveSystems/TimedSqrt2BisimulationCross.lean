@@ -13,6 +13,32 @@ namespace DeepWiki.ReactiveSystems
 
 open scoped NNReal
 
+/-! ### The √2-cut as a fractional comparison (foundation for the single-irrational-cut region)
+Within the integer region `(1, 2)` the irrational boundary `√2` is exactly the fractional cut at
+`√2 − 1`: `p < √2 ↔ fracPart p < fracPart √2`. This is the foundation for tracking the `√2`-cut
+*correctly* (decoupled from the integer clock cuts), the fix for the double-coincidence — where the
+relation must be **asymmetric**, mapping A-at-`√2` (`a`-disabled, open threshold) to B strictly past
+`√2` (`a`-disabled, closed threshold). -/
+
+/-- The fractional part of `√2` is `√2 − 1`. -/
+theorem fracPart_sqrt2NN : fracPart sqrt2NN = Real.sqrt 2 - 1 := by
+  have h1 : (1 : ℝ) ≤ Real.sqrt 2 := le_of_lt Real.one_lt_sqrt_two
+  have h2 : Real.sqrt 2 < 2 := by rw [← coe_sqrt2NN]; exact sqrt2NN_lt_two
+  have hfloor : ⌊Real.sqrt 2⌋ = 1 := by
+    rw [Int.floor_eq_iff]; refine ⟨by push_cast; linarith, by push_cast; linarith⟩
+  unfold fracPart; rw [coe_sqrt2NN, Int.fract, hfloor]; push_cast; ring
+
+/-- Within `[1, 2)` the `√2`-side is the fractional comparison with `fracPart √2 = √2 − 1`. -/
+theorem sqrt2_side_iff_fracPart {p : ℝ≥0} (h1 : 1 ≤ p) (h2 : p < 2) :
+    p < sqrt2NN ↔ fracPart p < fracPart sqrt2NN := by
+  have hfp : fracPart p = (p : ℝ) - 1 := by
+    have hpf : ⌊(p : ℝ)⌋ = 1 := by
+      rw [Int.floor_eq_iff]
+      exact ⟨by push_cast; exact_mod_cast h1, by push_cast; exact_mod_cast h2⟩
+    unfold fracPart; rw [Int.fract, hpf]; push_cast; ring
+  rw [fracPart_sqrt2NN, hfp, ← NNReal.coe_lt_coe, coe_sqrt2NN]
+  constructor <;> intro h <;> linarith
+
 /-- **Small advance preserves the region.** If no clock of `W` sits on an integer and `ε` is small
 enough that no clock crosses its next integer (`fracPart (W x) + ε < 1`), then `W` and `W + ε` are
 region-equivalent. -/
