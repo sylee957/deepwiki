@@ -392,18 +392,15 @@ theorem summable_armaPsi_coeff {φ θ : ℝ[X]} (hφ : IsCausalPoly φ) :
   refine Summable.of_norm_bounded hsum fun n => le_of_eq ?_
   rw [heq n, Complex.norm_real]
 
-/-- **Converse of Theorem 3.1.1 (an `MA(∞)` representation ⟹ causal):** if `φ, θ` are coprime
-and there exist absolutely summable one-sided weights `ψ` with the recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m`
-(eq 3.3.3, the `MA(∞)` representation `ψ = θ/φ`), then `φ` is causal — `φ(z) ≠ 0` for `‖z‖ ≤ 1`. By the
-generating-function identity `φ(z)·ψ̂(z) = θ(z)` on the closed disk (a Cauchy product, since
-`∑ⱼ |ψⱼ| < ∞`): a disk root `φ(z₀) = 0` would force `θ(z₀) = 0`, contradicting coprimality (a Bézout
-identity `a φ + b θ = 1` evaluated at `z₀`). Together with `IsCausalPoly.exists_radius_gt_one` this is
-the analytic content of the causal `⟺` of Theorem 3.1.1. -/
-theorem isCausalPoly_of_summable_recursion {φ θ : ℝ[X]} {ψ : ℕ → ℝ} (hcop : IsCoprime φ θ)
-    (hψ : Summable fun n => |ψ n|)
-    (hrec : ∀ m : ℕ, ∑ p ∈ Finset.antidiagonal m, φ.coeff p.1 * ψ p.2 = θ.coeff m) :
-    IsCausalPoly φ := by
-  intro z hz hφz
+/-- **Generating-function identity / transfer relation:** for absolutely summable one-sided weights
+`ψ` with the recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m` (eq 3.3.3), at every point `‖z‖ ≤ 1` of the closed
+unit disk the evaluated polynomials satisfy `φ(z) · (∑ₙ ψₙ zⁿ) = θ(z)` — the pointwise form of
+`φ(z)·ψ̂(z) = θ(z)`, i.e. the frequency response `ψ̂ = θ/φ` of the causal ARMA filter. A Cauchy
+product, valid since `∑ⱼ |ψⱼ| < ∞`. -/
+theorem aeval_mul_tsum_psi {φ θ : ℝ[X]} {ψ : ℕ → ℝ} (hψ : Summable fun n => |ψ n|)
+    (hrec : ∀ m : ℕ, ∑ p ∈ Finset.antidiagonal m, φ.coeff p.1 * ψ p.2 = θ.coeff m)
+    {z : ℂ} (hz : ‖z‖ ≤ 1) :
+    Polynomial.aeval z φ * (∑' n : ℕ, (ψ n : ℂ) * z ^ n) = Polynomial.aeval z θ := by
   set g : ℕ → ℂ := fun n => (ψ n : ℝ) • z ^ n with hg
   have hgn : Summable fun n => ‖g n‖ := by
     refine Summable.of_nonneg_of_le (fun _ => norm_nonneg _) (fun n => ?_) hψ
@@ -418,17 +415,32 @@ theorem isCausalPoly_of_summable_recursion {φ θ : ℝ[X]} {ψ : ℕ → ℝ} (
   have hgterm : ∀ j, g j = z ^ j * (ψ j : ℂ) := fun j => by
     show (ψ j : ℝ) • z ^ j = z ^ j * (ψ j : ℂ)
     rw [Complex.real_smul, mul_comm]
-  have hkey : Polynomial.aeval z φ * (∑' n, g n) = Polynomial.aeval z θ := by
-    rw [← (hasSum_aeval_smul φ z).tsum_eq,
-      tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hfn hgn,
-      ← (hasSum_aeval_smul θ z).tsum_eq]
-    refine tsum_congr fun m => ?_
-    simp_rw [hgterm]
-    rw [antidiagonal_term_eq φ (fun j => (ψ j : ℂ)) z m, smul_eq_mul, Complex.real_smul]
-    congr 1
-    rw [← hrec m]
-    push_cast
-    exact Finset.sum_congr rfl fun p _ => by rw [Complex.real_smul]
+  have hgsum : (∑' n : ℕ, (ψ n : ℂ) * z ^ n) = ∑' n, g n :=
+    tsum_congr fun n => by rw [hgterm n, mul_comm]
+  rw [hgsum, ← (hasSum_aeval_smul φ z).tsum_eq,
+    tsum_mul_tsum_eq_tsum_sum_antidiagonal_of_summable_norm hfn hgn,
+    ← (hasSum_aeval_smul θ z).tsum_eq]
+  refine tsum_congr fun m => ?_
+  simp_rw [hgterm]
+  rw [antidiagonal_term_eq φ (fun j => (ψ j : ℂ)) z m, smul_eq_mul, Complex.real_smul]
+  congr 1
+  rw [← hrec m]
+  push_cast
+  exact Finset.sum_congr rfl fun p _ => by rw [Complex.real_smul]
+
+/-- **Converse of Theorem 3.1.1 (an `MA(∞)` representation ⟹ causal):** if `φ, θ` are coprime
+and there exist absolutely summable one-sided weights `ψ` with the recursion `∑_{i+j=m} φᵢ ψⱼ = θ_m`
+(eq 3.3.3, the `MA(∞)` representation `ψ = θ/φ`), then `φ` is causal — `φ(z) ≠ 0` for `‖z‖ ≤ 1`. By the
+generating-function identity `φ(z)·ψ̂(z) = θ(z)` on the closed disk (a Cauchy product, since
+`∑ⱼ |ψⱼ| < ∞`): a disk root `φ(z₀) = 0` would force `θ(z₀) = 0`, contradicting coprimality (a Bézout
+identity `a φ + b θ = 1` evaluated at `z₀`). Together with `IsCausalPoly.exists_radius_gt_one` this is
+the analytic content of the causal `⟺` of Theorem 3.1.1. -/
+theorem isCausalPoly_of_summable_recursion {φ θ : ℝ[X]} {ψ : ℕ → ℝ} (hcop : IsCoprime φ θ)
+    (hψ : Summable fun n => |ψ n|)
+    (hrec : ∀ m : ℕ, ∑ p ∈ Finset.antidiagonal m, φ.coeff p.1 * ψ p.2 = θ.coeff m) :
+    IsCausalPoly φ := by
+  intro z hz hφz
+  have hkey := aeval_mul_tsum_psi hψ hrec hz
   have hθz : Polynomial.aeval z θ = 0 := by rw [hφz, zero_mul] at hkey; exact hkey.symm
   obtain ⟨a, b, hab⟩ := hcop
   have h1 : (0 : ℂ) = 1 := by
