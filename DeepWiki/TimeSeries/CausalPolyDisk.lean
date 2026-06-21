@@ -436,4 +436,15 @@ theorem isCausalPoly_of_summable_recursion {φ θ : ℝ[X]} {ψ : ℕ → ℝ} (
     rwa [map_add, map_mul, map_mul, map_one, hφz, hθz, mul_zero, mul_zero, add_zero] at hev
   exact one_ne_zero h1.symm
 
+/-- **Converse of Theorem 3.1.2 (an `AR(∞)` representation ⟹ invertible):** if `φ, θ` are coprime
+and the `AR(∞)` weights `π` exist (absolutely summable, one-sided, satisfying `∑_{i+j=m} θᵢ πⱼ = φ_m`),
+then `θ` is invertible — `θ(z) ≠ 0` for `|z| ≤ 1`. The `φ ↔ θ` dual of
+`isCausalPoly_of_summable_recursion` (`IsInvertiblePoly θ` is `IsCausalPoly θ`, and `IsCoprime φ θ`
+gives `IsCoprime θ φ`); closes the invertible `⟺` of Theorem 3.1.2. -/
+theorem isInvertiblePoly_of_summable_recursion {φ θ : ℝ[X]} {π : ℕ → ℝ} (hcop : IsCoprime φ θ)
+    (hπ : Summable fun n => |π n|)
+    (hrec : ∀ m : ℕ, ∑ p ∈ Finset.antidiagonal m, θ.coeff p.1 * π p.2 = φ.coeff m) :
+    IsInvertiblePoly θ :=
+  isCausalPoly_of_summable_recursion (φ := θ) (θ := φ) hcop.symm hπ hrec
+
 end DeepWiki.TimeSeries

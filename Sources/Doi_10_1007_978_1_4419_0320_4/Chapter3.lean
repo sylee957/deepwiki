@@ -109,9 +109,11 @@ direction of both Theorems 3.1.1 and 3.1.2** (`thm_3_1_1_forward`/`thm_3_1_2_for
 inversion `Wₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` solves `θ(B) W = φ(B) X` — so each root condition `⟹` the corresponding
 `MA(∞)`/`AR(∞)` representation exists; and the **converse of Theorem 3.1.1** (`thm_3_1_1_converse`),
 closing its causal `⟺`: a coprime `φ, θ` with an `MA(∞)` representation (summable one-sided weights
-satisfying eq 3.3.3) forces `φ(z) ≠ 0` on `|z| ≤ 1` (generating-function `φ(z) ψ̂(z) = θ(z)` + Bézout).
-What remains is the dual converse for Theorem 3.1.2, the two-sided Laurent existence (Thm 3.1.3), and
-Props 3.1.1/3.1.2. -/
+satisfying eq 3.3.3) forces `φ(z) ≠ 0` on `|z| ≤ 1` (generating-function `φ(z) ψ̂(z) = θ(z)` + Bézout),
+and its `φ ↔ θ` dual for Theorem 3.1.2 (`thm_3_1_2_converse`). So **both causal/invertible `⟺`
+equivalences of Theorems 3.1.1/3.1.2 are now closed** (forward + converse). What remains is the
+two-sided Laurent existence (Thm 3.1.3, `φ ≠ 0` only on `|z| = 1`) and Props 3.1.1/3.1.2 (filtered
+process convergence/stationarity for correlated input). -/
 
 /-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
 zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
@@ -154,6 +156,12 @@ alias arInv_weight_recursion := DeepWiki.TimeSeries.conv_coeff_arInv_eq_coeff
 representation exists, recovering the noise `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ`. The `φ ↔ θ` dual of `thm_3_1_1_forward`.
 The library's `invertible_arma_linearProcessLp_arInv_eq`. -/
 alias thm_3_1_2_forward := DeepWiki.TimeSeries.invertible_arma_linearProcessLp_arInv_eq
+
+/-- **Theorem 3.1.2, converse direction** (§3.1, p.86): if `φ, θ` are coprime and the `AR(∞)` weights
+`π` exist (absolutely summable, one-sided, satisfying `∑_{i+j=m} θᵢ πⱼ = φ_m`), then `θ` is invertible
+— `θ(z) ≠ 0` for `|z| ≤ 1`. The `φ ↔ θ` dual of `thm_3_1_1_converse`; closes the invertible `⟺`. The
+library's `isInvertiblePoly_of_summable_recursion`. -/
+alias thm_3_1_2_converse := DeepWiki.TimeSeries.isInvertiblePoly_of_summable_recursion
 
 /-- **§3.1** (AR(1) process, p.81): an `AR(1)` process with autoregressive polynomial
 `φ(z) = 1 − φ₁z`, i.e. `(1 − φ₁B)X = Z`, satisfies the autoregressive recursion
