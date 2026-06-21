@@ -26,6 +26,20 @@ theorem periodogram_zero_eq (n : ℕ) (x : ℕ → ℝ) :
   rw [← Complex.ofReal_sum, Complex.normSq_ofReal]
   ring
 
+/-- **Definition 10.1.1 (eq 10.1.7)**: the **discrete Fourier transform** of the data at frequency
+`λ`, `a(λ) = n^{−1/2} ∑_{t<n} xₜ e^{−itλ}` (the inner product `⟨x, e_λ⟩` against the Fourier vector).
+At a Fourier frequency `ωⱼ = 2πj/n` this is the coefficient `aⱼ`. -/
+noncomputable def dftCoeff (n : ℕ) (x : ℕ → ℝ) (lam : ℝ) : ℂ :=
+  ((Real.sqrt n)⁻¹ : ℝ) * ∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * lam)
+
+/-- **§10.1 (eq 10.1.8):** the periodogram is the squared modulus of the discrete Fourier transform,
+`Iₙ(λ) = |a(λ)|²`. -/
+theorem periodogram_eq_normSq_dftCoeff (n : ℕ) (x : ℕ → ℝ) (lam : ℝ) :
+    periodogram n x lam = Complex.normSq (dftCoeff n x lam) := by
+  have hc : Complex.normSq (((Real.sqrt n)⁻¹ : ℝ) : ℂ) = (n : ℝ)⁻¹ := by
+    rw [Complex.normSq_ofReal, ← mul_inv, Real.mul_self_sqrt (Nat.cast_nonneg n)]
+  rw [periodogram, div_eq_inv_mul, dftCoeff, Complex.normSq_mul, hc]
+
 open Real (pi)
 
 /-- **Root-of-unity orthogonality (the core of Proposition 10.1.1):** the geometric sum of the
