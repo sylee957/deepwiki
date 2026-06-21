@@ -1,12 +1,15 @@
 import Mathlib.Algebra.Polynomial.Derivative
+import Mathlib.FieldTheory.Perfect
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 
-/-! # Squarefree factorization — the derivative criterion (Bronstein §1.6)
+/-! # Squarefree factorization — the derivative criterion (Bronstein §1.6–§1.7)
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcd's with `dA/dx`, resting on
 the fact that a prime factor `P` divides `dA/dx` exactly once less than it divides `A`. Here we
 prove the easy half (Theorem 1.6.1(i), over any commutative ring): if `Pⁿ⁺¹ ∣ A` then `Pⁿ`
-divides both `A` and `dA/dx`, hence `Pⁿ ∣ gcd(A, dA/dx)`. The characteristic-`0` converse
-(Theorem 1.6.1(ii)) and the deflation theory it powers are tracked as remaining library work. -/
+divides both `A` and `dA/dx`, hence `Pⁿ ∣ gcd(A, dA/dx)`; the characteristic-`0` converse
+(Theorem 1.6.1(ii)); and the squarefree criterion of §1.7 (Lemma 1.7.1): over a characteristic-`0`
+field, `A` is squarefree iff `gcd(A, dA/dx) = 1`. The deflation theory and the full
+squarefree-factorization routine are tracked as remaining library work. -/
 
 open Polynomial
 
@@ -71,5 +74,12 @@ theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
     fun h => pow_succ_dvd_of_pow_dvd_derivative hn hP hPdeg h.1 h.2⟩
 
 end CharZero
+
+/-- **Lemma 1.7.1** (§1.7): over a characteristic-`0` field, `A` is squarefree iff it is coprime
+to its derivative — `gcd(A, dA/dx) = 1`. (`Squarefree ↔ Separable` on a perfect field, and
+`Separable A ↔ IsCoprime A (dA/dx)`.) -/
+theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
+    Squarefree A ↔ IsCoprime A (derivative A) :=
+  PerfectField.separable_iff_squarefree.symm.trans (separable_def A)
 
 end DeepWiki.SymbolicIntegration
