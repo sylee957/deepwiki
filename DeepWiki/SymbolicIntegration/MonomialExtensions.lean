@@ -55,6 +55,16 @@ theorem isNormal_one : IsNormal (1 : R) := by
   rw [IsNormal, h]
   exact isCoprime_one_left
 
+/-- **Theorem 3.4.1(i)** (§3.4, p.93): the product of two *coprime normal* polynomials is normal
+(`gcd(pq, D(pq)) = 1` when `p, q` are normal and coprime). -/
+theorem IsNormal.mul {p q : R} (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCoprime p q) :
+    IsNormal (p * q) := by
+  show IsCoprime (p * q) ((p * q)′)
+  rw [deriv_mul_eq]
+  refine IsCoprime.mul_left ?_ ?_
+  · rw [add_comm]; exact (hpq.mul_right hp).add_mul_left_right q′
+  · exact (hpq.symm.mul_right hq).add_mul_left_right p′
+
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
