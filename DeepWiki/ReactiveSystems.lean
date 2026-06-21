@@ -96,6 +96,7 @@ import DeepWiki.ReactiveSystems.TimedFullCharacteristic
 import DeepWiki.ReactiveSystems.TimedTargetInvCharacteristic
 import DeepWiki.ReactiveSystems.TimedConjInvCharacteristic
 import DeepWiki.ReactiveSystems.TimedGeneralCharacteristic
+import DeepWiki.ReactiveSystems.TimedUnboundedObstruction
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlRefined
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
