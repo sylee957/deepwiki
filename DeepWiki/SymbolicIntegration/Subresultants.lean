@@ -1,5 +1,6 @@
 import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import Mathlib.Algebra.Polynomial.Basic
+import Mathlib.GroupTheory.Perm.Fin
 import Mathlib.Tactic
 
 /-! # Subresultants (Bronstein §1.4, Definition 1.4.2)
@@ -339,5 +340,21 @@ theorem bSylvester_swap (A B : R[X]) (n m : ℕ) :
   · simp only [if_neg hi, if_pos (show (i : ℕ) - n < m by have := i.isLt; omega),
       show n + ((i : ℕ) - n) - (l : ℕ) = (i : ℕ) - (l : ℕ) from by omega,
       show (i : ℕ) - n + n = (i : ℕ) from by omega]
+
+/-- The `q`-th power of `finRotate (N+1)` is "add `q` modulo `N+1`": `(finRotate (N+1))^q r` has
+underlying value `(r + q) mod (N+1)`. (Mathlib has `finRotate_succ_apply`/`coe_finRotate` but no
+closed form for the power; this supplies it, used to identify a block-swap permutation as a power of
+`finRotate` and read off its sign.) -/
+theorem finRotate_pow_val (N q : ℕ) (r : Fin (N + 1)) :
+    (((finRotate (N + 1)) ^ q) r : ℕ) = (r.val + q) % (N + 1) := by
+  have hstep : ∀ x : Fin (N + 1), (finRotate (N + 1) x : ℕ) = (x.val + 1) % (N + 1) := by
+    intro x
+    rw [coe_finRotate]
+    split_ifs with h
+    · subst h; simp [Fin.val_last]
+    · rw [Nat.mod_eq_of_lt (by have := Fin.val_lt_last h; omega)]
+  induction q with
+  | zero => simp [Nat.mod_eq_of_lt r.isLt]
+  | succ k ih => rw [pow_succ', Equiv.Perm.mul_apply, hstep, ih, Nat.mod_add_mod]; congr 1
 
 end DeepWiki.SymbolicIntegration
