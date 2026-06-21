@@ -49,6 +49,20 @@ theorem AsymMatch.floor_le {c c' : ℝ≥0} (h : AsymMatch c c') : ⌊c'⌋₊ �
   have h2 : ((⌊c'⌋₊ : ℕ) : ℝ≥0) < c := (h ⌊c'⌋₊).mpr h1
   exact Nat.le_floor (le_of_lt h2)
 
+/-- **The floor-level straddle (one direction).** If A's crossing-value is below clock `y`'s next
+integer (A's process reaches `√2` before clock `y` crosses), then so is B's — by `AsymMatch.floor_le`
+plus the clocks-region floor match `⌊u y⌋ = ⌊u' y⌋`. This is what shows B's clocks-region delay window
+reaches `√2` whenever A's does, the key to the delay clause's placement. -/
+theorem crossVal_lt_next_of {D : Type*} {d e : ℝ≥0} {u u' : Valuation D} {y : D}
+    (h : AsymMatch (crossVal d (u y)) (crossVal e (u' y)))
+    (hfl : ⌊u y⌋₊ = ⌊u' y⌋₊) (hA : crossVal d (u y) < (⌊u y⌋₊ : ℝ≥0) + 1) :
+    crossVal e (u' y) < (⌊u' y⌋₊ : ℝ≥0) + 1 := by
+  have hAfloor : ⌊crossVal d (u y)⌋₊ ≤ ⌊u y⌋₊ :=
+    Nat.lt_succ_iff.mp ((Nat.floor_lt zero_le).mpr (by exact_mod_cast hA))
+  have hBfloor : ⌊crossVal e (u' y)⌋₊ ≤ ⌊u' y⌋₊ := hfl ▸ le_trans h.floor_le hAfloor
+  calc crossVal e (u' y) < (⌊crossVal e (u' y)⌋₊ : ℝ≥0) + 1 := Nat.lt_floor_add_one _
+    _ ≤ (⌊u' y⌋₊ : ℝ≥0) + 1 := by gcongr
+
 /-- **The process τ-match collapses to a single threshold in the live regime.** Because `√2 − e ≥ 0`
 always (truncated subtraction) the `m = 0` clause is vacuous, and because `√2 − d < 2` the `m ≥ 2`
 clauses are vacuous; so `AsymMatch (√2−d) (√2−e)` is just the `m = 1` condition — the `√2−1` cut
