@@ -127,13 +127,21 @@ theorem lem_3_3_5 {F : Type*} [Field F] [Differential F] {n : ℕ} (y c : Fin n 
     (hc : ∀ j, (c j)′ = 0) (hne : c ≠ 0) (hdep : ∑ j, c j * y j = 0) : wronskian y = 0 :=
   wronskian_eq_zero_of_linearDependent y c hc hne hdep
 
+/-- **Lemma 3.3.5** (§3.3, p.88), converse, case `n = 2`: a vanishing Wronskian of `y₁, y₂` forces
+linear dependence over the constants (`z = y₂/y₁` has `Dz = W/y₁² = 0`, so `z` is constant). -/
+theorem lem_3_3_5_converse_two {F : Type*} [Field F] [Differential F] (y₁ y₂ : F)
+    (h : wronskian ![y₁, y₂] = 0) :
+    ∃ c₁ c₂ : F, c₁′ = 0 ∧ c₂′ = 0 ∧ (c₁ ≠ 0 ∨ c₂ ≠ 0) ∧ c₁ * y₁ + c₂ * y₂ = 0 :=
+  wronskian_two_linearDependent y₁ y₂ h
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work:**
 --   • Theorem 3.2.4 (§3.2, p.85): a field automorphism of a separable algebraic extension commutes
 --     with `D`; trace/norm relations `Tr(Da/a) = D(Tr a)`, etc.
 --   • Lemma 3.3.2 / Corollary 3.3.1 (§3.3): new algebraic constants are exactly the elements
 --     algebraic over the initial constant field (needs minimal polynomials + `κ_D`).
 --   • Corollary 3.3.2, Lemmas 3.3.3, 3.3.4, 3.3.6 (constant-field behaviour under extensions).
---   • **Lemma 3.3.5 converse** (`W = 0 ⟹ linearly dependent over constants`) — the induction on `n`.
+--   • **Lemma 3.3.5 converse, general `n`** (`W = 0 ⟹ linearly dependent over constants`) — the
+--     induction on `n` (normalize a kernel vector, differentiate, recurse on the `(n−1)`-submatrix).
 
 /-! ## §3.4 Monomial Extensions -/
 

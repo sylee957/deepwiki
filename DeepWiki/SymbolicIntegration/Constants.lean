@@ -78,6 +78,22 @@ theorem wronskian_eq_zero_of_linearDependent {n : ℕ} (y c : Fin n → F)
     _ = iterDeriv (i : ℕ) (∑ j, c j * y j) := (iterDeriv_sum _ _ _).symm
     _ = 0 := by rw [hdep, iterDeriv_zero_right]
 
+/-- The 2×2 Wronskian: `W(y₁, y₂) = y₁·y₂′ − y₂·y₁′`. -/
+theorem wronskian_fin_two (y₁ y₂ : F) : wronskian ![y₁, y₂] = y₁ * y₂′ - y₂ * y₁′ := by
+  simp [wronskian, Matrix.det_fin_two, iterDeriv_succ, Matrix.cons_val_zero, Matrix.cons_val_one]
+
+/-- **Lemma 3.3.5** (§3.3), converse, case `n = 2`: if the Wronskian of `y₁, y₂` vanishes then
+they are linearly dependent over the constants. (The general-`n` converse — the induction on `n`
+— is still open.) -/
+theorem wronskian_two_linearDependent (y₁ y₂ : F) (h : wronskian ![y₁, y₂] = 0) :
+    ∃ c₁ c₂ : F, c₁′ = 0 ∧ c₂′ = 0 ∧ (c₁ ≠ 0 ∨ c₂ ≠ 0) ∧ c₁ * y₁ + c₂ * y₂ = 0 := by
+  rw [wronskian_fin_two] at h
+  by_cases hy1 : y₁ = 0
+  · exact ⟨1, 0, by simp, by simp, Or.inl one_ne_zero, by simp [hy1]⟩
+  · refine ⟨y₂ / y₁, -1, ?_, by simp, Or.inr (by simp), ?_⟩
+    · rw [deriv_div, show y₁ * y₂′ - y₂ * y₁′ = (0 : F) from h]; simp
+    · field_simp; ring
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration
