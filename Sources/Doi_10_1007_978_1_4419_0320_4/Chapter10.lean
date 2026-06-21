@@ -57,7 +57,13 @@ Proposition 10.2.1, Corollaries 10.2.1 and 10.2.2) are distribution theory and a
 /-! ## §10.3 Asymptotic Properties of the Periodogram (p.343)
 The periodogram is extended to every `ω ∈ [−π, π]` (Definition 10.3.1) and shown to be
 asymptotically unbiased for `2πf(ω)` — `E Iₙ(ω) → 2πf(ω)` (Proposition 10.3.1) — but **not**
-consistent. These limit results are infra-blocked. -/
+consistent. The limit results are infra-blocked; the extended periodogram itself is the library's
+`periodogram`, already defined at an arbitrary real frequency. -/
+
+/-- **§10.3 (Definition 10.3.1)**: the periodogram `Iₙ(ω)` extended to every `ω ∈ [−π, π]` (the
+`§10.1` `Iₙ` was at the Fourier frequencies `ωⱼ`; this is the same `Iₙ(λ)` read at an arbitrary
+frequency). The library's `periodogram` (already defined for any `λ : ℝ`). -/
+noncomputable abbrev def_10_3_1 := @DeepWiki.TimeSeries.periodogram
 
 /-! ## §10.4 Smoothing the Periodogram (p.353)
 A consistent estimator is obtained by smoothing: the **discrete spectral average estimator**
@@ -93,7 +99,7 @@ covariance matrix (eq 10.8.18); infra-blocked. -/
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §10.2: Proposition 10.2.1 (null distribution of the order statistics `Mₖ`) [infra]; Corollary 10.2.1
 [infra]; Corollary 10.2.2 [infra]; Fisher's test for hidden periodicities [infra]
-§10.3: Definition 10.3.1 (periodogram extended to all `ω ∈ [−π, π]`) [deferred]; Proposition 10.3.1
+§10.3: Proposition 10.3.1
 (asymptotic unbiasedness `E Iₙ(ω) → 2πf(ω)`) [infra]; the inconsistency of the periodogram [infra]
 §10.4: equation 10.4.7 (the discrete spectral average estimator `f̂`) [deferred]; Theorem 10.4.1
 (mean-square consistency) [infra]; Theorem 10.4.2 [infra]
