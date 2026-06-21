@@ -216,6 +216,11 @@ theorem thm_3_4_1_i_factor {R : Type*} [CommRing R] [Differential R] {p q : R}
     (hp : IsNormal p) (hq : q ∣ p) : IsNormal q :=
   IsNormal.of_dvd hp hq
 
+/-- **Theorem 3.4.1** (§3.4, p.93), consequence: every normal polynomial is squarefree. -/
+theorem thm_3_4_1_normal_squarefree {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsNormal p) : Squarefree p :=
+  IsNormal.squarefree hp
+
 /-- **Theorem 3.4.1(ii)** (§3.4, p.93), finite form: a finite product of special polynomials is
 special (`S` is closed under finite products). -/
 theorem thm_3_4_1_ii_prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} (s : Finset ι)

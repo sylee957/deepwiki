@@ -111,6 +111,20 @@ theorem IsNormal.of_dvd {p q : R} (h : IsNormal p) (hq : q ∣ p) : IsNormal q :
   obtain ⟨r, rfl⟩ := hq
   exact h.of_mul_left
 
+/-- **§3.4 consequence** (p.93): a normal polynomial is squarefree — if `x·x ∣ p` then `x` divides
+both `p` and `Dp` (`Dp = x·(…)` by Leibniz), so coprimality of `p, Dp` forces `x` to be a unit.
+Holds for *any* derivation (no field or characteristic hypothesis). -/
+theorem IsNormal.squarefree {p : R} (hp : IsNormal p) : Squarefree p := by
+  intro x hx
+  obtain ⟨r, hr⟩ := hx
+  have hxp : x ∣ p := ⟨x * r, by rw [hr]; ring⟩
+  have hxp' : x ∣ p′ := by
+    rw [hr]
+    have e : ((x * x) * r)′ = x * (x * r′ + r * x′ + r * x′) := by
+      rw [deriv_mul_eq (x * x) r, deriv_mul_eq x x]; ring
+    rw [e]; exact dvd_mul_right x _
+  exact IsCoprime.isUnit_of_dvd' hp hxp hxp'
+
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
 gives `p ∣ p′` only when `p ⊥ q`.) -/
