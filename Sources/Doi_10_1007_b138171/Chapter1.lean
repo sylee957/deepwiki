@@ -607,6 +607,16 @@ theorem ex_1_13 {R : Type*} [CommRing R] (f g : R[X]) (m n : ℕ) (hf : f.natDeg
       ∧ f * p + g * q = C (Polynomial.resultant f g m n) :=
   thm_1_4_2 f g m n hf hg H
 
+/-- **Example 1.7.1 / 1.7.2** (§1.7, p.30–32): the squarefree factorization Yun's algorithm computes
+for `A = x⁸ + 6x⁶ + 12x⁴ + 8x²` is `A = x²·(x²+2)³`. -/
+theorem ex_1_7_1 :
+    (X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : ℚ[X]) = X ^ 2 * (X ^ 2 + 2) ^ 3 := by ring
+
+/-- **Exercise 1.9** (§1, p.33): the squarefree factorization of `x⁸ − 5x⁶ + 6x⁴ + 4x² − 8` is
+`(x²+1)·(x²−2)³` (squarefree parts `x²+1` at multiplicity 1, `x²−2` at multiplicity 3). -/
+theorem ex_1_9 :
+    (X ^ 8 - 5 * X ^ 6 + 6 * X ^ 4 + 4 * X ^ 2 - 8 : ℚ[X]) = (X ^ 2 + 1) * (X ^ 2 - 2) ^ 3 := by ring
+
 /-- **Exercise 1.3** (§1, p.33): the inverse of `14` in `ℤ/37` is `8` (i.e. `14·8 ≡ 1`). -/
 theorem ex_1_3 : (14 : ZMod 37) * 8 = 1 := by decide
 
@@ -676,7 +686,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
-  Ex 1.5.2; Ex 1.7.1; Ex 1.7.2.
-Exercises: Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.9; Ex 1.11; Ex 1.14. -/
+  Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
+Exercises: Ex 1.4; Ex 1.5; Ex 1.6; Ex 1.7; Ex 1.8; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
