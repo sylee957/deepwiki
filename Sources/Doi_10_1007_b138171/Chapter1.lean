@@ -720,6 +720,28 @@ theorem ex_1_3_2 :
     (-X + 3) * (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15 : ℚ[X]) + (X^2 - 6*X + 10) * (X^3 + X^2 - 4*X - 4)
       = 5*X + 5 := by ring
 
+/-- **Example 1.3.3** (§1.3, p.12): the *half*-extended Euclidean route recovers the second
+cofactor by the exact division `t = (g − s·a)/b`. With `s = −x+3`, `g = 5x+5`, the dividend is
+`g − s·a = x⁵ − 5x⁴ + 30x² − 16x − 40` (the book's printed value drops the `−40`), and dividing
+by `b` is exact with quotient `t = x² − 6x + 10` — recovering equation 1.4. -/
+theorem ex_1_3_3 :
+    (5*X + 5 : ℚ[X]) - (-X + 3) * (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15)
+        = X^5 - 5*X^4 + 30*X^2 - 16*X - 40
+      ∧ (5*X + 5 : ℚ[X]) - (-X + 3) * (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15)
+        = (X^2 - 6*X + 10) * (X^3 + X^2 - 4*X - 4) :=
+  ⟨by ring, by ring⟩
+
+/-- **Example 1.3.4** (§1.3, p.13): solving the diophantine equation `s·a + t·b = x² − 1` in `ℚ[x]`
+(eq 1.6) for the `a, b` of Example 1.3.1 — scaling the gcd-Bézout by `(x−1)/5` gives
+`s = (−x²+4x−3)/5` and `t = (x³−7x²+16x−10)/5`. -/
+theorem ex_1_3_4 :
+    C (1/5) * (-X^2 + 4*X - 3 : ℚ[X]) * (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15)
+        + C (1/5) * (X^3 - 7*X^2 + 16*X - 10 : ℚ[X]) * (X^3 + X^2 - 4*X - 4)
+      = X^2 - 1 := by
+  apply Polynomial.funext; intro x
+  simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat, eval_neg,
+    eval_one]; ring
+
 /-- **Exercise 1.4** (§1, p.33): the gcd of `2x³ − (19/5)x² − x + 6/5 = (x−2)(2x²+(1/5)x−3/5)` and
 `x² + (1/3)x − 14/3 = (x−2)(x+7/3)` in `ℚ[x]` is `x − 2` (the cofactors `2x²+(1/5)x−3/5` and
 `x+7/3` are coprime — they share no root). The fractional-coefficient identities are discharged
@@ -841,7 +863,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
+Examples: Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7; Ex 1.14. -/
 
