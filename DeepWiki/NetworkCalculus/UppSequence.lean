@@ -493,6 +493,25 @@ theorem toFunPWL_continuous (r : UppSeq ℚ) : Continuous r.toFunPWL := by
     exact ⟨⌊x⌋₊, Nat.floor_le zero_le, le_of_lt (Nat.lt_floor_add_one x)⟩
   exact hlf.continuous hcov (fun _ => isClosed_Icc) (fun n => toFunPWL_continuousOn_Icc r n)
 
+/-- On `[0, m]` the PWL reading is **bounded below by the finite minimum of the samples** on `[0, m+1]`
+(it lies between bracketing samples, whose indices are `≤ m+1`). Gives boundedness for the
+continuous-time convolution. -/
+theorem toFunPWL_ge_finite_inf (r : UppSeq ℚ) (m : ℕ) (u : ℝ≥0) (hu : u ≤ (m : ℝ≥0)) :
+    (Finset.range (m + 2)).inf' (Finset.nonempty_range_iff.mpr (by omega)) (fun j => (r.evalNat j : ℝ))
+      ≤ r.toFunPWL u := by
+  have hfl : ⌊u⌋₊ ≤ m := by
+    have : ⌊u⌋₊ ≤ ⌊(m : ℝ≥0)⌋₊ := Nat.floor_le_floor hu
+    rwa [Nat.floor_natCast] at this
+  have hmem := toFunPWL_mem_uIcc r u
+  rw [Set.mem_uIcc] at hmem
+  have hlb : (Finset.range (m + 2)).inf' (Finset.nonempty_range_iff.mpr (by omega))
+      (fun j => (r.evalNat j : ℝ)) ≤ (r.evalNat ⌊u⌋₊ : ℝ) :=
+    Finset.inf'_le _ (Finset.mem_range.mpr (by omega))
+  have hlb2 : (Finset.range (m + 2)).inf' (Finset.nonempty_range_iff.mpr (by omega))
+      (fun j => (r.evalNat j : ℝ)) ≤ (r.evalNat (⌊u⌋₊ + 1) : ℝ) :=
+    Finset.inf'_le _ (Finset.mem_range.mpr (by omega))
+  rcases hmem with ⟨h1, _⟩ | ⟨h1, _⟩ <;> linarith
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/

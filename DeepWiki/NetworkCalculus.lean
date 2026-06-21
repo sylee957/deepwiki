@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.ClosuresNd
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
 import DeepWiki.NetworkCalculus.UppSequence
+import DeepWiki.NetworkCalculus.PwlMinConv
 import DeepWiki.NetworkCalculus.MinPlusMatrix
 import DeepWiki.NetworkCalculus.Additivity
 import DeepWiki.NetworkCalculus.Deconvolution
