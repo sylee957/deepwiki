@@ -102,6 +102,10 @@ theorem IsNormal.of_mul_left {p q : R} (h : IsNormal (p * q)) : IsNormal p := by
     rwa [show (p * q′ + q * p′) + p * -q′ = q * p′ from by ring] at this
   exact h2.of_mul_right_right
 
+/-- If `p · q` is normal then `q` is normal (the right factor; by commutativity). -/
+theorem IsNormal.of_mul_right {p q : R} (h : IsNormal (p * q)) : IsNormal q :=
+  IsNormal.of_mul_left (mul_comm p q ▸ h)
+
 /-- **Theorem 3.4.1(i)** (§3.4, p.93), second half: any factor of a normal polynomial is normal. -/
 theorem IsNormal.of_dvd {p q : R} (h : IsNormal p) (hq : q ∣ p) : IsNormal q := by
   obtain ⟨r, rfl⟩ := hq
