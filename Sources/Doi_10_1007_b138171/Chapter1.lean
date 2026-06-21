@@ -5,6 +5,7 @@ import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
+import Mathlib.Algebra.MvPolynomial.Division
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
 import Mathlib.RingTheory.Algebraic.Basic
@@ -25,10 +26,9 @@ aliases the Mathlib concept for each book definition and discharges each book th
 Mathlib (or with the `DeepWiki.SymbolicIntegration` library where the book states a new
 predicate, e.g. `IsGCD`). The book numbering lives here in the catalog, never in the library.
 
-A few concrete worked examples that need substantial bespoke number theory are still deferred
-(noted inline): the failure of unique factorization in `ℤ[√−5]` (Ex 1.1.6 — `6` and `2+2√−5`
-have no gcd — and Ex 1.1.7 — `2, 3, 1±√−5` irreducible), and the non-principal ideal `(X,Y)`
-(Ex 1.1.10). -/
+The two remaining deferred examples need substantial bespoke number theory (noted inline): the
+failure of unique factorization in `ℤ[√−5]` — Ex 1.1.6 (`6` and `2+2√−5` have no gcd) and Ex
+1.1.7 (`2, 3, 1±√−5` are irreducible). -/
 
 open Polynomial DeepWiki.SymbolicIntegration
 
@@ -252,6 +252,42 @@ example : UniqueFactorizationMonoid (Polynomial (Polynomial ℚ)) := inferInstan
 group homomorphism `toGL`. -/
 example : Function.Injective (Matrix.SpecialLinearGroup.toGL (n := Fin 2) (R := ℚ)) :=
   Matrix.SpecialLinearGroup.toGL_injective
+
+/-- **Example 1.1.10** (§1.1, p.6): in `ℚ[X, Y]` the ideal `(X, Y)` is *not* principal — so not
+every ideal of an integral domain is principal (motivating the PID definition). -/
+example :
+    ¬ (Ideal.span {(MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ), MvPolynomial.X 1}).IsPrincipal := by
+  rintro ⟨f, hf⟩
+  rw [show (MvPolynomial (Fin 2) ℚ ∙ f) = Ideal.span {f} from rfl] at hf
+  have hX0dvd : ¬ (MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ) ∣ MvPolynomial.X 1 := by
+    rintro ⟨g, hg⟩
+    have h := congrArg (MvPolynomial.eval ![0, 1]) hg
+    simp [MvPolynomial.eval_X] at h
+  have hfX0 : f ∣ MvPolynomial.X 0 := by
+    have hm : MvPolynomial.X 0 ∈
+        Ideal.span {(MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ), MvPolynomial.X 1} :=
+      Ideal.subset_span (by left; rfl)
+    rw [hf, Ideal.mem_span_singleton] at hm; exact hm
+  have h1notmem : (1 : MvPolynomial (Fin 2) ℚ) ∉
+      Ideal.span {(MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ), MvPolynomial.X 1} := by
+    intro hmem
+    obtain ⟨a, b, hab⟩ := Ideal.mem_span_pair.mp hmem
+    have h := congrArg MvPolynomial.constantCoeff hab
+    simp [MvPolynomial.constantCoeff_X] at h
+  have hfnu : ¬ IsUnit f := by
+    intro hu
+    exact h1notmem (by rw [hf, Ideal.span_singleton_eq_top.mpr hu]; exact Submodule.mem_top)
+  obtain ⟨c, hc⟩ := hfX0
+  rcases (MvPolynomial.X_prime).irreducible.isUnit_or_isUnit hc with hu | hcu
+  · exact hfnu hu
+  have hassoc : Associated f (MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ) :=
+    ⟨hcu.unit, by rw [IsUnit.unit_spec]; exact hc.symm⟩
+  apply hX0dvd
+  have hm : MvPolynomial.X 1 ∈
+      Ideal.span {(MvPolynomial.X 0 : MvPolynomial (Fin 2) ℚ), MvPolynomial.X 1} :=
+    Ideal.subset_span (by right; rfl)
+  rw [hf, Ideal.span_singleton_eq_span_singleton.mpr hassoc, Ideal.mem_span_singleton] at hm
+  exact hm
 
 /-- **Example 1.1.11** (§1.1, p.6): `ℚ[X]` is a principal ideal domain. -/
 example : IsPrincipalIdealRing (Polynomial ℚ) := inferInstance
