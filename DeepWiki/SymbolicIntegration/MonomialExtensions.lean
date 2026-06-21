@@ -415,6 +415,26 @@ theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v 
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
   rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
+/-- **Theorem 3.4.2** (§3.4, p.93), full squarefree form: a squarefree polynomial — written as the
+product `∏_{a∈s} (X − a)` of its distinct linear factors — is normal w.r.t. the monomial
+derivation `D` (`Dt = v`) iff `Dα ≠ Hₜ(α)` at *every* root, i.e. `∀ a ∈ s, v(a) ≠ a′`. Forward:
+each `X − a` divides the product so is normal (`IsNormal.of_dvd`); backward: the pairwise-coprime
+normal factors multiply to a normal product (`IsNormal.prod`). -/
+theorem isCoprime_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K]
+    (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a)))
+      ↔ ∀ a ∈ s, v.eval a ≠ a′ := by
+  classical
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  constructor
+  · intro hnorm a ha
+    have hdvd : (X - C a) ∣ ∏ b ∈ s, (X - C b) := Finset.dvd_prod_of_mem _ ha
+    exact (isCoprime_X_sub_C_implicitDeriv_iff v a).mp (IsNormal.of_dvd hnorm hdvd)
+  · intro h
+    refine IsNormal.prod s (fun a => X - C a) (fun a ha => ?_) (fun a _ b _ hab => ?_)
+    · exact (isCoprime_X_sub_C_implicitDeriv_iff v a).mpr (h a ha)
+    · exact isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)
+
 end LinearFactor
 
 end DeepWiki.SymbolicIntegration

@@ -289,6 +289,14 @@ theorem thm_3_4_2_linear {K : Type*} [Field K] [Differential K] (v : K[X]) (a : 
     IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ :=
   isCoprime_X_sub_C_implicitDeriv_iff v a
 
+/-- **Theorem 3.4.2** (§3.4, p.93), full squarefree form: a squarefree polynomial, as the product
+`∏_{a∈s}(X − a)` of its distinct linear factors, is normal w.r.t. the monomial derivation `D`
+(`Dt = v`, `Hₜ = v`) iff `Dα ≠ Hₜ(α)` at every root — `∀ a ∈ s, v(a) ≠ a′`. -/
+theorem thm_3_4_2 {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a)))
+      ↔ ∀ a ∈ s, v.eval a ≠ a′ :=
+  isCoprime_prod_X_sub_C_implicitDeriv_iff v s
+
 /-- **Theorem 3.4.3** (§3.4, p.93), single linear factor: `X − a` is special w.r.t. the monomial
 derivation `D` (`Dt = v`, `Hₜ = v`) iff `Dα = Hₜ(α)` at its root — `v(a) = a′`. -/
 theorem thm_3_4_3_linear {K : Type*} [Field K] [Differential K] (v : K[X]) (a : K) :
@@ -322,12 +330,11 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
 --   • Theorem 3.4.1(iii) — DONE in full: `thm_3_4_1_iii_prime` (prime-factor key step) and
 --     `thm_3_4_1_iii` (general factor of a special polynomial is special, via prime factorization).
---   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
---     for all roots `α`): the single-linear-factor cases are DONE (`thm_3_4_2_linear`,
---     `thm_3_4_3_linear`); the full statements need `p` split as `c·∏(X−aᵢ)` (squarefree ⇒ distinct
---     roots) + Lemma 3.4.4 (`pairwise_coprime_X_sub_C`) over the roots — `dvd_iff_isRoot`/
---     `isCoprime_X_sub_C_iff` are the per-factor tools. Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 /
---     3.4.6 (new constants ⇔ special polynomials), Theorem 3.4.4 (special of the first kind).
+--   • Theorem 3.4.2 — DONE: single linear factor (`thm_3_4_2_linear`) and the full squarefree
+--     product form (`thm_3_4_2`, normal ⟺ `v(a)≠a′` at every root). Theorem 3.4.3 special: the
+--     single-factor case is done (`thm_3_4_3_linear`); the full product form remains (parallel via
+--     `IsSpecial.prod`/`of_mul_coprime`). Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new
+--     constants ⇔ special polynomials), Theorem 3.4.4 (special of the first kind).
 
 /-! ## §3.5 The Canonical Representation -/
 
