@@ -23,21 +23,6 @@ Lemma 2 (§p.132): the reduced-p.r.s.-specialized telescope `Sⱼ(P₁,P₂) = (
 Theorem 1(a) (§p.133): `S_{nₖ}(P₁,P₂) = (-1)^σₖ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·cₖ^(δₖ₋₁-1)·Pₖ` for a reduced
   p.r.s. [external]: combine the telescoped Lemma 2 (`subresultant_prs_telescope_explicit`) with
   Lemma 1(a) (`subresultant_rem_eq_13`) and reduce the exponent `α ≡ σₖ (mod 2)`.
-Theorem 1(b) (§p.133): `S_{n_{k-1}-1}(P₁,P₂) = (-1)^τₖ·[∏ᵢ cᵢ^(-δᵢ₋₁(δᵢ-1))]·Pₖ` for a reduced p.r.s.
-  — NORMAL case PROVED (`subresultant_prs_normal_eq` = `thm_1_5_3_normal`); gap-vanishing PROVED
-  (`subresultant_prs_gap_zero` = `thm_1_5_3_gap`). The general DEFECTIVE nonzero case remains [external]:
-  instantiating `subresultant_prs_closed_top` with the reduced coeffs `αₗ=(lc F_{l+1})^(δₗ+1)`,
-  `βₗ=(lc Fₗ)^(δ_{l-1}+1)` (over a general decreasing degree sequence `n`, with `1 ≤ n(m+1)`) reduces it to a
-  TWO-PART collapse of the cross-multiplied R[X] form `∏cᵢ^(δᵢ₋₁(δᵢ-1))·RHS = (-1)^τ·LHS` (no Frac needed):
-  (a) an `lc`-power identity (general-δ analog of `lc_prod_collapse_normal`, δ-dependent exponents), and
-  (b) a `(-1)`-SIGN factor (carryable as the explicit exponent product — no mod-2 closed form needed).
-  DERIVED & VERIFIED (per-`k` exponent identity, Lean-checked): after cancelling `c_{m+1}^(δₘ+1)`, the
-  `c_k`-exponent on the LHS `αₘ`-product, `(δ_{k-1}+1)·E_{k-1}` with `E_{k-1}=E_k+δ_k`, equals the RHS
-  `c_k`-exponent `(δ_{k-1}+δ_k) + (δ_{k-1}+1)·E_k` PLUS exactly `δ_{k-1}(δ_k-1)` — i.e. Collins's coefficient
-  `∏cᵢ^(δᵢ₋₁(δᵢ-1))` falls out, and the endpoint `k=m` matches via `E_m=1` (the `c_m^(δ_{m-1}+1)=βₘ` factor =
-  `(δ_{m-1}+1)·E_m`); the `l=0` `β₀=1` term contributes nothing. So the math is settled. REMAINING = the
-  mechanical Lean assembly: reindex the LHS/RHS products to a common `∏_{k} c_k^(exp)` and discharge per-`k`
-  via that identity (a sizable `Finset` reindex; `m`-dependent `E_l` blocks a clean induction-on-`m`).
 Corollary 1.1 (§p.134); Corollary 1.2 (§p.135); Corollary 1.3 (§p.135); Corollary 1.4 (§p.135) [external].
 Lemma 3 (§p.135): for an *arbitrary* p.r.s. (coefficient choices `eᵢ, fᵢⱼ`), `Pₖ = (-1)^gₖ·[∏ᵢ cᵢ^hᵢₖ]·Sₖ`
   [external]: generalizes Lemma 1 to an arbitrary p.r.s. (eq 2) and iterates.
@@ -87,5 +72,10 @@ abbrev thm_1_normal_collapse := @lc_prod_collapse_normal
 equals the `(βₘ·lc·β)`-product times Collins's coefficient `∏ cᵢ^(δᵢ₋₁(δᵢ-1))`. The library's
 `lc_collapse_defective` (with helpers `shift_prod`, `beta_fold`). -/
 abbrev thm_1_defective_collapse := @lc_collapse_defective
+
+/-- **Theorem 1(b), defective closed form** (§p.133): `(∏cᵢ^(δᵢ₋₁(δᵢ-1)))·Sⱼ = SIGN·Pₖ` for a reduced
+p.r.s. with arbitrary gaps — the full Collins coefficient identified. The library's
+`subresultant_prs_defective_eq`. -/
+abbrev thm_1b_defective := @subresultant_prs_defective_eq
 
 end DeepWiki.Col

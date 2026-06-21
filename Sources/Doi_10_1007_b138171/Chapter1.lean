@@ -640,6 +640,11 @@ defective index strictly inside a degree gap. The library's `subresultant_prs_ga
 Theorem 1(c)). -/
 abbrev thm_1_5_3_gap := @subresultant_prs_gap_zero
 
+/-- **Theorem 1.5.3** (§1.5, p.23), defective (general-gap) closed form: for a reduced subresultant PRS,
+`(∏ cᵢ^(δᵢ₋₁(δᵢ-1)))·Sⱼ(A,B) = SIGN·Rᵢ` — the full Collins coefficient identified. The library's
+`subresultant_prs_defective_eq` (= Collins 1967 Theorem 1, defective case). -/
+abbrev thm_1_5_3_defective := @subresultant_prs_defective_eq
+
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
 theorem ex_1_5_1 :
@@ -1172,12 +1177,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   rwa [hBeq, hc.dvd_mul_left] at h
 
 /- ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§1.5: Thm 1.5.3 — the subresultant-PRS specialization `ηᵢ = 1` ⟹ `Sⱼ(A,B) = Rᵢ`: the **normal case**
-  (degrees decreasing by one — the generic case) is PROVED (`thm_1_5_3_normal` = `subresultant_prs_normal_eq`),
-  as is the base step (`thm_1_5_3_base`). Only the **defective-degree (gap)** general case remains [external]:
-  Collins 1967 (DOI 10.1145/321371.321381, ref. [23]) Theorem 1(a)(c) / Lemma 3 with the gap subresultants
-  (the `∏ cᵢ^(-δᵢ₋₁(δᵢ-1))` powers no longer collapse trivially) — see the `Sources/Doi_10_1145_321371_321381`
-  catalog.
 Examples: Ex 1.7.2 [deferred] — the step-by-step Yun trace (the intermediate `Yₖ`); the resulting
   factorization is `ex_1_7_1`.
 Exercises: Ex 1.7 [deferred] — compute the primitive and subresultant PRS of two `ℤ[t][x]` polynomials

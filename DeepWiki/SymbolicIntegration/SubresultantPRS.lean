@@ -556,4 +556,142 @@ theorem subresultant_prs_gap_zero [IsDomain R] (F : ℕ → R[X]) (α β : ℕ �
     (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree j (hα m le_rfl) (hβ m le_rfl)
     hlo hhi rfl le_rfl (hQ m le_rfl) (hrel m le_rfl)
 
+open Finset in
+/-- **Theorem 1.5.3 / Collins Theorem 1, defective (general-gap) case** — the full closed form. For a
+strictly degree-decreasing reduced subresultant PRS with the coefficient choice
+`αₗ = (lc F_{l+1})^(δₗ+1)`, `βₗ = (lc Fₗ)^(δ_{l-1}+1)` (`β₀ = 1`) in `hrel`, the subresultant equals the
+PRS element times Collins's coefficient `∏ cᵢ^(δᵢ₋₁(δᵢ-1))`, in cross-multiplied (denominator-cleared)
+form: `(∏ (lc F_{l+1})^(δₗ(δ_{l+1}-1)))·S_{deg F_{m+1}-1}(F₀,F₁) = SIGN·F_{m+2}`, where `SIGN` is the
+explicit `(-1)`-product `(-1)^(δₘ+1)·∏(-1)^((nₗ-j)(n_{l+1}-j))`. Assembles `subresultant_prs_closed_top`,
+the leading-coefficient collapse `lc_collapse_defective`, the sign factoring, and a leading-product
+cancellation. This is the general-`δ` companion of the normal case `subresultant_prs_normal_eq`. -/
+theorem subresultant_prs_defective_eq [IsDomain R] (F : ℕ → R[X]) (Q : ℕ → R[X]) (m : ℕ)
+    (hm : 1 ≤ m) (hdec : ∀ l ≤ m + 1, (F (l + 1)).natDegree < (F l).natDegree)
+    (hm1 : 1 ≤ (F (m + 1)).natDegree)
+    (hlc : ∀ l ≤ m + 1, (F l).coeff (F l).natDegree ≠ 0)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m,
+      C (((F (l + 1)).coeff (F (l + 1)).natDegree)
+          ^ ((F l).natDegree - (F (l + 1)).natDegree + 1)) * F l
+        = C (if l = 0 then (1 : R)
+              else ((F l).coeff (F l).natDegree) ^ ((F (l - 1)).natDegree - (F l).natDegree + 1))
+          * F (l + 2) + F (l + 1) * Q l) :
+    C (∏ l ∈ range m, ((F (l + 1)).coeff (F (l + 1)).natDegree)
+          ^ (((F l).natDegree - (F (l + 1)).natDegree)
+              * ((F (l + 1)).natDegree - (F (l + 2)).natDegree - 1)))
+        * subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1)
+      = ((-1 : R[X]) ^ ((F m).natDegree - (F (m + 1)).natDegree + 1)
+          * ∏ l ∈ range m, (-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+              * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1))))
+        * F (m + 2) := by
+  set c : ℕ → R := fun l => (F l).coeff (F l).natDegree with hc
+  set δ : ℕ → ℕ := fun l => (F l).natDegree - (F (l + 1)).natDegree with hδdef
+  set E : ℕ → ℕ := fun l => (F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1) with hEdef
+  set α : ℕ → R := fun l => ((F (l + 1)).coeff (F (l + 1)).natDegree)
+      ^ ((F l).natDegree - (F (l + 1)).natDegree + 1) with hαdef
+  set β : ℕ → R := fun l => if l = 0 then (1 : R)
+      else ((F l).coeff (F l).natDegree) ^ ((F (l - 1)).natDegree - (F l).natDegree + 1) with hβdef
+  have hmono : ∀ a b, a ≤ b → b ≤ m + 1 → (F b).natDegree ≤ (F a).natDegree := by
+    have key : ∀ e a, a + e ≤ m + 1 → (F (a + e)).natDegree ≤ (F a).natDegree := by
+      intro e; induction e with
+      | zero => intro a _; simp
+      | succ f ih => intro a ha
+                     have h1 := hdec (a + f) (by omega); have h2 := ih a (by omega)
+                     rw [show a + (f + 1) = a + f + 1 from by ring]; omega
+    intro a b hab hb
+    have := key (b - a) a (by omega); rwa [show a + (b - a) = b from by omega] at this
+  have hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree := fun l hl => hdec (l + 1) (by omega)
+  have hβne : ∀ l ≤ m, β l ≠ 0 := by
+    intro l hl; simp only [hβdef]; split
+    · exact one_ne_zero
+    · exact pow_ne_zero _ (hlc l (by omega))
+  have hclosed := subresultant_prs_closed_top F α β Q m hβne hcb
+    (fun l hl => by have := hmono (l + 2) (m + 1) (by omega) (by omega); omega) hQ hrel
+  have hcol := lc_collapse_defective c δ E m hm
+    (fun k hk => by simp only [hEdef, hδdef]
+                    have h1 := hdec (k + 1) (by omega)
+                    have h2 := hmono (k + 1 + 1) (m + 1) (by omega) (by omega)
+                    have h3 := hmono (k + 1) (m + 1) (by omega) (by omega); omega)
+    (fun k hk0 hkm => by simp only [hδdef]; have := hdec k (by omega); omega)
+    (by simp only [hEdef]; omega)
+  have hL : C (α m) * ∏ l ∈ range m, C (α l ^ E l)
+      = C (α m * (((F m).coeff (F m).natDegree) ^ ((F (m - 1)).natDegree - (F m).natDegree + 1)
+            * ∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
+                * (if l = 0 then (1 : R)
+                    else ((F l).coeff (F l).natDegree) ^ ((F (l - 1)).natDegree - (F l).natDegree + 1))
+                  ^ (E l))))
+        * C (∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1))) := by
+    rw [← map_prod, ← map_mul, ← map_mul]; congr 1
+    have hconv : ∏ l ∈ range m, α l ^ E l = ∏ l ∈ range m, (c (l + 1)) ^ ((δ l + 1) * E l) := by
+      refine prod_congr rfl (fun l _ => ?_); simp only [hαdef, hc, hδdef]; rw [← pow_mul]
+    have hbr : (∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
+            * (if l = 0 then (1 : R) else (c l) ^ (δ (l - 1) + 1)) ^ (E l)))
+        = ∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
+            * (if l = 0 then (1 : R)
+                else ((F l).coeff (F l).natDegree) ^ ((F (l - 1)).natDegree - (F l).natDegree + 1)) ^ (E l)) := by
+      refine prod_congr rfl (fun l hl => ?_); rw [mem_range] at hl
+      rcases Nat.eq_zero_or_pos l with h0 | h0
+      · simp [h0]
+      · rw [if_neg (by omega), if_neg (by omega)]
+        simp only [hc, hδdef]; rw [show l - 1 + 1 = l from by omega]
+    rw [hconv, hcol, hbr,
+      show (c m) ^ (δ (m - 1) + 1)
+          = ((F m).coeff (F m).natDegree) ^ ((F (m - 1)).natDegree - (F m).natDegree + 1) from by
+        simp only [hc, hδdef]; rw [show m - 1 + 1 = m from by omega]]
+    ac_rfl
+  have hGl : ∏ l ∈ range m, ((c (l + 1)) ^ ((F l).natDegree - (F (l + 2)).natDegree) * β l ^ (E l))
+      = ∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1)) * β l ^ (E l)) := by
+    refine prod_congr rfl (fun l hl => ?_); rw [mem_range] at hl
+    rw [show (F l).natDegree - (F (l + 2)).natDegree = δ l + δ (l + 1) from by
+      have e1 : (F (l + 1)).natDegree < (F l).natDegree := hdec l (by omega)
+      have e2 : (F (l + 2)).natDegree < (F (l + 1)).natDegree := hdec (l + 1) (by omega)
+      simp only [hδdef, show l + 1 + 1 = l + 2 from rfl]; omega]
+  have hsigns : (∏ l ∈ range m,
+        ((-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+              * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))
+          * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+          * C (β l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))))
+      = (∏ l ∈ range m, (-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+              * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1))))
+        * C (∏ l ∈ range m, ((c (l + 1)) ^ ((F l).natDegree - (F (l + 2)).natDegree)
+              * β l ^ ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1)))) := by
+    rw [map_prod, ← Finset.prod_mul_distrib]
+    refine prod_congr rfl (fun l _ => ?_)
+    simp only [map_mul, map_pow, hc]
+    ring
+  rw [hL, hsigns, hGl] at hclosed
+  set LCR : R := α m * (((F m).coeff (F m).natDegree) ^ ((F (m - 1)).natDegree - (F m).natDegree + 1)
+      * ∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
+          * (if l = 0 then (1 : R)
+              else ((F l).coeff (F l).natDegree) ^ ((F (l - 1)).natDegree - (F l).natDegree + 1)) ^ (E l)))
+    with hLCR
+  have hLCne : C LCR ≠ 0 := by
+    rw [Ne, C_eq_zero, hLCR]
+    simp only [hαdef]
+    refine mul_ne_zero (pow_ne_zero _ (hlc (m + 1) (by omega)))
+      (mul_ne_zero (pow_ne_zero _ (hlc m (by omega))) ?_)
+    rw [Finset.prod_ne_zero_iff]
+    intro l hl; rw [mem_range] at hl
+    refine mul_ne_zero (pow_ne_zero _ (hlc (l + 1) (by omega))) (pow_ne_zero _ ?_)
+    split
+    · exact one_ne_zero
+    · exact pow_ne_zero _ (hlc l (by omega))
+  have hgoal : C (∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1)))
+        * subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1)
+      = ((-1 : R[X]) ^ ((F m).natDegree - (F (m + 1)).natDegree + 1)
+          * ∏ l ∈ range m, (-1 : R[X]) ^ (((F l).natDegree - ((F (m + 1)).natDegree - 1))
+              * ((F (l + 1)).natDegree - ((F (m + 1)).natDegree - 1))))
+        * F (m + 2) := by
+    refine mul_left_cancel₀ hLCne ?_
+    rw [show C LCR * (C (∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1)))
+            * subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1))
+          = subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1)
+              * (C LCR * C (∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1)))) from by ring,
+        hclosed, hLCR]
+    simp only [hαdef, hβdef]
+    rw [if_neg (show m ≠ 0 by omega)]
+    simp only [map_mul, map_pow, map_prod, hc]
+    ring
+  exact hgoal
+
 end DeepWiki.SymbolicIntegration
