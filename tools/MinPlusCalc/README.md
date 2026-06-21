@@ -1,9 +1,10 @@
 # `minplus` — an executable, proved-correct (min,plus) calculator
 
-`minplus` computes with **ultimately pseudo-periodic (UPP)** integer sequences — the finite
+`minplus` computes with **ultimately pseudo-periodic (UPP)** **rational** (`ℚ`) sequences — the finite
 function class of deterministic network calculus (DNC Chapter 4). A UPP sequence is given by
 `<vals> <period> <incr>`: a stored prefix `v0,v1,…` followed by a positive period `d` and increment
-`c`, denoting `f(n) = f(n − d) + c` past the prefix. The operations are run by the **same Lean
+`c`, denoting `f(n) = f(n − d) + c` past the prefix. Values are rational — written `a` or `a/b` (e.g.
+`3/2`) — so fractional rates and bursts are first-class; integer inputs are the special case `a/1`. The operations are run by the **same Lean
 functions proved correct** in `DeepWiki.NetworkCalculus.UppSequence` — `evalNat`, `UppSeq.add`
 (`evalNat_add`), `UppSeq.min` (`evalNat_min`, balanced case). Like the `wiki`/`tlts` tools it is out
 of `defaultTargets`, so it never touches the math gate.
@@ -35,7 +36,7 @@ lake exe minplus            # usage
 | `minplus residual <vβ> <pβ> <cβ> <vα> <pα> <cα> <k>` | the **residual service curve** `[β−α]⁺↑(0..k−1)` — leftover service for a flow after a cross-flow (arrival `α`) is served by `β`; `residualAt` with intro/elim/mono proved |
 | `minplus tandem <α:v p c> <β1:v p c> <β2:v p c>` | **two servers in series**: the end-to-end service curve `β1∗β2` (concatenation thm `IsMinimalServiceCurve.comp`) + end-to-end backlog/delay — "pay bursts only once" |
 
-`<vals>` is comma-separated with no spaces, e.g. `0,1,2`.
+`<vals>` is comma-separated with no spaces, each value an integer or fraction `a/b`, e.g. `0,3/2,3`.
 
 ## Soundness
 
@@ -139,18 +140,15 @@ multiplexing, `tandem` for concatenation) are **verified for the discrete-time, 
 model** — every operator runs the same Lean function proved correct in `UppSequence`, and the two
 deviation bounds are proved extremal (`deconvNat_isGreatest`, `delayBound_least`).
 
-Two orthogonal generalizations remain:
+**Rational values are shipped.** `UppSeq V` and *all* its operators — including the sub-additive closure
+(`δ₀`, `iterConvNat`, `closureApproxNat`, and the stabilization theorems, generalized from `WithTop ℤ`
+to `WithTop V`) — are generic over any `[AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V]
+[Archimedean V]`, which `ℚ` satisfies with decidable order. The CLI now reads/prints `ℚ` (`a` or `a/b`)
+at the boundary, so every command runs over fractional rates and bursts via the *same* proved-correct
+functions. Integer inputs are the special case `a/1` (fully backward-compatible).
 
-- **Rational values** (fractional rates/bursts) are *not* a research gap: `UppSeq V` and its operators
-  are generic over any `[AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]`, and
-  `ℚ` satisfies all four with decidable order. The proved-correct `convNat`/`deconvNat`/`min`/`max` —
-  **and now the sub-additive closure** (`δ₀`, `iterConvNat`, `closureApproxNat`, and the stabilization
-  theorems were generalized from `WithTop ℤ` to `WithTop V`) — compute over `ℚ` unchanged (gate-verified
-  in `Calc.lean`: a fractional rate-`3/2` ⊗ rate-`1/2` convolution, a fractional backlog `3/2`, and a
-  rational sub-additive closure). Exposing them at the CLI needs only a rational reader/printer at the
-  boundary (`parseVals` via `splitOn "/"` + `mkRat`, render via `toString : ℚ`, `delayBound` fuel via
-  `(backlogBound …).ceil.toNat`) — a mechanical, not foundational, step.
-- **Continuous time** (rational breakpoint *positions* with linear interpolation between them) is a
-  genuinely different model: the operators become infima/suprema over a continuous `t`, and tying the
-  discrete `ℕ`-indexed values to the `ℝ≥0`-valued library curves (`residualCurve`, `concatConv`) needs
-  the piecewise-linear interpolation bridge. This is the real remaining frontier.
+**The one remaining frontier is continuous time** — rational breakpoint *positions* with linear
+interpolation between them. That is a genuinely different model: the operators become infima/suprema
+over a continuous `t`, and tying the discrete `ℕ`-indexed values to the `ℝ≥0`-valued library curves
+(`residualCurve`, `concatConv`) needs the piecewise-linear interpolation bridge. Everything tractable
+over the discrete-time UPP model — integer *and* rational, single- and multi-flow — is done.

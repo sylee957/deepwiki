@@ -1,18 +1,27 @@
 import MinPlusCalc.Calc
 
-/-! # `minplus` — an executable, proved-correct (min,plus) calculator over ℤ UPP sequences
-A UPP sequence is given by `<vals> <period> <incr>`: stored values `v0,v1,…` followed by a positive
-period `d` and increment `c`, denoting `f(n) = f(n-d) + c` past the stored prefix. The `add`/`min`
-results are computed by `DeepWiki.UppSeq.add`/`min`, proved correct by `evalNat_add`/`evalNat_min`. -/
+/-! # `minplus` — an executable, proved-correct (min,plus) calculator over ℚ UPP sequences
+A UPP sequence is given by `<vals> <period> <incr>`: stored values `v0,v1,…` (each `a` or `a/b`)
+followed by a positive period `d` and increment `c`, denoting `f(n) = f(n-d) + c` past the stored
+prefix. Values are rational (`ℚ`); integer inputs are the special case `a/1`. The results are computed
+by the *same* Lean functions proved correct in `UppSequence` (generic over the value type). -/
 
 open MinPlusCalc DeepWiki
 
-/-- Parse a comma-separated list of integers. -/
-def parseVals (s : String) : Except String (List Int) :=
-  (s.splitOn ",").mapM fun x =>
-    match x.toInt? with
-    | some i => .ok i
-    | none => .error s!"bad integer '{x}'"
+/-- Parse a rational literal: `"a"` (integer) or `"a/b"` (fraction, `b > 0`). -/
+def parseRat (x : String) : Except String ℚ :=
+  match x.splitOn "/" with
+  | [n] => match n.toInt? with
+      | some i => .ok (i : ℚ)
+      | none => .error s!"bad rational '{x}'"
+  | [n, d] => match n.toInt?, d.toNat? with
+      | some ni, some dn => if dn = 0 then .error s!"zero denominator in '{x}'" else .ok (mkRat ni dn)
+      | _, _ => .error s!"bad rational '{x}'"
+  | _ => .error s!"bad rational '{x}'"
+
+/-- Parse a comma-separated list of rationals (`a` or `a/b`). -/
+def parseVals (s : String) : Except String (List ℚ) :=
+  (s.splitOn ",").mapM parseRat
 
 /-- Parse a required natural-number argument. -/
 def reqNat (s : String) : IO Nat :=
@@ -20,29 +29,29 @@ def reqNat (s : String) : IO Nat :=
   | some n => pure n
   | none => throw (IO.userError s!"expected a number, got '{s}'")
 
-/-- Parse a required integer argument. -/
-def reqInt (s : String) : IO Int :=
-  match s.toInt? with
-  | some i => pure i
-  | none => throw (IO.userError s!"expected an integer, got '{s}'")
+/-- Parse a required rational argument (`a` or `a/b`). -/
+def reqRat (s : String) : IO ℚ :=
+  match parseRat s with
+  | .ok q => pure q
+  | .error m => throw (IO.userError m)
 
-/-- Build a validated `UppSeq ℤ` from three argument strings. -/
-def reqUpp (vals period incr : String) : IO (UppSeq Int) := do
+/-- Build a validated `UppSeq ℚ` from three argument strings. -/
+def reqUpp (vals period incr : String) : IO (UppSeq ℚ) := do
   match buildUpp ⟨← (match parseVals vals with | .ok v => pure v | .error m => throw (IO.userError m)),
-      ← reqNat period, ← reqInt incr⟩ with
+      ← reqNat period, ← reqRat incr⟩ with
   | .ok u => pure u
   | .error m => throw (IO.userError m)
 
-/-- Render a sampled sequence. -/
-def fmt (xs : List Int) : String := ", ".intercalate (xs.map toString)
+/-- Render a sampled sequence (rationals as `a/b`, integers bare). -/
+def fmt (xs : List ℚ) : String := ", ".intercalate (xs.map toString)
 
-/-- Render a sampled `WithTop ℤ` sequence, printing the top element `⊤` (`+∞`) as `inf`. -/
-def fmtWT (xs : List (WithTop ℤ)) : String :=
+/-- Render a sampled `WithTop ℚ` sequence, printing the top element `⊤` (`+∞`) as `inf`. -/
+def fmtWT (xs : List (WithTop ℚ)) : String :=
   ", ".intercalate (xs.map fun x => match x with | none => "inf" | some z => toString z)
 
 def usage : String := String.intercalate "\n"
-  [ "usage: minplus <command>   (executable, proved-correct (min,plus) calculator over ℤ UPP sequences)",
-    "  a UPP sequence is  <vals> <period> <incr>  where <vals>=v0,v1,…  and  f(n)=f(n-period)+incr",
+  [ "usage: minplus <command>   (executable, proved-correct (min,plus) calculator over ℚ UPP sequences)",
+    "  a UPP sequence is  <vals> <period> <incr>  where <vals>=v0,v1,…  (each a or a/b)  and  f(n)=f(n-period)+incr",
     "  past the stored prefix.",
     "    eval <vals> <period> <incr> <n>                 print f(n)",
     "    seq  <vals> <period> <incr> <k>                 print f(0..k-1)",
