@@ -234,6 +234,26 @@ theorem Sq2CoupledFRel.delayLiveStay {D : Type*} [Fintype D] {d e : ℝ≥0} {u 
   refine ⟨δ', hstay, le_of_lt ((jointValW_sqrt2_side hδ').mp hAlt), η₁, hη₁0, fun η' hη'0 hη'η₁ => ?_⟩
   exact (hsb η' η₁ hη'0 (lt_trans hη'η₁ hη₁η₂) hη₁0 hη₁η₂).trans hδ'
 
+/-- **Crossing delay** (`√2 ≤ d + δ`): A lands at or past `√2` (`a`-disabled); B matches into the past
+regime. The η-bump forces B *strictly* past `√2` even at the double-coincidence — the bumped process
+`(d+δ)+η > √2` has `frac ≠ 0`, so the region match (`jointValW_sqrt2_side` + `jointValW_sqrt2_eq_side`)
+puts B's process strictly above `√2`. The formula clocks land region-equivalent (`precomp some`). -/
+theorem Sq2CoupledFRel.delayCross {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' : Valuation D}
+    (h : Sq2CoupledFRel d u e u') (δ : ℝ≥0) (hcross : sqrt2NN ≤ d + δ) :
+    ∃ δ', sqrt2NN < e + δ' ∧ RegionEqAll (u.add δ) (u'.add δ') := by
+  obtain ⟨_, _, η₀, hη₀, hreg⟩ := h
+  obtain ⟨δ', hδ'⟩ :=
+    jointValW_delay_match (hreg (η₀ / 2) (half_pos hη₀) (NNReal.half_lt_self hη₀.ne')) δ
+  rw [show d + η₀ / 2 + δ = (d + δ) + η₀ / 2 from by ring] at hδ'
+  have hApast : sqrt2NN < (d + δ) + η₀ / 2 := lt_of_le_of_lt hcross (lt_add_of_pos_right _ (half_pos hη₀))
+  refine ⟨δ', ?_, ?_⟩
+  · have hge : sqrt2NN ≤ e + δ' :=
+      not_lt.mp (fun hlt => absurd ((jointValW_sqrt2_side hδ').mpr hlt) (not_lt.mpr (le_of_lt hApast)))
+    have hne : e + δ' ≠ sqrt2NN := fun heq => (ne_of_gt hApast) ((jointValW_sqrt2_eq_side hδ').mpr heq)
+    exact lt_of_le_of_ne hge (Ne.symm hne)
+  · have hp := RegionEqAll.precomp (f := Option.some) (Option.some_injective D) hδ'
+    rwa [jointValW_comp_some, jointValW_comp_some] at hp
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
