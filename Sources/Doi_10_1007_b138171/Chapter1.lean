@@ -465,6 +465,12 @@ theorem thm_1_4_1_prod {R : Type*} [CommRing R] [IsDomain R] (f g : R[X]) (n : �
     Polynomial.resultant f g f.natDegree n = f.leadingCoeff ^ n * (f.roots.map g.eval).prod :=
   Polynomial.resultant_eq_prod_eval f g n hg hf
 
+/-- **Theorem 1.4.1** (§1.4, p.19), multiplicativity: `res(A₁·A₂, B) = res(A₁, B) · res(A₂, B)`. -/
+theorem thm_1_4_1_mul {R : Type*} [CommRing R] (f₁ f₂ g : R[X]) (n : ℕ) (hn : g.natDegree ≤ n) :
+    Polynomial.resultant (f₁ * f₂) g (f₁.natDegree + f₂.natDegree) n
+      = Polynomial.resultant f₁ g f₁.natDegree n * Polynomial.resultant f₂ g f₂.natDegree n :=
+  Polynomial.resultant_mul_left f₁ f₂ g n hn
+
 /-- **Corollary 1.4.2** (§1.4, p.19), field case: `res(A,B) = 0 ⟺ A, B` are not coprime — i.e.
 `deg gcd(A,B) > 0` — provided `A` and `B` are not both zero. -/
 theorem cor_1_4_2 {K : Type*} [Field K] {f g : K[X]} :
