@@ -40,4 +40,18 @@ Nonlinear time-series models — threshold autoregressions, bilinear models, and
 conditional-variance models — relaxing the linear and Gaussian assumptions, and their probabilistic
 and statistical analysis; infra-blocked. -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§13.1: the transfer-function model `Yₜ = ∑_{j≥0} τⱼ X_{t−j} + Nₜ` (eq 13.1.1, an infinite one-sided
+filter) [infra]; Definition 13.1.1 (prewhitening) [infra]; estimation of the filter `{τⱼ}` [infra]
+§13.2: Definition 13.2.1 (the fractionally integrated `ARIMA(0,d,0)`, `(1 − B)^d Xₜ = Zₜ`, `d ∈ (−½, ½)`)
+[infra]; Theorem 13.2.1 (the unique stationary causal solution with slowly decaying autocorrelations)
+[infra]; the action of `(1 − B)^d` on a process (an infinite sum) [infra]; Whittle estimation of `d`
+[infra]
+§13.3: linear processes with infinite-variance (stable) noise; the Cauchy-driven `MA` process; the
+stable-law limit theory [infra]
+§13.4: threshold autoregression models [infra]; bilinear models [infra]; `ARCH` conditional-variance
+models [infra]; `GARCH` conditional-variance models [infra]
+(Only the fractional-difference coefficients eq 13.2.3 (`fracDiffCoeff`) are algebraic and done; the
+rest needs infinite linear filters, the Gamma function, stable laws, and nonlinear recursions.) -/
+
 end DeepWiki.Ts

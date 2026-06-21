@@ -385,4 +385,11 @@ The finite `MA(q)` autocovariance `γ(h) = σ² ∑ⱼ θⱼ θ_{j+|h|}` is the 
 case; the concrete low-order cases (MA(1), MA(2)) are proved in `DeepWiki.TimeSeries.ProcessExamples`
 (`maProcess1`, `maProcess2`). -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§3.1: Theorem 3.1.3 (two-sided/noncausal Laurent solution, `φ ≠ 0` only on `|z| = 1`) [infra]
+§3.2: Proposition 3.2.1 (a zero-mean `q`-correlated stationary process is an `MA(q)`) [infra]
+(Thm 3.1.3 needs annulus/Laurent reciprocal infrastructure; Prop 3.2.1 needs the L²-innovations/
+projection-of-past layer. Thms 3.1.1/3.1.2 ⟺, Props 3.1.1/3.1.2, Exs 3.2.1–3.2.3, and all of §3.3
+are formalized.) -/
+
 end DeepWiki.Ts

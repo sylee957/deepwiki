@@ -41,4 +41,12 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
         a i * a j * (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i)) :=
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§7.1: Theorem 7.1.1 (asymptotic variance of the sample mean, `n·Var(X̄ₙ) → ∑ⱼ γ(j)`) [infra]; Theorem
+7.1.2 (asymptotic normality of the sample mean) [infra]
+§7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, Bartlett's formula) [infra]; Theorem 7.2.2
+(Bartlett's formula, general case) [infra]
+(Dominant blocker: the time-series central limit theorem of §6.4. The estimators eq 7.2.1/7.2.2 and
+the sample-covariance-matrix non-negative-definiteness eq 7.2.3 are done.) -/
+
 end DeepWiki.Ts

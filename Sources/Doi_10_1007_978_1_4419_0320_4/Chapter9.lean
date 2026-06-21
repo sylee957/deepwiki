@@ -47,4 +47,14 @@ theorem sarima_constrained_arma {φ Φ θ Θ : ℝ[X]} {d D s : ℕ} {x z : ℤ 
     lagPoly (sarimaArPoly φ Φ d D s) x = lagPoly (sarimaMaPoly θ Θ s) z :=
   h.armaEq
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§9.2–§9.4: identification techniques (model selection from the sample ACF/PACF) [infra]; order
+selection by the AICC criterion [infra]; diagnostic checking (residual analysis, portmanteau tests)
+[infra]
+§9.5: forecasting `ARIMA` processes (the best linear predictor of the integrated model and the
+`h`-step prediction bounds) [infra]
+(The `ARIMA`/`SARIMA` model definitions and difference equations — def 9.1.1, eq 9.1.1, def 9.6.1, the
+constrained-ARMA equation — are done; the data-analytic model-building, order-selection, diagnostic,
+and forecasting procedures rest on the Chapter 6–8 estimation/limit theory.) -/
+
 end DeepWiki.Ts

@@ -88,4 +88,17 @@ projection-plus-causality layer deferred above. The **Wold decomposition**
 (`Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ + Vₜ`, purely-nondeterministic plus deterministic) needs closed-subspace limits
 and is infra-blocked. -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§5.1: Proposition 5.1.1 (`γ(0) > 0` and `γ(h) → 0` ⟹ the covariance matrix `Γₙ` is non-singular for
+every `n`) [infra]
+§5.2: Proposition 5.2.2 (the innovations algorithm `X̂_{n+1} = ∑ⱼ θₙⱼ(X_{n+1−j} − X̂_{n+1−j})`, eq
+5.2.15) [deferred]
+§5.3: Example 5.3.1 (`AR(p)` predictor `X̂_{n+1} = φ₁Xₙ + ⋯ + φₚX_{n+1−p}`) [infra]; Example 5.3.2 (`MA(q)`
+predictor) [infra]; Example 5.3.3 (`ARMA(1,1)` predictor `X̂_{n+1} = φXₙ + θₙ₁(Xₙ − X̂ₙ)`) [infra];
+`h`-step prediction (eqs 5.3.22–5.3.24, enumerated 5.3.22, 5.3.23, 5.3.24) [infra]; the Wold
+decomposition `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ + Vₜ` [infra]
+(§5.1/§5.3/Wold need the L² embedding of the process + span-of-past + causal orthogonality
+`Z_{n+1} ⊥ sp{Xₛ : s ≤ n}`; Prop 5.2.2 is reachable algebraically but is a hard nested recursion. The
+§5.1 projection (eq 5.1.3/5.1.5) and §5.2 Durbin–Levinson Prop 5.2.1 + error-product are done.) -/
+
 end DeepWiki.Ts

@@ -181,6 +181,12 @@ that subspace — the prediction equations (§2.3) at `ℳ = col(X)`. So §2.6 i
 application of the projection theorem; the library's `bestPredictor_sub_mem_orthogonal`. -/
 alias eq_2_6_5 := DeepWiki.TimeSeries.bestPredictor_sub_mem_orthogonal
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§2.5: Theorem 2.5.1 (the least-squares projection in `ℝⁿ` as `P_ℳ = X(XᵀX)⁻¹Xᵀ` with normal equations
+`XᵀX β = Xᵀx`) [deferred]
+(Reachable from the projection theorem `thm_2_3_1`/`bestPredictor` already in place; §2.1–§2.4 and §2.6
+are formalized.) -/
+
 end DeepWiki.Ts
 
 

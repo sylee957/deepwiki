@@ -59,4 +59,22 @@ The multivariate spectral representation `Xₜ = ∫ e^(itλ) dZ(λ)` via an ort
 process `Z` with `E(dZ(λ) dZ(λ)*) = dF(λ)` (Definition 11.8.1) — the vector analogue of the
 Chapter 4 spectral representation; the stochastic-integral construction is infra-blocked. -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§11.1: the mean vector `μ = EXₜ` (eq 11.1.4) [deferred]; Definition 11.1.1 (multivariate stationarity)
+[deferred]
+§11.2: Theorem 11.2.1 (asymptotic distribution of the sample cross-correlations `ρ̂ᵢⱼ(h)`) [infra];
+Theorem 11.2.2 [infra]
+§11.3: Theorem 11.3.1 (vector-ARMA causality criterion `det Φ(z) ≠ 0` for `|z| ≤ 1`) [deferred]; the
+vector `ARMA(p,q)` process definition [deferred]
+§11.4: the multivariate innovations one-step predictors `X̂ₙ₊₁` (eq 11.4.27) [infra]; their error
+covariance matrices (eq 11.4.28) [infra]
+§11.5: the Gaussian likelihood `L(Φ, Θ, Σ)` for multivariate ARMA ML estimation (eq 11.5.4) [infra]
+§11.6: the spectral density matrix `f(λ)` (eq 11.6.4) [infra]; Definition 11.6.1 (the cross spectrum
+`f₁₂`) [infra]; the squared coherency [infra]; the phase spectrum [infra]
+§11.7: the smoothed cross-spectral estimates `f̂ᵢⱼ` [infra]; the cross-amplitude and phase-spectrum
+estimates with their asymptotic distributions (Theorem 11.7.1) [infra]
+§11.8: Definition 11.8.1 (the multivariate spectral representation `Xₜ = ∫ e^{itλ} dZ(λ)`) [infra]
+(The stationary second-order matrix algebra `Γ(h)` (eq 11.1.5) is done; the rest needs matrix
+extensions of the limit/spectral theory and L² stochastic integration.) -/
+
 end DeepWiki.Ts

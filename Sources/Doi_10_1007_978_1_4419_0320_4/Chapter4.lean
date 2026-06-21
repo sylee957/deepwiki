@@ -126,4 +126,19 @@ theorem ex_4_4_2 (φ1 σ2 lam : ℝ) :
       = σ2 / (2 * Real.pi) / (1 - 2 * φ1 * Real.cos lam + φ1 ^ 2) :=
   armaSpectralDensity_ar1 φ1 σ2 lam
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§4.1: Definition 4.1.1 (complex stationary process) [infra]; Definition 4.1.2 (complex autocovariance
+`γ(h) = E(X_{t+h} X̄ₜ) − EX_{t+h} EX̄ₜ`) [infra]; Theorem 4.1.1 forward (complex stationary ⟹ Hermitian
+non-neg-definite `γ`) [infra]; Theorem 4.1.1 converse (existence of a process with given `γ`) [infra]
+§4.2: equation 4.2.5 (process spectral representation `Xₜ = ∫ e^{itν} dZ(ν)`) [infra]
+§4.3: Theorem 4.3.1 (Herglotz) converse (construct the spectral measure `F` from a non-neg-definite
+sequence) [infra]; Corollary 4.3.2 (summable `γ` ⟺ continuous bounded `f ≥ 0`) [infra]
+§4.4: the spectral-measure packaging of Theorem 4.4.1 (filter multiplies the spectral measure by
+`|ψ̂|²`) [infra]; the spectral-measure packaging of Theorem 4.4.2 [infra]
+§4.5–§4.7: stochastic integration / spectral representation theory (orthogonal-increment processes,
+`∫ dZ`) [infra]
+(Dominant blocker: a complex-L² process layer over `Lp ℂ 2 μ`, Bochner/Herglotz
+measure-from-positive-definite-sequence, and L² stochastic integration — absent in this Mathlib. The
+algebraic cores Thm 4.3.2, Thm 4.4.1 (`fourier_tsum_mul_shift`), Thm 4.4.2, Exs 4.4.1/4.4.2 are done.) -/
+
 end DeepWiki.Ts

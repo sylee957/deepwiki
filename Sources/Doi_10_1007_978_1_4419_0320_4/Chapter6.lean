@@ -26,4 +26,16 @@ available. This file is a book↔lib structure map; no Chapter 6 theorem is form
 
 namespace DeepWiki.Ts
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
+order notation) [infra]; Slutsky's theorem [infra]
+§6.2: Chebyshev's inequality (eq 6.2.1) [infra]; convergence in `rᵗʰ` mean [infra]
+§6.3: Proposition 6.3.2 (weak law of large numbers for moving averages, `n⁻¹ ∑ₜ Xₜ →ᵖ μ`) [infra]
+§6.4: the delta method (Example 6.4.2) [infra]; Definition 6.4.3 (`m`-dependence) [infra]; the central
+limit theorem for `m`-dependent processes [infra]; the central limit theorem for linear processes
+[infra]
+(Dominant blocker: the time-series central limit / large-sample limit theory for dependent and linear
+processes is not in this Mathlib — the whole chapter is the limit-theory engine the inference chapters
+rest on. No Chapter 6 theorem is formalized.) -/
+
 end DeepWiki.Ts

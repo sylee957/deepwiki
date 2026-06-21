@@ -84,4 +84,23 @@ The starred section derives the asymptotic normality of the maximum-likelihood a
 ARMA estimators (deferred from Chapter 8) via a Gram–Schmidt (Cholesky) factorization of the
 covariance matrix (eq 10.8.18); infra-blocked. -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§10.1: Definition 10.1.1 (the discrete Fourier transform coefficients `aⱼ = ⟨x, eⱼ⟩` as a named
+object, with the Fourier basis `eⱼ` and frequency set `Fₙ`) [deferred]
+§10.2: Proposition 10.2.1 (null distribution of the order statistics `Mₖ`) [infra]; Corollary 10.2.1
+[infra]; Corollary 10.2.2 [infra]; Fisher's test for hidden periodicities [infra]
+§10.3: Definition 10.3.1 (periodogram extended to all `ω ∈ [−π, π]`) [deferred]; Proposition 10.3.1
+(asymptotic unbiasedness `E Iₙ(ω) → 2πf(ω)`) [infra]; the inconsistency of the periodogram [infra]
+§10.4: equation 10.4.7 (the discrete spectral average estimator `f̂`) [deferred]; Theorem 10.4.1
+(mean-square consistency) [infra]; Theorem 10.4.2 [infra]
+§10.5: equation 10.5.4 (confidence intervals for `f(ω)`) [infra]; simultaneous confidence intervals
+over several frequencies [infra]
+§10.6: the sampling properties of the plug-in rational estimator `f̂` [infra]
+§10.7: the Cooley–Tukey FFT algorithm (eq 10.7.1, recursive `n = rs` factoring) [deferred]
+§10.8: equation 10.8.18 (the Gram–Schmidt/Cholesky covariance factorization) [deferred]; asymptotic
+normality of the ML and least-squares ARMA estimators [infra]
+(§10.1 orthogonality / Prop 10.1.1 / Parseval eq 10.1.9 and the §10.6 estimator formula eq 10.6.4 are
+done. Dominant blocker for the rest: large-sample limit theory — periodogram sampling distributions,
+smoothed-estimator consistency, confidence intervals; §10.7 is a procedural algorithm.) -/
+
 end DeepWiki.Ts

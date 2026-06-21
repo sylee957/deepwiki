@@ -45,4 +45,16 @@ Recursive Bayesian filtering propagates the conditional distribution of the stat
 conditional expectations for a large class of (not necessarily Gaussian) state-space models; the
 integral recursions are infra-blocked. -/
 
+/-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
+§12.2: Definition 12.2.1 (the prediction/filtering/smoothing projection problems) [infra]; the Kalman
+prediction recursion for `X̂ₜ` and `Ωₜ` [infra]; the Kalman filtering recursion [infra]; the Kalman
+smoothing recursion [infra]
+§12.3: the Gaussian likelihood of the realized observations via the missing-data Kalman recursion (eq
+12.3.6) [infra]; Example 12.3.1 (ARMA/ARIMA with missing values) [infra]
+§12.4: Proposition 12.4.3 (controllability/observability and the minimal-representation dimension)
+[deferred]; the controllability and observability definitions [deferred]
+§12.5: recursive Bayesian state estimation (the conditional-distribution integral recursions) [infra]
+(The state-space model and its deterministic recursions (def 12.1.1) are done; the Kalman recursions
+rest on the L²-projection operator, not yet built; the §12.4 matrix theory is reachable.) -/
+
 end DeepWiki.Ts
