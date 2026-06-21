@@ -356,6 +356,22 @@ theorem squarefreePart_deflation_eq_prod (A : D[X]) (k : ℕ) (hA : A.primPart �
     rw [Finset.mem_filter] at hP ⊢
     exact ⟨Finset.mem_image_of_mem _ hP.1, hP.2⟩
 
+open Classical in
+/-- The derivative of a deflation in factored form (the analytic core of Yun's relation 1.17):
+`d(A⁻ᵏ)/dx = ∑ₐ (∏_{b ≠ a} Aᵦ^(b−k)) · (a−k)·Aₐ^(a−k−1)·dAₐ/dx`, by the product and power rules on
+`A⁻ᵏ = ∏ Aⱼ^(j−k)`. -/
+theorem derivative_deflation (A : D[X]) (k : ℕ) :
+    derivative (deflation A k)
+      = ∑ a ∈ (normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P),
+        (∏ b ∈ ((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).erase a, (sqfreeFactPart A b) ^ (b - k))
+        * (C ((a - k : ℕ) : D) * (sqfreeFactPart A a) ^ (a - k - 1)
+          * derivative (sqfreeFactPart A a)) := by
+  rw [deflation_eq_prod_sqfreeFactPart A k, derivative_prod_finset]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [derivative_pow]
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
