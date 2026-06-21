@@ -790,6 +790,11 @@ abbrev alg_squarefree_emit := @squarefreeLoop_head_assoc
 associates), the next iteration's `S⁻`. -/
 abbrev alg_squarefree_update := @squarefreeLoop_tail_assoc
 
+/-- **Algorithm `Squarefree`** total correctness (§1.7, p.29, Musser), over a characteristic-`0` field:
+`squarefreeFactorization A` returns the squarefree-factorization parts `[A₁, …, Aₘ]` (`m` = the maximal
+multiplicity), each up to associates — `List.Forall₂ Associated` to `(List.range m).map (Aᵢ₊₁)`. -/
+abbrev alg_squarefree_correct := @squarefreeFactorization_forall₂
+
 open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
 `A = ∏_{a∈s}(X − a)^{eₐ}`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` is the (squarefree) product of the roots
@@ -1129,14 +1134,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   = **Lemma 7.1 case `0≤j<k` complete**: `Sⱼ(A,B) = (-1)^((m-j)(n-j))·(lc B)^(n-k)·Sⱼ(B,Rem)` at `Rem`'s
   true degree `k`. Remaining: the degenerate cases `j=k`/`k<j<n-1`/`j=n-1` of Thm 7.4 (det becomes
   triangular → diagonal product) → Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down the PRS).
-§1.7: the Musser/Yun `Squarefree` algorithm — the full inductive total-correctness theorem
-  (output list `= [A₁, …, Aₘ]` up to associates; needs the termination characterization
-  `(A⁻ᵏ).natDegree = 0 ⟺ k ≥ max multiplicity` + fuel/length bookkeeping) [infra]. The executable
-  `def squarefreeFactorization` (= `alg_squarefree`) and every loop-body line are verified: emit
-  `Aₖ = S*/gcd(S*,S⁻)` = `alg_squarefree_emit`, update `S⁻/gcd = A⁻⁽ᵏ⁺¹⁾` = `alg_squarefree_update`,
-  init `S⁻ = gcd(pp, pp') = A⁻¹` (eq 1.14) = `alg_squarefree_init_gcd`, loop gcd `= (A⁻ᵏ)*`
-  = `alg_squarefree_loop_gcd`. (Yun's `Yₖ` = `def_yun`; eq 1.17 deriv = `lem_1_7_2`, gcd
-  = `lem_1_7_2_eq_17_gcd`; eq 1.18 = `lem_1_7_2_eq_18`. Lemma 1.7.1 + Lemma 1.7.2 done.)
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
