@@ -445,6 +445,19 @@ theorem thm_3_5_1_gcd_dt {K : Type*} [Field K] [CharZero K] (s : Finset K) (e : 
       (∏ a ∈ s, (X - C a) ^ (e a - 1)) :=
   gcd_prod_X_sub_C_pow_derivative s e he
 
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), special-part formula `pₛ = gcd(p, Dp)/gcd(p, dp/dt)` in
+multiplicative form: for `p = ∏_{a∈s}(X − a)^{eₐ}` (char `0`),
+`gcd(p, Dp) ~ gcd(p, dp/dt) · ∏_{a : v(a)=a′}(X − a)`. The special part `pₛ` is exactly the
+squarefree product of `p`'s special roots. -/
+theorem thm_3_5_1 {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X]) (s : Finset K)
+    (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)))
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a))
+        * ∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) :=
+  gcd_implicitDeriv_associated_gcd_derivative_mul_special v s e he
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
 -- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced

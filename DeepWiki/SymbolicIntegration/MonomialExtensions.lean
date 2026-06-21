@@ -622,6 +622,20 @@ theorem gcd_prod_X_sub_C_pow_derivative {K : Type*} [Field K] [CharZero K] (s : 
   exact (associated_mul_unit_right _ _ hg1).symm
 
 open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), the special-part formula `pₛ = gcd(p, Dp)/gcd(p, dp/dt)` in
+multiplicative form: for `p = ∏_{a∈s}(X − a)^{eₐ}` (char `0`),
+`gcd(p, Dp) ~ gcd(p, dp/dt) · ∏_{a : v(a)=a′}(X − a)`. So the special part of `p` (the cofactor
+`gcd(p, Dp)/gcd(p, dp/dt)`) is exactly the squarefree product of its special roots. -/
+theorem gcd_implicitDeriv_associated_gcd_derivative_mul_special {K : Type*} [Field K] [CharZero K]
+    [Differential K] (v : K[X]) (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a) ^ e a)))
+      (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a))
+        * ∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) :=
+  (gcd_prod_X_sub_C_pow_implicitDeriv v s e he).trans
+    ((gcd_prod_X_sub_C_pow_derivative s e he).symm.mul_right _)
+
+open Classical in
 /-- **§3.5**: the special and normal parts of the squarefree splitting are coprime (`pₛ ⊥ pₙ`) —
 they are products over the disjoint special/normal halves of the root set. -/
 theorem isCoprime_splitting_parts {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
