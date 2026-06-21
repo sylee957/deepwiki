@@ -428,6 +428,18 @@ theorem derivative_deflation_pred (A : D[X]) (i : ℕ) (hi : 1 ≤ i) :
     rw [show a - (i - 1) = 0 from by have := ha haI; omega]
     simp
 
+open Classical in
+/-- The derivative of a squarefree part in factored form (toward Yun's relation 1.18):
+`d(A⁻ᵏ)*/dx = ∑_{a > k} (∏_{b > k, b ≠ a} Aᵦ) · dAₐ/dx`, by the product rule on `(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. -/
+theorem derivative_squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    derivative (squarefreePart (deflation A k))
+      = ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a),
+        (∏ b ∈ (((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a)).erase a,
+          sqfreeFactPart A b) * derivative (sqfreeFactPart A a) := by
+  rw [squarefreePart_deflation_eq_prod A k hA, derivative_prod_finset]
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
