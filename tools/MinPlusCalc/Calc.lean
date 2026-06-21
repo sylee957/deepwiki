@@ -304,4 +304,16 @@ its own closure, `f* = f` — convolving it with itself never lowers any value. 
 example : closureSample ⟨[0, 4], 1, 1, by decide, by decide⟩ 4 = [(0 : WithTop ℤ), 4, 5, 6] := by
   native_decide
 
+/-- **Rational-valued closure (gate-verified):** the sub-additive closure machinery is now generic
+over the value type (`closureApproxNat` over `WithTop V`), so it computes over `ℚ` too. The fractional
+sub-additive curve `f = [0, 5/2, 3, 7/2, …]` (rate `1/2`, `f(0)=0`) is its own closure `f* = f`. This
+exercises `closureApproxNat` at `V = ℚ` — the value-type generalization of `δ₀` and the whole closure
+iteration end-to-end. -/
+example :
+    (List.range 4).map (fun n => UppSeq.closureApproxNat
+        (⟨[(0 : WithTop ℚ), ((5 / 2 : ℚ) : WithTop ℚ)], ((1 / 2 : ℚ) : WithTop ℚ), 1,
+          by decide, (by decide : (1 : ℕ) ≤ 2)⟩) n n)
+      = [((0 : ℚ) : WithTop ℚ), ((5 / 2 : ℚ) : WithTop ℚ),
+         ((3 : ℚ) : WithTop ℚ), ((7 / 2 : ℚ) : WithTop ℚ)] := by native_decide
+
 end MinPlusCalc

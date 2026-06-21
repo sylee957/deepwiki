@@ -143,9 +143,13 @@ Two orthogonal generalizations remain:
 
 - **Rational values** (fractional rates/bursts) are *not* a research gap: `UppSeq V` and its operators
   are generic over any `[AddCommGroup V] [LinearOrder V] [IsOrderedAddMonoid V] [Archimedean V]`, and
-  `ℚ` satisfies all four with decidable order. The proved-correct `convNat`/`deconvNat`/`min`/`max`
-  already compute over `ℚ` unchanged (gate-verified in `Calc.lean`); exposing them at the CLI needs only
-  a rational reader/printer at the boundary — a mechanical, not foundational, step.
+  `ℚ` satisfies all four with decidable order. The proved-correct `convNat`/`deconvNat`/`min`/`max` —
+  **and now the sub-additive closure** (`δ₀`, `iterConvNat`, `closureApproxNat`, and the stabilization
+  theorems were generalized from `WithTop ℤ` to `WithTop V`) — compute over `ℚ` unchanged (gate-verified
+  in `Calc.lean`: a fractional rate-`3/2` ⊗ rate-`1/2` convolution, a fractional backlog `3/2`, and a
+  rational sub-additive closure). Exposing them at the CLI needs only a rational reader/printer at the
+  boundary (`parseVals` via `splitOn "/"` + `mkRat`, render via `toString : ℚ`, `delayBound` fuel via
+  `(backlogBound …).ceil.toNat`) — a mechanical, not foundational, step.
 - **Continuous time** (rational breakpoint *positions* with linear interpolation between them) is a
   genuinely different model: the operators become infima/suprema over a continuous `t`, and tying the
   discrete `ℕ`-indexed values to the `ℝ≥0`-valued library curves (`residualCurve`, `concatConv`) needs
