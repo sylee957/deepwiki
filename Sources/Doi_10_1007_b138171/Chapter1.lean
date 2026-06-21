@@ -689,6 +689,37 @@ theorem ex_1_2_2 :
       ∧ (52 * X + 111 : ℤ[X]).natDegree < 2 :=
   ⟨by ring, by compute_degree!⟩
 
+/-- **Example 1.3.1** (§1.3, p.10): the Euclidean algorithm computes the gcd of
+`x⁴ − 2x³ − 6x² + 12x + 15 = (x+1)(x³−3x²−3x+15)` and `x³ + x² − 4x − 4 = (x+1)(x²−4)` in `ℚ[x]`
+as `5x + 5 ~ x + 1` (the cofactors `x³−3x²−3x+15` and `x²−4` are coprime, via Bézout
+`−(x−3)(x³−3x²−3x+15) + (x²−6x+10)(x²−4) = 5`). -/
+theorem ex_1_3_1 :
+    Associated (gcd (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15 : ℚ[X]) (X^3 + X^2 - 4*X - 4)) (X + 1) := by
+  have hf : (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15 : ℚ[X]) = (X + 1) * (X^3 - 3*X^2 - 3*X + 15) := by ring
+  have hg : (X^3 + X^2 - 4*X - 4 : ℚ[X]) = (X + 1) * (X^2 - 4) := by ring
+  have hcop : IsCoprime (X^3 - 3*X^2 - 3*X + 15 : ℚ[X]) (X^2 - 4) := by
+    refine ⟨C (1/5) * (-(X - 3) : ℚ[X]), C (1/5) * (X^2 - 6*X + 10 : ℚ[X]), ?_⟩
+    have hb : (-(X - 3) : ℚ[X]) * (X^3 - 3*X^2 - 3*X + 15) + (X^2 - 6*X + 10) * (X^2 - 4) = 5 := by
+      ring
+    calc C (1/5) * (-(X - 3) : ℚ[X]) * (X^3 - 3*X^2 - 3*X + 15)
+          + C (1/5) * (X^2 - 6*X + 10 : ℚ[X]) * (X^2 - 4)
+        = C (1/5) * ((-(X - 3) : ℚ[X]) * (X^3 - 3*X^2 - 3*X + 15) + (X^2 - 6*X + 10) * (X^2 - 4)) := by
+          ring
+      _ = C (1/5) * 5 := by rw [hb]
+      _ = 1 := by rw [← map_ofNat C 5, ← C_mul]; norm_num
+  have hu : IsUnit (gcd (X^3 - 3*X^2 - 3*X + 15 : ℚ[X]) (X^2 - 4)) :=
+    hcop.isUnit_of_dvd' (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+  have hg1 : gcd (X^3 - 3*X^2 - 3*X + 15 : ℚ[X]) (X^2 - 4) = 1 :=
+    (normalize_gcd _ _).symm.trans (normalize_eq_one.mpr hu)
+  rw [hf, hg, gcd_mul_left, hg1, mul_one]
+  exact normalize_associated _
+
+/-- **Example 1.3.2** (§1.3, p.11): the *extended* Euclidean algorithm on the same `a, b` yields
+the Bézout cofactors `s = −x + 3`, `t = x² − 6x + 10` with `s·a + t·b = 5x + 5` (equation 1.4). -/
+theorem ex_1_3_2 :
+    (-X + 3) * (X ^ 4 - 2*X^3 - 6*X^2 + 12*X + 15 : ℚ[X]) + (X^2 - 6*X + 10) * (X^3 + X^2 - 4*X - 4)
+      = 5*X + 5 := by ring
+
 /-- **Exercise 1.4** (§1, p.33): the gcd of `2x³ − (19/5)x² − x + 6/5 = (x−2)(2x²+(1/5)x−3/5)` and
 `x² + (1/3)x − 14/3 = (x−2)(x+7/3)` in `ℚ[x]` is `x − 2` (the cofactors `2x²+(1/5)x−3/5` and
 `x+7/3` are coprime — they share no root). The fractional-coefficient identities are discharged
@@ -810,7 +841,7 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.6: Def 1.6.2 (deflations `A⁻ᵏ` / squarefree part `A*`); relation 1.11; relation 1.12;
   relation 1.13.
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
-Examples: Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
+Examples: Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7; Ex 1.14. -/
 
