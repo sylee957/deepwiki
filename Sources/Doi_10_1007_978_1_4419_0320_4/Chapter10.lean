@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.Periodogram
+import DeepWiki.TimeSeries.SpectralDensity
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 10: Inference for the Spectrum of a Stationary Process
@@ -67,6 +68,12 @@ A parametric estimator substitutes maximum-likelihood ARMA estimates into the AR
 density: `f̂(λ) = σ̂²/(2π) · |θ̂(e^{-iλ})|² / |φ̂(e^{-iλ})|²` (eq 10.6.4) — exactly the library's
 `armaSpectralDensity` (Theorem 4.4.2) evaluated at the estimated coefficients. The plug-in is
 algebraic; its sampling properties are infra-blocked. -/
+
+/-- **§10.6 (eq 10.6.4, the rational spectral density estimator)**: the maximum-likelihood plug-in
+`f̂(λ) = σ̂²/(2π) · |θ̂(e^{-iλ})|² / |φ̂(e^{-iλ})|²` is the `armaSpectralDensity` formula (eq 4.4.5,
+Theorem 4.4.2) evaluated at the estimated coefficients `φ̂, θ̂, σ̂²`. The library's
+`armaSpectralDensity`. -/
+noncomputable abbrev eq_10_6_4 := @DeepWiki.TimeSeries.armaSpectralDensity
 
 /-! ## §10.7 The Fast Fourier Transform (FFT) Algorithm (p.373)
 The Cooley–Tukey FFT computes the discrete Fourier transform in `O(n log n)` operations by
