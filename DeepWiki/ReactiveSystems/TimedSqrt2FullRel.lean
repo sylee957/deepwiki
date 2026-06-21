@@ -248,6 +248,29 @@ theorem crossVal_live_invariant {d δ v : ℝ≥0} (h : d + δ ≤ sqrt2NN) :
     crossVal (d + δ) (v + δ) = crossVal d v :=
   clock_at_sqrt2_delay_invariant h
 
+/-- **Delay clause, exact crossing at a coincidence** (the breakthrough case, previously thought to need
+asymmetric region theory). When A delays exactly to `√2` (`d+δ = √2`) and some clock `y` coincides
+(`cv d u y = m ∈ ℤ`), the symmetric region time-successor forces B's clock `y` to the integer `m`
+(`regionEqAll_satisfies` on `atom y eq m`), and then `coincidence_past` puts B's process strictly past
+`√2` — so both land `a`-disabled (the past regime), via standard symmetric region tools. -/
+theorem Sq2FullRel.delay_exact_coincidence {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' : Valuation D}
+    (hr : RegionEqAll u u') (he : e ≤ sqrt2NN) (hcross : ∀ y, AsymMatch (cv d u y) (cv e u' y))
+    (δ : ℝ≥0) (hδ : d + δ = sqrt2NN) (y : D) (m : ℕ) (hcoinc : cv d u y = (m : ℝ≥0)) :
+    ∃ δ' q', (sq2TLTS sqrt2NN).delay (Sq2.B e) δ' q' ∧
+      Sq2FullRel (Sq2.A (d + δ)) (u.add δ) q' (u'.add δ') := by
+  obtain ⟨δ', hr'⟩ := regionEqAll_timeSuccessor hr δ
+  have hδeq : δ = sqrt2NN - d := by rw [← hδ, add_tsub_cancel_left]
+  have huy : (u.add δ) y = (m : ℝ≥0) := by
+    rw [Valuation.add_apply, hδeq, ← cv_apply, hcoinc]
+  have huy' : (u'.add δ') y = (m : ℝ≥0) := by
+    have hs := regionEqAll_satisfies hr' (ClockConstraint.atom y Cmp.eq m)
+    simp only [satisfies, Cmp.holds] at hs
+    exact hs.mp huy
+  have hpast : sqrt2NN < e + δ' :=
+    coincidence_past (hcoinc ▸ hcross y) (by rw [← huy']; rfl) he
+  exact ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB,
+    Or.inl ⟨le_of_eq hδ.symm, hpast, hr'⟩⟩
+
 /-- The seed: `(A 0) ~ (B 0)` at the all-zero formula valuation. -/
 theorem sq2FullRel_seed {D : Type*} :
     Sq2FullRel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) := by
