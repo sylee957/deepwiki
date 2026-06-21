@@ -6,6 +6,7 @@ import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Algebra.MvPolynomial.Division
+import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
 import Mathlib.RingTheory.Algebraic.Basic
@@ -442,6 +443,32 @@ theorem thm_1_3_euclidean {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b :
 theorem thm_1_3_extended {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b : R) :
     EuclideanDomain.gcd a b = a * EuclideanDomain.gcdA a b + b * EuclideanDomain.gcdB a b :=
   EuclideanDomain.gcd_eq_gcd_ab a b
+
+/-! ## §1.4 Resultants and Subresultants -/
+
+/-- **Definition 1.4.1** (§1.4, p.18): the *Sylvester matrix* `S(A,B)`. -/
+noncomputable abbrev def_1_4_1_sylvester := @Polynomial.sylvester
+
+/-- **Definition 1.4.1** (§1.4, p.18): the *resultant* `res(A,B) = det S(A,B)`. -/
+noncomputable abbrev def_1_4_1 := @Polynomial.resultant
+
+/-- **Theorem 1.4.1** (§1.4, p.19), symmetry: `res(A,B) = (-1)^{deg A · deg B} · res(B,A)`. -/
+theorem thm_1_4_1_comm {R : Type*} [CommRing R] (f g : R[X]) :
+    Polynomial.resultant f g = (-1) ^ (f.natDegree * g.natDegree) * Polynomial.resultant g f :=
+  Polynomial.resultant_comm f g f.natDegree g.natDegree
+
+/-- **Theorem 1.4.1** (§1.4, p.19), the root form: for `f` that splits,
+`res(A,B) = lc(A)^{deg B} · ∏_{α root of A} B(α)`. -/
+theorem thm_1_4_1_prod {R : Type*} [CommRing R] [IsDomain R] (f g : R[X]) (n : ℕ)
+    (hg : g.natDegree ≤ n) (hf : f.Splits) :
+    Polynomial.resultant f g f.natDegree n = f.leadingCoeff ^ n * (f.roots.map g.eval).prod :=
+  Polynomial.resultant_eq_prod_eval f g n hg hf
+
+-- **Deferred — not in Mathlib (library work):** Corollary 1.4.1 (`res = 0 ⟺` common root in the
+-- algebraic closure — derivable from `thm_1_4_1_prod`), Theorem 1.4.2 (`res ∈ (A,B)`, i.e.
+-- `res = SA + TB`), Corollary 1.4.2 (`res = 0 ⟺ deg gcd(A,B) > 0`), and the entire *subresultant*
+-- theory: Definition 1.4.2 (`Sⱼ(A,B)` from Sylvester submatrices), Theorem 1.4.3 (subresultant
+-- specialization under ring homomorphisms), and §1.5 polynomial remainder sequences.
 
 /-! ## §1.6 Primitive Polynomials -/
 
