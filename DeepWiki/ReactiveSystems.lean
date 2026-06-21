@@ -72,6 +72,7 @@ import DeepWiki.ReactiveSystems.TimedBisimulationTimeAbstracted
 import DeepWiki.ReactiveSystems.TimedBisimulationWeak
 import DeepWiki.ReactiveSystems.TimedAutomata
 import DeepWiki.ReactiveSystems.NetworkTimedAutomata
+import DeepWiki.ReactiveSystems.TimedJobshopNetwork
 import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph

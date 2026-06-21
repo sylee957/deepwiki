@@ -7,6 +7,7 @@ import DeepWiki.ReactiveSystems.TimedRegions
 import DeepWiki.ReactiveSystems.TimedRegionsBisimulation
 import DeepWiki.ReactiveSystems.TimedRegionGraph
 import DeepWiki.ReactiveSystems.TimedZones
+import DeepWiki.ReactiveSystems.TimedJobshopNetwork
 import DeepWiki.ReactiveSystems.TimedLanguageExample
 import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
 import DeepWiki.ReactiveSystems.FourTimedAutomataBisim
@@ -17,13 +18,8 @@ import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 11: Timed behavioural equivalences
 Book-numbered restatements for §11.1 (timed/untimed trace equivalence), §11.2
-(timed/untimed bisimilarity) and §11.4 (the region construction), discharged by
-the `DeepWiki.ReactiveSystems` library.
-
-## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§11.5: zone graphs `[infra]`.
-Ex 11.3: timed parallel composition `[research]` (the §9.4 parallel SOS it builds on is now in
-  `TimedCcsParallel`; the bisimilarity argument of Ex 11.3 itself is not yet formalized). -/
+(timed/untimed bisimilarity), §11.4 (the region construction) and §11.5 (zones and
+reachability graphs), discharged by the `DeepWiki.ReactiveSystems` library. -/
 
 namespace DeepWiki.Rs
 
@@ -346,6 +342,18 @@ theorem ex_11_2 :
       DeepWiki.ReactiveSystems.taB.tlts.timedLang
         (DeepWiki.ReactiveSystems.taB.initial, fun _ => (0 : ℝ≥0))) :=
   DeepWiki.ReactiveSystems.taA_taB_untimedEq_not_timedEq
+
+/-- **Exercise 11.3** (§11.2, p.196). The network `Worker ∣ Employer` of Figure 10.4
+(the lazy worker and his demanding employer, `hit` the only ordinary action) is timed
+bisimilar to a single timed automaton `Simple-Jobshop` with only two clocks. The
+library's `networkWorkerEmployer_timedBisimilar_simpleJobshop`: the worker's and
+employer's mode timers (`x`, `z`) stay equal on every reachable state — so three
+clocks collapse to two — and the conjoined working invariant `x ≤ 60 ∧ y ≤ 4` is
+exactly the small Jobshop's. -/
+theorem ex_11_3 :
+    DeepWiki.ReactiveSystems.networkWorkerEmployer.TimedBisimilar
+      DeepWiki.ReactiveSystems.SimpleJobshop :=
+  DeepWiki.ReactiveSystems.networkWorkerEmployer_timedBisimilar_simpleJobshop
 
 /-- **Exercise 11.5** (§11.2, p.199). The four single-action, single-clock timed
 automata `A` (`a[y≤1, y:=0]` twice), `X` (`a[y≤2]` twice), `U` (`a[true]` then
