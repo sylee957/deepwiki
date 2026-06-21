@@ -627,6 +627,35 @@ theorem ex_1_5 :
   have h2 : (3 * X ^ 2 - 7 : ℤ[X]).natDegree = 2 := by compute_degree!
   rw [h2]; compute_degree!
 
+/-- **Exercise 1.4** (§1, p.33): the gcd of `2x³ − (19/5)x² − x + 6/5 = (x−2)(2x²+(1/5)x−3/5)` and
+`x² + (1/3)x − 14/3 = (x−2)(x+7/3)` in `ℚ[x]` is `x − 2` (the cofactors `2x²+(1/5)x−3/5` and
+`x+7/3` are coprime — they share no root). The fractional-coefficient identities are discharged
+pointwise via `Polynomial.funext` (`ℚ` is infinite), then the `gcd_mul_left` reduction applies. -/
+theorem ex_1_4 :
+    Associated
+      (gcd (2 * X ^ 3 - C (19 / 5) * X ^ 2 - X + C (6 / 5) : ℚ[X]) (X ^ 2 + C (1 / 3) * X - C (14 / 3)))
+      (X - 2) := by
+  have hf : (2 * X ^ 3 - C (19 / 5) * X ^ 2 - X + C (6 / 5) : ℚ[X])
+      = (X - 2) * (2 * X ^ 2 + C (1 / 5) * X - C (3 / 5)) := by
+    apply Polynomial.funext; intro x
+    simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat]
+    ring
+  have hg : (X ^ 2 + C (1 / 3) * X - C (14 / 3) : ℚ[X]) = (X - 2) * (X + C (7 / 3)) := by
+    apply Polynomial.funext; intro x
+    simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat]
+    ring
+  have hcop : IsCoprime (2 * X ^ 2 + C (1 / 5) * X - C (3 / 5) : ℚ[X]) (X + C (7 / 3)) := by
+    refine ⟨C (45 / 442), C (45 / 442) * (C (67 / 15) - 2 * X), ?_⟩
+    apply Polynomial.funext; intro x
+    simp only [eval_add, eval_sub, eval_mul, eval_pow, eval_X, eval_C, eval_ofNat, eval_one]
+    ring
+  have hu : IsUnit (gcd (2 * X ^ 2 + C (1 / 5) * X - C (3 / 5) : ℚ[X]) (X + C (7 / 3))) :=
+    hcop.isUnit_of_dvd' (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+  have hg1 : gcd (2 * X ^ 2 + C (1 / 5) * X - C (3 / 5) : ℚ[X]) (X + C (7 / 3)) = 1 :=
+    (normalize_gcd _ _).symm.trans (normalize_eq_one.mpr hu)
+  rw [hf, hg, gcd_mul_left, hg1, mul_one]
+  exact normalize_associated _
+
 /-- **Exercise 1.8** (§1, p.33): the gcd of `4x⁴ + 13x³ + 15x² + 7x + 1 = (x+1)³(4x+1)` and
 `2x³ + x² − 4x − 3 = (x+1)²(2x−3)` in `ℚ[x]` is `(x+1)²` (the cofactors `(x+1)(4x+1)` and
 `2x−3` are coprime, via Bézout `2·(x+1)(4x+1) + (−4x−11)(2x−3) = 35`). -/
@@ -721,6 +750,6 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
 §1.7: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm.
 Examples: Ex 1.2.1; Ex 1.3.1; Ex 1.3.3; Ex 1.3.4; Ex 1.3.5; Ex 1.3.7; Ex 1.4.2; Ex 1.5.1;
   Ex 1.5.2; Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
-Exercises: Ex 1.4; Ex 1.6; Ex 1.7; Ex 1.11; Ex 1.14. -/
+Exercises: Ex 1.6; Ex 1.7; Ex 1.11; Ex 1.14. -/
 
 end DeepWiki.Si
