@@ -383,6 +383,14 @@ theorem thm_3_5_1_gcd {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Fin
       (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) :=
   gcd_prod_X_sub_C_implicitDeriv v s
 
+open Classical in
+/-- **§3.5** canonical representation: the special and normal parts of the squarefree splitting are
+coprime — `pₛ ⊥ pₙ`. -/
+theorem splitting_parts_coprime {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+      (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a)) :=
+  isCoprime_splitting_parts v s
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
 -- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced

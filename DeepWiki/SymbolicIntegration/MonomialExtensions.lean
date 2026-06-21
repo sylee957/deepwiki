@@ -401,6 +401,15 @@ theorem isCoprime_X_sub_C_iff {K : Type*} [Field K] {a : K} {g : K[X]} :
     IsCoprime (X - C a) g ↔ g.eval a ≠ 0 := by
   rw [(prime_X_sub_C a).coprime_iff_not_dvd, dvd_iff_isRoot]; rfl
 
+/-- Products of linear factors over *disjoint* root sets are coprime. -/
+theorem isCoprime_prod_X_sub_C_of_disjoint {K : Type*} [Field K] {s t : Finset K}
+    (h : Disjoint s t) :
+    IsCoprime (∏ a ∈ s, (X - C a)) (∏ b ∈ t, (X - C b)) := by
+  refine IsCoprime.prod_left (fun a ha => IsCoprime.prod_right (fun b hb => ?_))
+  refine isCoprime_X_sub_C_iff.mpr ?_
+  rw [eval_sub, eval_X, eval_C]
+  exact sub_ne_zero.mpr (fun hab => (Finset.disjoint_left.mp h ha) (hab ▸ hb))
+
 /-- **Theorem 3.4.2** (§3.4, p.93), single linear factor: `X − a` is normal w.r.t. the monomial
 derivation `D` (`Dt = v`) iff `Dα ≠ Hₜ(α)` at its root, i.e. `v(a) ≠ a′`. -/
 theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
@@ -498,6 +507,14 @@ theorem gcd_prod_X_sub_C_implicitDeriv {K : Type*} [Field K] [Differential K] (v
   · rw [if_neg h]
     exact associated_one_iff_isUnit.mpr
       (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
+
+open Classical in
+/-- **§3.5**: the special and normal parts of the squarefree splitting are coprime (`pₛ ⊥ pₙ`) —
+they are products over the disjoint special/normal halves of the root set. -/
+theorem isCoprime_splitting_parts {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a))
+      (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a)) :=
+  isCoprime_prod_X_sub_C_of_disjoint (Finset.disjoint_filter_filter_not s s _)
 
 end LinearFactor
 
