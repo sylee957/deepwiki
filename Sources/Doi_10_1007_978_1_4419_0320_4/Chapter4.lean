@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.SpectralDistribution
 import DeepWiki.TimeSeries.SpectralDensity
 import DeepWiki.TimeSeries.SpectralDensityFourier
+import DeepWiki.TimeSeries.ArmaSpectralDensity
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 4: The Spectral Representation of a Stationary Process
@@ -83,13 +84,15 @@ ARMA(p,q) process (no common zeroes, `φ(z) ≠ 0` on `|z| = 1`) has the **ratio
 density** `f(λ) = (σ²/2π) |θ(e^{-iλ})|² / |φ(e^{-iλ})|²` (eq 4.4.5).
 
 The **frequency-domain core** of Theorem 4.4.1 — that a linear filter `ψ(B)` (`∑|ψⱼ| < ∞`)
-transforms the autocovariance's Fourier series by `|ψ̂(e^{-iλ})|²` — is now formalized
-(`thm_4_4_1` below: `∑ₙ e^{-inλ} ∑ₖ ψₖ ψ_{k+n} = (∑ₖ ψₖ e^{ikλ})(∑ₘ ψₘ e^{-imλ})`). What remains
-infra-blocked is its packaging as a statement about spectral *measures* (and the process spectral
-representation `Xₜ = ∫ e^{itν} dZ`). The spectral-density **formula** itself is the algebraic
-`armaSpectralDensity` below, with its non-negativity and the white-noise case (`φ = θ = 1`,
-constant `σ²/2π`), and **Example 4.4.1** (the MA(1) density `(σ²/2π)(1 + 2θ₁cos λ + θ₁²)`) all
-proved. -/
+transforms the autocovariance's Fourier series by `|ψ̂(e^{-iλ})|²` — is formalized (`thm_4_4_1`
+below), as is its squared-modulus form `fourier_tsum_mul_shift_eq_normSq`. **Theorem 4.4.2** is now
+formalized too (`thm_4_4_2`): the Fourier-series spectral density of the causal-ARMA autocovariance
+`γ(h) = σ² ∑ₖ ψ̃ₖ ψ̃_{k+h}` equals the rational `armaSpectralDensity = (σ²/2π)|θ/φ|²`, via the ARMA
+transfer function `ψ̂(e^{-iλ}) = θ(e^{-iλ})/φ(e^{-iλ})` (`tsum_armaPsiZ_fourier_eq_div`, the evaluated
+`φ·ψ̂ = θ` on the unit circle). What remains infra-blocked is the packaging in terms of spectral
+*measures* (and the process spectral representation `Xₜ = ∫ e^{itν} dZ`). The algebraic formula
+`armaSpectralDensity` carries its non-negativity, the white-noise case (`φ = θ = 1`, constant
+`σ²/2π`), and **Examples 4.4.1–4.4.2** (the MA(1) / AR(1) densities). -/
 
 /-- **§4.4, Theorem 4.4.1 (eq 4.4.3, frequency-domain core)**: a linear filter `ψ(B)` with
 `∑ⱼ |ψⱼ| < ∞` transforms the autocovariance's Fourier series by the squared transfer function
@@ -97,10 +100,15 @@ proved. -/
 conjugate since `ψ` is real). The library's `fourier_tsum_mul_shift`. -/
 alias thm_4_4_1 := DeepWiki.TimeSeries.fourier_tsum_mul_shift
 
-/-- **§4.4, Theorem 4.4.2 (eq 4.4.5)**: the rational spectral density of an ARMA(p,q) process,
-`f(λ) = (σ²/2π) · |θ(e^{-iλ})|² / |φ(e^{-iλ})|²`. The library's `armaSpectralDensity` (with
-`armaSpectralDensity_nonneg` and `armaSpectralDensity_one_one`, the white-noise constant). -/
-noncomputable abbrev thm_4_4_2 := @DeepWiki.TimeSeries.armaSpectralDensity
+/-- **§4.4 (eq 4.4.5, the rational spectral-density formula)**: `(σ²/2π) · |θ(e^{-iλ})|² /
+|φ(e^{-iλ})|²`. The library's `armaSpectralDensity` (with `armaSpectralDensity_nonneg` and
+`armaSpectralDensity_one_one`, the white-noise constant). -/
+noncomputable abbrev eq_4_4_5 := @DeepWiki.TimeSeries.armaSpectralDensity
+
+/-- **§4.4, Theorem 4.4.2**: the Fourier-series spectral density of the causal-`ARMA(p,q)`
+autocovariance `γ(h) = σ² ∑ₖ ψ̃ₖ ψ̃_{k+h}` is the rational density `(σ²/2π)|θ(e^{-iλ})|²/|φ(e^{-iλ})|²`
+(`eq_4_4_5`). The library's `fourierSpectralDensity_armaAcvf`. -/
+alias thm_4_4_2 := DeepWiki.TimeSeries.fourierSpectralDensity_armaAcvf
 
 /-- **Example 4.4.1** (§4.4, p.123): the spectral density of an `MA(1)` process
 `Xₜ = Zₜ + θ₁Zₜ₋₁` (`φ = 1`, `θ = 1 + θ₁z`) is `(σ²/2π)(1 + 2θ₁ cos λ + θ₁²)`. The library's
