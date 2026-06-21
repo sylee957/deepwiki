@@ -99,6 +99,36 @@ theorem sq2ARel_seed {D : Type*} :
     Sq2ARel (Sq2.A 0) (fun _ : D => 0) (Sq2.B 0) (fun _ : D => 0) :=
   Or.inr ⟨0, 0, rfl, rfl, zero_lt_sqrt2NN, le_of_lt zero_lt_sqrt2NN, RegionEqAll.refl _⟩
 
+/-- **Delay clause, past regime.** From two `a`-disabled region-equivalent states, a left delay is
+matched by a right delay landing again `a`-disabled and region-equivalent. -/
+theorem Sq2ARel.delay_past {D : Type*} [Fintype D] {p q : Sq2} {u u' : Valuation D}
+    (hpd : aDisabled sqrt2NN p) (hqd : aDisabled sqrt2NN q) (hr : RegionEqAll u u')
+    (d : ℝ≥0) (p' : Sq2) (hstep : (sq2TLTS sqrt2NN).delay p d p') :
+    ∃ d' q', (sq2TLTS sqrt2NN).delay q d' q' ∧ Sq2ARel p' (u.add d) q' (u'.add d') := by
+  rw [sq2_delay] at hstep
+  obtain ⟨d', hr'⟩ := regionEqAll_timeSuccessor hr d
+  obtain ⟨q', hqstep, hq'd⟩ := hqd.delay_succ d'
+  exact ⟨d', q', sq2_delay.mpr hqstep, Or.inl ⟨hpd.delay_pres hstep, hq'd, hr'⟩⟩
+
+/-- **Delay clause, live and non-crossing into the lower region** (`d + δ ≤ 1`, hence `< √2`). The
+integer-region time-successor already keeps B at `≤ 1 < √2` (so B stays live), no `√2`-side window
+needed — `√2` is irrelevant below `1`. (The remaining live cases enter the region `(1, √2)`, where the
+`√2`-side must be controlled inside the integer-region window — the asymmetric crux.) -/
+theorem Sq2ARel.delay_live_lower {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' : Valuation D}
+    (hr : RegionEqAll (jointVal d u) (jointVal e u')) (δ : ℝ≥0) (hlow : d + δ ≤ 1) :
+    ∃ δ' q', (sq2TLTS sqrt2NN).delay (Sq2.B e) δ' q' ∧
+      Sq2ARel (Sq2.A (d + δ)) (u.add δ) q' (u'.add δ') := by
+  obtain ⟨δ', hr'⟩ := regionEqAll_timeSuccessor hr δ
+  rw [jointVal_add, jointVal_add] at hr'
+  have h1lt : (1 : ℝ≥0) < sqrt2NN := by rw [← NNReal.coe_lt_coe]; push_cast; exact one_lt_sqrt2NN
+  -- `e + δ' ≤ 1` from the integer-region match on the process clock `none`
+  have hle : e + δ' ≤ (1 : ℝ≥0) := by
+    have hs := regionEqAll_satisfies hr' (ClockConstraint.atom none Cmp.le 1)
+    simp only [satisfies, Cmp.holds, jointVal_none, Nat.cast_one] at hs
+    exact hs.mp hlow
+  refine ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB,
+    Or.inr ⟨d + δ, e + δ', rfl, rfl, lt_of_le_of_lt hlow h1lt, le_of_lt (lt_of_le_of_lt hle h1lt), hr'⟩⟩
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
