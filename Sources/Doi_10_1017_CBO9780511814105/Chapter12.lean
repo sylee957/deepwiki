@@ -51,6 +51,9 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   (`naive_invariant_not_characteristic`): two pure-delay states with invariants `x≤2`/`x≤1` are not timed
   bisimilar yet both satisfy the naive `νX.(x≤2)∧∀∀X` (`mtInv`), so the safety body is *not* characteristic —
   invariants genuinely require the region-graph delay discretisation of the full LLW construction.
+  `TimedInvariantDelayForcing` then shows the **fix** (`charInvF_separates`): the *delay-forcing* clause
+  `∃∃(x = 2 ∧ X)` — a forceable delay-successor reaching the invariant boundary — *does* separate the two
+  states (`(false,0) ⊨`, `(true,0) ⊭`), the design behind LLW's region step (single-clock pure-delay case).
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes

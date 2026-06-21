@@ -90,6 +90,7 @@ import DeepWiki.ReactiveSystems.TimedNondetCharacteristic
 import DeepWiki.ReactiveSystems.TimedMultiActionCharacteristic
 import DeepWiki.ReactiveSystems.TimedGeneralGuardCharacteristic
 import DeepWiki.ReactiveSystems.TimedInvariantObstruction
+import DeepWiki.ReactiveSystems.TimedInvariantDelayForcing
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlStrict
 import DeepWiki.ReactiveSystems.TimedBisimulationHmlRefined
 import DeepWiki.ReactiveSystems.CharacteristicFormulaTimed
