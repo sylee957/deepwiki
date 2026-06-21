@@ -607,6 +607,11 @@ abbrev thm_1_5_2_explicit := @subresultant_prs_telescope_explicit
 `subresultant_prs_similar_elt`. -/
 abbrev thm_1_5_2_elt := @subresultant_prs_similar_elt
 
+/-- **Theorem 1.5.2** (§1.5, p.23) — nonzero case at the other regular index `j = deg Rᵢ₋₁ − 1`:
+`Sⱼ(A,B)` is similar to the PRS element `Rᵢ`. `subresultant_prs_similar_elt_top`. (With `thm_1_5_2_elt`
+this covers both regular indices.) -/
+abbrev thm_1_5_2_elt_top := @subresultant_prs_similar_elt_top
+
 /-- **Theorem 1.5.2** (§1.5, p.23) — exact rational coefficient form: over `Frac(D)`, at a regular index
 `Sⱼ(A,B) = ηᵢ·Rᵢ` for an explicit nonzero `ηᵢ ∈ Frac(D)` (eq 1.9). `subresultant_prs_eq_fractionRing`,
 lifting the `D[x]` similarity (`thm_1_5_2_elt`) to the scalar via `IsSimilar.exists_fractionRing`. -/

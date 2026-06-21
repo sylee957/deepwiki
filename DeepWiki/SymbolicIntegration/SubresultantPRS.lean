@@ -208,4 +208,25 @@ theorem subresultant_prs_eq_fractionRing {D : Type*} [CommRing D] [IsDomain D]
         = C η * (F (m + 2)).map (algebraMap D (FractionRing D)) :=
   (subresultant_prs_similar_elt F α β Q m hα hβ hlc hcb hj hQ hrel hC).exists_fractionRing
 
+/-- **Fundamental PRS Theorem, nonzero case at the other regular index `j = deg F_{m+1} − 1`** (Bronstein
+Thm 1.5.2): `Sⱼ(F₀,F₁)` is similar to the PRS element `F_{m+2}` — telescoping the similarity to the
+endpoint and then to the remainder via `subresultant_prs_similar_remainder_top` (eq 24). Together with
+`subresultant_prs_similar_elt` (the `j = deg F_{m+2}` index), this covers both regular indices. -/
+theorem subresultant_prs_similar_elt_top [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
+    (m : ℕ) (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
+    (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, (F (m + 1)).natDegree - 1 < (F (l + 2)).natDegree)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l) :
+    IsSimilar (subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree ((F (m + 1)).natDegree - 1))
+      (F (m + 2)) :=
+  (subresultant_prs_telescope F α β Q ((F (m + 1)).natDegree - 1) m
+      (fun l hl => hα l (by omega)) (fun l hl => hβ l (by omega)) (fun l hl => hlc l (by omega))
+      (fun l hl => hcb l (by omega)) hj (fun l hl => hQ l (by omega))
+      (fun l hl => hrel l (by omega))).trans
+    (subresultant_prs_similar_remainder_top (F m) (F (m + 1)) (F (m + 2)) (Q m) (α m) (β m)
+      (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
+      (hlc m le_rfl) (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
+
 end DeepWiki.SymbolicIntegration
