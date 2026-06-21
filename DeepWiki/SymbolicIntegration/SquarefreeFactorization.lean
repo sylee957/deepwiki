@@ -247,6 +247,37 @@ theorem squarefreePart_deflation_mul_sqfreeFactPart (A : D[X]) (i : ℕ) (hi : 1
   intro P _
   omega
 
+open Classical in
+/-- **Lemma 1.7.1 (i)** (§1.7): `A⁻ᵏ = ∏ᵢ Aᵢ^(i−k)`, the deflation regrouped by multiplicity (the
+product ranges over the multiplicities `i` occurring in `pp(A)`; terms with `i ≤ k` contribute `1`).
+Proof: `Finset.prod_fiberwise_of_maps_to` partitions the prime factors of `pp(A)` by multiplicity. -/
+theorem deflation_eq_prod_sqfreeFactPart (A : D[X]) (k : ℕ) :
+    deflation A k = ∏ i ∈ (normalizedFactors A.primPart).toFinset.image
+        (fun P => (normalizedFactors A.primPart).count P),
+      (sqfreeFactPart A i) ^ (i - k) := by
+  rw [deflation, ← Finset.prod_fiberwise_of_maps_to
+        (t := (normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P))
+        (g := fun P => (normalizedFactors A.primPart).count P)
+        (fun P hP => Finset.mem_image_of_mem _ hP)]
+  refine Finset.prod_congr rfl fun i _ => ?_
+  rw [sqfreeFactPart, ← Finset.prod_pow]
+  refine Finset.prod_congr rfl fun P hP => ?_
+  rw [Finset.mem_filter] at hP
+  rw [hP.2]
+
+open Classical in
+/-- **Lemma 1.7.1 (iii)** (§1.7): `pp(A) = ∏ᵢ Aᵢⁱ` (up to associates) — the squarefree
+factorization of the primitive part. (The `k = 0` case of `deflation_eq_prod_sqfreeFactPart`
+combined with `deflation_zero`.) -/
+theorem primPart_associated_prod_sqfreeFactPart (A : D[X]) (hA : A.primPart ≠ 0) :
+    Associated A.primPart (∏ i ∈ (normalizedFactors A.primPart).toFinset.image
+      (fun P => (normalizedFactors A.primPart).count P), (sqfreeFactPart A i) ^ i) := by
+  have h := deflation_eq_prod_sqfreeFactPart A 0
+  simp only [Nat.sub_zero] at h
+  rw [← h]
+  exact (deflation_zero A hA).symm
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
