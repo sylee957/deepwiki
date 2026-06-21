@@ -129,6 +129,36 @@ theorem Sq2ARel.delay_live_lower {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' :
   refine ⟨δ', Sq2.B (e + δ'), sq2_delay.mpr Sq2Step.delB,
     Or.inr ⟨d + δ, e + δ', rfl, rfl, lt_of_le_of_lt hlow h1lt, le_of_lt (lt_of_le_of_lt hle h1lt), hr'⟩⟩
 
+/-! ### The delay-invariant "value at the √2-crossing" (the key to the asymmetric region)
+
+Maximum-effort design breakthrough for the `(1,√2)` crux. The reason the integer-region match fails to
+control the `√2`-side is that it tracks the cross-ordering of each clock with the *integers*, not with
+`√2`. The fix: for a process at `d < √2` and a clock value `v`, the clock's **value at the
+`√2`-crossing** is `v + (√2 − d)` (advance everything by `√2 − d` to bring the process to `√2`).
+
+This quantity is **delay-invariant** (`clock_at_sqrt2_delay_invariant`): advancing the process and the
+clock together by `δ` leaves it unchanged. So the cross-ordering of every clock with the `√2`-boundary
+— in particular *whether a clock hits an integer exactly at `√2`* (`v + (√2 − d) ∈ ℤ`, the
+double-coincidence) — is a **static datum that is automatically preserved under delay**. The augmented
+single-irrational-cut region is therefore: the standard integer region on the advancing clocks/process,
+the `√2`-side, **and** a match on these frozen crossing-values `{v + (√2 − d)}`. The frozen match needs
+the open/closed **asymmetry** (A's crossing-value `= m` ↔ B's crossing-value just below `m`), which is
+exactly what places B strictly past `√2` at the coincidence. Because the frozen values don't move under
+delay, the delay clause only has to drive the standard region + `√2`-side (the existing window/placement
+toolkit), with the frozen match carried for free — the structural simplification that makes the
+construction tractable. -/
+
+/-- The clock value `v` reaches `v + (√2 − d)` when the process (at `d ≤ √2`) reaches `√2`, and this
+"value at the `√2`-crossing" is **delay-invariant**: advancing both the process and the clock by `δ`
+(staying `≤ √2`) leaves it unchanged. Hence the cross-ordering of each clock with the `√2`-boundary —
+and the double-coincidence `v + (√2 − d) ∈ ℤ` — is a static, auto-preserved datum. -/
+theorem clock_at_sqrt2_delay_invariant {d δ v : ℝ≥0} (h : d + δ ≤ sqrt2NN) :
+    (v + δ) + (sqrt2NN - (d + δ)) = v + (sqrt2NN - d) := by
+  have hd : d ≤ sqrt2NN := le_trans le_self_add h
+  rw [← NNReal.coe_inj]
+  push_cast [NNReal.coe_sub h, NNReal.coe_sub hd]
+  ring
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
