@@ -71,6 +71,10 @@ errors, the recursion's coefficients solve the order-`n` prediction equations
 The library's `dl_correct`. -/
 alias prop_5_2_1 := DeepWiki.TimeSeries.dl_correct
 
+/-- **§5.2 (eq 5.2.5, iterated)**: the one-step prediction error `vₙ = γ(0) ∏_{k=1}^n (1 − φₖₖ²)`
+decreases monotonically with the prediction order. The library's `dlError_eq_prod`. -/
+alias prediction_error_prod := DeepWiki.TimeSeries.dlError_eq_prod
+
 /-! ## §5.3 Recursive Prediction of an ARMA(p,q) Process (pp.177–182)
 
 Applying §5.2 to ARMA processes gives explicit predictors: **Example 5.3.1** (AR(p)):
