@@ -107,4 +107,52 @@ theorem sum_exp_mul_conj_exp (n : ℕ) (hn : 0 < n) (s t : ℕ) (hs : s < n) (ht
     · rintro rfl; simp
   simp only [hiff]
 
+/-- **Equation 10.1.9 (analysis of variance / Parseval):** the periodogram ordinates at the Fourier
+frequencies `ωⱼ = 2πj/n` sum to the total sum of squares — `∑_{j<n} Iₙ(ωⱼ) = ∑_{t<n} xₜ²`. -/
+theorem periodogram_sum_eq (n : ℕ) (hn : 0 < n) (x : ℕ → ℝ) :
+    ∑ j ∈ Finset.range n, periodogram n x (2 * pi * j / n) = ∑ t ∈ Finset.range n, (x t) ^ 2 := by
+  have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hn.ne'
+  -- the complex Parseval identity: ∑_j |Sⱼ|² (as ∑ Sⱼ conj Sⱼ) = n · ∑ xₜ²
+  have keyC : ∑ j ∈ Finset.range n,
+      (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n)))
+        * (starRingEnd ℂ) (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n)))
+      = (n : ℂ) * ∑ t ∈ Finset.range n, (x t : ℂ) ^ 2 := by
+    have expand : ∀ j ∈ Finset.range n,
+        (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n)))
+          * (starRingEnd ℂ) (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n)))
+        = ∑ t ∈ Finset.range n, ∑ s ∈ Finset.range n,
+            (x t : ℂ) * (x s : ℂ) * (Complex.exp (-Complex.I * t * (2 * pi * j / n))
+              * (starRingEnd ℂ) (Complex.exp (-Complex.I * s * (2 * pi * j / n)))) := by
+      intro j _
+      rw [map_sum, Finset.sum_mul_sum]
+      refine Finset.sum_congr rfl fun t _ => Finset.sum_congr rfl fun s _ => ?_
+      rw [map_mul, Complex.conj_ofReal]; ring
+    rw [Finset.sum_congr rfl expand, Finset.sum_comm, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun t ht => ?_
+    rw [Finset.sum_comm]
+    have inner : ∀ s ∈ Finset.range n,
+        ∑ j ∈ Finset.range n, (x t : ℂ) * (x s : ℂ) * (Complex.exp (-Complex.I * t * (2 * pi * j / n))
+          * (starRingEnd ℂ) (Complex.exp (-Complex.I * s * (2 * pi * j / n))))
+        = (x t : ℂ) * (x s : ℂ) * (if s = t then (n : ℂ) else 0) := by
+      intro s hs
+      rw [← Finset.mul_sum, sum_exp_mul_conj_exp n hn s t (Finset.mem_range.mp hs) (Finset.mem_range.mp ht)]
+    rw [Finset.sum_congr rfl inner]
+    simp_rw [mul_ite, mul_zero]
+    rw [Finset.sum_ite_eq' (Finset.range n) t, if_pos ht]
+    ring
+  -- descend: ∑ periodogram = (∑ normSq)/n = (n ∑ x²)/n = ∑ x²
+  have key : ∑ j ∈ Finset.range n,
+      Complex.normSq (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n)))
+      = (n : ℝ) * ∑ t ∈ Finset.range n, (x t) ^ 2 := by
+    have hC : ((∑ j ∈ Finset.range n,
+        Complex.normSq (∑ t ∈ Finset.range n, (x t : ℂ) * Complex.exp (-Complex.I * t * (2 * pi * j / n))) : ℝ) : ℂ)
+        = (n : ℂ) * ∑ t ∈ Finset.range n, (x t : ℂ) ^ 2 := by
+      rw [Complex.ofReal_sum]
+      simp_rw [← Complex.mul_conj]
+      exact keyC
+    exact_mod_cast hC
+  simp_rw [periodogram]
+  push_cast
+  rw [← Finset.sum_div, key, mul_comm, mul_div_assoc, div_self hn0, mul_one]
+
 end DeepWiki.TimeSeries
