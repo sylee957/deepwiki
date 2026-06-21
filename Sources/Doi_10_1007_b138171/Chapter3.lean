@@ -246,6 +246,15 @@ theorem thm_3_4_1_iii_prime {R : Type*} [CommRing R] [IsDomain R] [NormalizedGCD
     (hp : IsSpecial p) (he : IsUnit ((multiplicity π p : R))) : IsSpecial π :=
   isSpecial_of_prime_dvd hπ hdvd hp0 hp he
 
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93), full general-factor form: any factor of a special
+polynomial is special (over a char-`0` UFD-dioid, the multiplicity of each prime factor being a
+unit). -/
+theorem thm_3_4_1_iii {R : Type*} [CommRing R] [IsDomain R] [NormalizedGCDMonoid R]
+    [UniqueFactorizationMonoid R] [Differential R] {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
+    (hmult : ∀ π, Prime π → π ∣ p → IsUnit ((multiplicity π p : R))) (hdvd : q ∣ p) :
+    IsSpecial q :=
+  isSpecial_of_dvd hp0 hp hmult hdvd
+
 /-- **Theorem 3.4.1** (§3.4, p.93): `p` is *both* normal and special iff it is a unit (so the
 ideal `(p) = (1)`) — the normal-and-special polynomials are exactly the units of `k`. -/
 theorem thm_3_4_1_normal_special_iff_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} :
@@ -298,11 +307,8 @@ theorem lem_3_4_4 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential
   associated_gcd_deriv_prod s f hco
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial. The key
---     step — a *prime* factor of a special polynomial is special — is DONE (`thm_3_4_1_iii_prime`).
---     Remaining: assemble the general factor `q∣p` as a product of `p`'s prime factors (each
---     special by the prime case), special by `IsSpecial.mul` — needs UFD factorization of `q` and
---     the char-`0` `IsUnit ((multiplicity:R))` for each prime factor.
+--   • Theorem 3.4.1(iii) — DONE in full: `thm_3_4_1_iii_prime` (prime-factor key step) and
+--     `thm_3_4_1_iii` (general factor of a special polynomial is special, via prime factorization).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
 --     for all roots `α`), Corollaries 3.4.1 / 3.4.2, Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special
 --     polynomials), Theorem 3.4.4 (special of the first kind under algebraic extension).

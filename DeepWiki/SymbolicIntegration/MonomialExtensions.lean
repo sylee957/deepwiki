@@ -237,6 +237,23 @@ theorem isSpecial_of_prime_dvd {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp
       rwa [← hk] at hau
     exact hgπ.symm.dvd.trans (gcd_dvd_right π π′)
 
+variable [IsDomain R] [NormalizedGCDMonoid R] [UniqueFactorizationMonoid R] in
+/-- **Theorem 3.4.1(iii)** (§3.4, p.93): any factor of a special polynomial is special. Factor
+`q ∣ p` into primes (`induction_on_prime`); each prime factor divides `p` so is special
+(`isSpecial_of_prime_dvd`), and specialness is closed under products (`IsSpecial.mul`) and units.
+Needs every prime factor's multiplicity to be a unit (`IsUnit ((multiplicity:R))`, char `0`). -/
+theorem isSpecial_of_dvd {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
+    (hmult : ∀ π, Prime π → π ∣ p → IsUnit ((multiplicity π p : R))) (hdvd : q ∣ p) :
+    IsSpecial q := by
+  revert hdvd
+  refine UniqueFactorizationMonoid.induction_on_prime q ?_ ?_ ?_
+  · intro h; rw [zero_dvd_iff] at h; exact absurd h hp0
+  · intro u hu _; exact (isUnit_iff_dvd_one.mp hu).trans (one_dvd _)
+  · intro c π hc hπ ih hπc
+    have hπp : π ∣ p := (dvd_mul_right π c).trans hπc
+    have hcp : c ∣ p := (dvd_mul_left c π).trans hπc
+    exact (isSpecial_of_prime_dvd hπ hπp hp0 hp (hmult π hπ hπp)).mul (ih hcp)
+
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
 gives `p ∣ p′` only when `p ⊥ q`.) -/
