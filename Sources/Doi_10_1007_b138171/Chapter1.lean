@@ -464,11 +464,17 @@ theorem thm_1_4_1_prod {R : Type*} [CommRing R] [IsDomain R] (f g : R[X]) (n : �
     Polynomial.resultant f g f.natDegree n = f.leadingCoeff ^ n * (f.roots.map g.eval).prod :=
   Polynomial.resultant_eq_prod_eval f g n hg hf
 
+/-- **Corollary 1.4.2** (§1.4, p.19), field case: `res(A,B) = 0 ⟺ A, B` are not coprime — i.e.
+`deg gcd(A,B) > 0` — provided `A` and `B` are not both zero. -/
+theorem cor_1_4_2 {K : Type*} [Field K] {f g : K[X]} :
+    Polynomial.resultant f g = 0 ↔ (f ≠ 0 ∨ g ≠ 0) ∧ ¬ IsCoprime f g :=
+  Polynomial.resultant_eq_zero_iff
+
 -- **Deferred — not in Mathlib (library work):** Corollary 1.4.1 (`res = 0 ⟺` common root in the
 -- algebraic closure — derivable from `thm_1_4_1_prod`), Theorem 1.4.2 (`res ∈ (A,B)`, i.e.
--- `res = SA + TB`), Corollary 1.4.2 (`res = 0 ⟺ deg gcd(A,B) > 0`), and the entire *subresultant*
--- theory: Definition 1.4.2 (`Sⱼ(A,B)` from Sylvester submatrices), Theorem 1.4.3 (subresultant
--- specialization under ring homomorphisms), and §1.5 polynomial remainder sequences.
+-- `res = SA + TB`), and the entire *subresultant* theory: Definition 1.4.2 (`Sⱼ(A,B)` from
+-- Sylvester submatrices), Theorem 1.4.3 (subresultant specialization under ring homomorphisms),
+-- and §1.5 polynomial remainder sequences.
 
 /-! ## §1.6 Primitive Polynomials -/
 
