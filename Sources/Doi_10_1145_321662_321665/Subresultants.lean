@@ -8,7 +8,6 @@ and `(G,H)` for `F + B·G = H`. Equation (12) (the case `0 ≤ j < deg H`) is fu
 remaining equations of Lemma 1 and the Fundamental Theorem are tracked below.
 
 ## NOT YET FORMALIZED
-- Lemma 1, equation (13) [research]: `Sη(F,G) = (-1)^((φ-η)(γ-η))·g₀^(φ-η)·h₀^(γ-η-1)·H` (`j = deg H`).
 - Lemma 2 [research]: the subresultant chain of a full PRS.
 - Fundamental Theorem [research]: each `Sⱼ(F₁,F₂)` (`0 ≤ j < n₂`) is similar to some `Fᵢ` or zero. -/
 
@@ -31,5 +30,10 @@ abbrev lemma_1_eq_15 := @subresultant_rem_eq_15
 `Sⱼ(F,G) = 0` for `deg H < j < deg G − 1` — the defective ("gap") subresultants vanish. The library's
 `subresultant_rem_eq_14`. -/
 abbrev lemma_1_eq_14 := @subresultant_rem_eq_14
+
+/-- **Lemma 1**, equation (13) (§4, p.509): for `F + B·G = H` with `deg F ≥ deg G > deg H`,
+`S_η(F,G) = (-1)^((φ-η)(γ-η))·(lc G)^(φ-η)·(lc H)^(γ-η-1)·H` (`j = deg H = η`). The library's
+`subresultant_rem_eq_13`. -/
+abbrev lemma_1_eq_13 := @subresultant_rem_eq_13
 
 end DeepWiki.Btr

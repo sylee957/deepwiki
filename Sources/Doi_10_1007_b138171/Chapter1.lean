@@ -1138,12 +1138,14 @@ theorem ex_1_15 {D K : Type*} [CommRing D] [IsDomain D] [NormalizedGCDMonoid D]
   true degree `k`. The degenerate case `j=γ-1` (Brown–Traub eq 15) is also DONE:
   `subresultant_deg_sub_one`/`subresultant_rem_eq_15` (`S_{γ-1}(A,B) = (-1)^(φ-γ+1)·(lc B)^(φ-γ+1)·Rem`,
   via the upper-triangular `ⱼSᵢ` det — `Rem`-row `= [0,…,0,Rem.coeff i]`, `B`-block triangular with
-  `lc B` diagonal). The vanishing case `η<j<γ-1` (eq 14, `=0`) is also DONE: `subresultant_deg_mid`/
-  `subresultant_rem_eq_14` (the shared `subresultant_deg_ge_upperTri` makes `ⱼSᵢ` upper-triangular; a
-  middle `Rem`-row gives diagonal `Rem.coeff j = 0`). Remaining: eq 13 (`j=η`, the nonzero
-  `(lc B)^(φ-η)·(lc Rem)^(γ-η-1)·Rem`) — same upper-triangular det but the full `(γ-j)`-row diagonal
-  product (needs the filter-cardinality split); then Lemma 7.2 (=7.1 + scaling) → Thm 7.4 (iterate down
-  the PRS) → Thm 1.5.2/1.5.3.
+  `lc B` diagonal). **All of Brown–Traub Lemma 1 (the single division step) is now COMPLETE**: the
+  unified degenerate formula `subresultant_deg_ge` (`Sⱼ(B,Rem;γ,φ) = (lc B)^(φ-j)·(Rem.coeff j)^(γ-j-1)·Rem`
+  for `deg Rem ≤ j < γ`, via the shared upper-triangular `ⱼSᵢ` det `subresultant_deg_ge_upperTri` +
+  the diagonal product) yields eq 13 (`subresultant_rem_eq_13`, `j=η`), eq 14 (`subresultant_rem_eq_14`,
+  `=0`), eq 15 (`subresultant_rem_eq_15`, `j=γ-1`); with the `0≤j<η` case `subresultant_rem_lt` (eq 12),
+  every subresultant of a division step is now computed. Remaining: Lemma 2 (the subresultant chain of a
+  full PRS) → Thm 7.4 (iterate Lemma 1 down the PRS) → Bronstein Thm 1.5.2/1.5.3 (the explicit `ηᵢ/τᵢ`
+  similarity coefficients).
 Examples: Ex 1.7.2 (the step-by-step Yun trace; the resulting factorization is `ex_1_7_1`).
 Exercises: Ex 1.7. -/
 
