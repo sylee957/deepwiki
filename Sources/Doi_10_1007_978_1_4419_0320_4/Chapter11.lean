@@ -17,6 +17,16 @@ matrix function** `Γ(t+h, t) = E[(X_{t+h} − μ)(Xₜ − μ)'] = [γᵢⱼ(t+
 being the component cross-covariances `γᵢⱼ = Cov(X_{t+h,i}, X_{t,j})`. For a stationary multivariate
 series (Definition 11.1.1) these are independent of `t`, giving `μ` and `Γ(h)`. -/
 
+/-- **§11.1 (eq 11.1.4)**: the **mean vector** `μ = E Xₜ = [E X_{t,i}]ᵢ` of a `d`-variate process.
+The library's `mvMean`. -/
+noncomputable abbrev eq_11_1_4 := @DeepWiki.TimeSeries.mvMean
+
+/-- **Definition 11.1.1 (multivariate weak stationarity)**: each component square-integrable, the
+mean vector constant in `t`, and the cross-covariances invariant under a common shift (`Γ(t+h,t) =
+Γ(h)`). The library's `IsMultivariateStationary` (each component is univariately weakly stationary,
+`IsMultivariateStationary.component`). -/
+def def_11_1_1 := @DeepWiki.TimeSeries.IsMultivariateStationary
+
 /-- **§11.1 (eq 11.1.5)**: the **covariance matrix function** `Γ(h) = [Cov(X_{h,i}, X_{0,j})]ᵢⱼ`
 of a stationary `d`-variate process — the matrix analogue of the univariate autocovariance, with
 diagonal the componentwise `acvf` (`mvACVF_diag`) and `Γ(0)` symmetric (`mvACVF_zero_isSymm`).
@@ -60,8 +70,6 @@ process `Z` with `E(dZ(λ) dZ(λ)*) = dF(λ)` (Definition 11.8.1) — the vector
 Chapter 4 spectral representation; the stochastic-integral construction is infra-blocked. -/
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§11.1: the mean vector `μ = EXₜ` (eq 11.1.4) [deferred]; Definition 11.1.1 (multivariate stationarity)
-[deferred]
 §11.2: Theorem 11.2.1 (asymptotic distribution of the sample cross-correlations `ρ̂ᵢⱼ(h)`) [infra];
 Theorem 11.2.2 [infra]
 §11.3: Theorem 11.3.1 (vector-ARMA causality criterion `det Φ(z) ≠ 0` for `|z| ≤ 1`) [deferred]; the
