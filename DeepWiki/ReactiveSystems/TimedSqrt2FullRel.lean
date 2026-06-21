@@ -121,6 +121,22 @@ theorem process_le_iff_clock_le_cross {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤
     NNReal.coe_add]
   constructor <;> intro <;> linarith
 
+/-- **Process past `√2 − 1` ⟺ clock`+1` past its crossing-value.** The `√2 − 1` cut of the τ-match is
+the `√2` cut shifted by 1: the process is past `√2 − 1` (`√2 < d + δ + 1`) exactly when `v`'s post-delay
+value *plus one* is past `crossVal d v`. The `+1` on the clock side avoids truncating `crossVal − 1`. -/
+theorem process_past_sub1_iff {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤ sqrt2NN) :
+    sqrt2NN < d + δ + 1 ↔ crossVal d v < v + δ + 1 := by
+  rw [crossVal, show v + (sqrt2NN - d) < v + δ + 1 ↔ (sqrt2NN - d) < δ + 1 from by
+    rw [add_assoc, add_lt_add_iff_left], ← NNReal.coe_lt_coe, ← NNReal.coe_lt_coe]
+  push_cast [NNReal.coe_sub hd]; constructor <;> intro <;> linarith
+
+/-- Dually, the process is at-or-below `√2 − 1` (`d + δ + 1 ≤ √2`) iff `v + δ + 1 ≤ crossVal d v`. -/
+theorem process_le_sub1_iff {d δ : ℝ≥0} (v : ℝ≥0) (hd : d ≤ sqrt2NN) :
+    d + δ + 1 ≤ sqrt2NN ↔ v + δ + 1 ≤ crossVal d v := by
+  rw [crossVal, show v + δ + 1 ≤ v + (sqrt2NN - d) ↔ δ + 1 ≤ (sqrt2NN - d) from by
+    rw [add_assoc, add_le_add_iff_left], ← NNReal.coe_le_coe, ← NNReal.coe_le_coe]
+  push_cast [NNReal.coe_sub hd]; constructor <;> intro <;> linarith
+
 /-- The **crossing-value valuation** (clock crossings only): `y ↦ u y + (√2 − d)`, the value clock `y`
 holds when the process reaches `√2`. This is the delay-invariant object; the process's own τ = `√2 − d`
 is *not* invariant and is tracked separately. -/
