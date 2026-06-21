@@ -427,6 +427,77 @@ theorem subresultant_prs_normal_eq [IsDomain R] (F : ℕ → R[X]) (Q : ℕ → 
       from by ring, ← map_mul, ← map_mul, hScal] at hclosed
   exact mul_right_cancel₀ hSLne hclosed
 
+section DefectiveCollapse
+
+open Finset
+
+variable {M : Type*} [CommMonoid M]
+
+/-- Index shift: a product over `range m` of `c (l+1) ^ (f l)` reindexes to `Ico 1 (m+1)` over
+`c k ^ (f (k-1))`. -/
+theorem shift_prod (c : ℕ → M) (f : ℕ → ℕ) (m : ℕ) :
+    ∏ l ∈ range m, (c (l + 1)) ^ (f l) = ∏ k ∈ Ico 1 (m + 1), (c k) ^ (f (k - 1)) := by
+  rw [Finset.prod_Ico_eq_prod_range, Nat.add_sub_cancel]
+  refine prod_congr rfl (fun l _ => ?_)
+  rw [show (1 : ℕ) + l - 1 = l from by omega, Nat.add_comm 1 l]
+
+/-- The `β`-endpoint fold (Collins defective case): with `E m = 1` at the η-index, the separate endpoint
+`c m ^ (δ_{m-1}+1)` (`= βₘ`) absorbs into the `β`-product, giving `∏_{k ∈ Ico 1 (m+1)} c k ^ ((δ_{k-1}+1)·E k)`
+(the `l=0` term `β₀=1` drops). -/
+theorem beta_fold (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m) (hEm : E m = 1) :
+    (c m) ^ (δ (m - 1) + 1)
+        * ∏ l ∈ range m, (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l)
+      = ∏ k ∈ Ico 1 (m + 1), (c k) ^ ((δ (k - 1) + 1) * E k) := by
+  rw [Finset.prod_Ico_succ_top hm, hEm, mul_one, mul_comm]
+  congr 1
+  rw [Finset.range_eq_Ico, ← Finset.prod_Ico_consecutive _ (Nat.zero_le 1) hm]
+  rw [show ∏ l ∈ Ico 0 1, (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l) = 1 from by
+        rw [← Finset.range_eq_Ico, Finset.prod_range_one]; simp, one_mul]
+  refine prod_congr rfl (fun l hl => ?_)
+  rw [Finset.mem_Ico] at hl
+  rw [if_neg (by omega), ← pow_mul]
+
+/-- **General-δ leading-coefficient collapse** — the combinatorial heart of Collins's Theorem 1(b) in the
+*defective* case. With `E` decreasing by the gaps (`E k = E (k+1) + δ (k+1)`), gaps positive (`1 ≤ δ k`), and
+`E m = 1` (the η-index), the `αₘ`-product on the left equals the `(βₘ · lc · β)`-product on the right times
+exactly Collins's coefficient `∏ c (l+1) ^ (δ l · (δ_{l+1} − 1))` — i.e. `∏ cᵢ^(δᵢ₋₁(δᵢ−1))`. Every product
+reindexes (`shift_prod`, `beta_fold`) to a common `∏_{k ∈ Ico 1 (m+1)}`, and one `prod_congr` discharges it
+via the per-`k` identity `(δ_{k-1}+1)·E_{k-1} = (δ_{k-1}+1)·E_k + (δ_{k-1}+δ_k) + δ_{k-1}(δ_k−1)`. -/
+theorem lc_collapse_defective (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m)
+    (hE : ∀ k, E k = E (k + 1) + δ (k + 1)) (hδ : ∀ k, 1 ≤ δ k) (hEm : E m = 1) :
+    ∏ l ∈ range m, (c (l + 1)) ^ ((δ l + 1) * E l)
+      = (c m) ^ (δ (m - 1) + 1)
+        * (∏ l ∈ range m, ((c (l + 1)) ^ (δ l + δ (l + 1))
+            * (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l)))
+        * ∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1)) := by
+  rw [Finset.prod_mul_distrib]
+  have hR :
+      (c m) ^ (δ (m - 1) + 1)
+        * ((∏ l ∈ range m, (c (l + 1)) ^ (δ l + δ (l + 1)))
+            * ∏ l ∈ range m, (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l))
+        * ∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1))
+      = ((c m) ^ (δ (m - 1) + 1)
+            * ∏ l ∈ range m, (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l))
+          * (∏ l ∈ range m, (c (l + 1)) ^ (δ l + δ (l + 1)))
+          * ∏ l ∈ range m, (c (l + 1)) ^ (δ l * (δ (l + 1) - 1)) := by ac_rfl
+  rw [hR, beta_fold c δ E m hm hEm, shift_prod c (fun l => δ l + δ (l + 1)) m,
+    shift_prod c (fun l => δ l * (δ (l + 1) - 1)) m, shift_prod c (fun l => (δ l + 1) * E l) m,
+    ← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+  refine prod_congr rfl (fun k hk => ?_)
+  rw [Finset.mem_Ico] at hk
+  rw [← pow_add, ← pow_add]
+  congr 1
+  simp only [show (k - 1) + 1 = k from by omega]
+  have hEk : E (k - 1) = E k + δ k := by
+    have h := hE (k - 1); rwa [show k - 1 + 1 = k from by omega] at h
+  have hb := hδ k
+  rw [hEk]
+  rcases hd : δ k with _ | p
+  · omega
+  · simp; ring
+
+end DefectiveCollapse
+
 section SubresPRSCoeff
 
 variable {K : Type*} [Field K]

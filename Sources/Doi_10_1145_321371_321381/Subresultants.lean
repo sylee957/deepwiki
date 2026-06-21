@@ -83,4 +83,9 @@ reduced/subresultant p.r.s. coefficients substituted and the signs cancelled, th
 `(lc²·βₗ)`-product in `subresultant_prs_closed_top`. The library's `lc_prod_collapse_normal`. -/
 abbrev thm_1_normal_collapse := @lc_prod_collapse_normal
 
+/-- **Theorem 1(b) defective-case keystone** (§p.133, the general-δ `lc`-power collapse): the `αₘ`-product
+equals the `(βₘ·lc·β)`-product times Collins's coefficient `∏ cᵢ^(δᵢ₋₁(δᵢ-1))`. The library's
+`lc_collapse_defective` (with helpers `shift_prod`, `beta_fold`). -/
+abbrev thm_1_defective_collapse := @lc_collapse_defective
+
 end DeepWiki.Col
