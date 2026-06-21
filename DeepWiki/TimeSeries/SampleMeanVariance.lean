@@ -47,4 +47,83 @@ theorem tendsto_tsum_triangular {γ : ℤ → ℝ} (hγ : Summable γ) :
       exact mul_le_of_le_one_left (abs_nonneg _) hle1
     · rw [norm_zero]; exact abs_nonneg (γ h)
 
+/-- The two boundary sums of the induction step reindex onto the integer intervals `[1, n]` and
+`[-n, -1]`: `∑_{t<n} f(n − t) = ∑_{k∈[1,n]} f k` and `∑_{s<n} f(s − n) = ∑_{k∈[-n,-1]} f k`. -/
+private theorem sum_range_sub_aux (f : ℤ → ℝ) (n : ℕ) :
+    ∑ t ∈ Finset.range n, f ((n : ℤ) - t) = ∑ k ∈ Finset.Icc (1 : ℤ) n, f k := by
+  refine Finset.sum_nbij' (fun t => (n : ℤ) - t) (fun k => ((n : ℤ) - k).toNat) ?_ ?_ ?_ ?_ ?_
+  · intro t ht
+    simp only [Finset.mem_range] at ht
+    simp only [Finset.mem_Icc]
+    omega
+  · intro k hk
+    simp only [Finset.mem_Icc] at hk
+    simp only [Finset.mem_range]
+    omega
+  · intro t ht
+    simp only [Finset.mem_range] at ht
+    omega
+  · intro k hk
+    simp only [Finset.mem_Icc] at hk
+    omega
+  · intro t ht
+    rfl
+
+/-- Companion of `sum_range_sub_aux`: `∑_{s<n} f(s − n) = ∑_{k∈[-n,-1]} f k`. -/
+private theorem sum_range_sub_aux2 (f : ℤ → ℝ) (n : ℕ) :
+    ∑ s ∈ Finset.range n, f ((s : ℤ) - n) = ∑ k ∈ Finset.Icc (-(n : ℤ)) (-1), f k := by
+  refine Finset.sum_nbij' (fun s => (s : ℤ) - n) (fun k => (k + n).toNat) ?_ ?_ ?_ ?_ ?_
+  · intro s hs; simp only [Finset.mem_range] at hs; simp only [Finset.mem_Icc]; omega
+  · intro k hk; simp only [Finset.mem_Icc] at hk; simp only [Finset.mem_range]; omega
+  · intro s hs; simp only [Finset.mem_range] at hs; omega
+  · intro k hk; simp only [Finset.mem_Icc] at hk; omega
+  · intro s hs; rfl
+
+/-- **Counting identity (Theorem 7.1.1 kernel):** the square double sum of `f(s − t)` collapses to a
+triangular-weighted single sum, `∑_{s,t<n} f(s − t) = ∑_{|h|≤n} (n − |h|) f(h)`, because the lag
+`h = s − t` is hit by exactly `n − |h|` index pairs. Proved by induction: passing from `n` to `n+1`
+adds the boundary row and column `∑_{−n ≤ h ≤ n} f(h)`. -/
+theorem sum_range_sum_range_sub (f : ℤ → ℝ) (n : ℕ) :
+    ∑ s ∈ Finset.range n, ∑ t ∈ Finset.range n, f ((s : ℤ) - t)
+      = ∑ h ∈ Finset.Icc (-(n : ℤ)) n, ((n : ℝ) - |h|) * f h := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    -- expand the `(n+1)×(n+1)` square into the `n×n` square plus its boundary row/column/corner
+    have hS : ∑ s ∈ Finset.range (n + 1), ∑ t ∈ Finset.range (n + 1), f ((s : ℤ) - t)
+        = (∑ s ∈ Finset.range n, ∑ t ∈ Finset.range n, f ((s : ℤ) - t))
+          + (∑ s ∈ Finset.range n, f ((s : ℤ) - n)) + (∑ t ∈ Finset.range n, f ((n : ℤ) - t))
+          + f 0 := by
+      simp_rw [Finset.sum_range_succ, Finset.sum_add_distrib, sub_self]
+      ring
+    -- the boundary equals `∑_{−n ≤ h ≤ n} f h`
+    have hbdry : (∑ s ∈ Finset.range n, f ((s : ℤ) - n)) + (∑ t ∈ Finset.range n, f ((n : ℤ) - t))
+        + f 0 = ∑ h ∈ Finset.Icc (-(n : ℤ)) n, f h := by
+      rw [sum_range_sub_aux2, sum_range_sub_aux]
+      have hunion : Finset.Icc (-(n : ℤ)) n
+          = Finset.Icc (-(n : ℤ)) (-1) ∪ insert 0 (Finset.Icc (1 : ℤ) n) := by
+        ext x; simp only [Finset.mem_Icc, Finset.mem_union, Finset.mem_insert]; omega
+      have hdisj : Disjoint (Finset.Icc (-(n : ℤ)) (-1)) (insert 0 (Finset.Icc (1 : ℤ) n)) := by
+        simp only [Finset.disjoint_left, Finset.mem_Icc, Finset.mem_insert]; intro a ha; omega
+      have h0 : (0 : ℤ) ∉ Finset.Icc (1 : ℤ) n := by simp only [Finset.mem_Icc]; omega
+      rw [hunion, Finset.sum_union hdisj, Finset.sum_insert h0]; ring
+    -- drop the zero-weighted far endpoints `±(n+1)`, then split the coefficient `(n+1−|h|) = (n−|h|)+1`
+    have hdrop : ∑ h ∈ Finset.Icc (-((n : ℤ) + 1)) ((n : ℤ) + 1), (((n : ℝ) + 1) - |h|) * f h
+        = ∑ h ∈ Finset.Icc (-(n : ℤ)) n, (((n : ℝ) + 1) - |h|) * f h := by
+      refine (Finset.sum_subset ?_ ?_).symm
+      · intro x hx; simp only [Finset.mem_Icc] at hx ⊢; omega
+      · intro x hx hx'
+        simp only [Finset.mem_Icc] at hx hx'
+        have hx2 : |x| = (n : ℤ) + 1 := by rcases abs_cases x with ⟨h1, _⟩ | ⟨h1, _⟩ <;> omega
+        rw [hx2]; push_cast; ring
+    -- split the coefficient `(n+1−|h|) = (n−|h|) + 1`
+    have hsplit : ∑ h ∈ Finset.Icc (-(n : ℤ)) n, (((n : ℝ) + 1) - |h|) * f h
+        = (∑ h ∈ Finset.Icc (-(n : ℤ)) n, ((n : ℝ) - |h|) * f h)
+          + ∑ h ∈ Finset.Icc (-(n : ℤ)) n, f h := by
+      rw [← Finset.sum_add_distrib]; exact Finset.sum_congr rfl fun h _ => by ring
+    rw [hS, ih]
+    simp only [Nat.cast_succ]
+    rw [hdrop]
+    linarith [hbdry, hsplit]
+
 end DeepWiki.TimeSeries
