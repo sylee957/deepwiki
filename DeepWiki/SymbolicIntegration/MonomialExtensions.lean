@@ -598,6 +598,30 @@ theorem gcd_prod_X_sub_C_pow_implicitDeriv {K : Type*} [Field K] [CharZero K] [D
       (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
 
 open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), the `d/dt` companion: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
+`eₐ ≥ 1`, char `0`), `gcd(p, dp/dt) ~ ∏_a (X − a)^{eₐ−1}` — the pure multiplicity defect (no
+special bias, since `d(X − a)/dt = 1`). Combined with the `gcd(p, Dp)` formula this gives the
+special part `pₛ = gcd(p, Dp)/gcd(p, dp/dt) ~ ∏_{special}(X − a)`. -/
+theorem gcd_prod_X_sub_C_pow_derivative {K : Type*} [Field K] [CharZero K] (s : Finset K)
+    (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a)))
+      (∏ a ∈ s, (X - C a) ^ (e a - 1)) := by
+  letI : Differential K[X] := ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩
+  have hunit : ∀ a ∈ s, IsUnit ((e a : K[X])) := by
+    intro a ha
+    rw [← map_natCast (C : K →+* K[X])]
+    exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by have := he a ha; omega)))
+  refine (associated_gcd_deriv_prod s (fun a => (X - C a) ^ e a) (fun a _ b _ hab =>
+    gcd_isUnit_iff_isRelPrime.mpr ((IsCoprime.pow (isCoprime_X_sub_C_iff.mpr
+      (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab))).isRelPrime))).trans ?_
+  refine (Associated.prod s _ _ (fun a ha => associated_gcd_deriv_pow (he a ha) (hunit a ha))).trans ?_
+  refine Associated.prod s _ _ (fun a _ => ?_)
+  have hg1 : IsUnit (gcd (X - C a) ((X - C a)′)) := by
+    have hd : (X - C a)′ = 1 := by show derivative (X - C a) = 1; simp
+    rw [hd]; exact isUnit_gcd_one_right _
+  exact (associated_mul_unit_right _ _ hg1).symm
+
+open Classical in
 /-- **§3.5**: the special and normal parts of the squarefree splitting are coprime (`pₛ ⊥ pₙ`) —
 they are products over the disjoint special/normal halves of the root set. -/
 theorem isCoprime_splitting_parts {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
