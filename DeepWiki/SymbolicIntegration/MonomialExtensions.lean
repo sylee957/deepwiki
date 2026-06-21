@@ -207,4 +207,26 @@ theorem natDegree_implicitDeriv_le (v p : R[X]) :
       _ ≤ max p.natDegree (v.natDegree + (p.natDegree - 1)) := max_le_max h1 h2
       _ ≤ p.natDegree + max 0 (v.natDegree - 1) := by omega
 
+open Polynomial in
+/-- **Lemma 3.4.2(i)** (§3.4, p.91), the *nonlinear* equality case: over a characteristic-`0`
+field, when the `D`-degree `δ(t) = deg v ≥ 2` and `deg p ≥ 1`, the bound is sharp —
+`deg(D p) = deg p + δ(t) − 1`. (The `v·p′` term has degree `deg v + deg p − 1 > deg p`, so it
+strictly dominates `κ_D(p)` and sets the degree.) -/
+theorem natDegree_implicitDeriv_eq {F : Type*} [Field F] [CharZero F] [Differential F]
+    (v p : F[X]) (hv : 2 ≤ v.natDegree) (hp : 1 ≤ p.natDegree) :
+    (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) := by
+  have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have h1 : (Differential.mapCoeffs p).natDegree ≤ p.natDegree := by
+    apply natDegree_le_iff_coeff_eq_zero.mpr
+    intro N hN
+    rw [Differential.coeff_mapCoeffs, coeff_eq_zero_of_natDegree_lt hN]; simp
+  have hv0 : v ≠ 0 := by rintro rfl; simp at hv
+  have hdp : derivative p ≠ 0 := derivative_ne_zero.mpr (by omega)
+  have hmul : (v * derivative p).natDegree = v.natDegree + (p.natDegree - 1) := by
+    rw [natDegree_mul hv0 hdp, natDegree_derivative p]
+  have hlt : (Differential.mapCoeffs p).natDegree < (v * derivative p).natDegree := by
+    rw [hmul]; omega
+  rw [happly, natDegree_add_eq_right_of_natDegree_lt hlt, hmul]; omega
+
 end DeepWiki.SymbolicIntegration

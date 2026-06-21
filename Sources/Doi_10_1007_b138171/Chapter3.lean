@@ -247,8 +247,16 @@ theorem lem_3_4_2 {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :
     (Differential.implicitDeriv v p).natDegree ≤ p.natDegree + max 0 (v.natDegree - 1) :=
   natDegree_implicitDeriv_le v p
 
+/-- **Lemma 3.4.2(i)** (§3.4, p.91), nonlinear equality: over a characteristic-`0` field, the
+degree bound is an *equality* once `δ(t) = deg v ≥ 2` (and `deg p ≥ 1`):
+`deg(D p) = deg p + δ(t) − 1`. -/
+theorem lem_3_4_2_eq {F : Type*} [Field F] [CharZero F] [Differential F] (v p : F[X])
+    (hv : 2 ≤ v.natDegree) (hp : 1 ≤ p.natDegree) :
+    (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) :=
+  natDegree_implicitDeriv_eq v p hv hp
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Lemma 3.4.2 equality in the nonlinear case; Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product
+--   • Lemma 3.4.4 (the `gcd(∏pᵢ^{eᵢ}, D·)` product
 --     formula); Theorem 3.4.1(iii) for a *general* (non-coprime) factor of a special polynomial
 --     (rests on Lemma 3.4.4).
 --   • Theorems 3.4.2 / 3.4.3 (squarefree `p` normal ⟺ `Dα ≠ H_t(α)`; `p` special ⟺ `Dα = H_t(α)`
