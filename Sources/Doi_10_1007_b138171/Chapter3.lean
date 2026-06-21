@@ -111,20 +111,26 @@ theorem thm_3_2_1_unique {R K : Type*} [CommRing R] [IsDomain R] [Field K] [Alge
     (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ :=
   derivation_ext_fractionRing h
 
-/-- **Theorem 3.2.2** (§3.2, p.81), uniqueness on the polynomial ring: a derivation on `R[X]` is
-determined by its action on the constants and on `t = X` (so a monomial extension with `Dt`
-prescribed is unique). The existence on `R[X]` is `Differential.implicitDeriv` (`def_3_4_1`); the
-`F(t)` version combines this with `thm_3_2_1_unique`. -/
-theorem thm_3_2_2_poly_unique {R : Type*} [CommRing R] {Δ₁ Δ₂ : Derivation ℤ R[X] R[X]}
-    (hC : ∀ c : R, Δ₁ (Polynomial.C c) = Δ₂ (Polynomial.C c)) (hX : Δ₁ X = Δ₂ X) : Δ₁ = Δ₂ :=
-  derivation_polynomial_ext hC hX
+/-- **Theorem 3.2.2** (§3.2, p.81), polynomial-ring case (existence + uniqueness): there is a
+*unique* derivation on `R[X]` extending `D` on the constants and sending `t = X` to a prescribed
+`w`. (Existence is Mathlib's `Differential.implicitDeriv w`; uniqueness is
+`derivation_polynomial_ext`. The full `F(t)` field version additionally needs the §3.2.1
+fraction-field existence.) -/
+theorem thm_3_2_2_poly {R : Type*} [CommRing R] [Differential R] (w : R[X]) :
+    ∃! Δ : Derivation ℤ R[X] R[X], (∀ c : R, Δ (C c) = C (c′)) ∧ Δ X = w := by
+  refine ⟨Differential.implicitDeriv w, ⟨fun c => Differential.implicitDeriv_C w c,
+    Differential.implicitDeriv_X w⟩, ?_⟩
+  rintro Δ ⟨hC, hX⟩
+  exact derivation_polynomial_ext
+    (fun c => (hC c).trans (Differential.implicitDeriv_C w c).symm)
+    (hX.trans (Differential.implicitDeriv_X w).symm)
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):**
 --   • **Theorem 3.2.1** (§3.2, p.79), *existence*: a derivation on an integral domain `R` extends
 --     to its quotient field (`Δ(a/b) = (b·Da − a·Db)/b²`). [Construct a `Derivation` on
 --     `FractionRing R` — not in Mathlib; uniqueness is `thm_3_2_1_unique`.]
---   • **Theorem 3.2.2** (§3.2, p.81), full `F(t)` form (the polynomial-ring uniqueness is
---     `thm_3_2_2_poly_unique`; the field version needs the §3.2.1 fraction-field existence).
+--   • **Theorem 3.2.2** (§3.2, p.81), full `F(t)` form (the polynomial-ring case is `thm_3_2_2_poly`;
+--     the field `F(t)` version additionally needs the §3.2.1 fraction-field existence).
 
 /-! ## §3.3 Constants and Extensions -/
 
