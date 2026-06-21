@@ -22,7 +22,8 @@ the `DeepWiki.ReactiveSystems` library.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
 §11.5: zone graphs `[infra]`.
-Ex 11.3: timed parallel composition `[research]` (rests on the §9.4 negative-premise SOS rule, Chapter 9). -/
+Ex 11.3: timed parallel composition `[research]` (the §9.4 parallel SOS it builds on is now in
+  `TimedCcsParallel`; the bisimilarity argument of Ex 11.3 itself is not yet formalized). -/
 
 namespace DeepWiki.Rs
 

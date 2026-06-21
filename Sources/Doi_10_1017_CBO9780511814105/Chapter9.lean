@@ -1,5 +1,6 @@
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCcs
+import DeepWiki.ReactiveSystems.TimedCcsParallel
 import DeepWiki.ReactiveSystems.TimedCcsDeterminacy
 import DeepWiki.ReactiveSystems.TimedAlarmTimer
 import DeepWiki.ReactiveSystems.TimedCcsDelayExamples
@@ -7,13 +8,9 @@ import DeepWiki.ReactiveSystems.TimedLightSwitch
 import Sources.Doi_10_1017_CBO9780511814105.Source
 
 /-! # Reactive Systems catalog — Chapter 9: CCS with time delays
-Book-numbered restatements for the timed transition-system model of §9.2 and the
-syntax and SOS rules of timed CCS (§9.3), discharged by the
-`DeepWiki.ReactiveSystems` library.
-
-## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§9.4: the negative-premise SOS rule for the timed parallel operator `[research]` (needs a stratified /
-  coinductive transition definition); Ex 9.5. (Ex 11.3 in Chapter 11 depends on this.) -/
+Book-numbered restatements for the timed transition-system model of §9.2, the syntax and SOS rules of
+timed CCS (§9.3), and parallel composition with maximal progress (§9.4), discharged by the
+`DeepWiki.ReactiveSystems` library. -/
 
 namespace DeepWiki.Rs
 
@@ -158,5 +155,33 @@ theorem ex_9_4 :
     (∀ d : ℝ≥0, d ≤ 5 → ∃ Y, (tccsTLTS alarmDefn).delay (.const .Armed5) d Y ∧
         (tccsTLTS alarmDefn).act Y (Act.name .set10) (.const .Armed10)) :=
   ⟨alarm_idle_arms, alarm5_countdown, alarm5_timeOut, fun _ h => alarm5_reset h⟩
+
+/-! ## §9.4 Parallel composition (maximal progress) -/
+
+/-- **§9.4** (p.169): the action SOS of timed CCS with parallel composition — interleaving (`com1`,
+`com2`) and synchronisation (`com3`). The library's `PAct`. -/
+abbrev def_9_4_act := @DeepWiki.ReactiveSystems.PAct
+
+/-- **§9.4** (p.170): the delay relation respecting **maximal progress** — the stratified reading of the
+book's `NoSync(P,Q,d)` parallel side condition (raw componentwise delay, filtered so no intermediate
+state reachable by delaying `< d` is `τ`-urgent). The library's `PDelay`. -/
+abbrev def_9_4_delay := @DeepWiki.ReactiveSystems.PDelay
+
+/-- **§9.4 maximal-progress assumption** (p.170): if `P —τ→` then `P` cannot delay by any positive
+amount. The library's `pdelay_maximalProgress`. -/
+alias prop_9_4_maximalProgress := DeepWiki.ReactiveSystems.pdelay_maximalProgress
+
+/-- **Exercise 9.5** (p.170), second expression: `((press̄.P) | (ε(t).τ.press.Q + press.R)) \ press`
+synchronises immediately, so it cannot delay by any positive amount. -/
+alias ex_9_5_immediate := DeepWiki.ReactiveSystems.parRestrict_immediateSync_noDelay
+
+/-- **Exercise 9.5** (p.170), first expression: `((ε(0.3).press̄.P) | (ε(1.1).τ.press.Q + press.R)) \
+press` cannot delay by `0.4` — at the intermediate time `0.3` the guard expires and a synchronisation
+becomes available (here in general form, `t₁ < t₂`, `t₁ ≤ t₃`). -/
+alias ex_9_5_guardExpiry := DeepWiki.ReactiveSystems.parRestrict_guardExpiry_noDelay
+
+/-- **Exercise 9.5** (p.170), closing question: `ε(t).τ.0 + a.0` cannot delay past `t` (so, with the
+patience of the `a`-prefix giving every `d ≤ t`, it delays exactly up to `t`). -/
+alias ex_9_5_eps_bound := DeepWiki.ReactiveSystems.epsChoice_noDelay_gt
 
 end DeepWiki.Rs

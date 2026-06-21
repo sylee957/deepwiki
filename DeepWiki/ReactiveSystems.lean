@@ -60,6 +60,7 @@ import DeepWiki.ReactiveSystems.TimedAutomatonBisimilarity
 import DeepWiki.ReactiveSystems.FourTimedAutomataBisim
 import DeepWiki.ReactiveSystems.TimedTransitionSystems
 import DeepWiki.ReactiveSystems.TimedCcs
+import DeepWiki.ReactiveSystems.TimedCcsParallel
 import DeepWiki.ReactiveSystems.TimedCcsDeterminacy
 import DeepWiki.ReactiveSystems.TimedAlarmTimer
 import DeepWiki.ReactiveSystems.TimedTraces
