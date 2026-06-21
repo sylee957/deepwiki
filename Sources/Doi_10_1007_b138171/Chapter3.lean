@@ -375,8 +375,16 @@ theorem thm_3_5_1_squarefree {K : Type*} [Field K] [Differential K] (v : K[X]) (
             (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a))) :=
   splittingFactorization_prod_X_sub_C v s
 
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), squarefree gcd formula: the special part of a squarefree
+polynomial equals `gcd(p, Dp)` — `gcd(∏_{a∈s}(X − a), D ∏) ~ ∏_{a : v(a)=a′}(X − a)`. -/
+theorem thm_3_5_1_gcd {K : Type*} [Field K] [Differential K] (v : K[X]) (s : Finset K) :
+    Associated (gcd (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a))))
+      (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) :=
+  gcd_prod_X_sub_C_implicitDeriv v s
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
--- general `p`; the squarefree case is `thm_3_5_1_squarefree`), the `SplitFactor` /
+-- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced
 -- elements of `k⟨t⟩`, needs `RatFunc` numerator/denominator), and Theorem 3.5.2 (the `κ_D`
 -- splitting separates constant from nonconstant roots).
