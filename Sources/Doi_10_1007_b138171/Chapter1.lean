@@ -7,8 +7,12 @@ import Mathlib.RingTheory.PrincipalIdealDomain
 import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.FieldTheory.IsAlgClosed.Basic
+import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 import Mathlib.RingTheory.Localization.FractionRing
+import Mathlib.RingTheory.Nullstellensatz
 import Mathlib.Algebra.EuclideanDomain.Int
+import Mathlib.Algebra.EuclideanDomain.Basic
+import Mathlib.Algebra.Polynomial.Div
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 1: Algebraic Preliminaries
@@ -156,6 +160,30 @@ abbrev def_1_1_13_algClosed := @IsAlgClosed
 /-- **Definition 1.1.13**: an algebraic closure. -/
 abbrev def_1_1_13_algClosure := @IsAlgClosure
 
+/-- **Theorem 1.1.9** (§1.1, p.8), existence: every field `k` has an algebraic closure
+(`AlgebraicClosure k`). -/
+theorem thm_1_1_9_exists (k : Type*) [Field k] : IsAlgClosure k (AlgebraicClosure k) :=
+  inferInstance
+
+/-- **Theorem 1.1.9** (§1.1, p.8), uniqueness: any two algebraic closures of `F` are
+`F`-isomorphic. -/
+noncomputable def thm_1_1_9_unique (F K L : Type*) [Field F] [Field K] [Field L] [Algebra F K]
+    [Algebra F L] [IsAlgClosure F K] [IsAlgClosure F L] : K ≃ₐ[F] L :=
+  IsAlgClosure.equiv F K L
+
+/-- **Theorem 1.1.11** (§1.1, p.8), Hilbert's Nullstellensatz over an algebraically closed field:
+`vanishingIdeal (zeroLocus I) = √I`; equivalently, if `p` vanishes on `V(I)` then `pᵐ ∈ I` for
+some `m > 0`. -/
+theorem thm_1_1_11 {k : Type*} [Field k] [IsAlgClosed k] {σ : Type*} [Finite σ]
+    (I : Ideal (MvPolynomial σ k)) :
+    MvPolynomial.vanishingIdeal k (MvPolynomial.zeroLocus k I) = I.radical :=
+  MvPolynomial.vanishingIdeal_zeroLocus_eq_radical I
+
+-- **Theorem 1.1.10** (§1.1, p.8), the weak Nullstellensatz (`V(I) = ∅ ⟺ 1 ∈ I`), is deferred:
+-- Mathlib's `MvPolynomial.zeroLocus` carries a separate points-field parameter, so the
+-- specialized statement leaves `IsAlgClosed` instance metavariables. The book notes it (like the
+-- strong form `thm_1_1_11`) is not needed by the integration algorithm.
+
 /-! ### Worked examples (§1.1) -/
 
 /-- **Example 1.1.2** (§1.1, p.2): the 2×2 rational matrices form a commutative group under
@@ -193,5 +221,53 @@ example : Field (ZMod 5) := by
 /-- **Example 1.1.14** (§1.1, p.7): the *quotient field* of an integral domain is a field; e.g.
 the quotient field of `ℤ` is (isomorphic to) `ℚ`. -/
 noncomputable example : Field (FractionRing ℤ) := inferInstance
+
+/-! ## §1.2 Euclidean Division and Pseudo-Division
+The classical `PolyDivide` algorithm divides `A` by `B ≠ 0` over a field `K`, producing a unique
+quotient and remainder with `A = BQ + R` and `R = 0` or `deg R < deg B`. We catalog the
+degree-bounded division of Mathlib (`divByMonic`/`modByMonic`); over a field a general `B ≠ 0`
+is `lc(B)` times a monic polynomial, so the monic case is the essential content. The
+*pseudo-division* of an integral domain (`PolyPseudoDivide`, Ex 1.2.2) is genuinely new — not in
+Mathlib — and is deferred to its own iteration (a `DeepWiki.SymbolicIntegration` library
+definition with its `bᵈ⁺¹A = BQ + R` specification). -/
+
+/-- **`PolyDivide` quotient** (§1.2, p.8): the quotient `A /ₘ B` of Euclidean division by a monic
+divisor. -/
+noncomputable abbrev alg_1_2_quotient := @Polynomial.divByMonic
+
+/-- **`PolyDivide` remainder** (§1.2, p.8): the remainder `A %ₘ B`. -/
+noncomputable abbrev alg_1_2_remainder := @Polynomial.modByMonic
+
+/-- **Euclidean polynomial division** (§1.2, p.8): for a monic `B`, `A = B·(A /ₘ B) + (A %ₘ B)`
+with the remainder either `0` or of degree `< deg B`. -/
+theorem thm_1_2_polyDivide {K : Type*} [Field K] (A B : Polynomial K) (hB : B.Monic) :
+    A = B * (A /ₘ B) + (A %ₘ B) ∧ ((A %ₘ B) = 0 ∨ (A %ₘ B).degree < B.degree) := by
+  refine ⟨?_, ?_⟩
+  · rw [eq_comm, add_comm]; exact Polynomial.modByMonic_add_div A B
+  · rcases eq_or_ne (A %ₘ B) 0 with h | h
+    · exact Or.inl h
+    · exact Or.inr (Polynomial.degree_modByMonic_lt A hB)
+
+/-! ## §1.3 The Euclidean Algorithm -/
+
+/-- **`Euclidean` algorithm** (§1.3, p.10): `EuclideanDomain.gcd`, computed by repeated Euclidean
+division. -/
+abbrev alg_1_3_euclidean := @EuclideanDomain.gcd
+
+/-- **`ExtendedEuclidean` algorithm** (§1.3, p.11): the Bézout cofactors `(gcdA, gcdB)`. -/
+abbrev alg_1_3_extended := @EuclideanDomain.xgcd
+
+/-- **Euclidean algorithm correctness** (§1.3, p.10): `EuclideanDomain.gcd a b` is a greatest
+common divisor of `a` and `b` (the library predicate `IsGCD`). -/
+theorem thm_1_3_euclidean {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b : R) :
+    IsGCD a b (EuclideanDomain.gcd a b) :=
+  ⟨EuclideanDomain.gcd_dvd_left a b, EuclideanDomain.gcd_dvd_right a b,
+    fun _ h1 h2 => EuclideanDomain.dvd_gcd h1 h2⟩
+
+/-- **Extended Euclidean correctness** (§1.3, p.11), Bézout's identity:
+`gcd(a, b) = s·a + t·b` for `s = gcdA a b`, `t = gcdB a b`. -/
+theorem thm_1_3_extended {R : Type*} [EuclideanDomain R] [DecidableEq R] (a b : R) :
+    EuclideanDomain.gcd a b = a * EuclideanDomain.gcdA a b + b * EuclideanDomain.gcdB a b :=
+  EuclideanDomain.gcd_eq_gcd_ab a b
 
 end DeepWiki.Si

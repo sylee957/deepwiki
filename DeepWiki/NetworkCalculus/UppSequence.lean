@@ -1164,9 +1164,10 @@ theorem convNat_le_of_zero [AddCommMonoid V] [LinearOrder V] (r s : UppSeq V) (h
   calc r.convNat s n ≤ r.evalNat 0 + s.evalNat (n - 0) := r.convNat_le s (Nat.zero_le n)
     _ = s.evalNat n := by rw [h0, Nat.sub_zero, zero_add]
 
-/-- The `m`-fold (min,plus) self-convolution `f^⊗m` at `n` over `WithTop ℤ`: `f^⊗0 = δ₀`,
+/-- The `m`-fold (min,plus) self-convolution `f^⊗m` at `n` over `WithTop V`: `f^⊗0 = δ₀`,
 `f^⊗(m+1) = f ⊗ f^⊗m`. The building block of the sub-additive closure. -/
-def iterConvNat (f : UppSeq (WithTop ℤ)) : ℕ → ℕ → WithTop ℤ
+def iterConvNat [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) : ℕ → ℕ → WithTop V
   | 0, n => delta0.evalNat n
   | (m + 1), n => (Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
       (fun k => f.evalNat k + iterConvNat f m (n - k))
@@ -1174,7 +1175,8 @@ def iterConvNat (f : UppSeq (WithTop ℤ)) : ℕ → ℕ → WithTop ℤ
 /-- The **sub-additive-closure approximant** `⨅_{m=0}^{N} f^⊗m` at `n` — the closure truncated to `N`
 iterations. The true closure `f* = ⨅ₘ f^⊗m` is reached at finite `N` for UPP `f` (Lemma 4.7); the
 stabilization bound and UPP-ness of `f*` are future work (the research-grade part). -/
-def closureApproxNat (f : UppSeq (WithTop ℤ)) (N n : ℕ) : WithTop ℤ :=
+def closureApproxNat [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (N n : ℕ) : WithTop V :=
   (Finset.range (N + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos N)⟩ (fun m => iterConvNat f m n)
 
 /-- Pure rate `f(n) = n` over `WithTop ℤ` (null at the origin). -/
@@ -1185,17 +1187,20 @@ def rateWT : UppSeq (WithTop ℤ) := ⟨[0], 1, 1, by decide, by decide⟩
 example : ∀ n ∈ Finset.range 5, closureApproxNat rateWT 3 n = rateWT.evalNat n := by native_decide
 
 /-- `f^⊗1 = f`: one iteration is the identity convolution (`f ⊗ δ₀ = f`, by `convNat_delta0`). -/
-theorem iterConvNat_one (f : UppSeq (WithTop ℤ)) (n : ℕ) : iterConvNat f 1 n = f.evalNat n := by
+theorem iterConvNat_one [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (n : ℕ) : iterConvNat f 1 n = f.evalNat n := by
   have h : iterConvNat f 1 n = f.convNat delta0 n := rfl
   rw [h, convNat_comm, convNat_delta0]
 
 /-- The closure approximant is `≤ δ₀` (the `m = 0` term `f^⊗0 = δ₀`). -/
-theorem closureApproxNat_le_delta0 (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+theorem closureApproxNat_le_delta0 [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (N n : ℕ) :
     closureApproxNat f N n ≤ delta0.evalNat n :=
   Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (Nat.succ_pos N))
 
 /-- The closure approximant is `≤ f` (for `N ≥ 1`, the `m = 1` term `f^⊗1 = f`). -/
-theorem closureApproxNat_le_self (f : UppSeq (WithTop ℤ)) {N : ℕ} (hN : 1 ≤ N) (n : ℕ) :
+theorem closureApproxNat_le_self [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) {N : ℕ} (hN : 1 ≤ N) (n : ℕ) :
     closureApproxNat f N n ≤ f.evalNat n := by
   rw [← iterConvNat_one f n]
   exact Finset.inf'_le (fun m => iterConvNat f m n) (Finset.mem_range.mpr (by omega))
@@ -1203,7 +1208,8 @@ theorem closureApproxNat_le_self (f : UppSeq (WithTop ℤ)) {N : ℕ} (hN : 1 �
 /-- The closure approximant is **antitone in `N`** — `⨅_{m≤N+1} f^⊗ᵐ ≤ ⨅_{m≤N} f^⊗ᵐ` (one more term
 can only lower the infimum). So the approximants form a non-increasing sequence and converge
 pointwise; the closure is their limit. -/
-theorem closureApproxNat_antitone (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+theorem closureApproxNat_antitone [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (N n : ℕ) :
     closureApproxNat f (N + 1) n ≤ closureApproxNat f N n := by
   unfold closureApproxNat
   apply Finset.le_inf'
@@ -1213,8 +1219,8 @@ theorem closureApproxNat_antitone (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
 
 /-- For an **idempotent** (sub-additive) `f` — `f ⊗ f = f` — every iterate collapses: `f^⊗ᵐ = f`
 for all `m ≥ 1` (induction: `f^⊗(m+1) = f ⊗ f^⊗ᵐ = f ⊗ f = f`). -/
-theorem iterConvNat_eq_self_of_idem (f : UppSeq (WithTop ℤ))
-    (hidem : ∀ n, f.convNat f n = f.evalNat n) :
+theorem iterConvNat_eq_self_of_idem [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (hidem : ∀ n, f.convNat f n = f.evalNat n) :
     ∀ m, 1 ≤ m → ∀ n, iterConvNat f m n = f.evalNat n := by
   intro m
   induction m with
@@ -1232,7 +1238,8 @@ theorem iterConvNat_eq_self_of_idem (f : UppSeq (WithTop ℤ))
       exact hidem n
 
 /-- Lower-bound the closure approximant: `x ≤ ⨅_{m≤N} f^⊗ᵐ` from `x ≤ f^⊗ᵐ` for every `m ≤ N`. -/
-theorem le_closureApproxNat {x : WithTop ℤ} (f : UppSeq (WithTop ℤ)) {N n : ℕ}
+theorem le_closureApproxNat [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    {x : WithTop V} (f : UppSeq (WithTop V)) {N n : ℕ}
     (h : ∀ m, m < N + 1 → x ≤ iterConvNat f m n) : x ≤ closureApproxNat f N n :=
   Finset.le_inf' _ _ (fun m hm => h m (Finset.mem_range.mp hm))
 
@@ -1240,7 +1247,8 @@ theorem le_closureApproxNat {x : WithTop ℤ} (f : UppSeq (WithTop ℤ)) {N n : 
 splitting off `f^⊗0 = δ₀` and pulling `f` out of the remaining iterates. This realizes the closure as
 an actual fixed-point iteration `g_{N+1} = δ₀ ⊓ (f ⊗ g_N)`, and gives "fixed point ⟹ stable" for free
 (`closureApproxNat_stable`). -/
-theorem closureApproxNat_succ (f : UppSeq (WithTop ℤ)) (N n : ℕ) :
+theorem closureApproxNat_succ [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (N n : ℕ) :
     closureApproxNat f (N + 1) n = Min.min (delta0.evalNat n)
       ((Finset.range (n + 1)).inf' ⟨0, Finset.mem_range.mpr (Nat.succ_pos n)⟩
         (fun k => f.evalNat k + closureApproxNat f N (n - k))) := by
@@ -1280,7 +1288,8 @@ Caveat: this *global* hypothesis holds for **idempotent** `f` (at `N = 1`, `clos
 **not** for general `f` — e.g. `β_{1,2}` has `closureApprox(N) = β_{1,2N}`, which never globally
 stabilizes (`f^⊗ᵐ` does not reach `f*` at finite `N`). The general closure needs the min-plus matrix
 cyclicity theorem (`Aᵏ⁺ᵈ = Aᵏ + λd`, BCOQ Thm 3.112), not truncated convolution. -/
-theorem closureApproxNat_stable_step (f : UppSeq (WithTop ℤ)) {N : ℕ}
+theorem closureApproxNat_stable_step [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) {N : ℕ}
     (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) (n : ℕ) :
     closureApproxNat f (N + 2) n = closureApproxNat f (N + 1) n := by
   rw [show N + 2 = N + 1 + 1 from rfl, closureApproxNat_succ f (N + 1) n, closureApproxNat_succ f N n]
@@ -1291,7 +1300,8 @@ then `closureApprox(N+j) = closureApprox(N)` for *every* `j` — the approximant
 hence equals `f*`. (Induction via the recurrence.) Same caveat as `closureApproxNat_stable_step`: the
 global hypothesis is met only for **idempotent** `f`; for general `f` the truncated approximant never
 globally stabilizes, so this does not yield the general closure (which needs matrix cyclicity). -/
-theorem closureApproxNat_eq_of_stable (f : UppSeq (WithTop ℤ)) {N : ℕ}
+theorem closureApproxNat_eq_of_stable [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) {N : ℕ}
     (h : ∀ n, closureApproxNat f (N + 1) n = closureApproxNat f N n) :
     ∀ j n, closureApproxNat f (N + j) n = closureApproxNat f N n := by
   intro j
@@ -1309,7 +1319,8 @@ sub-additive service curve) the closure stabilizes at one iteration — `⨅_{m�
 every `N ≥ 1` — so the closure is computed exactly with no iteration bound needed. (The general
 non-idempotent case, where the iterates genuinely descend, needs the stabilization theory of Lemma
 4.7–4.9 and remains open.) -/
-theorem closureApproxNat_idem (f : UppSeq (WithTop ℤ)) (hidem : ∀ n, f.convNat f n = f.evalNat n)
+theorem closureApproxNat_idem [AddCommMonoid V] [LinearOrder V] [IsOrderedAddMonoid V]
+    (f : UppSeq (WithTop V)) (hidem : ∀ n, f.convNat f n = f.evalNat n)
     {N : ℕ} (hN : 1 ≤ N) (n : ℕ) :
     closureApproxNat f N n = Min.min (delta0.evalNat n) (f.evalNat n) := by
   refine le_antisymm
