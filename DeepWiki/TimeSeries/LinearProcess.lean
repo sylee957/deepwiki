@@ -124,6 +124,26 @@ theorem summable_mul_shift {ψ : ℤ → ℝ} (hψ : Summable ψ) (c : ℤ) :
   exact mul_le_mul_of_nonneg_right (le_hasSum habs.hasSum (j + c) fun i _ => abs_nonneg _)
     (abs_nonneg _)
 
+/-- **The autocovariance of an absolutely summable linear process is itself absolutely summable:**
+`∑ₕ |∑ₖ ψₖ ψ_{k+h}| < ∞` when `∑ₙ |ψₙ| < ∞`. So a linear process with `ℓ¹` weights has a *summable*
+autocovariance — hence (by Theorem 4.3.2) a spectral density. The lag-products `ψₖ ψₘ` form a
+summable family on `ℤ²` (`Summable.mul_norm`); the shear `(h,k) ↦ (k, k+h)` carries it to the
+correlation family, whose first-coordinate marginal is the autocovariance (`Summable.prod`). -/
+theorem summable_tsum_mul_shift {ψ : ℤ → ℝ} (hψ : Summable fun n => |ψ n|) :
+    Summable fun h : ℤ => ∑' k : ℤ, ψ k * ψ (k + h) := by
+  have hnorm : Summable fun n : ℤ => ‖ψ n‖ := by simpa only [Real.norm_eq_abs] using hψ
+  have hG : Summable fun p : ℤ × ℤ => ψ p.1 * ψ p.2 := (hnorm.mul_norm hnorm).of_norm
+  let e : ℤ × ℤ ≃ ℤ × ℤ :=
+    { toFun := fun p => (p.2, p.2 + p.1)
+      invFun := fun p => (p.2 - p.1, p.1)
+      left_inv := fun p => by obtain ⟨h, k⟩ := p; simp
+      right_inv := fun p => by obtain ⟨a, b⟩ := p; simp }
+  have hF : Summable fun p : ℤ × ℤ => ψ p.2 * ψ (p.2 + p.1) := by
+    have hcomp : (fun p : ℤ × ℤ => ψ p.2 * ψ (p.2 + p.1)) = (fun p : ℤ × ℤ => ψ p.1 * ψ p.2) ∘ e := by
+      funext p; simp [e, Function.comp]
+    rw [hcomp]; exact e.summable_iff.mpr hG
+  exact hF.prod
+
 /-! ## White-noise bridge: the `L²(ℝ)` inner product as an integral / covariance -/
 
 /-- The real `L²` inner product is the integral of the pointwise product: `⟪f, g⟫ = ∫ f·g`
