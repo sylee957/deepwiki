@@ -380,6 +380,23 @@ theorem isUPPWith_toFun [AddMonoid V] (r : UppSeq V) :
   rw [nnFloor_add_nat]
   exact r.evalNat_add_period (Nat.le_floor ht)
 
+/-- **Piecewise-linear reading** `ℝ≥0 → ℝ` of a `ℚ` UPP sequence: linear interpolation between
+consecutive integer samples (`f(⌊t⌋) + (t−⌊t⌋)·(f(⌊t⌋+1)−f(⌊t⌋))`). This is the *continuous-time*
+network-calculus curve the sequence stands for — unlike the coarser step reading `toFun`, it is
+continuous and piecewise-affine, the shape under which the (min,plus) operators are determined by
+breakpoints. The first brick of the (still open) discrete-to-continuous bridge: relating `convNat`
+to the continuous `minConv` of these PWL readings. -/
+noncomputable def toFunPWL (r : UppSeq ℚ) : ℝ≥0 → ℝ :=
+  fun t => (r.evalNat ⌊t⌋₊ : ℝ)
+    + (t - (⌊t⌋₊ : ℝ≥0) : ℝ) * ((r.evalNat (⌊t⌋₊ + 1) : ℝ) - (r.evalNat ⌊t⌋₊ : ℝ))
+
+/-- The PWL reading agrees with the discrete samples at integer arguments: `toFunPWL r n = f(n)`
+(the interpolation weight `t − ⌊t⌋` vanishes), so it genuinely extends the sequence. -/
+theorem toFunPWL_natCast (r : UppSeq ℚ) (n : ℕ) : r.toFunPWL (n : ℝ≥0) = (r.evalNat n : ℝ) := by
+  simp only [toFunPWL, Nat.floor_natCast]
+  rw [sub_self]
+  ring
+
 /-! ## A worked example (sanity checks, gate-verified by `native_decide`) -/
 
 /-- `f(0),f(1),f(2) = 0,1,2`, then period `2`, increment `3`: so `f(n+2) = f(n)+3` for `n ≥ 1`. -/
