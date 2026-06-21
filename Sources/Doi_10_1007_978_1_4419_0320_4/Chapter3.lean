@@ -256,6 +256,12 @@ order `q = deg θ` — the characterizing property of an `MA(q)`. The library's
 `maqFilter_tsum_mul_shift_eq_zero`. -/
 alias maq_acvf_finite_support := DeepWiki.TimeSeries.maqFilter_tsum_mul_shift_eq_zero
 
+/-- **§3.2 (the `MA(q)` autocovariance, explicit formula)**: for `0 ≤ h`, `∑ₖ ψₖ ψ_{k+h} =
+∑_{k=0}^q θₖ θ_{k+h}`, so by Theorem 3.2.1 the `MA(q)` autocovariance is `γ(h) = σ² ∑_{k=0}^{q−h} θₖ
+θ_{k+h}` for `0 ≤ h ≤ q` — the classical finite `MA(q)` acvf. The library's
+`maqFilter_tsum_mul_shift_eq`. -/
+alias maq_acvf_eq := DeepWiki.TimeSeries.maqFilter_tsum_mul_shift_eq
+
 /-- **Example 3.2.1 (faithful `MA(q)` ↔ `θ(B) Z`)** (§3.2, p.89): the `L²` linear process with the
 finite `MA(q)` filter, over square-integrable noise embedded in `Lp`, agrees almost everywhere with
 the book's `MA(q)` random-variable process `θ(B) Z` (`lagPoly θ Z`) — connecting the abstract `Lp`
