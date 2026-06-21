@@ -611,6 +611,21 @@ theorem ex_1_12 {R : Type*} [CommRing R] {a b q r z : R} (h : a = q * b + r) :
     · rw [h]; exact dvd_add (hbr.dvd_left.mul_left q) hbr.dvd_right
     · exact hbr.dvd htb (hr ▸ dvd_sub hta (htb.mul_left q))
 
+/-- **Exercise 1.10** (§1, p.33): `2` is irreducible but **not prime** in `ℤ[√−5]` — the concrete
+failure of "irreducible ⟹ prime". Irreducible since `N(2) = 4` (the helper for Ex 1.1.7); not
+prime since `2 ∣ (1+√−5)(1−√−5) = 6` yet `2 ∤ 1±√−5` (else `N(2)=4 ∣ N(1±√−5)=6`). -/
+theorem ex_1_10 : Irreducible (2 : Zsqrtd (-5)) ∧ ¬ Prime (2 : Zsqrtd (-5)) := by
+  have h2 : (2 : Zsqrtd (-5)) = ⟨2, 0⟩ := by ext <;> simp
+  have hn4 : (⟨2, 0⟩ : Zsqrtd (-5)).norm = 4 := by rw [Zsqrtd.norm_def]; norm_num
+  refine ⟨h2 ▸ zsqrtNeg5_irreducible_of_norm _ (Or.inl hn4), fun hp => ?_⟩
+  have hdvd : (2 : Zsqrtd (-5)) ∣ (⟨1, 1⟩ : Zsqrtd (-5)) * ⟨1, -1⟩ := by
+    rw [h2]; exact ⟨⟨3, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hn6p : (⟨1, 1⟩ : Zsqrtd (-5)).norm = 6 := by rw [Zsqrtd.norm_def]; norm_num
+  have hn6m : (⟨1, -1⟩ : Zsqrtd (-5)).norm = 6 := by rw [Zsqrtd.norm_def]; norm_num
+  rcases hp.2.2 _ _ hdvd with h | h <;> rw [h2] at h
+  · exact absurd (hn4 ▸ hn6p ▸ zsqrtd_norm_dvd_norm h) (by decide)
+  · exact absurd (hn4 ▸ hn6m ▸ zsqrtd_norm_dvd_norm h) (by decide)
+
 /- ## NOT YET FORMALIZED (complete inventory — audit 2026-06-21)
 Done: §1.1 (Def 1.1.1–1.1.13, Thm 1.1.1–1.1.11, Ex 1.1.1–1.1.14), §1.2 (Euclidean/pseudo-division
 `thm_1_2_*`), §1.3 (Euclidean + extended `thm_1_3_*`), §1.4 (Def 1.4.1 resultant/Sylvester,
@@ -626,7 +641,7 @@ pairwise-coprime parts, Lemma 1.7.1, eq 1.14 radical).
 §1.7 Squarefree Factorization: Lemma 1.7.2; the Musser/Yun `Squarefree` algorithm; Ex 1.7.1,
   Ex 1.7.2.
 Worked examples not formalized: 1.2.1, 1.3.1, 1.3.3–1.3.7, 1.4.2, 1.5.1, 1.5.2, 1.7.1, 1.7.2.
-Exercises: done 1.1, 1.3, 1.12; remaining 1.2, 1.4–1.11, 1.13–1.16 (mostly concrete gcd/
-PRS/squarefree computations + the §1.5 similarity/PRS proofs). -/
+Exercises: done 1.1, 1.3, 1.10, 1.12; remaining 1.2, 1.4–1.9, 1.11, 1.13–1.16 (mostly concrete
+gcd/PRS/squarefree computations + the §1.5 similarity/PRS proofs). -/
 
 end DeepWiki.Si
