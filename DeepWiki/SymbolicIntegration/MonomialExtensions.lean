@@ -416,6 +416,12 @@ theorem prod_X_sub_C_pow_eq_squarefree_factorization {K : Type*} [CommRing K] (s
   rw [← Finset.prod_pow]
   exact Finset.prod_congr rfl fun a ha => by rw [(Finset.mem_filter.mp ha).2]
 
+/-- A product of *distinct* linear factors is squarefree: `∏_{a∈t}(X − a)` has simple roots, hence
+is separable, hence squarefree. -/
+theorem squarefree_prod_X_sub_C {K : Type*} [Field K] (t : Finset K) :
+    Squarefree (∏ a ∈ t, (X - C a)) :=
+  (separable_prod_X_sub_C_iff'.mpr (fun _ _ _ _ h => h)).squarefree
+
 /-- Products of linear factors over *disjoint* root sets are coprime. -/
 theorem isCoprime_prod_X_sub_C_of_disjoint {K : Type*} [Field K] {s t : Finset K}
     (h : Disjoint s t) :

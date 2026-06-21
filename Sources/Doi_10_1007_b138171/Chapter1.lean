@@ -568,6 +568,13 @@ theorem def_1_7_2_coprime {K : Type*} [Field K] (s : Finset K) (e : K → ℕ) {
       (∏ a ∈ s.filter (fun a => e a = k'), (X - C a)) :=
   squarefree_factorization_pairwise_coprime s e hkk
 
+open Classical Polynomial in
+/-- **Definition 1.7.2** (§1.7, p.30): each squarefree-factorization part `Aₖ = ∏_{a:eₐ=k}(X − a)`
+is squarefree (a product of distinct linear factors). -/
+theorem def_1_7_2_squarefree {K : Type*} [Field K] (s : Finset K) (e : K → ℕ) (k : ℕ) :
+    Squarefree (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) :=
+  squarefree_prod_X_sub_C _
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (not in Mathlib), to be built in
 -- dedicated iterations:**
 --   • §1.4 the subresultant PRS (`Polynomial.resultant` IS in Mathlib; the subresultant
