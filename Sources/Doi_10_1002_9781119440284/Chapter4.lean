@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
+import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -12,7 +13,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Definition 4.1 (concave PWL normal form) `[infra]`; Proposition 4.1 (normal-form properties) `[infra]`; Theorem 4.1 (convolution of two convex PWL functions = merge segments by slope) `[infra]`; Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Definition 4.1 (concave PWL normal form) `[infra]`; Proposition 4.1 (normal-form properties) `[infra]`; Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -78,6 +79,22 @@ is ultimately pseudo-periodic from `T_f` with period `d_f` and increment `c_f`. 
 `DeepWiki.UppSeq.deconvNat_add_period`: the deconvolution sequence advances by `c_f` each period `d_f`
 (the `minplus` CLI's `deconvupp` builds the UPP quadruplet from it). -/
 alias lemma_4_5 := UppSeq.deconvNat_add_period
+
+/-- **Theorem 4.1** (§4.2.2, p.65), the transform-domain computation principle. For finite,
+convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution is computed by
+**adding the Legendre–Fenchel transforms and inverting**: `f ∗ g = 𝓛(𝓛 f + 𝓛 g)`. Because `𝓛 h(s)`
+is indexed by the *slope* `s`, pointwise addition of the transforms is exactly the book's "merge the
+segments in increasing order of slope" rule (Theorem 4.1, Figure 4.4). This is the mathematical
+content justifying the segment-merge algorithm; the explicit piecewise-affine data structure that
+performs the merge is the chapter's `[infra]` item. The library's
+`DeepWiki.minConv_eq_legendre_add_legendre` (composing the Fenchel–Moreau involution with
+`𝓛(f ∗ g) = 𝓛 f + 𝓛 g`). -/
+theorem thm_4_1_legendre {f g : ℝ≥0 → EReal}
+    (hf : IsConvexEReal f) (hg : IsConvexEReal g) (hmf : Monotone f) (hmg : Monotone g)
+    (hfin_f : ∀ x, f x ≠ ⊤ ∧ f x ≠ ⊥) (hfin_g : ∀ x, g x ≠ ⊤ ∧ g x ≠ ⊥)
+    (hf0 : ∀ x, 0 ≤ f x) (hg0 : ∀ x, 0 ≤ g x) :
+    minConv f g = legendre (legendre f + legendre g) :=
+  DeepWiki.minConv_eq_legendre_add_legendre hf hg hmf hmg hfin_f hfin_g hf0 hg0
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 

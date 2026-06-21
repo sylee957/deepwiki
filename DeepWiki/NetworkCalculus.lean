@@ -52,6 +52,7 @@ import DeepWiki.NetworkCalculus.LegendreFenchel
 import DeepWiki.NetworkCalculus.LegendreFenchelMoreau
 import DeepWiki.NetworkCalculus.LegendreFenchelMoreauConvex
 import DeepWiki.NetworkCalculus.LegendreFenchelConv
+import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.LegendreFenchelExamples
 import DeepWiki.NetworkCalculus.LegendreFenchelConvExamples
 import DeepWiki.NetworkCalculus.Stability
