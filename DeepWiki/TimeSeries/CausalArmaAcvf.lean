@@ -189,4 +189,17 @@ theorem causal_arma_linearProcessLp_arma_eq {φ θ : ℝ[X]} (hφ : IsCausalPoly
     show (fun m => ∑ k ∈ Finset.range (φ.natDegree + 1), φ.coeff k * ψ (m - k)) = maqFilter θ from
       funext hconv, linearProcessLp_maqFilter_eq]
 
+/-- **Theorem 3.1.2, forward direction** (invertible ⟹ the `AR(∞)` inversion solves the ARMA
+equation): for an invertible ARMA, the `AR(∞)` weights `π = φ/θ` give a process `Wₜ = ∑ⱼ πⱼ Xₜ₋ⱼ`
+satisfying `θ(B) W = φ(B) X`, i.e. `∑_{k=0}^q θₖ W_{t−k} = ∑_{j=0}^p φⱼ X_{t−j}`. The exact dual of
+`causal_arma_linearProcessLp_arma_eq` under `φ ↔ θ` (`IsInvertiblePoly θ` is definitionally the same
+`≠ 0 on |z| ≤ 1` condition as `IsCausalPoly θ`); combined with the ARMA equation this recovers the
+noise `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ`. -/
+theorem invertible_arma_linearProcessLp_arInv_eq {φ θ : ℝ[X]} (hθ : IsInvertiblePoly θ)
+    {X : ℤ → Lp ℝ 2 μ} {C : ℝ} (hXb : ∀ t, ‖X t‖ ≤ C) :
+    ∃ π : ℤ → ℝ, Summable π ∧ (∀ j : ℤ, j < 0 → π j = 0) ∧
+      ∀ t : ℤ, ∑ k ∈ Finset.range (θ.natDegree + 1), θ.coeff k • linearProcessLp π X (t - k)
+        = ∑ j ∈ Finset.range (φ.natDegree + 1), φ.coeff j • X (t - j) :=
+  causal_arma_linearProcessLp_arma_eq (φ := θ) (θ := φ) hθ hXb
+
 end DeepWiki.TimeSeries

@@ -104,10 +104,12 @@ summability** underlying both representations: `∑ⱼ |ψⱼ| < ∞` for the ca
 (`ex_3_2_3_summable`) and `∑ⱼ |πⱼ| < ∞` for the invertible `AR(∞)` weights `π = φ/θ`
 (`def_3_1_4_summable`), each with its Cauchy-convolution reciprocal recursion (`eq_3_3_3_analytic` /
 `arInv_weight_recursion`), proven from the polynomial being zero-free on a disk of radius `> 1`; and — now — the **forward
-direction of Theorem 3.1.1** (`thm_3_1_1_forward`): the causal `MA(∞)` process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ`
-*solves* the ARMA equation `φ(B) X = θ(B) Z`, so the root condition `⟹` an `MA(∞)` solution exists.
-What remains is the *converse* (an ARMA solution `⟹` causal, the other half of the `⟺`, which needs
-`L²` uniqueness), the two-sided Laurent existence (Thm 3.1.3), and Props 3.1.1/3.1.2. -/
+direction of both Theorems 3.1.1 and 3.1.2** (`thm_3_1_1_forward`/`thm_3_1_2_forward`): the causal
+`MA(∞)` process `Xₜ = ∑ⱼ ψⱼ Zₜ₋ⱼ` *solves* `φ(B) X = θ(B) Z`, and dually the invertible `AR(∞)`
+inversion `Wₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` solves `θ(B) W = φ(B) X` — so each root condition `⟹` the corresponding
+`MA(∞)`/`AR(∞)` representation exists. What remains is the *converses* (a representation `⟹` the root
+condition, the other halves of the `⟺`, which need `L²` uniqueness), the two-sided Laurent existence
+(Thm 3.1.3), and Props 3.1.1/3.1.2. -/
 
 /-- **Theorem 3.1.1** root condition (§3.1, p.85): the autoregressive polynomial `φ` has no
 zero in the closed complex unit disk, `φ(z) ≠ 0` for `|z| ≤ 1`. The library's `IsCausalPoly`.
@@ -137,6 +139,12 @@ alias def_3_1_4_summable := DeepWiki.TimeSeries.summable_norm_cauchyPowerSeries_
 `AR(∞)` weights `π = φ/θ` reproduce `φ` under Cauchy convolution with `θ` — the invertibility dual of
 the `MA(∞)` recursion `eq_3_3_3_analytic`. The library's `conv_coeff_arInv_eq_coeff`. -/
 alias arInv_weight_recursion := DeepWiki.TimeSeries.conv_coeff_arInv_eq_coeff
+
+/-- **Theorem 3.1.2, forward direction** (§3.1, p.86): for an invertible ARMA, the `AR(∞)` inversion
+`Wₜ = ∑ⱼ πⱼ Xₜ₋ⱼ` (`π = φ/θ`) solves `θ(B) W = φ(B) X` — so `θ(z) ≠ 0` on `|z| ≤ 1` ⟹ an `AR(∞)`
+representation exists, recovering the noise `Zₜ = ∑ⱼ πⱼ Xₜ₋ⱼ`. The `φ ↔ θ` dual of `thm_3_1_1_forward`.
+The library's `invertible_arma_linearProcessLp_arInv_eq`. -/
+alias thm_3_1_2_forward := DeepWiki.TimeSeries.invertible_arma_linearProcessLp_arInv_eq
 
 /-- **§3.1** (AR(1) process, p.81): an `AR(1)` process with autoregressive polynomial
 `φ(z) = 1 − φ₁z`, i.e. `(1 − φ₁B)X = Z`, satisfies the autoregressive recursion
