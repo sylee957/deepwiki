@@ -655,6 +655,74 @@ theorem subresultant_rem_eq_15 (A B Q Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ)
     show (γ - (γ - 1)) * (φ - (γ - 1)) = φ - γ + 1 from by
       rw [show γ - (γ - 1) = 1 from by omega, one_mul]; omega]
 
+/-- For `j ≥ deg Rem` the `ⱼSᵢ` submatrix of `bSylvester B Rem γ φ` is upper-triangular: the `B`-block
+has `lc B`-diagonal with zeros below, and every `Rem`-row entry strictly below the diagonal is
+`Rem.coeff` of a degree `> j ≥ deg Rem`, hence `0`. Shared core of the degenerate cases (eqs 13–15). -/
+private theorem subresultant_deg_ge_upperTri (B Rem : R[X]) (γ φ j i : ℕ) (hj1 : Rem.natDegree ≤ j)
+    (hj2 : j < γ) (hγφ : γ ≤ φ)
+    (e : Fin ((φ + γ - 2 * j - 1) + 1) ≃ Fin (φ + γ - 2 * j)) (he : e = finCongr (by omega))
+    (t s : Fin ((φ + γ - 2 * j - 1) + 1)) (hts : s < t) :
+    ((bSylvester B Rem γ φ).submatrix (subRow γ φ j) (subCol γ φ j i)).submatrix e e t s = 0 := by
+  have hsv : ((e s : Fin _) : ℕ) = (s : ℕ) := by simp [he]
+  have htv : ((e t : Fin _) : ℕ) = (t : ℕ) := by simp [he]
+  have hstn : (s : ℕ) < (t : ℕ) := by simpa using hts
+  have htle := t.isLt
+  rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+  have hcolv : (subCol γ φ j i (e s) : ℕ)
+      = if (s : ℕ) < φ + γ - 2 * j - 1 then (s : ℕ) else φ + γ - i - j - 1 := by
+    simp only [subCol, hsv]
+  have hrowv : (subRow γ φ j (e t) : ℕ)
+      = if (t : ℕ) < φ - j then (t : ℕ) else (t : ℕ) + j := by
+    simp only [subRow, htv]
+  simp only [bSylvester, Matrix.of_apply, hcolv, hrowv]
+  by_cases htB : (t : ℕ) < φ - j
+  · rw [if_pos htB, if_pos (show (s : ℕ) < φ + γ - 2 * j - 1 by omega),
+      if_pos (show (t : ℕ) < φ by omega), if_neg (by omega)]
+  · rw [if_neg htB, if_neg (show ¬ ((t : ℕ) + j < φ) by omega),
+      if_pos (show (s : ℕ) < φ + γ - 2 * j - 1 by omega)]
+    split
+    · exact coeff_eq_zero_of_natDegree_lt (by omega)
+    · rfl
+
+/-- **Fundamental PRS Theorem, vanishing case `deg Rem < j < deg G − 1`** (Brown–Traub Lemma 1, eq 14):
+`Sⱼ(B,Rem; γ,φ) = 0`. The `ⱼSᵢ` submatrix is upper-triangular (`subresultant_deg_ge_upperTri`) and a
+middle `Rem`-row contributes the diagonal entry `Rem.coeff j = 0` (as `j > deg Rem`), so the determinant
+vanishes. -/
+theorem subresultant_deg_mid (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree < j) (hj2 : j < γ - 1)
+    (hγφ : γ ≤ φ) :
+    subresultant B Rem γ φ j = 0 := by
+  rw [subresultant]
+  apply Finset.sum_eq_zero
+  intro i hi
+  have hij : i ≤ j := by rw [Finset.mem_range] at hi; omega
+  set e : Fin ((φ + γ - 2 * j - 1) + 1) ≃ Fin (φ + γ - 2 * j) := finCongr (by omega) with he
+  rw [show ((bSylvester B Rem γ φ).submatrix (subRow γ φ j) (subCol γ φ j i)).det = 0 from ?_,
+    map_zero, zero_mul]
+  rw [← Matrix.det_submatrix_equiv_self e,
+    Matrix.det_of_upperTriangular (fun t s hts =>
+      subresultant_deg_ge_upperTri B Rem γ φ j i (by omega) (by omega) hγφ e he t s hts)]
+  apply Finset.prod_eq_zero (Finset.mem_univ (⟨φ - j, by omega⟩ : Fin ((φ + γ - 2 * j - 1) + 1)))
+  have hv : ((e (⟨φ - j, by omega⟩ : Fin ((φ + γ - 2 * j - 1) + 1)) : Fin _) : ℕ) = φ - j := by
+    simp [he]
+  rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+  have hrow : (subRow γ φ j (e ⟨φ - j, by omega⟩) : ℕ) = φ := by
+    simp only [subRow, hv]; rw [if_neg (show ¬ (φ - j < φ - j) by omega)]; omega
+  have hcol : (subCol γ φ j i (e ⟨φ - j, by omega⟩) : ℕ) = φ - j := by
+    simp only [subCol, hv]; rw [if_pos (show φ - j < φ + γ - 2 * j - 1 by omega)]
+  simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+  rw [if_neg (show ¬ (φ < φ) by omega), if_pos ⟨by omega, by omega⟩]
+  exact coeff_eq_zero_of_natDegree_lt (by omega)
+
+/-- **Fundamental PRS Theorem, vanishing case** (Brown–Traub Lemma 1, eq 14): for a division step
+`A = Rem + B·Q` with `deg Rem < j < deg B − 1`, `Sⱼ(A,B) = 0`. Composes `subresultant_rem` with
+`subresultant_deg_mid`. -/
+theorem subresultant_rem_eq_14 (A B Q Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree < j)
+    (hj2 : j < γ - 1) (hγφ : γ ≤ φ) (hB : B.natDegree ≤ γ) (hQ : Q.natDegree + γ ≤ φ)
+    (hA : A = Rem + B * Q) :
+    subresultant A B φ γ j = 0 := by
+  rw [subresultant_rem A B Q Rem φ γ j (by omega) (by omega) hB hQ hA,
+    subresultant_deg_mid B Rem γ φ j hj1 hj2 hγφ, mul_zero]
+
 /-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
 degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
 power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,
