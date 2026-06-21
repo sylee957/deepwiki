@@ -208,6 +208,32 @@ theorem sq2CoupledRel_seed {D : Type*} :
         exact ⟨fun _ => le_of_lt hfrBpos, fun _ => le_of_lt hfrApos⟩
       · simp only [hsv, hfr0]
 
+/-- **Live-stay delay** (the successor breakthrough realized): when A delays to a process still below
+`√2`, B matches via the *existing* `jointValW_delay_match` — the asymmetric η-bump rides through the
+uniform advance. A single `δ'` serves the result's `∀η` (via `jointValW_smallBump`), and `e + δ' ≤ √2`
+because the bumped process stays below `√2` (`jointValW_sqrt2_side`). -/
+theorem Sq2CoupledFRel.delayLiveStay {D : Type*} [Fintype D] {d e : ℝ≥0} {u u' : Valuation D}
+    (h : Sq2CoupledFRel d u e u') (δ : ℝ≥0) (hstay : d + δ < sqrt2NN) :
+    ∃ δ', Sq2CoupledFRel (d + δ) (u.add δ) (e + δ') (u'.add δ') := by
+  obtain ⟨_, _, η₀, hη₀, hreg⟩ := h
+  obtain ⟨η₂, hη₂0, hsb⟩ := jointValW_smallBump (d + δ) (u.add δ)
+  have hgap : 0 < sqrt2NN - (d + δ) := tsub_pos_of_lt hstay
+  have hm0 : 0 < min η₀ (min η₂ (sqrt2NN - (d + δ))) := lt_min hη₀ (lt_min hη₂0 hgap)
+  set η₁ : ℝ≥0 := min η₀ (min η₂ (sqrt2NN - (d + δ))) / 2 with hη₁
+  have hη₁0 : 0 < η₁ := half_pos hm0
+  have hη₁m : η₁ < min η₀ (min η₂ (sqrt2NN - (d + δ))) := NNReal.half_lt_self hm0.ne'
+  have hη₁η₀ : η₁ < η₀ := lt_of_lt_of_le hη₁m (min_le_left _ _)
+  have hη₁η₂ : η₁ < η₂ := lt_of_lt_of_le hη₁m (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hη₁gap : η₁ < sqrt2NN - (d + δ) :=
+    lt_of_lt_of_le hη₁m (le_trans (min_le_right _ _) (min_le_right _ _))
+  obtain ⟨δ', hδ'⟩ := jointValW_delay_match (hreg η₁ hη₁0 hη₁η₀) δ
+  rw [show d + η₁ + δ = (d + δ) + η₁ from by ring] at hδ'
+  have hAlt : (d + δ) + η₁ < sqrt2NN :=
+    calc (d + δ) + η₁ < (d + δ) + (sqrt2NN - (d + δ)) := by gcongr
+      _ = sqrt2NN := add_tsub_cancel_of_le (le_of_lt hstay)
+  refine ⟨δ', hstay, le_of_lt ((jointValW_sqrt2_side hδ').mp hAlt), η₁, hη₁0, fun η' hη'0 hη'η₁ => ?_⟩
+  exact (hsb η' η₁ hη'0 (lt_trans hη'η₁ hη₁η₂) hη₁0 hη₁η₂).trans hδ'
+
 end TLTS
 
 end DeepWiki.ReactiveSystems
