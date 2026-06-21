@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.Subresultants
+import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import Mathlib.Data.ZMod.Basic
@@ -585,6 +586,12 @@ abbrev def_1_5_2 := @IsSimilar
 `A, B` is similar to `gcd(A, B)` (the library theorem `IsPRS.isSimilar_gcd`; `D[x]` is given its
 `GCDMonoid` structure via `UniqueFactorizationMonoid.toGCDMonoid`). -/
 abbrev thm_1_5_1 := @IsPRS.isSimilar_gcd
+
+/-- **Theorem 1.5.2** (§1.5, p.23, Fundamental PRS Theorem) — similarity core: for a PRS `F` with the
+division relations, every subresultant `Sⱼ(F₀,F₁)` is *similar* to `Sⱼ(Fₘ,F_{m+1})` down the sequence
+(`subresultant_prs_telescope`), so it is similar to a PRS element — establishing the structural claim of
+Thm 1.5.2. The fully explicit similarity coefficients `ηᵢ/τᵢ` (eq 1.9/1.10) are the remaining refinement. -/
+abbrev thm_1_5_2_similar := @subresultant_prs_telescope
 
 /-- **Example 1.5.1** (§1.5, p.25): the subresultants of `A = x²+1` and `B = x²−1` in `ℤ[x]` are
 `S₀ = 4 = res(A,B)` and `S₁ = −2` (defective, a nonzero constant). -/
