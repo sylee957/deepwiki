@@ -409,6 +409,21 @@ theorem splitting_parts_coprime {K : Type*} [Field K] [Differential K] (v : K[X]
       (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a)) :=
   isCoprime_splitting_parts v s
 
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99), general special-part extraction: a polynomial `∏_{a∈s}(X−a)^{eₐ}`
+factors as its special part (the special roots, with multiplicity) times the rest, the special part
+being special w.r.t. `D`. (For `eₐ > 1` the complementary factor is not normal — the full canonical
+representation reduces those multiplicities via rational functions.) -/
+theorem thm_3_5_1_special_part {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X])
+    (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    (∏ a ∈ s, (X - C a) ^ e a)
+        = (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a)
+          * (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a) ^ e a)
+      ∧ (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a)
+          ∣ Differential.implicitDeriv v
+              (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a) :=
+  isSpecial_special_part v s e he
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
 -- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
 -- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced

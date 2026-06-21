@@ -527,6 +527,24 @@ theorem splittingFactorization_prod_X_sub_C {K : Type*} [Field K] [Differential 
    (isCoprime_prod_X_sub_C_implicitDeriv_iff v _).mpr fun _ ha => (Finset.mem_filter.mp ha).2⟩
 
 open Classical in
+/-- **§3.5** special-part extraction for a *general* (non-squarefree) product: `∏_{a∈s}(X − a)^{eₐ}`
+factors as its special part (roots with `v(a)=a′`, with multiplicity) times the rest, the special
+part being special w.r.t. `D`. (The complementary factor is not normal once `eₐ > 1`; the full
+canonical representation handles those multiplicities via the rational-function reduction.) -/
+theorem isSpecial_special_part {K : Type*} [Field K] [CharZero K] [Differential K] (v : K[X])
+    (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :
+    (∏ a ∈ s, (X - C a) ^ e a)
+        = (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a)
+          * (∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a) ^ e a)
+      ∧ (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a)
+          ∣ Differential.implicitDeriv v
+              (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) ^ e a) :=
+  ⟨(Finset.prod_filter_mul_prod_filter_not s _ _).symm,
+   (dvd_prod_X_sub_C_pow_implicitDeriv_iff v _ e
+       (fun a ha => he a (Finset.mem_of_mem_filter a ha))).mpr
+     fun _ ha => (Finset.mem_filter.mp ha).2⟩
+
+open Classical in
 /-- **Theorem 3.5.1** (§3.5, p.99), squarefree gcd formula: the special part of a squarefree
 polynomial is exactly `gcd(p, Dp)` — `gcd(∏_{a∈s}(X − a), D ∏) ~ ∏_{a : v(a)=a′}(X − a)`. By
 Lemma 3.4.4 the gcd splits over the linear factors; each `gcd(X − a, D(X − a))` is `~ (X − a)` when
