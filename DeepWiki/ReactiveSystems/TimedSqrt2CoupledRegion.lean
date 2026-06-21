@@ -40,6 +40,79 @@ def Sq2CoupledRel {D : Type*} (p : Sq2) (u : Valuation D) (q : Sq2) (u' : Valuat
   (aDisabled sqrt2NN p ∧ aDisabled sqrt2NN q ∧ RegionEqAll u u')
   ∨ (∃ d e : ℝ≥0, p = Sq2.A d ∧ q = Sq2.B e ∧ Sq2CoupledFRel d u e u')
 
+/-- **Small process-bump invariance.** Two infinitesimally different process-bumps give the same
+augmented region: for all sufficiently small `a, b > 0`, `jointValW (T+a) w` and `jointValW (T+b) w`
+are region-equivalent. This is the `∀`-small-`η` uniformity that lets a single `δ'` (from
+`jointValW_delay_match`) serve the live-delay result's `∀ η`. The bound is the gap from the process
+clock's fractional part up to the next clock-fraction or its next integer. -/
+theorem jointValW_smallBump {D : Type*} [Fintype D] (T : ℝ≥0) (w : Valuation D) :
+    ∃ η₂ : ℝ≥0, 0 < η₂ ∧ ∀ a b : ℝ≥0, 0 < a → a < η₂ → 0 < b → b < η₂ →
+      RegionEqAll (jointValW (T + a) w) (jointValW (T + b) w) := by
+  set φ : ℝ := fracPart (T + twoSubSqrt2NN) with hφ
+  have hφ1 : φ < 1 := fracPart_lt_one _
+  have hφ0 : (0 : ℝ) ≤ φ := fracPart_nonneg _
+  obtain ⟨bnd, hbnd0, hbnd1, hbndx⟩ :
+      ∃ bnd : ℝ, 0 < bnd ∧ bnd ≤ 1 - φ ∧ ∀ x, φ < fracPart (w x) → bnd ≤ fracPart (w x) - φ := by
+    rcases isEmpty_or_nonempty D with hD | hD
+    · exact ⟨1 - φ, by linarith, le_refl _, fun x _ => (hD.false x).elim⟩
+    · obtain ⟨x₀, -, hx₀⟩ := Finset.exists_min_image Finset.univ
+        (fun x => if φ < fracPart (w x) then fracPart (w x) - φ else 1 - φ) Finset.univ_nonempty
+      refine ⟨min (1 - φ) (if φ < fracPart (w x₀) then fracPart (w x₀) - φ else 1 - φ),
+        lt_min (by linarith) ?_, min_le_left _ _, fun x hx => ?_⟩
+      · split <;> linarith
+      · refine le_trans (min_le_right _ _) ?_
+        have h := hx₀ x (Finset.mem_univ x)
+        rwa [if_pos hx] at h
+  -- value/floor/frac of a bumped process clock
+  have hval : ∀ a : ℝ≥0, jointValW (T + a) w none = (T + twoSubSqrt2NN) + a := fun a => by
+    rw [jointValW, jointVal_none]; ring
+  have hfa : ∀ a : ℝ≥0, (a : ℝ) < 1 - φ →
+      fracPart ((T + twoSubSqrt2NN) + a) = φ + (a : ℝ)
+        ∧ ⌊(T + twoSubSqrt2NN) + a⌋₊ = ⌊T + twoSubSqrt2NN⌋₊ := fun a ha =>
+    fracPart_add_of_no_wrap (by rw [← hφ]; linarith)
+  refine ⟨bnd.toNNReal, by rw [Real.toNNReal_pos]; exact hbnd0, fun a b ha haη hb hbη => ?_⟩
+  have hbndax : (a : ℝ) < bnd := by
+    have h := NNReal.coe_lt_coe.mpr haη; rwa [Real.coe_toNNReal bnd hbnd0.le] at h
+  have hbndbx : (b : ℝ) < bnd := by
+    have h := NNReal.coe_lt_coe.mpr hbη; rwa [Real.coe_toNNReal bnd hbnd0.le] at h
+  have haR : (a : ℝ) < 1 - φ := lt_of_lt_of_le hbndax hbnd1
+  have hbR : (b : ℝ) < 1 - φ := lt_of_lt_of_le hbndbx hbnd1
+  have haR0 : (0 : ℝ) < (a : ℝ) := by exact_mod_cast ha
+  have hbR0 : (0 : ℝ) < (b : ℝ) := by exact_mod_cast hb
+  have hval : ∀ c : ℝ≥0, jointValW (T + c) w none = (T + twoSubSqrt2NN) + c := fun c => by
+    rw [jointValW, jointVal_none]; ring
+  have hfa : fracPart ((T + twoSubSqrt2NN) + a) = φ + (a : ℝ) :=
+    (fracPart_add_of_no_wrap (by rw [← hφ]; linarith)).1
+  have hfb : fracPart ((T + twoSubSqrt2NN) + b) = φ + (b : ℝ) :=
+    (fracPart_add_of_no_wrap (by rw [← hφ]; linarith)).1
+  have hflra : ⌊(T + twoSubSqrt2NN) + a⌋₊ = ⌊T + twoSubSqrt2NN⌋₊ :=
+    (fracPart_add_of_no_wrap (by rw [← hφ]; linarith)).2
+  have hflrb : ⌊(T + twoSubSqrt2NN) + b⌋₊ = ⌊T + twoSubSqrt2NN⌋₊ :=
+    (fracPart_add_of_no_wrap (by rw [← hφ]; linarith)).2
+  apply regionEqAll_of_exact
+  · rintro (_ | x)
+    · rw [hval, hval, hflra, hflrb]
+    · rfl
+  · rintro (_ | x)
+    · rw [hval, hval, hfa, hfb]
+      exact iff_of_false (fun h => by linarith) (fun h => by linarith)
+    · exact Iff.rfl
+  · rintro (_ | x) (_ | y)
+    · rw [hval, hval]; exact ⟨fun _ => le_refl _, fun _ => le_refl _⟩
+    · simp only [hval, hfa, hfb]
+      show φ + (a : ℝ) ≤ fracPart (w y) ↔ φ + (b : ℝ) ≤ fracPart (w y)
+      by_cases hwy : φ < fracPart (w y)
+      · exact iff_of_true (by linarith [hbndx y hwy]) (by linarith [hbndx y hwy])
+      · rw [not_lt] at hwy
+        exact iff_of_false (fun h => by linarith) (fun h => by linarith)
+    · simp only [hval, hfa, hfb]
+      show fracPart (w x) ≤ φ + (a : ℝ) ↔ fracPart (w x) ≤ φ + (b : ℝ)
+      by_cases hwx : φ < fracPart (w x)
+      · exact iff_of_false (fun h => by linarith [hbndx x hwx]) (fun h => by linarith [hbndx x hwx])
+      · rw [not_lt] at hwx
+        exact iff_of_true (by linarith) (by linarith)
+    · exact Iff.rfl
+
 /-- The clock region (for the guard clause): restricting the augmented region to the formula clocks. -/
 theorem Sq2CoupledFRel.regionEqAll {D : Type*} {d e : ℝ≥0} {u u' : Valuation D}
     (h : Sq2CoupledFRel d u e u') : RegionEqAll u u' := by
