@@ -40,8 +40,10 @@ characterisation (§12.3), discharged by the `DeepWiki.ReactiveSystems` library.
   **nondeterminism** in `TimedNondetCharacteristic` (`ndChar_iff`): `NDetTA` = a finite *list* of
   single-action `a`-edges per location (single-atom `GuardCmp` guards `⋈ ∈ {≤,<,≥,>}` so negation is an
   atom), the body folding a readiness conjunction `⋀ₑ(gₑ ⇒ ⟨a⟩…)` and a safety box `[a](⋁ₑ(gₑ ∧ …))` over
-  the edge list (`bigAnd`/`bigOr` denotations + `GuardCmp.holds_neg`) — full iff again. Remaining:
-  multiple actions (per-action boxes over a finite `Act`) and location invariants.
+  the edge list (`bigAnd`/`bigOr` denotations + `GuardCmp.holds_neg`) — full iff again. Extended to
+  **multiple actions** in `TimedMultiActionCharacteristic` (`maChar_iff`): `MATA` = labelled edges over a
+  finite `Act`, safety conjoining a `[a]`-box over every `a : Fintype Act` (unused actions → `[a]ff`) —
+  full iff. Remaining: location invariants and conjunctive (multi-atom) guards.
   Ex 12.12 statement 3 (full-`Mt` strictness
   at `c=√2`) `[research]` (needs a single-irrational-cut region + coinductive bisimulation); Ex 12.14
   (a sublanguage characterizing untimed bisimilarity) `[research]`; Ex 12.15 (`Mt` distinguishes
