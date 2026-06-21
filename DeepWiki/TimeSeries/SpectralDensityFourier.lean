@@ -161,4 +161,26 @@ theorem fourier_tsum_mul_shift {ψ : ℤ → ℝ} (hψ : Summable fun n => |ψ n
   rw [← Summable.tsum_prod' hFsum fun n => hFsum.prod_factor n, hcomp]
   exact e.tsum_eq fun q => f q.1 * g q.2
 
+/-- **Theorem 4.4.1 as a squared modulus (eq 4.4.3):** for a real absolutely summable filter `ψ`, the
+Fourier series of the correlation `∑ₖ ψₖ ψ_{k+n}` equals the *squared modulus* of the transfer
+function `‖∑ₘ ψₘ e^{−imλ}‖²` — in particular a non-negative real. So the spectral density of a
+linear-filtered process is `|ψ̂(e^{−iλ})|²` times the input's, and is `≥ 0`. -/
+theorem fourier_tsum_mul_shift_eq_normSq {ψ : ℤ → ℝ} (hψ : Summable fun n => |ψ n|) (lam : ℝ) :
+    (∑' n : ℤ, Complex.exp (-(n : ℂ) * lam * Complex.I) * ∑' k : ℤ, (ψ k : ℂ) * (ψ (k + n) : ℂ))
+      = (Complex.normSq (∑' m : ℤ, (ψ m : ℂ) * Complex.exp (-(m : ℂ) * lam * Complex.I)) : ℂ) := by
+  rw [fourier_tsum_mul_shift hψ]
+  set T : ℂ := ∑' m : ℤ, (ψ m : ℂ) * Complex.exp (-(m : ℂ) * lam * Complex.I) with hT
+  have hconj : (∑' k : ℤ, (ψ k : ℂ) * Complex.exp ((k : ℂ) * lam * Complex.I)) = star T := by
+    rw [hT, tsum_star]
+    refine tsum_congr fun k => ?_
+    have h1 : star (ψ k : ℂ) = (ψ k : ℂ) := by simp
+    have h2 : star (Complex.exp (-(k : ℂ) * lam * Complex.I))
+        = Complex.exp ((k : ℂ) * lam * Complex.I) := by
+      rw [← starRingEnd_apply, ← Complex.exp_conj]
+      congr 1
+      simp only [map_mul, map_neg, map_intCast, Complex.conj_ofReal, Complex.conj_I]
+      ring
+    rw [star_mul', h1, h2, mul_comm]
+  rw [hconj, mul_comm, ← starRingEnd_apply, Complex.mul_conj]
+
 end DeepWiki.TimeSeries
