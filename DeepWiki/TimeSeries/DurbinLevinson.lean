@@ -82,4 +82,14 @@ theorem dlCoeff_one_one : dlCoeff γ 1 1 = γ 1 / γ 0 := by
 theorem dl_prediction_eq_one (h0 : γ 0 ≠ 0) : dlCoeff γ 1 1 * γ 0 = γ 1 := by
   rw [dlCoeff_one_one, div_mul_cancel₀ _ h0]
 
+/-- Reflection of a sum over `Icc 1 n`: `j ↦ n+1−j` is an involution on `{1,…,n}`. -/
+theorem sum_Icc_reflect {M : Type*} [AddCommMonoid M] (f : ℕ → M) (n : ℕ) :
+    ∑ j ∈ Icc 1 n, f (n + 1 - j) = ∑ j ∈ Icc 1 n, f j := by
+  refine Finset.sum_nbij' (fun j => n + 1 - j) (fun j => n + 1 - j) ?_ ?_ ?_ ?_ ?_
+  · intro a ha; simp only [Finset.mem_Icc] at ha ⊢; omega
+  · intro a ha; simp only [Finset.mem_Icc] at ha ⊢; omega
+  · intro a ha; simp only [Finset.mem_Icc] at ha; omega
+  · intro a ha; simp only [Finset.mem_Icc] at ha; omega
+  · intro _ _; rfl
+
 end DeepWiki.TimeSeries
