@@ -114,6 +114,30 @@ theorem exists_unique_horowitz_of_injective {Dminus Dstar E : K[X]} (hDm : Dminu
   apply Subtype.ext
   rw [horowitzMap_coe_apply, horowitzMap_coe_apply, hBC', hval]
 
+/-! ## Injectivity of the Horowitz operator (the root-multiplicity argument)
+For each prime `p` dividing `D⁻` with `p^k ‖ D⁻` (so `p ‖ D*`, char 0), one shows `p^k ∣ B`; collecting
+over all primes gives `D⁻ ∣ B`, and `deg B < deg D⁻` forces `B = 0`. The engine is the *Wronskian
+divisibility* below: from the Horowitz relation, `W = B′·D⁻ − B·D⁻′` is divisible by `p^{2k−1}`. -/
+
+/-- **Wronskian divisibility** (the first half of the injectivity multiplicity argument): writing
+`D⁻ = p^k·w` and `D* = p·u` with `p ∤ u`, the Horowitz relation
+`(p·u)·(B′·D⁻ − B·D⁻′) = −C·(D⁻)²` forces `p^{2k−1} ∣ B′·D⁻ − B·D⁻′` — cancel one `p` (`p ∤ u`, prime)
+to read off `2k−1` factors of `p`. -/
+theorem horowitz_wronskian_prime_pow_dvd {p w u B C : K[X]} (hp : Prime p) {k : ℕ} (hk : 1 ≤ k)
+    (hpu : ¬ p ∣ u)
+    (hrel : (p * u) * (derivative B * (p ^ k * w) - B * derivative (p ^ k * w))
+        = -(C * (p ^ k * w) ^ 2)) :
+    p ^ (2 * k - 1) ∣ derivative B * (p ^ k * w) - B * derivative (p ^ k * w) := by
+  have hp0 : p ≠ 0 := hp.ne_zero
+  set W := derivative B * (p ^ k * w) - B * derivative (p ^ k * w) with hW
+  have huW : u * W = -(C * p ^ (2 * k - 1) * w ^ 2) := by
+    apply mul_left_cancel₀ hp0
+    rw [← mul_assoc, hrel, mul_pow, ← pow_mul, show k * 2 = (2 * k - 1) + 1 from by omega, pow_succ]
+    ring
+  have hdvd : p ^ (2 * k - 1) ∣ u * W := ⟨-(C * w ^ 2), by rw [huW]; ring⟩
+  exact (Irreducible.coprime_pow_of_not_dvd (2 * k - 1) hp.irreducible hpu).symm.dvd_of_dvd_mul_left
+    hdvd
+
 end DeepWiki.SymbolicIntegration
 
 end
