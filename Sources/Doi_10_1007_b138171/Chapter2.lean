@@ -18,7 +18,10 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 §2.2: the full `HermiteReduce` algorithm (recursion over the squarefree factorization, `B, C` via
   `diophantineSolve`) [functional]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3 [functional]
   (their shared *result* is `ex_2_3_1`).
-§2.3: the Horowitz–Ostrogradsky algorithm [functional]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
+§2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
+  `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
+  and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
+  Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]; the Rothstein–Trager
   algorithm's formal log-sum assembly over the roots of `R` [functional: needs the root-indexed sum].
   Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`, the zeros of
@@ -90,6 +93,12 @@ noncomputable abbrev intRationalLogPart_resultant := @DeepWiki.SymbolicIntegrati
 functional def `rtLogGcd A D a = gcd(D, A − a·D')`, with correctness `rtLogGcd_isRoot_iff`
 (= Thm 2.4.1(ii)). The full algorithm sums `a·log(Gₐ)` over the roots `a` of `R`. -/
 noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtLogGcd
+
+/-- **Horowitz–Ostrogradsky algorithm** (§2.3, p.46), denominator split: the functional def
+`hoSplit D = (gcd(D, D'), D/gcd(D, D')) = (D⁻, D*)`, with `hoSplit_mul` (`D⁻·D* = D`) and
+`hoSplit_snd_squarefree` (`D*` is the squarefree radical of `D`, char `0`). The algorithm then solves
+a linear system for the numerators `B, C`. -/
+noncomputable abbrev horowitzOstrogradsky_split := @DeepWiki.SymbolicIntegration.hoSplit
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for

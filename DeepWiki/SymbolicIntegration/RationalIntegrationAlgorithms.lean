@@ -1,6 +1,8 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.Residues
+import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.RingTheory.EuclideanDomain
+import Mathlib.RingTheory.Radical.Basic
 import Mathlib.Algebra.Polynomial.Degree.Units
 
 /-! # Rational-function integration algorithms — functional form (Bronstein §2.1–§2.2)
@@ -94,5 +96,53 @@ theorem rtResultant_eval_eq_zero_iff [IsAlgClosed K] (A D : K[X]) (hD : D.Separa
     (hdeg : (A - C a * derivative D).natDegree = D.natDegree - 1) :
     (rtResultant A D).eval a = 0 ↔ ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
   rw [rtResultant_eval, ← hdeg, ← residue_iff_resultant_eq_zero A D hD a]
+
+/-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
+The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
+part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
+split with its two structural correctness facts: `D⁻·D* = D` and `D*` squarefree. -/
+
+open Classical in
+/-- **Horowitz–Ostrogradsky denominator split** (§2.3): `(D⁻, D*) = (gcd(D, D'), D/gcd(D, D'))`. -/
+noncomputable def hoSplit (D : K[X]) : K[X] × K[X] :=
+  (gcd D (derivative D), D / gcd D (derivative D))
+
+open Classical in
+/-- `gcd(D, D') ≠ 0` for `D ≠ 0`. -/
+private theorem gcd_derivative_ne_zero {D : K[X]} (hD : D ≠ 0) : gcd D (derivative D) ≠ 0 :=
+  fun h => hD (zero_dvd_iff.mp (h ▸ gcd_dvd_left D (derivative D)))
+
+open Classical in
+/-- **`D⁻·D* = D`**: the Horowitz–Ostrogradsky split factors `D` (since `gcd(D, D') ∣ D`). -/
+theorem hoSplit_mul (D : K[X]) (hD : D ≠ 0) : (hoSplit D).1 * (hoSplit D).2 = D :=
+  EuclideanDomain.mul_div_cancel' (gcd_derivative_ne_zero hD) (gcd_dvd_left _ _)
+
+open Classical in
+/-- **`D*` is squarefree** (§2.3): over a characteristic-`0` field, `D* = D/gcd(D, D')` is the radical
+of `D`. Via the §1.6 deflation theory (`squarefreePart_mul_deflation`, `deflation_one_eq_gcd`) it is
+associated to `squarefreePart D = radical D`, which is squarefree (`squarefree_radical`). -/
+theorem hoSplit_snd_squarefree [CharZero K] (D : K[X]) (hD : D ≠ 0) :
+    Squarefree (hoSplit D).2 := by
+  have hprim : D.IsPrimitive := (isPrimitive_iff_ne_zero D).mpr hD
+  have hpp : D.primPart = D := by
+    have h := eq_C_content_mul_primPart D
+    rw [hprim.content_eq_one, map_one, one_mul] at h; exact h.symm
+  have hppne : D.primPart ≠ 0 := by rw [hpp]; exact hD
+  have hmul : gcd D (derivative D) * (hoSplit D).2 = D := hoSplit_mul D hD
+  have h1 : Associated (squarefreePart D * deflation D 1) D := by
+    have := squarefreePart_mul_deflation D hppne; rwa [hpp] at this
+  have h2 : Associated (gcd D (derivative D)) (deflation D 1) := by
+    have := deflation_one_eq_gcd D hppne; rwa [hpp] at this
+  -- cancel the common factor gcd ~ deflation to get D* ~ squarefreePart
+  have hcomb : Associated (gcd D (derivative D) * (hoSplit D).2)
+      (deflation D 1 * squarefreePart D) := by
+    rw [hmul, mul_comm (deflation D 1) (squarefreePart D)]; exact h1.symm
+  have hAD : Associated (hoSplit D).2 (squarefreePart D) :=
+    Associated.of_mul_left hcomb h2 (gcd_derivative_ne_zero hD)
+  have hsqfp : squarefreePart D = UniqueFactorizationMonoid.radical D := by
+    unfold squarefreePart UniqueFactorizationMonoid.radical UniqueFactorizationMonoid.primeFactors
+    rw [hpp]; congr!
+  rw [hAD.squarefree_iff, hsqfp]
+  exact UniqueFactorizationMonoid.squarefree_radical
 
 end DeepWiki.SymbolicIntegration
