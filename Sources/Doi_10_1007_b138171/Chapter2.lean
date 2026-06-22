@@ -16,12 +16,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.2: the *outer* `HermiteReduce` recursion over the full squarefree factorization `D = ∏ᵢ Dᵢ^i`
-  [functional] — the remaining glue is the **multi-factor** partial fraction (iterate the coprime split
-  across all prime powers) wired to the inner loop on each. Done: the reduction step (`hermiteReduce_step`
-  / `hermiteReduce_step_ratFunc`); the prime-power *inner loop* `hermiteReducePower` /
-  `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0, via Bézout since `V ⊥ V'`); and the *two-factor*
-  partial-fraction building block `ratFunc_partialFraction_coprime` (`A/(P·Q) = B/Q + C/P` for `P ⊥ Q`).
-  The per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is `ex_2_3_1`).
+  [functional] — the remaining glue is wiring the multi-factor partial fraction to the inner loop on each
+  prime power (specialize `ratFunc_partialFraction_prod` to `Dᵢ^i`, then `hermiteReducePower` per factor,
+  and sum). Done: the reduction step (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`); the prime-power
+  *inner loop* `hermiteReducePower` / `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0, via Bézout since
+  `V ⊥ V'`); the *two-factor* split `ratFunc_partialFraction_coprime` (`A/(P·Q) = B/Q + C/P`, `P ⊥ Q`); and
+  the *multi-factor* partial fraction `ratFunc_partialFraction_prod` (`A/∏Pᵢ = ∑ Bᵢ/Pᵢ` for pairwise-coprime
+  `Pᵢ`, by Finset induction). The Ex 2.2.1/2.2.2/2.2.3 traces [functional] (shared *result* `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
   `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
   and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
@@ -170,6 +171,13 @@ recursion): for coprime `P, Q ≠ 0`, `A/(P·Q) = B/Q + C/P` where `(B, C) = dio
 across a squarefree factorization. The library's `ratFunc_partialFraction_coprime`. -/
 abbrev ratFunc_partialFraction_coprime :=
   @DeepWiki.SymbolicIntegration.ratFunc_partialFraction_coprime
+
+/-- **Multi-factor partial fraction in `K(x)`** (§2.2, full coprime decomposition): for a nonempty
+family of pairwise-coprime nonzero `P i` (`i ∈ s`), `A/∏ᵢ Pᵢ = ∑ᵢ Bᵢ/Pᵢ` for some `B i` — iterate the
+two-factor split across the family. Specializing to the prime powers `Dᵢ^i` of a squarefree factorization
+decomposes `A/D` for the per-factor Hermite loop. The library's `ratFunc_partialFraction_prod`. -/
+abbrev ratFunc_partialFraction_prod :=
+  @DeepWiki.SymbolicIntegration.ratFunc_partialFraction_prod
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for

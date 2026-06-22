@@ -221,6 +221,46 @@ theorem ratFunc_partialFraction_coprime {P Q A : K[X]} (hP : P ≠ 0) (hQ : Q �
     rw [← map_mul, ← map_mul, ← map_add, diophantineSolve_spec hPQ A]
   rw [hspec]; field_simp
 
+open Classical in
+/-- **Multi-factor partial fraction in `K(x)`** (§2.2, the full coprime decomposition): for a nonempty
+finite family of pairwise-coprime nonzero factors `P i` (`i ∈ s`), `A/∏ᵢ Pᵢ = ∑ᵢ Bᵢ/Pᵢ` for some
+numerators `B i` — obtained by iterating the two-factor split `ratFunc_partialFraction_coprime` down the
+family. Specializing `s` to the prime powers `Dᵢ^i` of a squarefree factorization `D = ∏ Dᵢ^i` (pairwise
+coprime) decomposes `A/D` into per-prime-power pieces, each then reduced by `hermiteReducePower`. -/
+theorem ratFunc_partialFraction_prod {ι : Type*} (P : ι → K[X]) :
+    ∀ (s : Finset ι), s.Nonempty → (∀ i ∈ s, P i ≠ 0) →
+      (∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (P i) (P j)) → ∀ (A : K[X]),
+      ∃ B : ι → K[X],
+        algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (P i)
+          = ∑ i ∈ s, algebraMap K[X] (RatFunc K) (B i) / algebraMap K[X] (RatFunc K) (P i) := by
+  intro s hs
+  induction hs using Finset.Nonempty.cons_induction with
+  | singleton a => exact fun _ _ A => ⟨fun _ => A, by simp⟩
+  | cons a s ha hs ih =>
+      intro hP hcop A
+      have hmem : ∀ i ∈ s, i ∈ Finset.cons a s ha := fun i hi => Finset.mem_cons.mpr (Or.inr hi)
+      have hPa : P a ≠ 0 := hP a (Finset.mem_cons_self a s)
+      have hP' : ∀ i ∈ s, P i ≠ 0 := fun i hi => hP i (hmem i hi)
+      have hcop' : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (P i) (P j) :=
+        fun i hi j hj hij => hcop i (hmem i hi) j (hmem j hj) hij
+      have hQ0 : (∏ i ∈ s, P i) ≠ 0 := Finset.prod_ne_zero_iff.mpr hP'
+      have hcopaQ : IsCoprime (P a) (∏ i ∈ s, P i) :=
+        IsCoprime.prod_right fun i hi =>
+          hcop a (Finset.mem_cons_self a s) i (hmem i hi) (by rintro rfl; exact ha hi)
+      obtain ⟨B', hB'⟩ := ih hP' hcop' (diophantineSolve (P a) (∏ i ∈ s, P i) A).1
+      refine ⟨fun i => if i = a then (diophantineSolve (P a) (∏ i ∈ s, P i) A).2 else B' i, ?_⟩
+      have hsplit := ratFunc_partialFraction_coprime (A := A) hPa hQ0 hcopaQ
+      rw [map_prod] at hsplit
+      have hsumeq : (∑ i ∈ s, algebraMap K[X] (RatFunc K)
+            (if i = a then (diophantineSolve (P a) (∏ i ∈ s, P i) A).2 else B' i)
+            / algebraMap K[X] (RatFunc K) (P i))
+          = ∑ i ∈ s, algebraMap K[X] (RatFunc K) (B' i) / algebraMap K[X] (RatFunc K) (P i) :=
+        Finset.sum_congr rfl fun i hi => by
+          rw [if_neg (fun (h : i = a) => ha (h ▸ hi))]
+      rw [Finset.prod_cons, Finset.sum_cons]
+      dsimp only
+      rw [hsumeq, if_pos rfl, hsplit, hB', add_comm]
+
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
 part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
