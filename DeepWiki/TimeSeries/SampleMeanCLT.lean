@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.SampleAutocovariance
 import Mathlib.Probability.CentralLimitTheorem
+import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 /-! # Asymptotic normality of the sample mean (§7.1, iid base case)
 The foundational large-sample result of Chapter 7: for an iid finite-variance noise sequence
@@ -11,7 +12,7 @@ sample mean `sampleMean`. -/
 
 namespace DeepWiki.TimeSeries
 
-open MeasureTheory ProbabilityTheory Filter
+open MeasureTheory ProbabilityTheory Filter Topology
 
 variable {Ω Ω' : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω'] {P : Measure Ω} {P' : Measure Ω'}
 
@@ -50,6 +51,21 @@ theorem iidNoise_sampleMean_clt {Z : ℕ → Ω → ℝ} {Y : Ω' → ℝ}
     exact sqrt_mul_sampleMean_sub n _ _
   rw [heq]
   exact tendstoInDistribution_inv_sqrt_mul_sum_sub hY hmem hindep hident
+
+/-- **Slutsky's theorem for the central limit theorem (`L²` form):** if `Yₙ ⇒ Z` in distribution and
+`Xₙ` is asymptotically `L²`-close to `Yₙ` (`‖Xₙ − Yₙ‖₂ → 0`), then `Xₙ ⇒ Z`. The bridge that
+transfers a central limit theorem along a negligible `L²` perturbation — the step that turns the iid
+sample-mean CLT into the linear-process / `MA(q)` central limit theorems. -/
+theorem tendstoInDistribution_of_tendsto_eLpNorm_sub {X Y : ℕ → Ω → ℝ} {Z : Ω' → ℝ}
+    (hY : TendstoInDistribution Y atTop Z (fun _ => P) P') (hX : ∀ n, AEStronglyMeasurable (X n) P)
+    (hL2 : Tendsto (fun n => eLpNorm (X n - Y n) 2 P) atTop (𝓝 0)) :
+    TendstoInDistribution X atTop Z (fun _ => P) P' := by
+  refine tendstoInDistribution_of_tendstoInMeasure_sub (Y := X) Z hY ?_
+    (fun n => (hX n).aemeasurable)
+  refine tendstoInMeasure_of_tendsto_eLpNorm (p := 2) (by norm_num)
+    (fun n => (hX n).sub ((hY.forall_aemeasurable n).aestronglyMeasurable))
+    aestronglyMeasurable_zero ?_
+  simpa using hL2
 
 -- Faithfulness: the limit is the centered Gaussian whose variance is the noise variance `Var Z₀`,
 -- and the statistic is exactly the standardized sample mean `√n (X̄ₙ − μ)`.
