@@ -113,6 +113,14 @@ theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimil
 theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
   ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
 
+/-- Similar polynomials have equal `natDegree` (over a domain `C a` with `a ≠ 0` does not change
+the degree, so `deg A = deg (C a * A) = deg (C b * B) = deg B`). -/
+theorem IsSimilar.natDegree_eq {A B : R[X]} (h : IsSimilar A B) : A.natDegree = B.natDegree := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  rw [← natDegree_C_mul ha, hab, natDegree_C_mul hb]
+
+example {A B : R[X]} (h : IsSimilar A B) : A.natDegree = B.natDegree := h.natDegree_eq
+
 /-- `Rem` is a *pseudo-remainder* of `A` by `B`: `lc(B)ᵏ · A = B·Q + Rem` with `deg Rem < deg B`
 for some power `k` and pseudo-quotient `Q` (the output of `PolyPseudoDivide`, §1.2). -/
 def IsPseudoRemainder (A B Rem : R[X]) : Prop :=
