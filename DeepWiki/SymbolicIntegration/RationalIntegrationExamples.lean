@@ -60,6 +60,30 @@ theorem hermiteReduce_octic_example {F : Type*} [Field F] [Differential F] {t : 
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hQ) ht0) hD]
   ring
 
+/-- **Exercise 2.1** (§2.2/§2.4, Hermite reduction of `(t⁵−t⁴+4t³+t²−t+5)/(t⁴−2t³+5t²−4t+4)`): the
+denominator is `(t²−t+2)²`, so Hermite reduction gives rational part `(7t⁴+7t³+20t+18)/(14(t²−t+2))` and
+remaining integrand `(7t+3)/(7(t²−t+2))` (squarefree denominator, the logarithmic part), i.e.
+`((7t⁴+7t³+20t+18)/(14(t²−t+2)))′ + (7t+3)/(7(t²−t+2))` is the integrand. -/
+theorem hermiteReduce_quartic_example {F : Type*} [Field F] [CharZero F] [Differential F] {t : F}
+    (ht : t′ = 1)
+    (hV : t ^ 2 - t + 2 ≠ 0) :
+    ((7 * t ^ 4 + 7 * t ^ 3 + 20 * t + 18) / (14 * (t ^ 2 - t + 2)))′
+        + (7 * t + 3) / (7 * (t ^ 2 - t + 2))
+      = (t ^ 5 - t ^ 4 + 4 * t ^ 3 + t ^ 2 - t + 5) / ((t ^ 2 - t + 2) ^ 2) := by
+  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h7 : (7 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h14 : (14 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h18 : (18 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h20 : (20 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have hV14 : (14 * (t ^ 2 - t + 2) : F) ≠ 0 := mul_ne_zero (by norm_num) hV
+  have hV7 : (7 * (t ^ 2 - t + 2) : F) ≠ 0 := mul_ne_zero (by norm_num) hV
+  have hV2 : ((t ^ 2 - t + 2) ^ 2 : F) ≠ 0 := pow_ne_zero _ hV
+  rw [deriv_div]
+  simp only [map_add, map_sub, deriv_const_mul _ h7, deriv_const_mul _ h14,
+    deriv_const_mul _ h20, deriv_pow, ht, mul_one, h18, h2]
+  rw [div_add_div _ _ (pow_ne_zero 2 hV14) hV7, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hV14) hV7) hV2]
+  ring
+
 /-- **Example 2.2.1** (§2.2, the original Hermite reduction trace) for
 `∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` (denominator `x²·(x²+2)³`). After the partial fraction
 `f = (x−1)/x² + (x⁴−6x³−18x²−12x+8)/(x²+2)³`, `HermiteReduce` (original version) runs the steps

@@ -251,6 +251,12 @@ and `A ← C − B'·D*/D⁻*` (book `(B,C) = (8x²+4, x⁴−2x²+16x+4)` then 
 `A/D* = 1/x`. The library's `hermiteMack_trace_octic`. -/
 abbrev ex_2_2_3 := @DeepWiki.SymbolicIntegration.hermiteMack_trace_octic
 
+/-- **Exercise 2.1** (§2.2, p.72), Hermite reduction of `(t⁵−t⁴+4t³+t²−t+5)/(t⁴−2t³+5t²−4t+4)`: the
+denominator is `(t²−t+2)²`, so the rational part is `(7t⁴+7t³+20t+18)/(14(t²−t+2))` and the remaining
+(logarithmic) integrand is `(7t+3)/(7(t²−t+2))` — verified as the differential-field identity
+`(rational part)′ + (7t+3)/(7(t²−t+2)) = integrand`. The library's `hermiteReduce_quartic_example`. -/
+abbrev ex_2_1 := @DeepWiki.SymbolicIntegration.hermiteReduce_quartic_example
+
 /-! ## §2.5 The Lazard–Rioboo–Trager Algorithm -/
 
 open Polynomial in
