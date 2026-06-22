@@ -130,6 +130,20 @@ theorem lrtSubresultant_eval (A D : K[X]) (a : K) (j : ℕ) :
       Polynomial.map_id]
     simp
 
+open Classical in
+/-- **Lazard–Rioboo–Trager algorithm** (§2.5, p.51, `IntRationalLogPart`): the functional log-part
+computation, returning the list of pairs `(Qᵢ, Sᵢ)` whose meaning is the logarithmic part
+`∫ A/D = ∑ᵢ ∑_{a : Qᵢ(a)=0} a·log(Sᵢ(a,x))`. The `Qᵢ` are the squarefree-factorization parts of the
+Rothstein–Trager resultant `R = resultant_x(D, A−tD')` (so `Qᵢ` collects the residues of multiplicity `i`
+in `R`); for each `i` with `deg Qᵢ > 0`, `Sᵢ = D` if `i = deg D`, else the `i`-th subresultant
+`lrtSubresultant A D i` (of `x`-degree `i`). The book's optional `lcₓ`-normalization (making the
+logarithms monic) is omitted — the un-normalized output is equally a valid antiderivative. -/
+noncomputable def lazardRiobooTrager (A D : K[X]) : List (K[X] × (K[X])[X]) :=
+  (squarefreeFactorization (rtResultant A D)).zipIdx.filterMap fun p =>
+    let i := p.2 + 1
+    if p.1.natDegree = 0 then none
+    else some (p.1, if i = D.natDegree then D.map (C : K →+* K[X]) else lrtSubresultant A D i)
+
 open scoped Differential in
 /-- **Hermite reduction step in `K(x)`** (§2.2): the integral-lowering identity for a rational
 function, now a theorem *about rational functions* (using `K(x) = RatFunc K`'s differential structure).

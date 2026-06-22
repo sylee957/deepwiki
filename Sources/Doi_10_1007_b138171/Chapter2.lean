@@ -16,11 +16,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2]; the
-  Lazard–Rioboo–Trager algorithm's *full assembly* (squarefree-factor `R`, select `Sⱼ` of `x`-degree `i`,
-  normalize, sum) [functional]. DONE: the subresultant primitive `lazardRiobooTrager_subresultant`
-  (= `lrtSubresultant`, the `j`-th subresultant `Sⱼ(D, A−tD')` over `K[t]`) with specialization
-  `lazardRiobooTrager_subresultant_eval` (`t ↦ a` recovers `Sⱼ(D, A−aD')`).
+§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2] — the
+  correctness that `Sⱼ(a,x) ~ gcd(D, A−aD')`. The Lazard–Rioboo–Trager *algorithm* is now functionally done:
+  primitive `lazardRiobooTrager_subresultant` (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval`
+  (specialization `t ↦ a`); and the full assembly `lazardRiobooTrager_algorithm` (= `lazardRiobooTrager`,
+  the `IntRationalLogPart` def returning the `(Qᵢ, Sᵢ)` log-part pairs; optional `lcₓ`-normalization omitted).
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -260,6 +260,12 @@ noncomputable abbrev lazardRiobooTrager_subresultant := @DeepWiki.SymbolicIntegr
 A−aD')` up to leading coefficient. -/
 abbrev lazardRiobooTrager_subresultant_eval :=
   @DeepWiki.SymbolicIntegration.lrtSubresultant_eval
+
+/-- **Lazard–Rioboo–Trager algorithm** `IntRationalLogPart` (§2.5, p.51): the functional log-part
+computation returning the `(Qᵢ, Sᵢ)` pairs meaning `∫ A/D = ∑ᵢ ∑_{a:Qᵢ(a)=0} a·log(Sᵢ(a,x))` — `Qᵢ` the
+squarefree-factorization parts of the resultant `R`, `Sᵢ = D` if `i = deg D` else the `i`-th subresultant.
+The library's `lazardRiobooTrager` (the book's optional `lcₓ`-normalization omitted). -/
+noncomputable abbrev lazardRiobooTrager_algorithm := @DeepWiki.SymbolicIntegration.lazardRiobooTrager
 
 open Polynomial in
 /-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the
