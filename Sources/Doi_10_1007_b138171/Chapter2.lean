@@ -23,10 +23,12 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.6: the integral *connection* (`thm_2_6_1_integral_connection`) and the Gröbner-basis foundation
   (`DeepWiki.SymbolicIntegration.IsGroebnerBasis`: predicate + membership⟺remainder-zero,
-  `IsReducedGroebnerBasis`, GB existence `exists_isGroebnerBasis` via Dickson's lemma) are done;
-  what remains of Thm 2.6.1 / the Czichowski algorithm is Buchberger's *algorithm* (computable GB)
-  and Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ` factorization, normal-position analysis of
-  `⟨A−zD', D⟩`) [infra: Buchberger; research: Czichowski normal position].
+  `IsReducedGroebnerBasis`, GB existence `exists_isGroebnerBasis` via Dickson's lemma,
+  `sPolynomial` + forward Buchberger criterion `IsGroebnerBasis.sPolynomial_div_remainder_eq_zero`)
+  are done; what remains of Thm 2.6.1 / the Czichowski algorithm is Buchberger's *theorem* (the
+  converse: S-polys reduce to 0 ⟹ GB, via syzygies) [research], a computable Buchberger *algorithm*
+  [infra], and Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ` factorization, normal-position analysis
+  of `⟨A−zD', D⟩`) [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.

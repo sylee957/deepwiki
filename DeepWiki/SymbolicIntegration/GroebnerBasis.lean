@@ -184,6 +184,33 @@ theorem exists_isGroebnerBasis {σ K : Type*} [Finite σ] [Field K] (m : Monomia
       simp only [Finset.coe_image, Set.mem_image, Set.Finite.coe_toFinset]
       exact ⟨s, hsM, rfl⟩
 
+/-- The **S-polynomial** `S(f,g)` over a field: with `γ = m.degree f ⊔ m.degree g` the lcm of the
+leading monomials, `monomial (γ - m.degree f) (m.leadingCoeff f)⁻¹ * f - monomial (γ - m.degree g)
+(m.leadingCoeff g)⁻¹ * g`; the two scaled terms share leading monomial `γ`, so `S(f,g)` cancels
+the leading terms of `f` and `g`. -/
+noncomputable def sPolynomial {K : Type*} [Field K] (m : MonomialOrder σ)
+    (f g : MvPolynomial σ K) : MvPolynomial σ K :=
+  monomial ((m.degree f ⊔ m.degree g) - m.degree f) (m.leadingCoeff f)⁻¹ * f -
+    monomial ((m.degree f ⊔ m.degree g) - m.degree g) (m.leadingCoeff g)⁻¹ * g
+
+/-- The S-polynomial of two ideal members lies in the ideal: `S(f,g) = monomial _ _ * f -
+monomial _ _ * g` is a difference of left multiples of `f, g ∈ I`. -/
+theorem sPolynomial_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)}
+    {f g : MvPolynomial σ K} (hf : f ∈ I) (hg : g ∈ I) : sPolynomial m f g ∈ I :=
+  I.sub_mem (Ideal.mul_mem_left _ _ hf) (Ideal.mul_mem_left _ _ hg)
+
+/-- **Buchberger's criterion, the forward (easy) half.** A Gröbner basis `B` of `I` reduces every
+S-polynomial `S(b,b')` (`b, b' ∈ B`) to zero: any division remainder of `S(b,b')` by `B` is `0`.
+The converse — S-polynomials reducing to `0` forcing `B` to be a Gröbner basis (Buchberger's
+theorem, via the syzygy argument) — is the deferred research-grade direction. -/
+theorem IsGroebnerBasis.sPolynomial_div_remainder_eq_zero {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)} (hB : IsGroebnerBasis m I B)
+    {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B) {g : B →₀ MvPolynomial σ K}
+    {r : MvPolynomial σ K}
+    (hgr : sPolynomial m b b' = Finsupp.linearCombination _ (fun x : B => (x : MvPolynomial σ K)) g + r)
+    (hrem : ∀ c ∈ r.support, ∀ x ∈ B, ¬ (m.degree x ≤ c)) : r = 0 :=
+  (hB.mem_iff_div_remainder_eq_zero _ hgr hrem).mp (sPolynomial_mem (hB.1 b hb) (hB.1 b' hb'))
+
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
     (B : Set (MvPolynomial σ R)) : Prop := IsGroebnerBasis m I B
@@ -208,5 +235,21 @@ example {σ K : Type*} [Finite σ] [Field K] (m : MonomialOrder σ)
     (I : Ideal (MvPolynomial σ K)) :
     ∃ B : Finset (MvPolynomial σ K), IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K)) :=
   exists_isGroebnerBasis m I
+
+noncomputable example {K : Type*} [Field K] (m : MonomialOrder σ) (f g : MvPolynomial σ K) :
+    MvPolynomial σ K :=
+  monomial ((m.degree f ⊔ m.degree g) - m.degree f) (m.leadingCoeff f)⁻¹ * f -
+    monomial ((m.degree f ⊔ m.degree g) - m.degree g) (m.leadingCoeff g)⁻¹ * g
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {f g : MvPolynomial σ K}
+    (hf : f ∈ I) (hg : g ∈ I) : sPolynomial m f g ∈ I :=
+  sPolynomial_mem hf hg
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
+    (hB : IsGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
+    {g : B →₀ MvPolynomial σ K} {r : MvPolynomial σ K}
+    (hgr : sPolynomial m b b' = Finsupp.linearCombination _ (fun x : B => (x : MvPolynomial σ K)) g + r)
+    (hrem : ∀ c ∈ r.support, ∀ x ∈ B, ¬ (m.degree x ≤ c)) : r = 0 :=
+  hB.sPolynomial_div_remainder_eq_zero hb hb' hgr hrem
 
 end DeepWiki.SymbolicIntegration
