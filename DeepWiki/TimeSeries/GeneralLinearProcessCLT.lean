@@ -56,4 +56,26 @@ theorem norm_tsum_filter_lag_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t
       ≤ ∑' j : ℕ, ‖ψ j • (memLp_lag hZ n j).toLp _‖ := norm_tsum_le_tsum_norm hsummn
     _ ≤ ∑' j : ℕ, |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) := hsummn.tsum_le_tsum hb hψ
 
+/-- `MemLp.toLp` commutes with finite sums: `∑ᵢ (fᵢ).toLp = (∑ᵢ fᵢ).toLp`. -/
+theorem toLp_finsetSum {ι : Type*} (s : Finset ι) {f : ι → Ω → ℝ} (hf : ∀ i, MemLp (f i) 2 μ) :
+    ∑ i ∈ s, (hf i).toLp (f i)
+      = (memLp_finsetSum s (fun i _ => hf i)).toLp (fun ω => ∑ i ∈ s, f i ω) := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp only [Finset.sum_empty]; exact (MemLp.toLp_zero _).symm
+  | insert a s ha ih =>
+    rw [Finset.sum_insert ha, ih, ← MemLp.toLp_add]
+    exact MemLp.toLp_congr _ _ (by filter_upwards with ω; simp [Finset.sum_insert ha])
+
+/-- The `Lp` windowed lag-`j` sum over the embedding equals the embedding of the raw lag-`j` sum:
+`∑_{t<n} (Z_{t−j} − Z_t)` as a single `Lp` element, identifying the two ways of forming it. -/
+theorem lag_toLpSeq_eq {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) (n j : ℕ) :
+    ∑ t ∈ Finset.range n, (toLpSeq Z hZ ((t : ℤ) - j) - toLpSeq Z hZ (t : ℤ))
+      = (memLp_lag hZ n j).toLp _ := by
+  have hterm : ∀ t : ℕ, toLpSeq Z hZ ((t : ℤ) - j) - toLpSeq Z hZ (t : ℤ)
+      = ((hZ ((t : ℤ) - j)).sub (hZ (t : ℤ))).toLp (Z ((t : ℤ) - j) - Z (t : ℤ)) := by
+    intro t; simp only [toLpSeq]; rw [← MemLp.toLp_sub]
+  simp_rw [hterm]
+  exact toLp_finsetSum (Finset.range n) (fun t => (hZ ((t : ℤ) - j)).sub (hZ (t : ℤ)))
+
 end DeepWiki.TimeSeries
