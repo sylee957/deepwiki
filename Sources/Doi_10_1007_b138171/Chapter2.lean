@@ -74,6 +74,25 @@ abbrev thm_2_4_1_i := @DeepWiki.SymbolicIntegration.residue_iff_resultant_eq_zer
 minimality — is delegated to Chaps 4/5 and remains [external]. -/
 abbrev thm_2_4_1_ii := @DeepWiki.SymbolicIntegration.isRoot_gcd_iff_residue
 
+open Polynomial in
+/-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for
+`f = (x⁴−3x²+6)/(x⁶−5x⁴+5x²+4)`: `D = x⁶−5x⁴+5x²+4` is squarefree, `D' = 6x⁵−20x³+10x`, and for an
+algebraic constant `a` with `4a²+1 = 0` the residue gcd is `Gₐ = gcd(D, A−aD') = x³+2ax²−3x−4a`.
+Faithful core: `Gₐ` divides both `D` and `A−aD'` — exhibited by the exact cofactorizations
+`D = Gₐ·(x³−2ax²−3x+4a)` and `A−aD' = Gₐ·(−6ax²−2x+6a)` (both modulo `4a²+1 = 0`). By `thm_2_4_1_ii`
+this makes every root of `Gₐ` a root of `D` with residue `a`. -/
+theorem ex_2_4_1 {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
+    ((X : F[X]) ^ 6 - 5 * X ^ 4 + 5 * X ^ 2 + 4
+        = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (X ^ 3 - 2 * C a * X ^ 2 - 3 * X + 4 * C a))
+      ∧ ((X : F[X]) ^ 4 - 3 * X ^ 2 + 6 - C a * (6 * X ^ 5 - 20 * X ^ 3 + 10 * X)
+        = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (-6 * C a * X ^ 2 - 2 * X + 6 * C a)) := by
+  have hb : 4 * (C a) ^ 2 + 1 = (0 : F[X]) := by
+    have h := congrArg (C : F →+* F[X]) ha
+    simpa [map_ofNat] using h
+  refine ⟨?_, ?_⟩
+  · linear_combination ((X : F[X]) ^ 2 - 2) ^ 2 * hb
+  · linear_combination (3 * ((X : F[X]) ^ 2 - 1) * (X ^ 2 - 2)) * hb
+
 /-- **Examples 2.2.1 / 2.3.1** (§2.2–2.3, p.41,46), the Hermite / Horowitz–Ostrogradsky *result*: in a
 differential field with `t′ = 1` (the integration variable, `t ≠ 0`, `t²+2 ≠ 0`),
 `∫ (t⁷−24t⁴−4t²+8t−8)/(t⁸+6t⁶+12t⁴+8t²) dt = (3t³+8t²+6t+4)/(t⁵+4t³+4t) + ∫ dt/t`, i.e. the rational part
