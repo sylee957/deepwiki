@@ -41,4 +41,23 @@ theorem residue_of_partialFraction (A E B : F[X]) (c α : F) (hE : E.eval α ≠
   simp only [eval_add, eval_mul, eval_C, eval_sub, eval_X, sub_self, zero_mul, add_zero]
   rw [mul_div_assoc, div_self hE, mul_one]
 
+/-- **Rothstein–Trager, residue criterion** (Bronstein Thm 2.4.1(ii), core): at a root `α` of `D`
+(so `D'(α) ≠ 0` for squarefree `D`), the residue `A(α)/D'(α)` equals `a` iff `α` is a root of
+`A − a·D'`. Hence the residue-`a` roots of `D` are exactly the common roots of `D` and `A − a·D'`. -/
+theorem residue_eq_iff_isRoot_sub (A D : F[X]) (a α : F) (hα : (derivative D).eval α ≠ 0) :
+    A.eval α / (derivative D).eval α = a ↔ (A - C a * derivative D).IsRoot α := by
+  rw [IsRoot.def, div_eq_iff hα, eval_sub, eval_mul, eval_C, sub_eq_zero]
+
+open scoped Classical in
+/-- **Rothstein–Trager, the `Gₐ` characterization** (Bronstein Thm 2.4.1(ii)): the roots of
+`Gₐ = gcd(D, A − a·D')` are exactly the roots of `D` whose residue (of `A/D`) is `a`. Combines the
+residue criterion `residue_eq_iff_isRoot_sub` with `roots(gcd) = common roots` (`dvd_gcd_iff`,
+`dvd_iff_isRoot`). This identifies, without factoring `D`, the roots at which the residue takes a
+given value `a` — part (ii) of the Rothstein–Trager theorem. -/
+theorem isRoot_gcd_iff_residue (A D : F[X]) (a α : F) (hα : (derivative D).eval α ≠ 0) :
+    (gcd D (A - C a * derivative D)).IsRoot α
+      ↔ (D.IsRoot α ∧ A.eval α / (derivative D).eval α = a) := by
+  rw [← dvd_iff_isRoot, dvd_gcd_iff, dvd_iff_isRoot, dvd_iff_isRoot,
+    residue_eq_iff_isRoot_sub A D a α hα]
+
 end DeepWiki.SymbolicIntegration

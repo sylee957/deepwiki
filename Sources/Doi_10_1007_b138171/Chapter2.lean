@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.Residues
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -14,7 +15,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
   `ExtendedEuclidean` finding `B, C`) [infra: opsem]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3
   [infra: opsem] (their shared *result* is `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky algorithm [infra: opsem]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
-§2.4: Thm 2.4.1; the Rothstein–Trager algorithm.
+§2.4: Thm 2.4.1(i),(iii) [infra: needs the resultant-roots formula `resultant_x(D,A−tD')=lc·∏(A(αᵢ)−t·D'(αᵢ))`,
+  not in Mathlib]; the Rothstein–Trager algorithm [infra: opsem]. Thm 2.4.1(ii) (the residue–`Gₐ`
+  characterization) is PROVED: `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`, on the §4.4 residue foundation).
 §2.5: Thm 2.5.1; the Lazard–Rioboo–Trager algorithm; Ex 2.5.1; Ex 2.5.2.
 §2.6: Thm 2.6.1; the Czichowski algorithm; Ex 2.6.1.
 §2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
@@ -57,6 +60,12 @@ theorem hermiteReduce_step {F : Type*} [Field F] [Differential F] (B C V : F) (h
     (-((m : F) + 1) * (B * V′ + C * V)) / V ^ (m + 2)
       = (B / V ^ (m + 1))′ + (-((m : F) + 1) * C - B′) / V ^ (m + 1) :=
   hermite_reduction_step B C V hV m
+
+/-- **Theorem 2.4.1(ii)** (§2.4, p.47), the Rothstein–Trager residue characterization: the roots of
+`Gₐ = gcd(D, A − a·D')` are exactly the roots of `D` whose residue is `a`. The library's
+`isRoot_gcd_iff_residue` (built on the §4.4 residue `A(α)/D'(α)`). Parts (i),(iii) — the resultant `R`
+and its zeros — need the resultant-roots formula and remain [infra]. -/
+abbrev thm_2_4_1_ii := @DeepWiki.SymbolicIntegration.isRoot_gcd_iff_residue
 
 /-- **Examples 2.2.1 / 2.3.1** (§2.2–2.3, p.41,46), the Hermite / Horowitz–Ostrogradsky *result*: in a
 differential field with `t′ = 1` (the integration variable, `t ≠ 0`, `t²+2 ≠ 0`),
