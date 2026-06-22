@@ -179,6 +179,13 @@ decomposes `A/D` for the per-factor Hermite loop. The library's `ratFunc_partial
 abbrev ratFunc_partialFraction_prod :=
   @DeepWiki.SymbolicIntegration.ratFunc_partialFraction_prod
 
+/-- **Hermite reduction of a full partial-fraction sum** (§2.2, the outer reduction): for squarefree
+factors `Dᵢ` with multiplicities `eᵢ ≥ 1` (char 0), `∑ᵢ Aᵢ/Dᵢ^{eᵢ} = (∑ᵢ gᵢ)′ + ∑ᵢ rᵢ/Dᵢ` with
+`(gᵢ, rᵢ) = hermiteReducePower Dᵢ eᵢ Aᵢ` — the rational part collected, the remaining integrand
+squarefree-denominatored. Composed with `ratFunc_partialFraction_prod` this is the full HermiteReduce.
+The library's `hermiteReduce_sum_spec`. -/
+abbrev hermiteReduce_sum_spec := @DeepWiki.SymbolicIntegration.hermiteReduce_sum_spec
+
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for
 `f = (x⁴−3x²+6)/(x⁶−5x⁴+5x²+4)`: `D = x⁶−5x⁴+5x²+4` is squarefree, `D' = 6x⁵−20x³+10x`, and for an
