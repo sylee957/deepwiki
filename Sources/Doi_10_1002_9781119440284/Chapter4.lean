@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexSegmentMerge
+import DeepWiki.NetworkCalculus.ConvexSegmentMergeTrunc
 import DeepWiki.NetworkCalculus.ConcaveSegmentMerge
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -17,7 +18,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope), flat case `thm_4_1_flat` (flatter line ∗ convex = shift), and the **balanced case `thm_4_1_balanced`** (`ρf=ρg`: the full `mergeBySlope` IS the convolution, by the slope-peel induction) are proved. What remains is only the *unbalanced* `ρf≠ρg` case, where the merge must **truncate** at `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — the peel machinery (`minConv_peel_leadSeg`/`minConv_leadSeg_le`) is reusable but the truncating merge + its bookkeeping are a separate effort (the transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -251,6 +252,25 @@ convolution needs no slope sort, only list append. The library's
 theorem thm_4_1_concave {l₁ l₂ : List (ℝ≥0 × ℝ≥0)} (h₁ : l₁ ≠ []) (h₂ : l₂ ≠ []) :
     minConv (concaveNFEval l₁) (concaveNFEval l₂) = concaveNFEval (l₁ ++ l₂) :=
   DeepWiki.minConv_concaveNFEval_eq_concaveNFEval_append h₁ h₂
+
+/-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
+convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:
+`g`'s segments steeper than `sf` are absorbed into the flatter asymptote. With `truncSegs sf gsegs`
+(= `gsegs.takeWhile (·.1 ≤ sf)`),
+`(convexSegEval f0 sf fsegs) ∗ (convexSegEval g0 sg gsegs) = convexSegEval (f0+g0) sf (mergeBySlope
+fsegs (truncSegs sf gsegs))`. Proved by reduction to the balanced case (`thm_4_1_balanced`) via
+"the convolution ignores `g`'s steep part" (`minConv_convexSegEval_truncSegs`, using the
+`sf`-Lipschitz-from-above bound). With `thm_4_1_base`/`_flat`/`_balanced` this closes Theorem 4.1.
+The library's `DeepWiki.minConv_convexSegEval_unbalanced`. -/
+theorem thm_4_1_unbalanced (sf sg f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 × ℝ≥0)) (hsfg : sf ≤ sg)
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ sf) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ sg) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 sf fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((convexSegEval (f0 + g0) sf (mergeBySlope fsegs (truncSegs sf gsegs)) t : ℝ≥0)
+            : ℝ) : EReal) :=
+  DeepWiki.minConv_convexSegEval_unbalanced sf sg f0 g0 fsegs gsegs hsfg hfsort hgsort hfs hgs t
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
