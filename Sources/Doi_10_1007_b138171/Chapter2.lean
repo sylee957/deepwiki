@@ -32,7 +32,8 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `intRationalLogPart_resultant`/`_gcd`, both on the §4.4 residue foundation.
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
   the Lazard–Rioboo–Trager algorithm [functional].
-§2.6: Thm 2.6.1; the Czichowski algorithm [functional]; Ex 2.6.1.
+§2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
+  [infra: Gröbner bases].
 §2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
 §2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
   Ex 2.8.2.
@@ -196,5 +197,21 @@ theorem ex_2_5_2 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
     add_zero]
   rw [div_add_div _ _ (pow_ne_zero 2 h1) h2, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 h1) h2) hD]
   ring
+
+/-! ## §2.6 The Czichowski Algorithm -/
+
+open Polynomial in
+/-- **Example 2.6.1** (§2.6, p.54), the Czichowski algorithm on the same integrand as Ex 2.4.1: the
+reduced Gröbner basis of `(D, A − t·D')` w.r.t. pure lex `x > t` is `{4t²+1, x³+2tx²−3x−4t}`, so
+`Q₁ = 4t²+1` and `S₁ = x³+2tx²−3x−4t`, yielding `∫ (x⁴−3x²+6)/(x⁶−5x⁴+5x²+4) = Σ_{4a²+1=0} a·log(x³+2ax²−3x−4a)`
+— *the same integral as Example 2.4.1*. Faithful core: the Czichowski log argument `S₁(a,x) = x³+2ax²−3x−4a`
+coincides with the Rothstein–Trager `Gₐ` and so divides both `D` and `A−aD'` (modulo `4a²+1 = 0`) — exactly
+`ex_2_4_1`. -/
+theorem ex_2_6_1 {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
+    ((X : F[X]) ^ 6 - 5 * X ^ 4 + 5 * X ^ 2 + 4
+        = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (X ^ 3 - 2 * C a * X ^ 2 - 3 * X + 4 * C a))
+      ∧ ((X : F[X]) ^ 4 - 3 * X ^ 2 + 6 - C a * (6 * X ^ 5 - 20 * X ^ 3 + 10 * X)
+        = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (-6 * C a * X ^ 2 - 2 * X + 6 * C a)) :=
+  ex_2_4_1 a ha
 
 end DeepWiki.Si
