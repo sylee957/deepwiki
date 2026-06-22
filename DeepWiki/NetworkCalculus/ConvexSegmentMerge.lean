@@ -93,6 +93,19 @@ theorem mergeBySlope_cons_gt {a b : ℝ≥0 × ℝ≥0} {as bs : List (ℝ≥0 �
     mergeBySlope (a :: as) (b :: bs) = b :: mergeBySlope (a :: as) bs := by
   rw [mergeBySlope, if_neg h]
 
+/-- Peel the leading segment `(s, ℓ)`: evaluating past its length is the tail evaluated from the
+shifted base, `convexSegEval f0 fs ((s, ℓ) :: rest) (ℓ + r) = convexSegEval (f0 + s·ℓ) fs rest r`.
+(At `r = 0` both sides are the corner value `f0 + s·ℓ`.) -/
+theorem convexSegEval_cons_peel (f0 fs s ℓ r : ℝ≥0) (rest : List (ℝ≥0 × ℝ≥0)) :
+    convexSegEval f0 fs ((s, ℓ) :: rest) (ℓ + r)
+      = convexSegEval (f0 + s * ℓ) fs rest r := by
+  rw [convexSegEval_cons]
+  rcases eq_or_ne r 0 with hr0 | hr0
+  · subst hr0
+    rw [add_zero, if_pos le_rfl, convexSegEval_zero]
+  · have hr : ℓ < ℓ + r := lt_add_of_pos_right ℓ (pos_iff_ne_zero.mpr hr0)
+    rw [if_neg (not_le.mpr hr), add_tsub_cancel_left]
+
 /-- **Theorem 4.1, base case** (the single semi-infinite segment, i.e. affine curves). The
 `(min,plus)` convolution of two affine curves `u ↦ a + p·u` and `u ↦ b + q·u` is the affine curve
 `a + b + min(p,q)·t` — the slower slope wins, with the bursts added. (This is the merge of two
