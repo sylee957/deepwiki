@@ -36,6 +36,37 @@ theorem convexSegEval_cons (f0 fs s ℓ : ℝ≥0) (rest : List (ℝ≥0 × ℝ�
   | nil => simp
   | cons hd tl => obtain ⟨s, ℓ⟩ := hd; rw [convexSegEval_cons]; simp
 
+/-- A convex PWL never drops below its base value (all slopes are `≥ 0`). -/
+theorem convexSegEval_base_le (fs : ℝ≥0) (l : List (ℝ≥0 × ℝ≥0)) (f0 t : ℝ≥0) :
+    f0 ≤ convexSegEval f0 fs l t := by
+  induction l generalizing f0 t with
+  | nil => rw [convexSegEval_nil]; exact le_self_add
+  | cons hd tl ih =>
+      obtain ⟨s, ℓ⟩ := hd
+      rw [convexSegEval_cons]
+      split
+      · exact le_self_add
+      · exact le_trans le_self_add (ih (f0 + s * ℓ) (t - ℓ))
+
+/-- A convex PWL is nondecreasing. -/
+theorem monotone_convexSegEval (fs : ℝ≥0) (l : List (ℝ≥0 × ℝ≥0)) (f0 : ℝ≥0) :
+    Monotone (convexSegEval f0 fs l) := by
+  induction l generalizing f0 with
+  | nil => intro t1 t2 h; simp only [convexSegEval_nil]; gcongr
+  | cons hd tl ih =>
+      obtain ⟨s, ℓ⟩ := hd
+      intro t1 t2 h
+      rw [convexSegEval_cons, convexSegEval_cons]
+      split
+      · split
+        · gcongr
+        · rename_i h1 h2
+          exact le_trans (by gcongr) (convexSegEval_base_le fs tl (f0 + s * ℓ) (t2 - ℓ))
+      · split
+        · rename_i h1 h2
+          exact absurd (le_trans h h2) h1
+        · exact ih (f0 + s * ℓ) (tsub_le_tsub_right h ℓ)
+
 /-- Merge two slope-sorted `(slope, length)` segment lists into one, ordering by increasing slope
 (the comparison key is the first component, the slope). -/
 noncomputable def mergeBySlope : List (ℝ≥0 × ℝ≥0) → List (ℝ≥0 × ℝ≥0) → List (ℝ≥0 × ℝ≥0)
