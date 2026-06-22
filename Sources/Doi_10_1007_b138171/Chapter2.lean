@@ -15,11 +15,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
-  The reduction step is done: `hermiteReduce_step` (the differential identity) and
-  `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
-  theorem about rational functions in `K(x)`), with `B, Cc` from `diophantineSolve`. The per-algorithm
-  traces of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is `ex_2_3_1`).
+§2.2: the *outer* `HermiteReduce` recursion over the full squarefree factorization `D = ∏ᵢ Dᵢ^i`
+  [functional] — partial-fraction `A/D` across the coprime prime powers, then run the inner loop on
+  each. The reduction step (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`) and the prime-power
+  *inner loop* are now done: `hermiteReducePower` (the functional recursion reducing `A/Vᵏ` to `g + r/V`
+  for squarefree `V`, iterating the step) and `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0,
+  via Bézout `diophantineSolve` since `V ⊥ V'`). The per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3
+  [functional] (their shared *result* is `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
   `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
   and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
@@ -149,6 +151,18 @@ noncomputable abbrev horowitzOstrogradsky_split := @DeepWiki.SymbolicIntegration
 denominator power drops by one. The library's `hermiteReduce_step_ratFunc`, a theorem about rational
 functions (using `K(x) = RatFunc K`'s `Differential` structure), with `B, Cc` from `diophantineSolve`. -/
 abbrev hermiteReduce_step_ratFunc := @DeepWiki.SymbolicIntegration.hermiteReduce_step_ratFunc
+
+/-- **Hermite reduction — prime-power inner loop** (§2.2, p.39, Algorithm `HermiteReduce` inner
+recursion): the functional `def hermiteReducePower V k A` iterating the reduction step to reduce
+`A/Vᵏ` (squarefree `V`) to `g + r/V` — the accumulated rational part `g ∈ K(x)` and the final
+numerator `r` over the squarefree `V`. The library's `hermiteReducePower`. -/
+noncomputable abbrev hermiteReducePower := @DeepWiki.SymbolicIntegration.hermiteReducePower
+
+/-- **Correctness of the Hermite prime-power loop** (§2.2, p.39): for squarefree `V` over a char-`0`
+field and `k ≥ 1`, `A/Vᵏ = g′ + r/V` with `(g, r) = hermiteReducePower V k A` — i.e.
+`∫ A/Vᵏ = g + ∫ r/V`, the rational part split off and the remaining integral squarefree-denominatored.
+The library's `hermiteReducePower_spec`. -/
+abbrev hermiteReducePower_spec := @DeepWiki.SymbolicIntegration.hermiteReducePower_spec
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for

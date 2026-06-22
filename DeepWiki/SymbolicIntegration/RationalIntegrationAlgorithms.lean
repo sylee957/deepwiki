@@ -124,6 +124,81 @@ theorem hermiteReduce_step_ratFunc {A B Cc V : K[X]} (hV : V ≠ 0) (m : ℕ)
       ← map_mul, ← map_mul, ← map_add, hrel] at key
   exact key
 
+open Classical in
+/-- **Hermite reduction — the prime-power inner loop** (§2.2): iterate `hermiteReduce_step_ratFunc`
+to reduce an integrand `A/Vᵏ` (with `V` squarefree) to `g + r/V`, lowering the denominator power one
+step at a time. Returns `(g, r)` with `g ∈ K(x)` the accumulated rational part and `r ∈ K[X]` the
+final numerator over the squarefree `V`. At power `k = m+2` it solves `B·V' + Cc·V = -A/(m+1)` (Bézout,
+`diophantineSolve`, since `V ⊥ V'`), emits `B/Vᵐ⁺¹` into `g`, and recurses on `-(m+1)·Cc − B'` over
+`Vᵐ⁺¹`. -/
+noncomputable def hermiteReducePower (V : K[X]) : ℕ → K[X] → RatFunc K × K[X]
+  | 0,     A => (0, A)
+  | 1,     A => (0, A)
+  | (m+2), A =>
+      let c : K[X] := -A * Polynomial.C (((m : K) + 1)⁻¹)
+      let B : K[X] := (diophantineSolve (derivative V) V c).1
+      let Cc : K[X] := (diophantineSolve (derivative V) V c).2
+      let r : K[X] := -(Polynomial.C ((m : K) + 1)) * Cc - derivative B
+      (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) V ^ (m + 1)
+          + (hermiteReducePower V (m + 1) r).1,
+       (hermiteReducePower V (m + 1) r).2)
+
+open scoped Differential in
+open Classical in
+/-- **Correctness of `hermiteReducePower`** (§2.2): for squarefree `V` over a characteristic-`0` field
+and any power `k ≥ 1`, the integrand splits as `A/Vᵏ = g' + r/V` where `(g, r) = hermiteReducePower V k A`
+— i.e. `∫ A/Vᵏ = g + ∫ r/V`, the rational part `g` extracted and the remaining integral having the
+squarefree denominator `V`. Proven by induction on `k`, each step the `hermiteReduce_step_ratFunc`
+identity glued to the recursive tail. -/
+theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
+    ∀ (k : ℕ), 1 ≤ k → ∀ (A : K[X]),
+      algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) V ^ k
+        = ((hermiteReducePower V k A).1)′
+          + algebraMap K[X] (RatFunc K) (hermiteReducePower V k A).2
+            / algebraMap K[X] (RatFunc K) V := by
+  have hV0 : V ≠ 0 := hV.ne_zero
+  have hcop : IsCoprime (derivative V) V := (squarefree_iff_isCoprime_derivative.mp hV).symm
+  have e1 : ∀ k : K, algebraMap K[X] (RatFunc K) (Polynomial.C k) = algebraMap K (RatFunc K) k := by
+    intro k
+    rw [← Polynomial.algebraMap_eq]
+    exact (IsScalarTower.algebraMap_apply K K[X] (RatFunc K) k).symm
+  intro k
+  induction k using Nat.strong_induction_on with
+  | _ k IH =>
+    intro hk A
+    obtain _ | _ | m := k
+    · exact absurd hk (by norm_num)
+    · simp only [hermiteReducePower, pow_one, map_zero, zero_add]
+    · have hm1 : ((m : K) + 1) ≠ 0 := Nat.cast_add_one_ne_zero m
+      have hc1 : algebraMap K (RatFunc K) ((m : K) + 1) = (m : RatFunc K) + 1 := by
+        rw [map_add, map_natCast, map_one]
+      simp only [hermiteReducePower]
+      set c : K[X] := -A * Polynomial.C (((m : K) + 1)⁻¹) with hc
+      set B : K[X] := (diophantineSolve (derivative V) V c).1 with hB
+      set Cc : K[X] := (diophantineSolve (derivative V) V c).2 with hCc
+      set r : K[X] := -(Polynomial.C ((m : K) + 1)) * Cc - derivative B with hr
+      have hrel : B * derivative V + Cc * V = c := by
+        have h := diophantineSolve_spec hcop c
+        rw [hB, hCc]; linear_combination h
+      have hkey : algebraMap K (RatFunc K) ((m : K) + 1)
+          * algebraMap K (RatFunc K) (((m : K) + 1)⁻¹) = 1 := by
+        rw [← map_mul, mul_inv_cancel₀ hm1, map_one]
+      have hcoef : -((m : RatFunc K) + 1) * algebraMap K[X] (RatFunc K) c
+          = algebraMap K[X] (RatFunc K) A := by
+        rw [hc, map_mul, map_neg, e1, ← hc1]
+        linear_combination (algebraMap K[X] (RatFunc K) A) * hkey
+      have hnum : -((m : RatFunc K) + 1) * algebraMap K[X] (RatFunc K) Cc
+            - algebraMap K[X] (RatFunc K) (derivative B)
+          = algebraMap K[X] (RatFunc K) r := by
+        rw [hr]; simp only [map_sub, map_mul, map_neg, e1, hc1]
+      have key := hermiteReduce_step_ratFunc hV0 m hrel
+      rw [hcoef, hnum] at key
+      have IHr := IH (m + 1) (by omega) (by omega) r
+      rw [map_add,
+        add_assoc (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) V ^ (m + 1))′,
+        ← IHr]
+      exact key
+
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
 part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
