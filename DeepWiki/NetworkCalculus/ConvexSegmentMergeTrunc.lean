@@ -136,4 +136,81 @@ theorem convexSegEval_upper_rate_of_le {sf f0 : ℝ≥0} {l : List (ℝ≥0 × �
     ∀ x d : ℝ≥0, convexSegEval f0 sf l (x + d) ≤ convexSegEval f0 sf l x + sf * d :=
   fun x d => convexSegEval_upper_rate sf sf l hall le_rfl f0 x d
 
+/-- **Truncation decomposition.** The truncated curve `Gt = convexSegEval g0 sf (truncSegs sf gsegs)`
+agrees with the original `G = convexSegEval g0 sg gsegs` up to the cut point and then continues at
+slope `sf`: for every `v` there is a `w ≤ v` (the matching point, `min v cutLen`) with
+`Gt v = G w + sf·(v − w)`. This is the exact structural fact that lets us slide the convolution's
+excess `g`-mass past the cut onto a flatter `f`. -/
+theorem convexSegEval_truncSegs_decomp (sf sg : ℝ≥0) :
+    ∀ (gsegs : List (ℝ≥0 × ℝ≥0)) (g0 v : ℝ≥0), ∃ w : ℝ≥0, w ≤ v ∧
+      convexSegEval g0 sf (truncSegs sf gsegs) v
+        = convexSegEval g0 sg gsegs w + sf * (v - w) := by
+  intro gsegs
+  induction gsegs with
+  | nil =>
+      intro g0 v
+      refine ⟨0, zero_le, ?_⟩
+      rw [truncSegs_nil, convexSegEval_nil, convexSegEval_nil, tsub_zero, mul_zero, add_zero]
+  | cons hd tl ih =>
+      intro g0 v
+      obtain ⟨sb, ℓb⟩ := hd
+      by_cases hsb : sb ≤ sf
+      · -- segment kept; split on whether `v` is on it
+        rw [truncSegs_cons_le hsb]
+        by_cases hv : v ≤ ℓb
+        · -- on the leading segment: `Gt v = G v`, witness `w = v`
+          refine ⟨v, le_rfl, ?_⟩
+          rw [convexSegEval_cons, if_pos hv, convexSegEval_cons, if_pos hv, tsub_self, mul_zero,
+            add_zero]
+        · -- past the leading segment: peel and use IH on the tail
+          have hℓbv : ℓb ≤ v := (not_le.mp hv).le
+          rw [convexSegEval_cons, if_neg hv]
+          obtain ⟨w', hw'le, hw'eq⟩ := ih (g0 + sb * ℓb) (v - ℓb)
+          refine ⟨ℓb + w', ?_, ?_⟩
+          · -- `ℓb + w' ≤ v`
+            calc ℓb + w' ≤ ℓb + (v - ℓb) := by gcongr
+              _ = v := add_tsub_cancel_of_le hℓbv
+          · -- `Gt v = G (ℓb + w') + sf·(v - (ℓb + w'))`
+            rw [hw'eq, ← convexSegEval_cons_peel g0 sg sb ℓb w' tl]
+            congr 2
+            rw [tsub_add_eq_tsub_tsub]
+      · -- segment dropped (and all after, by sorting): `Gt v = g0 + sf·v`, witness `w = 0`
+        rw [truncSegs_cons_gt hsb]
+        refine ⟨0, zero_le, ?_⟩
+        rw [convexSegEval_nil, convexSegEval_zero, tsub_zero]
+
+/-- **Truncation lowers the curve.** The truncated curve `convexSegEval g0 sf (truncSegs sf gsegs)`
+is pointwise `≤` the original `convexSegEval g0 sg gsegs` (for `sf ≤ sg`, slope-sorted `gsegs` with
+slopes `≤ sg`): below the cut they agree; beyond it the truncated curve runs at the flatter slope
+`sf` while the original keeps its steeper segments. -/
+theorem convexSegEval_truncSegs_le (sf sg : ℝ≥0) (hsfg : sf ≤ sg) :
+    ∀ (gsegs : List (ℝ≥0 × ℝ≥0)), List.Pairwise (fun a b => a.1 ≤ b.1) gsegs →
+      (∀ seg ∈ gsegs, seg.1 ≤ sg) → ∀ g0 v : ℝ≥0,
+      convexSegEval g0 sf (truncSegs sf gsegs) v ≤ convexSegEval g0 sg gsegs v := by
+  intro gsegs
+  induction gsegs with
+  | nil =>
+      intro _ _ g0 v
+      rw [truncSegs_nil, convexSegEval_nil, convexSegEval_nil]
+      gcongr
+  | cons hd tl ih =>
+      intro hsort hle g0 v
+      obtain ⟨sb, ℓb⟩ := hd
+      have htl_sort : List.Pairwise (fun a b => a.1 ≤ b.1) tl := (List.pairwise_cons.mp hsort).2
+      have htl_le : ∀ seg ∈ tl, seg.1 ≤ sg := fun seg h => hle seg (List.mem_cons_of_mem _ h)
+      by_cases hsb : sb ≤ sf
+      · -- segment kept
+        rw [truncSegs_cons_le hsb]
+        by_cases hv : v ≤ ℓb
+        · rw [convexSegEval_cons, if_pos hv, convexSegEval_cons, if_pos hv]
+        · rw [convexSegEval_cons, if_neg hv, convexSegEval_cons, if_neg hv]
+          exact ih htl_sort htl_le (g0 + sb * ℓb) (v - ℓb)
+      · -- segment dropped: `Gt v = g0 + sf·v`; sortedness ⟹ all remaining slopes `≥ sb > sf`
+        rw [truncSegs_cons_gt hsb, convexSegEval_nil]
+        have hsfb : sf ≤ sb := (not_le.mp hsb).le
+        have hall : ∀ seg ∈ (sb, ℓb) :: tl, sf ≤ seg.1 :=
+          sorted_head_le_all hsort rfl hsfb
+        have := convexSegEval_lower sg sf ((sb, ℓb) :: tl) hall hsfg g0 v
+        simpa using this
+
 end DeepWiki
