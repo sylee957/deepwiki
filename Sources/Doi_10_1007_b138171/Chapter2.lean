@@ -15,12 +15,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: the Bernoulli algorithm's integral assembly `∫ A/D = ∑_{α|D=0} (A(α)/D'(α))·log(x−α)` [functional:
-  now a per-term `logDeriv` sum over the decomposition below]. The root-indexed partial-fraction sum is
-  done — `eq_2_3_residue` (= `eq_sum_residue_mul_nodal_div`): for squarefree `D = ∏_{α∈s}(X−α)` and
-  `deg A < #s`, `A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`, i.e. `A/D = ∑_{α|D=0} (A(α)/D'(α))/(X−α)` (the
-  `∑_{α|D(α)=0}` sum shared with §2.4, via Lagrange interpolation). The *arctan term*
-  `∫ (Bx+C)/(x²+bx+c)ᵏ` is fully done: `eq_2_1_arctan` (k=1) and `eq_2_1_arctan_reduce` (k>1, with core
+§2.1: DONE. The Bernoulli algorithm is fully formalized: the root-indexed partial-fraction sum
+  `eq_2_3_residue` (`A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`) and its `K(x)` form `eq_2_3_ratFunc`
+  (`A/D = ∑_{α|D=0} (A(α)/D'(α))/(X−α)`, via Lagrange interpolation, shared with §2.4), and the integral
+  `bernoulli_integral` (`∫ A/D = ∑_{α|D=0} (A(α)/D'(α))·log(X−α)`, i.e. `(∑ residue·log)′ = A/D`). The
+  *arctan term* `∫ (Bx+C)/(x²+bx+c)ᵏ`: `eq_2_1_arctan` (k=1) and `eq_2_1_arctan_reduce` (k>1, with core
   `eq_2_1_arctan_reduce_core`).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
@@ -72,6 +71,16 @@ abbrev eq_2_1_log := @DeepWiki.SymbolicIntegration.logDeriv_eq_inv
 `∑_{α|D(α)=0}` sum underlying Bernoulli's algorithm and the §2.4 logarithmic part). The library's
 `eq_sum_residue_mul_nodal_div`, via Mathlib's Lagrange interpolation. -/
 abbrev eq_2_3_residue := @DeepWiki.SymbolicIntegration.eq_sum_residue_mul_nodal_div
+
+/-- **Bernoulli partial fraction in `K(x)`** (§2.1, eq 2.3): `A/D = ∑_{α|D=0} (A(α)/D'(α))/(X−α)` for
+squarefree `D = ∏_{α∈s}(X−α)`, `deg A < #s` — the partial fraction as a rational-function identity.
+The library's `ratFunc_eq_sum_residue_div`. -/
+abbrev eq_2_3_ratFunc := @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_div
+
+/-- **Bernoulli integral** (§2.1, eq 2.2): `∫ A/D = ∑_{α|D=0} (A(α)/D'(α))·log(X−α)` for squarefree
+`D`, `deg A < deg D` — the derivative of `∑ (A(α)/D'(α))·log(X−α)` is the integrand `A/D` (modeling
+`log(X−α)` by an element with derivative `1/(X−α)`). The library's `deriv_sum_residue_log`. -/
+abbrev bernoulli_integral := @DeepWiki.SymbolicIntegration.deriv_sum_residue_log
 
 /-- **Example 2.1.3** (§2.1, p.38), Bernoulli's algorithm for `f = 1/(x³+x)` over `ℚ(√−1)`: factoring
 `x³+x = x(x+i)(x−i)` linearly (`i = √−1`, `i² = −1`) gives the partial-fraction decomposition
