@@ -70,56 +70,90 @@ theorem isSimilar_lrtSubresultant_eval_gcd {K : Type*} [Field K] [GCDMonoid K[X]
     (le_trans (le_of_lt hjE) (le_trans hElt (Nat.sub_le _ _))) le_rfl le_rfl
     (leadingCoeff_ne_zero.mpr hD) hElt).trans hengine
 
+/-- **Theorem 2.5.1, part (ii) — the top-index `k = 1` case** (`E := A − a·D'` *divides* `D`): the
+Euclidean p.r.s. of `D, E` terminates in one step (`R₂ = prem(D, E) = 0`), so the last nonzero element
+is `R₁ = E` and `i = deg R₁ = deg E` is the *top* p.r.s. index. The LRT subresultant at index `deg E`,
+specialized `t ↦ a`, is `subresultant D E (deg D) (deg D − 1) (deg E)`, which the *normal*-orientation
+degenerate formula `subresultant_deg_ge_normal` (first poly `D`, the larger formal degree, `deg E < deg D`)
+collapses to `C(...)·E`, i.e. `~ E`; chaining `gcd D E ~ E` gives `~ gcd(D, A − a·D')`. This is the
+`k = 1` boundary that padding cannot reach (`j = deg E` may equal `deg D − 1`). -/
+theorem isSimilar_lrtSubresultant_eval_gcd_top {K : Type*} [Field K] [GCDMonoid K[X]]
+    (A D : K[X]) (a : K) (hD : D ≠ 0) (hA : A.natDegree < D.natDegree)
+    (hE : A - C a * derivative D ≠ 0)
+    (h0 : euclideanPRS D (A - C a * derivative D) 2 = 0) :
+    IsSimilar
+      ((lrtSubresultant A D (A - C a * derivative D).natDegree).map (Polynomial.evalRingHom a))
+      (gcd D (A - C a * derivative D)) := by
+  rw [lrtSubresultant_eval]
+  set E := A - C a * derivative D with hEdef
+  have hElt : E.natDegree ≤ D.natDegree - 1 :=
+    (natDegree_sub_le _ _).trans
+      (max_le (by omega) ((natDegree_C_mul_le _ _).trans (natDegree_derivative_le D)))
+  have hsim : IsSimilar (subresultant D E D.natDegree (D.natDegree - 1) E.natDegree) E := by
+    rw [subresultant_deg_ge_normal D E D.natDegree (D.natDegree - 1) E.natDegree le_rfl
+      (by omega) (Nat.sub_le _ _) hElt]
+    exact ⟨1, (D.coeff D.natDegree) ^ (D.natDegree - 1 - E.natDegree)
+        * E.coeff E.natDegree ^ (D.natDegree - E.natDegree - 1), one_ne_zero,
+      mul_ne_zero (pow_ne_zero _ (by rw [← leadingCoeff]; exact leadingCoeff_ne_zero.mpr hD))
+        (pow_ne_zero _ (by rw [← leadingCoeff]; exact leadingCoeff_ne_zero.mpr hE)),
+      by rw [map_one, one_mul]⟩
+  exact hsim.trans (isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0).symm
+
 open scoped Classical in
-/-- **Theorem 2.5.1 — algorithm-level capstone**: state part-(ii) correctness directly at the LRT
-algorithm's own index `i = rootMultiplicity a R` (`R = rtResultant A D`), with the p.r.s.-termination
-hypotheses discharged internally. Over an algebraically closed field with `D` separable and
-`deg A < deg D`, for a residue `a` whose multiplicity `i` in `R` is *strictly* below `deg(A − a·D')`
-(the genuine part-(ii) regime: the gcd is a proper factor of `A − a·D'`, forcing the Euclidean p.r.s.
-to take `≥ 2` steps), the LRT subresultant at index `i`, specialized `t ↦ a`, is similar to the
-Rothstein–Trager gcd `gcd(D, A − a·D')`. The index is rewritten from `i` to the last-p.r.s. degree via
-`rootMultiplicity_rtResultant_eq_natDegree_gcd` (`i = deg gcd`) and `IsSimilar.natDegree_eq` on
-`(isPRS_euclideanPRS …).isSimilar_gcd` (`deg gcd = deg R_k`), and the termination data
-`hk0`/`hknz` come from `exists_last_euclideanPRS_nonzero`; the strict bound `hi` forces `2 ≤ k`. The
-boundary `i = deg(A − a·D')` (`k = 1`, `A − a·D' ∣ D`) and `A − a·D' = 0` (the part-(i) `i = deg D`
-regime) are excluded by `hi`. -/
+/-- **Theorem 2.5.1 — algorithm-level capstone (full part-(ii) regime)**: state part-(ii) correctness
+directly at the LRT algorithm's own index `i = rootMultiplicity a R` (`R = rtResultant A D`), with the
+p.r.s.-termination hypotheses discharged internally. Over an algebraically closed field with `D`
+separable and `deg A < deg D`, for a residue `a` whose multiplicity `i` in `R` is *strictly* below
+`deg D` (i.e. `gcd(D, A − a·D')` is a *proper* factor of `D` — the genuine part-(ii) regime, excluding
+only the part-(i) `i = deg D` case where `A − a·D' = 0` and `gcd ~ D`), the LRT subresultant at index
+`i`, specialized `t ↦ a`, is similar to the Rothstein–Trager gcd `gcd(D, A − a·D')`. The index is
+rewritten from `i` to the last-p.r.s. degree via `rootMultiplicity_rtResultant_eq_natDegree_gcd`
+(`i = deg gcd`) and `IsSimilar.natDegree_eq` on `(isPRS_euclideanPRS …).isSimilar_gcd`
+(`deg gcd = deg R_k`); the termination data `hk0`/`hknz` come from `exists_last_euclideanPRS_nonzero`.
+Both `k ≥ 2` (multi-step, via `isSimilar_lrtSubresultant_eval_gcd` + padding) and `k = 1` (one-step,
+`E ∣ D`, the top p.r.s. index `i = deg E`, via `isSimilar_lrtSubresultant_eval_gcd_top`) are covered;
+only `A − a·D' = 0` (the part-(i) `i = deg D` regime) is excluded by `hi`. -/
 theorem lazardRiobooTrager_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
     (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
-    (hi : (rtResultant A D).rootMultiplicity a < (A - C a * derivative D).natDegree) :
+    (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
     IsSimilar
       ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
         (Polynomial.evalRingHom a))
       (gcd D (A - C a * derivative D)) := by
   set E := A - C a * derivative D with hE
   have hDne : D ≠ 0 := fun h => by simp [h] at hA
-  -- `A − a·D'` has positive degree, hence is nonzero (from `hi`)
-  have hEne : E ≠ 0 := fun h => by rw [h, natDegree_zero] at hi; exact Nat.not_lt_zero _ hi
   -- the multiplicity bridge: `i = deg gcd(D, E)`
   have hmul : (rtResultant A D).rootMultiplicity a = (gcd D E).natDegree :=
     rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
+  -- `E ≠ 0`: were `E = 0`, `gcd D 0 ~ D` would give `deg gcd = deg D`, contradicting `i < deg D`
+  have hEne : E ≠ 0 := by
+    intro h
+    rw [h, (IsSimilar.of_associated
+      (gcd_zero_right D ▸ normalize_associated D)).natDegree_eq] at hmul
+    rw [hmul] at hi; exact absurd hi (lt_irrefl _)
   -- termination data for the Euclidean p.r.s. of `D, E`
   obtain ⟨k, hk1, hk0, hknz⟩ := exists_last_euclideanPRS_nonzero D E hEne
   -- the last nonzero p.r.s. element is similar to the gcd, so they share the degree
   have hsim : IsSimilar (euclideanPRS D E k) (gcd D E) :=
     (isPRS_euclideanPRS D E).isSimilar_gcd hk0 (fun j hj1 hjk => hknz j hj1 hjk)
   have hdeg : (euclideanPRS D E k).natDegree = (gcd D E).natDegree := hsim.natDegree_eq
-  -- the strict bound forces `2 ≤ k`: at `k = 1` the last element is `E`, giving `deg E < deg E`
-  have hk2 : 2 ≤ k := by
-    rcases Nat.lt_or_ge k 2 with hk | hk
-    · have hk1' : k = 1 := by omega
-      subst hk1'
-      rw [euclideanPRS_one] at hdeg
-      rw [hmul, ← hdeg] at hi
-      exact absurd hi (lt_irrefl _)
-    · exact hk
-  -- rewrite the algorithm index to the last-p.r.s. degree and apply part (ii)
-  rw [hmul, ← hdeg]
-  exact isSimilar_lrtSubresultant_eval_gcd A D a hDne hA hk2 hk0 hknz
+  -- split on the number of p.r.s. steps
+  rcases Nat.lt_or_ge k 2 with hk | hk2
+  · -- `k = 1`: one-step termination, `E ∣ D`, the top p.r.s. index `i = deg E`
+    have hk1' : k = 1 := by omega
+    subst hk1'
+    rw [euclideanPRS_one] at hdeg
+    have h0 : euclideanPRS D E 2 = 0 := hk0
+    rw [hmul, ← hdeg]
+    exact isSimilar_lrtSubresultant_eval_gcd_top A D a hDne hA hEne h0
+  · -- `k ≥ 2`: multi-step termination, the part-(ii) padding path
+    rw [hmul, ← hdeg]
+    exact isSimilar_lrtSubresultant_eval_gcd A D a hDne hA hk2 hk0 hknz
 
 open scoped Classical in
 example {K : Type*} [Field K] [IsAlgClosed K]
     (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
-    (hi : (rtResultant A D).rootMultiplicity a < (A - C a * derivative D).natDegree) :
+    (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
     IsSimilar
       ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
         (Polynomial.evalRingHom a))
