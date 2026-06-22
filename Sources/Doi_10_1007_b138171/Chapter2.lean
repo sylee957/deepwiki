@@ -19,29 +19,10 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — COMPLETE end-to-end, ZERO excluded cases. The unified output statement `thm_2_5_1_output`
-  (`lazardRiobooTrager_output_isSimilar_gcd`) covers EVERY residue `a`: the algorithm's curve `Sᵢ` (= `D` if
-  `i = deg D`, else `lrtSubresultant A D i`, exactly `lazardRiobooTrager`'s own branch) specialized `t ↦ a`
-  is similar to `gcd(D, A−aD')`. It routes the `i = deg D` case (`A−aD' = 0`, part (i)) to `thm_2_5_1_i` and
-  the `i < deg D` case (part (ii)) to the capstone `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`), itself
-  COMPLETE over the part-(ii) regime: index `i = rootMultiplicity a R`, p.r.s.-termination discharged
-  internally, both the multi-step `k ≥ 2` and the top-index one-step `k = 1` (`A−aD' ∣ D`, `i = deg E` the
-  *top* index padding cannot reach) covered — the latter by `thm_2_5_1_ii_top`
-  (`isSimilar_lrtSubresultant_eval_gcd_top`), built on the normal-orientation degenerate subresultant
-  formula `subresultant_deg_ge_normal` and one-step gcd similarity
-  `isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`. Supporting pieces: part (i)
-  `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`);
-  part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every** residue (incl. the degenerate
-  `deg(A−aD') < deg D − 1`, via degree-padding similarity `isSimilar_subresultant_padding`) = `thm_2_5_1_ii`
-  (`isSimilar_lrtSubresultant_eval_gcd`); the multiplicity identification `deg_x R_m = i` =
-  `thm_2_5_1_multiplicity` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`,
-  `rootMultiplicity a R = deg gcd(D, A−aD')`), via `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`)
-  and `natDegree_gcd_eq_count_residue` (`deg gcd = #{α : residue α = a}`); the degree dividing line
-  `a = A_{n−1}/(n·lc D)` is `thm_2_5_1_nondegeneracy` (`natDegree_sub_C_mul_derivative`). The
-  Lazard–Rioboo–Trager *algorithm* is functionally done: primitive
-  `lazardRiobooTrager_subresultant` (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval`
-  (specialization `t ↦ a`); and the full assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def
-  returning the `(Qᵢ, Sᵢ)` log-part pairs; optional `lcₓ`-normalization omitted).
+§2.5: the `IntegrateRationalFunction` top-level algorithm (p.52) as a functional `def` — the `∫A/D`
+  assembly HermiteReduce + PolyDivide + IntRationalLogPart [deferred: heterogeneous rational + polynomial-
+  integral + transcendental-log output type; the pieces `hermiteReduce_full`, `lazardRiobooTrager`, and the
+  worked example `ex_2_7_3` are done].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:

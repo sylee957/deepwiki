@@ -78,9 +78,7 @@ connection (`subresultant_euclideanPRS_gcd_connection`) and `subresultant_paddin
 abbrev lazardRiobooTrager_correctness := @lazardRiobooTrager_isSimilar_gcd
 
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness) is assembled in
-`lazardRiobooTrager_correctness` over the whole part-(ii) regime (`i < deg D`): both the multi-step
-`k ≥ 2` and the top-index one-step `k = 1` (`A − α·D' ∣ D`) cases. The only excluded case is
-`A − α·D' = 0` — the part-(i) `i = deg D` regime, `gcd(D, 0) ~ D`. -/
+(none — the subresultant-PRS theory and its application to Bronstein's Thm 2.5.1 are fully formalized;
+see the pointers above.) -/
 
 end DeepWiki.Loos
