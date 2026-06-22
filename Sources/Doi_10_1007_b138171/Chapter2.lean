@@ -37,8 +37,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
-§2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
-  Ex 2.8.2.
+§2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
 §2.9: the in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
@@ -238,6 +237,21 @@ theorem ex_2_5_2 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
     add_zero]
   rw [div_add_div _ _ (pow_ne_zero 2 h1) h2, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 h1) h2) hD]
   ring
+
+/-! ## §2.8 Rioboo's Algorithm for Real Rational Functions -/
+
+/-- **Lemma 2.8.1** (§2.8, p.60), rewriting a complex logarithm as a real arctangent: for `u` with
+`u² ≠ −1`, `√−1 · d/dx log((u+√−1)/(u−√−1)) = 2 · d/dx arctan(u)` (eq 2.17). As a differential-field
+identity (with `i = √−1`, `i² = −1`, and `arctan'(u) = u'/(1+u²)`): `i · logDeriv((u+i)/(u−i)) =
+2·u'/(1+u²)`. The logarithmic derivative `logDeriv((u+i)/(u−i)) = u'/(u+i) − u'/(u−i) = −2i·u'/(u²+1)`
+(using `(u±i)' = u'`, `i` constant), and `i·(−2i) = −2i² = 2`. -/
+theorem lemma_2_8_1 {F : Type*} [Field F] [Differential F] {i u : F} (hi : i ^ 2 = -1)
+    (hi' : i′ = 0) (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
+    i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) := by
+  have hq : (1 + u ^ 2 : F) = (u + i) * (u - i) := by linear_combination hi
+  rw [Differential.logDeriv, deriv_div, map_add, map_sub, hi', hq]
+  field_simp
+  linear_combination (-2 * u′) * hi
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
