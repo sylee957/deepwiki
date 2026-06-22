@@ -164,6 +164,23 @@ theorem subresultant_prs_similar_elt [IsDomain R] (F : ℕ → R[X]) (α β : �
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) hC (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
+/-- **Subresultant ↔ gcd connection** (Loos's Subresultant Theorem applied to gcd computation; the link
+Bronstein's Thm 2.5.1 needs): if the abstract p.r.s. `F` terminates with `F_{m+2} ~ gcd(F₀, F₁)`, then the
+subresultant of `F₀, F₁` of degree `deg F_{m+2}` (`= deg gcd`) is similar to `gcd(F₀, F₁)`. Combines
+`subresultant_prs_similar_elt` (the subresultant of that degree is similar to the p.r.s. element) with the
+gcd-similarity of the last element (Theorem 1.5.1, `IsPRS.isSimilar_gcd`). -/
+theorem subresultant_isSimilar_gcd [IsDomain R] [GCDMonoid R[X]] (F : ℕ → R[X]) (α β : ℕ → R)
+    (Q : ℕ → R[X]) (m : ℕ) (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
+    (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
+    (hj : ∀ l < m, (F (m + 2)).natDegree < (F (l + 2)).natDegree)
+    (hQ : ∀ l ≤ m, (Q l).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree)
+    (hrel : ∀ l ≤ m, C (α l) * F l = C (β l) * F (l + 2) + F (l + 1) * Q l)
+    (hC : F (m + 2) ≠ 0) (hgcd : IsSimilar (F (m + 2)) (gcd (F 0) (F 1))) :
+    IsSimilar (subresultant (F 0) (F 1) (F 0).natDegree (F 1).natDegree (F (m + 2)).natDegree)
+      (gcd (F 0) (F 1)) :=
+  (subresultant_prs_similar_elt F α β Q m hα hβ hlc hcb hj hQ hrel hC).trans hgcd
+
 /-- `IsSimilar p q` over a domain lifts to an exact rational scalar over the field of fractions:
 `p = C η · q` in `Frac(D)[x]` for some nonzero `η ∈ Frac(D)` (namely `η = b/a` from the witnesses
 `C a · p = C b · q`). -/

@@ -34,12 +34,16 @@ abbrev subresultant_prs_correspondence := @subresultant_prs_similar_elt
 (`subresultant_prs_normal_eq`, `subresultant_prs_closed_top`). -/
 abbrev subresultant_pseudoRem := @subresultant_eq_pseudoRem
 
+/-- **Subresultant ↔ gcd connection** (the abstract link, Loos's Subresultant Theorem applied to gcd
+computation): for a p.r.s. `F` terminating with `F_{m+2} ~ gcd(F₀, F₁)`, the subresultant of degree
+`deg F_{m+2} = deg gcd` is similar to `gcd(F₀, F₁)`. The library's `subresultant_isSimilar_gcd`. -/
+abbrev subresultant_gcd_connection := @subresultant_isSimilar_gcd
+
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-The subresultant ↔ gcd connection that Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness)
-needs: the subresultant of `x`-degree `i = deg(gcd(A,B))` is *similar to* `gcd(A, B)` (the last nonzero
-p.r.s. element), obtained from `subresultant_prs_correspondence` + `IsPRS.isSimilar_gcd` (Thm 1.5.1) with
-the degree/index bookkeeping; and its degree-preserving *specialization* (`t ↦ α`) connecting LRT's
-`lrtSubresultant A D i` at a residue `α` to Rothstein–Trager's `gcd(D, A−αD')` (using
-`lrtSubresultant_eval` for the specialization and `thm_2_4_1_ii` for `deg gcd(D, A−αD') = i`). -/
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the *concrete instantiation* of
+`subresultant_gcd_connection` on the pseudo-remainder sequence of `(D, A−αD')` (constructing/extracting the
+p.r.s. and discharging the degree-decreasing / non-vanishing hypotheses), together with the degree-preserving
+*specialization* `t ↦ α` (via `lrtSubresultant_eval`) and `thm_2_4_1_ii` (`deg gcd(D, A−αD') = i` for a
+residue `α` of multiplicity `i`), to conclude `ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')`. -/
 
 end DeepWiki.Loos
