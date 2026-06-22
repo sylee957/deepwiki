@@ -142,4 +142,18 @@ theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Deriva
   | add p q hp hq => rw [map_add, map_add, hp, hq]
   | monomial n a ih => rw [pow_succ, ← mul_assoc, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
 
+/-- **Theorem 3.2.2** (§3.2), polynomial-ring existence + uniqueness: for `(R, D)` differential and any
+target `w : R[X]`, there is a *unique* derivation `Δ` on `R[X]` extending `D` on the constants
+(`Δ (C c) = C (Dc)`) and sending `X` to `w` (`Δ X = w`). Existence is `Differential.implicitDeriv w`;
+uniqueness is `derivation_polynomial_ext`. -/
+theorem existsUnique_derivation_polynomial {R : Type*} [CommRing R] [Differential R] (w : R[X]) :
+    ∃! Δ : Derivation ℤ R[X] R[X],
+      (∀ c : R, Δ (Polynomial.C c) = Polynomial.C (c′)) ∧ Δ Polynomial.X = w := by
+  refine ⟨Differential.implicitDeriv w, ⟨fun c => Differential.implicitDeriv_C w c,
+    Differential.implicitDeriv_X w⟩, ?_⟩
+  rintro Δ ⟨hC, hX⟩
+  exact derivation_polynomial_ext
+    (fun c => (hC c).trans (Differential.implicitDeriv_C w c).symm)
+    (hX.trans (Differential.implicitDeriv_X w).symm)
+
 end DeepWiki.SymbolicIntegration

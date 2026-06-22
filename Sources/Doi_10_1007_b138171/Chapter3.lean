@@ -96,14 +96,7 @@ abbrev thm_3_2_1_unique := @derivation_ext_fractionRing
 `w`. (Existence is Mathlib's `Differential.implicitDeriv w`; uniqueness is
 `derivation_polynomial_ext`. The full `F(t)` field version additionally needs the §3.2.1
 fraction-field existence.) -/
-theorem thm_3_2_2_poly {R : Type*} [CommRing R] [Differential R] (w : R[X]) :
-    ∃! Δ : Derivation ℤ R[X] R[X], (∀ c : R, Δ (C c) = C (c′)) ∧ Δ X = w := by
-  refine ⟨Differential.implicitDeriv w, ⟨fun c => Differential.implicitDeriv_C w c,
-    Differential.implicitDeriv_X w⟩, ?_⟩
-  rintro Δ ⟨hC, hX⟩
-  exact derivation_polynomial_ext
-    (fun c => (hC c).trans (Differential.implicitDeriv_C w c).symm)
-    (hX.trans (Differential.implicitDeriv_X w).symm)
+abbrev thm_3_2_2_poly := @existsUnique_derivation_polynomial
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):**
 --   • **Theorem 3.2.1** (§3.2, p.79), *existence*: a derivation on an integral domain `R` extends
