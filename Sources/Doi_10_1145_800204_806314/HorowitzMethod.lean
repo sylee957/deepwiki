@@ -36,18 +36,16 @@ noncomputable abbrev linear_operator := @horowitzLinear
 (`finrank_degreeLT_prod`, `= deg V + deg U`). -/
 noncomputable abbrev linear_operator_coords := @horowitzMap
 
-/-- **The linear solve, reduced to injectivity** (the paper's "`X` is the unique vector satisfying
-`EX = F`"): if the operator is injective, every numerator `A` (`deg A < deg B`) has a unique
-degree-bounded `C, D` solving `A = C′·U − C·E + D·V`. -/
-abbrev solve_of_injective := @exists_unique_horowitz_of_injective
+/-- **Nonsingularity of the system** (`det E ≠ 0`, equivalently `horowitzMap` injectivity): the paper
+computes by Cramer's rule (`MUSSLE`, `g₀ = det E`), relying on unique solvability. Proved here by the
+root-multiplicity argument — for each prime `p ∣ V` with `p^k ‖ V`, `p^k ∣ C` (`horowitz_prime_pow_dvd`,
+via the Wronskian divisibility `horowitz_wronskian_prime_pow_dvd` and the `(↑a − ↑k)·p′` coefficient),
+collected to `V ∣ C` and `C = 0` by degree. -/
+abbrev operator_injective := @horowitzMap_injective
 
-/- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Nonsingularity of the system (`det E ≠ 0`, equivalently `horowitzMap` injectivity) — the paper computes
-the solution by Cramer's rule (`MUSSLE`, `g₀ = det E`), relying on the unique solvability that traces to
-the existence + uniqueness of the rational part of `∫ A/B`. In the `DeepWiki` framework this is the one
-remaining lemma `Function.Injective (horowitzMap …)`, by the root-multiplicity argument
-(`mult_p(C) ≥ mult_p(V)` for each prime `p ∣ V`, via `pow_sub_one_dvd_derivative_of_pow_dvd` and char-0
-derivative multiplicity, giving `V ∣ C` then `C = 0` by degree); it discharges `solve_of_injective`'s
-hypothesis to yield the unconditional solve. -/
+/-- **The Horowitz solve** (the paper's main result — `X` is *the* unique vector satisfying `EX = F`):
+unconditionally, every numerator `A` (`deg A < deg B`) has a *unique* degree-bounded `C, D` solving
+`A = C′·U − C·E + D·V`, hence `∫ A/B = C/V + ∫ D/U`. The library's `exists_unique_horowitz`. -/
+abbrev solve := @exists_unique_horowitz
 
 end DeepWiki.Hor

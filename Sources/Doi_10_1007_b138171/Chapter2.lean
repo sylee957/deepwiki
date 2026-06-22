@@ -22,16 +22,16 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`) — and all three worked traces on the octic example are
   verified: `ex_2_2_1` (original/partial-fraction), `ex_2_2_2` (quadratic), `ex_2_2_3` (Mack's linear),
   sharing result `ex_2_3_1`.
-§2.3: the *functional linear solve* for the degree-bounded `B, C` — reduced to ONE injectivity lemma.
-  Done: denominator split `horowitzOstrogradsky_split` (= `hoSplit`) + `hoSplit_mul`/`hoSplit_snd_squarefree`;
-  key divisibility `horowitzOstrogradsky_dvd` (`D⁻ ∣ D⁻′·D*`, so `E` exists); reduction identity
-  `horowitzReduce_step_ratFunc` (`A/(D⁻·D*) = (B/D⁻)′ + C/D*`, abstract `horowitz_reduction_step`); and
-  the **linear-solve framework** (`HorowitzLinearSolve.lean`): `horowitzLinear`/`horowitzMap` (the operator
-  on `degreeLT` coordinate spaces), `finrank_degreeLT_prod`, and `exists_unique_horowitz_of_injective`
-  (injective ⟹ unique degree-bounded `B,C` solving `A = B′·D* − B·E + C·D⁻`, via `finrank`). REMAINING:
-  `horowitzMap` injectivity — the root-multiplicity argument (`mult_p(B) ≥ mult_p(D⁻)` for each prime,
-  via `pow_sub_one_dvd_derivative_of_pow_dvd` + char-0 derivative multiplicity, giving `D⁻ ∣ B` then
-  `B = 0` by degree). (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
+§2.3: DONE. The Horowitz–Ostrogradsky algorithm is fully formalized: denominator split
+  `horowitzOstrogradsky_split` (= `hoSplit`) + `hoSplit_mul`/`hoSplit_snd_squarefree`; key divisibility
+  `horowitzOstrogradsky_dvd` (`D⁻ ∣ D⁻′·D*`, so `E` exists); reduction identity
+  `horowitzReduce_step_ratFunc` (`A/(D⁻·D*) = (B/D⁻)′ + C/D*`); the linear-solve framework
+  (`HorowitzLinearSolve.lean`: `horowitzLinear`/`horowitzMap` on `degreeLT` coordinate spaces,
+  `finrank_degreeLT_prod`); the operator **injectivity** `horowitzMap_injective` (root-multiplicity:
+  `horowitz_wronskian_prime_pow_dvd` → `horowitz_prime_pow_dvd` → `horowitz_dvd_of_rel`); and the
+  **unconditional solve** `exists_unique_horowitz` (`A = B′·D* − B·E + C·D⁻` has unique degree-bounded
+  `B,C`). Source paper cataloged at `Sources/Doi_10_1145_800204_806314/`. (Ex 2.3.1's *result* — shared
+  with Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]. Parts (i),(ii) are
   PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`) and `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`);
   the two primitives are functional defs `intRationalLogPart_resultant`/`_gcd`; the *simple-root* log part

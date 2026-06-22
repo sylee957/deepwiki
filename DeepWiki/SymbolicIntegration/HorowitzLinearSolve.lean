@@ -198,6 +198,81 @@ theorem horowitz_prime_pow_dvd [CharZero K] {p w u B C : K[X]} (hp : Prime p) {k
     obtain ⟨B₂, hB₂⟩ := hpB1
     exact ⟨B₂, by rw [hB₁, hB₂, pow_succ]; ring⟩
 
+/-- **`D⁻ ∣ B`** (assembling the per-prime divisibility): under the Horowitz structure — `D*` squarefree,
+every prime of `D⁻` dividing `D*` (radical `D⁻ ∣ D*`), `E·D⁻ = D⁻′·D*`, char 0 — the homogeneous relation
+`B′·D* − B·E + C·D⁻ = 0` forces `D⁻ ∣ B`. For each prime `p`, extract `D⁻ = p^k·w`, `D* = p·u` and apply
+`horowitz_prime_pow_dvd`; collect via `dvd_iff_emultiplicity_le`. -/
+theorem horowitz_dvd_of_rel [CharZero K] {Dminus Dstar E B C : K[X]} (hDm : Dminus ≠ 0)
+    (hsqf : Squarefree Dstar) (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)
+    (hE : E * Dminus = derivative Dminus * Dstar)
+    (hrel0 : derivative B * Dstar - B * E + C * Dminus = 0) :
+    Dminus ∣ B := by
+  have hstar2 : Dstar * (derivative B * Dminus - B * derivative Dminus) = -(C * Dminus ^ 2) := by
+    linear_combination Dminus * hrel0 + B * hE
+  rw [UniqueFactorizationMonoid.dvd_iff_emultiplicity_le hDm]
+  intro p hp
+  by_cases hpDm : p ∣ Dminus
+  · have hfin : FiniteMultiplicity p Dminus := FiniteMultiplicity.of_prime_left hp hDm
+    obtain ⟨w, hw, hpw⟩ := hfin.exists_eq_pow_mul_and_not_dvd
+    set k := multiplicity p Dminus with hkdef
+    have hk1 : 1 ≤ k := by
+      rcases Nat.eq_zero_or_pos k with hk0 | hpos
+      · rw [hk0, pow_zero, one_mul] at hw
+        exact absurd (hw ▸ hpDm) hpw
+      · exact hpos
+    obtain ⟨u, hu, hpu⟩ : ∃ u, Dstar = p * u ∧ ¬ p ∣ u := by
+      obtain ⟨u, hu⟩ := hrad p hp hpDm
+      refine ⟨u, hu, fun hpu => hp.not_unit (hsqf p ?_)⟩
+      obtain ⟨u', rfl⟩ := hpu
+      exact ⟨u', by rw [hu]; ring⟩
+    have hpp : ¬ p ∣ derivative p := by
+      have hsep : IsCoprime p (derivative p) := (separable_def p).mp hp.irreducible.separable
+      exact fun hd => hp.not_unit (hsep.isUnit_of_dvd' dvd_rfl hd)
+    have hrel' : (p * u) * (derivative B * (p ^ k * w) - B * derivative (p ^ k * w))
+        = -(C * (p ^ k * w) ^ 2) := by rw [← hu, ← hw]; exact hstar2
+    have hpkB : p ^ k ∣ B := horowitz_prime_pow_dvd hp hk1 hpw hpu hpp hrel'
+    rw [hfin.emultiplicity_eq_multiplicity, ← hkdef, ← pow_dvd_iff_le_emultiplicity]
+    exact hpkB
+  · rw [emultiplicity_eq_zero.mpr hpDm]; exact zero_le
+
+/-- **Injectivity of the Horowitz operator** (§2.3): under the Horowitz structure, `horowitzMap` is
+injective. By `horowitz_dvd_of_rel`, `B′·D* − B·E + C·D⁻ = 0` forces `D⁻ ∣ B`, and `deg B < deg D⁻`
+forces `B = 0`, then `C·D⁻ = 0` forces `C = 0`. -/
+theorem horowitzMap_injective [CharZero K] {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hEdeg : E.degree < Dstar.natDegree) (hsqf : Squarefree Dstar)
+    (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)
+    (hE : E * Dminus = derivative Dminus * Dstar) :
+    Function.Injective (horowitzMap hDm hDs hEdeg) := by
+  rw [injective_iff_map_eq_zero]
+  rintro ⟨⟨B, hB⟩, ⟨C, hC⟩⟩ hBC
+  have hrel0 : derivative B * Dstar - B * E + C * Dminus = 0 := by
+    have h := congrArg Subtype.val hBC
+    rwa [horowitzMap_coe_apply] at h
+  have hdvd : Dminus ∣ B := horowitz_dvd_of_rel hDm hsqf hrad hE hrel0
+  have hB0 : B = 0 := by
+    by_contra hBne
+    have h1 : Dminus.degree ≤ B.degree := Polynomial.degree_le_of_dvd hdvd hBne
+    rw [degree_eq_natDegree hDm] at h1
+    exact absurd h1 (not_le.mpr (mem_degreeLT.mp hB))
+  have hC0 : C = 0 := by
+    have hCD : C * Dminus = 0 := by rw [hB0] at hrel0; simpa using hrel0
+    exact (mul_eq_zero.mp hCD).resolve_right hDm
+  exact Prod.ext (Subtype.ext hB0) (Subtype.ext hC0)
+
+/-- **The Horowitz solve** (§2.3, the unconditional form): under the Horowitz structure, for every
+numerator `A` with `deg A < deg D⁻ + deg D*` there exist **unique** degree-bounded `B, C` with
+`A = B′·D* − B·E + C·D⁻` — so `∫ A/D = B/D⁻ + ∫ C/D*` with `B, C` from the (now provably nonsingular)
+linear system. Combines `exists_unique_horowitz_of_injective` with `horowitzMap_injective`. -/
+theorem exists_unique_horowitz [CharZero K] {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hEdeg : E.degree < Dstar.natDegree) (hsqf : Squarefree Dstar)
+    (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)
+    (hE : E * Dminus = derivative Dminus * Dstar)
+    {A : K[X]} (hA : A ∈ degreeLT K (Dminus.natDegree + Dstar.natDegree)) :
+    ∃! BC : degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree,
+      derivative (BC.1 : K[X]) * Dstar - (BC.1 : K[X]) * E + (BC.2 : K[X]) * Dminus = A :=
+  exists_unique_horowitz_of_injective hDm hDs hEdeg
+    (horowitzMap_injective hDm hDs hEdeg hsqf hrad hE) hA
+
 end DeepWiki.SymbolicIntegration
 
 end
