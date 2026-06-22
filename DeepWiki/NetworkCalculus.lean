@@ -56,6 +56,7 @@ import DeepWiki.NetworkCalculus.ConvexConcaveCrossingPoint
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
 import DeepWiki.NetworkCalculus.SegmentDeconvComposite
+import DeepWiki.NetworkCalculus.SegmentDeconvCurve
 import DeepWiki.NetworkCalculus.ConcaveSubadditive
 import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.ConvexConvolution
