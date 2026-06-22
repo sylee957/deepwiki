@@ -80,4 +80,29 @@ theorem eLpNorm_maq_boundary_le (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ} {
   · exact le_trans (eLpNorm_const_smul_le)
       (mul_le_mul' le_rfl (eLpNorm_sum_range_lag_sub_le hmeas hZ n j))
 
+omit [MeasurableSpace Ω] in
+/-- **Algebraic identity for the `MA(q)` central limit theorem:** the difference between the rescaled
+`MA(q)` sample mean and the `∑θ`-scaled rescaled noise mean equals `(√n · n⁻¹)` times the
+coefficient-weighted lag-difference `D_n = ∑ⱼ θⱼ (∑_{t<n}(Z_{t−j} − Z_t))`. Exposing this `D_n`
+structure lets the boundary `L²` bound control the difference. -/
+theorem maq_sub_smul_eq (θ : Polynomial ℝ) (Z : ℤ → Ω → ℝ) (n : ℕ) :
+    ((fun ω => Real.sqrt n * sampleMean n
+          (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω))
+        - fun ω => (∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j)
+            * (Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω)))
+      = (Real.sqrt n * (n : ℝ)⁻¹) • ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j •
+          fun ω => ∑ t ∈ Finset.range n, (Z ((t : ℤ) - j) ω - Z (t : ℤ) ω) := by
+  ext ω
+  have key : (∑ t ∈ Finset.range n,
+        ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω)
+      - (∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j) * ∑ k ∈ Finset.range n, Z (k : ℤ) ω
+      = ∑ j ∈ Finset.range (θ.natDegree + 1),
+          θ.coeff j * ∑ t ∈ Finset.range n, (Z ((t : ℤ) - j) ω - Z (t : ℤ) ω) := by
+    rw [Finset.sum_comm, Finset.sum_mul, ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib]
+    exact Finset.sum_congr rfl fun t _ => by rw [mul_sub]
+  simp only [Pi.sub_apply, Pi.smul_apply, Finset.sum_apply, smul_eq_mul, sampleMean]
+  rw [← key]; ring
+
 end DeepWiki.TimeSeries
