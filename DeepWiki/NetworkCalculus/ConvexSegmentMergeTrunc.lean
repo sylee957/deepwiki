@@ -213,4 +213,50 @@ theorem convexSegEval_truncSegs_le (sf sg : ℝ≥0) (hsfg : sf ≤ sg) :
         have := convexSegEval_lower sg sf ((sb, ℓb) :: tl) hall hsfg g0 v
         simpa using this
 
+/-- **Convolution ignores `g`'s steep part.** For `sf ≤ sg`, slope-sorted `fsegs` (all slopes `≤ sf`)
+and `gsegs` (all slopes `≤ sg`), convolving the flatter-asymptote `F = convexSegEval f0 sf fsegs`
+with `G = convexSegEval g0 sg gsegs` is the same as convolving it with the **truncated**
+`Gt = convexSegEval g0 sf (truncSegs sf gsegs)` (asymptote lowered to `sf`, steep segments dropped):
+the `(min,plus)` convolution never uses `g`'s segments steeper than `sf`. -/
+theorem minConv_convexSegEval_truncSegs (sf sg f0 g0 : ℝ≥0)
+    (fsegs gsegs : List (ℝ≥0 × ℝ≥0)) (hsfg : sf ≤ sg)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ sf) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ sg) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 sf fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = minConv (fun u => (((convexSegEval f0 sf fsegs u : ℝ≥0) : ℝ) : EReal))
+                (fun v => (((convexSegEval g0 sf (truncSegs sf gsegs) v : ℝ≥0) : ℝ) : EReal)) t := by
+  have coeadd : ∀ x y : ℝ≥0,
+      (((x : ℝ) : EReal)) + (((y : ℝ) : EReal)) = (((x + y : ℝ≥0) : ℝ) : EReal) := by
+    intro x y; rw [← EReal.coe_add, ← NNReal.coe_add]
+  set F : ℝ≥0 → EReal := fun u => (((convexSegEval f0 sf fsegs u : ℝ≥0) : ℝ) : EReal) with hF
+  set G : ℝ≥0 → EReal := fun v => (((convexSegEval g0 sg gsegs v : ℝ≥0) : ℝ) : EReal) with hG
+  set Gt : ℝ≥0 → EReal :=
+    fun v => (((convexSegEval g0 sf (truncSegs sf gsegs) v : ℝ≥0) : ℝ) : EReal) with hGt
+  apply le_antisymm
+  · -- `minConv F G ≤ minConv F Gt`, sliding the excess `g`-mass onto the flatter `F`
+    refine le_minConv (fun u v huv => ?_)
+    obtain ⟨w, hwle, hweq⟩ := convexSegEval_truncSegs_decomp sf sg gsegs g0 v
+    -- split `t = (u + (v - w)) + w`
+    have hsplit : (u + (v - w)) + w = t := by
+      rw [add_assoc, tsub_add_cancel_of_le hwle, huv]
+    refine le_trans (minConv_le_add F G hsplit) ?_
+    simp only [hF, hG, hGt]
+    rw [coeadd, coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe, hweq]
+    -- `F (u + (v-w)) + G w ≤ F u + (G w + sf·(v-w))` via the upper-rate of `F`
+    have hFr : convexSegEval f0 sf fsegs (u + (v - w))
+        ≤ convexSegEval f0 sf fsegs u + sf * (v - w) :=
+      convexSegEval_upper_rate_of_le hfs u (v - w)
+    calc convexSegEval f0 sf fsegs (u + (v - w)) + convexSegEval g0 sg gsegs w
+        ≤ (convexSegEval f0 sf fsegs u + sf * (v - w)) + convexSegEval g0 sg gsegs w := by gcongr
+      _ = convexSegEval f0 sf fsegs u + (convexSegEval g0 sg gsegs w + sf * (v - w)) := by ring
+  · -- `minConv F Gt ≤ minConv F G`, via `Gt ≤ G` pointwise
+    refine le_minConv (fun u v huv => ?_)
+    refine le_trans (minConv_le_add F Gt huv) ?_
+    simp only [hF, hG, hGt]
+    rw [coeadd, coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+    have hGt_le : convexSegEval g0 sf (truncSegs sf gsegs) v ≤ convexSegEval g0 sg gsegs v :=
+      convexSegEval_truncSegs_le sf sg hsfg gsegs hgsort hgs g0 v
+    exact add_le_add le_rfl hGt_le
+
 end DeepWiki
