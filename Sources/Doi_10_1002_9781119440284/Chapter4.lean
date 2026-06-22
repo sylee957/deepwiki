@@ -4,6 +4,7 @@ import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexSegmentMerge
+import DeepWiki.NetworkCalculus.ConcaveSegmentMerge
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -240,6 +241,16 @@ theorem thm_4_1_balanced (s f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 × ℝ
             (fun v => (((convexSegEval g0 s gsegs v : ℝ≥0) : ℝ) : EReal)) t
       = (((convexSegEval (f0 + g0) s (mergeBySlope fsegs gsegs) t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_convexSegEval_eq_merge s f0 g0 fsegs gsegs hfsort hgsort hfs hgs t
+
+/-- **Theorem 4.1, the concave case** (§4.2.1, p.62): for *concave* PWL functions the `(min,plus)`
+convolution is the pointwise *minimum* — realized on the token-bucket-list representation as plain
+**concatenation**: `(⋀ᵢ γ_{r¹ᵢ,b¹ᵢ}) ∗ (⋀ⱼ γ_{r²ⱼ,b²ⱼ}) = ⋀ over (l₁ ++ l₂)` (for non-empty lists,
+both null at the origin). The dual of the convex segment-merge — far simpler, since concave
+convolution needs no slope sort, only list append. The library's
+`DeepWiki.minConv_concaveNFEval_eq_concaveNFEval_append`. -/
+theorem thm_4_1_concave {l₁ l₂ : List (ℝ≥0 × ℝ≥0)} (h₁ : l₁ ≠ []) (h₂ : l₂ ≠ []) :
+    minConv (concaveNFEval l₁) (concaveNFEval l₂) = concaveNFEval (l₁ ++ l₂) :=
+  DeepWiki.minConv_concaveNFEval_eq_concaveNFEval_append h₁ h₂
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
