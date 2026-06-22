@@ -16,7 +16,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope) and flat case `thm_4_1_flat` (flatter line ∗ convex = shift, the book's `f∗g=f+g(0)`) are proved. What remains is the *general* correctness: the merge must **truncate** at slope `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — `mergeBySlope` as written is the *full* merge, exact only in the balanced `ρf=ρg` case; the general theorem needs the truncating merge + the slope-peel induction (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope), flat case `thm_4_1_flat` (flatter line ∗ convex = shift), and the **balanced case `thm_4_1_balanced`** (`ρf=ρg`: the full `mergeBySlope` IS the convolution, by the slope-peel induction) are proved. What remains is only the *unbalanced* `ρf≠ρg` case, where the merge must **truncate** at `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — the peel machinery (`minConv_peel_leadSeg`/`minConv_leadSeg_le`) is reusable but the truncating merge + its bookkeeping are a separate effort (the transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -223,6 +223,23 @@ theorem thm_4_1_flat (a p g0 sg : ℝ≥0) (l : List (ℝ≥0 × ℝ≥0))
             (fun v => (((convexSegEval g0 sg l v : ℝ≥0) : ℝ) : EReal)) t
       = (((a + g0 + p * t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_flatLine_convexSegEval a p g0 sg l hl hsg t
+
+/-- **Theorem 4.1, the balanced case** (§4.2.2, p.65): the full segment-merge *is* the `(min,plus)`
+convolution when both convex PWLs share the asymptotic slope `s`. For slope-sorted segment lists
+(`List.Pairwise (·.1 ≤ ·.1)`) with all finite slopes `≤ s`,
+`(convexSegEval f0 s fsegs) ∗ (convexSegEval g0 s gsegs) = convexSegEval (f0+g0) s (mergeBySlope
+fsegs gsegs)` — no truncation needed, since every finite slope is `< s = min(ρf,ρg)`. Proved by the
+slope-peel induction (peel the globally flattest leading segment; base case `thm_4_1_base`). The
+library's `DeepWiki.minConv_convexSegEval_eq_merge`. The remaining general case is the *unbalanced*
+`ρf ≠ ρg`, where the merge must truncate at `min(ρf,ρg)`. -/
+theorem thm_4_1_balanced (s f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ s) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ s) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 s fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 s gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((convexSegEval (f0 + g0) s (mergeBySlope fsegs gsegs) t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.minConv_convexSegEval_eq_merge s f0 g0 fsegs gsegs hfsort hgsort hfs hgs t
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
