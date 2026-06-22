@@ -1,4 +1,5 @@
 import Mathlib.RingTheory.Multiplicity
+import DeepWiki.SymbolicIntegration.Residues
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 4: The Order Function
@@ -11,8 +12,12 @@ We catalog the §4.1 basic properties (Lemma 4.1.1) onto Mathlib's `emultiplicit
   separable algebraic extension); Ex 4.1.1.
 §4.2: Def 4.2.1; Def 4.2.2; Thm 4.2.1; Lemma 4.2.1; Ex 4.2.1.
 §4.3: Def 4.3.1; Thm 4.3.1.
-§4.4: Def 4.4.1; Thm 4.4.1; Thm 4.4.2; Thm 4.4.3; Thm 4.4.4; Cor 4.4.1; Cor 4.4.2; Lemma 4.4.2;
-  Lemma 4.4.3.
+§4.4 (abstract residue theory): Def 4.4.1 (the residue `π_p(f·p/Dp)` over a monomial extension);
+  Thm 4.4.1; Thm 4.4.2; Thm 4.4.3; Thm 4.4.4; Cor 4.4.1; Cor 4.4.2; Lemma 4.4.2; Lemma 4.4.3
+  [infra: rests on the §4.2 valuation/monomial-extension machinery]. The RATIONAL-function residue at a
+  simple root (`A(α)/D'(α)`, the case Bronstein Thm 2.4.1 uses) IS built: `residue_eq_eval_div_eval_derivative`,
+  `eval_derivative_X_sub_C_mul`, `residue_of_partialFraction`. Fully unblocking Thm 2.4.1 additionally needs
+  the resultant-roots formula `resultant_x(D, A−tD') = lc·∏(A(αᵢ)−t·D'(αᵢ))` (not in Mathlib) [infra].
 Exercises: Ex 4.1; Ex 4.2; Ex 4.3; Ex 4.4. -/
 
 namespace DeepWiki.Si
@@ -45,5 +50,21 @@ theorem lem_4_1_1_ii_eq {α : Type*} [CommRing α] [IsDomain α] {a x y : α}
 theorem lem_4_1_1_iii {α : Type*} [CommRing α] [IsDomain α] {a x y : α} (h : x ∣ y) :
     emultiplicity a x ≤ emultiplicity a y :=
   emultiplicity_le_emultiplicity_of_dvd_right h
+
+/-! ## §4.4 Residues (rational-function case — foundation of the Rothstein–Trager residue) -/
+
+/-- **§4.4 residue, simple-root derivative**: for `D = (X−α)·E`, `D'(α) = E(α)`. The library's
+`eval_derivative_X_sub_C_mul`. -/
+abbrev lem_4_4_deriv_root := @DeepWiki.SymbolicIntegration.eval_derivative_X_sub_C_mul
+
+/-- **§4.4 residue at a simple root** (the value in Thm 2.4.1's logarithmic part): the residue of `A/D`
+at a simple root `α` of `D = (X−α)·E` is `A(α)/D'(α) = A(α)/E(α)`. The library's
+`residue_eq_eval_div_eval_derivative`. -/
+abbrev def_4_4_residue := @DeepWiki.SymbolicIntegration.residue_eq_eval_div_eval_derivative
+
+/-- **§4.4 residue as partial-fraction coefficient**: in `A = c·E + (X−α)·B` (`D = (X−α)·E`), the
+coefficient `c` equals the residue `A(α)/D'(α)`. The library's `residue_of_partialFraction`. -/
+abbrev lem_4_4_residue_pf := @DeepWiki.SymbolicIntegration.residue_of_partialFraction
+
 
 end DeepWiki.Si

@@ -7,3 +7,4 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.Residues
