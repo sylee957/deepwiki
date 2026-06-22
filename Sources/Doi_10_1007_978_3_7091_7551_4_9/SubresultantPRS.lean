@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
+import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
 
 /-! # Loos subresultant-PRS theory — catalog
@@ -54,14 +55,20 @@ the bridge matching a formal-degree subresultant (the LRT `deg D − 1`) to an a
 computation, which makes Bronstein's Thm 2.5.1(ii) hold for the degenerate residue too. -/
 abbrev subresultant_padding_similarity := @isSimilar_subresultant_padding
 
+/-- **Lazard–Rioboo–Trager correctness, assembled** (Bronstein Thm 2.5.1, at the algorithm's own index):
+the subresultant-PRS engine specialized to the LRT log-part index `i = rootMultiplicity α R`, with the
+p.r.s.-termination data discharged internally — the LRT subresultant at index `i` (`t ↦ α`) is similar to
+`gcd(D, A − α·D')`. The library's `lazardRiobooTrager_isSimilar_gcd`: combines the subresultant ↔ gcd
+connection (`subresultant_euclideanPRS_gcd_connection`) and `subresultant_padding_similarity` with the
+multiplicity bridge `rootMultiplicity_rtResultant_eq_natDegree_gcd`. -/
+abbrev lazardRiobooTrager_correctness := @lazardRiobooTrager_isSimilar_gcd
+
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the mathematical content is COMPLETE — the
-concrete subresultant ↔ gcd connection (`subresultant_euclideanPRS_isSimilar_gcd`) and its `t ↦ α`
-specialization to *every* residue (`isSimilar_lrtSubresultant_eval_gcd`, the degenerate
-`deg(A − α·D') < deg D − 1` handled via `subresultant_padding_similarity`), plus the multiplicity
-identification `deg_x R_m = i` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`, via residue-counting in
-`ResidueMultiplicity`). Only the algorithm-level bookkeeping capstone remains (discharge the p.r.s.-
-termination hypotheses + rewrite the index to `i = rootMultiplicity α R`); tracked in the Bronstein
-`Chapter2` §2.5 marker, not here. -/
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness) is assembled in
+`lazardRiobooTrager_correctness` for the genuine part-(ii) regime (`i < deg(A − α·D')`). The residue
+boundary `i = deg(A − α·D')` — `k = 1`, i.e. `A − α·D' ∣ D`, where the index is the *top* p.r.s. degree
+and the padding lemma's `j < k` fails — is excluded by hypothesis and needs a top-index subresultant fact
+not yet in the engine [infra]. (The `A − α·D' = 0` boundary is the part-(i) `i = deg D` regime,
+`gcd(D, 0) = D`.) -/
 
 end DeepWiki.Loos

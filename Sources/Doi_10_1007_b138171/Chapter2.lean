@@ -19,15 +19,17 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — only the algorithm-level *bookkeeping* capstone remains [deferred]: discharging the p.r.s.-
-  termination hypotheses (`hk0`/`hknz`, via `exists_last_euclideanPRS_nonzero`) and rewriting the index of
-  `thm_2_5_1_ii` to the algorithm's `i = rootMultiplicity a R` (via `thm_2_5_1_multiplicity` +
-  `IsSimilar.natDegree_eq`), to state the correctness directly on `lazardRiobooTrager`'s output. The
-  mathematical content is COMPLETE: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i`
-  (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every**
-  residue (incl. the degenerate `deg(A−aD') < deg D − 1`, via degree-padding similarity
-  `isSimilar_subresultant_padding`) = `thm_2_5_1_ii` (`isSimilar_lrtSubresultant_eval_gcd`); the multiplicity
-  identification `deg_x R_m = i` = `thm_2_5_1_multiplicity` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`,
+§2.5: Thm 2.5.1 — the algorithm-level capstone is now `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`):
+  part-(ii) correctness stated directly at the algorithm's index `i = rootMultiplicity a R`, p.r.s.-termination
+  data discharged internally. The single hypothesis `i < deg(A−aD')` (the genuine part-(ii) regime) carves
+  out the two boundaries [deferred — need top-index subresultant theory not yet built]: `i = deg(A−aD')`
+  (`k = 1`, i.e. `A−aD' ∣ D`, where the index is the *top* p.r.s. degree and the padding lemma's `j < k`
+  fails) and `A−aD' = 0` (`A = a·D'`, the part-(i) `i = deg D` regime, `gcd(D,0) = D`). All the mathematical
+  content is COMPLETE: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`);
+  part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every** residue (incl. the degenerate
+  `deg(A−aD') < deg D − 1`, via degree-padding similarity `isSimilar_subresultant_padding`) = `thm_2_5_1_ii`
+  (`isSimilar_lrtSubresultant_eval_gcd`); the multiplicity identification `deg_x R_m = i` =
+  `thm_2_5_1_multiplicity` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`,
   `rootMultiplicity a R = deg gcd(D, A−aD')`), via `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`)
   and `natDegree_gcd_eq_count_residue` (`deg gcd = #{α : residue α = a}`); the degree dividing line
   `a = A_{n−1}/(n·lc D)` is `thm_2_5_1_nondegeneracy` (`natDegree_sub_C_mul_derivative`). The
@@ -321,6 +323,17 @@ combining `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`, the resid
 takes as its subresultant index, supplying the `deg_x R_m = i` half of part (ii). -/
 abbrev thm_2_5_1_multiplicity :=
   @DeepWiki.SymbolicIntegration.rootMultiplicity_rtResultant_eq_natDegree_gcd
+
+/-- **Theorem 2.5.1, algorithm-level capstone** (§2.5, p.50, part (ii) at the algorithm's own index):
+state correctness directly at the LRT subresultant index `i = rootMultiplicity a R` (`R = rtResultant A D`),
+with the p.r.s.-termination data discharged internally — over an algebraically closed field, `D` separable,
+`deg A < deg D`, for a residue `a` with `i < deg(A − a·D')`, the LRT subresultant at index `i` specialized
+`t ↦ a` is similar to `gcd(D, A − a·D')`. The library's `lazardRiobooTrager_isSimilar_gcd`: assembles
+`thm_2_5_1_ii` with `thm_2_5_1_multiplicity` (`i = deg gcd`) and `IsSimilar.natDegree_eq`
+(`deg gcd = deg R_k`), discharging `hk0`/`hknz` via `exists_last_euclideanPRS_nonzero`; the bound
+`i < deg(A − a·D')` forces `2 ≤ k`, excluding the boundaries `k = 1` (`A − a·D' ∣ D`) and `A − a·D' = 0`
+(the part-(i) `i = deg D` regime). -/
+abbrev thm_2_5_1 := @DeepWiki.SymbolicIntegration.lazardRiobooTrager_isSimilar_gcd
 
 /-- **Roots of the Rothstein–Trager resultant** (§2.5, behind Thm 2.5.1): over an algebraically closed
 field, for separable `D` and `deg A < deg D`, the roots of `R(t)` (with multiplicity) are exactly the
