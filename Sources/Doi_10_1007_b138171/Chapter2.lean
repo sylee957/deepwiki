@@ -9,19 +9,22 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 `DeepWiki.SymbolicIntegration` library and cataloged here.
 
 ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§2.1: the full Bernoulli algorithm; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the `arctan`
-  primitive); Ex 2.1.3.
-§2.2: the full `HermiteReduce` algorithm (recursion over the squarefree factorization,
-  `ExtendedEuclidean` finding `B, C`) [infra: opsem]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3
-  [infra: opsem] (their shared *result* is `ex_2_3_1`).
-§2.3: the Horowitz–Ostrogradsky algorithm [infra: opsem]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
+(Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
+semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
+`DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
+§2.1: the full Bernoulli algorithm [functional]; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the
+  `arctan` primitive); Ex 2.1.3.
+§2.2: the full `HermiteReduce` algorithm (recursion over the squarefree factorization, `B, C` via
+  `diophantineSolve`) [functional]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3 [functional]
+  (their shared *result* is `ex_2_3_1`).
+§2.3: the Horowitz–Ostrogradsky algorithm [functional]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]; the Rothstein–Trager
-  algorithm [infra: opsem]. Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`,
+  algorithm [functional]. Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`,
   the zeros of `R = resultant_x(D, A − t·D')` are exactly the residues) and `thm_2_4_1_ii`
   (= `isRoot_gcd_iff_residue`, the `Gₐ` characterization), both on the §4.4 residue foundation.
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
-  the Lazard–Rioboo–Trager algorithm [infra: opsem]; Ex 2.5.2.
-§2.6: Thm 2.6.1; the Czichowski algorithm; Ex 2.6.1.
+  the Lazard–Rioboo–Trager algorithm [functional]; Ex 2.5.2.
+§2.6: Thm 2.6.1; the Czichowski algorithm [functional]; Ex 2.6.1.
 §2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
 §2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
   Ex 2.8.2.
