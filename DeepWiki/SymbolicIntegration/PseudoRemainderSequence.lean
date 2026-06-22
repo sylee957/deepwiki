@@ -200,4 +200,29 @@ theorem subresultant_euclideanPRS_isSimilar_gcd [GCDMonoid R[X]] (A B : R[X]) (h
     ((isPRS_euclideanPRS A B).isSimilar_gcd hk0 (fun j hj1 hjk => hknz j hj1 hjk))
   exact key
 
+/-- A divisor of the same degree is *similar* to it: if `g ∣ p`, `p ≠ 0` and `deg g = deg p`, then the
+cofactor is a nonzero constant `C c`, so `C c * g = p = C 1 * p` and `IsSimilar g p`. -/
+theorem isSimilar_of_dvd_of_natDegree_eq {K : Type*} [Field K] {g p : K[X]}
+    (hdvd : g ∣ p) (hp : p ≠ 0) (hdeg : g.natDegree = p.natDegree) : IsSimilar g p := by
+  obtain ⟨q, rfl⟩ := hdvd
+  have hg : g ≠ 0 := left_ne_zero_of_mul hp
+  have hq : q ≠ 0 := right_ne_zero_of_mul hp
+  rw [natDegree_mul hg hq] at hdeg
+  obtain ⟨c, rfl⟩ := natDegree_eq_zero.mp (by omega : q.natDegree = 0)
+  have hc : c ≠ 0 := by rintro rfl; simp at hq
+  exact ⟨c, 1, hc, one_ne_zero, by rw [map_one, one_mul, mul_comm]⟩
+
+/-- **Theorem 2.5.1, part (i)** (the `n = deg C` case): when `gcd(C, E)` has the full degree `deg C`, it is
+similar to `C` (the book's "`gcd(C, A−αB) = C`"), since `gcd(C, E) ∣ C`. -/
+theorem isSimilar_gcd_left_of_natDegree_eq {K : Type*} [Field K] [GCDMonoid K[X]] {C E : K[X]}
+    (hC : C ≠ 0) (hdeg : (gcd C E).natDegree = C.natDegree) : IsSimilar (gcd C E) C :=
+  isSimilar_of_dvd_of_natDegree_eq (gcd_dvd_left C E) hC hdeg
+
+-- Faithfulness (Thm 2.5.1(i) at the LRT use site): when a residue `a` has multiplicity `deg D`,
+-- the gcd `gcd(D, A − a·D')` is similar to `D`.
+example {K : Type*} [Field K] [GCDMonoid K[X]] (A D : K[X]) (a : K) (hD : D ≠ 0)
+    (hn : (gcd D (A - C a * derivative D)).natDegree = D.natDegree) :
+    IsSimilar (gcd D (A - C a * derivative D)) D :=
+  isSimilar_gcd_left_of_natDegree_eq hD hn
+
 end DeepWiki.SymbolicIntegration
