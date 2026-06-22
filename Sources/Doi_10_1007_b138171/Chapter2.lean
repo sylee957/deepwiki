@@ -29,12 +29,12 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `horowitzOstrogradsky_dvd` (`D⁻ ∣ D⁻′·D*`, so the Horowitz `E` exists); and the reduction identity
   `horowitzReduce_step_ratFunc` (`A/(D⁻·D*) = (B/D⁻)′ + C/D*` given a solution; abstract form
   `horowitz_reduction_step`). (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
-§2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]; the Rothstein–Trager
-  algorithm's *residue-grouped* log-sum `∑_{a|R(a)=0} a·log(Gₐ)` (combining equal-residue roots via the
-  per-residue `Gₐ`) [functional: needs the residue partition]. Parts (i),(ii) are PROVED: `thm_2_4_1_i`
-  (= `residue_iff_resultant_eq_zero`) and `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`); the two primitives
-  are functional defs `intRationalLogPart_resultant`/`_gcd`; and the *simple-root* logarithmic part is now
-  explicit — `intRationalLogPart_logDeriv` (`A/D = ∑_{α|D=0} (A(α)/D'(α))·logDeriv(X−α)`).
+§2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]. Parts (i),(ii) are
+  PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`) and `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`);
+  the two primitives are functional defs `intRationalLogPart_resultant`/`_gcd`; the *simple-root* log part
+  is explicit (`intRationalLogPart_logDeriv`, `A/D = ∑_{α|D=0} (A(α)/D'(α))·logDeriv(X−α)`); and the
+  algorithm's *residue-grouped* log-sum output is now done — `intRationalLogPart_grouped`
+  (`A/D = ∑_a a·logDeriv(Gₐ)`, `Gₐ = ∏_{res(α)=a}(X−α)`, grouping equal-residue roots).
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
   the Lazard–Rioboo–Trager algorithm [functional].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
@@ -149,6 +149,13 @@ noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtL
 `1/(X−α)` being `logDeriv(X−α)`. The library's `ratFunc_eq_sum_residue_logDeriv`. -/
 abbrev intRationalLogPart_logDeriv :=
   @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_logDeriv
+
+/-- **Rothstein–Trager residue-grouped log sum** (§2.4): grouping the per-root sum by residue value,
+`A/D = ∑_{a} a·logDeriv(Gₐ)` over the distinct residues `a = A(α)/D'(α)`, where `Gₐ = ∏_{α:res(α)=a}(X−α)`
+is the Rothstein–Trager polynomial — so `∫ A/D = ∑_a a·log(Gₐ)`, the final algorithm output. The library's
+`ratFunc_eq_sum_residue_grouped`. -/
+abbrev intRationalLogPart_grouped :=
+  @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_grouped
 
 /-- **Horowitz–Ostrogradsky algorithm** (§2.3, p.46), denominator split: the functional def
 `hoSplit D = (gcd(D, D'), D/gcd(D, D')) = (D⁻, D*)`, with `hoSplit_mul` (`D⁻·D* = D`) and

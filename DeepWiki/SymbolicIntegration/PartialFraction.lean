@@ -101,4 +101,34 @@ theorem ratFunc_eq_sum_residue_logDeriv {K : Type*} [Field K] (s : Finset K) (A 
       derivative_sub, derivative_X, derivative_C, sub_zero, map_one]
   rw [Differential.logDeriv, ht, div_eq_mul_one_div]
 
+open Classical in
+open scoped Differential in
+/-- **Rothstein–Trager residue-grouped log sum** (§2.4): grouping the simple-root sum
+`ratFunc_eq_sum_residue_logDeriv` by residue value, `A/D = ∑_{a} a · logDeriv(∏_{α : res(α)=a}(X−α))`
+over the distinct residues `a = A(α)/D'(α)` — the factors with a common residue `a` collected into the
+Rothstein–Trager polynomial `Gₐ = ∏_{res(α)=a}(X−α)`, so `∫ A/D = ∑_a a·log(Gₐ)`. -/
+theorem ratFunc_eq_sum_residue_grouped {K : Type*} [Field K] (s : Finset K) (A : K[X])
+    (hA : A.degree < s.card) :
+    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+      = ∑ a ∈ s.image (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id))),
+          algebraMap K[X] (RatFunc K) (C a)
+            * Differential.logDeriv (algebraMap K[X] (RatFunc K)
+                (∏ α ∈ s.filter (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id)) = a),
+                  (X - C α))) := by
+  set res : K → K := fun α => A.eval α / eval α (derivative (Lagrange.nodal s id)) with hres
+  rw [ratFunc_eq_sum_residue_logDeriv s A hA,
+    ← Finset.sum_fiberwise_of_maps_to (g := res) (t := s.image res)
+      (fun α hα => Finset.mem_image_of_mem _ hα)
+      (f := fun α => algebraMap K[X] (RatFunc K) (C (res α))
+        * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)))]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  have hne : ∀ α ∈ s.filter (fun α => res α = a),
+      algebraMap K[X] (RatFunc K) (X - C α) ≠ 0 :=
+    fun α _ => (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
+  have hlog := logDeriv_prod_zpow (s.filter (fun α => res α = a))
+    (fun α => algebraMap K[X] (RatFunc K) (X - C α)) (fun _ => 1) hne
+  simp only [zpow_one, Int.cast_one, one_mul] at hlog
+  rw [map_prod, hlog, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun α hα => by rw [(Finset.mem_filter.mp hα).2]
+
 end DeepWiki.SymbolicIntegration
