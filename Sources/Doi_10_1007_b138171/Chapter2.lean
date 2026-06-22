@@ -135,6 +135,14 @@ functional def `rtLogGcd A D a = gcd(D, A − a·D')`, with correctness `rtLogGc
 (= Thm 2.4.1(ii)). The full algorithm sums `a·log(Gₐ)` over the roots `a` of `R`. -/
 noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtLogGcd
 
+/-- **Rothstein–Trager resultant as a product over roots** (§2.4; Thm 1.4.1 = `thm_1_4_1_prod`,
+specialized at `t = a`): over `K̄`, for `deg A < deg D`,
+`R(a) = lc(D)^{deg D−1}·∏_{α:D(α)=0}(A(α)−a·D'(α))`. The library's `rtResultant_eval_eq_prod_roots`. The
+root `a` has multiplicity `#{α : residue(α)=a} = deg gcd(D, A−aD')` — the residue-multiplicity count
+behind Thm 2.5.1. -/
+abbrev intRationalLogPart_resultant_prod :=
+  @DeepWiki.SymbolicIntegration.rtResultant_eval_eq_prod_roots
+
 /-- **Logarithmic part as a `logDeriv` sum** (§2.4, the integral exhibited as logarithms): for squarefree
 `D = ∏_{α∈s}(X−α)` and `deg A < #s`, `A/D = ∑_{α∈s} (A(α)/D'(α))·logDeriv(X−α)` in `K(x)`, so
 `∫ A/D = ∑ (A(α)/D'(α))·log(X−α)` — the explicit (simple-root) Rothstein–Trager logarithmic part, each

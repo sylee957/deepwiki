@@ -16,8 +16,9 @@ We catalog the §4.1 basic properties (Lemma 4.1.1) onto Mathlib's `emultiplicit
   Thm 4.4.1; Thm 4.4.2; Thm 4.4.3; Thm 4.4.4; Cor 4.4.1; Cor 4.4.2; Lemma 4.4.2; Lemma 4.4.3
   [infra: rests on the §4.2 valuation/monomial-extension machinery]. The RATIONAL-function residue at a
   simple root (`A(α)/D'(α)`, the case Bronstein Thm 2.4.1 uses) IS built: `residue_eq_eval_div_eval_derivative`,
-  `eval_derivative_X_sub_C_mul`, `residue_of_partialFraction`. Fully unblocking Thm 2.4.1 additionally needs
-  the resultant-roots formula `resultant_x(D, A−tD') = lc·∏(A(αᵢ)−t·D'(αᵢ))` (not in Mathlib) [infra].
+  `eval_derivative_X_sub_C_mul`, `residue_of_partialFraction`. The resultant-roots formula
+  `resultant_x(D, A−aD') = lc(D)^{deg D−1}·∏(A(αᵢ)−a·D'(αᵢ))` (Thm 1.4.1 = `thm_1_4_1_prod`, now in Mathlib
+  as `resultant_eq_prod_eval`) is built for the Rothstein–Trager resultant as `rtResultant_eval_eq_prod_roots`.
 Exercises: Ex 4.1; Ex 4.2; Ex 4.3; Ex 4.4. -/
 
 namespace DeepWiki.Si
