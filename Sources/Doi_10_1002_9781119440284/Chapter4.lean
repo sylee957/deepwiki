@@ -282,6 +282,22 @@ theorem thm_4_2_readback_below (f0 fs r b : ℝ≥0) (fsegs : List (ℝ≥0 × �
       = (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_tbEReal_convexSegEval_below f0 fs r b fsegs hfsort hfs hrf ht
 
+/-- **Theorem 4.2** (§4.2.2, p.68), the readback step *above* the breakpoint. For a convex PWL
+`f = convexSegEval f0 fs fsegs` (`r ≤ fs`), at or beyond `u* = segLenSum (truncSegs r fsegs)` the
+token bucket convolution is the meet of the line continuation `f(u*) + b + r·(t − u*)` and `f` — in
+general neither term dominates (the line starts above by `b`, then `f` overtakes it; *which* term
+wins on which sub-interval is the global simplification still open). The library's
+`DeepWiki.minConv_tbEReal_convexSegEval_above`. -/
+theorem thm_4_2_readback_above (f0 fs r b : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs)
+    {t : ℝ≥0} (ht : segLenSum (truncSegs r fsegs) ≤ t) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((convexSegEval f0 fs fsegs (segLenSum (truncSegs r fsegs)) + b
+            + r * (t - segLenSum (truncSegs r fsegs)) : ℝ≥0) : ℝ) : EReal)
+          ⊓ (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.minConv_tbEReal_convexSegEval_above f0 fs r b fsegs hfsort hfs hrf ht
+
 /-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
 convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:
 `g`'s segments steeper than `sf` are absorbed into the flatter asymptote. With `truncSegs sf gsegs`
