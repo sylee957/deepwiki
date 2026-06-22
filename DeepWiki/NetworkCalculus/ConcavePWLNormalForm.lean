@@ -90,6 +90,50 @@ theorem isConcaveEReal_concaveNFEval (l : List (ℝ≥0 × ℝ≥0)) :
       rw [concaveNFEval_cons]
       exact IsConcaveEReal.inf _ _ (isConcaveEReal_tbEReal rb.1 rb.2) ih
 
+/-- The constant-rate curve `t ↦ r·t` is nondecreasing. -/
+theorem monotone_rateEReal (r : ℝ≥0) : Monotone (rateEReal r) := by
+  intro a b hab
+  simp only [rateEReal]
+  rw [EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+  gcongr
+
+/-- The convolution unit `convUnitEReal` (`0` at the origin, `⊤` elsewhere) is nondecreasing. -/
+theorem monotone_convUnitEReal : Monotone convUnitEReal := by
+  intro a b hab
+  unfold convUnitEReal
+  by_cases ha : a = 0
+  · by_cases hb : b = 0 <;> simp [ha, hb]
+  · have hb : b ≠ 0 := by rintro rfl; exact ha (le_antisymm hab zero_le)
+    simp [ha, hb]
+
+/-- Each token-bucket curve `γ_{r,b}` is nondecreasing. -/
+theorem monotone_tbEReal (r b : ℝ≥0) : Monotone (tbEReal r b) := by
+  unfold tbEReal
+  exact ((monotone_rateEReal r).add_const _).inf monotone_convUnitEReal
+
+/-- A concave piecewise-linear function is nondecreasing — an infimum of nondecreasing
+token-buckets. -/
+theorem monotone_concaveNFEval (l : List (ℝ≥0 × ℝ≥0)) : Monotone (concaveNFEval l) := by
+  induction l with
+  | nil => exact monotone_const
+  | cons rb l ih => rw [concaveNFEval_cons]; exact (monotone_tbEReal rb.1 rb.2).inf ih
+
+/-- Each token-bucket curve is non-negative. -/
+theorem tbEReal_nonneg (r b : ℝ≥0) (t : ℝ≥0) : 0 ≤ tbEReal r b t := by
+  rcases eq_or_ne t 0 with rfl | ht
+  · rw [tbEReal_zero]
+  · rw [tbEReal_pos ht]
+    exact add_nonneg (by simp only [rateEReal]; exact_mod_cast (r * t).coe_nonneg)
+      (by exact_mod_cast b.coe_nonneg)
+
+/-- A concave piecewise-linear function is non-negative. -/
+theorem concaveNFEval_nonneg (l : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0) : 0 ≤ concaveNFEval l t := by
+  induction l with
+  | nil => exact le_top
+  | cons rb l ih =>
+      rw [concaveNFEval_cons, Pi.inf_apply]
+      exact le_inf (tbEReal_nonneg rb.1 rb.2 t) ih
+
 /-- **Definition 4.1** (Concave piecewise-linear normal form). A list `[(r₁,b₁), …, (rₙ,bₙ)]`
 of token-bucket parameters is in *concave normal form* when
 
