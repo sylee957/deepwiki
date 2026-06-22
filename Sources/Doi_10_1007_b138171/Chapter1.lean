@@ -673,8 +673,7 @@ theorem ex_1_5_2 :
 
 /-- **Exercise 1.11** (§1, p.33): similarity (Definition 1.5.2) is an equivalence relation on
 `D[x]` when `D` is an integral domain (`isSimilar_equivalence`). -/
-theorem ex_1_11 {R : Type*} [CommRing R] [IsDomain R] : Equivalence (IsSimilar (R := R)) :=
-  isSimilar_equivalence
+abbrev ex_1_11 := @isSimilar_equivalence
 
 /-! ## §1.6 Primitive Polynomials -/
 
