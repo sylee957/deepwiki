@@ -6,6 +6,7 @@ import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexSegmentMerge
 import DeepWiki.NetworkCalculus.ConvexSegmentMergeTrunc
 import DeepWiki.NetworkCalculus.ConcaveSegmentMerge
+import DeepWiki.NetworkCalculus.ConvexConvByLine
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -19,7 +20,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, the sup attained at `s=0`) is done; the two-segment piecewise case (optimal `s` at interior knots) remains; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -272,6 +273,28 @@ theorem thm_4_1_unbalanced (sf sg f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 
       = (((convexSegEval (f0 + g0) sf (mergeBySlope fsegs (truncSegs sf gsegs)) t : ℝ≥0)
             : ℝ) : EReal) :=
   DeepWiki.minConv_convexSegEval_unbalanced sf sg f0 g0 fsegs gsegs hsfg hfsort hgsort hfs hgs t
+
+/-- **Lemma 4.1** (§4.2.2, p.68), the per-line engine: the `(min,plus)` convolution of a convex PWL
+`f = convexSegEval f0 fs fsegs` by a single line `ℓ(u) = c + q·u` (with `q ≤ fs`). Let `u* =
+segLenSum (truncSegs q fsegs)` be the breakpoint where `f`'s slope first reaches `q`. Then below the
+breakpoint the convex part wins (`f + c`), and above it the line's slope takes over
+(`f(u*) + c + q·(t−u*)`). This is the engine of Lemma 4.1 (the concave operand's `j`-th piece `gⱼ`
+is such a line); the library's `DeepWiki.minConv_line_convexSegEval_below` /
+`DeepWiki.minConv_line_convexSegEval_above` (and `minConv_convexSegEval_steepLine` for `fs ≤ q`). -/
+theorem lemma_4_1_line (f0 fs c q : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hqf : q ≤ fs) (t : ℝ≥0) :
+    (t ≤ segLenSum (truncSegs q fsegs) →
+        minConv (fun u => (((convexSegEval c q [] u : ℝ≥0) : ℝ) : EReal))
+                (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) t
+          = (((convexSegEval f0 fs fsegs t + c : ℝ≥0) : ℝ) : EReal)) ∧
+    (segLenSum (truncSegs q fsegs) ≤ t →
+        minConv (fun u => (((convexSegEval c q [] u : ℝ≥0) : ℝ) : EReal))
+                (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) t
+          = (((convexSegEval f0 fs fsegs (segLenSum (truncSegs q fsegs)) + c
+                + q * (t - segLenSum (truncSegs q fsegs)) : ℝ≥0) : ℝ) : EReal)) :=
+  ⟨fun ht => minConv_line_convexSegEval_below f0 fs c q fsegs hfsort hfs hqf ht,
+   fun ht => minConv_line_convexSegEval_above f0 fs c q fsegs hfsort hfs hqf ht⟩
 
 /-- **Lemma 4.6** (§4.3, p.77), the affine base case. The `(min,plus)` deconvolution of two affine
 curves `u ↦ a + p·u` and `u ↦ b + q·u` is, in closed form, `a + p·t − b` when `p ≤ q` (the sup
