@@ -15,12 +15,6 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: DONE. The Bernoulli algorithm is fully formalized: the root-indexed partial-fraction sum
-  `eq_2_3_residue` (`A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`) and its `K(x)` form `eq_2_3_ratFunc`
-  (`A/D = ∑_{α|D=0} (A(α)/D'(α))/(X−α)`, via Lagrange interpolation, shared with §2.4), and the integral
-  `bernoulli_integral` (`∫ A/D = ∑_{α|D=0} (A(α)/D'(α))·log(X−α)`, i.e. `(∑ residue·log)′ = A/D`). The
-  *arctan term* `∫ (Bx+C)/(x²+bx+c)ᵏ`: `eq_2_1_arctan` (k=1) and `eq_2_1_arctan_reduce` (k>1, with core
-  `eq_2_1_arctan_reduce_core`).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
