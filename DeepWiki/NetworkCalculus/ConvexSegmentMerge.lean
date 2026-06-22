@@ -247,4 +247,59 @@ theorem minConv_flatLine_convexSegEval (a p g0 sg : ℝ≥0) (l : List (ℝ≥0 
     calc a + g0 + p * t = (a + p * u) + (g0 + p * v) := by rw [← huv]; ring
       _ ≤ (a + p * u) + convexSegEval g0 sg l v := by gcongr
 
+/-- **Theorem 4.1 — the convolution slope-peel** (the single inductive step). If `F`'s leading
+segment has slope `sa` and `G` grows at least at rate `sa` everywhere (`hGrate`), then for times
+`t ≥ ℓa` the `(min,plus)` convolution past the leading length equals the convolution of `F`'s
+*tail* `F' = convexSegEval (f0+sa·ℓa) sf as` with `G`: `(F ∗ G) t = (F' ∗ G) (t − ℓa)`. The
+flattest segment is consumed first, peeling one block off the merge. -/
+theorem minConv_peel_leadSeg (f0 sf sa ℓa : ℝ≥0) (as : List (ℝ≥0 × ℝ≥0))
+    (G : ℝ≥0 → ℝ≥0)
+    (hGrate : ∀ x d : ℝ≥0, G x + sa * d ≤ G (x + d)) {t : ℝ≥0} (ht : ℓa ≤ t) :
+    minConv (fun u => (((convexSegEval f0 sf ((sa, ℓa) :: as) u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((G v : ℝ≥0) : ℝ) : EReal)) t
+      = minConv (fun u => (((convexSegEval (f0 + sa * ℓa) sf as u : ℝ≥0) : ℝ) : EReal))
+                (fun v => (((G v : ℝ≥0) : ℝ) : EReal)) (t - ℓa) := by
+  apply le_antisymm
+  · -- (≤) each tail-split `u'+v = t-ℓa` lifts to an `F`-split `(ℓa+u')+v = t` via the peel
+    refine le_minConv (fun u' v huv => ?_)
+    have hsplit : (ℓa + u') + v = t := by
+      rw [add_assoc, huv, add_tsub_cancel_of_le ht]
+    refine le_trans (minConv_le_add _ _ hsplit) (le_of_eq ?_)
+    rw [convexSegEval_cons_peel]
+  · -- (≥) each `F`-split `u+v=t`: if `u ≥ ℓa` peel; else slide `sa·(ℓa−u)` of g-mass to f
+    refine le_minConv (fun u v huv => ?_)
+    by_cases hu : ℓa ≤ u
+    · -- `u` past the leading segment: peel directly
+      have hsplit : u - ℓa + v = t - ℓa := by
+        rw [tsub_add_eq_add_tsub hu, huv]
+      refine le_trans (minConv_le_add _ _ hsplit) (le_of_eq ?_)
+      rw [← convexSegEval_cons_peel f0 sf sa ℓa (u - ℓa) as, add_tsub_cancel_of_le hu]
+    · -- `u` on the leading segment: use the split `(0, v-(ℓa-u))` of `t-ℓa`
+      have huℓa : u ≤ ℓa := (not_le.mp hu).le
+      set d := ℓa - u with hd
+      have hvt : v = t - u := (eq_tsub_of_add_eq (by rw [add_comm]; exact huv))
+      have hvd : d ≤ v := by
+        rw [hd, hvt]; exact tsub_le_tsub_right ht u
+      have hsplit : (0 : ℝ≥0) + (v - d) = t - ℓa := by
+        rw [zero_add, hd, hvt, tsub_tsub_tsub_cancel_right huℓa]
+      refine le_trans (minConv_le_add _ _ hsplit) ?_
+      -- now: `↑(F' 0) + ↑(G (v-d)) ≤ ↑(F u) + ↑(G v)` in EReal, via `hGrate` + `F u = f0+sa·u`
+      have coeadd : ∀ x y : ℝ≥0,
+          (((x : ℝ) : EReal)) + (((y : ℝ) : EReal)) = (((x + y : ℝ≥0) : ℝ) : EReal) := by
+        intro x y; rw [← EReal.coe_add, ← NNReal.coe_add]
+      rw [coeadd, coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+      have hF'0 : convexSegEval (f0 + sa * ℓa) sf as 0 = f0 + sa * ℓa := convexSegEval_zero _ _ _
+      have hFu : convexSegEval f0 sf ((sa, ℓa) :: as) u = f0 + sa * u := by
+        rw [convexSegEval_cons, if_pos huℓa]
+      rw [hF'0, hFu]
+      have hGstep : G (v - d) + sa * d ≤ G v := by
+        have := hGrate (v - d) d
+        rwa [tsub_add_cancel_of_le hvd] at this
+      have hℓa : sa * ℓa = sa * u + sa * d := by
+        rw [hd, ← mul_add, add_tsub_cancel_of_le huℓa]
+      calc f0 + sa * ℓa + G (v - d)
+          = (f0 + sa * u) + (sa * d + G (v - d)) := by rw [hℓa]; ring
+        _ = (f0 + sa * u) + (G (v - d) + sa * d) := by rw [add_comm (sa * d)]
+        _ ≤ (f0 + sa * u) + G v := by gcongr
+
 end DeepWiki
