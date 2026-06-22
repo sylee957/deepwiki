@@ -1,4 +1,5 @@
 import Mathlib.FieldTheory.RatFunc.Basic
+import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
 
@@ -100,5 +101,29 @@ noncomputable def ratFuncDerivHom : RatFunc K →+ RatFunc K where
   toFun := ratFuncDeriv
   map_zero' := ratFuncDeriv_zero
   map_add' := ratFuncDeriv_add
+
+/-- `d/dx` kills constants `C c` (`c : K`): `(C c)' = 0`. -/
+theorem ratFuncDeriv_C_eq_zero (c : K) : ratFuncDeriv (RatFunc.C c) = 0 := by
+  rw [← RatFunc.algebraMap_C, ratFuncDeriv_algebraMap, derivative_C, map_zero]
+
+/-- **`K`-linearity of `d/dx`** on `K(x)`: `(c • x)' = c • x'` for a constant `c : K`. -/
+theorem ratFuncDeriv_smul (c : K) (x : RatFunc K) :
+    ratFuncDeriv (c • x) = c • ratFuncDeriv x := by
+  rw [RatFunc.smul_eq_C_mul, ratFuncDeriv_mul, ratFuncDeriv_C_eq_zero, zero_mul, zero_add,
+    ← RatFunc.smul_eq_C_mul]
+
+/-- `d/dx` as a `K`-derivation on `K(x)` (the `Algebra K (RatFunc K)` is unambiguous, so no diamond). -/
+noncomputable def ratFuncKDeriv : Derivation K (RatFunc K) (RatFunc K) :=
+  Derivation.mk'
+    { toFun := ratFuncDeriv, map_add' := ratFuncDeriv_add,
+      map_smul' := fun c x => by simpa using ratFuncDeriv_smul c x }
+    fun a b => by simp only [LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul]; rw [ratFuncDeriv_mul]; ring
+
+/-- **`K(x)` is a differential field** with derivation `d/dx`: restricting the `K`-derivation
+`ratFuncKDeriv` to `ℤ` makes `RatFunc K` a `Differential` ring (the repo pattern for `K[X]`), so the
+abstract differential-field calculus (e.g. `hermite_reduction_step`) applies to rational functions. -/
+noncomputable instance : Differential (RatFunc K) :=
+  letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
+  ⟨ratFuncKDeriv.restrictScalars ℤ⟩
 
 end DeepWiki.SymbolicIntegration
