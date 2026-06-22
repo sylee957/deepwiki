@@ -52,6 +52,16 @@ noncomputable def mergeBySlope : List (ℝ≥0 × ℝ≥0) → List (ℝ≥0 × 
 @[simp] theorem mergeBySlope_nil_right (l : List (ℝ≥0 × ℝ≥0)) : mergeBySlope l [] = l := by
   cases l <;> simp [mergeBySlope]
 
+/-- Merge step when the leading slopes compare `a.1 ≤ b.1`: the `a`-segment comes first. -/
+theorem mergeBySlope_cons_le {a b : ℝ≥0 × ℝ≥0} {as bs : List (ℝ≥0 × ℝ≥0)} (h : a.1 ≤ b.1) :
+    mergeBySlope (a :: as) (b :: bs) = a :: mergeBySlope as (b :: bs) := by
+  rw [mergeBySlope, if_pos h]
+
+/-- Merge step when `b.1 < a.1`: the `b`-segment comes first. -/
+theorem mergeBySlope_cons_gt {a b : ℝ≥0 × ℝ≥0} {as bs : List (ℝ≥0 × ℝ≥0)} (h : ¬ a.1 ≤ b.1) :
+    mergeBySlope (a :: as) (b :: bs) = b :: mergeBySlope (a :: as) bs := by
+  rw [mergeBySlope, if_neg h]
+
 /-- **Theorem 4.1, base case** (the single semi-infinite segment, i.e. affine curves). The
 `(min,plus)` convolution of two affine curves `u ↦ a + p·u` and `u ↦ b + q·u` is the affine curve
 `a + b + min(p,q)·t` — the slower slope wins, with the bursts added. (This is the merge of two
