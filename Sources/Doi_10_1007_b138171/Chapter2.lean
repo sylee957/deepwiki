@@ -16,8 +16,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
-  the Lazard–Rioboo–Trager algorithm [functional].
+§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2]; the
+  Lazard–Rioboo–Trager algorithm's *full assembly* (squarefree-factor `R`, select `Sⱼ` of `x`-degree `i`,
+  normalize, sum) [functional]. DONE: the subresultant primitive `lazardRiobooTrager_subresultant`
+  (= `lrtSubresultant`, the `j`-th subresultant `Sⱼ(D, A−tD')` over `K[t]`) with specialization
+  `lazardRiobooTrager_subresultant_eval` (`t ↦ a` recovers `Sⱼ(D, A−aD')`).
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -246,6 +249,17 @@ denominator is `(t²−t+2)²`, so the rational part is `(7t⁴+7t³+20t+18)/(14
 abbrev ex_2_1 := @DeepWiki.SymbolicIntegration.hermiteReduce_quartic_example
 
 /-! ## §2.5 The Lazard–Rioboo–Trager Algorithm -/
+
+/-- **LRT subresultant primitive** (§2.5, p.51): the functional def `lrtSubresultant A D j` = the `j`-th
+subresultant `Sⱼ(D, A − t·D')` w.r.t. `x` over `K[t]` — the one PRS whose remainders replace the
+Rothstein–Trager per-residue gcds. The library's `lrtSubresultant`. -/
+noncomputable abbrev lazardRiobooTrager_subresultant := @DeepWiki.SymbolicIntegration.lrtSubresultant
+
+/-- **Specialization of the LRT subresultant** (§2.5): mapping `t ↦ a` recovers `Sⱼ(D, A − a·D')` over `K`
+(`lrtSubresultant_eval`, the subresultant analog of `rtResultant_eval`). By Theorem 2.5.1 this is `gcd(D,
+A−aD')` up to leading coefficient. -/
+abbrev lazardRiobooTrager_subresultant_eval :=
+  @DeepWiki.SymbolicIntegration.lrtSubresultant_eval
 
 open Polynomial in
 /-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the

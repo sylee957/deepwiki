@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
+import DeepWiki.SymbolicIntegration.Subresultants
 import Mathlib.RingTheory.EuclideanDomain
 import Mathlib.RingTheory.Radical.Basic
 import Mathlib.Algebra.Polynomial.Degree.Units
@@ -97,6 +98,37 @@ theorem rtResultant_eval_eq_zero_iff [IsAlgClosed K] (A D : K[X]) (hD : D.Separa
     (hdeg : (A - C a * derivative D).natDegree = D.natDegree - 1) :
     (rtResultant A D).eval a = 0 ↔ ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
   rw [rtResultant_eval, ← hdeg, ← residue_iff_resultant_eq_zero A D hD a]
+
+/-! ## §2.5 The Lazard–Rioboo–Trager algorithm (subresultant primitive)
+LRT replaces the per-residue gcd computations of Rothstein–Trager with the *subresultant PRS* of `D` and
+`A − t·D'` (in `x`), computed once over `K[t]`. The `j`-th subresultant `Sⱼ(D, A−tD')`, specialized at a
+root `a` of `R`, yields `Gₐ = gcd(D, A−aD')` (Theorem 2.5.1, which rests on the §1.4/§1.5 subresultant-PRS
+theory). Here is the functional primitive `Sⱼ` and its specialization, the subresultant analog of
+`rtResultant`/`rtResultant_eval`. -/
+
+/-- **Lazard–Rioboo–Trager subresultant** `Sⱼ(D, A − t·D') ∈ K[t][x]`: `D, A, D'` lifted to `(K[t])[x]`
+(coefficients embedded by `C : K → K[t]`), `t = C X`, and the `j`-th subresultant taken w.r.t. `x` with the
+book's formal degrees `deg D` and `deg D − 1`. The remainders of this one PRS replace the Rothstein–Trager
+gcds. -/
+noncomputable def lrtSubresultant (A D : K[X]) (j : ℕ) : (K[X])[X] :=
+  subresultant (D.map (C : K →+* K[X]))
+    (A.map (C : K →+* K[X]) - C Polynomial.X * (derivative D).map (C : K →+* K[X]))
+    D.natDegree (D.natDegree - 1) j
+
+/-- **Specialization of `lrtSubresultant`**: mapping the `K[t]`-coefficients by `t ↦ a` recovers the
+parameter subresultant `Sⱼ(D, A − a·D')` over `K` — `subresultant_map` for the coefficient evaluation
+`K[t] → K`, since `(C·)` then `eval a` is the identity on `K`. By Theorem 2.5.1 this equals `gcd(D, A−aD')`
+up to its leading coefficient. -/
+theorem lrtSubresultant_eval (A D : K[X]) (a : K) (j : ℕ) :
+    (lrtSubresultant A D j).map (Polynomial.evalRingHom a)
+      = subresultant D (A - C a * derivative D) D.natDegree (D.natDegree - 1) j := by
+  have hcomp : (Polynomial.evalRingHom a).comp (C : K →+* K[X]) = RingHom.id K := by ext k; simp
+  rw [lrtSubresultant, ← subresultant_map]
+  congr 1
+  · rw [Polynomial.map_map, hcomp, Polynomial.map_id]
+  · simp only [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_map, Polynomial.map_C, hcomp,
+      Polynomial.map_id]
+    simp
 
 open scoped Differential in
 /-- **Hermite reduction step in `K(x)`** (§2.2): the integral-lowering identity for a rational
