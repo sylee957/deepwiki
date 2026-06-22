@@ -212,6 +212,37 @@ theorem isSimilar_of_dvd_of_natDegree_eq {K : Type*} [Field K] {g p : K[X]}
   have hc : c ≠ 0 := by rintro rfl; simp at hq
   exact ⟨c, 1, hc, one_ne_zero, by rw [map_one, one_mul, mul_comm]⟩
 
+/-- **One-step termination ⇒ divisibility**: over a field, if the Euclidean p.r.s. of `D, E` vanishes
+at index `2` (`R₂ = prem(D, E) = 0`) with `E ≠ 0`, then `E ∣ D`. From `IsPseudoRemainder D E 0`,
+`C (lc E)^k · D = E·Q` with `C (lc E)^k` a unit (field, `lc E ≠ 0`). -/
+theorem dvd_of_euclideanPRS_two_eq_zero {K : Type*} [Field K] (D E : K[X]) (hE : E ≠ 0)
+    (h0 : euclideanPRS D E 2 = 0) : E ∣ D := by
+  obtain ⟨k, Q, hEq, _⟩ :=
+    isPseudoRemainder_euclideanPRS D E 0 (by simpa using hE)
+  rw [euclideanPRS_zero, euclideanPRS_one, h0, add_zero] at hEq
+  have hu : IsUnit (C E.leadingCoeff ^ k) :=
+    (isUnit_C.mpr (Ne.isUnit (leadingCoeff_ne_zero.mpr hE))).pow k
+  have hEd : E ∣ C E.leadingCoeff ^ k * D := hEq ▸ Dvd.intro Q rfl
+  exact (hu.dvd_mul_left).mp hEd
+
+/-- **One-step termination ⇒ `gcd(D, E) ~ E`**: over a field, if `R₂ = prem(D, E) = 0` (so `E ∣ D`)
+with `E ≠ 0`, then `gcd(D, E)` is *similar* to `E` (they divide each other, hence are associated).
+This is the `k = 1` boundary of Theorem 2.5.1(ii): the p.r.s. terminates in one step, `R₁ = E` is the
+last nonzero element, and `R₁ ~ gcd(D, E)`. -/
+theorem isSimilar_gcd_right_of_euclideanPRS_two_eq_zero {K : Type*} [Field K] [GCDMonoid K[X]]
+    (D E : K[X]) (hE : E ≠ 0) (h0 : euclideanPRS D E 2 = 0) : IsSimilar (gcd D E) E := by
+  have hED : E ∣ D := dvd_of_euclideanPRS_two_eq_zero D E hE h0
+  exact IsSimilar.of_associated
+    (associated_of_dvd_dvd (gcd_dvd_right D E) (dvd_gcd hED dvd_rfl))
+
+-- One-step termination: `R₂ = 0` ⟹ `E ∣ D` and `gcd(D, E) ~ E` (the LRT `k = 1` boundary).
+example {K : Type*} [Field K] (D E : K[X]) (hE : E ≠ 0) (h0 : euclideanPRS D E 2 = 0) : E ∣ D :=
+  dvd_of_euclideanPRS_two_eq_zero D E hE h0
+
+example {K : Type*} [Field K] [GCDMonoid K[X]] (D E : K[X]) (hE : E ≠ 0)
+    (h0 : euclideanPRS D E 2 = 0) : IsSimilar (gcd D E) E :=
+  isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0
+
 /-- **Theorem 2.5.1, part (i)** (the `n = deg C` case): when `gcd(C, E)` has the full degree `deg C`, it is
 similar to `C` (the book's "`gcd(C, A−αB) = C`"), since `gcd(C, E) ∣ C`. -/
 theorem isSimilar_gcd_left_of_natDegree_eq {K : Type*} [Field K] [GCDMonoid K[X]] {C E : K[X]}
