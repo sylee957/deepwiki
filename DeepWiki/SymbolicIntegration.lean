@@ -15,3 +15,4 @@ import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
+import DeepWiki.SymbolicIntegration.ResidueMultiplicity
