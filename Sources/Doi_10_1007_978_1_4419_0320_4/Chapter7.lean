@@ -33,10 +33,11 @@ theorem eq_7_1_1 [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ} (hX : IsWeak
   tendsto_nsmul_variance_sampleMean hX hsum
 
 /-- **Theorem 7.1.2 (asymptotic normality of the sample mean, finite `MA(q)` case)**: for
-`Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` over centered iid `L²` noise `Z`, the standardized sample mean
-`√n X̄ₙ ⇒ (∑θ) Y₀ = N(0, (∑θ)² σ²)`. The library's `maq_sampleMean_clt` (the iid sample-mean CLT
-scaled by `∑θ`, with the moving-average perturbation removed by an `L²`-negligibility bridge). -/
-alias thm_7_1_2_maq := DeepWiki.TimeSeries.maq_sampleMean_clt
+`Yₜ = μ + ∑_{j=0}^q θⱼ Z_{t−j}` over centered iid `L²` noise `Z`, `√n(Ȳₙ − μ) ⇒ (∑θ) Y₀ =
+N(0, (∑θ)² σ²)` — B&D's exact statement for a finite moving average. The library's
+`maq_sampleMean_clt_mean` (the iid sample-mean CLT scaled by `∑θ`, with the moving-average
+perturbation removed by an `L²`-negligibility bridge; `maq_sampleMean_clt` is the `μ = 0` form). -/
+alias thm_7_1_2_maq := DeepWiki.TimeSeries.maq_sampleMean_clt_mean
 
 /-! ## §7.2 Estimation of γ(·) and ρ(·) (p.220) -/
 
