@@ -44,4 +44,101 @@ logarithm. -/
 theorem logDeriv_eq_inv {t : F} (ht : t′ = 1) : Differential.logDeriv t = t⁻¹ := by
   rw [Differential.logDeriv, ht, one_div]
 
+/-- **Integral of a linear form over an irreducible quadratic** (§2.1): with `s = √(4c−b²)`, modeling
+`log(t²+bt+c)` by `L` (`L′ = (2t+b)/(t²+bt+c)`) and `arctan((2t+b)/s)` by `Θ` (the arctan law
+`Θ′ = (2/s)/(1+((2t+b)/s)²)`), the derivative of `(B/2)·L + ((2C−bB)/s)·Θ` is `(Bt+C)/(t²+bt+c)`. -/
+theorem deriv_logArctan_eq_quadratic [CharZero F] {t : F} (_ht : t′ = 1)
+    {B C b c s L Θ : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (_hc : c′ = 0) (hs : s′ = 0)
+    (hs2 : s ^ 2 = 4 * c - b ^ 2) (hsne : s ≠ 0) (_hq : t ^ 2 + b * t + c ≠ 0)
+    (hL : L′ = (2 * t + b) / (t ^ 2 + b * t + c))
+    (hΘ : Θ′ = (2 / s) / (1 + ((2 * t + b) / s) ^ 2)) :
+    ((B / 2) * L + ((2 * C - b * B) / s) * Θ)′ = (B * t + C) / (t ^ 2 + b * t + c) := by
+  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have hβ : (B / 2)′ = 0 := by rw [deriv_div, hB, h2]; ring
+  have hnum : (2 * C - b * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
+  have hγ : ((2 * C - b * B) / s)′ = 0 := by rw [deriv_div, hnum, hs]; ring
+  have hu2 : 1 + ((2 * t + b) / s) ^ 2 = 4 * (t ^ 2 + b * t + c) / s ^ 2 := by
+    rw [div_pow]; field_simp; linear_combination hs2
+  have hΘ' : Θ′ = s / (2 * (t ^ 2 + b * t + c)) := by
+    rw [hΘ, hu2]; field_simp; ring
+  rw [map_add, deriv_const_mul _ hβ, deriv_const_mul _ hγ, hL, hΘ']
+  field_simp
+  ring
+
+/-- **Quadratic-power reduction, core identity** (§2.1): the polynomial numerator balance behind the
+`k>1` reduction of `∫ (Bx+C)/(x²+bx+c)ᵏ` —
+`2(2C−bB)·q − (2x+b)·((2C−bB)x + bC−2cB) = (Bx+C)·(4c−b²)` with `q = x²+bx+c`. -/
+theorem quadraticPow_reduce_core {R : Type*} [CommRing R] (t B C b c : R) :
+    2 * (2 * C - b * B) * (t ^ 2 + b * t + c)
+        - (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B))
+      = (B * t + C) * (4 * c - b ^ 2) := by ring
+
+/-- **Quadratic-power reduction** (§2.1): the recursive reduction lowering the power of an irreducible
+quadratic `q = x²+bx+c` (`4c−b² ≠ 0`), `k = m+2`:
+`∫ (Bx+C)/qᵏ = ((2C−bB)x+bC−2cB)/((k−1)(4c−b²)q^(k−1)) + ∫ (2k−3)(2C−bB)/((k−1)(4c−b²)q^(k−1))`,
+verified as a differential-field identity (collapsing via `quadraticPow_reduce_core`). -/
+theorem deriv_quadraticPow_reduce [CharZero F] {t : F}
+    (ht : t′ = 1) {B C b c : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (hc : c′ = 0)
+    (hR : 4 * c - b ^ 2 ≠ 0) (hq : t ^ 2 + b * t + c ≠ 0) (m : ℕ) :
+    (((2 * C - b * B) * t + (b * C - 2 * c * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
+      + ((2 * (m : F) + 1) * (2 * C - b * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1))
+      = (B * t + C) / (t ^ 2 + b * t + c) ^ (m + 2) := by
+  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h4 : (4 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h1' : (1 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have hmc : ((m : F))′ = 0 := by simp
+  have hq' : (t ^ 2 + b * t + c)′ = 2 * t + b := by
+    rw [map_add, map_add, deriv_pow, deriv_const_mul _ hb, hc, ht]; ring
+  have hcoef1 : (2 * C - b * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
+  have h2c : (2 * c)′ = 0 := by rw [deriv_const_mul _ h2, hc]; ring
+  have hcoef2 : (b * C - 2 * c * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ hb, deriv_const_mul _ h2c, hC, hB]; ring
+  have hP' : ((2 * C - b * B) * t + (b * C - 2 * c * B))′ = 2 * C - b * B := by
+    rw [map_add, deriv_const_mul _ hcoef1, hcoef2, ht]; ring
+  have hKconst : (((m : F) + 1))′ = 0 := by rw [map_add, hmc, h1']; ring
+  have h4cb : (4 * c - b ^ 2)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h4, hc, deriv_pow, hb]; ring
+  have hK : (((m : F) + 1) * (4 * c - b ^ 2))′ = 0 := by
+    rw [deriv_const_mul _ hKconst, h4cb]; ring
+  have hcore := quadraticPow_reduce_core t B C b c
+  have hRatDeriv : (((2 * C - b * B) * t + (b * C - 2 * c * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
+      = ((t ^ 2 + b * t + c) * (2 * C - b * B)
+          - ((m : F) + 1) * (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B)))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 2)) := by
+    rw [deriv_div, hP', deriv_const_mul _ hK, deriv_pow, hq']
+    simp only [Nat.add_sub_cancel]
+    set q := t ^ 2 + b * t + c
+    clear_value q
+    field_simp
+    push_cast
+    ring
+  rw [hRatDeriv]
+  set q := t ^ 2 + b * t + c with hqdef
+  clear_value q
+  set R := 4 * c - b ^ 2 with hRdef
+  clear_value R
+  have hpow : q ^ (m + 2) = q ^ (m + 1) * q := pow_succ q (m + 1)
+  simp only [hpow]
+  have hQne : q ^ (m + 1) ≠ 0 := pow_ne_zero _ hq
+  set Q := q ^ (m + 1) with hQdef
+  clear_value Q
+  field_simp
+  linear_combination ((m : F) + 1) * hcore
+
+/-- **Complex logarithm as real arctangent** (§2.8, Rioboo, eq 2.17): with `i = √−1` (`i² = −1`,
+constant) and `arctan'(u) = u'/(1+u²)`, `i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)` — the logarithmic
+derivative `−2i·u'/(u²+1)` times `i` gives `2·u'/(1+u²)`. -/
+theorem logDeriv_imagQuot_eq_arctanDeriv {i u : F} (hi : i ^ 2 = -1)
+    (hi' : i′ = 0) (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
+    i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) := by
+  have hq : (1 + u ^ 2 : F) = (u + i) * (u - i) := by linear_combination hi
+  rw [Differential.logDeriv, deriv_div, map_add, map_sub, hi', hq]
+  field_simp
+  linear_combination (-2 * u′) * hi
+
 end DeepWiki.SymbolicIntegration

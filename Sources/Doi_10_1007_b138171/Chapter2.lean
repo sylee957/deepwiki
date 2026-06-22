@@ -54,15 +54,12 @@ namespace DeepWiki.Si
 /-- **Equation 2.1** (§2.1, p.37), rational part: `∫ A·(x−a)⁻ᵏ dx = A·(x−a)¹⁻ᵏ/(1−k)` for `k ≠ 1`.
 As a derivative identity in a differential field with `Dt = 1` (`t = x − a`): `D(tⁿ/n) = tⁿ⁻¹`
 for `n ≠ 0`. -/
-theorem eq_2_1_rational {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) {n : ℤ}
-    (hn : (n : F) ≠ 0) : (t ^ n / (n : F))′ = t ^ (n - 1) :=
-  deriv_zpow_div_self ht hn
+abbrev eq_2_1_rational := @DeepWiki.SymbolicIntegration.deriv_zpow_div_self
 
 /-- **Equation 2.1** (§2.1, p.37), logarithmic part: `∫ dx/(x−a) = log(x−a)` — the integrand
-`1/(x−a)` is the logarithmic derivative of `x−a` (`logDeriv t = t⁻¹` when `Dt = 1`). -/
-theorem eq_2_1_log {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) :
-    Differential.logDeriv t = t⁻¹ :=
-  logDeriv_eq_inv ht
+`1/(x−a)` is the logarithmic derivative of `x−a` (`logDeriv t = t⁻¹` when `Dt = 1`). The library's
+`logDeriv_eq_inv`. -/
+abbrev eq_2_1_log := @DeepWiki.SymbolicIntegration.logDeriv_eq_inv
 
 /-- **Example 2.1.3** (§2.1, p.38), Bernoulli's algorithm for `f = 1/(x³+x)` over `ℚ(√−1)`: factoring
 `x³+x = x(x+i)(x−i)` linearly (`i = √−1`, `i² = −1`) gives the partial-fraction decomposition
@@ -83,25 +80,7 @@ theorem ex_2_1_3 {F : Type*} [Field F] [CharZero F] (t i : F) (hi : i ^ 2 = -1) 
 `arctan((2x+b)/s)` by `Θ` with the arctan law `Θ′ = (2x+b)/s)' / (1 + ((2x+b)/s)²)`, this verifies the
 formula as the differential-field identity below: the arctan derivative simplifies via `s² = 4c−b²` to
 `s/(2(x²+bx+c))`, and the two parts combine to `(Bx+C)/(x²+bx+c)`. -/
-theorem eq_2_1_arctan {F : Type*} [Field F] [CharZero F] [Differential F] {t : F} (_ht : t′ = 1)
-    {B C b c s L Θ : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (_hc : c′ = 0) (hs : s′ = 0)
-    (hs2 : s ^ 2 = 4 * c - b ^ 2) (hsne : s ≠ 0) (_hq : t ^ 2 + b * t + c ≠ 0)
-    (hL : L′ = (2 * t + b) / (t ^ 2 + b * t + c))
-    (hΘ : Θ′ = (2 / s) / (1 + ((2 * t + b) / s) ^ 2)) :
-    ((B / 2) * L + ((2 * C - b * B) / s) * Θ)′ = (B * t + C) / (t ^ 2 + b * t + c) := by
-  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
-  have hβ : (B / 2)′ = 0 := by rw [deriv_div, hB, h2]; ring
-  have hnum : (2 * C - b * B)′ = 0 := by
-    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
-  have hγ : ((2 * C - b * B) / s)′ = 0 := by rw [deriv_div, hnum, hs]; ring
-  -- simplify the arctan derivative via s² = 4c − b²
-  have hu2 : 1 + ((2 * t + b) / s) ^ 2 = 4 * (t ^ 2 + b * t + c) / s ^ 2 := by
-    rw [div_pow]; field_simp; linear_combination hs2
-  have hΘ' : Θ′ = s / (2 * (t ^ 2 + b * t + c)) := by
-    rw [hΘ, hu2]; field_simp; ring
-  rw [map_add, deriv_const_mul _ hβ, deriv_const_mul _ hγ, hL, hΘ']
-  field_simp
-  ring
+abbrev eq_2_1_arctan := @DeepWiki.SymbolicIntegration.deriv_logArctan_eq_quadratic
 
 /-- **Equation 2.1, the arctan-term reduction — core identity** (§2.1, p.37): the polynomial identity
 driving the `k>1` recursive reduction of `∫ (Bx+C)/(x²+bx+c)ᵏ = ((2C−bB)x+bC−2cB)/((k−1)(4c−b²)q^(k−1)) +
@@ -109,10 +88,7 @@ driving the `k>1` recursive reduction of `∫ (Bx+C)/(x²+bx+c)ᵏ = ((2C−bB)x
 reduced integrand, the `q`-powers cancel and the whole reduction collapses to this identity
 `2(2C−bB)·q − (2x+b)·((2C−bB)x + bC−2cB) = (Bx+C)·(4c−b²)` — the numerator balance that lowers `k` to
 `k−1` (iterating reaches `k=1` = `eq_2_1_arctan`). -/
-theorem eq_2_1_arctan_reduce_core {F : Type*} [CommRing F] (t B C b c : F) :
-    2 * (2 * C - b * B) * (t ^ 2 + b * t + c)
-        - (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B))
-      = (B * t + C) * (4 * c - b ^ 2) := by ring
+abbrev eq_2_1_arctan_reduce_core := @DeepWiki.SymbolicIntegration.quadraticPow_reduce_core
 
 /-- **Equation 2.1, the arctan term for `k>1`** (§2.1, p.37), the full recursive reduction: with
 `q = x²+bx+c` (`4c−b² ≠ 0`) and `k = m+2`,
@@ -120,58 +96,7 @@ theorem eq_2_1_arctan_reduce_core {F : Type*} [CommRing F] (t B C b c : F) :
 lowering the quadratic power `k → k−1` (iterating reaches `k=1` = `eq_2_1_arctan`). Verified as the
 differential-field identity: the rational part's derivative plus the reduced integrand equals the
 original integrand `(Bx+C)/qᵏ`, collapsing via `eq_2_1_arctan_reduce_core`. -/
-theorem eq_2_1_arctan_reduce {F : Type*} [Field F] [CharZero F] [Differential F] {t : F}
-    (ht : t′ = 1) {B C b c : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (hc : c′ = 0)
-    (hR : 4 * c - b ^ 2 ≠ 0) (hq : t ^ 2 + b * t + c ≠ 0) (m : ℕ) :
-    (((2 * C - b * B) * t + (b * C - 2 * c * B))
-        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
-      + ((2 * (m : F) + 1) * (2 * C - b * B))
-        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1))
-      = (B * t + C) / (t ^ 2 + b * t + c) ^ (m + 2) := by
-  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
-  have h4 : (4 : F)′ = 0 := mem_constants.mp (by norm_num)
-  have h1' : (1 : F)′ = 0 := mem_constants.mp (by norm_num)
-  have hmc : ((m : F))′ = 0 := by simp
-  have hm1 : ((m : F) + 1) ≠ 0 := Nat.cast_add_one_ne_zero m
-  have hq' : (t ^ 2 + b * t + c)′ = 2 * t + b := by
-    rw [map_add, map_add, deriv_pow, deriv_const_mul _ hb, hc, ht]; ring
-  have hcoef1 : (2 * C - b * B)′ = 0 := by
-    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
-  have h2c : (2 * c)′ = 0 := by rw [deriv_const_mul _ h2, hc]; ring
-  have hcoef2 : (b * C - 2 * c * B)′ = 0 := by
-    rw [map_sub, deriv_const_mul _ hb, deriv_const_mul _ h2c, hC, hB]; ring
-  have hP' : ((2 * C - b * B) * t + (b * C - 2 * c * B))′ = 2 * C - b * B := by
-    rw [map_add, deriv_const_mul _ hcoef1, hcoef2, ht]; ring
-  have hKconst : (((m : F) + 1))′ = 0 := by rw [map_add, hmc, h1']; ring
-  have h4cb : (4 * c - b ^ 2)′ = 0 := by
-    rw [map_sub, deriv_const_mul _ h4, hc, deriv_pow, hb]; ring
-  have hK : (((m : F) + 1) * (4 * c - b ^ 2))′ = 0 := by
-    rw [deriv_const_mul _ hKconst, h4cb]; ring
-  have hcore := eq_2_1_arctan_reduce_core t B C b c
-  have hRatDeriv : (((2 * C - b * B) * t + (b * C - 2 * c * B))
-        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
-      = ((t ^ 2 + b * t + c) * (2 * C - b * B)
-          - ((m : F) + 1) * (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B)))
-        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 2)) := by
-    rw [deriv_div, hP', deriv_const_mul _ hK, deriv_pow, hq']
-    simp only [Nat.add_sub_cancel]
-    set q := t ^ 2 + b * t + c
-    clear_value q
-    field_simp
-    push_cast
-    ring
-  rw [hRatDeriv]
-  set q := t ^ 2 + b * t + c with hqdef
-  clear_value q
-  set R := 4 * c - b ^ 2 with hRdef
-  clear_value R
-  have hpow : q ^ (m + 2) = q ^ (m + 1) * q := pow_succ q (m + 1)
-  simp only [hpow]
-  have hQne : q ^ (m + 1) ≠ 0 := pow_ne_zero _ hq
-  set Q := q ^ (m + 1) with hQdef
-  clear_value Q
-  field_simp
-  linear_combination ((m : F) + 1) * hcore
+abbrev eq_2_1_arctan_reduce := @DeepWiki.SymbolicIntegration.deriv_quadraticPow_reduce
 
 /-! ## §2.2 The Hermite Reduction -/
 
@@ -180,11 +105,7 @@ reduction. With `k = m + 2`, if `Q = (1-k)(B·V' + C·V)` then
 `Q / Vᵏ = (B / Vᵏ⁻¹)′ + ((1-k)·C - B') / Vᵏ⁻¹` — lowering the power of the squarefree factor `V`
 by one. (The algorithm finds `B, C` with `deg B < deg V` via the extended Euclidean algorithm,
 valid because `gcd(V, V') = 1` for squarefree `V`.) -/
-theorem hermiteReduce_step {F : Type*} [Field F] [Differential F] (B C V : F) (hV : V ≠ 0)
-    (m : ℕ) :
-    (-((m : F) + 1) * (B * V′ + C * V)) / V ^ (m + 2)
-      = (B / V ^ (m + 1))′ + (-((m : F) + 1) * C - B′) / V ^ (m + 1) :=
-  hermite_reduction_step B C V hV m
+abbrev hermiteReduce_step := @DeepWiki.SymbolicIntegration.hermite_reduction_step
 
 /-- **Theorem 2.4.1(i)** (§2.4, p.47), the Rothstein–Trager resultant criterion: over `K̄`, the zeros
 of `R = resultant_x(D, A − t·D')` are exactly the residues of `A/D` at the zeros of `D` — i.e.
@@ -316,13 +237,7 @@ theorem ex_2_5_2 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
 identity (with `i = √−1`, `i² = −1`, and `arctan'(u) = u'/(1+u²)`): `i · logDeriv((u+i)/(u−i)) =
 2·u'/(1+u²)`. The logarithmic derivative `logDeriv((u+i)/(u−i)) = u'/(u+i) − u'/(u−i) = −2i·u'/(u²+1)`
 (using `(u±i)' = u'`, `i` constant), and `i·(−2i) = −2i² = 2`. -/
-theorem lemma_2_8_1 {F : Type*} [Field F] [Differential F] {i u : F} (hi : i ^ 2 = -1)
-    (hi' : i′ = 0) (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
-    i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) := by
-  have hq : (1 + u ^ 2 : F) = (u + i) * (u - i) := by linear_combination hi
-  rw [Differential.logDeriv, deriv_div, map_add, map_sub, hi', hq]
-  field_simp
-  linear_combination (-2 * u′) * hi
+abbrev lemma_2_8_1 := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
