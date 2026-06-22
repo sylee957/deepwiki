@@ -20,9 +20,6 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Hermite-reduction remainder-properness `deg rᵢ < deg Dᵢ` is not yet exposed by
-  `integrateRationalFunction_reduction`, so `integrateRationalFunction_logForm` takes it as a hypothesis
-  [deferred: strengthen `hermiteReducePower`/`hermiteReduce_full` to also return the proper degree bound].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -383,6 +380,30 @@ final `∑ᵢ rᵢ/Dᵢ → ∑ logs` step remains. The library's `integrateRati
 abbrev integrateRationalFunction_reduction :=
   @DeepWiki.SymbolicIntegration.integrateRationalFunction_reduction
 
+/-- **Degree-reduced Diophantine solver** (§2.2, the Hermite Bézout variant): `diophantineSolveReduced
+a b c` reduces the first cofactor of `diophantineSolve` modulo `b`, so it still solves `a·B + b·C = c`
+(`diophantineSolveReduced_spec`) but now with `deg B < deg b` (`diophantineSolveReduced_fst_degree_lt`)
+— the proper Bézout cofactor the book's `deg B < deg V` requires. The library's
+`diophantineSolveReduced`. -/
+noncomputable abbrev diophantineSolveReduced := @DeepWiki.SymbolicIntegration.diophantineSolveReduced
+
+/-- **Hermite reduction keeps remainders proper** (§2.2, p.39): for squarefree `V` of positive degree
+(char `0`), a proper integrand `A/Vᵏ` (`deg A < k·deg V`) reduces to a remainder with `deg < deg V` —
+`deg (hermiteReducePower V k A).2 < deg V`. The degree invariant `deg A < k·deg V` is preserved by each
+reduction step and bottoms out at `k = 1`. This is the properness the book asserts of `HermiteReduce`'s
+output. The library's `hermiteReducePower_remainder_degree`. -/
+abbrev hermiteReducePower_remainder_degree :=
+  @DeepWiki.SymbolicIntegration.hermiteReducePower_remainder_degree
+
+/-- **`IntegrateRationalFunction` reduction with proper remainders** (§2.5, p.52): the strengthened
+reduction that also exposes the Hermite properness `deg rᵢ < deg Dᵢ`. For `A` over a *monic*
+squarefree-factored denominator `Den = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` monic squarefree of positive degree, pairwise
+coprime, `eᵢ ≥ 1`, char `0`), `A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ` with every `rᵢ` proper.
+Built on Mathlib's degree-bounded partial fraction `div_prod_eq_quo_add_sum_rem_div` plus
+`hermiteReducePower_remainder_degree`. The library's `integrateRationalFunction_reduction_proper`. -/
+abbrev integrateRationalFunction_reduction_proper :=
+  @DeepWiki.SymbolicIntegration.integrateRationalFunction_reduction_proper
+
 /-- **`IntegrateRationalFunction` closed log-form, single squarefree denominator** (§2.5, p.52,
 eq 2.4 — the `e = 1`, no-rational-part case): for a proper fraction `R/V` over a split squarefree
 `V = ∏_{α∈s}(X−α)` with `deg R < #s`, `R/V = ∑_a a·logDeriv(Gₐ)`, `Gₐ = ∏_{α∈s, res(α)=a}(X−α)` — i.e.
@@ -392,11 +413,12 @@ abbrev integrateRationalFunction_logForm_squarefree :=
   @DeepWiki.SymbolicIntegration.ratFunc_logForm_split_squarefree
 
 /-- **`IntegrateRationalFunction` closed log-form** (§2.5, p.52, eq 2.4 — the culmination): for `A`
-over a denominator with split squarefree factors `Dᵢ = ∏_{α∈sset i}(X−α)` (disjoint root-sets,
-`eᵢ ≥ 1`, char `0`), there are a rational part `g`, a polynomial-integral part `p`, and proper
-remainders `rᵢ` with `A/∏ᵢ Dᵢ^{eᵢ} = g′ + (polyIntegral p)′ + ∑ᵢ ∑_a a·logDeriv(Gᵢₐ)` (provided the
-`rᵢ` are proper, `deg rᵢ < #sset i`) — `∫ A/D = g + ∫ p dx + ∑ᵢ ∑_a a·log(Gᵢₐ)`. Assembles the §2.5
-reduction with the Rothstein–Trager residue-grouped log sum. The library's
+over a denominator with split squarefree factors `Dᵢ = ∏_{α∈sset i}(X−α)` (nonempty disjoint root-sets,
+`eᵢ ≥ 1`, char `0`), there are a rational part `g`, a polynomial-integral part `p`, and remainders `rᵢ`
+with `A/∏ᵢ Dᵢ^{eᵢ} = g′ + (polyIntegral p)′ + ∑ᵢ ∑_a a·logDeriv(Gᵢₐ)` —
+`∫ A/D = g + ∫ p dx + ∑ᵢ ∑_a a·log(Gᵢₐ)`. *Unconditional*: the Hermite-remainder properness
+`deg rᵢ < #sset i` is discharged internally via `integrateRationalFunction_reduction_proper`. Assembles
+the §2.5 reduction with the Rothstein–Trager residue-grouped log sum. The library's
 `integrateRationalFunction_logForm`. -/
 abbrev integrateRationalFunction_logForm :=
   @DeepWiki.SymbolicIntegration.integrateRationalFunction_logForm

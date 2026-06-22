@@ -48,22 +48,21 @@ open scoped Differential in
 open Classical in
 /-- **`IntegrateRationalFunction` in closed log-form** (§2.4/§2.5, eq 2.4 — the culmination): for a
 numerator `A` over a denominator whose squarefree factors are given in split form
-`Dᵢ = Lagrange.nodal (sset i) id = ∏_{α∈sset i}(X−α)` (the root-sets `sset i` pairwise disjoint, so the
-`Dᵢ` are squarefree and pairwise coprime, `eᵢ ≥ 1`, char `0`), there exist a rational part `g`, a
-polynomial-integral part `p`, and proper remainders `rᵢ` such that — *provided the remainders are
-proper* (`deg rᵢ < #sset i`) — the integrand has the closed log-form
-`A/∏ᵢ Dᵢ^{eᵢ} = g′ + (∫ p dx)′ + ∑ᵢ ∑_a a·logDeriv(Gᵢₐ)`, where `Gᵢₐ = ∏_{α∈sset i, res(α)=a}(X−α)`
-collects the roots of `Dᵢ` with residue `a`. Runs `integrateRationalFunction_reduction` internally
-(its `Squarefree`/`IsCoprime` side conditions discharged from the split form via
-`squarefree_prod_X_sub_C`/`isCoprime_prod_X_sub_C_of_disjoint` and `nodal_eq`), then applies
-`sum_proper_fraction_eq_logForm`. The properness premise `hproper` is on the *produced* `rᵢ`: Hermite
-reduction is supposed to leave proper remainders, but `integrateRationalFunction_reduction` does not
-currently expose the bound, so it is taken as a hypothesis on its output. -/
-theorem integrateRationalFunction_logForm [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty)
+`Dᵢ = Lagrange.nodal (sset i) id = ∏_{α∈sset i}(X−α)` (the nonempty root-sets `sset i` pairwise
+disjoint, so the `Dᵢ` are squarefree and pairwise coprime, `eᵢ ≥ 1`, char `0`), there exist a rational
+part `g`, a polynomial-integral part `p`, and remainders `rᵢ` such that the integrand has the closed
+log-form `A/∏ᵢ Dᵢ^{eᵢ} = g′ + (∫ p dx)′ + ∑ᵢ ∑_a a·logDeriv(Gᵢₐ)`, where
+`Gᵢₐ = ∏_{α∈sset i, res(α)=a}(X−α)` collects the roots of `Dᵢ` with residue `a`. *Unconditional*:
+Hermite reduction's remainder properness (`deg rᵢ < #sset i`) is now discharged internally — the
+strengthened `integrateRationalFunction_reduction_proper` returns the proper bound, whose
+`Squarefree`/`Monic`/positive-degree/`IsCoprime` side conditions follow from the split form
+(`squarefree_prod_X_sub_C`, `nodal_monic`, `natDegree_nodal`, `isCoprime_prod_X_sub_C_of_disjoint`),
+then `sum_proper_fraction_eq_logForm` does the residue-grouping. -/
+theorem integrateRationalFunction_logForm [CharZero K] {ι : Type*} (s : Finset ι)
     (sset : ι → Finset K) (e : ι → ℕ) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hne : ∀ i ∈ s, (sset i).Nonempty)
     (hdisj : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → Disjoint (sset i) (sset j)) (A : K[X]) :
     ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
-      (∀ i ∈ s, (r i).degree < (sset i).card) →
         algebraMap K[X] (RatFunc K) A
             / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (Lagrange.nodal (sset i) id) ^ e i
           = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
@@ -77,15 +76,22 @@ theorem integrateRationalFunction_logForm [CharZero K] {ι : Type*} (s : Finset 
                         (X - C α))) := by
   have hsf : ∀ i ∈ s, Squarefree (Lagrange.nodal (sset i) id) := fun i _ => by
     rw [Lagrange.nodal_eq]; exact squarefree_prod_X_sub_C (sset i)
+  have hmonic : ∀ i ∈ s, (Lagrange.nodal (sset i) id).Monic := fun i _ => Lagrange.nodal_monic
+  have hnd : ∀ i ∈ s, 0 < (Lagrange.nodal (sset i) id).natDegree := fun i hi => by
+    rw [Lagrange.natDegree_nodal]; exact (hne i hi).card_pos
   have hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j →
       IsCoprime (Lagrange.nodal (sset i) id) (Lagrange.nodal (sset j) id) := fun i hi j hj hij => by
     rw [Lagrange.nodal_eq, Lagrange.nodal_eq]
     exact isCoprime_prod_X_sub_C_of_disjoint (hdisj i hi j hj hij)
-  obtain ⟨g, p, r, hred⟩ :=
-    integrateRationalFunction_reduction s hs (fun i => Lagrange.nodal (sset i) id) e hsf he hcop A
-  refine ⟨g, p, r, fun hproper => ?_⟩
+  obtain ⟨g, p, r, hproper, hred⟩ :=
+    integrateRationalFunction_reduction_proper s (fun i => Lagrange.nodal (sset i) id) e hmonic hsf
+      hnd he hcop A
+  have hproper' : ∀ i ∈ s, (r i).degree < (sset i).card := fun i hi => by
+    have := hproper i hi
+    rwa [Lagrange.degree_nodal] at this
+  refine ⟨g, p, r, ?_⟩
   rw [hred]
-  exact sum_proper_fraction_eq_logForm s sset r g p hproper
+  exact sum_proper_fraction_eq_logForm s sset r g p hproper'
 
 open scoped Differential in
 open Classical in
@@ -118,12 +124,11 @@ example (s : Finset K) (R : K[X]) (hR : R.degree < s.card) :
 
 open scoped Differential in
 open Classical in
--- The full §2.5 closed log-form: rational part + polynomial-integral part + sum of log-derivatives.
-example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (sset : ι → Finset K) (e : ι → ℕ)
-    (he : ∀ i ∈ s, 1 ≤ e i)
+-- The full §2.5 closed log-form (unconditional): rational part + polynomial-integral part + log sum.
+example [CharZero K] {ι : Type*} (s : Finset ι) (sset : ι → Finset K) (e : ι → ℕ)
+    (he : ∀ i ∈ s, 1 ≤ e i) (hne : ∀ i ∈ s, (sset i).Nonempty)
     (hdisj : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → Disjoint (sset i) (sset j)) (A : K[X]) :
     ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
-      (∀ i ∈ s, (r i).degree < (sset i).card) →
         algebraMap K[X] (RatFunc K) A
             / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (Lagrange.nodal (sset i) id) ^ e i
           = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
@@ -135,6 +140,6 @@ example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (sset : ι �
                           (fun α =>
                             (r i).eval α / eval α (derivative (Lagrange.nodal (sset i) id)) = a),
                         (X - C α))) :=
-  integrateRationalFunction_logForm s hs sset e he hdisj A
+  integrateRationalFunction_logForm s sset e he hne hdisj A
 
 end DeepWiki.SymbolicIntegration

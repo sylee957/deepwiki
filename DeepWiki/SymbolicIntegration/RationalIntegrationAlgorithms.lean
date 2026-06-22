@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.Subresultants
 import Mathlib.RingTheory.EuclideanDomain
 import Mathlib.RingTheory.Radical.Basic
 import Mathlib.Algebra.Polynomial.Degree.Units
+import Mathlib.Algebra.Polynomial.PartialFractions
 
 /-! # Rational-function integration algorithms — functional form (Bronstein §2.1–§2.2)
 The book's integration *algorithms* (Bernoulli, Hermite, Horowitz–Ostrogradsky, Rothstein–Trager,
@@ -47,6 +48,36 @@ theorem diophantineSolve_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X]) :
   rw [step, ← EuclideanDomain.gcd_eq_gcd_ab, mul_assoc]
   nth_rewrite 2 [hgC]
   rw [← map_mul, inv_mul_cancel₀ hr0, map_one, mul_one]
+
+open Classical in
+/-- **Degree-reduced Diophantine solver** (the §2.2 Hermite variant): like `diophantineSolve`, but
+reduces the first cofactor `B` modulo `b` so that `deg B < deg b`. From `a·B + b·C = c`, writing
+`B = (B / b)·b + B % b`, the adjusted pair `(B % b, C + (B / b)·a)` still solves the Bézout equation
+(`a·(B % b) + b·(C + (B / b)·a) = a·B + b·C = c`) while making the first cofactor proper — exactly the
+`deg B < deg V` the Hermite reduction needs to keep its remainders proper. -/
+noncomputable def diophantineSolveReduced (a b c : K[X]) : K[X] × K[X] :=
+  ((diophantineSolve a b c).1 % b,
+   (diophantineSolve a b c).2 + ((diophantineSolve a b c).1 / b) * a)
+
+open Classical in
+/-- **Correctness of `diophantineSolveReduced`**: for coprime `a, b`, the reduced pair still solves the
+Bézout/Diophantine equation `a·B + b·C = c`. The modular adjustment preserves the identity since
+`a·(B % b) + b·(B / b)·a = a·B` (Euclidean `div_add_mod`). -/
+theorem diophantineSolveReduced_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X]) :
+    a * (diophantineSolveReduced a b c).1 + b * (diophantineSolveReduced a b c).2 = c := by
+  have hbase := diophantineSolve_spec hab c
+  simp only [diophantineSolveReduced]
+  have hdm : b * ((diophantineSolve a b c).1 / b) + (diophantineSolve a b c).1 % b
+      = (diophantineSolve a b c).1 := EuclideanDomain.div_add_mod _ b
+  linear_combination hbase + a * hdm
+
+open Classical in
+/-- **Degree bound for `diophantineSolveReduced`**: the first cofactor `B` is proper, `deg B < deg b`,
+whenever `b ≠ 0` — `B = (diophantineSolve …).1 % b` and `Polynomial.degree_mod_lt`. -/
+theorem diophantineSolveReduced_fst_degree_lt {a b : K[X]} (hb : b ≠ 0) (c : K[X]) :
+    (diophantineSolveReduced a b c).1.degree < b.degree := by
+  simp only [diophantineSolveReduced]
+  exact Polynomial.degree_mod_lt _ hb
 
 /-! ## §2.4 The Rothstein–Trager algorithm (functional core)
 The algorithm computes the logarithmic part `∫ A/D = Σ a·log(Gₐ)` for squarefree `D` from two
@@ -202,8 +233,8 @@ noncomputable def hermiteReducePower (V : K[X]) : ℕ → K[X] → RatFunc K × 
   | 1,     A => (0, A)
   | (m+2), A =>
       let c : K[X] := -A * Polynomial.C (((m : K) + 1)⁻¹)
-      let B : K[X] := (diophantineSolve (derivative V) V c).1
-      let Cc : K[X] := (diophantineSolve (derivative V) V c).2
+      let B : K[X] := (diophantineSolveReduced (derivative V) V c).1
+      let Cc : K[X] := (diophantineSolveReduced (derivative V) V c).2
       let r : K[X] := -(Polynomial.C ((m : K) + 1)) * Cc - derivative B
       (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) V ^ (m + 1)
           + (hermiteReducePower V (m + 1) r).1,
@@ -240,11 +271,11 @@ theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
         rw [map_add, map_natCast, map_one]
       simp only [hermiteReducePower]
       set c : K[X] := -A * Polynomial.C (((m : K) + 1)⁻¹) with hc
-      set B : K[X] := (diophantineSolve (derivative V) V c).1 with hB
-      set Cc : K[X] := (diophantineSolve (derivative V) V c).2 with hCc
+      set B : K[X] := (diophantineSolveReduced (derivative V) V c).1 with hB
+      set Cc : K[X] := (diophantineSolveReduced (derivative V) V c).2 with hCc
       set r : K[X] := -(Polynomial.C ((m : K) + 1)) * Cc - derivative B with hr
       have hrel : B * derivative V + Cc * V = c := by
-        have h := diophantineSolve_spec hcop c
+        have h := diophantineSolveReduced_spec hcop c
         rw [hB, hCc]; linear_combination h
       have hkey : algebraMap K (RatFunc K) ((m : K) + 1)
           * algebraMap K (RatFunc K) (((m : K) + 1)⁻¹) = 1 := by
@@ -264,6 +295,102 @@ theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
         add_assoc (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) V ^ (m + 1))′,
         ← IHr]
       exact key
+
+/-- **Degree cancellation helper**: if `(p · V).degree < ↑n` with `V`'s degree `↑d` and `d ≤ n`, then
+`p.degree < ↑(n − d)` — the multiplicative degree law `degree (p·V) = degree p + degree V` cancelled. -/
+private theorem degree_lt_of_mul_degree_lt {p V : K[X]} {d n : ℕ} (hV : V.degree = (d : WithBot ℕ))
+    (hd : d ≤ n) (h : (p * V).degree < (n : WithBot ℕ)) : p.degree < ((n - d : ℕ) : WithBot ℕ) := by
+  rw [Polynomial.degree_mul, hV] at h
+  rcases eq_or_ne p 0 with hp | hp
+  · rw [hp, Polynomial.degree_zero]; exact WithBot.bot_lt_coe _
+  · rw [Polynomial.degree_eq_natDegree hp] at h ⊢
+    rw [← Nat.cast_add, Nat.cast_lt] at h
+    rw [Nat.cast_lt]; omega
+
+/-- **Strict-to-predecessor degree bound**: `p.degree < ↑d` with `0 < d` gives `p.degree ≤ ↑(d − 1)`. -/
+private theorem degree_le_pred_of_lt {p : K[X]} {d : ℕ} (hd : 0 < d) (h : p.degree < (d : WithBot ℕ)) :
+    p.degree ≤ ((d - 1 : ℕ) : WithBot ℕ) := by
+  rcases eq_or_ne p 0 with hp | hp
+  · rw [hp, Polynomial.degree_zero]; exact bot_le
+  · rw [Polynomial.degree_eq_natDegree hp, Nat.cast_le]
+    rw [Polynomial.degree_eq_natDegree hp, Nat.cast_lt] at h; omega
+
+open Classical in
+/-- **Hermite reduction keeps the remainder proper** (§2.2): for squarefree `V` (`deg V > 0`) over a
+char-`0` field, if the integrand `A/Vᵏ` is *proper* (`deg A < k·deg V`), then the final remainder
+`(hermiteReducePower V k A).2` is proper for the squarefree `V`: `deg < deg V`. The invariant
+`deg A < k·deg V` is preserved by each reduction step (the reduced Bézout cofactor has `deg B < deg V`,
+forcing `deg Cc < (k−1)·deg V` and `deg r < (k−1)·deg V`), bottoming out at `k = 1` where the loop
+returns its proper input unchanged. This is the properness `integrateRationalFunction_logForm` needs. -/
+theorem hermiteReducePower_remainder_degree [CharZero K] (V : K[X]) (hV : Squarefree V)
+    (hdpos : 0 < V.natDegree) :
+    ∀ (k : ℕ), 1 ≤ k → ∀ (A : K[X]), A.degree < ((k * V.natDegree : ℕ) : WithBot ℕ) →
+      (hermiteReducePower V k A).2.degree < V.degree := by
+  have hV0 : V ≠ 0 := hV.ne_zero
+  have hcop : IsCoprime (derivative V) V := (squarefree_iff_isCoprime_derivative.mp hV).symm
+  set d : ℕ := V.natDegree with hd
+  have hVdeg : V.degree = (d : WithBot ℕ) := Polynomial.degree_eq_natDegree hV0
+  intro k
+  induction k using Nat.strong_induction_on with
+  | _ k IH =>
+    intro hk A hA
+    obtain _ | _ | m := k
+    · exact absurd hk (by norm_num)
+    · rw [hermiteReducePower, hVdeg]
+      rwa [Nat.one_mul] at hA
+    · have hm1 : ((m : K) + 1) ≠ 0 := Nat.cast_add_one_ne_zero m
+      have hinv : ((m : K) + 1)⁻¹ ≠ 0 := inv_ne_zero hm1
+      simp only [hermiteReducePower]
+      set c : K[X] := -A * Polynomial.C (((m : K) + 1)⁻¹) with hc
+      set B : K[X] := (diophantineSolveReduced (derivative V) V c).1 with hB
+      set Cc : K[X] := (diophantineSolveReduced (derivative V) V c).2 with hCc
+      set r : K[X] := -(Polynomial.C ((m : K) + 1)) * Cc - derivative B with hr
+      -- `deg c = deg A < (m+2)·d`.
+      have hcdeg : c.degree < (((m + 2) * d : ℕ) : WithBot ℕ) := by
+        rw [hc, Polynomial.degree_mul_C hinv, Polynomial.degree_neg]; exact hA
+      -- `deg B < deg V = d` (reduced solver).
+      have hBdeg : B.degree < (d : WithBot ℕ) := by
+        rw [hB, ← hVdeg]; exact diophantineSolveReduced_fst_degree_lt hV0 c
+      -- `deg V' < d`, so `deg V' ≤ d − 1`.
+      have hV'le : (derivative V).degree ≤ ((d - 1 : ℕ) : WithBot ℕ) :=
+        degree_le_pred_of_lt hdpos (by rw [← hVdeg]; exact Polynomial.degree_derivative_lt hV0)
+      -- `deg B < d`, so `deg B ≤ d − 1`.
+      have hBle : B.degree ≤ ((d - 1 : ℕ) : WithBot ℕ) := degree_le_pred_of_lt hdpos hBdeg
+      -- the Bézout relation `B·V' + Cc·V = c`.
+      have hrel : B * derivative V + Cc * V = c := by
+        have h := diophantineSolveReduced_spec hcop c
+        rw [hB, hCc]; linear_combination h
+      -- `deg (B·V') ≤ (d−1) + (d−1) < (m+2)·d`, so `deg (Cc·V) < (m+2)·d`.
+      have h2d : (d - 1 : ℕ) + (d - 1 : ℕ) < (m + 2) * d := by
+        have : 2 * d ≤ (m + 2) * d := Nat.mul_le_mul_right d (by omega)
+        omega
+      have hBV' : (B * derivative V).degree < (((m + 2) * d : ℕ) : WithBot ℕ) := by
+        refine lt_of_le_of_lt (Polynomial.degree_mul_le _ _) ?_
+        refine lt_of_le_of_lt (add_le_add hBle hV'le) ?_
+        rw [← Nat.cast_add, Nat.cast_lt]; exact h2d
+      have hCcV : (Cc * V).degree < (((m + 2) * d : ℕ) : WithBot ℕ) := by
+        have : Cc * V = c - B * derivative V := by linear_combination hrel
+        rw [this]
+        exact lt_of_le_of_lt (Polynomial.degree_sub_le _ _) (max_lt hcdeg hBV')
+      -- cancel `V` to bound `deg Cc < (m+1)·d`.
+      have hCcdeg : Cc.degree < (((m + 1) * d : ℕ) : WithBot ℕ) := by
+        have hdle : d ≤ (m + 2) * d := Nat.le_mul_of_pos_left d (by omega)
+        have hkey := degree_lt_of_mul_degree_lt hVdeg hdle hCcV
+        rwa [show (m + 2) * d - d = (m + 1) * d by
+          have : (m + 2) * d = (m + 1) * d + d := by ring
+          omega] at hkey
+      -- `deg r ≤ max (deg Cc) (deg B') < (m+1)·d`.
+      have hdle1 : (d - 1 : ℕ) < (m + 1) * d := by
+        have : d ≤ (m + 1) * d := Nat.le_mul_of_pos_left d (by omega)
+        omega
+      have hrdeg : r.degree < (((m + 1) * d : ℕ) : WithBot ℕ) := by
+        rw [hr]
+        refine lt_of_le_of_lt (Polynomial.degree_sub_le _ _) (max_lt ?_ ?_)
+        · rw [neg_mul, Polynomial.degree_neg, Polynomial.degree_C_mul hm1]; exact hCcdeg
+        · refine lt_of_le_of_lt (Polynomial.degree_derivative_le.trans hBle) ?_
+          rw [Nat.cast_lt]; exact hdle1
+      -- recurse on `r` at power `m+1`.
+      exact IH (m + 1) (by omega) (by omega) r hrdeg
 
 open Classical in
 /-- **Two-factor partial fraction in `K(x)`** (§2.2/§2.5, the coprime split): for coprime `P, Q` (both
@@ -454,6 +581,65 @@ example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (D : ι → 
         = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
           + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) :=
   integrateRationalFunction_reduction s hs D e hD he hcop A
+
+open scoped Differential in
+open Classical in
+/-- **`IntegrateRationalFunction` reduction with proper remainders** (§2.5, p.52): the strengthened
+reduction that *also* exposes the Hermite-reduction properness `deg rᵢ < deg Dᵢ`. For a numerator `A`
+over a *monic* squarefree-factored denominator `Den = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` monic squarefree of positive
+degree, pairwise coprime, `eᵢ ≥ 1`, char `0`), `A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ` with every
+`rᵢ` proper (`deg rᵢ < deg Dᵢ`). Uses Mathlib's degree-bounded partial fraction
+`div_prod_eq_quo_add_sum_rem_div` (proper per-factor numerators `Bᵢ`, `deg Bᵢ < deg Dᵢ^{eᵢ}`), then
+`hermiteReduce_sum_spec` (rational + squarefree split) and `hermiteReducePower_remainder_degree` (the
+proper input `deg Bᵢ < eᵢ·deg Dᵢ` forces `deg rᵢ < deg Dᵢ`). This discharges the properness premise that
+`integrateRationalFunction_logForm` previously had to assume. -/
+theorem integrateRationalFunction_reduction_proper [CharZero K] {ι : Type*} (s : Finset ι)
+    (D : ι → K[X]) (e : ι → ℕ) (hmonic : ∀ i ∈ s, (D i).Monic) (hsf : ∀ i ∈ s, Squarefree (D i))
+    (hnd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
+      (∀ i ∈ s, (r i).degree < (D i).degree) ∧
+      algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
+        = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) := by
+  -- Degree-bounded partial fraction over the monic powers `g i = (D i)^(e i)`.
+  have hgmonic : ∀ i ∈ s, ((D i) ^ e i).Monic := fun i hi => (hmonic i hi).pow _
+  have hgcop : Set.Pairwise (↑s : Set ι) fun i j => IsCoprime ((D i) ^ e i) ((D j) ^ e j) :=
+    fun i hi j hj hij => (hcop i hi j hj hij).pow
+  obtain ⟨p, B, hBdeg, hpf⟩ :=
+    Polynomial.div_prod_eq_quo_add_sum_rem_div (R := K) (K := RatFunc K) A hgmonic hgcop
+  -- Reduce each proper prime power `Bᵢ/(Dᵢ^eᵢ)` by the Hermite loop.
+  refine ⟨∑ i ∈ s, (hermiteReducePower (D i) (e i) (B i)).1, p,
+    fun i => (hermiteReducePower (D i) (e i) (B i)).2, fun i hi => ?_, ?_⟩
+  · -- properness: `deg rᵢ < deg Dᵢ` from the degree-tracking lemma.
+    simp only []
+    refine hermiteReducePower_remainder_degree (D i) (hsf i hi) (hnd i hi) (e i) (he i hi) (B i) ?_
+    have hd : ((D i) ^ e i).degree = ((e i * (D i).natDegree : ℕ) : WithBot ℕ) := by
+      rw [Polynomial.degree_pow, Polynomial.degree_eq_natDegree (hmonic i hi).ne_zero,
+        nsmul_eq_mul, ← Nat.cast_mul]
+    exact (hBdeg i hi).trans_eq hd
+  · -- assemble: partial fraction → `hermiteReduce_sum_spec` → `polyIntegral`.
+    have hsumeq := hermiteReduce_sum_spec s D e B hsf he
+    -- normalize the Mathlib casts `↑` to `algebraMap`, with `↑(Dᵢ^eᵢ) = (algebraMap Dᵢ)^eᵢ`.
+    have hpf' : algebraMap K[X] (RatFunc K) A
+          / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
+        = algebraMap K[X] (RatFunc K) p
+          + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (B i) / algebraMap K[X] (RatFunc K) (D i) ^ e i := by
+      have e1 : (∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i)
+          = ∏ i ∈ s, (algebraMap K[X] (RatFunc K) ((D i) ^ e i) : RatFunc K) :=
+        Finset.prod_congr rfl fun i _ => (map_pow _ _ _).symm
+      have e2 : (∑ i ∈ s, algebraMap K[X] (RatFunc K) (B i)
+            / algebraMap K[X] (RatFunc K) (D i) ^ e i)
+          = ∑ i ∈ s, (algebraMap K[X] (RatFunc K) (B i) : RatFunc K)
+              / algebraMap K[X] (RatFunc K) ((D i) ^ e i) :=
+        Finset.sum_congr rfl fun i _ => by rw [map_pow]
+      rw [e1, e2]; exact hpf
+    rw [hpf', hsumeq]
+    have hpi : (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+        = algebraMap K[X] (RatFunc K) p := by
+      show ratFuncDeriv _ = _
+      rw [ratFuncDeriv_algebraMap (polyIntegral p), polyIntegral_derivative]
+    rw [hpi]; ring
 
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
