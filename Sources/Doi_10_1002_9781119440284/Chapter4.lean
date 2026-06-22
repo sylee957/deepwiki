@@ -2,6 +2,7 @@ import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
+import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -144,6 +145,18 @@ theorem prop_4_1_envelope {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 × ℝ≥
     (hmin : ∀ s' ∈ l, tbEReal s.1 s.2 t ≤ tbEReal s'.1 s'.2 t) :
     concaveNFEval l t = tbEReal s.1 s.2 t :=
   concaveNFEval_eq_of_isMin hs hmin
+
+/-- **§4.2.1** (p.63), the convex representation (dual of Definition 4.1): a convex
+piecewise-linear function is the pointwise *supremum* of rate-latency curves `β_{Rᵢ,Tᵢ}`
+(`⨆ᵢ β_{Rᵢ,Tᵢ}`), the dual of the concave "minimum of token-buckets". The library's
+`DeepWiki.convexNFEval`; each `β_{R,T}` is convex (`DeepWiki.isConvexEReal_rateLatencyEReal`, the
+dual of `isConcaveEReal_tbEReal`) and so is the supremum (`DeepWiki.isConvexEReal_convexNFEval`). -/
+noncomputable def def_4_1_convex := @convexNFEval
+
+/-- **§4.2.1** (p.63): the convex representation is convex (dual of `prop_4_1_concave`). The
+library's `DeepWiki.isConvexEReal_convexNFEval`. -/
+theorem prop_4_1_convex (l : List (ℝ≥0 × ℝ≥0)) : IsConvexEReal (convexNFEval l) :=
+  isConvexEReal_convexNFEval l
 
 /-- **Theorem 4.1** (§4.2.2, p.65), the transform-domain computation principle. For finite,
 convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution is computed by
