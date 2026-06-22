@@ -511,4 +511,13 @@ theorem mergeBySlope_length :
   termination_by l1 l2 => l1.length + l2.length
   decreasing_by all_goals (simp_wf; try omega)
 
+/-- Faithfulness check: the empty/empty specialization of the balanced theorem recovers the affine
+base case `minConv_affine` at the shared slope (`min s s = s`). -/
+example (s f0 g0 t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 s [] u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 s [] v : ℝ≥0) : ℝ) : EReal)) t
+      = (((f0 + g0 + s * t : ℝ≥0) : ℝ) : EReal) := by
+  rw [minConv_convexSegEval_eq_merge s f0 g0 [] [] List.Pairwise.nil List.Pairwise.nil
+    (by simp) (by simp) t, mergeBySlope_nil_left, convexSegEval_nil]
+
 end DeepWiki
