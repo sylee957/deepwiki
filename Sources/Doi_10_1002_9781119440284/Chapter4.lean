@@ -3,6 +3,7 @@ import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ConvexConvolutionLegendre
 import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
+import DeepWiki.NetworkCalculus.ConvexSegmentMerge
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -15,7 +16,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — the data layer is now defined (`convexSegEval` evaluates a `(f0, finalSlope, (slope,length)-segments)` convex PWL; `mergeBySlope` slope-merges two segment lists); what remains is the *convolution-correctness* `convexSegEval (mergeBySlope …) = minConv …` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -173,6 +174,18 @@ theorem thm_4_1_legendre {f g : ℝ≥0 → EReal}
     (hf0 : ∀ x, 0 ≤ f x) (hg0 : ∀ x, 0 ≤ g x) :
     minConv f g = legendre (legendre f + legendre g) :=
   DeepWiki.minConv_eq_legendre_add_legendre hf hg hmf hmg hfin_f hfin_g hf0 hg0
+
+/-- **Theorem 4.1** (§4.2.2, p.65), the algorithm's data layer: a convex PWL is given by a base
+value, an asymptotic slope, and a list of `(slope, length)` finite segments; `convexSegEval`
+evaluates it. The library's `DeepWiki.convexSegEval`. -/
+noncomputable def thm_4_1_segEval := @convexSegEval
+
+/-- **Theorem 4.1** (§4.2.2, p.65), the algorithm's merge step: the `(min,plus)` convolution of two
+convex PWL functions concatenates all segments by increasing slope; `mergeBySlope` slope-merges two
+sorted segment lists. (Convolution-correctness `convexSegEval (mergeBySlope …) = minConv …` is the
+remaining step; its transform-domain principle is `thm_4_1_legendre`.) The library's
+`DeepWiki.mergeBySlope`. -/
+noncomputable def thm_4_1_merge := @mergeBySlope
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 

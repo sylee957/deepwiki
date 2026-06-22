@@ -46,6 +46,7 @@ import DeepWiki.NetworkCalculus.ConcaveProps
 import DeepWiki.NetworkCalculus.ConcaveDioid
 import DeepWiki.NetworkCalculus.ConcavePWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
+import DeepWiki.NetworkCalculus.ConvexSegmentMerge
 import DeepWiki.NetworkCalculus.ConcaveSubadditive
 import DeepWiki.NetworkCalculus.Convex
 import DeepWiki.NetworkCalculus.ConvexConvolution
