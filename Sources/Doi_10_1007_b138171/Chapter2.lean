@@ -16,12 +16,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.2: the *outer* `HermiteReduce` recursion over the full squarefree factorization `D = ∏ᵢ Dᵢ^i`
-  [functional] — partial-fraction `A/D` across the coprime prime powers, then run the inner loop on
-  each. The reduction step (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`) and the prime-power
-  *inner loop* are now done: `hermiteReducePower` (the functional recursion reducing `A/Vᵏ` to `g + r/V`
-  for squarefree `V`, iterating the step) and `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0,
-  via Bézout `diophantineSolve` since `V ⊥ V'`). The per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3
-  [functional] (their shared *result* is `ex_2_3_1`).
+  [functional] — the remaining glue is the **multi-factor** partial fraction (iterate the coprime split
+  across all prime powers) wired to the inner loop on each. Done: the reduction step (`hermiteReduce_step`
+  / `hermiteReduce_step_ratFunc`); the prime-power *inner loop* `hermiteReducePower` /
+  `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0, via Bézout since `V ⊥ V'`); and the *two-factor*
+  partial-fraction building block `ratFunc_partialFraction_coprime` (`A/(P·Q) = B/Q + C/P` for `P ⊥ Q`).
+  The per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
   `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
   and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
@@ -163,6 +163,13 @@ field and `k ≥ 1`, `A/Vᵏ = g′ + r/V` with `(g, r) = hermiteReducePower V k
 `∫ A/Vᵏ = g + ∫ r/V`, the rational part split off and the remaining integral squarefree-denominatored.
 The library's `hermiteReducePower_spec`. -/
 abbrev hermiteReducePower_spec := @DeepWiki.SymbolicIntegration.hermiteReducePower_spec
+
+/-- **Two-factor partial fraction in `K(x)`** (§2.2, the coprime split feeding the outer Hermite
+recursion): for coprime `P, Q ≠ 0`, `A/(P·Q) = B/Q + C/P` where `(B, C) = diophantineSolve P Q A`
+(Bézout `P·B + Q·C = A`). The inductive building block of the multi-factor partial-fraction decomposition
+across a squarefree factorization. The library's `ratFunc_partialFraction_coprime`. -/
+abbrev ratFunc_partialFraction_coprime :=
+  @DeepWiki.SymbolicIntegration.ratFunc_partialFraction_coprime
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for

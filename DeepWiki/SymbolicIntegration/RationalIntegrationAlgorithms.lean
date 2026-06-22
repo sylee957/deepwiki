@@ -199,6 +199,28 @@ theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
         ← IHr]
       exact key
 
+open Classical in
+/-- **Two-factor partial fraction in `K(x)`** (§2.2/§2.5, the coprime split): for coprime `P, Q` (both
+nonzero) and any numerator `A`, `A/(P·Q) = B/Q + C/P` where `(B, C) = diophantineSolve P Q A` solves the
+Bézout relation `P·B + Q·C = A`. This is the inductive building block of the multi-factor partial-fraction
+decomposition across a squarefree factorization `D = ∏ᵢ Dᵢ^i` (each `Dᵢ^i` pairwise coprime), which feeds
+the prime-power Hermite loop `hermiteReducePower` on each factor. -/
+theorem ratFunc_partialFraction_coprime {P Q A : K[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+    (hPQ : IsCoprime P Q) :
+    algebraMap K[X] (RatFunc K) A
+        / (algebraMap K[X] (RatFunc K) P * algebraMap K[X] (RatFunc K) Q)
+      = algebraMap K[X] (RatFunc K) (diophantineSolve P Q A).1 / algebraMap K[X] (RatFunc K) Q
+        + algebraMap K[X] (RatFunc K) (diophantineSolve P Q A).2 / algebraMap K[X] (RatFunc K) P := by
+  have hp : algebraMap K[X] (RatFunc K) P ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hP
+  have hq : algebraMap K[X] (RatFunc K) Q ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hQ
+  have hspec : algebraMap K[X] (RatFunc K) A
+      = algebraMap K[X] (RatFunc K) P * algebraMap K[X] (RatFunc K) (diophantineSolve P Q A).1
+        + algebraMap K[X] (RatFunc K) Q * algebraMap K[X] (RatFunc K) (diophantineSolve P Q A).2 := by
+    rw [← map_mul, ← map_mul, ← map_add, diophantineSolve_spec hPQ A]
+  rw [hspec]; field_simp
+
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
 part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
