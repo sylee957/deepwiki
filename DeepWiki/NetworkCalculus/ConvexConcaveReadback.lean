@@ -136,4 +136,28 @@ theorem minConv_tbEReal_line_eq_line (f0 fs r b : ℝ≥0) (hrf : r ≤ fs) {t :
       _ ≤ f0 + fs * t := add_le_add le_rfl h
   exact_mod_cast hle
 
+/-- **Crossing, general convex `f` — unified meet form.** For any convex PWL
+`f = convexSegEval f0 fs fsegs` (`r ≤ fs`), the bucket convolution is, for *all* `t`, the pointwise
+meet of `f` and the truncated line through the breakpoint: `f ∗ γ_{r,b} t = f(t) ⊓ (f(u*) + b +
+r·(t − u*))`, `u* = segLenSum (truncSegs r fsegs)`. Below `u*` the truncated `t − u* = 0` makes the
+line `f(u*) + b ≥ f`, so the meet returns `f`. Generalizes `minConv_tbEReal_line` (the `fsegs = []`
+case) to arbitrary segments. (Locating *which* term wins — the single crossing point inside `f`'s
+segments — needs `f`'s minimum-growth-rate beyond `u*` and is the remaining piece.) -/
+theorem minConv_tbEReal_convexSegEval_eq (f0 fs r b : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs) (t : ℝ≥0) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal)
+        ⊓ (((convexSegEval f0 fs fsegs (segLenSum (truncSegs r fsegs)) + b
+              + r * (t - segLenSum (truncSegs r fsegs)) : ℝ≥0) : ℝ) : EReal) := by
+  by_cases ht : t ≤ segLenSum (truncSegs r fsegs)
+  · rw [minConv_tbEReal_convexSegEval_below f0 fs r b fsegs hfsort hfs hrf ht,
+      tsub_eq_zero_of_le ht, mul_zero, add_zero]
+    have hle : convexSegEval f0 fs fsegs t
+        ≤ convexSegEval f0 fs fsegs (segLenSum (truncSegs r fsegs)) + b :=
+      le_trans (monotone_convexSegEval fs fsegs f0 ht) le_self_add
+    exact (inf_of_le_left (by exact_mod_cast hle)).symm
+  · rw [not_le] at ht
+    rw [minConv_tbEReal_convexSegEval_above f0 fs r b fsegs hfsort hfs hrf (le_of_lt ht), inf_comm]
+
 end DeepWiki
