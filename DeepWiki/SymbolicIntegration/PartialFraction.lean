@@ -83,4 +83,22 @@ theorem deriv_sum_residue_log {K : Type*} [Field K] (s : Finset K) (A : K[X])
       ratFuncDeriv_algebraMap, derivative_C, map_zero]
   rw [deriv_const_mul _ hc, hL α hα, ← div_eq_mul_inv]
 
+open scoped Differential in
+/-- **Logarithmic part as a `logDeriv` sum** (§2.1/§2.4): for `D = ∏_{α∈s}(X−α)` squarefree and
+`deg A < #s`, `A/D = ∑_{α∈s} (A(α)/D'(α)) · logDeriv(X−α)` in `K(x)` — the integrand exhibited as a sum
+of logarithmic derivatives, so `∫ A/D = ∑_{α∈s} (A(α)/D'(α))·log(X−α)`. The explicit (Rothstein–Trager
+simple-root) logarithmic part: each `1/(X−α)` *is* `logDeriv(X−α)` since `(X−α)′ = 1`. -/
+theorem ratFunc_eq_sum_residue_logDeriv {K : Type*} [Field K] (s : Finset K) (A : K[X])
+    (hA : A.degree < s.card) :
+    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+      = ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (A.eval α / eval α (derivative (Lagrange.nodal s id))))
+            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)) := by
+  rw [ratFunc_eq_sum_residue_div s A hA]
+  refine Finset.sum_congr rfl fun α hα => ?_
+  have ht : (algebraMap K[X] (RatFunc K) (X - C α))′ = 1 := by
+    rw [show (algebraMap K[X] (RatFunc K) _)′ = ratFuncDeriv _ from rfl, ratFuncDeriv_algebraMap,
+      derivative_sub, derivative_X, derivative_C, sub_zero, map_one]
+  rw [Differential.logDeriv, ht, div_eq_mul_one_div]
+
 end DeepWiki.SymbolicIntegration
