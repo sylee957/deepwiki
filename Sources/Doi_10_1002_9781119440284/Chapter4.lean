@@ -127,6 +127,14 @@ theorem prop_4_1_cross_mono {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormal
             (l.get ⟨i + 2, by omega⟩).1 (l.get ⟨i + 2, by omega⟩).2 :=
   h.cross_strictMono hi
 
+/-- **Proposition 4.1, item 4** (§4.2.1, p.63), general piecewise form: a non-empty concave PWL
+function equals *one of its token-buckets* `γⱼ` at every time (the finite minimum is always
+attained) — the book's "the function is piecewise linear". Identifying *which* `γⱼ` on `[tᵢ,tᵢ₊₁]`
+is the remaining ordering claim. The library's `DeepWiki.exists_mem_concaveNFEval_eq`. -/
+theorem prop_4_1_piecewise {l : List (ℝ≥0 × ℝ≥0)} (hne : l ≠ []) (t : ℝ≥0) :
+    ∃ s ∈ l, concaveNFEval l t = tbEReal s.1 s.2 t :=
+  exists_mem_concaveNFEval_eq hne t
+
 /-- **Proposition 4.1, item 4** (§4.2.1, p.63), pointwise envelope form: at any time where a
 token-bucket of the list attains the minimum, the concave PWL function equals it,
 `⋀ⱼ γⱼ(t) = γᵢ(t)`. With the crossing ordering (`def_4_1_cross`) this gives the book's

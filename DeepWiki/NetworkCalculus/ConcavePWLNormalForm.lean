@@ -261,6 +261,24 @@ theorem concaveNFEval_eq_of_isMin {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 �
     concaveNFEval l t = tbEReal s.1 s.2 t :=
   le_antisymm (concaveNFEval_le_of_mem hs t) (le_concaveNFEval hmin)
 
+/-- **Proposition 4.1, item 4** (general piecewise form): a non-empty concave PWL function equals
+*one of its token-buckets* at every time — the minimum of a finite list of buckets is always
+attained. (The book's per-interval statement additionally identifies *which* bucket, via the
+crossing intervals.) -/
+theorem exists_mem_concaveNFEval_eq {l : List (ℝ≥0 × ℝ≥0)} (hne : l ≠ []) (t : ℝ≥0) :
+    ∃ s ∈ l, concaveNFEval l t = tbEReal s.1 s.2 t := by
+  induction l with
+  | nil => exact absurd rfl hne
+  | cons a l ih =>
+      rcases eq_or_ne l [] with rfl | hl
+      · refine ⟨a, List.mem_cons_self, ?_⟩
+        rw [concaveNFEval_cons, concaveNFEval_nil, Pi.inf_apply, inf_eq_left]; exact le_top
+      · obtain ⟨s, hs, hseq⟩ := ih hl
+        rw [concaveNFEval_cons, Pi.inf_apply, hseq]
+        rcases le_total (tbEReal a.1 a.2 t) (tbEReal s.1 s.2 t) with hle | hle
+        · exact ⟨a, List.mem_cons_self, inf_eq_left.mpr hle⟩
+        · exact ⟨s, List.mem_cons_of_mem a hs, inf_eq_right.mpr hle⟩
+
 /-- **Proposition 4.1, item 4** for two buckets (the `n = 2` per-interval formula): up to the
 crossing the concave PWL function `γ_{r,b} ⊓ γ_{r',b'}` equals the high-rate bucket `γ_{r,b}`. -/
 theorem concaveNFEval_pair_eq_left {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0}
