@@ -99,6 +99,26 @@ theorem rtResultant_eval_eq_zero_iff [IsAlgClosed K] (A D : K[X]) (hD : D.Separa
     (rtResultant A D).eval a = 0 ↔ ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
   rw [rtResultant_eval, ← hdeg, ← residue_iff_resultant_eq_zero A D hD a]
 
+/-- **Rothstein–Trager resultant as a product over the roots of `D`** (Bronstein §1.4, Thm 1.4.1
+specialized at `t = a`): over an algebraically closed field, for `deg A < deg D`,
+`R(a) = lc(D)^{deg D − 1} · ∏_{α : D(α)=0} (A(α) − a·D'(α))`. This is `rtResultant_eval` composed with
+Mathlib's `resultant_eq_prod_eval` (the resultant of a split polynomial as a product of the other's
+evaluations at the roots); the degree bound `deg(A − a·D') ≤ deg D − 1` holds since `deg A < deg D` and
+`deg D' ≤ deg D − 1`. This is the formula whose root `a` of multiplicity `i` matches `deg gcd(D, A−aD') = i`
+(the residue-multiplicity count behind Theorem 2.5.1). -/
+theorem rtResultant_eval_eq_prod_roots [IsAlgClosed K] (A D : K[X]) (a : K)
+    (hA : A.natDegree < D.natDegree) :
+    (rtResultant A D).eval a
+      = D.leadingCoeff ^ (D.natDegree - 1) *
+        (D.roots.map (fun α => A.eval α - a * (derivative D).eval α)).prod := by
+  have hg : (A - C a * derivative D).natDegree ≤ D.natDegree - 1 :=
+    (natDegree_sub_le _ _).trans
+      (max_le (by omega) ((natDegree_C_mul_le _ _).trans (natDegree_derivative_le D)))
+  rw [rtResultant_eval, Polynomial.resultant_eq_prod_eval D (A - C a * derivative D)
+    (D.natDegree - 1) hg (IsAlgClosed.splits D)]
+  exact congrArg (D.leadingCoeff ^ (D.natDegree - 1) * ·)
+    (congrArg Multiset.prod (Multiset.map_congr rfl (fun α _ => by simp [eval_sub, eval_mul, eval_C])))
+
 /-! ## §2.5 The Lazard–Rioboo–Trager algorithm (subresultant primitive)
 LRT replaces the per-residue gcd computations of Rothstein–Trager with the *subresultant PRS* of `D` and
 `A − t·D'` (in `x`), computed once over `K[t]`. The `j`-th subresultant `Sⱼ(D, A−tD')`, specialized at a
