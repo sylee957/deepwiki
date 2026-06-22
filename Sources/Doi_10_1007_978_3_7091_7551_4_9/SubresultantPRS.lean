@@ -48,11 +48,13 @@ discharges the degree-decreasing / non-vanishing hypotheses of the abstract conn
 abbrev subresultant_euclideanPRS_gcd_connection := @subresultant_euclideanPRS_isSimilar_gcd
 
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the *multiplicity identification*
-`deg_x R_m = i` — that `deg gcd(D, A−αD') = i` for a residue `α` of multiplicity `i` in `R` (and the
-non-degeneracy `deg(A − α·D') = deg D − 1` it entails), which would discharge the degree/index hypotheses of
-the library's `isSimilar_lrtSubresultant_eval_gcd` against the actual `lazardRiobooTrager` output. The
-similarity itself is done: the concrete subresultant ↔ gcd connection
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the residue non-degeneracy
+`deg(A − α·D') = deg D − 1` at a residue `α` (a top-coefficient non-cancellation condition), the remaining
+`hdeg` hypothesis of `isSimilar_lrtSubresultant_eval_gcd` once the index is matched to the multiplicity.
+The *multiplicity identification* `deg_x R_m = i` (`deg gcd(D, A−αD') = i` for a residue `α` of multiplicity
+`i = rootMultiplicity α R`) is DONE — but via the residue-counting argument
+(`rootMultiplicity_rtResultant_eq_natDegree_gcd`, `roots_rtResultant`, in `ResidueMultiplicity`), not the
+subresultant engine. The similarity itself is done: the concrete subresultant ↔ gcd connection
 (`subresultant_euclideanPRS_isSimilar_gcd`) and its `t ↦ α` specialization
 (`isSimilar_lrtSubresultant_eval_gcd`, `ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')` in the
 non-degenerate case). -/

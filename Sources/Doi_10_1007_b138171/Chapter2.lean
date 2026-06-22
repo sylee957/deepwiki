@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
+import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import Sources.Doi_10_1007_b138171.Source
@@ -18,17 +19,19 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — the multiplicity identification `deg_x R_m = i` (i.e. `deg gcd(D, A−aD') = i` for a residue
-  `a` of multiplicity `i` in `R`, and the non-degeneracy `deg(A − a·D') = deg D − 1` it implies) [research:
-  rests on Thm 1.4.3 subresultant-specialization / the residue-multiplicity theory], which would discharge
-  the `hdeg`/index hypotheses of `thm_2_5_1_ii` against the actual `lazardRiobooTrager` output and remove the
-  `ppₓ`-vs-`~` gap. Both halves of the *similarity* are done: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i`
-  (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) core `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` (non-
-  degenerate `deg(A−aD') = deg D − 1`) = `thm_2_5_1_ii` (`isSimilar_lrtSubresultant_eval_gcd`). The
-  Lazard–Rioboo–Trager *algorithm* is functionally done: primitive `lazardRiobooTrager_subresultant`
-  (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval` (specialization `t ↦ a`); and the full
-  assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def returning the `(Qᵢ, Sᵢ)` log-part
-  pairs; optional `lcₓ`-normalization omitted).
+§2.5: Thm 2.5.1 — the non-degeneracy `deg(A − a·D') = deg D − 1` at a residue `a` [deferred: needs the
+  top-coefficient non-cancellation `a ≠ coeff_{n−1}(A)/(n·lc(D))`, a condition on the specific residue
+  `a`], which is the remaining `hdeg` hypothesis of `thm_2_5_1_ii` once the index `i` is matched to the
+  multiplicity. The multiplicity identification `deg_x R_m = i` itself is DONE: `thm_2_5_1_multiplicity`
+  (`rootMultiplicity_rtResultant_eq_natDegree_gcd`, `rootMultiplicity a R = deg gcd(D, A−aD')`), via
+  `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`, the residues) and `natDegree_gcd_eq_count_residue`
+  (`deg gcd = #{α : residue α = a}`). Both halves of the *similarity* are done: part (i) `n = deg D ⟹ gcd ~ D`
+  = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) core `lrtSubresultant A D i (a) ~
+  gcd(D, A−aD')` (non-degenerate `deg(A−aD') = deg D − 1`) = `thm_2_5_1_ii`
+  (`isSimilar_lrtSubresultant_eval_gcd`). The Lazard–Rioboo–Trager *algorithm* is functionally done: primitive
+  `lazardRiobooTrager_subresultant` (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval`
+  (specialization `t ↦ a`); and the full assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def
+  returning the `(Qᵢ, Sᵢ)` log-part pairs; optional `lcₓ`-normalization omitted).
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -296,6 +299,23 @@ to `gcd(D, A − a·D')` — the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (ove
 library's `isSimilar_lrtSubresultant_eval_gcd`: combines `lrtSubresultant_eval` with the concrete
 subresultant ↔ gcd connection `subresultant_euclideanPRS_isSimilar_gcd`. -/
 abbrev thm_2_5_1_ii := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd
+
+/-- **Theorem 2.5.1, the multiplicity identification `deg_x R_m = i`** (§2.5, p.50): over an algebraically
+closed field, for separable `D` and `deg A < deg D`, the multiplicity of a residue `a` as a root of the
+Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')` equals the degree of the Rothstein–Trager gcd:
+`rootMultiplicity a R = deg gcd(D, A − a·D')`. The library's `rootMultiplicity_rtResultant_eq_natDegree_gcd`,
+combining `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`, the residues) with
+`natDegree_gcd_eq_count_residue` (`deg gcd = #{α : residue α = a}`). This is the count `i` the LRT algorithm
+takes as its subresultant index, supplying the `deg_x R_m = i` half of part (ii). -/
+abbrev thm_2_5_1_multiplicity :=
+  @DeepWiki.SymbolicIntegration.rootMultiplicity_rtResultant_eq_natDegree_gcd
+
+/-- **Roots of the Rothstein–Trager resultant** (§2.5, behind Thm 2.5.1): over an algebraically closed
+field, for separable `D` and `deg A < deg D`, the roots of `R(t)` (with multiplicity) are exactly the
+residues `A(α)/D'(α)` over the roots `α` of `D` — `R.roots = D.roots.map (A(α)/D'(α))`. The library's
+`roots_rtResultant`, the un-evaluated root-product form `rtResultant_eq_prod_roots` factored per root by
+`linearFactor_eq_residue`. -/
+abbrev intRationalLogPart_resultant_roots := @DeepWiki.SymbolicIntegration.roots_rtResultant
 
 open Polynomial in
 /-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the
