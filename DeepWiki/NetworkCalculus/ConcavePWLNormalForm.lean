@@ -261,6 +261,30 @@ theorem concaveNFEval_eq_of_isMin {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 �
     concaveNFEval l t = tbEReal s.1 s.2 t :=
   le_antisymm (concaveNFEval_le_of_mem hs t) (le_concaveNFEval hmin)
 
+/-- **Proposition 4.1, item 4** for two buckets (the `n = 2` per-interval formula): up to the
+crossing the concave PWL function `γ_{r,b} ⊓ γ_{r',b'}` equals the high-rate bucket `γ_{r,b}`. -/
+theorem concaveNFEval_pair_eq_left {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0}
+    (ht : t ≤ tbCross r b r' b') :
+    concaveNFEval [(r, b), (r', b')] t = tbEReal r b t := by
+  refine concaveNFEval_eq_of_isMin (s := (r, b)) (by simp) ?_
+  intro s' hs'
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hs'
+  rcases hs' with rfl | rfl
+  · exact le_refl _
+  · exact tb_le_of_le_cross hr hb ht
+
+/-- **Proposition 4.1, item 4** for two buckets: beyond the crossing the function equals the
+low-rate bucket `γ_{r',b'}`. -/
+theorem concaveNFEval_pair_eq_right {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0}
+    (ht : tbCross r b r' b' ≤ t) :
+    concaveNFEval [(r, b), (r', b')] t = tbEReal r' b' t := by
+  refine concaveNFEval_eq_of_isMin (s := (r', b')) (by simp) ?_
+  intro s' hs'
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hs'
+  rcases hs' with rfl | rfl
+  · exact tb_ge_of_cross_le hr hb ht
+  · exact le_refl _
+
 /-- **Definition 4.1** (Concave piecewise-linear normal form). A list `[(r₁,b₁), …, (rₙ,bₙ)]`
 of token-bucket parameters is in *concave normal form* when
 
