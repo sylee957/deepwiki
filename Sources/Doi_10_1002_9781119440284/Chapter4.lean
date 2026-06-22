@@ -6,6 +6,7 @@ import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
 import DeepWiki.NetworkCalculus.ConvexSegmentMerge
 import DeepWiki.NetworkCalculus.ConvexSegmentMergeTrunc
 import DeepWiki.NetworkCalculus.ConcaveSegmentMerge
+import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -19,7 +20,7 @@ or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
 §4.2: Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
-§4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
+§4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, the sup attained at `s=0`) is done; the two-segment piecewise case (optimal `s` at interior knots) remains; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -271,6 +272,17 @@ theorem thm_4_1_unbalanced (sf sg f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 
       = (((convexSegEval (f0 + g0) sf (mergeBySlope fsegs (truncSegs sf gsegs)) t : ℝ≥0)
             : ℝ) : EReal) :=
   DeepWiki.minConv_convexSegEval_unbalanced sf sg f0 g0 fsegs gsegs hsfg hfsort hgsort hfs hgs t
+
+/-- **Lemma 4.6** (§4.3, p.77), the affine base case. The `(min,plus)` deconvolution of two affine
+curves `u ↦ a + p·u` and `u ↦ b + q·u` is, in closed form, `a + p·t − b` when `p ≤ q` (the sup
+`⨆ₛ g(t+s) − h(s)` is attained at `s = 0`, since the `s`-coefficient `p − q ≤ 0`), and `⊤` when
+`q < p` (unbounded). The reusable building block for Lemma 4.6's two-segment deconvolution. The
+library's `DeepWiki.minDeconv_affine_le` / `DeepWiki.minDeconv_affine_top`. -/
+theorem lemma_4_6_affine (a p b q t : ℝ≥0) :
+    (p ≤ q → minDeconv (affineE a p) (affineE b q) t
+        = (((a + p * t : ℝ≥0) : ℝ) : EReal) - (((b : ℝ≥0) : ℝ) : EReal)) ∧
+    (q < p → minDeconv (affineE a p) (affineE b q) t = ⊤) :=
+  ⟨minDeconv_affine_le a p b q t, minDeconv_affine_top a p b q t⟩
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
