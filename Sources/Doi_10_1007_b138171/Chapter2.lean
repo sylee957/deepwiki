@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.Residues
 import Sources.Doi_10_1007_b138171.Source
 
@@ -19,9 +20,11 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   (their shared *result* is `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky algorithm [functional]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]; the Rothstein–Trager
-  algorithm [functional]. Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`,
-  the zeros of `R = resultant_x(D, A − t·D')` are exactly the residues) and `thm_2_4_1_ii`
-  (= `isRoot_gcd_iff_residue`, the `Gₐ` characterization), both on the §4.4 residue foundation.
+  algorithm's formal log-sum assembly over the roots of `R` [functional: needs the root-indexed sum].
+  Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`, the zeros of
+  `R = resultant_x(D, A − t·D')` are exactly the residues) and `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`,
+  the `Gₐ` characterization); the algorithm's two computational primitives are functional defs
+  `intRationalLogPart_resultant`/`_gcd`, both on the §4.4 residue foundation.
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
   the Lazard–Rioboo–Trager algorithm [functional]; Ex 2.5.2.
 §2.6: Thm 2.6.1; the Czichowski algorithm [functional]; Ex 2.6.1.
@@ -77,6 +80,16 @@ abbrev thm_2_4_1_i := @DeepWiki.SymbolicIntegration.residue_iff_resultant_eq_zer
 `isRoot_gcd_iff_residue` (built on the §4.4 residue `A(α)/D'(α)`). Part (iii) — splitting-field
 minimality — is delegated to Chaps 4/5 and remains [external]. -/
 abbrev thm_2_4_1_ii := @DeepWiki.SymbolicIntegration.isRoot_gcd_iff_residue
+
+/-- **IntRationalLogPart / Rothstein–Trager algorithm** (§2.4, p.51), resultant primitive `R(t)`: the
+functional def `rtResultant A D = resultant_x(D, A − t·D')`, with `rtResultant_eval` specializing it
+at `t = a` and `rtResultant_eval_eq_zero_iff` (= Thm 2.4.1(i)) characterizing its roots as residues. -/
+noncomputable abbrev intRationalLogPart_resultant := @DeepWiki.SymbolicIntegration.rtResultant
+
+/-- **IntRationalLogPart / Rothstein–Trager algorithm** (§2.4, p.51), gcd primitive `Gₐ`: the
+functional def `rtLogGcd A D a = gcd(D, A − a·D')`, with correctness `rtLogGcd_isRoot_iff`
+(= Thm 2.4.1(ii)). The full algorithm sums `a·log(Gₐ)` over the roots `a` of `R`. -/
+noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtLogGcd
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for
