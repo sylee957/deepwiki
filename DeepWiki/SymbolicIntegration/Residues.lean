@@ -1,4 +1,7 @@
 import DeepWiki.SymbolicIntegration.Subresultants
+import Mathlib.RingTheory.Polynomial.Resultant.Basic
+import Mathlib.FieldTheory.IsAlgClosed.Basic
+import Mathlib.FieldTheory.Separable
 
 /-! # Residues of rational functions (Bronstein §4.4, rational case)
 The Rothstein–Trager theorem (Bronstein Thm 2.4.1) expresses `∫ A/D` for squarefree `D` as a sum of
@@ -59,5 +62,30 @@ theorem isRoot_gcd_iff_residue (A D : F[X]) (a α : F) (hα : (derivative D).eva
       ↔ (D.IsRoot α ∧ A.eval α / (derivative D).eval α = a) := by
   rw [← dvd_iff_isRoot, dvd_gcd_iff, dvd_iff_isRoot, dvd_iff_isRoot,
     residue_eq_iff_isRoot_sub A D a α hα]
+
+/-- **Rothstein–Trager, the resultant criterion** (Bronstein Thm 2.4.1(i)): over an algebraically
+closed field, for squarefree (`Separable`) `D`, a constant `a` is a residue of `A/D` — i.e. equals
+`A(α)/D'(α)` at some root `α` of `D` — exactly when the Rothstein–Trager resultant
+`R(a) = resultant_x(D, A − a·D')` vanishes. This is the half of Thm 2.4.1 that says the residues are
+the zeros of `R`: `resultant_eq_zero_iff` turns `R(a) = 0` into non-coprimality of `D` and `A − a·D'`,
+which over an algebraically closed field means a common root `α`; `Separable` forces `D'(α) ≠ 0` there,
+so the common root condition is exactly the residue equation `A(α)/D'(α) = a`. -/
+theorem residue_iff_resultant_eq_zero [IsAlgClosed F]
+    (A D : F[X]) (hD : D.Separable) (a : F) :
+    D.resultant (A - C a * derivative D) = 0 ↔
+      ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
+  have hD0 : D ≠ 0 := hD.ne_zero
+  have hev : ∀ (p : F[X]) (x : F), aeval x p = p.eval x := fun p x => by
+    simp [aeval_def, eval₂_eq_eval_map, Polynomial.map_id]
+  have hd : ∀ {α : F}, D.eval α = 0 → (derivative D).eval α ≠ 0 := by
+    intro α hα
+    have := hD.eval₂_derivative_ne_zero (RingHom.id F)
+      (by simpa [eval₂_eq_eval_map, Polynomial.map_id] using hα)
+    simpa [eval₂_eq_eval_map, Polynomial.map_id] using this
+  rw [resultant_eq_zero_iff, and_iff_right (Or.inl hD0),
+    Polynomial.isCoprime_iff_aeval_ne_zero_of_isAlgClosed (k := F) (K := F)]
+  simp only [not_forall, hev, ne_eq, not_or, not_not, eval_sub, eval_mul, eval_C, IsRoot.def]
+  refine exists_congr fun α => and_congr_right fun hDα => ?_
+  rw [div_eq_iff (hd hDα), sub_eq_zero]
 
 end DeepWiki.SymbolicIntegration
