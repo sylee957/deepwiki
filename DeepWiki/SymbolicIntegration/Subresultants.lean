@@ -803,6 +803,115 @@ theorem subresultant_deg_ge (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree 
   simp only [C_mul_X_pow_eq_monomial]
   exact (Rem.as_sum_range' (j + 1) (by omega)).symm
 
+/-- For `j ≥ deg B` and `m ≤ n` the `ⱼSᵢ` submatrix of `bSylvester A B n m` (the *normal*
+orientation, first poly `A` of the larger formal degree `n`) is upper-triangular: the `A`-block has
+`lc A = A.coeff n`-diagonal with zeros below, and every `B`-row entry strictly below the diagonal is
+`B.coeff` of a degree `> j ≥ deg B`, hence `0`. The mirror of `subresultant_deg_ge_upperTri`. -/
+private theorem subresultant_deg_ge_normal_upperTri (A B : R[X]) (n m j i : ℕ)
+    (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn : m ≤ n) (hjm : j ≤ m)
+    (e : Fin ((m + n - 2 * j - 1) + 1) ≃ Fin (m + n - 2 * j)) (he : e = finCongr (by omega))
+    (t s : Fin ((m + n - 2 * j - 1) + 1)) (hts : s < t) :
+    ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).submatrix e e t s = 0 := by
+  have hsv : ((e s : Fin _) : ℕ) = (s : ℕ) := by simp [he]
+  have htv : ((e t : Fin _) : ℕ) = (t : ℕ) := by simp [he]
+  have hstn : (s : ℕ) < (t : ℕ) := by simpa using hts
+  have htle := t.isLt
+  rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+  have hcolv : (subCol n m j i (e s) : ℕ)
+      = if (s : ℕ) < m + n - 2 * j - 1 then (s : ℕ) else m + n - i - j - 1 := by
+    simp only [subCol, hsv]
+  have hrowv : (subRow n m j (e t) : ℕ)
+      = if (t : ℕ) < m - j then (t : ℕ) else (t : ℕ) + j := by
+    simp only [subRow, htv]
+  simp only [bSylvester, Matrix.of_apply, hcolv, hrowv]
+  by_cases htB : (t : ℕ) < m - j
+  · rw [if_pos htB, if_pos (show (s : ℕ) < m + n - 2 * j - 1 by omega),
+      if_pos (show (t : ℕ) < m by omega), if_neg (by omega)]
+  · rw [if_neg htB, if_neg (show ¬ ((t : ℕ) + j < m) by omega),
+      if_pos (show (s : ℕ) < m + n - 2 * j - 1 by omega)]
+    split
+    · exact coeff_eq_zero_of_natDegree_lt (by omega)
+    · rfl
+
+/-- Per-minor evaluation for `deg B ≤ j ≤ m ≤ n`, `j < n` (the *normal*-orientation mirror of
+`subresultant_deg_ge_entry`): the upper-triangular `ⱼSᵢ` det of `bSylvester A B n m` is the product of
+its diagonal — `m-j` copies of `lc A = A.coeff n`, `n-j-1` copies of `B.coeff j`, and one `B.coeff i` —
+so `det = (A.coeff n)^(m-j)·(B.coeff j)^(n-j-1)·B.coeff i`. -/
+private theorem subresultant_deg_ge_normal_entry (A B : R[X]) (n m j i : ℕ)
+    (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn : m ≤ n) (hjm : j ≤ m) (hi : i ≤ j) :
+    ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).det
+      = (A.coeff n) ^ (m - j) * ((B.coeff j) ^ (n - j - 1) * B.coeff i) := by
+  set e : Fin ((m + n - 2 * j - 1) + 1) ≃ Fin (m + n - 2 * j) := finCongr (by omega) with he
+  rw [← Matrix.det_submatrix_equiv_self e,
+    Matrix.det_of_upperTriangular (fun t s hts =>
+      subresultant_deg_ge_normal_upperTri A B n m j i hj1 hj2 hmn hjm e he t s hts),
+    Fin.prod_univ_castSucc]
+  have hlast : (((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).submatrix e e)
+      (Fin.last _) (Fin.last _) = B.coeff i := by
+    have hlv : ((e (Fin.last (m + n - 2 * j - 1)) : Fin _) : ℕ) = m + n - 2 * j - 1 := by simp [he]
+    rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+    have hrow : (subRow n m j (e (Fin.last (m + n - 2 * j - 1))) : ℕ) = m + n - j - 1 := by
+      simp only [subRow, hlv]; rw [if_neg (show ¬ (m + n - 2 * j - 1 < m - j) by omega)]; omega
+    have hcol : (subCol n m j i (e (Fin.last (m + n - 2 * j - 1))) : ℕ) = m + n - i - j - 1 := by
+      simp only [subCol, hlv]; rw [if_neg (show ¬ (m + n - 2 * j - 1 < m + n - 2 * j - 1) by omega)]
+    simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+    rw [if_neg (show ¬ (m + n - j - 1 < m) by omega), if_pos ⟨by omega, by omega⟩]
+    congr 1; omega
+  have hmid : ∀ t : Fin (m + n - 2 * j - 1),
+      (((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).submatrix e e)
+        (Fin.castSucc t) (Fin.castSucc t)
+      = if (t : ℕ) < m - j then A.coeff n else B.coeff j := by
+    intro t
+    have htv : ((e (Fin.castSucc t) : Fin _) : ℕ) = (t : ℕ) := by simp [he]
+    have hti := t.isLt
+    rw [Matrix.submatrix_apply, Matrix.submatrix_apply]
+    have hcol : (subCol n m j i (e (Fin.castSucc t)) : ℕ) = (t : ℕ) := by
+      simp only [subCol, htv]; rw [if_pos (show (t : ℕ) < m + n - 2 * j - 1 by omega)]
+    by_cases htA : (t : ℕ) < m - j
+    · have hrow : (subRow n m j (e (Fin.castSucc t)) : ℕ) = (t : ℕ) := by
+        simp only [subRow, htv]; rw [if_pos (show (t : ℕ) < m - j by omega)]
+      simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+      rw [if_pos (show (t : ℕ) < m by omega), if_pos ⟨le_rfl, by omega⟩, if_pos htA]
+      congr 1; omega
+    · have hrow : (subRow n m j (e (Fin.castSucc t)) : ℕ) = (t : ℕ) + j := by
+        simp only [subRow, htv]; rw [if_neg (show ¬ ((t : ℕ) < m - j) by omega)]
+      simp only [bSylvester, Matrix.of_apply, hrow, hcol]
+      rw [if_neg (show ¬ ((t : ℕ) + j < m) by omega), if_pos ⟨by omega, by omega⟩, if_neg htA]
+      congr 1; omega
+  rw [hlast, Finset.prod_congr rfl (fun t _ => hmid t), Finset.prod_ite, Finset.prod_const,
+    Finset.prod_const, card_filter_lt _ _ (by omega)]
+  have hcn : (Finset.univ.filter (fun t : Fin (m + n - 2 * j - 1) => ¬ (t : ℕ) < m - j)).card
+      = n - j - 1 := by
+    have h := Finset.card_filter_add_card_filter_not
+      (s := (Finset.univ : Finset (Fin (m + n - 2 * j - 1)))) (p := fun t => (t : ℕ) < m - j)
+    rw [card_filter_lt _ _ (by omega), Finset.card_univ, Fintype.card_fin] at h; omega
+  rw [hcn]; ring
+
+/-- **Subresultant for `deg B ≤ j ≤ m ≤ n`, `j < n`** (the *normal*-orientation mirror of
+`subresultant_deg_ge`, with the first poly `A` of the larger formal degree `n`):
+`Sⱼ(A,B; n,m) = (lc A)^(m-j)·(B.coeff j)^(n-j-1)·B`. Summing the per-minor determinants
+(`subresultant_deg_ge_normal_entry`) reassembles `B` (`as_sum_range'`, `deg B ≤ j`). This is the shape
+needed by the Lazard–Rioboo–Trager top index `j = deg E`, where `E ∣ D` and the p.r.s. terminates in
+one step (`gcd D E ~ E`), so the formal degrees `(n,m) = (deg D, deg D − 1)` are *not* swapped. -/
+theorem subresultant_deg_ge_normal (A B : R[X]) (n m j : ℕ) (hj1 : B.natDegree ≤ j) (hj2 : j < n)
+    (hmn : m ≤ n) (hjm : j ≤ m) :
+    subresultant A B n m j = C ((A.coeff n) ^ (m - j) * (B.coeff j) ^ (n - j - 1)) * B := by
+  rw [subresultant]
+  rw [Finset.sum_congr rfl (fun i hi => by
+    rw [subresultant_deg_ge_normal_entry A B n m j i hj1 hj2 hmn hjm
+        (by rw [Finset.mem_range] at hi; omega),
+      show (A.coeff n) ^ (m - j) * ((B.coeff j) ^ (n - j - 1) * B.coeff i)
+        = ((A.coeff n) ^ (m - j) * (B.coeff j) ^ (n - j - 1)) * B.coeff i from by ring,
+      map_mul, mul_assoc]), ← Finset.mul_sum]
+  congr 1
+  simp only [C_mul_X_pow_eq_monomial]
+  exact (B.as_sum_range' (j + 1) (by omega)).symm
+
+-- The normal-orientation degenerate formula: `Sⱼ(A,B; n,m) = C(...)·B` for `deg B ≤ j ≤ m ≤ n`, `j < n`.
+example (A B : R[X]) (n m j : ℕ) (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn : m ≤ n) (hjm : j ≤ m) :
+    subresultant A B n m j = C ((A.coeff n) ^ (m - j) * (B.coeff j) ^ (n - j - 1)) * B :=
+  subresultant_deg_ge_normal A B n m j hj1 hj2 hmn hjm
+
 /-- **Fundamental PRS Theorem, case `j = deg H`** (Brown–Traub Lemma 1, eq 13): for a division step
 `A = Rem + B·Q` with `deg Rem < deg B = γ ≤ deg A = φ`,
 `S_η(A,B) = (-1)^((φ-η)(γ-η))·(lc B)^(φ-η)·(lc Rem)^(γ-η-1)·Rem` at `η = deg Rem`. Composes
