@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
@@ -19,11 +20,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: the full `∫A/D = rational + ∑ logs` log-sum assembly of `IntegrateRationalFunction` (p.52)
-  [deferred: needs the Rothstein–Trager/LRT log-sum derivative identity (only per-residue Thm 2.5.1 +
-  the simple-root Bernoulli case `deriv_sum_residue_log` exist); the reduction
-  `integrateRationalFunction_reduction` (rational + `polyIntegral` + squarefree-denominator sum) and pieces
-  `hermiteReduce_full`, `polyIntegral`, `lazardRiobooTrager`, `ex_2_7_3` are done].
+§2.5: Hermite-reduction remainder-properness `deg rᵢ < deg Dᵢ` is not yet exposed by
+  `integrateRationalFunction_reduction`, so `integrateRationalFunction_logForm` takes it as a hypothesis
+  [deferred: strengthen `hermiteReducePower`/`hermiteReduce_full` to also return the proper degree bound].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -383,6 +382,24 @@ and a squarefree-denominator residual (the `IntRationalLogPart` input). Assemble
 final `∑ᵢ rᵢ/Dᵢ → ∑ logs` step remains. The library's `integrateRationalFunction_reduction`. -/
 abbrev integrateRationalFunction_reduction :=
   @DeepWiki.SymbolicIntegration.integrateRationalFunction_reduction
+
+/-- **`IntegrateRationalFunction` closed log-form, single squarefree denominator** (§2.5, p.52,
+eq 2.4 — the `e = 1`, no-rational-part case): for a proper fraction `R/V` over a split squarefree
+`V = ∏_{α∈s}(X−α)` with `deg R < #s`, `R/V = ∑_a a·logDeriv(Gₐ)`, `Gₐ = ∏_{α∈s, res(α)=a}(X−α)` — i.e.
+`∫ R/V = ∑_a a·log(Gₐ)`, the §2.4/§2.5 logarithmic part with no rational/polynomial part. The library's
+`ratFunc_logForm_split_squarefree`. -/
+abbrev integrateRationalFunction_logForm_squarefree :=
+  @DeepWiki.SymbolicIntegration.ratFunc_logForm_split_squarefree
+
+/-- **`IntegrateRationalFunction` closed log-form** (§2.5, p.52, eq 2.4 — the culmination): for `A`
+over a denominator with split squarefree factors `Dᵢ = ∏_{α∈sset i}(X−α)` (disjoint root-sets,
+`eᵢ ≥ 1`, char `0`), there are a rational part `g`, a polynomial-integral part `p`, and proper
+remainders `rᵢ` with `A/∏ᵢ Dᵢ^{eᵢ} = g′ + (polyIntegral p)′ + ∑ᵢ ∑_a a·logDeriv(Gᵢₐ)` (provided the
+`rᵢ` are proper, `deg rᵢ < #sset i`) — `∫ A/D = g + ∫ p dx + ∑ᵢ ∑_a a·log(Gᵢₐ)`. Assembles the §2.5
+reduction with the Rothstein–Trager residue-grouped log sum. The library's
+`integrateRationalFunction_logForm`. -/
+abbrev integrateRationalFunction_logForm :=
+  @DeepWiki.SymbolicIntegration.integrateRationalFunction_logForm
 
 /-! ## §2.8 Rioboo's Algorithm for Real Rational Functions -/
 
