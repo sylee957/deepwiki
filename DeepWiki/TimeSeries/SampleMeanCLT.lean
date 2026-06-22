@@ -52,6 +52,29 @@ theorem iidNoise_sampleMean_clt {Z : ℕ → Ω → ℝ} {Y : Ω' → ℝ}
   rw [heq]
   exact tendstoInDistribution_inv_sqrt_mul_sum_sub hY hmem hindep hident
 
+/-- **Central limit theorem over a `ℤ`-window:** for a `ℤ`-indexed iid noise sequence `Z`
+(`iIndepFun`, all identically distributed to `Z a`, with `Z a ∈ L²`), the sample mean over the
+length-`n` window starting at `a` satisfies `√n (n⁻¹ ∑_{k<n} Z_{a+k} − μ) ⇒ N(0, σ²)`. The window
+form needed by the `MA(q)` / linear-process central limit theorem, where the noise is `ℤ`-indexed
+for the lag shifts. Reindexes `iidNoise_sampleMean_clt` along the injection `k ↦ a + k`. -/
+theorem iidNoise_sampleMean_clt_window {Z : ℤ → Ω → ℝ} {Y : Ω' → ℝ} (a : ℤ)
+    (hY : HasLaw Y (gaussianReal 0 Var[Z a; P].toNNReal) P') (hmem : MemLp (Z a) 2 P)
+    (hindep : iIndepFun Z P) (hident : ∀ s, IdentDistrib (Z s) (Z a) P P) :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n (fun k => Z (a + k) ω) - P[Z a])) atTop Y
+      (fun _ => P) P' := by
+  have hg : Function.Injective (fun k : ℕ => a + (k : ℤ)) := fun k₁ k₂ h => by simpa using h
+  have hZ0 : Z (a + ((0 : ℕ) : ℤ)) = Z a := by norm_num
+  have hmean : P[Z a] = P[Z (a + ((0 : ℕ) : ℤ))] := by rw [hZ0]
+  have heq : (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n (fun k => Z (a + k) ω) - P[Z a]))
+      = fun (n : ℕ) ω =>
+        Real.sqrt n * (sampleMean n (fun k => Z (a + ((k : ℕ) : ℤ)) ω) - P[Z (a + ((0 : ℕ) : ℤ))]) := by
+    rw [hmean]
+  rw [heq]
+  exact iidNoise_sampleMean_clt (Z := fun k : ℕ => Z (a + (k : ℤ))) (Y := Y)
+    (by rw [hZ0]; exact hY) (by rw [hZ0]; exact hmem) (hindep.precomp hg)
+    (fun i => by rw [hZ0]; exact hident (a + (i : ℤ)))
+
 /-- **Slutsky's theorem for the central limit theorem (`L²` form):** if `Yₙ ⇒ Z` in distribution and
 `Xₙ` is asymptotically `L²`-close to `Yₙ` (`‖Xₙ − Yₙ‖₂ → 0`), then `Xₙ ⇒ Z`. The bridge that
 transfers a central limit theorem along a negligible `L²` perturbation — the step that turns the iid
