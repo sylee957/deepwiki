@@ -100,94 +100,95 @@ theorem minConv_concaveNFEval_singleton_eq_lineMeet_inf {f : ℝ≥0 → EReal} 
 
 /-! ## GOAL 2 — the Lemma 4.6 dividend asymmetry as a citable `¬∀` -/
 
-/-- A constant `EReal`-valued curve `fun _ => c`. The deconvolution `minDeconv (const c) h t =
+/-- A constant `EReal`-valued curve `fun _ => c` (the `E` suffix marks these as `EReal`-valued, vs
+the `Curve`-valued `stepCurve` in `ServiceCurvePackets`). The deconvolution `minDeconv (const c) h t =
 ⨆ s, c - h s` is independent of `t`. -/
-noncomputable def constCurve (c : EReal) : ℝ≥0 → EReal := fun _ => c
+noncomputable def constCurveE (c : EReal) : ℝ≥0 → EReal := fun _ => c
 
-@[simp] theorem constCurve_apply (c : EReal) (t : ℝ≥0) : constCurve c t = c := rfl
+@[simp] theorem constCurveE_apply (c : EReal) (t : ℝ≥0) : constCurveE c t = c := rfl
 
-/-- `minDeconv (constCurve c) h t = ⨆ s, c - h s` (the dividend is `t`-independent). -/
-theorem minDeconv_constCurve (c : EReal) (h : ℝ≥0 → EReal) (t : ℝ≥0) :
-    minDeconv (constCurve c) h t = ⨆ s : ℝ≥0, c - h s := by
-  simp only [minDeconv, constCurve_apply]
+/-- `minDeconv (constCurveE c) h t = ⨆ s, c - h s` (the dividend is `t`-independent). -/
+theorem minDeconv_constCurveE (c : EReal) (h : ℝ≥0 → EReal) (t : ℝ≥0) :
+    minDeconv (constCurveE c) h t = ⨆ s : ℝ≥0, c - h s := by
+  simp only [minDeconv, constCurveE_apply]
 
 /-- A two-value step curve: `b₀` at `0`, `b₁` everywhere positive. The shift dependence of its
 deconvolution is what breaks dividend-side distribution (constant curves would tie). -/
-noncomputable def stepCurve (b₀ b₁ : EReal) : ℝ≥0 → EReal := fun t => if t = 0 then b₀ else b₁
+noncomputable def stepCurveE (b₀ b₁ : EReal) : ℝ≥0 → EReal := fun t => if t = 0 then b₀ else b₁
 
-@[simp] theorem stepCurve_zero (b₀ b₁ : EReal) : stepCurve b₀ b₁ 0 = b₀ := by
-  simp [stepCurve]
+@[simp] theorem stepCurveE_zero (b₀ b₁ : EReal) : stepCurveE b₀ b₁ 0 = b₀ := by
+  simp [stepCurveE]
 
-theorem stepCurve_pos (b₀ b₁ : EReal) {t : ℝ≥0} (ht : t ≠ 0) : stepCurve b₀ b₁ t = b₁ := by
-  simp [stepCurve, ht]
+theorem stepCurveE_pos (b₀ b₁ : EReal) {t : ℝ≥0} (ht : t ≠ 0) : stepCurveE b₀ b₁ t = b₁ := by
+  simp [stepCurveE, ht]
 
-/-- The meet of the two opposite steps is the constant `0`: `stepCurve 1 0 ⊓ stepCurve 0 1 =
-constCurve 0` (at `0` it is `1 ⊓ 0 = 0`, elsewhere `0 ⊓ 1 = 0`). -/
-theorem inf_stepCurve_eq_constCurve_zero :
-    (stepCurve (1 : EReal) 0 ⊓ stepCurve 0 1) = constCurve 0 := by
+/-- The meet of the two opposite steps is the constant `0`: `stepCurveE 1 0 ⊓ stepCurveE 0 1 =
+constCurveE 0` (at `0` it is `1 ⊓ 0 = 0`, elsewhere `0 ⊓ 1 = 0`). -/
+theorem inf_stepCurveE_eq_constCurveE_zero :
+    (stepCurveE (1 : EReal) 0 ⊓ stepCurveE 0 1) = constCurveE 0 := by
   funext t
   rcases eq_or_ne t 0 with rfl | ht
-  · simp [stepCurve, constCurve]
-  · simp [stepCurve_pos, ht, constCurve]
+  · simp [stepCurveE, constCurveE]
+  · simp [stepCurveE_pos, ht, constCurveE]
 
-/-- The deconvolution of `constCurve 0` by `constCurve 0` at `0` is `0`: every shifted
+/-- The deconvolution of `constCurveE 0` by `constCurveE 0` at `0` is `0`: every shifted
 difference is `0 - 0 = 0`. -/
-theorem minDeconv_constCurve_zero_self :
-    minDeconv (constCurve (0 : EReal)) (constCurve 0) (0 : ℝ≥0) = 0 := by
-  rw [minDeconv_constCurve]; simp [constCurve]
+theorem minDeconv_constCurveE_zero_self :
+    minDeconv (constCurveE (0 : EReal)) (constCurveE 0) (0 : ℝ≥0) = 0 := by
+  rw [minDeconv_constCurveE]; simp [constCurveE]
 
-/-- The deconvolution of a `stepCurve b₀ b₁` by `constCurve 0` at `0` is `b₀ ⊔ b₁`: the
+/-- The deconvolution of a `stepCurveE b₀ b₁` by `constCurveE 0` at `0` is `b₀ ⊔ b₁`: the
 shifted differences range over `{b₀ - 0, b₁ - 0}`, whose supremum is the join. -/
-theorem minDeconv_stepCurve_constCurve_zero (b₀ b₁ : EReal) :
-    minDeconv (stepCurve b₀ b₁) (constCurve 0) (0 : ℝ≥0) = b₀ ⊔ b₁ := by
+theorem minDeconv_stepCurveE_constCurveE_zero (b₀ b₁ : EReal) :
+    minDeconv (stepCurveE b₀ b₁) (constCurveE 0) (0 : ℝ≥0) = b₀ ⊔ b₁ := by
   apply le_antisymm
   · refine minDeconv_le (fun s => ?_)
-    simp only [zero_add, constCurve_apply, sub_zero]
+    simp only [zero_add, constCurveE_apply, sub_zero]
     rcases eq_or_ne s 0 with rfl | hs
-    · simp [stepCurve]
-    · rw [stepCurve_pos _ _ hs]; exact le_sup_right
+    · simp [stepCurveE]
+    · rw [stepCurveE_pos _ _ hs]; exact le_sup_right
   · refine sup_le ?_ ?_
-    · calc b₀ = stepCurve b₀ b₁ (0 + 0) - constCurve 0 0 := by simp [stepCurve, constCurve]
+    · calc b₀ = stepCurveE b₀ b₁ (0 + 0) - constCurveE 0 0 := by simp [stepCurveE, constCurveE]
         _ ≤ _ := sub_le_minDeconv _ _ 0 0
-    · calc b₁ = stepCurve b₀ b₁ (0 + 1) - constCurve 0 1 := by
-            rw [zero_add, stepCurve_pos _ _ one_ne_zero]; simp [constCurve]
+    · calc b₁ = stepCurveE b₀ b₁ (0 + 1) - constCurveE 0 1 := by
+            rw [zero_add, stepCurveE_pos _ _ one_ne_zero]; simp [constCurveE]
         _ ≤ _ := sub_le_minDeconv _ _ 0 1
 
-/-- `minDeconv (stepCurve 1 0) (constCurve 0) 0 = 1` (best shift `s = 0`). -/
-theorem minDeconv_stepCurve10 :
-    minDeconv (stepCurve (1 : EReal) 0) (constCurve 0) (0 : ℝ≥0) = 1 := by
-  rw [minDeconv_stepCurve_constCurve_zero]; norm_num
+/-- `minDeconv (stepCurveE 1 0) (constCurveE 0) 0 = 1` (best shift `s = 0`). -/
+theorem minDeconv_stepCurveE10 :
+    minDeconv (stepCurveE (1 : EReal) 0) (constCurveE 0) (0 : ℝ≥0) = 1 := by
+  rw [minDeconv_stepCurveE_constCurveE_zero]; norm_num
 
-/-- `minDeconv (stepCurve 0 1) (constCurve 0) 0 = 1` (best shift `s ≠ 0`). -/
-theorem minDeconv_stepCurve01 :
-    minDeconv (stepCurve (0 : EReal) 1) (constCurve 0) (0 : ℝ≥0) = 1 := by
-  rw [minDeconv_stepCurve_constCurve_zero]; norm_num
+/-- `minDeconv (stepCurveE 0 1) (constCurveE 0) 0 = 1` (best shift `s ≠ 0`). -/
+theorem minDeconv_stepCurveE01 :
+    minDeconv (stepCurveE (0 : EReal) 1) (constCurveE 0) (0 : ℝ≥0) = 1 := by
+  rw [minDeconv_stepCurveE_constCurveE_zero]; norm_num
 
 /-- **Lemma 4.6 dividend asymmetry — the strict inequality witness.** The sub-distribution
 `minDeconv_inf_left_le` is *strict* at this witness: `minDeconv (g₁ ⊓ g₂) h 0 < minDeconv g₁ h 0
-⊓ minDeconv g₂ h 0` for `g₁ = stepCurve 1 0`, `g₂ = stepCurve 0 1`, `h = constCurve 0` — the
+⊓ minDeconv g₂ h 0` for `g₁ = stepCurveE 1 0`, `g₂ = stepCurveE 0 1`, `h = constCurveE 0` — the
 LHS is `0`, the RHS is `1`. The optimal shift differs between `g₁` (best at `s = 0`) and `g₂`
 (best at `s ≠ 0`), so the meet of suprema strictly exceeds the supremum of the meet. -/
 theorem minDeconv_inf_left_lt_witness :
-    minDeconv (stepCurve (1 : EReal) 0 ⊓ stepCurve 0 1) (constCurve 0) 0
-      < minDeconv (stepCurve (1 : EReal) 0) (constCurve 0) 0
-          ⊓ minDeconv (stepCurve 0 1) (constCurve 0) 0 := by
-  rw [inf_stepCurve_eq_constCurve_zero, minDeconv_constCurve_zero_self,
-    minDeconv_stepCurve10, minDeconv_stepCurve01]
+    minDeconv (stepCurveE (1 : EReal) 0 ⊓ stepCurveE 0 1) (constCurveE 0) 0
+      < minDeconv (stepCurveE (1 : EReal) 0) (constCurveE 0) 0
+          ⊓ minDeconv (stepCurveE 0 1) (constCurveE 0) 0 := by
+  rw [inf_stepCurveE_eq_constCurveE_zero, minDeconv_constCurveE_zero_self,
+    minDeconv_stepCurveE10, minDeconv_stepCurveE01]
   norm_num
 
 /-- **Lemma 4.6 dividend asymmetry, as a citable `¬∀`.** Deconvolution does *not* in general
 distribute over `⊓` in the *dividend*: there exist `g₁, g₂, h : ℝ≥0 → EReal` and `t` with
-`minDeconv (g₁ ⊓ g₂) h t ≠ minDeconv g₁ h t ⊓ minDeconv g₂ h t`. Witnesses: `g₁ = stepCurve 1 0`
-(value `1` at `0`, `0` elsewhere), `g₂ = stepCurve 0 1` (the reverse), `h = constCurve 0`,
-`t = 0`. Then `g₁ ⊓ g₂ = constCurve 0` so the LHS is `0`; but `minDeconv g₁ h 0 = 1` (best shift
+`minDeconv (g₁ ⊓ g₂) h t ≠ minDeconv g₁ h t ⊓ minDeconv g₂ h t`. Witnesses: `g₁ = stepCurveE 1 0`
+(value `1` at `0`, `0` elsewhere), `g₂ = stepCurveE 0 1` (the reverse), `h = constCurveE 0`,
+`t = 0`. Then `g₁ ⊓ g₂ = constCurveE 0` so the LHS is `0`; but `minDeconv g₁ h 0 = 1` (best shift
 `s = 0`) and `minDeconv g₂ h 0 = 1` (best shift `s ≠ 0`), so the RHS is `1 ⊓ 1 = 1 ≠ 0` — the
 optimal shifts disagree. Direct consequence of the strict gap `minDeconv_inf_left_lt_witness`. -/
 theorem not_forall_minDeconv_inf_left_eq :
     ¬ ∀ (g₁ g₂ h : ℝ≥0 → EReal) (t : ℝ≥0),
         minDeconv (g₁ ⊓ g₂) h t = minDeconv g₁ h t ⊓ minDeconv g₂ h t := by
   intro hcontra
-  exact absurd (hcontra (stepCurve 1 0) (stepCurve 0 1) (constCurve 0) 0)
+  exact absurd (hcontra (stepCurveE 1 0) (stepCurveE 0 1) (constCurveE 0) 0)
     (ne_of_lt minDeconv_inf_left_lt_witness)
 
 end DeepWiki
