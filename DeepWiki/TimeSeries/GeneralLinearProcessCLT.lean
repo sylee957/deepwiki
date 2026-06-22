@@ -106,4 +106,17 @@ theorem linearProcess_sampleSum_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp 
   refine tsum_congr fun j => ?_
   rw [← Finset.smul_sum, ← smul_sub, ← Finset.sum_sub_distrib, lag_toLpSeq_eq]
 
+/-- **`‖D_n‖ ≤ C` for the causal linear process:** the `L²` norm of the windowed sample-sum minus
+its `(∑ψ)`-scaled noise part is bounded by `∑ⱼ |ψⱼ|·2jM`, uniformly in `n` — combining the
+structural identity `linearProcess_sampleSum_sub` with the boundary bound `norm_tsum_filter_lag_le`. -/
+theorem norm_sampleSum_sub_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) {ψ : ℕ → ℝ}
+    (hψ : Summable ψ) (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ)
+    (hψj : Summable fun j : ℕ => |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal)) (n : ℕ) :
+    ‖(∑ t ∈ Finset.range n, ∑' j : ℕ, ψ j • toLpSeq Z hZ ((t : ℤ) - (j : ℤ)))
+          - (∑' j : ℕ, ψ j) • ∑ t ∈ Finset.range n, toLpSeq Z hZ (t : ℤ)‖
+      ≤ ∑' j : ℕ, |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) := by
+  rw [linearProcess_sampleSum_sub hZ hψ hsum n]
+  exact norm_tsum_filter_lag_le hZ hident hψj n
+
 end DeepWiki.TimeSeries
