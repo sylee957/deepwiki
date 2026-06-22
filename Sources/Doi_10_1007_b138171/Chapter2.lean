@@ -15,29 +15,7 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.2: DONE. The `HermiteReduce` algorithm is fully formalized — reduction step (`hermiteReduce_step` /
-  `hermiteReduce_step_ratFunc`), prime-power inner loop (`hermiteReducePower` / `hermiteReducePower_spec`),
-  two-factor and multi-factor partial fractions (`ratFunc_partialFraction_coprime` /
-  `ratFunc_partialFraction_prod`), and the complete outer algorithm `hermiteReduce_full`
-  (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`) — and all three worked traces on the octic example are
-  verified: `ex_2_2_1` (original/partial-fraction), `ex_2_2_2` (quadratic), `ex_2_2_3` (Mack's linear),
-  sharing result `ex_2_3_1`.
-§2.3: DONE. The Horowitz–Ostrogradsky algorithm is fully formalized: denominator split
-  `horowitzOstrogradsky_split` (= `hoSplit`) + `hoSplit_mul`/`hoSplit_snd_squarefree`; key divisibility
-  `horowitzOstrogradsky_dvd` (`D⁻ ∣ D⁻′·D*`, so `E` exists); reduction identity
-  `horowitzReduce_step_ratFunc` (`A/(D⁻·D*) = (B/D⁻)′ + C/D*`); the linear-solve framework
-  (`HorowitzLinearSolve.lean`: `horowitzLinear`/`horowitzMap` on `degreeLT` coordinate spaces,
-  `finrank_degreeLT_prod`); the operator **injectivity** `horowitzMap_injective` (root-multiplicity:
-  `horowitz_wronskian_prime_pow_dvd` → `horowitz_prime_pow_dvd` → `horowitz_dvd_of_rel`); and the
-  **unconditional solve** `exists_unique_horowitz` (`A = B′·D* − B·E + C·D⁻` has unique degree-bounded
-  `B,C`). Source paper cataloged at `Sources/Doi_10_1145_800204_806314/`. (Ex 2.3.1's *result* — shared
-  with Ex 2.2.1 — is `ex_2_3_1`.)
-§2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]. Parts (i),(ii) are
-  PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`) and `thm_2_4_1_ii` (= `isRoot_gcd_iff_residue`);
-  the two primitives are functional defs `intRationalLogPart_resultant`/`_gcd`; the *simple-root* log part
-  is explicit (`intRationalLogPart_logDeriv`, `A/D = ∑_{α|D=0} (A(α)/D'(α))·logDeriv(X−α)`); and the
-  algorithm's *residue-grouped* log-sum output is now done — `intRationalLogPart_grouped`
-  (`A/D = ∑_a a·logDeriv(Gₐ)`, `Gₐ = ∏_{res(α)=a}(X−α)`, grouping equal-residue roots).
+§2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
   the Lazard–Rioboo–Trager algorithm [functional].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm

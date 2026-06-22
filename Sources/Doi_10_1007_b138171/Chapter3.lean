@@ -261,13 +261,8 @@ applying `lem_3_4_4_pow` to each factor gives the book's `∏ pᵢ^{eᵢ-1} gcd(
 abbrev lem_3_4_4 := @associated_gcd_deriv_prod
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   • Theorem 3.4.1(iii) — DONE in full: `thm_3_4_1_iii_prime` (prime-factor key step) and
---     `thm_3_4_1_iii` (general factor of a special polynomial is special, via prime factorization).
---   • Theorems 3.4.2 / 3.4.3 — DONE: single linear factor (`thm_3_4_2_linear`/`thm_3_4_3_linear`)
---     and the full squarefree product forms (`thm_3_4_2`: normal ⟺ `v(a)≠a′` at every root;
---     `thm_3_4_3`: special ⟺ `v(a)=a′` at every root). Remaining §3.4: Corollaries 3.4.1 / 3.4.2,
---     Lemmas 3.4.5 / 3.4.6 (new constants ⇔ special polynomials), Theorem 3.4.4 (special of the
---     first kind under algebraic extension).
+--   Corollary 3.4.1; Corollary 3.4.2; Lemma 3.4.5; Lemma 3.4.6 (new constants ⇔ special polynomials);
+--   Theorem 3.4.4 (special of the first kind under algebraic extension).
 
 /-! ## §3.5 The Canonical Representation -/
 
