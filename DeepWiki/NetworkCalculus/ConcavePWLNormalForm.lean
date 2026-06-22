@@ -147,6 +147,25 @@ theorem tbCross_lt_tbCross_of_strictMin {r₁ b₁ r₂ b₂ r₃ b₃ : ℝ≥0
     tbCross r₁ b₁ r₂ b₂ < tbCross r₂ b₂ r₃ b₃ :=
   lt_trans ((tb_gt_iff_cross_lt h₁₂ hb₁₂ ht).mp hm₁) ((tb_lt_iff_lt_cross h₂₃ hb₂₃ ht).mp hm₃)
 
+/-- Up to the crossing, the high-rate/low-burst bucket is `≤` the other (the `≤` form of
+`tb_lt_iff_lt_cross`, including the endpoints `t = 0` and `t = tbCross`). -/
+theorem tb_le_of_le_cross {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0}
+    (ht : t ≤ tbCross r b r' b') : tbEReal r b t ≤ tbEReal r' b' t := by
+  rcases eq_or_ne t 0 with rfl | h0
+  · rw [tbEReal_zero, tbEReal_zero]
+  · rcases lt_or_eq_of_le ht with hlt | heq
+    · exact ((tb_lt_iff_lt_cross hr hb h0).mpr hlt).le
+    · rw [heq]; exact (tbEReal_eq_at_cross hr hb).le
+
+/-- Beyond the crossing, the low-rate/high-burst bucket is `≤` the other. -/
+theorem tb_ge_of_cross_le {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0}
+    (ht : tbCross r b r' b' ≤ t) : tbEReal r' b' t ≤ tbEReal r b t := by
+  rcases eq_or_ne t 0 with rfl | h0
+  · rw [tbEReal_zero, tbEReal_zero]
+  · rcases lt_or_eq_of_le ht with hlt | heq
+    · exact ((tb_gt_iff_cross_lt hr hb h0).mpr hlt).le
+    · rw [← heq]; exact (tbEReal_eq_at_cross hr hb).ge
+
 /-! ## Concave PWL evaluation and Definition 4.1 (normal form) -/
 
 /-- A list of `(rate, burst)` pairs evaluated as a concave piecewise-linear curve: the
