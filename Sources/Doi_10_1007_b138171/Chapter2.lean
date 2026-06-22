@@ -13,11 +13,10 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: the full Bernoulli algorithm [functional]; the `q`-power assembly of the `k>1` arctan-term
-  reduction `∫ (Bx+C)/(x²+bx+c)ᵏ` (the symbolic `q^(k−1)`-power bookkeeping; follows the
-  `hermite_reduction_step` pattern). The `k=1` arctan formula `eq_2_1_arctan` and the `k>1` reduction's
-  core numerator identity `eq_2_1_arctan_reduce_core` (`2(2C−bB)q − (2x+b)·((2C−bB)x+bC−2cB) =
-  (Bx+C)(4c−b²)`) are done.
+§2.1: the full Bernoulli algorithm [functional: needs the root-indexed partial-fraction sum
+  `∑_{α|D(α)=0}`, shared with §2.4]. The *arctan term* `∫ (Bx+C)/(x²+bx+c)ᵏ` is fully done: `eq_2_1_arctan`
+  (k=1, the log + arctan formula) and `eq_2_1_arctan_reduce` (k>1, the full recursive reduction lowering
+  the quadratic power, with core numerator identity `eq_2_1_arctan_reduce_core`).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
@@ -114,6 +113,65 @@ theorem eq_2_1_arctan_reduce_core {F : Type*} [CommRing F] (t B C b c : F) :
     2 * (2 * C - b * B) * (t ^ 2 + b * t + c)
         - (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B))
       = (B * t + C) * (4 * c - b ^ 2) := by ring
+
+/-- **Equation 2.1, the arctan term for `k>1`** (§2.1, p.37), the full recursive reduction: with
+`q = x²+bx+c` (`4c−b² ≠ 0`) and `k = m+2`,
+`∫ (Bx+C)/qᵏ = ((2C−bB)x+bC−2cB)/((k−1)(4c−b²)q^(k−1)) + ∫ (2k−3)(2C−bB)/((k−1)(4c−b²)q^(k−1))`,
+lowering the quadratic power `k → k−1` (iterating reaches `k=1` = `eq_2_1_arctan`). Verified as the
+differential-field identity: the rational part's derivative plus the reduced integrand equals the
+original integrand `(Bx+C)/qᵏ`, collapsing via `eq_2_1_arctan_reduce_core`. -/
+theorem eq_2_1_arctan_reduce {F : Type*} [Field F] [CharZero F] [Differential F] {t : F}
+    (ht : t′ = 1) {B C b c : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (hc : c′ = 0)
+    (hR : 4 * c - b ^ 2 ≠ 0) (hq : t ^ 2 + b * t + c ≠ 0) (m : ℕ) :
+    (((2 * C - b * B) * t + (b * C - 2 * c * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
+      + ((2 * (m : F) + 1) * (2 * C - b * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1))
+      = (B * t + C) / (t ^ 2 + b * t + c) ^ (m + 2) := by
+  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h4 : (4 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h1' : (1 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have hmc : ((m : F))′ = 0 := by simp
+  have hm1 : ((m : F) + 1) ≠ 0 := Nat.cast_add_one_ne_zero m
+  have hq' : (t ^ 2 + b * t + c)′ = 2 * t + b := by
+    rw [map_add, map_add, deriv_pow, deriv_const_mul _ hb, hc, ht]; ring
+  have hcoef1 : (2 * C - b * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
+  have h2c : (2 * c)′ = 0 := by rw [deriv_const_mul _ h2, hc]; ring
+  have hcoef2 : (b * C - 2 * c * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ hb, deriv_const_mul _ h2c, hC, hB]; ring
+  have hP' : ((2 * C - b * B) * t + (b * C - 2 * c * B))′ = 2 * C - b * B := by
+    rw [map_add, deriv_const_mul _ hcoef1, hcoef2, ht]; ring
+  have hKconst : (((m : F) + 1))′ = 0 := by rw [map_add, hmc, h1']; ring
+  have h4cb : (4 * c - b ^ 2)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h4, hc, deriv_pow, hb]; ring
+  have hK : (((m : F) + 1) * (4 * c - b ^ 2))′ = 0 := by
+    rw [deriv_const_mul _ hKconst, h4cb]; ring
+  have hcore := eq_2_1_arctan_reduce_core t B C b c
+  have hRatDeriv : (((2 * C - b * B) * t + (b * C - 2 * c * B))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 1)))′
+      = ((t ^ 2 + b * t + c) * (2 * C - b * B)
+          - ((m : F) + 1) * (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B)))
+        / (((m : F) + 1) * (4 * c - b ^ 2) * (t ^ 2 + b * t + c) ^ (m + 2)) := by
+    rw [deriv_div, hP', deriv_const_mul _ hK, deriv_pow, hq']
+    simp only [Nat.add_sub_cancel]
+    set q := t ^ 2 + b * t + c
+    clear_value q
+    field_simp
+    push_cast
+    ring
+  rw [hRatDeriv]
+  set q := t ^ 2 + b * t + c with hqdef
+  clear_value q
+  set R := 4 * c - b ^ 2 with hRdef
+  clear_value R
+  have hpow : q ^ (m + 2) = q ^ (m + 1) * q := pow_succ q (m + 1)
+  simp only [hpow]
+  have hQne : q ^ (m + 1) ≠ 0 := pow_ne_zero _ hq
+  set Q := q ^ (m + 1) with hQdef
+  clear_value Q
+  field_simp
+  linear_combination ((m : F) + 1) * hcore
 
 /-! ## §2.2 The Hermite Reduction -/
 
