@@ -138,6 +138,66 @@ theorem horowitz_wronskian_prime_pow_dvd {p w u B C : K[X]} (hp : Prime p) {k : 
   exact (Irreducible.coprime_pow_of_not_dvd (2 * k - 1) hp.irreducible hpu).symm.dvd_of_dvd_mul_left
     hdvd
 
+/-- **Per-prime divisibility** (the multiplicity argument): for a prime `p` with `D⁻ = p^k·w` (`p ∤ w`),
+`D* = p·u` (`p ∤ u`), `p ∤ p′` (char-0 separability), the Horowitz relation forces `p^k ∣ B`. By induction
+on `a ≤ k`: from `p^a ∣ B` (so `B = p^a·B₁`) and `p^{2k−1} ∣ W`, the `p`-order of `W = p^{a+k−1}·M` with
+`M ≡ (a−k)·p′·B₁·w (mod p)` forces `p ∣ B₁` (since `p ∤ (a−k)·p′·w`), giving `p^{a+1} ∣ B`. -/
+theorem horowitz_prime_pow_dvd [CharZero K] {p w u B C : K[X]} (hp : Prime p) {k : ℕ} (hk : 1 ≤ k)
+    (hpw : ¬ p ∣ w) (hpu : ¬ p ∣ u) (hpp : ¬ p ∣ derivative p)
+    (hrel : (p * u) * (derivative B * (p ^ k * w) - B * derivative (p ^ k * w))
+        = -(C * (p ^ k * w) ^ 2)) :
+    p ^ k ∣ B := by
+  have hp0 : p ≠ 0 := hp.ne_zero
+  have hstar := horowitz_wronskian_prime_pow_dvd hp hk hpu hrel
+  obtain ⟨c, rfl⟩ : ∃ c, k = c + 1 := ⟨k - 1, by omega⟩
+  suffices h : ∀ a, a ≤ c + 1 → p ^ a ∣ B by exact h (c + 1) le_rfl
+  intro a
+  induction a with
+  | zero => intro _; rw [pow_zero]; exact one_dvd B
+  | succ a ih =>
+    intro ha
+    obtain ⟨B₁, hB₁⟩ := ih (by omega)
+    have hWak1 : p ^ (a + c + 1) ∣
+        derivative B * (p ^ (c + 1) * w) - B * derivative (p ^ (c + 1) * w) := by
+      rw [show a + c + 1 = a + (c + 1) from by omega]
+      exact dvd_trans (pow_dvd_pow p (by omega)) hstar
+    -- W = p^(a+c)·X + p^(a+c+1)·Y, X = (↑a − ↑(c+1))·p′·B₁·w, Y = B₁′·w − B₁·w′
+    set X : K[X] := (Polynomial.C (a : K) - Polynomial.C ((c + 1 : ℕ) : K)) * derivative p * B₁ * w
+      with hXdef
+    have hident :
+        derivative B * (p ^ (c + 1) * w) - B * derivative (p ^ (c + 1) * w)
+          = p ^ (a + c) * X
+            + p ^ (a + c + 1) * (derivative B₁ * w - B₁ * derivative w) := by
+      subst hB₁
+      rw [hXdef]
+      rcases Nat.eq_zero_or_pos a with rfl | hapos
+      · simp only [pow_zero, one_mul, Nat.cast_zero, map_zero, zero_sub, derivative_mul,
+          derivative_pow, Nat.add_sub_cancel]
+        push_cast; ring
+      · obtain ⟨b, rfl⟩ : ∃ b, a = b + 1 := ⟨a - 1, by omega⟩
+        simp only [derivative_mul, derivative_pow, Nat.add_sub_cancel, Nat.cast_add, Nat.cast_one]
+        ring
+    -- extract p ∣ X, hence p ∣ B₁
+    have hX1 : p ^ (a + c + 1) ∣ p ^ (a + c) * X :=
+      (dvd_add_left (dvd_mul_right _ _)).mp (hident ▸ hWak1)
+    have hpX : p ∣ X :=
+      (mul_dvd_mul_iff_left (pow_ne_zero (a + c) hp0)).mp (by rwa [pow_succ] at hX1)
+    have hcoeff : ¬ p ∣ (Polynomial.C (a : K) - Polynomial.C ((c + 1 : ℕ) : K)) := by
+      rw [← map_sub]
+      have hne : ((a : K) - ((c + 1 : ℕ) : K)) ≠ 0 := by
+        rw [sub_ne_zero]; exact_mod_cast (by omega : a ≠ c + 1)
+      exact fun hd => hp.not_unit (isUnit_of_dvd_unit hd (isUnit_C.mpr (isUnit_iff_ne_zero.mpr hne)))
+    have hpB1 : p ∣ B₁ := by
+      rcases hp.dvd_mul.mp hpX with h | h
+      · rcases hp.dvd_mul.mp h with h | h
+        · rcases hp.dvd_mul.mp h with h | h
+          · exact absurd h hcoeff
+          · exact absurd h hpp
+        · exact h
+      · exact absurd h hpw
+    obtain ⟨B₂, hB₂⟩ := hpB1
+    exact ⟨B₂, by rw [hB₁, hB₂, pow_succ]; ring⟩
+
 end DeepWiki.SymbolicIntegration
 
 end
