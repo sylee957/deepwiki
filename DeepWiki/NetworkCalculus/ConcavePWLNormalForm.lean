@@ -355,4 +355,97 @@ theorem IsConcaveNormalForm.cross_strictMono {l : List (ℝ≥0 × ℝ≥0)} (h 
     (hmin ⟨i, by omega⟩ (Fin.ne_of_val_ne (by omega)))
     (hmin ⟨i + 2, by omega⟩ (Fin.ne_of_val_ne (by omega)))
 
+/-! ## The per-interval formula (Proposition 4.1, item 4)
+
+For a list in concave normal form, on the inter-crossing interval the matching token-bucket is
+the pointwise minimum, so `concaveNFEval l` equals it there. The crux is *transitive
+minimality*: index `i` beats every other index `j` at a time `t` between its two bounding
+crossings — for `j > i` by chaining `tb_le_of_le_cross` along the (increasing) crossings, for
+`j < i` by chaining `tb_ge_of_cross_le`. -/
+
+/-- In a concave normal form, the rate strictly decreases across any index gap: `i < j ⟹
+rⱼ < rᵢ`. -/
+theorem IsConcaveNormalForm.rate_lt_of_lt {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {i j : Fin l.length} (hij : i < j) : (l.get j).1 < (l.get i).1 :=
+  (List.pairwise_iff_get.mp h.1) i j hij
+
+/-- In a concave normal form, the burst strictly increases across any index gap: `i < j ⟹
+bᵢ < bⱼ`. -/
+theorem IsConcaveNormalForm.burst_lt_of_lt {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {i j : Fin l.length} (hij : i < j) : (l.get i).2 < (l.get j).2 :=
+  (List.pairwise_iff_get.mp h.burst_strictMono) i j hij
+
+/-- **Transitive minimality, upward half.** If `t` is at most the `i`/`i+1` crossing then the
+`i`-th bucket is `≤` every later bucket `i+k+1` at `t` (chaining `tb_le_of_le_cross` along the
+increasing crossings). -/
+theorem IsConcaveNormalForm.le_of_le_cross_succ {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {t : ℝ≥0} {i k : ℕ} (hk : i + k + 1 < l.length)
+    (ht : t ≤ tbCross (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2
+                      (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2) :
+    tbEReal (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2 t ≤
+    tbEReal (l.get ⟨i + k + 1, hk⟩).1 (l.get ⟨i + k + 1, hk⟩).2 t := by
+  induction k generalizing i with
+  | zero =>
+      have hlt : (⟨i, by omega⟩ : Fin l.length) < ⟨i + 1, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+      exact tb_le_of_le_cross (h.rate_lt_of_lt hlt) (h.burst_lt_of_lt hlt).le ht
+  | succ k ih =>
+      -- base step `i ≤ i+1`, then `i+1 ≤ i+1+k+1` by IH at `i+1`
+      have hlt : (⟨i, by omega⟩ : Fin l.length) < ⟨i + 1, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+      have hstep : tbEReal (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2 t ≤
+          tbEReal (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2 t :=
+        tb_le_of_le_cross (h.rate_lt_of_lt hlt) (h.burst_lt_of_lt hlt).le ht
+      -- carry the bound to the next crossing via `cross_strictMono`
+      have ht' : t ≤ tbCross (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2
+                              (l.get ⟨i + 2, by omega⟩).1 (l.get ⟨i + 2, by omega⟩).2 :=
+        le_trans ht (h.cross_strictMono (by omega)).le
+      have hrec : tbEReal (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2 t ≤
+          tbEReal (l.get ⟨i + 1 + k + 1, by omega⟩).1 (l.get ⟨i + 1 + k + 1, by omega⟩).2 t :=
+        ih (by omega) ht'
+      have he : (⟨i + 1 + k + 1, by omega⟩ : Fin l.length) = ⟨i + (k + 1) + 1, hk⟩ := by
+        simp only [Fin.mk.injEq]; omega
+      rw [he] at hrec
+      exact le_trans hstep hrec
+
+/-- **Transitive minimality, downward half.** If `t` is at least the `i`/`i+1` crossing then the
+`i+1`-th bucket is `≤` every earlier bucket `i-k` at `t` (chaining `tb_ge_of_cross_le` along the
+increasing crossings). -/
+theorem IsConcaveNormalForm.le_of_cross_le_pred {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {t : ℝ≥0} {i k : ℕ} (hi : i + 1 < l.length) (hk : k ≤ i)
+    (ht : tbCross (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2
+                  (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2 ≤ t) :
+    tbEReal (l.get ⟨i + 1, hi⟩).1 (l.get ⟨i + 1, hi⟩).2 t ≤
+    tbEReal (l.get ⟨i - k, by omega⟩).1 (l.get ⟨i - k, by omega⟩).2 t := by
+  induction k generalizing i with
+  | zero =>
+      have hlt : (⟨i, by omega⟩ : Fin l.length) < ⟨i + 1, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+      simpa using tb_ge_of_cross_le (h.rate_lt_of_lt hlt) (h.burst_lt_of_lt hlt).le ht
+  | succ k ih =>
+      -- `i+1 ≤ i` (base), then `i ≤ i-(k+1)` by IH at `i-1`
+      have hi1 : 1 ≤ i := by omega
+      have hlt : (⟨i, by omega⟩ : Fin l.length) < ⟨i + 1, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+      have hstep : tbEReal (l.get ⟨i + 1, hi⟩).1 (l.get ⟨i + 1, hi⟩).2 t ≤
+          tbEReal (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2 t :=
+        tb_ge_of_cross_le (h.rate_lt_of_lt hlt) (h.burst_lt_of_lt hlt).le ht
+      -- previous crossing `(i-1)/i` is below the current one, hence below `t`
+      have hcs : tbCross (l.get ⟨i - 1, by omega⟩).1 (l.get ⟨i - 1, by omega⟩).2
+                          (l.get ⟨i - 1 + 1, by omega⟩).1 (l.get ⟨i - 1 + 1, by omega⟩).2 <
+                 tbCross (l.get ⟨i - 1 + 1, by omega⟩).1 (l.get ⟨i - 1 + 1, by omega⟩).2
+                          (l.get ⟨i - 1 + 2, by omega⟩).1 (l.get ⟨i - 1 + 2, by omega⟩).2 :=
+        h.cross_strictMono (by omega)
+      have he1 : (⟨i - 1 + 1, by omega⟩ : Fin l.length) = ⟨i, by omega⟩ := by simp only [Fin.mk.injEq]; omega
+      have he2 : (⟨i - 1 + 2, by omega⟩ : Fin l.length) = ⟨i + 1, by omega⟩ := by
+        simp only [Fin.mk.injEq]; omega
+      rw [he1, he2] at hcs
+      have ht' : tbCross (l.get ⟨i - 1, by omega⟩).1 (l.get ⟨i - 1, by omega⟩).2
+                          (l.get ⟨i - 1 + 1, by omega⟩).1 (l.get ⟨i - 1 + 1, by omega⟩).2 ≤ t := by
+        rw [he1]; exact le_trans hcs.le ht
+      have hrec : tbEReal (l.get ⟨i - 1 + 1, by omega⟩).1 (l.get ⟨i - 1 + 1, by omega⟩).2 t ≤
+          tbEReal (l.get ⟨i - 1 - k, by omega⟩).1 (l.get ⟨i - 1 - k, by omega⟩).2 t :=
+        ih (by omega) (by omega) ht'
+      have he3 : (⟨i - 1 + 1, by omega⟩ : Fin l.length) = ⟨i, by omega⟩ := by simp only [Fin.mk.injEq]; omega
+      have he4 : (⟨i - 1 - k, by omega⟩ : Fin l.length) = ⟨i - (k + 1), by omega⟩ := by
+        simp only [Fin.mk.injEq]; omega
+      rw [he3, he4] at hrec
+      exact le_trans hstep hrec
+
 end DeepWiki
