@@ -279,6 +279,26 @@ theorem hermiteReduce_sum_spec [CharZero K] {ι : Type*} (s : Finset ι) (D : ι
   exact Finset.sum_congr rfl fun i hi =>
     hermiteReducePower_spec (D i) (hD i hi) (e i) (he i hi) (A i)
 
+open scoped Differential in
+open Classical in
+/-- **Hermite reduction — complete outer algorithm** (§2.2): for a single proper fraction `A/D` whose
+denominator has squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (the `Dᵢ` squarefree, pairwise coprime,
+`eᵢ ≥ 1`, char 0), there is a rational part `g` and numerators `rᵢ` with
+`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` — i.e. `∫ A/D = g + ∫ ∑ᵢ rᵢ/Dᵢ`, the remaining integrand having squarefree
+denominators. Composes `ratFunc_partialFraction_prod` (decompose `A/D` into `∑ Bᵢ/Dᵢ^{eᵢ}`) with
+`hermiteReduce_sum_spec` (reduce each prime power). -/
+theorem hermiteReduce_full [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty)
+    (D : ι → K[X]) (e : ι → ℕ) (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (g : RatFunc K) (r : ι → K[X]),
+      algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
+        = g′ + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) := by
+  obtain ⟨B, hB⟩ := ratFunc_partialFraction_prod (fun i => D i ^ e i) s hs
+    (fun i hi => pow_ne_zero _ (hD i hi).ne_zero)
+    (fun i hi j hj hij => (hcop i hi j hj hij).pow) A
+  simp only [map_pow] at hB
+  exact ⟨_, _, hB.trans (hermiteReduce_sum_spec s D e B hD he)⟩
+
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
 part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator

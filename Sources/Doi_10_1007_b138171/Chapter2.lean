@@ -15,14 +15,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.2: the *outer* `HermiteReduce` recursion over the full squarefree factorization `D = ∏ᵢ Dᵢ^i`
-  [functional] — the remaining glue is wiring the multi-factor partial fraction to the inner loop on each
-  prime power (specialize `ratFunc_partialFraction_prod` to `Dᵢ^i`, then `hermiteReducePower` per factor,
-  and sum). Done: the reduction step (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`); the prime-power
-  *inner loop* `hermiteReducePower` / `hermiteReducePower_spec` (`A/Vᵏ = g′ + r/V`, char 0, via Bézout since
-  `V ⊥ V'`); the *two-factor* split `ratFunc_partialFraction_coprime` (`A/(P·Q) = B/Q + C/P`, `P ⊥ Q`); and
-  the *multi-factor* partial fraction `ratFunc_partialFraction_prod` (`A/∏Pᵢ = ∑ Bᵢ/Pᵢ` for pairwise-coprime
-  `Pᵢ`, by Finset induction). The Ex 2.2.1/2.2.2/2.2.3 traces [functional] (shared *result* `ex_2_3_1`).
+§2.2: the per-algorithm *traces* of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is
+  `ex_2_3_1`). The `HermiteReduce` algorithm itself is now fully formalized: reduction step
+  (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`), prime-power inner loop (`hermiteReducePower` /
+  `hermiteReducePower_spec`), two-factor and multi-factor partial fractions
+  (`ratFunc_partialFraction_coprime` / `ratFunc_partialFraction_prod`), and the complete outer algorithm
+  `hermiteReduce_full` (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`).
 §2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
   `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
   and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
@@ -185,6 +183,13 @@ factors `Dᵢ` with multiplicities `eᵢ ≥ 1` (char 0), `∑ᵢ Aᵢ/Dᵢ^{e�
 squarefree-denominatored. Composed with `ratFunc_partialFraction_prod` this is the full HermiteReduce.
 The library's `hermiteReduce_sum_spec`. -/
 abbrev hermiteReduce_sum_spec := @DeepWiki.SymbolicIntegration.hermiteReduce_sum_spec
+
+/-- **Hermite reduction — complete outer algorithm** (§2.2, p.39, Algorithm `HermiteReduce`): for a
+proper fraction `A/D` with squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` squarefree, pairwise coprime,
+`eᵢ ≥ 1`, char 0), there exist a rational part `g` and numerators `rᵢ` with `A/D = g′ + ∑ᵢ rᵢ/Dᵢ`, i.e.
+`∫ A/D = g + ∫ ∑ᵢ rᵢ/Dᵢ` with the remaining integrand squarefree-denominatored. Composes the multi-factor
+partial fraction with the per-prime-power reduction. The library's `hermiteReduce_full`. -/
+abbrev hermiteReduce_full := @DeepWiki.SymbolicIntegration.hermiteReduce_full
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for
