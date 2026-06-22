@@ -93,6 +93,44 @@ theorem mergeBySlope_cons_gt {a b : ℝ≥0 × ℝ≥0} {as bs : List (ℝ≥0 �
     mergeBySlope (a :: as) (b :: bs) = b :: mergeBySlope (a :: as) bs := by
   rw [mergeBySlope, if_neg h]
 
+/-- A segment is in the merge iff it is in one of the inputs (the merge keeps exactly the union). -/
+theorem mem_mergeBySlope {x : ℝ≥0 × ℝ≥0} : ∀ (l1 l2 : List (ℝ≥0 × ℝ≥0)),
+    x ∈ mergeBySlope l1 l2 ↔ x ∈ l1 ∨ x ∈ l2 := by
+  intro l1 l2
+  induction l1, l2 using mergeBySlope.induct with
+  | case1 l => simp
+  | case2 l => simp
+  | case3 a as b bs hab ih => rw [mergeBySlope_cons_le hab]; simp only [List.mem_cons, ih]; tauto
+  | case4 a as b bs hab ih => rw [mergeBySlope_cons_gt hab]; simp only [List.mem_cons, ih]; tauto
+
+/-- `mergeBySlope` of two slope-sorted lists is slope-sorted — the merge output is again a valid
+convex segment list, so Theorem 4.1's merge can be composed/iterated. -/
+theorem mergeBySlope_sorted : ∀ (l1 l2 : List (ℝ≥0 × ℝ≥0)),
+    List.Pairwise (fun a b => a.1 ≤ b.1) l1 → List.Pairwise (fun a b => a.1 ≤ b.1) l2 →
+    List.Pairwise (fun a b => a.1 ≤ b.1) (mergeBySlope l1 l2) := by
+  intro l1 l2
+  induction l1, l2 using mergeBySlope.induct with
+  | case1 l => intro _ h2; rwa [mergeBySlope_nil_left]
+  | case2 l => intro h1 _; rwa [mergeBySlope_nil_right]
+  | case3 a as b bs hab ih =>
+      intro h1 h2
+      rw [mergeBySlope_cons_le hab, List.pairwise_cons]
+      refine ⟨fun x hx => ?_, ih (List.pairwise_cons.mp h1).2 h2⟩
+      rcases (mem_mergeBySlope as (b :: bs)).mp hx with hx | hx
+      · exact (List.pairwise_cons.mp h1).1 x hx
+      · rcases List.mem_cons.mp hx with rfl | hx
+        · exact hab
+        · exact le_trans hab ((List.pairwise_cons.mp h2).1 x hx)
+  | case4 a as b bs hab ih =>
+      intro h1 h2
+      rw [mergeBySlope_cons_gt hab, List.pairwise_cons]
+      refine ⟨fun x hx => ?_, ih h1 (List.pairwise_cons.mp h2).2⟩
+      rcases (mem_mergeBySlope (a :: as) bs).mp hx with hx | hx
+      · rcases List.mem_cons.mp hx with rfl | hx
+        · exact (not_le.mp hab).le
+        · exact le_trans (not_le.mp hab).le ((List.pairwise_cons.mp h1).1 x hx)
+      · exact (List.pairwise_cons.mp h2).1 x hx
+
 /-- Peel the leading segment `(s, ℓ)`: evaluating past its length is the tail evaluated from the
 shifted base, `convexSegEval f0 fs ((s, ℓ) :: rest) (ℓ + r) = convexSegEval (f0 + s·ℓ) fs rest r`.
 (At `r = 0` both sides are the corner value `f0 + s·ℓ`.) -/
