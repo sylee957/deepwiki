@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
+import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 
 /-! # Lazard–Rioboo–Trager correctness (Bronstein Theorem 2.5.1, part (ii))
 The LRT log-part algorithm replaces the Rothstein–Trager per-residue gcds `gcd(D, A − a·D')` by the
@@ -68,5 +69,61 @@ theorem isSimilar_lrtSubresultant_eval_gcd {K : Type*} [Field K] [GCDMonoid K[X]
     (euclideanPRS D E k).natDegree hjE
     (le_trans (le_of_lt hjE) (le_trans hElt (Nat.sub_le _ _))) le_rfl le_rfl
     (leadingCoeff_ne_zero.mpr hD) hElt).trans hengine
+
+open scoped Classical in
+/-- **Theorem 2.5.1 — algorithm-level capstone**: state part-(ii) correctness directly at the LRT
+algorithm's own index `i = rootMultiplicity a R` (`R = rtResultant A D`), with the p.r.s.-termination
+hypotheses discharged internally. Over an algebraically closed field with `D` separable and
+`deg A < deg D`, for a residue `a` whose multiplicity `i` in `R` is *strictly* below `deg(A − a·D')`
+(the genuine part-(ii) regime: the gcd is a proper factor of `A − a·D'`, forcing the Euclidean p.r.s.
+to take `≥ 2` steps), the LRT subresultant at index `i`, specialized `t ↦ a`, is similar to the
+Rothstein–Trager gcd `gcd(D, A − a·D')`. The index is rewritten from `i` to the last-p.r.s. degree via
+`rootMultiplicity_rtResultant_eq_natDegree_gcd` (`i = deg gcd`) and `IsSimilar.natDegree_eq` on
+`(isPRS_euclideanPRS …).isSimilar_gcd` (`deg gcd = deg R_k`), and the termination data
+`hk0`/`hknz` come from `exists_last_euclideanPRS_nonzero`; the strict bound `hi` forces `2 ≤ k`. The
+boundary `i = deg(A − a·D')` (`k = 1`, `A − a·D' ∣ D`) and `A − a·D' = 0` (the part-(i) `i = deg D`
+regime) are excluded by `hi`. -/
+theorem lazardRiobooTrager_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
+    (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
+    (hi : (rtResultant A D).rootMultiplicity a < (A - C a * derivative D).natDegree) :
+    IsSimilar
+      ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * derivative D)) := by
+  set E := A - C a * derivative D with hE
+  have hDne : D ≠ 0 := fun h => by simp [h] at hA
+  -- `A − a·D'` has positive degree, hence is nonzero (from `hi`)
+  have hEne : E ≠ 0 := fun h => by rw [h, natDegree_zero] at hi; exact Nat.not_lt_zero _ hi
+  -- the multiplicity bridge: `i = deg gcd(D, E)`
+  have hmul : (rtResultant A D).rootMultiplicity a = (gcd D E).natDegree :=
+    rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
+  -- termination data for the Euclidean p.r.s. of `D, E`
+  obtain ⟨k, hk1, hk0, hknz⟩ := exists_last_euclideanPRS_nonzero D E hEne
+  -- the last nonzero p.r.s. element is similar to the gcd, so they share the degree
+  have hsim : IsSimilar (euclideanPRS D E k) (gcd D E) :=
+    (isPRS_euclideanPRS D E).isSimilar_gcd hk0 (fun j hj1 hjk => hknz j hj1 hjk)
+  have hdeg : (euclideanPRS D E k).natDegree = (gcd D E).natDegree := hsim.natDegree_eq
+  -- the strict bound forces `2 ≤ k`: at `k = 1` the last element is `E`, giving `deg E < deg E`
+  have hk2 : 2 ≤ k := by
+    rcases Nat.lt_or_ge k 2 with hk | hk
+    · have hk1' : k = 1 := by omega
+      subst hk1'
+      rw [euclideanPRS_one] at hdeg
+      rw [hmul, ← hdeg] at hi
+      exact absurd hi (lt_irrefl _)
+    · exact hk
+  -- rewrite the algorithm index to the last-p.r.s. degree and apply part (ii)
+  rw [hmul, ← hdeg]
+  exact isSimilar_lrtSubresultant_eval_gcd A D a hDne hA hk2 hk0 hknz
+
+open scoped Classical in
+example {K : Type*} [Field K] [IsAlgClosed K]
+    (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
+    (hi : (rtResultant A D).rootMultiplicity a < (A - C a * derivative D).natDegree) :
+    IsSimilar
+      ((lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * derivative D)) :=
+  lazardRiobooTrager_isSimilar_gcd A D hD hA a hi
 
 end DeepWiki.SymbolicIntegration
