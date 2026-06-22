@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.ConvexConvByLine
 import DeepWiki.NetworkCalculus.ConvexConcaveReadback
 import DeepWiki.NetworkCalculus.ConvexSegEvalSplit
 import DeepWiki.NetworkCalculus.ConvexConcaveCrossingPoint
+import DeepWiki.NetworkCalculus.ConvexConcaveCrossingCoord
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
 import DeepWiki.NetworkCalculus.SegmentDeconvComposite
@@ -26,7 +27,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution + readback engines are done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`; `thm_4_2_readback_below`/`_above`: each `f ∗ γⱼ = (f ∗ lineⱼ) ⊓ f` with `lineⱼ = convexSegEval bⱼ rⱼ []` so `lemma_4_1_line` computes it — below a bucket's breakpoint `f ∗ γⱼ = f`, above it the meet of the line continuation and `f`); the ordering's breakpoint monotonicity, tie region, and one-sided domination are done (`thm_4_2_ordering_below_tie`: below the lower breakpoint all buckets tie at `f`; `thm_4_2_ordering_le_below`: up to the higher breakpoint the lower-rate bucket dominates — `f ∗ γ ≤ f` always, so the higher bucket is redundant on `[0, u*(r')]`); the crossing is done as a meet — base case (`thm_4_2_crossing_single_rate`: single-rate `f`, `f ∗ γ_{r,b}` is `f` left of `t = b/(fs−r)`, the bucket line right of it) and general convex `f` (`thm_4_2_crossing_general`: `f ∗ γ_{r,b} = f(t) ⊓ (f(u*) + b + r·(t − u*))` for any segments); the crossing is now resolved structurally: the minimum-growth-rate beyond `u*` is done (`thm_4_2_growth_past_breakpoint`, via the `convexSegEval` split-at-the-breakpoint), making the "`f ≤ line`" set a down-set, and both meet branches are pinned (`thm_4_2_crossing_resolved`: `f ∗ γ_{r,b} = f` where `f` is slack, `= f(u*)+b+r·(t−u*)` where the bucket binds — a single switch from `f` to the bucket line); the switch is now packaged as contiguous regimes (`thm_4_2_crossing_single_switch`: slack is an initial interval, binding a final interval) with the `r = fs` slack-forever edge case (`thm_4_2_crossing_slack_forever`: infinite threshold, bucket never binds); what remains is only the *explicit* crossing coordinate `u**` (solving `f(t)−f(u*)−r·(t−u*) = b`, needs an IVT / per-segment closed form) and the final collapse of `⊓ⱼ` into one PWL.
+§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution + readback engines are done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`; `thm_4_2_readback_below`/`_above`: each `f ∗ γⱼ = (f ∗ lineⱼ) ⊓ f` with `lineⱼ = convexSegEval bⱼ rⱼ []` so `lemma_4_1_line` computes it — below a bucket's breakpoint `f ∗ γⱼ = f`, above it the meet of the line continuation and `f`); the ordering's breakpoint monotonicity, tie region, and one-sided domination are done (`thm_4_2_ordering_below_tie`: below the lower breakpoint all buckets tie at `f`; `thm_4_2_ordering_le_below`: up to the higher breakpoint the lower-rate bucket dominates — `f ∗ γ ≤ f` always, so the higher bucket is redundant on `[0, u*(r')]`); the crossing is done as a meet — base case (`thm_4_2_crossing_single_rate`: single-rate `f`, `f ∗ γ_{r,b}` is `f` left of `t = b/(fs−r)`, the bucket line right of it) and general convex `f` (`thm_4_2_crossing_general`: `f ∗ γ_{r,b} = f(t) ⊓ (f(u*) + b + r·(t − u*))` for any segments); the crossing is now resolved structurally: the minimum-growth-rate beyond `u*` is done (`thm_4_2_growth_past_breakpoint`, via the `convexSegEval` split-at-the-breakpoint), making the "`f ≤ line`" set a down-set, and both meet branches are pinned (`thm_4_2_crossing_resolved`: `f ∗ γ_{r,b} = f` where `f` is slack, `= f(u*)+b+r·(t−u*)` where the bucket binds — a single switch from `f` to the bucket line); the switch is now packaged as contiguous regimes (`thm_4_2_crossing_single_switch`: slack is an initial interval, binding a final interval) with the `r = fs` slack-forever edge case (`thm_4_2_crossing_slack_forever`: infinite threshold, bucket never binds), and the *explicit* crossing coordinate for a single steep-tail (`thm_4_2_crossing_coord`: `u** = u* + b/(s−r)`, `f` below / bucket line above, via the monotone excess `excess_mono`); what remains is only the multi-segment-tail crossing offset (per-segment accumulation walking to the saturating segment) and the final collapse of `⊓ⱼ` into one PWL.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, sup at `s=0`), the rate-latency case (`lemma_4_6_rateLatency`: `β_{R₁,T₁} ⊘ β_{R₂,T₂} = R₁·(t+T₂−T₁)₊` for `R₁≤R₂`, sup at `s=T₂`), and the divisor-distribution engine (`lemma_4_6_distrib`: `g ⊘ (h₁⊓h₂) = (g⊘h₁) ⊔ (g⊘h₂)`) are done, as is the fast-divisor rate-latency case (`lemma_4_6_rateLatency_top`: `R₂<R₁ ⇒ ⊤`), the two-rate-latency-min composite (`lemma_4_6_inf_two`), and divisor distribution over a list-meet (`lemma_4_6_inf_list`: `g ⊘ (⊓ over l) = ⨆ h∈l, g⊘h`), and the general composition over a concave PWL divisor (`lemma_4_6_concaveCurve`: `β_{R₁,T₁} ⊘ (⊓ₚ β_p) = ⨆ p, rlDeconvTerm`, with the affine/token-bucket variant) plus the dividend-side asymmetry (`lemma_4_6_inf_left_le`: only `≤`, equality fails — vs the divisor-side equality); Lemma 4.6 is essentially complete (a `¬∀` witness for the dividend equality-failure would make it a citable general fact); Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -446,6 +447,30 @@ theorem thm_4_2_crossing_slack_forever (f0 fs b : ℝ≥0) (fsegs : List (ℝ≥
     minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal fs b) t
       = (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_tbEReal_convexSegEval_eq_f_of_rate_eq f0 fs b fsegs hfsort hfs t
+
+/-- **Theorem 4.2** (§4.2.2, p.68), the explicit crossing coordinate `u**` (single steep-tail case).
+Beyond `u*` the excess `E(d) = f(u*+d) − f(u*) − r·d` is monotone (`DeepWiki.excess_mono`) and `0` at
+`d = 0`. When the steep tail is a single segment `dropSegs r fsegs = [(s,ℓ)]` with `r < s` and `b`
+reachable (`b ≤ (s−r)·ℓ`), the crossing offset is **explicit**, `δ = b/(s−r)`, with `E(δ) = b`; so
+with `u** = u* + δ` the convolution is `f` for `u* ≤ t ≤ u**` and the bucket line `f(u*)+b+r·(t−u*)`
+for `t ≥ u**`. The library's `DeepWiki.minConv_tbEReal_eq_f_below_crossing` /
+`DeepWiki.minConv_tbEReal_eq_line_above_crossing` (offset `DeepWiki.crossingOffset_singleTail`). -/
+theorem thm_4_2_crossing_coord (f0 fs r s ℓ b : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs)
+    (htail : dropSegs r fsegs = (s, ℓ) :: []) (hrs : r < s) (hb : b ≤ (s - r) * ℓ) :
+    (∀ {t : ℝ≥0}, segLenSum (truncSegs r fsegs) ≤ t →
+        t ≤ segLenSum (truncSegs r fsegs) + crossingOffset_singleTail r s b →
+      minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+        = (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal)) ∧
+    (∀ {t : ℝ≥0}, segLenSum (truncSegs r fsegs) + crossingOffset_singleTail r s b ≤ t →
+      minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+        = (((convexSegEval f0 fs fsegs (segLenSum (truncSegs r fsegs)) + b
+              + r * (t - segLenSum (truncSegs r fsegs)) : ℝ≥0) : ℝ) : EReal)) :=
+  ⟨fun ht htu => DeepWiki.minConv_tbEReal_eq_f_below_crossing f0 fs r s ℓ b fsegs hfsort hfs hrf
+      htail hrs hb ht htu,
+   fun htu => DeepWiki.minConv_tbEReal_eq_line_above_crossing f0 fs r s ℓ b fsegs hfsort hfs hrf
+      htail hrs hb htu⟩
 
 /-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
 convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:
