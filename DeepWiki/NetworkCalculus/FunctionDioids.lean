@@ -106,6 +106,34 @@ theorem minConv_le_minConv {D T : Type*} [AddZeroClass D] [Add T]
   le_minConv fun u s hus =>
     le_trans (minConv_le_add g h hus) (add_le_add (hg u) (hh s))
 
+/-- Convolution distributes over meet: `minConv f (g ⊓ h) = minConv f g ⊓ minConv f h`
+(pointwise). Holds for any `f` over a linearly ordered codomain with monotone `+` — the
+engine for splitting a convex-by-concave convolution into a meet of convex-by-line pieces
+(since `f u + (g s ⊓ h s) = (f u + g s) ⊓ (f u + h s)` and `⨅` of a `⊓` is the `⊓` of `⨅`s). -/
+theorem minConv_inf {D T : Type*} [AddZeroClass D] [Add T]
+    [ConditionallyCompleteLinearOrder T] [OrderBot T] [AddLeftMono T] [AddRightMono T]
+    (f g h : D → T) (t : D) :
+    minConv f (g ⊓ h) t = minConv f g t ⊓ minConv f h t := by
+  apply le_antisymm
+  · refine le_inf ?_ ?_
+    · exact minConv_le_minConv (fun _ => le_rfl) (fun s => inf_le_left) t
+    · exact minConv_le_minConv (fun _ => le_rfl) (fun s => inf_le_right) t
+  · refine le_minConv fun u s hus => ?_
+    rw [Pi.inf_apply]
+    have hadd : f u + (g s ⊓ h s) = (f u + g s) ⊓ (f u + h s) := by
+      rcases le_total (g s) (h s) with hgh | hgh
+      · rw [inf_eq_left.mpr hgh, inf_eq_left.mpr (add_le_add le_rfl hgh)]
+      · rw [inf_eq_right.mpr hgh, inf_eq_right.mpr (add_le_add le_rfl hgh)]
+    rw [hadd]
+    exact inf_le_inf (minConv_le_add f g hus) (minConv_le_add f h hus)
+
+/-- Function-level form of `minConv_inf`: `minConv f (g ⊓ h) = minConv f g ⊓ minConv f h`. -/
+theorem minConv_inf_fun {D T : Type*} [AddZeroClass D] [Add T]
+    [ConditionallyCompleteLinearOrder T] [OrderBot T] [AddLeftMono T] [AddRightMono T]
+    (f g h : D → T) :
+    minConv f (g ⊓ h) = minConv f g ⊓ minConv f h := by
+  funext t; rw [Pi.inf_apply]; exact minConv_inf f g h t
+
 /-- The `(t, 0)` split: `minConv f g t ≤ f t` when `g 0 = 0`. -/
 theorem minConv_le_left {D T : Type*} [AddZeroClass D] [AddZeroClass T]
     [ConditionallyCompleteLattice T] [OrderBot T]

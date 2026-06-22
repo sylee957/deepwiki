@@ -20,7 +20,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution engine is done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`, reducing the convolution to a meet of convex-by-line pieces via `lemma_4_1_line`); what remains is reading the meet of those per-line values back into a single concave/PWL closed form.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, the sup attained at `s=0`) is done; the two-segment piecewise case (optimal `s` at interior knots) remains; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -254,6 +254,18 @@ convolution needs no slope sort, only list append. The library's
 theorem thm_4_1_concave {l₁ l₂ : List (ℝ≥0 × ℝ≥0)} (h₁ : l₁ ≠ []) (h₂ : l₂ ≠ []) :
     minConv (concaveNFEval l₁) (concaveNFEval l₂) = concaveNFEval (l₁ ++ l₂) :=
   DeepWiki.minConv_concaveNFEval_eq_concaveNFEval_append h₁ h₂
+
+/-- **Theorem 4.2** (§4.2.2, p.68), the distribution step: convolution by a concave PWL distributes
+over its token-bucket meet, `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`. In the foldr representation
+`concaveNFEval l = foldr (γ ⊓ ·) ⊤`, convolution pushes inside termwise (`minConv_inf` — the general
+fact that `(min,plus)` convolution distributes over `⊓`). For a *convex* `f` each `f ∗ γⱼ` is then the
+convex-by-line value (`lemma_4_1_line`), making the convex-by-concave convolution computable; this is
+the engine of Theorem 4.2's algorithm. The library's `DeepWiki.minConv_concaveNFEval_foldr`
+(and the underlying `DeepWiki.minConv_inf`). -/
+theorem thm_4_2_distrib (f : ℝ≥0 → EReal) (l : List (ℝ≥0 × ℝ≥0)) :
+    minConv f (concaveNFEval l)
+      = l.foldr (fun rb acc => minConv f (tbEReal rb.1 rb.2) ⊓ acc) (minConv f topCurve) :=
+  DeepWiki.minConv_concaveNFEval_foldr f l
 
 /-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
 convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:

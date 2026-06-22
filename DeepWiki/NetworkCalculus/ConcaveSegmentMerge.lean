@@ -66,4 +66,19 @@ example {l₁ l₂ : List (ℝ≥0 × ℝ≥0)} (h₁ : l₁ ≠ []) (h₂ : l�
     minConv (concaveNFEval l₁) (concaveNFEval l₂) = concaveNFEval (l₁ ++ l₂) :=
   minConv_concaveNFEval_eq_concaveNFEval_append h₁ h₂
 
+/-! ## Convolution by a concave PWL distributes over its token-bucket meet (toward Theorem 4.2) -/
+
+/-- **Toward Theorem 4.2 (convex-by-concave).** Convolution by a concave PWL `concaveNFEval l`
+(an infimum of token buckets) distributes over the meet: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`. In the
+foldr representation `concaveNFEval l = foldr (γ ⊓ ·) ⊤`, convolution pushes inside termwise
+(via `minConv_inf_fun`), so `f ∗ concaveNFEval l = foldr ((f ∗ γⱼ) ⊓ ·) (f ∗ ⊤)`. For a *convex*
+`f` each piece `f ∗ γⱼ` is then the convex-by-line value (Lemma 4.1), which is what makes the
+convex-by-concave convolution computable. -/
+theorem minConv_concaveNFEval_foldr (f : ℝ≥0 → EReal) (l : List (ℝ≥0 × ℝ≥0)) :
+    minConv f (concaveNFEval l)
+      = l.foldr (fun rb acc => minConv f (tbEReal rb.1 rb.2) ⊓ acc) (minConv f topCurve) := by
+  induction l with
+  | nil => rfl
+  | cons rb l ih => rw [concaveNFEval_cons, minConv_inf_fun, ih, List.foldr_cons]
+
 end DeepWiki
