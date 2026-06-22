@@ -60,6 +60,73 @@ theorem hermiteReduce_octic_example {F : Type*} [Field F] [Differential F] {t : 
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hQ) ht0) hD]
   ring
 
+/-- **Example 2.2.1** (§2.2, the original Hermite reduction trace) for
+`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` (denominator `x²·(x²+2)³`). After the partial fraction
+`f = (x−1)/x² + (x⁴−6x³−18x²−12x+8)/(x²+2)³`, `HermiteReduce` (original version) runs the steps
+`(i,j) = (2,1),(3,2),(3,1)` with `V = x` then `V = x²+2`: each verifies the extended-Euclidean relation
+`V'·B + V·C = −Aᵢ/j` (no `U` factor — partial fractions already separated the prime powers) and the update
+`Aᵢ ← −jC − B'`. The `x`-part reduces to `1` (giving `∫dx/x`); the `(x²+2)`-part reduces
+`x⁴−6x³−18x²−12x+8 → x²−6x−2 → 0`. Rational part `g = 1/x + 6x/(x²+2)² + (3−x)/(x²+2)`. Derivative values
+`V'=1, 2x; B'=0,6,−1` inlined; step 2's `C = −x²/2+3x−2` as `Ĉ = 2C = −x²+6x−4`. -/
+theorem hermiteBasic_trace_octic {F : Type*} [CommRing F] :
+    -- x-part, step (2,1) j=1: V=x, A=x−1, B=1, C=−1
+    ((1 : F[X]) * 1 + X * (-1) = -(X - 1))
+      ∧ ((1 : F[X]) = -(-1) - 0)
+    -- (x²+2)-part, step (3,2) j=2 (scaled by 2, Ĉ = 2C = −x²+6x−4)
+    ∧ (2 * ((2 * X) * (6 * X)) + (X ^ 2 + 2) * (-X ^ 2 + 6 * X - 4)
+        = -(X ^ 4 - 6 * X ^ 3 - 18 * X ^ 2 - 12 * X + 8 : F[X]))
+      ∧ ((X ^ 2 - 6 * X - 2 : F[X]) = -(-X ^ 2 + 6 * X - 4) - 6)
+    -- step (3,1) j=1: V=x²+2, A=x²−6x−2, B=−x+3, C=1
+    ∧ ((2 * X) * (-X + 3) + (X ^ 2 + 2) * 1 = -(X ^ 2 - 6 * X - 2 : F[X]))
+      ∧ ((0 : F[X]) = -(1 : F[X]) - (-1)) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
+
+/-- **Example 2.2.2** (§2.2, the quadratic Hermite reduction trace) for
+`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` (denominator `x²·(x²+2)³`). The three reduction steps
+`(i,j) = (2,1),(3,2),(3,1)` of `HermiteReduce` (quadratic version), with `V₂ = x`, `U₂ = (x²+2)³`,
+`V₃ = x²+2`, `U₃ = x`: each verifies the extended-Euclidean relation `U·V'·B + V·C = −A/j` and the update
+`A ← −jC − U·B'`, reducing the numerator `A₀ → A₁ → A₂ → A₃ = x²+2` (so the remainder is `1/x`). The
+derivative values `V₂'=1, V₃'=2x, B'=0,6,−1` are inlined, and step 2's `C₂ = −x⁴/2−x³/2+x²−2x−2` appears
+as `Ĉ₂ = 2·C₂ = −x⁴−x³+2x²−4x−4` (the Bézout relation and update both scaled by `j = 2`). -/
+theorem hermiteQuadratic_trace_octic {F : Type*} [CommRing F] :
+    -- step (2,1), j=1:  U₂·V₂'·B + V₂·C₁ = −A₀,   A₁ = −1·C₁ − U₂·B'
+    ((X ^ 2 + 2) ^ 3 * (1 : F[X]) + X * (-X ^ 6 - X ^ 5 + 18 * X ^ 3 - 8 * X - 8)
+        = -(X ^ 7 - 24 * X ^ 4 - 4 * X ^ 2 + 8 * X - 8))
+      ∧ ((X ^ 6 + X ^ 5 - 18 * X ^ 3 + 8 * X + 8 : F[X])
+        = -(-X ^ 6 - X ^ 5 + 18 * X ^ 3 - 8 * X - 8))
+    -- step (3,2), j=2 (scaled by 2):  2·(U₃·V₃'·B) + V₃·Ĉ₂ = −A₁,   A₂ = −Ĉ₂ − U₃·B'
+    ∧ (2 * (X * (2 * X) * (6 * X)) + (X ^ 2 + 2) * (-X ^ 4 - X ^ 3 + 2 * X ^ 2 - 4 * X - 4)
+        = -(X ^ 6 + X ^ 5 - 18 * X ^ 3 + 8 * X + 8 : F[X]))
+      ∧ ((X ^ 4 + X ^ 3 - 2 * X ^ 2 - 2 * X + 4 : F[X])
+        = -(-X ^ 4 - X ^ 3 + 2 * X ^ 2 - 4 * X - 4) - 6 * X)
+    -- step (3,1), j=1:  U₃·V₃'·B + V₃·C₃ = −A₂,   A₃ = −1·C₃ − U₃·B'
+    ∧ (X * (2 * X) * (-X + 3) + (X ^ 2 + 2) * (-X ^ 2 + X - 2)
+        = -(X ^ 4 + X ^ 3 - 2 * X ^ 2 - 2 * X + 4 : F[X]))
+      ∧ ((X ^ 2 + 2 : F[X]) = -(-X ^ 2 + X - 2) - X * (-1)) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
+
+/-- **Example 2.2.3** (§2.2, Mack's linear Hermite reduction trace) for
+`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, with `D⁻ = gcd(D, D') = x⁵+4x³+4x` and `D* = D/D⁻ = x³+2x`.
+Two reduction steps (one per while-iteration), each verifying the extended-Euclidean relation
+`(−D*·D⁻'/D⁻)·B + D⁻*·C = A` and update `A ← C − B'·D*/D⁻*`: step 1 with first argument `−5x²−2`
+(`= −D*·D⁻'/D⁻`) gives `(B,C) = (8x²+4, x⁴−2x²+16x+4)`, reducing `A₀ → A₁ = x⁴−2x²+4`; step 2 with
+first argument `−2x²` gives `(B,C) = (3, x²+2)`, reducing `A₁ → A₂ = x²+2`, and `A₂/D* = 1/x`. -/
+theorem hermiteMack_trace_octic {F : Type*} [CommRing F] :
+    -- denominator split D = D*·D⁻, and the polynomial cofactor for −D*·D⁻'/D⁻ = −(5x²+2)
+    ((X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : F[X]) = (X ^ 3 + 2 * X) * (X ^ 5 + 4 * X ^ 3 + 4 * X))
+      ∧ ((X ^ 5 + 4 * X ^ 3 + 4 * X) * (5 * X ^ 2 + 2)
+        = (X ^ 3 + 2 * X) * (5 * X ^ 4 + 12 * X ^ 2 + 4 : F[X]))
+    -- step 1 Bézout (−5x²−2)·B + D⁻*·C = A₀, with D⁻* = x³+2x; update A₁ = C − B'·(D*/D⁻*=1)
+    ∧ ((-5 * X ^ 2 - 2) * (8 * X ^ 2 + 4) + (X ^ 3 + 2 * X) * (X ^ 4 - 2 * X ^ 2 + 16 * X + 4)
+        = (X ^ 7 - 24 * X ^ 4 - 4 * X ^ 2 + 8 * X - 8 : F[X]))
+      ∧ ((X ^ 4 - 2 * X ^ 2 + 4 : F[X]) = (X ^ 4 - 2 * X ^ 2 + 16 * X + 4) - 16 * X * 1)
+    -- step 2: D⁻ = x²+2, cofactor for −D*·D⁻'/D⁻ = −2x²; Bézout (−2x²)·B + D⁻*·C = A₁; update A₂ = C
+    ∧ ((X ^ 2 + 2) * (2 * X ^ 2) = (X ^ 3 + 2 * X) * (2 * X : F[X]))
+      ∧ ((-2 * X ^ 2) * 3 + (X ^ 2 + 2) * (X ^ 2 + 2) = (X ^ 4 - 2 * X ^ 2 + 4 : F[X]))
+    -- final remainder A₂/D* = (x²+2)/(x³+2x) = 1/x  (since (x²+2)·x = x³+2x)
+    ∧ ((X ^ 2 + 2) * X = (X ^ 3 + 2 * X : F[X])) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
+
 /-- **Lazard–Rioboo–Trager subresultant for `(x⁴−3x²+6)/(x⁶−5x⁴+5x²+4)`**: the degree-3 subresultant
 value at a root `a` of `4a²+1` is `S₃(a,x) = −214ax³+107x²+642ax−214 = −214a·(x³+2ax²−3x−4a)`, i.e.
 `−214a` times the Rothstein–Trager gcd `Gₐ`. -/

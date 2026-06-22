@@ -15,12 +15,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.2: the per-algorithm *traces* of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is
-  `ex_2_3_1`). The `HermiteReduce` algorithm itself is now fully formalized: reduction step
-  (`hermiteReduce_step` / `hermiteReduce_step_ratFunc`), prime-power inner loop (`hermiteReducePower` /
-  `hermiteReducePower_spec`), two-factor and multi-factor partial fractions
-  (`ratFunc_partialFraction_coprime` / `ratFunc_partialFraction_prod`), and the complete outer algorithm
-  `hermiteReduce_full` (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`).
+§2.2: DONE. The `HermiteReduce` algorithm is fully formalized — reduction step (`hermiteReduce_step` /
+  `hermiteReduce_step_ratFunc`), prime-power inner loop (`hermiteReducePower` / `hermiteReducePower_spec`),
+  two-factor and multi-factor partial fractions (`ratFunc_partialFraction_coprime` /
+  `ratFunc_partialFraction_prod`), and the complete outer algorithm `hermiteReduce_full`
+  (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`) — and all three worked traces on the octic example are
+  verified: `ex_2_2_1` (original/partial-fraction), `ex_2_2_2` (quadratic), `ex_2_2_3` (Mack's linear),
+  sharing result `ex_2_3_1`.
 §2.3: the *functional linear solve* for the degree-bounded `B, C` (set up and solve the linear system
   `B′·D* − B·E + C·D⁻ = A` over `K`) [functional/infra: needs a linear-system solver layer]. Done: the
   denominator split `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with
@@ -231,6 +232,24 @@ is `(3t³+8t²+6t+4)/(t⁵+4t³+4t)` and the remaining integrand reduces to `1/t
 the differential-field identity `((3t³+8t²+6t+4)/(t⁵+4t³+4t))′ + t⁻¹ = the integrand` (`deriv_div` +
 cross-multiplied `ring`). Both denominators factor as `t·(t²+2)²` and `t²·(t²+2)³`. -/
 abbrev ex_2_3_1 := @DeepWiki.SymbolicIntegration.hermiteReduce_octic_example
+
+/-- **Example 2.2.1** (§2.2, p.40), the *original* `HermiteReduce` trace on
+`(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`: after the partial fraction `(x−1)/x² + (x⁴−6x³−18x²−12x+8)/(x²+2)³`,
+the three steps `(i,j)=(2,1),(3,2),(3,1)` each verify `V'·B + V·C = −Aᵢ/j` and the update `Aᵢ ← −jC − B'`
+(table values from the book). The library's `hermiteBasic_trace_octic`. -/
+abbrev ex_2_2_1 := @DeepWiki.SymbolicIntegration.hermiteBasic_trace_octic
+
+/-- **Example 2.2.2** (§2.2, p.42), the *quadratic* Hermite reduction trace on the same integrand: the
+three steps `(i,j)=(2,1),(3,2),(3,1)` (with `U₂=(x²+2)³`, `U₃=x`) each verify `U·V'·B + V·C = −A/j` and
+the update `A ← −jC − U·B'`, reducing `A₀ → A₁ → A₂ → A₃ = x²+2` (no partial fraction needed). The
+library's `hermiteQuadratic_trace_octic`. -/
+abbrev ex_2_2_2 := @DeepWiki.SymbolicIntegration.hermiteQuadratic_trace_octic
+
+/-- **Example 2.2.3** (§2.2, p.44), *Mack's linear* Hermite reduction trace on the same integrand:
+`D⁻ = gcd(D,D') = x⁵+4x³+4x`, `D* = x³+2x`, two reduction steps each verifying `(−D*·D⁻'/D⁻)·B + D⁻*·C = A`
+and `A ← C − B'·D*/D⁻*` (book `(B,C) = (8x²+4, x⁴−2x²+16x+4)` then `(3, x²+2)`), `A` reduced to `x²+2` with
+`A/D* = 1/x`. The library's `hermiteMack_trace_octic`. -/
+abbrev ex_2_2_3 := @DeepWiki.SymbolicIntegration.hermiteMack_trace_octic
 
 /-! ## §2.5 The Lazard–Rioboo–Trager Algorithm -/
 
