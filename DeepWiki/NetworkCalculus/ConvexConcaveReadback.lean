@@ -64,4 +64,18 @@ theorem minConv_tbEReal_convexSegEval_above (f0 fs r b : ℝ≥0) (fsegs : List 
   rw [minConv_tbEReal_eq_line_inf (isNeverBot_coe_nnreal _), Pi.inf_apply, minConv_comm,
     minConv_line_convexSegEval_above f0 fs b r fsegs hfsort hfs hrf ht]
 
+/-- **Toward the global ordering (outer Lemma 4.1).** Below the *lower*-rate bucket's breakpoint
+`u*(r)` (with `r ≤ r'`, so `u*(r) ≤ u*(r')` by `segLenSum_truncSegs_mono`), *both* token buckets are
+inactive and convolve to `f`, so they tie: `f ∗ γ_{r,b} = f ∗ γ_{r',b'}` there. The first
+where-which-bucket-dominates region of the ordering — a tie. -/
+theorem minConv_tbEReal_convexSegEval_eq_below (f0 fs r r' b b' : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs) (hr'f : r' ≤ fs) (hrr' : r ≤ r')
+    {t : ℝ≥0} (ht : t ≤ segLenSum (truncSegs r fsegs)) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r' b') t := by
+  rw [minConv_tbEReal_convexSegEval_below f0 fs r b fsegs hfsort hfs hrf ht,
+    minConv_tbEReal_convexSegEval_below f0 fs r' b' fsegs hfsort hfs hr'f
+      (le_trans ht (segLenSum_truncSegs_mono hrr' fsegs))]
+
 end DeepWiki

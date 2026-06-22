@@ -146,6 +146,19 @@ theorem segLenSum_truncSegs_le (q : ℝ≥0) :
       · rw [truncSegs_cons_gt hsq, segLenSum_nil]
         positivity
 
+/-- The breakpoint `u*(q) = segLenSum (truncSegs q fsegs)` is monotone in the slope `q`: a lower
+slope is reached earlier, `q ≤ q' → u*(q) ≤ u*(q')` (a lower-rate token bucket activates sooner). -/
+theorem segLenSum_truncSegs_mono {q q' : ℝ≥0} (h : q ≤ q') (l : List (ℝ≥0 × ℝ≥0)) :
+    segLenSum (truncSegs q l) ≤ segLenSum (truncSegs q' l) := by
+  induction l with
+  | nil => simp
+  | cons a rest ih =>
+      obtain ⟨sa, ℓa⟩ := a
+      by_cases ha : sa ≤ q
+      · rw [truncSegs_cons_le ha, truncSegs_cons_le (le_trans ha h), segLenSum_cons, segLenSum_cons]
+        exact add_le_add le_rfl ih
+      · rw [truncSegs_cons_gt ha, segLenSum_nil]; positivity
+
 /-- **Convolution by a line — the short-time regime `t ≤ u*`.** With `u* = segLenSum (truncSegs q fsegs)`
 the breakpoint where `f`'s slope first reaches `q`, for `t ≤ u*` the line is steeper than `f` so far,
 so the convolution keeps `f`: `(ℓ ∗ f) t = f(t) + c`. -/

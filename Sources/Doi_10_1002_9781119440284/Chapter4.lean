@@ -21,7 +21,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution + readback engines are done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`; `thm_4_2_readback_below`: each `f ∗ γⱼ = (f ∗ lineⱼ) ⊓ f` with `lineⱼ = convexSegEval bⱼ rⱼ []` so `lemma_4_1_line` computes it, and below a bucket's breakpoint `f ∗ γⱼ = f`); what remains is the global meet→single-PWL simplification (which bucket dominates on each interval — the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering of the outer Lemma 4.1).
+§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution + readback engines are done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`; `thm_4_2_readback_below`/`_above`: each `f ∗ γⱼ = (f ∗ lineⱼ) ⊓ f` with `lineⱼ = convexSegEval bⱼ rⱼ []` so `lemma_4_1_line` computes it — below a bucket's breakpoint `f ∗ γⱼ = f`, above it the meet of the line continuation and `f`); the ordering's breakpoint monotonicity + tie region are done (`thm_4_2_ordering_below_tie`: lower-rate buckets activate earlier, and below the lower breakpoint all buckets tie at `f`); what remains is the nontrivial domination (which bucket strictly wins on the active region — the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering of the outer Lemma 4.1) and the final collapse of `⊓ⱼ` into one PWL.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, the sup attained at `s=0`) is done; the two-segment piecewise case (optimal `s` at interior knots) remains; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -297,6 +297,21 @@ theorem thm_4_2_readback_above (f0 fs r b : ℝ≥0) (fsegs : List (ℝ≥0 × �
             + r * (t - segLenSum (truncSegs r fsegs)) : ℝ≥0) : ℝ) : EReal)
           ⊓ (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_tbEReal_convexSegEval_above f0 fs r b fsegs hfsort hfs hrf ht
+
+/-- **Lemma 4.1 / Theorem 4.2** (§4.2.2, p.68), the ordering — first (tie) region. The breakpoint
+`u*(r) = segLenSum (truncSegs r fsegs)` is monotone in the rate (`segLenSum_truncSegs_mono`: a
+lower-rate bucket activates earlier). Hence below the *lower*-rate bucket's breakpoint (`r ≤ r'`,
+`t ≤ u*(r) ≤ u*(r')`) *both* buckets are inactive and convolve to `f`, so `f ∗ γ_{r,b} = f ∗ γ_{r',b'}`
+— they tie. This is the first of the outer Lemma 4.1's domination regions; the nontrivial direction
+(which bucket strictly wins on the active region) remains. The library's
+`DeepWiki.minConv_tbEReal_convexSegEval_eq_below`. -/
+theorem thm_4_2_ordering_below_tie (f0 fs r r' b b' : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs) (hr'f : r' ≤ fs) (hrr' : r ≤ r')
+    {t : ℝ≥0} (ht : t ≤ segLenSum (truncSegs r fsegs)) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r' b') t :=
+  DeepWiki.minConv_tbEReal_convexSegEval_eq_below f0 fs r r' b b' fsegs hfsort hfs hrf hr'f hrr' ht
 
 /-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
 convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:
