@@ -19,10 +19,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — the non-degeneracy `deg(A − a·D') = deg D − 1` at a residue `a` [deferred: needs the
-  top-coefficient non-cancellation `a ≠ coeff_{n−1}(A)/(n·lc(D))`, a condition on the specific residue
-  `a`], which is the remaining `hdeg` hypothesis of `thm_2_5_1_ii` once the index `i` is matched to the
-  multiplicity. The multiplicity identification `deg_x R_m = i` itself is DONE: `thm_2_5_1_multiplicity`
+§2.5: Thm 2.5.1 — the *degenerate* residue `a = coeff_{n−1}(A)/(n·lc(D))` only [research: there
+  `deg(A − a·D') < deg D − 1`, so matching `lrtSubresultant`'s formal degree `deg D − 1` needs the K[t]-level
+  degree-drop argument (Thm 1.4.3 = `subresultant_map_lt`), the leading-coeff factor absorbed by `~`]. For
+  every *other* residue the non-degeneracy `deg(A − a·D') = deg D − 1` is PROVEN: `thm_2_5_1_nondegeneracy`
+  (`natDegree_sub_C_mul_derivative`, under the explicit non-cancellation `A_{n−1} ≠ a·n·lc(D)`), which
+  discharges the `hdeg` hypothesis of `thm_2_5_1_ii`. The multiplicity identification `deg_x R_m = i` is DONE:
+  `thm_2_5_1_multiplicity`
   (`rootMultiplicity_rtResultant_eq_natDegree_gcd`, `rootMultiplicity a R = deg gcd(D, A−aD')`), via
   `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`, the residues) and `natDegree_gcd_eq_count_residue`
   (`deg gcd = #{α : residue α = a}`). Both halves of the *similarity* are done: part (i) `n = deg D ⟹ gcd ~ D`
@@ -299,6 +302,12 @@ to `gcd(D, A − a·D')` — the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (ove
 library's `isSimilar_lrtSubresultant_eval_gcd`: combines `lrtSubresultant_eval` with the concrete
 subresultant ↔ gcd connection `subresultant_euclideanPRS_isSimilar_gcd`. -/
 abbrev thm_2_5_1_ii := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd
+
+/-- **Theorem 2.5.1, residue non-degeneracy** (§2.5, p.50): the `hdeg : deg(A − a·D') = deg D − 1`
+hypothesis of `thm_2_5_1_ii` holds for every residue `a` except the single value `a = A_{n−1}/(n·lc D)` —
+under the explicit non-cancellation `A_{n−1} ≠ a·(n·lc D)` (`n = deg D`). The library's
+`natDegree_sub_C_mul_derivative`. -/
+abbrev thm_2_5_1_nondegeneracy := @DeepWiki.SymbolicIntegration.natDegree_sub_C_mul_derivative
 
 /-- **Theorem 2.5.1, the multiplicity identification `deg_x R_m = i`** (§2.5, p.50): over an algebraically
 closed field, for separable `D` and `deg A < deg D`, the multiplicity of a residue `a` as a root of the
