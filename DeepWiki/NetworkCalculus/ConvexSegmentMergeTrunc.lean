@@ -259,4 +259,57 @@ theorem minConv_convexSegEval_truncSegs (sf sg f0 g0 : ℝ≥0)
       convexSegEval_truncSegs_le sf sg hsfg gsegs hgsort hgs g0 v
     exact add_le_add le_rfl hGt_le
 
+/-- **Theorem 4.1, the unbalanced case** (different asymptotic slopes, `sf ≤ sg`). The `(min,plus)`
+convolution of two convex PWLs with the flatter asymptote `sf` is the slope-merge from `f(0)+g(0)`
+of `f`'s segments with `g`'s segments **truncated at slope `sf`** — every segment of `g` steeper
+than `sf` is absorbed into the (flatter) asymptote `sf`. (Since `fsegs` already has all slopes `≤ sf`
+it needs no truncation; only `g` is cut.) Proved by reducing to the balanced case
+(`minConv_convexSegEval_eq_merge`) through `minConv_convexSegEval_truncSegs`. -/
+theorem minConv_convexSegEval_unbalanced (sf sg f0 g0 : ℝ≥0)
+    (fsegs gsegs : List (ℝ≥0 × ℝ≥0)) (hsfg : sf ≤ sg)
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ sf) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ sg) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 sf fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((convexSegEval (f0 + g0) sf (mergeBySlope fsegs (truncSegs sf gsegs)) t : ℝ≥0)
+            : ℝ) : EReal) := by
+  rw [minConv_convexSegEval_truncSegs sf sg f0 g0 fsegs gsegs hsfg hgsort hfs hgs t]
+  exact minConv_convexSegEval_eq_merge sf f0 g0 fsegs (truncSegs sf gsegs) hfsort
+    (truncSegs_sorted hgsort) hfs (truncSegs_slope_le gsegs) t
+
+/-- Faithfulness check: when `g` is already balanced (all its slopes `≤ sf = sg`), truncation is a
+no-op (`truncSegs_eq_self`) and the unbalanced theorem collapses back onto the balanced merge. -/
+example (s f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ s) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ s) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 s fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 s gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((convexSegEval (f0 + g0) s (mergeBySlope fsegs gsegs) t : ℝ≥0) : ℝ) : EReal) := by
+  rw [minConv_convexSegEval_unbalanced s s f0 g0 fsegs gsegs le_rfl hfsort hgsort hfs hgs t,
+    truncSegs_eq_self hgs]
+
+/-- Faithfulness check: a flat line `u ↦ a + sf·u` (no finite segments, asymptote `sf`) convolved
+with a convex PWL `g` *all of whose slopes are steeper than `sf`* (so `g` is truncated to nothing)
+absorbs all of `g`'s segments — the result is the line shifted by `g(0)`, recovering
+`minConv_flatLine_convexSegEval` from the unbalanced theorem. -/
+example (a sf sg g0 : ℝ≥0) (gsegs : List (ℝ≥0 × ℝ≥0)) (hsfg : sf ≤ sg)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hgs : ∀ seg ∈ gsegs, seg.1 ≤ sg) (hgsteep : ∀ seg ∈ gsegs, sf ≤ seg.1)
+    (hgne : ∀ seg ∈ gsegs, sf ≠ seg.1) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval a sf [] u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((a + g0 + sf * t : ℝ≥0) : ℝ) : EReal) := by
+  have htrunc : truncSegs sf gsegs = [] := by
+    cases gsegs with
+    | nil => rfl
+    | cons hd tl =>
+        obtain ⟨sb, ℓb⟩ := hd
+        have : sf < sb :=
+          lt_of_le_of_ne (hgsteep (sb, ℓb) List.mem_cons_self) (hgne (sb, ℓb) List.mem_cons_self)
+        exact truncSegs_cons_gt (not_le.mpr this) tl
+  rw [minConv_convexSegEval_unbalanced sf sg a g0 [] gsegs hsfg List.Pairwise.nil hgsort
+    (by simp) hgs t, htrunc, mergeBySlope_nil_left, convexSegEval_nil]
+
 end DeepWiki
