@@ -13,8 +13,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: the full Bernoulli algorithm [functional]; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the
-  `arctan` primitive).
+§2.1: the full Bernoulli algorithm [functional]; the `k>1` recursive reduction of the *arctan* term
+  `∫ (Bx+C)/(x²+bx+c)ᵏ` (eq 2.1, k>1 — a rational reduction to `k−1`). The `k=1` arctan formula
+  `eq_2_1_arctan` is done (modeling `log`/`arctan` by their differential-field derivative laws).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
@@ -75,6 +76,32 @@ theorem ex_2_1_3 {F : Type*} [Field F] [CharZero F] (t i : F) (hi : i ^ 2 = -1) 
   have key : (1 : F) / t - (1 / 2) / (t + i) - (1 / 2) / (t - i) = -(i ^ 2) / (t ^ 3 + t) := by
     rw [hfac]; field_simp; ring
   rw [key, hi]; norm_num
+
+/-- **Equation 2.1, the arctan term** (§2.1, p.37): for an irreducible real quadratic `x²+bx+c`
+(`4c−b² > 0`, `s = √(4c−b²)`), `∫ (Bx+C)/(x²+bx+c) dx = (B/2)·log(x²+bx+c) +
+(2C−bB)/s · arctan((2x+b)/s)`. Modeling `log(x²+bx+c)` by `L` with `L′ = (2x+b)/(x²+bx+c)` and
+`arctan((2x+b)/s)` by `Θ` with the arctan law `Θ′ = (2x+b)/s)' / (1 + ((2x+b)/s)²)`, this verifies the
+formula as the differential-field identity below: the arctan derivative simplifies via `s² = 4c−b²` to
+`s/(2(x²+bx+c))`, and the two parts combine to `(Bx+C)/(x²+bx+c)`. -/
+theorem eq_2_1_arctan {F : Type*} [Field F] [CharZero F] [Differential F] {t : F} (_ht : t′ = 1)
+    {B C b c s L Θ : F} (hB : B′ = 0) (hC : C′ = 0) (hb : b′ = 0) (_hc : c′ = 0) (hs : s′ = 0)
+    (hs2 : s ^ 2 = 4 * c - b ^ 2) (hsne : s ≠ 0) (_hq : t ^ 2 + b * t + c ≠ 0)
+    (hL : L′ = (2 * t + b) / (t ^ 2 + b * t + c))
+    (hΘ : Θ′ = (2 / s) / (1 + ((2 * t + b) / s) ^ 2)) :
+    ((B / 2) * L + ((2 * C - b * B) / s) * Θ)′ = (B * t + C) / (t ^ 2 + b * t + c) := by
+  have h2 : (2 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have hβ : (B / 2)′ = 0 := by rw [deriv_div, hB, h2]; ring
+  have hnum : (2 * C - b * B)′ = 0 := by
+    rw [map_sub, deriv_const_mul _ h2, deriv_const_mul _ hb, hC, hB]; ring
+  have hγ : ((2 * C - b * B) / s)′ = 0 := by rw [deriv_div, hnum, hs]; ring
+  -- simplify the arctan derivative via s² = 4c − b²
+  have hu2 : 1 + ((2 * t + b) / s) ^ 2 = 4 * (t ^ 2 + b * t + c) / s ^ 2 := by
+    rw [div_pow]; field_simp; linear_combination hs2
+  have hΘ' : Θ′ = s / (2 * (t ^ 2 + b * t + c)) := by
+    rw [hΘ, hu2]; field_simp; ring
+  rw [map_add, deriv_const_mul _ hβ, deriv_const_mul _ hγ, hL, hΘ']
+  field_simp
+  ring
 
 /-! ## §2.2 The Hermite Reduction -/
 
