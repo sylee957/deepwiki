@@ -14,7 +14,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Proposition 4.1 — item 4 only `[infra]` (the explicit per-interval formula `⋀ⱼγⱼ = γᵢ` on `[tᵢ,tᵢ₊₁]` needs the indexed envelope; items 1–3 are `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono`); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -126,6 +126,16 @@ theorem prop_4_1_cross_mono {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormal
     tbCross (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2
             (l.get ⟨i + 2, by omega⟩).1 (l.get ⟨i + 2, by omega⟩).2 :=
   h.cross_strictMono hi
+
+/-- **Proposition 4.1, item 4** (§4.2.1, p.63), pointwise envelope form: at any time where a
+token-bucket of the list attains the minimum, the concave PWL function equals it,
+`⋀ⱼ γⱼ(t) = γᵢ(t)`. With the crossing ordering (`def_4_1_cross`) this gives the book's
+per-interval statement on `[tᵢ,tᵢ₊₁]` once `γᵢ` is shown minimal there. The library's
+`DeepWiki.concaveNFEval_eq_of_isMin`. -/
+theorem prop_4_1_envelope {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 × ℝ≥0} (hs : s ∈ l) {t : ℝ≥0}
+    (hmin : ∀ s' ∈ l, tbEReal s.1 s.2 t ≤ tbEReal s'.1 s'.2 t) :
+    concaveNFEval l t = tbEReal s.1 s.2 t :=
+  concaveNFEval_eq_of_isMin hs hmin
 
 /-- **Theorem 4.1** (§4.2.2, p.65), the transform-domain computation principle. For finite,
 convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution is computed by

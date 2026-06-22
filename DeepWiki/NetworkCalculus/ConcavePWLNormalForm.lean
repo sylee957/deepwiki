@@ -232,6 +232,35 @@ theorem concaveNFEval_nonneg (l : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0) : 0 �
       rw [concaveNFEval_cons, Pi.inf_apply]
       exact le_inf (tbEReal_nonneg rb.1 rb.2 t) ih
 
+/-- The evaluation is `≤` every member token-bucket (it is their infimum). -/
+theorem concaveNFEval_le_of_mem {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 × ℝ≥0} (hs : s ∈ l) (t : ℝ≥0) :
+    concaveNFEval l t ≤ tbEReal s.1 s.2 t := by
+  induction l with
+  | nil => exact absurd hs (by simp)
+  | cons a l ih =>
+      rw [concaveNFEval_cons, Pi.inf_apply]
+      rcases List.mem_cons.mp hs with rfl | hs'
+      · exact inf_le_left
+      · exact le_trans inf_le_right (ih hs')
+
+/-- A lower bound for every member token-bucket is a lower bound for the evaluation. -/
+theorem le_concaveNFEval {l : List (ℝ≥0 × ℝ≥0)} {x : EReal} {t : ℝ≥0}
+    (h : ∀ s ∈ l, x ≤ tbEReal s.1 s.2 t) : x ≤ concaveNFEval l t := by
+  induction l with
+  | nil => rw [concaveNFEval_nil]; exact le_top
+  | cons a l ih =>
+      rw [concaveNFEval_cons, Pi.inf_apply]
+      exact le_inf (h a List.mem_cons_self) (ih (fun s hs => h s (List.mem_cons_of_mem a hs)))
+
+/-- **Proposition 4.1, item 4** (pointwise envelope form): wherever a token-bucket of the list
+is the minimum, the concave PWL function equals it. Combined with the crossing ordering
+(`tb_le_of_le_cross` / `tb_ge_of_cross_le`), this gives the book's per-interval formula
+`⋀ⱼγⱼ = γᵢ` on `[tᵢ, tᵢ₊₁]` once `γᵢ` is shown minimal there. -/
+theorem concaveNFEval_eq_of_isMin {l : List (ℝ≥0 × ℝ≥0)} {s : ℝ≥0 × ℝ≥0} (hs : s ∈ l) {t : ℝ≥0}
+    (hmin : ∀ s' ∈ l, tbEReal s.1 s.2 t ≤ tbEReal s'.1 s'.2 t) :
+    concaveNFEval l t = tbEReal s.1 s.2 t :=
+  le_antisymm (concaveNFEval_le_of_mem hs t) (le_concaveNFEval hmin)
+
 /-- **Definition 4.1** (Concave piecewise-linear normal form). A list `[(r₁,b₁), …, (rₙ,bₙ)]`
 of token-bucket parameters is in *concave normal form* when
 
