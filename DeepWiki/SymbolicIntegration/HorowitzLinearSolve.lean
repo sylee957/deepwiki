@@ -66,6 +66,54 @@ theorem horowitzLinear_mem_degreeLT {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0)
   · exact degree_mul_lt_of_lt_of_le hB (le_of_lt hE)
   · rw [Nat.add_comm m n]; exact degree_mul_lt_of_lt_of_le hC (le_of_eq hDmdeg)
 
+/-- The Horowitz operator as a `K`-linear map between the **degree-bounded coordinate spaces**
+`degreeLT (deg D⁻) × degreeLT (deg D*) → degreeLT (deg D⁻ + deg D*)`. Both have `K`-dimension
+`deg D⁻ + deg D*`, so this map is injective iff surjective — the basis of "the solve exists and is
+unique iff the operator is injective". -/
+def horowitzMap {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hE : E.degree < Dstar.natDegree) :
+    (degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree) →ₗ[K]
+      degreeLT K (Dminus.natDegree + Dstar.natDegree) :=
+  LinearMap.codRestrict _
+    ((horowitzLinear Dminus Dstar E).comp
+      ((degreeLT K Dminus.natDegree).subtype.prodMap (degreeLT K Dstar.natDegree).subtype))
+    (fun BC => horowitzLinear_mem_degreeLT hDm hDs hE BC.1.2 BC.2.2)
+
+@[simp] theorem horowitzMap_coe_apply {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hE : E.degree < Dstar.natDegree) (BC : degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree) :
+    (horowitzMap hDm hDs hE BC : K[X])
+      = derivative (BC.1 : K[X]) * Dstar - (BC.1 : K[X]) * E + (BC.2 : K[X]) * Dminus := rfl
+
+/-- `finrank` of the Horowitz domain `degreeLT m × degreeLT n` is `m + n` (each factor has the
+`Fin`-power basis `degreeLTEquiv`). -/
+theorem finrank_degreeLT_prod (m n : ℕ) :
+    Module.finrank K (degreeLT K m × degreeLT K n) = m + n := by
+  rw [Module.finrank_prod, (degreeLTEquiv K m).finrank_eq, (degreeLTEquiv K n).finrank_eq,
+    Module.finrank_pi, Module.finrank_pi, Fintype.card_fin, Fintype.card_fin]
+
+/-- **The Horowitz solve, reduced to injectivity** (§2.3): if the Horowitz operator is injective, then
+for every numerator `A` with `deg A < deg D⁻ + deg D*` there exist **unique** degree-bounded `B, C` with
+`A = B′·D* − B·E + C·D⁻` — so `∫ A/D = B/D⁻ + ∫ C/D*` with `B, C` found by the linear system. (By
+`injective_iff_surjective` on the equal-dimension coordinate spaces; injectivity is the remaining
+root-multiplicity lemma.) -/
+theorem exists_unique_horowitz_of_injective {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hE : E.degree < Dstar.natDegree) (hinj : Function.Injective (horowitzMap hDm hDs hE))
+    {A : K[X]} (hA : A ∈ degreeLT K (Dminus.natDegree + Dstar.natDegree)) :
+    ∃! BC : degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree,
+      derivative (BC.1 : K[X]) * Dstar - (BC.1 : K[X]) * E + (BC.2 : K[X]) * Dminus = A := by
+  have hfr : Module.finrank K (degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree)
+      = Module.finrank K (degreeLT K (Dminus.natDegree + Dstar.natDegree)) := by
+    rw [finrank_degreeLT_prod, (degreeLTEquiv K _).finrank_eq, Module.finrank_pi, Fintype.card_fin]
+  have hsurj : Function.Surjective (horowitzMap hDm hDs hE) :=
+    (LinearMap.injective_iff_surjective_of_finrank_eq_finrank hfr).mp hinj
+  obtain ⟨BC, hBC⟩ := hsurj ⟨A, hA⟩
+  have hval : derivative (BC.1 : K[X]) * Dstar - (BC.1 : K[X]) * E + (BC.2 : K[X]) * Dminus = A := by
+    rw [← horowitzMap_coe_apply hDm hDs hE BC]; exact congrArg Subtype.val hBC
+  refine ⟨BC, hval, fun BC' hBC' => ?_⟩
+  apply hinj
+  apply Subtype.ext
+  rw [horowitzMap_coe_apply, horowitzMap_coe_apply, hBC', hval]
+
 end DeepWiki.SymbolicIntegration
 
 end
