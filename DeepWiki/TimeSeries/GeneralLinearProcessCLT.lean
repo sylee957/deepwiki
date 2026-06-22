@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.LinearProcessCLT
 import DeepWiki.TimeSeries.LinearProcess
+import Mathlib.Topology.Algebra.InfiniteSum.Order
 
 /-! # Toward the general linear-process central limit theorem (Theorem 7.1.2)
 Bridges the raw-function boundary `L²` estimates of `LinearProcessCLT` to the Hilbert space
@@ -34,5 +35,25 @@ theorem norm_toLp_lag_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ)
       ≤ (2 * (j : ℝ≥0∞) * eLpNorm (Z 0) 2 μ).toReal := ENNReal.toReal_mono htop hbound
     _ = 2 * j * (eLpNorm (Z 0) 2 μ).toReal := by
         rw [ENNReal.toReal_mul, ENNReal.toReal_mul]; norm_num
+
+/-- **Infinite-filter boundary `L²` bound:** for a causal filter `ψ : ℕ → ℝ` with `∑ⱼ |ψⱼ|·j < ∞`,
+the `L²` norm of the boundary term `∑ⱼ ψⱼ • (lag j)` of the linear process is bounded by
+`∑ⱼ |ψⱼ|·2jM`, uniformly in `n` — Banach absolute convergence (`norm_tsum_le_tsum_norm`) plus the
+per-lag bound. This is the `‖D_n‖₂ ≤ C` of the general (`MA(∞)` / ARMA) sample-mean CLT. -/
+theorem norm_tsum_filter_lag_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) {ψ : ℕ → ℝ}
+    (hψ : Summable fun j : ℕ => |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal)) (n : ℕ) :
+    ‖∑' j : ℕ, ψ j • (memLp_lag hZ n j).toLp _‖
+      ≤ ∑' j : ℕ, |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) := by
+  have hb : ∀ j : ℕ, ‖ψ j • (memLp_lag hZ n j).toLp _‖
+      ≤ |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) := by
+    intro j
+    rw [norm_smul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_left (norm_toLp_lag_le hZ hident n j) (abs_nonneg _)
+  have hsummn : Summable fun j : ℕ => ‖ψ j • (memLp_lag hZ n j).toLp _‖ :=
+    Summable.of_nonneg_of_le (fun _ => norm_nonneg _) hb hψ
+  calc ‖∑' j : ℕ, ψ j • (memLp_lag hZ n j).toLp _‖
+      ≤ ∑' j : ℕ, ‖ψ j • (memLp_lag hZ n j).toLp _‖ := norm_tsum_le_tsum_norm hsummn
+    _ ≤ ∑' j : ℕ, |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) := hsummn.tsum_le_tsum hb hψ
 
 end DeepWiki.TimeSeries
