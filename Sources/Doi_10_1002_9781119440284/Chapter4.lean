@@ -7,6 +7,7 @@ import DeepWiki.NetworkCalculus.ConvexSegmentMerge
 import DeepWiki.NetworkCalculus.ConvexSegmentMergeTrunc
 import DeepWiki.NetworkCalculus.ConcaveSegmentMerge
 import DeepWiki.NetworkCalculus.ConvexConvByLine
+import DeepWiki.NetworkCalculus.ConvexConcaveReadback
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -20,7 +21,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution engine is done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`, reducing the convolution to a meet of convex-by-line pieces via `lemma_4_1_line`); what remains is reading the meet of those per-line values back into a single concave/PWL closed form.
+§4.2: Lemma 4.1 (convolving a convex PWL by a line) `[infra]` — the per-line engine is done (`lemma_4_1_line`: below the breakpoint `u*` the result is `f + c`, above it `f(u*) + c + q·(t−u*)`); what remains is assembling the lines `gⱼ` of a concave operand and the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering (the outer Lemma 4.1 toward Theorem 4.2); Theorem 4.2 (convex-by-concave convolution, segment-wise) `[infra]` — the distribution + readback engines are done (`thm_4_2_distrib`/`minConv_inf`: `f ∗ (⊓ⱼ γⱼ) = ⊓ⱼ (f ∗ γⱼ)`; `thm_4_2_readback_below`: each `f ∗ γⱼ = (f ∗ lineⱼ) ⊓ f` with `lineⱼ = convexSegEval bⱼ rⱼ []` so `lemma_4_1_line` computes it, and below a bucket's breakpoint `f ∗ γⱼ = f`); what remains is the global meet→single-PWL simplification (which bucket dominates on each interval — the `f∗gⱼ` vs `f∗gⱼ₋₁` ordering of the outer Lemma 4.1).
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]` — the affine base case (`lemma_4_6_affine`: `(a+p·u) ⊘ (b+q·u) = a+p·t−b` when `p≤q`, `= ⊤` when `q<p`, the sup attained at `s=0`) is done; the two-segment piecewise case (optimal `s` at interior knots) remains; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -266,6 +267,20 @@ theorem thm_4_2_distrib (f : ℝ≥0 → EReal) (l : List (ℝ≥0 × ℝ≥0)) 
     minConv f (concaveNFEval l)
       = l.foldr (fun rb acc => minConv f (tbEReal rb.1 rb.2) ⊓ acc) (minConv f topCurve) :=
   DeepWiki.minConv_concaveNFEval_foldr f l
+
+/-- **Theorem 4.2** (§4.2.2, p.68), the readback step. Each per-bucket convolution reads back as a
+meet, `f ∗ γ_{r,b} = (f ∗ lineᵣᵦ) ⊓ f`, where `lineᵣᵦ = convexSegEval b r []`, so the Lemma 4.1
+engine computes the line factor. Concretely, for a convex PWL `f = convexSegEval f0 fs fsegs`
+(`r ≤ fs`), *below the bucket's breakpoint* `u* = segLenSum (truncSegs r fsegs)` the token bucket is
+inactive and `f ∗ γ_{r,b} = f` (the line factor `f + b ≥ f` loses the meet). The library's
+`DeepWiki.minConv_tbEReal_eq_line_inf` / `DeepWiki.minConv_tbEReal_convexSegEval_below`. -/
+theorem thm_4_2_readback_below (f0 fs r b : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hrf : r ≤ fs)
+    {t : ℝ≥0} (ht : t ≤ segLenSum (truncSegs r fsegs)) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((convexSegEval f0 fs fsegs t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.minConv_tbEReal_convexSegEval_below f0 fs r b fsegs hfsort hfs hrf ht
 
 /-- **Theorem 4.1, the unbalanced case** (§4.2.2, p.65) — completing Theorem 4.1. When the two
 convex PWLs have *different* asymptotic slopes (`ρf = sf ≤ sg = ρg`), the merge must **truncate**:

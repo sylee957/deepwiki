@@ -81,4 +81,32 @@ theorem minConv_concaveNFEval_foldr (f : ℝ≥0 → EReal) (l : List (ℝ≥0 �
   | nil => rfl
   | cons rb l ih => rw [concaveNFEval_cons, minConv_inf_fun, ih, List.foldr_cons]
 
+/-! ## Readback: each per-bucket convolution is `f` met with the convex-by-line value -/
+
+/-- **Toward Theorem 4.2, readback step.** Convolving (any `IsNeverBot`) `f` by a single token
+bucket `γ_{r,b} = lineᵣᵦ ⊓ 𝟙` gives `f ∗ γ_{r,b} = (f ∗ lineᵣᵦ) ⊓ f`: distribute over the meet
+(`minConv_inf_fun`), and the convolution unit drops out (`f ∗ 𝟙 = f`). For a *convex* `f` the line
+factor `f ∗ lineᵣᵦ` is the closed form of `lemma_4_1_line`, so each per-bucket value is a meet of
+`f` and an explicit convex-by-line curve. -/
+theorem minConv_tbEReal_eq_inf {f : ℝ≥0 → EReal} (hf : IsNeverBot f) (r b : ℝ≥0) :
+    minConv f (tbEReal r b)
+      = minConv f (rateEReal r + Function.const ℝ≥0 ((b : ℝ) : EReal)) ⊓ f := by
+  unfold tbEReal
+  rw [minConv_inf_fun, minConv_comm f convUnitEReal, minConv_convUnitEReal_left f hf]
+
+/-- **Toward Theorem 4.2, list readback.** Putting the distribution (`minConv_concaveNFEval_foldr`)
+together with the per-bucket readback (`minConv_tbEReal_eq_inf`): convolving (`IsNeverBot`) `f` by a
+concave PWL is the foldr of the per-line meets `(f ∗ lineⱼ) ⊓ f`. The `f ∗ ⊤` base is the dioid
+`mul_zero` (`= ⊤`, the meet identity), so the value is `⊓ⱼ ((f ∗ lineⱼ) ⊓ f)`. -/
+theorem minConv_concaveNFEval_eq_foldr_inf {f : ℝ≥0 → EReal} (hf : IsNeverBot f)
+    (l : List (ℝ≥0 × ℝ≥0)) :
+    minConv f (concaveNFEval l)
+      = l.foldr (fun rb acc =>
+          (minConv f (rateEReal rb.1 + Function.const ℝ≥0 ((rb.2 : ℝ) : EReal)) ⊓ f) ⊓ acc)
+          (minConv f topCurve) := by
+  rw [minConv_concaveNFEval_foldr]
+  congr 1
+  funext rb acc
+  rw [minConv_tbEReal_eq_inf hf]
+
 end DeepWiki
