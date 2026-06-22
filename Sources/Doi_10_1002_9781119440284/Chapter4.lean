@@ -100,6 +100,13 @@ need the intersection-point layer, see the chapter's `## NOT YET FORMALIZED` blo
 theorem prop_4_1_concave (l : List (ℝ≥0 × ℝ≥0)) : IsConcaveEReal (concaveNFEval l) :=
   isConcaveEReal_concaveNFEval l
 
+/-- **Definition 4.1** (§4.2.1, p.63), the intersection point `tᵢ`. The crossing time of two
+adjacent token-buckets `γ_{r,b}` and `γ_{r',b'}` is `tᵢ = (b'−b)/(r−r')` (the book's eq. for
+`tᵢ`, `2 ≤ i ≤ n`). The two buckets are equal there (`tbEReal_eq_at_cross`) and `γ_{r,b}` is the
+strict minimum exactly before it (`tb_lt_iff_lt_cross`); it is positive when rates decrease and
+bursts increase (`tbCross_pos`). The library's `DeepWiki.tbCross`. -/
+noncomputable def def_4_1_cross := @tbCross
+
 /-- **Proposition 4.1, item 2** (§4.2.1, p.63): in a concave normal form the bursts are strictly
 increasing along the list (`bᵢ < bⱼ` for `i < j`). If `bᵢ ≥ bⱼ` while the rates decrease
 (`rᵢ > rⱼ`), then `γ_{rᵢ,bᵢ} ≥ γ_{rⱼ,bⱼ}` pointwise, so `γᵢ` is redundant — contradicting the

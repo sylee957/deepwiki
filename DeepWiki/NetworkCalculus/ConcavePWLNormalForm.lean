@@ -68,6 +68,60 @@ theorem tbEReal_mono_of {r r' b b' t : ℝ≥0} (ht : t ≠ 0) (hr : r ≤ r') (
     gcongr
   · exact_mod_cast hb
 
+/-! ## Intersection points (the `tᵢ` sequence of Definition 4.1) -/
+
+/-- The crossing time of two token-buckets `γ_{r,b}` and `γ_{r',b'}`:
+`t = (b' − b)/(r − r')`, the point where the affine parts `b + r·t` and `b' + r'·t` agree
+(the book's `tᵢ` for adjacent buckets, with `r > r'` and `b < b'`). -/
+noncomputable def tbCross (r b r' b' : ℝ≥0) : ℝ≥0 := (b' - b) / (r - r')
+
+/-- The crossing time is positive when the rates strictly decrease and the bursts strictly
+increase (`r' < r`, `b < b'`). -/
+theorem tbCross_pos {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b < b') : 0 < tbCross r b r' b' :=
+  div_pos (tsub_pos_of_lt hb) (tsub_pos_of_lt hr)
+
+/-- The affine parts agree at the crossing: `b + r·t = b' + r'·t` at `t = (b'−b)/(r−r')`. -/
+theorem tb_affine_eq_at_cross {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') :
+    b + r * tbCross r b r' b' = b' + r' * tbCross r b r' b' := by
+  have hne : (r : ℝ) - r' ≠ 0 := by
+    have : (r' : ℝ) < r := by exact_mod_cast hr
+    linarith
+  have ht : ((tbCross r b r' b' : ℝ≥0) : ℝ) = ((b' : ℝ) - b) / ((r : ℝ) - r') := by
+    rw [tbCross, NNReal.coe_div, NNReal.coe_sub hb, NNReal.coe_sub hr.le]
+  rw [← NNReal.coe_inj]
+  push_cast [ht]
+  field_simp
+  ring
+
+/-- The two token-buckets are equal at their crossing time `tbCross`. -/
+theorem tbEReal_eq_at_cross {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') :
+    tbEReal r b (tbCross r b r' b') = tbEReal r' b' (tbCross r b r' b') := by
+  rcases eq_or_lt_of_le hb with rfl | hblt
+  · have h0 : tbCross r b r' b = 0 := by rw [tbCross, tsub_self, zero_div]
+    rw [h0, tbEReal_zero, tbEReal_zero]
+  · have htpos : tbCross r b r' b' ≠ 0 := (tbCross_pos hr hblt).ne'
+    rw [tbEReal_pos htpos, tbEReal_pos htpos]
+    have heq : r * tbCross r b r' b' + b = r' * tbCross r b r' b' + b' := by
+      rw [add_comm (r * _) b, add_comm (r' * _) b']; exact tb_affine_eq_at_cross hr hb
+    simp only [rateEReal]
+    rw [← EReal.coe_add, ← EReal.coe_add, ← NNReal.coe_add, ← NNReal.coe_add, heq]
+
+/-- Ordering across the crossing: with decreasing rates (`r' < r`) and `b ≤ b'`, the
+high-rate/low-burst bucket `γ_{r,b}` is strictly below `γ_{r',b'}` exactly *before* the crossing
+time. (So `γ_{r,b}` is the minimum on `(0, tbCross)` and `γ_{r',b'}` beyond it.) -/
+theorem tb_lt_iff_lt_cross {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0} (ht : t ≠ 0) :
+    tbEReal r b t < tbEReal r' b' t ↔ t < tbCross r b r' b' := by
+  rw [tbEReal_pos ht, tbEReal_pos ht]
+  simp only [rateEReal]
+  rw [← EReal.coe_add, ← EReal.coe_add, EReal.coe_lt_coe_iff, ← NNReal.coe_lt_coe, tbCross,
+    NNReal.coe_div, NNReal.coe_sub hr.le, NNReal.coe_sub hb]
+  have hrr : (0 : ℝ) < (r : ℝ) - r' := by
+    have : (r' : ℝ) < r := by exact_mod_cast hr
+    linarith
+  rw [lt_div_iff₀ hrr]
+  push_cast
+  constructor <;> intro h <;> nlinarith [h]
+
 /-! ## Concave PWL evaluation and Definition 4.1 (normal form) -/
 
 /-- A list of `(rate, burst)` pairs evaluated as a concave piecewise-linear curve: the
