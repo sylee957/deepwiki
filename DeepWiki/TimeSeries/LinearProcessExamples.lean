@@ -194,4 +194,49 @@ theorem maqFilter_tsum_mul_shift_eq (θ : ℝ[X]) {h : ℤ} (hh : 0 ≤ h) :
   rw [Finset.mem_range, not_lt] at hn
   rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega : θ.natDegree < n), zero_mul]
 
+/-- `maqFilter θ` is absolutely summable — finitely supported, so `∑ⱼ ‖ψⱼ‖ < ∞`. -/
+theorem summable_norm_maqFilter (θ : ℝ[X]) : Summable (fun j => ‖maqFilter θ j‖) :=
+  summable_of_ne_finset_zero (s := Finset.Icc 0 (θ.natDegree : ℤ)) (fun j hj => by
+    rw [Finset.mem_Icc, not_and_or, not_le, not_le] at hj
+    rcases hj with hj | hj
+    · rw [maqFilter_neg θ hj, norm_zero]
+    · rw [maqFilter, if_pos (by omega), Polynomial.coeff_eq_zero_of_natDegree_lt (by omega),
+        norm_zero])
+
+/-- **Asymptotic-variance identity (B&D Theorem 7.1.2's `v`):** the sum of all autocovariance terms
+of a finite `MA(q)` filter equals the square of its total weight,
+`∑ₕ ∑ₖ ψₖ ψ_{k+h} = (∑ⱼ ψⱼ)²` — so `∑ₕ γ(h) = σ²(∑θ)²`, matching the `MA(q)` central-limit-theorem
+variance to the sum of autocovariances of Theorem 7.1.1. Fubini on the absolutely summable double
+series (reindexed `(h,k) ↦ (k, k+h)`) plus shift-invariance of the inner sum. -/
+theorem maqFilter_acvfSum (θ : ℝ[X]) :
+    ∑' h : ℤ, ∑' k : ℤ, maqFilter θ k * maqFilter θ (k + h) = (∑' j : ℤ, maqFilter θ j) ^ 2 := by
+  set ψ := maqFilter θ with hψdef
+  have hns : Summable (fun j => ‖ψ j‖) := summable_norm_maqFilter θ
+  have hprod : Summable (fun q : ℤ × ℤ => ψ q.1 * ψ q.2) :=
+    summable_mul_of_summable_norm hns hns
+  let e : ℤ × ℤ ≃ ℤ × ℤ :=
+    { toFun := fun p => (p.2, p.2 + p.1)
+      invFun := fun q => (q.2 - q.1, q.1)
+      left_inv := fun p => by simp
+      right_inv := fun q => by simp }
+  have hsum2 : Summable (fun p : ℤ × ℤ => ψ p.2 * ψ (p.2 + p.1)) := by
+    have hcomp : (fun p : ℤ × ℤ => ψ p.2 * ψ (p.2 + p.1)) = (fun q : ℤ × ℤ => ψ q.1 * ψ q.2) ∘ e := by
+      ext ⟨h, k⟩; rfl
+    rw [hcomp]; exact (e.summable_iff).mpr hprod
+  have step2 : (∑' p : ℤ × ℤ, ψ p.2 * ψ (p.2 + p.1)) = ∑' q : ℤ × ℤ, ψ q.1 * ψ q.2 :=
+    Equiv.tsum_eq e (fun q => ψ q.1 * ψ q.2)
+  have hrow_prod : ∀ b : ℤ, Summable fun c : ℤ => ψ b * ψ c :=
+    fun b => (summable_maqFilter θ).mul_left (ψ b)
+  have hrow_sum2 : ∀ b : ℤ, Summable fun c : ℤ => ψ c * ψ (c + b) := fun b =>
+    summable_of_ne_finset_zero (s := Finset.Icc 0 (θ.natDegree : ℤ)) (fun c hc => by
+      rw [Finset.mem_Icc, not_and_or, not_le, not_le] at hc
+      rcases hc with hc | hc
+      · rw [hψdef, maqFilter_neg θ hc, zero_mul]
+      · rw [show ψ c = θ.coeff c.toNat from by
+            simp only [hψdef, maqFilter, if_pos (by omega : (0 : ℤ) ≤ c)],
+          Polynomial.coeff_eq_zero_of_natDegree_lt (by omega : θ.natDegree < c.toNat), zero_mul])
+  rw [← hsum2.tsum_prod' hrow_sum2, step2, hprod.tsum_prod' hrow_prod]
+  simp_rw [tsum_mul_left]
+  rw [tsum_mul_right, sq]
+
 end DeepWiki.TimeSeries
