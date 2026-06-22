@@ -268,6 +268,13 @@ theorem thm_4_2_distrib (f : ℝ≥0 → EReal) (l : List (ℝ≥0 × ℝ≥0)) 
       = l.foldr (fun rb acc => minConv f (tbEReal rb.1 rb.2) ⊓ acc) (minConv f topCurve) :=
   DeepWiki.minConv_concaveNFEval_foldr f l
 
+/-- **Theorem 4.2** (§4.2.2, p.68), structural bound: convolution by a (non-empty) concave PWL only
+lowers the curve, `f ∗ concaveNFEval l ≤ f` — the whole-list version of `f ∗ γⱼ ≤ f`, since a
+non-empty concave PWL is null at the origin. The library's `DeepWiki.minConv_concaveNFEval_le_self`. -/
+theorem thm_4_2_le_self (f : ℝ≥0 → EReal) {l : List (ℝ≥0 × ℝ≥0)} (hne : l ≠ []) (t : ℝ≥0) :
+    minConv f (concaveNFEval l) t ≤ f t :=
+  DeepWiki.minConv_concaveNFEval_le_self f hne t
+
 /-- **Theorem 4.2** (§4.2.2, p.68), the readback step. Each per-bucket convolution reads back as a
 meet, `f ∗ γ_{r,b} = (f ∗ lineᵣᵦ) ⊓ f`, where `lineᵣᵦ = convexSegEval b r []`, so the Lemma 4.1
 engine computes the line factor. Concretely, for a convex PWL `f = convexSegEval f0 fs fsegs`

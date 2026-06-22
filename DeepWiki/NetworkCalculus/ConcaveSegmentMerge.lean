@@ -109,4 +109,13 @@ theorem minConv_concaveNFEval_eq_foldr_inf {f : ℝ≥0 → EReal} (hf : IsNever
   funext rb acc
   rw [minConv_tbEReal_eq_inf hf]
 
+/-- **Toward Theorem 4.2.** Convolution by a (non-empty) concave PWL can only lower the curve:
+`f ∗ concaveNFEval l ≤ f`. The whole-list generalization of `minConv_tbEReal_le_self` — since a
+non-empty concave PWL is null at the origin (`concaveNFEval_zero_of_ne_nil`), the `(0,t)` split
+already bounds the convolution by `f`. -/
+theorem minConv_concaveNFEval_le_self (f : ℝ≥0 → EReal) {l : List (ℝ≥0 × ℝ≥0)} (hne : l ≠ [])
+    (t : ℝ≥0) :
+    minConv f (concaveNFEval l) t ≤ f t :=
+  minConv_le_left f (concaveNFEval_zero_of_ne_nil hne) t
+
 end DeepWiki
