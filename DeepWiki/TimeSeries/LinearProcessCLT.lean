@@ -188,4 +188,34 @@ theorem maq_sampleMean_clt [IsProbabilityMeasure P] [IsProbabilityMeasure P']
   exact tendstoInDistribution_of_tendsto_eLpNorm_sub hY hX
     (tendsto_eLpNorm_maq_sub θ hmeas hmem hident)
 
+/-- **Theorem 7.1.2 (finite `MA(q)`, B&D form with process mean):** for `Yₜ = μ + ∑_{j=0}^q θⱼ Z_{t−j}`
+over centered iid `L²` noise, `√n(Ȳₙ − μ) ⇒ (∑θ) Y₀ = N(0, (∑θ)² σ²)` — the exact statement of B&D
+Theorem 7.1.2 for a finite moving average. The process mean cancels (`√n(Ȳₙ − μ) = √n X̄ₙ` for the
+centered part), reducing to `maq_sampleMean_clt`. -/
+theorem maq_sampleMean_clt_mean [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (θ : Polynomial ℝ) (μ : ℝ) {Z : ℤ → Ω → ℝ} {Y₀ : Ω' → ℝ}
+    (hmeas : ∀ s, AEStronglyMeasurable (Z s) P) (hmem : ∀ s, MemLp (Z s) 2 P)
+    (hindep : iIndepFun Z P) (hident : ∀ s, IdentDistrib (Z s) (Z 0) P P)
+    (hcenter : P[Z 0] = 0) (hY₀ : HasLaw Y₀ (gaussianReal 0 Var[Z 0; P].toNNReal) P') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n
+          (fun t => μ + ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω) - μ))
+      atTop ((∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j) • Y₀) (fun _ => P) P' := by
+  have heq : (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n
+          (fun t => μ + ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω) - μ))
+      = fun (n : ℕ) ω => Real.sqrt n * sampleMean n
+          (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω) := by
+    ext n ω
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · subst hn; simp [sampleMean]
+    · have hμ : sampleMean n
+            (fun t => μ + ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω)
+          = μ + sampleMean n
+            (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω) := by
+        rw [sampleMean, sampleMean, Finset.sum_add_distrib, Finset.sum_const, Finset.card_range,
+          nsmul_eq_mul, mul_add, ← mul_assoc, inv_mul_cancel₀ (Nat.cast_ne_zero.mpr hn.ne'), one_mul]
+      rw [hμ]; ring
+  rw [heq]
+  exact maq_sampleMean_clt θ hmeas hmem hindep hident hcenter hY₀
+
 end DeepWiki.TimeSeries
