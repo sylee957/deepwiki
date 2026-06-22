@@ -15,6 +15,26 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+/-- **Residue non-degeneracy** (the `deg(A − a·D') = deg D − 1` hypothesis of
+`isSimilar_lrtSubresultant_eval_gcd`): when the `xⁿ⁻¹`-coefficient does not cancel —
+`A_{n−1} ≠ a·n·lc(D)` with `n = deg D` — the difference `A − a·D'` keeps the full degree `deg D − 1`.
+(The leading coefficient of `D'` is `n·lc(D)`, so the degree drops only at the single residue value
+`a = A_{n−1}/(n·lc D)`.) Always `deg(A − a·D') ≤ deg D − 1` since `deg A < deg D`. -/
+theorem natDegree_sub_C_mul_derivative {K : Type*} [Field K] (A D : K[X]) (a : K)
+    (hA : A.natDegree < D.natDegree)
+    (hne : A.coeff (D.natDegree - 1) ≠ a * ((D.natDegree : K) * D.leadingCoeff)) :
+    (A - C a * derivative D).natDegree = D.natDegree - 1 := by
+  have hle : (A - C a * derivative D).natDegree ≤ D.natDegree - 1 :=
+    (natDegree_sub_le _ _).trans
+      (max_le (by omega) ((natDegree_C_mul_le _ _).trans (natDegree_derivative_le D)))
+  refine le_antisymm hle (le_natDegree_of_ne_zero ?_)
+  have hcast : ((D.natDegree - 1 : ℕ) : K) + 1 = (D.natDegree : K) := by
+    rw [Nat.cast_sub (by omega : 1 ≤ D.natDegree), Nat.cast_one]; ring
+  rw [coeff_sub, coeff_C_mul, coeff_derivative, Nat.sub_add_cancel (by omega : 1 ≤ D.natDegree),
+    hcast, ← leadingCoeff]
+  intro h
+  exact hne (by linear_combination h)
+
 /-- **Theorem 2.5.1, part (ii)** (the LRT subresultant correctness, non-degenerate case): for `D ≠ 0` and a
 value `a` with `deg(A − a·D') = deg D − 1`, the LRT subresultant `lrtSubresultant A D` at the index
 `i = deg R_k` (`R_k` the last nonzero element of the Euclidean p.r.s. of `D, A − a·D'`), specialized by
@@ -34,5 +54,18 @@ theorem isSimilar_lrtSubresultant_eval_gcd {K : Type*} [Field K] [GCDMonoid K[X]
   rw [lrtSubresultant_eval, ← hdeg]
   exact subresultant_euclideanPRS_isSimilar_gcd D (A - C a * derivative D) hD
     (by rw [hdeg]; exact Nat.sub_le _ _) hk2 hk0 hknz
+
+-- Faithfulness: the non-cancellation condition `natDegree_sub_C_mul_derivative` discharges the `hdeg`
+-- hypothesis, so part-(ii) correctness holds for any residue `a` with `A_{n−1} ≠ a·n·lc(D)`.
+example {K : Type*} [Field K] [GCDMonoid K[X]] (A D : K[X]) (a : K) (hD : D ≠ 0)
+    (hA : A.natDegree < D.natDegree)
+    (hne : A.coeff (D.natDegree - 1) ≠ a * ((D.natDegree : K) * D.leadingCoeff))
+    {k : ℕ} (hk2 : 2 ≤ k) (hk0 : euclideanPRS D (A - C a * derivative D) (k + 1) = 0)
+    (hknz : ∀ j, 1 ≤ j → j ≤ k → euclideanPRS D (A - C a * derivative D) j ≠ 0) :
+    IsSimilar
+      ((lrtSubresultant A D (euclideanPRS D (A - C a * derivative D) k).natDegree).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * derivative D)) :=
+  isSimilar_lrtSubresultant_eval_gcd A D a hD (natDegree_sub_C_mul_derivative A D a hA hne) hk2 hk0 hknz
 
 end DeepWiki.SymbolicIntegration
