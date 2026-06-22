@@ -16,7 +16,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope) and flat case `thm_4_1_flat` (flatter line ∗ convex = shift, the book's `f∗g=f+g(0)`) are proved. What remains is the *general* correctness: the merge must **truncate** at slope `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — `mergeBySlope` as written is the *full* merge, exact only in the balanced `ρf=ρg` case; the general theorem needs the truncating merge + the slope-peel induction (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope) and flat case `thm_4_1_flat` (flatter line ∗ convex = shift, the book's `f∗g=f+g(0)`) are proved. What remains is the *general* correctness: the merge must **truncate** at slope `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — `mergeBySlope` as written is the *full* merge, exact only in the balanced `ρf=ρg` case; the general theorem needs the truncating merge + the slope-peel induction (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -136,6 +136,21 @@ is the remaining ordering claim. The library's `DeepWiki.exists_mem_concaveNFEva
 theorem prop_4_1_piecewise {l : List (ℝ≥0 × ℝ≥0)} (hne : l ≠ []) (t : ℝ≥0) :
     ∃ s ∈ l, concaveNFEval l t = tbEReal s.1 s.2 t :=
   exists_mem_concaveNFEval_eq hne t
+
+/-- **Proposition 4.1, item 4** (§4.2.1, p.63), the per-interval formula — fully closed. On the
+`i`-th inter-crossing interval `[tᵢ, tᵢ₊₁]` (bounding crossings, with the conventions `t₁ = 0` and
+`tₙ₊₁ = ∞` made vacuous by the conditional hypotheses), the concave PWL function `⋀ⱼ γⱼ` coincides
+with its `i`-th token-bucket `γ_{rᵢ,bᵢ}`. Proof: transitive minimality of `γᵢ` on the interval
+(chaining the crossing orderings up and down the slope-sorted list) feeds `concaveNFEval_eq_of_isMin`.
+The library's `DeepWiki.IsConcaveNormalForm.concaveNFEval_eq_get_of_mem_interval`. -/
+theorem prop_4_1_interval {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l) {t : ℝ≥0}
+    (i : Fin l.length)
+    (hlo : ∀ hi : 1 ≤ i.val, tbCross (l.get ⟨i.val - 1, by omega⟩).1 (l.get ⟨i.val - 1, by omega⟩).2
+                                      (l.get i).1 (l.get i).2 ≤ t)
+    (hhi : ∀ hi : i.val + 1 < l.length, t ≤ tbCross (l.get i).1 (l.get i).2
+                                          (l.get ⟨i.val + 1, hi⟩).1 (l.get ⟨i.val + 1, hi⟩).2) :
+    concaveNFEval l t = tbEReal (l.get i).1 (l.get i).2 t :=
+  h.concaveNFEval_eq_get_of_mem_interval i hlo hhi
 
 /-- **Proposition 4.1, item 4** (§4.2.1, p.63), pointwise envelope form: at any time where a
 token-bucket of the list attains the minimum, the concave PWL function equals it,
