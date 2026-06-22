@@ -29,7 +29,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   the `Gₐ` characterization); the algorithm's two computational primitives are functional defs
   `intRationalLogPart_resultant`/`_gcd`, both on the §4.4 residue foundation.
 §2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
-  the Lazard–Rioboo–Trager algorithm [functional]; Ex 2.5.2.
+  the Lazard–Rioboo–Trager algorithm [functional].
 §2.6: Thm 2.6.1; the Czichowski algorithm [functional]; Ex 2.6.1.
 §2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
 §2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
@@ -163,5 +163,30 @@ theorem ex_2_5_1 {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
     have h := congrArg (C : F →+* F[X]) ha
     simpa [map_ofNat] using h
   linear_combination (107 * ((X : F[X]) ^ 2 - 2)) * hb
+
+/-- **Example 2.5.2** (§2.5, p.53), the Hermite-reduction result for `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
+(denominator `(x²−1)²(x−2)`): `HermiteReduce` returns rational part `g = (12x+6)/(x²−1)` and remaining
+integrand `h = 12/(x²−x−2)`, so `∫ f = (12x+6)/(x²−1) + ∫ 12/(x²−x−2)`. Verified as the differential-field
+identity `((12x+6)/(x²−1))′ + 12/(x²−x−2) = 36/(x⁵−2x⁴−2x³+4x²+x−2)` (the numerator sum collapses to
+`36(x+1)`). The logarithmic part `∫ 12/(x²−x−2) = Σ_{α²=16} α·log(x − 1/2 − 3α/8)` is the §2.4/§2.5
+log-part computation (cf. `ex_2_4_1`). -/
+theorem ex_2_5_2 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
+    (h1 : t ^ 2 - 1 ≠ 0) (h2 : t ^ 2 - t - 2 ≠ 0) :
+    ((12 * t + 6) / (t ^ 2 - 1))′ + 12 / (t ^ 2 - t - 2)
+      = 36 / (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2) := by
+  have ht2 : (t - 2 : F) ≠ 0 := by
+    intro h; apply h2; rw [sub_eq_zero.mp h]; norm_num
+  have hD : (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2 : F) ≠ 0 := by
+    have h : (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2 : F) = (t ^ 2 - 1) ^ 2 * (t - 2) := by
+      ring
+    rw [h]; exact mul_ne_zero (pow_ne_zero 2 h1) ht2
+  have h12 : (12 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h6 : (6 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h1' : (1 : F)′ = 0 := mem_constants.mp (by norm_num)
+  rw [deriv_div]
+  simp only [map_add, map_sub, deriv_const_mul _ h12, h6, h1', deriv_pow, ht, mul_one, sub_zero,
+    add_zero]
+  rw [div_add_div _ _ (pow_ne_zero 2 h1) h2, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 h1) h2) hD]
+  ring
 
 end DeepWiki.Si
