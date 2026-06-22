@@ -98,4 +98,42 @@ theorem minConv_tbEReal_convexSegEval_le_below (f0 fs r r' b b' : ℝ≥0) (fseg
   rw [minConv_tbEReal_convexSegEval_below f0 fs r' b' fsegs hfsort hfs hr'f ht']
   exact minConv_tbEReal_le_self (isNeverBot_coe_nnreal _) r b t
 
+/-! ## The crossing, base case: `f` a single rate (`fsegs = []`) -/
+
+/-- **Crossing base case — explicit value.** For `f` a single-rate line `convexSegEval f0 fs []`
+(`r ≤ fs`), the breakpoint is at the origin, so the bucket convolution is the meet of the two
+affines for *all* `t`: `f ∗ γ_{r,b} t = (f0 + b + r·t) ⊓ (f0 + fs·t)`. -/
+theorem minConv_tbEReal_line (f0 fs r b : ℝ≥0) (hrf : r ≤ fs) (t : ℝ≥0) :
+    minConv (fun v => (((convexSegEval f0 fs [] v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((f0 + b + r * t : ℝ≥0) : ℝ) : EReal) ⊓ (((f0 + fs * t : ℝ≥0) : ℝ) : EReal) := by
+  have h0 : segLenSum (truncSegs r ([] : List (ℝ≥0 × ℝ≥0))) = 0 := by simp
+  rw [minConv_tbEReal_convexSegEval_above f0 fs r b [] (by simp) (by simp) hrf
+      (by rw [h0]; positivity)]
+  rw [h0]
+  simp only [convexSegEval_nil, mul_zero, add_zero, tsub_zero]
+
+/-- **Crossing base case — left of the crossing.** While `fs·t ≤ r·t + b` (i.e. `(fs−r)·t ≤ b`,
+left of the crossing `t = b/(fs−r)`), the bucket is inactive and `f ∗ γ_{r,b} = f` (`= f0 + fs·t`). -/
+theorem minConv_tbEReal_line_eq_f (f0 fs r b : ℝ≥0) (hrf : r ≤ fs) {t : ℝ≥0}
+    (h : fs * t ≤ r * t + b) :
+    minConv (fun v => (((convexSegEval f0 fs [] v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((f0 + fs * t : ℝ≥0) : ℝ) : EReal) := by
+  rw [minConv_tbEReal_line f0 fs r b hrf, inf_eq_right]
+  have hle : f0 + fs * t ≤ f0 + b + r * t :=
+    calc f0 + fs * t ≤ f0 + (r * t + b) := add_le_add le_rfl h
+      _ = f0 + b + r * t := by ring
+  exact_mod_cast hle
+
+/-- **Crossing base case — right of the crossing.** Once `r·t + b ≤ fs·t` (right of the crossing),
+the token-bucket line takes over and `f ∗ γ_{r,b} = f0 + b + r·t` (slope `r`, the bucket's rate). -/
+theorem minConv_tbEReal_line_eq_line (f0 fs r b : ℝ≥0) (hrf : r ≤ fs) {t : ℝ≥0}
+    (h : r * t + b ≤ fs * t) :
+    minConv (fun v => (((convexSegEval f0 fs [] v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      = (((f0 + b + r * t : ℝ≥0) : ℝ) : EReal) := by
+  rw [minConv_tbEReal_line f0 fs r b hrf, inf_eq_left]
+  have hle : f0 + b + r * t ≤ f0 + fs * t :=
+    calc f0 + b + r * t = f0 + (r * t + b) := by ring
+      _ ≤ f0 + fs * t := add_le_add le_rfl h
+  exact_mod_cast hle
+
 end DeepWiki
