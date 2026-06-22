@@ -78,4 +78,39 @@ theorem minConv_concaveNFEval_render (f0 fs : ℝ≥0) (fsegs l : List (ℝ≥0 
   rw [minConv_concaveNFEval_eq_lineMeet_inf (isNeverBot_coe_nnreal _) hne,
     lineMeet_eq_renderedLineMeet f0 fs fsegs hfsort hfs l hl]
 
+/-! ## Well-formedness of the rendered output
+The convex-by-concave output is generally *convex-then-concave* (a convex head `f`, then
+decreasing-rate bucket lines), so collapsing it to a single `convexSegEval`/`concaveNFEval` segment
+list needs a general arbitrary-slope PWL datatype not present in this layer. What holds with the
+current representation: the rendered meet is a genuine **monotone** curve. -/
+
+/-- The `EReal` coe of a `convexSegEval` curve is monotone (it is `f`'s monotonicity lifted). -/
+theorem monotone_coe_convexSegEval (a b : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) :
+    Monotone (fun t => (((convexSegEval a b segs t : ℝ≥0) : ℝ) : EReal)) :=
+  fun _ _ h =>
+    EReal.coe_le_coe_iff.mpr (NNReal.coe_le_coe.mpr (monotone_convexSegEval b segs a h))
+
+/-- The rendered bucket-line envelope is monotone (a finite meet of monotone convex curves; the
+`topCurve` base is constant). -/
+theorem monotone_renderedLineMeet (f0 : ℝ≥0) (fsegs l : List (ℝ≥0 × ℝ≥0)) :
+    Monotone (renderedLineMeet f0 fsegs l) := by
+  induction l with
+  | nil => rw [renderedLineMeet_nil]; exact monotone_const
+  | cons rb l ih =>
+      rw [renderedLineMeet_cons]
+      exact Monotone.inf (monotone_coe_convexSegEval (rb.2 + f0) rb.1 (truncSegs rb.1 fsegs)) ih
+
+/-- **The rendered Theorem 4.2 output is a monotone curve** (well-formedness): for bucket rates
+`≤ fs`, `f ∗ concaveNFEval l` is non-decreasing — it is the meet of the monotone rendered envelope
+and the monotone `f`. (Collapsing it to one PWL segment list is the remaining `[infra]` step, needing
+a general arbitrary-slope PWL datatype since the output is convex-then-concave.) -/
+theorem monotone_minConv_concaveNFEval_render (f0 fs : ℝ≥0) (fsegs l : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs) (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs)
+    (hl : ∀ rb ∈ l, rb.1 ≤ fs) (hne : l ≠ []) :
+    Monotone (minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal))
+      (concaveNFEval l)) := by
+  rw [minConv_concaveNFEval_render f0 fs fsegs l hfsort hfs hl hne]
+  exact Monotone.inf (monotone_renderedLineMeet f0 fsegs l)
+    (monotone_coe_convexSegEval f0 fs fsegs)
+
 end DeepWiki
