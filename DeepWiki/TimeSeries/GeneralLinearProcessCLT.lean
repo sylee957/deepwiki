@@ -91,4 +91,19 @@ theorem finsetSum_tsum {ι κ M : Type*} [AddCommGroup M] [TopologicalSpace M]
     rw [Finset.sum_insert ha, ih, ← Summable.tsum_add (hf a) (summable_sum fun i _ => hf i)]
     exact tsum_congr fun k => by rw [Finset.sum_insert ha]
 
+/-- **Structural identity `D_n = ∑ⱼ ψⱼ•(lag j)`:** the windowed sample sum of the causal linear
+process `Xₜ = ∑ⱼ ψⱼ Z_{t−j}` minus `(∑ψ)` times the windowed noise sum equals the filter-weighted
+lag-difference. The bridge from the actual linear process to the boundary-bounded element. -/
+theorem linearProcess_sampleSum_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) {ψ : ℕ → ℝ}
+    (hψ : Summable ψ) (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (n : ℕ) :
+    (∑ t ∈ Finset.range n, ∑' j : ℕ, ψ j • toLpSeq Z hZ ((t : ℤ) - (j : ℤ)))
+        - (∑' j : ℕ, ψ j) • ∑ t ∈ Finset.range n, toLpSeq Z hZ (t : ℤ)
+      = ∑' j : ℕ, ψ j • (memLp_lag hZ n j).toLp _ := by
+  rw [finsetSum_tsum (Finset.range n) (fun t => hsum (t : ℤ)), ← hψ.tsum_smul_const,
+    ← Summable.tsum_sub (summable_sum (s := Finset.range n) fun t _ => hsum (t : ℤ))
+      (hψ.smul_const _)]
+  refine tsum_congr fun j => ?_
+  rw [← Finset.smul_sum, ← smul_sub, ← Finset.sum_sub_distrib, lag_toLpSeq_eq]
+
 end DeepWiki.TimeSeries
