@@ -439,22 +439,14 @@ noncomputable abbrev def_1_4_1_sylvester := @Polynomial.sylvester
 noncomputable abbrev def_1_4_1 := @Polynomial.resultant
 
 /-- **Theorem 1.4.1** (§1.4, p.19), symmetry: `res(A,B) = (-1)^{deg A · deg B} · res(B,A)`. -/
-theorem thm_1_4_1_comm {R : Type*} [CommRing R] (f g : R[X]) :
-    Polynomial.resultant f g = (-1) ^ (f.natDegree * g.natDegree) * Polynomial.resultant g f :=
-  Polynomial.resultant_comm f g f.natDegree g.natDegree
+abbrev thm_1_4_1_comm := @Polynomial.resultant_comm
 
 /-- **Theorem 1.4.1** (§1.4, p.19), the root form: for `f` that splits,
 `res(A,B) = lc(A)^{deg B} · ∏_{α root of A} B(α)`. -/
-theorem thm_1_4_1_prod {R : Type*} [CommRing R] [IsDomain R] (f g : R[X]) (n : ℕ)
-    (hg : g.natDegree ≤ n) (hf : f.Splits) :
-    Polynomial.resultant f g f.natDegree n = f.leadingCoeff ^ n * (f.roots.map g.eval).prod :=
-  Polynomial.resultant_eq_prod_eval f g n hg hf
+abbrev thm_1_4_1_prod := @Polynomial.resultant_eq_prod_eval
 
 /-- **Theorem 1.4.1** (§1.4, p.19), multiplicativity: `res(A₁·A₂, B) = res(A₁, B) · res(A₂, B)`. -/
-theorem thm_1_4_1_mul {R : Type*} [CommRing R] (f₁ f₂ g : R[X]) (n : ℕ) (hn : g.natDegree ≤ n) :
-    Polynomial.resultant (f₁ * f₂) g (f₁.natDegree + f₂.natDegree) n
-      = Polynomial.resultant f₁ g f₁.natDegree n * Polynomial.resultant f₂ g f₂.natDegree n :=
-  Polynomial.resultant_mul_left f₁ f₂ g n hn
+abbrev thm_1_4_1_mul := @Polynomial.resultant_mul_left
 
 /-- **Corollary 1.4.2** (§1.4, p.19), field case: `res(A,B) = 0 ⟺ A, B` are not coprime — i.e.
 `deg gcd(A,B) > 0` — provided `A` and `B` are not both zero. -/
@@ -697,46 +689,28 @@ abbrev def_1_6_1_primitive := @Polynomial.IsPrimitive
 noncomputable abbrev def_1_6_1_primPart := @Polynomial.primPart
 
 /-- **Definition 1.6.1**: the decomposition `A = content(A) · pp(A)`. -/
-theorem def_1_6_1_decomp {R : Type*} [CommRing R] [NormalizedGCDMonoid R] (A : R[X]) :
-    A = Polynomial.C A.content * A.primPart :=
-  Polynomial.eq_C_content_mul_primPart A
+abbrev def_1_6_1_decomp := @Polynomial.eq_C_content_mul_primPart
 
 /-- **Lemma 1.6.1** (§1.6, p.26), Gauss's Lemma: the content is multiplicative,
 `content(AB) = content(A) · content(B)`. -/
-theorem lem_1_6_1 {R : Type*} [CommRing R] [NormalizedGCDMonoid R] (A B : R[X]) :
-    (A * B).content = A.content * B.content :=
-  Polynomial.content_mul
+abbrev lem_1_6_1 := @Polynomial.content_mul
 
 /-- **Theorem 1.6.1(i)** (§1.6, p.27): a prime factor divides the derivative one less time —
 if `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ gcd(A, dA/dx)` (for any gcd `G` of `A` and its derivative). -/
-theorem thm_1_6_1_i {R : Type*} [CommRing R] {A P G : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A)
-    (hG : IsGCD A (derivative A) G) : P ^ n ∣ G :=
-  pow_dvd_gcd_of_pow_succ_dvd h hG
+abbrev thm_1_6_1_i := @pow_dvd_gcd_of_pow_succ_dvd
 
 /-- **Theorem 1.6.1(ii)** (§1.6, p.27): the characteristic-`0` converse — for a prime `P` of
 positive degree and `n > 0`, if `Pⁿ` divides both `A` and `dA/dx` then `Pⁿ⁺¹ ∣ A`. -/
-theorem thm_1_6_1_ii {R : Type*} [CommRing R] [IsDomain R] [CharZero R] {A P : R[X]} {n : ℕ}
-    (hn : 0 < n) (hP : Prime P) (hPdeg : 0 < P.natDegree) (hA : P ^ n ∣ A)
-    (hA' : P ^ n ∣ derivative A) : P ^ (n + 1) ∣ A :=
-  pow_succ_dvd_of_pow_dvd_derivative hn hP hPdeg hA hA'
+abbrev thm_1_6_1_ii := @pow_succ_dvd_of_pow_dvd_derivative
 
 /-- **Theorem 1.6.1** (§1.6, p.27), combined: in characteristic `0`, for a prime `P` of positive
 degree and `n > 0`, `Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ A ∧ Pⁿ ∣ dA/dx`. -/
-theorem thm_1_6_1 {R : Type*} [CommRing R] [IsDomain R] [CharZero R] {A P : R[X]} {n : ℕ}
-    (hn : 0 < n) (hP : Prime P) (hPdeg : 0 < P.natDegree) :
-    P ^ (n + 1) ∣ A ↔ P ^ n ∣ A ∧ P ^ n ∣ derivative A :=
-  pow_succ_dvd_iff hn hP hPdeg
+abbrev thm_1_6_1 := @pow_succ_dvd_iff
 
-open Classical Polynomial in
 /-- **Equation 1.14** (§1.6, p.28): the squarefree part `A* = A/gcd(A, dA/dx)` of `A` is its
 radical. For `A = ∏_{a∈s}(X − a)^{eₐ}` (char `0`), stated multiplicatively,
 `A ~ gcd(A, dA/dx) · ∏_{a∈s}(X − a)` — so `A*` is the squarefree product `∏(X − a)`. -/
-theorem eq_1_14 {K : Type*} [Field K] [CharZero K] (s : Finset K) (e : K → ℕ)
-    (he : ∀ a ∈ s, 1 ≤ e a) :
-    Associated (∏ a ∈ s, (X - C a) ^ e a)
-      (gcd (∏ a ∈ s, (X - C a) ^ e a) (derivative (∏ a ∈ s, (X - C a) ^ e a))
-        * ∏ a ∈ s, (X - C a)) :=
-  prod_X_sub_C_pow_associated_gcd_mul_radical s e he
+abbrev eq_1_14 := @prod_X_sub_C_pow_associated_gcd_mul_radical
 
 /-- **Definition 1.6.2** (§1.6, p.26): the *squarefree part* `A* = ∏ Pᵢ` (the library
 `squarefreePart`). -/
@@ -765,9 +739,7 @@ abbrev def_1_7_1 := @Squarefree
 /-- **Squarefree criterion** (§1.7; a consequence of Theorem 1.6.1 over a characteristic-`0` field,
 used to justify the `Squarefree` algorithm): `A` is squarefree iff `gcd(A, dA/dx) = 1` — i.e. `A`
 and its derivative are coprime. -/
-theorem squarefree_iff_coprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
-    Squarefree A ↔ IsCoprime A (derivative A) :=
-  squarefree_iff_isCoprime_derivative
+abbrev squarefree_iff_coprime_derivative := @squarefree_iff_isCoprime_derivative
 
 /-- **Squarefree-factorization part** `Aᵢ = ∏_{eₚ = i} P` (§1.7, Lemma 1.7.1). -/
 noncomputable abbrev def_sqfreeFactPart := @sqfreeFactPart
@@ -837,26 +809,15 @@ open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the *squarefree factorization* `A = ∏ₖ Aₖᵏ` of
 `A = ∏_{a∈s}(X − a)^{eₐ}`, where `Aₖ = ∏_{a : eₐ=k}(X − a)` is the (squarefree) product of the roots
 of multiplicity exactly `k`. -/
-theorem def_1_7_2 {K : Type*} [CommRing K] (s : Finset K) (e : K → ℕ) :
-    (∏ a ∈ s, (X - C a) ^ e a)
-      = ∏ k ∈ s.image e, (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) ^ k :=
-  prod_X_sub_C_pow_eq_squarefree_factorization s e
+abbrev def_1_7_2 := @prod_X_sub_C_pow_eq_squarefree_factorization
 
-open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): the squarefree-factorization parts `Aₖ` are pairwise
 coprime — `Aₖ ⊥ Aₖ'` for `k ≠ k'` (their roots have distinct multiplicities, hence are disjoint). -/
-theorem def_1_7_2_coprime {K : Type*} [Field K] (s : Finset K) (e : K → ℕ) {k k' : ℕ}
-    (hkk : k ≠ k') :
-    IsCoprime (∏ a ∈ s.filter (fun a => e a = k), (X - C a))
-      (∏ a ∈ s.filter (fun a => e a = k'), (X - C a)) :=
-  squarefree_factorization_pairwise_coprime s e hkk
+abbrev def_1_7_2_coprime := @squarefree_factorization_pairwise_coprime
 
-open Classical Polynomial in
 /-- **Definition 1.7.2** (§1.7, p.30): each squarefree-factorization part `Aₖ = ∏_{a:eₐ=k}(X − a)`
 is squarefree (a product of distinct linear factors). -/
-theorem def_1_7_2_squarefree {K : Type*} [Field K] (s : Finset K) (e : K → ℕ) (k : ℕ) :
-    Squarefree (∏ a ∈ s.filter (fun a => e a = k), (X - C a)) :=
-  squarefree_prod_X_sub_C _
+abbrev def_1_7_2_squarefree := @squarefree_prod_X_sub_C
 
 /-! ## Exercises -/
 
