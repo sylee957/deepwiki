@@ -329,6 +329,43 @@ theorem cancellation_lemma {K : Type*} [Field K] (m : MonomialOrder σ) {n : ℕ
     mul_inv_cancel₀ hdlast, neg_smul, one_smul, sub_neg_eq_add,
     Finset.sum_erase_add Finset.univ p (Finset.mem_univ last)]
 
+/-- **Leading-monomial divisibility ⟹ Gröbner basis** (the bookkeeping wrapper of CLO §2.6
+Theorem 6). If `B ⊆ I` has unit leading coefficients, generates `I`, and every nonzero `f ∈ I`
+has its leading monomial divisible by `m.degree b` for some `b ∈ B`, then `B` is a Gröbner basis
+of `I`. The hard content of the converse Buchberger criterion is establishing the divisibility
+hypothesis. -/
+theorem isGroebnerBasis_of_exists_leadingMonomial_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
+    (hBI : ∀ b ∈ B, b ∈ I) (hlc : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
+    (hdvd : ∀ f ∈ I, f ≠ 0 → ∃ b ∈ B, m.degree b ≤ m.degree f) :
+    IsGroebnerBasis m I B := by
+  classical
+  refine ⟨hBI, hlc, ?_⟩
+  -- rewrite both leading-monomial images as `monomial · 1` of the degree-image
+  have himgB : (fun b => monomial (m.degree b) (1 : K)) '' B
+      = (fun s => monomial s (1 : K)) '' (m.degree '' B) := by
+    rw [Set.image_image]
+  apply le_antisymm
+  · -- `span (leading monomials of B) ⊆ initialIdeal m I`
+    rw [Ideal.span_le]
+    rintro _ ⟨b, hb, rfl⟩
+    have hb0 : b ≠ 0 := by
+      intro h0
+      simpa [h0] using hlc b hb
+    exact Ideal.subset_span ⟨b, ⟨hBI b hb, hb0⟩, rfl⟩
+  · -- `initialIdeal m I ⊆ span (leading monomials of B)`
+    rw [initialIdeal, Ideal.span_le]
+    rintro _ ⟨f, ⟨hfI, hf0⟩, rfl⟩
+    rw [SetLike.mem_coe, himgB, mem_ideal_span_monomial_image]
+    -- `monomial (m.degree f) 1` has support `{m.degree f}`
+    intro xi hxi
+    have hxi' : xi = m.degree f := by
+      rw [mem_support_iff, coeff_monomial, ne_eq, ite_eq_right_iff,
+        Classical.not_imp, eq_comm] at hxi
+      exact hxi.1
+    obtain ⟨b, hbB, hble⟩ := hdvd f hfI hf0
+    exact ⟨m.degree b, ⟨b, hbB, rfl⟩, hxi' ▸ hble⟩
+
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
     (B : Set (MvPolynomial σ R)) : Prop := IsGroebnerBasis m I B
