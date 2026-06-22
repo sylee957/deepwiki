@@ -78,4 +78,24 @@ theorem minConv_tbEReal_convexSegEval_eq_below (f0 fs r r' b b' : ℝ≥0) (fseg
     minConv_tbEReal_convexSegEval_below f0 fs r' b' fsegs hfsort hfs hr'f
       (le_trans ht (segLenSum_truncSegs_mono hrr' fsegs))]
 
+/-- Convolving by a token bucket can only lower the curve: `f ∗ γ_{r,b} ≤ f`, since the readback
+`(f ∗ lineᵣᵦ) ⊓ f` is a meet with `f`. General over `IsNeverBot f`. -/
+theorem minConv_tbEReal_le_self {f : ℝ≥0 → EReal} (hf : IsNeverBot f) (r b : ℝ≥0) :
+    minConv f (tbEReal r b) ≤ f := by
+  rw [minConv_tbEReal_eq_inf hf]; exact inf_le_right
+
+/-- **Toward the global ordering — domination.** Up to the *higher*-rate bucket's breakpoint
+`u*(r')`, the lower-rate bucket's convolution dominates (is `≤`): `f ∗ γ_{r,b} t ≤ f ∗ γ_{r',b'} t`
+for `t ≤ u*(r')`. There the higher bucket is still inactive (`f ∗ γ_{r',b'} = f`) while
+`f ∗ γ_{r,b} ≤ f` always — so on the whole region `[0, u*(r')]` the lower-rate bucket is the one that
+appears in the min. -/
+theorem minConv_tbEReal_convexSegEval_le_below (f0 fs r r' b b' : ℝ≥0) (fsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs) (hr'f : r' ≤ fs)
+    {t : ℝ≥0} (ht' : t ≤ segLenSum (truncSegs r' fsegs)) :
+    minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r b) t
+      ≤ minConv (fun v => (((convexSegEval f0 fs fsegs v : ℝ≥0) : ℝ) : EReal)) (tbEReal r' b') t := by
+  rw [minConv_tbEReal_convexSegEval_below f0 fs r' b' fsegs hfsort hfs hr'f ht']
+  exact minConv_tbEReal_le_self (isNeverBot_coe_nnreal _) r b t
+
 end DeepWiki
