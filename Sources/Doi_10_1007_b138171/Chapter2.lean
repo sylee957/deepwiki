@@ -19,10 +19,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: the `IntegrateRationalFunction` top-level algorithm (p.52) as a functional `def` — the `∫A/D`
-  assembly HermiteReduce + PolyDivide + IntRationalLogPart [deferred: heterogeneous rational + polynomial-
-  integral + transcendental-log output type; the pieces `hermiteReduce_full`, `lazardRiobooTrager`, and the
-  worked example `ex_2_7_3` are done].
+§2.5: the full `∫A/D = rational + ∑ logs` log-sum assembly of `IntegrateRationalFunction` (p.52)
+  [deferred: needs the Rothstein–Trager/LRT log-sum derivative identity (only per-residue Thm 2.5.1 +
+  the simple-root Bernoulli case `deriv_sum_residue_log` exist); the reduction
+  `integrateRationalFunction_reduction` (rational + `polyIntegral` + squarefree-denominator sum) and pieces
+  `hermiteReduce_full`, `polyIntegral`, `lazardRiobooTrager`, `ex_2_7_3` are done].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -363,6 +364,25 @@ identity `((12x+6)/(x²−1))′ + 12/(x²−x−2) = 36/(x⁵−2x⁴−2x³+4x
 `36(x+1)`). The logarithmic part `∫ 12/(x²−x−2) = Σ_{α²=16} α·log(x − 1/2 − 3α/8)` is the §2.4/§2.5
 log-part computation (cf. `ex_2_4_1`). -/
 abbrev ex_2_5_2 := @DeepWiki.SymbolicIntegration.hermiteReduce_quintic_example
+
+/-- **`IntegrateRationalFunction`, the `∫ Q dx` polynomial part** (§2.5, p.52): the polynomial
+antiderivative `polyIntegral Q = ∑ₙ (aₙ/(n+1))·xⁿ⁺¹` (`Q = ∑ aₙ xⁿ`) — missing from Mathlib — with
+correctness `derivative (polyIntegral Q) = Q` (char `0`). The library's `polyIntegral_derivative`. -/
+abbrev integrateRationalFunction_polyIntegral := @DeepWiki.SymbolicIntegration.polyIntegral_derivative
+
+/-- **`IntegrateRationalFunction`, the `PolyDivide` split** (§2.5, p.52): for `Den ≠ 0`,
+`A/Den = (A / Den) + (A % Den)/Den` in `K(x)` — the improper fraction splits into polynomial quotient
+plus proper remainder (Euclidean `div_add_mod`). The library's `ratFunc_polyDivide_split`. -/
+abbrev integrateRationalFunction_polyDivide := @DeepWiki.SymbolicIntegration.ratFunc_polyDivide_split
+
+/-- **`IntegrateRationalFunction` reduction** (§2.5, p.52): for `A` over a squarefree-factored denominator
+`Den = ∏ᵢ Dᵢ^{eᵢ}` (char `0`), `A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ` — i.e.
+`∫ A/Den = g + ∫ p dx + ∫ ∑ᵢ rᵢ/Dᵢ`, the integral reduced to a rational part, a polynomial-integral part,
+and a squarefree-denominator residual (the `IntRationalLogPart` input). Assembles `HermiteReduce`
+(`hermiteReduce_full`), `PolyDivide` (`integrateRationalFunction_polyDivide`), and `polyIntegral`. The
+final `∑ᵢ rᵢ/Dᵢ → ∑ logs` step remains. The library's `integrateRationalFunction_reduction`. -/
+abbrev integrateRationalFunction_reduction :=
+  @DeepWiki.SymbolicIntegration.integrateRationalFunction_reduction
 
 /-! ## §2.8 Rioboo's Algorithm for Real Rational Functions -/
 

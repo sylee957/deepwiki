@@ -365,6 +365,96 @@ theorem hermiteReduce_full [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Non
   simp only [map_pow] at hB
   exact ⟨_, _, hB.trans (hermiteReduce_sum_spec s D e B hD he)⟩
 
+/-! ## §2.5 The polynomial part of `IntegrateRationalFunction` (`∫ Q dx`)
+The top-level algorithm splits `∫ A/D` into a rational part (Hermite), a polynomial part `∫ Q dx`
+(`Q` from polynomial division), and a logarithmic part (LRT). Here is the polynomial antiderivative
+`∫ Q dx` — missing from Mathlib — with its correctness `derivative (polyIntegral Q) = Q`. -/
+
+/-- **Polynomial antiderivative** (§2.5, the `∫ Q dx` piece of `IntegrateRationalFunction`):
+`∫ (∑ₙ aₙ xⁿ) dx = ∑ₙ (aₙ/(n+1))·xⁿ⁺¹`, the term-by-term antiderivative of a polynomial. -/
+noncomputable def polyIntegral (Q : K[X]) : K[X] :=
+  Q.sum fun n a => C (a / ((n : K) + 1)) * X ^ (n + 1)
+
+/-- **Correctness of `polyIntegral`** (§2.5): over a characteristic-`0` field,
+`d/dx (∫ Q dx) = Q` — `polyIntegral` is a genuine antiderivative of `Q`. Each term's derivative is
+`C ((a/(n+1))·(n+1)) · Xⁿ = C a · Xⁿ` (`(n+1 : K) ≠ 0` in char `0`); summing reassembles `Q` via
+`sum_C_mul_X_pow_eq`. -/
+theorem polyIntegral_derivative [CharZero K] (Q : K[X]) : derivative (polyIntegral Q) = Q := by
+  rw [polyIntegral, Polynomial.sum_def, derivative_sum]
+  rw [show (∑ n ∈ Q.support, derivative (C (Q.coeff n / ((n : K) + 1)) * X ^ (n + 1)))
+        = ∑ n ∈ Q.support, C (Q.coeff n) * X ^ n from Finset.sum_congr rfl fun n _ => ?_]
+  · conv_rhs => rw [← Polynomial.sum_C_mul_X_pow_eq Q, Polynomial.sum_def]
+  · rw [derivative_C_mul_X_pow, Nat.add_sub_cancel]
+    have hn1 : ((n + 1 : ℕ) : K) = (n : K) + 1 := by push_cast; ring
+    rw [hn1, div_mul_cancel₀ _ (by exact_mod_cast Nat.succ_ne_zero n)]
+
+-- `∫ Q dx` is a genuine antiderivative of `Q`.
+example [CharZero K] (Q : K[X]) : derivative (polyIntegral Q) = Q := polyIntegral_derivative Q
+
+/-- **Polynomial-division split in `K(x)`** (§2.5, the `PolyDivide` step of `IntegrateRationalFunction`):
+for `Den ≠ 0`, `A/Den = (A / Den) + (A % Den)/Den` in `K(x)` — the improper fraction `A/Den` splits into
+its polynomial quotient `Q = A / Den` and the proper remainder fraction `(A % Den)/Den`
+(Euclidean `div_add_mod`). -/
+theorem ratFunc_polyDivide_split (A Den : K[X]) (hDen : Den ≠ 0) :
+    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) Den
+      = algebraMap K[X] (RatFunc K) (A / Den)
+        + algebraMap K[X] (RatFunc K) (A % Den) / algebraMap K[X] (RatFunc K) Den := by
+  have hd : algebraMap K[X] (RatFunc K) Den ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hDen
+  have hAeq : algebraMap K[X] (RatFunc K) A
+      = algebraMap K[X] (RatFunc K) Den * algebraMap K[X] (RatFunc K) (A / Den)
+        + algebraMap K[X] (RatFunc K) (A % Den) := by
+    rw [← map_mul, ← map_add, EuclideanDomain.div_add_mod]
+  rw [hAeq]; field_simp
+
+open scoped Differential in
+open Classical in
+/-- **`IntegrateRationalFunction` reduction** (§2.5, p.52): for a numerator `A` and a denominator given
+in squarefree-factored form `Den = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` squarefree, pairwise coprime, `eᵢ ≥ 1`, char `0`),
+the integrand `A/Den` reduces to a rational derivative `g′`, the derivative of a polynomial integral
+`(∫ p dx)′ = (polyIntegral p)′`, and a sum of proper fractions with squarefree denominators `∑ᵢ rᵢ/Dᵢ`:
+`A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ`, i.e. `∫ A/Den = g + ∫ p dx + ∫ ∑ᵢ rᵢ/Dᵢ`. Assembles
+`ratFunc_polyDivide_split` (PolyDivide → polynomial part `p = (A % Den)/Den` quotient + proper remainder),
+`polyIntegral`/`polyIntegral_derivative` (`∫ p dx`), and `hermiteReduce_full` (the proper remainder's
+rational + squarefree-denominator split). The residual `∑ᵢ rᵢ/Dᵢ` is the `IntRationalLogPart` input. -/
+theorem integrateRationalFunction_reduction [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty)
+    (D : ι → K[X]) (e : ι → ℕ) (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
+      algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
+        = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) := by
+  set Den : K[X] := ∏ i ∈ s, D i ^ e i with hDen
+  have hDenne : Den ≠ 0 :=
+    Finset.prod_ne_zero_iff.mpr fun i hi => pow_ne_zero _ (hD i hi).ne_zero
+  have hDenmap : (∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i)
+      = algebraMap K[X] (RatFunc K) Den := by
+    rw [hDen, map_prod]; exact Finset.prod_congr rfl fun i _ => (map_pow _ _ _).symm
+  -- PolyDivide: split off the polynomial quotient `A / Den`.
+  rw [hDenmap, ratFunc_polyDivide_split A Den hDenne]
+  -- Hermite-reduce the proper remainder `(A % Den) / Den`.
+  obtain ⟨g, r, hg⟩ := hermiteReduce_full s hs D e hD he hcop (A % Den)
+  rw [← hDenmap, hg]
+  -- The polynomial quotient integrates to `polyIntegral (A / Den)`.
+  refine ⟨g, A / Den, r, ?_⟩
+  have hpi : (algebraMap K[X] (RatFunc K) (polyIntegral (A / Den)))′
+      = algebraMap K[X] (RatFunc K) (A / Den) := by
+    show ratFuncDeriv _ = _
+    rw [ratFuncDeriv_algebraMap (polyIntegral (A / Den)), polyIntegral_derivative]
+  rw [hpi]; ring
+
+open scoped Differential in
+open Classical in
+-- `∫ A/Den` reduces to a rational part, a polynomial-integral part, and a squarefree-denominator sum.
+example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (D : ι → K[X]) (e : ι → ℕ)
+    (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (g : RatFunc K) (p : K[X]) (r : ι → K[X]),
+      algebraMap K[X] (RatFunc K) A / ∏ i ∈ s, algebraMap K[X] (RatFunc K) (D i) ^ e i
+        = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ i ∈ s, algebraMap K[X] (RatFunc K) (r i) / algebraMap K[X] (RatFunc K) (D i) :=
+  integrateRationalFunction_reduction s hs D e hD he hcop A
+
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
 part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
