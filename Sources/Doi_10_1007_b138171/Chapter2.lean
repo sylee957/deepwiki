@@ -15,9 +15,11 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.1: the full Bernoulli algorithm [functional]; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the
   `arctan` primitive); Ex 2.1.3.
-§2.2: the full `HermiteReduce` algorithm (recursion over the squarefree factorization, `B, C` via
-  `diophantineSolve`) [functional]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3 [functional]
-  (their shared *result* is `ex_2_3_1`).
+§2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
+  The reduction step is done: `hermiteReduce_step` (the differential identity) and
+  `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
+  theorem about rational functions in `K(x)`), with `B, Cc` from `diophantineSolve`. The per-algorithm
+  traces of Ex 2.2.1/2.2.2/2.2.3 [functional] (their shared *result* is `ex_2_3_1`).
 §2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
   `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
   and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
@@ -99,6 +101,12 @@ noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtL
 `hoSplit_snd_squarefree` (`D*` is the squarefree radical of `D`, char `0`). The algorithm then solves
 a linear system for the numerators `B, C`. -/
 noncomputable abbrev horowitzOstrogradsky_split := @DeepWiki.SymbolicIntegration.hoSplit
+
+/-- **Hermite reduction step**, integral form in `K(x)` (§2.2, p.39): given Bézout data
+`B·V' + Cc·V = A`, `∫ (1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫ ((1−k)Cc − B')/Vᵏ⁻¹` (`k = m+2`) — the integrand's
+denominator power drops by one. The library's `hermiteReduce_step_ratFunc`, a theorem about rational
+functions (using `K(x) = RatFunc K`'s `Differential` structure), with `B, Cc` from `diophantineSolve`. -/
+abbrev hermiteReduce_step_ratFunc := @DeepWiki.SymbolicIntegration.hermiteReduce_step_ratFunc
 
 open Polynomial in
 /-- **Example 2.4.1** (§2.4, p.48), the Rothstein–Trager residue computation for

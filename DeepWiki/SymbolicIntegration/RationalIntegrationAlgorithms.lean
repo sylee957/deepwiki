@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.RingTheory.EuclideanDomain
@@ -96,6 +97,32 @@ theorem rtResultant_eval_eq_zero_iff [IsAlgClosed K] (A D : K[X]) (hD : D.Separa
     (hdeg : (A - C a * derivative D).natDegree = D.natDegree - 1) :
     (rtResultant A D).eval a = 0 ↔ ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
   rw [rtResultant_eval, ← hdeg, ← residue_iff_resultant_eq_zero A D hD a]
+
+open scoped Differential in
+/-- **Hermite reduction step in `K(x)`** (§2.2): the integral-lowering identity for a rational
+function, now a theorem *about rational functions* (using `K(x) = RatFunc K`'s differential structure).
+If `B·V' + Cc·V = A` (the Bézout data the algorithm finds, e.g. from `diophantineSolve`), then writing
+`k = m+2`, `∫ (1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫ ((1−k)Cc − B')/Vᵏ⁻¹` — the integrand's denominator power drops by
+one. Obtained by applying the abstract `hermite_reduction_step` to the `algebraMap` images in `RatFunc K`
+(`d/dx` on the images is `Polynomial.derivative` by `ratFuncDeriv_algebraMap`). -/
+theorem hermiteReduce_step_ratFunc {A B Cc V : K[X]} (hV : V ≠ 0) (m : ℕ)
+    (hrel : B * derivative V + Cc * V = A) :
+    (-((m : RatFunc K) + 1) * algebraMap K[X] (RatFunc K) A)
+        / algebraMap K[X] (RatFunc K) V ^ (m + 2)
+      = (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) V ^ (m + 1))′
+        + (-((m : RatFunc K) + 1) * algebraMap K[X] (RatFunc K) Cc
+            - algebraMap K[X] (RatFunc K) (derivative B))
+          / algebraMap K[X] (RatFunc K) V ^ (m + 1) := by
+  have hv : algebraMap K[X] (RatFunc K) V ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hV
+  have key := hermite_reduction_step (algebraMap K[X] (RatFunc K) B)
+    (algebraMap K[X] (RatFunc K) Cc) (algebraMap K[X] (RatFunc K) V) hv m
+  rw [show (algebraMap K[X] (RatFunc K) V)′ = algebraMap K[X] (RatFunc K) (derivative V) from
+        ratFuncDeriv_algebraMap V,
+      show (algebraMap K[X] (RatFunc K) B)′ = algebraMap K[X] (RatFunc K) (derivative B) from
+        ratFuncDeriv_algebraMap B,
+      ← map_mul, ← map_mul, ← map_add, hrel] at key
+  exact key
 
 /-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
 The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
