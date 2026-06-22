@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
+import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 import Sources.Doi_10_1007_b138171.Source
 
@@ -14,10 +15,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: the full Bernoulli algorithm [functional: needs the root-indexed partial-fraction sum
-  `∑_{α|D(α)=0}`, shared with §2.4]. The *arctan term* `∫ (Bx+C)/(x²+bx+c)ᵏ` is fully done: `eq_2_1_arctan`
-  (k=1, the log + arctan formula) and `eq_2_1_arctan_reduce` (k>1, the full recursive reduction lowering
-  the quadratic power, with core numerator identity `eq_2_1_arctan_reduce_core`).
+§2.1: the Bernoulli algorithm's integral assembly `∫ A/D = ∑_{α|D=0} (A(α)/D'(α))·log(x−α)` [functional:
+  now a per-term `logDeriv` sum over the decomposition below]. The root-indexed partial-fraction sum is
+  done — `eq_2_3_residue` (= `eq_sum_residue_mul_nodal_div`): for squarefree `D = ∏_{α∈s}(X−α)` and
+  `deg A < #s`, `A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`, i.e. `A/D = ∑_{α|D=0} (A(α)/D'(α))/(X−α)` (the
+  `∑_{α|D(α)=0}` sum shared with §2.4, via Lagrange interpolation). The *arctan term*
+  `∫ (Bx+C)/(x²+bx+c)ᵏ` is fully done: `eq_2_1_arctan` (k=1) and `eq_2_1_arctan_reduce` (k>1, with core
+  `eq_2_1_arctan_reduce_core`).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
@@ -61,6 +65,13 @@ abbrev eq_2_1_rational := @DeepWiki.SymbolicIntegration.deriv_zpow_div_self
 `1/(x−a)` is the logarithmic derivative of `x−a` (`logDeriv t = t⁻¹` when `Dt = 1`). The library's
 `logDeriv_eq_inv`. -/
 abbrev eq_2_1_log := @DeepWiki.SymbolicIntegration.logDeriv_eq_inv
+
+/-- **Equation 2.3 / Bernoulli partial fraction** (§2.1, p.38, simple-root case): for squarefree
+`D = ∏_{α∈s}(X−α)` and `deg A < #s`, `A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`, i.e. `A/D = ∑_{α|D=0}
+(A(α)/D'(α))/(X−α)` — the partial fraction over the roots of `D`, residue `A(α)/D'(α)` at each (the
+`∑_{α|D(α)=0}` sum underlying Bernoulli's algorithm and the §2.4 logarithmic part). The library's
+`eq_sum_residue_mul_nodal_div`, via Mathlib's Lagrange interpolation. -/
+abbrev eq_2_3_residue := @DeepWiki.SymbolicIntegration.eq_sum_residue_mul_nodal_div
 
 /-- **Example 2.1.3** (§2.1, p.38), Bernoulli's algorithm for `f = 1/(x³+x)` over `ℚ(√−1)`: factoring
 `x³+x = x(x+i)(x−i)` linearly (`i = √−1`, `i² = −1`) gives the partial-fraction decomposition
