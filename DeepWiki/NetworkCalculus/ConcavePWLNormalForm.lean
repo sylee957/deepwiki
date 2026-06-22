@@ -448,4 +448,71 @@ theorem IsConcaveNormalForm.le_of_cross_le_pred {l : List (ℝ≥0 × ℝ≥0)} 
       rw [he3, he4] at hrec
       exact le_trans hstep hrec
 
+/-- **Per-interval minimality (Proposition 4.1, item 4, crux).** For a list in concave normal
+form, index `i` realizes the pointwise minimum at every time `t` of its inter-crossing interval:
+`tᵢ ≤ t ≤ tᵢ₊₁`, encoded by the two conditional crossing bounds (`hlo`: `tᵢ = tbCross(i-1,i) ≤ t`
+when `i ≥ 1`, with `t₁ = 0` vacuous at `i = 0`; `hhi`: `t ≤ tᵢ₊₁ = tbCross(i,i+1)` when
+`i+1 < n`, with `tₙ₊₁ = ∞` vacuous at `i = n-1`). Then `γᵢ(t) ≤ γⱼ(t)` for every `j`. -/
+theorem IsConcaveNormalForm.isMin_of_mem_interval {l : List (ℝ≥0 × ℝ≥0)}
+    (h : IsConcaveNormalForm l) {t : ℝ≥0} (i : Fin l.length)
+    (hlo : ∀ hi : 1 ≤ i.val, tbCross (l.get ⟨i.val - 1, by omega⟩).1 (l.get ⟨i.val - 1, by omega⟩).2
+                                      (l.get i).1 (l.get i).2 ≤ t)
+    (hhi : ∀ hi : i.val + 1 < l.length, t ≤ tbCross (l.get i).1 (l.get i).2
+                                          (l.get ⟨i.val + 1, hi⟩).1 (l.get ⟨i.val + 1, hi⟩).2)
+    (j : Fin l.length) :
+    tbEReal (l.get i).1 (l.get i).2 t ≤ tbEReal (l.get j).1 (l.get j).2 t := by
+  rcases lt_trichotomy j.val i.val with hji | hji | hij
+  · -- `j < i`: downward chaining with the lower crossing bound (set `m = i-1`, `k = m - j`)
+    have hi1 : 1 ≤ i.val := by omega
+    have hmlen : i.val - 1 + 1 < l.length := by omega
+    have hkle : i.val - 1 - j.val ≤ i.val - 1 := by omega
+    have hei : i = ⟨i.val - 1 + 1, hmlen⟩ := by simp only [Fin.ext_iff]; omega
+    have hej : j = ⟨i.val - 1 - (i.val - 1 - j.val), by omega⟩ := by simp only [Fin.ext_iff]; omega
+    have hcross : tbCross (l.get ⟨i.val - 1, by omega⟩).1 (l.get ⟨i.val - 1, by omega⟩).2
+                          (l.get ⟨i.val - 1 + 1, hmlen⟩).1 (l.get ⟨i.val - 1 + 1, hmlen⟩).2 ≤ t := by
+      have hlo' := hlo hi1
+      rw [congrArg l.get hei] at hlo'; exact hlo'
+    rw [hei, hej]
+    exact h.le_of_cross_le_pred hmlen hkle hcross
+  · -- `j = i`
+    rw [Fin.ext hji.symm]
+  · -- `j > i`: upward chaining with the upper crossing bound (set `k = j - i - 1`)
+    have hi1 : i.val + 1 < l.length := by omega
+    have hklen : i.val + (j.val - i.val - 1) + 1 < l.length := by omega
+    have hei : i = ⟨i.val, by omega⟩ := (Fin.eta i i.isLt).symm
+    have hej : j = ⟨i.val + (j.val - i.val - 1) + 1, hklen⟩ := by simp only [Fin.ext_iff]; omega
+    have hcross : t ≤ tbCross (l.get ⟨i.val, by omega⟩).1 (l.get ⟨i.val, by omega⟩).2
+                              (l.get ⟨i.val + 1, by omega⟩).1 (l.get ⟨i.val + 1, by omega⟩).2 := by
+      have hhi' := hhi hi1
+      rw [congrArg l.get hei] at hhi'; exact hhi'
+    rw [hei, hej]
+    exact h.le_of_le_cross_succ hklen hcross
+
+/-- **Proposition 4.1, item 4** (per-interval formula). For a list in concave normal form, the
+concave PWL function equals its `i`-th token-bucket on the `i`-th inter-crossing interval: at any
+`t` with `tᵢ ≤ t ≤ tᵢ₊₁` (the bounding crossings, with `t₁ = 0` and `tₙ₊₁ = ∞` as the vacuous
+endpoint conventions), `(⋀ⱼ γⱼ)(t) = γ_{rᵢ,bᵢ}(t)`. -/
+theorem IsConcaveNormalForm.concaveNFEval_eq_get_of_mem_interval {l : List (ℝ≥0 × ℝ≥0)}
+    (h : IsConcaveNormalForm l) {t : ℝ≥0} (i : Fin l.length)
+    (hlo : ∀ hi : 1 ≤ i.val, tbCross (l.get ⟨i.val - 1, by omega⟩).1 (l.get ⟨i.val - 1, by omega⟩).2
+                                      (l.get i).1 (l.get i).2 ≤ t)
+    (hhi : ∀ hi : i.val + 1 < l.length, t ≤ tbCross (l.get i).1 (l.get i).2
+                                          (l.get ⟨i.val + 1, hi⟩).1 (l.get ⟨i.val + 1, hi⟩).2) :
+    concaveNFEval l t = tbEReal (l.get i).1 (l.get i).2 t := by
+  refine concaveNFEval_eq_of_isMin (List.get_mem l i) ?_
+  intro s' hs'
+  obtain ⟨j, rfl⟩ := List.mem_iff_get.mp hs'
+  exact h.isMin_of_mem_interval i hlo hhi j
+
+-- Book wording check (Proposition 4.1, item 4): on the `i`-th inter-crossing interval
+-- `[tᵢ, tᵢ₊₁]` (bounding crossings, `t₁ = 0`, `tₙ₊₁ = ∞`) the concave PWL function `⋀ⱼ γⱼ`
+-- coincides with its `i`-th token-bucket `γ_{rᵢ,bᵢ}`.
+example {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l) {t : ℝ≥0} (i : Fin l.length)
+    (hlo : ∀ hi : 1 ≤ i.val, tbCross (l.get ⟨i.val - 1, by omega⟩).1 (l.get ⟨i.val - 1, by omega⟩).2
+                                      (l.get i).1 (l.get i).2 ≤ t)
+    (hhi : ∀ hi : i.val + 1 < l.length, t ≤ tbCross (l.get i).1 (l.get i).2
+                                          (l.get ⟨i.val + 1, hi⟩).1 (l.get ⟨i.val + 1, hi⟩).2) :
+    concaveNFEval l t = tbEReal (l.get i).1 (l.get i).2 t :=
+  h.concaveNFEval_eq_get_of_mem_interval i hlo hhi
+
 end DeepWiki
