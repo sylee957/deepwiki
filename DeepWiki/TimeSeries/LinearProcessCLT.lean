@@ -149,4 +149,43 @@ theorem tendsto_eLpNorm_maq_sub (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ}
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hlim
     (fun _ => zero_le) hbound
 
+variable {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+
+/-- **Central limit theorem for the sample mean of a finite `MA(q)` process (Theorem 7.1.2, finite
+moving-average case):** for `Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` driven by centered iid `L²` noise `Z`, the
+standardized sample mean converges in distribution to `(∑θ) Y₀` where `Y₀ ~ N(0, σ²)` — i.e. to
+`N(0, (∑θ)² σ²)`. The iid sample-mean CLT (`iidNoise_sampleMean_clt_window`) scaled by `∑θ`, with the
+moving-average perturbation removed through the `L²`-negligibility bridge
+(`tendstoInDistribution_of_tendsto_eLpNorm_sub`, `tendsto_eLpNorm_maq_sub`). -/
+theorem maq_sampleMean_clt [IsProbabilityMeasure P] [IsProbabilityMeasure P']
+    (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ} {Y₀ : Ω' → ℝ}
+    (hmeas : ∀ s, AEStronglyMeasurable (Z s) P) (hmem : ∀ s, MemLp (Z s) 2 P)
+    (hindep : iIndepFun Z P) (hident : ∀ s, IdentDistrib (Z s) (Z 0) P P)
+    (hcenter : P[Z 0] = 0) (hY₀ : HasLaw Y₀ (gaussianReal 0 Var[Z 0; P].toNNReal) P') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n
+        (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω))
+      atTop ((∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j) • Y₀) (fun _ => P) P' := by
+  have hwin : TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω))
+      atTop Y₀ (fun _ => P) P' := by
+    have h := iidNoise_sampleMean_clt_window (P := P) (P' := P') 0 hY₀ (hmem 0) hindep hident
+    have heq : (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n (fun k => Z (0 + (k : ℤ)) ω) - P[Z 0]))
+        = fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω) := by
+      ext n ω; simp only [hcenter, sub_zero, zero_add]
+    rwa [heq] at h
+  have hX : ∀ n : ℕ, AEStronglyMeasurable
+      (fun ω => Real.sqrt n * sampleMean n
+        (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω)) P := by
+    intro n
+    simp only [sampleMean]
+    refine AEStronglyMeasurable.const_mul (AEStronglyMeasurable.const_mul ?_ _) _
+    exact Finset.aestronglyMeasurable_fun_sum _ fun t _ =>
+      Finset.aestronglyMeasurable_fun_sum _ fun j _ => (hmeas _).const_mul _
+  have hY := hwin.continuous_comp
+    (g := fun x : ℝ => (∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j) * x)
+    (continuous_const.mul continuous_id)
+  exact tendstoInDistribution_of_tendsto_eLpNorm_sub hY hX
+    (tendsto_eLpNorm_maq_sub θ hmeas hmem hident)
+
 end DeepWiki.TimeSeries
