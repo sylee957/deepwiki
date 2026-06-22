@@ -89,6 +89,18 @@ theorem IsGroebnerBasis.mem_iff_div_remainder_eq_zero (hB : IsGroebnerBasis m I 
     rw [hgr, hr0, add_zero]
     exact hcomb
 
+/-- A *reduced* Gröbner basis: a Gröbner basis that is monic (every leading coefficient
+is `1`) and reduced (no support monomial of any `b` is divisible by the leading monomial
+of a different `b'`). -/
+def IsReducedGroebnerBasis (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
+    (B : Set (MvPolynomial σ R)) : Prop :=
+  IsGroebnerBasis m I B ∧ (∀ b ∈ B, m.leadingCoeff b = 1) ∧
+    (∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → ∀ c ∈ b.support, ¬ (m.degree b' ≤ c))
+
+/-- A reduced Gröbner basis is a Gröbner basis. -/
+theorem IsReducedGroebnerBasis.isGroebnerBasis (hB : IsReducedGroebnerBasis m I B) :
+    IsGroebnerBasis m I B := hB.1
+
 /-- A Gröbner basis of `I` generates `I`. -/
 theorem IsGroebnerBasis.span_eq (hB : IsGroebnerBasis m I B) : Ideal.span B = I := by
   apply le_antisymm
@@ -115,5 +127,12 @@ example (hB : IsGroebnerBasis m I B) (f : MvPolynomial σ R)
   hB.mem_iff_div_remainder_eq_zero f hgr hrem
 
 example (hB : IsGroebnerBasis m I B) : Ideal.span B = I := hB.span_eq
+
+example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
+    (B : Set (MvPolynomial σ R)) : Prop :=
+  IsGroebnerBasis m I B ∧ (∀ b ∈ B, m.leadingCoeff b = 1) ∧
+    (∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → ∀ c ∈ b.support, ¬ (m.degree b' ≤ c))
+
+example (hB : IsReducedGroebnerBasis m I B) : IsGroebnerBasis m I B := hB.isGroebnerBasis
 
 end DeepWiki.SymbolicIntegration
