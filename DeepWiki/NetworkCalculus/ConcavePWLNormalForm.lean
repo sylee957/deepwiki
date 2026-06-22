@@ -243,4 +243,26 @@ theorem IsConcaveNormalForm.burst_strictMono {l : List (ℝ≥0 × ℝ≥0)}
   rw [not_lt] at hb
   exact absurd (lt_of_lt_of_le hlt (tbEReal_mono_of (ne_of_gt ht) hr.le hb)) (lt_irrefl _)
 
+/-- **Proposition 4.1, item 3.** In a concave normal form the intersection points are strictly
+increasing: for every `i` with `i+2 < n`, the consecutive crossings satisfy
+`tbCross γᵢ γᵢ₊₁ < tbCross γᵢ₊₁ γᵢ₊₂`. (With `t₁ = 0` and `tᵢ` the `(i−1)`-th crossing this is the
+book's `tᵢ < tᵢ₊₁`.) The middle bucket's irredundancy witness places it strictly below both
+neighbours at one time, which sandwiches that time between the two crossings. -/
+theorem IsConcaveNormalForm.cross_strictMono {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {i : ℕ} (hi : i + 2 < l.length) :
+    tbCross (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2
+            (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2 <
+    tbCross (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2
+            (l.get ⟨i + 2, by omega⟩).1 (l.get ⟨i + 2, by omega⟩).2 := by
+  obtain ⟨hrate, hirr⟩ := h
+  have hget := List.pairwise_iff_get.mp hrate
+  have hbget := List.pairwise_iff_get.mp (IsConcaveNormalForm.burst_strictMono ⟨hrate, hirr⟩)
+  have hlt01 : (⟨i, by omega⟩ : Fin l.length) < ⟨i + 1, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+  have hlt12 : (⟨i + 1, by omega⟩ : Fin l.length) < ⟨i + 2, by omega⟩ := by rw [Fin.mk_lt_mk]; omega
+  obtain ⟨t, ht, hmin⟩ := hirr ⟨i + 1, by omega⟩
+  exact tbCross_lt_tbCross_of_strictMin (hget _ _ hlt01) (hget _ _ hlt12)
+    (hbget _ _ hlt01).le (hbget _ _ hlt12).le (ne_of_gt ht)
+    (hmin ⟨i, by omega⟩ (Fin.ne_of_val_ne (by omega)))
+    (hmin ⟨i + 2, by omega⟩ (Fin.ne_of_val_ne (by omega)))
+
 end DeepWiki

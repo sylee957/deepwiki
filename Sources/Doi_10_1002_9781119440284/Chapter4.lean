@@ -14,7 +14,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Proposition 4.1 — items 3–4 only `[infra]` (the intersection-point sequence `tᵢ` increasing, and the explicit per-interval `γ` formula need the intersection-point layer; item 1 concavity = `prop_4_1_concave`, item 2 bursts-increasing = `prop_4_1_burst`); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Proposition 4.1 — item 4 only `[infra]` (the explicit per-interval formula `⋀ⱼγⱼ = γᵢ` on `[tᵢ,tᵢ₊₁]` needs the indexed envelope; items 1–3 are `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono`); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* on a PWL data structure `[infra]` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`; what remains is only the concrete piecewise-affine representation realizing the merge); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -114,6 +114,18 @@ irredundancy clause of Definition 4.1. The library's `DeepWiki.IsConcaveNormalFo
 theorem prop_4_1_burst {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l) :
     l.Pairwise (fun a b => a.2 < b.2) :=
   h.burst_strictMono
+
+/-- **Proposition 4.1, item 3** (§4.2.1, p.63): in a concave normal form the intersection points
+`tᵢ` are strictly increasing. The consecutive crossings satisfy `tbCross γᵢ γᵢ₊₁ < tbCross γᵢ₊₁ γᵢ₊₂`
+for every `i` with `i+2 < n` — the middle bucket's irredundancy witness sandwiches a time strictly
+between the two crossings. The library's `DeepWiki.IsConcaveNormalForm.cross_strictMono`. -/
+theorem prop_4_1_cross_mono {l : List (ℝ≥0 × ℝ≥0)} (h : IsConcaveNormalForm l)
+    {i : ℕ} (hi : i + 2 < l.length) :
+    tbCross (l.get ⟨i, by omega⟩).1 (l.get ⟨i, by omega⟩).2
+            (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2 <
+    tbCross (l.get ⟨i + 1, by omega⟩).1 (l.get ⟨i + 1, by omega⟩).2
+            (l.get ⟨i + 2, by omega⟩).1 (l.get ⟨i + 2, by omega⟩).2 :=
+  h.cross_strictMono hi
 
 /-- **Theorem 4.1** (§4.2.2, p.65), the transform-domain computation principle. For finite,
 convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution is computed by
