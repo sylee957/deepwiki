@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
+import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
@@ -20,8 +21,10 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
-  [infra: Gröbner bases].
+§2.6: the integral *connection* (Czichowski's Gröbner-basis logs = the RT gcds, his Lemma 2.3) is
+  done (`thm_2_6_1_integral_connection`); what remains of Thm 2.6.1 / the Czichowski algorithm is the
+  Gröbner-basis *structure* (`Pₖ = Rₖ·Sₖ` factorization, reduced-GB existence) [infra: reduced Gröbner
+  bases — Mathlib has the monomial-order division foundation, not reduced bases / Buchberger].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -442,6 +445,14 @@ reduced Gröbner basis of `(D, A − t·D')` w.r.t. pure lex `x > t` is `{4t²+1
 coincides with the Rothstein–Trager `Gₐ` and so divides both `D` and `A−aD'` (modulo `4a²+1 = 0`) — exactly
 `ex_2_4_1`. -/
 abbrev ex_2_6_1 := @DeepWiki.SymbolicIntegration.rothsteinTrager_gcd_example
+
+/-- **Theorem 2.6.1, the integral connection** (§2.6, p.54), Czichowski's algorithm reuses the
+Rothstein–Trager logarithmic part: his Gröbner-basis logarithm argument `S(x,c) = gcd(D, A − c·D')`
+(Czichowski's Lemma 2.3) coincides with the RT/LRT gcd, so `∫ A/D = ∑_a a·log(gcd(D, A − a·D'))` is the
+*same* integral as §2.4/§2.5. The library's `ratFunc_eq_sum_residue_gcd` (proved via
+`gcd_nodal_eq_prod_residue` = Lemma 2.3); the Gröbner-basis structure remains [infra]. Double-referenced
+to the source paper as `DeepWiki.Czi.integral_logForm_gcd`. -/
+abbrev thm_2_6_1_integral_connection := @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_gcd
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
