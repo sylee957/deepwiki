@@ -36,11 +36,7 @@ abbrev thm_3_1_1_ii := @deriv_div
 
 /-- **Theorem 3.1.1(iii)** (§3.1, p.76): `Const_D R` is a differential subring (subfield) of
 `R` — in particular it is closed under `D` (trivially, since `Da = 0` on it). -/
-theorem thm_3_1_1_iii {R : Type*} [CommRing R] [Differential R] :
-    IsDifferentialIdeal (R := R) ⊥ ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
-  refine ⟨fun a ha => ?_, fun a ha => ?_⟩
-  · simp only [Ideal.mem_bot] at ha ⊢; simp [ha]
-  · simp only [mem_constants] at ha ⊢; simp [ha]
+abbrev thm_3_1_1_iii := @isDifferentialIdeal_bot_and_deriv_mem_constants
 
 /-- **Theorem 3.1.1(iv)** (§3.1, p.76): the power rule `D(aⁿ) = n·aⁿ⁻¹·Da` (natural exponent). -/
 abbrev thm_3_1_1_iv := @deriv_pow

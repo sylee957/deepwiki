@@ -62,6 +62,15 @@ theorem deriv_eval_of_const_coeffs (p : R[X]) (u : R) (hp : ∀ i, (p.coeff i)�
 (`D I ⊆ I`). -/
 def IsDifferentialIdeal (I : Ideal R) : Prop := ∀ a ∈ I, a′ ∈ I
 
+/-- **Theorem 3.1.1(iii)**: the constants `Const_D R` form a *differential subring* of `(R, D)` — the
+zero ideal `⊥` is a differential ideal, and `Const_D R` is closed under `D` (trivially: `Da = 0` on it,
+and `0 ∈ Const_D R`). -/
+theorem isDifferentialIdeal_bot_and_deriv_mem_constants :
+    IsDifferentialIdeal (⊥ : Ideal R) ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
+  refine ⟨fun a ha => ?_, fun a ha => ?_⟩
+  · simp only [Ideal.mem_bot] at ha ⊢; simp [ha]
+  · simp only [mem_constants] at ha ⊢; simp [ha]
+
 omit [Differential R] in
 /-- **Lemma 3.1.1** (action): a linear combination of derivations is a derivation —
 `(c·D₁ + D₂)` acts pointwise as `a ↦ c·D₁a + D₂a`. The module `Ω(R) = Derivation ℤ R R`
