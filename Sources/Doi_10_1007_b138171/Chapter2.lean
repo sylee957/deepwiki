@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
+import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -16,11 +17,16 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2] — the
-  correctness that `Sⱼ(a,x) ~ gcd(D, A−aD')`. The Lazard–Rioboo–Trager *algorithm* is now functionally done:
-  primitive `lazardRiobooTrager_subresultant` (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval`
-  (specialization `t ↦ a`); and the full assembly `lazardRiobooTrager_algorithm` (= `lazardRiobooTrager`,
-  the `IntRationalLogPart` def returning the `(Qᵢ, Sᵢ)` log-part pairs; optional `lcₓ`-normalization omitted).
+§2.5: Thm 2.5.1 part (ii) [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2]
+  — the LRT wrapping `ppₓ(lrtSubresultant A D i)(a) ~ gcd(D, A−aD')`: the degree-preserving `t↦a`
+  specialization (`lrtSubresultant_eval`) of the concrete subresultant↔gcd connection
+  (`subresultant_euclideanPRS_isSimilar_gcd`), matching the formal-degree subresultant `(deg D, deg D−1)`
+  to the actual PRS of `(D, A−aD')` and identifying `deg_x R_m = i` (the multiplicity = `deg gcd`). Part (i)
+  (`n = deg D ⟹ gcd ~ D`) is done: `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`). The
+  Lazard–Rioboo–Trager *algorithm* is functionally done: primitive `lazardRiobooTrager_subresultant`
+  (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval` (specialization `t ↦ a`); and the full
+  assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def returning the `(Qᵢ, Sᵢ)` log-part
+  pairs; optional `lcₓ`-normalization omitted).
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
@@ -266,6 +272,12 @@ computation returning the `(Qᵢ, Sᵢ)` pairs meaning `∫ A/D = ∑ᵢ ∑_{a:
 squarefree-factorization parts of the resultant `R`, `Sᵢ = D` if `i = deg D` else the `i`-th subresultant.
 The library's `lazardRiobooTrager` (the book's optional `lcₓ`-normalization omitted). -/
 noncomputable abbrev lazardRiobooTrager_algorithm := @DeepWiki.SymbolicIntegration.lazardRiobooTrager
+
+/-- **Theorem 2.5.1, part (i)** (§2.5, p.50, the `n = deg(C)` case): when the residue `α` has multiplicity
+`n = deg(C)`, `gcd(C, A−αB) = C` (up to the gcd's unit ambiguity, i.e. *similar* to `C`). The library's
+`isSimilar_gcd_left_of_natDegree_eq`: a degree-`deg C` divisor of `C` is similar to `C`. The general
+divisor form is `isSimilar_of_dvd_of_natDegree_eq`. -/
+abbrev thm_2_5_1_i := @DeepWiki.SymbolicIntegration.isSimilar_gcd_left_of_natDegree_eq
 
 open Polynomial in
 /-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the
