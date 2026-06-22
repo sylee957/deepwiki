@@ -13,6 +13,18 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
 
+/-- **Degree-padding similarity**: raising the second polynomial's formal degree from its true degree `k`
+to `n` scales the subresultant by `C(lc B)^(n−k)` (a nonzero constant when `lc B ≠ 0`), so the two are
+*similar*. `subresultant_padding` packaged through `IsSimilar` — the bridge that lets a formal-degree
+subresultant (e.g. the LRT `deg D − 1`) match an actual-degree p.r.s. computation up to similarity. -/
+theorem isSimilar_subresultant_padding [IsDomain R] (B Rem : R[X]) (m k j : ℕ)
+    (hjk : j < k) (hjm : j ≤ m) (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ k)
+    (hlc : B.coeff m ≠ 0) {n : ℕ} (hn : k ≤ n) :
+    IsSimilar (subresultant B Rem m n j) (subresultant B Rem m k j) := by
+  rw [subresultant_padding B Rem m k j hjk hjm hB hRem n hn]
+  exact ⟨1, (B.coeff m) ^ (n - k), one_ne_zero, pow_ne_zero _ hlc,
+    by rw [map_one, one_mul, map_pow]⟩
+
 /-- **Fundamental PRS Theorem, per-step similarity** (Brown–Traub §5): across one PRS division step
 `α·A = β·C + B·Q` (with `lc B ≠ 0`, `α, β ≠ 0`), the subresultants `Sⱼ(A,B)` and `Sⱼ(B,C)` are
 similar (`0 ≤ j < deg C`). The similarity constants are read off `subresultant_prs_step` (eq 21). -/
