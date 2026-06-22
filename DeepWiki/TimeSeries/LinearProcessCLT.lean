@@ -67,4 +67,17 @@ theorem eLpNorm_sum_range_lag_sub_le {Z : ℤ → Ω → ℝ} {M : ℝ≥0∞}
     calc _ ≤ 2 * M + 2 * (j : ℝ≥0∞) * M := add_le_add hF ih
       _ = 2 * ((j : ℕ) + 1 : ℕ) * M := by push_cast; ring
 
+/-- **Full boundary `L²` bound for `MA(q)`:** the linear combination of lag-differences with the
+moving-average coefficients has `L²` norm bounded by `∑ⱼ ‖θⱼ‖ · 2jM`, a constant independent of `n`.
+This is `‖D_n‖₂ ≤ C` for `D_n = Sₙ − (∑θ) Tₙ`; Minkowski over the lags `j` plus the lag-`j` estimate. -/
+theorem eLpNorm_maq_boundary_le (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ} {M : ℝ≥0∞}
+    (hmeas : ∀ s, AEStronglyMeasurable (Z s) P) (hZ : ∀ s, eLpNorm (Z s) 2 P ≤ M) (n : ℕ) :
+    eLpNorm (∑ j ∈ Finset.range (θ.natDegree + 1),
+        θ.coeff j • fun ω => ∑ t ∈ Finset.range n, (Z ((t : ℤ) - j) ω - Z (t : ℤ) ω)) 2 P
+      ≤ ∑ j ∈ Finset.range (θ.natDegree + 1), ‖θ.coeff j‖ₑ * (2 * j * M) := by
+  refine le_trans (eLpNorm_sum_le (fun j _ => ?_) (by norm_num)) (Finset.sum_le_sum fun j _ => ?_)
+  · exact (Finset.aestronglyMeasurable_fun_sum _ fun t _ => (hmeas _).sub (hmeas _)).const_smul _
+  · exact le_trans (eLpNorm_const_smul_le)
+      (mul_le_mul' le_rfl (eLpNorm_sum_range_lag_sub_le hmeas hZ n j))
+
 end DeepWiki.TimeSeries
