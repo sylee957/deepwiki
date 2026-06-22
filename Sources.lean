@@ -69,3 +69,5 @@ import Sources.Doi_10_1145_321662_321665.Source
 import Sources.Doi_10_1145_321662_321665.Subresultants
 import Sources.Doi_10_1145_800204_806314.Source
 import Sources.Doi_10_1145_800204_806314.HorowitzMethod
+import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
+import Sources.Doi_10_1007_978_3_7091_7551_4_9.SubresultantPRS
