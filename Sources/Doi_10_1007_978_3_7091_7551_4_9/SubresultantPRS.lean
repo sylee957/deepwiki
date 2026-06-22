@@ -47,16 +47,21 @@ subresultant of `A, B` of degree `deg R_k = deg gcd` is similar to `gcd(A, B)`. 
 discharges the degree-decreasing / non-vanishing hypotheses of the abstract connection). -/
 abbrev subresultant_euclideanPRS_gcd_connection := @subresultant_euclideanPRS_isSimilar_gcd
 
+/-- **Degree-padding similarity** (Geddes §7.3 Lemma 7.1's leading-coefficient correction, as a similarity):
+raising the second polynomial's formal degree from its true degree `k` to `n` scales the subresultant by the
+nonzero constant `C(lc B)^(n−k)`, so the two are similar. The library's `isSimilar_subresultant_padding` —
+the bridge matching a formal-degree subresultant (the LRT `deg D − 1`) to an actual-degree p.r.s.
+computation, which makes Bronstein's Thm 2.5.1(ii) hold for the degenerate residue too. -/
+abbrev subresultant_padding_similarity := @isSimilar_subresultant_padding
+
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the residue non-degeneracy
-`deg(A − α·D') = deg D − 1` at a residue `α` (a top-coefficient non-cancellation condition), the remaining
-`hdeg` hypothesis of `isSimilar_lrtSubresultant_eval_gcd` once the index is matched to the multiplicity.
-The *multiplicity identification* `deg_x R_m = i` (`deg gcd(D, A−αD') = i` for a residue `α` of multiplicity
-`i = rootMultiplicity α R`) is DONE — but via the residue-counting argument
-(`rootMultiplicity_rtResultant_eq_natDegree_gcd`, `roots_rtResultant`, in `ResidueMultiplicity`), not the
-subresultant engine. The similarity itself is done: the concrete subresultant ↔ gcd connection
-(`subresultant_euclideanPRS_isSimilar_gcd`) and its `t ↦ α` specialization
-(`isSimilar_lrtSubresultant_eval_gcd`, `ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')` in the
-non-degenerate case). -/
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the mathematical content is COMPLETE — the
+concrete subresultant ↔ gcd connection (`subresultant_euclideanPRS_isSimilar_gcd`) and its `t ↦ α`
+specialization to *every* residue (`isSimilar_lrtSubresultant_eval_gcd`, the degenerate
+`deg(A − α·D') < deg D − 1` handled via `subresultant_padding_similarity`), plus the multiplicity
+identification `deg_x R_m = i` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`, via residue-counting in
+`ResidueMultiplicity`). Only the algorithm-level bookkeeping capstone remains (discharge the p.r.s.-
+termination hypotheses + rewrite the index to `i = rootMultiplicity α R`); tracked in the Bronstein
+`Chapter2` §2.5 marker, not here. -/
 
 end DeepWiki.Loos

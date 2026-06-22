@@ -19,19 +19,19 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — the *degenerate* residue `a = coeff_{n−1}(A)/(n·lc(D))` only [research: there
-  `deg(A − a·D') < deg D − 1`, so matching `lrtSubresultant`'s formal degree `deg D − 1` needs the K[t]-level
-  degree-drop argument (Thm 1.4.3 = `subresultant_map_lt`), the leading-coeff factor absorbed by `~`]. For
-  every *other* residue the non-degeneracy `deg(A − a·D') = deg D − 1` is PROVEN: `thm_2_5_1_nondegeneracy`
-  (`natDegree_sub_C_mul_derivative`, under the explicit non-cancellation `A_{n−1} ≠ a·n·lc(D)`), which
-  discharges the `hdeg` hypothesis of `thm_2_5_1_ii`. The multiplicity identification `deg_x R_m = i` is DONE:
-  `thm_2_5_1_multiplicity`
-  (`rootMultiplicity_rtResultant_eq_natDegree_gcd`, `rootMultiplicity a R = deg gcd(D, A−aD')`), via
-  `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`, the residues) and `natDegree_gcd_eq_count_residue`
-  (`deg gcd = #{α : residue α = a}`). Both halves of the *similarity* are done: part (i) `n = deg D ⟹ gcd ~ D`
-  = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) core `lrtSubresultant A D i (a) ~
-  gcd(D, A−aD')` (non-degenerate `deg(A−aD') = deg D − 1`) = `thm_2_5_1_ii`
-  (`isSimilar_lrtSubresultant_eval_gcd`). The Lazard–Rioboo–Trager *algorithm* is functionally done: primitive
+§2.5: Thm 2.5.1 — only the algorithm-level *bookkeeping* capstone remains [deferred]: discharging the p.r.s.-
+  termination hypotheses (`hk0`/`hknz`, via `exists_last_euclideanPRS_nonzero`) and rewriting the index of
+  `thm_2_5_1_ii` to the algorithm's `i = rootMultiplicity a R` (via `thm_2_5_1_multiplicity` +
+  `IsSimilar.natDegree_eq`), to state the correctness directly on `lazardRiobooTrager`'s output. The
+  mathematical content is COMPLETE: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i`
+  (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every**
+  residue (incl. the degenerate `deg(A−aD') < deg D − 1`, via degree-padding similarity
+  `isSimilar_subresultant_padding`) = `thm_2_5_1_ii` (`isSimilar_lrtSubresultant_eval_gcd`); the multiplicity
+  identification `deg_x R_m = i` = `thm_2_5_1_multiplicity` (`rootMultiplicity_rtResultant_eq_natDegree_gcd`,
+  `rootMultiplicity a R = deg gcd(D, A−aD')`), via `roots_rtResultant` (`R.roots = D.roots.map (A(α)/D'(α))`)
+  and `natDegree_gcd_eq_count_residue` (`deg gcd = #{α : residue α = a}`); the degree dividing line
+  `a = A_{n−1}/(n·lc D)` is `thm_2_5_1_nondegeneracy` (`natDegree_sub_C_mul_derivative`). The
+  Lazard–Rioboo–Trager *algorithm* is functionally done: primitive
   `lazardRiobooTrager_subresultant` (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval`
   (specialization `t ↦ a`); and the full assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def
   returning the `(Qᵢ, Sᵢ)` log-part pairs; optional `lcₓ`-normalization omitted).
@@ -295,18 +295,21 @@ noncomputable abbrev lazardRiobooTrager_algorithm := @DeepWiki.SymbolicIntegrati
 divisor form is `isSimilar_of_dvd_of_natDegree_eq`. -/
 abbrev thm_2_5_1_i := @DeepWiki.SymbolicIntegration.isSimilar_gcd_left_of_natDegree_eq
 
-/-- **Theorem 2.5.1, part (ii)** (§2.5, p.50, the `n < deg(D)` case, non-degenerate): for `D ≠ 0` and `a`
-with `deg(A − a·D') = deg D − 1`, the LRT subresultant `lrtSubresultant A D` at index `i = deg R_k`
-(`R_k` the last nonzero element of the Euclidean p.r.s. of `D, A − a·D'`), specialized `t ↦ a`, is similar
-to `gcd(D, A − a·D')` — the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (over a field `ppₓ(R_m) ~ R_m`). The
-library's `isSimilar_lrtSubresultant_eval_gcd`: combines `lrtSubresultant_eval` with the concrete
-subresultant ↔ gcd connection `subresultant_euclideanPRS_isSimilar_gcd`. -/
+/-- **Theorem 2.5.1, part (ii)** (§2.5, p.50, the `n < deg(D)` case — *every* residue): for `D ≠ 0` and
+`deg A < deg D`, the LRT subresultant `lrtSubresultant A D` at index `i = deg R_k` (`R_k` the last nonzero
+element of the Euclidean p.r.s. of `D, A − a·D'`), specialized `t ↦ a`, is similar to `gcd(D, A − a·D')` —
+the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (over a field `ppₓ(R_m) ~ R_m`). The library's
+`isSimilar_lrtSubresultant_eval_gcd`: combines `lrtSubresultant_eval` with the concrete subresultant ↔ gcd
+connection `subresultant_euclideanPRS_isSimilar_gcd`, the formal degree `deg D − 1` matched to the actual
+`deg(A − a·D')` by `isSimilar_subresultant_padding` — so it holds even for the degenerate residue where
+`deg(A − a·D') < deg D − 1`. -/
 abbrev thm_2_5_1_ii := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd
 
-/-- **Theorem 2.5.1, residue non-degeneracy** (§2.5, p.50): the `hdeg : deg(A − a·D') = deg D − 1`
-hypothesis of `thm_2_5_1_ii` holds for every residue `a` except the single value `a = A_{n−1}/(n·lc D)` —
-under the explicit non-cancellation `A_{n−1} ≠ a·(n·lc D)` (`n = deg D`). The library's
-`natDegree_sub_C_mul_derivative`. -/
+/-- **Theorem 2.5.1, residue degree dividing line** (§2.5, p.50): `A − a·D'` keeps the full degree
+`deg D − 1` except at the single residue value `a = A_{n−1}/(n·lc D)` (`n = deg D`), where the `xⁿ⁻¹`
+coefficient cancels — proven under the explicit non-cancellation `A_{n−1} ≠ a·(n·lc D)`. (`thm_2_5_1_ii`
+no longer needs this — it handles the degenerate value uniformly via padding — but this records the
+boundary.) The library's `natDegree_sub_C_mul_derivative`. -/
 abbrev thm_2_5_1_nondegeneracy := @DeepWiki.SymbolicIntegration.natDegree_sub_C_mul_derivative
 
 /-- **Theorem 2.5.1, the multiplicity identification `deg_x R_m = i`** (§2.5, p.50): over an algebraically
