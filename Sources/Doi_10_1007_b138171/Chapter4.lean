@@ -30,26 +30,17 @@ noncomputable abbrev def_4_1_1 := @emultiplicity
 
 /-- **Lemma 4.1.1(i)** (§4.1, p.108): for an irreducible (prime) `a`,
 `ν_a(xy) = ν_a(x) + ν_a(y)`. -/
-theorem lem_4_1_1_i {α : Type*} [CommRing α] [IsDomain α] {a x y : α} (ha : Prime a) :
-    emultiplicity a (x * y) = emultiplicity a x + emultiplicity a y :=
-  emultiplicity_mul ha
+abbrev lem_4_1_1_i := @emultiplicity_mul
 
 /-- **Lemma 4.1.1(ii)** (§4.1, p.108): `ν_a(x + y) ≥ min(ν_a(x), ν_a(y))`. -/
-theorem lem_4_1_1_ii {α : Type*} [CommRing α] [IsDomain α] {a x y : α} :
-    min (emultiplicity a x) (emultiplicity a y) ≤ emultiplicity a (x + y) :=
-  min_le_emultiplicity_add
+abbrev lem_4_1_1_ii := @min_le_emultiplicity_add
 
 /-- **Lemma 4.1.1(ii)** (§4.1, p.108), equality case: if `ν_a(x) ≠ ν_a(y)` then
 `ν_a(x + y) = min(ν_a(x), ν_a(y))`. -/
-theorem lem_4_1_1_ii_eq {α : Type*} [CommRing α] [IsDomain α] {a x y : α}
-    (h : emultiplicity a x ≠ emultiplicity a y) :
-    emultiplicity a (x + y) = min (emultiplicity a x) (emultiplicity a y) :=
-  emultiplicity_add_eq_min h
+abbrev lem_4_1_1_ii_eq := @emultiplicity_add_eq_min
 
 /-- **Lemma 4.1.1(iii)** (§4.1, p.108): if `x ∣ y` then `ν_a(x) ≤ ν_a(y)`. -/
-theorem lem_4_1_1_iii {α : Type*} [CommRing α] [IsDomain α] {a x y : α} (h : x ∣ y) :
-    emultiplicity a x ≤ emultiplicity a y :=
-  emultiplicity_le_emultiplicity_of_dvd_right h
+abbrev lem_4_1_1_iii := @emultiplicity_le_emultiplicity_of_dvd_right
 
 /-! ## §4.4 Residues (rational-function case — foundation of the Rothstein–Trager residue) -/
 
