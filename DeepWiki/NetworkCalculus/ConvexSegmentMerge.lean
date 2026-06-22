@@ -157,6 +157,74 @@ theorem convexSegEval_lower (sg p : ℝ≥0) :
         rw [hps, show g0 + (p * ℓ + p * (s - ℓ)) = (g0 + p * ℓ) + p * (s - ℓ) from by ring]
         gcongr
 
+/-- A convex PWL whose every slope is `≥ p` grows at least at rate `p` between *any* two points:
+`convexSegEval g0 sg l x + p·d ≤ convexSegEval g0 sg l (x + d)` (the from-any-point strengthening
+of `convexSegEval_lower`, which is its `x = 0` case via `convexSegEval_zero`). -/
+theorem convexSegEval_rate (sg p : ℝ≥0) :
+    ∀ l : List (ℝ≥0 × ℝ≥0), (∀ seg ∈ l, p ≤ seg.1) → p ≤ sg → ∀ g0 x d : ℝ≥0,
+      convexSegEval g0 sg l x + p * d ≤ convexSegEval g0 sg l (x + d) := by
+  intro l
+  induction l with
+  | nil =>
+      intro _ hsg g0 x d
+      rw [convexSegEval_nil, convexSegEval_nil]
+      have hpsg : p * d ≤ sg * d := by gcongr
+      calc g0 + sg * x + p * d ≤ g0 + sg * x + sg * d := by gcongr
+        _ = g0 + sg * (x + d) := by ring
+  | cons hd tl ih =>
+      intro hl hsg g0 x d
+      obtain ⟨sseg, ℓ⟩ := hd
+      have hsseg : p ≤ sseg := hl (sseg, ℓ) List.mem_cons_self
+      have htl : ∀ seg ∈ tl, p ≤ seg.1 := fun seg h => hl seg (List.mem_cons_of_mem _ h)
+      rw [convexSegEval_cons, convexSegEval_cons]
+      by_cases hxd : x + d ≤ ℓ
+      · -- both `x` and `x + d` on the leading segment
+        have hx : x ≤ ℓ := le_trans le_self_add hxd
+        rw [if_pos hx, if_pos hxd]
+        have hpsseg : p * d ≤ sseg * d := by gcongr
+        calc g0 + sseg * x + p * d ≤ g0 + sseg * x + sseg * d := by gcongr
+          _ = g0 + sseg * (x + d) := by ring
+      · by_cases hx : x ≤ ℓ
+        · -- `x` on the leading segment, `x + d` past it
+          rw [if_pos hx, if_neg hxd]
+          have hℓxd : ℓ ≤ x + d := (not_le.mp hxd).le
+          refine le_trans ?_ (convexSegEval_lower sg p tl htl hsg (g0 + sseg * ℓ) (x + d - ℓ))
+          -- reduce to `sseg·x + p·d ≤ sseg·ℓ + p·(x+d-ℓ)`
+          have hpsub : p * (x + d) = p * ℓ + p * (x + d - ℓ) := by
+            rw [← mul_add, add_tsub_cancel_of_le hℓxd]
+          have hkey : sseg * x + p * d ≤ sseg * ℓ + p * (x + d - ℓ) := by
+            have hstep : sseg * x + p * ℓ ≤ sseg * ℓ + p * x := by
+              have : p * (ℓ - x) ≤ sseg * (ℓ - x) := by gcongr
+              have hxℓ : x ≤ ℓ := hx
+              calc sseg * x + p * ℓ = sseg * x + (p * x + p * (ℓ - x)) := by
+                      rw [← mul_add, add_tsub_cancel_of_le hxℓ]
+                _ ≤ sseg * x + (p * x + sseg * (ℓ - x)) := by gcongr
+                _ = sseg * ℓ + p * x := by
+                      rw [show sseg * x + (p * x + sseg * (ℓ - x))
+                            = (sseg * x + sseg * (ℓ - x)) + p * x from by ring,
+                        ← mul_add, add_tsub_cancel_of_le hxℓ]
+            -- now combine with `p·x + p·d = p·ℓ + p·(x+d-ℓ)`
+            have hpxd : p * x + p * d = p * ℓ + p * (x + d - ℓ) := by
+              rw [← mul_add, hpsub]
+            -- add `p·x` to both sides; the goal then reduces to `hstep` after `hpxd`
+            rw [← add_le_add_iff_right (p * x)]
+            calc sseg * x + p * d + p * x
+                = sseg * x + (p * x + p * d) := by ring
+              _ = sseg * x + (p * ℓ + p * (x + d - ℓ)) := by rw [hpxd]
+              _ = (sseg * x + p * ℓ) + p * (x + d - ℓ) := by ring
+              _ ≤ (sseg * ℓ + p * x) + p * (x + d - ℓ) := by gcongr
+              _ = sseg * ℓ + p * (x + d - ℓ) + p * x := by ring
+          calc g0 + sseg * x + p * d = g0 + (sseg * x + p * d) := by ring
+            _ ≤ g0 + (sseg * ℓ + p * (x + d - ℓ)) := by gcongr
+            _ = g0 + sseg * ℓ + p * (x + d - ℓ) := by ring
+        · -- both past the leading segment
+          rw [if_neg hx, if_neg hxd]
+          have hℓx : ℓ ≤ x := (not_le.mp hx).le
+          have hsplit : x + d - ℓ = (x - ℓ) + d := by
+            rw [tsub_add_eq_add_tsub hℓx]
+          rw [hsplit]
+          exact ih htl hsg (g0 + sseg * ℓ) (x - ℓ) d
+
 /-- **Theorem 4.1, the flat case** (convolution by a flatter line; the book's `f ∗ g = f + g(0)`
 when each slope of `f` is `≤` each slope of `g`). If a line `u ↦ a + p·u` is flatter than the
 convex PWL `g` (every slope of `g` is `≥ p`), their `(min,plus)` convolution is the line shifted by
