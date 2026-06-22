@@ -74,4 +74,18 @@ theorem isConvexEReal_convexNFEval (l : List (ℝ≥0 × ℝ≥0)) : IsConvexERe
       rw [convexNFEval_cons]
       exact IsConvexEReal.sup _ _ (isConvexEReal_rateLatencyEReal rt.1 rt.2) ih
 
+/-- Each rate-latency curve `β_{R,T}` is nondecreasing. -/
+theorem monotone_rateLatencyEReal (R T : ℝ≥0) : Monotone (rateLatencyEReal R T) := by
+  intro a b hab
+  simp only [rateLatencyEReal]
+  rw [EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+  gcongr
+
+/-- A convex piecewise-linear function is nondecreasing — a supremum of nondecreasing
+rate-latencies. -/
+theorem monotone_convexNFEval (l : List (ℝ≥0 × ℝ≥0)) : Monotone (convexNFEval l) := by
+  induction l with
+  | nil => exact monotone_const
+  | cons rt l ih => rw [convexNFEval_cons]; exact (monotone_rateLatencyEReal rt.1 rt.2).sup ih
+
 end DeepWiki
