@@ -302,4 +302,213 @@ theorem minConv_peel_leadSeg (f0 sf sa ℓa : ℝ≥0) (as : List (ℝ≥0 × �
         _ = (f0 + sa * u) + (G (v - d) + sa * d) := by rw [add_comm (sa * d)]
         _ ≤ (f0 + sa * u) + G v := by gcongr
 
+/-- **Theorem 4.1 — the convolution on the leading segment** (the short-time half of the peel). On
+times `t ≤ ℓa`, before the flattest segment `(sa, ℓa)` of `F` is exhausted, the `(min,plus)`
+convolution with a `G` growing at rate `≥ sa` everywhere is the affine `F(0)+G(0)+sa·t`:
+`(F ∗ G) t = f0 + G 0 + sa·t`. -/
+theorem minConv_leadSeg_le (f0 sf sa ℓa : ℝ≥0) (as : List (ℝ≥0 × ℝ≥0))
+    (G : ℝ≥0 → ℝ≥0) (hGrate : ∀ x d : ℝ≥0, G x + sa * d ≤ G (x + d)) {t : ℝ≥0} (ht : t ≤ ℓa) :
+    minConv (fun u => (((convexSegEval f0 sf ((sa, ℓa) :: as) u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((G v : ℝ≥0) : ℝ) : EReal)) t
+      = (((f0 + G 0 + sa * t : ℝ≥0) : ℝ) : EReal) := by
+  have coeadd : ∀ x y : ℝ≥0,
+      (((x : ℝ) : EReal)) + (((y : ℝ) : EReal)) = (((x + y : ℝ≥0) : ℝ) : EReal) := by
+    intro x y; rw [← EReal.coe_add, ← NNReal.coe_add]
+  have hFu : ∀ u : ℝ≥0, u ≤ ℓa → convexSegEval f0 sf ((sa, ℓa) :: as) u = f0 + sa * u :=
+    fun u hu => by rw [convexSegEval_cons, if_pos hu]
+  apply le_antisymm
+  · refine le_trans (minConv_le_add _ _ (add_zero t)) (le_of_eq ?_)
+    rw [hFu t ht, coeadd]; norm_cast; ring
+  · refine le_minConv (fun u v huv => ?_)
+    have hut : u ≤ t := huv ▸ le_self_add
+    have hu : u ≤ ℓa := le_trans hut ht
+    rw [hFu u hu, coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+    have hGlow : G 0 + sa * v ≤ G v := by
+      have := hGrate 0 v; rwa [zero_add] at this
+    calc f0 + G 0 + sa * t = (f0 + sa * u) + (G 0 + sa * v) := by rw [← huv]; ring
+      _ ≤ (f0 + sa * u) + G v := by gcongr
+
+/-- From a slope-sorted list `l` and `sa ≤ l.head.1`, every slope of `l` dominates `sa`. -/
+theorem sorted_head_le_all {sa : ℝ≥0} {l : List (ℝ≥0 × ℝ≥0)}
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) l) {hd : ℝ≥0 × ℝ≥0} {tl : List (ℝ≥0 × ℝ≥0)}
+    (hl : l = hd :: tl) (hsa : sa ≤ hd.1) : ∀ seg ∈ l, sa ≤ seg.1 := by
+  subst hl
+  rw [List.pairwise_cons] at hsort
+  intro seg hseg
+  rw [List.mem_cons] at hseg
+  rcases hseg with rfl | hseg
+  · exact hsa
+  · exact le_trans hsa (hsort.1 seg hseg)
+
+/-- The growth-rate hypothesis `convexSegEval_rate` packages for `minConv_peel_leadSeg`: a convex
+PWL with all slopes `≥ sa` (and asymptotic `≥ sa`) grows at rate `≥ sa` from any point. -/
+theorem convexSegEval_rate_of_le {s sa g0 : ℝ≥0} {l : List (ℝ≥0 × ℝ≥0)}
+    (hall : ∀ seg ∈ l, sa ≤ seg.1) (hsas : sa ≤ s) :
+    ∀ x d : ℝ≥0, convexSegEval g0 s l x + sa * d ≤ convexSegEval g0 s l (x + d) :=
+  fun x d => convexSegEval_rate s sa l hall hsas g0 x d
+
+/-- **Theorem 4.1, the balanced case.** When two convex PWLs share the same asymptotic slope `s`
+(every finite segment slope is `≤ s`, and the segment lists are slope-sorted), the full
+`mergeBySlope` is *exactly* the `(min,plus)` convolution — no truncation needed, because the merged
+list keeps slope `< s` throughout:
+`(convexSegEval f0 s fsegs) ∗ (convexSegEval g0 s gsegs) = convexSegEval (f0+g0) s (mergeBySlope …)`.
+Proved by peeling the globally flattest leading segment (`minConv_peel_leadSeg`) until both lists
+are empty, where it is the affine base case `minConv_affine`. -/
+theorem minConv_convexSegEval_balanced (s : ℝ≥0) :
+    ∀ (n : ℕ) (fsegs gsegs : List (ℝ≥0 × ℝ≥0)), fsegs.length + gsegs.length = n →
+      ∀ (f0 g0 t : ℝ≥0),
+      List.Pairwise (fun a b => a.1 ≤ b.1) fsegs →
+      List.Pairwise (fun a b => a.1 ≤ b.1) gsegs →
+      (∀ seg ∈ fsegs, seg.1 ≤ s) → (∀ seg ∈ gsegs, seg.1 ≤ s) →
+      (((convexSegEval (f0 + g0) s (mergeBySlope fsegs gsegs) t : ℝ≥0) : ℝ) : EReal)
+        = minConv (fun u => (((convexSegEval f0 s fsegs u : ℝ≥0) : ℝ) : EReal))
+                  (fun v => (((convexSegEval g0 s gsegs v : ℝ≥0) : ℝ) : EReal)) t := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    intro fsegs gsegs hn f0 g0 t hfsort hgsort hfs hgs
+    match fsegs, gsegs, hn with
+    | [], [], _ =>
+        rw [mergeBySlope_nil_left, convexSegEval_nil]
+        simp only [convexSegEval_nil]
+        rw [minConv_affine f0 s g0 s t, min_self]
+    | [], (sb, ℓb) :: gbs, hn =>
+        -- f affine slope `s`; peel g's leading segment, recurse on `([], gbs)`
+        have hsbs : sb ≤ s := hgs (sb, ℓb) List.mem_cons_self
+        have hgbs_sort : List.Pairwise (fun a b => a.1 ≤ b.1) gbs :=
+          (List.pairwise_cons.mp hgsort).2
+        have hgbs_le : ∀ seg ∈ gbs, seg.1 ≤ s :=
+          fun seg h => hgs seg (List.mem_cons_of_mem _ h)
+        -- `F_f` is affine slope `s`; it grows at rate `≥ sb` since `sb ≤ s`
+        have hGrate : ∀ x d : ℝ≥0,
+            convexSegEval f0 s [] x + sb * d ≤ convexSegEval f0 s [] (x + d) :=
+          convexSegEval_rate_of_le (by simp) hsbs
+        rw [mergeBySlope_nil_left]
+        by_cases ht : t ≤ ℓb
+        · -- short region: convolution is affine on `g`'s leading segment
+          rw [convexSegEval_cons, if_pos ht, minConv_comm,
+            minConv_leadSeg_le g0 s sb ℓb gbs _ hGrate ht, convexSegEval_zero]
+          norm_cast; ring
+        · -- past `ℓb`: peel `g`'s lead and apply the IH on `([], gbs)`
+          have hℓbt : ℓb ≤ t := (not_le.mp ht).le
+          rw [convexSegEval_cons, if_neg ht, minConv_comm,
+            minConv_peel_leadSeg g0 s sb ℓb gbs _ hGrate hℓbt, minConv_comm]
+          have hlen : ([] : List (ℝ≥0 × ℝ≥0)).length + gbs.length < n := by
+            simp only [List.length_nil, List.length_cons] at hn ⊢; omega
+          have := ih _ hlen [] gbs rfl f0 (g0 + sb * ℓb) (t - ℓb)
+            List.Pairwise.nil hgbs_sort (by simp) hgbs_le
+          rw [mergeBySlope_nil_left] at this
+          rw [show f0 + g0 + sb * ℓb = f0 + (g0 + sb * ℓb) from by ring]
+          exact this
+    | (sa, ℓa) :: fas, [], hn =>
+        -- symmetric to the previous case: peel `f`'s leading segment, recurse on `(fas, [])`
+        have hsas : sa ≤ s := hfs (sa, ℓa) List.mem_cons_self
+        have hfas_sort : List.Pairwise (fun a b => a.1 ≤ b.1) fas :=
+          (List.pairwise_cons.mp hfsort).2
+        have hfas_le : ∀ seg ∈ fas, seg.1 ≤ s :=
+          fun seg h => hfs seg (List.mem_cons_of_mem _ h)
+        have hGrate : ∀ x d : ℝ≥0,
+            convexSegEval g0 s [] x + sa * d ≤ convexSegEval g0 s [] (x + d) :=
+          convexSegEval_rate_of_le (by simp) hsas
+        rw [mergeBySlope_nil_right]
+        by_cases ht : t ≤ ℓa
+        · rw [convexSegEval_cons, if_pos ht,
+            minConv_leadSeg_le f0 s sa ℓa fas _ hGrate ht, convexSegEval_zero]
+        · have hℓat : ℓa ≤ t := (not_le.mp ht).le
+          rw [convexSegEval_cons, if_neg ht,
+            minConv_peel_leadSeg f0 s sa ℓa fas _ hGrate hℓat]
+          have hlen : fas.length + ([] : List (ℝ≥0 × ℝ≥0)).length < n := by
+            simp only [List.length_nil, List.length_cons] at hn ⊢; omega
+          have := ih _ hlen fas [] rfl (f0 + sa * ℓa) g0 (t - ℓa)
+            hfas_sort List.Pairwise.nil hfas_le (by simp)
+          rw [mergeBySlope_nil_right] at this
+          rw [show f0 + g0 + sa * ℓa = f0 + sa * ℓa + g0 from by ring]
+          exact this
+    | (sa, ℓa) :: fas, (sb, ℓb) :: gbs, hn =>
+        have hsas : sa ≤ s := hfs (sa, ℓa) List.mem_cons_self
+        have hsbs : sb ≤ s := hgs (sb, ℓb) List.mem_cons_self
+        have hfas_sort : List.Pairwise (fun a b => a.1 ≤ b.1) fas :=
+          (List.pairwise_cons.mp hfsort).2
+        have hgbs_sort : List.Pairwise (fun a b => a.1 ≤ b.1) gbs :=
+          (List.pairwise_cons.mp hgsort).2
+        have hfas_le : ∀ seg ∈ fas, seg.1 ≤ s :=
+          fun seg h => hfs seg (List.mem_cons_of_mem _ h)
+        have hgbs_le : ∀ seg ∈ gbs, seg.1 ≤ s :=
+          fun seg h => hgs seg (List.mem_cons_of_mem _ h)
+        by_cases hab : sa ≤ sb
+        · -- `f`'s lead is the global min: peel it, recurse on `(fas, (sb,ℓb)::gbs)`
+          have hgall : ∀ seg ∈ (sb, ℓb) :: gbs, sa ≤ seg.1 :=
+            sorted_head_le_all hgsort rfl hab
+          have hGrate : ∀ x d : ℝ≥0,
+              convexSegEval g0 s ((sb, ℓb) :: gbs) x + sa * d
+                ≤ convexSegEval g0 s ((sb, ℓb) :: gbs) (x + d) :=
+            convexSegEval_rate_of_le hgall hsas
+          rw [mergeBySlope_cons_le (show (sa, ℓa).1 ≤ (sb, ℓb).1 from hab)]
+          by_cases ht : t ≤ ℓa
+          · rw [convexSegEval_cons, if_pos ht,
+              minConv_leadSeg_le f0 s sa ℓa fas _ hGrate ht, convexSegEval_zero]
+          · have hℓat : ℓa ≤ t := (not_le.mp ht).le
+            rw [convexSegEval_cons, if_neg ht,
+              minConv_peel_leadSeg f0 s sa ℓa fas _ hGrate hℓat]
+            have hlen : fas.length + ((sb, ℓb) :: gbs).length < n := by
+              simp only [List.length_cons] at hn ⊢; omega
+            have := ih _ hlen fas ((sb, ℓb) :: gbs) rfl (f0 + sa * ℓa) g0 (t - ℓa)
+              hfas_sort hgsort hfas_le hgs
+            rw [show f0 + g0 + sa * ℓa = f0 + sa * ℓa + g0 from by ring]
+            exact this
+        · -- `g`'s lead is the global min: peel it (via `minConv_comm`), recurse on `((sa,ℓa)::fas, gbs)`
+          have hba : sb ≤ sa := (not_le.mp hab).le
+          have hfall : ∀ seg ∈ (sa, ℓa) :: fas, sb ≤ seg.1 :=
+            sorted_head_le_all hfsort rfl hba
+          have hGrate : ∀ x d : ℝ≥0,
+              convexSegEval f0 s ((sa, ℓa) :: fas) x + sb * d
+                ≤ convexSegEval f0 s ((sa, ℓa) :: fas) (x + d) :=
+            convexSegEval_rate_of_le hfall hsbs
+          rw [mergeBySlope_cons_gt (show ¬ (sa, ℓa).1 ≤ (sb, ℓb).1 from hab)]
+          by_cases ht : t ≤ ℓb
+          · rw [convexSegEval_cons, if_pos ht, minConv_comm,
+              minConv_leadSeg_le g0 s sb ℓb gbs _ hGrate ht, convexSegEval_zero]
+            norm_cast; ring
+          · have hℓbt : ℓb ≤ t := (not_le.mp ht).le
+            rw [convexSegEval_cons, if_neg ht, minConv_comm,
+              minConv_peel_leadSeg g0 s sb ℓb gbs _ hGrate hℓbt, minConv_comm]
+            have hlen : ((sa, ℓa) :: fas).length + gbs.length < n := by
+              simp only [List.length_cons] at hn ⊢; omega
+            have := ih _ hlen ((sa, ℓa) :: fas) gbs rfl f0 (g0 + sb * ℓb) (t - ℓb)
+              hfsort hgbs_sort hfs hgbs_le
+            rw [show f0 + g0 + sb * ℓb = f0 + (g0 + sb * ℓb) from by ring]
+            exact this
+
+/-- **Theorem 4.1, balanced case (usable form).** Drops the recursion-fuel argument of
+`minConv_convexSegEval_balanced`: for slope-sorted segment lists with all finite slopes `≤` the
+shared asymptotic slope `s`, the `(min,plus)` convolution equals the `mergeBySlope` evaluation from
+`f(0)+g(0)`. -/
+theorem minConv_convexSegEval_eq_merge (s f0 g0 : ℝ≥0) (fsegs gsegs : List (ℝ≥0 × ℝ≥0))
+    (hfsort : List.Pairwise (fun a b => a.1 ≤ b.1) fsegs)
+    (hgsort : List.Pairwise (fun a b => a.1 ≤ b.1) gsegs)
+    (hfs : ∀ seg ∈ fsegs, seg.1 ≤ s) (hgs : ∀ seg ∈ gsegs, seg.1 ≤ s) (t : ℝ≥0) :
+    minConv (fun u => (((convexSegEval f0 s fsegs u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 s gsegs v : ℝ≥0) : ℝ) : EReal)) t
+      = (((convexSegEval (f0 + g0) s (mergeBySlope fsegs gsegs) t : ℝ≥0) : ℝ) : EReal) :=
+  (minConv_convexSegEval_balanced s _ fsegs gsegs rfl f0 g0 t hfsort hgsort hfs hgs).symm
+
+/-- The balanced `mergeBySlope` is *untruncated*: it returns the whole slope-sorted concatenation,
+length `fsegs.length + gsegs.length`, so every finite segment of both inputs survives into the
+convolution result (no segments are dropped). -/
+theorem mergeBySlope_length :
+    ∀ fsegs gsegs : List (ℝ≥0 × ℝ≥0),
+      (mergeBySlope fsegs gsegs).length = fsegs.length + gsegs.length
+  | [], l => by simp
+  | a :: as, [] => by simp
+  | a :: as, b :: bs => by
+      by_cases h : a.1 ≤ b.1
+      · rw [mergeBySlope_cons_le h, List.length_cons,
+          mergeBySlope_length as (b :: bs), List.length_cons, List.length_cons]
+        ring
+      · rw [mergeBySlope_cons_gt h, List.length_cons,
+          mergeBySlope_length (a :: as) bs, List.length_cons, List.length_cons]
+        ring
+  termination_by l1 l2 => l1.length + l2.length
+  decreasing_by all_goals (simp_wf; try omega)
+
 end DeepWiki
