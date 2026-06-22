@@ -16,7 +16,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — the data layer is now defined (`convexSegEval` evaluates a `(f0, finalSlope, (slope,length)-segments)` convex PWL; `mergeBySlope` slope-merges two segment lists); what remains is the *convolution-correctness* `convexSegEval (mergeBySlope …) = minConv …` (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
+§4.2: Proposition 4.1 — item 4's remaining piece `[infra]` (the *ordering claim* that `γᵢ` is the minimum on `[tᵢ,tᵢ₊₁]`, a transitive crossing chain; the pointwise envelope-from-minimality `prop_4_1_envelope` and items 1–3 `prop_4_1_concave` / `prop_4_1_burst` / `prop_4_1_cross_mono` are done); Theorem 4.1, the explicit *segment-merge-by-slope algorithm* `[infra]` — data layer defined (`convexSegEval`/`mergeBySlope`); base case `thm_4_1_base` (affine ∗ affine = min-slope) and flat case `thm_4_1_flat` (flatter line ∗ convex = shift, the book's `f∗g=f+g(0)`) are proved. What remains is the *general* correctness: the merge must **truncate** at slope `min(ρf,ρg)` (segments steeper than the slower asymptote are absorbed) — `mergeBySlope` as written is the *full* merge, exact only in the balanced `ρf=ρg` case; the general theorem needs the truncating merge + the slope-peel induction (its transform-domain *principle* `f∗g = 𝓛(𝓛f+𝓛g)` IS formalized — `thm_4_1_legendre`); Lemma 4.1 (segment placement of the min) `[infra]`; Theorem 4.2 (convex-by-concave convolution, segment-wise — the concave-convolution core is `IsConcaveEReal.minConv`) `[infra]`.
 §4.3: Lemma 4.6 (closed-form deconvolution of two segments) `[infra]`; Lemma 4.7 (sub-additive-closure factorization) `[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
@@ -196,6 +196,18 @@ theorem thm_4_1_base (a p b q t : ℝ≥0) :
             (fun u => (((b + q * u : ℝ≥0) : ℝ) : EReal)) t
       = (((a + b + min p q * t : ℝ≥0) : ℝ) : EReal) :=
   DeepWiki.minConv_affine a p b q t
+
+/-- **Theorem 4.1, the flat case** (§4.2.2, p.66): convolution by a flatter line. If a line
+`u ↦ a + p·u` is flatter than the convex PWL `g` (every slope of `g` is `≥ p`), then
+`(a + p·u) ∗ g = a + g(0) + p·t` — the flatter operand absorbs all the mass (the book's
+`f ∗ g = f + g(0)` when each slope of `f` is `≤` each slope of `g`). The library's
+`DeepWiki.minConv_flatLine_convexSegEval`. -/
+theorem thm_4_1_flat (a p g0 sg : ℝ≥0) (l : List (ℝ≥0 × ℝ≥0))
+    (hl : ∀ seg ∈ l, p ≤ seg.1) (hsg : p ≤ sg) (t : ℝ≥0) :
+    minConv (fun u => (((a + p * u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg l v : ℝ≥0) : ℝ) : EReal)) t
+      = (((a + g0 + p * t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.minConv_flatLine_convexSegEval a p g0 sg l hl hsg t
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 

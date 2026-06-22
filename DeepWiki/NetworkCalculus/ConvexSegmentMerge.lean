@@ -121,4 +121,49 @@ theorem minConv_affine (a p b q t : ℝ≥0) :
     calc a + b + min p q * t ≤ a + b + (p * u + q * v) := by gcongr
       _ = (a + p * u) + (b + q * v) := by ring
 
+/-- A convex PWL whose every slope is `≥ p` grows at least at rate `p` from its base:
+`g0 + p·s ≤ convexSegEval g0 sg l s` (generalizes `convexSegEval_base_le`, the `p = 0` case). -/
+theorem convexSegEval_lower (sg p : ℝ≥0) :
+    ∀ l : List (ℝ≥0 × ℝ≥0), (∀ seg ∈ l, p ≤ seg.1) → p ≤ sg → ∀ g0 s : ℝ≥0,
+      g0 + p * s ≤ convexSegEval g0 sg l s := by
+  intro l
+  induction l with
+  | nil => intro _ hsg g0 s; rw [convexSegEval_nil]; gcongr
+  | cons hd tl ih =>
+      intro hl hsg g0 s
+      obtain ⟨sseg, ℓ⟩ := hd
+      have hsseg : p ≤ sseg := hl (sseg, ℓ) List.mem_cons_self
+      have htl : ∀ seg ∈ tl, p ≤ seg.1 := fun seg h => hl seg (List.mem_cons_of_mem _ h)
+      rw [convexSegEval_cons]
+      split
+      · gcongr
+      · rename_i hsℓ
+        have hℓs : ℓ ≤ s := (not_le.mp hsℓ).le
+        refine le_trans ?_ (ih htl hsg (g0 + sseg * ℓ) (s - ℓ))
+        have hps : p * s = p * ℓ + p * (s - ℓ) := by rw [← mul_add, add_tsub_cancel_of_le hℓs]
+        rw [hps, show g0 + (p * ℓ + p * (s - ℓ)) = (g0 + p * ℓ) + p * (s - ℓ) from by ring]
+        gcongr
+
+/-- **Theorem 4.1, the flat case** (convolution by a flatter line; the book's `f ∗ g = f + g(0)`
+when each slope of `f` is `≤` each slope of `g`). If a line `u ↦ a + p·u` is flatter than the
+convex PWL `g` (every slope of `g` is `≥ p`), their `(min,plus)` convolution is the line shifted by
+`g(0)`: `(a + p·u) ∗ g = a + g0 + p·t`. The flatter operand absorbs all the mass. -/
+theorem minConv_flatLine_convexSegEval (a p g0 sg : ℝ≥0) (l : List (ℝ≥0 × ℝ≥0))
+    (hl : ∀ seg ∈ l, p ≤ seg.1) (hsg : p ≤ sg) (t : ℝ≥0) :
+    minConv (fun u => (((a + p * u : ℝ≥0) : ℝ) : EReal))
+            (fun v => (((convexSegEval g0 sg l v : ℝ≥0) : ℝ) : EReal)) t
+      = (((a + g0 + p * t : ℝ≥0) : ℝ) : EReal) := by
+  have coeadd : ∀ x y : ℝ≥0,
+      (((x : ℝ) : EReal)) + (((y : ℝ) : EReal)) = (((x + y : ℝ≥0) : ℝ) : EReal) := by
+    intro x y; rw [← EReal.coe_add, ← NNReal.coe_add]
+  apply le_antisymm
+  · refine le_trans (minConv_le_add _ _ (add_zero t)) (le_of_eq ?_)
+    simp only [convexSegEval_zero]
+    rw [coeadd]; norm_cast; ring
+  · refine le_minConv (fun u v huv => ?_)
+    rw [coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+    have hlow : g0 + p * v ≤ convexSegEval g0 sg l v := convexSegEval_lower sg p l hl hsg g0 v
+    calc a + g0 + p * t = (a + p * u) + (g0 + p * v) := by rw [← huv]; ring
+      _ ≤ (a + p * u) + convexSegEval g0 sg l v := by gcongr
+
 end DeepWiki
