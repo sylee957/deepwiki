@@ -55,20 +55,32 @@ the bridge matching a formal-degree subresultant (the LRT `deg D − 1`) to an a
 computation, which makes Bronstein's Thm 2.5.1(ii) hold for the degenerate residue too. -/
 abbrev subresultant_padding_similarity := @isSimilar_subresultant_padding
 
-/-- **Lazard–Rioboo–Trager correctness, assembled** (Bronstein Thm 2.5.1, at the algorithm's own index):
-the subresultant-PRS engine specialized to the LRT log-part index `i = rootMultiplicity α R`, with the
-p.r.s.-termination data discharged internally — the LRT subresultant at index `i` (`t ↦ α`) is similar to
+/-- **Top-index degenerate subresultant** (the normal-orientation mirror of `subresultant_deg_ge`, with
+the first polynomial of the larger formal degree): `Sⱼ(A,B; n,m) = C((lc A)^(m−j)·(B.coeff j)^(n−j−1))·B`
+for `deg B ≤ j ≤ m ≤ n`, `j < n` — the shape reaching the LRT top index `j = deg E` (`E ∣ D`,
+`(n,m) = (deg D, deg D − 1)` *not* swapped). The library's `subresultant_deg_ge_normal`. -/
+abbrev subresultant_top_degenerate := @subresultant_deg_ge_normal
+
+/-- **One-step p.r.s. termination ⇒ `gcd(D, E) ~ E`**: over a field, when the Euclidean p.r.s. of `D, E`
+vanishes at index 2 (`prem(D, E) = 0`, `E ∣ D`, `E ≠ 0`), `gcd(D, E)` is similar to `E` (the `k = 1`
+boundary of the subresultant ↔ gcd correspondence). The library's
+`isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`. -/
+abbrev gcd_similar_euclideanPRS_top := @isSimilar_gcd_right_of_euclideanPRS_two_eq_zero
+
+/-- **Lazard–Rioboo–Trager correctness, assembled** (Bronstein Thm 2.5.1, at the algorithm's own index —
+the full part-(ii) regime): the subresultant-PRS engine specialized to the LRT log-part index
+`i = rootMultiplicity α R`, with the p.r.s.-termination data discharged internally — for `i < deg D`
+(`gcd(D, A − α·D')` a *proper* factor of `D`), the LRT subresultant at index `i` (`t ↦ α`) is similar to
 `gcd(D, A − α·D')`. The library's `lazardRiobooTrager_isSimilar_gcd`: combines the subresultant ↔ gcd
-connection (`subresultant_euclideanPRS_gcd_connection`) and `subresultant_padding_similarity` with the
-multiplicity bridge `rootMultiplicity_rtResultant_eq_natDegree_gcd`. -/
+connection (`subresultant_euclideanPRS_gcd_connection`) and `subresultant_padding_similarity` (multi-step
+`k ≥ 2`) with the top-index `subresultant_top_degenerate` + `gcd_similar_euclideanPRS_top` (one-step
+`k = 1`, `A − α·D' ∣ D`), via the multiplicity bridge `rootMultiplicity_rtResultant_eq_natDegree_gcd`. -/
 abbrev lazardRiobooTrager_correctness := @lazardRiobooTrager_isSimilar_gcd
 
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
 Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness) is assembled in
-`lazardRiobooTrager_correctness` for the genuine part-(ii) regime (`i < deg(A − α·D')`). The residue
-boundary `i = deg(A − α·D')` — `k = 1`, i.e. `A − α·D' ∣ D`, where the index is the *top* p.r.s. degree
-and the padding lemma's `j < k` fails — is excluded by hypothesis and needs a top-index subresultant fact
-not yet in the engine [infra]. (The `A − α·D' = 0` boundary is the part-(i) `i = deg D` regime,
-`gcd(D, 0) = D`.) -/
+`lazardRiobooTrager_correctness` over the whole part-(ii) regime (`i < deg D`): both the multi-step
+`k ≥ 2` and the top-index one-step `k = 1` (`A − α·D' ∣ D`) cases. The only excluded case is
+`A − α·D' = 0` — the part-(i) `i = deg D` regime, `gcd(D, 0) ~ D`. -/
 
 end DeepWiki.Loos

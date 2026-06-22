@@ -19,13 +19,17 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — the algorithm-level capstone is now `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`):
-  part-(ii) correctness stated directly at the algorithm's index `i = rootMultiplicity a R`, p.r.s.-termination
-  data discharged internally. The single hypothesis `i < deg(A−aD')` (the genuine part-(ii) regime) carves
-  out the two boundaries [deferred — need top-index subresultant theory not yet built]: `i = deg(A−aD')`
-  (`k = 1`, i.e. `A−aD' ∣ D`, where the index is the *top* p.r.s. degree and the padding lemma's `j < k`
-  fails) and `A−aD' = 0` (`A = a·D'`, the part-(i) `i = deg D` regime, `gcd(D,0) = D`). All the mathematical
-  content is COMPLETE: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`);
+§2.5: Thm 2.5.1 — the algorithm-level capstone is now `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`),
+  COMPLETE over the whole part-(ii) regime: part-(ii) correctness stated directly at the algorithm's index
+  `i = rootMultiplicity a R`, p.r.s.-termination data discharged internally, under the single hypothesis
+  `i < deg D` (i.e. `gcd(D, A−aD')` a *proper* factor of `D`). Both the multi-step `k ≥ 2` and the top-index
+  one-step `k = 1` (`A−aD' ∣ D`, last p.r.s. element `R₁ = E`, `i = deg E` the *top* index that padding
+  cannot reach) are now covered — the latter by `thm_2_5_1_ii_top`
+  (`isSimilar_lrtSubresultant_eval_gcd_top`), built on the normal-orientation degenerate subresultant
+  formula `subresultant_deg_ge_normal` (first poly the larger formal degree) and the one-step gcd similarity
+  `isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`. The only excluded case is `A−aD' = 0` (`A = a·D'`, the
+  part-(i) `i = deg D` regime, `gcd(D,0) ~ D` = `thm_2_5_1_i`). Supporting pieces: part (i)
+  `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`);
   part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every** residue (incl. the degenerate
   `deg(A−aD') < deg D − 1`, via degree-padding similarity `isSimilar_subresultant_padding`) = `thm_2_5_1_ii`
   (`isSimilar_lrtSubresultant_eval_gcd`); the multiplicity identification `deg_x R_m = i` =
@@ -307,6 +311,15 @@ connection `subresultant_euclideanPRS_isSimilar_gcd`, the formal degree `deg D �
 `deg(A − a·D') < deg D − 1`. -/
 abbrev thm_2_5_1_ii := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd
 
+/-- **Theorem 2.5.1, part (ii) — the top-index `k = 1` case** (§2.5, p.50, `E := A − a·D' ∣ D`): the
+Euclidean p.r.s. of `D, E` terminates in one step (`R₂ = prem(D, E) = 0`), so `R₁ = E` is the last
+nonzero element and `i = deg E` is the *top* p.r.s. index — the boundary the degree-padding lemma's
+`j < k` cannot reach. The library's `isSimilar_lrtSubresultant_eval_gcd_top`: the specialized LRT
+subresultant `subresultant D E (deg D) (deg D−1) (deg E)` collapses by the normal-orientation degenerate
+formula `subresultant_deg_ge_normal` (first poly `D` of the larger formal degree) to `C(...)·E ~ E`, then
+`gcd D E ~ E` (`isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`) chains to `~ gcd(D, A−a·D')`. -/
+abbrev thm_2_5_1_ii_top := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd_top
+
 /-- **Theorem 2.5.1, residue degree dividing line** (§2.5, p.50): `A − a·D'` keeps the full degree
 `deg D − 1` except at the single residue value `a = A_{n−1}/(n·lc D)` (`n = deg D`), where the `xⁿ⁻¹`
 coefficient cancels — proven under the explicit non-cancellation `A_{n−1} ≠ a·(n·lc D)`. (`thm_2_5_1_ii`
@@ -324,15 +337,16 @@ takes as its subresultant index, supplying the `deg_x R_m = i` half of part (ii)
 abbrev thm_2_5_1_multiplicity :=
   @DeepWiki.SymbolicIntegration.rootMultiplicity_rtResultant_eq_natDegree_gcd
 
-/-- **Theorem 2.5.1, algorithm-level capstone** (§2.5, p.50, part (ii) at the algorithm's own index):
-state correctness directly at the LRT subresultant index `i = rootMultiplicity a R` (`R = rtResultant A D`),
-with the p.r.s.-termination data discharged internally — over an algebraically closed field, `D` separable,
-`deg A < deg D`, for a residue `a` with `i < deg(A − a·D')`, the LRT subresultant at index `i` specialized
+/-- **Theorem 2.5.1, algorithm-level capstone** (§2.5, p.50, part (ii) at the algorithm's own index —
+the full part-(ii) regime): state correctness directly at the LRT subresultant index
+`i = rootMultiplicity a R` (`R = rtResultant A D`), with the p.r.s.-termination data discharged
+internally — over an algebraically closed field, `D` separable, `deg A < deg D`, for a residue `a` with
+`i < deg D` (`gcd(D, A − a·D')` a *proper* factor of `D`), the LRT subresultant at index `i` specialized
 `t ↦ a` is similar to `gcd(D, A − a·D')`. The library's `lazardRiobooTrager_isSimilar_gcd`: assembles
-`thm_2_5_1_ii` with `thm_2_5_1_multiplicity` (`i = deg gcd`) and `IsSimilar.natDegree_eq`
-(`deg gcd = deg R_k`), discharging `hk0`/`hknz` via `exists_last_euclideanPRS_nonzero`; the bound
-`i < deg(A − a·D')` forces `2 ≤ k`, excluding the boundaries `k = 1` (`A − a·D' ∣ D`) and `A − a·D' = 0`
-(the part-(i) `i = deg D` regime). -/
+`thm_2_5_1_ii`/`thm_2_5_1_ii_top` with `thm_2_5_1_multiplicity` (`i = deg gcd`) and `IsSimilar.natDegree_eq`
+(`deg gcd = deg R_k`), discharging `hk0`/`hknz` via `exists_last_euclideanPRS_nonzero`. Splitting on the
+p.r.s. length: `k ≥ 2` uses `thm_2_5_1_ii`, `k = 1` uses `thm_2_5_1_ii_top`; only `A − a·D' = 0` (the
+part-(i) `i = deg D` regime, `gcd ~ D`) is excluded by `i < deg D`. -/
 abbrev thm_2_5_1 := @DeepWiki.SymbolicIntegration.lazardRiobooTrager_isSimilar_gcd
 
 /-- **Roots of the Rothstein–Trager resultant** (§2.5, behind Thm 2.5.1): over an algebraically closed
