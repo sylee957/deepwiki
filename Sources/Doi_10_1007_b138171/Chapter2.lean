@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
+import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -17,12 +18,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 part (ii) [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2]
-  — the LRT wrapping `ppₓ(lrtSubresultant A D i)(a) ~ gcd(D, A−aD')`: the degree-preserving `t↦a`
-  specialization (`lrtSubresultant_eval`) of the concrete subresultant↔gcd connection
-  (`subresultant_euclideanPRS_isSimilar_gcd`), matching the formal-degree subresultant `(deg D, deg D−1)`
-  to the actual PRS of `(D, A−aD')` and identifying `deg_x R_m = i` (the multiplicity = `deg gcd`). Part (i)
-  (`n = deg D ⟹ gcd ~ D`) is done: `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`). The
+§2.5: Thm 2.5.1 — the multiplicity identification `deg_x R_m = i` (i.e. `deg gcd(D, A−aD') = i` for a residue
+  `a` of multiplicity `i` in `R`, and the non-degeneracy `deg(A − a·D') = deg D − 1` it implies) [research:
+  rests on Thm 1.4.3 subresultant-specialization / the residue-multiplicity theory], which would discharge
+  the `hdeg`/index hypotheses of `thm_2_5_1_ii` against the actual `lazardRiobooTrager` output and remove the
+  `ppₓ`-vs-`~` gap. Both halves of the *similarity* are done: part (i) `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i`
+  (`isSimilar_gcd_left_of_natDegree_eq`); part (ii) core `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` (non-
+  degenerate `deg(A−aD') = deg D − 1`) = `thm_2_5_1_ii` (`isSimilar_lrtSubresultant_eval_gcd`). The
   Lazard–Rioboo–Trager *algorithm* is functionally done: primitive `lazardRiobooTrager_subresultant`
   (= `lrtSubresultant`) + `lazardRiobooTrager_subresultant_eval` (specialization `t ↦ a`); and the full
   assembly `lazardRiobooTrager_algorithm` (the `IntRationalLogPart` def returning the `(Qᵢ, Sᵢ)` log-part
@@ -278,6 +280,14 @@ noncomputable abbrev lazardRiobooTrager_algorithm := @DeepWiki.SymbolicIntegrati
 `isSimilar_gcd_left_of_natDegree_eq`: a degree-`deg C` divisor of `C` is similar to `C`. The general
 divisor form is `isSimilar_of_dvd_of_natDegree_eq`. -/
 abbrev thm_2_5_1_i := @DeepWiki.SymbolicIntegration.isSimilar_gcd_left_of_natDegree_eq
+
+/-- **Theorem 2.5.1, part (ii)** (§2.5, p.50, the `n < deg(D)` case, non-degenerate): for `D ≠ 0` and `a`
+with `deg(A − a·D') = deg D − 1`, the LRT subresultant `lrtSubresultant A D` at index `i = deg R_k`
+(`R_k` the last nonzero element of the Euclidean p.r.s. of `D, A − a·D'`), specialized `t ↦ a`, is similar
+to `gcd(D, A − a·D')` — the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (over a field `ppₓ(R_m) ~ R_m`). The
+library's `isSimilar_lrtSubresultant_eval_gcd`: combines `lrtSubresultant_eval` with the concrete
+subresultant ↔ gcd connection `subresultant_euclideanPRS_isSimilar_gcd`. -/
+abbrev thm_2_5_1_ii := @DeepWiki.SymbolicIntegration.isSimilar_lrtSubresultant_eval_gcd
 
 open Polynomial in
 /-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the

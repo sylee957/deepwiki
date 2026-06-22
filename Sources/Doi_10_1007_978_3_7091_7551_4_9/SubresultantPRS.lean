@@ -48,9 +48,13 @@ discharges the degree-decreasing / non-vanishing hypotheses of the abstract conn
 abbrev subresultant_euclideanPRS_gcd_connection := @subresultant_euclideanPRS_isSimilar_gcd
 
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the degree-preserving *specialization*
-`t ↦ α` of `subresultant_euclideanPRS_gcd_connection` (via `lrtSubresultant_eval`), combined with
-`thm_2_4_1_ii` (`deg gcd(D, A−αD') = i` for a residue `α` of multiplicity `i`), to conclude
-`ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')`. -/
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the *multiplicity identification*
+`deg_x R_m = i` — that `deg gcd(D, A−αD') = i` for a residue `α` of multiplicity `i` in `R` (and the
+non-degeneracy `deg(A − α·D') = deg D − 1` it entails), which would discharge the degree/index hypotheses of
+the library's `isSimilar_lrtSubresultant_eval_gcd` against the actual `lazardRiobooTrager` output. The
+similarity itself is done: the concrete subresultant ↔ gcd connection
+(`subresultant_euclideanPRS_isSimilar_gcd`) and its `t ↦ α` specialization
+(`isSimilar_lrtSubresultant_eval_gcd`, `ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')` in the
+non-degenerate case). -/
 
 end DeepWiki.Loos
