@@ -104,4 +104,100 @@ theorem exists_last_euclideanPRS_nonzero (A B : R[X]) (hB : B ≠ 0) :
     have := Nat.find_min hex hlt
     rwa [show j - 1 + 1 = j from by omega] at this
 
+/-- Strict degree decrease across the nonzero range: `deg R_b < deg R_a` for `1 ≤ a < b ≤ k` (with all
+intermediate terms nonzero). -/
+theorem euclideanPRS_natDegree_strictAnti (A B : R[X]) {k : ℕ}
+    (hknz : ∀ j, 1 ≤ j → j ≤ k → euclideanPRS A B j ≠ 0) :
+    ∀ a b, 1 ≤ a → a < b → b ≤ k →
+      (euclideanPRS A B b).natDegree < (euclideanPRS A B a).natDegree := by
+  intro a b ha hab hbk
+  induction b with
+  | zero => omega
+  | succ b ih =>
+    rcases Nat.lt_or_ge a b with hab' | hab'
+    · obtain ⟨b', rfl⟩ : ∃ b', b = b' + 1 := ⟨b - 1, by omega⟩
+      have hstep : (euclideanPRS A B (b' + 2)).natDegree < (euclideanPRS A B (b' + 1)).natDegree :=
+        natDegree_lt_natDegree (hknz (b' + 2) (by omega) hbk)
+          (euclideanPRS_degree_lt A B b' (hknz (b' + 1) (by omega) (by omega)))
+      exact lt_trans hstep (ih (by omega) (by omega))
+    · have ha' : a = b := by omega
+      subst ha'
+      obtain ⟨a', rfl⟩ : ∃ a', a = a' + 1 := ⟨a - 1, by omega⟩
+      exact natDegree_lt_natDegree (hknz (a' + 2) (by omega) hbk)
+        (euclideanPRS_degree_lt A B a' (hknz (a' + 1) (by omega) (by omega)))
+
+set_option maxHeartbeats 1000000 in
+/-- **Subresultant ↔ gcd, concretely** (Thm 2.5.1, step 2c): for the Euclidean p.r.s. of `A, B`
+(`deg B ≤ deg A`) with last nonzero element `R_k` (`k ≥ 2`), the subresultant of `A, B` of degree
+`deg R_k` (`= deg gcd`) is similar to `gcd(A, B)`. Instantiates `subresultant_isSimilar_gcd` on
+`euclideanPRS A B`: the `IsPRS` relation supplies `α = lc^e, β = 1, Q`; the strict degree decrease supplies
+the degree hypotheses; and `IsPRS.isSimilar_gcd` (Thm 1.5.1) supplies `R_k ~ gcd(A, B)`. -/
+theorem subresultant_euclideanPRS_isSimilar_gcd [GCDMonoid R[X]] (A B : R[X]) (hA : A ≠ 0)
+    (hAB : B.natDegree ≤ A.natDegree) {k : ℕ} (hk2 : 2 ≤ k) (hk0 : euclideanPRS A B (k + 1) = 0)
+    (hknz : ∀ j, 1 ≤ j → j ≤ k → euclideanPRS A B j ≠ 0) :
+    IsSimilar (subresultant A B A.natDegree B.natDegree (euclideanPRS A B k).natDegree) (gcd A B) := by
+  classical
+  obtain ⟨m, rfl⟩ : ∃ m, k = m + 2 := ⟨k - 2, by omega⟩
+  set F := euclideanPRS A B with hF
+  have hnz : ∀ l ≤ m, F (l + 1) ≠ 0 := fun l hl => hknz (l + 1) (by omega) (by omega)
+  have hFlne : ∀ l ≤ m, F l ≠ 0 := by
+    intro l hl
+    rcases Nat.eq_zero_or_pos l with rfl | hlpos
+    · exact hA
+    · exact hknz l (by omega) (by omega)
+  have hdle : ∀ l ≤ m, (F (l + 1)).natDegree ≤ (F l).natDegree := by
+    intro l hl
+    rcases Nat.eq_zero_or_pos l with rfl | hlpos
+    · exact hAB
+    · obtain ⟨a, rfl⟩ : ∃ a, l = a + 1 := ⟨l - 1, by omega⟩
+      exact le_of_lt (natDegree_lt_natDegree (hknz (a + 2) (by omega) (by omega))
+        (euclideanPRS_degree_lt A B a (hknz (a + 1) (by omega) (by omega))))
+  -- choose the pseudo-division exponent `e l` and quotient `q l`
+  have hpr : ∀ l, ∃ p : ℕ × R[X], l ≤ m →
+      C ((F (l + 1)).leadingCoeff) ^ p.1 * F l = F (l + 1) * p.2 + F (l + 2) := by
+    intro l
+    by_cases hl : l ≤ m
+    · obtain ⟨e, qq, he, _⟩ := isPseudoRemainder_euclideanPRS A B l (hnz l hl)
+      exact ⟨(e, qq), fun _ => he⟩
+    · exact ⟨(0, 0), fun h => absurd h hl⟩
+  choose eq hq using hpr
+  have hrel : ∀ l ≤ m, C ((F (l + 1)).leadingCoeff ^ (eq l).1) * F l
+      = C (1 : R) * F (l + 2) + F (l + 1) * (eq l).2 := by
+    intro l hl
+    rw [C_pow, hq l hl, map_one, one_mul]; ring
+  have hQbound : ∀ l ≤ m, ((eq l).2).natDegree + (F (l + 1)).natDegree ≤ (F l).natDegree := by
+    intro l hl
+    have hl1 : F (l + 1) ≠ 0 := hnz l hl
+    have hFl : F l ≠ 0 := hFlne l hl
+    by_cases hql : (eq l).2 = 0
+    · simp only [hql, natDegree_zero, zero_add]; exact hdle l hl
+    · have hr := hrel l hl
+      rw [map_one, one_mul] at hr
+      have heqfq : F (l + 1) * (eq l).2 = C ((F (l + 1)).leadingCoeff ^ (eq l).1) * F l - F (l + 2) := by
+        linear_combination -hr
+      have hd1 : (C ((F (l + 1)).leadingCoeff ^ (eq l).1) * F l).degree ≤ (F l).degree := by
+        refine le_trans (degree_mul_le _ _) ?_
+        calc (C ((F (l + 1)).leadingCoeff ^ (eq l).1)).degree + (F l).degree
+            ≤ 0 + (F l).degree := add_le_add_left degree_C_le _
+          _ = (F l).degree := zero_add _
+      have hd2 : (F (l + 2)).degree ≤ (F l).degree := by
+        have hdle' : (F (l + 1)).degree ≤ (F l).degree := by
+          rw [degree_eq_natDegree hl1, degree_eq_natDegree hFl]; exact_mod_cast hdle l hl
+        exact le_trans (le_of_lt (euclideanPRS_degree_lt A B l hl1)) hdle'
+      have hdeg : (F (l + 1) * (eq l).2).degree ≤ (F l).degree := by
+        rw [heqfq]; exact le_trans (degree_sub_le _ _) (max_le hd1 hd2)
+      have hnatle : (F (l + 1) * (eq l).2).natDegree ≤ (F l).natDegree := natDegree_le_natDegree hdeg
+      rw [natDegree_mul hl1 hql] at hnatle
+      omega
+  have key := subresultant_isSimilar_gcd F (fun l => (F (l + 1)).leadingCoeff ^ (eq l).1) (fun _ => 1)
+    (fun l => (eq l).2) m
+    (fun l hl => pow_ne_zero _ (leadingCoeff_ne_zero.mpr (hnz l hl))) (fun _ _ => one_ne_zero)
+    (fun l hl => leadingCoeff_ne_zero.mpr (hnz l hl))
+    (fun l hl => natDegree_lt_natDegree (hknz (l + 2) (by omega) (by omega))
+      (euclideanPRS_degree_lt A B l (hnz l hl)))
+    (fun l hl => euclideanPRS_natDegree_strictAnti A B hknz (l + 2) (m + 2) (by omega) (by omega) le_rfl)
+    hQbound hrel (hknz (m + 2) (by omega) le_rfl)
+    ((isPRS_euclideanPRS A B).isSimilar_gcd hk0 (fun j hj1 hjk => hknz j hj1 hjk))
+  exact key
+
 end DeepWiki.SymbolicIntegration
