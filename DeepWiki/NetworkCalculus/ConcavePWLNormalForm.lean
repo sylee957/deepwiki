@@ -122,6 +122,31 @@ theorem tb_lt_iff_lt_cross {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {
   push_cast
   constructor <;> intro h <;> nlinarith [h]
 
+/-- Ordering after the crossing: the low-rate/high-burst bucket `γ_{r',b'}` is strictly below
+`γ_{r,b}` exactly *after* the crossing time. -/
+theorem tb_gt_iff_cross_lt {r b r' b' : ℝ≥0} (hr : r' < r) (hb : b ≤ b') {t : ℝ≥0} (ht : t ≠ 0) :
+    tbEReal r' b' t < tbEReal r b t ↔ tbCross r b r' b' < t := by
+  rw [tbEReal_pos ht, tbEReal_pos ht]
+  simp only [rateEReal]
+  rw [← EReal.coe_add, ← EReal.coe_add, EReal.coe_lt_coe_iff, ← NNReal.coe_lt_coe, tbCross,
+    NNReal.coe_div, NNReal.coe_sub hr.le, NNReal.coe_sub hb]
+  have hrr : (0 : ℝ) < (r : ℝ) - r' := by
+    have : (r' : ℝ) < r := by exact_mod_cast hr
+    linarith
+  rw [div_lt_iff₀ hrr]
+  push_cast
+  constructor <;> intro h <;> nlinarith [h]
+
+/-- The crossing points increase (the local step of Proposition 4.1, item 3): if the middle
+bucket `γ_{r₂,b₂}` is the strict minimum of three consecutive buckets at some positive time, its
+two crossing points satisfy `tbCross γ₁γ₂ < tbCross γ₂γ₃`. Otherwise `γ₂` would be dominated by
+`min(γ₁,γ₃)` everywhere, contradicting irredundancy. -/
+theorem tbCross_lt_tbCross_of_strictMin {r₁ b₁ r₂ b₂ r₃ b₃ : ℝ≥0}
+    (h₁₂ : r₂ < r₁) (h₂₃ : r₃ < r₂) (hb₁₂ : b₁ ≤ b₂) (hb₂₃ : b₂ ≤ b₃) {t : ℝ≥0} (ht : t ≠ 0)
+    (hm₁ : tbEReal r₂ b₂ t < tbEReal r₁ b₁ t) (hm₃ : tbEReal r₂ b₂ t < tbEReal r₃ b₃ t) :
+    tbCross r₁ b₁ r₂ b₂ < tbCross r₂ b₂ r₃ b₃ :=
+  lt_trans ((tb_gt_iff_cross_lt h₁₂ hb₁₂ ht).mp hm₁) ((tb_lt_iff_lt_cross h₂₃ hb₂₃ ht).mp hm₃)
+
 /-! ## Concave PWL evaluation and Definition 4.1 (normal form) -/
 
 /-- A list of `(rate, burst)` pairs evaluated as a concave piecewise-linear curve: the
