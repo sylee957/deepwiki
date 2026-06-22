@@ -160,4 +160,36 @@ example {K : Type*} [Field K] [IsAlgClosed K]
       (gcd D (A - C a * derivative D)) :=
   lazardRiobooTrager_isSimilar_gcd A D hD hA a hi
 
+open scoped Classical in
+/-- **Theorem 2.5.1, unified algorithm output** (no excluded case): for any `a`, the LRT algorithm's
+output curve `Sᵢ` at multiplicity `i = rootMultiplicity a R` — namely `D` if `i = deg D` (part (i), the
+`A − a·D' = 0` regime, where `gcd ~ D`) else `lrtSubresultant A D i` (part (ii)) — specialized `t ↦ a`,
+is similar to `gcd(D, A − a·D')`. The `if i = deg D` branch is exactly `lazardRiobooTrager`'s own, so this
+stitches parts (i) and (ii) into one statement covering EVERY residue with no boundary: `i ≤ deg D` always
+(`gcd ∣ D`), and the `i = deg D` case routes to `isSimilar_gcd_left_of_natDegree_eq`, `i < deg D` to the
+capstone `lazardRiobooTrager_isSimilar_gcd`. -/
+theorem lazardRiobooTrager_output_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
+    (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K) :
+    IsSimilar
+      ((if (rtResultant A D).rootMultiplicity a = D.natDegree then D.map (C : K →+* K[X])
+        else lrtSubresultant A D ((rtResultant A D).rootMultiplicity a)).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * derivative D)) := by
+  have hDne : D ≠ 0 := fun h => by simp [h] at hA
+  set E := A - C a * derivative D with hE
+  have hmul : (rtResultant A D).rootMultiplicity a = (gcd D E).natDegree :=
+    rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
+  have hile : (rtResultant A D).rootMultiplicity a ≤ D.natDegree :=
+    hmul.le.trans (natDegree_le_of_dvd (gcd_dvd_left D E) hDne)
+  by_cases hcase : (rtResultant A D).rootMultiplicity a = D.natDegree
+  · rw [if_pos hcase]
+    have hmapid : (D.map (C : K →+* K[X])).map (Polynomial.evalRingHom a) = D := by
+      rw [Polynomial.map_map,
+        show (Polynomial.evalRingHom a).comp (C : K →+* K[X]) = RingHom.id K from by ext k; simp,
+        Polynomial.map_id]
+    rw [hmapid]
+    exact (isSimilar_gcd_left_of_natDegree_eq hDne (hmul.symm.trans hcase)).symm
+  · rw [if_neg hcase]
+    exact lazardRiobooTrager_isSimilar_gcd A D hD hA a (lt_of_le_of_ne hile hcase)
+
 end DeepWiki.SymbolicIntegration
