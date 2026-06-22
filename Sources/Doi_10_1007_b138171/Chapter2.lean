@@ -13,9 +13,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 (Algorithms are being formalized as functional Lean `def`s + correctness lemmas, NOT operational
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
-§2.1: the full Bernoulli algorithm [functional]; the `k>1` recursive reduction of the *arctan* term
-  `∫ (Bx+C)/(x²+bx+c)ᵏ` (eq 2.1, k>1 — a rational reduction to `k−1`). The `k=1` arctan formula
-  `eq_2_1_arctan` is done (modeling `log`/`arctan` by their differential-field derivative laws).
+§2.1: the full Bernoulli algorithm [functional]; the `q`-power assembly of the `k>1` arctan-term
+  reduction `∫ (Bx+C)/(x²+bx+c)ᵏ` (the symbolic `q^(k−1)`-power bookkeeping; follows the
+  `hermite_reduction_step` pattern). The `k=1` arctan formula `eq_2_1_arctan` and the `k>1` reduction's
+  core numerator identity `eq_2_1_arctan_reduce_core` (`2(2C−bB)q − (2x+b)·((2C−bB)x+bC−2cB) =
+  (Bx+C)(4c−b²)`) are done.
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
@@ -101,6 +103,17 @@ theorem eq_2_1_arctan {F : Type*} [Field F] [CharZero F] [Differential F] {t : F
   rw [map_add, deriv_const_mul _ hβ, deriv_const_mul _ hγ, hL, hΘ']
   field_simp
   ring
+
+/-- **Equation 2.1, the arctan-term reduction — core identity** (§2.1, p.37): the polynomial identity
+driving the `k>1` recursive reduction of `∫ (Bx+C)/(x²+bx+c)ᵏ = ((2C−bB)x+bC−2cB)/((k−1)(4c−b²)q^(k−1)) +
+∫ (2k−3)(2C−bB)/((k−1)(4c−b²)q^(k−1))` (`q = x²+bx+c`). Differentiating the rational part and adding the
+reduced integrand, the `q`-powers cancel and the whole reduction collapses to this identity
+`2(2C−bB)·q − (2x+b)·((2C−bB)x + bC−2cB) = (Bx+C)·(4c−b²)` — the numerator balance that lowers `k` to
+`k−1` (iterating reaches `k=1` = `eq_2_1_arctan`). -/
+theorem eq_2_1_arctan_reduce_core {F : Type*} [CommRing F] (t B C b c : F) :
+    2 * (2 * C - b * B) * (t ^ 2 + b * t + c)
+        - (2 * t + b) * ((2 * C - b * B) * t + (b * C - 2 * c * B))
+      = (B * t + C) * (4 * c - b ^ 2) := by ring
 
 /-! ## §2.2 The Hermite Reduction -/
 
