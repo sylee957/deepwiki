@@ -105,4 +105,48 @@ theorem maq_sub_smul_eq (θ : Polynomial ℝ) (Z : ℤ → Ω → ℝ) (n : ℕ)
   simp only [Pi.sub_apply, Pi.smul_apply, Finset.sum_apply, smul_eq_mul, sampleMean]
   rw [← key]; ring
 
+/-- **`L²`-negligibility of the `MA(q)` perturbation:** the difference between the rescaled `MA(q)`
+sample mean and the `∑θ`-scaled rescaled noise mean tends to `0` in `L²`. From the algebraic identity
+`maq_sub_smul_eq` (difference `= (√n·n⁻¹)·D_n`), the boundary bound `‖D_n‖₂ ≤ C`, and `√n·n⁻¹ → 0`. -/
+theorem tendsto_eLpNorm_maq_sub (θ : Polynomial ℝ) {Z : ℤ → Ω → ℝ}
+    (hmeas : ∀ s, AEStronglyMeasurable (Z s) P) (hmem : ∀ s, MemLp (Z s) 2 P)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) P P) :
+    Tendsto (fun n : ℕ => eLpNorm
+      ((fun ω => Real.sqrt n * sampleMean n
+            (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω))
+        - fun ω => (∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j)
+            * (Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω))) 2 P) atTop (𝓝 0) := by
+  have hZ : ∀ s, eLpNorm (Z s) 2 P ≤ eLpNorm (Z 0) 2 P := fun s => le_of_eq ((hident s).eLpNorm_eq 2)
+  set C := ∑ j ∈ Finset.range (θ.natDegree + 1), ‖θ.coeff j‖ₑ * (2 * (j : ℝ≥0∞) * eLpNorm (Z 0) 2 P)
+    with hC
+  have hCtop : C ≠ ⊤ := by
+    refine ENNReal.sum_ne_top.2 fun j _ => ENNReal.mul_ne_top (by simp [enorm_ne_top]) ?_
+    exact ENNReal.mul_ne_top (ENNReal.mul_ne_top (by simp) (by simp)) (hmem 0).eLpNorm_lt_top.ne
+  have hbound : ∀ n : ℕ, eLpNorm
+      ((fun ω => Real.sqrt n * sampleMean n
+            (fun t => ∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j * Z ((t : ℤ) - j) ω))
+        - fun ω => (∑ j ∈ Finset.range (θ.natDegree + 1), θ.coeff j)
+            * (Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω))) 2 P
+        ≤ ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹) * C := by
+    intro n
+    rw [maq_sub_smul_eq, eLpNorm_const_smul, Real.enorm_eq_ofReal (by positivity)]
+    exact mul_le_mul' le_rfl (eLpNorm_maq_boundary_le θ hmeas hZ n)
+  have hroot : Tendsto (fun n : ℕ => Real.sqrt n * (n : ℝ)⁻¹) atTop (𝓝 0) := by
+    refine (tendsto_inv_atTop_zero.comp
+      (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)).congr' ?_
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    have hn' : (0 : ℝ) < n := by exact_mod_cast hn
+    have hs : Real.sqrt n ≠ 0 := by positivity
+    have hsq : Real.sqrt n * Real.sqrt n = (n : ℝ) := Real.mul_self_sqrt hn'.le
+    simp only [Function.comp_apply]
+    rw [show (n : ℝ)⁻¹ = (Real.sqrt n * Real.sqrt n)⁻¹ from by rw [hsq], mul_inv, ← mul_assoc,
+      mul_inv_cancel₀ hs, one_mul]
+  have hlim : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹) * C) atTop (𝓝 0) := by
+    have h1 : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹)) atTop (𝓝 0) := by
+      rw [← ENNReal.ofReal_zero]
+      exact (ENNReal.continuous_ofReal.tendsto 0).comp hroot
+    simpa using ENNReal.Tendsto.mul_const h1 (Or.inr hCtop)
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hlim
+    (fun _ => zero_le) hbound
+
 end DeepWiki.TimeSeries
