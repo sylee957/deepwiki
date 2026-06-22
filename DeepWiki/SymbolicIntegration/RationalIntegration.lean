@@ -29,6 +29,20 @@ theorem hermite_reduction_step (B C V : F) (hV : V ≠ 0) (m : ℕ) :
   push_cast
   ring
 
+/-- **Horowitz–Ostrogradsky reduction identity** (§2.3): the differential identity underlying the
+Horowitz method. For a denominator split `D = D⁻·D*` (`D⁻` the "powered" part `gcd(D, D')`, `D*` the
+squarefree part), writing `E := D⁻′·D*/D⁻` (a *polynomial* — `D⁻ ∣ D⁻′·D*`), the rational function with
+numerator `A = B′·D* − B·E + C·D⁻` satisfies `A/(D⁻·D*) = (B/D⁻)′ + C/D*`. So `∫ A/D = B/D⁻ + ∫ C/D*`,
+the rational part `B/D⁻` split off in one shot. Holds in any differential field given `E·D⁻ = D⁻′·D*`;
+the *algorithm* finds `B, C` (with `deg B < deg D⁻`, `deg C < deg D*`) by a linear system. -/
+theorem horowitz_reduction_step (B C Dminus Dstar E : F) (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hE : E * Dminus = Dminus′ * Dstar) :
+    (B′ * Dstar - B * E + C * Dminus) / (Dminus * Dstar)
+      = (B / Dminus)′ + C / Dstar := by
+  rw [deriv_div]
+  field_simp
+  linear_combination -B * hE
+
 /-- **Bernoulli, rational part** (§2.1): the antiderivative of `tⁿ⁻¹` is `tⁿ/n`, i.e.
 `D(tⁿ/n) = tⁿ⁻¹`, whenever `Dt = 1` (e.g. `t = x − a`) and `n ≠ 0`. This is the closed form
 `∫ (x−a)⁻ᵏ dx = (x−a)¹⁻ᵏ/(1−k)` (the rational part of Bernoulli's algorithm) for `k ≠ 1`. -/

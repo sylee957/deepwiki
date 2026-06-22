@@ -21,10 +21,13 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `hermiteReducePower_spec`), two-factor and multi-factor partial fractions
   (`ratFunc_partialFraction_coprime` / `ratFunc_partialFraction_prod`), and the complete outer algorithm
   `hermiteReduce_full` (`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` for `D = ∏ Dᵢ^{eᵢ}`).
-§2.3: the Horowitz–Ostrogradsky linear solve for `B, C` [functional]. The denominator split is done:
-  `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with `hoSplit_mul` (`D⁻·D* = D`)
-  and `hoSplit_snd_squarefree` (`D*` is the squarefree radical). (Ex 2.3.1's *result* — shared with
-  Ex 2.2.1 — is `ex_2_3_1`.)
+§2.3: the *functional linear solve* for the degree-bounded `B, C` (set up and solve the linear system
+  `B′·D* − B·E + C·D⁻ = A` over `K`) [functional/infra: needs a linear-system solver layer]. Done: the
+  denominator split `horowitzOstrogradsky_split` (= `hoSplit`, `(gcd(D,D'), D/gcd(D,D'))`) with
+  `hoSplit_mul` (`D⁻·D* = D`) and `hoSplit_snd_squarefree` (`D*` squarefree radical); the key divisibility
+  `horowitzOstrogradsky_dvd` (`D⁻ ∣ D⁻′·D*`, so the Horowitz `E` exists); and the reduction identity
+  `horowitzReduce_step_ratFunc` (`A/(D⁻·D*) = (B/D⁻)′ + C/D*` given a solution; abstract form
+  `horowitz_reduction_step`). (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5]; the Rothstein–Trager
   algorithm's formal log-sum assembly over the roots of `R` [functional: needs the root-indexed sum].
   Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`, the zeros of
@@ -144,6 +147,20 @@ noncomputable abbrev intRationalLogPart_gcd := @DeepWiki.SymbolicIntegration.rtL
 `hoSplit_snd_squarefree` (`D*` is the squarefree radical of `D`, char `0`). The algorithm then solves
 a linear system for the numerators `B, C`. -/
 noncomputable abbrev horowitzOstrogradsky_split := @DeepWiki.SymbolicIntegration.hoSplit
+
+/-- **Key divisibility for Horowitz** (§2.3, p.46): `D⁻ = gcd(D, D')` divides `D⁻′·D*` (`D* = D/D⁻`),
+which is what makes the Horowitz polynomial `E = D⁻′·D*/D⁻` exist and the reduction stay in `K[X]`. The
+library's `hoSplit_fst_dvd_deriv_mul_snd`. -/
+noncomputable abbrev horowitzOstrogradsky_dvd :=
+  @DeepWiki.SymbolicIntegration.hoSplit_fst_dvd_deriv_mul_snd
+
+/-- **Horowitz–Ostrogradsky reduction identity** (§2.3, p.46): given the split `D = D⁻·D*`, the Horowitz
+polynomial `E` (`E·D⁻ = D⁻′·D*`), and numerators with `B′·D* − B·E + C·D⁻ = A`, the integral identity
+`A/(D⁻·D*) = (B/D⁻)′ + C/D*` holds in `K(x)` — so `∫ A/D = B/D⁻ + ∫ C/D*`, the rational part split off
+in one shot. The library's `horowitzReduce_step_ratFunc`; the abstract differential-field form is
+`horowitz_reduction_step`. The algorithm finds `B, C` (degree-bounded) by a linear system. -/
+abbrev horowitzReduce_step_ratFunc :=
+  @DeepWiki.SymbolicIntegration.horowitzReduce_step_ratFunc
 
 /-- **Hermite reduction step**, integral form in `K(x)` (§2.2, p.39): given Bézout data
 `B·V' + Cc·V = A`, `∫ (1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫ ((1−k)Cc − B')/Vᵏ⁻¹` (`k = m+2`) — the integrand's

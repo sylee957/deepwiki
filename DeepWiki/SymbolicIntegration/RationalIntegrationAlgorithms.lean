@@ -347,4 +347,55 @@ theorem hoSplit_snd_squarefree [CharZero K] (D : K[X]) (hD : D ≠ 0) :
   rw [hAD.squarefree_iff, hsqfp]
   exact UniqueFactorizationMonoid.squarefree_radical
 
+open Classical in
+/-- **Key divisibility for Horowitz–Ostrogradsky** (§2.3): `D⁻ = gcd(D, D')` divides `D⁻′·D*` where
+`D* = D/D⁻`. (From `D' = D⁻′·D* + D⁻·D*'` and `D⁻ ∣ D'`, so `D⁻ ∣ D' − D⁻·D*' = D⁻′·D*`.) This is what
+makes the Horowitz polynomial `E := D⁻′·D*/D⁻` exist, so the reduction stays inside `K[X]`. -/
+theorem hoSplit_fst_dvd_deriv_mul_snd (D : K[X]) (hD : D ≠ 0) :
+    (hoSplit D).1 ∣ derivative (hoSplit D).1 * (hoSplit D).2 := by
+  have hmul : (hoSplit D).1 * (hoSplit D).2 = D := hoSplit_mul D hD
+  have hderiv : derivative D
+      = derivative (hoSplit D).1 * (hoSplit D).2 + (hoSplit D).1 * derivative (hoSplit D).2 := by
+    conv_lhs => rw [← hmul]
+    rw [derivative_mul]
+  have hdvdD' : (hoSplit D).1 ∣ derivative D := gcd_dvd_right D (derivative D)
+  have key : (hoSplit D).1 ∣ derivative D - (hoSplit D).1 * derivative (hoSplit D).2 :=
+    dvd_sub hdvdD' (dvd_mul_right _ _)
+  rwa [hderiv, add_sub_cancel_right] at key
+
+open scoped Differential in
+/-- **Horowitz–Ostrogradsky reduction step in `K(x)`** (§2.3): the polynomial-level integral identity.
+For a split `D = D⁻·D*` with the Horowitz polynomial `E` (`E·D⁻ = D⁻′·D*`) and numerator data
+`B′·D* − B·E + C·D⁻ = A`, `A/(D⁻·D*) = (B/D⁻)′ + C/D*` in `K(x)`, so `∫ A/D = B/D⁻ + ∫ C/D*`. Obtained
+from the abstract `horowitz_reduction_step` on the `algebraMap` images (`d/dx` on them is
+`Polynomial.derivative`). The algorithm finds `B, C` (degree-bounded) by a linear system. -/
+theorem horowitzReduce_step_ratFunc {A B C Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
+    (hE : E * Dminus = derivative Dminus * Dstar)
+    (hA : derivative B * Dstar - B * E + C * Dminus = A) :
+    algebraMap K[X] (RatFunc K) A
+        / (algebraMap K[X] (RatFunc K) Dminus * algebraMap K[X] (RatFunc K) Dstar)
+      = (algebraMap K[X] (RatFunc K) B / algebraMap K[X] (RatFunc K) Dminus)′
+        + algebraMap K[X] (RatFunc K) C / algebraMap K[X] (RatFunc K) Dstar := by
+  have hm : algebraMap K[X] (RatFunc K) Dminus ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hDm
+  have hs : algebraMap K[X] (RatFunc K) Dstar ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hDs
+  have hE' : algebraMap K[X] (RatFunc K) E * algebraMap K[X] (RatFunc K) Dminus
+      = (algebraMap K[X] (RatFunc K) Dminus)′ * algebraMap K[X] (RatFunc K) Dstar := by
+    rw [show (algebraMap K[X] (RatFunc K) Dminus)′
+          = algebraMap K[X] (RatFunc K) (derivative Dminus) from ratFuncDeriv_algebraMap Dminus,
+        ← map_mul, ← map_mul, hE]
+  have key := horowitz_reduction_step (algebraMap K[X] (RatFunc K) B) (algebraMap K[X] (RatFunc K) C)
+    (algebraMap K[X] (RatFunc K) Dminus) (algebraMap K[X] (RatFunc K) Dstar)
+    (algebraMap K[X] (RatFunc K) E) hm hs hE'
+  have hnum : (algebraMap K[X] (RatFunc K) B)′ * algebraMap K[X] (RatFunc K) Dstar
+        - algebraMap K[X] (RatFunc K) B * algebraMap K[X] (RatFunc K) E
+        + algebraMap K[X] (RatFunc K) C * algebraMap K[X] (RatFunc K) Dminus
+      = algebraMap K[X] (RatFunc K) A := by
+    rw [show (algebraMap K[X] (RatFunc K) B)′
+          = algebraMap K[X] (RatFunc K) (derivative B) from ratFuncDeriv_algebraMap B,
+        ← map_mul, ← map_mul, ← map_mul, ← map_sub, ← map_add, hA]
+  rw [hnum] at key
+  exact key
+
 end DeepWiki.SymbolicIntegration
