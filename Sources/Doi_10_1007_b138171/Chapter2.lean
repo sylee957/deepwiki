@@ -11,8 +11,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 §2.1: the full Bernoulli algorithm; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the `arctan`
   primitive); Ex 2.1.3.
 §2.2: the full `HermiteReduce` algorithm (recursion over the squarefree factorization,
-  `ExtendedEuclidean` finding `B, C`); Ex 2.2.1; Ex 2.2.2; Ex 2.2.3.
-§2.3: the Horowitz–Ostrogradsky algorithm; Ex 2.3.1.
+  `ExtendedEuclidean` finding `B, C`) [infra: opsem]; the per-algorithm traces of Ex 2.2.1/2.2.2/2.2.3
+  [infra: opsem] (their shared *result* is `ex_2_3_1`).
+§2.3: the Horowitz–Ostrogradsky algorithm [infra: opsem]. (Ex 2.3.1's *result* — shared with Ex 2.2.1 — is `ex_2_3_1`.)
 §2.4: Thm 2.4.1; the Rothstein–Trager algorithm.
 §2.5: Thm 2.5.1; the Lazard–Rioboo–Trager algorithm; Ex 2.5.1; Ex 2.5.2.
 §2.6: Thm 2.6.1; the Czichowski algorithm; Ex 2.6.1.
@@ -56,5 +57,32 @@ theorem hermiteReduce_step {F : Type*} [Field F] [Differential F] (B C V : F) (h
     (-((m : F) + 1) * (B * V′ + C * V)) / V ^ (m + 2)
       = (B / V ^ (m + 1))′ + (-((m : F) + 1) * C - B′) / V ^ (m + 1) :=
   hermite_reduction_step B C V hV m
+
+/-- **Examples 2.2.1 / 2.3.1** (§2.2–2.3, p.41,46), the Hermite / Horowitz–Ostrogradsky *result*: in a
+differential field with `t′ = 1` (the integration variable, `t ≠ 0`, `t²+2 ≠ 0`),
+`∫ (t⁷−24t⁴−4t²+8t−8)/(t⁸+6t⁶+12t⁴+8t²) dt = (3t³+8t²+6t+4)/(t⁵+4t³+4t) + ∫ dt/t`, i.e. the rational part
+is `(3t³+8t²+6t+4)/(t⁵+4t³+4t)` and the remaining integrand reduces to `1/t` (`logDeriv t`). Verified as
+the differential-field identity `((3t³+8t²+6t+4)/(t⁵+4t³+4t))′ + t⁻¹ = the integrand` (`deriv_div` +
+cross-multiplied `ring`). Both denominators factor as `t·(t²+2)²` and `t²·(t²+2)³`. -/
+theorem ex_2_3_1 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) (ht0 : t ≠ 0) (ht2 : t ^ 2 + 2 ≠ 0) :
+    ((3 * t ^ 3 + 8 * t ^ 2 + 6 * t + 4) / (t ^ 5 + 4 * t ^ 3 + 4 * t))′ + t⁻¹
+      = (t ^ 7 - 24 * t ^ 4 - 4 * t ^ 2 + 8 * t - 8) / (t ^ 8 + 6 * t ^ 6 + 12 * t ^ 4 + 8 * t ^ 2) := by
+  have hQ : (t ^ 5 + 4 * t ^ 3 + 4 * t : F) ≠ 0 := by
+    have h : (t ^ 5 + 4 * t ^ 3 + 4 * t : F) = t * (t ^ 2 + 2) ^ 2 := by ring
+    rw [h]; exact mul_ne_zero ht0 (pow_ne_zero _ ht2)
+  have hD : (t ^ 8 + 6 * t ^ 6 + 12 * t ^ 4 + 8 * t ^ 2 : F) ≠ 0 := by
+    have h : (t ^ 8 + 6 * t ^ 6 + 12 * t ^ 4 + 8 * t ^ 2 : F) = t ^ 2 * (t ^ 2 + 2) ^ 3 := by ring
+    rw [h]; exact mul_ne_zero (pow_ne_zero _ ht0) (pow_ne_zero _ ht2)
+  have h3 : (3 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h4 : (4 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h6 : (6 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h8 : (8 : F)′ = 0 := mem_constants.mp (by norm_num)
+  rw [deriv_div]
+  simp only [map_add, deriv_const_mul _ h3, deriv_const_mul _ h4, deriv_const_mul _ h6,
+    deriv_const_mul _ h8, h4, deriv_pow, ht, mul_one]
+  rw [show (t⁻¹ : F) = 1 / t from (one_div t).symm,
+    div_add_div _ _ (pow_ne_zero 2 hQ) ht0,
+    div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hQ) ht0) hD]
+  ring
 
 end DeepWiki.Si
