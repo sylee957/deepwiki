@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
 
 /-! # Loos subresultant-PRS theory — catalog
@@ -39,11 +40,17 @@ computation): for a p.r.s. `F` terminating with `F_{m+2} ~ gcd(F₀, F₁)`, the
 `deg F_{m+2} = deg gcd` is similar to `gcd(F₀, F₁)`. The library's `subresultant_isSimilar_gcd`. -/
 abbrev subresultant_gcd_connection := @subresultant_isSimilar_gcd
 
+/-- **Subresultant ↔ gcd, concretely**: the abstract connection instantiated on the Euclidean p.r.s.
+`euclideanPRS A B` — for `A ≠ 0`, `deg B ≤ deg A`, with last nonzero element `R_k` (`k ≥ 2`), the
+subresultant of `A, B` of degree `deg R_k = deg gcd` is similar to `gcd(A, B)`. The library's
+`subresultant_euclideanPRS_isSimilar_gcd` (constructs the p.r.s. via `euclideanPRS`, proves termination, and
+discharges the degree-decreasing / non-vanishing hypotheses of the abstract connection). -/
+abbrev subresultant_euclideanPRS_gcd_connection := @subresultant_euclideanPRS_isSimilar_gcd
+
 /- ## NOT YET FORMALIZED (subtractive — delete each item once formalized)
-Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the *concrete instantiation* of
-`subresultant_gcd_connection` on the pseudo-remainder sequence of `(D, A−αD')` (constructing/extracting the
-p.r.s. and discharging the degree-decreasing / non-vanishing hypotheses), together with the degree-preserving
-*specialization* `t ↦ α` (via `lrtSubresultant_eval`) and `thm_2_4_1_ii` (`deg gcd(D, A−αD') = i` for a
-residue `α` of multiplicity `i`), to conclude `ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')`. -/
+Bronstein's **Theorem 2.5.1** (Lazard–Rioboo–Trager correctness): the degree-preserving *specialization*
+`t ↦ α` of `subresultant_euclideanPRS_gcd_connection` (via `lrtSubresultant_eval`), combined with
+`thm_2_4_1_ii` (`deg gcd(D, A−αD') = i` for a residue `α` of multiplicity `i`), to conclude
+`ppₓ(lrtSubresultant A D i)(α) ~ gcd(D, A−αD')`. -/
 
 end DeepWiki.Loos
