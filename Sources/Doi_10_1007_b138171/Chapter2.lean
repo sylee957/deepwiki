@@ -14,7 +14,7 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.1: the full Bernoulli algorithm [functional]; the *arctan* term `∫ (Bx+C)/(x²+bx+c)ᵏ` (needs the
-  `arctan` primitive); Ex 2.1.3.
+  `arctan` primitive).
 §2.2: the full `HermiteReduce` algorithm's recursion over the squarefree factorization [functional].
   The reduction step is done: `hermiteReduce_step` (the differential identity) and
   `hermiteReduce_step_ratFunc` (its integral form `∫(1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫((1−k)Cc−B')/Vᵏ⁻¹` as a
@@ -62,6 +62,19 @@ theorem eq_2_1_rational {F : Type*} [Field F] [Differential F] {t : F} (ht : t�
 theorem eq_2_1_log {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) :
     Differential.logDeriv t = t⁻¹ :=
   logDeriv_eq_inv ht
+
+/-- **Example 2.1.3** (§2.1, p.38), Bernoulli's algorithm for `f = 1/(x³+x)` over `ℚ(√−1)`: factoring
+`x³+x = x(x+i)(x−i)` linearly (`i = √−1`, `i² = −1`) gives the partial-fraction decomposition
+`1/(x³+x) = 1/x − (1/2)/(x+i) − (1/2)/(x−i)`, whence `∫ dx/(x³+x) = log x − ½log(x+i) − ½log(x−i)` (an
+integral over `ℚ(√−1)`; cf. eq 2.2 for the `√−1`-free form). Faithful core: the field identity below,
+where the numerator collapses to `−i² = 1`. -/
+theorem ex_2_1_3 {F : Type*} [Field F] [CharZero F] (t i : F) (hi : i ^ 2 = -1) (ht : t ≠ 0)
+    (h1 : t + i ≠ 0) (h2 : t - i ≠ 0) :
+    1 / (t ^ 3 + t) = 1 / t - (1 / 2) / (t + i) - (1 / 2) / (t - i) := by
+  have hfac : t ^ 3 + t = t * (t + i) * (t - i) := by linear_combination t * hi
+  have key : (1 : F) / t - (1 / 2) / (t + i) - (1 / 2) / (t - i) = -(i ^ 2) / (t ^ 3 + t) := by
+    rw [hfac]; field_simp; ring
+  rw [key, hi]; norm_num
 
 /-! ## §2.2 The Hermite Reduction -/
 
