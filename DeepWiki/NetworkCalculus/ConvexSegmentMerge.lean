@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.ConvexPWLNormalForm
+import DeepWiki.NetworkCalculus.FunctionDioids
 
 /-! # Theorem 4.1 — the segment-merge algorithm for convex PWL convolution (foundation)
 A convex piecewise-linear function in `F₀↑` (ultimately linear) is represented by a base value
@@ -50,5 +51,33 @@ noncomputable def mergeBySlope : List (ℝ≥0 × ℝ≥0) → List (ℝ≥0 × 
 
 @[simp] theorem mergeBySlope_nil_right (l : List (ℝ≥0 × ℝ≥0)) : mergeBySlope l [] = l := by
   cases l <;> simp [mergeBySlope]
+
+/-- **Theorem 4.1, base case** (the single semi-infinite segment, i.e. affine curves). The
+`(min,plus)` convolution of two affine curves `u ↦ a + p·u` and `u ↦ b + q·u` is the affine curve
+`a + b + min(p,q)·t` — the slower slope wins, with the bursts added. (This is the merge of two
+empty segment lists: `convexSegEval f0 sf [] = f0 + sf·t`, and the result has slope `min(sf,sg)`
+from `f(0)+g(0)`.) -/
+theorem minConv_affine (a p b q t : ℝ≥0) :
+    minConv (fun u => (((a + p * u : ℝ≥0) : ℝ) : EReal))
+            (fun u => (((b + q * u : ℝ≥0) : ℝ) : EReal)) t
+      = (((a + b + min p q * t : ℝ≥0) : ℝ) : EReal) := by
+  have coeadd : ∀ x y : ℝ≥0,
+      (((x : ℝ) : EReal)) + (((y : ℝ) : EReal)) = (((x + y : ℝ≥0) : ℝ) : EReal) := by
+    intro x y; rw [← EReal.coe_add, ← NNReal.coe_add]
+  apply le_antisymm
+  · rcases le_total p q with hpq | hpq
+    · refine le_trans (minConv_le_add _ _ (add_zero t)) (le_of_eq ?_)
+      rw [coeadd, min_eq_left hpq]; norm_cast; ring
+    · refine le_trans (minConv_le_add _ _ (zero_add t)) (le_of_eq ?_)
+      rw [coeadd, min_eq_right hpq]; norm_cast; ring
+  · refine le_minConv (fun u v huv => ?_)
+    rw [coeadd, EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+    have hmin : min p q * t ≤ p * u + q * v := by
+      have h2 : min p q * t = min p q * u + min p q * v := by rw [← huv]; ring
+      rw [h2]; gcongr
+      · exact min_le_left p q
+      · exact min_le_right p q
+    calc a + b + min p q * t ≤ a + b + (p * u + q * v) := by gcongr
+      _ = (a + p * u) + (b + q * v) := by ring
 
 end DeepWiki

@@ -187,6 +187,16 @@ remaining step; its transform-domain principle is `thm_4_1_legendre`.) The libra
 `DeepWiki.mergeBySlope`. -/
 noncomputable def thm_4_1_merge := @mergeBySlope
 
+/-- **Theorem 4.1, base case** (§4.2.2, p.65): the `(min,plus)` convolution of two affine curves
+`u ↦ a + p·u` and `u ↦ b + q·u` is the affine curve `a + b + min(p,q)·t` — the slower slope wins
+and the bursts add. This is the single-semi-infinite-segment case (`mergeBySlope [] [] = []`), the
+base of the slope-merge induction. The library's `DeepWiki.minConv_affine`. -/
+theorem thm_4_1_base (a p b q t : ℝ≥0) :
+    minConv (fun u => (((a + p * u : ℝ≥0) : ℝ) : EReal))
+            (fun u => (((b + q * u : ℝ≥0) : ℝ) : EReal)) t
+      = (((a + b + min p q * t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.minConv_affine a p b q t
+
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
 end DeepWiki.Dnc
