@@ -78,4 +78,17 @@ theorem lag_toLpSeq_eq {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) (
   simp_rw [hterm]
   exact toLp_finsetSum (Finset.range n) (fun t => (hZ ((t : ℤ) - j)).sub (hZ (t : ℤ)))
 
+/-- A finite sum commutes with an infinite sum (`tsum`) in a complete topological additive group:
+`∑ᵢ∈s ∑'ₖ fᵢ k = ∑'ₖ ∑ᵢ∈s fᵢ k`, when each `fᵢ` is summable. -/
+theorem finsetSum_tsum {ι κ M : Type*} [AddCommGroup M] [TopologicalSpace M]
+    [IsTopologicalAddGroup M] [T2Space M] (s : Finset ι) {f : ι → κ → M}
+    (hf : ∀ i, Summable (f i)) :
+    ∑ i ∈ s, ∑' k, f i k = ∑' k, ∑ i ∈ s, f i k := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp
+  | insert a s ha ih =>
+    rw [Finset.sum_insert ha, ih, ← Summable.tsum_add (hf a) (summable_sum fun i _ => hf i)]
+    exact tsum_congr fun k => by rw [Finset.sum_insert ha]
+
 end DeepWiki.TimeSeries
