@@ -57,6 +57,17 @@ theorem tbEReal_pos {t : ℝ≥0} (ht : t ≠ 0) (r b : ℝ≥0) :
   rw [Pi.inf_apply, convUnitEReal, if_neg ht, Pi.add_apply, const_apply, inf_eq_left]
   exact le_top
 
+/-- Token-buckets are monotone in both parameters off the origin: a smaller rate and a
+smaller burst give a pointwise-smaller curve at every `t > 0`. -/
+theorem tbEReal_mono_of {r r' b b' t : ℝ≥0} (ht : t ≠ 0) (hr : r ≤ r') (hb : b ≤ b') :
+    tbEReal r b t ≤ tbEReal r' b' t := by
+  rw [tbEReal_pos ht, tbEReal_pos ht]
+  refine add_le_add ?_ ?_
+  · simp only [rateEReal]
+    rw [EReal.coe_le_coe_iff, NNReal.coe_le_coe]
+    gcongr
+  · exact_mod_cast hb
+
 /-! ## Concave PWL evaluation and Definition 4.1 (normal form) -/
 
 /-- A list of `(rate, burst)` pairs evaluated as a concave piecewise-linear curve: the
@@ -92,5 +103,21 @@ def IsConcaveNormalForm (l : List (ℝ≥0 × ℝ≥0)) : Prop :=
   ∀ i : Fin l.length, ∃ t : ℝ≥0, 0 < t ∧
     ∀ j : Fin l.length, j ≠ i →
       tbEReal (l.get i).1 (l.get i).2 t < tbEReal (l.get j).1 (l.get j).2 t
+
+/-- **Proposition 4.1, item 2.** In a concave normal form the bursts are strictly increasing
+along the list (`bᵢ < bⱼ` for `i < j`). If `bᵢ ≥ bⱼ` while `rᵢ > rⱼ` then `γᵢ ≥ γⱼ` pointwise,
+making `γᵢ` redundant — contradicting irredundancy at `i`. -/
+theorem IsConcaveNormalForm.burst_strictMono {l : List (ℝ≥0 × ℝ≥0)}
+    (h : IsConcaveNormalForm l) : l.Pairwise (fun a b => a.2 < b.2) := by
+  obtain ⟨hrate, hirr⟩ := h
+  rw [List.pairwise_iff_get]
+  intro i j hij
+  have hr : (l.get j).1 < (l.get i).1 := (List.pairwise_iff_get.mp hrate) i j hij
+  obtain ⟨t, ht, hmin⟩ := hirr i
+  have hlt : tbEReal (l.get i).1 (l.get i).2 t < tbEReal (l.get j).1 (l.get j).2 t :=
+    hmin j hij.ne'
+  by_contra hb
+  rw [not_lt] at hb
+  exact absurd (lt_of_lt_of_le hlt (tbEReal_mono_of (ne_of_gt ht) hr.le hb)) (lt_irrefl _)
 
 end DeepWiki
