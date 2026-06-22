@@ -19,16 +19,17 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.5: Thm 2.5.1 — the algorithm-level capstone is now `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`),
-  COMPLETE over the whole part-(ii) regime: part-(ii) correctness stated directly at the algorithm's index
-  `i = rootMultiplicity a R`, p.r.s.-termination data discharged internally, under the single hypothesis
-  `i < deg D` (i.e. `gcd(D, A−aD')` a *proper* factor of `D`). Both the multi-step `k ≥ 2` and the top-index
-  one-step `k = 1` (`A−aD' ∣ D`, last p.r.s. element `R₁ = E`, `i = deg E` the *top* index that padding
-  cannot reach) are now covered — the latter by `thm_2_5_1_ii_top`
+§2.5: Thm 2.5.1 — COMPLETE end-to-end, ZERO excluded cases. The unified output statement `thm_2_5_1_output`
+  (`lazardRiobooTrager_output_isSimilar_gcd`) covers EVERY residue `a`: the algorithm's curve `Sᵢ` (= `D` if
+  `i = deg D`, else `lrtSubresultant A D i`, exactly `lazardRiobooTrager`'s own branch) specialized `t ↦ a`
+  is similar to `gcd(D, A−aD')`. It routes the `i = deg D` case (`A−aD' = 0`, part (i)) to `thm_2_5_1_i` and
+  the `i < deg D` case (part (ii)) to the capstone `thm_2_5_1` (`lazardRiobooTrager_isSimilar_gcd`), itself
+  COMPLETE over the part-(ii) regime: index `i = rootMultiplicity a R`, p.r.s.-termination discharged
+  internally, both the multi-step `k ≥ 2` and the top-index one-step `k = 1` (`A−aD' ∣ D`, `i = deg E` the
+  *top* index padding cannot reach) covered — the latter by `thm_2_5_1_ii_top`
   (`isSimilar_lrtSubresultant_eval_gcd_top`), built on the normal-orientation degenerate subresultant
-  formula `subresultant_deg_ge_normal` (first poly the larger formal degree) and the one-step gcd similarity
-  `isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`. The only excluded case is `A−aD' = 0` (`A = a·D'`, the
-  part-(i) `i = deg D` regime, `gcd(D,0) ~ D` = `thm_2_5_1_i`). Supporting pieces: part (i)
+  formula `subresultant_deg_ge_normal` and one-step gcd similarity
+  `isSimilar_gcd_right_of_euclideanPRS_two_eq_zero`. Supporting pieces: part (i)
   `n = deg D ⟹ gcd ~ D` = `thm_2_5_1_i` (`isSimilar_gcd_left_of_natDegree_eq`);
   part (ii) `lrtSubresultant A D i (a) ~ gcd(D, A−aD')` for **every** residue (incl. the degenerate
   `deg(A−aD') < deg D − 1`, via degree-padding similarity `isSimilar_subresultant_padding`) = `thm_2_5_1_ii`
@@ -348,6 +349,14 @@ internally — over an algebraically closed field, `D` separable, `deg A < deg D
 p.r.s. length: `k ≥ 2` uses `thm_2_5_1_ii`, `k = 1` uses `thm_2_5_1_ii_top`; only `A − a·D' = 0` (the
 part-(i) `i = deg D` regime, `gcd ~ D`) is excluded by `i < deg D`. -/
 abbrev thm_2_5_1 := @DeepWiki.SymbolicIntegration.lazardRiobooTrager_isSimilar_gcd
+
+/-- **Theorem 2.5.1, unified algorithm output** (§2.5, p.50, parts (i)+(ii) combined, NO excluded case):
+for any `a`, the LRT algorithm's output curve `Sᵢ` at multiplicity `i = rootMultiplicity a R` — `D` if
+`i = deg D` (part (i), `A − a·D' = 0`) else `lrtSubresultant A D i` (part (ii)) — specialized `t ↦ a`, is
+similar to `gcd(D, A − a·D')`. The `if i = deg D` is exactly `lazardRiobooTrager`'s own branch, so this
+covers EVERY residue. The library's `lazardRiobooTrager_output_isSimilar_gcd` (routes `i = deg D` to
+`thm_2_5_1_i`, `i < deg D` to `thm_2_5_1`). -/
+abbrev thm_2_5_1_output := @DeepWiki.SymbolicIntegration.lazardRiobooTrager_output_isSimilar_gcd
 
 /-- **Roots of the Rothstein–Trager resultant** (§2.5, behind Thm 2.5.1): over an algebraically closed
 field, for separable `D` and `deg A < deg D`, the roots of `R(t)` (with multiplicity) are exactly the
