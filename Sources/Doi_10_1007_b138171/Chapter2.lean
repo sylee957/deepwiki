@@ -19,7 +19,8 @@ identity that lowers the power of a squarefree denominator factor — is proved 
   algorithm [infra: opsem]. Parts (i),(ii) are PROVED: `thm_2_4_1_i` (= `residue_iff_resultant_eq_zero`,
   the zeros of `R = resultant_x(D, A − t·D')` are exactly the residues) and `thm_2_4_1_ii`
   (= `isRoot_gcd_iff_residue`, the `Gₐ` characterization), both on the §4.4 residue foundation.
-§2.5: Thm 2.5.1; the Lazard–Rioboo–Trager algorithm; Ex 2.5.1; Ex 2.5.2.
+§2.5: Thm 2.5.1 [research: subresultant-multiplicity proof, rests on Thms 1.4.1/1.4.3/1.5.1/1.5.2];
+  the Lazard–Rioboo–Trager algorithm [infra: opsem]; Ex 2.5.2.
 §2.6: Thm 2.6.1; the Czichowski algorithm; Ex 2.6.1.
 §2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
 §2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
@@ -119,5 +120,23 @@ theorem ex_2_3_1 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) 
     div_add_div _ _ (pow_ne_zero 2 hQ) ht0,
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hQ) ht0) hD]
   ring
+
+/-! ## §2.5 The Lazard–Rioboo–Trager Algorithm -/
+
+open Polynomial in
+/-- **Example 2.5.1** (§2.5, p.52), Lazard–Rioboo–Trager on the same integrand as Ex 2.4.1: the
+subresultant PRS of `D = x⁶−5x⁴+5x²+4` and `A−tD'` has a degree-3 element `R₃ = S₃`, and at a root
+`a` of `Q₃` (`4a²+1 = 0`) the book computes `S₃(a,x) = −214ax³+107x²+642ax−214`. Faithful punchline
+(`ex_2_5_1`): this value is exactly `−214a·(x³+2ax²−3x−4a)`, i.e. `−214a` times the Rothstein–Trager
+gcd `Gₐ` of Ex 2.4.1 — so the LRT subresultant and the RT gcd agree up to the scalar `−214a`, and
+monic-normalizing `S₃(a,x)` recovers `Gₐ`. Verified as the algebraic identity modulo `4a²+1 = 0`
+(`linear_combination … * hb`); this checks the normalization step, not the PRS computation itself. -/
+theorem ex_2_5_1 {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
+    (-214 * C a * (X : F[X]) ^ 3 + 107 * X ^ 2 + 642 * C a * X - 214
+      = -214 * C a * (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a)) := by
+  have hb : 4 * (C a) ^ 2 + 1 = (0 : F[X]) := by
+    have h := congrArg (C : F →+* F[X]) ha
+    simpa [map_ofNat] using h
+  linear_combination (107 * ((X : F[X]) ^ 2 - 2)) * hb
 
 end DeepWiki.Si
