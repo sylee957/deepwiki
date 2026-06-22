@@ -34,7 +34,8 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   the Lazard–Rioboo–Trager algorithm [functional].
 §2.6: Thm 2.6.1 [infra: Gröbner bases in K[x,t], not in Mathlib]; the Czichowski algorithm
   [infra: Gröbner bases].
-§2.7: Thm 2.7.1; Ex 2.7.2; Ex 2.7.3.
+§2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
+  needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Lemma 2.8.1; Rioboo's real-rational-function algorithm; Ex 2.8.1;
   Ex 2.8.2.
 §2.9: the in-field-integration algorithm.
@@ -213,5 +214,36 @@ theorem ex_2_6_1 {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
       ∧ ((X : F[X]) ^ 4 - 3 * X ^ 2 + 6 - C a * (6 * X ^ 5 - 20 * X ^ 3 + 10 * X)
         = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (-6 * C a * X ^ 2 - 2 * X + 6 * C a)) :=
   ex_2_4_1 a ha
+
+/-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
+
+/-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
+(denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
+`36/D = (Σ_{α²−1=0} (−3α−6)/(x−α)²) − 4/(x+1) + 4/(x−2)`. Here `α²−1=0` gives `α = ±1` (rational), so the
+sum is `−9/(x−1)² − 3/(x+1)²`, and the decomposition is the field identity below. -/
+theorem ex_2_7_2 {F : Type*} [Field F] (t : F) (h1 : t - 1 ≠ 0) (h2 : t + 1 ≠ 0) (h3 : t - 2 ≠ 0) :
+    36 / (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2)
+      = -9 / (t - 1) ^ 2 - 3 / (t + 1) ^ 2 - 4 / (t + 1) + 4 / (t - 2) := by
+  have hD : t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2 = (t - 1) ^ 2 * (t + 1) ^ 2 * (t - 2) := by
+    ring
+  rw [hD]; field_simp; ring
+
+/-- **Example 2.7.3** (§2.7, p.59), `IntegrateRationalFunction` (full-partial-fraction form) of
+`f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`: from the decomposition (eq 2.13), `∫ f = 4·log(x−2) − 4·log(x+1) +
+Σ_{α²−1=0} (3α+6)/(x−α)`, i.e. rational part `9/(x−1) + 3/(x+1)` plus logs `4·log(x−2) − 4·log(x+1)`.
+Verified as the differential-field identity `(9/(x−1) + 3/(x+1))′ + (4/(x−2) − 4/(x+1)) = f` (the bracket
+is the log part's integrand `4·logDeriv(x−2) − 4·logDeriv(x+1)`). -/
+theorem ex_2_7_3 {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1) (h1 : t - 1 ≠ 0)
+    (h2 : t + 1 ≠ 0) (h3 : t - 2 ≠ 0) :
+    (9 / (t - 1) + 3 / (t + 1))′ + (4 / (t - 2) - 4 / (t + 1))
+      = 36 / (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2) := by
+  have hD : (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2 : F)
+      = (t - 1) ^ 2 * ((t + 1) ^ 2 * (t - 2)) := by ring
+  have h9 : (9 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h3' : (3 : F)′ = 0 := mem_constants.mp (by norm_num)
+  have h1' : (1 : F)′ = 0 := mem_constants.mp (by norm_num)
+  rw [map_add, deriv_div, deriv_div]
+  simp only [map_add, map_sub, h9, h3', h1', ht]
+  rw [hD]; field_simp; ring
 
 end DeepWiki.Si
