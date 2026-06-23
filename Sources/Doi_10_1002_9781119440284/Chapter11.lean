@@ -12,6 +12,7 @@ import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
 import DeepWiki.NetworkCalculus.TandemWorstCaseExamples
 import DeepWiki.NetworkCalculus.TandemLinearProgramWitness
+import DeepWiki.NetworkCalculus.TandemFifoMilpWitness
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -27,7 +28,7 @@ optimum is attained as the LP value (homogeneous via `tandemWitness`) but STRICT
 true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_programOptimum`, equal iff
 `r=0`). The only residual `[infra]`: an EXACT finite LP (the §11.1.3 multi-window trajectory
 reconstruction) whose optimum equals the PMOO value — the relaxation-free solver formulation.
-§11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
+§11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
 
@@ -260,6 +261,25 @@ theorem thm_11_2_sound {n : ℕ} {N : DeepWiki.TandemLP.Tandem n} {M : ℝ}
     (hRmin : ∀ h : Fin n, Rmin ≤ N.rate h) (hstab : N.rate0 < Rmin) :
     DeepWiki.TandemFifo.fifoDelay v ≤ DeepWiki.TandemLP.objectiveValue N Rmin :=
   DeepWiki.TandemFifo.fifoDelay_le_objectiveValue hv hRmin hstab
+
+/-- **Theorem 11.2, FIFO-MILP optimum = worst case** (§11.2.2) for the HOMOGENEOUS-rate tandem: the
+FIFO MILP optimum is attained, `programOptimum (FifoFeasible N M) fifoDelay = objectiveValue N Rmin`
+(any n, for `M` ≥ the witness window-sum), via the worst-case vertex `TandemLP.tandemWitness` lifted to
+`FifoVars` with the all-zero Boolean ordering `z=0` (on the monotone-date vertex every FIFO ordering
+collapses to `z=0`, so attainment is a finite computation). The library's
+`DeepWiki.TandemFifo.fifoTandem_programOptimum_homogeneous`. ★ Note the n=1 tandem-LP FIFO model (SFA
+`(RT+b)/(R−r)`) is DISTINCT from the Table 11.2 two-flow node (tight `T+(b₁+b₂)/R`, `ex_11_2`/
+`fifoNode_programOptimum`) — strict gap `objectiveValue_one_gt_tight`. Residual `[infra]`/`[research]`:
+the general heterogeneous case (SFA not tight) + the exponential `2^?` Boolean-ordering
+trajectory-from-solution reconstruction (§11.2.2). -/
+theorem thm_11_2_optimum {n : ℕ} (N : DeepWiki.TandemLP.Tandem (n + 1)) {Rmin M : ℝ}
+    (hRmin : 0 < Rmin) (hrate0 : 0 ≤ N.rate0) (hrate : ∀ h : Fin (n + 1), N.rate h = Rmin)
+    (hlat : ∀ h : Fin (n + 1), 0 ≤ N.lat h) (hb : 0 ≤ N.burst) (hstab : N.rate0 < Rmin)
+    (hM : (∑ k : Fin (n + 1), DeepWiki.TandemLP.witnessWindow N Rmin k) ≤ M) :
+    programOptimum (DeepWiki.TandemFifo.FifoFeasible N M)
+        (fun v => ((DeepWiki.TandemFifo.fifoDelay v : ℝ) : EReal))
+      = ((DeepWiki.TandemLP.objectiveValue N Rmin : ℝ) : EReal) :=
+  DeepWiki.TandemFifo.fifoTandem_programOptimum_homogeneous N hRmin hrate0 hrate hlat hb hstab hM
 
 /-- **Example 11.2** (§11.2.1, p.263): one FIFO server with two token-bucket flows `γ_{rᵢ,bᵢ}` under
 rate-latency `β_{R,T}` (Table 11.2 LP). The worst-case end-to-end delay is the CLOSED-FORM program
