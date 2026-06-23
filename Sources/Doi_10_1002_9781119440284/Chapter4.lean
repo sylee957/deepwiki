@@ -39,6 +39,7 @@ import DeepWiki.NetworkCalculus.PwlBreakpoints
 import DeepWiki.NetworkCalculus.PwlThetaDecomp
 import DeepWiki.NetworkCalculus.ConvexSegTangents
 import DeepWiki.NetworkCalculus.ContainerClosure
+import DeepWiki.NetworkCalculus.HullENN
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -77,9 +78,11 @@ form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (i
 `[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
 the `C_cv` concave-hull is now built (`eq_4_6_concaveHull`/`Ccv`: least concave majorant, eq.[4.6]
 core), so the `[∧]` upper-bound canonicalization is available; the unary closure inclusion `[*]` ([4.16]/[4.17]) is now done as inclusion-soundness
-(`thm_4_4_closure`/`ContainerNN.closure_mem`: `f⋆ ∈ [f̲⋆, f̄⋆]`, via `⋆`-monotonicity); what remains of
-Def 4.5/Thm 4.4 is the `C_vx`/`C_cv` canonicalization of the [4.16]/[4.17] bounds (needs an `ℝ≥0∞`
-hull layer) and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]); Proposition 4.4 (canonical
+(`thm_4_4_closure`/`ContainerNN.closure_mem`: `f⋆ ∈ [f̲⋆, f̄⋆]`, via `⋆`-monotonicity); the `C_vx`/
+`C_cv` canonicalization of the [4.16]/[4.17] bounds is now done over the `ℝ≥0∞` hull layer
+(`def_4_5_closure_canonical`/`CvxENN`/`CcvENN`: convex/concave canonical closure bounds), so what
+remains of Def 4.5/Thm 4.4 is only the `F`-closure halves (book defers Thm 4.4's full proof to
+[LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
 layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
@@ -90,9 +93,8 @@ the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now
 needs a closure↔Legendre identity.
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
 genuinely deferred: the book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full `F`-closure
-Thm 4.4 (→[LEC 14]); and three `[infra]` layers — the `C_vx`/`C_cv` canonicalization of the
-[4.16]/[4.17] closure bounds (needs an `ℝ≥0∞` hull), the closure↔Legendre identity (blocks Lemma 4.10
-[4.12] and the quotient `⋆`), and Def 4.4 finiteness from the canonical form. Remark 4.1. -/
+Thm 4.4 (→[LEC 14]); and two `[infra]` layers — the closure↔Legendre identity (blocks Lemma 4.10
+[4.12] and the quotient `⋆`) and Def 4.4 finiteness from the canonical form. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -938,6 +940,19 @@ is `ℝ≥0∞`-valued), `f[*] = [f̲⋆, f̄⋆]` (`ContainerNN.closure`), and 
 theorem thm_4_4_closure {c : DeepWiki.ContainerNN} {f : ℝ≥0 → ℝ≥0∞} (h : f ∈ c) :
     subadditiveClosureENN f ∈ c.closure :=
   DeepWiki.ContainerNN.closure_mem h
+
+/-- **Definition 4.5 [4.16]/[4.17], the `C_vx`/`C_cv` canonicalization** of the closure container's
+bounds, over the `ℝ≥0∞` closure carrier. The hull layer `DeepWiki.CvxENN`/`DeepWiki.CcvENN` (`⨆`/`⨅`
+of convex/concave minorants/majorants, the `ℝ≥0∞` mirror of `Ccv`) canonicalizes the closure bounds:
+the lower bound becomes convex (`isConvexENN_CvxENN_closure_lo`), the upper bound concave
+(`isConcaveENN_CcvENN_closure_hi`), each still bracketing the closure (`CvxENN c.lo⋆ ≤ c.lo⋆`,
+`c.hi⋆ ≤ CcvENN c.hi⋆`). The library's `DeepWiki.{CvxENN,CcvENN}` (universal-property satellites
+`{CvxENN,CcvENN}_le`, idempotence, convex/concave fixed-point). -/
+theorem def_4_5_closure_canonical (c : DeepWiki.ContainerNN) :
+    IsConvexENN (DeepWiki.CvxENN c.closure.lo) ∧ IsConcaveENN (DeepWiki.CcvENN c.closure.hi)
+      ∧ DeepWiki.CvxENN c.closure.lo ≤ c.closure.lo ∧ c.closure.hi ≤ DeepWiki.CcvENN c.closure.hi :=
+  ⟨DeepWiki.isConvexENN_CvxENN_closure_lo c, DeepWiki.isConcaveENN_CcvENN_closure_hi c,
+    DeepWiki.CvxENN_closure_lo_le c, DeepWiki.le_CcvENN_closure_hi c⟩
 
 /-- **Proposition 4.4** (§4.4, p.86): the canonical bound of a Legendre class `[f]_L`. The convex
 biconjugate `Cvx f = 𝓛(𝓛 f)` is the **least** element of `[f]_L = {g | 𝓛 g = 𝓛 f}` — a member

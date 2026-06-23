@@ -82,6 +82,7 @@ import DeepWiki.NetworkCalculus.PwlBreakpoints
 import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.PwlThetaDecomp
 import DeepWiki.NetworkCalculus.ConvexSegTangents
+import DeepWiki.NetworkCalculus.HullENN
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
