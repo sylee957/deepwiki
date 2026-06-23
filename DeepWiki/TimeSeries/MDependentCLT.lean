@@ -287,6 +287,17 @@ theorem tendsto_blockCount_div {p m : ℕ} (hpm : p + m ≠ 0) :
   field_simp
   nlinarith [hc]
 
+/-- **The Slutsky rescaling factor converges**: `√(r(n)/n) → 1/√(p+m)`. Composing `Real.sqrt`
+(continuous) with the block density `tendsto_blockCount_div`; the factor relating the `√r`-scaled block
+CLT statistic to the `√n`-scaled gap-removed partial sum. -/
+theorem tendsto_sqrt_blockCount_div {p m : ℕ} (hpm : p + m ≠ 0) :
+    Tendsto (fun n : ℕ => Real.sqrt ((blockCount p m n : ℝ) / n)) atTop
+      (𝓝 (1 / Real.sqrt ((p + m : ℕ) : ℝ))) := by
+  have h : (1 : ℝ) / Real.sqrt ((p + m : ℕ) : ℝ) = Real.sqrt (1 / ((p + m : ℕ) : ℝ)) := by
+    rw [one_div, ← Real.sqrt_inv, one_div]
+  rw [h]
+  exact (Real.continuous_sqrt.tendsto _).comp (tendsto_blockCount_div hpm)
+
 /-- **The big-block sums obey a central limit theorem in distribution** (h1, distribution form): for a
 strictly stationary `L²` `m`-dependent process, `√r (r⁻¹ ∑_{k<r} U_k − E U₀) ⇒ N(0, Var U₀)`, where
 `U_k = ∑_{t ∈ bigBlock k} Xₜ`. A direct application of the iid sample-mean CLT (`iidNoise_sampleMean_clt`)
