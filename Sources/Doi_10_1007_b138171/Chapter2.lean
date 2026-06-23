@@ -33,21 +33,18 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 — the LAST bridge: the **coefficient identification `localCoeff A M α i d = Hᵢ,(i−d)(α)`**
-  (book p.56) [infra: the principal-part assembly over `K̄` is now PROVED — `thm_2_7_1_principalPart`
-  (`subtract_localPrincipalPart_eq`): for `D = (x−α)^i·M`, `M(α) ≠ 0`, subtracting the per-root Laurent sum
-  `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) leaves `R/M`, regular at `α`, so that sum IS the
-  principal part of `A/D` at the pole `α`; built on the local Taylor approximant `W = (A·N) %ₘ (x−α)^i`
-  (`N = M⁻¹ mod (x−α)^i`) with `M·W ≡ A (mod (x−α)^i)` (`localApprox_spec`) and its `(x−α)`-adic
-  reconstruction `W = ∑_{d<i} c_d·(x−α)^d` (`localApprox_eq_sum`). What REMAINS is identifying the local
-  digit `c_d = localCoeff A M α i d = (taylor α W).coeff d` with the engine output `Hᵢ,(i−d)(α)`: both are the
-  order-`d` Taylor coefficient of `A/M = hᵢ,α`, but matching the polynomial Hasse-derivative `(hasseDeriv d W)(α)`
-  to the genuine rational-function derivative `(1/d!)·(d/dx)^[d] (A/M)(α)` (`eval_laurentH_eq_taylor_coeff`)
-  needs an iterated-Leibniz / high-order-vanishing development for the `ratFuncKDeriv` derivation
-  (`A/M − W = (x−α)^i·(R/M)` vanishes to order `i` at `α`) not yet built]. The substantive identification
-  `Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` — the engine output IS the order-`(i−j)` Taylor coefficient of
-  `hᵢ,α` — is PROVED (`thm_2_7_1_taylor_coeff`, `eval_laurentH_eq_taylor_coeff`). Everything ELSE of Thm 2.7.1
-  is now PROVED: the differential-variable engine eqs 2.10–2.12
+§2.7: Thm 2.7.1 — the only residual is the **peeled-vs-original numerator matching** in the multi-pole
+  assembly [infra: the over-the-closure multi-pole telescoping `thm_2_7_1_telescoping`
+  (`exists_sum_localPrincipalPart`) and capstone `thm_2_7_1_over_closure`
+  (`completePartialFraction_over_closure`: `A/D = P + ∑_{α∈R} PP α` for `D = (∏(x−α)^{mult α})·C c` split over
+  `K̄`) are PROVED, peeling roots one at a time via `thm_2_7_1_principalPart`. In the telescoping each `PP α`
+  is `localPrincipalPart` of the *peeled* (running) numerator — a correct singular part at `α` — so identifying
+  its coefficients with the original-`A` engine outputs `Hᵢⱼ(α)` (rather than the peeled numerator's) is the
+  one remaining step: it needs the **intrinsicity of the principal part** (subtracting a principal part at a
+  DIFFERENT pole `β` does not change the principal part at `α`), i.e. uniqueness of the partial-fraction
+  decomposition, not yet packaged. The single-pole coefficient identification IS fully proved
+  (`thm_2_7_1_coeff_eq_laurentH`, `localCoeff_eq_laurentH`: `localCoeff A M α i d = Hᵢ,(i−d)(α)`).]
+  Everything substantive of Thm 2.7.1 is now PROVED: the differential-variable engine eqs 2.10–2.12
   (`thm_2_7_1_laurentH`); the eq 2.11 invariant on `Frac (DiffPoly K)` (`eq_2_11_invariant`); the
   **differential substitution hom** `σα` carrying the engine's `ddx` to the genuine `Polynomial.derivative`
   (`thm_2_7_1_diffSubst`); the **specialized eq 2.11 invariant in `K(x)`** —
@@ -56,8 +53,12 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `σα(Pᵢⱼ)(α) = Qᵢⱼ(α)` (`thm_2_7_1_laurentQ_eval`/`thm_2_7_1_diffSubst_eval`); the **general** engine-output
   evaluation `Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` for ALL `i,j` (`thm_2_7_1_eval`, generalizing
   the `i=1` residue `thm_2_7_1_residue`); the combined `Hᵢⱼ(α)`-from-genuine-`hᵢ,α`-numerator form
-  (`thm_2_7_1_eval_diffSubst`); and **the order-`(i−j)` Taylor-coefficient identification**
-  (`thm_2_7_1_taylor_coeff`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
+  (`thm_2_7_1_eval_diffSubst`); **the order-`(i−j)` Taylor-coefficient identification**
+  (`thm_2_7_1_taylor_coeff`); the **Hasse ↔ differential-engine coefficient bridge**
+  (`thm_2_7_1_coeff_bridge`: `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`) and the **full single-pole coefficient
+  identification** `localCoeff = Hᵢ,(i−d)(α)` (`thm_2_7_1_coeff_eq_laurentH`); the **principal-part assembly**
+  per pole (`thm_2_7_1_principalPart`) and **over all poles** (`thm_2_7_1_telescoping`,
+  `thm_2_7_1_over_closure`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
   `thm_2_7_1`.
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
@@ -1021,9 +1022,43 @@ the per-root sum IS the principal part of `A/D` at the pole `α`. The Laurent co
 `c_d = localCoeff A M α i d` are the `(x−α)`-adic digits of the local Taylor approximant
 `W = (A·N) %ₘ (x−α)^i` (`N = M⁻¹ mod (x−α)^i`), which agrees with `A·(x−α)ⁱ/D` to order `i` at `α`
 (`M·W ≡ A`). The library's `subtract_localPrincipalPart_eq` (existence form
-`exists_regular_sub_localPrincipalPart`). Identifying `c_{i−j} = Hᵢⱼ(α)` (`thm_2_7_1_taylor_coeff`) needs the
-Hasse-derivative/`ratFuncKDeriv` Taylor bridge (§2.7 NOT YET FORMALIZED). -/
+`exists_regular_sub_localPrincipalPart`). Identifying `c_{i−j} = Hᵢⱼ(α)` is `thm_2_7_1_coeff_bridge`. -/
 abbrev thm_2_7_1_principalPart := @DeepWiki.SymbolicIntegration.subtract_localPrincipalPart_eq
+
+/-- **Theorem 2.7.1, the coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`** (§2.7, p.56, the
+Hasse-derivative ↔ differential-engine identification): for `D = (x−α)ⁱ·M` (`M(α) ≠ 0`) and `d < i`, the
+Stage L `(X−α)`-adic Laurent digit `localCoeff A M α i d = (taylor α W).coeff d` (the `(x−α)`-adic digit of the
+local approximant `W = (A·N) %ₘ (x−α)ⁱ`) is the order-`d` Taylor coefficient of the genuine function
+`hᵢ,α = A/M = (A/D)(x−α)ⁱ`. Proof: split `A/M = W + (A/M − W)`, push `(d/dx)^[d]` through; the embedded-`W`
+term gives `d!·localCoeff` (Hasse identity `d!·hasseDeriv = derivative^[d]`), the remainder
+`(A/M − W) = (A − M·W)/M` (numerator divisible by `(x−α)ⁱ`) vanishes at `α` for `d < i`. The library's
+`localCoeff_eq_taylor_coeff`. -/
+abbrev thm_2_7_1_coeff_bridge := @DeepWiki.SymbolicIntegration.localCoeff_eq_taylor_coeff
+
+/-- **Theorem 2.7.1, the FULL coefficient identification `localCoeff = Hᵢ,(i−d)(α)`** (§2.7, p.56, the LAST
+bridge — now PROVED): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, with `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`,
+`D = (x−α)ⁱ·M`) and `d < i`, the Stage L Laurent digit `localCoeff A M α i d` equals the Bronstein–Salvy engine
+output `Hᵢ,(i−d)(α) = (laurentH A D Dᵢ i (i−d))(α)`. Both equal the order-`d` Taylor coefficient
+`(1/d!)·(d/dx)^[d](A/M)(α)` of `hᵢ,α = A/M`: `localCoeff` by the Hasse bridge (`thm_2_7_1_coeff_bridge`), the
+engine output by the differential-engine invariant (`thm_2_7_1_taylor_coeff`, with `i − (i − d) = d`). This is
+the final unification of the principal-part structure with the differential engine. The library's
+`localCoeff_eq_laurentH`. -/
+abbrev thm_2_7_1_coeff_eq_laurentH := @DeepWiki.SymbolicIntegration.localCoeff_eq_laurentH
+
+/-- **Theorem 2.7.1, the multi-pole telescoping** (§2.7, p.56, the closure-level assembly over all poles): for a
+`Finset R` of distinct roots with multiplicities `mult` and a base `M₀` pole-free at every `α ∈ R`, subtracting
+the per-pole principal parts at every `α ∈ R` from `A/(∏_{α∈R}(x−α)^{mult α}·M₀)` leaves a remainder `Rem/M₀`
+regular at every `α ∈ R`: `A/(∏_{α∈R}(x−α)^{mult α}·M₀) = ∑_{α∈R} PP α + Rem/M₀`, each `PP α` a genuine Laurent
+sum. Proved by `Finset` induction peeling one root at a time via `thm_2_7_1_principalPart` (the numerator is
+generalized so each peel recurses on the local remainder). The library's `exists_sum_localPrincipalPart`. -/
+abbrev thm_2_7_1_telescoping := @DeepWiki.SymbolicIntegration.exists_sum_localPrincipalPart
+
+/-- **Theorem 2.7.1, the over-the-closure complete partial fraction** (§2.7, p.56, the literal conclusion when
+`D` splits): for `D = (∏_{α∈R}(x−α)^{mult α})·C c` (`c ≠ 0`, `R` the full root set over `K̄`), there is a
+polynomial part `P` and a per-pole principal-part family `PP` (each `PP α = ∑_{j=1}^{mult α} c_{α,j}/(x−α)ʲ`)
+with `A/D = P + ∑_{α∈R} PP α`. The constant base makes the telescoping remainder `Rem/(C c)` a pure polynomial
+(`div_C_eq_algebraMap`), the polynomial part `P`. The library's `completePartialFraction_over_closure`. -/
+abbrev thm_2_7_1_over_closure := @DeepWiki.SymbolicIntegration.completePartialFraction_over_closure
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
