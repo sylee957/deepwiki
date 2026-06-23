@@ -273,6 +273,7 @@ import DeepWiki.NetworkCalculus.ComplexityNP
 import DeepWiki.NetworkCalculus.BooleanSatisfiability
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
+import DeepWiki.NetworkCalculus.ThreeDMReduction
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersResidualSpPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualFifoPmooConcat

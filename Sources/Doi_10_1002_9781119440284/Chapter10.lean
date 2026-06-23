@@ -31,6 +31,7 @@ import DeepWiki.NetworkCalculus.ComplexityNP
 import DeepWiki.NetworkCalculus.BooleanSatisfiability
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
+import DeepWiki.NetworkCalculus.ThreeDMReduction
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -330,9 +331,13 @@ That gap is now framed faithfully rather than only cited:
 * `cookLevin : IsNPHard_TM cnfEncode Satisfiable` — **Cook–Levin stated over the real class**, scoped as
   the SINGLE axiom (the tableau construction is research-scale, ~30k lines in comparable assistants).
 * `isNPHard_TM_of_satReduction` / `IsNPHard_TM.viaReduction` — the chain mechanism: any problem reached
-  from SAT by Karp reductions is NP-hard. The chain is now `SAT ≤ₖ 3SAT` (`satToThreeSat`, FULLY PROVED
-  — both satisfiability directions + the linear size bound, `cook_levin_chain_satToThreeSat`) then
-  `3DM ≤ₖ X3C ≤ₖ worst-case-backlog` (proved); the SINGLE remaining gadget is `3SAT ≤ₖ 3DM` `[infra]`.
+  from SAT by Karp reductions is NP-hard. **The combinatorial chain is now FULLY PROVED end to end**:
+  `SAT ≤ₖ 3SAT` (`satToThreeSat`, both directions + linear bound) then `3SAT ≤ₖ 3DM`
+  (`threeSatToThreeDM`/`cook_levin_chain_threeSatToThreeDM`, the Garey–Johnson ring/clause/garbage gadget,
+  both directions + quartic bound, axiom-free) then `3DM ≤ₖ X3C ≤ₖ worst-case-backlog` (proved). The ONE
+  remaining link to the absolute TM-hardness is an encoding-alignment `[infra]`: a variable-compaction
+  prepass (`numVars ≤ 3·#clauses` for 3-CNF) so the gadget is polynomial in the `cnfEncode` length, which
+  does not charge for unused variables. The hard part — every combinatorial reduction — is done.
 `#print axioms isNPHard_TM_of_satReduction` = Mathlib's 3 standard axioms + exactly `cookLevin`. -/
 
 /-- **Cook–Levin, faithfully stated** (toward discharging `X3CIsNPHard`): SAT is NP-hard over the
@@ -361,5 +366,23 @@ gives `isNPHard_TM_threeSat` (3SAT NP-hard, modulo only the tableau). The librar
 theorem cook_levin_chain_satToThreeSat :
     DeepWiki.IsNPHard_TM DeepWiki.cnfEncode DeepWiki.threeSat :=
   DeepWiki.isNPHard_TM_threeSat
+
+/-- **Cook–Levin chain, keystone gadget: `3SAT ≤ₖ 3DM`** (Garey–Johnson Thm 3.2 / Karp 1972) — BOTH
+directions FULLY PROVED, axiom-free. The genuine construction: a cyclic `2m`-triple truth-setting ring
+per variable (two orientations = truth value), a per-clause satisfaction gadget consuming a tip of the
+satisfying orientation, and garbage-collection triples balancing the parts to `|W|=|X|=|Y|=2nm`
+(`gadgetInstance`, the equal-card counting `nm+m+(n−1)m=2nm` proved). `threeSat_iff_threeDMDecision_map`
+proves `3SAT ⟺ 3DM` both ways (forward: orient rings by truth + route clauses; reverse: ring-consistency
+`forall_falseTriple_mem_of_one` forces a uniform orientation read off as the assignment). `#print axioms
+threeSat_iff_threeDMDecision_map` = Mathlib's 3 standard axioms only. `isNPHardVia_threeSat_threeDMDecision`
+(3DM is 3SAT-hard, UNCONDITIONAL) with a quartic size bound vs `ThreeDM.cnfSize`. The library's
+`DeepWiki.threeSatToThreeDM`. NB the absolute TM-chain `isNPHard_TM 3DM` needs one orthogonal step — a
+variable-compaction prepass (`numVars ≤ 3·#clauses` for 3-CNF) so the gadget is polynomial in the
+`cnfEncode` length (which does not charge for unused variables) — `[infra]`; the combinatorial reduction
+itself is done. -/
+theorem cook_levin_chain_threeSatToThreeDM :
+    KarpReduction.IsNPHardVia DeepWiki.ThreeDM.cnfSize DeepWiki.ThreeDMInstance.size
+      DeepWiki.threeSat DeepWiki.ThreeDMInstance.threeDMDecision :=
+  DeepWiki.isNPHardVia_threeSat_threeDMDecision
 
 end DeepWiki.Dnc
