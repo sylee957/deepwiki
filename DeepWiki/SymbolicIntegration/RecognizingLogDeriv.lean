@@ -157,4 +157,44 @@ example [IsAlgClosed K] (N : K[X]) (hN : N ≠ 0) :
           (algebraMap K[X] (RatFunc K) (X - C β)))).sum :=
   logDeriv_algebraMap_eq_sum_roots N hN
 
+/-! ## The simple-pole residue functional (toward the `⟹` direction)
+The residue of `f ∈ K(x)` at a *simple* pole `α` is extracted by multiplying by `X − α` (which
+cancels the pole) and evaluating at `α`: `residueAt α f = ((X − α)·f)(α)`. Both `A/D` (with `D`
+squarefree) and `logDeriv u` have only simple poles, so this functional reads off both residues. -/
+
+/-- A divisor of a polynomial nonzero at `α` is itself nonzero at `α` — `g ∣ h`, `h(α) ≠ 0 ⟹ g(α) ≠ 0`. -/
+theorem eval_ne_zero_of_dvd {α : K} {g h : K[X]} (hdvd : g ∣ h) (hh : h.eval α ≠ 0) :
+    g.eval α ≠ 0 := by
+  obtain ⟨c, rfl⟩ := hdvd
+  rw [eval_mul] at hh
+  exact left_ne_zero_of_mul hh
+
+/-- **Evaluation of a pole-free quotient**: when `h(α) ≠ 0`, the rational function `g/h ∈ K(x)`
+evaluates at `α` to the field quotient `g(α)/h(α)` — `RatFunc.eval` clears the (reduced) denominator,
+which divides `h` (`denom_div_dvd`) and so is also nonzero at `α`, letting the cross-multiplication
+`num·h = g·denom` evaluate to `g(α)/h(α)`. -/
+theorem eval_algebraMap_div (α : K) (g h : K[X]) (hh : h.eval α ≠ 0) :
+    RatFunc.eval (RingHom.id K) α (algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h)
+      = g.eval α / h.eval α := by
+  set x : RatFunc K := algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h with hx
+  have hh0 : h ≠ 0 := fun h0 => hh (by rw [h0, eval_zero])
+  have hdenom : (RatFunc.denom x).eval α ≠ 0 :=
+    eval_ne_zero_of_dvd (RatFunc.denom_div_dvd g h) hh
+  -- cross-multiplication `num x · h = g · denom x`, from `num x / denom x = g / h`
+  have hcross : RatFunc.num x * h = g * RatFunc.denom x := by
+    have hd := RatFunc.denom_ne_zero x
+    have heq : algebraMap K[X] (RatFunc K) (RatFunc.num x)
+          / algebraMap K[X] (RatFunc K) (RatFunc.denom x)
+        = algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h :=
+      (RatFunc.num_div_denom x).trans hx
+    rw [div_eq_div_iff
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hd)
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hh0),
+      ← map_mul, ← map_mul] at heq
+    exact RatFunc.algebraMap_injective K heq
+  have heval : (RatFunc.num x).eval α * h.eval α = g.eval α * (RatFunc.denom x).eval α := by
+    simpa only [eval_mul] using congrArg (Polynomial.eval α) hcross
+  rw [RatFunc.eval, Polynomial.eval₂_id, Polynomial.eval₂_id, div_eq_div_iff hdenom hh]
+  exact heval
+
 end DeepWiki.SymbolicIntegration
