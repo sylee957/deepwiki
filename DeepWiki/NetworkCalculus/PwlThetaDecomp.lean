@@ -74,6 +74,19 @@ The convex representative `f̲` itself is the pointwise supremum of rate-latency
 the dual of [4.13]'s `Θ`-meet. Each generator is anchored at a breakpoint `τ` with slope `p` no
 larger than every slope of `f̲` from `τ` on, so `β_{p, τ}(t) = p·(t − τ)₊` lies below `f̲`. -/
 
+/-- **Each generator lies below the convex normal form.** `convexNFEval` is the supremum of its
+rate-latency generators, so any `g ∈ gens` has `β_{g.1, g.2} ≤ convexNFEval gens` pointwise (the
+intro/elim satellite for the sup). -/
+theorem le_convexNFEval_of_mem (gens : List (ℝ≥0 × ℝ≥0)) {g : ℝ≥0 × ℝ≥0} (hg : g ∈ gens)
+    (t : ℝ≥0) : rateLatencyEReal g.1 g.2 t ≤ convexNFEval gens t := by
+  induction gens with
+  | nil => simp at hg
+  | cons hd tl ih =>
+      rw [convexNFEval_cons]
+      rcases List.mem_cons.mp hg with rfl | hg
+      · exact le_sup_left
+      · exact le_trans (ih hg) le_sup_right
+
 /-- **A breakpoint-anchored rate-latency lies below the convex PWL.** If the slope `p` is `≤` every
 finite slope of `convexSegEval f0 fs segs` and `≤` its asymptotic slope `fs`, then the rate-latency
 `β_{p, T}(t) = p·(t − T)₊` is `≤ ↑(f̲(t))` everywhere: before `T` the generator is `0`, and from
@@ -146,5 +159,78 @@ theorem asymptoteTangentLatency_le_rank (fs : ℝ≥0) (segs : List (ℝ≥0 × 
               exact add_le_add this (ih htl)
           _ = (fs : ℝ) * (ℓ + segLenSum tl) := by ring
   rw [pwlRank]; exact hcs
+
+/-- The **asymptotic-tangent latency** `T∞ = u* − f̲(u*)/fs` of `convexSegEval f0 fs segs`: the
+abscissa where the tangent line of the asymptote (slope `fs`, through the rank corner
+`(u*, f̲(u*))`) crosses zero. The latency of the single sloped rate-latency generator that carries
+the asymptote in the convex sup-of-rate-latencies decomposition. -/
+noncomputable def asymptoteTangentLatency (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) : ℝ≥0 :=
+  pwlRank segs - convexSegEval f0 fs segs (pwlRank segs) / fs
+
+/-- **The asymptotic tangent rate-latency equals the curve past the rank.** For positive asymptotic
+slope `fs` and `f0 = 0`, the rate-latency `β_{fs, T∞}` anchored at the asymptotic-tangent latency
+`T∞ = u* − f̲(u*)/fs` coincides with `f̲` for `t ≥ u* = pwlRank segs`:
+`β_{fs, T∞}(t) = f̲(u*) + fs·(t − u*) = f̲(t)`. This single sloped generator realises the asymptote
+exactly — the part [4.13]'s meet of *constant* `Θ`'s (`⊤` past the rank) cannot represent. -/
+theorem rateLatencyEReal_asymptoteTangent_eq_past_rank (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) (hall : ∀ seg ∈ segs, seg.1 ≤ fs) {t : ℝ≥0} (ht : pwlRank segs ≤ t) :
+    rateLatencyEReal fs (asymptoteTangentLatency 0 fs segs) t
+      = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  set u := pwlRank segs with hu
+  set v := convexSegEval 0 fs segs u with hv
+  rw [rateLatencyEReal_apply]
+  congr 1
+  rw [NNReal.coe_inj] -- reduce to the `ℝ≥0` value equality
+  -- `f̲(t) = f̲(u) + fs·(t − u)` past the rank
+  rw [convexSegEval_past_rank 0 fs segs ht, ← hv]
+  -- `β_{fs, T∞}(t) = fs·(t − T∞)` with `T∞ = u − v/fs`, and `v/fs ≤ u`
+  have hdiv_le : v / fs ≤ u := by
+    rw [div_le_iff₀ hfs]
+    have := asymptoteTangentLatency_le_rank fs segs hall
+    rw [← hu, ← hv] at this
+    -- `(v : ℝ) ≤ fs·u` ⇒ `v ≤ fs·u` in `ℝ≥0`, i.e. `v ≤ u·fs`
+    rw [mul_comm]; exact_mod_cast this
+  rw [asymptoteTangentLatency, ← hu, ← hv]
+  -- `t − (u − v/fs) = (t − u) + v/fs` since `v/fs ≤ u ≤ t`
+  have hsub : t - (u - v / fs) = (t - u) + v / fs := by
+    rw [tsub_tsub_assoc ht hdiv_le, add_comm]
+  rw [hsub, mul_add]
+  -- `fs·(v/fs) = v` (positive `fs`)
+  rw [mul_div_cancel₀ v (ne_of_gt hfs)]
+  ring
+
+/-- **The convex sup-of-rate-latencies equals the curve past the rank, given the asymptote tangent.**
+If a generator list `gens` (each rate `≤` all slopes and `≤ fs`) contains the asymptotic-tangent
+generator `(fs, T∞)`, then for `t ≥ pwlRank segs` the convex normal form `convexNFEval gens`
+*equals* `f̲(t)`: the asymptote tangent reaches the curve (`≥`), and every generator stays below it
+(`≤`). This is the exact convex sup-of-rate-latencies reading on the asymptotic region. -/
+theorem convexNFEval_eq_past_rank_of_mem_tangent (fs : ℝ≥0) (segs gens : List (ℝ≥0 × ℝ≥0))
+    (hfs0 : 0 < fs) (hall : ∀ seg ∈ segs, seg.1 ≤ fs)
+    (hrate : ∀ g ∈ gens, ∀ seg ∈ segs, g.1 ≤ seg.1) (hgfs : ∀ g ∈ gens, g.1 ≤ fs)
+    (hmem : (fs, asymptoteTangentLatency 0 fs segs) ∈ gens) {t : ℝ≥0} (ht : pwlRank segs ≤ t) :
+    convexNFEval gens t = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  refine le_antisymm (convexNFEval_le_convexSegEval 0 fs segs gens hrate hgfs t) ?_
+  -- the asymptote-tangent generator reaches the curve past the rank
+  rw [← rateLatencyEReal_asymptoteTangent_eq_past_rank fs segs hfs0 hall ht]
+  exact le_convexNFEval_of_mem gens hmem t
+
+/-! ## Faithfulness checks (against Prop 4.4 / eq. [4.13], book p. 86) -/
+
+/-- Eq. [4.13]: `Ω_f̲ = ⋀ᵢ Θ^{κᵢ}_{τᵢ}` is a canonical *upper* bound — `f̲ ≤ Ω_f̲` everywhere. -/
+example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0) :
+    ((convexSegEval f0 fs segs t : ℝ≥0) : EReal) ≤ canonicalUpperBound f0 fs segs t :=
+  convexSegEval_le_canonicalUpperBound f0 fs segs t
+
+/-- Eq. [4.13]: `∀ t > tₙ, Ω_f̲(t) = +∞` (past the last breakpoint `tₙ = pwlRank segs`). -/
+example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) {t : ℝ≥0} (ht : pwlRank segs < t) :
+    canonicalUpperBound f0 fs segs t = ⊤ :=
+  canonicalUpperBound_eq_top_past_rank f0 fs segs ht
+
+/-- Convex companion: the supremum of rate-latencies `convexNFEval` is `≤ f̲` when each generator's
+rate is dominated by all slopes and the asymptotic slope (the `≤` inclusion of `f̲ = ⨆ᵢ β_{Rᵢ,Tᵢ}`). -/
+example (f0 fs : ℝ≥0) (segs gens : List (ℝ≥0 × ℝ≥0))
+    (hrate : ∀ g ∈ gens, ∀ seg ∈ segs, g.1 ≤ seg.1) (hfs : ∀ g ∈ gens, g.1 ≤ fs) (t : ℝ≥0) :
+    convexNFEval gens t ≤ (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal) :=
+  convexNFEval_le_convexSegEval f0 fs segs gens hrate hfs t
 
 end DeepWiki
