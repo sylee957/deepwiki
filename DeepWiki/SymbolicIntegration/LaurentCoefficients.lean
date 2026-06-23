@@ -634,6 +634,59 @@ theorem laurentQ_eval_at_root [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) 
     | some k => rw [eval_laurentSubst_some]; rfl
   rw [hfg]
 
+/-! ## Stage H — the differential substitution hom `σα` and the specialized invariant (book p.56)
+
+The bridge from the differential-variable engine to the **actual** function `hᵢ,α = (A/D)(x−α)ⁱ`:
+substitute the genuine derivatives of `Dᵢ,α = Dᵢ /ₘ (x−α)` for the differential variables. The map
+`diffSubst Diα : DiffPoly K →ₐ[K] K[x]` sends `x ↦ X`, `u^(k) ↦ derivative^[k] Diα`; it is a
+**differential** algebra hom — `diffSubst Diα (ddx p) = derivative (diffSubst Diα p)` — so it carries the
+engine's `ddx` to the genuine `Polynomial.derivative`, and hence commutes with the iterated `(d/dx)^[d]`. -/
+
+/-- **The differential substitution hom** `σα : DiffPoly K →ₐ[K] K[x]` (book p.56): the `K`-algebra map
+`x ↦ X`, `u^(k) ↦ Dᵢ,α^(k) = derivative^[k] Diα`, substituting the genuine derivatives of `Diα` (`= Dᵢ,α`,
+the `(x−α)`-cofactor of `Dᵢ` at the root `α`) for the differential indeterminate's derivatives. -/
+noncomputable def diffSubst (Diα : K[X]) : DiffPoly K →ₐ[K] K[X] :=
+  MvPolynomial.aeval fun v => match v with
+    | none => Polynomial.X
+    | some k => derivative^[k] Diα
+
+@[simp] theorem diffSubst_X_none (Diα : K[X]) :
+    diffSubst Diα (X none : DiffPoly K) = Polynomial.X := by
+  simp [diffSubst]
+
+@[simp] theorem diffSubst_X_some (Diα : K[X]) (k : ℕ) :
+    diffSubst Diα (X (some k) : DiffPoly K) = derivative^[k] Diα := by
+  simp [diffSubst]
+
+@[simp] theorem diffSubst_dpEmbed (Diα p : K[X]) : diffSubst Diα (dpEmbed p) = p := by
+  have h : ((diffSubst Diα : DiffPoly K →ₐ[K] K[X]).toRingHom.comp dpEmbed) = RingHom.id K[X] := by
+    apply Polynomial.ringHom_ext
+    · intro c; simp [dpEmbed]
+    · simp [dpEmbed]
+  exact congrArg (fun f : K[X] →+* K[X] => f p) h
+
+/-- **`σα` is a differential hom** (book p.56, the key bridge): `σα (ddx p) = derivative (σα p)` — the
+substitution carries the engine's `d/dx` (`ddx`) to the genuine `Polynomial.derivative`. By
+`MvPolynomial.induction_on`: on `C a` both vanish, on a product `p·X v` Leibniz on both sides reduces to the
+base cases `σα(ddx (X none)) = σα 1 = 1 = derivative X` and
+`σα(ddx (X (some k))) = derivative^[k+1] Diα = derivative (derivative^[k] Diα) = derivative (σα (X (some k)))`. -/
+theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
+    diffSubst Diα (ddx p) = derivative (diffSubst Diα p) := by
+  induction p using MvPolynomial.induction_on with
+  | C a => rw [← MvPolynomial.algebraMap_eq, (ddx (K := K)).map_algebraMap, map_zero,
+      AlgHom.commutes, Polynomial.algebraMap_eq, derivative_C]
+  | add p q hp hq => rw [map_add, map_add, map_add, derivative_add, hp, hq]
+  | mul_X p v hp =>
+      have hbase : diffSubst Diα (ddx (X v : DiffPoly K)) = derivative (diffSubst Diα (X v)) := by
+        cases v with
+        | none => rw [ddx_x, map_one, diffSubst_X_none, derivative_X]
+        | some k =>
+            rw [show ddx (X (some k) : DiffPoly K) = X (some (k + 1)) from ddx_u k,
+              diffSubst_X_some, diffSubst_X_some, ← Function.iterate_succ_apply' derivative k Diα]
+      rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, map_add, map_mul, map_mul, hp, hbase,
+        map_mul, derivative_mul]
+      ring
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
