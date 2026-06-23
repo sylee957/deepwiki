@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.TupleCalculus
+import DeepWiki.RelationalDatabases.QueryEquivalence
 
 /-! # First-order database-relation calculus: variable infrastructure
 Toward the full Codd equivalence: the existential quantifier (needed for projection and join)
@@ -146,5 +147,39 @@ theorem evalFOExpr_joinQuery [DecidableEq Att] (db : (i : ι) → Table (sch i) 
   · rintro ⟨hi, hj⟩
     exact ⟨t.restrict Finset.subset_union_left, t.restrict Finset.subset_union_right, hi, hj,
       fun _ _ _ _ => rfl, fun _ _ _ _ => rfl⟩
+
+/-- The quantifier-free `QCond` over a single scheme `Ω` embeds into the first-order calculus
+(with all base relations of scheme `Ω`): the boolean structure maps across, with the free
+variable read by `Var.here`. -/
+def qcondToFO {Ω : Finset Att} : QCond ι Ω Val → FOCond ι (fun _ => Ω) Val [Ω]
+  | .rel i => FOCond.relA i Var.here
+  | .comp P => FOCond.compA Var.here P
+  | .neg C => FOCond.neg (qcondToFO C)
+  | .and C D => FOCond.and (qcondToFO C) (qcondToFO D)
+  | .or C D => FOCond.or (qcondToFO C) (qcondToFO D)
+
+/-- `FOCond` subsumes the quantifier-free `QCond`: the embedding denotes the same table, so the
+first-order calculus is a single faithful home for the whole equivalence. -/
+theorem evalFOExpr_qcondToFO {Ω : Finset Att} (db : ι → Table Ω Val) (C : QCond ι Ω Val) :
+    evalFOExpr db (qcondToFO C) = evalQCond db C := by
+  induction C with
+  | rel i =>
+    ext t
+    simp only [evalFOExpr, qcondToFO, evalFO, lookup_here, Set.mem_setOf_eq, evalQCond_rel]
+  | comp P =>
+    ext t
+    simp only [evalFOExpr, qcondToFO, evalFO, lookup_here, Set.mem_setOf_eq, evalQCond_comp]
+  | neg C ih =>
+    rw [qcondToFO, evalQCond_neg, ← ih]
+    ext t
+    simp only [evalFOExpr, evalFO, Set.mem_setOf_eq, Set.mem_compl_iff]
+  | and C D ihC ihD =>
+    rw [qcondToFO, evalQCond_and, ← ihC, ← ihD]
+    ext t
+    simp only [evalFOExpr, evalFO, mem_inter, Set.mem_setOf_eq]
+  | or C D ihC ihD =>
+    rw [qcondToFO, evalQCond_or, ← ihC, ← ihD]
+    ext t
+    simp only [evalFOExpr, evalFO, mem_union, Set.mem_setOf_eq]
 
 end DeepWiki

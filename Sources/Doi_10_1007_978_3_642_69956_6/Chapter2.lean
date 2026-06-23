@@ -165,6 +165,10 @@ abbrev reduction_projection := @DeepWiki.evalFOExpr_projQuery
 join. -/
 abbrev reduction_join := @DeepWiki.evalFOExpr_joinQuery
 
+/-- **`FOCond` subsumes the quantifier-free calculus** (§2.4): the quantifier-free `QCond`
+embeds into the first-order calculus with the same denotation, unifying the two layers. -/
+abbrev reduction_qcond_subsumed := @DeepWiki.evalFOExpr_qcondToFO
+
 /-! ## §2.3 SQL: Structured Query Language -/
 
 /-- **SQL query** (§2.3.1/§2.3.2, Fig 2.11, p.37): an elementary `Select … From … Where …` query
