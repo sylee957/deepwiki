@@ -362,4 +362,31 @@ theorem causalLinearProcess_sampleMean_clt_of_summable [IsProbabilityMeasure μ]
       rw [levyProkhorovDist_self]; exact hδ.le
     · exact levyProkhorovDist_truncation_le hZ hindep hident hcenter hψ hsum m hn hδ hm
 
+/-- **Central limit theorem for the sample mean of an AR(1) process**: the causal `AR(1)` process
+`Xₜ = ∑_{j≥0} φʲ Z_{t−j}` (`|φ| < 1`) over centered iid `L²` noise has an asymptotically normal
+sample mean, `√n X̄ₙ ⇒ (1 − φ)⁻¹ Y₀ = N(0, σ²/(1 − φ)²)`. A concrete instance of the full Theorem
+7.1.2 (`causalLinearProcess_sampleMean_clt_of_summable`) with the geometric filter `ψⱼ = φʲ`, whose
+absolute summability is the geometric series. -/
+theorem ar1_sampleMean_clt [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω']
+    {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {Z : ℤ → Ω → ℝ} {Y₀ : Ω' → ℝ} {φ : ℝ} (hφ : |φ| < 1)
+    (hZ : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ) (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ)
+    (hcenter : μ[Z 0] = 0) (hY₀ : HasLaw Y₀ (gaussianReal 0 Var[Z 0; μ].toNNReal) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n fun t =>
+        (causalLinearProcessLp (fun j => φ ^ j) Z hZ (t : ℤ) : Ω → ℝ) ω)
+      atTop ((1 - φ)⁻¹ • Y₀) (fun _ => μ) μ' := by
+  have hgeom : Summable fun j : ℕ => |φ| ^ j := summable_geometric_of_lt_one (abs_nonneg φ) hφ
+  have hψ : Summable fun j : ℕ => |φ ^ j| := by simpa only [abs_pow] using hgeom
+  have hsum : ∀ t : ℤ, Summable fun j : ℕ => (φ ^ j) • toLpSeq Z hZ (t - (j : ℤ)) := fun t => by
+    refine Summable.of_norm ?_
+    have hb : ∀ j : ℕ, ‖(φ ^ j) • toLpSeq Z hZ (t - (j : ℤ))‖
+        = |φ| ^ j * (eLpNorm (Z 0) 2 μ).toReal := fun j => by
+      simp only [toLpSeq, norm_smul, Real.norm_eq_abs, abs_pow]
+      rw [Lp.norm_toLp, (hident (t - (j : ℤ))).eLpNorm_eq 2]
+    simp only [hb]
+    exact hgeom.mul_right _
+  rw [show ((1 - φ)⁻¹ : ℝ) = ∑' j : ℕ, φ ^ j from
+    (tsum_geometric_of_norm_lt_one (by rwa [Real.norm_eq_abs])).symm]
+  exact causalLinearProcess_sampleMean_clt_of_summable hZ hψ hsum hindep hident hcenter hY₀
+
 end DeepWiki.TimeSeries
