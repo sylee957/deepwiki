@@ -247,6 +247,12 @@ join dependency produces nothing new already satisfies that join dependency — 
 tableau is a model of `SC`. -/
 abbrev chase_fixpoint_models_jd := @DeepWiki.satisfiesJd_of_jdChaseStep_eq
 
+/-- **Theorem 3.15** (§3.4, completeness core): the distinguished row is the glue of the initial
+family — if the initial-tableau rows are present in `T` and the goal jd holds in `T`, then
+`distRow ∈ T`. With the previous ingredient this gives: a closed reachable tableau modelling `SC`
+(hence `J`, when `SC ⊨ J`) contains the success row. -/
+abbrev chase_completeness_core := @DeepWiki.distRow_mem_of_satisfiesJd
+
 /-! ## §3.5 Inclusion Dependencies -/
 
 /-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*

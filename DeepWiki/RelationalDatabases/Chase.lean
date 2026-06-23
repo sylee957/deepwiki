@@ -248,4 +248,26 @@ theorem satisfiesJd_of_jdChaseStep_eq {k : ℕ} {comp : Fin k → Finset Att} {T
   rw [← h]
   exact Or.inr ⟨fam, hfam, hpair, key⟩
 
+/-- **The distinguished row is the glue of the initial family** (the completeness core of Theorem
+3.15): if the initial-tableau rows of a covering jd `⋈[comp]` are present in `T` and that jd holds
+in `T`, then `distRow ∈ T`. The initial rows pairwise agree on the distinguished entries, so the jd
+glues them into the all-distinguished row. -/
+theorem distRow_mem_of_satisfiesJd {k : ℕ} {comp : Fin k → Finset Att} {T : Tableau Ω}
+    (hcov : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i) (hsub : initialTableau comp ⊆ T)
+    (hjd : SatisfiesJd T comp) : distRow Ω ∈ T := by
+  set fam : Fin k → ChaseRow Ω := fun i a =>
+    if a.val ∈ comp i then ChaseSymbol.dist a.val else ChaseSymbol.undist a.val i.val with hfamdef
+  have hfam : ∀ i, fam i ∈ T := fun i => hsub ⟨i, rfl⟩
+  have hpair : ∀ i j, Agree (comp i ∩ comp j) (fam i) (fam j) := by
+    intro i j a ha
+    rw [Finset.mem_inter] at ha
+    simp only [hfamdef, if_pos ha.1, if_pos ha.2]
+  obtain ⟨v, hv, hvfam⟩ := hjd fam hfam hpair
+  have hvd : v = distRow Ω := by
+    funext a
+    obtain ⟨i, hi⟩ := hcov a
+    rw [hvfam i a hi]
+    simp only [hfamdef, distRow, if_pos hi]
+  rwa [hvd] at hv
+
 end DeepWiki
