@@ -274,6 +274,7 @@ import DeepWiki.NetworkCalculus.BooleanSatisfiability
 import DeepWiki.NetworkCalculus.BooleanConstraints
 import DeepWiki.NetworkCalculus.FiniteFunctionClauses
 import DeepWiki.NetworkCalculus.TM2Trace
+import DeepWiki.NetworkCalculus.StmtSmallStep
 import DeepWiki.NetworkCalculus.TableauSchema
 import DeepWiki.NetworkCalculus.TableauReadback
 import DeepWiki.NetworkCalculus.TableauInit
