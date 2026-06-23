@@ -306,6 +306,170 @@ theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Moni
     Polynomial.eval_mul, hα, zero_mul, add_zero]
   rw [mul_comm]
 
+/-! ## Stage F — the `d/dx` derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`, validating the `Pᵢⱼ`
+recursion (eq 2.11 as a fraction-field invariant)
+
+Mathlib has no derivation on a field of fractions, so — exactly as `RationalFunctionDerivative.lean`
+does for `K(x)` — we build `d/dx` on `Frac (DiffPoly K) = Localization (nonZeroDivisors (DiffPoly K))`
+directly by the quotient rule `(p/q)' = (ddx p·q − p·ddx q)/q²`, lifting the engine's `ddx`. The
+well-definedness on `Localization.liftOn` follows from differentiating the localization relation. With
+the resulting derivation `fracKDeriv`, eq 2.11's claim `hᵢ^(d)/d! = Pᵢⱼ/(u^(2i−j)·Eᵢ^(i−j+1))` (`d=i−j`)
+becomes a clean fraction-field identity `(fracKDeriv^[d] hᵢ) = d!·(Pᵢ,d/(u^(i+d)·Eᵢ^(d+1)))`, proved by
+induction via `laurentNum_cleared_step` and Mathlib's `Derivation.leibniz_div`. -/
+
+/-- The quotient-rule numerator/denominator pair `(ddx p·q − p·ddx q, q²)` as an element of
+`Frac (DiffPoly K)`. -/
+private noncomputable def fracDerivAux (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
+    FractionRing (DiffPoly K) :=
+  Localization.mk (ddx p * (q : DiffPoly K) - p * ddx (q : DiffPoly K))
+    ⟨(q : DiffPoly K) ^ 2, pow_mem q.2 2⟩
+
+private theorem fracDerivAux_wd {p p' : DiffPoly K} {q q' : nonZeroDivisors (DiffPoly K)}
+    (h : (Localization.r (nonZeroDivisors (DiffPoly K))) (p, q) (p', q')) :
+    fracDerivAux p q = fracDerivAux p' q' := by
+  rw [Localization.r_iff_exists] at h
+  obtain ⟨c, hc⟩ := h
+  have hc0 : (c : DiffPoly K) ≠ 0 := nonZeroDivisors.coe_ne_zero c
+  have key : (q' : DiffPoly K) * p = (q : DiffPoly K) * p' := mul_left_cancel₀ hc0 (by simpa using hc)
+  have keyd := congrArg ddx key
+  rw [Derivation.leibniz, Derivation.leibniz] at keyd
+  simp only [smul_eq_mul] at keyd
+  unfold fracDerivAux
+  rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
+  refine ⟨1, ?_⟩
+  simp only [OneMemClass.coe_one, one_mul]
+  show ((q' : DiffPoly K) ^ 2) * (ddx p * (q : DiffPoly K) - p * ddx (q : DiffPoly K))
+      = ((q : DiffPoly K) ^ 2) * (ddx p' * (q' : DiffPoly K) - p' * ddx (q' : DiffPoly K))
+  linear_combination ((q : DiffPoly K) * (q' : DiffPoly K)) * keyd
+    - ((q : DiffPoly K) * ddx (q' : DiffPoly K) + (q' : DiffPoly K) * ddx (q : DiffPoly K)) * key
+
+/-- **`d/dx` on `Frac (DiffPoly K)`** (§2.7): the quotient-rule derivative `(p/q)' = (ddx p·q − p·ddx q)/q²`
+extending the engine's `ddx`, defined via `Localization.liftOn` (well-defined by `fracDerivAux_wd`). -/
+noncomputable def fracDeriv (x : FractionRing (DiffPoly K)) : FractionRing (DiffPoly K) :=
+  Localization.liftOn x fracDerivAux (fun h => fracDerivAux_wd h)
+
+/-- **Quotient rule** for `fracDeriv`: `(mk p q)' = (ddx p·q − p·ddx q)/q²`. -/
+theorem fracDeriv_mk (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
+    fracDeriv (Localization.mk p q) = fracDerivAux p q :=
+  Localization.liftOn_mk _ _ _ _
+
+/-- **`mk a b = mk c d` from the cross-multiplication** `d·a = b·c` in `DiffPoly K`. -/
+private theorem mk_eq_of {a c : DiffPoly K} {b d : nonZeroDivisors (DiffPoly K)}
+    (h : (d : DiffPoly K) * a = (b : DiffPoly K) * c) :
+    (Localization.mk a b : FractionRing (DiffPoly K)) = Localization.mk c d := by
+  rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
+  exact ⟨1, by simp only [OneMemClass.coe_one, one_mul]; exact h⟩
+
+/-- **`fracDeriv` extends `ddx`**: on an embedded numerator (as a fraction over `1`), `d/dx` on `Frac`
+is the engine's `ddx`, `fracDeriv (algebraMap p) = algebraMap (ddx p)`. -/
+theorem fracDeriv_algebraMap (p : DiffPoly K) :
+    fracDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
+      = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) := by
+  rw [← Localization.mk_one_eq_algebraMap, fracDeriv_mk]
+  unfold fracDerivAux
+  rw [← Localization.mk_one_eq_algebraMap]
+  apply mk_eq_of
+  simp
+
+/-- **Additivity of `fracDeriv`** on `Frac (DiffPoly K)`: `(x + y)' = x' + y'`. -/
+theorem fracDeriv_add (x y : FractionRing (DiffPoly K)) :
+    fracDeriv (x + y) = fracDeriv x + fracDeriv y := by
+  induction x using Localization.induction_on with | _ px =>
+  induction y using Localization.induction_on with | _ py =>
+  obtain ⟨p, q⟩ := px; obtain ⟨r, s⟩ := py
+  rw [Localization.add_mk, fracDeriv_mk, fracDeriv_mk, fracDeriv_mk]
+  unfold fracDerivAux
+  rw [Localization.add_mk]
+  apply mk_eq_of
+  push_cast
+  simp only [map_add, Derivation.leibniz, smul_eq_mul]
+  ring
+
+/-- **Leibniz rule for `fracDeriv`** on `Frac (DiffPoly K)`: `(x·y)' = x'·y + x·y'`. -/
+theorem fracDeriv_mul (x y : FractionRing (DiffPoly K)) :
+    fracDeriv (x * y) = fracDeriv x * y + x * fracDeriv y := by
+  induction x using Localization.induction_on with | _ px =>
+  induction y using Localization.induction_on with | _ py =>
+  obtain ⟨p, q⟩ := px; obtain ⟨r, s⟩ := py
+  rw [Localization.mk_mul, fracDeriv_mk, fracDeriv_mk, fracDeriv_mk]
+  unfold fracDerivAux
+  rw [Localization.mk_mul, Localization.mk_mul, Localization.add_mk]
+  apply mk_eq_of
+  push_cast
+  simp only [Derivation.leibniz, smul_eq_mul]
+  ring
+
+/-- **`K`-linearity of `fracDeriv`** on `Frac (DiffPoly K)`: `(c • x)' = c • x'` for `c : K`. -/
+theorem fracDeriv_smul (c : K) (x : FractionRing (DiffPoly K)) :
+    fracDeriv (c • x) = c • fracDeriv x := by
+  induction x using Localization.induction_on with | _ px =>
+  obtain ⟨p, q⟩ := px
+  rw [Localization.smul_mk, fracDeriv_mk, fracDeriv_mk]
+  unfold fracDerivAux
+  rw [Localization.smul_mk]
+  apply mk_eq_of
+  have hc : ddx (c • p) = c • ddx p := map_smul ddx.toLinearMap c p
+  rw [hc, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul]
+  ring
+
+/-- **The `d/dx` `K`-derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`** (§2.7): `fracDeriv` bundled as a
+`Derivation K (Frac) (Frac)`, so Mathlib's `Derivation.leibniz_div`/`leibniz_pow` apply. -/
+noncomputable def fracKDeriv :
+    Derivation K (FractionRing (DiffPoly K)) (FractionRing (DiffPoly K)) :=
+  Derivation.mk'
+    { toFun := fracDeriv, map_add' := fracDeriv_add,
+      map_smul' := fun c x => by simpa using fracDeriv_smul c x }
+    fun a b => by
+      simp only [LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul]; rw [fracDeriv_mul]; ring
+
+@[simp] theorem fracKDeriv_apply (x : FractionRing (DiffPoly K)) : fracKDeriv x = fracDeriv x := rfl
+
+/-- **`fracKDeriv` extends `ddx`** (the bundled form of `fracDeriv_algebraMap`). -/
+theorem fracKDeriv_algebraMap (p : DiffPoly K) :
+    fracKDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
+      = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) :=
+  fracDeriv_algebraMap p
+
+/-- **`dpEmbed Ei ≠ 0`** for `Ei ≠ 0`: the embedding `K[x] → DiffPoly K` is injective (with left inverse
+`aeval (laurentSubst _)`), so it does not kill a nonzero polynomial. -/
+theorem dpEmbed_ne_zero {Ei : K[X]} (hEi : Ei ≠ 0) : dpEmbed Ei ≠ (0 : DiffPoly K) := by
+  intro h
+  apply hEi
+  have := congrArg (MvPolynomial.aeval (laurentSubst (0 : K[X]))) h
+  rwa [aeval_laurentSubst_dpEmbed, map_zero] at this
+
+/-- **The `hᵢ^(d)` denominator** `u^(i+d)·Eᵢ^(d+1) ∈ DiffPoly K` (eq 2.11, `d = i−j`, denominator
+`u^(2i−j)·Eᵢ^(i−j+1)`). -/
+noncomputable def lDenom (Ei : K[X]) (i d : ℕ) : DiffPoly K :=
+  (X (some 0)) ^ (i + d) * (dpEmbed Ei) ^ (d + 1)
+
+/-- **`u^(i+d)·Eᵢ^(d+1) ≠ 0`** for `Ei ≠ 0`. -/
+theorem lDenom_ne_zero {Ei : K[X]} (i d : ℕ) (hEi : Ei ≠ 0) : lDenom Ei i d ≠ 0 := by
+  refine mul_ne_zero (pow_ne_zero _ ?_) (pow_ne_zero _ (dpEmbed_ne_zero hEi))
+  simp [MvPolynomial.X_ne_zero]
+
+/-- **Denominator recursion**: `denom_{d+1} = denom_d · u · Eᵢ` (the new `u`/`Eᵢ` factor each step). -/
+theorem lDenom_succ (Ei : K[X]) (i d : ℕ) :
+    lDenom Ei i (d + 1) = lDenom Ei i d * X (some 0) * dpEmbed Ei := by
+  unfold lDenom
+  rw [show i + (d + 1) = (i + d) + 1 from by ring]
+  ring
+
+/-- **`hᵢ = A/(uⁱ·Eᵢ)`** as an element of `K(x)⟨u⟩` (eq 2.11 base): the differential-variable fraction
+the engine differentiates. -/
+noncomputable def hFrac (A Ei : K[X]) (i : ℕ) : FractionRing (DiffPoly K) :=
+  algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (dpEmbed A) /
+    algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (lDenom Ei i 0)
+
+/-- **The candidate `hᵢ^(d)/d!` fraction** `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` (eq 2.11, RHS). -/
+noncomputable def lFrac (A Ei : K[X]) (i d : ℕ) : FractionRing (DiffPoly K) :=
+  algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (laurentNum A Ei i d) /
+    algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (lDenom Ei i d)
+
+/-- **`lFrac` base case** `d=0`: `Pᵢ,0/denom₀ = A/(uⁱ·Eᵢ) = hᵢ` (`Pᵢ,0 = A`). -/
+theorem lFrac_zero (A Ei : K[X]) (i : ℕ) : lFrac A Ei i 0 = hFrac A Ei i := by
+  unfold lFrac hFrac; rw [laurentNum_zero]
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
