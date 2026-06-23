@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.SampleMeanVariance
 import DeepWiki.TimeSeries.MultivariateCLT
+import DeepWiki.TimeSeries.SampleMeanCLT
 import Mathlib.Probability.IdentDistrib
 
 /-! # Central limit theorem for m-dependent sequences (§6.4, Theorem 6.4.2) — foundations
@@ -216,6 +217,21 @@ theorem IsMDependent.tendsto_charFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → �
     (fun i => hstat.identDistrib_bigBlockSum hmeas p m i) ?_ hU0.integrable_sq
   rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
   simp [hcenter]
+
+/-- **The big-block sums obey a central limit theorem in distribution** (h1, distribution form): for a
+strictly stationary `L²` `m`-dependent process, `√r (r⁻¹ ∑_{k<r} U_k − E U₀) ⇒ N(0, Var U₀)`, where
+`U_k = ∑_{t ∈ bigBlock k} Xₜ`. A direct application of the iid sample-mean CLT (`iidNoise_sampleMean_clt`)
+to the big-block sums, which are iid (`iIndepFun_bigBlockSum` + `identDistrib_bigBlockSum`). -/
+theorem IsMDependent.tendstoInDistribution_bigBlockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P']
+    (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem : ∀ t, MemLp (X t) 2 μ) (p : ℕ) {Y : Ω' → ℝ}
+    (hY : HasLaw Y (gaussianReal 0 Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ].toNNReal) P') :
+    TendstoInDistribution (fun (r : ℕ) ω => Real.sqrt r *
+        (sampleMean r (fun k => ∑ t ∈ bigBlock p m k, X t ω)
+          - μ[fun ω => ∑ t ∈ bigBlock p m 0, X t ω])) atTop Y (fun _ => μ) P' :=
+  iidNoise_sampleMean_clt hY (memLp_finsetSum _ fun t _ => hmem t) (hmdep.iIndepFun_bigBlockSum p)
+    fun i => hstat.identDistrib_bigBlockSum hmeas p m i
 
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
