@@ -19,6 +19,7 @@ import DeepWiki.TimeSeries.DoubleLimitDistribution
 import DeepWiki.TimeSeries.LinearProcessFullCLT
 import DeepWiki.TimeSeries.MultivariateCLT
 import DeepWiki.TimeSeries.AsymptoticNormality
+import DeepWiki.TimeSeries.MultivariateDelta
 import DeepWiki.TimeSeries.DeltaMethod
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.MDependentCLT
