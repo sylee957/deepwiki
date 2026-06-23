@@ -493,4 +493,41 @@ theorem IsMDependent.tendstoInDistribution_gapRemoved_smul {m : ℕ} {X : ℤ �
   rw [heq]
   exact hmain
 
+/-- **A Lévy–Prokhorov distance bound from an `L²` bound** (general form): if `f − g` has `L²` norm
+`≤ B` and `B ≤ δ·√δ`, then the laws of `f` and `g` are within `δ` in Lévy–Prokhorov distance.
+Chebyshev (`meas_ge_le_mul_pow_eLpNorm_enorm`) on the `L²` bound controls the tail `μ{δ ≤ |f−g|}`,
+fed to the in-measure ⟹ Lévy–Prokhorov estimate `levyProkhorovEDist_map_le`. The general engine for the
+double-limit approximation hypothesis `h3`. -/
+theorem levyProkhorovDist_le_of_eLpNorm_le [IsProbabilityMeasure μ] {f g : Ω → ℝ}
+    (hf : AEStronglyMeasurable f μ) (hg : AEStronglyMeasurable g μ) {B δ : ℝ} (hB0 : 0 ≤ B)
+    (hδ : 0 < δ) (heLp : eLpNorm (f - g) 2 μ ≤ ENNReal.ofReal B) (hm : B ≤ δ * Real.sqrt δ) :
+    levyProkhorovDist (μ.map f) (μ.map g) ≤ δ := by
+  have hcheb : μ {ω | δ ≤ dist (f ω) (g ω)} ≤ ENNReal.ofReal δ := by
+    have hset : {ω | δ ≤ dist (f ω) (g ω)} = {ω | ENNReal.ofReal δ ≤ ‖(f - g) ω‖ₑ} := by
+      ext ω
+      simp only [Set.mem_setOf_eq, Pi.sub_apply, Real.dist_eq, ← Real.norm_eq_abs, ← ofReal_norm]
+      exact (ENNReal.ofReal_le_ofReal_iff (norm_nonneg _)).symm
+    rw [hset]
+    refine le_trans (meas_ge_le_mul_pow_eLpNorm_enorm μ two_ne_zero ENNReal.ofNat_ne_top
+      (hf.sub hg) (ENNReal.ofReal_pos.mpr hδ).ne'
+      (fun h => absurd h ENNReal.ofReal_ne_top)) ?_
+    rw [show ((2 : ENNReal).toReal) = ((2 : ℕ) : ℝ) by norm_num, ENNReal.rpow_natCast,
+      ENNReal.rpow_natCast]
+    calc (ENNReal.ofReal δ)⁻¹ ^ 2 * eLpNorm (f - g) 2 μ ^ 2
+        ≤ (ENNReal.ofReal δ)⁻¹ ^ 2 * ENNReal.ofReal B ^ 2 := by gcongr
+      _ = ENNReal.ofReal (B ^ 2 / δ ^ 2) := by
+          rw [← ENNReal.ofReal_inv_of_pos hδ, ← ENNReal.ofReal_pow (by positivity),
+            ← ENNReal.ofReal_pow hB0, ← ENNReal.ofReal_mul (by positivity)]
+          congr 1; field_simp
+      _ ≤ ENNReal.ofReal δ := by
+          apply ENNReal.ofReal_le_ofReal
+          rw [div_le_iff₀ (by positivity)]
+          have h1 : B ^ 2 ≤ (δ * Real.sqrt δ) ^ 2 := pow_le_pow_left₀ hB0 hm 2
+          have h2 : (δ * Real.sqrt δ) ^ 2 = δ * δ ^ 2 := by
+            rw [mul_pow, Real.sq_sqrt hδ.le]; ring
+          linarith [h1, h2]
+  refine (ENNReal.toReal_mono ENNReal.ofReal_ne_top
+    (le_trans (levyProkhorovEDist_map_le f g hf.aemeasurable hg.aemeasurable hδ)
+      (sup_le le_rfl hcheb))).trans_eq (ENNReal.toReal_ofReal hδ.le)
+
 end DeepWiki.TimeSeries
