@@ -2031,6 +2031,42 @@ theorem am_D_eq_cdiv_mul (fuel : ℕ) (D Vpow : CPoly) (hVpow : cnorm Vpow ≠ [
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vpow) := by
   rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel D Vpow hVpow hrem]
 
+/-! ### The single-repeated-factor wrapper: `U·V` is the radical `Dstar`
+
+When `D` has a **single** repeated factor `(V, m)` (every other irreducible factor of `D` is simple),
+the `hermiteReduce` `g`-fold reduces to the *one* `hermiteInner` term `g = gloc`, and the global
+denominator `U·V^m = D` deflates to `U·V = Dstar` exactly (the radical: `V` at power `1`, every other
+factor already simple). Then `hermiteInner_spec_of`'s residual identity `A/(U·V^m) = gloc′ +
+Afinal/(U·V)` is *directly* the wrapper conclusion `A/D = gloc′ + Afinal/Dstar`, with **no** divisibility
+certificate — the residual denominator is already `Dstar`. This is the fully-unconditional wrapper for the
+single-repeated-factor shape (the abstract composition is below; the general multi-factor `g`-fold needs
+the per-factor interference clearing, recorded in `## NOT YET FORMALIZED`). -/
+
+open scoped Differential in
+/-- **Single-repeated-factor wrapper correctness** in `RatFunc ℚ`: for one repeated factor `(V, j+1)`
+with `U = D/V^{j+1}` (so `am D = am U · am V^{j+1}`) and `Dstar = U·V` the radical (`am Dstar =
+am U · am V`), the `hermiteInner` reduction of the global `A/D` is *directly* the wrapper:
+`am A/am D = (toQFun gloc)′ + am Afinal/am Dstar`, where `(gloc, Afinal) = hermiteInner fuel V U j A
+qzero`. No divisibility certificate — the residual denominator `U·V` is already the radical. The single
+`hermiteInner` term of the `g`-fold when `D` has exactly one repeated factor; composes
+`hermiteInner_spec_of` with the two denominator reconciliations. -/
+theorem hermiteReduce_residual_correct_single (fuel : ℕ) (V U A Dstar D : CPoly)
+    (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
+    (hq : cnorm V ≠ [])
+    (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
+      = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1))
+    (hgc : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ)
+    (hD : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
+    (hDstar : algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (hermiteInner fuel V U j A qzero).1)′
+        + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  rw [hD, hDstar]
+  exact hermiteInner_spec_of fuel V U hU hV hq hg hgc j A
+
 /-! ### Reducing the cleared-identity divisibility to two structural divisibilities
 
 The monolithic premise of `hermiteReduce_residual_correct_of_dvd` is `D·gden² ∣ resNum'·Dstar` (with
