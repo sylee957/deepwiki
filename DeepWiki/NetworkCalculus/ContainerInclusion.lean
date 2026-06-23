@@ -85,6 +85,63 @@ theorem conv_mem {c d : Container} {f g : ℝ≥0 → EReal}
   ⟨fun t => minConv_le_minConv (fun u => hf.1 u) (fun s => hg.1 s) t,
    fun t => minConv_le_minConv (fun u => hf.2 u) (fun s => hg.2 s) t⟩
 
+/-! ## Satellites: inclusion-monotonicity and singleton reduction -/
+
+/-- Containers with equal bounds are equal (the `le` field is a proof). -/
+theorem ext {c d : Container} (hlo : c.lo = d.lo) (hhi : c.hi = d.hi) : c = d := by
+  cases c; cases d; cases hlo; cases hhi; rfl
+
+/-- **The lifted meet is inclusion-monotone**: widening both arguments by their
+bounds (`c'.lo ≤ c.lo`, `c.hi ≤ c'.hi`, and likewise for `d`) widens `c [∧] d`
+into `c' [∧] d'`. -/
+theorem inf_subset_inf {c c' d d' : Container}
+    (hclo : c'.lo ≤ c.lo) (hchi : c.hi ≤ c'.hi)
+    (hdlo : d'.lo ≤ d.lo) (hdhi : d.hi ≤ d'.hi) :
+    Subset (inf c d) (inf c' d') :=
+  subset_of_le (inf_le_inf hclo hdlo) (inf_le_inf hchi hdhi)
+
+/-- **The lifted convolution is inclusion-monotone**: widening both arguments by
+their bounds widens `c [∗] d` into `c' [∗] d'` (`minConv_le_minConv`). -/
+theorem conv_subset_conv {c c' d d' : Container}
+    (hclo : c'.lo ≤ c.lo) (hchi : c.hi ≤ c'.hi)
+    (hdlo : d'.lo ≤ d.lo) (hdhi : d.hi ≤ d'.hi) :
+    Subset (conv c d) (conv c' d') :=
+  subset_of_le
+    (fun t => minConv_le_minConv (fun u => hclo u) (fun s => hdlo s) t)
+    (fun t => minConv_le_minConv (fun u => hchi u) (fun s => hdhi s) t)
+
+/-- **On singletons the lifted meet reduces to the plain meet**:
+`(singleton f) [∧] (singleton g) = singleton (f ⊓ g)` (zero uncertainty in,
+zero uncertainty out). -/
+theorem inf_singleton (f g : ℝ≥0 → EReal) :
+    inf (singleton f) (singleton g) = singleton (f ⊓ g) :=
+  ext rfl rfl
+
+/-- **On singletons the lifted convolution reduces to the plain convolution**:
+`(singleton f) [∗] (singleton g) = singleton (minConv f g)`. -/
+theorem conv_singleton (f g : ℝ≥0 → EReal) :
+    conv (singleton f) (singleton g) = singleton (minConv f g) :=
+  ext rfl rfl
+
+/-! ## Faithfulness checks (anonymous restatements vs the book) -/
+
+-- Definition 4.5 [4.14] (un-canonicalized lift): `[∧]` applies `⊓` to the bounds.
+example (c d : Container) :
+    (inf c d).lo = c.lo ⊓ d.lo ∧ (inf c d).hi = c.hi ⊓ d.hi := ⟨rfl, rfl⟩
+
+-- Definition 4.5 [4.15]: `[∗]` applies `∗` (`minConv`) to the bounds.
+example (c d : Container) :
+    (conv c d).lo = minConv c.lo d.lo ∧ (conv c d).hi = minConv c.hi d.hi :=
+  ⟨rfl, rfl⟩
+
+-- Theorem 4.4 (minimum): `f ∈ f, g ∈ g ⇒ f ∧ g ∈ f[∧]g`.
+example {c d : Container} {f g : ℝ≥0 → EReal} (hf : f ∈ c) (hg : g ∈ d) :
+    (f ⊓ g) ∈ inf c d := inf_mem hf hg
+
+-- Theorem 4.4 (convolution): `f ∈ f, g ∈ g ⇒ f ∗ g ∈ f[∗]g`.
+example {c d : Container} {f g : ℝ≥0 → EReal} (hf : f ∈ c) (hg : g ∈ d) :
+    minConv f g ∈ conv c d := conv_mem hf hg
+
 end Container
 
 end DeepWiki
