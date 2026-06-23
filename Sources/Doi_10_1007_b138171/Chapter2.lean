@@ -33,14 +33,17 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 — the GENERAL correctness of the rational `Hᵢⱼ` engine: `Hᵢⱼ(α)` is the `1/(x−α)ʲ`
-  Laurent coefficient of `A/D` for every `i,j` (via the Taylor expansion of `hᵢ,α = (A/D)(x−α)ⁱ`,
-  book p.56) [deferred: needs the `Frac R` denominator-form invariant of the `Pᵢⱼ` recursion +
-  the Taylor-series argument over the algebraic closure]. (The differential-variable engine *itself*
-  — eqs 2.10–2.12, `bezoutE`/`bezoutDeriv`/`laurentNum`/`laurentQ`/`laurentH` — is now DEFINED
-  (`thm_2_7_1_laurentH`), and the `i=1` residue case `H₁₁(α) = A(α)/D'(α)` is PROVED
-  (`thm_2_7_1_residue`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
-  `thm_2_7_1`.)
+§2.7: Thm 2.7.1 — the GENERAL correctness of the rational `Hᵢⱼ` engine for `i,j ≥ 2`: identifying
+  `Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)` (= `Qᵢⱼ(α)`, the library's `thm_2_7_1_laurentQ_eval`) with the
+  `(i−j)`-th Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α`, hence the `1/(x−α)ʲ` Laurent coefficient
+  of `A/D` (book p.56) [deferred: the remaining step is Taylor's theorem over the algebraic closure —
+  `hᵢ,α = ∑_k (hᵢ,α^{(k)}(α)/k!)(x−α)^k`]. (The differential-variable engine *itself* — eqs 2.10–2.12,
+  `bezoutE`/`bezoutDeriv`/`laurentNum`/`laurentQ`/`laurentH` — is DEFINED (`thm_2_7_1_laurentH`); the `i=1`
+  residue case `H₁₁(α) = A(α)/D'(α)` is PROVED (`thm_2_7_1_residue`); the eq 2.11 `Frac R` denominator-form
+  invariant of the `Pᵢⱼ` recursion is PROVED (`eq_2_11_invariant`, on a hand-built `d/dx` derivation on
+  `Frac (DiffPoly K)`); and the book's p.56 root-evaluation `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)` is PROVED
+  (`thm_2_7_1_laurentQ_eval`, via `Dᵢ^{(k+1)}(α) = (k+1)·Dᵢ,α^{(k)}(α)`). The `K[x]`-level complete-PFD
+  *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
@@ -926,6 +929,24 @@ noncomputable abbrev thm_2_7_1_laurentQ := @DeepWiki.SymbolicIntegration.laurent
 — the Rothstein–Trager residue of `A/D` at a simple root `α` of `D = D₁·E₁`, since `B₁(α)=1/E₁(α)`,
 `C₁(α)=1/D₁'(α)` and `D'(α)=D₁'(α)·E₁(α)`. The library's `eval_laurentH_one_one_eq_residue`. -/
 abbrev thm_2_7_1_residue := @DeepWiki.SymbolicIntegration.eval_laurentH_one_one_eq_residue
+
+/-- **Theorem 2.7.1, eq 2.11 as a fraction-field invariant** (§2.7, p.55, the validation of the `Pᵢⱼ`
+recursion): in `K(x)⟨u⟩ = Frac (DiffPoly K)`, `(d/dx)^[i−j] hᵢ = (∏_{k}(i+k+1))·(Pᵢⱼ/(u^{2i−j}·Eᵢ^{i−j+1}))`
+for `hᵢ = A/(uⁱ·Eᵢ)` — the `d`-fold `d/dx` of `hᵢ` is the `laurentNum` numerator over its denominator, up
+to the `laurentNumStep` divisor product (`laurentScale`; the book's `hᵢ^{i−j}/(i−j)!` normalization folded
+in). Validates `laurentNum`/`laurentNumStep` against the genuine quotient-rule `d/dx`. The library's
+`iterate_fracKDeriv_hFrac`, built on the `K`-derivation `fracKDeriv` on the fraction field (quotient rule
+via `Localization.liftOn`) and the cleared step `laurentNum_cleared_step`/`reduced_num`. -/
+abbrev eq_2_11_invariant := @DeepWiki.SymbolicIntegration.iterate_fracKDeriv_hFrac
+
+/-- **Theorem 2.7.1, the root-evaluation `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`** (§2.7, p.56): at a root `α` of
+`Dᵢ = (x−α)·Dᵢ,α` (over `K̄`), the `Qᵢⱼ` substitution evaluates to `Pᵢⱼ` at the derivatives of `Dᵢ,α`,
+`Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^{i−j}(α))` — via the Leibniz identity
+`Dᵢ^{(k+1)}(α) = (k+1)·Dᵢ,α^{(k)}(α)` (the library's `eval_laurentSubst_some`). The library's
+`laurentQ_eval_at_root`. (Identifying `Pᵢⱼ(α,…)` with the `(i−j)`-th Taylor coefficient of
+`hᵢ,α = (A/D)(x−α)ⁱ`, hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`, is the remaining Taylor-series
+step over the closure — see §2.7 NOT YET FORMALIZED.) -/
+abbrev thm_2_7_1_laurentQ_eval := @DeepWiki.SymbolicIntegration.laurentQ_eval_at_root
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
