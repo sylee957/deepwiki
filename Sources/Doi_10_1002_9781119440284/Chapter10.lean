@@ -27,6 +27,9 @@ import DeepWiki.NetworkCalculus.KarpReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPHardness
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPMembership
 import DeepWiki.NetworkCalculus.ThreeDimensionalMatchingReduction
+import DeepWiki.NetworkCalculus.ComplexityNP
+import DeepWiki.NetworkCalculus.BooleanSatisfiability
+import DeepWiki.NetworkCalculus.CookLevin
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -53,8 +56,11 @@ framework Mathlib lacks). `#print axioms`: NP-membership uses Mathlib's 3 standa
 NP-completeness adds exactly `X3CIsNPHard`. So Thm 10.2 is formalized end-to-end as an NP-completeness
 result modulo exactly that one cited classical fact. The reduction CHAIN extends one canonical step
 further (`thm_10_2_chain_threeDM`/`threeDMToX3C`: `3DM ≤ₖ X3C` fully proved, so NP-hardness can rest on
-`ThreeDMIsNPHard` instead) — relocating the cited axiom toward Cook–Levin, which (proving 3DM/SAT ∈ NPC
-from a Turing-machine/NP framework Mathlib lacks) remains the sole irreducible base. -/
+`ThreeDMIsNPHard` instead) — relocating the cited axiom toward Cook–Levin. The Cook–Levin GAP is now
+framed faithfully (see the "Toward Cook–Levin" section below): a Turing-machine-grounded NP class
+`IsInNP_TM` (real poly-time TM2 verifier) + the CNF-SAT model + `cookLevin` stated over it as the single
+research-scale axiom (the ~30k-line tableau) + the chain mechanism. So the sole irreducible base is now
+exactly the `cookLevin` tableau axiom, on a genuine NP framework rather than a missing one. -/
 
 namespace DeepWiki.Dnc
 
@@ -312,5 +318,34 @@ RELOCATES the cited completeness axiom one canonical step; it does not discharge
 theorem thm_10_2_chain_threeDM :
     DeepWiki.IsNPHard DeepWiki.WellFormedX3C.size DeepWiki.worstCaseBacklogDecision :=
   DeepWiki.isNPHard_worstCaseBacklogDecision_via_threeDM
+
+/-! ### Toward Cook–Levin — the genuine NP framework (`ComplexityNP`/`BooleanSatisfiability`/`CookLevin`)
+The base `axiom X3CIsNPHard`/`ThreeDMIsNPHard` is `X3C`/`3DM ∈ NPC`, classically resting on **Cook–Levin**.
+That gap is now framed faithfully rather than only cited:
+* `IsInNP_TM` — a **Turing-machine-grounded** NP class: the verifier is a genuine polynomial-time finite
+  TM2 (`Turing.TM2ComputableInPolyTime`), the structure the lightweight `IsInNP` proxy discarded.
+  `IsInNP_TM.toIsInNP` bridges it to the proxy (axiom-free), so this chapter's machinery specializes it.
+* `CnfFormula`/`Satisfiable` — the CNF-SAT decision problem (decidable evaluator).
+* `cookLevin : IsNPHard_TM cnfEncode Satisfiable` — **Cook–Levin stated over the real class**, scoped as
+  the SINGLE axiom (the tableau construction is research-scale, ~30k lines in comparable assistants).
+* `isNPHard_TM_of_satReduction` / `IsNPHard_TM.viaReduction` — the chain mechanism: any problem reached
+  from SAT by Karp reductions is NP-hard. `3DM ≤ₖ X3C` and `X3C ≤ₖ worst-case-backlog` are proved; the
+  `SAT ≤ₖ 3SAT ≤ₖ 3DM` gadgets remain `[infra]`.
+`#print axioms isNPHard_TM_of_satReduction` = Mathlib's 3 standard axioms + exactly `cookLevin`. -/
+
+/-- **Cook–Levin, faithfully stated** (toward discharging `X3CIsNPHard`): SAT is NP-hard over the
+Turing-machine-grounded NP class `IsNPHard_TM`. Scoped as the single research-scale axiom (the tableau).
+The library's `DeepWiki.cookLevin`. -/
+theorem cook_levin : DeepWiki.IsNPHard_TM DeepWiki.cnfEncode DeepWiki.Satisfiable :=
+  DeepWiki.cookLevin
+
+/-- **The NP-hardness chain mechanism** (the shape that would discharge Thm 10.2 from Cook–Levin):
+any problem reached from SAT by a Karp reduction is NP-hard. The library's
+`DeepWiki.isNPHard_TM_of_satReduction`. -/
+theorem npHard_of_sat_reduction {ρ ρΓ : Type} {ec : ρ → List ρΓ} {R : ρ → Prop}
+    (red : DeepWiki.KarpReduction (fun φ => (DeepWiki.cnfEncode φ).length)
+      (fun z => (ec z).length) DeepWiki.Satisfiable R) :
+    DeepWiki.IsNPHard_TM ec R :=
+  DeepWiki.isNPHard_TM_of_satReduction red
 
 end DeepWiki.Dnc
