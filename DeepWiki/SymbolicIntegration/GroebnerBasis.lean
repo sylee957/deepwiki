@@ -2186,6 +2186,52 @@ theorem C_dvd_lazardView_succ {K : Type*} [Field K]
   rw [mul_comm (Polynomial.C gj)] at hCq
   exact (mul_dvd_mul_iff_left (by rwa [Ne, Polynomial.C_eq_zero])).mp hCq
 
+/-- **Lazard's Lemma 3 descent, strengthened induction** (Part B). Assuming the no-common-factor
+**base** `degreeOf 0 (sorted 0) = 0` (`f₀ ∈ K[x]`, `hbase`), the divisibility `C(gᵢ) ∣ lazardView
+(sorted j)` holds for **all** `j ≤ i` — by strong induction on `i.val`: the base `i.val = 0` is
+`C_dvd_lazardView_of_degreeOf_zero`; the step uses the predecessor's IH together with the
+non-circular `C_dvd_lazardView_succ` (for `j = i`) and the `gᵢ ∣ g_{i'}` chain (for `j < i`). -/
+theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i : Fin B.card) :
+    ∀ j : Fin B.card, j ≤ i →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB j) := by
+  induction hi : i.val using Nat.strong_induction_on generalizing i with
+  | _ n ih =>
+    subst hi
+    rcases Nat.eq_zero_or_pos i.val with h0 | hpos
+    · -- base `i.val = 0`: the only `j ≤ i` is `i`, of `y`-degree `0`.
+      intro j hji
+      have hji0 : j.val = 0 := Nat.le_zero.mp (h0 ▸ (Fin.le_def.mp hji))
+      have hji_eq : j = i := Fin.ext (by rw [hji0, h0])
+      rw [hji_eq]
+      exact C_dvd_lazardView_of_degreeOf_zero (hbase i h0)
+    · -- step: let `i'` be the predecessor (`i'.val = i.val - 1`).
+      set i' : Fin B.card := ⟨i.val - 1, by omega⟩ with hi'_def
+      have hi'val : i'.val = i.val - 1 := by rw [hi'_def]
+      have hi'lt : i' < i := by rw [Fin.lt_def, hi'val]; omega
+      have hsucc : ∀ k : Fin B.card, k < i → k ≤ i' := by
+        intro k hk; rw [Fin.le_def, hi'val]; rw [Fin.lt_def] at hk; omega
+      -- IH on `i'` (smaller key).
+      have hIH' : ∀ k : Fin B.card, k ≤ i' →
+          Polynomial.C (leadingYCoeff (sortedByYDegree hB i'))
+            ∣ lazardView (sortedByYDegree hB k) := ih i'.val (by rw [hi'val]; omega) i' rfl
+      -- `C(g_i) ∣ lazardView (sorted i)` via the non-circular succ step (IH covers `j ≤ i'`).
+      have hsuccdvd : Polynomial.C (leadingYCoeff (sortedByYDegree hB i))
+          ∣ lazardView (sortedByYDegree hB i) :=
+        C_dvd_lazardView_succ hB hi'lt hsucc hIH'
+      -- assemble `∀ j ≤ i`: `j = i` is `hsuccdvd`; `j ≤ i'` uses IH + `g_i ∣ g_{i'}` chain.
+      intro j hji
+      rcases eq_or_lt_of_le hji with hje | hjl
+      · rw [hje]; exact hsuccdvd
+      · have hji' : j ≤ i' := hsucc j hjl
+        have hchain : leadingYCoeff (sortedByYDegree hB i)
+            ∣ leadingYCoeff (sortedByYDegree hB i') :=
+          leadingYCoeff_sortedByYDegree_dvd_of_le hB (le_of_lt hi'lt)
+        exact dvd_trans (map_dvd Polynomial.C hchain) (hIH' j hji')
+
 open scoped Classical in
 /-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
 the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
