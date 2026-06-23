@@ -133,4 +133,16 @@ theorem eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le [IsProbabilityMeasure �
               * ((n : ℝ)⁻¹ * (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|)) from by ring,
           Real.mul_self_sqrt hn'.le, ← mul_assoc, mul_inv_cancel₀ hn'.ne', one_mul]
 
+/-- **The causal linear process is `ℝ`-linear in its filter (difference form):** for summable
+filters, `causalLinearProcessLp φ₁ − causalLinearProcessLp φ₂ = causalLinearProcessLp (φ₁ − φ₂)`.
+With `φ₂ = ψ·1_{j≤m}` the difference of the full and truncated processes is the tail process. -/
+theorem causalLinearProcessLp_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) {φ₁ φ₂ : ℕ → ℝ}
+    (hsum₁ : ∀ t : ℤ, Summable fun j : ℕ => φ₁ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (hsum₂ : ∀ t : ℤ, Summable fun j : ℕ => φ₂ j • toLpSeq Z hZ (t - (j : ℤ))) (t : ℤ) :
+    causalLinearProcessLp φ₁ Z hZ t - causalLinearProcessLp φ₂ Z hZ t
+      = causalLinearProcessLp (fun j => φ₁ j - φ₂ j) Z hZ t := by
+  simp only [causalLinearProcessLp]
+  rw [← Summable.tsum_sub (hsum₁ t) (hsum₂ t)]
+  exact tsum_congr fun j => (sub_smul _ _ _).symm
+
 end DeepWiki.TimeSeries
