@@ -1702,6 +1702,29 @@ theorem yunInv_base_rat (A : ℚ[X]) (hA0 : A ≠ 0) :
   rw [gcd_rat_eq A (derivative A)]
   exact key
 
+/-- **Scaled Yun loop base case** over ambient `ℚ`: if the initial pair is a common constant multiple
+`(C u·(A/gcd(A,A′)), C u·(A′/gcd) − (C u·(A/gcd))′)` of the monic-gcd initialization (with `u ≠ 0`),
+then it satisfies `YunInv A 1` with scalar `u·(leadingCoeff A)`. This absorbs the unit discrepancy when
+the concrete `csqfreeFactor` init divides by the *raw* (non-monic) extended-gcd output `g ~ gcd(A,A′)`
+rather than the monic gcd: `A/g = C(leadingCoeff g)⁻¹·(A/gcd)`, so `u = (leadingCoeff g)⁻¹`. The shared
+scalar `u·(leadingCoeff A)` multiplies both `Babs A 1` and `Dabs A 1`, keeping the subtraction in the
+`d`-update consistent. -/
+theorem yunInv_base_scaled_rat (A : ℚ[X]) (hA0 : A ≠ 0) (u : ℚ) (hu : u ≠ 0) (b1 d1 : ℚ[X])
+    (hb1 : b1 = Polynomial.C u * (A / gcd A (derivative A)))
+    (hd1 : d1 = Polynomial.C u * (derivative A / gcd A (derivative A))
+              - derivative (Polynomial.C u * (A / gcd A (derivative A)))) :
+    YunInv A 1 b1 d1 := by
+  obtain ⟨c, hc, hbb, hdd⟩ := yunInv_base_rat A hA0
+  rw [hbb] at hb1 hd1
+  have hDgcd : derivative A / gcd A (derivative A)
+      = Polynomial.C c * Dabs A 1 + derivative (Polynomial.C c * Babs A 1) := by
+    rw [← hbb]; exact eq_add_of_sub_eq hdd
+  rw [hDgcd] at hd1
+  simp only [derivative_C_mul] at hd1
+  refine ⟨u * c, mul_ne_zero hu hc, ?_, ?_⟩
+  · rw [hb1, map_mul]; ring
+  · rw [hd1, map_mul]; ring
+
 /-- **The emitted Yun factor is associated to `Vᵢ`** over ambient `ℚ` (`yunStep_emit_assoc`
 specialized): under `YunInv A i b d` (`1 ≤ i`), `gcd b d` is `Associated (sqfreeFactPart A i)`. -/
 theorem yunStep_emit_assoc_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X]) (hinv : YunInv A i b d) :
