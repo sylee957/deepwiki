@@ -119,4 +119,9 @@ theorem norm_sampleSum_sub_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 
   rw [linearProcess_sampleSum_sub hZ hψ hsum n]
   exact norm_tsum_filter_lag_le hZ hident hψj n
 
+/-- The `eLpNorm` of an `Lp` element's coercion is its (extended) norm: `eLpNorm ⇑W = ‖W‖ₑ`. -/
+theorem eLpNorm_coeFn {E : Type*} [NormedAddCommGroup E] {p : ℝ≥0∞} (W : Lp E p μ) :
+    eLpNorm (⇑W) p μ = ‖W‖ₑ := by
+  rw [← Lp.enorm_toLp (Lp.memLp W), Lp.toLp_coeFn]
+
 end DeepWiki.TimeSeries
