@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.NormalForms
+import DeepWiki.RelationalDatabases.DependencyImplication
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 4: Vertical Decompositions
@@ -22,8 +23,9 @@ semantics.
   synthesis algorithm) with Theorem 4.6 and Corollary 4.1 (every scheme has a constraint-preserving
   3NF decomposition), Example 4.10 (redundant schemes survive) [infra]. (Def 4.3 lossless-join
   decomposition is done.)
-§4.5: Def 4.7 (fourth normal form) with Theorem 4.7 (4NF ⟹ BCNF), Def 4.8 (fifth normal form /
-  project-join normal form) with Theorem 4.8 (5NF ⟹ 4NF) [infra: needs mvd/jd implication].
+§4.5: Def 4.8 (fifth normal form / project-join normal form) with Theorem 4.8 (5NF ⟹ 4NF)
+  [infra: needs join-dependency implication; the mvd-implication relation, Def 4.7 fourth normal
+  form and Theorem 4.7 (4NF ⟹ BCNF) are done].
 §4.6: vertical decomposition and consistency checking [infra].
 §4.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -73,5 +75,30 @@ abbrev def_4_3_lossless_join := @DeepWiki.IsLosslessJoinDecomp
 /-- **Trivial lossless decomposition** (§4.4): the single-component decomposition `{Ω}` is
 lossless. -/
 abbrev lossless_join_single := @DeepWiki.isLosslessJoinDecomp_single
+
+/-! ## §4.5 Fourth Normal Form -/
+
+/-- **Mixed dependency** (§4.5): a functional or multivalued dependency over a scheme, the alphabet
+of the mixed implication relation. -/
+abbrev dep := @DeepWiki.Dep
+
+/-- **Mixed dependency implication** (§4.5): `D ⊨ d` — every relation satisfying the dependency
+set `D` satisfies `d`. -/
+abbrev dep_implies := @DeepWiki.DepImplies
+
+/-- **Superkey via implication** (§4.5, cf. Def 4.1): `D ⊨ X → Ω`. -/
+abbrev superkey_dep := @DeepWiki.IsSuperkeyDep
+
+/-- **Definition 4.7** (§4.5, p.135): a scheme is in *fourth normal form* when every nontrivial
+implied multivalued dependency has a superkey left-hand side. -/
+abbrev def_4_7_4nf := @DeepWiki.Is4NF
+
+/-- **Definition 4.5 (implication form)** (§4.5): Boyce–Codd normal form stated over the mixed
+implication relation. -/
+abbrev def_4_5_bcnf_dep := @DeepWiki.IsBCNFDep
+
+/-- **Theorem 4.7** (§4.5, p.135): a relation scheme in fourth normal form is in Boyce–Codd
+normal form. -/
+abbrev thm_4_7 := @DeepWiki.isBCNFDep_of_is4NF
 
 end DeepWiki.Rdb
