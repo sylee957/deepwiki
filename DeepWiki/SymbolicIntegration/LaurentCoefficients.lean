@@ -2096,15 +2096,16 @@ theorem exists_sum_localPrincipalPart_regular (M₀ : K[X]) (mult : K → ℕ) :
         algebraMap K[X] (RatFunc K) A
             / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀)
           = (∑ α ∈ R, PP α) + algebraMap K[X] (RatFunc K) Rem / algebraMap K[X] (RatFunc K) M₀
-        ∧ ∀ α ∈ R, RegularAt α
+        ∧ (∀ α ∈ R, RegularAt α
             (algebraMap K[X] (RatFunc K) A
-                / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀) - PP α) := by
+                / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀) - PP α))
+        ∧ ∀ α ∈ R, ∃ (A' M' : K[X]), PP α = localPrincipalPart A' M' α (mult α) := by
   intro R
   induction R using Finset.induction_on with
   | empty =>
     intro _ A
     exact ⟨fun _ => 0, A, by rw [rootProd_empty, one_mul, Finset.sum_empty, zero_add],
-      fun α hα => by simp at hα⟩
+      (fun α hα => by simp at hα), fun α hα => by simp at hα⟩
   | @insert α₀ R hα₀ ih =>
     intro hpolefree A
     set N := rootProd R mult * M₀ with hNdef
@@ -2113,9 +2114,9 @@ theorem exists_sum_localPrincipalPart_regular (M₀ : K[X]) (mult : K → ℕ) :
       exact mul_ne_zero (eval_rootProd_ne_zero mult hα₀)
         (hpolefree α₀ (Finset.mem_insert_self α₀ R))
     have hpeel := subtract_localPrincipalPart_eq A N (mult α₀) hNα₀
-    obtain ⟨PP, Rem, hrec, hregrec⟩ :=
+    obtain ⟨PP, Rem, hrec, hregrec, hstructrec⟩ :=
       ih (fun β hβ => hpolefree β (Finset.mem_insert_of_mem hβ)) (localRemainder A N α₀ (mult α₀))
-    refine ⟨fun β => if β = α₀ then localPrincipalPart A N α₀ (mult α₀) else PP β, Rem, ?_, ?_⟩
+    refine ⟨fun β => if β = α₀ then localPrincipalPart A N α₀ (mult α₀) else PP β, Rem, ?_, ?_, ?_⟩
     · -- the decomposition equation (as in `exists_sum_localPrincipalPart`)
       simp only [Finset.sum_insert hα₀, if_pos]
       have hsumR : (∑ β ∈ R, (if β = α₀ then localPrincipalPart A N α₀ (mult α₀) else PP β))
@@ -2169,5 +2170,117 @@ theorem exists_sum_localPrincipalPart_regular (M₀ : K[X]) (mult : K → ℕ) :
                   / algebraMap K[X] (RatFunc K) N - PP γ) := by ring
         rw [hrw]
         exact h1.add h2
+    · -- each `PP α` is a `localPrincipalPart` (explicitly for `α₀`, by IH for `α ∈ R`)
+      intro γ hγ
+      simp only []
+      rcases eq_or_ne γ α₀ with hγα₀ | hγα₀
+      · subst hγα₀; exact ⟨A, N, by rw [if_pos rfl]⟩
+      · rw [if_neg hγα₀]
+        exact hstructrec γ (Finset.mem_of_mem_insert_of_ne hγ hγα₀)
+
+open Classical in
+/-- **Theorem 2.7.1, the LITERAL engine-form partial fraction `A/D = P + ∑_α ∑_{j=1}^{mult α} Hᵢⱼ(α)/(x−α)ʲ`**
+(Bronstein §2.7, the full closure-level conclusion): for `D = (∏_{α∈R}(x−α)^{mult α})·C c` split over `K̄`
+(`c ≠ 0`), GIVEN per-pole squarefree-factorization data `pole α` (a monic `Dᵢ = (x−α)·Dᵢ,α` with `α` its root,
+the cofactor coprimalities, the base-value nonvanishing, `0 < mult α`, and the original factorization
+`D = (x−α)^{mult α}·(Dᵢ,α^{mult α}·Eᵢ)`), there is a polynomial part `P` with
+`A/D = P + ∑_{α∈R} ∑_{j=1}^{mult α} (laurentH A D Dᵢ (mult α) j)(α)/(x−α)ʲ` — the engine outputs `Hᵢⱼ(α)` ARE
+the partial-fraction Laurent coefficients. Each per-pole principal part from the telescoping
+(`exists_sum_localPrincipalPart_regular`) is identified with the original-`A` engine sum by principal-part
+intrinsicity (`principalPart_eq_engineSum_of_regular`), the per-pole `RegularAt α (A/D − PP α)` certificate
+supplying the needed regularity. This is the complete, literal Theorem 2.7.1 over the algebraic closure. -/
+theorem completePartialFraction_engineForm [CharZero K] (A : K[X]) (mult : K → ℕ) (R : Finset K)
+    {c : K} (hc : c ≠ 0)
+    (Di Diα : K → K[X])
+    (pole : ∀ α ∈ R, 0 < mult α ∧ (Di α).Monic ∧ (Di α).eval α = 0
+      ∧ Di α = (Polynomial.X - Polynomial.C α) * Diα α
+      ∧ IsCoprime (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)) (Di α)
+      ∧ IsCoprime (derivative (Di α)) (Di α)
+      ∧ (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)).eval α ≠ 0
+      ∧ (Diα α).eval α ≠ 0
+      ∧ rootProd R mult * Polynomial.C c
+          = (Polynomial.X - Polynomial.C α) ^ mult α
+            * lDenomα (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)) (Diα α) (mult α) 0) :
+    ∃ (P : K[X]),
+      algebraMap K[X] (RatFunc K) A
+          / algebraMap K[X] (RatFunc K) (rootProd R mult * Polynomial.C c)
+        = algebraMap K[X] (RatFunc K) P
+          + ∑ α ∈ R, ∑ j ∈ Finset.Icc 1 (mult α),
+              algebraMap K[X] (RatFunc K)
+                  (Polynomial.C ((laurentH A (rootProd R mult * Polynomial.C c) (Di α) (mult α) j).eval α))
+                / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j := by
+  set D := rootProd R mult * Polynomial.C c with hDdef
+  have hpolefree : ∀ α ∈ R, (Polynomial.C c).eval α ≠ 0 := fun α _ => by
+    rw [Polynomial.eval_C]; exact hc
+  obtain ⟨PP, Rem, hdecomp, hreg, hstruct⟩ :=
+    exists_sum_localPrincipalPart_regular (Polynomial.C c) mult R hpolefree A
+  refine ⟨Polynomial.C c⁻¹ * Rem, ?_⟩
+  -- each `PP α` equals its engine sum, by intrinsicity
+  have hPPeng : ∀ α ∈ R, PP α
+      = ∑ j ∈ Finset.Icc 1 (mult α),
+          algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D (Di α) (mult α) j).eval α))
+            / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j := by
+    intro α hα
+    obtain ⟨hi, hDimonic, hDiα0root, hfac, hcopE, hcopD, hEi, hDiαα, hDfac⟩ := pole α hα
+    obtain ⟨A', M', hPPeq⟩ := hstruct α hα
+    obtain ⟨N, Md, hMd, hregdiv⟩ := (hreg α hα).exists_div
+    rw [hPPeq]
+    -- assemble the `hreg`-certificate into the input shape of `principalPart_eq_engineSum_of_regular`
+    apply principalPart_eq_engineSum_of_regular (D := D) (mult α) hi hDimonic hDiα0root hfac hcopE hcopD
+      hEi hDiαα hMd
+    -- the goal denominator `(x−α)^{mult α}·lDenomα… = D` (`hDfac`); rest is `hreg`'s certificate
+    rw [← hDfac, ← hPPeq]
+    exact hregdiv
+  -- rewrite the sum and fold the constant remainder into the polynomial part
+  rw [hdecomp, div_C_eq_algebraMap hc, add_comm]
+  congr 1
+  exact Finset.sum_congr rfl hPPeng
+
+/-- Restatement of the principal-part intrinsicity / uniqueness (book §2.7, the closing fact): two principal
+parts at `α` of order `i` whose difference is regular at `α` are equal. -/
+example {A₁ M₁ A₂ M₂ N₁ N₂ Md₁ Md₂ : K[X]} {α : K} (i : ℕ) (hMd₁ : Md₁.eval α ≠ 0)
+    (hMd₂ : Md₂.eval α ≠ 0)
+    (heq : localPrincipalPart A₁ M₁ α i
+            + algebraMap K[X] (RatFunc K) N₁ / algebraMap K[X] (RatFunc K) Md₁
+          = localPrincipalPart A₂ M₂ α i
+            + algebraMap K[X] (RatFunc K) N₂ / algebraMap K[X] (RatFunc K) Md₂) :
+    localPrincipalPart A₁ M₁ α i = localPrincipalPart A₂ M₂ α i :=
+  principalPart_unique i hMd₁ hMd₂ heq
+
+/-- Restatement of the literal per-pole engine form (book p.56): the principal part of `A/D` at a root `α` of
+`Dᵢ` is `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`, the Bronstein–Salvy engine sum. -/
+example [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ) (hi : 0 < i) (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    localPrincipalPart A (lDenomα (laurentE D Di i) Diα i 0) α i
+      = ∑ j ∈ Finset.Icc 1 i,
+          algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D Di i j).eval α))
+            / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j :=
+  localPrincipalPart_eq_engineSum A D Di Diα i hi hDi hα hfac hcopE hcopD hEi hDiα
+
+/-- Restatement of the literal Theorem 2.7.1 over `K̄` (book p.55–56), engine form:
+`A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} (Hᵢᵢ(α)/(x−α)ⁱ + ⋯ + Hᵢ₁(α)/(x−α))`, the engine outputs `Hᵢⱼ(α)` being the
+partial-fraction Laurent coefficients of `A/D`. -/
+example [CharZero K] (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K} (hc : c ≠ 0)
+    (Di Diα : K → K[X])
+    (pole : ∀ α ∈ R, 0 < mult α ∧ (Di α).Monic ∧ (Di α).eval α = 0
+      ∧ Di α = (Polynomial.X - Polynomial.C α) * Diα α
+      ∧ IsCoprime (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)) (Di α)
+      ∧ IsCoprime (derivative (Di α)) (Di α)
+      ∧ (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)).eval α ≠ 0
+      ∧ (Diα α).eval α ≠ 0
+      ∧ rootProd R mult * Polynomial.C c
+          = (Polynomial.X - Polynomial.C α) ^ mult α
+            * lDenomα (laurentE (rootProd R mult * Polynomial.C c) (Di α) (mult α)) (Diα α) (mult α) 0) :
+    ∃ (P : K[X]),
+      algebraMap K[X] (RatFunc K) A
+          / algebraMap K[X] (RatFunc K) (rootProd R mult * Polynomial.C c)
+        = algebraMap K[X] (RatFunc K) P
+          + ∑ α ∈ R, ∑ j ∈ Finset.Icc 1 (mult α),
+              algebraMap K[X] (RatFunc K)
+                  (Polynomial.C ((laurentH A (rootProd R mult * Polynomial.C c) (Di α) (mult α) j).eval α))
+                / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j :=
+  completePartialFraction_engineForm A mult R hc Di Diα pole
 
 end DeepWiki.SymbolicIntegration
