@@ -36,14 +36,17 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
   generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
   set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
-§2.4: the *converse* reduction — the tuple calculus to the relational algebra (`calcToAlg` over
-  the first-order calculus) and the safety/domain-independence it requires [research]. (Done: the
-  database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free fragment ↔ algebra
-  both directions, the first-order calculus `FOCond`/`evalFO` with de Bruijn variables and
-  per-relation schemes, the per-operator reductions, and now the **full recursive algebra →
+§2.4: the *constructive* converse — a recursive `calcToAlg` translating each *safe* first-order
+  condition to an algebra expression [research: needs the renaming operator `ρ` (itself §2.1
+  `[infra]`) to compile the de Bruijn context into a product scheme without attribute clashes].
+  (Done: the database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free
+  fragment ↔ algebra both directions, the first-order calculus `FOCond`/`evalFO` with de Bruijn
+  variables and per-relation schemes, the per-operator reductions, the **full recursive algebra →
   calculus translation** — weakening `FOCond.wk`/`evalFO_wk` via order-preserving embeddings
   `Thin`, the database-indexed algebra `DbAlgExpr`/`evalDbAlg`, and `algToFO` with correctness
-  `evalFOExpr_algToFO`, giving the algebra ⊆ calculus direction.)
+  `evalFOExpr_algToFO` (algebra ⊆ calculus) — and the **safety-necessity** result
+  `neg_relA_not_isAlgExpressible`: the complement `¬ R(t)` is not algebra-expressible, so the
+  converse must restrict to safe formulas.)
 §2.5: the reduction of the relational algebra to SQL [infra].
 §2.6: the reduction of SQL to the tuple calculus [infra].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
@@ -196,6 +199,15 @@ abbrev reduction_algToCalc := @DeepWiki.algToFO
 expression, `evalFOExpr (algToFO e) = evalDbAlg e` — the relational algebra is subsumed by the
 first-order tuple calculus. -/
 abbrev reduction_algToCalc_correct := @DeepWiki.evalFOExpr_algToFO
+
+/-- **Algebra-expressibility / safety** (§2.4): a database-to-table map some algebra expression
+computes for every database — the model's domain-independence notion for the converse reduction. -/
+abbrev safety_isAlgExpressible := @DeepWiki.IsAlgExpressible
+
+/-- **Safety is necessary** (§2.4): the complement `¬ R(t)` is *not* algebra-expressible (empty
+database ⟹ complement is `univ` but every algebra expression is empty), so the calculus → algebra
+reduction cannot be total — it must restrict to safe formulas. -/
+abbrev safety_neg_not_expressible := @DeepWiki.neg_relA_not_isAlgExpressible
 
 /-! ## §2.3 SQL: Structured Query Language -/
 

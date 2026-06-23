@@ -192,4 +192,48 @@ example [DecidableEq Att] (db : (i : ι) → Table (sch i) Val) {Ω : Finset Att
     (e : DbAlgExpr ι sch Val Ω) : ∃ C : FOCond ι sch Val [Ω], evalFOExpr db C = evalDbAlg db e :=
   ⟨algToFO e, evalFOExpr_algToFO db e⟩
 
+/-! ## Safety: why the converse reduction must be restricted
+The calculus → algebra direction is *not* total: a condition can denote a table no algebra
+expression equals (for every database). The witness is negation, whose denotation depends on the
+whole value space, not on the active domain — which is exactly what *safety* / domain-independence
+rules out. -/
+
+/-- A database-to-table map is *algebra-expressible* (the model's notion of a safe query): some
+algebra expression computes it for every database. -/
+def IsAlgExpressible [DecidableEq Att] {Ω : Finset Att}
+    (T : ((i : ι) → Table (sch i) Val) → Table Ω Val) : Prop :=
+  ∃ e : DbAlgExpr ι sch Val Ω, ∀ db, T db = evalDbAlg db e
+
+/-- With every base relation empty, every algebra expression denotes the empty table — the
+algebra cannot conjure tuples absent from its inputs. -/
+theorem evalDbAlg_empty [DecidableEq Att] {Ω : Finset Att} (e : DbAlgExpr ι sch Val Ω) :
+    evalDbAlg (fun _ => (∅ : Table _ Val)) e = ∅ := by
+  induction e with
+  | base i => rfl
+  | sel P e ih => simp only [evalDbAlg, ih]; ext t; simp [mem_select]
+  | proj Ω₁ h e ih => simp only [evalDbAlg, ih]; ext s; simp [mem_project]
+  | join e e' ih ih' => simp only [evalDbAlg, ih]; ext t; simp [mem_join]
+  | union e e' ih ih' => simp only [evalDbAlg, ih, ih']; ext t; simp [mem_union]
+  | diff e e' ih ih' => simp only [evalDbAlg, ih]; ext t; simp [mem_diff]
+
+/-- **Safety is necessary** (§2.4): the complement `¬ R(t)` is not algebra-expressible. With every
+base relation empty the complement is all of `univ`, while every algebra expression is empty
+(`evalDbAlg_empty`). So the calculus → algebra reduction cannot be total — it must restrict to
+safe (domain-independent) formulas. -/
+theorem neg_relA_not_isAlgExpressible [DecidableEq Att] [Nonempty Val] (i : ι) :
+    ¬ IsAlgExpressible (Ω := sch i)
+      (fun (db : (j : ι) → Table (sch j) Val) =>
+        evalFOExpr db (FOCond.neg (FOCond.relA i (Var.here)))) := by
+  rintro ⟨e, he⟩
+  have h : evalFOExpr (fun _ => (∅ : Table (sch i) Val))
+      (FOCond.neg (FOCond.relA i Var.here)) = ∅ := by
+    have hh := he (fun _ => ∅)
+    rw [evalDbAlg_empty] at hh
+    exact hh
+  have hne : (evalFOExpr (fun _ => (∅ : Table (sch i) Val))
+      (FOCond.neg (FOCond.relA i Var.here))).Nonempty :=
+    ⟨Classical.arbitrary (Tuple (sch i) Val), by simp [evalFOExpr, evalFO]⟩
+  rw [h] at hne
+  exact Set.not_nonempty_empty hne
+
 end DeepWiki
