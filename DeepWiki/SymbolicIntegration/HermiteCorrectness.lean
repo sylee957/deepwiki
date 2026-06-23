@@ -1485,3 +1485,46 @@ theorem yunFactorizationAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A 
     Associated (prodPow 1 (yunFactorizationAbs A n))
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
   yunLoopAbs_prodPow_assoc A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
+/-! ### Bridging the concrete `csqfreeFactor` monic gcd to the abstract `gcd`
+
+The atomic concrete↔abstract correspondence for one Yun step: the computable monic gcd `cmonic
+(cgcdExt fuel b d).1` realizes the abstract monic `gcd (toPoly b) (toPoly d)` under `toPoly`. This is
+the load-bearing translation that aligns `csqfreeFactor.go`'s emitted factor `cmonic (cgcdExt b d)`
+with `yunLoopAbs`'s emitted factor `gcd (toPoly b) (toPoly d)`. -/
+
+/-- **`cmonic` realizes `normalize`** through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. The
+nonzero case is `C (clead q)⁻¹ · toPoly q`, with `clead q = leadingCoeff (toPoly q)`, which is exactly
+`normalize` over a field; the zero case is `0`. -/
+theorem toPoly_cmonic_eq_normalize (q : CPoly) :
+    toPoly (cmonic q) = normalize (toPoly q) := by
+  unfold cmonic
+  by_cases h : cisZero (cnorm q)
+  · simp only [h, if_true]
+    have hq0 : toPoly q = 0 := by
+      have : cnorm q = [] := by simpa [cisZero] using h
+      rw [← toPoly_cnorm, this, toPoly_nil]
+    rw [toPoly_nil, hq0, normalize_zero]
+  · simp only [h, Bool.false_eq_true, if_false]
+    have hqn : cnorm q ≠ [] := by simpa [cisZero] using h
+    have hq0 : toPoly q ≠ 0 := fun hh => hqn ((cnorm_eq_nil_iff q).mpr hh)
+    rw [toPoly_cscale, toPoly_cnorm, clead_eq_leadingCoeff, normalize_apply,
+      Polynomial.coe_normUnit]
+    have hlc : (toPoly q).leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
+    rw [show ((normUnit (toPoly q).leadingCoeff : ℚ) : ℚ) = (toPoly q).leadingCoeff⁻¹ from by
+          simp [hlc], toPoly_cnorm, mul_comm]
+
+/-- **The concrete monic gcd realizes the abstract `gcd`** (under gcd-termination): `toPoly (cmonic
+(cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d)`. The computable gcd is `~ gcd (toPoly b) (toPoly d)`
+(divides both by `toPoly_cgcdExt_dvd`, greatest by `toPoly_dvd_cgcdExt`); `cmonic` normalizes it, and
+`gcd` is already normalized, so the monic associates are equal. -/
+theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPoly) (hterm : cgcdTerminates fuel b d) :
+    toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d) := by
+  rw [toPoly_cmonic_eq_normalize]
+  -- `toPoly (cgcdExt b d).1 ~ gcd (toPoly b) (toPoly d)`, so their normalizations agree.
+  obtain ⟨hgb, hgd⟩ := toPoly_cgcdExt_dvd fuel b d hterm
+  have hassoc : Associated (toPoly (cgcdExt fuel b d).1) (gcd (toPoly b) (toPoly d)) :=
+    associated_of_dvd_dvd (dvd_gcd hgb hgd) (toPoly_dvd_cgcdExt fuel b d (gcd_dvd_left _ _)
+      (gcd_dvd_right _ _))
+  rw [← normalize_gcd (toPoly b) (toPoly d)]
+  exact normalize_eq_normalize_iff.mpr (hassoc.dvd_dvd)
