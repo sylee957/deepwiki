@@ -218,6 +218,20 @@ theorem IsMDependent.tendsto_charFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → �
   rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
   simp [hcenter]
 
+/-- **Reparametrizing convergence in distribution by an index map**: if `Xᵢ ⇒ Z` along `l` and
+`r → l` along `l'`, then `X_{r(i)} ⇒ Z` along `l'` (for a constant measure family). The index change
+that turns the block CLT (indexed by the block count) into one indexed by the sample size via
+`r(n) → ∞`. -/
+theorem tendstoInDistribution_comp_tendsto {ι ι' α β E : Type*} [MeasurableSpace α]
+    [MeasurableSpace β] [MeasurableSpace E] [TopologicalSpace E] [OpensMeasurableSpace E]
+    {l : Filter ι} {l' : Filter ι'} {X : ι → α → E} {Z : β → E} {ν : Measure α}
+    [IsProbabilityMeasure ν] {ν' : Measure β} [IsProbabilityMeasure ν']
+    (hY : TendstoInDistribution X l Z (fun _ => ν) ν') {r : ι' → ι} (hr : Tendsto r l' l) :
+    TendstoInDistribution (fun i => X (r i)) l' Z (fun _ => ν) ν' where
+  forall_aemeasurable := fun i => hY.forall_aemeasurable (r i)
+  aemeasurable_limit := hY.aemeasurable_limit
+  tendsto := hY.tendsto.comp hr
+
 /-- The number of complete big blocks fitting in `[0, n)`: `⌊n/(p+m)⌋`. Each contributes a size-`p`
 block, so `blockCount · p` indices are covered by blocks and the rest (`≈ n·m/(p+m)`) are gaps. -/
 def blockCount (p m n : ℕ) : ℕ := n / (p + m)
