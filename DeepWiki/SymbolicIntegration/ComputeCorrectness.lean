@@ -120,4 +120,17 @@ theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly) :
       simp only [toPoly_csub, toPoly_cmul]
       linear_combination hih + toPoly t * hdiv
 
+/-- The **`LogToAtan` step invariant** `B·D − A·C = G` holds in `ℚ[X]`: the extended-Euclidean
+cofactors `(G, D, C) = cgcdExt fuel B (−A)` that each `logToAtanCompute` step uses (so that
+`(A·D + B·C)/G` is the next arctan argument) satisfy `toPoly B · toPoly D − toPoly A · toPoly C =
+toPoly G`. A direct corollary of `toPoly_cgcdExt`, validating the Rioboo recursion's core Bézout
+relation on all inputs (not just the `native_decide`'d Example 2.8.1). -/
+theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly) :
+    toPoly B * toPoly (cgcdExt fuel B (cneg A)).2.1
+        - toPoly A * toPoly (cgcdExt fuel B (cneg A)).2.2
+      = toPoly (cgcdExt fuel B (cneg A)).1 := by
+  have h := toPoly_cgcdExt fuel B (cneg A)
+  rw [toPoly_cneg] at h
+  linear_combination h
+
 end DeepWiki.SymbolicIntegration.Compute
