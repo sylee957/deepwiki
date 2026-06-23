@@ -148,3 +148,49 @@ theorem isLogToAtanRun_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p)
   | step hAB hCD hG hG0 _ ih =>
       rw [atanDerivSum_cons, ← atanDerivSum_singleton, ih, ← imagLog_step hi hAB hCD hG hG0]
 
+omit [Differential R] [CharZero R] in
+/-- **Fuel def, base branch** (§2.8 p.63): when `B ∣ A`, one fuel step computes `[φA/φB]`, so the
+executable `logToAtanAux` agrees with the `base` run. -/
+@[simp] theorem logToAtanAux_base {n : ℕ} {A B : K[X]} (hdvd : B ∣ A) :
+    logToAtanAux φ (n + 1) A B = [φ A / φ B] := by
+  rw [logToAtanAux]; simp [hdvd]
+
+omit [Differential R] [CharZero R] in
+/-- **Fuel def, swap branch** (§2.8 p.63): when `¬ B ∣ A` and `deg A < deg B`, the fuel def recurses on
+`(−B, A)` with one fewer unit of fuel, matching the `swap` run. -/
+theorem logToAtanAux_swap {n : ℕ} {A B : K[X]} (hdvd : ¬ B ∣ A) (hlt : A.degree < B.degree) :
+    logToAtanAux φ (n + 1) A B = logToAtanAux φ n (-B) A := by
+  rw [logToAtanAux]; simp [hdvd, hlt]
+
+omit [Differential R] [CharZero R] in
+/-- **Fuel def, step branch** (§2.8 p.63): when `¬ B ∣ A` and `deg A ≥ deg B`, the fuel def prepends
+`(φA·φD + φB·φC)/φG` (with `C = gcdB(B,−A)`, `D = gcdA(B,−A)`, `G = gcd(B,−A)`) and recurses on the
+cofactors `(D, C)`, matching the `step` run. -/
+theorem logToAtanAux_step {n : ℕ} {A B : K[X]} (hdvd : ¬ B ∣ A) (hle : ¬ A.degree < B.degree) :
+    logToAtanAux φ (n + 1) A B
+      = (φ A * φ (EuclideanDomain.gcdA B (-A)) + φ B * φ (EuclideanDomain.gcdB B (-A)))
+          / φ (EuclideanDomain.gcd B (-A))
+        :: logToAtanAux φ n (EuclideanDomain.gcdA B (-A)) (EuclideanDomain.gcdB B (-A)) := by
+  rw [logToAtanAux]; simp [hdvd, hle]
+
+/-- **Fuel def realizes a run** (§2.8 p.63): if `logToAtanAux φ fuel A B` is a complete Rioboo run
+`IsLogToAtanRun φ i A B (logToAtanAux φ fuel A B)`, its arctan-derivative sum is the complex log,
+`atanDerivSum (logToAtanAux φ fuel A B) = i · imagLog φ i A B`. The bridge from the executable
+fuel-bounded def to the correctness assembly (whenever fuel suffices to reach a base case). -/
+theorem logToAtanAux_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
+    {A B : K[X]} {fuel : ℕ} (hrun : IsLogToAtanRun φ i A B (logToAtanAux φ fuel A B)) :
+    atanDerivSum (logToAtanAux φ fuel A B) = i * imagLog φ i A B :=
+  isLogToAtanRun_correct hi hφneg hrun
+
+/-- Restatement of **`LogToAtan` correctness** against the book wording (§2.8, p.63): if `f = ∑_{P∈L}
+2·arctan(P)` is the output of Rioboo's `LogToAtan(A, B)`, then `df/dx = d/dx · i·log((A+iB)/(A−iB))` —
+i.e. as derivatives, `∑_{P∈L} 2·P'/(1+P²) = i · logDeriv((φA+iφB)/(φA−iφB))`. -/
+example (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
+    {A B : K[X]} {L : List R} (hrun : IsLogToAtanRun φ i A B L) :
+    (L.map fun P => 2 * (P′ / (1 + P ^ 2))).sum
+      = i * Differential.logDeriv ((φ A + i * φ B) / (φ A - i * φ B)) :=
+  isLogToAtanRun_correct hi hφneg hrun
+
+end LogToAtan
+
+end DeepWiki.SymbolicIntegration
