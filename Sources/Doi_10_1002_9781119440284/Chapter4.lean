@@ -33,6 +33,7 @@ import DeepWiki.NetworkCalculus.ContainerQuotientConv
 import DeepWiki.NetworkCalculus.ContainerCanonical
 import DeepWiki.NetworkCalculus.ContainerUncertainty
 import DeepWiki.NetworkCalculus.ContainerInclusion
+import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -70,8 +71,13 @@ container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical
 form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion functions
 `[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
 remains of Def 4.5/Thm 4.4 is the `C_cv` concave-hull canonicalization, the unary closure inclusion
-`[*]` ([4.16]/[4.17]), and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]);
-Proposition 4.4 (canonical upper bound); Lemma 4.10 — `[research]`; Remark 4.1. -/
+`[*]` ([4.16]/[4.17]), and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]); Proposition 4.4 (canonical
+bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
+canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: Prop 4.4's `Θ_f̲`
+[4.13] enumeration + Lemma 4.10 [4.12] closure (need a breakpoint layer / closure↔Legendre identity).
+So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores); the remaining items are the
+book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full Thm 4.4 (→[LEC 14]), the `C_cv` hull,
+the `[*]` closure inclusion, and the `Θ`/closure infra layers. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -906,6 +912,29 @@ the same inclusion content; the `C_cv` concave-hull operator + the unary closure
 theorem thm_4_4 {c d : DeepWiki.Container} {f g : ℝ≥0 → EReal} (hf : f ∈ c) (hg : g ∈ d) :
     (f ⊓ g) ∈ DeepWiki.Container.inf c d ∧ minConv f g ∈ DeepWiki.Container.conv c d :=
   ⟨DeepWiki.Container.inf_mem hf hg, DeepWiki.Container.conv_mem hf hg⟩
+
+/-- **Proposition 4.4** (§4.4, p.86): the canonical bound of a Legendre class `[f]_L`. The convex
+biconjugate `Cvx f = 𝓛(𝓛 f)` is the **least** element of `[f]_L = {g | 𝓛 g = 𝓛 f}` — a member
+(`𝓛(Cvx f) = 𝓛 f`) and a lower bound — i.e. `IsLeast (legendreClass f) (Cvx f)`. (The book's `Θ_f̲`
+sum-of-elementary-functions form [4.13] needs a non-differentiable-points enumeration, `[infra]`.)
+The library's `DeepWiki.Container.isLeast_legendreClass_biconj`. -/
+theorem prop_4_4 (f : ℝ≥0 → EReal) :
+    IsLeast (DeepWiki.Container.legendreClass f) (DeepWiki.Container.biconj f) :=
+  DeepWiki.Container.isLeast_legendreClass_biconj f
+
+/-- **Lemma 4.10** (§4.4, p.86): computing in the dioid `F↑/L` is equivalent to computing with
+canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
+the quotient operations reduce to `Cvx`-conditions on representatives: e.g. for `⊓` [4.10],
+`[f]⊓[g] = [f⊓g] ↔ Cvx(Cvx f ⊓ Cvx g) = Cvx(f⊓g)` (`inf_mk_eq_iff_biconj`), and the unconditional core
+`Cvx(Cvx f ⊓ Cvx g) = Cvx(f⊓g)` holds. ([4.11] convolution similarly; [4.12] closure needs a
+closure↔Legendre identity, `[infra]`.) The library's `DeepWiki.Container.inf_mk_eq_iff_biconj` /
+`mk_biconj`. -/
+theorem lemma_4_10 (f g : ℝ≥0 → EReal) :
+    DeepWiki.Container.FmodL.inf (DeepWiki.Container.FmodL.mk f) (DeepWiki.Container.FmodL.mk g)
+        = DeepWiki.Container.FmodL.mk (f ⊓ g)
+      ↔ DeepWiki.Container.biconj (DeepWiki.Container.biconj f ⊓ DeepWiki.Container.biconj g)
+        = DeepWiki.Container.biconj (f ⊓ g) :=
+  DeepWiki.Container.inf_mk_eq_iff_biconj f g
 
 /-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
 Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
