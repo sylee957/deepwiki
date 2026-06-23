@@ -342,6 +342,31 @@ theorem hermiteInner_spec_acc (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (
 theorem toQFun_qzero : toQFun qzero = 0 := by
   simp [toQFun, qzero, toPoly_nil]
 
+/-- `qadd x y` has nonzero denominator when both `x, y` do (`den = x.2 · y.2`). -/
+theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPoly y.2 ≠ 0) :
+    toPoly (qadd x y).2 ≠ 0 := by
+  obtain ⟨a, b⟩ := x; obtain ⟨c, d⟩ := y
+  show toPoly (cmul b d) ≠ 0
+  rw [toPoly_cmul]; exact mul_ne_zero hx hy
+
+/-- **The `qadd`-fold realizes the rational-function sum**: for a list of `QFun` increments each with
+nonzero denominator and an initial accumulator with nonzero denominator,
+`toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum`. So the Hermite `g`-fold, whatever its
+increments, reads in `RatFunc ℚ` as the plain sum of the increments (plus the seed) — the structural
+fact underlying the multi-factor `hermiteReduce` `g`-accumulation. -/
+theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 ≠ 0)
+    (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
+    toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum := by
+  induction gs generalizing init with
+  | nil => simp
+  | cons hd tl ih =>
+    have hhd : toPoly hd.2 ≠ 0 := hgs hd (List.mem_cons_self ..)
+    have htl : ∀ g ∈ tl, toPoly g.2 ≠ 0 := fun g hg => hgs g (List.mem_cons_of_mem hd hg)
+    have hnew : toPoly (qadd init hd).2 ≠ 0 := toPoly_qadd_den_ne_zero hinit hhd
+    rw [List.foldl_cons, ih (qadd init hd) hnew htl, toQFun_qadd init hd hinit hhd,
+      List.map_cons, List.sum_cons]
+    ring
+
 open scoped Differential in
 /-- **`hermiteInner` loop correctness** (the public `qzero`-start form) in `RatFunc ℚ`: with `am =
 algebraMap ℚ[X] (RatFunc ℚ)`, for `U, V ≠ 0`, if every reachable computable Bézout step satisfies its
