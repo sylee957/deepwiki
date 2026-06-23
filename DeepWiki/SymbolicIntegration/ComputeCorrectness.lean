@@ -729,4 +729,39 @@ theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly),
         rw [← hdr, clead_eq_coeff, Nat.add_sub_cancel_left]
         ring
 
+/-- **`cresultant = Polynomial.resultant`, the general case**: for sufficient fuel the computable
+Euclidean-PRS resultant equals Mathlib's Sylvester resultant for *any* `p, q`. The `deg q ≤ deg p`
+case is `cresultant_eq_of_ge`; the `deg p < deg q` case swaps via `resultant_comm`. So the
+`native_decide`-validated `rtResultantCompute` is provably the honest resultant on all inputs. -/
+theorem cresultant_eq (fuel : ℕ) (p q : CPoly)
+    (hfuel : (cnorm p).length + (cnorm q).length + 2 ≤ fuel) :
+    cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
+  by_cases hpq : (cnorm q).length ≤ (cnorm p).length
+  · exact cresultant_eq_of_ge fuel p q hpq (by omega)
+  · replace hpq : (cnorm p).length < (cnorm q).length := by omega
+    have hq : cnorm q ≠ [] := by intro h; rw [h, List.length_nil] at hpq; omega
+    have hcz : cisZero q = false := by simpa [cisZero] using hq
+    by_cases hqc : (cnorm q).length ≤ 1
+    · -- q a nonzero constant, p = 0
+      have hp0 : cnorm p = [] := List.length_eq_zero_iff.mp (by omega)
+      have hp0' : toPoly p = 0 := by rw [← toPoly_cnorm, hp0, toPoly_nil]
+      have hdp : cdeg p = 0 := by simp only [cdeg, hp0, List.length_nil]
+      have hdq : cdeg q = 0 := by simp only [cdeg]; omega
+      have hval : cresultant fuel p q = cpow (clead q) (cdeg p) := by
+        obtain ⟨fuel', rfl⟩ : ∃ f, fuel = f + 1 := ⟨fuel - 1, by omega⟩
+        rw [cresultant]
+        simp only [cisZero_cnorm, hcz, Bool.false_eq_true, if_false, if_pos hqc, clead_cnorm,
+          cdeg_cnorm]
+      rw [hval, cpow_eq, hp0', hdp, hdq]
+      simp
+    · -- q non-constant, swap
+      obtain ⟨fuel', rfl⟩ : ∃ f, fuel = f + 1 := ⟨fuel - 1, by omega⟩
+      have hval : cresultant (fuel' + 1) p q
+          = cpow (-1) (cdeg p * cdeg q) * cresultant fuel' q p := by
+        rw [cresultant]
+        simp only [cisZero_cnorm, hcz, Bool.false_eq_true, if_false, if_neg hqc, if_pos hpq,
+          cdeg_cnorm, cresultant_cnorm]
+      rw [hval, cpow_eq, cresultant_eq_of_ge fuel' q p (le_of_lt hpq) (by omega),
+        Polynomial.resultant_comm (toPoly p) (toPoly q)]
+
 end DeepWiki.SymbolicIntegration.Compute
