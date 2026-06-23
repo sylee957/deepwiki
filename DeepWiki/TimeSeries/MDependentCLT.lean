@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.SampleMeanVariance
+import Mathlib.Probability.IdentDistrib
 
 /-! # Central limit theorem for m-dependent sequences (§6.4, Theorem 6.4.2) — foundations
 A bottom-up construction of the `m`-dependent central limit theorem via Bernstein's
@@ -114,6 +115,38 @@ theorem IsMDependent.iIndepFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → ℝ} [I
     (h : IsMDependent m X μ) (p : ℕ) :
     iIndepFun (fun (i : ℕ) (ω : Ω) => ∑ t ∈ bigBlock p m i, X t ω) μ :=
   h.iIndepFun_blockSum (bigBlock p m) fun _ _ hij => bigBlock_sep hij
+
+/-- **Strict stationarity ⟹ a shifted finite-block sum is identically distributed**:
+`∑_{t ∈ C} X_{t+c}` has the same law as `∑_{t ∈ C} Xₜ`. The finite-marginal shift-invariance of strict
+stationarity (`Fin |C|`-indexed) transported to the subtype-indexed block via `C ≃ Fin |C|`, then
+pushed through the coordinate-sum map. -/
+theorem IsStrictlyStationary.identDistrib_finsetSum {X : ℤ → Ω → ℝ}
+    (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t)) (C : Finset ℤ) (c : ℤ) :
+    IdentDistrib (fun ω => ∑ t ∈ C, X (t + c) ω) (fun ω => ∑ t ∈ C, X t ω) μ μ := by
+  set e := C.equivFin with he
+  have hR : Measurable (fun v : Fin C.card → ℝ => fun i : ↥C => v (e i)) :=
+    measurable_pi_lambda _ fun i => measurable_pi_apply _
+  have htuple : IdentDistrib (fun ω (i : ↥C) => X (↑i + c) ω) (fun ω (i : ↥C) => X (↑i) ω) μ μ := by
+    refine ⟨(measurable_pi_lambda _ fun (i : ↥C) => hmeas (↑i + c)).aemeasurable,
+      (measurable_pi_lambda _ fun (i : ↥C) => hmeas ↑i).aemeasurable, ?_⟩
+    have ec : (fun ω (i : ↥C) => X (↑i + c) ω)
+        = (fun v : Fin C.card → ℝ => fun i : ↥C => v (e i)) ∘
+          (fun ω (j : Fin C.card) => X (↑(e.symm j) + c) ω) := by
+      funext ω i; simp only [Function.comp_apply, Equiv.symm_apply_apply]
+    have e0 : (fun ω (i : ↥C) => X (↑i) ω)
+        = (fun v : Fin C.card → ℝ => fun i : ↥C => v (e i)) ∘
+          (fun ω (j : Fin C.card) => X (↑(e.symm j)) ω) := by
+      funext ω i; simp only [Function.comp_apply, Equiv.symm_apply_apply]
+    rw [ec, e0, ← Measure.map_map hR (measurable_pi_lambda _ fun j => hmeas _),
+      ← Measure.map_map hR (measurable_pi_lambda _ fun j => hmeas _)]
+    exact congrArg (Measure.map (fun v : Fin C.card → ℝ => fun i : ↥C => v (e i)))
+      (hstat C.card (fun j => ↑(e.symm j)) c).symm
+  have hconv : (fun ω => ∑ t ∈ C, X (t + c) ω) = fun ω => ∑ i : ↥C, X (↑i + c) ω := by
+    funext ω; exact (Finset.sum_coe_sort C (fun t => X (t + c) ω)).symm
+  have hconv0 : (fun ω => ∑ t ∈ C, X t ω) = fun ω => ∑ i : ↥C, X (↑i) ω := by
+    funext ω; exact (Finset.sum_coe_sort C (fun t => X t ω)).symm
+  rw [hconv, hconv0]
+  exact htuple.comp (Finset.measurable_sum Finset.univ fun i _ => measurable_pi_apply i)
 
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
