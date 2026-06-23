@@ -11,6 +11,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowed
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowedReindex
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactReorder
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowedPermute
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -39,9 +40,14 @@ The general-n windowed→analytic bridge is proved under the bottleneck-last hyp
 optimum = `exactChainOptimum`, ANY n). The ARBITRARY-ORDER case is now also handled
 (`thm_11_1_exact_reorder`/`chainValue_perm`: the exact worst case `(∑T)+b/(minR)` is permutation-
 invariant — depends only on the server multiset — and `exists_perm_programOptimum_windowed_eq_exact
-ChainOptimum` relabels the bottleneck last). NB the in-place windowed-last identity stays order-DEPENDENT
-(`b/R_last` vs `b/minR`); the manifestly order-independent exact LP is the collapsed `thm_11_1_exact_lp`.
-Ch11's §11.1 LP-optimum-=-worst-case is now COMPLETE (exact value, exact LP in 3 forms, order-independence).
+ChainOptimum` relabels the bottleneck last). and the windowed-LP reordering `Equiv`
+(`thm_11_1_reorder_equiv`/`programOptimum_windowed_permute_eq_exactChainOptimum`: a genuine `Vars`-
+permutation bijection gives `programOptimum` invariance under jointly relabeling servers + objective
+node, so any-order = `exactChainOptimum` THROUGH the `Equiv`, built on the generalized
+`WindowedFeasibleGen` since `cumLatency` is an order-dependent prefix-sum). NB the in-place FIXED-
+objective-node identity stays order-DEPENDENT (`b/R_last` vs `b/minR`); the manifestly order-independent
+exact LP is the collapsed `thm_11_1_exact_lp`. Ch11's §11.1 LP-optimum-=-worst-case is COMPLETE (exact
+value, exact LP in 3 forms, order-independence + the reindexing Equiv).
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). The book defers this exact general case to **[BOU 16b]** (Bouillard–Stea, DOI 10.1109/TNET.2014.2332071) — now formalized from the paper itself (`FifoFeedForwardExact`: Theorem 1 = Lemmas 2/3 logical bridge, the §IV.D LP bracket `v_LP ≤ WCD ≤ V_LP`, the `2^(N+1)−1` variable count, single/multi-node exact instances). The CONCRETE general-N construction is also now formalized one layer below the abstract bridge (`FifoFeedForwardConcrete`: the depth-N binary-tree date layout `DateTree` with `count=2^(N+1)−1`, the `Scenario` properties 1–3, Lemma 2's per-constraint sample discharges `Scenario.sample_feasible_pointwise`, and Lemma 3's min-plus extrapolation core `extrapolate`/`extrapolate_arrival`); Lemma 1 (the convolution-time attainment the backward recursion needs) is now PROVED
 (`FifoFeedForwardReconstruction.exists_serviceCurveTime`), and the single-node case has a CONCRETE full
 Theorem-1 round-trip via an actual admissible burst trajectory (`fifoNode_reconstruction`, no Boolean
@@ -437,5 +443,29 @@ theorem thm_11_1_exact_reorder (b : ℝ≥0) {servers₁ servers₂ : List (ℝ�
     (hperm : List.Perm servers₁ servers₂) :
     DeepWiki.chainValue b servers₁ = DeepWiki.chainValue b servers₂ :=
   DeepWiki.chainValue_perm b hperm
+
+/-- **§11.1.3 the windowed-LP reordering `Equiv`** (resolving the arbitrary-order case in-place). The
+windowed feasible set carries a genuine `Vars`-permutation bijection `windowedPermute σ` (permute the
+departure dates by `σ`), giving `programOptimum` invariance under JOINTLY relabeling the servers
+`(R,L)` by `σ` and the objective node by `σ⁻¹` (`programOptimum_windowedGen_permute`, derived from a
+feasible-set bijection via `programOptimum_congr_equiv`). Hence for ANY server order, the σ-relabeled
+(bottleneck-last) windowed LP equals the order-independent `exactChainOptimum`
+(`programOptimum_windowed_permute_eq_exactChainOptimum`) — closing the arbitrary-order case THROUGH the
+reindexing `Equiv`, not just the existence form. The library's
+`DeepWiki.programOptimum_windowed_permute_eq_exactChainOptimum`. ★ KEY: `cumLatency` is a prefix-sum
+(order-dependent), so the bijection is built on the generalized `WindowedFeasibleGen` (arbitrary
+per-server offset, which permutes verbatim); the in-place FIXED-objective-node identity stays genuinely
+order-dependent. -/
+theorem thm_11_1_reorder_equiv {n : ℕ} (r b : ℝ≥0) (R T : Fin (n + 1) → ℝ≥0)
+    (σ : Equiv.Perm (Fin (n + 1))) (hb : 0 < b) (hRpos : ∀ h, 0 < R h)
+    (hbot : ∀ h, (R ∘ σ) (Fin.last n) ≤ (R ∘ σ) h) (hrR : r ≤ (R ∘ σ) (Fin.last n)) :
+    programOptimum
+        (DeepWiki.WindowedFeasible (r : ℝ) (b : ℝ)
+          (fun h => ((R ∘ σ) h : ℝ)) (fun h => ((T ∘ σ) h : ℝ)))
+        (fun v => ((DeepWiki.windowedDelay (Fin.last n) v : ℝ) : EReal))
+      = exactChainOptimum (tokenBucketArrival r b) (rateLatencyNN (R 0) (T 0))
+          ((List.ofFn (fun i : Fin n => (R i.succ, T i.succ))).map
+            (fun p => rateLatencyNN p.1 p.2)) :=
+  DeepWiki.programOptimum_windowed_permute_eq_exactChainOptimum r b R T σ hb hRpos hbot hrR
 
 end DeepWiki.Dnc
