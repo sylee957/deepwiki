@@ -2171,3 +2171,49 @@ theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar 
   exact hermiteReduce_residual_correct_of_split fuel A D gnum gden Dstar hD hgden hDstar hfuel
     hresD hg2
 
+/-! ### Example 2.2.1: the unconditional wrapper, certificate `native_decide`d
+
+The decidable residual-honesty bundle `HermiteResComp` holds on Example 2.2.1 (`native_decide`), so the
+**unconditional** wrapper applies with *no* exact-division hypothesis supplied: the certificate is the
+engine's own `cmod`-computation, checked by `native_decide`. This is the honest `RatFunc ℚ` correctness
+of the computed Hermite reduction for `f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` with the certificate
+fully internal. -/
+
+/-- **Example 2.2.1: the residual-honesty bundle holds** (`native_decide`): both split `cmod`-remainders
+of the computed `(gnum, gden, Dstar) = ([8,12,20,12,8,3], [0,8,0,12,0,6,0,1], [0,2,0,1])` vanish, so
+`HermiteResComp 40 cA221 cD221 gnum gden Dstar` — the engine certifies its own residual recovery. -/
+theorem hermite_ex221_resComp :
+    HermiteResComp 40 cA221 cD221 [8, 12, 20, 12, 8, 3] [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] := by
+  native_decide
+
+open scoped Differential in
+/-- **Example 2.2.1: the unconditional Hermite reduction is correct as a `RatFunc ℚ` identity** (§2.2,
+p.41): `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the computed `gnum, gden, Dstar` of
+Example 2.2.1, with **no** exact-division certificate as a hypothesis — the certificate is discharged by
+the `native_decide`'d residual-honesty bundle `hermite_ex221_resComp` through
+`hermiteReduce_residual_correct_uncond`. The nonzero hypotheses hold by `decide`; the fuel bound by
+`native_decide`. -/
+example :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
+      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv 40
+              (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+                  (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+                    (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
+              (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+  have hD : toPoly cD221 ≠ 0 := fun h => by
+    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    revert this; decide
+  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
+    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    revert this; decide
+  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+      (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+        (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
+    native_decide
+  exact hermiteReduce_residual_correct_uncond 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hermite_ex221_resComp
+
