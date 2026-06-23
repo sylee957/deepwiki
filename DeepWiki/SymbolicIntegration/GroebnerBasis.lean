@@ -3113,4 +3113,47 @@ example {K : Type*} [Field K] [Finite σ] (m : MonomialOrder σ) {B : Finset (Mv
       IsGroebnerBasis m (Ideal.span (↑B : Set (MvPolynomial σ K))) (↑G : Set (MvPolynomial σ K)) :=
   buchberger_terminates_correct m hB
 
+/-! ## The `P·Gₖ₊₁` divide-out: from an arbitrary reduced GB to the no-common-factor case
+
+Lazard (1985), Theorem 1 proof (p.262): "Let `P = primpart(GCD(f₀,…,fₖ))` and `Gₖ₊₁ =
+content(GCD(f₀,…,fₖ))`. … Thus we may divide by `P·Gₖ₊₁` and suppose that the `fᵢ` have no common
+divisors." The single common factor to divide out is `H := GCD(f₀,…,fₖ) = P·Gₖ₊₁`, the gcd of the
+whole basis in `K[x][y]`. Here `H` is taken in the `lazardView` ring `K[x][y] = Polynomial
+(MvPolynomial (Fin 1) K)` (a UFD, hence `GCDMonoid`) as `gbYGcd hB := ⨅ᵍᶜᵈ_i lazardView (sorted i)`,
+its cofactors `lazardView (sorted i) / H` are produced by `gbYGcd_dvd`, and their gcd is a **unit**
+(`gbYGcd_cofactor_gcd_isUnit`) — exactly `HasNoCommonYFactor` for the divided family. So the
+structural conclusions proved unconditional under `HasNoCommonYFactor` apply to every divided
+arbitrary reduced bivariate Gröbner basis. -/
+
+open scoped Classical in
+/-- A chosen `NormalizedGCDMonoid` on the `lazardView` ring `K[x][y] = Polynomial (MvPolynomial
+(Fin 1) K)` (a UFD over the UFD `K[x]`, hence a normalized GCD domain) — supplies the `Finset.gcd`
+over the basis. Used as a local `letI`; not a global instance. -/
+@[reducible] noncomputable def gcdMonoidLazardRing (K : Type*) [Field K] :
+    NormalizedGCDMonoid (Polynomial (MvPolynomial (Fin 1) K)) :=
+  letI := UniqueFactorizationMonoid.normalizationMonoid
+    (α := Polynomial (MvPolynomial (Fin 1) K))
+  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
+
+open scoped Classical in
+/-- **The common `K[x][y]`-factor of the basis** (Lazard's `GCD(f₀,…,fₖ) = P·Gₖ₊₁`): the gcd of the
+`lazardView`s of all sorted basis elements, taken in `K[x][y]`. Dividing it out yields the
+no-common-factor case. -/
+noncomputable def gbYGcd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Polynomial (MvPolynomial (Fin 1) K) :=
+  letI := gcdMonoidLazardRing K
+  (Finset.univ : Finset (Fin B.card)).gcd (fun i => lazardView (sortedByYDegree hB i))
+
+/-- **`gbYGcd` divides every basis view** (`H ∣ lazardView (sorted i)`): the gcd of a family divides
+each member (`Finset.gcd_dvd`). -/
+theorem gbYGcd_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) :
+    @Dvd.dvd _ _ (gbYGcd hB) (lazardView (sortedByYDegree hB i)) := by
+  letI := gcdMonoidLazardRing K
+  exact Finset.gcd_dvd (Finset.mem_univ i)
+
 end DeepWiki.SymbolicIntegration
