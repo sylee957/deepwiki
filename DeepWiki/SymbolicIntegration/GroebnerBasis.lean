@@ -3476,4 +3476,75 @@ theorem dividedBasis_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin
   exact hB.ne_zero (sortedByYDegree_mem hB i)
     (by rw [← gbCommonYFactor_mul_dividedBasis hB hne i, h0, mul_zero])
 
+/-- **`lazardView` of a `K`-scalar multiple**: `lazardView (C c * f) = Polynomial.C (C c) * lazardView f`
+(`finSuccEquiv` is a `K`-algebra hom, `finSuccEquiv_comp_C_eq_C`). -/
+theorem lazardView_C_scalar_mul {K : Type*} [Field K] (c : K) (f : MvPolynomial (Fin 2) K) :
+    lazardView (MvPolynomial.C c * f) = Polynomial.C (MvPolynomial.C c) * lazardView f := by
+  rw [lazardView, map_mul, lazardView]
+  congr 1
+  have h2 := RingHom.congr_fun (finSuccEquiv_comp_C_eq_C (R := K) 1) c
+  simp only [RingHom.comp_apply] at h2
+  exact ((finSuccEquiv K 1).symm_apply_eq.mp h2).symm
+
+/-- **The monic divided basis** (`fᵢ/H` rescaled to lex-leading-coefficient `1`): the divided cofactor
+`dividedBasis hB hne i` scaled by `(lex.leadingCoeff)⁻¹`. A unit-scalar multiple of the cofactor, so
+its `lazardView` is *associated* to `gbYGcdCofactor hB hne i` — the form needed for a *reduced* GB. -/
+noncomputable def monicDividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    MvPolynomial (Fin 2) K :=
+  MvPolynomial.C (MonomialOrder.lex.leadingCoeff (dividedBasis hB hne i))⁻¹ * dividedBasis hB hne i
+
+/-- The lex leading coefficient of `dividedBasis hB hne i` is nonzero (`dividedBasis_ne_zero`). -/
+theorem leadingCoeff_dividedBasis_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    MonomialOrder.lex.leadingCoeff (dividedBasis hB hne i) ≠ 0 :=
+  MonomialOrder.lex.leadingCoeff_ne_zero_iff.mpr (dividedBasis_ne_zero hB hne i)
+
+/-- `monicDividedBasis hB hne i ≠ 0` (unit-scalar multiple of the nonzero `dividedBasis`). -/
+theorem monicDividedBasis_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    monicDividedBasis hB hne i ≠ 0 := by
+  rw [monicDividedBasis, ← smul_eq_C_mul, smul_ne_zero_iff]
+  exact ⟨inv_ne_zero (leadingCoeff_dividedBasis_ne_zero hB hne i), dividedBasis_ne_zero hB hne i⟩
+
+/-- `lex.degree (monicDividedBasis hB hne i) = lex.degree (dividedBasis hB hne i)`: scaling by the
+nonzero constant `(leadingCoeff)⁻¹` preserves the leading monomial (`degree_C_mul`). -/
+theorem degree_monicDividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    MonomialOrder.lex.degree (monicDividedBasis hB hne i)
+      = MonomialOrder.lex.degree (dividedBasis hB hne i) :=
+  degree_C_mul MonomialOrder.lex (inv_ne_zero (leadingCoeff_dividedBasis_ne_zero hB hne i)) _
+
+/-- `lex.leadingCoeff (monicDividedBasis hB hne i) = 1`: the scaling by `(leadingCoeff)⁻¹` normalizes
+the leading coefficient to `1` (`leadingCoeff_C_mul`, field inverse). -/
+theorem leadingCoeff_monicDividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    MonomialOrder.lex.leadingCoeff (monicDividedBasis hB hne i) = 1 := by
+  rw [monicDividedBasis, leadingCoeff_C_mul MonomialOrder.lex
+    (inv_ne_zero (leadingCoeff_dividedBasis_ne_zero hB hne i)),
+    inv_mul_cancel₀ (leadingCoeff_dividedBasis_ne_zero hB hne i)]
+
+/-- **`lazardView (monicDividedBasis hB hne i)` is associated to the cofactor**
+`gbYGcdCofactor hB hne i`: they differ by the unit scalar `C (C (leadingCoeff)⁻¹)`. So the divided
+ideal's divisor lattice agrees with the cofactors'. -/
+theorem lazardView_monicDividedBasis_associated {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    Associated (gbYGcdCofactor hB hne i) (lazardView (monicDividedBasis hB hne i)) := by
+  rw [monicDividedBasis, lazardView_C_scalar_mul, lazardView_dividedBasis]
+  -- `C (C (leadingCoeff)⁻¹)` is a unit (nonzero field constant lifted twice).
+  refine associated_unit_mul_right _ _ (Polynomial.isUnit_C.mpr ?_)
+  exact (inv_ne_zero (leadingCoeff_dividedBasis_ne_zero hB hne i)).isUnit.map MvPolynomial.C
+
 end DeepWiki.SymbolicIntegration
