@@ -1007,6 +1007,87 @@ theorem buchberger_terminates_correct {K : Type*} [Field K] [Finite σ] (m : Mon
       refine ⟨G, (subset_buchbergerStep m hC).trans hCG, by rw [hspanG, hspaneq], ?_⟩
       rwa [hspaneq] at hgb
 
+/-! ## Lazard's Lemma 1: distinct leading y-degrees in a minimal bivariate Gröbner basis
+
+Lazard (1985), J. Symb. Comp. 1, 261–270, Lemma 1 — the foundational step of his bivariate
+Gröbner-basis structure theorem, and the stepping stone toward Czichowski's structural lemmas
+(Bronstein §2.6). Over `MvPolynomial (Fin 2) K` (index `0 = x`, `1 = y`) the leading y-degree of
+`b` is `(m.degree b) 1`; the lemma says distinct elements of a minimal/reduced Gröbner basis have
+distinct leading y-degrees. -/
+
+/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `1` (the y-coordinate) are comparable:
+since the remaining ℕ-values at index `0` are totally ordered, the finsupps are comparable
+pointwise. -/
+theorem finsupp_fin_two_le_or_le_of_apply_eq {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) :
+    d ≤ d' ∨ d' ≤ d := by
+  rcases le_total (d 0) (d' 0) with h0 | h0
+  · refine Or.inl ?_
+    rw [Finsupp.le_def]
+    intro i
+    fin_cases i
+    · exact h0
+    · exact h.le
+  · refine Or.inr ?_
+    rw [Finsupp.le_def]
+    intro i
+    fin_cases i
+    · exact h0
+    · exact h.ge
+
+/-- A reduced Gröbner basis element is nonzero: its leading coefficient is `1 ≠ 0`. -/
+theorem IsReducedGroebnerBasis.ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)}
+    {B : Set (MvPolynomial σ K)} (hB : IsReducedGroebnerBasis m I B) {b : MvPolynomial σ K}
+    (hb : b ∈ B) : b ≠ 0 :=
+  m.leadingCoeff_ne_zero_iff.mp (by rw [hB.2.1 b hb]; exact one_ne_zero)
+
+/-- **Minimality extraction.** In a reduced Gröbner basis, the leading monomial of `b'` does not
+divide that of a distinct `b`: instantiating the reduced condition at the leading monomial
+`m.degree b ∈ b.support` (`b ≠ 0`). -/
+theorem IsReducedGroebnerBasis.leadingMonomial_not_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
+    (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
+    (hne : b ≠ b') : ¬ (m.degree b' ≤ m.degree b) :=
+  hB.2.2 b hb b' hb' hne (m.degree b) (degree_mem_support (hB.ne_zero hb))
+
+/-- **Lazard (1985), Lemma 1.** In a reduced (minimal) Gröbner basis `B` of a two-variable ideal,
+distinct elements have distinct leading y-degrees `(m.degree ·) 1`. If two shared a y-degree they
+would be comparable (`finsupp_fin_two_le_or_le_of_apply_eq`), so one leading monomial would divide
+the other — contradicting minimality (`IsReducedGroebnerBasis.leadingMonomial_not_le`). -/
+theorem lazard_lemma1 {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 := by
+  intro b hb b' hb' hne hy
+  rcases finsupp_fin_two_le_or_le_of_apply_eq hy with hle | hle
+  · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb') (Finset.mem_coe.mpr hb)
+      (Ne.symm hne) hle
+  · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb) (Finset.mem_coe.mpr hb') hne hle
+
+/-- **Lazard's Lemma 1, injectivity form.** The leading-y-degree map `b ↦ (m.degree b) 1` is
+injective on a reduced Gröbner basis of a two-variable ideal. -/
+theorem lazard_lemma1_injOn {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Set.InjOn (fun b => (m.degree b) 1) (↑B : Set (MvPolynomial (Fin 2) K)) := by
+  intro b hb b' hb' hyeq
+  by_contra hne
+  exact lazard_lemma1 hB b hb b' hb' hne hyeq
+
+-- Restatements against the intended wording.
+example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
+  finsupp_fin_two_le_or_le_of_apply_eq h
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
+    (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
+    (hne : b ≠ b') : ¬ (m.degree b' ≤ m.degree b) :=
+  hB.leadingMonomial_not_le hb hb' hne
+
+example {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 :=
+  lazard_lemma1 hB
+
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
     (B : Set (MvPolynomial σ R)) : Prop := IsGroebnerBasis m I B
