@@ -2232,6 +2232,18 @@ theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
           leadingYCoeff_sortedByYDegree_dvd_of_le hB (le_of_lt hi'lt)
         exact dvd_trans (map_dvd Polynomial.C hchain) (hIH' j hji')
 
+/-- **Lazard's Lemma 3, the diagonal descent** (Part B conclusion). Under the no-common-factor base
+`degreeOf 0 (sorted 0) = 0` (`hbase`), each sorted basis element satisfies `gᵢ ∣ fᵢ` in the form
+`C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)` — the `j = i` specialization of
+`C_dvd_lazardView_sortedByYDegree_of_le`. -/
+theorem lazard_lemma3_dvd {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  C_dvd_lazardView_sortedByYDegree_of_le hB hbase i i le_rfl
+
 open scoped Classical in
 /-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
 the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
@@ -2303,6 +2315,25 @@ theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (h
   refine ⟨(lazardView f).primPart, Polynomial.eq_C_content_mul_primPart (lazardView f),
     content_associated_leadingYCoeff_of_C_dvd hdvd, Polynomial.isPrimitive_primPart _,
     leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩
+
+/-- **Lazard's `Pₖ = Rₖ·Sₖ` for every sorted basis element** (Part C, no-common-factor case). With
+the no-common-factor base `degreeOf 0 (sorted 0) = 0` (`hbase`), the descent `lazard_lemma3_dvd`
+discharges the divisibility hypothesis of `lazard_Pk_eq_Rk_Sk`, so *every* `fᵢ = sorted i` splits as
+`lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ ∼ Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive and monic
+in `y` (unit leading coefficient). -/
+theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i : Fin B.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
+    (lazard_lemma3_dvd hB hbase i)
 
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
