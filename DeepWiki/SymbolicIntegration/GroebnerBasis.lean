@@ -3156,4 +3156,53 @@ theorem gbYGcd_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
   letI := gcdMonoidLazardRing K
   exact Finset.gcd_dvd (Finset.mem_univ i)
 
+open scoped Classical in
+/-- **The divided basis cofactors** (`b'ᵢ` in `lazardView`-space): the `K[x][y]`-cofactor family with
+`lazardView (sorted i) = gbYGcd hB * gbYGcdCofactor hB i` and gcd a unit. From `Finset.extract_gcd`
+(nonempty `B`), which produces both the cofactors and their coprimality. -/
+noncomputable def gbYGcdCofactor {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    Fin B.card → Polynomial (MvPolynomial (Fin 1) K) :=
+  letI := gcdMonoidLazardRing K
+  (Finset.extract_gcd (fun i => lazardView (sortedByYDegree hB i)) hne).choose
+
+/-- **The divided-basis factorization** (Lazard's `fᵢ = H·b'ᵢ`, view form): `lazardView (sorted i) =
+gbYGcd hB * gbYGcdCofactor hB i`, the gcd times its cofactor (`Finset.extract_gcd`). -/
+theorem gbYGcd_mul_cofactor {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    lazardView (sortedByYDegree hB i) = gbYGcd hB * gbYGcdCofactor hB hne i := by
+  letI := gcdMonoidLazardRing K
+  exact (Finset.extract_gcd (fun i => lazardView (sortedByYDegree hB i)) hne).choose_spec.1 i
+    (Finset.mem_univ i)
+
+/-- **The cofactors are coprime** (Lazard's "no common factor", normalized form): `univ.gcd
+(gbYGcdCofactor hB hne) = 1` — dividing out the gcd leaves a unit gcd (`Finset.extract_gcd`). -/
+theorem gbYGcdCofactor_gcd_eq_one {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    letI := gcdMonoidLazardRing K
+    (Finset.univ : Finset (Fin B.card)).gcd (gbYGcdCofactor hB hne) = 1 := by
+  letI := gcdMonoidLazardRing K
+  exact (Finset.extract_gcd (fun i => lazardView (sortedByYDegree hB i)) hne).choose_spec.2
+
+/-- **The divided basis has no common `y`-factor** (sub-goal 3, Lazard's `P = Gₖ₊₁ = 1`): every
+`K[x][y]`-divisor common to all cofactors `gbYGcdCofactor hB hne i` is a unit — it divides their gcd
+`= 1` (`gbYGcdCofactor_gcd_eq_one`). This is exactly `HasNoCommonYFactor` for the divided family. -/
+theorem cofactor_hasNoCommonYFactor {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    (P : Polynomial (MvPolynomial (Fin 1) K))
+    (hP : ∀ i : Fin B.card, P ∣ gbYGcdCofactor hB hne i) : IsUnit P := by
+  letI := gcdMonoidLazardRing K
+  have hdvd : P ∣ (Finset.univ : Finset (Fin B.card)).gcd (gbYGcdCofactor hB hne) :=
+    Finset.dvd_gcd (fun i _ => hP i)
+  rw [gbYGcdCofactor_gcd_eq_one hB hne] at hdvd
+  exact isUnit_of_dvd_one hdvd
+
 end DeepWiki.SymbolicIntegration
