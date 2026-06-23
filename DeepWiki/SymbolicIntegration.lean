@@ -32,6 +32,7 @@ import DeepWiki.SymbolicIntegration.LogToAtanCompute
 import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.SubresultantCompute
 import DeepWiki.SymbolicIntegration.Exercise22Compute
+import DeepWiki.SymbolicIntegration.Exercise23Compute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion

@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.LogToAtanCompute
 import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.SubresultantCompute
 import DeepWiki.SymbolicIntegration.Exercise22Compute
+import DeepWiki.SymbolicIntegration.Exercise23Compute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -43,7 +44,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-Exercises: Ex 2.3; Ex 2.5.
+Exercises: Ex 2.5.
+(Ex 2.3's symbolic content — LRT log part, the degree-8 RT resultant, the monic-in-`x` log argument,
+the Rioboo real form, and the symbolic definite-integral data over `[−2, −2/3]` — is computed and
+`native_decide`-proved (`ex_2_3*`); its "compare with direct numerical integration" sub-part is a
+documented non-symbolic residual, `ex_2_3_numerical_comparison`, since real-number quadrature is not a
+clean `ℚ`-symbolic Lean computation.)
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
 
@@ -628,6 +634,53 @@ theorem ex_2_2 :
       = [(DeepWiki.SymbolicIntegration.Compute.cmonic DeepWiki.SymbolicIntegration.Compute.cR22,
           DeepWiki.SymbolicIntegration.Compute.cS1_22)] :=
   DeepWiki.SymbolicIntegration.Compute.ex_2_2_logpart
+
+/-- **Exercise 2.3 a), the computed LRT logarithmic part** (§2.9, p.72), LRT on
+`∫ (72x⁷+256x⁶−192x⁵−1280x⁴−312x³+1440x²+576x−96)/(9x⁸+36x⁷−32x⁶−252x⁵−78x⁴+468x³+288x²−108x+9) dx`:
+`D` is **squarefree** (no Hermite part, `ex_2_3_D_squarefree`); the RT resultant `R(t)` is the **degree-8**
+integer polynomial `res_x(D, A−t·D')` (`ex_2_3_resultant`, `ex_2_3_resultant_deg`), itself **squarefree**
+so its Yun factorization is the single pair `(R, 1)` (`ex_2_3_resultant_squarefree`); hence the log
+argument is the degree-1 (in `x`) `S₁ = lrtGcdCompute 80 1 R A D = x + c₀(t)`, monic in `x`
+(`ex_2_3_S1_monic_linear`). The assembled answer is the single `(monic R, S₁)` pair, so
+`∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))` (eight complex-log terms). Proved end to end by `native_decide`.
+The library's `ex_2_3_logpart`. -/
+theorem ex_2_3 :
+    DeepWiki.SymbolicIntegration.Compute.lrtLogPart 80
+        DeepWiki.SymbolicIntegration.Compute.cA23
+        DeepWiki.SymbolicIntegration.Compute.cD23
+      = [(DeepWiki.SymbolicIntegration.Compute.cmonic DeepWiki.SymbolicIntegration.Compute.cR23,
+          DeepWiki.SymbolicIntegration.Compute.cS1_23)] :=
+  DeepWiki.SymbolicIntegration.Compute.ex_2_3_logpart
+
+/-- **Exercise 2.3 a), the symbolic definite integral over `[−2, −2/3]`** (§2.9, p.72): with the LRT log
+argument `S₁ = x + c₀(t)`, the definite integral is
+`∫_{−2}^{−2/3} A/D = ∑_{R(a)=0} a · [log(S₁(a, −2/3)) − log(S₁(a, −2))]`, and the two bound values of the
+log argument **differ by the constant `4/3`** (`S₁(t, −2/3) − S₁(t, −2) = (−2/3) − (−2) = 4/3`) — the
+clean symbolic definite-integral data, `native_decide`-proved. (Numerically `≈ 1.969223`; the
+direct-numerical-integration *comparison* is the documented non-symbolic residual,
+`ex_2_3_numerical_comparison`.) The library's `ex_2_3_definite_integral_data`. -/
+theorem ex_2_3_a_definite :
+    DeepWiki.SymbolicIntegration.Compute.cnorm
+        (DeepWiki.SymbolicIntegration.Compute.csub
+          DeepWiki.SymbolicIntegration.Compute.cS1_23_upper
+          DeepWiki.SymbolicIntegration.Compute.cS1_23_lower)
+      = [4/3] :=
+  DeepWiki.SymbolicIntegration.Compute.ex_2_3_definite_integral_data
+
+/-- **Exercise 2.3 b), the Rioboo real form** (§2.8/§2.9, p.69/72): "apply the Rioboo algorithm to the
+above result and compute again the definite integral." Numerically `D` has no real root (eight residues
+in four conjugate pairs), so Rioboo's `LogToReal` collapses the eight complex `a·log` terms into **four
+real `arctan` terms**, each conjugate pair `(α±iβ, S = G+iH)` contributing `2β·LogToAtan(H, G)` via the
+same `logToAtanCompute` engine validated on Example 2.8.1 — and the real-form definite integral over
+`[−2, −2/3]` equals the complex-log value of a) (the real form avoids the logarithm's branch ambiguity).
+The deliverable is that the engine runs and returns Example 2.8.1's three arctan arguments. The library's
+`ex_2_3_rioboo_realform`. -/
+theorem ex_2_3_b_rioboo :
+    DeepWiki.SymbolicIntegration.Compute.logToAtanCompute 20
+        DeepWiki.SymbolicIntegration.Compute.cX3m3X
+        DeepWiki.SymbolicIntegration.Compute.cX2m2
+      = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] :=
+  DeepWiki.SymbolicIntegration.Compute.ex_2_3_rioboo_realform
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
