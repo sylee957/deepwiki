@@ -22,7 +22,7 @@ the Lévy–Prokhorov edistance of their laws is bounded by `ofReal r ⊔ μ{ω 
 The set inclusion `{X ∈ B} ⊆ {Y ∈ thickening_ε B} ∪ {dist (X,Y) ≥ r}` (with `r ≤ ε`) makes each
 of the two Lévy–Prokhorov defining inequalities hold. -/
 theorem levyProkhorovEDist_map_le {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E]
-    [OpensMeasurableSpace E] (X Y : Ω → E) (hX : Measurable X) (hY : Measurable Y) {r : ℝ}
+    [OpensMeasurableSpace E] (X Y : Ω → E) (hX : AEMeasurable X μ) (hY : AEMeasurable Y μ) {r : ℝ}
     (hr : 0 < r) :
     levyProkhorovEDist (μ.map X) (μ.map Y)
       ≤ ENNReal.ofReal r ⊔ μ {ω | r ≤ dist (X ω) (Y ω)} := by
@@ -34,10 +34,11 @@ theorem levyProkhorovEDist_map_le {E : Type*} [PseudoMetricSpace E] [MeasurableS
       _ ≤ ε.toReal := ENNReal.toReal_mono hεtop.ne hofr
   have hpε : p ≤ ε := le_of_lt (lt_of_le_of_lt le_sup_right hδε)
   -- generic one-sided bound: `μ(U⁻¹B) ≤ μ(V⁻¹ thickening) + μ{dist (U,V) ≥ r}`
-  have one_side : ∀ (U V : Ω → E), Measurable U → Measurable V →
+  have one_side : ∀ (U V : Ω → E), AEMeasurable U μ → AEMeasurable V μ →
       (μ.map U) B ≤ (μ.map V) (thickening ε.toReal B) + μ {ω | r ≤ dist (U ω) (V ω)} := by
     intro U V hU hV
-    rw [Measure.map_apply hU hB, Measure.map_apply hV isOpen_thickening.measurableSet]
+    rw [Measure.map_apply_of_aemeasurable hU hB,
+      Measure.map_apply_of_aemeasurable hV isOpen_thickening.measurableSet]
     refine le_trans (measure_mono ?_) (measure_union_le _ _)
     intro ω hω
     rw [Set.mem_preimage] at hω
