@@ -88,7 +88,7 @@ core), so the `[∧]` upper-bound canonicalization is available; the unary closu
 remains of Def 4.5/Thm 4.4 is only the `F`-closure halves (book defers Thm 4.4's full proof to
 [LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
-canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
+canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); the breakpoint/rank
 layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
 (`prop_4_4_canonicalBound`/`canonicalUpperBound`: `f̲ ≤ ⋀ᵢ Θ`, the constant-`Θ` meet IS [4.13] — it's
 the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now the FULL equality (`prop_4_4_convexCompanion`/
@@ -260,7 +260,7 @@ convex, non-decreasing, non-negative curves `f, g`, the `(min,plus)` convolution
 is indexed by the *slope* `s`, pointwise addition of the transforms is exactly the book's "merge the
 segments in increasing order of slope" rule (Theorem 4.1, Figure 4.4). This is the mathematical
 content justifying the segment-merge algorithm; the explicit piecewise-affine data structure that
-performs the merge is the chapter's `[infra]` item. The library's
+performs the merge is `DeepWiki.lowerEnvMerge` / `GeneralPwl`. The library's
 `DeepWiki.minConv_eq_legendre_add_legendre` (composing the Fenchel–Moreau involution with
 `𝓛(f ∗ g) = 𝓛 f + 𝓛 g`). -/
 theorem thm_4_1_legendre {f g : ℝ≥0 → EReal}
@@ -600,8 +600,8 @@ theorem thm_4_2_render (f0 fs : ℝ≥0) (fsegs l : List (ℝ≥0 × ℝ≥0))
 /-- **Theorem 4.2, output well-formedness** (§4.2.2). The rendered convex-by-concave output is a
 genuine **monotone** curve — the meet of the monotone rendered envelope and the monotone `f`. (The
 output is in general *convex-then-concave* — a convex head `f`, then decreasing-rate bucket lines —
-so collapsing it to a single PWL *segment list* needs a general arbitrary-slope PWL datatype, the
-remaining `[infra]` step; the result is fully pinned down here as a finite meet of explicit pieces.)
+collapsing it to a single PWL *segment list* uses the general arbitrary-slope PWL datatype `GeneralPwl`
+(the final fold is `thm_4_2_output_pwl`); the result is a finite meet of explicit pieces.)
 The library's `DeepWiki.monotone_minConv_concaveNFEval_render`. -/
 theorem thm_4_2_render_monotone (f0 fs : ℝ≥0) (fsegs l : List (ℝ≥0 × ℝ≥0))
     (hfsort : List.Pairwise (fun a c => a.1 ≤ c.1) fsegs) (hfs : ∀ seg ∈ fsegs, seg.1 ≤ fs)
@@ -831,8 +831,9 @@ The `n`-fold `(min,+)` convolution power of an open segment `segNN a b va s` is,
 support `(n·a, n·b)`, the open segment of the **same slope** `s`: `(σⁿ)(t) = n·va + s·(t − n·a)` (and
 `= ⊤` off `(n·a, n·b)` for `n ≥ 1`). This is the first sentence of Lemma 4.9 — the building block of
 the closure's pseudo-periodicity (`σ⋆ = ⨅ₙ σⁿ`). The order-theoretic infimum-selection step (which `n`
-wins per `t`, the rank, the `closure(t+a) = closure t + s·a` period) is the remaining `[infra]` part.
-The library's `DeepWiki.minConvPow_segNN_eq_affine` (support `_eq_top_of_le`/`_of_ge`). -/
+wins per `t`, the rank, the `closure(t+a) = closure t + s·a` period) is carried by the full Lemma 4.9
+(`lemma_4_9`, unconditional). The library's `DeepWiki.minConvPow_segNN_eq_affine` (support
+`_eq_top_of_le`/`_of_ge`). -/
 theorem lemma_4_9_powers (a b va s : ℝ≥0) {n : ℕ} (hn : 1 ≤ n)
     {t : ℝ≥0} (htl : (n : ℝ≥0) * a < t) (htr : t < (n : ℝ≥0) * b) :
     minConvPow (segNN a b va s) n t
@@ -893,8 +894,8 @@ homomorphism, so the congruence `SameLegendre` respects the operations: `⊓` un
 properness (`SameLegendre.legendreConv`, via `legendre (f∗g) = legendre f + legendre g`). The quotient
 `FmodL = Quotient legendreSetoid` carries the descended meet (`FmodL.inf`, `FmodL.inf_mk`). The
 library's `DeepWiki.Container.SameLegendre.inf` / `.legendreConv` / `DeepWiki.Container.FmodL`. (Full
-`⊗`-descent needs a proper subtype; closure-congruence needs a closure↔Legendre identity — both
-`[infra]`.) -/
+`⊗`-descent is on the proper-curve subtype `FmodLProper` (`prop_4_3_conv_mk`); closure-congruence is
+the closure↔Legendre identity `lemma_4_10_12`.) -/
 theorem prop_4_3_inf_congr {f f' g g' : ℝ≥0 → EReal}
     (hf : DeepWiki.Container.SameLegendre f f') (hg : DeepWiki.Container.SameLegendre g g') :
     DeepWiki.Container.SameLegendre (f ⊓ g) (f' ⊓ g') :=
@@ -978,8 +979,8 @@ theorem def_4_5_closure_canonical (c : DeepWiki.ContainerNN) :
 /-- **Proposition 4.4** (§4.4, p.86): the canonical bound of a Legendre class `[f]_L`. The convex
 biconjugate `Cvx f = 𝓛(𝓛 f)` is the **least** element of `[f]_L = {g | 𝓛 g = 𝓛 f}` — a member
 (`𝓛(Cvx f) = 𝓛 f`) and a lower bound — i.e. `IsLeast (legendreClass f) (Cvx f)`. (The book's `Θ_f̲`
-sum-of-elementary-functions form [4.13] needs a non-differentiable-points enumeration, `[infra]`.)
-The library's `DeepWiki.Container.isLeast_legendreClass_biconj`. -/
+sum-of-elementary-functions form [4.13] is `prop_4_4_canonicalBound`, on the breakpoint enumeration
+`DeepWiki.breakpoints`.) The library's `DeepWiki.Container.isLeast_legendreClass_biconj`. -/
 theorem prop_4_4 (f : ℝ≥0 → EReal) :
     IsLeast (DeepWiki.Container.legendreClass f) (DeepWiki.Container.biconj f) :=
   DeepWiki.Container.isLeast_legendreClass_biconj f
@@ -1003,8 +1004,9 @@ segment (past it the curve is the asymptote, `convexSegEval_past_rank`); `breakp
 cumulative-length non-differentiable points; and the corner value at the k-th breakpoint is `f0 +
 cornerSum (take k segs)` (`convexSegEval_at_breakpoint`). The library's `DeepWiki.pwlRank` /
 `DeepWiki.breakpoints` / `DeepWiki.convexSegEval_at_breakpoint`. (NB literal Prop 4.4 [4.13]
-`Θ_f̲ = ⋀ᵢ Θ^{κᵢ}_{τᵢ}` is NOT a pointwise theorem with the constant `Theta` — it samples `f` only at
-breakpoints, `⊤` past rank; full [4.13] needs *sloped* `Θ` generators, `[infra]`.) -/
+`Θ_f̲ = ⋀ᵢ Θ^{κᵢ}_{τᵢ}` is NOT a pointwise equality with the constant `Theta` — it samples `f` only at
+breakpoints, `⊤` past rank: it is the canonical UPPER bound `prop_4_4_canonicalBound`. The convex
+companion `f̲ = ⨆ β` (sloped generators) is the full equality `prop_4_4_convexCompanion`.) -/
 theorem pwl_breakpoints (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k : ℕ) :
     convexSegEval f0 fs segs (DeepWiki.segLenSum (segs.take k))
       = f0 + DeepWiki.cornerSum (segs.take k) :=
