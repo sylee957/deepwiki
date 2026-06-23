@@ -14,7 +14,10 @@ linear processes** (§6.4) is now formalized (`clt_linearProcess`), the rest sta
 
 - **§6.1 Convergence in Probability** (p.198): `Xₙ →ᵖ X` (Definition 6.1.1), the `Oₚ` and `oₚ`
   order notation (Definition 6.1.4), and Slutsky-type results. Mathlib has convergence in
-  measure (`MeasureTheory.TendstoInMeasure`); the `Oₚ` and `oₚ` calculus is not packaged.
+  measure (`MeasureTheory.TendstoInMeasure`) and **Slutsky's theorem** itself
+  (`TendstoInDistribution.prodMk_of_tendstoInMeasure_const`, with the additive form
+  `add_of_tendstoInMeasure_const`); the **ratio form** is DeepWiki's `slutsky_ratio`. The `Oₚ`/`oₚ`
+  calculus is not packaged.
 - **§6.2 Convergence in rᵗʰ Mean** (p.203): `Lʳ` convergence, Chebyshev's inequality (6.2.1) and
   mean-square convergence. Mathlib has the `Lᵖ` spaces and Chebyshev and Markov bounds; the named
   `r`-th-mean convergence predicate is spelled as `eLpNorm (Xₙ − X) r μ → 0`.
@@ -33,6 +36,13 @@ linear processes** (§6.4) is now formalized (`clt_linearProcess`), the rest sta
 namespace DeepWiki.Ts
 
 open DeepWiki.TimeSeries
+
+/-- **§6.1 Slutsky's theorem, ratio form**: if `Xₙ ⇒ X` and `Yₙ →ᵖ b ≠ 0`, then `Xₙ / Yₙ ⇒ X / b`.
+The library's `tendstoInDistribution_div_of_tendstoInMeasure_const` — the divisive companion of
+Mathlib's `TendstoInDistribution.prodMk_of_tendstoInMeasure_const` (Slutsky's theorem proper, the
+joint form) and `add_of_tendstoInMeasure_const` (additive form); the inference tool behind the
+sample-autocorrelation limit `ρ̂(h) = γ̂(h)/γ̂(0)` of Bartlett's formula (§7.2). -/
+alias slutsky_ratio := DeepWiki.TimeSeries.tendstoInDistribution_div_of_tendstoInMeasure_const
 
 /-- **§6.4 — Central limit theorem for (causal) linear processes**: for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}`
 over centered iid `L²` noise with `∑ⱼ |ψⱼ| < ∞`, the standardized sample mean is asymptotically
@@ -64,7 +74,7 @@ abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
-order notation) [infra]; Slutsky's theorem [infra]
+order notation) [infra]
 §6.2: Chebyshev's inequality (eq 6.2.1) [infra]; convergence in `rᵗʰ` mean [infra]
 §6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
 `clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
