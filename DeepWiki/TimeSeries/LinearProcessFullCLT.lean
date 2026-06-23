@@ -179,4 +179,62 @@ theorem tendsto_tsum_ite_lt_zero {ψ : ℕ → ℝ} (hψ : Summable fun j => |ψ
   rw [show (0 : ℝ) = (∑' j : ℕ, |ψ j|) - ∑' j : ℕ, |ψ j| from (sub_self _).symm]
   exact tendsto_const_nhds.sub hps
 
+/-- **`L²` bound on the truncation error of the standardized sample mean:** the difference between
+the full standardized sample mean `√n X̄ₙ` and its finite-`MA(m)` truncation `√n X̄ₙ^{(m)}` has
+`L²` norm `≤ ‖toLpSeq 0‖ · ∑_{j>m} |ψⱼ|`, *uniformly in `n ≥ 1`* — the difference is the tail
+process `Xₜ − Xₜ^{(m)} = ∑_{j>m} ψⱼ Z_{t−j}` (`causalLinearProcessLp_sub`), bounded by
+`eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le`. The eventually-vanishing approximation `h3`. -/
+theorem eLpNorm_sqrt_sampleMean_truncation_sub_le [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0) {ψ : ℕ → ℝ}
+    (hψ : Summable fun j => |ψ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ))) (m : ℕ) {n : ℕ}
+    (hn : 1 ≤ n) :
+    eLpNorm ((fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+        - fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp (fun j => if j ≤ m then ψ j else 0) Z hZ (t : ℤ) : Ω → ℝ) ω) 2 μ
+      ≤ ENNReal.ofReal (‖toLpSeq Z hZ 0‖ * ∑' j : ℕ, if m < j then |ψ j| else 0) := by
+  set ψm : ℕ → ℝ := fun j => if j ≤ m then ψ j else 0 with hψm
+  set ψt : ℕ → ℝ := fun j => if m < j then ψ j else 0 with hψt
+  have hsumm : ∀ t : ℤ, Summable fun j : ℕ => ψm j • toLpSeq Z hZ (t - (j : ℤ)) := fun t =>
+    summable_of_ne_finset_zero (s := Finset.range (m + 1)) fun j hj => by
+      simp only [Finset.mem_range, not_lt] at hj
+      simp only [hψm, if_neg (by omega : ¬ j ≤ m), zero_smul]
+  have hsumt : ∀ t : ℤ, Summable fun j : ℕ => ψt j • toLpSeq Z hZ (t - (j : ℤ)) := fun t =>
+    ((hsum t).sub (hsumm t)).congr fun j => by
+      rw [← sub_smul]; congr 1; simp only [hψt, hψm]
+      rcases le_or_gt j m with h | h
+      · rw [if_pos h, if_neg (by omega : ¬ m < j), sub_self]
+      · rw [if_neg (by omega : ¬ j ≤ m), if_pos h, sub_zero]
+  have hψt_abs : Summable fun j => |ψt j| := Summable.of_nonneg_of_le (fun _ => abs_nonneg _)
+    (fun j => by simp only [hψt]; split_ifs with h <;> simp [abs_nonneg]) hψ
+  have hsub_eq : ∀ t : ℤ, causalLinearProcessLp ψ Z hZ t - causalLinearProcessLp ψm Z hZ t
+      = causalLinearProcessLp ψt Z hZ t := fun t => by
+    rw [causalLinearProcessLp_sub hZ hsum hsumm t]
+    congr 1; funext j; simp only [hψt, hψm]
+    rcases le_or_gt j m with h | h
+    · rw [if_pos h, if_neg (by omega : ¬ m < j), sub_self]
+    · rw [if_neg (by omega : ¬ j ≤ m), if_pos h, sub_zero]
+  have hpt : ∀ t : ℤ, (fun ω => (causalLinearProcessLp ψ Z hZ t : Ω → ℝ) ω
+        - (causalLinearProcessLp ψm Z hZ t : Ω → ℝ) ω)
+      =ᵐ[μ] fun ω => (causalLinearProcessLp ψt Z hZ t : Ω → ℝ) ω := fun t => by
+    rw [← hsub_eq t]; exact (Lp.coeFn_sub _ _).symm
+  have key : ((fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+        - fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp ψm Z hZ (t : ℤ) : Ω → ℝ) ω)
+      =ᵐ[μ] fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp ψt Z hZ (t : ℤ) : Ω → ℝ) ω := by
+    have hae := sum_eventuallyEq (Finset.range n) (fun t (_ : t ∈ Finset.range n) => hpt (t : ℤ))
+    filter_upwards [hae] with ω hω
+    simp only [Pi.sub_apply, sampleMean]
+    rw [Finset.sum_sub_distrib] at hω
+    rw [← hω]; ring
+  rw [eLpNorm_congr_ae key]
+  refine le_trans (eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le hZ hindep hident hcenter
+    hψt_abs hsumt hn) (le_of_eq ?_)
+  congr 2
+  exact tsum_congr fun j => by simp only [hψt]; split_ifs <;> simp [abs_zero]
+
 end DeepWiki.TimeSeries
