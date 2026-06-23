@@ -415,4 +415,32 @@ theorem tendsto_nsmul_variance_sampleMean_of_mDependent {m : ℕ} {X : ℤ → �
       (𝓝 (∑' k : ℤ, acvfStat X μ k)) :=
   tendsto_nsmul_variance_sampleMean hX (summable_acvfStat_of_mDependent h hX.memLp)
 
+/-- **The big-block variance `vₚ = Var[U₀⁽ᵖ⁾]/(p+m)` converges to `v = ∑_h γ(h)`** as `p → ∞`.
+Writing `vₚ = (p · Var[X̄_p]) · (p/(p+m))`, the first factor tends to `∑_h γ(h)`
+(`tendsto_nsmul_variance_sampleMean_of_mDependent`) and the gap-shrinking factor `p/(p+m) → 1`.
+This is the limiting variance of the gap-removed CLT, and the input to the `Wₚ ⇒ Z` Gaussian step. -/
+theorem tendsto_variance_bigBlockSum_div_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ) (h : IsMDependent m X μ) :
+    Tendsto (fun p : ℕ => Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ] / (p + m : ℝ)) atTop
+      (𝓝 (∑' k : ℤ, acvfStat X μ k)) := by
+  have ha := tendsto_nsmul_variance_sampleMean_of_mDependent hX h
+  have hd : Tendsto (fun p : ℕ => (p : ℝ) + m) atTop atTop :=
+    tendsto_atTop_add_const_right atTop (m : ℝ) tendsto_natCast_atTop_atTop
+  have hr : Tendsto (fun p : ℕ => (p : ℝ) / (p + m : ℝ)) atTop (𝓝 1) := by
+    have hsub : Tendsto (fun p : ℕ => 1 - (m : ℝ) / (p + m)) atTop (𝓝 (1 - 0)) :=
+      tendsto_const_nhds.sub (tendsto_const_nhds.div_atTop hd)
+    rw [sub_zero] at hsub
+    refine hsub.congr' ?_
+    filter_upwards [eventually_gt_atTop 0] with p hp
+    have hpm : (p : ℝ) + m ≠ 0 := by positivity
+    field_simp
+    ring
+  have hmain := ha.mul hr
+  rw [mul_one] at hmain
+  refine hmain.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with p hp
+  rw [variance_bigBlockSum_zero]
+  have hpm : (p : ℝ) + m ≠ 0 := by positivity
+  field_simp
+
 end DeepWiki.TimeSeries
