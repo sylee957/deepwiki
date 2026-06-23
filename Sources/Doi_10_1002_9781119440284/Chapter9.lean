@@ -20,6 +20,7 @@ import DeepWiki.NetworkCalculus.RealTimeCalculusService
 import DeepWiki.NetworkCalculus.RealTimeCalculusServiceCurve
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
+import DeepWiki.NetworkCalculus.IntermediateServiceCurve
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 9: A Hierarchy of Service Curves
@@ -28,7 +29,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§9.3: Theorem 9.7 (the general intermediate-service-curve construction; only its δ_T case `lemma_9_5` is formalized) `[research]`. -/
+§9.3: Theorem 9.7 (the general intermediate-service-curve construction) `[research]` — the theorem is EXPLICITLY conditional on a composition hypothesis `Ŝ(β₂)∘Ŝ(β₁) ⊆ Ŝ(β₁∗β₂)` the book never establishes. The unconditional parts ARE formalized: the δ_T base case (`lemma_9_5`), the complete pure-rate sandwich (`thm_9_7_rate`), and the general upper inclusion `S̄ ⊆ S_mp(β)` for convex-PWL β (`thm_9_7_upper`); what remains open is the lower inclusion `S_strict(β) ⊆ S̄(Ŝ(β))` for a β WITH latency (per-segment delay∘rate tandem stacking) + that composition hypothesis. -/
 
 namespace DeepWiki.Dnc
 
@@ -205,8 +206,28 @@ alias lemma_9_5 := systemClosure_delayTandemUnion_eq
 
 /-! **Theorem 9.7** (§9.3.1, p.227): for each convex piecewise-linear β there is a system S of
 strict-service servers with `S_strict(β) ⊆ S̄ ⊆ S_mp(β)` — "no good intermediate type of service
-curve exists". The book does not prove the general theorem; only its δ_T special case is formalized,
-as `lemma_9_5` (`systemClosure_delayTandemUnion_eq`). -/
+curve exists". The theorem is EXPLICITLY CONDITIONAL: it assumes the composition hypothesis
+`Ŝ(β₂)∘Ŝ(β₁) ⊆ Ŝ(β₁∗β₂)`, which the book does NOT establish, so the general convex-PWL case is
+research-grade/open. The unconditional parts are formalized below; the δ_T base case is `lemma_9_5`. -/
+
+/-- **Theorem 9.7, complete sandwich for a pure-rate curve `λ_R`** (the clean case past pure delay,
+no composition hypothesis): a single strict-rate server already realizes
+`S_strict(λ_R) ⊆ S̄(S_strict(λ_R)) ⊆ S_mp(λ_R)`. The library's
+`DeepWiki.strictServiceRel_rate_le_systemClosure_le_minimalServiceRel`. -/
+theorem thm_9_7_rate (R : ℝ≥0) :
+    strictServiceRel (rate R) ≤ systemClosure (strictServiceRel (rate R)) ∧
+      systemClosure (strictServiceRel (rate R)) ≤ minimalServiceRel (liftEReal (rate R)) :=
+  DeepWiki.strictServiceRel_rate_le_systemClosure_le_minimalServiceRel R
+
+/-- **Theorem 9.7, the general upper inclusion** `S̄(S) ⊆ S_mp(β)` for a convex-PWL `β = convexNFEval l`
+(`S ⊆ S_mp(β)` with `β` left-continuous ⟹ the system closure stays a min-plus server for `β`). This is
+the unconditional half of the theorem; the lower inclusion `S_strict(β) ⊆ S̄(Ŝ(β))` for a `β` with
+latency, and the composition hypothesis, are the open/research part (`[research]`). The library's
+`DeepWiki.systemClosure_le_minimalServiceRel_convexNFEval`. -/
+theorem thm_9_7_upper {l : List (ℝ≥0 × ℝ≥0)} {S : Curve → Curve → Prop}
+    (hS : S ≤ minimalServiceRel (convexNFEval l)) :
+    systemClosure S ≤ minimalServiceRel (convexNFEval l) :=
+  DeepWiki.systemClosure_le_minimalServiceRel_convexNFEval hS
 
 /-- **Theorem 9.8** (§9.3.2, p.228): s3c composition — `S_s3c(β₂,Dw₂) ∘ S_s3c(β₁,Dw₁) ⊆ S_s3c(β₁∗β₂,Dw')` with the composed dwell `Dw'(t) = Dw₂(t) + Dw₁(t − Dw₂(t))`. The library's `DeepWiki.IsSufficientlyStrict.comp` (cumulative-pair form: tandem s3c servers `(A,M)`/`(M,D)` compose to an s3c server `(A,D)` for `β₁ ∗ β₂` at the composed dwell). The s3c relation is `IsSufficientlyStrict` (def_9_types_s3c). The FIFO-multiplexing `(β−α₂)⁺` residual builds on this. -/
 alias thm_9_8 := IsSufficientlyStrict.comp
