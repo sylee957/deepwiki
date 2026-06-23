@@ -590,4 +590,37 @@ theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
       rw [cnorm_idem]
       omega
 
+/-- **Quotient degree**: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
+`natDegree (cdiv …) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
+Supplies `resultant_add_mul_right`'s degree side-condition. -/
+theorem cdiv_natDegree_add (fuel : ℕ) (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+    (hq2 : 2 ≤ (cnorm q).length) (hpq : (cnorm q).length ≤ (cnorm p).length)
+    (hfuel : (cnorm p).length ≤ fuel) :
+    (toPoly (cdiv fuel p q)).natDegree + (toPoly q).natDegree = (toPoly p).natDegree := by
+  have hP : toPoly p ≠ 0 := fun h => hp ((cnorm_eq_nil_iff p).mpr h)
+  have hQ : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hdiv : toPoly p = toPoly (cdiv fuel p q) * toPoly q + toPoly (cmod fuel p q) :=
+    toPoly_cdivmod' fuel p q hq
+  have hr : (toPoly (cmod fuel p q)).natDegree < (toPoly q).natDegree := by
+    have hlen := cmod_length_lt fuel p q hq hfuel
+    have e1 := cdeg_eq_natDegree (cmod fuel p q)
+    have e2 := cdeg_eq_natDegree q
+    simp only [cdeg] at e1 e2
+    omega
+  have hpq' : (toPoly q).natDegree ≤ (toPoly p).natDegree := by
+    have e1 := cdeg_eq_natDegree p
+    have e2 := cdeg_eq_natDegree q
+    simp only [cdeg] at e1 e2
+    omega
+  have hquo : toPoly (cdiv fuel p q) ≠ 0 := by
+    intro h0
+    rw [h0, zero_mul, zero_add] at hdiv
+    rw [hdiv] at hpq'
+    omega
+  have key : (toPoly (cdiv fuel p q) * toPoly q).natDegree = (toPoly p).natDegree := by
+    have heq : toPoly (cdiv fuel p q) * toPoly q = toPoly p - toPoly (cmod fuel p q) := by
+      rw [hdiv]; ring
+    rw [heq, natDegree_sub_eq_left_of_natDegree_lt (lt_of_lt_of_le hr hpq')]
+  rwa [Polynomial.natDegree_mul hquo hQ] at key
+
 end DeepWiki.SymbolicIntegration.Compute
