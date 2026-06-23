@@ -37,29 +37,21 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.8: Rioboo's `LogToReal` root-partition/recursion: the `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB`
-  real/imaginary splits ARE done (`logToReal_split`/`exists_realImag_split_bivariate`), as are the
-  conjugate-product bridge `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root
-  selection criterion `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), the per-pair /
-  sum-over-pairs real forms (`logToReal_conjugate_pair`/`logToReal_sum`), Thm 2.8.4's coprimality
-  core `gcd(A(a,b,x),B(a,b,x))=1` (`thm_2_8_4`, with (2.29)/(2.30) `thm_2_8_4_eq_2_29`/`_eq_2_30`),
-  and the **full recursion's correctness GIVEN the partition** (`logToReal_correct_of_partition`,
-  book (2.22)→(2.26)): taking the root partition `roots = reals + map(a+ib) pairs + map(a−ib) pairs`
-  as a certified `Multiset` hypothesis, the original complex log-sum `∑_{R(α)=0} α·logDeriv(S α)` equals
-  `LogToReal`'s real output `∑_{reals} a·logDeriv(S a) + ∑_{pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`
-  (a `Multiset.sum` split `logToReal_rootSum_split` folded against `logToReal_conjugate_pair_of_split`).
-  The conjugation's permutation of the roots is also done (`logToReal_conj_permutes_roots`:
-  σ-fixed coeffs ⟹ `R.roots.map σ = R.roots`, multiplicity-preserving).
-  STILL OPEN: (i) [external] the LRT-gcd-cofactor derivation feeding Thm 2.8.4 — that `S = A+iB` IS the
-  LRT gcd of `C−(a+ib)D'` and `D` so the cofactors `E₁+iE₂`, `F₁+iF₂` of (2.27)/(2.28) exist (taken as
-  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory); (ii) [infra] the PARTITION
-  CONSTRUCTION itself — the σ-orbit decomposition of the σ-stable root `Multiset` `R.roots` into σ-fixed
-  roots (real) ⊎ 2-element σ-orbits `{α, σα}` (conjugate pairs), plus the `b>0` representative selection
-  (`a=(α+σα)/2`, `b=(α−σα)/(2i)` in the fixed field, `b>0` via a `LinearOrderedField` order on `K`);
-  needs a `Multiset` orbit-quotient under an order-2 involution + a field-with-involution `(L,σ)` whose
-  fixed field carries an `i²=−1`-compatible `LinearOrder` (`K̄=K(i)` complexification over ordered `K`),
-  not yet built — feeding its `reals`/`pairs` into `logToReal_correct_of_partition` would close §2.8.
-  Ex 2.8.2.
+§2.8: Rioboo's `LogToReal` is COMPLETE except for one [external] derivation. Done: the
+  `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB` real/imaginary splits
+  (`logToReal_split`/`exists_realImag_split_bivariate`), the conjugate-product bridge
+  `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root selection criterion
+  `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), the per-pair / sum-over-pairs real forms
+  (`logToReal_conjugate_pair`/`logToReal_sum`), the recursion's correctness given the partition
+  (`logToReal_correct_of_partition`), the σ-orbit PARTITION CONSTRUCTION (`logToReal_roots_partition`:
+  the σ-stable root `Multiset` partitions as real roots ⊎ `b>0`-rep conjugate pairs, the `b<0` block the
+  count-preserving `σ`-image of the `b>0` block over an ordered fixed field `K`), and hence the
+  **full `LogToReal` correctness over `R`'s roots with NO partition hypothesis**
+  (`logToReal_correct`, book (2.22)→(2.26)): `∑_{R(α)=0} α·logDeriv(S α) = ∑_{reals} a·logDeriv(S a) +
+  ∑_{b>0 pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`.
+  STILL OPEN: [external] the LRT-gcd-cofactor derivation feeding Thm 2.8.4 — that `S = A+iB` IS the LRT
+  gcd of `C−(a+ib)D'` and `D` so the cofactors `E₁+iE₂`, `F₁+iF₂` of (2.27)/(2.28) exist (taken as
+  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory). Ex 2.8.2.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -636,6 +628,29 @@ splits, then `σ` maps the root multiset to itself (`R.roots.map σ = R.roots`) 
 (`count_roots_conj_eq`) — so `σ` acts as a permutation of `R`'s roots, with σ-fixed roots real and
 2-orbits `{α, σα}` the conjugate pairs. The library's `roots_map_self_of_map_eq`. -/
 abbrev logToReal_conj_permutes_roots := @DeepWiki.SymbolicIntegration.roots_map_self_of_map_eq
+
+/-- **`LogToReal` σ-orbit root partition** (§2.8, p.66, book (2.25), the partition CONSTRUCTION): over
+a field-with-involution `(L, σ)` (`σ ∘ σ = id`, `σ i = −i`, `i² = −1`) with the ordered fixed field `K`
+reading each imaginary part `b α = imagPart σ i α` (`algebraMap K L (b α) = imagPart σ i α`), the
+σ-stable root multiset of a σ-fixed split `R` partitions as `R.roots = reals + pairs.map(a+ib) +
+pairs.map(a−ib)` with `reals = R.roots.filter (b·=0)` (the real roots) and `pairs = R.roots.filter
+(0<b·)` (one `b>0` representative per conjugate pair). The `b<0` block is the count-preserving `σ`-image
+of the `b>0` block (`count_roots_conj_eq` + `b(σα)=−b(α)`, a `Multiset.count`/`Multiset.ext`
+σ-bijection), and the trichotomy `b≠0 = (0<b) ⊎ (b<0)` splits the moved part. The library's
+`roots_partition` — the genuine §2.8 partition infra, with `realPart`/`imagPart` and their `σ`-fixed /
+`α=a+ib` / `b(σα)=−b(α)` / `b=0⟺σ-fixed` lemmas (`realPart_fixed`, `imagPart_fixed`,
+`eq_realPart_add_imagPart`, `imagPart_conj`, `realImagPartK_eq_zero_iff`). -/
+abbrev logToReal_roots_partition := @DeepWiki.SymbolicIntegration.roots_partition
+
+/-- **`LogToReal` full correctness over `R`'s roots** (§2.8, p.66–69, book (2.22)→(2.26), CLOSING the
+algorithm): feeding the CONSTRUCTED σ-orbit partition (`roots_partition`) into
+`logToReal_correct_of_partition`, the original complex log-sum's derivative `∑_{α|R(α)=0}
+α·logDeriv(S(α,x))` equals `LogToReal`'s real output's derivative `∑_{a∈K,R(a)=0} a·logDeriv(S(a,x)) +
+∑_{a,b∈K,b>0} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]` — the `a·log(A²+B²) + b·LogToAtan(A,B)`
+real form per conjugate pair (book (2.26)) — with NO partition hypothesis, only each root's
+real/imaginary split `S(a±i·b,x) = A±i·B` (from `exists_realImag_split_bivariate`). The library's
+`logToReal_correct` — the full §2.8 `LogToReal`. -/
+abbrev logToReal_correct := @DeepWiki.SymbolicIntegration.logToReal_correct
 
 /-- **Theorem 2.8.4** (§2.8, p.67–68, Rioboo), Rioboo's conversion specializes well: for a real field
 `K` with real closure `K̄`, `C, D ∈ K[x]` (`deg D > 0`, `deg D > deg C`, `D` squarefree,
