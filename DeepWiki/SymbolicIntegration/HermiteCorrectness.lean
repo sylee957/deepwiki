@@ -486,3 +486,164 @@ theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgde
   simp only [map_sub, map_mul]
   rw [pow_two]
   field_simp
+
+/-! ### The full `hermiteReduce` wrapper correctness (in `RatFunc ℚ`)
+
+The previous pieces combine into the public correctness theorem for the computable wrapper
+`hermiteReduce`. Its residual numerator `Bres = cdiv … (resNum·Dstar) resDen` is computed by exact
+division, so as a `RatFunc ℚ` element it equals `resNum·Dstar / resDen`. Folding that through
+`residual_numerator_ratFunc` (the quotient-rule identity `A/D − g′ = resNum/resDen`) and cancelling
+`Dstar` against `resDen = D·gden²` (using `Dstar ∣ D`, witnessed by the exact-division certificate)
+gives `am A/am D = (toQFun g)′ + am Bres/am Dstar`. The single hypothesis is the exact-division
+certificate — exactly the polynomial **cleared identity** `resNum·Dstar = Bres·resDen` that
+`hermite_ex221_cleared_identity` validates by `native_decide`. -/
+
+open scoped Differential in
+/-- **Full `hermiteReduce` wrapper correctness** in `RatFunc ℚ`: writing
+`hermiteReduce fuel A D = ((gnum, gden), (Bres, Dstar))` with `am = algebraMap ℚ[X] (RatFunc ℚ)`,
+under the *exact-division certificate* — the residual numerator `Bres = cdiv fuel (resNum·Dstar)
+resDen` divides exactly (`toPoly (cmod fuel (resNum·Dstar) resDen) = 0`), where
+`resNum = A·gden² − D·(gnum'·gden − gnum·gden')` and `resDen = D·gden²` — and with `D, gden ≠ 0`,
+`Dstar ≠ 0`, the computed reduction satisfies `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`.
+I.e. `∫ A/D = gnum/gden + ∫ Bres/Dstar`: the rational part is `gnum/gden` and the residual integrand
+is `Bres/Dstar`. The certificate is precisely the polynomial cleared identity
+`resNum·Dstar = Bres·resDen`. Combines `residual_numerator_ratFunc` (the quotient-rule numerator) with
+`am_cdiv_of_cmod_zero` (the exact division), cancelling `Dstar` in `am Bres/am Dstar`. -/
+theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly)
+    (gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0)
+    (hDstar : cnorm Dstar ≠ [])
+    (hexact : toPoly (cmod fuel
+        (cmul (csub (cmul A (cmul gden gden))
+            (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+        (cmul D (cmul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  -- abbreviations matching `hermiteReduce`'s `let`-bindings.
+  set resNum := cmul (csub (cmul A (cmul gden gden))
+      (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar with hresNum
+  set resDen := cmul D (cmul gden gden) with hresDen
+  have hDstar0 : toPoly Dstar ≠ 0 := fun h => hDstar ((cnorm_eq_nil_iff Dstar).mpr h)
+  have hresDenPoly0 : toPoly resDen ≠ 0 := by
+    rw [hresDen, toPoly_cmul, toPoly_cmul]
+    exact mul_ne_zero hD (mul_ne_zero hgden hgden)
+  have hresDen0 : cnorm resDen ≠ [] := fun h => hresDenPoly0 ((cnorm_eq_nil_iff resDen).mp h)
+  have hdstar : am (toPoly Dstar) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar0
+  -- `toQFun (gnum, gden) = am (toPoly gnum) / am (toPoly gden)`.
+  have htoQ : toQFun (gnum, gden) = am (toPoly gnum) / am (toPoly gden) := rfl
+  -- the residual numerator identity.
+  have hresid := residual_numerator_ratFunc (toPoly A) (toPoly D) (toPoly gnum) (toPoly gden) hD hgden
+  -- the exact division `am (resNum) / am (resDen) = am (cdiv … resNum resDen)`.
+  have hcdiv := am_cdiv_of_cmod_zero fuel resNum resDen hresDen0 hexact
+  -- compute `toPoly resNum` and `toPoly resDen` through the homomorphism.
+  have hresNumPoly : toPoly resNum
+      = (toPoly A * (toPoly gden * toPoly gden)
+          - toPoly D * (derivative (toPoly gnum) * toPoly gden
+              - toPoly gnum * derivative (toPoly gden))) * toPoly Dstar := by
+    rw [hresNum, toPoly_cmul, toPoly_csub, toPoly_cmul, toPoly_cmul, toPoly_cmul, toPoly_csub,
+      toPoly_cmul, toPoly_cmul, toPoly_cderiv, toPoly_cderiv]
+  have hresDenPoly : toPoly resDen = toPoly D * (toPoly gden * toPoly gden) := by
+    rw [hresDen, toPoly_cmul, toPoly_cmul]
+  -- `am Bres / am Dstar = resNum'/(am D·(am gden·am gden))`: cancel `Dstar` against the exact division.
+  have hd : am (toPoly D) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
+  have hgd : am (toPoly gden) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hgden
+  have hkey : am (toPoly (cdiv fuel resNum resDen)) / am (toPoly Dstar)
+      = am (toPoly A * (toPoly gden * toPoly gden)
+            - toPoly D * (derivative (toPoly gnum) * toPoly gden - toPoly gnum * derivative (toPoly gden)))
+          / (am (toPoly D) * (am (toPoly gden) * am (toPoly gden))) := by
+    rw [← hcdiv, hresNumPoly, hresDenPoly, map_mul, map_mul, map_mul, div_div,
+      mul_comm (am (toPoly D) * (am (toPoly gden) * am (toPoly gden))) (am (toPoly Dstar)),
+      mul_comm (am _) (am (toPoly Dstar)), mul_div_mul_left _ _ hdstar]
+  -- assemble: `A/D = g′ + Bres/Dstar` from the residual identity `A/D − g′ = resNum'/(...)`.
+  rw [htoQ, hkey]
+  linear_combination hresid
+
+/-- `toQFun` is invariant under `cnorm` of both components (`toPoly_cnorm`). -/
+theorem toQFun_cnorm (gnum gden : CPoly) :
+    toQFun (cnorm gnum, cnorm gden) = toQFun (gnum, gden) := by
+  simp only [toQFun, toPoly_cnorm]
+
+open scoped Differential in
+/-- **`hermiteReduce` wrapper correctness, residual form** in `RatFunc ℚ`, stated with the residual
+`Bres` taken as the `cnorm`-wrapped exact division (the algorithm's output shape): under the
+exact-division certificate `hexact` and `D, gden ≠ 0`, `Dstar ≠ 0`, the rational part `gnum/gden`
+together with `Bres/Dstar` gives `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. A direct
+`cnorm`-fold of `hermiteReduce_residual_correct` — the form matching how `hermiteReduce` returns its
+residual numerator `Bres = cnorm (cdiv … (resNum·Dstar) (D·gden²))`. -/
+theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hexact : toPoly (cmod fuel
+        (cmul (csub (cmul A (cmul gden gden))
+            (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+        (cmul D (cmul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cnorm (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden)))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  rw [toPoly_cnorm]
+  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar hexact
+
+/-! ### Example 2.2.1: the certificate is real
+
+The exact-division certificate `hexact` is not vacuous: on Example 2.2.1 the residual `cdiv`
+divides exactly (`hermite_ex221_exact_division`, `native_decide`). Feeding it to
+`hermiteReduce_residual_correct` gives the *rational-function* correctness identity
+`am A/am D = (toQFun g)′ + am Bres/am Dstar` for the concrete computed reduction — upgrading the
+`native_decide` polynomial cleared identity to an honest `RatFunc ℚ` equality. -/
+
+/-- **Example 2.2.1: the residual division is exact** — the remainder of `(resNum·Dstar)` by
+`(D·gden²)` reads to `0` (`cnorm … = []`), so `Bres = cdiv …` is honest `ℚ[X]` division. The
+computed rational part is `gnum = [8,12,20,12,8,3]`, `gden = [0,8,0,12,0,6,0,1]`, and the squarefree
+radical `Dstar = [0,2,0,1] = x³+2x`. Proved by `native_decide`. -/
+theorem hermite_ex221_exact_division :
+    cnorm (cmod 40
+      (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+          (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+            (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
+      (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = [] := by
+  native_decide
+
+open scoped Differential in
+/-- **Example 2.2.1: the Hermite reduction is correct as a `RatFunc ℚ` identity** (§2.2, p.41):
+`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` for the concrete computed `gnum, gden, Dstar`
+of Example 2.2.1, with `Bres = cdiv … (resNum·Dstar) (D·gden²)`. Honest `ℚ(x)` equality (not just the
+cleared polynomial certificate), obtained from `hermiteReduce_residual_correct` with the exact-division
+certificate discharged by `hermite_ex221_exact_division`. The nonzero hypotheses (`D, gden, Dstar`)
+hold since their `toPoly`/`cnorm` are nonzero (checked by `native_decide`/`decide`). -/
+example :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
+      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv 40
+              (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+                  (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+                    (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
+              (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+  have hD : toPoly cD221 ≠ 0 := fun h => by
+    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    revert this; decide
+  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
+    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    revert this; decide
+  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hexact : toPoly (cmod 40
+      (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+          (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+            (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
+      (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
+    rw [← cnorm_eq_nil_iff, hermite_ex221_exact_division]
+  exact hermiteReduce_residual_correct 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hexact
