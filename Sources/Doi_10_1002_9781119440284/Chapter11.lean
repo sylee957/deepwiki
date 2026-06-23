@@ -8,6 +8,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowed
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -27,10 +28,12 @@ or recorded as a note / unformalized item.
 chain convolution). The §11.1.2 LP (`thm_11_1_optimum`) is the SFA RELAXATION `(RT+b)/(R−r)` — its
 optimum is attained as the LP value (homogeneous via `tandemWitness`) but STRICTLY over-estimates the
 true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_programOptimum`, equal iff
-`r=0`). The EXACT relaxation-free LP is now built (`thm_11_1_exact_lp`/`exactChainOptimum`/
+`r=0`). The EXACT relaxation-free LP is built (`thm_11_1_exact_lp`/`exactChainOptimum`/
 `programOptimum_exactServer`: optimum `(∑T)+b/(minR)` for all `r`, via the date-split polytope the SFA LP
-dropped + the PMOO collapse); the only residual `[infra]` is a per-server-windowed finite encoding for
-general n (cosmetic — the collapsed single-server encoding is already exact).
+dropped) AND in genuine per-server-WINDOWED form (`thm_11_1_exact_lp_windowed`/`programOptimum_windowed
+_last`: one date/window per server, optimum `(∑Tₕ)+b/(R_bottleneck)`, n=2 bridged to `exactChainOptimum`).
+The only residual is pure `Fin`↔`List` reindexing plumbing for the general-n windowed→analytic bridge —
+no further math.
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -368,5 +371,22 @@ theorem thm_11_1_exact_lp (r b R T : ℝ) (hR : 0 < R) (hrR : r ≤ R) (hb : 0 �
         (fun v => ((DeepWiki.exactServerDelay v : ℝ) : EReal))
       = ((T + b / R : ℝ) : EReal) :=
   DeepWiki.programOptimum_exactServer hR hrR hb hT
+
+/-- **§11.1.3, the per-server-WINDOWED exact LP** (the genuine multi-window form). One date/window per
+server (`WindowedVars`/`WindowedFeasible`: `n+1` boundary dates, each server's rate-latency
+strict-service constraint measured from the common backlog start with prefix-sum latency
+`cumLatency`), NOT collapsed before sampling. Its optimum is the exact worst case
+`(∑ₕTₕ) + b/(R_{hstar})` at the bottleneck server (`programOptimum_windowed`; bottleneck-last form
+`programOptimum_windowed_last`). The non-summation in the rate (`min`, not `∑1/Rₕ`) is genuine: the
+windows all measure from the common start `s`, so delay is dominated by the single slowest server.
+For n=2 this equals the analytic `exactChainOptimum` (`programOptimum_windowed_two_eq_exactChainOptimum`).
+The library's `DeepWiki.programOptimum_windowed_last`. (Residual: the general-n bridge to
+`exactChainOptimum` is pure `Fin`↔`List` reindexing plumbing — no further math.) -/
+theorem thm_11_1_exact_lp_windowed {n : ℕ} {r b : ℝ} {R T : Fin (n + 1) → ℝ}
+    (hRpos : ∀ h, 0 < R h) (hrR : r ≤ R (Fin.last n)) (hb : 0 ≤ b) (hT : ∀ h, 0 ≤ T h) :
+    programOptimum (DeepWiki.WindowedFeasible r b R T)
+        (fun v => ((DeepWiki.windowedDelay (Fin.last n) v : ℝ) : EReal))
+      = ((((∑ h, T h) + b / R (Fin.last n) : ℝ) : EReal)) :=
+  DeepWiki.programOptimum_windowed_last hRpos hrR hb hT
 
 end DeepWiki.Dnc
