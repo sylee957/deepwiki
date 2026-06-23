@@ -35,11 +35,12 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
   generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
   set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
-§2.4: the full reduction of the tuple calculus to the relational algebra — the join reduction,
-  the recursive translation function `calcToAlg` over the first-order calculus, and safety/domain-
-  independence [research]. (Done: the database-relation calculus foundation `QCond`/`evalQCond`,
-  the quantifier-free fragment ↔ algebra both directions, the first-order calculus `FOCond`/
-  `evalFO` with de Bruijn variables, and the projection reduction `evalFOExpr_projQuery`.)
+§2.4: the full reduction of the tuple calculus to the relational algebra — the recursive
+  translation function `calcToAlg` over the first-order calculus, and safety/domain-independence
+  [research]. (Done: the database-relation calculus foundation `QCond`/`evalQCond`, the
+  quantifier-free fragment ↔ algebra both directions, the first-order calculus `FOCond`/`evalFO`
+  with de Bruijn variables and per-relation schemes, and the per-operator reductions —
+  projection `evalFOExpr_projQuery` and join `evalFOExpr_joinQuery`.)
 §2.5: the reduction of the relational algebra to SQL [infra].
 §2.6: the reduction of SQL to the tuple calculus [infra].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
@@ -158,6 +159,11 @@ abbrev tupleCalc_fo_eval := @DeepWiki.evalFO
 first-order expression `{s | ∃ t, t ∈ R ∧ s, t agree on Ω₁}` — the existential realises
 projection. -/
 abbrev reduction_projection := @DeepWiki.evalFOExpr_projQuery
+
+/-- **Join reduction** (§2.4): the join of two base relations is the first-order expression
+`{t | ∃ u w, u ∈ R ∧ w ∈ S ∧ t agrees with u, w on their schemes}` — two existentials realise the
+join. -/
+abbrev reduction_join := @DeepWiki.evalFOExpr_joinQuery
 
 /-! ## §2.3 SQL: Structured Query Language -/
 
