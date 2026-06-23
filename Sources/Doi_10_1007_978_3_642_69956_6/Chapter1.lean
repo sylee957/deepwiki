@@ -26,7 +26,9 @@ Ex 1.8: a *second* database constraint (not equivalent to relation constraints) 
   constraint that is a non-trivial consequence of the two — a non-trivial single-relation
   consequence of two cross-relation constraints [deferred: construction; the core, a database
   constraint not equivalent to relation constraints, is `ex_1_8`].
-Ex 1.9: the same for two dynamic relation constraints [deferred: construction].
+Ex 1.9: the same for a *second* dynamic relation constraint and a relation-constraint consequence
+  [deferred: construction; the core, a dynamic relation constraint not equivalent to relation
+  constraints, is `ex_1_9`].
 Ex 1.10: the THIRSTY database scheme — boolean functions and classification of its seven
   constraints [deferred].
 Ex 1.11: which constraints of Exercise 1.10 are consequences of which [deferred].
@@ -190,5 +192,14 @@ abbrev ex_1_8 := @DeepWiki.ex18_not_relationConstraintEquiv
 /-- **Exercise 1.8** (§1.7, p.16): the notion underlying it — a database constraint is *equivalent
 to relation constraints* when it factors as a conjunction of one constraint per relation. -/
 abbrev ex_1_8_relationConstraintEquiv := @DeepWiki.IsRelationConstraintEquiv
+
+/-- **Exercise 1.9** (§1.7, p.16), core: the monotone dynamic relation constraint (the relation
+only grows) is *not* equivalent to relation constraints — it relates consecutive instances, so no
+per-instance constraint can capture it. -/
+abbrev ex_1_9 := @DeepWiki.ex18DynMono_not_relationConstraintEquiv
+
+/-- **Exercise 1.9** (§1.7, p.16): the underlying notion — a dynamic relation constraint is
+*equivalent to relation constraints* when it factors as a per-instance constraint at every step. -/
+abbrev ex_1_9_relationConstraintEquivDyn := @DeepWiki.IsRelationConstraintEquivDyn
 
 end DeepWiki.Rdb

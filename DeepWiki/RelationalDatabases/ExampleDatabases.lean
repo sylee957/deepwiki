@@ -139,4 +139,37 @@ theorem ex18_not_relationConstraintEquiv : ¬ IsRelationConstraintEquiv ex18Db e
   subst ht''
   exact absurd heq (by decide)
 
+/-! ## Exercise 1.9 — a dynamic relation constraint not equivalent to relation constraints -/
+
+/-- A dynamic relation constraint is *equivalent to relation constraints* when it factors as a
+per-instance relation constraint holding at every step — its truth ignores the relationship
+between consecutive instances. -/
+def IsRelationConstraintEquivDyn {Att Val : Type} (R : RelScheme Att Val)
+    (dc : DynRelConstraint R) : Prop :=
+  ∃ rc : RelConstraint R.prim, ∀ seq, dc seq ↔ ∀ n, rc (seq n)
+
+/-- The *monotone* dynamic relation constraint on `ex18Rel`: the relation only grows over time. -/
+def ex18DynMono : DynRelConstraint ex18Rel := fun seq => ∀ n, seq n ⊆ seq (n + 1)
+
+/-- **Exercise 1.9**: the monotone dynamic relation constraint is *not* equivalent to relation
+constraints. It relates consecutive instances, so it cannot factor as a per-instance condition:
+the growing sequence `∅, {a}, {a}, …` satisfies it, while the reordered `{a}, ∅, ∅, …` — built from
+the same instances — does not, so no per-instance constraint could separate them. -/
+theorem ex18DynMono_not_relationConstraintEquiv :
+    ¬ IsRelationConstraintEquivDyn ex18Rel ex18DynMono := by
+  rintro ⟨rc, h⟩
+  set s1 : ℕ → Set (TupleOf ex18Scheme) := fun n => if n = 0 then ∅ else {tupA 1} with hs1
+  set s2 : ℕ → Set (TupleOf ex18Scheme) := fun n => if n = 0 then {tupA 1} else ∅ with hs2
+  have hmono1 : ex18DynMono s1 := by intro n; cases n <;> simp [hs1]
+  have hall1 := (h s1).mp hmono1
+  have hrcE : rc ∅ := by have := hall1 0; simpa [hs1] using this
+  have hrcT : rc {tupA 1} := by have := hall1 1; simpa [hs1] using this
+  have hall2 : ∀ n, rc (s2 n) := by
+    intro n; cases n with
+    | zero => simpa [hs2] using hrcT
+    | succ m => simpa [hs2] using hrcE
+  have hmono2 := (h s2).mpr hall2
+  have hmem := hmono2 0 (show tupA 1 ∈ s2 0 by simp [hs2])
+  simp [hs2] at hmem
+
 end DeepWiki
