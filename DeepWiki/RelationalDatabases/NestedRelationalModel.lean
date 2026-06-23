@@ -472,4 +472,35 @@ satisfies the fd `A → D` — the non-nested part functionally determines the n
 example : (nest ["C"] "D" (rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)],
       [("A", atom 5), ("C", atom 6)]])).SatisfiesFd ["A"] ["D"] := by decide
 
+/-- **Definition 7.10** (§7.3): a nested relation satisfies the multivalued dependency `X ↠ Y` when
+any two rows agreeing on `X` can be "swapped" — there is a row agreeing with the first on `X ∪ Y`
+and with the second outside `X ∪ Y`. Atoms satisfy every mvd vacuously. -/
+def NestedValue.SatisfiesMvd (X Y : List Att) : NestedValue Att V → Prop
+  | .atom _ => True
+  | .rel rows => ∀ t1 ∈ rows, ∀ t2 ∈ rows, NestedTuple.agreeOn X t1 t2 →
+      ∃ t3 ∈ rows, NestedTuple.agreeOn (X ++ Y) t3 t1 ∧
+        NestedTuple.dropKeys (X ++ Y) t3 = NestedTuple.dropKeys (X ++ Y) t2
+
+omit [DecidableEq V] in
+/-- Atoms satisfy every multivalued dependency. -/
+@[simp] theorem NestedValue.satisfiesMvd_atom (X Y : List Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).SatisfiesMvd X Y := trivial
+
+/-- Satisfaction of a multivalued dependency is decidable. -/
+instance NestedValue.decidableSatisfiesMvd (X Y : List Att) :
+    (v : NestedValue Att V) → Decidable (v.SatisfiesMvd X Y)
+  | .atom _ => .isTrue trivial
+  | .rel rows =>
+    inferInstanceAs (Decidable (∀ t1 ∈ rows, ∀ t2 ∈ rows, NestedTuple.agreeOn X t1 t2 →
+      ∃ t3 ∈ rows, NestedTuple.agreeOn (X ++ Y) t3 t1 ∧
+        NestedTuple.dropKeys (X ++ Y) t3 = NestedTuple.dropKeys (X ++ Y) t2))
+
+open NestedValue in
+/-- A "rectangle" relation (every `B`-value paired with every `C`-value at `A = 1`) satisfies the
+multivalued dependency `A ↠ B`. -/
+example : (rel [[("A", atom 1), ("B", atom 1), ("C", atom 1)],
+      [("A", atom 1), ("B", atom 1), ("C", atom 2)],
+      [("A", atom 1), ("B", atom 2), ("C", atom 1)],
+      [("A", atom 1), ("B", atom 2), ("C", atom 2)]]).SatisfiesMvd ["A"] ["B"] := by decide
+
 end DeepWiki
