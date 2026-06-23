@@ -19,8 +19,10 @@ linear processes** (§6.4) is now formalized (`clt_linearProcess`), the rest sta
   `add_of_tendstoInMeasure_const`); the **ratio form** is DeepWiki's `slutsky_ratio`. The `Oₚ`/`oₚ`
   calculus is not packaged.
 - **§6.2 Convergence in rᵗʰ Mean** (p.203): `Lʳ` convergence, Chebyshev's inequality (6.2.1) and
-  mean-square convergence. Mathlib has the `Lᵖ` spaces and Chebyshev and Markov bounds; the named
-  `r`-th-mean convergence predicate is spelled as `eLpNorm (Xₙ − X) r μ → 0`.
+  mean-square convergence. Mathlib has `Lᵖ` spaces, **Chebyshev** (`ProbabilityTheory.meas_ge_le_variance_div_sq`,
+  cataloged `eq_6_2_1`) and **Markov** (`meas_ge_le_mul_pow_eLpNorm_enorm`) bounds; `rᵗʰ`-mean
+  convergence is spelled `eLpNorm (Xₙ − X) r μ → 0`, and `rᵗʰ`-mean `⇒` in probability is Mathlib's
+  `tendstoInMeasure_of_tendsto_eLpNorm` (used in `prop_6_3_2`).
 - **§6.3 Convergence in Distribution** (p.~206): weak convergence, plus the **weak law of large
   numbers for moving averages** (Proposition 6.3.2, `n⁻¹ ∑ₜ Xₜ →ᵖ 0` for a summable causal linear
   process) — now formalized (`prop_6_3_2`), from the `L²` bound `‖√n X̄ₙ‖₂ ≤ C` so `‖X̄ₙ‖₂ → 0`.
@@ -43,6 +45,11 @@ Mathlib's `TendstoInDistribution.prodMk_of_tendstoInMeasure_const` (Slutsky's th
 joint form) and `add_of_tendstoInMeasure_const` (additive form); the inference tool behind the
 sample-autocorrelation limit `ρ̂(h) = γ̂(h)/γ̂(0)` of Bartlett's formula (§7.2). -/
 alias slutsky_ratio := DeepWiki.TimeSeries.tendstoInDistribution_div_of_tendstoInMeasure_const
+
+/-- **§6.2 Chebyshev's inequality (eq 6.2.1)**: `μ{|X − E X| ≥ c} ≤ Var X / c²` for an `L²` random
+variable. Mathlib's `ProbabilityTheory.meas_ge_le_variance_div_sq` — the basic deviation bound behind
+mean-square convergence and the §6.3 weak law (`prop_6_3_2`). -/
+alias eq_6_2_1 := ProbabilityTheory.meas_ge_le_variance_div_sq
 
 /-- **§6.4 — Central limit theorem for (causal) linear processes**: for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}`
 over centered iid `L²` noise with `∑ⱼ |ψⱼ| < ∞`, the standardized sample mean is asymptotically
@@ -76,7 +83,6 @@ abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
 order notation) [infra]
-§6.2: Chebyshev's inequality (eq 6.2.1) [infra]; convergence in `rᵗʰ` mean [infra]
 §6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
 `clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
 are done; the general `m`-dependent CLT needs a big-block/small-block construction)
