@@ -2,6 +2,7 @@ import DeepWiki.RelationalDatabases.FunctionalDependencies
 import DeepWiki.RelationalDatabases.MultivaluedDependencies
 import DeepWiki.RelationalDatabases.JoinDependencies
 import DeepWiki.RelationalDatabases.InclusionDependencies
+import DeepWiki.RelationalDatabases.DependencyImplication
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 3: Constraints
@@ -24,9 +25,12 @@ semantics.
   functional fixpoint algorithm]; Def 3.6 non-redundant cover; Def 3.7 canonical cover and
   Example 3.10 [infra].
 §3.3: Theorem 3.7 / 3.8 (an fd gives a lossless two-way decomposition, and its partial
-  converse), Theorem 3.11 (dependency
-  basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
-  (polynomial-time decidability) [infra].
+  converse), the converse direction of Theorem 3.11 (every union of dependency-basis blocks is an
+  implied mvd) and Algorithm 3.3 with Theorem 3.12 / 3.13 (the basis computation, sound / complete /
+  non-redundant) and Corollary 3.2 (polynomial-time decidability) [research: needs the
+  finite-intersection construction of each block and the completeness model. The dependency-basis
+  partition `SameBlock`/`DepB(X)`, the forward direction of Theorem 3.11 (implied mvd right sides
+  are block-unions) and the singleton-block clause are done].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
   Corollary 3.3 (an mvd is a two-component jd), the chase (Algorithm 3.4) with Theorem 3.15
   (correctness) and Theorem 3.16 (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd
@@ -156,6 +160,19 @@ abbrev lem_3_1_m6_diff := @DeepWiki.satisfiesMvd_diff
 /-- **Theorem 3.9** (§3.3, p.86): a multivalued dependency is exactly a two-component join
 dependency — `X ↠ Y` holds iff `r` decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. -/
 abbrev thm_3_9 := @DeepWiki.satisfiesMvd_iff_satisfiesJd
+
+/-- **Theorem 3.11** (§3.3, p.82), the dependency basis `DepB(X)`: the partition of `Ω` whose
+blocks are the classes of `SameBlock` — two attributes share a block iff every implied `X ↠ Y`
+contains both or neither. -/
+abbrev thm_3_11_depBasis := @DeepWiki.SameBlock
+
+/-- **Theorem 3.11** (§3.3, p.82), forward direction: the right side of an implied mvd `X ↠ Y` is a
+union of dependency-basis blocks (it is saturated under `SameBlock`). -/
+abbrev thm_3_11_forward := @DeepWiki.mem_of_sameBlock_of_depImplies
+
+/-- **Theorem 3.11** (§3.3, p.82), singleton clause: if `X → {A}` is implied then `{A}` is a
+dependency-basis block. -/
+abbrev thm_3_11_singleton := @DeepWiki.sameBlock_singleton_of_fd
 
 /-! ## §3.4 Join Dependencies -/
 

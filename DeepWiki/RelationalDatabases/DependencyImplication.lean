@@ -205,4 +205,41 @@ theorem is4NF_of_is5NF [Nontrivial Val] (h5 : Is5NF Ω Val D) : Is4NF Ω Val D :
     intro b hb
     exact (htu ⟨b, hYΩ hb⟩).mp (hwt ⟨b, hYΩ hb⟩ (Finset.mem_union.mpr (Or.inr hb))).symm
 
+/-! ## Dependency basis (Theorem 3.11) -/
+
+/-- Two attributes lie in the same *dependency-basis block* of `X` (w.r.t. `D`) when every implied
+multivalued dependency `X ↠ Y` contains both or neither. The blocks are the classes of this
+equivalence — the partition `DepB(X)` of Theorem 3.11; the implied mvds `X ↠ Y` are exactly those
+whose right side is a union of blocks. -/
+def SameBlock (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) (X : Finset Att) (A B : Att) :
+    Prop :=
+  ∀ Y : Finset Att, DepImplies Ω Val D (.mvd X Y) → (A ∈ Y ↔ B ∈ Y)
+
+/-- `SameBlock` is reflexive. -/
+theorem SameBlock.refl (A : Att) : SameBlock Ω Val D X A A := fun _ _ => Iff.rfl
+
+/-- `SameBlock` is symmetric. -/
+theorem SameBlock.symm {A B : Att} (h : SameBlock Ω Val D X A B) : SameBlock Ω Val D X B A :=
+  fun Y hY => (h Y hY).symm
+
+/-- `SameBlock` is transitive. -/
+theorem SameBlock.trans {A B C : Att} (hAB : SameBlock Ω Val D X A B)
+    (hBC : SameBlock Ω Val D X B C) : SameBlock Ω Val D X A C :=
+  fun Y hY => (hAB Y hY).trans (hBC Y hY)
+
+/-- **Theorem 3.11** (forward direction): the right side of an implied multivalued dependency is a
+union of dependency-basis blocks — it is saturated under `SameBlock` (if it contains `A` it contains
+every attribute in `A`'s block). -/
+theorem mem_of_sameBlock_of_depImplies {X Y : Finset Att} (h : DepImplies Ω Val D (.mvd X Y))
+    {A B : Att} (hA : A ∈ Y) (hAB : SameBlock Ω Val D X A B) : B ∈ Y :=
+  (hAB Y h).mp hA
+
+/-- An attribute determined by `X` forms a singleton block: if `D ⊨ X → {A}` then `A`'s block is
+`{A}` (every block-mate of `A` equals `A`). This is the `{A} ∈ DepB(X)` clause of Theorem 3.11. -/
+theorem sameBlock_singleton_of_fd {X : Finset Att} {A : Att}
+    (hA : DepImplies Ω Val D (.fd X {A})) {B : Att} (hAB : SameBlock Ω Val D X A B) : B = A := by
+  have hmvd : DepImplies Ω Val D (.mvd X {A}) := depImplies_mvd_of_fd hA
+  have : B ∈ ({A} : Finset Att) := (hAB {A} hmvd).mp (Finset.mem_singleton_self A)
+  exact Finset.mem_singleton.mp this
+
 end DeepWiki
