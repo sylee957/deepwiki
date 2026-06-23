@@ -43,6 +43,35 @@ theorem lazardView_liftX (p : K[X]) :
   simp only [RingHom.comp_apply, RingEquiv.toRingHom_eq_coe, RingHom.coe_coe]
   exact (finSuccEquiv K 1).apply_symm_apply _
 
+/-- The `K[x]`-equiv sends `C a ↦ Polynomial.C a` and `X 0 ↦ Polynomial.X`. -/
+theorem mvPolynomialFinOneEquivPolynomial_C (a : K) :
+    mvPolynomialFinOneEquivPolynomial K (C a) = Polynomial.C a := by
+  rw [mvPolynomialFinOneEquivPolynomial]
+  show Polynomial.map (isEmptyAlgEquiv K (Fin 0)).toRingEquiv.toRingHom
+    ((finSuccEquiv K 0) (C a)) = _
+  rw [finSuccEquiv_apply]
+  simp
+
+theorem mvPolynomialFinOneEquivPolynomial_X :
+    mvPolynomialFinOneEquivPolynomial K (X 0) = Polynomial.X := by
+  rw [mvPolynomialFinOneEquivPolynomial]
+  show Polynomial.map (isEmptyAlgEquiv K (Fin 0)).toRingEquiv.toRingHom
+    ((finSuccEquiv K 0) (X 0)) = _
+  rw [finSuccEquiv_X_zero]
+  simp
+
+@[simp] theorem liftX_C (a : K) : liftX (Polynomial.C a) = (C a : MvPolynomial (Fin 2) K) := by
+  apply lazardView_injective
+  rw [lazardView_liftX, ← mvPolynomialFinOneEquivPolynomial_C a, RingEquiv.symm_apply_apply,
+    lazardView, finSuccEquiv_apply]
+  simp
+
+@[simp] theorem liftX_X : liftX (Polynomial.X : K[X]) = X (1 : Fin 2) := by
+  apply lazardView_injective
+  rw [lazardView_liftX, ← mvPolynomialFinOneEquivPolynomial_X, RingEquiv.symm_apply_apply,
+    lazardView]
+  exact (finSuccEquiv_X_succ (j := 0)).symm
+
 /-- `liftX` is injective (composition of the ring isos `finSuccEquiv.symm`, the `K[x]`-equiv, and
 `Polynomial.C`). -/
 theorem liftX_injective : Function.Injective (liftX (K := K)) := by
@@ -173,6 +202,37 @@ theorem czIdeal_eq_span_gb (hD : D.Separable) :
     rintro f (rfl | rfl)
     · exact liftX_D_mem_czIdeal A D
     · exact zMinusResidue_mem_czIdeal A D hD
+
+/-! ## `{D, z − T}` is a Gröbner basis (deliverable D)
+
+The two leading monomials are `x^(deg D)` (of `D`, a `z`-free polynomial) and `z` (of `z − T`),
+which are **coprime**. We show every nonzero `f ∈ I` has its leading monomial divisible by one of
+them: either `f` has a `z` in its leading term (so `z ∣ LM(f)`), or `f` is `z`-free, in which case
+substituting `z := T` (the ring map `evalAtResidue`, which kills `z − T` and fixes `liftX`) sends
+`f ∈ I` to a multiple of `D`, forcing `x^(deg D) ∣ LM(f)`. -/
+
+/-- **The "substitute `z := T`" map** `K[x, z] → K[x]`: `X 0 ↦ residuePoly A D`, `X 1 ↦ X`. It kills
+`z − T` and is a left inverse of `liftX`, so `f ∈ ⟨D, z − T⟩ ↦` a multiple of `D`. -/
+noncomputable def evalAtResidue : MvPolynomial (Fin 2) K →+* K[X] :=
+  (MvPolynomial.aeval (![residuePoly A D, Polynomial.X] : Fin 2 → K[X])).toRingHom
+
+@[simp] theorem evalAtResidue_X0 : evalAtResidue A D (X 0) = residuePoly A D := by
+  simp [evalAtResidue]
+
+@[simp] theorem evalAtResidue_X1 : evalAtResidue A D (X 1) = Polynomial.X := by
+  simp [evalAtResidue]
+
+@[simp] theorem evalAtResidue_C (a : K) : evalAtResidue A D (C a) = Polynomial.C a := by
+  simp [evalAtResidue]
+
+/-- `evalAtResidue` is a left inverse of `liftX`: `evalAtResidue (liftX p) = p`. -/
+@[simp] theorem evalAtResidue_liftX (p : K[X]) : evalAtResidue A D (liftX p) = p := by
+  refine Polynomial.induction_on p (fun a => by simp) (fun p q hp hq => by simp [hp, hq])
+    (fun n a _ => by simp [pow_succ])
+
+/-- `evalAtResidue` kills `z − T`. -/
+@[simp] theorem evalAtResidue_zMinusResidue : evalAtResidue A D (zMinusResidue A D) = 0 := by
+  rw [zMinusResidue, map_sub, evalAtResidue_X0, evalAtResidue_liftX, sub_self]
 
 -- Restatements against Czichowski's wording.
 example (A D : K[X]) (hD : D.Separable) :
