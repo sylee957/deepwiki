@@ -465,4 +465,30 @@ theorem cdeg_eq_natDegree (p : CPoly) : cdeg p = (toPoly p).natDegree := by
 theorem clead_eq_leadingCoeff (p : CPoly) : clead p = (toPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdeg_eq_natDegree, ← clead_eq_coeff]
 
+/-- **One Euclidean-division step strictly drops the degree** (`ℚ[X]` level): subtracting the
+leading-term-matching multiple `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient, so the
+degree falls. The cancellation behind `cdivmod`'s remainder loop (via `Polynomial.degree_sub_lt`). -/
+theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+    (hpq : Q.natDegree ≤ P.natDegree) :
+    (P - C (P.leadingCoeff / Q.leadingCoeff)
+        * X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
+  have hQlc : Q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hQ
+  have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
+  have hc0 : P.leadingCoeff / Q.leadingCoeff ≠ 0 := div_ne_zero hPlc hQlc
+  have hCc : (C (P.leadingCoeff / Q.leadingCoeff)) ≠ 0 := by
+    rwa [Ne, Polynomial.C_eq_zero]
+  have hXk : (X ^ (P.natDegree - Q.natDegree) : ℚ[X]) ≠ 0 := pow_ne_zero _ Polynomial.X_ne_zero
+  set T := C (P.leadingCoeff / Q.leadingCoeff) * X ^ (P.natDegree - Q.natDegree) * Q with hT
+  have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCc hXk) hQ
+  have hTnd : T.natDegree = P.natDegree := by
+    rw [hT, Polynomial.natDegree_mul (mul_ne_zero hCc hXk) hQ,
+      Polynomial.natDegree_mul hCc hXk, Polynomial.natDegree_C, Polynomial.natDegree_X_pow]
+    omega
+  have hTlc : T.leadingCoeff = P.leadingCoeff := by
+    rw [hT, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+      Polynomial.leadingCoeff_X_pow, mul_one, div_mul_cancel₀ _ hQlc]
+  exact Polynomial.degree_sub_lt
+    (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
+    hTlc.symm
+
 end DeepWiki.SymbolicIntegration.Compute
