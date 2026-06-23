@@ -31,6 +31,7 @@ import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ContainerQuotient
 import DeepWiki.NetworkCalculus.ContainerQuotientConv
 import DeepWiki.NetworkCalculus.ContainerCanonical
+import DeepWiki.NetworkCalculus.ContainerUncertainty
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -63,8 +64,9 @@ closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[
 FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWiki.IsAlmostConcave`/
 `IsAlmostConvex` = `F_acv`/`F_acx`, `IsConcaveEReal.isAlmostConcave`, `IsAsymptoticallyTyped` = the
 container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the `Θ^κ_τ ∗ g` decomposition) DONE
-(`def_4_3`/`IsCanonicalDecomp`/`Container.canonicalRep`); Definition 4.4 (maximal uncertainty);
-Definition 4.5 (inclusion
+(`def_4_3`/`IsCanonicalDecomp`/`Container.canonicalRep`); Definition 4.4 (maximal uncertainty) DONE
+(`def_4_4`: `Bmax = vDev(f̄,f̲)`, `Dmax = hDev(f̄,f̲)` at the rank abscissa; finiteness FROM canonical
+form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion
 functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all `[research]` (the
 container inclusion-function algorithmics); Remark 4.1. -/
 
@@ -877,6 +879,17 @@ function `Θ^κ_τ` (`DeepWiki.Theta`: `κ` on `[0,τ]`, `⊤` after) and the de
 theorem def_4_3 (f g : ℝ≥0 → EReal) (τ : ℝ≥0) (κ : EReal) :
     DeepWiki.IsCanonicalDecomp f τ κ g ↔ g 0 = 0 ∧ f = minConv (DeepWiki.Theta κ τ) g :=
   DeepWiki.isCanonicalDecomp_iff f τ κ g
+
+/-- **Definition 4.4** (§4.4, p.89): the maximal uncertainty of a container `[f̲, f̄]_L` in canonical
+form, at the rank-determined abscissa `t₀` (ranks `Tlo, Thi`). Data domain `Bmax = vDev(f̄, f̲) =
+f̄(t₀) − f̲(t₀)` (`maximalUncertaintyData`), time domain `Dmax = hDev(f̄, f̲)`
+(`maximalUncertaintyTime`), built on the deviation API (`vDevAt`/`hDevAt`, upper bound first). Nonneg,
+`= 0` on a singleton (exact container), `= ⊤` on the universal container, inclusion-monotone. The
+library's `DeepWiki.Container.maximalUncertaintyData` / `.maximalUncertaintyTime`. -/
+theorem def_4_4 (c : DeepWiki.Container) (Tlo Thi : ℝ≥0) :
+    DeepWiki.Container.maximalUncertaintyData c Tlo Thi
+      = vDevAt c.hi c.lo (DeepWiki.Container.bmaxAbscissa Tlo Thi) :=
+  DeepWiki.Container.maximalUncertaintyData_eq c Tlo Thi
 
 /-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
 Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
