@@ -2076,6 +2076,43 @@ theorem C_dvd_lazardView_descentStep {K : Type*} [Field K]
     C_dvd_lazardView_of_mem_of_dvd_bounded hB hRmem hR0 hbounded
   exact C_dvd_lazardView_of_reductionStep_mul (q := q) hfj hRdvd
 
+/-! ## Lazard's Lemma 3: the full descent in the no-common-factor case
+
+Lazard (1985), Theorem 1 proof + Lemma 3 (p.262–263). The descent `C(gᵢ) ∣ lazardView fᵢ`
+("`gᵢ ∣ fᵢ`") is proved by **upward** induction over the `y`-degree-sorted enumeration, in the
+strengthened form `P(i) : ∀ j ≤ i, C(gᵢ) ∣ lazardView (sorted j)`. The step `i → i+1` is
+non-circular: with `q = gᵢ/g_{i+1}` the reduction element `R = yConst q · f_{i+1} − y^{shift}·fᵢ`
+has `y`-degree `< d(i+1)`, so its GB-reduction uses only lower elements `sorted j (j ≤ i)`, all
+divisible by `C(gᵢ)` by the IH; hence `C(gᵢ) ∣ lazardView R`. The IH also gives `C(gᵢ) ∣ lazardView
+fᵢ`, so from `C q · lazardView f_{i+1} = lazardView R + X^{shift}·lazardView fᵢ` one gets
+`C(gᵢ) ∣ C q · lazardView f_{i+1}`; since `C(gᵢ) = C(g_{i+1})·C(q)`, cancelling `C(q)` yields
+`C(g_{i+1}) ∣ lazardView f_{i+1}` — the goal at `i+1`, **without** using `g_{i+1} ∣ f_{i+1}` itself.
+
+The descent's **base** `P(0) : C(g₀) ∣ lazardView f₀` is where Lazard's "divide out the common
+content" enters: it is equivalent to `f₀ ∈ K[x]` (`degreeOf 0 f₀ = 0`), which holds precisely after
+dividing the basis by `primpart(gcd) · content(gcd)` so the `fᵢ` have no common factor — recorded
+as the hypothesis `hbase`. -/
+
+/-- **A bounded `y`-degree basis element is a lower sorted index.** If `b ∈ B` has
+`degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)`, then `b = sortedByYDegree hB j` for some `j ≤ i`
+(the sort is a `y`-degree bijection onto `B`, strictly increasing). -/
+theorem exists_sortedIndex_le_of_degreeOf_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i : Fin B.card} {b : MvPolynomial (Fin 2) K} (hbB : b ∈ B)
+    (hdeg : degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)) :
+    ∃ j : Fin B.card, j ≤ i ∧ b = sortedByYDegree hB j := by
+  have hmem : b ∈ Set.range (sortedByYDegree hB) := by
+    rw [range_sortedByYDegree hB]; exact Finset.mem_coe.mpr hbB
+  obtain ⟨j, hj⟩ := hmem
+  refine ⟨j, ?_, hj.symm⟩
+  by_contra hlt
+  rw [not_le] at hlt
+  have hmono := degreeOf_sortedByYDegree_strictMono hB hlt
+  simp only at hmono
+  rw [← hj] at hdeg
+  exact absurd hdeg (not_le.mpr hmono)
+
 open scoped Classical in
 /-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
 the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
