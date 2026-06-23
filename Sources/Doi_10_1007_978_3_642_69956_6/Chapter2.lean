@@ -1,5 +1,6 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
 import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
+import DeepWiki.RelationalDatabases.TupleCalculus
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -22,8 +23,10 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   intersection is already `evalAlg_inter`].
 §2.1.4: the scheme-level operators (view schemes `Π(V;Ω₁)`, `ρ(V;f)`, `V ⋈ V'`, `V ∪ V'`,
   `V − V'`) with domain/`SC` bookkeeping (the view *instance* `evalAlg` is done) [infra].
-§2.2: the tuple calculus — syntax (2.2.2), generating part (2.2.3), views (2.2.4), expressive
-  power (2.2.5) [infra: a first-order formula syntax + semantics over tuples].
+§2.2: the concrete tuple-calculus atoms `r(t)`, `f(t₁(A₁),…)`, `t(A) θ t'(B)` (the generic
+  `Cond.atom` skeleton, semantics, the generating part 2.2.3/2.2.5 and views 2.2.4 are done)
+  and the `DOM(Aᵢ)`-ranging existential of the book's view-instance definition [infra: concrete
+  atoms + per-attribute domains].
 §2.3: SQL — syntax (2.3.2), generating part (2.3.3), views (2.3.4), expressive power (2.3.5)
   [infra: an SQL syntax type].
 §2.4: the reduction of the tuple calculus to the relational algebra [research: the translation
@@ -83,5 +86,29 @@ abbrev algebra_view_instance := @DeepWiki.evalAlg
 /-- **Generating part expresses intersection** (§2.1.5, p.28), expression level: `e − (e − e')`
 denotes `e ∩ e'`. -/
 abbrev algebra_expr_inter := @DeepWiki.evalAlg_inter
+
+/-! ## §2.2 The Tuple Calculus -/
+
+/-- **Calculus condition** (§2.2.2, Fig 2.10, p.33): the abstract syntax of tuple-calculus
+conditions over a context of tuple variables — atoms, `¬`, `∨`, and the existential tuple
+quantifier (conjunction, implication and `∀` are derived). -/
+abbrev tupleCalc_cond := @DeepWiki.Cond
+
+/-- **Semantics of a condition** (§2.2.4, p.34): the proposition `C(t/t₀)` a condition asserts
+of an environment. -/
+abbrev tupleCalc_eval := @DeepWiki.evalCond
+
+/-- **View instance represented by a calculus expression** (§2.2.4, p.34): `{t(Ω) | C}` denotes
+the rows over `Ω` satisfying the single-free-variable condition `C`. -/
+abbrev tupleCalc_expr := @DeepWiki.evalCalcExpr
+
+/-- **Generating part — universal quantifier** (§2.2.5, p.35): `∀t(…)C = ¬∃t(…)(¬C)`. -/
+abbrev tupleCalc_all_from_ex := @DeepWiki.evalCond_all
+
+/-- **Generating part — conjunction** (§2.2.5, p.35): `C₁ ∧ C₂ = ¬((¬C₁) ∨ (¬C₂))`. -/
+abbrev tupleCalc_conj_from_disj := @DeepWiki.evalCond_conj
+
+/-- **Generating part — implication** (§2.2.5, p.35): `C₁ ⇒ C₂ = (¬C₁) ∨ C₂`. -/
+abbrev tupleCalc_imp_from_disj := @DeepWiki.evalCond_imp
 
 end DeepWiki.Rdb
