@@ -9,12 +9,10 @@ library provides the recursive nested-value carrier (Def 7.4); the algebra and d
 are layered on it later.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-The nested algebra and dependency theory are blocked on a carrier redesign: `NestedValue`'s `rel`
-field holds `List (Att → NestedValue …)`, and recursion *through the function-valued tuple* (`t a`)
-fails Lean's termination check (a function argument has no usable size measure), so `map`/`depth`/
-nest/unnest cannot be defined. Fixing this means changing the tuple representation to a
-structurally-recursable type (e.g. an assoc-list `List (Att × NestedValue …)`), which changes the
-tuple semantics — a [deferred] design judgment to make with the user before proceeding.
+The carrier was redesigned (2026-06-23) to assoc-list tuples (`NestedTuple = List (Att × NestedValue
+…)`, `rel : List NestedTuple`) so recursion works via `mutual` blocks (`map`/`depth` defined); the
+old function-valued tuple field could not be recursed through. The nested algebra and dependencies
+are layered on this next.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
@@ -41,5 +39,18 @@ abbrev def_7_4_nested_value := @DeepWiki.NestedValue
 
 /-- **Atomicity test** (§7.1): whether a nested value is atomic rather than a nested relation. -/
 abbrev nested_value_isAtom := @DeepWiki.NestedValue.isAtom
+
+/-- **§7.1 carrier**: a nested tuple — an association list of attribute–nested-value pairs. -/
+abbrev nested_tuple := @DeepWiki.NestedTuple
+
+/-- **§7.1 carrier**: a nested relation — a list of nested tuples. -/
+abbrev nested_rel := @DeepWiki.NestedRel
+
+/-- **§7.1**: functorial map over the atoms of a nested value (recurses into every nesting
+level). -/
+abbrev nested_value_map := @DeepWiki.NestedValue.map
+
+/-- **§7.1**: the nesting depth of a nested value. -/
+abbrev nested_value_depth := @DeepWiki.NestedValue.depth
 
 end DeepWiki.Rdb
