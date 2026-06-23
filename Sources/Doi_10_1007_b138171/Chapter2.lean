@@ -933,9 +933,9 @@ abbrev eq_2_11_invariant := @DeepWiki.SymbolicIntegration.iterate_fracKDeriv_hFr
 `Dᵢ = (x−α)·Dᵢ,α` (over `K̄`), the `Qᵢⱼ` substitution evaluates to `Pᵢⱼ` at the derivatives of `Dᵢ,α`,
 `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^{i−j}(α))` — via the Leibniz identity
 `Dᵢ^{(k+1)}(α) = (k+1)·Dᵢ,α^{(k)}(α)` (the library's `eval_laurentSubst_some`). The library's
-`laurentQ_eval_at_root`. (Identifying `Pᵢⱼ(α,…)` with the `(i−j)`-th Taylor coefficient of
-`hᵢ,α = (A/D)(x−α)ⁱ`, hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`, is the remaining Taylor-series
-step over the closure — see §2.7 NOT YET FORMALIZED.) -/
+`laurentQ_eval_at_root`. (`Pᵢⱼ(α,…)` is identified with the `(i−j)`-th Taylor coefficient of
+`hᵢ,α = (A/D)(x−α)ⁱ`, hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`, in `thm_2_7_1_taylor_coeff`;
+the literal book conclusion is `thm_2_7_1_engineForm`.) -/
 abbrev thm_2_7_1_laurentQ_eval := @DeepWiki.SymbolicIntegration.laurentQ_eval_at_root
 
 /-- **Theorem 2.7.1, the differential substitution hom `σα`** (§2.7, p.56, the bridge to the genuine
