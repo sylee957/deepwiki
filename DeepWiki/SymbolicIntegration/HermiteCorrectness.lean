@@ -1860,7 +1860,8 @@ theorem isRelPrime_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V W : ℚ[X]) 
 step is exact (`GoYun`). The concrete analog of `SqfreeExact` for the Yun loop association. The `GoYun`
 conjunct is the per-step exact-division content (decidable mirror as in `SqfreeExactComp`); the
 `YunInv` start conjunct ties `(b₁, d₁)` to the abstract radical/derivative-poly `Babs`/`Dabs` up to a
-shared scalar. -/
+shared scalar — constructible by `yunInv_base_scaled_rat` from the init exactness `toPoly D = toPoly g ·
+toPoly b₁` (the raw extended-gcd output `g ~ gcd`, absorbing the unit `(leadingCoeff g)⁻¹`). -/
 def SqfreeYun (fuel : ℕ) (D : CPoly) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
