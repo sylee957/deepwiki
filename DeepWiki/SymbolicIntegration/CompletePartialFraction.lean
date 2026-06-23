@@ -121,4 +121,35 @@ theorem baseDigit_reconstruction (g : K[X]) (hg : g.Monic) :
       rw [baseDigit_succ B g hg, pow_succ]
       ring
 
+/-! ## §2.7 The `Dᵢ`-adic expansion of a single prime-power fraction `B/g^e` -/
+
+/-- **`Dᵢ`-adic Laurent expansion of `B/g^e`** (§2.7, Theorem 2.7.1, the single-prime-power core): for
+monic `g` of positive degree and `B` with `deg B < e·deg g`, the fraction `B/g^e` decomposes as
+`B/g^e = ∑_{k=1}^{e} Hₖ/g^k` with `deg Hₖ < deg g`, where `Hₖ = baseDigit B g (e−k)` is the `(e−k)`-th
+base-`g` digit of `B` — i.e. the digit expansion `B = ∑_{j<e} Cⱼ·g^j` rewritten with descending powers
+`Cⱼ/g^{e−j}` (reindexed `k = e−j`). This is the partial fraction of one prime-power summand `Dᵢ^{eᵢ}`. -/
+theorem ratFunc_DadicExpansion (g : K[X]) (hg : g.Monic) (e : ℕ) (B : K[X])
+    (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
+    (algebraMap K[X] (RatFunc K) B) / (algebraMap K[X] (RatFunc K) g) ^ e
+      = ∑ k ∈ Finset.Icc 1 e, algebraMap K[X] (RatFunc K) (baseDigit B g (e - k))
+          / (algebraMap K[X] (RatFunc K) g) ^ k := by
+  have hg0 : algebraMap K[X] (RatFunc K) g ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hg.ne_zero
+  -- expand `B` into its base-`g` digits in the numerator only
+  conv_lhs => rw [baseDigit_reconstruction g hg e B hB, map_sum, Finset.sum_div]
+  -- reindex `Finset.range e` (digit index `j`) to `Finset.Icc 1 e` (power index `k = e − j`)
+  refine Finset.sum_nbij' (fun j => e - j) (fun k => e - k) ?_ ?_ ?_ ?_ ?_
+  · intro j hj; simp only [Finset.mem_range] at hj; simp only [Finset.mem_Icc]; omega
+  · intro k hk; simp only [Finset.mem_Icc] at hk; simp only [Finset.mem_range]; omega
+  · intro j hj; simp only [Finset.mem_range] at hj; omega
+  · intro k hk; simp only [Finset.mem_Icc] at hk; omega
+  · intro j hj
+    simp only [Finset.mem_range] at hj
+    -- the `j`-th digit summand `Cⱼ·g^j/g^e` equals `Cⱼ/g^{e-j}`, matched to `k = e-j`
+    have hkj : e - (e - j) = j := by omega
+    have hpow : (algebraMap K[X] (RatFunc K) g) ^ j * (algebraMap K[X] (RatFunc K) g) ^ (e - j)
+        = (algebraMap K[X] (RatFunc K) g) ^ e := by rw [← pow_add]; congr 1; omega
+    rw [hkj, map_mul, map_pow]
+    rw [div_eq_div_iff (pow_ne_zero _ hg0) (pow_ne_zero _ hg0), mul_assoc, hpow]
+
 end DeepWiki.SymbolicIntegration
