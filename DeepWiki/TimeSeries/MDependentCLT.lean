@@ -95,6 +95,17 @@ theorem IsMDependent.iIndepFun_blockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsPr
       hIndep.measure_inter_preimage_eq_mul Ds Da hDs hDa, hDseq, hDaeq,
       ih fun i hi => hsets i (Finset.mem_insert_of_mem hi), mul_comm]
 
+/-- **A sum over `Ico 0 p` in `ℤ` is a sum over `range p`** (reindexing `k ↦ ↑k`). Relates the
+`ℤ`-indexed first big block `bigBlock 0 = Ico 0 p` to the `ℕ`-indexed sample mean. -/
+theorem sum_Ico_zero_int_eq_sum_range {M : Type*} [AddCommMonoid M] (f : ℤ → M) (p : ℕ) :
+    ∑ t ∈ Finset.Ico (0 : ℤ) (p : ℤ), f t = ∑ k ∈ Finset.range p, f (k : ℤ) := by
+  refine Finset.sum_nbij' (fun t => t.toNat) (fun k => (k : ℤ)) ?_ ?_ ?_ ?_ ?_
+  · intro t ht; simp only [Finset.mem_Ico] at ht; simp only [Finset.mem_range]; omega
+  · intro k hk; simp only [Finset.mem_range] at hk; simp only [Finset.mem_Ico]; omega
+  · intro t ht; simp only [Finset.mem_Ico] at ht; omega
+  · intro k _; simp
+  · intro t ht; simp only [Finset.mem_Ico] at ht; congr 1; omega
+
 /-- The `i`-th **big block** of the `(p+m)`-spaced big-block/small-block partition: the size-`p`
 window `[i(p+m), i(p+m)+p)`, with a size-`m` gap before the next block. -/
 noncomputable def bigBlock (p m i : ℕ) : Finset ℤ :=
@@ -109,6 +120,30 @@ theorem bigBlock_sep {p m : ℕ} {i j : ℕ} (hij : i < j) :
   have hij' : (i : ℤ) + 1 ≤ j := by exact_mod_cast hij
   nlinarith [mul_le_mul_of_nonneg_right hij' (show (0 : ℤ) ≤ (p : ℤ) + m by positivity),
     hs.1, hs.2, ht.1, ht.2]
+
+omit [MeasurableSpace Ω] in
+/-- **The first big block sum is `p` times the sample mean over `[0,p)`**: `∑_{t∈[0,p)} Xₜ =
+p · X̄_p` (the block `bigBlock 0 = [0,p)` reindexed to `range p`). Bridges the block variance to the
+sample-mean variance. -/
+theorem sum_bigBlock_zero_eq_mul_sampleMean {X : ℤ → Ω → ℝ} (p m : ℕ) (ω : Ω) :
+    ∑ t ∈ bigBlock p m 0, X t ω = (p : ℝ) * sampleMean p (fun t => X (t : ℤ) ω) := by
+  rcases Nat.eq_zero_or_pos p with hp | hp
+  · subst hp; simp [bigBlock]
+  · rw [bigBlock]
+    simp only [Nat.cast_zero, zero_mul, zero_add]
+    rw [sum_Ico_zero_int_eq_sum_range (fun t => X t ω) p, sampleMean,
+      mul_inv_cancel_left₀ (Nat.cast_pos.mpr hp).ne']
+
+/-- **The first big-block-sum variance is `p²` times the sample-mean variance**:
+`Var[∑_{t<p} Xₜ] = p² · Var[X̄_p]` (from `sum_bigBlock_zero_eq_mul_sampleMean` and `variance_const_mul`).
+This is the numerator of `vₚ = Var[U₀⁽ᵖ⁾]/(p+m)`. -/
+theorem variance_bigBlockSum_zero {X : ℤ → Ω → ℝ} (p m : ℕ) :
+    Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ]
+      = (p : ℝ) ^ 2 * Var[fun ω => sampleMean p (fun t => X (t : ℤ) ω); μ] := by
+  have h : (fun ω => ∑ t ∈ bigBlock p m 0, X t ω)
+      = fun ω => (p : ℝ) * sampleMean p (fun t => X (t : ℤ) ω) := by
+    funext ω; exact sum_bigBlock_zero_eq_mul_sampleMean p m ω
+  rw [h, variance_const_mul]
 
 /-- **The big-block sums of an m-dependent process are mutually independent**: applying
 `iIndepFun_blockSum` to the gap-`m`-separated big blocks. The independence input to the big-block
