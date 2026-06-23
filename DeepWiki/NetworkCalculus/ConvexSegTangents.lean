@@ -298,4 +298,39 @@ theorem convexNFEval_eq_of_le_of_reaches (f0 fs : ℝ≥0) (segs gens : List (�
   rw [← hgt]
   exact le_convexNFEval_of_mem gens hg t
 
+/-! ## The concrete segment-tangent generator list and its coverage -/
+
+/-- **Find the active segment.** For `t ≤ segLenSum segs` there is a split
+`segs = pre ++ (s, ℓ) :: post` with `t` in that segment: `segLenSum pre ≤ t ≤ segLenSum pre + ℓ`.
+(Every point up to the rank lies on some finite segment.) -/
+theorem exists_active_seg (segs : List (ℝ≥0 × ℝ≥0)) (hne : segs ≠ []) {t : ℝ≥0}
+    (ht : t ≤ segLenSum segs) :
+    ∃ (pre post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0),
+      segs = pre ++ (s, ℓ) :: post ∧ segLenSum pre ≤ t ∧ t ≤ segLenSum pre + ℓ := by
+  induction segs generalizing t with
+  | nil => exact absurd rfl hne
+  | cons hd tl ih =>
+      obtain ⟨s, ℓ⟩ := hd
+      rw [segLenSum_cons] at ht
+      by_cases hle : t ≤ ℓ
+      · -- `t` is on the leading segment: `pre = []`
+        exact ⟨[], tl, s, ℓ, rfl, by simp, by simpa using hle⟩
+      · -- past the leading segment: recurse on `tl` at `t - ℓ`, prepend `(s, ℓ)` to `pre`
+        have hℓt : ℓ ≤ t := (not_le.mp hle).le
+        have htl : t - ℓ ≤ segLenSum tl := by rw [tsub_le_iff_left]; exact ht
+        -- the tail must be nonempty (else `segLenSum tl = 0`, contradicting `t - ℓ ≤ 0 < t - ℓ`)
+        have htlne : tl ≠ [] := by
+          rintro rfl
+          rw [segLenSum_nil, nonpos_iff_eq_zero, tsub_eq_zero_iff_le] at htl
+          exact hle htl
+        obtain ⟨pre, post, s', ℓ', hsplit, hlo, hhi⟩ := ih htlne htl
+        refine ⟨(s, ℓ) :: pre, post, s', ℓ', by rw [List.cons_append, hsplit], ?_, ?_⟩
+        · rw [segLenSum_cons, add_comm]
+          rw [le_tsub_iff_left hℓt] at hlo
+          rwa [add_comm] at hlo
+        · rw [segLenSum_cons,
+            show ℓ + segLenSum pre + ℓ' = ℓ + (segLenSum pre + ℓ') from by ring,
+            ← tsub_le_iff_left]
+          exact hhi
+
 end DeepWiki
