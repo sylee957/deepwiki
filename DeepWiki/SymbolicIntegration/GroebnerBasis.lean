@@ -2235,15 +2235,18 @@ def gbLeadingCoeffIsUnit {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) 
     (htop : Fin B.card) : Prop :=
   IsUnit (gbCommonContent hB htop)
 
-/-- **Lazard's Lemma 3 descent, strengthened induction** (Part B). Assuming the no-common-factor
-**base** `degreeOf 0 (sorted 0) = 0` (`f₀ ∈ K[x]`, `hbase`), the divisibility `C(gᵢ) ∣ lazardView
-(sorted j)` holds for **all** `j ≤ i` — by strong induction on `i.val`: the base `i.val = 0` is
-`C_dvd_lazardView_of_degreeOf_zero`; the step uses the predecessor's IH together with the
-non-circular `C_dvd_lazardView_succ` (for `j = i`) and the `gᵢ ∣ g_{i'}` chain (for `j < i`). -/
+/-- **Lazard's Lemma 3 descent, strengthened induction** (Part B). Assuming the **base divisibility**
+`C(g₀) ∣ lazardView f₀` at the minimal `y`-degree index (`hbase`, the genuinely necessary-and-sufficient
+form of "no common factor" — strictly weaker than `f₀ ∈ K[x]`, which it follows from via
+`C_dvd_lazardView_of_degreeOf_zero`), the divisibility `C(gᵢ) ∣ lazardView (sorted j)` holds for **all**
+`j ≤ i` — by strong induction on `i.val`: the base `i.val = 0` is `hbase`; the step uses the
+predecessor's IH together with the non-circular `C_dvd_lazardView_succ` (for `j = i`) and the
+`gᵢ ∣ g_{i'}` chain (for `j < i`). -/
 theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0))
     (i : Fin B.card) :
     ∀ j : Fin B.card, j ≤ i →
       Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB j) := by
@@ -2251,12 +2254,12 @@ theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
   | _ n ih =>
     subst hi
     rcases Nat.eq_zero_or_pos i.val with h0 | hpos
-    · -- base `i.val = 0`: the only `j ≤ i` is `i`, of `y`-degree `0`.
+    · -- base `i.val = 0`: the only `j ≤ i` is `i`, where `hbase` supplies the divisibility.
       intro j hji
       have hji0 : j.val = 0 := Nat.le_zero.mp (h0 ▸ (Fin.le_def.mp hji))
       have hji_eq : j = i := Fin.ext (by rw [hji0, h0])
       rw [hji_eq]
-      exact C_dvd_lazardView_of_degreeOf_zero (hbase i h0)
+      exact hbase i h0
     · -- step: let `i'` be the predecessor (`i'.val = i.val - 1`).
       set i' : Fin B.card := ⟨i.val - 1, by omega⟩ with hi'_def
       have hi'val : i'.val = i.val - 1 := by rw [hi'_def]
@@ -2281,17 +2284,43 @@ theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
           leadingYCoeff_sortedByYDegree_dvd_of_le hB (le_of_lt hi'lt)
         exact dvd_trans (map_dvd Polynomial.C hchain) (hIH' j hji')
 
-/-- **Lazard's Lemma 3, the diagonal descent** (Part B conclusion). Under the no-common-factor base
-`degreeOf 0 (sorted 0) = 0` (`hbase`), each sorted basis element satisfies `gᵢ ∣ fᵢ` in the form
-`C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)` — the `j = i` specialization of
-`C_dvd_lazardView_sortedByYDegree_of_le`. -/
+/-- **The base divisibility from `f₀ ∈ K[x]`** (the `degreeOf 0 (sorted 0) = 0` ⟹ base-divisibility
+adapter). The old no-common-factor base `degreeOf 0 (sorted i0) = 0` (`f₀ ∈ K[x]`) implies the genuinely
+necessary-and-sufficient base divisibility `C(g₀) ∣ lazardView f₀` (via
+`C_dvd_lazardView_of_degreeOf_zero`), so theorems taking the weaker hypothesis specialize to the
+`degreeOf = 0` form. -/
+theorem baseDvd_of_degreeOf_zero {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i0 : Fin B.card) (hi0 : i0.val = 0) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0) :=
+  C_dvd_lazardView_of_degreeOf_zero (hbase i0 hi0)
+
+/-- **Lazard's Lemma 3, the diagonal descent** (Part B conclusion). Under the base divisibility
+`C(g₀) ∣ lazardView f₀` at the minimal `y`-degree index (`hbase`, the genuinely necessary-and-sufficient
+"no common factor" — see `baseDvd_of_degreeOf_zero` for the `f₀ ∈ K[x]` special case), each sorted basis
+element satisfies `gᵢ ∣ fᵢ` in the form `C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)` — the
+`j = i` specialization of `C_dvd_lazardView_sortedByYDegree_of_le`. -/
 theorem lazard_lemma3_dvd {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0))
+    (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  C_dvd_lazardView_sortedByYDegree_of_le hB hbase i i le_rfl
+
+/-- **Lazard's Lemma 3, the diagonal descent from `f₀ ∈ K[x]`** (Part B conclusion, `degreeOf = 0`
+form). The `degreeOf 0 (sorted 0) = 0` specialization of `lazard_lemma3_dvd` (base discharged by
+`baseDvd_of_degreeOf_zero`). -/
+theorem lazard_lemma3_dvd_of_degreeOf_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
     (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  C_dvd_lazardView_sortedByYDegree_of_le hB hbase i i le_rfl
+  lazard_lemma3_dvd hB (baseDvd_of_degreeOf_zero hB hbase) i
 
 open scoped Classical in
 /-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
@@ -2366,11 +2395,29 @@ theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (h
     leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩
 
 /-- **Lazard's `Pₖ = Rₖ·Sₖ` for every sorted basis element** (Part C, no-common-factor case). With
-the no-common-factor base `degreeOf 0 (sorted 0) = 0` (`hbase`), the descent `lazard_lemma3_dvd`
-discharges the divisibility hypothesis of `lazard_Pk_eq_Rk_Sk`, so *every* `fᵢ = sorted i` splits as
-`lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ ∼ Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive and monic
-in `y` (unit leading coefficient). -/
+the base divisibility `C(g₀) ∣ lazardView f₀` (`hbase`, the necessary-and-sufficient "no common factor"),
+the descent `lazard_lemma3_dvd` discharges the divisibility hypothesis of `lazard_Pk_eq_Rk_Sk`, so
+*every* `fᵢ = sorted i` splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ ∼ Rᵢ = leadingYCoeff fᵢ`
+and `Sᵢ` primitive and monic in `y` (unit leading coefficient). -/
 theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0))
+    (i : Fin B.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
+    (lazard_lemma3_dvd hB hbase i)
+
+/-- **Lazard's `Pₖ = Rₖ·Sₖ` for every sorted basis element from `f₀ ∈ K[x]`** (Part C, `degreeOf = 0`
+form): the `degreeOf 0 (sorted 0) = 0` specialization of `lazard_Pk_eq_Rk_Sk_of_sortedByYDegree` (base
+discharged by `baseDvd_of_degreeOf_zero`). -/
+theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
@@ -2381,8 +2428,7 @@ theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
         Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
           (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
         S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
-  lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
-    (lazard_lemma3_dvd hB hbase i)
+  lazard_Pk_eq_Rk_Sk_of_sortedByYDegree hB (baseDvd_of_degreeOf_zero hB hbase) i
 
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
@@ -2435,10 +2481,19 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0))
     (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
   lazard_lemma3_dvd hB hbase i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  lazard_lemma3_dvd_of_degreeOf_zero hB hbase i
 
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
