@@ -2,6 +2,7 @@ import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.SampleMeanVariance
 import DeepWiki.TimeSeries.LinearProcessCLT
 import DeepWiki.TimeSeries.GeneralLinearProcessCLT
+import DeepWiki.TimeSeries.LinearProcessFullCLT
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 7: Estimation of the Mean and the Autocovariance Function
@@ -22,8 +23,9 @@ The process mean `μ` is estimated by the sample mean `X̄ₙ = n⁻¹ ∑ₜ X�
 `sampleMean`). **Theorem 7.1.1** (asymptotic variance `n·Var(X̄ₙ) → ∑ⱼ γ(j)`, `eq_7_1_1`) is now
 formalized; **Theorem 7.1.2** (asymptotic normality of `X̄ₙ`) is formalized both for a **finite
 `MA(q)`** process (`thm_7_1_2_maq`) and for the **general causal linear process / `MA(∞)`**
-`Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` under `∑ⱼ |ψⱼ|·j < ∞` (`thm_7_1_2_arma`, covering causal ARMA). The full
-B&D hypothesis `∑ⱼ |ψⱼ| < ∞` (without the `·j` weight) needs the `m`-dependent CLT and remains open. -/
+`Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` under `∑ⱼ |ψⱼ|·j < ∞` (`thm_7_1_2_arma`, covering causal ARMA), and — the
+complete B&D statement — under the **weak** hypothesis `∑ⱼ |ψⱼ| < ∞` alone (`thm_7_1_2_full`), via a
+formalization of Billingsley's double-limit theorem applied to the finite-`MA(m)` truncations. -/
 
 /-- **Theorem 7.1.1 (asymptotic variance of the sample mean)**: for a weakly stationary process with
 summable autocovariance `γ`, `n · Var(X̄ₙ) → ∑ⱼ γ(j)` — the rescaled sample-mean variance converges
@@ -47,6 +49,14 @@ linear process `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` nois
 N(0, (∑ψ)² σ²)`. The library's `causalLinearProcess_sampleMean_clt` (the iid sample-mean CLT scaled
 by `∑ψ`, the `MA(∞)` perturbation removed by an `L²`-negligibility bridge). -/
 alias thm_7_1_2_arma := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_clt
+
+/-- **Theorem 7.1.2 (asymptotic normality, full hypothesis `∑ⱼ |ψⱼ| < ∞`)**: for the causal linear
+process `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` noise, with the **weak** summability
+`∑ⱼ |ψⱼ| < ∞` (no `·j` weight), `√n X̄ₙ ⇒ (∑ψ) Y₀ = N(0, (∑ψ)² σ²)`. The complete B&D statement —
+the library's `causalLinearProcess_sampleMean_clt_of_summable`, assembled from the finite-`MA(m)`
+truncation CLTs through the **double-limit theorem** (`tendstoInDistribution_of_eventually_approx`,
+Billingsley Thm 3.2) with a uniform `L²` truncation-error bound. -/
+alias thm_7_1_2_full := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_clt_of_summable
 
 /-! ## §7.2 Estimation of γ(·) and ρ(·) (p.220) -/
 
@@ -73,9 +83,6 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§7.1: Theorem 7.1.2 (asymptotic normality of the sample mean) under the full B&D hypothesis
-`∑ⱼ |ψⱼ| < ∞` [infra] (the finite `MA(q)` case `thm_7_1_2_maq` and the general causal `MA(∞)`/ARMA case
-under `∑ⱼ |ψⱼ|·j < ∞` `thm_7_1_2_arma` are done; the weaker-summability full case needs the `m`-dependent CLT)
 §7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, Bartlett's formula) [infra]; Theorem 7.2.2
 (Bartlett's formula, general case) [infra]
 (Dominant blocker: the time-series central limit theorem of §6.4. The estimators eq 7.2.1/7.2.2 and
