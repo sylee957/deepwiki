@@ -111,4 +111,50 @@ example (s : Finset K) (A : K[X]) (hA : A.degree < s.card)
         = Differential.logDeriv u :=
   isLogDeriv_of_integer_residues s A hA hint
 
+/-! ## Numerator log-derivative as a sum over roots (toward the `⟹` direction) -/
+
+open scoped Classical in
+open scoped Differential in
+/-- **Log-derivative of a polynomial as a root sum** (Bronstein §2.9, the `⟹`-direction ingredient):
+over an algebraically closed field, for nonzero `N : K[X]`, the rational-function logarithmic derivative
+`logDeriv(N) = ∑_{β ∈ N.roots} logDeriv(X − β) = ∑_β 1/(X − β)` — the sum over the roots of `N` with
+multiplicity (each `(X−β)^{m}` contributing `m` copies). From `N = lc(N)·∏_β(X−β)` (`Splits.eq_prod_roots`,
+`N` splits over `K̄`) and `logDeriv_multisetProd`; the leading constant drops (`logDeriv` kills constants).
+This is `N′/N = ∑ m_β/(X−β)`, whose residue at a simple pole `α` is the root multiplicity `m_α ∈ ℤ`. -/
+theorem logDeriv_algebraMap_eq_sum_roots [IsAlgClosed K] (N : K[X]) (hN : N ≠ 0) :
+    Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
+      = (N.roots.map (fun β => Differential.logDeriv
+          (algebraMap K[X] (RatFunc K) (X - C β)))).sum := by
+  have hsplit : N.Splits := IsAlgClosed.splits N
+  have hlc : N.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hN
+  -- the constant `C lc` has zero log-derivative
+  have hCconst : Differential.logDeriv (algebraMap K[X] (RatFunc K) (C N.leadingCoeff)) = 0 := by
+    rw [Differential.logDeriv_eq_zero,
+      show (algebraMap K[X] (RatFunc K) (C N.leadingCoeff))′
+        = ratFuncDeriv _ from rfl, ratFuncDeriv_algebraMap, derivative_C, map_zero]
+  -- nonzero of the constant and the product factors
+  have hCne : algebraMap K[X] (RatFunc K) (C N.leadingCoeff) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (by simpa using hlc)
+  have hProd : ((N.roots.map (X - C ·)).prod : K[X]) ≠ 0 := by
+    refine Multiset.prod_ne_zero ?_
+    simp only [Multiset.mem_map, not_exists]
+    exact fun β => fun ⟨_, h⟩ => X_sub_C_ne_zero β h.symm.symm
+  have hPne : algebraMap K[X] (RatFunc K) ((N.roots.map (X - C ·)).prod) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hProd
+  -- `N = C lc · ∏_β (X − β)`, push through `algebraMap` on the LHS only
+  conv_lhs => rw [hsplit.eq_prod_roots]
+  rw [map_mul, Differential.logDeriv_mul _ _ hCne hPne, hCconst, zero_add, map_multiset_prod,
+    Multiset.map_map, Differential.logDeriv_multisetProd]
+  · exact congrArg Multiset.sum (Multiset.map_congr rfl fun β _ => rfl)
+  · exact fun x _ => (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero x)
+
+open scoped Classical in
+open scoped Differential in
+-- `logDeriv(N) = ∑_{β ∈ N.roots} logDeriv(X−β)`: the numerator log-derivative is the root sum.
+example [IsAlgClosed K] (N : K[X]) (hN : N ≠ 0) :
+    Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
+      = (N.roots.map (fun β => Differential.logDeriv
+          (algebraMap K[X] (RatFunc K) (X - C β)))).sum :=
+  logDeriv_algebraMap_eq_sum_roots N hN
+
 end DeepWiki.SymbolicIntegration
