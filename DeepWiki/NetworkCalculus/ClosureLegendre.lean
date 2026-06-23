@@ -150,4 +150,65 @@ theorem legendre_legendreClosure {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u)
   funext t
   exact iSup_congr fun n => congrFun (legendre_legendreConvPow hf n) t
 
+/-! ## Lemma 4.10 [4.12] — the closure descends to the quotient `ℱ↑/𝓛`
+
+The transform of the closure depends only on the transform of the input
+(`legendre_legendreClosure`: `𝓛(f⋆) = ⨆ₙ n • 𝓛 f`), so the sub-additive
+closure `⋆` respects the Legendre–Fenchel congruence: it is well-defined on the
+quotient dioid `ℱ↑/𝓛` (equation [4.9], the closure case of [4.12]). -/
+
+namespace Container
+
+/-- **[4.12]/[4.9] is well-defined: `⋆` respects `≡_𝓛`.** Two non-negative curves
+with the same Legendre–Fenchel transform have closures with the same transform —
+`𝓛 f = 𝓛 g` gives `𝓛(f⋆) = ⨆ₙ n • 𝓛 f = ⨆ₙ n • 𝓛 g = 𝓛(g⋆)`
+(`legendre_legendreClosure`). So the sub-additive closure descends to `ℱ↑/𝓛`. -/
+theorem SameLegendre.legendreClosure {f g : ℝ≥0 → EReal}
+    (hf : ∀ u, 0 ≤ f u) (hg : ∀ v, 0 ≤ g v) (h : SameLegendre f g) :
+    SameLegendre (legendreClosure f) (legendreClosure g) := by
+  unfold SameLegendre at h ⊢
+  rw [legendre_legendreClosure hf, legendre_legendreClosure hg, h]
+
+/-- **Lemma 4.10 [4.12]** (the exact book equivalence): the closure of the
+canonical representative `Cvx f = f̂` lands in the same class as `f⋆`
+(`[f]⋆_𝓛 = [f⋆]_𝓛`, i.e. `𝓛((f̂)⋆) = 𝓛(f⋆)`) **iff** their convex hulls agree
+(`Cvx((Cvx f)⋆) = Cvx(f⋆)`). This is `sameLegendre_iff_biconj_eq` at the two
+closures — exactly "follows from Propositions 4.2 and 4.3". -/
+theorem sameLegendre_legendreClosure_biconj_iff (f : ℝ≥0 → EReal) :
+    legendre (legendreClosure (biconj f)) = legendre (legendreClosure f)
+      ↔ biconj (legendreClosure (biconj f)) = biconj (legendreClosure f) :=
+  sameLegendre_iff_biconj_eq (legendreClosure (biconj f)) (legendreClosure f)
+
+/-- The truth of [4.12]'s class equality `[f]⋆_𝓛 = [f⋆]_𝓛` for a non-negative
+curve `f` whose convex hull `f̂` is also non-negative: closing `f` and closing
+its canonical representative `f̂` give the same Legendre–Fenchel class
+(`𝓛((f̂)⋆) = 𝓛(f⋆)`), since `f̂` and `f` already share their transform
+(`legendre_biconj`). -/
+theorem sameLegendre_legendreClosure_biconj {f : ℝ≥0 → EReal}
+    (hf : ∀ u, 0 ≤ f u) (hfhat : ∀ u, 0 ≤ biconj f u) :
+    SameLegendre (legendreClosure (biconj f)) (legendreClosure f) :=
+  SameLegendre.legendreClosure hfhat hf (legendre_biconj f)
+
+end Container
+
+/-! ## Faithfulness checks (anonymous restatements vs the book) -/
+
+-- `legendre_iInf` generalizes `legendre_inf` (`𝓛(f ⊓ g) = 𝓛 f ⊔ 𝓛 g`).
+example (f g : ℝ≥0 → EReal) : legendre (f ⊓ g) = legendre f ⊔ legendre g :=
+  legendre_inf f g
+
+-- Lemma 4.10 [4.12] (well-definedness, the [4.9] closure case): `⋆` respects `≡_𝓛`.
+example {f g : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) (hg : ∀ v, 0 ≤ g v)
+    (h : legendre f = legendre g) :
+    legendre (legendreClosure f) = legendre (legendreClosure g) :=
+  Container.SameLegendre.legendreClosure hf hg h
+
+-- Lemma 4.10 [4.12] exact form: `[f]⋆_𝓛 = [f⋆]_𝓛 ⇔ Cvx(Cvx f⋆) = Cvx(f⋆)`,
+-- with `Cvx = biconj` and `[f]⋆_𝓛` computed via the canonical representative `Cvx f`.
+example (f : ℝ≥0 → EReal) :
+    legendre (legendreClosure (Container.biconj f)) = legendre (legendreClosure f)
+      ↔ Container.biconj (legendreClosure (Container.biconj f))
+          = Container.biconj (legendreClosure f) :=
+  Container.sameLegendre_legendreClosure_biconj_iff f
+
 end DeepWiki
