@@ -23,13 +23,18 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ` is formalized **conditional on
-  the no-common-factor base** `degreeOf 0 (sorted 0) = 0` (`hbase`, `f₀ ∈ K[x]`): the non-circular
-  step (`C_dvd_lazardView_succ`), the strengthened induction (`C_dvd_lazardView_sortedByYDegree_of_le`,
+  the no-common-factor base** `C(g₀) ∣ lazardView f₀` (`hbase`, the genuinely necessary-and-sufficient
+  base divisibility; the `f₀ ∈ K[x]` / `degreeOf 0 (sorted 0) = 0` special case specializes via
+  `baseDvd_of_degreeOf_zero`/`lazard_lemma3_dvd_of_degreeOf_zero`): the non-circular step
+  (`C_dvd_lazardView_succ`), the strengthened induction (`C_dvd_lazardView_sortedByYDegree_of_le`,
   `lazard_lemma3_dvd`), and the per-element split (`lazard_Pk_eq_Rk_Sk_of_sortedByYDegree`) all close
-  with no sorry. Open: discharging `hbase` — it needs Theorem 1's divide-out by the genuine `K[x][y]`
-  common factor `P·Gₖ₊₁` where `P = primpart(gcd(f₀,…,fₖ))` carries the `y`-degree; the `K[x]`-content
-  layer alone (`gbCommonContent ∼ gₖ`, `IsUnit gₖ`) is necessary but NOT sufficient — `I=(y)` has
-  `gₖ=1` yet `f₀=y ∉ K[x]` [research: Lazard Thm 1 P·Gₖ₊₁ divide-out construction]; plus the
+  with no sorry. The base is genuinely irremovable — `f=xy+1` is a reduced-GB minimal element with
+  `leadingYCoeff = x` non-unit and `C(x) ∤ lazardView f` (formal refutation
+  `not_isUnit_leadingYCoeff_xyAddOne`, `not_C_leadingYCoeff_dvd_lazardView_xyAddOne`), so no free
+  leading-coeff fact discharges it. Open: discharging `hbase` — it needs Theorem 1's divide-out by the
+  genuine `K[x][y]` common factor `P·Gₖ₊₁` where `P = primpart(gcd(f₀,…,fₖ))` carries the `y`-degree;
+  the `K[x]`-content layer alone (`gbCommonContent ∼ gₖ`, `IsUnit gₖ`) is necessary but NOT sufficient —
+  `I=(y)` has `gₖ=1` yet `f₀=y ∉ K[x]` [research: Lazard Thm 1 P·Gₖ₊₁ divide-out construction]; plus the
   normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
@@ -590,6 +595,17 @@ associated to `Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive with unit leading
 The library's `lazard_Pk_eq_Rk_Sk` (content half `content_associated_leadingYCoeff_of_C_dvd`,
 monic-primpart half `leadingCoeff_primPart_isUnit_of_C_dvd`). -/
 noncomputable abbrev lazard_Pk_eq_Rk_Sk := @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk
+
+/-- **Lazard (1985), Lemma 3, the base obstruction is genuine** (cited in §2.6; the no-common-factor
+base is a real hypothesis, not a free lemma): `f = xy + 1` (`y = X 0`, `x = X 1`) generates a reduced
+Gröbner basis whose only — hence minimal-`y`-degree — element it is, with `leadingYCoeff f = x` **not a
+unit** of `K[x]` and `C(x) ∤ lazardView f = C(x)·Y + 1`. So the descent's base divisibility `C(g₀) ∣
+lazardView f₀` (and hence `lazard_lemma3_dvd`) is **false** here; no leading-coefficient unit fact
+discharges it, and Lazard's `P·Gₖ₊₁` divide-out is unavoidable (`I=(y)` further shows `IsUnit gₖ` alone
+is insufficient). The library's `not_C_leadingYCoeff_dvd_lazardView_xyAddOne` (unit half
+`not_isUnit_leadingYCoeff_xyAddOne`). -/
+abbrev lazard_lemma3_base_obstruction :=
+  @DeepWiki.SymbolicIntegration.not_C_leadingYCoeff_dvd_lazardView_xyAddOne
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
