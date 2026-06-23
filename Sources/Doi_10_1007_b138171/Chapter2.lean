@@ -20,6 +20,7 @@ import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.SubresultantCompute
 import DeepWiki.SymbolicIntegration.Exercise22Compute
 import DeepWiki.SymbolicIntegration.Exercise23Compute
+import DeepWiki.SymbolicIntegration.Exercise25Compute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -44,7 +45,6 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-Exercises: Ex 2.5.
 (Ex 2.3's symbolic content — LRT log part, the degree-8 RT resultant, the monic-in-`x` log argument,
 the Rioboo real form, and the symbolic definite-integral data over `[−2, −2/3]` — is computed and
 `native_decide`-proved (`ex_2_3*`); its "compare with direct numerical integration" sub-part is a
@@ -681,6 +681,66 @@ theorem ex_2_3_b_rioboo :
         DeepWiki.SymbolicIntegration.Compute.cX2m2
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] :=
   DeepWiki.SymbolicIntegration.Compute.ex_2_3_rioboo_realform
+
+/-- **Exercise 2.5 ([66])** (§2.9, p.73), LRT on
+`∫ (x⁴+x³+x²+x+1) / (x⁵+x⁴+2x³+2x²−2+4√(−1+√3)) dx`. The denominator's constant term involves the
+algebraic number `θ = √(−1+√3) = √(√3−1)` (`θ⁴+2θ²−2=0`, Eisenstein-at-2 ⇒ irreducible), so the
+integrand is over the **field extension** `K = ℚ(θ) = ℚ[y]/(y⁴+2y²−2)`. The library builds a computable
+extension carrier and re-runs the subresultant-PRS LRT one level up (`K[t]`, `K[t][x]`): `D` is squarefree,
+`R(t) = res_x(D, A−t·D')` is degree-5 squarefree (`ex25_resultant_squarefree`), so the log argument is
+degree-1 in `x`, `S₁ = x + c₀(t)` monic over `K[t]/(R)` (`ex25_logpart_monic_linear`), giving
+`∫ A/D = ∑_{R(a)=0} a·log(x + c₀(a))`. The library's `ex25_resultant_squarefree` (the RT resultant `R(t)`
+over `ℚ(θ)` has trivial `gcd_t(R, R')`). -/
+theorem ex_2_5_resultant_squarefree :
+    DeepWiki.SymbolicIntegration.Compute.epmonic
+        (DeepWiki.SymbolicIntegration.Compute.epgcdExt 60
+          DeepWiki.SymbolicIntegration.Compute.ex25Rt
+          (DeepWiki.SymbolicIntegration.Compute.epderiv
+            DeepWiki.SymbolicIntegration.Compute.ex25Rt)).1
+      = [[1]] :=
+  DeepWiki.SymbolicIntegration.Compute.ex25_resultant_squarefree
+
+/-- **Exercise 2.5, the computed LRT log argument** (§2.9, p.73): the per-residue gcd is `S₁(t,x) = x + c₀(t)`,
+**monic and linear in `x`** over `K[t]/(R)` (two `x`-coefficients, leading `x`-coefficient `1`), so
+`∫ A/D = ∑_{R(a)=0} a·log(x + c₀(a))` (five complex-log terms over the degree-5 residue ring). The library's
+`ex25_logpart_monic_linear`. -/
+theorem ex_2_5_logpart :
+    DeepWiki.SymbolicIntegration.Compute.ex25S1.length = 2 ∧
+      DeepWiki.SymbolicIntegration.Compute.eblc DeepWiki.SymbolicIntegration.Compute.ex25S1 = [[1]] :=
+  DeepWiki.SymbolicIntegration.Compute.ex25_logpart_monic_linear
+
+/-- **Exercise 2.5, the raw degree-1 subresultant** (§2.9, p.73): the subresultant PRS output *before*
+normalization is `S₁ʳᵃʷ = c₁(t)·x + c₀ʳᵃʷ(t)` with small integer coefficients over `K = ℚ(θ)` —
+`x⁰`-coeff `1 + (−2−12θ)t + (−32+104θ)t² + (96−224θ)t³`,
+`x¹`-coeff `(3−4θ) + (−40+52θ)t + (184−224θ)t² + (−288+320θ)t³`. The library's `ex25_raw_subresultant`. -/
+theorem ex_2_5_raw_subresultant :
+    (DeepWiki.SymbolicIntegration.Compute.ex25S1raw.map
+        (·.map DeepWiki.SymbolicIntegration.Compute.cnorm)) =
+      [[[1], [-2, -12], [-32, 104], [96, -224]],
+       [[3, -4], [-40, 52], [184, -224], [-288, 320]]] :=
+  DeepWiki.SymbolicIntegration.Compute.ex25_raw_subresultant
+
+/-- **Exercise 2.5 — "what happens if the subresultants are not made primitive?"** (§2.9, p.73; Mulders
+[66]). The raw degree-1 subresultant `S₁ʳᵃʷ` is **not monic in `x`**: its leading `x`-coefficient `c₁(t)`
+is a degree-3 polynomial in `t` (not `1`), and `S₁ʳᵃʷ = content(t) · primitive(t,x)` for a **non-unit**
+`content(t) ∈ K[t]` of `t`-degree `1`. So evaluating the subresultant at the residues `R(a)=0` *without
+first making it primitive* multiplies the log argument by the spurious `content(a)` (and the leading
+`c₁(a)` is not a unit at every residue), injecting an extra `log(content(a))` term instead of the clean
+`log(x + c₀(a))`. Making it primitive in `x` (strip `content(t)`) and monic in `x` over `K[t]/(R)` removes
+this — that is the answer. The library's `ex25_raw_eq_content_mul_primitive` (with `ex25_content_nonunit`,
+`ex25_raw_not_monic_in_x`). -/
+theorem ex_2_5_not_primitive :
+    DeepWiki.SymbolicIntegration.Compute.ex25S1raw =
+        DeepWiki.SymbolicIntegration.Compute.ebscaleC
+          DeepWiki.SymbolicIntegration.Compute.ex25content
+          DeepWiki.SymbolicIntegration.Compute.ex25S1prim ∧
+      DeepWiki.SymbolicIntegration.Compute.epdeg DeepWiki.SymbolicIntegration.Compute.ex25content = 1 ∧
+      DeepWiki.SymbolicIntegration.Compute.epdeg
+          (DeepWiki.SymbolicIntegration.Compute.eblc
+            DeepWiki.SymbolicIntegration.Compute.ex25S1raw) = 3 :=
+  ⟨DeepWiki.SymbolicIntegration.Compute.ex25_raw_eq_content_mul_primitive,
+   DeepWiki.SymbolicIntegration.Compute.ex25_content_nonunit,
+   DeepWiki.SymbolicIntegration.Compute.ex25_raw_not_monic_in_x⟩
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
