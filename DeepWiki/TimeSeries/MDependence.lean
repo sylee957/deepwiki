@@ -49,4 +49,14 @@ theorem isMDependent_of_iIndepFun {Z : ℤ → Ω → ℝ} {μ : Measure Ω} (hi
     (hmeas : ∀ i, Measurable (Z i)) (m : ℕ) : IsMDependent m Z μ :=
   (isMDependent_zero_of_iIndepFun hindep hmeas).mono (Nat.zero_le m)
 
+/-- **m-dependence transports through a pointwise measurable map**: if `X` is `m`-dependent and
+`g : ℝ → ℝ` is measurable, then the pointwise image `t ↦ g ∘ Xₜ` is `m`-dependent (each block composes
+with `g` coordinatewise, preserving block independence). So `|X|`, `X²`, and centerings `X − c` of an
+`m`-dependent process are again `m`-dependent. -/
+theorem IsMDependent.comp {m : ℕ} {X : ℤ → Ω → ℝ} {μ : Measure Ω} (h : IsMDependent m X μ)
+    {g : ℝ → ℝ} (hg : Measurable g) : IsMDependent m (fun t ω => g (X t ω)) μ := by
+  intro S T hST
+  exact (h S T hST).comp (φ := fun v i => g (v i)) (ψ := fun v i => g (v i))
+    (measurable_pi_lambda _ fun i => by fun_prop) (measurable_pi_lambda _ fun i => by fun_prop)
+
 end DeepWiki.TimeSeries
