@@ -5,7 +5,8 @@ import DeepWiki.RelationalDatabases.NormalForms
 Functional- and multivalued-dependency reasoning over one scheme is unified by a *mixed* implication
 relation: a set `D` of dependencies (each an fd `X → Y` or an mvd `X ↠ Y`) *implies* a dependency
 when every relation satisfying all of `D` satisfies it. Each row-level inference rule lifts to this
-relation by quantifying over relations.
+relation by quantifying over relations (all of FM1/M0–M4/FM2 for mvds and the Armstrong rules for
+fds).
 
 With implication in hand a *superkey* is `D ⊨ X → Ω`, and a scheme is in *fourth normal form* when
 every nontrivial implied mvd has a superkey left-hand side. We prove `4NF ⟹ BCNF`. -/
@@ -77,6 +78,26 @@ theorem depImplies_fd_of_mvd_fd (hXY : DepImplies Ω Val D (.mvd X Y))
 theorem depImplies_mvd_union (hXY : DepImplies Ω Val D (.mvd X Y))
     (hXZ : DepImplies Ω Val D (.mvd X Z)) : DepImplies Ω Val D (.mvd X (Y ∪ Z)) :=
   fun r hr => satisfiesMvd_union (hXY r hr) (hXZ r hr)
+
+/-- Armstrong transitivity at the implication level. -/
+theorem depImplies_fd_trans (hXY : DepImplies Ω Val D (.fd X Y))
+    (hYZ : DepImplies Ω Val D (.fd Y Z)) : DepImplies Ω Val D (.fd X Z) :=
+  fun r hr => satisfiesFd_trans (hXY r hr) (hYZ r hr)
+
+/-- Armstrong augmentation at the implication level. -/
+theorem depImplies_fd_augment (h : DepImplies Ω Val D (.fd X Y)) :
+    DepImplies Ω Val D (.fd X (X ∪ Y)) :=
+  fun r hr => satisfiesFd_augment (h r hr)
+
+/-- Functional-dependency union at the implication level. -/
+theorem depImplies_fd_union (hXY : DepImplies Ω Val D (.fd X Y))
+    (hXZ : DepImplies Ω Val D (.fd X Z)) : DepImplies Ω Val D (.fd X (Y ∪ Z)) :=
+  fun r hr => satisfiesFd_unionRule (hXY r hr) (hXZ r hr)
+
+/-- Functional-dependency decomposition at the implication level. -/
+theorem depImplies_fd_decompose (h : DepImplies Ω Val D (.fd X (Y ∪ Z))) :
+    DepImplies Ω Val D (.fd X Y) :=
+  fun r hr => satisfiesFd_decompose (h r hr)
 
 /-- `X` is a *superkey* with respect to a mixed dependency set: `D ⊨ X → Ω`. -/
 def IsSuperkeyDep (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) (X : Finset Att) : Prop :=
