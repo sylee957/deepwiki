@@ -53,4 +53,17 @@ abbrev nested_value_map := @DeepWiki.NestedValue.map
 /-- **§7.1**: the nesting depth of a nested value. -/
 abbrev nested_value_depth := @DeepWiki.NestedValue.depth
 
+/-- **§7.1**: functor identity law for `map`. -/
+abbrev nested_value_map_id := @DeepWiki.NestedValue.map_id
+
+/-- **§7.1**: functor composition law for `map`. -/
+abbrev nested_value_map_map := @DeepWiki.NestedValue.map_map
+
+/-- **§7.1**: `map` preserves nesting depth. -/
+abbrev nested_value_depth_map := @DeepWiki.NestedValue.depth_map
+
+/-- **Definition 7.6** (§7.1): a flat (first-normal-form) nested value — nesting depth at most
+one. -/
+abbrev def_7_6_isFlat := @DeepWiki.NestedValue.isFlat
+
 end DeepWiki.Rdb

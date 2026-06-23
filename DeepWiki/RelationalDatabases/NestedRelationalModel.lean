@@ -30,7 +30,7 @@ abbrev NestedTuple (Att V : Type) : Type := List (Att × NestedValue Att V)
 /-- A *nested relation* (the payload of `NestedValue.rel`): a list of nested tuples. -/
 abbrev NestedRel (Att V : Type) : Type := List (NestedTuple Att V)
 
-variable {Att V W : Type}
+variable {Att V W X : Type}
 
 /-- Whether a nested value is atomic (an `atom`) rather than a nested relation. -/
 def NestedValue.isAtom : NestedValue Att V → Bool
@@ -93,5 +93,80 @@ end
 theorem NestedValue.one_le_depth_rel (rows : NestedRel Att V) :
     1 ≤ (NestedValue.rel rows).depth := by
   simp only [NestedValue.depth]; omega
+
+mutual
+/-- Functor identity law: mapping the identity is the identity. -/
+theorem NestedValue.map_id : ∀ x : NestedValue Att V, x.map id = x
+  | .atom _ => rfl
+  | .rel rows => by simp only [NestedValue.map, NestedValue.mapRel_id rows]
+/-- Identity law lifted to a nested relation. -/
+theorem NestedValue.mapRel_id : ∀ rows : NestedRel Att V, NestedValue.mapRel id rows = rows
+  | [] => rfl
+  | row :: rest => by
+      simp only [NestedValue.mapRel, NestedValue.mapTuple_id row, NestedValue.mapRel_id rest]
+/-- Identity law lifted to a nested tuple. -/
+theorem NestedValue.mapTuple_id : ∀ row : NestedTuple Att V, NestedValue.mapTuple id row = row
+  | [] => rfl
+  | p :: rest => by
+      simp only [NestedValue.mapTuple, NestedValue.map_id p.2, NestedValue.mapTuple_id rest]
+end
+
+mutual
+/-- Functor composition law: `(x.map f).map g = x.map (g ∘ f)`. -/
+theorem NestedValue.map_map (f : V → W) (g : W → X) :
+    ∀ x : NestedValue Att V, (x.map f).map g = x.map (fun v => g (f v))
+  | .atom _ => rfl
+  | .rel rows => by simp only [NestedValue.map, NestedValue.mapRel_map f g rows]
+/-- Composition law lifted to a nested relation. -/
+theorem NestedValue.mapRel_map (f : V → W) (g : W → X) :
+    ∀ rows : NestedRel Att V,
+      NestedValue.mapRel g (NestedValue.mapRel f rows) = NestedValue.mapRel (fun v => g (f v)) rows
+  | [] => rfl
+  | row :: rest => by
+      simp only [NestedValue.mapRel, NestedValue.mapTuple_map f g row, NestedValue.mapRel_map f g rest]
+/-- Composition law lifted to a nested tuple. -/
+theorem NestedValue.mapTuple_map (f : V → W) (g : W → X) :
+    ∀ row : NestedTuple Att V,
+      NestedValue.mapTuple g (NestedValue.mapTuple f row) = NestedValue.mapTuple (fun v => g (f v)) row
+  | [] => rfl
+  | p :: rest => by
+      simp only [NestedValue.mapTuple, NestedValue.map_map f g p.2, NestedValue.mapTuple_map f g rest]
+end
+
+mutual
+/-- `map` preserves nesting depth (it only relabels atoms). -/
+theorem NestedValue.depth_map (g : V → W) : ∀ x : NestedValue Att V, (x.map g).depth = x.depth
+  | .atom _ => rfl
+  | .rel rows => by simp only [NestedValue.map, NestedValue.depth, NestedValue.depthRel_map g rows]
+/-- Depth preservation lifted to a nested relation. -/
+theorem NestedValue.depthRel_map (g : V → W) :
+    ∀ rows : NestedRel Att V,
+      NestedValue.depthRel (NestedValue.mapRel g rows) = NestedValue.depthRel rows
+  | [] => rfl
+  | row :: rest => by
+      simp only [NestedValue.mapRel, NestedValue.depthRel, NestedValue.depthTuple_map g row,
+        NestedValue.depthRel_map g rest]
+/-- Depth preservation lifted to a nested tuple. -/
+theorem NestedValue.depthTuple_map (g : V → W) :
+    ∀ row : NestedTuple Att V,
+      NestedValue.depthTuple (NestedValue.mapTuple g row) = NestedValue.depthTuple row
+  | [] => rfl
+  | p :: rest => by
+      simp only [NestedValue.mapTuple, NestedValue.depthTuple, NestedValue.depth_map g p.2,
+        NestedValue.depthTuple_map g rest]
+end
+
+/-- A nested value is *flat* (in first normal form) when its nesting depth is at most one — an atom,
+or a relation all of whose tuple values are atomic. -/
+def NestedValue.isFlat (x : NestedValue Att V) : Prop := x.depth ≤ 1
+
+/-- Atoms are flat. -/
+theorem NestedValue.isFlat_atom (v : V) : (NestedValue.atom (Att := Att) v).isFlat := by
+  simp [NestedValue.isFlat]
+
+/-- Flatness is preserved by `map`. -/
+theorem NestedValue.isFlat.map {x : NestedValue Att V} (g : V → W) (h : x.isFlat) :
+    (x.map g).isFlat := by
+  simp only [NestedValue.isFlat, NestedValue.depth_map]; exact h
 
 end DeepWiki
