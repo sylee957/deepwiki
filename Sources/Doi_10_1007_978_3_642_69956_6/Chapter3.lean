@@ -33,14 +33,16 @@ semantics.
   partition `SameBlock`/`DepB(X)`, the forward direction of Theorem 3.11 (implied mvd right sides
   are block-unions) and the singleton-block clause are done].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
-  Corollary 3.3 (an mvd is a two-component jd), the chase *fixpoint iteration* (looping the fd- and
-  jd-rules to closure) with its termination and Theorem 3.15 (correctness), Theorem 3.16
+  Corollary 3.3 (an mvd is a two-component jd), the chase's termination (the `(kn)ⁿ` bound on the
+  fixpoint iteration) and the *completeness* half of Theorem 3.15 (`SC ⊨ J ⟹` the distinguished row
+  appears, via a valuation built from a would-be jd-violating family), Theorem 3.16
   (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd implication via the chase),
   Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham algorithm (Algorithm 3.5,
   Theorem 3.18) [infra/research]. (The chase data model — Def 3.11 tableaux/rows/symbols, Def 3.12
   the initial tableau, the success row + membership criterion, the valuation bridge — and *both*
   individual rules with their soundness — the jd-rule `jdChaseStep` and the fd-rule as a symbol
-  substitution `substTableau`/`mergeSubst` — are done.)
+  substitution `substTableau`/`mergeSubst` — and the **soundness half of Theorem 3.15** (multi-step:
+  the chase derivation `ChaseStep`/`ReflTransGen` never escapes a model of `SC`) are done.)
 §3.5: Theorem 3.19 (completeness and non-redundancy of the id axiom system `𝓘`; the three rules
   I1/I2/I3 are sound — done), Theorem 3.20 (id implication is decidable), Theorem 3.21
   (fd+id implication is undecidable), Example 3.26 (ids have no finite counterexample) [research].
@@ -230,6 +232,15 @@ abbrev chase_jdStep_model_sound := @DeepWiki.applyTableau_jdChaseStep_subset_mod
 /-- **Theorem 3.15** (§3.4, soundness core), fd-rule: an fd-rule merge keeps the represented
 relation inside any model. -/
 abbrev chase_fdStep_model_sound := @DeepWiki.applyTableau_mergeSubst_subset_model
+
+/-- **Algorithm 3.4** (§3.4): one chase step — a jd-rule application or an fd-rule merge of two
+symbolically-agreeing rows. -/
+abbrev chase_step := @DeepWiki.ChaseStep
+
+/-- **Theorem 3.15** (§3.4, p.91), the soundness half: along any chase derivation the represented
+relation stays inside a model of all the fds and jds — the chase never produces a tuple absent from
+a model of `SC`. -/
+abbrev thm_3_15_sound := @DeepWiki.applyTableau_subset_of_chaseStar
 
 /-! ## §3.5 Inclusion Dependencies -/
 

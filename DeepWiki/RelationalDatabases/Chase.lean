@@ -192,4 +192,42 @@ theorem applyTableau_mergeSubst_subset_model (ρ : Valuation Att Val) {s t : Cha
     applyTableau ρ (substTableau (mergeSubst s t) T) ⊆ r := by
   rw [applyTableau_mergeSubst ρ T h]; exact hsub
 
+omit [DecidableEq Att] in
+/-- A functional dependency holding in a relation holds in every subrelation. -/
+theorem satisfiesFd_subset {r s : Table Ω Val} (hsr : s ⊆ r) {X Y : Finset Att}
+    (h : SatisfiesFd r X Y) : SatisfiesFd s X Y :=
+  fun t₁ h₁ t₂ h₂ => h t₁ (hsr h₁) t₂ (hsr h₂)
+
+/-- One step of the chase relative to a set of fds and a set of (covering) jds (Algorithm 3.4):
+either a jd-rule application or a fd-rule merge of two rows that agree symbolically on the fd's
+left side. -/
+inductive ChaseStep (fds : Set (Finset Att × Finset Att))
+    (jds : Set (Σ k : ℕ, Fin k → Finset Att)) : Tableau Ω → Tableau Ω → Prop
+  /-- The jd-rule for a (covering) jd of the set. -/
+  | jd {k : ℕ} {comp : Fin k → Finset Att} (hmem : (⟨k, comp⟩ : Σ k, Fin k → Finset Att) ∈ jds)
+      (hcov : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i) {T : Tableau Ω} :
+      ChaseStep fds jds T (jdChaseStep comp T)
+  /-- The fd-rule for an fd of the set: merge the `A`-symbols of two `X`-agreeing rows. -/
+  | fd {X Y : Finset Att} (hmem : (X, Y) ∈ fds) {T : Tableau Ω} {R₁ R₂ : ChaseRow Ω}
+      (h₁ : R₁ ∈ T) (h₂ : R₂ ∈ T) (hX : ∀ a : {x // x ∈ Ω}, a.val ∈ X → R₁ a = R₂ a)
+      {a : {x // x ∈ Ω}} (ha : a.val ∈ Y) :
+      ChaseStep fds jds T (substTableau (mergeSubst (R₁ a) (R₂ a)) T)
+
+/-- **Chase soundness (multi-step), the soundness half of Theorem 3.15**: along any chase
+derivation, the represented relation stays inside a model `r` of all the fds and jds — so the chase
+never produces a tuple absent from a model of `SC`. -/
+theorem applyTableau_subset_of_chaseStar (ρ : Valuation Att Val) {r : Table Ω Val}
+    {fds : Set (Finset Att × Finset Att)} {jds : Set (Σ k : ℕ, Fin k → Finset Att)}
+    (hfd : ∀ XY ∈ fds, SatisfiesFd r XY.1 XY.2) (hjd : ∀ kc ∈ jds, SatisfiesJd r kc.2)
+    {T T' : Tableau Ω} (hstar : Relation.ReflTransGen (ChaseStep fds jds) T T')
+    (hsub : applyTableau ρ T ⊆ r) : applyTableau ρ T' ⊆ r := by
+  induction hstar with
+  | refl => exact hsub
+  | tail _ hstep ih =>
+    cases hstep with
+    | jd hmem hcov => exact applyTableau_jdChaseStep_subset_model ρ _ ih hcov (hjd _ hmem)
+    | fd hmem h₁ h₂ hX ha =>
+      exact applyTableau_mergeSubst_subset_model ρ ih
+        (fdMerge_value_eq ρ (satisfiesFd_subset ih (hfd _ hmem)) h₁ h₂ hX ha)
+
 end DeepWiki
