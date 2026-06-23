@@ -13,3 +13,4 @@ import DeepWiki.RelationalDatabases.HorizontalDecompositions
 import DeepWiki.RelationalDatabases.IncompleteInformation
 import DeepWiki.RelationalDatabases.NestedRelationalModel
 import DeepWiki.RelationalDatabases.UpdatesTransactions
+import DeepWiki.RelationalDatabases.QueryEquivalence

@@ -2,6 +2,7 @@ import DeepWiki.RelationalDatabases.RelationalAlgebra
 import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 import DeepWiki.RelationalDatabases.TupleCalculus
 import DeepWiki.RelationalDatabases.Sql
+import DeepWiki.RelationalDatabases.QueryEquivalence
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -33,8 +34,11 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
   generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
   set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
-§2.4: the reduction of the tuple calculus to the relational algebra [research: the translation
-  plus safety/domain-independence].
+§2.4: the full reduction of the tuple calculus to the relational algebra — the existential
+  quantifier (projection/join), the translation function `calcToAlg` and safety/domain-
+  independence [research]. (The database-relation calculus foundation `QCond`/`evalQCond` and the
+  quantifier-free fragment — connectives realising selection/union/difference of base relations —
+  are done.)
 §2.5: the reduction of the relational algebra to SQL [infra].
 §2.6: the reduction of SQL to the tuple calculus [infra].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
@@ -114,6 +118,24 @@ abbrev tupleCalc_conj_from_disj := @DeepWiki.evalCond_conj
 
 /-- **Generating part — implication** (§2.2.5, p.35): `C₁ ⇒ C₂ = (¬C₁) ∨ C₂`. -/
 abbrev tupleCalc_imp_from_disj := @DeepWiki.evalCond_imp
+
+/-! ## §2.4 Reduction of the Tuple Calculus to the Algebra (foundation) -/
+
+/-- **Database-relation calculus condition** (§2.4): the quantifier-free tuple calculus over a
+fixed database of base relations — the faithful basis for the algebra↔calculus equivalence (a
+generic-table atom would trivialise it). -/
+abbrev tupleCalc_dbCond := @DeepWiki.QCond
+
+/-- **Semantics of a database-relation condition** (§2.4): the table it denotes over `db`. -/
+abbrev tupleCalc_dbCond_eval := @DeepWiki.evalQCond
+
+/-- **Selection as a calculus condition** (§2.4): `rel i ∧ comp P` denotes the selection of the
+base relation `db i` by `P`. -/
+abbrev reduction_select := @DeepWiki.evalQCond_select
+
+/-- **Difference as a calculus condition** (§2.4): `C ∧ ¬D` denotes the difference of the denoted
+tables. -/
+abbrev reduction_diff := @DeepWiki.evalQCond_diff
 
 /-! ## §2.3 SQL: Structured Query Language -/
 
