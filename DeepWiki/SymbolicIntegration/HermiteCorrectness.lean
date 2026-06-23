@@ -2217,3 +2217,23 @@ example :
   exact hermiteReduce_residual_correct_uncond 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hermite_ex221_resComp
 
+open scoped Differential in
+-- Hermite reduction (Bronstein §2.2/§2.5): `∫ A/D = g + ∫ Bres/Dstar` with `g = gnum/gden` the
+-- rational part and `Bres/Dstar` the residual (squarefree-denominator) integrand — the computable
+-- `hermiteReduce`'s output, certified in `RatFunc ℚ` from only the decidable residual-honesty bundle
+-- (no exact-division hypothesis).
+example (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+        (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
+    (hcomp : HermiteResComp fuel A D gnum gden Dstar) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
+  hermiteReduce_residual_correct_uncond fuel A D gnum gden Dstar hD hgden hDstar hfuel hcomp
+
