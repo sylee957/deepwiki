@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.SampleMeanVariance
+import DeepWiki.TimeSeries.MultivariateCLT
 import Mathlib.Probability.IdentDistrib
 
 /-! # Central limit theorem for m-dependent sequences (§6.4, Theorem 6.4.2) — foundations
@@ -197,6 +198,24 @@ theorem variance_finsetSum_le {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
         rw [himg]
         exact Summable.sum_le_tsum _ (fun h _ => abs_nonneg _) hsa
     _ = (A.card : ℝ) * ∑' h : ℤ, |acvfStat X μ h| := by rw [Finset.sum_const, nsmul_eq_mul]
+
+/-- **Block-level central limit theorem** (h1 core): for a strictly stationary, centered, `L²`,
+`m`-dependent process, the standardized sum of the first `r` big-block sums has characteristic function
+converging to `exp(−Var(U₀)/2)` — applying the iid charFun CLT to the big-block sums `(Uᵢ)`, which are
+iid (`iIndepFun_bigBlockSum` + `identDistrib_bigBlockSum`). -/
+theorem IsMDependent.tendsto_charFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0) (p : ℕ) :
+    Tendsto (fun r : ℕ => charFun (μ.map fun ω =>
+        (√r)⁻¹ * ∑ k ∈ Finset.range r, ∑ t ∈ bigBlock p m k, X t ω) 1) atTop
+      (𝓝 (Complex.exp (Complex.ofReal
+        (-(∫ ω, (∑ t ∈ bigBlock p m 0, X t ω) ^ 2 ∂μ) / 2)))) := by
+  have hU0 : MemLp (fun ω => ∑ t ∈ bigBlock p m 0, X t ω) 2 μ :=
+    memLp_finsetSum _ fun t _ => hmem t
+  refine tendsto_charFun_inv_sqrt_mul_sum_one (hmdep.iIndepFun_bigBlockSum p)
+    (fun i => hstat.identDistrib_bigBlockSum hmeas p m i) ?_ hU0.integrable_sq
+  rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
+  simp [hcenter]
 
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
