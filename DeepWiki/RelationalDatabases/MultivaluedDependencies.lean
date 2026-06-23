@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.FunctionalDependencies
+import DeepWiki.RelationalDatabases.JoinDependencies
 
 /-! # Multivalued dependencies
 A multivalued dependency `X ↠ Y` holds in a row set when, for any two rows agreeing on `X`,
@@ -209,5 +210,40 @@ theorem satisfiesMvd_diff {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
       · exact hwu b (Finset.mem_union.mpr (Or.inr hZb))
       · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, hZb⟩)))]
         exact hau b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, fun hY => hZb (hYZ hY)⟩)))
+
+/-- The two-component family `{X ∪ Y, X ∪ (Ω − Y)}` whose join dependency is the mvd `X ↠ Y`. -/
+def mvdComp (X Y Ω : Finset Att) : Bool → Finset Att
+  | false => X ∪ Y
+  | true => X ∪ (Ω \ Y)
+
+/-- **Theorem 3.9** (§3.3, p.86): a multivalued dependency is exactly a two-component join
+dependency — `X ↠ Y` holds iff `r` decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. -/
+theorem satisfiesMvd_iff_satisfiesJd {X Y : Finset Att} :
+    SatisfiesMvd r X Y ↔ SatisfiesJd r (mvdComp X Y Ω) := by
+  have hsub : ∀ a : {x // x ∈ Ω}, a.val ∈ X ∪ Y → a.val ∈ X ∪ (Ω \ Y) → a.val ∈ X := by
+    intro a h1 h2
+    simp only [Finset.mem_union, Finset.mem_sdiff] at h1 h2
+    tauto
+  constructor
+  · intro h t htr hpair
+    have hagX : Agree X (t false) (t true) := fun a ha =>
+      hpair false true a (Finset.mem_inter.mpr ⟨Finset.mem_union_left _ ha, Finset.mem_union_left _ ha⟩)
+    obtain ⟨v, hv, hvf, hvt⟩ := h (t false) (htr false) (t true) (htr true) hagX
+    exact ⟨v, hv, fun i => by cases i with | false => exact hvf | true => exact hvt⟩
+  · intro h t ht u hu hag
+    have hmem : ∀ i, (fun b => bif b then u else t) i ∈ r := by
+      intro i; cases i with | false => exact ht | true => exact hu
+    have hpair : ∀ i j, Agree (mvdComp X Y Ω i ∩ mvdComp X Y Ω j)
+        ((fun b => bif b then u else t) i) ((fun b => bif b then u else t) j) := by
+      intro i j
+      cases i <;> cases j
+      · exact fun _ _ => rfl
+      · exact fun a ha =>
+          hag a (hsub a (Finset.mem_inter.mp ha).1 (Finset.mem_inter.mp ha).2)
+      · exact fun a ha =>
+          (hag a (hsub a (Finset.mem_inter.mp ha).2 (Finset.mem_inter.mp ha).1)).symm
+      · exact fun _ _ => rfl
+    obtain ⟨v, hv, hvi⟩ := h (fun b => bif b then u else t) hmem hpair
+    exact ⟨v, hv, hvi false, hvi true⟩
 
 end DeepWiki

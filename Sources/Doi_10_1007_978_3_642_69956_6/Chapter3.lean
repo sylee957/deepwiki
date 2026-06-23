@@ -24,8 +24,7 @@ semantics.
   functional fixpoint algorithm]; Def 3.6 non-redundant cover; Def 3.7 canonical cover and
   Example 3.10 [infra].
 §3.3: Theorem 3.7 / 3.8 (an fd gives a lossless two-way decomposition, and its partial
-  converse), Theorem 3.9 (an mvd holds iff the relation decomposes losslessly),
-  Theorem 3.11 (dependency
+  converse), Theorem 3.11 (dependency
   basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
   (polynomial-time decidability) [infra].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
@@ -150,6 +149,10 @@ abbrev lem_3_1_m5_inter := @DeepWiki.satisfiesMvd_inter
 
 /-- **Lemma 3.1, rule M6** (§3.3, mvd-difference): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y − Z)`. -/
 abbrev lem_3_1_m6_diff := @DeepWiki.satisfiesMvd_diff
+
+/-- **Theorem 3.9** (§3.3, p.86): a multivalued dependency is exactly a two-component join
+dependency — `X ↠ Y` holds iff `r` decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. -/
+abbrev thm_3_9 := @DeepWiki.satisfiesMvd_iff_satisfiesJd
 
 /-! ## §3.4 Join Dependencies -/
 
