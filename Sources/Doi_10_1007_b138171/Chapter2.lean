@@ -18,6 +18,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.LogToAtanCompute
 import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.SubresultantCompute
+import DeepWiki.SymbolicIntegration.Exercise22Compute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -42,7 +43,7 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
+Exercises: Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
 
@@ -604,6 +605,29 @@ theorem ex_2_6_1_lrtGcd_compute :
         DeepWiki.SymbolicIntegration.Compute.cD241
       = [[0, -4], [-3], [0, 2], [1]] :=
   DeepWiki.SymbolicIntegration.Compute.lrtGcd_ex241
+
+/-- **Exercise 2.2, the assembled LRT log part** (§2.9, p.72): `lrtLogPart A D` runs the whole computable
+LRT pipeline — RT resultant `R = res_x(D, A−t·D')`, Yun squarefree factorization of `R`, the subresultant
+PRS, and mod-`R` monic-in-`x` normalization — returning the `(Qᵢ, Sᵢ)` pairs of
+`∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`. The library's `lrtLogPart` (with the Yun `csqfreeFactor`). -/
+def ex_2_2_lrtLogPart := @DeepWiki.SymbolicIntegration.Compute.lrtLogPart
+
+/-- **Exercise 2.2, the computed answer** (§2.9, p.72), LRT on
+`∫ (8x⁹+x⁸−12x⁷−4x⁶−26x⁵−6x⁴+30x³+23x²−2x−7)/(x¹⁰−2x⁸−2x⁷−4x⁶+7x⁴+10x³+3x²−4x−2) dx`: `D` is
+**squarefree** (no Hermite part, `ex_2_2_D_squarefree`); the RT resultant `R(t) = cR22` is the degree-10
+integer polynomial `res_x(D, A−t·D')` (`ex_2_2_resultant`), itself **squarefree** so its Yun factorization
+is the single pair `(R, 1)` (`ex_2_2_resultant_squarefree`); hence the log argument is the degree-1 (in
+`x`) `S₁ = lrtGcdCompute 60 1 R A D = x + c₀(t)`, monic in `x` (`ex_2_2_S1_monic_linear`). The assembled
+answer is the single `(monic R, S₁)` pair, so
+`∫ A/D = ∑_{R(a)=0} a · log(x + c₀(a))` with `c₀(t) ∈ ℚ[t]/(R)` the degree-9 residue polynomial. Proved
+end to end by `native_decide`. The library's `ex_2_2_logpart`. -/
+theorem ex_2_2 :
+    DeepWiki.SymbolicIntegration.Compute.lrtLogPart 60
+        DeepWiki.SymbolicIntegration.Compute.cA22
+        DeepWiki.SymbolicIntegration.Compute.cD22
+      = [(DeepWiki.SymbolicIntegration.Compute.cmonic DeepWiki.SymbolicIntegration.Compute.cR22,
+          DeepWiki.SymbolicIntegration.Compute.cS1_22)] :=
+  DeepWiki.SymbolicIntegration.Compute.ex_2_2_logpart
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
