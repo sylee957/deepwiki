@@ -2,6 +2,8 @@ import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.SampleMeanVariance
 import DeepWiki.TimeSeries.MultivariateCLT
 import DeepWiki.TimeSeries.SampleMeanCLT
+import DeepWiki.TimeSeries.DeltaMethod
+import DeepWiki.TimeSeries.DoubleLimitDistribution
 import Mathlib.Probability.IdentDistrib
 
 /-! # Central limit theorem for m-dependent sequences (§6.4, Theorem 6.4.2) — foundations
@@ -442,5 +444,20 @@ theorem tendsto_variance_bigBlockSum_div_of_mDependent {m : ℕ} {X : ℤ → Ω
   rw [variance_bigBlockSum_zero]
   have hpm : (p : ℝ) + m ≠ 0 := by positivity
   field_simp
+
+/-- **The Gaussian limits `Wₚ = √vₚ · G` converge in distribution to `Z = √v · G`** as `p → ∞`,
+where `G` is a standard normal (`h2` of the double-limit theorem). Since `vₚ → v`, the scale factors
+`√vₚ → √v` (continuity of `√`), and `tendstoInDistribution_const_smul_of_tendsto` transports this to the
+scaled Gaussians. Realizing the whole `N(0,vₚ)` family as scalings of one fixed `G` puts them on a common
+probability space, as the double-limit assembly requires. -/
+theorem tendstoInDistribution_gaussianFamily_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ) (h : IsMDependent m X μ)
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {G : Ω' → ℝ} (hG : AEMeasurable G P') :
+    TendstoInDistribution
+      (fun p ω => Real.sqrt (Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ] / (p + m : ℝ)) • G ω) atTop
+      (fun ω => Real.sqrt (∑' k : ℤ, acvfStat X μ k) • G ω) (fun _ => P') P' :=
+  tendstoInDistribution_const_smul_of_tendsto
+    ((Real.continuous_sqrt.tendsto _).comp (tendsto_variance_bigBlockSum_div_of_mDependent hX h)) hG
 
 end DeepWiki.TimeSeries
