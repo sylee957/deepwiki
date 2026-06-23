@@ -181,4 +181,19 @@ worlds are β-equivalent to `X`. -/
 def BetaRepresents (ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val))
     (T : NullTable Ω Val) (X : Set (Table Ω Val)) : Prop := BetaEquiv ops (coddRep T) X
 
+/-- Every definite (null-free) row of a Codd table is a certain answer: it appears in every
+open-world possible instance. -/
+theorem mem_infoF_id_coddRep_of_toNull_mem {T : NullTable Ω Val} {t : Tuple Ω Val}
+    (h : toNull t ∈ T) : t ∈ infoF id (coddRep T) := by
+  rw [mem_infoF]
+  intro r hr
+  obtain ⟨t', ht', hmi⟩ := hr (toNull t) h
+  rwa [toNull_injective ((moreInfo_toNull_iff t _).mp hmi)] at ht'
+
+/-- The certain answers of a definite table are exactly the table itself (its identity
+f-information over the possible worlds). -/
+theorem infoF_id_rep_toNullTable [Inhabited Val] (r : Table Ω Val) :
+    infoF id (rep (toNullTable r)) = r := by
+  rw [rep_toNullTable]; simp [infoF]
+
 end DeepWiki

@@ -128,3 +128,9 @@ abbrev def_6_2_betaEquiv := @DeepWiki.BetaEquiv
 /-- **Definition 6.2** (§6.1, p.160), β-representation: a null-table β-represents `X` when its
 Codd-table worlds are β-equivalent to `X`. -/
 abbrev def_6_2_betaRepresents := @DeepWiki.BetaRepresents
+
+/-- **§6.1**: every definite (null-free) row of a Codd table is a certain answer. -/
+abbrev definite_row_is_certain := @DeepWiki.mem_infoF_id_coddRep_of_toNull_mem
+
+/-- **§6.1**: a definite table's certain answers are exactly itself. -/
+abbrev certain_answers_definite := @DeepWiki.infoF_id_rep_toNullTable
