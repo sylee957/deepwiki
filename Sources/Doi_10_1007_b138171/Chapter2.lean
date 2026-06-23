@@ -44,8 +44,10 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   via coprime leading monomials `x^(deg D)`, `z` (`isGroebnerBasis_gb`, the `z := T` substitution
   argument). The zeros' `x`-parts are the (distinct, `D` squarefree) roots of `D` with residue
   `z`-part `A(α)/D'(α)` (`eval_residuePoly_of_isRoot`, `nodup_roots_of_separable` = normal position).
-  Remaining: Lemma 2.1's zero-dimensionality and maximality-w.r.t.-the-zero-set claims
-  [research: needs `MvPolynomial`-variety / Nullstellensatz dimension theory].
+  Lemma 2.1(i) **zero-dimensionality** is done: eliminating `z = T` gives the iso
+  `K[x,z] ⧸ I ≃ₐ[K] K[x] ⧸ (D)` (`czIdealQuotEquiv`), finite over `K` since `D` is monic
+  (`finite_quotient_czIdeal`). Remaining: Lemma 2.1's maximality-w.r.t.-the-zero-set claim
+  [research: needs `MvPolynomial`-variety / Nullstellensatz `I = I(V(I))`].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -719,6 +721,17 @@ noncomputable abbrev czichowski_lemma_2_1_ideal_eq := @DeepWiki.SymbolicIntegrat
 of (squarefree) `D`. The library's `eval_residuePoly_of_isRoot`. -/
 noncomputable abbrev czichowski_lemma_2_1_residue :=
   @DeepWiki.SymbolicIntegration.eval_residuePoly_of_isRoot
+
+/-- **Czichowski (1995), Lemma 2.1, the eliminating iso** (J. Symb. Comp. 20, p.164): substituting
+`z = T` identifies `K[x, z] ⧸ I ≃ₐ[K] K[x] ⧸ (D)`. The library's `czIdealQuotEquiv`. -/
+noncomputable abbrev czichowski_lemma_2_1_quotient_equiv :=
+  @DeepWiki.SymbolicIntegration.czIdealQuotEquiv
+
+/-- **Czichowski (1995), Lemma 2.1(i), zero-dimensionality** (J. Symb. Comp. 20, p.164): `I` is
+zero-dimensional, i.e. `K[x, z] ⧸ I` is a finite `K`-module (rank `deg D`), since `D` is monic. The
+library's `finite_quotient_czIdeal`. -/
+noncomputable abbrev czichowski_lemma_2_1_zero_dimensional :=
+  @DeepWiki.SymbolicIntegration.finite_quotient_czIdeal
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
