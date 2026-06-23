@@ -131,4 +131,57 @@ theorem IsStrictlyStationary.movingAverage {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ
     ← Measure.map_map hFm (measurable_pi_lambda _ fun p => hZmeas (s p + h)),
     hZstat (k * (q + 1)) s h]
 
+/-- **A strictly stationary `L²` process is weakly stationary**: shift-invariance of the finite joint
+laws gives a constant mean (the `k = 1` law equality, `IdentDistrib.integral_eq`) and a shift-invariant
+autocovariance (the `k = 2` joint-law equality — covariance pushes through the pair-tuple map,
+`covariance_map`). Bridges `IsStrictlyStationary` to the `IsWeaklyStationary` hypothesis of `thm_6_4_2`. -/
+theorem IsStrictlyStationary.isWeaklyStationary {X : ℤ → Ω → ℝ} (hXmeas : ∀ t, Measurable (X t))
+    (hXmem : ∀ t, MemLp (X t) 2 μ) (hstat : IsStrictlyStationary X μ) : IsWeaklyStationary X μ where
+  memLp := hXmem
+  mean_const := by
+    intro s t
+    have hlaw : μ.map (X s) = μ.map (X t) := by
+      have h1 := hstat 1 (fun _ => s) (t - s)
+      rw [show (X s) = (fun w : Fin 1 → ℝ => w 0) ∘ fun ω (_ : Fin 1) => X s ω from by funext ω; rfl,
+        show (X t) = (fun w : Fin 1 → ℝ => w 0) ∘ fun ω (_ : Fin 1) => X (s + (t - s)) ω from by
+          funext ω; simp,
+        ← Measure.map_map (measurable_pi_apply 0) (measurable_pi_lambda _ fun _ => hXmeas _),
+        ← Measure.map_map (measurable_pi_apply 0) (measurable_pi_lambda _ fun _ => hXmeas _), h1]
+    exact (⟨(hXmeas s).aemeasurable, (hXmeas t).aemeasurable, hlaw⟩ :
+      IdentDistrib (X s) (X t) μ μ).integral_eq
+  acvf_shift := by
+    intro r s h
+    have hev : ∀ a b : ℤ, cov[(fun w : Fin 2 → ℝ => w 0), (fun w => w 1);
+        μ.map fun ω i => X (![a, b] i) ω] = cov[X a, X b; μ] := by
+      intro a b
+      rw [covariance_map (measurable_pi_apply 0).aestronglyMeasurable
+        (measurable_pi_apply 1).aestronglyMeasurable
+        (measurable_pi_lambda _ fun _ => hXmeas _).aemeasurable]
+      congr 1
+    rw [← hev r s, ← hev (r + h) (s + h)]
+    congr 1
+    rw [hstat 2 ![r, s] h]
+    congr 1
+    funext ω i
+    fin_cases i <;> simp
+
+/-- **Central limit theorem for a moving average** (Brockwell–Davis Example 6.4.4): for an MA(q) process
+`Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` over centered `L²` i.i.d. (indeed strictly-stationary independent) noise `Z`,
+the standardized sample mean `√n X̄ₙ` converges in distribution to `N(0, vₘ)` with `vₘ = ∑_{|h|≤q} γ(h)` —
+realized as `√vₘ · G` for a standard normal `G`. The process is `q`-dependent (`isMDependent_movingAverage`),
+strictly and weakly stationary, centered and `L²`, so the `m`-dependent CLT `thm_6_4_2` applies. -/
+theorem movingAverage_clt {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {G : Ω' → ℝ}
+    (hindep : iIndepFun Z μ) (hZstat : IsStrictlyStationary Z μ) (hmeas : ∀ t, Measurable (Z t))
+    (hmem : ∀ t, MemLp (Z t) 2 μ) (hcenter : ∀ t, μ[Z t] = 0) (hG : HasLaw G (gaussianReal 0 1) P') :
+    TendstoInDistribution (fun (n : ℕ) ω => Real.sqrt n *
+        sampleMean n (fun t => movingAverage θ q Z (t : ℤ) ω)) atTop
+      (fun ω => Real.sqrt (∑' k : ℤ, acvfStat (movingAverage θ q Z) μ k) • G ω) (fun _ => μ) P' := by
+  have hMAstat : IsStrictlyStationary (movingAverage θ q Z) μ :=
+    IsStrictlyStationary.movingAverage hmeas hZstat
+  exact (isMDependent_movingAverage hindep hmeas).tendstoInDistribution_sqrt_sampleMean hMAstat
+    (hMAstat.isWeaklyStationary (measurable_movingAverage hmeas) (memLp_movingAverage hmem))
+    (measurable_movingAverage hmeas) (memLp_movingAverage hmem)
+    (integral_movingAverage hmem hcenter) hG
+
 end DeepWiki.TimeSeries
