@@ -172,4 +172,87 @@ theorem ex18DynMono_not_relationConstraintEquiv :
   have hmem := hmono2 0 (show tupA 1 ∈ s2 0 by simp [hs2])
   simp [hs2] at hmem
 
+/-! ## Exercise 1.10 — the `THIRSTY` database and its seven constraints
+The classification of each constraint (to which of `SC_L`, `SC_V`, `SC_S`, `SDC` it belongs) is
+recorded in each docstring. `SC_L` is empty: none of the seven constrain `LIKES` alone. -/
+
+/-- Attributes of `LIKES`: a drinker and a beer he likes. -/
+abbrev likesAttrs : Finset String := {"L-DRINKER", "L-BEER"}
+
+/-- Attributes of `VISITS`: a drinker and a bar he visits. -/
+abbrev visitsAttrs : Finset String := {"V-DRINKER", "V-BAR"}
+
+/-- Attributes of `SERVES`: a bar and a beer it serves. -/
+abbrev servesAttrs : Finset String := {"S-BAR", "S-BEER"}
+
+/-- A `THIRSTY` database instance: the three relations `LIKES`, `VISITS`, `SERVES`. -/
+structure ThirstyInst where
+  /-- The `LIKES` relation: drinkers and the beers they like. -/
+  likes : Set (Tuple likesAttrs String)
+  /-- The `VISITS` relation: drinkers and the bars they visit. -/
+  visits : Set (Tuple visitsAttrs String)
+  /-- The `SERVES` relation: bars and the beers they serve. -/
+  serves : Set (Tuple servesAttrs String)
+
+/-- Drinker of a `LIKES` tuple. -/
+def lDrinker (t : Tuple likesAttrs String) : String := t ⟨"L-DRINKER", by decide⟩
+
+/-- Beer of a `LIKES` tuple. -/
+def lBeer (t : Tuple likesAttrs String) : String := t ⟨"L-BEER", by decide⟩
+
+/-- Drinker of a `VISITS` tuple. -/
+def vDrinker (t : Tuple visitsAttrs String) : String := t ⟨"V-DRINKER", by decide⟩
+
+/-- Bar of a `VISITS` tuple. -/
+def vBar (t : Tuple visitsAttrs String) : String := t ⟨"V-BAR", by decide⟩
+
+/-- Bar of a `SERVES` tuple. -/
+def sBar (t : Tuple servesAttrs String) : String := t ⟨"S-BAR", by decide⟩
+
+/-- Beer of a `SERVES` tuple. -/
+def sBeer (t : Tuple servesAttrs String) : String := t ⟨"S-BEER", by decide⟩
+
+/-- **Exercise 1.10**, constraint 1 (`SDC`): every drinker visits only bars where some beer he
+likes is served. -/
+def thirsty_c1 (db : ThirstyInst) : Prop :=
+  ∀ v ∈ db.visits, ∃ l ∈ db.likes, ∃ s ∈ db.serves,
+    lDrinker l = vDrinker v ∧ sBar s = vBar v ∧ lBeer l = sBeer s
+
+/-- **Exercise 1.10**, constraint 2 (`SC_S`): each bar serves at least one beer. -/
+def thirsty_c2 (bars : Set String) (db : ThirstyInst) : Prop :=
+  ∀ bar ∈ bars, ∃ s ∈ db.serves, sBar s = bar
+
+/-- **Exercise 1.10**, constraint 3 (`SC_V`): each bar has at least one visitor. -/
+def thirsty_c3 (bars : Set String) (db : ThirstyInst) : Prop :=
+  ∀ bar ∈ bars, ∃ v ∈ db.visits, vBar v = bar
+
+/-- **Exercise 1.10**, constraint 4 (`SDC`): each bar only serves beers that are liked by some of
+its visitors. -/
+def thirsty_c4 (db : ThirstyInst) : Prop :=
+  ∀ s ∈ db.serves, ∃ v ∈ db.visits, ∃ l ∈ db.likes,
+    vBar v = sBar s ∧ vDrinker v = lDrinker l ∧ lBeer l = sBeer s
+
+/-- **Exercise 1.10**, constraint 5 (`SDC`): if two drinkers visit the same bar, some beer is
+liked by both of them and served at the bar. -/
+def thirsty_c5 (db : ThirstyInst) : Prop :=
+  ∀ v₁ ∈ db.visits, ∀ v₂ ∈ db.visits, vBar v₁ = vBar v₂ →
+    ∃ beer : String, (∃ l₁ ∈ db.likes, lDrinker l₁ = vDrinker v₁ ∧ lBeer l₁ = beer) ∧
+      (∃ l₂ ∈ db.likes, lDrinker l₂ = vDrinker v₂ ∧ lBeer l₂ = beer) ∧
+      (∃ s ∈ db.serves, sBar s = vBar v₁ ∧ sBeer s = beer)
+
+/-- **Exercise 1.10**, constraint 6 (`SDC`): if a drinker does not visit a bar, the bar serves at
+least one beer he does not like. -/
+def thirsty_c6 (drinkers bars : Set String) (db : ThirstyInst) : Prop :=
+  ∀ d ∈ drinkers, ∀ bar ∈ bars,
+    (¬ ∃ v ∈ db.visits, vDrinker v = d ∧ vBar v = bar) →
+    ∃ s ∈ db.serves, sBar s = bar ∧ ¬ ∃ l ∈ db.likes, lDrinker l = d ∧ lBeer l = sBeer s
+
+/-- **Exercise 1.10**, constraint 7 (`SDC`): if a drinker likes a beer served in a bar visited by
+another drinker, then the two drinkers visit a common bar. -/
+def thirsty_c7 (db : ThirstyInst) : Prop :=
+  ∀ l ∈ db.likes, ∀ s ∈ db.serves, ∀ v ∈ db.visits,
+    lBeer l = sBeer s → sBar s = vBar v →
+    ∃ v₁ ∈ db.visits, ∃ v₂ ∈ db.visits,
+      vDrinker v₁ = lDrinker l ∧ vDrinker v₂ = vDrinker v ∧ vBar v₁ = vBar v₂
+
 end DeepWiki

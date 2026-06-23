@@ -29,8 +29,6 @@ Ex 1.8: a *second* database constraint (not equivalent to relation constraints) 
 Ex 1.9: the same for a *second* dynamic relation constraint and a relation-constraint consequence
   [deferred: construction; the core, a dynamic relation constraint not equivalent to relation
   constraints, is `ex_1_9`].
-Ex 1.10: the THIRSTY database scheme — boolean functions and classification of its seven
-  constraints [deferred].
 Ex 1.11: which constraints of Exercise 1.10 are consequences of which [deferred].
 Ex 1.12: a dynamic relation scheme for the convex non-intersecting quadrilaterals [deferred:
   geometric/informal content]. -/
@@ -201,5 +199,35 @@ abbrev ex_1_9 := @DeepWiki.ex18DynMono_not_relationConstraintEquiv
 /-- **Exercise 1.9** (§1.7, p.16): the underlying notion — a dynamic relation constraint is
 *equivalent to relation constraints* when it factors as a per-instance constraint at every step. -/
 abbrev ex_1_9_relationConstraintEquivDyn := @DeepWiki.IsRelationConstraintEquivDyn
+
+/-- **Exercise 1.10** (§1.7, p.17): the `THIRSTY` database instance — the relations `LIKES`,
+`VISITS`, `SERVES`. -/
+abbrev ex_1_10_thirsty := @DeepWiki.ThirstyInst
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 1 (`SDC`): every drinker visits only bars serving
+a beer he likes. -/
+abbrev ex_1_10_c1 := @DeepWiki.thirsty_c1
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 2 (`SC_S`): each bar serves at least one beer. -/
+abbrev ex_1_10_c2 := @DeepWiki.thirsty_c2
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 3 (`SC_V`): each bar has at least one visitor. -/
+abbrev ex_1_10_c3 := @DeepWiki.thirsty_c3
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 4 (`SDC`): each bar only serves beers liked by some
+of its visitors. -/
+abbrev ex_1_10_c4 := @DeepWiki.thirsty_c4
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 5 (`SDC`): two drinkers visiting one bar share a
+liked beer served there. -/
+abbrev ex_1_10_c5 := @DeepWiki.thirsty_c5
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 6 (`SDC`): a non-visited bar serves some beer the
+drinker dislikes. -/
+abbrev ex_1_10_c6 := @DeepWiki.thirsty_c6
+
+/-- **Exercise 1.10** (§1.7, p.17), constraint 7 (`SDC`): liking a beer served in a bar visited by
+another drinker forces a common bar. -/
+abbrev ex_1_10_c7 := @DeepWiki.thirsty_c7
 
 end DeepWiki.Rdb
