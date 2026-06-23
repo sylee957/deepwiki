@@ -122,6 +122,9 @@ when, for any two rows agreeing on `X`, the `Y`-versus-`(Ω − Y)` tuple swap s
 relation. -/
 abbrev def_3_8 := @DeepWiki.SatisfiesMvd
 
+/-- **Reflexivity** (§3.3): a multivalued dependency `X ↠ Y` holds whenever `Y ⊆ X`. -/
+abbrev mvd_reflexive := @DeepWiki.satisfiesMvd_trivial
+
 /-- **Corollary 3.1, rule FM1** (§3.3, p.79): every functional dependency is a multivalued
 dependency — `X → Y` gives `X ↠ Y`. -/
 abbrev cor_3_1_fd_to_mvd := @DeepWiki.satisfiesMvd_of_satisfiesFd

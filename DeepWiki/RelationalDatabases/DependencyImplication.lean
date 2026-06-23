@@ -36,6 +36,18 @@ def DepImplies (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) (d : Dep Att
 
 variable {D : Set (Dep Att)} {X Y Z W V : Finset Att}
 
+/-- A dependency in the set is implied by it. -/
+theorem depImplies_of_mem {d : Dep Att} (hd : d ∈ D) : DepImplies Ω Val D d :=
+  fun _ hr => hr d hd
+
+/-- A trivial fd (`Y ⊆ X`) is implied by any dependency set. -/
+theorem depImplies_fd_trivial (h : Y ⊆ X) : DepImplies Ω Val D (.fd X Y) :=
+  fun _ _ => satisfiesFd_trivial h
+
+/-- A trivial mvd (`Y ⊆ X`) is implied by any dependency set. -/
+theorem depImplies_mvd_trivial (h : Y ⊆ X) : DepImplies Ω Val D (.mvd X Y) :=
+  fun _ _ => satisfiesMvd_trivial h
+
 /-- Rule FM1 at the implication level: an implied fd is an implied mvd. -/
 theorem depImplies_mvd_of_fd (h : DepImplies Ω Val D (.fd X Y)) :
     DepImplies Ω Val D (.mvd X Y) :=

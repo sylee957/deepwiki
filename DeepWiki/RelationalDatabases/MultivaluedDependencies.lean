@@ -27,6 +27,12 @@ def SatisfiesMvd (r : Table Ω Val) (X Y : Finset Att) : Prop :=
 
 variable {r : Table Ω Val} {X Y : Finset Att}
 
+/-- Rule M0 (reflexivity): `X ↠ Y` holds whenever `Y ⊆ X`. The second row is the witness, since
+`X ∪ Y = X` on `Ω`. -/
+theorem satisfiesMvd_trivial (h : Y ⊆ X) : SatisfiesMvd r X Y := by
+  intro t ht u hu hag
+  exact ⟨u, hu, Agree.mono (Finset.union_subset subset_rfl h) hag.symm, fun _ _ => rfl⟩
+
 /-- Rule FM1 (Corollary 3.1): every functional dependency is a multivalued dependency —
 `X → Y` implies `X ↠ Y`. The second row itself is the required witness. -/
 theorem satisfiesMvd_of_satisfiesFd (h : SatisfiesFd r X Y) : SatisfiesMvd r X Y := by
