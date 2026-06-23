@@ -29,6 +29,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
+import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.LrtMonicLogs

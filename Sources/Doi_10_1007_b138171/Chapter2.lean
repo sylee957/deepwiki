@@ -17,6 +17,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
+import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
@@ -40,15 +41,25 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   real/imaginary splits ARE done (`logToReal_split`/`exists_realImag_split_bivariate`), as are the
   conjugate-product bridge `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root
   selection criterion `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), the per-pair /
-  sum-over-pairs real forms (`logToReal_conjugate_pair`/`logToReal_sum`), and Thm 2.8.4's coprimality
-  core `gcd(A(a,b,x),B(a,b,x))=1` (`thm_2_8_4`, with (2.29)/(2.30) `thm_2_8_4_eq_2_29`/`_eq_2_30`).
+  sum-over-pairs real forms (`logToReal_conjugate_pair`/`logToReal_sum`), Thm 2.8.4's coprimality
+  core `gcd(A(a,b,x),B(a,b,x))=1` (`thm_2_8_4`, with (2.29)/(2.30) `thm_2_8_4_eq_2_29`/`_eq_2_30`),
+  and the **full recursion's correctness GIVEN the partition** (`logToReal_correct_of_partition`,
+  book (2.22)→(2.26)): taking the root partition `roots = reals + map(a+ib) pairs + map(a−ib) pairs`
+  as a certified `Multiset` hypothesis, the original complex log-sum `∑_{R(α)=0} α·logDeriv(S α)` equals
+  `LogToReal`'s real output `∑_{reals} a·logDeriv(S a) + ∑_{pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`
+  (a `Multiset.sum` split `logToReal_rootSum_split` folded against `logToReal_conjugate_pair_of_split`).
+  The conjugation's permutation of the roots is also done (`logToReal_conj_permutes_roots`:
+  σ-fixed coeffs ⟹ `R.roots.map σ = R.roots`, multiplicity-preserving).
   STILL OPEN: (i) [external] the LRT-gcd-cofactor derivation feeding Thm 2.8.4 — that `S = A+iB` IS the
   LRT gcd of `C−(a+ib)D'` and `D` so the cofactors `E₁+iE₂`, `F₁+iF₂` of (2.27)/(2.28) exist (taken as
-  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory); (ii) [infra] the multiset
-  bookkeeping that partitions `R`'s roots over `K̄` into real roots ⊎ conjugate pairs with the `b>0`
-  ordered-field selection, and the assembly of the full recursion's correctness over that partition —
-  needs splitting-field root-counting machinery (`K̄`-root multiset + `LinearOrderedField`
-  complexification) not yet built. Ex 2.8.2.
+  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory); (ii) [infra] the PARTITION
+  CONSTRUCTION itself — the σ-orbit decomposition of the σ-stable root `Multiset` `R.roots` into σ-fixed
+  roots (real) ⊎ 2-element σ-orbits `{α, σα}` (conjugate pairs), plus the `b>0` representative selection
+  (`a=(α+σα)/2`, `b=(α−σα)/(2i)` in the fixed field, `b>0` via a `LinearOrderedField` order on `K`);
+  needs a `Multiset` orbit-quotient under an order-2 involution + a field-with-involution `(L,σ)` whose
+  fixed field carries an `i²=−1`-compatible `LinearOrder` (`K̄=K(i)` complexification over ordered `K`),
+  not yet built — feeding its `reals`/`pairs` into `logToReal_correct_of_partition` would close §2.8.
+  Ex 2.8.2.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -600,6 +611,31 @@ of `R` iff `P = 0 ∧ Q = 0` — exactly the condition under which `LogToReal` s
 essential: `P + i·Q = 0` alone does **not** force `P = Q = 0`). -/
 abbrev logToReal_root_criterion :=
   @DeepWiki.SymbolicIntegration.aeval_eq_zero_iff_realImag_eq_zero
+
+/-- **`LogToReal` correctness over the root partition** (§2.8, p.66–69, book (2.22)→(2.26), the
+assembly of the full algorithm): given that `R`'s roots partition as `roots = reals + map(a·+i·b·) pairs
++ map(a·−i·b·) pairs` (real roots ⊎ conjugate pairs `a±i·b`, book (2.25)) and each pair's real/imaginary
+split `S(a±i·b, x) = A ± i·B` (`A²+B² ≠ 0`), the original complex log-sum's derivative
+`∑_{α|R(α)=0} α·logDeriv(S(α,x))` equals `LogToReal`'s real output's derivative
+`∑_{a∈K,R(a)=0} a·logDeriv(S(a,x)) + ∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]` — the
+`a·log(A²+B²) + b·LogToAtan(A,B)` real form per pair (book (2.26)). The library's
+`logToReal_correct_of_partition`: a `Multiset.sum` split (`logToReal_rootSum_split`) folded against the
+per-pair `logToReal_conjugate_pair_of_split`. The partition is taken as a certified hypothesis. -/
+abbrev logToReal_correct_of_partition :=
+  @DeepWiki.SymbolicIntegration.logToReal_correct_of_partition
+
+/-- **`LogToReal` root-sum split over the partition** (§2.8, p.66): `∑_{α∈roots} g(α)` splits as the
+real-root sum `∑_{reals} g(a)` plus the conjugate-pair sum `∑_{pairs} [g(a₊) + g(a₋)]`, given the root
+partition `roots = reals + map a₊ pairs + map a₋ pairs`. The library's `logToReal_rootSum_split` (pure
+`Multiset.sum`/`map` bookkeeping). -/
+abbrev logToReal_rootSum_split := @DeepWiki.SymbolicIntegration.logToReal_rootSum_split
+
+/-- **σ-conjugation permutes `R`'s roots** (§2.8, p.66, the start of the partition construction): if a
+field automorphism `σ` (the conjugation, `σ i = −i`) fixes `R`'s coefficients (`R.map σ = R`) and `R`
+splits, then `σ` maps the root multiset to itself (`R.roots.map σ = R.roots`) preserving multiplicities
+(`count_roots_conj_eq`) — so `σ` acts as a permutation of `R`'s roots, with σ-fixed roots real and
+2-orbits `{α, σα}` the conjugate pairs. The library's `roots_map_self_of_map_eq`. -/
+abbrev logToReal_conj_permutes_roots := @DeepWiki.SymbolicIntegration.roots_map_self_of_map_eq
 
 /-- **Theorem 2.8.4** (§2.8, p.67–68, Rioboo), Rioboo's conversion specializes well: for a real field
 `K` with real closure `K̄`, `C, D ∈ K[x]` (`deg D > 0`, `deg D > deg C`, `D` squarefree,
