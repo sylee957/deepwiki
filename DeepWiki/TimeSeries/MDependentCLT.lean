@@ -712,4 +712,36 @@ theorem IsMDependent.eventually_levyProkhorovDist_gapRemoved_le {m : ℕ} {X : �
     (integral_sqrt_sampleMean_sub_gapRemoved hmem hcenter p n) hδ
     (le_of_lt (lt_of_le_of_lt (variance_sqrt_sampleMean_sub_gapRemoved_le hX hsum p n) hn))
 
+/-- **Central limit theorem for a strictly stationary `m`-dependent sequence** (Brockwell–Davis
+Theorem 6.4.2): for centered `L²` `m`-dependent `{Xₜ}`, the standardized sample mean `√n X̄ₙ` converges
+in distribution to `N(0, v)` with `v = ∑_h γ(h) = ∑_{|h| ≤ m} γ(h)` — here realized as `√v · G` for a
+standard normal `G`. Bernstein's big-block/small-block method: the gap-removed big-block partial sum
+`Y⁽ᵖ⁾ₙ` is asymptotically normal with variance `vₚ` (h1, mutual block independence + the multivariate
+CLT), `vₚ → v` so the Gaussian limits converge (h2), and the small-block remainder vanishes in
+Lévy–Prokhorov distance (h3); the double-limit theorem `tendstoInDistribution_of_eventually_approx'`
+ties them together. -/
+theorem IsMDependent.tendstoInDistribution_sqrt_sampleMean {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+    [IsProbabilityMeasure P'] {G : Ω' → ℝ} (hmdep : IsMDependent m X μ)
+    (hstat : IsStrictlyStationary X μ) (hX : IsWeaklyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0) (hG : HasLaw G (gaussianReal 0 1) P') :
+    TendstoInDistribution (fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)) atTop
+      (fun ω => Real.sqrt (∑' k : ℤ, acvfStat X μ k) • G ω) (fun _ => μ) P' := by
+  refine tendstoInDistribution_of_eventually_approx'
+    (Y' := fun p (n : ℕ) ω => (Real.sqrt n)⁻¹ *
+      ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω)
+    (W := fun p ω => Real.sqrt (Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ] / (p + m : ℝ)) • G ω)
+    ?hYm ?hZ ?h1 ?h2 ?h3
+  case h2 => exact tendstoInDistribution_gaussianFamily_of_mDependent hX hmdep hG.aemeasurable
+  case h1 =>
+    filter_upwards [eventually_gt_atTop 0] with p hp
+    exact hmdep.tendstoInDistribution_gapRemoved_smul hstat hmeas hmem hcenter hp hG
+  case h3 => exact fun δ hδ => hmdep.eventually_levyProkhorovDist_gapRemoved_le hX hmeas hmem hcenter hδ
+  case hYm =>
+    intro n
+    refine (Measurable.aemeasurable ?_)
+    simp only [sampleMean]
+    exact ((Finset.measurable_sum _ fun t _ => hmeas _).const_mul _).const_mul _
+  case hZ => simp only [smul_eq_mul]; exact hG.aemeasurable.const_mul _
+
 end DeepWiki.TimeSeries

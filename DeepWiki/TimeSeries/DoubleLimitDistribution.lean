@@ -154,16 +154,17 @@ theorem tendstoInDistribution_of_eventually_approx
 
 /-- **Double-limit theorem, limsup-in-`n` form** (Billingsley Theorem 3.2): the same as
 `tendstoInDistribution_of_eventually_approx` but with the approximation hypothesis `h3` only required
-*eventually in `n`* (`∀ᶠ m, ∀ᶠ n`) rather than uniformly in `n`. This is the form the big-block/small-block
-arguments need — the gap-removed partial sum approximates `√n X̄ₙ` only for large `n` (for small `n`
-there are no complete blocks). The uniform-in-`n` original is the special case `∀ n ⟹ ∀ᶠ n`. -/
+*eventually in `n`* (`∀ᶠ m, ∀ᶠ n`) rather than uniformly in `n`, and the per-`m` convergence `h1` only
+required *eventually in `m`*. This is the form the big-block/small-block arguments need — the gap-removed
+partial sum approximates `√n X̄ₙ` only for large `n`, and the block CLT only for `m ≥ 1` (`m = 0` gives
+empty blocks). The proof selects a single large `m`, so eventual hypotheses suffice. -/
 theorem tendstoInDistribution_of_eventually_approx'
     {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E] [BorelSpace E]
     [TopologicalSpace.SeparableSpace E] {Ω₀ : Type*} [MeasurableSpace Ω₀] {ν : Measure Ω₀}
     [IsProbabilityMeasure ν] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
     [IsProbabilityMeasure μ'] {Y : ℕ → Ω₀ → E} {Y' : ℕ → ℕ → Ω₀ → E} {W : ℕ → Ω' → E} {Z : Ω' → E}
     (hYm : ∀ n, AEMeasurable (Y n) ν) (hZ : AEMeasurable Z μ')
-    (h1 : ∀ m, TendstoInDistribution (Y' m) atTop (W m) (fun _ => ν) μ')
+    (h1 : ∀ᶠ m in atTop, TendstoInDistribution (Y' m) atTop (W m) (fun _ => ν) μ')
     (h2 : TendstoInDistribution W atTop Z (fun _ => μ') μ')
     (h3 : ∀ δ : ℝ, 0 < δ → ∀ᶠ m in atTop, ∀ᶠ n in atTop,
         levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n)) ≤ δ) :
@@ -172,16 +173,21 @@ theorem tendstoInDistribution_of_eventually_approx'
   refine tendstoInDistribution_of_tendsto_levyProkhorovDist hYm hZ ?_
   refine Metric.tendsto_atTop.mpr (fun δ hδ => ?_)
   have hδ3 : (0 : ℝ) < δ / 3 := by positivity
+  obtain ⟨m₁, hm₁⟩ := eventually_atTop.mp h1
   obtain ⟨m₂, hm₂⟩ := Metric.tendsto_atTop.mp
     (tendsto_levyProkhorovDist_of_tendstoInDistribution h2) (δ / 3) hδ3
   obtain ⟨m₃, hm₃⟩ := eventually_atTop.mp (h3 (δ / 3) hδ3)
-  set m := max m₂ m₃ with hmdef
+  set m := max (max m₁ m₂) m₃ with hmdef
+  have hmle1 : m₁ ≤ m := le_trans (le_max_left _ _) (le_max_left _ _)
+  have hmle2 : m₂ ≤ m := le_trans (le_max_right _ _) (le_max_left _ _)
+  have hmle3 : m₃ ≤ m := le_max_right _ _
+  have hW1 : TendstoInDistribution (Y' m) atTop (W m) (fun _ => ν) μ' := hm₁ m hmle1
   have hterm3 : levyProkhorovDist (μ'.map (W m)) (μ'.map Z) < δ / 3 := by
-    have := hm₂ m (le_max_left _ _)
+    have := hm₂ m hmle2
     rwa [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)] at this
-  obtain ⟨N₁, hN₁⟩ := eventually_atTop.mp (hm₃ m (le_max_right _ _))
+  obtain ⟨N₁, hN₁⟩ := eventually_atTop.mp (hm₃ m hmle3)
   obtain ⟨N₂, hN₂⟩ := Metric.tendsto_atTop.mp
-    (tendsto_levyProkhorovDist_of_tendstoInDistribution (h1 m)) (δ / 3) hδ3
+    (tendsto_levyProkhorovDist_of_tendstoInDistribution hW1) (δ / 3) hδ3
   refine ⟨max N₁ N₂, fun n hn => ?_⟩
   rw [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)]
   have hterm1 : levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n)) ≤ δ / 3 :=
@@ -191,7 +197,7 @@ theorem tendstoInDistribution_of_eventually_approx'
     rwa [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)] at this
   haveI : IsProbabilityMeasure (ν.map (Y n)) := Measure.isProbabilityMeasure_map (hYm n)
   haveI : IsProbabilityMeasure (ν.map (Y' m n)) :=
-    Measure.isProbabilityMeasure_map ((h1 m).forall_aemeasurable n)
+    Measure.isProbabilityMeasure_map (hW1.forall_aemeasurable n)
   haveI : IsProbabilityMeasure (μ'.map (W m)) :=
     Measure.isProbabilityMeasure_map (h2.forall_aemeasurable m)
   haveI : IsProbabilityMeasure (μ'.map Z) := Measure.isProbabilityMeasure_map hZ
