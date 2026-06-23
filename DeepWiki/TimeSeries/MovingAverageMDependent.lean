@@ -96,4 +96,39 @@ theorem isMDependent_movingAverage {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω 
   rw [hcompS, hcompT]
   exact (iIndepFun.indepFun_finset S' T' hdisj hindep hmeas).comp hφm hψm
 
+/-- **A moving average of a strictly stationary process is strictly stationary**: each `MA(q)` tuple
+`(X_{t i})ᵢ` is a fixed measurable functional `F` of the noise window tuple `(Z_{s p})ₚ`
+(`s p = t (p.1) − p.2` over the flattened index `Fin k × Fin (q+1)`), and the shift commutes with `F`,
+so shift-invariance of the noise joint law transfers through `F` (`Measure.map_map`). With
+`isMDependent_movingAverage` and the structural lemmas this supplies the hypotheses of the `m`-dependent
+CLT for `MA(q)` over strictly-stationary (e.g. i.i.d.) noise. -/
+theorem IsStrictlyStationary.movingAverage {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω → ℝ}
+    (hZmeas : ∀ t, Measurable (Z t)) (hZstat : IsStrictlyStationary Z μ) :
+    IsStrictlyStationary (DeepWiki.TimeSeries.movingAverage θ q Z) μ := by
+  intro k t h
+  set e := finProdFinEquiv (m := k) (n := q + 1) with he
+  set s : Fin (k * (q + 1)) → ℤ := fun p => t (e.symm p).1 - ((e.symm p).2 : ℤ) with hs
+  set F : (Fin (k * (q + 1)) → ℝ) → (Fin k → ℝ) :=
+    fun w i => ∑ j : Fin (q + 1), θ (j : ℕ) * w (e (i, j)) with hF
+  have hFm : Measurable F :=
+    measurable_pi_lambda _ fun i => Finset.measurable_sum _ fun j _ =>
+      (measurable_pi_apply _).const_mul _
+  have hcomp : ∀ c : ℤ, (fun ω (i : Fin k) => DeepWiki.TimeSeries.movingAverage θ q Z (t i + c) ω)
+      = F ∘ fun ω p => Z (s p + c) ω := by
+    intro c
+    funext ω i
+    simp only [hF, Function.comp_apply, movingAverage_apply]
+    rw [← Fin.sum_univ_eq_sum_range (fun j => θ j * Z (t i + c - (j : ℤ)) ω) (q + 1)]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    have hse : s (e (i, j)) = t i - (j : ℤ) := by simp only [hs, Equiv.symm_apply_apply]
+    rw [hse]
+    congr 2
+    omega
+  have eL : (fun ω (i : Fin k) => DeepWiki.TimeSeries.movingAverage θ q Z (t i) ω)
+      = F ∘ fun ω p => Z (s p) ω := by simpa using hcomp 0
+  rw [eL, hcomp h,
+    ← Measure.map_map hFm (measurable_pi_lambda _ fun p => hZmeas (s p)),
+    ← Measure.map_map hFm (measurable_pi_lambda _ fun p => hZmeas (s p + h)),
+    hZstat (k * (q + 1)) s h]
+
 end DeepWiki.TimeSeries
