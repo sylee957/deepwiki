@@ -298,6 +298,14 @@ theorem tendsto_sqrt_blockCount_div {p m : ℕ} (hpm : p + m ≠ 0) :
   rw [h]
   exact (Real.continuous_sqrt.tendsto _).comp (tendsto_blockCount_div hpm)
 
+/-- **A big-block sum of a centered process is centered**: `E[∑_{t ∈ bigBlock 0} Xₜ] = 0`. Lets the
+block CLT statistic `√r(X̄ᵤ − E U₀)` drop its mean-subtraction to `(√r)⁻¹ ∑ Uᵢ` in the h1 reparametrization. -/
+theorem integral_bigBlockSum_eq_zero [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0) (p m : ℕ) :
+    μ[fun ω => ∑ t ∈ bigBlock p m 0, X t ω] = 0 := by
+  rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
+  simp [hcenter]
+
 /-- **The big-block sums obey a central limit theorem in distribution** (h1, distribution form): for a
 strictly stationary `L²` `m`-dependent process, `√r (r⁻¹ ∑_{k<r} U_k − E U₀) ⇒ N(0, Var U₀)`, where
 `U_k = ∑_{t ∈ bigBlock k} Xₜ`. A direct application of the iid sample-mean CLT (`iidNoise_sampleMean_clt`)
