@@ -11,6 +11,7 @@ import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
+import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -28,7 +29,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   construction, eqs 2.10–2.12) + the over-the-closure `Hᵢⱼ(α)/(x−α)ʲ` form [functional/infra: needs the
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
-§2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
+§2.8: Thm 2.8.4; Rioboo's real-rational-function algorithm (`LogToReal`/`LogToAtan` recursion); Ex 2.8.1; Ex 2.8.2.
 §2.9: the in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
@@ -429,12 +430,31 @@ abbrev integrateRationalFunction_logForm :=
 
 /-! ## §2.8 Rioboo's Algorithm for Real Rational Functions -/
 
+/-- **Property (2.16)** (§2.8, p.60), the field with no `√−1`: if `x²+1` is irreducible over `K`,
+then for `P, Q ∈ K[x]`, `P² + Q² = 0 ⟹ P = 0 ∧ Q = 0`. Proof: if `Q ≠ 0`, comparing leading
+coefficients of `P² = −Q²` makes `−1 = (lc P / lc Q)²` a square in `K`, contradicting irreducibility
+of `x²+1` (`not_isSquare_neg_one_of_irreducible`). The library's `sq_add_sq_eq_zero_of_irreducible`. -/
+abbrev eq_2_16 := @DeepWiki.SymbolicIntegration.sq_add_sq_eq_zero_of_irreducible
+
+/-- **Property (2.16), the `√−1`-free reformulation** (§2.8, p.60): `x²+1` irreducible over `K` ⟺ `−1`
+has no square root in `K` (a root of `x²+1` is exactly a `√−1`). The library's
+`not_isSquare_neg_one_of_irreducible`, with the root bridge `isSquare_neg_one_iff_exists_isRoot`. -/
+abbrev eq_2_16_not_isSquare := @DeepWiki.SymbolicIntegration.not_isSquare_neg_one_of_irreducible
+
+/-- **Constant `√−1`** (§2.8, p.60, behind eq 2.17): in a characteristic-`0` differential field, an
+element `i` with `i² = −1` is a constant (`i′ = 0`) — differentiate `i² = −1` to `2·i·i′ = 0` and
+cancel `2·i ≠ 0`. The library's `deriv_i_eq_zero`. -/
+abbrev lemma_2_8_1_const_i := @DeepWiki.SymbolicIntegration.deriv_i_eq_zero
+
 /-- **Lemma 2.8.1** (§2.8, p.60), rewriting a complex logarithm as a real arctangent: for `u` with
 `u² ≠ −1`, `√−1 · d/dx log((u+√−1)/(u−√−1)) = 2 · d/dx arctan(u)` (eq 2.17). As a differential-field
-identity (with `i = √−1`, `i² = −1`, and `arctan'(u) = u'/(1+u²)`): `i · logDeriv((u+i)/(u−i)) =
-2·u'/(1+u²)`. The logarithmic derivative `logDeriv((u+i)/(u−i)) = u'/(u+i) − u'/(u−i) = −2i·u'/(u²+1)`
-(using `(u±i)' = u'`, `i` constant), and `i·(−2i) = −2i² = 2`. -/
-abbrev lemma_2_8_1 := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv
+identity (with `i = √−1`, `i² = −1` ⟹ `i` constant, and `arctan'(u) = u'/(1+u²)`):
+`i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)`. The logarithmic derivative
+`logDeriv((u+i)/(u−i)) = u'/(u+i) − u'/(u−i) = −2i·u'/(u²+1)` (using `(u±i)' = u'`, `i` constant), and
+`i·(−2i) = −2i² = 2`. The library's `logDeriv_imagQuot_eq_arctanDeriv_of_sq` (the constant-`i`
+hypothesis `i′ = 0` discharged from `i² = −1` via `deriv_i_eq_zero`); the bare form taking `i′ = 0`
+as a hypothesis is `logDeriv_imagQuot_eq_arctanDeriv`. -/
+abbrev lemma_2_8_1 := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv_of_sq
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
