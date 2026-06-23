@@ -7,8 +7,11 @@ dependency* `X ↛ Y` (Def 5.4): every tuple has another tuple agreeing on `X` b
 `Y` (every `X`-value carries at least two `Y`-values). The sound mixed inference rules FA1, FA2
 (turning a functional dependency and an ad into a new ad) and A1 are proved at the row-set level.
 
-The conflict theory, the Armstrong-relation completeness proof (Thm 5.1/5.2), the membership
-algorithm and the inheritance of dependencies under decomposition are layered on later. -/
+The conflict notion (a constraint set whose only model is empty, with the canonical conflict
+`{X → Y, X ↛ Y}`) and Armstrong / strong-Armstrong relations are defined, with strong-Armstrong ⟹
+Armstrong on a nonempty instance. The existence proof (Thm 5.1/5.2, a direct-product construction),
+the membership algorithm and the inheritance of dependencies under decomposition are layered on
+later. -/
 
 namespace DeepWiki
 
@@ -56,5 +59,43 @@ theorem satisfiesAd_a1 [DecidableEq Att] (hW : W ⊆ V)
   obtain ⟨t', ht', hXV, hYW⟩ := had t ht
   refine ⟨t', ht', Agree.mono Finset.subset_union_left hXV, fun hY => hYW ?_⟩
   exact agree_union.mpr ⟨hY, Agree.mono (hW.trans Finset.subset_union_right) hXV⟩
+
+/-- A relation satisfying both the functional dependency `X → Y` and the afunctional dependency
+`X ↛ Y` must be empty: a tuple would need a partner agreeing on `X` (hence on `Y`, by the fd) yet
+differing on `Y`. So `{X → Y, X ↛ Y}` is the canonical conflicting set. -/
+theorem eq_empty_of_satisfiesFd_satisfiesAd (h : SatisfiesFd r X Y) (had : SatisfiesAd r X Y) :
+    r = ∅ := by
+  ext t
+  simp only [Set.mem_empty_iff_false, iff_false]
+  intro ht
+  obtain ⟨t', ht', hX, hnY⟩ := had t ht
+  exact hnY (h t ht t' ht' hX)
+
+/-- A set of functional dependencies `F` and afunctional dependencies `A` is *in conflict*
+(Def 5.6): the empty instance is the only one satisfying all of them. -/
+def InConflict (Ω : Finset Att) (Val : Type v) (F A : FdSet Att) : Prop :=
+  ∀ r : Table Ω Val, (∀ fd ∈ F, SatisfiesFd r fd.1 fd.2) →
+    (∀ ad ∈ A, SatisfiesAd r ad.1 ad.2) → r = ∅
+
+/-- An instance is an *Armstrong relation* for `F` (Def 5.7): the functional dependencies holding
+in it are exactly the consequences of `F`. -/
+def IsArmstrongRelation (Ω : Finset Att) (Val : Type v) (F : FdSet Att) (r : Table Ω Val) : Prop :=
+  ∀ X Y : Finset Att, SatisfiesFd r X Y ↔ Implies Ω Val F X Y
+
+/-- An instance is a *strong Armstrong relation* for `F` (Def 5.8): every consequence fd of `F`
+holds, and every non-consequence fd `X → Y` fails maximally — its afunctional dependency `X ↛ Y`
+holds. -/
+def IsStrongArmstrong (Ω : Finset Att) (Val : Type v) (F : FdSet Att) (r : Table Ω Val) : Prop :=
+  (∀ X Y, Implies Ω Val F X Y → SatisfiesFd r X Y) ∧
+    (∀ X Y, ¬ Implies Ω Val F X Y → SatisfiesAd r X Y)
+
+/-- A nonempty strong Armstrong relation is an Armstrong relation: a non-consequence fd carries its
+afunctional dependency, which (on a nonempty instance) forbids the fd from holding. -/
+theorem isArmstrongRelation_of_isStrongArmstrong {F : FdSet Att} (hne : r.Nonempty)
+    (h : IsStrongArmstrong Ω Val F r) : IsArmstrongRelation Ω Val F r := by
+  refine fun X Y => ⟨fun hfd => ?_, h.1 X Y⟩
+  by_contra hni
+  exact (Set.nonempty_iff_ne_empty.mp hne)
+    (eq_empty_of_satisfiesFd_satisfiesAd hfd (h.2 X Y hni))
 
 end DeepWiki
