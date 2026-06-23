@@ -3411,4 +3411,69 @@ theorem mem_span_divided_iff {K : Type*} [Field K] {ι : Type*} [Fintype ι]
     rw [← hc, Finset.mul_sum]
     exact Finset.sum_congr rfl (fun i _ => by ring)
 
+/-- **The common `y`-factor `gbYGcd` is nonzero**: the gcd of the nonzero basis views (a nonempty
+family in the domain `K[x][y]`) is nonzero (`Finset.gcd_eq_zero_iff`). -/
+theorem gbYGcd_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) : gbYGcd hB ≠ 0 := by
+  letI := gcdMonoidLazardRing K
+  rw [gbYGcd, Ne, Finset.gcd_eq_zero_iff]
+  push Not
+  obtain ⟨i, hi⟩ := hne
+  exact ⟨i, hi, lazardView_eq_zero_iff.not.mpr (hB.ne_zero (sortedByYDegree_mem hB i))⟩
+
+/-- **The bivariate common factor `H = gbCommonYFactor hB` is nonzero**: its `lazardView` is the
+nonzero `gbYGcd hB` (`gbYGcd_ne_zero`), and `lazardView` is injective. -/
+theorem gbCommonYFactor_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) : gbCommonYFactor hB ≠ 0 := by
+  intro h0
+  apply gbYGcd_ne_zero hB hne
+  rw [← lazardView_gbCommonYFactor hB, h0, lazardView, map_zero]
+
+/-- **The divided basis cofactor, pulled back to `K[x,y]`** (Lazard's `qᵢ = fᵢ/H`): the bivariate
+preimage `(finSuccEquiv K 1).symm (gbYGcdCofactor hB hne i)` of the `K[x][y]`-cofactor. Its
+`lazardView` is `gbYGcdCofactor hB hne i`, and `gbCommonYFactor hB * dividedBasis hB hne i =
+sortedByYDegree hB i`. -/
+noncomputable def dividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    MvPolynomial (Fin 2) K :=
+  (finSuccEquiv K 1).symm (gbYGcdCofactor hB hne i)
+
+/-- `lazardView (dividedBasis hB hne i) = gbYGcdCofactor hB hne i` (`apply_symm_apply`). -/
+@[simp] theorem lazardView_dividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    lazardView (dividedBasis hB hne i) = gbYGcdCofactor hB hne i := by
+  rw [dividedBasis, lazardView, AlgEquiv.apply_symm_apply]
+
+/-- **The divided-basis factorization, bivariate form** (`H · qᵢ = fᵢ`): `gbCommonYFactor hB *
+dividedBasis hB hne i = sortedByYDegree hB i`, the pullback of `gbYGcd_mul_cofactor` through the ring
+iso `finSuccEquiv` (`lazardView` injective). -/
+theorem gbCommonYFactor_mul_dividedBasis {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    gbCommonYFactor hB * dividedBasis hB hne i = sortedByYDegree hB i := by
+  apply lazardView_injective
+  rw [lazardView, map_mul, ← lazardView, ← lazardView, lazardView_gbCommonYFactor,
+    lazardView_dividedBasis]
+  exact (gbYGcd_mul_cofactor hB hne i).symm
+
+/-- **The divided basis is nonzero** (`qᵢ ≠ 0`): `H · qᵢ = fᵢ ≠ 0` (`gbCommonYFactor_mul_dividedBasis`,
+basis elements nonzero). -/
+theorem dividedBasis_ne_zero {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    dividedBasis hB hne i ≠ 0 := by
+  intro h0
+  exact hB.ne_zero (sortedByYDegree_mem hB i)
+    (by rw [← gbCommonYFactor_mul_dividedBasis hB hne i, h0, mul_zero])
+
 end DeepWiki.SymbolicIntegration
