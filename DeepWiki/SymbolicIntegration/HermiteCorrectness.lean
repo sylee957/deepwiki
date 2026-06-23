@@ -1802,6 +1802,135 @@ theorem go_factor_assoc (fuel : ℕ) (A : CPoly) :
         · exact ⟨hhead, le_refl i⟩
         · exact (ih b' d' (i + 1) (by omega) hgorest hinv' Vm hVm).imp id (by omega)
 
+/-! ### Concrete `csqfreeFactor` Yun correctness: squarefree and pairwise-coprime factors
+
+Bundling the loop correspondence (`go_factor_assoc`) with the start of the loop, every factor `(V, m)`
+the concrete `csqfreeFactor fuel D` emits is `Associated (sqfreeFactPart (toPoly D) m)` — squarefree
+(`squarefree_of_associated_sqfreeFactPart_rat`), and at distinct list positions (distinct recorded
+multiplicities) pairwise relatively prime (`isRelPrime_of_associated_sqfreeFactPart_rat`). The single
+hypothesis is the engine-honesty bundle `SqfreeYun fuel D` — the initialization satisfies the loop
+invariant `YunInv (toPoly D) 1` and every step is exact (`GoYun`) — the concrete analog of
+`SqfreeExact`; on a concrete `D` it reduces to decidable `cmod`-vanishings (cf. `SqfreeExactComp`). This
+discharges the two clauses the documented wall blocked: **squarefree** and **pairwise coprime** of the
+computable `csqfreeFactor`, transferred from the abstract Yun spine through the `ℚ`-instance bridge. -/
+
+/-- **Associated to a squarefree part ⟹ squarefree** over ambient `ℚ` (`squarefree_of_associated_
+sqfreeFactPart` with the `sqfreeFactPart_rat_eq` instance rewrite). -/
+theorem squarefree_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V : ℚ[X]) (j : ℕ)
+    (h : Associated V (sqfreeFactPart A j)) : Squarefree V := by
+  apply squarefree_of_associated_sqfreeFactPart A j
+  rw [← sqfreeFactPart_rat_eq A j]; exact h
+
+/-- **Associated to distinct-multiplicity squarefree parts ⟹ relatively prime** over ambient `ℚ`
+(`isRelPrime_of_associated_sqfreeFactPart` with the `sqfreeFactPart_rat_eq` instance rewrites). -/
+theorem isRelPrime_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V W : ℚ[X]) (i j : ℕ) (hij : i ≠ j)
+    (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
+    IsRelPrime V W := by
+  apply isRelPrime_of_associated_sqfreeFactPart A hij
+  · rw [← sqfreeFactPart_rat_eq A i]; exact hV
+  · rw [← sqfreeFactPart_rat_eq A j]; exact hW
+
+/-- **Engine-honesty bundle** for `csqfreeFactor fuel D`: the initialization `(b₁, d₁) =
+(D/gcd(D,D′), D′/gcd(D,D′) − b₁′)` satisfies the loop invariant `YunInv (toPoly D) 1` and every Yun loop
+step is exact (`GoYun`). The concrete analog of `SqfreeExact`; on a concrete `D` it is a decidable
+condition (the `cmod`-vanishings of `SqfreeExactComp` plus the start invariant). -/
+def SqfreeYun (fuel : ℕ) (D : CPoly) : Prop :=
+  let p := cnorm D
+  let g := (cgcdExt fuel p (cderiv p)).1
+  let b1 := cdiv fuel p g
+  let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
+  YunInv (toPoly D) 1 (toPoly b1) (toPoly d1) ∧ GoYun fuel fuel b1 d1
+
+/-- **Every `csqfreeFactor` factor is associated to a squarefree part**: under `SqfreeYun fuel D`, each
+`(V, m) ∈ csqfreeFactor fuel D` has `toPoly V ~ sqfreeFactPart (toPoly D) m` and `1 ≤ m`. From
+`go_factor_assoc` started at the loop base. -/
+theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
+    (Vm : CPoly × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+    Associated (toPoly Vm.1) (sqfreeFactPart (toPoly D) Vm.2) ∧ 1 ≤ Vm.2 := by
+  rw [SqfreeYun] at hex
+  obtain ⟨hinv, hgo⟩ := hex
+  rw [csqfreeFactor.eq_def] at hVm
+  exact go_factor_assoc fuel D fuel _ _ 1 (le_refl 1) hgo hinv Vm hVm
+
+/-- **Every `csqfreeFactor` factor is squarefree** (concrete Yun correctness, squarefree clause): under
+`SqfreeYun fuel D`, `toPoly V` is squarefree for every `(V, m) ∈ csqfreeFactor fuel D`. -/
+theorem csqfreeFactor_squarefree (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
+    (Vm : CPoly × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+    Squarefree (toPoly Vm.1) :=
+  squarefree_of_associated_sqfreeFactPart_rat (toPoly D) _ Vm.2
+    (csqfreeFactor_factor_assoc fuel D hex Vm hVm).1
+
+/-- The recorded multiplicity of every factor emitted by `csqfreeFactor.go fuel fo b d i` is `≥ i`. -/
+theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly) (i : ℕ) (Vm : CPoly × ℕ),
+    Vm ∈ csqfreeFactor.go fuel fo b d i → i ≤ Vm.2 := by
+  intro fo
+  induction fo with
+  | zero => intro b d i Vm hVm; rw [csqfreeFactor.go.eq_def] at hVm; simp at hVm
+  | succ fo ih =>
+    intro b d i Vm hVm
+    rw [csqfreeFactor.go.eq_def] at hVm
+    by_cases hb : b.length ≤ 1
+    · simp only [hb, if_true] at hVm; simp at hVm
+    · simp only [hb, if_false] at hVm
+      set q := cmonic (cgcdExt fuel b d).1
+      set b' := cdiv fuel b q
+      set d' := csub (cdiv fuel d q) (cderiv b')
+      by_cases hq : q.length ≤ 1
+      · simp only [hq, if_true] at hVm
+        exact le_trans (Nat.le_succ i) (ih b' d' (i + 1) Vm hVm)
+      · simp only [hq, if_false, List.mem_cons] at hVm
+        rcases hVm with rfl | hVm
+        · exact le_refl i
+        · exact le_trans (Nat.le_succ i) (ih b' d' (i + 1) Vm hVm)
+
+/-- **The recorded multiplicities are pairwise distinct** (strictly increasing) across the factors of
+`csqfreeFactor.go fuel fo b d i`. Each kept head has multiplicity `i`; every tail factor has
+multiplicity `≥ i+1` (`go_mult_ge`), so all differ. -/
+theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly) (i : ℕ),
+    List.Pairwise (fun x y : CPoly × ℕ => x.2 ≠ y.2) (csqfreeFactor.go fuel fo b d i) := by
+  intro fo
+  induction fo with
+  | zero => intro b d i; rw [csqfreeFactor.go.eq_def]; simp
+  | succ fo ih =>
+    intro b d i
+    rw [csqfreeFactor.go.eq_def]
+    by_cases hb : b.length ≤ 1
+    · simp only [hb, if_true]; simp
+    · simp only [hb, if_false]
+      set q := cmonic (cgcdExt fuel b d).1
+      set b' := cdiv fuel b q
+      set d' := csub (cdiv fuel d q) (cderiv b')
+      by_cases hq : q.length ≤ 1
+      · simp only [hq, if_true]; exact ih b' d' (i + 1)
+      · simp only [hq, if_false, List.pairwise_cons]
+        refine ⟨fun Vm hVm => ?_, ih b' d' (i + 1)⟩
+        have := go_mult_ge fuel fo b' d' (i + 1) Vm hVm
+        omega
+
+/-- **The `csqfreeFactor` factors have pairwise-distinct multiplicities**. -/
+theorem csqfreeFactor_mult_pairwise (fuel : ℕ) (D : CPoly) :
+    List.Pairwise (fun x y : CPoly × ℕ => x.2 ≠ y.2) (csqfreeFactor fuel D) := by
+  rw [csqfreeFactor.eq_def]; exact go_mult_pairwise fuel fuel _ _ 1
+
+/-- **The `csqfreeFactor` factors are pairwise relatively prime** (concrete Yun correctness, coprimality
+clause): under `SqfreeYun fuel D`, factors at distinct list positions `p ≠ q` of `csqfreeFactor fuel D`
+have `IsRelPrime (toPoly Vₚ) (toPoly V_q)`. Distinct positions carry distinct recorded multiplicities
+(`csqfreeFactor_mult_pairwise`), and each factor is `~ sqfreeFactPart (toPoly D)` at its multiplicity, so
+`isRelPrime_of_associated_sqfreeFactPart_rat` applies. -/
+theorem csqfreeFactor_pairwise_isRelPrime (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
+    (p q : ℕ) (hpq : p ≠ q) (hp : p < (csqfreeFactor fuel D).length)
+    (hq : q < (csqfreeFactor fuel D).length) :
+    IsRelPrime (toPoly ((csqfreeFactor fuel D).get ⟨p, hp⟩).1)
+      (toPoly ((csqfreeFactor fuel D).get ⟨q, hq⟩).1) := by
+  have hpw := csqfreeFactor_mult_pairwise fuel D
+  have hmne : ((csqfreeFactor fuel D).get ⟨p, hp⟩).2 ≠ ((csqfreeFactor fuel D).get ⟨q, hq⟩).2 := by
+    rcases lt_or_gt_of_ne hpq with h | h
+    · exact List.pairwise_iff_get.mp hpw ⟨p, hp⟩ ⟨q, hq⟩ h
+    · exact (List.pairwise_iff_get.mp hpw ⟨q, hq⟩ ⟨p, hp⟩ h).symm
+  exact isRelPrime_of_associated_sqfreeFactPart_rat (toPoly D) _ _ _ _ hmne
+    (csqfreeFactor_factor_assoc fuel D hex _ ((csqfreeFactor fuel D).get_mem _)).1
+    (csqfreeFactor_factor_assoc fuel D hex _ ((csqfreeFactor fuel D).get_mem _)).1
+
 /-! ### Restatements against the intended Yun-correctness wording -/
 
 open Classical in
