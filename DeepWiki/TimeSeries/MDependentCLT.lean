@@ -356,6 +356,21 @@ theorem sqrt_sampleMean_sub_gapRemoved {X : ℤ → Ω → ℝ} (p m n : ℕ) (�
     rw [← Finset.sum_sdiff hsub]
     ring
 
+/-- **The gap-remainder variance is `≤ (|gap|/n)·∑|γ|`**: `Var[√n X̄ₙ − Y⁽ᵖ⁾ₙ] ≤ ((n−blockCount·p)/n)·∑|γ|`.
+The difference is `(√n)⁻¹·∑_{gap} X` (`sqrt_sampleMean_sub_gapRemoved`), so its variance is `n⁻¹` times the
+gap-sum variance, bounded by `|gap|·∑|γ|` (`variance_finsetSum_le`) with `|gap| = n−blockCount·p`. -/
+theorem variance_sqrt_sampleMean_sub_gapRemoved_le {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    (hX : IsWeaklyStationary X μ) (hsum : Summable (acvfStat X μ)) (p n : ℕ) :
+    variance (fun ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)
+      - (Real.sqrt n)⁻¹ * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) μ
+    ≤ ((n - blockCount p m n * p : ℕ) : ℝ) / n * ∑' h : ℤ, |acvfStat X μ h| := by
+  rw [funext fun ω => sqrt_sampleMean_sub_gapRemoved p m n ω, variance_const_mul, inv_pow,
+    Real.sq_sqrt (Nat.cast_nonneg n)]
+  have hvar := variance_finsetSum_le hX hsum
+    (Finset.Ico (0 : ℤ) n \ (Finset.range (blockCount p m n)).biUnion (bigBlock p m))
+  rw [gap_card] at hvar
+  exact le_trans (mul_le_mul_of_nonneg_left hvar (by positivity)) (le_of_eq (by ring))
+
 /-- **The number of big blocks tends to infinity**: `blockCount p m n → ∞` as `n → ∞` (for a positive
 block-plus-gap length). The index reparametrization that turns the block CLT (in the block count `r`)
 into a statement about the sample size `n`. -/
