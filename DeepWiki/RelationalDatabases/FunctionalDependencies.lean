@@ -120,4 +120,74 @@ theorem implies_iff_subset_fdClosure {SC : FdSet Att} {X Y : Finset Att} :
     have hsat : SatisfiesFd r X {a.val} := hmem r hr
     exact hsat t₁ h₁ t₂ h₂ hag a (Finset.mem_singleton_self a.val)
 
+/-- Agreement is symmetric. -/
+theorem Agree.symm {X : Finset Att} {t₁ t₂ : Tuple Ω Val} (h : Agree X t₁ t₂) :
+    Agree X t₂ t₁ :=
+  fun a ha => (h a ha).symm
+
+/-- Syntactic union rule (derived F4): `X → Y` and `X → Z` derive `X → Y ∪ Z`. -/
+theorem derives_union [DecidableEq Att] {SC : FdSet Att} {X Y Z : Finset Att}
+    (hXY : Derives SC X Y) (hXZ : Derives SC X Z) : Derives SC X (Y ∪ Z) := by
+  have h1 : Derives SC X (X ∪ Y) := hXY.augment
+  have h2 : Derives SC (X ∪ Y) ((X ∪ Y) ∪ Z) :=
+    ((Derives.trivial Finset.subset_union_left).trans hXZ).augment
+  exact (h1.trans h2).trans
+    (Derives.trivial (by intro a ha; simp only [Finset.mem_union] at *; tauto))
+
+/-- From `X → {b}` for every `b ∈ U`, derive `X → U`. -/
+theorem derives_of_forall_singleton [DecidableEq Att] {SC : FdSet Att} {X : Finset Att} :
+    ∀ {U : Finset Att}, (∀ b ∈ U, Derives SC X {b}) → Derives SC X U := by
+  intro U
+  induction U using Finset.induction_on with
+  | empty => intro _; exact Derives.trivial (Finset.empty_subset X)
+  | @insert a s _ ih =>
+    intro h
+    rw [Finset.insert_eq]
+    exact derives_union (h a (Finset.mem_insert_self a s))
+      (ih (fun b hb => h b (Finset.mem_insert_of_mem hb)))
+
+/-- Completeness of Armstrong's axioms (Theorem 3.2): over a value type with at least two
+elements, every functional dependency over `Ω` semantically implied by `SC` is derivable. The
+witness is the two-tuple relation that is constant `v₀` except for value `v₁` off the fd-closure
+of `X`. -/
+theorem derives_complete [DecidableEq Att] [Nontrivial Val] {SC : FdSet Att} {X Y : Finset Att}
+    (hSC : ∀ fd ∈ SC, fd.1 ⊆ Ω ∧ fd.2 ⊆ Ω) (hY : Y ⊆ Ω)
+    (h : Implies Ω Val SC X Y) : Derives SC X Y := by
+  classical
+  obtain ⟨v₀, v₁, hv⟩ := exists_pair_ne Val
+  let t₁ : Tuple Ω Val := fun _ => v₀
+  let t₂ : Tuple Ω Val := fun a => if Derives SC X {a.val} then v₀ else v₁
+  have e1 : ∀ a, t₁ a = v₀ := fun _ => rfl
+  have e2pos : ∀ a : {x // x ∈ Ω}, Derives SC X {a.val} → t₂ a = v₀ := fun a hh => if_pos hh
+  have e2neg : ∀ a : {x // x ∈ Ω}, ¬ Derives SC X {a.val} → t₂ a = v₁ := fun a hh => if_neg hh
+  -- the two rows agree at `a` exactly when `X → {a}` is derivable
+  have heq_imp : ∀ a : {x // x ∈ Ω}, t₁ a = t₂ a → Derives SC X {a.val} := by
+    intro a hae
+    by_contra hcon
+    exact hv ((e1 a).symm.trans (hae.trans (e2neg a hcon)))
+  have himp_eq : ∀ a : {x // x ∈ Ω}, Derives SC X {a.val} → t₁ a = t₂ a :=
+    fun a hd => (e1 a).trans (e2pos a hd).symm
+  have hsat : ∀ fd ∈ SC, SatisfiesFd ({t₁, t₂} : Table Ω Val) fd.1 fd.2 := by
+    rintro ⟨U, V⟩ hUV s₁ hs₁ s₂ hs₂ hag
+    obtain ⟨hU, _⟩ := hSC (U, V) hUV
+    have key : Agree U t₁ t₂ → Agree V t₁ t₂ := by
+      intro hagU
+      have hUcl : ∀ b ∈ U, Derives SC X {b} :=
+        fun b hb => heq_imp ⟨b, hU hb⟩ (hagU ⟨b, hU hb⟩ hb)
+      have hXV : Derives SC X V :=
+        (derives_of_forall_singleton hUcl).trans (Derives.base hUV)
+      exact fun a ha =>
+        himp_eq a (hXV.trans (Derives.trivial (Finset.singleton_subset_iff.mpr ha)))
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hs₁ hs₂
+    rcases hs₁ with rfl | rfl <;> rcases hs₂ with rfl | rfl
+    · exact fun a _ => rfl
+    · exact key hag
+    · exact (key hag.symm).symm
+    · exact fun a _ => rfl
+  have hagX : Agree X t₁ t₂ :=
+    fun a ha => himp_eq a (Derives.trivial (Finset.singleton_subset_iff.mpr ha))
+  have hagY : Agree Y t₁ t₂ :=
+    h {t₁, t₂} hsat t₁ (Set.mem_insert _ _) t₂ (Set.mem_insert_iff.mpr (Or.inr rfl)) hagX
+  exact derives_of_forall_singleton (fun b hb => heq_imp ⟨b, hY hb⟩ (hagY ⟨b, hY hb⟩ hb))
+
 end DeepWiki

@@ -15,12 +15,12 @@ semantics.
 §3.1: Def 3.2 (a type of constraint), Def 3.3 (the implication problem), Def 3.4 (sound /
   complete / non-redundant axiom systems), Example 3.4 key-dependency axioms K1/K2 [infra: an
   abstract axiom-system framework over arbitrary constraint types].
-§3.2: Theorem 3.2 completeness of Armstrong's axioms (the two-tuple `0/1` counterexample
-  relation) [infra: needs a two-element value type]; Theorem 3.1 derived rules F5 (intersection),
-  F6 (reduction), F7 (generalized augmentation), F9 (generalized transitivity) [deferred];
-  Algorithm 3.1 / 3.2 (attribute-closure computation) with Theorem 3.3 / 3.5 correctness and
-  Theorem 3.4 / 3.6 complexity [infra: functional fixpoint algorithm]; Def 3.6 non-redundant
-  cover; Def 3.7 canonical cover and Example 3.10 [infra].
+§3.2: the non-redundancy of Armstrong's axioms (Theorem 3.2 — soundness and completeness are
+  done); Theorem 3.1 derived rules F5 (intersection), F6 (reduction), F7 (generalized
+  augmentation), F9 (generalized transitivity) [deferred]; Algorithm 3.1 / 3.2 (attribute-closure
+  computation) with Theorem 3.3 / 3.5 correctness and Theorem 3.4 / 3.6 complexity [infra:
+  functional fixpoint algorithm]; Def 3.6 non-redundant cover; Def 3.7 canonical cover and
+  Example 3.10 [infra].
 §3.3: multivalued dependencies — definition, the MVD axioms, the implication problem [infra].
 §3.4: join dependencies — definition, the chase, acyclicity [infra/research].
 §3.5: inclusion dependencies — definition, axioms, the (undecidable in general) implication
@@ -61,13 +61,22 @@ abbrev thm_3_1_f4_union := @DeepWiki.satisfiesFd_unionRule
 `X → Y`. -/
 abbrev thm_3_1_f8_decompose := @DeepWiki.satisfiesFd_decompose
 
+/-- **Theorem 3.1, rule F4 (syntactic)** (§3.2, p.66): `X → Y` and `X → Z` *derive* `X → Y ∪ Z`
+using only Armstrong's axioms. -/
+abbrev thm_3_1_f4_union_derived := @DeepWiki.derives_union
+
 /-- **Armstrong's axiom system `𝓕`** (§3.2, Theorem 3.2, p.66): the syntactic derivation of
 functional dependencies from `SC` by triviality, augmentation and transitivity. -/
 abbrev fd_axiom_system := @DeepWiki.Derives
 
 /-- **Theorem 3.2, soundness** (§3.2, p.67): every dependency derivable by Armstrong's axioms is
-semantically implied. (Completeness and non-redundancy remain.) -/
+semantically implied. -/
 abbrev thm_3_2_sound := @DeepWiki.derives_sound
+
+/-- **Theorem 3.2, completeness** (§3.2, p.67): over a value type with ≥2 elements, every fd over
+`Ω` semantically implied by `SC` is derivable by Armstrong's axioms — proved via the two-tuple
+counterexample relation. With soundness this gives `SC⁺ = SC*` for functional dependencies. -/
+abbrev thm_3_2_complete := @DeepWiki.derives_complete
 
 /-- **fd-closure `X̄`** (§3.2, p.68): the attributes `A` with `SC ⊨ X → A`. -/
 abbrev fd_closure := @DeepWiki.fdClosure
