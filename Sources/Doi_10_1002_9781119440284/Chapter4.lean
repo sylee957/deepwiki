@@ -36,6 +36,7 @@ import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.LegendreFenchelConcave
 import DeepWiki.NetworkCalculus.PwlBreakpoints
+import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -73,9 +74,10 @@ container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical
 form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion functions
 `[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
 the `C_cv` concave-hull is now built (`eq_4_6_concaveHull`/`Ccv`: least concave majorant, eq.[4.6]
-core), so the `[∧]` upper-bound canonicalization is available; what remains of Def 4.5/Thm 4.4 is the
-unary closure inclusion `[*]` ([4.16]/[4.17]) and the `F`-closure halves (book defers Thm 4.4's full
-proof to [LEC 14]); Proposition 4.4 (canonical
+core), so the `[∧]` upper-bound canonicalization is available; the unary closure inclusion `[*]` ([4.16]/[4.17]) is now done as inclusion-soundness
+(`thm_4_4_closure`/`ContainerNN.closure_mem`: `f⋆ ∈ [f̲⋆, f̄⋆]`, via `⋆`-monotonicity); what remains of
+Def 4.5/Thm 4.4 is the `C_vx`/`C_cv` canonicalization of the [4.16]/[4.17] bounds (needs an `ℝ≥0∞`
+hull layer) and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
 layer is now built (`pwl_breakpoints`/`pwlRank`/`breakpoints`), but full Prop 4.4 [4.13] needs *sloped*
@@ -918,6 +920,17 @@ the same inclusion content; the `C_cv` concave-hull operator + the unary closure
 theorem thm_4_4 {c d : DeepWiki.Container} {f g : ℝ≥0 → EReal} (hf : f ∈ c) (hg : g ∈ d) :
     (f ⊓ g) ∈ DeepWiki.Container.inf c d ∧ minConv f g ∈ DeepWiki.Container.conv c d :=
   ⟨DeepWiki.Container.inf_mem hf hg, DeepWiki.Container.conv_mem hf hg⟩
+
+/-- **Definition 4.5 [4.16]/[4.17]** + **Theorem 4.4**, the unary sub-additive-closure inclusion
+`[*]`. Over `ℝ≥0∞` containers (`DeepWiki.ContainerNN`, the closure carrier — `subadditiveClosureENN`
+is `ℝ≥0∞`-valued), `f[*] = [f̲⋆, f̄⋆]` (`ContainerNN.closure`), and Theorem 4.4's closure case is
+`f ∈ f → f⋆ ∈ f[*]` (`closure_mem`) — both bounds by the monotonicity of `⋆`
+(`subadditiveClosureENN_mono`). The library's `DeepWiki.ContainerNN.closure_mem` /
+`.closure`. (The book's `C_vx`/`C_cv` canonicalization of the closure bounds [4.16]/[4.17] needs an
+`ℝ≥0∞` convex/concave-hull layer; the inclusion-soundness here holds regardless of canonical form.) -/
+theorem thm_4_4_closure {c : DeepWiki.ContainerNN} {f : ℝ≥0 → ℝ≥0∞} (h : f ∈ c) :
+    subadditiveClosureENN f ∈ c.closure :=
+  DeepWiki.ContainerNN.closure_mem h
 
 /-- **Proposition 4.4** (§4.4, p.86): the canonical bound of a Legendre class `[f]_L`. The convex
 biconjugate `Cvx f = 𝓛(𝓛 f)` is the **least** element of `[f]_L = {g | 𝓛 g = 𝓛 f}` — a member
