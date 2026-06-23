@@ -145,4 +145,38 @@ theorem causalLinearProcessLp_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z
   rw [← Summable.tsum_sub (hsum₁ t) (hsum₂ t)]
   exact tsum_congr fun j => (sub_smul _ _ _).symm
 
+/-- **The summable tail vanishes:** for `∑ⱼ |ψⱼ| < ∞`, the tail mass `∑_{j>m} |ψⱼ| → 0` as
+`m → ∞` (the total minus the partial sum). The eventually-in-`m` ingredient that makes the
+double-limit approximation `h3` hold. -/
+theorem tendsto_tsum_ite_lt_zero {ψ : ℕ → ℝ} (hψ : Summable fun j => |ψ j|) :
+    Tendsto (fun m : ℕ => ∑' j : ℕ, if m < j then |ψ j| else 0) atTop (𝓝 0) := by
+  have hsumA : ∀ m : ℕ, Summable fun j : ℕ => if m < j then |ψ j| else 0 := fun m =>
+    Summable.of_nonneg_of_le (fun j => by split_ifs <;> positivity)
+      (fun j => by split_ifs with h; exacts [le_refl _, abs_nonneg _]) hψ
+  have hsumB : ∀ m : ℕ, Summable fun j : ℕ => if j ≤ m then |ψ j| else 0 := fun m =>
+    summable_of_ne_finset_zero (s := Finset.range (m + 1)) fun j hj => by
+      simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega)]
+  have hadd : ∀ m : ℕ, (∑' j : ℕ, if m < j then |ψ j| else 0)
+      = (∑' j : ℕ, |ψ j|) - ∑ j ∈ Finset.range (m + 1), |ψ j| := by
+    intro m
+    have h2 : (∑' j : ℕ, if j ≤ m then |ψ j| else 0) = ∑ j ∈ Finset.range (m + 1), |ψ j| := by
+      rw [tsum_eq_sum (s := Finset.range (m + 1)) fun j hj => by
+        simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega)]]
+      exact Finset.sum_congr rfl fun j hj => by
+        simp only [Finset.mem_range] at hj; rw [if_pos (by omega)]
+    have h1 : (∑' j : ℕ, if m < j then |ψ j| else 0)
+        + (∑' j : ℕ, if j ≤ m then |ψ j| else 0) = ∑' j : ℕ, |ψ j| := by
+      rw [← Summable.tsum_add (hsumA m) (hsumB m)]
+      exact tsum_congr fun j => by
+        rcases lt_or_ge m j with h | h
+        · rw [if_pos h, if_neg (by omega : ¬ j ≤ m)]; ring
+        · rw [if_neg (by omega : ¬ m < j), if_pos (by omega : j ≤ m)]; ring
+    rw [eq_sub_iff_add_eq, ← h2]; exact h1
+  rw [show (fun m : ℕ => ∑' j : ℕ, if m < j then |ψ j| else 0)
+        = fun m : ℕ => (∑' j : ℕ, |ψ j|) - ∑ j ∈ Finset.range (m + 1), |ψ j| from funext hadd]
+  have hps : Tendsto (fun m : ℕ => ∑ j ∈ Finset.range (m + 1), |ψ j|) atTop
+      (𝓝 (∑' j : ℕ, |ψ j|)) := hψ.hasSum.tendsto_sum_nat.comp (tendsto_add_atTop_nat 1)
+  rw [show (0 : ℝ) = (∑' j : ℕ, |ψ j|) - ∑' j : ℕ, |ψ j| from (sub_self _).symm]
+  exact tendsto_const_nhds.sub hps
+
 end DeepWiki.TimeSeries
