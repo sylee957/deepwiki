@@ -270,4 +270,19 @@ theorem distRow_mem_of_satisfiesJd {k : ℕ} {comp : Fin k → Finset Att} {T : 
     simp only [hfamdef, distRow, if_pos hi]
   rwa [hvd] at hv
 
+/-- **Completeness of the chase (Theorem 3.15, completeness half), assembled**: if a chased tableau
+`T` retains the initial rows of the (covering) goal jd, models the dependency set `SC = (fds, jds)`,
+and `SC` implies the goal jd over the symbol domain, then the distinguished row appears — so the
+chase reports the implication. (The hypotheses `hpersist`/`hTfd`/`hTjd` are exactly what a terminal
+chased tableau supplies; only producing that tableau — the terminating chase function — is left.) -/
+theorem distRow_mem_of_models_of_implies {k : ℕ} {comp : Fin k → Finset Att} {T : Tableau Ω}
+    {fds : Set (Finset Att × Finset Att)} {jds : Set (Σ k : ℕ, Fin k → Finset Att)}
+    (hcov : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i) (hpersist : initialTableau comp ⊆ T)
+    (hTfd : ∀ XY ∈ fds, SatisfiesFd T XY.1 XY.2) (hTjd : ∀ kc ∈ jds, SatisfiesJd T kc.2)
+    (hSCJ : ∀ r : Table Ω (ChaseSymbol Att),
+      (∀ XY ∈ fds, SatisfiesFd r XY.1 XY.2) → (∀ kc ∈ jds, SatisfiesJd r kc.2) →
+        SatisfiesJd r comp) :
+    distRow Ω ∈ T :=
+  distRow_mem_of_satisfiesJd hcov hpersist (hSCJ T hTfd hTjd)
+
 end DeepWiki

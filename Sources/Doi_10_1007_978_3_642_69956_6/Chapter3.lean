@@ -253,6 +253,11 @@ family — if the initial-tableau rows are present in `T` and the goal jd holds 
 (hence `J`, when `SC ⊨ J`) contains the success row. -/
 abbrev chase_completeness_core := @DeepWiki.distRow_mem_of_satisfiesJd
 
+/-- **Theorem 3.15** (§3.4, p.91), the completeness half (assembled): a chased tableau retaining the
+initial rows and modelling `SC` contains the distinguished row when `SC ⊨ J` — the chase reports the
+implication. The remaining hypotheses are exactly what a terminal chased tableau supplies. -/
+abbrev thm_3_15_complete := @DeepWiki.distRow_mem_of_models_of_implies
+
 /-! ## §3.5 Inclusion Dependencies -/
 
 /-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*
