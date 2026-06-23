@@ -35,6 +35,7 @@ import DeepWiki.NetworkCalculus.ContainerUncertainty
 import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.LegendreFenchelConcave
+import DeepWiki.NetworkCalculus.PwlBreakpoints
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -76,8 +77,10 @@ core), so the `[∧]` upper-bound canonicalization is available; what remains of
 unary closure inclusion `[*]` ([4.16]/[4.17]) and the `F`-closure halves (book defers Thm 4.4's full
 proof to [LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
-canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: Prop 4.4's `Θ_f̲`
-[4.13] enumeration + Lemma 4.10 [4.12] closure (need a breakpoint layer / closure↔Legendre identity).
+canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
+layer is now built (`pwl_breakpoints`/`pwlRank`/`breakpoints`), but full Prop 4.4 [4.13] needs *sloped*
+`Θ` generators (the constant `Theta` meet only samples `f` at breakpoints) and Lemma 4.10 [4.12]
+closure needs a closure↔Legendre identity.
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores); the remaining items are the
 book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full Thm 4.4 (→[LEC 14]), the `C_cv` hull,
 the `[*]` closure inclusion, and the `Θ`/closure infra layers. Remark 4.1. -/
@@ -937,6 +940,19 @@ theorem eq_4_6_concaveHull (f : ℝ≥0 → EReal) :
     IsConcaveEReal (DeepWiki.Ccv f) ∧ f ≤ DeepWiki.Ccv f
       ∧ ∀ g, IsConcaveEReal g → f ≤ g → DeepWiki.Ccv f ≤ g :=
   ⟨DeepWiki.isConcaveEReal_Ccv f, DeepWiki.le_Ccv f, fun _g hg hfg => DeepWiki.Ccv_le hg hfg⟩
+
+/-- **§4.4 breakpoint/rank infra** (supports Prop 4.4 [4.13] + Def 4.4 finiteness). For a convex PWL
+`convexSegEval f0 fs segs`: `pwlRank segs = segLenSum segs` is the abscissa of the last semi-infinite
+segment (past it the curve is the asymptote, `convexSegEval_past_rank`); `breakpoints segs` are the
+cumulative-length non-differentiable points; and the corner value at the k-th breakpoint is `f0 +
+cornerSum (take k segs)` (`convexSegEval_at_breakpoint`). The library's `DeepWiki.pwlRank` /
+`DeepWiki.breakpoints` / `DeepWiki.convexSegEval_at_breakpoint`. (NB literal Prop 4.4 [4.13]
+`Θ_f̲ = ⋀ᵢ Θ^{κᵢ}_{τᵢ}` is NOT a pointwise theorem with the constant `Theta` — it samples `f` only at
+breakpoints, `⊤` past rank; full [4.13] needs *sloped* `Θ` generators, `[infra]`.) -/
+theorem pwl_breakpoints (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k : ℕ) :
+    convexSegEval f0 fs segs (DeepWiki.segLenSum (segs.take k))
+      = f0 + DeepWiki.cornerSum (segs.take k) :=
+  DeepWiki.convexSegEval_at_breakpoint f0 fs segs k
 
 /-- **Lemma 4.10** (§4.4, p.86): computing in the dioid `F↑/L` is equivalent to computing with
 canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
