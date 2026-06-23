@@ -201,4 +201,43 @@ theorem tendsto_eLpNorm_linearProcess_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, 
     simpa using ENNReal.Tendsto.mul_const h1 (Or.inr ENNReal.ofReal_ne_top)
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hlim (fun _ => zero_le) hbound
 
+/-- **Central limit theorem for the sample mean of a causal linear process (general Theorem 7.1.2,
+`MA(∞)` / ARMA case):** for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` noise `Z`, with
+`∑ⱼ |ψⱼ|·j < ∞` (e.g. a causal ARMA filter), the standardized sample mean converges in distribution
+to `(∑ψ) Y₀ = N(0, (∑ψ)² σ²)`. The iid sample-mean CLT scaled by `∑ψ`, with the moving-average
+perturbation removed through the `L²`-negligibility bridge. -/
+theorem causalLinearProcess_sampleMean_clt [IsProbabilityMeasure μ] {Ω' : Type*}
+    [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {Z : ℤ → Ω → ℝ} {Y₀ : Ω' → ℝ}
+    (hZ : ∀ t, MemLp (Z t) 2 μ) {ψ : ℕ → ℝ} (hψ : Summable ψ)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (hindep : iIndepFun Z μ) (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0)
+    (hY₀ : HasLaw Y₀ (gaussianReal 0 Var[Z 0; μ].toNNReal) μ')
+    (hψj : Summable fun j : ℕ => |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal)) :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n fun t => (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+      atTop ((∑' j : ℕ, ψ j) • Y₀) (fun _ => μ) μ' := by
+  have hwin : TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω)) atTop Y₀ (fun _ => μ) μ' := by
+    have h := iidNoise_sampleMean_clt_window (P := μ) (P' := μ') 0 hY₀ (hZ 0) hindep hident
+    have heq : (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n (fun k => Z (0 + (k : ℤ)) ω) - μ[Z 0]))
+        = fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun k => Z (k : ℤ) ω) := by
+      ext n ω; simp only [hcenter, sub_zero, zero_add]
+    rwa [heq] at h
+  have hY := hwin.continuous_comp (g := fun x : ℝ => (∑' j : ℕ, ψ j) * x)
+    (continuous_const.mul continuous_id)
+  refine tendstoInDistribution_of_tendsto_eLpNorm_sub hY (fun n => ?_) ?_
+  · simp only [sampleMean]
+    exact ((Finset.aestronglyMeasurable_fun_sum _ fun t _ =>
+      Lp.aestronglyMeasurable _).const_mul _).const_mul _
+  · refine (tendsto_eLpNorm_linearProcess_sub hZ hψ hsum hident hψj).congr'
+      (Filter.Eventually.of_forall fun n => eLpNorm_congr_ae ?_)
+    have hsm : (fun ω => sampleMean n (fun t => (toLpSeq Z hZ (t : ℤ) : Ω → ℝ) ω))
+        =ᵐ[μ] fun ω => sampleMean n (fun k => Z (k : ℤ) ω) := by
+      simp only [sampleMean, toLpSeq]
+      filter_upwards [sum_eventuallyEq (Finset.range n)
+        (fun t (_ : t ∈ Finset.range n) => (hZ (t : ℤ)).coeFn_toLp)] with ω hω
+      rw [hω]
+    filter_upwards [hsm] with ω hω
+    simp only [Pi.sub_apply, Function.comp_apply, hω]
+
 end DeepWiki.TimeSeries
