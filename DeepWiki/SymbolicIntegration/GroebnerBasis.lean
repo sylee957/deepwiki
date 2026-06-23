@@ -2,6 +2,9 @@ import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.RingTheory.MvPolynomial.Ideal
 import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
+import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
+import Mathlib.RingTheory.Bezout
 import Mathlib.Data.Finsupp.PWO
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Finsupp.MonomialOrder
@@ -1258,6 +1261,70 @@ example {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠
 example {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
     leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f :=
   leadingYCoeff_X_pow_mul k f
+
+/-! ## GCD / Bézout structure on the leading-`y`-coefficient ring `MvPolynomial (Fin 1) K`
+
+The leading-`y`-coefficients `Rₖ = leadingYCoeff fₖ` live in `MvPolynomial (Fin 1) K ≃ K[x]`, a
+**principal ideal domain**. Lazard's Lemma 2 needs (i) a chosen `gcd` (`MvPolynomial (Fin 1) K`
+is a UFD, hence a `GCDMonoid` via `UniqueFactorizationMonoid.toGCDMonoid`), and (ii) **Bézout's
+identity** — `gcd g g'` as a `K[x]`-combination `a·g + b·g'` (transferring `K[x]`'s `IsBezout`
+through the ring equivalence `MvPolynomial (Fin 1) K ≃+* K[x]`). These are provided as local
+`letI` instances inside the lemmas; no global instance is registered (to avoid diamonds). -/
+
+open scoped Classical in
+/-- The ring equivalence `MvPolynomial (Fin 1) K ≃+* K[x]`: pull out the single variable
+(`finSuccEquiv K 0`), then erase the now-empty inner `MvPolynomial (Fin 0) K ≃ K`. -/
+noncomputable def mvPolynomialFinOneEquivPolynomial (K : Type*) [Field K] :
+    MvPolynomial (Fin 1) K ≃+* Polynomial K :=
+  ((finSuccEquiv K 0).trans (Polynomial.mapAlgEquiv (isEmptyAlgEquiv K (Fin 0)))).toRingEquiv
+
+open scoped Classical in
+/-- A chosen `GCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` GCD domain). Used as a local
+`letI`; not a global instance. -/
+@[reducible] noncomputable def gcdMonoidMvPolynomialFinOne (K : Type*) [Field K] :
+    GCDMonoid (MvPolynomial (Fin 1) K) :=
+  UniqueFactorizationMonoid.toGCDMonoid _
+
+/-- `MvPolynomial (Fin 1) K` is a Bézout ring (transfer `K[x]`'s `IsBezout` through the surjective
+`mvPolynomialFinOneEquivPolynomial.symm`). Used as a local `letI`; not a global instance. -/
+@[reducible] noncomputable def isBezoutMvPolynomialFinOne (K : Type*) [Field K] :
+    IsBezout (MvPolynomial (Fin 1) K) :=
+  Function.Surjective.isBezout (mvPolynomialFinOneEquivPolynomial K).symm.toRingHom
+    (mvPolynomialFinOneEquivPolynomial K).symm.surjective
+
+open scoped Classical in
+/-- **Bézout's identity for the leading-`y`-coefficient ring** (for the chosen `GCDMonoid`):
+there are `a, b ∈ MvPolynomial (Fin 1) K` with `a·g + b·g' = gcd g g'`. -/
+theorem exists_mul_add_mul_eq_gcd {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
+    ∃ a b : MvPolynomial (Fin 1) K,
+      a * g + b * g' = @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' := by
+  letI := gcdMonoidMvPolynomialFinOne K
+  letI := isBezoutMvPolynomialFinOne K
+  have hdvd : @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' ∣ gcd g g' := dvd_refl _
+  rw [gcd_dvd_iff_exists] at hdvd
+  obtain ⟨a, b, hab⟩ := hdvd
+  exact ⟨a, b, by rw [hab]; ring⟩
+
+/-- `gcd g g' ∣ g` (left) for the chosen `GCDMonoid` on `MvPolynomial (Fin 1) K`. -/
+theorem gcd_dvd_left_mvPolynomialFinOne {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
+    @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' ∣ g :=
+  letI := gcdMonoidMvPolynomialFinOne K
+  gcd_dvd_left g g'
+
+/-- `gcd g g' ∣ g'` (right) for the chosen `GCDMonoid` on `MvPolynomial (Fin 1) K`. -/
+theorem gcd_dvd_right_mvPolynomialFinOne {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
+    @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' ∣ g' :=
+  letI := gcdMonoidMvPolynomialFinOne K
+  gcd_dvd_right g g'
+
+-- Restatements against the intended wording.
+noncomputable example {K : Type*} [Field K] : MvPolynomial (Fin 1) K ≃+* Polynomial K :=
+  mvPolynomialFinOneEquivPolynomial K
+
+example {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
+    ∃ a b : MvPolynomial (Fin 1) K,
+      a * g + b * g' = @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' :=
+  exists_mul_add_mul_eq_gcd g g'
 
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
