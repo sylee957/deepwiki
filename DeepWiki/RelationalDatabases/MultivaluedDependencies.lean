@@ -42,4 +42,41 @@ theorem satisfiesMvd_complement (h : SatisfiesMvd r X Y) : SatisfiesMvd r X (Ω 
   simp only [Finset.mem_union, Finset.mem_sdiff] at ha ⊢
   tauto
 
+/-- An `X ↠ Y` witness `v` (agreeing with `t` on `X ∪ Y` and with `u` on `X ∪ (Ω − Y)`) agrees
+with `t` on every attribute where `t` and `u` already agree. -/
+theorem mvd_witness_agree {X Y : Finset Att} {t u v : Tuple Ω Val}
+    (hvt : Agree (X ∪ Y) v t) (hvu : Agree (X ∪ (Ω \ Y)) v u)
+    {a : {x // x ∈ Ω}} (ha : t a = u a) : v a = t a := by
+  by_cases hY : a.val ∈ Y
+  · exact hvt a (Finset.mem_union_right _ hY)
+  · exact (hvu a (Finset.mem_union_right _ (Finset.mem_sdiff.mpr ⟨a.property, hY⟩))).trans ha.symm
+
+/-- Rule M2 (Theorem 3.10, mvd-augmentation): `X ↠ Y` gives `W ∪ X ↠ V ∪ Y` when `V ⊆ W`. -/
+theorem satisfiesMvd_augment {X Y W V : Finset Att} (hVW : V ⊆ W) (h : SatisfiesMvd r X Y) :
+    SatisfiesMvd r (W ∪ X) (V ∪ Y) := by
+  intro t ht u hu hag
+  have hagX : Agree X t u := Agree.mono Finset.subset_union_right hag
+  have hagW : Agree W t u := Agree.mono Finset.subset_union_left hag
+  obtain ⟨v, hv, hvt, hvu⟩ := h t ht u hu hagX
+  have hvtW : Agree W v t := fun a ha => mvd_witness_agree hvt hvu (hagW a ha)
+  refine ⟨v, hv, ?_, ?_⟩
+  · -- `Agree ((W ∪ X) ∪ (V ∪ Y)) v t`, reduced to `Agree (W ∪ (X ∪ Y)) v t`
+    refine Agree.mono ?_ (agree_union.mpr ⟨hvtW, hvt⟩)
+    intro a ha
+    simp only [Finset.mem_union] at ha ⊢
+    rcases ha with (hW | hX) | (hV | hY)
+    · exact Or.inl hW
+    · exact Or.inr (Or.inl hX)
+    · exact Or.inl (hVW hV)
+    · exact Or.inr (Or.inr hY)
+  · -- `Agree ((W ∪ X) ∪ (Ω − (V ∪ Y))) v u`, reduced to `Agree (W ∪ (X ∪ (Ω − Y))) v u`
+    have hvuW : Agree W v u := fun a ha => (hvtW a ha).trans (hagW a ha)
+    refine Agree.mono ?_ (agree_union.mpr ⟨hvuW, hvu⟩)
+    intro a ha
+    simp only [Finset.mem_union, Finset.mem_sdiff] at ha ⊢
+    rcases ha with (hW | hX) | ⟨haΩ, hnVY⟩
+    · exact Or.inl hW
+    · exact Or.inr (Or.inl hX)
+    · exact Or.inr (Or.inr ⟨haΩ, fun hY => hnVY (Or.inr hY)⟩)
+
 end DeepWiki

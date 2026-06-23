@@ -25,8 +25,8 @@ semantics.
   Example 3.10 [infra].
 §3.3: Theorem 3.7 / 3.8 (an fd gives a lossless two-way decomposition, and its partial
   converse), Theorem 3.9 (an mvd holds iff the relation decomposes losslessly), the remaining
-  axioms of system `𝓜` — M2 (mvd-augmentation), M3 (mvd-pseudotransitivity), FM2 (mixed
-  pseudotransitivity); M1 and FM1 are done — Lemma 3.1 rules M4/M5/M6, Theorem 3.11 (dependency
+  axioms of system `𝓜` — M3 (mvd-pseudotransitivity), FM2 (mixed pseudotransitivity); M1, FM1
+  and M2 are done — Lemma 3.1 rules M4/M5/M6, Theorem 3.11 (dependency
   basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
   (polynomial-time decidability) [infra].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
@@ -130,6 +130,10 @@ abbrev cor_3_1_fd_to_mvd := @DeepWiki.satisfiesMvd_of_satisfiesFd
 
 /-- **Corollary 3.1, rule M1** (§3.3, p.79, complementation): `X ↠ Y` gives `X ↠ Ω − Y`. -/
 abbrev cor_3_1_complement := @DeepWiki.satisfiesMvd_complement
+
+/-- **Theorem 3.10, rule M2** (§3.3, p.80, mvd-augmentation): `X ↠ Y` gives `W ∪ X ↠ V ∪ Y`
+when `V ⊆ W`. -/
+abbrev thm_3_10_m2_augment := @DeepWiki.satisfiesMvd_augment
 
 /-! ## §3.4 Join Dependencies -/
 
