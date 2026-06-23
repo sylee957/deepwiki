@@ -293,4 +293,29 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
         toPoly_cmul, map_mul]
       linear_combination hsc
 
+/-- **Diophantine/Bézout solver correctness through `toPoly`**: when `gcd(p, q)` is a nonzero
+constant (the coprimality the Hermite call sites guarantee), `cdiophantine fuel p q rhs = (B, C)`
+solves `B·p + C·q = rhs` in `ℚ[X]`: `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`.
+Validates the Hermite reduction's Bézout step on all inputs. -/
+theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q ≠ [])
+    (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
+    (hgc : clead (cgcdExt fuel p q).1 ≠ 0) :
+    toPoly (cdiophantine fuel p q rhs).1 * toPoly p
+        + toPoly (cdiophantine fuel p q rhs).2 * toPoly q
+      = toPoly rhs := by
+  rcases hgst : cgcdExt fuel p q with ⟨g, s, t⟩
+  rw [hgst] at hg hgc
+  have hbez : toPoly s * toPoly p + toPoly t * toPoly q = toPoly g := by
+    have h := toPoly_cgcdExt fuel p q; rw [hgst] at h; exact h
+  simp only [cdiophantine, hgst]
+  rcases hqB : cdivmod fuel (cscale (clead g)⁻¹ (cmul rhs s)) q with ⟨quo, B⟩
+  have hdiv : toPoly (cscale (clead g)⁻¹ (cmul rhs s)) = toPoly quo * toPoly q + toPoly B := by
+    have h := toPoly_cdivmod' fuel (cscale (clead g)⁻¹ (cmul rhs s)) q hq
+    rw [hqB] at h; exact h
+  simp only [toPoly_cnorm, toPoly_cadd, toPoly_cmul, toPoly_cscale] at hdiv ⊢
+  have hinv : Polynomial.C (clead g)⁻¹ * toPoly g = 1 := by
+    rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
+  linear_combination (-toPoly p) * hdiv
+    + (Polynomial.C (clead g)⁻¹ * toPoly rhs) * hbez + toPoly rhs * hinv
+
 end DeepWiki.SymbolicIntegration.Compute
