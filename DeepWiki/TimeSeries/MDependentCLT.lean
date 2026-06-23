@@ -675,4 +675,41 @@ theorem levyProkhorovDist_le_of_variance_le [IsProbabilityMeasure μ] {f g : Ω 
     (le_trans (levyProkhorovEDist_map_le f g hf hg hδ) (sup_le le_rfl hcheb))).trans_eq
     (ENNReal.toReal_ofReal hδ.le)
 
+/-- **h3 of the m-dependent double-limit**: eventually in `p`, eventually in `n`, the laws of `√n X̄ₙ`
+and the gap-removed partial sum `Y⁽ᵖ⁾ₙ` are within `δ` in Lévy–Prokhorov distance. The gap-remainder
+variance is `≤ (|gap|/n)·∑|γ| → (m/(p+m))·∑|γ| → 0`, so it is eventually `< δ³`, which the variance LP
+engine `levyProkhorovDist_le_of_variance_le` converts to a Lévy–Prokhorov distance `≤ δ`. -/
+theorem IsMDependent.eventually_levyProkhorovDist_gapRemoved_le {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] (hmdep : IsMDependent m X μ) (hX : IsWeaklyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0)
+    {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ p : ℕ in atTop, ∀ᶠ n : ℕ in atTop,
+      levyProkhorovDist
+        (μ.map fun ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω))
+        (μ.map fun ω => (Real.sqrt n)⁻¹ *
+          ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) ≤ δ := by
+  have hsum : Summable (acvfStat X μ) := summable_acvfStat_of_mDependent hmdep hX.memLp
+  have hdenom : Tendsto (fun p : ℕ => ((p + m : ℕ) : ℝ)) atTop atTop :=
+    tendsto_natCast_atTop_atTop.comp (tendsto_atTop_mono (fun p => Nat.le_add_right p m) tendsto_id)
+  have hm0 : Tendsto (fun p : ℕ => (m : ℝ) / ((p + m : ℕ) : ℝ) * ∑' h : ℤ, |acvfStat X μ h|) atTop
+      (𝓝 0) := by
+    have h1 : Tendsto (fun p : ℕ => (m : ℝ) / ((p + m : ℕ) : ℝ)) atTop (𝓝 0) :=
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => (m : ℝ)) atTop (𝓝 (m : ℝ))).div_atTop hdenom
+    simpa using h1.mul_const (∑' h : ℤ, |acvfStat X μ h|)
+  filter_upwards [hm0.eventually_lt_const (by positivity : (0 : ℝ) < δ ^ 3),
+    eventually_ge_atTop 1] with p hp hp1
+  have hpm : p + m ≠ 0 := by omega
+  have hgap := (tendsto_gapFraction (m := m) hpm).mul_const (∑' h : ℤ, |acvfStat X μ h|)
+  filter_upwards [hgap.eventually_lt_const hp] with n hn
+  have hfm : Measurable (fun ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)) := by
+    simp only [sampleMean]
+    exact ((Finset.measurable_sum _ fun t _ => hmeas _).const_mul _).const_mul _
+  have hgm : Measurable (fun ω => (Real.sqrt n)⁻¹ *
+      ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) :=
+    (Finset.measurable_sum _ fun i _ => Finset.measurable_sum _ fun t _ => hmeas _).const_mul _
+  exact levyProkhorovDist_le_of_variance_le hfm.aemeasurable hgm.aemeasurable
+    (memLp_sqrt_sampleMean_sub_gapRemoved hmem p n)
+    (integral_sqrt_sampleMean_sub_gapRemoved hmem hcenter p n) hδ
+    (le_of_lt (lt_of_le_of_lt (variance_sqrt_sampleMean_sub_gapRemoved_le hX hsum p n) hn))
+
 end DeepWiki.TimeSeries
