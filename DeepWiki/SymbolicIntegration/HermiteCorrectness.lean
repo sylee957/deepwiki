@@ -1528,3 +1528,47 @@ theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPoly) (hterm : cgcdTerminates
       (gcd_dvd_right _ _))
   rw [← normalize_gcd (toPoly b) (toPoly d)]
   exact normalize_eq_normalize_iff.mpr (hassoc.dvd_dvd)
+
+/-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` — squarefree emitted factors
+
+Under a per-step **honesty bundle** `GoYun` (gcd-termination, and both `b/q` and `d/q` exact divisions
+realized under `toPoly`), the concrete loop `csqfreeFactor.go` maps under `toPoly` onto the abstract
+`yunLoopAbs` step: the working pair `(toPoly b, toPoly d)` satisfies `YunInv (toPoly A) i`, the monic
+gcd `cmonic (cgcdExt b d).1` realizes `gcd (toPoly b) (toPoly d)`, and `(b', d')` advance the
+invariant (`yunStep_preserves`). Hence every (kept) emitted factor is `~ sqfreeFactPart`, so squarefree
+(`yunStep_emit_assoc` + `squarefree_of_associated_sqfreeFactPart`). -/
+
+/-- **Per-step honesty bundle** for `csqfreeFactor.go` to realize the abstract Yun step: at each
+non-terminal step (`b` non-constant) the gcd terminates, the monic divisor `q = cmonic (cgcdExt b d).1`
+divides both `b` and `d` exactly (`toPoly b = toPoly q · toPoly b′`, `toPoly d = toPoly q · toPoly
+(d/q)`), and the predicate recurses on `(b′, d′)`. The honest content making the concrete loop a faithful
+realization of `yunLoopAbs`. -/
+def GoYun (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
+  | 0, _, _ => True
+  | fo + 1, b, d =>
+    if b.length ≤ 1 then True
+    else
+      let q := cmonic (cgcdExt fuel b d).1
+      let b' := cdiv fuel b q
+      let d' := csub (cdiv fuel d q) (cderiv b')
+      cgcdTerminates fuel b d ∧
+        toPoly b = toPoly q * toPoly b' ∧
+        toPoly d = toPoly q * toPoly (cdiv fuel d q) ∧
+        GoYun fuel fo b' d'
+
+/-! ### Remaining wall: the `ℚ`-instance diamond in the concrete bridge
+
+The concrete↔abstract step correspondence (`csqfreeFactor.go`'s `(b′, d′)` maps to `yunLoopAbs`'s
+`(b/gcd, d/gcd − (b/gcd)′)`) is provable per step from `toPoly_cmonic_cgcdExt`, `GoYun`'s exact
+divisions, and `toPoly_cderiv`. But carrying the abstract invariant `YunInv (A : ℚ[X]) i …` through the
+loop and applying `yunStep_preserves`/`yunStep_emit_assoc` at `ℚ[X]` hits a **`CommRing ℚ` instance
+diamond**: the abstract theory (stated over `{K} [Field K]`) derives `CommRing ℚ` as
+`Field.toCommRing`, while `csqfreeFactor`/`Babs`/`normalizedFactors` use `ℚ`'s ambient
+`Rat.commRing` (with `instDecidableEqRat` rather than `Classical.dec` for the `NormalizedGCDMonoid`).
+The two `primPart`/`gcd`/`squarefreePart` instances are *defeq* but not syntactically equal, so
+`yunStep_emit_assoc A i hi hA hinv` does not directly typecheck against the `ℚ`-ambient `hA`. Closing
+this needs reconciling the instances (e.g. restating the abstract theory's `ℚ` specialization through
+the field-derived `CommRing`/`NormalizedGCDMonoid`, or a `convert`/instance-rewrite bridge). This is
+the sole remaining gap between the complete *abstract* Yun correctness above and a fully concrete
+`csqfreeFactor` theorem; the abstract spine and the atomic gcd bridge (`toPoly_cmonic_cgcdExt`) are
+both in place. -/
