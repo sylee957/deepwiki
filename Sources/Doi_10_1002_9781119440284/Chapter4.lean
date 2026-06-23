@@ -84,9 +84,13 @@ the `C_cv` concave-hull is now built (`eq_4_6_concaveHull`/`Ccv`: least concave 
 core), so the `[∧]` upper-bound canonicalization is available; the unary closure inclusion `[*]` ([4.16]/[4.17]) is now done as inclusion-soundness
 (`thm_4_4_closure`/`ContainerNN.closure_mem`: `f⋆ ∈ [f̲⋆, f̄⋆]`, via `⋆`-monotonicity); the `C_vx`/
 `C_cv` canonicalization of the [4.16]/[4.17] bounds is now done over the `ℝ≥0∞` hull layer
-(`def_4_5_closure_canonical`/`CvxENN`/`CcvENN`: convex/concave canonical closure bounds), so what
-remains of Def 4.5/Thm 4.4 is only the `F`-closure halves (book defers Thm 4.4's full proof to
-[LEC 14]); Proposition 4.4 (canonical
+(`def_4_5_closure_canonical`/`CvxENN`/`CcvENN`: convex/concave canonical closure bounds); the `F`-closure
+(internality) the book defers to [LEC 14] is now formalized FROM that paper (`ContainerInternalF`:
+Def 23 internality of `[⊕]` — the canonicalized lifted meet IS a canonical container of `F`,
+`isCanonicalContainer_canonicalizedInf`; the Le Boudec–Thiran concave identities Thm 3; the `ℱ_acv`
+closure; Prop 3 slope-half), with the per-paper double-reference catalog
+`Sources/Doi_10_1007_s10626_012_0148_9` (`DeepWiki.Lcch.*`) — the `[*]`/`[⋆]` internality + the
+rank-renormalized reassembly stay `[infra]`; Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); the breakpoint/rank
 layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
@@ -97,8 +101,10 @@ the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now
 (`lemma_4_10_12`/`legendre_legendreClosure`/`Container.SameLegendre.legendreClosure`: the
 closure↔Legendre identity `𝓛(f⋆)=⨆ₙ n•𝓛f`, so `⋆` descends to `F↑/L` for nonneg curves).
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
-genuinely book-deferred to other papers: the general three-part Thm 4.2 (→[BOU 16a]) and the full
-`F`-closure Thm 4.4 (→[LEC 14]). All `[infra]` layers are now built. Remark 4.1. -/
+book-deferred to other papers: the general three-part Thm 4.2 (→[BOU 16a], weak-KAM) — still to
+formalize — and the full `F`-closure Thm 4.4 (→[LEC 14]), whose internality core is now formalized from
+the paper (`ContainerInternalF`, catalog `Sources/Doi_10_1007_s10626_012_0148_9`), `[*]`/`[⋆]` +
+rank-reassembly remaining `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
