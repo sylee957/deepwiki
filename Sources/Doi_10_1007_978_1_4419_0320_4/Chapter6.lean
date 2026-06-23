@@ -12,9 +12,9 @@ limit theorems for dependent and linear processes, the delta method for time ser
 available. This file is largely a book↔lib structure map; the **central limit theorem for (causal)
 linear processes** (§6.4) is now formalized (`clt_linearProcess`), the rest stays infra-blocked.
 
-- **§6.1 Convergence in Probability** (p.198): `Xₙ →ᵖ X` (Definition 6.1.1), the `Oₚ` and `oₚ`
-  order notation (Definition 6.1.4), and Slutsky-type results. Mathlib has convergence in
-  measure (`MeasureTheory.TendstoInMeasure`) and **Slutsky's theorem** itself
+- **§6.1 Convergence in Probability** (p.198): `Xₙ →ᵖ X` (Definition 6.1.1, = Mathlib's
+  `MeasureTheory.TendstoInMeasure`, cataloged `def_6_1_1`), the `Oₚ` and `oₚ` order notation
+  (Definition 6.1.4), and Slutsky-type results. Mathlib has **Slutsky's theorem** itself
   (`TendstoInDistribution.prodMk_of_tendstoInMeasure_const`, with the additive form
   `add_of_tendstoInMeasure_const`); the **ratio form** is DeepWiki's `slutsky_ratio`. The `Oₚ`/`oₚ`
   calculus is not packaged.
@@ -45,6 +45,11 @@ Mathlib's `TendstoInDistribution.prodMk_of_tendstoInMeasure_const` (Slutsky's th
 joint form) and `add_of_tendstoInMeasure_const` (additive form); the inference tool behind the
 sample-autocorrelation limit `ρ̂(h) = γ̂(h)/γ̂(0)` of Bartlett's formula (§7.2). -/
 alias slutsky_ratio := DeepWiki.TimeSeries.tendstoInDistribution_div_of_tendstoInMeasure_const
+
+/-- **§6.1 Definition 6.1.1 — convergence in probability**: `Xₙ →ᵖ X` iff `μ{|Xₙ − X| ≥ ε} → 0` for
+every `ε > 0`. Mathlib's `MeasureTheory.TendstoInMeasure` (the convergence mode underlying the §6.3
+weak law `prop_6_3_2`, the §6.4 delta method `example_6_4_2`, and Slutsky `slutsky_ratio`). -/
+abbrev def_6_1_1 := @MeasureTheory.TendstoInMeasure
 
 /-- **§6.2 Chebyshev's inequality (eq 6.2.1)**: `μ{|X − E X| ≥ c} ≤ Var X / c²` for an `L²` random
 variable. Mathlib's `ProbabilityTheory.meas_ge_le_variance_div_sq` — the basic deviation bound behind
@@ -81,8 +86,7 @@ limit theorem for dependent processes. -/
 abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
-order notation) [infra]
+§6.1: Definition 6.1.4 (`Oₚ`/`oₚ` stochastic order notation) [infra]
 §6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
 `clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
 are done; the general `m`-dependent CLT needs a big-block/small-block construction)
