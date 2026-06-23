@@ -23,34 +23,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — Lazard Thm 1 is **complete through the `P·Gₖ₊₁` divide-out**:
-  the descent `gᵢ ∣ fᵢ` and `Pₖ = Rₖ·Sₖ` are unconditional under `HasNoCommonYFactor`
-  (`lazard_lemma3_dvd_of_hasNoCommonYFactor`, `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`), and an
-  **arbitrary** reduced bivariate GB is reduced to that state by dividing out the basis gcd `H = P·Gₖ₊₁`
-  (`lazard_thm1_divideOut`: `gbCommonYFactor` divides every element, cofactors `fᵢ = H·b'ᵢ` are coprime
-  via `gbYGcdCofactor_gcd_eq_one`/`cofactor_hasNoCommonYFactor`). The divided family `{fᵢ/H}` is now
-  built explicitly as a **Gröbner basis of the quotient ideal** `I' = span {fᵢ/H}`
-  (`isGroebnerBasis_dividedBasis`, via the membership equivalence `g∈I' ⟺ H·g∈I` `mem_dividedIdeal_iff`
-  and leading-monomial domination), monic and with pairwise non-dividing leading monomials
-  (`dividedBasis_leadingMonomial_not_le`), and `HasNoCommonYFactor` is shown to be an **ideal invariant**:
-  *any* reduced GB of `I'` has no common `y`-factor (`hasNoCommonYFactor_of_dividedIdeal`, via
-  `dvd_lazardView_of_mem_span`), discharging the `hassoc` re-presentation hypothesis **automatically**.
-  Reduced-GB existence is now general (`exists_isReducedGroebnerBasis`: every ideal over a field with
-  finitely many variables has one, built by monicize→minimize→autoReduce on `exists_isGroebnerBasis`),
-  so `Pₖ = Rₖ·Sₖ` is **fully unconditional** for a reduced bivariate GB (`lazard_Pk_eq_Rk_Sk_unconditional`).
-  Czichowski's Lemma 2.1 `GB₁ = {D(x), z − T(x)}` is now **built and proved a Gröbner basis** of
-  `I = ⟨A − z·D', D⟩` (lex `z > x`): residue polynomial `T = A·(D'⁻¹ mod D) mod D` (`residuePoly`),
-  `z − T ∈ I` (`zMinusResidue_mem_czIdeal`), `I = ⟨D, z − T⟩` (`czIdeal_eq_span_gb`), and `GB₁` a GB
-  via coprime leading monomials `x^(deg D)`, `z` (`isGroebnerBasis_gb`, the `z := T` substitution
-  argument). The zeros' `x`-parts are the (distinct, `D` squarefree) roots of `D` with residue
-  `z`-part `A(α)/D'(α)` (`eval_residuePoly_of_isRoot`, `nodup_roots_of_separable` = normal position).
-  Lemma 2.1 is **complete (i,ii,iii)**: (i) **zero-dimensionality** — eliminating `z = T` gives the iso
-  `K[x,z] ⧸ I ≃ₐ[K] K[x] ⧸ (D)` (`czIdealQuotEquiv`), finite over `K` since `D` is monic
-  (`finite_quotient_czIdeal`); (ii) **normal position** (`nodup_roots_of_separable`); (iii)
-  **maximality w.r.t. the zero set** = `I` radical (`czIdeal_isRadical`, via `D` squarefree ⟹
-  `K[x] ⧸ (D)` reduced, transported across the iso). Remaining only as a *geometric* bonus phrasing:
-  `I = MvPolynomial.vanishingIdeal (zeroLocus …)` [research: needs the Nullstellensatz `I(V(I)) = √I`
-  over an algebraically closed `K`; the algebraic content `I = √I` is `czIdeal_isRadical`].
+§2.6: Czichowski's `R₁ = radical(res_x(A − z·D', D))` (Lemma 2.2(iii)) — the content `R₁` of the
+  first Gröbner-basis element is the squarefree part of the resultant [now reachable: the
+  reduced-Gröbner-basis and Lazard-`Pₖ=Rₖ·Sₖ` infra it deferred to is formalized].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -741,6 +716,13 @@ noncomputable abbrev czichowski_lemma_2_1_zero_dimensional :=
 Nullstellensatz `I(V(I)) = √I`, this is exactly `I = I(V(I))`. The library's `czIdeal_isRadical`. -/
 noncomputable abbrev czichowski_lemma_2_1_radical :=
   @DeepWiki.SymbolicIntegration.czIdeal_isRadical
+
+/-- **Czichowski (1995), Lemma 2.1(iii), geometric form** (J. Symb. Comp. 20, p.164): over an
+algebraically closed `K`, `I = ⟨A − z·D', D⟩` is its own vanishing ideal, `I = I(V(I))` — Hilbert's
+Nullstellensatz `I(V(I)) = √I` applied to the radical `I`. The library's
+`czIdeal_eq_vanishingIdeal_zeroLocus`. -/
+noncomputable abbrev czichowski_lemma_2_1_vanishing_ideal :=
+  @DeepWiki.SymbolicIntegration.czIdeal_eq_vanishingIdeal_zeroLocus
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 

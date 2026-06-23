@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import Mathlib.RingTheory.Nullstellensatz
 
 /-! # Czichowski's Gröbner basis `GB₁` of `⟨A − z·D', D⟩` (Bronstein §2.6 / Czichowski Lemma 2.1)
 
@@ -17,8 +18,11 @@ So `lazardView` reads `f` as a polynomial in `z` over `K[x] ≃ MvPolynomial (Fi
 
 This file builds the concrete core: the residue polynomial `T` (`liftX`-ed into two variables),
 `z − T ∈ I`, `I = ⟨D, z − T⟩`, and that `{D, z − T}` is a Gröbner basis (its leading monomials
-`x^(deg D)` and `z` are coprime). The variety analysis (zero-dimensionality, normal position,
-maximality) is the genuine research wall and is left to the §2.6 catalog marker. -/
+`x^(deg D)` and `z` are coprime). Lemma 2.1 is then fully formalized: zero-dimensionality via the
+eliminating iso `K[x, z] ⧸ I ≃ₐ K[x] ⧸ (D)` (`finite_quotient_czIdeal`), normal position via the
+distinct roots of `D` (`nodup_roots_of_separable`), and maximality as radicality
+(`czIdeal_isRadical`, and over `[IsAlgClosed K]` the Nullstellensatz form
+`czIdeal_eq_vanishingIdeal_zeroLocus`: `I = I(V(I))`). -/
 
 open MvPolynomial MonomialOrder Polynomial
 
@@ -498,13 +502,28 @@ this is exactly that `I` is maximal among the ideals sharing its zero set. -/
 theorem czIdeal_isRadical (hD : D.Separable) : (czIdeal A D).IsRadical :=
   (Ideal.isRadical_iff_quotient_reduced _).mpr (isReduced_quotient_czIdeal A D hD)
 
-/-! ### Toward the variety analysis (deliverable E, partial): the residue value at a zero
+/-- **Geometric maximality (Lemma 2.1(iii), Nullstellensatz form)**: over an algebraically closed
+`K`, `I = ⟨A − z·D', D⟩` is the full vanishing ideal of its zero set, `I = I(V(I))`. Immediate from
+`czIdeal_isRadical` and Hilbert's Nullstellensatz `I(V(I)) = √I`. -/
+theorem czIdeal_eq_vanishingIdeal_zeroLocus [IsAlgClosed K] (hD : D.Separable) :
+    vanishingIdeal K (zeroLocus K (czIdeal A D)) = czIdeal A D := by
+  rw [vanishingIdeal_zeroLocus_eq_radical]
+  exact (czIdeal_isRadical A D hD).radical
+
+-- Lemma 2.1(iii), geometric form: `I` is its own vanishing ideal over an algebraically closed field.
+example [IsAlgClosed K] (A D : K[X]) (hD : D.Separable) :
+    vanishingIdeal K (zeroLocus K (Ideal.span
+        {liftX A - zVar * liftX (derivative D), liftX D})) =
+      Ideal.span {liftX A - zVar * liftX (derivative D), liftX D} :=
+  czIdeal_eq_vanishingIdeal_zeroLocus A D hD
+
+/-! ### The zeros of `I`: the residue value at a zero (Lemma 2.1, geometric content)
 
 The zeros of `I` are `(α, T(α))` for the roots `α` of `D`, and `T(α) = A(α)/D'(α)` is the
 Rothstein–Trager residue. The `x`-parts are the roots of `D`, **distinct** since `D` is squarefree
-(`Separable.nodup_roots`) — this is the *normal position* of Lemma 2.1(ii). The remaining claims
-(zero-dimensionality, maximality w.r.t. the zero set) need `MvPolynomial`-variety / Nullstellensatz
-dimension theory and are the genuine research wall; see the §2.6 catalog marker. -/
+(`Separable.nodup_roots`) — the *normal position* of Lemma 2.1(ii). Together with the
+zero-dimensionality (`finite_quotient_czIdeal`) and radicality (`czIdeal_isRadical`,
+`czIdeal_eq_vanishingIdeal_zeroLocus`), Czichowski's Lemma 2.1 is fully formalized. -/
 
 /-- **The residue value at a zero of `D`** (deliverable E, the `x`-parts of the zeros): for a root
 `α` of `D` (squarefree, so `D'(α) ≠ 0`), `T(α) = A(α)/D'(α)` — the Rothstein–Trager residue. So the
