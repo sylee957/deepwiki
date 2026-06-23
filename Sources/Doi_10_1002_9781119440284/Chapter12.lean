@@ -20,6 +20,9 @@ import DeepWiki.NetworkCalculus.StabilityNetworkScalingInstability
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import DeepWiki.NetworkCalculus.StabilityLocalOfGlobal
 import DeepWiki.NetworkCalculus.StabilityBehaviourEquivalence
+import DeepWiki.NetworkCalculus.StabilityLinearModelReduction
+import DeepWiki.NetworkCalculus.FeedForwardTransformExample
+import DeepWiki.NetworkCalculus.FixedPriorityExample
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -28,9 +31,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.1: Lemma 12.2 (global stability ⟹ local stability) mechanism is now DONE (`lemma_12_2`: the behaviour-preserving raise `β ⊔ rateLatency n T` — Prop 5.13 raise `isStrictMinimalServiceCurve_sup_of_backloggedLength_le` + `r(α)<n` ⟹ locally stable); the `rateLatency n T` surrogate stands in for the `ℝ≥0`-inexpressible infinite-jump `δ_T`, the only residual being the literal `n → ∞` limit. Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) `[infra]` — needs a network-level token-bucket/rate-latency model-bounding construction. (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.)
-§12.2: Example 12.1 (the Figure 12.1 feed-forward transformation) `[deferred]`.
-§12.3: Example 12.2 (FDF priorities on the Figure 12.1 network) `[deferred]`. -/
+§12.1: Lemma 12.2 (global stability ⟹ local stability) mechanism is now DONE (`lemma_12_2`: the behaviour-preserving raise `β ⊔ rateLatency n T` — Prop 5.13 raise `isStrictMinimalServiceCurve_sup_of_backloggedLength_le` + `r(α)<n` ⟹ locally stable); the `rateLatency n T` surrogate stands in for the `ℝ≥0`-inexpressible infinite-jump `δ_T`, the only residual being the literal `n → ∞` limit. Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) is `lemma_12_3` (per-server rate-monotone transfer + network-level `isGloballyStable_of_linearModel`); the only residual `[infra]` is the model-bounding construction producing the trajectory-admissibility hypothesis. (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.) -/
 
 namespace DeepWiki.Dnc
 
@@ -544,5 +545,32 @@ of this constant-scaling instability), so it is out of this book's scope rather 
 trajectories whose backlog grows geometrically; their per-phase burst recursion shares the divergence
 engine `linearIterate_unbounded`, but the full piecewise-cumulative-function constructions are not yet
 formalized. -/
+
+/-- **Lemma 12.3** (§12.1, p.272), the linear-model reduction: if the linear model (token-bucket
+arrivals + rate-latency services satisfying local stability) is globally stable then local stability of
+ANY curves suffices for global stability. The per-server engine is rate-monotone transfer
+(`IsLocallyStableServer.of_le`) ⟹ the linear-model criterion `isLocallyStableServer_of_linearBound`
+(token-bucket-above + rate-latency-below + `r<R` ⟹ locally stable). At the network level
+`Network.isGloballyStable_of_linearModel` transfers global stability from the linear model under a
+trajectory-admissibility hypothesis `htraj` (the only residual `[infra]`: the model-bounding
+construction that produces it). The library's `DeepWiki.Network.isGloballyStable_of_linearModel`. -/
+alias lemma_12_3 := DeepWiki.Network.isGloballyStable_of_linearModel
+
+/-- **Example 12.1** (§12.2, p.273, the Figure 12.1 feed-forward transformation): the cyclic 4-server
+network (flows 1=⟨3,4,2⟩, 2=⟨4,2,3⟩, 3=⟨2,1,3⟩, 4) has NO feed-forward ranking
+(`fourServerNetwork_not_feedForward`); removing the arcs `{(4,2),(2,1)}` and splitting yields 7
+sub-flows that ARE feed-forward (`feedForwardTransform_isFeedForward`, rank 1,2↦0/3↦1/4↦2). The
+library's `DeepWiki.feedForwardTransform_isFeedForward`. (Flow 4's path is cross-example-inconsistent
+in the book — Ex 12.1's acyclicity forces ⟨2,3⟩, Ex 12.2's priorities force ⟨3,2⟩; each example is
+formalized under its own required path.) -/
+alias ex_12_1 := DeepWiki.feedForwardTransform_isFeedForward
+
+/-- **Example 12.2** (§12.3.2, p.278, FDF priorities on the Figure 12.1 network): the
+furthest-from-destination-first priority assignment. Server 3 matches the book exactly — flow 1 >
+flow 4 > {flows 2,3 tied} (`fdf_server3_flow1_highest`). The library's
+`DeepWiki.fdf_server3_flow1_highest`. (★ BOOK ERRATUM, server 2: the book's "flows 4 and 3 share
+highest, flow 1 lowest" contradicts the FDF distances under any flow-4 reading — the distances give
+flow 3 strictly highest, then flow 2, then {flows 1,4} tied; documented in `FixedPriorityExample`.) -/
+alias ex_12_2 := DeepWiki.fdf_server3_flow1_highest
 
 end DeepWiki.Dnc
