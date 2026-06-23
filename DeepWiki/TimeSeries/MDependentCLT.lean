@@ -148,6 +148,27 @@ theorem IsStrictlyStationary.identDistrib_finsetSum {X : ℤ → Ω → ℝ}
   rw [hconv, hconv0]
   exact htuple.comp (Finset.measurable_sum Finset.univ fun i _ => measurable_pi_apply i)
 
+/-- **Big-block sums are identically distributed** (strict stationarity): every big-block sum has the
+same law as the first, since `bigBlock i` is `bigBlock 0` shifted by `i(p+m)`. -/
+theorem IsStrictlyStationary.identDistrib_bigBlockSum {X : ℤ → Ω → ℝ}
+    (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t)) (p m i : ℕ) :
+    IdentDistrib (fun ω => ∑ t ∈ bigBlock p m i, X t ω)
+      (fun ω => ∑ t ∈ bigBlock p m 0, X t ω) μ μ := by
+  have hshift : (fun ω => ∑ t ∈ bigBlock p m i, X t ω)
+      = fun ω => ∑ t ∈ bigBlock p m 0, X (t + (i : ℤ) * ((p : ℤ) + m)) ω := by
+    funext ω
+    refine Finset.sum_nbij' (fun s => s - (i : ℤ) * ((p : ℤ) + m))
+      (fun t => t + (i : ℤ) * ((p : ℤ) + m)) ?_ ?_ ?_ ?_ ?_
+    · intro s hs
+      simp only [bigBlock, Finset.mem_Ico, Nat.cast_zero, zero_mul, zero_add] at hs ⊢; omega
+    · intro t ht
+      simp only [bigBlock, Finset.mem_Ico, Nat.cast_zero, zero_mul, zero_add] at ht ⊢; omega
+    · intro s _; ring
+    · intro t _; ring
+    · intro s _; rw [sub_add_cancel]
+  rw [hshift]
+  exact hstat.identDistrib_finsetSum hmeas (bigBlock p m 0) ((i : ℤ) * ((p : ℤ) + m))
+
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
 theorem tsum_acvfStat_eq_sum_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDependent m X μ)
