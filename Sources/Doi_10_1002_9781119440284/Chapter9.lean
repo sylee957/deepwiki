@@ -16,6 +16,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveVariableCapacityStart
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
 import DeepWiki.NetworkCalculus.RealTimeCalculus
+import DeepWiki.NetworkCalculus.RealTimeCalculusService
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
 import Sources.Doi_10_1002_9781119440284.Source
@@ -26,7 +27,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§9.1: the RTC greedy-processor service-curve type (equations [9.4]-[9.6]) `[infra]` (its bivariate Chasles framework is `def_9_1`/`lemma_9_2`; the RTC↔NC equivalence is `thm_9_2`).
+§9.1: the RTC greedy-processor service-curve type (equations [9.4]-[9.6]) is now DONE at the real carrier (`rtc_service`: `Â ∗ βᵐ ≤ D̂ ≤ Â`, the Def 9.1 guarantee via Theorem 9.2); residual `[infra]`: the `Curve`/`IsMinimalServiceCurve` (EReal) lift needs a regularity-packaging bridge (monotone / left-continuous / null-at-origin — external to the Chasles framework).
 §9.3: Theorem 9.7 (the general intermediate-service-curve construction; only its δ_T case `lemma_9_5` is formalized) `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -84,9 +85,33 @@ alias thm_9_2_reverse := isRtcGreedy_of_isVarCapacityEqns
 arrival/service curves — a univariate cumulative `g` induces the Chasles
 bivariate `(s,t) ↦ g t − g s` (`ofUnivariate`, `isChasles_ofUnivariate`), and a
 Chasles bivariate reads back as `f s t = f 0 t − f 0 s` (`IsChasles`,
-`IsChasles.eq_univariate_sub`). The min/max RTC curves `αⁱᵘ,αᵘ,βᵐ,βᴹ` extracted
-from these bounds are not separately formalized. -/
+`IsChasles.eq_univariate_sub`). The RTC arrival/service guarantees `αˡ/αᵘ/βᵐ/βᴹ`
+are the predicate layer `IsRtcArrival`/`GuaranteesRtcMinService`/`BoundedByRtcMaxService`
+(`def_9_1_rtcCurves`). -/
 def def_9_1 := @ofUnivariate
+
+/-- **Definition 9.1, RTC curve guarantees** (§9.1.3, p.217): a Chasles capacity `C` *guarantees* the
+min/max RTC service curves `(βᵐ,βᴹ)` iff `βᵐ(t−s) ≤ C[s,t] ≤ βᴹ(t−s)` (and dually `A` is constrained by
+arrival curves `(αˡ,αᵘ)`). The library's `DeepWiki.GuaranteesRtcMinService` /
+`DeepWiki.BoundedByRtcMaxService` / `DeepWiki.IsRtcArrival`. -/
+def def_9_1_rtcCurves := @GuaranteesRtcMinService
+
+/-- **RTC greedy-processor service-curve type** (§9.1, Def 9.1, the catalog's open §9.1 item): the RTC
+greedy processor [9.4]-[9.6] (`IsRtcGreedy`) that guarantees min service curve `βᵐ` PROVIDES a
+(min,plus) service curve — the univariate departure is lower-bounded by the convolution `Â ∗ βᵐ ≤ D̂`
+(`minConvReal_le_departure_of_isRtcGreedy`, via Theorem 9.2 transporting the var-capacity guarantee),
+and is causal `D̂ ≤ Â` (`departure_le_arrival_of_isRtcGreedy`) — the min-plus service pair
+`Â ∗ βᵐ ≤ D̂ ≤ Â`. Stated at the real carrier (faithful to Def 9.1's real increments
+`βᵐ(t−s) ≤ C[s,t]`); the `Curve`/`IsMinimalServiceCurve` (EReal) lift needs a regularity-packaging
+bridge (monotone/left-cont/null-at-origin — external to the Chasles framework), the residual sub-item.
+The library's `DeepWiki.minConvReal_le_departure_of_isRtcGreedy`. -/
+theorem rtc_service {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ} {betaM : ℝ≥0 → ℝ}
+    (hA : IsChasles A) (hC : IsChasles C) (hb0 : b 0 = 0) (hg : IsRtcGreedy A C D C' b)
+    (hbdd : ∀ t : ℝ≥0, BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - A 0 u.1))
+    (hAnn : ∀ u, 0 ≤ A 0 u) (hβnn : ∀ u, 0 ≤ betaM u) (hguar : GuaranteesRtcMinService C betaM)
+    (t : ℝ≥0) :
+    minConvReal (fun u => A 0 u) betaM t ≤ D 0 t :=
+  minConvReal_le_departure_of_isRtcGreedy hA hC hb0 hg hbdd hAnn hβnn hguar t
 
 /-- **Lemma 9.3** (§9.1.4, p.218): If β ≤ β̃ then S_asc(β,β̃) ⊆ S_mp(β): an adaptive server with β ≤ β̃ is a min-plus server for β. -/
 alias lemma_9_3 := adaptiveServiceRel_le_minimalServiceRel
