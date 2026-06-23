@@ -3375,4 +3375,40 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
         S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
   lazard_Pk_eq_Rk_Sk_of_divideOut hB hne hB' hassoc j
 
+/-! ## The divided family is a reduced Gröbner basis (discharging `hassoc`)
+
+Lazard (1985), Theorem 1, final step: the divided family `{fᵢ/H}` (`H = gbCommonYFactor hB` the common
+`K[x][y]`-factor) is itself a **reduced** Gröbner basis of the quotient ideal `I' := span {fᵢ/H}`, and
+its leading monomials are those of `B` shifted down by `LM(H)` — an order-isomorphism preserving the
+GB and reducedness structure. The arithmetic core is the membership equivalence `g ∈ ⟨fᵢ/H⟩ ⟺ H·g ∈
+⟨fᵢ⟩` (cancel `H` over the domain). This discharges the `hassoc` recovery hypothesis of
+`lazard_Pk_eq_Rk_Sk_of_divideOut`, making `Pₖ = Rₖ·Sₖ` **unconditional** for an arbitrary reduced
+bivariate Gröbner basis. -/
+
+/-- **Membership in the divided ideal** (cancel the common factor `H`, domain). For a finite family
+`q : ι → MvPolynomial σ K` and `H ≠ 0`, a polynomial `g` lies in `span (range q)` iff `H·g` lies in
+`span (range (H · q))`: forward multiplies a representation by `H`; backward cancels `H`
+(`mul_left_cancel₀`). -/
+theorem mem_span_divided_iff {K : Type*} [Field K] {ι : Type*} [Fintype ι]
+    (q : ι → MvPolynomial σ K) {H : MvPolynomial σ K} (hH : H ≠ 0) (g : MvPolynomial σ K) :
+    g ∈ Ideal.span (Set.range q) ↔
+      H * g ∈ Ideal.span (Set.range (fun i => H * q i)) := by
+  classical
+  constructor
+  · -- `g = ∑ cᵢ·qᵢ ⟹ H·g = ∑ cᵢ·(H·qᵢ)`.
+    intro hg
+    rw [Ideal.mem_span_range_iff_exists_fun] at hg ⊢
+    obtain ⟨c, hc⟩ := hg
+    refine ⟨c, ?_⟩
+    rw [← hc, Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun i _ => by ring)
+  · -- `H·g = ∑ cᵢ·(H·qᵢ) = H·(∑ cᵢ·qᵢ) ⟹ g = ∑ cᵢ·qᵢ` (cancel `H`).
+    intro hHg
+    rw [Ideal.mem_span_range_iff_exists_fun] at hHg ⊢
+    obtain ⟨c, hc⟩ := hHg
+    refine ⟨c, ?_⟩
+    apply mul_left_cancel₀ hH
+    rw [← hc, Finset.mul_sum]
+    exact Finset.sum_congr rfl (fun i _ => by ring)
+
 end DeepWiki.SymbolicIntegration
