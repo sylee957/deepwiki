@@ -22,15 +22,16 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ` is **unconditional under
-  `HasNoCommonYFactor`** (`lazard_lemma3_dvd_of_hasNoCommonYFactor`, `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`):
-  the no-common-factor base is discharged by the structure fact that `primPart(lazardView f₀)` divides
-  every basis view (`primPart_lazardView_min_dvd_all`, via a reduction-element induction + Gauss-lemma
-  scalar-strip `isPrimitive_dvd_of_dvd_C_mul`), forcing `degreeOf 0 f₀ = 0`. Open: the divide-out
-  *construction* producing, from an arbitrary reduced GB, the divided basis `{fᵢ/(P·Gₖ₊₁)}` that
-  satisfies `HasNoCommonYFactor` — the leading-monomial-preservation core is `degree_cofactor` /
-  `degree_mul_le_mul_iff` / `leadingMonomial_cofactor_not_le` [research: Lazard Thm 1 P·Gₖ₊₁ quotient-GB
-  construction]; plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — Lazard Thm 1 is **complete through the `P·Gₖ₊₁` divide-out**:
+  the descent `gᵢ ∣ fᵢ` and `Pₖ = Rₖ·Sₖ` are unconditional under `HasNoCommonYFactor`
+  (`lazard_lemma3_dvd_of_hasNoCommonYFactor`, `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`), and an
+  **arbitrary** reduced bivariate GB is reduced to that state by dividing out the basis gcd `H = P·Gₖ₊₁`
+  (`lazard_thm1_divideOut`: `gbCommonYFactor` divides every element, cofactors `fᵢ = H·b'ᵢ` are coprime
+  via `gbYGcdCofactor_gcd_eq_one`/`cofactor_hasNoCommonYFactor`), with the structure conclusion bridged
+  through `hasNoCommonYFactor_of_cofactor_associated` → `lazard_Pk_eq_Rk_Sk_of_divideOut`. Open: the
+  divided family is an actual reduced GB of the quotient ideal `⟨fᵢ/H⟩` (the `initialIdeal`-of-quotient
+  assembly discharging the `hassoc` re-presentation hypothesis) [research: Lazard Thm 1 quotient-GB
+  assembly]; plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -633,6 +634,21 @@ for every sorted element with **no** base hypothesis. The library's
 `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`. -/
 noncomputable abbrev lazard_lemma3_dvd_unconditional :=
   @DeepWiki.SymbolicIntegration.lazard_lemma3_dvd_of_hasNoCommonYFactor
+
+/-- **Lazard (1985), Theorem 1, the `P·Gₖ₊₁` divide-out** (cited in §2.6; p.262, proof: "we may divide
+by `P·Gₖ₊₁` and suppose that the `fᵢ` have no common divisors"): from an **arbitrary** reduced bivariate
+GB, the basis gcd `H = GCD(f₀,…,fₖ) = P·Gₖ₊₁` (`gbCommonYFactor`) divides every element, and the
+cofactors `fᵢ = H·b'ᵢ` have **no common `y`-factor** (`cofactor_hasNoCommonYFactor`). The library's
+`lazard_thm1_divideOut`. -/
+noncomputable abbrev lazard_thm1_divide_out :=
+  @DeepWiki.SymbolicIntegration.lazard_thm1_divideOut
+
+/-- **Lazard (1985), Theorem 1, `Pₖ = Rₖ·Sₖ` for the general case** (cited in §2.6; p.262): the divide-out
+delivers `HasNoCommonYFactor` to any reduced GB recovering its cofactors, so the structural split
+`lazardView fⱼ = C(cⱼ)·Sⱼ` (`cⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and `y`-monic) holds for an arbitrary
+reduced bivariate GB once divided by `H`. The library's `lazard_Pk_eq_Rk_Sk_of_divideOut`. -/
+noncomputable abbrev lazard_thm1_structure :=
+  @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_of_divideOut
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
