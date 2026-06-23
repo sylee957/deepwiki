@@ -538,8 +538,12 @@ divergence (`ex_12_scalingInstability_iterate`), the separation from local stabi
 (`ex_12_localStability_not_sufficient`), and the recursion's grounding in the residual + output
 operations (`ex_12_scalingBurst_grounded`). The book derives instability by showing this NC bound
 *diverges*; the explicit cumulative-function trajectory proving the network is literally not globally
-stable is deferred by the book to the reference [FID 06b] (which the book cites for the "more details"
-of this constant-scaling instability), so it is out of this book's scope rather than a gap here.
+stable is deferred by the book to the reference [FID 06b]. That paper's **data-scaling calculus is now
+formalized from the paper itself** (`ScalingFunction.lean`: Def 3.1 scaling function/operator, Def 3.2
+maximal scaling curve, Cor 3.4 scaled-output arrival curve `α_S = S̄∘α`, and the gain-identity grounding
+the divergence in genuine scaling operations), with the per-paper double-reference catalog
+`Sources/Doi_10_1145_1140277_1140310` (`DeepWiki.Fs.*`, DOI 10.1145/1140277.1140310). Only the explicit
+adversarial piecewise-linear backlog-growing trajectory (Fig 12.5) stays `[deferred]`.
 
 **§12.4.1 (adversarial methods: SDF / FIFO, p.280–283)** presents in-book phase-by-phase adversarial
 trajectories whose backlog grows geometrically; their per-phase burst recursion shares the divergence
