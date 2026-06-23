@@ -2,6 +2,7 @@ import DeepWiki.TimeSeries.LinearProcessFullCLT
 import DeepWiki.TimeSeries.DeltaMethod
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.MDependentCLT
+import DeepWiki.TimeSeries.MovingAverageMDependent
 import DeepWiki.TimeSeries.StochasticOrder
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
@@ -107,16 +108,24 @@ strictly stationary `m`-dependent (indeed any summable-acvf weakly stationary) s
 `tendsto_nsmul_variance_sampleMean_of_mDependent`. -/
 alias thm_6_4_2_i := DeepWiki.TimeSeries.tendsto_nsmul_variance_sampleMean_of_mDependent
 
+/-- **§6.4 Example 6.4.3 — a moving average is m-dependent**: the MA(q) process `Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}`
+over i.i.d. noise is `q`-dependent (Example 6.4.3 is the case `q = 1`, `Xₜ = Zₜ − Zₜ₋₁`). The library's
+`isMDependent_movingAverage` (blocks separated by `> q` depend on disjoint noise windows); with the
+structural lemmas `measurable_movingAverage`/`memLp_movingAverage`/`integral_movingAverage` this readies
+`movingAverage` for the `m`-dependent CLT `thm_6_4_2`. -/
+alias example_6_4_3 := DeepWiki.TimeSeries.isMDependent_movingAverage
+
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred];
-Example 6.4.3 (the MA(1) process `Xₜ = Zₜ − Zₜ₋₁` is `1`-dependent, with `√n X̄ₙ ⇒ N(0,0)` degenerate) [deferred];
-Example 6.4.4 (asymptotic normality of `X̄ₙ` for the MA(q) process via Theorem 6.4.2) [deferred];
+Example 6.4.4 (asymptotic normality of `X̄ₙ` for the MA(q) process via Theorem 6.4.2) [deferred — `movingAverage`
+is already built, `q`-dependent `example_6_4_3`, measurable/`L²`/centered; the one remaining input to `thm_6_4_2`
+is `IsStrictlyStationary (movingAverage θ q Z)` from i.i.d. noise, i.e. the iid⟹strictly-stationary bridge];
 Definition 6.4.2 (asymptotic normality of a sequence of random `k`-vectors) [infra];
 Proposition 6.4.2 (linear images `B Xₙ` of an asymptotically normal sequence are asymptotically normal) [infra];
 Proposition 6.4.3 (the multivariate delta method) [infra]
 (The headline §6.4 results are done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
-CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`. The remaining items are the vector-AN
-framework (`Definition 6.4.2`/`Proposition 6.4.2`/`6.4.3`) and concrete worked examples; the multivariate
-iid CLT `multivariate_iid_clt` is available as the engine for the vector results.) -/
+CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, and MA m-dependence `example_6_4_3`. The remaining
+items are the vector-AN framework (`Definition 6.4.2`/`Proposition 6.4.2`/`6.4.3`) and the iid⟹strictly-stationary
+bridge for Example 6.4.4; the multivariate iid CLT `multivariate_iid_clt` is the engine for the vector results.) -/
 
 end DeepWiki.Ts
