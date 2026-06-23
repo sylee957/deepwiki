@@ -139,6 +139,141 @@ theorem exists_coe_vDev_coeENN (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × 
     ∃ B : ℝ≥0, vDev (coeENN a fs segA) (coeENN b fs segB) = (B : ℝ≥0∞) :=
   ⟨_, (ENNReal.coe_toNNReal (vDev_coeENN_ne_top a b fs segA segB)).symm⟩
 
+/-! ## Horizontal deviation `Dmax` — past-rank admissibility
+
+The horizontal analogue is genuinely harder and needs a *positive* final slope
+`0 < fs`: two parallel flat (`fs = 0`) asymptotes at different heights are never
+horizontally reachable, so `Dmax = ⊤`. With `0 < fs` the two parallel asymptotes
+(slope `fs`) are a fixed horizontal distance apart, `(f̄ R − f̲ R)/fs`. Past the
+rank this gives a per-point admissible shift, hence a per-point `hDevAt` bound. -/
+
+/-- **Past-rank horizontal admissibility.** For `R ≤ t` (`R = jointRank segA
+segB`) and a shift `d` with `f̄ R − f̲ R ≤ fs · d`, the lower curve catches up:
+`f̄ t ≤ f̲ (t + d)`. Both are affine of slope `fs` past `R`, so the shift `d`
+recovers exactly `fs · d ≥ f̄ R − f̲ R` of height. -/
+theorem apply_le_apply_add_past_jointRank (a b fs : ℝ≥0)
+    (segA segB : List (ℝ≥0 × ℝ≥0)) {t d : ℝ≥0} (ht : jointRank segA segB ≤ t)
+    (hd : convexSegEval a fs segA (jointRank segA segB)
+        - convexSegEval b fs segB (jointRank segA segB) ≤ fs * d) :
+    convexSegEval a fs segA t ≤ convexSegEval b fs segB (t + d) := by
+  set R := jointRank segA segB with hR
+  have hRt : R ≤ t := ht
+  have htd : R ≤ t + d := le_trans ht le_self_add
+  -- past `R` both curves are affine: f̄ t = f̄R + fs(t−R), f̲(t+d) = f̲R + fs(t+d−R)
+  rw [convexSegEval_sub_past_rank a fs segA (le_max_left _ _) hRt,
+    convexSegEval_sub_past_rank b fs segB (le_max_right _ _) htd]
+  -- key: f̄R ≤ f̲R + fs·d  (from `hd`, since f̄R − f̲R ≤ fs·d and truncated sub)
+  have hkey : convexSegEval a fs segA R
+      ≤ convexSegEval b fs segB R + fs * d := by
+    rw [← tsub_le_iff_left]; exact hd
+  calc convexSegEval a fs segA R + fs * (t - R)
+      ≤ (convexSegEval b fs segB R + fs * d) + fs * (t - R) := by gcongr
+    _ = convexSegEval b fs segB R + (fs * (t - R) + fs * d) := by ring
+    _ = convexSegEval b fs segB R + fs * ((t - R) + d) := by rw [mul_add]
+    _ ≤ convexSegEval b fs segB R + fs * (t + d - R) := by
+        gcongr
+        rw [tsub_add_eq_add_tsub hRt]
+
+/-- **Per-point horizontal-deviation bound past the rank.** For `R ≤ t`
+(`R = jointRank segA segB`) and `f̄ R − f̲ R ≤ fs · d`, the pointwise horizontal
+deviation is bounded by the shift: `hDevAt f̄ f̲ t ≤ ↑d` (`ℝ≥0∞` reading). -/
+theorem hDevAt_coeENN_le_past_jointRank (a b fs : ℝ≥0)
+    (segA segB : List (ℝ≥0 × ℝ≥0)) {t d : ℝ≥0} (ht : jointRank segA segB ≤ t)
+    (hd : convexSegEval a fs segA (jointRank segA segB)
+        - convexSegEval b fs segB (jointRank segA segB) ≤ fs * d) :
+    (hDevAt (coeENN a fs segA) (coeENN b fs segB) t : ℝ≥0∞) ≤ (d : ℝ≥0∞) :=
+  hDevAt_le (by
+    show (convexSegEval a fs segA t : ℝ≥0∞) ≤ (convexSegEval b fs segB (t + d) : ℝ≥0∞)
+    exact_mod_cast apply_le_apply_add_past_jointRank a b fs segA segB ht hd)
+
+/-- **A canonical shift that works past the rank** (`0 < fs`): `d₀ = (f̄ R − f̲
+R)/fs` satisfies `f̄ R − f̲ R ≤ fs · d₀`, so `apply_le_apply_add_past_jointRank`
+and `hDevAt_coeENN_le_past_jointRank` apply to it. -/
+theorem jointRank_gap_le_mul_div (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) :
+    convexSegEval a fs segA (jointRank segA segB)
+        - convexSegEval b fs segB (jointRank segA segB)
+      ≤ fs * ((convexSegEval a fs segA (jointRank segA segB)
+          - convexSegEval b fs segB (jointRank segA segB)) / fs) := by
+  rw [mul_div_cancel₀ _ hfs.ne']
+
+/-! ## Finiteness of `Dmax` (positive final slope)
+
+With a *positive* final slope `0 < fs`, a single shift `d₀ = R + f̄ R / fs` is
+admissible at **every** `t`: it pushes `t` past the rank far enough that the lower
+curve's affine tail has recovered the full height `f̄ R ≥ f̄ t`. Hence the
+horizontal deviation `Dmax = hDev f̄ f̲` is finite. -/
+
+/-- **A uniform admissible shift** (`0 < fs`). With `d₀ = R + f̄ R / fs`
+(`R = jointRank segA segB`), at *every* `t` the lower curve catches the upper one:
+`f̄ t ≤ f̲ (t + d₀)`. The shift carries `t + d₀` past `R`, where the affine tail of
+`f̲` has accrued `f̲ R + fs · (t + d₀ − R) ≥ f̄ R ≥ f̄ t`. -/
+theorem apply_le_apply_add_uniformShift (a b fs : ℝ≥0)
+    (segA segB : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs) (t : ℝ≥0) :
+    convexSegEval a fs segA t
+      ≤ convexSegEval b fs segB
+          (t + (jointRank segA segB
+            + convexSegEval a fs segA (jointRank segA segB) / fs)) := by
+  set R := jointRank segA segB with hR
+  set d₀ := R + convexSegEval a fs segA R / fs with hd₀
+  have hRd₀ : R ≤ d₀ := by rw [hd₀]; exact le_self_add
+  -- the shift `d₀` clears the past-rank gap: f̄R − f̲R ≤ fs·d₀
+  have hgap : convexSegEval a fs segA R - convexSegEval b fs segB R ≤ fs * d₀ := by
+    refine le_trans tsub_le_self ?_
+    calc convexSegEval a fs segA R
+        = fs * (convexSegEval a fs segA R / fs) := by
+          rw [mul_div_cancel₀ _ hfs.ne']
+      _ ≤ fs * d₀ := by
+          gcongr
+          rw [hd₀]; exact le_add_self
+  rcases le_total R t with ht | ht
+  · -- `R ≤ t`: both already past the rank — reuse the past-rank admissibility
+    exact apply_le_apply_add_past_jointRank a b fs segA segB ht hgap
+  · -- `t ≤ R`: `f̄ t ≤ f̄ R`, and `f̲(t+d₀) ≥ f̲ R + fs·(d₀ − R) = f̲ R + f̄ R ≥ f̄ R`
+    have hRtd : R ≤ t + d₀ := le_trans hRd₀ (by rw [add_comm]; exact le_self_add)
+    rw [convexSegEval_sub_past_rank b fs segB (le_max_right _ _) hRtd]
+    refine le_trans ((monotone_convexSegEval fs segA a) ht) ?_
+    have hge : convexSegEval a fs segA R / fs ≤ t + d₀ - R := by
+      have h1 : convexSegEval a fs segA R / fs = d₀ - R := by
+        rw [hd₀, add_tsub_cancel_left]
+      rw [h1]
+      exact tsub_le_tsub_right (by rw [add_comm]; exact le_self_add) R
+    calc convexSegEval a fs segA R
+        = fs * (convexSegEval a fs segA R / fs) := by rw [mul_div_cancel₀ _ hfs.ne']
+      _ ≤ fs * (t + d₀ - R) := by gcongr
+      _ ≤ convexSegEval b fs segB R + fs * (t + d₀ - R) := le_add_self
+
+/-- **Definition 4.4 finiteness — `Dmax ≤ ↑d₀`** (`0 < fs`). The time-domain
+maximal uncertainty is bounded by the uniform shift `d₀ = R + f̄ R / fs`
+(`R = jointRank segA segB`): `hDev f̄ f̲ ≤ ↑d₀` (`ℝ≥0∞` reading). -/
+theorem hDev_coeENN_le_coe (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) :
+    (hDev (coeENN a fs segA) (coeENN b fs segB) : ℝ≥0∞)
+      ≤ ((jointRank segA segB
+          + convexSegEval a fs segA (jointRank segA segB) / fs : ℝ≥0) : ℝ≥0∞) :=
+  hDev_le fun t => hDevAt_le (by
+    show (convexSegEval a fs segA t : ℝ≥0∞)
+      ≤ (convexSegEval b fs segB
+          (t + (jointRank segA segB
+            + convexSegEval a fs segA (jointRank segA segB) / fs)) : ℝ≥0∞)
+    exact_mod_cast apply_le_apply_add_uniformShift a b fs segA segB hfs t)
+
+/-- **Definition 4.4 finiteness — `Dmax` is finite** (`0 < fs`). With a positive
+final slope the time-domain maximal uncertainty `Dmax = hDev (f̄, f̲)` of a
+canonical container is finite: `hDev f̄ f̲ ≠ ⊤`. (Positivity is essential — two
+parallel flat asymptotes are never horizontally reachable, giving `Dmax = ⊤`.) -/
+theorem hDev_coeENN_ne_top (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) :
+    (hDev (coeENN a fs segA) (coeENN b fs segB) : ℝ≥0∞) ≠ ⊤ :=
+  ne_top_of_le_ne_top ENNReal.coe_ne_top (hDev_coeENN_le_coe a b fs segA segB hfs)
+
+/-- **Definition 4.4 finiteness — `Dmax < ⊤`** (`0 < fs`). The strict-inequality
+form of the time-domain finiteness. -/
+theorem hDev_coeENN_lt_top (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) :
+    (hDev (coeENN a fs segA) (coeENN b fs segB) : ℝ≥0∞) < ⊤ :=
+  lt_of_le_of_lt (hDev_coeENN_le_coe a b fs segA segB hfs) ENNReal.coe_lt_top
+
 /-! ## Faithfulness checks (against §4.4, book p. 89) -/
 
 /-- Faithfulness: past the joint rank the vertical gap is the constant rank-value
@@ -155,6 +290,12 @@ slope) is finite, `< ⊤`. -/
 example (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0)) :
     vDev (coeENN a fs segA) (coeENN b fs segB) < ⊤ :=
   vDev_coeENN_lt_top a b fs segA segB
+
+/-- Faithfulness: `Dmax = hDev(f̄, f̲)` of a canonical container with positive
+final slope (`0 < fs`) is finite, `< ⊤`. -/
+example (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs) :
+    (hDev (coeENN a fs segA) (coeENN b fs segB) : ℝ≥0∞) < ⊤ :=
+  hDev_coeENN_lt_top a b fs segA segB hfs
 
 end MaxUncertaintyFinite
 
