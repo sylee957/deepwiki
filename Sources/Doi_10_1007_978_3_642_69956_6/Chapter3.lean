@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.FunctionalDependencies
+import DeepWiki.RelationalDatabases.MultivaluedDependencies
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 3: Constraints
@@ -21,7 +22,12 @@ semantics.
   computation) with Theorem 3.3 / 3.5 correctness and Theorem 3.4 / 3.6 complexity [infra:
   functional fixpoint algorithm]; Def 3.6 non-redundant cover; Def 3.7 canonical cover and
   Example 3.10 [infra].
-§3.3: multivalued dependencies — definition, the MVD axioms, the implication problem [infra].
+§3.3: Theorem 3.7 / 3.8 (an fd gives a lossless two-way decomposition, and its partial
+  converse), Theorem 3.9 (an mvd holds iff the relation decomposes losslessly), the remaining
+  axioms of system `𝓜` — M2 (mvd-augmentation), M3 (mvd-pseudotransitivity), FM2 (mixed
+  pseudotransitivity); M1 and FM1 are done — Lemma 3.1 rules M4/M5/M6, Theorem 3.11 (dependency
+  basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
+  (polynomial-time decidability) [infra].
 §3.4: join dependencies — definition, the chase, acyclicity [infra/research].
 §3.5: inclusion dependencies — definition, axioms, the (undecidable in general) implication
   problem [research].
@@ -84,5 +90,19 @@ abbrev fd_closure := @DeepWiki.fdClosure
 /-- **fd-closure characterization** (§3.2, p.68): `SC ⊨ X → Y` iff every attribute of `Y` lies
 in the fd-closure `X̄` — the basis of the closure decision procedure. -/
 abbrev fd_closure_characterization := @DeepWiki.implies_iff_subset_fdClosure
+
+/-! ## §3.3 Multivalued Dependencies -/
+
+/-- **Definition 3.8** (§3.3, p.78): a row set satisfies the *multivalued dependency* `X ↠ Y`
+when, for any two rows agreeing on `X`, the `Y`-versus-`(Ω − Y)` tuple swap stays in the
+relation. -/
+abbrev def_3_8 := @DeepWiki.SatisfiesMvd
+
+/-- **Corollary 3.1, rule FM1** (§3.3, p.79): every functional dependency is a multivalued
+dependency — `X → Y` gives `X ↠ Y`. -/
+abbrev cor_3_1_fd_to_mvd := @DeepWiki.satisfiesMvd_of_satisfiesFd
+
+/-- **Corollary 3.1, rule M1** (§3.3, p.79, complementation): `X ↠ Y` gives `X ↠ Ω − Y`. -/
+abbrev cor_3_1_complement := @DeepWiki.satisfiesMvd_complement
 
 end DeepWiki.Rdb

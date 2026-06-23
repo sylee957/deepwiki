@@ -5,3 +5,4 @@ import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 import DeepWiki.RelationalDatabases.TupleCalculus
 import DeepWiki.RelationalDatabases.Sql
 import DeepWiki.RelationalDatabases.FunctionalDependencies
+import DeepWiki.RelationalDatabases.MultivaluedDependencies
