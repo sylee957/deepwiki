@@ -169,6 +169,35 @@ theorem IsStrictlyStationary.identDistrib_bigBlockSum {X : ℤ → Ω → ℝ}
   rw [hshift]
   exact hstat.identDistrib_finsetSum hmeas (bigBlock p m 0) ((i : ℤ) * ((p : ℤ) + m))
 
+/-- For a weakly stationary process the lag covariance is the autocovariance of the lag difference:
+`cov[Xₛ, Xₜ] = γ(s − t)`. -/
+theorem IsWeaklyStationary.cov_eq_acvfStat_sub {X : ℤ → Ω → ℝ} (hX : IsWeaklyStationary X μ)
+    (s t : ℤ) : cov[X s, X t; μ] = acvfStat X μ (s - t) := by
+  rw [acvfStat_apply, hX.acvf_shift s t (-t)]
+  simp only [← sub_eq_add_neg, sub_self]
+
+/-- **A general variance bound for a block sum**: for a weakly stationary process with summable
+autocovariance, `Var(∑_{t ∈ A} Xₜ) ≤ |A| · ∑_h |γ(h)|`. The analytic input for the small-block (gap)
+remainder in the m-dependent CLT: the variance of a sum over any finite set is controlled by its
+cardinality times the total absolute autocovariance. -/
+theorem variance_finsetSum_le {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ] (hX : IsWeaklyStationary X μ)
+    (hsum : Summable (acvfStat X μ)) (A : Finset ℤ) :
+    variance (fun ω => ∑ t ∈ A, X t ω) μ ≤ (A.card : ℝ) * ∑' h : ℤ, |acvfStat X μ h| := by
+  rw [variance_fun_sum' fun t _ => hX.memLp t]
+  have hsa := hsum.abs
+  calc ∑ s ∈ A, ∑ t ∈ A, cov[X s, X t; μ]
+      ≤ ∑ s ∈ A, ∑ t ∈ A, |acvfStat X μ (s - t)| := by
+        gcongr with s _ t _; rw [hX.cov_eq_acvfStat_sub]; exact le_abs_self _
+    _ ≤ ∑ s ∈ A, ∑' h : ℤ, |acvfStat X μ h| := by
+        gcongr with s _
+        have himg : ∑ t ∈ A, |acvfStat X μ (s - t)|
+            = ∑ h ∈ A.image (fun t => s - t), |acvfStat X μ h| :=
+          (Finset.sum_image (g := fun t => s - t) (f := fun h => |acvfStat X μ h|)
+            fun a _ b _ hab => by simp only [] at hab; omega).symm
+        rw [himg]
+        exact Summable.sum_le_tsum _ (fun h _ => abs_nonneg _) hsa
+    _ = (A.card : ℝ) * ∑' h : ℤ, |acvfStat X μ h| := by rw [Finset.sum_const, nsmul_eq_mul]
+
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
 theorem tsum_acvfStat_eq_sum_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDependent m X μ)
