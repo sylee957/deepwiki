@@ -19,11 +19,10 @@ are layered on this next.
 §7.2: Def 7.7 (all operators — `μ`, `ν`, `ρ`, `∪`, `−`, `∩`, `×`, `π`, `σ`, with `DecidableEq
   (NestedValue …)`) and Def 7.8 (nested algebra expression + evaluator) are done; remaining: the
   nest/unnest-not-inverse fact [infra].
-§7.3: Def 7.9 (fd) and Def 7.10 (mvd) on nested instances are done, both with decidable satisfaction
-  and concrete instances (a Theorem 7.1 fd instance, an mvd "rectangle" instance); the *general*
-  Theorem 7.1 (`ν(ω; X)` satisfies `(Ω − X) → X`) needs the attribute universe `Ω` the untyped
-  carrier does not track (a schema-typed model). Remaining: the non-commutativity of nesting
-  (Example 7.10) [infra].
+§7.3: Def 7.9 (fd), Def 7.10 (mvd) on nested instances (both decidable, with concrete instances incl.
+  a Theorem 7.1 fd instance and an mvd "rectangle"), and Example 7.10 (nesting non-commutative) are
+  done; only the *general* Theorem 7.1 (`ν(ω; X)` satisfies `(Ω − X) → X`) remains, needing the
+  attribute universe `Ω` the untyped carrier does not track (a schema-typed model) [infra].
 §7.4: the expressiveness of the nested relational algebra [research].
 §7.5: hierarchical instances [research].
 §7.6: Exercises [deferred: not yet transcribed]. -/
@@ -131,3 +130,7 @@ abbrev satisfiesFd_self := @DeepWiki.NestedValue.satisfiesFd_self
 /-- **Definition 7.10** (§7.3): a nested relation satisfies the multivalued dependency `X ↠ Y` when
 rows agreeing on `X` can be swapped on `Y` versus the complement. -/
 abbrev def_7_10_satisfiesMvd := @DeepWiki.NestedValue.SatisfiesMvd
+
+/-- **Example 7.10** (§7.3): nesting is not commutative — nesting `B` then `C` can differ from
+nesting `C` then `B`. -/
+abbrev ex_7_10_nest_not_commutative := @DeepWiki.nest_not_commutative

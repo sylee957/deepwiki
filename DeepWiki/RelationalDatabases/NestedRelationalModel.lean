@@ -503,4 +503,14 @@ example : (rel [[("A", atom 1), ("B", atom 1), ("C", atom 1)],
       [("A", atom 1), ("B", atom 2), ("C", atom 1)],
       [("A", atom 1), ("B", atom 2), ("C", atom 2)]]).SatisfiesMvd ["A"] ["B"] := by decide
 
+open NestedValue in
+/-- **Example 7.10** (§7.3): nesting is *not* commutative — nesting `B` then `C` can give a
+different (genuinely differently-grouped) result than nesting `C` then `B`. -/
+theorem nest_not_commutative :
+    ∃ (r : NestedValue String ℕ) (X Y : List String) (P Q : String),
+      (r.nest X P).nest Y Q ≠ (r.nest Y Q).nest X P :=
+  ⟨rel [[("A", atom 1), ("B", atom 1), ("C", atom 1)],
+        [("A", atom 1), ("B", atom 1), ("C", atom 2)],
+        [("A", atom 1), ("B", atom 2), ("C", atom 1)]], ["B"], ["C"], "P", "Q", by decide⟩
+
 end DeepWiki
