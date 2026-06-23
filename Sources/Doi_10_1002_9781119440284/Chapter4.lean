@@ -58,10 +58,13 @@ directions); Proposition 4.3 DONE — congruence is an equivalence (`prop_4_3_se
 `FmodL` (`prop_4_3_inf_congr`/`FmodL.inf`) and `∗` respects it at the representative level
 (`SameLegendre.legendreConv`); the `⊗`-descent is done on the proper-curve subtype (`prop_4_3_conv_mk`/`FmodLProper`, mapping into
 the full quotient since `legendreConv` need not preserve properness); what remains is the
-closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; Definition 4.3 (canonical representation); Definition 4.4 (maximal uncertainty); Definition
-4.5 (inclusion functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all
-`[research]` (need the `F_acv` almost-concave class + asymptotic-slope `ρ` typing, not yet built);
-Remark 4.1. -/
+closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; the §4.4
+FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWiki.IsAlmostConcave`/
+`IsAlmostConvex` = `F_acv`/`F_acx`, `IsConcaveEReal.isAlmostConcave`, `IsAsymptoticallyTyped` = the
+container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the
+`Θ^κ_τ ∗ g` decomposition); Definition 4.4 (maximal uncertainty); Definition 4.5 (inclusion
+functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all `[research]` (the
+container inclusion-function algorithmics); Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
