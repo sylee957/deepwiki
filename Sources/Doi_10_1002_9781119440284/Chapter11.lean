@@ -7,6 +7,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
+import DeepWiki.NetworkCalculus.TandemFifoMilp
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -16,7 +17,7 @@ or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
 §11.1: Example 11.1 (two-server tandem, figure) `[deferred]`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); residual `[infra]`: the optimization half (LP optimum = worst case) needs a solver/extremal-trajectory argument, not a closed-form lemma.
-§11.2: Example 11.2 (single FIFO node, figure) `[deferred]`; Theorem 11.2 general FIFO tandem (the exponential MILP construction + trajectory-from-solution reconstruction) `[infra]`. -/
+§11.2: Example 11.2 (single FIFO node, figure) `[deferred]`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
 
@@ -224,5 +225,30 @@ theorem thm_11_1_sound {n : ℕ} {N : DeepWiki.TandemLP.Tandem n} {v : DeepWiki.
     (hstab : N.rate0 < Rmin) :
     DeepWiki.TandemLP.delay v ≤ DeepWiki.TandemLP.objectiveValue N Rmin :=
   DeepWiki.TandemLP.delay_le_objectiveValue hv hRmin hstab
+
+/-- **Lemma 11.1.1** (§11.2, p.263), the big-M order encoding `x ≤_b y`: a Boolean `b ∈ {0,1}` with the
+constraint pair `x + (1−b)M ≥ y`, `y + bM ≥ x` (dates boxed in `[0,M]`) encodes the order disjunction —
+`bigMOrder_iff : (the big-M pair) ↔ ((b=0 → x ≤ y) ∧ (b=1 → y ≤ x))`. The library's
+`DeepWiki.TandemFifo.{BigMOrder, bigMOrder_iff}`. -/
+theorem lemma_11_1_1 {M x y b : ℝ} (hxge0 : 0 ≤ x) (hxleM : x ≤ M) (hyge0 : 0 ≤ y) (hyleM : y ≤ M)
+    (hb : b = 0 ∨ b = 1) :
+    (x + (1 - b) * M ≥ y ∧ y + b * M ≥ x) ↔ ((b = 0 → x ≤ y) ∧ (b = 1 → y ≤ x)) :=
+  DeepWiki.TandemFifo.bigMOrder_iff hxge0 hxleM hyge0 hyleM hb
+
+/-- **Theorem 11.2 / §11.2** (general FIFO tandem), the representable half: the FIFO tandem MILP as DATA
++ soundness. `TandemFifo.FifoFeasible` extends the arbitrary-mux tandem LP (`TandemLP.Feasible`) with a
+per-server Boolean date-ordering selector `z` constrained by the Lemma-11.1.1 big-M encoding (FIFO: an
+earlier-arriving bit departs earlier). FIFO is a restriction of arbitrary-mux (`FifoFeasible.feasible`),
+so a FIFO-feasible point's delay is bounded by the §11.1 objective (`thm_11_2_sound`/
+`fifoDelay_le_objectiveValue`), and the FIFO MILP optimum is below the arbitrary-mux LP optimum
+(`fifoOptimum_le_arbMuxOptimum`, §11.2.3). The library's `DeepWiki.TandemFifo.*`. (Solver-dependent
+residual `[infra]`: the exponential binary-tree multi-flow layout `Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`, and the
+MILP-optimum = worst-case `≥` direction — the §11.2.2 trajectory-from-solution reconstruction over the
+`2^?` Boolean orderings, an extremal/existence argument, not a closed form.) -/
+theorem thm_11_2_sound {n : ℕ} {N : DeepWiki.TandemLP.Tandem n} {M : ℝ}
+    {v : DeepWiki.TandemFifo.FifoVars n} (hv : DeepWiki.TandemFifo.FifoFeasible N M v) {Rmin : ℝ}
+    (hRmin : ∀ h : Fin n, Rmin ≤ N.rate h) (hstab : N.rate0 < Rmin) :
+    DeepWiki.TandemFifo.fifoDelay v ≤ DeepWiki.TandemLP.objectiveValue N Rmin :=
+  DeepWiki.TandemFifo.fifoDelay_le_objectiveValue hv hRmin hstab
 
 end DeepWiki.Dnc
