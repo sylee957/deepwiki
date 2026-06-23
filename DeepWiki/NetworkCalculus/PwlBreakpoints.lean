@@ -173,4 +173,59 @@ theorem breakpoints_pairwise_lt (segs : List (ℝ≥0 × ℝ≥0))
         exact lt_add_of_pos_right ℓ (pos_of_mem_breakpoints tl htl hy)
       · exact (ih htl).map _ (fun a b hab => by gcongr)
 
+/-! ## Corner values — the curve value at each breakpoint -/
+
+/-- The **corner-value increment** of a segment list: `Σᵢ slopeᵢ · lengthᵢ` (the height gained
+over all finite segments). Adding it to the base `f0` gives the value at the rank. -/
+noncomputable def cornerSum : List (ℝ≥0 × ℝ≥0) → ℝ≥0
+  | [] => 0
+  | (s, ℓ) :: rest => s * ℓ + cornerSum rest
+
+@[simp] theorem cornerSum_nil : cornerSum [] = 0 := rfl
+
+@[simp] theorem cornerSum_cons (s ℓ : ℝ≥0) (rest : List (ℝ≥0 × ℝ≥0)) :
+    cornerSum ((s, ℓ) :: rest) = s * ℓ + cornerSum rest := rfl
+
+/-- **The value at the rank is the sum of the corner increments.**
+`convexSegEval f0 fs segs (pwlRank segs) = f0 + cornerSum segs`: at the last breakpoint the curve
+has accrued `f0 + Σᵢ slopeᵢ·lengthᵢ`. -/
+theorem convexSegEval_pwlRank (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) :
+    convexSegEval f0 fs segs (pwlRank segs) = f0 + cornerSum segs := by
+  induction segs generalizing f0 with
+  | nil => rw [pwlRank_nil, convexSegEval_zero, cornerSum_nil, add_zero]
+  | cons hd tl ih =>
+      obtain ⟨s, ℓ⟩ := hd
+      rw [pwlRank_cons, cornerSum_cons, convexSegEval_cons_peel, ih]
+      ring
+
+/-- **The value at the `k`-th breakpoint is the sum of the first `k` corner increments.**
+`convexSegEval f0 fs segs (segLenSum (segs.take k)) = f0 + cornerSum (segs.take k)`: at the
+breakpoint after `k` segments the curve value is `f0 + Σᵢ₌₀..k₋₁ slopeᵢ·lengthᵢ`. -/
+theorem convexSegEval_at_breakpoint (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k : ℕ) :
+    convexSegEval f0 fs segs (segLenSum (segs.take k)) = f0 + cornerSum (segs.take k) := by
+  induction segs generalizing f0 k with
+  | nil => simp
+  | cons hd tl ih =>
+      obtain ⟨s, ℓ⟩ := hd
+      cases k with
+      | zero => simp
+      | succ k =>
+          rw [List.take_succ_cons, segLenSum_cons, cornerSum_cons,
+            convexSegEval_cons_peel, ih]
+          ring
+
+/-- Faithfulness check: evaluating the curve at the `k`-th entry of `breakpoints` gives the
+corner value over the first `k+1` segments. -/
+example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k : ℕ)
+    (hk : k < (breakpoints segs).length) :
+    convexSegEval f0 fs segs ((breakpoints segs)[k])
+      = f0 + cornerSum (segs.take (k + 1)) := by
+  rw [breakpoints_getElem segs k hk, convexSegEval_at_breakpoint]
+
+/-- Faithfulness check: the value at the rank equals the value at the last breakpoint (nonempty
+`segs`), namely `f0 + cornerSum segs`. -/
+example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (h : breakpoints segs ≠ []) :
+    convexSegEval f0 fs segs ((breakpoints segs).getLast h) = f0 + cornerSum segs := by
+  rw [breakpoints_getLast, convexSegEval_pwlRank]
+
 end DeepWiki
