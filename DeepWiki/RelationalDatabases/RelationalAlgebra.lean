@@ -133,6 +133,24 @@ theorem union_assoc {Ω : Finset Att} (v v' v'' : Table Ω Val) :
     union (union v v') v'' = union v (union v' v'') := by
   ext t; simp only [mem_union]; tauto
 
+/-- Selection only removes rows: `σ(v; P) ⊆ v`. -/
+theorem select_subset {Ω : Finset Att} (P : Tuple Ω Val → Prop) (v : Table Ω Val) :
+    select P v ⊆ v := fun _ h => h.1
+
+/-- Selection is monotone in its table argument. -/
+theorem select_mono {Ω : Finset Att} (P : Tuple Ω Val → Prop) {v v' : Table Ω Val} (h : v ⊆ v') :
+    select P v ⊆ select P v' := fun _ ht => ⟨h ht.1, ht.2⟩
+
+/-- Projection is monotone in its table argument. -/
+theorem project_mono {Ω Ω₁ : Finset Att} (h : Ω₁ ⊆ Ω) {v v' : Table Ω Val} (hv : v ⊆ v') :
+    project h v ⊆ project h v' := by
+  rintro s ⟨t, htv, rfl⟩; exact ⟨t, hv htv, rfl⟩
+
+/-- Selection distributes over intersection: `σ(v ∩ v'; P) = σ(v; P) ∩ σ(v'; P)`. -/
+theorem select_inter {Ω : Finset Att} (P : Tuple Ω Val → Prop) (v v' : Table Ω Val) :
+    select P (inter v v') = inter (select P v) (select P v') := by
+  ext t; simp only [mem_select, mem_inter]; tauto
+
 /-- **Renaming a tuple** along a bijection `e` of the attribute carriers of `Ω` and `Ω'`: the
 value at `a` moves to the value at `e a` (`ρ`'s action on rows). -/
 def renameTuple {Ω Ω' : Finset Att} (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'}) (t : Tuple Ω Val) :

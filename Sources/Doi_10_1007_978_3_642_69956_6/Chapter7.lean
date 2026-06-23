@@ -9,8 +9,12 @@ library provides the recursive nested-value carrier (Def 7.4); the algebra and d
 are layered on it later.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-The nested algebra and dependency theory need a richer development of the nested carrier
-(scheme-indexed tuples, nest/unnest with grouping, decidable tuple equality).
+The nested algebra and dependency theory are blocked on a carrier redesign: `NestedValue`'s `rel`
+field holds `List (Att → NestedValue …)`, and recursion *through the function-valued tuple* (`t a`)
+fails Lean's termination check (a function argument has no usable size measure), so `map`/`depth`/
+nest/unnest cannot be defined. Fixing this means changing the tuple representation to a
+structurally-recursable type (e.g. an assoc-list `List (Att × NestedValue …)`), which changes the
+tuple semantics — a [deferred] design judgment to make with the user before proceeding.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
