@@ -15,6 +15,7 @@ import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
+import DeepWiki.SymbolicIntegration.LogToAtanCompute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -534,6 +535,26 @@ step function). The library's `ex281_isLogToAtanRun` builds the explicit `IsLogT
 cofactors `(x, x²−1, 2)`, `(1, x, 1)` — same arctan args, Bézout by `ring`), and `ex281_logToAtan_correct`
 reads off `atanDerivSum [...] = i · logDeriv((φA+iφB)/(φA−iφB))` from `logToAtan_correct`. -/
 abbrev ex_2_8_1 := @DeepWiki.SymbolicIntegration.ex281_logToAtan_correct
+
+/-- **`LogToAtan`, computable variant** (§2.8, p.63): a genuinely `#eval`-able rendering of Rioboo's
+recursion over a dense coefficient list `CPoly := List ℚ` (Mathlib's `ℚ[X]` arithmetic is
+noncomputable, so the abstract `logToAtanAux` cannot run). Branches mirror `logToAtan_algorithm`
+(base `B ∣ A`, swap `deg A < deg B`, step with extended-Euclidean cofactors `B·D − A·C = G`), fuel-
+bounded for termination, returning the arctan arguments as `(numerator, denominator)` `CPoly` pairs.
+The library's `logToAtanCompute`, with the `toPoly : CPoly → ℚ[X]` bridge and its homomorphism lemmas
+(`toPoly_cadd`/`toPoly_cmul`/…). The full agreement with `logToAtanAux` is deferred. -/
+def logToAtan_compute := @DeepWiki.SymbolicIntegration.Compute.logToAtanCompute
+
+/-- **Example 2.8.1, the proved computation** (§2.8, p.63–64): `logToAtanCompute 20 (x³−3x) (x²−2)`
+evaluates (by `native_decide`) to the `(num, den)` pairs `[((−x+3x³−x⁵), −2), ((−x³), −1), ((x), 1)]`,
+equal as fractions to the book table's arctan arguments `(x⁵−3x³+x)/2, x³, x` (eq 2.20). The library's
+`logToAtanCompute_ex281` — the algorithm actually *runs* and returns the book's answer. -/
+theorem ex_2_8_1_compute :
+    DeepWiki.SymbolicIntegration.Compute.logToAtanCompute 20
+        DeepWiki.SymbolicIntegration.Compute.cX3m3X
+        DeepWiki.SymbolicIntegration.Compute.cX2m2
+      = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] :=
+  DeepWiki.SymbolicIntegration.Compute.logToAtanCompute_ex281
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
