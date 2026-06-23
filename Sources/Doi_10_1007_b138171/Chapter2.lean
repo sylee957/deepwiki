@@ -22,17 +22,9 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: the integral *connection* (`thm_2_6_1_integral_connection`) and the Gröbner-basis foundation
-  (`DeepWiki.SymbolicIntegration.IsGroebnerBasis`: predicate + membership⟺remainder-zero,
-  `IsReducedGroebnerBasis`, GB existence `exists_isGroebnerBasis` via Dickson's lemma,
-  `sPolynomial` + forward Buchberger criterion `IsGroebnerBasis.sPolynomial_div_remainder_eq_zero`)
-  are done, as is CLO §2.6 Lemma 5 (the cancellation lemma `cancellation_lemma`: equal-leading-monomial
-  sum with cancelling leading terms = ∑ dᵢ·S(pᵢ, p_last), each S-poly of smaller degree) — the
-  self-contained stepping stone toward the converse. What remains of Thm 2.6.1 / the Czichowski algorithm
-  is the full converse Buchberger *theorem* (CLO Theorem 6: S-polys reduce to 0 ⟹ GB, via the
-  minimal-representation / syzygy argument) [research], a computable Buchberger *algorithm* [infra], and
-  Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ` factorization, normal-position analysis of `⟨A−zD', D⟩`)
-  [research: Czichowski normal position].
+§2.6: a computable Buchberger *algorithm* (the iterative S-poly completion loop) [infra: needs a
+  termination/normal-form procedure layer], and Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ`
+  factorization, normal-position analysis of `⟨A−zD', D⟩`) [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -468,9 +460,19 @@ monomial `δ` and their leading terms cancel (`m.degree (∑ pᵢ) ≺[m] δ`), 
 (`dᵢ = m.leadingCoeff pᵢ`) and `∑ᵢ pᵢ = ∑_{i≠last} dᵢ·S(pᵢ, p_last)` is a combination of
 S-polynomials each of strictly smaller degree `≺[m] δ`. The library's
 `cancellation_lemma` (with the collapse `sPolynomial_eq_of_degree_eq` and degree bound
-`sPolynomial_degree_lt_of_degree_eq`). A stepping stone toward Buchberger's theorem; the full
-converse (CLO Theorem 6, the minimal-representation argument) remains. -/
+`sPolynomial_degree_lt_of_degree_eq`). The self-contained heart of CLO Theorem 6. -/
 abbrev clo_lemma_5_cancellation := @DeepWiki.SymbolicIntegration.cancellation_lemma
+
+/-- **Cox–Little–O'Shea §2.6, Theorem 6 (Buchberger's criterion, converse half)** — a generating
+set `B` of `I` with unit leading coefficients, all of whose S-polynomials reduce to `0` modulo `B`
+(each `S(b,b')` has a standard representation `∑ q c · c` over `B` with summand degrees
+`≼[m] m.degree (S(b,b'))`), is a Gröbner basis of `I`. The library's
+`isGroebnerBasis_of_sPolynomial_reducesToZero`, via the minimal-representation argument
+(`exists_leadingMonomial_le`: minimize the representation's largest-summand degree; the strict case
+cancels the top part into S-polynomials by `cancellation_lemma`/Mathlib `sPolynomial_decomposition`
+and reduces each by hypothesis to a strictly smaller representation). -/
+abbrev clo_thm_6_buchberger_converse :=
+  @DeepWiki.SymbolicIntegration.isGroebnerBasis_of_sPolynomial_reducesToZero
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
