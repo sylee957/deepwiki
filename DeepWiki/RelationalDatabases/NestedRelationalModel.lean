@@ -318,4 +318,43 @@ example : (rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)],
     = rel [[("A", atom 1), ("D", rel [[("C", atom 2)], [("C", atom 3)]])],
       [("A", atom 5), ("D", rel [[("C", atom 6)]])]] := by decide
 
+/-! ## The set operators, projection and selection (§7.2) -/
+
+/-- **Union** `∪` (§7.2): set union of two nested relations (deduplicated append). Non-relations
+return the left operand. -/
+def NestedValue.union : NestedValue Att V → NestedValue Att V → NestedValue Att V
+  | .rel r1, .rel r2 => .rel (r1 ++ r2).dedup
+  | a, _ => a
+
+/-- **Difference** `−` (§7.2): the rows of the left relation not in the right. -/
+def NestedValue.diff : NestedValue Att V → NestedValue Att V → NestedValue Att V
+  | .rel r1, .rel r2 => .rel (r1.filter (fun t => decide (t ∉ r2)))
+  | a, _ => a
+
+/-- **Intersection** `∩` (§7.2): the rows in both relations. -/
+def NestedValue.inter : NestedValue Att V → NestedValue Att V → NestedValue Att V
+  | .rel r1, .rel r2 => .rel (r1.filter (fun t => decide (t ∈ r2)))
+  | a, _ => a
+
+/-- **Projection** `π_X` (§7.2): project every tuple onto the attributes `X` (deduplicated). -/
+def NestedValue.proj (X : List Att) : NestedValue Att V → NestedValue Att V
+  | .atom v => .atom v
+  | .rel rows => .rel ((rows.map (NestedTuple.projTo X)).dedup)
+
+/-- **Selection** `σ_P` (§7.2): keep the tuples satisfying the Boolean condition `P`. -/
+def NestedValue.sel (P : NestedTuple Att V → Bool) : NestedValue Att V → NestedValue Att V
+  | .atom v => .atom v
+  | .rel rows => .rel (rows.filter P)
+
+@[simp] theorem NestedValue.proj_atom (X : List Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).proj X = .atom v := rfl
+
+omit [DecidableEq Att] [DecidableEq V] in
+@[simp] theorem NestedValue.sel_atom (P : NestedTuple Att V → Bool) (v : V) :
+    (NestedValue.atom (Att := Att) v).sel P = .atom v := rfl
+
+open NestedValue in
+example : (rel [[("A", atom 1), ("B", atom 2)], [("A", atom 1), ("B", atom 3)]]).proj ["A"]
+    = rel [[("A", atom 1)]] := by decide
+
 end DeepWiki
