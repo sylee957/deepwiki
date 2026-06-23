@@ -41,4 +41,43 @@ theorem tendstoInMeasure_comp_const {f : ℕ → Ω → ℝ} {c : ℝ} {h : ℝ 
     simp only [hempty, measure_empty]
     exact tendsto_const_nhds
 
+/-- **The (one-dimensional) delta method** (Brockwell–Davis Example 6.4.2): if `Xₙ →ᵖ a`, the
+standardized `√n (Xₙ − a)` converges in distribution to `Y₀`, and `g` is (measurable and)
+differentiable at `a` with derivative `g'`, then `√n (g Xₙ − g a) ⇒ g' · Y₀`. Via the slope
+decomposition `√n (g Xₙ − g a) = s(Xₙ)·√n (Xₙ − a)` with `s` the derivative-patched difference
+quotient (`s(Xₙ) →ᵖ g'` by `tendstoInMeasure_comp_const`), fed through Slutsky's product theorem.
+With `Y₀ ~ N(0, σ²)` the limit `g' · Y₀ ~ N(0, g'² σ²)` (`gaussianReal_const_mul`). -/
+theorem delta_method [IsProbabilityMeasure μ] {a g' : ℝ} {g : ℝ → ℝ} (hderiv : HasDerivAt g g' a)
+    (hgm : Measurable g) {X : ℕ → Ω → ℝ} (hXm : ∀ n, AEMeasurable (X n) μ)
+    {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {Y₀ : Ω' → ℝ}
+    (hcons : TendstoInMeasure μ X atTop (fun _ => a))
+    (hnorm : TendstoInDistribution (fun (n : ℕ) ω => √n * (X n ω - a)) atTop Y₀ (fun _ => μ) μ') :
+    TendstoInDistribution (fun (n : ℕ) ω => √n * (g (X n ω) - g a)) atTop (fun ω => g' * Y₀ ω)
+      (fun _ => μ) μ' := by
+  classical
+  have hslope : Measurable (slope g a) := by
+    rw [slope_fun_def_field]; exact (hgm.sub_const _).div (measurable_id.sub_const _)
+  set s : ℝ → ℝ := Function.update (slope g a) a g' with hs
+  have hsa : s a = g' := Function.update_self a g' (slope g a)
+  have hsm : Measurable s := by
+    have hse : s = fun x => if x = a then g' else slope g a x :=
+      funext fun x => by rw [hs, Function.update_apply]
+    rw [hse]
+    exact Measurable.ite (measurableSet_singleton a) measurable_const hslope
+  have hs_cont : ContinuousAt s a :=
+    continuousAt_update_same.mpr (hasDerivAt_iff_tendsto_slope.mp hderiv)
+  have hs_tendsto : TendstoInMeasure μ (fun n ω => s (X n ω)) atTop (fun _ => g') := by
+    have h := tendstoInMeasure_comp_const hcons hs_cont
+    rwa [hsa] at h
+  have hs_aem : ∀ n, AEMeasurable (fun ω => s (X n ω)) μ := fun n => hsm.comp_aemeasurable (hXm n)
+  have halg : ∀ (n : ℕ) (ω : Ω), √n * (g (X n ω) - g a) = s (X n ω) * (√n * (X n ω - a)) := by
+    intro n ω
+    by_cases h : X n ω = a
+    · rw [h, hsa]; ring
+    · rw [hs, Function.update_of_ne h, slope_def_field]; field_simp
+  refine (TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const
+    (by fun_prop : Continuous fun p : ℝ × ℝ => p.2 * p.1) hnorm hs_tendsto hs_aem).congr
+    (fun n => Filter.Eventually.of_forall fun ω => (halg n ω).symm)
+    (Filter.Eventually.of_forall fun _ => rfl)
+
 end DeepWiki.TimeSeries
