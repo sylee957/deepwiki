@@ -138,7 +138,7 @@ theorem logDeriv_algebraMap_eq_sum_roots [IsAlgClosed K] (N : K[X]) (hN : N ≠ 
   have hProd : ((N.roots.map (X - C ·)).prod : K[X]) ≠ 0 := by
     refine Multiset.prod_ne_zero ?_
     simp only [Multiset.mem_map, not_exists]
-    exact fun β => fun ⟨_, h⟩ => X_sub_C_ne_zero β h.symm.symm
+    exact fun β => fun ⟨_, h⟩ => X_sub_C_ne_zero β h
   have hPne : algebraMap K[X] (RatFunc K) ((N.roots.map (X - C ·)).prod) ≠ 0 :=
     (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hProd
   -- `N = C lc · ∏_β (X − β)`, push through `algebraMap` on the LHS only
