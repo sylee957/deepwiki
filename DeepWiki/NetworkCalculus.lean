@@ -66,6 +66,7 @@ import DeepWiki.NetworkCalculus.BoundedSegment
 import DeepWiki.NetworkCalculus.SegmentDeconvConcat
 import DeepWiki.NetworkCalculus.SegmentConvolution
 import DeepWiki.NetworkCalculus.SpotClosureUPP
+import DeepWiki.NetworkCalculus.SegmentClosureUPP
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
 import DeepWiki.NetworkCalculus.SegmentDeconvComposite

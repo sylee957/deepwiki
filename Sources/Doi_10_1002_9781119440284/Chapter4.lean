@@ -24,6 +24,7 @@ import DeepWiki.NetworkCalculus.SegmentDeconvCurve
 import DeepWiki.NetworkCalculus.SegmentDeconvConcat
 import DeepWiki.NetworkCalculus.SegmentConvolution
 import DeepWiki.NetworkCalculus.SpotClosureUPP
+import DeepWiki.NetworkCalculus.SegmentClosureUPP
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -44,8 +45,10 @@ book's own §4.2 note — is fully formalized with explicit single-`Pwl` output,
 `thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
 `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
 §4.3: Lemma 4.7 (sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`)
-`[research]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]` — needs the n-fold
-segment-convolution support-overlap argument over the UPP layer.
+`[research]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]` — the per-segment geometry is done
+(`lemma_4_9_powers`: the `n`-fold power is the open segment of the same slope `s` on `(n·a, n·b)`);
+what remains is the order-theoretic infimum-selection over `⨅ₙ σⁿ` (which `n` wins per `t`, the rank,
+the `closure(t+a) = closure t + s·a` period step).
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -773,6 +776,19 @@ spot `spotNN (n•d) (n•c)`, so its closure `σ⋆ = ⨅ₙ σⁿ` is the arit
 theorem lemma_4_8 (d : ℝ≥0) (c : ℝ≥0∞) (hd : 0 < d) :
     IsUPP (subadditiveClosureENN (spotNN d c)) :=
   spotClosure_isUPP d c hd
+
+/-- **Lemma 4.9** (§4.3, p.78), the per-segment geometry (toward "closure of an open segment is UPP").
+The `n`-fold `(min,+)` convolution power of an open segment `segNN a b va s` is, on its `n`-fold open
+support `(n·a, n·b)`, the open segment of the **same slope** `s`: `(σⁿ)(t) = n·va + s·(t − n·a)` (and
+`= ⊤` off `(n·a, n·b)` for `n ≥ 1`). This is the first sentence of Lemma 4.9 — the building block of
+the closure's pseudo-periodicity (`σ⋆ = ⨅ₙ σⁿ`). The order-theoretic infimum-selection step (which `n`
+wins per `t`, the rank, the `closure(t+a) = closure t + s·a` period) is the remaining `[infra]` part.
+The library's `DeepWiki.minConvPow_segNN_eq_affine` (support `_eq_top_of_le`/`_of_ge`). -/
+theorem lemma_4_9_powers (a b va s : ℝ≥0) {n : ℕ} (hn : 1 ≤ n)
+    {t : ℝ≥0} (htl : (n : ℝ≥0) * a < t) (htr : t < (n : ℝ≥0) * b) :
+    minConvPow (segNN a b va s) n t
+      = (((n : ℝ≥0) * va + s * (t - (n : ℝ≥0) * a) : ℝ≥0) : ℝ≥0∞) :=
+  minConvPow_segNN_eq_affine a b va s hn htl htr
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
