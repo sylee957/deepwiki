@@ -133,4 +133,103 @@ theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly) :
   rw [toPoly_cneg] at h
   linear_combination h
 
+/-! ### The bivariate bridge `toBPoly : BPoly → ℚ[t][x]` and its homomorphism lemmas
+One level up from `toPoly`: a `BPoly = List CPoly` is read as a polynomial in `x` (`Polynomial`)
+whose coefficients are the `ℚ[t]` polynomials `toPoly`. The homomorphism lemmas reduce the `BPoly`
+algebra to honest `(ℚ[X])[X]` operations, mirroring the `CPoly` layer. -/
+
+/-- **Bivariate bridge** `toBPoly : BPoly → (ℚ[X])[X]`: read a `BPoly` (list of `CPoly = ℚ[t]`
+`x`-coefficients, low→high) as an honest `Polynomial (Polynomial ℚ)` in Horner form in `x`, each
+`x`-coefficient embedded via `toPoly`. -/
+noncomputable def toBPoly : BPoly → Polynomial (Polynomial ℚ)
+  | [] => 0
+  | a :: p => Polynomial.C (toPoly a) + Polynomial.X * toBPoly p
+
+@[simp] theorem toBPoly_nil : toBPoly ([] : BPoly) = 0 := rfl
+
+@[simp] theorem toBPoly_cons (a : CPoly) (p : BPoly) :
+    toBPoly (a :: p) = Polynomial.C (toPoly a) + Polynomial.X * toBPoly p := rfl
+
+/-- `toBPoly` is **additive**: `badd` realizes `(ℚ[X])[X]` addition. -/
+theorem toBPoly_badd (p q : BPoly) : toBPoly (badd p q) = toBPoly p + toBPoly q := by
+  induction p generalizing q with
+  | nil => simp [badd]
+  | cons a as ih =>
+    cases q with
+    | nil => simp [badd]
+    | cons b bs =>
+      simp only [badd, toBPoly_cons, ih, toPoly_cadd, map_add]
+      ring
+
+/-- `toBPoly` is **negation-compatible**: `bneg` realizes `(ℚ[X])[X]` negation. -/
+theorem toBPoly_bneg (p : BPoly) : toBPoly (bneg p) = - toBPoly p := by
+  induction p with
+  | nil => simp [bneg]
+  | cons a as ih =>
+    show toBPoly (cneg a :: bneg as) = _
+    simp only [toBPoly_cons, toPoly_cneg, map_neg, ih]
+    ring
+
+/-- `toBPoly` is **subtraction-compatible**: `bsub` realizes `(ℚ[X])[X]` subtraction. -/
+theorem toBPoly_bsub (p q : BPoly) : toBPoly (bsub p q) = toBPoly p - toBPoly q := by
+  simp [bsub, toBPoly_badd, toBPoly_bneg, sub_eq_add_neg]
+
+/-- `toBPoly` realizes **scaling by a `ℚ[t]` coefficient**: `bscaleC c p` is `C (toPoly c) · toBPoly p`. -/
+theorem toBPoly_bscaleC (c : CPoly) (p : BPoly) :
+    toBPoly (bscaleC c p) = Polynomial.C (toPoly c) * toBPoly p := by
+  induction p with
+  | nil => simp [bscaleC]
+  | cons a as ih =>
+    show toBPoly (cmul c a :: bscaleC c as) = _
+    simp only [toBPoly_cons, toPoly_cmul, map_mul, ih]
+    ring
+
+/-- `toBPoly` realizes the **`x`-shift**: `bshift k p` is `Xᵏ · toBPoly p`. -/
+theorem toBPoly_bshift (k : ℕ) (p : BPoly) :
+    toBPoly (bshift k p) = Polynomial.X ^ k * toBPoly p := by
+  induction k with
+  | zero => simp [bshift]
+  | succ n ih =>
+    show toBPoly ([] :: bshift n p) = _
+    simp only [toBPoly_cons, toPoly_nil, map_zero, ih]
+    ring
+
+/-- `toBPoly` is **multiplicative**: `bmul` realizes `(ℚ[X])[X]` multiplication. -/
+theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q := by
+  induction p with
+  | nil => simp [bmul]
+  | cons a as ih =>
+    show toBPoly (badd (bscaleC a q) ([] :: bmul as q)) = _
+    simp only [toBPoly_badd, toBPoly_bscaleC, toBPoly_cons, toPoly_nil, map_zero, ih]
+    ring
+
+/-- `bnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
+theorem bnorm_cons_eq (a : CPoly) (as : BPoly) :
+    bnorm (a :: as)
+      = (match bnorm as with
+          | [] => if cisZero (cnorm a) then [] else [cnorm a]
+          | r => cnorm a :: r) := rfl
+
+/-- **`toBPoly` ignores normalization**: `toBPoly (bnorm p) = toBPoly p`. -/
+@[simp] theorem toBPoly_bnorm (p : BPoly) : toBPoly (bnorm p) = toBPoly p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [bnorm_cons_eq]
+    cases h : bnorm as with
+    | nil =>
+      rw [h] at ih
+      simp only [toBPoly_nil] at ih
+      have has : toBPoly as = 0 := ih.symm
+      cases ha : cisZero (cnorm a) with
+      | true =>
+        have hpa : toPoly a = 0 := by
+          have hca : cnorm a = [] := by simpa [cisZero, cnorm_idem] using ha
+          rw [← toPoly_cnorm, hca, toPoly_nil]
+        simp [toBPoly_cons, hpa, has]
+      | false => simp [toBPoly_cons, toPoly_cnorm, has]
+    | cons b bs =>
+      rw [h] at ih
+      simp only [toBPoly_cons, toPoly_cnorm, ih]
+
 end DeepWiki.SymbolicIntegration.Compute
