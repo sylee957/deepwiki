@@ -33,12 +33,11 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   and leading-monomial domination), monic and with pairwise non-dividing leading monomials
   (`dividedBasis_leadingMonomial_not_le`), and `HasNoCommonYFactor` is shown to be an **ideal invariant**:
   *any* reduced GB of `I'` has no common `y`-factor (`hasNoCommonYFactor_of_dividedIdeal`, via
-  `dvd_lazardView_of_mem_span`), discharging the `hassoc` re-presentation hypothesis **automatically** —
-  so `Pₖ = Rₖ·Sₖ` holds for any reduced GB of `I'` (`lazard_Pk_eq_Rk_Sk_dividedIdeal`). Open: reduced-GB
-  existence for `I'` to make it fully hypothesis-free — the explicit divided basis is a *minimal* GB but
-  not necessarily reduced when `H` is multi-term (tail support-shift under `·H` can cancel; exact only
-  for monomial `H`) [research: reduced-GB existence / Lazard Thm 1 reduced quotient-GB].
-  Plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
+  `dvd_lazardView_of_mem_span`), discharging the `hassoc` re-presentation hypothesis **automatically**.
+  Reduced-GB existence is now general (`exists_isReducedGroebnerBasis`: every ideal over a field with
+  finitely many variables has one, built by monicize→minimize→autoReduce on `exists_isGroebnerBasis`),
+  so `Pₖ = Rₖ·Sₖ` is **fully unconditional** for a reduced bivariate GB (`lazard_Pk_eq_Rk_Sk_unconditional`).
+  Remaining: the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -504,6 +503,24 @@ each step either fixes `B` — then `B` is a Gröbner basis by `clo_thm_6_buchbe
 (`leadTermIdeal_lt_of_ne`), which cannot recur. The library's `buchberger_terminates_correct`. -/
 abbrev buchberger_terminates_correct :=
   @DeepWiki.SymbolicIntegration.buchberger_terminates_correct
+
+/-- **Existence of a reduced Gröbner basis** (cited in §2.6; the canonical form Czichowski's and
+Lazard's structure theorems take as input): over a field with finitely many variables, every ideal
+`I` has a finite *reduced* Gröbner basis. Built by monicizing (`monicize`), minimizing
+(`minimize`, one representative per minimal leading monomial), then one-pass auto-reducing
+(`autoReduce`, each element reduced mod the others) a Gröbner basis from `exists_isGroebnerBasis`.
+The library's `exists_isReducedGroebnerBasis`. -/
+abbrev exists_isReducedGroebnerBasis :=
+  @DeepWiki.SymbolicIntegration.exists_isReducedGroebnerBasis
+
+/-- **Lazard's Theorem 1, the `Pₖ = Rₖ·Sₖ` factorization, fully unconditional** (§2.6, the divide-out
+closed): for a reduced bivariate Gröbner basis of `I` (nonempty), there exists a reduced Gröbner
+basis `B'` of the divided ideal `I' = span {fᵢ/H}` (`H = P·Gₖ₊₁` the basis gcd) — supplied by
+`exists_isReducedGroebnerBasis` — for which every sorted element splits as
+`lazardView fⱼ = C(contentⱼ)·Sⱼ` with `contentⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and `y`-monic.
+No `hassoc`/`HasNoCommonYFactor` hypothesis. The library's `lazard_Pk_eq_Rk_Sk_unconditional`. -/
+abbrev lazard_Pk_eq_Rk_Sk_unconditional :=
+  @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_unconditional
 
 /-- **Lazard (1985), Lemma 1** (cited in §2.6; J. Symb. Comp. 1, 261–270): in a reduced (minimal)
 Gröbner basis of a two-variable ideal `I ⊆ K[x,y]`, distinct elements have *distinct* leading
