@@ -23,6 +23,7 @@ import DeepWiki.NetworkCalculus.SegmentDeconvComposite
 import DeepWiki.NetworkCalculus.SegmentDeconvCurve
 import DeepWiki.NetworkCalculus.SegmentDeconvConcat
 import DeepWiki.NetworkCalculus.SegmentConvolution
+import DeepWiki.NetworkCalculus.SpotClosureUPP
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -43,9 +44,8 @@ book's own §4.2 note — is fully formalized with explicit single-`Pwl` output,
 `thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
 `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
 §4.3: Lemma 4.7 (sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`)
-`[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment
-is UPP) `[infra]` — Lemmas 4.8/4.9 need the ultimately-pseudo-periodic data structure (quadruplets +
-period), the heavier §4.3.2 representation layer not yet built.
+`[research]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]` — needs the n-fold
+segment-convolution support-overlap argument over the UPP layer.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -763,6 +763,16 @@ theorem thm_4_2_segConv_corners (a₁ b₁ v₁ s₁ a₂ b₂ v₂ s₂ : ℝ�
     minConv (segE a₁ b₁ v₁ s₁) (segE a₂ b₂ v₂ s₂) (a₁ + a₂)
       = (((v₁ : ℝ≥0) : ℝ) : EReal) + (((v₂ : ℝ≥0) : ℝ) : EReal) :=
   minConv_segE_segE_left a₁ b₁ v₁ s₁ a₂ b₂ v₂ s₂ h₁ h₂
+
+/-- **Lemma 4.8** (§4.3, p.78): the **sub-additive closure of a spot is ultimately pseudo-periodic**.
+A spot `spotNN d c` (value `c` at `d`, `+∞` elsewhere, over `ℝ≥0∞`) has `n`-fold convolution power the
+spot `spotNN (n•d) (n•c)`, so its closure `σ⋆ = ⨅ₙ σⁿ` is the arithmetic-progression staircase
+`{(n·d, n·c)}` — which is `IsUPP` with rank `0`, period `d`, increment `c` (`0 < d`). The library's
+`DeepWiki.spotClosure_isUPP` (powers `DeepWiki.minConvPow_spotNN`, periodicity
+`DeepWiki.subadditiveClosureENN_spotNN_shift`). -/
+theorem lemma_4_8 (d : ℝ≥0) (c : ℝ≥0∞) (hd : 0 < d) :
+    IsUPP (subadditiveClosureENN (spotNN d c)) :=
+  spotClosure_isUPP d c hd
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
