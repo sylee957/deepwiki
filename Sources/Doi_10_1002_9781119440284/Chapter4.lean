@@ -37,6 +37,7 @@ import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.LegendreFenchelConcave
 import DeepWiki.NetworkCalculus.PwlBreakpoints
 import DeepWiki.NetworkCalculus.PwlThetaDecomp
+import DeepWiki.NetworkCalculus.ConvexSegTangents
 import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
@@ -83,8 +84,10 @@ bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (c
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
 layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
 (`prop_4_4_canonicalBound`/`canonicalUpperBound`: `f̲ ≤ ⋀ᵢ Θ`, the constant-`Θ` meet IS [4.13] — it's
-the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is `≤` + asymptotic-exact (full
-per-segment equality open); Lemma 4.10 [4.12] closure still needs a closure↔Legendre identity.
+the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now the FULL equality (`prop_4_4_convexCompanion`/
+`convexNFEval_segTangentGens_eq`: convex PWL = sup of its segment tangent rate-latencies, for base 0
++ positive slopes; flat/positive-base via hypothesis-form lemmas); Lemma 4.10 [4.12] closure still
+needs a closure↔Legendre identity.
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores); the remaining items are the
 book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full Thm 4.4 (→[LEC 14]), the `C_cv` hull,
 the `[*]` closure inclusion, and the `Θ`/closure infra layers. Remark 4.1. -/
@@ -980,6 +983,20 @@ exactness `convexNFEval_eq_past_rank_of_mem_tangent`, full per-segment equality 
 theorem prop_4_4_canonicalBound (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0) :
     ((convexSegEval f0 fs segs t : ℝ≥0) : EReal) ≤ DeepWiki.canonicalUpperBound f0 fs segs t :=
   DeepWiki.convexSegEval_le_canonicalUpperBound f0 fs segs t
+
+/-- **Prop 4.4 [4.13], convex companion — full equality**: a convex slope-sorted PWL is the supremum
+of its segment tangent rate-latencies, `convexSegEval 0 fs segs = ⨆ᵢ β_{sᵢ,Tᵢ}` on all of `[0,∞)`
+(`convexNFEval (segTangentGens fs segs)`), unifying the two convex representations (segment list ↔
+sup-of-rate-latencies / `convexNFEval`). Holds for `0 < fs`, slope-sorted segments with every
+`0 < sᵢ ≤ fs`. (Scoped to base `0` and positive slopes — flat segments / positive base need a
+constant generator, handled via the hypothesis-form lemmas.) The library's
+`DeepWiki.convexNFEval_segTangentGens_eq` (per-segment tangent `DeepWiki.segTangentLatency`). -/
+theorem prop_4_4_convexCompanion (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs)
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) segs) (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs)
+    (hpos : ∀ seg ∈ segs, 0 < seg.1) (hne : segs ≠ []) (t : ℝ≥0) :
+    convexNFEval (DeepWiki.segTangentGens fs segs) t
+      = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) :=
+  DeepWiki.convexNFEval_segTangentGens_eq fs segs hfs hsort hle_fs hpos hne t
 
 /-- **Lemma 4.10** (§4.4, p.86): computing in the dioid `F↑/L` is equivalent to computing with
 canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
