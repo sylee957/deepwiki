@@ -66,4 +66,8 @@ abbrev nested_value_depth_map := @DeepWiki.NestedValue.depth_map
 one. -/
 abbrev def_7_6_isFlat := @DeepWiki.NestedValue.isFlat
 
-end DeepWiki.Rdb
+/-! ## §7.2 The Nested Relational Algebra -/
+
+/-- **Definition 7.7** (§7.2), the *unnest* operator `μ_a`: flatten a nested relation on the
+relation-valued attribute `a` (one output row per inner sub-row). -/
+abbrev def_7_7_unnest := @DeepWiki.NestedValue.unnest

@@ -169,4 +169,39 @@ theorem NestedValue.isFlat.map {x : NestedValue Att V} (g : V → W) (h : x.isFl
     (x.map g).isFlat := by
   simp only [NestedValue.isFlat, NestedValue.depth_map]; exact h
 
+/-! ## The unnest operator (§7.2) -/
+
+variable [DecidableEq Att]
+
+/-- Look up the value of attribute `a` in a nested tuple (the first matching pair). -/
+def NestedTuple.lookup (a : Att) (t : NestedTuple Att V) : Option (NestedValue Att V) :=
+  (t.find? (fun p => decide (p.1 = a))).map Prod.snd
+
+/-- Drop every pair for attribute `a` from a nested tuple. -/
+def NestedTuple.eraseKey (a : Att) (t : NestedTuple Att V) : NestedTuple Att V :=
+  t.filter (fun p => decide (p.1 ≠ a))
+
+/-- Unnest a single tuple on a relation-valued attribute `a`: replace it by one tuple per sub-row,
+each the tuple (minus `a`) extended with that sub-row. A non-relation value leaves the tuple as is;
+an empty sub-relation makes the tuple vanish. -/
+def NestedRel.unnestTuple (a : Att) (t : NestedTuple Att V) : NestedRel Att V :=
+  match NestedTuple.lookup a t with
+  | some (.rel sub) => sub.map (fun s => NestedTuple.eraseKey a t ++ s)
+  | _ => [t]
+
+/-- **Unnest** `μ_a` (§7.2): flatten a nested relation on the relation-valued attribute `a`. -/
+def NestedValue.unnest (a : Att) : NestedValue Att V → NestedValue Att V
+  | .atom v => .atom v
+  | .rel rows => .rel (rows.flatMap (NestedRel.unnestTuple a))
+
+@[simp] theorem NestedValue.unnest_atom (a : Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).unnest a = .atom v := rfl
+
+@[simp] theorem NestedValue.unnest_rel (a : Att) (rows : NestedRel Att V) :
+    (NestedValue.rel rows).unnest a = .rel (rows.flatMap (NestedRel.unnestTuple a)) := rfl
+
+open NestedValue in
+example : (rel [[("A", atom 1), ("B", rel [[("C", atom 2)], [("C", atom 3)]])]]).unnest "B"
+    = rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)]] := rfl
+
 end DeepWiki
