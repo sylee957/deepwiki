@@ -1367,4 +1367,21 @@ theorem exists_regular_sub_localPrincipalPart (A M : K[X]) {α : K} (i : ℕ) (h
         = algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) N :=
   ⟨localRemainder A M α i, M, hM, subtract_localPrincipalPart_eq A M i hM⟩
 
+/-- Restatement of `M·W ≡ A (mod (X−α)^i)` (the local approximant agrees with `A/D·(X−α)^i` to order `i`):
+`(X−α)^i ∣ A − M·W`. -/
+example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    (Polynomial.X - Polynomial.C α) ^ i ∣ A - M * localApprox A M α i :=
+  localApprox_spec A M i hM
+
+/-- Restatement of the closure-level partial-fraction core (book p.56): with `D = (X−α)^i·M`, `M(α) ≠ 0`,
+subtracting the engine's per-root Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) from
+`A/D` leaves `R/M`, regular at `α` — i.e. that sum is exactly the principal part of `A/D` at the pole `α`. -/
+example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    algebraMap K[X] (RatFunc K) A
+        / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
+      - localPrincipalPart A M α i
+      = algebraMap K[X] (RatFunc K) (localRemainder A M α i)
+          / algebraMap K[X] (RatFunc K) M :=
+  subtract_localPrincipalPart_eq A M i hM
+
 end DeepWiki.SymbolicIntegration

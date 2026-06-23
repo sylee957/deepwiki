@@ -33,15 +33,21 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 — the LAST naming step: the **literal `= c_j` partial-fraction identification** of the
-  order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` with the `1/(x−α)ʲ` partial-fraction
-  coefficient `c_j` of `A/D` (book p.56) [infra: needs a principal-part / `(x−α)`-adic Laurent development over
-  `K̄` — the Taylor expansion of a pole-cleared rational function, plus a bridge connecting the `K[x]`-level
-  `CompletePartialFraction.baseDigit` at a root `α` to the closure coefficient. The substantive identification
+§2.7: Thm 2.7.1 — the LAST bridge: the **coefficient identification `localCoeff A M α i d = Hᵢ,(i−d)(α)`**
+  (book p.56) [infra: the principal-part assembly over `K̄` is now PROVED — `thm_2_7_1_principalPart`
+  (`subtract_localPrincipalPart_eq`): for `D = (x−α)^i·M`, `M(α) ≠ 0`, subtracting the per-root Laurent sum
+  `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) leaves `R/M`, regular at `α`, so that sum IS the
+  principal part of `A/D` at the pole `α`; built on the local Taylor approximant `W = (A·N) %ₘ (x−α)^i`
+  (`N = M⁻¹ mod (x−α)^i`) with `M·W ≡ A (mod (x−α)^i)` (`localApprox_spec`) and its `(x−α)`-adic
+  reconstruction `W = ∑_{d<i} c_d·(x−α)^d` (`localApprox_eq_sum`). What REMAINS is identifying the local
+  digit `c_d = localCoeff A M α i d = (taylor α W).coeff d` with the engine output `Hᵢ,(i−d)(α)`: both are the
+  order-`d` Taylor coefficient of `A/M = hᵢ,α`, but matching the polynomial Hasse-derivative `(hasseDeriv d W)(α)`
+  to the genuine rational-function derivative `(1/d!)·(d/dx)^[d] (A/M)(α)` (`eval_laurentH_eq_taylor_coeff`)
+  needs an iterated-Leibniz / high-order-vanishing development for the `ratFuncKDeriv` derivation
+  (`A/M − W = (x−α)^i·(R/M)` vanishes to order `i` at `α`) not yet built]. The substantive identification
   `Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` — the engine output IS the order-`(i−j)` Taylor coefficient of
-  `hᵢ,α` — is now PROVED (`thm_2_7_1_taylor_coeff`, `eval_laurentH_eq_taylor_coeff`); those Taylor coefficients
-  ARE the `1/(x−α)ʲ` Laurent coefficients by the definition of `hᵢ,α`, so only the literal `c_j` *naming*
-  remains]. Everything ELSE of Thm 2.7.1 is now PROVED: the differential-variable engine eqs 2.10–2.12
+  `hᵢ,α` — is PROVED (`thm_2_7_1_taylor_coeff`, `eval_laurentH_eq_taylor_coeff`). Everything ELSE of Thm 2.7.1
+  is now PROVED: the differential-variable engine eqs 2.10–2.12
   (`thm_2_7_1_laurentH`); the eq 2.11 invariant on `Frac (DiffPoly K)` (`eq_2_11_invariant`); the
   **differential substitution hom** `σα` carrying the engine's `ddx` to the genuine `Polynomial.derivative`
   (`thm_2_7_1_diffSubst`); the **specialized eq 2.11 invariant in `K(x)`** —
@@ -1006,6 +1012,18 @@ cancels the `(Dᵢ,α, Eᵢ)`-power factors of `thm_2_7_1_eval_diffSubst` via th
 by the definition of `hᵢ,α`; the literal `= c_j` naming is the only residual (§2.7 NOT YET FORMALIZED). The
 library's `eval_laurentH_eq_taylor_coeff`. -/
 abbrev thm_2_7_1_taylor_coeff := @DeepWiki.SymbolicIntegration.eval_laurentH_eq_taylor_coeff
+
+/-- **Theorem 2.7.1, the closure-level partial-fraction assembly** (§2.7, p.56, the principal-part core):
+for `D = (x−α)^i·M` with `M(α) ≠ 0` (`α` a pole of `A/D` of order `≤ i`), subtracting the engine's per-root
+Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) leaves `R/M`, regular at `α`:
+`A/D − ∑_{j=1}^{i} c_{i−j}/(x−α)ʲ = R/M`, `M(α) ≠ 0`. This is the substantive partial-fraction statement —
+the per-root sum IS the principal part of `A/D` at the pole `α`. The Laurent coefficients
+`c_d = localCoeff A M α i d` are the `(x−α)`-adic digits of the local Taylor approximant
+`W = (A·N) %ₘ (x−α)^i` (`N = M⁻¹ mod (x−α)^i`), which agrees with `A·(x−α)ⁱ/D` to order `i` at `α`
+(`M·W ≡ A`). The library's `subtract_localPrincipalPart_eq` (existence form
+`exists_regular_sub_localPrincipalPart`). Identifying `c_{i−j} = Hᵢⱼ(α)` (`thm_2_7_1_taylor_coeff`) needs the
+Hasse-derivative/`ratFuncKDeriv` Taylor bridge (§2.7 NOT YET FORMALIZED). -/
+abbrev thm_2_7_1_principalPart := @DeepWiki.SymbolicIntegration.subtract_localPrincipalPart_eq
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
