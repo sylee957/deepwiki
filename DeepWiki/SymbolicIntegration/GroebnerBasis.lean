@@ -2186,20 +2186,30 @@ theorem C_dvd_lazardView_succ {K : Type*} [Field K]
   rw [mul_comm (Polynomial.C gj)] at hCq
   exact (mul_dvd_mul_iff_left (by rwa [Ne, Polynomial.C_eq_zero])).mp hCq
 
-/-! ## Part A: the common content of the leading `y`-coefficients (`gₖ`)
+/-! ## Part A: the common factor of the basis (Lazard's `P·Gₖ₊₁`) and the no-common-factor base
 
-Lazard (1985), Theorem 1 proof (p.262): the basis may be divided by `primpart(gcd(f₀,…,fₖ)) ·
-content(gcd(f₀,…,fₖ))` to reduce to the **no-common-factor** case where `P = Gₖ₊₁ = 1` and `gₖ = 1`.
+Lazard (1985), Theorem 1 proof (p.262): the basis may be divided by `P·Gₖ₊₁` where
+`P = primpart(gcd(f₀,…,fₖ))` (the `y`-**primitive part**, a `K[x][y]` polynomial carrying the
+`y`-dependence) and `Gₖ₊₁ = content(gcd(f₀,…,fₖ))` (a `K[x]` polynomial), to reduce to the
+**no-common-factor** case where `P = Gₖ₊₁ = 1`. *Both* factors must be divided out for the base
+`f₀ ∈ K[x]` of the Lemma 3 descent.
 
-The common content of the leading `y`-coefficients has a clean closed form here: since the
-higher-`y`-degree `g_j` divides every lower `gᵢ` (`leadingYCoeff_sortedByYDegree_dvd_of_le`), the
-**top** element `gₖ = leadingYCoeff (sorted top)` already divides *all* the `gᵢ` — so the gcd of the
-leading coefficients is `gₖ` (up to associates). The no-common-factor condition is therefore
-`IsUnit gₖ`, recorded as `GbLeadingCoeffsCoprime`. -/
+Two layers, with **different** scope:
+* The `K[x]`-layer `Gₖ₊₁` has a clean closed form: since the higher-`y`-degree `g_j` divides every
+  lower `gᵢ` (`leadingYCoeff_sortedByYDegree_dvd_of_le`), the **top** `gₖ = leadingYCoeff (sorted
+  top)` divides *all* `gᵢ`, so up to associates `Gₖ₊₁ ∼ gₖ` — recorded as `gbCommonContent` and the
+  predicate `gbLeadingCoeffIsUnit := IsUnit gₖ`.
+* The `K[x][y]`-layer `P` (the `y`-content of the gcd) is **not** captured by `gₖ`: e.g. `I = (y)`
+  has `gₖ = 1` (`IsUnit gₖ` holds) yet `f₀ = y ∉ K[x]`, because `P = primpart(gcd) = y` is still to
+  be divided out. So `IsUnit gₖ` is *necessary but not sufficient* for the descent base. The base is
+  recorded directly as `hbase : degreeOf 0 (sorted 0) = 0` — see the §2.6 residual for why
+  discharging it needs the genuine `K[x][y]` divide-out construction, not just `gₖ`. -/
 
-/-- **The common divisor of the leading `y`-coefficients** (Lazard's `Gₖ₊₁`-content, closed form):
-the leading `y`-coefficient `gₖ` of the **top** (`y`-degree-maximal) sorted basis element. By
-`leadingYCoeff_sortedByYDegree_dvd_of_le` it divides `leadingYCoeff (sorted i)` for every `i`. -/
+/-- **The `K[x]`-content common divisor of the leading `y`-coefficients** (Lazard's `Gₖ₊₁`, closed
+form): the leading `y`-coefficient `gₖ` of the **top** (`y`-degree-maximal) sorted basis element. By
+`leadingYCoeff_sortedByYDegree_dvd_of_le` it divides `leadingYCoeff (sorted i)` for every `i`. (Only
+the `K[x]`-layer; the `y`-primitive part `P` of the gcd is a separate factor — see the section
+docstring.) -/
 noncomputable def gbCommonContent {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
@@ -2215,11 +2225,11 @@ theorem gbCommonContent_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 
     gbCommonContent hB htop ∣ leadingYCoeff (sortedByYDegree hB i) :=
   leadingYCoeff_sortedByYDegree_dvd_of_le hB (hmax i)
 
-/-- **The no-common-factor condition** (Lazard's `gₖ = 1`): the leading `y`-coefficients of the
-basis have a unit common divisor, i.e. `IsUnit gₖ` for the top element. This is the hypothesis that
-Theorem 1's "divide by `PGₖ₊₁`" achieves; it makes every `gₖ ∣ gᵢ` a unit-multiple, the precondition
-of the unconditional descent. -/
-def GbLeadingCoeffsCoprime {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+/-- **The `K[x]`-content-unit condition** (Lazard's `Gₖ₊₁ = 1`): `IsUnit gₖ` for the top element.
+**Necessary but not sufficient** for the descent base — it ignores the `y`-primitive part `P` of the
+gcd (`I = (y)` satisfies it yet has `f₀ = y ∉ K[x]`). Records only the `K[x]`-layer of Lazard's
+`P·Gₖ₊₁` divide-out. -/
+def gbLeadingCoeffIsUnit {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (htop : Fin B.card) : Prop :=
