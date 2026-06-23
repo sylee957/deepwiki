@@ -88,9 +88,11 @@ the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now
 `convexNFEval_segTangentGens_eq`: convex PWL = sup of its segment tangent rate-latencies, for base 0
 + positive slopes; flat/positive-base via hypothesis-form lemmas); Lemma 4.10 [4.12] closure still
 needs a closure↔Legendre identity.
-So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores); the remaining items are the
-book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full Thm 4.4 (→[LEC 14]), the `C_cv` hull,
-the `[*]` closure inclusion, and the `Θ`/closure infra layers. Remark 4.1. -/
+So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
+genuinely deferred: the book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full `F`-closure
+Thm 4.4 (→[LEC 14]); and three `[infra]` layers — the `C_vx`/`C_cv` canonicalization of the
+[4.16]/[4.17] closure bounds (needs an `ℝ≥0∞` hull), the closure↔Legendre identity (blocks Lemma 4.10
+[4.12] and the quotient `⋆`), and Def 4.4 finiteness from the canonical form. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
