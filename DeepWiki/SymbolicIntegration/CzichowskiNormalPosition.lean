@@ -470,6 +470,34 @@ theorem finite_quotient_czIdeal (hM : D.Monic) (hD : D.Separable) :
   haveI : Module.Finite K (K[X] ⧸ Ideal.span {D}) := hM.finite_adjoinRoot (R := K)
   Module.Finite.equiv (czIdealQuotEquiv A D hD).symm.toLinearEquiv
 
+/-! ## Maximality w.r.t. the zero set: `I` is radical (Czichowski Lemma 2.1(iii))
+
+Czichowski's "`I` is maximal among the ideals with its zero set" is exactly that `I` is a
+**radical** ideal (`I = √I`): by the Nullstellensatz `I(V(I)) = √I`, so `I = I(V(I)) ⟺ I` radical.
+Since `D` is separable hence squarefree, `K[x] ⧸ (D)` is reduced; transporting through the
+eliminating iso `K[x, z] ⧸ I ≃ₐ K[x] ⧸ (D)` makes `K[x, z] ⧸ I` reduced, i.e. `I` is radical. -/
+
+/-- **`(D)` is reduced**: for `D` separable (hence squarefree), the quotient `K[X] ⧸ (D)` is reduced
+(`D` squarefree `⟹ (D)` radical `⟹` reduced quotient). -/
+theorem isReduced_quotient_span_singleton (hD : D.Separable) :
+    IsReduced (K[X] ⧸ Ideal.span {D}) :=
+  (Ideal.isRadical_iff_quotient_reduced _).mp
+    (isRadical_iff_span_singleton.mp hD.squarefree.isRadical)
+
+/-- **`K[x, z] ⧸ I` is reduced**: transport `IsReduced (K[X] ⧸ (D))` across the eliminating iso
+`czIdealQuotEquiv` (an `AlgEquiv`, hence an injective monoid-with-zero hom). -/
+theorem isReduced_quotient_czIdeal (hD : D.Separable) :
+    IsReduced (MvPolynomial (Fin 2) K ⧸ czIdeal A D) :=
+  haveI := isReduced_quotient_span_singleton D hD
+  isReduced_of_injective (czIdealQuotEquiv A D hD).toRingHom
+    (czIdealQuotEquiv A D hD).injective
+
+/-- **Czichowski's ideal is radical** (Lemma 2.1(iii), maximality w.r.t. its zero set): for `D` monic
+separable, `I = ⟨A − z·D', D⟩` is a radical ideal (`I = √I`). By the Nullstellensatz `I(V(I)) = √I`,
+this is exactly that `I` is maximal among the ideals sharing its zero set. -/
+theorem czIdeal_isRadical (hD : D.Separable) : (czIdeal A D).IsRadical :=
+  (Ideal.isRadical_iff_quotient_reduced _).mpr (isReduced_quotient_czIdeal A D hD)
+
 /-! ### Toward the variety analysis (deliverable E, partial): the residue value at a zero
 
 The zeros of `I` are `(α, T(α))` for the roots `α` of `D`, and `T(α) = A(α)/D'(α)` is the
@@ -535,5 +563,10 @@ example (A D : K[X]) (hM : D.Monic) (hD : D.Separable) :
     Module.Finite K
       (MvPolynomial (Fin 2) K ⧸ Ideal.span {liftX A - zVar * liftX (derivative D), liftX D}) :=
   finite_quotient_czIdeal A D hM hD
+
+-- Lemma 2.1(iii): `I = ⟨A − z·D', D⟩` is radical (maximal w.r.t. its zero set, by the Nullstellensatz).
+example (A D : K[X]) (hD : D.Separable) :
+    (Ideal.span {liftX A - zVar * liftX (derivative D), liftX D}).IsRadical :=
+  czIdeal_isRadical A D hD
 
 end DeepWiki.SymbolicIntegration

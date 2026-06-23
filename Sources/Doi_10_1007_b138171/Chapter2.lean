@@ -44,10 +44,13 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   via coprime leading monomials `x^(deg D)`, `z` (`isGroebnerBasis_gb`, the `z := T` substitution
   argument). The zeros' `x`-parts are the (distinct, `D` squarefree) roots of `D` with residue
   `z`-part `A(α)/D'(α)` (`eval_residuePoly_of_isRoot`, `nodup_roots_of_separable` = normal position).
-  Lemma 2.1(i) **zero-dimensionality** is done: eliminating `z = T` gives the iso
+  Lemma 2.1 is **complete (i,ii,iii)**: (i) **zero-dimensionality** — eliminating `z = T` gives the iso
   `K[x,z] ⧸ I ≃ₐ[K] K[x] ⧸ (D)` (`czIdealQuotEquiv`), finite over `K` since `D` is monic
-  (`finite_quotient_czIdeal`). Remaining: Lemma 2.1's maximality-w.r.t.-the-zero-set claim
-  [research: needs `MvPolynomial`-variety / Nullstellensatz `I = I(V(I))`].
+  (`finite_quotient_czIdeal`); (ii) **normal position** (`nodup_roots_of_separable`); (iii)
+  **maximality w.r.t. the zero set** = `I` radical (`czIdeal_isRadical`, via `D` squarefree ⟹
+  `K[x] ⧸ (D)` reduced, transported across the iso). Remaining only as a *geometric* bonus phrasing:
+  `I = MvPolynomial.vanishingIdeal (zeroLocus …)` [research: needs the Nullstellensatz `I(V(I)) = √I`
+  over an algebraically closed `K`; the algebraic content `I = √I` is `czIdeal_isRadical`].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -732,6 +735,12 @@ zero-dimensional, i.e. `K[x, z] ⧸ I` is a finite `K`-module (rank `deg D`), si
 library's `finite_quotient_czIdeal`. -/
 noncomputable abbrev czichowski_lemma_2_1_zero_dimensional :=
   @DeepWiki.SymbolicIntegration.finite_quotient_czIdeal
+
+/-- **Czichowski (1995), Lemma 2.1(iii), maximality w.r.t. the zero set** (J. Symb. Comp. 20, p.164):
+`I = ⟨A − z·D', D⟩` is radical (`I = √I`), i.e. maximal among the ideals with its zero set — by the
+Nullstellensatz `I(V(I)) = √I`, this is exactly `I = I(V(I))`. The library's `czIdeal_isRadical`. -/
+noncomputable abbrev czichowski_lemma_2_1_radical :=
+  @DeepWiki.SymbolicIntegration.czIdeal_isRadical
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
