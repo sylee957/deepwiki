@@ -16,11 +16,10 @@ are layered on this next.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
-§7.2: Def 7.7 — unnest `μ` and renaming `ρ` are done; the remaining operators (union, difference,
-  cartesian product, projection, the nest `ν`, selection) and Def 7.8 (a nested algebra expression)
-  and the nest/unnest-not-inverse fact need a `DecidableEq (NestedValue …)` instance for grouping /
-  set semantics — `deriving DecidableEq` does NOT apply to the recursive carrier, so a hand-written
-  mutual `beq` + correctness (or `decEq`) is required first [infra].
+§7.2: Def 7.7 — unnest `μ`, renaming `ρ`, and `DecidableEq (NestedValue …)` (hand-written mutual
+  `beq` + correctness, since `deriving` does not apply) are done; the remaining operators (union,
+  difference, cartesian product, projection, the nest `ν`, selection), Def 7.8 (a nested algebra
+  expression), and the nest/unnest-not-inverse fact are the next step [infra].
 §7.3: Def 7.9 / 7.10 (functional and multivalued dependencies on nested instances), Theorem 7.1
   (`ν(ω; X)` satisfies the fd `(Ω − X) → X`), and the non-commutativity of nesting (Example
   7.10) [infra].
@@ -77,3 +76,10 @@ abbrev def_7_7_unnest := @DeepWiki.NestedValue.unnest
 /-- **Definition 7.7** (§7.2), the *renaming* operator `ρ_{a→b}`: rename a top-level attribute
 throughout a nested relation. -/
 abbrev def_7_7_rename := @DeepWiki.NestedValue.rename
+
+/-- **§7.2 infrastructure**: decidable Boolean equality of nested values (hand-written, since
+`deriving DecidableEq` does not apply to the nested carrier) and its correctness. -/
+abbrev nested_value_beq := @DeepWiki.NestedValue.beq
+
+/-- **§7.2 infrastructure**: correctness of `NestedValue.beq` (decides equality). -/
+abbrev nested_value_beq_iff := @DeepWiki.NestedValue.beq_iff

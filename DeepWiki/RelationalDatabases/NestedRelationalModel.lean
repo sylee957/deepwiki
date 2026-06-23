@@ -49,6 +49,65 @@ theorem NestedValue.atom_inj {v w : V}
   injection h
 
 mutual
+/-- Boolean equality of nested values (and, mutually, of relations and tuples). `deriving
+DecidableEq` does not apply to this nested carrier, so equality is built by hand. -/
+def NestedValue.beq [DecidableEq Att] [DecidableEq V] :
+    NestedValue Att V → NestedValue Att V → Bool
+  | .atom v, .atom w => decide (v = w)
+  | .rel r1, .rel r2 => NestedValue.beqRel r1 r2
+  | .atom _, .rel _ => false
+  | .rel _, .atom _ => false
+/-- Boolean equality lifted to nested relations. -/
+def NestedValue.beqRel [DecidableEq Att] [DecidableEq V] :
+    NestedRel Att V → NestedRel Att V → Bool
+  | [], [] => true
+  | t1 :: r1, t2 :: r2 => NestedValue.beqTuple t1 t2 && NestedValue.beqRel r1 r2
+  | [], _ :: _ => false
+  | _ :: _, [] => false
+/-- Boolean equality lifted to nested tuples. -/
+def NestedValue.beqTuple [DecidableEq Att] [DecidableEq V] :
+    NestedTuple Att V → NestedTuple Att V → Bool
+  | [], [] => true
+  | p1 :: t1, p2 :: t2 =>
+      decide (p1.1 = p2.1) && NestedValue.beq p1.2 p2.2 && NestedValue.beqTuple t1 t2
+  | [], _ :: _ => false
+  | _ :: _, [] => false
+end
+
+mutual
+/-- Correctness of `beq`: it decides equality of nested values. -/
+theorem NestedValue.beq_iff [DecidableEq Att] [DecidableEq V] :
+    ∀ a b : NestedValue Att V, NestedValue.beq a b = true ↔ a = b
+  | .atom _, .atom _ => by simp [NestedValue.beq]
+  | .rel r1, .rel r2 => by
+      simp only [NestedValue.beq, NestedValue.beqRel_iff r1 r2, NestedValue.rel.injEq]
+  | .atom _, .rel _ => by simp [NestedValue.beq]
+  | .rel _, .atom _ => by simp [NestedValue.beq]
+/-- Correctness of `beqRel`. -/
+theorem NestedValue.beqRel_iff [DecidableEq Att] [DecidableEq V] :
+    ∀ r1 r2 : NestedRel Att V, NestedValue.beqRel r1 r2 = true ↔ r1 = r2
+  | [], [] => by simp [NestedValue.beqRel]
+  | t1 :: r1, t2 :: r2 => by
+      simp only [NestedValue.beqRel, Bool.and_eq_true, NestedValue.beqTuple_iff t1 t2,
+        NestedValue.beqRel_iff r1 r2, List.cons.injEq]
+  | [], _ :: _ => by simp [NestedValue.beqRel]
+  | _ :: _, [] => by simp [NestedValue.beqRel]
+/-- Correctness of `beqTuple`. -/
+theorem NestedValue.beqTuple_iff [DecidableEq Att] [DecidableEq V] :
+    ∀ t1 t2 : NestedTuple Att V, NestedValue.beqTuple t1 t2 = true ↔ t1 = t2
+  | [], [] => by simp [NestedValue.beqTuple]
+  | p1 :: t1, p2 :: t2 => by
+      simp only [NestedValue.beqTuple, Bool.and_eq_true, decide_eq_true_eq,
+        NestedValue.beq_iff p1.2 p2.2, NestedValue.beqTuple_iff t1 t2, List.cons.injEq, Prod.ext_iff]
+  | [], _ :: _ => by simp [NestedValue.beqTuple]
+  | _ :: _, [] => by simp [NestedValue.beqTuple]
+end
+
+/-- Decidable equality of nested values (from `beq` and its correctness). -/
+instance [DecidableEq Att] [DecidableEq V] : DecidableEq (NestedValue Att V) :=
+  fun a b => decidable_of_iff _ (NestedValue.beq_iff a b)
+
+mutual
 /-- Functorial map of `g : V → W` over the atoms of a nested value (and, mutually, over a nested
 relation and over a tuple), recursing into every nesting level. -/
 def NestedValue.map (g : V → W) : NestedValue Att V → NestedValue Att W
