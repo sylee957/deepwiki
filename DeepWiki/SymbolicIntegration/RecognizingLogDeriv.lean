@@ -3,13 +3,16 @@ import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 
 /-! # Recognizing logarithmic derivatives (Bronstein §2.9)
-For `f = A/D ∈ K(x)` with `D` squarefree, `deg A < deg D`, `gcd(A, D) = 1`, the criterion of §2.9
-(Mařík): `f` is the logarithmic derivative of a rational function — `∃ u ∈ K(x)*, f = logDeriv u` —
-**iff** all the residues `A(α)/D'(α)` (the roots of the Rothstein–Trager resultant, by
-`roots_rtResultant`) are integers (lie in the image of `ℤ → K`). The reachable substance is the
-`⟸` direction: grouping the simple-root residue decomposition `ratFunc_eq_sum_residue_grouped` by
-residue value, each integer residue `nₐ` turns the grouped factor `Gₐ = ∏_{res α = a}(X−α)` into a
-power `Gₐ^{nₐ}`, so `A/D = logDeriv(∏ₐ Gₐ^{nₐ}) = logDeriv u` with `u` the explicit `zpow`-product. -/
+For `f = A/D ∈ K(x)` with `D` squarefree, `deg A < deg D`, the criterion of §2.9 (Mařík): `f` is the
+logarithmic derivative of a rational function — `∃ u ∈ K(x)*, f = logDeriv u` — **iff** all the residues
+`A(α)/D'(α)` (the roots of the Rothstein–Trager resultant, by `roots_rtResultant`) are integers (lie in
+the image of `ℤ → K`). Both directions are proved (packaged as `isLogDeriv_iff_integer_residues`).
+`⟸` (`isLogDeriv_of_integer_residues`): grouping the simple-root residue decomposition
+`ratFunc_eq_sum_residue_grouped` by residue value, each integer residue `nₐ` turns the grouped factor
+`Gₐ = ∏_{res α = a}(X−α)` into a power `Gₐ^{nₐ}`, so `A/D = logDeriv(∏ₐ Gₐ^{nₐ})`.
+`⟹` (`integer_residues_of_isLogDeriv`): the simple-pole residue functional `residueAt α f = ((X−α)·f)(α)`
+reads `A(α)/D'(α)` from `A/D` (simple root) and the integer `ord_α(num u) − ord_α(denom u)` from
+`logDeriv u`; the hypothesis `A/D = logDeriv u` equates them. -/
 
 open Polynomial
 
