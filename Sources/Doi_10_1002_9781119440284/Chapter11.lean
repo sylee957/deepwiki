@@ -51,10 +51,16 @@ value, exact LP in 3 forms, order-independence + the reindexing Equiv).
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). The book defers this exact general case to **[BOU 16b]** (Bouillard–Stea, DOI 10.1109/TNET.2014.2332071) — now formalized from the paper itself (`FifoFeedForwardExact`: Theorem 1 = Lemmas 2/3 logical bridge, the §IV.D LP bracket `v_LP ≤ WCD ≤ V_LP`, the `2^(N+1)−1` variable count, single/multi-node exact instances). The CONCRETE general-N construction is also now formalized one layer below the abstract bridge (`FifoFeedForwardConcrete`: the depth-N binary-tree date layout `DateTree` with `count=2^(N+1)−1`, the `Scenario` properties 1–3, Lemma 2's per-constraint sample discharges `Scenario.sample_feasible_pointwise`, and Lemma 3's min-plus extrapolation core `extrapolate`/`extrapolate_arrival`); Lemma 1 (the convolution-time attainment the backward recursion needs) is now PROVED
 (`FifoFeedForwardReconstruction.exists_serviceCurveTime`), and the single-node case has a CONCRETE full
 Theorem-1 round-trip via an actual admissible burst trajectory (`fifoNode_reconstruction`, no Boolean
-variables). Only the genuinely solver-dependent general-N residual stays scoped — Lemma 2's backward
-date recursion composed over the `2^(N+1)−1` `DateTree`, and Lemma 3's global monotonicity/left-continuity
-+ FIFO-order preservation across the `2^?` orderings (`[infra]`/`[research]`). Paper-side
-double-reference catalog: `Sources/Doi_10_1109_TNET_2014_2332071` (`DeepWiki.Bs.*`). -/
+variables). The backward date recursion is now PROVED for ALL `N`
+(`FifoFeedForwardTandem.placeServiceDates`/`placeServiceDates_allLe`: the depth-`N` `DateTree` built
+backwards from the exit date via Lemma 1's oracle, with every one of the `2^(N+1)−1` placed dates `≤` the
+exit date), and the N=2 tandem has a CONCRETE full Theorem-1 reconstruction by an actual admissible
+trajectory (`tandem_reconstruction`/`tandem_reconstruction_bottleneck`, the closed two-node analogue of
+`fifoNode_reconstruction`). Only the genuinely solver-dependent general-N residual stays scoped — the
+per-node service-curve property at tree depth `> 2`, the floor-augmented global extrapolation, and
+FIFO-order preservation across the `2^N` Boolean orderings (`[infra]`/`[research]`, THE exponential
+frontier the paper enumerates numerically). Paper-side double-reference catalog:
+`Sources/Doi_10_1109_TNET_2014_2332071` (`DeepWiki.Bs.*`). -/
 
 namespace DeepWiki.Dnc
 

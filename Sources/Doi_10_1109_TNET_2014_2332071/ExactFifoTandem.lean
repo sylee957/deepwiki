@@ -1,6 +1,7 @@
 import DeepWiki.NetworkCalculus.FifoFeedForwardExact
 import DeepWiki.NetworkCalculus.FifoFeedForwardConcrete
 import DeepWiki.NetworkCalculus.FifoFeedForwardReconstruction
+import DeepWiki.NetworkCalculus.FifoFeedForwardTandem
 import Sources.Doi_10_1109_TNET_2014_2332071.Source
 
 /-! # Bouillard–Stea — exact worst-case delay in FIFO-multiplexing feed-forward networks — catalog
@@ -71,5 +72,22 @@ alias lemma_1 := FifoFeedForward.exists_serviceCurveTime
 `0⁺`, rate-latency output, causal, service-curve-bounded), with both Theorem-1 directions explicit and
 no Boolean variables. The library's `DeepWiki.FifoFeedForward.fifoNode_reconstruction`. -/
 alias thm_1_reconstruction_node := FifoFeedForward.fifoNode_reconstruction
+
+/-- **§IV.C the backward date recursion over `DateTree`, all `N`** (p.6–8): `placeServiceDates` builds
+the depth-`N` date tree backwards from the exit date, placing each node's FIFO + service-curve child
+dates via Lemma 1's oracle (`serviceDateOracle`/`serviceDateOracle_attains`). The genuine "placed dates
+are causal" content: `placeServiceDates_allLe` — every one of the `2^(N+1)−1` placed dates is `≤` the
+exit date (the MILP constraint `C_T`), by induction over the tree, for EVERY `N`. The library's
+`DeepWiki.FifoFeedForward.placeServiceDates_allLe`. -/
+alias backward_recursion := FifoFeedForward.placeServiceDates_allLe
+
+/-- **Theorem 1, concrete N=2 tandem reconstruction** (§IV.A/C): for a two-node FIFO tandem the
+worst-case end-to-end delay `T₂+b/R₂` is realized by an ACTUAL admissible trajectory — `tandemScenario`
+(`A ≥ D₁ ≥ D₂`, monotone + FIFO-causal + α-constrained ingress, a `Scenario 2`), with each node offering
+its rate-latency service curve via Lemma 1 and the tagged Boolean bit realizing the delay
+(`tandem_reconstruction`); `tandem_reconstruction_bottleneck` discharges causality from the data
+(`R₂≤R₁, T₁≤T₂`), the closed two-node analogue of N=1's `fifoNode_reconstruction`. The library's
+`DeepWiki.FifoFeedForward.tandem_reconstruction_bottleneck`. -/
+alias thm_1_reconstruction_tandem := FifoFeedForward.tandem_reconstruction_bottleneck
 
 end DeepWiki.Bs
