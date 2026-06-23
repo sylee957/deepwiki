@@ -362,4 +362,52 @@ theorem residueAt_logDeriv_div_eq_int (N M : K[X]) (hN : N ≠ 0) (hM : M ≠ 0)
   push_cast
   ring
 
+open scoped Classical in
+open scoped Differential in
+/-- **Recognizing logarithmic derivatives, `⟹` direction** (Bronstein §2.9, p.72, Mařík): over an
+algebraically closed field, if `A/D` (with `D` squarefree, `deg A < deg D`) is the logarithmic
+derivative of some nonzero `u ∈ K(x)*`, then at every root `α` of `D` the residue `A(α)/D'(α)` is an
+*integer* in `K` — `∃ n : ℤ, A(α)/D'(α) = (n : K)`, namely `n = ord_α(num u) − ord_α(denom u)`. Proof:
+the residue functional `residueAt α` reads `A(α)/D'(α)` from `A/D` (`residueAt_div_eq_residue`, `D`
+having `α` as a simple root) and `ord_α(num u) − ord_α(denom u)` from `logDeriv u`
+(`residueAt_logDeriv_div_eq_int`); the hypothesis `A/D = logDeriv u` equates them. -/
+theorem integer_residues_of_isLogDeriv [IsAlgClosed K] (A D : K[X]) (hD : D.Separable)
+    (u : RatFunc K) (hu : u ≠ 0)
+    (hlog : algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D
+      = Differential.logDeriv u) (α : K) (hα : D.IsRoot α) :
+    ∃ n : ℤ, A.eval α / (derivative D).eval α = (n : K) := by
+  -- `D = (X − α)·E` with `E(α) ≠ 0` (`α` a simple root of squarefree `D`)
+  have hD0 : D ≠ 0 := hD.ne_zero
+  have hmult : D.rootMultiplicity α = 1 :=
+    le_antisymm (rootMultiplicity_le_one_of_separable hD α)
+      ((rootMultiplicity_pos hD0).mpr hα)
+  obtain ⟨E, hDeq, hndvd⟩ := D.exists_eq_pow_rootMultiplicity_mul_and_not_dvd hD0 α
+  rw [hmult, pow_one] at hDeq
+  have hE : E.eval α ≠ 0 := fun h0 => hndvd (dvd_iff_isRoot.mpr h0)
+  -- write `u = num u / denom u` (both nonzero)
+  have hNu : RatFunc.num u ≠ 0 := RatFunc.num_ne_zero hu
+  have hMu : RatFunc.denom u ≠ 0 := RatFunc.denom_ne_zero u
+  refine ⟨(RatFunc.num u).rootMultiplicity α - (RatFunc.denom u).rootMultiplicity α, ?_⟩
+  -- the residue read two ways via the hypothesis `A/D = logDeriv u`
+  have hres1 : residueAt α (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D)
+      = A.eval α / (derivative D).eval α := by
+    rw [hDeq]; exact residueAt_div_eq_residue A E α hE
+  have hres2 : residueAt α (Differential.logDeriv u)
+      = (((RatFunc.num u).rootMultiplicity α : ℤ)
+          - ((RatFunc.denom u).rootMultiplicity α : ℤ) : K) := by
+    conv_lhs => rw [← RatFunc.num_div_denom u]
+    exact residueAt_logDeriv_div_eq_int (RatFunc.num u) (RatFunc.denom u) hNu hMu α
+  rw [← hres1, hlog, hres2]
+  push_cast
+  ring
+
+open scoped Classical in
+open scoped Differential in
+-- The `⟹` direction: a logarithmic-derivative `A/D` has integer residues at the roots of `D`.
+example [IsAlgClosed K] (A D : K[X]) (hD : D.Separable) (u : RatFunc K) (hu : u ≠ 0)
+    (hlog : algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D
+      = Differential.logDeriv u) (α : K) (hα : D.IsRoot α) :
+    ∃ n : ℤ, A.eval α / (derivative D).eval α = (n : K) :=
+  integer_residues_of_isLogDeriv A D hD u hu hlog α hα
+
 end DeepWiki.SymbolicIntegration
