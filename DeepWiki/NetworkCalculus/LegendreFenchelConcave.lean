@@ -91,4 +91,37 @@ below it. -/
 theorem Ccv_mono {f g : ℝ≥0 → EReal} (h : f ≤ g) : Ccv f ≤ Ccv g :=
   Ccv_le (isConcaveEReal_Ccv g) (le_trans h (le_Ccv g))
 
+/-! ## The `[∧]` (container-meet) canonical upper bound
+DNC §4.4 (canonical representation of a container) builds the canonical upper
+bound of a container by applying `𝒞_cv` to a meet `f̄ ⊓ Ω`. The following spell
+out that `𝒞_cv (f ⊓ g)` is exactly the *least concave curve above the meet*: it
+is concave, it majorizes `f ⊓ g`, and any concave curve above the meet bounds
+it. -/
+
+/-- **The `[∧]`-canonicalized upper bound is concave**: `𝒞_cv (f ⊓ g)` is concave
+(the canonical upper bound of a container meet, DNC §4.4). -/
+theorem isConcaveEReal_Ccv_inf (f g : ℝ≥0 → EReal) :
+    IsConcaveEReal (Ccv (f ⊓ g)) :=
+  isConcaveEReal_Ccv (f ⊓ g)
+
+/-- **The `[∧]`-canonicalized bound majorizes the meet**: `f ⊓ g ≤ 𝒞_cv (f ⊓ g)`. -/
+theorem inf_le_Ccv_inf (f g : ℝ≥0 → EReal) : f ⊓ g ≤ Ccv (f ⊓ g) :=
+  le_Ccv (f ⊓ g)
+
+/-- **The `[∧]`-canonicalized bound is the least concave majorant of the meet**:
+for any concave `h ≥ f ⊓ g`, `𝒞_cv (f ⊓ g) ≤ h`. -/
+theorem Ccv_inf_le {f g h : ℝ≥0 → EReal} (hhc : IsConcaveEReal h)
+    (hhf : f ⊓ g ≤ h) : Ccv (f ⊓ g) ≤ h :=
+  Ccv_le hhc hhf
+
+-- Restatements against the book's wording (DNC §4.4, eq. [4.6]): the concave
+-- hull is concave, majorizes `f` (`𝒞_cv f ≥ f`), is the least such, and fixes
+-- concave curves.
+example (f : ℝ≥0 → EReal) : IsConcaveEReal (Ccv f) := isConcaveEReal_Ccv f
+example (f : ℝ≥0 → EReal) : f ≤ Ccv f := le_Ccv f
+example {f g : ℝ≥0 → EReal} (hc : IsConcaveEReal g) (hfg : f ≤ g) : Ccv f ≤ g :=
+  Ccv_le hc hfg
+example {f : ℝ≥0 → EReal} (hf : IsConcaveEReal f) : Ccv f = f :=
+  Ccv_eq_self_of_isConcaveEReal hf
+
 end DeepWiki
