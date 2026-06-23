@@ -59,4 +59,25 @@ English word for `B` — is informal and not modelled.) -/
 def abstract_sumB : RelConstraint abstractScheme :=
   fun r => ∀ t ∈ r, cval t < ∑ᶠ t' ∈ {t' | t' ∈ r ∧ cval t' = cval t}, bval t'
 
+/-! ## Example 1.2 — `ROOMS` and the `noremove` dynamic constraint (Exercise 1.3) -/
+
+/-- The `ROOMS` primitive relation scheme: room number, number of beds, a bath flag (`0`/`1`),
+floor and rate. -/
+abbrev roomsScheme : PrimRelScheme String ℤ :=
+  ⟨{"RN", "NOB", "BATH", "FLOOR", "RATE"}, fun _ => Set.univ⟩
+
+/-- The `ROOMS` relation scheme (no static constraints attached here). -/
+abbrev roomsRel : RelScheme String ℤ := ⟨roomsScheme, ∅⟩
+
+/-- The room-number component of a `ROOMS` tuple. -/
+def roomNum (t : TupleOf roomsScheme) : ℤ := t.val ⟨"RN", by decide⟩
+
+/-- The bath flag of a `ROOMS` tuple (`1` = has a bath). -/
+def bath (t : TupleOf roomsScheme) : ℤ := t.val ⟨"BATH", by decide⟩
+
+/-- **Exercise 1.3**: the `noremove` dynamic relation constraint — a bath is never removed from a
+room. If a room with a bath persists to the next instance, it still has a bath. -/
+def rooms_noremove : DynRelConstraint roomsRel :=
+  fun seq => ∀ n, ∀ t ∈ seq n, ∀ t' ∈ seq (n + 1), roomNum t = roomNum t' → bath t = 1 → bath t' = 1
+
 end DeepWiki

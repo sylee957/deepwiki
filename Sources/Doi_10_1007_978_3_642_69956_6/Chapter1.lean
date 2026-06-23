@@ -19,7 +19,6 @@ or open-ended constructions, several with informal content:
 Ex 1.1: the fourth ABSTRACT constraint — `A` is the first letter of the English word for the
   `B`-value [external: no formal object for "the English word for an integer"; the other three
   constraints are done].
-Ex 1.3: a formal definition of the `noremove` dynamic relation constraint of Example 1.7 [deferred].
 Ex 1.4: formal definitions of the dynamic database constraints of `SDYDC` in Example 1.8 [deferred].
 Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [deferred].
 Ex 1.6: boolean functions for every constraint of Example 1.10 (HOTELDB, six relations) [deferred].
@@ -176,5 +175,9 @@ abbrev ex_1_2_fourRooms := @DeepWiki.roommaids_fourRooms
 
 /-- **Exercise 1.2** (§1.7, p.16): no two roommaids are responsible for the same room. -/
 abbrev ex_1_2_uniqueRoom := @DeepWiki.roommaids_uniqueRoom
+
+/-- **Exercise 1.3** (§1.7, p.16): the `noremove` dynamic relation constraint — a room with a
+bath never loses it from one instance to the next. -/
+abbrev ex_1_3_noremove := @DeepWiki.rooms_noremove
 
 end DeepWiki.Rdb
