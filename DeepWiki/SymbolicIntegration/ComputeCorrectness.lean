@@ -623,4 +623,110 @@ theorem cdiv_natDegree_add (fuel : ℕ) (p q : CPoly) (hp : cnorm p ≠ []) (hq 
     rw [heq, natDegree_sub_eq_left_of_natDegree_lt (lt_of_lt_of_le hr hpq')]
   rwa [Polynomial.natDegree_mul hquo hQ] at key
 
+/-- `cpow c n = c ^ n`. -/
+theorem cpow_eq (c : ℚ) (n : ℕ) : cpow c n = c ^ n := by
+  induction n with
+  | zero => simp [cpow]
+  | succ n ih => rw [cpow, ih, pow_succ']
+
+/-- `cdeg` is invariant under `cnorm`. -/
+theorem cdeg_cnorm (p : CPoly) : cdeg (cnorm p) = cdeg p := by
+  simp only [cdeg, cnorm_idem]
+
+/-- `cmod` is invariant under normalizing both arguments. -/
+theorem cmod_cnorm_both (fuel : ℕ) (p q : CPoly) :
+    cmod fuel (cnorm p) (cnorm q) = cmod fuel p q := by
+  cases fuel with
+  | zero => simp [cmod, cdivmod, cnorm_idem]
+  | succ fuel => simp only [cmod, cdivmod, cnorm_idem]
+
+/-- `cresultant` is invariant under normalizing both arguments (it normalizes them internally). -/
+theorem cresultant_cnorm (fuel : ℕ) (p q : CPoly) :
+    cresultant fuel (cnorm p) (cnorm q) = cresultant fuel p q := by
+  cases fuel with
+  | zero => rfl
+  | succ fuel => simp only [cresultant, cnorm_idem]
+
+/-- **`cresultant ↔ Polynomial.resultant`, the case `deg q ≤ deg p`** (no swap): with enough fuel the
+computable Euclidean-PRS resultant equals Mathlib's Sylvester resultant. The reduction step matches
+`resultant_comm` (swap) ∘ `resultant_add_mul_right` (the `p mod q` reduction) ∘ `resultant_add_right_deg`
+(the sign-free `lc(q)^(dp−dr)` augmentation); the base cases are `resultant_zero_right`(_deg). -/
+theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly),
+    (cnorm q).length ≤ (cnorm p).length →
+    (cnorm p).length + (cnorm q).length + 1 ≤ fuel →
+    cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by
+  intro fuel
+  induction fuel with
+  | zero => intro p q _ hfuel; omega
+  | succ fuel ih =>
+    intro p q hpq hfuel
+    by_cases h0 : cisZero q = true
+    · -- q = 0
+      have hqnil : cnorm q = [] := by simpa [cisZero] using h0
+      have hq0 : toPoly q = 0 := by rw [← toPoly_cnorm, hqnil, toPoly_nil]
+      have hdq : cdeg q = 0 := by simp [cdeg, hqnil]
+      have hval : cresultant (fuel + 1) p q = (if (cnorm p).length ≤ 1 then 1 else 0) := by
+        rw [cresultant]; simp only [cisZero_cnorm, h0, if_true]
+      rw [hval, hq0, Polynomial.resultant_zero_right, hdq, pow_zero, mul_one]
+      by_cases hp1 : (cnorm p).length ≤ 1
+      · have : cdeg p = 0 := by simp only [cdeg]; omega
+        rw [if_pos hp1, this, pow_zero]
+      · have : cdeg p ≠ 0 := by simp only [cdeg]; omega
+        rw [if_neg hp1, zero_pow this]
+    · have hcz : cisZero q = false := by simpa using h0
+      have hq : cnorm q ≠ [] := fun h => by simp [cisZero, h] at hcz
+      by_cases hqc : (cnorm q).length ≤ 1
+      · -- q a nonzero constant: res(p, c) = c^(deg p)
+        have hdq : cdeg q = 0 := by simp only [cdeg]; omega
+        have hval : cresultant (fuel + 1) p q = cpow (clead q) (cdeg p) := by
+          rw [cresultant]
+          simp only [cisZero_cnorm, hcz, Bool.false_eq_true, if_false, if_pos hqc, clead_cnorm,
+            cdeg_cnorm]
+        rw [hval, cpow_eq, hdq, Polynomial.resultant_zero_right_deg]
+        rw [clead_eq_coeff, hdq]
+      · -- reduction
+        have hq2 : 2 ≤ (cnorm q).length := by omega
+        have hp : cnorm p ≠ [] := by
+          intro h; rw [h, List.length_nil] at hpq; omega
+        have hpqlen : ¬ (cnorm p).length < (cnorm q).length := by omega
+        have hRlen : (cnorm (cmod (fuel + 1) p q)).length < (cnorm q).length :=
+          cmod_length_lt (fuel + 1) p q hq (by omega)
+        have hval : cresultant (fuel + 1) p q
+            = cpow (-1) (cdeg p * cdeg q) * cpow (clead q) (cdeg p - cdeg (cmod (fuel + 1) p q))
+              * cresultant fuel q (cmod (fuel + 1) p q) := by
+          rw [cresultant]
+          simp only [cisZero_cnorm, hcz, Bool.false_eq_true, if_false, if_neg hqc, if_neg hpqlen,
+            clead_cnorm, cdeg_cnorm, cmod_cnorm_both, cresultant_cnorm]
+        rw [hval, cpow_eq, cpow_eq]
+        have hih := ih q (cmod (fuel + 1) p q) (le_of_lt hRlen) (by omega)
+        rw [hih]
+        have hP : toPoly p ≠ 0 := fun h => hp ((cnorm_eq_nil_iff p).mpr h)
+        have hQ : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+        have hdp : cdeg p = (toPoly p).natDegree := cdeg_eq_natDegree p
+        have hdq : cdeg q = (toPoly q).natDegree := cdeg_eq_natDegree q
+        have hdr : cdeg (cmod (fuel + 1) p q) = (toPoly (cmod (fuel + 1) p q)).natDegree :=
+          cdeg_eq_natDegree _
+        have hdrlt : (toPoly (cmod (fuel + 1) p q)).natDegree < (toPoly q).natDegree := by
+          rw [← hdr, ← hdq]; simp only [cdeg]; omega
+        have hqp : (toPoly q).natDegree ≤ (toPoly p).natDegree := by
+          rw [← hdq, ← hdp]; simp only [cdeg]; omega
+        have hdiv : toPoly p
+            = toPoly (cmod (fuel + 1) p q) + toPoly q * toPoly (cdiv (fuel + 1) p q) := by
+          have h : toPoly p = toPoly (cdiv (fuel + 1) p q) * toPoly q
+              + toPoly (cmod (fuel + 1) p q) := toPoly_cdivmod' (fuel + 1) p q hq
+          linear_combination h
+        have hqd : (toPoly (cdiv (fuel + 1) p q)).natDegree + (toPoly q).natDegree
+            = (toPoly p).natDegree := cdiv_natDegree_add (fuel + 1) p q hp hq hq2 hpq (by omega)
+        rw [Polynomial.resultant_comm (toPoly p) (toPoly q), hdiv,
+          Polynomial.resultant_add_mul_right (toPoly q) (toPoly (cmod (fuel + 1) p q))
+            (toPoly (cdiv (fuel + 1) p q)) (cdeg q) (cdeg p)
+            (by rw [hdp, hdq]; omega) (le_of_eq hdq.symm)]
+        rw [hdp, show (toPoly p).natDegree
+              = (toPoly (cmod (fuel + 1) p q)).natDegree + (cdeg p - cdeg (cmod (fuel + 1) p q))
+            from by rw [hdr, hdp]; omega,
+          Polynomial.resultant_add_right_deg (toPoly q) (toPoly (cmod (fuel + 1) p q)) (cdeg q)
+            (toPoly (cmod (fuel + 1) p q)).natDegree (cdeg p - cdeg (cmod (fuel + 1) p q)) le_rfl]
+        rw [← hdr, clead_eq_coeff, Nat.add_sub_cancel_left]
+        ring
+
 end DeepWiki.SymbolicIntegration.Compute
