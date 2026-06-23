@@ -57,6 +57,7 @@ import DeepWiki.NetworkCalculus.ConvexConcaveCrossingCoord
 import DeepWiki.NetworkCalculus.ConvexConcaveCrossingMulti
 import DeepWiki.NetworkCalculus.ConvexConcaveCollapse
 import DeepWiki.NetworkCalculus.ConvexConcaveRender
+import DeepWiki.NetworkCalculus.ConvexConcaveThreePart
 import DeepWiki.NetworkCalculus.GeneralPwl
 import DeepWiki.NetworkCalculus.PwlLowerEnvelope
 import DeepWiki.NetworkCalculus.PwlMerge

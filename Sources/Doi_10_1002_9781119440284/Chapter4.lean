@@ -56,12 +56,18 @@ or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
 §4.2: Theorem 4.2, the general (finite-support) form — the three-part `convex–concave–convex`
-decomposition `[external]`: the book itself defers the formal proof to [BOU 16a]; the final convex
-part appears only for *bounded*-support functions, which the infinite-support `convexSegEval` /
-token-bucket model does not represent. (The infinite-support case — `convex-then-concave` per the
-book's own §4.2 note — is fully formalized with explicit single-`Pwl` output, the cataloged
-`thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
-`lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
+decomposition `[external]`: the book defers the formal proof to [BOU 16a] (= that paper's Theorem 4.6).
+Now formalized FROM the paper at the faithful-core level (`ConvexConcaveThreePart`: the structural
+predicates `IsThreePartCvxCcvCvx`/`IsThreePartOnIcc`, the proof's convolution engines — Lemma 4.3
+distribution `minConv_distrib_inf`, convex∗convex, concave∗concave — and a concrete witness with all
+three parts genuine, `isThreePartOnIcc_witnessThree`); per-paper double-reference catalog
+`Sources/Doi_10_1090_mcom_2986` (`DeepWiki.Bfz.*`). FINDING: the final convex part only appears for
+*bounded*-support functions, and the `⊤`-padded `segE` is NOT `IsConvexEReal` (carrier gotcha), so the
+faithful witness lives at the real-`Icc` level; the full weak-KAM/Lax–Oleinik induction (Lemmas 4.4/4.5
+slope surgery + bounded-support arithmetic) over interval-restricted PWL stays `[external]`/`[infra]`.
+(The infinite-support case — `convex-then-concave` per the book's own §4.2 note — is fully formalized
+with explicit single-`Pwl` output, the cataloged `thm_4_2_output_pwl` and its supporting `thm_4_2_*`;
+Lemma 4.1's per-line engine + ordering are `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
 §4.3: COMPLETE (Lemmas 4.6, 4.7, 4.8, 4.9 all done; Lemma 4.9 `lemma_4_9` is unconditional, both
 cases, with two book-misprint repairs on the increments/rank).
 §4.4 containers: Definition 4.2 (container = curve-interval `[f̲,f̄]`) DONE (`def_4_2`/`Container`);
@@ -101,10 +107,11 @@ the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now
 (`lemma_4_10_12`/`legendre_legendreClosure`/`Container.SameLegendre.legendreClosure`: the
 closure↔Legendre identity `𝓛(f⋆)=⨆ₙ n•𝓛f`, so `⋆` descends to `F↑/L` for nonneg curves).
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
-book-deferred to other papers: the general three-part Thm 4.2 (→[BOU 16a], weak-KAM) — still to
-formalize — and the full `F`-closure Thm 4.4 (→[LEC 14]), whose internality core is now formalized from
-the paper (`ContainerInternalF`, catalog `Sources/Doi_10_1007_s10626_012_0148_9`), `[*]`/`[⋆]` +
-rank-reassembly remaining `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
+book-deferred to other papers, now formalized FROM those papers at the faithful-core level: the general
+three-part Thm 4.2 (→[BOU 16a] weak-KAM, `ConvexConcaveThreePart`, catalog
+`Sources/Doi_10_1090_mcom_2986`) and the full `F`-closure Thm 4.4 (→[LEC 14], `ContainerInternalF`,
+catalog `Sources/Doi_10_1007_s10626_012_0148_9`) — the weak-KAM induction (Thm 4.2) and `[*]`/`[⋆]` +
+rank-reassembly (Thm 4.4) remain `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
