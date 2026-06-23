@@ -38,11 +38,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
   `logToReal_conjugate_pair`/`logToReal_sum`); Ex 2.8.2.
-Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7 [partial — the regularity core (`ex_2_7_regularity`: the
-  `i`-th LRT subresultant has `x`-degree exactly `i` at a multiplicity-`i` residue) and the required
-  "leading coeffs are units in `K[t]/(Qᵢ)`" fact (`ex_2_7_units`: `sᵢ` coprime to `Qᵢ`) are done; the
-  full algorithmic modification of LRT to *output* monic-in-`x` logarithm arguments remains [functional:
-  needs the monic-normalized log-part construction]].
+Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
 
@@ -384,8 +380,19 @@ subresultant) is **coprime** to the multiplicity-`i` factor `Qᵢ = lrtQ A D i :
 (`i < deg D`) — i.e. `sᵢ` is a unit in `K[t]/(Qᵢ)`, exactly what makes monic-normalizing the LRT logarithm
 arguments legitimate even when `Qᵢ` is not irreducible. From `ex_2_7_regularity` (`sᵢ(a) ≠ 0` at each root
 `a` of `Qᵢ`) and the squarefreeness of `Qᵢ` (distinct linear factors `t − a`). The library's
-`isCoprime_lrtPsc_lrtQ`. The full algorithmic modification of LRT to output monic logs remains. -/
+`isCoprime_lrtPsc_lrtQ`. -/
 abbrev ex_2_7_units := @DeepWiki.SymbolicIntegration.isCoprime_lrtPsc_lrtQ
+
+/-- **Exercise 2.7** (§2.9, p.73), the algorithmic deliverable — *modify LRT so the polynomials inside the
+logarithms are monic in `x`, with no change to the integral*. Replacing the LRT log argument `Sᵢ(a,x)`
+(the specialized `i`-th subresultant `(lrtSubresultant A D i).map (t↦a)`) by its monic-in-`x` normalization
+`monicLrtLog A D i a = Sᵢ(a,x)·C(sᵢ(a))⁻¹` leaves the logarithmic-part derivative unchanged:
+`logDeriv(Sᵢ(a,x)) = logDeriv(monicLrtLog A D i a)` over `K(x)`. The two differ only by the nonzero
+`x`-constant leading coefficient `sᵢ(a)` (`ex_2_7_regularity` ⟹ `sᵢ(a) ≠ 0`, so
+`monicLrtLog` is monic), and `logDeriv` kills that constant factor (the `log(sᵢ(a))` term is `x`-constant,
+derivative `0`). The library's `logDeriv_monicLrtLog_eq`, resting on the clean core
+`logDeriv_algebraMap_C_mul_eq` (`logDeriv (C c · f) = logDeriv f` for `c ≠ 0` constant in `x`). -/
+abbrev ex_2_7 := @DeepWiki.SymbolicIntegration.logDeriv_monicLrtLog_eq
 
 /-- **Example 2.5.2** (§2.5, p.53), the Hermite-reduction result for `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x²−1)²(x−2)`): `HermiteReduce` returns rational part `g = (12x+6)/(x²−1)` and remaining
