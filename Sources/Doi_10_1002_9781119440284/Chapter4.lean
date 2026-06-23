@@ -25,6 +25,7 @@ import DeepWiki.NetworkCalculus.SegmentDeconvConcat
 import DeepWiki.NetworkCalculus.SegmentConvolution
 import DeepWiki.NetworkCalculus.SpotClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureUPP
+import DeepWiki.NetworkCalculus.SegmentClosureSelect
 import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -46,10 +47,9 @@ book's own §4.2 note — is fully formalized with explicit single-`Pwl` output,
 `thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
 `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
 §4.3: Lemma 4.7 (sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`)
-`[research]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]` — the per-segment geometry is done
-(`lemma_4_9_powers`: the `n`-fold power is the open segment of the same slope `s` on `(n·a, n·b)`);
-what remains is the order-theoretic infimum-selection over `⨅ₙ σⁿ` (which `n` wins per `t`, the rank,
-the `closure(t+a) = closure t + s·a` period step).
+`[research]`; Lemma 4.9 (closure of an open segment is UPP): the `va ≤ s·a` case is DONE in full (`lemma_4_9`:
+period `a`, increment `va` — a book-misprint repair, the book prints `s·a`); the symmetric `va > s·a`
+case (period `b`, right-anchored) remains `[infra]` (the dual infimum-selection).
 §4.4 containers: Definition 4.2 (container = curve-interval `[f̲,f̄]`) DONE (`def_4_2`/`Container`);
 Proposition 4.2 (same Legendre–Fenchel transform ↔ equal convex biconjugates) DONE (`prop_4_2`, both
 directions); Proposition 4.3 congruence is an equivalence relation DONE (`prop_4_3_setoid`), but its
@@ -797,6 +797,18 @@ theorem lemma_4_9_powers (a b va s : ℝ≥0) {n : ℕ} (hn : 1 ≤ n)
     minConvPow (segNN a b va s) n t
       = (((n : ℝ≥0) * va + s * (t - (n : ℝ≥0) * a) : ℝ≥0) : ℝ≥0∞) :=
   minConvPow_segNN_eq_affine a b va s hn htl htr
+
+/-- **Lemma 4.9** (§4.3, p.78), the `va ≤ s·a` case — FULL: the sub-additive closure of an open
+segment is UPP. Past rank `(⌈a/(b−a)⌉+2)·a` the consecutive power-supports `(n·a, n·b)` chain-cover
+`ℝ₊` (`a < b`), the closure value is `closure(n·a + t) = n·va + s·t` for `t ∈ (0,a]` (the candidate
+`n·va + s·t` undercuts every other power, the infimum-selection), so the closure is UPP with period
+`a` and increment `va`. **Book misprint (repaired):** the book prints the increment as `f'·a = s·a`;
+the genuine per-period increment is `va = f(a⁺)` (the per-copy value), equal to `s·a` only at the
+boundary `va = s·a`. The library's `DeepWiki.isUPP_subadditiveClosureENN_segNN` (value
+`DeepWiki.subadditiveClosureENN_segNN_eq`). The symmetric `va > s·a` case (period `b`) remains. -/
+theorem lemma_4_9 (a b va s : ℝ≥0) (ha : 0 < a) (hab : a < b) (hsa : va ≤ s * a) :
+    IsUPP (subadditiveClosureENN (segNN a b va s)) :=
+  isUPP_subadditiveClosureENN_segNN a b va s ha hab hsa
 
 /-- **Definition 4.2** (§4.4, p.81): the set `F` of **containers** — a container is a function-lattice
 interval `[f̲, f̄]` of `(min,plus)` curves (`lo ≤ hi`), the uncertainty between a lower and an upper
