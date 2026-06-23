@@ -82,6 +82,23 @@ end
 @[simp] theorem NestedValue.conformsRel_nil (cols : List (Att × NestedScheme Att)) :
     NestedValue.ConformsRel ([] : NestedRel Att V) cols := trivial
 
+/-- **Definition 7.5** (§7.1/§7.3): a *nested relation constraint* — a Boolean function on nested
+relations (`true` = the relation satisfies it). -/
+def NestedConstraint (Att V : Type) : Type := NestedValue Att V → Bool
+
+/-- A nested relation *satisfies* a constraint when the constraint evaluates to `true`. -/
+def NestedValue.SatisfiesConstraint (r : NestedValue Att V) (C : NestedConstraint Att V) : Prop :=
+  C r = true
+
+/-- A nested relation instance of a scheme satisfies *all* the scheme's constraints `SC` (so it is
+an element of `I_NRS`). -/
+def NestedValue.SatisfiesAll (r : NestedValue Att V) (SC : Set (NestedConstraint Att V)) : Prop :=
+  ∀ C ∈ SC, r.SatisfiesConstraint C
+
+/-- Every relation satisfies the empty constraint set. -/
+@[simp] theorem NestedValue.satisfiesAll_empty (r : NestedValue Att V) :
+    r.SatisfiesAll ∅ := fun _ hC => hC.elim
+
 mutual
 /-- Boolean equality of nested values (and, mutually, of relations and tuples). `deriving
 DecidableEq` does not apply to this nested carrier, so equality is built by hand. -/
