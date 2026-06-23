@@ -82,4 +82,33 @@ theorem certainAnswer_imp_possibleAnswer [Inhabited Val] {T : NullTable Ω Val} 
 /-- The null-table of a definite table (every row total). -/
 def toNullTable (r : Table Ω Val) : NullTable Ω Val := toNull '' r
 
+/-- `toNull` is injective. -/
+theorem toNull_injective : Function.Injective (toNull : Tuple Ω Val → NullTuple Ω Val) :=
+  fun _ _ h => funext fun a => Option.some_injective _ (congrFun h a)
+
+/-- A definite table represents exactly itself: its only possible world is itself — the null-free
+embedding is faithful. -/
+theorem rep_toNullTable [Inhabited Val] (r : Table Ω Val) : rep (toNullTable r) = {r} := by
+  ext r'
+  rw [Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨f, hf, rfl⟩
+    ext t
+    simp only [toNullTable, Set.mem_image]
+    constructor
+    · rintro ⟨_, ⟨t₀, ht₀, rfl⟩, rfl⟩
+      rwa [toNull_injective ((moreInfo_toNull_iff t₀ _).mp (hf (toNull t₀) ⟨t₀, ht₀, rfl⟩))]
+    · intro ht
+      exact ⟨toNull t, ⟨t, ht, rfl⟩,
+        toNull_injective ((moreInfo_toNull_iff t _).mp (hf (toNull t) ⟨t, ht, rfl⟩))⟩
+  · rintro rfl
+    refine ⟨fun nt a => (nt a).getD default, fun nt _ a v h => by simp [toNull, h], ?_⟩
+    ext t
+    simp only [toNullTable, Set.mem_image]
+    constructor
+    · intro ht
+      exact ⟨toNull t, ⟨t, ht, rfl⟩, by funext a; simp [toNull]⟩
+    · rintro ⟨_, ⟨t₀, ht₀, rfl⟩, rfl⟩
+      simpa [toNull] using ht₀
+
 end DeepWiki

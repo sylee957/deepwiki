@@ -92,3 +92,7 @@ abbrev certain_answer := @DeepWiki.CertainAnswer
 
 /-- **§6.1**: every certain answer is a possible answer (the representation is nonempty). -/
 abbrev certain_imp_possible := @DeepWiki.certainAnswer_imp_possibleAnswer
+
+/-- **§6.1** (faithfulness): a definite (null-free) table represents exactly itself — its only
+possible world is itself. A representation system must contain the definite relations faithfully. -/
+abbrev rep_definite_faithful := @DeepWiki.rep_toNullTable
