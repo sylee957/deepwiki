@@ -368,6 +368,18 @@ theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 
     ring
 
 open scoped Differential in
+/-- **The `qadd`-fold derivative is the sum of the increment derivatives**: starting from `qzero`,
+`(toQFun (gs.foldl qadd qzero))′ = ∑ⱼ (toQFun gⱼ)′` in `RatFunc ℚ`. The derivative of the Hermite
+`g`-accumulation distributes over the per-factor increments (the derivation is additive on the
+`toQFun_foldl_qadd` sum). The structural bridge from the fold to a sum of per-factor reductions. -/
+theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
+    (toQFun (gs.foldl qadd qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
+  rw [toQFun_foldl_qadd gs qzero (by simp [qzero, toPoly_cons]) hgs, toQFun_qzero, zero_add]
+  rw [show ((gs.map toQFun).sum)′ = Differential.deriv (R := RatFunc ℚ) (gs.map toQFun).sum from rfl,
+    map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
+  rfl
+
+open scoped Differential in
 /-- **`hermiteInner` loop correctness** (the public `qzero`-start form) in `RatFunc ℚ`: with `am =
 algebraMap ℚ[X] (RatFunc ℚ)`, for `U, V ≠ 0`, if every reachable computable Bézout step satisfies its
 defining relation (`hbez`, discharged by `toPoly_cdiophantine`), then `hermiteInner fuel V U j A qzero
