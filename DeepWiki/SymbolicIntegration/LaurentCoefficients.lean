@@ -1268,3 +1268,103 @@ theorem localApprox_eq_sum (A M : K[X]) (α : K) (i : ℕ) :
       rwa [hpowdeg] at hdW
   rw [htay, Polynomial.sum_over_range' _ (fun d => by simp) i hdeg]
   rfl
+
+/-- **The principal part of `A/D` at the pole `α`** (§2.7, Theorem 2.7.1, the closure form): the sum
+`∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` of the `1/(x−α)ʲ` Laurent terms, with `c_d = localCoeff …` the `(X−α)`-adic
+digits of the local approximant `W`. Subtracting it from `A/D` removes the order-`i` pole at `α`
+(`subtract_localPrincipalPart_eq`). With `D = (X−α)^i·M`, `M(α) ≠ 0`. -/
+noncomputable def localPrincipalPart (A M : K[X]) (α : K) (i : ℕ) : RatFunc K :=
+  ∑ j ∈ Finset.Icc 1 i,
+    algebraMap K[X] (RatFunc K) (Polynomial.C (localCoeff A M α i (i - j)))
+      / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j
+
+/-- **The principal part consolidated over the common denominator `(X−α)^i`** (§2.7): the Laurent sum
+`∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` equals `W/(x−α)^i` for the local approximant `W = ∑_{d<i} c_d·(x−α)^d`
+(`localApprox`), by clearing each term to the common power `i` and reindexing `d = i−j`. -/
+theorem localPrincipalPart_eq_div (A M : K[X]) (α : K) (i : ℕ) :
+    localPrincipalPart A M α i
+      = algebraMap K[X] (RatFunc K) (localApprox A M α i)
+          / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i := by
+  have hX0 : (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
+  rw [localApprox_eq_sum A M α i, map_sum, Finset.sum_div, localPrincipalPart]
+  -- reindex `Finset.Icc 1 i` (power `j`) to `Finset.range i` (digit `d = i − j`)
+  refine Finset.sum_nbij' (fun j => i - j) (fun d => i - d) ?_ ?_ ?_ ?_ ?_
+  · intro j hj; simp only [Finset.mem_Icc] at hj; simp only [Finset.mem_range]; omega
+  · intro d hd; simp only [Finset.mem_range] at hd; simp only [Finset.mem_Icc]; omega
+  · intro j hj; simp only [Finset.mem_Icc] at hj; omega
+  · intro d hd; simp only [Finset.mem_range] at hd; omega
+  · intro j hj
+    simp only [Finset.mem_Icc] at hj
+    -- the `j`-th Laurent term `c_{i−j}/(x−α)^j` equals `c_{i−j}·(x−α)^{i−j}/(x−α)^i` (`d = i−j`)
+    have hpow : (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ (i - j)
+        * (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j
+        = (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i := by
+      rw [← pow_add]; congr 1; omega
+    rw [map_mul, map_pow, div_eq_div_iff (pow_ne_zero _ hX0) (pow_ne_zero _ hX0), mul_assoc, hpow]
+
+/-- **The regular remainder `R = (A − M·W) /ₘ (X−α)^i`** (§2.7): the polynomial left after subtracting the
+principal part, `A/D − PP = R/M`. By `localApprox_spec`, `(X−α)^i ∣ A − M·W`, so `R` is a genuine
+polynomial; `R/M` is regular at `α` since `M(α) ≠ 0`. -/
+noncomputable def localRemainder (A M : K[X]) (α : K) (i : ℕ) : K[X] :=
+  (A - M * localApprox A M α i) /ₘ (Polynomial.X - Polynomial.C α) ^ i
+
+/-- **`A − M·W = (X−α)^i·R`** (§2.7): the exact factorization of the principal-part numerator, from the
+divisibility `localApprox_spec` and the monic division reconstruction. -/
+theorem localRemainder_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    A - M * localApprox A M α i
+      = (Polynomial.X - Polynomial.C α) ^ i * localRemainder A M α i := by
+  have hmonic : ((Polynomial.X - Polynomial.C α) ^ i).Monic := (monic_X_sub_C α).pow i
+  conv_lhs => rw [← modByMonic_add_div (A - M * localApprox A M α i)
+    ((Polynomial.X - Polynomial.C α) ^ i)]
+  rw [(modByMonic_eq_zero_iff_dvd hmonic).2 (localApprox_spec A M i hM), zero_add, localRemainder]
+
+/-- **Theorem 2.7.1, subtracting the principal part removes the pole** (§2.7, p.56, the closure-level
+assembly): for `D = (X−α)^i·M` with `M(α) ≠ 0` (so `α` is a pole of `A/D` of order `≤ i`), subtracting the
+engine's Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) leaves `R/M`, regular at `α`:
+`A/D − ∑_{j=1}^{i} c_{i−j}/(x−α)ʲ = R/M`, `R = localRemainder …`, `M(α) ≠ 0`. This is the partial-fraction
+core — the principal part `∑_j c_{i−j}/(x−α)ʲ` is exactly the singular part of `A/D` at `α`. The Laurent
+coefficients `c_{i−j} = localCoeff A M α i (i−j)` are the engine outputs `Hᵢⱼ(α)` (the order-`(i−j)` Taylor
+coefficients of `hᵢ,α`, `eval_laurentH_eq_taylor_coeff`, up to the Hasse-derivative bridge). -/
+theorem subtract_localPrincipalPart_eq (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    algebraMap K[X] (RatFunc K) A
+        / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
+      - localPrincipalPart A M α i
+      = algebraMap K[X] (RatFunc K) (localRemainder A M α i)
+          / algebraMap K[X] (RatFunc K) M := by
+  set X' := algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α) with hX'
+  have hX0 : X' ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
+  have hM0 : algebraMap K[X] (RatFunc K) M ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+      (fun h => hM (by rw [h, Polynomial.eval_zero]))
+  rw [localPrincipalPart_eq_div]
+  -- common denominator `(X−α)^i · M`; the numerator is `A − M·W = (X−α)^i·R`
+  rw [map_mul, map_pow, ← hX']
+  rw [div_sub_div _ _ (mul_ne_zero (pow_ne_zero i hX0) hM0) (pow_ne_zero i hX0)]
+  rw [div_eq_div_iff (mul_ne_zero (mul_ne_zero (pow_ne_zero i hX0) hM0) (pow_ne_zero i hX0)) hM0]
+  -- clear denominators and use `A − M·W = (X−α)^i·R` (the spec, mapped through `algebraMap`)
+  have hspec : algebraMap K[X] (RatFunc K) A - algebraMap K[X] (RatFunc K) M
+        * algebraMap K[X] (RatFunc K) (localApprox A M α i)
+      = X' ^ i * algebraMap K[X] (RatFunc K) (localRemainder A M α i) := by
+    have h := localRemainder_spec A M i hM
+    have := congrArg (algebraMap K[X] (RatFunc K)) h
+    rwa [map_sub, map_mul, map_mul, map_pow, ← hX'] at this
+  -- the goal is a polynomial identity; `linear_combination` with `hspec` (times the leftover factor)
+  linear_combination (X' ^ i * algebraMap K[X] (RatFunc K) M) * hspec
+
+/-- **Theorem 2.7.1, the principal part is exactly the singular part** (§2.7, p.56, the closure-level
+conclusion, existence form): for `D = (X−α)^i·M` with `M(α) ≠ 0`, there is a polynomial `R` and a
+denominator `M` pole-free at `α` (`M(α) ≠ 0`) with
+`A/D − ∑_{j=1}^{i} c_{i−j}/(x−α)ʲ = R/M`, i.e. subtracting the engine's Laurent sum at `α` leaves a
+rational function **regular at `α`** (no pole). This is the assertion that the book's per-root sum
+`∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is the principal part of `A/D` at the pole `α`; summing over all poles `α` of
+`D` and adding the polynomial part `P = A /ₘ D` recovers `A/D` (the full partial-fraction theorem). -/
+theorem exists_regular_sub_localPrincipalPart (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    ∃ (R N : K[X]), N.eval α ≠ 0 ∧
+      algebraMap K[X] (RatFunc K) A
+          / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
+        - localPrincipalPart A M α i
+        = algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) N :=
+  ⟨localRemainder A M α i, M, hM, subtract_localPrincipalPart_eq A M i hM⟩
+
+end DeepWiki.SymbolicIntegration
