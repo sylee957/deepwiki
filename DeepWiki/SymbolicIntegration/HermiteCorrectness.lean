@@ -808,6 +808,20 @@ theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     rw [← toPoly_cnorm D, hb1]; exact Dvd.intro_left _ rfl
   exact hdvd.trans hb1D
 
+/-! ### What radical-divides buys (and what it does *not*) for the wrapper
+
+`toPoly_Dstar_dvd_D` settles the **radical clause** `toPoly Dstar ∣ toPoly D`. This is the `Dstar ∣ D`
+half mentioned in `hermiteReduce_residual_correct_of_dvd`'s docstring — but **not** the full divisibility
+that theorem requires. Its hypothesis is `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)` with
+`resNum = A·gden² − D·(gnum'·gden − gnum·gden')`; cancelling `Dstar` against `D = Dstar·W`, this is
+`W·gden² ∣ A·gden² − D·gprimeNum`, which forces `W ∣ A` and so does **not** follow from `Dstar ∣ D`
+alone (it is the *cleared Hermite identity* `resNum·Dstar = Bres·(D·gden²)`, validated per-example by
+`hermite_ex221_cleared_identity`). The missing half — "the numerator clears" — is exactly the
+correctness of the computed rational part `g = gnum/gden` (that `A/D − g′` genuinely has denominator
+`Dstar`), i.e. the full `hermiteInner`/`hermiteReduce` loop correctness, a strictly larger result than
+`csqfreeFactor`'s honesty. So `toPoly_Dstar_dvd_D` is a genuine ingredient toward an unconditional
+wrapper, but does not by itself discharge `hermiteReduce_residual_correct_of_dvd`. -/
+
 /-! ### A computable witness for `SqfreeExact` (`native_decide`-checkable)
 
 `SqfreeExact` is phrased with `toPoly` equalities (noncomputable). Its computable mirror `SqfreeExactComp`
