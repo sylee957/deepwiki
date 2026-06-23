@@ -14,6 +14,7 @@ import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
+import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -38,7 +39,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the conjugate-pair real-form identity is done, `logToReal_conjugate_pair`);
-  Ex 2.8.1; Ex 2.8.2.
+  Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7 [partial — the regularity core (`ex_2_7_regularity`: the
   `i`-th LRT subresultant has `x`-degree exactly `i` at a multiplicity-`i` residue) and the required
@@ -519,6 +520,15 @@ swap = Thm 2.8.1(a) (`imagLog_swap`), step = Thm 2.8.1(b) (`imagLog_step`); the 
 inductive run spec `IsLogToAtanRun`. The library's `isLogToAtanRun_correct` (and the fuel-def bridge
 `logToAtanAux_correct`). -/
 abbrev logToAtan_correct := @DeepWiki.SymbolicIntegration.isLogToAtanRun_correct
+
+/-- **Example 2.8.1** (§2.8, p.63–64), the worked `LogToAtan` run on `A = x³−3x`, `B = x²−2`: the
+book table (p.64) lists the three branches — step 1 cofactors `(C,D,G) = (x/2, x²/2−1/2, 1)`, step 2
+`(2, 2x, 1)`, base `2x/2 = x` — emitting arctan arguments `[(x⁵−3x³+x)/2, x³, x]`, so
+`∫ (x⁴−3x²+6)/(x⁶−5x⁴+5x²+4) dx = arctan((x⁵−3x³+x)/2) + arctan(x³) + arctan(x)` (eq 2.20, up to a
+step function). The library's `ex281_isLogToAtanRun` builds the explicit `IsLogToAtanRun` (integer-scaled
+cofactors `(x, x²−1, 2)`, `(1, x, 1)` — same arctan args, Bézout by `ring`), and `ex281_logToAtan_correct`
+reads off `atanDerivSum [...] = i · logDeriv((φA+iφB)/(φA−iφB))` from `logToAtan_correct`. -/
+abbrev ex_2_8_1 := @DeepWiki.SymbolicIntegration.ex281_logToAtan_correct
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
