@@ -32,7 +32,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's real-rational-function algorithm (`LogToReal`/`LogToAtan` recursion); Ex 2.8.1; Ex 2.8.2.
-§2.9: "Recognizing Logarithmic Derivatives" criterion ⟹ direction (`logDeriv u = A/D` ⟹ residues integral — needs a residue-functional / order-at-a-pole layer; the ⟸ direction is `recognizingLogDerivatives_of_integer_residues`); the full `IntegrateRationalFunction` in-field-integration algorithm.
+§2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -827,9 +827,8 @@ abbrev recognizingDerivatives := @DeepWiki.SymbolicIntegration.logPart_not_ratio
 /-- **Recognizing Derivatives, the criterion** (§2.9, p.71): for `f ∈ K(x)` with Hermite reduction
 `f = dg/dx + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f = du/dx` for some `u ∈ K(x)`
 **iff** `A = 0`. The library's `isRationalDerivative_iff`. (The "Recognizing Logarithmic Derivatives"
-criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — has its `⟸`
-direction in `recognizingLogDerivatives_of_integer_residues`; the `⟹` direction and the full
-`IntegrateRationalFunction` algorithm remain [deferred].) -/
+criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — is the packaged
+`recognizingLogDerivatives_iff`; the full `IntegrateRationalFunction` algorithm remains [deferred].) -/
 abbrev recognizingDerivatives_iff := @DeepWiki.SymbolicIntegration.isRationalDerivative_iff
 
 /-- **Recognizing Logarithmic Derivatives, `⟸` direction** (§2.9, p.72): for `f = A/D` with `D`
@@ -844,10 +843,51 @@ abbrev recognizingLogDerivatives_of_integer_residues :=
 /-- **Recognizing Logarithmic Derivatives, the `⟹`-direction numerator ingredient** (§2.9, p.72):
 over an algebraically closed field, for nonzero `N`, `logDeriv(N) = N′/N = ∑_{β∈N.roots} 1/(X−β)` — the
 root sum with multiplicity. With `u = N/M`, `logDeriv u = ∑ (m_N(β) − m_M(β))/(X−β)`, so the residue at a
-simple pole `α` of `A/D = logDeriv u` is the integer `m_N(α) − m_M(α)` — the missing residue-functional
-step (residue at a simple pole = order at the point) is what completes the `⟹` direction. The library's
+simple pole `α` of `A/D = logDeriv u` is the integer `m_N(α) − m_M(α)`. The library's
 `logDeriv_algebraMap_eq_sum_roots`. -/
 abbrev logDeriv_numerator_root_sum :=
   @DeepWiki.SymbolicIntegration.logDeriv_algebraMap_eq_sum_roots
+
+/-- **Simple-pole residue functional** (§2.9, p.72, the `⟹`-direction extraction): `residueAt α f =
+((X − α)·f)(α)` — multiply `f ∈ K(x)` by `X − α` to cancel a simple pole at `α`, then evaluate there.
+For `f` with at most a simple pole at `α` this is the residue (coefficient of `1/(X − α)`). The
+library's `residueAt`, with pole-free evaluation `residueAt_of_mul_X_sub_C` (`(X−α)·f = g/h`, `h(α) ≠ 0`
+⟹ `residueAt α f = g(α)/h(α)`). -/
+noncomputable abbrev recognizingLogDerivatives_residueAt :=
+  @DeepWiki.SymbolicIntegration.residueAt
+
+/-- **Residue of `A/D` at a simple root** (§2.9, p.72, computation 1): for `D = (X − α)·E` with
+`E(α) ≠ 0`, `residueAt α (A/D) = A(α)/E(α) = A(α)/D'(α)` — multiplying by `X − α` cancels the simple
+pole. The library's `residueAt_div_eq_residue`. -/
+abbrev recognizingLogDerivatives_residue_div :=
+  @DeepWiki.SymbolicIntegration.residueAt_div_eq_residue
+
+/-- **Residue of `logDeriv N` at `α` is the root multiplicity** (§2.9, p.72, computation 2): for nonzero
+`N`, `residueAt α (logDeriv N) = (rootMultiplicity α N : K)` — writing `N = (X − α)^k·N₁` (`N₁(α) ≠ 0`),
+`(X − α)·(N'/N) = (k·N₁ + (X − α)·N₁')/N₁` evaluates at `α` to `k`. Hence
+`residueAt α (logDeriv(N/M)) = ord_α(N) − ord_α(M) ∈ ℤ` (`residueAt_logDeriv_div_eq_int`). The library's
+`residueAt_logDeriv_eq_rootMultiplicity`. -/
+abbrev recognizingLogDerivatives_residue_logDeriv :=
+  @DeepWiki.SymbolicIntegration.residueAt_logDeriv_eq_rootMultiplicity
+
+/-- **Recognizing Logarithmic Derivatives, `⟹` direction** (§2.9, p.72, Mařík): over an algebraically
+closed field, if `A/D` (with `D` squarefree, `deg A < deg D`) is the logarithmic derivative of some
+nonzero `u ∈ K(x)*`, then at every root `α` of `D` the residue `A(α)/D'(α)` is an integer in `K` —
+`∃ n : ℤ, A(α)/D'(α) = (n : K)`, namely `n = ord_α(num u) − ord_α(denom u)`. The residue functional
+`residueAt α` reads `A(α)/D'(α)` from `A/D` (computation 1) and the integer `ord_α(num u) − ord_α(denom u)`
+from `logDeriv u` (computation 2); the hypothesis `A/D = logDeriv u` equates them. The library's
+`integer_residues_of_isLogDeriv`. -/
+abbrev recognizingLogDerivatives_of_isLogDeriv :=
+  @DeepWiki.SymbolicIntegration.integer_residues_of_isLogDeriv
+
+/-- **Recognizing Logarithmic Derivatives, the criterion** (§2.9, p.72, Mařík — both directions):
+over an algebraically closed field, for squarefree `D = ∏_{α∈s}(X − α)` and `deg A < #s`, the proper
+fraction `A/D` is the logarithmic derivative of some nonzero `u ∈ K(x)*` **iff** every residue
+`A(α)/D'(α)` (`α ∈ s`, the roots of the Rothstein–Trager resultant) is an integer in `K`. Packages the
+`⟸` (`recognizingLogDerivatives_of_integer_residues`) and `⟹`
+(`recognizingLogDerivatives_of_isLogDeriv`) directions. The library's
+`isLogDeriv_iff_integer_residues`. -/
+abbrev recognizingLogDerivatives_iff :=
+  @DeepWiki.SymbolicIntegration.isLogDeriv_iff_integer_residues
 
 end DeepWiki.Si
