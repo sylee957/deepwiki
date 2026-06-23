@@ -116,24 +116,22 @@ structural lemmas `measurable_movingAverage`/`memLp_movingAverage`/`integral_mov
 alias example_6_4_3 := DeepWiki.TimeSeries.isMDependent_movingAverage
 
 /-- **§6.4 Example 6.4.4 — asymptotic normality of the moving-average sample mean**: for an MA(q) process
-`Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` over centered `L²` strictly-stationary independent noise, `√n X̄ₙ ⇒ N(0, vₘ)`
-with `vₘ = ∑_{|h| ≤ q} γ(h)` (the case `q = 1`, `Xₜ = Zₜ − Zₜ₋₁`, is the degenerate `N(0,0)`). The library's
-`movingAverage_clt`, which assembles `q`-dependence, strict and weak stationarity, centering and `L²` and
-applies the `m`-dependent CLT `thm_6_4_2`. -/
-alias example_6_4_4 := DeepWiki.TimeSeries.movingAverage_clt
+`Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` over centered `L²` i.i.d. noise, `√n X̄ₙ ⇒ N(0, vₘ)` with `vₘ = ∑_{|h| ≤ q} γ(h)` (the case `q = 1`,
+`Xₜ = Zₜ − Zₜ₋₁`, is the degenerate `N(0,0)`). The library's `movingAverage_clt_iid`, which assembles
+`q`-dependence, strict stationarity (from i.i.d. via the `iIndepFun ⟹ IsStrictlyStationary` bridge), weak
+stationarity, centering and `L²` and applies the `m`-dependent CLT `thm_6_4_2` (the more general strict-
+stationary-noise form is `movingAverage_clt`). -/
+alias example_6_4_4 := DeepWiki.TimeSeries.movingAverage_clt_iid
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred];
 Definition 6.4.2 (asymptotic normality of a sequence of random `k`-vectors) [infra];
 Proposition 6.4.2 (linear images `B Xₙ` of an asymptotically normal sequence are asymptotically normal) [infra];
-Proposition 6.4.3 (the multivariate delta method) [infra];
-the i.i.d. ⟹ strictly-stationary bridge (`movingAverage_clt` takes strict-stationary independent noise;
-genuinely i.i.d. noise needs `iIndepFun + IdentDistrib ⟹ IsStrictlyStationary`, the shift-invariant
-`infinitePi` joint law) [infra]
-(The headline §6.4 results are done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
+Proposition 6.4.3 (the multivariate delta method) [infra]
+(The §6.4 large-sample core is done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
 CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, MA m-dependence `example_6_4_3`, and the MA CLT
-`example_6_4_4`. The remaining items are the vector-AN framework (`Definition 6.4.2`/`Proposition 6.4.2`/`6.4.3`)
-and the iid⟹strictly-stationary bridge; the multivariate iid CLT `multivariate_iid_clt` is the engine for
-the vector results.) -/
+for i.i.d. noise `example_6_4_4`. The remaining items are the vector-AN framework — `Definition 6.4.2`,
+`Proposition 6.4.2`, `6.4.3` — and the Example 6.4.2 delta-method application; the multivariate iid CLT
+`multivariate_iid_clt` is the engine for the vector results.) -/
 
 end DeepWiki.Ts
