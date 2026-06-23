@@ -25,6 +25,7 @@ import DeepWiki.NetworkCalculus.SegmentDeconvConcat
 import DeepWiki.NetworkCalculus.SegmentConvolution
 import DeepWiki.NetworkCalculus.SpotClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureUPP
+import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -49,7 +50,14 @@ book's own §4.2 note — is fully formalized with explicit single-`Pwl` output,
 (`lemma_4_9_powers`: the `n`-fold power is the open segment of the same slope `s` on `(n·a, n·b)`);
 what remains is the order-theoretic infimum-selection over `⨅ₙ σⁿ` (which `n` wins per `t`, the rank,
 the `closure(t+a) = closure t + s·a` period step).
-§4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
+§4.4 containers: Definition 4.2 (container = curve-interval `[f̲,f̄]`) DONE (`def_4_2`/`Container`);
+Proposition 4.2 (same Legendre–Fenchel transform ↔ equal convex biconjugates) DONE (`prop_4_2`, both
+directions); Proposition 4.3 congruence is an equivalence relation DONE (`prop_4_3_setoid`), but its
+**quotient dioid `F↑/L` operations [4.7]–[4.9]** (`⊓`/`∗`/`⋆` well-defined on the quotient) remain
+`[infra]`; Definition 4.3 (canonical representation); Definition 4.4 (maximal uncertainty); Definition
+4.5 (inclusion functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all
+`[research]` (need the `F_acv` almost-concave class + asymptotic-slope `ρ` typing, not yet built);
+Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -789,6 +797,28 @@ theorem lemma_4_9_powers (a b va s : ℝ≥0) {n : ℕ} (hn : 1 ≤ n)
     minConvPow (segNN a b va s) n t
       = (((n : ℝ≥0) * va + s * (t - (n : ℝ≥0) * a) : ℝ≥0) : ℝ≥0∞) :=
   minConvPow_segNN_eq_affine a b va s hn htl htr
+
+/-- **Definition 4.2** (§4.4, p.81): the set `F` of **containers** — a container is a function-lattice
+interval `[f̲, f̄]` of `(min,plus)` curves (`lo ≤ hi`), the uncertainty between a lower and an upper
+function. The library's `DeepWiki.Container` (membership `Container.Mem`, `singleton`, `univ = [⊥,⊤]`,
+subset order; the Legendre-refined `[f̲,f̄]_𝓛` is `Container.MemL`). -/
+abbrev def_4_2 := @DeepWiki.Container
+
+/-- **Proposition 4.2** (§4.4, p.82): two `(min,plus)` functions have the same Legendre–Fenchel
+transform iff their convex biconjugates `𝓛∘𝓛` (the convex hull `Cvx`) coincide:
+`𝓛 f = 𝓛 g ↔ Cvx f = Cvx g`. Both directions; `𝓛` is injective on convex representatives
+(`eq_of_sameLegendre_of_isConvex`) and `Cvx f` is the least element of `[f]_𝓛`
+(`biconj_le_of_sameLegendre`). The library's `DeepWiki.Container.sameLegendre_iff_biconj_eq`. -/
+theorem prop_4_2 (f g : ℝ≥0 → EReal) :
+    legendre f = legendre g ↔ (legendre ∘ legendre) f = (legendre ∘ legendre) g :=
+  DeepWiki.Container.sameLegendre_iff_biconj_eq f g
+
+/-- **Proposition 4.3** (§4.4, p.83), the congruence (scaffolding). Same-Legendre-transform is an
+equivalence relation `SameLegendre` (the dioid `F↑/L` is its quotient); the quotient `(⊓, ∗, ⋆)`
+operations [4.7]–[4.9] are the remaining part. The library's `DeepWiki.Container.equivalence_sameLegendre` /
+`DeepWiki.Container.legendreSetoid`. -/
+theorem prop_4_3_setoid : Equivalence DeepWiki.Container.SameLegendre :=
+  DeepWiki.Container.equivalence_sameLegendre
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
