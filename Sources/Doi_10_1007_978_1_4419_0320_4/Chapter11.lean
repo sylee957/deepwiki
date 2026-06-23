@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.MultivariateTimeSeries
+import DeepWiki.TimeSeries.MultivariateArma
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 11: Multivariate Time Series
@@ -44,6 +45,12 @@ and the **causality criterion** `det Φ(z) ≠ 0 for |z| ≤ 1` (Theorem 11.3.1)
 of the Chapter 3 condition. The algebra is tractable; the spectral and limit theory is
 infra-blocked. -/
 
+/-- **§11.3 — the vector `ARMA(p, q)` process**: the matrix lag-polynomial recursion
+`Xₜ − Φ₁Xₜ₋₁ − ⋯ − ΦₚXₜ₋ₚ = Zₜ + Θ₁Zₜ₋₁ + ⋯ + Θ_qZₜ₋q` (`Φ(B)Xₜ = Θ(B)Zₜ`), with matrix AR/MA
+coefficients. The library's `IsVectorARMA` (the recursion; white-noise input and stationarity are
+supplied as separate hypotheses, with `isVectorARMA_zero`: an `ARMA(0,0)` process is its input). -/
+abbrev def_11_3_vectorARMA := @DeepWiki.TimeSeries.IsVectorARMA
+
 /-! ## §11.4 Best Linear Predictors of Second Order Random Vectors (p.427)
 The multivariate innovations algorithm computes the one-step predictors `X̂ₙ₊₁` and their error
 covariance matrices (eq 11.4.27 and 11.4.28) — the vector generalization of the §5.2 innovations
@@ -72,8 +79,7 @@ Chapter 4 spectral representation; the stochastic-integral construction is infra
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §11.2: Theorem 11.2.1 (asymptotic distribution of the sample cross-correlations `ρ̂ᵢⱼ(h)`) [infra];
 Theorem 11.2.2 [infra]
-§11.3: Theorem 11.3.1 (vector-ARMA causality criterion `det Φ(z) ≠ 0` for `|z| ≤ 1`) [deferred]; the
-vector `ARMA(p,q)` process definition [deferred]
+§11.3: Theorem 11.3.1 (vector-ARMA causality criterion `det Φ(z) ≠ 0` for `|z| ≤ 1`) [deferred]
 §11.4: the multivariate innovations one-step predictors `X̂ₙ₊₁` (eq 11.4.27) [infra]; their error
 covariance matrices (eq 11.4.28) [infra]
 §11.5: the Gaussian likelihood `L(Φ, Θ, Σ)` for multivariate ARMA ML estimation (eq 11.5.4) [infra]

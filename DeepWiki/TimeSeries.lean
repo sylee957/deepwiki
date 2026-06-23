@@ -30,6 +30,7 @@ import DeepWiki.TimeSeries.SpectralDensityFourier
 import DeepWiki.TimeSeries.YuleWalker
 import DeepWiki.TimeSeries.Periodogram
 import DeepWiki.TimeSeries.MultivariateTimeSeries
+import DeepWiki.TimeSeries.MultivariateArma
 import DeepWiki.TimeSeries.StateSpace
 import DeepWiki.TimeSeries.FractionalDifference
 import DeepWiki.TimeSeries.LinearFilters
