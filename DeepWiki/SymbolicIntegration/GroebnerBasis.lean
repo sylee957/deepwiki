@@ -1326,6 +1326,130 @@ example {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
       a * g + b * g' = @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' :=
   exists_mul_add_mul_eq_gcd g g'
 
+/-! ## Lazard's Lemma 2: the leading-`y`-coefficient gcd construction
+
+Lazard (1985), Lemma 2 (J. Symb. Comp. 1, p.263): along a minimal bivariate Gröbner basis sorted
+by increasing `y`-degree, `R_{i+1} = leadingYCoeff f_{i+1}` divides `Rᵢ = leadingYCoeff fᵢ`. The
+algebraic core, formalized here as `lazard_gcd_construction`: with `dᵢ ≤ d_{i+1}` the ideal members
+`y^{d_{i+1}−dᵢ}·fᵢ` and `f_{i+1}` share `y`-degree `d_{i+1}` with leading-`y`-coefficients `Rᵢ`,
+`R_{i+1}`; a **Bézout combination** `ã·(y^{d_{i+1}−dᵢ}·fᵢ) + b̃·f_{i+1} ∈ I` (lifting the `K[x]`-Bézout
+identity `a·Rᵢ + b·R_{i+1} = gcd(Rᵢ,R_{i+1})` to `y`-constants) produces `P ∈ I` of `y`-degree
+`d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ, R_{i+1})`.
+
+The remaining minimality contradiction — `LM(P) ≥ LM(b)` for some basis `b` forces `gcd = R_{i+1}`,
+i.e. `R_{i+1} ∣ Rᵢ` — needs the `x`-degree bridge `(m.degree P) 1 = natDegree_x (leadingYCoeff P)`
+under lex (the second lex coordinate of the leading monomial equals the `x`-degree of the
+leading-`y`-coefficient), which is unformalized — see the §2.6 residual. -/
+
+/-- **Leading coefficient of a sum at a known degree.** If `p, q : S[Y]` have `natDegree ≤ d` and
+their `d`-coefficients sum to a nonzero value, then `p + q` has `natDegree` exactly `d` and
+`leadingCoeff (p + q) = p.coeff d + q.coeff d`. -/
+theorem natDegree_leadingCoeff_add {S : Type*} [CommRing S] {p q : Polynomial S} {d : ℕ}
+    (hp : p.natDegree ≤ d) (hq : q.natDegree ≤ d) (hne : p.coeff d + q.coeff d ≠ 0) :
+    (p + q).natDegree = d ∧ (p + q).leadingCoeff = p.coeff d + q.coeff d := by
+  have hcoeff : (p + q).coeff d = p.coeff d + q.coeff d := Polynomial.coeff_add p q d
+  have hdle : (p + q).natDegree ≤ d := (Polynomial.natDegree_add_le p q).trans (max_le hp hq)
+  have hdeg : (p + q).natDegree = d := by
+    refine le_antisymm hdle ?_
+    by_contra hlt
+    rw [not_le] at hlt
+    exact hne (by rw [← hcoeff]; exact Polynomial.coeff_eq_zero_of_natDegree_lt hlt)
+  exact ⟨hdeg, by rw [Polynomial.leadingCoeff, hdeg, hcoeff]⟩
+
+/-- **Gröbner-basis leading-monomial domination.** Every nonzero `f ∈ I` has its leading monomial
+dominated by that of some nonzero basis element: `∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree f`
+(`monomial (m.degree f) 1 ∈ initialIdeal m I = span (leading monomials of B)`). -/
+theorem IsGroebnerBasis.exists_degree_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)} (hB : IsGroebnerBasis m I B)
+    {f : MvPolynomial σ K} (hfI : f ∈ I) (hf0 : f ≠ 0) :
+    ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree f := by
+  classical
+  obtain ⟨_, hlc, hinit⟩ := hB
+  have hgen : monomial (m.degree f) (1 : K) ∈ initialIdeal m I :=
+    Ideal.subset_span ⟨f, ⟨hfI, hf0⟩, rfl⟩
+  rw [← hinit] at hgen
+  have himg : (fun b => monomial (m.degree b) (1 : K)) '' B
+      = (fun s => monomial s (1 : K)) '' (m.degree '' B) := by rw [Set.image_image]
+  rw [himg, mem_ideal_span_monomial_image] at hgen
+  obtain ⟨_, ⟨b, hbB, hb⟩, hsi⟩ := hgen (m.degree f) (by
+    rw [mem_support_iff, coeff_monomial, if_pos rfl]; exact one_ne_zero)
+  rw [← hb] at hsi
+  refine ⟨b, hbB, ?_, hsi⟩
+  intro hb0
+  exact (hlc b hbB).ne_zero (by rw [hb0, MonomialOrder.leadingCoeff, degree_zero, coeff_zero])
+
+open scoped Classical in
+/-- **Lazard's Lemma 2, the gcd construction** (the algebraic core, Lazard 1985, p.263). For ideal
+members `fᵢ, f_{i+1}` with `degreeOf 0 fᵢ ≤ degreeOf 0 f_{i+1}` (the `y`-degrees), there is `P ∈ I`
+of `y`-degree `degreeOf 0 f_{i+1}` whose leading-`y`-coefficient is `gcd(leadingYCoeff fᵢ,
+leadingYCoeff f_{i+1})`. Built from the Bézout combination `ã·(y^{d_{i+1}−dᵢ}·fᵢ) + b̃·f_{i+1}`. -/
+theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {fi fi1 : MvPolynomial (Fin 2) K} (hfiI : fi ∈ I) (hfi1I : fi1 ∈ I)
+    (hfi : fi ≠ 0) (hd : degreeOf 0 fi ≤ degreeOf 0 fi1) :
+    ∃ P ∈ I, degreeOf 0 P = degreeOf 0 fi1 ∧
+      leadingYCoeff P = @gcd _ _ (gcdMonoidMvPolynomialFinOne K)
+        (leadingYCoeff fi) (leadingYCoeff fi1) := by
+  letI := gcdMonoidMvPolynomialFinOne K
+  set gi := leadingYCoeff fi with hgi
+  set gi1 := leadingYCoeff fi1 with hgi1
+  set k := degreeOf 0 fi1 - degreeOf 0 fi with hk
+  obtain ⟨a, b, hab⟩ := exists_mul_add_mul_eq_gcd gi gi1
+  set fs := X 0 ^ k * fi with hfs
+  have hfsI : fs ∈ I := Ideal.mul_mem_left _ _ hfiI
+  have hfsdeg : degreeOf 0 fs = degreeOf 0 fi1 := by
+    rw [hfs, degreeOf_X_pow_mul _ hfi, hk, Nat.add_sub_cancel' hd]
+  have hfslc : leadingYCoeff fs = gi := by rw [hfs, leadingYCoeff_X_pow_mul]
+  -- lift the `K[x]`-Bézout coefficients `a, b` to `y`-constants `ã, b̃`.
+  set atil := (finSuccEquiv K 1).symm (Polynomial.C a) with hatil
+  set btil := (finSuccEquiv K 1).symm (Polynomial.C b) with hbtil
+  set P := atil * fs + btil * fi1 with hP
+  have hPI : P ∈ I := I.add_mem (Ideal.mul_mem_left _ _ hfsI) (Ideal.mul_mem_left _ _ hfi1I)
+  have hlazP : lazardView P = Polynomial.C a * lazardView fs + Polynomial.C b * lazardView fi1 := by
+    rw [hP, hatil, hbtil]
+    simp only [lazardView, map_add, map_mul, AlgEquiv.apply_symm_apply]
+  -- `gcd(gᵢ, g_{i+1}) ≠ 0` (since `gᵢ ≠ 0`).
+  have hgcd_ne : @gcd _ _ (gcdMonoidMvPolynomialFinOne K) gi gi1 ≠ 0 := by
+    rw [Ne, gcd_eq_zero_iff, not_and_or]
+    exact Or.inl (by rw [hgi]; exact leadingYCoeff_ne_zero.mpr hfi)
+  -- the two `y`-degree-`d` summands `p := C a · (lazardView fs)`, `q := C b · (lazardView f_{i+1})`.
+  set d := degreeOf 0 fi1 with hd_def
+  set p := Polynomial.C a * lazardView fs with hp_def
+  set q := Polynomial.C b * lazardView fi1 with hq_def
+  have hpdeg : p.natDegree ≤ d := by
+    rw [hp_def]
+    exact (Polynomial.natDegree_C_mul_le _ _).trans (by rw [natDegree_lazardView, hfsdeg])
+  have hqdeg : q.natDegree ≤ d := by
+    rw [hq_def]
+    exact (Polynomial.natDegree_C_mul_le _ _).trans (by rw [natDegree_lazardView])
+  -- their `d`-coefficients are `a·gᵢ` and `b·g_{i+1}`.
+  have hpcoeff : p.coeff d = a * gi := by
+    rw [hp_def, Polynomial.coeff_C_mul]
+    congr 1
+    rw [← hfsdeg, ← natDegree_lazardView, Polynomial.coeff_natDegree, ← hfslc]; rfl
+  have hqcoeff : q.coeff d = b * gi1 := by
+    rw [hq_def, Polynomial.coeff_C_mul]
+    congr 1
+    rw [hd_def, ← natDegree_lazardView, Polynomial.coeff_natDegree]; rfl
+  have hsum_ne : p.coeff d + q.coeff d ≠ 0 := by rw [hpcoeff, hqcoeff, hab]; exact hgcd_ne
+  obtain ⟨hPdeg, hPlc⟩ := natDegree_leadingCoeff_add hpdeg hqdeg hsum_ne
+  rw [← hlazP] at hPdeg hPlc
+  exact ⟨P, hPI, by rw [← natDegree_lazardView, hPdeg],
+    by rw [leadingYCoeff, hPlc, hpcoeff, hqcoeff, hab]⟩
+
+-- Restatements against the intended wording.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
+    (hB : IsGroebnerBasis m I B) {f : MvPolynomial σ K} (hfI : f ∈ I) (hf0 : f ≠ 0) :
+    ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree f :=
+  hB.exists_degree_le hfI hf0
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {fi fi1 : MvPolynomial (Fin 2) K} (hfiI : fi ∈ I) (hfi1I : fi1 ∈ I)
+    (hfi : fi ≠ 0) (hd : degreeOf 0 fi ≤ degreeOf 0 fi1) :
+    ∃ P ∈ I, degreeOf 0 P = degreeOf 0 fi1 ∧
+      leadingYCoeff P = @gcd _ _ (gcdMonoidMvPolynomialFinOne K)
+        (leadingYCoeff fi) (leadingYCoeff fi1) :=
+  lazard_gcd_construction hfiI hfi1I hfi hd
+
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
     (B : Set (MvPolynomial σ R)) : Prop := IsGroebnerBasis m I B

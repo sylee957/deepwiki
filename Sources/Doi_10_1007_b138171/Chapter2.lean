@@ -24,11 +24,14 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (distinct leading y-degrees in a
   minimal bivariate GB) is done (`lazard_lemma1`); the K[x][y] representation bridge (degree /
-  leading-y-coefficient correspondence, `y = variable 0`) is done (`lazard_leadingYCoeff`,
-  `lazard_degree_bridge`); Lazard Lemma 2's y-shift alignment is done (`lazard_lemma2_yShift`), but
-  Lemma 2's gcd-division step + minimality contradiction giving `R_{k+1} ∣ Rₖ` (needs a transferred
-  GCD/Bézout structure on `MvPolynomial (Fin 1) K` and Theorem 1's `Pₖ = Rₖ·Sₖ` factorization),
-  Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization, and the normal-position analysis of `⟨A−zD', D⟩` remain
+  leading-y-coefficient correspondence, `y = variable 0`) is done (`leadingYCoeff`,
+  `degree_apply_zero_eq_natDegree_lazardView`); Lazard Lemma 2's y-shift alignment
+  (`leadingYCoeff_yShift_eq`), the transferred GCD/Bézout structure on `MvPolynomial (Fin 1) K`
+  (`gcdMonoidMvPolynomialFinOne`, `exists_mul_add_mul_eq_gcd`), and the gcd-division construction
+  giving `P ∈ I` of y-degree `d_{k+1}` with `leadingYCoeff P = gcd(Rₖ, R_{k+1})`
+  (`lazard_gcd_construction`) are done, but Lemma 2's minimality contradiction giving `R_{k+1} ∣ Rₖ`
+  (needs the x-degree bridge `(lex.degree P) 1 = degreeOf 0 (leadingYCoeff P)`), Lemma 3, the
+  `Pₖ = Rₖ·Sₖ` factorization, and the normal-position analysis of `⟨A−zD', D⟩` remain
   [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
