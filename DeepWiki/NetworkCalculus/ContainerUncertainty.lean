@@ -153,6 +153,41 @@ theorem hDevAt_maximalUncertaintyTime_mono {c d : Container}
     (hDevAt c.hi c.lo t₀ : ℝ≥0∞) ≤ hDevAt d.hi d.lo t₀ :=
   hDevAt_mono hhi hlo t₀
 
+/-! ## Tie-in with the canonical representation (Definition 4.3)
+
+Definition 4.4 is stated for a container "in its canonical form" (`f̲` almost
+convex, `f̄` almost concave, asymptotically typed). The data-domain uncertainty
+reads against the canonical representative `f̲ = canonicalRep`, and the two
+maximal distances are the gaps between `f̄` and that representative. -/
+
+/-- `Bmax = f̄(t₀) − (canonicalRep c)(t₀)`: the data-domain uncertainty is the
+vertical gap of `f̄` over the canonical representative `f̲` at the rank
+abscissa. -/
+theorem maximalUncertaintyData_eq_canonicalRep (c : Container) (Tlo Thi : ℝ≥0) :
+    c.maximalUncertaintyData Tlo Thi
+      = c.hi (bmaxAbscissa Tlo Thi) - c.canonicalRep (bmaxAbscissa Tlo Thi) := by
+  rw [maximalUncertaintyData_eq, canonicalRep_eq]
+
+/-- For a canonical container the data-domain uncertainty is nonnegative at any
+abscissa where the lower bound is finite (`≠ ±∞`) — the canonical form keeps the
+bounds finite so the loss of precision is bounded (the §4.4.2 motivation). -/
+theorem zero_le_maximalUncertaintyData_of_isCanonical {c : Container}
+    (_ : IsCanonicalContainer c) (Tlo Thi : ℝ≥0)
+    (htop : c.lo (bmaxAbscissa Tlo Thi) ≠ ⊤)
+    (hbot : c.lo (bmaxAbscissa Tlo Thi) ≠ ⊥) :
+    0 ≤ c.maximalUncertaintyData Tlo Thi :=
+  c.zero_le_maximalUncertaintyData Tlo Thi htop hbot
+
+/-- A canonical container whose bounds coincide (`f̄ = f̲`) is exact, with zero
+data-domain uncertainty at a finite rank value. -/
+theorem maximalUncertaintyData_eq_zero_of_hi_eq_lo {c : Container}
+    (h : c.hi = c.lo) (Tlo Thi : ℝ≥0)
+    (htop : c.lo (bmaxAbscissa Tlo Thi) ≠ ⊤)
+    (hbot : c.lo (bmaxAbscissa Tlo Thi) ≠ ⊥) :
+    c.maximalUncertaintyData Tlo Thi = 0 := by
+  rw [maximalUncertaintyData_eq, h]
+  exact EReal.sub_self htop hbot
+
 /-! ## Faithfulness checks (against §4.4, book p. 89) -/
 
 /-- Definition 4.4 (time domain): `Dmax = hDev(f̄, f̲) = inf_{τ≥0} {τ | f̄(t₀) ≤
