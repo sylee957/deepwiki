@@ -80,4 +80,22 @@ theorem delta_method [IsProbabilityMeasure μ] {a g' : ℝ} {g : ℝ → ℝ} (h
     (fun n => Filter.Eventually.of_forall fun ω => (halg n ω).symm)
     (Filter.Eventually.of_forall fun _ => rfl)
 
+/-- **Slutsky's theorem for ratios:** if `Aₙ` converges in distribution to `Z` and `Bₙ →ᵖ b` with
+`b ≠ 0`, then `Aₙ / Bₙ ⇒ Z / b`. Via `Bₙ⁻¹ →ᵖ b⁻¹` (continuous mapping of the inverse at `b ≠ 0`,
+`tendstoInMeasure_comp_const`) and Slutsky's product theorem. The tool behind the asymptotic
+distribution of the sample autocorrelation `ρ̂(h) = γ̂(h)/γ̂(0)` (Bartlett's formula). -/
+theorem tendstoInDistribution_div_of_tendstoInMeasure_const [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ']
+    {A B : ℕ → Ω → ℝ} {Z : Ω' → ℝ} {b : ℝ} (hb : b ≠ 0)
+    (hA : TendstoInDistribution A atTop Z (fun _ => μ) μ')
+    (hB : TendstoInMeasure μ B atTop (fun _ => b)) (hBm : ∀ n, AEMeasurable (B n) μ) :
+    TendstoInDistribution (fun n ω => A n ω / B n ω) atTop (fun ω => Z ω / b) (fun _ => μ) μ' := by
+  have hinv : TendstoInMeasure μ (fun n ω => (B n ω)⁻¹) atTop (fun _ => b⁻¹) :=
+    tendstoInMeasure_comp_const hB (continuousAt_inv₀ hb)
+  refine (TendstoInDistribution.continuous_comp_prodMk_of_tendstoInMeasure_const
+    (by fun_prop : Continuous fun p : ℝ × ℝ => p.1 * p.2) hA hinv
+    (fun n => (hBm n).inv)).congr
+    (fun n => Filter.Eventually.of_forall fun ω => (div_eq_mul_inv _ _).symm)
+    (Filter.Eventually.of_forall fun ω => (div_eq_mul_inv _ _).symm)
+
 end DeepWiki.TimeSeries
