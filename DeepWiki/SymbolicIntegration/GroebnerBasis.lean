@@ -1844,6 +1844,158 @@ theorem lazard_lemma3_reductionStep_mem {K : Type*} [Field K] {I : Ideal (MvPoly
     yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi ∈ I :=
   I.sub_mem (Ideal.mul_mem_left _ _ hfi1I) (Ideal.mul_mem_left _ _ hfiI)
 
+/-- **The `K[x][y]` view of the reduction step.** Writing `R := yConst q · f_{i+1} − y^{shift}·fᵢ`,
+its `K[x][y]` view is `lazardView R = C q · lazardView f_{i+1} − X^{shift} · lazardView fᵢ`; this is
+the equation the descent telescopes (the `y`-shift `X^{shift}` and `y`-constant `C q` are `lazardView`
+of `X 0 ^ shift` and `yConst q`). -/
+theorem lazardView_reductionStep {K : Type*} [Field K] (fi fi1 : MvPolynomial (Fin 2) K)
+    (q : MvPolynomial (Fin 1) K) (sh : ℕ) :
+    lazardView (yConst q * fi1 - X 0 ^ sh * fi)
+      = Polynomial.C q * lazardView fi1 - Polynomial.X ^ sh * lazardView fi := by
+  rw [lazardView, map_sub, map_mul, map_mul, map_pow, finSuccEquiv_X_zero, ← lazardView,
+    ← lazardView, ← lazardView, lazardView_yConst]
+
+/-- **The descent equation, solved for `y^{shift}·fᵢ`.** From the reduction step `R = yConst q ·
+f_{i+1} − y^{shift}·fᵢ`, the `y`-shifted `fᵢ` is `X^{shift}·lazardView fᵢ = C q · lazardView f_{i+1}
+− lazardView R` in `K[x][y]` — the form whose `K[x]`-content/divisibility the descent reads off. -/
+theorem lazardView_yShift_eq_reductionStep {K : Type*} [Field K]
+    (fi fi1 : MvPolynomial (Fin 2) K) (q : MvPolynomial (Fin 1) K) (sh : ℕ) :
+    Polynomial.X ^ sh * lazardView fi
+      = Polynomial.C q * lazardView fi1 - lazardView (yConst q * fi1 - X 0 ^ sh * fi) := by
+  rw [lazardView_reductionStep]; ring
+
+/-- **`C d ∣ X^sh · p ⟹ C d ∣ p`** over any commutative ring: a `y`-constant divisor survives the
+`y`-shift `X^sh` (the coefficients of `X^sh · p` are `p`'s coefficients shifted, so `d` divides each
+coefficient of `p` iff it divides each coefficient of `X^sh · p`). -/
+theorem C_dvd_of_C_dvd_X_pow_mul {S : Type*} [CommRing S] {d : S} {p : Polynomial S} {sh : ℕ}
+    (h : Polynomial.C d ∣ Polynomial.X ^ sh * p) : Polynomial.C d ∣ p := by
+  rw [Polynomial.C_dvd_iff_dvd_coeff] at h ⊢
+  intro i
+  have := h (i + sh)
+  rwa [Polynomial.coeff_X_pow_mul] at this
+
+/-- **The descent transfer step** (Part B core, divisibility half, general form). With `R := yConst
+q · f_{i+1} − y^{shift}·fᵢ`, if `C d ∣ C q · lazardView f_{i+1}` and `C d ∣ lazardView R`, then
+`C d ∣ lazardView fᵢ`: substituting into `X^{shift}·lazardView fᵢ = C q · lazardView f_{i+1} −
+lazardView R` shows `C d ∣ X^{shift}·lazardView fᵢ`, and `C d` survives the `y`-shift
+(`C_dvd_of_C_dvd_X_pow_mul`). The `C q ·` form is what the descent needs: with `gᵢ = g_{i+1}·q`,
+`C(gᵢ) ∣ C q · lazardView f_{i+1}` follows from the higher-index `C(g_{i+1}) ∣ lazardView f_{i+1}`. -/
+theorem C_dvd_lazardView_of_reductionStep_mul {K : Type*} [Field K]
+    {fi fi1 : MvPolynomial (Fin 2) K} {q : MvPolynomial (Fin 1) K} {d : MvPolynomial (Fin 1) K}
+    {sh : ℕ} (hfi1 : Polynomial.C d ∣ Polynomial.C q * lazardView fi1)
+    (hR : Polynomial.C d ∣ lazardView (yConst q * fi1 - X 0 ^ sh * fi)) :
+    Polynomial.C d ∣ lazardView fi := by
+  refine C_dvd_of_C_dvd_X_pow_mul (sh := sh) ?_
+  rw [lazardView_yShift_eq_reductionStep]
+  exact dvd_sub hfi1 hR
+
+/-- **The descent transfer step** (Part B core, divisibility half). With `R := yConst q · f_{i+1} −
+y^{shift}·fᵢ`, if the divisibilities `C d ∣ lazardView f_{i+1}` and `C d ∣ lazardView R` hold, then
+`C d ∣ lazardView fᵢ` (the `C q ·` form `C_dvd_lazardView_of_reductionStep_mul` with `C d ∣ lazardView
+f_{i+1} ⟹ C d ∣ C q · lazardView f_{i+1}`). -/
+theorem C_dvd_lazardView_of_reductionStep {K : Type*} [Field K]
+    {fi fi1 : MvPolynomial (Fin 2) K} {q : MvPolynomial (Fin 1) K} {d : MvPolynomial (Fin 1) K}
+    {sh : ℕ} (hfi1 : Polynomial.C d ∣ lazardView fi1)
+    (hR : Polynomial.C d ∣ lazardView (yConst q * fi1 - X 0 ^ sh * fi)) :
+    Polynomial.C d ∣ lazardView fi :=
+  C_dvd_lazardView_of_reductionStep_mul (Dvd.dvd.mul_left hfi1 _) hR
+
+/-- **Divisibility propagates through a `K[x][y]` combination** (Part B core, IH-aggregation half).
+If `C d ∣ lazardView b` for every `b` in the support of a finite combination `R = ∑ b ∈ s, h b · b`,
+then `C d ∣ lazardView R` — `lazardView` is a ring hom, so the divisor of every factor divides the
+sum. This is the step that turns the per-element induction hypothesis `gᵢ ∣ f_j` into `gᵢ ∣ R`. -/
+theorem C_dvd_lazardView_sum {K : Type*} [Field K] {d : MvPolynomial (Fin 1) K}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, Polynomial.C d ∣ lazardView b) :
+    Polynomial.C d ∣ lazardView (∑ b ∈ s, h b * b) := by
+  rw [lazardView, map_sum]
+  refine Finset.dvd_sum (fun b hb => ?_)
+  rw [map_mul]
+  exact Dvd.dvd.mul_left ((hdvd b hb)) _
+
+/-- **Leading-`y`-coefficient divisibility along the sorted basis** (Lemma 2, one step on the
+enumeration): for `i < j`, the higher-`y`-degree `leadingYCoeff (sortedByYDegree hB j)` divides the
+lower one `leadingYCoeff (sortedByYDegree hB i)` (`lazard_lemma2` at the strictly increasing
+`y`-degrees `degreeOf 0`). -/
+theorem leadingYCoeff_sortedByYDegree_dvd_of_lt {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i j : Fin B.card} (hij : i < j) :
+    leadingYCoeff (sortedByYDegree hB j) ∣ leadingYCoeff (sortedByYDegree hB i) :=
+  lazard_lemma2 hB (sortedByYDegree_mem hB i) (sortedByYDegree_mem hB j)
+    (degreeOf_sortedByYDegree_strictMono hB hij)
+
+/-- **Leading-`y`-coefficient divisibility chain** (`≤` form): for `i ≤ j` along the sorted basis,
+`leadingYCoeff (sortedByYDegree hB j) ∣ leadingYCoeff (sortedByYDegree hB i)` — the higher
+`y`-degree's `gⱼ` divides every lower `gᵢ` (one-step `leadingYCoeff_sortedByYDegree_dvd_of_lt`, plus
+reflexivity). This is the chain the descent uses to push `gᵢ ∣ g_j` onto the lower combination. -/
+theorem leadingYCoeff_sortedByYDegree_dvd_of_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i j : Fin B.card} (hij : i ≤ j) :
+    leadingYCoeff (sortedByYDegree hB j) ∣ leadingYCoeff (sortedByYDegree hB i) := by
+  rcases lt_or_eq_of_le hij with h | h
+  · exact leadingYCoeff_sortedByYDegree_dvd_of_lt hB h
+  · rw [h]
+
+/-- **A factor's `y`-degree is dominated by the product's**: `degreeOf 0 b ≤ degreeOf 0 (g * b)` for
+`g * b ≠ 0` (`natDegree` of the `K[x][y]` product adds, both factors nonzero). -/
+theorem degreeOf_le_degreeOf_mul {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
+    (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) := by
+  have hg : g ≠ 0 := fun h0 => hne (by rw [h0, zero_mul])
+  have hb : b ≠ 0 := fun h0 => hne (by rw [h0, mul_zero])
+  rw [← natDegree_lazardView, ← natDegree_lazardView, lazardView, lazardView, map_mul,
+    Polynomial.natDegree_mul (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])
+      (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])]
+  exact Nat.le_add_left _ _
+
+/-- **Under lex, the division-algorithm degree bound becomes a `y`-degree bound**: from
+`m.degree bg ≼[lex] m.degree R` (a `div_set` summand bound) with `bg, R ≠ 0`, the `y`-degree
+`degreeOf 0 bg ≤ degreeOf 0 R`. -/
+theorem degreeOf_le_of_lex_degree_le {K : Type*} [Field K] {bg R : MvPolynomial (Fin 2) K}
+    (hbg : bg ≠ 0) (hR : R ≠ 0)
+    (hle : MonomialOrder.lex.degree bg ≼[MonomialOrder.lex] MonomialOrder.lex.degree R) :
+    degreeOf 0 bg ≤ degreeOf 0 R := by
+  rw [MonomialOrder.lex_le_iff] at hle
+  have := apply_zero_le_of_toLex_le hle
+  rwa [lex_degree_apply_zero hbg, lex_degree_apply_zero hR] at this
+
+open scoped Classical in
+/-- **GB-reduction of an ideal member with `y`-degree control** (the combinatorial input to the
+descent). For a reduced Gröbner basis over lex and `R ∈ I`, `R = ∑ b ∈ B, (g b) · b` where every
+contributing basis element has `y`-degree `degreeOf 0 b ≤ degreeOf 0 R` — the lex division-algorithm
+remainder is `0` (GB) and each quotient summand's `y`-degree is dominated by `R`'s. -/
+theorem exists_yDegree_bounded_representation {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {R : MvPolynomial (Fin 2) K} (hRI : R ∈ I) (hR0 : R ≠ 0) :
+    ∃ g : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K,
+      R = ∑ b ∈ B, g b * b ∧
+        ∀ b ∈ B, g b * b ≠ 0 → degreeOf 0 b ≤ degreeOf 0 R := by
+  classical
+  obtain ⟨c, r, hcr, hcdeg, hrem⟩ := MonomialOrder.div_set hB.isGroebnerBasis.2.1 R
+  have hr0 : r = 0 := (hB.isGroebnerBasis.mem_iff_div_remainder_eq_zero R hcr hrem).mp hRI
+  -- the `div_set` combination as a `B`-indexed sum, extended by `0` off `B`.
+  refine ⟨fun b => if hb : b ∈ B then c ⟨b, Finset.mem_coe.mpr hb⟩ else 0, ?_, ?_⟩
+  · rw [hcr, hr0, add_zero, Finsupp.linearCombination_apply,
+      Finsupp.sum_fintype _ _ (fun b => by rw [zero_smul])]
+    -- `∑ b : B, (c b) • ↑b = ∑ b ∈ B.attach, (c b) • ↑b = ∑ b ∈ B, g b * b`.
+    rw [← Finset.sum_attach B (fun b => (if hb : b ∈ B then c ⟨b, Finset.mem_coe.mpr hb⟩ else 0) * b)]
+    refine Finset.sum_congr rfl (fun b _ => ?_)
+    have hbB : (b : MvPolynomial (Fin 2) K) ∈ B := Finset.mem_coe.mp b.2
+    rw [smul_eq_mul, dif_pos hbB, mul_comm]
+  · intro b hb hbne
+    have hbg : c ⟨b, Finset.mem_coe.mpr hb⟩ * b ≠ 0 := by
+      simpa [hb] using hbne
+    have hcdeg' : MonomialOrder.lex.degree ((b : MvPolynomial (Fin 2) K) * c ⟨b, Finset.mem_coe.mpr hb⟩)
+        ≼[MonomialOrder.lex] MonomialOrder.lex.degree R := hcdeg ⟨b, Finset.mem_coe.mpr hb⟩
+    have hbg' : (b : MvPolynomial (Fin 2) K) * c ⟨b, Finset.mem_coe.mpr hb⟩ ≠ 0 := by
+      rwa [mul_comm] at hbg
+    have hle : degreeOf 0 ((b : MvPolynomial (Fin 2) K) * c ⟨b, Finset.mem_coe.mpr hb⟩)
+        ≤ degreeOf 0 R := degreeOf_le_of_lex_degree_le hbg' hR0 hcdeg'
+    rw [mul_comm] at hle
+    exact le_trans (degreeOf_le_degreeOf_mul hbg) hle
+
 open scoped Classical in
 /-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
 the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
@@ -1927,6 +2079,34 @@ example {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
     degreeOf 0 (yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi)
       < degreeOf 0 fi1 :=
   lazard_lemma3_reductionStep hfi hd hq
+
+-- Restatements of the Lemma 3 descent components against the intended wording.
+example {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K} {q d : MvPolynomial (Fin 1) K}
+    {sh : ℕ} (hfi1 : Polynomial.C d ∣ lazardView fi1)
+    (hR : Polynomial.C d ∣ lazardView (yConst q * fi1 - X 0 ^ sh * fi)) :
+    Polynomial.C d ∣ lazardView fi :=
+  C_dvd_lazardView_of_reductionStep hfi1 hR
+
+example {K : Type*} [Field K] {d : MvPolynomial (Fin 1) K}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, Polynomial.C d ∣ lazardView b) :
+    Polynomial.C d ∣ lazardView (∑ b ∈ s, h b * b) :=
+  C_dvd_lazardView_sum hdvd
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {R : MvPolynomial (Fin 2) K} (hRI : R ∈ I) (hR0 : R ≠ 0) :
+    ∃ g : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K,
+      R = ∑ b ∈ B, g b * b ∧ ∀ b ∈ B, g b * b ≠ 0 → degreeOf 0 b ≤ degreeOf 0 R :=
+  exists_yDegree_bounded_representation hB hRI hR0
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i j : Fin B.card} (hij : i ≤ j) :
+    leadingYCoeff (sortedByYDegree hB j) ∣ leadingYCoeff (sortedByYDegree hB i) :=
+  leadingYCoeff_sortedByYDegree_dvd_of_le hB hij
 
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
     (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :

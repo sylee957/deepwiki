@@ -22,12 +22,13 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (`lazard_lemma1`), the K[x][y]
-  representation bridge (`leadingYCoeff`, `degree_apply_zero_eq_natDegree_lazardView`), and Lemma 2
-  (`R_{k+1} ∣ Rₖ`, `lazard_lemma2`), Lemma 3's reduction step (`lazard_lemma3_reductionStep`), and
-  its `Pₖ = Rₖ·Sₖ` content/primpart payload (`lazard_Pk_eq_Rk_Sk`) are done. The full Lemma 3 descent
-  `gᵢ ∣ fᵢ` over the sorted `f₀,…,fₖ` and the normal-position analysis of `⟨A−zD', D⟩` remain
-  [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ`: all step components are
+  formalized (sorted enumeration `sortedByYDegree`, reduction transfer
+  `C_dvd_lazardView_of_reductionStep`, IH aggregation `C_dvd_lazardView_sum`, GB-reduction with
+  y-degree control `exists_yDegree_bounded_representation`, `gᵢ ∣ g_j` chain
+  `leadingYCoeff_sortedByYDegree_dvd_of_le`); only their assembly into the circular-degree induction
+  of p.263 remains [research: Lazard Lemma 3 induction], plus the normal-position analysis of
+  `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -552,6 +553,18 @@ descent operates on the minimal Gröbner basis *sorted by increasing `y`-degree*
 landing in `B` (`sortedByYDegree_mem`) and bijectively (`range_sortedByYDegree`). The library's
 `sortedByYDegree`. -/
 noncomputable abbrev lazard_sortedByYDegree := @DeepWiki.SymbolicIntegration.sortedByYDegree
+
+/-- **Lazard (1985), Lemma 3, the descent step components** (cited in §2.6; J. Symb. Comp. 1, p.263):
+the algebraic + combinatorial pieces of `gᵢ ∣ fᵢ`. The reduction transfer
+`C_dvd_lazardView_of_reductionStep` (and `…_mul`) reduces `C(gᵢ) ∣ lazardView fᵢ` to divisibility of
+`f_{i+1}` and `R := yConst q·f_{i+1} − y^{shift}·fᵢ`; `C_dvd_lazardView_sum` aggregates the per-element
+IH through a `K[x][y]` combination; `exists_yDegree_bounded_representation` is the GB-reduction of
+`R ∈ I` into basis elements of `y`-degree `≤ degreeOf 0 R` (lex division remainder `0`); and
+`leadingYCoeff_sortedByYDegree_dvd_of_le` is the `gᵢ ∣ g_j` chain. The full descent (assembling these
+into the circular-degree induction of p.263) remains. The library's
+`C_dvd_lazardView_of_reductionStep`. -/
+noncomputable abbrev lazard_lemma3_descentStep :=
+  @DeepWiki.SymbolicIntegration.C_dvd_lazardView_of_reductionStep
 
 /-- **Bronstein/Czichowski §2.6(i), `Pₖ = Rₖ·Sₖ`** (Lazard 1985, Lemma 3 payload): if `gᵢ ∣ fᵢ`
 (`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
