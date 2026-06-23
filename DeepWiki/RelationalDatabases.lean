@@ -8,3 +8,4 @@ import DeepWiki.RelationalDatabases.FunctionalDependencies
 import DeepWiki.RelationalDatabases.MultivaluedDependencies
 import DeepWiki.RelationalDatabases.JoinDependencies
 import DeepWiki.RelationalDatabases.InclusionDependencies
+import DeepWiki.RelationalDatabases.NormalForms
