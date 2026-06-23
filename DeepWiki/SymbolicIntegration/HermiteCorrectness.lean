@@ -2031,3 +2031,30 @@ theorem am_D_eq_cdiv_mul (fuel : ℕ) (D Vpow : CPoly) (hVpow : cnorm Vpow ≠ [
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vpow) := by
   rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel D Vpow hVpow hrem]
 
+/-! ### Reducing the cleared-identity divisibility to two structural divisibilities
+
+The monolithic premise of `hermiteReduce_residual_correct_of_dvd` is `D·gden² ∣ resNum'·Dstar` (with
+`resNum' = A·gden² − D·gprimeNum`, the un-`Dstar`'d residual numerator). The genuine loop content
+factors this into two *cleaner* divisibilities, each a `cmod`-vanishing the engine can `native_decide`:
+
+* **`D ∣ resNum'`** — the global denominator `D` divides the residual numerator (equivalently
+  `D ∣ A·gden²`, since `D ∣ D·gprimeNum` trivially). Writing `resNum' = D·M`,
+* **`gden² ∣ M·Dstar`** with `M = resNum'/D` — what remains after cancelling `D`.
+
+Then `D·gden² ∣ resNum'·Dstar` since `resNum'·Dstar = D·(M·Dstar)` and `gden² ∣ M·Dstar`. This is the
+algebraic skeleton of "`A/D − g′` clears to denominator `Dstar`": the first divisibility says the global
+fraction's numerator reduces, the second that the leftover `gden²` cancels against `M·Dstar`. -/
+
+/-- **The cleared-identity divisibility from two cleaner ones** (`ℚ[X]` level): if `D ∣ R` (so
+`R = D·M`) and `gd2 ∣ M·S`, then `D·gd2 ∣ R·S`. The algebraic reduction of
+`hermiteReduce_residual_correct_of_dvd`'s monolithic premise to the loop's two structural
+divisibilities (`D ∣ resNum'`, `gden² ∣ (resNum'/D)·Dstar`). -/
+theorem dvd_clearedIdentity_of_split {R D gd2 S : ℚ[X]} (hD : D ≠ 0)
+    (hDR : D ∣ R) (hgd : gd2 ∣ (R / D) * S) :
+    D * gd2 ∣ R * S := by
+  obtain ⟨M, hM⟩ := hDR
+  have hMeq : R / D = M := by rw [hM, mul_div_cancel_left₀ _ hD]
+  rw [hMeq] at hgd
+  obtain ⟨N, hN⟩ := hgd
+  exact ⟨N, by rw [hM]; linear_combination D * hN⟩
+
