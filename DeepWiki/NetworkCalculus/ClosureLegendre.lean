@@ -110,7 +110,7 @@ theorem legendreConvPow_nonneg {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u)
       exact legendreConv_nonneg (fun u => ih u) hf u
 
 /-- A non-negative curve is proper (never `⊥`). -/
-theorem ne_bot_of_nonneg {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) (u : ℝ≥0) :
+theorem apply_ne_bot_of_nonneg {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) (u : ℝ≥0) :
     f u ≠ ⊥ := fun h => by simpa [h] using hf u
 
 /-- **`𝓛(fⁿ) = n • 𝓛 f`** for a non-negative curve `f`: the transform of an
@@ -122,8 +122,8 @@ theorem legendre_legendreConvPow {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u)
   | zero => rw [legendreConvPow_zero, legendre_legendreUnit, zero_smul]
   | succ n ih =>
       rw [legendreConvPow_succ,
-        legendre_legendreConv (ne_bot_of_nonneg (legendreConvPow_nonneg hf n))
-          (ne_bot_of_nonneg hf),
+        legendre_legendreConv (apply_ne_bot_of_nonneg (legendreConvPow_nonneg hf n))
+          (apply_ne_bot_of_nonneg hf),
         ih, succ_nsmul]
 
 /-- `f¹ = f` for a non-negative curve: the unit power `δ₀ ⊗ f` is `f`, since the
@@ -141,7 +141,7 @@ theorem legendreConvPow_one {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) :
       subst huv
       rw [legendreUnit_zero, zero_add]
     · rw [show legendreUnit u = ⊤ from if_neg hu,
-        EReal.top_add_of_ne_bot (ne_bot_of_nonneg hf v)]
+        EReal.top_add_of_ne_bot (apply_ne_bot_of_nonneg hf v)]
       exact le_top
 
 /-- The (min,+) **sub-additive closure** `f⋆ = ⨅ₙ fⁿ` of a curve under the

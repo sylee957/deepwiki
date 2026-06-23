@@ -84,6 +84,7 @@ import DeepWiki.NetworkCalculus.PwlThetaDecomp
 import DeepWiki.NetworkCalculus.ConvexSegTangents
 import DeepWiki.NetworkCalculus.HullENN
 import DeepWiki.NetworkCalculus.MaxUncertaintyFinite
+import DeepWiki.NetworkCalculus.ClosureLegendre
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo

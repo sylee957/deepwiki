@@ -41,6 +41,7 @@ import DeepWiki.NetworkCalculus.ConvexSegTangents
 import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.HullENN
 import DeepWiki.NetworkCalculus.MaxUncertaintyFinite
+import DeepWiki.NetworkCalculus.ClosureLegendre
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -69,7 +70,8 @@ directions); Proposition 4.3 DONE — congruence is an equivalence (`prop_4_3_se
 `FmodL` (`prop_4_3_inf_congr`/`FmodL.inf`) and `∗` respects it at the representative level
 (`SameLegendre.legendreConv`); the `⊗`-descent is done on the proper-curve subtype (`prop_4_3_conv_mk`/`FmodLProper`, mapping into
 the full quotient since `legendreConv` need not preserve properness); what remains is the
-closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; the §4.4
+closure operation `⋆` on the quotient is DONE via the closure↔Legendre identity (`lemma_4_10_12`,
+`⋆` descends to `F↑/L` for nonneg curves); the §4.4
 FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWiki.IsAlmostConcave`/
 `IsAlmostConvex` = `F_acv`/`F_acx`, `IsConcaveEReal.isAlmostConcave`, `IsAsymptoticallyTyped` = the
 container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the `Θ^κ_τ ∗ g` decomposition) DONE
@@ -91,12 +93,12 @@ layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonica
 (`prop_4_4_canonicalBound`/`canonicalUpperBound`: `f̲ ≤ ⋀ᵢ Θ`, the constant-`Θ` meet IS [4.13] — it's
 the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now the FULL equality (`prop_4_4_convexCompanion`/
 `convexNFEval_segTangentGens_eq`: convex PWL = sup of its segment tangent rate-latencies, for base 0
-+ positive slopes; flat/positive-base via hypothesis-form lemmas); Lemma 4.10 [4.12] closure still
-needs a closure↔Legendre identity.
++ positive slopes; flat/positive-base via hypothesis-form lemmas); Lemma 4.10 [4.12] closure is DONE
+(`lemma_4_10_12`/`legendre_legendreClosure`/`Container.SameLegendre.legendreClosure`: the
+closure↔Legendre identity `𝓛(f⋆)=⨆ₙ n•𝓛f`, so `⋆` descends to `F↑/L` for nonneg curves).
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
-genuinely deferred: the book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full `F`-closure
-Thm 4.4 (→[LEC 14]); and one `[infra]` layer — the closure↔Legendre identity (blocks Lemma 4.10
-[4.12] and the quotient `⋆`). Remark 4.1. -/
+genuinely book-deferred to other papers: the general three-part Thm 4.2 (→[BOU 16a]) and the full
+`F`-closure Thm 4.4 (→[LEC 14]). All `[infra]` layers are now built. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -1038,15 +1040,29 @@ theorem prop_4_4_convexCompanion (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0
 canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
 the quotient operations reduce to `Cvx`-conditions on representatives: e.g. for `⊓` [4.10],
 `[f]⊓[g] = [f⊓g] ↔ Cvx(Cvx f ⊓ Cvx g) = Cvx(f⊓g)` (`inf_mk_eq_iff_biconj`), and the unconditional core
-`Cvx(Cvx f ⊓ Cvx g) = Cvx(f⊓g)` holds. ([4.11] convolution similarly; [4.12] closure needs a
-closure↔Legendre identity, `[infra]`.) The library's `DeepWiki.Container.inf_mk_eq_iff_biconj` /
-`mk_biconj`. -/
+`Cvx(Cvx f ⊓ Cvx g) = Cvx(f⊓g)` holds. ([4.11] convolution similarly; [4.12] closure is
+`lemma_4_10_12` below.) The library's `DeepWiki.Container.inf_mk_eq_iff_biconj` / `mk_biconj`. -/
 theorem lemma_4_10 (f g : ℝ≥0 → EReal) :
     DeepWiki.Container.FmodL.inf (DeepWiki.Container.FmodL.mk f) (DeepWiki.Container.FmodL.mk g)
         = DeepWiki.Container.FmodL.mk (f ⊓ g)
       ↔ DeepWiki.Container.biconj (DeepWiki.Container.biconj f ⊓ DeepWiki.Container.biconj g)
         = DeepWiki.Container.biconj (f ⊓ g) :=
   DeepWiki.Container.inf_mk_eq_iff_biconj f g
+
+/-- **Lemma 4.10 [4.12]** (§4.4, p.86), the sub-additive-closure case. The closure↔Legendre identity:
+the (min,+) inf-convolution closure's transform depends only on the transform,
+`𝓛(f⋆) = ⨆ₙ n•𝓛 f` for nonneg `f` (`legendre_legendreClosure`), so the closure DESCENDS to `F↑/L` —
+`𝓛 f = 𝓛 g` (both nonneg, the `ℱ↑` setting) ⟹ `𝓛(f⋆) = 𝓛(g⋆)`
+(`Container.SameLegendre.legendreClosure`). The exact book equivalence `[f]⋆_L = [f⋆]_L ↔
+Cvx((Cvx f)⋆) = Cvx(f⋆)` is `sameLegendre_legendreClosure_biconj_iff` (`sameLegendre_iff_biconj_eq` at
+the two closures), its truth `sameLegendre_legendreClosure_biconj`. The library's
+`DeepWiki.Container.{SameLegendre.legendreClosure, sameLegendre_legendreClosure_biconj_iff}`. -/
+theorem lemma_4_10_12 (f : ℝ≥0 → EReal) :
+    legendre (DeepWiki.legendreClosure (DeepWiki.Container.biconj f))
+        = legendre (DeepWiki.legendreClosure f)
+      ↔ DeepWiki.Container.biconj (DeepWiki.legendreClosure (DeepWiki.Container.biconj f))
+        = DeepWiki.Container.biconj (DeepWiki.legendreClosure f) :=
+  DeepWiki.Container.sameLegendre_legendreClosure_biconj_iff f
 
 /-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
 Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
