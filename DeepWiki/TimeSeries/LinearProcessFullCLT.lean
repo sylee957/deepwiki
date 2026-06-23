@@ -53,4 +53,46 @@ theorem norm_sum_toLpSeq_lag_sq [IsProbabilityMeasure μ] {Z : ℤ → Ω → �
       (fun hs' => absurd hs hs'), inner_toLpSeq hmem hmom, if_pos rfl]
   rw [Finset.sum_congr rfl key, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
+/-- **`L²` bound on a windowed causal-linear-process sum:** for absolutely summable filter `φ`,
+`‖∑_{t<n} Xₜ‖ ≤ √n · ‖toLpSeq 0‖ · ∑ⱼ |φⱼ|` where `Xₜ = ∑ⱼ φⱼ Z_{t−j}` — interchange the windowed
+sum with the filter tsum (`finsetSum_tsum`), Minkowski over the filter (`norm_tsum_le_tsum_norm`), and
+the orthogonal `√n·σ` bound on each lagged window (`norm_sum_toLpSeq_lag_sq`). With `φ` the tail
+`ψⱼ·1_{j>m}`, the `1/√n`-scaled version is `‖√n(X̄ₙ − X̄ₙ^{(m)})‖₂ ≤ σ·∑_{j>m}|ψⱼ|`. -/
+theorem norm_sum_causalLinearProcessLp_le [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ}
+    (hmem : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0)
+    {φ : ℕ → ℝ} (hφ : Summable fun j => |φ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => φ j • toLpSeq Z hmem (t - (j : ℤ))) (n : ℕ) :
+    ‖∑ t ∈ Finset.range n, causalLinearProcessLp φ Z hmem t‖
+      ≤ Real.sqrt n * ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j| := by
+  have hAnorm : ∀ j : ℤ,
+      ‖∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - j)‖
+        = Real.sqrt n * ‖toLpSeq Z hmem 0‖ := by
+    intro j
+    have hsq := norm_sum_toLpSeq_lag_sq hmem hindep hident hcenter n j
+    have h0 : ‖toLpSeq Z hmem (0 : ℤ)‖ ^ 2 = ∫ ω, Z 0 ω * Z 0 ω ∂μ := by
+      rw [← real_inner_self_eq_norm_sq,
+        inner_toLpSeq hmem (integral_mul_eq_iid hmem hindep hident hcenter), if_pos rfl]
+    have hnn1 : (0 : ℝ) ≤ ‖∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - j)‖ := norm_nonneg _
+    have hnn2 : (0 : ℝ) ≤ Real.sqrt n * ‖toLpSeq Z hmem 0‖ := by positivity
+    have hsq2 : ‖∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - j)‖ ^ 2
+        = (Real.sqrt n * ‖toLpSeq Z hmem 0‖) ^ 2 := by
+      rw [hsq, ← h0, mul_pow, Real.sq_sqrt (Nat.cast_nonneg n)]
+    rw [← Real.sqrt_sq hnn1, hsq2, Real.sqrt_sq hnn2]
+  simp only [causalLinearProcessLp]
+  rw [finsetSum_tsum (Finset.range n) (fun t => hsum (t : ℤ))]
+  rw [show (fun j : ℕ => ∑ t ∈ Finset.range n, φ j • toLpSeq Z hmem ((t : ℤ) - (j : ℤ)))
+        = fun j : ℕ => φ j • ∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - (j : ℤ))
+      from funext fun j => (Finset.smul_sum).symm]
+  have hsummorm : Summable fun j : ℕ =>
+      ‖φ j • ∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - (j : ℤ))‖ := by
+    simp only [norm_smul, Real.norm_eq_abs, hAnorm]
+    exact hφ.mul_right _
+  calc ‖∑' j : ℕ, φ j • ∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - (j : ℤ))‖
+      ≤ ∑' j : ℕ, ‖φ j • ∑ t ∈ Finset.range n, toLpSeq Z hmem ((t : ℤ) - (j : ℤ))‖ :=
+        norm_tsum_le_tsum_norm hsummorm
+    _ = ∑' j : ℕ, |φ j| * (Real.sqrt n * ‖toLpSeq Z hmem 0‖) := by
+        refine tsum_congr fun j => ?_; rw [norm_smul, Real.norm_eq_abs, hAnorm]
+    _ = Real.sqrt n * ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j| := by rw [tsum_mul_right, mul_comm]
+
 end DeepWiki.TimeSeries
