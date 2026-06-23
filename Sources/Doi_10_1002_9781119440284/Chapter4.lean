@@ -32,6 +32,7 @@ import DeepWiki.NetworkCalculus.ContainerQuotient
 import DeepWiki.NetworkCalculus.ContainerQuotientConv
 import DeepWiki.NetworkCalculus.ContainerCanonical
 import DeepWiki.NetworkCalculus.ContainerUncertainty
+import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -66,9 +67,11 @@ FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWi
 container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the `Θ^κ_τ ∗ g` decomposition) DONE
 (`def_4_3`/`IsCanonicalDecomp`/`Container.canonicalRep`); Definition 4.4 (maximal uncertainty) DONE
 (`def_4_4`: `Bmax = vDev(f̄,f̲)`, `Dmax = hDev(f̄,f̲)` at the rank abscissa; finiteness FROM canonical
-form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion
-functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all `[research]` (the
-container inclusion-function algorithmics); Remark 4.1. -/
+form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion functions
+`[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
+remains of Def 4.5/Thm 4.4 is the `C_cv` concave-hull canonicalization, the unary closure inclusion
+`[*]` ([4.16]/[4.17]), and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]);
+Proposition 4.4 (canonical upper bound); Lemma 4.10 — `[research]`; Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -890,6 +893,19 @@ theorem def_4_4 (c : DeepWiki.Container) (Tlo Thi : ℝ≥0) :
     DeepWiki.Container.maximalUncertaintyData c Tlo Thi
       = vDevAt c.hi c.lo (DeepWiki.Container.bmaxAbscissa Tlo Thi) :=
   DeepWiki.Container.maximalUncertaintyData_eq c Tlo Thi
+
+/-- **Definition 4.5** + **Theorem 4.4** (§4.4.3, p.89–91): the container inclusion functions and
+their soundness. An operation lifts to containers via its bounds — meet `[∧]` `f[∧]g = [f̲⊓g̲, f̄⊓ḡ]`
+(`Container.inf`, [4.14]) and convolution `[∗]` `f[∗]g = [f̲∗g̲, f̄∗ḡ]` (`Container.conv`, [4.15]) —
+and **Theorem 4.4** is the inclusion-soundness: `f ∈ f → g ∈ g → f⊓g ∈ f[∧]g` (`inf_mem`) and
+`minConv f g ∈ f[∗]g` (`conv_mem`), via the monotonicity of `⊓`/`minConv`. The library's
+`DeepWiki.Container.inf_mem` / `.conv_mem` (lifts `.inf`/`.conv`). (NB the book's `[∧]` canonicalizes
+the bounds with the convex/concave hulls `C_vx`/`C_cv` — here the un-canonicalized lift, which carries
+the same inclusion content; the `C_cv` concave-hull operator + the unary closure inclusion `[*]`
+[4.16]/[4.17] remain. The book defers Thm 4.4's full proof to [LEC 14].) -/
+theorem thm_4_4 {c d : DeepWiki.Container} {f g : ℝ≥0 → EReal} (hf : f ∈ c) (hg : g ∈ d) :
+    (f ⊓ g) ∈ DeepWiki.Container.inf c d ∧ minConv f g ∈ DeepWiki.Container.conv c d :=
+  ⟨DeepWiki.Container.inf_mem hf hg, DeepWiki.Container.conv_mem hf hg⟩
 
 /-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
 Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
