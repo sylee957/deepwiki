@@ -10,6 +10,7 @@ remaining ingredient (the remainder is `o_p` from differentiability + tightness)
 step. -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
+open scoped ENNReal
 
 namespace DeepWiki.TimeSeries
 
@@ -35,5 +36,36 @@ theorem tendstoInDistribution_smul_comp_of_tendstoInMeasure_remainder {E F : Typ
     simp only [Pi.sub_apply, ← smul_sub, sub_sub]
   rw [hfun]
   exact hrem
+
+/-- **`o_p · O_p = o_p`**: if `aₙ → 0` in probability and `bₙ` is uniformly tight (for every `ε` there is
+a bound `M` with `μ{|bₙ| ≥ M} ≤ ε` for all `n`), then `aₙ · bₙ → 0` in probability. The crux of the Taylor
+remainder vanishing in the delta method. -/
+theorem tendstoInMeasure_mul_zero_of_tight {a b : ℕ → Ω → ℝ}
+    (ha : TendstoInMeasure μ a atTop 0)
+    (hb : ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, 0 < M ∧ ∀ n, μ {ω | M ≤ |b n ω|} ≤ ε) :
+    TendstoInMeasure μ (fun n ω => a n ω * b n ω) atTop 0 := by
+  rw [tendstoInMeasure_iff_norm] at ha ⊢
+  intro η hη
+  rw [ENNReal.tendsto_nhds_zero]
+  intro ε hε
+  obtain ⟨M, hM, hMb⟩ := hb (ε / 2) (ENNReal.half_pos hε.ne')
+  have hak := (ha (η / M) (by positivity))
+  rw [ENNReal.tendsto_nhds_zero] at hak
+  filter_upwards [hak (ε / 2) (ENNReal.half_pos hε.ne')] with n hn
+  calc μ {ω | η ≤ ‖a n ω * b n ω - 0‖}
+      ≤ μ ({ω | M ≤ |b n ω|} ∪ {ω | η / M ≤ ‖a n ω - 0‖}) := by
+        refine measure_mono fun ω hω => ?_
+        simp only [Set.mem_setOf_eq, sub_zero, Real.norm_eq_abs, Set.mem_union] at hω ⊢
+        by_cases hbM : M ≤ |b n ω|
+        · exact Or.inl hbM
+        · refine Or.inr ?_
+          replace hbM := not_le.mp hbM
+          rw [abs_mul] at hω
+          rw [div_le_iff₀ hM]
+          nlinarith [hω, abs_nonneg (a n ω), abs_nonneg (b n ω),
+            mul_nonneg (abs_nonneg (a n ω)) (sub_nonneg.mpr hbM.le)]
+    _ ≤ μ {ω | M ≤ |b n ω|} + μ {ω | η / M ≤ ‖a n ω - 0‖} := measure_union_le _ _
+    _ ≤ ε / 2 + ε / 2 := add_le_add (hMb n) hn
+    _ = ε := ENNReal.add_halves ε
 
 end DeepWiki.TimeSeries
