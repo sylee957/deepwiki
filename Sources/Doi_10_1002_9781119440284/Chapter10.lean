@@ -20,6 +20,7 @@ import DeepWiki.NetworkCalculus.PmooSeparatedFlowIncomparable
 import DeepWiki.NetworkCalculus.StaticPriorityPmooNestedTandem
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionBridge
+import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionNetwork
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -31,9 +32,11 @@ or recorded as a note / unformalized item.
 §10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) — the combinatorial CORE
 (`thm_10_2_core`) AND the reduction correctness (`thm_10_2_reduction`: worst-case backlog ≥ 3s−2q ⟺
 exact 3-cover, the worst-case objective as a `programOptimum`) are done — the formalizable poly-time
-reduction. Residual `[external]`: the `NPHard` typeclass (no Mathlib complexity framework) and the
-network-dynamics → backlog-value realization (the convex-maximization-attains-integral-vertices
-analysis step). -/
+reduction. The network-served realization (`thm_10_2_network`) computes the ACTUAL backlog at `W` from
+the Figure-10.7 served rate equations and transfers the `3s−2q ⟺ cover` threshold to it. Residual: the
+continuous-time rate→`Curve` integration + `t→1⁻` left-limit `[infra]`; fractional-vs-integral routing
+optimality (a finite convex-maximization-on-a-polytope fact) `[research]`; the `NPHard` typeclass
+`[external]` (no Mathlib complexity framework). -/
 
 namespace DeepWiki.Dnc
 
@@ -206,5 +209,22 @@ theorem thm_10_2_reduction {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fi
     3 * I.numSubsets - 2 * I.q ≤ I.worstCaseBacklog ↔
       ∃ assign C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
   I.threshold_le_worstCaseBacklog_iff_exists_cover hne hsq
+
+/-- **Theorem 10.2, network-served realization** (§10.5): the threshold correspondence holds for the
+ACTUAL network backlog computed from the Figure-10.7 served rate equations (not just the abstract
+objective). At an integral routing the backlog at the bottom server `W` at time `1⁻` is
+`3(s−q)+saturatedCount` (`backlogAtW_eq_backlogValue`, real arithmetic over the upper/middle served
+totals), so the worst case over integral routings is `worstCaseBacklog`
+(`worstCaseBacklogAtW_eq`) and `3s−2q ≤ network-backlog ⟺ exact 3-cover`
+(`threshold_le_worstCaseBacklogAtW_iff_exists_cover`). The library's
+`DeepWiki.X3CInstance.threshold_le_worstCaseBacklogAtW_iff_exists_cover`. (Residual above the
+served-equation layer: continuous-time rate→`Curve` integration with the `t→1⁻` left-limit `[infra]`;
+fractional-vs-integral routing optimality — a finite convex-maximization-on-a-polytope fact `[research]`;
+the `NPHard` typeclass `[external]`.) -/
+theorem thm_10_2_network {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fintype ι] [Fintype α]
+    (I : DeepWiki.X3CInstance ι α) (hne : I.HasAssignment) (hsq : I.q ≤ I.numSubsets) :
+    3 * I.numSubsets - 2 * I.q ≤ I.worstCaseBacklogAtW ↔
+      ∃ assign C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
+  I.threshold_le_worstCaseBacklogAtW_iff_exists_cover hne hsq
 
 end DeepWiki.Dnc
