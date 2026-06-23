@@ -230,4 +230,22 @@ theorem applyTableau_subset_of_chaseStar (ρ : Valuation Att Val) {r : Table Ω 
       exact applyTableau_mergeSubst_subset_model ρ ih
         (fdMerge_value_eq ρ (satisfiesFd_subset ih (hfd _ hmem)) h₁ h₂ hX ha)
 
+open Classical in
+/-- **The jd-rule fixpoint is a model of the jd** (a completeness ingredient for Theorem 3.15): a
+tableau on which the jd-rule for a covering `⋈[comp]` produces nothing new already satisfies that
+join dependency, viewing rows (over the symbol "domain") as tuples. So the *terminal* chased tableau
+is a model of `SC`. -/
+theorem satisfiesJd_of_jdChaseStep_eq {k : ℕ} {comp : Fin k → Finset Att} {T : Tableau Ω}
+    (hcov : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i) (h : jdChaseStep comp T = T) :
+    SatisfiesJd T comp := by
+  intro fam hfam hpair
+  have key : ∀ i, ∀ a : {x // x ∈ Ω}, a.val ∈ comp i →
+      fam (Classical.choose (hcov a)) a = fam i a := by
+    intro i a hi
+    exact hpair (Classical.choose (hcov a)) i a
+      (Finset.mem_inter.mpr ⟨Classical.choose_spec (hcov a), hi⟩)
+  refine ⟨fun a => fam (Classical.choose (hcov a)) a, ?_, key⟩
+  rw [← h]
+  exact Or.inr ⟨fam, hfam, hpair, key⟩
+
 end DeepWiki

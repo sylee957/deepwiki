@@ -242,6 +242,11 @@ relation stays inside a model of all the fds and jds — the chase never produce
 a model of `SC`. -/
 abbrev thm_3_15_sound := @DeepWiki.applyTableau_subset_of_chaseStar
 
+/-- **Theorem 3.15** (§3.4, completeness ingredient): a tableau on which the jd-rule for a covering
+join dependency produces nothing new already satisfies that join dependency — the terminal chased
+tableau is a model of `SC`. -/
+abbrev chase_fixpoint_models_jd := @DeepWiki.satisfiesJd_of_jdChaseStep_eq
+
 /-! ## §3.5 Inclusion Dependencies -/
 
 /-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*
