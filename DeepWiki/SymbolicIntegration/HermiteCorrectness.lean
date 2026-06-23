@@ -2296,3 +2296,57 @@ example (fuel : ℕ) (A D gnum gden Dstar : CPoly)
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
   hermiteReduce_residual_correct_uncond fuel A D gnum gden Dstar hD hgden hDstar hfuel hcomp
 
+/-! ### Example 2.2.1 via the radical wrapper: `Dstar ∣ D` from the proven Yun radical clause
+
+The radical wrapper `hermiteReduce_residual_correct_of_radical` consumes `Dstar ∣ D` as a hypothesis,
+which for Example 2.2.1 is discharged not by `native_decide` but by the **proven** Yun radical-divides
+theorem `toPoly_Dstar_dvd_D` (through the `native_decide`'d honesty bundle `hermite_ex221_sqfreeExactComp`),
+transported to the literal radical `[0,2,0,1]` by the computed fold equality. Only the *single* residual
+cert remains `native_decide`'d — the abstract radical content is genuinely proven. -/
+
+/-- **Example 2.2.1: the radical `[0,2,0,1]` divides `D`** with the *proven* Yun radical clause: the
+computed radical `Dstar = x³+2x` (the `csqfreeFactor 40 cD221` fold) divides `D`, transported to the
+literal `[0,2,0,1]` (`native_decide` fold-equality + `toPoly_Dstar_dvd_D`). -/
+theorem hermite_ex221_Dstar_dvd : toPoly [0, 2, 0, 1] ∣ toPoly cD221 := by
+  have hfold : ((csqfreeFactor 40 cD221).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
+      = [0, 2, 0, 1] := by native_decide
+  have := toPoly_Dstar_dvd_D 40 cD221
+    (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
+  rwa [hfold] at this
+
+open scoped Differential in
+/-- **Example 2.2.1: the unconditional Hermite reduction via the radical wrapper** (§2.2, p.41):
+`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` with the radical clause `Dstar ∣ D` discharged
+by the *proven* `hermite_ex221_Dstar_dvd` (Yun radical-divides), and only the single residual cert
+`native_decide`'d. The cleanest split — abstract radical content proven, one residual cert checked. -/
+example :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly cA221) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly cD221)
+      = (toQFun ([8, 12, 20, 12, 8, 3], [0, 8, 0, 12, 0, 6, 0, 1]))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv 40
+              (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+                  (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+                    (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])
+              (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly [0, 2, 0, 1]) := by
+  have hD : toPoly cD221 ≠ 0 := fun h => by
+    have : cnorm cD221 = [] := (cnorm_eq_nil_iff cD221).mpr h
+    revert this; decide
+  have hgden : toPoly [0, 8, 0, 12, 0, 6, 0, 1] ≠ 0 := fun h => by
+    have : cnorm [0, 8, 0, 12, 0, 6, 0, 1] = [] := (cnorm_eq_nil_iff _).mpr h
+    revert this; decide
+  have hDstar : cnorm [0, 2, 0, 1] ≠ [] := by decide
+  have hfuel : (cnorm (cmul (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+      (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+        (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
+    native_decide
+  have hfuelD : (cnorm cD221).length ≤ 40 := by decide
+  have hWgd : toPoly (cmod 40
+      (csub (cmul cA221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))
+        (cmul cD221 (csub (cmul (cderiv [8, 12, 20, 12, 8, 3]) [0, 8, 0, 12, 0, 6, 0, 1])
+          (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1])))))
+      (cmul (cdiv 40 cD221 [0, 2, 0, 1]) (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
+    rw [← cnorm_eq_nil_iff]; native_decide
+  exact hermiteReduce_residual_correct_of_radical 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hfuelD hermite_ex221_Dstar_dvd hWgd
+
