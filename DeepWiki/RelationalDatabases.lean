@@ -9,6 +9,7 @@ import DeepWiki.RelationalDatabases.MultivaluedDependencies
 import DeepWiki.RelationalDatabases.JoinDependencies
 import DeepWiki.RelationalDatabases.InclusionDependencies
 import DeepWiki.RelationalDatabases.DependencyImplication
+import DeepWiki.RelationalDatabases.Chase
 import DeepWiki.RelationalDatabases.NormalForms
 import DeepWiki.RelationalDatabases.HorizontalDecompositions
 import DeepWiki.RelationalDatabases.IncompleteInformation

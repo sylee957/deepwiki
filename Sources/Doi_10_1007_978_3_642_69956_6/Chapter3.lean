@@ -3,6 +3,7 @@ import DeepWiki.RelationalDatabases.MultivaluedDependencies
 import DeepWiki.RelationalDatabases.JoinDependencies
 import DeepWiki.RelationalDatabases.InclusionDependencies
 import DeepWiki.RelationalDatabases.DependencyImplication
+import DeepWiki.RelationalDatabases.Chase
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 3: Constraints
@@ -32,10 +33,13 @@ semantics.
   partition `SameBlock`/`DepB(X)`, the forward direction of Theorem 3.11 (implied mvd right sides
   are block-unions) and the singleton-block clause are done].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
-  Corollary 3.3 (an mvd is a two-component jd), the chase (Algorithm 3.4) with Theorem 3.15
-  (correctness) and Theorem 3.16 (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd
-  implication via the chase), Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham
-  algorithm (Algorithm 3.5, Theorem 3.18) [infra/research].
+  Corollary 3.3 (an mvd is a two-component jd), the chase *steps* (Algorithm 3.4's fd- and jd-rules)
+  with their iteration to a fixpoint, termination and Theorem 3.15 (correctness), Theorem 3.16
+  (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd implication via the chase),
+  Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham algorithm (Algorithm 3.5,
+  Theorem 3.18) [infra/research]. (The chase data model — Def 3.11 tableaux/rows/symbols, Def 3.12
+  the initial tableau, the all-distinguished success row with its membership criterion, and the
+  valuation bridge to relations — is done.)
 §3.5: Theorem 3.19 (completeness and non-redundancy of the id axiom system `𝓘`; the three rules
   I1/I2/I3 are sound — done), Theorem 3.20 (id implication is decidable), Theorem 3.21
   (fd+id implication is undecidable), Example 3.26 (ids have no finite counterexample) [research].
@@ -180,6 +184,23 @@ abbrev thm_3_11_singleton := @DeepWiki.sameBlock_singleton_of_fd
 family of rows pairwise agreeing on the component intersections glues to a row agreeing with each
 on its component. -/
 abbrev def_3_9 := @DeepWiki.SatisfiesJd
+
+/-- **Definition 3.11** (§3.4, p.89), the chase tableau model: a *row* assigns a chase symbol
+(distinguished `αA` or undistinguished `βᴬᵢ`) to each attribute; a *tableau* is a set of rows. -/
+abbrev def_3_11_tableau := @DeepWiki.Tableau
+
+/-- **Definition 3.12** (§3.4, p.89): the *initial tableau* `τ(J)` of a join dependency — one row
+per component, distinguished on the component and freshly undistinguished elsewhere. -/
+abbrev def_3_12_initialTableau := @DeepWiki.initialTableau
+
+/-- **Algorithm 3.4** (§3.4, p.91), the success condition: the all-distinguished row whose presence
+in the chased tableau signals that the join dependency is implied; it is in the *initial* tableau
+exactly when some component already covers `Ω`. -/
+abbrev chase_distinguished_row := @DeepWiki.distRow_mem_initialTableau_iff
+
+/-- **Algorithm 3.4** (§3.4): the valuation bridge sending a tableau to a relation instance (used to
+relate the chased tableau to relations in the correctness argument). -/
+abbrev chase_applyTableau := @DeepWiki.applyTableau
 
 /-! ## §3.5 Inclusion Dependencies -/
 
