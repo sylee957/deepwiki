@@ -18,9 +18,9 @@ operators, their distribution over union, and several equivalence rules.
 §8.3: Def 8.8 (parameterized transactions), Def 8.9 (a constraint set specified by parameterized
   transactions), Theorem 8.2 (every set of fds is so specified) and Theorem 8.3 (a non-trivial
   set of mvds is not) [infra/research].
-§8.4: Def 8.10 (independent condition sets) and the 18 transaction-equivalence rules E1–E18
-  (E2/E3 and a deletion case of E9 are done; the rest involve `Mod` and condition independence)
-  [infra].
+§8.4: the transaction-equivalence rules involving `Mod` — E1, E4–E7, E10, E12–E18 (E2, E3, E8,
+  a deletion case of E9, E11 and Def 8.10 independence are done) [infra: needs the `Mod`
+  operator].
 §8.5: Exercises [deferred: not yet transcribed]. -/
 
 open DeepWiki
@@ -59,5 +59,15 @@ abbrev e3_del_then_ins := @DeepWiki.Ins_Del
 
 /-- **Rule E9** (§8.4, p.213, deletion case): two deletions commute. -/
 abbrev e9_del_comm := @DeepWiki.Del_Del_comm
+
+/-- **Rule E8** (§8.4, p.212): two insertions commute. -/
+abbrev e8_ins_comm := @DeepWiki.Ins_Ins_comm
+
+/-- **Definition 8.10** (§8.4, p.212): two condition sets are *independent* when no tuple
+satisfies both. -/
+abbrev def_8_10_independent := @DeepWiki.Independent
+
+/-- **Rule E11** (§8.4, p.212): an insertion and a deletion of independent conditions commute. -/
+abbrev e11_ins_del_swap := @DeepWiki.Ins_Del_comm_of_independent
 
 end DeepWiki.Rdb

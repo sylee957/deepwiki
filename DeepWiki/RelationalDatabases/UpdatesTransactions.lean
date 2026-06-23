@@ -56,4 +56,25 @@ theorem Del_Del_comm (C₁ C₂ : Condition Ω Val) (r : Table Ω Val) :
     Del C₁ (Del C₂ r) = Del C₂ (Del C₁ r) := by
   ext t; simp only [mem_Del]; tauto
 
+/-- Rule E8: insertions commute. -/
+theorem Ins_Ins_comm (C₁ C₂ : Condition Ω Val) (r : Table Ω Val) :
+    Ins C₁ (Ins C₂ r) = Ins C₂ (Ins C₁ r) := by
+  ext t; simp only [mem_Ins]; tauto
+
+/-- Two conditions are *independent* (Def 8.10): no tuple satisfies both. -/
+def Independent (C₁ C₂ : Condition Ω Val) : Prop := ∀ t, ¬ (C₁ t ∧ C₂ t)
+
+/-- Rule E11: an insertion and a deletion of independent conditions commute. -/
+theorem Ins_Del_comm_of_independent {C₁ C₂ : Condition Ω Val} (h : Independent C₁ C₂)
+    (r : Table Ω Val) : Del C₂ (Ins C₁ r) = Ins C₁ (Del C₂ r) := by
+  ext t
+  simp only [mem_Del, mem_Ins]
+  constructor
+  · rintro ⟨ht | hC1, hnC2⟩
+    · exact Or.inl ⟨ht, hnC2⟩
+    · exact Or.inr hC1
+  · rintro (⟨ht, hnC2⟩ | hC1)
+    · exact ⟨Or.inl ht, hnC2⟩
+    · exact ⟨Or.inr hC1, fun hC2 => h t ⟨hC1, hC2⟩⟩
+
 end DeepWiki
