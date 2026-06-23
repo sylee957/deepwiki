@@ -79,6 +79,7 @@ import DeepWiki.NetworkCalculus.ContainerUncertainty
 import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.ContainerInternalF
+import DeepWiki.NetworkCalculus.ContainerInternalFConvClosure
 import DeepWiki.NetworkCalculus.LegendreFenchelConcave
 import DeepWiki.NetworkCalculus.PwlBreakpoints
 import DeepWiki.NetworkCalculus.ContainerClosure

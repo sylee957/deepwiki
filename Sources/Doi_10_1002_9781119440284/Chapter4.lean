@@ -94,9 +94,12 @@ core), so the `[∧]` upper-bound canonicalization is available; the unary closu
 (internality) the book defers to [LEC 14] is now formalized FROM that paper (`ContainerInternalF`:
 Def 23 internality of `[⊕]` — the canonicalized lifted meet IS a canonical container of `F`,
 `isCanonicalContainer_canonicalizedInf`; the Le Boudec–Thiran concave identities Thm 3; the `ℱ_acv`
-closure; Prop 3 slope-half), with the per-paper double-reference catalog
-`Sources/Doi_10_1007_s10626_012_0148_9` (`DeepWiki.Lcch.*`) — the `[*]`/`[⋆]` internality + the
-rank-renormalized reassembly stay `[infra]`; Proposition 4.4 (canonical
+closure; Prop 3 slope-half) AND the `[*]`/`[⋆]` inclusion functions (`ContainerInternalFConvClosure`:
+Prop 6 `ℱ_acx` closed under `∗`, Prop 7 `conv_isCanonicalContainer_of_convex_concave` = the convolution
+`[*]` internal to `F`, Prop 9 `[⋆]` convex bound unconditionally almost-convex + eq.18 closure-respects-
+𝓛), with the per-paper double-reference catalog `Sources/Doi_10_1007_s10626_012_0148_9`
+(`DeepWiki.Lcch.*`) — only the geometric pieces (the slope identity eq.15, the eq.18 elementary-closure
+decomposition, the rank-renormalized reassembly) stay `[infra]`; Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); the breakpoint/rank
 layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
@@ -110,8 +113,9 @@ So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaini
 book-deferred to other papers, now formalized FROM those papers at the faithful-core level: the general
 three-part Thm 4.2 (→[BOU 16a] weak-KAM, `ConvexConcaveThreePart`, catalog
 `Sources/Doi_10_1090_mcom_2986`) and the full `F`-closure Thm 4.4 (→[LEC 14], `ContainerInternalF`,
-catalog `Sources/Doi_10_1007_s10626_012_0148_9`) — the weak-KAM induction (Thm 4.2) and `[*]`/`[⋆]` +
-rank-reassembly (Thm 4.4) remain `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
+catalog `Sources/Doi_10_1007_s10626_012_0148_9`; `[⊕]`/`[*]`/`[⋆]` internality all formalized) — only
+the weak-KAM induction (Thm 4.2) and the geometric slope/decomposition/rank-reassembly pieces (Thm 4.4)
+remain `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 

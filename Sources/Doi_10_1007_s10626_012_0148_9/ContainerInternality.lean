@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.ContainerInternalF
+import DeepWiki.NetworkCalculus.ContainerInternalFConvClosure
 import Sources.Doi_10_1007_s10626_012_0148_9.Source
 
 /-! # Le Corronc–Cottenceau–Hardouin — container internality (F-closure) — catalog
@@ -38,5 +39,23 @@ alias def_17_convex_hull := Container.isConvexEReal_biconj_of_zero_ne_top
 a shared rank + asymptotic typing) — so the inclusion function `[⊕]` is internal to `F`. The library's
 `DeepWiki.Container.isCanonicalContainer_canonicalizedInf`. -/
 alias def_23_internal_inf := Container.isCanonicalContainer_canonicalizedInf
+
+/-- **Proposition 6** (p.23): `ℱ_acx` (almost-convex, the upper-bound class) is closed under convolution
+`∗` — the convolution of two convex functions is convex (the dual of Prop 5's `ℱ_acv` closure). The
+library's `DeepWiki.Container.isConvexEReal_minConv_convex`. -/
+alias prop_6 := Container.isConvexEReal_minConv_convex
+
+/-- **Proposition 7** (p.23): the `[*]` (convolution) inclusion function is INTERNAL to `F` — the lifted
+convolution `Container.conv c d = [f̲∗g̲, f̄∗ḡ]` is a canonical container (convex lower bounds nonneg,
+concave upper bounds bounded-below, asymptotically typed). The library's
+`DeepWiki.Container.conv_isCanonicalContainer_of_convex_concave`. -/
+alias prop_7_internal_conv := Container.conv_isCanonicalContainer_of_convex_concave
+
+/-- **Proposition 9 / eq. 18** (pp.25–26): the `[⋆]` (closure) inclusion function's convex upper bound
+`C_vx(f̄⋆)` is unconditionally almost convex (closure is null at origin + `C_vx = biconj` convex), and
+the closure respects the Legendre class (eq. 18 well-definedness). The library's
+`DeepWiki.Container.isConvexEReal_biconj_subadditiveClosureEReal` /
+`sameLegendre_legendreClosure_of_sameLegendre`. -/
+alias prop_9_internal_closure := Container.isConvexEReal_biconj_subadditiveClosureEReal
 
 end DeepWiki.Lcch
