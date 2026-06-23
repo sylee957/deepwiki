@@ -12,6 +12,7 @@ import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
+import DeepWiki.SymbolicIntegration.InFieldIntegration
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -30,7 +31,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's real-rational-function algorithm (`LogToReal`/`LogToAtan` recursion); Ex 2.8.1; Ex 2.8.2.
-§2.9: the in-field-integration algorithm.
+§2.9: "Recognizing Logarithmic Derivatives" criterion (Mařík: RT-resultant roots all integers); the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -812,5 +813,21 @@ abbrev ex_2_7_2 := @DeepWiki.SymbolicIntegration.fullPartialFraction_example
 Verified as the differential-field identity `(9/(x−1) + 3/(x+1))′ + (4/(x−2) − 4/(x+1)) = f` (the bracket
 is the log part's integrand `4·logDeriv(x−2) − 4·logDeriv(x+1)`). -/
 abbrev ex_2_7_3 := @DeepWiki.SymbolicIntegration.integrateRational_example
+
+/-! ## §2.9 In-Field Integration -/
+
+/-- **Recognizing Derivatives** (§2.9, p.71), the substance: after Hermite/Horowitz reduction
+`f = dg/dx + A/D` with `D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`, the logarithmic part `A/D`
+is **not** the derivative of any rational function when `A ≠ 0` — `∀ v ∈ K(x), v′ ≠ A/D` (since `D | A`
+with `deg A < deg D` forces `A = 0`). The library's `logPart_not_rational_derivative`, by the
+residue-free divisibility descent forcing `Dⁿ | denom(v)` for all `n`. -/
+abbrev recognizingDerivatives := @DeepWiki.SymbolicIntegration.logPart_not_rational_derivative
+
+/-- **Recognizing Derivatives, the criterion** (§2.9, p.71): for `f ∈ K(x)` with Hermite reduction
+`f = dg/dx + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f = du/dx` for some `u ∈ K(x)`
+**iff** `A = 0`. The library's `isRationalDerivative_iff`. (The "Recognizing Logarithmic Derivatives"
+criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — and the full
+`IntegrateRationalFunction` algorithm remain [deferred].) -/
+abbrev recognizingDerivatives_iff := @DeepWiki.SymbolicIntegration.isRationalDerivative_iff
 
 end DeepWiki.Si
