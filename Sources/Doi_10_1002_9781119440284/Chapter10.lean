@@ -30,6 +30,7 @@ import DeepWiki.NetworkCalculus.ThreeDimensionalMatchingReduction
 import DeepWiki.NetworkCalculus.ComplexityNP
 import DeepWiki.NetworkCalculus.BooleanSatisfiability
 import DeepWiki.NetworkCalculus.CookLevin
+import DeepWiki.NetworkCalculus.ThreeSatReduction
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -329,8 +330,9 @@ That gap is now framed faithfully rather than only cited:
 * `cookLevin : IsNPHard_TM cnfEncode Satisfiable` — **Cook–Levin stated over the real class**, scoped as
   the SINGLE axiom (the tableau construction is research-scale, ~30k lines in comparable assistants).
 * `isNPHard_TM_of_satReduction` / `IsNPHard_TM.viaReduction` — the chain mechanism: any problem reached
-  from SAT by Karp reductions is NP-hard. `3DM ≤ₖ X3C` and `X3C ≤ₖ worst-case-backlog` are proved; the
-  `SAT ≤ₖ 3SAT ≤ₖ 3DM` gadgets remain `[infra]`.
+  from SAT by Karp reductions is NP-hard. The chain is now `SAT ≤ₖ 3SAT` (`satToThreeSat`, FULLY PROVED
+  — both satisfiability directions + the linear size bound, `cook_levin_chain_satToThreeSat`) then
+  `3DM ≤ₖ X3C ≤ₖ worst-case-backlog` (proved); the SINGLE remaining gadget is `3SAT ≤ₖ 3DM` `[infra]`.
 `#print axioms isNPHard_TM_of_satReduction` = Mathlib's 3 standard axioms + exactly `cookLevin`. -/
 
 /-- **Cook–Levin, faithfully stated** (toward discharging `X3CIsNPHard`): SAT is NP-hard over the
@@ -347,5 +349,17 @@ theorem npHard_of_sat_reduction {ρ ρΓ : Type} {ec : ρ → List ρΓ} {R : ρ
       (fun z => (ec z).length) DeepWiki.Satisfiable R) :
     DeepWiki.IsNPHard_TM ec R :=
   DeepWiki.isNPHard_TM_of_satReduction red
+
+/-- **Cook–Levin chain, first gadget: `SAT ≤ₖ 3SAT`** (clause-splitting to 3-CNF). The map
+`satToThreeSatMap` splits each long clause `[l₁,…,l_k]` into the chain `[l₁,l₂,z₁],[¬z₁,l₃,z₂],…` with
+fresh aux variables; `satisfiable_satToThreeSatMap_iff` proves satisfiability is preserved BOTH ways
+(the forward carry-rule assignment + the backward restriction), `is3Cnf_satToThreeSatMap` the ≤3-literal
+guarantee, with a genuine linear size bound. The reduction `satToThreeSat` is FULLY PROVED (`#print
+axioms satisfiable_satToThreeSatMap_iff` = Mathlib's 3 standard axioms only). Composing with `cookLevin`
+gives `isNPHard_TM_threeSat` (3SAT NP-hard, modulo only the tableau). The library's
+`DeepWiki.satToThreeSat`. -/
+theorem cook_levin_chain_satToThreeSat :
+    DeepWiki.IsNPHard_TM DeepWiki.cnfEncode DeepWiki.threeSat :=
+  DeepWiki.isNPHard_TM_threeSat
 
 end DeepWiki.Dnc
