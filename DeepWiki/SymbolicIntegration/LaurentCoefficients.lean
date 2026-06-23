@@ -202,19 +202,21 @@ noncomputable def laurentSubst (Di : K[X]) : Option ℕ → K[X] := fun v =>
   | some k => Polynomial.C ((k + 1 : K)⁻¹) * (derivative^[k + 1] Di)
 
 /-- **The polynomial `Qᵢⱼ ∈ K[x]`** (§2.7): `Qᵢⱼ = aeval (laurentSubst Dᵢ) Pᵢⱼ`, substituting the scaled
-derivatives of `Dᵢ` for the differential variables in the numerator `Pᵢⱼ = laurentNum A Eᵢ i (i−j)`. -/
-noncomputable def laurentQ (A Di : K[X]) (i j : ℕ) : K[X] :=
-  aeval (laurentSubst Di) (laurentNum A (laurentE A Di i) i (i - j))
+derivatives of `Dᵢ` for the differential variables in the numerator `Pᵢⱼ = laurentNum A Eᵢ i (i−j)`. Here
+`Eᵢ = laurentE D Dᵢ i = D /ₘ Dᵢ^i` is the book's cofactor (the part of `D` complementary to `Dᵢ^i`), so the
+numerator recursion differentiates the genuine `hᵢ = A/(Dᵢ^i·Eᵢ)`. -/
+noncomputable def laurentQ (A D Di : K[X]) (i j : ℕ) : K[X] :=
+  aeval (laurentSubst Di) (laurentNum A (laurentE D Di i) i (i - j))
 
 /-- **The Bronstein–Salvy Laurent coefficient `Hᵢⱼ ∈ K[x]`** (§2.7, eq 2.12, **the engine**):
 `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`, computed by purely rational operations over `K` without
 factoring `Dᵢ`. The Laurent coefficient of `1/(x−α)^j` at a root `α` of `Dᵢ` is `Hᵢⱼ(α)`. -/
 noncomputable def laurentH (A D Di : K[X]) (i j : ℕ) : K[X] :=
-  (laurentQ A Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di
+  (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di
 
 theorem laurentH_def (A D Di : K[X]) (i j : ℕ) :
     laurentH A D Di i j
-      = (laurentQ A Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
+      = (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
   rfl
 
 /-! ## Stage E — the `i=1` residue: `H₁₁(α) = A(α)/D'(α)` -/
@@ -233,7 +235,7 @@ theorem aeval_laurentSubst_dpEmbed (Di p : K[X]) :
 /-- **`Q₁₁ = A`** (§2.7, the `i=j=1` base case): for `i=j=1` the derivative count is `i−j=0`, so
 `P₁₁ = dpEmbed A` and `Q₁₁ = aeval (laurentSubst D₁) (dpEmbed A) = A` — the substitution fixes the base
 variable `x ↦ X` and `A` has no differential variables. -/
-theorem laurentQ_one_one (A Di : K[X]) : laurentQ A Di 1 1 = A := by
+theorem laurentQ_one_one (A D Di : K[X]) : laurentQ A D Di 1 1 = A := by
   rw [laurentQ, Nat.sub_self, laurentNum_zero, aeval_laurentSubst_dpEmbed]
 
 /-- **`E₁ = D /ₘ D₁`** for `i=1`: the cofactor at multiplicity one. -/
@@ -621,10 +623,10 @@ noncomputable def substEvalAt (Diα : K[X]) (α : K) : Option ℕ → K := fun v
 This is the substantive root-evaluation step; identifying the resulting `Pᵢⱼ(α,…)` with the `(i−j)`-th
 Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` (hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`)
 is the remaining Taylor-series argument over the closure. -/
-theorem laurentQ_eval_at_root [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
-    (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
+theorem laurentQ_eval_at_root [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
+    (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
       = MvPolynomial.aeval (substEvalAt Diα α)
-          (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) := by
+          (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) := by
   unfold laurentQ
   rw [eval_aeval_diffPoly]
   have hfg : (fun v => (laurentSubst ((Polynomial.X - Polynomial.C α) * Diα) v).eval α) = substEvalAt Diα α := by
@@ -847,10 +849,10 @@ theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
 `laurentQ_eval_at_root`), since both are `aeval (substEvalAt Diα α) (laurentNum …)`. This identifies the
 engine's rational `Qᵢⱼ(α)` with the (Taylor-coefficient-bearing) numerator of the **actual** rational
 function `hᵢ,α = (A/D)(x−α)ⁱ`. -/
-theorem eval_diffSubst_laurentNum_eq_laurentQ_eval [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+theorem eval_diffSubst_laurentNum_eq_laurentQ_eval [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     Polynomial.eval α
-        (diffSubst Diα (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
-      = (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α := by
+        (diffSubst Diα (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
+      = (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α := by
   rw [eval_diffSubst, laurentQ_eval_at_root]
 
 /-! ### Step 4 — the remaining extraction lemma (the pole-order-`j` Laurent coefficient)
@@ -882,7 +884,7 @@ to `Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` — the substit
 theorem eval_laurentH {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
     (laurentH A D Di i j).eval α
-      = (laurentQ A Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
+      = (laurentQ A D Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
           * (1 / (derivative Di).eval α) ^ (2 * i - j) := by
   rw [laurentH, eval_modByMonic_of_root hDi hα, Polynomial.eval_mul, Polynomial.eval_mul,
     Polynomial.eval_pow, Polynomial.eval_pow]
@@ -903,7 +905,7 @@ theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} 
     (hDi : Di.Monic) (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
     (laurentH A D Di i j).eval α
-      = Polynomial.eval α (diffSubst Diα (laurentNum A (laurentE A Di i) i (i - j)))
+      = Polynomial.eval α (diffSubst Diα (laurentNum A (laurentE D Di i) i (i - j)))
         * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
         * (1 / (derivative Di).eval α) ^ (2 * i - j) := by
   rw [eval_laurentH i j hDi hα hcopE hcopD]
@@ -932,7 +934,7 @@ example (Di : K[X]) (hDi : Di.Monic) (hcop : IsCoprime (derivative Di) Di) :
 /-- Restatement of (2.12): the engine `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`. -/
 example (A D Di : K[X]) (i j : ℕ) :
     laurentH A D Di i j
-      = (laurentQ A Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
+      = (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
   laurentH_def A D Di i j
 
 /-- Restatement of the `i=1` residue (book p.56): `H₁₁(α) = A(α)/D'(α)` at a simple root `α` of `D`. -/
@@ -964,11 +966,11 @@ example (A E2 : K[X]) :
 
 /-- Restatement of the root-evaluation step (book p.56): at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`,
 `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
-example [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
-    (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
+example [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
+    (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
       = MvPolynomial.aeval (substEvalAt Diα α)
-          (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) :=
-  laurentQ_eval_at_root A Diα α i j
+          (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) :=
+  laurentQ_eval_at_root A D Diα α i j
 
 /-- Restatement that `σα` is the differential substitution hom (book p.56, Step 1): it carries the
 engine's `ddx` to the genuine `Polynomial.derivative`, `σα (ddx p) = derivative (σα p)`. -/
@@ -998,18 +1000,18 @@ example (A Ei Diα : K[X]) (i : ℕ) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) :
   rw [mul_pow]; ring
 
 /-- Restatement of Step 3, the root-value bridge `σα(Pᵢ,i−j)(α) = Qᵢⱼ(α)` (book p.56). -/
-example [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+example [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     Polynomial.eval α
-        (diffSubst Diα (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
-      = (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α :=
-  eval_diffSubst_laurentNum_eq_laurentQ_eval A Diα α i j
+        (diffSubst Diα (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
+      = (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α :=
+  eval_diffSubst_laurentNum_eq_laurentQ_eval A D Diα α i j
 
 /-- Restatement of Step 5, the general engine-output evaluation
 `Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` (book p.56, eq 2.12 evaluated). -/
 example {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
     (laurentH A D Di i j).eval α
-      = (laurentQ A Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
+      = (laurentQ A D Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
           * (1 / (derivative Di).eval α) ^ (2 * i - j) :=
   eval_laurentH i j hDi hα hcopE hcopD
 
