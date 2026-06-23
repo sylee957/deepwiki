@@ -456,6 +456,23 @@ hypothesis `i′ = 0` discharged from `i² = −1` via `deriv_i_eq_zero`); the b
 as a hypothesis is `logDeriv_imagQuot_eq_arctanDeriv`. -/
 abbrev lemma_2_8_1 := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv_of_sq
 
+/-- **Theorem 2.8.1(a)** (§2.8, p.62, Rioboo): for `A, B ∈ K[x]\{0}` with `A²+B² ≠ 0` (`i² = −1`),
+`d/dx log((A+iB)/(A−iB)) = d/dx log((−B+iA)/(−B−iA))` — the two complex logarithms have equal
+logarithmic derivatives because `(A+iB)/(A−iB) = −(−B+iA)/(−B−iA)` and the `−1` factor has zero
+`logDeriv`. The library's `logDeriv_imagQuot_eq_imagQuot_swap`. -/
+abbrev thm_2_8_1_a := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_imagQuot_swap
+
+/-- **Theorem 2.8.1(b)** (§2.8, p.62, Rioboo's recursion-step identity, the LogToAtan reduction): for
+`A, B` with `A²+B² ≠ 0` (`i² = −1`) and `C, D ∈ K[x]` with `B·D − A·C = G := gcd(A,B)`, `C ≠ 0`,
+`C²+D² ≠ 0`, and `P := (A·D + B·C)/G`,
+`i · d/dx log((A+iB)/(A−iB)) = 2 · d/dx arctan(P) + i · d/dx log((D+iC)/(D−iC))` — rendering
+`d/dx arctan(P) = P'/(1+P²)`. Proof: the factoring `(A+iB)/(A−iB) = ((P+i)/(P−i))·((D+iC)/(D−iC))`
+(from `(D−iC)(A+iB) = G(P+i)`, `(D+iC)(A−iB) = G(P−i)`) makes `logDeriv` additive, and Lemma 2.8.1
+turns `i·logDeriv((P+i)/(P−i))` into `2·P'/(1+P²)`. The denominator nonvanishing is supplied by
+`sub_imag_ne_zero`/`add_imag_ne_zero` and `sq_add_one_ne_zero_of_quot` (`(P²+1)G² = (A²+B²)(C²+D²)`).
+The library's `logDeriv_imagQuot_eq_arctan_add_imagQuot`. -/
+abbrev thm_2_8_1_b := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctan_add_imagQuot
+
 /-! ## §2.6 The Czichowski Algorithm -/
 
 open Polynomial in
