@@ -96,4 +96,41 @@ theorem project_project {Ω Ω₁ Ω₂ : Finset Att} (h₁ : Ω₁ ⊆ Ω) (h�
   · rintro ⟨t', ⟨t, ht, rfl⟩, rfl⟩; exact ⟨t, ht, rfl⟩
   · rintro ⟨t, ht, rfl⟩; exact ⟨t.restrict h₁, ⟨t, ht, rfl⟩, rfl⟩
 
+/-- Selection commutes: `σ(σ(v; Q); P) = σ(σ(v; P); Q)`. -/
+theorem select_comm {Ω : Finset Att} (P Q : Tuple Ω Val → Prop) (v : Table Ω Val) :
+    select P (select Q v) = select Q (select P v) := by
+  ext t; simp only [mem_select]; tauto
+
+/-- Selection distributes over union: `σ(v ∪ v'; P) = σ(v; P) ∪ σ(v'; P)`. -/
+theorem select_union {Ω : Finset Att} (P : Tuple Ω Val → Prop) (v v' : Table Ω Val) :
+    select P (union v v') = union (select P v) (select P v') := by
+  ext t; simp only [mem_select, mem_union]; tauto
+
+/-- Selection distributes over difference: `σ(v − v'; P) = σ(v; P) − σ(v'; P)`. -/
+theorem select_diff {Ω : Finset Att} (P : Tuple Ω Val → Prop) (v v' : Table Ω Val) :
+    select P (diff v v') = diff (select P v) (select P v') := by
+  ext t; simp only [mem_select, mem_diff]; tauto
+
+/-- Projection distributes over union: `Π(v ∪ v'; Ω₁) = Π(v; Ω₁) ∪ Π(v'; Ω₁)`. -/
+theorem project_union {Ω Ω₁ : Finset Att} (h : Ω₁ ⊆ Ω) (v v' : Table Ω Val) :
+    project h (union v v') = union (project h v) (project h v') := by
+  ext s
+  simp only [mem_project, mem_union]
+  constructor
+  · rintro ⟨t, htv | htv', rfl⟩
+    · exact Or.inl ⟨t, htv, rfl⟩
+    · exact Or.inr ⟨t, htv', rfl⟩
+  · rintro (⟨t, htv, rfl⟩ | ⟨t, htv', rfl⟩)
+    · exact ⟨t, Or.inl htv, rfl⟩
+    · exact ⟨t, Or.inr htv', rfl⟩
+
+/-- Union is commutative. -/
+theorem union_comm {Ω : Finset Att} (v v' : Table Ω Val) : union v v' = union v' v := by
+  ext t; simp only [mem_union]; tauto
+
+/-- Union is associative. -/
+theorem union_assoc {Ω : Finset Att} (v v' v'' : Table Ω Val) :
+    union (union v v') v'' = union v (union v' v'') := by
+  ext t; simp only [mem_union]; tauto
+
 end DeepWiki
