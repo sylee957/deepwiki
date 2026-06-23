@@ -22,13 +22,15 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ`: base case + per-step assembly
-  formalized (`C_dvd_lazardView_of_degreeOf_zero`, `C_dvd_lazardView_descentStep` from
-  `C_dvd_lazardView_of_mem_of_dvd_bounded`/`C_dvd_C_mul_lazardView_of_dvd`); the full induction stays
-  open only at Lazard's no-common-factor `÷q` diagonal step `C(g_{i+1}) ∣ lazardView f_{i+1}` (the
-  reduction step concludes the lower `fᵢ`, not the diagonal; `R`'s GB-reduction may contain `fᵢ`
-  itself) [research: Lazard Lemma 3 no-common-factor reduction], plus the normal-position analysis of
-  `⟨A−zD', D⟩` [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ` is formalized **conditional on
+  the no-common-factor base** `degreeOf 0 (sorted 0) = 0` (`hbase`, `f₀ ∈ K[x]`): the non-circular
+  step (`C_dvd_lazardView_succ`), the strengthened induction (`C_dvd_lazardView_sortedByYDegree_of_le`,
+  `lazard_lemma3_dvd`), and the per-element split (`lazard_Pk_eq_Rk_Sk_of_sortedByYDegree`) all close
+  with no sorry. Open: discharging `hbase` — it needs Theorem 1's divide-out by the genuine `K[x][y]`
+  common factor `P·Gₖ₊₁` where `P = primpart(gcd(f₀,…,fₖ))` carries the `y`-degree; the `K[x]`-content
+  layer alone (`gbCommonContent ∼ gₖ`, `IsUnit gₖ`) is necessary but NOT sufficient — `I=(y)` has
+  `gₖ=1` yet `f₀=y ∉ K[x]` [research: Lazard Thm 1 P·Gₖ₊₁ divide-out construction]; plus the
+  normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
