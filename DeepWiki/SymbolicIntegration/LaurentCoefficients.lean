@@ -229,4 +229,90 @@ theorem laurentH_one_one (A D Di : K[X]) :
   rw [laurentH, laurentQ_one_one]
   norm_num
 
+/-- **`%ₘ Dᵢ` is invisible at a root** of `Dᵢ`: for monic `Dᵢ` with `Dᵢ(α)=0`,
+`(P %ₘ Dᵢ).eval α = P.eval α` — the quotient term `Dᵢ·(P /ₘ Dᵢ)` vanishes at `α`. Used to read engine
+outputs (which are `%ₘ Dᵢ`-reduced) at the roots of `Dᵢ`. -/
+theorem eval_modByMonic_of_root {P Di : K[X]} {α : K} (_hDi : Di.Monic) (hα : Di.eval α = 0) :
+    (P %ₘ Di).eval α = P.eval α := by
+  conv_rhs => rw [← modByMonic_add_div P Di]
+  rw [Polynomial.eval_add, Polynomial.eval_mul, hα, zero_mul, add_zero]
+
+/-- **`Bᵢ(α) = 1/Eᵢ(α)`** at a root `α` of `Dᵢ` (§2.7, the (2.10) evaluation): from `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`,
+evaluating at a root of the monic `Dᵢ` gives `Bᵢ(α)·Eᵢ(α) = 1`. -/
+theorem bezoutE_mul_laurentE_eval {D Di : K[X]} {α : K} (i : ℕ) (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hcop : IsCoprime (laurentE D Di i) Di) :
+    (bezoutE D Di i).eval α * (laurentE D Di i).eval α = 1 := by
+  have h := bezoutE_mul_laurentE_modByMonic D Di i hDi hcop
+  have := congrArg (fun p => p.eval α) h
+  simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
+
+/-- **`Cᵢ(α) = 1/Dᵢ'(α)`** at a root `α` of `Dᵢ` (§2.7, the (2.10) evaluation): from `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`,
+evaluating at a root of the monic `Dᵢ` gives `Cᵢ(α)·Dᵢ'(α) = 1`. -/
+theorem bezoutDeriv_mul_derivative_eval {Di : K[X]} {α : K} (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hcop : IsCoprime (derivative Di) Di) :
+    (bezoutDeriv Di).eval α * (derivative Di).eval α = 1 := by
+  have h := bezoutDeriv_mul_derivative_modByMonic Di hDi hcop
+  have := congrArg (fun p => p.eval α) h
+  simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
+
+/-- **`H₁₁(α) = A(α)/D'(α)`**, the Rothstein–Trager residue (§2.7, the `i=1` correctness, book p.56):
+for a simple factor `D = D₁·E₁` (`E₁ = D /ₘ D₁`) and a root `α` of the monic squarefree `D₁`
+(with `E₁(α) ≠ 0`, `D₁'(α) ≠ 0`), the engine output evaluates to `H₁₁(α) = A(α)/(E₁(α)·D₁'(α))`. Since
+`D'(α) = D₁'(α)·E₁(α)` at a root of `D₁` (the `D₁·E₁'` term vanishes), this is exactly the residue
+`A(α)/D'(α)` of `A/D` at the simple root `α` — the value collected in the Rothstein–Trager logarithmic
+sum (`Residues.residue_eq_eval_div_eval_derivative`). -/
+theorem eval_laurentH_one_one {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hcopE : IsCoprime (laurentE D Di 1) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hE : (laurentE D Di 1).eval α ≠ 0) (hD' : (derivative Di).eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α
+      = A.eval α / ((laurentE D Di 1).eval α * (derivative Di).eval α) := by
+  rw [laurentH_one_one, eval_modByMonic_of_root hDi hα, Polynomial.eval_mul, Polynomial.eval_mul]
+  have hB : (bezoutE D Di 1).eval α = 1 / (laurentE D Di 1).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutE_mul_laurentE_eval 1 hDi hα hcopE)
+  have hC : (bezoutDeriv Di).eval α = 1 / (derivative Di).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
+  rw [hB, hC]
+  field_simp
+/-- **`H₁₁(α) = A(α)/D'(α)`, in terms of the genuine `D'`** (§2.7, the residue, book p.56): when
+`D = D₁·E₁` with `E₁ = D /ₘ D₁` and `α` a root of the monic squarefree `D₁`, the residue denominator
+`E₁(α)·D₁'(α)` equals `D'(α)` (since `D' = D₁'·E₁ + D₁·E₁'` and `D₁(α)=0`), so the engine output is the
+Rothstein–Trager residue `H₁₁(α) = A(α)/D'(α)`. -/
+theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hfac : D = Di * laurentE D Di 1) (hcopE : IsCoprime (laurentE D Di 1) Di)
+    (hcopD : IsCoprime (derivative Di) Di) (hE : (laurentE D Di 1).eval α ≠ 0)
+    (hD' : (derivative Di).eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α = A.eval α / (derivative D).eval α := by
+  rw [eval_laurentH_one_one hDi hα hcopE hcopD hE hD']
+  congr 1
+  -- `D'(α) = D₁'(α)·E₁(α)`: differentiate `D = D₁·E₁`, the `D₁·E₁'` term vanishes at the root `α`
+  conv_rhs => rw [hfac, derivative_mul, Polynomial.eval_add, Polynomial.eval_mul,
+    Polynomial.eval_mul, hα, zero_mul, add_zero]
+  rw [mul_comm]
+
+/-! ## Restatements against the book's wording -/
+
+/-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
+example (D Di : K[X]) (i : ℕ) (hDi : Di.Monic) (hcop : IsCoprime (laurentE D Di i) Di) :
+    (bezoutE D Di i * laurentE D Di i) %ₘ Di = (1 : K[X]) %ₘ Di :=
+  bezoutE_mul_laurentE_modByMonic D Di i hDi hcop
+
+/-- Restatement of (2.10), the `Cᵢ` congruence `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. -/
+example (Di : K[X]) (hDi : Di.Monic) (hcop : IsCoprime (derivative Di) Di) :
+    (bezoutDeriv Di * derivative Di) %ₘ Di = (1 : K[X]) %ₘ Di :=
+  bezoutDeriv_mul_derivative_modByMonic Di hDi hcop
+
+/-- Restatement of (2.12): the engine `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`. -/
+example (A D Di : K[X]) (i j : ℕ) :
+    laurentH A D Di i j
+      = (laurentQ A Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
+  laurentH_def A D Di i j
+
+/-- Restatement of the `i=1` residue (book p.56): `H₁₁(α) = A(α)/D'(α)` at a simple root `α` of `D`. -/
+example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : D = Di * laurentE D Di 1) (hcopE : IsCoprime (laurentE D Di 1) Di)
+    (hcopD : IsCoprime (derivative Di) Di)
+    (hE : (laurentE D Di 1).eval α ≠ 0) (hD' : (derivative Di).eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α = A.eval α / (derivative D).eval α :=
+  eval_laurentH_one_one_eq_residue hDi hα hfac hcopE hcopD hE hD'
+
 end DeepWiki.SymbolicIntegration
