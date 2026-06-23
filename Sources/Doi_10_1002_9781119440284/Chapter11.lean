@@ -9,6 +9,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowed
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowedReindex
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -32,8 +33,12 @@ true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_pro
 `programOptimum_exactServer`: optimum `(∑T)+b/(minR)` for all `r`, via the date-split polytope the SFA LP
 dropped) AND in genuine per-server-WINDOWED form (`thm_11_1_exact_lp_windowed`/`programOptimum_windowed
 _last`: one date/window per server, optimum `(∑Tₕ)+b/(R_bottleneck)`, n=2 bridged to `exactChainOptimum`).
-The only residual is pure `Fin`↔`List` reindexing plumbing for the general-n windowed→analytic bridge —
-no further math.
+The general-n windowed→analytic bridge is now proved under the bottleneck-last hypothesis
+(`thm_11_1_exact_lp_windowed_bridge`/`programOptimum_windowed_last_eq_exactChainOptimum`: windowed-last
+optimum = `exactChainOptimum`, ANY n). The sole residual is the ARBITRARY-ORDER case — the windowed
+objective is the delay to the *last* server (`b/R_last`) vs `exactChainOptimum`'s `b/minR`, so the
+unrestricted identity needs a `Fin (n+1)` polytope-reindexing `Equiv` to move the bottleneck last (the
+analytic side is order-independent by `List.Perm`) — `[infra]`.
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -388,5 +393,25 @@ theorem thm_11_1_exact_lp_windowed {n : ℕ} {r b : ℝ} {R T : Fin (n + 1) → 
         (fun v => ((DeepWiki.windowedDelay (Fin.last n) v : ℝ) : EReal))
       = ((((∑ h, T h) + b / R (Fin.last n) : ℝ) : EReal)) :=
   DeepWiki.programOptimum_windowed_last hRpos hrR hb hT
+
+/-- **§11.1.3 windowed↔analytic bridge** (general n): the per-server-windowed LP optimum equals the
+analytic `exactChainOptimum` of the rate-latency chain — for ANY n, under the **bottleneck-last**
+hypothesis `∀ h, R(Fin.last n) ≤ R h` (both `(∑Tₕ)+b/(R_last)`, the `Fin`→`List` reindexing
+`sum_eq_head_add_tail` + `foldrInf_rate_eq_last`). Subsumes the n=2 case. The library's
+`DeepWiki.programOptimum_windowed_last_eq_exactChainOptimum`. ★ The hypothesis is load-bearing, not
+cosmetic: the windowed objective is the delay to the LAST server (`b/R_last`) while `exactChainOptimum`
+uses `b/minR`, equal iff the last server is the bottleneck. The UNRESTRICTED (arbitrary-order) identity
+is false without a reorder; it needs a `Fin (n+1)` polytope-reindexing `Equiv` on the windowed side
+(the analytic side is order-independent by `List.Perm`) — genuine `[infra]`, deferred. -/
+theorem thm_11_1_exact_lp_windowed_bridge {n : ℕ} (r b : ℝ≥0) (R T : Fin (n + 1) → ℝ≥0)
+    (hb : 0 < b) (hRpos : ∀ h, 0 < R h) (hbot : ∀ h, R (Fin.last n) ≤ R h)
+    (hrR : r ≤ R (Fin.last n)) :
+    programOptimum
+        (DeepWiki.WindowedFeasible (r : ℝ) (b : ℝ) (fun h => (R h : ℝ)) (fun h => (T h : ℝ)))
+        (fun v => ((DeepWiki.windowedDelay (Fin.last n) v : ℝ) : EReal))
+      = exactChainOptimum (tokenBucketArrival r b) (rateLatencyNN (R 0) (T 0))
+          ((List.ofFn (fun i : Fin n => (R i.succ, T i.succ))).map
+            (fun p => rateLatencyNN p.1 p.2)) :=
+  DeepWiki.programOptimum_windowed_last_eq_exactChainOptimum r b R T hb hRpos hbot hrR
 
 end DeepWiki.Dnc

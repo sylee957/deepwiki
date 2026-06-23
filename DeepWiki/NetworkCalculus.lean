@@ -123,6 +123,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowed
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowedReindex
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.Servers
