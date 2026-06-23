@@ -1,4 +1,5 @@
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.Tactic
 
 /-! # State-space models (§12.1)
@@ -48,6 +49,21 @@ theorem state_zero_noise (M : StateSpaceModel w v) (x₁ : Fin v → ℝ) (t : �
   induction t with
   | zero => simp [state, pow_zero, one_mulVec]
   | succ t ih => rw [state_succ, ih, Pi.zero_apply, add_zero, mulVec_mulVec, pow_succ']
+
+/-- **§12.4 — observability matrix** of `(F, G)`: the stacked matrix `[G; G F; …; G Fᵛ⁻¹]` whose block
+row `k` is `G Fᵏ`. Its column rank decides whether the initial state can be recovered from the
+noise-free observation sequence. -/
+def observabilityMatrix (M : StateSpaceModel w v) : Matrix (Fin v × Fin w) (Fin v) ℝ :=
+  fun p j => (M.G * M.F ^ (p.1 : ℕ)) p.2 j
+
+/-- Block row `k` of the observability matrix is `G Fᵏ`. -/
+theorem observabilityMatrix_apply (M : StateSpaceModel w v) (k : Fin v) (i : Fin w) (j : Fin v) :
+    M.observabilityMatrix (k, i) j = (M.G * M.F ^ (k : ℕ)) i j := rfl
+
+/-- **§12.4 — observability**: the state-space model `(F, G)` is **observable** if its observability
+matrix has full column rank `v` (equivalently, distinct initial states give distinct noise-free
+observation sequences `Gx, GFx, …`). -/
+def IsObservable (M : StateSpaceModel w v) : Prop := M.observabilityMatrix.rank = v
 
 end StateSpaceModel
 

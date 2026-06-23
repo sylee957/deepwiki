@@ -37,8 +37,13 @@ the Kalman recursions still compute the Gaussian likelihood of the realized obse
 /-! ## §12.4 Controllability and Observability (p.491)
 The controllability and observability of a state-space representation, and their role in
 determining the minimal dimension of a representation (Proposition 12.4.3, relating controllability
-to the ARMA polynomials `Φ(B)` and `Θ(B)`); the matrix theory is tractable but is not formalized
-here. -/
+to the ARMA polynomials `Φ(B)` and `Θ(B)`). **Observability** is formalized (`def_12_4_observable`);
+controllability needs an input-matrix structure the bare `StateSpaceModel` does not carry. -/
+
+/-- **§12.4 — observability**: the state-space model `(F, G)` is observable iff its observability
+matrix `[G; GF; …; GFᵛ⁻¹]` (`observabilityMatrix`) has full column rank `v` — distinct initial states
+give distinct noise-free observation sequences. The library's `StateSpaceModel.IsObservable`. -/
+abbrev def_12_4_observable := @DeepWiki.TimeSeries.StateSpaceModel.IsObservable
 
 /-! ## §12.5 Recursive Bayesian State Estimation (p.496)
 Recursive Bayesian filtering propagates the conditional distribution of the state, computing
@@ -52,7 +57,7 @@ smoothing recursion [infra]
 §12.3: the Gaussian likelihood of the realized observations via the missing-data Kalman recursion (eq
 12.3.6) [infra]; Example 12.3.1 (ARMA/ARIMA with missing values) [infra]
 §12.4: Proposition 12.4.3 (controllability/observability and the minimal-representation dimension)
-[deferred]; the controllability and observability definitions [deferred]
+[deferred]; the controllability definition (needs an input-matrix structure) [deferred]
 §12.5: recursive Bayesian state estimation (the conditional-distribution integral recursions) [infra]
 (The state-space model and its deterministic recursions (def 12.1.1) are done; the Kalman recursions
 rest on the L²-projection operator, not yet built; the §12.4 matrix theory is reachable.) -/
