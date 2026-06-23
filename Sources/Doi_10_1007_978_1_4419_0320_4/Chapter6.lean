@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.LinearProcessFullCLT
 import DeepWiki.TimeSeries.DeltaMethod
 import DeepWiki.TimeSeries.MDependence
+import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.StochasticOrder
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
@@ -79,12 +80,12 @@ obtained from the `L²` bound `‖√n X̄ₙ‖₂ ≤ C` (so `‖X̄ₙ‖₂ 
 measure. -/
 alias prop_6_3_2 := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_wlln
 
-/-- **§6.4 Example 6.4.2 — the (one-dimensional) delta method**: if `Xₙ →ᵖ a`, the standardized
+/-- **§6.4 Proposition 6.4.1 — the (one-dimensional) delta method**: if `Xₙ →ᵖ a`, the standardized
 `√n (Xₙ − a)` converges in distribution to `Y₀`, and `g` is differentiable at `a`, then
 `√n (g Xₙ − g a) ⇒ g'(a) · Y₀` (so for `Y₀ ~ N(0, σ²)`, the limit is `N(0, g'(a)² σ²)`). The
 library's `delta_method` — the asymptotic-normality transfer for smooth functionals, the §6.4 tool
 behind the sample-autocorrelation limit theory (Bartlett, §7.2). -/
-alias example_6_4_2 := DeepWiki.TimeSeries.delta_method
+alias prop_6_4_1 := DeepWiki.TimeSeries.delta_method
 
 /-- **§6.4 Definition 6.4.3 — m-dependence**: a process `X` is `m`-dependent if any two finite blocks
 separated by more than `m` time steps are independent. The library's `IsMDependent` (with its
@@ -93,12 +94,29 @@ sequence is `m`-dependent for every `m`, being `0`-dependent); the hypothesis of
 limit theorem for dependent processes. -/
 abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 
+/-- **§6.4 Theorem 6.4.2 — the central limit theorem for strictly stationary `m`-dependent sequences**:
+for centered `L²` strictly-stationary `m`-dependent `{Xₜ}` with `vₘ = γ(0) + 2∑_{j=1}^m γ(j) = ∑_{|h|≤m} γ(h)`,
+the standardized sample mean `√n X̄ₙ` is `AN(0, vₘ)`, i.e. `√n X̄ₙ ⇒ N(0, vₘ)`. The library's
+`IsMDependent.tendstoInDistribution_sqrt_sampleMean` (part (ii); the limit `√vₘ · G` for a standard
+normal `G`), proved by Bernstein's big-block/small-block method. Part (i), `n · Var(X̄ₙ) → vₘ`, is
+`tendsto_nsmul_variance_sampleMean_of_mDependent`. -/
+alias thm_6_4_2 := DeepWiki.TimeSeries.IsMDependent.tendstoInDistribution_sqrt_sampleMean
+
+/-- **§6.4 Theorem 6.4.2(i) — the limiting variance**: `n · Var(X̄ₙ) → vₘ = ∑_{|h| ≤ m} γ(h)` for a
+strictly stationary `m`-dependent (indeed any summable-acvf weakly stationary) sequence. The library's
+`tendsto_nsmul_variance_sampleMean_of_mDependent`. -/
+alias thm_6_4_2_i := DeepWiki.TimeSeries.tendsto_nsmul_variance_sampleMean_of_mDependent
+
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
-`clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
-are done; the general `m`-dependent CLT needs a big-block/small-block construction)
-(Dominant blocker for the remaining items: the general dependent-process large-sample theory. The
-linear-process CLT — the main §6.4 engine for Chapter 7 — is now formalized via the double-limit
-theorem; the multivariate iid CLT `multivariate_iid_clt` is also available for Bartlett's formula.) -/
+§6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred];
+Example 6.4.3 (the MA(1) process `Xₜ = Zₜ − Zₜ₋₁` is `1`-dependent, with `√n X̄ₙ ⇒ N(0,0)` degenerate) [deferred];
+Example 6.4.4 (asymptotic normality of `X̄ₙ` for the MA(q) process via Theorem 6.4.2) [deferred];
+Definition 6.4.2 (asymptotic normality of a sequence of random `k`-vectors) [infra];
+Proposition 6.4.2 (linear images `B Xₙ` of an asymptotically normal sequence are asymptotically normal) [infra];
+Proposition 6.4.3 (the multivariate delta method) [infra]
+(The headline §6.4 results are done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
+CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`. The remaining items are the vector-AN
+framework (`Definition 6.4.2`/`Proposition 6.4.2`/`6.4.3`) and concrete worked examples; the multivariate
+iid CLT `multivariate_iid_clt` is available as the engine for the vector results.) -/
 
 end DeepWiki.Ts
