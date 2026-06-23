@@ -74,3 +74,23 @@ theorem tendsto_levyProkhorovDist_of_tendstoInDistribution
   refine hc.congr (fun i => ?_)
   rw [Function.comp_apply, LevyProkhorov.dist_probabilityMeasure_def]
   rfl
+
+/-- **Lévy–Prokhorov distance of laws tends to `0` ⟹ convergence in distribution** (separable
+codomain), the converse of `tendsto_levyProkhorovDist_of_tendstoInDistribution`. Given measurability
+of the variables, `levyProkhorovDist (law (X i)) (law Z) → 0` rebuilds the abstract
+`TendstoInDistribution`. The exit from the metric form back to weak convergence. -/
+theorem tendstoInDistribution_of_tendsto_levyProkhorovDist
+    {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E] [BorelSpace E]
+    [TopologicalSpace.SeparableSpace E]
+    {ι : Type*} {l : Filter ι} {Ω₀ : Type*} [MeasurableSpace Ω₀] {ν : Measure Ω₀}
+    [IsProbabilityMeasure ν] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] {X : ι → Ω₀ → E} {Z : Ω' → E}
+    (hX : ∀ i, AEMeasurable (X i) ν) (hZ : AEMeasurable Z μ')
+    (h : Tendsto (fun i => levyProkhorovDist (ν.map (X i)) (μ'.map Z)) l (𝓝 0)) :
+    TendstoInDistribution X l Z (fun _ => ν) μ' := by
+  refine ⟨hX, hZ, ?_⟩
+  rw [(LevyProkhorov.probabilityMeasureHomeomorph (Ω := E)).isEmbedding.tendsto_nhds_iff,
+    tendsto_iff_dist_tendsto_zero]
+  refine h.congr (fun i => ?_)
+  rw [Function.comp_apply, LevyProkhorov.dist_probabilityMeasure_def]
+  rfl
