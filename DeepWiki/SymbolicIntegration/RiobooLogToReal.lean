@@ -160,4 +160,47 @@ example {R : Type*} [Field R] [Differential R] {ι : Type*} (s : Finset ι) (i :
 
 end LogToReal
 
+section LogToRealAtanRun
+variable {R : Type*} [Field R] [Differential R] [CharZero R]
+variable {K : Type*} [Field K] {φ : Polynomial K →+* R} {i : R}
+
+/-- **`LogToReal` full real output over conjugate pairs** (§2.8, p.69, the `log + arctan` shape): for a
+`Finset ι` of conjugate-pair data with `A k = φ(Apoly k)`, `B k = φ(Bpoly k)` (`(A k)²+(B k)² ≠ 0`) and
+per-pair `LogToAtan(Apoly k, Bpoly k)` runs `IsLogToAtanRun φ i (Apoly k) (Bpoly k) (L k)`, the
+sum-over-pairs real form is fully real-valued:
+`∑ₖ [(a k + i·b k)·logDeriv(φ(Apoly k) + i·φ(Bpoly k)) + (a k − i·b k)·logDeriv(φ(Apoly k) − i·φ(Bpoly k))]
+  = ∑ₖ [a k·logDeriv((φ(Apoly k))²+(φ(Bpoly k))²) + b k·atanDerivSum(L k)]` — the `i·logDeriv` term of
+each pair is replaced by the real arctan-derivative sum `atanDerivSum(L k) = ∑_{P∈L k} 2·P'/(1+P²)` via
+`isLogToAtanRun_correct` (`imagLog φ i = logDeriv((φA+iφB)/(φA−iφB))`). Combines `logToReal_sum` with the
+`LogToAtan` correctness, exhibiting `∑ₖ [a k·log((A k)²+(B k)²) + b k·(arctan sum)]`. -/
+theorem logToReal_sum_atanRun (hi : i ^ 2 = -1) (hφneg : ∀ p : Polynomial K, φ (-p) = -φ p)
+    {ι : Type*} (s : Finset ι) (a b : ι → R) (Apoly Bpoly : ι → Polynomial K) (L : ι → List R)
+    (hAB : ∀ k ∈ s, (φ (Apoly k)) ^ 2 + (φ (Bpoly k)) ^ 2 ≠ 0)
+    (hrun : ∀ k ∈ s, IsLogToAtanRun φ i (Apoly k) (Bpoly k) (L k)) :
+    ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (φ (Apoly k) + i * φ (Bpoly k))
+          + (a k - i * b k) * Differential.logDeriv (φ (Apoly k) - i * φ (Bpoly k)))
+      = ∑ k ∈ s, (a k * Differential.logDeriv ((φ (Apoly k)) ^ 2 + (φ (Bpoly k)) ^ 2)
+          + b k * atanDerivSum (L k)) := by
+  rw [logToReal_sum s hi a b (fun k => φ (Apoly k)) (fun k => φ (Bpoly k)) hAB]
+  refine Finset.sum_congr rfl fun k hk => ?_
+  -- replace the `i·logDeriv((φA+iφB)/(φA−iφB))` term with `atanDerivSum (L k)`
+  rw [isLogToAtanRun_correct hi hφneg (hrun k hk), imagLog]
+
+/-- Restatement of **`LogToReal`'s full real output** against the book wording (§2.8, p.69): with each
+conjugate pair's `LogToAtan` run computed, the `LogToReal` sum is the derivative of the fully real
+function `∑ₖ [a k·log((A k)²+(B k)²) + b k·(∑ arctan)]` — `a k·log(A²+B²)` plus the `b k`-weighted
+arctan-derivative sum of the pair. -/
+example {R : Type*} [Field R] [Differential R] [CharZero R] {K : Type*} [Field K]
+    {φ : Polynomial K →+* R} {i : R} (hi : i ^ 2 = -1) (hφneg : ∀ p : Polynomial K, φ (-p) = -φ p)
+    {ι : Type*} (s : Finset ι) (a b : ι → R) (Apoly Bpoly : ι → Polynomial K) (L : ι → List R)
+    (hAB : ∀ k ∈ s, (φ (Apoly k)) ^ 2 + (φ (Bpoly k)) ^ 2 ≠ 0)
+    (hrun : ∀ k ∈ s, IsLogToAtanRun φ i (Apoly k) (Bpoly k) (L k)) :
+    ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (φ (Apoly k) + i * φ (Bpoly k))
+          + (a k - i * b k) * Differential.logDeriv (φ (Apoly k) - i * φ (Bpoly k)))
+      = ∑ k ∈ s, (a k * Differential.logDeriv ((φ (Apoly k)) ^ 2 + (φ (Bpoly k)) ^ 2)
+          + b k * atanDerivSum (L k)) :=
+  logToReal_sum_atanRun hi hφneg s a b Apoly Bpoly L hAB hrun
+
+end LogToRealAtanRun
+
 end DeepWiki.SymbolicIntegration

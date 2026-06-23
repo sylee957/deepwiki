@@ -554,6 +554,16 @@ Rioboo's `LogToReal`. A `Finset.sum_congr` fold of `logToReal_conjugate_pair`. T
 `logToReal_sum`; `logToReal_sum_atan` is the arctan-substituted `B=1` form. -/
 abbrev logToReal_sum := @DeepWiki.SymbolicIntegration.logToReal_sum
 
+/-- **`LogToReal` full real output over conjugate pairs** (§2.8, p.69, the `log + arctan` shape of the
+output): with each pair `(Apoly k, Bpoly k)` carrying a `LogToAtan(Apoly k, Bpoly k)` run, the
+sum-over-pairs real form becomes fully real:
+`∑ₖ [(a k+i·b k)·d/dx log(φAₖ+i·φBₖ) + (a k−i·b k)·d/dx log(φAₖ−i·φBₖ)]
+  = ∑ₖ [a k·d/dx log((φAₖ)²+(φBₖ)²) + b k·atanDerivSum(L k)]` — each pair's complex-log term is the
+real arctan-derivative sum `∑_{P∈L k} 2·P'/(1+P²)`, exhibiting `∑ₖ [a k·log(A²+B²) + b k·(arctan sum)]`.
+Combines `logToReal_sum` with `isLogToAtanRun_correct` (`logToAtan_correct`). The library's
+`logToReal_sum_atanRun`. -/
+abbrev logToReal_sum_atanRun := @DeepWiki.SymbolicIntegration.logToReal_sum_atanRun
+
 /-! ## §2.6 The Czichowski Algorithm -/
 
 open Polynomial in
