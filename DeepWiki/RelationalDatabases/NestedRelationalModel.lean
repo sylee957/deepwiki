@@ -406,6 +406,33 @@ def NestedAlgExpr.eval : NestedAlgExpr Att V → NestedValue Att V
 @[simp] theorem NestedAlgExpr.eval_base (r : NestedValue Att V) :
     (NestedAlgExpr.base r).eval = r := rfl
 
+@[simp] theorem NestedAlgExpr.eval_union (e₁ e₂ : NestedAlgExpr Att V) :
+    (NestedAlgExpr.union e₁ e₂).eval = e₁.eval.union e₂.eval := rfl
+
+@[simp] theorem NestedAlgExpr.eval_diff (e₁ e₂ : NestedAlgExpr Att V) :
+    (NestedAlgExpr.diff e₁ e₂).eval = e₁.eval.diff e₂.eval := rfl
+
+@[simp] theorem NestedAlgExpr.eval_inter (e₁ e₂ : NestedAlgExpr Att V) :
+    (NestedAlgExpr.inter e₁ e₂).eval = e₁.eval.inter e₂.eval := rfl
+
+@[simp] theorem NestedAlgExpr.eval_product (e₁ e₂ : NestedAlgExpr Att V) :
+    (NestedAlgExpr.product e₁ e₂).eval = e₁.eval.product e₂.eval := rfl
+
+@[simp] theorem NestedAlgExpr.eval_proj (X : List Att) (e : NestedAlgExpr Att V) :
+    (NestedAlgExpr.proj X e).eval = e.eval.proj X := rfl
+
+@[simp] theorem NestedAlgExpr.eval_sel (P : NestedTuple Att V → Bool) (e : NestedAlgExpr Att V) :
+    (NestedAlgExpr.sel P e).eval = e.eval.sel P := rfl
+
+@[simp] theorem NestedAlgExpr.eval_nest (X : List Att) (B : Att) (e : NestedAlgExpr Att V) :
+    (NestedAlgExpr.nest X B e).eval = e.eval.nest X B := rfl
+
+@[simp] theorem NestedAlgExpr.eval_unnest (a : Att) (e : NestedAlgExpr Att V) :
+    (NestedAlgExpr.unnest a e).eval = e.eval.unnest a := rfl
+
+@[simp] theorem NestedAlgExpr.eval_rename (a b : Att) (e : NestedAlgExpr Att V) :
+    (NestedAlgExpr.rename a b e).eval = e.eval.rename a b := rfl
+
 open NestedValue in
 /-- **Nest and unnest are not mutually inverse** (§7.2): unnesting an *empty* relation-valued
 attribute drops the row entirely, and re-nesting cannot bring it back — so `ν ∘ μ` is not the
