@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.SampleAutocovariance
 import DeepWiki.TimeSeries.SampleMeanVariance
 import DeepWiki.TimeSeries.LinearProcessCLT
+import DeepWiki.TimeSeries.GeneralLinearProcessCLT
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 7: Estimation of the Mean and the Autocovariance Function
@@ -19,9 +20,10 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 /-! ## §7.1 Estimation of μ (p.218)
 The process mean `μ` is estimated by the sample mean `X̄ₙ = n⁻¹ ∑ₜ Xₜ` (the library's
 `sampleMean`). **Theorem 7.1.1** (asymptotic variance `n·Var(X̄ₙ) → ∑ⱼ γ(j)`, `eq_7_1_1`) is now
-formalized; **Theorem 7.1.2** (asymptotic normality of `X̄ₙ`) is formalized for a **finite `MA(q)`**
-process (`thm_7_1_2_maq`, the library's `maq_sampleMean_clt`); the general linear-process case needs
-the `m`-dependent central limit theorem and remains infra-blocked. -/
+formalized; **Theorem 7.1.2** (asymptotic normality of `X̄ₙ`) is formalized both for a **finite
+`MA(q)`** process (`thm_7_1_2_maq`) and for the **general causal linear process / `MA(∞)`**
+`Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` under `∑ⱼ |ψⱼ|·j < ∞` (`thm_7_1_2_arma`, covering causal ARMA). The full
+B&D hypothesis `∑ⱼ |ψⱼ| < ∞` (without the `·j` weight) needs the `m`-dependent CLT and remains open. -/
 
 /-- **Theorem 7.1.1 (asymptotic variance of the sample mean)**: for a weakly stationary process with
 summable autocovariance `γ`, `n · Var(X̄ₙ) → ∑ⱼ γ(j)` — the rescaled sample-mean variance converges
@@ -38,6 +40,13 @@ N(0, (∑θ)² σ²)` — B&D's exact statement for a finite moving average. The
 `maq_sampleMean_clt_mean` (the iid sample-mean CLT scaled by `∑θ`, with the moving-average
 perturbation removed by an `L²`-negligibility bridge; `maq_sampleMean_clt` is the `μ = 0` form). -/
 alias thm_7_1_2_maq := DeepWiki.TimeSeries.maq_sampleMean_clt_mean
+
+/-- **Theorem 7.1.2 (asymptotic normality, general causal `MA(∞)` / ARMA case)**: for the causal
+linear process `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` noise `Z`, with `∑ⱼ |ψⱼ|·j < ∞`
+(satisfied by every causal ARMA filter, whose `ψⱼ` decay geometrically), `√n X̄ₙ ⇒ (∑ψ) Y₀ =
+N(0, (∑ψ)² σ²)`. The library's `causalLinearProcess_sampleMean_clt` (the iid sample-mean CLT scaled
+by `∑ψ`, the `MA(∞)` perturbation removed by an `L²`-negligibility bridge). -/
+alias thm_7_1_2_arma := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_clt
 
 /-! ## §7.2 Estimation of γ(·) and ρ(·) (p.220) -/
 
@@ -64,8 +73,9 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§7.1: Theorem 7.1.2 (asymptotic normality of the sample mean) for a general linear process [infra]
-(the finite `MA(q)` case `thm_7_1_2_maq` is done; the general case needs the `m`-dependent CLT)
+§7.1: Theorem 7.1.2 (asymptotic normality of the sample mean) under the full B&D hypothesis
+`∑ⱼ |ψⱼ| < ∞` [infra] (the finite `MA(q)` case `thm_7_1_2_maq` and the general causal `MA(∞)`/ARMA case
+under `∑ⱼ |ψⱼ|·j < ∞` `thm_7_1_2_arma` are done; the weaker-summability full case needs the `m`-dependent CLT)
 §7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, Bartlett's formula) [infra]; Theorem 7.2.2
 (Bartlett's formula, general case) [infra]
 (Dominant blocker: the time-series central limit theorem of §6.4. The estimators eq 7.2.1/7.2.2 and
