@@ -80,4 +80,15 @@ abbrev info_order := @DeepWiki.MoreInfo
 /-- **§6.1**: a definite tuple's total row is maximal in the information order. -/
 abbrev info_order_definite_maximal := @DeepWiki.moreInfo_toNull_iff
 
-end DeepWiki.Rdb
+/-- **Definition 6.1** (§6.1, representation), the possible-worlds semantics: the set of definite
+tables a null-table denotes — its rows completed (nulls filled) in every way. -/
+abbrev rep_possible_worlds := @DeepWiki.rep
+
+/-- **§6.1**: a *possible answer* — a tuple in some possible world. -/
+abbrev possible_answer := @DeepWiki.PossibleAnswer
+
+/-- **§6.1**: a *certain answer* — a tuple in every possible world. -/
+abbrev certain_answer := @DeepWiki.CertainAnswer
+
+/-- **§6.1**: every certain answer is a possible answer (the representation is nonempty). -/
+abbrev certain_imp_possible := @DeepWiki.certainAnswer_imp_possibleAnswer

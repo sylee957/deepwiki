@@ -53,4 +53,33 @@ theorem moreInfo_toNull_iff (t : Tuple Ω Val) (nt : NullTuple Ω Val) :
   · intro h; funext a; exact h a (t a) rfl
   · rintro rfl; exact MoreInfo.refl _
 
+/-- The *representation* of a null-table (its set of possible definite worlds): the definite tables
+obtained by completing each null row to a definite tuple (filling its nulls), then taking the image.
+This is the possible-worlds semantics underlying Def 6.1's representation systems. -/
+def rep (T : NullTable Ω Val) : Set (Table Ω Val) :=
+  {r | ∃ f : NullTuple Ω Val → Tuple Ω Val,
+    (∀ nt ∈ T, MoreInfo nt (toNull (f nt))) ∧ r = f '' T}
+
+/-- A *possible answer*: a tuple present in some possible world. -/
+def PossibleAnswer (T : NullTable Ω Val) (t : Tuple Ω Val) : Prop := ∃ r ∈ rep T, t ∈ r
+
+/-- A *certain answer*: a tuple present in every possible world. -/
+def CertainAnswer (T : NullTable Ω Val) (t : Tuple Ω Val) : Prop := ∀ r ∈ rep T, t ∈ r
+
+/-- The representation is nonempty: filling every null with a default value gives a possible
+world. -/
+theorem rep_nonempty [Inhabited Val] (T : NullTable Ω Val) : (rep T).Nonempty := by
+  refine ⟨_, (fun nt a => (nt a).getD default), ?_, rfl⟩
+  intro nt _ a v h
+  simp [toNull, h]
+
+/-- Every certain answer is a possible answer (the representation being nonempty). -/
+theorem certainAnswer_imp_possibleAnswer [Inhabited Val] {T : NullTable Ω Val} {t : Tuple Ω Val}
+    (h : CertainAnswer T t) : PossibleAnswer T t := by
+  obtain ⟨r, hr⟩ := rep_nonempty T
+  exact ⟨r, hr, h r hr⟩
+
+/-- The null-table of a definite table (every row total). -/
+def toNullTable (r : Table Ω Val) : NullTable Ω Val := toNull '' r
+
 end DeepWiki
