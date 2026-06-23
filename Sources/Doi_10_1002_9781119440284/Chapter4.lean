@@ -27,6 +27,7 @@ import DeepWiki.NetworkCalculus.SpotClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureSelect
 import DeepWiki.NetworkCalculus.Containers
+import DeepWiki.NetworkCalculus.ContainerQuotient
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -52,9 +53,10 @@ period `a`, increment `va` — a book-misprint repair, the book prints `s·a`); 
 case (period `b`, right-anchored) remains `[infra]` (the dual infimum-selection).
 §4.4 containers: Definition 4.2 (container = curve-interval `[f̲,f̄]`) DONE (`def_4_2`/`Container`);
 Proposition 4.2 (same Legendre–Fenchel transform ↔ equal convex biconjugates) DONE (`prop_4_2`, both
-directions); Proposition 4.3 congruence is an equivalence relation DONE (`prop_4_3_setoid`), but its
-**quotient dioid `F↑/L` operations [4.7]–[4.9]** (`⊓`/`∗`/`⋆` well-defined on the quotient) remain
-`[infra]`; Definition 4.3 (canonical representation); Definition 4.4 (maximal uncertainty); Definition
+directions); Proposition 4.3 DONE — congruence is an equivalence (`prop_4_3_setoid`), `⊓` descends to the quotient
+`FmodL` (`prop_4_3_inf_congr`/`FmodL.inf`) and `∗` respects it at the representative level
+(`SameLegendre.legendreConv`); what remains is full `⊗`-descent (needs a proper subtype) and the
+closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; Definition 4.3 (canonical representation); Definition 4.4 (maximal uncertainty); Definition
 4.5 (inclusion functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all
 `[research]` (need the `F_acv` almost-concave class + asymptotic-slope `ρ` typing, not yet built);
 Remark 4.1. -/
@@ -831,6 +833,19 @@ operations [4.7]–[4.9] are the remaining part. The library's `DeepWiki.Contain
 `DeepWiki.Container.legendreSetoid`. -/
 theorem prop_4_3_setoid : Equivalence DeepWiki.Container.SameLegendre :=
   DeepWiki.Container.equivalence_sameLegendre
+
+/-- **Proposition 4.3** (§4.4, p.83), the quotient dioid `F↑/L`. The Legendre–Fenchel transform is a
+homomorphism, so the congruence `SameLegendre` respects the operations: `⊓` unconditionally
+(`SameLegendre.inf`, via `legendre_inf`) and convolution `∗` at the representative level under
+properness (`SameLegendre.legendreConv`, via `legendre (f∗g) = legendre f + legendre g`). The quotient
+`FmodL = Quotient legendreSetoid` carries the descended meet (`FmodL.inf`, `FmodL.inf_mk`). The
+library's `DeepWiki.Container.SameLegendre.inf` / `.legendreConv` / `DeepWiki.Container.FmodL`. (Full
+`⊗`-descent needs a proper subtype; closure-congruence needs a closure↔Legendre identity — both
+`[infra]`.) -/
+theorem prop_4_3_inf_congr {f f' g g' : ℝ≥0 → EReal}
+    (hf : DeepWiki.Container.SameLegendre f f') (hg : DeepWiki.Container.SameLegendre g g') :
+    DeepWiki.Container.SameLegendre (f ⊓ g) (f' ⊓ g') :=
+  DeepWiki.Container.SameLegendre.inf hf hg
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
