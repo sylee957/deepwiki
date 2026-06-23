@@ -3594,4 +3594,51 @@ theorem mem_dividedIdeal_iff {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin
     funext (fun i => gbCommonYFactor_mul_dividedBasis hB hne i)
   rw [hfun, range_sortedByYDegree hB, hB.isGroebnerBasis.span_eq]
 
+/-- **Leading-monomial domination for the divided ideal** (the `hdvd` core of the GB property). For
+nonzero `g ∈ I'`, `H·g` is a nonzero element of the original GB ideal `I`, so some basis element
+`sortedByYDegree hB i_b = H·(fᵢ_b/H)` has `lex.degree ≤ lex.degree (H·g)`; cancelling the common
+`lex.degree H` shift (`degree_mul`, domain) gives `lex.degree (monicDividedBasis i_b) ≤ lex.degree g`. -/
+theorem exists_degree_le_dividedIdeal {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {g : MvPolynomial (Fin 2) K} (hgI : g ∈ dividedIdeal hB hne) (hg0 : g ≠ 0) :
+    ∃ b ∈ Set.range (monicDividedBasis hB hne),
+      MonomialOrder.lex.degree b ≤ MonomialOrder.lex.degree g := by
+  have hH : gbCommonYFactor hB ≠ 0 := gbCommonYFactor_ne_zero hB hne
+  have hHg0 : gbCommonYFactor hB * g ≠ 0 := mul_ne_zero hH hg0
+  have hHgI : gbCommonYFactor hB * g ∈ I := (mem_dividedIdeal_iff hB hne g).mp hgI
+  obtain ⟨b, hbB, _, hble⟩ := hB.isGroebnerBasis.exists_degree_le hHgI hHg0
+  -- `b = sortedByYDegree hB i_b = H · dividedBasis i_b`.
+  rw [← range_sortedByYDegree hB] at hbB
+  obtain ⟨ib, rfl⟩ := hbB
+  rw [← gbCommonYFactor_mul_dividedBasis hB hne ib] at hble
+  -- cancel the `lex.degree H` shift on both sides.
+  rw [degree_mul hH (dividedBasis_ne_zero hB hne ib), degree_mul hH hg0,
+    add_le_add_iff_left] at hble
+  exact ⟨monicDividedBasis hB hne ib, ⟨ib, rfl⟩,
+    (degree_monicDividedBasis hB hne ib).le.trans hble⟩
+
+/-- **The monic divided family is a Gröbner basis of the quotient ideal `I'`** (Lazard Thm 1, Part C):
+`IsGroebnerBasis lex I' {fᵢ/H}`. The leading coefficients are `1` (monic), the family generates `I'`
+(by definition), and leading-monomial domination holds (`exists_degree_le_dividedIdeal`), so
+`isGroebnerBasis_of_exists_leadingMonomial_le` applies. -/
+theorem isGroebnerBasis_dividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    IsGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+      (Set.range (monicDividedBasis hB hne)) := by
+  refine isGroebnerBasis_of_exists_leadingMonomial_le ?_ ?_ ?_
+  · -- `B' ⊆ I'`.
+    rintro _ ⟨i, rfl⟩
+    exact Ideal.subset_span ⟨i, rfl⟩
+  · -- unit leading coefficients (`= 1`).
+    rintro _ ⟨i, rfl⟩
+    rw [leadingCoeff_monicDividedBasis hB hne i]
+    exact isUnit_one
+  · -- leading-monomial domination.
+    rintro g hgI hg0
+    exact exists_degree_le_dividedIdeal hB hne hgI hg0
+
 end DeepWiki.SymbolicIntegration
