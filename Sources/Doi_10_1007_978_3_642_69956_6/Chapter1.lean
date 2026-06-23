@@ -19,8 +19,8 @@ or open-ended constructions, several with informal content:
 Ex 1.1: the fourth ABSTRACT constraint — `A` is the first letter of the English word for the
   `B`-value [external: no formal object for "the English word for an integer"; the other three
   constraints are done].
-Ex 1.4: formal definitions of the dynamic database constraints of `SDYDC` in Example 1.8 [deferred].
-Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [deferred].
+Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [external: the book states
+  them as "obvious"; the schemes here leave domains total].
 Ex 1.6: boolean functions for every constraint of Example 1.10 (HOTELDB, six relations) [deferred].
 Ex 1.8: a *second* database constraint (not equivalent to relation constraints) and a relation
   constraint that is a non-trivial consequence of the two — a non-trivial single-relation
@@ -229,5 +229,25 @@ abbrev ex_1_10_c6 := @DeepWiki.thirsty_c6
 /-- **Exercise 1.10** (§1.7, p.17), constraint 7 (`SDC`): liking a beer served in a bar visited by
 another drinker forces a common bar. -/
 abbrev ex_1_10_c7 := @DeepWiki.thirsty_c7
+
+/-- **Exercise 1.4** (§1.7, p.16): a `HOTELDB` database instance (the relations relevant to the
+`SDC`/`SDYDC` constraints). -/
+abbrev ex_1_4_hotelDb := @DeepWiki.HotelDbInst
+
+/-- **Exercise 1.4** (§1.7, p.16), SDYDC constraint 1: no visitor is deleted while `STAYS` still
+holds information about him. -/
+abbrev ex_1_4_noDeleteWithStay := @DeepWiki.sdydc_noDeleteWithStay
+
+/-- **Exercise 1.4** (§1.7, p.16), SDYDC constraint 2: a visitor's phone bills are all paid when
+he leaves the hotel. -/
+abbrev ex_1_4_billsPaidOnLeave := @DeepWiki.sdydc_billsPaidOnLeave
+
+/-- **Exercise 1.4** (§1.7, p.16), SDYDC constraint 3: a bath is never removed from a room (rooms
+may be annulled). -/
+abbrev ex_1_4_noBathRemoval := @DeepWiki.sdydc_noBathRemoval
+
+/-- **Exercise 1.4** (§1.7, p.16), SDYDC constraint 4: only the stay with the oldest `LEAV-DATE`
+may be removed from `STAYS`. -/
+abbrev ex_1_4_onlyOldestRemoved := @DeepWiki.sdydc_onlyOldestRemoved
 
 end DeepWiki.Rdb

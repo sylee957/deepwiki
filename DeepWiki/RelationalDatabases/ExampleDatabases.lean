@@ -255,4 +255,85 @@ def thirsty_c7 (db : ThirstyInst) : Prop :=
     ∃ v₁ ∈ db.visits, ∃ v₂ ∈ db.visits,
       vDrinker v₁ = lDrinker l ∧ vDrinker v₂ = vDrinker v ∧ vBar v₁ = vBar v₂
 
+/-! ## Example 1.8 — `SDYDC` dynamic database constraints (Exercise 1.4)
+The four dynamic database constraints of `DYHOTELDB = (HOTELDB, SDYDC)`, as predicates on a
+database evolution (a sequence of instances). Only the components each constraint mentions are
+read; values are integers (dates, room and visitor numbers; the `PAID?` flag is `1` = paid). -/
+
+/-- Attributes of `VISITORS`. -/
+abbrev visitorsAttrs : Finset String :=
+  {"VIS-NUMBER", "VIS-NAME", "VIS-STREET", "VIS-CITY", "VIS-COUNTRY"}
+
+/-- Attributes of `STAYS`. -/
+abbrev staysAttrs : Finset String :=
+  {"VIS-NUMBER", "ARRIV-DATE", "LEAV-DATE", "ROOM-STAY", "NUMBER-OF-ACCOMP-PERSONS", "BILL"}
+
+/-- Attributes of `PHONE-BILLS`. -/
+abbrev phoneBillsAttrs : Finset String :=
+  {"ROOM-NB", "TIME", "DATE", "DESTINATION", "PHBILL", "PAID?"}
+
+/-- Attributes of `ROOMS` (raw-tuple form for the hotel database bundle). -/
+abbrev hotelRoomsAttrs : Finset String := {"RN", "NOB", "BATH", "FLOOR", "RATE"}
+
+/-- Visitor number of a `VISITORS` tuple. -/
+def visNum (t : Tuple visitorsAttrs ℤ) : ℤ := t ⟨"VIS-NUMBER", by decide⟩
+
+/-- Visitor number of a `STAYS` tuple. -/
+def stayVisNum (t : Tuple staysAttrs ℤ) : ℤ := t ⟨"VIS-NUMBER", by decide⟩
+
+/-- Leave date of a `STAYS` tuple. -/
+def leavDate (t : Tuple staysAttrs ℤ) : ℤ := t ⟨"LEAV-DATE", by decide⟩
+
+/-- Room of a `STAYS` tuple. -/
+def roomStay (t : Tuple staysAttrs ℤ) : ℤ := t ⟨"ROOM-STAY", by decide⟩
+
+/-- Room number of a `PHONE-BILLS` tuple. -/
+def pbRoom (t : Tuple phoneBillsAttrs ℤ) : ℤ := t ⟨"ROOM-NB", by decide⟩
+
+/-- Paid flag of a `PHONE-BILLS` tuple (`1` = paid). -/
+def pbPaid (t : Tuple phoneBillsAttrs ℤ) : ℤ := t ⟨"PAID?", by decide⟩
+
+/-- Room number of a `ROOMS` tuple. -/
+def hrRoomNum (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"RN", by decide⟩
+
+/-- Bath flag of a `ROOMS` tuple (`1` = has a bath). -/
+def hrBath (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"BATH", by decide⟩
+
+/-- A `HOTELDB` database instance (the relations relevant to the dynamic and database
+constraints). -/
+structure HotelDbInst where
+  /-- The `VISITORS` relation. -/
+  visitors : Set (Tuple visitorsAttrs ℤ)
+  /-- The `STAYS` relation. -/
+  stays : Set (Tuple staysAttrs ℤ)
+  /-- The `PHONE-BILLS` relation. -/
+  phoneBills : Set (Tuple phoneBillsAttrs ℤ)
+  /-- The `ROOMS` relation. -/
+  rooms : Set (Tuple hotelRoomsAttrs ℤ)
+
+/-- **Exercise 1.4**, SDYDC constraint 1: no visitor may be deleted while `STAYS` still holds
+information about him — a deleted visitor has no remaining stay. -/
+def sdydc_noDeleteWithStay (seq : ℕ → HotelDbInst) : Prop :=
+  ∀ n, ∀ vis ∈ (seq n).visitors,
+    (∀ vis' ∈ (seq (n + 1)).visitors, visNum vis' ≠ visNum vis) →
+    (∀ stay ∈ (seq (n + 1)).stays, stayVisNum stay ≠ visNum vis)
+
+/-- **Exercise 1.4**, SDYDC constraint 2: all the phone bills of a visitor must be paid when he
+leaves — when a stay is removed, every phone bill for that room is paid. -/
+def sdydc_billsPaidOnLeave (seq : ℕ → HotelDbInst) : Prop :=
+  ∀ n, ∀ stay ∈ (seq n).stays, stay ∉ (seq (n + 1)).stays →
+    ∀ pb ∈ (seq n).phoneBills, pbRoom pb = roomStay stay → pbPaid pb = 1
+
+/-- **Exercise 1.4**, SDYDC constraint 3: a bath must not be removed from a room (rooms may,
+however, be annulled). -/
+def sdydc_noBathRemoval (seq : ℕ → HotelDbInst) : Prop :=
+  ∀ n, ∀ room ∈ (seq n).rooms, ∀ room' ∈ (seq (n + 1)).rooms,
+    hrRoomNum room = hrRoomNum room' → hrBath room = 1 → hrBath room' = 1
+
+/-- **Exercise 1.4**, SDYDC constraint 4: only the stay with the oldest `LEAV-DATE` may be removed
+from `STAYS` — a removed stay has the minimum leave date. -/
+def sdydc_onlyOldestRemoved (seq : ℕ → HotelDbInst) : Prop :=
+  ∀ n, ∀ stay ∈ (seq n).stays, stay ∉ (seq (n + 1)).stays →
+    ∀ stay' ∈ (seq n).stays, leavDate stay ≤ leavDate stay'
+
 end DeepWiki
