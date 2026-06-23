@@ -16,10 +16,9 @@ are layered on this next.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
-§7.2: Def 7.7 — unnest `μ`, nest `ν`, renaming `ρ`, union/difference/intersection, projection `π`,
-  selection `σ`, and `DecidableEq (NestedValue …)` (hand-written mutual `beq`) are done; remaining:
-  cartesian product, Def 7.8 (a nested algebra expression), and the nest/unnest-not-inverse fact
-  [infra].
+§7.2: Def 7.7 (all operators — `μ`, `ν`, `ρ`, `∪`, `−`, `∩`, `×`, `π`, `σ`, with `DecidableEq
+  (NestedValue …)`) and Def 7.8 (nested algebra expression + evaluator) are done; remaining: the
+  nest/unnest-not-inverse fact [infra].
 §7.3: Def 7.9 / 7.10 (functional and multivalued dependencies on nested instances), Theorem 7.1
   (`ν(ω; X)` satisfies the fd `(Ω − X) → X`), and the non-commutativity of nesting (Example
   7.10) [infra].
@@ -103,3 +102,13 @@ abbrev def_7_7_proj := @DeepWiki.NestedValue.proj
 
 /-- **Definition 7.7** (§7.2), nested *selection* `σ_P`. -/
 abbrev def_7_7_sel := @DeepWiki.NestedValue.sel
+
+/-- **Definition 7.7** (§7.2), nested *cartesian product* `×`. -/
+abbrev def_7_7_product := @DeepWiki.NestedValue.product
+
+/-- **Definition 7.8** (§7.2): a *nested algebra expression* — the syntax of the nested relational
+algebra (base relations, the operators of Def 7.7). -/
+abbrev def_7_8_nestedAlgExpr := @DeepWiki.NestedAlgExpr
+
+/-- **Definition 7.8** (§7.2): the value (denotational semantics) of a nested algebra expression. -/
+abbrev def_7_8_eval := @DeepWiki.NestedAlgExpr.eval

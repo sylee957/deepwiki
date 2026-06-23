@@ -357,4 +357,53 @@ open NestedValue in
 example : (rel [[("A", atom 1), ("B", atom 2)], [("A", atom 1), ("B", atom 3)]]).proj ["A"]
     = rel [[("A", atom 1)]] := by decide
 
+/-- **Cartesian product** `×` (§7.2): every row of the left concatenated with every row of the
+right (deduplicated). -/
+def NestedValue.product : NestedValue Att V → NestedValue Att V → NestedValue Att V
+  | .rel r1, .rel r2 => .rel ((r1.flatMap (fun t1 => r2.map (fun t2 => t1 ++ t2))).dedup)
+  | a, _ => a
+
+/-! ## Nested algebra expressions (§7.2, Definition 7.8) -/
+
+/-- **Definition 7.8** (§7.2): a *nested algebra expression* — the syntax of the nested relational
+algebra over base relations: union, difference, intersection, cartesian product, projection,
+selection, nest, unnest and renaming. -/
+inductive NestedAlgExpr (Att V : Type) where
+  /-- A base (constant) nested relation. -/
+  | base : NestedValue Att V → NestedAlgExpr Att V
+  /-- Union of two expressions. -/
+  | union : NestedAlgExpr Att V → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Difference of two expressions. -/
+  | diff : NestedAlgExpr Att V → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Intersection of two expressions. -/
+  | inter : NestedAlgExpr Att V → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Cartesian product of two expressions. -/
+  | product : NestedAlgExpr Att V → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Projection onto a set of attributes. -/
+  | proj : List Att → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Selection by a Boolean condition. -/
+  | sel : (NestedTuple Att V → Bool) → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Nest a set of attributes under a new relation-valued attribute. -/
+  | nest : List Att → Att → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Unnest a relation-valued attribute. -/
+  | unnest : Att → NestedAlgExpr Att V → NestedAlgExpr Att V
+  /-- Rename an attribute. -/
+  | rename : Att → Att → NestedAlgExpr Att V → NestedAlgExpr Att V
+
+/-- The value of a nested algebra expression (its denotational semantics). -/
+def NestedAlgExpr.eval : NestedAlgExpr Att V → NestedValue Att V
+  | .base r => r
+  | .union e₁ e₂ => (e₁.eval).union e₂.eval
+  | .diff e₁ e₂ => (e₁.eval).diff e₂.eval
+  | .inter e₁ e₂ => (e₁.eval).inter e₂.eval
+  | .product e₁ e₂ => (e₁.eval).product e₂.eval
+  | .proj X e => e.eval.proj X
+  | .sel P e => e.eval.sel P
+  | .nest X B e => e.eval.nest X B
+  | .unnest a e => e.eval.unnest a
+  | .rename a b e => e.eval.rename a b
+
+@[simp] theorem NestedAlgExpr.eval_base (r : NestedValue Att V) :
+    (NestedAlgExpr.base r).eval = r := rfl
+
 end DeepWiki
