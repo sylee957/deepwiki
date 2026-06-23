@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.HermiteCompute
+import Mathlib.FieldTheory.RatFunc.Basic
 
 /-! # Correctness of the computable engine (`toPoly` agreement bridge)
 The `*Compute` engine (`CPoly := List ℚ`, `cdivmod`/`cgcdExt`/…) is validated *pointwise* by
@@ -376,5 +377,25 @@ theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : CPoly), cgcdTerminates fuel
       refine ⟨?_, hgb⟩
       rw [hdiv]
       exact dvd_add (hgb.mul_left _) hgr
+
+/-- **Rational function** read of a `QFun` into `RatFunc ℚ`: `(num, den) ↦ toPoly num / toPoly den`. -/
+noncomputable def toQFun (x : QFun) : RatFunc ℚ :=
+  algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.1) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.2)
+
+/-- **`qadd` realizes rational-function addition** (for nonzero denominators): `toQFun (qadd x y) =
+toQFun x + toQFun y` in `RatFunc ℚ`. So the Hermite reduction's rational-part accumulation `qadd` is
+honest `ℚ(x)` addition, not just a `native_decide`-matched pair operation. -/
+theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
+    toQFun (qadd x y) = toQFun x + toQFun y := by
+  obtain ⟨a, b⟩ := x
+  obtain ⟨c, d⟩ := y
+  have hinj := IsFractionRing.injective ℚ[X] (RatFunc ℚ)
+  have hb' : algebraMap ℚ[X] (RatFunc ℚ) (toPoly b) ≠ 0 :=
+    (map_ne_zero_iff _ hinj).mpr hb
+  have hd' : algebraMap ℚ[X] (RatFunc ℚ) (toPoly d) ≠ 0 :=
+    (map_ne_zero_iff _ hinj).mpr hd
+  simp only [toQFun, qadd, toPoly_cadd, toPoly_cmul, map_add, map_mul]
+  rw [div_add_div _ _ hb' hd']
+  ring
 
 end DeepWiki.SymbolicIntegration.Compute
