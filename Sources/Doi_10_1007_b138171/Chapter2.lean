@@ -20,6 +20,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
+import DeepWiki.SymbolicIntegration.RealFieldExamples
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -38,23 +39,6 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.8: Rioboo's `LogToReal` and Thm 2.8.4 are COMPLETE. Done: the
-  `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB` real/imaginary splits
-  (`logToReal_split`/`exists_realImag_split_bivariate`), the conjugate-product bridge
-  `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root selection criterion
-  `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), the per-pair / sum-over-pairs real forms
-  (`logToReal_conjugate_pair`/`logToReal_sum`), the recursion's correctness given the partition
-  (`logToReal_correct_of_partition`), the σ-orbit PARTITION CONSTRUCTION (`logToReal_roots_partition`:
-  the σ-stable root `Multiset` partitions as real roots ⊎ `b>0`-rep conjugate pairs, the `b<0` block the
-  count-preserving `σ`-image of the `b>0` block over an ordered fixed field `K`), and hence the
-  **full `LogToReal` correctness over `R`'s roots with NO partition hypothesis**
-  (`logToReal_correct`, book (2.22)→(2.26)): `∑_{R(α)=0} α·logDeriv(S α) = ∑_{reals} a·logDeriv(S a) +
-  ∑_{b>0 pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`. Thm 2.8.4 is now FULL (`thm_2_8_4_full` =
-  `rioboo_coprime_lrt`): the LRT correctness `lazardRiobooTrager_output_isSimilar_gcd` discharges the
-  (2.27)/(2.28) cofactor hypotheses of `rioboo_coprime` — `S(a+ib,x)` is *similar* to (hence *associated*
-  to, hence divides) `gcd(D, C−(a+ib)D')`, so the cofactors `E₁+iE₂`, `F₁+iF₂` exist via the
-  real/imaginary decomposition `exists_realImag_decomp` over the conjugation `σ`.
-  STILL OPEN: Ex 2.8.2.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -691,6 +675,13 @@ the LRT correctness `lazardRiobooTrager_output_isSimilar_gcd` makes `S(a+i·b, x
 both `D` and `C−(a+i·b)·D'`; the cofactors `E, F` (2.27)/(2.28) thus exist, split into real+`i`·imaginary
 parts by `exists_realImag_decomp`, and `rioboo_coprime` closes. -/
 abbrev thm_2_8_4_full := @DeepWiki.SymbolicIntegration.rioboo_coprime_lrt
+
+/-- **Example 2.8.2** (§2.8, p.65), examples of REAL (formally real) fields: `ℝ`, `ℚ`, and `ℚ(ⁿ√p) ⊆ ℝ`
+(the field generated over `ℚ` by a real `n`-th root of a prime, `exists_real_nthRoot`) are real — the
+last via the pullback `isFormallyReal_of_injective` of formal reality along the embedding into `ℝ`;
+conversely `ℚ(√−2)` and positive-characteristic fields are NOT real. The library's
+`isFormallyReal_qadjoin_real` (+ `isFormallyReal_of_injective`, `not_isFormallyReal_of_charP`). -/
+abbrev ex_2_8_2 := @DeepWiki.SymbolicIntegration.isFormallyReal_qadjoin_real
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
