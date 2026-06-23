@@ -13,6 +13,7 @@ import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.InFieldIntegration
+import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -31,7 +32,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's real-rational-function algorithm (`LogToReal`/`LogToAtan` recursion); Ex 2.8.1; Ex 2.8.2.
-§2.9: "Recognizing Logarithmic Derivatives" criterion (Mařík: RT-resultant roots all integers); the full `IntegrateRationalFunction` in-field-integration algorithm.
+§2.9: "Recognizing Logarithmic Derivatives" criterion ⟹ direction (`logDeriv u = A/D` ⟹ residues integral — needs a residue-functional / order-at-a-pole layer; the ⟸ direction is `recognizingLogDerivatives_of_integer_residues`); the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -826,8 +827,27 @@ abbrev recognizingDerivatives := @DeepWiki.SymbolicIntegration.logPart_not_ratio
 /-- **Recognizing Derivatives, the criterion** (§2.9, p.71): for `f ∈ K(x)` with Hermite reduction
 `f = dg/dx + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f = du/dx` for some `u ∈ K(x)`
 **iff** `A = 0`. The library's `isRationalDerivative_iff`. (The "Recognizing Logarithmic Derivatives"
-criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — and the full
+criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — has its `⟸`
+direction in `recognizingLogDerivatives_of_integer_residues`; the `⟹` direction and the full
 `IntegrateRationalFunction` algorithm remain [deferred].) -/
 abbrev recognizingDerivatives_iff := @DeepWiki.SymbolicIntegration.isRationalDerivative_iff
+
+/-- **Recognizing Logarithmic Derivatives, `⟸` direction** (§2.9, p.72): for `f = A/D` with `D`
+squarefree (`D = ∏_{α∈s}(X−α)`, `deg A < #s`), if all the residues `A(α)/D'(α)` — the roots of the
+Rothstein–Trager resultant — are integers in `K`, then `f` is the logarithmic derivative of a *nonzero*
+rational function `u ∈ K(x)*` (`f = du/dx /u`). The explicit witness `u = ∏ₐ Gₐ^{nₐ}` is the product of
+the Rothstein–Trager factors raised to their integer residues. The library's
+`isLogDeriv_of_integer_residues`. -/
+abbrev recognizingLogDerivatives_of_integer_residues :=
+  @DeepWiki.SymbolicIntegration.isLogDeriv_of_integer_residues
+
+/-- **Recognizing Logarithmic Derivatives, the `⟹`-direction numerator ingredient** (§2.9, p.72):
+over an algebraically closed field, for nonzero `N`, `logDeriv(N) = N′/N = ∑_{β∈N.roots} 1/(X−β)` — the
+root sum with multiplicity. With `u = N/M`, `logDeriv u = ∑ (m_N(β) − m_M(β))/(X−β)`, so the residue at a
+simple pole `α` of `A/D = logDeriv u` is the integer `m_N(α) − m_M(α)` — the missing residue-functional
+step (residue at a simple pole = order at the point) is what completes the `⟹` direction. The library's
+`logDeriv_algebraMap_eq_sum_roots`. -/
+abbrev logDeriv_numerator_root_sum :=
+  @DeepWiki.SymbolicIntegration.logDeriv_algebraMap_eq_sum_roots
 
 end DeepWiki.Si
