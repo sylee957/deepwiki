@@ -38,8 +38,8 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
-  multivariate root machinery; the conjugate-pair real-form identity is done, `logToReal_conjugate_pair`);
-  Ex 2.8.2.
+  multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
+  `logToReal_conjugate_pair`/`logToReal_sum`); Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7 [partial — the regularity core (`ex_2_7_regularity`: the
   `i`-th LRT subresultant has `x`-degree exactly `i` at a multiplicity-`i` residue) and the required
@@ -544,6 +544,15 @@ conjugate-pair contribution into the fully real `a·log(A²+B²) + b·2·arctan(
 case). The library's `logToReal_conjugate_pair_atan`. -/
 abbrev logToReal_conjugate_pair_atan :=
   @DeepWiki.SymbolicIntegration.logToReal_conjugate_pair_atan
+
+/-- **`LogToReal` sum-over-conjugate-pairs real form** (§2.8, p.69, the correctness heart of the full
+algorithm): for a `Finset ι` of conjugate-pair data `(a k, b k, A k, B k)` (`(A k)²+(B k)² ≠ 0`), the
+sum `∑ₖ [(a k + i·b k)·d/dx log(A k + i·B k) + (a k − i·b k)·d/dx log(A k − i·B k)]` of conjugate-pair
+contributions equals `∑ₖ [a k·d/dx log((A k)²+(B k)²) + b k·d/dx (i·log((A k+i·B k)/(A k−i·B k)))]` — a
+**real** function's derivative `∑ₖ [a k·log((A k)²+(B k)²) + b k·LogToAtan(A k, B k)]`, the output of
+Rioboo's `LogToReal`. A `Finset.sum_congr` fold of `logToReal_conjugate_pair`. The library's
+`logToReal_sum`; `logToReal_sum_atan` is the arctan-substituted `B=1` form. -/
+abbrev logToReal_sum := @DeepWiki.SymbolicIntegration.logToReal_sum
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
