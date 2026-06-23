@@ -49,6 +49,39 @@ theorem NestedValue.atom_inj {v w : V}
     (h : (NestedValue.atom (Att := Att) v) = NestedValue.atom w) : v = w := by
   injection h
 
+/-- **Definition 7.3** (§7.1): a *nested relation scheme* — the "type" of a nested value: either
+atomic, or a relation scheme assigning each attribute (column) its own nested sub-scheme. -/
+inductive NestedScheme (Att : Type) where
+  /-- The scheme of an atomic value. -/
+  | atomic : NestedScheme Att
+  /-- A nested relation scheme: a list of columns, each an attribute with its sub-scheme. -/
+  | relScheme : List (Att × NestedScheme Att) → NestedScheme Att
+
+mutual
+/-- **Conformance** (§7.1): a nested value *conforms to* a nested scheme — atoms to `atomic`, and a
+nested relation to a `relScheme` when each of its tuples conforms columnwise. -/
+def NestedValue.Conforms : NestedValue Att V → NestedScheme Att → Prop
+  | .atom _, .atomic => True
+  | .rel rows, .relScheme cols => NestedValue.ConformsRel rows cols
+  | _, _ => False
+/-- Every tuple of a nested relation conforms to the columns. -/
+def NestedValue.ConformsRel : NestedRel Att V → List (Att × NestedScheme Att) → Prop
+  | [], _ => True
+  | t :: rest, cols => NestedValue.ConformsTuple t cols ∧ NestedValue.ConformsRel rest cols
+/-- A tuple conforms to the columns: same attributes in order, each value conforming to its
+column's sub-scheme. -/
+def NestedValue.ConformsTuple : NestedTuple Att V → List (Att × NestedScheme Att) → Prop
+  | [], [] => True
+  | (a, v) :: t, (b, s) :: cols => a = b ∧ NestedValue.Conforms v s ∧ NestedValue.ConformsTuple t cols
+  | _, _ => False
+end
+
+@[simp] theorem NestedValue.conforms_atom_atomic (v : V) :
+    (NestedValue.atom (Att := Att) v).Conforms NestedScheme.atomic := trivial
+
+@[simp] theorem NestedValue.conformsRel_nil (cols : List (Att × NestedScheme Att)) :
+    NestedValue.ConformsRel ([] : NestedRel Att V) cols := trivial
+
 mutual
 /-- Boolean equality of nested values (and, mutually, of relations and tuples). `deriving
 DecidableEq` does not apply to this nested carrier, so equality is built by hand. -/

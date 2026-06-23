@@ -13,9 +13,9 @@ The carrier was redesigned (2026-06-23) to assoc-list tuples (`NestedTuple = Lis
 …)`, `rel : List NestedTuple`) so recursion works via `mutual` blocks (`map`/`depth` defined); the
 old function-valued tuple field could not be recursed through. The nested algebra and dependencies
 are layered on this next.
-§7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
-  nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
-  Def 7.6 (a flat relation instance as a special nested one) [infra].
+§7.1: Def 7.3 (nested relation scheme + conformance) and Def 7.6 (flat instance = `isFlat`) are
+  done; remaining: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 (primitive
+  nested relation scheme), Def 7.5 (a nested relation constraint) [infra].
 §7.2: Def 7.7 (all operators — `μ`, `ν`, `ρ`, `∪`, `−`, `∩`, `×`, `π`, `σ`, with `DecidableEq
   (NestedValue …)`) and Def 7.8 (nested algebra expression + evaluator) are done; remaining: the
   nest/unnest-not-inverse fact [infra].
@@ -40,6 +40,13 @@ abbrev def_7_4_nested_value := @DeepWiki.NestedValue
 
 /-- **Atomicity test** (§7.1): whether a nested value is atomic rather than a nested relation. -/
 abbrev nested_value_isAtom := @DeepWiki.NestedValue.isAtom
+
+/-- **Definition 7.3** (§7.1): a *nested relation scheme* — the type of a nested value (atomic, or
+a relation scheme of columns each with a sub-scheme). -/
+abbrev def_7_3_nestedScheme := @DeepWiki.NestedScheme
+
+/-- **§7.1** conformance: a nested value conforms to a nested scheme. -/
+abbrev nested_value_conforms := @DeepWiki.NestedValue.Conforms
 
 /-- **§7.1 carrier**: a nested tuple — an association list of attribute–nested-value pairs. -/
 abbrev nested_tuple := @DeepWiki.NestedTuple
