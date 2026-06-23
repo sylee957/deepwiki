@@ -263,4 +263,39 @@ theorem rateLatencyEReal_segTangent_le (f0 fs s ℓ : ℝ≥0) (pre post : List 
       rw [hexp]; linarith [hlowerR]
     · exact (convexSegEval v fs ((s, ℓ) :: post) (t - τ)).coe_nonneg
 
+/-! ## Assembling the full equality `f̲ = ⨆ᵢ β_{sᵢ, Tᵢ}`
+
+Combining the two directions: if every generator lies below the curve (`≤`) and at each point some
+generator reaches it (`≥`), the convex sup-of-tangents `convexNFEval gens` equals `↑f̲` everywhere.
+The concrete tangent generators (segment tangents + the asymptotic tangent) satisfy both. -/
+
+/-- **The convex sup is below the curve when every generator is.** If each `g ∈ gens` lies below
+`↑f̲` at `t`, so does their supremum `convexNFEval gens t`. (The `≤` half of the assembly.) -/
+theorem convexNFEval_le_of_forall_le (f0 fs : ℝ≥0) (segs gens : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0)
+    (hle : ∀ g ∈ gens,
+      rateLatencyEReal g.1 g.2 t ≤ (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal)) :
+    convexNFEval gens t ≤ (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  induction gens with
+  | nil => rw [convexNFEval_nil]; exact bot_le
+  | cons g gs ih =>
+      rw [convexNFEval_cons]
+      exact sup_le (hle g List.mem_cons_self) (ih (fun g' hg' => hle g' (List.mem_cons_of_mem _ hg')))
+
+/-- **Generic assembly of the convex tangent decomposition.** If every generator `g ∈ gens` lies
+below the curve (`β_g ≤ ↑f̲` everywhere) and at each point `t` *some* generator reaches it
+(`β_g(t) = ↑f̲(t)`), then `convexNFEval gens = ↑f̲` pointwise. (The `≤` is `convexNFEval_le_of_forall_le`;
+the `≥` is `le_convexNFEval_of_mem` at the reaching generator.) -/
+theorem convexNFEval_eq_of_le_of_reaches (f0 fs : ℝ≥0) (segs gens : List (ℝ≥0 × ℝ≥0))
+    (hle : ∀ g ∈ gens, ∀ t : ℝ≥0,
+      rateLatencyEReal g.1 g.2 t ≤ (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal))
+    (hreach : ∀ t : ℝ≥0, ∃ g ∈ gens,
+      rateLatencyEReal g.1 g.2 t = (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal))
+    (t : ℝ≥0) :
+    convexNFEval gens t = (((convexSegEval f0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  refine le_antisymm
+    (convexNFEval_le_of_forall_le f0 fs segs gens t (fun g hg => hle g hg t)) ?_
+  obtain ⟨g, hg, hgt⟩ := hreach t
+  rw [← hgt]
+  exact le_convexNFEval_of_mem gens hg t
+
 end DeepWiki
