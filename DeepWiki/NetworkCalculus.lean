@@ -223,6 +223,7 @@ import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemLinearProgramWitness
 import DeepWiki.NetworkCalculus.TandemFifoMilp
 import DeepWiki.NetworkCalculus.TandemFifoMilpWitness
+import DeepWiki.NetworkCalculus.FifoFeedForwardExact
 import DeepWiki.NetworkCalculus.TandemWorstCaseExamples
 import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
 import DeepWiki.NetworkCalculus.ServersResidualGpsStrict
