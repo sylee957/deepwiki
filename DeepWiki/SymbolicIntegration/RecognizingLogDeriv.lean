@@ -410,4 +410,45 @@ example [IsAlgClosed K] (A D : K[X]) (hD : D.Separable) (u : RatFunc K) (hu : u 
     ∃ n : ℤ, A.eval α / (derivative D).eval α = (n : K) :=
   integer_residues_of_isLogDeriv A D hD u hu hlog α hα
 
+/-- `nodal s id = ∏_{α∈s}(X − α)` is separable: a product of distinct linear factors. -/
+theorem separable_nodal (s : Finset K) : (Lagrange.nodal s id).Separable := by
+  rw [Lagrange.nodal_eq]
+  exact separable_prod_X_sub_C_iff'.mpr (fun x _ y _ h => h)
+
+open scoped Classical in
+open scoped Differential in
+/-- **Recognizing logarithmic derivatives, the criterion** (Bronstein §2.9, p.72, Mařík — both
+directions): over an algebraically closed field, for squarefree `D = ∏_{α∈s}(X − α)` (`s` the distinct
+roots) and `deg A < #s`, the proper fraction `A/D` is the logarithmic derivative of some nonzero
+`u ∈ K(x)*` **iff** every residue `A(α)/D'(α)` (`α ∈ s`) is an integer in `K`. The `⟹` is
+`integer_residues_of_isLogDeriv` (specialized to `D = nodal s id`, whose roots are `s` and which is
+separable by `separable_nodal`); the `⟸` is `isLogDeriv_of_integer_residues` (the explicit
+`∏ₐ Gₐ^{nₐ}` witness). -/
+theorem isLogDeriv_iff_integer_residues [IsAlgClosed K] (s : Finset K) (A : K[X])
+    (hA : A.degree < s.card) :
+    (∃ u : RatFunc K, u ≠ 0 ∧
+        algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+          = Differential.logDeriv u)
+      ↔ (∀ α ∈ s, ∃ n : ℤ,
+          A.eval α / eval α (derivative (Lagrange.nodal s id)) = (n : K)) := by
+  constructor
+  · rintro ⟨u, hu, hlog⟩ α hα
+    refine integer_residues_of_isLogDeriv A (Lagrange.nodal s id) (separable_nodal s) u hu hlog α ?_
+    exact Lagrange.eval_nodal_at_node (v := id) hα
+  · intro hint
+    obtain ⟨u, hu, hlog⟩ := isLogDeriv_of_integer_residues s A hA
+      (fun α hα => (hint α hα).imp fun _ h => h.symm)
+    exact ⟨u, hu, hlog⟩
+
+open scoped Classical in
+open scoped Differential in
+-- The packaged criterion: `A/D = logDeriv u` (some `u ≠ 0`) ↔ all residues `A(α)/D'(α)` are integers.
+example [IsAlgClosed K] (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
+    (∃ u : RatFunc K, u ≠ 0 ∧
+        algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+          = Differential.logDeriv u)
+      ↔ (∀ α ∈ s, ∃ n : ℤ,
+          A.eval α / eval α (derivative (Lagrange.nodal s id)) = (n : K)) :=
+  isLogDeriv_iff_integer_residues s A hA
+
 end DeepWiki.SymbolicIntegration
