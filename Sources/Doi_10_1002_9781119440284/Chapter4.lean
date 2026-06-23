@@ -40,6 +40,7 @@ import DeepWiki.NetworkCalculus.PwlThetaDecomp
 import DeepWiki.NetworkCalculus.ConvexSegTangents
 import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.HullENN
+import DeepWiki.NetworkCalculus.MaxUncertaintyFinite
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -73,8 +74,9 @@ FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWi
 `IsAlmostConvex` = `F_acv`/`F_acx`, `IsConcaveEReal.isAlmostConcave`, `IsAsymptoticallyTyped` = the
 container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the `Θ^κ_τ ∗ g` decomposition) DONE
 (`def_4_3`/`IsCanonicalDecomp`/`Container.canonicalRep`); Definition 4.4 (maximal uncertainty) DONE
-(`def_4_4`: `Bmax = vDev(f̄,f̲)`, `Dmax = hDev(f̄,f̲)` at the rank abscissa; finiteness FROM canonical
-form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion functions
+(`def_4_4`: `Bmax = vDev(f̄,f̲)`, `Dmax = hDev(f̄,f̲)` at the rank abscissa) — and its finiteness FROM
+canonical form is now DONE too (`def_4_4_finite`/`MaxUncertaintyFinite`: `Bmax,Dmax < ⊤` for
+equal-final-slope convex PWL bounds, via past-`pwlRank` gap stabilization; `Dmax` needs `0<fs`); Definition 4.5 (inclusion functions
 `[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
 the `C_cv` concave-hull is now built (`eq_4_6_concaveHull`/`Ccv`: least concave majorant, eq.[4.6]
 core), so the `[∧]` upper-bound canonicalization is available; the unary closure inclusion `[*]` ([4.16]/[4.17]) is now done as inclusion-soundness
@@ -93,8 +95,8 @@ the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is now
 needs a closure↔Legendre identity.
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores). The remaining items are
 genuinely deferred: the book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full `F`-closure
-Thm 4.4 (→[LEC 14]); and two `[infra]` layers — the closure↔Legendre identity (blocks Lemma 4.10
-[4.12] and the quotient `⋆`) and Def 4.4 finiteness from the canonical form. Remark 4.1. -/
+Thm 4.4 (→[LEC 14]); and one `[infra]` layer — the closure↔Legendre identity (blocks Lemma 4.10
+[4.12] and the quotient `⋆`). Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
@@ -916,6 +918,23 @@ theorem def_4_4 (c : DeepWiki.Container) (Tlo Thi : ℝ≥0) :
     DeepWiki.Container.maximalUncertaintyData c Tlo Thi
       = vDevAt c.hi c.lo (DeepWiki.Container.bmaxAbscissa Tlo Thi) :=
   DeepWiki.Container.maximalUncertaintyData_eq c Tlo Thi
+
+/-- **Definition 4.4 finiteness** (§4.4, p.89): the maximal uncertainty of a container in canonical
+form is FINITE. When both bounds are convex PWL `convexSegEval` curves with the SAME final slope `fs`
+(the asymptotic typing `ρ_{f̲}=ρ_{f̄}`), past the joint rank `R = max(pwlRank …)` both grow at rate
+`fs`, so the vertical gap is constant past `R` and bounded before it: `Bmax = vDev(f̄,f̲) < ⊤`
+(`vDev_coeENN_lt_top`). The time domain `Dmax = hDev(f̄,f̲) < ⊤` likewise, with `0 < fs` (flat parallel
+asymptotes are never horizontally reachable) (`hDev_coeENN_lt_top`). This is the intrinsic
+rank/last-segment layer Def 4.4's finiteness needs. The library's
+`DeepWiki.MaxUncertaintyFinite.{vDev_coeENN_lt_top, hDev_coeENN_lt_top}` (on the `ℝ≥0∞` reading
+`coeENN`; the constant-gap core is `vDevAt_coeENN_eq_past_jointRank`). -/
+theorem def_4_4_finite (a b fs : ℝ≥0) (segA segB : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs) :
+    vDev (DeepWiki.MaxUncertaintyFinite.coeENN a fs segA)
+        (DeepWiki.MaxUncertaintyFinite.coeENN b fs segB) < ⊤
+      ∧ (hDev (DeepWiki.MaxUncertaintyFinite.coeENN a fs segA)
+          (DeepWiki.MaxUncertaintyFinite.coeENN b fs segB) : ℝ≥0∞) < ⊤ :=
+  ⟨DeepWiki.MaxUncertaintyFinite.vDev_coeENN_lt_top a b fs segA segB,
+    DeepWiki.MaxUncertaintyFinite.hDev_coeENN_lt_top a b fs segA segB hfs⟩
 
 /-- **Definition 4.5** + **Theorem 4.4** (§4.4.3, p.89–91): the container inclusion functions and
 their soundness. An operation lifts to containers via its bounds — meet `[∧]` `f[∧]g = [f̲⊓g̲, f̄⊓ḡ]`
