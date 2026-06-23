@@ -109,6 +109,7 @@ import DeepWiki.NetworkCalculus.NetworkTopology
 import DeepWiki.NetworkCalculus.StabilityNetwork
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.RealTimeCalculusService
+import DeepWiki.NetworkCalculus.RealTimeCalculusServiceCurve
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
 import DeepWiki.NetworkCalculus.PacketCurves

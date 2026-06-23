@@ -17,6 +17,7 @@ import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveWeaklyStrictStrictness
 import DeepWiki.NetworkCalculus.RealTimeCalculus
 import DeepWiki.NetworkCalculus.RealTimeCalculusService
+import DeepWiki.NetworkCalculus.RealTimeCalculusServiceCurve
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrict
 import DeepWiki.NetworkCalculus.ServiceCurveSufficientlyStrictResidual
 import Sources.Doi_10_1002_9781119440284.Source
@@ -27,7 +28,6 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§9.1: the RTC greedy-processor service-curve type (equations [9.4]-[9.6]) is now DONE at the real carrier (`rtc_service`: `Â ∗ βᵐ ≤ D̂ ≤ Â`, the Def 9.1 guarantee via Theorem 9.2); residual `[infra]`: the `Curve`/`IsMinimalServiceCurve` (EReal) lift needs a regularity-packaging bridge (monotone / left-continuous / null-at-origin — external to the Chasles framework).
 §9.3: Theorem 9.7 (the general intermediate-service-curve construction; only its δ_T case `lemma_9_5` is formalized) `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -102,9 +102,7 @@ greedy processor [9.4]-[9.6] (`IsRtcGreedy`) that guarantees min service curve `
 (`minConvReal_le_departure_of_isRtcGreedy`, via Theorem 9.2 transporting the var-capacity guarantee),
 and is causal `D̂ ≤ Â` (`departure_le_arrival_of_isRtcGreedy`) — the min-plus service pair
 `Â ∗ βᵐ ≤ D̂ ≤ Â`. Stated at the real carrier (faithful to Def 9.1's real increments
-`βᵐ(t−s) ≤ C[s,t]`); the `Curve`/`IsMinimalServiceCurve` (EReal) lift needs a regularity-packaging
-bridge (monotone/left-cont/null-at-origin — external to the Chasles framework), the residual sub-item.
-The library's `DeepWiki.minConvReal_le_departure_of_isRtcGreedy`. -/
+`βᵐ(t−s) ≤ C[s,t]`). The library's `DeepWiki.minConvReal_le_departure_of_isRtcGreedy`. -/
 theorem rtc_service {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ} {betaM : ℝ≥0 → ℝ}
     (hA : IsChasles A) (hC : IsChasles C) (hb0 : b 0 = 0) (hg : IsRtcGreedy A C D C' b)
     (hbdd : ∀ t : ℝ≥0, BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - A 0 u.1))
@@ -112,6 +110,23 @@ theorem rtc_service {A C D C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → �
     (t : ℝ≥0) :
     minConvReal (fun u => A 0 u) betaM t ≤ D 0 t :=
   minConvReal_le_departure_of_isRtcGreedy hA hC hb0 hg hbdd hAnn hβnn hguar t
+
+/-- **RTC greedy-processor service-curve type, `Curve`/EReal level** (§9.1, Def 9.1): the real-carrier
+guarantee `rtc_service` lifted to the library's `IsMinimalServiceCurve`. For `Curve`s `A D` whose values
+tie to the RTC readings (`(A t : ℝ) = Areal 0 t`, `(D t : ℝ) = Dreal 0 t` — the regularity bridge), the
+RTC greedy processor guaranteeing min service curve `βᵐ ≥ 0` offers the (min,plus) minimal service
+curve `↑βᵐ` for its singleton served pair. The carrier crossing `coe_minConvReal_eq_minConv` (`ℝ`
+`minConvReal` = `EReal` `minConv`, an equality via `IsGLB` transport through `ℝ→EReal`). The library's
+`DeepWiki.isMinimalServiceCurve_of_isRtcGreedy` (+ `minimalServiceRel_of_isRtcGreedy`). -/
+theorem rtc_service_curve {Areal C Dreal C' : ℝ≥0 → ℝ≥0 → ℝ} {b : ℝ≥0 → ℝ} {betaM : ℝ≥0 → ℝ}
+    {A D : Curve} (hAval : ∀ t, ((A t : ℝ≥0) : ℝ) = Areal 0 t)
+    (hDval : ∀ t, ((D t : ℝ≥0) : ℝ) = Dreal 0 t)
+    (hA : IsChasles Areal) (hC : IsChasles C) (hb0 : b 0 = 0) (hg : IsRtcGreedy Areal C Dreal C' b)
+    (hbdd : ∀ t : ℝ≥0, BddAbove (Set.range fun u : {u : ℝ≥0 // u ≤ t} => C 0 u.1 - Areal 0 u.1))
+    (hCmono : Monotone (fun u => C 0 u)) (hβnn : ∀ u, 0 ≤ betaM u)
+    (hguar : GuaranteesRtcMinService C betaM) :
+    IsMinimalServiceCurve (betaMEReal betaM) (fun A' D' => A' = A ∧ D' = D) :=
+  isMinimalServiceCurve_of_isRtcGreedy hAval hDval hA hC hb0 hg hbdd hCmono hβnn hguar
 
 /-- **Lemma 9.3** (§9.1.4, p.218): If β ≤ β̃ then S_asc(β,β̃) ⊆ S_mp(β): an adaptive server with β ≤ β̃ is a min-plus server for β. -/
 alias lemma_9_3 := adaptiveServiceRel_le_minimalServiceRel
