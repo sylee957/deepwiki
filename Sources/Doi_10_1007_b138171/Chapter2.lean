@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
+import DeepWiki.SymbolicIntegration.LaurentCoefficients
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -32,10 +33,14 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 rational `Hᵢⱼ` algorithm (the Bronstein–Salvy differential-variable Laurent-coefficient
-  construction, eqs 2.10–2.12) + the over-the-closure `Hᵢⱼ(α)/(x−α)ʲ` form [functional/infra: needs the
-  differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
-  `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
+§2.7: Thm 2.7.1 — the GENERAL correctness of the rational `Hᵢⱼ` engine: `Hᵢⱼ(α)` is the `1/(x−α)ʲ`
+  Laurent coefficient of `A/D` for every `i,j` (via the Taylor expansion of `hᵢ,α = (A/D)(x−α)ⁱ`,
+  book p.56) [deferred: needs the `Frac R` denominator-form invariant of the `Pᵢⱼ` recursion +
+  the Taylor-series argument over the algebraic closure]. (The differential-variable engine *itself*
+  — eqs 2.10–2.12, `bezoutE`/`bezoutDeriv`/`laurentNum`/`laurentQ`/`laurentH` — is now DEFINED
+  (`thm_2_7_1_laurentH`), and the `i=1` residue case `H₁₁(α) = A(α)/D'(α)` is PROVED
+  (`thm_2_7_1_residue`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
+  `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
@@ -888,8 +893,39 @@ abbrev thm_2_7_1_DadicExpansion := @DeepWiki.SymbolicIntegration.ratFunc_DadicEx
 over-the-closure form being the evaluation of `Hᵢⱼ` at the roots `α` of `Dᵢ`. The library's
 `ratFunc_completePartialFraction`, composing Mathlib's degree-bounded coprime split with the per-factor
 `Dᵢ`-adic expansion. The *rational algorithm* for the `Hᵢⱼ` (the differential-variable Laurent-coefficient
-construction, eqs 2.10–2.12) remains [functional/infra]. -/
+construction, eqs 2.10–2.12) is `thm_2_7_1_laurentH`. -/
 abbrev thm_2_7_1 := @DeepWiki.SymbolicIntegration.ratFunc_completePartialFraction
+
+/-- **Theorem 2.7.1, the differential-variable Laurent-coefficient engine** (§2.7, p.54–56, eqs 2.10–2.12,
+the Bronstein–Salvy rational `Hᵢⱼ` algorithm): `Hᵢⱼ = Qᵢⱼ·Bᵢ^{i−j+1}·Cᵢ^{2i−j} (mod Dᵢ)`, computing the
+partial-fraction Laurent coefficients by purely rational operations over `K` (no factoring of `Dᵢ`). Built
+over `R = MvPolynomial (Option ℕ) K` (variable `none` = `x`, `some n` = the `n`-th derivative `u^(n)` of a
+differential indeterminate) with `d/dx = mkDerivation`. The library's `laurentH`. -/
+noncomputable abbrev thm_2_7_1_laurentH := @DeepWiki.SymbolicIntegration.laurentH
+
+/-- **Theorem 2.7.1, eq 2.10** (§2.7, p.55): the extended-Euclidean Bézout cofactor `Bᵢ` with
+`Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)` (`Eᵢ = D /ₘ Dᵢ^i`), via `diophantineSolve`. The library's `bezoutE`, with
+congruence `bezoutE_mul_laurentE_modByMonic`. -/
+noncomputable abbrev eq_2_10_bezoutE := @DeepWiki.SymbolicIntegration.bezoutE
+
+/-- **Theorem 2.7.1, eq 2.10** (§2.7, p.55): the extended-Euclidean Bézout cofactor `Cᵢ` with
+`Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`, via `diophantineSolve`. The library's `bezoutDeriv`, with congruence
+`bezoutDeriv_mul_derivative_modByMonic`. -/
+noncomputable abbrev eq_2_10_bezoutDeriv := @DeepWiki.SymbolicIntegration.bezoutDeriv
+
+/-- **Theorem 2.7.1, eq 2.11** (§2.7, p.55): the Laurent numerator `Pᵢⱼ ∈ K(x)⟨u⟩` of
+`hᵢ^{i−j}/(i−j)! = Pᵢⱼ/(u^{2i−j}·Eᵢ^{i−j+1})`, defined by the quotient-rule recursion on the derivative
+count `i−j`. The library's `laurentNum` (with step `laurentNumStep`). -/
+noncomputable abbrev eq_2_11_laurentNum := @DeepWiki.SymbolicIntegration.laurentNum
+
+/-- **Theorem 2.7.1, the `Qᵢⱼ` substitution** (§2.7, p.55): `Qᵢⱼ = Pᵢⱼ(x, Dᵢ', Dᵢ''/2, …, Dᵢ^{i−j+1}/(i−j+1))
+∈ K[x]`, the `aeval` of `Pᵢⱼ` under `u^(k) ↦ Dᵢ^{(k+1)}/(k+1)`. The library's `laurentQ`. -/
+noncomputable abbrev thm_2_7_1_laurentQ := @DeepWiki.SymbolicIntegration.laurentQ
+
+/-- **Theorem 2.7.1, the `i=1` residue** (§2.7, p.56): the engine's simplest output, `H₁₁(α) = A(α)/D'(α)`
+— the Rothstein–Trager residue of `A/D` at a simple root `α` of `D = D₁·E₁`, since `B₁(α)=1/E₁(α)`,
+`C₁(α)=1/D₁'(α)` and `D'(α)=D₁'(α)·E₁(α)`. The library's `eval_laurentH_one_one_eq_residue`. -/
+abbrev thm_2_7_1_residue := @DeepWiki.SymbolicIntegration.eval_laurentH_one_one_eq_residue
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
