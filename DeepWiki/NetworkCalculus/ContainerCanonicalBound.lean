@@ -73,6 +73,13 @@ theorem mk_eq_mk_iff_biconj_eq (f g : ℝ≥0 → EReal) :
     FmodL.mk f = FmodL.mk g ↔ biconj f = biconj g :=
   (FmodL.mk_eq_mk).trans (sameLegendre_iff_biconj_eq f g)
 
+/-- **The canonical representative is a section of `ℱ↑/𝓛`**: `[Cvx f]_𝓛 = [f]_𝓛`.
+The convex hull picks the least element of each class, and `Cvx f` lies in
+`[f]_𝓛` (`legendre_biconj`), so passing to the canonical representative does not
+change the quotient class — `FmodL.mk ∘ biconj` is a section of `FmodL.mk`. -/
+@[simp] theorem mk_biconj (f : ℝ≥0 → EReal) : FmodL.mk (biconj f) = FmodL.mk f :=
+  FmodL.mk_eq_mk.mpr (legendre_biconj f)
+
 /-- **Lemma 4.10 [4.10], p. 86 — the meet.** `[f]_𝓛 ⊓ [g]_𝓛 = [f ⊓ g]_𝓛`
 iff `Cvx (Cvx f ⊓ Cvx g) = Cvx (f ⊓ g)`. The left side is the descended meet
 on representatives (`FmodL.inf_mk`); the biconditional is `mk_eq_mk_iff_biconj_eq`
