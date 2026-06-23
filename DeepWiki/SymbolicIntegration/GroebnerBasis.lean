@@ -2235,6 +2235,69 @@ def gbLeadingCoeffIsUnit {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) 
     (htop : Fin B.card) : Prop :=
   IsUnit (gbCommonContent hB htop)
 
+/-! ### The base obstruction is genuine: `f = xy + 1` (refuting a free base case)
+
+The descent base `C(g₀) ∣ lazardView f₀` cannot be discharged for free: it is **not** implied by any
+leading-coefficient unit fact, and is genuinely **false** for some reduced-GB-shaped minimal elements.
+The witness is `f = xy + 1` (with `y = X 0`, `x = X 1`): its `K[x][y]` view is `C(x)·Y + 1`, so its
+leading-`y`-coefficient is `g = x`, which is **not a unit** of `K[x]`, and `C(x) ∤ C(x)·Y + 1` (the
+constant term `1` is not divisible by `x`). Since `xy + 1` generates a reduced Gröbner basis whose only
+(hence minimal-`y`-degree) element it is, this refutes "`IsUnit (leadingYCoeff f₀)`" and the base
+divisibility alike — so Lazard's divide-out by the genuine `K[x][y]` common factor `P·Gₖ₊₁` is unavoidable
+(`I = (xy+1)` has `gₖ = x`, not even `K[x]`-content-unit, but `I = (y)` shows even `IsUnit gₖ` fails to
+suffice). -/
+
+/-- `xy + 1`'s leading-`y`-coefficient `x = X 0` does not divide `1` in `K[x]` (`= MvPolynomial (Fin 1)
+K`): evaluating at `x ↦ 0` would force `0 ∣ 1` in `K`. -/
+theorem leadingYCoeff_xyAddOne_not_dvd_one {K : Type*} [Field K] :
+    ¬ (X (0 : Fin 1) : MvPolynomial (Fin 1) K) ∣ 1 := by
+  intro h
+  have he : (MvPolynomial.eval (fun _ => (0 : K))) (X (0 : Fin 1))
+      ∣ (MvPolynomial.eval (fun _ => (0 : K))) 1 := map_dvd _ h
+  rw [MvPolynomial.eval_X, map_one, zero_dvd_iff] at he
+  exact one_ne_zero he
+
+/-- The `K[x][y]` view of `xy + 1` is `C(x)·Y + 1` (`x = X 0`, `y = X 1`). -/
+theorem lazardView_xyAddOne {K : Type*} [Field K] :
+    lazardView (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K)
+      = Polynomial.C (X 0) * Polynomial.X + 1 := by
+  have h1 : (X (1 : Fin 2) : MvPolynomial (Fin 2) K) = X (0 : Fin 1).succ := by congr 1
+  rw [lazardView, map_add, map_mul, map_one, finSuccEquiv_X_zero, h1, finSuccEquiv_X_succ]
+
+/-- `leadingYCoeff (xy + 1) = x` (`= X 0`): the coefficient of `Y¹` in `C(x)·Y + 1`. -/
+theorem leadingYCoeff_xyAddOne {K : Type*} [Field K] :
+    leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K) = X 0 := by
+  rw [leadingYCoeff, lazardView_xyAddOne]
+  have hCX : (Polynomial.C (X (0 : Fin 1) : MvPolynomial (Fin 1) K) * Polynomial.X).natDegree = 1 :=
+    Polynomial.natDegree_C_mul_X _ (MvPolynomial.X_ne_zero _)
+  have hd : (Polynomial.C (X (0 : Fin 1) : MvPolynomial (Fin 1) K) * Polynomial.X + 1).natDegree = 1 := by
+    rw [Polynomial.natDegree_add_eq_left_of_natDegree_lt
+      (by rw [hCX, Polynomial.natDegree_one]; decide), hCX]
+  rw [Polynomial.leadingCoeff, hd, Polynomial.coeff_add, Polynomial.coeff_C_mul,
+    Polynomial.coeff_X_one, mul_one, Polynomial.coeff_one, if_neg (by decide), add_zero]
+
+/-- **`leadingYCoeff f₀` need not be a unit** (refuting the cheap base case, unit half): `xy + 1` has
+`leadingYCoeff = x`, not a unit of `K[x]`. -/
+theorem not_isUnit_leadingYCoeff_xyAddOne {K : Type*} [Field K] :
+    ¬ IsUnit (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K)) := by
+  rw [leadingYCoeff_xyAddOne]
+  exact fun h => leadingYCoeff_xyAddOne_not_dvd_one (isUnit_iff_dvd_one.mp h)
+
+/-- **The base divisibility `C(g₀) ∣ lazardView f₀` genuinely fails** (refuting the cheap base case,
+divisibility half): for `f = xy + 1`, `C(leadingYCoeff f) = C(x)` does **not** divide
+`lazardView f = C(x)·Y + 1` — the constant term `1` is not divisible by `x`. So the Lemma 3 descent
+`lazard_lemma3_dvd` would be **false** for a reduced GB with this minimal element; the no-common-factor
+base is a real hypothesis, not a free lemma (Route to discharging it: Lazard's `P·Gₖ₊₁` divide-out). -/
+theorem not_C_leadingYCoeff_dvd_lazardView_xyAddOne {K : Type*} [Field K] :
+    ¬ Polynomial.C (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K))
+        ∣ lazardView (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K) := by
+  rw [leadingYCoeff_xyAddOne, lazardView_xyAddOne, Polynomial.C_dvd_iff_dvd_coeff]
+  intro h
+  have h0 := h 0
+  simp only [Polynomial.coeff_add, Polynomial.mul_coeff_zero, Polynomial.coeff_C,
+    Polynomial.coeff_X_zero, mul_zero, Polynomial.coeff_one_zero, zero_add] at h0
+  exact leadingYCoeff_xyAddOne_not_dvd_one h0
+
 /-- **Lazard's Lemma 3 descent, strengthened induction** (Part B). Assuming the **base divisibility**
 `C(g₀) ∣ lazardView f₀` at the minimal `y`-degree index (`hbase`, the genuinely necessary-and-sufficient
 form of "no common factor" — strictly weaker than `f₀ ∈ K[x]`, which it follows from via
@@ -2528,6 +2591,16 @@ example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
     IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
       (lazardView f)).leadingCoeff) :=
   leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd
+
+-- The base obstruction is genuine: `f = xy + 1` refutes a free base case.
+example {K : Type*} [Field K] :
+    ¬ IsUnit (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K)) :=
+  not_isUnit_leadingYCoeff_xyAddOne
+
+example {K : Type*} [Field K] :
+    ¬ Polynomial.C (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K))
+        ∣ lazardView (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K) :=
+  not_C_leadingYCoeff_dvd_lazardView_xyAddOne
 
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
