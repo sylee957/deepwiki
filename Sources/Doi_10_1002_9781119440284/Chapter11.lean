@@ -10,6 +10,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowed
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactWindowedReindex
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExactReorder
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -33,12 +34,14 @@ true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_pro
 `programOptimum_exactServer`: optimum `(∑T)+b/(minR)` for all `r`, via the date-split polytope the SFA LP
 dropped) AND in genuine per-server-WINDOWED form (`thm_11_1_exact_lp_windowed`/`programOptimum_windowed
 _last`: one date/window per server, optimum `(∑Tₕ)+b/(R_bottleneck)`, n=2 bridged to `exactChainOptimum`).
-The general-n windowed→analytic bridge is now proved under the bottleneck-last hypothesis
+The general-n windowed→analytic bridge is proved under the bottleneck-last hypothesis
 (`thm_11_1_exact_lp_windowed_bridge`/`programOptimum_windowed_last_eq_exactChainOptimum`: windowed-last
-optimum = `exactChainOptimum`, ANY n). The sole residual is the ARBITRARY-ORDER case — the windowed
-objective is the delay to the *last* server (`b/R_last`) vs `exactChainOptimum`'s `b/minR`, so the
-unrestricted identity needs a `Fin (n+1)` polytope-reindexing `Equiv` to move the bottleneck last (the
-analytic side is order-independent by `List.Perm`) — `[infra]`.
+optimum = `exactChainOptimum`, ANY n). The ARBITRARY-ORDER case is now also handled
+(`thm_11_1_exact_reorder`/`chainValue_perm`: the exact worst case `(∑T)+b/(minR)` is permutation-
+invariant — depends only on the server multiset — and `exists_perm_programOptimum_windowed_eq_exact
+ChainOptimum` relabels the bottleneck last). NB the in-place windowed-last identity stays order-DEPENDENT
+(`b/R_last` vs `b/minR`); the manifestly order-independent exact LP is the collapsed `thm_11_1_exact_lp`.
+Ch11's §11.1 LP-optimum-=-worst-case is now COMPLETE (exact value, exact LP in 3 forms, order-independence).
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -413,5 +416,20 @@ theorem thm_11_1_exact_lp_windowed_bridge {n : ℕ} (r b : ℝ≥0) (R T : Fin (
           ((List.ofFn (fun i : Fin n => (R i.succ, T i.succ))).map
             (fun p => rateLatencyNN p.1 p.2)) :=
   DeepWiki.programOptimum_windowed_last_eq_exactChainOptimum r b R T hb hRpos hbot hrR
+
+/-- **§11.1.3 arbitrary-order reorder** (the order-independence of the exact tandem worst case). The
+exact worst-case delay depends only on the server MULTISET: `chainValue_perm` — for permuted server
+lists `servers₁ ~ servers₂`, the closed form `(∑Tₕ)+b/(minₕRₕ)` is equal (latency sum via
+`List.Perm.sum_eq`, rate-min via the comm/assoc `⊓`-fold). So for ANY tandem (no bottleneck-last
+hypothesis) there is a relabeling putting the bottleneck last whose windowed LP computes the exact
+order-independent worst case (`exists_perm_programOptimum_windowed_eq_exactChainOptimum`). The library's
+`DeepWiki.chainValue_perm` (+ the relabeling bridge). ★ NB the literal in-place windowed-last identity
+stays order-DEPENDENT (windowed `b/R_last` vs exact `b/minR`), so arbitrary order is handled by this
+reorder, not by an in-place reindexing; the manifestly order-independent exact LP is the COLLAPSED form
+`thm_11_1_exact_lp`. -/
+theorem thm_11_1_exact_reorder (b : ℝ≥0) {servers₁ servers₂ : List (ℝ≥0 × ℝ≥0)}
+    (hperm : List.Perm servers₁ servers₂) :
+    DeepWiki.chainValue b servers₁ = DeepWiki.chainValue b servers₂ :=
+  DeepWiki.chainValue_perm b hperm
 
 end DeepWiki.Dnc
