@@ -2567,6 +2567,118 @@ theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero {K : Type*} [Fiel
         S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
   lazard_Pk_eq_Rk_Sk_of_sortedByYDegree hB (baseDvd_of_degreeOf_zero hB hbase) i
 
+/-! ## Part B: the no-common-factor base, and the genuine `K[x][y]` divide-out obstruction
+
+Lazard (1985), Lemma 3 (p.263): *if the `fᵢ` have no common factor, then `f₀ ∈ K[x]` and `gₖ = 1`*.
+The mechanism is the `y`-**primitive part** `P := primPart(lazardView f₀)`. Lazard shows `P` divides
+every `fᵢ` by an induction that feeds `(gᵢ/g_{i+1})·fᵢ ∈ (fᵢ,…,f₀)` through the IH and then strips
+the `K[x]`-scalar `gᵢ/g_{i+1}` by Gauss's lemma (a primitive polynomial dividing `C(c)·g` divides
+`g`). No common factor then forces `P` to be a unit, i.e. `f₀ ∈ K[x]` (`natDegree = 0`).
+
+This section formalizes the reusable arithmetic of that route — the **general-`K[x][y]`-divisor**
+propagation (the `C d`-specialized descent of Part A↑ generalized to any divisor `P`) and the
+**Gauss-lemma scalar-strip** — and pins the precise remaining obstruction. The single missing input
+(`§2.6 residual`) is `P ∣ lazardView fᵢ` for *all* `i` (the structure induction), whose step needs `P`
+to survive the `y`-shift `X^{shift}` inside `(gᵢ/g_{i+1})·fᵢ − y^{shift}·f₀`; unlike a `K[x]` constant
+`C d` (`C_dvd_of_C_dvd_X_pow_mul`), a general `P` does **not** survive `X^{shift}` (e.g. `X ∣ X·p`,
+`X ∤ p`). Lazard sidesteps this by reducing `(gᵢ/g_{i+1})·fᵢ` as an ideal member (degree `< d(i+1)`)
+rather than peeling `X^{shift}`, so the structure induction is over GB-reductions of the whole
+combination — the genuinely research-grade core left open here. -/
+
+/-- **General-divisor sum propagation** (Part B core, generalizing `C_dvd_lazardView_sum` off the
+`C d` form). If a divisor `P : K[x][y]` divides `lazardView b` for every `b` in the support of a
+finite `K[x][y]`-combination `R = ∑ b ∈ s, h b · b`, then `P ∣ lazardView R` — `lazardView` is a ring
+hom, so `P` divides every term and hence the sum. -/
+theorem dvd_lazardView_sum {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
+    P ∣ lazardView (∑ b ∈ s, h b * b) := by
+  rw [lazardView, map_sum]
+  refine Finset.dvd_sum (fun b hb => ?_)
+  rw [map_mul]
+  exact Dvd.dvd.mul_left (hdvd b hb) _
+
+/-- **General-divisor bounded-representation propagation** (Part B core, generalizing
+`C_dvd_lazardView_of_mem_of_dvd_bounded` off the `C d` form). If `R ∈ I` is nonzero and a divisor
+`P : K[x][y]` divides `lazardView b` for every basis element `b` of `y`-degree `≤ degreeOf 0 R`
+(`exists_yDegree_bounded_representation` selects those as the only contributors), then `P ∣ lazardView
+R`. This is the IH-aggregation step of Lazard's structure induction for a general `K[x][y]` factor. -/
+theorem dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {P : Polynomial (MvPolynomial (Fin 1) K)} {R : MvPolynomial (Fin 2) K}
+    (hRI : R ∈ I) (hR0 : R ≠ 0)
+    (hdvd : ∀ b ∈ B, degreeOf 0 b ≤ degreeOf 0 R → P ∣ lazardView b) :
+    P ∣ lazardView R := by
+  obtain ⟨g, hgsum, hgdeg⟩ := exists_yDegree_bounded_representation hB hRI hR0
+  rw [hgsum, lazardView, map_sum]
+  refine Finset.dvd_sum (fun b hb => ?_)
+  by_cases hbne : g b * b = 0
+  · rw [hbne, map_zero]; exact dvd_zero _
+  · rw [map_mul]
+    exact Dvd.dvd.mul_left (hdvd b hb (hgdeg b hb hbne)) _
+
+/-- **Gauss's lemma, scalar-strip form** (Part B core). A `y`-primitive `P : K[x][y]` dividing
+`C(c)·g` (a `K[x]`-scalar `c` times `g`) divides `g` itself: `P ∣ C(c)·g ⟹ P ∣ (C(c)·g).primPart =
+(C c).primPart · g.primPart` (a unit times `g.primPart`, `isUnit_primPart_C`/`primPart_mul`), and a
+primitive divisor of a primitive part divides the polynomial (`IsPrimitive.dvd_primPart_iff_dvd`). This
+is the step that peels the `K[x]`-factor `gᵢ/g_{i+1}` in Lazard's `primpart(f₀)`-divides-all induction. -/
+theorem isPrimitive_dvd_of_dvd_C_mul {K : Type*} [Field K]
+    {P g : Polynomial (MvPolynomial (Fin 1) K)} {c : MvPolynomial (Fin 1) K}
+    (hP : P.IsPrimitive) (hc : c ≠ 0) (hg : g ≠ 0) (hdvd : P ∣ Polynomial.C c * g) :
+    P ∣ g := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  have hCg0 : Polynomial.C c * g ≠ 0 :=
+    mul_ne_zero (by rwa [Ne, Polynomial.C_eq_zero]) hg
+  -- `P ∣ (C c * g).primPart` (primitive divisor `↔` divides primPart).
+  have hpp : P ∣ (Polynomial.C c * g).primPart :=
+    (hP.dvd_primPart_iff_dvd hCg0).mpr hdvd
+  -- `(C c * g).primPart = (C c).primPart * g.primPart`, a unit times `g.primPart`.
+  rw [Polynomial.primPart_mul hCg0] at hpp
+  obtain ⟨u, hu⟩ := Polynomial.isUnit_primPart_C c
+  rw [← hu] at hpp
+  -- strip the unit `u` on the dividend, then `P ∣ g.primPart ⟹ P ∣ g`.
+  rw [(u.isUnit).dvd_mul_left] at hpp
+  exact (hP.dvd_primPart_iff_dvd hg).mp hpp
+
+/-- **The candidate common `y`-factor is primitive** (Part B): `primPart(lazardView f)` is `y`-primitive
+(`Polynomial.isPrimitive_primPart`) — the `P` Lazard divides the whole basis by. -/
+theorem isPrimitive_primPart_lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)).IsPrimitive :=
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  Polynomial.isPrimitive_primPart _
+
+/-- **The candidate common `y`-factor divides the min element** (Part B): `primPart(lazardView f₀) ∣
+lazardView f₀` (`Polynomial.primPart_dvd`) — the base of Lazard's `primpart(f₀)`-divides-all induction. -/
+theorem primPart_lazardView_dvd {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+      ∣ lazardView f :=
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  Polynomial.primPart_dvd _
+
+/-- **`f₀ ∈ K[x]` ⟺ the candidate `y`-factor `primPart(lazardView f₀)` is a unit** (Part B, the exact
+collapse target). The minimal element has `y`-degree `0` iff `lazardView f₀` has `natDegree 0` iff its
+primitive part is a unit (a primitive `y`-constant). So Lazard's conclusion "`f₀ ∈ K[x]`" is exactly
+"`primPart(lazardView f₀)` is a unit", which the no-common-factor divide-out forces. -/
+theorem degreeOf_zero_iff_isUnit_primPart_lazardView {K : Type*} [Field K]
+    {f : MvPolynomial (Fin 2) K} :
+    degreeOf 0 f = 0 ↔
+      IsUnit (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  rw [← natDegree_lazardView, ← Polynomial.natDegree_primPart (p := lazardView f)]
+  constructor
+  · intro h0
+    -- `natDegree (primPart) = 0` and primitive ⟹ unit (a primitive `y`-constant).
+    rw [Polynomial.eq_C_of_natDegree_eq_zero h0]
+    rw [Polynomial.isUnit_C]
+    -- a primitive constant `C r` has `r` a unit (`content = normalize r = 1`).
+    have hprim := Polynomial.isPrimitive_primPart (lazardView f)
+    rw [Polynomial.eq_C_of_natDegree_eq_zero h0, Polynomial.isPrimitive_iff_content_eq_one,
+      Polynomial.content_C, normalize_eq_one] at hprim
+    exact hprim
+  · intro hu
+    exact Polynomial.natDegree_eq_zero_of_isUnit hu
+
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
     lazardView (yConst r) = Polynomial.C r :=
@@ -2624,6 +2736,17 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolyno
     (hq : q ≠ 0) (hq' : q' ≠ 0) (hb : h * q ∈ B) (hb' : h * q' ∈ B) (hne : h * q ≠ h * q') :
     ¬ (m.degree q' ≤ m.degree q) :=
   leadingMonomial_cofactor_not_le hB hh hq hq' hb hb' hne
+
+-- Part B: the Gauss-lemma scalar-strip and the `f₀ ∈ K[x]` ⟺ unit-primPart collapse target.
+example {K : Type*} [Field K] {P g : Polynomial (MvPolynomial (Fin 1) K)}
+    {c : MvPolynomial (Fin 1) K} (hP : P.IsPrimitive) (hc : c ≠ 0) (hg : g ≠ 0)
+    (hdvd : P ∣ Polynomial.C c * g) : P ∣ g :=
+  isPrimitive_dvd_of_dvd_C_mul hP hc hg hdvd
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    degreeOf 0 f = 0 ↔
+      IsUnit (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) :=
+  degreeOf_zero_iff_isUnit_primPart_lazardView
 
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
