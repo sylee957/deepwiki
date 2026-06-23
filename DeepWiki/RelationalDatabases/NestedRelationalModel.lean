@@ -414,4 +414,43 @@ theorem nest_unnest_not_inverse :
     ¬ ∀ (r : NestedValue String ℕ) (X : List String) (B : String), (r.unnest B).nest X B = r :=
   fun h => absurd (h (rel [[("A", atom 1), ("B", rel [])]]) ["C"] "B") (by decide)
 
+/-! ## Functional dependencies on nested instances (§7.3) -/
+
+omit [DecidableEq V] in
+/-- The empty projection of a nested tuple is empty. -/
+@[simp] theorem NestedTuple.projTo_nil (t : NestedTuple Att V) :
+    NestedTuple.projTo [] t = [] := by
+  simp [NestedTuple.projTo]
+
+/-- Two nested tuples *agree on* `X` when their `X`-projections coincide. -/
+def NestedTuple.agreeOn (X : List Att) (t1 t2 : NestedTuple Att V) : Prop :=
+  NestedTuple.projTo X t1 = NestedTuple.projTo X t2
+
+/-- **Definition 7.9** (§7.3): a nested relation satisfies the functional dependency `X → Y` when
+any two rows agreeing on `X` also agree on `Y`. Atoms satisfy every fd vacuously. -/
+def NestedValue.SatisfiesFd (X Y : List Att) : NestedValue Att V → Prop
+  | .atom _ => True
+  | .rel rows => ∀ t1 ∈ rows, ∀ t2 ∈ rows, NestedTuple.agreeOn X t1 t2 → NestedTuple.agreeOn Y t1 t2
+
+omit [DecidableEq V] in
+/-- Atoms satisfy every functional dependency. -/
+@[simp] theorem NestedValue.satisfiesFd_atom (X Y : List Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).SatisfiesFd X Y := trivial
+
+omit [DecidableEq V] in
+/-- Every relation satisfies the trivial fd `X → X`. -/
+theorem NestedValue.satisfiesFd_self (X : List Att) (r : NestedValue Att V) :
+    r.SatisfiesFd X X := by
+  cases r with
+  | atom => exact trivial
+  | rel rows => intro t1 _ t2 _ h; exact h
+
+omit [DecidableEq V] in
+/-- Every relation satisfies the trivial fd `X → ∅`. -/
+theorem NestedValue.satisfiesFd_nil_right (X : List Att) (r : NestedValue Att V) :
+    r.SatisfiesFd X [] := by
+  cases r with
+  | atom => exact trivial
+  | rel rows => intro t1 _ t2 _ _; simp [NestedTuple.agreeOn]
+
 end DeepWiki

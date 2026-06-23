@@ -116,3 +116,12 @@ abbrev def_7_8_eval := @DeepWiki.NestedAlgExpr.eval
 /-- **§7.2**: nest and unnest are not mutually inverse — unnesting an empty relation-valued
 attribute drops the row, which re-nesting cannot recover (a `¬ ∀` non-theorem). -/
 abbrev nest_unnest_not_inverse := @DeepWiki.nest_unnest_not_inverse
+
+/-! ## §7.3 Dependencies in the Nested Relational Model -/
+
+/-- **Definition 7.9** (§7.3): a nested relation satisfies the functional dependency `X → Y` when
+any two rows agreeing on `X` agree on `Y`. -/
+abbrev def_7_9_satisfiesFd := @DeepWiki.NestedValue.SatisfiesFd
+
+/-- **§7.3**: every relation satisfies the trivial fd `X → X`. -/
+abbrev satisfiesFd_self := @DeepWiki.NestedValue.satisfiesFd_self
