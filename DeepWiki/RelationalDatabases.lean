@@ -10,3 +10,4 @@ import DeepWiki.RelationalDatabases.JoinDependencies
 import DeepWiki.RelationalDatabases.InclusionDependencies
 import DeepWiki.RelationalDatabases.NormalForms
 import DeepWiki.RelationalDatabases.HorizontalDecompositions
+import DeepWiki.RelationalDatabases.IncompleteInformation
