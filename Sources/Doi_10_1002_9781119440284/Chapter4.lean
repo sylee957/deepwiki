@@ -21,6 +21,8 @@ import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
 import DeepWiki.NetworkCalculus.SegmentDeconvComposite
 import DeepWiki.NetworkCalculus.SegmentDeconvCurve
+import DeepWiki.NetworkCalculus.SegmentDeconvConcat
+import DeepWiki.NetworkCalculus.SegmentConvolution
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -40,14 +42,10 @@ token-bucket model does not represent. (The infinite-support case — `convex-th
 book's own §4.2 note — is fully formalized with explicit single-`Pwl` output, the cataloged
 `thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
 `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
-§4.3: Lemma 4.6, the literal two-*bounded*-segment deconvolution `f ⊘ g` (`f:I→R`, `g:J→R`;
-result = the two segments concatenated on `(I−J)∩ℝ₊` from `(a−d, f(a⁺)−g(d⁻))`, larger slope first)
-`[infra]` — needs bounded-support segments, outside the infinite-support model; the affine /
-rate-latency / concave-curve deconvolution analogs (`lemma_4_6_affine`, `lemma_4_6_rateLatency`(`_top`),
-`lemma_4_6_distrib`, `lemma_4_6_inf_two`/`_inf_list`, `lemma_4_6_concaveCurve`) and the dividend-side
-non-distribution `lemma_4_6_inf_left_not_forall_eq` are the cataloged building blocks. Lemma 4.7
-(sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`) `[research]`;
-Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment is UPP) `[infra]`.
+§4.3: Lemma 4.7 (sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`)
+`[research]`; Lemma 4.8 (closure of a spot is UPP) `[infra]`; Lemma 4.9 (closure of an open segment
+is UPP) `[infra]` — Lemmas 4.8/4.9 need the ultimately-pseudo-periodic data structure (quadruplets +
+period), the heavier §4.3.2 representation layer not yet built.
 §4.4 containers: Definition 4.2; Definition 4.3; Definition 4.4; Definition 4.5; Proposition 4.2; Proposition 4.3; Proposition 4.4; Lemma 4.10; Theorem 4.4; Remark 4.1 — all `[research]`. -/
 
 namespace DeepWiki.Dnc
@@ -728,6 +726,43 @@ theorem lemma_4_6_inf_left_not_forall_eq :
     ¬ ∀ (g₁ g₂ h : ℝ≥0 → EReal) (t : ℝ≥0),
         minDeconv (g₁ ⊓ g₂) h t = minDeconv g₁ h t ⊓ minDeconv g₂ h t :=
   not_forall_minDeconv_inf_left_eq
+
+/-- **Lemma 4.6** (§4.3, p.77), the LITERAL two-bounded-segment deconvolution. For two segments
+`f = segBotE a b va sf` (bot-padded: `−∞` outside `[a,b]`, the book's "outside `J` set `g = −∞`") and
+`g = segE c d vc sg` (top-padded), `f ⊘ g` on `(I−J)∩ℝ₊` is the two segments concatenated, **larger
+slope first**, with the four regimes (`u` maximized when `sg ≤ sf`, minimized when `sf ≤ sg`; inner
+vs. boundary optimum split at `t = b−d` / `t = a−c`). Anchored at `t = a−d` to `f(a⁺) − g(d⁻)`
+(`minDeconv_segBotE_segE_anchor_of_slope_ge`). The library's four regime equalities
+`DeepWiki.minDeconv_segBotE_segE_eq_of_slope_ge`(`_right`) / `_of_slope_lt`(`_left`). -/
+theorem lemma_4_6_segments (a b va sf c d vc sg t : ℝ≥0) :
+    (sg ≤ sf → a ≤ t + d → t + d ≤ b → c ≤ d →
+        minDeconv (segBotE a b va sf) (segE c d vc sg) t
+          = segBotE a b va sf (t + d) - segE c d vc sg d) ∧
+    (sg ≤ sf → a ≤ b → t ≤ b → c ≤ b - t → b - t ≤ d →
+        minDeconv (segBotE a b va sf) (segE c d vc sg) t
+          = segBotE a b va sf b - segE c d vc sg (b - t)) ∧
+    (sf ≤ sg → a ≤ b → t ≤ a → c ≤ a - t → a - t ≤ d →
+        minDeconv (segBotE a b va sf) (segE c d vc sg) t
+          = segBotE a b va sf a - segE c d vc sg (a - t)) ∧
+    (sf ≤ sg → a ≤ t + c → t + c ≤ b → c ≤ d →
+        minDeconv (segBotE a b va sf) (segE c d vc sg) t
+          = segBotE a b va sf (t + c) - segE c d vc sg c) :=
+  ⟨minDeconv_segBotE_segE_eq_of_slope_ge a b va sf c d vc sg t,
+   minDeconv_segBotE_segE_eq_of_slope_ge_right a b va sf c d vc sg t,
+   minDeconv_segBotE_segE_eq_of_slope_lt_left a b va sf c d vc sg t,
+   minDeconv_segBotE_segE_eq_of_slope_lt a b va sf c d vc sg t⟩
+
+/-- **Theorem 4.2 building block** (§4.3, p.77): the convolution of two bounded segments. It is
+supported on `[a₁+a₂, b₁+b₂]` (`⊤` outside — `minConv_segE_segE_of_lt_left`/`_of_gt_right`), has corner
+values `v₁+v₂` at `a₁+a₂` and `(v₁+s₁(b₁−a₁))+(v₂+s₂(b₂−a₂))` at `b₁+b₂`, and is **convex** (the split
+objective is affine in `u`, so its inf is at an endpoint — `segPairObj_endpoints_le_minConv` plus the
+per-split upper bound pin it between the endpoint-min and any admissible split). This is the per-piece
+engine for computing convex∗concave as a min over segment-pair convolutions (the book's Theorem 4.2
+algorithm). The library's `DeepWiki.minConv_segE_segE_left`/`_right`/`_of_lt_left` etc. -/
+theorem thm_4_2_segConv_corners (a₁ b₁ v₁ s₁ a₂ b₂ v₂ s₂ : ℝ≥0) (h₁ : a₁ ≤ b₁) (h₂ : a₂ ≤ b₂) :
+    minConv (segE a₁ b₁ v₁ s₁) (segE a₂ b₂ v₂ s₂) (a₁ + a₂)
+      = (((v₁ : ℝ≥0) : ℝ) : EReal) + (((v₂ : ℝ≥0) : ℝ) : EReal) :=
+  minConv_segE_segE_left a₁ b₁ v₁ s₁ a₂ b₂ v₂ s₂ h₁ h₂
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
