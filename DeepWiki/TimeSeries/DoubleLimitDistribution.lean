@@ -54,3 +54,23 @@ theorem levyProkhorovEDist_map_le {E : Type*} [PseudoMetricSpace E] [MeasurableS
     rw [hp]; congr 1; ext ω; simp only [Set.mem_setOf_eq, dist_comm]
   rw [hsymm]
   exact add_le_add le_rfl hpε
+
+/-- **Convergence in distribution ⟹ Lévy–Prokhorov distance of laws tends to `0`** (separable
+codomain): the abstract weak convergence `TendstoInDistribution` of `X` to `Z` is, via the
+metrization homeomorphism `probabilityMeasureHomeomorph`, the metric statement that
+`levyProkhorovDist (law (X i)) (law Z) → 0`. The workable metric form of convergence in
+distribution. -/
+theorem tendsto_levyProkhorovDist_of_tendstoInDistribution
+    {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E] [BorelSpace E]
+    [TopologicalSpace.SeparableSpace E]
+    {ι : Type*} {l : Filter ι} {Ω₀ : Type*} [MeasurableSpace Ω₀] {ν : Measure Ω₀}
+    [IsProbabilityMeasure ν] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] {X : ι → Ω₀ → E} {Z : Ω' → E}
+    (h : TendstoInDistribution X l Z (fun _ => ν) μ') :
+    Tendsto (fun i => levyProkhorovDist (ν.map (X i)) (μ'.map Z)) l (𝓝 0) := by
+  have hc := ((LevyProkhorov.probabilityMeasureHomeomorph (Ω := E)).continuous.tendsto _).comp
+    h.tendsto
+  rw [tendsto_iff_dist_tendsto_zero] at hc
+  refine hc.congr (fun i => ?_)
+  rw [Function.comp_apply, LevyProkhorov.dist_probabilityMeasure_def]
+  rfl
