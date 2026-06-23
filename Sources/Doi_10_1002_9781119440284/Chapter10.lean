@@ -25,6 +25,7 @@ import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionConvexity
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionTrajectory
 import DeepWiki.NetworkCalculus.KarpReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPHardness
+import DeepWiki.NetworkCalculus.WorstCaseBoundNPMembership
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -41,13 +42,15 @@ the Figure-10.7 served rate equations and transfers the `3s−2q ⟺ cover` thre
 former analysis residuals are CLOSED: fractional-routing optimality (`thm_10_2_fractional`: every
 fractional fluid routing has objective ≤ q, by convexity + `convexHull_pi`) and the continuous-time
 realization (`thm_10_2_trajectory`: the rate-based backlog as a capped-ramp trajectory, value at
-`t→1⁻`). The NP-hardness WRAPPER is now also built (`thm_10_2_nphard`/`isNPHardVia_x3c_worstCaseBacklog
-Decision`, AXIOM-FREE relative form, on the `KarpReduction` framework; absolute
-`isNPHard_worstCaseBacklogDecision` modulo the single cited `axiom X3CIsNPHard` = Exact-3-Cover NP-
-completeness, Garey-Johnson SP2). The ONLY external/abstracted inputs, all explicit: poly-time modeled
-as a polynomial output-size-bound proxy (not a TM cost model), and X3C-NP-completeness cited (a full
-`NPHard` proof of X3C needs a Turing-machine/NP framework Mathlib lacks). So Thm 10.2 is formalized
-end-to-end modulo exactly that one cited classical fact. -/
+`t→1⁻`). The full NP-COMPLETENESS is now built (`thm_10_2_npcomplete`/`isNPComplete_worstCaseBacklogDecision`):
+NP-hard (`thm_10_2_nphard`, the X3C Karp reduction) AND in NP (`isInNP_worstCaseBacklogDecision`,
+AXIOM-FREE — the exact-cover assignment is a decidably-checkable, polynomially-bounded `List ℕ`
+certificate). The ONLY external/abstracted inputs, all explicit: poly-time modeled as a polynomial
+size-bound proxy + decidability (not a TM cost model), and X3C-NP-completeness cited as the single
+`axiom X3CIsNPHard` (Garey-Johnson SP2; a full `NPHard` proof of X3C needs a Turing-machine/NP
+framework Mathlib lacks). `#print axioms`: NP-membership uses Mathlib's 3 standard axioms only;
+NP-completeness adds exactly `X3CIsNPHard`. So Thm 10.2 is formalized end-to-end as an NP-completeness
+result modulo exactly that one cited classical fact. -/
 
 namespace DeepWiki.Dnc
 
@@ -280,5 +283,17 @@ theorem thm_10_2_nphard :
     KarpReduction.IsNPHardVia DeepWiki.WellFormedX3C.size DeepWiki.WellFormedX3C.size
       DeepWiki.x3cDecision DeepWiki.worstCaseBacklogDecision :=
   DeepWiki.isNPHardVia_x3c_worstCaseBacklogDecision
+
+/-- **Theorem 10.2, NP-COMPLETENESS** (§10.5): computing the exact worst-case backlog is NP-complete.
+NP-hard (`thm_10_2_nphard`/`isNPHard_worstCaseBacklogDecision`, the X3C Karp reduction, modulo the
+cited `X3CIsNPHard`) AND in NP (`isInNP_worstCaseBacklogDecision`, AXIOM-FREE: the exact-cover
+assignment encoded as a `List ℕ` of subset indices — injective encoding — is a decidably-checkable,
+polynomially-size-bounded certificate). The library's `DeepWiki.isNPComplete_worstCaseBacklogDecision`
+(`IsNPComplete := IsNPHard ∧ Nonempty (IsInNP)`). `#print axioms`: NP-membership uses only Mathlib's 3
+standard axioms; NP-completeness adds exactly `X3CIsNPHard`. Poly-time of the verifier is modeled
+(framework-wide) as a certificate size-bound + decidability, not a TM cost model. -/
+theorem thm_10_2_npcomplete :
+    DeepWiki.IsNPComplete DeepWiki.WellFormedX3C.size DeepWiki.worstCaseBacklogDecision :=
+  DeepWiki.isNPComplete_worstCaseBacklogDecision
 
 end DeepWiki.Dnc
