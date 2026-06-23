@@ -63,8 +63,13 @@ distribution `minConv_distrib_inf`, convex∗convex, concave∗concave — and a
 three parts genuine, `isThreePartOnIcc_witnessThree`); per-paper double-reference catalog
 `Sources/Doi_10_1090_mcom_2986` (`DeepWiki.Bfz.*`). FINDING: the final convex part only appears for
 *bounded*-support functions, and the `⊤`-padded `segE` is NOT `IsConvexEReal` (carrier gotcha), so the
-faithful witness lives at the real-`Icc` level; the full weak-KAM/Lax–Oleinik induction (Lemmas 4.4/4.5
-slope surgery + bounded-support arithmetic) over interval-restricted PWL stays `[external]`/`[infra]`.
+faithful witness lives at the real-`Icc` level. The induction is now pushed deeper
+(`ConvexConvBySegment`): Lemma 4.1's genuine three-case affine base on a BOUNDED `[c,d]`
+(`minConv_line_segE` — the bounded support creates the third convex part), Lemma 4.4 slope surgery
+lifted through the convolution (`minConv_tbEReal_line_le_of_le_cross`), the Thm 4.6 induction step
+(`minConv_line_inf_tb_eq_switch` — adding a segment is a single switch), and the affine-base three-part
+conclusion (`isThreePartOnIcc_convLineSegReal`). Only the general induction over a SEGMENTED convex `f`
+(threading `g¹` through `f`'s breakpoints — the `α>0` case) stays `[external]`/`[infra]`.
 (The infinite-support case — `convex-then-concave` per the book's own §4.2 note — is fully formalized
 with explicit single-`Pwl` output, the cataloged `thm_4_2_output_pwl` and its supporting `thm_4_2_*`;
 Lemma 4.1's per-line engine + ordering are `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
@@ -114,8 +119,9 @@ book-deferred to other papers, now formalized FROM those papers at the faithful-
 three-part Thm 4.2 (→[BOU 16a] weak-KAM, `ConvexConcaveThreePart`, catalog
 `Sources/Doi_10_1090_mcom_2986`) and the full `F`-closure Thm 4.4 (→[LEC 14], `ContainerInternalF`,
 catalog `Sources/Doi_10_1007_s10626_012_0148_9`; `[⊕]`/`[*]`/`[⋆]` internality all formalized) — only
-the weak-KAM induction (Thm 4.2) and the geometric slope/decomposition/rank-reassembly pieces (Thm 4.4)
-remain `[infra]`. All `[infra]` layers are built. Remark 4.1. -/
+only the segmented-`f` general weak-KAM induction (Thm 4.2; the affine base + slope surgery + induction
+step are done) and the geometric slope/decomposition/rank-reassembly pieces (Thm 4.4) remain `[infra]`.
+All `[infra]` layers are built. Remark 4.1. -/
 
 namespace DeepWiki.Dnc
 
