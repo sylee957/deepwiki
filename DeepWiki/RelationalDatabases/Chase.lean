@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
+import DeepWiki.RelationalDatabases.JoinDependencies
 
 /-! # The chase: tableaux and the initial tableau
 The chase decides whether a join dependency is implied by a set of fds and jds (Algorithm 3.4). It
@@ -67,5 +68,42 @@ omit [DecidableEq Att] in
 @[simp] theorem mem_applyTableau (ρ : Valuation Att Val) (T : Tableau Ω) (t : Tuple Ω Val) :
     t ∈ applyTableau ρ T ↔ ∃ ℓ ∈ T, applyRow ρ ℓ = t := by
   simp [applyTableau, Set.mem_image]
+
+/-- The *jd-rule* chase step for `⋈[comp]` (Algorithm 3.4): add every row glued from a family of
+tableau rows that pairwise agree on the component intersections. -/
+def jdChaseStep {ℓ : ℕ} (comp : Fin ℓ → Finset Att) (T : Tableau Ω) : Tableau Ω :=
+  T ∪ {R | ∃ rows : Fin ℓ → ChaseRow Ω, (∀ i, rows i ∈ T) ∧
+    (∀ i j, ∀ a : {x // x ∈ Ω}, a.val ∈ comp i ∩ comp j → rows i a = rows j a) ∧
+    ∀ i, ∀ a : {x // x ∈ Ω}, a.val ∈ comp i → R a = rows i a}
+
+/-- The jd-rule only adds rows (the chase is extensive). -/
+theorem subset_jdChaseStep {ℓ : ℕ} (comp : Fin ℓ → Finset Att) (T : Tableau Ω) :
+    T ⊆ jdChaseStep comp T := Set.subset_union_left
+
+/-- **Soundness of the jd-rule**: if the join dependency `⋈[comp]` already holds in the relation
+represented by a tableau (under a valuation `ρ`), the jd-rule adds nothing new — every glued row
+maps to a tuple already present. This is the invariant behind the chase's correctness. -/
+theorem applyTableau_jdChaseStep_subset {ℓ : ℕ} (ρ : Valuation Att Val)
+    (comp : Fin ℓ → Finset Att) (T : Tableau Ω)
+    (hcover : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i)
+    (hjd : SatisfiesJd (applyTableau ρ T) comp) :
+    applyTableau ρ (jdChaseStep comp T) ⊆ applyTableau ρ T := by
+  rintro t ht
+  rw [mem_applyTableau] at ht
+  obtain ⟨L, hL, rfl⟩ := ht
+  rcases hL with hLT | ⟨rows, hrows, hagree, hglue⟩
+  · exact (mem_applyTableau _ _ _).mpr ⟨L, hLT, rfl⟩
+  · have hfam : ∀ i, applyRow ρ (rows i) ∈ applyTableau ρ T :=
+      fun i => (mem_applyTableau _ _ _).mpr ⟨rows i, hrows i, rfl⟩
+    have hpair : ∀ i j, Agree (comp i ∩ comp j) (applyRow ρ (rows i)) (applyRow ρ (rows j)) :=
+      fun i j a ha => by simp only [applyRow]; rw [hagree i j a ha]
+    obtain ⟨v, hv, hvfam⟩ := hjd (fun i => applyRow ρ (rows i)) hfam hpair
+    have hLv : applyRow ρ L = v := by
+      funext a
+      obtain ⟨i, hi⟩ := hcover a
+      rw [hvfam i a hi]
+      simp only [applyRow]
+      rw [hglue i a hi]
+    rw [hLv]; exact hv
 
 end DeepWiki

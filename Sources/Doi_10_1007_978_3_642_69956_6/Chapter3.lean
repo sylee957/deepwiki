@@ -202,6 +202,14 @@ abbrev chase_distinguished_row := @DeepWiki.distRow_mem_initialTableau_iff
 relate the chased tableau to relations in the correctness argument). -/
 abbrev chase_applyTableau := @DeepWiki.applyTableau
 
+/-- **Algorithm 3.4** (§3.4, p.91), the jd-rule: add every row glued from a family of tableau rows
+pairwise agreeing on the component intersections. -/
+abbrev chase_jdStep := @DeepWiki.jdChaseStep
+
+/-- **Algorithm 3.4** (§3.4), jd-rule soundness: if the join dependency already holds in the
+relation a tableau represents, the jd-rule adds no new tuple — the invariant behind Theorem 3.15. -/
+abbrev chase_jdStep_sound := @DeepWiki.applyTableau_jdChaseStep_subset
+
 /-! ## §3.5 Inclusion Dependencies -/
 
 /-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*
