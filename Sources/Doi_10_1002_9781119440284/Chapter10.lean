@@ -16,6 +16,9 @@ import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersToa
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
 import DeepWiki.NetworkCalculus.NetworkTopology
+import DeepWiki.NetworkCalculus.PmooSeparatedFlowIncomparable
+import DeepWiki.NetworkCalculus.StaticPriorityPmooNestedTandem
+import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReduction
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -24,8 +27,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§10.3: Example 10.1 (loss of tightness: incomparable feed-forward vs PMOO end-to-end curves, with figure) `[deferred]`; Example 10.2 (SP-PMOO worked on the nested tandem of Figure 10.1) `[deferred]`.
-§10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) `[research]`. -/
+§10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) — the combinatorial CORE is done (`thm_10_2_core`: optimum = q ⟺ exact 3-cover exists); the full NP-hardness wrapper (poly-time-reduction type class + network→backlog semantics + convex-maximization-attains-vertices) is `[external]` (Mathlib has no NP-hardness framework). -/
 
 namespace DeepWiki.Dnc
 
@@ -143,5 +145,43 @@ alias alg_7_gfa_dominates_sfa := concatConv_residualCurve_sfa_le_gfa
 
 /-- **Example 10.6** (§10.4.3, p.249): GFA worked on Figure 10.6 with flow 2 the flow of interest: arc-wise grouping of cross-traffic, the grouped arrival/service curves η and β̃ at each server. -/
 alias ex_10_6 := DeepWiki.isMinimalServiceCurve_concatConv_groupResidual
+
+/-- **Example 10.1** (§10.3, p.250, loss of tightness): on the non-nested tandem (flow of interest on
+all 3 servers, cross-flows on `{1,2}` and `{2,3}`), the PMOO and separated-flow (SFA) end-to-end
+service curves are INCOMPARABLE — they share the rate `R−r₂−r₃` but neither latency uniformly
+dominates over the parameter family, so neither analysis is uniformly tighter. The citable `¬∀` pair
+`DeepWiki.{not_forall_pmooCurve_le_sfaCurve, not_forall_sfaCurve_le_pmooCurve}`. -/
+theorem ex_10_1_incomparable :
+    (¬ ∀ R T r₂ b₂ r₃ b₃ t, DeepWiki.pmooCurve R T r₂ b₂ r₃ b₃ t
+        ≤ DeepWiki.sfaCurve R T r₂ b₂ r₃ b₃ t)
+      ∧ (¬ ∀ R T r₂ b₂ r₃ b₃ t, DeepWiki.sfaCurve R T r₂ b₂ r₃ b₃ t
+        ≤ DeepWiki.pmooCurve R T r₂ b₂ r₃ b₃ t) :=
+  ⟨DeepWiki.not_forall_pmooCurve_le_sfaCurve, DeepWiki.not_forall_sfaCurve_le_pmooCurve⟩
+
+/-- **Example 10.2** (§10.3, p.251, SP-PMOO on the Figure 10.1 nested tandem): the peel-from-inside
+recursion `β̃₁ = β⁽²⁾`, `β̃₂ = β⁽¹⁾ ∗ [β⁽²⁾−α₁]⁺↑`, `β̃₃ = [β̃₂−α₂]⁺↑ ∗ β⁽³⁾`. For identical
+rate-latency servers `β_{R,T}` and affine inner arrivals, the end-to-end `β̃₃` is rate-latency with
+bottleneck rate `R−r₁−r₂` (`nestedBeta₃_rateLatency`; `β̃₂` is `nestedBeta₂_rateLatency`). The library's
+`DeepWiki.nestedBeta₃_rateLatency`. -/
+theorem ex_10_2 (R T r₁ b₁ r₂ b₂ : ℝ≥0) (hR : r₁ < R) (hR₂ : r₂ < R - r₁) :
+    DeepWiki.nestedBeta₃ (rateLatency R T) (rateLatency R T) (rateLatency R T)
+        (fun t => r₁ * t + b₁) (fun t => r₂ * t + b₂)
+      = rateLatency (DeepWiki.nestedBeta₃Rate R r₁ r₂) (DeepWiki.nestedBeta₃Latency R T r₁ b₁ r₂ b₂) :=
+  DeepWiki.nestedBeta₃_rateLatency R T r₁ b₁ r₂ b₂ hR hR₂
+
+/-- **Theorem 10.2** (§10.5, p.255): computing exact worst-case backlog/delay in a feed-forward network
+with arbitrary multiplexing is NP-hard (X3C reduction, Figure 10.7). The combinatorial CORE is
+formalized — over an X3C instance (3-element subsets of a `3q`-set), the reduction's saturated subsets
+are member-disjoint and the optimum `saturatedCount ≤ q` (`X3CInstance.saturatedCount_le_q`), reaching
+`q` **iff** an exact 3-cover exists (`X3CInstance.saturatedCount_eq_q_iff_exists_cover` — the
+"feasible bound ⟺ exact cover" correspondence). The full NP-hardness wrapper (a poly-time-reduction
+type class + the network→backlog semantics + the convex-maximization-attains-vertices step) is
+`[external]` — Mathlib has no NP-hardness framework. The library's
+`DeepWiki.X3CInstance.saturatedCount_eq_q_iff_exists_cover`. -/
+theorem thm_10_2_core {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fintype ι] [Fintype α]
+    (I : DeepWiki.X3CInstance ι α) {assign : α → ι} (hassign : I.IsAssignment assign) :
+    I.saturatedCount assign = I.q ↔
+      ∃ C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
+  I.saturatedCount_eq_q_iff_exists_cover hassign
 
 end DeepWiki.Dnc
