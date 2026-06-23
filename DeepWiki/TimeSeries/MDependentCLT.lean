@@ -218,6 +218,17 @@ theorem IsMDependent.tendsto_charFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → �
   rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
   simp [hcenter]
 
+/-- The number of complete big blocks fitting in `[0, n)`: `⌊n/(p+m)⌋`. Each contributes a size-`p`
+block, so `blockCount · p` indices are covered by blocks and the rest (`≈ n·m/(p+m)`) are gaps. -/
+def blockCount (p m n : ℕ) : ℕ := n / (p + m)
+
+/-- **The number of big blocks tends to infinity**: `blockCount p m n → ∞` as `n → ∞` (for a positive
+block-plus-gap length). The index reparametrization that turns the block CLT (in the block count `r`)
+into a statement about the sample size `n`. -/
+theorem tendsto_blockCount {p m : ℕ} (hpm : p + m ≠ 0) :
+    Tendsto (fun n => blockCount p m n) atTop atTop :=
+  Nat.tendsto_div_const_atTop hpm
+
 /-- **The big-block sums obey a central limit theorem in distribution** (h1, distribution form): for a
 strictly stationary `L²` `m`-dependent process, `√r (r⁻¹ ∑_{k<r} U_k − E U₀) ⇒ N(0, Var U₀)`, where
 `U_k = ∑_{t ∈ bigBlock k} Xₜ`. A direct application of the iid sample-mean CLT (`iidNoise_sampleMean_clt`)
