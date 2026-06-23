@@ -26,6 +26,7 @@ import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionTrajectory
 import DeepWiki.NetworkCalculus.KarpReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPHardness
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPMembership
+import DeepWiki.NetworkCalculus.ThreeDimensionalMatchingReduction
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -50,7 +51,10 @@ size-bound proxy + decidability (not a TM cost model), and X3C-NP-completeness c
 `axiom X3CIsNPHard` (Garey-Johnson SP2; a full `NPHard` proof of X3C needs a Turing-machine/NP
 framework Mathlib lacks). `#print axioms`: NP-membership uses Mathlib's 3 standard axioms only;
 NP-completeness adds exactly `X3CIsNPHard`. So Thm 10.2 is formalized end-to-end as an NP-completeness
-result modulo exactly that one cited classical fact. -/
+result modulo exactly that one cited classical fact. The reduction CHAIN extends one canonical step
+further (`thm_10_2_chain_threeDM`/`threeDMToX3C`: `3DM ≤ₖ X3C` fully proved, so NP-hardness can rest on
+`ThreeDMIsNPHard` instead) — relocating the cited axiom toward Cook–Levin, which (proving 3DM/SAT ∈ NPC
+from a Turing-machine/NP framework Mathlib lacks) remains the sole irreducible base. -/
 
 namespace DeepWiki.Dnc
 
@@ -295,5 +299,18 @@ standard axioms; NP-completeness adds exactly `X3CIsNPHard`. Poly-time of the ve
 theorem thm_10_2_npcomplete :
     DeepWiki.IsNPComplete DeepWiki.WellFormedX3C.size DeepWiki.worstCaseBacklogDecision :=
   DeepWiki.isNPComplete_worstCaseBacklogDecision
+
+/-- **Theorem 10.2, the reduction chain extended to 3DM** (toward Cook–Levin): the NP-hardness can rest
+on the more canonical **3-Dimensional Matching** instead of X3C. `threeDMToX3C` is the textbook Karp
+reduction `3DM ≤ₖ X3C` (3DM is a restricted X3C — the matching IS the cover, both directions proved,
+total map), so `isNPHard_worstCaseBacklogDecision_via_threeDM` derives Thm 10.2's NP-hardness from
+`axiom ThreeDMIsNPHard` (Garey–Johnson SP1 / Karp 1972) — NOT from `X3CIsNPHard`. `#print axioms`: the
+reduction itself is fully proved (Mathlib's 3 standard axioms); the chain adds only `ThreeDMIsNPHard`.
+The library's `DeepWiki.isNPHard_worstCaseBacklogDecision_via_threeDM` (+ `threeDMToX3C`). (This
+RELOCATES the cited completeness axiom one canonical step; it does not discharge it — the base
+3DM/SAT ∈ NPC still needs a Cook–Levin/Turing-machine framework Mathlib lacks.) -/
+theorem thm_10_2_chain_threeDM :
+    DeepWiki.IsNPHard DeepWiki.WellFormedX3C.size DeepWiki.worstCaseBacklogDecision :=
+  DeepWiki.isNPHard_worstCaseBacklogDecision_via_threeDM
 
 end DeepWiki.Dnc

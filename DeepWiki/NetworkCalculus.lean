@@ -264,6 +264,7 @@ import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionTrajectory
 import DeepWiki.NetworkCalculus.KarpReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPHardness
 import DeepWiki.NetworkCalculus.WorstCaseBoundNPMembership
+import DeepWiki.NetworkCalculus.ThreeDimensionalMatchingReduction
 import DeepWiki.NetworkCalculus.ServersResidualSpPmoo
 import DeepWiki.NetworkCalculus.ServersResidualSpPmooDelay
 import DeepWiki.NetworkCalculus.ServersResidualFifoPmooConcat
