@@ -94,3 +94,59 @@ theorem tendstoInDistribution_of_tendsto_levyProkhorovDist
   refine h.congr (fun i => ?_)
   rw [Function.comp_apply, LevyProkhorov.dist_probabilityMeasure_def]
   rfl
+
+/-- **Double-limit theorem for convergence in distribution** (Billingsley, *Convergence of
+Probability Measures*, Theorem 3.2): if `Y' m` converges in distribution to `W m` for each `m`
+(`h1`), `W m` converges in distribution to `Z` as `m → ∞` (`h2`), and the approximations `Y' m`
+eventually approximate `Y` uniformly in `n` in Lévy–Prokhorov distance (`h3`), then `Y` converges
+in distribution to `Z`. The metric-`ε/3` diagonal: `dist(law Yₙ, law Z) ≤ dist(law Yₙ, law Y'ₘₙ) +
+dist(law Y'ₘₙ, law Wₘ) + dist(law Wₘ, law Z)`, each term `< δ/3` for a suitable `m` and large `n`.
+The `[infra]` enabler for the linear-process CLT under the full `∑ⱼ |ψⱼ| < ∞` (finite-`MA(q)`
+truncation). -/
+theorem tendstoInDistribution_of_eventually_approx
+    {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E] [BorelSpace E]
+    [TopologicalSpace.SeparableSpace E] {Ω₀ : Type*} [MeasurableSpace Ω₀] {ν : Measure Ω₀}
+    [IsProbabilityMeasure ν] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] {Y : ℕ → Ω₀ → E} {Y' : ℕ → ℕ → Ω₀ → E} {W : ℕ → Ω' → E} {Z : Ω' → E}
+    (hYm : ∀ n, AEMeasurable (Y n) ν) (hZ : AEMeasurable Z μ')
+    (h1 : ∀ m, TendstoInDistribution (Y' m) atTop (W m) (fun _ => ν) μ')
+    (h2 : TendstoInDistribution W atTop Z (fun _ => μ') μ')
+    (h3 : ∀ δ : ℝ, 0 < δ → ∀ᶠ m in atTop,
+        ∀ n, levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n)) ≤ δ) :
+    TendstoInDistribution Y atTop Z (fun _ => ν) μ' := by
+  have hnn : ∀ a b : Measure E, 0 ≤ levyProkhorovDist a b := fun _ _ => ENNReal.toReal_nonneg
+  refine tendstoInDistribution_of_tendsto_levyProkhorovDist hYm hZ ?_
+  refine Metric.tendsto_atTop.mpr (fun δ hδ => ?_)
+  have hδ3 : (0 : ℝ) < δ / 3 := by positivity
+  -- term3 = dist(law Wₘ, law Z): eventually `< δ/3` (from `h2` via the metric transport)
+  obtain ⟨m₂, hm₂⟩ := Metric.tendsto_atTop.mp
+    (tendsto_levyProkhorovDist_of_tendstoInDistribution h2) (δ / 3) hδ3
+  -- term1 = dist(law Yₙ, law Y'ₘₙ): eventually-in-`m` uniformly `≤ δ/3` (from `h3`)
+  obtain ⟨m₃, hm₃⟩ := eventually_atTop.mp (h3 (δ / 3) hδ3)
+  set m := max m₂ m₃ with hmdef
+  have hterm3 : levyProkhorovDist (μ'.map (W m)) (μ'.map Z) < δ / 3 := by
+    have := hm₂ m (le_max_left _ _)
+    rwa [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)] at this
+  have hterm1 : ∀ n, levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n)) ≤ δ / 3 :=
+    hm₃ m (le_max_right _ _)
+  -- term2 = dist(law Y'ₘₙ, law Wₘ): tends to `0` in `n` (from `h1 m`)
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp
+    (tendsto_levyProkhorovDist_of_tendstoInDistribution (h1 m)) (δ / 3) hδ3
+  refine ⟨N, fun n hn => ?_⟩
+  rw [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)]
+  have hterm2 : levyProkhorovDist (ν.map (Y' m n)) (μ'.map (W m)) < δ / 3 := by
+    have := hN n hn
+    rwa [Real.dist_eq, sub_zero, abs_of_nonneg (hnn _ _)] at this
+  haveI : IsProbabilityMeasure (ν.map (Y n)) := Measure.isProbabilityMeasure_map (hYm n)
+  haveI : IsProbabilityMeasure (ν.map (Y' m n)) :=
+    Measure.isProbabilityMeasure_map ((h1 m).forall_aemeasurable n)
+  haveI : IsProbabilityMeasure (μ'.map (W m)) := Measure.isProbabilityMeasure_map (h2.forall_aemeasurable m)
+  haveI : IsProbabilityMeasure (μ'.map Z) := Measure.isProbabilityMeasure_map hZ
+  calc levyProkhorovDist (ν.map (Y n)) (μ'.map Z)
+      ≤ levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n))
+        + levyProkhorovDist (ν.map (Y' m n)) (μ'.map Z) := levyProkhorovDist_triangle _ _ _
+    _ ≤ levyProkhorovDist (ν.map (Y n)) (ν.map (Y' m n))
+        + (levyProkhorovDist (ν.map (Y' m n)) (μ'.map (W m))
+          + levyProkhorovDist (μ'.map (W m)) (μ'.map Z)) :=
+        add_le_add le_rfl (levyProkhorovDist_triangle _ _ _)
+    _ < δ := by linarith [hterm1 n, hterm2, hterm3]
