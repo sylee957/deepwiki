@@ -3,6 +3,7 @@ import DeepWiki.TimeSeries.DeltaMethod
 import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.MovingAverageMDependent
+import DeepWiki.TimeSeries.AsymptoticNormality
 import DeepWiki.TimeSeries.StochasticOrder
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
@@ -123,15 +124,24 @@ stationarity, centering and `L²` and applies the `m`-dependent CLT `thm_6_4_2` 
 stationary-noise form is `movingAverage_clt`). -/
 alias example_6_4_4 := DeepWiki.TimeSeries.movingAverage_clt_iid
 
+/-- **§6.4 Definition 6.4.2 — asymptotic normality of a sequence of random `k`-vectors**: `Xₙ` is
+`AN(aₙ, Sₙ)` if every nondegenerate linear projection `λ ⬝ᵥ Xₙ` is one-dimensionally asymptotically
+normal `AN(λ ⬝ᵥ aₙ, λ ⬝ᵥ Sₙ λ)` (Cramér–Wold form). The library's `IsAsymptoticallyNormalVec`, built on
+the 1-D `IsAsymptoticallyNormal` predicate (charFun convergence to `N(0,1)`). -/
+abbrev def_6_4_2 := @DeepWiki.TimeSeries.IsAsymptoticallyNormalVec
+
+/-- **§6.4 Proposition 6.4.2 — linear images preserve asymptotic normality**: if `Xₙ` is `AN(aₙ, Sₙ)`
+then `B Xₙ` is `AN(B aₙ, B Sₙ Bᵀ)` for any matrix `B`. The library's
+`IsAsymptoticallyNormalVec.matrix_mulVec` (each projection of `B Xₙ` is a projection of `Xₙ`). -/
+alias prop_6_4_2 := DeepWiki.TimeSeries.IsAsymptoticallyNormalVec.matrix_mulVec
+
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred];
-Definition 6.4.2 (asymptotic normality of a sequence of random `k`-vectors) [infra];
-Proposition 6.4.2 (linear images `B Xₙ` of an asymptotically normal sequence are asymptotically normal) [infra];
 Proposition 6.4.3 (the multivariate delta method) [infra]
 (The §6.4 large-sample core is done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
-CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, MA m-dependence `example_6_4_3`, and the MA CLT
-for i.i.d. noise `example_6_4_4`. The remaining items are the vector-AN framework — `Definition 6.4.2`,
-`Proposition 6.4.2`, `6.4.3` — and the Example 6.4.2 delta-method application; the multivariate iid CLT
-`multivariate_iid_clt` is the engine for the vector results.) -/
+CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, MA m-dependence `example_6_4_3`, the MA CLT
+for i.i.d. noise `example_6_4_4`, and the vector-AN framework `def_6_4_2`/`prop_6_4_2`. Remaining: the
+multivariate delta method `Proposition 6.4.3` and the Example 6.4.2 delta-method application; the
+multivariate iid CLT `multivariate_iid_clt` is the engine for these.) -/
 
 end DeepWiki.Ts
