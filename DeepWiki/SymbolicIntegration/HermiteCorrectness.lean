@@ -1437,3 +1437,51 @@ theorem yunInv_base {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0
   -- assemble.
   refine ⟨A.leadingCoeff, hlc, hb1, ?_⟩
   rw [hd1div, hb1, derivative_C_mul, Dabs, Nat.sub_self, ← hbabs, mul_sub]
+
+/-! ### Unconditional abstract Yun factorization
+
+Starting the loop from the `csqfreeFactor` initialization (`yunInv_base`), the abstract Yun loop
+`yunFactorizationAbs A n = yunLoopAbs A (A/gcd(A,A′), A′/gcd(A,A′) − …) 1 n` factorizes `A` with no
+`YunInv` hypothesis — only `A ≠ 0`. All four clauses (factorwise association to `Vᵢ`, squarefree,
+pairwise relatively prime, product decomposition) hold unconditionally. -/
+
+open Classical in
+/-- **Unconditional abstract Yun factorization** of `A : K[X]`: the `n`-step Yun loop from the
+initialization `(A/gcd(A,A′), A′/gcd(A,A′) − (A/gcd(A,A′))′)`. -/
+noncomputable def yunFactorizationAbs {K : Type*} [Field K] (A : K[X]) (n : ℕ) : List K[X] :=
+  yunLoopAbs A (A / gcd A (derivative A),
+    derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) 1 n
+
+open Classical in
+/-- **Factorwise correctness** (unconditional): `yunFactorizationAbs A n` is `Forall₂ Associated` to
+`[V₁, …, Vₙ]` (`sqfreeFactPart A (1+j)`). From `yunLoopAbs_forall₂` + `yunInv_base`. -/
+theorem yunFactorizationAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) (n : ℕ) :
+    List.Forall₂ Associated (yunFactorizationAbs A n)
+      ((List.range n).map (fun j => sqfreeFactPart A (1 + j))) :=
+  yunLoopAbs_forall₂ A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
+open Classical in
+/-- **Every Yun factor is squarefree** (unconditional). -/
+theorem yunFactorizationAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) (n : ℕ) : ∀ V ∈ yunFactorizationAbs A n, Squarefree V :=
+  yunLoopAbs_squarefree A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
+open Classical in
+/-- **The Yun factors are pairwise relatively prime** (unconditional). -/
+theorem yunFactorizationAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) {p q : ℕ} (hpq : p ≠ q)
+    (hp : p < (yunFactorizationAbs A n).length) (hq : q < (yunFactorizationAbs A n).length) :
+    IsRelPrime ((yunFactorizationAbs A n).get ⟨p, hp⟩) ((yunFactorizationAbs A n).get ⟨q, hq⟩) :=
+  yunLoopAbs_pairwise_isRelPrime A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA) hpq hp hq
+
+open Classical in
+/-- **The product decomposition** (unconditional): the powered product `∏ₖ eₖ^{1+k}` of the Yun
+factors is `Associated (∏_{j<n} V_{1+j}^{1+j})`. With `n` covering all multiplicities this is
+`A.primPart` up to associates (`primPart_associated_prod_sqfreeFactPart`), i.e. the Yun decomposition
+`A ~ u·∏ⱼ Vⱼ^iⱼ`. -/
+theorem yunFactorizationAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) (n : ℕ) :
+    Associated (prodPow 1 (yunFactorizationAbs A n))
+      (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
+  yunLoopAbs_prodPow_assoc A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
