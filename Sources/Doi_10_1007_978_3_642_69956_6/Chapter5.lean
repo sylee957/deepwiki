@@ -10,10 +10,10 @@ dependencies (§5.3) and normal forms for horizontal decompositions (§5.4). The
 inference rules FA1, FA2 and A1.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-§5.1: Def 5.2 (the selection for `X → Y`), Def 5.3 (a goal and the horizontal decomposition),
-  Def 5.5 (the selection for an ad), and Theorem 5.1 (a strong Armstrong relation always exists,
-  via the direct-product construction) [infra/research]. (Def 5.6 conflict, Def 5.7 / 5.8 Armstrong
-  and strong Armstrong relations are done.)
+§5.1: Def 5.2 (the selection for `X → Y`), Def 5.3 (a goal and the horizontal decomposition) and
+  Def 5.5 (the selection for an ad) [infra]. (Def 5.6 conflict, Def 5.7 / 5.8 Armstrong and strong
+  Armstrong relations, and Theorem 5.1 — strong-Armstrong existence via the direct product — are
+  done.)
 §5.2: Lemma 5.1 / 5.2 (conflict via Armstrong relations), Algorithm 5.1 (conflict detection),
   Theorem 5.2 and Corollary 5.1 (the rules I/FA1/FA2/A1 are complete for mixed fds and ads),
   Algorithm 5.2 (ad membership) [infra/research].
@@ -73,5 +73,9 @@ abbrev def_5_8_strong_armstrong := @DeepWiki.IsStrongArmstrong
 
 /-- A nonempty strong Armstrong relation is an Armstrong relation (§5.1). -/
 abbrev armstrong_of_strong := @DeepWiki.isArmstrongRelation_of_isStrongArmstrong
+
+/-- **Theorem 5.1** (§5.1, p.137): for every set of functional dependencies over `Ω` there exists a
+strong Armstrong relation — Fagin's direct product `⊗_Z r_Z` of the two-tuple factors. -/
+abbrev thm_5_1 := @DeepWiki.exists_strongArmstrong
 
 end DeepWiki.Rdb
