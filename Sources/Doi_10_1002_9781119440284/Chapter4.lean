@@ -34,6 +34,7 @@ import DeepWiki.NetworkCalculus.ContainerCanonical
 import DeepWiki.NetworkCalculus.ContainerUncertainty
 import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ContainerCanonicalBound
+import DeepWiki.NetworkCalculus.LegendreFenchelConcave
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -70,8 +71,10 @@ container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical
 (`def_4_4`: `Bmax = vDev(f̄,f̲)`, `Dmax = hDev(f̄,f̲)` at the rank abscissa; finiteness FROM canonical
 form needs an intrinsic `rank`/last-segment layer, `[infra]`); Definition 4.5 (inclusion functions
 `[∧]`/`[∗]`) + Theorem 4.4 (inclusion-soundness for them) DONE (`thm_4_4`: `inf_mem`/`conv_mem`); what
-remains of Def 4.5/Thm 4.4 is the `C_cv` concave-hull canonicalization, the unary closure inclusion
-`[*]` ([4.16]/[4.17]), and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]); Proposition 4.4 (canonical
+the `C_cv` concave-hull is now built (`eq_4_6_concaveHull`/`Ccv`: least concave majorant, eq.[4.6]
+core), so the `[∧]` upper-bound canonicalization is available; what remains of Def 4.5/Thm 4.4 is the
+unary closure inclusion `[*]` ([4.16]/[4.17]) and the `F`-closure halves (book defers Thm 4.4's full
+proof to [LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: Prop 4.4's `Θ_f̲`
 [4.13] enumeration + Lemma 4.10 [4.12] closure (need a breakpoint layer / closure↔Legendre identity).
@@ -921,6 +924,19 @@ The library's `DeepWiki.Container.isLeast_legendreClass_biconj`. -/
 theorem prop_4_4 (f : ℝ≥0 → EReal) :
     IsLeast (DeepWiki.Container.legendreClass f) (DeepWiki.Container.biconj f) :=
   DeepWiki.Container.isLeast_legendreClass_biconj f
+
+/-- **§4.4 eq. [4.6]** (p.83), the concave hull `C_cv`. `DeepWiki.Ccv f` is the **least concave
+function ≥ f** (built as the `⨅` of all concave majorants — `IsConcaveEReal` is closed under `⨅`):
+concave (`isConcaveEReal_Ccv`), `f ≤ Ccv f` (`le_Ccv`), and universal `IsConcaveEReal g → f ≤ g →
+Ccv f ≤ g` (`Ccv_le`), with idempotence and concave fixed-point. This is the concave dual of `C_vx`,
+the operator Def 4.5 [4.14] uses to canonicalize a container meet's UPPER bound `C_cv(f̄ ⊓ ḡ)`
+(`isConcaveEReal_Ccv_inf`). The library's `DeepWiki.Ccv`. (The book's piecewise eq. [4.6] splice at
+`τ_f = max{t | f(t)=f(0)}` needs the level-set/`F_acv` layer; the global least-concave-majorant here is
+the faithful core.) -/
+theorem eq_4_6_concaveHull (f : ℝ≥0 → EReal) :
+    IsConcaveEReal (DeepWiki.Ccv f) ∧ f ≤ DeepWiki.Ccv f
+      ∧ ∀ g, IsConcaveEReal g → f ≤ g → DeepWiki.Ccv f ≤ g :=
+  ⟨DeepWiki.isConcaveEReal_Ccv f, DeepWiki.le_Ccv f, fun _g hg hfg => DeepWiki.Ccv_le hg hfg⟩
 
 /-- **Lemma 4.10** (§4.4, p.86): computing in the dioid `F↑/L` is equivalent to computing with
 canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
