@@ -13,6 +13,18 @@ namespace DeepWiki.TimeSeries
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
+omit [MeasurableSpace Ω] in
+/-- A block sum `∑_{t ∈ C} Xₜ` factors through the tuple `(Xₜ)_{t ∈ A}` over any containing index
+set `C ⊆ A`, as the coordinate-sum map composed with that tuple. The plumbing that lets
+`IndepFun` of block tuples descend to `IndepFun` of block sums. -/
+private theorem blockSum_eq_comp_tuple {C A : Finset ℤ} (hCA : C ⊆ A) (X : ℤ → Ω → ℝ) :
+    (fun ω => ∑ t ∈ C, X t ω)
+      = (fun v : ↥A → ℝ => ∑ t ∈ C.attach, v ⟨↑t, hCA t.2⟩) ∘
+        (fun ω (u : ↥A) => X (↑u) ω) := by
+  funext ω
+  simp only [Function.comp_apply]
+  exact (Finset.sum_attach C (fun t => X t ω)).symm
+
 /-- **m-dependent ⟹ the autocovariance vanishes beyond lag `m`**: for `|k| > m`, `Xₖ` and `X₀` are
 independent, so `acvfStat X μ k = cov[Xₖ, X₀] = 0`. -/
 theorem acvfStat_eq_zero_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDependent m X μ)
@@ -36,6 +48,49 @@ theorem summable_acvfStat_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ} (h : 
       rcases hk with hk | hk
       · exact lt_abs.mpr (Or.inr (by omega))
       · exact lt_abs.mpr (Or.inl (by omega)))
+
+/-- **Mutual independence of block sums** (the engine of the m-dependent CLT's big-block step): for an
+`m`-dependent process and finite index blocks `B₀ < B₁ < ⋯` each separated from the next by more than
+`m`, the block sums `∑_{t ∈ Bᵢ} Xₜ` are mutually independent. Proved from one-sided `m`-dependence by
+induction on the blocks (peeling the largest): the top block is independent of the union of the
+earlier ones — all before it — via `IsMDependent` applied to that union, the earlier block sums
+factoring through the union's coordinate tuple. -/
+theorem IsMDependent.iIndepFun_blockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    (h : IsMDependent m X μ) {r : ℕ} (B : Fin r → Finset ℤ)
+    (hsep : ∀ i j : Fin r, i < j → ∀ s ∈ B i, ∀ t ∈ B j, s + (m : ℤ) < t) :
+    iIndepFun (fun (i : Fin r) (ω : Ω) => ∑ t ∈ B i, X t ω) μ := by
+  rw [iIndepFun_iff_measure_inter_preimage_eq_mul]
+  intro S
+  induction S using Finset.induction_on_max with
+  | empty => intro sets _; simp
+  | insert a s ha ih =>
+    intro sets hsets
+    have has : a ∉ s := fun h' => lt_irrefl a (ha a h')
+    have hsep' : ∀ x ∈ s.biUnion B, ∀ t ∈ B a, x + (m : ℤ) < t := fun x hx t ht => by
+      rw [Finset.mem_biUnion] at hx
+      obtain ⟨i, hi, hxi⟩ := hx
+      exact hsep i a (ha i hi) x hxi t ht
+    have hIndep := h (s.biUnion B) (B a) hsep'
+    have hmeas_a : MeasurableSet[MeasurableSpace.comap (fun ω (u : ↥(B a)) => X (↑u) ω) inferInstance]
+        ((fun ω => ∑ t ∈ B a, X t ω) ⁻¹' sets a) := by
+      rw [blockSum_eq_comp_tuple (Finset.Subset.refl (B a))]
+      exact ((Finset.measurable_sum (B a).attach fun t _ =>
+        measurable_pi_apply (⟨(↑t : ℤ), Finset.Subset.refl (B a) t.2⟩ : ↥(B a))).comp
+        (measurable_iff_comap_le.2 le_rfl)) (hsets a (Finset.mem_insert_self a s))
+    have hmeas_s : MeasurableSet[MeasurableSpace.comap
+          (fun ω (u : ↥(s.biUnion B)) => X (↑u) ω) inferInstance]
+        (⋂ i ∈ s, (fun ω => ∑ t ∈ B i, X t ω) ⁻¹' sets i) := by
+      refine MeasurableSet.biInter s.countable_toSet fun i hi => ?_
+      rw [blockSum_eq_comp_tuple (Finset.subset_biUnion_of_mem B hi)]
+      exact ((Finset.measurable_sum (B i).attach fun t _ =>
+        measurable_pi_apply (⟨(↑t : ℤ), Finset.subset_biUnion_of_mem B hi t.2⟩ :
+          ↥(s.biUnion B))).comp
+        (measurable_iff_comap_le.2 le_rfl)) (hsets i (Finset.mem_insert_of_mem hi))
+    obtain ⟨Da, hDa, hDaeq⟩ := MeasurableSpace.measurableSet_comap.1 hmeas_a
+    obtain ⟨Ds, hDs, hDseq⟩ := MeasurableSpace.measurableSet_comap.1 hmeas_s
+    rw [Finset.set_biInter_insert, Finset.prod_insert has, ← hDaeq, ← hDseq, Set.inter_comm,
+      hIndep.measure_inter_preimage_eq_mul Ds Da hDs hDa, hDseq, hDaeq,
+      ih fun i hi => hsets i (Finset.mem_insert_of_mem hi), mul_comm]
 
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
