@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.MDependentCLT
+import DeepWiki.TimeSeries.IidStrictlyStationary
 
 /-! # Moving-average processes are m-dependent (Brockwell–Davis §6.4, Examples 6.4.3–6.4.4)
 An MA(q) process `Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` driven by i.i.d. noise is `q`-dependent: two blocks of the
@@ -183,5 +184,19 @@ theorem movingAverage_clt {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω → ℝ} 
     (hMAstat.isWeaklyStationary (measurable_movingAverage hmeas) (memLp_movingAverage hmem))
     (measurable_movingAverage hmeas) (memLp_movingAverage hmem)
     (integral_movingAverage hmem hcenter) hG
+
+/-- **Central limit theorem for a moving average of i.i.d. noise** (Brockwell–Davis Example 6.4.4, as
+stated): for an MA(q) process `Xₜ = ∑_{j=0}^q θⱼ Z_{t−j}` over centered `L²` i.i.d. noise `Z`,
+`√n X̄ₙ ⇒ N(0, ∑_{|h|≤q} γ(h))`. Same as `movingAverage_clt`, with strict stationarity of the noise
+supplied by `iIndepFun.isStrictlyStationary` (i.i.d. ⟹ strictly stationary). -/
+theorem movingAverage_clt_iid {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {G : Ω' → ℝ}
+    (hindep : iIndepFun Z μ) (hmeas : ∀ t, Measurable (Z t))
+    (hident : ∀ t, IdentDistrib (Z t) (Z 0) μ μ) (hmem : ∀ t, MemLp (Z t) 2 μ)
+    (hcenter : ∀ t, μ[Z t] = 0) (hG : HasLaw G (gaussianReal 0 1) P') :
+    TendstoInDistribution (fun (n : ℕ) ω => Real.sqrt n *
+        sampleMean n (fun t => movingAverage θ q Z (t : ℤ) ω)) atTop
+      (fun ω => Real.sqrt (∑' k : ℤ, acvfStat (movingAverage θ q Z) μ k) • G ω) (fun _ => μ) P' :=
+  movingAverage_clt hindep (iIndepFun.isStrictlyStationary hindep hmeas hident) hmeas hmem hcenter hG
 
 end DeepWiki.TimeSeries
