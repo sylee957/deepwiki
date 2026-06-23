@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.FifoFeedForwardExact
 import DeepWiki.NetworkCalculus.FifoFeedForwardConcrete
+import DeepWiki.NetworkCalculus.FifoFeedForwardReconstruction
 import Sources.Doi_10_1109_TNET_2014_2332071.Source
 
 /-! # Bouillard–Stea — exact worst-case delay in FIFO-multiplexing feed-forward networks — catalog
@@ -57,5 +58,18 @@ alias lemma_2 := FifoFeedForward.Scenario.sample_feasible_pointwise
 cumulative (for sub-additive `α`) from sampled values — `extrapolate_arrival` is the genuine
 property-3 content. The library's `DeepWiki.FifoFeedForward.extrapolate` / `extrapolate_arrival`. -/
 alias lemma_3_extrapolate := FifoFeedForward.extrapolate_arrival
+
+/-- **Lemma 1** (§IV.A, p.4/7): the inf-convolution `(A∗β)(t)` is ATTAINED at a service-curve time
+`t₃ ≤ t` (`minConvProj A β t = A t₃ + β(t−t₃)`) for monotone left-continuous `A` and continuous `β` —
+the existence the Lemma 2 backward date recursion rests on; service-dominator form
+`exists_serviceCurveTime_of_serviceDominator`. The library's
+`DeepWiki.FifoFeedForward.exists_serviceCurveTime`. -/
+alias lemma_1 := FifoFeedForward.exists_serviceCurveTime
+
+/-- **Theorem 1, concrete single-node round trip** (§IV.A / Table 11.2): the FIFO-node optimum
+`T+(b₁+b₂)/R` is realized by an ACTUAL admissible trajectory (`burstArrival`/`burstDeparture` — burst at
+`0⁺`, rate-latency output, causal, service-curve-bounded), with both Theorem-1 directions explicit and
+no Boolean variables. The library's `DeepWiki.FifoFeedForward.fifoNode_reconstruction`. -/
+alias thm_1_reconstruction_node := FifoFeedForward.fifoNode_reconstruction
 
 end DeepWiki.Bs
