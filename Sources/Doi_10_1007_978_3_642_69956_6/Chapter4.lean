@@ -18,10 +18,10 @@ semantics.
   [infra/research].
 §4.3: Algorithm 4.2 (decomposition into BCNF) with Theorem 4.4 (correctness), Theorem 4.5
   (deciding BCNF is NP-complete) [infra/research].
-§4.4: Def 4.3 (lossless-join decomposition), Def 4.6 (constraint-preserving representation /
-  decomposition), Algorithm 4.3 (the synthesis algorithm) with Theorem 4.6 and Corollary 4.1
-  (every scheme has a constraint-preserving 3NF decomposition), Example 4.10 (redundant schemes
-  survive) [infra].
+§4.4: Def 4.6 (constraint-preserving representation / decomposition), Algorithm 4.3 (the
+  synthesis algorithm) with Theorem 4.6 and Corollary 4.1 (every scheme has a constraint-preserving
+  3NF decomposition), Example 4.10 (redundant schemes survive) [infra]. (Def 4.3 lossless-join
+  decomposition is done.)
 §4.5: Def 4.7 (fourth normal form) with Theorem 4.7 (4NF ⟹ BCNF), Def 4.8 (fifth normal form /
   project-join normal form) with Theorem 4.8 (5NF ⟹ 4NF) [infra: needs mvd/jd implication].
 §4.6: vertical decomposition and consistency checking [infra].
@@ -63,5 +63,15 @@ abbrev thm_4_3 := @DeepWiki.is3NF_of_isBCNF
 
 /-- **Third implies second normal form** (§4.2, p.115): every 3NF relation scheme is in 2NF. -/
 abbrev nf_2nf_of_3nf := @DeepWiki.is2NF_of_is3NF
+
+/-! ## §4.4 Constraint Preserving Normalization -/
+
+/-- **Definition 4.3** (§4.2, p.116): a *lossless-join decomposition* — components covering `Ω`
+such that every instance satisfying `SC` equals the join of its projections. -/
+abbrev def_4_3_lossless_join := @DeepWiki.IsLosslessJoinDecomp
+
+/-- **Trivial lossless decomposition** (§4.4): the single-component decomposition `{Ω}` is
+lossless. -/
+abbrev lossless_join_single := @DeepWiki.isLosslessJoinDecomp_single
 
 end DeepWiki.Rdb

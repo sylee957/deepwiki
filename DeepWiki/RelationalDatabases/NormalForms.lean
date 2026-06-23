@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.FunctionalDependencies
+import DeepWiki.RelationalDatabases.JoinDependencies
 
 /-! # Normal forms (functional-dependency based)
 Keys and the functional-dependency normal forms. A *superkey* functionally determines every
@@ -13,7 +14,7 @@ join-dependency implication) are layered on later. -/
 
 namespace DeepWiki
 
-universe u v
+universe u v w
 
 variable {Att : Type u} {Val : Type v} {Ω : Finset Att}
 
@@ -70,5 +71,22 @@ theorem is2NF_of_is3NF {SC : FdSet Att} (h : Is3NF Ω Val SC) : Is2NF Ω Val SC 
   · exact Or.inr h2
   · obtain ⟨K, hK, hYK⟩ := hpart
     exact absurd h3 (hK.not_superkey_of_ssubset hYK)
+
+/-- A finite family of attribute sets `comp` is a *lossless-join decomposition* (Def 4.3): the
+components lie in and cover `Ω`, and every instance satisfying `SC` equals the join of its
+projections — i.e. satisfies the corresponding join dependency. -/
+def IsLosslessJoinDecomp {ι : Type w} [DecidableEq Att] (Ω : Finset Att)
+    (Val : Type v) (SC : FdSet Att) (comp : ι → Finset Att) : Prop :=
+  (∀ i, comp i ⊆ Ω) ∧ (∀ a ∈ Ω, ∃ i, a ∈ comp i) ∧
+    ∀ r : Table Ω Val, (∀ fd ∈ SC, SatisfiesFd r fd.1 fd.2) → SatisfiesJd r comp
+
+/-- The trivial single-component decomposition `{Ω}` is a lossless-join decomposition. -/
+theorem isLosslessJoinDecomp_single [DecidableEq Att] (Ω : Finset Att) (Val : Type v)
+    (SC : FdSet Att) : IsLosslessJoinDecomp Ω Val SC (fun _ : Unit => Ω) := by
+  refine ⟨fun _ => subset_rfl, fun a ha => ⟨(), ha⟩, ?_⟩
+  intro r _ t ht _
+  refine ⟨t (), ht (), fun i => ?_⟩
+  cases i
+  exact fun a _ => rfl
 
 end DeepWiki
