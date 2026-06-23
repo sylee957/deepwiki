@@ -417,3 +417,72 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV hq hg hgc j A
+
+/-! ### Exact division through `toPoly`
+
+When the computable Euclidean division `cdiv fuel p q` is *exact* (the remainder `cmod fuel p q`
+reads to `0`), it realizes honest division in `ℚ[X]`: `toPoly p = toPoly (cdiv fuel p q) · toPoly q`.
+This is the certificate the `hermiteReduce` residual recovery needs — `Bres = cdiv … (resNum·Dstar)
+resDen` divides exactly because the difference `A/D − g′` is a genuine polynomial fraction over
+`Dstar`. -/
+
+/-- **Exact-division bridge**: if the remainder `cmod fuel p q` reads to `0` in `ℚ[X]`, then `cdiv`
+realizes honest division: `toPoly p = toPoly (cdiv fuel p q) · toPoly q`. (From the Euclidean-division
+identity `toPoly_cdivmod'` with a zero remainder; needs `cnorm q ≠ []`.) -/
+theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
+  have h := toPoly_cdivmod' fuel p q hq
+  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
+      show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
+  exact h
+
+open Classical in
+/-- **Exact-division cross-multiplication in `RatFunc ℚ`**: when `cdiv fuel p q` is exact
+(`toPoly (cmod fuel p q) = 0`) and `q ≠ 0`, the fraction `am p / am q` equals `am (cdiv fuel p q)`
+as a `RatFunc ℚ` element. -/
+theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q)) := by
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hq0
+  rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
+    div_self hqm, mul_one]
+
+/-! ### The residual-recovery identity (in `RatFunc ℚ`)
+
+`hermiteReduce` computes the residual log-part numerator `Bres` by clearing denominators in
+`A/D − g′ = Bres/Dstar`: with `g = gnum/gden`, the quotient rule gives `A/D − g′ = resNum/resDen`
+where `resNum = A·gden² − D·(gnum'·gden − gnum·gden')` and `resDen = D·gden²`. The lemma below is the
+pure `RatFunc ℚ` calculation of that subtraction; `am_cdiv_of_cmod_zero` then folds the exact division
+`Bres = (resNum·Dstar)/resDen` into the squarefree-denominator form `Bres/Dstar`. -/
+
+open scoped Differential in
+/-- **The residual-recovery numerator identity** in `RatFunc ℚ`: with `am = algebraMap ℚ[X]
+(RatFunc ℚ)`, for `D, gden ≠ 0`, the difference of `A/D` and the derivative of the rational part
+`gnum/gden` is `resNum/(D·gden²)` where `resNum = A·gden² − D·(gnum'·gden − gnum·gden')`. The
+quotient-rule numerator of `(gnum/gden)′` cleared over the common denominator `D·gden²`. -/
+theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgden : gden ≠ 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) A / algebraMap ℚ[X] (RatFunc ℚ) D
+        - (algebraMap ℚ[X] (RatFunc ℚ) gnum / algebraMap ℚ[X] (RatFunc ℚ) gden)′
+      = algebraMap ℚ[X] (RatFunc ℚ)
+          (A * (gden * gden) - D * (derivative gnum * gden - gnum * derivative gden))
+        / (algebraMap ℚ[X] (RatFunc ℚ) D * (algebraMap ℚ[X] (RatFunc ℚ) gden
+            * algebraMap ℚ[X] (RatFunc ℚ) gden)) := by
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  have hd : am D ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
+  have hgd : am gden ≠ 0 := (map_ne_zero_iff _ hinj).mpr hgden
+  -- `am`-of-derivative rewrites (defeq to `ratFuncDeriv_algebraMap`).
+  have hdgnum : (am gnum)′ = am (derivative gnum) := ratFuncDeriv_algebraMap gnum
+  have hdgden : (am gden)′ = am (derivative gden) := ratFuncDeriv_algebraMap gden
+  -- the quotient rule for `(gnum/gden)′`.
+  have hderiv : (am gnum / am gden)′
+      = (am gden * am (derivative gnum) - am gnum * am (derivative gden)) / (am gden ^ 2) := by
+    rw [deriv_div, hdgnum, hdgden]
+  rw [hderiv]
+  simp only [map_sub, map_mul]
+  rw [pow_two]
+  field_simp
