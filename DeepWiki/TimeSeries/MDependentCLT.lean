@@ -56,9 +56,9 @@ induction on the blocks (peeling the largest): the top block is independent of t
 earlier ones — all before it — via `IsMDependent` applied to that union, the earlier block sums
 factoring through the union's coordinate tuple. -/
 theorem IsMDependent.iIndepFun_blockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
-    (h : IsMDependent m X μ) {r : ℕ} (B : Fin r → Finset ℤ)
-    (hsep : ∀ i j : Fin r, i < j → ∀ s ∈ B i, ∀ t ∈ B j, s + (m : ℤ) < t) :
-    iIndepFun (fun (i : Fin r) (ω : Ω) => ∑ t ∈ B i, X t ω) μ := by
+    (h : IsMDependent m X μ) {ι : Type*} [LinearOrder ι] (B : ι → Finset ℤ)
+    (hsep : ∀ i j : ι, i < j → ∀ s ∈ B i, ∀ t ∈ B j, s + (m : ℤ) < t) :
+    iIndepFun (fun (i : ι) (ω : Ω) => ∑ t ∈ B i, X t ω) μ := by
   rw [iIndepFun_iff_measure_inter_preimage_eq_mul]
   intro S
   induction S using Finset.induction_on_max with
@@ -91,6 +91,29 @@ theorem IsMDependent.iIndepFun_blockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsPr
     rw [Finset.set_biInter_insert, Finset.prod_insert has, ← hDaeq, ← hDseq, Set.inter_comm,
       hIndep.measure_inter_preimage_eq_mul Ds Da hDs hDa, hDseq, hDaeq,
       ih fun i hi => hsets i (Finset.mem_insert_of_mem hi), mul_comm]
+
+/-- The `i`-th **big block** of the `(p+m)`-spaced big-block/small-block partition: the size-`p`
+window `[i(p+m), i(p+m)+p)`, with a size-`m` gap before the next block. -/
+noncomputable def bigBlock (p m i : ℕ) : Finset ℤ :=
+  Finset.Ico ((i : ℤ) * ((p : ℤ) + m)) ((i : ℤ) * ((p : ℤ) + m) + p)
+
+/-- **Big blocks are gap-`m` separated**: every index of an earlier big block precedes every index of
+a later one by more than `m` (the gap is exactly `m`, so the separation is `m+1 > m`). -/
+theorem bigBlock_sep {p m : ℕ} {i j : ℕ} (hij : i < j) :
+    ∀ s ∈ bigBlock p m i, ∀ t ∈ bigBlock p m j, s + (m : ℤ) < t := by
+  intro s hs t ht
+  simp only [bigBlock, Finset.mem_Ico] at hs ht
+  have hij' : (i : ℤ) + 1 ≤ j := by exact_mod_cast hij
+  nlinarith [mul_le_mul_of_nonneg_right hij' (show (0 : ℤ) ≤ (p : ℤ) + m by positivity),
+    hs.1, hs.2, ht.1, ht.2]
+
+/-- **The big-block sums of an m-dependent process are mutually independent**: applying
+`iIndepFun_blockSum` to the gap-`m`-separated big blocks. The independence input to the big-block
+central limit step. -/
+theorem IsMDependent.iIndepFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    (h : IsMDependent m X μ) (p : ℕ) :
+    iIndepFun (fun (i : ℕ) (ω : Ω) => ∑ t ∈ bigBlock p m i, X t ω) μ :=
+  h.iIndepFun_blockSum (bigBlock p m) fun _ _ hij => bigBlock_sep hij
 
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
