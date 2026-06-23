@@ -1490,4 +1490,161 @@ theorem exists_iterate_ratFuncKDeriv_div (p M : K[X]) {α : K} (i : ℕ) (hM : M
       rw [inv_pow, ← div_eq_inv_mul, div_eq_div_iff (pow_ne_zero 2 hQn0) (pow_ne_zero 2 hQn0)]
       ring
 
+/-- **The order-`d` derivative of a `(X−α)^i`-divisible quotient vanishes at `α`** (`d < i`): evaluating the
+shape `P_d/Q_d` of `exists_iterate_ratFuncKDeriv_div` at `α`, the surviving `(X−α)^(i−d)` numerator factor
+(positive power since `d < i`) is zero at `α`, so `(d/dx)^[d](p/M)(α) = 0`. -/
+theorem eval_iterate_ratFuncKDeriv_div_eq_zero (p M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0)
+    (hdvd : (Polynomial.X - Polynomial.C α) ^ i ∣ p) (hd : d < i) :
+    RatFunc.eval (RingHom.id K) α
+        ((ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) p / algebraMap K[X] (RatFunc K) M)) = 0 := by
+  obtain ⟨Pd, Qd, hQd, hdvdd, heqd⟩ :=
+    exists_iterate_ratFuncKDeriv_div p M i hM hdvd d (Nat.le_of_lt hd)
+  rw [heqd, eval_algebraMap_div α Pd Qd hQd]
+  -- the numerator `Pd` is divisible by `(X−α)^(i−d)`, a positive power, hence has root `α`
+  obtain ⟨s, hs⟩ := hdvdd
+  have hPd0 : Pd.eval α = 0 := by
+    rw [hs, Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_sub, Polynomial.eval_X,
+      Polynomial.eval_C, sub_self, zero_pow (by omega), zero_mul]
+  rw [hPd0, zero_div]
+
+/-- **`A/M − W = (A − M·W)/M`** in `K(x)`: the local approximant `W` (embedded) subtracted from `A/M` clears
+to the single quotient `(A − M·W)/M`, whose numerator `A − M·W` is divisible by `(X−α)^i`
+(`localApprox_spec`). -/
+theorem hFrac_sub_localApprox (A M : K[X]) (α : K) (i : ℕ) (hM : M.eval α ≠ 0) :
+    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M
+        - algebraMap K[X] (RatFunc K) (localApprox A M α i)
+      = algebraMap K[X] (RatFunc K) (A - M * localApprox A M α i)
+          / algebraMap K[X] (RatFunc K) M := by
+  have hM0 : algebraMap K[X] (RatFunc K) M ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+      (fun h => hM (by rw [h, Polynomial.eval_zero]))
+  rw [map_sub, map_mul]
+  field_simp
+
+/-! ## Stage M (cont.) — P2: `localCoeff A M α i d = (1/d!)·(d/dx)^[d](A/M)(α) = Hᵢ,(i−d)(α)`
+
+`hᵢ,α = A/M` (since `A/D·(x−α)ⁱ = A·(x−α)ⁱ/((x−α)ⁱ·M) = A/M`). Splitting
+`(d/dx)^[d](A/M) = (d/dx)^[d] W + (d/dx)^[d](A/M − W)` and evaluating at `α`: the first term is
+`d!·localCoeff` (Hasse bridge `eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff`), the second vanishes for
+`d < i` (`eval_iterate_ratFuncKDeriv_div_eq_zero`, since `A/M − W = (A − M·W)/M` with `(x−α)ⁱ ∣ A − M·W`).
+So `(d/dx)^[d](A/M)(α) = d!·localCoeff`, i.e. `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`. -/
+
+/-- **`(d/dx)^[d]` is additive** (the iterated derivation respects sums): `(ratFuncKDeriv^[d])(x + y)
+= (ratFuncKDeriv^[d]) x + (ratFuncKDeriv^[d]) y`, by `Derivation.map_add` iterated. Used to split
+`A/M = W + (A/M − W)`. -/
+theorem iterate_ratFuncKDeriv_add (x y : RatFunc K) (d : ℕ) :
+    (ratFuncKDeriv^[d]) (x + y) = (ratFuncKDeriv^[d]) x + (ratFuncKDeriv^[d]) y := by
+  induction d generalizing x y with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply, Function.iterate_succ_apply, Function.iterate_succ_apply,
+      map_add, ih]
+
+/-- **P2 — the coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`** (Bronstein §2.7, the
+Hasse-derivative ↔ differential-engine identification): for `D = (x−α)ⁱ·M` with `M(α) ≠ 0` and `d < i`, the
+Stage L `(X−α)`-adic Laurent digit `localCoeff A M α i d = (taylor α W).coeff d` equals the order-`d` Taylor
+coefficient of the genuine function `hᵢ,α = A/M` (`= (A/D)(x−α)ⁱ`),
+`localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`. Proof: split `A/M = W + (A/M − W)`, push `(d/dx)^[d]` through the
+sum (`iterate_ratFuncKDeriv_add`) — the embedded-`W` term is `algebraMap (derivative^[d] W)`
+(`iterate_ratFuncKDeriv_algebraMap`), the remainder term `(A/M − W) = (A − M·W)/M` (numerator divisible by
+`(x−α)ⁱ`) is `algebraMap Pd / algebraMap Qd` with `Pd(α) = 0`, `Qd(α) ≠ 0` (`exists_iterate_ratFuncKDeriv_div`,
+`d < i` keeps a positive `(x−α)`-power). Combining over the common denominator `Qd` and evaluating,
+`(d/dx)^[d](A/M)(α) = (derivative^[d] W)(α) = d!·localCoeff` (Hasse identity
+`eval_iterate_derivative_eq_factorial_taylor_coeff`). This identifies the Stage L principal-part digit with
+the engine Taylor coefficient `Hᵢ,(i−d)(α)` (the order-`d = (i − j)` data of `eval_laurentH_eq_taylor_coeff`). -/
+theorem localCoeff_eq_taylor_coeff [CharZero K] (A M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0)
+    (hd : d < i) :
+    localCoeff A M α i d
+      = (((d.factorial : K))⁻¹)
+          * RatFunc.eval (RingHom.id K) α
+              ((ratFuncKDeriv^[d])
+                (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M)) := by
+  set W := localApprox A M α i with hWdef
+  -- the remainder `(A/M − W) = (A − M·W)/M` has the explicit `Pd/Qd` shape, `(x−α)`-divisible numerator
+  obtain ⟨Pd, Qd, hQd, hdvdd, heqd⟩ :=
+    exists_iterate_ratFuncKDeriv_div (A - M * W) M i hM (localApprox_spec A M i hM) d
+      (Nat.le_of_lt hd)
+  have hPd0 : Pd.eval α = 0 := by
+    obtain ⟨s, hs⟩ := hdvdd
+    rw [hs, Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_sub, Polynomial.eval_X,
+      Polynomial.eval_C, sub_self, zero_pow (by omega), zero_mul]
+  -- split `A/M = W + (A/M − W)` and push `(d/dx)^[d]` through the sum
+  have hsplit : algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M
+      = algebraMap K[X] (RatFunc K) W
+        + (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M
+            - algebraMap K[X] (RatFunc K) W) := by ring
+  rw [hsplit, iterate_ratFuncKDeriv_add, iterate_ratFuncKDeriv_algebraMap,
+    hFrac_sub_localApprox A M α i hM, ← hWdef, heqd]
+  -- combine the two summands over the common denominator `Qd`
+  have hQd0 : algebraMap K[X] (RatFunc K) Qd ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+      (fun h => hQd (by rw [h, Polynomial.eval_zero]))
+  have hcomb : algebraMap K[X] (RatFunc K) (derivative^[d] W)
+        + algebraMap K[X] (RatFunc K) Pd / algebraMap K[X] (RatFunc K) Qd
+      = algebraMap K[X] (RatFunc K) (derivative^[d] W * Qd + Pd) / algebraMap K[X] (RatFunc K) Qd := by
+    rw [map_add, map_mul, add_div, mul_div_assoc, div_self hQd0, mul_one]
+  rw [hcomb, eval_algebraMap_div α _ _ hQd]
+  -- evaluate: numerator `(derivative^[d] W · Qd + Pd)(α) = (derivative^[d] W)(α)·Qd(α)` (since `Pd(α)=0`)
+  rw [Polynomial.eval_add, Polynomial.eval_mul, hPd0, add_zero,
+    eval_iterate_derivative_eq_factorial_taylor_coeff, localCoeff, ← hWdef]
+  have hfac : (d.factorial : K) ≠ 0 := by
+    exact_mod_cast (Nat.cast_ne_zero (R := K)).mpr (Nat.factorial_ne_zero d)
+  field_simp
+
+/-- **`hᵢ,α = A/M` for `M = Dᵢ,α^i·Eᵢ`** (`= lDenomα Eᵢ Dᵢ,α i 0`): the genuine function the engine
+differentiates is `A/M`, the same `A/M` whose order-`d` Taylor digits are `localCoeff` (Stage M).
+`hFracα A Eᵢ Dᵢ,α i = algebraMap A / algebraMap (lDenomα Eᵢ Dᵢ,α i 0)` and `lDenomα Eᵢ Dᵢ,α i 0 = Dᵢ,α^i·Eᵢ`. -/
+theorem hFracα_eq_div_lDenomα (A Ei Diα : K[X]) (i : ℕ) :
+    hFracα A Ei Diα i
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i 0) := rfl
+
+/-- **P2, chained to the engine: `localCoeff = Hᵢ,(i−d)(α)`** (Bronstein §2.7, the full coefficient
+identification): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, with `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`,
+so `D = (x−α)ⁱ·M`) pole-free at `α` and `d < i`, the Stage L `(X−α)`-adic Laurent digit
+`localCoeff A M α i d` equals the engine output `Hᵢ,(i−d)(α) = (laurentH A D Dᵢ i (i−d))(α)`. Both equal the
+order-`d` Taylor coefficient `(1/d!)·(d/dx)^[d](A/M)(α)` of `hᵢ,α = A/M = (A/D)(x−α)ⁱ`: `localCoeff` by the
+Hasse-derivative bridge `localCoeff_eq_taylor_coeff`, the engine output by the differential-engine invariant
+`eval_laurentH_eq_taylor_coeff` (with `i − (i − d) = d`). This is the final unification of the Stage L
+principal-part structure with the Stage K differential engine. -/
+theorem localCoeff_eq_laurentH [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ)
+    (hi : 0 < i) (hd : d < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    localCoeff A (lDenomα (laurentE D Di i) Diα i 0) α i d
+      = (laurentH A D Di i (i - d)).eval α := by
+  set Ei := laurentE D Di i with hEidef
+  set M := lDenomα Ei Diα i 0 with hMdef
+  -- `M(α) ≠ 0`: `M = Diα^i·Ei`
+  have hM : M.eval α ≠ 0 := by
+    rw [hMdef, lDenomα, Nat.add_zero, Nat.zero_add, pow_one, Polynomial.eval_mul, Polynomial.eval_pow]
+    exact mul_ne_zero (pow_ne_zero _ hDiα) hEi
+  -- the engine side: `Hᵢ,(i−d)(α) = (1/(i−(i−d))!)·(d/dx)^[i−(i−d)] hᵢ,α (α)`, with `i−(i−d)=d`
+  have hji : i - d ≤ i := by omega
+  rw [eval_laurentH_eq_taylor_coeff (Diα := Diα) i (i - d) hi hji hDi hα hfac hcopE hcopD hEi hDiα]
+  rw [show i - (i - d) = d from by omega, ← hEidef]
+  -- the `localCoeff` side via the Hasse bridge, with `hFracα = A/M`
+  rw [localCoeff_eq_taylor_coeff A M i d hM hd, hFracα_eq_div_lDenomα, ← hMdef]
+
+/-- Restatement of P2 (the coefficient bridge): the Stage L Laurent digit `localCoeff` is the order-`d`
+Taylor coefficient `(1/d!)·(d/dx)^[d](A/M)(α)` of `hᵢ,α = A/M`. -/
+example [CharZero K] (A M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0) (hd : d < i) :
+    localCoeff A M α i d
+      = (((d.factorial : K))⁻¹)
+          * RatFunc.eval (RingHom.id K) α
+              ((ratFuncKDeriv^[d])
+                (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M)) :=
+  localCoeff_eq_taylor_coeff A M i d hM hd
+
+/-- Restatement of P2 chained to the engine: the Stage L Laurent digit `localCoeff` equals the
+Bronstein–Salvy engine output `Hᵢ,(i−d)(α)` (book p.56). -/
+example [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ) (hi : 0 < i) (hd : d < i)
+    (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    localCoeff A (lDenomα (laurentE D Di i) Diα i 0) α i d
+      = (laurentH A D Di i (i - d)).eval α :=
+  localCoeff_eq_laurentH A D Di Diα i d hi hd hDi hα hfac hcopE hcopD hEi hDiα
+
 end DeepWiki.SymbolicIntegration
