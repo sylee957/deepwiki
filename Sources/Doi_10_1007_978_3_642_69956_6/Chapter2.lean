@@ -4,6 +4,7 @@ import DeepWiki.RelationalDatabases.TupleCalculus
 import DeepWiki.RelationalDatabases.Sql
 import DeepWiki.RelationalDatabases.QueryEquivalence
 import DeepWiki.RelationalDatabases.QueryEquivalenceFO
+import DeepWiki.RelationalDatabases.QueryEquivalenceCodd
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -35,12 +36,14 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
   generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
   set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
-§2.4: the full reduction of the tuple calculus to the relational algebra — the recursive
-  translation function `calcToAlg` over the first-order calculus, and safety/domain-independence
-  [research]. (Done: the database-relation calculus foundation `QCond`/`evalQCond`, the
-  quantifier-free fragment ↔ algebra both directions, the first-order calculus `FOCond`/`evalFO`
-  with de Bruijn variables and per-relation schemes, and the per-operator reductions —
-  projection `evalFOExpr_projQuery` and join `evalFOExpr_joinQuery`.)
+§2.4: the *converse* reduction — the tuple calculus to the relational algebra (`calcToAlg` over
+  the first-order calculus) and the safety/domain-independence it requires [research]. (Done: the
+  database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free fragment ↔ algebra
+  both directions, the first-order calculus `FOCond`/`evalFO` with de Bruijn variables and
+  per-relation schemes, the per-operator reductions, and now the **full recursive algebra →
+  calculus translation** — weakening `FOCond.wk`/`evalFO_wk` via order-preserving embeddings
+  `Thin`, the database-indexed algebra `DbAlgExpr`/`evalDbAlg`, and `algToFO` with correctness
+  `evalFOExpr_algToFO`, giving the algebra ⊆ calculus direction.)
 §2.5: the reduction of the relational algebra to SQL [infra].
 §2.6: the reduction of SQL to the tuple calculus [infra].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
@@ -168,6 +171,31 @@ abbrev reduction_join := @DeepWiki.evalFOExpr_joinQuery
 /-- **`FOCond` subsumes the quantifier-free calculus** (§2.4): the quantifier-free `QCond`
 embeds into the first-order calculus with the same denotation, unifying the two layers. -/
 abbrev reduction_qcond_subsumed := @DeepWiki.evalFOExpr_qcondToFO
+
+/-- **Context thinning** (§2.4): an order-preserving embedding of de Bruijn contexts, the basis
+of weakening. -/
+abbrev calc_thinning := @DeepWiki.Thin
+
+/-- **Condition weakening** (§2.4): reindex a first-order condition into a larger context (used to
+compose sub-queries under the existentials), meaning preserved by `evalFO_wk`. -/
+abbrev calc_weaken := @DeepWiki.FOCond.wk
+
+/-- **Weakening correctness** (§2.4): the weakened condition over the larger environment holds iff
+the original holds over the projected one. -/
+abbrev calc_weaken_correct := @DeepWiki.evalFO_wk
+
+/-- **Database-indexed relational algebra** (§2.4): algebra expressions indexed by their output
+scheme — the source of the recursive translation to the calculus. -/
+abbrev algebra_dbIndexed := @DeepWiki.DbAlgExpr
+
+/-- **Recursive algebra → calculus translation** (§2.4): each algebra expression maps to a
+single-free-variable first-order condition (projection and join introduce existentials). -/
+abbrev reduction_algToCalc := @DeepWiki.algToFO
+
+/-- **Codd's theorem, algebra ⊆ calculus** (§2.4): `algToFO` denotes the same table as the algebra
+expression, `evalFOExpr (algToFO e) = evalDbAlg e` — the relational algebra is subsumed by the
+first-order tuple calculus. -/
+abbrev reduction_algToCalc_correct := @DeepWiki.evalFOExpr_algToFO
 
 /-! ## §2.3 SQL: Structured Query Language -/
 

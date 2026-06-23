@@ -15,4 +15,5 @@ import DeepWiki.RelationalDatabases.NestedRelationalModel
 import DeepWiki.RelationalDatabases.UpdatesTransactions
 import DeepWiki.RelationalDatabases.QueryEquivalence
 import DeepWiki.RelationalDatabases.QueryEquivalenceFO
+import DeepWiki.RelationalDatabases.QueryEquivalenceCodd
 import DeepWiki.RelationalDatabases.ExampleDatabases
