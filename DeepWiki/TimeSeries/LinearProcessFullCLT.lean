@@ -95,4 +95,42 @@ theorem norm_sum_causalLinearProcessLp_le [IsProbabilityMeasure μ] {Z : ℤ →
         refine tsum_congr fun j => ?_; rw [norm_smul, Real.norm_eq_abs, hAnorm]
     _ = Real.sqrt n * ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j| := by rw [tsum_mul_right, mul_comm]
 
+/-- **Uniform `L²` bound on the standardized sample mean of a causal linear process:** for `n ≥ 1`
+and absolutely summable filter `φ`, `‖√n X̄ₙ‖₂ ≤ ‖toLpSeq 0‖ · ∑ⱼ |φⱼ|`, *independently of `n`* —
+the `(√n · n⁻¹)` rescaling exactly cancels the `√n` orthogonal growth of the windowed sum
+(`norm_sum_causalLinearProcessLp_le`). Applied to the truncation tail `φ = ψ·1_{j>m}`, this is the
+double-limit approximation `h3`. -/
+theorem eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ}
+    (hmem : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0)
+    {φ : ℕ → ℝ} (hφ : Summable fun j => |φ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => φ j • toLpSeq Z hmem (t - (j : ℤ))) {n : ℕ} (hn : 1 ≤ n) :
+    eLpNorm (fun ω => Real.sqrt n * sampleMean n
+        fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω) 2 μ
+      ≤ ENNReal.ofReal (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|) := by
+  have hn' : (0 : ℝ) < n := by exact_mod_cast hn
+  have hae : (fun ω => Real.sqrt n * sampleMean n
+        fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω)
+      =ᵐ[μ] (Real.sqrt n * (n : ℝ)⁻¹)
+        • ((∑ t ∈ Finset.range n, causalLinearProcessLp φ Z hmem (t : ℤ) : Lp ℝ 2 μ) : Ω → ℝ) := by
+    filter_upwards [Lp.coeFn_finsetSum (Finset.range n)
+      (fun t => causalLinearProcessLp φ Z hmem (t : ℤ))] with ω e1
+    simp only [Pi.smul_apply, smul_eq_mul, sampleMean, e1, Finset.sum_apply]
+    ring
+  rw [eLpNorm_congr_ae hae, eLpNorm_const_smul, Real.enorm_eq_ofReal (by positivity), eLpNorm_coeFn,
+    ← ofReal_norm, ← ENNReal.ofReal_mul (by positivity)]
+  refine ENNReal.ofReal_le_ofReal ?_
+  calc (Real.sqrt n * (n : ℝ)⁻¹)
+        * ‖∑ t ∈ Finset.range n, causalLinearProcessLp φ Z hmem (t : ℤ)‖
+      ≤ (Real.sqrt n * (n : ℝ)⁻¹)
+        * (Real.sqrt n * ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|) := by
+        gcongr
+        exact norm_sum_causalLinearProcessLp_le hmem hindep hident hcenter hφ hsum n
+    _ = ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j| := by
+        rw [show (Real.sqrt n * (n : ℝ)⁻¹)
+              * (Real.sqrt n * ‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|)
+            = (Real.sqrt n * Real.sqrt n)
+              * ((n : ℝ)⁻¹ * (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|)) from by ring,
+          Real.mul_self_sqrt hn'.le, ← mul_assoc, mul_inv_cancel₀ hn'.ne', one_mul]
+
 end DeepWiki.TimeSeries
