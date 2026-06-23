@@ -2679,6 +2679,183 @@ theorem degreeOf_zero_iff_isUnit_primPart_lazardView {K : Type*} [Field K]
   · intro hu
     exact Polynomial.natDegree_eq_zero_of_isUnit hu
 
+/-- **The min element's `y`-primitive part divides the next basis element** (Part B, structure
+induction step — Lazard's "`primpart(f₀)` divides `f_{i+1}`"). Fix `P := primPart(lazardView f₀)`
+(`f₀ = sorted 0`). With `i < i1` immediate (`hsucc`) and the IH `P ∣ lazardView (sorted j)` for all
+`j ≤ i`, one gets `P ∣ lazardView f_{i1}`. Mechanism (`C_dvd_lazardView_succ` shape, but for the fixed
+primitive divisor `P`): the reduction `R = yConst q · f_{i1} − y^{shift}·fi ∈ I` (`q = gᵢ/g_{i1}`) has
+`y`-degree `< d(i1)`, so by IH `P ∣ lazardView R`; with `P ∣ lazardView fi` (IH at `i`), the reduction
+equation gives `P ∣ C q · lazardView f_{i1}`; the `K[x]`-scalar `q` is stripped by Gauss's lemma
+(`isPrimitive_dvd_of_dvd_C_mul`, `P` primitive). -/
+theorem primPart_lazardView_min_dvd_succ {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i0 : Fin B.card) {i i1 : Fin B.card} (hii1 : i < i1)
+    (hsucc : ∀ j : Fin B.card, j < i1 → j ≤ i)
+    (hIH : ∀ j : Fin B.card, j ≤ i →
+      (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+        (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB j)) :
+    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i1) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  set P := (lazardView (sortedByYDegree hB i0)).primPart with hP_def
+  set fi := sortedByYDegree hB i with hfi_def
+  set fj := sortedByYDegree hB i1 with hfj_def
+  have hfi0 : fi ≠ 0 := hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i))
+  have hfj0 : fj ≠ 0 := hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i1))
+  have hdlt : degreeOf 0 fi < degreeOf 0 fj := degreeOf_sortedByYDegree_strictMono hB hii1
+  obtain ⟨q, hq⟩ := leadingYCoeff_sortedByYDegree_dvd_of_lt hB hii1
+  set sh := degreeOf 0 fj - degreeOf 0 fi with hsh
+  set R := yConst q * fj - X 0 ^ sh * fi with hR_def
+  have hRmem : R ∈ I :=
+    lazard_lemma3_reductionStep_mem (hB.isGroebnerBasis.1 fi (sortedByYDegree_mem hB i))
+      (hB.isGroebnerBasis.1 fj (sortedByYDegree_mem hB i1))
+  have hRdeg : degreeOf 0 R < degreeOf 0 fj :=
+    lazard_lemma3_reductionStep hfi0 hdlt hq.symm
+  -- `P ∣ lazardView R`: every GB-reduction contributor has `y`-degree `< d(i1)`, so index `≤ i`.
+  have hRdvd : P ∣ lazardView R := by
+    by_cases hR0 : R = 0
+    · rw [hR0, lazardView_eq_zero_iff.mpr rfl]; exact dvd_zero _
+    refine dvd_lazardView_of_mem_of_dvd_bounded hB hRmem hR0 (fun b hb hbdeg => ?_)
+    have hbi1 : degreeOf 0 b < degreeOf 0 fj := lt_of_le_of_lt hbdeg hRdeg
+    obtain ⟨j, hji1, hbj⟩ := exists_sortedIndex_le_of_degreeOf_le (i := i1) hB hb (le_of_lt hbi1)
+    have hjlt : j < i1 := by
+      by_contra hge
+      rw [not_lt] at hge
+      have hle : degreeOf 0 fj ≤ degreeOf 0 (sortedByYDegree hB j) := by
+        rcases lt_or_eq_of_le hge with h | h
+        · exact le_of_lt (degreeOf_sortedByYDegree_strictMono hB h)
+        · rw [hfj_def, h]
+      rw [hbj] at hbi1
+      exact absurd hbi1 (not_lt.mpr hle)
+    rw [hbj]
+    exact hIH j (hsucc j hjlt)
+  -- `P ∣ C q · lazardView f_{i1}` from the reduction equation (IH at `i` gives `P ∣ lazardView fi`).
+  have hfi_dvd : P ∣ lazardView fi := hIH i le_rfl
+  have hCq : P ∣ Polynomial.C q * lazardView fj := by
+    have heq : Polynomial.C q * lazardView fj
+        = lazardView R + Polynomial.X ^ sh * lazardView fi := by
+      rw [hR_def, lazardView_reductionStep]; ring
+    rw [heq]
+    exact dvd_add hRdvd (Dvd.dvd.mul_left hfi_dvd _)
+  -- strip the `K[x]`-scalar `q` by Gauss (`P` primitive, `q ≠ 0`, `lazardView fj ≠ 0`).
+  have hq0 : (q : MvPolynomial (Fin 1) K) ≠ 0 := by
+    intro h0
+    rw [h0, mul_zero] at hq
+    exact (leadingYCoeff_ne_zero.mpr hfi0) hq
+  exact isPrimitive_dvd_of_dvd_C_mul (isPrimitive_primPart_lazardView _) hq0
+    (lazardView_eq_zero_iff.not.mpr hfj0) hCq
+
+/-- **The min element's `y`-primitive part divides every basis element** (Part B, full structure
+induction — Lazard's "`primpart(f₀)` divides `f₀,…,fₖ`"). For the min-`y`-degree element `f₀ = sorted
+0`, `P := primPart(lazardView f₀)` divides `lazardView (sorted i)` for all `i`, by strong induction on
+`i.val`: the base `i.val = 0` is `primPart_lazardView_dvd` (`P ∣ lazardView f₀`); the step is
+`primPart_lazardView_min_dvd_succ`. This is the genuine structure fact behind the no-common-factor
+base. -/
+theorem primPart_lazardView_min_dvd_all {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i0 : Fin B.card) (hi0 : i0.val = 0) (i : Fin B.card) :
+    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  induction hi : i.val using Nat.strong_induction_on generalizing i with
+  | _ n ih =>
+    subst hi
+    rcases Nat.eq_zero_or_pos i.val with h0 | hpos
+    · -- base: `i.val = 0 = i0.val`, so `i = i0`; `P ∣ lazardView f₀` is `primPart_lazardView_dvd`.
+      have hii0 : i = i0 := Fin.ext (by rw [h0, hi0])
+      rw [hii0]
+      exact primPart_lazardView_dvd _
+    · -- step: `i'` the predecessor; IH at `i'` covers all `j ≤ i'`, then the succ step.
+      set i' : Fin B.card := ⟨i.val - 1, by omega⟩ with hi'_def
+      have hi'val : i'.val = i.val - 1 := by rw [hi'_def]
+      have hi'lt : i' < i := by rw [Fin.lt_def, hi'val]; omega
+      have hsucc : ∀ k : Fin B.card, k < i → k ≤ i' := by
+        intro k hk; rw [Fin.le_def, hi'val]; rw [Fin.lt_def] at hk; omega
+      have hIH : ∀ j : Fin B.card, j ≤ i' →
+          (lazardView (sortedByYDegree hB i0)).primPart ∣ lazardView (sortedByYDegree hB j) := by
+        intro j hji'
+        exact ih j.val (by rw [Fin.le_def, hi'val] at hji'; omega) j rfl
+      exact primPart_lazardView_min_dvd_succ hB i0 hi'lt hsucc hIH
+
+/-- **The basis has no common `y`-factor** (Lazard's "the `fᵢ` have no common factor", `K[x][y]`-layer
+`P = 1`): every `K[x][y]`-divisor common to all `lazardView (sorted i)` is a unit. This is the genuine
+no-common-factor hypothesis of Lazard's Theorem 1 reduction — the state reached after dividing out
+`P·Gₖ₊₁`. (The `K[x]`-layer `Gₖ₊₁ = 1` is the separate `gbLeadingCoeffIsUnit`.) -/
+def HasNoCommonYFactor {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) : Prop :=
+  ∀ P : Polynomial (MvPolynomial (Fin 1) K),
+    (∀ i : Fin B.card, P ∣ lazardView (sortedByYDegree hB i)) → IsUnit P
+
+/-- **No common `y`-factor ⟹ the min element is in `K[x]`** (Part B conclusion, Lazard's "`f₀ ∈ K[x]`").
+The candidate `P = primPart(lazardView f₀)` is a common `y`-factor of every basis view
+(`primPart_lazardView_min_dvd_all`); no-common-factor forces `P` to be a unit, which is exactly
+`degreeOf 0 f₀ = 0` (`degreeOf_zero_iff_isUnit_primPart_lazardView`). -/
+theorem degreeOf_min_eq_zero_of_hasNoCommonYFactor {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hncf : HasNoCommonYFactor hB) (i0 : Fin B.card) (hi0 : i0.val = 0) :
+    degreeOf 0 (sortedByYDegree hB i0) = 0 := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  have hunit : IsUnit ((lazardView (sortedByYDegree hB i0)).primPart) :=
+    hncf _ (fun i => primPart_lazardView_min_dvd_all hB i0 hi0 i)
+  exact degreeOf_zero_iff_isUnit_primPart_lazardView.mpr hunit
+
+/-- **Lazard's Lemma 3 descent, unconditional under no-common-factor** (Part C, the divide-out
+discharges the base). With `HasNoCommonYFactor` (Lazard's `P·Gₖ₊₁` already divided out), the base
+hypothesis `hbase` of `lazard_lemma3_dvd` is discharged via
+`degreeOf_min_eq_zero_of_hasNoCommonYFactor`, so each sorted element satisfies `gᵢ ∣ fᵢ` in the form
+`C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)` with **no** base hypothesis. -/
+theorem lazard_lemma3_dvd_of_hasNoCommonYFactor {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  lazard_lemma3_dvd_of_degreeOf_zero hB
+    (fun i0 hi0 => degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0) i
+
+/-- **Lazard's `Pₖ = Rₖ·Sₖ`, unconditional under no-common-factor** (Part C). With
+`HasNoCommonYFactor`, every sorted basis element splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content
+`cᵢ ∼ Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive and monic in `y` — the Czichowski structure, with the
+base hypothesis discharged by the divide-out (`degreeOf_min_eq_zero_of_hasNoCommonYFactor`). -/
+theorem lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero hB
+    (fun i0 hi0 => degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0) i
+
+-- Part B/C: the structure induction and the unconditional descent under no-common-factor.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i0 : Fin B.card) (hi0 : i0.val = 0) (i : Fin B.card) :
+    (@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView (sortedByYDegree hB i0))) ∣ lazardView (sortedByYDegree hB i) :=
+  primPart_lazardView_min_dvd_all hB i0 hi0 i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hncf : HasNoCommonYFactor hB) (i0 : Fin B.card) (hi0 : i0.val = 0) :
+    degreeOf 0 (sortedByYDegree hB i0) = 0 :=
+  degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  lazard_lemma3_dvd_of_hasNoCommonYFactor hB hncf i
+
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
     lazardView (yConst r) = Polynomial.C r :=
