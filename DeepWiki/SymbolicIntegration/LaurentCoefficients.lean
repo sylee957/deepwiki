@@ -171,6 +171,23 @@ theorem laurentNum_succ (A Ei : K[X]) (i d : ℕ) :
     laurentNum A Ei i (d + 1)
       = laurentNumStep Ei (i + d) (d + 1) (laurentNum A Ei i d) := rfl
 
+/-- **The cleared quotient-rule step** (§2.7, eq 2.11 differentiated, denominator-free form): over a
+characteristic-`0` field the `1/(d+1)` in `laurentNumStep` clears, giving the polynomial identity
+`(i+d+1)·Pᵢ,d₊₁ = ddx Pᵢ,d · u · Eᵢ − Pᵢ,d·((i+d)·u'·Eᵢ + (d+1)·u·Eᵢ')` in `DiffPoly K`. This is the
+numerator of the quotient rule `d/dx (P/(uᵃ·Eᵢᵇ)) = (ddx P·u·Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))/(uᵃ⁺¹·Eᵢᵇ⁺¹)`
+with `a = i+d`, `b = d+1`, validating the `Pᵢⱼ` recursion against the genuine `d/dx` of `hᵢ`. -/
+theorem laurentNum_cleared_step [CharZero K] (A Ei : K[X]) (i d : ℕ) :
+    MvPolynomial.C ((i + d : K) + 1) * laurentNum A Ei i (d + 1)
+      = ddx (laurentNum A Ei i d) * X (some 0) * dpEmbed Ei
+        - laurentNum A Ei i d
+            * ((i + d : DiffPoly K) * X (some 1) * dpEmbed Ei
+                + (d + 1 : DiffPoly K) * X (some 0) * dpEmbed (derivative Ei)) := by
+  rw [laurentNum_succ, laurentNumStep, ← mul_assoc, ← MvPolynomial.C_mul]
+  have hne : ((i + d : ℕ) : K) + 1 ≠ 0 := Nat.cast_add_one_ne_zero _
+  rw [show ((i : K) + d + 1) = (((i + d : ℕ) : K) + 1) by push_cast; ring,
+      mul_inv_cancel₀ hne, MvPolynomial.C_1, one_mul]
+  push_cast; ring
+
 /-! ## Stage D — (2.12) the engine: `Qᵢⱼ` substitution and `Hᵢⱼ` -/
 
 /-- **The `Qᵢⱼ` substitution map** (§2.7): the `K`-algebra map `DiffPoly K → K[x]` realizing
