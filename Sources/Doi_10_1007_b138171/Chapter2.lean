@@ -9,6 +9,7 @@ import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.GroebnerBasis
+import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -37,7 +38,14 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   Reduced-GB existence is now general (`exists_isReducedGroebnerBasis`: every ideal over a field with
   finitely many variables has one, built by monicize→minimize→autoReduce on `exists_isGroebnerBasis`),
   so `Pₖ = Rₖ·Sₖ` is **fully unconditional** for a reduced bivariate GB (`lazard_Pk_eq_Rk_Sk_unconditional`).
-  Remaining: the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
+  Czichowski's Lemma 2.1 `GB₁ = {D(x), z − T(x)}` is now **built and proved a Gröbner basis** of
+  `I = ⟨A − z·D', D⟩` (lex `z > x`): residue polynomial `T = A·(D'⁻¹ mod D) mod D` (`residuePoly`),
+  `z − T ∈ I` (`zMinusResidue_mem_czIdeal`), `I = ⟨D, z − T⟩` (`czIdeal_eq_span_gb`), and `GB₁` a GB
+  via coprime leading monomials `x^(deg D)`, `z` (`isGroebnerBasis_gb`, the `z := T` substitution
+  argument). The zeros' `x`-parts are the (distinct, `D` squarefree) roots of `D` with residue
+  `z`-part `A(α)/D'(α)` (`eval_residuePoly_of_isRoot`, `nodup_roots_of_separable` = normal position).
+  Remaining: Lemma 2.1's zero-dimensionality and maximality-w.r.t.-the-zero-set claims
+  [research: needs `MvPolynomial`-variety / Nullstellensatz dimension theory].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -695,6 +703,22 @@ reduced GB of the quotient ideal `I' = span {fᵢ/H}`, the structural split `laz
 discharged automatically. The library's `lazard_Pk_eq_Rk_Sk_dividedIdeal`. -/
 noncomputable abbrev lazard_thm1_quotient_structure :=
   @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_dividedIdeal
+
+/-- **Czichowski (1995), Lemma 2.1, `GB₁` is a Gröbner basis** (cited in §2.6 as the Czichowski
+algorithm engine; J. Symb. Comp. 20, 163–167, p.164): `GB₁ = {D(x), z − T(x)}` is a Gröbner basis of
+`I = ⟨A − z·D', D⟩ ⊂ K[x, z]` w.r.t. the p.l. ordering `z > x`, with `T = A·(D'⁻¹ mod D) mod D`. The
+library's `isGroebnerBasis_gb` (`z = X 0` dominant, `x = X 1`). -/
+noncomputable abbrev czichowski_lemma_2_1_gb := @DeepWiki.SymbolicIntegration.isGroebnerBasis_gb
+
+/-- **Czichowski (1995), Lemma 2.1, `I = ⟨D, z − T⟩`** (J. Symb. Comp. 20, p.164): the reduced
+generators of `I = ⟨A − z·D', D⟩`. The library's `czIdeal_eq_span_gb`. -/
+noncomputable abbrev czichowski_lemma_2_1_ideal_eq := @DeepWiki.SymbolicIntegration.czIdeal_eq_span_gb
+
+/-- **Czichowski (1995), Lemma 2.1, the residue polynomial `T`** (J. Symb. Comp. 20, p.164): the zeros
+`(α, T(α))` of `I` have `z`-part `T(α) = A(α)/D'(α)`, the Rothstein–Trager residue, at each root `α`
+of (squarefree) `D`. The library's `eval_residuePoly_of_isRoot`. -/
+noncomputable abbrev czichowski_lemma_2_1_residue :=
+  @DeepWiki.SymbolicIntegration.eval_residuePoly_of_isRoot
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
