@@ -116,6 +116,48 @@ example {R : Type*} [Field R] [Differential R] (i a b A B : R) (hi : i ^ 2 = -1)
         + b * (i * Differential.logDeriv ((A + i * B) / (A - i * B))) :=
   logToReal_conjugate_pair hi hAB
 
+/-- **`LogToReal` sum-over-conjugate-pairs real form** (§2.8, p.69, the correctness heart of the full
+algorithm): for a `Finset ι` of conjugate-pair data `(a k, b k, A k, B k)` with `(A k)²+(B k)² ≠ 0`,
+`∑ₖ [(a k + i·b k)·logDeriv(A k + i·B k) + (a k − i·b k)·logDeriv(A k − i·B k)]
+  = ∑ₖ [a k·logDeriv((A k)²+(B k)²) + b k·(i·logDeriv((A k + i·B k)/(A k − i·B k)))]` — fold of the
+per-pair `logToReal_conjugate_pair` over the index set by `Finset.sum_congr`. The output is the real
+function `∑ₖ [a k·log((A k)²+(B k)²) + b k·LogToAtan(A k, B k)]`. -/
+theorem logToReal_sum {ι : Type*} (s : Finset ι) {i : R} (hi : i ^ 2 = -1)
+    (a b A B : ι → R) (hAB : ∀ k ∈ s, (A k) ^ 2 + (B k) ^ 2 ≠ 0) :
+    ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (A k + i * B k)
+          + (a k - i * b k) * Differential.logDeriv (A k - i * B k))
+      = ∑ k ∈ s, (a k * Differential.logDeriv ((A k) ^ 2 + (B k) ^ 2)
+          + b k * (i * Differential.logDeriv ((A k + i * B k) / (A k - i * B k)))) :=
+  Finset.sum_congr rfl fun k hk => logToReal_conjugate_pair hi (hAB k hk)
+
+/-- **`LogToReal` sum-over-conjugate-pairs, atan-substituted real form** (§2.8, p.69, the
+`log + arctan` shape of `LogToReal`'s output): the single-`B=1` case of `logToReal_sum` with each
+`i·logDeriv((A k + i)/(A k − i))` term replaced (via **Theorem 2.8.1**,
+`logToReal_conjugate_pair_atan`) by the fully real `2·(A k)′/(1 + (A k)²)`:
+`∑ₖ [(a k + i·b k)·logDeriv(A k + i·1) + (a k − i·b k)·logDeriv(A k − i·1)]
+  = ∑ₖ [a k·logDeriv((A k)²+1²) + b k·(2·((A k)′/(1+(A k)²)))]` — a fold of
+`logToReal_conjugate_pair_atan`. The full multi-term arctan list per pair uses
+`isLogToAtanRun_correct`/`atanDerivSum`. -/
+theorem logToReal_sum_atan [CharZero R] {ι : Type*} (s : Finset ι) {i : R} (hi : i ^ 2 = -1)
+    (a b A : ι → R) (h1 : ∀ k ∈ s, A k + i ≠ 0) (h2 : ∀ k ∈ s, A k - i ≠ 0) :
+    ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (A k + i * 1)
+          + (a k - i * b k) * Differential.logDeriv (A k - i * 1))
+      = ∑ k ∈ s, (a k * Differential.logDeriv ((A k) ^ 2 + 1 ^ 2)
+          + b k * (2 * ((A k)′ / (1 + (A k) ^ 2)))) :=
+  Finset.sum_congr rfl fun k hk => logToReal_conjugate_pair_atan hi (h1 k hk) (h2 k hk)
+
+/-- Restatement of the **`LogToReal` sum-over-conjugate-pairs real form** against the book wording
+(§2.8, p.69): summing each conjugate pair's contribution over a family `(a k, b k, A k, B k)` yields a
+**real** function's derivative `∑ₖ [a k·log((A k)²+(B k)²) + b k·LogToAtan(A k, B k)]` — the output of
+Rioboo's `LogToReal`. -/
+example {R : Type*} [Field R] [Differential R] {ι : Type*} (s : Finset ι) (i : R) (hi : i ^ 2 = -1)
+    (a b A B : ι → R) (hAB : ∀ k ∈ s, (A k) ^ 2 + (B k) ^ 2 ≠ 0) :
+    ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (A k + i * B k)
+          + (a k - i * b k) * Differential.logDeriv (A k - i * B k))
+      = ∑ k ∈ s, (a k * Differential.logDeriv ((A k) ^ 2 + (B k) ^ 2)
+          + b k * (i * Differential.logDeriv ((A k + i * B k) / (A k - i * B k)))) :=
+  logToReal_sum s hi a b A B hAB
+
 end LogToReal
 
 end DeepWiki.SymbolicIntegration
