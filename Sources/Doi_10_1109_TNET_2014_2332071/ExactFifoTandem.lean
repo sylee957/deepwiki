@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.FifoFeedForwardExact
+import DeepWiki.NetworkCalculus.FifoFeedForwardConcrete
 import Sources.Doi_10_1109_TNET_2014_2332071.Source
 
 /-! # Bouillard–Stea — exact worst-case delay in FIFO-multiplexing feed-forward networks — catalog
@@ -38,5 +39,23 @@ alias thm_1_fifoNode := FifoFeedForward.fifoNode_worstCaseDelay_eq
 optimum equals the worst-case delay `(∑ₕRₕTₕ + b)/(Rmin − r)` (Lemma 2 collapses to the single all-zero
 Boolean-ordering witness). The library's `DeepWiki.FifoFeedForward.fifoTandemHomogeneous_worstCaseDelay`. -/
 alias thm_1_homogeneous := FifoFeedForward.fifoTandemHomogeneous_worstCaseDelay
+
+/-- **§IV.C the concrete binary-tree variable layout** (p.6–7): the depth-`N` date tree
+(`DateTree N`, each output date with FIFO + service-curve child dates), with `count = 2^(N+1)−1`
+(`DateTree.count_eq`). The MILP scenario carries properties 1–3 (`Scenario N`: monotone,
+α-upper-constrained ingress, FIFO causality). The library's `DeepWiki.FifoFeedForward.DateTree` /
+`Scenario`. -/
+abbrev milp_dateTree := @FifoFeedForward.DateTree
+
+/-- **Lemma 2 (scenario → feasible solution), the constraint discharges** (p.7): a real scenario sampled
+at the tree dates satisfies the arrival / monotonicity / FIFO MILP constraints with objective = realized
+delay. The library's `DeepWiki.FifoFeedForward.Scenario.sample_feasible_pointwise`. -/
+alias lemma_2 := FifoFeedForward.Scenario.sample_feasible_pointwise
+
+/-- **Lemma 3 (solution → scenario), the min-plus extrapolation core** ([8, Lemma 2], p.8):
+`extrapolate α v K t = min{v(t_k) + α(t−t_k) : t_k ∈ K, t_k ≤ t}` reconstructs an α-upper-constrained
+cumulative (for sub-additive `α`) from sampled values — `extrapolate_arrival` is the genuine
+property-3 content. The library's `DeepWiki.FifoFeedForward.extrapolate` / `extrapolate_arrival`. -/
+alias lemma_3_extrapolate := FifoFeedForward.extrapolate_arrival
 
 end DeepWiki.Bs
