@@ -460,4 +460,37 @@ theorem tendstoInDistribution_gaussianFamily_of_mDependent {m : ℕ} {X : ℤ �
   tendstoInDistribution_const_smul_of_tendsto
     ((Real.continuous_sqrt.tendsto _).comp (tendsto_variance_bigBlockSum_div_of_mDependent hX h)) hG
 
+/-- **The gap-removed partial sum `Y⁽ᵖ⁾ₙ` converges in distribution to `Wₚ = √vₚ · G`** (`h1` of the
+double-limit theorem, with the limit realized on the common `G`-space). Instantiating
+`tendstoInDistribution_gapRemoved` with `Yₚ = √(Var[U₀⁽ᵖ⁾]) · G ~ N(0, Var[U₀⁽ᵖ⁾])`
+(`gaussianReal_const_mul`), its limit `(1/√(p+m)) · √(Var[U₀⁽ᵖ⁾]) · G` equals `√(Var[U₀⁽ᵖ⁾]/(p+m)) · G`
+by `√(a/b) = √a/√b` — matching exactly the `Wₚ` of `tendstoInDistribution_gaussianFamily_of_mDependent`. -/
+theorem IsMDependent.tendstoInDistribution_gapRemoved_smul {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+    [IsProbabilityMeasure P'] (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0)
+    {p : ℕ} (hp : 0 < p) {G : Ω' → ℝ} (hG : HasLaw G (gaussianReal 0 1) P') :
+    TendstoInDistribution (fun (n : ℕ) ω => (Real.sqrt n)⁻¹
+        * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) atTop
+      (fun ω => Real.sqrt (Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ] / (p + m : ℝ)) • G ω)
+      (fun _ => μ) P' := by
+  set V := Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ] with hV
+  have hVnn : 0 ≤ V := variance_nonneg _ _
+  have hY : HasLaw (fun ω => Real.sqrt V * G ω) (gaussianReal 0 V.toNNReal) P' := by
+    have h := gaussianReal_const_mul hG (Real.sqrt V)
+    rw [mul_zero] at h
+    convert h using 2
+    rw [mul_one]
+    apply NNReal.coe_injective
+    rw [Real.coe_toNNReal _ hVnn, NNReal.coe_mk, Real.sq_sqrt hVnn]
+  have hmain := hmdep.tendstoInDistribution_gapRemoved hstat hmeas hmem hcenter hp hY
+  have heq : (fun ω => Real.sqrt (V / (p + m : ℝ)) • G ω)
+      = fun ω => 1 / Real.sqrt ((p + m : ℕ) : ℝ) * (Real.sqrt V * G ω) := by
+    funext ω
+    rw [smul_eq_mul, Real.sqrt_div hVnn]
+    push_cast
+    ring
+  rw [heq]
+  exact hmain
+
 end DeepWiki.TimeSeries
