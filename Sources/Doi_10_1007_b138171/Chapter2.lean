@@ -22,17 +22,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (distinct leading y-degrees in a
-  minimal bivariate GB) is done (`lazard_lemma1`); the K[x][y] representation bridge (degree /
-  leading-y-coefficient correspondence, `y = variable 0`) is done (`leadingYCoeff`,
-  `degree_apply_zero_eq_natDegree_lazardView`); Lazard Lemma 2's y-shift alignment
-  (`leadingYCoeff_yShift_eq`), the transferred GCD/Bézout structure on `MvPolynomial (Fin 1) K`
-  (`gcdMonoidMvPolynomialFinOne`, `exists_mul_add_mul_eq_gcd`), and the gcd-division construction
-  giving `P ∈ I` of y-degree `d_{k+1}` with `leadingYCoeff P = gcd(Rₖ, R_{k+1})`
-  (`lazard_gcd_construction`) are done, but Lemma 2's minimality contradiction giving `R_{k+1} ∣ Rₖ`
-  (needs the x-degree bridge `(lex.degree P) 1 = degreeOf 0 (leadingYCoeff P)`), Lemma 3, the
-  `Pₖ = Rₖ·Sₖ` factorization, and the normal-position analysis of `⟨A−zD', D⟩` remain
-  [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (`lazard_lemma1`), the K[x][y]
+  representation bridge (`leadingYCoeff`, `degree_apply_zero_eq_natDegree_lazardView`), and Lemma 2
+  (`R_{k+1} ∣ Rₖ`, `lazard_lemma2`, via the GCD/Bézout transfer `gcdMonoidMvPolynomialFinOne` /
+  `exists_mul_add_mul_eq_gcd`, the gcd construction `lazard_gcd_construction`, and the x-degree
+  bridge `lex_degree_apply_one`) are done. Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization, and the
+  normal-position analysis of `⟨A−zD', D⟩` remain [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -530,11 +525,17 @@ abbrev lazard_degree_bridge := @DeepWiki.SymbolicIntegration.degree_apply_zero_e
 members of Lemma 2's `R_{i+1} ∣ Rᵢ` proof. Multiplying by `y^k = X 0 ^ k` adds `k` to the `y`-degree
 (`degreeOf_X_pow_mul`: `degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k`) and fixes the leading-`y`-coefficient
 (`leadingYCoeff_X_pow_mul`: `leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f`), so the shifted `y^{d_{i+1}−dᵢ}·fᵢ`
-matches the `y`-degree `d_{i+1}` of `f_{i+1}` while keeping `Rᵢ` (`leadingYCoeff_yShift_eq`). The library's
-`leadingYCoeff_yShift_eq`. The remaining gcd-division step and the minimality contradiction giving
-`R_{i+1} ∣ Rᵢ` rest on Lazard's Theorem 1 structure (content / primpart / `Pₖ = Rₖ·Sₖ`, a transferred
-GCD/Bézout structure on `MvPolynomial (Fin 1) K`) and remain [research]. -/
+matches the `y`-degree `d_{i+1}` of `f_{i+1}` while keeping `Rᵢ`. The library's `leadingYCoeff_yShift_eq`. -/
 noncomputable abbrev lazard_lemma2_yShift := @DeepWiki.SymbolicIntegration.leadingYCoeff_yShift_eq
+
+/-- **Lazard (1985), Lemma 2** (cited in §2.6; J. Symb. Comp. 1, 261–270, p.263): the
+leading-`y`-coefficient (in `K[x]`) of the highest power of `y` in `f_{i+1}` divides that in `fᵢ`,
+along a reduced bivariate Gröbner basis ordered by increasing `y`-degree. The library's
+`lazard_lemma2`, via the transferred GCD/Bézout structure on `MvPolynomial (Fin 1) K`
+(`gcdMonoidMvPolynomialFinOne`, `exists_mul_add_mul_eq_gcd`), the gcd construction
+`lazard_gcd_construction` (`P ∈ I` of `y`-degree `d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ,R_{i+1})`),
+and the `x`-degree bridge `lex_degree_apply_one` driving the minimality contradiction. -/
+abbrev lazard_lemma2 := @DeepWiki.SymbolicIntegration.lazard_lemma2
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 

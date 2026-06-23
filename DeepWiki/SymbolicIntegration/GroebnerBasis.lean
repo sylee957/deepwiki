@@ -1105,6 +1105,18 @@ theorem apply_zero_le_of_toLex_le {s t : Fin 2 →₀ ℕ} (h : toLex s ≤ toLe
     · exact (hbelow 0 (by decide)).le
   · exact (congrArg (fun u => (ofLex u) 0) heq).le
 
+/-- For lex on `Fin 2`, comparable exponent vectors *equal at the dominant index `0`* are comparable
+at index `1`: `toLex s ≤ toLex t → s 0 = t 0 → s 1 ≤ t 1` (a tie at the most significant lex
+coordinate is broken by the next one). -/
+theorem apply_one_le_of_toLex_le_of_apply_zero_eq {s t : Fin 2 →₀ ℕ}
+    (h : toLex s ≤ toLex t) (h0 : s 0 = t 0) : s 1 ≤ t 1 := by
+  rcases h.lt_or_eq with hlt | heq
+  · obtain ⟨i, _, hi⟩ := Finsupp.Lex.lt_iff.mp hlt
+    fin_cases i
+    · exact absurd h0 (ne_of_lt hi)
+    · exact hi.le
+  · exact (congrArg (fun u => (ofLex u) 1) heq).le
+
 /-- **Lex makes the `y`-degree (index `0`) dominant**: for `MonomialOrder.lex` on `Fin 2` and
 `f ≠ 0`, the index-`0` exponent of the leading monomial equals the `y`-degree `degreeOf 0 f`. -/
 theorem lex_degree_apply_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
@@ -1317,6 +1329,43 @@ theorem gcd_dvd_right_mvPolynomialFinOne {K : Type*} [Field K] (g g' : MvPolynom
   letI := gcdMonoidMvPolynomialFinOne K
   gcd_dvd_right g g'
 
+/-- The `x`-degree bridge to `K[x]`: `natDegree (e r) = degreeOf 0 r` for the ring equivalence
+`e = mvPolynomialFinOneEquivPolynomial K` (it composes `finSuccEquiv K 0`, whose `natDegree` is
+`degreeOf 0`, with a coefficient-relabelling that preserves `natDegree`). -/
+theorem natDegree_mvPolynomialFinOneEquivPolynomial {K : Type*} [Field K]
+    (r : MvPolynomial (Fin 1) K) :
+    (mvPolynomialFinOneEquivPolynomial K r).natDegree = degreeOf 0 r := by
+  rw [mvPolynomialFinOneEquivPolynomial]
+  show (Polynomial.mapAlgEquiv (isEmptyAlgEquiv K (Fin 0)) (finSuccEquiv K 0 r)).natDegree = _
+  rw [Polynomial.coe_mapAlgEquiv, ← natDegree_finSuccEquiv r]
+  apply Polynomial.natDegree_map_eq_of_injective
+  exact EquivLike.injective (isEmptyAlgEquiv K (Fin 0))
+
+/-- **`degreeOf 0` is monotone under divisibility** on `MvPolynomial (Fin 1) K`: `p ∣ q`, `q ≠ 0`
+`⟹ degreeOf 0 p ≤ degreeOf 0 q` (transfer to `K[x]`'s `natDegree_le_of_dvd`). -/
+theorem degreeOf_le_of_dvd {K : Type*} [Field K] {p q : MvPolynomial (Fin 1) K}
+    (hpq : p ∣ q) (hq : q ≠ 0) : degreeOf 0 p ≤ degreeOf 0 q := by
+  set e := mvPolynomialFinOneEquivPolynomial K with he
+  rw [← natDegree_mvPolynomialFinOneEquivPolynomial, ← natDegree_mvPolynomialFinOneEquivPolynomial]
+  refine Polynomial.natDegree_le_of_dvd (map_dvd e hpq) ?_
+  rwa [Ne, map_eq_zero_iff _ e.injective]
+
+/-- **Equal-degree divisor is a reverse divisor** on `MvPolynomial (Fin 1) K`: if `p ∣ q`, `q ≠ 0`
+and `degreeOf 0 q ≤ degreeOf 0 p`, then `q ∣ p` (`p, q` are associated; transfer to `K[x]`'s
+`associated_of_dvd_of_natDegree_le`). -/
+theorem dvd_of_dvd_of_degreeOf_le {K : Type*} [Field K] {p q : MvPolynomial (Fin 1) K}
+    (hpq : p ∣ q) (hq : q ≠ 0) (hdeg : degreeOf 0 q ≤ degreeOf 0 p) : q ∣ p := by
+  set e := mvPolynomialFinOneEquivPolynomial K with he
+  have heq : e p ∣ e q := map_dvd e hpq
+  have hq' : e q ≠ 0 := by rwa [Ne, map_eq_zero_iff _ e.injective]
+  rw [← natDegree_mvPolynomialFinOneEquivPolynomial, ← natDegree_mvPolynomialFinOneEquivPolynomial]
+    at hdeg
+  have hassoc : Associated (e p) (e q) :=
+    Polynomial.associated_of_dvd_of_natDegree_le heq hq' hdeg
+  have h2 : e q ∣ e p := hassoc.symm.dvd
+  have h3 : e.symm (e q) ∣ e.symm (e p) := map_dvd e.symm h2
+  rwa [e.symm_apply_apply, e.symm_apply_apply] at h3
+
 -- Restatements against the intended wording.
 noncomputable example {K : Type*} [Field K] : MvPolynomial (Fin 1) K ≃+* Polynomial K :=
   mvPolynomialFinOneEquivPolynomial K
@@ -1435,6 +1484,116 @@ theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (
   rw [← hlazP] at hPdeg hPlc
   exact ⟨P, hPI, by rw [← natDegree_lazardView, hPdeg],
     by rw [leadingYCoeff, hPlc, hpcoeff, hqcoeff, hab]⟩
+
+/-- **The `x`-degree of the leading monomial under lex** (Lazard's structure theory): for
+`MonomialOrder.lex` on `Fin 2` and `f ≠ 0`, the index-`1` exponent of the leading monomial is the
+`x`-degree `degreeOf 0 (leadingYCoeff f)` of the leading-`y`-coefficient — among the top-`y`-power
+terms (the support of `leadingYCoeff f`), lex picks the maximal `x`-power. -/
+theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) := by
+  classical
+  set δ := MonomialOrder.lex.degree f with hδ
+  have hδ0 : δ 0 = degreeOf 0 f := lex_degree_apply_zero hf
+  have hlyc : leadingYCoeff f = (lazardView f).coeff (degreeOf 0 f) := by
+    rw [leadingYCoeff, Polynomial.leadingCoeff, natDegree_lazardView]
+  have hsucc : (1 : Fin 2) = (0 : Fin 1).succ := rfl
+  apply le_antisymm
+  · -- `δ 1 ≤ deg_x`: `δ = (tail δ).cons (δ 0)`, and `tail δ ∈ support (leadingYCoeff f)`.
+    have hδmem : δ ∈ f.support := MonomialOrder.degree_mem_support hf
+    set mon' : Fin 1 →₀ ℕ := Finsupp.tail δ with hmon'
+    have hcons : Finsupp.cons (δ 0) mon' = δ := by rw [hmon', Finsupp.cons_tail]
+    have hmem' : mon' ∈ (leadingYCoeff f).support := by
+      rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0, hcons]; exact hδmem
+    have hval : mon' 0 = δ 1 := by rw [hmon', Finsupp.tail_apply, hsucc]
+    rw [← hval, degreeOf_eq_sup]
+    exact Finset.le_sup (f := fun s : Fin 1 →₀ ℕ => s 0) hmem'
+  · -- `deg_x ≤ δ 1`: each `mon ∈ support (leadingYCoeff f)` gives `mon.cons (δ 0) ≼[lex] δ`.
+    rw [degreeOf_eq_sup]
+    apply Finset.sup_le
+    intro mon hmon
+    rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0] at hmon
+    have hle : (Finsupp.cons (δ 0) mon) ≼[MonomialOrder.lex] δ := MonomialOrder.le_degree hmon
+    rw [MonomialOrder.lex_le_iff] at hle
+    have h0eq : (Finsupp.cons (δ 0) mon) 0 = δ 0 := Finsupp.cons_zero _ _
+    have hmain := apply_one_le_of_toLex_le_of_apply_zero_eq hle h0eq
+    have hcons1 : (Finsupp.cons (δ 0) mon) 1 = mon 0 := by rw [hsucc, Finsupp.cons_succ]
+    rwa [hcons1] at hmain
+
+/-- **Lazard (1985), Lemma 2** (J. Symb. Comp. 1, p.263): along a reduced (minimal) bivariate
+Gröbner basis over `lex`, the leading-`y`-coefficient `R_{i+1} = leadingYCoeff f_{i+1}` of the
+higher-`y`-degree element divides `Rᵢ = leadingYCoeff fᵢ`. From `lazard_gcd_construction` there is
+`P ∈ I` of `y`-degree `d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ, R_{i+1})`; its leading monomial
+`(d_{i+1}, deg_x gcd)` dominates some basis element `b`, which minimality forces to be `f_{i+1}`
+(else `LM(b) ≤ LM(f_{i+1})`, impossible) — giving `deg_x R_{i+1} ≤ deg_x gcd`, hence
+`R_{i+1} ∼ gcd`, so `R_{i+1} ∣ gcd ∣ Rᵢ`. -/
+theorem lazard_lemma2 {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {fi fi1 : MvPolynomial (Fin 2) K} (hfi : fi ∈ B) (hfi1 : fi1 ∈ B)
+    (hd : degreeOf 0 fi < degreeOf 0 fi1) :
+    leadingYCoeff fi1 ∣ leadingYCoeff fi := by
+  letI := gcdMonoidMvPolynomialFinOne K
+  set m := MonomialOrder.lex (σ := Fin 2)
+  have hfi0 : fi ≠ 0 := hB.ne_zero hfi
+  have hfi10 : fi1 ≠ 0 := hB.ne_zero hfi1
+  set gi := leadingYCoeff fi with hgi
+  set gi1 := leadingYCoeff fi1 with hgi1
+  set g := @gcd _ _ (gcdMonoidMvPolynomialFinOne K) gi gi1 with hg
+  have hg_gi : g ∣ gi := gcd_dvd_left_mvPolynomialFinOne gi gi1
+  have hg_gi1 : g ∣ gi1 := gcd_dvd_right_mvPolynomialFinOne gi gi1
+  obtain ⟨P, hPI, hPdeg, hPlc⟩ :=
+    lazard_gcd_construction (hB.isGroebnerBasis.1 fi hfi) (hB.isGroebnerBasis.1 fi1 hfi1)
+      hfi0 (le_of_lt hd)
+  rw [← hgi, ← hgi1, ← hg] at hPlc
+  have hg_ne : g ≠ 0 := by
+    rw [hg, Ne, gcd_eq_zero_iff, not_and_or]
+    exact Or.inl (by rw [hgi]; exact leadingYCoeff_ne_zero.mpr hfi0)
+  have hP0 : P ≠ 0 := leadingYCoeff_ne_zero.mp (by rw [hPlc]; exact hg_ne)
+  -- It suffices to show `R_{i+1} ∣ gcd` (then `R_{i+1} ∣ gcd ∣ Rᵢ`).
+  suffices hgi1g : gi1 ∣ g by exact hgi1g.trans hg_gi
+  refine dvd_of_dvd_of_degreeOf_le hg_gi1 (by rw [hgi1]; exact leadingYCoeff_ne_zero.mpr hfi10) ?_
+  -- the leading monomials: `m.degree P = (d_{i+1}, deg_x gcd)`, `m.degree f_{i+1} = (d_{i+1}, deg_x R_{i+1})`.
+  have hPdeg0 : (m.degree P) 0 = degreeOf 0 fi1 := by rw [lex_degree_apply_zero hP0, hPdeg]
+  have hPdeg1 : (m.degree P) 1 = degreeOf 0 g := by rw [lex_degree_apply_one hP0, hPlc]
+  have hfi1deg0 : (m.degree fi1) 0 = degreeOf 0 fi1 := lex_degree_apply_zero hfi10
+  have hfi1deg1 : (m.degree fi1) 1 = degreeOf 0 gi1 := lex_degree_apply_one hfi10
+  have hgdeg_le : degreeOf 0 g ≤ degreeOf 0 gi1 :=
+    degreeOf_le_of_dvd hg_gi1 (by rw [hgi1]; exact leadingYCoeff_ne_zero.mpr hfi10)
+  obtain ⟨b, hbB, _, hble⟩ := hB.isGroebnerBasis.exists_degree_le hPI hP0
+  -- `b = f_{i+1}`: else `m.degree b ≤ m.degree f_{i+1}` (both coords), contradicting minimality.
+  have hbfi1 : b = fi1 := by
+    by_contra hne
+    have hb0' : (m.degree b) 0 ≤ (m.degree fi1) 0 := by
+      have := (Finsupp.le_def.mp hble) 0
+      rw [hfi1deg0, ← hPdeg0]; exact this
+    have hb1' : (m.degree b) 1 ≤ (m.degree fi1) 1 := by
+      have hbP := (Finsupp.le_def.mp hble) 1
+      rw [hPdeg1] at hbP
+      rw [hfi1deg1]; exact hbP.trans hgdeg_le
+    have hble_fi1 : m.degree b ≤ m.degree fi1 := by
+      rw [Finsupp.le_def]; intro i; fin_cases i
+      · exact hb0'
+      · exact hb1'
+    exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hfi1) (Finset.mem_coe.mpr hbB)
+      (fun h => hne h.symm) hble_fi1
+  -- with `b = f_{i+1}`: `m.degree f_{i+1} ≤ m.degree P`, so `deg_x R_{i+1} ≤ deg_x gcd`.
+  rw [hbfi1] at hble
+  have hfin := (Finsupp.le_def.mp hble) 1
+  rw [hfi1deg1, hPdeg1] at hfin
+  exact hfin
+
+-- Restatements against the intended wording.
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) :=
+  lex_degree_apply_one hf
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {fi fi1 : MvPolynomial (Fin 2) K} (hfi : fi ∈ B) (hfi1 : fi1 ∈ B)
+    (hd : degreeOf 0 fi < degreeOf 0 fi1) :
+    leadingYCoeff fi1 ∣ leadingYCoeff fi :=
+  lazard_lemma2 hB hfi hfi1 hd
 
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
