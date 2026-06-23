@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
+import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -37,7 +38,7 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.8: Rioboo's `LogToReal` is COMPLETE except for one [external] derivation. Done: the
+§2.8: Rioboo's `LogToReal` and Thm 2.8.4 are COMPLETE. Done: the
   `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB` real/imaginary splits
   (`logToReal_split`/`exists_realImag_split_bivariate`), the conjugate-product bridge
   `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root selection criterion
@@ -48,10 +49,12 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   count-preserving `σ`-image of the `b>0` block over an ordered fixed field `K`), and hence the
   **full `LogToReal` correctness over `R`'s roots with NO partition hypothesis**
   (`logToReal_correct`, book (2.22)→(2.26)): `∑_{R(α)=0} α·logDeriv(S α) = ∑_{reals} a·logDeriv(S a) +
-  ∑_{b>0 pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`.
-  STILL OPEN: [external] the LRT-gcd-cofactor derivation feeding Thm 2.8.4 — that `S = A+iB` IS the LRT
-  gcd of `C−(a+ib)D'` and `D` so the cofactors `E₁+iE₂`, `F₁+iF₂` of (2.27)/(2.28) exist (taken as
-  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory). Ex 2.8.2.
+  ∑_{b>0 pairs}[a·logDeriv(A²+B²) + b·LogToAtan]`. Thm 2.8.4 is now FULL (`thm_2_8_4_full` =
+  `rioboo_coprime_lrt`): the LRT correctness `lazardRiobooTrager_output_isSimilar_gcd` discharges the
+  (2.27)/(2.28) cofactor hypotheses of `rioboo_coprime` — `S(a+ib,x)` is *similar* to (hence *associated*
+  to, hence divides) `gcd(D, C−(a+ib)D')`, so the cofactors `E₁+iE₂`, `F₁+iF₂` exist via the
+  real/imaginary decomposition `exists_realImag_decomp` over the conjugation `σ`.
+  STILL OPEN: Ex 2.8.2.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
@@ -676,6 +679,18 @@ abbrev thm_2_8_4_eq_2_29 := @DeepWiki.SymbolicIntegration.imagPart_eq_of_mul_spl
 `D = (F₁+i·F₂)(A+i·B)` gives `D(x) = F₁(a,b,x)·A(a,b,x) − F₂(a,b,x)·B(a,b,x)`. The library's
 `realPart_eq_of_mul_split`, via `eq_and_eq_of_add_imag_eq`. -/
 abbrev thm_2_8_4_eq_2_30 := @DeepWiki.SymbolicIntegration.realPart_eq_of_mul_split
+
+/-- **Theorem 2.8.4, the FULL statement** (§2.8, p.67–68, Rioboo) — the LRT *discharges* the cofactor
+hypotheses of `thm_2_8_4`. Over an algebraically closed char-`0` field with an involutive conjugation
+`conj` (`conj i = −i`) certifying `C, D` real and `a, b` real, with `D` separable, `deg C < deg D`,
+`b ≠ 0`, and `(a+i·b)` a root of the RT/LRT resultant `R = res_x(D, C−t·D')`, the real/imaginary parts
+`A, B` of the LRT log argument `S(a+i·b, x) = A + i·B` are **coprime** — `gcd(A, B) = 1`, so Rioboo's
+arctan denominator is nonzero. **No abstract cofactor hypotheses.** The library's `rioboo_coprime_lrt`:
+the LRT correctness `lazardRiobooTrager_output_isSimilar_gcd` makes `S(a+i·b, x)` *similar* to
+`gcd(D, C−(a+i·b)·D')`, hence (over the field) *associated* (`IsSimilar.associated`), hence a divisor of
+both `D` and `C−(a+i·b)·D'`; the cofactors `E, F` (2.27)/(2.28) thus exist, split into real+`i`·imaginary
+parts by `exists_realImag_decomp`, and `rioboo_coprime` closes. -/
+abbrev thm_2_8_4_full := @DeepWiki.SymbolicIntegration.rioboo_coprime_lrt
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
