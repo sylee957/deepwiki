@@ -3,6 +3,7 @@ import Mathlib.Algebra.MvPolynomial.Eval
 import Mathlib.Algebra.Polynomial.Derivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 
 /-! # The Bronstein–Salvy differential-variable Laurent-coefficient engine (Bronstein §2.7, Theorem 2.7.1, eqs 2.10–2.12)
 
@@ -919,6 +920,116 @@ theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} 
     | some k => subst hfac; rw [eval_laurentSubst_some]; simp [substEvalAt]
   rw [hf]
 
+/-! ## Stage K — (a) `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α` (Step 4, the reachable core)
+
+Evaluating the specialized eq 2.11 invariant `iterate_ratFuncKDeriv_hFracα` (Stage I) at the root `α` via
+`RatFunc.eval (RingHom.id K) α` — a ring hom away from the (here nonzero) denominator `Dᵢ,α(α)·Eᵢ(α) ≠ 0`
+— gives `(d/dx)^[i−j] hᵢ,α (α) = (i−j)!·σα(Pᵢ,i−j)(α)/(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})`. Combined with the
+cofactor identity `Dᵢ'(α) = Dᵢ,α(α)` (from `Dᵢ = (x−α)·Dᵢ,α`) and `eval_laurentH_eq_diffSubst_laurentNum`
+(Steps 2+3+5), the `(Dᵢ,α, Eᵢ)`-power denominators cancel the `(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` factors,
+identifying the engine output `Hᵢⱼ(α)` with the **order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`
+at `α`**, i.e. `(d/dx)^[i−j] hᵢ,α (α)/(i−j)!`. Those Taylor coefficients ARE the `1/(x−α)ʲ` partial-fraction
+(Laurent) coefficients of `A/D` by the very definition of `hᵢ,α`, so this completes Thm 2.7.1 up to the
+literal `= c_j` naming. -/
+
+/-- **The cofactor at a simple root: `Dᵢ'(α) = Dᵢ,α(α)`** (book p.56): when `Dᵢ = (x−α)·Dᵢ,α`, the
+derivative `Dᵢ' = Dᵢ,α + (x−α)·Dᵢ,α'`, so at the root `α` the `(x−α)`-term drops and `Dᵢ'(α) = Dᵢ,α(α)`. -/
+theorem eval_derivative_of_X_sub_C_mul {Di Diα : K[X]} {α : K}
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα) :
+    (derivative Di).eval α = Diα.eval α := by
+  subst hfac
+  rw [derivative_mul, derivative_sub, derivative_X, Polynomial.derivative_C, sub_zero, one_mul,
+    Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_sub, Polynomial.eval_X,
+    Polynomial.eval_C, sub_self, zero_mul, add_zero]
+
+/-- **`Eᵢ(α) ≠ 0` ∧ `Dᵢ,α(α) ≠ 0` ⟹ the `hᵢ,α`-denominator is nonzero at `α`**:
+`(lDenomα Eᵢ Dᵢ,α i d)(α) = Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1} ≠ 0`. -/
+theorem eval_lDenomα_ne_zero {Ei Diα : K[X]} {α : K} (i d : ℕ) (hEi : Ei.eval α ≠ 0)
+    (hDiα : Diα.eval α ≠ 0) : (lDenomα Ei Diα i d).eval α ≠ 0 := by
+  unfold lDenomα
+  rw [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_pow]
+  exact mul_ne_zero (pow_ne_zero _ hDiα) (pow_ne_zero _ hEi)
+
+/-- **Eval of the genuine `hᵢ,α^{(d)}/d!`-fraction at `α`**: when `Eᵢ(α), Dᵢ,α(α) ≠ 0`,
+`RatFunc.eval id α (lFracα A Eᵢ Dᵢ,α i d) = σα(Pᵢ,d)(α) / (Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`, via
+`eval_algebraMap_div` (the denominator is pole-free at `α`). -/
+theorem eval_lFracα {A Ei Diα : K[X]} {α : K} (i d : ℕ) (hEi : Ei.eval α ≠ 0)
+    (hDiα : Diα.eval α ≠ 0) :
+    RatFunc.eval (RingHom.id K) α (lFracα A Ei Diα i d)
+      = (diffSubst Diα (laurentNum A Ei i d)).eval α / (lDenomα Ei Diα i d).eval α := by
+  rw [lFracα, eval_algebraMap_div α _ _ (eval_lDenomα_ne_zero i d hEi hDiα)]
+
+/-- **Eval of a `K`-scaled `hᵢ,α`-fraction at `α`**: `RatFunc.eval id α (c • lFracα A Eᵢ Dᵢ,α i d)
+= c · σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})` — the scalar `c • _ = C c · _` folds into the numerator
+(`algebraMap (C c · num)/algebraMap denom`) and `eval_algebraMap_div` reads it off. -/
+theorem eval_smul_lFracα {A Ei Diα : K[X]} {α : K} (c : K) (i d : ℕ) (hEi : Ei.eval α ≠ 0)
+    (hDiα : Diα.eval α ≠ 0) :
+    RatFunc.eval (RingHom.id K) α (c • lFracα A Ei Diα i d)
+      = c * ((diffSubst Diα (laurentNum A Ei i d)).eval α / (lDenomα Ei Diα i d).eval α) := by
+  have hsmul : c • lFracα A Ei Diα i d
+      = algebraMap K[X] (RatFunc K) (Polynomial.C c * diffSubst Diα (laurentNum A Ei i d))
+        / algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i d) := by
+    rw [lFracα, RatFunc.smul_eq_C_mul, ← RatFunc.algebraMap_C, map_mul, mul_div_assoc]
+  rw [hsmul, eval_algebraMap_div α _ _ (eval_lDenomα_ne_zero i d hEi hDiα),
+    Polynomial.eval_mul, Polynomial.eval_C, mul_div_assoc]
+
+/-- **(a), Stage I evaluated at the root `α`** (book p.56): for `0 < i`, `Eᵢ(α), Dᵢ,α(α) ≠ 0`, evaluating
+the specialized eq 2.11 invariant `iterate_ratFuncKDeriv_hFracα` at `α` gives
+`(d/dx)^[d] hᵢ,α (α) = d!·σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`, the value of the order-`d` Taylor data of
+the genuine rational function `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)`. `RatFunc.eval id α` is a ring hom away from the (here
+nonzero) denominator. -/
+theorem eval_ratFuncKDeriv_iterate_hFracα_at_root [CharZero K] {A Ei Diα : K[X]} {α : K} (i : ℕ)
+    (hi : 0 < i) (hEi0 : Ei ≠ 0) (hDiα0 : Diα ≠ 0) (hEi : Ei.eval α ≠ 0) (hDiα : Diα.eval α ≠ 0)
+    (d : ℕ) :
+    RatFunc.eval (RingHom.id K) α ((ratFuncKDeriv^[d]) (hFracα A Ei Diα i))
+      = (d.factorial : K) * (diffSubst Diα (laurentNum A Ei i d)).eval α
+          / (lDenomα Ei Diα i d).eval α := by
+  rw [iterate_ratFuncKDeriv_hFracα A Ei Diα i hi hEi0 hDiα0 d,
+    eval_smul_lFracα _ i d hEi hDiα, mul_div_assoc]
+
+/-- **(a) — `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`** (§2.7, p.56, the
+substantive reachable core of Thm 2.7.1): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α` (with `j ≤ i`,
+`Eᵢ(α), Dᵢ,α(α) ≠ 0`, where `Eᵢ = laurentE D Dᵢ i`), the engine output equals
+`Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` — the order-`(i−j)` Taylor coefficient of the genuine rational
+function `hᵢ,α`. Combines `eval_laurentH_eq_diffSubst_laurentNum` (Steps 2+3+5) with Stage I evaluated at
+`α` (`eval_ratFuncKDeriv_iterate_hFracα_at_root`) and the cofactor identity `Dᵢ'(α) = Dᵢ,α(α)`
+(`eval_derivative_of_X_sub_C_mul`): the `(Dᵢ,α, Eᵢ)`-power denominators cancel the
+`(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` factors. Since `hᵢ,α = (A/D)(x−α)ⁱ`, its order-`(i−j)` Taylor
+coefficient at `α` is precisely the `1/(x−α)ʲ` partial-fraction (Laurent) coefficient `c_j` of `A/D`. -/
+theorem eval_laurentH_eq_taylor_coeff [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ)
+    (hi : 0 < i) (hji : j ≤ i) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (laurentH A D Di i j).eval α
+      = (((i - j).factorial : K))⁻¹
+          * RatFunc.eval (RingHom.id K) α
+              ((ratFuncKDeriv^[i - j]) (hFracα A (laurentE D Di i) Diα i)) := by
+  -- abbreviations
+  set Ei := laurentE D Di i with hEidef
+  have hEi0 : Ei ≠ 0 := fun h => hEi (by rw [h, Polynomial.eval_zero])
+  have hDiα0 : Diα ≠ 0 := fun h => hDiα (by rw [h, Polynomial.eval_zero])
+  -- evaluate Stage I at the root
+  rw [eval_ratFuncKDeriv_iterate_hFracα_at_root i hi hEi0 hDiα0 hEi hDiα (i - j)]
+  -- the engine output, via Steps 2+3+5
+  rw [eval_laurentH_eq_diffSubst_laurentNum i j hDi hα hfac hcopE hcopD, ← hEidef]
+  -- the `(derivative Di)(α) = Diα(α)` cofactor identity
+  rw [eval_derivative_of_X_sub_C_mul hfac]
+  -- the denominator `lDenomα Ei Diα i (i-j) (α) = Diα(α)^{i+(i-j)}·Ei(α)^{(i-j)+1}`
+  unfold lDenomα
+  rw [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_pow]
+  -- index arithmetic: `i + (i-j) = 2i - j`
+  have hidx : i + (i - j) = 2 * i - j := by omega
+  rw [hidx]
+  -- abbreviate the evaluated numerator and the two base values
+  set N := (diffSubst Diα (laurentNum A Ei i (i - j))).eval α with hN
+  set e := Ei.eval α with he
+  set g := Diα.eval α with hg
+  have hfact : ((i - j).factorial : K) ≠ 0 := by exact_mod_cast Nat.factorial_ne_zero (i - j)
+  -- both sides are `N / (e^{i-j+1}·g^{2i-j})` (the `(i-j)!⁻¹·(i-j)!` cancels)
+  rw [one_div, one_div, inv_pow, inv_pow]
+  field_simp
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
@@ -1014,5 +1125,45 @@ example {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α 
       = (laurentQ A D Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
           * (1 / (derivative Di).eval α) ^ (2 * i - j) :=
   eval_laurentH i j hDi hα hcopE hcopD
+
+/-- Restatement of (a), the cofactor identity at a simple root: `Dᵢ'(α) = Dᵢ,α(α)`. -/
+example {Di Diα : K[X]} {α : K} (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα) :
+    (derivative Di).eval α = Diα.eval α :=
+  eval_derivative_of_X_sub_C_mul hfac
+
+/-- Restatement of (a), Stage I evaluated at the root: `(d/dx)^[d] hᵢ,α (α) =
+d!·σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`. -/
+example [CharZero K] {A Ei Diα : K[X]} {α : K} (i : ℕ) (hi : 0 < i) (hEi0 : Ei ≠ 0)
+    (hDiα0 : Diα ≠ 0) (hEi : Ei.eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) (d : ℕ) :
+    RatFunc.eval (RingHom.id K) α ((ratFuncKDeriv^[d]) (hFracα A Ei Diα i))
+      = (d.factorial : K) * (diffSubst Diα (laurentNum A Ei i d)).eval α
+          / (lDenomα Ei Diα i d).eval α :=
+  eval_ratFuncKDeriv_iterate_hFracα_at_root i hi hEi0 hDiα0 hEi hDiα d
+
+/-- **(a) restated** (book p.56): `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient
+`(1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` of the genuine rational function `hᵢ,α = (A/D)(x−α)ⁱ` at `α`. -/
+example [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ) (hi : 0 < i) (hji : j ≤ i)
+    (hDi : Di.Monic) (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (laurentH A D Di i j).eval α
+      = (((i - j).factorial : K))⁻¹
+          * RatFunc.eval (RingHom.id K) α
+              ((ratFuncKDeriv^[i - j]) (hFracα A (laurentE D Di i) Diα i)) :=
+  eval_laurentH_eq_taylor_coeff i j hi hji hDi hα hfac hcopE hcopD hEi hDiα
+
+/-- **The `i=j=1` instance of (a)** (book p.56): at a simple root, the order-`0` Taylor coefficient is the
+function value `hᵢ,α(α)`, so `eval_laurentH_eq_taylor_coeff` specializes to `H₁₁(α) = h₁,α(α)` — the
+`(d/dx)^[0]`-Taylor data, consistent with the residue `eval_laurentH_one_one_eq_residue`. Here `i−j = 0`,
+`(0)! = 1`, and `(ratFuncKDeriv^[0]) (hFracα …) = hFracα …`. -/
+example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di 1) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di 1).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α
+      = RatFunc.eval (RingHom.id K) α (hFracα A (laurentE D Di 1) Diα 1) := by
+  have h := eval_laurentH_eq_taylor_coeff (A := A) (D := D) (Di := Di) (Diα := Diα) (α := α) 1 1
+    one_pos le_rfl hDi hα hfac hcopE hcopD hEi hDiα
+  simpa using h
 
 end DeepWiki.SymbolicIntegration
