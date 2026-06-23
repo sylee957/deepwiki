@@ -21,7 +21,6 @@ Ex 1.1: the fourth ABSTRACT constraint — `A` is the first letter of the Englis
   constraints are done].
 Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [external: the book states
   them as "obvious"; the schemes here leave domains total].
-Ex 1.6: boolean functions for every constraint of Example 1.10 (HOTELDB, six relations) [deferred].
 Ex 1.8: a *second* database constraint (not equivalent to relation constraints) and a relation
   constraint that is a non-trivial consequence of the two — a non-trivial single-relation
   consequence of two cross-relation constraints [deferred: construction; the core, a database
@@ -259,5 +258,62 @@ abbrev ex_1_11_c2_of_c1_c3 := @DeepWiki.thirsty_c2_of_c1_c3
 /-- **Exercise 1.11** (§1.7, p.17): THIRSTY constraint 3 is a consequence of constraints 2 and 4
 (every bar serves a beer, liked by a visitor, so the bar has a visitor). -/
 abbrev ex_1_11_c3_of_c2_c4 := @DeepWiki.thirsty_c3_of_c2_c4
+
+/-! ### Exercise 1.6 — the `HOTELDB` constraints (Example 1.10).
+`SC_C` is Exercise 1.2 (`ex_1_2_*`) and `SDYDC` is Exercise 1.4 (`ex_1_4_*`). -/
+
+/-- **Exercise 1.6** (§1.7, p.16), `HOTELDB` six-relation database instance. -/
+abbrev ex_1_6_hotelDb := @DeepWiki.HotelDbInst
+
+/-- **Exercise 1.6**, `SC_R`/1: every room has a different number. -/
+abbrev ex_1_6_scR_uniqueNumber := @DeepWiki.rooms_uniqueNumber
+
+/-- **Exercise 1.6**, `SC_R`/2 (tuple constraint): eight floors, first room-number digit = floor. -/
+abbrev ex_1_6_scR_floorDigit := @DeepWiki.rooms_floorDigit
+
+/-- **Exercise 1.6**, `SC_R`/3 (tuple constraint): every room on floor 2 has a bath. -/
+abbrev ex_1_6_scR_floor2Bath := @DeepWiki.rooms_floor2Bath
+
+/-- **Exercise 1.6**, `SC_R`/4 (tuple constraint): a room with a bath costs over 150. -/
+abbrev ex_1_6_scR_bathRate := @DeepWiki.rooms_bathRate
+
+/-- **Exercise 1.6**, `SC_R`/5: no floor has more than 20 rooms. -/
+abbrev ex_1_6_scR_floorCount := @DeepWiki.rooms_floorCount
+
+/-- **Exercise 1.6**, `SC_R`/6: the average number of beds per room is at least 1.60. -/
+abbrev ex_1_6_scR_bedAverage := @DeepWiki.rooms_bedAverage
+
+/-- **Exercise 1.6**, `SC_V`/1: every visitor has a different number. -/
+abbrev ex_1_6_scV_uniqueNumber := @DeepWiki.visitors_uniqueNumber
+
+/-- **Exercise 1.6**, `SC_V`/2: same city implies same country. -/
+abbrev ex_1_6_scV_cityCountry := @DeepWiki.visitors_cityCountry
+
+/-- **Exercise 1.6**, `SC_S`/1: a visitor leaves later than he arrives. -/
+abbrev ex_1_6_scS_leaveAfterArrival := @DeepWiki.stays_leaveAfterArrival
+
+/-- **Exercise 1.6**, `SC_S`/2: a visitor cannot arrive a second time while still staying. -/
+abbrev ex_1_6_scS_noSecondArrival := @DeepWiki.stays_noSecondArrival
+
+/-- **Exercise 1.6**, `SC_P`: no two phone bills agree on room number, time and date. -/
+abbrev ex_1_6_scP_key := @DeepWiki.phoneBills_key
+
+/-- **Exercise 1.6**, `SC_E`: all employees have a different number. -/
+abbrev ex_1_6_scE_uniqueNumber := @DeepWiki.employees_uniqueNumber
+
+/-- **Exercise 1.6**, `SDC`/1: one roommaid is responsible for each hotel room. -/
+abbrev ex_1_6_sdc_oneRoommaidPerRoom := @DeepWiki.sdc_oneRoommaidPerRoom
+
+/-- **Exercise 1.6**, `SDC`/2: the rooms where visitors stay are hotel rooms. -/
+abbrev ex_1_6_sdc_staysRoomsAreHotel := @DeepWiki.sdc_staysRoomsAreHotel
+
+/-- **Exercise 1.6**, `SDC`/3: phone-bill room numbers are hotel rooms. -/
+abbrev ex_1_6_sdc_phoneRoomsAreHotel := @DeepWiki.sdc_phoneRoomsAreHotel
+
+/-- **Exercise 1.6**, `SDC`/4: a phone call from a room means it was occupied that date. -/
+abbrev ex_1_6_sdc_phoneImpliesOccupied := @DeepWiki.sdc_phoneImpliesOccupied
+
+/-- **Exercise 1.6**, `SDC`/5: each roommaid is an employee whose job is roommaid. -/
+abbrev ex_1_6_sdc_roommaidIsEmployee := @DeepWiki.sdc_roommaidIsEmployee
 
 end DeepWiki.Rdb

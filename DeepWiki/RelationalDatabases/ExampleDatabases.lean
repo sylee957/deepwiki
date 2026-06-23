@@ -299,17 +299,53 @@ def hrRoomNum (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"RN", by decide⟩
 /-- Bath flag of a `ROOMS` tuple (`1` = has a bath). -/
 def hrBath (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"BATH", by decide⟩
 
-/-- A `HOTELDB` database instance (the relations relevant to the dynamic and database
-constraints). -/
+/-- Attributes of `EMPLOYEES`. -/
+abbrev employeesAttrs : Finset String := {"EMPLOYEE-NUMBER", "EMPLOYEE-NAME", "JOB", "SALARY"}
+
+/-- Attributes of `ROOMMAIDS` (full-name form for the hotel database bundle). -/
+abbrev hotelRoommaidsAttrs : Finset String := {"ROOMMAID-NUMBER", "ROOM-NUMBER"}
+
+/-- City of a `VISITORS` tuple. -/
+def visCity (t : Tuple visitorsAttrs ℤ) : ℤ := t ⟨"VIS-CITY", by decide⟩
+
+/-- Country of a `VISITORS` tuple. -/
+def visCountry (t : Tuple visitorsAttrs ℤ) : ℤ := t ⟨"VIS-COUNTRY", by decide⟩
+
+/-- Arrival date of a `STAYS` tuple. -/
+def arrivDate (t : Tuple staysAttrs ℤ) : ℤ := t ⟨"ARRIV-DATE", by decide⟩
+
+/-- Time of a `PHONE-BILLS` tuple. -/
+def pbTime (t : Tuple phoneBillsAttrs ℤ) : ℤ := t ⟨"TIME", by decide⟩
+
+/-- Date of a `PHONE-BILLS` tuple. -/
+def pbDate (t : Tuple phoneBillsAttrs ℤ) : ℤ := t ⟨"DATE", by decide⟩
+
+/-- Number of an `EMPLOYEES` tuple. -/
+def empNum (t : Tuple employeesAttrs ℤ) : ℤ := t ⟨"EMPLOYEE-NUMBER", by decide⟩
+
+/-- Job of an `EMPLOYEES` tuple. -/
+def empJob (t : Tuple employeesAttrs ℤ) : ℤ := t ⟨"JOB", by decide⟩
+
+/-- Roommaid number of a `ROOMMAIDS` tuple. -/
+def rmNum (t : Tuple hotelRoommaidsAttrs ℤ) : ℤ := t ⟨"ROOMMAID-NUMBER", by decide⟩
+
+/-- Room number of a `ROOMMAIDS` tuple. -/
+def rmRoom (t : Tuple hotelRoommaidsAttrs ℤ) : ℤ := t ⟨"ROOM-NUMBER", by decide⟩
+
+/-- A `HOTELDB` database instance: its six relations. -/
 structure HotelDbInst where
+  /-- The `ROOMS` relation. -/
+  rooms : Set (Tuple hotelRoomsAttrs ℤ)
+  /-- The `ROOMMAIDS` relation. -/
+  roommaids : Set (Tuple hotelRoommaidsAttrs ℤ)
   /-- The `VISITORS` relation. -/
   visitors : Set (Tuple visitorsAttrs ℤ)
   /-- The `STAYS` relation. -/
   stays : Set (Tuple staysAttrs ℤ)
   /-- The `PHONE-BILLS` relation. -/
   phoneBills : Set (Tuple phoneBillsAttrs ℤ)
-  /-- The `ROOMS` relation. -/
-  rooms : Set (Tuple hotelRoomsAttrs ℤ)
+  /-- The `EMPLOYEES` relation. -/
+  employees : Set (Tuple employeesAttrs ℤ)
 
 /-- **Exercise 1.4**, SDYDC constraint 1: no visitor may be deleted while `STAYS` still holds
 information about him — a deleted visitor has no remaining stay. -/
@@ -359,5 +395,104 @@ theorem thirsty_c3_of_c2_c4 {bars : Set String} {db : ThirstyInst}
   obtain ⟨s, hs, hsbar⟩ := h2 bar hbar
   obtain ⟨v, hv, _, _, hvbar, _, _⟩ := h4 s hs
   exact ⟨v, hv, hvbar.trans hsbar⟩
+
+/-! ## Example 1.10 — `HOTELDB` constraints (Exercise 1.6)
+Boolean functions for every constraint set of `HOTELDB`. `SC_C` (`ROOMMAIDS`) is Exercise 1.2 and
+`SDYDC` is Exercise 1.4 above; the remaining sets `SC_R`, `SC_V`, `SC_S`, `SC_P`, `SC_E` and `SDC`
+follow. Per Example 1.9, the `SC_R` floor-digit, floor-2-bath and bath-cost constraints are tuple
+constraints; uniqueness, the per-floor count and the bed average are not. -/
+
+/-- First (most significant) decimal digit of a natural number. -/
+def firstDigit : ℕ → ℕ
+  | n => if h : n < 10 then n else firstDigit (n / 10)
+  decreasing_by exact Nat.div_lt_self (by omega) (by omega)
+
+/-- Number of beds of a `ROOMS` tuple. -/
+def hrBeds (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"NOB", by decide⟩
+
+/-- Floor of a `ROOMS` tuple. -/
+def hrFloor (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"FLOOR", by decide⟩
+
+/-- Rate of a `ROOMS` tuple. -/
+def hrRate (t : Tuple hotelRoomsAttrs ℤ) : ℤ := t ⟨"RATE", by decide⟩
+
+/-- **Exercise 1.6**, `SC_R`/1: every room has a different room number. -/
+def rooms_uniqueNumber (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r, hrRoomNum t₁ = hrRoomNum t₂ → t₁ = t₂
+
+/-- **Exercise 1.6**, `SC_R`/2 (tuple constraint): there are only eight floors and the first digit
+of the room number indicates the floor. -/
+def rooms_floorDigit (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  ∀ t ∈ r, 1 ≤ hrFloor t ∧ hrFloor t ≤ 8 ∧ hrFloor t = (firstDigit (hrRoomNum t).toNat : ℤ)
+
+/-- **Exercise 1.6**, `SC_R`/3 (tuple constraint): every room on floor 2 has a bath. -/
+def rooms_floor2Bath (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  ∀ t ∈ r, hrFloor t = 2 → hrBath t = 1
+
+/-- **Exercise 1.6**, `SC_R`/4 (tuple constraint): a room with a bath costs over 150. -/
+def rooms_bathRate (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  ∀ t ∈ r, hrBath t = 1 → 150 < hrRate t
+
+/-- **Exercise 1.6**, `SC_R`/5: no floor has more than 20 rooms. -/
+def rooms_floorCount (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  ∀ fl : ℤ, {t | t ∈ r ∧ hrFloor t = fl}.ncard ≤ 20
+
+/-- **Exercise 1.6**, `SC_R`/6: the average number of beds per room is at least `1.60`
+(`5 · Σ beds ≥ 8 · #rooms`, the division-free form of `Σ beds / #rooms ≥ 8/5`). -/
+def rooms_bedAverage (r : Set (Tuple hotelRoomsAttrs ℤ)) : Prop :=
+  8 * (r.ncard : ℤ) ≤ 5 * ∑ᶠ t ∈ r, hrBeds t
+
+/-- **Exercise 1.6**, `SC_V`/1: every visitor has a different number. -/
+def visitors_uniqueNumber (r : Set (Tuple visitorsAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r, visNum t₁ = visNum t₂ → t₁ = t₂
+
+/-- **Exercise 1.6**, `SC_V`/2: if two visitors live in the same city, they live in the same
+country. -/
+def visitors_cityCountry (r : Set (Tuple visitorsAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r, visCity t₁ = visCity t₂ → visCountry t₁ = visCountry t₂
+
+/-- **Exercise 1.6**, `SC_S`/1: a visitor leaves on a later date than his arrival. -/
+def stays_leaveAfterArrival (r : Set (Tuple staysAttrs ℤ)) : Prop :=
+  ∀ t ∈ r, arrivDate t < leavDate t
+
+/-- **Exercise 1.6**, `SC_S`/2: a visitor cannot arrive a second time while he is still staying —
+two stays of one visitor whose arrivals fall within one another coincide. -/
+def stays_noSecondArrival (r : Set (Tuple staysAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r, stayVisNum t₁ = stayVisNum t₂ →
+    arrivDate t₁ ≤ arrivDate t₂ → arrivDate t₂ < leavDate t₁ → t₁ = t₂
+
+/-- **Exercise 1.6**, `SC_P`: no two different phone bills agree on room number, time and date. -/
+def phoneBills_key (r : Set (Tuple phoneBillsAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r,
+    pbRoom t₁ = pbRoom t₂ → pbTime t₁ = pbTime t₂ → pbDate t₁ = pbDate t₂ → t₁ = t₂
+
+/-- **Exercise 1.6**, `SC_E`: all employees have a different number. -/
+def employees_uniqueNumber (r : Set (Tuple employeesAttrs ℤ)) : Prop :=
+  ∀ t₁ ∈ r, ∀ t₂ ∈ r, empNum t₁ = empNum t₂ → t₁ = t₂
+
+/-- **Exercise 1.6**, `SDC`/1: just one roommaid is responsible for each room of the hotel. -/
+def sdc_oneRoommaidPerRoom (db : HotelDbInst) : Prop :=
+  ∀ room ∈ db.rooms, ∃ rm ∈ db.roommaids, rmRoom rm = hrRoomNum room ∧
+    ∀ rm' ∈ db.roommaids, rmRoom rm' = hrRoomNum room → rmNum rm' = rmNum rm
+
+/-- **Exercise 1.6**, `SDC`/2: the rooms where visitors stay are rooms of the hotel. -/
+def sdc_staysRoomsAreHotel (db : HotelDbInst) : Prop :=
+  ∀ s ∈ db.stays, ∃ room ∈ db.rooms, hrRoomNum room = roomStay s
+
+/-- **Exercise 1.6**, `SDC`/3: the room numbers occurring in `PHONE-BILLS` are rooms of the
+hotel. -/
+def sdc_phoneRoomsAreHotel (db : HotelDbInst) : Prop :=
+  ∀ pb ∈ db.phoneBills, ∃ room ∈ db.rooms, hrRoomNum room = pbRoom pb
+
+/-- **Exercise 1.6**, `SDC`/4: if there is a phone call from a room then that room was occupied on
+that date. -/
+def sdc_phoneImpliesOccupied (db : HotelDbInst) : Prop :=
+  ∀ pb ∈ db.phoneBills, ∃ s ∈ db.stays,
+    roomStay s = pbRoom pb ∧ arrivDate s ≤ pbDate pb ∧ pbDate pb ≤ leavDate s
+
+/-- **Exercise 1.6**, `SDC`/5: each roommaid in `ROOMMAIDS` is an employee whose job
+(`roommaidJob`) is roommaid. -/
+def sdc_roommaidIsEmployee (roommaidJob : ℤ) (db : HotelDbInst) : Prop :=
+  ∀ rm ∈ db.roommaids, ∃ e ∈ db.employees, empNum e = rmNum rm ∧ empJob e = roommaidJob
 
 end DeepWiki
