@@ -106,4 +106,58 @@ theorem applyTableau_jdChaseStep_subset {ℓ : ℕ} (ρ : Valuation Att Val)
       rw [hglue i a hi]
     rw [hLv]; exact hv
 
+/-- Apply a symbol substitution to a row. -/
+def substRow (σ : ChaseSymbol Att → ChaseSymbol Att) (ℓ : ChaseRow Ω) : ChaseRow Ω :=
+  fun a => σ (ℓ a)
+
+/-- Apply a symbol substitution to a tableau — the form of every fd-rule step (Algorithm 3.4). -/
+def substTableau (σ : ChaseSymbol Att → ChaseSymbol Att) (T : Tableau Ω) : Tableau Ω :=
+  substRow σ '' T
+
+omit [DecidableEq Att] in
+/-- A `ρ`-invisible substitution does not change a row's image. -/
+theorem applyRow_substRow (ρ : Valuation Att Val) (σ : ChaseSymbol Att → ChaseSymbol Att)
+    (ℓ : ChaseRow Ω) (hσ : ∀ s, ρ (σ s) = ρ s) : applyRow ρ (substRow σ ℓ) = applyRow ρ ℓ := by
+  funext a; simp only [applyRow, substRow]; exact hσ (ℓ a)
+
+omit [DecidableEq Att] in
+/-- **Soundness of any fd-rule step**: a substitution the valuation `ρ` cannot distinguish
+(`ρ ∘ σ = ρ`) leaves the represented relation unchanged. -/
+theorem applyTableau_substTableau_of_consistent (ρ : Valuation Att Val)
+    (σ : ChaseSymbol Att → ChaseSymbol Att) (T : Tableau Ω) (hσ : ∀ s, ρ (σ s) = ρ s) :
+    applyTableau ρ (substTableau σ T) = applyTableau ρ T := by
+  unfold applyTableau substTableau
+  rw [Set.image_image]
+  exact Set.image_congr' fun ℓ => applyRow_substRow ρ σ ℓ hσ
+
+/-- The fd-rule's merge substitution: identify symbol `s` with `t`. -/
+def mergeSubst (s t : ChaseSymbol Att) : ChaseSymbol Att → ChaseSymbol Att :=
+  fun x => if x = s then t else x
+
+/-- Merging two symbols of equal `ρ`-value is `ρ`-invisible. -/
+theorem consistent_mergeSubst (ρ : Valuation Att Val) {s t : ChaseSymbol Att} (h : ρ s = ρ t)
+    (x : ChaseSymbol Att) : ρ (mergeSubst s t x) = ρ x := by
+  unfold mergeSubst
+  split
+  · next hx => rw [hx]; exact h.symm
+  · rfl
+
+/-- Merging two symbols of equal `ρ`-value leaves the represented relation unchanged — the fd-rule
+step is sound. -/
+theorem applyTableau_mergeSubst (ρ : Valuation Att Val) {s t : ChaseSymbol Att} (T : Tableau Ω)
+    (h : ρ s = ρ t) : applyTableau ρ (substTableau (mergeSubst s t) T) = applyTableau ρ T :=
+  applyTableau_substTableau_of_consistent ρ _ T (consistent_mergeSubst ρ h)
+
+omit [DecidableEq Att] in
+/-- **The fd justifies its merges**: if `X → Y` holds in the represented relation and two rows of
+the tableau agree symbolically on `X`, then on each attribute of `Y` their symbols have equal
+`ρ`-value — so merging them (via `mergeSubst`/`applyTableau_mergeSubst`) is sound. -/
+theorem fdMerge_value_eq (ρ : Valuation Att Val) {X Y : Finset Att} {T : Tableau Ω}
+    (hfd : SatisfiesFd (applyTableau ρ T) X Y) {R₁ R₂ : ChaseRow Ω} (h₁ : R₁ ∈ T) (h₂ : R₂ ∈ T)
+    (hX : ∀ a : {x // x ∈ Ω}, a.val ∈ X → R₁ a = R₂ a) {a : {x // x ∈ Ω}} (ha : a.val ∈ Y) :
+    ρ (R₁ a) = ρ (R₂ a) :=
+  hfd (applyRow ρ R₁) ((mem_applyTableau _ _ _).mpr ⟨R₁, h₁, rfl⟩)
+    (applyRow ρ R₂) ((mem_applyTableau _ _ _).mpr ⟨R₂, h₂, rfl⟩)
+    (fun b hb => by simp only [applyRow]; rw [hX b hb]) a ha
+
 end DeepWiki

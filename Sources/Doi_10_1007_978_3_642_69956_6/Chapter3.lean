@@ -33,13 +33,14 @@ semantics.
   partition `SameBlock`/`DepB(X)`, the forward direction of Theorem 3.11 (implied mvd right sides
   are block-unions) and the singleton-block clause are done].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
-  Corollary 3.3 (an mvd is a two-component jd), the chase *steps* (Algorithm 3.4's fd- and jd-rules)
-  with their iteration to a fixpoint, termination and Theorem 3.15 (correctness), Theorem 3.16
+  Corollary 3.3 (an mvd is a two-component jd), the chase *fixpoint iteration* (looping the fd- and
+  jd-rules to closure) with its termination and Theorem 3.15 (correctness), Theorem 3.16
   (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd implication via the chase),
   Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham algorithm (Algorithm 3.5,
   Theorem 3.18) [infra/research]. (The chase data model — Def 3.11 tableaux/rows/symbols, Def 3.12
-  the initial tableau, the all-distinguished success row with its membership criterion, and the
-  valuation bridge to relations — is done.)
+  the initial tableau, the success row + membership criterion, the valuation bridge — and *both*
+  individual rules with their soundness — the jd-rule `jdChaseStep` and the fd-rule as a symbol
+  substitution `substTableau`/`mergeSubst` — are done.)
 §3.5: Theorem 3.19 (completeness and non-redundancy of the id axiom system `𝓘`; the three rules
   I1/I2/I3 are sound — done), Theorem 3.20 (id implication is decidable), Theorem 3.21
   (fd+id implication is undecidable), Example 3.26 (ids have no finite counterexample) [research].
@@ -209,6 +210,18 @@ abbrev chase_jdStep := @DeepWiki.jdChaseStep
 /-- **Algorithm 3.4** (§3.4), jd-rule soundness: if the join dependency already holds in the
 relation a tableau represents, the jd-rule adds no new tuple — the invariant behind Theorem 3.15. -/
 abbrev chase_jdStep_sound := @DeepWiki.applyTableau_jdChaseStep_subset
+
+/-- **Algorithm 3.4** (§3.4, p.91), the fd-rule: a symbol substitution on the tableau, with the
+merge `mergeSubst` identifying two symbols. -/
+abbrev chase_fdStep := @DeepWiki.substTableau
+
+/-- **Algorithm 3.4** (§3.4), fd-rule soundness: merging two symbols of equal value leaves the
+represented relation unchanged. -/
+abbrev chase_fdStep_sound := @DeepWiki.applyTableau_mergeSubst
+
+/-- **Algorithm 3.4** (§3.4): the fd justifies its merges — symbolically `X`-agreeing rows have
+equal-valued symbols on `Y` when `X → Y` holds, so the fd-rule merge is sound. -/
+abbrev chase_fd_justifies_merge := @DeepWiki.fdMerge_value_eq
 
 /-! ## §3.5 Inclusion Dependencies -/
 
