@@ -83,4 +83,15 @@ theorem IsAsymptoticallyNormalVec.matrix_mulVec {k m : ℕ} {X : ℕ → Ω → 
   simp only [hproj, hquad]
   exact key
 
+/-- **Asymptotic normality of vectors is preserved under a constant shift** (the affine part of
+Prop 6.4.2): if `Xₙ` is `AN(aₙ, Sₙ)` then `Xₙ + d` is `AN(aₙ + d, Sₙ)`. Each projection
+`λ ⬝ᵥ (Xₙ + d) = λ ⬝ᵥ Xₙ + λ ⬝ᵥ d` is a shifted 1-D asymptotically normal sequence. -/
+theorem IsAsymptoticallyNormalVec.add_const {k : ℕ} {X : ℕ → Ω → Fin k → ℝ} {a : ℕ → Fin k → ℝ}
+    {S : ℕ → Matrix (Fin k) (Fin k) ℝ} (h : IsAsymptoticallyNormalVec X a S μ) (d : Fin k → ℝ) :
+    IsAsymptoticallyNormalVec (fun n ω => X n ω + d) (fun n => a n + d) S μ := by
+  intro lam hlam
+  have key := (h lam hlam).add_const fun _ => lam ⬝ᵥ d
+  simp only [dotProduct_add]
+  exact key
+
 end DeepWiki.TimeSeries
