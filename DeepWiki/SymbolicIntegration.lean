@@ -25,4 +25,5 @@ import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
+import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
