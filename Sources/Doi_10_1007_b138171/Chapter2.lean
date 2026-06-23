@@ -9,6 +9,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
@@ -39,7 +40,11 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   multivariate root machinery; the conjugate-pair real-form identity is done, `logToReal_conjugate_pair`);
   Ex 2.8.1; Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
-Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7.
+Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7 [partial — the regularity core (`ex_2_7_regularity`: the
+  `i`-th LRT subresultant has `x`-degree exactly `i` at a multiplicity-`i` residue) and the required
+  "leading coeffs are units in `K[t]/(Qᵢ)`" fact (`ex_2_7_units`: `sᵢ` coprime to `Qᵢ`) are done; the
+  full algorithmic modification of LRT to *output* monic-in-`x` logarithm arguments remains [functional:
+  needs the monic-normalized log-part construction]].
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
 
@@ -365,6 +370,24 @@ gcd `Gₐ` of Ex 2.4.1 — so the LRT subresultant and the RT gcd agree up to th
 monic-normalizing `S₃(a,x)` recovers `Gₐ`. Verified as the algebraic identity modulo `4a²+1 = 0`
 (`linear_combination … * hb`); this checks the normalization step, not the PRS computation itself. -/
 abbrev ex_2_5_1 := @DeepWiki.SymbolicIntegration.lazardRiobooTrager_example
+
+/-- **Exercise 2.7** (§2.9, p.73), the regularity core behind making the LRT logarithm arguments monic in
+`x`: at a residue `a` of multiplicity `i < deg D` in the Rothstein–Trager resultant `R = res_x(D, A−t·D')`,
+the specialized `i`-th LRT subresultant `Sᵢ(D, A−a·D')` has `x`-degree *exactly* `i`, so its leading
+`x`-coefficient — the `i`-th principal subresultant coefficient `sᵢ(a)` — is **nonzero**. Via
+`lazardRiobooTrager_isSimilar_gcd` (`Sᵢ` specialized at `a` is *similar* to `gcd(D, A−a·D')`, so equal
+`natDegree`) and `rootMultiplicity_rtResultant_eq_natDegree_gcd` (`deg gcd = rootMult a R = i`). The
+library's `leadingCoeff_lrtSubresultant_eval_ne_zero`. -/
+abbrev ex_2_7_regularity := @DeepWiki.SymbolicIntegration.leadingCoeff_lrtSubresultant_eval_ne_zero
+
+/-- **Exercise 2.7** (§2.9, p.73), the required "**units in `K[t]/(Qᵢ(t))`**" fact: the `i`-th principal
+subresultant coefficient `sᵢ = lrtPsc A D i ∈ K[t]` (the leading `x`-coefficient of the `i`-th LRT
+subresultant) is **coprime** to the multiplicity-`i` factor `Qᵢ = lrtQ A D i := ∏_{a:rootMult a R=i}(t−a)`
+(`i < deg D`) — i.e. `sᵢ` is a unit in `K[t]/(Qᵢ)`, exactly what makes monic-normalizing the LRT logarithm
+arguments legitimate even when `Qᵢ` is not irreducible. From `ex_2_7_regularity` (`sᵢ(a) ≠ 0` at each root
+`a` of `Qᵢ`) and the squarefreeness of `Qᵢ` (distinct linear factors `t − a`). The library's
+`isCoprime_lrtPsc_lrtQ`. The full algorithmic modification of LRT to output monic logs remains. -/
+abbrev ex_2_7_units := @DeepWiki.SymbolicIntegration.isCoprime_lrtPsc_lrtQ
 
 /-- **Example 2.5.2** (§2.5, p.53), the Hermite-reduction result for `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x²−1)²(x−2)`): `HermiteReduce` returns rational part `g = (12x+6)/(x²−1)` and remaining
