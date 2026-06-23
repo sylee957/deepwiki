@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputeCorrectness
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Correctness of the computable Hermite reduction (`cdiophantine`/`hermiteInner`)
 The computable Hermite engine of `HermiteCompute` (`cdiophantine`, `hermiteInner`, `hermiteReduce`) is
@@ -972,3 +973,42 @@ example :
     toPoly ((csqfreeFactor 40 cD221).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly cD221 :=
   toPoly_Dstar_dvd_D 40 cD221 (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
+
+/-! ### Full `csqfreeFactor` Yun correctness — the abstract invariant
+
+Toward the *equality* clause `toPoly D = u·∏ⱼ (toPoly Vⱼ)^iⱼ` (with each `Vⱼ` squarefree and the `Vⱼ`
+pairwise coprime), this section ties `csqfreeFactor`'s `(b, d)` recurrence to the abstract Yun theory of
+`SquarefreeFactorization` (the `deflation`/`squarefreePart`/`sqfreeFactPart`/`Yun` machinery). The
+invariant carried through the loop: at step `i`, the working numerator `bᵢ` is the radical of the
+remaining part `∏_{j≥i} Vⱼ = squarefreePart (deflation A (i−1))`, and the working derivative-poly
+`dᵢ = Yᵢ − bᵢ′ = Vᵢ·Y_{i+1}`; the emitted factor `gcd(bᵢ, dᵢ) ~ Vᵢ = sqfreeFactPart A i`. -/
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- **The abstract Yun gcd step**: `gcd(∏_{j≥i} Vⱼ, Yᵢ − (∏_{j≥i} Vⱼ)′) ~ Vᵢ`, the i-th squarefree
+factor. The radical `S = squarefreePart (deflation A (i−1)) = Vᵢ · S'` (`S' = squarefreePart
+(deflation A i)`) and the working derivative-poly `d = Yᵢ − S′ = Vᵢ · Y_{i+1}` share the common factor
+`Vᵢ`; pulling it out (`gcd_mul_left'`), `gcd(S', Y_{i+1})` is a unit by `S' ⊥ Y_{i+1}`
+(`isRelPrime_squarefreePart_Yun`). The core gcd identity pinning each Yun factor to `Vᵢ`. -/
+theorem gcd_radical_yunStep_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) :
+    Associated
+      (gcd (squarefreePart (deflation A (i - 1)))
+        (Yun A i - derivative (squarefreePart (deflation A (i - 1)))))
+      (sqfreeFactPart A i) := by
+  have hsplit := squarefreePart_deflation_mul_sqfreeFactPart A i hi hA
+  have hd := Yun_sub_derivative_squarefreePart A i hi hA
+  set V := sqfreeFactPart A i with hV
+  set S' := squarefreePart (deflation A i) with hS'
+  set Y := Yun A (i + 1) with hY
+  have hS : squarefreePart (deflation A (i - 1)) = V * S' := by
+    rw [hV, hS', mul_comm]; exact hsplit.symm
+  rw [hd, hS]
+  refine (gcd_mul_left' V S' Y).trans ?_
+  have hrp : IsRelPrime S' Y := by
+    have h := isRelPrime_squarefreePart_Yun A (i + 1) (by omega) hA
+    rwa [Nat.add_sub_cancel] at h
+  have hunit : IsUnit (gcd S' Y) := gcd_isUnit_iff_isRelPrime.mpr hrp
+  have : Associated (V * gcd S' Y) (V * 1) :=
+    (associated_one_iff_isUnit.mpr hunit).mul_left V
+  rwa [mul_one] at this
