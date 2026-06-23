@@ -17,6 +17,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
+import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -35,14 +36,18 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.8: Thm 2.8.4; Rioboo's `LogToReal` root-partition/recursion: the `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB`
+§2.8: Rioboo's `LogToReal` root-partition/recursion: the `R(u+iv)=P+iQ` / `S(u+iv,x)=A+iB`
   real/imaginary splits ARE done (`logToReal_split`/`exists_realImag_split_bivariate`), as are the
   conjugate-product bridge `A²+B²=S(a+ib)·S(a−ib)` (`logToReal_conjProduct_bridge`), the per-root
-  selection criterion `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), and the per-pair /
-  sum-over-pairs real forms (`logToReal_conjugate_pair`/`logToReal_sum`). STILL OPEN [infra]: the
-  multiset bookkeeping that partitions `R`'s roots over `K̄` into real roots ⊎ conjugate pairs with the
-  `b>0` ordered-field selection, and the assembly of the full recursion's correctness over that
-  partition — needs splitting-field root-counting machinery (`K̄`-root multiset + `LinearOrderedField`
+  selection criterion `R(a+ib)=0 ⟺ P(a,b)=Q(a,b)=0` (`logToReal_root_criterion`), the per-pair /
+  sum-over-pairs real forms (`logToReal_conjugate_pair`/`logToReal_sum`), and Thm 2.8.4's coprimality
+  core `gcd(A(a,b,x),B(a,b,x))=1` (`thm_2_8_4`, with (2.29)/(2.30) `thm_2_8_4_eq_2_29`/`_eq_2_30`).
+  STILL OPEN: (i) [external] the LRT-gcd-cofactor derivation feeding Thm 2.8.4 — that `S = A+iB` IS the
+  LRT gcd of `C−(a+ib)D'` and `D` so the cofactors `E₁+iE₂`, `F₁+iF₂` of (2.27)/(2.28) exist (taken as
+  hypotheses in `rioboo_coprime`; needs the LRT-gcd-at-complex-roots theory); (ii) [infra] the multiset
+  bookkeeping that partitions `R`'s roots over `K̄` into real roots ⊎ conjugate pairs with the `b>0`
+  ordered-field selection, and the assembly of the full recursion's correctness over that partition —
+  needs splitting-field root-counting machinery (`K̄`-root multiset + `LinearOrderedField`
   complexification) not yet built. Ex 2.8.2.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
@@ -595,6 +600,31 @@ of `R` iff `P = 0 ∧ Q = 0` — exactly the condition under which `LogToReal` s
 essential: `P + i·Q = 0` alone does **not** force `P = Q = 0`). -/
 abbrev logToReal_root_criterion :=
   @DeepWiki.SymbolicIntegration.aeval_eq_zero_iff_realImag_eq_zero
+
+/-- **Theorem 2.8.4** (§2.8, p.67–68, Rioboo), Rioboo's conversion specializes well: for a real field
+`K` with real closure `K̄`, `C, D ∈ K[x]` (`deg D > 0`, `deg D > deg C`, `D` squarefree,
+`gcd(C,D) = 1`), with `R = P + i·Q` a squarefree factor of the RT/LRT resultant and `S = A + i·B` the
+LRT gcd, if `a, b ∈ K̄` satisfy `P(a,b) = Q(a,b) = 0` and `b ≠ 0`, then `gcd(A(a,b,x), B(a,b,x)) = 1`
+in `K(a,b)[x]` — so Rioboo's arctan numerator has a nonzero denominator. The library's `rioboo_coprime`
+(the purely-algebraic Bézout core): taking the LRT gcd-cofactor factorizations (2.27)
+`C − (a+i·b)·D' = (E₁+i·E₂)(A+i·B)`, (2.28) `D = (F₁+i·F₂)(A+i·B)` as hypotheses (the faithful
+"`A+iB` divides both `C−(a+ib)D'` and `D`" content), the imaginary part of (2.27) gives (2.29)
+`−b·D' = E₁B + E₂A`, the real part of (2.28) gives (2.30) `D = F₁A − F₂B`, and `D` squarefree
+(`G₁D + G₂D' = 1`) yields `b = (bG₁F₁ − G₂E₂)·A − (bG₁F₂ + G₂E₁)·B`, putting the unit `b` in
+`span {A, B}`, i.e. `IsCoprime A B`. The complexification is modeled as a char-`0` domain (the field
+`K(a,b)(i)` adjoined to `K(a,b)[x]`) with a conjugation `σ` (`σ i = −i`) certifying the parts real. -/
+abbrev thm_2_8_4 := @DeepWiki.SymbolicIntegration.rioboo_coprime
+
+/-- **Theorem 2.8.4, equation (2.29)** (§2.8, p.68): taking the imaginary part of (2.27)
+`C − (a+i·b)·D' = (E₁+i·E₂)(A+i·B)` gives `−b·D'(x) = E₁(a,b,x)·B(a,b,x) + E₂(a,b,x)·A(a,b,x)` (the
+real `C, D'` contribute nothing to the imaginary part except `Im(−(a+ib)D') = −b·D'`). The library's
+`imagPart_eq_of_mul_split`, via the `i`-free component matching `eq_and_eq_of_add_imag_eq`. -/
+abbrev thm_2_8_4_eq_2_29 := @DeepWiki.SymbolicIntegration.imagPart_eq_of_mul_split
+
+/-- **Theorem 2.8.4, equation (2.30)** (§2.8, p.68): taking the real part of (2.28)
+`D = (F₁+i·F₂)(A+i·B)` gives `D(x) = F₁(a,b,x)·A(a,b,x) − F₂(a,b,x)·B(a,b,x)`. The library's
+`realPart_eq_of_mul_split`, via `eq_and_eq_of_add_imag_eq`. -/
+abbrev thm_2_8_4_eq_2_30 := @DeepWiki.SymbolicIntegration.realPart_eq_of_mul_split
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
