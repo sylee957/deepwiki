@@ -116,3 +116,35 @@ theorem imagLog_step (hi : i ^ 2 = -1)
       = atanDerivSum [(φ A * φ D + φ B * φ C) / φ G] + i * imagLog φ i D C := by
   rw [imagLog, imagLog, atanDerivSum_singleton,
     logDeriv_imagQuot_eq_arctan_add_imagQuot hi hAB hCD hG hG0]
+
+/-- **A complete `LogToAtan` run** (§2.8 p.63): the inductive spec of a finite Rioboo recursion tree
+on `(A, B)` producing the arctan-argument list `L : List R`. Constructors mirror the three branches:
+`base` (`B ∣ A`, output `[φA/φB]`), `swap` (`deg A < deg B`, recurse on `(−B, A)`), and `step`
+(`deg A ≥ deg B`, prepend `(φA·φD + φB·φC)/φG` and recurse on the cofactors `(D, C)`), each carrying the
+nonvanishing data (`(φA)²+(φB)² ≠ 0`, `φB ≠ 0`, and for `step` the Bézout relation, `φG ≠ 0`,
+`(φC)²+(φD)² ≠ 0`). Captures termination structurally without a degree measure. -/
+inductive IsLogToAtanRun (φ : K[X] →+* R) (i : R) : K[X] → K[X] → List R → Prop
+  | base {A B : K[X]} (hB : φ B ≠ 0) (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0) (hdvd : B ∣ A) :
+      IsLogToAtanRun φ i A B [φ A / φ B]
+  | swap {A B : K[X]} {L : List R} (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0)
+      (hrun : IsLogToAtanRun φ i (-B) A L) :
+      IsLogToAtanRun φ i A B L
+  | step {A B C D G : K[X]} {L : List R} (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0)
+      (hCD : (φ C) ^ 2 + (φ D) ^ 2 ≠ 0) (hG : φ B * φ D - φ A * φ C = φ G) (hG0 : φ G ≠ 0)
+      (hrun : IsLogToAtanRun φ i D C L) :
+      IsLogToAtanRun φ i A B ((φ A * φ D + φ B * φ C) / φ G :: L)
+
+/-- **`LogToAtan` correctness** (§2.8 p.63, the assembly of Theorem 2.8.1): for any complete Rioboo
+run `IsLogToAtanRun φ i A B L`, the arctan-derivative sum of the output equals the complex logarithm,
+`atanDerivSum L = i · imagLog φ i A B = i · d/dx log((φA+iφB)/(φA−iφB))`. Proof: induction on the run —
+`base` is `atanDerivSum_base` (Lemma 2.8.1), `swap` is `imagLog_swap` (Thm 2.8.1(a)) after the IH, and
+`step` is `imagLog_step` (Thm 2.8.1(b)) after the IH. -/
+theorem isLogToAtanRun_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
+    {A B : K[X]} {L : List R} (hrun : IsLogToAtanRun φ i A B L) :
+    atanDerivSum L = i * imagLog φ i A B := by
+  induction hrun with
+  | base hB hAB _ => exact atanDerivSum_base hi hB hAB
+  | swap hAB _ ih => rw [ih, imagLog_swap hi hφneg hAB]
+  | step hAB hCD hG hG0 _ ih =>
+      rw [atanDerivSum_cons, ← atanDerivSum_singleton, ih, ← imagLog_step hi hAB hCD hG hG0]
+
