@@ -1595,6 +1595,176 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     leadingYCoeff fi1 ∣ leadingYCoeff fi :=
   lazard_lemma2 hB hfi hfi1 hd
 
+/-! ## Sorting a minimal bivariate Gröbner basis by `y`-degree
+
+Lazard's Lemma 3 (and the descent `gᵢ ∣ fᵢ`) operates on the basis `B` *sorted by increasing
+`y`-degree* `degreeOf 0`. The sort exists because the `y`-degrees are **distinct** on `B`: under
+`lex` (index `0 = y` dominant) `degreeOf 0 b = (lex.degree b) 0`, and two distinct basis elements
+sharing it would be comparable (`finsupp_fin_two_le_or_le_of_apply_zero_eq`), contradicting
+minimality (`IsReducedGroebnerBasis.leadingMonomial_not_le`). The strictly-increasing enumeration
+`sortedByYDegree` is built from `Finset.orderEmbOfFin` on the (injective) `y`-degree image. -/
+
+/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `0` (the `y`-coordinate under the lex
+convention) are comparable: the remaining ℕ-values at index `1` are totally ordered. -/
+theorem finsupp_fin_two_le_or_le_of_apply_zero_eq {d d' : Fin 2 →₀ ℕ} (h : d 0 = d' 0) :
+    d ≤ d' ∨ d' ≤ d := by
+  rcases le_total (d 1) (d' 1) with h1 | h1
+  · refine Or.inl ?_
+    rw [Finsupp.le_def]; intro i; fin_cases i
+    · exact h.le
+    · exact h1
+  · refine Or.inr ?_
+    rw [Finsupp.le_def]; intro i; fin_cases i
+    · exact h.ge
+    · exact h1
+
+/-- **The `y`-degrees are distinct on a minimal Gröbner basis** (the index-`0` companion of
+`lazard_lemma1`). Under `lex`, distinct elements of a reduced bivariate Gröbner basis have
+distinct `y`-degrees `degreeOf 0`: a tie makes the leading monomials comparable, so one divides
+the other, contradicting minimality. -/
+theorem lazard_degreeOf_ne {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → degreeOf 0 b ≠ degreeOf 0 b' := by
+  intro b hb b' hb' hne hdeg
+  have hb0 : b ≠ 0 := hB.ne_zero (Finset.mem_coe.mpr hb)
+  have hb'0 : b' ≠ 0 := hB.ne_zero (Finset.mem_coe.mpr hb')
+  have hdeg' : (MonomialOrder.lex.degree b) 0 = (MonomialOrder.lex.degree b') 0 := by
+    rw [lex_degree_apply_zero hb0, lex_degree_apply_zero hb'0, hdeg]
+  rcases finsupp_fin_two_le_or_le_of_apply_zero_eq hdeg' with hle | hle
+  · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb') (Finset.mem_coe.mpr hb)
+      (Ne.symm hne) hle
+  · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb) (Finset.mem_coe.mpr hb') hne hle
+
+/-- **The `y`-degree key is injective on a minimal Gröbner basis.** -/
+theorem lazard_degreeOf_injOn {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Set.InjOn (fun b => degreeOf 0 b) (↑B : Set (MvPolynomial (Fin 2) K)) := by
+  intro b hb b' hb' hdeg
+  by_contra hne
+  exact lazard_degreeOf_ne hB b hb b' hb' hne hdeg
+
+/-- The image finset of `y`-degrees of a minimal Gröbner basis; its cardinality is `B.card`
+(the key is injective, `lazard_degreeOf_injOn`). -/
+noncomputable def yDegreeImage {K : Type*} [Field K] (B : Finset (MvPolynomial (Fin 2) K)) :
+    Finset ℕ :=
+  B.image (fun b => degreeOf 0 b)
+
+/-- `(yDegreeImage B).card = B.card` for a minimal Gröbner basis (`y`-degree key injective). -/
+theorem card_yDegreeImage {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    (yDegreeImage B).card = B.card :=
+  Finset.card_image_of_injOn (lazard_degreeOf_injOn hB)
+
+/-- The `∃!` witness for `sortedByYDegree`: a *unique* basis element of any prescribed `y`-degree
+that occurs in `B` (existence from `Finset.mem_image`, uniqueness from `lazard_degreeOf_injOn`). -/
+theorem existsUnique_mem_degreeOf_eq {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {d : ℕ} (hd : d ∈ yDegreeImage B) :
+    ∃! b, b ∈ B ∧ degreeOf 0 b = d := by
+  rw [yDegreeImage, Finset.mem_image] at hd
+  obtain ⟨b, hbB, hbeq⟩ := hd
+  refine ⟨b, ⟨hbB, hbeq⟩, ?_⟩
+  rintro b' ⟨hb'B, hb'eq⟩
+  exact lazard_degreeOf_injOn hB (Finset.mem_coe.mpr hb'B) (Finset.mem_coe.mpr hbB)
+    (show degreeOf 0 b' = degreeOf 0 b by rw [hb'eq, hbeq])
+
+open scoped Classical in
+/-- **The minimal Gröbner basis sorted by `y`-degree** (Part A of Lazard's Lemma 3 framework). An
+enumeration `Fin B.card → MvPolynomial (Fin 2) K` of `B` whose `y`-degrees `degreeOf 0` are
+strictly increasing: pull the increasing enumeration of the (injective) `y`-degree image back
+through the bijection `b ↦ degreeOf 0 b`. -/
+noncomputable def sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) : MvPolynomial (Fin 2) K :=
+  B.choose (fun b => degreeOf 0 b = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i)
+    (existsUnique_mem_degreeOf_eq hB (Finset.orderEmbOfFin_mem _ _ _))
+
+/-- `sortedByYDegree hB i ∈ B`: the sorted enumeration lands in the basis. -/
+theorem sortedByYDegree_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) : sortedByYDegree hB i ∈ B := by
+  classical
+  exact Finset.choose_mem
+    (fun b => degreeOf 0 b = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i) B _
+
+/-- **The sorted enumeration realizes the chosen `y`-degree**: `degreeOf 0 (sortedByYDegree hB i)`
+is the `i`-th value of the increasing `y`-degree enumeration. -/
+theorem degreeOf_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) :
+    degreeOf 0 (sortedByYDegree hB i)
+      = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i := by
+  classical
+  exact Finset.choose_property
+    (fun b => degreeOf 0 b = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i) B _
+
+/-- **The sorted enumeration is strictly increasing in `y`-degree**: `i < j ⟹ degreeOf 0
+(sortedByYDegree hB i) < degreeOf 0 (sortedByYDegree hB j)` (Part A's key monotonicity). -/
+theorem degreeOf_sortedByYDegree_strictMono {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    StrictMono (fun i => degreeOf 0 (sortedByYDegree hB i)) := by
+  intro i j hij
+  simp only [degreeOf_sortedByYDegree]
+  exact (Finset.orderEmbOfFin (yDegreeImage B) (card_yDegreeImage hB)).strictMono hij
+
+/-- **The sorted enumeration is injective** (strictly monotone `y`-degree key). -/
+theorem sortedByYDegree_injective {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Function.Injective (sortedByYDegree hB) := by
+  intro i j hij
+  by_contra hne
+  rcases lt_or_gt_of_ne hne with h | h
+  · exact absurd (congrArg (fun b => degreeOf 0 b) hij)
+      (ne_of_lt (degreeOf_sortedByYDegree_strictMono hB h))
+  · exact absurd (congrArg (fun b => degreeOf 0 b) hij.symm)
+      (ne_of_lt (degreeOf_sortedByYDegree_strictMono hB h))
+
+/-- **The sorted enumeration is a bijection onto `B`**: its range is exactly `↑B`. With injectivity
+(`sortedByYDegree_injective`) and `|Fin B.card| = |B|`, the image is all of `B`. -/
+theorem range_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Set.range (sortedByYDegree hB) = (↑B : Set (MvPolynomial (Fin 2) K)) := by
+  classical
+  refine Set.eq_of_subset_of_ncard_le ?_ ?_ (B.finite_toSet)
+  · rintro _ ⟨i, rfl⟩; exact sortedByYDegree_mem hB i
+  · rw [Set.ncard_coe_finset, Set.ncard_range_of_injective (sortedByYDegree_injective hB)]
+    simp [Nat.card_eq_fintype_card]
+
+-- Restatements against the intended wording.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → degreeOf 0 b ≠ degreeOf 0 b' :=
+  lazard_degreeOf_ne hB
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) : sortedByYDegree hB i ∈ B :=
+  sortedByYDegree_mem hB i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    StrictMono (fun i => degreeOf 0 (sortedByYDegree hB i)) :=
+  degreeOf_sortedByYDegree_strictMono hB
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    Set.range (sortedByYDegree hB) = (↑B : Set (MvPolynomial (Fin 2) K)) :=
+  range_sortedByYDegree hB
+
 /-! ## Lazard's Lemma 3: the leading-`y`-coefficient reduction step and the `Pₖ = Rₖ·Sₖ` split
 
 Lazard (1985), Lemma 3 (J. Symb. Comp. 1, p.263): for a minimal bivariate Gröbner basis sorted by

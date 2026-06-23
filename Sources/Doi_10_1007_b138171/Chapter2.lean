@@ -545,6 +545,14 @@ so the top terms cancel. The library's `lazard_lemma3_reductionStep` (membership
 noncomputable abbrev lazard_lemma3_reductionStep :=
   @DeepWiki.SymbolicIntegration.lazard_lemma3_reductionStep
 
+/-- **Lazard (1985), Lemma 3, the sorted enumeration** (cited in §2.6; J. Symb. Comp. 1, p.263): the
+descent operates on the minimal Gröbner basis *sorted by increasing `y`-degree* `f₀,…,fₖ`. The
+`y`-degrees `degreeOf 0` are distinct (`lazard_degreeOf_ne`, the index-`0` companion of Lemma 1), so
+`sortedByYDegree` enumerates `B` with strictly increasing `y`-degree (`degreeOf_sortedByYDegree_strictMono`),
+landing in `B` (`sortedByYDegree_mem`) and bijectively (`range_sortedByYDegree`). The library's
+`sortedByYDegree`. -/
+noncomputable abbrev lazard_sortedByYDegree := @DeepWiki.SymbolicIntegration.sortedByYDegree
+
 /-- **Bronstein/Czichowski §2.6(i), `Pₖ = Rₖ·Sₖ`** (Lazard 1985, Lemma 3 payload): if `gᵢ ∣ fᵢ`
 (`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
 associated to `Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive with unit leading coefficient (monic-in-`y`).
