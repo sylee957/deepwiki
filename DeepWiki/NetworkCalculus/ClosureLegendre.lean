@@ -126,6 +126,24 @@ theorem legendre_legendreConvPow {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u)
           (ne_bot_of_nonneg hf),
         ih, succ_nsmul]
 
+/-- `f¹ = f` for a non-negative curve: the unit power `δ₀ ⊗ f` is `f`, since the
+only finite summand is the origin split `(0, t)` giving `0 + f t = f t`. -/
+theorem legendreConvPow_one {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) :
+    legendreConvPow f 1 = f := by
+  funext t
+  rw [legendreConvPow_succ, legendreConvPow_zero, legendreConv_apply]
+  apply le_antisymm
+  · exact iInf_le_of_le ⟨(0, t), zero_add t⟩ (by rw [legendreUnit_zero, zero_add])
+  · refine le_iInf fun p => ?_
+    obtain ⟨⟨u, v⟩, (huv : u + v = t)⟩ := p
+    rcases eq_or_ne u 0 with rfl | hu
+    · rw [show (0 : ℝ≥0) + v = v from zero_add v] at huv
+      subst huv
+      rw [legendreUnit_zero, zero_add]
+    · rw [show legendreUnit u = ⊤ from if_neg hu,
+        EReal.top_add_of_ne_bot (ne_bot_of_nonneg hf v)]
+      exact le_top
+
 /-- The (min,+) **sub-additive closure** `f⋆ = ⨅ₙ fⁿ` of a curve under the
 inf-convolution `legendreConv`. -/
 noncomputable def legendreClosure (f : ℝ≥0 → EReal) : ℝ≥0 → EReal :=
@@ -139,6 +157,19 @@ theorem legendreClosure_apply (f : ℝ≥0 → EReal) (t : ℝ≥0) :
 theorem legendreClosure_nonneg {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) (t : ℝ≥0) :
     0 ≤ legendreClosure f t :=
   le_iInf fun n => legendreConvPow_nonneg hf n t
+
+/-- **The closure lies below the input**: `f⋆ ≤ f` pointwise for a non-negative
+curve (the `n = 1` power `f¹ = f` is one of the terms of the infimum). -/
+theorem legendreClosure_le {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u) (t : ℝ≥0) :
+    legendreClosure f t ≤ f t :=
+  (iInf_le _ 1).trans_eq (congrFun (legendreConvPow_one hf) t)
+
+/-- **`𝓛 f ≤ 𝓛(f⋆)`**: since the closure lies below `f` (`legendreClosure_le`),
+its larger value is subtracted, so the transform is pointwise larger
+(`legendre_antitone`). -/
+theorem legendre_le_legendre_legendreClosure {f : ℝ≥0 → EReal} (hf : ∀ u, 0 ≤ f u)
+    (t : ℝ≥0) : legendre f t ≤ legendre (legendreClosure f) t :=
+  legendre_antitone (fun u => legendreClosure_le hf u) t
 
 /-- **`𝓛(f⋆) = ⨆ₙ (n • 𝓛 f)`** for a non-negative curve: the transform of the
 sub-additive closure is the supremum of the additive multiples of `𝓛 f`. It
