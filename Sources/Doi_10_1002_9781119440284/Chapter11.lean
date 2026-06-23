@@ -9,6 +9,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
 import DeepWiki.NetworkCalculus.TandemWorstCaseExamples
+import DeepWiki.NetworkCalculus.TandemLinearProgramWitness
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -17,7 +18,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§11.1: Example 11.1 (two-server tandem worked delay bound) is `ex_11_1`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); residual `[infra]`: the optimization half (LP optimum = worst case) needs a solver/extremal-trajectory argument, not a closed-form lemma.
+§11.1: Example 11.1 (two-server tandem worked delay bound) is `ex_11_1`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); the optimization half (LP optimum = worst case) is now DONE for the homogeneous-rate tandem (`thm_11_1_optimum`/`tandem_programOptimum_homogeneous`, any n, via the `tandemWitness` vertex); for a HETEROGENEOUS tandem the SFA objective is genuinely NOT tight (`objectiveValue_not_tight_heterogeneous` — a true non-attainment, not a gap), and the exact heterogeneous optimum's extremal vertex remains `[infra]` (the value the finite LP computes via a solver).
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -273,5 +274,22 @@ theorem ex_11_1 {b r R T : ℝ} (hstab : 2 * r < R) {v : TandemLP.Vars 2}
     (hv : TandemLP.Feasible (TandemWorstCaseExamples.example_11_1_tandem b r R T) v) :
     TandemLP.delay v ≤ (2 * (R * T) + 2 * b) / (R - 2 * r) :=
   DeepWiki.TandemWorstCaseExamples.example_11_1_delay_bound hstab hv
+
+/-- **Theorem 11.1, optimum = worst case** (§11.1.3) for a HOMOGENEOUS-rate tandem (`∀h, Rₕ = Rmin`):
+the LP optimum is attained — `programOptimum (Feasible N) delay = objectiveValue N Rmin`
+(`TandemLP.tandem_programOptimum_homogeneous`, any `n`; specialized `…_one`/`…_two` for the §11.1
+example cases) — via a worst-case witness vertex `tandemWitness` (whole source burst as backlog at the
+first boundary, cleared at the bottleneck rate). The library's
+`DeepWiki.TandemLP.tandem_programOptimum_homogeneous`. ★ For a HETEROGENEOUS tandem the SFA/bottleneck
+objective is genuinely NOT the optimum — when a server has `Rₕ > Rmin` and `Tₕ > 0`, attainment would
+force a negative backlog (`objectiveValue_not_tight_heterogeneous`: a concrete 2-server witness, rates
+1,2 / latencies 0,1, where the bottleneck objective 3 strictly exceeds the exact 3/2); the exact
+heterogeneous optimum is the value the finite LP computes (solver) — that vertex remains `[infra]`. -/
+theorem thm_11_1_optimum {n : ℕ} (N : TandemLP.Tandem (n + 1)) {Rmin : ℝ} (hRmin : 0 < Rmin)
+    (hrate0 : 0 ≤ N.rate0) (hrate : ∀ h : Fin (n + 1), N.rate h = Rmin)
+    (hlat : ∀ h : Fin (n + 1), 0 ≤ N.lat h) (hb : 0 ≤ N.burst) (hstab : N.rate0 < Rmin) :
+    programOptimum (TandemLP.Feasible N) (fun v => ((TandemLP.delay v : ℝ) : EReal))
+      = ((TandemLP.objectiveValue N Rmin : ℝ) : EReal) :=
+  TandemLP.tandem_programOptimum_homogeneous N hRmin hrate0 hrate hlat hb hstab
 
 end DeepWiki.Dnc

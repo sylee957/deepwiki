@@ -214,6 +214,7 @@ import DeepWiki.NetworkCalculus.StabilityLinearModelReduction
 import DeepWiki.NetworkCalculus.FeedForwardTransformExample
 import DeepWiki.NetworkCalculus.FixedPriorityExample
 import DeepWiki.NetworkCalculus.TandemLinearProgram
+import DeepWiki.NetworkCalculus.TandemLinearProgramWitness
 import DeepWiki.NetworkCalculus.TandemFifoMilp
 import DeepWiki.NetworkCalculus.TandemWorstCaseExamples
 import DeepWiki.NetworkCalculus.ServersResidualGpsImproved
