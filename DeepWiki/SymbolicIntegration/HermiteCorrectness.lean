@@ -379,6 +379,32 @@ theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2
     map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
   rfl
 
+/-- **Sum of constant-minus-term** in any additive comm group: `∑ⱼ (T − residⱼ) = n·T − ∑ⱼ residⱼ`,
+where `n = gs.length` (the `ℕ`-scalar multiple). -/
+theorem sum_map_const_sub {α G : Type*} [AddCommGroup G] (gs : List α) (T : G) (resid : α → G) :
+    (gs.map (fun g => T - resid g)).sum = gs.length • T - (gs.map resid).sum := by
+  induction gs with
+  | nil => simp
+  | cons hd tl ih =>
+    simp only [List.map_cons, List.sum_cons, List.length_cons, ih, succ_nsmul]
+    abel
+
+open scoped Differential in
+/-- **The global-`A` fold residual as an explicit `(1−n)·T + ∑ residᵢ` sum** in `RatFunc ℚ`: if the
+fold increments `gs` each reduce the *same* global target `T` with `(toQFun gⱼ)′ = T − residⱼ` (the
+shape `hermiteInner_spec` gives, `T = A/D`, `residⱼ = Afinalⱼ/(Uⱼ·Vⱼ)`), then the fold residual is
+`T − (toQFun (gs.foldl qadd qzero))′ = (1 − gs.length)·T + ∑ⱼ residⱼ`. This is the *exact* algebraic
+content of the global-`A` `g`-fold: each increment reduces the whole `T`, so `n` of them overcount `T`
+by `(n−1)` copies — which the `∑ residⱼ` interference must clear back to a single squarefree-denominator
+residual. The honest skeleton over which the multi-factor interference-clearing is stated. -/
+theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0)
+    (T : RatFunc ℚ) (resid : QFun → RatFunc ℚ)
+    (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
+    T - (toQFun (gs.foldl qadd qzero))′
+      = T - gs.length • T + (gs.map resid).sum := by
+  rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, sum_map_const_sub]
+  abel
+
 open scoped Differential in
 /-- **`hermiteInner` loop correctness** (the public `qzero`-start form) in `RatFunc ℚ`: with `am =
 algebraMap ℚ[X] (RatFunc ℚ)`, for `U, V ≠ 0`, if every reachable computable Bézout step satisfies its
