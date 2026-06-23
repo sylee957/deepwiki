@@ -297,4 +297,69 @@ theorem levyProkhorovDist_truncation_le [IsProbabilityMeasure μ] {Z : ℤ → �
     (le_trans (levyProkhorovEDist_map_le Xf Xf' (hmeas _).aemeasurable (hmeas _).aemeasurable hδ)
       (sup_le le_rfl hcheb))).trans_eq (ENNReal.toReal_ofReal hδ.le)
 
+/-- **Central limit theorem for the sample mean of a causal linear process (full Theorem 7.1.2,
+Brockwell–Davis), under the weak hypothesis `∑ⱼ |ψⱼ| < ∞`:** for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over
+centered iid `L²` noise, the standardized sample mean converges in distribution to
+`(∑ψ) Y₀ = N(0, (∑ψ)² σ²)`. The finite-`MA(m)` truncations converge
+(`causalLinearProcess_sampleMean_clt`), their Gaussian limits converge as the partial sums
+`∑_{j≤m} ψⱼ → ∑ψ`, and the truncation error vanishes uniformly in `n`
+(`levyProkhorovDist_truncation_le`); the **double-limit theorem**
+`tendstoInDistribution_of_eventually_approx` ties them together. This removes the `∑ⱼ |ψⱼ|·j < ∞`
+strengthening required by `causalLinearProcess_sampleMean_clt`. -/
+theorem causalLinearProcess_sampleMean_clt_of_summable [IsProbabilityMeasure μ] {Ω' : Type*}
+    [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {Z : ℤ → Ω → ℝ} {Y₀ : Ω' → ℝ}
+    (hZ : ∀ t, MemLp (Z t) 2 μ) {ψ : ℕ → ℝ} (hψ : Summable fun j => |ψ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (hindep : iIndepFun Z μ) (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0)
+    (hY₀ : HasLaw Y₀ (gaussianReal 0 Var[Z 0; μ].toNNReal) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n fun t =>
+        (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+      atTop ((∑' j : ℕ, ψ j) • Y₀) (fun _ => μ) μ' := by
+  have hψ' : Summable ψ := summable_abs_iff.mp hψ
+  have hY₀meas : AEMeasurable Y₀ μ' := hY₀.aemeasurable
+  refine tendstoInDistribution_of_eventually_approx
+    (Y := fun (n : ℕ) ω => Real.sqrt n * sampleMean n fun t =>
+      (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+    (Y' := fun (m n : ℕ) ω => Real.sqrt n * sampleMean n fun t =>
+      (causalLinearProcessLp (fun j => if j ≤ m then ψ j else 0) Z hZ (t : ℤ) : Ω → ℝ) ω)
+    (W := fun m => (∑' j : ℕ, if j ≤ m then ψ j else 0) • Y₀) (Z := (∑' j : ℕ, ψ j) • Y₀)
+    (fun n => ((Finset.aestronglyMeasurable_fun_sum _ fun t _ =>
+      Lp.aestronglyMeasurable _).const_mul _).const_mul _ |>.aemeasurable)
+    (hY₀meas.const_smul _) (fun m => ?_) ?_ ?_
+  · -- h1: each truncation's CLT
+    have hsummψm : ∀ t : ℤ, Summable fun j : ℕ =>
+        (if j ≤ m then ψ j else 0) • toLpSeq Z hZ (t - (j : ℤ)) := fun t =>
+      summable_of_ne_finset_zero (s := Finset.range (m + 1)) fun j hj => by
+        simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega), zero_smul]
+    exact causalLinearProcess_sampleMean_clt hZ
+      (summable_of_ne_finset_zero (s := Finset.range (m + 1)) fun j hj => by
+        simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega)])
+      hsummψm hindep hident hcenter hY₀
+      (summable_of_ne_finset_zero (s := Finset.range (m + 1)) fun j hj => by
+        simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega)]; simp)
+  · -- h2: Wₘ ⇒ Z as the partial sums converge
+    refine tendstoInDistribution_of_ae_tendsto (fun m => hY₀meas.const_smul _) (hY₀meas.const_smul _)
+      (Filter.Eventually.of_forall fun ω => ?_)
+    simp only [Pi.smul_apply, smul_eq_mul]
+    refine Filter.Tendsto.mul_const _ ?_
+    have hps : Tendsto (fun m : ℕ => ∑ j ∈ Finset.range (m + 1), ψ j) atTop (𝓝 (∑' j : ℕ, ψ j)) :=
+      hψ'.hasSum.tendsto_sum_nat.comp (tendsto_add_atTop_nat 1)
+    refine hps.congr fun m => ?_
+    rw [tsum_eq_sum (s := Finset.range (m + 1)) fun j hj => by
+      simp only [Finset.mem_range, not_lt] at hj; rw [if_neg (by omega)]]
+    exact Finset.sum_congr rfl fun j hj => by simp only [Finset.mem_range] at hj; rw [if_pos (by omega)]
+  · -- h3: eventually-in-m, uniform-in-n Lévy–Prokhorov closeness
+    intro δ hδ
+    have hBtend : Tendsto (fun m : ℕ => ‖toLpSeq Z hZ 0‖ * ∑' j : ℕ, if m < j then |ψ j| else 0)
+        atTop (𝓝 0) := by
+      have h := (tendsto_tsum_ite_lt_zero hψ).const_mul (‖toLpSeq Z hZ 0‖)
+      rwa [mul_zero] at h
+    filter_upwards [hBtend.eventually_le_const (show (0 : ℝ) < δ * Real.sqrt δ by positivity)]
+      with m hm n
+    rcases Nat.eq_zero_or_pos n with hn0 | hn
+    · subst hn0; simp only [Nat.cast_zero, Real.sqrt_zero, zero_mul]
+      rw [levyProkhorovDist_self]; exact hδ.le
+    · exact levyProkhorovDist_truncation_le hZ hindep hident hcenter hψ hsum m hn hδ hm
+
 end DeepWiki.TimeSeries
