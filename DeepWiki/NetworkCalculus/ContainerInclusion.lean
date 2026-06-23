@@ -59,6 +59,32 @@ theorem inf_mem {c d : Container} {f g : ℝ≥0 → EReal}
     (hf : f ∈ c) (hg : g ∈ d) : (f ⊓ g) ∈ inf c d :=
   ⟨inf_le_inf hf.1 hg.1, inf_le_inf hf.2 hg.2⟩
 
+/-! ## Lifted convolution — inclusion function `[∗]` (Definition 4.5 [4.15]) -/
+
+/-- The **lifted convolution** `c [∗] d`: apply `minConv` to the bounds,
+`[f̲ ∗ g̲, f̄ ∗ ḡ]`. The bound order survives because `minConv` is monotone in
+both arguments (`minConv_le_minConv`). This is the inclusion function `[∗]` of
+Definition 4.5 [4.15]. -/
+noncomputable def conv (c d : Container) : Container where
+  lo := minConv c.lo d.lo
+  hi := minConv c.hi d.hi
+  le := fun t => minConv_le_minConv (fun u => c.le u) (fun s => d.le s) t
+
+/-- The lower bound of `c [∗] d` is `minConv c.lo d.lo`. -/
+@[simp] theorem conv_lo (c d : Container) : (conv c d).lo = minConv c.lo d.lo := rfl
+
+/-- The upper bound of `c [∗] d` is `minConv c.hi d.hi`. -/
+@[simp] theorem conv_hi (c d : Container) : (conv c d).hi = minConv c.hi d.hi := rfl
+
+/-- **Theorem 4.4 (convolution case):** the lifted convolution is
+inclusion-sound — for `f ∈ c` and `g ∈ d`, the convolution `minConv f g` lies in
+`c [∗] d`. Both bounds follow from monotonicity of `minConv`
+(`minConv_le_minConv`). -/
+theorem conv_mem {c d : Container} {f g : ℝ≥0 → EReal}
+    (hf : f ∈ c) (hg : g ∈ d) : minConv f g ∈ conv c d :=
+  ⟨fun t => minConv_le_minConv (fun u => hf.1 u) (fun s => hg.1 s) t,
+   fun t => minConv_le_minConv (fun u => hf.2 u) (fun s => hg.2 s) t⟩
+
 end Container
 
 end DeepWiki
