@@ -453,4 +453,23 @@ theorem NestedValue.satisfiesFd_nil_right (X : List Att) (r : NestedValue Att V)
   | atom => exact trivial
   | rel rows => intro t1 _ t2 _ _; simp [NestedTuple.agreeOn]
 
+/-- Agreement on a set of attributes is decidable. -/
+instance NestedTuple.decidableAgreeOn (X : List Att) (t1 t2 : NestedTuple Att V) :
+    Decidable (NestedTuple.agreeOn X t1 t2) :=
+  inferInstanceAs (Decidable (NestedTuple.projTo X t1 = NestedTuple.projTo X t2))
+
+/-- Satisfaction of a functional dependency is decidable. -/
+instance NestedValue.decidableSatisfiesFd (X Y : List Att) :
+    (v : NestedValue Att V) → Decidable (v.SatisfiesFd X Y)
+  | .atom _ => .isTrue trivial
+  | .rel rows =>
+    inferInstanceAs (Decidable (∀ t1 ∈ rows, ∀ t2 ∈ rows,
+      NestedTuple.agreeOn X t1 t2 → NestedTuple.agreeOn Y t1 t2))
+
+open NestedValue in
+/-- **Theorem 7.1** (§7.3, concrete instance): the relation produced by nesting `C` under `D`
+satisfies the fd `A → D` — the non-nested part functionally determines the nested attribute. -/
+example : (nest ["C"] "D" (rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)],
+      [("A", atom 5), ("C", atom 6)]])).SatisfiesFd ["A"] ["D"] := by decide
+
 end DeepWiki

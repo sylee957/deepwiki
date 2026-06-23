@@ -19,9 +19,11 @@ are layered on this next.
 §7.2: Def 7.7 (all operators — `μ`, `ν`, `ρ`, `∪`, `−`, `∩`, `×`, `π`, `σ`, with `DecidableEq
   (NestedValue …)`) and Def 7.8 (nested algebra expression + evaluator) are done; remaining: the
   nest/unnest-not-inverse fact [infra].
-§7.3: Def 7.9 / 7.10 (functional and multivalued dependencies on nested instances), Theorem 7.1
-  (`ν(ω; X)` satisfies the fd `(Ω − X) → X`), and the non-commutativity of nesting (Example
-  7.10) [infra].
+§7.3: Def 7.9 (fd on nested instances) is done, with decidable satisfaction and a concrete instance
+  of Theorem 7.1 (`ν(ω; X)` satisfies the fd `(Ω − X) → X`); the *general* Theorem 7.1 needs the
+  attribute universe `Ω` the untyped carrier does not track (a schema-typed model). Remaining:
+  Def 7.10 (multivalued dependencies on nested instances) and the non-commutativity of nesting
+  (Example 7.10) [infra].
 §7.4: the expressiveness of the nested relational algebra [research].
 §7.5: hierarchical instances [research].
 §7.6: Exercises [deferred: not yet transcribed]. -/
