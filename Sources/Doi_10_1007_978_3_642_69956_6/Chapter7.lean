@@ -112,3 +112,7 @@ abbrev def_7_8_nestedAlgExpr := @DeepWiki.NestedAlgExpr
 
 /-- **Definition 7.8** (§7.2): the value (denotational semantics) of a nested algebra expression. -/
 abbrev def_7_8_eval := @DeepWiki.NestedAlgExpr.eval
+
+/-- **§7.2**: nest and unnest are not mutually inverse — unnesting an empty relation-valued
+attribute drops the row, which re-nesting cannot recover (a `¬ ∀` non-theorem). -/
+abbrev nest_unnest_not_inverse := @DeepWiki.nest_unnest_not_inverse

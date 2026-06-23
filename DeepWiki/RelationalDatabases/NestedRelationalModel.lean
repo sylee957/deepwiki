@@ -406,4 +406,12 @@ def NestedAlgExpr.eval : NestedAlgExpr Att V → NestedValue Att V
 @[simp] theorem NestedAlgExpr.eval_base (r : NestedValue Att V) :
     (NestedAlgExpr.base r).eval = r := rfl
 
+open NestedValue in
+/-- **Nest and unnest are not mutually inverse** (§7.2): unnesting an *empty* relation-valued
+attribute drops the row entirely, and re-nesting cannot bring it back — so `ν ∘ μ` is not the
+identity in general. -/
+theorem nest_unnest_not_inverse :
+    ¬ ∀ (r : NestedValue String ℕ) (X : List String) (B : String), (r.unnest B).nest X B = r :=
+  fun h => absurd (h (rel [[("A", atom 1), ("B", rel [])]]) ["C"] "B") (by decide)
+
 end DeepWiki
