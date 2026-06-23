@@ -17,6 +17,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.InFieldIntegration
+import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
 import DeepWiki.SymbolicIntegration.LaurentCoefficients
@@ -37,7 +38,6 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
   `logToReal_conjugate_pair`/`logToReal_sum`); Ex 2.8.2.
-§2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7 [partial — the regularity core (`ex_2_7_regularity`: the
   `i`-th LRT subresultant has `x`-degree exactly `i` at a multiplicity-`i` residue) and the required
   "leading coeffs are units in `K[t]/(Qᵢ)`" fact (`ex_2_7_units`: `sᵢ` coprime to `Qᵢ`) are done; the
@@ -1081,10 +1081,35 @@ abbrev recognizingDerivatives := @DeepWiki.SymbolicIntegration.logPart_not_ratio
 
 /-- **Recognizing Derivatives, the criterion** (§2.9, p.71): for `f ∈ K(x)` with Hermite reduction
 `f = dg/dx + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f = du/dx` for some `u ∈ K(x)`
-**iff** `A = 0`. The library's `isRationalDerivative_iff`. (The "Recognizing Logarithmic Derivatives"
-criterion — Mařík's test that the Rothstein–Trager resultant has all-integer roots — is the packaged
-`recognizingLogDerivatives_iff`; the full `IntegrateRationalFunction` algorithm remains [deferred].) -/
+**iff** `A = 0`. The library's `isRationalDerivative_iff`. (The constructive antiderivative when
+`A = 0` is `recognizingDerivatives_integral`; the "Recognizing Logarithmic Derivatives" criterion —
+Mařík's test that the Rothstein–Trager resultant has all-integer roots — is the packaged
+`recognizingLogDerivatives_iff`.) -/
 abbrev recognizingDerivatives_iff := @DeepWiki.SymbolicIntegration.isRationalDerivative_iff
+
+/-- **In-field antiderivative** (§2.9, p.71, the constructive output of "Recognizing Derivatives"):
+the Hermite quotient `g ∈ K[X]` read in `K(x)` as the antiderivative — `inFieldIntegral g =
+algebraMap g`. When the integrability criterion `A = 0` holds, `g` is an antiderivative of `f`
+(`recognizingDerivatives_integral_spec`), realizing the book's "in which case `u = g`". The library's
+`inFieldIntegral`. -/
+noncomputable abbrev recognizingDerivatives_integral :=
+  @DeepWiki.SymbolicIntegration.inFieldIntegral
+
+/-- **In-field antiderivative correctness** (§2.9, p.71, the constructive half of "Recognizing
+Derivatives"): if the Hermite reduction is `f = dg/dx + A/D` and the log-part numerator `A = 0`, then
+the Hermite quotient `g` is an antiderivative — `(inFieldIntegral g)′ = f`. The book's
+`u = g + ∫(A/D)dx` with the `∫(A/D)` term vanishing (`A = 0`). The library's `inFieldIntegral_spec`. -/
+abbrev recognizingDerivatives_integral_spec :=
+  @DeepWiki.SymbolicIntegration.inFieldIntegral_spec
+
+/-- **In-field integrability decision, with witness** (§2.9, p.71, the payoff of "Recognizing
+Derivatives"): for `f ∈ K(x)` with Hermite reduction `f = dg/dx + A/D` (`D` squarefree,
+`gcd(A, D) = 1`, `deg A < deg D`), `f` has a rational antiderivative **iff** `A = 0`; and when so the
+explicit Hermite quotient `g` is one (`(inFieldIntegral g)′ = f`). Packages the criterion
+`recognizingDerivatives_iff` with the constructive antiderivative `recognizingDerivatives_integral_spec`.
+The library's `inFieldIntegrable_iff`. -/
+abbrev recognizingDerivatives_integrable_iff :=
+  @DeepWiki.SymbolicIntegration.inFieldIntegrable_iff
 
 /-- **Recognizing Logarithmic Derivatives, `⟸` direction** (§2.9, p.72): for `f = A/D` with `D`
 squarefree (`D = ∏_{α∈s}(X−α)`, `deg A < #s`), if all the residues `A(α)/D'(α)` — the roots of the
