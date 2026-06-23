@@ -1,5 +1,7 @@
 import DeepWiki.RelationalDatabases.FunctionalDependencies
 import DeepWiki.RelationalDatabases.MultivaluedDependencies
+import DeepWiki.RelationalDatabases.JoinDependencies
+import DeepWiki.RelationalDatabases.InclusionDependencies
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 3: Constraints
@@ -28,9 +30,14 @@ semantics.
   pseudotransitivity); M1 and FM1 are done — Lemma 3.1 rules M4/M5/M6, Theorem 3.11 (dependency
   basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
   (polynomial-time decidability) [infra].
-§3.4: join dependencies — definition, the chase, acyclicity [infra/research].
-§3.5: inclusion dependencies — definition, axioms, the (undecidable in general) implication
-  problem [research].
+§3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
+  Corollary 3.3 (an mvd is a two-component jd), the chase (Algorithm 3.4) with Theorem 3.15
+  (correctness) and Theorem 3.16 (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd
+  implication via the chase), Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham
+  algorithm (Algorithm 3.5, Theorem 3.18) [infra/research].
+§3.5: the remaining inclusion-dependency inference rules (projection/permutation), the
+  interaction of inclusion dependencies with fds, and the undecidability of the combined
+  implication problem [research]; the definition, reflexivity and transitivity are done.
 §3.6: tuple- and equality-generating dependencies — definition and the chase [infra/research].
 §3.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -104,5 +111,25 @@ abbrev cor_3_1_fd_to_mvd := @DeepWiki.satisfiesMvd_of_satisfiesFd
 
 /-- **Corollary 3.1, rule M1** (§3.3, p.79, complementation): `X ↠ Y` gives `X ↠ Ω − Y`. -/
 abbrev cor_3_1_complement := @DeepWiki.satisfiesMvd_complement
+
+/-! ## §3.4 Join Dependencies -/
+
+/-- **Definition 3.9** (§3.4, p.87): a row set satisfies the *join dependency* `⋈ᵢ Xᵢ` when any
+family of rows pairwise agreeing on the component intersections glues to a row agreeing with each
+on its component. -/
+abbrev def_3_9 := @DeepWiki.SatisfiesJd
+
+/-! ## §3.5 Inclusion Dependencies -/
+
+/-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*
+`[A₁,…,Aₖ] ⊆ [B₁,…,Bₖ]` when every row is matched on the `A`-attributes by some row on the
+`B`-attributes. -/
+abbrev def_3_15 := @DeepWiki.SatisfiesInd
+
+/-- **Inclusion-dependency reflexivity** (§3.5): `[A] ⊆ [A]`. -/
+abbrev ind_refl := @DeepWiki.satisfiesInd_refl
+
+/-- **Inclusion-dependency transitivity** (§3.5): `[A] ⊆ [B]` and `[B] ⊆ [C]` give `[A] ⊆ [C]`. -/
+abbrev ind_trans := @DeepWiki.satisfiesInd_trans
 
 end DeepWiki.Rdb

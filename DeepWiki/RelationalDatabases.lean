@@ -6,3 +6,5 @@ import DeepWiki.RelationalDatabases.TupleCalculus
 import DeepWiki.RelationalDatabases.Sql
 import DeepWiki.RelationalDatabases.FunctionalDependencies
 import DeepWiki.RelationalDatabases.MultivaluedDependencies
+import DeepWiki.RelationalDatabases.JoinDependencies
+import DeepWiki.RelationalDatabases.InclusionDependencies
