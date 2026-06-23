@@ -607,6 +607,14 @@ is insufficient). The library's `not_C_leadingYCoeff_dvd_lazardView_xyAddOne` (u
 abbrev lazard_lemma3_base_obstruction :=
   @DeepWiki.SymbolicIntegration.not_C_leadingYCoeff_dvd_lazardView_xyAddOne
 
+/-- **Lazard (1985), Lemma 3, the base = content criterion** (cited in §2.6; the "no common factor"
+characterization): the descent base `C(gᵢ) ∣ lazardView fᵢ` holds **iff** `content(lazardView fᵢ)` is
+*associated* to `Rᵢ = leadingYCoeff fᵢ` — `fᵢ` is `y`-primitive up to its leading coefficient. This is
+exactly what Lazard's `P·Gₖ₊₁` divide-out achieves for the whole basis. The library's
+`C_dvd_lazardView_iff_content_associated`. -/
+abbrev lazard_lemma3_base_content_criterion :=
+  @DeepWiki.SymbolicIntegration.C_dvd_lazardView_iff_content_associated
+
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`

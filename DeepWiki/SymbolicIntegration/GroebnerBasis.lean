@@ -2416,6 +2416,21 @@ theorem content_associated_leadingYCoeff_of_C_dvd {K : Type*} [Field K]
   refine associated_of_dvd_dvd (content_lazardView_dvd_leadingYCoeff f) ?_
   exact Polynomial.dvd_content_iff_C_dvd.mpr hdvd
 
+/-- **The base divisibility is the content criterion** (the "no common factor" characterization). The
+descent base `C(gᵢ) ∣ lazardView fᵢ` holds **iff** the content of `lazardView fᵢ` is *associated* to
+`Rᵢ = leadingYCoeff fᵢ` (i.e. `fᵢ` is `y`-primitive up to its leading coefficient). Forward is
+`content_associated_leadingYCoeff_of_C_dvd`; the converse uses `gᵢ ∣ content` (from the association) and
+`Polynomial.dvd_content_iff_C_dvd`. This is the exact obstruction Lazard's `P·Gₖ₊₁` divide-out removes —
+it makes every `fᵢ` `y`-primitive (`content ∼ Rᵢ`) so the base holds. -/
+theorem C_dvd_lazardView_iff_content_associated {K : Type*} [Field K]
+    {f : MvPolynomial (Fin 2) K} :
+    Polynomial.C (leadingYCoeff f) ∣ lazardView f ↔
+      Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+        (leadingYCoeff f) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine ⟨content_associated_leadingYCoeff_of_C_dvd, fun hassoc => ?_⟩
+  exact Polynomial.dvd_content_iff_C_dvd.mp hassoc.symm.dvd
+
 /-- **Lazard's Lemma 3, monic-primpart half of `Pₖ = Rₖ·Sₖ`**: if `C(Rᵢ) ∣ lazardView fᵢ` (`gᵢ ∣ fᵢ`),
 the primitive part `Sᵢ = (lazardView fᵢ).primPart` is **monic in `y`** — its leading coefficient is a
 unit of `K[x]` (a nonzero constant). Since `Rᵢ = content · leadingCoeff(Sᵢ)` and `content ∼ Rᵢ`, the
@@ -2591,6 +2606,13 @@ example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
     IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
       (lazardView f)).leadingCoeff) :=
   leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd
+
+-- The base divisibility is the content criterion.
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    Polynomial.C (leadingYCoeff f) ∣ lazardView f ↔
+      Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+        (leadingYCoeff f) :=
+  C_dvd_lazardView_iff_content_associated
 
 -- The base obstruction is genuine: `f = xy + 1` refutes a free base case.
 example {K : Type*} [Field K] :
