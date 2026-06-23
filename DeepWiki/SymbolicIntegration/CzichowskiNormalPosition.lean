@@ -675,4 +675,117 @@ theorem mem_zeroLocus_czIdeal_iff_isRoot (hD : D.Separable) (x : Fin 2 → K) :
     rw [mem_zeroLocus_czIdeal_iff]
     exact ⟨hroot, by rw [hres, div_mul_cancel₀ _ hD'0]⟩
 
+/-! ### The `z`-elimination ideal and Czichowski's `R₁` -/
+
+/-- **The `z`-elimination ideal** `I ∩ K[z]`: the pullback of `I` along the `z`-embedding `polyZ`.
+A polynomial `p(z)` lies here iff `polyZ p ∈ I`, i.e. `p`, viewed bivariately, lies in `I`. -/
+noncomputable def elimZ : Ideal K[X] := Ideal.comap polyZ (czIdeal A D)
+
+@[simp] theorem mem_elimZ_iff {p : K[X]} : p ∈ elimZ A D ↔ polyZ p ∈ czIdeal A D := Iff.rfl
+
+open scoped Classical in
+/-- **Czichowski's `R₁`** `= ∏_{a ∈ distinct residues}(z − a)`, the monic squarefree product over the
+distinct roots of the Rothstein–Trager resultant `R = res_x(A − z·D', D)` — equivalently over the
+distinct residues `A(α)/D'(α)`. It is the squarefree part (radical) of `R`, and (Lemma 2.2(iii)) the
+content of the first pure-`z` element of the reduced Gröbner basis of `I` w.r.t. the p.l. ordering
+`x > z`, i.e. the monic generator of the `z`-elimination ideal `I ∩ K[z]`. -/
+noncomputable def czichowskiR1 : K[X] :=
+  (rtResultant A D).roots.toFinset.prod (fun a => Polynomial.X - Polynomial.C a)
+
+/-- `R₁` is monic (a product of monic linear factors `z − a`). -/
+theorem czichowskiR1_monic : (czichowskiR1 A D).Monic := by
+  classical
+  exact monic_prod_of_monic _ _ (fun a _ => monic_X_sub_C a)
+
+/-- `R₁ ≠ 0`. -/
+theorem czichowskiR1_ne_zero : czichowskiR1 A D ≠ 0 := (czichowskiR1_monic A D).ne_zero
+
+open scoped Classical in
+/-- **`R₁` is squarefree**: its roots are distinct (a `Finset` product of distinct linear factors). -/
+theorem czichowskiR1_squarefree : Squarefree (czichowskiR1 A D) := by
+  classical
+  rw [czichowskiR1]
+  exact (separable_prod_X_sub_C_iff' (f := id)).mpr (fun a _ b _ h => h) |>.squarefree
+
+open scoped Classical in
+/-- **A constant `a` is a root of `R₁` iff it is a root of the resultant `R`**: `R₁` and `R` have the
+same root *set* (`R₁` is `R`'s squarefree part). -/
+theorem isRoot_czichowskiR1_iff {a : K} :
+    (czichowskiR1 A D).IsRoot a ↔ a ∈ (rtResultant A D).roots.toFinset := by
+  classical
+  rw [← Polynomial.mem_roots (czichowskiR1_ne_zero A D), czichowskiR1,
+    Polynomial.roots_prod_X_sub_C, Finset.mem_val]
+
+/-! ### `I ∩ K[z] = (R₁)` -/
+
+open scoped Classical in
+/-- **Each residue is realized by a zero of `I`**: for `a` a root of the resultant `R` (a distinct
+residue), there is a root `α` of `D` with residue `a`, so the point `(a, α)` lies in `V(I)`. -/
+theorem exists_mem_zeroLocus_of_root_rtResultant [IsAlgClosed K] (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) {a : K} (ha : a ∈ (rtResultant A D).roots.toFinset) :
+    ∃ x : Fin 2 → K, x ∈ zeroLocus K (czIdeal A D) ∧ x 0 = a := by
+  classical
+  rw [rtResultant_roots_toFinset A D hD hA, Finset.mem_image] at ha
+  obtain ⟨α, hα, hres⟩ := ha
+  refine ⟨![a, α], ?_, by simp⟩
+  rw [mem_zeroLocus_czIdeal_iff_isRoot A D hD]
+  refine ⟨Polynomial.isRoot_of_mem_roots (Multiset.mem_toFinset.mp hα), ?_⟩
+  simpa using hres.symm
+
+open scoped Classical in
+/-- **`R₁ ∈ I ∩ K[z]`** (Lemma 2.2(iii), the membership direction): the squarefree part of the
+resultant lies in the elimination ideal. Each point of `V(I)` has `z`-coordinate a residue (root of
+`R`, hence of `R₁`), so `R₁(z)` vanishes on `V(I) = V(I(V(I)))`; by `I = I(V(I))`, `polyZ R₁ ∈ I`. -/
+theorem czichowskiR1_mem_elimZ [IsAlgClosed K] (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) : czichowskiR1 A D ∈ elimZ A D := by
+  classical
+  rw [mem_elimZ_iff, ← czIdeal_eq_vanishingIdeal_zeroLocus A D hD, mem_vanishingIdeal_iff]
+  intro x hx
+  rw [aeval_polyZ]
+  -- `x 0` is a residue, hence a root of `R`, hence a root of `R₁`
+  have hroot : D.IsRoot (x 1) := (mem_zeroLocus_czIdeal_iff_isRoot A D hD x).mp hx |>.1
+  have hres : x 0 = A.eval (x 1) / (derivative D).eval (x 1) :=
+    (mem_zeroLocus_czIdeal_iff_isRoot A D hD x).mp hx |>.2
+  have hmem : x 0 ∈ (rtResultant A D).roots.toFinset := by
+    rw [rtResultant_roots_toFinset A D hD hA, Finset.mem_image]
+    exact ⟨x 1, Multiset.mem_toFinset.mpr ((Polynomial.mem_roots hD.ne_zero).mpr hroot), hres.symm⟩
+  exact (isRoot_czichowskiR1_iff A D).mpr hmem
+
+open scoped Classical in
+/-- **`I ∩ K[z] ⊆ (R₁)`** (Lemma 2.2(iii), the divisibility direction): every `p ∈ I ∩ K[z]` is a
+multiple of `R₁`. `polyZ p ∈ I = I(V(I))` makes `p` vanish at every residue (the `z`-coordinate of a
+zero of `I`), so each linear factor `z − a` of the squarefree `R₁` divides `p`; hence `R₁ ∣ p`. -/
+theorem elimZ_le_span_czichowskiR1 [IsAlgClosed K] (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) : elimZ A D ≤ Ideal.span {czichowskiR1 A D} := by
+  classical
+  intro p hp
+  rw [Ideal.mem_span_singleton]
+  rw [mem_elimZ_iff, ← czIdeal_eq_vanishingIdeal_zeroLocus A D hD, mem_vanishingIdeal_iff] at hp
+  -- `p` vanishes at every distinct residue `a`
+  have hpa : ∀ a ∈ (rtResultant A D).roots.toFinset, p.eval a = 0 := by
+    intro a ha
+    obtain ⟨x, hx, hx0⟩ := exists_mem_zeroLocus_of_root_rtResultant A D hD hA ha
+    have := hp x hx
+    rwa [aeval_polyZ, hx0] at this
+  -- each `z − a` divides `p`; the distinct factors are pairwise coprime, so `R₁ ∣ p`
+  rw [czichowskiR1]
+  refine Finset.prod_dvd_of_coprime
+    (fun a _ b _ hab => (pairwise_coprime_X_sub_C Function.injective_id hab)) ?_
+  intro a ha
+  exact (Polynomial.dvd_iff_isRoot).mpr (hpa a ha)
+
+open scoped Classical in
+/-- **`I ∩ K[z] = (R₁)`** (Lemma 2.2(iii), the syntactic identification of Czichowski's first
+`x > z` reduced-Gröbner-basis element): over an algebraically closed field, for `D` monic separable
+and `deg A < deg D`, the `z`-elimination ideal of `I = ⟨A − z·D', D⟩` is the principal ideal
+generated by `R₁ = ∏_{distinct residues}(z − a)`, the monic squarefree generator. `R₁` is exactly
+the content of the first pure-`z` element of the reduced Gröbner basis of `I` for the p.l. ordering
+`x > z`. -/
+theorem elimZ_eq_span_czichowskiR1 [IsAlgClosed K] (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) :
+    elimZ A D = Ideal.span {czichowskiR1 A D} := by
+  refine le_antisymm (elimZ_le_span_czichowskiR1 A D hD hA) ?_
+  rw [Ideal.span_le, Set.singleton_subset_iff]
+  exact SetLike.mem_coe.mpr (czichowskiR1_mem_elimZ A D hD hA)
+
 end DeepWiki.SymbolicIntegration
