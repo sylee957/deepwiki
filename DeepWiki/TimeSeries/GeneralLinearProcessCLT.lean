@@ -130,6 +130,20 @@ theorem eLpNorm_coeFn {E : Type*} [NormedAddCommGroup E] {p : ℝ≥0∞} (W : L
     eLpNorm (⇑W) p μ = ‖W‖ₑ := by
   rw [← Lp.enorm_toLp (Lp.memLp W), Lp.toLp_coeFn]
 
+/-- **Exponential dominates polynomial weight:** if `∑ₙ aₙ sⁿ < ∞` for `s > 1` and `aₙ ≥ 0`, then
+`∑ₙ aₙ n < ∞`. Via Bernoulli `1 + n(s−1) ≤ sⁿ`, so `n ≤ (s−1)⁻¹ sⁿ`. The bridge from a filter's
+disk-summability (`∑|ψⱼ| sʲ < ∞`, `s > 1`) to the lag-weighted `∑|ψⱼ| j < ∞` the CLT needs. -/
+theorem summable_mul_nat_of_summable_mul_pow {a : ℕ → ℝ} (ha : ∀ n, 0 ≤ a n) {s : ℝ} (hs : 1 < s)
+    (h : Summable fun n => a n * s ^ n) : Summable fun n => a n * n := by
+  have hs1 : (0 : ℝ) < s - 1 := by linarith
+  refine Summable.of_nonneg_of_le (fun n => mul_nonneg (ha n) (Nat.cast_nonneg n))
+    (f := fun n => (s - 1)⁻¹ * (a n * s ^ n)) (fun n => ?_) (h.mul_left _)
+  have hb : (1 : ℝ) + n * (s - 1) ≤ s ^ n := by
+    have := one_add_mul_le_pow (by linarith : (-2 : ℝ) ≤ s - 1) n
+    simpa using this
+  have hn : (n : ℝ) ≤ (s - 1)⁻¹ * s ^ n := by rw [le_inv_mul_iff₀ hs1]; nlinarith [hb]
+  nlinarith [mul_nonneg (ha n) (sub_nonneg.mpr hn)]
+
 /-- Finite sums respect almost-everywhere equality: if `fᵢ =ᵐ gᵢ` for each `i ∈ s`, then the
 pointwise finite sums are a.e. equal. -/
 theorem sum_eventuallyEq {ι : Type*} (s : Finset ι) {f g : ι → Ω → ℝ}
