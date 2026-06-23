@@ -204,4 +204,26 @@ open NestedValue in
 example : (rel [[("A", atom 1), ("B", rel [[("C", atom 2)], [("C", atom 3)]])]]).unnest "B"
     = rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)]] := rfl
 
+/-! ## The renaming operator (§7.2) -/
+
+/-- Rename attribute `a` to `b` in a nested tuple (top-level keys only). -/
+def NestedTuple.renameKey (a b : Att) (t : NestedTuple Att V) : NestedTuple Att V :=
+  t.map (fun p => if p.1 = a then (b, p.2) else p)
+
+/-- **Renaming** `ρ_{a→b}` (§7.2): rename a top-level attribute `a` to `b` throughout a nested
+relation. Nested sub-relations keep their own schemes and are untouched. -/
+def NestedValue.rename (a b : Att) : NestedValue Att V → NestedValue Att V
+  | .atom v => .atom v
+  | .rel rows => .rel (rows.map (NestedTuple.renameKey a b))
+
+@[simp] theorem NestedValue.rename_atom (a b : Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).rename a b = .atom v := rfl
+
+@[simp] theorem NestedValue.rename_rel (a b : Att) (rows : NestedRel Att V) :
+    (NestedValue.rel rows).rename a b = .rel (rows.map (NestedTuple.renameKey a b)) := rfl
+
+open NestedValue in
+example : (rel [[("A", atom 1), ("B", atom 2)]]).rename "A" "Z"
+    = rel [[("Z", atom 1), ("B", atom 2)]] := rfl
+
 end DeepWiki

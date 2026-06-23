@@ -16,9 +16,11 @@ are layered on this next.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
-§7.2: Def 7.7 (the nested operators — union, difference, cartesian product, projection, the
-  nest `ν` and unnest `μ`, renaming, selection), Def 7.8 (a nested algebra expression), and
-  the fact that nest and unnest are not in general mutually inverse [infra].
+§7.2: Def 7.7 — unnest `μ` and renaming `ρ` are done; the remaining operators (union, difference,
+  cartesian product, projection, the nest `ν`, selection) and Def 7.8 (a nested algebra expression)
+  and the nest/unnest-not-inverse fact need a `DecidableEq (NestedValue …)` instance for grouping /
+  set semantics — `deriving DecidableEq` does NOT apply to the recursive carrier, so a hand-written
+  mutual `beq` + correctness (or `decEq`) is required first [infra].
 §7.3: Def 7.9 / 7.10 (functional and multivalued dependencies on nested instances), Theorem 7.1
   (`ν(ω; X)` satisfies the fd `(Ω − X) → X`), and the non-commutativity of nesting (Example
   7.10) [infra].
@@ -71,3 +73,7 @@ abbrev def_7_6_isFlat := @DeepWiki.NestedValue.isFlat
 /-- **Definition 7.7** (§7.2), the *unnest* operator `μ_a`: flatten a nested relation on the
 relation-valued attribute `a` (one output row per inner sub-row). -/
 abbrev def_7_7_unnest := @DeepWiki.NestedValue.unnest
+
+/-- **Definition 7.7** (§7.2), the *renaming* operator `ρ_{a→b}`: rename a top-level attribute
+throughout a nested relation. -/
+abbrev def_7_7_rename := @DeepWiki.NestedValue.rename
