@@ -1012,6 +1012,108 @@ theorem buchberger_terminates_correct {K : Type*} [Field K] [Finite σ] (m : Mon
       refine ⟨G, (subset_buchbergerStep m hC).trans hCG, by rw [hspanG, hspaneq], ?_⟩
       rwa [hspaneq] at hgb
 
+/-! ## Existence of a reduced Gröbner basis (one-pass inter-reduction)
+
+From `exists_isGroebnerBasis` a finite Gröbner basis exists; making it monic, deleting
+redundant elements (whose leading monomial is divided by another's), and auto-reducing each
+surviving element against the others produces a *reduced* Gröbner basis. Each step preserves
+`Ideal.span` (hence `I`) and the leading-monomial set, so the Gröbner property persists. -/
+
+/-- `initialIdeal m I` equals the leading-term ideal of any Gröbner basis `B` of `I`
+(`leadTermIdeal m B`). -/
+theorem IsGroebnerBasis.initialIdeal_eq_leadTermIdeal {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
+    (hB : IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K))) :
+    initialIdeal m I = leadTermIdeal m B :=
+  hB.2.2.symm
+
+/-- **Leading-term-ideal criterion for a Gröbner basis.** A finite `B ⊆ I` with unit leading
+coefficients is a Gröbner basis of `I` iff its leading-term ideal equals the initial ideal of `I`. -/
+theorem isGroebnerBasis_iff_leadTermIdeal_eq {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
+    (hBI : ∀ b ∈ (↑B : Set (MvPolynomial σ K)), b ∈ I)
+    (hlc : ∀ b ∈ (↑B : Set (MvPolynomial σ K)), IsUnit (m.leadingCoeff b)) :
+    IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K)) ↔ leadTermIdeal m B = initialIdeal m I :=
+  ⟨fun hB => hB.2.2, fun h => ⟨hBI, hlc, h⟩⟩
+
+/-- **Leading-term-preservation under division by a non-dividing set.** If `g ≠ 0` and no
+`m.degree b` (`b ∈ B'`) divides `m.degree g`, then dividing `g` by `B'` leaves the leading term
+untouched: `(remainder m hB' g).coeff (m.degree g) = m.leadingCoeff g`. -/
+theorem coeff_remainder_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
+    {B' : Finset (MvPolynomial σ K)} (hB' : ∀ b ∈ B', IsUnit (m.leadingCoeff b))
+    {g : MvPolynomial σ K}
+    (hnd : ∀ b ∈ (↑B' : Set (MvPolynomial σ K)), ¬ (m.degree b ≤ m.degree g)) :
+    (remainder m hB' g).coeff (m.degree g) = m.leadingCoeff g := by
+  classical
+  have hspec := remainder_spec m hB' g
+  -- `g = q + r` with `q = ∑ b·g_b`, each `m.degree (b·g_b) ≼[m] m.degree g`.
+  have hgqr : g = Finsupp.linearCombination _
+      (fun (b : (↑B' : Set (MvPolynomial σ K))) => (b : MvPolynomial σ K)) (divData m hB' g).1
+      + remainder m hB' g := hspec.1
+  -- the `m.degree g`-coefficient of every summand `b·g_b` vanishes.
+  have hqcoeff : (Finsupp.linearCombination _
+      (fun (b : (↑B' : Set (MvPolynomial σ K))) => (b : MvPolynomial σ K))
+        (divData m hB' g).1).coeff (m.degree g) = 0 := by
+    rw [linearCombination_eq_attach_sum, coeff_sum]
+    refine Finset.sum_eq_zero (fun c _ => ?_)
+    have hcle : m.toSyn (m.degree ((divData m hB' g).1 c * (c : MvPolynomial σ K)))
+        ≤ m.toSyn (m.degree g) := by
+      have := hspec.2.1 c; rwa [mul_comm] at this
+    by_cases hz : (divData m hB' g).1 c * (c : MvPolynomial σ K) = 0
+    · rw [hz, coeff_zero]
+    rcases lt_or_eq_of_le hcle with hlt | heq
+    · exact coeff_eq_zero_of_lt hlt
+    · -- equality of degrees would force `m.degree c ≤ m.degree g`, contradicting `hnd`.
+      exfalso
+      have hdegeq : m.degree ((divData m hB' g).1 c * (c : MvPolynomial σ K)) = m.degree g :=
+        m.toSyn.injective heq
+      have hdle : m.degree (c : MvPolynomial σ K)
+          ≤ m.degree ((divData m hB' g).1 c * (c : MvPolynomial σ K)) :=
+        degree_le_degree_mul hz
+      exact hnd c c.2 (hdegeq ▸ hdle)
+  -- hence `r.coeff (m.degree g) = g.coeff (m.degree g) = lc g`.
+  have hgc : (remainder m hB' g).coeff (m.degree g) = g.coeff (m.degree g) := by
+    have := congrArg (fun p => MvPolynomial.coeff (m.degree g) p) hgqr
+    simp only [coeff_add, hqcoeff, zero_add] at this
+    exact this.symm
+  rw [hgc, ← MonomialOrder.leadingCoeff]
+
+/-- **Degree-preservation under division by a non-dividing set.** Under the hypotheses of
+`coeff_remainder_degree_eq`, the remainder is nonzero, has the same leading monomial as `g`, and
+the same leading coefficient. -/
+theorem degree_remainder_eq {K : Type*} [Field K] (m : MonomialOrder σ)
+    {B' : Finset (MvPolynomial σ K)} (hB' : ∀ b ∈ B', IsUnit (m.leadingCoeff b))
+    {g : MvPolynomial σ K} (hg : g ≠ 0)
+    (hnd : ∀ b ∈ (↑B' : Set (MvPolynomial σ K)), ¬ (m.degree b ≤ m.degree g)) :
+    remainder m hB' g ≠ 0 ∧ m.degree (remainder m hB' g) = m.degree g ∧
+      m.leadingCoeff (remainder m hB' g) = m.leadingCoeff g := by
+  classical
+  have hcoeff := coeff_remainder_degree_eq m hB' hnd
+  have hlcg : m.leadingCoeff g ≠ 0 := m.leadingCoeff_ne_zero_iff.mpr hg
+  have hspec := remainder_spec m hB' g
+  -- `m.degree (remainder) ≼[m] m.degree g` from `g = q + r` and `degree_sub_le`.
+  have hrle : m.toSyn (m.degree (remainder m hB' g)) ≤ m.toSyn (m.degree g) := by
+    have hreq : remainder m hB' g = g - Finsupp.linearCombination _
+        (fun (b : (↑B' : Set (MvPolynomial σ K))) => (b : MvPolynomial σ K)) (divData m hB' g).1 := by
+      rw [eq_sub_iff_add_eq, add_comm]; exact hspec.1.symm
+    rw [hreq]
+    refine degree_sub_le.trans ?_
+    rw [sup_le_iff]
+    refine ⟨le_rfl, ?_⟩
+    rw [linearCombination_eq_attach_sum]
+    refine (degree_sum_le).trans (Finset.sup_le (fun c _ => ?_))
+    have := hspec.2.1 c; rwa [mul_comm] at this
+  -- `m.degree g ∈ remainder.support` (its coeff there is `lc g ≠ 0`).
+  have hmem : m.degree g ∈ (remainder m hB' g).support := by
+    rw [mem_support_iff, hcoeff]; exact hlcg
+  have hne : remainder m hB' g ≠ 0 := by
+    intro h0; rw [h0, support_zero] at hmem; exact absurd hmem (Finset.notMem_empty _)
+  -- degree equality from the two-sided bound.
+  have hge : m.toSyn (m.degree g) ≤ m.toSyn (m.degree (remainder m hB' g)) := m.le_degree hmem
+  have hdeg : m.degree (remainder m hB' g) = m.degree g := m.toSyn.injective (le_antisymm hrle hge)
+  refine ⟨hne, hdeg, ?_⟩
+  rw [MonomialOrder.leadingCoeff, hdeg, hcoeff, MonomialOrder.leadingCoeff]
+
 /-! ## Lazard's Lemma 1: distinct leading y-degrees in a minimal bivariate Gröbner basis
 
 Lazard (1985), J. Symb. Comp. 1, 261–270, Lemma 1 — the foundational step of his bivariate
