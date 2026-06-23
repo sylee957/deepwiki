@@ -123,6 +123,20 @@ theorem bigBlock_sep {p m : ℕ} {i j : ℕ} (hij : i < j) :
   nlinarith [mul_le_mul_of_nonneg_right hij' (show (0 : ℤ) ≤ (p : ℤ) + m by positivity),
     hs.1, hs.2, ht.1, ht.2]
 
+/-- **A big block has exactly `p` elements**: `bigBlock p m i = [i(p+m), i(p+m)+p)` has `p` integers. -/
+theorem bigBlock_card (p m i : ℕ) : (bigBlock p m i).card = p := by
+  rw [bigBlock, Int.card_Ico, add_sub_cancel_left, Int.toNat_natCast]
+
+/-- **The big blocks are pairwise disjoint** (consequence of gap-`m` separation `bigBlock_sep`). -/
+theorem bigBlock_pairwiseDisjoint (p m r : ℕ) :
+    (↑(Finset.range r) : Set ℕ).PairwiseDisjoint (bigBlock p m) := by
+  intro i _ j _ hij
+  simp only [Function.onFun, Finset.disjoint_left]
+  intro x hxi hxj
+  rcases lt_or_gt_of_ne hij with h | h
+  · have := bigBlock_sep h x hxi x hxj; omega
+  · have := bigBlock_sep h x hxj x hxi; omega
+
 omit [MeasurableSpace Ω] in
 /-- **The first big block sum is `p` times the sample mean over `[0,p)`**: `∑_{t∈[0,p)} Xₜ =
 p · X̄_p` (the block `bigBlock 0 = [0,p)` reindexed to `range p`). Bridges the block variance to the
@@ -287,6 +301,33 @@ theorem tendstoInDistribution_comp_tendsto {ι ι' α β E : Type*} [MeasurableS
 /-- The number of complete big blocks fitting in `[0, n)`: `⌊n/(p+m)⌋`. Each contributes a size-`p`
 block, so `blockCount · p` indices are covered by blocks and the rest (`≈ n·m/(p+m)`) are gaps. -/
 def blockCount (p m n : ℕ) : ℕ := n / (p + m)
+
+/-- **The first `blockCount p m n` big blocks lie in `[0, n)`**: each `bigBlock p m i` with
+`i < n/(p+m)` is contained in `Ico 0 n` (since `(i+1)(p+m) ≤ n`). -/
+theorem bigBlock_subset_Ico {p m n i : ℕ} (hi : i < blockCount p m n) :
+    bigBlock p m i ⊆ Finset.Ico (0 : ℤ) n := by
+  have hpm : 0 < p + m := by
+    rcases Nat.eq_zero_or_pos (p + m) with h | h
+    · rw [blockCount, h, Nat.div_zero] at hi; exact absurd hi (Nat.not_lt_zero i)
+    · exact h
+  have hle : (i + 1) * (p + m) ≤ n := (Nat.le_div_iff_mul_le hpm).mp (Nat.succ_le_of_lt hi)
+  have hleZ : ((i : ℤ) + 1) * ((p : ℤ) + m) ≤ n := by exact_mod_cast hle
+  intro x hx
+  simp only [bigBlock, Finset.mem_Ico] at hx ⊢
+  refine ⟨le_trans (by positivity) hx.1, lt_of_lt_of_le hx.2 ?_⟩
+  nlinarith [hleZ, (by positivity : (0 : ℤ) ≤ (m : ℤ))]
+
+/-- **The gap `[0,n) ∖ ⋃ blocks` has `n − blockCount·p` elements**: the `blockCount` disjoint blocks of
+size `p` cover `blockCount·p` indices in `[0,n)`, leaving the rest as the small-block gap. -/
+theorem gap_card (p m n : ℕ) :
+    (Finset.Ico (0 : ℤ) n \ (Finset.range (blockCount p m n)).biUnion (bigBlock p m)).card
+      = n - blockCount p m n * p := by
+  have hsub : (Finset.range (blockCount p m n)).biUnion (bigBlock p m) ⊆ Finset.Ico (0 : ℤ) n :=
+    Finset.biUnion_subset.mpr fun i hi => bigBlock_subset_Ico (Finset.mem_range.mp hi)
+  rw [Finset.card_sdiff_of_subset hsub,
+    Finset.card_biUnion (bigBlock_pairwiseDisjoint p m (blockCount p m n))]
+  simp only [bigBlock_card, Finset.sum_const, Finset.card_range, smul_eq_mul]
+  rw [Int.card_Ico, sub_zero, Int.toNat_natCast]
 
 /-- **The number of big blocks tends to infinity**: `blockCount p m n → ∞` as `n → ∞` (for a positive
 block-plus-gap length). The index reparametrization that turns the block CLT (in the block count `r`)
