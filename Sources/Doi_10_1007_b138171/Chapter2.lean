@@ -27,11 +27,18 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   (`lazard_lemma3_dvd_of_hasNoCommonYFactor`, `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`), and an
   **arbitrary** reduced bivariate GB is reduced to that state by dividing out the basis gcd `H = P·Gₖ₊₁`
   (`lazard_thm1_divideOut`: `gbCommonYFactor` divides every element, cofactors `fᵢ = H·b'ᵢ` are coprime
-  via `gbYGcdCofactor_gcd_eq_one`/`cofactor_hasNoCommonYFactor`), with the structure conclusion bridged
-  through `hasNoCommonYFactor_of_cofactor_associated` → `lazard_Pk_eq_Rk_Sk_of_divideOut`. Open: the
-  divided family is an actual reduced GB of the quotient ideal `⟨fᵢ/H⟩` (the `initialIdeal`-of-quotient
-  assembly discharging the `hassoc` re-presentation hypothesis) [research: Lazard Thm 1 quotient-GB
-  assembly]; plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
+  via `gbYGcdCofactor_gcd_eq_one`/`cofactor_hasNoCommonYFactor`). The divided family `{fᵢ/H}` is now
+  built explicitly as a **Gröbner basis of the quotient ideal** `I' = span {fᵢ/H}`
+  (`isGroebnerBasis_dividedBasis`, via the membership equivalence `g∈I' ⟺ H·g∈I` `mem_dividedIdeal_iff`
+  and leading-monomial domination), monic and with pairwise non-dividing leading monomials
+  (`dividedBasis_leadingMonomial_not_le`), and `HasNoCommonYFactor` is shown to be an **ideal invariant**:
+  *any* reduced GB of `I'` has no common `y`-factor (`hasNoCommonYFactor_of_dividedIdeal`, via
+  `dvd_lazardView_of_mem_span`), discharging the `hassoc` re-presentation hypothesis **automatically** —
+  so `Pₖ = Rₖ·Sₖ` holds for any reduced GB of `I'` (`lazard_Pk_eq_Rk_Sk_dividedIdeal`). Open: reduced-GB
+  existence for `I'` to make it fully hypothesis-free — the explicit divided basis is a *minimal* GB but
+  not necessarily reduced when `H` is multi-term (tail support-shift under `·H` can cancel; exact only
+  for monomial `H`) [research: reduced-GB existence / Lazard Thm 1 reduced quotient-GB].
+  Plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -649,6 +656,28 @@ delivers `HasNoCommonYFactor` to any reduced GB recovering its cofactors, so the
 reduced bivariate GB once divided by `H`. The library's `lazard_Pk_eq_Rk_Sk_of_divideOut`. -/
 noncomputable abbrev lazard_thm1_structure :=
   @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_of_divideOut
+
+/-- **Lazard (1985), Theorem 1, the divided family is a Gröbner basis of the quotient** (cited in §2.6;
+p.262): the divided family `{fᵢ/H}` (`monicDividedBasis`) is a Gröbner basis of the quotient ideal
+`I' = span {fᵢ/H}` (`dividedIdeal`), via the membership equivalence `g∈I' ⟺ H·g∈I` (`mem_dividedIdeal_iff`,
+cancel `H` over the domain) and leading-monomial domination. The library's `isGroebnerBasis_dividedBasis`. -/
+noncomputable abbrev lazard_thm1_quotient_groebner :=
+  @DeepWiki.SymbolicIntegration.isGroebnerBasis_dividedBasis
+
+/-- **Lazard (1985), Theorem 1, `HasNoCommonYFactor` is an ideal invariant** (cited in §2.6; p.262): *any*
+reduced GB of the quotient ideal `I' = span {fᵢ/H}` has no common `y`-factor — a common factor of one
+presentation's views divides every ideal member's view (`dvd_lazardView_of_mem_span`), hence the cofactors
+(gcd 1). This discharges the `hassoc` re-presentation hypothesis automatically. The library's
+`hasNoCommonYFactor_of_dividedIdeal`. -/
+noncomputable abbrev lazard_thm1_quotient_no_common_factor :=
+  @DeepWiki.SymbolicIntegration.hasNoCommonYFactor_of_dividedIdeal
+
+/-- **Lazard (1985), Theorem 1, `Pₖ = Rₖ·Sₖ` for the divided quotient** (cited in §2.6; p.262): for any
+reduced GB of the quotient ideal `I' = span {fᵢ/H}`, the structural split `lazardView fⱼ = C(cⱼ)·Sⱼ`
+(`cⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and `y`-monic) holds, with the no-common-factor hypothesis
+discharged automatically. The library's `lazard_Pk_eq_Rk_Sk_dividedIdeal`. -/
+noncomputable abbrev lazard_thm1_quotient_structure :=
+  @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_dividedIdeal
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
