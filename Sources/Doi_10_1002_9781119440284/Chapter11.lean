@@ -7,6 +7,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainExact
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -26,8 +27,10 @@ or recorded as a note / unformalized item.
 chain convolution). The §11.1.2 LP (`thm_11_1_optimum`) is the SFA RELAXATION `(RT+b)/(R−r)` — its
 optimum is attained as the LP value (homogeneous via `tandemWitness`) but STRICTLY over-estimates the
 true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_programOptimum`, equal iff
-`r=0`). The only residual `[infra]`: an EXACT finite LP (the §11.1.3 multi-window trajectory
-reconstruction) whose optimum equals the PMOO value — the relaxation-free solver formulation.
+`r=0`). The EXACT relaxation-free LP is now built (`thm_11_1_exact_lp`/`exactChainOptimum`/
+`programOptimum_exactServer`: optimum `(∑T)+b/(minR)` for all `r`, via the date-split polytope the SFA LP
+dropped + the PMOO collapse); the only residual `[infra]` is a per-server-windowed finite encoding for
+general n (cosmetic — the collapsed single-server encoding is already exact).
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); the MILP optimum = worst case is now done for the HOMOGENEOUS tandem (`thm_11_2_optimum`/`fifoTandem_programOptimum_homogeneous`, the `z=0` lifted witness); residual `[infra]`/`[research]`: the general heterogeneous case (SFA objective not tight) + the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) with the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings (an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -348,5 +351,22 @@ theorem thm_11_1_relaxation_gap (r b R T : ℝ≥0) (hb : 0 < b) (hR : 0 < R) (h
       < programOptimum (TandemLP.Feasible (DeepWiki.singleServerTandem r b R T))
           (fun v => ((TandemLP.delay v : ℝ) : EReal)) :=
   DeepWiki.worstCaseChainDelay_lt_programOptimum r b R T hb hR hr hstab
+
+/-- **§11.1.3, the EXACT relaxation-free finite LP** (Theorem 11.1, tight form). The exact tandem LP
+optimum equals the true worst-case delay `(∑Tₕ)+b/(minₕRₕ)` — for ALL `r` (including `r>0`, where the
+§11.1.2 SFA `TandemLP` strictly over-estimates). Two forms: (a) `exactChainOptimum` = the `programOptimum`
+over the full `ChainServed` trajectory set = `worstCaseChainDelay` = the closed form
+(`exactChainOptimum_tokenBucketNN_rateLatencyNN`); (b) a genuinely finite-dimensional LP
+`ExactServerFeasible` (the §11.1.3 polytope with the date-split `s≤u` charging the token bucket over
+`[s,u]` — the constraint the SFA LP dropped) whose optimum is exactly `T+b/R` per server
+(`programOptimum_exactServer`), collapsing for the n-server tandem to `(∑T)+b/(minR)`
+(`programOptimum_exactServer_collapsed_eq_exactChainOptimum`). The library's
+`DeepWiki.{exactChainOptimum, programOptimum_exactServer}`. (Residual `[infra]`: a per-server-windowed
+finite encoding for general n — cosmetic; the collapsed encoding is already exact.) -/
+theorem thm_11_1_exact_lp (r b R T : ℝ) (hR : 0 < R) (hrR : r ≤ R) (hb : 0 ≤ b) (hT : 0 ≤ T) :
+    programOptimum (DeepWiki.ExactServerFeasible r b R T)
+        (fun v => ((DeepWiki.exactServerDelay v : ℝ) : EReal))
+      = ((T + b / R : ℝ) : EReal) :=
+  DeepWiki.programOptimum_exactServer hR hrR hb hT
 
 end DeepWiki.Dnc
