@@ -113,3 +113,18 @@ abbrev thm_6_3_selectCertain := @DeepWiki.selectCertain
 
 /-- **Theorem 6.3**: certain-selection only removes rows. -/
 abbrev thm_6_3_selectCertain_subset := @DeepWiki.selectCertain_subset
+
+/-- **Definition 6.2** (§6.1, p.160), the f-information `X^f = ⋂_{r ∈ X} f r`: the answers `f`
+certainly produces over a set of possible instances. -/
+abbrev def_6_2_infoF := @DeepWiki.infoF
+
+/-- **§6.1**: the certain answers of a null-table are its identity f-information. -/
+abbrev certainAnswer_eq_infoF := @DeepWiki.certainAnswer_iff_mem_infoF_id
+
+/-- **Definition 6.2** (§6.1, p.160), β-equivalence `≡_β`: same f-information for every operator in
+the family — an equivalence relation. -/
+abbrev def_6_2_betaEquiv := @DeepWiki.BetaEquiv
+
+/-- **Definition 6.2** (§6.1, p.160), β-representation: a null-table β-represents `X` when its
+Codd-table worlds are β-equivalent to `X`. -/
+abbrev def_6_2_betaRepresents := @DeepWiki.BetaRepresents

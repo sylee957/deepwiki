@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
+import Mathlib.Data.Set.Lattice
 
 /-! # Null-extended values and the information order
 Incomplete information at the value level: a *null-extended tuple* (a Codd / V-table row) carries,
@@ -13,7 +14,7 @@ namespace DeepWiki
 
 universe u v
 
-variable {Att : Type u} {Val : Type v} {Ω : Finset Att}
+variable {Att : Type u} {Val : Type v} {Ω Ω' : Finset Att}
 
 /-- A *null-extended tuple* (Codd / V-table row): each attribute carries a value or `none` (null). -/
 abbrev NullTuple (Ω : Finset Att) (Val : Type v) : Type _ := Tuple Ω (Option Val)
@@ -137,5 +138,47 @@ theorem selectCertain_subset (P : Tuple Ω Val → Prop) (T : NullTable Ω Val) 
 theorem selectCertain_definite {P : Tuple Ω Val → Prop} {T : NullTable Ω Val} {t : Tuple Ω Val}
     (h : toNull t ∈ selectCertain P T) : P t :=
   h.2 t (MoreInfo.refl _)
+
+/-- **Definition 6.2** (f-information): the tuples `f` certainly produces across a set of possible
+instances — `X^f = ⋂_{r ∈ X} f r`, the certain answers of `f`. -/
+def infoF (f : Table Ω Val → Table Ω' Val) (X : Set (Table Ω Val)) : Table Ω' Val :=
+  ⋂ r ∈ X, f r
+
+/-- A tuple is in the f-information iff it lies in `f r` for every possible world `r`. -/
+theorem mem_infoF {f : Table Ω Val → Table Ω' Val} {X : Set (Table Ω Val)} {t : Tuple Ω' Val} :
+    t ∈ infoF f X ↔ ∀ r ∈ X, t ∈ f r := by simp [infoF]
+
+/-- More possible worlds give fewer certain answers. -/
+theorem infoF_antitone (f : Table Ω Val → Table Ω' Val) {X Y : Set (Table Ω Val)} (h : X ⊆ Y) :
+    infoF f Y ⊆ infoF f X := by
+  intro t ht; rw [mem_infoF] at ht ⊢; exact fun r hr => ht r (h hr)
+
+/-- The certain answers of a null-table are its identity f-information over the possible worlds. -/
+theorem certainAnswer_iff_mem_infoF_id {T : NullTable Ω Val} {t : Tuple Ω Val} :
+    CertainAnswer T t ↔ t ∈ infoF id (rep T) := by simp [CertainAnswer, mem_infoF]
+
+/-- **Definition 6.2** (β-equivalence): two sets of instances yield the same f-information for every
+operator in the family `ops` — the same certain answers for every `β`-expression. -/
+def BetaEquiv (ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val))
+    (X Y : Set (Table Ω Val)) : Prop := ∀ p ∈ ops, infoF p.2 X = infoF p.2 Y
+
+/-- β-equivalence is reflexive. -/
+theorem BetaEquiv.refl (ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val))
+    (X : Set (Table Ω Val)) : BetaEquiv ops X X := fun _ _ => rfl
+
+/-- β-equivalence is symmetric. -/
+theorem BetaEquiv.symm {ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val)}
+    {X Y : Set (Table Ω Val)} (h : BetaEquiv ops X Y) : BetaEquiv ops Y X :=
+  fun p hp => (h p hp).symm
+
+/-- β-equivalence is transitive. -/
+theorem BetaEquiv.trans {ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val)}
+    {X Y Z : Set (Table Ω Val)} (h₁ : BetaEquiv ops X Y) (h₂ : BetaEquiv ops Y Z) :
+    BetaEquiv ops X Z := fun p hp => (h₁ p hp).trans (h₂ p hp)
+
+/-- **Definition 6.2** (β-representation): a null-table `β`-represents `X` when its Codd-table
+worlds are β-equivalent to `X`. -/
+def BetaRepresents (ops : Set (Σ Ω' : Finset Att, Table Ω Val → Table Ω' Val))
+    (T : NullTable Ω Val) (X : Set (Table Ω Val)) : Prop := BetaEquiv ops (coddRep T) X
 
 end DeepWiki
