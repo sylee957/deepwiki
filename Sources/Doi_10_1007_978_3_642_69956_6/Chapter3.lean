@@ -19,8 +19,7 @@ semantics.
   complete / non-redundant axiom systems), Example 3.4 key-dependency axioms K1/K2 [infra: an
   abstract axiom-system framework over arbitrary constraint types].
 §3.2: the non-redundancy of Armstrong's axioms (Theorem 3.2 — soundness and completeness are
-  done); Theorem 3.1 derived rules F5 (intersection), F6 (reduction), F7 (generalized
-  augmentation), F9 (generalized transitivity) [deferred]; Algorithm 3.1 / 3.2 (attribute-closure
+  done; Theorem 3.1 derived rules F4–F9 are done); Algorithm 3.1 / 3.2 (attribute-closure
   computation) with Theorem 3.3 / 3.5 correctness and Theorem 3.4 / 3.6 complexity [infra:
   functional fixpoint algorithm]; Def 3.6 non-redundant cover; Def 3.7 canonical cover and
   Example 3.10 [infra].
@@ -83,6 +82,20 @@ abbrev thm_3_1_f8_decompose := @DeepWiki.satisfiesFd_decompose
 /-- **Theorem 3.1, rule F4 (syntactic)** (§3.2, p.66): `X → Y` and `X → Z` *derive* `X → Y ∪ Z`
 using only Armstrong's axioms. -/
 abbrev thm_3_1_f4_union_derived := @DeepWiki.derives_union
+
+/-- **Theorem 3.1, rule F5** (§3.2, p.66, intersection): `X → Y` gives `X → Y ∩ Z`. -/
+abbrev thm_3_1_f5_inter := @DeepWiki.satisfiesFd_interRule
+
+/-- **Theorem 3.1, rule F6** (§3.2, p.66, reduction): `X → Y` gives `X → Y − X`. -/
+abbrev thm_3_1_f6_reduction := @DeepWiki.satisfiesFd_reduction
+
+/-- **Theorem 3.1, rule F7** (§3.2, p.66, generalized augmentation): from `X → Y`, `X ⊆ U`,
+`V ⊆ X ∪ Y`, the dependency `U → V`. -/
+abbrev thm_3_1_f7_genAugment := @DeepWiki.satisfiesFd_genAugment
+
+/-- **Theorem 3.1, rule F9** (§3.2, p.66, generalized transitivity): from `X → Y`, `U → V`,
+`U ⊆ X ∪ Y`, `X ⊆ W`, `Z ⊆ V ∪ W`, the dependency `W → Z`. -/
+abbrev thm_3_1_f9_genTrans := @DeepWiki.satisfiesFd_genTrans
 
 /-- **Armstrong's axiom system `𝓕`** (§3.2, Theorem 3.2, p.66): the syntactic derivation of
 functional dependencies from `SC` by triviality, augmentation and transitivity. -/

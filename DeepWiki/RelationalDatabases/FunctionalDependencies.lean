@@ -190,4 +190,35 @@ theorem derives_complete [DecidableEq Att] [Nontrivial Val] {SC : FdSet Att} {X 
     h {t₁, t₂} hsat t₁ (Set.mem_insert _ _) t₂ (Set.mem_insert_iff.mpr (Or.inr rfl)) hagX
   exact derives_of_forall_singleton (fun b hb => heq_imp ⟨b, hY hb⟩ (hagY ⟨b, hY hb⟩ hb))
 
+/-- Derived rule F5 (intersection): `X → Y` gives `X → Y ∩ Z` (in particular from `X → Y` and
+`X → Z`). -/
+theorem satisfiesFd_interRule [DecidableEq Att] (hXY : SatisfiesFd r X Y) :
+    SatisfiesFd r X (Y ∩ Z) :=
+  fun t₁ h₁ t₂ h₂ hag => Agree.mono Finset.inter_subset_left (hXY t₁ h₁ t₂ h₂ hag)
+
+/-- Derived rule F6 (reduction): `X → Y` gives `X → Y − X`. -/
+theorem satisfiesFd_reduction [DecidableEq Att] (hXY : SatisfiesFd r X Y) :
+    SatisfiesFd r X (Y \ X) :=
+  fun t₁ h₁ t₂ h₂ hag => Agree.mono Finset.sdiff_subset (hXY t₁ h₁ t₂ h₂ hag)
+
+/-- Derived rule F7 (generalized augmentation): from `X → Y` with `X ⊆ U` and `V ⊆ X ∪ Y`, the
+dependency `U → V`. -/
+theorem satisfiesFd_genAugment [DecidableEq Att] {U V : Finset Att} (hXU : X ⊆ U)
+    (hV : V ⊆ X ∪ Y) (hXY : SatisfiesFd r X Y) : SatisfiesFd r U V := by
+  intro t₁ h₁ t₂ h₂ hag
+  have hagX : Agree X t₁ t₂ := Agree.mono hXU hag
+  exact Agree.mono hV (agree_union.mpr ⟨hagX, hXY t₁ h₁ t₂ h₂ hagX⟩)
+
+/-- Derived rule F9 (generalized transitivity): from `X → Y` and `U → V` with `U ⊆ X ∪ Y`,
+`X ⊆ W` and `Z ⊆ V ∪ W`, the dependency `W → Z`. -/
+theorem satisfiesFd_genTrans [DecidableEq Att] {U V W : Finset Att} (hU : U ⊆ X ∪ Y)
+    (hX : X ⊆ W) (hZ : Z ⊆ V ∪ W) (hXY : SatisfiesFd r X Y) (hUV : SatisfiesFd r U V) :
+    SatisfiesFd r W Z := by
+  intro t₁ h₁ t₂ h₂ hag
+  have hagX : Agree X t₁ t₂ := Agree.mono hX hag
+  have hagY : Agree Y t₁ t₂ := hXY t₁ h₁ t₂ h₂ hagX
+  have hagU : Agree U t₁ t₂ := Agree.mono hU (agree_union.mpr ⟨hagX, hagY⟩)
+  have hagV : Agree V t₁ t₂ := hUV t₁ h₁ t₂ h₂ hagU
+  exact Agree.mono hZ (agree_union.mpr ⟨hagV, hag⟩)
+
 end DeepWiki
