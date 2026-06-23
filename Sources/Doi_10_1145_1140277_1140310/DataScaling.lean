@@ -1,4 +1,5 @@
 import DeepWiki.NetworkCalculus.ScalingFunction
+import DeepWiki.NetworkCalculus.StabilityNetworkScalingTrajectory
 import Sources.Doi_10_1145_1140277_1140310.Source
 
 /-! # Fidler–Schmitt — network calculus with data scaling — catalog
@@ -32,5 +33,20 @@ scaling `(linearScale m₄ ∘ linearScale m₂) 1` — connecting the formalize
 divergence to genuine data-scaling operations. The library's
 `DeepWiki.scaling_gain_eq_perHop_prod` / `DeepWiki.scaling_gain_numerator_eq_comp`. -/
 alias gain_grounding := scaling_gain_numerator_eq_comp
+
+/-- **§12.4.2 geometric backlog (Lemma 12.6 trajectory), explicit closed form**: the per-phase burst
+sequence `σₙ = (c·σ + d)^[n] σ₀` has the division-free form `cⁿ·σ₀ + d·∑_{k<n} cᵏ`
+(`burstSeq_eq`) and diverges `→ ⊤` in the unstable regime `c ≥ 1, d > 0` (`burstSeq_tendsto_atTop`),
+with `c` = the scaling gain `m₂m₄/((1−m₂)(1−m₄))` (`scalingBurstSeq_unbounded`). The library's
+`DeepWiki.burstSeq_eq`. -/
+alias lemma_12_6_geometric := burstSeq_eq
+
+/-- **§12.4.2 adversarial witness trajectory**: a concrete bursty-staircase cumulative
+`burstTrajectory` (data injected at each phase boundary, reaching `σₙ`) is a genuine flow whose backlog
+against a stalled departure is unbounded — `Deviation.backlog = ⊤` and `maxBackloggedLength = ⊤`
+(`backlog_burstTrajectory`), realizing the geometric divergence along an actual flow. The library's
+`DeepWiki.backlog_burstTrajectory` (sequence `DeepWiki.burstTrajectory`). (The full Fig-12.5 coupled
+cyclic served-pair dynamics + the [FID 06b] Def-3.3 descaled `S⁻¹` backlog reading stay `[deferred]`.) -/
+alias fig_12_5_witness := backlog_burstTrajectory
 
 end DeepWiki.Fs

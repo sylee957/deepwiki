@@ -542,8 +542,12 @@ stable is deferred by the book to the reference [FID 06b]. That paper's **data-s
 formalized from the paper itself** (`ScalingFunction.lean`: Def 3.1 scaling function/operator, Def 3.2
 maximal scaling curve, Cor 3.4 scaled-output arrival curve `α_S = S̄∘α`, and the gain-identity grounding
 the divergence in genuine scaling operations), with the per-paper double-reference catalog
-`Sources/Doi_10_1145_1140277_1140310` (`DeepWiki.Fs.*`, DOI 10.1145/1140277.1140310). Only the explicit
-adversarial piecewise-linear backlog-growing trajectory (Fig 12.5) stays `[deferred]`.
+`Sources/Doi_10_1145_1140277_1140310` (`DeepWiki.Fs.*`, DOI 10.1145/1140277.1140310). The explicit
+geometric backlog trajectory is now also formalized (`StabilityNetworkScalingTrajectory`:
+`burstSeq_eq` closed form `cⁿσ₀+d∑cᵏ`, `burstSeq_tendsto_atTop`, and a concrete staircase witness flow
+`burstTrajectory` with `backlog = ⊤`/`maxBackloggedLength = ⊤`, `backlog_burstTrajectory`). Only the full
+Fig-12.5 COUPLED cyclic served-pair dynamics (each server's input = the other's scaled output) + the
+[FID 06b] Def-3.3 descaled-`S⁻¹` backlog reading stay `[deferred]`.
 
 **§12.4.1 (adversarial methods: SDF / FIFO, p.280–283)** presents in-book phase-by-phase adversarial
 trajectories whose backlog grows geometrically; their per-phase burst recursion shares the divergence
