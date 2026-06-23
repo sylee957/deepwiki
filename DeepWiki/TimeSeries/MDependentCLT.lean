@@ -418,6 +418,30 @@ theorem tendsto_sqrt_blockCount_div {p m : ℕ} (hpm : p + m ≠ 0) :
   rw [h]
   exact (Real.continuous_sqrt.tendsto _).comp (tendsto_blockCount_div hpm)
 
+/-- **The gap fraction tends to `m/(p+m)`**: `(n − blockCount·p)/n → m/(p+m)` as `n → ∞`. Writing the
+fraction as `1 − p·(blockCount/n)`, the block density `blockCount/n → 1/(p+m)` (`tendsto_blockCount_div`)
+gives `1 − p/(p+m) = m/(p+m)`. This shrinking gap fraction makes the small-block remainder vanish. -/
+theorem tendsto_gapFraction {p m : ℕ} (hpm : p + m ≠ 0) :
+    Tendsto (fun n : ℕ => ((n - blockCount p m n * p : ℕ) : ℝ) / n) atTop
+      (𝓝 ((m : ℝ) / ((p + m : ℕ) : ℝ))) := by
+  have hlim : Tendsto (fun n : ℕ => 1 - (p : ℝ) * ((blockCount p m n : ℝ) / n)) atTop
+      (𝓝 (1 - (p : ℝ) * (1 / ((p + m : ℕ) : ℝ)))) :=
+    tendsto_const_nhds.sub ((tendsto_blockCount_div hpm).const_mul (p : ℝ))
+  have hcast : ((p + m : ℕ) : ℝ) = (p : ℝ) + m := by push_cast; ring
+  have hne : (p : ℝ) + m ≠ 0 := hcast ▸ Nat.cast_ne_zero.mpr hpm
+  have heq : (1 : ℝ) - (p : ℝ) * (1 / ((p + m : ℕ) : ℝ)) = (m : ℝ) / ((p + m : ℕ) : ℝ) := by
+    rw [hcast, mul_one_div]; field_simp; ring
+  rw [← heq]
+  refine hlim.congr' ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  have hle : blockCount p m n * p ≤ n := by
+    calc blockCount p m n * p ≤ blockCount p m n * (p + m) := by gcongr; omega
+      _ = n / (p + m) * (p + m) := rfl
+      _ ≤ n := Nat.div_mul_le_self n (p + m)
+  rw [Nat.cast_sub hle, Nat.cast_mul]
+  field_simp
+
 /-- **A big-block sum of a centered process is centered**: `E[∑_{t ∈ bigBlock 0} Xₜ] = 0`. Lets the
 block CLT statistic `√r(X̄ᵤ − E U₀)` drop its mean-subtraction to `(√r)⁻¹ ∑ Uᵢ` in the h1 reparametrization. -/
 theorem integral_bigBlockSum_eq_zero [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
