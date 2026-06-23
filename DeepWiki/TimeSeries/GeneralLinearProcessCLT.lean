@@ -142,4 +142,63 @@ theorem sum_eventuallyEq {ι : Type*} (s : Finset ι) {f g : ι → Ω → ℝ}
     simp_rw [Finset.sum_insert ha]
     exact (h a (Finset.mem_insert_self a s)).add (ih fun i hi => h i (Finset.mem_insert_of_mem hi))
 
+/-- **`L²`-negligibility for the general linear process:** the difference between the rescaled
+sample mean of the causal linear process and the `(∑ψ)`-scaled rescaled noise sum tends to `0` in
+`L²`, when `∑ⱼ |ψⱼ|·j < ∞`. From the structural identity (`‖D_n‖ ≤ C` uniformly) and `√n·n⁻¹ → 0`. -/
+theorem tendsto_eLpNorm_linearProcess_sub {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) {ψ : ℕ → ℝ}
+    (hψ : Summable ψ) (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ)))
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ)
+    (hψj : Summable fun j : ℕ => |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal)) :
+    Tendsto (fun n : ℕ => eLpNorm
+      ((fun ω => Real.sqrt n * sampleMean n fun t => (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+        - fun ω => (∑' j : ℕ, ψ j)
+            * (Real.sqrt n * sampleMean n fun t => (toLpSeq Z hZ (t : ℤ) : Ω → ℝ) ω)) 2 μ)
+      atTop (𝓝 0) := by
+  set C := ∑' j : ℕ, |ψ j| * (2 * j * (eLpNorm (Z 0) 2 μ).toReal) with hC
+  have hbound : ∀ n : ℕ, eLpNorm
+      ((fun ω => Real.sqrt n * sampleMean n fun t => (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+        - fun ω => (∑' j : ℕ, ψ j)
+            * (Real.sqrt n * sampleMean n fun t => (toLpSeq Z hZ (t : ℤ) : Ω → ℝ) ω)) 2 μ
+        ≤ ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹) * ENNReal.ofReal C := by
+    intro n
+    have hae : ((fun ω => Real.sqrt n
+            * sampleMean n fun t => (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+          - fun ω => (∑' j : ℕ, ψ j)
+              * (Real.sqrt n * sampleMean n fun t => (toLpSeq Z hZ (t : ℤ) : Ω → ℝ) ω))
+        =ᵐ[μ] (Real.sqrt n * (n : ℝ)⁻¹)
+          • ((∑ t ∈ Finset.range n, causalLinearProcessLp ψ Z hZ (t : ℤ)
+              - (∑' j : ℕ, ψ j) • ∑ t ∈ Finset.range n, toLpSeq Z hZ (t : ℤ) : Lp ℝ 2 μ) : Ω → ℝ) := by
+      filter_upwards [Lp.coeFn_finsetSum (Finset.range n)
+          (fun t => causalLinearProcessLp ψ Z hZ (t : ℤ)),
+        Lp.coeFn_finsetSum (Finset.range n) (fun t => toLpSeq Z hZ (t : ℤ)),
+        Lp.coeFn_sub (∑ t ∈ Finset.range n, causalLinearProcessLp ψ Z hZ (t : ℤ))
+          ((∑' j : ℕ, ψ j) • ∑ t ∈ Finset.range n, toLpSeq Z hZ (t : ℤ)),
+        Lp.coeFn_smul (∑' j : ℕ, ψ j) (∑ t ∈ Finset.range n, toLpSeq Z hZ (t : ℤ))]
+        with ω e1 e2 e3 e4
+      simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul, sampleMean, e3, e4, e1, e2,
+        Finset.sum_apply]
+      ring
+    rw [eLpNorm_congr_ae hae, eLpNorm_const_smul, Real.enorm_eq_ofReal (by positivity), eLpNorm_coeFn]
+    gcongr
+    rw [← ofReal_norm]
+    refine ENNReal.ofReal_le_ofReal ?_
+    simp only [causalLinearProcessLp]
+    exact norm_sampleSum_sub_le hZ hψ hsum hident hψj n
+  have hroot : Tendsto (fun n : ℕ => Real.sqrt n * (n : ℝ)⁻¹) atTop (𝓝 0) := by
+    refine (tendsto_inv_atTop_zero.comp
+      (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)).congr' ?_
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    have hn' : (0 : ℝ) < n := by exact_mod_cast hn
+    have hs : Real.sqrt n ≠ 0 := by positivity
+    have hsq : Real.sqrt n * Real.sqrt n = (n : ℝ) := Real.mul_self_sqrt hn'.le
+    simp only [Function.comp_apply]
+    rw [show (n : ℝ)⁻¹ = (Real.sqrt n * Real.sqrt n)⁻¹ from by rw [hsq], mul_inv, ← mul_assoc,
+      mul_inv_cancel₀ hs, one_mul]
+  have hlim : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹) * ENNReal.ofReal C)
+      atTop (𝓝 0) := by
+    have h1 : Tendsto (fun n : ℕ => ENNReal.ofReal (Real.sqrt n * (n : ℝ)⁻¹)) atTop (𝓝 0) := by
+      rw [← ENNReal.ofReal_zero]; exact (ENNReal.continuous_ofReal.tendsto 0).comp hroot
+    simpa using ENNReal.Tendsto.mul_const h1 (Or.inr ENNReal.ofReal_ne_top)
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hlim (fun _ => zero_le) hbound
+
 end DeepWiki.TimeSeries
