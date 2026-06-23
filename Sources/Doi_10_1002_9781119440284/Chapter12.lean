@@ -21,6 +21,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import DeepWiki.NetworkCalculus.StabilityLocalOfGlobal
 import DeepWiki.NetworkCalculus.StabilityBehaviourEquivalence
 import DeepWiki.NetworkCalculus.StabilityLinearModelReduction
+import DeepWiki.NetworkCalculus.StabilityBehaviourEquivalenceLimit
 import DeepWiki.NetworkCalculus.FeedForwardTransformExample
 import DeepWiki.NetworkCalculus.FixedPriorityExample
 import Sources.Doi_10_1002_9781119440284.Source
@@ -31,7 +32,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.1: Lemma 12.2 (global stability ⟹ local stability) mechanism is now DONE (`lemma_12_2`: the behaviour-preserving raise `β ⊔ rateLatency n T` — Prop 5.13 raise `isStrictMinimalServiceCurve_sup_of_backloggedLength_le` + `r(α)<n` ⟹ locally stable); the `rateLatency n T` surrogate stands in for the `ℝ≥0`-inexpressible infinite-jump `δ_T`, the only residual being the literal `n → ∞` limit. Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) is `lemma_12_3` (per-server rate-monotone transfer + network-level `isGloballyStable_of_linearModel`); the only residual `[infra]` is the model-bounding construction producing the trajectory-admissibility hypothesis. (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.) -/
+§12.1: Lemma 12.2 (global stability ⟹ local stability) mechanism is now DONE (`lemma_12_2`: the behaviour-preserving raise `β ⊔ rateLatency n T` — Prop 5.13 raise `isStrictMinimalServiceCurve_sup_of_backloggedLength_le` + `r(α)<n` ⟹ locally stable); the `rateLatency n T` surrogate stands in for the `ℝ≥0`-inexpressible infinite-jump `δ_T`, and the `n→∞` (`R=∞`) limit is now DONE (`lemma_12_2_limit`/`tendsto_longTermServiceRate_sup_rateLatency_atTop`: the raised rate → ⊤, so ∃ finite n making any finite-rate flow locally stable). Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) is `lemma_12_3`, with `htraj` now DISCHARGED for the canonical same-flows linear model (`lemma_12_3_linearize`/`Network.linearize`+`isGloballyStable_of_linearize` — replacing only the curves, keeping the flows, so `htraj` is definitional); the only residual `[infra]` is the genuine trajectory-ENLARGING curve replacement (non-shared arrival processes). (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.) -/
 
 namespace DeepWiki.Dnc
 
@@ -136,6 +137,20 @@ theorem lemma_12_2 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0} 
     IsStrictMinimalServiceCurve (fun u => β u ⊔ rateLatency n T u) S ∧
       IsLocallyStableServer α (fun u => β u ⊔ rateLatency n T u) :=
   DeepWiki.isLocallyStableServer_sup_rateLatency_of_globallyStable hβ hmax hrate
+
+/-- **Lemma 12.2, the `n→∞` (`R=∞`) limit** (§12.1): the surrogate `rateLatency n T` realizes the book's
+infinite-jump `δ_T` (`R=∞`) in the limit — `longTermServiceRate (β ⊔ rateLatency n T) → ⊤` as `n→∞`
+(`tendsto_longTermServiceRate_sup_rateLatency_atTop`), so a globally stable strict server is locally
+stable against ANY finite-rate flow for some finite `n` (`exists_isLocallyStableServer_sup_rateLatency
+_of_globallyStable` — the faithful `n→∞` reading without an `ℝ≥0`-inexpressible infinite curve). The
+library's `DeepWiki.exists_isLocallyStableServer_sup_rateLatency_of_globallyStable`. -/
+theorem lemma_12_2_limit {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0} {T : ℝ≥0}
+    (hβ : IsStrictMinimalServiceCurve β S)
+    (hmax : ∀ A D : Curve, S A D → maxBackloggedLength (⇑A) (⇑D) ≤ (T : ℝ≥0∞))
+    (hα : longTermArrivalRate α ≠ ⊤) :
+    ∃ n : ℝ≥0, IsStrictMinimalServiceCurve (fun u => β u ⊔ rateLatency n T u) S ∧
+      IsLocallyStableServer α (fun u => β u ⊔ rateLatency n T u) :=
+  DeepWiki.exists_isLocallyStableServer_sup_rateLatency_of_globallyStable hβ hmax hα
 
 /-- **Linear-model local stability** (§12.1, per-server reading): a token-bucket flow `γ_{r,b}`
 (`fun t => r*t+b`) against a rate-latency server `β_{R,T}` is locally stable **iff** `r < R`
@@ -560,9 +575,24 @@ ANY curves suffices for global stability. The per-server engine is rate-monotone
 (`IsLocallyStableServer.of_le`) ⟹ the linear-model criterion `isLocallyStableServer_of_linearBound`
 (token-bucket-above + rate-latency-below + `r<R` ⟹ locally stable). At the network level
 `Network.isGloballyStable_of_linearModel` transfers global stability from the linear model under a
-trajectory-admissibility hypothesis `htraj` (the only residual `[infra]`: the model-bounding
-construction that produces it). The library's `DeepWiki.Network.isGloballyStable_of_linearModel`. -/
+trajectory-admissibility hypothesis `htraj`. The library's
+`DeepWiki.Network.isGloballyStable_of_linearModel`. -/
 alias lemma_12_3 := DeepWiki.Network.isGloballyStable_of_linearModel
+
+/-- **Lemma 12.3, `htraj` discharged** (§12.1): for the canonical same-flows linear model
+`Network.linearize net arrivalCurveLin serviceLin` (structure-update replacing ONLY the curves, keeping
+the flows/paths/arrival processes), the trajectory-admissibility `htraj` holds by construction
+(`SameFlows.htraj`, definitional via the shared `aggregateArrival`), so the reduction needs no extra
+hypothesis: `Network.isGloballyStable_of_linearize`. The library's
+`DeepWiki.Network.isGloballyStable_of_linearize`. (Residual `[infra]`: the genuine
+trajectory-ENLARGING curve replacement — a served-pair "admits more trajectories" op — when arrival
+processes are not literally shared.) -/
+theorem lemma_12_3_linearize {κ ι : Type*} [Fintype κ] [Fintype ι] [DecidableEq κ]
+    (net : DeepWiki.Network κ ι) (departure : κ → Curve)
+    (arrivalCurveLin : ι → (ℝ≥0 → ℝ≥0)) (serviceLin : κ → (ℝ≥0 → ℝ≥0))
+    (hlinStable : (net.linearize arrivalCurveLin serviceLin).IsGloballyStable departure) :
+    net.IsGloballyStable departure :=
+  net.isGloballyStable_of_linearize departure arrivalCurveLin serviceLin hlinStable
 
 /-- **Example 12.1** (§12.2, p.273, the Figure 12.1 feed-forward transformation): the cyclic 4-server
 network (flows 1=⟨3,4,2⟩, 2=⟨4,2,3⟩, 3=⟨2,1,3⟩, 4) has NO feed-forward ranking
