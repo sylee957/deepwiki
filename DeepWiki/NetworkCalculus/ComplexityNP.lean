@@ -68,8 +68,10 @@ noncomputable def IsInNP_TM.toIsInNP {α αΓ : Type} {ea : α → List αΓ} {L
 
 /-- **`Q` is NP-hard** (Turing-machine-grounded): every TM-grounded NP problem Karp-reduces to `Q`
 (sizes taken as encoding lengths). This is the genuine NP-hardness notion — the one an eventual
-Cook–Levin proof discharges for SAT. -/
-def IsNPHard_TM {τ τΓ : Type} (eb : τ → List τΓ) (Q : τ → Prop) : Prop :=
+Cook–Levin proof discharges for SAT. The NP *membership* side (`α`) stays `Type` (it must be encodable
+to a TM tape), but the **target** `τ` is `Type*` — so `Q` may be a bundled `Type 1` decision problem
+(e.g. `WellFormedX3C`, `worstCaseBacklogDecision`), which is exactly what the DNC chain needs. -/
+def IsNPHard_TM {τ : Type*} {τΓ : Type*} (eb : τ → List τΓ) (Q : τ → Prop) : Prop :=
   ∀ (α αΓ : Type) (ea : α → List αΓ) (L : α → Prop),
     IsInNP_TM ea L →
       Nonempty (KarpReduction (fun x => (ea x).length) (fun y => (eb y).length) L Q)
@@ -84,14 +86,15 @@ structure IsNPComplete_TM {τ τΓ : Type} (eb : τ → List τΓ) (Q : τ → P
 /-- The proxy `IsNPHard` is **stronger** than TM-grounded NP-hardness: it asks `Q` to be hard for the
 *larger* class of certificate-proxy-NP problems, which (via `IsInNP_TM.toIsInNP`) includes every
 TM-grounded NP problem. So proxy NP-hardness transfers to the genuine notion. -/
-theorem IsNPHard.toIsNPHard_TM {τ τΓ : Type} {eb : τ → List τΓ} {Q : τ → Prop}
+theorem IsNPHard.toIsNPHard_TM {τ : Type*} {τΓ : Type*} {eb : τ → List τΓ} {Q : τ → Prop}
     (h : IsNPHard (fun y => (eb y).length) Q) : IsNPHard_TM eb Q :=
   fun _ _ ea L hL => h _ (fun x => (ea x).length) L hL.toIsInNP
 
 /-- **NP-hardness propagates along Karp reductions**: if `Q` is NP-hard and `Q ≤ₖ R`, then `R` is
 NP-hard (compose every NP-problem-to-`Q` reduction with `Q → R`). This is the chain mechanism — given
 an NP-hard seed (Cook–Levin's SAT), a path of reductions to a target proves the target NP-hard. -/
-theorem IsNPHard_TM.viaReduction {τ τΓ ρ ρΓ : Type} {eb : τ → List τΓ} {ec : ρ → List ρΓ}
+theorem IsNPHard_TM.viaReduction {τ : Type*} {τΓ : Type*} {ρ : Type*} {ρΓ : Type*}
+    {eb : τ → List τΓ} {ec : ρ → List ρΓ}
     {Q : τ → Prop} {R : ρ → Prop} (hQ : IsNPHard_TM eb Q)
     (red : KarpReduction (fun y => (eb y).length) (fun z => (ec z).length) Q R) :
     IsNPHard_TM ec R :=

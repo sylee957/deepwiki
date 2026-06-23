@@ -32,6 +32,7 @@ import DeepWiki.NetworkCalculus.BooleanSatisfiability
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
+import DeepWiki.NetworkCalculus.CookLevinChain
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -331,13 +332,14 @@ That gap is now framed faithfully rather than only cited:
 * `cookLevin : IsNPHard_TM cnfEncode Satisfiable` — **Cook–Levin stated over the real class**, scoped as
   the SINGLE axiom (the tableau construction is research-scale, ~30k lines in comparable assistants).
 * `isNPHard_TM_of_satReduction` / `IsNPHard_TM.viaReduction` — the chain mechanism: any problem reached
-  from SAT by Karp reductions is NP-hard. **The combinatorial chain is now FULLY PROVED end to end**:
-  `SAT ≤ₖ 3SAT` (`satToThreeSat`, both directions + linear bound) then `3SAT ≤ₖ 3DM`
-  (`threeSatToThreeDM`/`cook_levin_chain_threeSatToThreeDM`, the Garey–Johnson ring/clause/garbage gadget,
-  both directions + quartic bound, axiom-free) then `3DM ≤ₖ X3C ≤ₖ worst-case-backlog` (proved). The ONE
-  remaining link to the absolute TM-hardness is an encoding-alignment `[infra]`: a variable-compaction
-  prepass (`numVars ≤ 3·#clauses` for 3-CNF) so the gadget is polynomial in the `cnfEncode` length, which
-  does not charge for unused variables. The hard part — every combinatorial reduction — is done.
+  from SAT by Karp reductions is NP-hard. **★ The chain is now CLOSED end to end** (`thm_10_2_cookLevin
+  _capstone` / `isNPHard_TM_worstCaseBacklog`): `SAT ≤ₖ 3SAT` (`satToThreeSat`) then `3SAT ≤ₖ 3DM`
+  (`threeSatToThreeDM`, Garey–Johnson gadget) then `3DM ≤ₖ X3C ≤ₖ worst-case-backlog`, with the encoding
+  gap closed by `compactCnf` (variable-compaction, removes unused vars, both directions + linear bound)
+  and the `IsNPHard_TM` target universe generalized `Type → Type*` (NP membership stays `Type 0`, the
+  target may be the `Type 1` `WellFormedX3C`). So **worst-case-backlog is NP-hard over the genuine TM NP
+  class, `#print axioms` = Mathlib's 3 + EXACTLY `cookLevin`** — every reduction genuine, the tableau the
+  sole unproved input. The `IsNPHardVia` "relative to SAT" form (`thm_10_2_via_sat`) is axiom-free.
 `#print axioms isNPHard_TM_of_satReduction` = Mathlib's 3 standard axioms + exactly `cookLevin`. -/
 
 /-- **Cook–Levin, faithfully stated** (toward discharging `X3CIsNPHard`): SAT is NP-hard over the
@@ -384,5 +386,28 @@ theorem cook_levin_chain_threeSatToThreeDM :
     KarpReduction.IsNPHardVia DeepWiki.ThreeDM.cnfSize DeepWiki.ThreeDMInstance.size
       DeepWiki.threeSat DeepWiki.ThreeDMInstance.threeDMDecision :=
   DeepWiki.isNPHardVia_threeSat_threeDMDecision
+
+/-- **Theorem 10.2 — NP-hardness over the GENUINE TM NP class (Cook–Levin capstone).** Worst-case-
+backlog decision is `IsNPHard_TM`: every Turing-machine-grounded NP problem Karp-reduces to it, via the
+full chain `SAT ≤ₖ 3SAT ≤ₖ 3DM ≤ₖ X3C ≤ₖ worst-case-backlog`. The chain is closed by `compactCnf` (a
+variable-compaction reduction removing unused variables, both satisfiability directions + a linear bound
+so the 3DM gadget is polynomial in the `cnfEncode` length) + `worstCaseChain` (the composed Karp
+reduction at the genuine encodings). `#print axioms isNPHard_TM_worstCaseBacklog` = Mathlib's 3 standard
+axioms + EXACTLY `cookLevin` — every reduction in the chain is genuine; the single research-scale
+tableau is the only unproved input. The library's `DeepWiki.isNPHard_TM_worstCaseBacklog`. -/
+theorem thm_10_2_cookLevin_capstone :
+    DeepWiki.IsNPHard_TM DeepWiki.x3cEnc DeepWiki.worstCaseBacklogDecision :=
+  DeepWiki.isNPHard_TM_worstCaseBacklog
+
+/-- **Theorem 10.2 — NP-hardness relative to SAT (unconditional, axiom-free).** Worst-case-backlog is
+NP-hard relative to SAT: `SAT ≤ₖ worst-case-backlog` is a genuine Karp reduction (the full compacted
+chain). `#print axioms isNPHardVia_sat_worstCaseBacklog` = Mathlib's 3 standard axioms only — no
+`cookLevin`, because "NP-hard relative to" needs no completeness seed. The library's
+`DeepWiki.isNPHardVia_sat_worstCaseBacklog`. -/
+theorem thm_10_2_via_sat :
+    KarpReduction.IsNPHardVia (fun φ => (DeepWiki.cnfEncode φ).length)
+      (fun z => (DeepWiki.x3cEnc z).length) DeepWiki.Satisfiable
+      DeepWiki.worstCaseBacklogDecision :=
+  DeepWiki.isNPHardVia_sat_worstCaseBacklog
 
 end DeepWiki.Dnc
