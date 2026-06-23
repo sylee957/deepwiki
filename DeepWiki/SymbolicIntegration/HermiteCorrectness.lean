@@ -1099,3 +1099,65 @@ theorem gcd_Babs_Dabs {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (h
     gcd_isUnit_iff_isRelPrime.mpr hrp
   rw [(normalize_eq_one.mpr hunit ▸ (normalize_gcd (Babs A (i + 1)) (Yun A (i + 1))).symm :
     gcd (Babs A (i + 1)) (Yun A (i + 1)) = 1), mul_one]
+
+open Classical in
+/-- `Vᵢ = C(leadingCoeff Vᵢ) · normalize Vᵢ` over a field: the monic normalization scaled back by the
+leading coefficient recovers the polynomial. (`normalize p = p · C(leadingCoeff p)⁻¹`.) -/
+theorem self_eq_C_leadingCoeff_mul_normalize {K : Type*} [Field K] (p : K[X]) (hp : p ≠ 0) :
+    p = Polynomial.C p.leadingCoeff * normalize p := by
+  have hlc : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hp
+  have hcn : ((normUnit p.leadingCoeff : K) : K) = p.leadingCoeff⁻¹ := by
+    simp [normUnit, hlc]
+  rw [normalize_apply, Polynomial.coe_normUnit, hcn]
+  rw [show Polynomial.C p.leadingCoeff * (p * Polynomial.C p.leadingCoeff⁻¹)
+        = (Polynomial.C p.leadingCoeff * Polynomial.C p.leadingCoeff⁻¹) * p from by ring,
+    ← map_mul, mul_inv_cancel₀ hlc, map_one, one_mul]
+
+/-! ### The shared-scalar Yun loop invariant and its one-step preservation -/
+
+open Classical in
+/-- **The Yun loop invariant** (shared-scalar form): the concrete working pair `(b, d)` is a *common
+constant multiple* `C c · (Babs A i, Dabs A i)` of the abstract radical/derivative-poly at step `i`
+(with `c ≠ 0`). The single shared scalar `c` is what lets the subtraction in the `d`-update commute
+with the abstract identities. -/
+def YunInv {K : Type*} [Field K] (A : K[X]) (i : ℕ) (b d : K[X]) : Prop :=
+  ∃ c : K, c ≠ 0 ∧ b = Polynomial.C c * Babs A i ∧ d = Polynomial.C c * Dabs A i
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- **One Yun loop step preserves the invariant.** From `YunInv A i b d` (with `1 ≤ i`,
+`A.primPart ≠ 0`), the monic gcd `q = gcd b d = normalize Vᵢ`, the deflated numerator `b' = b/q` and
+updated derivative-poly `d' = d/q − b′′` satisfy `YunInv A (i+1) b' d'` — with the scalar advancing by
+`leadingCoeff Vᵢ`. The shared scalar `c·leadingCoeff Vᵢ` multiplies *both* `Babs A (i+1)` and
+`Dabs A (i+1)`, so the subtraction `d/q − (b/q)′` realizes exactly `C(c·w)·(Y_{i+1} − Babs A (i+1)′)`. -/
+theorem yunStep_preserves {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
+    gcd b d = normalize (sqfreeFactPart A i) ∧
+      YunInv A (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d)) := by
+  obtain ⟨c, hc, hb, hd⟩ := hinv
+  set V := sqfreeFactPart A i with hV
+  have hV0 : V ≠ 0 := sqfreeFactPart_ne_zero A i
+  set w := V.leadingCoeff with hw
+  have hw0 : w ≠ 0 := leadingCoeff_ne_zero.mpr hV0
+  set Vn := normalize V with hVn
+  have hVn0 : Vn ≠ 0 := by rw [hVn]; simpa using hV0
+  -- `gcd b d = normalize V`: the shared constant `C c` drops out of the gcd.
+  have hgcd : gcd b d = Vn := by
+    rw [hb, hd, gcd_mul_left, normalize_eq_one.mpr (isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc)),
+      one_mul, gcd_Babs_Dabs A i hi hA, ← hV, ← hVn]
+  -- `V = C w * Vn`.
+  have hVeq : V = Polynomial.C w * Vn := self_eq_C_leadingCoeff_mul_normalize V hV0
+  -- `b = Vn * (C (c*w) * Babs A (i+1))`.
+  have hbfact : b = Vn * (Polynomial.C (c * w) * Babs A (i + 1)) := by
+    rw [hb, Babs_eq_mul A i hi hA, ← hV, hVeq, map_mul]; ring
+  -- `d = Vn * (C (c*w) * Yun A (i+1))`.
+  have hdfact : d = Vn * (Polynomial.C (c * w) * Yun A (i + 1)) := by
+    rw [hd, Dabs_eq_mul A i hi hA, ← hV, hVeq, map_mul]; ring
+  -- divisions by the monic `q = Vn`.
+  have hb' : b / gcd b d = Polynomial.C (c * w) * Babs A (i + 1) := by
+    rw [hgcd, hbfact, mul_div_cancel_left₀ _ hVn0]
+  have hd' : d / gcd b d = Polynomial.C (c * w) * Yun A (i + 1) := by
+    rw [hgcd, hdfact, mul_div_cancel_left₀ _ hVn0]
+  refine ⟨hgcd, c * w, mul_ne_zero hc hw0, hb', ?_⟩
+  -- `d' = d/q − (b/q)′ = C(c*w)·(Y_{i+1} − Babs A (i+1)′) = C(c*w)·Dabs A (i+1)`.
+  rw [hd', hb', derivative_C_mul, Dabs, Nat.add_sub_cancel, Babs, Nat.add_sub_cancel, mul_sub]
