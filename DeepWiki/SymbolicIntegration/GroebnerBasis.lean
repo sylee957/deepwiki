@@ -1595,6 +1595,175 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     leadingYCoeff fi1 ∣ leadingYCoeff fi :=
   lazard_lemma2 hB hfi hfi1 hd
 
+/-! ## Lazard's Lemma 3: the leading-`y`-coefficient reduction step and the `Pₖ = Rₖ·Sₖ` split
+
+Lazard (1985), Lemma 3 (J. Symb. Comp. 1, p.263): for a minimal bivariate Gröbner basis sorted by
+increasing `y`-degree, `gᵢ = leadingYCoeff fᵢ` divides `fᵢ` (and `f₀ ∈ K[x]`, `fₖ` monic in `y`).
+The mechanism is the **reduction step**: since `g_{i+1} ∣ gᵢ` (Lemma 2, `lazard_lemma2`), with
+`q = gᵢ/g_{i+1}` the ideal element `C̃(q)·f_{i+1} − y^{d_{i+1}−dᵢ}·fᵢ` has matching `y`-degree-`d_{i+1}`
+leading term `gᵢ·y^{d_{i+1}}`, so the difference has `y`-degree `< d_{i+1}` — formalized here as
+`lazard_lemma3_reductionStep`. Reducing it to zero modulo the basis and inducting over the sorted
+enumeration gives `gᵢ ∣ fᵢ` (the full descent over `f₀,…,fₖ` is the unformalized remainder — see the
+§2.6 residual).
+
+The concrete Czichowski payload `Pₖ = Rₖ·Sₖ` is the content/primpart split with the content equal to
+`Rᵢ = leadingYCoeff fᵢ`: given `gᵢ ∣ fᵢ` (i.e. `C(Rᵢ) ∣ lazardView fᵢ`), the content of `lazardView fᵢ`
+is associated to `Rᵢ` and the primitive part `Sᵢ` is monic-in-`y` (unit leading coefficient) —
+`content_associated_leadingYCoeff_of_C_dvd`, `leadingCoeff_primPart_isUnit_of_C_dvd`,
+`lazard_Pk_eq_Rk_Sk`. -/
+
+/-- The `y`-constant lift `K[x] → K[x][y] → MvPolynomial (Fin 2) K` of a leading-`y`-coefficient,
+`r ↦ (finSuccEquiv K 1).symm (C r)`; its `K[x][y]` view is the constant polynomial `C r`. -/
+noncomputable def yConst {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
+    MvPolynomial (Fin 2) K :=
+  (finSuccEquiv K 1).symm (Polynomial.C r)
+
+/-- `lazardView (yConst r) = C r`: the `K[x][y]` view of a `y`-constant is the constant polynomial. -/
+@[simp] theorem lazardView_yConst {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
+    lazardView (yConst r) = Polynomial.C r := by
+  rw [lazardView, yConst, AlgEquiv.apply_symm_apply]
+
+/-- **Lazard's Lemma 3, the reduction step** (Lazard 1985, p.263). With `q = gᵢ/g_{i+1}` witnessed by
+`leadingYCoeff fi1 * q = leadingYCoeff fi` (the divisibility from Lemma 2) and `y`-degrees
+`dᵢ < d_{i+1}`, the ideal element `R := yConst q · f_{i+1} − y^{d_{i+1}−dᵢ}·fᵢ` has `y`-degree
+`< d_{i+1}`: both subtracted terms have `y`-degree `d_{i+1}` and the *same* leading-`y`-coefficient
+`gᵢ`, so the top terms cancel. (Membership `R ∈ I` for `fᵢ, f_{i+1} ∈ I` is immediate.) -/
+theorem lazard_lemma3_reductionStep {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
+    (hfi : fi ≠ 0) (hd : degreeOf 0 fi < degreeOf 0 fi1)
+    {q : MvPolynomial (Fin 1) K} (hq : leadingYCoeff fi1 * q = leadingYCoeff fi) :
+    degreeOf 0 (yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi)
+      < degreeOf 0 fi1 := by
+  set d := degreeOf 0 fi1 with hd_def
+  set sh := degreeOf 0 fi1 - degreeOf 0 fi with hsh
+  -- the two `K[x][y]`-views `p := C q · lazardView f_{i+1}` and `r := X^sh · lazardView fᵢ`.
+  set p := Polynomial.C q * lazardView fi1 with hp_def
+  set r := Polynomial.X ^ sh * lazardView fi with hr_def
+  have hview : lazardView (yConst q * fi1 - X 0 ^ sh * fi) = p - r := by
+    rw [lazardView, map_sub, map_mul, map_mul, map_pow, finSuccEquiv_X_zero, ← lazardView,
+      ← lazardView, ← lazardView, lazardView_yConst, hp_def, hr_def]
+  -- both have `natDegree ≤ d`.
+  have hpdeg : p.natDegree ≤ d := by
+    rw [hp_def]
+    exact (Polynomial.natDegree_C_mul_le _ _).trans (by rw [natDegree_lazardView])
+  have hrdeg : r.natDegree ≤ d := by
+    rw [hr_def, Polynomial.natDegree_X_pow_mul sh (lazardView_eq_zero_iff.not.mpr hfi),
+      natDegree_lazardView, hsh, Nat.add_sub_cancel' (le_of_lt hd)]
+  -- their `d`-coefficients agree, both `= gᵢ`.
+  have hpcoeff : p.coeff d = leadingYCoeff fi := by
+    rw [hp_def, Polynomial.coeff_C_mul, hd_def, ← natDegree_lazardView, Polynomial.coeff_natDegree,
+      ← leadingYCoeff, mul_comm, hq]
+  have hrcoeff : r.coeff d = leadingYCoeff fi := by
+    have hdeq : d = degreeOf 0 fi + sh := by rw [hd_def, hsh, Nat.add_sub_cancel' (le_of_lt hd)]
+    rw [hr_def, hdeq, Polynomial.coeff_X_pow_mul, ← natDegree_lazardView, Polynomial.coeff_natDegree,
+      ← leadingYCoeff]
+  -- the difference's `d`-coefficient vanishes, so `natDegree < d` (`d > 0`).
+  have hdiff0 : (p - r).coeff d = 0 := by rw [Polynomial.coeff_sub, hpcoeff, hrcoeff, sub_self]
+  have hle : (p - r).natDegree ≤ d := (Polynomial.natDegree_sub_le p r).trans (max_le hpdeg hrdeg)
+  have hdpos : 0 < d := lt_of_le_of_lt (Nat.zero_le _) hd
+  rw [← natDegree_lazardView, hview]
+  refine lt_of_le_of_ne hle (fun heq => ?_)
+  rw [← heq, Polynomial.coeff_natDegree, Polynomial.leadingCoeff_eq_zero] at hdiff0
+  rw [hdiff0, Polynomial.natDegree_zero] at heq
+  exact hdpos.ne' heq.symm
+
+/-- The ideal element of the Lemma 3 reduction step lies in `I` (difference of left multiples of the
+ideal members `fᵢ, f_{i+1}`). -/
+theorem lazard_lemma3_reductionStep_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {fi fi1 : MvPolynomial (Fin 2) K} (hfiI : fi ∈ I) (hfi1I : fi1 ∈ I)
+    {q : MvPolynomial (Fin 1) K} :
+    yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi ∈ I :=
+  I.sub_mem (Ideal.mul_mem_left _ _ hfi1I) (Ideal.mul_mem_left _ _ hfiI)
+
+open scoped Classical in
+/-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
+the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
+instance (avoids diamonds with `gcdMonoidMvPolynomialFinOne`). -/
+@[reducible] noncomputable def normalizedGcdMonoidMvPolynomialFinOne (K : Type*) [Field K] :
+    NormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+  letI := UniqueFactorizationMonoid.normalizationMonoid (α := MvPolynomial (Fin 1) K)
+  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
+
+/-- **Content divides the leading-`y`-coefficient**: for the chosen `NormalizedGCDMonoid`, the
+content of `lazardView f` divides `Rᵢ = leadingYCoeff f` (`content` divides every coefficient,
+including the leading one). -/
+theorem content_lazardView_dvd_leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    @Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)
+      ∣ leadingYCoeff f := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  rw [leadingYCoeff, Polynomial.leadingCoeff]
+  exact Polynomial.content_dvd_coeff _
+
+/-- **Lazard's Lemma 3, content half of `Pₖ = Rₖ·Sₖ`**: if `gᵢ ∣ fᵢ` in the form `C(Rᵢ) ∣ lazardView fᵢ`
+(equivalently `Rᵢ ∣ content`, the converse of the always-true `content ∣ Rᵢ`), then the content of
+`lazardView fᵢ` is **associated** to `Rᵢ = leadingYCoeff fᵢ`. -/
+theorem content_associated_leadingYCoeff_of_C_dvd {K : Type*} [Field K]
+    {f : MvPolynomial (Fin 2) K}
+    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+      (leadingYCoeff f) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine associated_of_dvd_dvd (content_lazardView_dvd_leadingYCoeff f) ?_
+  exact Polynomial.dvd_content_iff_C_dvd.mpr hdvd
+
+/-- **Lazard's Lemma 3, monic-primpart half of `Pₖ = Rₖ·Sₖ`**: if `C(Rᵢ) ∣ lazardView fᵢ` (`gᵢ ∣ fᵢ`),
+the primitive part `Sᵢ = (lazardView fᵢ).primPart` is **monic in `y`** — its leading coefficient is a
+unit of `K[x]` (a nonzero constant). Since `Rᵢ = content · leadingCoeff(Sᵢ)` and `content ∼ Rᵢ`, the
+factor `leadingCoeff(Sᵢ)` must be a unit. -/
+theorem leadingCoeff_primPart_isUnit_of_C_dvd {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
+    (hf : f ≠ 0) (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView f)).leadingCoeff) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  set c := Polynomial.content (lazardView f) with hc
+  set s := Polynomial.primPart (lazardView f) with hs
+  have hassoc : Associated c (leadingYCoeff f) := content_associated_leadingYCoeff_of_C_dvd hdvd
+  have hc0 : c ≠ 0 := by
+    rw [hc, Ne, Polynomial.content_eq_zero_iff]; exact lazardView_eq_zero_iff.not.mpr hf
+  -- `Rᵢ = leadingCoeff (C c * s) = c * leadingCoeff s` (domain), and `c ∼ Rᵢ`, so `leadingCoeff s` is a unit.
+  have hReq : leadingYCoeff f = c * s.leadingCoeff := by
+    conv_lhs => rw [leadingYCoeff, Polynomial.eq_C_content_mul_primPart (lazardView f), ← hc, ← hs]
+    rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C]
+  obtain ⟨u, hu⟩ := hassoc
+  -- `c * (s.leadingCoeff) = c * u`, cancel `c` to get `s.leadingCoeff = u`, a unit.
+  have : c * s.leadingCoeff = c * (u : MvPolynomial (Fin 1) K) := by rw [← hReq, hu]
+  rw [mul_right_inj' hc0] at this
+  rw [this]; exact u.isUnit
+
+/-- **Lazard's Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization** (Bronstein/Czichowski §2.6(i)). If `gᵢ ∣ fᵢ`
+(`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
+associated to `Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive and monic-in-`y` (unit leading coefficient) —
+the Czichowski structure `Pₖ = Rₖ·Sₖ`. -/
+theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
+    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView f = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView f)) (leadingYCoeff f) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine ⟨(lazardView f).primPart, Polynomial.eq_C_content_mul_primPart (lazardView f),
+    content_associated_leadingYCoeff_of_C_dvd hdvd, Polynomial.isPrimitive_primPart _,
+    leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩
+
+-- Restatements against the intended wording.
+example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
+    lazardView (yConst r) = Polynomial.C r :=
+  lazardView_yConst r
+
+example {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
+    (hfi : fi ≠ 0) (hd : degreeOf 0 fi < degreeOf 0 fi1)
+    {q : MvPolynomial (Fin 1) K} (hq : leadingYCoeff fi1 * q = leadingYCoeff fi) :
+    degreeOf 0 (yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi)
+      < degreeOf 0 fi1 :=
+  lazard_lemma3_reductionStep hfi hd hq
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
+    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView f)).leadingCoeff) :=
+  leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd
+
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
     (hB : IsGroebnerBasis m I B) {f : MvPolynomial σ K} (hfI : f ∈ I) (hf0 : f ≠ 0) :

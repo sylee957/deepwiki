@@ -24,10 +24,10 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (`lazard_lemma1`), the K[x][y]
   representation bridge (`leadingYCoeff`, `degree_apply_zero_eq_natDegree_lazardView`), and Lemma 2
-  (`R_{k+1} ∣ Rₖ`, `lazard_lemma2`, via the GCD/Bézout transfer `gcdMonoidMvPolynomialFinOne` /
-  `exists_mul_add_mul_eq_gcd`, the gcd construction `lazard_gcd_construction`, and the x-degree
-  bridge `lex_degree_apply_one`) are done. Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization, and the
-  normal-position analysis of `⟨A−zD', D⟩` remain [research: Czichowski normal position].
+  (`R_{k+1} ∣ Rₖ`, `lazard_lemma2`), Lemma 3's reduction step (`lazard_lemma3_reductionStep`), and
+  its `Pₖ = Rₖ·Sₖ` content/primpart payload (`lazard_Pk_eq_Rk_Sk`) are done. The full Lemma 3 descent
+  `gᵢ ∣ fᵢ` over the sorted `f₀,…,fₖ` and the normal-position analysis of `⟨A−zD', D⟩` remain
+  [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -536,6 +536,21 @@ along a reduced bivariate Gröbner basis ordered by increasing `y`-degree. The l
 `lazard_gcd_construction` (`P ∈ I` of `y`-degree `d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ,R_{i+1})`),
 and the `x`-degree bridge `lex_degree_apply_one` driving the minimality contradiction. -/
 abbrev lazard_lemma2 := @DeepWiki.SymbolicIntegration.lazard_lemma2
+
+/-- **Lazard (1985), Lemma 3, reduction step** (cited in §2.6; J. Symb. Comp. 1, p.263): with
+`q = gᵢ/g_{i+1}` (`g_{i+1} ∣ gᵢ` from Lemma 2) the ideal element `yConst q·f_{i+1} − y^{d_{i+1}−dᵢ}·fᵢ`
+has `y`-degree `< d_{i+1}` — its two terms share the `y`-degree-`d_{i+1}` leading-`y`-coefficient `gᵢ`,
+so the top terms cancel. The library's `lazard_lemma3_reductionStep` (membership
+`lazard_lemma3_reductionStep_mem`). The full descent `gᵢ ∣ fᵢ` over the sorted `f₀,…,fₖ` remains. -/
+noncomputable abbrev lazard_lemma3_reductionStep :=
+  @DeepWiki.SymbolicIntegration.lazard_lemma3_reductionStep
+
+/-- **Bronstein/Czichowski §2.6(i), `Pₖ = Rₖ·Sₖ`** (Lazard 1985, Lemma 3 payload): if `gᵢ ∣ fᵢ`
+(`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
+associated to `Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive with unit leading coefficient (monic-in-`y`).
+The library's `lazard_Pk_eq_Rk_Sk` (content half `content_associated_leadingYCoeff_of_C_dvd`,
+monic-primpart half `leadingCoeff_primPart_isUnit_of_C_dvd`). -/
+noncomputable abbrev lazard_Pk_eq_Rk_Sk := @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
