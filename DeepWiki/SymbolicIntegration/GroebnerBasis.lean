@@ -3641,4 +3641,58 @@ theorem isGroebnerBasis_dividedBasis {K : Type*} [Field K] {I : Ideal (MvPolynom
     rintro g hgI hg0
     exact exists_degree_le_dividedIdeal hB hne hgI hg0
 
+/-- **The divided basis is `sortedByYDegree`-distinct ⟹ index-distinct**: `monicDividedBasis hB hne`
+is injective (the cofactors `dividedBasis` are, since `H·qᵢ = fᵢ` and `sortedByYDegree` is injective;
+monic scaling is injective). -/
+theorem monicDividedBasis_injective {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    Function.Injective (monicDividedBasis hB hne) := by
+  intro i j hij
+  set ci := MonomialOrder.lex.leadingCoeff (dividedBasis hB hne i) with hci_def
+  set cj := MonomialOrder.lex.leadingCoeff (dividedBasis hB hne j) with hcj_def
+  have hci : ci ≠ 0 := leadingCoeff_dividedBasis_ne_zero hB hne i
+  have hcj : cj ≠ 0 := leadingCoeff_dividedBasis_ne_zero hB hne j
+  -- multiply `monicDividedBasis i = monicDividedBasis j` by `H`:
+  -- `C cᵢ⁻¹ · fᵢ = C cⱼ⁻¹ · fⱼ` (using `H · monicDividedBasis k = C cₖ⁻¹ · fₖ`).
+  have key : MvPolynomial.C ci⁻¹ * sortedByYDegree hB i
+      = MvPolynomial.C cj⁻¹ * sortedByYDegree hB j := by
+    have e : ∀ k : Fin B.card,
+        gbCommonYFactor hB * monicDividedBasis hB hne k
+          = MvPolynomial.C (MonomialOrder.lex.leadingCoeff (dividedBasis hB hne k))⁻¹
+            * sortedByYDegree hB k := by
+      intro k
+      rw [monicDividedBasis, mul_left_comm, gbCommonYFactor_mul_dividedBasis]
+    have := congrArg (fun p => gbCommonYFactor hB * p) hij
+    simp only [e] at this
+    exact this
+  -- leading coefficients: `B` is monic, so `leadingCoeff (C cₖ⁻¹ · fₖ) = cₖ⁻¹`. Hence `cᵢ⁻¹ = cⱼ⁻¹`.
+  have hlc := congrArg (fun p => MonomialOrder.lex.leadingCoeff p) key
+  simp only [leadingCoeff_C_mul MonomialOrder.lex (inv_ne_zero hci),
+    leadingCoeff_C_mul MonomialOrder.lex (inv_ne_zero hcj),
+    hB.2.1 _ (sortedByYDegree_mem hB i), hB.2.1 _ (sortedByYDegree_mem hB j), mul_one] at hlc
+  -- `cᵢ⁻¹ = cⱼ⁻¹`, so `key` cancels `C cᵢ⁻¹` to give `fᵢ = fⱼ`, hence `i = j`.
+  rw [hlc] at key
+  exact sortedByYDegree_injective hB
+    (mul_left_cancel₀ (by rw [Ne, MvPolynomial.C_eq_zero]; exact inv_ne_zero hcj) key)
+
+/-- **The divided basis has pairwise non-dividing leading monomials** (Lazard's Theorem 1 minimality,
+leading-monomial form). For distinct `i ≠ i'`, neither `lex.degree (monicDividedBasis i')` divides
+`lex.degree (monicDividedBasis i)`: the `lex.degree H` shift cancels (`leadingMonomial_cofactor_not_le`
+on `B`'s reducedness). This is the minimal-Gröbner-basis condition the divided family inherits. -/
+theorem dividedBasis_leadingMonomial_not_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) {i i' : Fin B.card} (hii : i ≠ i') :
+    ¬ (MonomialOrder.lex.degree (monicDividedBasis hB hne i')
+        ≤ MonomialOrder.lex.degree (monicDividedBasis hB hne i)) := by
+  rw [degree_monicDividedBasis, degree_monicDividedBasis]
+  refine leadingMonomial_cofactor_not_le hB (gbCommonYFactor_ne_zero hB hne)
+    (dividedBasis_ne_zero hB hne i) (dividedBasis_ne_zero hB hne i') ?_ ?_ ?_
+  · rw [gbCommonYFactor_mul_dividedBasis]; exact sortedByYDegree_mem hB i
+  · rw [gbCommonYFactor_mul_dividedBasis]; exact sortedByYDegree_mem hB i'
+  · rw [gbCommonYFactor_mul_dividedBasis, gbCommonYFactor_mul_dividedBasis]
+    exact fun h => hii (sortedByYDegree_injective hB h)
+
 end DeepWiki.SymbolicIntegration
