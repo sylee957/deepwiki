@@ -1664,6 +1664,62 @@ theorem yunFactorizationAbs_prodPow_assoc_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : 
   · congr 1
     exact Subsingleton.elim _ _
 
+/-! ### Concrete-loop step bridges: the abstract Yun step over ambient `ℚ` instances
+
+To carry the abstract `YunInv`/`yunStep_*` apparatus through the concrete `csqfreeFactor.go` loop —
+whose `toPoly`-image lives in `ℚ[X]` with *ambient* instances — the abstract step lemmas are
+specialized to ambient `ℚ`. The recipe (instance-bridge through the `DecidableEq ℚ` subsingleton):
+`primPart` discharged by `convert A.primPart_ne_zero using 2`; the `gcd`/`sqfreeFactPart` value-level
+diamond rewritten away by `gcd_rat_eq`/`sqfreeFactPart_rat_eq`; the abstract conclusion then closed by
+`exact` (whnf-bridging the residual `Babs`/`Dabs` reading inside `YunInv`). -/
+
+/-- The ambient `gcd` over `ℚ[X]` equals the `Classical`-derived one used by the abstract Yun theory:
+both are `Polynomial.normalizedGcdMonoid` over `NormalizedGCDMonoid ℚ`, which differ only in a
+`Subsingleton (DecidableEq ℚ)` argument. The value-level companion of `sqfreeFactPart_rat_eq`. -/
+theorem gcd_rat_eq (a b : ℚ[X]) :
+    @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.commRing _).toGCDMonoid a b
+      = @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.instField.toCommRing
+          (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Field.toSemifield.toCommGroupWithZero
+            (fun x y => Classical.propDecidable (x = y)))).toGCDMonoid a b := by
+  have hinst : @CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat
+      = @CommGroupWithZero.instNormalizedGCDMonoid ℚ Field.toSemifield.toCommGroupWithZero
+          (fun x y => Classical.propDecidable (x = y)) := by
+    congr 1; exact Subsingleton.elim _ _
+  rw [show @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.commRing _).toGCDMonoid a b
+        = @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.commRing
+            (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat)).toGCDMonoid
+          a b from rfl, hinst]
+
+/-- **Yun loop base case** over ambient `ℚ` (`yunInv_base` specialized): `csqfreeFactor`'s
+initialization `(A/gcd(A,A′), A′/gcd(A,A′) − …)` satisfies `YunInv A 1 …` with ambient instances. -/
+theorem yunInv_base_rat (A : ℚ[X]) (hA0 : A ≠ 0) :
+    YunInv A 1 (A / gcd A (derivative A))
+      (derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) := by
+  have key := yunInv_base A hA0
+    (by convert A.primPart_ne_zero using 2 <;> first | rfl | (congr 1; exact Subsingleton.elim _ _))
+  rw [gcd_rat_eq A (derivative A)]
+  exact key
+
+/-- **The emitted Yun factor is associated to `Vᵢ`** over ambient `ℚ` (`yunStep_emit_assoc`
+specialized): under `YunInv A i b d` (`1 ≤ i`), `gcd b d` is `Associated (sqfreeFactPart A i)`. -/
+theorem yunStep_emit_assoc_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X]) (hinv : YunInv A i b d) :
+    Associated (gcd b d) (sqfreeFactPart A i) := by
+  have key := yunStep_emit_assoc A i hi
+    (by convert A.primPart_ne_zero using 2 <;> first | rfl | (congr 1; exact Subsingleton.elim _ _)) hinv
+  rw [sqfreeFactPart_rat_eq A i, gcd_rat_eq b d]
+  exact key
+
+/-- **One Yun loop step advances the invariant** over ambient `ℚ` (`yunStep_preserves` specialized,
+second conjunct): from `YunInv A i b d` (`1 ≤ i`), the deflated pair `(b/gcd, d/gcd − (b/gcd)′)`
+satisfies `YunInv A (i+1)`. The invariant carried through the concrete loop. -/
+theorem yunStep_preserves_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X]) (hinv : YunInv A i b d) :
+    YunInv A (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d)) := by
+  have key := (yunStep_preserves A i hi
+    (by convert A.primPart_ne_zero using 2 <;> first | rfl | (congr 1; exact Subsingleton.elim _ _))
+    hinv).2
+  rw [gcd_rat_eq b d]
+  exact key
+
 /-! ### Restatements against the intended Yun-correctness wording -/
 
 open Classical in
