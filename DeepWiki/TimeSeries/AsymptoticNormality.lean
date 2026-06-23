@@ -9,6 +9,7 @@ reference Gaussian variable). The library's `TendstoInDistribution`-form central
 through `IsAsymptoticallyNormal.of_tendstoInDistribution`. -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
+open scoped Matrix
 
 namespace DeepWiki.TimeSeries
 
@@ -53,5 +54,33 @@ theorem IsAsymptoticallyNormal.add_const {X : ℕ → Ω → ℝ} {a b : ℕ →
   have heq : (fun ω => (X n ω - a n) / b n) = fun ω => (X n ω + d n - (a n + d n)) / b n := by
     funext ω; rw [add_sub_add_right_eq_sub]
   rw [heq]
+
+/-- **Asymptotic normality of a sequence of random vectors** (Brockwell–Davis Definition 6.4.2,
+Cramér–Wold form): the `ℝᵏ`-valued sequence `Xₙ` is `AN(aₙ, Sₙ)` if every nondegenerate linear
+projection `λ ⬝ᵥ Xₙ` (`λ ⬝ᵥ Sₙ λ > 0`) is one-dimensionally asymptotically normal
+`AN(λ ⬝ᵥ aₙ, λ ⬝ᵥ Sₙ λ)`. -/
+def IsAsymptoticallyNormalVec {k : ℕ} (X : ℕ → Ω → Fin k → ℝ) (a : ℕ → Fin k → ℝ)
+    (S : ℕ → Matrix (Fin k) (Fin k) ℝ) (μ : Measure Ω) : Prop :=
+  ∀ lam : Fin k → ℝ, (∀ n, 0 < lam ⬝ᵥ (S n *ᵥ lam)) →
+    IsAsymptoticallyNormal (fun n ω => lam ⬝ᵥ X n ω) (fun n => lam ⬝ᵥ a n)
+      (fun n => Real.sqrt (lam ⬝ᵥ (S n *ᵥ lam))) μ
+
+/-- **Linear images of asymptotically normal vectors are asymptotically normal** (Brockwell–Davis
+Proposition 6.4.2): if `Xₙ` is `AN(aₙ, Sₙ)` then `B Xₙ` is `AN(B aₙ, B Sₙ Bᵀ)` for any matrix `B`. Each
+projection `λ ⬝ᵥ (B Xₙ) = (Bᵀ λ) ⬝ᵥ Xₙ` is the `(Bᵀ λ)`-projection of `Xₙ`, hence asymptotically normal. -/
+theorem IsAsymptoticallyNormalVec.matrix_mulVec {k m : ℕ} {X : ℕ → Ω → Fin k → ℝ} {a : ℕ → Fin k → ℝ}
+    {S : ℕ → Matrix (Fin k) (Fin k) ℝ} (h : IsAsymptoticallyNormalVec X a S μ)
+    (B : Matrix (Fin m) (Fin k) ℝ) :
+    IsAsymptoticallyNormalVec (fun n ω => B *ᵥ X n ω) (fun n => B *ᵥ a n)
+      (fun n => B * S n * Bᵀ) μ := by
+  intro lam hlam
+  have hproj : ∀ v : Fin k → ℝ, lam ⬝ᵥ (B *ᵥ v) = (Bᵀ *ᵥ lam) ⬝ᵥ v := fun v => by
+    rw [Matrix.dotProduct_mulVec, ← Matrix.mulVec_transpose]
+  have hquad : ∀ n, lam ⬝ᵥ ((B * S n * Bᵀ) *ᵥ lam) = (Bᵀ *ᵥ lam) ⬝ᵥ (S n *ᵥ (Bᵀ *ᵥ lam)) := fun n => by
+    rw [← Matrix.mulVec_mulVec, ← Matrix.mulVec_mulVec, hproj]
+  have hcond : ∀ n, 0 < (Bᵀ *ᵥ lam) ⬝ᵥ (S n *ᵥ (Bᵀ *ᵥ lam)) := fun n => (hquad n) ▸ hlam n
+  have key := h (Bᵀ *ᵥ lam) hcond
+  simp only [hproj, hquad]
+  exact key
 
 end DeepWiki.TimeSeries
