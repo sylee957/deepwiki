@@ -371,6 +371,24 @@ theorem variance_sqrt_sampleMean_sub_gapRemoved_le {m : ℕ} {X : ℤ → Ω →
   rw [gap_card] at hvar
   exact le_trans (mul_le_mul_of_nonneg_left hvar (by positivity)) (le_of_eq (by ring))
 
+/-- **The gap remainder `√n X̄ₙ − Y⁽ᵖ⁾ₙ` is `L²`** (a finite linear combination of the `L²` variables
+`Xₜ`, via the difference identity). -/
+theorem memLp_sqrt_sampleMean_sub_gapRemoved {m : ℕ} {X : ℤ → Ω → ℝ} (hmem : ∀ t, MemLp (X t) 2 μ)
+    (p n : ℕ) :
+    MemLp (fun ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)
+      - (Real.sqrt n)⁻¹ * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) 2 μ := by
+  rw [funext fun ω => sqrt_sampleMean_sub_gapRemoved p m n ω]
+  exact (memLp_finsetSum _ (fun t _ => hmem t)).const_mul _
+
+/-- **The gap remainder `√n X̄ₙ − Y⁽ᵖ⁾ₙ` is centered** (mean `0`, from the centering of `X`). -/
+theorem integral_sqrt_sampleMean_sub_gapRemoved {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0) (p n : ℕ) :
+    μ[fun ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)
+      - (Real.sqrt n)⁻¹ * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω] = 0 := by
+  rw [funext fun ω => sqrt_sampleMean_sub_gapRemoved p m n ω, integral_const_mul,
+    integral_finsetSum _ (fun t _ => (hmem t).integrable one_le_two)]
+  simp [hcenter]
+
 /-- **The number of big blocks tends to infinity**: `blockCount p m n → ∞` as `n → ∞` (for a positive
 block-plus-gap length). The index reparametrization that turns the block CLT (in the block count `r`)
 into a statement about the sample size `n`. -/
