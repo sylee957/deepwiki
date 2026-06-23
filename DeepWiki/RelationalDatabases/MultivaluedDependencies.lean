@@ -5,7 +5,8 @@ A multivalued dependency `X ↠ Y` holds in a row set when, for any two rows agr
 the "tuple swap" on `Y` versus `Ω − Y` stays in the relation (Def 3.8) — equivalently, the
 relation decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. The inference rules of the fd+mvd
 system are proved sound at the row-set level: FD-implies-MVD (FM1), complementation (M1),
-augmentation (M2), mvd-transitivity (M3) and mixed pseudotransitivity (FM2).
+augmentation (M2), mvd-transitivity (M3), mixed pseudotransitivity (FM2), and the Lemma 3.1
+derived rules union (M4), intersection (M5) and difference (M6).
 
 The dependency basis, Algorithm 3.3 and the completeness of the axiom system are layered on
 later. -/
@@ -124,5 +125,89 @@ theorem satisfiesFd_of_mvd_fd {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
   have h2 : w b = u b :=
     hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hb.2⟩)))
   exact (hwZ b hb.1).symm.trans h2
+
+/-- Rule M4 (Lemma 3.1, mvd-union): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y ∪ Z)`. Swap onto `Y` (via
+`X ↠ Y`), then onto `Z` (via `X ↠ Z` on the swapped row and `t`). -/
+theorem satisfiesMvd_union {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
+    (hXZ : SatisfiesMvd r X Z) : SatisfiesMvd r X (Y ∪ Z) := by
+  intro t ht u hu hag
+  obtain ⟨a, ha, hat, hau⟩ := hXY t ht u hu hag
+  have hXta : Agree X t a := (Agree.mono Finset.subset_union_left hat).symm
+  obtain ⟨w, hw, hwt, hwa⟩ := hXZ t ht a ha hXta
+  refine ⟨w, hw, ?_, ?_⟩
+  · intro b hb
+    simp only [Finset.mem_union] at hb
+    rcases hb with hX | hY | hZ
+    · exact hwt b (Finset.mem_union.mpr (Or.inl hX))
+    · by_cases hZb : b.val ∈ Z
+      · exact hwt b (Finset.mem_union.mpr (Or.inr hZb))
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hZb⟩)))]
+        exact hat b (Finset.mem_union.mpr (Or.inr hY))
+    · exact hwt b (Finset.mem_union.mpr (Or.inr hZ))
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff, not_or] at hb
+    rcases hb with hX | ⟨hbΩ, hnY, hnZ⟩
+    · rw [hwt b (Finset.mem_union.mpr (Or.inl hX))]; exact hag b hX
+    · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, hnZ⟩)))]
+      exact hau b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, hnY⟩)))
+
+/-- Rule M5 (Lemma 3.1, mvd-intersection): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y ∩ Z)`. -/
+theorem satisfiesMvd_inter {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
+    (hXZ : SatisfiesMvd r X Z) : SatisfiesMvd r X (Y ∩ Z) := by
+  intro t ht u hu hag
+  obtain ⟨a, ha, hat, hau⟩ := hXY t ht u hu hag
+  have hXau : Agree X a u := Agree.mono Finset.subset_union_left hau
+  obtain ⟨w, hw, hwa, hwu⟩ := hXZ a ha u hu hXau
+  refine ⟨w, hw, ?_, ?_⟩
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_inter] at hb
+    rcases hb with hX | ⟨hY, hZ⟩
+    · by_cases hZb : b.val ∈ Z
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr hZb))]
+        exact hat b (Finset.mem_union.mpr (Or.inl hX))
+      · rw [hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hZb⟩)))]
+        exact (hag b hX).symm
+    · rw [hwa b (Finset.mem_union.mpr (Or.inr hZ))]
+      exact hat b (Finset.mem_union.mpr (Or.inr hY))
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff, Finset.mem_inter, not_and] at hb
+    rcases hb with hX | ⟨hbΩ, hYnZ⟩
+    · by_cases hZb : b.val ∈ Z
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr hZb))]
+        exact hau b (Finset.mem_union.mpr (Or.inl hX))
+      · exact hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hZb⟩)))
+    · by_cases hZb : b.val ∈ Z
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr hZb))]
+        exact hau b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, fun hY => hYnZ hY hZb⟩)))
+      · exact hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, hZb⟩)))
+
+/-- Rule M6 (Lemma 3.1, mvd-difference): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y − Z)`. -/
+theorem satisfiesMvd_diff {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
+    (hXZ : SatisfiesMvd r X Z) : SatisfiesMvd r X (Y \ Z) := by
+  intro t ht u hu hag
+  obtain ⟨a, ha, hat, hau⟩ := hXY t ht u hu hag
+  have hXua : Agree X u a := (Agree.mono Finset.subset_union_left hau).symm
+  obtain ⟨w, hw, hwu, hwa⟩ := hXZ u hu a ha hXua
+  refine ⟨w, hw, ?_, ?_⟩
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff] at hb
+    rcases hb with hX | ⟨hY, hnZ⟩
+    · by_cases hZb : b.val ∈ Z
+      · rw [hwu b (Finset.mem_union.mpr (Or.inr hZb))]; exact (hag b hX).symm
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hZb⟩)))]
+        exact hat b (Finset.mem_union.mpr (Or.inl hX))
+    · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hnZ⟩)))]
+      exact hat b (Finset.mem_union.mpr (Or.inr hY))
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff, not_and, not_not] at hb
+    rcases hb with hX | ⟨hbΩ, hYZ⟩
+    · by_cases hZb : b.val ∈ Z
+      · exact hwu b (Finset.mem_union.mpr (Or.inr hZb))
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hZb⟩)))]
+        exact hau b (Finset.mem_union.mpr (Or.inl hX))
+    · by_cases hZb : b.val ∈ Z
+      · exact hwu b (Finset.mem_union.mpr (Or.inr hZb))
+      · rw [hwa b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, hZb⟩)))]
+        exact hau b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, fun hY => hZb (hYZ hY)⟩)))
 
 end DeepWiki

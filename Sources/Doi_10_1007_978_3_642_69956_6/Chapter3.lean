@@ -25,7 +25,7 @@ semantics.
   Example 3.10 [infra].
 §3.3: Theorem 3.7 / 3.8 (an fd gives a lossless two-way decomposition, and its partial
   converse), Theorem 3.9 (an mvd holds iff the relation decomposes losslessly),
-  Lemma 3.1 rules M4/M5/M6 (mvd union/intersection/difference), Theorem 3.11 (dependency
+  Theorem 3.11 (dependency
   basis), Algorithm 3.3 with Theorem 3.12 / 3.13 (sound/complete/non-redundant) and Corollary 3.2
   (polynomial-time decidability) [infra].
 §3.4: Theorem 3.14 (a jd holds iff the relation equals the join of its component projections),
@@ -141,6 +141,15 @@ abbrev thm_3_10_m3_trans := @DeepWiki.satisfiesMvd_trans
 /-- **Theorem 3.10, rule FM2** (§3.3, p.80, mixed pseudotransitivity): `X ↠ Y` and `Y → Z` give
 `X → (Z − Y)`. -/
 abbrev thm_3_10_fm2_mixed := @DeepWiki.satisfiesFd_of_mvd_fd
+
+/-- **Lemma 3.1, rule M4** (§3.3, mvd-union): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y ∪ Z)`. -/
+abbrev lem_3_1_m4_union := @DeepWiki.satisfiesMvd_union
+
+/-- **Lemma 3.1, rule M5** (§3.3, mvd-intersection): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y ∩ Z)`. -/
+abbrev lem_3_1_m5_inter := @DeepWiki.satisfiesMvd_inter
+
+/-- **Lemma 3.1, rule M6** (§3.3, mvd-difference): `X ↠ Y` and `X ↠ Z` give `X ↠ (Y − Z)`. -/
+abbrev lem_3_1_m6_diff := @DeepWiki.satisfiesMvd_diff
 
 /-! ## §3.4 Join Dependencies -/
 
