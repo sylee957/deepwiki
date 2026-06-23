@@ -1,5 +1,6 @@
 import DeepWiki.RelationalDatabases.RelationalModel
 import DeepWiki.RelationalDatabases.ConstraintClassification
+import DeepWiki.RelationalDatabases.ExampleDatabases
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 1: Relational Database Model
@@ -15,9 +16,9 @@ the formalism and are not modelled.
 The chapter's substance is its definitions plus the §1.5 classification and Exercise 1.7, all
 cataloged below. The remaining exercises are concrete encodings of the book's running examples
 or open-ended constructions, several with informal content:
-Ex 1.1: boolean functions for the four relation constraints of Example 1.5 (ABSTRACT) [deferred:
-  includes the informal "first letter of the English word for the B-value" predicate].
-Ex 1.2: boolean functions for the relation constraints of Example 1.6 (ROOMMAIDS) [deferred].
+Ex 1.1: the fourth ABSTRACT constraint — `A` is the first letter of the English word for the
+  `B`-value [external: no formal object for "the English word for an integer"; the other three
+  constraints are done].
 Ex 1.3: a formal definition of the `noremove` dynamic relation constraint of Example 1.7 [deferred].
 Ex 1.4: formal definitions of the dynamic database constraints of `SDYDC` in Example 1.8 [deferred].
 Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [deferred].
@@ -154,5 +155,26 @@ consequence of a set of tuple constraints is a tuple constraint. The book's own 
 satisfy more instances than any tuple constraint — dropping union-closure. The true result is
 `ex_1_7_conjunction`. -/
 abbrev ex_1_7_refuted := @DeepWiki.not_forall_isConsequence_isTupleConstraint
+
+/-! ## §1.7 Exercises — concrete example constraints -/
+
+/-- **Exercise 1.1** (§1.7, p.16), `B < C`: every `ABSTRACT` tuple's `B`-value is below its
+`C`-value. -/
+abbrev ex_1_1_bLtC := @DeepWiki.abstract_bLtC
+
+/-- **Exercise 1.1** (§1.7, p.16), distinct `B`-values: no two `ABSTRACT` tuples share a
+`B`-value. -/
+abbrev ex_1_1_uniqueB := @DeepWiki.abstract_uniqueB
+
+/-- **Exercise 1.1** (§1.7, p.16), the `C`-sum bound: per tuple, the `B`-values sharing its
+`C`-value sum to more than that `C`-value. -/
+abbrev ex_1_1_sumB := @DeepWiki.abstract_sumB
+
+/-- **Exercise 1.2** (§1.7, p.16): every roommaid is responsible for exactly four rooms
+(`ROOMMAIDS`). -/
+abbrev ex_1_2_fourRooms := @DeepWiki.roommaids_fourRooms
+
+/-- **Exercise 1.2** (§1.7, p.16): no two roommaids are responsible for the same room. -/
+abbrev ex_1_2_uniqueRoom := @DeepWiki.roommaids_uniqueRoom
 
 end DeepWiki.Rdb
