@@ -13,6 +13,7 @@ import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
+import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
@@ -33,7 +34,10 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   construction, eqs 2.10–2.12) + the over-the-closure `Hᵢⱼ(α)/(x−α)ʲ` form [functional/infra: needs the
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
-§2.8: Thm 2.8.4; Rioboo's `LogToReal` real-rational-function recursion; Ex 2.8.1; Ex 2.8.2.
+§2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
+  `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
+  multivariate root machinery; the conjugate-pair real-form identity is done, `logToReal_conjugate_pair`);
+  Ex 2.8.1; Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
@@ -492,6 +496,21 @@ swap = Thm 2.8.1(a) (`imagLog_swap`), step = Thm 2.8.1(b) (`imagLog_step`); the 
 inductive run spec `IsLogToAtanRun`. The library's `isLogToAtanRun_correct` (and the fuel-def bridge
 `logToAtanAux_correct`). -/
 abbrev logToAtan_correct := @DeepWiki.SymbolicIntegration.isLogToAtanRun_correct
+
+/-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
+`LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
+`(a+ib)·d/dx log(A+iB) + (a−ib)·d/dx log(A−iB) = a·d/dx log(A²+B²) + b·d/dx (i·log((A+iB)/(A−iB)))`
+is a **real** function's derivative — the `a·log(A²+B²) + b·LogToAtan(A,B)` summand of `LogToReal`'s
+output. Pure `logDeriv` algebra (`logDeriv(A+iB)±logDeriv(A−iB) = logDeriv(A²+B²)/logDeriv((A+iB)/(A−iB))`
+via `(A+iB)(A−iB)=A²+B²`). The library's `logToReal_conjugate_pair`. -/
+abbrev logToReal_conjugate_pair := @DeepWiki.SymbolicIntegration.logToReal_conjugate_pair
+
+/-- **`LogToReal` real-form, arctan-substituted** (§2.8, p.69, the `log + arctan` shape of
+`LogToReal`'s output): substituting Theorem 2.8.1 for the `i·log((A+iB)/(A−iB))` term turns the
+conjugate-pair contribution into the fully real `a·log(A²+B²) + b·2·arctan(A)` (single-step `B = 1`
+case). The library's `logToReal_conjugate_pair_atan`. -/
+abbrev logToReal_conjugate_pair_atan :=
+  @DeepWiki.SymbolicIntegration.logToReal_conjugate_pair_atan
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
