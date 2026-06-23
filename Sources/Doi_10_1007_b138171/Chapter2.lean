@@ -33,33 +33,6 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 — the only residual is the **peeled-vs-original numerator matching** in the multi-pole
-  assembly [infra: the over-the-closure multi-pole telescoping `thm_2_7_1_telescoping`
-  (`exists_sum_localPrincipalPart`) and capstone `thm_2_7_1_over_closure`
-  (`completePartialFraction_over_closure`: `A/D = P + ∑_{α∈R} PP α` for `D = (∏(x−α)^{mult α})·C c` split over
-  `K̄`) are PROVED, peeling roots one at a time via `thm_2_7_1_principalPart`. In the telescoping each `PP α`
-  is `localPrincipalPart` of the *peeled* (running) numerator — a correct singular part at `α` — so identifying
-  its coefficients with the original-`A` engine outputs `Hᵢⱼ(α)` (rather than the peeled numerator's) is the
-  one remaining step: it needs the **intrinsicity of the principal part** (subtracting a principal part at a
-  DIFFERENT pole `β` does not change the principal part at `α`), i.e. uniqueness of the partial-fraction
-  decomposition, not yet packaged. The single-pole coefficient identification IS fully proved
-  (`thm_2_7_1_coeff_eq_laurentH`, `localCoeff_eq_laurentH`: `localCoeff A M α i d = Hᵢ,(i−d)(α)`).]
-  Everything substantive of Thm 2.7.1 is now PROVED: the differential-variable engine eqs 2.10–2.12
-  (`thm_2_7_1_laurentH`); the eq 2.11 invariant on `Frac (DiffPoly K)` (`eq_2_11_invariant`); the
-  **differential substitution hom** `σα` carrying the engine's `ddx` to the genuine `Polynomial.derivative`
-  (`thm_2_7_1_diffSubst`); the **specialized eq 2.11 invariant in `K(x)`** —
-  `(d/dx)^{i−j} hᵢ,α = (i−j)!·σα(Pᵢⱼ)/(Dᵢ,α^{2i−j}·Eᵢ^{i−j+1})`, making `Pᵢⱼ` genuinely the numerators of the
-  derivatives of the ACTUAL function `hᵢ,α` (`thm_2_7_1_invariant_ratfunc`); the root-value bridge
-  `σα(Pᵢⱼ)(α) = Qᵢⱼ(α)` (`thm_2_7_1_laurentQ_eval`/`thm_2_7_1_diffSubst_eval`); the **general** engine-output
-  evaluation `Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` for ALL `i,j` (`thm_2_7_1_eval`, generalizing
-  the `i=1` residue `thm_2_7_1_residue`); the combined `Hᵢⱼ(α)`-from-genuine-`hᵢ,α`-numerator form
-  (`thm_2_7_1_eval_diffSubst`); **the order-`(i−j)` Taylor-coefficient identification**
-  (`thm_2_7_1_taylor_coeff`); the **Hasse ↔ differential-engine coefficient bridge**
-  (`thm_2_7_1_coeff_bridge`: `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`) and the **full single-pole coefficient
-  identification** `localCoeff = Hᵢ,(i−d)(α)` (`thm_2_7_1_coeff_eq_laurentH`); the **principal-part assembly**
-  per pole (`thm_2_7_1_principalPart`) and **over all poles** (`thm_2_7_1_telescoping`,
-  `thm_2_7_1_over_closure`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
-  `thm_2_7_1`.
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
   multivariate root machinery; the per-pair and sum-over-pairs real forms are done,
@@ -1059,6 +1032,30 @@ polynomial part `P` and a per-pole principal-part family `PP` (each `PP α = ∑
 with `A/D = P + ∑_{α∈R} PP α`. The constant base makes the telescoping remainder `Rem/(C c)` a pure polynomial
 (`div_C_eq_algebraMap`), the polynomial part `P`. The library's `completePartialFraction_over_closure`. -/
 abbrev thm_2_7_1_over_closure := @DeepWiki.SymbolicIntegration.completePartialFraction_over_closure
+
+/-- **Theorem 2.7.1, principal-part intrinsicity / uniqueness** (§2.7, p.56, the closing fact): two principal
+parts at `α` of order `i` whose difference is regular at `α` are equal. The mechanism: a principal part at `α`
+consolidates to `W/(x−α)^i` with `deg W < i`; if equal to a function regular at `α` (`= N/M`, `M(α) ≠ 0`),
+cross-multiplying gives `(x−α)^i ∣ W·M`, coprimality forces `(x−α)^i ∣ W`, and `deg W < i` forces `W = 0`. This
+is what makes the partial-fraction principal part *intrinsic* — independent of how the regular rest is split
+off — and so closes the peeled-vs-original numerator matching of the multi-pole assembly. The library's
+`principalPart_unique`. -/
+abbrev thm_2_7_1_principalPart_unique := @DeepWiki.SymbolicIntegration.principalPart_unique
+
+/-- **Theorem 2.7.1, the literal per-pole engine form** (§2.7, p.56): the principal part of `A/D` at a root `α`
+of `Dᵢ = (x−α)·Dᵢ,α` (over the original cofactor `M = Dᵢ,α^i·Eᵢ`, `D = (x−α)ⁱ·M`) is **literally** the
+Bronstein–Salvy engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)ʲ`, since each Laurent coefficient
+`localCoeff A M α i (i−j) = Hᵢⱼ(α)` (`thm_2_7_1_coeff_eq_laurentH`). The library's
+`localPrincipalPart_eq_engineSum`. -/
+abbrev thm_2_7_1_engineSum := @DeepWiki.SymbolicIntegration.localPrincipalPart_eq_engineSum
+
+/-- **Theorem 2.7.1, the LITERAL engine-form partial fraction over `K̄`** (§2.7, p.55–56, the full closure-level
+conclusion `A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} (Hᵢᵢ(α)/(x−α)ⁱ + ⋯ + Hᵢ₁(α)/(x−α))`): for `D = (∏_{α∈R}(x−α)^{mult α})·C c`
+split over `K̄`, with per-pole squarefree-factorization data, `A/D = P + ∑_{α∈R} ∑_{j=1}^{mult α} Hᵢⱼ(α)/(x−α)ʲ`
+— the engine outputs `laurentH` ARE the partial-fraction Laurent coefficients. Each per-pole principal part from
+the regularity-carrying telescoping (`exists_sum_localPrincipalPart_regular`) is identified with the original-`A`
+engine sum by intrinsicity (`thm_2_7_1_principalPart_unique`). The library's `completePartialFraction_engineForm`. -/
+abbrev thm_2_7_1_engineForm := @DeepWiki.SymbolicIntegration.completePartialFraction_engineForm
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
