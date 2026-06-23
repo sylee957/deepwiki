@@ -19,6 +19,7 @@ import DeepWiki.NetworkCalculus.NetworkTopology
 import DeepWiki.NetworkCalculus.PmooSeparatedFlowIncomparable
 import DeepWiki.NetworkCalculus.StaticPriorityPmooNestedTandem
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReduction
+import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionBridge
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -27,7 +28,12 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) — the combinatorial CORE is done (`thm_10_2_core`: optimum = q ⟺ exact 3-cover exists); the full NP-hardness wrapper (poly-time-reduction type class + network→backlog semantics + convex-maximization-attains-vertices) is `[external]` (Mathlib has no NP-hardness framework). -/
+§10.5: Theorem 10.2 (NP-hardness of exact worst-case bounds, X3C reduction) — the combinatorial CORE
+(`thm_10_2_core`) AND the reduction correctness (`thm_10_2_reduction`: worst-case backlog ≥ 3s−2q ⟺
+exact 3-cover, the worst-case objective as a `programOptimum`) are done — the formalizable poly-time
+reduction. Residual `[external]`: the `NPHard` typeclass (no Mathlib complexity framework) and the
+network-dynamics → backlog-value realization (the convex-maximization-attains-integral-vertices
+analysis step). -/
 
 namespace DeepWiki.Dnc
 
@@ -183,5 +189,22 @@ theorem thm_10_2_core {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fintype
     I.saturatedCount assign = I.q ↔
       ∃ C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
   I.saturatedCount_eq_q_iff_exists_cover hassign
+
+/-- **Theorem 10.2, the reduction correctness** (§10.5): the X3C → worst-case-backlog-decision
+polynomial reduction is correct — `(∃ exact 3-cover) ↔ (worst-case backlog at W reaches the threshold
+3s−2q)`. The worst-case backlog is the `programOptimum` of the convex objective over integral vertices,
+`worstCaseBacklog = ⨆_assign 3(s−q)+saturatedCount` (≤ 3s−2q, `satOptimum_le_q`), and the decision
+`reduceToDecision` carries (value, threshold) with `reduceToDecision_correct`. This is the formalizable
+NP-hardness content (a correct poly-time reduction from X3C); the full `NPHard` typeclass (no Mathlib
+complexity framework) and the network-dynamics→backlog realization (the convex-maximization-attains-
+integral-vertices analysis step) are `[external]`. The library's
+`DeepWiki.X3CInstance.threshold_le_worstCaseBacklog_iff_exists_cover` (+ `reduceToDecision_correct`).
+NB the book's backlog is `3(s−q)+saturatedCount` (INCREASING in the maximized saturation), reaching
+`3s−2q` exactly when a cover exists. -/
+theorem thm_10_2_reduction {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fintype ι] [Fintype α]
+    (I : DeepWiki.X3CInstance ι α) (hne : I.HasAssignment) (hsq : I.q ≤ I.numSubsets) :
+    3 * I.numSubsets - 2 * I.q ≤ I.worstCaseBacklog ↔
+      ∃ assign C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
+  I.threshold_le_worstCaseBacklog_iff_exists_cover hne hsq
 
 end DeepWiki.Dnc
