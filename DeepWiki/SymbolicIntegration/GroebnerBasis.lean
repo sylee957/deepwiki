@@ -3257,6 +3257,54 @@ theorem lazard_thm1_divideOut {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fi
     fun i => by rw [lazardView_gbCommonYFactor]; exact gbYGcd_mul_cofactor hB hne i,
     cofactor_hasNoCommonYFactor hB hne⟩
 
+/-- **The divide-out delivers `HasNoCommonYFactor` to the divided reduced GB** (the bridge to the
+unconditional structural conclusions). If `hB'` is *any* reduced GB whose sorted basis views
+**recover every** divide-out cofactor up to associates — each `gbYGcdCofactor hB hne i` is associated
+to some view `lazardView (sorted hB' j)` (a reduced re-presentation of the divided family
+`{lazardView (sorted i) / H}` rescales only by units, so the divisor lattices agree) — then
+`HasNoCommonYFactor hB'` holds: a common divisor `P` of all `hB'`-views divides each cofactor (via the
+association), hence divides the cofactors' gcd `= 1` (`cofactor_hasNoCommonYFactor`). This is the exact
+predicate `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`/`lazard_lemma3_dvd_of_hasNoCommonYFactor` consume,
+so the full structural decomposition `Pₖ = Rₖ·Sₖ` applies to the divided basis of an arbitrary GB. -/
+theorem hasNoCommonYFactor_of_cofactor_associated {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {I' : Ideal (MvPolynomial (Fin 2) K)} {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex I' (↑B' : Set (MvPolynomial (Fin 2) K)))
+    (hassoc : ∀ i : Fin B.card, ∃ j : Fin B'.card,
+      Associated (gbYGcdCofactor hB hne i) (lazardView (sortedByYDegree hB' j))) :
+    HasNoCommonYFactor hB' := by
+  intro P hP
+  refine cofactor_hasNoCommonYFactor hB hne P (fun i => ?_)
+  obtain ⟨j, hij⟩ := hassoc i
+  -- `P ∣ lazardView (sorted hB' j) ∼ cofactor i`, so `P ∣ cofactor i`.
+  exact (hP j).trans hij.symm.dvd
+
+/-- **Lazard's `Pₖ = Rₖ·Sₖ` for an arbitrary reduced bivariate GB, through the divide-out** (the full
+Theorem 1 structural conclusion, general case). For any reduced GB `hB'` that re-presents the
+divide-out cofactors of `hB` (the `hassoc` recovery hypothesis), every sorted element of `hB'` splits
+as `lazardView fⱼ = C(cⱼ)·Sⱼ` with content `cⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and monic in `y`.
+Chains `hasNoCommonYFactor_of_cofactor_associated` into `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`, so
+the structure theorem holds for the general case once the basis is divided by `gbCommonYFactor hB`. -/
+theorem lazard_Pk_eq_Rk_Sk_of_divideOut {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {I' : Ideal (MvPolynomial (Fin 2) K)} {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex I' (↑B' : Set (MvPolynomial (Fin 2) K)))
+    (hassoc : ∀ i : Fin B.card, ∃ j : Fin B'.card,
+      Associated (gbYGcdCofactor hB hne i) (lazardView (sortedByYDegree hB' j)))
+    (j : Fin B'.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB' j) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB' j))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB' j))) (leadingYCoeff (sortedByYDegree hB' j)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor hB'
+    (hasNoCommonYFactor_of_cofactor_associated hB hne hB' hassoc) j
+
 -- The `P·Gₖ₊₁` divide-out (Lazard's Theorem 1, general case).
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
@@ -3297,5 +3345,34 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
         (∀ i, lazardView (sortedByYDegree hB i) = lazardView H * b' i) ∧
         (∀ P : Polynomial (MvPolynomial (Fin 1) K), (∀ i, P ∣ b' i) → IsUnit P) :=
   lazard_thm1_divideOut hB hne
+
+-- The divide-out delivers `HasNoCommonYFactor` to the divided GB, hence `Pₖ = Rₖ·Sₖ`.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {I' : Ideal (MvPolynomial (Fin 2) K)} {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex I' (↑B' : Set (MvPolynomial (Fin 2) K)))
+    (hassoc : ∀ i : Fin B.card, ∃ j : Fin B'.card,
+      Associated (gbYGcdCofactor hB hne i) (lazardView (sortedByYDegree hB' j))) :
+    HasNoCommonYFactor hB' :=
+  hasNoCommonYFactor_of_cofactor_associated hB hne hB' hassoc
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {I' : Ideal (MvPolynomial (Fin 2) K)} {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex I' (↑B' : Set (MvPolynomial (Fin 2) K)))
+    (hassoc : ∀ i : Fin B.card, ∃ j : Fin B'.card,
+      Associated (gbYGcdCofactor hB hne i) (lazardView (sortedByYDegree hB' j)))
+    (j : Fin B'.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB' j) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB' j))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB' j))) (leadingYCoeff (sortedByYDegree hB' j)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk_of_divideOut hB hne hB' hassoc j
 
 end DeepWiki.SymbolicIntegration
