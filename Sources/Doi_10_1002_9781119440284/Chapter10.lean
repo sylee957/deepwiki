@@ -23,6 +23,8 @@ import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionBridge
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionNetwork
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionConvexity
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionTrajectory
+import DeepWiki.NetworkCalculus.KarpReduction
+import DeepWiki.NetworkCalculus.WorstCaseBoundNPHardness
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -36,12 +38,16 @@ or recorded as a note / unformalized item.
 exact 3-cover, the worst-case objective as a `programOptimum`) are done — the formalizable poly-time
 reduction. The network-served realization (`thm_10_2_network`) computes the ACTUAL backlog at `W` from
 the Figure-10.7 served rate equations and transfers the `3s−2q ⟺ cover` threshold to it. The two
-former analysis residuals are now CLOSED: fractional-routing optimality (`thm_10_2_fractional`: every
-fractional fluid routing has objective ≤ q, by convexity + `convexHull_pi` — no fractional advantage)
-and the continuous-time realization (`thm_10_2_trajectory`: the rate-based backlog as a genuine
-capped-ramp trajectory, value at `t→1⁻`). The SOLE residual is the `NPHard` typeclass `[external]` —
-Mathlib has no complexity-class framework, so the "therefore NP-hard" label (given the correct
-poly-time reduction, which IS formalized) is unstatable, a separate framework-building project. -/
+former analysis residuals are CLOSED: fractional-routing optimality (`thm_10_2_fractional`: every
+fractional fluid routing has objective ≤ q, by convexity + `convexHull_pi`) and the continuous-time
+realization (`thm_10_2_trajectory`: the rate-based backlog as a capped-ramp trajectory, value at
+`t→1⁻`). The NP-hardness WRAPPER is now also built (`thm_10_2_nphard`/`isNPHardVia_x3c_worstCaseBacklog
+Decision`, AXIOM-FREE relative form, on the `KarpReduction` framework; absolute
+`isNPHard_worstCaseBacklogDecision` modulo the single cited `axiom X3CIsNPHard` = Exact-3-Cover NP-
+completeness, Garey-Johnson SP2). The ONLY external/abstracted inputs, all explicit: poly-time modeled
+as a polynomial output-size-bound proxy (not a TM cost model), and X3C-NP-completeness cited (a full
+`NPHard` proof of X3C needs a Turing-machine/NP framework Mathlib lacks). So Thm 10.2 is formalized
+end-to-end modulo exactly that one cited classical fact. -/
 
 namespace DeepWiki.Dnc
 
@@ -258,5 +264,21 @@ theorem thm_10_2_trajectory {ι : Type*} {αT : Type*} [DecidableEq ι] [Decidab
     Deviation.backlog (DeepWiki.rampCapped a) (DeepWiki.rampCapped d)
       = ((I.backlogAtW assign : ℝ≥0) : ℝ≥0∞) :=
   I.backlog_trajectory_eq_backlogAtW hda hrate
+
+/-- **Theorem 10.2, the NP-hardness wrapper** (§10.5). Built on a minimal faithful Karp-reduction
+framework (`DeepWiki.KarpReduction`: a many-one map + correctness + a polynomial output-SIZE-bound
+proxy for poly-time, with `id`/`comp` algebra; `IsNPHardVia`/`IsNPHard`). The Figure-10.7 reduction is
+the (decision-level identity) Karp reduction `x3cToWorstCaseBacklog`, giving the AXIOM-FREE relative
+result `isNPHardVia_x3c_worstCaseBacklogDecision`: worst-case-backlog decision is NP-hard *relative to*
+X3C. With the single cited external fact `X3CIsNPHard` (Exact-3-Cover is NP-complete, Garey-Johnson
+SP2 — an `axiom`, since proving it needs a Turing-machine/NP framework Mathlib lacks), the absolute
+`isNPHard_worstCaseBacklogDecision` follows. The library's
+`DeepWiki.isNPHardVia_x3c_worstCaseBacklogDecision` (relative, proved) + `isNPHard_worstCaseBacklog
+Decision` (absolute, modulo the one cited axiom). Abstractions, all explicit: poly-time = size-bound
+proxy; X3C-completeness = cited axiom. -/
+theorem thm_10_2_nphard :
+    KarpReduction.IsNPHardVia DeepWiki.WellFormedX3C.size DeepWiki.WellFormedX3C.size
+      DeepWiki.x3cDecision DeepWiki.worstCaseBacklogDecision :=
+  DeepWiki.isNPHardVia_x3c_worstCaseBacklogDecision
 
 end DeepWiki.Dnc
