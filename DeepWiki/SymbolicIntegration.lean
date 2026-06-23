@@ -23,3 +23,4 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
+import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
