@@ -22,8 +22,10 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ` factorization, normal-position analysis of
-  `⟨A−zD', D⟩`) [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (distinct leading y-degrees in a
+  minimal bivariate GB) is done (`lazard_lemma1`); the K[x][y] representation bridge (content/
+  primpart), Lazard Lemma 2 (`R_{k+1} ∣ Rₖ`), Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization, and the
+  normal-position analysis of `⟨A−zD', D⟩` remain [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -489,6 +491,14 @@ each step either fixes `B` — then `B` is a Gröbner basis by `clo_thm_6_buchbe
 (`leadTermIdeal_lt_of_ne`), which cannot recur. The library's `buchberger_terminates_correct`. -/
 abbrev buchberger_terminates_correct :=
   @DeepWiki.SymbolicIntegration.buchberger_terminates_correct
+
+/-- **Lazard (1985), Lemma 1** (cited in §2.6; J. Symb. Comp. 1, 261–270): in a reduced (minimal)
+Gröbner basis of a two-variable ideal `I ⊆ K[x,y]`, distinct elements have *distinct* leading
+y-degrees `(m.degree b) 1` — the foundational step of Lazard's bivariate GB structure theorem and
+the first stepping stone toward Czichowski's structural lemmas. The library's `lazard_lemma1`
+(order sublemma `finsupp_fin_two_le_or_le_of_apply_eq` + minimality extraction
+`IsReducedGroebnerBasis.leadingMonomial_not_le`), with injectivity form `lazard_lemma1_injOn`. -/
+abbrev lazard_lemma1 := @DeepWiki.SymbolicIntegration.lazard_lemma1
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
