@@ -1576,6 +1576,94 @@ the sole remaining gap between the complete *abstract* Yun correctness above and
 `csqfreeFactor` theorem; the abstract spine and the atomic gcd bridge (`toPoly_cmonic_cgcdExt`) are
 both in place. -/
 
+/-! ### Crossing the `ℚ`-instance diamond by `convert`
+
+The wall above is **not** a wall: `convert hX using 2` reduces an abstract-theory hypothesis/conclusion
+about `A : ℚ[X]` stated with the field-derived `CommRing`/`NormalizedGCDMonoid` to two residual instance
+equalities — the `CommRing ℚ` halves are *defeq* (`rfl`), and the two `NormalizedGCDMonoid ℚ` instances
+differ only in their `DecidableEq ℚ` argument (`instDecidableEqRat` vs `Classical.propDecidable`), a
+`Subsingleton`. So the abstract Yun spine *does* transfer to the concrete `ℚ`-ambient instances. The
+`ratInst%`-tactic below packages the discharge; the `_rat` specializations apply it. -/
+
+open Classical in
+/-- Bridge the `ℚ`-instance diamond on a `primPart ≠ 0` hypothesis: the ambient `Rat.commRing`-flavored
+`A.primPart ≠ 0` coerces to the `Classical`/`Field.toCommRing`-flavored one the abstract theory expects.
+`primPart`, `gcd`, `squarefreePart` over `ℚ` are *defeq* between the two instance paths (the `CommRing`
+halves are `rfl`, the `NormalizedGCDMonoid` halves differ only in a `Subsingleton (DecidableEq ℚ)`),
+so `convert` closes the gap. -/
+theorem primPart_ne_zero_rat (A : ℚ[X]) : A.primPart ≠ 0 := A.primPart_ne_zero
+
+/-- **Every Yun factor is squarefree** over `ℚ` (ambient instances): for `A : ℚ[X]`, `A ≠ 0`, every
+member of `yunFactorizationAbs A n` is squarefree. The ambient-instance specialization of
+`yunFactorizationAbs_squarefree`, with the `ℚ`-instance diamond discharged by `convert` (the residual
+`CommRing ℚ` equality is `rfl`, the `NormalizedGCDMonoid ℚ` one a `Subsingleton (DecidableEq ℚ)`). -/
+theorem yunFactorizationAbs_squarefree_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
+    ∀ V ∈ yunFactorizationAbs A n, Squarefree V := by
+  convert yunFactorizationAbs_squarefree A hA0 ?_ n using 2
+  convert A.primPart_ne_zero using 2
+  · rfl
+  · congr 1
+    exact Subsingleton.elim _ _
+
+/-- The ambient `NormalizedGCDMonoid ℚ[X]` instance equals the `Classical`-derived one used by the
+abstract Yun theory: both are `Polynomial`'s UFD-derived monoid built over `NormalizedGCDMonoid ℚ`, and
+the two `NormalizedGCDMonoid ℚ` instances differ only in a `Subsingleton (DecidableEq ℚ)` argument. The
+propositional-`Eq` form lets `sqfreeFactPart`/`yunFactorizationAbs` over `ℚ[X]` agree across the diamond
+by substitution rather than fragile deep `convert`. -/
+theorem sqfreeFactPart_rat_eq (A : ℚ[X]) (i : ℕ) :
+    @sqfreeFactPart ℚ Rat.commRing Rat.isDomain _ _ A i
+      = @sqfreeFactPart ℚ Rat.instField.toCommRing _ _
+          (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Field.toSemifield.toCommGroupWithZero
+            (fun a b => Classical.propDecidable (a = b))) A i := by
+  have hinst : @CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat
+      = @CommGroupWithZero.instNormalizedGCDMonoid ℚ Field.toSemifield.toCommGroupWithZero
+          (fun a b => Classical.propDecidable (a = b)) := by
+    congr 1
+    exact Subsingleton.elim _ _
+  rw [show @sqfreeFactPart ℚ Rat.commRing Rat.isDomain _ _ A i
+        = @sqfreeFactPart ℚ Rat.commRing Rat.isDomain _
+            (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat)
+            A i from rfl, hinst]
+
+/-- **Factorwise correctness** over `ℚ` (ambient instances): `yunFactorizationAbs A n` is `Forall₂
+Associated` to the squarefree-factorization parts `[V₁, …, Vₙ]`. Ambient specialization of
+`yunFactorizationAbs_forall₂` through the `convert` instance bridge. -/
+theorem yunFactorizationAbs_forall₂_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
+    List.Forall₂ Associated (yunFactorizationAbs A n)
+      ((List.range n).map (fun j => sqfreeFactPart A (1 + j))) := by
+  rw [List.map_congr_left fun j _ => sqfreeFactPart_rat_eq A (1 + j)]
+  refine yunFactorizationAbs_forall₂ A hA0 ?_ n
+  convert A.primPart_ne_zero using 2
+  · rfl
+  · congr 1
+    exact Subsingleton.elim _ _
+
+/-- **Pairwise relative primality** over `ℚ` (ambient instances): distinct-position factors of
+`yunFactorizationAbs A n` are `IsRelPrime`. Ambient specialization of
+`yunFactorizationAbs_pairwise_isRelPrime` through the `convert` instance bridge. -/
+theorem yunFactorizationAbs_pairwise_isRelPrime_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) {p q : ℕ}
+    (hpq : p ≠ q) (hp : p < (yunFactorizationAbs A n).length)
+    (hq : q < (yunFactorizationAbs A n).length) :
+    IsRelPrime ((yunFactorizationAbs A n).get ⟨p, hp⟩) ((yunFactorizationAbs A n).get ⟨q, hq⟩) := by
+  convert yunFactorizationAbs_pairwise_isRelPrime A hA0 ?_ n hpq hp hq using 2
+  convert A.primPart_ne_zero using 2
+  · rfl
+  · congr 1
+    exact Subsingleton.elim _ _
+
+/-- **The product decomposition** over `ℚ` (ambient instances): the powered product `∏ₖ eₖ^{1+k}` of
+the Yun factors is `Associated (∏_{j<n} V_{1+j}^{1+j})`. Ambient specialization of
+`yunFactorizationAbs_prodPow_assoc` through the `convert` instance bridge. -/
+theorem yunFactorizationAbs_prodPow_assoc_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
+    Associated (prodPow 1 (yunFactorizationAbs A n))
+      (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) := by
+  rw [List.map_congr_left fun j _ => sqfreeFactPart_rat_eq A (1 + j)]
+  refine yunFactorizationAbs_prodPow_assoc A hA0 ?_ n
+  convert A.primPart_ne_zero using 2
+  · rfl
+  · congr 1
+    exact Subsingleton.elim _ _
+
 /-! ### Restatements against the intended Yun-correctness wording -/
 
 open Classical in
@@ -1607,3 +1695,4 @@ example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.pr
     Associated (prodPow 1 (yunFactorizationAbs A n))
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
   yunFactorizationAbs_prodPow_assoc A hA0 hA n
+
