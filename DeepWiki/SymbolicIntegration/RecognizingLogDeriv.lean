@@ -197,4 +197,37 @@ theorem eval_algebraMap_div (α : K) (g h : K[X]) (hh : h.eval α ≠ 0) :
   rw [RatFunc.eval, Polynomial.eval₂_id, Polynomial.eval₂_id, div_eq_div_iff hdenom hh]
   exact heval
 
+/-- **The simple-pole residue functional** `residueAt α f = ((X − α)·f)(α)`: multiply `f ∈ K(x)` by
+`X − α` to cancel a simple pole at `α`, then evaluate at `α`. For `f` with at most a simple pole at
+`α`, this is the residue (the coefficient of `1/(X − α)` in the partial fraction of `f`). -/
+noncomputable def residueAt (α : K) (f : RatFunc K) : K :=
+  RatFunc.eval (RingHom.id K) α (algebraMap K[X] (RatFunc K) (X - C α) * f)
+
+open scoped Classical in
+/-- **Residue from a pole-free reduced form**: if `(X − α)·f = g/h` in `K(x)` with `h(α) ≠ 0`, then
+`residueAt α f = g(α)/h(α)`. The intro/elim API for `residueAt`: a residue computation reduces to
+exhibiting the once-multiplied function as a quotient regular at `α`. -/
+theorem residueAt_of_mul_X_sub_C (α : K) (f : RatFunc K) (g h : K[X]) (hh : h.eval α ≠ 0)
+    (heq : algebraMap K[X] (RatFunc K) (X - C α) * f
+      = algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h) :
+    residueAt α f = g.eval α / h.eval α := by
+  rw [residueAt, heq, eval_algebraMap_div α g h hh]
+
+open scoped Classical in
+/-- **Residue of `A/D` at a simple root** (computation 1, Bronstein §2.9): for `D = (X − α)·E` with
+`E(α) ≠ 0` (so `α` is a simple root and `D'(α) = E(α)`), the residue of `A/D` at `α` is
+`A(α)/E(α) = A(α)/D'(α)`. Multiplying `A/D` by `X − α` cancels the simple pole to `A/E`, which is
+pole-free at `α`. -/
+theorem residueAt_div_eq_residue (A E : K[X]) (α : K) (hE : E.eval α ≠ 0) :
+    residueAt α (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) ((X - C α) * E))
+      = A.eval α / (derivative ((X - C α) * E)).eval α := by
+  rw [residue_eq_eval_div_eval_derivative]
+  refine residueAt_of_mul_X_sub_C α _ A E hE ?_
+  have hXne : algebraMap K[X] (RatFunc K) (X - C α) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
+  have hEne : algebraMap K[X] (RatFunc K) E ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (fun h0 => hE (by rw [h0, eval_zero]))
+  rw [map_mul]
+  field_simp
+
 end DeepWiki.SymbolicIntegration
