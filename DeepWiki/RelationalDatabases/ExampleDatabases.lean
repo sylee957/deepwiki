@@ -336,4 +336,28 @@ def sdydc_onlyOldestRemoved (seq : ℕ → HotelDbInst) : Prop :=
   ∀ n, ∀ stay ∈ (seq n).stays, stay ∉ (seq (n + 1)).stays →
     ∀ stay' ∈ (seq n).stays, leavDate stay ≤ leavDate stay'
 
+/-! ## Exercise 1.11 — consequences among the `THIRSTY` constraints
+Two consequences are established below: `c2` follows from `c1 ∧ c3`, and dually `c3` from
+`c2 ∧ c4`. (Constraints 5, 6, 7 are not derived from the others here.) -/
+
+/-- **Exercise 1.11**: constraint 2 is a consequence of constraints 1 and 3. If every bar has a
+visitor (`c3`) and every visitor likes some beer served at the bar he visits (`c1`), then every
+bar serves a beer (`c2`). -/
+theorem thirsty_c2_of_c1_c3 {bars : Set String} {db : ThirstyInst}
+    (h1 : thirsty_c1 db) (h3 : thirsty_c3 bars db) : thirsty_c2 bars db := by
+  intro bar hbar
+  obtain ⟨v, hv, hvbar⟩ := h3 bar hbar
+  obtain ⟨_, _, s, hs, _, hsbar, _⟩ := h1 v hv
+  exact ⟨s, hs, hsbar.trans hvbar⟩
+
+/-- **Exercise 1.11**: constraint 3 is a consequence of constraints 2 and 4. If every bar serves a
+beer (`c2`) and every served beer is liked by some visitor of the bar (`c4`), then every bar has a
+visitor (`c3`). -/
+theorem thirsty_c3_of_c2_c4 {bars : Set String} {db : ThirstyInst}
+    (h2 : thirsty_c2 bars db) (h4 : thirsty_c4 db) : thirsty_c3 bars db := by
+  intro bar hbar
+  obtain ⟨s, hs, hsbar⟩ := h2 bar hbar
+  obtain ⟨v, hv, _, _, hvbar, _, _⟩ := h4 s hs
+  exact ⟨v, hv, hvbar.trans hsbar⟩
+
 end DeepWiki

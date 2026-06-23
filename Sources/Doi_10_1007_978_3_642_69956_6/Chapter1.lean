@@ -29,7 +29,9 @@ Ex 1.8: a *second* database constraint (not equivalent to relation constraints) 
 Ex 1.9: the same for a *second* dynamic relation constraint and a relation-constraint consequence
   [deferred: construction; the core, a dynamic relation constraint not equivalent to relation
   constraints, is `ex_1_9`].
-Ex 1.11: which constraints of Exercise 1.10 are consequences of which [deferred].
+Ex 1.11: the consequence relations among constraints 5, 6, 7 of Exercise 1.10 [deferred: the two
+  clean consequences — `c2` from `c1 ∧ c3` and `c3` from `c2 ∧ c4` — are `ex_1_11_c2_of_c1_c3` /
+  `ex_1_11_c3_of_c2_c4`; the status of 5/6/7 needs counterexample instances].
 Ex 1.12: a dynamic relation scheme for the convex non-intersecting quadrilaterals [deferred:
   geometric/informal content]. -/
 
@@ -249,5 +251,13 @@ abbrev ex_1_4_noBathRemoval := @DeepWiki.sdydc_noBathRemoval
 /-- **Exercise 1.4** (§1.7, p.16), SDYDC constraint 4: only the stay with the oldest `LEAV-DATE`
 may be removed from `STAYS`. -/
 abbrev ex_1_4_onlyOldestRemoved := @DeepWiki.sdydc_onlyOldestRemoved
+
+/-- **Exercise 1.11** (§1.7, p.17): THIRSTY constraint 2 is a consequence of constraints 1 and 3
+(every bar has a visitor, who likes a beer served there, so the bar serves a beer). -/
+abbrev ex_1_11_c2_of_c1_c3 := @DeepWiki.thirsty_c2_of_c1_c3
+
+/-- **Exercise 1.11** (§1.7, p.17): THIRSTY constraint 3 is a consequence of constraints 2 and 4
+(every bar serves a beer, liked by a visitor, so the bar has a visitor). -/
+abbrev ex_1_11_c3_of_c2_c4 := @DeepWiki.thirsty_c3_of_c2_c4
 
 end DeepWiki.Rdb
