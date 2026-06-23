@@ -237,4 +237,64 @@ theorem eLpNorm_sqrt_sampleMean_truncation_sub_le [IsProbabilityMeasure μ] {Z :
   congr 2
   exact tsum_congr fun j => by simp only [hψt]; split_ifs <;> simp [abs_zero]
 
+/-- **Lévy–Prokhorov bound on the truncation error of the standardized sample mean:** for `n ≥ 1`,
+if the tail mass is small enough (`‖toLpSeq 0‖ · ∑_{j>m} |ψⱼ| ≤ δ^{3/2}`), the laws of `√n X̄ₙ` and
+its `MA(m)` truncation are within `δ` in Lévy–Prokhorov distance. Chebyshev
+(`meas_ge_le_mul_pow_eLpNorm_enorm`) on the `L²` truncation bound, fed into the in-measure ⟹
+Lévy–Prokhorov estimate `levyProkhorovEDist_map_le`. The per-`(m,n)` ingredient of the double-limit
+approximation `h3`. -/
+theorem levyProkhorovDist_truncation_le [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ}
+    (hZ : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0) {ψ : ℕ → ℝ}
+    (hψ : Summable fun j => |ψ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => ψ j • toLpSeq Z hZ (t - (j : ℤ))) (m : ℕ) {n : ℕ}
+    (hn : 1 ≤ n) {δ : ℝ} (hδ : 0 < δ)
+    (hm : ‖toLpSeq Z hZ 0‖ * ∑' j : ℕ, (if m < j then |ψ j| else 0) ≤ δ * Real.sqrt δ) :
+    levyProkhorovDist
+        (μ.map fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω)
+        (μ.map fun ω => Real.sqrt n * sampleMean n fun t =>
+          (causalLinearProcessLp (fun j => if j ≤ m then ψ j else 0) Z hZ (t : ℤ) : Ω → ℝ) ω)
+      ≤ δ := by
+  set B : ℝ := ‖toLpSeq Z hZ 0‖ * ∑' j : ℕ, (if m < j then |ψ j| else 0) with hB
+  have hB0 : 0 ≤ B := by rw [hB]; positivity
+  set Xf : Ω → ℝ := fun ω => Real.sqrt n * sampleMean n fun t =>
+    (causalLinearProcessLp ψ Z hZ (t : ℤ) : Ω → ℝ) ω with hXf
+  set Xf' : Ω → ℝ := fun ω => Real.sqrt n * sampleMean n fun t =>
+    (causalLinearProcessLp (fun j => if j ≤ m then ψ j else 0) Z hZ (t : ℤ) : Ω → ℝ) ω with hXf'
+  have hmeas : ∀ φ : ℕ → ℝ, AEStronglyMeasurable (fun ω => Real.sqrt n * sampleMean n fun t =>
+      (causalLinearProcessLp φ Z hZ (t : ℤ) : Ω → ℝ) ω) μ := fun φ => by
+    simp only [sampleMean]
+    exact ((Finset.aestronglyMeasurable_fun_sum _ fun t _ =>
+      Lp.aestronglyMeasurable _).const_mul _).const_mul _
+  have heLp : eLpNorm (Xf - Xf') 2 μ ≤ ENNReal.ofReal B :=
+    eLpNorm_sqrt_sampleMean_truncation_sub_le hZ hindep hident hcenter hψ hsum m hn
+  have hcheb : μ {ω | δ ≤ dist (Xf ω) (Xf' ω)} ≤ ENNReal.ofReal δ := by
+    have hset : {ω | δ ≤ dist (Xf ω) (Xf' ω)} = {ω | ENNReal.ofReal δ ≤ ‖(Xf - Xf') ω‖ₑ} := by
+      ext ω
+      simp only [Set.mem_setOf_eq, Pi.sub_apply, Real.dist_eq, ← Real.norm_eq_abs, ← ofReal_norm]
+      exact (ENNReal.ofReal_le_ofReal_iff (norm_nonneg _)).symm
+    rw [hset]
+    refine le_trans (meas_ge_le_mul_pow_eLpNorm_enorm μ two_ne_zero ENNReal.ofNat_ne_top
+      ((hmeas _).sub (hmeas _)) (ENNReal.ofReal_pos.mpr hδ).ne'
+      (fun h => absurd h ENNReal.ofReal_ne_top)) ?_
+    rw [show ((2 : ENNReal).toReal) = ((2 : ℕ) : ℝ) by norm_num, ENNReal.rpow_natCast,
+      ENNReal.rpow_natCast]
+    calc (ENNReal.ofReal δ)⁻¹ ^ 2 * eLpNorm (Xf - Xf') 2 μ ^ 2
+        ≤ (ENNReal.ofReal δ)⁻¹ ^ 2 * ENNReal.ofReal B ^ 2 := by gcongr
+      _ = ENNReal.ofReal (B ^ 2 / δ ^ 2) := by
+          rw [← ENNReal.ofReal_inv_of_pos hδ, ← ENNReal.ofReal_pow (by positivity),
+            ← ENNReal.ofReal_pow hB0, ← ENNReal.ofReal_mul (by positivity)]
+          congr 1; field_simp
+      _ ≤ ENNReal.ofReal δ := by
+          apply ENNReal.ofReal_le_ofReal
+          rw [div_le_iff₀ (by positivity)]
+          have h1 : B ^ 2 ≤ (δ * Real.sqrt δ) ^ 2 := pow_le_pow_left₀ hB0 hm 2
+          have h2 : (δ * Real.sqrt δ) ^ 2 = δ * δ ^ 2 := by
+            rw [mul_pow, Real.sq_sqrt hδ.le]; ring
+          linarith [h1, h2]
+  refine (ENNReal.toReal_mono ENNReal.ofReal_ne_top
+    (le_trans (levyProkhorovEDist_map_le Xf Xf' (hmeas _).aemeasurable (hmeas _).aemeasurable hδ)
+      (sup_le le_rfl hcheb))).trans_eq (ENNReal.toReal_ofReal hδ.le)
+
 end DeepWiki.TimeSeries
