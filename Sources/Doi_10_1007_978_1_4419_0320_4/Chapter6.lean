@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.LinearProcessFullCLT
 import DeepWiki.TimeSeries.DeltaMethod
 import DeepWiki.TimeSeries.MDependence
+import DeepWiki.TimeSeries.StochasticOrder
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 6: Asymptotic Theory (structure map)
@@ -51,6 +52,13 @@ every `ε > 0`. Mathlib's `MeasureTheory.TendstoInMeasure` (the convergence mode
 weak law `prop_6_3_2`, the §6.4 delta method `example_6_4_2`, and Slutsky `slutsky_ratio`). -/
 abbrev def_6_1_1 := @MeasureTheory.TendstoInMeasure
 
+/-- **§6.1 Definition 6.1.4 — the `oₚ`/`Oₚ` stochastic order notation**: `Xₙ = oₚ(rₙ)` when
+`Xₙ/rₙ → 0` in probability (`IsLittleOp`, with `oₚ(1) ↔ →ᵖ 0` via `isLittleOp_one_iff`), and
+`Xₙ = Oₚ(rₙ)` when `Xₙ/rₙ` is bounded in probability (`IsBigOp`). The library's `IsLittleOp`
+(its `Oₚ` companion is `DeepWiki.TimeSeries.IsBigOp`) — the asymptotic-order calculus for random
+sequences, not present in Mathlib. -/
+abbrev def_6_1_4 := @DeepWiki.TimeSeries.IsLittleOp
+
 /-- **§6.2 Chebyshev's inequality (eq 6.2.1)**: `μ{|X − E X| ≥ c} ≤ Var X / c²` for an `L²` random
 variable. Mathlib's `ProbabilityTheory.meas_ge_le_variance_div_sq` — the basic deviation bound behind
 mean-square convergence and the §6.3 weak law (`prop_6_3_2`). -/
@@ -86,7 +94,6 @@ limit theorem for dependent processes. -/
 abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§6.1: Definition 6.1.4 (`Oₚ`/`oₚ` stochastic order notation) [infra]
 §6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
 `clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
 are done; the general `m`-dependent CLT needs a big-block/small-block construction)
