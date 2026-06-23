@@ -22,12 +22,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ`: all step components are
-  formalized (sorted enumeration `sortedByYDegree`, reduction transfer
-  `C_dvd_lazardView_of_reductionStep`, IH aggregation `C_dvd_lazardView_sum`, GB-reduction with
-  y-degree control `exists_yDegree_bounded_representation`, `gᵢ ∣ g_j` chain
-  `leadingYCoeff_sortedByYDegree_dvd_of_le`); only their assembly into the circular-degree induction
-  of p.263 remains [research: Lazard Lemma 3 induction], plus the normal-position analysis of
+§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ`: base case + per-step assembly
+  formalized (`C_dvd_lazardView_of_degreeOf_zero`, `C_dvd_lazardView_descentStep` from
+  `C_dvd_lazardView_of_mem_of_dvd_bounded`/`C_dvd_C_mul_lazardView_of_dvd`); the full induction stays
+  open only at Lazard's no-common-factor `÷q` diagonal step `C(g_{i+1}) ∣ lazardView f_{i+1}` (the
+  reduction step concludes the lower `fᵢ`, not the diagonal; `R`'s GB-reduction may contain `fᵢ`
+  itself) [research: Lazard Lemma 3 no-common-factor reduction], plus the normal-position analysis of
   `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
@@ -565,6 +565,22 @@ into the circular-degree induction of p.263) remains. The library's
 `C_dvd_lazardView_of_reductionStep`. -/
 noncomputable abbrev lazard_lemma3_descentStep :=
   @DeepWiki.SymbolicIntegration.C_dvd_lazardView_of_reductionStep
+
+/-- **Lazard (1985), Lemma 3, the assembled single descent step** (cited in §2.6; J. Symb. Comp. 1,
+p.263): the per-step assembly of `gᵢ ∣ fᵢ`. From `C(gᵢ) ∣ C q·lazardView f_{i+1}` (the higher-index
+input, `C_dvd_C_mul_lazardView_of_dvd` from `C(g_{i+1}) ∣ lazardView f_{i+1}`) and `C(gᵢ) ∣ lazardView b`
+for every basis element of `y`-degree `≤ degreeOf 0 R` (`C_dvd_lazardView_of_mem_of_dvd_bounded`,
+bounded GB-reduction + sum), the reduction step gives `C(gᵢ) ∣ lazardView fᵢ`. The full induction
+stays open only at the no-common-factor `÷q` diagonal `C(g_{i+1}) ∣ lazardView f_{i+1}`. The library's
+`C_dvd_lazardView_descentStep`. -/
+noncomputable abbrev lazard_lemma3_descentStep_assembled :=
+  @DeepWiki.SymbolicIntegration.C_dvd_lazardView_descentStep
+
+/-- **Lazard (1985), Lemma 3, base case** (cited in §2.6; J. Symb. Comp. 1, p.263, "`f₀ ∈ K[x]`"): a
+`y`-degree-`0` element has constant `K[x][y]` view `lazardView f = C (leadingYCoeff f)`, so `gᵢ ∣ fᵢ`
+holds trivially. The library's `C_dvd_lazardView_of_degreeOf_zero`. -/
+noncomputable abbrev lazard_lemma3_base :=
+  @DeepWiki.SymbolicIntegration.C_dvd_lazardView_of_degreeOf_zero
 
 /-- **Bronstein/Czichowski §2.6(i), `Pₖ = Rₖ·Sₖ`** (Lazard 1985, Lemma 3 payload): if `gᵢ ∣ fᵢ`
 (`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
