@@ -382,6 +382,45 @@ example (A D : K[X]) (hD : D.Separable) :
       = Ideal.span {liftX D, zVar - liftX (residuePoly A D)} :=
   czIdeal_eq_span_gb A D hD
 
+/-! ### Toward the variety analysis (deliverable E, partial): the residue value at a zero
+
+The zeros of `I` are `(α, T(α))` for the roots `α` of `D`, and `T(α) = A(α)/D'(α)` is the
+Rothstein–Trager residue. The `x`-parts are the roots of `D`, **distinct** since `D` is squarefree
+(`Separable.nodup_roots`) — this is the *normal position* of Lemma 2.1(ii). The remaining claims
+(zero-dimensionality, maximality w.r.t. the zero set) need `MvPolynomial`-variety / Nullstellensatz
+dimension theory and are the genuine research wall; see the §2.6 catalog marker. -/
+
+/-- **The residue value at a zero of `D`** (deliverable E, the `x`-parts of the zeros): for a root
+`α` of `D` (squarefree, so `D'(α) ≠ 0`), `T(α) = A(α)/D'(α)` — the Rothstein–Trager residue. So the
+zeros of `I` are `(α, A(α)/D'(α))` over the roots `α` of `D`. -/
+theorem eval_residuePoly_of_isRoot (hD : D.Separable) {α : K} (hα : D.IsRoot α) :
+    (residuePoly A D).eval α = A.eval α / (derivative D).eval α := by
+  have hDα : D.eval α = 0 := hα
+  have hD'α : (derivative D).eval α ≠ 0 := by
+    have := hD.eval₂_derivative_ne_zero (RingHom.id K)
+      (by simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using hα)
+    simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using this
+  -- `D'(α)·B(α) = 1` (from `D'·B + D·C = 1` and `D(α) = 0`)
+  have hBα : (derivative D).eval α * (dDerivInv D).eval α = 1 := by
+    have h := congrArg (Polynomial.eval α) (dDeriv_mul_dDerivInv_add D hD)
+    rw [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_mul, hDα,
+      Polynomial.eval_one] at h
+    linear_combination h
+  -- `A·B = D·Q + T`, so `T(α) = A(α)·B(α)` (since `D(α) = 0`)
+  obtain ⟨Q, hQ⟩ := A_mul_dDerivInv_sub_residuePoly_dvd A D
+  have hTα : (residuePoly A D).eval α = A.eval α * (dDerivInv D).eval α := by
+    have h := congrArg (Polynomial.eval α) hQ
+    rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_mul, hDα,
+      zero_mul] at h
+    linear_combination - h
+  rw [hTα, eq_div_iff hD'α]
+  linear_combination (A.eval α) * hBα
+
+/-- **Normal position (Lemma 2.1(ii))**: the `x`-parts of the zeros — the roots of `D` — are
+distinct, since `D` is squarefree (`Separable ⟹ nodup roots`). -/
+theorem nodup_roots_of_separable (hD : D.Separable) : D.roots.Nodup :=
+  Polynomial.nodup_roots hD
+
 /-- The two leading monomials are coprime: `x^(deg D) ⊓ z = 0` (disjoint exponent supports),
 the structural reason `GB₁`'s single S-polynomial reduces to zero (Buchberger's first criterion). -/
 example (D : K[X]) : (Finsupp.single (1 : Fin 2) D.natDegree) ⊓ (Finsupp.single (0 : Fin 2) 1) = 0 := by
@@ -391,5 +430,10 @@ example (A D : K[X]) (hD : D.Separable) (hD0 : D ≠ 0) :
     IsGroebnerBasis MonomialOrder.lex (Ideal.span {liftX A - zVar * liftX (derivative D), liftX D})
       {liftX D, zVar - liftX (residuePoly A D)} :=
   isGroebnerBasis_gb A D hD hD0
+
+-- The `x`-parts of the zeros are the roots of `D`, with residue `z`-part `A(α)/D'(α)`.
+example (A D : K[X]) (hD : D.Separable) {α : K} (hα : D.IsRoot α) :
+    (residuePoly A D).eval α = A.eval α / (derivative D).eval α :=
+  eval_residuePoly_of_isRoot A D hD hα
 
 end DeepWiki.SymbolicIntegration
