@@ -22,9 +22,8 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: a computable Buchberger *algorithm* (the iterative S-poly completion loop) [infra: needs a
-  termination/normal-form procedure layer], and Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ`
-  factorization, normal-position analysis of `⟨A−zD', D⟩`) [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas (`Pₖ = Rₖ·Sₖ` factorization, normal-position analysis of
+  `⟨A−zD', D⟩`) [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -473,6 +472,23 @@ cancels the top part into S-polynomials by `cancellation_lemma`/Mathlib `sPolyno
 and reduces each by hypothesis to a strictly smaller representation). -/
 abbrev clo_thm_6_buchberger_converse :=
   @DeepWiki.SymbolicIntegration.isGroebnerBasis_of_sPolynomial_reducesToZero
+
+/-- **Buchberger's algorithm — one completion step** (§2.6, the S-polynomial completion loop):
+`buchbergerStep m hB` adjoins to `B` the nonzero division remainders (`MonomialOrder.div_set`,
+via `remainder`) of all S-polynomials `S(b,b')`, `b,b' ∈ B`. It preserves the ideal
+(`span_buchbergerStep`: the new elements are remainders of ideal members) and enlarges the basis
+(`subset_buchbergerStep`). The library's `buchbergerStep`. -/
+noncomputable abbrev buchberger_step := @DeepWiki.SymbolicIntegration.buchbergerStep
+
+/-- **Buchberger's algorithm — termination + correctness** (§2.6, Buchberger's theorem): over a
+field with finitely many variables, iterating `buchbergerStep` from any finite `B` (unit leading
+coefficients) reaches a Gröbner basis `G ⊇ B` of `⟨B⟩` with `⟨G⟩ = ⟨B⟩`. Termination is the
+Noetherian ascending-chain condition (`WellFoundedGT` on the leading-term ideals `leadTermIdeal`):
+each step either fixes `B` — then `B` is a Gröbner basis by `clo_thm_6_buchberger_converse`
+(`isGroebnerBasis_of_buchbergerStep_eq`) — or strictly grows `leadTermIdeal`
+(`leadTermIdeal_lt_of_ne`), which cannot recur. The library's `buchberger_terminates_correct`. -/
+abbrev buchberger_terminates_correct :=
+  @DeepWiki.SymbolicIntegration.buchberger_terminates_correct
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
