@@ -218,6 +218,21 @@ theorem IsMDependent.tendsto_charFun_bigBlockSum {m : ℕ} {X : ℤ → Ω → �
   rw [integral_finsetSum _ fun t _ => (hmem t).integrable one_le_two]
   simp [hcenter]
 
+/-- **A deterministic convergent sequence converges in measure to its limit**: if `cₙ → c₀` in `ℝ`
+then the constant-in-`ω` sequence `cₙ` converges in measure to `c₀`. The deterministic `√(r(n)/n)`
+factor entering the Slutsky-product rescaling of the block CLT. -/
+theorem tendstoInMeasure_const_of_tendsto [IsProbabilityMeasure μ] {c : ℕ → ℝ} {c₀ : ℝ}
+    (hc : Tendsto c atTop (𝓝 c₀)) :
+    TendstoInMeasure μ (fun n (_ : Ω) => c n) atTop (fun _ => c₀) := by
+  intro ε hε
+  have hed : Tendsto (fun n => edist (c n) c₀) atTop (𝓝 0) := by
+    simpa using hc.edist (tendsto_const_nhds (x := c₀))
+  refine tendsto_nhds_of_eventually_eq ?_
+  filter_upwards [hed.eventually (eventually_lt_nhds hε)] with n hn
+  have hset : {ω : Ω | ε ≤ edist (c n) c₀} = ∅ := by
+    ext ω; simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]; exact hn
+  rw [hset, measure_empty]
+
 /-- **Reparametrizing convergence in distribution by an index map**: if `Xᵢ ⇒ Z` along `l` and
 `r → l` along `l'`, then `X_{r(i)} ⇒ Z` along `l'` (for a constant measure family). The index change
 that turns the block CLT (indexed by the block count) into one indexed by the sample size via
