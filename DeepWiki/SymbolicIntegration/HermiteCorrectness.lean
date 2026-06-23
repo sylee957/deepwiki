@@ -1720,6 +1720,88 @@ theorem yunStep_preserves_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X
   rw [gcd_rat_eq b d]
   exact key
 
+/-! ### The concrete `csqfreeFactor.go` loop carries the abstract `YunInv` (factorwise association)
+
+Under the per-step honesty bundle `GoYun` and the loop invariant `YunInv (toPoly A) i`, the concrete
+loop `csqfreeFactor.go` maps onto the abstract `yunStep`: each non-terminal step's monic gcd
+`q = cmonic (cgcdExt b d).1` realizes `gcd (toPoly b) (toPoly d)` (`toPoly_cmonic_cgcdExt`), the exact
+divisions of `GoYun` make the deflated `(b′, d′)` realize `(b/gcd, d/gcd − (b/gcd)′)`, and
+`yunStep_preserves_rat` advances `YunInv`. So every *kept* emitted factor `(V, m)` has
+`toPoly V ~ sqfreeFactPart (toPoly A) m` (`yunStep_emit_assoc_rat`), with the recorded multiplicity `m`
+its abstract index (`i ≤ m`, strictly increasing per recursion). This is the concrete realization that
+transfers the abstract squarefree/coprime clauses onto `csqfreeFactor`. -/
+
+/-- `Babs A i ≠ 0` over `ℚ` (`squarefreePart (deflation A (i−1))` is monic, hence nonzero). -/
+theorem Babs_ne_zero_rat (A : ℚ[X]) (i : ℕ) : Babs A i ≠ 0 := by
+  rw [Babs]
+  exact (squarefreePart_deflation_monic A (i - 1)
+    (by convert A.primPart_ne_zero using 2 <;>
+      first | rfl | (congr 1; exact Subsingleton.elim _ _))).ne_zero
+
+/-- The working numerator of a `YunInv` state is nonzero: `b = C c · Babs A i` with `c ≠ 0` and
+`Babs A i ≠ 0`. -/
+theorem ne_zero_of_yunInv_rat (A : ℚ[X]) (i : ℕ) (b d : ℚ[X]) (hinv : YunInv A i b d) : b ≠ 0 := by
+  obtain ⟨c, hc, hb, _⟩ := hinv
+  rw [hb]
+  exact mul_ne_zero ((map_ne_zero_iff _ Polynomial.C_injective).mpr hc) (Babs_ne_zero_rat A i)
+
+/-- `b = a / c` from the exact factorization `a = c · b` (`c ≠ 0`). -/
+private theorem eq_div_of_eq_mul {a b c : ℚ[X]} (hc : c ≠ 0) (h : a = c * b) : b = a / c := by
+  rw [h, mul_div_cancel_left₀ _ hc]
+
+/-- **The concrete Yun loop's kept factors are factorwise associated to the squarefree parts**: under
+`GoYun fuel fo b d` and `YunInv (toPoly A) i (toPoly b) (toPoly d)` (`1 ≤ i`), every emitted factor
+`(V, m) ∈ csqfreeFactor.go fuel fo b d i` satisfies `toPoly V ~ sqfreeFactPart (toPoly A) m` and
+`i ≤ m`. Induction on the fuel counter: each step's monic gcd realizes `gcd (toPoly b) (toPoly d)`
+(`toPoly_cmonic_cgcdExt`), `GoYun`'s exact divisions give the deflated pair as `(b/gcd, d/gcd − (b/gcd)′)`,
+`yunStep_preserves_rat` advances the invariant, and the head factor is `~ sqfreeFactPart (toPoly A) i`
+(`yunStep_emit_assoc_rat`); dropped (unit) factors leave the tail unchanged. -/
+theorem go_factor_assoc (fuel : ℕ) (A : CPoly) :
+    ∀ (fo : ℕ) (b d : CPoly) (i : ℕ), 1 ≤ i → GoYun fuel fo b d →
+      YunInv (toPoly A) i (toPoly b) (toPoly d) →
+      ∀ (Vm : CPoly × ℕ), Vm ∈ csqfreeFactor.go fuel fo b d i →
+        Associated (toPoly Vm.1) (sqfreeFactPart (toPoly A) Vm.2) ∧ i ≤ Vm.2 := by
+  intro fo
+  induction fo with
+  | zero =>
+    intro b d i _ _ _ Vm hVm
+    rw [csqfreeFactor.go.eq_def] at hVm; simp at hVm
+  | succ fo ih =>
+    intro b d i hi hgo hinv Vm hVm
+    rw [csqfreeFactor.go.eq_def] at hVm
+    by_cases hb : b.length ≤ 1
+    · simp only [hb, if_true] at hVm; simp at hVm
+    · simp only [hb, if_false] at hVm
+      rw [GoYun] at hgo
+      simp only [hb, if_false] at hgo
+      obtain ⟨hterm, hexb, hexd, hgorest⟩ := hgo
+      set q := cmonic (cgcdExt fuel b d).1 with hqdef
+      set b' := cdiv fuel b q with hb'def
+      set d' := csub (cdiv fuel d q) (cderiv b') with hd'def
+      have hgcd : toPoly q = gcd (toPoly b) (toPoly d) := toPoly_cmonic_cgcdExt fuel b d hterm
+      have hbne : toPoly b ≠ 0 := ne_zero_of_yunInv_rat (toPoly A) i (toPoly b) (toPoly d) hinv
+      have hgcd0 : gcd (toPoly b) (toPoly d) ≠ 0 :=
+        fun h => hbne (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+      have hbfact : toPoly b = gcd (toPoly b) (toPoly d) * toPoly b' := hgcd ▸ hexb
+      have hdfact : toPoly d = gcd (toPoly b) (toPoly d) * toPoly (cdiv fuel d q) := hgcd ▸ hexd
+      have hb'eq : toPoly b' = toPoly b / gcd (toPoly b) (toPoly d) := eq_div_of_eq_mul hgcd0 hbfact
+      have hd'eq : toPoly d' = toPoly d / gcd (toPoly b) (toPoly d) - derivative (toPoly b') := by
+        rw [hd'def, toPoly_csub, toPoly_cderiv]
+        congr 1
+        exact eq_div_of_eq_mul hgcd0 hdfact
+      have hinv' : YunInv (toPoly A) (i + 1) (toPoly b') (toPoly d') := by
+        rw [hb'eq, hd'eq, hb'eq]
+        exact yunStep_preserves_rat (toPoly A) i hi (toPoly b) (toPoly d) hinv
+      have hhead : Associated (toPoly q) (sqfreeFactPart (toPoly A) i) := by
+        rw [hgcd]; exact yunStep_emit_assoc_rat (toPoly A) i hi (toPoly b) (toPoly d) hinv
+      by_cases hq : q.length ≤ 1
+      · simp only [hq, if_true] at hVm
+        exact (ih b' d' (i + 1) (by omega) hgorest hinv' Vm hVm).imp id (by omega)
+      · simp only [hq, if_false, List.mem_cons] at hVm
+        rcases hVm with rfl | hVm
+        · exact ⟨hhead, le_refl i⟩
+        · exact (ih b' d' (i + 1) (by omega) hgorest hinv' Vm hVm).imp id (by omega)
+
 /-! ### Restatements against the intended Yun-correctness wording -/
 
 open Classical in
