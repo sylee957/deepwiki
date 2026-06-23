@@ -17,8 +17,6 @@ reduction (intersection from difference).
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
 The query-language reductions are to be built as functional translation `def`s + correctness
 lemmas (not operational semantics); they need syntax/semantics layers not yet present.
-§2.1: the renaming operator `ρ` of Example 2.4 [infra: an attribute bijection on the subtype
-  row representation].
 §2.1: the division operator `÷` of Example 2.6 and its generating-part expansion
   `r ÷ s = Π(r;…) − Π((Π(r;…) ⋈ s) − r;…)` [infra].
 §2.1.5: generating-part completeness for the selection-as-join expansions
@@ -82,6 +80,10 @@ abbrev algebra_difference := @DeepWiki.diff
 /-- **Intersection `v ∩ v'`** (§2.1, Example 2.5, p.23): set intersection of tables over equal
 attributes. -/
 abbrev algebra_intersection := @DeepWiki.inter
+
+/-- **Renaming `ρ(v; e)`** (§2.1, Example 2.4, p.22): rename the attributes of a table along a
+bijection of the attribute carriers; invertible by renaming back along `e.symm`. -/
+abbrev algebra_rename := @DeepWiki.renameTable
 
 /-- **Intersection from difference** (§2.1.3, p.28; §2.1.5): `r ∩ s = r − (r − s)` — the first
 step in showing the generating part (instances, `Π`, `ρ`, `⋈`, `∪`, `−`, computable instances)

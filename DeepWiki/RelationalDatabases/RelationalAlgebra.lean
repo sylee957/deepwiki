@@ -133,4 +133,35 @@ theorem union_assoc {Ω : Finset Att} (v v' v'' : Table Ω Val) :
     union (union v v') v'' = union v (union v' v'') := by
   ext t; simp only [mem_union]; tauto
 
+/-- **Renaming a tuple** along a bijection `e` of the attribute carriers of `Ω` and `Ω'`: the
+value at `a` moves to the value at `e a` (`ρ`'s action on rows). -/
+def renameTuple {Ω Ω' : Finset Att} (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'}) (t : Tuple Ω Val) :
+    Tuple Ω' Val := fun b => t (e.symm b)
+
+/-- **Renaming `ρ(v; e)`** (§2.1, Example 2.4): rename every tuple of a table along `e`. -/
+def renameTable {Ω Ω' : Finset Att} (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'}) (v : Table Ω Val) :
+    Table Ω' Val := renameTuple e '' v
+
+@[simp] theorem mem_renameTable {Ω Ω' : Finset Att} (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'})
+    (v : Table Ω Val) (s : Tuple Ω' Val) :
+    s ∈ renameTable e v ↔ ∃ t ∈ v, renameTuple e t = s := by
+  simp [renameTable, Set.mem_image]
+
+/-- Renaming a tuple back along `e.symm` recovers it. -/
+@[simp] theorem renameTuple_symm_renameTuple {Ω Ω' : Finset Att}
+    (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'}) (t : Tuple Ω Val) :
+    renameTuple e.symm (renameTuple e t) = t := by
+  funext a; simp [renameTuple]
+
+/-- Renaming a table back along `e.symm` recovers it (`ρ` is invertible). -/
+theorem renameTable_symm_renameTable {Ω Ω' : Finset Att} (e : {a // a ∈ Ω} ≃ {a // a ∈ Ω'})
+    (v : Table Ω Val) : renameTable e.symm (renameTable e v) = v := by
+  ext t
+  simp only [mem_renameTable]
+  constructor
+  · rintro ⟨s, ⟨t', ht', rfl⟩, rfl⟩
+    rwa [renameTuple_symm_renameTuple]
+  · intro ht
+    exact ⟨renameTuple e t, ⟨t, ht, rfl⟩, renameTuple_symm_renameTuple e t⟩
+
 end DeepWiki
