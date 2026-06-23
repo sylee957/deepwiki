@@ -12,3 +12,4 @@ import DeepWiki.RelationalDatabases.NormalForms
 import DeepWiki.RelationalDatabases.HorizontalDecompositions
 import DeepWiki.RelationalDatabases.IncompleteInformation
 import DeepWiki.RelationalDatabases.NestedRelationalModel
+import DeepWiki.RelationalDatabases.UpdatesTransactions
