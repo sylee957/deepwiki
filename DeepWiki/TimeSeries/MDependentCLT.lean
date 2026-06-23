@@ -229,6 +229,35 @@ theorem tendsto_blockCount {p m : ℕ} (hpm : p + m ≠ 0) :
     Tendsto (fun n => blockCount p m n) atTop atTop :=
   Nat.tendsto_div_const_atTop hpm
 
+/-- **Asymptotic block density**: `r(n)/n → 1/(p+m)` — the fraction of the sample covered by complete
+big blocks. The deterministic factor in the `√(r(n)/n)` Slutsky rescaling of the block CLT, and what
+sends the gap fraction `m/(p+m) → 0` as `p → ∞` (the small-block remainder). -/
+theorem tendsto_blockCount_div {p m : ℕ} (hpm : p + m ≠ 0) :
+    Tendsto (fun n : ℕ => (blockCount p m n : ℝ) / n) atTop (𝓝 (1 / ((p + m : ℕ) : ℝ))) := by
+  have hpos : 0 < p + m := Nat.pos_of_ne_zero hpm
+  have hpmR : (0 : ℝ) < ((p + m : ℕ) : ℝ) := by exact_mod_cast hpos
+  have herr : Tendsto (fun n : ℕ => ((n % (p + m) : ℕ) : ℝ) / (((p + m : ℕ) : ℝ) * n)) atTop (𝓝 0) := by
+    refine squeeze_zero (fun n => by positivity) (g := fun n : ℕ => 1 / (n : ℝ)) (fun n => ?_)
+      tendsto_one_div_atTop_nhds_zero_nat
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · simp
+    · have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+      calc ((n % (p + m) : ℕ) : ℝ) / (((p + m : ℕ) : ℝ) * n)
+          ≤ ((p + m : ℕ) : ℝ) / (((p + m : ℕ) : ℝ) * n) := by
+            gcongr; exact_mod_cast (Nat.mod_lt n hpos).le
+        _ = 1 / (n : ℝ) := by field_simp
+  have hlim : Tendsto (fun n : ℕ => 1 / ((p + m : ℕ) : ℝ)
+      - ((n % (p + m) : ℕ) : ℝ) / (((p + m : ℕ) : ℝ) * n)) atTop (𝓝 (1 / ((p + m : ℕ) : ℝ))) := by
+    simpa using tendsto_const_nhds.sub herr
+  refine hlim.congr' ?_
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  have hc : (n : ℝ) = ((p + m : ℕ) : ℝ) * ((blockCount p m n : ℕ) : ℝ) + ((n % (p + m) : ℕ) : ℝ) := by
+    rw [blockCount]; exact_mod_cast (Nat.div_add_mod n (p + m)).symm
+  rw [blockCount] at hc ⊢
+  field_simp
+  nlinarith [hc]
+
 /-- **The big-block sums obey a central limit theorem in distribution** (h1, distribution form): for a
 strictly stationary `L²` `m`-dependent process, `√r (r⁻¹ ∑_{k<r} U_k − E U₀) ⇒ N(0, Var U₀)`, where
 `U_k = ∑_{t ∈ bigBlock k} Xₜ`. A direct application of the iid sample-mean CLT (`iidNoise_sampleMean_clt`)
