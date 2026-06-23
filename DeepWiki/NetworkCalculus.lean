@@ -271,6 +271,7 @@ import DeepWiki.NetworkCalculus.WorstCaseBoundNPMembership
 import DeepWiki.NetworkCalculus.ThreeDimensionalMatchingReduction
 import DeepWiki.NetworkCalculus.ComplexityNP
 import DeepWiki.NetworkCalculus.BooleanSatisfiability
+import DeepWiki.NetworkCalculus.BooleanConstraints
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
