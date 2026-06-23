@@ -203,12 +203,34 @@ theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q 
     simp only [toBPoly_badd, toBPoly_bscaleC, toBPoly_cons, toPoly_nil, map_zero, ih]
     ring
 
+/-- `bnorm [] = []`. -/
+@[simp] theorem bnorm_nil : bnorm ([] : BPoly) = [] := rfl
+
 /-- `bnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
 theorem bnorm_cons_eq (a : CPoly) (as : BPoly) :
     bnorm (a :: as)
       = (match bnorm as with
           | [] => if cisZero (cnorm a) then [] else [cnorm a]
           | r => cnorm a :: r) := rfl
+
+/-- `bnorm` is **idempotent**. -/
+@[simp] theorem bnorm_idem (p : BPoly) : bnorm (bnorm p) = bnorm p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [bnorm_cons_eq]
+    cases h : bnorm as with
+    | nil => cases ha : cisZero (cnorm a) <;> simp [bnorm_cons_eq, cnorm_idem, ha]
+    | cons b bs =>
+      rw [h] at ih
+      simp only [bnorm_cons_eq, cnorm_idem, ih]
+
+/-- `bpsremainder` **normalizes its divisor**: `bpsremainder fuel p q = bpsremainder fuel p (bnorm q)`. -/
+theorem bpsremainder_bnorm_right (fuel : ℕ) (p q : BPoly) :
+    bpsremainder fuel p q = bpsremainder fuel p (bnorm q) := by
+  cases fuel with
+  | zero => rfl
+  | succ fuel => simp only [bpsremainder, bnorm_idem]
 
 /-- **`toBPoly` ignores normalization**: `toBPoly (bnorm p) = toBPoly p`. -/
 @[simp] theorem toBPoly_bnorm (p : BPoly) : toBPoly (bnorm p) = toBPoly p := by
@@ -231,5 +253,44 @@ theorem bnorm_cons_eq (a : CPoly) (as : BPoly) :
     | cons b bs =>
       rw [h] at ih
       simp only [toBPoly_cons, toPoly_cnorm, ih]
+
+/-- `toBPoly [[1]] = 1`: the `BPoly` constant `1`. -/
+@[simp] theorem toBPoly_one : toBPoly ([[1]] : BPoly) = 1 := by
+  simp [toBPoly_cons, toPoly_cons]
+
+/-- **Pseudo-division identity through `toBPoly`** (any fuel): there is a multiplier `c ∈ ℚ[t]` (a
+product of leading `x`-coefficients of `q`) and a quotient `s` with `C (toPoly c) · toBPoly p =
+toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)`. So the computable pseudo-remainder realizes
+the honest `ℚ[t][x]` pseudo-division relation `lc(q)ᵏ·p = s·q + prem` — the existential matches the
+non-field coefficient ring `ℚ[t]` (where division is only up to a leading-coefficient factor). This is
+the spine for the subresultant-PRS gcd agreement (`lrtGcdCompute ↔ lrtSubresultant`). -/
+theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q) := by
+  induction fuel generalizing p with
+  | zero => exact ⟨[], [1], by simp [bpsremainder, toBPoly_bnorm, toPoly_cons]⟩
+  | succ fuel ih =>
+    simp only [bpsremainder]
+    split_ifs with hq hlen
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons]⟩
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons]⟩
+    · obtain ⟨s', c', hsc⟩ := ih (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+        (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+      have hp' : toBPoly (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+          (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+          = Polynomial.C (toPoly (blc (bnorm q))) * toBPoly p
+            - Polynomial.C (toPoly (blc (bnorm p)))
+              * Polynomial.X ^ ((bnorm p).length - (bnorm q).length) * toBPoly q := by
+        rw [toBPoly_bnorm, toBPoly_bsub, toBPoly_bscaleC, toBPoly_bscaleC, toBPoly_bshift,
+          toBPoly_bnorm, toBPoly_bnorm]
+        ring
+      rw [hp', bpsremainder_bnorm_right] at hsc
+      refine ⟨badd s' (bscaleC (cmul c' (blc (bnorm p)))
+          (bshift ((bnorm p).length - (bnorm q).length) [[1]])),
+          cmul c' (blc (bnorm q)), ?_⟩
+      rw [toBPoly_badd, toBPoly_bscaleC, toBPoly_bshift, toBPoly_one, toPoly_cmul, map_mul,
+        toPoly_cmul, map_mul]
+      linear_combination hsc
 
 end DeepWiki.SymbolicIntegration.Compute
