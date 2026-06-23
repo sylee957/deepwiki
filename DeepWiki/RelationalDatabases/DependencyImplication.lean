@@ -8,8 +8,10 @@ when every relation satisfying all of `D` satisfies it. Each row-level inference
 relation by quantifying over relations (all of FM1/M0–M4/FM2 for mvds and the Armstrong rules for
 fds).
 
-With implication in hand a *superkey* is `D ⊨ X → Ω`, and a scheme is in *fourth normal form* when
-every nontrivial implied mvd has a superkey left-hand side. We prove `4NF ⟹ BCNF`. -/
+With implication in hand a *superkey* is `D ⊨ X → Ω`, a scheme is in *fourth normal form* when
+every nontrivial implied mvd has a superkey left-hand side, and in *fifth normal form* when every
+implied join dependency is implied by the key dependencies. We prove `4NF ⟹ BCNF` and
+`5NF ⟹ 4NF`. -/
 
 namespace DeepWiki
 
@@ -106,7 +108,7 @@ def IsSuperkeyDep (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) (X : Fins
 /-- A scheme with mixed dependency set `D` is in *fourth normal form*: every nontrivial implied
 multivalued dependency `X ↠ Y` (`Y ⊄ X` and `X ∪ Y` not covering `Ω`) has `X` a superkey. -/
 def Is4NF (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) : Prop :=
-  ∀ X Y : Finset Att, DepImplies Ω Val D (.mvd X Y) →
+  ∀ X Y : Finset Att, Y ⊆ Ω → DepImplies Ω Val D (.mvd X Y) →
     ¬ (Y ⊆ X) → ¬ (Ω ⊆ X ∪ Y) → IsSuperkeyDep Ω Val D X
 
 /-- A scheme with mixed dependency set `D` is in *Boyce–Codd normal form*: every implied `X → {A}`
@@ -136,8 +138,71 @@ theorem isBCNFDep_of_is4NF (h : Is4NF Ω Val D) : IsBCNFDep Ω Val D := by
   · refine Or.inr ?_
     by_cases hcov : Ω ⊆ X ∪ {A}
     · exact isSuperkeyDep_of_fd_cover hXA hcov
-    · refine h X {A} (depImplies_mvd_of_fd hXA) ?_ hcov
+    · refine h X {A} (Finset.singleton_subset_iff.mpr hA) (depImplies_mvd_of_fd hXA) ?_ hcov
       intro hsub
       exact hAX (hsub (Finset.mem_singleton_self A))
+
+/-! ## Fifth normal form (project-join normal form) -/
+
+/-- `X` is a superkey whenever some superkey `Z` is contained in `X` over `Ω`. -/
+theorem isSuperkeyDep_of_subset {Z : Finset Att} (hZ : IsSuperkeyDep Ω Val D Z)
+    (hsub : ∀ a : {x // x ∈ Ω}, a.val ∈ Z → a.val ∈ X) : IsSuperkeyDep Ω Val D X :=
+  fun r hr s₁ hs₁ s₂ hs₂ hag => hZ r hr s₁ hs₁ s₂ hs₂ (fun a ha => hag a (hsub a ha))
+
+/-- A scheme with mixed dependency set `D` is in *fifth normal form* (project-join normal form,
+Def 4.8): every (finite) join dependency implied by `D` is already implied by the key dependencies
+`{X → Ω | D ⊨ X → Ω}`. -/
+def Is5NF (Ω : Finset Att) (Val : Type v) (D : Set (Dep Att)) : Prop :=
+  ∀ {ι : Type} [Fintype ι] (comp : ι → Finset Att),
+    (∀ r : Table Ω Val, (∀ e ∈ D, Dep.Satisfies r e) → SatisfiesJd r comp) →
+    ∀ r : Table Ω Val, (∀ Z : Finset Att, IsSuperkeyDep Ω Val D Z → SatisfiesFd r Z Ω) →
+      SatisfiesJd r comp
+
+/-- **Theorem 4.8**: a relation scheme in fifth normal form is in fourth normal form. A nontrivial
+implied mvd is the two-component jd `⋈[X∪Y, X∪(Ω−Y)]` (Theorem 3.9), so 5NF makes it implied by the
+keys; the two-tuple relation agreeing exactly on `X` satisfies every key fd (else `X` would already
+be a superkey) yet violates that jd unless `X` is a superkey. -/
+theorem is4NF_of_is5NF [Nontrivial Val] (h5 : Is5NF Ω Val D) : Is4NF Ω Val D := by
+  intro X Y hYΩ hmvd hnY hnc
+  by_contra hnsk
+  obtain ⟨v0, v1, hv⟩ := exists_pair_ne Val
+  set t : Tuple Ω Val := (fun _ => v0) with ht
+  set u : Tuple Ω Val := (fun a => if a.val ∈ X then v0 else v1) with hu
+  have htu : ∀ a : {x // x ∈ Ω}, t a = u a ↔ a.val ∈ X := by
+    intro a
+    simp only [ht, hu]
+    by_cases haX : a.val ∈ X
+    · simp [haX]
+    · simp [haX, hv]
+  have hkeysat : ∀ Z : Finset Att, IsSuperkeyDep Ω Val D Z →
+      SatisfiesFd ({t, u} : Table Ω Val) Z Ω := by
+    intro Z hZ s₁ hs₁ s₂ hs₂ hag
+    have key : Agree Z t u → False := fun hagZ =>
+      hnsk (isSuperkeyDep_of_subset hZ (fun a ha => (htu a).mp (hagZ a ha)))
+    simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hs₁ hs₂
+    rcases hs₁ with rfl | rfl <;> rcases hs₂ with rfl | rfl
+    · exact fun _ _ => rfl
+    · exact absurd hag key
+    · exact absurd hag.symm key
+    · exact fun _ _ => rfl
+  have hjdStar : SatisfiesJd ({t, u} : Table Ω Val) (mvdComp X Y Ω) :=
+    h5 (mvdComp X Y Ω) (fun r hr => satisfiesMvd_iff_satisfiesJd.mp (hmvd r hr))
+      ({t, u} : Table Ω Val) hkeysat
+  have hmvdStar : SatisfiesMvd ({t, u} : Table Ω Val) X Y :=
+    satisfiesMvd_iff_satisfiesJd.mpr hjdStar
+  obtain ⟨w, hw, hwt, hwu⟩ :=
+    hmvdStar t (Set.mem_insert _ _) u (Set.mem_insert_iff.mpr (Or.inr rfl))
+      (fun a ha => (htu a).mpr ha)
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hw
+  rcases hw with rfl | rfl
+  · apply hnc
+    intro a ha
+    by_contra haXY
+    simp only [Finset.mem_union, not_or] at haXY
+    exact haXY.1 ((htu ⟨a, ha⟩).mp
+      (hwu ⟨a, ha⟩ (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨ha, haXY.2⟩)))))
+  · apply hnY
+    intro b hb
+    exact (htu ⟨b, hYΩ hb⟩).mp (hwt ⟨b, hYΩ hb⟩ (Finset.mem_union.mpr (Or.inr hb))).symm
 
 end DeepWiki

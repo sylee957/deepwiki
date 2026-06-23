@@ -23,11 +23,6 @@ semantics.
   synthesis algorithm) with Theorem 4.6 and Corollary 4.1 (every scheme has a constraint-preserving
   3NF decomposition), Example 4.10 (redundant schemes survive) [infra]. (Def 4.3 lossless-join
   decomposition is done.)
-§4.5: Def 4.8 (fifth normal form / project-join normal form) with Theorem 4.8 (5NF ⟹ 4NF)
-  [research: needs Fagin's PJNF theory — join-dependency implication plus "a JD is implied by the
-  keys"; the naive "every JD component is a superkey" form does NOT yield 5NF ⟹ 4NF (an mvd's
-  two-component JD makes `X∪Y` a superkey, but 4NF needs `X`). The mvd-implication relation, Def 4.7
-  fourth normal form and Theorem 4.7 (4NF ⟹ BCNF) are done].
 §4.6: vertical decomposition and consistency checking [infra].
 §4.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -99,8 +94,17 @@ abbrev def_4_7_4nf := @DeepWiki.Is4NF
 implication relation. -/
 abbrev def_4_5_bcnf_dep := @DeepWiki.IsBCNFDep
 
-/-- **Theorem 4.7** (§4.5, p.135): a relation scheme in fourth normal form is in Boyce–Codd
+/-- **Theorem 4.7** (§4.5, p.125): a relation scheme in fourth normal form is in Boyce–Codd
 normal form. -/
 abbrev thm_4_7 := @DeepWiki.isBCNFDep_of_is4NF
+
+/-- **Definition 4.8** (§4.5, p.125): a scheme is in *fifth normal form* (project-join normal form)
+when every join dependency implied by `SC` is already implied by the key dependencies
+`{X → Ω | SC ⊨ X → Ω}`. -/
+abbrev def_4_8_5nf := @DeepWiki.Is5NF
+
+/-- **Theorem 4.8** (§4.5, p.125): a relation scheme in fifth normal form is in fourth normal
+form. -/
+abbrev thm_4_8 := @DeepWiki.is4NF_of_is5NF
 
 end DeepWiki.Rdb
