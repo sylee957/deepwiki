@@ -33,21 +33,25 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 — the LAST step of the GENERAL `Hᵢⱼ` correctness: the **higher-order Laurent extraction**
-  identifying the order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` with the `1/(x−α)ʲ`
-  partial-fraction coefficient `c_j` of `A/D` (book p.56) [deferred: a `residueAt`-of-order-`j` generalization
-  — multiply by `(x−α)ʲ`, take `(i−j)` derivatives, evaluate; the library's `RecognizingLogDeriv.residueAt`
-  does only the simple-pole `j=1`, `(i−j)=0` case, stated precisely as "Laurent extraction (Step 4)" in
-  `DeepWiki.SymbolicIntegration.LaurentCoefficients`]. Everything ELSE of Thm 2.7.1 is now PROVED: the
-  differential-variable engine eqs 2.10–2.12 (`thm_2_7_1_laurentH`); the eq 2.11 invariant on `Frac (DiffPoly K)`
-  (`eq_2_11_invariant`); the **differential substitution hom** `σα` carrying the engine's `ddx` to the genuine
-  `Polynomial.derivative` (`thm_2_7_1_diffSubst`); the **specialized eq 2.11 invariant in `K(x)`** —
+§2.7: Thm 2.7.1 — the LAST naming step: the **literal `= c_j` partial-fraction identification** of the
+  order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` with the `1/(x−α)ʲ` partial-fraction
+  coefficient `c_j` of `A/D` (book p.56) [infra: needs a principal-part / `(x−α)`-adic Laurent development over
+  `K̄` — the Taylor expansion of a pole-cleared rational function, plus a bridge connecting the `K[x]`-level
+  `CompletePartialFraction.baseDigit` at a root `α` to the closure coefficient. The substantive identification
+  `Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` — the engine output IS the order-`(i−j)` Taylor coefficient of
+  `hᵢ,α` — is now PROVED (`thm_2_7_1_taylor_coeff`, `eval_laurentH_eq_taylor_coeff`); those Taylor coefficients
+  ARE the `1/(x−α)ʲ` Laurent coefficients by the definition of `hᵢ,α`, so only the literal `c_j` *naming*
+  remains]. Everything ELSE of Thm 2.7.1 is now PROVED: the differential-variable engine eqs 2.10–2.12
+  (`thm_2_7_1_laurentH`); the eq 2.11 invariant on `Frac (DiffPoly K)` (`eq_2_11_invariant`); the
+  **differential substitution hom** `σα` carrying the engine's `ddx` to the genuine `Polynomial.derivative`
+  (`thm_2_7_1_diffSubst`); the **specialized eq 2.11 invariant in `K(x)`** —
   `(d/dx)^{i−j} hᵢ,α = (i−j)!·σα(Pᵢⱼ)/(Dᵢ,α^{2i−j}·Eᵢ^{i−j+1})`, making `Pᵢⱼ` genuinely the numerators of the
   derivatives of the ACTUAL function `hᵢ,α` (`thm_2_7_1_invariant_ratfunc`); the root-value bridge
   `σα(Pᵢⱼ)(α) = Qᵢⱼ(α)` (`thm_2_7_1_laurentQ_eval`/`thm_2_7_1_diffSubst_eval`); the **general** engine-output
   evaluation `Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` for ALL `i,j` (`thm_2_7_1_eval`, generalizing
-  the `i=1` residue `thm_2_7_1_residue`); and the combined `Hᵢⱼ(α)`-from-genuine-`hᵢ,α`-numerator form
-  (`thm_2_7_1_eval_diffSubst`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
+  the `i=1` residue `thm_2_7_1_residue`); the combined `Hᵢⱼ(α)`-from-genuine-`hᵢ,α`-numerator form
+  (`thm_2_7_1_eval_diffSubst`); and **the order-`(i−j)` Taylor-coefficient identification**
+  (`thm_2_7_1_taylor_coeff`). The `K[x]`-level complete-PFD *structure* `A/D = P + ∑ᵢ ∑ⱼ Hᵢⱼ/Dᵢ^j` is
   `thm_2_7_1`.
 §2.8: Thm 2.8.4; Rioboo's full multivariate `LogToReal` recursion (the `R(u+iv)=P+iQ` /
   `S(u+iv,x)=A+iB` split, the `b>0` root selection, the recursion over `R`'s roots — needs
@@ -988,11 +992,20 @@ abbrev thm_2_7_1_eval := @DeepWiki.SymbolicIntegration.eval_laurentH
 
 /-- **Theorem 2.7.1, `Hᵢⱼ(α)` from the genuine `hᵢ,α`-numerator** (§2.7, p.56, Steps 2+3+5 combined): at a
 root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, `Hᵢⱼ(α) = σα(Pᵢⱼ)(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`, routing
-the engine's `Qᵢⱼ(α)` through the value at `α` of the **genuine** `hᵢ,α^{(i−j)}/(i−j)!` numerator. The only
-remaining gap to `Hᵢⱼ(α) = c_j` (the `1/(x−α)ʲ` partial-fraction coefficient of `A/D`) is the higher-order
-Laurent extraction (Step 4, see §2.7 NOT YET FORMALIZED). The library's
+the engine's `Qᵢⱼ(α)` through the value at `α` of the **genuine** `hᵢ,α^{(i−j)}/(i−j)!` numerator. The library's
 `eval_laurentH_eq_diffSubst_laurentNum`. -/
 abbrev thm_2_7_1_eval_diffSubst := @DeepWiki.SymbolicIntegration.eval_laurentH_eq_diffSubst_laurentNum
+
+/-- **Theorem 2.7.1, the Taylor-coefficient identification** (§2.7, p.56, the substantive Step-4 core): at a
+root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α` (with `j ≤ i`, `Eᵢ(α), Dᵢ,α(α) ≠ 0`), the engine output is the
+order-`(i−j)` Taylor coefficient of the genuine rational function `hᵢ,α = (A/D)(x−α)ⁱ` at `α`:
+`Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)`. Evaluates the specialized eq 2.11 invariant
+(`thm_2_7_1_invariant_ratfunc`) at `α` (`RatFunc.eval id α`, a ring hom off the nonzero denominator) and
+cancels the `(Dᵢ,α, Eᵢ)`-power factors of `thm_2_7_1_eval_diffSubst` via the cofactor identity
+`Dᵢ'(α) = Dᵢ,α(α)`. Those Taylor coefficients ARE the `1/(x−α)ʲ` partial-fraction coefficients `c_j` of `A/D`
+by the definition of `hᵢ,α`; the literal `= c_j` naming is the only residual (§2.7 NOT YET FORMALIZED). The
+library's `eval_laurentH_eq_taylor_coeff`. -/
+abbrev thm_2_7_1_taylor_coeff := @DeepWiki.SymbolicIntegration.eval_laurentH_eq_taylor_coeff
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
