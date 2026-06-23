@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.PartialFraction
+import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
@@ -23,8 +24,10 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
-  needs the Laurent-series coefficient algorithm].
+§2.7: Thm 2.7.1 rational `Hᵢⱼ` algorithm (the Bronstein–Salvy differential-variable Laurent-coefficient
+  construction, eqs 2.10–2.12) + the over-the-closure `Hᵢⱼ(α)/(x−α)ʲ` form [functional/infra: needs the
+  differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
+  `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
 §2.9: the in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
@@ -735,6 +738,30 @@ noncomputable abbrev czichowski_lemma_2_2_iii_radical :=
   @DeepWiki.SymbolicIntegration.czichowskiR1_eq_radical_rtResultant
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
+
+/-- **Theorem 2.7.1, the base-`Dᵢ` (`Dᵢ`-adic) digit expansion** (§2.7, p.55, the substantive new
+ingredient): for monic `g` of positive degree and `B` with `deg B < e·deg g`, the base-`g` digits
+`Cⱼ = baseDigit B g j = (B /ₘ g^j) %ₘ g` reconstruct `B = ∑_{j<e} Cⱼ·g^j` with `deg Cⱼ < deg g` — the
+polynomial positional notation underlying the `Dᵢ`-adic Laurent series of `B/Dᵢ^{eᵢ}`. The library's
+`baseDigit_reconstruction` (digits via repeated division by the monic `Dᵢ`; `divByMonic_pow_succ` is the
+iterated-division step), with degree bound `degree_baseDigit_lt`. -/
+abbrev thm_2_7_1_baseExpansion := @DeepWiki.SymbolicIntegration.baseDigit_reconstruction
+
+/-- **Theorem 2.7.1, the `Dᵢ`-adic expansion of one prime-power fraction** (§2.7, p.55): for monic `g`
+and `deg B < e·deg g`, `B/g^e = ∑_{k=1}^{e} Hₖ/g^k` with `Hₖ = baseDigit B g (e−k)`, `deg Hₖ < deg g` —
+the digit expansion `B = ∑_{j<e} Cⱼ·g^j` rewritten with descending powers (reindexed `k = e−j`). The
+library's `ratFunc_DadicExpansion`. -/
+abbrev thm_2_7_1_DadicExpansion := @DeepWiki.SymbolicIntegration.ratFunc_DadicExpansion
+
+/-- **Theorem 2.7.1, the complete partial fraction decomposition** (§2.7, p.55, the structural
+`K[x]`-level conclusion): for `A, D ∈ K[x]` with squarefree factorization `D = D₁D₂²⋯Dₙⁿ = ∏ᵢ Dᵢ^{eᵢ}`
+(monic, pairwise-coprime, positive-degree `Dᵢ`, `eᵢ ≥ 1`),
+`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P = A div D` — the `Hᵢⱼ(α)/(x−α)ʲ`
+over-the-closure form being the evaluation of `Hᵢⱼ` at the roots `α` of `Dᵢ`. The library's
+`ratFunc_completePartialFraction`, composing Mathlib's degree-bounded coprime split with the per-factor
+`Dᵢ`-adic expansion. The *rational algorithm* for the `Hᵢⱼ` (the differential-variable Laurent-coefficient
+construction, eqs 2.10–2.12) remains [functional/infra]. -/
+abbrev thm_2_7_1 := @DeepWiki.SymbolicIntegration.ratFunc_completePartialFraction
 
 /-- **Example 2.7.2** (§2.7, p.58), `FullPartialFraction` of `f = 36/(x⁵−2x⁴−2x³+4x²+x−2)`
 (denominator `(x−1)²(x+1)²(x−2)`): the full partial-fraction decomposition (eq 2.13) is
