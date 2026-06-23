@@ -287,4 +287,79 @@ theorem residueAt_logDeriv_eq_rootMultiplicity (N : K[X]) (hN : N ≠ 0) (α : K
     simp only [eval_add, eval_mul, eval_C, eval_sub, eval_X, sub_self, zero_mul, add_zero]
     rw [mul_div_assoc, div_self hN₁, mul_one]
 
+open scoped Classical in
+/-- **Additivity of the residue at a simple pole**: if `(X − α)·f = a/b` and `(X − α)·g = c/d` are both
+pole-free at `α` (`b(α), d(α) ≠ 0`), then `residueAt α (f − g) = residueAt α f − residueAt α g`. The
+once-multiplied difference `(X − α)·(f − g) = (a·d − c·b)/(b·d)` is again pole-free at `α`. -/
+theorem residueAt_sub_of_witnesses (α : K) (f g : RatFunc K) (a b c d : K[X])
+    (hb : b.eval α ≠ 0) (hd : d.eval α ≠ 0)
+    (hf : algebraMap K[X] (RatFunc K) (X - C α) * f
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) b)
+    (hg : algebraMap K[X] (RatFunc K) (X - C α) * g
+      = algebraMap K[X] (RatFunc K) c / algebraMap K[X] (RatFunc K) d) :
+    residueAt α (f - g) = a.eval α / b.eval α - c.eval α / d.eval α := by
+  have hbne : algebraMap K[X] (RatFunc K) b ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (fun h0 => hb (by rw [h0, eval_zero]))
+  have hdne : algebraMap K[X] (RatFunc K) d ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (fun h0 => hd (by rw [h0, eval_zero]))
+  have hbd : (b * d).eval α ≠ 0 := by rw [eval_mul]; exact mul_ne_zero hb hd
+  rw [residueAt_of_mul_X_sub_C α (f - g) (a * d - c * b) (b * d) hbd ?_]
+  · rw [eval_sub, eval_mul, eval_mul, eval_mul, div_sub_div _ _ hb hd]
+    ring_nf
+  · rw [mul_sub, hf, hg, map_sub, map_mul, map_mul, map_mul, div_sub_div _ _ hbne hdne,
+      mul_comm (algebraMap K[X] (RatFunc K) c)]
+
+open scoped Classical in
+open scoped Differential in
+/-- **Pole-free witness for `(X − α)·logDeriv N`** (computation 2, the reduced quotient): for nonzero
+`N = (X − α)^k·N₁` (`k = rootMultiplicity α N`, `N₁(α) ≠ 0`), the once-multiplied logarithmic derivative
+is the quotient `(k·N₁ + (X − α)·N₁')/N₁`, regular at `α`. Exposing the witness (the `(X − α)^k`
+cancellation from `residueAt_logDeriv_eq_rootMultiplicity`) lets `residueAt_sub_of_witnesses` combine
+two logarithmic derivatives. -/
+theorem mul_X_sub_C_logDeriv_reduced (N : K[X]) (hN : N ≠ 0) (α : K) :
+    ∃ N₁ : K[X], N₁.eval α ≠ 0 ∧
+      algebraMap K[X] (RatFunc K) (X - C α)
+          * Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
+        = algebraMap K[X] (RatFunc K) (C (N.rootMultiplicity α : K) * N₁ + (X - C α) * derivative N₁)
+          / algebraMap K[X] (RatFunc K) N₁ := by
+  set k := N.rootMultiplicity α with hk
+  obtain ⟨N₁, hNeq, hndvd⟩ := N.exists_eq_pow_rootMultiplicity_mul_and_not_dvd hN α
+  rw [← hk] at hNeq
+  have hN₁ : N₁.eval α ≠ 0 := fun h0 => hndvd (dvd_iff_isRoot.mpr h0)
+  refine ⟨N₁, hN₁, ?_⟩
+  have hN₁0 : N₁ ≠ 0 := fun h0 => hN₁ (by rw [h0, eval_zero])
+  have hpoly : (X - C α) * derivative N
+      = (X - C α) ^ k * (C (k : K) * N₁ + (X - C α) * derivative N₁) := by
+    rw [hNeq]; exact mul_X_sub_C_derivative_pow_mul α k N₁
+  have hpkne : algebraMap K[X] (RatFunc K) ((X - C α) ^ k) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (pow_ne_zero _ (X_sub_C_ne_zero α))
+  rw [logDeriv_algebraMap_eq, ← mul_div_assoc, ← map_mul, hpoly, hNeq]
+  simp only [map_mul]
+  rw [mul_div_mul_left (G₀ := RatFunc K) _ _ hpkne]
+
+open scoped Classical in
+open scoped Differential in
+/-- **Residue of `logDeriv (N/M)` is an integer** (computation 2, the difference form, Bronstein §2.9):
+for nonzero `N, M : K[X]`, the residue at `α` of `logDeriv(N/M) = N'/N − M'/M` is the integer
+`rootMultiplicity α N − rootMultiplicity α M`. The two simple-pole residues
+(`residueAt_logDeriv_eq_rootMultiplicity`) subtract through `residueAt_sub_of_witnesses`. -/
+theorem residueAt_logDeriv_div_eq_int (N M : K[X]) (hN : N ≠ 0) (hM : M ≠ 0) (α : K) :
+    residueAt α (Differential.logDeriv (algebraMap K[X] (RatFunc K) N
+        / algebraMap K[X] (RatFunc K) M))
+      = ((N.rootMultiplicity α : ℤ) - (M.rootMultiplicity α : ℤ) : K) := by
+  obtain ⟨N₁, hN₁, hNwit⟩ := mul_X_sub_C_logDeriv_reduced N hN α
+  obtain ⟨M₁, hM₁, hMwit⟩ := mul_X_sub_C_logDeriv_reduced M hM α
+  have hdiv : Differential.logDeriv (algebraMap K[X] (RatFunc K) N
+        / algebraMap K[X] (RatFunc K) M)
+      = Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
+        - Differential.logDeriv (algebraMap K[X] (RatFunc K) M) :=
+    Differential.logDeriv_div _ _
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hN)
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hM)
+  rw [hdiv, residueAt_sub_of_witnesses α _ _ _ N₁ _ M₁ hN₁ hM₁ hNwit hMwit]
+  simp only [eval_add, eval_mul, eval_C, eval_sub, eval_X, sub_self, zero_mul, add_zero]
+  rw [mul_div_assoc, div_self hN₁, mul_one, mul_div_assoc, div_self hM₁, mul_one]
+  push_cast
+  ring
+
 end DeepWiki.SymbolicIntegration
