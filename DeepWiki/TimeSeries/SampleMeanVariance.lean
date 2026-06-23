@@ -128,18 +128,13 @@ theorem sum_range_sum_range_sub (f : ℤ → ℝ) (n : ℕ) :
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- **Theorem 7.1.1 (asymptotic variance of the sample mean):** for a weakly stationary process whose
-autocovariance `γ` is summable, the rescaled variance of the sample mean converges to the sum of all
-autocovariances, `n · Var(X̄ₙ) → ∑ⱼ γ(j)`. Combines the variance-of-sum identity
-`n · Var(X̄ₙ) = ∑_{|h|<n} (1 − |h|/n) γ(h)` (via `variance_fun_sum'`, `acvf_eq_acvfStat`, and the
-counting kernel `sum_range_sum_range_sub`) with the Cesàro limit `tendsto_tsum_triangular`. -/
-theorem tendsto_nsmul_variance_sampleMean [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
-    (hX : IsWeaklyStationary X μ) (hsum : Summable (acvfStat X μ)) :
-    Tendsto (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ) atTop
-      (𝓝 (∑' h : ℤ, acvfStat X μ h)) := by
-  have hkey : ∀ n : ℕ, (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ
+/-- **The exact `n · Var(X̄ₙ)` representation** underlying Theorem 7.1.1: for a weakly stationary
+process, `n · Var(X̄ₙ) = ∑_{|h|<n} (1 − |h|/n) γ(h)` (the triangular/counting-kernel form), via
+`variance_fun_sum'`, `acvf_eq_acvfStat`, and `sum_range_sum_range_sub`. -/
+theorem nsmul_variance_sampleMean_eq [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (n : ℕ) :
+    (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ
       = ∑' h : ℤ, if |(h : ℝ)| < n then (1 - |(h : ℝ)| / n) * acvfStat X μ h else 0 := by
-    intro n
     have hvar : variance (fun ω => sampleMean n (fun t => X t ω)) μ
         = ((n : ℝ)⁻¹) ^ 2
           * ∑ s ∈ Finset.range n, ∑ t ∈ Finset.range n, acvfStat X μ ((s : ℤ) - t) := by
@@ -174,9 +169,41 @@ theorem tendsto_nsmul_variance_sampleMean [IsProbabilityMeasure μ] {X : ℤ →
       have hc : ¬ |(h : ℝ)| < (n : ℝ) := by
         rw [← Int.cast_abs, not_lt]; exact_mod_cast hge
       rw [if_neg hc]
-  rw [show (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ)
-        = fun n : ℕ => ∑' h : ℤ, if |(h : ℝ)| < n then (1 - |(h : ℝ)| / n) * acvfStat X μ h else 0
-      from funext hkey]
+
+/-- **Uniform bound `n · Var(X̄ₙ) ≤ ∑ₕ |γ(h)|`** for a weakly stationary process with summable
+autocovariance — the rescaled sample-mean variance is dominated, *uniformly in `n`*, by the total
+absolute autocovariance. The non-asymptotic companion of `tendsto_nsmul_variance_sampleMean`, used to
+control truncation tails in the linear-process CLT. -/
+theorem nsmul_variance_sampleMean_le [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (hsum : Summable (acvfStat X μ)) (n : ℕ) :
+    (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ ≤ ∑' h : ℤ, |acvfStat X μ h| := by
+  rw [nsmul_variance_sampleMean_eq hX n]
+  have hbound : ∀ h : ℤ,
+      |if |(h : ℝ)| < n then (1 - |(h : ℝ)| / n) * acvfStat X μ h else 0| ≤ |acvfStat X μ h| := by
+    intro h
+    split_ifs with hlt
+    · rw [abs_mul]
+      have hn : (0 : ℝ) < n := lt_of_le_of_lt (abs_nonneg _) hlt
+      have hr0 : (0 : ℝ) ≤ |(h : ℝ)| / n := by positivity
+      have hr2 : |(h : ℝ)| / n ≤ 1 := by rw [div_le_one hn]; exact le_of_lt hlt
+      have h1 : |1 - |(h : ℝ)| / n| ≤ 1 := by rw [abs_of_nonneg (by linarith)]; linarith
+      calc |1 - |(h : ℝ)| / n| * |acvfStat X μ h|
+          ≤ 1 * |acvfStat X μ h| := mul_le_mul_of_nonneg_right h1 (abs_nonneg _)
+        _ = |acvfStat X μ h| := one_mul _
+    · simp
+  exact (Summable.of_norm_bounded hsum.abs
+    (fun h => by rw [Real.norm_eq_abs]; exact hbound h)).tsum_le_tsum
+    (fun h => (le_abs_self _).trans (hbound h)) hsum.abs
+
+/-- **Theorem 7.1.1 (asymptotic variance of the sample mean):** for a weakly stationary process whose
+autocovariance `γ` is summable, the rescaled variance of the sample mean converges to the sum of all
+autocovariances, `n · Var(X̄ₙ) → ∑ⱼ γ(j)`. Combines the variance-of-sum identity
+`nsmul_variance_sampleMean_eq` with the Cesàro limit `tendsto_tsum_triangular`. -/
+theorem tendsto_nsmul_variance_sampleMean [IsProbabilityMeasure μ] {X : ℤ → Ω → ℝ}
+    (hX : IsWeaklyStationary X μ) (hsum : Summable (acvfStat X μ)) :
+    Tendsto (fun n : ℕ => (n : ℝ) * variance (fun ω => sampleMean n (fun t => X t ω)) μ) atTop
+      (𝓝 (∑' h : ℤ, acvfStat X μ h)) := by
+  simp_rw [nsmul_variance_sampleMean_eq hX]
   exact tendsto_tsum_triangular hsum
 
 end DeepWiki.TimeSeries
