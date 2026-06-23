@@ -333,4 +333,73 @@ theorem exists_active_seg (segs : List (ℝ≥0 × ℝ≥0)) (hne : segs ≠ [])
             ← tsub_le_iff_left]
           exact hhi
 
+/-- **Slope-sorting splits at any segment: prefix slopes `≤` segment slope.** In a slope-sorted
+`pre ++ (s, ℓ) :: post`, every slope of `pre` is `≤ s`. -/
+theorem prefix_slopes_le (pre post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0)
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) (pre ++ (s, ℓ) :: post)) :
+    ∀ seg ∈ pre, seg.1 ≤ s := by
+  induction pre with
+  | nil => intro seg hseg; simp at hseg
+  | cons hd tl ih =>
+      rw [List.cons_append, List.pairwise_cons] at hsort
+      intro seg hseg
+      rcases List.mem_cons.mp hseg with rfl | hseg
+      · exact hsort.1 (s, ℓ) (by rw [List.mem_append]; right; exact List.mem_cons_self)
+      · exact ih hsort.2 seg hseg
+
+/-- **Slope-sorting splits at any segment: suffix slopes `≥` segment slope.** In a slope-sorted
+`pre ++ (s, ℓ) :: post`, every slope of `(s, ℓ) :: post` is `≥ s`. -/
+theorem suffix_slopes_ge (pre post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0)
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) (pre ++ (s, ℓ) :: post)) :
+    ∀ seg ∈ (s, ℓ) :: post, s ≤ seg.1 := by
+  have hsuf : List.Pairwise (fun a b => a.1 ≤ b.1) ((s, ℓ) :: post) := by
+    induction pre with
+    | nil => simpa using hsort
+    | cons hd tl ih => rw [List.cons_append, List.pairwise_cons] at hsort; exact ih hsort.2
+  rw [List.pairwise_cons] at hsuf
+  intro seg hseg
+  rcases List.mem_cons.mp hseg with rfl | hseg
+  · exact le_rfl
+  · exact hsuf.1 seg hseg
+
+/-! ## The full convex tangent decomposition (`f0 = 0`, slope-sorted, positive slopes)
+
+The end target [4.13]-convex: a convex PWL null at the origin with slope-sorted, strictly positive
+segment slopes and positive asymptote is the supremum of its tangent rate-latencies. Given a
+generator list containing every segment tangent (one per split) and the asymptotic tangent, both
+`hle` and `hreach` of `convexNFEval_eq_of_le_of_reaches` hold, so `convexNFEval gens = ↑f̲`. -/
+
+/-- **The full convex sup-of-tangents equality.** Let `f̲ = convexSegEval 0 fs segs` with positive
+asymptote `fs`, slope-sorted finite segments all `≤ fs` and all `> 0` (`hpos`), and `segs ≠ []`. If a
+generator list `gens` (i) has every generator below the curve (`hbelow`), (ii) contains the
+asymptotic tangent `(fs, T∞)`, and (iii) contains, for every split `segs = pre ++ (s, ℓ) :: post`,
+the segment tangent `(s, segTangentLatency 0 pre s)` (`hsegmem`), then `convexNFEval gens = ↑f̲`
+everywhere — the convex companion of [4.13], `f̲ = ⨆ᵢ β_{sᵢ, Tᵢ}`. -/
+theorem convexNFEval_eq_convexSegEval (fs : ℝ≥0) (segs gens : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) segs)
+    (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs) (hpos : ∀ seg ∈ segs, 0 < seg.1) (hne : segs ≠ [])
+    (hbelow : ∀ g ∈ gens, ∀ t : ℝ≥0,
+      rateLatencyEReal g.1 g.2 t ≤ (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal))
+    (hasymp : (fs, asymptoteTangentLatency 0 fs segs) ∈ gens)
+    (hsegmem : ∀ (pre post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0), segs = pre ++ (s, ℓ) :: post →
+      (s, segTangentLatency 0 pre s) ∈ gens)
+    (t : ℝ≥0) :
+    convexNFEval gens t = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  refine convexNFEval_eq_of_le_of_reaches 0 fs segs gens hbelow (fun t => ?_) t
+  rcases le_total t (pwlRank segs) with htle | htge
+  · -- on the finite region: the active segment's tangent reaches the curve
+    obtain ⟨pre, post, s, ℓ, hsplit, hlo, hhi⟩ :=
+      exists_active_seg segs hne (show t ≤ segLenSum segs from htle)
+    -- slope facts from sorting; positivity of `s`
+    have hsortsplit : List.Pairwise (fun a b => a.1 ≤ b.1) (pre ++ (s, ℓ) :: post) := hsplit ▸ hsort
+    have hpre : ∀ seg ∈ pre, seg.1 ≤ s := prefix_slopes_le pre post s ℓ hsortsplit
+    have hs : 0 < s := hpos (s, ℓ) (by rw [hsplit, List.mem_append]; right; exact List.mem_cons_self)
+    have hdiv : (0 + cornerSum pre) / s ≤ segLenSum pre := div_corner_le_segLenSum s pre hpre hs
+    refine ⟨(s, segTangentLatency 0 pre s), hsegmem pre post s ℓ hsplit, ?_⟩
+    rw [hsplit]
+    exact rateLatencyEReal_segTangent_eq_on_seg 0 fs s ℓ pre post hs hdiv hlo hhi
+  · -- past the rank: the asymptotic tangent reaches the curve
+    refine ⟨(fs, asymptoteTangentLatency 0 fs segs), hasymp, ?_⟩
+    exact rateLatencyEReal_asymptoteTangent_eq_past_rank fs segs hfs hle_fs htge
+
 end DeepWiki
