@@ -11,7 +11,7 @@ reduces multivariate charFun convergence to Mathlib's univariate CLT, and Lévy'
 foundational enabler for Bartlett's formula (Thm 7.2.1/7.2.2) and the Ch10–13 multivariate theory. -/
 
 open MeasureTheory ProbabilityTheory Filter Complex
-open scoped Topology RealInnerProductSpace ENNReal
+open scoped Topology RealInnerProductSpace ENNReal Matrix
 
 namespace DeepWiki.TimeSeries
 
@@ -77,5 +77,63 @@ theorem tendsto_charFun_inv_sqrt_mul_sum_one [IsProbabilityMeasure μ] {W : ℕ 
     rw [hlim] at key
     refine Tendsto.congr (fun n => ?_) key
     rw [hmap ((√n)⁻¹ * 1), mul_one, mul_comm]
+
+/-- **Multivariate central limit theorem for iid random vectors:** for centered iid `L²` random
+vectors `Z : ℕ → Ω → EuclideanSpace ℝ (Fin k)` whose directional variances match the positive
+semidefinite matrix `S` (`∫ ⟪Z₀, t⟫² = tᵀ S t`), the standardized partial sums
+`(√n)⁻¹ ∑_{k<n} Zₖ` converge in distribution to the multivariate Gaussian `N(0, S)`. Via the
+Cramér–Wold device (`charFun_proj`): the characteristic function at every `t` reduces to the
+univariate CLT for the projections `⟪Zₖ, t⟫` (`tendsto_charFun_inv_sqrt_mul_sum_one`), matched to
+`charFun_multivariateGaussian` through Lévy's continuity theorem. The foundation for Bartlett's
+formula and the multivariate/spectral asymptotics of Ch10–13. -/
+theorem multivariate_iid_clt {k : ℕ} [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω']
+    {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {Z : ℕ → Ω → EuclideanSpace ℝ (Fin k)}
+    {V : Ω' → EuclideanSpace ℝ (Fin k)} {S : Matrix (Fin k) (Fin k) ℝ} (hS : S.PosSemidef)
+    (hZmem : ∀ i, MemLp (Z i) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ i, IdentDistrib (Z i) (Z 0) μ μ) (hcenter : ∫ ω, Z 0 ω ∂μ = 0)
+    (hcov : ∀ t : EuclideanSpace ℝ (Fin k), ∫ ω, (⟪Z 0 ω, t⟫ : ℝ) ^ 2 ∂μ = t ⬝ᵥ S *ᵥ t)
+    (hV : HasLaw V (multivariateGaussian 0 S) μ') :
+    TendstoInDistribution (fun (n : ℕ) ω => (√n)⁻¹ • ∑ k ∈ Finset.range n, Z k ω) atTop V
+      (fun _ => μ) μ' := by
+  have hZae : ∀ i, AEMeasurable (Z i) μ := fun i => (hZmem i).aestronglyMeasurable.aemeasurable
+  have hZint : Integrable (Z 0) μ := (hZmem 0).integrable (by norm_num)
+  have haemeas : ∀ n : ℕ, AEMeasurable
+      (fun ω => (√(n : ℝ))⁻¹ • ∑ k ∈ Finset.range n, Z k ω) μ :=
+    fun n => (Finset.aemeasurable_fun_sum (Finset.range n) fun k _ => hZae k).const_smul
+      ((√(n : ℝ))⁻¹)
+  refine ⟨haemeas, hV.aemeasurable, ?_⟩
+  refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.2 fun t => ?_
+  rw! [hV.map_eq]
+  simp only [ProbabilityMeasure.coe_mk]
+  rw [charFun_multivariateGaussian hS]
+  -- projections `W k = ⟪Z k ·, t⟫` are centered iid `L²`
+  have hLm : Measurable fun x : EuclideanSpace ℝ (Fin k) => (⟪x, t⟫ : ℝ) :=
+    ((innerSL ℝ).flip t).continuous.measurable
+  set W : ℕ → Ω → ℝ := fun k ω => ⟪Z k ω, t⟫ with hW
+  have hWiid : iIndepFun W μ := hindep.comp (fun _ x => ⟪x, t⟫) (fun _ => hLm)
+  have hWident : ∀ i, IdentDistrib (W i) (W 0) μ μ := fun i =>
+    (hident i).comp hLm
+  have hW0 : μ[W 0] = 0 := by
+    simp only [hW]
+    rw [integral_congr_ae (ae_of_all _ fun ω => real_inner_comm t (Z 0 ω)),
+      integral_inner hZint, hcenter, inner_zero_right]
+  have hWmem : Integrable (fun ω => W 0 ω ^ 2) μ := by
+    have hWLp : MemLp (W 0) 2 μ :=
+      (((innerSL ℝ).flip t).lipschitz).comp_memLp (by simp) (hZmem 0)
+    exact hWLp.integrable_sq
+  have hlim := tendsto_charFun_inv_sqrt_mul_sum_one hWiid hWident hW0 hWmem
+  have hfn : ∀ n : ℕ, charFun ((μ.map fun ω => (√n)⁻¹ • ∑ k ∈ Finset.range n, Z k ω)) t
+      = charFun (μ.map fun ω => (√n)⁻¹ * ∑ k ∈ Finset.range n, W k ω) 1 := fun n => by
+    rw [charFun_proj (haemeas n) t]
+    congr 2; funext ω
+    rw [real_inner_smul_left, sum_inner]
+  have hlimeq : Complex.exp ((⟪t, (0 : EuclideanSpace ℝ (Fin k))⟫ : ℝ) * I - ↑(t ⬝ᵥ S *ᵥ t) / 2)
+      = Complex.exp (Complex.ofReal (-(∫ ω, W 0 ω ^ 2 ∂μ) / 2)) := by
+    rw [inner_zero_right, hW]
+    simp only [hcov]
+    congr 1
+    push_cast; ring
+  rw [hlimeq]
+  exact (hlim.congr fun n => (hfn n).symm)
 
 end DeepWiki.TimeSeries
