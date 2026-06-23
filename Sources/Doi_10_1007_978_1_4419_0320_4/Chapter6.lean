@@ -68,8 +68,9 @@ alias example_6_4_2 := DeepWiki.TimeSeries.delta_method
 
 /-- **§6.4 Definition 6.4.3 — m-dependence**: a process `X` is `m`-dependent if any two finite blocks
 separated by more than `m` time steps are independent. The library's `IsMDependent` (with its
-monotonicity `IsMDependent.mono`); the hypothesis of the §6.4 central limit theorem for dependent
-processes. -/
+monotonicity `IsMDependent.mono`, and the canonical example `isMDependent_of_iIndepFun`: an i.i.d.
+sequence is `m`-dependent for every `m`, being `0`-dependent); the hypothesis of the §6.4 central
+limit theorem for dependent processes. -/
 abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)

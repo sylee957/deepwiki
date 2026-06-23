@@ -30,4 +30,23 @@ theorem IsMDependent.mono {m m' : ℕ} {X : ℤ → Ω → ℝ} {μ : Measure Ω
   have h2 : (m : ℤ) ≤ (m' : ℤ) := by exact_mod_cast hmm
   omega
 
+/-- **An i.i.d. sequence is `0`-dependent**: a mutually independent family `Z` is `0`-dependent —
+finite index blocks separated by more than `0` (i.e. disjoint) give independent tuples. The base case
+of `m`-dependence (here `X = Z`, so the blocks are the `Z`-tuples and `iIndepFun.indepFun_finset`
+applies directly). -/
+theorem isMDependent_zero_of_iIndepFun {Z : ℤ → Ω → ℝ} {μ : Measure Ω} (hindep : iIndepFun Z μ)
+    (hmeas : ∀ i, Measurable (Z i)) : IsMDependent 0 Z μ := by
+  intro S T hST
+  refine iIndepFun.indepFun_finset S T ?_ hindep hmeas
+  rw [Finset.disjoint_left]
+  intro a haS haT
+  have h := hST a haS a haT
+  omega
+
+/-- **An i.i.d. sequence is `m`-dependent for every `m`**: from `0`-dependence
+(`isMDependent_zero_of_iIndepFun`) and monotonicity (`IsMDependent.mono`). -/
+theorem isMDependent_of_iIndepFun {Z : ℤ → Ω → ℝ} {μ : Measure Ω} (hindep : iIndepFun Z μ)
+    (hmeas : ∀ i, Measurable (Z i)) (m : ℕ) : IsMDependent m Z μ :=
+  (isMDependent_zero_of_iIndepFun hindep hmeas).mono (Nat.zero_le m)
+
 end DeepWiki.TimeSeries
