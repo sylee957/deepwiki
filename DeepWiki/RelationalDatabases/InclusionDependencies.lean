@@ -33,4 +33,12 @@ theorem satisfiesInd_trans (hAB : SatisfiesInd r A B) (hBC : SatisfiesInd r B C)
   obtain ⟨t'', ht'', h2⟩ := hBC t' ht'
   exact ⟨t'', ht'', fun i => (h1 i).trans (h2 i)⟩
 
+/-- Inclusion-dependency projection/permutation (rule I2): reindexing both sequences by the same
+map `σ` preserves the dependency — `[A] ⊆ [B]` gives `[A ∘ σ] ⊆ [B ∘ σ]`. -/
+theorem satisfiesInd_reindex {l : ℕ} (σ : Fin l → Fin k) (h : SatisfiesInd r A B) :
+    SatisfiesInd r (A ∘ σ) (B ∘ σ) := by
+  intro t ht
+  obtain ⟨t', ht', hh⟩ := h t ht
+  exact ⟨t', ht', fun j => hh (σ j)⟩
+
 end DeepWiki

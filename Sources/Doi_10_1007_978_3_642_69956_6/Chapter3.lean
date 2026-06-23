@@ -35,9 +35,15 @@ semantics.
   (correctness) and Theorem 3.16 (NP-hardness of jd+fd implication), Corollary 3.4 (jd-vs-jd
   implication via the chase), Def 3.13/3.14 (m-cyclic / acyclic jds), Theorem 3.17 and the Graham
   algorithm (Algorithm 3.5, Theorem 3.18) [infra/research].
-§3.5: the remaining inclusion-dependency inference rules (projection/permutation), the
-  interaction of inclusion dependencies with fds, and the undecidability of the combined
-  implication problem [research]; the definition, reflexivity and transitivity are done.
+§3.5: Theorem 3.19 (completeness and non-redundancy of the id axiom system `𝓘`; the three rules
+  I1/I2/I3 are sound — done), Theorem 3.20 (id implication is decidable), Theorem 3.21
+  (fd+id implication is undecidable), Example 3.26 (ids have no finite counterexample) [research].
+§3.6: tuple- and equality-generating dependencies (Def 3.16 / 3.17, with the full / embedded /
+  typed / untyped classification), embedded multivalued dependencies and projected embedded join
+  dependencies (Def 3.19), Theorem 3.22 (fds/mvds/jds/ids as tgds/egds), Theorem 3.23 / 3.25
+  (embedded and projected-embedded jds as projection decompositions), Theorem 3.24 (full tgd+egd
+  implication is decidable, via the generalized chase) and Theorem 3.26 (projected-embedded-jd
+  implication is undecidable) [research]. The embedded jd (Def 3.18) is the general `SatisfiesJd`.
 §3.6: tuple- and equality-generating dependencies — definition and the chase [infra/research].
 §3.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -129,7 +135,18 @@ abbrev def_3_15 := @DeepWiki.SatisfiesInd
 /-- **Inclusion-dependency reflexivity** (§3.5): `[A] ⊆ [A]`. -/
 abbrev ind_refl := @DeepWiki.satisfiesInd_refl
 
-/-- **Inclusion-dependency transitivity** (§3.5): `[A] ⊆ [B]` and `[B] ⊆ [C]` give `[A] ⊆ [C]`. -/
+/-- **Inclusion-dependency transitivity** (§3.5, rule I3): `[A] ⊆ [B]` and `[B] ⊆ [C]` give
+`[A] ⊆ [C]`. -/
 abbrev ind_trans := @DeepWiki.satisfiesInd_trans
+
+/-- **Inclusion-dependency projection/permutation** (§3.5, Theorem 3.19, rule I2): reindexing both
+sequences by the same map preserves the dependency. -/
+abbrev ind_reindex := @DeepWiki.satisfiesInd_reindex
+
+/-! ## §3.6 Tuple and Equality Generating Dependencies -/
+
+/-- **Definition 3.18** (§3.6, p.104): an *embedded join dependency* — the general `SatisfiesJd`
+without the requirement that the components cover `Ω`. -/
+abbrev def_3_18_embedded_jd := @DeepWiki.SatisfiesJd
 
 end DeepWiki.Rdb
