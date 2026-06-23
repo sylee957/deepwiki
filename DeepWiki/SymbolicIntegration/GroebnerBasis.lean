@@ -3,6 +3,8 @@ import Mathlib.RingTheory.MvPolynomial.Ideal
 import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
 import Mathlib.Data.Finsupp.PWO
+import Mathlib.Algebra.MvPolynomial.Equiv
+import Mathlib.Data.Finsupp.MonomialOrder
 
 /-! # Gröbner bases over a monomial order
 
@@ -1073,9 +1075,122 @@ theorem lazard_lemma1_injOn {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
   by_contra hne
   exact lazard_lemma1 hB b hb b' hb' hne hyeq
 
+/-! ## The `MvPolynomial (Fin 2) K ↔ K[x][y]` representation bridge
+
+Lazard's bivariate Gröbner-basis structure theory (Lazard 1985, for Bronstein §2.6 /
+Czichowski) views a bivariate polynomial `f : MvPolynomial (Fin 2) K` as a univariate
+polynomial in `y` with coefficients in `K[x]`. Mathlib's `MvPolynomial.finSuccEquiv` pulls out
+**variable `0`** as the `Polynomial` variable, so we adopt the convention `y = variable 0`,
+`x = variable 1` — `finSuccEquiv K 1 f : Polynomial (MvPolynomial (Fin 1) K)` is the `K[x][y]`
+view, its `natDegree` is the `y`-degree `degreeOf 0 f`, and its `leadingCoeff` (in the GCD domain
+`MvPolynomial (Fin 1) K ≃ K[x]`) is the leading-`y`-coefficient `Rₖ` of Lazard's lemmas.
+
+For Lazard's structure theory the `y`-degree must be the **dominant** coordinate of the monomial
+order. The lex order `MonomialOrder.lex` on `Fin 2` makes the *smaller* index dominant (`X 1 <
+X 0 ^ 2`), i.e. index `0 = y` dominant — the right convention. We package this dominance as a
+hypothesis `hdom : ∀ f ≠ 0, (m.degree f) 0 = degreeOf 0 f` and prove `MonomialOrder.lex`
+satisfies it (`lex_degree_apply_zero`), so the bridge is stated for any dominant order and
+instantiated concretely by lex. -/
+
+/-- For lex on `Fin 2`, comparable exponent vectors are comparable at the dominant index `0`:
+`toLex s ≤ toLex t → s 0 ≤ t 0` (index `0` is the most significant lex coordinate). -/
+theorem apply_zero_le_of_toLex_le {s t : Fin 2 →₀ ℕ} (h : toLex s ≤ toLex t) : s 0 ≤ t 0 := by
+  rcases h.lt_or_eq with hlt | heq
+  · obtain ⟨i, hbelow, hi⟩ := Finsupp.Lex.lt_iff.mp hlt
+    fin_cases i
+    · exact hi.le
+    · exact (hbelow 0 (by decide)).le
+  · exact (congrArg (fun u => (ofLex u) 0) heq).le
+
+/-- **Lex makes the `y`-degree (index `0`) dominant**: for `MonomialOrder.lex` on `Fin 2` and
+`f ≠ 0`, the index-`0` exponent of the leading monomial equals the `y`-degree `degreeOf 0 f`. -/
+theorem lex_degree_apply_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 0 = degreeOf 0 f := by
+  apply le_antisymm
+  · exact monomial_le_degreeOf 0 (MonomialOrder.degree_mem_support hf)
+  · rw [degreeOf_le_iff]
+    intro s hs
+    have hle : s ≼[MonomialOrder.lex] MonomialOrder.lex.degree f :=
+      MonomialOrder.le_degree hs
+    rw [MonomialOrder.lex_le_iff] at hle
+    exact apply_zero_le_of_toLex_le hle
+
+/-- **The `K[x][y]` view of a bivariate polynomial** (`y = variable 0`): `finSuccEquiv K 1 f`
+re-reads `f : MvPolynomial (Fin 2) K` as a univariate polynomial in `y` with coefficients in
+`MvPolynomial (Fin 1) K ≃ K[x]`. -/
+noncomputable def lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    Polynomial (MvPolynomial (Fin 1) K) :=
+  finSuccEquiv K 1 f
+
+/-- **Lazard's leading-`y`-coefficient `Rₖ`**: the `K[x]`-coefficient of the top `y`-power of `f`,
+`(finSuccEquiv K 1 f).leadingCoeff ∈ MvPolynomial (Fin 1) K`. -/
+noncomputable def leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    MvPolynomial (Fin 1) K :=
+  (lazardView f).leadingCoeff
+
+/-- `lazardView` is injective (it is the bijection `finSuccEquiv`). -/
+theorem lazardView_injective {K : Type*} [Field K] :
+    Function.Injective (lazardView (K := K)) :=
+  (finSuccEquiv K 1).injective
+
+/-- `lazardView f = 0 ↔ f = 0`. -/
+@[simp] theorem lazardView_eq_zero_iff {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    lazardView f = 0 ↔ f = 0 := by
+  rw [lazardView, map_eq_zero_iff _ (finSuccEquiv K 1).injective]
+
+/-- **The `y`-degree bridge**: the `natDegree` of the `K[x][y]` view is the `y`-degree
+`degreeOf 0 f` (Mathlib's `natDegree_finSuccEquiv`). -/
+theorem natDegree_lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    (lazardView f).natDegree = degreeOf 0 f :=
+  natDegree_finSuccEquiv f
+
+/-- **The degree bridge** (under a dominant order): for a `MonomialOrder (Fin 2) m` whose leading
+monomial maximizes the variable-`0` exponent (`hdom`), the index-`0` component of `m.degree f` is
+the `K[x][y]` `natDegree`. Combines `hdom` with `natDegree_finSuccEquiv`. -/
+theorem degree_apply_zero_eq_natDegree_lazardView {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+    (hdom : ∀ f : MvPolynomial (Fin 2) K, f ≠ 0 → (m.degree f) 0 = degreeOf 0 f)
+    {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (m.degree f) 0 = (lazardView f).natDegree := by
+  rw [hdom f hf, natDegree_lazardView]
+
+/-- **`leadingYCoeff f ≠ 0 ↔ f ≠ 0`**: the leading-`y`-coefficient vanishes exactly when `f` does
+(`Polynomial.leadingCoeff_ne_zero` through the `finSuccEquiv` injection). -/
+@[simp] theorem leadingYCoeff_ne_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    leadingYCoeff f ≠ 0 ↔ f ≠ 0 := by
+  rw [ne_eq, ne_eq, leadingYCoeff, Polynomial.leadingCoeff_eq_zero, lazardView_eq_zero_iff]
+
+/-- **`leadingYCoeff f = 0 ↔ f = 0`**. -/
+@[simp] theorem leadingYCoeff_eq_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    leadingYCoeff f = 0 ↔ f = 0 := by
+  rw [leadingYCoeff, Polynomial.leadingCoeff_eq_zero, lazardView_eq_zero_iff]
+
+/-- **Multiplicativity of the leading-`y`-coefficient**: `leadingYCoeff (f * g) = leadingYCoeff f *
+leadingYCoeff g` — `lazardView` is a ring hom into the domain `Polynomial (MvPolynomial (Fin 1) K)`
+(no zero divisors), so `Polynomial.leadingCoeff_mul` applies. -/
+theorem leadingYCoeff_mul {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
+    leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g := by
+  rw [leadingYCoeff, leadingYCoeff, leadingYCoeff, lazardView, lazardView, lazardView, map_mul,
+    Polynomial.leadingCoeff_mul]
+
 -- Restatements against the intended wording.
 example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
   finsupp_fin_two_le_or_le_of_apply_eq h
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 0 = degreeOf 0 f :=
+  lex_degree_apply_zero hf
+
+example {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    (lazardView f).natDegree = degreeOf 0 f :=
+  natDegree_lazardView f
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
+    leadingYCoeff f ≠ 0 ↔ f ≠ 0 :=
+  leadingYCoeff_ne_zero
+
+example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
+    leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g :=
+  leadingYCoeff_mul f g
 
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
     (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)

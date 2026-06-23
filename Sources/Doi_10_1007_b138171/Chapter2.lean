@@ -23,9 +23,11 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
 §2.6: Czichowski's structural lemmas — Lazard (1985) Lemma 1 (distinct leading y-degrees in a
-  minimal bivariate GB) is done (`lazard_lemma1`); the K[x][y] representation bridge (content/
-  primpart), Lazard Lemma 2 (`R_{k+1} ∣ Rₖ`), Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization, and the
-  normal-position analysis of `⟨A−zD', D⟩` remain [research: Czichowski normal position].
+  minimal bivariate GB) is done (`lazard_lemma1`); the K[x][y] representation bridge (degree /
+  leading-y-coefficient correspondence, `y = variable 0`) is done (`lazard_leadingYCoeff`,
+  `lazard_degree_bridge`); Lazard Lemma 2 (`R_{k+1} ∣ Rₖ`), Lemma 3, the `Pₖ = Rₖ·Sₖ`
+  factorization, and the normal-position analysis of `⟨A−zD', D⟩` remain [research: Czichowski
+  normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -499,6 +501,25 @@ the first stepping stone toward Czichowski's structural lemmas. The library's `l
 (order sublemma `finsupp_fin_two_le_or_le_of_apply_eq` + minimality extraction
 `IsReducedGroebnerBasis.leadingMonomial_not_le`), with injectivity form `lazard_lemma1_injOn`. -/
 abbrev lazard_lemma1 := @DeepWiki.SymbolicIntegration.lazard_lemma1
+
+/-- **The `MvPolynomial (Fin 2) K ↔ K[x][y]` representation bridge** (cited in §2.6; Lazard 1985,
+the framework step of his bivariate GB structure theory). With the convention `y = variable 0`
+(matching `MvPolynomial.finSuccEquiv`, which pulls out variable `0` as the `Polynomial` variable),
+`lazardView f = finSuccEquiv K 1 f` is the `K[x][y]` view and `leadingYCoeff f` is Lazard's
+leading-y-coefficient `Rₖ ∈ MvPolynomial (Fin 1) K ≃ K[x]`. The y-degree bridge `natDegree_lazardView`
+(`(lazardView f).natDegree = degreeOf 0 f`, Mathlib's `natDegree_finSuccEquiv`) plus the dominance
+lemma `lex_degree_apply_zero` (lex makes index `0 = y` dominant: `(MonomialOrder.lex.degree f) 0 =
+degreeOf 0 f`) give the degree correspondence `degree_apply_zero_eq_natDegree_lazardView`. Satellite
+API: `leadingYCoeff_ne_zero`/`leadingYCoeff_eq_zero` and multiplicativity `leadingYCoeff_mul`
+(`MvPolynomial (Fin 1) K` is a domain). The library's `leadingYCoeff`. -/
+noncomputable abbrev lazard_leadingYCoeff := @DeepWiki.SymbolicIntegration.leadingYCoeff
+
+/-- **The y-degree correspondence of the `K[x][y]` bridge** (cited in §2.6; Lazard 1985): under a
+monomial order `m` making `y = variable 0` dominant (`hdom`, satisfied by `MonomialOrder.lex`), the
+index-`0` component of the leading monomial `m.degree f` equals the `K[x][y]` view's `natDegree`,
+`(m.degree f) 0 = (lazardView f).natDegree`. The library's
+`degree_apply_zero_eq_natDegree_lazardView`. -/
+abbrev lazard_degree_bridge := @DeepWiki.SymbolicIntegration.degree_apply_zero_eq_natDegree_lazardView
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
