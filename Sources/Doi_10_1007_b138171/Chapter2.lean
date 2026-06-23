@@ -22,20 +22,15 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ` is formalized **conditional on
-  the no-common-factor base** `C(g₀) ∣ lazardView f₀` (`hbase`, the genuinely necessary-and-sufficient
-  base divisibility; the `f₀ ∈ K[x]` / `degreeOf 0 (sorted 0) = 0` special case specializes via
-  `baseDvd_of_degreeOf_zero`/`lazard_lemma3_dvd_of_degreeOf_zero`): the non-circular step
-  (`C_dvd_lazardView_succ`), the strengthened induction (`C_dvd_lazardView_sortedByYDegree_of_le`,
-  `lazard_lemma3_dvd`), and the per-element split (`lazard_Pk_eq_Rk_Sk_of_sortedByYDegree`) all close
-  with no sorry. The base is genuinely irremovable — `f=xy+1` is a reduced-GB minimal element with
-  `leadingYCoeff = x` non-unit and `C(x) ∤ lazardView f` (formal refutation
-  `not_isUnit_leadingYCoeff_xyAddOne`, `not_C_leadingYCoeff_dvd_lazardView_xyAddOne`), so no free
-  leading-coeff fact discharges it. Open: discharging `hbase` — it needs Theorem 1's divide-out by the
-  genuine `K[x][y]` common factor `P·Gₖ₊₁` where `P = primpart(gcd(f₀,…,fₖ))` carries the `y`-degree;
-  the `K[x]`-content layer alone (`gbCommonContent ∼ gₖ`, `IsUnit gₖ`) is necessary but NOT sufficient —
-  `I=(y)` has `gₖ=1` yet `f₀=y ∉ K[x]` [research: Lazard Thm 1 P·Gₖ₊₁ divide-out construction]; plus the
-  normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
+§2.6: Czichowski's structural lemmas — the Lemma 3 descent `gᵢ ∣ fᵢ` is **unconditional under
+  `HasNoCommonYFactor`** (`lazard_lemma3_dvd_of_hasNoCommonYFactor`, `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`):
+  the no-common-factor base is discharged by the structure fact that `primPart(lazardView f₀)` divides
+  every basis view (`primPart_lazardView_min_dvd_all`, via a reduction-element induction + Gauss-lemma
+  scalar-strip `isPrimitive_dvd_of_dvd_C_mul`), forcing `degreeOf 0 f₀ = 0`. Open: the divide-out
+  *construction* producing, from an arbitrary reduced GB, the divided basis `{fᵢ/(P·Gₖ₊₁)}` that
+  satisfies `HasNoCommonYFactor` — the leading-monomial-preservation core is `degree_cofactor` /
+  `degree_mul_le_mul_iff` / `leadingMonomial_cofactor_not_le` [research: Lazard Thm 1 P·Gₖ₊₁ quotient-GB
+  construction]; plus the normal-position analysis of `⟨A−zD', D⟩` [research: Czichowski normal position].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.
@@ -614,6 +609,30 @@ exactly what Lazard's `P·Gₖ₊₁` divide-out achieves for the whole basis. T
 `C_dvd_lazardView_iff_content_associated`. -/
 abbrev lazard_lemma3_base_content_criterion :=
   @DeepWiki.SymbolicIntegration.C_dvd_lazardView_iff_content_associated
+
+/-- **Lazard (1985), Lemma 3, the structure fact** (cited in §2.6; p.263, "`primpart(f₀)` divides
+`f₀,…,fₖ`"): for the minimal-`y`-degree element `f₀`, its `y`-primitive part `P = primPart(lazardView
+f₀)` divides `lazardView (sorted i)` for *every* `i` — by a reduction-element induction (the
+`(gᵢ/g_{i+1})·fᵢ ∈ (fᵢ,…,f₀)` membership feeds the IH; Gauss's lemma strips the `K[x]`-scalar). The
+library's `primPart_lazardView_min_dvd_all`. -/
+noncomputable abbrev lazard_lemma3_structure_fact :=
+  @DeepWiki.SymbolicIntegration.primPart_lazardView_min_dvd_all
+
+/-- **Lazard (1985), Lemma 3, "`f₀ ∈ K[x]`" under no common factor** (cited in §2.6; p.263): if the
+basis has no common `y`-factor (`HasNoCommonYFactor`: every common `K[x][y]`-divisor of the views is a
+unit — Lazard's post-`P·Gₖ₊₁`-divide-out state), the minimal element has `y`-degree `0`, since the
+common factor `primPart(lazardView f₀)` is forced to be a unit. The library's
+`degreeOf_min_eq_zero_of_hasNoCommonYFactor`. -/
+noncomputable abbrev lazard_lemma3_min_in_Kx :=
+  @DeepWiki.SymbolicIntegration.degreeOf_min_eq_zero_of_hasNoCommonYFactor
+
+/-- **Lazard (1985), Lemma 3 descent, unconditional** (cited in §2.6; the no-common-factor case): under
+`HasNoCommonYFactor` the base divisibility is discharged, so `gᵢ ∣ fᵢ` (`C(Rᵢ) ∣ lazardView fᵢ`) holds
+for every sorted element with **no** base hypothesis. The library's
+`lazard_lemma3_dvd_of_hasNoCommonYFactor`; the `Pₖ = Rₖ·Sₖ` split is
+`lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`. -/
+noncomputable abbrev lazard_lemma3_dvd_unconditional :=
+  @DeepWiki.SymbolicIntegration.lazard_lemma3_dvd_of_hasNoCommonYFactor
 
 /-! ## §2.7 Newton–Leibniz–Bernoulli Revisited -/
 
