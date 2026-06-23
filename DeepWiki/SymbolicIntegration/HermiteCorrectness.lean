@@ -1040,3 +1040,62 @@ theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
     (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
     IsRelPrime V W :=
   ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
+
+/-! ### The abstract Yun loop state and its step recurrence (exact, scalar-tracked)
+
+`csqfreeFactor`'s loop carries a numerator `b` (the radical of the remaining part) and a
+derivative-poly `d`, updating `(b, d) ↦ (b/gcd, d/gcd − (b/gcd)′)`. Because the `d`-update contains a
+**subtraction**, the invariant cannot be tracked up to `Associated` alone (subtraction does not respect
+associates); it must track a single *shared scalar* `c ∈ K` relating `(b, d)` to the abstract pair
+`(Babs A i, Dabs A i)`. The two abstract objects satisfy EXACT product identities
+`Babs A i = Vᵢ · Babs A (i+1)` and `Dabs A i = Vᵢ · Yun A (i+1)` (from
+`squarefreePart_deflation_mul_sqfreeFactPart` and `Yun_sub_derivative_squarefreePart`), and `gcd Babs
+Dabs = normalize Vᵢ` (the relatively-prime quotient is a unit), so dividing both by the monic gcd
+multiplies each by the *same* scalar `(leadingCoeff Vᵢ)` — the shared-scalar invariant is preserved. -/
+
+open Classical in
+/-- **Abstract Yun numerator** `Babs A i = ∏_{j≥i} Vⱼ`, the radical of the remaining part at step `i`
+(`= squarefreePart (deflation A (i−1))`). -/
+noncomputable def Babs {K : Type*} [Field K] (A : K[X]) (i : ℕ) : K[X] :=
+  squarefreePart (deflation A (i - 1))
+
+open Classical in
+/-- **Abstract Yun derivative-poly** `Dabs A i = Yᵢ − Babs A i′ = Vᵢ · Y_{i+1}`, the working `d` at
+step `i`. -/
+noncomputable def Dabs {K : Type*} [Field K] (A : K[X]) (i : ℕ) : K[X] :=
+  Yun A i - derivative (squarefreePart (deflation A (i - 1)))
+
+open Classical in
+/-- `Babs A i = Vᵢ · Babs A (i+1)` (exact): the remaining radical factors off `Vᵢ` and the radical of
+the next remaining part. Restates `squarefreePart_deflation_mul_sqfreeFactPart`. -/
+theorem Babs_eq_mul {K : Type*} [Field K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
+    Babs A i = sqfreeFactPart A i * Babs A (i + 1) := by
+  rw [Babs, Babs, Nat.add_sub_cancel, ← squarefreePart_deflation_mul_sqfreeFactPart A i hi hA,
+    mul_comm]
+
+open Classical in
+/-- `Dabs A i = Vᵢ · Yun A (i+1)` (exact): the working derivative-poly factors off `Vᵢ`. Restates
+`Yun_sub_derivative_squarefreePart`. -/
+theorem Dabs_eq_mul {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) :
+    Dabs A i = sqfreeFactPart A i * Yun A (i + 1) := by
+  rw [Dabs]; exact Yun_sub_derivative_squarefreePart A i hi hA
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- **The monic Yun gcd is `normalize Vᵢ`**: `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart
+A i)`. Both `Babs A i = Vᵢ·Babs A (i+1)` and `Dabs A i = Vᵢ·Y_{i+1}` carry the common factor `Vᵢ`;
+factoring it out (`gcd_mul_left`), `gcd (Babs A (i+1)) (Y_{i+1})` is a unit (relatively prime,
+`isRelPrime_squarefreePart_Yun`, normalized to `1`), leaving `normalize Vᵢ`. -/
+theorem gcd_Babs_Dabs {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) :
+    gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i) := by
+  rw [Babs_eq_mul A i hi hA, Dabs_eq_mul A i hi hA, gcd_mul_left]
+  -- `gcd (Babs A (i+1)) (Yun A (i+1)) = 1`
+  have hrp : IsRelPrime (Babs A (i + 1)) (Yun A (i + 1)) := by
+    have h := isRelPrime_squarefreePart_Yun A (i + 1) (by omega) hA
+    rw [Babs]; rwa [Nat.add_sub_cancel] at h
+  have hunit : IsUnit (gcd (Babs A (i + 1)) (Yun A (i + 1))) :=
+    gcd_isUnit_iff_isRelPrime.mpr hrp
+  rw [(normalize_eq_one.mpr hunit ▸ (normalize_gcd (Babs A (i + 1)) (Yun A (i + 1))).symm :
+    gcd (Babs A (i + 1)) (Yun A (i + 1)) = 1), mul_one]
