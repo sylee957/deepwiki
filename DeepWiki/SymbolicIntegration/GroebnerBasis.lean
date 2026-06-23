@@ -3205,4 +3205,97 @@ theorem cofactor_hasNoCommonYFactor {K : Type*} [Field K] {I : Ideal (MvPolynomi
   rw [gbYGcdCofactor_gcd_eq_one hB hne] at hdvd
   exact isUnit_of_dvd_one hdvd
 
+/-- **The common factor pulled back to `K[x,y]`** (Lazard's `H = P·Gₖ₊₁` as a bivariate polynomial):
+`(finSuccEquiv K 1).symm (gbYGcd hB)`, the divisor `H` that divides every basis element directly in
+`MvPolynomial (Fin 2) K`. -/
+noncomputable def gbCommonYFactor {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    MvPolynomial (Fin 2) K :=
+  (finSuccEquiv K 1).symm (gbYGcd hB)
+
+/-- **The pullback's `lazardView` is `gbYGcd`** (`lazardView H = gbYGcd hB`): `lazardView` is
+`finSuccEquiv K 1`, so its `symm` is the inverse (`apply_symm_apply`). -/
+@[simp] theorem lazardView_gbCommonYFactor {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
+    lazardView (gbCommonYFactor hB) = gbYGcd hB := by
+  rw [gbCommonYFactor, lazardView, AlgEquiv.apply_symm_apply]
+
+/-- **The common factor `H` divides every basis element** (Lazard's `H ∣ fᵢ`, bivariate form): from
+`gbYGcd hB ∣ lazardView (sorted i)` (`gbYGcd_dvd`), transported back through the ring iso `lazardView`
+(`map_dvd_iff`). This is the divisor Lazard's Theorem 1 proof divides the basis by. -/
+theorem gbCommonYFactor_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) :
+    gbCommonYFactor hB ∣ sortedByYDegree hB i := by
+  letI := gcdMonoidLazardRing K
+  rw [← map_dvd_iff (finSuccEquiv K 1)]
+  show lazardView (gbCommonYFactor hB) ∣ lazardView (sortedByYDegree hB i)
+  rw [lazardView_gbCommonYFactor]
+  exact gbYGcd_dvd hB i
+
+/-- **Lazard's Theorem 1, the `P·Gₖ₊₁` divide-out** (capstone, the general bivariate case). For an
+**arbitrary** (nonempty) reduced bivariate Gröbner basis, there is a common factor `H` (the gcd of the
+basis, `gbCommonYFactor`) dividing every element, and a cofactor family `b'ᵢ` with `fᵢ = H·b'ᵢ` whose
+views `lazardView`-coincide with the divided basis and have **no common `y`-factor** — exactly the
+state in which the structural conclusions (`lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`, the descent)
+hold unconditionally. So every arbitrary reduced bivariate GB reduces, by this divide-out, to the
+no-common-factor case where Lazard's structure theorem applies. -/
+theorem lazard_thm1_divideOut {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    ∃ (H : MvPolynomial (Fin 2) K)
+      (b' : Fin B.card → Polynomial (MvPolynomial (Fin 1) K)),
+      (∀ i, H ∣ sortedByYDegree hB i) ∧
+        (∀ i, lazardView (sortedByYDegree hB i) = lazardView H * b' i) ∧
+        (∀ P : Polynomial (MvPolynomial (Fin 1) K),
+          (∀ i, P ∣ b' i) → IsUnit P) :=
+  ⟨gbCommonYFactor hB, gbYGcdCofactor hB hne, gbCommonYFactor_dvd hB,
+    fun i => by rw [lazardView_gbCommonYFactor]; exact gbYGcd_mul_cofactor hB hne i,
+    cofactor_hasNoCommonYFactor hB hne⟩
+
+-- The `P·Gₖ₊₁` divide-out (Lazard's Theorem 1, general case).
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) :
+    @Dvd.dvd _ _ (gbYGcd hB) (lazardView (sortedByYDegree hB i)) :=
+  gbYGcd_dvd hB i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (i : Fin B.card) :
+    lazardView (sortedByYDegree hB i) = gbYGcd hB * gbYGcdCofactor hB hne i :=
+  gbYGcd_mul_cofactor hB hne i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    (P : Polynomial (MvPolynomial (Fin 1) K))
+    (hP : ∀ i : Fin B.card, P ∣ gbYGcdCofactor hB hne i) : IsUnit P :=
+  cofactor_hasNoCommonYFactor hB hne P hP
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (i : Fin B.card) :
+    gbCommonYFactor hB ∣ sortedByYDegree hB i :=
+  gbCommonYFactor_dvd hB i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    ∃ (H : MvPolynomial (Fin 2) K)
+      (b' : Fin B.card → Polynomial (MvPolynomial (Fin 1) K)),
+      (∀ i, H ∣ sortedByYDegree hB i) ∧
+        (∀ i, lazardView (sortedByYDegree hB i) = lazardView H * b' i) ∧
+        (∀ P : Polynomial (MvPolynomial (Fin 1) K), (∀ i, P ∣ b' i) → IsUnit P) :=
+  lazard_thm1_divideOut hB hne
+
 end DeepWiki.SymbolicIntegration
