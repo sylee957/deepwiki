@@ -624,4 +624,55 @@ theorem aeval_polyZ (x : Fin 2 → K) (p : K[X]) :
     (fun p q hp hq => by rw [map_add, map_add, hp, hq, Polynomial.eval_add])
     (fun n a _ => by simp [pow_succ, polyZ_C, zVar])
 
+/-! ### The zero set `V(I) = {(residue, root)}` -/
+
+/-- `aeval x` evaluated on the first generator `A − z·D'` reads `A(x₁) − x₀·D'(x₁)`. -/
+theorem aeval_czGen (x : Fin 2 → K) :
+    MvPolynomial.aeval x (czGen A D) = A.eval (x 1) - x 0 * (derivative D).eval (x 1) := by
+  rw [czGen, map_sub, map_mul, aeval_liftX, aeval_liftX]
+  simp [zVar]
+
+/-- **Membership in `V(I)`**: a point `x` is a zero of `I = ⟨A − z·D', D⟩` iff `D(x₁) = 0` and
+`A(x₁) = x₀·D'(x₁)` — i.e. `x₁` is a root of `D` and `x₀` is its residue. -/
+theorem mem_zeroLocus_czIdeal_iff (x : Fin 2 → K) :
+    x ∈ zeroLocus K (czIdeal A D) ↔
+      D.eval (x 1) = 0 ∧ A.eval (x 1) = x 0 * (derivative D).eval (x 1) := by
+  rw [czIdeal, zeroLocus_span]
+  constructor
+  · intro hx
+    refine ⟨?_, ?_⟩
+    · have := hx (liftX D) (by simp); rwa [aeval_liftX] at this
+    · have := hx (czGen A D) (by simp); rw [aeval_czGen] at this; exact sub_eq_zero.mp this
+  · rintro ⟨hD0, hA0⟩ p (rfl | rfl)
+    · rw [aeval_czGen, hA0, sub_self]
+    · rw [aeval_liftX, hD0]
+
+/-- **The `z`-coordinate of a zero is a residue**: at a point of `V(I)`, with `D` separable
+(so `D'(x₁) ≠ 0` at the root `x₁`), `x₀ = A(x₁)/D'(x₁)` is the Rothstein–Trager residue. -/
+theorem zeroLocus_coord_eq_residue (hD : D.Separable) {x : Fin 2 → K}
+    (hx : x ∈ zeroLocus K (czIdeal A D)) :
+    x 0 = A.eval (x 1) / (derivative D).eval (x 1) := by
+  rw [mem_zeroLocus_czIdeal_iff] at hx
+  have hD'0 : (derivative D).eval (x 1) ≠ 0 := by
+    have := hD.eval₂_derivative_ne_zero (RingHom.id K)
+      (by simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using hx.1)
+    simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using this
+  rw [eq_div_iff hD'0, hx.2]
+
+/-- **The zero set is exactly `{(residue, root)}`**: over an algebraically closed field with `D`
+separable, the points of `V(I)` are precisely `(A(α)/D'(α), α)` for the roots `α` of `D`. -/
+theorem mem_zeroLocus_czIdeal_iff_isRoot (hD : D.Separable) (x : Fin 2 → K) :
+    x ∈ zeroLocus K (czIdeal A D) ↔
+      D.IsRoot (x 1) ∧ x 0 = A.eval (x 1) / (derivative D).eval (x 1) := by
+  constructor
+  · intro hx
+    exact ⟨(mem_zeroLocus_czIdeal_iff A D x).mp hx |>.1, zeroLocus_coord_eq_residue A D hD hx⟩
+  · rintro ⟨hroot, hres⟩
+    have hD'0 : (derivative D).eval (x 1) ≠ 0 := by
+      have := hD.eval₂_derivative_ne_zero (RingHom.id K)
+        (by simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using hroot)
+      simpa [Polynomial.eval₂_eq_eval_map, Polynomial.map_id] using this
+    rw [mem_zeroLocus_czIdeal_iff]
+    exact ⟨hroot, by rw [hres, div_mul_cancel₀ _ hD'0]⟩
+
 end DeepWiki.SymbolicIntegration
