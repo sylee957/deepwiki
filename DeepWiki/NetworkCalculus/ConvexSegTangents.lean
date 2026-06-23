@@ -76,6 +76,28 @@ theorem convexSegEval_append_at_segLenSum (f0 fs : ℝ≥0) (pre rest : List (�
         convexSegEval_cons_peel, ih]
       ring
 
+/-- **Peel the whole prefix.** For `t ≥ τ = segLenSum pre`, the curve restarts from the corner value
+`v = f̲(τ) = f0 + cornerSum pre` on the suffix: `f̲(t) = convexSegEval v fs suf (t − τ)`. (Iterated
+`convexSegEval_cons_peel`; local copy avoiding the `ConvexSegEvalSplit` import.) -/
+theorem convexSegEval_append_peel_at (f0 fs : ℝ≥0) (pre suf : List (ℝ≥0 × ℝ≥0)) {t : ℝ≥0}
+    (ht : segLenSum pre ≤ t) :
+    convexSegEval f0 fs (pre ++ suf) t
+      = convexSegEval (f0 + cornerSum pre) fs suf (t - segLenSum pre) := by
+  induction pre generalizing f0 t with
+  | nil => simp
+  | cons hd tl ih =>
+      obtain ⟨sa, ℓa⟩ := hd
+      rw [segLenSum_cons] at ht ⊢
+      have hℓat : ℓa ≤ t := le_trans le_self_add ht
+      have htl : segLenSum tl ≤ t - ℓa := by rw [le_tsub_iff_left hℓat]; exact ht
+      rw [List.cons_append, cornerSum_cons,
+        show t = ℓa + (t - ℓa) from (add_tsub_cancel_of_le hℓat).symm,
+        convexSegEval_cons_peel f0 fs sa ℓa (t - ℓa) (tl ++ suf),
+        ih (f0 + sa * ℓa) htl, tsub_tsub,
+        show f0 + sa * ℓa + cornerSum tl = f0 + (sa * ℓa + cornerSum tl) from by ring]
+      congr 2
+      rw [add_tsub_cancel_of_le hℓat]
+
 /-! ## Per-segment tangent latency and own-segment exactness -/
 
 /-- The **per-segment tangent latency** of segment `i` (split `segs = pre ++ (s, ℓ) :: post`, with
