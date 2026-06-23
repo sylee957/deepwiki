@@ -29,6 +29,7 @@ import DeepWiki.NetworkCalculus.SegmentClosureSelect
 import DeepWiki.NetworkCalculus.SegmentClosureSelectDual
 import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ContainerQuotient
+import DeepWiki.NetworkCalculus.ContainerQuotientConv
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -55,7 +56,8 @@ cases, with two book-misprint repairs on the increments/rank).
 Proposition 4.2 (same Legendre–Fenchel transform ↔ equal convex biconjugates) DONE (`prop_4_2`, both
 directions); Proposition 4.3 DONE — congruence is an equivalence (`prop_4_3_setoid`), `⊓` descends to the quotient
 `FmodL` (`prop_4_3_inf_congr`/`FmodL.inf`) and `∗` respects it at the representative level
-(`SameLegendre.legendreConv`); what remains is full `⊗`-descent (needs a proper subtype) and the
+(`SameLegendre.legendreConv`); the `⊗`-descent is done on the proper-curve subtype (`prop_4_3_conv_mk`/`FmodLProper`, mapping into
+the full quotient since `legendreConv` need not preserve properness); what remains is the
 closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; Definition 4.3 (canonical representation); Definition 4.4 (maximal uncertainty); Definition
 4.5 (inclusion functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all
 `[research]` (need the `F_acv` almost-concave class + asymptotic-slope `ρ` typing, not yet built);
@@ -860,6 +862,20 @@ theorem prop_4_3_inf_congr {f f' g g' : ℝ≥0 → EReal}
     (hf : DeepWiki.Container.SameLegendre f f') (hg : DeepWiki.Container.SameLegendre g g') :
     DeepWiki.Container.SameLegendre (f ⊓ g) (f' ⊓ g') :=
   DeepWiki.Container.SameLegendre.inf hf hg
+
+/-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
+Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
+proper subtype `ProperCurve`: `FmodLProper.conv` lifts `legendreConv` via `Quotient.lift₂`
+(`conv_mk : conv (mk f) (mk g) = FmodL.mk (legendreConv f g)`), and `⊓` is a closed op on the subtype
+(`FmodLProper.inf`). NB the result of `⊗` lands in the FULL quotient `FmodL`, not back in the proper
+subtype: `legendreConv` of two proper curves need NOT be proper (an infinite `⨅` over `{u+v=t}` can
+hit `⊥` though every term is `> ⊥`). The library's `DeepWiki.Container.FmodLProper.conv` /
+`.inf`. -/
+theorem prop_4_3_conv_mk (f g : DeepWiki.Container.ProperCurve) :
+    DeepWiki.Container.FmodLProper.conv (DeepWiki.Container.FmodLProper.mk f)
+        (DeepWiki.Container.FmodLProper.mk g)
+      = DeepWiki.Container.FmodL.mk (legendreConv f.1 g.1) :=
+  DeepWiki.Container.FmodLProper.conv_mk f g
 
 /-! **Remark** (§4.3.3, p.80): On the discrete domain ℕ, (F_ℕ, ∧, ∗_ℕ) is a dioid; the library's function complete-dioid (FPlus over the ℝ≥0 domain) carries the same (min,conv) dioid algebra. Library: FPlus, isSubCompleteDioid_FPlus. -/
 
