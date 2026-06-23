@@ -19,3 +19,4 @@ import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.GroebnerBasis
+import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
