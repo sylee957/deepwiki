@@ -16,6 +16,7 @@ import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.LogToAtanCompute
+import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -555,6 +556,28 @@ theorem ex_2_8_1_compute :
         DeepWiki.SymbolicIntegration.Compute.cX2m2
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] :=
   DeepWiki.SymbolicIntegration.Compute.logToAtanCompute_ex281
+
+/-- **Rothstein–Trager resultant, computable variant** (§2.4, eq 2.7, p.47): a genuinely `#eval`-able
+rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `CPoly := List ℚ` (Mathlib's
+`ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `cresultant` uses the
+Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
+resultant is recovered, staying univariate, by evaluation + Lagrange interpolation (`cinterpolate`).
+The library's `rtResultantCompute`, with `cderiv` (computable derivative, `toPoly_cderiv` bridge) and
+`csqfreePart` (primitive part). Agreement with `rtResultant` is deferred. -/
+def rtResultant_compute := @DeepWiki.SymbolicIntegration.Compute.rtResultantCompute
+
+/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
+`A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`) to
+`[45796, 0, 549552, 0, 2198208, 0, 2930944]` = the book's `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7),
+whose monic squarefree part `csqfreePart … = [1/4, 0, 1]` is the book's primitive `R(t) = 4t²+1`. The
+library's `rtResultant_ex241` / `rtResultant_ex241_sqfree` — the RT resultant engine actually *runs* and
+returns the book's answer. -/
+theorem ex_2_4_1_compute :
+    DeepWiki.SymbolicIntegration.Compute.rtResultantCompute 30
+        DeepWiki.SymbolicIntegration.Compute.cA241
+        DeepWiki.SymbolicIntegration.Compute.cD241
+      = [45796, 0, 549552, 0, 2198208, 0, 2930944] :=
+  DeepWiki.SymbolicIntegration.Compute.rtResultant_ex241
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
