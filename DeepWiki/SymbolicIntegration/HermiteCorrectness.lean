@@ -1299,3 +1299,141 @@ theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (
     Associated (prodPow i (yunLoopAbs A (b, d) i n))
       (prodPow i ((List.range n).map (fun j => sqfreeFactPart A (i + j)))) :=
   prodPow_associated (yunLoopAbs_forall₂ A hA n i b d hi hinv) i
+
+/-! ### The Yun loop base case: `csqfreeFactor`'s `(b₁, d₁)` satisfy `YunInv A 1`
+
+The initialization `b₁ = A/gcd(A,A′)`, `d₁ = A′/gcd(A,A′) − b₁′` of `csqfreeFactor` satisfies the
+shared-scalar invariant `YunInv A 1 b₁ d₁` with scalar `c = leadingCoeff A`. The two monic equalities
+`deflation A 0 = normalize A` (the monic radical-free part) and `gcd A A′ = deflation A 1` reduce the
+init to `derivative_deflation_pred` (`(deflation A 0)′ = deflation A 1 · Yun A 1`) with the scalar
+`leadingCoeff A` consistently shared between `b₁` and `d₁`. -/
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `squarefreePart (deflation A k)` is monic (a product of normalized — hence monic — prime factors). -/
+theorem squarefreePart_deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ)
+    (hA : A.primPart ≠ 0) : (squarefreePart (deflation A k)).Monic := by
+  rw [squarefreePart_deflation A k hA]
+  refine monic_prod_of_monic _ _ (fun P hP => ?_)
+  have hmem := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+  rw [← normalize_normalized_factor P hmem]
+  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `deflation A k` is monic (a product of normalized prime *powers*). -/
+theorem deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ) :
+    (deflation A k).Monic := by
+  rw [deflation]
+  refine monic_prod_of_monic _ _ (fun P hP => ?_)
+  have hmem := Multiset.mem_toFinset.mp hP
+  refine (?_ : (P).Monic).pow _
+  rw [← normalize_normalized_factor P hmem]
+  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `A.primPart` is associated to `A` (over a field the content `C (content A)` is a unit). -/
+theorem associated_primPart_self {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0) :
+    Associated A.primPart A := by
+  have hc : IsUnit (Polynomial.C A.content) := by
+    rw [isUnit_C, isUnit_iff_ne_zero]
+    exact fun h => hA0 (by rw [A.eq_C_content_mul_primPart, h, map_zero, zero_mul])
+  refine ⟨hc.unit, ?_⟩
+  rw [IsUnit.unit_spec]
+  conv_rhs => rw [A.eq_C_content_mul_primPart]
+  ring
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `deflation A 0 = normalize A`: the monic radical-free part is the monic associate of `A`
+(`deflation A 0 ~ A.primPart ~ A ~ normalize A`, all reduced to equality by monic-ness). -/
+theorem deflation_zero_eq_normalize {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) : deflation A 0 = normalize A := by
+  refine eq_of_monic_of_associated (deflation_monic A 0)
+    ((monic_normalize hA0)) ?_
+  exact ((deflation_zero A hA).trans (associated_primPart_self A hA0)).trans
+    (associated_normalize A)
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `A′ = C(content A) · A.primPart′`: the derivative pulls the constant content through. -/
+theorem derivative_eq_C_content_mul_derivative_primPart {K : Type*} [Field K] (A : K[X]) :
+    derivative A = Polynomial.C A.content * derivative A.primPart := by
+  conv_lhs => rw [A.eq_C_content_mul_primPart]
+  rw [derivative_mul, derivative_C, zero_mul, zero_add]
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `gcd A A′ = deflation A 1` over a field: the gcd of `A` and its derivative is Musser's first
+deflation. `gcd A A′ ~ gcd A.primPart A.primPart′ ~ deflation A 1` (`deflation_one_eq_gcd`), both monic
+hence equal. -/
+theorem gcd_self_derivative_eq_deflation_one {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) :
+    gcd A (derivative A) = deflation A 1 := by
+  have hgne : gcd A (derivative A) ≠ 0 :=
+    fun h => hA0 (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+  have hgmonic : (gcd A (derivative A)).Monic := by
+    rw [← normalize_eq_self_iff_monic hgne]; exact normalize_gcd A (derivative A)
+  refine eq_of_monic_of_associated hgmonic (deflation_monic A 1) ?_
+  -- `gcd A A′ ~ gcd A.primPart A.primPart′ ~ deflation A 1`
+  have hAp : Associated A A.primPart := (associated_primPart_self A hA0).symm
+  have hc : IsUnit (Polynomial.C A.content) := by
+    rw [isUnit_C, isUnit_iff_ne_zero]
+    exact fun h => hA0 (by rw [A.eq_C_content_mul_primPart, h, map_zero, zero_mul])
+  have hAp' : Associated (derivative A) (derivative A.primPart) := by
+    rw [derivative_eq_C_content_mul_derivative_primPart A]
+    exact associated_unit_mul_left (derivative A.primPart) (Polynomial.C A.content) hc
+  exact (Associated.gcd hAp hAp').trans (deflation_one_eq_gcd A hA)
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `squarefreePart (deflation A 0) · deflation A 1 = deflation A 0` (exact, monic version of relation
+1.11): the radical times the first deflation recovers the radical-free part, with associated monics
+forced to equality. -/
+theorem squarefreePart_mul_deflation_one {K : Type*} [Field K] (A : K[X]) (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A 0) * deflation A 1 = deflation A 0 := by
+  refine eq_of_monic_of_associated
+    ((squarefreePart_deflation_monic A 0 hA).mul (deflation_monic A 1)) (deflation_monic A 0) ?_
+  exact squarefreePart_mul_deflation_succ A 0 hA
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- **The Yun loop base case**: `csqfreeFactor`'s initialization `(b₁, d₁) = (A/gcd(A,A′), A′/gcd(A,A′)
+− b₁′)` satisfies `YunInv A 1 b₁ d₁` with shared scalar `c = leadingCoeff A`. From the equalities
+`deflation A 0 = normalize A`, `gcd A A′ = deflation A 1`, the exact relation `Babs A 1 · deflation A 1
+= deflation A 0`, and `derivative_deflation_pred` (`(deflation A 0)′ = deflation A 1 · Yun A 1`): both
+`b₁` and `d₁` factor as `C(leadingCoeff A)` times the abstract `Babs A 1`, `Dabs A 1`. -/
+theorem yunInv_base {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) :
+    YunInv A 1 (A / gcd A (derivative A))
+      (derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) := by
+  have hg : gcd A (derivative A) = deflation A 1 := gcd_self_derivative_eq_deflation_one A hA0 hA
+  have hd1ne : deflation A 1 ≠ 0 := deflation_ne_zero A 1
+  -- `A = C(lc A) · deflation A 0`.
+  have hlc : A.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hA0
+  have hAeq : A = Polynomial.C A.leadingCoeff * deflation A 0 := by
+    rw [deflation_zero_eq_normalize A hA0 hA]
+    exact self_eq_C_leadingCoeff_mul_normalize A hA0
+  -- `b₁ = A/g = C(lc A) · Babs A 1`.
+  have hbabs : Babs A 1 = squarefreePart (deflation A 0) := by rw [Babs]
+  -- `A = (C lc · squarefreePart (deflation A 0)) · deflation A 1`
+  have hAfact : A = (Polynomial.C A.leadingCoeff * squarefreePart (deflation A 0)) * deflation A 1 := by
+    rw [mul_assoc, squarefreePart_mul_deflation_one A hA, ← hAeq]
+  have hb1 : A / gcd A (derivative A) = Polynomial.C A.leadingCoeff * Babs A 1 := by
+    rw [hg, hbabs]
+    nth_rewrite 1 [hAfact]
+    rw [mul_div_cancel_right₀ _ hd1ne]
+  -- `A′ = C(lc A) · deflation A 1 · Yun A 1`  (from `derivative_deflation_pred` at i=1).
+  have hAderiv : derivative A = Polynomial.C A.leadingCoeff * (deflation A 1 * Yun A 1) := by
+    have hdp := derivative_deflation_pred A 1 (le_refl 1)
+    rw [Nat.sub_self] at hdp
+    conv_lhs => rw [hAeq, derivative_C_mul, hdp]
+  -- `A′/g = C(lc A) · Yun A 1`.
+  have hd1div : derivative A / gcd A (derivative A) = Polynomial.C A.leadingCoeff * Yun A 1 := by
+    rw [hg]
+    nth_rewrite 1 [hAderiv]
+    rw [mul_comm (deflation A 1) (Yun A 1), ← mul_assoc, mul_div_cancel_right₀ _ hd1ne]
+  -- assemble.
+  refine ⟨A.leadingCoeff, hlc, hb1, ?_⟩
+  rw [hd1div, hb1, derivative_C_mul, Dabs, Nat.sub_self, ← hbabs, mul_sub]
