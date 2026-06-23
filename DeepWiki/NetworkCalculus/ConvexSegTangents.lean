@@ -23,6 +23,14 @@ namespace DeepWiki
 
 open scoped Classical NNReal
 
+/-- The `ℝ≥0` truncated subtraction, read in `ℝ`, is the relu `max (x − T) 0`. (Local copy of the
+private helper in `ConvexPWLNormalForm`.) -/
+private theorem coe_tsub_eq_max' (x T : ℝ≥0) : ((x - T : ℝ≥0) : ℝ) = max ((x : ℝ) - T) 0 := by
+  rcases le_total T x with h | h
+  · rw [NNReal.coe_sub h, max_eq_left (by have := NNReal.coe_le_coe.mpr h; linarith)]
+  · rw [tsub_eq_zero_of_le h, NNReal.coe_zero,
+      max_eq_right (by have := NNReal.coe_le_coe.mpr h; linarith)]
+
 /-! ## Segment-affine value: the curve is its affine piece on each segment
 
 A convex PWL split as `segs = pre ++ (s, ℓ) :: post` is affine of slope `s` on the `pre`-anchored
@@ -98,6 +106,26 @@ theorem convexSegEval_append_peel_at (f0 fs : ℝ≥0) (pre suf : List (ℝ≥0 
       congr 2
       rw [add_tsub_cancel_of_le hℓat]
 
+/-- **Below the prefix length the suffix is irrelevant.** For `t ≤ τ = segLenSum pre`, the value of
+`convexSegEval f0 fs (pre ++ suf)` is determined by the prefix alone:
+`f̲(t) = convexSegEval f0 fs pre t`. (The suffix segments start only after `τ`.) -/
+theorem convexSegEval_append_below (f0 fs : ℝ≥0) (pre suf : List (ℝ≥0 × ℝ≥0)) {t : ℝ≥0}
+    (ht : t ≤ segLenSum pre) :
+    convexSegEval f0 fs (pre ++ suf) t = convexSegEval f0 fs pre t := by
+  induction pre generalizing f0 t with
+  | nil =>
+      rw [segLenSum_nil, nonpos_iff_eq_zero] at ht
+      subst ht; simp
+  | cons hd tl ih =>
+      obtain ⟨sa, ℓa⟩ := hd
+      rw [segLenSum_cons] at ht
+      rw [List.cons_append, convexSegEval_cons, convexSegEval_cons]
+      split
+      · rfl
+      · rename_i hnt
+        have hℓat : ℓa ≤ t := (not_le.mp hnt).le
+        exact ih (f0 + sa * ℓa) (by rw [tsub_le_iff_left]; exact ht)
+
 /-! ## Per-segment tangent latency and own-segment exactness -/
 
 /-- The **per-segment tangent latency** of segment `i` (split `segs = pre ++ (s, ℓ) :: post`, with
@@ -156,5 +184,83 @@ theorem rateLatencyEReal_segTangent_eq_on_seg (f0 fs s ℓ : ℝ≥0) (pre post 
     rw [tsub_tsub_assoc hlo hdiv, add_comm]
   rw [hsub, mul_add, mul_div_cancel₀ v (ne_of_gt hs)]
   ring
+
+/-! ## The segment tangent lies below the curve everywhere (the convex `≤`)
+
+A tangent to a convex function lies below it: the segment-`i` tangent `β_{s, Tᵢ}` is `≤ f̲`
+everywhere, not just on segment `i`. With `pre`'s slopes `≤ s` (slope-sorting), the curve rises at
+rate `≤ s` before `τ`; with the suffix slopes `≥ s` (and `s ≤ fs`), it rises at rate `≥ s` after.
+Both bounds pinch the tangent below the curve. -/
+
+/-- **A segment tangent lies below the curve everywhere.** For `s > 0`, with the prefix slopes `≤ s`
+(`hpre`), the suffix slopes `≥ s` (`hsuf`), `s ≤ fs`, and the well-formedness bound `v/s ≤ τ`, the
+tangent rate-latency `β_{s, Tᵢ}` is `≤ ↑f̲` everywhere: `β_{s,Tᵢ}(t) = s·(t − Tᵢ) ≤ f̲(t)` for all
+`t`. (A tangent to a convex function never crosses above it.) -/
+theorem rateLatencyEReal_segTangent_le (f0 fs s ℓ : ℝ≥0) (pre post : List (ℝ≥0 × ℝ≥0))
+    (hs : 0 < s) (hpre : ∀ seg ∈ pre, seg.1 ≤ s) (hsuf : ∀ seg ∈ (s, ℓ) :: post, s ≤ seg.1)
+    (hsfs : s ≤ fs) (hdiv : (f0 + cornerSum pre) / s ≤ segLenSum pre) (t : ℝ≥0) :
+    rateLatencyEReal s (segTangentLatency f0 pre s) t
+      ≤ (((convexSegEval f0 fs (pre ++ (s, ℓ) :: post) t : ℝ≥0) : ℝ) : EReal) := by
+  set τ := segLenSum pre with hτ
+  set v := f0 + cornerSum pre with hv
+  rw [rateLatencyEReal_apply, EReal.coe_le_coe_iff, segTangentLatency, ← hτ, ← hv]
+  -- the latency `T = τ − v/s`; reduce to `(s : ℝ)·max(t − T, 0) ≤ (f̲ t : ℝ)`
+  rw [NNReal.coe_mul, coe_tsub_eq_max']
+  set fval : ℝ := (convexSegEval f0 fs (pre ++ (s, ℓ) :: post) t : ℝ) with hfval
+  have hfnn : (0 : ℝ) ≤ fval := (convexSegEval f0 fs (pre ++ (s, ℓ) :: post) t).coe_nonneg
+  rcases le_total t τ with htle | htge
+  · -- below `τ`: upper-rate caps the curve, so the tangent stays below
+    -- `f̲ t = convexSegEval f0 s pre t` (suffix irrelevant; asymptote irrelevant)
+    have hfeq : fval = (convexSegEval f0 s pre t : ℝ) := by
+      rw [hfval, convexSegEval_append_below f0 fs pre _ htle,
+        convexSegEval_asymp_irrel fs s pre f0 t htle]
+    -- upper-rate from `t` to `τ`: `v ≤ f̲ t + s·(τ − t)`
+    have hupper : convexSegEval f0 s pre τ ≤ convexSegEval f0 s pre t + s * (τ - t) := by
+      have := (@convexSegEval_upper_rate_of_le s f0 pre hpre) t (τ - t)
+      rwa [add_tsub_cancel_of_le htle] at this
+    have hvτ : convexSegEval f0 s pre τ = v := by
+      rw [hv, ← convexSegEval_pwlRank f0 s pre]; rfl
+    rw [hvτ] at hupper
+    -- now in `ℝ`: `v ≤ f̲ t + s·(τ − t)`
+    have hupperR : (v : ℝ) ≤ (convexSegEval f0 s pre t : ℝ) + (s : ℝ) * ((τ : ℝ) - (t : ℝ)) := by
+      have := NNReal.coe_le_coe.mpr hupper
+      push_cast [NNReal.coe_sub htle] at this ⊢
+      linarith
+    have hTr : ((τ - v / s : ℝ≥0) : ℝ) = (τ : ℝ) - (v : ℝ) / (s : ℝ) := by
+      rw [NNReal.coe_sub hdiv, NNReal.coe_div]
+    rw [hfeq, hTr, mul_max_of_nonneg _ _ s.coe_nonneg, mul_zero]
+    apply max_le
+    · -- `s·(t − T) = s·(t − τ) + v ≤ f̲ t` (the negative `t − τ` cancels `s·(τ − t)`)
+      have hsvs : (s : ℝ) * ((v : ℝ) / (s : ℝ)) = (v : ℝ) := by field_simp
+      have hexp : (s : ℝ) * ((t : ℝ) - ((τ : ℝ) - (v : ℝ) / (s : ℝ)))
+          = (s : ℝ) * ((t : ℝ) - (τ : ℝ)) + (v : ℝ) := by
+        rw [mul_sub, mul_sub, hsvs]; ring
+      rw [hexp]; nlinarith [hupperR]
+    · exact (convexSegEval f0 s pre t).coe_nonneg
+  · -- past `τ`: lower-rate (suffix slopes `≥ s`) makes the curve rise at least at rate `s`
+    -- `f̲ t = convexSegEval v fs ((s,ℓ)::post) (t − τ)`
+    have hfeq : fval = (convexSegEval v fs ((s, ℓ) :: post) (t - τ) : ℝ) := by
+      rw [hfval, convexSegEval_append_peel_at f0 fs pre _ htge, ← hv, ← hτ]
+    -- lower-rate from `0` to `t − τ`: `v + s·(t − τ) ≤ f̲ t`
+    have hlower : convexSegEval v fs ((s, ℓ) :: post) 0 + s * (t - τ)
+        ≤ convexSegEval v fs ((s, ℓ) :: post) (0 + (t - τ)) :=
+      convexSegEval_rate fs s ((s, ℓ) :: post) hsuf hsfs v 0 (t - τ)
+    rw [zero_add, convexSegEval_zero] at hlower
+    have hlowerR : (v : ℝ) + (s : ℝ) * ((t : ℝ) - (τ : ℝ))
+        ≤ (convexSegEval v fs ((s, ℓ) :: post) (t - τ) : ℝ) := by
+      have := NNReal.coe_le_coe.mpr hlower
+      push_cast [NNReal.coe_sub htge] at this ⊢
+      linarith
+    have hTr : ((τ - v / s : ℝ≥0) : ℝ) = (τ : ℝ) - (v : ℝ) / (s : ℝ) := by
+      rw [NNReal.coe_sub hdiv, NNReal.coe_div]
+    rw [hfeq, hTr, mul_max_of_nonneg _ _ s.coe_nonneg, mul_zero]
+    apply max_le
+    · -- `s·(t − T) = s·(t − τ) + v` (genuine since `T ≤ τ ≤ t`)
+      have hsvs : (s : ℝ) * ((v : ℝ) / (s : ℝ)) = (v : ℝ) := by field_simp
+      have hexp : (s : ℝ) * ((t : ℝ) - ((τ : ℝ) - (v : ℝ) / (s : ℝ)))
+          = (s : ℝ) * ((t : ℝ) - (τ : ℝ)) + (v : ℝ) := by
+        rw [mul_sub, mul_sub, hsvs]; ring
+      rw [hexp]; linarith [hlowerR]
+    · exact (convexSegEval v fs ((s, ℓ) :: post) (t - τ)).coe_nonneg
 
 end DeepWiki
