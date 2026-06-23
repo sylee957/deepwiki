@@ -21,6 +21,8 @@ import DeepWiki.NetworkCalculus.StaticPriorityPmooNestedTandem
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReduction
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionBridge
 import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionNetwork
+import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionConvexity
+import DeepWiki.NetworkCalculus.WorstCaseBoundX3CReductionTrajectory
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 10: Modular Analysis: Computing with Curves
@@ -33,10 +35,13 @@ or recorded as a note / unformalized item.
 (`thm_10_2_core`) AND the reduction correctness (`thm_10_2_reduction`: worst-case backlog ≥ 3s−2q ⟺
 exact 3-cover, the worst-case objective as a `programOptimum`) are done — the formalizable poly-time
 reduction. The network-served realization (`thm_10_2_network`) computes the ACTUAL backlog at `W` from
-the Figure-10.7 served rate equations and transfers the `3s−2q ⟺ cover` threshold to it. Residual: the
-continuous-time rate→`Curve` integration + `t→1⁻` left-limit `[infra]`; fractional-vs-integral routing
-optimality (a finite convex-maximization-on-a-polytope fact) `[research]`; the `NPHard` typeclass
-`[external]` (no Mathlib complexity framework). -/
+the Figure-10.7 served rate equations and transfers the `3s−2q ⟺ cover` threshold to it. The two
+former analysis residuals are now CLOSED: fractional-routing optimality (`thm_10_2_fractional`: every
+fractional fluid routing has objective ≤ q, by convexity + `convexHull_pi` — no fractional advantage)
+and the continuous-time realization (`thm_10_2_trajectory`: the rate-based backlog as a genuine
+capped-ramp trajectory, value at `t→1⁻`). The SOLE residual is the `NPHard` typeclass `[external]` —
+Mathlib has no complexity-class framework, so the "therefore NP-hard" label (given the correct
+poly-time reduction, which IS formalized) is unstatable, a separate framework-building project. -/
 
 namespace DeepWiki.Dnc
 
@@ -226,5 +231,32 @@ theorem thm_10_2_network {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fint
     3 * I.numSubsets - 2 * I.q ≤ I.worstCaseBacklogAtW ↔
       ∃ assign C, I.IsExactCover C assign ∧ (∀ e, ∃ i ∈ C, e ∈ I.members i) :=
   I.threshold_le_worstCaseBacklogAtW_iff_exists_cover hne hsq
+
+/-- **Theorem 10.2, fractional-routing optimality** (§10.5): no FRACTIONAL fluid routing beats the
+integral vertices — every feasible routing `r : α → ι → ℝ` (nonneg, supported on the containing
+subsets, `Σᵢ rₑᵢ = 1`) has objective `fracObjective r ≤ q` (`fracObjective_le_q_of_feasible`). Proof:
+`fracObjective` is convex (`convexOn_fracObjective`, `[·−2]⁺` sums), the polytope is the convex hull of
+the integral routings (`convexHull_pi`), and a convex function is maximized at a vertex
+(`ConvexOn.le_sup_of_mem_convexHull`), each vertex giving `saturatedCount ≤ q`. This closes the
+convex-maximization step over ALL routings (no fractional advantage). The library's
+`DeepWiki.X3CInstance.fracObjective_le_q_of_feasible`. -/
+theorem thm_10_2_fractional {ι α : Type*} [DecidableEq ι] [DecidableEq α] [Fintype ι] [Fintype α]
+    (I : DeepWiki.X3CInstance ι α) {r : α → ι → ℝ} (hr : I.IsFeasible r) :
+    I.fracObjective r ≤ (I.q : ℝ) :=
+  I.fracObjective_le_q_of_feasible hr
+
+/-- **Theorem 10.2, continuous-time realization** (§10.5): the rate-based worst-case `W`-backlog is a
+genuine continuous-time trajectory. With capped-ramp cumulatives `A_W = a·min(t,1)`, `D_W = d·min(t,1)`
+(`rampCapped`, continuous + left-continuous + null-at-origin) and net rate `a − d = backlogAtW`, the
+served-pair backlog `Deviation.backlog A_W D_W = backlogAtW` (`backlog_trajectory_eq_backlogAtW`) and
+its instantaneous value at `t→1⁻` tends to `backlogAtW` (`tendsto_backlogAt_trajectory_backlogAtW`).
+This closes the continuous-time rate→`Curve` integration layer. The library's
+`DeepWiki.X3CInstance.backlog_trajectory_eq_backlogAtW`. -/
+theorem thm_10_2_trajectory {ι : Type*} {αT : Type*} [DecidableEq ι] [DecidableEq αT] [Fintype ι]
+    [Fintype αT] (I : DeepWiki.X3CInstance ι αT) {assign : αT → ι} {a d : ℝ≥0} (hda : d ≤ a)
+    (hrate : a - d = (I.backlogAtW assign : ℝ≥0)) :
+    Deviation.backlog (DeepWiki.rampCapped a) (DeepWiki.rampCapped d)
+      = ((I.backlogAtW assign : ℝ≥0) : ℝ≥0∞) :=
+  I.backlog_trajectory_eq_backlogAtW hda hrate
 
 end DeepWiki.Dnc
