@@ -382,6 +382,94 @@ example (A D : K[X]) (hD : D.Separable) :
       = Ideal.span {liftX D, zVar - liftX (residuePoly A D)} :=
   czIdeal_eq_span_gb A D hD
 
+/-! ## Zero-dimensionality of `I` (Czichowski Lemma 2.1(i))
+
+Eliminating `z = T` makes the quotient `K[x, z] ⧸ I` isomorphic to `K[x] ⧸ (D)`: the
+surjective `K`-algebra map `evalAtResidue` (then `mod D`) has kernel exactly `I`, so the first
+isomorphism theorem gives `K[x, z] ⧸ I ≃ₐ K[x] ⧸ (D)`. Since `D` is monic of degree `d`,
+`K[x] ⧸ (D) = AdjoinRoot D` is a finite `K`-module (rank `d`), so `I` is **zero-dimensional**. -/
+
+/-- **The reduction `f ≡ liftX (evalAtResidue f) (mod I)`**: for every `f`, the difference
+`f − liftX (evalAtResidue f)` lies in `I` (substituting `z := T` changes `f` only by a multiple of
+`z − T`, hence of `I`). Proved by `MvPolynomial` induction, using `z − T ∈ I`. -/
+theorem sub_liftX_evalAtResidue_mem_czIdeal (hD : D.Separable)
+    (f : MvPolynomial (Fin 2) K) : f - liftX (evalAtResidue A D f) ∈ czIdeal A D := by
+  induction f using MvPolynomial.induction_on with
+  | C a => rw [evalAtResidue_C, liftX_C, sub_self]; exact Ideal.zero_mem _
+  | add p q hp hq =>
+    rw [map_add, map_add]
+    have : p + q - (liftX (evalAtResidue A D p) + liftX (evalAtResidue A D q))
+        = (p - liftX (evalAtResidue A D p)) + (q - liftX (evalAtResidue A D q)) := by ring
+    rw [this]; exact Ideal.add_mem _ hp hq
+  | mul_X p n hp =>
+    -- `p·Xn − liftX(eval(p·Xn)) = (p − liftX(eval p))·Xn + liftX(eval p)·(Xn − liftX(eval Xn))`
+    have hXn : X n - liftX (evalAtResidue A D (X n)) ∈ czIdeal A D := by
+      match n with
+      | 0 => rw [evalAtResidue_X0]; exact zMinusResidue_mem_czIdeal A D hD
+      | 1 => rw [evalAtResidue_X1, liftX_X, sub_self]; exact Ideal.zero_mem _
+    rw [map_mul, map_mul]
+    have hsplit : p * X n - liftX (evalAtResidue A D p) * liftX (evalAtResidue A D (X n))
+        = (p - liftX (evalAtResidue A D p)) * X n
+          + liftX (evalAtResidue A D p) * (X n - liftX (evalAtResidue A D (X n))) := by ring
+    rw [hsplit]
+    exact Ideal.add_mem _ (Ideal.mul_mem_right _ _ hp) (Ideal.mul_mem_left _ _ hXn)
+
+/-- **`I` is the kernel of `mod D ∘ evalAtResidue`**: `f ∈ I ⟺ D ∣ evalAtResidue f`. Combined with
+the surjectivity of `evalAtResidue`, this realizes `K[x, z] ⧸ I ≃ K[x] ⧸ (D)`. -/
+theorem mem_czIdeal_iff_dvd_evalAtResidue (hD : D.Separable)
+    {f : MvPolynomial (Fin 2) K} : f ∈ czIdeal A D ↔ D ∣ evalAtResidue A D f := by
+  constructor
+  · intro hf
+    have := evalAtResidue_mem_span_of_mem_czIdeal A D hD hf
+    rwa [Ideal.mem_span_singleton] at this
+  · intro ⟨g, hg⟩
+    -- `f = (f − liftX(eval f)) + liftX(D·g) = (…) + liftX D · liftX g ∈ I`
+    have h1 : f - liftX (evalAtResidue A D f) ∈ czIdeal A D :=
+      sub_liftX_evalAtResidue_mem_czIdeal A D hD f
+    have h2 : liftX (evalAtResidue A D f) ∈ czIdeal A D := by
+      rw [hg, map_mul]
+      exact Ideal.mul_mem_right _ _ (liftX_D_mem_czIdeal A D)
+    have : f = (f - liftX (evalAtResidue A D f)) + liftX (evalAtResidue A D f) := by ring
+    rw [this]; exact Ideal.add_mem _ h1 h2
+
+/-- **The residue `K`-algebra map** `K[x, z] →ₐ[K] K[x] ⧸ (D)`: substitute `z := T`, then reduce
+`mod D`. Its kernel is `I` and it is surjective (`liftX` lifts back), giving the eliminating iso. -/
+noncomputable def evalAtResidueQuot : MvPolynomial (Fin 2) K →ₐ[K] K[X] ⧸ Ideal.span {D} :=
+  (Ideal.Quotient.mkₐ K (Ideal.span {D})).comp
+    (MvPolynomial.aeval (![residuePoly A D, Polynomial.X] : Fin 2 → K[X]))
+
+@[simp] theorem evalAtResidueQuot_apply (f : MvPolynomial (Fin 2) K) :
+    evalAtResidueQuot A D f = Ideal.Quotient.mk (Ideal.span {D}) (evalAtResidue A D f) := rfl
+
+/-- `evalAtResidueQuot` is surjective: `liftX p ↦ mk p`, and `mk` is surjective. -/
+theorem evalAtResidueQuot_surjective : Function.Surjective (evalAtResidueQuot A D) := by
+  intro y
+  obtain ⟨p, rfl⟩ := Ideal.Quotient.mk_surjective y
+  exact ⟨liftX p, by rw [evalAtResidueQuot_apply, evalAtResidue_liftX]⟩
+
+/-- **The kernel of `evalAtResidueQuot` is exactly `I`**. -/
+theorem ker_evalAtResidueQuot (hD : D.Separable) :
+    RingHom.ker (evalAtResidueQuot A D).toRingHom = czIdeal A D := by
+  ext f
+  rw [RingHom.mem_ker, AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom, evalAtResidueQuot_apply,
+    Ideal.Quotient.eq_zero_iff_mem, Ideal.mem_span_singleton,
+    ← mem_czIdeal_iff_dvd_evalAtResidue A D hD]
+
+/-- **The eliminating iso** `K[x, z] ⧸ I ≃ₐ[K] K[x] ⧸ (D)` (Czichowski Lemma 2.1(i), engine):
+substituting `z = T` identifies the bivariate quotient with the univariate one. -/
+noncomputable def czIdealQuotEquiv (hD : D.Separable) :
+    (MvPolynomial (Fin 2) K ⧸ czIdeal A D) ≃ₐ[K] K[X] ⧸ Ideal.span {D} :=
+  (Ideal.quotientEquivAlgOfEq K (ker_evalAtResidueQuot A D hD).symm).trans
+    (Ideal.quotientKerAlgEquivOfSurjective (evalAtResidueQuot_surjective A D))
+
+/-- **Zero-dimensionality of Czichowski's ideal** (Lemma 2.1(i)): for `D` monic squarefree, the
+quotient `K[x, z] ⧸ ⟨A − z·D', D⟩` is a finite `K`-module — eliminating `z = T` makes it
+`K[x] ⧸ (D)`, finite of rank `deg D` since `D` is monic. -/
+theorem finite_quotient_czIdeal (hM : D.Monic) (hD : D.Separable) :
+    Module.Finite K (MvPolynomial (Fin 2) K ⧸ czIdeal A D) :=
+  haveI : Module.Finite K (K[X] ⧸ Ideal.span {D}) := hM.finite_adjoinRoot (R := K)
+  Module.Finite.equiv (czIdealQuotEquiv A D hD).symm.toLinearEquiv
+
 /-! ### Toward the variety analysis (deliverable E, partial): the residue value at a zero
 
 The zeros of `I` are `(α, T(α))` for the roots `α` of `D`, and `T(α) = A(α)/D'(α)` is the
@@ -435,5 +523,17 @@ example (A D : K[X]) (hD : D.Separable) (hD0 : D ≠ 0) :
 example (A D : K[X]) (hD : D.Separable) {α : K} (hα : D.IsRoot α) :
     (residuePoly A D).eval α = A.eval α / (derivative D).eval α :=
   eval_residuePoly_of_isRoot A D hD hα
+
+-- Eliminating `z = T` identifies `K[x, z] ⧸ I` with `K[x] ⧸ (D)`.
+noncomputable example (A D : K[X]) (hD : D.Separable) :
+    (MvPolynomial (Fin 2) K ⧸ Ideal.span {liftX A - zVar * liftX (derivative D), liftX D})
+      ≃ₐ[K] K[X] ⧸ Ideal.span {D} :=
+  czIdealQuotEquiv A D hD
+
+-- Lemma 2.1(i): `I = ⟨A − z·D', D⟩` is zero-dimensional (finite-dimensional quotient over `K`).
+example (A D : K[X]) (hM : D.Monic) (hD : D.Separable) :
+    Module.Finite K
+      (MvPolynomial (Fin 2) K ⧸ Ideal.span {liftX A - zVar * liftX (derivative D), liftX D}) :=
+  finite_quotient_czIdeal A D hM hD
 
 end DeepWiki.SymbolicIntegration
