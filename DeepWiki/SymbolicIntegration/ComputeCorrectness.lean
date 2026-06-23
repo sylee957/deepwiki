@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.HermiteCompute
 import Mathlib.FieldTheory.RatFunc.Basic
+import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Correctness of the computable engine (`toPoly` agreement bridge)
 The `*Compute` engine (`CPoly := List ℚ`, `cdivmod`/`cgcdExt`/…) is validated *pointwise* by
@@ -397,5 +398,71 @@ theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
   simp only [toQFun, qadd, toPoly_cadd, toPoly_cmul, map_add, map_mul]
   rw [div_add_div _ _ hb' hd']
   ring
+
+/-! ### Degree / leading coefficient bridge (toward the resultant agreement)
+The `CPoly` list structure maps to `ℚ[X]` coefficients exactly: `(toPoly p).coeff i = p.getD i 0`.
+From this, `cdeg`/`clead` are the honest `natDegree`/`leadingCoeff` (for a normalized, nonzero list). -/
+
+/-- **Coefficient read**: the `i`-th coefficient of `toPoly p` is the `i`-th list entry (`0` past the
+end). The Horner bridge `toPoly` realizes the dense coefficient list exactly. -/
+theorem toPoly_coeff (p : CPoly) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := by
+  induction p generalizing i with
+  | nil => simp
+  | cons a as ih =>
+    rw [toPoly_cons]
+    cases i with
+    | zero => simp [coeff_C]
+    | succ n => simp [coeff_X_mul, ih]
+
+/-- **Degree bound**: `natDegree (toPoly p) ≤ (cnorm p).length − 1` (coefficients past the normalized
+length vanish). -/
+theorem natDegree_toPoly_le (p : CPoly) : (toPoly p).natDegree ≤ (cnorm p).length - 1 := by
+  rw [← toPoly_cnorm]
+  apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
+  intro m hm
+  rw [toPoly_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
+  rfl
+
+/-- `cnorm` has **no trailing zero**: `(cnorm p).getLast? ≠ some 0`. -/
+theorem cnorm_getLast?_ne_some_zero (p : CPoly) : (cnorm p).getLast? ≠ some 0 := by
+  induction p with
+  | nil => simp
+  | cons a as ih =>
+    rw [cnorm_cons_eq]
+    cases h : cnorm as with
+    | nil =>
+      by_cases ha : a = 0 <;> simp [ha]
+    | cons b bs =>
+      rw [h] at ih
+      rw [List.getLast?_cons_cons]
+      exact ih
+
+/-- For a normalized nonzero `CPoly`, the leading coefficient `clead` is nonzero. -/
+theorem clead_ne_zero {p : CPoly} (h : cnorm p ≠ []) : clead p ≠ 0 := by
+  rw [clead]
+  rcases hl : (cnorm p).getLast? with _ | v
+  · exact absurd (List.getLast?_eq_none_iff.mp hl) h
+  · simp only [Option.getD_some]
+    rintro rfl
+    exact cnorm_getLast?_ne_some_zero p hl
+
+/-- **`clead` is the coefficient at the top index**: `clead p = (toPoly p).coeff (cdeg p)`. -/
+theorem clead_eq_coeff (p : CPoly) : clead p = (toPoly p).coeff (cdeg p) := by
+  rw [clead, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
+    ← List.getLast?_eq_getElem?]
+
+/-- **`cdeg` is the honest `natDegree`**: `cdeg p = (toPoly p).natDegree`. -/
+theorem cdeg_eq_natDegree (p : CPoly) : cdeg p = (toPoly p).natDegree := by
+  rcases eq_or_ne (cnorm p) [] with h | h
+  · have h0 : toPoly p = 0 := by rw [← toPoly_cnorm, h, toPoly_nil]
+    rw [cdeg, h, h0]; simp
+  · refine le_antisymm ?_ (natDegree_toPoly_le p)
+    apply Polynomial.le_natDegree_of_ne_zero
+    rw [← clead_eq_coeff]
+    exact clead_ne_zero h
+
+/-- **`clead` is the honest `leadingCoeff`**: `clead p = (toPoly p).leadingCoeff`. -/
+theorem clead_eq_leadingCoeff (p : CPoly) : clead p = (toPoly p).leadingCoeff := by
+  rw [Polynomial.leadingCoeff, ← cdeg_eq_natDegree, ← clead_eq_coeff]
 
 end DeepWiki.SymbolicIntegration.Compute
