@@ -119,6 +119,8 @@ import DeepWiki.NetworkCalculus.WorstCaseLPArbMuxNode
 import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.Servers

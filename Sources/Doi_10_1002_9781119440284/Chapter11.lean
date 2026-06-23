@@ -5,6 +5,8 @@ import DeepWiki.NetworkCalculus.WorstCaseLPBacklog
 import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainRateLatency
+import DeepWiki.NetworkCalculus.WorstCaseLPTandemChainBridge
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
@@ -18,7 +20,13 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§11.1: Example 11.1 (two-server tandem worked delay bound) is `ex_11_1`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); the optimization half (LP optimum = worst case) is now DONE for the homogeneous-rate tandem (`thm_11_1_optimum`/`tandem_programOptimum_homogeneous`, any n, via the `tandemWitness` vertex); for a HETEROGENEOUS tandem the SFA objective is genuinely NOT tight (`objectiveValue_not_tight_heterogeneous` — a true non-attainment, not a gap), and the exact heterogeneous optimum's extremal vertex remains `[infra]` (the value the finite LP computes via a solver).
+§11.1: Example 11.1 (two-server tandem worked delay bound) is `ex_11_1`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); the exact worst-case end-to-end delay is now formalized in closed form for ANY rate-latency tandem:
+`(∑ₕTₕ) + b/(minₕRₕ)` (`thm_11_1_exact`/`worstCaseChainDelay_tokenBucketNN_rateLatencyNN`, via the PMOO
+chain convolution). The §11.1.2 LP (`thm_11_1_optimum`) is the SFA RELAXATION `(RT+b)/(R−r)` — its
+optimum is attained as the LP value (homogeneous via `tandemWitness`) but STRICTLY over-estimates the
+true worst case for `r>0` (`thm_11_1_relaxation_gap`/`worstCaseChainDelay_lt_programOptimum`, equal iff
+`r=0`). The only residual `[infra]`: an EXACT finite LP (the §11.1.3 multi-window trajectory
+reconstruction) whose optimum equals the PMOO value — the relaxation-free solver formulation.
 §11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
@@ -291,5 +299,34 @@ theorem thm_11_1_optimum {n : ℕ} (N : TandemLP.Tandem (n + 1)) {Rmin : ℝ} (h
     programOptimum (TandemLP.Feasible N) (fun v => ((TandemLP.delay v : ℝ) : EReal))
       = ((TandemLP.objectiveValue N Rmin : ℝ) : EReal) :=
   TandemLP.tandem_programOptimum_homogeneous N hRmin hrate0 hrate hlat hb hstab
+
+/-- **The EXACT heterogeneous tandem worst-case delay** (§11.1, the true optimum). For a token-bucket
+flow `γ_{r,b}` through a tandem of rate-latency servers `β_{Rₕ,Tₕ}` (ANY rates), the worst-case
+end-to-end delay over all feasible trajectories is the closed form `(∑ₕTₕ) + b/(minₕRₕ)` — via the PMOO
+chain convolution `β₀∗⋯∗βₙ = β_{minR,∑T}` (`minConvChain_rateLatencyNN`) and
+`worstCaseChainDelay_eq_hDev_minConvChain`. The library's
+`DeepWiki.worstCaseChainDelay_tokenBucketNN_rateLatencyNN`. ★ This is BELOW the §11.1.2 LP
+(`thm_11_1_optimum`/`objectiveValue`), which is the SFA RELAXATION `(RT+b)/(R−r)`: the LP strictly
+over-estimates for `r>0` (`worstCaseChainDelay_lt_programOptimum`), coinciding only at `r=0`
+(`worstCaseChainDelay_eq_programOptimum_of_rate0`). So the exact worst case is this PMOO value; an
+exact finite LP would need the §11.1.3 multi-window reconstruction (`[infra]`). -/
+theorem thm_11_1_exact (r b R₀ T₀ : ℝ≥0) (ps : List (ℝ≥0 × ℝ≥0)) (hb : 0 < b)
+    (hRmin : 0 < ps.foldr (fun p R => p.1 ⊓ R) R₀) (hrR : r ≤ ps.foldr (fun p R => p.1 ⊓ R) R₀) :
+    worstCaseChainDelay (tokenBucketArrival r b) (rateLatencyNN R₀ T₀)
+        (ps.map (fun p => rateLatencyNN p.1 p.2))
+      = (((T₀ + (ps.map Prod.snd).sum) + b / (ps.foldr (fun p R => p.1 ⊓ R) R₀) : ℝ≥0) : ℝ≥0∞) :=
+  DeepWiki.worstCaseChainDelay_tokenBucketNN_rateLatencyNN r b R₀ T₀ ps hb hRmin hrR
+
+/-- **The §11.1.2 LP is a sound relaxation** (the over-estimation gap, made precise). For a single
+rate-latency server with token-bucket arrival, the exact worst-case delay `T+b/R` is ≤ the LP optimum
+`(RT+b)/(R−r)` (`worstCaseChainDelay_le_programOptimum`), STRICTLY so for `r>0`
+(`worstCaseChainDelay_lt_programOptimum`), with equality iff `r=0`. The library's
+`DeepWiki.worstCaseChainDelay_lt_programOptimum`. -/
+theorem thm_11_1_relaxation_gap (r b R T : ℝ≥0) (hb : 0 < b) (hR : 0 < R) (hr : 0 < r)
+    (hstab : r < R) :
+    ((worstCaseChainDelay (tokenBucketArrival r b) (rateLatencyNN R T) [] : ℝ≥0∞) : EReal)
+      < programOptimum (TandemLP.Feasible (DeepWiki.singleServerTandem r b R T))
+          (fun v => ((TandemLP.delay v : ℝ) : EReal)) :=
+  DeepWiki.worstCaseChainDelay_lt_programOptimum r b R T hb hR hr hstab
 
 end DeepWiki.Dnc
