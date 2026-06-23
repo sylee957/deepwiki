@@ -820,6 +820,103 @@ theorem iterate_ratFuncKDeriv_hFracα [CharZero K] (A Ei Diα : K[X]) (i : ℕ) 
     congr 1
     push_cast; ring
 
+/-! ## Stage J — the root-value bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)` (Step 3) and the residual Laurent fact
+
+`σα(Pᵢ,d)(α)` (the numerator of the genuine `hᵢ,α^{(d)}/d!` evaluated at `α`, from Step 2) coincides with the
+book's `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)` (Stage G): both are `aeval (substEvalAt Diα α) (laurentNum …)`. So the
+engine's `Qᵢⱼ(α)` IS the numerator of the `(i−j)`-th derivative of the actual rational function `hᵢ,α` at
+`α` — i.e. `(i−j)!·[Taylor coeff of hᵢ,α at α, order i−j]·(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})`. -/
+
+/-- **`(σα P)(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`** (the evaluated differential hom): evaluating `σα P` at `α`
+collapses to the `aeval` of `P` at the root-substitution point `substEvalAt Diα α` (`x ↦ α`,
+`u^(k) ↦ Dᵢ,α^{(k)}(α)`), by pushing `eval α` through the `aeval`. -/
+theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
+    Polynomial.eval α (diffSubst Diα P) = MvPolynomial.aeval (substEvalAt Diα α) P := by
+  rw [diffSubst, eval_aeval_diffPoly]
+  have hfun : (fun v => Polynomial.eval α
+        (match v with | (none : Option ℕ) => Polynomial.X | some k => derivative^[k] Diα))
+      = substEvalAt Diα α := by
+    funext v
+    cases v with
+    | none => simp [substEvalAt]
+    | some k => simp [substEvalAt]
+  rw [hfun]
+
+/-- **Step 3, the bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)`** (book p.56): the value at `α` of the genuine
+`hᵢ,α^{(i−j)}/(i−j)!` numerator (`= σα(laurentNum …)`, Step 2) equals the engine's `Qᵢⱼ(α)` (Stage G,
+`laurentQ_eval_at_root`), since both are `aeval (substEvalAt Diα α) (laurentNum …)`. This identifies the
+engine's rational `Qᵢⱼ(α)` with the (Taylor-coefficient-bearing) numerator of the **actual** rational
+function `hᵢ,α = (A/D)(x−α)ⁱ`. -/
+theorem eval_diffSubst_laurentNum_eq_laurentQ_eval [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+    Polynomial.eval α
+        (diffSubst Diα (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
+      = (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α := by
+  rw [eval_diffSubst, laurentQ_eval_at_root]
+
+/-! ### Step 4 — the remaining extraction lemma (the pole-order-`j` Laurent coefficient)
+
+What remains for the full general Thm 2.7.1 correctness (`Hᵢⱼ(α) =` the `1/(x−α)ʲ` partial-fraction
+coefficient `c_j` of `A/D`) is the **Taylor/Laurent extraction over the algebraic closure**, NOT reachable
+with the present simple-pole `residueAt` (`RecognizingLogDeriv.residueAt`, the coefficient of `1/(x−α)¹`
+only). Precisely, the residual fact is:
+
+> **Laurent extraction (Step 4).** Over `K̄`, with `hᵢ,α = (A/D)(x−α)ⁱ` regular at `α` and `A/D` having a
+> pole of order `≤ i` at `α` with principal part `∑_{k=1}^{i} c_k/(x−α)^k`, the order-`(i−j)` Taylor
+> coefficient of `hᵢ,α` at `α` is exactly `c_j` (the `1/(x−α)ʲ` partial-fraction coefficient of `A/D`):
+> `(d/dx)^[i−j] hᵢ,α (α) / (i−j)! = c_j`.
+
+Combined with Step 2 (`iterate_ratFuncKDeriv_hFracα`, giving `(d/dx)^[i−j] hᵢ,α (α) = (i−j)!·Qᵢⱼ(α) /
+(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})` via Step 3) and Step 5 (`Hᵢⱼ(α) = Qᵢⱼ(α)·Bᵢ(α)^{i−j+1}·Cᵢ(α)^{2i−j}`,
+`eval_laurentH` below, with `Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)`), this yields `Hᵢⱼ(α) = c_j`. The blocker
+is the **higher-order** principal-part extraction (a `residueAt`-of-order-`j` generalization: multiply by
+`(x−α)ʲ`, take `(i−j)` derivatives, evaluate; the library's `residueAt` does only the `j=1`, `(i−j)=0` case).
+The `i=j=1` instance is closed (`eval_laurentH_one_one_eq_residue`). -/
+
+/-- **Step 5, the general engine-output evaluation** `Hᵢⱼ(α) = Qᵢⱼ(α)·Bᵢ(α)^{i−j+1}·Cᵢ(α)^{2i−j}` (§2.7,
+eq 2.12 evaluated, generalizing `eval_laurentH_one_one` from `i=j=1` to all `i,j`): at a root `α` of the
+monic `Dᵢ`, the `%ₘ Dᵢ` reduction is invisible (`eval_modByMonic_of_root`), so the engine output evaluates
+to `Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` — the substitution value times the Bézout-cofactor powers
+`Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)` (from the (2.10) congruences
+`bezoutE_mul_laurentE_eval`/`bezoutDeriv_mul_derivative_eval`). This is the `K`-level value the Laurent fact
+(Step 4) then identifies with the `1/(x−α)ʲ` partial-fraction coefficient `c_j`. -/
+theorem eval_laurentH {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
+    (laurentH A D Di i j).eval α
+      = (laurentQ A Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
+          * (1 / (derivative Di).eval α) ^ (2 * i - j) := by
+  rw [laurentH, eval_modByMonic_of_root hDi hα, Polynomial.eval_mul, Polynomial.eval_mul,
+    Polynomial.eval_pow, Polynomial.eval_pow]
+  have hB : (bezoutE D Di i).eval α = 1 / (laurentE D Di i).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutE_mul_laurentE_eval i hDi hα hcopE)
+  have hC : (bezoutDeriv Di).eval α = 1 / (derivative Di).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
+  rw [hB, hC]
+
+/-- **Steps 2+3+5 combined: `Hᵢⱼ(α)` from the genuine `hᵢ,α`-numerator** (§2.7, p.56): at a root `α` of the
+monic `Dᵢ = (x−α)·Dᵢ,α`, the engine output is `Hᵢⱼ(α) = σα(Pᵢ,i−j)(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`,
+where `σα(Pᵢ,i−j)(α) = Polynomial.eval α (diffSubst Dᵢ,α (laurentNum …))` is the value at `α` of the
+**genuine** `hᵢ,α^{(i−j)}/(i−j)!` numerator (`= σα(laurentNum …)`, Step 2; `= Qᵢⱼ(α)`, Step 3,
+`eval_diffSubst_laurentNum_eq_laurentQ_eval`). This routes the engine's `Qᵢⱼ(α)` through the *actual*
+rational function `hᵢ,α = (A/D)(x−α)ⁱ`. The only remaining gap to `Hᵢⱼ(α) = c_j` is identifying
+`σα(Pᵢ,i−j)(α)`-via-`(Dᵢ,α,Eᵢ)`-powers with the order-`(i−j)` Taylor coefficient of `hᵢ,α` (Step 4). -/
+theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ)
+    (hDi : Di.Monic) (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
+    (laurentH A D Di i j).eval α
+      = Polynomial.eval α (diffSubst Diα (laurentNum A (laurentE A Di i) i (i - j)))
+        * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
+        * (1 / (derivative Di).eval α) ^ (2 * i - j) := by
+  rw [eval_laurentH i j hDi hα hcopE hcopD]
+  congr 2
+  -- `Qᵢⱼ(α) = σα(Pᵢ,i−j)(α)`: the engine substitution value equals the genuine-hom numerator value
+  rw [laurentQ, eval_aeval_diffPoly, eval_diffSubst]
+  have hf : (fun v => Polynomial.eval α (laurentSubst Di v)) = substEvalAt Diα α := by
+    funext v
+    cases v with
+    | none => simp [laurentSubst, substEvalAt]
+    | some k => subst hfac; rw [eval_laurentSubst_some]; simp [substEvalAt]
+  rw [hf]
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
@@ -872,5 +969,48 @@ example [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
       = MvPolynomial.aeval (substEvalAt Diα α)
           (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) :=
   laurentQ_eval_at_root A Diα α i j
+
+/-- Restatement that `σα` is the differential substitution hom (book p.56, Step 1): it carries the
+engine's `ddx` to the genuine `Polynomial.derivative`, `σα (ddx p) = derivative (σα p)`. -/
+example (Diα : K[X]) (p : DiffPoly K) :
+    diffSubst Diα (ddx p) = derivative (diffSubst Diα p) :=
+  diffSubst_ddx Diα p
+
+/-- Restatement of the specialized eq 2.11 invariant in `K(x)` (book p.56, Step 2): the `d`-th genuine
+derivative of `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)` is `d!·σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1})`. -/
+example [CharZero K] (A Ei Diα : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) (d : ℕ) :
+    (ratFuncKDeriv^[d]) (hFracα A Ei Diα i)
+      = (d.factorial : K) • (algebraMap K[X] (RatFunc K) (diffSubst Diα (laurentNum A Ei i d)) /
+          algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i d)) :=
+  iterate_ratFuncKDeriv_hFracα A Ei Diα i hi hEi hDiα d
+
+/-- `hᵢ,α = (A/D)·(x−α)ⁱ` (the genuine function the engine differentiates): with `D = Dᵢ^i·Eᵢ` and
+`Dᵢ = (x−α)·Dᵢ,α`, the candidate `hFracα = A/(Dᵢ,α^i·Eᵢ)` satisfies `hFracα·algebraMap D = algebraMap(A·(x−α)ⁱ)`,
+i.e. `hFracα = (A/D)·(x−α)ⁱ`. (`D = (x−α)ⁱ·Dᵢ,α^i·Eᵢ`, so `(A/D)·(x−α)ⁱ = A/(Dᵢ,α^i·Eᵢ)`.) Shown at `α = 0`
+(`x−α = x`): `hFracα·((x·Dᵢ,α)ⁱ·Eᵢ) = A·xⁱ`. -/
+example (A Ei Diα : K[X]) (i : ℕ) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) :
+    hFracα A Ei Diα i * algebraMap K[X] (RatFunc K) (((Polynomial.X - Polynomial.C (0 : K)) * Diα) ^ i * Ei)
+      = algebraMap K[X] (RatFunc K) (A * (Polynomial.X - Polynomial.C (0 : K)) ^ i) := by
+  rw [hFracα, lDenomα, Nat.add_zero, Nat.zero_add, pow_one, div_mul_eq_mul_div,
+    div_eq_iff (RatFunc.algebraMap_ne_zero (mul_ne_zero (pow_ne_zero _ hDiα) hEi)),
+    ← map_mul, ← map_mul]
+  congr 1
+  rw [mul_pow]; ring
+
+/-- Restatement of Step 3, the root-value bridge `σα(Pᵢ,i−j)(α) = Qᵢⱼ(α)` (book p.56). -/
+example [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+    Polynomial.eval α
+        (diffSubst Diα (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
+      = (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α :=
+  eval_diffSubst_laurentNum_eq_laurentQ_eval A Diα α i j
+
+/-- Restatement of Step 5, the general engine-output evaluation
+`Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` (book p.56, eq 2.12 evaluated). -/
+example {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
+    (laurentH A D Di i j).eval α
+      = (laurentQ A Di i j).eval α * (1 / (laurentE D Di i).eval α) ^ (i - j + 1)
+          * (1 / (derivative Di).eval α) ^ (2 * i - j) :=
+  eval_laurentH i j hDi hα hcopE hcopD
 
 end DeepWiki.SymbolicIntegration
