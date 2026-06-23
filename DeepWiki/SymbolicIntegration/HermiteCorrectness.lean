@@ -792,11 +792,12 @@ engine-honesty bundle `SqfreeExact fuel D`, the squarefree radical `Dstar = ∏�
 `csqfreeFactor fuel D` divides `D` in `ℚ[X]`: `toPoly Dstar ∣ toPoly D`. The product of the Yun factors
 divides the initial deflation `b₁` (`goProd_dvd`), and `b₁ = D/gcd(D,D')` divides `D` by the initial
 exact division. This is the honest mathematical content of the Yun squarefree factorization recorded by
-`hermiteReduce`. The *equality* clause for full `csqfreeFactor` correctness — `toPoly D = u·∏ⱼ
-(toPoly Vⱼ)^iⱼ` with each `Vⱼ` squarefree and the `Vⱼ` pairwise coprime — is proved at the abstract
-`K[X]` level below (`yunFactorizationAbs_forall₂`/`_squarefree`/`_pairwise_isRelPrime`/`_prodPow_assoc`,
-unconditional from `A ≠ 0`); only the `csqfreeFactor.go`↔`yunLoopAbs` `toPoly` bridge remains, blocked
-by a `ℚ`-instance diamond (see the `GoYun` section). -/
+`hermiteReduce`. The squarefree and pairwise-coprime clauses for full `csqfreeFactor` correctness — each
+`Vⱼ` squarefree and the `Vⱼ` pairwise coprime — are proved at the abstract `K[X]` level below
+(`yunFactorizationAbs_squarefree`/`_pairwise_isRelPrime`, unconditional from `A ≠ 0`) and transferred to
+the concrete `csqfreeFactor` (`csqfreeFactor_squarefree`/`csqfreeFactor_pairwise_isRelPrime`) through the
+now-crossed `ℚ`-instance diamond (see the `GoYun`/`go_factor_assoc` sections), under the honesty bundle
+`SqfreeYun`. -/
 theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     toPoly ((csqfreeFactor fuel D).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly D := by
@@ -1559,22 +1560,23 @@ def GoYun (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
         toPoly d = toPoly q * toPoly (cdiv fuel d q) ∧
         GoYun fuel fo b' d'
 
-/-! ### Remaining wall: the `ℚ`-instance diamond in the concrete bridge
+/-! ### The `ℚ`-instance diamond in the concrete bridge — RESOLVED
 
 The concrete↔abstract step correspondence (`csqfreeFactor.go`'s `(b′, d′)` maps to `yunLoopAbs`'s
 `(b/gcd, d/gcd − (b/gcd)′)`) is provable per step from `toPoly_cmonic_cgcdExt`, `GoYun`'s exact
-divisions, and `toPoly_cderiv`. But carrying the abstract invariant `YunInv (A : ℚ[X]) i …` through the
-loop and applying `yunStep_preserves`/`yunStep_emit_assoc` at `ℚ[X]` hits a **`CommRing ℚ` instance
-diamond**: the abstract theory (stated over `{K} [Field K]`) derives `CommRing ℚ` as
-`Field.toCommRing`, while `csqfreeFactor`/`Babs`/`normalizedFactors` use `ℚ`'s ambient
+divisions, and `toPoly_cderiv`. Carrying the abstract invariant `YunInv (A : ℚ[X]) i …` through the
+loop and applying `yunStep_preserves`/`yunStep_emit_assoc` at `ℚ[X]` once appeared blocked by a
+**`CommRing ℚ` instance diamond**: the abstract theory (stated over `{K} [Field K]`) derives
+`CommRing ℚ` as `Field.toCommRing`, while `csqfreeFactor`/`Babs`/`normalizedFactors` use `ℚ`'s ambient
 `Rat.commRing` (with `instDecidableEqRat` rather than `Classical.dec` for the `NormalizedGCDMonoid`).
-The two `primPart`/`gcd`/`squarefreePart` instances are *defeq* but not syntactically equal, so
-`yunStep_emit_assoc A i hi hA hinv` does not directly typecheck against the `ℚ`-ambient `hA`. Closing
-this needs reconciling the instances (e.g. restating the abstract theory's `ℚ` specialization through
-the field-derived `CommRing`/`NormalizedGCDMonoid`, or a `convert`/instance-rewrite bridge). This is
-the sole remaining gap between the complete *abstract* Yun correctness above and a fully concrete
-`csqfreeFactor` theorem; the abstract spine and the atomic gcd bridge (`toPoly_cmonic_cgcdExt`) are
-both in place. -/
+The two `primPart`/`gcd`/`squarefreePart` instances are *defeq* but not syntactically equal. The
+resolution (next sections): the diamond reduces — through `convert`/the `rw`-trick — to two residual
+instance equalities, the `CommRing ℚ` halves being `rfl`-defeq and the `NormalizedGCDMonoid ℚ` halves
+differing only in a `Subsingleton (DecidableEq ℚ)` argument. This crosses the gap: the ambient-`ℚ` step
+bridges (`yunInv_base_rat`/`yunStep_emit_assoc_rat`/`yunStep_preserves_rat`) carry the abstract spine
+through the concrete loop (`go_factor_assoc`), yielding the concrete `csqfreeFactor` **squarefree** and
+**pairwise-coprime** clauses (`csqfreeFactor_squarefree`/`csqfreeFactor_pairwise_isRelPrime`) under the
+engine-honesty bundle `SqfreeYun`. -/
 
 /-! ### Crossing the `ℚ`-instance diamond by `convert`
 
@@ -1832,8 +1834,10 @@ theorem isRelPrime_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V W : ℚ[X]) 
 
 /-- **Engine-honesty bundle** for `csqfreeFactor fuel D`: the initialization `(b₁, d₁) =
 (D/gcd(D,D′), D′/gcd(D,D′) − b₁′)` satisfies the loop invariant `YunInv (toPoly D) 1` and every Yun loop
-step is exact (`GoYun`). The concrete analog of `SqfreeExact`; on a concrete `D` it is a decidable
-condition (the `cmod`-vanishings of `SqfreeExactComp` plus the start invariant). -/
+step is exact (`GoYun`). The concrete analog of `SqfreeExact` for the Yun loop association. The `GoYun`
+conjunct is the per-step exact-division content (decidable mirror as in `SqfreeExactComp`); the
+`YunInv` start conjunct ties `(b₁, d₁)` to the abstract radical/derivative-poly `Babs`/`Dabs` up to a
+shared scalar. -/
 def SqfreeYun (fuel : ℕ) (D : CPoly) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
@@ -1962,4 +1966,20 @@ example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.pr
     Associated (prodPow 1 (yunFactorizationAbs A n))
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
   yunFactorizationAbs_prodPow_assoc A hA0 hA n
+
+-- Concrete Yun correctness (squarefree clause): every factor the computable `csqfreeFactor` emits is
+-- squarefree, under the engine-honesty bundle `SqfreeYun`.
+example (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
+    (Vm : CPoly × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+    Squarefree (toPoly Vm.1) :=
+  csqfreeFactor_squarefree fuel D hex Vm hVm
+
+-- Concrete Yun correctness (coprimality clause): factors of `csqfreeFactor` at distinct positions are
+-- relatively prime, under `SqfreeYun`.
+example (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
+    (p q : ℕ) (hpq : p ≠ q) (hp : p < (csqfreeFactor fuel D).length)
+    (hq : q < (csqfreeFactor fuel D).length) :
+    IsRelPrime (toPoly ((csqfreeFactor fuel D).get ⟨p, hp⟩).1)
+      (toPoly ((csqfreeFactor fuel D).get ⟨q, hq⟩).1) :=
+  csqfreeFactor_pairwise_isRelPrime fuel D hex p q hpq hp hq
 
