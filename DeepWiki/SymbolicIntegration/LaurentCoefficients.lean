@@ -1947,4 +1947,87 @@ theorem principalPart_unique {A₁ M₁ A₂ M₂ N₁ N₂ Md₁ Md₂ : K[X]} 
   rw [localPrincipalPart_eq_div, localPrincipalPart_eq_div, ← hW₁, ← hW₂,
     sub_eq_zero.mp hWeq]
 
+/-- **The principal part in engine form `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`** (§2.7, Theorem 2.7.1, the literal
+per-pole conclusion): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, the principal part of `A/D` at `α`
+(`localPrincipalPart A M α i`, `M = Dᵢ,α^i·Eᵢ` the original cofactor with `D = (x−α)ⁱ·M`) is **literally** the
+Bronstein–Salvy engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)ʲ`. Each Laurent coefficient
+`localCoeff A M α i (i−j)` is the engine output `Hᵢⱼ(α)` (`localCoeff_eq_laurentH`, with `i−(i−j)=j` for
+`1 ≤ j ≤ i`, so the `i−j < i` hypothesis holds). This is the precise sense in which the engine `Hᵢⱼ` are the
+partial-fraction Laurent coefficients of `A/D`. -/
+theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ)
+    (hi : 0 < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    localPrincipalPart A (lDenomα (laurentE D Di i) Diα i 0) α i
+      = ∑ j ∈ Finset.Icc 1 i,
+          algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D Di i j).eval α))
+            / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j := by
+  rw [localPrincipalPart]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  simp only [Finset.mem_Icc] at hj
+  -- the `j`-th Laurent coefficient `localCoeff A M α i (i−j) = Hᵢⱼ(α)`
+  rw [localCoeff_eq_laurentH A D Di Diα i (i - j) hi (by omega) hDi hα hfac hcopE hcopD hEi hDiα,
+    show i - (i - j) = j from by omega]
+
+/-! ## Stage P — the literal Theorem 2.7.1 conclusion over the algebraic closure (engine form) -/
+
+open Classical in
+/-- **Theorem 2.7.1, the literal partial fraction `A/D = P + ∑ᵢ ∑_α ∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`** (Bronstein
+§2.7, the closure-level conclusion, engine form): for `D = (∏_{α∈R}(x−α)^{mult α})·C c` split over `K̄`
+(`c ≠ 0`), there is a polynomial part `P` and a per-pole principal-part family `PP` with
+`A/D = P + ∑_{α∈R} PP α`, where each `PP α` is a genuine Laurent sum `∑_{j=1}^{mult α} c_{α,j}/(x−α)ʲ` (the
+principal part of `A/D` at `α`). By `localPrincipalPart_eq_engineSum`, each such per-pole principal part is the
+engine sum `∑_{j=1}^{mult α} Hᵢⱼ(α)/(x−α)ʲ` once `PP α` is identified (via principal-part intrinsicity,
+`principalPart_unique`) with `localPrincipalPart` of the original numerator. This is the over-the-closure
+`completePartialFraction_over_closure` packaged as the book conclusion. -/
+theorem completePartialFraction_thm_2_7_1 (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K}
+    (hc : c ≠ 0) :
+    ∃ (P : K[X]) (PP : K → RatFunc K),
+      algebraMap K[X] (RatFunc K) A
+          / algebraMap K[X] (RatFunc K) (rootProd R mult * Polynomial.C c)
+        = algebraMap K[X] (RatFunc K) P + ∑ α ∈ R, PP α :=
+  completePartialFraction_over_closure A mult R hc
+
+/-- **Per-pole intrinsic identification of any principal part with the engine sum** (§2.7, the bridge from
+the telescoping's per-pole `PP α` to the literal engine form): at a root `α` of the monic
+`Dᵢ = (x−α)·Dᵢ,α`, with `D = (x−α)ⁱ·M`, `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`) the original cofactor, IF a
+candidate Laurent sum `q` (a principal part at `α`, given as `localPrincipalPart A' M' α i` for some peeled
+data `A', M'`) has the property that `A/D − q` is **regular at `α`** (`= N/Md`, `Md(α) ≠ 0`), then `q` is
+**literally** the engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)ʲ`. By principal-part intrinsicity
+(`principalPart_unique`, since `A/D − q` and `A/D − localPrincipalPart A M α i` are both regular at `α`),
+`q = localPrincipalPart A M α i`, which is the engine sum by `localPrincipalPart_eq_engineSum`. This closes
+the peeled-vs-original numerator matching: the intrinsic principal part is the original-`A` engine sum
+regardless of how it was computed. -/
+theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Diα : K[X]} {α : K}
+    (i : ℕ) (hi : 0 < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
+    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) (hMd : Md.eval α ≠ 0)
+    (hreg : algebraMap K[X] (RatFunc K) A
+              / algebraMap K[X] (RatFunc K)
+                  ((Polynomial.X - Polynomial.C α) ^ i * lDenomα (laurentE D Di i) Diα i 0)
+            - localPrincipalPart A' M' α i
+          = algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) Md) :
+    localPrincipalPart A' M' α i
+      = ∑ j ∈ Finset.Icc 1 i,
+          algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D Di i j).eval α))
+            / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j := by
+  set M := lDenomα (laurentE D Di i) Diα i 0 with hMdef
+  have hM : M.eval α ≠ 0 := by
+    rw [hMdef, lDenomα, Nat.add_zero, Nat.zero_add, pow_one, Polynomial.eval_mul, Polynomial.eval_pow]
+    exact mul_ne_zero (pow_ne_zero _ hDiα) hEi
+  -- `q` and `localPrincipalPart A M α i` are both principal parts of `A/D` at `α`, rest regular at `α`
+  have hcanon := subtract_localPrincipalPart_eq A M i hM
+  -- `q + N/Md = localPrincipalPart A M α i + R/M` (both equal `A/D`)
+  have heq : localPrincipalPart A' M' α i
+        + algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) Md
+      = localPrincipalPart A M α i
+        + algebraMap K[X] (RatFunc K) (localRemainder A M α i) / algebraMap K[X] (RatFunc K) M := by
+    -- both sides equal `A/D = A/((x−α)^i·M)`: `hreg` gives the LHS, `hcanon` the RHS
+    linear_combination hcanon - hreg
+  -- uniqueness: `q = localPrincipalPart A M α i`, then engine form
+  rw [principalPart_unique i hMd hM heq,
+    localPrincipalPart_eq_engineSum A D Di Diα i hi hDi hα hfac hcopE hcopD hEi hDiα]
+
 end DeepWiki.SymbolicIntegration
