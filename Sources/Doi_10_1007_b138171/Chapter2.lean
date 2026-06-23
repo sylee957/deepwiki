@@ -15,6 +15,7 @@ import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
+import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
@@ -34,7 +35,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
 §2.8: Thm 2.8.4; Rioboo's `LogToReal` real-rational-function recursion; Ex 2.8.1; Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
-Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
+Exercises: Ex 2.2; Ex 2.3; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
 and is procedural — needs operational semantics.) -/
 
@@ -906,5 +907,22 @@ fraction `A/D` is the logarithmic derivative of some nonzero `u ∈ K(x)*` **iff
 `isLogDeriv_iff_integer_residues`. -/
 abbrev recognizingLogDerivatives_iff :=
   @DeepWiki.SymbolicIntegration.isLogDeriv_iff_integer_residues
+
+/-! ## Exercises -/
+
+/-- **Exercise 2.4(b)** (§2, p.72): a closed form for `∫ dx/(1+xⁿ)`, `n ∈ ℕ`. Over an algebraically
+closed field `K` with `(n:K) ≠ 0` (so `Xⁿ+1` is separable) and `1 ≤ n`,
+`1/(Xⁿ+1) = ∑_{ζ ∈ (Xⁿ+1).roots} (−ζ/n)·logDeriv(X−ζ)` in `K(x)` — i.e.
+`∫ dx/(1+xⁿ) = ∑_ζ (−ζ/n)·log(x−ζ)`, a sum over the roots with residue `−ζ/n = 1/(n·ζⁿ⁻¹)` at each.
+Specializes the simple-root log-part `eq_2_3_residue`/`intRationalLogPart_logDeriv` at `A = 1`,
+`D = Xⁿ+1` (monic, splits, separable, so it is the nodal product over its distinct roots). The
+library's `inv_one_add_X_pow_eq_sum_residue_logDeriv`. -/
+abbrev ex_2_4 := @DeepWiki.SymbolicIntegration.inv_one_add_X_pow_eq_sum_residue_logDeriv
+
+/-- **Exercise 2.4(a)** (§2, p.72): the `n = 4` case `∫ dx/(1+x⁴)`. Over an algebraically closed
+field `K` with `(4:K) ≠ 0` (e.g. `CharZero K`),
+`1/(X⁴+1) = ∑_{ζ ∈ (X⁴+1).roots} (−ζ/4)·logDeriv(X−ζ)`, the `n = 4` instance of `ex_2_4`. The
+library's `inv_one_add_X_pow_four_eq_sum_residue_logDeriv`. -/
+abbrev ex_2_4_a := @DeepWiki.SymbolicIntegration.inv_one_add_X_pow_four_eq_sum_residue_logDeriv
 
 end DeepWiki.Si
