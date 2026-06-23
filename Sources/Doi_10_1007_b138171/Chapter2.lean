@@ -931,10 +931,11 @@ noncomputable abbrev thm_2_7_1_laurentQ := @DeepWiki.SymbolicIntegration.laurent
 abbrev thm_2_7_1_residue := @DeepWiki.SymbolicIntegration.eval_laurentH_one_one_eq_residue
 
 /-- **Theorem 2.7.1, eq 2.11 as a fraction-field invariant** (§2.7, p.55, the validation of the `Pᵢⱼ`
-recursion): in `K(x)⟨u⟩ = Frac (DiffPoly K)`, `(d/dx)^[i−j] hᵢ = (∏_{k}(i+k+1))·(Pᵢⱼ/(u^{2i−j}·Eᵢ^{i−j+1}))`
-for `hᵢ = A/(uⁱ·Eᵢ)` — the `d`-fold `d/dx` of `hᵢ` is the `laurentNum` numerator over its denominator, up
-to the `laurentNumStep` divisor product (`laurentScale`; the book's `hᵢ^{i−j}/(i−j)!` normalization folded
-in). Validates `laurentNum`/`laurentNumStep` against the genuine quotient-rule `d/dx`. The library's
+recursion): in `K(x)⟨u⟩ = Frac (DiffPoly K)`, `(d/dx)^[i−j] hᵢ = (i−j)!·(Pᵢⱼ/(u^{2i−j}·Eᵢ^{i−j+1}))` for
+`hᵢ = A/(uⁱ·Eᵢ)` — exactly the book's `hᵢ^{(i−j)}/(i−j)! = Pᵢⱼ/(u^{2i−j}·Eᵢ^{i−j+1})`. The `laurentNumStep`
+divisor is the factorial increment `d+1` (`laurentScale K i d = d!`, `laurentScale_eq_factorial`), so
+`laurentNum` is EXACTLY the book's `Pᵢⱼ` and the engine faithfully computes `Hᵢⱼ`. Validates
+`laurentNum`/`laurentNumStep` against the genuine quotient-rule `d/dx`. The library's
 `iterate_fracKDeriv_hFrac`, built on the `K`-derivation `fracKDeriv` on the fraction field (quotient rule
 via `Localization.liftOn`) and the cleared step `laurentNum_cleared_step`/`reduced_num`. -/
 abbrev eq_2_11_invariant := @DeepWiki.SymbolicIntegration.iterate_fracKDeriv_hFrac

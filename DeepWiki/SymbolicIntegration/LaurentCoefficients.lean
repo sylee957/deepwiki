@@ -146,20 +146,22 @@ theorem isCoprime_derivative_of_squarefree [CharZero K] {Di : K[X]} (hsf : Squar
 /-! ## Stage C — (2.11) the `Pᵢⱼ` numerator recursion -/
 
 /-- **The numerator-recursion step** (§2.7, differentiating eq 2.11): from the numerator `P` of
-`hᵢ^d/d! = P/(u^a·Eᵢ^b)` (with `a = i+d`, `b = d+1`), one `d/dx` and a `1/(d+1)` factor give the numerator
-of `hᵢ^(d+1)/(d+1)!`, namely
-`(1/(d+1))·(ddx P · u · Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))` over `u^(a+1)·Eᵢ^(b+1)`. Here `Eᵢ = dpEmbed Ei`,
-`Eᵢ' = dpEmbed (derivative Ei)`, `u = X (some 0)`, `u' = X (some 1)`. -/
+`hᵢ^d/d! = P/(u^a·Eᵢ^b)` (with `a = i+d`, `b = d+1`), one `d/dx` and the factorial factor `1/(d+1) = 1/b`
+give the numerator of `hᵢ^(d+1)/(d+1)!`, namely
+`(1/b)·(ddx P · u · Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))` over `u^(a+1)·Eᵢ^(b+1)`. Here `Eᵢ = dpEmbed Ei`,
+`Eᵢ' = dpEmbed (derivative Ei)`, `u = X (some 0)`, `u' = X (some 1)`. The divisor is the factorial
+increment `b = d+1` (since `hᵢ^(d+1)/(d+1)! = (1/(d+1))·d/dx(hᵢ^(d)/d!)`), NOT `a+1`. -/
 noncomputable def laurentNumStep (Ei : K[X]) (a b : ℕ) (P : DiffPoly K) : DiffPoly K :=
-  MvPolynomial.C ((a + 1 : K)⁻¹) *
+  MvPolynomial.C ((b : K)⁻¹) *
     (ddx P * X (some 0) * dpEmbed Ei
       - P * ((a : DiffPoly K) * X (some 1) * dpEmbed Ei
               + (b : DiffPoly K) * X (some 0) * dpEmbed (derivative Ei)))
 
 /-- **The Laurent numerator `Pᵢⱼ`** (§2.7, eq 2.11), indexed by the derivative count `d = i − j` running
 `0,1,…`: `laurentNum A Ei i 0 = dpEmbed A` (the numerator of `hᵢ = A/(uⁱ·Eᵢ)`), and each successive `d`
-applies `laurentNumStep` with denominator exponents `a = i+d`, `b = d+1`. So `laurentNum A Ei i d` is the
-`Pᵢⱼ` with `j = i − d`, the numerator of `hᵢ^d/d! = Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))`. -/
+applies `laurentNumStep` with denominator exponents `a = i+d`, `b = d+1` (so the factorial divisor is
+`b = d+1`). So `laurentNum A Ei i d` is EXACTLY the book's `Pᵢⱼ` with `j = i − d`, the numerator of
+`hᵢ^d/d! = Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))` — no scale discrepancy. -/
 noncomputable def laurentNum (A Ei : K[X]) (i : ℕ) : ℕ → DiffPoly K
   | 0 => dpEmbed A
   | d + 1 => laurentNumStep Ei (i + d) (d + 1) (laurentNum A Ei i d)
@@ -172,20 +174,21 @@ theorem laurentNum_succ (A Ei : K[X]) (i d : ℕ) :
       = laurentNumStep Ei (i + d) (d + 1) (laurentNum A Ei i d) := rfl
 
 /-- **The cleared quotient-rule step** (§2.7, eq 2.11 differentiated, denominator-free form): over a
-characteristic-`0` field the `1/(d+1)` in `laurentNumStep` clears, giving the polynomial identity
-`(i+d+1)·Pᵢ,d₊₁ = ddx Pᵢ,d · u · Eᵢ − Pᵢ,d·((i+d)·u'·Eᵢ + (d+1)·u·Eᵢ')` in `DiffPoly K`. This is the
-numerator of the quotient rule `d/dx (P/(uᵃ·Eᵢᵇ)) = (ddx P·u·Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))/(uᵃ⁺¹·Eᵢᵇ⁺¹)`
-with `a = i+d`, `b = d+1`, validating the `Pᵢⱼ` recursion against the genuine `d/dx` of `hᵢ`. -/
+characteristic-`0` field the factorial divisor `1/(d+1)` in `laurentNumStep` clears, giving the polynomial
+identity `(d+1)·Pᵢ,d₊₁ = ddx Pᵢ,d · u · Eᵢ − Pᵢ,d·((i+d)·u'·Eᵢ + (d+1)·u·Eᵢ')` in `DiffPoly K`. This is the
+factorial-scaled numerator of the quotient rule `d/dx (P/(uᵃ·Eᵢᵇ)) =
+(ddx P·u·Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))/(uᵃ⁺¹·Eᵢᵇ⁺¹)` with `a = i+d`, `b = d+1` (so dividing by `b = d+1`
+yields `Pᵢ,d₊₁`), validating the `Pᵢⱼ` recursion against the genuine `d/dx` of `hᵢ^d/d!`. -/
 theorem laurentNum_cleared_step [CharZero K] (A Ei : K[X]) (i d : ℕ) :
-    MvPolynomial.C ((i + d : K) + 1) * laurentNum A Ei i (d + 1)
+    MvPolynomial.C ((d : K) + 1) * laurentNum A Ei i (d + 1)
       = ddx (laurentNum A Ei i d) * X (some 0) * dpEmbed Ei
         - laurentNum A Ei i d
             * ((i + d : DiffPoly K) * X (some 1) * dpEmbed Ei
                 + (d + 1 : DiffPoly K) * X (some 0) * dpEmbed (derivative Ei)) := by
   rw [laurentNum_succ, laurentNumStep, ← mul_assoc, ← MvPolynomial.C_mul]
-  have hne : ((i + d : ℕ) : K) + 1 ≠ 0 := Nat.cast_add_one_ne_zero _
-  rw [show ((i : K) + d + 1) = (((i + d : ℕ) : K) + 1) by push_cast; ring,
-      mul_inv_cancel₀ hne, MvPolynomial.C_1, one_mul]
+  have hne : ((d : ℕ) : K) + 1 ≠ 0 := Nat.cast_add_one_ne_zero _
+  rw [show ((d : K) + 1) = (((d + 1 : ℕ)) : K) by push_cast; ring,
+      mul_inv_cancel₀ (by exact_mod_cast hne), MvPolynomial.C_1, one_mul]
   push_cast; ring
 
 /-! ## Stage D — (2.12) the engine: `Qᵢⱼ` substitution and `Hᵢⱼ` -/
@@ -482,13 +485,13 @@ theorem lFrac_mk (A Ei : K[X]) (i d : ℕ) (hEi : Ei ≠ 0) :
   unfold lFrac; rw [Localization.mk_eq_mk', IsFractionRing.mk'_eq_div]
 
 /-- **The reduced quotient-rule numerator** (`i+d ≥ 1`): differentiating `Pᵢ,d/denom_d` and reducing,
-`ddx Pᵢ,d·denom_d − Pᵢ,d·ddx denom_d = u^(i+d−1)·Eᵢ^d·((i+d+1)·Pᵢ,d₊₁)` — the common factor `u^(i+d−1)·Eᵢ^d`
-(`= denom_d² / denom_{d+1}`) extracted, leaving `(i+d+1)·Pᵢ,d₊₁` by `laurentNum_cleared_step`. Stated with
-`m = i+d−1` to keep the exponent honest. -/
+`ddx Pᵢ,d·denom_d − Pᵢ,d·ddx denom_d = u^(i+d−1)·Eᵢ^d·((d+1)·Pᵢ,d₊₁)` — the common factor `u^(i+d−1)·Eᵢ^d`
+(`= denom_d² / denom_{d+1}`) extracted, leaving the factorial-scaled `(d+1)·Pᵢ,d₊₁` by
+`laurentNum_cleared_step`. Stated with `m = i+d−1` to keep the exponent honest. -/
 theorem reduced_num [CharZero K] (A Ei : K[X]) (i d m : ℕ) (hm : i + d = m + 1) :
     ddx (laurentNum A Ei i d) * lDenom Ei i d - laurentNum A Ei i d * ddx (lDenom Ei i d)
       = X (some 0) ^ m * dpEmbed Ei ^ d *
-          (MvPolynomial.C ((i + d : K) + 1) * laurentNum A Ei i (d + 1)) := by
+          (MvPolynomial.C ((d : K) + 1) * laurentNum A Ei i (d + 1)) := by
   rw [laurentNum_cleared_step]
   unfold lDenom
   rw [hm]
@@ -502,12 +505,13 @@ theorem reduced_num [CharZero K] (A Ei : K[X]) (i d m : ℕ) (hm : i + d = m + 1
   rw [key, pow_succ (X (some 0) : DiffPoly K) m, pow_succ (dpEmbed Ei : DiffPoly K) d, hmK]
   ring
 
-/-- **The `hᵢ^(d)`-recursion step in `K(x)⟨u⟩`** (§2.7, eq 2.11): `d/dx (Pᵢ,d/denom_d) = (i+d+1)·(Pᵢ,d₊₁/denom_{d+1})`
-— differentiating the `d`-th fraction gives the `(d+1)`-th scaled by `i+d+1` (the divisor `laurentNumStep`
-clears). Proved via `reduced_num` + `lDenom_succ`. Requires `0 < i` (so `u^(i+d)` has a positive power to
-differentiate) and `Ei ≠ 0`. -/
+/-- **The `hᵢ^(d)`-recursion step in `K(x)⟨u⟩`** (§2.7, eq 2.11): `d/dx (Pᵢ,d/denom_d) = (d+1)·(Pᵢ,d₊₁/denom_{d+1})`
+— differentiating the `d`-th fraction gives the `(d+1)`-th scaled by the factorial increment `d+1` (the
+divisor `laurentNumStep` clears). This is exactly `d/dx (hᵢ^d/d!) = (d+1)·(hᵢ^(d+1)/(d+1)!)`. Proved via
+`reduced_num` + `lDenom_succ`. Requires `0 < i` (so `u^(i+d)` has a positive power to differentiate) and
+`Ei ≠ 0`. -/
 theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) :
-    fracKDeriv (lFrac A Ei i d) = (((i : K) + d) + 1) • lFrac A Ei i (d + 1) := by
+    fracKDeriv (lFrac A Ei i d) = ((d : K) + 1) • lFrac A Ei i (d + 1) := by
   obtain ⟨m, hm⟩ : ∃ m, i + d = m + 1 := ⟨i + d - 1, by omega⟩
   rw [lFrac_mk A Ei i d hEi, lFrac_mk A Ei i (d + 1) hEi, fracKDeriv_apply, fracDeriv_mk]
   show (Localization.mk _ ⟨(lDenom Ei i d) ^ 2, _⟩ : FractionRing (DiffPoly K)) = _
@@ -518,17 +522,26 @@ theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hE
   unfold lDenom
   rw [hm]; ring
 
-/-- **The factorial-style divisor product** `∏_{k=0}^{d−1}(i+k+1)` accumulated by the `laurentNumStep`
-recursion (which divides by `i+d+1`, not `d+1`, at step `d`). -/
+/-- **The factorial divisor `d!`** accumulated by the `laurentNumStep` recursion (which divides by the
+factorial increment `d+1` at step `d`), realized in `K`. With the corrected normalization the scale is the
+pure factorial `d! = ∏_{k=0}^{d−1}(k+1)`, matching the book's `hᵢ^(d)/d!`. -/
 noncomputable def laurentScale (K : Type*) [Field K] (i : ℕ) : ℕ → K
   | 0 => 1
-  | d + 1 => laurentScale K i d * ((i + d : K) + 1)
+  | d + 1 => laurentScale K i d * ((d : K) + 1)
+
+/-- **`laurentScale = d!`** (the corrected scale collapses to the pure factorial): with `laurentNumStep`
+dividing by the factorial increment `d+1`, the accumulated product `laurentScale K i d` is exactly the
+factorial `(d! : K)`, independent of `i`. -/
+theorem laurentScale_eq_factorial (i d : ℕ) : laurentScale K i d = (d.factorial : K) := by
+  induction d with
+  | zero => simp [laurentScale]
+  | succ n ih => rw [laurentScale, ih, Nat.factorial_succ]; push_cast; ring
 
 /-- **The eq 2.11 invariant in `K(x)⟨u⟩ = Frac (DiffPoly K)`** (§2.7, the validation of the `Pᵢⱼ` recursion):
-`(d/dx)^[d] hᵢ = (∏_{k=0}^{d−1}(i+k+1)) · (Pᵢ,d / (u^(i+d)·Eᵢ^(d+1)))` for `hᵢ = A/(uⁱ·Eᵢ)`. Since
-`laurentNumStep` divides by `i+d+1` (not the factorial `d+1`), the `d`-th derivative carries the explicit
-product `laurentScale`; the book's clean `hᵢ^(d)/d! = Pᵢⱼ/denom_d` is this with the `laurentNum`
-normalization folded into `laurentScale`. Proved by induction via `fracKDeriv_lFrac`. -/
+`(d/dx)^[d] hᵢ = d! · (Pᵢ,d / (u^(i+d)·Eᵢ^(d+1)))` for `hᵢ = A/(uⁱ·Eᵢ)` — i.e. exactly the book's
+`hᵢ^(d)/d! = Pᵢⱼ/denom_d` (`= Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))`). Since `laurentNumStep` divides by the factorial
+increment `d+1`, the `d`-th derivative carries the factorial `laurentScale K i d = d!` (`laurentScale_eq_factorial`);
+the engine's `laurentNum` is EXACTLY the book's `Pᵢⱼ`. Proved by induction via `fracKDeriv_lFrac`. -/
 theorem iterate_fracKDeriv_hFrac [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0)
     (d : ℕ) :
     (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d := by
@@ -648,10 +661,23 @@ example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
   eval_laurentH_one_one_eq_residue hDi hα hfac hcopE hcopD hE hD'
 
 /-- Restatement of (2.11) as a fraction-field invariant (book p.55): the `d`-th `d/dx` of
-`hᵢ = A/(uⁱ·Eᵢ)` in `K(x)⟨u⟩` is `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` up to the `laurentNumStep` divisor product. -/
+`hᵢ = A/(uⁱ·Eᵢ)` in `K(x)⟨u⟩` is `d! · Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` — exactly the book's
+`hᵢ^(d)/d! = Pᵢ,d/denom_d` (the scale is the pure factorial `d!`, no `i`-dependent discrepancy). -/
 example [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (d : ℕ) :
-    (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d :=
-  iterate_fracKDeriv_hFrac A Ei i hi hEi d
+    (fracKDeriv^[d]) (hFrac A Ei i) = (d.factorial : K) • lFrac A Ei i d := by
+  rw [iterate_fracKDeriv_hFrac A Ei i hi hEi d, laurentScale_eq_factorial]
+
+/-- Regression for the `laurentNumStep` factorial fix (`i=2, d=1`): `laurentNum A E₂ 2 1` is EXACTLY the
+book's `P₂,₁ = A'·u·E₂ − A·(2·u'·E₂ + u·E₂')` (numerator of `h₂' = (A/(u²E₂))'`, `1! = 1`, **no** `1/3`
+factor). Before the fix `laurentNumStep` divided by `a+1 = i+d+1 = 4`-style scalars and this was off by a
+binomial factor; with the factorial divisor `b = d+1 = 1` here, the step contributes no division. -/
+example (A E2 : K[X]) :
+    laurentNum A E2 2 1
+      = ddx (dpEmbed A) * X (some 0) * dpEmbed E2
+        - dpEmbed A * ((2 : DiffPoly K) * X (some 1) * dpEmbed E2
+                        + (1 : DiffPoly K) * X (some 0) * dpEmbed (derivative E2)) := by
+  rw [laurentNum_succ, laurentNum_zero, laurentNumStep]
+  norm_num
 
 /-- Restatement of the root-evaluation step (book p.56): at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`,
 `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
