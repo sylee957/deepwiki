@@ -242,4 +242,13 @@ theorem sameBlock_singleton_of_fd {X : Finset Att} {A : Att}
   have : B ∈ ({A} : Finset Att) := (hAB {A} hmvd).mp (Finset.mem_singleton_self A)
   exact Finset.mem_singleton.mp this
 
+/-- Rule M5 at the implication level (mvd-intersection). -/
+theorem depImplies_mvd_inter (hXY : DepImplies Ω Val D (.mvd X Y))
+    (hXZ : DepImplies Ω Val D (.mvd X Z)) : DepImplies Ω Val D (.mvd X (Y ∩ Z)) :=
+  fun r hr => satisfiesMvd_inter (hXY r hr) (hXZ r hr)
+
+/-- `X ↠ Ω` is always implied (the cover-trivial mvd). -/
+theorem depImplies_mvd_univ : DepImplies Ω Val D (.mvd X Ω) :=
+  fun _ _ t ht u _ hag => ⟨t, ht, fun _ _ => rfl, Agree.mono (by simp) hag⟩
+
 end DeepWiki
