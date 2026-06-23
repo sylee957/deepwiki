@@ -2007,3 +2007,27 @@ example (fuel : ℕ) (D : CPoly) (hex : SqfreeYun fuel D)
       (toPoly ((csqfreeFactor fuel D).get ⟨q, hq⟩).1) :=
   csqfreeFactor_pairwise_isRelPrime fuel D hex p q hpq hp hq
 
+/-! ### Toward the UNCONDITIONAL `hermiteReduce` wrapper (no exact-division certificate)
+
+`hermiteReduce_residual_correct_of_dvd` still assumes the cleared-identity divisibility
+`toPoly (D·gden²) ∣ toPoly (resNum·Dstar)`. The remaining work removes that hypothesis: the
+divisibility is a *consequence* of `A/D − g′` genuinely having denominator `Dstar`, which is the
+loop correctness of the per-factor `hermiteInner` reductions glued through `hermiteReduce`'s `g`-fold.
+
+The engine reduces the **global** fraction `A/D` once per repeated factor `(Vᵢ, iᵢ)`: with
+`U = D/Vᵢ^{iᵢ}` (exact, since `Vᵢ^{iᵢ} ∣ D`), `hermiteInner_spec_of` gives
+`am A/am D = (toQFun glocᵢ)′ + am A_finalᵢ/(am U·am Vᵢ)`, i.e. the residual fraction
+`am A/am D − (toQFun glocᵢ)′` has denominator `am U·am Vᵢ = am (D/Vᵢ^{iᵢ−1})`, whose squarefree
+*radical* is dominated by `Dstar`. The composition tracks these per-factor residuals through the fold. -/
+
+/-- **Exact reading of the global denominator** through a factor power: if `cmod fuel D Vpow` reads to
+`0` (i.e. `Vpow ∣ D` exactly) and `Vpow ≠ 0`, then `am D = am (cdiv fuel D Vpow) · am Vpow` in
+`RatFunc ℚ`. This is the certificate making `hermiteInner`'s global denominator `U·Vᵢ^{iᵢ}` equal to
+`D` (so each factor's inner loop reduces the genuine `A/D`). -/
+theorem am_D_eq_cdiv_mul (fuel : ℕ) (D Vpow : CPoly) (hVpow : cnorm Vpow ≠ [])
+    (hrem : toPoly (cmod fuel D Vpow) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D Vpow))
+        * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vpow) := by
+  rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel D Vpow hVpow hrem]
+
