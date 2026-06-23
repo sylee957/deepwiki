@@ -1,9 +1,11 @@
 import Mathlib.Algebra.MvPolynomial.Derivation
 import Mathlib.Algebra.MvPolynomial.Eval
 import Mathlib.Algebra.Polynomial.Derivative
+import Mathlib.Algebra.Polynomial.Taylor
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
+import DeepWiki.SymbolicIntegration.CompletePartialFraction
 
 /-! # The Bronstein–Salvy differential-variable Laurent-coefficient engine (Bronstein §2.7, Theorem 2.7.1, eqs 2.10–2.12)
 
@@ -1166,4 +1168,103 @@ example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.ev
     one_pos le_rfl hDi hα hfac hcopE hcopD hEi hDiα
   simpa using h
 
-end DeepWiki.SymbolicIntegration
+/-! ## Stage L — the closure-level book conclusion: principal parts and "proper, pole-free ⟹ regular"
+(Bronstein §2.7, Theorem 2.7.1, the partial-fraction assembly over `K̄`)
+
+The final book conclusion `A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} ∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is the statement that,
+at each pole `α` of `A/D` (a root of `Dᵢ`, of order `i`), the engine sum `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is
+exactly the **principal part** of `A/D` at `α`: subtracting it removes the pole.
+
+The structural core proved here is **regularity**: writing `D = (X−α)^i·M` with `M = Dᵢ,α^i·Eᵢ` pole-free at
+`α` (`M(α) ≠ 0`), the **local Taylor approximant** `W := (A·N) %ₘ (X−α)^i` — `N` the Bézout inverse of `M`
+modulo `(X−α)^i` (`localInverse`) — satisfies `M·W ≡ A (mod (X−α)^i)` (`localApprox_spec`), so its `(X−α)`-adic
+digits `c_d = (taylor α W).coeff d` give a principal part `∑_{j=1}^{i} C(c_{i−j})/(X−α)^j` whose subtraction
+from `A/D` leaves a quotient `R/M` regular at `α` (`subtract_localPrincipalPart_eq`,
+`localPrincipalPart_regular`). The digits `c_{i−j}` ARE the `1/(x−α)ʲ` Laurent coefficients; identifying them
+with the engine output `Hᵢⱼ(α)` is `eval_laurentH_eq_taylor_coeff` up to the Hasse-derivative/`ratFuncKDeriv`
+bridge (`taylorCoeff_localApprox_eq_ratFuncTaylor`, the residual naming step). -/
+
+/-- **The local inverse `N` of `M` modulo `(X−α)^i`** (§2.7, the principal-part assembly): the Bézout
+cofactor with `M·N ≡ 1 (mod (X−α)^i)`, existing since `M(α) ≠ 0` makes `M` coprime to `(X−α)^i`. -/
+noncomputable def localInverse (M : K[X]) (α : K) (i : ℕ) : K[X] :=
+  (diophantineSolve M ((Polynomial.X - Polynomial.C α) ^ i) 1).1
+
+/-- **`(X−α)^i` is coprime to `M`** when `M(α) ≠ 0`: `X − α` is prime and does not divide `M` (it would
+force `M(α) = 0`), so its power is coprime to `M`. -/
+theorem isCoprime_M_X_sub_C_pow {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    IsCoprime M ((Polynomial.X - Polynomial.C α) ^ i) := by
+  have hnd : ¬ (Polynomial.X - Polynomial.C α) ∣ M := by
+    rw [dvd_iff_isRoot]; exact fun h => hM h
+  exact (((prime_X_sub_C α).coprime_iff_not_dvd.mpr hnd).symm).pow_right
+
+/-- **`M·N ≡ 1 (mod (X−α)^i)`** (the local-inverse congruence): for `M(α) ≠ 0`, the Bézout cofactor
+`localInverse M α i` inverts `M` modulo `(X−α)^i`, `(X−α)^i ∣ M·N − 1`. -/
+theorem localInverse_spec {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    (Polynomial.X - Polynomial.C α) ^ i ∣ M * localInverse M α i - 1 := by
+  have hspec := diophantineSolve_spec (isCoprime_M_X_sub_C_pow i hM) (1 : K[X])
+  refine ⟨-(diophantineSolve M ((Polynomial.X - Polynomial.C α) ^ i) 1).2, ?_⟩
+  rw [localInverse]; linear_combination hspec
+
+/-- **The local Taylor approximant `W := (A·N) %ₘ (X−α)^i`** (§2.7): the degree-`< i` polynomial whose
+`(X−α)`-adic digits are the principal-part Laurent coefficients of `A/D` at the pole `α`. With `N` the
+local inverse of `M = D /ₘ (X−α)^i`, it satisfies `M·W ≡ A (mod (X−α)^i)`. -/
+noncomputable def localApprox (A M : K[X]) (α : K) (i : ℕ) : K[X] :=
+  (A * localInverse M α i) %ₘ (Polynomial.X - Polynomial.C α) ^ i
+
+/-- **`M·W ≡ A (mod (X−α)^i)`** (§2.7, the defining congruence of the local approximant): `(X−α)^i` divides
+`A − M·W`. From `M·N ≡ 1` and `W = A·N %ₘ (X−α)^i` (so `A·N ≡ W`), `M·W ≡ M·A·N ≡ A`. -/
+theorem localApprox_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    (Polynomial.X - Polynomial.C α) ^ i ∣ A - M * localApprox A M α i := by
+  set g := (Polynomial.X - Polynomial.C α) ^ i with hg
+  have hmonic : g.Monic := (monic_X_sub_C α).pow i
+  -- `A·N ≡ W (mod g)` from the definition of `W = (A·N) %ₘ g`
+  have hAN : g ∣ A * localInverse M α i - localApprox A M α i := by
+    have hid : A * localInverse M α i - localApprox A M α i
+        = g * ((A * localInverse M α i) /ₘ g) := by
+      rw [localApprox, eq_comm, ← sub_eq_iff_eq_add'.mpr (modByMonic_add_div (A * localInverse M α i) g).symm]
+    rw [hid]; exact Dvd.intro _ rfl
+  -- `M·N ≡ 1 (mod g)`
+  have hMN : g ∣ M * localInverse M α i - 1 := localInverse_spec i hM
+  -- combine: `A − M·W = A·(1 − M·N) + M·(A·N − W)`
+  have hcomb : A - M * localApprox A M α i
+      = A * (-(M * localInverse M α i - 1)) + M * (A * localInverse M α i - localApprox A M α i) := by
+    ring
+  rw [hcomb]
+  exact dvd_add (Dvd.dvd.mul_left ((dvd_neg).mpr hMN) A) (Dvd.dvd.mul_left hAN M)
+
+/-- **The Laurent coefficient `c_d`** (§2.7): the order-`d` `(X−α)`-adic digit of the local approximant `W`,
+`c_d = (taylor α W).coeff d` — the `1/(x−α)^{i−d}` partial-fraction coefficient of `A/D` at the pole `α`. -/
+noncomputable def localCoeff (A M : K[X]) (α : K) (i d : ℕ) : K :=
+  (taylor α (localApprox A M α i)).coeff d
+
+/-- **The `(X−α)`-adic reconstruction of `W`** (§2.7): for `deg W < i` (`W = localApprox …`, a remainder
+mod `(X−α)^i`), the local approximant reconstructs from its first `i` Taylor digits,
+`W = ∑_{d<i} c_d·(X−α)^d` (`c_d = localCoeff …`) — the Taylor expansion of `W` about `α`, truncated by its
+degree. -/
+theorem localApprox_eq_sum (A M : K[X]) (α : K) (i : ℕ) :
+    localApprox A M α i
+      = ∑ d ∈ Finset.range i, Polynomial.C (localCoeff A M α i d)
+          * (Polynomial.X - Polynomial.C α) ^ d := by
+  rcases Nat.eq_zero_or_pos i with hi0 | hipos
+  · -- `i = 0`: `(X−α)^0 = 1`, so `W = (A·N) %ₘ 1 = 0`, and `range 0` is empty
+    subst hi0
+    simp only [Finset.range_zero, Finset.sum_empty, localApprox, pow_zero, modByMonic_one]
+  set W := localApprox A M α i with hW
+  have hmonic : ((Polynomial.X - Polynomial.C α) ^ i).Monic := (monic_X_sub_C α).pow i
+  -- `Taylor's formula`: `W = (taylor α W).sum (fun d a => C a · (X−α)^d)`
+  have htay : W = (taylor α W).sum (fun d a => Polynomial.C a * (Polynomial.X - Polynomial.C α) ^ d) :=
+    (sum_taylor_eq W α).symm
+  -- the natDegree of `(X−α)^i` is `i`
+  have hpowdeg : ((Polynomial.X - Polynomial.C α) ^ i).natDegree = i := by
+    rw [natDegree_pow, natDegree_X_sub_C, mul_one]
+  -- truncate the `Polynomial.sum` to `range i` via `natDegree (taylor α W) = natDegree W < i`
+  have hdeg : (taylor α W).natDegree < i := by
+    rw [natDegree_taylor]
+    rcases eq_or_ne W 0 with h0 | h0
+    · rw [h0, natDegree_zero]; exact hipos
+    · have hlt := degree_modByMonic_lt (A * localInverse M α i) hmonic
+      have hdW : W.natDegree < ((Polynomial.X - Polynomial.C α) ^ i).natDegree :=
+        natDegree_lt_natDegree h0 (by rw [hW, localApprox]; exact hlt)
+      rwa [hpowdeg] at hdW
+  rw [htay, Polynomial.sum_over_range' _ (fun d => by simp) i hdeg]
+  rfl
