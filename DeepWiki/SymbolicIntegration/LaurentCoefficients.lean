@@ -1384,4 +1384,110 @@ example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
           / algebraMap K[X] (RatFunc K) M :=
   subtract_localPrincipalPart_eq A M i hM
 
+/-! ## Stage M — the coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)` (P2, the
+Hasse-derivative ↔ differential-engine identification, Bronstein §2.7)
+
+The Stage L Laurent coefficient `localCoeff A M α i d = (taylor α W).coeff d` (a `(X−α)`-adic digit of the
+local approximant `W = (A·N) %ₘ (X−α)^i`) is identified here with the differential-engine Taylor
+coefficient `(1/d!)·(d/dx)^[d] hᵢ,α (α)`, where `hᵢ,α = A/M = (A/D)(x−α)ⁱ` (since `D = (x−α)ⁱ·M`). Two
+ingredients:
+
+* **the Hasse-derivative bridge** (`eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff`): the genuine
+  `(d/dx)^[d]` of the embedded polynomial `W`, evaluated at `α`, is `d!·localCoeff` — via
+  `ratFuncKDeriv (algebraMap p) = algebraMap (derivative p)` iterated, then
+  `derivative^[d] W = d!·hasseDeriv d W` (`Polynomial.factorial_smul_hasseDeriv`) and
+  `(taylor α W).coeff d = (hasseDeriv d W).eval α` (`Polynomial.taylor_coeff`);
+* **high-order vanishing** (`eval_iterate_ratFuncKDeriv_X_sub_C_pow_dvd`): `A/M − W = (x−α)ⁱ·(R/M)`
+  (`localRemainder_spec`), and `(d/dx)^[d]` of a function whose numerator is divisible by `(x−α)ⁱ` still
+  has a positive `(x−α)`-power in the numerator when `d < i`, so it vanishes at `α`.
+
+Combining, `(d/dx)^[d](A/M)(α) = (d/dx)^[d](W)(α) + 0 = d!·localCoeff`, i.e.
+`localCoeff = (1/d!)·(d/dx)^[d](A/M)(α) = Hᵢ,(i−d)(α)` (the engine Taylor coefficient,
+`eval_laurentH_eq_taylor_coeff`). -/
+
+/-- **`(d/dx)^[d]` carries an embedded polynomial to its iterated derivative**: `(ratFuncKDeriv^[d])`
+applied to `algebraMap p` is `algebraMap (derivative^[d] p)`, by iterating `ratFuncDeriv_algebraMap`. -/
+theorem iterate_ratFuncKDeriv_algebraMap (p : K[X]) (d : ℕ) :
+    (ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) p)
+      = algebraMap K[X] (RatFunc K) (derivative^[d] p) := by
+  induction d generalizing p with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply, Function.iterate_succ_apply,
+      show ratFuncKDeriv (algebraMap K[X] (RatFunc K) p) = algebraMap K[X] (RatFunc K) (derivative p)
+        from ratFuncDeriv_algebraMap p, ih]
+
+/-- **Eval of `(d/dx)^[d] W` at `α` is `(derivative^[d] W)(α)`** for an embedded polynomial `W`: the
+`(d/dx)^[d]` of `algebraMap W` is the embedded `derivative^[d] W`, whose `RatFunc.eval id α` reads off the
+polynomial value (denominator `1`, `eval_algebraMap_div`). -/
+theorem eval_iterate_ratFuncKDeriv_algebraMap (W : K[X]) (α : K) (d : ℕ) :
+    RatFunc.eval (RingHom.id K) α ((ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) W))
+      = (derivative^[d] W).eval α := by
+  rw [iterate_ratFuncKDeriv_algebraMap]
+  have h := eval_algebraMap_div α (derivative^[d] W) 1 (by simp)
+  rwa [map_one, div_one, Polynomial.eval_one, div_one] at h
+
+/-- **`(derivative^[d] W)(α) = d!·(taylor α W).coeff d`** (the Hasse-derivative identity): the genuine
+`d`-th derivative value at `α` is `d!` times the order-`d` `(X−α)`-adic digit, from
+`Polynomial.factorial_smul_hasseDeriv` (`d! • hasseDeriv d = derivative^[d]`) and `Polynomial.taylor_coeff`
+(`(taylor α W).coeff d = (hasseDeriv d W).eval α`). -/
+theorem eval_iterate_derivative_eq_factorial_taylor_coeff (W : K[X]) (α : K) (d : ℕ) :
+    (derivative^[d] W).eval α = (d.factorial : K) * (taylor α W).coeff d := by
+  have hhasse : derivative^[d] W = d.factorial • hasseDeriv d W := by
+    have h := congrFun (Polynomial.factorial_smul_hasseDeriv (R := K) (k := d)) W
+    simpa using h.symm
+  rw [hhasse, Polynomial.taylor_coeff, Polynomial.eval_smul, nsmul_eq_mul]
+
+/-- **The Hasse-derivative bridge**: the genuine `(d/dx)^[d]` of the embedded local approximant `W`,
+evaluated at `α`, is `d!·localCoeff A M α i d` — identifying the engine's iterated-derivative Taylor data
+with the Stage L `(X−α)`-adic digit `c_d = (taylor α W).coeff d`. -/
+theorem eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff (A M : K[X]) (α : K) (i d : ℕ) :
+    RatFunc.eval (RingHom.id K) α
+        ((ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) (localApprox A M α i)))
+      = (d.factorial : K) * localCoeff A M α i d := by
+  rw [eval_iterate_ratFuncKDeriv_algebraMap, eval_iterate_derivative_eq_factorial_taylor_coeff,
+    localCoeff]
+
+/-- **High-order vanishing of `(d/dx)^[d]` of a numerator divisible by `(X−α)^i`** (the clean induction): for
+`d ≤ i`, `M(α) ≠ 0`, and `(X−α)^i ∣ p`, the `(d/dx)^[d]` of `p/M` (in `K(x)`) has the shape
+`P_d / Q_d` with `Q_d(α) ≠ 0` and `(X−α)^(i−d) ∣ P_d` — the iterated quotient rule preserves a `(X−α)^(i−d)`
+numerator factor (each derivative drops the power by `1`, `pow_sub_one_dvd_derivative_of_pow_dvd`) and keeps
+the denominator pole-free at `α`. -/
+theorem exists_iterate_ratFuncKDeriv_div (p M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0)
+    (hdvd : (Polynomial.X - Polynomial.C α) ^ i ∣ p) :
+    ∀ d, d ≤ i → ∃ (Pd Qd : K[X]), Qd.eval α ≠ 0 ∧ (Polynomial.X - Polynomial.C α) ^ (i - d) ∣ Pd ∧
+      (ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) p / algebraMap K[X] (RatFunc K) M)
+        = algebraMap K[X] (RatFunc K) Pd / algebraMap K[X] (RatFunc K) Qd := by
+  intro d
+  induction d with
+  | zero =>
+    intro _
+    exact ⟨p, M, hM, by simpa using hdvd, by rw [Function.iterate_zero_apply]⟩
+  | succ n ih =>
+    intro hsucc
+    obtain ⟨Pn, Qn, hQn, hdvdn, heqn⟩ := ih (Nat.le_of_succ_le hsucc)
+    -- the quotient rule for `Pn/Qn` gives numerator `Pn'·Qn − Pn·Qn'`, denominator `Qn²`
+    refine ⟨derivative Pn * Qn - Pn * derivative Qn, Qn ^ 2, ?_, ?_, ?_⟩
+    · rw [Polynomial.eval_pow]; exact pow_ne_zero 2 hQn
+    · -- `(X−α)^(i−n) ∣ Pn`, so `(X−α)^(i−n−1) ∣ Pn'` and `(X−α)^(i−n) ∣ Pn·Qn'`
+      have hd1 : (Polynomial.X - Polynomial.C α) ^ (i - n - 1) ∣ derivative Pn :=
+        pow_sub_one_dvd_derivative_of_pow_dvd hdvdn
+      have hd2 : (Polynomial.X - Polynomial.C α) ^ (i - n - 1) ∣ Pn :=
+        dvd_trans (pow_dvd_pow _ (by omega)) hdvdn
+      rw [show i - (n + 1) = i - n - 1 from by omega]
+      exact dvd_sub (Dvd.dvd.mul_right hd1 Qn) (Dvd.dvd.mul_right hd2 (derivative Qn))
+    · rw [Function.iterate_succ_apply', heqn]
+      have hQn0 : algebraMap K[X] (RatFunc K) Qn ≠ 0 :=
+        (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+          (fun h => hQn (by rw [h, Polynomial.eval_zero]))
+      rw [Derivation.leibniz_div,
+        show ratFuncKDeriv (algebraMap K[X] (RatFunc K) Pn) = algebraMap K[X] (RatFunc K) (derivative Pn)
+          from ratFuncDeriv_algebraMap Pn,
+        show ratFuncKDeriv (algebraMap K[X] (RatFunc K) Qn) = algebraMap K[X] (RatFunc K) (derivative Qn)
+          from ratFuncDeriv_algebraMap Qn]
+      -- expand the quotient rule (in `•` form) and push through `algebraMap`
+      rw [smul_eq_mul, smul_eq_mul, smul_eq_mul, map_sub, map_mul, map_mul, map_pow]
+      rw [inv_pow, ← div_eq_inv_mul, div_eq_div_iff (pow_ne_zero 2 hQn0) (pow_ne_zero 2 hQn0)]
+      ring
+
 end DeepWiki.SymbolicIntegration
