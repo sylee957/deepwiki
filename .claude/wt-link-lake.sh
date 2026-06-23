@@ -67,10 +67,14 @@ if [ -d "$MAIN_LAKE/config" ] && [ ! -e "$WT_LAKE/config" ]; then
   ln -sfn "$MAIN_LAKE/config" "$WT_LAKE/config"
 fi
 
-# Note: we deliberately do NOT share `.lake/build`. Sharing the dependency
-# `packages` (above) is what avoids the expensive Mathlib rebuild; the local
-# `Book` target is cheap to recompile (~seconds) and each worktree must own its
-# own `build` since its `Book/*.lean` differs. (The main `build` is also bloated
-# with doc-gen4 artifacts that are irrelevant to a chapter build.)
+# Warm the local `.lake/build` once by COPYING (not symlinking) the main repo's
+# oleans. The DeepWiki library here is ~1500 modules, so a cold rebuild from an
+# empty build dir is many minutes; the one-time ~3G copy makes the worktree's
+# first `lake build`/gate ~seconds (lake accepts the copied oleans despite the
+# different source path). Each worktree keeps its OWN writable build (its sources
+# differ), so we copy rather than share. Idempotent: skip once build exists.
+if [ ! -d "$WT_LAKE/build" ] && [ -d "$MAIN_LAKE/build" ]; then
+  cp -a "$MAIN_LAKE/build" "$WT_LAKE/build"
+fi
 
 exit 0
