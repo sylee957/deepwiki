@@ -128,6 +128,31 @@ and `Dmax = ⊤`. -/
   rw [univ_hi, univ_lo]
   exact fun h => (lt_irrefl (⊥ : EReal)) (lt_of_lt_of_le bot_lt_top h)
 
+/-! ## Inclusion-monotonicity (a wider container is more uncertain)
+
+A container `c` included in a wider `d` (its bounds squeezed inward,
+`d.lo ≤ c.lo` and `c.hi ≤ d.hi`) has no larger uncertainty. At **shared ranks**
+the data abscissa `bmaxAbscissa Tlo Thi` coincides, so the data-domain
+uncertainty is directly monotone; the time-domain version is stated at a fixed
+shared abscissa (the time abscissa `dmaxAbscissa` depends on the curves). -/
+
+/-- **Data-domain uncertainty is inclusion-monotone at shared ranks**: squeezing
+the bounds inward (`d.lo ≤ c.lo`, `c.hi ≤ d.hi`) shrinks `Bmax`,
+`c.Bmax ≤ d.Bmax`. -/
+theorem maximalUncertaintyData_mono {c d : Container} (Tlo Thi : ℝ≥0)
+    (hlo : d.lo ≤ c.lo) (hhi : c.hi ≤ d.hi) :
+    c.maximalUncertaintyData Tlo Thi ≤ d.maximalUncertaintyData Tlo Thi := by
+  rw [maximalUncertaintyData_eq, maximalUncertaintyData_eq]
+  exact EReal.sub_le_sub (hhi _) (hlo _)
+
+/-- **Time-domain uncertainty is monotone at a fixed abscissa**: squeezing the
+bounds inward (`d.lo ≤ c.lo`, `c.hi ≤ d.hi`) shrinks the pointwise `Dmax` at any
+shared abscissa `t₀`, `hDevAt c.hi c.lo t₀ ≤ hDevAt d.hi d.lo t₀`. -/
+theorem hDevAt_maximalUncertaintyTime_mono {c d : Container}
+    (hlo : d.lo ≤ c.lo) (hhi : c.hi ≤ d.hi) (t₀ : ℝ≥0) :
+    (hDevAt c.hi c.lo t₀ : ℝ≥0∞) ≤ hDevAt d.hi d.lo t₀ :=
+  hDevAt_mono hhi hlo t₀
+
 /-! ## Faithfulness checks (against §4.4, book p. 89) -/
 
 /-- Definition 4.4 (time domain): `Dmax = hDev(f̄, f̲) = inf_{τ≥0} {τ | f̄(t₀) ≤
