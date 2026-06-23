@@ -17,6 +17,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.LogToAtanCompute
 import DeepWiki.SymbolicIntegration.RtResultantCompute
+import DeepWiki.SymbolicIntegration.SubresultantCompute
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
@@ -578,6 +579,31 @@ theorem ex_2_4_1_compute :
         DeepWiki.SymbolicIntegration.Compute.cD241
       = [45796, 0, 549552, 0, 2198208, 0, 2930944] :=
   DeepWiki.SymbolicIntegration.Compute.rtResultant_ex241
+
+/-- **LRT log argument `S(t,x) = gcd_x(D, A − t·D')`, computable variant** (§2.5/§2.6, p.51/54): a
+genuinely `#eval`-able rendering of the bivariate polynomial that goes inside the logarithms of
+`∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`, over the bivariate carrier `BPoly := List CPoly` (`= ℚ[t][x]`;
+Mathlib's `lrtSubresultant` is noncomputable). Built from the subresultant PRS (Collins–Brown,
+`subresPRS`) via pseudo-division `bpsremainder` over the non-field ring `ℚ[t]`, taking the `x`-degree-`j`
+subresultant, then reducing modulo the resultant factor `R(t)` and making it monic in `x` over
+`ℚ[t]/(R)` (Exercise 2.7's normalization). The library's `lrtGcdCompute`. Agreement with `lrtSubresultant`
+is deferred. -/
+def lrt_gcd_compute := @DeepWiki.SymbolicIntegration.Compute.lrtGcdCompute
+
+/-- **Example 2.4.1 / 2.6.1, the proved LRT log-argument computation** (§2.5/§2.6, p.51/54): the degree-3
+bivariate subresultant `S₃(D, A − t·D')` of `D = x⁶−5x⁴+5x²+4`, `A − t·D'` (`A = x⁴−3x²+6`), reduced mod
+the RT resultant factor `R(t) = 4t²+1` and made monic in `x` over `ℚ[t]/(R)`, evaluates (by
+`native_decide`) to `[[0, -4], [-3], [0, 2], [1]]` = `x³ + 2t·x² − 3x − 4t` — **exactly** the book's LRT
+log argument, the Czichowski/Gröbner basis element of Example 2.6.1 (`B = {4t²+1, x³+2tx²−3x−4t}`). The
+raw subresultant carries the cofactor `−214t` (`S₃ ≡ −214t·(x³+2tx²−3x−4t) mod R`), stripped by the
+monic-in-`x` normalization. The library's `lrtGcd_ex241` — the bivariate LRT log-argument engine runs. -/
+theorem ex_2_6_1_lrtGcd_compute :
+    DeepWiki.SymbolicIntegration.Compute.lrtGcdCompute 30 3
+        DeepWiki.SymbolicIntegration.Compute.cR241
+        DeepWiki.SymbolicIntegration.Compute.cA241
+        DeepWiki.SymbolicIntegration.Compute.cD241
+      = [[0, -4], [-3], [0, 2], [1]] :=
+  DeepWiki.SymbolicIntegration.Compute.lrtGcd_ex241
 
 /-- **`LogToReal` conjugate-pair real-form identity** (§2.8, p.69, the mathematical heart of
 `LogToReal`): pairing conjugate roots `α = a ± i·b` of `S(α, x) = A + iB`, the contribution
