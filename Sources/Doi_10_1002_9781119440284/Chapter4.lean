@@ -30,6 +30,7 @@ import DeepWiki.NetworkCalculus.SegmentClosureSelectDual
 import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ContainerQuotient
 import DeepWiki.NetworkCalculus.ContainerQuotientConv
+import DeepWiki.NetworkCalculus.ContainerCanonical
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
@@ -61,8 +62,9 @@ the full quotient since `legendreConv` need not preserve properness); what remai
 closure operation `⋆` on the quotient (needs a closure↔Legendre identity) `[infra]`; the §4.4
 FOUNDATION is now built (library `DeepWiki.rho` = asymptotic slope `ρ`, `DeepWiki.IsAlmostConcave`/
 `IsAlmostConvex` = `F_acv`/`F_acx`, `IsConcaveEReal.isAlmostConcave`, `IsAsymptoticallyTyped` = the
-container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the
-`Θ^κ_τ ∗ g` decomposition); Definition 4.4 (maximal uncertainty); Definition 4.5 (inclusion
+container `ρ_{f̲}=ρ_{f̄}` typing); building on it: Definition 4.3 (canonical representation, the `Θ^κ_τ ∗ g` decomposition) DONE
+(`def_4_3`/`IsCanonicalDecomp`/`Container.canonicalRep`); Definition 4.4 (maximal uncertainty);
+Definition 4.5 (inclusion
 functions); Proposition 4.4 (canonical upper bound); Lemma 4.10; Theorem 4.4 — all `[research]` (the
 container inclusion-function algorithmics); Remark 4.1. -/
 
@@ -865,6 +867,16 @@ theorem prop_4_3_inf_congr {f f' g g' : ℝ≥0 → EReal}
     (hf : DeepWiki.Container.SameLegendre f f') (hg : DeepWiki.Container.SameLegendre g g') :
     DeepWiki.Container.SameLegendre (f ⊓ g) (f' ⊓ g') :=
   DeepWiki.Container.SameLegendre.inf hf hg
+
+/-- **Definition 4.3** (§4.4, p.83): the canonical representation of a container, via the elementary
+function `Θ^κ_τ` (`DeepWiki.Theta`: `κ` on `[0,τ]`, `⊤` after) and the decomposition `f = Θ^κ_τ ∗ g`
+(`g 0 = 0`). `IsCanonicalDecomp f τ κ g` is that decomposition (pins `f(0) = κ`, constant on `[0,τ]`,
+`Θ ∗ g` reading off-prefix); `IsCanonicalContainer` is the container-level form and
+`Container.canonicalRep` its representative (`= c.lo`, in the container and `MemL`). The library's
+`DeepWiki.IsCanonicalDecomp` / `DeepWiki.IsCanonicalContainer` / `DeepWiki.Container.canonicalRep`. -/
+theorem def_4_3 (f g : ℝ≥0 → EReal) (τ : ℝ≥0) (κ : EReal) :
+    DeepWiki.IsCanonicalDecomp f τ κ g ↔ g 0 = 0 ∧ f = minConv (DeepWiki.Theta κ τ) g :=
+  DeepWiki.isCanonicalDecomp_iff f τ κ g
 
 /-- **Proposition 4.3** (§4.4), the quotient `F↑/L` convolution `⊗` on the proper-curve subtype.
 Since `legendreConv`'s congruence needs all operands proper (`∀u, f u ≠ ⊥`), `⊗` descends on the
