@@ -9,13 +9,15 @@ no-information nulls (§6.4) and the weak instance model (§6.5). The `DeepWiki.
 library formalizes the §6.2 updates on sets of possible instances, which are null-free.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-The null-extended carrier is now present (`NullTuple`/`NullTable` over `Option Val`, with the
-information order `MoreInfo`); the representation systems and theorems on top of it remain.
-§6.1: Codd tables, V-tables and C-tables; Def 6.1 (a representation system), Def 6.2
-  (β-equivalence and β-representation); Theorems 6.1–6.7 on which classes of relational
-  expressions (`P`, `S`, `S⁺`, `J`, `U`, `D`, `R`) each representation system can correctly
-  evaluate (e.g. Thm 6.3 Codd tables support `PS`, Thm 6.5 V-tables support `PS⁺UJ`, Thm 6.7
-  C-tables support `PSUJ`) [infra/research].
+The null-extended carrier and Codd-table representation are present (`NullTuple`/`NullTable`,
+the information order `MoreInfo`, `rep`/`coddRep`, certain/possible answers, and the Thm 6.3
+projection/`selectCertain` rules); the equivalence machinery and the remaining systems remain.
+§6.1: Def 6.1's full "representation system" triple `⟨I, Rep, β⟩` with its correctness condition;
+  Def 6.2's f-information `X^f = ⋂ f(X)` and β-equivalence `≡_β` / β-representation; Theorem 6.1's
+  `≡_P` claim (Codd tables P-represent any X) and Thm 6.2 (`≡_S`); the "correctly evaluates"
+  statement of Theorem 6.3 (`Rep(f(T)) ≡_PS f(Rep(T))`); Theorem 6.4 (Codd tables fail `PSU` and
+  `PJ`); V-tables and Theorem 6.5 (`PS⁺UJ`) / Theorem 6.6 (V-tables fail `PS`); C-tables and
+  Theorem 6.7 (`PSUJ`) [infra/research].
 §6.2: Def 6.3 (elementary conditions and conditions), the per-table insertion/deletion/
   modification, and Theorem 6.8 (which update operations are feasible for Codd / V / C-tables)
   [infra: needs the null-table representations].
@@ -96,3 +98,18 @@ abbrev certain_imp_possible := @DeepWiki.certainAnswer_imp_possibleAnswer
 /-- **§6.1** (faithfulness): a definite (null-free) table represents exactly itself — its only
 possible world is itself. A representation system must contain the definite relations faithfully. -/
 abbrev rep_definite_faithful := @DeepWiki.rep_toNullTable
+
+/-- **Theorem 6.1** (§6.1, p.160), the Codd-table representation `Rep(T)`: the open-world instances
+in which every null row of `T` has a definite refinement. -/
+abbrev thm_6_1_coddRep := @DeepWiki.coddRep
+
+/-- **§6.1**: every closed possible world is a Codd-table (open-world) world. -/
+abbrev rep_subset_coddRep := @DeepWiki.rep_subset_coddRep
+
+/-- **Theorem 6.3** (§6.1, p.161), the selection rule `σ(T;E)`: keep a null row only when the
+condition is certainly true — true on every way of filling its nulls. The projection rule
+`Π(T;Y) = {t[Y] : t ∈ T}` is the row-level `DeepWiki.project`. -/
+abbrev thm_6_3_selectCertain := @DeepWiki.selectCertain
+
+/-- **Theorem 6.3**: certain-selection only removes rows. -/
+abbrev thm_6_3_selectCertain_subset := @DeepWiki.selectCertain_subset

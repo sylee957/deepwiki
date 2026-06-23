@@ -111,4 +111,31 @@ theorem rep_toNullTable [Inhabited Val] (r : Table Ω Val) : rep (toNullTable r)
     · rintro ⟨_, ⟨t₀, ht₀, rfl⟩, rfl⟩
       simpa [toNull] using ht₀
 
+/-- **Codd-table representation** (Theorem 6.1): the instances `r` in which every null row of `T`
+has a refinement — a more-informative definite row `t ∈ r`. This is the open-world possible-worlds
+semantics the book uses for `Rep`. -/
+def coddRep (T : NullTable Ω Val) : Set (Table Ω Val) :=
+  {r | ∀ nt ∈ T, ∃ t ∈ r, MoreInfo nt (toNull t)}
+
+/-- Every closed possible world is a Codd-table world: a completion `f '' T` refines every row. -/
+theorem rep_subset_coddRep (T : NullTable Ω Val) : rep T ⊆ coddRep T := by
+  rintro r ⟨f, hf, rfl⟩
+  intro nt hnt
+  exact ⟨f nt, ⟨nt, hnt, rfl⟩, hf nt hnt⟩
+
+/-- **Selection rule for Codd tables** (Theorem 6.3, the `σ`-rule): keep a null row only when the
+condition is *certainly* true — true on every definite refinement (every way of filling its
+nulls). -/
+def selectCertain (P : Tuple Ω Val → Prop) (T : NullTable Ω Val) : NullTable Ω Val :=
+  {nt ∈ T | ∀ t, MoreInfo nt (toNull t) → P t}
+
+/-- Certain-selection only removes rows. -/
+theorem selectCertain_subset (P : Tuple Ω Val → Prop) (T : NullTable Ω Val) :
+    selectCertain P T ⊆ T := fun _ h => h.1
+
+/-- A definite (null-free) row kept by certain-selection satisfies the condition. -/
+theorem selectCertain_definite {P : Tuple Ω Val → Prop} {T : NullTable Ω Val} {t : Tuple Ω Val}
+    (h : toNull t ∈ selectCertain P T) : P t :=
+  h.2 t (MoreInfo.refl _)
+
 end DeepWiki
