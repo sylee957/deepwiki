@@ -223,6 +223,14 @@ abbrev chase_fdStep_sound := @DeepWiki.applyTableau_mergeSubst
 equal-valued symbols on `Y` when `X → Y` holds, so the fd-rule merge is sound. -/
 abbrev chase_fd_justifies_merge := @DeepWiki.fdMerge_value_eq
 
+/-- **Theorem 3.15** (§3.4, soundness core), jd-rule: a jd-rule step keeps the represented relation
+inside any model of the join dependency — the chase never escapes a model of `SC`. -/
+abbrev chase_jdStep_model_sound := @DeepWiki.applyTableau_jdChaseStep_subset_model
+
+/-- **Theorem 3.15** (§3.4, soundness core), fd-rule: an fd-rule merge keeps the represented
+relation inside any model. -/
+abbrev chase_fdStep_model_sound := @DeepWiki.applyTableau_mergeSubst_subset_model
+
 /-! ## §3.5 Inclusion Dependencies -/
 
 /-- **Definition 3.15** (§3.5, p.100): a row set satisfies the *inclusion dependency*

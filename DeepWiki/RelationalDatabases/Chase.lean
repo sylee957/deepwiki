@@ -160,4 +160,36 @@ theorem fdMerge_value_eq (ρ : Valuation Att Val) {X Y : Finset Att} {T : Tablea
     (applyRow ρ R₂) ((mem_applyTableau _ _ _).mpr ⟨R₂, h₂, rfl⟩)
     (fun b hb => by simp only [applyRow]; rw [hX b hb]) a ha
 
+/-- **Model soundness of the jd-rule**: if the represented relation already sits inside a model `r`
+of the join dependency, so does the relation after a jd-rule step — the chase never escapes a model
+of `SC`. -/
+theorem applyTableau_jdChaseStep_subset_model {k : ℕ} (ρ : Valuation Att Val)
+    (comp : Fin k → Finset Att) {T : Tableau Ω} {r : Table Ω Val}
+    (hsub : applyTableau ρ T ⊆ r) (hcover : ∀ a : {x // x ∈ Ω}, ∃ i, a.val ∈ comp i)
+    (hjd : SatisfiesJd r comp) : applyTableau ρ (jdChaseStep comp T) ⊆ r := by
+  rintro t ht
+  rw [mem_applyTableau] at ht
+  obtain ⟨L, hL, rfl⟩ := ht
+  rcases hL with hLT | ⟨rows, hrows, hagree, hglue⟩
+  · exact hsub ((mem_applyTableau _ _ _).mpr ⟨L, hLT, rfl⟩)
+  · have hfam : ∀ i, applyRow ρ (rows i) ∈ r :=
+      fun i => hsub ((mem_applyTableau _ _ _).mpr ⟨rows i, hrows i, rfl⟩)
+    have hpair : ∀ i j, Agree (comp i ∩ comp j) (applyRow ρ (rows i)) (applyRow ρ (rows j)) :=
+      fun i j a ha => by simp only [applyRow]; rw [hagree i j a ha]
+    obtain ⟨v, hv, hvfam⟩ := hjd (fun i => applyRow ρ (rows i)) hfam hpair
+    have hLv : applyRow ρ L = v := by
+      funext a
+      obtain ⟨i, hi⟩ := hcover a
+      rw [hvfam i a hi]
+      simp only [applyRow]
+      rw [hglue i a hi]
+    rw [hLv]; exact hv
+
+/-- **Model soundness of the fd-rule**: an fd-rule merge of two equal-valued symbols keeps the
+represented relation inside any model `r`. -/
+theorem applyTableau_mergeSubst_subset_model (ρ : Valuation Att Val) {s t : ChaseSymbol Att}
+    {T : Tableau Ω} {r : Table Ω Val} (hsub : applyTableau ρ T ⊆ r) (h : ρ s = ρ t) :
+    applyTableau ρ (substTableau (mergeSubst s t) T) ⊆ r := by
+  rw [applyTableau_mergeSubst ρ T h]; exact hsub
+
 end DeepWiki
