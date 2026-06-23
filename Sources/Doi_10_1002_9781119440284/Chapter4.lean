@@ -28,6 +28,7 @@ import DeepWiki.NetworkCalculus.SegmentClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureSelect
 import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ContainerQuotient
+import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
 import DeepWiki.NetworkCalculus.FunctionDioids
 import DeepWiki.NetworkCalculus.UltimatelyPseudoPeriodic
@@ -47,8 +48,7 @@ token-bucket model does not represent. (The infinite-support case — `convex-th
 book's own §4.2 note — is fully formalized with explicit single-`Pwl` output, the cataloged
 `thm_4_2_output_pwl` and its supporting `thm_4_2_*`; Lemma 4.1's per-line engine + ordering are
 `lemma_4_1_line` / `thm_4_2_ordering_*` / `thm_4_2_crossing_*`.)
-§4.3: Lemma 4.7 (sub-additive-closure factorization, Lagrange's trick `(f∧g∗h*) = f*∗(δ₀∧g∗(g∧h)*)`)
-`[research]`; Lemma 4.9 (closure of an open segment is UPP): the `va ≤ s·a` case is DONE in full (`lemma_4_9`:
+§4.3: Lemma 4.9 (closure of an open segment is UPP): the `va ≤ s·a` case is DONE in full (`lemma_4_9`:
 period `a`, increment `va` — a book-misprint repair, the book prints `s·a`); the symmetric `va > s·a`
 case (period `b`, right-anchored) remains `[infra]` (the dual infimum-selection).
 §4.4 containers: Definition 4.2 (container = curve-interval `[f̲,f̄]`) DONE (`def_4_2`/`Container`);
@@ -811,6 +811,19 @@ boundary `va = s·a`. The library's `DeepWiki.isUPP_subadditiveClosureENN_segNN`
 theorem lemma_4_9 (a b va s : ℝ≥0) (ha : 0 < a) (hab : a < b) (hsa : va ≤ s * a) :
     IsUPP (subadditiveClosureENN (segNN a b va s)) :=
   isUPP_subadditiveClosureENN_segNN a b va s ha hab hsa
+
+/-- **Lemma 4.7** (§4.3, p.78, unpublished — S. Lagrange): the sub-additive-closure factorization
+`(f ∧ g∗h⋆)⋆ = f⋆ ∗ (δ₀ ∧ g∗(g∧h)⋆)` in the `(min,+)` function dioid (`⊓` = min, `∗` = `minConv`,
+`⋆` = `subadditiveClosureENN`, `δ₀ = minConvPow g 0` the unit). Both inclusions, via Prop 2.6
+`(f∧g)⋆ = f⋆∗g⋆` (`subadditiveClosureENN_min`) and the inner identity `(g∗h⋆)⋆ = δ₀ ∧ g∗(g∧h)⋆`. Note
+the LHS outer star (the book text-extraction garbles it; confirmed by OCR render). The library's
+`DeepWiki.subadditiveClosureENN_min_minConv_subadditiveClosureENN`. -/
+theorem lemma_4_7 (f g h : ℝ≥0 → ℝ≥0∞) :
+    subadditiveClosureENN (fun t => min (f t) (minConv g (subadditiveClosureENN h) t))
+      = minConv (subadditiveClosureENN f)
+          (fun t => min (minConvPow g 0 t)
+            (minConv g (subadditiveClosureENN (fun s => min (g s) (h s))) t)) :=
+  subadditiveClosureENN_min_minConv_subadditiveClosureENN f g h
 
 /-- **Definition 4.2** (§4.4, p.81): the set `F` of **containers** — a container is a function-lattice
 interval `[f̲, f̄]` of `(min,plus)` curves (`lo ≤ hi`), the uncertainty between a lower and an upper

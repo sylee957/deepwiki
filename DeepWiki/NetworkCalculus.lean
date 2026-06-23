@@ -70,6 +70,7 @@ import DeepWiki.NetworkCalculus.SegmentClosureUPP
 import DeepWiki.NetworkCalculus.SegmentClosureSelect
 import DeepWiki.NetworkCalculus.Containers
 import DeepWiki.NetworkCalculus.ContainerQuotient
+import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.SegmentDeconv
 import DeepWiki.NetworkCalculus.SegmentDeconvTwo
 import DeepWiki.NetworkCalculus.SegmentDeconvComposite
