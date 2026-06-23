@@ -470,6 +470,74 @@ noncomputable def lFrac (A Ei : K[X]) (i d : ℕ) : FractionRing (DiffPoly K) :=
 theorem lFrac_zero (A Ei : K[X]) (i : ℕ) : lFrac A Ei i 0 = hFrac A Ei i := by
   unfold lFrac hFrac; rw [laurentNum_zero]
 
+/-- **Membership in `nonZeroDivisors`** for a nonzero `DiffPoly K` element (a domain, so nonzero ⇒
+not a zero divisor). -/
+private theorem mem_nzd {p : DiffPoly K} (hp : p ≠ 0) : p ∈ nonZeroDivisors (DiffPoly K) :=
+  mem_nonZeroDivisors_iff_ne_zero.mpr hp
+
+/-- **`lFrac` as a `Localization.mk`**: `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1)) = mk Pᵢ,d ⟨denom_d⟩`. -/
+theorem lFrac_mk (A Ei : K[X]) (i d : ℕ) (hEi : Ei ≠ 0) :
+    lFrac A Ei i d
+      = Localization.mk (laurentNum A Ei i d) ⟨lDenom Ei i d, mem_nzd (lDenom_ne_zero i d hEi)⟩ := by
+  unfold lFrac; rw [Localization.mk_eq_mk', IsFractionRing.mk'_eq_div]
+
+/-- **The reduced quotient-rule numerator** (`i+d ≥ 1`): differentiating `Pᵢ,d/denom_d` and reducing,
+`ddx Pᵢ,d·denom_d − Pᵢ,d·ddx denom_d = u^(i+d−1)·Eᵢ^d·((i+d+1)·Pᵢ,d₊₁)` — the common factor `u^(i+d−1)·Eᵢ^d`
+(`= denom_d² / denom_{d+1}`) extracted, leaving `(i+d+1)·Pᵢ,d₊₁` by `laurentNum_cleared_step`. Stated with
+`m = i+d−1` to keep the exponent honest. -/
+theorem reduced_num [CharZero K] (A Ei : K[X]) (i d m : ℕ) (hm : i + d = m + 1) :
+    ddx (laurentNum A Ei i d) * lDenom Ei i d - laurentNum A Ei i d * ddx (lDenom Ei i d)
+      = X (some 0) ^ m * dpEmbed Ei ^ d *
+          (MvPolynomial.C ((i + d : K) + 1) * laurentNum A Ei i (d + 1)) := by
+  rw [laurentNum_cleared_step]
+  unfold lDenom
+  rw [hm]
+  have hddxE : ddx (dpEmbed Ei) = dpEmbed (derivative Ei) := ddx_dpEmbed Ei
+  have hmK : ((i : DiffPoly K) + (d : DiffPoly K)) = (m : DiffPoly K) + 1 := by exact_mod_cast hm
+  have key : ddx (X (some 0) ^ (m + 1) * dpEmbed Ei ^ (d + 1))
+      = ((m : DiffPoly K) + 1) * X (some 0) ^ m * X (some 1) * dpEmbed Ei ^ (d + 1)
+        + X (some 0) ^ (m + 1) * ((d : DiffPoly K) + 1) * dpEmbed Ei ^ d * dpEmbed (derivative Ei) := by
+    rw [Derivation.leibniz, Derivation.leibniz_pow, Derivation.leibniz_pow, ddx_u 0, hddxE]
+    simp only [Nat.add_sub_cancel, nsmul_eq_mul, smul_eq_mul, dpU]; push_cast; ring
+  rw [key, pow_succ (X (some 0) : DiffPoly K) m, pow_succ (dpEmbed Ei : DiffPoly K) d, hmK]
+  ring
+
+/-- **The `hᵢ^(d)`-recursion step in `K(x)⟨u⟩`** (§2.7, eq 2.11): `d/dx (Pᵢ,d/denom_d) = (i+d+1)·(Pᵢ,d₊₁/denom_{d+1})`
+— differentiating the `d`-th fraction gives the `(d+1)`-th scaled by `i+d+1` (the divisor `laurentNumStep`
+clears). Proved via `reduced_num` + `lDenom_succ`. Requires `0 < i` (so `u^(i+d)` has a positive power to
+differentiate) and `Ei ≠ 0`. -/
+theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) :
+    fracKDeriv (lFrac A Ei i d) = (((i : K) + d) + 1) • lFrac A Ei i (d + 1) := by
+  obtain ⟨m, hm⟩ : ∃ m, i + d = m + 1 := ⟨i + d - 1, by omega⟩
+  rw [lFrac_mk A Ei i d hEi, lFrac_mk A Ei i (d + 1) hEi, fracKDeriv_apply, fracDeriv_mk]
+  show (Localization.mk _ ⟨(lDenom Ei i d) ^ 2, _⟩ : FractionRing (DiffPoly K)) = _
+  rw [Localization.smul_mk]
+  apply mk_eq_of
+  show lDenom Ei i (d + 1) * _ = (lDenom Ei i d) ^ 2 * _
+  rw [reduced_num A Ei i d m hm, MvPolynomial.smul_eq_C_mul, lDenom_succ]
+  unfold lDenom
+  rw [hm]; ring
+
+/-- **The factorial-style divisor product** `∏_{k=0}^{d−1}(i+k+1)` accumulated by the `laurentNumStep`
+recursion (which divides by `i+d+1`, not `d+1`, at step `d`). -/
+noncomputable def laurentScale (K : Type*) [Field K] (i : ℕ) : ℕ → K
+  | 0 => 1
+  | d + 1 => laurentScale K i d * ((i + d : K) + 1)
+
+/-- **The eq 2.11 invariant in `K(x)⟨u⟩ = Frac (DiffPoly K)`** (§2.7, the validation of the `Pᵢⱼ` recursion):
+`(d/dx)^[d] hᵢ = (∏_{k=0}^{d−1}(i+k+1)) · (Pᵢ,d / (u^(i+d)·Eᵢ^(d+1)))` for `hᵢ = A/(uⁱ·Eᵢ)`. Since
+`laurentNumStep` divides by `i+d+1` (not the factorial `d+1`), the `d`-th derivative carries the explicit
+product `laurentScale`; the book's clean `hᵢ^(d)/d! = Pᵢⱼ/denom_d` is this with the `laurentNum`
+normalization folded into `laurentScale`. Proved by induction via `fracKDeriv_lFrac`. -/
+theorem iterate_fracKDeriv_hFrac [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0)
+    (d : ℕ) :
+    (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d := by
+  induction d with
+  | zero => rw [Function.iterate_zero_apply, laurentScale, one_smul, lFrac_zero]
+  | succ n ih =>
+    rw [Function.iterate_succ_apply', ih, laurentScale, Derivation.map_smul,
+      fracKDeriv_lFrac A Ei i n hi hEi, smul_smul]
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
@@ -495,5 +563,11 @@ example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hE : (laurentE D Di 1).eval α ≠ 0) (hD' : (derivative Di).eval α ≠ 0) :
     (laurentH A D Di 1 1).eval α = A.eval α / (derivative D).eval α :=
   eval_laurentH_one_one_eq_residue hDi hα hfac hcopE hcopD hE hD'
+
+/-- Restatement of (2.11) as a fraction-field invariant (book p.55): the `d`-th `d/dx` of
+`hᵢ = A/(uⁱ·Eᵢ)` in `K(x)⟨u⟩` is `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` up to the `laurentNumStep` divisor product. -/
+example [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (d : ℕ) :
+    (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d :=
+  iterate_fracKDeriv_hFrac A Ei i hi hEi d
 
 end DeepWiki.SymbolicIntegration
