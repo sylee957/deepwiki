@@ -19,8 +19,8 @@ linear processes** (§6.4) is now formalized (`clt_linearProcess`), the rest sta
   mean-square convergence. Mathlib has the `Lᵖ` spaces and Chebyshev and Markov bounds; the named
   `r`-th-mean convergence predicate is spelled as `eLpNorm (Xₙ − X) r μ → 0`.
 - **§6.3 Convergence in Distribution** (p.~206): weak convergence, plus the **weak law of large
-  numbers for moving averages** (Proposition 6.3.2, `n⁻¹ ∑ₜ Xₜ →ᵖ μ` for a summable linear
-  process). Mathlib has weak convergence of measures; the moving-average WLLN is infra-blocked.
+  numbers for moving averages** (Proposition 6.3.2, `n⁻¹ ∑ₜ Xₜ →ᵖ 0` for a summable causal linear
+  process) — now formalized (`prop_6_3_2`), from the `L²` bound `‖√n X̄ₙ‖₂ ≤ C` so `‖X̄ₙ‖₂ → 0`.
 - **§6.4 The Central Limit Theorem and Related Results** (p.~211): the delta method (Example
   6.4.2), `m`-dependence (Definition 6.4.3), and the central limit theorem for `m`-dependent and
   linear processes. Mathlib has the classical i.i.d. central limit theorem; the **linear-process
@@ -42,6 +42,13 @@ assembled from the finite-`MA(m)` truncation CLTs through the double-limit theor
 §7.1.2 (`thm_7_1_2_full`). -/
 alias clt_linearProcess := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_clt_of_summable
 
+/-- **§6.3 Proposition 6.3.2 — weak law of large numbers for the (causal) moving-average process**:
+for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` noise with `∑ⱼ |ψⱼ| < ∞`, the sample mean
+converges to `0` in probability, `X̄ₙ →ᵖ 0`. The library's `causalLinearProcess_sampleMean_wlln`,
+obtained from the `L²` bound `‖√n X̄ₙ‖₂ ≤ C` (so `‖X̄ₙ‖₂ ≤ C/√n → 0`) via `L² ⇒` convergence in
+measure. -/
+alias prop_6_3_2 := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_wlln
+
 /-- **§6.4 Example 6.4.2 — the (one-dimensional) delta method**: if `Xₙ →ᵖ a`, the standardized
 `√n (Xₙ − a)` converges in distribution to `Y₀`, and `g` is differentiable at `a`, then
 `√n (g Xₙ − g a) ⇒ g'(a) · Y₀` (so for `Y₀ ~ N(0, σ²)`, the limit is `N(0, g'(a)² σ²)`). The
@@ -59,7 +66,6 @@ abbrev def_6_4_3 := @DeepWiki.TimeSeries.IsMDependent
 §6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
 order notation) [infra]; Slutsky's theorem [infra]
 §6.2: Chebyshev's inequality (eq 6.2.1) [infra]; convergence in `rᵗʰ` mean [infra]
-§6.3: Proposition 6.3.2 (weak law of large numbers for moving averages, `n⁻¹ ∑ₜ Xₜ →ᵖ μ`) [infra]
 §6.4: the central limit theorem for general `m`-dependent processes [infra] (the linear-process CLT
 `clt_linearProcess`, the delta method `example_6_4_2`, and the `m`-dependence definition `def_6_4_3`
 are done; the general `m`-dependent CLT needs a big-block/small-block construction)

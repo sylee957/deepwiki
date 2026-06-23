@@ -389,4 +389,52 @@ theorem ar1_sampleMean_clt [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSp
     (tsum_geometric_of_norm_lt_one (by rwa [Real.norm_eq_abs])).symm]
   exact causalLinearProcess_sampleMean_clt_of_summable hZ hψ hsum hindep hident hcenter hY₀
 
+/-- **Weak law of large numbers for the causal linear process** (Brockwell–Davis Proposition 6.3.2):
+for `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}` over centered iid `L²` noise with `∑ⱼ |ψⱼ| < ∞`, the sample mean
+converges to `0` in probability, `X̄ₙ →ᵖ 0`. From the `L²` bound `‖√n X̄ₙ‖₂ ≤ C`
+(`eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le`): `‖X̄ₙ‖₂ ≤ C/√n → 0`, and `L²` convergence
+implies convergence in measure. -/
+theorem causalLinearProcess_sampleMean_wlln [IsProbabilityMeasure μ] {Z : ℤ → Ω → ℝ}
+    (hmem : ∀ t, MemLp (Z t) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ s, IdentDistrib (Z s) (Z 0) μ μ) (hcenter : μ[Z 0] = 0)
+    {φ : ℕ → ℝ} (hφ : Summable fun j => |φ j|)
+    (hsum : ∀ t : ℤ, Summable fun j : ℕ => φ j • toLpSeq Z hmem (t - (j : ℤ))) :
+    TendstoInMeasure μ (fun (n : ℕ) ω => sampleMean n
+      fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω) atTop (fun _ => (0 : ℝ)) := by
+  have hmeas : ∀ n : ℕ, AEStronglyMeasurable (fun ω => sampleMean n
+      fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω) μ := fun n => by
+    simp only [sampleMean]
+    exact (Finset.aestronglyMeasurable_fun_sum _ fun t _ => Lp.aestronglyMeasurable _).const_mul _
+  refine tendstoInMeasure_of_tendsto_eLpNorm (p := 2) (by norm_num) hmeas
+    aestronglyMeasurable_const ?_
+  have hsqrt : Tendsto (fun n : ℕ => ENNReal.ofReal (√(n : ℝ))) atTop (𝓝 ⊤) :=
+    ENNReal.tendsto_ofReal_atTop.comp (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)
+  have hb : Tendsto (fun n : ℕ => ENNReal.ofReal (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|)
+      * (ENNReal.ofReal (√(n : ℝ)))⁻¹) atTop (𝓝 0) := by
+    have hinv : Tendsto (fun n : ℕ => (ENNReal.ofReal (√(n : ℝ)))⁻¹) atTop (𝓝 0) :=
+      ENNReal.inv_top ▸ tendsto_inv_iff.mpr hsqrt
+    have h2 := ENNReal.Tendsto.const_mul (a := ENNReal.ofReal (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|))
+      hinv (Or.inr ENNReal.ofReal_ne_top)
+    rwa [mul_zero] at h2
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hb
+    (Filter.Eventually.of_forall fun n => zero_le) ?_
+  filter_upwards [Filter.eventually_ge_atTop 1] with n hn
+  have hn' : (0 : ℝ) < √(n : ℝ) := Real.sqrt_pos.mpr (by exact_mod_cast hn)
+  have key := eLpNorm_sqrt_sampleMean_causalLinearProcessLp_le hmem hindep hident hcenter hφ hsum hn
+  rw [show (fun ω => Real.sqrt (n : ℝ) * sampleMean n
+        fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω)
+      = (√(n : ℝ)) • (fun ω => sampleMean n
+        fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω) from by
+        funext ω; simp [Pi.smul_apply, smul_eq_mul], eLpNorm_const_smul,
+    Real.enorm_eq_ofReal hn'.le] at key
+  rw [show ((fun (n : ℕ) ω => sampleMean n
+        fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω) n - fun _ => (0 : ℝ))
+      = (fun ω => sampleMean n fun t => (causalLinearProcessLp φ Z hmem (t : ℤ) : Ω → ℝ) ω)
+      from by funext ω; simp,
+    show ENNReal.ofReal (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|) * (ENNReal.ofReal (√(n : ℝ)))⁻¹
+      = ENNReal.ofReal (‖toLpSeq Z hmem 0‖ * ∑' j : ℕ, |φ j|) / ENNReal.ofReal (√(n : ℝ))
+      from (div_eq_mul_inv _ _).symm]
+  exact (ENNReal.le_div_iff_mul_le (Or.inl (ENNReal.ofReal_pos.mpr hn').ne')
+    (Or.inl ENNReal.ofReal_ne_top)).mpr (by rw [mul_comm]; exact key)
+
 end DeepWiki.TimeSeries
