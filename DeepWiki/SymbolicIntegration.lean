@@ -36,6 +36,7 @@ import DeepWiki.SymbolicIntegration.HermiteCompute
 import DeepWiki.SymbolicIntegration.Exercise23Compute
 import DeepWiki.SymbolicIntegration.Exercise25Compute
 import DeepWiki.SymbolicIntegration.ComputeCorrectness
+import DeepWiki.SymbolicIntegration.HermiteCorrectness
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
