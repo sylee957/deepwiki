@@ -792,8 +792,11 @@ engine-honesty bundle `SqfreeExact fuel D`, the squarefree radical `Dstar = ∏�
 `csqfreeFactor fuel D` divides `D` in `ℚ[X]`: `toPoly Dstar ∣ toPoly D`. The product of the Yun factors
 divides the initial deflation `b₁` (`goProd_dvd`), and `b₁ = D/gcd(D,D')` divides `D` by the initial
 exact division. This is the honest mathematical content of the Yun squarefree factorization recorded by
-`hermiteReduce`; the still-open piece for full `csqfreeFactor` correctness is the *equality*
-`toPoly D = u·∏ⱼ (toPoly Vⱼ)^iⱼ` with each `Vⱼ` squarefree and the `Vⱼ` pairwise coprime. -/
+`hermiteReduce`. The *equality* clause for full `csqfreeFactor` correctness — `toPoly D = u·∏ⱼ
+(toPoly Vⱼ)^iⱼ` with each `Vⱼ` squarefree and the `Vⱼ` pairwise coprime — is proved at the abstract
+`K[X]` level below (`yunFactorizationAbs_forall₂`/`_squarefree`/`_pairwise_isRelPrime`/`_prodPow_assoc`,
+unconditional from `A ≠ 0`); only the `csqfreeFactor.go`↔`yunLoopAbs` `toPoly` bridge remains, blocked
+by a `ℚ`-instance diamond (see the `GoYun` section). -/
 theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     toPoly ((csqfreeFactor fuel D).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly D := by
@@ -1572,3 +1575,35 @@ the field-derived `CommRing`/`NormalizedGCDMonoid`, or a `convert`/instance-rewr
 the sole remaining gap between the complete *abstract* Yun correctness above and a fully concrete
 `csqfreeFactor` theorem; the abstract spine and the atomic gcd bridge (`toPoly_cmonic_cgcdExt`) are
 both in place. -/
+
+/-! ### Restatements against the intended Yun-correctness wording -/
+
+open Classical in
+-- Yun factorization, factor identification (Geddes–Czapor–Labahn §8.2 / Bronstein §1.7): the `n`-step
+-- abstract Yun loop on `A` produces, factor-by-factor, the squarefree-factorization parts `Vⱼ` of `A`.
+example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) :
+    List.Forall₂ Associated (yunFactorizationAbs A n)
+      ((List.range n).map (fun j => sqfreeFactPart A (1 + j))) :=
+  yunFactorizationAbs_forall₂ A hA0 hA n
+
+open Classical in
+-- Yun correctness, squarefreeness clause: every factor the loop produces is squarefree.
+example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) :
+    ∀ V ∈ yunFactorizationAbs A n, Squarefree V :=
+  yunFactorizationAbs_squarefree A hA0 hA n
+
+open Classical in
+-- Yun correctness, coprimality clause: factors at distinct positions are relatively prime.
+example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ)
+    {p q : ℕ} (hpq : p ≠ q) (hp : p < (yunFactorizationAbs A n).length)
+    (hq : q < (yunFactorizationAbs A n).length) :
+    IsRelPrime ((yunFactorizationAbs A n).get ⟨p, hp⟩) ((yunFactorizationAbs A n).get ⟨q, hq⟩) :=
+  yunFactorizationAbs_pairwise_isRelPrime A hA0 hA n hpq hp hq
+
+open Classical in
+-- Yun correctness, decomposition clause: the powered product of the factors `∏ₖ eₖ^{1+k}` is, up to
+-- associates, `∏ⱼ Vⱼ^iⱼ` — the squarefree factorization of `A`.
+example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) :
+    Associated (prodPow 1 (yunFactorizationAbs A n))
+      (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
+  yunFactorizationAbs_prodPow_assoc A hA0 hA n
