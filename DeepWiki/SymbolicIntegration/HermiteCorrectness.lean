@@ -437,6 +437,40 @@ theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ []
       show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
   exact h
 
+/-- **Divisibility ⟹ exact remainder**: if `toPoly q ∣ toPoly p` in `ℚ[X]` (and `q ≠ 0`, enough
+fuel), then the computable remainder reads to `0`: `toPoly (cmod fuel p q) = 0`. The remainder
+`r = cmod fuel p q` satisfies `toPoly p = toPoly (cdiv …)·toPoly q + toPoly r` with `deg (toPoly r) <
+deg (toPoly q)` (`cmod_length_lt` + the degree bridge); since `toPoly q ∣ toPoly p` it also divides
+`toPoly r`, and a polynomial of degree `< deg q` divisible by `q` is `0`. Converts the exact-division
+certificate from a `cmod`-computation into an honest `ℚ[X]` divisibility hypothesis. -/
+theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
+    toPoly (cmod fuel p q) = 0 := by
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  -- Euclidean identity: `toPoly p = toPoly (cdiv …)·toPoly q + toPoly (cmod …)`.
+  have hdiv := toPoly_cdivmod' fuel p q hq
+  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
+      show (cdivmod fuel p q).2 = cmod fuel p q from rfl] at hdiv
+  -- `toPoly q ∣ toPoly (cmod …)`: it divides `p` and `(cdiv …)·q`, hence the difference.
+  have hqr : toPoly q ∣ toPoly (cmod fuel p q) := by
+    have hd2 : toPoly q ∣ toPoly (cdiv fuel p q) * toPoly q := Dvd.intro_left _ rfl
+    have : toPoly (cmod fuel p q) = toPoly p - toPoly (cdiv fuel p q) * toPoly q := by
+      rw [hdiv]; ring
+    rw [this]; exact dvd_sub hdvd hd2
+  -- degree of the remainder is below `deg q`.
+  have hlen : (cnorm (cmod fuel p q)).length < (cnorm q).length := cmod_length_lt fuel p q hq hfuel
+  by_contra hne
+  have hrne : toPoly (cmod fuel p q) ≠ 0 := hne
+  have hdeg : (toPoly q).degree ≤ (toPoly (cmod fuel p q)).degree :=
+    Polynomial.degree_le_of_dvd hqr hrne
+  -- but the length bound gives the strict reverse inequality.
+  have e1 : (cnorm (cmod fuel p q)).length = (toPoly (cmod fuel p q)).natDegree + 1 :=
+    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
+  have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
+  have hndlt : (toPoly (cmod fuel p q)).natDegree < (toPoly q).natDegree := by omega
+  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hq0, Nat.cast_le] at hdeg
+  omega
+
 open Classical in
 /-- **Exact-division cross-multiplication in `RatFunc ℚ`**: when `cdiv fuel p q` is exact
 (`toPoly (cmod fuel p q) = 0`) and `q ≠ 0`, the fraction `am p / am q` equals `am (cdiv fuel p q)`
@@ -594,6 +628,37 @@ theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
   rw [toPoly_cnorm]
   exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar hexact
+
+open scoped Differential in
+/-- **`hermiteReduce` wrapper correctness from an algebraic divisibility certificate** in `RatFunc ℚ`:
+the exact-division premise as an honest `ℚ[X]` *divisibility* `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)`
+(plus a fuel bound), rather than a `cmod`-computation. Under `D, gden ≠ 0`, `Dstar ≠ 0`, and the
+divisibility certificate, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. The divisibility is
+the genuine mathematical content: it holds because `A/D − g′` is a polynomial fraction over `Dstar`
+(equivalently `Dstar ∣ D` and the numerator clears). Discharges the `cmod` certificate via
+`cmod_eq_zero_of_dvd`. -/
+theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+        (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
+    (hdvd : toPoly (cmul D (cmul gden gden))
+      ∣ toPoly (cmul (csub (cmul A (cmul gden gden))
+          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hresDenP : toPoly (cmul D (cmul gden gden)) ≠ 0 := by
+    rw [toPoly_cmul, toPoly_cmul]
+    exact mul_ne_zero hD (mul_ne_zero hgden hgden)
+  have hresDen : cnorm (cmul D (cmul gden gden)) ≠ [] :=
+    fun h => hresDenP ((cnorm_eq_nil_iff _).mp h)
+  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar
+    (cmod_eq_zero_of_dvd fuel _ _ hresDen hfuel hdvd)
 
 /-! ### Example 2.2.1: the certificate is real
 
