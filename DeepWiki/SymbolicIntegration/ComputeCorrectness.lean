@@ -328,4 +328,53 @@ theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : CPoly)
   rw [← toPoly_cgcdExt fuel a b]
   exact dvd_add (ha.mul_left _) (hb.mul_left _)
 
+/-- **Termination predicate** for `cgcdExt`: the remainder sequence reaches `0` within `fuel` (the
+algorithm finishes rather than bottoming out on the fuel counter). Mirrors `cgcdExt`'s recursion. -/
+def cgcdTerminates : ℕ → CPoly → CPoly → Prop
+  | 0, _, b => cisZero b = true
+  | fuel + 1, a, b => cisZero b = true ∨ cgcdTerminates fuel b (cmod (fuel + 1) a b)
+
+/-- **`cgcdExt`'s gcd divides both inputs** when the algorithm terminates: under `cgcdTerminates`,
+`toPoly (cgcdExt fuel a b).1` divides `toPoly a` and `toPoly b`. With `toPoly_dvd_cgcdExt` (greatest)
+and the Bézout identity, this characterizes `g` as an honest gcd of `a, b` in `ℚ[X]`. -/
+theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : CPoly), cgcdTerminates fuel a b →
+    toPoly (cgcdExt fuel a b).1 ∣ toPoly a ∧ toPoly (cgcdExt fuel a b).1 ∣ toPoly b := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b hterm
+    simp only [cgcdTerminates] at hterm
+    rw [cgcdExt]
+    have hb0 : toPoly b = 0 := by
+      have hcb : cnorm b = [] := by simpa [cisZero] using hterm
+      rw [← toPoly_cnorm, hcb, toPoly_nil]
+    exact ⟨by simp [toPoly_cnorm], by simp [hb0]⟩
+  | succ fuel ih =>
+    intro a b hterm
+    rw [cgcdExt]
+    cases hb : cisZero b with
+    | true =>
+      have hb0 : toPoly b = 0 := by
+        have hcb : cnorm b = [] := by simpa [cisZero] using hb
+        rw [← toPoly_cnorm, hcb, toPoly_nil]
+      exact ⟨by simp [toPoly_cnorm], by simp [hb0]⟩
+    | false =>
+      simp only [Bool.false_eq_true, if_false]
+      rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
+      rcases hg : cgcdExt fuel b r with ⟨g, s, t⟩
+      have hterm' : cgcdTerminates fuel b r := by
+        rw [cgcdTerminates] at hterm
+        rcases hterm with h | h
+        · rw [hb] at h; simp at h
+        · have hcm : cmod (fuel + 1) a b = r := by rw [cmod, hqr]
+          rwa [hcm] at h
+      obtain ⟨hgb, hgr⟩ := ih b r hterm'
+      rw [hg] at hgb hgr
+      have hdiv : toPoly a = toPoly q * toPoly b + toPoly r := by
+        have h := toPoly_cdivmod' (fuel + 1) a b (by simpa [cisZero] using hb)
+        rw [hqr] at h; exact h
+      refine ⟨?_, hgb⟩
+      rw [hdiv]
+      exact dvd_add (hgb.mul_left _) hgr
+
 end DeepWiki.SymbolicIntegration.Compute
