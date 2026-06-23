@@ -22,8 +22,10 @@ Ex 1.1: the fourth ABSTRACT constraint — `A` is the first letter of the Englis
 Ex 1.4: formal definitions of the dynamic database constraints of `SDYDC` in Example 1.8 [deferred].
 Ex 1.5: the domain functions `domR,…,domE` of Example 1.10 (HOTELDB) [deferred].
 Ex 1.6: boolean functions for every constraint of Example 1.10 (HOTELDB, six relations) [deferred].
-Ex 1.8: a database scheme with two database constraints (not equivalent to relation constraints)
-  and a relation constraint that is a non-trivial consequence of them [deferred: construction].
+Ex 1.8: a *second* database constraint (not equivalent to relation constraints) and a relation
+  constraint that is a non-trivial consequence of the two — a non-trivial single-relation
+  consequence of two cross-relation constraints [deferred: construction; the core, a database
+  constraint not equivalent to relation constraints, is `ex_1_8`].
 Ex 1.9: the same for two dynamic relation constraints [deferred: construction].
 Ex 1.10: the THIRSTY database scheme — boolean functions and classification of its seven
   constraints [deferred].
@@ -179,5 +181,14 @@ abbrev ex_1_2_uniqueRoom := @DeepWiki.roommaids_uniqueRoom
 /-- **Exercise 1.3** (§1.7, p.16): the `noremove` dynamic relation constraint — a room with a
 bath never loses it from one instance to the next. -/
 abbrev ex_1_3_noremove := @DeepWiki.rooms_noremove
+
+/-- **Exercise 1.8** (§1.7, p.16), core: the inclusion database constraint `R.A ⊆ S.A` is *not*
+equivalent to relation constraints — some database constraints genuinely relate two relations and
+cannot be expressed by constraints on the individual relations. -/
+abbrev ex_1_8 := @DeepWiki.ex18_not_relationConstraintEquiv
+
+/-- **Exercise 1.8** (§1.7, p.16): the notion underlying it — a database constraint is *equivalent
+to relation constraints* when it factors as a conjunction of one constraint per relation. -/
+abbrev ex_1_8_relationConstraintEquiv := @DeepWiki.IsRelationConstraintEquiv
 
 end DeepWiki.Rdb

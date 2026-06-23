@@ -80,4 +80,63 @@ room. If a room with a bath persists to the next instance, it still has a bath. 
 def rooms_noremove : DynRelConstraint roomsRel :=
   fun seq => ∀ n, ∀ t ∈ seq n, ∀ t' ∈ seq (n + 1), roomNum t = roomNum t' → bath t = 1 → bath t' = 1
 
+/-! ## Exercise 1.8 — a database constraint not equivalent to relation constraints -/
+
+/-- A database constraint is *equivalent to relation constraints* when it factors as a
+conjunction of one relation constraint per relation scheme — its truth depends on each relation
+separately. -/
+def IsRelationConstraintEquiv {ι : Type} [Fintype ι] {Att Val : Type}
+    (P : PrimDbScheme ι Att Val) (c : DbConstraint P) : Prop :=
+  ∃ rc : (i : ι) → RelConstraint (P.scheme i).prim, ∀ d, c d ↔ ∀ i, rc i (d i)
+
+/-- The single-attribute scheme used for both relations of the Exercise 1.8 database. -/
+abbrev ex18Scheme : PrimRelScheme String ℤ := ⟨{"A"}, fun _ => Set.univ⟩
+
+/-- The Exercise 1.8 relation scheme. -/
+abbrev ex18Rel : RelScheme String ℤ := ⟨ex18Scheme, ∅⟩
+
+/-- A two-relation database (`false` = R, `true` = S), both relations over the attribute `A`. -/
+abbrev ex18Db : PrimDbScheme Bool String ℤ :=
+  { scheme := fun _ => ex18Rel, compat := fun _ _ _ _ _ => rfl }
+
+/-- The `A`-value of an Exercise-1.8 tuple. -/
+def aOf18 (t : TupleOf ex18Scheme) : ℤ := t.val ⟨"A", by decide⟩
+
+/-- The tuple over `ex18Scheme` with `A`-value `v`. -/
+def tupA (v : ℤ) : TupleOf ex18Scheme := ⟨fun _ => v, fun _ => Set.mem_univ _⟩
+
+@[simp] theorem aOf18_tupA (v : ℤ) : aOf18 (tupA v) = v := rfl
+
+/-- The inclusion database constraint `R.A ⊆ S.A`. -/
+def ex18Incl : DbConstraint ex18Db := fun d => ∀ t ∈ d false, ∃ t' ∈ d true, aOf18 t = aOf18 t'
+
+/-- **Exercise 1.8**: the inclusion database constraint is *not* equivalent to relation
+constraints. It genuinely relates the two relations, so its model set is not closed under mixing
+components — taking R from one satisfying instance and S from another can violate it. (This is
+why some database constraints cannot be expressed by constraints on the individual relations.) -/
+theorem ex18_not_relationConstraintEquiv : ¬ IsRelationConstraintEquiv ex18Db ex18Incl := by
+  rintro ⟨rc, h⟩
+  have hc1 : ex18Incl (fun _ => {tupA 1}) := by
+    intro t ht
+    rw [Set.mem_singleton_iff] at ht
+    subst ht
+    exact ⟨tupA 1, Set.mem_singleton_iff.mpr rfl, rfl⟩
+  have hc2 : ex18Incl (fun _ => {tupA 2}) := by
+    intro t ht
+    rw [Set.mem_singleton_iff] at ht
+    subst ht
+    exact ⟨tupA 2, Set.mem_singleton_iff.mpr rfl, rfl⟩
+  -- the mixed instance: R = {tupA 1}, S = {tupA 2}
+  have hmix : ∀ i,
+      rc i ((fun b => bif b then ({tupA 2} : Set (TupleOf ex18Scheme)) else {tupA 1}) i) := by
+    intro i
+    cases i with
+    | false => exact (h _).mp hc1 false
+    | true => exact (h _).mp hc2 true
+  have hc3 := (h _).mpr hmix
+  obtain ⟨t', ht', heq⟩ := hc3 (tupA 1) (Set.mem_singleton_iff.mpr rfl)
+  have ht'' : t' = tupA 2 := ht'
+  subst ht''
+  exact absurd heq (by decide)
+
 end DeepWiki
