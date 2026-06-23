@@ -32,4 +32,26 @@ theorem IsAsymptoticallyNormal.of_tendstoInDistribution [IsProbabilityMeasure μ
   rw [← hG.map_eq]
   exact ProbabilityMeasure.tendsto_iff_tendsto_charFun.mp h.tendsto s
 
+/-- **Asymptotic normality is preserved under positive scaling**: if `Xₙ` is `AN(aₙ, bₙ²)` then `c · Xₙ`
+is `AN(c·aₙ, (c·bₙ)²)` for `c > 0` (the standardized sequence is unchanged). -/
+theorem IsAsymptoticallyNormal.const_mul_pos {X : ℕ → Ω → ℝ} {a b : ℕ → ℝ}
+    (h : IsAsymptoticallyNormal X a b μ) {c : ℝ} (hc : 0 < c) :
+    IsAsymptoticallyNormal (fun n ω => c * X n ω) (fun n => c * a n) (fun n => c * b n) μ := by
+  intro s
+  refine (h s).congr fun n => ?_
+  have heq : (fun ω => (X n ω - a n) / b n) = fun ω => (c * X n ω - c * a n) / (c * b n) := by
+    funext ω; rw [← mul_sub, mul_div_mul_left _ _ hc.ne']
+  rw [heq]
+
+/-- **Asymptotic normality is preserved under an additive shift**: if `Xₙ` is `AN(aₙ, bₙ²)` then
+`Xₙ + dₙ` is `AN(aₙ + dₙ, bₙ²)` (the standardized sequence is unchanged). -/
+theorem IsAsymptoticallyNormal.add_const {X : ℕ → Ω → ℝ} {a b : ℕ → ℝ}
+    (h : IsAsymptoticallyNormal X a b μ) (d : ℕ → ℝ) :
+    IsAsymptoticallyNormal (fun n ω => X n ω + d n) (fun n => a n + d n) b μ := by
+  intro s
+  refine (h s).congr fun n => ?_
+  have heq : (fun ω => (X n ω - a n) / b n) = fun ω => (X n ω + d n - (a n + d n)) / b n := by
+    funext ω; rw [add_sub_add_right_eq_sub]
+  rw [heq]
+
 end DeepWiki.TimeSeries
