@@ -85,4 +85,54 @@ theorem convexSegEval_append_at_segLenSum (f0 fs : ℝ≥0) (pre rest : List (�
 noncomputable def segTangentLatency (f0 : ℝ≥0) (pre : List (ℝ≥0 × ℝ≥0)) (s : ℝ≥0) : ℝ≥0 :=
   segLenSum pre - (f0 + cornerSum pre) / s
 
+/-- **The prefix corner sum is dominated by `s·τ` when every prefix slope is `≤ s`.**
+`cornerSum pre = Σⱼ sⱼ·ℓⱼ ≤ s · Σⱼ ℓⱼ = s · segLenSum pre`: with `pre`'s slopes all `≤` segment
+`i`'s slope `s` (slope-sorting), the prefix never rises faster than slope `s`. -/
+theorem cornerSum_le_mul_segLenSum (s : ℝ≥0) (pre : List (ℝ≥0 × ℝ≥0))
+    (hpre : ∀ seg ∈ pre, seg.1 ≤ s) : cornerSum pre ≤ s * segLenSum pre := by
+  induction pre with
+  | nil => simp
+  | cons hd tl ih =>
+      obtain ⟨sj, ℓj⟩ := hd
+      have hsj : sj ≤ s := hpre (sj, ℓj) List.mem_cons_self
+      have htl : ∀ seg ∈ tl, seg.1 ≤ s := fun seg h => hpre seg (List.mem_cons_of_mem _ h)
+      rw [cornerSum_cons, segLenSum_cons, mul_add]
+      gcongr
+      exact ih htl
+
+/-- **The segment-`i` tangent has a nonnegative latency when `f0 = 0` and `pre`'s slopes are `≤ s`.**
+`v/s = cornerSum pre / s ≤ segLenSum pre = τ`, so `Tᵢ = τ − v/s` is the genuine (uncapped)
+x-intercept of segment `i`'s affine extension. -/
+theorem div_corner_le_segLenSum (s : ℝ≥0) (pre : List (ℝ≥0 × ℝ≥0))
+    (hpre : ∀ seg ∈ pre, seg.1 ≤ s) (hs : 0 < s) :
+    (0 + cornerSum pre) / s ≤ segLenSum pre := by
+  rw [zero_add, div_le_iff₀ hs, mul_comm]
+  exact cornerSum_le_mul_segLenSum s pre hpre
+
+/-- **Own-segment exactness — the segment-`i` tangent equals the curve on segment `i`.** Splitting
+`segs = pre ++ (s, ℓ) :: post` with `s > 0` and the well-formedness bound `v/s ≤ τ`
+(`v = f0 + cornerSum pre`, `τ = segLenSum pre`), the tangent rate-latency `β_{s, Tᵢ}` anchored at
+`Tᵢ = segTangentLatency f0 pre s` reproduces the curve for `t` in segment `i` (`τ ≤ t ≤ τ + ℓ`):
+`β_{s, Tᵢ}(t) = s·(t − Tᵢ) = v + s·(t − τ) = f̲(t)`. The single sloped generator that *is* the affine
+piece on its own segment. -/
+theorem rateLatencyEReal_segTangent_eq_on_seg (f0 fs s ℓ : ℝ≥0) (pre post : List (ℝ≥0 × ℝ≥0))
+    (hs : 0 < s) (hdiv : (f0 + cornerSum pre) / s ≤ segLenSum pre)
+    {t : ℝ≥0} (hlo : segLenSum pre ≤ t) (hhi : t ≤ segLenSum pre + ℓ) :
+    rateLatencyEReal s (segTangentLatency f0 pre s) t
+      = (((convexSegEval f0 fs (pre ++ (s, ℓ) :: post) t : ℝ≥0) : ℝ) : EReal) := by
+  set τ := segLenSum pre with hτ
+  set v := f0 + cornerSum pre with hv
+  rw [rateLatencyEReal_apply]
+  congr 1
+  rw [NNReal.coe_inj]
+  -- the curve is the affine piece `v + s·(t − τ)` on this segment
+  rw [convexSegEval_affine_on_seg f0 fs s ℓ pre post hlo hhi,
+    convexSegEval_append_at_segLenSum, ← hv, ← hτ]
+  -- `t − Tᵢ = (t − τ) + v/s` since `v/s ≤ τ ≤ t`
+  rw [segTangentLatency, ← hτ, ← hv]
+  have hsub : t - (τ - v / s) = (t - τ) + v / s := by
+    rw [tsub_tsub_assoc hlo hdiv, add_comm]
+  rw [hsub, mul_add, mul_div_cancel₀ v (ne_of_gt hs)]
+  ring
+
 end DeepWiki
