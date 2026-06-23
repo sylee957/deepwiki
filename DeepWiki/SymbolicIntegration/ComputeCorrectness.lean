@@ -547,4 +547,47 @@ theorem step_length_lt (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     rw [length_cnorm_of_ne _ hne, length_cnorm_of_ne p hp]
     omega
 
+/-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
+theorem clead_cnorm (p : CPoly) : clead (cnorm p) = clead p := by
+  simp only [clead, cnorm_idem]
+
+/-- `cisZero` is invariant under `cnorm`. -/
+theorem cisZero_cnorm (q : CPoly) : cisZero (cnorm q) = cisZero q := by
+  simp only [cisZero, cnorm_idem]
+
+/-- **Remainder degree bound**: with enough fuel and a nonzero divisor, `cmod fuel p q` has strictly
+smaller normalized length than `q` — the Euclidean remainder is properly reduced. By induction on
+fuel, using `step_length_lt` for the recursive (degree-drop) case. -/
+theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hfuel : (cnorm p).length ≤ fuel) :
+    (cnorm (cmod fuel p q)).length < (cnorm q).length := by
+  induction fuel generalizing p with
+  | zero =>
+    have hp0 : cnorm p = [] := List.length_eq_zero_iff.mp (by omega)
+    have h2 : cmod 0 p q = [] := by simp [cmod, cdivmod, hp0]
+    rw [h2]; simpa using List.length_pos_iff.mpr hq
+  | succ fuel ih =>
+    have hcz : cisZero (cnorm q) = false := by rw [cisZero_cnorm]; simpa [cisZero] using hq
+    by_cases hlen : (cnorm p).length < (cnorm q).length
+    · have h2 : cmod (fuel + 1) p q = cnorm p := by
+        rw [cmod, cdivmod]
+        simp only [hcz, Bool.false_eq_true, if_false, if_pos hlen]
+      rw [h2, cnorm_idem]; exact hlen
+    · have hp : cnorm p ≠ [] := by
+        rintro h
+        rw [h, List.length_nil] at hlen
+        exact hlen (List.length_pos_iff.mpr hq)
+      have hstep := step_length_lt p q hp hq (by omega)
+      have key : cmod (fuel + 1) p q
+          = cmod fuel (cnorm (csub (cnorm p)
+              (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q])
+                (cnorm q)))) q := by
+        rw [cmod, cdivmod]
+        simp only [hcz, Bool.false_eq_true, if_false, if_neg hlen, clead_cnorm, cmod,
+          ← cdivmod_cnorm_right]
+      rw [key]
+      apply ih
+      rw [cnorm_idem]
+      omega
+
 end DeepWiki.SymbolicIntegration.Compute
