@@ -58,4 +58,23 @@ theorem subjection_subset (X Y : Set (Table Ω Val)) : subjection X Y ⊆ X :=
 theorem subset_augmentation (X Y : Set (Table Ω Val)) : X ⊆ augmentation X Y :=
   Set.subset_union_left
 
+/-- Augmentation is commutative. -/
+theorem augmentation_comm (X Y : Set (Table Ω Val)) : augmentation X Y = augmentation Y X :=
+  Set.union_comm X Y
+
+/-- Subjection is commutative. -/
+theorem subjection_comm (X Y : Set (Table Ω Val)) : subjection X Y = subjection Y X :=
+  Set.inter_comm X Y
+
+/-- General insertion is commutative (pairwise union is symmetric). -/
+theorem generalInsertion_comm (X Y : Set (Table Ω Val)) :
+    generalInsertion X Y = generalInsertion Y X := by
+  ext s
+  constructor <;> rintro ⟨r, hr, r', hr', rfl⟩ <;> exact ⟨r', hr', r, hr, Set.union_comm r r'⟩
+
+/-- Integration is commutative (pairwise intersection is symmetric). -/
+theorem integration_comm (X Y : Set (Table Ω Val)) : integration X Y = integration Y X := by
+  ext s
+  constructor <;> rintro ⟨r, hr, r', hr', rfl⟩ <;> exact ⟨r', hr', r, hr, Set.inter_comm r r'⟩
+
 end DeepWiki
