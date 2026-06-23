@@ -16,9 +16,9 @@ are layered on this next.
 §7.1: Def 7.1 (the attribute universe `𝒰` with composed attributes), Def 7.2 / 7.3 (primitive
   nested relation scheme and nested relation scheme), Def 7.5 (a nested relation constraint),
   Def 7.6 (a flat relation instance as a special nested one) [infra].
-§7.2: Def 7.7 — unnest `μ`, renaming `ρ`, and `DecidableEq (NestedValue …)` (hand-written mutual
-  `beq` + correctness, since `deriving` does not apply) are done; the remaining operators (union,
-  difference, cartesian product, projection, the nest `ν`, selection), Def 7.8 (a nested algebra
+§7.2: Def 7.7 — unnest `μ`, nest `ν`, renaming `ρ`, and `DecidableEq (NestedValue …)` (hand-written
+  mutual `beq` + correctness, since `deriving` does not apply) are done; the remaining operators
+  (union, difference, cartesian product, projection, selection), Def 7.8 (a nested algebra
   expression), and the nest/unnest-not-inverse fact are the next step [infra].
 §7.3: Def 7.9 / 7.10 (functional and multivalued dependencies on nested instances), Theorem 7.1
   (`ν(ω; X)` satisfies the fd `(Ω − X) → X`), and the non-commutativity of nesting (Example
@@ -83,3 +83,8 @@ abbrev nested_value_beq := @DeepWiki.NestedValue.beq
 
 /-- **§7.2 infrastructure**: correctness of `NestedValue.beq` (decides equality). -/
 abbrev nested_value_beq_iff := @DeepWiki.NestedValue.beq_iff
+
+/-- **Definition 7.7** (§7.2), the *nest* operator `ν_{X→B}`: group rows by their values outside
+`X` and collect each group's `X`-projections under a new relation-valued attribute `B`. Dual to
+unnest. -/
+abbrev def_7_7_nest := @DeepWiki.NestedValue.nest

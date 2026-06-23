@@ -1,4 +1,5 @@
 import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Dedup
 
 /-! # The nested relational model
 The nested (non-first-normal-form) model relaxes the flat-table assumption: a value may itself be
@@ -284,5 +285,37 @@ def NestedValue.rename (a b : Att) : NestedValue Att V → NestedValue Att V
 open NestedValue in
 example : (rel [[("A", atom 1), ("B", atom 2)]]).rename "A" "Z"
     = rel [[("Z", atom 1), ("B", atom 2)]] := rfl
+
+/-! ## The nest operator (§7.2) -/
+
+/-- Keep only the pairs of a nested tuple whose attribute lies in `X`. -/
+def NestedTuple.projTo (X : List Att) (t : NestedTuple Att V) : NestedTuple Att V :=
+  t.filter (fun p => decide (p.1 ∈ X))
+
+/-- Drop the pairs of a nested tuple whose attribute lies in `X` (the complementary projection). -/
+def NestedTuple.dropKeys (X : List Att) (t : NestedTuple Att V) : NestedTuple Att V :=
+  t.filter (fun p => decide (p.1 ∉ X))
+
+variable [DecidableEq V]
+
+/-- **Nest** `ν_{X→B}` (§7.2): group the rows of a nested relation by their values *outside* `X`,
+and for each group emit one row — the common outside-`X` part extended with a new attribute `B`
+whose value is the relation of the group's `X`-projections. Dual to `unnest`. -/
+def NestedValue.nest (X : List Att) (B : Att) : NestedValue Att V → NestedValue Att V
+  | .atom v => .atom v
+  | .rel rows =>
+    let rests := (rows.map (NestedTuple.dropKeys X)).dedup
+    .rel (rests.map (fun rest =>
+      rest ++ [(B, .rel ((rows.filter (fun t => decide (NestedTuple.dropKeys X t = rest))).map
+        (NestedTuple.projTo X)))]))
+
+@[simp] theorem NestedValue.nest_atom (X : List Att) (B : Att) (v : V) :
+    (NestedValue.atom (Att := Att) v).nest X B = .atom v := rfl
+
+open NestedValue in
+example : (rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)],
+      [("A", atom 5), ("C", atom 6)]]).nest ["C"] "D"
+    = rel [[("A", atom 1), ("D", rel [[("C", atom 2)], [("C", atom 3)]])],
+      [("A", atom 5), ("D", rel [[("C", atom 6)]])]] := by decide
 
 end DeepWiki
