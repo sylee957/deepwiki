@@ -458,4 +458,128 @@ theorem convexNFEval_eq_convexSegEval (fs : ℝ≥0) (segs gens : List (ℝ≥0 
     refine ⟨(fs, asymptoteTangentLatency 0 fs segs), hasymp, ?_⟩
     exact rateLatencyEReal_asymptoteTangent_eq_past_rank fs segs hfs hle_fs htge
 
+/-- **The asymptotic tangent latency equals the last "segment" tangent.**
+`asymptoteTangentLatency 0 fs segs = segTangentLatency 0 segs fs`: the asymptote is the tangent of
+the (whole-list) prefix at slope `fs`. -/
+theorem asymptoteTangentLatency_eq_segTangentLatency (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) :
+    asymptoteTangentLatency 0 fs segs = segTangentLatency 0 segs fs := by
+  rw [asymptoteTangentLatency, segTangentLatency, convexSegEval_pwlRank, pwlRank]
+
+/-- **The asymptotic tangent lies below the curve everywhere.** For positive `fs` with all slopes
+`≤ fs`, the asymptotic tangent `β_{fs, T∞}` is `≤ ↑f̲` everywhere: equal past the rank, and below it
+before (the curve rises at rate `≤ fs`, so its tangent at the asymptote stays underneath). -/
+theorem rateLatencyEReal_asymptoteTangent_le (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs) (t : ℝ≥0) :
+    rateLatencyEReal fs (asymptoteTangentLatency 0 fs segs) t
+      ≤ (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  set τ := pwlRank segs with hτ
+  set v := convexSegEval 0 fs segs τ with hv
+  have hdiv : v / fs ≤ τ := by
+    rw [div_le_iff₀ hfs, mul_comm]
+    have := asymptoteTangentLatency_le_rank fs segs hle_fs
+    rw [← hτ, ← hv] at this
+    exact_mod_cast this
+  rcases le_total τ t with htge | htle
+  · -- past the rank: equality
+    exact le_of_eq (rateLatencyEReal_asymptoteTangent_eq_past_rank fs segs hfs hle_fs htge)
+  · -- before the rank: upper-rate bound (`≤ fs`) keeps the tangent below
+    rw [rateLatencyEReal_apply, EReal.coe_le_coe_iff, asymptoteTangentLatency, ← hτ, ← hv]
+    rw [NNReal.coe_mul, coe_tsub_eq_max']
+    -- upper-rate from `t` to `τ`: `v ≤ f̲ t + fs·(τ − t)`
+    have hupper : convexSegEval 0 fs segs τ ≤ convexSegEval 0 fs segs t + fs * (τ - t) := by
+      have := (@convexSegEval_upper_rate_of_le fs 0 segs hle_fs) t (τ - t)
+      rwa [add_tsub_cancel_of_le htle] at this
+    rw [← hv] at hupper
+    have hupperR : (v : ℝ) ≤ (convexSegEval 0 fs segs t : ℝ) + (fs : ℝ) * ((τ : ℝ) - (t : ℝ)) := by
+      have := NNReal.coe_le_coe.mpr hupper
+      push_cast [NNReal.coe_sub htle] at this ⊢
+      linarith
+    have hfnn : (0 : ℝ) ≤ (convexSegEval 0 fs segs t : ℝ) := (convexSegEval 0 fs segs t).coe_nonneg
+    have hTr : ((τ - v / fs : ℝ≥0) : ℝ) = (τ : ℝ) - (v : ℝ) / (fs : ℝ) := by
+      rw [NNReal.coe_sub hdiv, NNReal.coe_div]
+    rw [hTr, mul_max_of_nonneg _ _ fs.coe_nonneg, mul_zero]
+    apply max_le
+    · have hsvs : (fs : ℝ) * ((v : ℝ) / (fs : ℝ)) = (v : ℝ) := by field_simp
+      have hexp : (fs : ℝ) * ((t : ℝ) - ((τ : ℝ) - (v : ℝ) / (fs : ℝ)))
+          = (fs : ℝ) * ((t : ℝ) - (τ : ℝ)) + (v : ℝ) := by
+        rw [mul_sub, mul_sub, hsvs]; ring
+      rw [hexp]; nlinarith [hupperR]
+    · exact hfnn
+
+/-- **Every canonical generator lies below the curve.** For a slope-sorted positive-slope `segs`
+(all `≤ fs`), each `g ∈ segTangentGens fs segs` (segment tangents and the asymptotic tangent)
+satisfies `β_g ≤ ↑f̲` everywhere. (Segment tangents via `rateLatencyEReal_segTangent_le`, the
+asymptotic one via `rateLatencyEReal_asymptoteTangent_le`.) -/
+theorem segTangentGens_below (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs)
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) segs)
+    (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs) (hpos : ∀ seg ∈ segs, 0 < seg.1)
+    (g : ℝ≥0 × ℝ≥0) (hg : g ∈ segTangentGens fs segs) (t : ℝ≥0) :
+    rateLatencyEReal g.1 g.2 t ≤ (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  rw [segTangentGens, List.mem_append] at hg
+  rcases hg with hg | hg
+  · -- a segment tangent: read off its split and apply `rateLatencyEReal_segTangent_le`
+    obtain ⟨pre, post, ℓ, hsplit, hlat⟩ := mem_segTangentGensFrom_iff hg
+    rw [List.nil_append] at hlat
+    obtain ⟨gs, gT⟩ := g
+    simp only at hsplit hlat
+    subst hlat
+    have hsortsplit : List.Pairwise (fun a b => a.1 ≤ b.1) (pre ++ (gs, ℓ) :: post) := hsplit ▸ hsort
+    have hpre : ∀ seg ∈ pre, seg.1 ≤ gs := prefix_slopes_le pre post gs ℓ hsortsplit
+    have hsuf : ∀ seg ∈ (gs, ℓ) :: post, gs ≤ seg.1 := suffix_slopes_ge pre post gs ℓ hsortsplit
+    have hs : 0 < gs :=
+      hpos (gs, ℓ) (by rw [hsplit, List.mem_append]; right; exact List.mem_cons_self)
+    have hgsfs : gs ≤ fs :=
+      hle_fs (gs, ℓ) (by rw [hsplit, List.mem_append]; right; exact List.mem_cons_self)
+    have hdiv : (0 + cornerSum pre) / gs ≤ segLenSum pre := div_corner_le_segLenSum gs pre hpre hs
+    have := rateLatencyEReal_segTangent_le 0 fs gs ℓ pre post hs hpre hsuf hgsfs hdiv t
+    rwa [← hsplit] at this
+  · -- the appended asymptotic tangent
+    rw [List.mem_singleton] at hg
+    subst hg
+    exact rateLatencyEReal_asymptoteTangent_le fs segs hfs hle_fs t
+
+/-- **The convex companion of Prop 4.4 [4.13] — `f̲ = ⨆ᵢ β_{sᵢ, Tᵢ}` on all of `[0,∞)`.** A convex
+PWL `f̲ = convexSegEval 0 fs segs` null at the origin, with positive asymptote `fs`, slope-sorted
+finite segments all `≤ fs` and strictly positive, equals the pointwise supremum of its *canonical
+tangent rate-latencies* `segTangentGens fs segs` (one per segment, plus the asymptotic tangent):
+`convexNFEval (segTangentGens fs segs) = ↑f̲` everywhere. The standard "convex function = sup of its
+tangent lines", dual to [4.13]'s `Θ`-meet upper bound. -/
+theorem convexNFEval_segTangentGens_eq (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    (hfs : 0 < fs) (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) segs)
+    (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs) (hpos : ∀ seg ∈ segs, 0 < seg.1) (hne : segs ≠ [])
+    (t : ℝ≥0) :
+    convexNFEval (segTangentGens fs segs) t
+      = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) := by
+  refine convexNFEval_eq_convexSegEval fs segs (segTangentGens fs segs) hfs hsort hle_fs hpos hne
+    (segTangentGens_below fs segs hfs hsort hle_fs hpos) ?_ ?_ t
+  · -- the asymptotic tangent is the appended element
+    rw [segTangentGens, List.mem_append, List.mem_singleton]; right; rfl
+  · -- every split's segment tangent is in the accumulated part
+    intro pre post s ℓ hsplit
+    rw [segTangentGens, List.mem_append]; left
+    have := mem_segTangentGensFrom [] pre post s ℓ segs hsplit
+    rwa [List.nil_append] at this
+
+/-! ## Faithfulness checks (Prop 4.4 [4.13], convex companion) -/
+
+/-- Own-segment exactness: on segment `i` (`τᵢ ≤ t ≤ τᵢ+ℓᵢ`, `sᵢ > 0`) the tangent rate-latency
+`β_{sᵢ, Tᵢ}` *equals* the curve. -/
+example (f0 fs s ℓ : ℝ≥0) (pre post : List (ℝ≥0 × ℝ≥0)) (hs : 0 < s)
+    (hdiv : (f0 + cornerSum pre) / s ≤ segLenSum pre) {t : ℝ≥0}
+    (hlo : segLenSum pre ≤ t) (hhi : t ≤ segLenSum pre + ℓ) :
+    rateLatencyEReal s (segTangentLatency f0 pre s) t
+      = (((convexSegEval f0 fs (pre ++ (s, ℓ) :: post) t : ℝ≥0) : ℝ) : EReal) :=
+  rateLatencyEReal_segTangent_eq_on_seg f0 fs s ℓ pre post hs hdiv hlo hhi
+
+/-- The convex companion of [4.13]: `f̲ = ⨆ᵢ β_{sᵢ, Tᵢ}` — a convex PWL null at the origin (positive
+slopes `≤ fs`, slope-sorted) is the pointwise supremum of its tangent rate-latencies, on all of
+`[0,∞)`. -/
+example (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (hfs : 0 < fs)
+    (hsort : List.Pairwise (fun a b => a.1 ≤ b.1) segs)
+    (hle_fs : ∀ seg ∈ segs, seg.1 ≤ fs) (hpos : ∀ seg ∈ segs, 0 < seg.1) (hne : segs ≠ [])
+    (t : ℝ≥0) :
+    convexNFEval (segTangentGens fs segs) t
+      = (((convexSegEval 0 fs segs t : ℝ≥0) : ℝ) : EReal) :=
+  convexNFEval_segTangentGens_eq fs segs hfs hsort hle_fs hpos hne t
+
 end DeepWiki
