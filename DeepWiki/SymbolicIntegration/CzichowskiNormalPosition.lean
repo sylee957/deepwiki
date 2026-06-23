@@ -234,6 +234,144 @@ noncomputable def evalAtResidue : MvPolynomial (Fin 2) K →+* K[X] :=
 @[simp] theorem evalAtResidue_zMinusResidue : evalAtResidue A D (zMinusResidue A D) = 0 := by
   rw [zMinusResidue, map_sub, evalAtResidue_X0, evalAtResidue_liftX, sub_self]
 
+/-! ### Leading monomials of the two basis elements (lex `z > x`) -/
+
+/-- A `z`-free polynomial's leading monomial has index-`0` exponent `0`. -/
+theorem lex_degree_liftX_apply_zero (p : K[X]) :
+    (MonomialOrder.lex.degree (liftX p)) 0 = 0 := by
+  rcases eq_or_ne (liftX p) 0 with hp0 | hp0
+  · rw [hp0, MonomialOrder.degree_zero]; simp
+  · rw [lex_degree_apply_zero hp0, degreeOf_zero_liftX]
+
+/-- A `z`-free polynomial's leading monomial is `≺[lex] z`: its index-`0` exponent is `0`,
+strictly below the index-`0 = 1` of `m.degree (X 0) = single 0 1`. -/
+theorem lex_degree_liftX_lt_X0 (p : K[X]) :
+    MonomialOrder.lex.degree (liftX p) ≺[MonomialOrder.lex] Finsupp.single (0 : Fin 2) 1 := by
+  rw [MonomialOrder.lex_lt_iff, Finsupp.Lex.lt_iff]
+  refine ⟨0, fun i hi => absurd hi (by simp), ?_⟩
+  simp only [ofLex_toLex, lex_degree_liftX_apply_zero, Finsupp.single_eq_same]
+  exact Nat.zero_lt_one
+
+/-- **The leading monomial of `z − T` is `z`** (lex `z > x`): `m.degree (zMinusResidue) = single 0 1`,
+since `liftX T` (`z`-free) is strictly `≺[lex]` the `z` of `X 0`. -/
+theorem degree_zMinusResidue :
+    MonomialOrder.lex.degree (zMinusResidue A D) = Finsupp.single (0 : Fin 2) 1 := by
+  have hX0 : MonomialOrder.lex.degree (X (0 : Fin 2) : MvPolynomial (Fin 2) K)
+      = Finsupp.single 0 1 := degree_X
+  rw [zMinusResidue, MonomialOrder.degree_sub_of_lt (g := liftX (residuePoly A D)), hX0]
+  rw [hX0]; exact lex_degree_liftX_lt_X0 (residuePoly A D)
+
+/-- **The leading monomial of `D` is `x^(deg D)`** (lex `z > x`): for `D ≠ 0`,
+`m.degree (liftX D) = single 1 (D.natDegree)` (`z`-degree `0`, `x`-degree `D.natDegree`). -/
+theorem degree_liftX_D (hD : D ≠ 0) :
+    MonomialOrder.lex.degree (liftX D) = Finsupp.single (1 : Fin 2) D.natDegree := by
+  have hne : liftX D ≠ 0 := by rwa [Ne, liftX_eq_zero_iff]
+  refine Finsupp.ext fun i => ?_
+  match i with
+  | 0 =>
+    rw [lex_degree_apply_zero hne, degreeOf_zero_liftX, Finsupp.single_eq_of_ne (by decide)]
+  | 1 =>
+    rw [lex_degree_apply_one hne, Finsupp.single_eq_same]
+    have hlyc : leadingYCoeff (liftX D) = (mvPolynomialFinOneEquivPolynomial K).symm D := by
+      rw [leadingYCoeff, lazardView_liftX, Polynomial.leadingCoeff_C]
+    rw [hlyc, ← natDegree_mvPolynomialFinOneEquivPolynomial, RingEquiv.apply_symm_apply]
+
+/-! ### `{D, z − T}` is a Gröbner basis -/
+
+/-- A `z`-free bivariate polynomial is a lift: `degreeOf 0 f = 0 → f = liftX (evalAtResidue f)`. -/
+theorem eq_liftX_of_degreeOf_zero {f : MvPolynomial (Fin 2) K} (hf : degreeOf 0 f = 0) :
+    f = liftX (evalAtResidue A D f) := by
+  -- `lazardView f` has `natDegree 0`, hence is a constant `C c`
+  have hnat : (lazardView f).natDegree = 0 := by rw [natDegree_lazardView, hf]
+  have hC : lazardView f = Polynomial.C ((lazardView f).coeff 0) :=
+    Polynomial.eq_C_of_natDegree_eq_zero hnat
+  -- so `f = liftX (e ((lazardView f).coeff 0))`
+  have hflift : f = liftX (mvPolynomialFinOneEquivPolynomial K ((lazardView f).coeff 0)) := by
+    apply lazardView_injective
+    rw [lazardView_liftX, RingEquiv.symm_apply_apply]
+    rw [hC]; simp
+  rw [hflift, evalAtResidue_liftX]
+
+/-- `evalAtResidue` sends `A − z·D'` to a multiple of `D` (`= A − T·D' = D·(A·C + D'·Q)`). -/
+theorem evalAtResidue_czGen_mem_span (hD : D.Separable) :
+    evalAtResidue A D (czGen A D) ∈ Ideal.span {D} := by
+  rw [czGen, map_sub, map_mul, evalAtResidue_X0, evalAtResidue_liftX, evalAtResidue_liftX]
+  -- `A − T·D' = D·(A·C + D'·Q)` (the `hkey` of section C)
+  obtain ⟨Q, hQ⟩ := A_mul_dDerivInv_sub_residuePoly_dvd A D
+  set C := (diophantineSolve (derivative D) D 1).2 with hC
+  have hkey : A - residuePoly A D * derivative D = D * (A * C + derivative D * Q) := by
+    have hbz : derivative D * dDerivInv D + D * C = 1 := dDeriv_mul_dDerivInv_add D hD
+    have hTB : residuePoly A D = A * dDerivInv D - D * Q := by linear_combination - hQ
+    rw [hTB]; linear_combination (- A) * hbz
+  rw [hkey, Ideal.mem_span_singleton]
+  exact Dvd.intro _ rfl
+
+/-- `evalAtResidue` sends every element of `I = ⟨A − z·D', D⟩` to a multiple of `D`. -/
+theorem evalAtResidue_mem_span_of_mem_czIdeal (hD : D.Separable)
+    {f : MvPolynomial (Fin 2) K} (hf : f ∈ czIdeal A D) :
+    evalAtResidue A D f ∈ Ideal.span {D} := by
+  rw [czIdeal] at hf
+  refine Submodule.span_induction ?_ ?_ ?_ ?_ hf
+  · rintro g (rfl | rfl)
+    · exact evalAtResidue_czGen_mem_span A D hD
+    · rw [evalAtResidue_liftX]; exact Ideal.mem_span_singleton_self D
+  · simp
+  · intro x y _ _ hx hy; rw [map_add]; exact Ideal.add_mem _ hx hy
+  · intro a x _ hx; rw [smul_eq_mul, map_mul]; exact Ideal.mul_mem_left _ _ hx
+
+/-- **`GB₁ = {D, z − T}` is a Gröbner basis of `I`** (deliverable D), w.r.t. the p.l. ordering
+`z > x`. Every nonzero `f ∈ I` has its leading monomial divisible by one of the two coprime
+leading monomials `z` (of `z − T`) and `x^(deg D)` (of `D`): if `f` carries a `z` in its leading
+term, then `z ∣ LM(f)`; otherwise `f` is `z`-free, so substituting `z := T` sends `f ∈ I` to a
+multiple of `D`, forcing `deg_x ≥ deg D`, i.e. `x^(deg D) ∣ LM(f)`. -/
+theorem isGroebnerBasis_gb (hD : D.Separable) (hD0 : D ≠ 0) :
+    IsGroebnerBasis MonomialOrder.lex (czIdeal A D) {liftX D, zMinusResidue A D} := by
+  set m := MonomialOrder.lex (σ := Fin 2)
+  -- the two basis elements lie in `I`, with unit (monic) leading coefficients
+  have hmem : ∀ b ∈ ({liftX D, zMinusResidue A D} : Set (MvPolynomial (Fin 2) K)), b ∈ czIdeal A D := by
+    rintro b (rfl | rfl)
+    · exact liftX_D_mem_czIdeal A D
+    · exact zMinusResidue_mem_czIdeal A D hD
+  refine isGroebnerBasis_of_exists_leadingMonomial_le hmem ?_ ?_
+  · -- unit leading coefficients (both basis elements are nonzero over a field)
+    rintro b (rfl | rfl)
+    · exact m.isUnit_leadingCoeff.mpr (by rwa [Ne, liftX_eq_zero_iff])
+    · refine m.isUnit_leadingCoeff.mpr (fun h => ?_)
+      have := degree_zMinusResidue A D
+      rw [h, MonomialOrder.degree_zero] at this
+      exact absurd this.symm (by simp)
+  · -- divisibility of the leading monomial
+    intro f hfI hf0
+    by_cases hz : 1 ≤ (m.degree f) 0
+    · -- `z ∣ LM(f)`
+      refine ⟨zMinusResidue A D, by simp, ?_⟩
+      rw [degree_zMinusResidue]
+      intro i
+      match i with
+      | 0 => rwa [Finsupp.single_eq_same]
+      | 1 => rw [Finsupp.single_eq_of_ne (by decide)]; exact Nat.zero_le _
+    · -- `f` is `z`-free; substitute `z := T`
+      have hz' : (m.degree f) 0 = 0 := by omega
+      have hzdeg : degreeOf 0 f = 0 := by
+        rw [← lex_degree_apply_zero hf0]; exact hz'
+      have hflift : f = liftX (evalAtResidue A D f) := eq_liftX_of_degreeOf_zero A D hzdeg
+      have hp0 : evalAtResidue A D f ≠ 0 := by
+        intro h; rw [h, map_zero] at hflift; exact hf0 hflift
+      -- `D ∣ evalAtResidue f`
+      have hdvd : D ∣ evalAtResidue A D f := by
+        have := evalAtResidue_mem_span_of_mem_czIdeal A D hD hfI
+        rwa [Ideal.mem_span_singleton] at this
+      refine ⟨liftX D, by simp, ?_⟩
+      rw [degree_liftX_D D hD0]
+      conv_rhs => rw [hflift]
+      rw [degree_liftX_D _ hp0]
+      intro i
+      match i with
+      | 0 => simp
+      | 1 =>
+        rw [Finsupp.single_eq_same, Finsupp.single_eq_same]
+        exact Polynomial.natDegree_le_of_dvd hdvd hp0
+
 -- Restatements against Czichowski's wording.
 example (A D : K[X]) (hD : D.Separable) :
     zVar - liftX (residuePoly A D) ∈ Ideal.span {liftX A - zVar * liftX (derivative D), liftX D} :=
@@ -243,5 +381,15 @@ example (A D : K[X]) (hD : D.Separable) :
     Ideal.span {liftX A - zVar * liftX (derivative D), liftX D}
       = Ideal.span {liftX D, zVar - liftX (residuePoly A D)} :=
   czIdeal_eq_span_gb A D hD
+
+/-- The two leading monomials are coprime: `x^(deg D) ⊓ z = 0` (disjoint exponent supports),
+the structural reason `GB₁`'s single S-polynomial reduces to zero (Buchberger's first criterion). -/
+example (D : K[X]) : (Finsupp.single (1 : Fin 2) D.natDegree) ⊓ (Finsupp.single (0 : Fin 2) 1) = 0 := by
+  ext i; match i with | 0 => simp | 1 => simp
+
+example (A D : K[X]) (hD : D.Separable) (hD0 : D ≠ 0) :
+    IsGroebnerBasis MonomialOrder.lex (Ideal.span {liftX A - zVar * liftX (derivative D), liftX D})
+      {liftX D, zVar - liftX (residuePoly A D)} :=
+  isGroebnerBasis_gb A D hD hD0
 
 end DeepWiki.SymbolicIntegration
