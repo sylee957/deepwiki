@@ -1,4 +1,5 @@
 import DeepWiki.TimeSeries.LinearProcessFullCLT
+import DeepWiki.TimeSeries.DeltaMethod
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 6: Asymptotic Theory (structure map)
@@ -40,14 +41,21 @@ assembled from the finite-`MA(m)` truncation CLTs through the double-limit theor
 §7.1.2 (`thm_7_1_2_full`). -/
 alias clt_linearProcess := DeepWiki.TimeSeries.causalLinearProcess_sampleMean_clt_of_summable
 
+/-- **§6.4 Example 6.4.2 — the (one-dimensional) delta method**: if `Xₙ →ᵖ a`, the standardized
+`√n (Xₙ − a)` converges in distribution to `Y₀`, and `g` is differentiable at `a`, then
+`√n (g Xₙ − g a) ⇒ g'(a) · Y₀` (so for `Y₀ ~ N(0, σ²)`, the limit is `N(0, g'(a)² σ²)`). The
+library's `delta_method` — the asymptotic-normality transfer for smooth functionals, the §6.4 tool
+behind the sample-autocorrelation limit theory (Bartlett, §7.2). -/
+alias example_6_4_2 := DeepWiki.TimeSeries.delta_method
+
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.1: Definition 6.1.1 (convergence in probability `Xₙ →ᵖ X`) [infra]; Definition 6.1.4 (`Oₚ`/`oₚ`
 order notation) [infra]; Slutsky's theorem [infra]
 §6.2: Chebyshev's inequality (eq 6.2.1) [infra]; convergence in `rᵗʰ` mean [infra]
 §6.3: Proposition 6.3.2 (weak law of large numbers for moving averages, `n⁻¹ ∑ₜ Xₜ →ᵖ μ`) [infra]
-§6.4: the delta method (Example 6.4.2) [infra]; Definition 6.4.3 (`m`-dependence) [infra]; the central
-limit theorem for general `m`-dependent processes [infra] (the linear-process CLT `clt_linearProcess`
-is done)
+§6.4: Definition 6.4.3 (`m`-dependence) [infra]; the central limit theorem for general `m`-dependent
+processes [infra] (the linear-process CLT `clt_linearProcess` and the delta method `example_6_4_2`
+are done)
 (Dominant blocker for the remaining items: the general dependent-process large-sample theory. The
 linear-process CLT — the main §6.4 engine for Chapter 7 — is now formalized via the double-limit
 theorem; the multivariate iid CLT `multivariate_iid_clt` is also available for Bartlett's formula.) -/
