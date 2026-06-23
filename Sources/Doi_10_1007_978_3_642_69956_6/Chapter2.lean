@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
+import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -15,13 +16,12 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   row representation].
 §2.1: the division operator `÷` of Example 2.6 and its generating-part expansion
   `r ÷ s = Π(r;…) − Π((Π(r;…) ⋈ s) − r;…)` [infra].
-§2.1.5: generating-part completeness for `DOM(A)`, the comparative instances `[A θ B]`/`[A θ a]`,
-  the computable instances `{x₁:A₁;…|f}`, and the selection-as-join expansions
-  `σ(r; A θ B) = r ⋈ [A θ B]`, `σ(r; A θ a) = r ⋈ [A θ a]`, `σ(r; f(A₁,…,Aₙ)) = r ⋈ {…|f}`
-  [infra: needs the comparative/computable-instance layer].
-§2.1.2 / Fig 2.9: the syntax of algebraic expressions [infra: an `AlgExpr` syntax type].
+§2.1.5: generating-part completeness for the selection-as-join expansions
+  `σ(r; A θ B) = r ⋈ [A θ B]`, `σ(r; A θ a) = r ⋈ [A θ a]`, `σ(r; f(A₁,…,Aₙ)) = r ⋈ {…|f}`,
+  and division `r ÷ s = Π(r;…) − Π((Π(r;…) ⋈ s) − r;…)` [infra: needs the `Ω ∪ Ω = Ω` transport;
+  intersection is already `evalAlg_inter`].
 §2.1.4: the scheme-level operators (view schemes `Π(V;Ω₁)`, `ρ(V;f)`, `V ⋈ V'`, `V ∪ V'`,
-  `V − V'`) with domain/`SC` bookkeeping [infra].
+  `V − V'`) with domain/`SC` bookkeeping (the view *instance* `evalAlg` is done) [infra].
 §2.2: the tuple calculus — syntax (2.2.2), generating part (2.2.3), views (2.2.4), expressive
   power (2.2.5) [infra: a first-order formula syntax + semantics over tuples].
 §2.3: SQL — syntax (2.3.2), generating part (2.3.3), views (2.3.4), expressive power (2.3.5)
@@ -68,5 +68,20 @@ abbrev algebra_intersection := @DeepWiki.inter
 step in showing the generating part (instances, `Π`, `ρ`, `⋈`, `∪`, `−`, computable instances)
 expresses the whole algebra. -/
 abbrev algebra_inter_from_diff := @DeepWiki.inter_eq_diff_diff
+
+/-! ## §2.1.2 / §2.1.4 Algebraic expressions and their view instances -/
+
+/-- **Algebraic expression** (§2.1.2, Fig 2.9, p.27): the abstract syntax of the relational
+algebra — base relation instances, computable instances, projection, selection, join, union and
+difference — denoting a table over its output attributes. -/
+abbrev algebra_expr := @DeepWiki.AlgExpr
+
+/-- **View instance represented by an algebraic expression** (§2.1.4, p.28): the denotational
+semantics `evalAlg` mapping an algebraic expression to the table it represents. -/
+abbrev algebra_view_instance := @DeepWiki.evalAlg
+
+/-- **Generating part expresses intersection** (§2.1.5, p.28), expression level: `e − (e − e')`
+denotes `e ∩ e'`. -/
+abbrev algebra_expr_inter := @DeepWiki.evalAlg_inter
 
 end DeepWiki.Rdb
