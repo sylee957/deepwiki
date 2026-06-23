@@ -8,6 +8,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
 import DeepWiki.NetworkCalculus.TandemLinearProgram
 import DeepWiki.NetworkCalculus.TandemFifoMilp
+import DeepWiki.NetworkCalculus.TandemWorstCaseExamples
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -16,8 +17,8 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§11.1: Example 11.1 (two-server tandem, figure) `[deferred]`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); residual `[infra]`: the optimization half (LP optimum = worst case) needs a solver/extremal-trajectory argument, not a closed-form lemma.
-§11.2: Example 11.2 (single FIFO node, figure) `[deferred]`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
+§11.1: Example 11.1 (two-server tandem worked delay bound) is `ex_11_1`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); residual `[infra]`: the optimization half (LP optimum = worst case) needs a solver/extremal-trajectory argument, not a closed-form lemma.
+§11.2: Example 11.2 (single FIFO node, closed-form worst-case delay `T+(b₁+b₂)/R`) is `ex_11_2`. Theorem 11.2 general FIFO tandem is now done as DATA + soundness (`lemma_11_1_1` big-M order encoding, `thm_11_2_sound`: the FIFO MILP = arbitrary-mux tandem LP + per-server big-M FIFO ordering, feasibility ⟹ delay ≤ objective, FIFO optimum ≤ arbitrary-mux optimum); residual `[infra]`: the exponential binary-tree multi-flow layout (`Fᵢ^{(h)}`/`pᵢ`/`Fl(h)`) and the MILP-optimum = worst-case `≥` direction (the §11.2.2 trajectory-from-solution reconstruction over the `2^?` Boolean orderings — an extremal/existence argument, not a closed form). -/
 
 namespace DeepWiki.Dnc
 
@@ -250,5 +251,27 @@ theorem thm_11_2_sound {n : ℕ} {N : DeepWiki.TandemLP.Tandem n} {M : ℝ}
     (hRmin : ∀ h : Fin n, Rmin ≤ N.rate h) (hstab : N.rate0 < Rmin) :
     DeepWiki.TandemFifo.fifoDelay v ≤ DeepWiki.TandemLP.objectiveValue N Rmin :=
   DeepWiki.TandemFifo.fifoDelay_le_objectiveValue hv hRmin hstab
+
+/-- **Example 11.2** (§11.2.1, p.263): one FIFO server with two token-bucket flows `γ_{rᵢ,bᵢ}` under
+rate-latency `β_{R,T}` (Table 11.2 LP). The worst-case end-to-end delay is the CLOSED-FORM program
+optimum `T + (b₁+b₂)/R` (single node ⟹ exact, both bound and attaining witness). The library's
+`DeepWiki.TandemWorstCaseExamples.example_11_2_fifo_optimum` (symmetric equal-flow case
+`T + 2b/R`). Curves are symbolic (the book gives no figure numerics). -/
+theorem ex_11_2 {b₁ b₂ r₁ r₂ R T : ℝ} (hR : 0 < R) (hstab : r₁ + r₂ ≤ R)
+    (hb₁ : 0 ≤ b₁) (hb₂ : 0 ≤ b₂) (hT : 0 ≤ T) :
+    programOptimum (FifoNodeFeasible b₁ b₂ r₁ r₂ R T) (fun v => ((fifoNodeDelay v : ℝ) : EReal))
+      = ((T + (b₁ + b₂) / R : ℝ) : EReal) :=
+  DeepWiki.TandemWorstCaseExamples.example_11_2_fifo_optimum hR hstab hb₁ hb₂ hT
+
+/-- **Example 11.1** (§11.1.1, p.258): the two-server tandem of Figure 10.2 with token-bucket arrivals
+`γ_{r,b}` (each flow) and strict rate-latency `β_{R,T}` (each server). The §11.1.3 soundness half: every
+feasible Table-11.1 LP point has end-to-end delay `≤ (2RT+2b)/(R−2r)` (aggregating the two `γ_{r,b}`
+flows into `γ_{2r,2b}`), under stability `2r < R`. The library's
+`DeepWiki.TandemWorstCaseExamples.example_11_1_delay_bound` (objective
+`example_11_1_objectiveValue`). The optimum-equals-worst-case direction is the `[infra]` solver half. -/
+theorem ex_11_1 {b r R T : ℝ} (hstab : 2 * r < R) {v : TandemLP.Vars 2}
+    (hv : TandemLP.Feasible (TandemWorstCaseExamples.example_11_1_tandem b r R T) v) :
+    TandemLP.delay v ≤ (2 * (R * T) + 2 * b) / (R - 2 * r) :=
+  DeepWiki.TandemWorstCaseExamples.example_11_1_delay_bound hstab hv
 
 end DeepWiki.Dnc
