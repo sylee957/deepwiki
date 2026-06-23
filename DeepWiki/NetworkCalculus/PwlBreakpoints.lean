@@ -1,5 +1,6 @@
 import DeepWiki.NetworkCalculus.ConvexConvByLine
 import DeepWiki.NetworkCalculus.ConvexSegmentMerge
+import DeepWiki.NetworkCalculus.ContainerCanonical
 
 /-! # Breakpoint / rank structure of a convex PWL (§4.4 infra)
 The book's Prop 4.4 [4.13] and Def 4.4 finiteness rest on the breakpoint structure of a
@@ -227,5 +228,103 @@ example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k : ℕ)
 example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (h : breakpoints segs ≠ []) :
     convexSegEval f0 fs segs ((breakpoints segs).getLast h) = f0 + cornerSum segs := by
   rw [breakpoints_getLast, convexSegEval_pwlRank]
+
+/-! ## The `Θ`-meet over breakpoints (Prop 4.4 [4.13])
+
+The book's `Θ_f̲ = ⋀ᵢ Θ^{κᵢ}_{τᵢ}` (eq. [4.13]) decomposes the finite part of a convex PWL as
+the `(min,+)` meet (dioid `+ = ⊓`) of the container elementary functions `Θ^{κᵢ}_{τᵢ}`
+(`DeepWiki.Theta`: `κ` on `[0, τ]`, `⊤` after) pinned at the non-differentiable points `τᵢ` with
+corner value `κᵢ = f(τᵢ)`. Each generator caps the curve at a corner; their meet samples `f` at
+the breakpoints and is `⊤` past the last (the finite region's lower-envelope construction). -/
+
+/-- The list of `Θ` generators for the breakpoints of `convexSegEval f0 fs segs`: one
+`Θ^{κᵢ}_{τᵢ}` per finite segment, with rank `τᵢ` the `i`-th breakpoint and corner value
+`κᵢ = ↑(convexSegEval f0 fs segs τᵢ)`. -/
+noncomputable def breakpointThetas (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) :
+    List (ℝ≥0 → EReal) :=
+  (breakpoints segs).map (fun τ => Theta ((convexSegEval f0 fs segs τ : ℝ≥0) : EReal) τ)
+
+/-- Pointwise meet of a list of `EReal`-valued spot functions (identity `⊤`); the dioid sum
+`⋀ = ⊓` of [4.13]. -/
+noncomputable def meetSpots (gs : List (ℝ≥0 → EReal)) : ℝ≥0 → EReal :=
+  fun t => (gs.map (fun g => g t)).foldr (· ⊓ ·) ⊤
+
+@[simp] theorem meetSpots_nil : meetSpots [] = fun _ => ⊤ := rfl
+
+@[simp] theorem meetSpots_cons (g : ℝ≥0 → EReal) (gs : List (ℝ≥0 → EReal)) :
+    meetSpots (g :: gs) = fun t => g t ⊓ meetSpots gs t := rfl
+
+/-- Each generator dominates the meet: `meetSpots gs t ≤ g t` for `g ∈ gs` (the meet is below
+every elementary function). -/
+theorem meetSpots_le_of_mem {gs : List (ℝ≥0 → EReal)} {g : ℝ≥0 → EReal} (hg : g ∈ gs)
+    (t : ℝ≥0) : meetSpots gs t ≤ g t := by
+  induction gs with
+  | nil => simp at hg
+  | cons hd tl ih =>
+      rw [meetSpots_cons]
+      rcases List.mem_cons.mp hg with rfl | hg
+      · exact inf_le_left
+      · exact le_trans inf_le_right (ih hg)
+
+/-- A pointwise lower bound for the meet: if `x ≤ g t` for every `g ∈ gs`, then `x ≤ meetSpots gs t`. -/
+theorem le_meetSpots {gs : List (ℝ≥0 → EReal)} {x : EReal} {t : ℝ≥0}
+    (h : ∀ g ∈ gs, x ≤ g t) : x ≤ meetSpots gs t := by
+  induction gs with
+  | nil => simp
+  | cons hd tl ih =>
+      rw [meetSpots_cons]
+      exact le_inf (h hd List.mem_cons_self) (ih (fun g hg => h g (List.mem_cons_of_mem _ hg)))
+
+/-- **The `Θ`-meet is a pointwise upper bound of the curve.** The lifted curve is everywhere below
+the meet of its breakpoint generators:
+`↑(convexSegEval f0 fs segs t) ≤ meetSpots (breakpointThetas f0 fs segs) t`. (On the finite region
+each generator caps at a corner `≥ f(t)` by monotonicity; past the rank every generator is `⊤`.) -/
+theorem convexSegEval_le_meet_breakpointThetas (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    (t : ℝ≥0) :
+    ((convexSegEval f0 fs segs t : ℝ≥0) : EReal)
+      ≤ meetSpots (breakpointThetas f0 fs segs) t := by
+  refine le_meetSpots (fun g hg => ?_)
+  rw [breakpointThetas, List.mem_map] at hg
+  obtain ⟨τ, _, rfl⟩ := hg
+  rcases le_or_gt t τ with hle | hlt
+  · rw [Theta_of_le hle]
+    exact_mod_cast (monotone_convexSegEval fs segs f0) hle
+  · -- past this breakpoint the generator is `⊤`, trivially above
+    rw [Theta_of_lt hlt]; exact le_top
+
+/-- **The `Θ`-meet samples the curve exactly at each breakpoint.** At a breakpoint `τ ∈ breakpoints`
+the meet equals the corner value, `meetSpots (breakpointThetas f0 fs segs) τ = ↑(convexSegEval f0 fs segs τ)`:
+[4.13]'s generators pin `Θ_f̲` to the curve at the non-differentiable points. -/
+theorem meet_breakpointThetas_eq_at_breakpoint (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    {τ : ℝ≥0} (hτ : τ ∈ breakpoints segs) :
+    meetSpots (breakpointThetas f0 fs segs) τ
+      = ((convexSegEval f0 fs segs τ : ℝ≥0) : EReal) := by
+  refine le_antisymm ?_ (convexSegEval_le_meet_breakpointThetas f0 fs segs τ)
+  -- the generator at `τ` itself takes value `κ_τ = f(τ)` there (`Theta_self`)
+  have hmem : Theta ((convexSegEval f0 fs segs τ : ℝ≥0) : EReal) τ ∈ breakpointThetas f0 fs segs := by
+    rw [breakpointThetas, List.mem_map]; exact ⟨τ, hτ, rfl⟩
+  refine le_of_le_of_eq (meetSpots_le_of_mem hmem τ) ?_
+  rw [Theta_self]
+
+/-- **The `Θ`-meet is `⊤` past the last breakpoint.** For `pwlRank segs < t` no generator's prefix
+covers `t`, so the meet is `⊤` — the breakpoint generators bound only the finite region, and the
+asymptote is a separate (sloped) generator. (Hence [4.13]'s meet of *constant* `Θ`'s is not the
+full pointwise curve; the asymptote needs an affine generator.) -/
+theorem meet_breakpointThetas_eq_top_past_rank (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0))
+    {t : ℝ≥0} (ht : pwlRank segs < t) :
+    meetSpots (breakpointThetas f0 fs segs) t = ⊤ := by
+  rw [eq_top_iff]
+  refine le_meetSpots (fun g hg => ?_)
+  rw [breakpointThetas, List.mem_map] at hg
+  obtain ⟨τ, hτ, rfl⟩ := hg
+  rw [Theta_of_lt (lt_of_le_of_lt (le_pwlRank_of_mem_breakpoints segs hτ) ht)]
+
+/-- Faithfulness check: at the rank, the `Θ`-meet equals the corner value `↑(f0 + cornerSum segs)`. -/
+example (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (h : segs ≠ []) :
+    meetSpots (breakpointThetas f0 fs segs) (pwlRank segs)
+      = (((f0 + cornerSum segs : ℝ≥0) : ℝ) : EReal) := by
+  rw [meet_breakpointThetas_eq_at_breakpoint f0 fs segs (pwlRank_mem_breakpoints segs h),
+    convexSegEval_pwlRank]
+  norm_cast
 
 end DeepWiki
