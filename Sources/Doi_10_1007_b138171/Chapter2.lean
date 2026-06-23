@@ -23,9 +23,11 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
-§2.6: Czichowski's `R₁ = radical(res_x(A − z·D', D))` (Lemma 2.2(iii)) — the content `R₁` of the
-  first Gröbner-basis element is the squarefree part of the resultant [now reachable: the
-  reduced-Gröbner-basis and Lazard-`Pₖ=Rₖ·Sₖ` infra it deferred to is formalized].
+§2.6: Czichowski's `R₁ = radical(resultant)` (Lemma 2.2(iii)) only as the *Gröbner-basis-syntactic*
+  identification — the resultant side is done (`rtResultant_roots_toFinset`: the distinct roots of
+  `res_x(A − z·D', D)` are the residues, so its radical `R₁ = ∏(t − distinct residue)` divides it,
+  `czichowskiR1_dvd_rtResultant`); what remains is that this `R₁` is the first reduced-GB element's
+  `x`-content [deferred: needs the `x > z` reduced GB of `⟨A − z·D', D⟩` (our GB is `z > x`)].
 §2.7: Thm 2.7.1 (the Bronstein–Salvy full-partial-fraction coefficients `Hᵢⱼ`) [functional/infra:
   needs the Laurent-series coefficient algorithm].
 §2.8: Thm 2.8.1; Thm 2.8.4; Rioboo's real-rational-function algorithm; Ex 2.8.1; Ex 2.8.2.

@@ -1,4 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
+import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.GroebnerBasis
 import Sources.Doi_10_1006_jsco_1995_1043.Source
 
 /-! # Czichowski catalog — the integral connection (Lemma 2.3 + part (iii))
@@ -7,9 +9,10 @@ logarithms `S(x,c) = gcd(D, A − c·D')` are exactly the Rothstein–Trager gcd
 `∫ A/D = ∑ c·log(gcd(D, A − c·D'))` is the same logarithmic part as the §2.4/§2.5 RT/LRT result.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-The Gröbner-basis *structure* — the reduced-GB factorization `Pₖ = Rₖ·Sₖ`, `R_{k+1} ∣ Rₖ`,
-`R₁ = radical(resultant)`, and the reduced-Gröbner-basis definition/existence — [infra: reduced Gröbner
-bases]. -/
+Czichowski's `R₁ = radical(resultant)` (Lemma 2.2(iii)) only as the *Gröbner-basis-syntactic*
+identification: that the explicit radical `R₁ = ∏_{distinct residue a}(t − a)` (formalized below, the
+resultant side) is the first reduced-GB element's `x`-content [deferred: needs the `x > z` reduced GB of
+`⟨A − z·D', D⟩`; our `z > x` GB (`isGroebnerBasis_gb`) and the radical/resultant side are done]. -/
 
 open scoped Classical
 
@@ -25,5 +28,20 @@ abbrev lemma_2_3_gcd := @DeepWiki.SymbolicIntegration.gcd_nodal_eq_prod_residue
 Lazard–Rioboo–Trager (§2.4/§2.5), with the RT gcd as the log argument. The library's
 `ratFunc_eq_sum_residue_gcd`. -/
 abbrev integral_logForm_gcd := @DeepWiki.SymbolicIntegration.ratFunc_eq_sum_residue_gcd
+
+/-- **Lemma 2.2(iii)** (p.165, resultant side): the distinct roots of `R = res_x(A − t·D', D)` are exactly
+the distinct residues `{A(α)/D'(α) : D(α) = 0}`, so the radical (squarefree part) of the resultant is
+`∏(t − distinct residue)` — Czichowski's `R₁`. The library's `rtResultant_roots_toFinset`. -/
+abbrev lemma_2_2_iii_roots := @DeepWiki.SymbolicIntegration.rtResultant_roots_toFinset
+
+/-- **Lemma 2.2(iii)** (p.165, radical-divides): `R₁ = ∏(t − distinct root) ∣ R` — `R₁` is the squarefree
+part (radical) of the resultant. The library's `czichowskiR1_dvd_rtResultant`. -/
+abbrev lemma_2_2_iii_radical_dvd := @DeepWiki.SymbolicIntegration.czichowskiR1_dvd_rtResultant
+
+/-- **The reduced-Gröbner-basis structure** Czichowski's note rests on, now general (Bronstein §2.6
+defers to it): `Pₖ = Rₖ·Sₖ` for any reduced bivariate GB (`lazard_Pk_eq_Rk_Sk_unconditional`), built on
+reduced-GB existence (`exists_isReducedGroebnerBasis`). The library's `lazard_Pk_eq_Rk_Sk_unconditional`. -/
+abbrev groebner_structure_Pk_eq_Rk_Sk :=
+  @DeepWiki.SymbolicIntegration.lazard_Pk_eq_Rk_Sk_unconditional
 
 end DeepWiki.Czi

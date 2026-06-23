@@ -181,4 +181,27 @@ example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (hA : A.natDegree < D.na
     (rtResultant A D).rootMultiplicity a = (gcd D (A - C a * derivative D)).natDegree :=
   rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
 
+open scoped Classical in
+/-- **Distinct roots of the Rothstein–Trager resultant = the distinct residues** (Czichowski Lemma
+2.2(iii), resultant side): over an algebraically closed field with `D` separable and `deg A < deg D`, the
+*distinct* roots of `R = res_x(A − t·D', D)` are exactly the distinct residues `{A(α)/D'(α) : D(α) = 0}` —
+the `.toFinset` reading of `roots_rtResultant`. Hence the squarefree part (radical) of the resultant is
+`∏_{a}(t − a)` over the distinct residues, which is Czichowski's `R₁`. Identifying `R₁` with the first
+reduced-Gröbner-basis element's `x`-content is the remaining GB-syntactic step (needs the `x > z` basis). -/
+theorem rtResultant_roots_toFinset [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
+    (hA : A.natDegree < D.natDegree) :
+    (rtResultant A D).roots.toFinset
+      = D.roots.toFinset.image (fun α => A.eval α / (derivative D).eval α) := by
+  rw [roots_rtResultant A D hD hA, Multiset.toFinset_map]
+
+open scoped Classical in
+/-- **Czichowski's `R₁` divides the resultant** (Lemma 2.2(iii), the radical-divides direction): the monic
+squarefree `R₁ := ∏_{a}(t − a)` over the distinct roots of `R = res_x(A − t·D', D)` divides `R` — `R₁` is the
+squarefree part (radical). With `rtResultant_roots_toFinset` (those distinct roots are the residues), this is
+`R₁ = ∏ over distinct residues`, Czichowski's `R₁ = radical(resultant)`. -/
+theorem czichowskiR1_dvd_rtResultant [IsAlgClosed F] (A D : F[X]) :
+    ((rtResultant A D).roots.toFinset.prod (fun a => Polynomial.X - C a)) ∣ rtResultant A D :=
+  (Multiset.prod_dvd_prod_of_le (Multiset.map_le_map (Multiset.dedup_le _))).trans
+    (prod_multiset_X_sub_C_dvd _)
+
 end DeepWiki.SymbolicIntegration
