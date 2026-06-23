@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
+import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 
 /-! # Query-system equivalence (Codd's theorem), foundation
 The relational algebra, the tuple calculus and SQL express the same queries (§2.4–2.6). A
@@ -72,5 +73,29 @@ theorem evalQCond_diff (C D : QCond ι Ω Val) :
   rw [evalQCond_and, evalQCond_neg]
   ext t
   simp only [mem_inter, mem_diff, Set.mem_compl_iff]
+
+/-- The converse translation: every database-relation condition is a relational-algebra
+expression (negation uses the universe `comp (fun _ => True)` minus the subexpression). -/
+def qcondToAlg [DecidableEq Att] (db : ι → Table Ω Val) : QCond ι Ω Val → AlgExpr Att Val Ω
+  | .rel i => AlgExpr.rel (db i)
+  | .comp P => AlgExpr.comp P
+  | .neg C => AlgExpr.diff (AlgExpr.comp (fun _ => True)) (qcondToAlg db C)
+  | .and C D => (qcondToAlg db C).inter (qcondToAlg db D)
+  | .or C D => AlgExpr.union (qcondToAlg db C) (qcondToAlg db D)
+
+/-- The converse translation is correct: every quantifier-free database-relation calculus
+condition denotes the same table as its algebra translation. Together with `evalQCond_select`,
+`evalQCond_or` and `evalQCond_diff` this is the algebra ↔ calculus equivalence for the
+quantifier-free (projection- and join-free) fragment. -/
+theorem evalAlg_qcondToAlg [DecidableEq Att] (db : ι → Table Ω Val) (C : QCond ι Ω Val) :
+    evalAlg (qcondToAlg db C) = evalQCond db C := by
+  induction C with
+  | rel i => rw [qcondToAlg, evalAlg_rel, evalQCond_rel]
+  | comp P => rw [qcondToAlg, evalAlg_comp, evalQCond_comp]
+  | neg C ih =>
+    rw [qcondToAlg, evalAlg_diff, evalAlg_comp, ih, evalQCond_neg]
+    ext t; simp only [mem_diff, Set.mem_setOf_eq, Set.mem_compl_iff, true_and]
+  | and C D ihC ihD => rw [qcondToAlg, evalAlg_inter, ihC, ihD, evalQCond_and]
+  | or C D ihC ihD => rw [qcondToAlg, evalAlg_union, ihC, ihD, evalQCond_or]
 
 end DeepWiki

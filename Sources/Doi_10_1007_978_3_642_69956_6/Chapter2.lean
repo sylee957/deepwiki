@@ -137,6 +137,14 @@ abbrev reduction_select := @DeepWiki.evalQCond_select
 tables. -/
 abbrev reduction_diff := @DeepWiki.evalQCond_diff
 
+/-- **Converse translation calculus → algebra** (§2.4): every quantifier-free database-relation
+condition is a relational-algebra expression. -/
+abbrev reduction_calcToAlg := @DeepWiki.qcondToAlg
+
+/-- **Converse translation correctness** (§2.4): the algebra translation denotes the same table —
+giving the algebra ↔ calculus equivalence for the quantifier-free fragment. -/
+abbrev reduction_calcToAlg_correct := @DeepWiki.evalAlg_qcondToAlg
+
 /-! ## §2.3 SQL: Structured Query Language -/
 
 /-- **SQL query** (§2.3.1/§2.3.2, Fig 2.11, p.37): an elementary `Select … From … Where …` query
