@@ -2058,3 +2058,61 @@ theorem dvd_clearedIdentity_of_split {R D gd2 S : ℚ[X]} (hD : D ≠ 0)
   obtain ⟨N, hN⟩ := hgd
   exact ⟨N, by rw [hM]; linear_combination D * hN⟩
 
+/-- **Divisibility from a vanishing `cmod` remainder**: if `cmod fuel p q` reads to `0` and `q ≠ 0`
+(`cnorm q ≠ []`), then `toPoly q ∣ toPoly p`. The honest-division reading of an exact computable
+remainder (`toPoly_cdiv_of_cmod_zero`). -/
+theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    toPoly q ∣ toPoly p :=
+  ⟨toPoly (cdiv fuel p q), by rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, mul_comm]⟩
+
+open scoped Differential in
+/-- **`hermiteReduce` wrapper correctness from the two split divisibility certificates** in `RatFunc ℚ`:
+the cleared-identity premise factored into the loop's two structural `cmod`-vanishings —
+`hresD : D ∣ resNum'` (the global denominator divides the residual numerator `resNum' = A·gden² −
+D·gprimeNum`) and `hg2 : gden² ∣ (resNum'/D)·Dstar` (what remains after cancelling `D`) — under
+`D, gden ≠ 0`, `Dstar ≠ 0`, and a fuel bound. Concludes
+`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. These two certificates are the genuine
+loop content (`A/D − g′` clears to denominator `Dstar`), each decidably `cmod`-checkable on a
+concrete `D` — strictly cleaner than the monolithic `hermiteReduce_residual_correct_of_dvd`
+premise, which they assemble via `dvd_clearedIdentity_of_split`. -/
+theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+        (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
+    (hresD : toPoly (cmod fuel
+        (csub (cmul A (cmul gden gden))
+          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) = 0)
+    (hg2 : toPoly (cmod fuel
+        (cmul (cdiv fuel
+            (csub (cmul A (cmul gden gden))
+              (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) D) Dstar)
+        (cmul gden gden)) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  set resNum' := csub (cmul A (cmul gden gden))
+    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
+  -- nonzero divisors as `cnorm ≠ []`.
+  have hDne : cnorm D ≠ [] := fun h => hD ((cnorm_eq_nil_iff D).mp h)
+  have hgden2 : toPoly (cmul gden gden) ≠ 0 := by rw [toPoly_cmul]; exact mul_ne_zero hgden hgden
+  have hgden2ne : cnorm (cmul gden gden) ≠ [] := fun h => hgden2 ((cnorm_eq_nil_iff _).mp h)
+  -- cert 1: `D ∣ resNum'`.
+  have hDR : toPoly D ∣ toPoly resNum' := toPoly_dvd_of_cmod_zero fuel resNum' D hDne hresD
+  -- cert 2: `gden² ∣ (cdiv resNum' D)·Dstar`, and `toPoly (cdiv resNum' D) = resNum'/D`.
+  have hMeq : toPoly (cdiv fuel resNum' D) = toPoly resNum' / toPoly D := by
+    rw [toPoly_cdiv_of_cmod_zero fuel resNum' D hDne hresD, mul_div_cancel_right₀ _ hD]
+  have hg2dvd : toPoly (cmul gden gden) ∣ toPoly (cmul (cdiv fuel resNum' D) Dstar) :=
+    toPoly_dvd_of_cmod_zero fuel _ _ hgden2ne hg2
+  rw [toPoly_cmul, toPoly_cmul, hMeq] at hg2dvd
+  -- assemble the monolithic divisibility via the split lemma.
+  have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
+    rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
+    exact dvd_clearedIdentity_of_split hD hDR hg2dvd
+  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
+
