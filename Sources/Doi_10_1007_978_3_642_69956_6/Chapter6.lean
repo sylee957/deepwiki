@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.IncompleteInformation
+import DeepWiki.RelationalDatabases.NullValues
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 6: Incomplete Information
@@ -8,8 +9,8 @@ no-information nulls (§6.4) and the weak instance model (§6.5). The `DeepWiki.
 library formalizes the §6.2 updates on sets of possible instances, which are null-free.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-The null-value representation systems require a null-extended carrier (a value type with Codd
-`@` nulls and marked variables) not yet present.
+The null-extended carrier is now present (`NullTuple`/`NullTable` over `Option Val`, with the
+information order `MoreInfo`); the representation systems and theorems on top of it remain.
 §6.1: Codd tables, V-tables and C-tables; Def 6.1 (a representation system), Def 6.2
   (β-equivalence and β-representation); Theorems 6.1–6.7 on which classes of relational
   expressions (`P`, `S`, `S⁺`, `J`, `U`, `D`, `R`) each representation system can correctly
@@ -62,5 +63,21 @@ abbrev subjection_subset := @DeepWiki.subjection_subset
 /-- **Augmentation enlarges** (§6.2): an augmentation update can only grow the set of
 possibilities. -/
 abbrev augmentation_superset := @DeepWiki.subset_augmentation
+
+/-! ## §6.1 Null-extended carrier (Codd / V-tables) -/
+
+/-- **§6.1 carrier**: a null-extended tuple (Codd / V-table row) — each attribute carries a value
+or a null (`Option Val`). -/
+abbrev null_tuple := @DeepWiki.NullTuple
+
+/-- **§6.1 carrier**: a null-extended table. -/
+abbrev null_table := @DeepWiki.NullTable
+
+/-- **§6.1 information order**: `nt'` is at least as informative as `nt` (definite, equal wherever
+`nt` is definite) — a partial order (reflexive, transitive, antisymmetric). -/
+abbrev info_order := @DeepWiki.MoreInfo
+
+/-- **§6.1**: a definite tuple's total row is maximal in the information order. -/
+abbrev info_order_definite_maximal := @DeepWiki.moreInfo_toNull_iff
 
 end DeepWiki.Rdb
