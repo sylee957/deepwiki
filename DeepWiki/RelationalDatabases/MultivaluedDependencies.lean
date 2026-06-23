@@ -3,12 +3,11 @@ import DeepWiki.RelationalDatabases.FunctionalDependencies
 /-! # Multivalued dependencies
 A multivalued dependency `X ↠ Y` holds in a row set when, for any two rows agreeing on `X`,
 the "tuple swap" on `Y` versus `Ω − Y` stays in the relation (Def 3.8) — equivalently, the
-relation decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. Two basic inference rules are
-proved sound at the row-set level: every functional dependency is a multivalued dependency
-(FM1) and multivalued dependencies are closed under complementation `Y ↦ Ω − Y` (M1).
+relation decomposes losslessly onto `X ∪ Y` and `X ∪ (Ω − Y)`. The inference rules of the fd+mvd
+system are proved sound at the row-set level: FD-implies-MVD (FM1), complementation (M1),
+augmentation (M2), mvd-transitivity (M3) and mixed pseudotransitivity (FM2).
 
-The remaining axioms of the fd+mvd system (mvd-augmentation, mvd- and mixed pseudotransitivity),
-the dependency basis, Algorithm 3.3 and the completeness of the axiom system are layered on
+The dependency basis, Algorithm 3.3 and the completeness of the axiom system are layered on
 later. -/
 
 namespace DeepWiki
@@ -78,5 +77,52 @@ theorem satisfiesMvd_augment {X Y W V : Finset Att} (hVW : V ⊆ W) (h : Satisfi
     · exact Or.inl hW
     · exact Or.inr (Or.inl hX)
     · exact Or.inr (Or.inr ⟨haΩ, fun hY => hnVY (Or.inr hY)⟩)
+
+/-- Rule M3 (Theorem 3.10, mvd-transitivity): `X ↠ Y` and `Y ↠ Z` give `X ↠ (Z − Y)`. The witness
+swaps onto `Y` (via `X ↠ Y`, on the pair `u, t`) and then onto `Z` (via `Y ↠ Z`). -/
+theorem satisfiesMvd_trans {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
+    (hYZ : SatisfiesMvd r Y Z) : SatisfiesMvd r X (Z \ Y) := by
+  intro t ht u hu hag
+  obtain ⟨a, ha, hau, hat⟩ := hXY u hu t ht hag.symm
+  have haYu : Agree Y a u := Agree.mono Finset.subset_union_right hau
+  obtain ⟨w, hw, hwa, hwu⟩ := hYZ a ha u hu haYu
+  refine ⟨w, hw, ?_, ?_⟩
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff] at hb
+    rcases hb with hX | ⟨hZ, hnY⟩
+    · by_cases hYZb : b.val ∈ Y ∨ b.val ∈ Z
+      · rw [hwa b (Finset.mem_union.mpr hYZb), hau b (Finset.mem_union.mpr (Or.inl hX))]
+        exact (hag b hX).symm
+      · push Not at hYZb
+        rw [hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hYZb.2⟩)))]
+        exact (hag b hX).symm
+    · rw [hwa b (Finset.mem_union.mpr (Or.inr hZ))]
+      exact hat b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hnY⟩)))
+  · intro b hb
+    simp only [Finset.mem_union, Finset.mem_sdiff, not_and, not_not] at hb
+    rcases hb with hX | ⟨hbΩ, hZY⟩
+    · by_cases hYZb : b.val ∈ Y ∨ b.val ∈ Z
+      · rw [hwa b (Finset.mem_union.mpr hYZb)]
+        exact hau b (Finset.mem_union.mpr (Or.inl hX))
+      · push Not at hYZb
+        exact hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hYZb.2⟩)))
+    · by_cases hY : b.val ∈ Y
+      · rw [hwa b (Finset.mem_union.mpr (Or.inl hY))]
+        exact hau b (Finset.mem_union.mpr (Or.inr hY))
+      · exact hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨hbΩ, fun hZ => hY (hZY hZ)⟩)))
+
+/-- Rule FM2 (Theorem 3.10, mixed pseudotransitivity): `X ↠ Y` and `Y → Z` give `X → (Z − Y)`.
+The `X ↠ Y` witness `w` agrees with `t` on `Y` (hence on `Z`, by the functional dependency) and
+with `u` off `Y`, so `t` and `u` agree on `Z − Y`. -/
+theorem satisfiesFd_of_mvd_fd {X Y Z : Finset Att} (hXY : SatisfiesMvd r X Y)
+    (hYZ : SatisfiesFd r Y Z) : SatisfiesFd r X (Z \ Y) := by
+  intro t ht u hu hag
+  obtain ⟨w, hw, hwt, hwu⟩ := hXY t ht u hu hag
+  have hwZ : Agree Z w t := hYZ w hw t ht (Agree.mono Finset.subset_union_right hwt)
+  intro b hb
+  rw [Finset.mem_sdiff] at hb
+  have h2 : w b = u b :=
+    hwu b (Finset.mem_union.mpr (Or.inr (Finset.mem_sdiff.mpr ⟨b.property, hb.2⟩)))
+  exact (hwZ b hb.1).symm.trans h2
 
 end DeepWiki
