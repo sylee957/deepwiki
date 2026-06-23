@@ -98,4 +98,16 @@ theorem tendstoInDistribution_div_of_tendstoInMeasure_const [IsProbabilityMeasur
     (fun n => Filter.Eventually.of_forall fun ω => (div_eq_mul_inv _ _).symm)
     (Filter.Eventually.of_forall fun ω => (div_eq_mul_inv _ _).symm)
 
+/-- **Scalar convergence lifts to convergence in distribution of the scaled variable:** if `cₙ → c₀`
+then `cₙ • Y₀ ⇒ c₀ • Y₀` in distribution. The `Wₘ ⇒ Z` ingredient whenever a family of Gaussian (or
+other) limits is a converging scalar multiple of one base variable — used in the double-limit CLT
+assembly (the truncation limits `(∑_{j≤m} ψⱼ) Y₀ → (∑ψ) Y₀`) and scaling Slutsky arguments. -/
+theorem tendstoInDistribution_const_smul_of_tendsto {Ω' : Type*} [MeasurableSpace Ω']
+    {μ' : Measure Ω'} [IsProbabilityMeasure μ'] {c : ℕ → ℝ} {c₀ : ℝ}
+    (hc : Tendsto c atTop (𝓝 c₀)) {Y₀ : Ω' → ℝ} (hY₀ : AEMeasurable Y₀ μ') :
+    TendstoInDistribution (fun (n : ℕ) ω => c n • Y₀ ω) atTop (fun ω => c₀ • Y₀ ω)
+      (fun _ => μ') μ' :=
+  tendstoInDistribution_of_ae_tendsto (fun n => hY₀.const_smul (c n)) (hY₀.const_smul c₀)
+    (Filter.Eventually.of_forall fun ω => hc.smul_const (Y₀ ω))
+
 end DeepWiki.TimeSeries
