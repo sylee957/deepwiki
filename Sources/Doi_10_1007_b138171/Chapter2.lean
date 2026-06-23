@@ -12,6 +12,7 @@ import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
+import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import Sources.Doi_10_1007_b138171.Source
@@ -31,7 +32,7 @@ semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve
   construction, eqs 2.10–2.12) + the over-the-closure `Hᵢⱼ(α)/(x−α)ʲ` form [functional/infra: needs the
   differential-variable Laurent-coefficient engine]. (The `K[x]`-level complete-PFD *structure*
   `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` is `thm_2_7_1`.)
-§2.8: Thm 2.8.4; Rioboo's real-rational-function algorithm (`LogToReal`/`LogToAtan` recursion); Ex 2.8.1; Ex 2.8.2.
+§2.8: Thm 2.8.4; Rioboo's `LogToReal` real-rational-function recursion; Ex 2.8.1; Ex 2.8.2.
 §2.9: the full `IntegrateRationalFunction` in-field-integration algorithm.
 Exercises: Ex 2.2; Ex 2.3; Ex 2.4; Ex 2.5; Ex 2.7.
 (The transcendental part §2.3–§2.9 is resultant/PRS-based, rests on the §1.4 subresultant backlog,
@@ -474,6 +475,22 @@ turns `i·logDeriv((P+i)/(P−i))` into `2·P'/(1+P²)`. The denominator nonvani
 `sub_imag_ne_zero`/`add_imag_ne_zero` and `sq_add_one_ne_zero_of_quot` (`(P²+1)G² = (A²+B²)(C²+D²)`).
 The library's `logDeriv_imagQuot_eq_arctan_add_imagQuot`. -/
 abbrev thm_2_8_1_b := @DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctan_add_imagQuot
+
+/-- **`LogToAtan` algorithm** (§2.8, p.63): Rioboo's recursion converting a complex logarithm
+`i·log((A+iB)/(A−iB))` to a sum `∑ 2·arctan(P)` of real arctangents (`A, B ∈ K[x]`, `B ≠ 0`).
+`if B ∣ A return [A/B]`; `if deg A < deg B return LogToAtan(−B, A)`; else with `B·D − A·C = G =
+gcd(A,B)`, `return (A·D+B·C)/G :: LogToAtan(D, C)`. The library's `logToAtanAux` (fuel-bounded, total,
+embedding the operands into a characteristic-`0` differential field via a ring hom `φ` with `i² = −1`);
+the arctan-derivative sum of a list is `atanDerivSum`. -/
+noncomputable abbrev logToAtan_algorithm := @DeepWiki.SymbolicIntegration.logToAtanAux
+
+/-- **`LogToAtan` correctness** (§2.8, p.63): the output `f = ∑_{P∈L} 2·arctan(P)` of `LogToAtan(A, B)`
+satisfies `df/dx = d/dx · i·log((A+iB)/(A−iB))` — as derivatives, `∑_{P∈L} 2·P'/(1+P²) =
+i·logDeriv((φA+iφB)/(φA−iφB))`. Each branch is Theorem 2.8.1: base = Lemma 2.8.1 (`atanDerivSum_base`),
+swap = Thm 2.8.1(a) (`imagLog_swap`), step = Thm 2.8.1(b) (`imagLog_step`); the assembly is over the
+inductive run spec `IsLogToAtanRun`. The library's `isLogToAtanRun_correct` (and the fuel-def bridge
+`logToAtanAux_correct`). -/
+abbrev logToAtan_correct := @DeepWiki.SymbolicIntegration.isLogToAtanRun_correct
 
 /-! ## §2.6 The Czichowski Algorithm -/
 
