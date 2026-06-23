@@ -162,6 +162,7 @@ import DeepWiki.NetworkCalculus.ServersSystemClosure
 import DeepWiki.NetworkCalculus.ServiceCurveStrictTandem
 import DeepWiki.NetworkCalculus.ServiceCurveStrictTandemDilution
 import DeepWiki.NetworkCalculus.IntermediateServiceCurve
+import DeepWiki.NetworkCalculus.FifoResidualExample
 import DeepWiki.NetworkCalculus.ServersControlTandem
 import DeepWiki.NetworkCalculus.ServersControlFeedback
 import DeepWiki.NetworkCalculus.ServersControlFeedbackWindow

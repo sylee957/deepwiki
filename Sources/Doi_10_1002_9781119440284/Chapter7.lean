@@ -13,6 +13,7 @@ import DeepWiki.NetworkCalculus.ServersResidualPriority
 import DeepWiki.NetworkCalculus.ServersResidualPriorityPackets
 import DeepWiki.NetworkCalculus.ServiceCurveMinimal
 import DeepWiki.NetworkCalculus.ServiceCurveStrict
+import DeepWiki.NetworkCalculus.FifoResidualExample
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 7: Multiple Flows Crossing One Server
@@ -21,7 +22,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§7.3: Example 7.1 (FIFO 2-flow residual rate-latency, with figure) `[deferred]`. -/
+(empty — Chapter 7 is fully formalized.) -/
 
 namespace DeepWiki.Dnc
 
@@ -139,5 +140,19 @@ alias thm_7_10 := sum_apply_tsub_le_of_isDeadlineCompatible
 
 /-- **Theorem 7.11** (§7.3.4.3, p.181): Sufficient condition: an EDF server with strict left-continuous aggregate β meeting ∑_i α_i ∗ δ_{d_i} ≤ β (the capacity condition) is deadline compatible. -/
 alias thm_7_11 := isDeadlineCompatible_of_isEdf
+
+/-- **Example 7.1** (§7.3.1.3, p.169): residual service curve for a FIFO server crossed by two flows,
+cross flow 2 with token-bucket arrival `γ_{r,b}`, aggregate rate-latency `β_{R,T}` (`r < R`). Via Thm
+7.5 `β₁^θ = [β − α₂ ∗ δ_θ]⁺ ∧ δ_θ`: for `θ ≤ b/R+T` it is the rate-latency `β_{R−r, (b+RT−rθ)/(R−r)}`
+(`fifoResidual_rateLatencyNN_affine`), maximized at `θ₀ = b/R+T` giving `β_{R−r, b/R+T}`
+(`fifoResidual_rateLatencyNN_affine_optimal`); for `θ ≥ b/R+T` it is a shifted token bucket
+(`fifoResidual_rateLatencyNN_affine_late`). The served form: a 2-flow FIFO server gives flow 0 the
+rate-latency residual `A₀ ∗ β_{R−r, b/R+T} ≤ D₀` (`minConv_rateLatencyResidual_le_of_isFifo_two`). The
+library's `DeepWiki.fifoResidual_rateLatencyNN_affine_optimal`. (Curves symbolic; the book's "ρ" in the
+residual rate is an OCR/typo for the cross-rate `r`.) -/
+theorem ex_7_1 (R T r b : ℝ≥0) (hR : r < R) (hRpos : 0 < R) :
+    fifoResidual (rateLatencyNN R T) (affine r b) (b / R + T)
+      = rateLatencyNN (R - r) (b / R + T) :=
+  DeepWiki.fifoResidual_rateLatencyNN_affine_optimal R T r b hR hRpos
 
 end DeepWiki.Dnc
