@@ -2058,6 +2058,17 @@ theorem dvd_clearedIdentity_of_split {R D gd2 S : ℚ[X]} (hD : D ≠ 0)
   obtain ⟨N, hN⟩ := hgd
   exact ⟨N, by rw [hM]; linear_combination D * hN⟩
 
+/-- **The cleared-identity divisibility from `Dstar ∣ D` plus one cleaner divisibility** (`ℚ[X]`
+level): if `S ∣ D` (so `D = S·W`, the radical clause `Dstar ∣ D`) and `W·gd2 ∣ R` (the single residual
+cert), then `D·gd2 ∣ R·S`. Cancelling the common `S`: `D·gd2 = S·(W·gd2)` and `R·S = S·R`, so the
+claim is `W·gd2 ∣ R`. Folds the **proven** radical-divides fact (`toPoly_Dstar_dvd_D`) into the
+divisibility, leaving a *single* `cmod`-cert `(D/Dstar)·gden² ∣ resNum'` to discharge. -/
+theorem dvd_clearedIdentity_of_radical {R D gd2 S W : ℚ[X]}
+    (hSD : D = S * W) (hWgd : W * gd2 ∣ R) :
+    D * gd2 ∣ R * S := by
+  obtain ⟨N, hN⟩ := hWgd
+  exact ⟨N, by rw [hSD]; linear_combination S * hN⟩
+
 /-- **Divisibility from a vanishing `cmod` remainder**: if `cmod fuel p q` reads to `0` and `q ≠ 0`
 (`cnorm q ≠ []`), then `toPoly q ∣ toPoly p`. The honest-division reading of an exact computable
 remainder (`toPoly_cdiv_of_cmod_zero`). -/
@@ -2114,6 +2125,54 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
     exact dvd_clearedIdentity_of_split hD hDR hg2dvd
+  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
+
+open scoped Differential in
+/-- **`hermiteReduce` wrapper correctness from the radical clause plus one cert** in `RatFunc ℚ`: the
+cleared-identity premise reduced using the **proven** radical-divides fact `Dstar ∣ D`
+(`hDstarD`, from `toPoly_Dstar_dvd_D`/`SqfreeYun` when `Dstar` is the computed radical). With
+`W = D/Dstar`, the single residual cert `hWgd : W·gden² ∣ resNum'` (a `cmod`-vanishing) then suffices.
+Under `D, gden ≠ 0`, `Dstar ≠ 0` and a fuel bound, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am
+Dstar`. This is the cleanest divisibility input: the *abstract* radical content folded in, leaving one
+decidable cert. -/
+theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+        (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
+    (hfuelD : (cnorm D).length ≤ fuel)
+    (hDstarD : toPoly Dstar ∣ toPoly D)
+    (hWgd : toPoly (cmod fuel
+        (csub (cmul A (cmul gden gden))
+          (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))))
+        (cmul (cdiv fuel D Dstar) (cmul gden gden))) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  set resNum' := csub (cmul A (cmul gden gden))
+    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
+  have hWeq : toPoly D = toPoly Dstar * toPoly (cdiv fuel D Dstar) := by
+    have hrem : toPoly (cmod fuel D Dstar) = 0 := cmod_eq_zero_of_dvd fuel D Dstar hDstar hfuelD hDstarD
+    rw [toPoly_cdiv_of_cmod_zero fuel D Dstar hDstar hrem, mul_comm]
+  -- the single residual cert: `(cdiv D Dstar)·gden² ∣ resNum'`.
+  have hWgdne : cnorm (cmul (cdiv fuel D Dstar) (cmul gden gden)) ≠ [] := by
+    intro h
+    have h0 : toPoly (cmul (cdiv fuel D Dstar) (cmul gden gden)) = 0 := (cnorm_eq_nil_iff _).mp h
+    rw [toPoly_cmul, toPoly_cmul] at h0
+    rcases mul_eq_zero.mp h0 with h1 | h2
+    · rw [hWeq, h1, mul_zero] at hD; exact hD rfl
+    · rcases mul_eq_zero.mp h2 with hh | hh <;> exact hgden hh
+  have hWgddvd : toPoly (cmul (cdiv fuel D Dstar) (cmul gden gden)) ∣ toPoly resNum' :=
+    toPoly_dvd_of_cmod_zero fuel _ _ hWgdne hWgd
+  rw [toPoly_cmul, toPoly_cmul] at hWgddvd
+  -- assemble the monolithic divisibility through the radical reduction.
+  have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
+    rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
+    exact dvd_clearedIdentity_of_radical (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
 
 /-! ### The decidable residual-honesty bundle and the unconditional wrapper
