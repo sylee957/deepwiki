@@ -27,3 +27,4 @@ import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
+import DeepWiki.SymbolicIntegration.LrtMonicLogs
