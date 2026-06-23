@@ -1,0 +1,56 @@
+import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
+import Mathlib.MeasureTheory.Function.ConvergenceInDistribution
+
+/-! # Lévy–Prokhorov bound from convergence in measure
+The technical heart of the **double-limit theorem** for convergence in distribution
+(Billingsley, *Convergence of Probability Measures*, Theorem 3.2): if two random variables are
+close *in measure*, their laws are close in the **Lévy–Prokhorov metric**. Concretely
+`levyProkhorovEDist (μ.map X) (μ.map Y) ≤ ofReal r ⊔ μ{ω | r ≤ dist (X ω) (Y ω)}`, from the set
+inclusion `{X ∈ B} ⊆ {Y ∈ thickening_r B} ∪ {dist (X,Y) ≥ r}`. This is the estimate that lets a
+sequence of approximating processes (e.g. the finite `MA(q)` truncations of a linear process)
+control the law of the limiting process. -/
+
+open MeasureTheory Filter Metric Set
+open scoped Topology ENNReal NNReal
+
+namespace DeepWiki.TimeSeries
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+
+/-- **In-measure ⟹ Lévy–Prokhorov bound:** for measurable `X, Y` into a metric space and `r > 0`,
+the Lévy–Prokhorov edistance of their laws is bounded by `ofReal r ⊔ μ{ω | r ≤ dist (X ω) (Y ω)}`.
+The set inclusion `{X ∈ B} ⊆ {Y ∈ thickening_ε B} ∪ {dist (X,Y) ≥ r}` (with `r ≤ ε`) makes each
+of the two Lévy–Prokhorov defining inequalities hold. -/
+theorem levyProkhorovEDist_map_le {E : Type*} [PseudoMetricSpace E] [MeasurableSpace E]
+    [OpensMeasurableSpace E] (X Y : Ω → E) (hX : Measurable X) (hY : Measurable Y) {r : ℝ}
+    (hr : 0 < r) :
+    levyProkhorovEDist (μ.map X) (μ.map Y)
+      ≤ ENNReal.ofReal r ⊔ μ {ω | r ≤ dist (X ω) (Y ω)} := by
+  set p : ℝ≥0∞ := μ {ω | r ≤ dist (X ω) (Y ω)} with hp
+  refine levyProkhorovEDist_le_of_forall _ _ _ (fun ε B hδε hεtop hB => ?_)
+  have hrε : r ≤ ε.toReal := by
+    have hofr : ENNReal.ofReal r ≤ ε := le_of_lt (lt_of_le_of_lt le_sup_left hδε)
+    calc r = (ENNReal.ofReal r).toReal := (ENNReal.toReal_ofReal hr.le).symm
+      _ ≤ ε.toReal := ENNReal.toReal_mono hεtop.ne hofr
+  have hpε : p ≤ ε := le_of_lt (lt_of_le_of_lt le_sup_right hδε)
+  -- generic one-sided bound: `μ(U⁻¹B) ≤ μ(V⁻¹ thickening) + μ{dist (U,V) ≥ r}`
+  have one_side : ∀ (U V : Ω → E), Measurable U → Measurable V →
+      (μ.map U) B ≤ (μ.map V) (thickening ε.toReal B) + μ {ω | r ≤ dist (U ω) (V ω)} := by
+    intro U V hU hV
+    rw [Measure.map_apply hU hB, Measure.map_apply hV isOpen_thickening.measurableSet]
+    refine le_trans (measure_mono ?_) (measure_union_le _ _)
+    intro ω hω
+    rw [Set.mem_preimage] at hω
+    by_cases hd : r ≤ dist (U ω) (V ω)
+    · exact Or.inr hd
+    · refine Or.inl ?_
+      rw [Set.mem_preimage]
+      refine mem_thickening_iff.mpr ⟨U ω, hω, ?_⟩
+      rw [dist_comm]
+      exact lt_of_lt_of_le (not_le.mp hd) hrε
+  refine ⟨le_trans (one_side X Y hX hY) (add_le_add le_rfl hpε), ?_⟩
+  refine le_trans (one_side Y X hY hX) ?_
+  have hsymm : μ {ω | r ≤ dist (Y ω) (X ω)} = p := by
+    rw [hp]; congr 1; ext ω; simp only [Set.mem_setOf_eq, dist_comm]
+  rw [hsymm]
+  exact add_le_add le_rfl hpε
