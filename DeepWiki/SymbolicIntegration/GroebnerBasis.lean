@@ -3725,4 +3725,96 @@ theorem dvd_lazardView_of_mem_span {K : Type*}
     rw [lazardView, smul_eq_mul, map_mul]
     exact Dvd.dvd.mul_left hx _
 
+/-- **`HasNoCommonYFactor` for ANY reduced GB of the divided ideal `I'`** (the ideal-invariance
+bridge). Any reduced GB `hB'` of `dividedIdeal hB hne` has no common `y`-factor: a `P` dividing all
+`lazardView (sortedByYDegree hB' j)` divides `lazardView g` for every `g ∈ I'`
+(`dvd_lazardView_of_mem_span`, the `sortedByYDegree hB' j` generate `I'`), in particular every
+`monicDividedBasis hB hne i ∈ I'`; those have no common factor
+(`monicDividedBasis_hasNoCommonYFactor`), so `P` is a unit. This works for *any* presentation of `I'`
+— the no-common-factor property is an ideal invariant, not tied to the explicit divided basis. -/
+theorem hasNoCommonYFactor_of_dividedIdeal {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+      (↑B' : Set (MvPolynomial (Fin 2) K))) :
+    HasNoCommonYFactor hB' := by
+  intro P hP
+  -- `P` divides every basis view `lazardView (sortedByYDegree hB' j)`.
+  have hPB' : ∀ b' ∈ (↑B' : Set (MvPolynomial (Fin 2) K)), P ∣ lazardView b' := by
+    intro b' hb'
+    rw [← range_sortedByYDegree hB'] at hb'
+    obtain ⟨j, rfl⟩ := hb'
+    exact hP j
+  -- hence `P ∣ lazardView g` for every `g ∈ I' = span ↑B'`.
+  have hPg : ∀ g ∈ dividedIdeal hB hne, P ∣ lazardView g := by
+    intro g hg
+    refine dvd_lazardView_of_mem_span hPB' ?_
+    rwa [hB'.isGroebnerBasis.span_eq]
+  -- in particular `P` divides every `lazardView (monicDividedBasis hB hne i)`, which has no common factor.
+  refine monicDividedBasis_hasNoCommonYFactor hB hne P (fun i => ?_)
+  exact hPg _ (Ideal.subset_span ⟨i, rfl⟩)
+
+/-- **Lazard's `Pₖ = Rₖ·Sₖ` for the divided ideal, no `hassoc` needed** (the Theorem 1 structural
+conclusion, general case, discharged). For an **arbitrary** reduced bivariate GB `hB` and *any*
+reduced GB `hB'` of its divided ideal `I' = span {fᵢ/H}`, every sorted element of `hB'` splits as
+`lazardView fⱼ = C(cⱼ)·Sⱼ` with content `cⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and monic in `y`. The
+`HasNoCommonYFactor hB'` hypothesis of `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor` is discharged
+**automatically** by `hasNoCommonYFactor_of_dividedIdeal` (the ideal-invariance bridge) — replacing the
+hand-supplied `hassoc` recovery hypothesis of `lazard_Pk_eq_Rk_Sk_of_divideOut`. -/
+theorem lazard_Pk_eq_Rk_Sk_dividedIdeal {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+      (↑B' : Set (MvPolynomial (Fin 2) K)))
+    (j : Fin B'.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB' j) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB' j))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB' j))) (leadingYCoeff (sortedByYDegree hB' j)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor hB'
+    (hasNoCommonYFactor_of_dividedIdeal hB hne hB') j
+
+-- The divided family is a Gröbner basis of `I' = span {fᵢ/H}` (Lazard Thm 1, Part C).
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    IsGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+      (Set.range (monicDividedBasis hB hne)) :=
+  isGroebnerBasis_dividedBasis hB hne
+
+-- The divided basis has pairwise non-dividing leading monomials (minimal-GB condition).
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) {i i' : Fin B.card} (hii : i ≠ i') :
+    ¬ (MonomialOrder.lex.degree (monicDividedBasis hB hne i')
+        ≤ MonomialOrder.lex.degree (monicDividedBasis hB hne i)) :=
+  dividedBasis_leadingMonomial_not_le hB hne hii
+
+-- `g ∈ I' ⟺ H·g ∈ I` (the divided-ideal membership equivalence).
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) (g : MvPolynomial (Fin 2) K) :
+    g ∈ dividedIdeal hB hne ↔ gbCommonYFactor hB * g ∈ I :=
+  mem_dividedIdeal_iff hB hne g
+
+-- Any reduced GB of `I'` has no common `y`-factor (ideal invariance), hence `Pₖ = Rₖ·Sₖ`.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    {B' : Finset (MvPolynomial (Fin 2) K)}
+    (hB' : IsReducedGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+      (↑B' : Set (MvPolynomial (Fin 2) K))) :
+    HasNoCommonYFactor hB' :=
+  hasNoCommonYFactor_of_dividedIdeal hB hne hB'
+
 end DeepWiki.SymbolicIntegration
