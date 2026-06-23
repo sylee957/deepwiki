@@ -1161,3 +1161,58 @@ theorem yunStep_preserves {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ
   refine ⟨hgcd, c * w, mul_ne_zero hc hw0, hb', ?_⟩
   -- `d' = d/q − (b/q)′ = C(c*w)·(Y_{i+1} − Babs A (i+1)′) = C(c*w)·Dabs A (i+1)`.
   rw [hd', hb', derivative_C_mul, Dabs, Nat.add_sub_cancel, Babs, Nat.add_sub_cancel, mul_sub]
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- **The emitted Yun factor is associated to `Vᵢ`**: under `YunInv A i b d`, the monic gcd `gcd b d`
+(the i-th emitted squarefree factor) is `Associated (sqfreeFactPart A i)`. Hence it is squarefree
+(`squarefree_of_associated_sqfreeFactPart`); factors at distinct multiplicities are relatively prime
+(`isRelPrime_of_associated_sqfreeFactPart`). -/
+theorem yunStep_emit_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
+    Associated (gcd b d) (sqfreeFactPart A i) := by
+  rw [(yunStep_preserves A i hi hA hinv).1]
+  exact normalize_associated (sqfreeFactPart A i)
+
+/-! ### The abstract Yun loop and its factorwise correctness
+
+The abstract loop `yunLoopAbs A (b, d) i n` runs `n` Yun steps from the working pair `(b, d)` at
+multiplicity `i`, emitting `gcd bⱼ dⱼ` (the j-th squarefree factor) at each step. Iterating
+`yunStep_preserves` keeps `YunInv A (i+j)` along the run, so the j-th emitted factor is `Associated
+(sqfreeFactPart A (i+j))` — squarefree, and at distinct multiplicities pairwise relatively prime. -/
+
+open Classical in
+/-- **Abstract Yun loop**: `n` steps from `(b, d)` at multiplicity `i`, emitting `gcd bⱼ dⱼ` each step
+(the abstract counterpart of `csqfreeFactor.go`, with the `K[X]` monic `gcd` for `cmonic ∘ cgcdExt`
+and honest `/` for `cdiv`). -/
+noncomputable def yunLoopAbs {K : Type*} [Field K] (A : K[X]) : K[X] × K[X] → ℕ → ℕ → List K[X]
+  | _, _, 0 => []
+  | (b, d), i, (n + 1) =>
+      gcd b d :: yunLoopAbs A (b / gcd b d, d / gcd b d - derivative (b / gcd b d)) (i + 1) n
+
+open Classical in
+/-- **Abstract Yun loop correctness**: from `YunInv A i b d` (with `1 ≤ i`), the `n`-step run emits
+factors `[gcd b₁ d₁, …]` that are `Forall₂ Associated` to `[Vᵢ, Vᵢ₊₁, …, V_{i+n−1}]`
+(`sqfreeFactPart A (i+j)`). The decomposition spine: each Yun factor is, up to a constant, the
+matching squarefree-factorization part. Induction on `n` using `yunStep_emit_assoc` (head) and
+`yunStep_preserves` (tail invariant). -/
+theorem yunLoopAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
+    ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
+      List.Forall₂ Associated (yunLoopAbs A (b, d) i n)
+        ((List.range n).map (fun j => sqfreeFactPart A (i + j))) := by
+  intro n
+  induction n with
+  | zero => intro i b d _ _; simp [yunLoopAbs]
+  | succ n ih =>
+    intro i b d hi hinv
+    rw [yunLoopAbs, List.range_succ_eq_map, List.map_cons]
+    refine List.Forall₂.cons (yunStep_emit_assoc A i hi hA hinv) ?_
+    have hstep := (yunStep_preserves A i hi hA hinv).2
+    have htail := ih (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d))
+      (by omega) hstep
+    rw [List.map_map]
+    have hreindex : (List.range n).map ((fun j => sqfreeFactPart A (i + j)) ∘ Nat.succ)
+        = (List.range n).map (fun j => sqfreeFactPart A ((i + 1) + j)) :=
+      List.map_congr_left (fun j _ => by simp only [Function.comp_apply]; congr 1; omega)
+    rw [hreindex]
+    exact htail
