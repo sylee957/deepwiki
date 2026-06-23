@@ -491,4 +491,60 @@ theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
     hTlc.symm
 
+/-- `cnorm p = []` iff `toPoly p = 0` (the list normalizes to empty exactly for the zero polynomial). -/
+theorem cnorm_eq_nil_iff (p : CPoly) : cnorm p = [] ↔ toPoly p = 0 := by
+  constructor
+  · intro h; rw [← toPoly_cnorm, h, toPoly_nil]
+  · intro h
+    by_contra hne
+    have hcl := clead_ne_zero hne
+    rw [clead_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
+    exact hcl rfl
+
+/-- For a nonzero polynomial, the normalized list length is `natDegree + 1`. -/
+theorem length_cnorm_of_ne (p : CPoly) (h : cnorm p ≠ []) :
+    (cnorm p).length = (toPoly p).natDegree + 1 := by
+  have hd := cdeg_eq_natDegree p
+  rw [cdeg] at hd
+  have hlen : 1 ≤ (cnorm p).length := List.length_pos_iff.mpr h
+  omega
+
+/-- **One `cdivmod` step strictly shortens the normalized list** (the termination measure): the
+remainder-loop replacement `cnorm (p − (lcP/lcQ)·xᵏ·q)` (the exact term `cdivmod` subtracts) has
+strictly smaller normalized length than `p`. Proven by transporting `degree_reduce_step_lt`. -/
+theorem step_length_lt (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
+    (hpq : (cnorm q).length ≤ (cnorm p).length) :
+    (cnorm (csub (cnorm p)
+        (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q])
+          (cnorm q)))).length < (cnorm p).length := by
+  have hP : toPoly p ≠ 0 := fun h => hp ((cnorm_eq_nil_iff p).mpr h)
+  have hQ : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hk : (cnorm p).length - (cnorm q).length
+      = (toPoly p).natDegree - (toPoly q).natDegree := by
+    rw [length_cnorm_of_ne p hp, length_cnorm_of_ne q hq]; omega
+  have hc : clead p / clead q = (toPoly p).leadingCoeff / (toPoly q).leadingCoeff := by
+    rw [clead_eq_leadingCoeff, clead_eq_leadingCoeff]
+  set step := csub (cnorm p)
+    (cmul (cshift ((cnorm p).length - (cnorm q).length) [clead p / clead q]) (cnorm q))
+    with hstepdef
+  have hstep : toPoly step
+      = toPoly p - C ((toPoly p).leadingCoeff / (toPoly q).leadingCoeff)
+          * X ^ ((toPoly p).natDegree - (toPoly q).natDegree) * toPoly q := by
+    rw [hstepdef, toPoly_csub, toPoly_cnorm, toPoly_cmul, toPoly_cshift, toPoly_cnorm, hk, hc]
+    simp only [toPoly_cons, toPoly_nil, mul_zero, add_zero]
+    ring
+  have hpq' : (toPoly q).natDegree ≤ (toPoly p).natDegree := by
+    have e1 := length_cnorm_of_ne p hp
+    have e2 := length_cnorm_of_ne q hq
+    omega
+  have hdeg : (toPoly step).degree < (toPoly p).degree := by
+    rw [hstep]; exact degree_reduce_step_lt hP hQ hpq'
+  by_cases hs0 : toPoly step = 0
+  · rw [(cnorm_eq_nil_iff _).mpr hs0, List.length_nil]
+    exact List.length_pos_iff.mpr hp
+  · have hne : cnorm step ≠ [] := fun h => hs0 ((cnorm_eq_nil_iff _).mp h)
+    have hlt := Polynomial.natDegree_lt_natDegree hs0 hdeg
+    rw [length_cnorm_of_ne _ hne, length_cnorm_of_ne p hp]
+    omega
+
 end DeepWiki.SymbolicIntegration.Compute
