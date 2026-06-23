@@ -25,4 +25,13 @@ theorem isLittleOp_one_iff {X : ℕ → Ω → ℝ} {μ : Measure Ω} :
     IsLittleOp X (fun _ => 1) μ ↔ TendstoInMeasure μ X atTop (fun _ => 0) := by
   simp only [IsLittleOp, div_one]
 
+/-- **A uniform a.e. bound gives `Oₚ`**: if `|Xₙ / rₙ| ≤ C` almost everywhere for every `n`, then
+`Xₙ = Oₚ(rₙ)` (take the bound `M = C`; the exceeding set is null). -/
+theorem isBigOp_of_ae_bound {X : ℕ → Ω → ℝ} {r : ℕ → ℝ} {μ : Measure Ω} {C : ℝ}
+    (h : ∀ n, ∀ᵐ ω ∂μ, |X n ω / r n| ≤ C) : IsBigOp X r μ := fun ε _ =>
+  ⟨C, fun n => by
+    have hnull : μ {ω | C < |X n ω / r n|} = 0 :=
+      measure_mono_null (fun ω hω => not_le.mpr hω) (ae_iff.mp (h n))
+    rw [hnull]; exact zero_le⟩
+
 end DeepWiki.TimeSeries
