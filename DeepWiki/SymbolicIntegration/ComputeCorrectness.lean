@@ -318,4 +318,14 @@ theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q ≠ [])
   linear_combination (-toPoly p) * hdiv
     + (Polynomial.C (clead g)⁻¹ * toPoly rhs) * hbez + toPoly rhs * hinv
 
+/-- **`cgcdExt`'s gcd is greatest among common divisors**: any `d` dividing both `toPoly a` and
+`toPoly b` divides `toPoly (cgcdExt fuel a b).1` — immediate from the Bézout identity (`g` lies in the
+ideal `(a, b)`). Together with the (fuel-dependent) converse `g ∣ a, g ∣ b` this characterizes `g` as
+a gcd; this half is fuel-independent. -/
+theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : CPoly)
+    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) :
+    d ∣ toPoly (cgcdExt fuel a b).1 := by
+  rw [← toPoly_cgcdExt fuel a b]
+  exact dvd_add (ha.mul_left _) (hb.mul_left _)
+
 end DeepWiki.SymbolicIntegration.Compute
