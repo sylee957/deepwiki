@@ -1,6 +1,7 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
 import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 import DeepWiki.RelationalDatabases.TupleCalculus
+import DeepWiki.RelationalDatabases.Sql
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -27,8 +28,11 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   `Cond.atom` skeleton, semantics, the generating part 2.2.3/2.2.5 and views 2.2.4 are done)
   and the `DOM(Aᵢ)`-ranging existential of the book's view-instance definition [infra: concrete
   atoms + per-attribute domains].
-§2.3: SQL — syntax (2.3.2), generating part (2.3.3), views (2.3.4), expressive power (2.3.5)
-  [infra: an SQL syntax type].
+§2.3: the SQL elementary query `Select … From … Where …` internals — attribute lists, relation
+  lists, conditions (elementary conditions `f(…)`, comparisons, set-comparisons `sθ`, `IN`,
+  emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
+  generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
+  set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
 §2.4: the reduction of the tuple calculus to the relational algebra [research: the translation
   plus safety/domain-independence].
 §2.5: the reduction of the relational algebra to SQL [infra].
@@ -110,5 +114,20 @@ abbrev tupleCalc_conj_from_disj := @DeepWiki.evalCond_conj
 
 /-- **Generating part — implication** (§2.2.5, p.35): `C₁ ⇒ C₂ = (¬C₁) ∨ C₂`. -/
 abbrev tupleCalc_imp_from_disj := @DeepWiki.evalCond_imp
+
+/-! ## §2.3 SQL: Structured Query Language -/
+
+/-- **SQL query** (§2.3.1/§2.3.2, Fig 2.11, p.37): an elementary `Select … From … Where …` query
+combined by the set operations `UNION`, `MINUS`, `INTERSECTION` (here at the set-operation level,
+the elementary query given by its view instance). -/
+abbrev sql_query := @DeepWiki.SqlQuery
+
+/-- **View instance represented by an SQL query** (§2.3.4, p.43): the denotational semantics
+`evalSql` of an SQL query as a table. -/
+abbrev sql_view_instance := @DeepWiki.evalSql
+
+/-- **Generating part — intersection from difference** (§2.3.5, p.45): `α INTERSECTION β`
+denotes the same table as `α MINUS (α MINUS β)`. -/
+abbrev sql_inter_from_minus := @DeepWiki.evalSql_inter_eq_minus
 
 end DeepWiki.Rdb
