@@ -27,6 +27,24 @@ def Del (C : Condition Ω Val) (r : Table Ω Val) : Table Ω Val := {t ∈ r | �
 /-- **Insertion** `Ins(C, r)` (Def 8.4): `r` together with the tuples satisfying `C`. -/
 def Ins (C : Condition Ω Val) (r : Table Ω Val) : Table Ω Val := r ∪ {t | C t}
 
+/-- **Modification** `Mod(C, m, r)` (Def 8.4, function model): keep the tuples not satisfying
+`C`, and replace each tuple satisfying `C` by its image under the modification `m`. (The book's
+`Mod(C, C', r)` is the case where `m` overrides the attributes named in the target condition
+`C'`.) -/
+def Mod (C : Condition Ω Val) (m : Tuple Ω Val → Tuple Ω Val) (r : Table Ω Val) : Table Ω Val :=
+  Del C r ∪ m '' {t ∈ r | C t}
+
+/-- Modifying the selected tuples by the identity is a no-op: `Mod(C, id, r) = r`. -/
+theorem Mod_id (C : Condition Ω Val) (r : Table Ω Val) : Mod C id r = r := by
+  ext t
+  simp only [Mod, Del, Set.mem_union, Set.image_id, Set.mem_sep_iff]
+  constructor
+  · rintro (⟨ht, _⟩ | ⟨ht, _⟩) <;> exact ht
+  · intro ht
+    by_cases hC : C t
+    · exact Or.inr ⟨ht, hC⟩
+    · exact Or.inl ⟨ht, hC⟩
+
 @[simp] theorem mem_Del (C : Condition Ω Val) (r : Table Ω Val) (t : Tuple Ω Val) :
     t ∈ Del C r ↔ t ∈ r ∧ ¬ C t := Iff.rfl
 

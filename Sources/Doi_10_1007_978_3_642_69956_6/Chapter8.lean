@@ -9,9 +9,9 @@ specified by parameterized transactions (§8.3) and an axiomatization of transac
 operators, their distribution over union, and several equivalence rules.
 
 ## NOT YET FORMALIZED (audit 2026-06-23; subtractive — delete each item once it is formalized)
-§8.1: Def 8.3 / 8.4 the *modification* operator `Mod(C, C', r)` (the deletion and insertion
-  operators are done), the structured elementary conditions `A = a` / `A ≠ a` (Def 8.1; here
-  conditions are modelled as predicates) [infra].
+§8.1: the structured-`C'` modification `Mod(C, C', r)` where `C'` overrides the named attributes
+  (the general function-model `Mod(C, m, r)` is done), and the structured elementary conditions
+  `A = a` / `A ≠ a` (Def 8.1; here conditions are modelled as predicates) [infra].
 §8.2: Def 8.5 (a transaction as a sequence of actions), Def 8.6 (equivalent transactions),
   Def 8.7 (domain-tuples / domain-sets), Lemma 8.2, Algorithm 8.1 (polynomial equivalence
   decision) and Theorem 8.1 (its correctness) [infra: needs the transaction/action syntax].
@@ -38,6 +38,14 @@ abbrev def_8_4_deletion := @DeepWiki.Del
 
 /-- **Definition 8.4** (§8.1, p.204), insertion: `Ins(C, r)` adds the tuples satisfying `C`. -/
 abbrev def_8_4_insertion := @DeepWiki.Ins
+
+/-- **Definition 8.4** (§8.1, p.204), modification (function model): `Mod(C, m, r)` replaces each
+`C`-tuple by its image under `m`. -/
+abbrev def_8_4_modification := @DeepWiki.Mod
+
+/-- **Rule E1** (§8.4, p.211, function-model form): `Mod(C, id, r) = r` — modifying by the
+identity is a no-op. -/
+abbrev e1_mod_id := @DeepWiki.Mod_id
 
 /-! ## §8.2 Equivalent Transactions -/
 
