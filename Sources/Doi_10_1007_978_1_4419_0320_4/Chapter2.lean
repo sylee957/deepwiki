@@ -8,6 +8,7 @@ import Mathlib.Analysis.InnerProductSpace.GramSchmidtOrtho
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import DeepWiki.TimeSeries.BestLinearPredictor
+import DeepWiki.TimeSeries.LeastSquares
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 2: Hilbert Spaces
@@ -159,9 +160,14 @@ noncomputable abbrev gramSchmidtProcedure := @InnerProductSpace.gramSchmidt
 
 /-- **Theorem 2.5.2** (§2.5, p.59): a matrix/operator `M` is an (orthogonal) projection iff
 it is symmetric and idempotent, `Mᵀ = M ∧ M² = M`. Mathlib's `isStarProjection_iff`
-(`IsStarProjection ↔ IsIdempotentElem ∧ IsSelfAdjoint`). Theorem 2.5.1 (the least-squares form
-`P_ℳ = X(XᵀX)⁻¹Xᵀ` with normal equations `XᵀX β = Xᵀx`) is a derived matrix computation. -/
+(`IsStarProjection ↔ IsIdempotentElem ∧ IsSelfAdjoint`). -/
 alias thm_2_5_2 := isStarProjection_iff
+
+/-- **Theorem 2.5.1** (§2.5, p.58), the least-squares **normal equations** `XᵀX β = Xᵀx`: when `β`
+solves them, the residual `x − Xβ` is orthogonal to the column space of `X`, so `Xβ` is the
+least-squares projection of `x` onto `col(X)`. The library's `residual_orthogonal_of_normalEquations`
+(the characterization; the explicit closed form `P_ℳ = X(XᵀX)⁻¹Xᵀ` needs full-rank invertibility). -/
+alias thm_2_5_1 := DeepWiki.TimeSeries.residual_orthogonal_of_normalEquations
 
 /-! ## §2.2 (deferred item) -/
 
@@ -182,10 +188,10 @@ application of the projection theorem; the library's `bestPredictor_sub_mem_orth
 alias eq_2_6_5 := DeepWiki.TimeSeries.bestPredictor_sub_mem_orthogonal
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§2.5: Theorem 2.5.1 (the least-squares projection in `ℝⁿ` as `P_ℳ = X(XᵀX)⁻¹Xᵀ` with normal equations
-`XᵀX β = Xᵀx`) [deferred]
-(Reachable from the projection theorem `thm_2_3_1`/`bestPredictor` already in place; §2.1–§2.4 and §2.6
-are formalized.) -/
+§2.5: Theorem 2.5.1 explicit closed form `P_ℳ = X(XᵀX)⁻¹Xᵀ` (needs the full-rank invertibility of
+`XᵀX`) [deferred] — the normal-equations characterization `XᵀX β = Xᵀx ⇒ residual ⊥ col(X)` is done
+(`thm_2_5_1`)
+(§2.1–§2.4 and §2.6 are formalized.) -/
 
 end DeepWiki.Ts
 
