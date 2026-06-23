@@ -538,6 +538,89 @@ theorem iterate_fracKDeriv_hFrac [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < 
     rw [Function.iterate_succ_apply', ih, laurentScale, Derivation.map_smul,
       fracKDeriv_lFrac A Ei i n hi hEi, smul_smul]
 
+/-! ## Stage G — the root-evaluation `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢα(α), …)` (book p.56)
+
+At a root `α` of `Dᵢ` over the algebraic closure, write `Dᵢ = (x−α)·Dᵢ,α`. The substitution `Qᵢⱼ`
+(`u^(k) ↦ Dᵢ^(k+1)/(k+1)`) evaluated at `α` recovers the derivatives of `Dᵢ,α`: the engine of this is the
+Leibniz identity `Dᵢ^(k+1)(α) = (k+1)·Dᵢ,α^(k)(α)` (book p.56, since `(x−α)^(j)=0` for `j>1`), giving
+`Dᵢ^(k+1)(α)/(k+1) = Dᵢ,α^(k)(α)`. Hence `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^(i−j)(α))`. -/
+
+/-- **Leibniz for `(x−α)·p`** (book p.56): `(((x−α)·p)^(k+1) = (x−α)·p^(k+1) + (k+1)·p^(k)`, since the
+second and higher derivatives of `x−α` vanish. -/
+theorem iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
+    derivative^[k + 1] ((Polynomial.X - Polynomial.C α) * p)
+      = (Polynomial.X - Polynomial.C α) * derivative^[k + 1] p + ((k + 1 : ℕ)) • derivative^[k] p := by
+  induction k with
+  | zero =>
+    simp only [Function.iterate_one, Function.iterate_zero_apply, zero_add, derivative_mul,
+      derivative_sub, derivative_X, Polynomial.derivative_C, sub_zero, one_mul, one_smul]
+    ring
+  | succ n ih =>
+    have e1 : derivative^[n + 2] ((Polynomial.X - Polynomial.C α) * p)
+        = derivative (derivative^[n + 1] ((Polynomial.X - Polynomial.C α) * p)) :=
+      Function.iterate_succ_apply' derivative (n + 1) _
+    have e2 : derivative (derivative^[n + 1] p) = derivative^[n + 2] p :=
+      (Function.iterate_succ_apply' derivative (n + 1) p).symm
+    have e3 : derivative (derivative^[n] p) = derivative^[n + 1] p :=
+      (Function.iterate_succ_apply' derivative n p).symm
+    rw [e1, ih, map_add, derivative_mul, derivative_sub, derivative_X, Polynomial.derivative_C,
+      sub_zero, one_mul, derivative_smul, e2, e3, succ_nsmul]
+    ring_nf
+
+/-- **`Dᵢ^(k+1)(α) = (k+1)·Dᵢ,α^(k)(α)`** at a root (book p.56): evaluating `iterate_derivative_X_sub_C_mul`
+at `α` kills the `(x−α)` factor. -/
+theorem eval_iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
+    (derivative^[k + 1] ((Polynomial.X - Polynomial.C α) * p)).eval α
+      = ((k : K) + 1) * (derivative^[k] p).eval α := by
+  rw [iterate_derivative_X_sub_C_mul, Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_sub,
+    Polynomial.eval_X, Polynomial.eval_C, sub_self, zero_mul, zero_add, Polynomial.eval_smul,
+    nsmul_eq_mul]
+  push_cast; ring
+
+/-- **`(laurentSubst Dᵢ (u^(k)))(α) = Dᵢ,α^(k)(α)`** (book p.56, the substitution's root value): the scaled
+derivative `Dᵢ^(k+1)/(k+1)` evaluated at a root `α` of `Dᵢ = (x−α)·Dᵢ,α` is the `k`-th derivative of `Dᵢ,α`. -/
+theorem eval_laurentSubst_some [CharZero K] (Diα : K[X]) (α : K) (k : ℕ) :
+    (laurentSubst ((Polynomial.X - Polynomial.C α) * Diα) (some k)).eval α
+      = (derivative^[k] Diα).eval α := by
+  unfold laurentSubst
+  rw [Polynomial.eval_mul, Polynomial.eval_C, eval_iterate_derivative_X_sub_C_mul, ← mul_assoc,
+    inv_mul_cancel₀ (Nat.cast_add_one_ne_zero (R := K) k), one_mul]
+
+/-- **`eval ∘ aeval` collapses to a single evaluated substitution**: `(aeval f P)(α) = aeval (v ↦ f(v)(α)) P`
+for `P ∈ DiffPoly K`, `f : Option ℕ → K[x]` — push the outer `eval α` through the `aeval`. -/
+theorem eval_aeval_diffPoly (f : Option ℕ → K[X]) (α : K) (P : DiffPoly K) :
+    Polynomial.eval α (MvPolynomial.aeval f P) = MvPolynomial.aeval (fun v => (f v).eval α) P := by
+  induction P using MvPolynomial.induction_on with
+  | C a => simp
+  | add p q hp hq => simp [hp, hq]
+  | mul_X p n hp => simp [hp]
+
+/-- **The root-substitution point** `v ↦` (its value at `α`): `x ↦ α`, `u^(k) ↦ Dᵢ,α^(k)(α)` — the
+arguments of `Pᵢⱼ` in the book's `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
+noncomputable def substEvalAt (Diα : K[X]) (α : K) : Option ℕ → K := fun v =>
+  match v with
+  | none => α
+  | some k => (derivative^[k] Diα).eval α
+
+/-- **`Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^(i−j)(α))`** (book p.56): at a root `α` of
+`Dᵢ = (x−α)·Dᵢ,α`, the `Qᵢⱼ` substitution evaluates to `Pᵢⱼ` at the derivatives of `Dᵢ,α` — by
+`eval_aeval_diffPoly` (collapse the outer `eval α`) and `eval_laurentSubst_some` (each `u^(k)` value).
+This is the substantive root-evaluation step; identifying the resulting `Pᵢⱼ(α,…)` with the `(i−j)`-th
+Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` (hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`)
+is the remaining Taylor-series argument over the closure. -/
+theorem laurentQ_eval_at_root [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+    (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
+      = MvPolynomial.aeval (substEvalAt Diα α)
+          (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) := by
+  unfold laurentQ
+  rw [eval_aeval_diffPoly]
+  have hfg : (fun v => (laurentSubst ((Polynomial.X - Polynomial.C α) * Diα) v).eval α) = substEvalAt Diα α := by
+    funext v
+    cases v with
+    | none => simp [laurentSubst, substEvalAt]
+    | some k => rw [eval_laurentSubst_some]; rfl
+  rw [hfg]
+
 /-! ## Restatements against the book's wording -/
 
 /-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
@@ -569,5 +652,13 @@ example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
 example [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (d : ℕ) :
     (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d :=
   iterate_fracKDeriv_hFrac A Ei i hi hEi d
+
+/-- Restatement of the root-evaluation step (book p.56): at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`,
+`Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
+example [CharZero K] (A Diα : K[X]) (α : K) (i j : ℕ) :
+    (laurentQ A ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
+      = MvPolynomial.aeval (substEvalAt Diα α)
+          (laurentNum A (laurentE A ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) :=
+  laurentQ_eval_at_root A Diα α i j
 
 end DeepWiki.SymbolicIntegration
