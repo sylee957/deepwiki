@@ -1216,3 +1216,43 @@ theorem yunLoopAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA :
       List.map_congr_left (fun j _ => by simp only [Function.comp_apply]; congr 1; omega)
     rw [hreindex]
     exact htail
+
+open Classical in
+/-- **Every Yun factor is squarefree** (abstract loop): under `YunInv A i b d` (`1 ≤ i`), every member
+of `yunLoopAbs A (b, d) i n` is squarefree. Direct induction: the head `gcd b d ~ Vᵢ` is squarefree
+(`yunStep_emit_assoc` + `squarefree_of_associated_sqfreeFactPart`); the tail keeps `YunInv` (step). -/
+theorem yunLoopAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
+    ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
+      ∀ V ∈ yunLoopAbs A (b, d) i n, Squarefree V := by
+  intro n
+  induction n with
+  | zero => intro i b d _ _ V hV; simp [yunLoopAbs] at hV
+  | succ n ih =>
+    intro i b d hi hinv V hV
+    rw [yunLoopAbs, List.mem_cons] at hV
+    rcases hV with rfl | hV
+    · exact squarefree_of_associated_sqfreeFactPart A i (yunStep_emit_assoc A i hi hA hinv)
+    · exact ih (i + 1) _ _ (by omega) (yunStep_preserves A i hi hA hinv).2 V hV
+
+open Classical in
+/-- **The Yun factors are pairwise relatively prime** (abstract loop): under `YunInv A i b d`
+(`1 ≤ i`), members of `yunLoopAbs A (b, d) i n` at distinct list positions `p ≠ q` are `IsRelPrime`.
+Their multiplicities `i+p ≠ i+q` differ, so `isRelPrime_of_associated_sqfreeFactPart` applies to the
+two factors (each `Associated` to its `sqfreeFactPart` by `yunLoopAbs_forall₂`). -/
+theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d)
+    {p q : ℕ} (hpq : p ≠ q) (hp : p < (yunLoopAbs A (b, d) i n).length)
+    (hq : q < (yunLoopAbs A (b, d) i n).length) :
+    IsRelPrime ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩) ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) := by
+  have hF := yunLoopAbs_forall₂ A hA n i b d hi hinv
+  have hlen : (yunLoopAbs A (b, d) i n).length
+      = ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hF.length_eq
+  have hp' : p < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hp
+  have hq' : q < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hq
+  have hAp : Associated ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩) (sqfreeFactPart A (i + p)) := by
+    have h := hF.get hp hp'
+    simpa using h
+  have hAq : Associated ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) (sqfreeFactPart A (i + q)) := by
+    have h := hF.get hq hq'
+    simpa using h
+  exact isRelPrime_of_associated_sqfreeFactPart A (by omega : i + p ≠ i + q) hAp hAq
