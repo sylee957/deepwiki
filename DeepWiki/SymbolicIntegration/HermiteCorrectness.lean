@@ -2116,3 +2116,58 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
     exact dvd_clearedIdentity_of_split hD hDR hg2dvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
 
+/-! ### The decidable residual-honesty bundle and the unconditional wrapper
+
+The split certificates of `hermiteReduce_residual_correct_of_split` are two `cmod`-vanishings — a
+**decidable** condition `HermiteResComp` (the residual-recovery analog of `SqfreeExactComp` for the Yun
+loop). Bundling it with `D, gden, Dstar ≠ 0` and a fuel bound, the wrapper conclusion holds with **no**
+exact-division certificate as a hypothesis: the certificate is *computed and checked* by the engine.
+On a concrete `D` this is `native_decide`-discharged (Example 2.2.1 below). The remaining theoretical
+gap — proving `HermiteResComp` from `SqfreeYun` *abstractly* — is the global-`A` `hermiteReduce`
+`g`-fold composition (each repeated factor reduces the full `A/D`; the residuals' multi-factor
+interference clearing to denominator `Dstar` is the genuine loop-correctness content, decidably true
+per example, abstractly open). -/
+
+/-- **Decidable residual-recovery honesty bundle** for `hermiteReduce`'s computed rational part
+`(gnum, gden)` and radical `Dstar`: the two split `cmod`-remainders vanish — `D ∣ resNum'` and
+`gden² ∣ (resNum'/D)·Dstar`, with `resNum' = A·gden² − D·(gnum'·gden − gnum·gden')`. Decidable
+(`cnorm … = []` checks), hence `native_decide`-checkable; implies the divisibility certificate
+`hermiteReduce_residual_correct_of_split` consumes. -/
+def HermiteResComp (fuel : ℕ) (A D gnum gden Dstar : CPoly) : Prop :=
+  let resNum' := csub (cmul A (cmul gden gden))
+    (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))
+  cnorm (cmod fuel resNum' D) = [] ∧
+    cnorm (cmod fuel (cmul (cdiv fuel resNum' D) Dstar) (cmul gden gden)) = []
+
+/-- `HermiteResComp` is decidable (both conjuncts are `cnorm … = []` equality checks). -/
+instance decHermiteResComp (fuel : ℕ) (A D gnum gden Dstar : CPoly) :
+    Decidable (HermiteResComp fuel A D gnum gden Dstar) := by
+  unfold HermiteResComp; infer_instance
+
+open scoped Differential in
+/-- **Unconditional `hermiteReduce` wrapper correctness** in `RatFunc ℚ` (no exact-division certificate
+as a hypothesis): from the *decidable* residual-honesty bundle `HermiteResComp fuel A D gnum gden Dstar`
+(the two split `cmod`-vanishings, computed and checked by the engine) plus `D, gden ≠ 0`, `Dstar ≠ 0`
+and a fuel bound, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` with
+`Bres = cdiv fuel (resNum'·Dstar) (D·gden²)`. I.e. `∫ A/D = gnum/gden + ∫ Bres/Dstar`. The honest
+`RatFunc ℚ` correctness of the computable Hermite reduction with the certificate discharged from the
+engine's own decidable `cmod`-computations (`HermiteResComp_to_split`), rather than supplied as an
+algebraic divisibility hypothesis. -/
+theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar : CPoly)
+    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
+        (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
+    (hcomp : HermiteResComp fuel A D gnum gden Dstar) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun (gnum, gden))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            (toPoly (cdiv fuel
+              (cmul (csub (cmul A (cmul gden gden))
+                  (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
+              (cmul D (cmul gden gden))))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  obtain ⟨hresD, hg2⟩ := hcomp
+  rw [cnorm_eq_nil_iff] at hresD hg2
+  exact hermiteReduce_residual_correct_of_split fuel A D gnum gden Dstar hD hgden hDstar hfuel
+    hresD hg2
+
