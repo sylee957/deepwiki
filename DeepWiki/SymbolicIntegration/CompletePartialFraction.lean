@@ -152,4 +152,71 @@ theorem ratFunc_DadicExpansion (g : K[X]) (hg : g.Monic) (e : ℕ) (B : K[X])
     rw [hkj, map_mul, map_pow]
     rw [div_eq_div_iff (pow_ne_zero _ hg0) (pow_ne_zero _ hg0), mul_assoc, hpow]
 
+/-! ## §2.7 Theorem 2.7.1 — the complete partial fraction decomposition (`K[x]`-level structure) -/
+
+open Classical in
+/-- **Theorem 2.7.1, the complete partial fraction decomposition** (§2.7, structural `K[x]`-level core):
+for `A, D ∈ K[x]` with a squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (the `Dᵢ` monic of positive degree,
+pairwise coprime, `eᵢ ≥ 1`), there is a polynomial part `P` and proper numerators `Hᵢⱼ` (`deg Hᵢⱼ < deg Dᵢ`)
+with
+`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j`.
+Composes Mathlib's degree-bounded coprime split `div_prod_eq_quo_add_sum_rem_div` (giving `A/∏ᵢ Dᵢ^{eᵢ}
+= P + ∑ᵢ rᵢ/Dᵢ^{eᵢ}`, `deg rᵢ < eᵢ·deg Dᵢ`) with the `Dᵢ`-adic expansion `ratFunc_DadicExpansion` of each
+prime-power summand `rᵢ/Dᵢ^{eᵢ}`. The over-the-closure form `Hᵢⱼ(α)/(x−α)ʲ` and the rational `Hᵢⱼ`
+*algorithm* (eqs 2.10–2.12) are out of scope. -/
+theorem ratFunc_completePartialFraction {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
+    (hD : ∀ i ∈ s, (D i).Monic) (_hd : ∀ i ∈ s, 0 < (D i).natDegree) (_he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (P : K[X]) (H : ι → ℕ → K[X]),
+      (∀ i ∈ s, ∀ k, (H i k).degree < (D i).degree) ∧
+        algebraMap K[X] (RatFunc K) A
+            / ∏ i ∈ s, (algebraMap K[X] (RatFunc K) (D i)) ^ e i
+          = algebraMap K[X] (RatFunc K) P
+            + ∑ i ∈ s, ∑ k ∈ Finset.Icc 1 (e i),
+                algebraMap K[X] (RatFunc K) (H i k) / (algebraMap K[X] (RatFunc K) (D i)) ^ k := by
+  -- the squarefree factors as monic, pairwise-coprime powers `gᵢ = Dᵢ^{eᵢ}`
+  have hgmonic : ∀ i ∈ s, ((D i) ^ e i).Monic := fun i hi => (hD i hi).pow _
+  have hgcop : Set.Pairwise ↑s fun i j => IsCoprime ((D i) ^ e i) ((D j) ^ e j) :=
+    fun i hi j hj hij => ((hcop hi hj hij).pow)
+  -- Mathlib's degree-bounded partial fraction over the `gᵢ`
+  obtain ⟨P, r, hrdeg, hPF⟩ :=
+    div_prod_eq_quo_add_sum_rem_div (K := RatFunc K) A hgmonic hgcop
+  refine ⟨P, fun i k => baseDigit (r i) (D i) (e i - k), fun i hi k => ?_, ?_⟩
+  · exact degree_baseDigit_lt _ _ (hD i hi) _
+  · -- Mathlib's split, then expand each prime-power summand `rᵢ/Dᵢ^{eᵢ}` via the `Dᵢ`-adic expansion
+    simp only [Algebra.cast, map_pow] at hPF
+    rw [hPF]
+    congr 1
+    refine Finset.sum_congr rfl fun i hi => ?_
+    have hri : (r i).degree < ((e i * (D i).natDegree : ℕ) : WithBot ℕ) := by
+      have hlt := hrdeg i hi
+      rwa [degree_pow, degree_eq_natDegree (hD i hi).ne_zero, nsmul_eq_mul, ← Nat.cast_mul] at hlt
+    exact ratFunc_DadicExpansion (D i) (hD i hi) (e i) (r i) hri
+
+/-! ## §2.7 Restatements against the book's wording -/
+
+/-- Restatement of the base-`g` digit expansion: `B = ∑_{j<e} Cⱼ·g^j` with proper digits `deg Cⱼ < deg g`,
+the positional base-`g` notation underlying the `Dᵢ`-adic Laurent series. -/
+example (g : K[X]) (hg : g.Monic) (_hd : 0 < g.natDegree) (e : ℕ) (B : K[X])
+    (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
+    ∃ C : ℕ → K[X], (∀ j, (C j).degree < g.degree) ∧
+      B = ∑ j ∈ Finset.range e, C j * g ^ j :=
+  ⟨baseDigit B g, fun j => degree_baseDigit_lt _ _ hg j, baseDigit_reconstruction g hg e B hB⟩
+
+/-- Restatement of Theorem 2.7.1 (the `K[x]`-level structural conclusion): for a squarefree
+factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (monic, pairwise-coprime, positive-degree `Dᵢ`, `eᵢ ≥ 1`),
+`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P` the polynomial part — the
+`Hᵢⱼ(α)/(x−α)ʲ` over-the-closure form being the further evaluation of `Hᵢⱼ` at the roots `α` of `Dᵢ`. -/
+example {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
+    (hD : ∀ i ∈ s, (D i).Monic) (hd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
+    (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :
+    ∃ (P : K[X]) (H : ι → ℕ → K[X]),
+      (∀ i ∈ s, ∀ k, (H i k).degree < (D i).degree) ∧
+        algebraMap K[X] (RatFunc K) A
+            / ∏ i ∈ s, (algebraMap K[X] (RatFunc K) (D i)) ^ e i
+          = algebraMap K[X] (RatFunc K) P
+            + ∑ i ∈ s, ∑ k ∈ Finset.Icc 1 (e i),
+                algebraMap K[X] (RatFunc K) (H i k) / (algebraMap K[X] (RatFunc K) (D i)) ^ k :=
+  ratFunc_completePartialFraction s D e hD hd he hcop A
+
 end DeepWiki.SymbolicIntegration
