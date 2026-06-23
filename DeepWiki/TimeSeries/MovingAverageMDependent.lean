@@ -40,4 +40,60 @@ theorem integral_movingAverage [IsProbabilityMeasure μ] {θ : ℕ → ℝ} {q :
   rw [integral_finsetSum _ fun _ _ => ((hZmem _).const_mul _).integrable one_le_two]
   simp [integral_const_mul, hZc]
 
+/-- **An MA(q) process over i.i.d. noise is `q`-dependent**: two blocks of `X` separated by more than
+`q` time steps depend on disjoint windows `[s−q, s]` of the noise, hence are independent. The block
+tuple over `S` factors as a measurable window-map `φ` of the noise tuple over `S' = ⋃_{s∈S} [s−q, s]`,
+the noise tuples over the disjoint windows `S'`, `T'` are independent (`iIndepFun.indepFun_finset`), and
+independence transfers through `φ`, `ψ` (`IndepFun.comp`). -/
+theorem isMDependent_movingAverage {θ : ℕ → ℝ} {q : ℕ} {Z : ℤ → Ω → ℝ} (hindep : iIndepFun Z μ)
+    (hmeas : ∀ i, Measurable (Z i)) : IsMDependent q (movingAverage θ q Z) μ := by
+  intro S T hST
+  classical
+  set S' := S.biUnion (fun s => Finset.Icc (s - (q : ℤ)) s) with hS'
+  set T' := T.biUnion (fun t => Finset.Icc (t - (q : ℤ)) t) with hT'
+  have hdisj : Disjoint S' T' := by
+    rw [Finset.disjoint_left]
+    intro a haS haT
+    simp only [hS', hT', Finset.mem_biUnion, Finset.mem_Icc] at haS haT
+    obtain ⟨s, hs, hs1, hs2⟩ := haS
+    obtain ⟨t, ht, ht1, ht2⟩ := haT
+    have h := hST s hs t ht
+    omega
+  have hmemS : ∀ (i : ↥S) (j : ℕ), j < q + 1 → (↑i : ℤ) - j ∈ S' := by
+    intro i j hj
+    rw [hS', Finset.mem_biUnion]
+    exact ⟨↑i, i.2, by rw [Finset.mem_Icc]; omega⟩
+  have hmemT : ∀ (i : ↥T) (j : ℕ), j < q + 1 → (↑i : ℤ) - j ∈ T' := by
+    intro i j hj
+    rw [hT', Finset.mem_biUnion]
+    exact ⟨↑i, i.2, by rw [Finset.mem_Icc]; omega⟩
+  set φ : (↥S' → ℝ) → (↥S → ℝ) := fun w i => ∑ j ∈ Finset.range (q + 1), θ j *
+    (if h : (↑i : ℤ) - j ∈ S' then w ⟨↑i - j, h⟩ else 0) with hφ
+  set ψ : (↥T' → ℝ) → (↥T → ℝ) := fun w i => ∑ j ∈ Finset.range (q + 1), θ j *
+    (if h : (↑i : ℤ) - j ∈ T' then w ⟨↑i - j, h⟩ else 0) with hψ
+  have hφm : Measurable φ := by
+    refine measurable_pi_lambda _ fun i => Finset.measurable_sum _ fun j _ =>
+      Measurable.const_mul ?_ _
+    by_cases h : (↑i : ℤ) - j ∈ S'
+    · simp only [dif_pos h]; exact measurable_pi_apply _
+    · simp only [dif_neg h]; exact measurable_const
+  have hψm : Measurable ψ := by
+    refine measurable_pi_lambda _ fun i => Finset.measurable_sum _ fun j _ =>
+      Measurable.const_mul ?_ _
+    by_cases h : (↑i : ℤ) - j ∈ T'
+    · simp only [dif_pos h]; exact measurable_pi_apply _
+    · simp only [dif_neg h]; exact measurable_const
+  have hcompS : (fun ω (i : ↥S) => movingAverage θ q Z (↑i) ω)
+      = fun ω => φ (fun a : ↥S' => Z (↑a) ω) := by
+    funext ω i
+    simp only [hφ, movingAverage]
+    exact Finset.sum_congr rfl fun j hj => by rw [dif_pos (hmemS i j (Finset.mem_range.mp hj))]
+  have hcompT : (fun ω (i : ↥T) => movingAverage θ q Z (↑i) ω)
+      = fun ω => ψ (fun a : ↥T' => Z (↑a) ω) := by
+    funext ω i
+    simp only [hψ, movingAverage]
+    exact Finset.sum_congr rfl fun j hj => by rw [dif_pos (hmemT i j (Finset.mem_range.mp hj))]
+  rw [hcompS, hcompT]
+  exact (iIndepFun.indepFun_finset S' T' hdisj hindep hmeas).comp hφm hψm
+
 end DeepWiki.TimeSeries
