@@ -122,4 +122,139 @@ example {R : Type*} [Field R] [Differential R] [CharZero R] (i u : R) (hi : i ^ 
 
 end Lemma281
 
+section Theorem281
+variable {R : Type*} [Field R] [Differential R]
+
+omit [Differential R] in
+/-- **Nonvanishing of `a − i·b`** (§2.8, behind Thm 2.8.1): if `a² + b² ≠ 0` and `i² = −1`, then
+`a − i·b ≠ 0` — because `(a − i·b)·(a + i·b) = a² + b² ≠ 0`. -/
+theorem sub_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 0) :
+    a - i * b ≠ 0 := by
+  intro h
+  apply hab
+  have hmul : (a - i * b) * (a + i * b) = a ^ 2 + b ^ 2 := by linear_combination (- b ^ 2) * hi
+  rw [h, zero_mul] at hmul
+  exact hmul.symm
+
+omit [Differential R] in
+/-- **Nonvanishing of `a + i·b`** (§2.8, behind Thm 2.8.1): if `a² + b² ≠ 0` and `i² = −1`, then
+`a + i·b ≠ 0` — because `(a + i·b)·(a − i·b) = a² + b² ≠ 0`. -/
+theorem add_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 0) :
+    a + i * b ≠ 0 := by
+  intro h
+  apply hab
+  have hmul : (a + i * b) * (a - i * b) = a ^ 2 + b ^ 2 := by linear_combination (- b ^ 2) * hi
+  rw [h, zero_mul] at hmul
+  exact hmul.symm
+
+omit [Differential R] in
+/-- **Brahmagupta–Fibonacci nonvanishing of `P² + 1`** (§2.8, behind Thm 2.8.1): with
+`G = B·D − A·C`, `P = (A·D + B·C)/G`, `G ≠ 0`, the identity `(P² + 1)·G² = (A²+B²)(C²+D²)` makes
+`P² + 1 ≠ 0` whenever `A²+B² ≠ 0` and `C²+D² ≠ 0`. -/
+theorem sq_add_one_ne_zero_of_quot {A B C D G : R} (hG : B * D - A * C = G) (hG0 : G ≠ 0)
+    (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0) :
+    ((A * D + B * C) / G) ^ 2 + 1 ≠ 0 := by
+  have hPG : ((A * D + B * C) / G) * G = A * D + B * C := div_mul_cancel₀ _ hG0
+  set P := (A * D + B * C) / G with hP
+  intro h
+  -- `(P²+1)·G² = (A²+B²)(C²+D²) ≠ 0`, but `P²+1 = 0`.
+  apply mul_ne_zero hAB hCD
+  have key : (P ^ 2 + 1) * G ^ 2 = (A ^ 2 + B ^ 2) * (C ^ 2 + D ^ 2) := by
+    have hkey : (P * G) ^ 2 + G ^ 2 = (A ^ 2 + B ^ 2) * (C ^ 2 + D ^ 2) := by
+      rw [hPG]; linear_combination (-(G + B * D - A * C)) * hG
+    rw [← hkey]; ring
+  rw [h, zero_mul] at key
+  exact key.symm
+
+/-- **Theorem 2.8.1(a)** (§2.8, p.62, Rioboo): for `A, B` with `A²+B² ≠ 0` and `i² = −1`, the two
+logarithms have equal logarithmic derivatives,
+`logDeriv((A+iB)/(A−iB)) = logDeriv((−B+iA)/(−B−iA))` — because `(A+iB)/(A−iB) = −(−B+iA)/(−B−iA)`
+and the constant `−1` has zero logarithmic derivative. -/
+theorem logDeriv_imagQuot_eq_imagQuot_swap [CharZero R] {i A B : R} (hi : i ^ 2 = -1)
+    (hAB : A ^ 2 + B ^ 2 ≠ 0) :
+    Differential.logDeriv ((A + i * B) / (A - i * B))
+      = Differential.logDeriv ((-B + i * A) / (-B - i * A)) := by
+  have hAmB : A - i * B ≠ 0 := sub_imag_ne_zero hi hAB
+  -- `−B + i·A ≠ 0` and `−B − i·A ≠ 0`: `(-B)² + A² = A² + B² ≠ 0`.
+  have hBA : (-B) ^ 2 + A ^ 2 ≠ 0 := fun h => hAB (by linear_combination h)
+  have hmBmA : -B - i * A ≠ 0 := sub_imag_ne_zero hi hBA
+  have hmBpA : -B + i * A ≠ 0 := add_imag_ne_zero hi hBA
+  have hderivm1 : ((-1 : R))′ = 0 := by
+    rw [map_neg, (Differential.deriv : Derivation ℤ R R).map_one_eq_zero, neg_zero]
+  have hlogm1 : Differential.logDeriv (-1 : R) = 0 :=
+    (Differential.logDeriv_eq_zero (-1 : R)).mpr hderivm1
+  -- `(A+iB)/(A−iB) = (−1)·((−B+iA)/(−B−iA))`.
+  have hquot : (A + i * B) / (A - i * B) = (-1) * ((-B + i * A) / (-B - i * A)) := by
+    rw [neg_one_mul, ← neg_div, div_eq_div_iff hAmB hmBmA]
+    linear_combination (-2 * A * B) * hi
+  rw [hquot, Differential.logDeriv_mul (-1 : R) _ (by norm_num) (div_ne_zero hmBpA hmBmA),
+    hlogm1, zero_add]
+
+/-- **Theorem 2.8.1(b)** (§2.8, p.62, Rioboo's recursion-step identity): for `A, B` with `A²+B² ≠ 0`,
+`i² = −1`, and `C, D` with `G := B·D − A·C ≠ 0`, `C²+D² ≠ 0`, setting `P := (A·D + B·C)/G`,
+`i · logDeriv((A+iB)/(A−iB)) = 2·(P'/(1+P²)) + i · logDeriv((D+iC)/(D−iC))` — i.e.
+`i·d/dx log((A+iB)/(A−iB)) = 2·d/dx arctan(P) + i·d/dx log((D+iC)/(D−iC))`. Proof: the factoring
+`(A+iB)/(A−iB) = ((P+i)/(P−i))·((D+iC)/(D−iC))` (from `(D−iC)(A+iB) = G(P+i)`,
+`(D+iC)(A−iB) = G(P−i)`) makes `logDeriv` additive, and Lemma 2.8.1 turns
+`i·logDeriv((P+i)/(P−i))` into `2·P'/(1+P²)`. -/
+theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} (hi : i ^ 2 = -1)
+    (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0)
+    (hG : B * D - A * C = G) (hG0 : G ≠ 0) :
+    i * Differential.logDeriv ((A + i * B) / (A - i * B))
+      = 2 * (((A * D + B * C) / G)′ / (1 + ((A * D + B * C) / G) ^ 2))
+        + i * Differential.logDeriv ((D + i * C) / (D - i * C)) := by
+  have hAmB : A - i * B ≠ 0 := sub_imag_ne_zero hi hAB
+  have hDC : D ^ 2 + C ^ 2 ≠ 0 := fun h => hCD (by linear_combination h)
+  have hDmC : D - i * C ≠ 0 := sub_imag_ne_zero hi hDC
+  have hDpC : D + i * C ≠ 0 := add_imag_ne_zero hi hDC
+  have hP1 : ((A * D + B * C) / G) ^ 2 + 1 ≠ 0 := sq_add_one_ne_zero_of_quot hG hG0 hAB hCD
+  have hPG : ((A * D + B * C) / G) * G = A * D + B * C := div_mul_cancel₀ _ hG0
+  set P := (A * D + B * C) / G with hPdef
+  have hPpi : P + i ≠ 0 := by
+    intro h; apply hP1
+    have hmul : (P + i) * (P - i) = P ^ 2 + 1 := by linear_combination (-1 : R) * hi
+    rw [h, zero_mul] at hmul; exact hmul.symm
+  have hPmi : P - i ≠ 0 := by
+    intro h; apply hP1
+    have hmul : (P - i) * (P + i) = P ^ 2 + 1 := by linear_combination (-1 : R) * hi
+    rw [h, zero_mul] at hmul; exact hmul.symm
+  -- The factoring `(A+iB)/(A−iB) = ((P+i)/(P−i))·((D+iC)/(D−iC))`, using `P·G = AD+BC`, `BD−AC = G`.
+  have hfac : (A + i * B) / (A - i * B)
+      = ((P + i) / (P - i)) * ((D + i * C) / (D - i * C)) := by
+    rw [div_mul_div_comm, div_eq_div_iff hAmB (mul_ne_zero hPmi hDmC)]
+    -- `(D−iC)(A+iB) = G(P+i)`, `(D+iC)(A−iB) = G(P−i)` (via `P·G = AD+BC`, `BD−AC = G`, `i²=−1`).
+    have e1 : (D - i * C) * (A + i * B) = P * G + i * G := by
+      rw [hPG]; linear_combination i * hG - B * C * hi
+    have e2 : (D + i * C) * (A - i * B) = P * G - i * G := by
+      rw [hPG]; linear_combination -i * hG - B * C * hi
+    -- `(A+iB)(P−i)(D−iC) = (P−i)·G(P+i) = G(P²+1) = (P+i)·G(P−i) = (A−iB)(P+i)(D+iC)`.
+    linear_combination (P - i) * e1 - (P + i) * e2
+  rw [hfac,
+    Differential.logDeriv_mul ((P + i) / (P - i)) ((D + i * C) / (D - i * C))
+      (div_ne_zero hPpi hPmi) (div_ne_zero hDpC hDmC), mul_add]
+  -- Lemma 2.8.1 on `i·logDeriv((P+i)/(P−i))`.
+  rw [logDeriv_imagQuot_eq_arctanDeriv_of_sq hi hPpi hPmi]
+
+/-- Restatement of **Theorem 2.8.1(a)** against the book wording (§2.8, p.62): for `A, B ∈ K[x]\{0}`
+with `A²+B² ≠ 0` (`i² = −1`), `d/dx log((A+iB)/(A−iB)) = d/dx log((−B+iA)/(−B−iA))` — as logarithmic
+derivatives `logDeriv((A+iB)/(A−iB)) = logDeriv((−B+iA)/(−B−iA))`. -/
+example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B : R) (hi : i ^ 2 = -1)
+    (hAB : A ^ 2 + B ^ 2 ≠ 0) :
+    Differential.logDeriv ((A + i * B) / (A - i * B))
+      = Differential.logDeriv ((-B + i * A) / (-B - i * A)) :=
+  logDeriv_imagQuot_eq_imagQuot_swap hi hAB
+
+/-- Restatement of **Theorem 2.8.1(b)** against the book wording (§2.8, p.62, eq display): with
+`G = gcd(A,B) = B·D − A·C`, `C ≠ 0` (so `C²+D² ≠ 0`), `P = (A·D + B·C)/G`,
+`i · d/dx log((A+iB)/(A−iB)) = 2·d/dx arctan(P) + i · d/dx log((D+iC)/(D−iC))` — rendering
+`d/dx arctan(P) = P'/(1+P²)`. -/
+example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B C D G : R) (hi : i ^ 2 = -1)
+    (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0) (hG : B * D - A * C = G) (hG0 : G ≠ 0) :
+    i * Differential.logDeriv ((A + i * B) / (A - i * B))
+      = 2 * (((A * D + B * C) / G)′ / (1 + ((A * D + B * C) / G) ^ 2))
+        + i * Differential.logDeriv ((D + i * C) / (D - i * C)) :=
+  logDeriv_imagQuot_eq_arctan_add_imagQuot hi hAB hCD hG hG0
+
+end Theorem281
+
 end DeepWiki.SymbolicIntegration
