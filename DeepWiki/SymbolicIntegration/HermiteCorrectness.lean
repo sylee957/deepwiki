@@ -1256,3 +1256,46 @@ theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K
     have h := hF.get hq hq'
     simpa using h
   exact isRelPrime_of_associated_sqfreeFactPart A (by omega : i + p ≠ i + q) hAp hAq
+
+/-! ### The Yun decomposition: product of the factors -/
+
+open Classical in
+/-- **The product of the Yun factors is the remaining radical** (abstract loop): under `YunInv A i b d`
+(`1 ≤ i`), the product of the `n` emitted factors is `Associated (∏_{j<n} Vᵢ₊ⱼ)` (`= ∏_{j<n}
+sqfreeFactPart A (i+j)`). Via `List.rel_prod` (`Associated` is multiplicative) on
+`yunLoopAbs_forall₂`. -/
+theorem yunLoopAbs_prod_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0)
+    (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
+    Associated (yunLoopAbs A (b, d) i n).prod
+      (((List.range n).map (fun j => sqfreeFactPart A (i + j))).prod) :=
+  List.rel_prod (R := Associated) (Associated.refl 1)
+    (fun _ _ hx _ _ hy => hx.mul_mul hy) (yunLoopAbs_forall₂ A hA n i b d hi hinv)
+
+open Classical in
+/-- **Powered product** of a Yun-factor list `[e₀, e₁, …]`: `∏ₖ eₖ^{i+k}`, raising the k-th factor to
+its multiplicity `i+k` (the radical-to-full-power lift used in the Yun decomposition `∏ⱼ Vⱼ^iⱼ`). -/
+noncomputable def prodPow {K : Type*} [Field K] (i : ℕ) : List K[X] → K[X]
+  | [] => 1
+  | e :: es => e ^ i * prodPow (i + 1) es
+
+open Classical in
+/-- `prodPow` respects `Forall₂ Associated` pointwise: associated factor-lists give associated
+powered products (each `eₖ ~ Vₖ` lifts to `eₖ^{i+k} ~ Vₖ^{i+k}` by `Associated.pow`, multiplied). -/
+theorem prodPow_associated {K : Type*} [Field K] {l₁ l₂ : List K[X]}
+    (h : List.Forall₂ Associated l₁ l₂) (i : ℕ) :
+    Associated (prodPow i l₁) (prodPow i l₂) := by
+  induction h generalizing i with
+  | nil => exact Associated.refl _
+  | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
+
+open Classical in
+/-- **The exponentiated Yun decomposition** (abstract loop): under `YunInv A i b d` (`1 ≤ i`), the
+powered product `∏ₖ eₖ^{i+k}` of the emitted factors is `Associated (∏_{j<n} Vᵢ₊ⱼ^{i+j})`. From
+`yunLoopAbs_forall₂` via `prodPow_associated`. With `n` covering all multiplicities and `b₁/d₁` the
+initial radical/derivative-poly, the right side is `A.primPart` up to associates
+(`primPart_associated_prod_sqfreeFactPart`), giving the Yun product decomposition `D ~ u·∏ⱼ Vⱼ^iⱼ`. -/
+theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0)
+    (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
+    Associated (prodPow i (yunLoopAbs A (b, d) i n))
+      (prodPow i ((List.range n).map (fun j => sqfreeFactPart A (i + j)))) :=
+  prodPow_associated (yunLoopAbs_forall₂ A hA n i b d hi hinv) i
