@@ -19,6 +19,7 @@ import DeepWiki.NetworkCalculus.StabilityNetworkGpsConstantEndToEnd
 import DeepWiki.NetworkCalculus.StabilityNetworkScalingInstability
 import DeepWiki.NetworkCalculus.StabilityNetworkScheduler
 import DeepWiki.NetworkCalculus.StabilityLocalOfGlobal
+import DeepWiki.NetworkCalculus.StabilityBehaviourEquivalence
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 12: Stability in Networks with Cyclic Dependencies
@@ -27,7 +28,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§12.1: Lemma 12.2 (global stability ⟹ local stability) `[infra]` — its rate engine is `lemma_12_2_rate` (`longTermServiceRate β = ⊤` ⟹ locally stable); the full wrapper needs the `δ_T` infinite-jump burst-delay curve (NOT expressible in `ℝ≥0`-valued `longTermServiceRate`) + the Prop 5.13 behaviour-equivalence layer (`β ↦ β ∨ δ_T` preserves served pairs), neither built. Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) `[infra]` — needs a network-level token-bucket/rate-latency model-bounding construction. (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.)
+§12.1: Lemma 12.2 (global stability ⟹ local stability) mechanism is now DONE (`lemma_12_2`: the behaviour-preserving raise `β ⊔ rateLatency n T` — Prop 5.13 raise `isStrictMinimalServiceCurve_sup_of_backloggedLength_le` + `r(α)<n` ⟹ locally stable); the `rateLatency n T` surrogate stands in for the `ℝ≥0`-inexpressible infinite-jump `δ_T`, the only residual being the literal `n → ∞` limit. Lemma 12.3 (reduction: linear-model global stability ⟹ local stability suffices for arbitrary curves) `[infra]` — needs a network-level token-bucket/rate-latency model-bounding construction. (Per-server linear-model local-stability is `lemma_12_linearLocal_iff`.)
 §12.2: Example 12.1 (the Figure 12.1 feed-forward transformation) `[deferred]`.
 §12.3: Example 12.2 (FDF priorities on the Figure 12.1 network) `[deferred]`. -/
 
@@ -108,11 +109,32 @@ backlogged period `T` matters), making the service rate `R(h) = ∞`, so every f
 locally stable. This is exactly the rate consequence: `longTermServiceRate β = ⊤` and finite arrival
 rate ⟹ locally stable. The library's `DeepWiki.isLocallyStableServer_of_serviceRate_top`. (The full
 Lemma 12.2 wrapper still needs the `δ_T` infinite-jump curve — not expressible in `ℝ≥0`-valued
-`longTermServiceRate` — and the Prop 5.13 behaviour-equivalence layer; both `[infra]`.) -/
+`longTermServiceRate` — and the Prop 5.13 behaviour-equivalence layer; the full mechanism is
+`lemma_12_2` below.) -/
 theorem lemma_12_2_rate {α β : ℝ≥0 → ℝ≥0} (hβ : longTermServiceRate β = ⊤)
     (hα : longTermArrivalRate α ≠ ⊤) :
     IsLocallyStableServer α β :=
   DeepWiki.isLocallyStableServer_of_serviceRate_top hβ hα
+
+/-- **Lemma 12.2** (global stability ⟹ local stability, §12.1 p.272), the full mechanism via a
+behaviour-preserving service-curve raise. The book raises each strict service curve `β` to `β ∨ δ_T`
+(`δ_T` = pure delay, `0` on `[0,T]`, `+∞` after; `T` bounds every backlogged period): by Prop 5.13
+only `β` before `T` matters, so behaviour is unchanged, but `R = ∞` makes every server locally stable.
+Since `δ_T`'s `+∞` jump is not `ℝ≥0`-expressible, we use the representable surrogate `rateLatency n T`
+(vanishes on `[0,T]`, `longTermServiceRate = n`): for a globally stable strict server (every served
+pair's max backlogged period `≤ T`) and finite arrival rate `r(α) < n`, the raise `β ⊔ rateLatency n T`
+is BOTH still a strict service curve (Prop 5.13 raise, `isStrictMinimalServiceCurve_sup_of_backloggedLength_le`)
+AND locally stable. The library's `DeepWiki.isLocallyStableServer_sup_rateLatency_of_globallyStable`
+(token-bucket form `…_affine_…`). (The literal `global ⟹ local` for the *original* `β` is the infinite
+`δ_T` limit `n → ∞`, genuinely inexpressible in the `ℝ≥0`-valued rate; the surrogate is the faithful
+representable mechanism.) -/
+theorem lemma_12_2 {S : Curve → Curve → Prop} {β α : ℝ≥0 → ℝ≥0} {T n : ℝ≥0}
+    (hβ : IsStrictMinimalServiceCurve β S)
+    (hmax : ∀ A D : Curve, S A D → maxBackloggedLength (⇑A) (⇑D) ≤ (T : ℝ≥0∞))
+    (hrate : longTermArrivalRate α < (n : ℝ≥0∞)) :
+    IsStrictMinimalServiceCurve (fun u => β u ⊔ rateLatency n T u) S ∧
+      IsLocallyStableServer α (fun u => β u ⊔ rateLatency n T u) :=
+  DeepWiki.isLocallyStableServer_sup_rateLatency_of_globallyStable hβ hmax hrate
 
 /-- **Linear-model local stability** (§12.1, per-server reading): a token-bucket flow `γ_{r,b}`
 (`fun t => r*t+b`) against a rate-latency server `β_{R,T}` is locally stable **iff** `r < R`

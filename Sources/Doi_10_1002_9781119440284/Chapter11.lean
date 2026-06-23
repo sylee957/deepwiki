@@ -6,6 +6,7 @@ import DeepWiki.NetworkCalculus.WorstCaseLPInstance
 import DeepWiki.NetworkCalculus.WorstCaseLPTandem
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemChain
 import DeepWiki.NetworkCalculus.WorstCaseLPTandemBacklog
+import DeepWiki.NetworkCalculus.TandemLinearProgram
 import Sources.Doi_10_1002_9781119440284.Source
 
 /-! # DNC catalog — Chapter 11: Tight Worst-case Performances
@@ -14,7 +15,7 @@ Book-numbered catalog entries for this chapter, each linked to the
 or recorded as a note / unformalized item.
 
 ## NOT YET FORMALIZED (subtractive — delete each item once it is formalized)
-§11.1: Example 11.1 (two-server tandem, figure) `[deferred]`; Remark 11.1 / Table 11.1 (the finite tandem LP construction) `[infra]`.
+§11.1: Example 11.1 (two-server tandem, figure) `[deferred]`. Remark 11.1 / Table 11.1 (the finite tandem LP construction) is now done as DATA + soundness (`table_11_1`/`thm_11_1_sound`: the general `n`-server LP variables+constraints, feasibility ⟹ delay ≤ objective); residual `[infra]`: the optimization half (LP optimum = worst case) needs a solver/extremal-trajectory argument, not a closed-form lemma.
 §11.2: Example 11.2 (single FIFO node, figure) `[deferred]`; Theorem 11.2 general FIFO tandem (the exponential MILP construction + trajectory-from-solution reconstruction) `[infra]`. -/
 
 namespace DeepWiki.Dnc
@@ -203,5 +204,25 @@ alias bound_11_2_3_upper := DeepWiki.milpOptimum_le_relaxationOptimum
 set, so the reduced LP's optimum is a (polynomial-time) lower bound on the worst-case delay. The
 library's `reducedOptimum_le_milpOptimum`. -/
 alias bound_11_2_3_lower := DeepWiki.reducedOptimum_le_milpOptimum
+
+/-- **Table 11.1 / §11.1.2** the general `n`-server tandem LP as DATA: variables `TandemLP.Vars`
+(boundary dates `t₀ ≥ ⋯ ≥ tₙ` + aggregate cumulatives sampled at them) and the linear constraints
+`TandemLP.Feasible` (date ordering, cumulative monotonicity, token-bucket arrival at the source,
+per-server rate-latency strict service, flow conservation across boundaries), over the network data
+`TandemLP.Tandem`. The library's `DeepWiki.TandemLP.{Tandem,Vars,Feasible}`. -/
+abbrev table_11_1 := @DeepWiki.TandemLP.Feasible
+
+/-- **Theorem 11.1 / §11.1.3, soundness** (the representable half): a feasible point of the tandem LP
+has its end-to-end delay bounded by the LP objective `(∑ₕ Rₕ·Tₕ + b)/(Rmin − r)`
+(`delay_le_objectiveValue`) — every feasible LP point is a valid worst-case scenario, so the objective
+upper-bounds the realized delay (`TandemLP.delay = ∑ₕ windowₕ` telescoping + the bottleneck inequality).
+The library's `DeepWiki.TandemLP.delay_le_objectiveValue`. (The optimization half — LP optimum EQUALS
+the worst case — is the extremal/existence content needing a solver, not a closed-form Lean lemma; the
+multi-flow routing and the Thm 11.2 FIFO MILP Boolean date-orderings are likewise not built.) -/
+theorem thm_11_1_sound {n : ℕ} {N : DeepWiki.TandemLP.Tandem n} {v : DeepWiki.TandemLP.Vars n}
+    (hv : DeepWiki.TandemLP.Feasible N v) {Rmin : ℝ} (hRmin : ∀ h : Fin n, Rmin ≤ N.rate h)
+    (hstab : N.rate0 < Rmin) :
+    DeepWiki.TandemLP.delay v ≤ DeepWiki.TandemLP.objectiveValue N Rmin :=
+  DeepWiki.TandemLP.delay_le_objectiveValue hv hRmin hstab
 
 end DeepWiki.Dnc
