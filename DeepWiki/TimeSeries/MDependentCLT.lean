@@ -530,4 +530,24 @@ theorem levyProkhorovDist_le_of_eLpNorm_le [IsProbabilityMeasure μ] {f g : Ω �
     (le_trans (levyProkhorovEDist_map_le f g hf.aemeasurable hg.aemeasurable hδ)
       (sup_le le_rfl hcheb))).trans_eq (ENNReal.toReal_ofReal hδ.le)
 
+/-- **A Lévy–Prokhorov distance bound from a variance bound** (centered case): if `f − g` is centered
+with `variance ≤ δ³`, then the laws of `f` and `g` are within `δ` in Lévy–Prokhorov distance. The
+variance-form Chebyshev inequality `meas_ge_le_variance_div_sq` controls `μ{δ ≤ |f−g|} ≤ Var/δ² ≤ δ`,
+fed to `levyProkhorovEDist_map_le`. The engine for `h3` of the m-dependent CLT, where the gap-sum
+variance bound comes straight from `variance_finsetSum_le`. -/
+theorem levyProkhorovDist_le_of_variance_le [IsProbabilityMeasure μ] {f g : Ω → ℝ}
+    (hf : AEMeasurable f μ) (hg : AEMeasurable g μ) (hfg : MemLp (f - g) 2 μ) (hc : μ[f - g] = 0)
+    {δ : ℝ} (hδ : 0 < δ) (hvar : variance (f - g) μ ≤ δ ^ 3) :
+    levyProkhorovDist (μ.map f) (μ.map g) ≤ δ := by
+  have hcheb : μ {ω | δ ≤ dist (f ω) (g ω)} ≤ ENNReal.ofReal δ := by
+    have hset : {ω | δ ≤ dist (f ω) (g ω)} = {ω | δ ≤ |(f - g) ω - μ[f - g]|} := by
+      rw [hc]; ext ω; simp only [Set.mem_setOf_eq, Pi.sub_apply, Real.dist_eq, sub_zero]
+    rw [hset]
+    refine le_trans (meas_ge_le_variance_div_sq hfg hδ) (ENNReal.ofReal_le_ofReal ?_)
+    rw [div_le_iff₀ (by positivity)]
+    nlinarith [hvar]
+  refine (ENNReal.toReal_mono ENNReal.ofReal_ne_top
+    (le_trans (levyProkhorovEDist_map_le f g hf hg hδ) (sup_le le_rfl hcheb))).trans_eq
+    (ENNReal.toReal_ofReal hδ.le)
+
 end DeepWiki.TimeSeries
