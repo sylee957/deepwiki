@@ -329,6 +329,33 @@ theorem gap_card (p m n : ℕ) :
   simp only [bigBlock_card, Finset.sum_const, Finset.card_range, smul_eq_mul]
   rw [Int.card_Ico, sub_zero, Int.toNat_natCast]
 
+omit [MeasurableSpace Ω] in
+/-- **The standardized sample mean minus the gap-removed partial sum is the gap sum**:
+`√n X̄ₙ − Y⁽ᵖ⁾ₙ = (√n)⁻¹ · ∑_{t ∈ [0,n) ∖ ⋃ blocks} Xₜ`. Both standardized sums share the `(√n)⁻¹`
+factor; their difference collects exactly the small-block (gap) indices, via `√n·n⁻¹ = (√n)⁻¹`,
+`sum_biUnion` (disjoint blocks), and `sum_sdiff` (blocks `⊆ [0,n)`). -/
+theorem sqrt_sampleMean_sub_gapRemoved {X : ℤ → Ω → ℝ} (p m n : ℕ) (ω : Ω) :
+    Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)
+      - (Real.sqrt n)⁻¹ * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω
+    = (Real.sqrt n)⁻¹ * ∑ t ∈ Finset.Ico (0 : ℤ) n \
+        (Finset.range (blockCount p m n)).biUnion (bigBlock p m), X t ω := by
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn; simp [Real.sqrt_zero, sampleMean]
+  · have hsub : (Finset.range (blockCount p m n)).biUnion (bigBlock p m) ⊆ Finset.Ico (0 : ℤ) n :=
+      Finset.biUnion_subset.mpr fun i hi => bigBlock_subset_Ico (Finset.mem_range.mp hi)
+    have hsqp : (0 : ℝ) < Real.sqrt n := Real.sqrt_pos.mpr (by positivity)
+    have hn0 : (0 : ℝ) < (n : ℝ) := by positivity
+    have hsm : Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω)
+        = (Real.sqrt n)⁻¹ * ∑ t ∈ Finset.Ico (0 : ℤ) n, X t ω := by
+      rw [sampleMean, ← sum_Ico_zero_int_eq_sum_range (fun t => X t ω) n, ← mul_assoc]
+      congr 1
+      rw [← div_eq_mul_inv, eq_comm, inv_eq_one_div, div_eq_div_iff hsqp.ne' hn0.ne', one_mul,
+        Real.mul_self_sqrt hn0.le]
+    rw [hsm, ← Finset.sum_biUnion (bigBlock_pairwiseDisjoint p m (blockCount p m n)), ← mul_sub]
+    congr 1
+    rw [← Finset.sum_sdiff hsub]
+    ring
+
 /-- **The number of big blocks tends to infinity**: `blockCount p m n → ∞` as `n → ∞` (for a positive
 block-plus-gap length). The index reparametrization that turns the block CLT (in the block count `r`)
 into a statement about the sample size `n`. -/
