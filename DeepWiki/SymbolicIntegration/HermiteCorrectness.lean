@@ -808,6 +808,90 @@ theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     rw [← toPoly_cnorm D, hb1]; exact Dvd.intro_left _ rfl
   exact hdvd.trans hb1D
 
+/-! ### A computable witness for `SqfreeExact` (`native_decide`-checkable)
+
+`SqfreeExact` is phrased with `toPoly` equalities (noncomputable). Its computable mirror `SqfreeExactComp`
+asserts the *vanishing of the `cmod` remainders* of each division — a decidable condition that
+`native_decide` checks on a concrete `D`. `SqfreeExactComp_to_SqfreeExact` discharges the `toPoly` bundle
+from the `cmod`-zero witnesses (via `toPoly_cdiv_of_cmod_zero`), so the Yun radical-divides theorem
+`toPoly_Dstar_dvd_D` is concretely instantiable. -/
+
+/-- **Computable per-step exactness** for the Yun loop: at each non-terminal step the `cmod`-remainder of
+`b` by `q = monic(gcd b d)` vanishes and `q ≠ 0`. Decidable (so `native_decide`-checkable). -/
+def GoExactComp (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
+  | 0, _, _ => True
+  | fo + 1, b, d =>
+    if b.length ≤ 1 then True
+    else
+      let q := cmonic (cgcdExt fuel b d).1
+      let b' := cdiv fuel b q
+      let d' := csub (cdiv fuel d q) (cderiv b')
+      cnorm (cmod fuel b q) = [] ∧ cnorm q ≠ [] ∧ GoExactComp fuel fo b' d'
+
+/-- `GoExactComp` is decidable (the `cmod`-remainder vanishing and `cnorm ≠ []` checks are). -/
+instance decGoExactComp (fuel fo : ℕ) (b d : CPoly) : Decidable (GoExactComp fuel fo b d) := by
+  induction fo generalizing b d with
+  | zero => exact inferInstanceAs (Decidable True)
+  | succ fo ih =>
+    rw [GoExactComp]
+    by_cases hb : b.length ≤ 1
+    · rw [if_pos hb]; exact inferInstanceAs (Decidable True)
+    · rw [if_neg hb]
+      have := ih (cdiv fuel b (cmonic (cgcdExt fuel b d).1))
+        (csub (cdiv fuel d (cmonic (cgcdExt fuel b d).1))
+          (cderiv (cdiv fuel b (cmonic (cgcdExt fuel b d).1))))
+      infer_instance
+
+/-- The computable `GoExactComp` implies the `toPoly` predicate `GoExact`: each vanishing `cmod`
+remainder makes the corresponding `cdiv` an honest division (`toPoly_cdiv_of_cmod_zero`). -/
+theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly),
+    GoExactComp fuel fo b d → GoExact fuel fo b d := by
+  intro fo
+  induction fo with
+  | zero => intro b d _; trivial
+  | succ fo ih =>
+    intro b d h
+    rw [GoExactComp] at h
+    rw [GoExact]
+    by_cases hb : b.length ≤ 1
+    · simp only [hb, if_true]
+    · simp only [hb, if_false] at h ⊢
+      obtain ⟨hrem, hqne, hrest⟩ := h
+      refine ⟨?_, ih _ _ hrest⟩
+      have hrem0 : toPoly (cmod fuel b (cmonic (cgcdExt fuel b d).1)) = 0 := by
+        rw [← toPoly_cnorm, hrem, toPoly_nil]
+      exact (toPoly_cdiv_of_cmod_zero fuel b (cmonic (cgcdExt fuel b d).1) hqne hrem0).trans
+        (mul_comm _ _)
+
+/-- **Computable engine-honesty bundle** for `csqfreeFactor fuel D`: the `cmod`-remainders of the
+initial deflation and of every Yun loop step vanish (and the divisors are nonzero). Decidable
+(`native_decide`-checkable); implies the `toPoly` bundle `SqfreeExact`. -/
+def SqfreeExactComp (fuel : ℕ) (D : CPoly) : Prop :=
+  let p := cnorm D
+  let g := (cgcdExt fuel p (cderiv p)).1
+  let b1 := cdiv fuel p g
+  let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
+  (cnorm (cmod fuel p g) = [] ∧ cnorm g ≠ []) ∧ GoExactComp fuel fuel b1 d1
+
+/-- `SqfreeExactComp` is decidable. -/
+instance decSqfreeExactComp (fuel : ℕ) (D : CPoly) : Decidable (SqfreeExactComp fuel D) := by
+  unfold SqfreeExactComp; infer_instance
+
+/-- The computable `SqfreeExactComp` implies the `toPoly` bundle `SqfreeExact`: the vanishing
+`cmod`-remainders make the initial deflation and each Yun step honest divisions
+(`toPoly_cdiv_of_cmod_zero`, `GoExactComp_to_GoExact`). -/
+theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : CPoly) :
+    SqfreeExactComp fuel D → SqfreeExact fuel D := by
+  intro h
+  rw [SqfreeExactComp] at h
+  rw [SqfreeExact]
+  obtain ⟨⟨hrem, hgne⟩, hgo⟩ := h
+  refine ⟨?_, GoExactComp_to_GoExact fuel fuel _ _ hgo⟩
+  have hrem0 : toPoly (cmod fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1) = 0 := by
+    rw [← toPoly_cnorm, hrem, toPoly_nil]
+  exact (toPoly_cdiv_of_cmod_zero fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1
+    hgne hrem0).trans (mul_comm _ _)
+
 /-! ### Example 2.2.1: the certificate is real
 
 The exact-division certificate `hexact` is not vacuous: on Example 2.2.1 the residual `cdiv`
@@ -860,3 +944,17 @@ example :
     rw [← cnorm_eq_nil_iff, hermite_ex221_exact_division]
   exact hermiteReduce_residual_correct 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hexact
+
+/-- **Example 2.2.1: the engine-honesty bundle holds** (`native_decide`): every `cmod`-remainder in the
+Yun factorization of `D = x²(x²+2)³` vanishes, so `SqfreeExactComp 40 cD221` — and hence (via
+`SqfreeExactComp_to_SqfreeExact`) the `toPoly` bundle `SqfreeExact 40 cD221` — holds. -/
+theorem hermite_ex221_sqfreeExactComp : SqfreeExactComp 40 cD221 := by native_decide
+
+/-- **Example 2.2.1: the Yun radical divides `D`** — the radical `Dstar = x(x²+2) = x³+2x` of
+`csqfreeFactor 40 cD221` divides `D = x²(x²+2)³` in `ℚ[X]`. A concrete, non-vacuous instance of
+`toPoly_Dstar_dvd_D`, discharged through the `native_decide`'d computable bundle
+`hermite_ex221_sqfreeExactComp`. -/
+example :
+    toPoly ((csqfreeFactor 40 cD221).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
+      ∣ toPoly cD221 :=
+  toPoly_Dstar_dvd_D 40 cD221 (SqfreeExactComp_to_SqfreeExact 40 cD221 hermite_ex221_sqfreeExactComp)
