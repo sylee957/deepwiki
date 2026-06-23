@@ -2186,6 +2186,45 @@ theorem C_dvd_lazardView_succ {K : Type*} [Field K]
   rw [mul_comm (Polynomial.C gj)] at hCq
   exact (mul_dvd_mul_iff_left (by rwa [Ne, Polynomial.C_eq_zero])).mp hCq
 
+/-! ## Part A: the common content of the leading `y`-coefficients (`gₖ`)
+
+Lazard (1985), Theorem 1 proof (p.262): the basis may be divided by `primpart(gcd(f₀,…,fₖ)) ·
+content(gcd(f₀,…,fₖ))` to reduce to the **no-common-factor** case where `P = Gₖ₊₁ = 1` and `gₖ = 1`.
+
+The common content of the leading `y`-coefficients has a clean closed form here: since the
+higher-`y`-degree `g_j` divides every lower `gᵢ` (`leadingYCoeff_sortedByYDegree_dvd_of_le`), the
+**top** element `gₖ = leadingYCoeff (sorted top)` already divides *all* the `gᵢ` — so the gcd of the
+leading coefficients is `gₖ` (up to associates). The no-common-factor condition is therefore
+`IsUnit gₖ`, recorded as `GbLeadingCoeffsCoprime`. -/
+
+/-- **The common divisor of the leading `y`-coefficients** (Lazard's `Gₖ₊₁`-content, closed form):
+the leading `y`-coefficient `gₖ` of the **top** (`y`-degree-maximal) sorted basis element. By
+`leadingYCoeff_sortedByYDegree_dvd_of_le` it divides `leadingYCoeff (sorted i)` for every `i`. -/
+noncomputable def gbCommonContent {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (htop : Fin B.card) : MvPolynomial (Fin 1) K :=
+  leadingYCoeff (sortedByYDegree hB htop)
+
+/-- **`gbCommonContent` divides every leading `y`-coefficient**: with `htop` the `y`-degree-maximal
+index (`∀ i, i ≤ htop`), `gₖ = gbCommonContent` divides `leadingYCoeff (sorted i)` for all `i`. -/
+theorem gbCommonContent_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {htop : Fin B.card} (hmax : ∀ i : Fin B.card, i ≤ htop) (i : Fin B.card) :
+    gbCommonContent hB htop ∣ leadingYCoeff (sortedByYDegree hB i) :=
+  leadingYCoeff_sortedByYDegree_dvd_of_le hB (hmax i)
+
+/-- **The no-common-factor condition** (Lazard's `gₖ = 1`): the leading `y`-coefficients of the
+basis have a unit common divisor, i.e. `IsUnit gₖ` for the top element. This is the hypothesis that
+Theorem 1's "divide by `PGₖ₊₁`" achieves; it makes every `gₖ ∣ gᵢ` a unit-multiple, the precondition
+of the unconditional descent. -/
+def GbLeadingCoeffsCoprime {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (htop : Fin B.card) : Prop :=
+  IsUnit (gbCommonContent hB htop)
+
 /-- **Lazard's Lemma 3 descent, strengthened induction** (Part B). Assuming the no-common-factor
 **base** `degreeOf 0 (sorted 0) = 0` (`f₀ ∈ K[x]`, `hbase`), the divisibility `C(gᵢ) ∣ lazardView
 (sorted j)` holds for **all** `j ≤ i` — by strong induction on `i.val`: the base `i.val = 0` is
@@ -2374,6 +2413,33 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {i j : Fin B.card} (hij : i ≤ j) :
     leadingYCoeff (sortedByYDegree hB j) ∣ leadingYCoeff (sortedByYDegree hB i) :=
   leadingYCoeff_sortedByYDegree_dvd_of_le hB hij
+
+-- Restatements of the no-common-factor descent (Parts A–C) against the intended wording.
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {htop : Fin B.card} (hmax : ∀ i : Fin B.card, i ≤ htop) (i : Fin B.card) :
+    gbCommonContent hB htop ∣ leadingYCoeff (sortedByYDegree hB i) :=
+  gbCommonContent_dvd hB hmax i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0)
+    (i : Fin B.card) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
+  lazard_lemma3_dvd hB hbase i
+
+example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
+    {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i i1 : Fin B.card} (hii1 : i < i1)
+    (hsucc : ∀ j : Fin B.card, j < i1 → j ≤ i)
+    (hIH : ∀ j : Fin B.card, j ≤ i →
+      Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB j)) :
+    Polynomial.C (leadingYCoeff (sortedByYDegree hB i1))
+      ∣ lazardView (sortedByYDegree hB i1) :=
+  C_dvd_lazardView_succ hB hii1 hsucc hIH
 
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf0 : degreeOf 0 f = 0) :
     Polynomial.C (leadingYCoeff f) ∣ lazardView f :=
