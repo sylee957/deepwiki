@@ -230,4 +230,61 @@ theorem residueAt_div_eq_residue (A E : K[X]) (α : K) (hE : E.eval α ≠ 0) :
   rw [map_mul]
   field_simp
 
+/-- **Factorization of `(X − α)·N'` along the root multiplicity** (computation 2, the polynomial core):
+for `N = (X − α)^k · N₁`, `(X − α)·N' = (X − α)^k · (k·N₁ + (X − α)·N₁')` — the `(X − α)^k` common factor
+that cancels against `N` in `(X − α)·(N'/N)`, leaving the regular-at-`α` quotient
+`(k·N₁ + (X − α)·N₁')/N₁`. -/
+theorem mul_X_sub_C_derivative_pow_mul (α : K) (k : ℕ) (N₁ : K[X]) :
+    (X - C α) * derivative ((X - C α) ^ k * N₁)
+      = (X - C α) ^ k * (C (k : K) * N₁ + (X - C α) * derivative N₁) := by
+  rw [derivative_mul, derivative_pow, derivative_X_sub_C, mul_one]
+  cases k with
+  | zero => simp
+  | succ m => rw [Nat.add_sub_cancel]; ring
+
+open scoped Differential in
+/-- `logDeriv` of a polynomial in `K(x)` is `N'/N`: `logDeriv(algebraMap N) = algebraMap(N')/algebraMap(N)`.
+-/
+theorem logDeriv_algebraMap_eq (N : K[X]) :
+    Differential.logDeriv (algebraMap K[X] (RatFunc K) N)
+      = algebraMap K[X] (RatFunc K) (derivative N) / algebraMap K[X] (RatFunc K) N := by
+  rw [Differential.logDeriv,
+    show (algebraMap K[X] (RatFunc K) N)′ = ratFuncDeriv _ from rfl, ratFuncDeriv_algebraMap]
+
+open scoped Classical in
+open scoped Differential in
+/-- **Residue of `logDeriv N` at `α` is the root multiplicity** (computation 2, Bronstein §2.9): for
+nonzero `N : K[X]`, the residue at `α` of the logarithmic derivative `N'/N` is the multiplicity of `α`
+as a root of `N` — `residueAt α (logDeriv N) = (rootMultiplicity α N : K)`. Writing `N = (X − α)^k·N₁`
+with `N₁(α) ≠ 0` (`k = rootMultiplicity α N`), `(X − α)·(N'/N) = (k·N₁ + (X − α)·N₁')/N₁`, regular at
+`α` and evaluating there to `(k·N₁(α) + 0)/N₁(α) = k`. -/
+theorem residueAt_logDeriv_eq_rootMultiplicity (N : K[X]) (hN : N ≠ 0) (α : K) :
+    residueAt α (Differential.logDeriv (algebraMap K[X] (RatFunc K) N))
+      = (N.rootMultiplicity α : K) := by
+  set k := N.rootMultiplicity α with hk
+  obtain ⟨N₁, hNeq, hndvd⟩ := N.exists_eq_pow_rootMultiplicity_mul_and_not_dvd hN α
+  rw [← hk] at hNeq
+  -- `N₁(α) ≠ 0` from `¬(X − α) ∣ N₁`
+  have hN₁ : N₁.eval α ≠ 0 := fun h0 => hndvd (dvd_iff_isRoot.mpr h0)
+  have hN₁0 : N₁ ≠ 0 := fun h0 => hN₁ (by rw [h0, eval_zero])
+  rw [logDeriv_algebraMap_eq]
+  -- reduce to the regular quotient `(k·N₁ + (X−α)·N₁')/N₁`
+  refine (residueAt_of_mul_X_sub_C α _ (C (k : K) * N₁ + (X - C α) * derivative N₁) N₁ hN₁ ?_).trans ?_
+  · -- the RatFunc identity, from the polynomial factorization, canceling `(X−α)^k`
+    have hpoly : (X - C α) * derivative N
+        = (X - C α) ^ k * (C (k : K) * N₁ + (X - C α) * derivative N₁) := by
+      rw [hNeq]; exact mul_X_sub_C_derivative_pow_mul α k N₁
+    have hN₁ne : algebraMap K[X] (RatFunc K) N₁ ≠ 0 :=
+      (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hN₁0
+    have hNne : algebraMap K[X] (RatFunc K) N ≠ 0 :=
+      (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hN
+    have hpkne : algebraMap K[X] (RatFunc K) ((X - C α) ^ k) ≠ 0 :=
+      (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (pow_ne_zero _ (X_sub_C_ne_zero α))
+    rw [← mul_div_assoc, ← map_mul, hpoly, hNeq]
+    simp only [map_mul]
+    rw [mul_div_mul_left (G₀ := RatFunc K) _ _ hpkne]
+  · -- evaluate `(k·N₁ + (X−α)·N₁')/N₁` at `α`: numerator `= k·N₁(α)`, ratio `= k`
+    simp only [eval_add, eval_mul, eval_C, eval_sub, eval_X, sub_self, zero_mul, add_zero]
+    rw [mul_div_assoc, div_self hN₁, mul_one]
+
 end DeepWiki.SymbolicIntegration
