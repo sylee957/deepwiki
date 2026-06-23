@@ -321,6 +321,44 @@ theorem IsMDependent.tendstoInDistribution_bigBlockSum {m : ℕ} {X : ℤ → Ω
   iidNoise_sampleMean_clt hY (memLp_finsetSum _ fun t _ => hmem t) (hmdep.iIndepFun_bigBlockSum p)
     fun i => hstat.identDistrib_bigBlockSum hmeas p m i
 
+/-- **h1 — the gap-removed big-block partial sum obeys the block CLT**: for a strictly stationary
+centered `L²` `m`-dependent process, `Y⁽ᵖ⁾ₙ = (√n)⁻¹ ∑_{i<r(n)} ∑_{t∈bigBlock i} Xₜ ⇒ (1/√(p+m)) Y`,
+where `Y ~ N(0, Var U₀)` (so the limit has variance `vₚ = Var U₀/(p+m)`). Reparametrizes the block
+CLT by `r(n) = ⌊n/(p+m)⌋ → ∞`, then applies the deterministic `√(r/n) → 1/√(p+m)` Slutsky factor; the
+`√` algebra `√(r/n)·√r·r⁻¹ = (√n)⁻¹` reconciles the statistic with `Y⁽ᵖ⁾ₙ` (centering drops `E U₀`). -/
+theorem IsMDependent.tendstoInDistribution_gapRemoved {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P']
+    (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem : ∀ t, MemLp (X t) 2 μ) (hcenter : ∀ t, μ[X t] = 0) {p : ℕ} (hp : 0 < p) {Y : Ω' → ℝ}
+    (hY : HasLaw Y (gaussianReal 0 Var[fun ω => ∑ t ∈ bigBlock p m 0, X t ω; μ].toNNReal) P') :
+    TendstoInDistribution (fun (n : ℕ) ω => (Real.sqrt n)⁻¹
+        * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω) atTop
+      (fun ω => 1 / Real.sqrt ((p + m : ℕ) : ℝ) * Y ω) (fun _ => μ) P' := by
+  have hpm : p + m ≠ 0 := by omega
+  have hc0 : μ[fun ω => ∑ t ∈ bigBlock p m 0, X t ω] = 0 :=
+    integral_bigBlockSum_eq_zero hmem hcenter p m
+  have hrep := tendstoInDistribution_comp_tendsto
+    (hmdep.tendstoInDistribution_bigBlockSum hstat hmeas hmem p hY) (tendsto_blockCount hpm)
+  have hslut := hrep.continuous_comp_prodMk_of_tendstoInMeasure_const
+    (g := fun ab : ℝ × ℝ => ab.2 * ab.1) (by fun_prop)
+    (tendstoInMeasure_const_of_tendsto (tendsto_sqrt_blockCount_div hpm)) (fun _ => aemeasurable_const)
+  have hstat_eq : (fun (n : ℕ) ω => (Real.sqrt n)⁻¹
+        * ∑ i ∈ Finset.range (blockCount p m n), ∑ t ∈ bigBlock p m i, X t ω)
+      = fun n ω => Real.sqrt ((blockCount p m n : ℝ) / n)
+        * (Real.sqrt (blockCount p m n)
+          * (sampleMean (blockCount p m n) (fun k => ∑ t ∈ bigBlock p m k, X t ω)
+            - μ[fun ω => ∑ t ∈ bigBlock p m 0, X t ω])) := by
+    funext n ω
+    rw [hc0, sub_zero, sampleMean]
+    rcases Nat.eq_zero_or_pos (blockCount p m n) with hr | hr
+    · simp [hr]
+    · have hrR : (0 : ℝ) < blockCount p m n := by exact_mod_cast hr
+      rw [Real.sqrt_div hrR.le]
+      field_simp
+      rw [Real.sq_sqrt hrR.le]
+  rw [hstat_eq]
+  exact hslut
+
 /-- **The long-run variance of an m-dependent process is the finite sum `∑_{|h| ≤ m} γ(h)`**: the
 autocovariance series collapses to lags within the dependence range. -/
 theorem tsum_acvfStat_eq_sum_of_mDependent {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDependent m X μ)
