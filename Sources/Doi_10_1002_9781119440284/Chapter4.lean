@@ -36,6 +36,7 @@ import DeepWiki.NetworkCalculus.ContainerInclusion
 import DeepWiki.NetworkCalculus.ContainerCanonicalBound
 import DeepWiki.NetworkCalculus.LegendreFenchelConcave
 import DeepWiki.NetworkCalculus.PwlBreakpoints
+import DeepWiki.NetworkCalculus.PwlThetaDecomp
 import DeepWiki.NetworkCalculus.ContainerClosure
 import DeepWiki.NetworkCalculus.ClosureFactorization
 import DeepWiki.NetworkCalculus.ClosuresEReal
@@ -80,9 +81,10 @@ Def 4.5/Thm 4.4 is the `C_vx`/`C_cv` canonicalization of the [4.16]/[4.17] bound
 hull layer) and the `F`-closure halves (book defers Thm 4.4's full proof to [LEC 14]); Proposition 4.4 (canonical
 bound: `Cvx f` is the least element of `[f]_L`) DONE (`prop_4_4`); Lemma 4.10 (computing in `F↑/L` ≡
 canonical reps) DONE for `⊓`/`∗` (`lemma_4_10`, [4.10]/[4.11]); residual `[infra]`: the breakpoint/rank
-layer is now built (`pwl_breakpoints`/`pwlRank`/`breakpoints`), but full Prop 4.4 [4.13] needs *sloped*
-`Θ` generators (the constant `Theta` meet only samples `f` at breakpoints) and Lemma 4.10 [4.12]
-closure needs a closure↔Legendre identity.
+layer (`pwl_breakpoints`/`pwlRank`/`breakpoints`) and Prop 4.4 [4.13]'s canonical upper bound `Ω_f̲`
+(`prop_4_4_canonicalBound`/`canonicalUpperBound`: `f̲ ≤ ⋀ᵢ Θ`, the constant-`Θ` meet IS [4.13] — it's
+the upper bound, not `f̲`) are DONE; the convex companion `f̲ = ⨆ β` is `≤` + asymptotic-exact (full
+per-segment equality open); Lemma 4.10 [4.12] closure still needs a closure↔Legendre identity.
 So Ch4's numbered Defs/Props/Lemmas/Thms are all formalized (cores); the remaining items are the
 book-deferred general three-part Thm 4.2 (→[BOU 16a]) and full Thm 4.4 (→[LEC 14]), the `C_cv` hull,
 the `[*]` closure inclusion, and the `Θ`/closure infra layers. Remark 4.1. -/
@@ -966,6 +968,18 @@ theorem pwl_breakpoints (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (k 
     convexSegEval f0 fs segs (DeepWiki.segLenSum (segs.take k))
       = f0 + DeepWiki.cornerSum (segs.take k) :=
   DeepWiki.convexSegEval_at_breakpoint f0 fs segs k
+
+/-- **Proposition 4.4 eq. [4.13]** (§4.4, p.86): the canonical UPPER bound `Ω_f̲ = ⋀ᵢ Θ^{κᵢ}_{tᵢ}` of a
+convex PWL — the meet of the (piecewise-constant) elementary functions `Θ` over the
+non-differentiable points, sampling `f̲` at each breakpoint and `= +∞` past the last. It majorizes:
+`f̲ ≤ Ω_f̲` (`convexSegEval_le_canonicalUpperBound`), is exact at breakpoints, and `= ⊤` past the rank.
+(The constant `Θ` is correct here — `Ω_f̲` is the upper bound, NOT `f̲` itself; the convex companion
+`f̲ = ⨆ᵢ β_{Rᵢ,Tᵢ}` sup-of-rate-latencies is `convexNFEval_le_convexSegEval` + asymptotic-tangent
+exactness `convexNFEval_eq_past_rank_of_mem_tangent`, full per-segment equality open.) The library's
+`DeepWiki.canonicalUpperBound`. -/
+theorem prop_4_4_canonicalBound (f0 fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) (t : ℝ≥0) :
+    ((convexSegEval f0 fs segs t : ℝ≥0) : EReal) ≤ DeepWiki.canonicalUpperBound f0 fs segs t :=
+  DeepWiki.convexSegEval_le_canonicalUpperBound f0 fs segs t
 
 /-- **Lemma 4.10** (§4.4, p.86): computing in the dioid `F↑/L` is equivalent to computing with
 canonical representatives. The canonical-rep map is a section (`[Cvx f]_L = [f]_L`, `mk_biconj`), and
