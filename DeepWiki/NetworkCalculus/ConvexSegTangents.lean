@@ -362,6 +362,62 @@ theorem suffix_slopes_ge (pre post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0
   · exact le_rfl
   · exact hsuf.1 seg hseg
 
+/-! ### The canonical segment-tangent generator list -/
+
+/-- The **segment tangents accumulated from a prefix** `pre`: for `f0 = 0`, one tangent generator
+`(s, segTangentLatency 0 (pre ++ <segments so far>) s)` per remaining segment, threading the running
+prefix so each latency uses the correct cumulative `pre`. -/
+noncomputable def segTangentGensFrom (pre : List (ℝ≥0 × ℝ≥0)) :
+    List (ℝ≥0 × ℝ≥0) → List (ℝ≥0 × ℝ≥0)
+  | [] => []
+  | (s, ℓ) :: rest => (s, segTangentLatency 0 pre s) :: segTangentGensFrom (pre ++ [(s, ℓ)]) rest
+
+/-- The **canonical convex tangent generator list** of `convexSegEval 0 fs segs`: one tangent
+rate-latency per finite segment (`segTangentGensFrom []`) plus the asymptotic tangent `(fs, T∞)`. -/
+noncomputable def segTangentGens (fs : ℝ≥0) (segs : List (ℝ≥0 × ℝ≥0)) : List (ℝ≥0 × ℝ≥0) :=
+  segTangentGensFrom [] segs ++ [(fs, asymptoteTangentLatency 0 fs segs)]
+
+/-- **Every split's segment tangent is in the accumulated list.** For a split
+`segs = pre2 ++ (s, ℓ) :: post`, the tangent `(s, segTangentLatency 0 (pre ++ pre2) s)` is a member
+of `segTangentGensFrom pre segs` — the running prefix `pre` composes with the split prefix `pre2`. -/
+theorem mem_segTangentGensFrom (pre pre2 post : List (ℝ≥0 × ℝ≥0)) (s ℓ : ℝ≥0) :
+    ∀ segs : List (ℝ≥0 × ℝ≥0), segs = pre2 ++ (s, ℓ) :: post →
+      (s, segTangentLatency 0 (pre ++ pre2) s) ∈ segTangentGensFrom pre segs := by
+  induction pre2 generalizing pre with
+  | nil =>
+      intro segs hsegs
+      subst hsegs
+      rw [List.nil_append, segTangentGensFrom, List.append_nil]
+      exact List.mem_cons_self
+  | cons hd tl ih =>
+      intro segs hsegs
+      obtain ⟨sa, ℓa⟩ := hd
+      subst hsegs
+      rw [List.cons_append, segTangentGensFrom]
+      refine List.mem_cons_of_mem _ ?_
+      have := ih (pre ++ [(sa, ℓa)]) (tl ++ (s, ℓ) :: post) rfl
+      rwa [List.append_assoc, List.singleton_append] at this
+
+/-- **Every accumulated generator comes from a split.** A member `g ∈ segTangentGensFrom pre segs`
+is `(s, segTangentLatency 0 (pre ++ pre2) s)` for some split `segs = pre2 ++ (s, ℓ) :: post`. (The
+converse of `mem_segTangentGensFrom`; lets us read off the prefix of any generator.) -/
+theorem mem_segTangentGensFrom_iff {pre : List (ℝ≥0 × ℝ≥0)} :
+    ∀ {segs : List (ℝ≥0 × ℝ≥0)} {g : ℝ≥0 × ℝ≥0}, g ∈ segTangentGensFrom pre segs →
+      ∃ (pre2 post : List (ℝ≥0 × ℝ≥0)) (ℓ : ℝ≥0),
+        segs = pre2 ++ (g.1, ℓ) :: post ∧ g.2 = segTangentLatency 0 (pre ++ pre2) g.1 := by
+  intro segs
+  induction segs generalizing pre with
+  | nil => intro g hg; rw [segTangentGensFrom] at hg; simp at hg
+  | cons hd tl ih =>
+      obtain ⟨sa, ℓa⟩ := hd
+      intro g hg
+      rw [segTangentGensFrom] at hg
+      rcases List.mem_cons.mp hg with rfl | hg
+      · exact ⟨[], tl, ℓa, by simp, by simp⟩
+      · obtain ⟨pre2, post, ℓ, hsplit, hlat⟩ := ih hg
+        refine ⟨(sa, ℓa) :: pre2, post, ℓ, by rw [List.cons_append, hsplit], ?_⟩
+        rw [hlat, List.append_assoc, List.singleton_append]
+
 /-! ## The full convex tangent decomposition (`f0 = 0`, slope-sorted, positive slopes)
 
 The end target [4.13]-convex: a convex PWL null at the origin with slope-sorted, strictly positive
