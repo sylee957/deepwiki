@@ -4319,6 +4319,28 @@ theorem lazard_Pk_eq_Rk_Sk_dividedIdeal {K : Type*} [Field K]
   lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor hB'
     (hasNoCommonYFactor_of_dividedIdeal hB hne hB') j
 
+/-- **Lazard's `Pₖ = Rₖ·Sₖ`, fully unconditional** (Theorem 1, the divide-out closed). For a reduced
+bivariate Gröbner basis `hB` of `I` (nonempty), there *exists* a reduced Gröbner basis `B'` of the
+divided ideal `I' = span {fᵢ/H}` (`exists_isReducedGroebnerBasis`), and every sorted element of `B'`
+splits as `lazardView fⱼ = C(cⱼ)·Sⱼ` with content `cⱼ ∼ leadingYCoeff fⱼ`, `Sⱼ` primitive and monic
+in `y`. No `hassoc`/`HasNoCommonYFactor` hypothesis: both are discharged by the divided-ideal
+invariance and the reduced-GB existence theorem. -/
+theorem lazard_Pk_eq_Rk_Sk_unconditional {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty) :
+    ∃ B' : Finset (MvPolynomial (Fin 2) K),
+      ∃ hB' : IsReducedGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+        (↑B' : Set (MvPolynomial (Fin 2) K)),
+      ∀ j : Fin B'.card, ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+        lazardView (sortedByYDegree hB' j) = Polynomial.C (@Polynomial.content _ _
+            (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB' j))) * S ∧
+          Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+            (lazardView (sortedByYDegree hB' j))) (leadingYCoeff (sortedByYDegree hB' j)) ∧
+          S.IsPrimitive ∧ IsUnit S.leadingCoeff := by
+  obtain ⟨B', hB'⟩ := exists_isReducedGroebnerBasis MonomialOrder.lex (dividedIdeal hB hne)
+  exact ⟨B', hB', fun j => lazard_Pk_eq_Rk_Sk_dividedIdeal hB hne hB' j⟩
+
 -- The divided family is a Gröbner basis of `I' = span {fᵢ/H}` (Lazard Thm 1, Part C).
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
