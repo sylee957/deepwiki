@@ -3695,4 +3695,34 @@ theorem dividedBasis_leadingMonomial_not_le {K : Type*} [Field K]
   · rw [gbCommonYFactor_mul_dividedBasis, gbCommonYFactor_mul_dividedBasis]
     exact fun h => hii (sortedByYDegree_injective hB h)
 
+/-- **The monic divided family has no common `y`-factor** (Lazard's `P = Gₖ₊₁ = 1` for `{fᵢ/H}`): any
+`K[x][y]`-divisor `P` common to all `lazardView (monicDividedBasis hB hne i)` is a unit. Each view is
+*associated* to the cofactor `gbYGcdCofactor hB hne i` (`lazardView_monicDividedBasis_associated`),
+whose family gcd is `1` (`cofactor_hasNoCommonYFactor`). -/
+theorem monicDividedBasis_hasNoCommonYFactor {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hne : (Finset.univ : Finset (Fin B.card)).Nonempty)
+    (P : Polynomial (MvPolynomial (Fin 1) K))
+    (hP : ∀ i : Fin B.card, P ∣ lazardView (monicDividedBasis hB hne i)) : IsUnit P := by
+  refine cofactor_hasNoCommonYFactor hB hne P (fun i => ?_)
+  exact (hP i).trans (lazardView_monicDividedBasis_associated hB hne i).symm.dvd
+
+/-- **Ideal-membership transfer of `P ∣ lazardView`** (the `HasNoCommonYFactor`-invariance core).
+If `P` divides `lazardView b'` for every `b'` in a generating set `B'` of an ideal containing `g`,
+then `P ∣ lazardView g`: writing `g = ∑ cₖ·b'ₖ`, `lazardView g = ∑ lazardView(cₖ)·lazardView(b'ₖ)` and
+`P` divides each term. So a common `y`-factor of one generating set divides every ideal member's view
+— the fact that makes `HasNoCommonYFactor` an *ideal* invariant, not a basis-presentation artefact. -/
+theorem dvd_lazardView_of_mem_span {K : Type*}
+    [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
+    {B' : Set (MvPolynomial (Fin 2) K)} (hP : ∀ b' ∈ B', P ∣ lazardView b')
+    {g : MvPolynomial (Fin 2) K} (hg : g ∈ Ideal.span B') : P ∣ lazardView g := by
+  refine Submodule.span_induction ?_ ?_ ?_ ?_ hg
+  · intro x hx; exact hP x hx
+  · rw [lazardView, map_zero]; exact dvd_zero _
+  · intro x y _ _ hx hy; rw [lazardView, map_add]; exact dvd_add hx hy
+  · intro a x _ hx
+    rw [lazardView, smul_eq_mul, map_mul]
+    exact Dvd.dvd.mul_left hx _
+
 end DeepWiki.SymbolicIntegration
