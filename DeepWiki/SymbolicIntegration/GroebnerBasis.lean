@@ -1192,6 +1192,54 @@ example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
     leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g :=
   leadingYCoeff_mul f g
 
+/-! ## Toward Lazard's Lemma 2: the `y`-shift toolbox
+
+Lazard (1985), Lemma 2 — the leading-`y`-coefficient `R_{i+1} = leadingYCoeff f_{i+1}` divides
+`Rᵢ = leadingYCoeff fᵢ` along a minimal bivariate Gröbner basis sorted by increasing `y`-degree
+(Lemma 1, `lazard_lemma1`). The proof's algebraic core: since `d(i) < d(i+1)` the ideal members
+`y^{d(i+1)−d(i)}·fᵢ` and `f_{i+1}` share `y`-degree `d(i+1)`; dividing their leading terms produces an
+ideal element of `y`-degree `d(i+1)` whose leading-`y`-coefficient is `gcd(Rᵢ, R_{i+1})`; its leading
+monomial must be divisible by some basis element's leading monomial, and minimality forces
+`R_{i+1} = gcd(Rᵢ, R_{i+1})`, i.e. `R_{i+1} ∣ Rᵢ`.
+
+The `y`-shift `f ↦ y^k·f` is the move that aligns the two `y`-degrees. Under the `K[x][y]` view
+(`y = X 0`), it multiplies `lazardView` by `Polynomial.X ^ k`, so it adds `k` to the `y`-degree and
+leaves the leading-`y`-coefficient unchanged. These facts (`degreeOf_X_pow_mul`,
+`leadingYCoeff_X_pow_mul`) and the resulting same-`y`-degree alignment (`leadingYCoeff_yShift_eq`)
+are formalized; the full divisibility conclusion rests on Lazard's Theorem 1 structure (content /
+primpart / `Pₖ = Rₖ·Sₖ`), which is unformalized — see the §2.6 residual. -/
+
+/-- The `K[x][y]` view of a `y`-shift: `lazardView (X 0 ^ k * f) = Polynomial.X ^ k * lazardView f`
+(`finSuccEquiv (X 0) = Polynomial.X`). -/
+theorem lazardView_X_pow_mul {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
+    lazardView (X 0 ^ k * f) = Polynomial.X ^ k * lazardView f := by
+  rw [lazardView, lazardView, map_mul, map_pow, finSuccEquiv_X_zero]
+
+/-- **`y`-shift adds `k` to the `y`-degree**: `degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k` for
+`f ≠ 0` (the `K[x][y]` `natDegree` of `X^k * lazardView f`). -/
+theorem degreeOf_X_pow_mul {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k := by
+  have hne : lazardView f ≠ 0 := lazardView_eq_zero_iff.not.mpr hf
+  rw [← natDegree_lazardView, ← natDegree_lazardView, lazardView_X_pow_mul,
+    Polynomial.natDegree_X_pow_mul k hne]
+
+/-- **`y`-shift fixes the leading-`y`-coefficient**: `leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f`
+(`Polynomial.leadingCoeff_mul_X_pow`). -/
+theorem leadingYCoeff_X_pow_mul {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
+    leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f := by
+  rw [leadingYCoeff, leadingYCoeff, lazardView_X_pow_mul, mul_comm, Polynomial.leadingCoeff_mul_X_pow]
+
+/-- **The same-`y`-degree alignment of Lazard's Lemma 2** (the `R_{i+1} ∣ Rᵢ` setup): if `fᵢ` has
+`y`-degree `dᵢ` and `f_{i+1}` has `y`-degree `d_{i+1}` with `dᵢ ≤ d_{i+1}`, then the `y`-shifted
+`y^{d_{i+1}−dᵢ}·fᵢ` matches the `y`-degree `d_{i+1}` of `f_{i+1}` while keeping the leading-`y`-coefficient
+`Rᵢ` — so their leading terms (degree `d_{i+1}`) can be divided, the step producing `gcd(Rᵢ, R_{i+1})`. -/
+theorem leadingYCoeff_yShift_eq {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
+    (hfi : fi ≠ 0) (hd : degreeOf 0 fi ≤ degreeOf 0 fi1) :
+    degreeOf 0 (X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi) = degreeOf 0 fi1 ∧
+      leadingYCoeff (X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi) = leadingYCoeff fi :=
+  ⟨by rw [degreeOf_X_pow_mul _ hfi, Nat.add_sub_cancel' hd],
+    leadingYCoeff_X_pow_mul _ fi⟩
+
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
     (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
     (hne : b ≠ b') : ¬ (m.degree b' ≤ m.degree b) :=
@@ -1202,6 +1250,14 @@ example {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
     ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 :=
   lazard_lemma1 hB
+
+example {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k :=
+  degreeOf_X_pow_mul k hf
+
+example {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
+    leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f :=
+  leadingYCoeff_X_pow_mul k f
 
 -- Restatements against the intended wording.
 example (m : MonomialOrder σ) (I : Ideal (MvPolynomial σ R))
