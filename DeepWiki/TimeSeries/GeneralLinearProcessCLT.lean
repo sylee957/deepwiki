@@ -15,6 +15,12 @@ open scoped ENNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
+/-- **The causal linear process `Xₜ = ∑_{j≥0} ψⱼ Z_{t−j}`** as an `L²(μ)` element — the `MA(∞)`
+representation driven by a causal filter `ψ : ℕ → ℝ` over the `L²`-embedded noise `toLpSeq Z`. -/
+noncomputable def causalLinearProcessLp (ψ : ℕ → ℝ) (Z : ℤ → Ω → ℝ) (hZ : ∀ t, MemLp (Z t) 2 μ)
+    (t : ℤ) : Lp ℝ 2 μ :=
+  ∑' j : ℕ, ψ j • toLpSeq Z hZ (t - (j : ℤ))
+
 /-- The windowed lag-`j` difference is square-integrable (a finite sum of `L²` differences). -/
 theorem memLp_lag {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 2 μ) (n j : ℕ) :
     MemLp (fun ω => ∑ t ∈ Finset.range n, (Z ((t : ℤ) - j) ω - Z (t : ℤ) ω)) 2 μ :=
@@ -123,5 +129,17 @@ theorem norm_sampleSum_sub_le {Z : ℤ → Ω → ℝ} (hZ : ∀ t, MemLp (Z t) 
 theorem eLpNorm_coeFn {E : Type*} [NormedAddCommGroup E] {p : ℝ≥0∞} (W : Lp E p μ) :
     eLpNorm (⇑W) p μ = ‖W‖ₑ := by
   rw [← Lp.enorm_toLp (Lp.memLp W), Lp.toLp_coeFn]
+
+/-- Finite sums respect almost-everywhere equality: if `fᵢ =ᵐ gᵢ` for each `i ∈ s`, then the
+pointwise finite sums are a.e. equal. -/
+theorem sum_eventuallyEq {ι : Type*} (s : Finset ι) {f g : ι → Ω → ℝ}
+    (h : ∀ i ∈ s, f i =ᵐ[μ] g i) :
+    (fun ω => ∑ i ∈ s, f i ω) =ᵐ[μ] fun ω => ∑ i ∈ s, g i ω := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp
+  | insert a s ha ih =>
+    simp_rw [Finset.sum_insert ha]
+    exact (h a (Finset.mem_insert_self a s)).add (ih fun i hi => h i (Finset.mem_insert_of_mem hi))
 
 end DeepWiki.TimeSeries
