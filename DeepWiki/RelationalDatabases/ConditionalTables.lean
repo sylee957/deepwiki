@@ -98,4 +98,61 @@ theorem CTable.mem_rep {T : CTable Ω Val Var} {r : Table Ω Val} :
     CTable.instAt (Ω := Ω) ⟨∅, g⟩ ν = (∅ : Table Ω Val) := by
   ext t; simp [CTable.instAt]
 
+/-! ## V-tables as conditionless C-tables -/
+
+/-- A **V-table** (§6.1): a set of V-tuples (constants and marked variables), with no conditions —
+evaluated naively under a valuation. -/
+abbrev VTable (Ω : Finset Att) (Val : Type v) (Var : Type w) : Type _ := Set (VTuple Ω Val Var)
+
+/-- The relations a V-table represents: the naive images under all valuations. -/
+def VTable.rep (T : VTable Ω Val Var) : Set (Table Ω Val) := { r | ∃ ν : Var → Val, applyV ν '' T = r }
+
+/-- A V-table as a C-table: every row carries the (always-true) empty condition, and the global
+condition is empty. -/
+def VTable.toCTable (T : VTable Ω Val Var) : CTable Ω Val Var :=
+  ⟨{p | p.1 ∈ T ∧ p.2 = ([] : CCond Val Var)}, []⟩
+
+/-- Under any valuation, the conditionless C-table of a V-table yields its naive image. -/
+theorem VTable.instAt_toCTable (T : VTable Ω Val Var) (ν : Var → Val) :
+    (VTable.toCTable T).instAt ν = applyV ν '' T := by
+  ext t
+  simp only [CTable.mem_instAt, VTable.toCTable, Set.mem_setOf_eq, Set.mem_image]
+  constructor
+  · rintro ⟨p, ⟨hp, -⟩, -, ht⟩; exact ⟨p.1, hp, ht⟩
+  · rintro ⟨vt, hvt, ht⟩; exact ⟨(vt, []), ⟨hvt, rfl⟩, by simp, ht⟩
+
+/-- **C-tables subsume V-tables**: the C-table of a V-table represents exactly the V-table's naive
+relations. -/
+theorem VTable.rep_toCTable (T : VTable Ω Val Var) : (VTable.toCTable T).rep = T.rep := by
+  ext r
+  rw [CTable.mem_rep]
+  simp only [VTable.rep, Set.mem_setOf_eq, VTable.instAt_toCTable]
+  constructor
+  · rintro ⟨ν, -, hr⟩; exact ⟨ν, hr⟩
+  · rintro ⟨ν, hr⟩; exact ⟨ν, by show CCond.Holds ν []; simp, hr⟩
+
+/-! ## Ordinary relations as C-tables -/
+
+/-- An ordinary table as a V-table (all entries constants). -/
+def Table.toVTable (r : Table Ω Val) : VTable Ω Val Var := Tuple.toV '' r
+
+/-- The naive image of a constant V-table is the table itself, for every valuation. -/
+@[simp] theorem applyV_image_toVTable (ν : Var → Val) (r : Table Ω Val) :
+    applyV ν '' (Table.toVTable (Var := Var) r) = r := by
+  ext t
+  constructor
+  · rintro ⟨vt, hvt, rfl⟩
+    obtain ⟨s, hs, rfl⟩ := hvt
+    rw [applyV_toV]; exact hs
+  · intro ht; exact ⟨Tuple.toV t, ⟨t, ht, rfl⟩, by rw [applyV_toV]⟩
+
+/-- A constant V-table represents exactly the original relation (a complete-information table). -/
+theorem Table.rep_toVTable [Nonempty Val] (r : Table Ω Val) :
+    (Table.toVTable (Var := Var) r).rep = {r} := by
+  ext s
+  simp only [VTable.rep, Set.mem_setOf_eq, Set.mem_singleton_iff]
+  constructor
+  · rintro ⟨ν, hν⟩; rw [applyV_image_toVTable] at hν; exact hν.symm
+  · rintro rfl; exact ⟨fun _ => Classical.arbitrary Val, applyV_image_toVTable _ _⟩
+
 end DeepWiki
