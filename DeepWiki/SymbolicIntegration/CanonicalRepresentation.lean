@@ -553,6 +553,30 @@ theorem isNormalSqfree_of_splitFactorStep_natDegree_zero {p : K[X]} (hp : p ≠ 
     hprime.irreducible.isUnit_gcd_iff.mpr (fun hd => hπnospec (hd : @IsSpecial _ _ _ π))
   exact (gcd_isUnit_iff_isRelPrime.mp hgcdu).isCoprime
 
+open Classical in
+/-- The `SplitFactor` step `S` is always *special*: `S ~ ∏_{special}π`, a product of special primes,
+hence special (`IsSpecial.prod`/`of_associated`). -/
+theorem isSpecial_splitFactorStep (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
+    @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ (splitFactorStep v p) := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  have hassoc := splitFactorStep_associated_prod_special v hp
+  refine IsSpecial.of_associated hassoc.symm ?_
+  refine IsSpecial.prod _ _ (fun π hπ => ?_)
+  -- each special prime factor is special.
+  exact (Finset.mem_filter.mp hπ).2
+
+open Classical in
+/-- The `SplitFactor` step `S` divides `p`: `S ~ ∏_{special}π` and each special prime divides `p`. -/
+theorem splitFactorStep_dvd (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
+    splitFactorStep v p ∣ p := by
+  have hassoc := splitFactorStep_associated_prod_special v hp
+  refine hassoc.dvd.trans (Finset.prod_dvd_of_isRelPrime ?_ ?_)
+  · intro π hπ ρ hρ hπρ
+    exact (pairwise_primeFactors_isRelPrime (a := p))
+      (Finset.mem_of_mem_filter π hπ) (Finset.mem_of_mem_filter ρ hρ) hπρ
+  · intro π hπ
+    exact dvd_of_mem_normalizedFactors (mem_primeFactors.mp (Finset.mem_of_mem_filter π hπ))
+
 end GeneralSplitFactorStep
 
 section SplitSquarefreeFactor
