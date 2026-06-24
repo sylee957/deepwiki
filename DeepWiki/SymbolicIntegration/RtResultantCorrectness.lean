@@ -610,4 +610,86 @@ theorem map_eval_lrtSubresultant_map {F G : Type*} [Field F] [Field G] (ι : F �
   · simp
   · simp [Polynomial.coe_mapRingHom]
 
+/-! ### Discharging `hLne` for Example 2.4.1 (the residue non-vanishing) -/
+
+open Compute in
+/-- **`(toPoly cD241).natDegree = 6`** (`D = x⁶−5x⁴+5x²+4`). -/
+theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
+  rw [← cdeg_eq_natDegree]; decide
+
+set_option maxHeartbeats 800000 in
+open Compute in
+open scoped Classical in
+/-- **The residue specialization of the base-changed LRT subresultant is nonzero** (Ex 2.4.1): over
+`R241 = ℚ[t]/(4t²+1)`, the degree-3 LRT subresultant of `(A.map σ, D.map σ)` specialized at the root
+`α = i/2` is nonzero, `(lrtSubresultant (cA241.map σ) (cD241.map σ) 3).map (evalRingHom α) ≠ 0`. Proved by
+base-changing to the algebraic closure `K̄ = AlgebraicClosure R241` (`ι` injective), where the LRT
+regularity core `leadingCoeff_lrtSubresultant_eval_ne_zero` fires: the residue `β = ι α` is a root of the
+base-changed `rtResultant` of *multiplicity exactly 3* (`rootMultiplicity_rtResultant_map_ex241`, from the
+honest equation `rtResultant = 45796·(4t²+1)³`), so the index-3 specialized subresultant has degree 3 and
+nonzero leading coefficient. The `ι`-image being nonzero reflects back through injectivity. -/
+theorem lrtSubresultant_map_eval_ex241_ne_zero :
+    (lrtSubresultant ((toPoly cA241).map (AdjoinRoot.of (toPoly cR241)))
+        ((toPoly cD241).map (AdjoinRoot.of (toPoly cR241))) 3).map
+      (Polynomial.evalRingHom (AdjoinRoot.root (toPoly cR241))) ≠ 0 := by
+  classical
+  set R241 := AdjoinRoot (toPoly cR241) with hR
+  set σ : ℚ →+* R241 := AdjoinRoot.of (toPoly cR241) with hσ
+  set α : R241 := AdjoinRoot.root (toPoly cR241) with hα
+  set Kbar := AlgebraicClosure R241 with hK
+  set ι : R241 →+* Kbar := algebraMap R241 Kbar with hι
+  have hιinj : Function.Injective ι := FaithfulSMul.algebraMap_injective R241 Kbar
+  set τ : ℚ →+* Kbar := ι.comp σ with hτ
+  have hτinj : Function.Injective τ := hιinj.comp (AdjoinRoot.of (toPoly cR241)).injective
+  set β : Kbar := ι α with hβdef
+  -- `β` is a root of `(toPoly cR241).map τ`
+  have hβroot : ((toPoly cR241).map τ).IsRoot β := by
+    have hαroot : ((toPoly cR241).map σ).IsRoot α := AdjoinRoot.isRoot_root (toPoly cR241)
+    rw [hτ, ← Polynomial.map_map, hβdef]
+    simpa [Polynomial.IsRoot, Polynomial.eval_map, ← Polynomial.eval₂_hom]
+      using congrArg ι hαroot
+  -- separability and degree facts over `Kbar`
+  have hDsep : ((toPoly cD241).map τ).Separable := separable_toPoly_cD241.map
+  have hAD : ((toPoly cA241).map τ).natDegree < ((toPoly cD241).map τ).natDegree := by
+    rw [Polynomial.natDegree_map_eq_of_injective hτinj,
+      Polynomial.natDegree_map_eq_of_injective hτinj]
+    exact natDegree_cA241_lt_cD241
+  -- the multiplicity-3 fact
+  have hmult : Polynomial.rootMultiplicity β
+      (rtResultant ((toPoly cA241).map τ) ((toPoly cD241).map τ)) = 3 :=
+    rootMultiplicity_rtResultant_map_ex241 τ hτinj hβroot
+  -- `β` is a root of `rtResultant (A.map τ)(D.map τ)`
+  have hRne : rtResultant ((toPoly cA241).map τ) ((toPoly cD241).map τ) ≠ 0 := by
+    intro h0; rw [h0, Polynomial.rootMultiplicity_zero] at hmult; exact absurd hmult (by norm_num)
+  have hβR : (rtResultant ((toPoly cA241).map τ) ((toPoly cD241).map τ)).IsRoot β :=
+    (Polynomial.rootMultiplicity_pos hRne).mp (by rw [hmult]; norm_num)
+  -- the regularity core over the algebraically closed `Kbar` at multiplicity `3 < deg D = 6`
+  have hdegD6 : ((toPoly cD241).map τ).natDegree = 6 := by
+    rw [Polynomial.natDegree_map_eq_of_injective hτinj]; exact natDegree_toPoly_cD241
+  have hcore := leadingCoeff_lrtSubresultant_eval_ne_zero
+    ((toPoly cA241).map τ) ((toPoly cD241).map τ) hDsep hAD β hβR (by rw [hmult, hdegD6]; norm_num)
+  rw [hmult] at hcore
+  -- so the specialized subresultant over `Kbar` is nonzero
+  have hKbarne : ((lrtSubresultant ((toPoly cA241).map τ) ((toPoly cD241).map τ) 3).map
+      (Polynomial.evalRingHom β)) ≠ 0 := fun h => hcore (by rw [h, Polynomial.coeff_zero])
+  -- this `Kbar` object is the `ι`-image of the `R241` object; reflect nonzero back
+  intro hzero
+  apply hKbarne
+  -- `map_eval` commute (over `R241 → Kbar`), then `A.map σ.map ι = A.map τ`, `ι α = β`
+  have hmapτ : ∀ p : ℚ[X], p.map τ = (p.map σ).map ι := fun p => by rw [hτ, Polynomial.map_map]
+  have hcommute := map_eval_lrtSubresultant_map ι hιinj
+    ((toPoly cA241).map σ) ((toPoly cD241).map σ) 3 α
+  rw [← hmapτ, ← hmapτ] at hcommute
+  rw [show β = ι α from hβdef, ← hcommute, hzero, Polynomial.map_zero]
+
+open Compute in
+/-- **Example 2.4.1's `hLne` is a theorem**: `Φ (lrtSubresultant (toPoly cA241) (toPoly cD241) 3) ≠ 0`
+(with `Φ = mapRingHom φ241`, `φ241 = mk (4t²+1)`). Routes the residue-specialization form
+(`mapRingHom_φ241_lrtSubresultant_ex241_eq_eval`) to the proven base-changed non-vanishing
+`lrtSubresultant_map_eval_ex241_ne_zero`. -/
+theorem mapRingHom_φ241_lrtSubresultant_ex241_ne_zero :
+    (Polynomial.mapRingHom φ241) (lrtSubresultant (toPoly cA241) (toPoly cD241) 3) ≠ 0 := by
+  rw [mapRingHom_φ241_lrtSubresultant_ex241_eq_eval]
+  exact lrtSubresultant_map_eval_ex241_ne_zero
+
 end DeepWiki.SymbolicIntegration
