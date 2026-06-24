@@ -210,4 +210,53 @@ theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPo
   exact ⟨s, c, hsc, fun hQs =>
     subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQs⟩
 
+/-! ### Identifying the LRT operands: the computable lifts realize `D.map C`, `A − t·D'`
+The abstract LRT subresultant `lrtSubresultant A D j` (`RationalIntegrationAlgorithms`) takes the
+subresultant of `D.map C` and `A.map C − C X · (D').map C` over `(ℚ[X])[X]`. The computable engine
+forms the same operands as `BPoly`s (`liftCtoBPoly D`, `bArgAmtD' A D`). These lemmas show the `toBPoly`
+images of the computable operands are *exactly* the abstract LRT operands — closing the gap between the
+two operand constructions so the subresultant chain above is literally about `lrtSubresultant`. -/
+
+/-- `toPoly (cC c) = C c`: the constant-`CPoly` lift realizes the `ℚ[X]` constant. -/
+@[simp] theorem toPoly_cC (c : ℚ) : toPoly (cC c) = Polynomial.C c := by
+  rw [cC, toPoly_cnorm]
+  simp [toPoly_cons]
+
+/-- **`liftCtoBPoly` realizes `·.map C`**: `toBPoly (liftCtoBPoly p) = (toPoly p).map C` — lifting a
+`CPoly` (`= ℚ[x]`) into `BPoly` with constant `t`-coefficients realizes the abstract coefficient
+embedding `C : ℚ →+* ℚ[t]` applied to `toPoly p`. -/
+theorem toBPoly_liftCtoBPoly (p : CPoly) :
+    toBPoly (liftCtoBPoly p) = (toPoly p).map (Polynomial.C : ℚ →+* ℚ[X]) := by
+  induction p with
+  | nil => simp [liftCtoBPoly]
+  | cons a as ih =>
+    show toBPoly (cC a :: liftCtoBPoly as) = _
+    rw [toBPoly_cons, toPoly_cons, ih, toPoly_cC, Polynomial.map_add, Polynomial.map_mul,
+      Polynomial.map_X, Polynomial.map_C]
+
+/-- `toPoly ctVar = X`: the computable `t`-variable lifts to `X ∈ ℚ[t]` (the `t`-indeterminate
+realized in `ComputeCorrectness`'s `ℚ[X]` reading of `CPoly = ℚ[t]`). -/
+@[simp] theorem toPoly_ctVar : toPoly ctVar = (Polynomial.X : ℚ[X]) := by
+  rw [ctVar]; simp [toPoly_cons]
+
+/-- **`bArgAmtD'` realizes the LRT second operand**: `toBPoly (bArgAmtD' A D) = (toPoly A).map C −
+C X · (derivative (toPoly D)).map C` — the computable `A − t·D'` lift is exactly the
+`A.map C − C t · (D').map C` operand of `lrtSubresultant`. -/
+theorem toBPoly_bArgAmtD' (A D : CPoly) :
+    toBPoly (bArgAmtD' A D)
+      = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
+        - Polynomial.C Polynomial.X * (derivative (toPoly D)).map (Polynomial.C : ℚ →+* ℚ[X]) := by
+  rw [bArgAmtD', toBPoly_bsub, toBPoly_liftCtoBPoly, toBPoly_bscaleC, toBPoly_liftCtoBPoly,
+    toPoly_ctVar, toPoly_cderiv]
+
+/-- **The computable LRT operands are the abstract LRT operands**: `toBPoly (liftCtoBPoly D)` and
+`toBPoly (bArgAmtD' A D)` are exactly the two arguments of `lrtSubresultant A D j` (with the book's
+formal degrees `deg D`, `deg D − 1`). So the subresultant chain `subresultant_C_mul_eq_rem_of_bpsremainder`
+run on these lifts is literally about `lrtSubresultant`. -/
+theorem lrtSubresultant_eq_subresultant_toBPoly (A D : CPoly) (j : ℕ) :
+    lrtSubresultant (toPoly A) (toPoly D) j
+      = subresultant (toBPoly (liftCtoBPoly D)) (toBPoly (bArgAmtD' A D))
+          (toPoly D).natDegree ((toPoly D).natDegree - 1) j := by
+  rw [lrtSubresultant, toBPoly_liftCtoBPoly, toBPoly_bArgAmtD']
+
 end DeepWiki.SymbolicIntegration.Compute
