@@ -4,6 +4,7 @@ import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.MovingAverageMDependent
 import DeepWiki.TimeSeries.AsymptoticNormality
+import DeepWiki.TimeSeries.MultivariateDelta
 import DeepWiki.TimeSeries.StochasticOrder
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
@@ -135,13 +136,20 @@ then `B Xₙ` is `AN(B aₙ, B Sₙ Bᵀ)` for any matrix `B`. The library's
 `IsAsymptoticallyNormalVec.matrix_mulVec` (each projection of `B Xₙ` is a projection of `Xₙ`). -/
 alias prop_6_4_2 := DeepWiki.TimeSeries.IsAsymptoticallyNormalVec.matrix_mulVec
 
+/-- **§6.4 Proposition 6.4.3 — the multivariate delta method** (convergence-in-distribution form): if `g`
+is differentiable at `p` with derivative `D`, `Xₙ → p` in probability, the standardized `(Xₙ − p)/cₙ`
+converges in distribution to `V`, and `‖(Xₙ − p)/cₙ‖` is uniformly tight, then `(g(Xₙ) − g(p))/cₙ ⇒ D V`.
+The library's `tendstoInDistribution_smul_comp_of_hasFDerivAt`: continuous mapping of the linear part, the
+Taylor remainder vanishing in probability, and Slutsky. Tightness is taken as a hypothesis — it is the one
+ingredient (Prokhorov: a convergent-in-distribution sequence is tight) Mathlib does not yet supply. -/
+alias prop_6_4_3 := DeepWiki.TimeSeries.tendstoInDistribution_smul_comp_of_hasFDerivAt
+
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred];
-Proposition 6.4.3 (the multivariate delta method) [infra]
+§6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred]
 (The §6.4 large-sample core is done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
 CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, MA m-dependence `example_6_4_3`, the MA CLT
-for i.i.d. noise `example_6_4_4`, and the vector-AN framework `def_6_4_2`/`prop_6_4_2`. Remaining: the
-multivariate delta method `Proposition 6.4.3` and the Example 6.4.2 delta-method application; the
-multivariate iid CLT `multivariate_iid_clt` is the engine for these.) -/
+for i.i.d. noise `example_6_4_4`, the vector-AN framework `def_6_4_2`/`prop_6_4_2`, and the multivariate
+delta method `prop_6_4_3` (modulo tightness, which is the Mathlib-missing Prokhorov direction). Remaining:
+the Example 6.4.2 sample-coefficient-of-variation delta-method application.) -/
 
 end DeepWiki.Ts
