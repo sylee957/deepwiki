@@ -353,4 +353,42 @@ theorem tendstoInDistribution_sampleMean_centered_mul_shift {m : ℕ} {X : ℤ �
       simp)
     hG
 
+/-- **The centered vector autocovariance process is `(m+k)`-dependent:** `Yₜ = (XₜXₜ₊ₕ − γₕ)ₕ` (as an
+`EuclideanSpace ℝ (Fin (k+1))`) inherits `m`-dependence from `X` — it is the windowed function
+`f w = (w 0 · w h − γₕ)ₕ` of `X` (`IsMDependent.window`). The `m`-dependent vector statistic whose CLT is
+multivariate Bartlett. -/
+theorem isMDependent_vecAutocov {m : ℕ} {X : ℤ → Ω → ℝ} (hmdep : IsMDependent m X μ) (k : ℕ)
+    (γ : Fin (k + 1) → ℝ) :
+    IsMDependent (m + k)
+      (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ := by
+  have heq : (fun (t : ℤ) ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1))))
+      = fun t ω => (WithLp.toLp 2 fun i =>
+        (fun j : Fin (k + 1) => X (t + (j : ℕ)) ω) 0 * (fun j : Fin (k + 1) => X (t + (j : ℕ)) ω) i
+          - γ i : EuclideanSpace ℝ (Fin (k + 1))) := by
+    funext t ω; congr 1; funext i; simp
+  rw [heq]
+  exact IsMDependent.window hmdep k
+    (f := fun w => (WithLp.toLp 2 fun i => w 0 * w i - γ i : EuclideanSpace ℝ (Fin (k + 1))))
+    (by fun_prop)
+
+/-- **The centered vector autocovariance process is strictly stationary:** `Yₜ = (XₜXₜ₊ₕ − γₕ)ₕ` inherits
+strict stationarity from `X` (the windowed function `f w = (w 0 · w h − γₕ)ₕ`, `IsStrictlyStationary.window`). -/
+theorem isStrictlyStationary_vecAutocov {X : ℤ → Ω → ℝ} (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (k : ℕ) (γ : Fin (k + 1) → ℝ) :
+    IsStrictlyStationary
+      (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ := by
+  have heq : (fun (t : ℤ) ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1))))
+      = fun t ω => (WithLp.toLp 2 fun i =>
+        (fun j : Fin (k + 1) => X (t + (j : ℕ)) ω) 0 * (fun j : Fin (k + 1) => X (t + (j : ℕ)) ω) i
+          - γ i : EuclideanSpace ℝ (Fin (k + 1))) := by
+    funext t ω; congr 1; funext i; simp
+  rw [heq]
+  exact IsStrictlyStationary.window hstat hmeas k
+    (f := fun w => (WithLp.toLp 2 fun i => w 0 * w i - γ i : EuclideanSpace ℝ (Fin (k + 1))))
+    (by fun_prop)
+
 end DeepWiki.TimeSeries
