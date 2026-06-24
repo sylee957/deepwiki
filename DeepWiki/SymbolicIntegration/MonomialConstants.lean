@@ -72,4 +72,24 @@ theorem isSpecial_iff_deriv_eq_zero_of_monic {w : k} {q : k[X]} (hq : q.Monic) :
       exact absurd (natDegree_le_of_dvd hdvd hne) (by omega)
   · intro h; rw [h]; exact dvd_zero q
 
+omit [Differential k] in
+/-- The monic normalization `p/lc(p)` of a nonzero `p` is an associate of `p` and monic. -/
+theorem associated_mul_C_inv_leadingCoeff {p : k[X]} (hp : p ≠ 0) :
+    Associated p (p * C p.leadingCoeff⁻¹) ∧ (p * C p.leadingCoeff⁻¹).Monic := by
+  have hlc : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hp
+  refine ⟨(associated_mul_unit_right p _ (isUnit_C.mpr (Ne.isUnit (inv_ne_zero hlc)))),
+    monic_mul_C_of_leadingCoeff_mul_eq_one (mul_inv_cancel₀ hlc)⟩
+
+/-- **Constants and special polynomials** (§3.4, p.96, Lemma 3.4.6): when `Dt ∈ k`, a nonzero
+`p ∈ k[t]` is special iff its monic normalization `p/lc(p)` is a constant of `k(t)` —
+`p ∣ Dp ⟺ D(p/lc(p)) = 0`. (Specialness is an associate invariant, reducing to the monic case
+`isSpecial_iff_deriv_eq_zero_of_monic`.) -/
+theorem isSpecial_iff_deriv_normalize_eq_zero {w : k} {p : k[X]} (hp : p ≠ 0) :
+    p ∣ Differential.implicitDeriv (C w) p
+      ↔ Differential.implicitDeriv (C w) (p * C p.leadingCoeff⁻¹) = 0 := by
+  letI : Differential k[X] := ⟨Differential.implicitDeriv (C w)⟩
+  obtain ⟨hassoc, hmonic⟩ := associated_mul_C_inv_leadingCoeff hp
+  rw [← isSpecial_iff_deriv_eq_zero_of_monic hmonic]
+  exact ⟨fun h => IsSpecial.of_associated hassoc h, fun h => IsSpecial.of_associated hassoc.symm h⟩
+
 end DeepWiki.SymbolicIntegration
