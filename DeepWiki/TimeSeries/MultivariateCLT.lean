@@ -170,4 +170,36 @@ theorem tendstoInDistribution_multivariateGaussian_of_tendsto_charFun_proj {k : 
   rw [← hlim]
   exact hproj t
 
+/-- **Marginal characteristic function:** the characteristic function of the law of the scalar projection
+`⟪X ·, t⟫` at `s` equals that of the law of `X` at `s • t` — both are `∫ exp(I·s·⟪X ω, t⟫) dμ`. The
+all-`s` generalization of `charFun_proj` (which is the `s = 1` case). -/
+theorem charFun_map_inner {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [MeasurableSpace E]
+    [BorelSpace E] {X : Ω → E} (hX : AEMeasurable X μ) (t : E) (s : ℝ) :
+    charFun (μ.map fun ω => (⟪X ω, t⟫ : ℝ)) s = charFun (μ.map X) (s • t) := by
+  rw [charFun_apply, charFun_apply,
+    integral_map (by fun_prop : AEMeasurable (fun ω => (⟪X ω, t⟫ : ℝ)) μ) (by fun_prop),
+    integral_map hX (by fun_prop)]
+  refine integral_congr_ae (ae_of_all _ fun ω => ?_)
+  simp only [real_inner_smul_right, RCLike.inner_apply, conj_trivial]
+
+/-- **A linear projection of a multivariate Gaussian is univariate Gaussian:** for `S` positive
+semidefinite, the law of `⟪·, t⟫` under `multivariateGaussian 0 S` is `gaussianReal 0 (t ⬝ᵥ S t)`. Proven
+by matching characteristic functions (`charFun_map_inner` + `charFun_multivariateGaussian` +
+`charFun_gaussianReal`, the quadratic form `(s•t) ⬝ᵥ S (s•t) = s²·(t ⬝ᵥ S t)`) and `Measure.ext_of_charFun`.
+The marginal-extraction keystone connecting the multivariate CLT to the per-direction univariate Gaussians. -/
+theorem map_inner_multivariateGaussian {k : ℕ} {S : Matrix (Fin k) (Fin k) ℝ} (hS : S.PosSemidef)
+    (t : EuclideanSpace ℝ (Fin k)) :
+    (multivariateGaussian 0 S).map (fun x => (⟪x, t⟫ : ℝ))
+      = gaussianReal 0 (t ⬝ᵥ S *ᵥ t).toNNReal := by
+  refine Measure.ext_of_charFun (funext fun s => ?_)
+  have h := charFun_map_inner (μ := multivariateGaussian 0 S) (X := id) aemeasurable_id t s
+  simp only [id_eq, Measure.map_id] at h
+  have hnn : (0 : ℝ) ≤ t ⬝ᵥ S *ᵥ t := by simpa using hS.dotProduct_mulVec_nonneg t
+  rw [h, charFun_multivariateGaussian hS, charFun_gaussianReal, inner_zero_right]
+  congr 1
+  simp only [WithLp.ofLp_smul, Matrix.mulVec_smul, smul_dotProduct, dotProduct_smul, smul_eq_mul,
+    Real.coe_toNNReal _ hnn]
+  push_cast
+  ring
+
 end DeepWiki.TimeSeries
