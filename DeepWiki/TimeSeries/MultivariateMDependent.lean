@@ -481,4 +481,56 @@ theorem tendstoInMeasure_sampleMean_mul_shift {m : ℕ} {X : ℤ → Ω → ℝ}
     rw [mul_sub, ← mul_assoc, inv_mul_cancel₀ hn0, one_mul]
   simp only [hkey, sub_zero]
 
+omit [MeasurableSpace Ω] in
+/-- The inner product of the (scaled) sample-autocovariance vector with a coefficient vector `c` is
+the corresponding linear combination of scalar centered sample means:
+`⟪√n • (n⁻¹ • ∑ₜ toLp(XₜXₜ₊ᵢ − γᵢ)ᵢ), c⟫ = √n · ∑ᵢ cᵢ · n⁻¹∑ₜ(XₜXₜ₊ᵢ − γᵢ)`. The EuclideanSpace
+projection algebra (`inner_smul_sampleMean_eq` + `inner_eq_sum_coord` + `sampleMean`-linearity). -/
+theorem inner_sampleAutocovVec_eq {X : ℤ → Ω → ℝ} (k : ℕ) (γ : Fin (k + 1) → ℝ)
+    (c : EuclideanSpace ℝ (Fin (k + 1))) (n : ℕ) (ω : Ω) :
+    (⟪(Real.sqrt n : ℝ) • ((n : ℝ)⁻¹ • ∑ t ∈ Finset.range n,
+        (WithLp.toLp 2 fun i => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1)))), c⟫ : ℝ)
+      = Real.sqrt n * ∑ i, c i * sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i) := by
+  rw [inner_smul_sampleMean_eq (Y := fun t ω => (WithLp.toLp 2 fun i =>
+    X t ω * X (t + (i : ℕ)) ω - γ i : EuclideanSpace ℝ (Fin (k + 1)))) c n ω]
+  congr 1
+  have hfun : (fun s : ℕ => (⟪(WithLp.toLp 2 fun i => X (s : ℤ) ω * X (s + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1))), c⟫ : ℝ))
+      = fun (s : ℕ) => ∑ i, c i * (X (s : ℤ) ω * X (s + (i : ℕ)) ω - γ i) := by
+    funext s
+    exact inner_eq_sum_coord (fun ω' => (WithLp.toLp 2 fun i =>
+      X (s : ℤ) ω' * X (s + (i : ℕ)) ω' - γ i : EuclideanSpace ℝ (Fin (k + 1)))) c ω
+  rw [hfun]
+  simp only [sampleMean, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun s _ => by ring
+
+/-- **CLT for linear combinations of the centered sample autocovariances** (the projected vector
+Bartlett CLT): for any coefficient vector `c`, `√n · ∑ᵢ cᵢ · n⁻¹∑ₜ(XₜXₜ₊ᵢ − γᵢ) ⇒ ⟪V, c⟫`, where
+`V ~ N(0, S)` is the long-run-covariance Gaussian of the lag-product process. The continuous-linear
+image `⟪·, c⟫` of `tendstoInDistribution_sampleAutocovVec` (via `inner_sampleAutocovVec_eq`).
+Specializing `c` to `eₕ − ρ(h)·e₀` yields the sample-autocorrelation CLT numerator. -/
+theorem tendstoInDistribution_linearCombo_sampleAutocov {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : Fin (k + 1) → ℝ)
+    (hcenter : ∀ (t : ℤ) (i : Fin (k + 1)), ∫ ω, X t ω * X (t + (i : ℕ)) ω ∂μ = γ i)
+    (hpsd : (longRunCovMatrix (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ).PosSemidef)
+    (c : EuclideanSpace ℝ (Fin (k + 1)))
+    {V : Ω' → EuclideanSpace ℝ (Fin (k + 1))}
+    (hV : HasLaw V (multivariateGaussian 0 (longRunCovMatrix
+        (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1)))) μ)) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * ∑ i, c i *
+        sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i))
+      atTop (fun ω' => (⟪V ω', c⟫ : ℝ)) (fun _ => μ) μ' := by
+  have hcomp := (tendstoInDistribution_sampleAutocovVec hmdep hstat hmeas hmem4 k γ hcenter hpsd
+    hV).continuous_comp (g := fun x : EuclideanSpace ℝ (Fin (k + 1)) => (⟪x, c⟫ : ℝ)) (by fun_prop)
+  simp only [Function.comp_def] at hcomp
+  exact hcomp.congr (fun n => Filter.Eventually.of_forall fun ω => inner_sampleAutocovVec_eq k γ c n ω)
+    (Filter.Eventually.of_forall fun ω' => rfl)
+
 end DeepWiki.TimeSeries
