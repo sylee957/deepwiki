@@ -32,7 +32,7 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
 5. **§6.5–6.6 `PolyRischDE`** — the non-cancellation and cancellation cases that finally solve the
    degree-bounded polynomial equation in `k[t]`.
 
-## What this file delivers (the first four reachable stages, computable + `native_decide`-validated)
+## What this file delivers (the full non-cancellation pipeline, computable + `native_decide`-validated)
 
 * **`cWeakNormalizer Dt fuel fnum fden`** (§6.1) — the `WeakNormalizer` algorithm box (book p.183) over
   the tower: split the denominator of `f = fnum/fden` into its normal part `dₙ`, form
@@ -64,6 +64,22 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
   The cancellation refinements (raising the bound when the leading coefficients are a logarithmic
   derivative) likewise need the Ch. 7 subroutine and are documented but not run.
 
+* **`cSPDE Dt fuel a b c n`** (§6.4) — Rothstein's `SPDE(a, b, c, D, n)` box (book p.203): the recursive
+  `g = gcd(a, b)`-peeling reduction of the degree-bounded `a·Dq + b·q = c` (eq. 6.12) to one with
+  `a = 1` (eq. 6.16). Returns `none` ("no solution of degree `≤ n`") or `(b̄, c̄, m, α, β)` so any
+  solution `q` is `q = α·h + β` for an `h` solving `Dh + b̄·h = c̄`, `deg(h) ≤ m`. Fuel-bounded; the
+  `n < 0`/`c = 0` short-circuit returns the all-zero tuple (the only solution is `q = 0`).
+
+* **`cPolyRischDENoCancel Dt fuel b c n`** (§6.5) — the `PolyRischDENoCancel1(b, c, D, n)` box (book
+  p.208), the **non-cancellation** case (`D = d/dt`, or `deg(b) > max(0, δ−1)`): solve `Dq + b·q = c`
+  (eq. 6.19) degree-by-degree from the top down — `lc(c) = lc(b)·lc(q)` fixes `q`'s leading monomial,
+  subtract `D(·) + b·(·)`, recurse on the lower-degree remainder. Returns `Option (CPolyG QFunNZ)`.
+
+* **`cRischDE Dt fuel fnum fden gnum gden`** — the **assembled full solver**: chains
+  `cRdeNormalDenominator` (§6.2) → `cRdeSpecialDenominator` (§6.2) → `cRdeBoundDegree` (§6.3) →
+  `cSPDE` (§6.4) → `cPolyRischDENoCancel` (§6.5), reconstructing `y = ynum/yden ∈ k(t)` solving
+  `Dy + f·y = g`, or `none`. Validated end-to-end on Example 6.5.1 (`rischDE_solve_example`).
+
 ## Validation (`native_decide`)
 
 Bronstein's **Example 6.1.2** (book p.186): `k = ℚ(x)`, `D = d/dx`, `t = tan(x)` (`Dt = 1 + t²`), the
@@ -81,17 +97,28 @@ Continuing on the same example, **Example 6.2.2** (book p.192) runs `RdeSpecialD
 `d_c = 0`, giving the degree bound `n = 0` (any polynomial solution lies in ℚ(x)). `native_decide` pins
 both (`rischDE_specialDenominator_example`, `rischDE_boundDegree_example`).
 
-## What is NOT here (the remaining stages, honestly deferred)
+**Example 6.5.1** (book p.208) exercises the *whole assembled solver* `cRischDE` end-to-end. For
+`Dy + (t²+1)y = t³ + (x+1)t² + t + (x+2)` (eq. 6.20, from `∫ (tan³x + (x+1)tan²x + tan x + x + 2) e^{tan
+x} dx`) over the same monomial, the pipeline returns the book's elementary solution `y = t + x`, and
+`rischDE_solve_example` checks it *actually solves* the equation by clearing denominators
+(`rdeClearedCheck`: the polynomial identity `D(y)+f·y = g` after multiplying out — not merely pinning the
+output). **Example 6.4.1** (book p.204): `cRischDE` on the original `Dy + (t²+1)y = 1/t²` (eq. 6.4)
+returns `none` — `SPDE` reaches `n = −1 < 0` with `c ≠ 0`, so `∫ e^{tan x}/tan²x dx` is not elementary
+(`rischDE_noSolution_example`).
 
-This is one major algorithm; the deliverable is the **first four stages computing over the tower** plus
-validation, not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). The cancellation
-refinements inside `cRdeSpecialDenominator`/`cRdeBoundDegree` (the parametric-logarithmic-derivative
-checks, §5.12 / Ch. 7) only *raise* the bound in the cancellation case and are documented but not run;
-the validation case (and every non-cancellation case) is reproduced exactly. The remaining pipeline
-stages — §6.4 `SPDE` (Rothstein's recursive `gcd(a,b)`-peeling reduction of the degree-bounded
-`a·Dq + b·q = c` to one with `a = 1`, Theorem 6.4.1 / eq. 6.16) and §6.5–6.6 `PolyRischDE` (the
-non-cancellation and cancellation cases solving the degree-bounded polynomial equation in `k[t]`) — are
-the natural continuation. No `sorry`. -/
+## What is NOT here (the §6.6 cancellation case, honestly deferred)
+
+This is one major algorithm; the deliverable is the **full non-cancellation pipeline computing over the
+tower** plus validation, not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). What remains
+is the **§6.6 cancellation cases** (`PolyRischDECancel{Prim,Exp}`, book p.211–215): the sub-cases where
+the leading terms of `Dq` and `bq` *do* cancel (`δ ≤ 1`, `b ∈ k*`, `D ≠ d/dt`; or `δ ≥ 2`,
+`deg(b) = δ−1`, `deg(q) = −lc(b)/λ(t)`). These reduce to an **in-field-integration** problem and a
+*recursion to `RischDE` over the coefficient field `k`* (eq. 6.23 `Dy + by = lc(c)`), needing the §5.12
+parametric-logarithmic-derivative / limited-integration subroutine and the `Du/u = b` test — the
+genuine remaining engineering. The cancellation refinements inside
+`cRdeSpecialDenominator`/`cRdeBoundDegree` (also §5.12 / Ch. 7) only *raise* the bound in that same
+cancellation case and are likewise documented but not run; every non-cancellation case (and both
+validation runs) is reproduced exactly. No `sorry`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -578,5 +605,77 @@ theorem rischDE_boundDegree_example :
   native_decide
 
 #print axioms rischDE_boundDegree_example
+
+/-! ### Validation — Bronstein Example 6.5.1 (book p.208): the FULL RDE solver, end-to-end
+
+`k = ℚ(x)`, `D = d/dx`, `t = tan(x)` (`Dt = 1+t²`). The equation
+`Dy + (t²+1)y = t³ + (x+1)t² + t + (x+2)` (eq. 6.20) arises from
+`∫ (tan³x + (x+1)tan²x + tan x + x + 2) e^{tan x} dx`. The book runs the §6.5 non-cancellation loop
+(`b = t²+1`, `n = +∞`) and gets the **elementary solution** `y = t + x`, hence
+`∫ (…) e^{tan x} dx = (tan x + x) e^{tan x}`. The full pipeline `cRischDE` (normal denominator → special
+denominator → degree bound → `cSPDE` → `cPolyRischDENoCancel`) reproduces this. -/
+
+open CPolyG QFunNZ
+
+/-- The variable `x ∈ ℚ(x)` as a tower constant `QFunNZ` (numerator `[0,1]`, denominator `[1]`). -/
+def rischDExQ : QFunNZ := ofNumDen [0, 1] [1] (by decide)
+
+/-- Example 6.5.1's right-hand side `g = t³ + (x+1)t² + t + (x+2)` (numerator over denominator `1`),
+low→high in `t` with `ℚ(x)` coefficients. -/
+def rischDExampleG651num : CPolyG QFunNZ :=
+  [QFunNZ.qaddNZ rischDExQ (ofConstNZ 2), ofConstNZ 1, QFunNZ.qaddNZ rischDExQ (ofConstNZ 1),
+   ofConstNZ 1]
+
+/-- **Cleared Risch-DE identity check** `rdeClearedCheck Dt fnum fden gnum gden ynum yden`: `true` iff
+`y = ynum/yden` solves `Dy + (fnum/fden)·y = gnum/gden`, verified as the polynomial identity obtained
+by clearing all denominators (multiply through by `yden²·fden·gden`, using
+`Dy = (D(ynum)·yden − ynum·D(yden))/yden²`):
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`. `D = cmonomialDeriv
+Dt`; the equality is decided by `cisZeroG` of the cleared difference (`QFunNZ` has no `DecidableEq`). -/
+def rdeClearedCheck (Dt fnum fden gnum gden ynum yden : CPolyG QFunNZ) : Bool :=
+  let Dyn := cmonomialDeriv Dt ynum
+  let Dyd := cmonomialDeriv Dt yden
+  let lhs := caddG
+    (cmulG (cmulG gden fden) (csubG (cmulG Dyn yden) (cmulG ynum Dyd)))
+    (cmulG (cmulG (cmulG gden fnum) ynum) yden)
+  let rhs := cmulG (cmulG gnum fden) (cmulG yden yden)
+  cisZeroG (csubG lhs rhs)
+
+-- **Sanity print** (book p.208): `cRischDE` on Example 6.5.1 returns `y = (x+t)/1`.
+#eval (CPolyG.cRischDE rischDExampleDt 50 rischDExampleFnum rischDExampleFden
+    rischDExampleG651num rischDExampleFden).map
+  (fun p => (((p.1 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1)),
+             ((p.2 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1))))
+
+/-- **Example 6.5.1 — the FULL Risch differential equation solver runs end-to-end over the tower**
+(`native_decide`, Bronstein Ch. 6, book p.208). For `Dy + (t²+1)y = t³ + (x+1)t² + t + (x+2)` over
+`ℚ(x)(t)`, `t = tan(x)`, `Dt = 1+t²` (here `f = t²+1`, `g = t³+(x+1)t²+t+(x+2)`, both denominators `1`),
+the assembled `cRischDE` — `cRdeNormalDenominator` (§6.2) → `cRdeSpecialDenominator` (§6.2) →
+`cRdeBoundDegree` (§6.3) → `cSPDE` (§6.4) → `cPolyRischDENoCancel` (§6.5) — returns
+`some (ynum, yden)`, and the returned `y = ynum/yden` is verified to **actually solve** `Dy + f·y = g`
+by `rdeClearedCheck` (the cleared polynomial identity, not merely pinning the output): the book's
+solution is `y = t + x`. This is the capstone deliverable — the complete non-cancellation RDE pipeline
+*computes* an elementary solution over the monomial tower ℚ(x)[t]. -/
+theorem rischDE_solve_example :
+    (match cRischDE rischDExampleDt 50 rischDExampleFnum rischDExampleFden
+          rischDExampleG651num rischDExampleFden with
+      | some (ynum, yden) =>
+          rdeClearedCheck rischDExampleDt rischDExampleFnum rischDExampleFden
+            rischDExampleG651num rischDExampleFden ynum yden
+      | none => false) = true := by native_decide
+
+#print axioms rischDE_solve_example
+
+/-- **Example 6.4.1 — the RDE solver correctly reports NO solution** (`native_decide`, Bronstein §6.4,
+book p.204). The original Example 6.1.2 equation `Dy + (t²+1)y = 1/t²` (eq. 6.4, from
+`∫ e^{tan x}/tan²x dx`) has **no** solution `y ∈ k(t)`: the book's `SPDE` run reaches
+`SPDE(t, t³+t, t²−t+1, D, −1)` with `n = −1 < 0` and `c ≠ 0`, returning "no solution", so the original
+integral is not elementary. The full `cRischDE` (here `f = t²+1` with denominator `1`, `g = 1/t²` with
+numerator `1`, denominator `t²`) returns `none`, matching the book. -/
+theorem rischDE_noSolution_example :
+    (cRischDE rischDExampleDt 50 rischDExampleFnum rischDExampleFden
+      rischDExampleGnum rischDExampleGden).isNone = true := by native_decide
+
+#print axioms rischDE_noSolution_example
 
 end DeepWiki.SymbolicIntegration
