@@ -1922,4 +1922,76 @@ theorem hgu_ex241 :
   show toPoly [(1 : ℚ)] = _
   rw [toPoly_cons, toPoly_nil]; simp
 
+/-! ### The content nonzero `hc0` and quotient-degree bound `hQ`, derived from `chain_hsc`
+The two hypotheses of `_concrete` mentioning the `Classical.choose` witnesses `chainC`/`chainS` are *not*
+directly `native_decide`'able (the choose is noncomputable). But they follow from the pseudo-division
+identity `chain_hsc` by a **degree argument** over the domain `(ℚ[X])[X]`, using only computable chain
+facts: the chain elements `chainG (l+1)`, `chainG (l+2)` are nonzero with known `x`-degrees, and the
+β-divisor exactly divides the pseudo-remainder (`hdiv_ex241`), so the pseudo-remainder has `x`-degree
+`deg (chainG (l+2)) < deg (chainG (l+1))`. -/
+
+/-- The chain elements `chainG 1 … chainG 3` are nonzero under `toBPoly` (`l ≤ 1` ⟹ `l+1, l+2 ∈ {1,2,3}`),
+via `bisZero_iff_toBPoly_eq_zero` and `chainG_ne_zero_ex241`. -/
+theorem toBPoly_chainG_ne_zero_ex241 (i : ℕ) (hi : i ≤ 3) : toBPoly (chainG 30 gP gQ i) ≠ 0 := by
+  rw [Ne, ← bisZero_iff_toBPoly_eq_zero]
+  exact chainG_ne_zero_ex241 i hi
+
+/-- **The pseudo-remainder is `C(toPoly βₗ)` times the next chain element** (Ex 2.4.1, `l ≤ 1`):
+`toBPoly (prem (chainG l) (chainG (l+1))) = C(toPoly (chainBt l)) · toBPoly (chainG (l+2))`. From
+`chain_hG2` (the divided-step recurrence) and the β-divisor exact division `toBPoly_bdivC_exact`
+(`hdiv_ex241`). -/
+theorem toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
+    toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)))
+      = Polynomial.C (toPoly (chainBt 30 gP gQ l)) * toBPoly (chainG 30 gP gQ (l + 2)) := by
+  have hexact := toBPoly_bdivC_exact 30
+    (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1))) (chainBt 30 gP gQ l)
+    (hβcn_ex241 l hl) (fun a ha => hdiv_ex241 l hl a ha)
+  rw [chain_hG2]
+  exact hexact.symm
+
+/-- The `x`-degree of the pseudo-remainder `prem (chainG l) (chainG (l+1))` equals
+`deg (chainG (l+2))` (`l ≤ 1`): the `C(toPoly βₗ)` constant factor does not change the `x`-degree
+(`toPoly βₗ ≠ 0`), via `toBPoly_prem_ex241` and `natDegree_C_mul`. -/
+theorem natDegree_toBPoly_prem_ex241 (l : ℕ) (hl : l ≤ 1) :
+    (toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)))).natDegree
+      = (toBPoly (chainG 30 gP gQ (l + 2))).natDegree := by
+  rw [toBPoly_prem_ex241 l hl, Polynomial.natDegree_C_mul (hβ0_ex241 l hl)]
+
+/-- **`hc0` for Ex 2.4.1**: the pseudo-division content `chainC l` (`l ≤ 1`) reads to a nonzero `ℚ[t]`
+polynomial (`toPoly (chainC l) ≠ 0`). Degree argument over the domain `(ℚ[X])[X]`: if `toPoly (chainC l) =
+0`, then `chain_hsc` gives `toBPoly (chainS l) · toBPoly (chainG (l+1)) = − toBPoly (prem)`; the RHS has
+`x`-degree `deg (chainG (l+2)) < deg (chainG (l+1))` (`natDegree_toBPoly_prem_ex241` + `hcb_ex241`), while
+the LHS has `x`-degree `≥ deg (chainG (l+1))` (if `chainS l ≠ 0`) or is `0` forcing `chainG (l+2) = 0`
+(if `chainS l = 0`) — both contradictions. -/
+theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
+  intro l hl hc0
+  have hsc := chain_hsc 30 gP gQ l
+  rw [hc0, map_zero, zero_mul] at hsc
+  -- 0 = toBPoly(chainS l) · toBPoly(G(l+1)) + toBPoly(prem)
+  have hprem := toBPoly_prem_ex241 l hl
+  have hG1ne := toBPoly_chainG_ne_zero_ex241 (l + 1) (by omega)
+  have hG2ne := toBPoly_chainG_ne_zero_ex241 (l + 2) (by omega)
+  have hβne := hβ0_ex241 l hl
+  -- rearrange: toBPoly(chainS l)·toBPoly(G(l+1)) = - toBPoly(prem)
+  have heq : toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))
+      = - toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1))) := by
+    linear_combination -hsc
+  -- degree of the RHS
+  have hpremne : toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1))) ≠ 0 := by
+    rw [hprem]; exact mul_ne_zero (by simp [Polynomial.C_eq_zero, hβne]) hG2ne
+  by_cases hSne : toBPoly (chainS 30 gP gQ l) = 0
+  · rw [hSne, zero_mul, eq_comm, neg_eq_zero] at heq
+    exact hpremne heq
+  · -- both sides nonzero; compare degrees
+    have hdRHS : (- toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)))).natDegree
+        = (toBPoly (chainG 30 gP gQ (l + 2))).natDegree := by
+      rw [Polynomial.natDegree_neg, natDegree_toBPoly_prem_ex241 l hl]
+    have hdLHS : (toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))).natDegree
+        = (toBPoly (chainS 30 gP gQ l)).natDegree + (toBPoly (chainG 30 gP gQ (l + 1))).natDegree :=
+      Polynomial.natDegree_mul hSne hG1ne
+    have hdeg := congrArg Polynomial.natDegree heq
+    rw [hdLHS, hdRHS] at hdeg
+    have hcb := hcb_ex241 l hl
+    omega
+
 end DeepWiki.SymbolicIntegration.Compute
