@@ -2963,3 +2963,66 @@ theorem dvd_R_iff_dvd_resNumPrime {R resNum' gden W : ℚ[X]} (hgden : gden ≠ 
   · intro h
     have hg2 : gden * gden ≠ 0 := mul_ne_zero hgden hgden
     exact (mul_dvd_mul_iff_right hg2).mp h
+
+/-! ### Summary: the multi-factor interference invariant, reduced to ONE named divisibility
+
+The multi-factor `hermiteReduce` `g`-fold correctness is now reduced to a **single** polynomial
+divisibility. The chain (all proven except the last):
+
+* `foldl_cond_eq_foldl_glocList` — the conditional `g`-fold is a plain `qadd`-fold over the kept-factor
+  increment list `glocList`.
+* `glocIncr_residual` / `glocIncr_hstep` — each kept factor's increment reduces the *global* `T = A/D`,
+  leaving `residᵢ = am Afinalᵢ/(am Uᵢ·am Vi)` (over the global `D`: `am (Afinalᵢ·Vi^{i−1})/am D`), from
+  the per-factor Bézout side conditions and the reconciliation `am D = am Uᵢ·am Vi^{i}`.
+* `total_fold_residual` / `total_fold_residual_over_D` — the whole fold residual `A/D − g′` is the
+  **single** polynomial fraction `am R/am D` with `R = C(1−n)·A + Σᵢ residNumIncrᵢ` (`n = #kept`): the
+  exact `(1−n)·T + Σ residᵢ` overcounting skeleton collapsed onto the common denominator `D`.
+* `toPoly_Dstar_dvd_D` (**proven** Yun radical clause) gives `Dstar ∣ D`, i.e. `D = Dstar·W`,
+  `W = D/Dstar`.
+* `am_div_D_eq_div_Dstar` — `am R/am D` clears to `am (R/W)/am Dstar` **iff** `W ∣ R`.
+* `hermiteReduce_residual_correct_multifactor` — assembles the above into
+  `am A/am D = (toQFun g)′ + am (R/W)/am Dstar`, **conditional only on `W ∣ R`**.
+* `residNum_eq_resNumPrime` + `dvd_R_iff_dvd_resNumPrime` — `R·gden² = resNum'`, so `W ∣ R ⟺
+  W·gden² ∣ resNum'` (the algorithm's own cleared-identity cert), confirming consistency.
+
+**THE REMAINING WALL** is the single divisibility
+
+  `W ∣ R`,   `W = D/Dstar`,   `R = C(1−n)·A + Σ_{kept (Vi,i)} Afinalᵢ · Vi^{i−1}`,
+
+equivalently `W·gden² ∣ resNum'`. It is the genuine **multi-factor interference clearing**: each
+`Afinalᵢ` (the leftover numerator of `hermiteInner` over factor `i`) carries high powers of the *other*
+factors in its residual denominator `Uᵢ·Vi = D/Vi^{i−1}`, and only the *sum* `(1−n)·A + Σᵢ Afinalᵢ·Vi^{i−1}`
+cancels those high powers down to the radical `Dstar`. This cancellation is **not** implied by the
+per-factor `hermiteInner_spec_of` specifications alone (which constrain each `Afinalᵢ` only locally); it
+is the global partial-fraction content of Hermite-reduction correctness, decidably true per example
+(`hermite_ex221_Dstar_dvd` + the residual cert) but abstractly open. The single-repeated-factor case
+(`n = 1`, `W = ∏_{k≠i} Vk^{ik−1} = 1`, so `W ∣ R` is trivial) is the proven
+`hermiteReduce_residual_correct_single`. -/
+
+open scoped Differential in
+-- Hermite reduction, multi-factor wrapper (Bronstein §2.2/§2.5): the computable `hermiteReduce`
+-- `g`-fold integrates the rational part `g`, leaving a residual over the squarefree radical `Dstar` —
+-- conditional ONLY on the single interference divisibility `W ∣ R` (`W = D/Dstar`,
+-- `R = C(1−n)·A + Σ Afinalᵢ·Vi^{i−1}`), everything else (the over-`D` residual skeleton, the radical
+-- clause `Dstar ∣ D`) proven.
+example (fuel : ℕ) (A D Dstar W : CPoly) (factors : List (CPoly × ℕ))
+    (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D))
+    (hWdec : toPoly D = toPoly Dstar * toPoly W)
+    (hWR : toPoly W ∣ Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+        * toPoly A
+        + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+                * toPoly A
+              + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
+              / toPoly W)
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
+  hermiteReduce_residual_correct_multifactor fuel A D Dstar W factors hD hDstar hV hstep hWdec hWR
