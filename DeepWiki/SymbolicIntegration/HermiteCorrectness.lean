@@ -2644,3 +2644,45 @@ theorem total_fold_residual (fuel : ℕ) (A D : CPoly) (factors : List (CPoly ×
     exact hstep Vi hViF h2
   rw [hmapeq, sum_map_const_sub]
   abel
+
+/-! ### The per-factor residual over the *global* denominator `D`
+
+`glocIncr_residual`'s `residᵢ = am Afinalᵢ/(am Uᵢ·am Vi)` is recast over the *common* denominator `am D`:
+since `am D = am Uᵢ·am Vi^{i}` (`i = j+2`) and `am Vi^{i} = am Vi^{i−1}·am Vi`, the denominator
+`am Uᵢ·am Vi = am D/am Vi^{i−1}`, so `residᵢ = am (Afinalᵢ·Vi^{i−1})/am D`. This lets the total residual
+`(1−n)·T + Σᵢ residᵢ` be written as a *single* fraction `R/am D` with polynomial numerator `R =
+(1−n)·A + Σᵢ Afinalᵢ·Vi^{i−1}` — the form whose numerator must be divisible by `am (D/Dstar)` for the
+interference to clear to denominator `Dstar`. -/
+
+open scoped Differential in
+/-- **The per-factor residual over `D`**: for a kept factor `(Vi, i)` with `i = j+2`, the residual
+`residᵢ = am Afinalᵢ/(am Uᵢ·am Vi)` of `glocIncr_residual` equals `am (Afinalᵢ·Vi^{i−1})/am D` over the
+global denominator, given the reconciliation `am D = am Uᵢ·am Vi^{i}` and `D, Vi ≠ 0`. The numerator is
+`Afinalᵢ` raised through the factor power `Vi^{j+1} = Vi^{i−1}` — the per-factor contribution to the
+single-fraction-over-`D` numerator. -/
+theorem glocResidDen_eq_over_D (fuel : ℕ) (D : CPoly) (Vi : CPoly) (j : ℕ)
+    (Afinal : CPoly) (hD : toPoly D ≠ 0) (hV : toPoly Vi ≠ 0)
+    (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
+    (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D
+          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
+        * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vi) ^ (j + 2)) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly Afinal) / glocResidDen fuel D (Vi, j + 2)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly Afinal * toPoly Vi ^ (j + 1))
+        / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  set U := cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1]) with hUdef
+  have hd : am (toPoly D) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
+  have hv : am (toPoly Vi) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hV
+  have hu : am (toPoly U) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hU
+  -- the residual denominator `am U·am Vi`; `glocResidDen (Vi, j+2)` uses exactly this `U`.
+  have hresD : glocResidDen fuel D (Vi, j + 2) = am (toPoly U) * am (toPoly Vi) := by
+    rw [glocResidDen, hUdef]
+  rw [hresD]
+  -- `am D = am U · am Vi^(j+2) = (am U·am Vi)·am Vi^(j+1)`.
+  have hDfact : am (toPoly D) = (am (toPoly U) * am (toPoly Vi)) * am (toPoly Vi) ^ (j + 1) := by
+    rw [hDrec]; ring
+  rw [map_mul, map_pow, hDfact]
+  have hVip : am (toPoly Vi) ^ (j + 1) ≠ 0 := pow_ne_zero _ hv
+  field_simp
