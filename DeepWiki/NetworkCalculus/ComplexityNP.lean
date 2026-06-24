@@ -36,20 +36,30 @@ structure IsInNP_TM {α αΓ : Type} (ea : α → List αΓ) (L : α → Prop) w
   Cert : Type
   /-- the verifier's tape alphabet -/
   Γ : Type
-  /-- encoding of the verifier input (instance paired with certificate) -/
-  einput : α × Cert → List Γ
+  /-- encoding of the instance `x` (the **fixed** prefix of the verifier input) -/
+  einstance : α → List Γ
+  /-- encoding of the certificate (the **free** suffix of the verifier input, appended after the
+  instance) — separability is what lets a SAT reduction fix `x` and quantify over `cert`. -/
+  ecert : Cert → List Γ
   /-- the size of a certificate -/
   certSize : Cert → ℕ
   /-- the Boolean verifier -/
   verify : α × Cert → Bool
-  /-- the verifier runs in polynomial time on a finite TM2 — the genuine poly-time witness -/
-  verify_polyTime : TM2ComputableInPolyTime einput encodeBool verify
+  /-- the verifier runs in polynomial time on a finite TM2, reading the instance-then-certificate
+  input `einstance x ++ ecert c` — the genuine poly-time witness. -/
+  verify_polyTime :
+    TM2ComputableInPolyTime (fun p : α × Cert => einstance p.1 ++ ecert p.2) encodeBool verify
   /-- the polynomial bounding certificate size in input size -/
   certPoly : Polynomial ℕ
   /-- every accepted certificate is polynomially bounded in the input size -/
   cert_bound : ∀ x c, verify (x, c) = true → certSize c ≤ certPoly.eval (ea x).length
   /-- soundness and completeness: `L x` holds iff some certificate is accepted -/
   spec : ∀ x, L x ↔ ∃ c : Cert, verify (x, c) = true
+
+/-- The assembled verifier input on instance `x` with certificate `c`: the instance encoding followed
+by the certificate encoding (`einstance x ++ ecert c`). -/
+def IsInNP_TM.einput {α αΓ : Type} {ea : α → List αΓ} {L : α → Prop} (h : IsInNP_TM ea L) :
+    α × h.Cert → List h.Γ := fun p => h.einstance p.1 ++ h.ecert p.2
 
 /-- **Bridge: TM-grounded NP membership implies the certificate-size proxy `IsInNP`** (forgetting the
 poly-*time* verifier, keeping decidability + the certificate-size bound). So any theorem proved against
