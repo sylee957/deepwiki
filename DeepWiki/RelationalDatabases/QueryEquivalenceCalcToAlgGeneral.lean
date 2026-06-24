@@ -51,4 +51,37 @@ theorem flattenTagged_disjoint_head (Ω : Finset Att) (Γ : Ctx Att) :
   obtain ⟨q', _, hq'⟩ := hq
   simp [Prod.ext_iff] at hq'
 
+/-- A position-`0` tag of the product scheme comes from the head variable. -/
+theorem mem_flattenTagged_zero {p : TagAtt Att} {Ω : Finset Att} {Γ : Ctx Att}
+    (hp : p ∈ flattenTagged (Ω :: Γ)) (h0 : p.1 = 0) : p.2 ∈ Ω := by
+  rw [flattenTagged_cons, Finset.mem_union] at hp
+  rcases hp with hp | hp
+  · obtain ⟨a, ha, hap⟩ := Finset.mem_map.mp hp
+    rw [tag0, Function.Embedding.coeFn_mk] at hap
+    rw [← hap]; exact ha
+  · obtain ⟨q, _, hqp⟩ := Finset.mem_map.mp hp
+    rw [shiftTag, Function.Embedding.coeFn_mk] at hqp
+    rw [← hqp] at h0; simp at h0
+
+/-- A positive-position tag of the product scheme comes (shifted) from a deeper variable. -/
+theorem mem_flattenTagged_succ {p : TagAtt Att} {Ω : Finset Att} {Γ : Ctx Att}
+    (hp : p ∈ flattenTagged (Ω :: Γ)) (hn : p.1 ≠ 0) : (p.1 - 1, p.2) ∈ flattenTagged Γ := by
+  rw [flattenTagged_cons, Finset.mem_union] at hp
+  rcases hp with hp | hp
+  · obtain ⟨a, _, hap⟩ := Finset.mem_map.mp hp
+    rw [tag0, Function.Embedding.coeFn_mk] at hap
+    exact absurd (by rw [← hap]) hn
+  · obtain ⟨q, hq, hqp⟩ := Finset.mem_map.mp hp
+    rw [shiftTag, Function.Embedding.coeFn_mk] at hqp
+    have h1 : (p.1 - 1, p.2) = q := by rw [← hqp]; simp
+    rw [h1]; exact hq
+
+/-- Glue an environment into a single flat row over the *tagged* product scheme: the tag `(i, a)`
+reads attribute `a` from the i-th context variable. -/
+def envToTupleTagged : {Γ : Ctx Att} → Env Val Γ → Tuple (flattenTagged Γ) Val
+  | [], _ => fun p => absurd p.property (Finset.notMem_empty p.val)
+  | _ :: _, (t, e) => fun p =>
+      if h : p.val.1 = 0 then t ⟨p.val.2, mem_flattenTagged_zero p.property h⟩
+      else (envToTupleTagged e) ⟨(p.val.1 - 1, p.val.2), mem_flattenTagged_succ p.property h⟩
+
 end DeepWiki
