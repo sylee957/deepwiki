@@ -10,6 +10,7 @@ import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
+import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -499,6 +500,11 @@ abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
 (degree 2), by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish (coefficient swell). -/
 abbrev ex_3_5_1 := @splitFactorFast_ex351
 
+/-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFast` (Yun in `t`
++ per-factor differential special/normal split) on the same degree-5 `p` returns Bronstein's squarefree
+splitting `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²`, `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)`, by `native_decide`. -/
+abbrev ex_3_5_2 := @splitSquarefreeFast_ex352
+
 /-! ## Chapter 3 Exercises -/
 
 /-- **Exercise 3.1** (Ch 3, p.105): `D(∏ uᵢ^eᵢ)/(∏ uᵢ^eᵢ) = ∑ eᵢ·(Duᵢ/uᵢ)` — the logarithmic
@@ -536,8 +542,6 @@ abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 §3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
   (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
-Examples: Ex 3.5.2 [deferred: a computable `SplitSquarefreeFactor` rendering — Ex 3.5.1 now COMPUTES
-  via the fraction-free `cSplitFactorFast` (`ex_3_5_1`), so the same kernel + Yun gives 3.5.2].
 Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
   hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
   [infra/research: multivariate decomposition + Darboux polynomials]; Ex 3.11 general non-squarefree [deferred]. -/
