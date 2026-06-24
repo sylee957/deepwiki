@@ -446,17 +446,19 @@ theorem cnorm_getLast?_ne_some_zero (p : CPoly) : (cnorm p).getLast? ≠ some 0 
 
 /-- For a normalized nonzero `CPoly`, the leading coefficient `clead` is nonzero. -/
 theorem clead_ne_zero {p : CPoly} (h : cnorm p ≠ []) : clead p ≠ 0 := by
-  rw [clead]
-  rcases hl : (cnorm p).getLast? with _ | v
+  show CPolyG.cleadG p ≠ 0
+  rcases hl : (CPolyG.cnormG p).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hl) h
-  · simp only [Option.getD_some]
+  · simp only [CPolyG.cleadG, hl, Option.getD_some]
     rintro rfl
     exact cnorm_getLast?_ne_some_zero p hl
 
 /-- **`clead` is the coefficient at the top index**: `clead p = (toPoly p).coeff (cdeg p)`. -/
 theorem clead_eq_coeff (p : CPoly) : clead p = (toPoly p).coeff (cdeg p) := by
-  rw [clead, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
+  show CPolyG.cleadG p = _
+  rw [CPolyG.cleadG, cdeg, ← toPoly_cnorm, toPoly_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
+  rfl
 
 /-- **`cdeg` is the honest `natDegree`**: `cdeg p = (toPoly p).natDegree`. -/
 theorem cdeg_eq_natDegree (p : CPoly) : cdeg p = (toPoly p).natDegree := by
@@ -556,7 +558,8 @@ theorem step_length_lt (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
 
 /-- `clead` is invariant under `cnorm`: `clead (cnorm p) = clead p`. -/
 theorem clead_cnorm (p : CPoly) : clead (cnorm p) = clead p := by
-  simp only [clead, cnorm_idem]
+  show CPolyG.cleadG (CPolyG.cnormG p) = CPolyG.cleadG p
+  simp only [CPolyG.cleadG, CPolyG.cnormG_idem]
 
 /-- `cisZero` is invariant under `cnorm`. -/
 theorem cisZero_cnorm (q : CPoly) : cisZero (cnorm q) = cisZero q := by

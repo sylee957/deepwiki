@@ -53,8 +53,9 @@ def cshift : ℕ → CPoly → CPoly := CPolyG.cshiftG
 generic `cmulG` specialized at `ℚ`. -/
 def cmul : CPoly → CPoly → CPoly := CPolyG.cmulG
 
-/-- **Leading coefficient** of a `CPoly` (the top nonzero coefficient; `0` for the zero polynomial). -/
-def clead (p : CPoly) : ℚ := (cnorm p).getLast?.getD 0
+/-- **Leading coefficient** of a `CPoly` (the top nonzero coefficient; `0` for the zero polynomial) —
+the generic `cleadG` specialized at `ℚ` (`CField.zero = 0`, defeq). -/
+def clead (p : CPoly) : ℚ := CPolyG.cleadG p
 
 /-- **Zero test** for a `CPoly`: `true` iff it normalizes to `[]`. -/
 def cisZero (p : CPoly) : Bool := cnorm p == []
