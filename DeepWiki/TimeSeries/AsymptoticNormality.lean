@@ -55,6 +55,26 @@ theorem IsAsymptoticallyNormal.add_const {X : ℕ → Ω → ℝ} {a b : ℕ →
     funext ω; rw [add_sub_add_right_eq_sub]
   rw [heq]
 
+/-- **Asymptotic normality from convergence in distribution to a non-degenerate Gaussian:** if `Yₙ ⇒ G`
+with `G ~ N(0, v)` and `v > 0`, then `Yₙ` is `AN(0, v)` — the standardized `Yₙ / √v` converges to `N(0,1)`.
+The companion of `of_tendstoInDistribution` for a limit whose variance need not be `1` (the standardizer
+`gaussianReal_map_div_const`: `N(0,v)` pushed through `· / √v` is `N(0,1)`). -/
+theorem IsAsymptoticallyNormal.of_tendstoInDistribution_gaussianReal [IsProbabilityMeasure μ]
+    {Y : ℕ → Ω → ℝ} {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {G : Ω' → ℝ} {v : ℝ} (hv : 0 < v) (hG : HasLaw G (gaussianReal 0 v.toNNReal) P')
+    (h : TendstoInDistribution Y atTop G (fun _ => μ) P') :
+    IsAsymptoticallyNormal Y (fun _ => 0) (fun _ => Real.sqrt v) μ := by
+  have hdiv : HasLaw (· / Real.sqrt v) (gaussianReal 0 1) (gaussianReal 0 v.toNNReal) :=
+    ⟨by fun_prop, by
+      rw [gaussianReal_map_div_const, zero_div]
+      congr 1
+      apply NNReal.coe_injective
+      rw [NNReal.coe_div, NNReal.coe_mk, Real.sq_sqrt hv.le, Real.coe_toNNReal v hv.le,
+        NNReal.coe_one, div_self hv.ne']⟩
+  refine IsAsymptoticallyNormal.of_tendstoInDistribution (hdiv.fun_comp hG) ?_
+  have hcomp := h.continuous_comp (g := (· / Real.sqrt v)) (continuous_id.div_const _)
+  simpa [Function.comp_def, sub_zero] using hcomp
+
 /-- **Asymptotic normality of a sequence of random vectors** (Brockwell–Davis Definition 6.4.2,
 Cramér–Wold form): the `ℝᵏ`-valued sequence `Xₙ` is `AN(aₙ, Sₙ)` if every nondegenerate linear
 projection `λ ⬝ᵥ Xₙ` (`λ ⬝ᵥ Sₙ λ > 0`) is one-dimensionally asymptotically normal
