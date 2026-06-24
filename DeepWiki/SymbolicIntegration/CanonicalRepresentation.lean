@@ -87,7 +87,7 @@ def IsNormalSqfree (pn : R) : Prop := ∀ q : R, Squarefree q → q ∣ pn → I
 /-- **Definition 3.5.1** (§3.5), *book-faithful splitting factorization*: `p = pₛ·pₙ` with `pₛ`
 special and every squarefree factor of `pₙ` normal. Matches Bronstein's Def 3.5.1 exactly (unlike
 the stronger `IsSplittingFactorization`, which demands `pₙ` itself `IsNormal`, hence squarefree). -/
-def IsSplittingFactorization' (p ps pn : R) : Prop :=
+def IsSplittingFactorizationGen (p ps pn : R) : Prop :=
   p = ps * pn ∧ IsSpecial ps ∧ IsNormalSqfree pn
 
 /-- A repo-normal `pn` (`IsNormal`) is book-normal: its squarefree factors are factors of a normal
@@ -96,8 +96,8 @@ theorem IsNormal.isNormalSqfree {pn : R} (h : IsNormal pn) : IsNormalSqfree pn :
   fun _ _ hq => h.of_dvd hq
 
 /-- The stronger (repo) splitting factorization implies the book-faithful one. -/
-theorem IsSplittingFactorization.toPrime {p ps pn : R}
-    (h : IsSplittingFactorization p ps pn) : IsSplittingFactorization' p ps pn :=
+theorem IsSplittingFactorization.toGen {p ps pn : R}
+    (h : IsSplittingFactorization p ps pn) : IsSplittingFactorizationGen p ps pn :=
   ⟨h.1, h.2.1, h.2.2.isNormalSqfree⟩
 
 /-- On a *squarefree* `pn` the two normality notions agree: a squarefree polynomial is book-normal
@@ -583,9 +583,9 @@ and `p ≠ 0`, `splitFactorAux v p fuel` returns a *book-faithful* splitting fac
 of `p` — `p = pₛ·pₙ`, `pₛ` special, and every squarefree factor of `pₙ` normal (`IsNormalSqfree`).
 No `IsSplitFactorStep` hypothesis: the step facts (`isSpecial_splitFactorStep`, `splitFactorStep_dvd`,
 `isNormalSqfree_of_splitFactorStep_natDegree_zero`) are proved from Theorem 3.5.1(i) for general `p`. -/
-theorem splitFactorAux_isSplittingFactorization' (v : K[X]) :
+theorem splitFactorAux_isSplittingFactorizationGen (v : K[X]) :
     ∀ (fuel : ℕ) (p : K[X]), p ≠ 0 → p.natDegree ≤ fuel →
-      @IsSplittingFactorization' _ _ ⟨Differential.implicitDeriv v⟩ p
+      @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv v⟩ p
         (splitFactorAux v p fuel).2 (splitFactorAux v p fuel).1 := by
   letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
   intro fuel
@@ -629,10 +629,10 @@ open Classical in
 `splitFactor v p = (pₙ, pₛ)` is a book-faithful splitting factorization — `p = pₛ·pₙ`, `pₛ` special,
 every squarefree factor of `pₙ` normal. This is Theorem 3.5.1(i) for general `p`, with no
 side hypothesis. -/
-theorem splitFactor_isSplittingFactorization' (v p : K[X]) (hp : p ≠ 0) :
-    @IsSplittingFactorization' _ _ ⟨Differential.implicitDeriv v⟩ p
+theorem splitFactor_isSplittingFactorizationGen (v p : K[X]) (hp : p ≠ 0) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv v⟩ p
       (splitFactor v p).2 (splitFactor v p).1 :=
-  splitFactorAux_isSplittingFactorization' v p.natDegree p hp le_rfl
+  splitFactorAux_isSplittingFactorizationGen v p.natDegree p hp le_rfl
 
 end GeneralSplitFactorStep
 
