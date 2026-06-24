@@ -479,4 +479,35 @@ theorem rtResultant_map_of_injective {K L : Type*} [Field K] [Field L] (σ : K �
     (Polynomial.mapRingHom σ) (m := D.natDegree) (n := D.natDegree - 1)]
   rw [Polynomial.coe_mapRingHom]
 
+/-! ### Root multiplicity of `C c · p³` at a simple root of `p` -/
+
+/-- `rootMultiplicity β (p^n) = n · rootMultiplicity β p` for `p ≠ 0`. -/
+theorem rootMultiplicity_pow {F : Type*} [Field F] {p : F[X]} (hp0 : p ≠ 0) (β : F) (n : ℕ) :
+    Polynomial.rootMultiplicity β (p ^ n) = n * Polynomial.rootMultiplicity β p := by
+  induction n with
+  | zero => simp
+  | succ m ih =>
+    rw [pow_succ, Polynomial.rootMultiplicity_mul (mul_ne_zero (pow_ne_zero m hp0) hp0), ih]
+    ring
+
+theorem rootMultiplicity_C_mul_pow_of_separable {F : Type*} [Field F] {c : F} (hc : c ≠ 0)
+    {p : F[X]} (hsep : p.Separable) {β : F} (hβ : p.IsRoot β) (n : ℕ) :
+    Polynomial.rootMultiplicity β (Polynomial.C c * p ^ n) = n := by
+  have hp0 : p ≠ 0 := hsep.ne_zero
+  have hpn0 : p ^ n ≠ 0 := pow_ne_zero n hp0
+  have hCc0 : (Polynomial.C c : F[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using hc
+  -- `rootMult β (C c · pⁿ) = rootMult β (C c) + rootMult β (pⁿ)`
+  rw [Polynomial.rootMultiplicity_mul (mul_ne_zero hCc0 hpn0)]
+  -- `rootMult β (C c) = 0`
+  have hCmult : Polynomial.rootMultiplicity β (Polynomial.C c) = 0 := by
+    rw [Polynomial.rootMultiplicity_eq_zero]
+    simp [Polynomial.IsRoot, hc]
+  -- `rootMult β p = 1` (simple root of a separable polynomial)
+  have hp1 : Polynomial.rootMultiplicity β p = 1 := by
+    have hle := Polynomial.rootMultiplicity_le_one_of_separable hsep β
+    have hge : 1 ≤ Polynomial.rootMultiplicity β p :=
+      (Polynomial.rootMultiplicity_pos hp0).mpr hβ
+    omega
+  rw [hCmult, zero_add, rootMultiplicity_pow hp0, hp1, mul_one]
+
 end DeepWiki.SymbolicIntegration
