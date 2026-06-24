@@ -58,6 +58,75 @@ theorem isSpecial_num_denom_of_const_quotient {a b : R} (hco : IsCoprime a b) (h
 
 end FractionConstants
 
+section Nonlinear
+-- A *nonlinear* monomial: `δ(t) = deg(Dt) = deg v ≥ 2`. Here the leading term of `Dp` comes from
+-- `v·dp/dt`, so `lc(Dp) = (deg p)·lc(p)·lc(v)` for `deg p ≥ 1` — the engine of Lemma 3.4.5's
+-- equal-degree claim.
+variable {F : Type*} [Field F] [CharZero F] [Differential F]
+
+/-- For a *nonlinear* monomial (`deg v ≥ 2`) and `deg p ≥ 1`, the leading coefficient of `Dp` is
+`(deg p)·lc(p)·lc(v)` — the leading term comes entirely from `v·dp/dt`. -/
+theorem leadingCoeff_implicitDeriv_nonlinear (v p : F[X]) (hv : 2 ≤ v.natDegree)
+    (hp : 1 ≤ p.natDegree) :
+    (Differential.implicitDeriv v p).leadingCoeff
+      = (p.natDegree : F) * p.leadingCoeff * v.leadingCoeff := by
+  have happly : Differential.implicitDeriv v p
+      = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have hv0 : v ≠ 0 := by rintro rfl; simp at hv
+  have hdp : derivative p ≠ 0 := derivative_ne_zero.mpr (by omega)
+  have hmul : (v * derivative p).natDegree = p.natDegree + (v.natDegree - 1) := by
+    rw [natDegree_mul hv0 hdp, natDegree_derivative]; omega
+  have h1 : (Differential.mapCoeffs p).natDegree ≤ p.natDegree := by
+    refine natDegree_le_iff_coeff_eq_zero.mpr (fun N hN => ?_)
+    rw [Differential.coeff_mapCoeffs, coeff_eq_zero_of_natDegree_lt hN]; simp
+  have hlt : (Differential.mapCoeffs p).natDegree < (v * derivative p).natDegree := by
+    rw [hmul]; omega
+  have hdeg : (Differential.implicitDeriv v p).natDegree = (v * derivative p).natDegree := by
+    rw [happly, natDegree_add_eq_right_of_natDegree_lt hlt]
+  rw [leadingCoeff, hdeg, happly, coeff_add, coeff_eq_zero_of_natDegree_lt (hlt.trans_le le_rfl),
+    zero_add, ← leadingCoeff, leadingCoeff_mul, leadingCoeff_derivative]
+  ring
+
+/-- For a *nonlinear* monomial (`deg v ≥ 2`), a special divisor cofactor `g = Dp/p` of a nonzero
+`p` reads off the degree of `p`: when `deg p ≥ 1`, `g.leadingCoeff = (deg p)·lc(v)` and
+`deg g = δ(t) − 1`; when `deg p = 0`, `deg g = 0`. (From `Dp = p·g` and the leading-coefficient
+formula for `Dp`.) -/
+theorem leadingCoeff_cofactor_nonlinear {v p g : F[X]} (hv : 2 ≤ v.natDegree) (hp0 : p ≠ 0)
+    (hg : Differential.implicitDeriv v p = p * g) :
+    (1 ≤ p.natDegree → g.leadingCoeff = (p.natDegree : F) * v.leadingCoeff
+        ∧ g.natDegree = v.natDegree - 1)
+      ∧ (p.natDegree = 0 → g.natDegree = 0) := by
+  have hlcp : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hp0
+  have hlcv : v.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr (by rintro rfl; simp at hv)
+  refine ⟨fun hp => ?_, fun hp => ?_⟩
+  · -- nonlinear, `deg p ≥ 1`: compare leading coefficients and degrees of `Dp = p·g`
+    have hlc : (Differential.implicitDeriv v p).leadingCoeff
+        = (p.natDegree : F) * p.leadingCoeff * v.leadingCoeff :=
+      leadingCoeff_implicitDeriv_nonlinear v p hv hp
+    have hdeg : (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) :=
+      natDegree_implicitDeriv_eq v p hv hp
+    have hgne : g ≠ 0 := by
+      rintro rfl; rw [mul_zero] at hg; rw [hg] at hdeg; simp at hdeg; omega
+    have hlcg : p.leadingCoeff * g.leadingCoeff = (p.natDegree : F) * p.leadingCoeff * v.leadingCoeff := by
+      rw [← leadingCoeff_mul, ← hg, hlc]
+    have hdegg : g.natDegree = v.natDegree - 1 := by
+      rw [hg, natDegree_mul hp0 hgne] at hdeg; omega
+    refine ⟨?_, hdegg⟩
+    have := mul_left_cancel₀ hlcp (by rw [hlcg]; ring :
+      p.leadingCoeff * g.leadingCoeff = p.leadingCoeff * ((p.natDegree : F) * v.leadingCoeff))
+    exact this
+  · -- `deg p = 0`: `p = C c`, so `Dp = C(c′)` has degree `0`, and `Dp = p·g` forces `deg g = 0`
+    rcases eq_or_ne g 0 with hg0 | hgne
+    · rw [hg0]; simp
+    · obtain ⟨c, rfl⟩ : ∃ c, p = C c := ⟨p.coeff 0, eq_C_of_natDegree_eq_zero hp⟩
+      have hDp0 : (Differential.implicitDeriv v (C c)).natDegree = 0 := by
+        rw [Differential.implicitDeriv_C]; exact natDegree_C _
+      rw [hg, natDegree_mul hp0 hgne, natDegree_C] at hDp0
+      omega
+
+end Nonlinear
+
 section ScalarMonomial
 -- The base case of §3.4: the monomial derivation with `Dt = w ∈ k`, i.e. the implicit derivation
 -- whose `t`-component is the *constant* polynomial `C w`.
