@@ -154,21 +154,76 @@ theorem not_linearDependentOverConst_algebraMap {n : ℕ} [NeZero n] (y : Fin n 
 
 end Extension
 
-section SeparableAlgebraic
-variable {E : Type*} [Field E] [Differential E]
-
 /-- **Lemma 3.3.2(ii)** (§3.3): a separable algebraic element over the constants is a constant.
 If `c ∈ E` is a root of a polynomial `p` with constant coefficients (algebraic over the
 constants) and `p` is separable at `c` (`p'(c) ≠ 0`, the separability witness), then `c′ = 0`.
 From the chain rule `Δ(p(c)) = p'(c)·Δc` (the `κ_D(p)` term drops as `p`'s coefficients are
 constants), and `p(c) = 0`, so `p'(c)·Δc = 0`, forcing `Δc = 0`. -/
-theorem deriv_eq_zero_of_separable_algebraic_const {c : E} (p : E[X])
+theorem deriv_eq_zero_of_separable_algebraic_const {E : Type*} [Field E] [Differential E]
+    {c : E} (p : E[X])
     (hp : ∀ i, (p.coeff i)′ = 0) (hroot : p.eval c = 0) (hsep : p.derivative.eval c ≠ 0) :
     c′ = 0 := by
   have hchain : (p.eval c)′ = p.derivative.eval c * c′ := deriv_eval_of_const_coeffs p c hp
   rw [hroot, map_zero] at hchain
   exact (mul_eq_zero.mp hchain.symm).resolve_left hsep
 
-end SeparableAlgebraic
+section AlgebraicConstant
+variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
+  [DifferentialAlgebra F E]
+
+/-- The coefficients of `Differential.mapCoeffs p` at indices `≥ p.natDegree` all vanish, for a
+monic `p`: above `natDegree` the coefficients of `p` are `0` (so their derivative is `0`), and at
+`natDegree` itself the leading coefficient is the constant `1` (derivative `0`). -/
+theorem coeff_mapCoeffs_eq_zero_of_monic {p : F[X]} (hp : p.Monic) {i : ℕ}
+    (hi : p.natDegree ≤ i) : (Differential.mapCoeffs p).coeff i = 0 := by
+  rw [Differential.coeff_mapCoeffs]
+  rcases eq_or_lt_of_le hi with rfl | hlt
+  · rw [Polynomial.Monic.coeff_natDegree hp]; simp
+  · rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt]; simp
+
+/-- `Differential.mapCoeffs p` has degree strictly below a monic `p` (its leading constant `1`
+differentiates to `0`). -/
+theorem degree_mapCoeffs_lt {p : F[X]} (hp : p.Monic) :
+    (Differential.mapCoeffs p).degree < p.degree := by
+  rw [Polynomial.degree_eq_natDegree hp.ne_zero]
+  apply (Polynomial.degree_lt_iff_coeff_zero _ _).mpr
+  intro k hk
+  exact coeff_mapCoeffs_eq_zero_of_monic hp hk
+
+/-- **Lemma 3.3.2(i)** (§3.3): a new algebraic constant is algebraic over the old constants.
+If `c ∈ E` is a constant (`c′ = 0`) and algebraic over `F` (integral, with minimal polynomial of
+positive degree), then `c` is a root of a *nonzero polynomial with constant coefficients* — i.e.
+`c` is algebraic over `Const_D F`. (Differentiate the minimal-polynomial relation: `0 = Δ(p(c)) =
+κ_D(p)(c) + p'(c)·c′ = κ_D(p)(c)`; `κ_D(p) = mapCoeffs p` has degree below `p`, so by minimality
+it is `0`, forcing every coefficient of `p` to be a constant.) -/
+theorem isAlgebraicOverConst_of_deriv_eq_zero {c : E} (hc : c′ = 0)
+    (hint : IsIntegral F c) :
+    ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval c = 0 := by
+  set p := minpoly F c with hpdef
+  have hpmonic : p.Monic := minpoly.monic hint
+  -- the κ_D(p) term vanishes at c
+  have hkappa : Polynomial.aeval c (Differential.mapCoeffs p) = 0 := by
+    have hchain := Differential.deriv_aeval_eq (A := F) (R := E) c p
+    rw [minpoly.aeval, map_zero, hc, mul_zero, add_zero] at hchain
+    exact hchain.symm
+  -- minimality forces mapCoeffs p = 0
+  have hmc0 : Differential.mapCoeffs p = 0 := by
+    by_contra hne
+    have hle := minpoly.degree_le_of_ne_zero F c hne hkappa
+    rw [← hpdef] at hle
+    exact absurd (lt_of_le_of_lt hle (degree_mapCoeffs_lt hpmonic)) (lt_irrefl _)
+  -- hence every coefficient of p is a constant
+  have hconst : ∀ i, (p.coeff i)′ = 0 := fun i => by
+    have := congrArg (fun r => Polynomial.coeff r i) hmc0
+    rwa [Differential.coeff_mapCoeffs, Polynomial.coeff_zero] at this
+  -- map p into E[X]: nonzero, constant coefficients, root at c
+  refine ⟨p.map (algebraMap F E), ?_, ?_, ?_⟩
+  · rw [Ne, Polynomial.map_eq_zero_iff (algebraMap F E).injective]
+    exact hpmonic.ne_zero
+  · intro i
+    rw [Polynomial.coeff_map, deriv_algebraMap, hconst i, map_zero]
+  · rw [Polynomial.eval_map, ← Polynomial.aeval_def, minpoly.aeval]
+
+end AlgebraicConstant
 
 end DeepWiki.SymbolicIntegration
