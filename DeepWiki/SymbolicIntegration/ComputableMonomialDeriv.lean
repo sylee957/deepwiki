@@ -154,6 +154,50 @@ theorem toPolyG_cmonomialDeriv (Dt p : CPolyG α) :
         simp [Differential.implicitDeriv, derivative']]
   ring
 
+/-! ### Computable `splitFactor` (Bronstein §3.5, Fig.)
+
+`cSplitFactor Dt fuel p = (pₙ, pₛ)` peels off the special part `pₛ` and the normal part `pₙ` of `p`
+under the monomial derivation `D` (`Dt` the derivative of `t`). Bronstein's loop: `S = gcd(p, Dp) /
+gcd(p, dp/dt)` is the squarefree special factor of the current `p`; if it is constant (`cdegG = 0`)
+the rest is normal, else recurse on `p/S` and accumulate `S` into the special part. Fuel-bounded. -/
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Computable splitting-factorization loop** (Bronstein §3.5): `cSplitFactor Dt fuel p = (pₙ, pₛ)`
+with `pₛ` the special part and `pₙ` the normal part of `p` w.r.t. the monomial derivation `D`
+(`Dt` = `dt/d·`). One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)`; constant `S` ⇒ `p` is normal,
+else recurse on `p/S`. Fuel-bounded; the engine reduces (`native_decide`). -/
+def cSplitFactor (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
+  | 0, p => (p, [CField.one])
+  | fuel + 1, p =>
+    let S := cdivG (fuel + 1) (cgcdExtG (fuel + 1) p (cmonomialDeriv Dt p)).1
+      (cgcdExtG (fuel + 1) p (cderivG p)).1
+    if cdegG S = 0 then (p, [CField.one])
+    else
+      let (qn, qs) := cSplitFactor Dt fuel (cdivG (fuel + 1) p S)
+      (qn, cmulG S qs)
+
 end CPolyG
+
+/-! ### The payoff — the engine **executes** `cSplitFactor` over ℚ(x)[t] (`native_decide`)
+
+These `native_decide` checks are Stage D's deliverable: the splitting-factorization loop, routed
+through `CField QFunNZ` + `CDiffField QFunNZ`, *reduces* in the native compiler with no dependence on
+the noncomputable `CFieldSpec`/`CDiffFieldSpec`. First a small ℚ(x)[t] sanity run, then Bronstein's
+Example 3.5.1. -/
+
+namespace QFunNZ
+
+/-- Build a `QFunNZ` from a numerator and a **nonzero** denominator `CPoly` (the denominator-≠-0
+membership is discharged by `cisZero`, decided by `decide`). The fiddly subtype constructor for
+writing rational-function coefficients of a `CPolyG QFunNZ` by hand. -/
+def ofNumDen (num den : Compute.CPoly) (h : Compute.cisZero den = false) : QFunNZ :=
+  ⟨(num, den), fun hz => by
+    rw [(Compute.cisZero_iff_toPoly_eq_zero den).mpr hz] at h; exact absurd h (by decide)⟩
+
+/-- A `QFunNZ` from a rational constant `n` (numerator `[n]`, denominator `[1]`). -/
+def ofConstNZ (n : ℚ) : QFunNZ := ofNumDen [n] [1] (by decide)
+
+end QFunNZ
 
 end DeepWiki.SymbolicIntegration
