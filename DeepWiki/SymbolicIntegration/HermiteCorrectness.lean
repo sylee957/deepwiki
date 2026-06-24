@@ -3140,3 +3140,26 @@ theorem dvd_num_of_isQRegular {Q r D : ℚ[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q
     linear_combination heq
   have hpoly : r * q = p * D := hinj hcross
   exact (hQ.pow_left).dvd_of_dvd_mul_right (by rw [hpoly]; exact hQe.mul_left p)
+
+open scoped Differential in
+/-- **`Q`-regular is closed under the `RatFunc` derivative**: if `f = am p/am q` has denominator `q`
+coprime to `Q`, then `f′` has denominator `q²` (quotient rule `ratFuncDeriv_mk`), still coprime to `Q`
+(`IsRelPrime.pow_right`). A pole-free-at-`Q` function differentiates to a pole-free-at-`Q` function. -/
+theorem IsQRegular.deriv {Q : ℚ[X]} {f : RatFunc ℚ} (hf : IsQRegular Q f) :
+    IsQRegular Q (f′) := by
+  obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
+  refine ⟨derivative p * q - p * derivative q, q ^ 2, pow_ne_zero 2 hq, hQ.pow_right, ?_⟩
+  rw [hfeq, ← RatFunc.mk_eq_div]
+  show ratFuncDeriv (RatFunc.mk p q) = _
+  rw [ratFuncDeriv_mk, RatFunc.mk_eq_div]
+
+/-- **`glocᵢ` is `Q`-regular for `Q` coprime to `Vi`**: `toQFun (glocIncr fuel A D Vi)` has denominator
+`(toPoly Vi.1)^m` (`glocIncr_den_eq_pow`), coprime to `Q` whenever `IsRelPrime Q (toPoly Vi.1)`. So the
+increment's rational read has no pole at any other irreducible factor — the localization that confines
+factor `i`'s pole to `Vi`. -/
+theorem glocIncr_toQFun_isQRegular (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) {Q : ℚ[X]}
+    (hV : toPoly Vi.1 ≠ 0) (hQ : IsRelPrime Q (toPoly Vi.1)) :
+    IsQRegular Q (toQFun (glocIncr fuel A D Vi)) := by
+  obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi
+  refine ⟨toPoly (glocIncr fuel A D Vi).1, toPoly Vi.1 ^ m, pow_ne_zero m hV, hQ.pow_right, ?_⟩
+  rw [toQFun, hm]
