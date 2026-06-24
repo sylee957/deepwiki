@@ -127,4 +127,48 @@ theorem algEquiv_comm_deriv (σ : E ≃ₐ[F] E) (a : E) : σ (a′) = (σ a)′
 
 end Automorphism
 
+section TraceNorm
+variable {F E : Type*} [Field F] [Differential F] [Field E] [Differential E] [Algebra F E]
+  [DifferentialAlgebra F E] [FiniteDimensional F E] [IsGalois F E]
+
+/-- **Theorem 3.2.4(ii)** (§3.2), trace commutes with `D`: on a finite Galois (char `0` ⇒ separable
+normal) differential extension `(E, Δ)` of `(F, D)`, `D(Tr a) = Tr(Δ a)` for `a ∈ E`. Each Galois
+automorphism `σ` commutes with `Δ` (Theorem 3.2.4(i)), and `Tr` is the sum over the `σ`, so `D`
+passes through the sum. -/
+theorem deriv_trace_eq_trace_deriv (a : E) :
+    (Algebra.trace F E a)′ = Algebra.trace F E (a′) := by
+  apply FaithfulSMul.algebraMap_injective F E
+  rw [← deriv_algebraMap, trace_eq_sum_automorphisms,
+    trace_eq_sum_automorphisms, map_sum]
+  refine Finset.sum_congr rfl fun σ _ => ?_
+  rw [← algEquiv_comm_deriv σ a]
+
+/-- **Theorem 3.2.4(ii)** (§3.2), norm log-derivative: on a finite Galois differential extension,
+the logarithmic-derivative of the norm is the trace of the logarithmic derivative —
+`Tr(Δa/a) = D(N a)/N a` for `a ≠ 0`. Equivalently `D(N a) = N a · Tr(Δa/a)`. From `N a = ∏_σ σ a`
+(each `σ` commuting with `Δ`), `D(N a)/N a = ∑_σ Δ(σ a)/σ a = ∑_σ σ(Δa/a) = Tr(Δa/a)`. -/
+theorem trace_logDeriv_eq_logDeriv_norm (a : E) (ha : a ≠ 0) :
+    Algebra.trace F E (a′ / a) = (Algebra.norm F a)′ / Algebra.norm F a := by
+  have hσne : ∀ σ : E ≃ₐ[F] E, σ a ≠ 0 := fun σ => by
+    rw [ne_eq, map_eq_zero_iff _ σ.injective]; exact ha
+  apply FaithfulSMul.algebraMap_injective F E
+  -- LHS: `algebraMap (Tr(a'/a)) = ∑_σ σ(a'/a) = ∑_σ (σ a)'/(σ a)`.
+  have hlhs : algebraMap F E (Algebra.trace F E (a′ / a)) = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
+    rw [trace_eq_sum_automorphisms]
+    refine Finset.sum_congr rfl fun σ _ => ?_
+    rw [map_div₀, algEquiv_comm_deriv σ a]
+  -- RHS: `algebraMap (D(N a)/N a) = logDeriv (algebraMap (N a)) = logDeriv (∏_σ σ a)`.
+  have hrhs : algebraMap F E ((Algebra.norm F a)′ / Algebra.norm F a)
+      = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
+    have hstep : Differential.logDeriv ((algebraMap F E) (Algebra.norm F a))
+        = ∑ σ : E ≃ₐ[F] E, (σ a)′ / σ a := by
+      rw [Algebra.norm_eq_prod_automorphisms,
+        Differential.logDeriv_prod _ Finset.univ (fun σ : E ≃ₐ[F] E => σ a) (fun σ _ => hσne σ)]
+      rfl
+    rw [map_div₀, ← deriv_algebraMap]
+    exact hstep
+  rw [hlhs, hrhs]
+
+end TraceNorm
+
 end DeepWiki.SymbolicIntegration
