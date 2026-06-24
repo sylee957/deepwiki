@@ -487,6 +487,72 @@ theorem splitFactorStep_associated_prod_special (v : K[X]) {p : K[X]} (hp : p �
   -- `gcd(p, Dp) ~ defect·special ~ gcd(p, dp/dt)·special`.
   exact hnum.trans (hden.symm.mul_right special)
 
+open Classical in
+omit [CharZero K] in
+/-- If every prime factor of `p` is normal (w.r.t. `D`), then `p` is *book-normal*: every squarefree
+factor of `p` is normal. A squarefree `q ∣ p` is associated to the product of its distinct (hence
+pairwise-coprime) prime factors, each of which divides `p` and so is normal (`IsNormal.prod`). -/
+theorem isNormalSqfree_of_forall_prime_normal (v : K[X]) {p : K[X]}
+    (h : ∀ π : K[X], Prime π → π ∣ p → @IsNormal _ _ ⟨Differential.implicitDeriv v⟩ π) :
+    @IsNormalSqfree _ _ ⟨Differential.implicitDeriv v⟩ p := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  intro q hsf hqp
+  have hq0 : q ≠ 0 := hsf.ne_zero
+  -- `q ~ ∏ π ∈ primeFactors q, π` (q squarefree ⇒ radical).
+  have hrad : Associated (∏ π ∈ primeFactors q, π) q := by
+    have hAssoc : Associated (radical q) q :=
+      radical_associated ((isRadical_iff_squarefree_of_ne_zero hq0).mpr hsf) hq0
+    rwa [radical] at hAssoc
+  refine IsNormal.of_associated hrad ?_
+  refine IsNormal.prod (primeFactors q) (fun π => π) (fun π hπ => ?_) (fun π hπ ρ hρ hπρ => ?_)
+  · -- each prime factor of q is normal: it is prime and divides q ∣ p.
+    have hprime : Prime π := prime_of_normalized_factor π (mem_primeFactors.mp hπ)
+    have hdvd : π ∣ p := (dvd_of_mem_normalizedFactors (mem_primeFactors.mp hπ)).trans hqp
+    exact h π hprime hdvd
+  · exact (((pairwise_primeFactors_isRelPrime (a := q)) hπ hρ hπρ)).isCoprime
+
+open Classical in
+/-- **Theorem 3.5.1(i)** book-faithful step (`S` constant): if the `SplitFactor` step `S` is constant
+(`deg S = 0`), then `p` is book-normal — every squarefree factor of `p` is normal. (`S ~ ∏_{special}π`
+is a unit, so `p` has no special prime factor; every prime factor is normal.) -/
+theorem isNormalSqfree_of_splitFactorStep_natDegree_zero {p : K[X]} (hp : p ≠ 0)
+    (hdeg : (splitFactorStep v p).natDegree = 0) :
+    @IsNormalSqfree _ _ ⟨Differential.implicitDeriv v⟩ p := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  have hassoc := splitFactorStep_associated_prod_special v hp
+  -- `S` is a nonzero constant, hence a unit; so `∏_{special}π` is a unit.
+  have hspne : (∏ π ∈ (primeFactors p).filter
+      (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π) ≠ 0 := by
+    rw [Finset.prod_ne_zero_iff]
+    exact fun π hπ => (prime_of_normalized_factor π
+      (mem_primeFactors.mp (Finset.mem_of_mem_filter π hπ))).ne_zero
+  have hSne : splitFactorStep v p ≠ 0 := fun hS => hspne (hassoc.eq_zero_iff.mp hS)
+  have hSu : IsUnit (splitFactorStep v p) := by
+    rw [Polynomial.isUnit_iff_degree_eq_zero, Polynomial.degree_eq_natDegree hSne, hdeg]; rfl
+  have hspu : IsUnit (∏ π ∈ (primeFactors p).filter
+      (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π) :=
+    hassoc.isUnit hSu
+  -- a unit product of primes forces an empty filter: no special prime factor.
+  have hnospec : ∀ π ∈ primeFactors p, ¬ @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π := by
+    intro π hπ hπspec
+    have hmem : π ∈ (primeFactors p).filter
+        (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π) := Finset.mem_filter.mpr ⟨hπ, hπspec⟩
+    have hπdvd : π ∣ ∏ ρ ∈ (primeFactors p).filter
+        (fun ρ => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ ρ), ρ := Finset.dvd_prod_of_mem _ hmem
+    exact (prime_of_normalized_factor π (mem_primeFactors.mp hπ)).not_unit
+      (isUnit_of_dvd_unit hπdvd hspu)
+  -- every prime factor of `p` is normal.
+  refine isNormalSqfree_of_forall_prime_normal v (fun π hprime hdvd => ?_)
+  -- find a normalized associate `ρ ∈ primeFactors p`; `ρ` is not special, so neither is `π`.
+  obtain ⟨ρ, hρmem, hρassoc⟩ := exists_mem_normalizedFactors_of_dvd hp hprime.irreducible hdvd
+  have hρpf : ρ ∈ primeFactors p := mem_primeFactors.mpr hρmem
+  have hρnospec : ¬ @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ ρ := hnospec ρ hρpf
+  have hπnospec : ¬ @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π :=
+    fun hπs => hρnospec (IsSpecial.of_associated hρassoc hπs)
+  have hgcdu : IsUnit (gcd π π′) :=
+    hprime.irreducible.isUnit_gcd_iff.mpr (fun hd => hπnospec (hd : @IsSpecial _ _ _ π))
+  exact (gcd_isUnit_iff_isRelPrime.mp hgcdu).isCoprime
+
 end GeneralSplitFactorStep
 
 section SplitSquarefreeFactor
