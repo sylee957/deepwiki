@@ -137,4 +137,25 @@ theorem evalSql_algToSql : {Ω : Finset Att} → (e : AlgExpr Att Val Ω) →
   | _, .diff e e' => by
       rw [algToSql, evalSql_minus, evalSql_algToSql e, evalSql_algToSql e', evalAlg_diff]
 
+/-- **Reduction of SQL to the algebra**: every SQL query is an algebra expression — elementary
+queries are base relations, and `UNION`/`MINUS`/`INTERSECTION` map to union/difference/intersection
+(the last via the generating part `e − (e − e')`). -/
+def sqlToAlg : {Ω : Finset Att} → SqlQuery Att Val Ω → AlgExpr Att Val Ω
+  | _, .elem v => .rel v
+  | _, .union a b => .union (sqlToAlg a) (sqlToAlg b)
+  | _, .minus a b => .diff (sqlToAlg a) (sqlToAlg b)
+  | _, .inter a b => (sqlToAlg a).inter (sqlToAlg b)
+
+/-- The SQL-to-algebra reduction is correct: it preserves the view instance. With `algToSql`, the
+relational algebra and SQL have the same expressive power. -/
+theorem evalAlg_sqlToAlg : {Ω : Finset Att} → (q : SqlQuery Att Val Ω) →
+    evalAlg (sqlToAlg q) = evalSql q
+  | _, .elem _ => by simp only [sqlToAlg, evalAlg_rel, evalSql_elem]
+  | _, .union a b => by
+      rw [sqlToAlg, evalAlg_union, evalAlg_sqlToAlg a, evalAlg_sqlToAlg b, evalSql_union]
+  | _, .minus a b => by
+      rw [sqlToAlg, evalAlg_diff, evalAlg_sqlToAlg a, evalAlg_sqlToAlg b, evalSql_minus]
+  | _, .inter a b => by
+      rw [sqlToAlg, evalAlg_inter, evalAlg_sqlToAlg a, evalAlg_sqlToAlg b, evalSql_inter]
+
 end DeepWiki

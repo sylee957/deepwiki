@@ -46,9 +46,9 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   `evalFOExpr_algToFO` (algebra ⊆ calculus) — and the **safety-necessity** result
   `neg_relA_not_isAlgExpressible`: the complement `¬ R(t)` is not algebra-expressible, so the
   converse must restrict to safe formulas.)
-§2.5: the reduction of the relational algebra to SQL is DONE (`algToSql` + `evalSql_algToSql`):
-  set operations map to SQL `UNION`/`MINUS`, base/SPJ subexpressions to elementary queries,
-  preserving the view instance.
+§2.5: DONE in both directions — `algToSql`/`evalSql_algToSql` (algebra → SQL) and `sqlToAlg`/
+  `evalAlg_sqlToAlg` (SQL → algebra), establishing that the relational algebra and SQL have the same
+  expressive power (the set-operation/SPJ level; the elementary `Where` internals are abstracted).
 §2.6: the reduction of SQL to the tuple calculus [infra: needs SQL's elementary `Where`-condition
   language translated to first-order conditions].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
@@ -257,5 +257,13 @@ abbrev reduction_algToSql := @DeepWiki.algToSql
 
 /-- **§2.5**: correctness of the algebra-to-SQL reduction — it preserves the view instance. -/
 abbrev reduction_algToSql_correct := @DeepWiki.evalSql_algToSql
+
+/-- **§2.5** (converse): the reduction translating an SQL query to an algebra expression
+(elementary queries to base relations; `UNION`/`MINUS`/`INTERSECTION` to union/diff/inter). -/
+abbrev reduction_sqlToAlg := @DeepWiki.sqlToAlg
+
+/-- **§2.5**: correctness of the SQL-to-algebra reduction. With `algToSql`, the relational algebra
+and SQL have the same expressive power. -/
+abbrev reduction_sqlToAlg_correct := @DeepWiki.evalAlg_sqlToAlg
 
 end DeepWiki.Rdb
