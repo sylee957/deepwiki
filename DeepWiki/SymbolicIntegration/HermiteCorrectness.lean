@@ -3293,3 +3293,73 @@ theorem dvd_residNum_factor (fuel : ℕ) (A D : CPoly) (factors : List (CPoly ×
   have : toPoly kelem.1 ^ (kelem.2 - 1) ∣ (R - residNumIncr fuel A D kelem)
       + residNumIncr fuel A D kelem := dvd_add hdvdSub' hdvdInc
   simpa using this
+
+/-! ### The product divisibility `W ∣ R` over the pairwise-coprime kept factors
+
+The interference numerator `R` is divisible by each `Vk^{ik−1}` (`dvd_residNum_factor`). Since the kept
+factors `Vk` are pairwise coprime (Yun's `csqfreeFactor_pairwise_isRelPrime`), so are the powers
+`Vk^{ik−1}`, hence their product `W = ∏_{kept} Vk^{ik−1} = D/Dstar` divides `R` — the single remaining
+interference divisibility, now proven by the per-factor order argument. -/
+
+/-- **`x` coprime to each list element ⟹ coprime to the product** (list `IsRelPrime.prod_right`). -/
+theorem isRelPrime_list_prod_right {α : Type*} [CommMonoidWithZero α] [GCDMonoid α]
+    (x : α) (L : List α) (h : ∀ a ∈ L, IsRelPrime x a) : IsRelPrime x L.prod := by
+  induction L with
+  | nil => simpa using isRelPrime_one_right
+  | cons hd tl ih =>
+    rw [List.prod_cons]
+    exact (h hd (List.mem_cons_self ..)).mul_right (ih fun a ha => h a (List.mem_cons_of_mem _ ha))
+
+/-- **Pairwise-coprime list factors each dividing `z` ⟹ product divides `z`** (list
+`Finset.prod_dvd_of_isRelPrime`): inducting with `IsRelPrime.mul_dvd`, the head is coprime to the tail
+product (`isRelPrime_list_prod_right`). -/
+theorem list_prod_dvd_of_pairwise {α : Type*} [CommMonoidWithZero α] [GCDMonoid α]
+    (L : List α) (z : α) (hpw : L.Pairwise IsRelPrime) (hd : ∀ a ∈ L, a ∣ z) : L.prod ∣ z := by
+  induction L with
+  | nil => simp
+  | cons hd' tl ih =>
+    rw [List.prod_cons, List.pairwise_cons] at *
+    exact IsRelPrime.mul_dvd (isRelPrime_list_prod_right hd' tl fun i hi => hpw.1 i hi)
+      (hd hd' (List.mem_cons_self ..)) (ih hpw.2 fun a ha => hd a (List.mem_cons_of_mem _ ha))
+
+open scoped Differential in
+/-- **The product interference divisibility `W ∣ R`**: with `W = ∏_{kept} Vk^{ik−1}` and `R =
+C(1−n)·A + Σ residNumIncr`, given the per-factor residual identities (`hstep`), pairwise coprimality of
+the kept factors `Vk` (`hpw`), each `Vk^{ik} ∣ D`, the product `∏_{kept} Vk^{ik−1}` divides `R`. The
+per-factor order bounds `Vk^{ik−1} ∣ R` (`dvd_residNum_factor`) assemble over the coprime powers
+(`list_prod_dvd_of_pairwise`): the entire multi-factor interference clears, the last remaining piece. -/
+theorem prod_dvd_residNum (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ))
+    (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
+    (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D))
+    (hpw : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Pairwise
+      (fun a b => IsRelPrime (toPoly a.1) (toPoly b.1)))
+    (hpow : ∀ Vi ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)),
+      toPoly Vi.1 ^ Vi.2 ∣ toPoly D) :
+    ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
+        (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).prod
+      ∣ Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ)) * toPoly A
+        + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum := by
+  set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept
+  -- the mapped powers are pairwise `IsRelPrime` (from pairwise coprimality of the `Vk`).
+  have hpwpow : (kept.map (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).Pairwise IsRelPrime := by
+    rw [List.pairwise_map]
+    exact hpw.imp (fun {a b} hab => (hab.pow_left).pow_right)
+  refine list_prod_dvd_of_pairwise _ _ hpwpow ?_
+  -- each mapped power `Vk^{ik−1}` divides `R` by the per-factor order bound.
+  intro a ha
+  rw [List.mem_map] at ha
+  obtain ⟨kelem, hkelem, rfl⟩ := ha
+  -- the localization coprimality for the OTHER kept factors at `kelem`.
+  haveI hsymInst : Std.Symm (fun a b : CPoly × ℕ => IsRelPrime (toPoly a.1) (toPoly b.1)) :=
+    ⟨fun {_ _} (h : IsRelPrime _ _) => h.symm⟩
+  have hcop : ∀ Vi ∈ kept, Vi ≠ kelem → IsRelPrime (toPoly kelem.1) (toPoly Vi.1) := by
+    intro Vi hVi hne
+    -- from pairwise coprimality (symmetric): `kelem` and `Vi` distinct kept factors are coprime.
+    exact (hkept ▸ hpw : kept.Pairwise _).forall hkelem hVi (Ne.symm hne)
+  exact dvd_residNum_factor fuel A D factors kelem hkelem hnd hD hV hstep hcop
+    (hpow kelem hkelem)
