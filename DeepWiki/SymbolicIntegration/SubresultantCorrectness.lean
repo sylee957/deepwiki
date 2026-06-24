@@ -2151,4 +2151,27 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
   rw [show toPoly ([1] : CPoly) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
   exact one_ne_zero hcoeff
 
+/-! ### The ℚ[t]-similarity `lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1 (all chain hyps discharged)
+Plugging every discharged chain regularity lemma into `isSimilar_lrtSubresultant_lrtSubresultantCompute`
+(at `m = 1`, the degree-3 index) gives the abstract `ℚ[t]`-similarity
+`lrtSubresultant A D 3 ∼ toBPoly (lrtSubresultantCompute 30 3 A D)` with **no** remaining chain hypotheses
+— `hc0`/`hQ` are the derived `hc0_ex241`/`hQ_ex241`, the rest are `native_decide` facts. -/
+
+/-- **`lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1** (`ℚ[t]`-similarity, all chain hypotheses
+discharged): the abstract LRT subresultant `lrtSubresultant (toPoly cA241) (toPoly cD241) 3` is `ℚ[t]`-similar
+to the computable primitive LRT subresultant `toBPoly (lrtSubresultantCompute 30 3 cA241 cD241)`. The full
+chain agreement `isSimilar_lrtSubresultant_lrtSubresultantCompute` with every regularity hypothesis
+discharged for the real `subresPRS` chain of Example 2.4.1. -/
+theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
+    IsSimilar (lrtSubresultant (toPoly cA241) (toPoly cD241)
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree)
+      (toBPoly (lrtSubresultantCompute 30
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) :=
+  isSimilar_lrtSubresultant_lrtSubresultantCompute 30 cA241 cD241 (chainG 30 gP gQ)
+    (chainBt 30 gP gQ) (chainS 30 gP gQ) (chainC 30 gP gQ) 1
+    (chainG_zero 30 gP gQ) (chainG_one 30 gP gQ) hd0_ex241 hd1_ex241
+    (fun l _ => chain_hsc 30 gP gQ l) hβcn_ex241 hdiv_ex241
+    (fun l _ => chain_hG2 30 gP gQ l) hc0_ex241 hβ0_ex241 hlc_ex241 hcb_ex241 hjlt_ex241 hQ_ex241
+    hCne_ex241 hfilt_ex241 hg_ex241 hgcn_ex241 hg0_ex241 hrem_ex241
+
 end DeepWiki.SymbolicIntegration.Compute
