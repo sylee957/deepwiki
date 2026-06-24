@@ -30,6 +30,11 @@ theorem am_toPoly_ne_zero {p : CPoly} (hp : toPoly p ≠ 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hp
 
+/-- **`cisZero` reads as `toPoly = 0`**: `cisZero p = true ↔ toPoly p = 0` (the zero test on `CPoly`
+agrees with vanishing in `ℚ[X]`). -/
+theorem cisZero_iff_toPoly_eq_zero (p : CPoly) : cisZero p = true ↔ toPoly p = 0 := by
+  rw [cisZero, beq_iff_eq, cnorm_eq_nil_iff]
+
 /-! ### Computable field operations on `QFun` -/
 
 /-- **One rational function** `1/1`. -/
@@ -85,5 +90,28 @@ theorem toQFun_qsub (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
     toQFun (qsub x y) = toQFun x - toQFun y := by
   have hd' : toPoly (qneg y).2 ≠ 0 := hd
   rw [qsub, toQFun_qadd x (qneg y) hb hd', toQFun_qneg, sub_eq_add_neg]
+
+/-- **`qinv` realizes inversion**: `toQFun (qinv x) = (toQFun x)⁻¹` in `RatFunc ℚ` (including the
+field convention `0⁻¹ = 0`: when the numerator is zero, both sides are `0`). -/
+theorem toQFun_qinv (x : QFun) : toQFun (qinv x) = (toQFun x)⁻¹ := by
+  obtain ⟨a, b⟩ := x
+  rw [qinv]
+  by_cases ha : cisZero (a, b).1 = true
+  · -- numerator is zero: `toQFun (0/b) = 0`, and `0⁻¹ = 0`.
+    have ha0 : toPoly a = 0 := (cisZero_iff_toPoly_eq_zero a).mp ha
+    simp only [ha, if_true]
+    rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div, inv_zero]
+  · -- numerator nonzero: `qinv (a,b) = (b,a)`, `am(b)/am(a) = (am(a)/am(b))⁻¹`.
+    rw [if_neg ha, toQFun, toQFun, inv_div]
+
+/-- **`qdiv` realizes division**: `toQFun (qdiv x y) = toQFun x / toQFun y` in `RatFunc ℚ`. -/
+theorem toQFun_qdiv (x y : QFun) : toQFun (qdiv x y) = toQFun x / toQFun y := by
+  rw [qdiv, toQFun_qmul, toQFun_qinv, div_eq_mul_inv]
+
+/-- **`qpow` realizes the `ℕ`-power**: `toQFun (qpow x n) = (toQFun x) ^ n` in `RatFunc ℚ`. -/
+theorem toQFun_qpow (x : QFun) (n : ℕ) : toQFun (qpow x n) = (toQFun x) ^ n := by
+  induction n with
+  | zero => rw [qpow, toQFun_qone, pow_zero]
+  | succ n ih => rw [qpow, toQFun_qmul, ih, pow_succ, mul_comm]
 
 end DeepWiki.SymbolicIntegration.Compute
