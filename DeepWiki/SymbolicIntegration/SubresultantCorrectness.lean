@@ -1270,4 +1270,59 @@ theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (
   rw [goStep]
   rw [goState_succ_fst fuel s0 l]
 
+/-! #### The `go`-list ↔ `goState` bridge (reading `subresPRS` off the state machine)
+The `goState` machine carries the chain data; to identify `subresPRS`'s *list* elements with the state
+machine (for the singleton-filter `hfil`), these lemmas read the `go` list — and then `subresPRS` —
+through `goState`, valid while the chain stays nonzero and fuel suffices. -/
+
+/-- **One `subresPRS.go` step against `goState`**: while `Ri` (the current element `s.2.1`) is nonzero,
+`go fuel (fo+1) …` emits `Ri` then recurses on the `goStep`-advanced state — the literal `go` recurrence
+re-expressed through the top-level `goStep`. -/
+theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz : ¬ bisZero s.2.1 = true) :
+    subresPRS.go fuel (fo + 1) s.1 s.2.1 s.2.2.1 s.2.2.2
+      = s.2.1 :: subresPRS.go fuel fo (goStep fuel s).1 (goStep fuel s).2.1
+          (goStep fuel s).2.2.1 (goStep fuel s).2.2.2 := by
+  obtain ⟨Ri_1, Ri, psi, dp⟩ := s
+  rw [subresPRS.go.eq_2]
+  simp only at hz
+  simp only [hz, Bool.false_eq_true, if_false]
+  rfl
+
+/-- **`go`-list index reads the state machine**: as long as the chain elements stay nonzero through index
+`k` and the fuel `fo` exceeds `k`, the `k`-th element of `go fuel fo …` is the second state component
+`(goState fuel s k).2.1`. Induction on `k`, peeling one `go_step_state` and shifting `goState` by
+`goState_goStep`. -/
+theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : ℕ) (hfo : k < fo)
+    (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true) :
+    (subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2).getD k [] = (goState fuel s k).2.1 := by
+  induction k generalizing s fo with
+  | zero =>
+    obtain ⟨f', rfl⟩ : ∃ f', fo = f' + 1 := ⟨fo - 1, by omega⟩
+    rw [go_step_state fuel f' s (hnz 0 (by omega))]
+    rfl
+  | succ n ih =>
+    obtain ⟨f', rfl⟩ : ∃ f', fo = f' + 1 := ⟨fo - 1, by omega⟩
+    rw [go_step_state fuel f' s (hnz 0 (by omega)), List.getD_cons_succ,
+      ih (goStep fuel s) f' (by omega)
+        (fun i hi => by rw [goState_goStep]; exact hnz (i + 1) (by omega)),
+      goState_goStep]
+
+/-- **`subresPRS` index reads the chain element `G i := (goState fuel s₀ i).1`**: with the initial state
+`s₀ = (P, Q, [-1], bdeg P − bdeg Q)`, the `i`-th element of `subresPRS fuel P Q` is `(goState fuel s₀ i).1`
+— provided the chain stays nonzero through index `i−1` and `i ≤ fuel`. So `subresPRS`'s list is literally
+the `goState` chain, the identification that lets the singleton-filter fact be stated on the state machine.
+-/
+theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
+    (hnz : ∀ k < i, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) k).2.1 = true) :
+    (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 := by
+  rw [subresPRS.eq_def]
+  cases i with
+  | zero => rfl
+  | succ n =>
+    rw [List.getD_cons_succ]
+    have h := go_getD fuel (P, Q, [-1], bdeg P - bdeg Q) n fuel (by omega)
+      (fun k hk => hnz k (by omega))
+    simp only at h
+    rw [h, goState_succ_fst]
+
 end DeepWiki.SymbolicIntegration.Compute
