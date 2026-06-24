@@ -2245,6 +2245,30 @@ theorem mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero :
   apply mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero
   rw [lrtGcdCompute, hbridge, h, mul_zero]
 
+/-! ### The `hLne` residue non-vanishing, reduced to the `eval-at-root` form (Ex 2.4.1)
+The single remaining hypothesis `hLne : Φ (lrtSubresultant A D 3) ≠ 0` is, via the `mk ↔ eval-at-root`
+bridge `mapRingHom_mk_lrtSubresultant`, exactly the statement that the *base-changed* LRT subresultant over
+`R241 = ℚ(i/2)`, specialized at the root `α = root(4t²+1)`, is nonzero:
+`(lrtSubresultant (A.map σ) (D.map σ) 3).map (evalRingHom α) ≠ 0` (`σ = of (4t²+1)` the base change). This
+is the residue specialization of the abstract LRT subresultant at the residue `α = i/2` — exactly the object
+the proven LRT regularity `leadingCoeff_lrtSubresultant_eval_ne_zero` controls, *provided* the index `3`
+matches the residue multiplicity `rootMultiplicity α (rtResultant (A.map σ) (D.map σ))`. The bridge below
+records the reduction; discharging it needs the multiplicity-`3` fact over an algebraically closed extension
+(see the closing note: `α = i/2` is a residue of multiplicity exactly `3 = deg gcd(D, A − (i/2)·D')`). -/
+
+/-- **`hLne` ⟺ residue specialization of the base-changed subresultant is nonzero** (Ex 2.4.1): the residue
+non-vanishing `Φ (lrtSubresultant A D 3) ≠ 0` (where `Φ = mapRingHom φ241`, `φ241 = mk (4t²+1)`) is, by the
+`mk ↔ eval-at-root` bridge `mapRingHom_mk_lrtSubresultant`, *defeq-after-rewrite* equal to the non-vanishing
+of the base-changed LRT subresultant `lrtSubresultant (A.map σ) (D.map σ) 3` (over `R241 = ℚ(i/2)`,
+`σ = of (4t²+1)`) specialized at the root `α = root (4t²+1)`. This identifies `hLne` with the abstract
+`lrtSubresultant_eval`-style object at the residue `α`, the entry point for the LRT regularity transfer. -/
+theorem mapRingHom_φ241_lrtSubresultant_ex241_eq_eval :
+    (Polynomial.mapRingHom φ241) (lrtSubresultant (toPoly cA241) (toPoly cD241) 3)
+      = (lrtSubresultant ((toPoly cA241).map (AdjoinRoot.of (toPoly cR241)))
+            ((toPoly cD241).map (AdjoinRoot.of (toPoly cR241))) 3).map
+          (Polynomial.evalRingHom (AdjoinRoot.root (toPoly cR241))) :=
+  mapRingHom_mk_lrtSubresultant (toPoly cR241) (toPoly cA241) (toPoly cD241) 3
+
 /-- **The closed residue-ring agreement for Example 2.4.1**: over the residue field
 `R241 = ℚ[t]/(4t²+1) = AdjoinRoot (toPoly cR241)`, the `φ241`-image of the abstract LRT subresultant
 `lrtSubresultant (toPoly cA241) (toPoly cD241) 3` is `IsSimilar` to the `φ241`-image of the computable LRT
