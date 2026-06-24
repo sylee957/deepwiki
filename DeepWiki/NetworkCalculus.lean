@@ -291,6 +291,7 @@ import DeepWiki.NetworkCalculus.StateTransitionAssembly
 import DeepWiki.NetworkCalculus.CellTransitionAssembly
 import DeepWiki.NetworkCalculus.UnifTransition
 import DeepWiki.NetworkCalculus.StackShapePropagation
+import DeepWiki.NetworkCalculus.MultiStepDecode
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
