@@ -2,11 +2,15 @@ import DeepWiki.SymbolicIntegration.SpecialFirstKind
 
 /-! # Constants of a monomial extension and base change (Bronstein §3.4)
 For a monomial `t` over `(k, D)` (so `Dt = v ∈ k[t]`), this file relates the *constants* of
-`k(t)` to the *special* polynomials. When `Dt ∈ k` a nonzero `p ∈ k[t]` is special iff its monic
-associate is a constant (`isSpecial_iff_deriv_monic_eq_zero`); this is the engine behind the fact
-that any new constant in `k(t) ∖ k` makes `Sⁱʳʳ` nonempty. We also complete the base-change
-corollary (normal polynomials stay normal under an algebraic extension `k ⊆ E`), and record the
-constant-field case `Da = 0`. -/
+`k(t)` to the *special* polynomials. A constant `c = a/b ∈ Const_D(k(t))` has special numerator
+and denominator (`isSpecial_num_denom_of_const_quotient`), of equal degree when `t` is nonlinear
+(`natDegree_eq_of_special_of_deriv_quotient_num_eq_zero`); these combine into the full
+`isSpecial_and_natDegree_eq_of_const_quotient_nonlinear`. When `Dt ∈ k` a nonzero `p ∈ k[t]` is
+special iff its monic associate is a constant (`isSpecial_iff_deriv_normalize_eq_zero`); this is
+the engine behind the fact that any new constant in `k(t) ∖ k` makes `Sⁱʳʳ` nonempty. We also
+complete the base-change corollary (normal polynomials stay normal under an algebraic extension
+`k ⊆ E`, `isCoprime_map_implicitDeriv_of_isCoprime`), and record the constant-field case `Da = 0`
+(special ↔ `p ∣ Hₜ`, normal ↔ `gcd(p, Hₜ) = 1`). -/
 
 open scoped Differential
 open Polynomial
@@ -124,6 +128,75 @@ theorem leadingCoeff_cofactor_nonlinear {v p g : F[X]} (hv : 2 ≤ v.natDegree) 
         rw [Differential.implicitDeriv_C]; exact natDegree_C _
       rw [hg, natDegree_mul hp0 hgne, natDegree_C] at hDp0
       omega
+
+/-- **Lemma 3.4.5** (§3.4, p.96), second part: for a *nonlinear* monomial (`deg v ≥ 2`), if
+`a, b ∈ k[t]` are nonzero, special, and satisfy the constant-quotient identity `b·Da = a·Db`
+(i.e. `a/b ∈ Const_D(k(t))`, `a/b ≠ 0`), then `a` and `b` have the same degree. Writing
+`Da = a·g`, `Db = b·h`, cancellation gives `g = h`; the leading coefficient of `g` reads off
+`deg a` (`= (deg a)·lc v`) and likewise `deg b`, forcing `deg a = deg b`. -/
+theorem natDegree_eq_of_special_of_deriv_quotient_num_eq_zero {v a b : F[X]} (hv : 2 ≤ v.natDegree)
+    (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hsa : a ∣ Differential.implicitDeriv v a) (hsb : b ∣ Differential.implicitDeriv v b)
+    (h : b * Differential.implicitDeriv v a = a * Differential.implicitDeriv v b) :
+    a.natDegree = b.natDegree := by
+  obtain ⟨g, hg⟩ := hsa
+  obtain ⟨h', hh⟩ := hsb
+  -- `g = h'` by cancelling `a·b` in `b·(a·g) = a·(b·h')`
+  have hgh : g = h' := by
+    have hcancel : a * b * g = a * b * h' := by
+      rw [show a * b * g = b * (a * g) from by ring, show a * b * h' = a * (b * h') from by ring,
+        ← hg, ← hh, h]
+    exact mul_left_cancel₀ (mul_ne_zero ha0 hb0) hcancel
+  subst hgh
+  obtain ⟨hga, hg0a⟩ := leadingCoeff_cofactor_nonlinear hv ha0 hg
+  obtain ⟨hgb, hg0b⟩ := leadingCoeff_cofactor_nonlinear hv hb0 hh
+  have hlcv : v.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr (by rintro rfl; simp at hv)
+  rcases Nat.eq_zero_or_pos a.natDegree with hae | hap
+  · -- `deg a = 0`: then `deg g = 0`, so `deg b ≥ 1` is impossible (`leadingCoeff_cofactor` gives δ−1)
+    rcases Nat.eq_zero_or_pos b.natDegree with hbe | hbp
+    · rw [hae, hbe]
+    · obtain ⟨_, hgdegb⟩ := hgb hbp
+      rw [hg0a hae] at hgdegb
+      omega
+  · rcases Nat.eq_zero_or_pos b.natDegree with hbe | hbp
+    · obtain ⟨_, hgdega⟩ := hga hap
+      rw [hg0b hbe] at hgdega
+      omega
+    · -- both `≥ 1`: leading coeffs `(deg a)·lc v = lc g = (deg b)·lc v`
+      obtain ⟨hlca, _⟩ := hga hap
+      obtain ⟨hlcb, _⟩ := hgb hbp
+      have : (a.natDegree : F) * v.leadingCoeff = (b.natDegree : F) * v.leadingCoeff := by
+        rw [← hlca, ← hlcb]
+      have hcast : (a.natDegree : F) = (b.natDegree : F) := mul_right_cancel₀ hlcv this
+      exact_mod_cast hcast
+
+/-- **Lemma 3.4.5** (§3.4, p.96), full statement over `k(t) = Frac(k[t])` for a *nonlinear*
+monomial (`Dt = v`, `deg v ≥ 2`): a constant `c = a/b ∈ Const_D(k(t))` with `a, b` coprime,
+`a ≠ 0`, `b ≠ 0` has both numerator and denominator special (`a ∣ Da`, `b ∣ Db`) *and* of the
+*same degree* (`deg a = deg b`). Here `k(t)` is realized as a differential fraction field `K` of
+`F[X] = k[t]` whose derivation extends the monomial derivation `Differential.implicitDeriv v`. -/
+theorem isSpecial_and_natDegree_eq_of_const_quotient_nonlinear
+    {K : Type*} [Field K] [Algebra F[X] K] [IsFractionRing F[X] K] [Differential K]
+    {v a b : F[X]} (hv : 2 ≤ v.natDegree) (hco : IsCoprime a b) (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hder : ∀ p : F[X], (algebraMap F[X] K p)′ = algebraMap F[X] K (Differential.implicitDeriv v p))
+    (hconst : (algebraMap F[X] K a / algebraMap F[X] K b)′ = 0) :
+    a ∣ Differential.implicitDeriv v a ∧ b ∣ Differential.implicitDeriv v b
+      ∧ a.natDegree = b.natDegree := by
+  letI : Differential F[X] := ⟨Differential.implicitDeriv v⟩
+  letI : DifferentialAlgebra F[X] K := ⟨hder⟩
+  obtain ⟨hsa, hsb⟩ := isSpecial_num_denom_of_const_quotient hco hb0 hconst
+  -- the numerator identity `b·Da = a·Db` from `Dc = 0`, pulled back through `algebraMap`
+  have hinj : Function.Injective (algebraMap F[X] K) := IsFractionRing.injective F[X] K
+  have hbK : algebraMap F[X] K b ≠ 0 := fun hz => hb0 (hinj (by rw [hz, map_zero]))
+  have hpoly : b * Differential.implicitDeriv v a = a * Differential.implicitDeriv v b := by
+    apply hinj
+    rw [deriv_div, div_eq_zero_iff] at hconst
+    rcases hconst with hz | hz
+    · rw [sub_eq_zero] at hz
+      rw [map_mul, map_mul, ← hder, ← hder]; exact hz
+    · exact absurd (pow_eq_zero_iff (by norm_num) |>.mp hz) hbK
+  exact ⟨hsa, hsb,
+    natDegree_eq_of_special_of_deriv_quotient_num_eq_zero hv ha0 hb0 hsa hsb hpoly⟩
 
 end Nonlinear
 
