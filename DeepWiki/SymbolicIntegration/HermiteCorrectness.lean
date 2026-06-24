@@ -2595,3 +2595,52 @@ theorem glocIncr_residual (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ)
   -- `hspec : A/D = gloc′ + Afinal/(U·Vi)`, so `gloc′ = A/D − Afinal/(U·Vi)`.
   rw [eq_sub_iff_add_eq, hUdef]
   linear_combination -hspec
+
+/-! ### The total fold residual: `(1−n)·T + Σᵢ residᵢ` over the kept-factor list
+
+Combining `foldl_cond_eq_foldl_glocList` (the conditional fold is a `qadd`-fold over `glocList`),
+`deriv_toQFun_foldl_qadd` (the fold derivative is the sum of the increment derivatives), and
+`glocIncr_residual` (each increment reduces the global `T`), the total residual `T − (toQFun g)′` of
+the whole `g`-fold is `(1 − n)·T + Σᵢ residᵢ`, with `n` the number of kept factors and `residᵢ =
+am Afinalᵢ/(am Uᵢ·am Vi)`. This is the honest `foldl_residual_eq` skeleton evaluated on `hermiteReduce`'s
+actual `g`-fold; the remaining content (the interference clearing) is that this telescopes to a single
+fraction over the squarefree radical `Dstar`. -/
+
+open scoped Differential in
+/-- **The total `g`-fold residual** in `RatFunc ℚ`: with `T = am A/am D`, if every kept factor `(Vi, i)`
+of `factors` satisfies the per-factor residual identity `(toQFun (glocIncr fuel A D Vi))′ = T − resid Vi`
+(the conclusion of `glocIncr_residual`, supplied as `hstep`), then the residual of the conditional
+`g`-fold (`= (glocList fuel A D factors).foldl qadd qzero`) is
+`T − (toQFun g)′ = T − (#kept)•T + Σ_{kept} resid Vi`. The exact overcounting skeleton: `#kept`
+increments each reduce the whole `T`, so the fold overcounts by `(#kept − 1)` copies of `T`, which the
+`Σ resid` interference must clear. -/
+theorem total_fold_residual (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ))
+    (T : RatFunc ℚ) (resid : CPoly × ℕ → RatFunc ℚ)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′ = T - resid Vi) :
+    T - (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = T - (factors.filter (fun Vi => decide (2 ≤ Vi.2))).length • T
+        + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map resid).sum := by
+  set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept
+  -- denominators of the increments are nonzero.
+  have hden : ∀ g ∈ glocList fuel A D factors, toPoly g.2 ≠ 0 := by
+    intro g hg
+    rw [glocList, List.mem_map] at hg
+    obtain ⟨Vi, hViMem, rfl⟩ := hg
+    rw [← hkept] at hViMem
+    have hViF : Vi ∈ factors := List.mem_of_mem_filter hViMem
+    exact glocIncr_den_ne_zero fuel A D Vi (hV Vi hViF)
+  -- the fold derivative is the sum of the increment derivatives.
+  rw [deriv_toQFun_foldl_qadd (glocList fuel A D factors) hden]
+  -- rewrite the increment-derivative list over the kept-factor list, applying `hstep`.
+  rw [glocList, List.map_map]
+  have hmapeq : kept.map ((fun g => (toQFun g)′) ∘ glocIncr fuel A D)
+      = kept.map (fun Vi => T - resid Vi) := by
+    refine List.map_congr_left (fun Vi hVi => ?_)
+    have hViF : Vi ∈ factors := List.mem_of_mem_filter hVi
+    have h2 : 2 ≤ Vi.2 := by simpa using (List.mem_filter.mp hVi).2
+    simp only [Function.comp_apply]
+    exact hstep Vi hViF h2
+  rw [hmapeq, sum_map_const_sub]
+  abel
