@@ -32,42 +32,37 @@ with: every *accepted* certificate is polynomially bounded (`cert_bound`), and `
 certificate is accepted (`spec`). The poly-*time* verifier is exactly the structure the proxy
 `IsInNP` lacks. -/
 structure IsInNP_TM {α αΓ : Type} (ea : α → List αΓ) (L : α → Prop) where
-  /-- the certificate type -/
-  Cert : Type
   /-- the verifier's tape alphabet -/
   Γ : Type
-  /-- encoding of the instance `x` (the **fixed** prefix of the verifier input) -/
+  /-- encoding of the instance `x` — the **fixed prefix** of the verifier input -/
   einstance : α → List Γ
-  /-- encoding of the certificate (the **free** suffix of the verifier input, appended after the
-  instance) — separability is what lets a SAT reduction fix `x` and quantify over `cert`. -/
-  ecert : Cert → List Γ
-  /-- the size of a certificate -/
-  certSize : Cert → ℕ
-  /-- the Boolean verifier -/
-  verify : α × Cert → Bool
-  /-- the verifier runs in polynomial time on a finite TM2, reading the instance-then-certificate
-  input `einstance x ++ ecert c` — the genuine poly-time witness. -/
+  /-- the Boolean verifier, reading the instance `x` and a **raw certificate** `c : List Γ` (the free
+  suffix of the verifier input). Taking the certificate raw — rather than `ecert`-encoded from an
+  abstract `Cert` — is what makes the SAT reduction's "certificate-as-free-cells" SOUND: every free-cell
+  suffix is itself a certificate, so `∃ free-cells = ∃ cert`. This is the standard NP definition
+  (certificate = a bounded symbol string the verifier interprets). -/
+  verify : α × List Γ → Bool
+  /-- the verifier runs in polynomial time on a finite TM2, reading the input `einstance x ++ c`. -/
   verify_polyTime :
-    TM2ComputableInPolyTime (fun p : α × Cert => einstance p.1 ++ ecert p.2) encodeBool verify
-  /-- the polynomial bounding certificate size in input size -/
+    TM2ComputableInPolyTime (fun p : α × List Γ => einstance p.1 ++ p.2) encodeBool verify
+  /-- the polynomial bounding certificate length in input size -/
   certPoly : Polynomial ℕ
   /-- every accepted certificate is polynomially bounded in the input size -/
-  cert_bound : ∀ x c, verify (x, c) = true → certSize c ≤ certPoly.eval (ea x).length
+  cert_bound : ∀ x c, verify (x, c) = true → c.length ≤ certPoly.eval (ea x).length
   /-- soundness and completeness: `L x` holds iff some certificate is accepted -/
-  spec : ∀ x, L x ↔ ∃ c : Cert, verify (x, c) = true
+  spec : ∀ x, L x ↔ ∃ c : List Γ, verify (x, c) = true
 
-/-- The assembled verifier input on instance `x` with certificate `c`: the instance encoding followed
-by the certificate encoding (`einstance x ++ ecert c`). -/
+/-- The assembled verifier input on instance `x` with raw certificate `c`: `einstance x ++ c`. -/
 def IsInNP_TM.einput {α αΓ : Type} {ea : α → List αΓ} {L : α → Prop} (h : IsInNP_TM ea L) :
-    α × h.Cert → List h.Γ := fun p => h.einstance p.1 ++ h.ecert p.2
+    α × List h.Γ → List h.Γ := fun p => h.einstance p.1 ++ p.2
 
 /-- **Bridge: TM-grounded NP membership implies the certificate-size proxy `IsInNP`** (forgetting the
 poly-*time* verifier, keeping decidability + the certificate-size bound). So any theorem proved against
 the proxy (e.g. the DNC Theorem 10.2 machinery) applies to the genuine class. -/
 noncomputable def IsInNP_TM.toIsInNP {α αΓ : Type} {ea : α → List αΓ} {L : α → Prop}
     (h : IsInNP_TM ea L) : IsInNP (fun x => (ea x).length) L where
-  Cert := h.Cert
-  sizeCert := h.certSize
+  Cert := List h.Γ
+  sizeCert := List.length
   check x c := h.verify (x, c) = true
   decCheck _ _ := inferInstance
   certPoly := h.certPoly
