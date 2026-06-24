@@ -316,9 +316,10 @@ abbrev thm_3_5_1 := @gcd_implicitDeriv_associated_gcd_derivative_mul_special
 `S = gcd(p, Dp)/gcd(p, dp/dt)` and recurse on `p/S`, returning `(pₙ, pₛ)`. -/
 noncomputable abbrev splitFactor_algorithm := @splitFactor
 
-/-- **SplitFactor** correctness (§3.5, p.100): the output is a splitting factorization `p = pₛ·pₙ`,
-given the one-step special-part property — discharged unconditionally on squarefree-split `p`
-(`isSplitFactorStep_prod_X_sub_C`); the general case needs Theorem 3.5.1(i) in full. -/
+/-- **SplitFactor** correctness (§3.5, p.100) into the *stronger* repo predicate (`IsNormal pₙ`),
+given the one-step special-part property — discharged on squarefree-split `p`
+(`isSplitFactorStep_prod_X_sub_C`). For the book predicate on arbitrary `p`, see the unconditional
+`splitFactor_correct_gen`. -/
 abbrev splitFactor_correct := @splitFactor_isSplittingFactorization
 
 /-- **SplitSquarefreeFactor** (§3.5, p.102): Yun squarefree factorization, then per factor
@@ -345,9 +346,20 @@ abbrev canonicalRepresentation_correct := @canonicalRepresentation_sum_eq
 nonconstant roots — a root `α` of `p` has `Dα = 0 ↔ pₛ(α) = 0`. -/
 abbrev thm_3_5_2 := @deriv_eq_zero_iff_isRoot_special
 
--- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
--- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`) — which is also what
--- `splitFactor_correct` needs to drop its one-step hypothesis for arbitrary `p`.
+/-- **Definition 3.5.1** (§3.5, p.99), book-faithful form: `p = pₛ·pₙ` with `pₛ` special and every
+squarefree factor of `pₙ` normal. The repo `def_3_5_1` is the stronger `IsNormal pₙ` form (forces `pₙ`
+squarefree); the two agree on squarefree `pₙ`. -/
+abbrev def_3_5_1_book := @IsSplittingFactorizationGen
+
+/-- **Theorem 3.5.1(i)** (§3.5, p.99), general `p`: `gcd(p, Dp)/gcd(p, dp/dt)` is associated to the
+product of all coprime special irreducible factors of `p` (char `0`) — proven over `K`'s UFD
+factorization into general irreducibles, with no algebraic-closure transport. -/
+abbrev thm_3_5_1_general := @splitFactorStep_associated_prod_special
+
+/-- **SplitFactor** correctness, UNCONDITIONAL (§3.5, p.100): for any `p ≠ 0`, `splitFactor v p` is a
+book-faithful splitting factorization (`def_3_5_1_book`) — no one-step hypothesis, via
+`thm_3_5_1_general`. -/
+abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
 §3.2: Thm 3.2.1 existence (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
@@ -356,8 +368,6 @@ abbrev thm_3_5_2 := @deriv_eq_zero_iff_isRoot_special
   Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
 §3.4: Def 3.4.3; Def 3.4.4 (special of the first kind); Lemma 3.4.5; Lemma 3.4.8; Thm 3.4.4
   (special of the first kind under algebraic extension); Cor 3.4.1.
-§3.5: Thm 3.5.1 for general (non-squarefree) `p` over `RatFunc` (also drops the one-step hypothesis
-  of `splitFactor_correct` for arbitrary `p`).
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
