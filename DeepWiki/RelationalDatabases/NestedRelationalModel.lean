@@ -365,6 +365,23 @@ theorem NestedTuple.dropKeys_singleton_eq_self {B : Att} {t : NestedTuple Att V}
   simp only [decide_eq_true_eq, List.mem_singleton]
   exact h p hp
 
+/-- **Theorem 7.1, combinatorial core**: extending each of a `Nodup` list of `B`-free "rest" tuples
+with a single `(B, _)` pair (any value) yields rows whose `dropKeys [B]`-projections are still
+`Nodup` — the rest part is a key, recovered by dropping `B`. -/
+theorem NestedTuple.map_append_dropKeys_nodup {B : Att} {rests : NestedRel Att V}
+    (g : NestedTuple Att V → NestedValue Att V) (hnodup : rests.Nodup)
+    (hB : ∀ rest ∈ rests, ∀ p ∈ rest, p.1 ≠ B) :
+    ((rests.map fun rest => rest ++ [(B, g rest)]).map (NestedTuple.dropKeys [B])).Nodup := by
+  have hmap : (rests.map fun rest => rest ++ [(B, g rest)]).map (NestedTuple.dropKeys [B]) = rests := by
+    rw [List.map_map]
+    conv_rhs => rw [← List.map_id rests]
+    apply List.map_congr_left
+    intro rest hrest
+    show NestedTuple.dropKeys [B] (rest ++ [(B, g rest)]) = rest
+    rw [NestedTuple.dropKeys_append, NestedTuple.dropKeys_singleton_self, List.append_nil,
+      NestedTuple.dropKeys_singleton_eq_self (hB rest hrest)]
+  rw [hmap]; exact hnodup
+
 variable [DecidableEq V]
 
 /-- **Nest** `ν_{X→B}` (§7.2): group the rows of a nested relation by their values *outside* `X`,
