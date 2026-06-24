@@ -219,4 +219,69 @@ theorem residue_eq_eval_divByMonic [DifferentialAlgebra k Ω] (v : k[X]) (α : �
 
 end FirstKind
 
+section AlgebraicExtension
+-- `E` an algebraic differential extension of `k`, both inside the common closure `Ω`.
+variable {E : Type*} [Field E] [Differential E] [Algebra k E] [DifferentialAlgebra k E]
+
+/-- `mapCoeffs` commutes with base change along a differential-algebra hom: applying `D` to the
+coefficients and then mapping equals mapping then applying `D` (`deriv_algebraMap` coefficientwise). -/
+theorem mapCoeffs_map (p : k[X]) :
+    (Differential.mapCoeffs p).map (algebraMap k E)
+      = Differential.mapCoeffs (p.map (algebraMap k E)) := by
+  ext i
+  rw [coeff_map, Differential.coeff_mapCoeffs, Differential.coeff_mapCoeffs, coeff_map,
+    deriv_algebraMap]
+
+/-- The monomial derivation commutes with base change: `(D[v] p).map = D[v.map] (p.map)`
+(`mapCoeffs` commutes, and `v·p'` maps to `(v.map)·(p.map)'`). -/
+theorem implicitDeriv_map (v p : k[X]) :
+    (Differential.implicitDeriv v p).map (algebraMap k E)
+      = Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by
+  have h1 : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have h2 : Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E))
+      = Differential.mapCoeffs (p.map (algebraMap k E))
+        + (v.map (algebraMap k E)) * derivative (p.map (algebraMap k E)) := by
+    simp [Differential.implicitDeriv, derivative']
+  rw [h1, h2, Polynomial.map_add, Polynomial.map_mul, mapCoeffs_map, derivative_map]
+
+/-- **Corollary 3.4.1** (§3.4, p.95), special half: a special polynomial stays special after an
+algebraic base change — `p ∣ Dp` in `k[t]` gives `p.map ∣ D(p.map)` in `E[t]` (`map` is a ring hom
+preserving divisibility, and `D` commutes with `map`). -/
+theorem isSpecial_map_of_isSpecial {v p : k[X]} (hp : p ∣ Differential.implicitDeriv v p) :
+    (p.map (algebraMap k E)) ∣
+      Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by
+  rw [← implicitDeriv_map]; exact Polynomial.map_dvd _ hp
+
+section ThreeKind
+-- ... viewed inside the common closure `Ω` (`k ⊆ E ⊆ Ω`).
+variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω] [Algebra E Ω] [IsScalarTower k E Ω]
+
+omit [Differential k] [Differential E] [DifferentialAlgebra k E] [Differential Ω] in
+/-- The residue is invariant under the intermediate base change `k → E`: `pα(α)` computed for the
+mapped monomial `v.map` equals the one for `v` (the scalar tower collapses the evaluation). -/
+theorem residue_map (v : k[X]) (α : Ω) :
+    residue (Ω := Ω) (v.map (algebraMap k E)) α = residue (Ω := Ω) v α := by
+  rw [residue, residue, derivative_map,
+    ← aeval_eq_aeval_map (IsScalarTower.algebraMap_eq k E Ω).symm (derivative v) α]
+
+/-- **Theorem 3.4.4(iii)** (§3.4, p.99): `S₁` grows with the field — if `E` is an algebraic
+extension of `k`, a polynomial that is special of the first kind over `k[t]` stays special of the
+first kind over `E[t]` (`S₁,k[t]:k ⊆ S₁,E[t]:E`). The polynomial stays special (Cor 3.4.1), and the
+residue/root test is unchanged because we test log-derivatives over the common closure `Ω` — the
+Lemma 3.4.8 step of the book is absorbed into testing over `Ω`. -/
+theorem isSpecialFirstKind_map [Algebra.IsAlgebraic k Ω] {v p : k[X]}
+    (hp : IsSpecialFirstKind (Ω := Ω) v p) :
+    IsSpecialFirstKind (Ω := Ω) (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by
+  refine ⟨isSpecial_map_of_isSpecial hp.1, ?_⟩
+  intro α hα hlog
+  have hroot : aeval α p = 0 := by
+    rwa [aeval_eq_aeval_map (IsScalarTower.algebraMap_eq k E Ω).symm p α]
+  rw [residue_map] at hlog
+  exact hp.2 α hroot hlog
+
+end ThreeKind
+
+end AlgebraicExtension
+
 end DeepWiki.SymbolicIntegration
