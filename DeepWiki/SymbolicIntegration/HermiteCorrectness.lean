@@ -2510,3 +2510,31 @@ theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : CPoly) (factors : List 
       rw [glocList] at this
       exact this
 
+/-- **`hermiteInner` preserves nonzero accumulator denominator**: if `V ≠ 0` and the seed `g` has
+nonzero denominator, then `(hermiteInner fuel V U j A g).1` does too. Each loop step `qadd`s
+`(B, V^(j+1))` whose denominator `V^(j+1) ≠ 0`, so the denominator stays nonzero. -/
+theorem hermiteInner_den_ne_zero (fuel : ℕ) (V U : CPoly) (hV : toPoly V ≠ 0) :
+    ∀ (j : ℕ) (A : CPoly) (g : QFun), toPoly g.2 ≠ 0 →
+      toPoly (hermiteInner fuel V U j A g).1.2 ≠ 0 := by
+  intro j
+  induction j with
+  | zero => intro A g hg; simpa [hermiteInner] using hg
+  | succ j ih =>
+    intro A g hg
+    rw [hermiteInner]
+    rcases hBC : cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j : ℚ) + 1)⁻¹) A) with ⟨B, C⟩
+    simp only []
+    set Vpow := (List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1] with hVpowdef
+    have hVpow0 : toPoly Vpow ≠ 0 := by
+      rw [toPoly_hermiteInner_Vpow]; exact pow_ne_zero _ hV
+    have hgnew : toPoly (qadd g (B, Vpow)).2 ≠ 0 := by
+      show toPoly (cmul g.2 Vpow) ≠ 0
+      rw [toPoly_cmul]; exact mul_ne_zero hg hVpow0
+    exact ih _ _ hgnew
+
+/-- The `glocIncr` increment has nonzero denominator (when `V ≠ 0`): `hermiteInner` starts from `qzero`
+(denominator `[1]`, nonzero) and `hermiteInner_den_ne_zero` preserves it. -/
+theorem glocIncr_den_ne_zero (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) (hV : toPoly Vi.1 ≠ 0) :
+    toPoly (glocIncr fuel A D Vi).2 ≠ 0 :=
+  hermiteInner_den_ne_zero fuel Vi.1 _ hV (Vi.2 - 1) A qzero (by simp [qzero, toPoly_cons])
+
