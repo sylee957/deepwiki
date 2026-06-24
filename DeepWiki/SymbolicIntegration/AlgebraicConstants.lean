@@ -121,4 +121,36 @@ theorem wronskian_ne_zero_iff_not_linearDependentOverConst {n : ℕ} [NeZero n] 
 
 end Wronskian
 
+section Extension
+variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
+  [DifferentialAlgebra F E]
+
+/-- Iterated derivative commutes with a differential extension: `Dⁱ(algebraMap c) = algebraMap (Dⁱ c)`. -/
+theorem iterDeriv_algebraMap (i : ℕ) (x : F) :
+    iterDeriv i (algebraMap F E x) = algebraMap F E (iterDeriv i x) := by
+  induction i with
+  | zero => rfl
+  | succ n ih => rw [iterDeriv_succ, ih, deriv_algebraMap, iterDeriv_succ]
+
+/-- The Wronskian commutes with a differential extension: `W(algebraMap ∘ y) = algebraMap (W y)`. -/
+theorem wronskian_algebraMap {n : ℕ} (y : Fin n → F) :
+    wronskian (fun j => algebraMap F E (y j)) = algebraMap F E (wronskian y) := by
+  rw [wronskian, wronskian, RingHom.map_det]
+  congr 1
+  ext i j
+  simp only [Matrix.of_apply, RingHom.mapMatrix_apply, Matrix.map_apply, iterDeriv_algebraMap]
+
+/-- **Corollary 3.3.2** (§3.3): linear independence over the constants is preserved by a
+differential extension — if `y₁,…,yₙ ∈ F` are *not* linearly dependent over `Const_D F`, then
+their images in `E` are not linearly dependent over `Const_Δ E`. (Both are read off the same
+Wronskian, which is nonzero in `F` hence nonzero in `E`.) -/
+theorem not_linearDependentOverConst_algebraMap {n : ℕ} [NeZero n] (y : Fin n → F)
+    (h : ¬ linearDependentOverConst y) :
+    ¬ linearDependentOverConst (fun j => algebraMap F E (y j)) := by
+  rw [← wronskian_ne_zero_iff_not_linearDependentOverConst] at h ⊢
+  rw [wronskian_algebraMap]
+  exact fun hcontra => h ((map_eq_zero (algebraMap F E)).mp hcontra)
+
+end Extension
+
 end DeepWiki.SymbolicIntegration
