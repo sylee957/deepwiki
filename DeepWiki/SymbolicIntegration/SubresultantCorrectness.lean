@@ -1718,6 +1718,92 @@ noncomputable abbrev φ241 : ℚ[X] →+* R241 := AdjoinRoot.mk (toPoly cR241)
 /-- **`φ241` kills `toPoly cR241`**: `φ241 (toPoly cR241) = 0` (`AdjoinRoot.mk_self`). -/
 theorem φ241_toPoly_cR241 : φ241 (toPoly cR241) = 0 := AdjoinRoot.mk_self
 
+/-- **`φ241 x = 0 ↔ (4t²+1) ∣ x`**: the kernel of the quotient map `φ241 = AdjoinRoot.mk (toPoly cR241)`
+is exactly the multiples of `toPoly cR241` (`AdjoinRoot.mk_eq_zero`). -/
+theorem φ241_eq_zero_iff (x : ℚ[X]) : φ241 x = 0 ↔ toPoly cR241 ∣ x := AdjoinRoot.mk_eq_zero
+
+/-! ### A *correct* residue-map bridge for `IsSimilar` (replacing the over-strong universal `hne`)
+The headline `lrtGcdCompute_isSimilar_lrtSubresultant` pushes a `ℚ[t]`-similarity through `φ` via
+`isSimilar_mapRingHom`, whose hypothesis `hne` quantifies over **all** witness pairs `(a, b)` of the
+similarity and demands `φ a ≠ 0 ∧ φ b ≠ 0`. That hypothesis is **unsatisfiable** whenever `φ` has a
+nontrivial kernel: if `(a₀, b₀)` is one witness pair, so is `(q·a₀, q·b₀)` for any `q ≠ 0`, and taking
+`q = toPoly cR241` (which `φ` kills) gives a pair with `φ (q·a₀) = 0` — refuting `hne`. So `_concrete`
+cannot be instantiated to its (true) conclusion through that path.
+
+The fix: push through using only the **gcd-reduced** witness pair. For `φ = AdjoinRoot.mk f` with `f`
+irreducible (`ℚ[X]` a Euclidean domain), if `IsSimilar A B` and the `φ`-images `Φ A`, `Φ B` are nonzero,
+then `IsSimilar (Φ A) (Φ B)`: divide the witnesses `a, b` by `g = gcd a b` to get a coprime pair
+`(a', b')` with the same relation; were `φ a' = 0` then (as `Φ B ≠ 0`, `S[x]` a domain) `φ b' = 0` too, so
+`f ∣ a'` and `f ∣ b'`, forcing `IsUnit f` against irreducibility. Hence both `φ a', φ b' ≠ 0`, the genuine
+residue-ring similarity witnesses. -/
+
+/-- **The correct residue-map `IsSimilar` bridge**: for `φ : ℚ[X] →+* S` (`S` a domain) whose kernel is
+exactly the multiples of an *irreducible* `f` (`hker : ∀ x, φ x = 0 ↔ f ∣ x`), a `ℚ[t]`-similarity
+`IsSimilar A B` with **nonzero** `φ`-images `Φ A`, `Φ B` (`Φ = Polynomial.mapRingHom φ`) gives a residue-ring
+similarity `IsSimilar (Φ A) (Φ B)`. Unlike `isSimilar_mapRingHom`'s universal `hne` (unsatisfiable when
+`ker φ ≠ 0`), this uses the gcd-reduced (coprime) witness pair, whose `φ`-images cannot both vanish (else
+`f` divides a coprime pair, hence is a unit). -/
+theorem isSimilar_mapRingHom_of_irreducible {S : Type*} [CommRing S] [IsDomain S]
+    (f : ℚ[X]) (hf : Irreducible f) (φ : ℚ[X] →+* S) (hker : ∀ x, φ x = 0 ↔ f ∣ x)
+    {A B : (ℚ[X])[X]} (h : IsSimilar A B)
+    (hA : (Polynomial.mapRingHom φ) A ≠ 0) (hB : (Polynomial.mapRingHom φ) B ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
+  classical
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  set g := GCDMonoid.gcd a b with hg
+  have hgne : g ≠ 0 := gcd_ne_zero_of_left ha
+  set a' := a / g with ha'def
+  set b' := b / g with hb'def
+  have hcop : IsCoprime a' b' := isCoprime_div_gcd_div_gcd hb
+  have hga : g * a' = a := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_left a b)
+  have hgb : g * b' = b := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_right a b)
+  have ha'ne : a' ≠ 0 := by
+    intro h0; rw [h0, mul_zero] at hga; exact ha hga.symm
+  have hb'ne : b' ≠ 0 := by
+    intro h0; rw [h0, mul_zero] at hgb; exact hb hgb.symm
+  -- the gcd-reduced relation `C a' * A = C b' * B`
+  have hab' : Polynomial.C a' * A = Polynomial.C b' * B := by
+    have hcancel : Polynomial.C g * (Polynomial.C a' * A) = Polynomial.C g * (Polynomial.C b' * B) := by
+      rw [← mul_assoc, ← mul_assoc, ← Polynomial.C_mul, ← Polynomial.C_mul, hga, hgb, hab]
+    have hCg : (Polynomial.C g : (ℚ[X])[X]) ≠ 0 := by
+      simpa [Polynomial.C_eq_zero] using hgne
+    exact mul_left_cancel₀ hCg hcancel
+  -- φ-images of a', b' are nonzero (else f divides the coprime pair → f a unit)
+  have hφa' : φ a' ≠ 0 := by
+    intro h0
+    have hfa' : f ∣ a' := (hker a').1 h0
+    -- from C a' * A = C b' * B, φ: C(φ a')·ΦA = C(φ b')·ΦB ⟹ 0 = C(φ b')·ΦB ⟹ φ b' = 0
+    have himg := congrArg (Polynomial.map φ) hab'
+    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
+    simp only [Polynomial.coe_mapRingHom] at hA hB
+    rw [h0, map_zero, zero_mul] at himg
+    have hφb' : φ b' = 0 := by
+      by_contra hb0
+      exact hB (by
+        have : (Polynomial.C (φ b') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using hb0
+        exact (mul_eq_zero.mp himg.symm).resolve_left this)
+    have hfb' : f ∣ b' := (hker b').1 hφb'
+    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
+  have hφb' : φ b' ≠ 0 := by
+    intro h0
+    have hfb' : f ∣ b' := (hker b').1 h0
+    have himg := congrArg (Polynomial.map φ) hab'
+    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
+    simp only [Polynomial.coe_mapRingHom] at hA hB
+    rw [h0, map_zero, zero_mul] at himg
+    have hφa' : φ a' = 0 := by
+      by_contra ha0
+      exact hA (by
+        have : (Polynomial.C (φ a') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using ha0
+        exact (mul_eq_zero.mp himg).resolve_left this)
+    have hfa' : f ∣ a' := (hker a').1 hφa'
+    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
+  -- assemble the residue-ring similarity with witnesses (φ a', φ b')
+  refine ⟨φ a', φ b', hφa', hφb', ?_⟩
+  have hcong := congrArg (Polynomial.map φ) hab'
+  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
+  simpa only [Polynomial.coe_mapRingHom] using hcong
+
 /-! ### The decidable chain regularity for Example 2.4.1 (`native_decide`)
 The concrete chain `subresPRS 30 (liftCtoBPoly cD241) (bArgAmtD' cA241 cD241)` has `x`-degrees
 `[6,5,4,3,2,1,0]` (indices 0..6), then index 7 is zero. The book's LRT log argument is the **degree-3**
