@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -311,11 +312,42 @@ multiplicative form: for `p = ∏_{a∈s}(X − a)^{eₐ}` (char `0`),
 squarefree product of `p`'s special roots. -/
 abbrev thm_3_5_1 := @gcd_implicitDeriv_associated_gcd_derivative_mul_special
 
+/-- **SplitFactor** (§3.5, p.100): the splitting-factorization algorithm — peel off
+`S = gcd(p, Dp)/gcd(p, dp/dt)` and recurse on `p/S`, returning `(pₙ, pₛ)`. -/
+noncomputable abbrev splitFactor_algorithm := @splitFactor
+
+/-- **SplitFactor** correctness (§3.5, p.100): the output is a splitting factorization `p = pₛ·pₙ`,
+given the one-step special-part property — discharged unconditionally on squarefree-split `p`
+(`isSplitFactorStep_prod_X_sub_C`); the general case needs Theorem 3.5.1(i) in full. -/
+abbrev splitFactor_correct := @splitFactor_isSplittingFactorization
+
+/-- **SplitSquarefreeFactor** (§3.5, p.102): Yun squarefree factorization, then per factor
+`Sᵢ = gcd(pᵢ, Dpᵢ)` (special part) and `Nᵢ = pᵢ/Sᵢ` (normal part). -/
+noncomputable abbrev splitSquarefreeFactor_algorithm := @splitSquarefreeFactor
+
+/-- **Definition 3.5.2** (§3.5, p.103): `f ∈ k(t)` is *simple* w.r.t. `D` if its denominator is
+normal. -/
+abbrev def_3_5_2_simple := @IsSimple
+
+/-- **Definition 3.5.2** (§3.5, p.103): `f ∈ k(t)` is *reduced* w.r.t. `D` if its denominator is
+special; the reduced elements form `k⟨t⟩`. -/
+abbrev def_3_5_2_reduced := @DeepWiki.SymbolicIntegration.IsReduced
+
+/-- **CanonicalRepresentation** (§3.5, p.103): `f = fₚ + fₛ + fₙ` (polynomial, special, normal parts)
+via `PolyDivide` + `SplitFactor` + `ExtendedEuclidean`. -/
+noncomputable abbrev canonicalRepresentation_algorithm := @canonicalRepresentation
+
+/-- **CanonicalRepresentation** correctness (§3.5, p.103): the polynomial, special, and normal parts
+sum back to `f`. -/
+abbrev canonicalRepresentation_correct := @canonicalRepresentation_sum_eq
+
+/-- **Theorem 3.5.2** (§3.5, p.103): the `κ_D`-splitting `p = pₛpₙ` separates constant from
+nonconstant roots — a root `α` of `p` has `Dα = 0 ↔ pₛ(α) = 0`. -/
+abbrev thm_3_5_2 := @deriv_eq_zero_iff_isRoot_special
+
 -- **Deferred — §3.5 library work:** Theorem 3.5.1 in full (`pₛ = gcd(p,Dp)/gcd(p,dp/dt)` for
--- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`), the `SplitFactor` /
--- `SplitSquarefreeFactor` / `CanonicalRepresentation` algorithms, Def 3.5.2 (simple/reduced
--- elements of `k⟨t⟩`, needs `RatFunc` numerator/denominator), and Theorem 3.5.2 (the `κ_D`
--- splitting separates constant from nonconstant roots).
+-- general `p`; the squarefree case is `thm_3_5_1_squarefree` / `thm_3_5_1_gcd`) — which is also what
+-- `splitFactor_correct` needs to drop its one-step hypothesis for arbitrary `p`.
 
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
 §3.2: Thm 3.2.1 existence (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
@@ -324,8 +356,8 @@ abbrev thm_3_5_1 := @gcd_implicitDeriv_associated_gcd_derivative_mul_special
   Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
 §3.4: Def 3.4.3; Def 3.4.4 (special of the first kind); Lemma 3.4.5; Lemma 3.4.8; Thm 3.4.4
   (special of the first kind under algebraic extension); Cor 3.4.1.
-§3.5: Thm 3.5.1 for general (non-squarefree) `p` over `RatFunc`; Thm 3.5.2; Def 3.5.2 (simple/
-  reduced elements of `k⟨t⟩`); the `SplitFactor` algorithm; the `CanonicalRepresentation` algorithm.
+§3.5: Thm 3.5.1 for general (non-squarefree) `p` over `RatFunc` (also drops the one-step hypothesis
+  of `splitFactor_correct` for arbitrary `p`).
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
