@@ -83,9 +83,19 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
   the §5.12 obstruction; this is the branch §6.6 reaches), returning `false`. The full proper/simple/
   integer-residue recognizer over ℚ(x) is the documented continuation.
 
+* **`cRationalRDE fuel bnum bden cnum cden`** (§6.6 eq. 6.23 base solve) — the **rational Risch DE**
+  `Ds + b·s = c` over `k = ℚ(x)` (`b = bnum/bden`, `c = cnum/cden`, `D = d/dx`), self-contained over
+  `CPolyG ℚ = List ℚ`: the whole Ch. 6 pipeline re-run with the trivial primitive monomial `t = x` over
+  the constant field ℚ (`Dx = 1`, `δ = 0`). Over ℚ every irreducible is normal (no special part,
+  `ℚ⟨x⟩ = ℚ[x]`), so it is simpler than the tower: weak normalizer (`cWeakNormalizerQ`) → normal
+  denominator (`cRdeNormalDenominatorQ`) → degree bound (`cRdeBoundDegreeBaseQ`) → SPDE (`cSPDEQ`) →
+  PolyRischDE (`cPolyRischDEQ`, the `b = 0` integration / `deg(b) ≥ 1` non-cancellation / `b ∈ ℚ*`
+  primitive-cancellation split, the last recursing to the constant solve `cRischDEConst`).
+
 * **`cRischDEBase fuel b c`** (§6.6 eq. 6.23) — the **base Risch DE** `Ds + b·s = c` over `k = ℚ(x)`
-  (`D = d/dx`), the leading-coefficient recursion target of the primitive cancellation case;
-  implemented for the bottoming-out `k`-constant sub-case (`b, c ∈ ℚ`, `s = c/b`).
+  (`D = d/dx`), the leading-coefficient recursion target of the primitive cancellation case: the
+  `k`-constant fast path (`b, c ∈ ℚ`, `s = c/b`) plus the **general** non-constant solve routing
+  `b, c ∈ ℚ(x)` through `cRationalRDE` (lifting the `QFunNZ` num/den coefficient lists ↔ `CPolyG ℚ`).
 
 * **`cPolyRischDECancelPrim Dt fuel b c n`** (§6.6, the `PolyRischDECancelPrim(b, c, D, n)` box, book
   p.212) — the **primitive cancellation** case (`Dt ∈ k`, `b ∈ k*`): `D` does not raise the
@@ -137,28 +147,36 @@ derivative (`cParametricLogDeriv = false`), then recurses degree-by-degree into 
 `native_decide`-verified to *actually solve* `Dq + b·q = c` (cleared difference). The dispatcher
 `cPolyRischDE` is checked to route this same input to the cancellation solver.
 
+**The §6.6 base recursion is now general** (`rischDE_baseRecursion_example`, `rischDE_rationalRDE_example`):
+the eq. 6.23 leading-coefficient recursion `RischDE(b, lc(c))` of the primitive cancellation case is solved
+by `cRationalRDE` for **non-constant** `b, c ∈ ℚ(x)` — the whole Ch. 6 pipeline at the base level — so
+`cPolyRischDECancelPrim` now drives primitive cancellation RDEs whose base coefficient is a genuine
+rational function (e.g. `Dy + (1/x)y = 2log(x)+1` over `t = log x` solves to `y = x·log(x)`), not only the
+bottoming-out `k`-constant case.
+
 ## What is NOT here (the rest of §6.6, honestly deferred)
 
-The deliverable is the **full non-cancellation pipeline plus the §6.6 primitive cancellation case
-computing over the tower**, plus validation — not abstract correctness (no `Dy + fy = g ↔ …` theorem is
-proved). What remains of the **§6.6 cancellation cases** (book p.211–215):
+The deliverable is the **full non-cancellation pipeline, the §6.6 primitive cancellation case (now with a
+general non-constant rational base RDE over ℚ(x)), and a self-contained rational base RDE solver**, plus
+validation — not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). What remains:
 
 * **`PolyRischDECancelExp`** (hyperexponential, `Dt/t ∈ k`, `δ = 1`, book p.213) and
   **`PolyRischDECancelTan`** (nonlinear / hypertangent `Dt/(t²+1) ∈ k`, `δ = 2`, book p.215): they
   recurse to a base RDE over `k` or `k(√−1)` / a **`CoupledDESystem`** (Ch. 8) and an in-field
-  integration; not implemented (the dispatcher falls them back to the non-cancellation loop).
-* **The general eq. 6.23 base recursion.** `cRischDEBase` solves the bottoming-out `k`-constant
-  sub-case only; the general *rational Risch DE in `x`* (non-constant `b, c ∈ ℚ(x)`, the whole Ch. 6
-  pipeline re-run with `t = x` the trivial primitive monomial) is the remaining recursion.
+  integration; not implemented (the dispatcher falls them back to the non-cancellation loop). The
+  hyperexponential box is the natural next step now that the base RDE is general (`cRationalRDE` is the
+  recursion target); the tangent box is deferred to the Ch. 8 coupled-system layer.
 * **The full §5.12 / §7.3 recognizer.** `cParametricLogDeriv` decides the reachable constant
   obstruction exactly; the proper/simple/integer-residue Rothstein–Trager recognizer over ℚ(x) and the
   §7.3 unique-`m/n` linear-constraint solve are the documented continuation. The in-field-integration
-  sub-branch of `PolyRischDECancelPrim` (`zc = Dp` test when `b = Dz/z`) is likewise documented.
+  sub-branch of `PolyRischDECancelPrim` (`zc = Dp` test when `b = Dz/z`) is likewise documented —
+  the general degree-by-degree recursion is *sound* without it (eq. 6.23 applies to any `b ∈ k*`), so
+  it is only an optimization for the `b = Dz/z` sub-case.
 
 The cancellation refinements inside `cRdeSpecialDenominator`/`cRdeBoundDegree` (also §5.12 / Ch. 7)
 only *raise* the bound in that same cancellation case and are likewise documented but not run; every
-non-cancellation case, the primitive cancellation case, and all validation runs are reproduced exactly.
-No `sorry`. -/
+non-cancellation case, the primitive cancellation case (constant and general rational base), and all
+validation runs are reproduced exactly. No `sorry`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -521,6 +539,255 @@ def cParametricLogDeriv (fuel : ℕ) (b : QFunNZ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
   CField.isZero b || cBaseIsProper fuel b
 
+/-! ### `cRationalRDE` (Bronstein §6.6 eq. 6.23 base case, the **rational** RDE) — `Ds + b·s = c` over ℚ(x)
+
+The eq. 6.23 base solve `RischDE(b, lc(c))` is the *rational* Risch differential equation `Ds + b·s = c`
+with `s, b, c ∈ ℚ(x)`, `D = d/dx` — the whole Ch. 6 pipeline re-run with the **trivial primitive
+monomial** `t = x` over the constant field `k = ℚ` (`Dx = 1`, `δ = deg(Dx) = 0`). It is **self-contained
+over `CPolyG ℚ = List ℚ`** (the concrete `ℚ[x]` engine, `D = cderivG` the plain `d/dx`), and simpler than
+the tower RDE: over ℚ with `D = d/dx` **every** irreducible `p ∈ ℚ[x]` is *normal* (`p ∤ Dp = p'` since
+`deg p' < deg p`), so there is **no special part** — `SplitFactor(d) = (d, 1)`, `ℚ⟨x⟩ = ℚ[x]`, and the
+special-denominator step is trivial (the §6.2 *Primitive Case*, book p.188). The pipeline:
+
+1. **Weak normalizer** (`cWeakNormalizerQ`, §6.1): `q₁ ∈ ℚ[x]` with `b − Dq₁/q₁` weakly normalized — the
+   change of variable `s = u/q₁` clears `b`'s positive-integer residues (the obstruction to the normal-
+   denominator bound). The residue resultant `r(z) = res_x(a − z·d₁′, d₁)` is built over ℚ by the §5.6
+   evaluation + interpolation template (`cResidueResultantQ`), its positive integer roots feeding the
+   `WeakNormalizer` product (`cWeakNormalizerQ`); on an already-normalized `b` it returns `q₁ = 1`.
+2. **Normal denominator** (`cRdeNormalDenominatorQ`, §6.2 / Corollary 6.1.1): reduce to the polynomial
+   equation `a·Dq + B·q = C` with `a, h, B, C ∈ ℚ[x]` (the §6.2 *Primitive Case* gives `B, C ∈ ℚ[x]`
+   directly, no special part), `s = u/q₁ = (q/h)/q₁`; `none` ⇒ no solution.
+3. **Degree bound** (`cRdeBoundDegreeBaseQ`, §6.3, the `RdeBoundDegreeBase` box, book p.199): an upper
+   bound `n` on `deg(q)`.
+4. **SPDE** (`cSPDEQ`, §6.4): Rothstein's `gcd(a,b)`-peel to `a = 1`.
+5. **PolyRischDE** (`cPolyRischDEQ`, §6.5/§6.6): with `δ = 0`, `deg(B) ≥ 1` is non-cancellation
+   (`cPolyRischDENoCancelQ`), `B = 0` is pure integration (`cIntegratePolyQ`, always solvable over ℚ),
+   and `B ∈ ℚ*` (a nonzero constant) is the **primitive cancellation** case (`cPolyRischDECancelPrimQ`),
+   which recurses degree-by-degree into `RischDE(B, lc(C))` over the **constants `k = ℚ`** — the genuine
+   bottoming-out `cRischDEConst` (`B·s = lc(C)`, `s = lc(C)/B ∈ ℚ`). So the recursion terminates: a
+   rational RDE over ℚ(x) bottoms out at a *linear-algebraic* solve over ℚ. -/
+
+/-- **`d/dx` on `CPolyG ℚ`** `cderivQ p = cderivG p`: the plain formal derivative (the generic `cderivG`
+specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
+abbrev cderivQ (p : CPolyG ℚ) : CPolyG ℚ := cderivG p
+
+/-- **Residue resultant over ℚ** `cResidueResultantQ fuel a d = r(z) = res_x(a − z·d′, d) ∈ ℚ[z]` (the
+§5.6 evaluation + interpolation template, `cresultantG` + `cinterpolateG`), whose roots are the residues
+`{a(α)/d′(α) : d(α)=0}` of `a/d`. `deg_z r ≤ deg_x d` makes `deg_x d + 1` nodes exact. -/
+def cResidueResultantQ (fuel : ℕ) (a d : CPolyG ℚ) : CPolyG ℚ :=
+  let Dd := cderivQ d
+  let n := cdegG d
+  let pts : List (ℚ × ℚ) := (List.range (n + 1)).map (fun k =>
+    let zk : ℚ := (k : ℚ)
+    (zk, cresultantG fuel d (csubG a (cscaleG zk Dd))))
+  cinterpolateG pts
+
+/-- **Positive integer roots of `r ∈ ℚ[z]` up to a bound** `cPosIntRootsQ r bound = [n ∈ {1,…,bound} :
+r(n)=0]` (Horner-evaluated): the residue resultant's positive integer roots, the multiplicities of the
+`WeakNormalizer` product. Empty for an already-weakly-normalized `b`. -/
+def cPosIntRootsQ (r : CPolyG ℚ) (bound : ℕ) : List ℕ :=
+  (List.range bound).filterMap (fun k =>
+    let n : ℕ := k + 1
+    let val : ℚ := ((r : List ℚ).foldr (fun a acc => a + (n : ℚ) * acc) 0)
+    if val = 0 then some n else none)
+
+/-- **Weak normalizer over ℚ** `cWeakNormalizerQ fuel fnum fden = q₁ ∈ ℚ[x]` (Bronstein §6.1, book p.183,
+the *base/primitive* specialization): `f − Dq₁/q₁` is weakly normalized for `f = fnum/fden`, `D = d/dx`.
+Over ℚ there is no special part, so `SplitFactor(fden) = (fden, 1)` and the normal part `dₙ = fden`;
+`g = gcd(dₙ, dₙ′)`, `d₁ = (dₙ/g)/gcd(dₙ/g, g)` (the squarefree radical), `a` the residue numerator from
+`ExtendedEuclidean(fden/d₁, d₁, fnum)`, `r = res_x(a − z·d₁′, d₁)`, and the product over the positive
+integer roots `nᵢ` of `r`. `q₁ = 1` when `f` is already weakly normalized. -/
+def cWeakNormalizerQ (fuel : ℕ) (fnum fden : CPolyG ℚ) (boundRoots : ℕ := 16) : CPolyG ℚ :=
+  let dn := fden
+  let g := (cgcdExtG fuel dn (cderivQ dn)).1
+  let dstar := cdivG fuel dn g
+  let d1 := cdivG fuel dstar (cgcdExtG fuel dstar g).1
+  let fdenOverD1 := cdivG fuel fden d1
+  let a := (cdiophantineG fuel fdenOverD1 d1 fnum).1
+  let Dd1 := cderivQ d1
+  let r := cResidueResultantQ fuel a d1
+  let roots := cPosIntRootsQ r boundRoots
+  roots.foldl (fun (acc : CPolyG ℚ) (n : ℕ) =>
+    let gi := (cgcdExtG fuel (csubG a (cscaleG ((n : ℚ)) Dd1)) d1).1
+    cmulG acc (cpowG gi n)) [(1 : ℚ)]
+
+/-- **Normal-denominator reduction over ℚ** `cRdeNormalDenominatorQ fuel fnum fden gnum gden` (Bronstein
+§6.2 / Corollary 6.1.1, book p.185, the *Primitive Case*) for weakly normalized `f = fnum/fden` and
+`g = gnum/gden`, `D = d/dx`. Over ℚ the normal parts are the whole denominators (`dₙ = fden`,
+`eₙ = gden`); `p = gcd(dₙ, eₙ)`, `h = gcd(eₙ, eₙ′)/gcd(p, p′)`. Returns `none` (when `eₙ ∤ dₙh²`) or
+`(a, B, C, h)` with all four in `ℚ[x]` such that every solution `y = f/?` of `Dy + fy = g` has `q = y·h`
+solving `a·Dq + B·q = C`: `a = dₙh`, `B = dₙh·f − dₙ·Dh`, `C = dₙh²·g`. -/
+def cRdeNormalDenominatorQ (fuel : ℕ) (fnum fden gnum gden : CPolyG ℚ) :
+    Option (CPolyG ℚ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) :=
+  let dn := fden
+  let en := gden
+  let p := (cgcdExtG fuel dn en).1
+  let h := cdivG fuel (cgcdExtG fuel en (cderivQ en)).1 (cgcdExtG fuel p (cderivQ p)).1
+  let dnh2 := cmulG (cmulG dn h) h
+  if cdvdG fuel en dnh2 then
+    let a := cmulG dn h
+    let Dh := cderivQ h
+    let b := cdivG fuel (csubG (cmulG a fnum) (cmulG (cmulG dn Dh) fden)) fden
+    let c := cdivG fuel (cmulG dnh2 gnum) gden
+    some (a, b, c, h)
+  else none
+
+/-- **Base degree bound** `cRdeBoundDegreeBaseQ a b c = n ∈ ℤ` (Bronstein §6.3, the `RdeBoundDegreeBase`
+box, book p.199): an upper bound on `deg(q)` for any polynomial solution `q ∈ ℚ[x]` of `a·Dq + b·q = c`
+(`D = d/dx`, `k = ℚ` constants). With `d_a = deg(a)`, `d_b = deg(b)` (taken `−1` when `b = 0`, i.e.
+`deg(0) = −∞`), `d_c = deg(c)`: `n ← max(0, d_c − max(d_b, d_a − 1))`, refined in the cancellation case
+`d_b = d_a − 1` (with `b ≠ 0`) to `n ← max(0, m, d_c − d_b)` when `m = −lc(b)/lc(a)` is a non-negative
+integer (the only base-case cancellation, since `Dz = 0` for the constant `k = ℚ`). -/
+def cRdeBoundDegreeBaseQ (a b c : CPolyG ℚ) : ℤ :=
+  let da : ℤ := (cdegG a : ℤ)
+  -- `deg(0) = −∞`; use `−1` so `max d_b (d_a−1) = d_a−1` when `b = 0` (no cancellation, `deg q = d_c−d_a+1`).
+  let db : ℤ := if cisZeroG b then -1 else (cdegG b : ℤ)
+  let dc : ℤ := (cdegG c : ℤ)
+  let n0 : ℤ := max 0 (dc - max db (da - 1))
+  if db = da - 1 ∧ ¬ cisZeroG b then
+    -- `m = −lc(b)/lc(a) ∈ ℚ`; the base-case cancellation refinement fires only for `m ∈ ℤ≥0`.
+    let m : ℚ := - (cleadG b) / (cleadG a)
+    if m.den = 1 ∧ m ≥ 0 then max n0 (max m.num (dc - db)) else n0
+  else n0
+
+/-- **SPDE over ℚ** `cSPDEQ fuel a b c n` (Bronstein §6.4, Rothstein's `SPDE` box, book p.203, `D = d/dx`):
+the `gcd(a,b)`-peel reducing the degree-bounded `a·Dq + b·q = c` to one with `a = 1`. Returns `none` ("no
+solution of degree `≤ n`") or `(b̄, c̄, m, α, β)` so any solution is `q = α·h + β` with `h` solving
+`Dh + b̄·h = c̄`, `deg(h) ≤ m`. Fuel-bounded (one level per `gcd`-peel). -/
+def cSPDEQ : ℕ → (a b c : CPolyG ℚ) → (n : ℤ) →
+    Option (CPolyG ℚ × CPolyG ℚ × ℤ × CPolyG ℚ × CPolyG ℚ)
+  | 0, _, _, _, _ => none
+  | fuel + 1, a, b, c, n =>
+    if n < 0 then
+      if cisZeroG c then some ([], [], 0, [], []) else none
+    else
+      let g := (cgcdExtG fuel a b).1
+      if cdvdG fuel g c then
+        let a := cdivG fuel a g
+        let b := cdivG fuel b g
+        let c := cdivG fuel c g
+        if cdegG a = 0 then
+          let ainv := CField.inv (cleadG a)
+          some (cscaleG ainv b, cscaleG ainv c, n, [CField.one], [])
+        else
+          let (r, z) := cdiophantineG fuel b a c
+          let Da := cderivQ a
+          let Dr := cderivQ r
+          match cSPDEQ fuel a (caddG b Da) (csubG z Dr) (n - (cdegG a : ℤ)) with
+          | none => none
+          | some (bbar, cbar, m, α, β) =>
+              some (bbar, cbar, m, cmulG a α, caddG (cmulG a β) r)
+      else none
+
+/-- **Non-cancellation Poly-Risch-DE over ℚ** `cPolyRischDENoCancelQ fuel b c n` (Bronstein §6.5, the
+`PolyRischDENoCancel1` box, book p.208, `D = d/dx`): solve `Dq + b·q = c` for `q ∈ ℚ[x]`, `deg(q) ≤ n`,
+in the non-cancellation case `deg(b) ≥ 1` (so `b ≠ 0`), top-down degree-by-degree
+(`lc(c) = lc(b)·lc(q)`). Returns `none` or `some q`. Fuel-bounded. -/
+def cPolyRischDENoCancelQ : ℕ → (b c : CPolyG ℚ) → (n : ℤ) → Option (CPolyG ℚ)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    if cisZeroG c then some []
+    else
+      let m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ)
+      if n < 0 ∨ m < 0 ∨ m > n then none
+      else
+        let coeff := CField.div (cleadG c) (cleadG b)
+        let p := cshiftG m.toNat [coeff]
+        let c' := csubG (csubG c (cderivQ p)) (cmulG b p)
+        match cPolyRischDENoCancelQ fuel b c' (m - 1) with
+        | none => none
+        | some q => some (caddG p q)
+
+/-- **Polynomial antiderivative over ℚ** `cIntegratePolyQ c = q` with `Dq = c` and `q(0) = 0`: over ℚ
+every polynomial integrates termwise, `∫ Σ cᵢxⁱ = Σ (cᵢ/(i+1)) x^{i+1}`. The `b = 0` (`Dq = c`) branch of
+the base poly RDE. -/
+def cIntegratePolyQ (c : CPolyG ℚ) : CPolyG ℚ :=
+  (0 : ℚ) :: ((c : List ℚ).zipIdx.map (fun (a, i) => a / ((i : ℚ) + 1)))
+
+/-- **Base RDE over the constants ℚ** `cRischDEConst b c` (Bronstein §6.6 eq. 6.23, the bottoming-out
+`k`-constant solve): `Ds + b·s = c` with `b, c ∈ ℚ` collapses to `b·s = c` (`Ds = 0` for constant `s`),
+so `s = c/b` for `b ≠ 0`; `b = 0` needs `Ds = c`, solvable by a constant only for `c = 0` (`s = 0`). -/
+def cRischDEConst (b c : ℚ) : Option ℚ :=
+  if b = 0 then (if c = 0 then some 0 else none) else some (c / b)
+
+/-- **Primitive cancellation Poly-Risch-DE over ℚ** `cPolyRischDECancelPrimQ fuel b c n` (Bronstein §6.6,
+the `PolyRischDECancelPrim` box, book p.212, base level): `b ∈ ℚ*` (a constant), `D = d/dx`, `δ = 0`, so
+the leading terms of `Dq` and `bq` cancel; solve `Dq + b·q = c` degree-by-degree, recursing into the
+constant base RDE `RischDE(b, lc(c)) = lc(c)/b` (`cRischDEConst`) at each degree. Returns `none` or
+`some q`. Fuel-bounded (`deg(c)` drops each pass). -/
+def cPolyRischDECancelPrimQ : ℕ → (b c : CPolyG ℚ) → (n : ℤ) → Option (CPolyG ℚ)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    let b0 : ℚ := cleadG b
+    if cisZeroG c then some []
+    else if n < (cdegG c : ℤ) then none
+    else
+      let m : ℕ := cdegG c
+      match cRischDEConst b0 (cleadG c) with
+      | none => none
+      | some s =>
+        let stm : CPolyG ℚ := cshiftG m [s]
+        let c' := csubG (csubG c (cmulG b stm)) (cderivQ stm)
+        match cPolyRischDECancelPrimQ fuel b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+
+/-- **Poly-Risch-DE dispatcher over ℚ** `cPolyRischDEQ fuel b c n` (Bronstein §6.5 + §6.6, base level,
+`D = d/dx`, `δ = 0`): solve `Dq + b·q = c` for `q ∈ ℚ[x]`, `deg(q) ≤ n`. Routes `b = 0` to polynomial
+integration (`cIntegratePolyQ`, with the `deg(c)+1 ≤ n` check), `deg(b) ≥ 1` to the non-cancellation
+solver, and `b ∈ ℚ*` to the primitive cancellation solver. -/
+def cPolyRischDEQ (fuel : ℕ) (b c : CPolyG ℚ) (n : ℤ) : Option (CPolyG ℚ) :=
+  if cisZeroG b then
+    if cisZeroG c then some []
+    else if (cdegG c : ℤ) + 1 > n then none
+    else some (cIntegratePolyQ c)
+  else if (cdegG b : ℤ) > 0 then cPolyRischDENoCancelQ fuel b c n
+  else cPolyRischDECancelPrimQ fuel b c n
+
+/-- **Computable rational Risch DE** `cRationalRDE fuel bnum bden cnum cden` (Bronstein §6.6 eq. 6.23, the
+base solve): solve `Ds + b·s = c` for `s ∈ ℚ(x)` with `b = bnum/bden`, `c = cnum/cden ∈ ℚ(x)`, `D = d/dx`.
+Returns `some (snum, sden)` with `s = snum/sden`, or `none`. The whole Ch. 6 pipeline at the base level
+(trivial primitive monomial `t = x`, `k = ℚ`):
+
+1. **Weak normalize.** `q₁ ← cWeakNormalizerQ bnum bden`. The change of variable `s = u/q₁` rewrites
+   `Ds + b·s = c` as `Du + (b − Dq₁/q₁)·u = c·q₁`, with `b̃ = b − Dq₁/q₁` weakly normalized and
+   `c̃ = c·q₁`; the final `s = u/q₁` folds `q₁` into the denominator.
+2. **Normal denominator** `cRdeNormalDenominatorQ` ⇒ `(a, B, C, h)` (or `none`), `u = q/h`.
+3. **Degree bound** `cRdeBoundDegreeBaseQ a B C` ⇒ `N`. *(Special denominator is trivial over ℚ — no
+   special part — so `h₁ = 1` and the §6.2 special step is skipped.)*
+4. **SPDE** `cSPDEQ a B C N` ⇒ `(b̄, c̄, m, α, β)` (or `none`): `q = α·v + β`, `v` solves `Dv + b̄·v = c̄`.
+5. **PolyRischDE** `cPolyRischDEQ b̄ c̄ m` ⇒ `v` (or `none`).
+
+Then `q = α·v + β`, `u = q/h`, `s = u/q₁ = q/(h·q₁)`, so `(snum, sden) = (q, h·q₁)`. Fuel-bounded. -/
+def cRationalRDE (fuel : ℕ) (bnum bden cnum cden : CPolyG ℚ) :
+    Option (CPolyG ℚ × CPolyG ℚ) :=
+  let q1 := cWeakNormalizerQ fuel bnum bden
+  let Dq1 := cderivQ q1
+  -- `b̃ = b − Dq₁/q₁ = (bnum·q₁ − Dq₁·bden)/(bden·q₁)`, `c̃ = c·q₁ = (cnum·q₁)/cden`.
+  let bpnum := csubG (cmulG bnum q1) (cmulG Dq1 bden)
+  let bpden := cmulG bden q1
+  let cpnum := cmulG cnum q1
+  let cpden := cden
+  -- reduce `b̃, c̃` to lowest terms over ℚ[x] (divide out the gcd of numerator and denominator).
+  let gb := (cgcdExtG fuel bpnum bpden).1
+  let bnum2 := cdivG fuel bpnum gb
+  let bden2 := cdivG fuel bpden gb
+  let gc := (cgcdExtG fuel cpnum cpden).1
+  let cnum2 := cdivG fuel cpnum gc
+  let cden2 := cdivG fuel cpden gc
+  match cRdeNormalDenominatorQ fuel bnum2 bden2 cnum2 cden2 with
+  | none => none
+  | some (a0, b0, c0, h0) =>
+    let N := cRdeBoundDegreeBaseQ a0 b0 c0
+    match cSPDEQ fuel a0 b0 c0 N with
+    | none => none
+    | some (bbar, cbar, m, α, β) =>
+      match cPolyRischDEQ fuel bbar cbar m with
+      | none => none
+      | some v =>
+        let Q := caddG (cmulG α v) β        -- polynomial unknown; `u = Q/h₀`, `s = Q/(h₀·q₁)`.
+        some (Q, cmulG h0 q1)
+
 /-! ### `cRischDEBase` (Bronstein §6.6 eq. 6.23 base case) — the rational RDE `Ds + b·s = c` over ℚ(x)
 
 The cancellation primitive case reduces, leading-coefficient by leading-coefficient, to a **Risch
@@ -535,13 +802,18 @@ recursion (non-constant `b, c ∈ ℚ(x)`) is the documented remaining piece. -/
 
 /-- **Base-field Risch DE `Ds + b·s = c` over `k = ℚ(x)`**, the eq. 6.23 recursion target of the §6.6
 cancellation primitive case. `cRischDEBase fuel b c` returns `some s` with `s ∈ ℚ(x)` solving
-`Ds + b·s = c` (`D = d/dx` on `QFunNZ`), or `none`. Implemented for the **bottoming-out constant
-sub-case**: when `b` and `c` are `k`-constants (`b, c ∈ ℚ`), `Ds = 0` for the constant solution and
-`s = c/b` (`b ≠ 0`); `b = 0` needs `Ds = c`, solvable by a constant only when `c = 0` (`s = 0`). For
-non-constant `b, c ∈ ℚ(x)` this returns `none` (the general rational-RDE-in-`x` recursion is the
-documented continuation), making the test sound: a reported `some s` always *actually solves* the
-base equation (checked by `cRischDEBase_solves` at the worked value). -/
-def cRischDEBase (_fuel : ℕ) (b c : QFunNZ) : Option QFunNZ :=
+`Ds + b·s = c` (`D = d/dx` on `QFunNZ`), or `none`. **General** for `b, c ∈ ℚ(x)`:
+
+* the **`k`-constant fast path** (`b, c ∈ ℚ`): `Ds = 0` for the constant solution, so `s = c/b` (`b ≠ 0`);
+  `b = 0` needs `Ds = c`, solvable by a constant only when `c = 0` (`s = 0`) — the bottoming-out case.
+* the **general rational solve**: route `b = bnum/bden`, `c = cnum/cden ∈ ℚ(x)` (read off the numerator /
+  denominator `ℚ[x]`-coefficient lists `b.1.1, b.1.2, c.1.1, c.1.2`) through `cRationalRDE` (the whole
+  Ch. 6 pipeline at the base level, `t = x`), lifting the returned `(snum, sden)` back to `QFunNZ` (the
+  denominator is nonzero by construction; the `cisZero`-test discharges the subtype membership).
+
+A reported `some s` always *actually solves* the base equation (checked by `rischDE_baseRecursion_example`
+at the worked non-constant value). -/
+def cRischDEBase (fuel : ℕ) (b c : QFunNZ) : Option QFunNZ :=
   -- constant test: a `QFunNZ` value is a `k`-constant iff its lowest-terms `d/dx` derivative is zero.
   let isConst : QFunNZ → Bool := fun z => CField.isZero (CDiffField.cderiv z)
   if isConst b && isConst c then
@@ -551,7 +823,12 @@ def cRischDEBase (_fuel : ℕ) (b c : QFunNZ) : Option QFunNZ :=
     else
       -- `b·s = c` with `b ≠ 0` constant ⇒ `s = c/b` (also constant, so `Ds = 0`).
       some (CField.div c b)
-  else none
+  else
+    -- general rational RDE in `x` (non-constant `b` and/or `c`): the full base-level Ch. 6 pipeline.
+    match CPolyG.cRationalRDE fuel b.1.1 b.1.2 c.1.1 c.1.2 with
+    | none => none
+    | some (snum, sden) =>
+      if h : Compute.cisZero sden = false then some (QFunNZ.ofNumDen snum sden h) else none
 
 /-! ### `cPolyRischDECancelPrim` (Bronstein §6.6, the `PolyRischDECancelPrim(b,c,D,n)` box, book p.212)
 
@@ -942,9 +1219,10 @@ to the cancellation solver (`deg(b) = 0 = max(0, δ−1)`, `δ = 0`), producing 
 This is the §6.6 deliverable: the **cancellation** case of `PolyRischDE` — which `cPolyRischDENoCancel`
 cannot handle (the leading terms cancel) — *computes* over the monomial tower ℚ(x)[t], driving the
 §5.12 parametric-logarithmic-derivative test (`b = 1` ruled out) and the eq. 6.23 base Risch DE over
-`k = ℚ(x)` (`RischDE(1,1) = 1`) to the elementary solution `q = log(x)`. The hyperexponential
-(`PolyRischDECancelExp`) and nonlinear/hypertangent (`PolyRischDECancelTan`) cancellation cases, and the
-general non-constant rational base RDE recursion of eq. 6.23, are the documented continuation. -/
+`k = ℚ(x)` (`RischDE(1,1) = 1`) to the elementary solution `q = log(x)`. *(The general **non-constant**
+rational base RDE recursion of eq. 6.23 is exercised separately by `rischDE_baseRecursion_example`.)* The
+hyperexponential (`PolyRischDECancelExp`) and nonlinear/hypertangent (`PolyRischDECancelTan`) cancellation
+cases are the documented continuation. -/
 theorem rischDE_cancel_example :
     (match cPolyRischDECancelPrim rischDECancelDt 30 rischDECancelB rischDECancelC 5 with
       | some q =>
@@ -957,5 +1235,108 @@ theorem rischDE_cancel_example :
         | _, _ => false) = true := by native_decide
 
 #print axioms rischDE_cancel_example
+
+/-! ### Validation — the §6.6 base recursion drives a NON-CONSTANT base RDE over ℚ(x) (`t = log x`)
+
+The deepest §6.6 frontier: a primitive cancellation RDE whose eq. 6.23 leading-coefficient recursion
+`RischDE(b, lc(c))` needs a **non-constant** base solve `Ds + b(x)·s = c(x)` over `k = ℚ(x)` — the
+*rational* Risch DE, the whole Ch. 6 pipeline re-run at the base level (`t = x`, `k = ℚ`). We use
+`t = log(x)` (`Dt = 1/x ∈ k`, primitive, `δ = 0`) and
+
+```
+  Dy + (1/x)·y = 2·log(x) + 1      (f = 1/x ∈ ℚ(x)*,  g = 2t + 1 ∈ ℚ(x)[t],  deg(g) = 1)
+```
+
+whose elementary solution is `y = x·log(x) = x·t` (indeed `D(x·t) + (1/x)(x·t) = (t + 1) + t = 2t + 1`).
+The §6.6 primitive cancellation peels the leading monomial via `RischDE(b₀, lc(c)) = RischDE(1/x, 2)` over
+ℚ(x), which the **constant** base case *cannot* solve (`1/x ∉ ℚ`); `cRationalRDE` solves it — `s = x` —
+by weak-normalizing `1/x` (residue `1` at `x = 0`, `q₁ = x`), reducing to `Du = 2x` and `s = x²/x = x`.
+The leading monomial `s·t = x·t` then leaves remainder `0`, terminating with `q = x·t`. -/
+
+open CPolyG QFunNZ
+
+/-- The primitive monomial derivative `Dt = 1/x` (`t = log(x)`); `δ = 0`. -/
+def rischDEBaseRecDt : CPolyG QFunNZ := [ofNumDen [1] [0, 1] (by decide)]
+
+/-- The base-recursion example's `f = 1/x ∈ ℚ(x)*` (a degree-0 `t`-polynomial), numerator over
+denominator `1`. -/
+def rischDEBaseRecFnum : CPolyG QFunNZ := [ofNumDen [1] [0, 1] (by decide)]
+/-- The base-recursion example's `f`-denominator `1`. -/
+def rischDEBaseRecFden : CPolyG QFunNZ := [ofConstNZ 1]
+
+/-- The base-recursion example's `g = 2·log(x) + 1 = 2t + 1` (low→high in `t`: `[1, 2]`), numerator over
+denominator `1`. -/
+def rischDEBaseRecGnum : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 2]
+/-- The base-recursion example's `g`-denominator `1`. -/
+def rischDEBaseRecGden : CPolyG QFunNZ := [ofConstNZ 1]
+
+-- **Sanity prints.** The standalone base solve `RischDE(1/x, 2) = x` over ℚ(x); the assembled `cRischDE`
+-- returns `y = x·log(x) = x·t` (`t`-coeffs `[0, x]`); and the standalone `cRationalRDE` for
+-- `Ds + (1/x)s = 2` returns `(snum, sden) = (x², x) ≡ x`.
+#eval (cRischDEBase 60 (ofNumDen [1] [0, 1] (by decide)) (ofConstNZ 2)).map (fun z => Compute.qnorm 60 z.1)
+#eval (cRationalRDE 60 [1] [0, 1] [2] [1]).map (fun p => ((p.1 : List ℚ), (p.2 : List ℚ)))
+#eval (cRischDE rischDEBaseRecDt 60 rischDEBaseRecFnum rischDEBaseRecFden
+    rischDEBaseRecGnum rischDEBaseRecGden).map
+  (fun p => (((p.1 : List QFunNZ).map (fun z => Compute.qnorm 60 z.1)),
+             ((p.2 : List QFunNZ).map (fun z => Compute.qnorm 60 z.1))))
+
+/-- **The §6.6 base recursion runs a NON-CONSTANT rational base RDE over ℚ(x)** (`native_decide`,
+Bronstein §6.6 eq. 6.23, the `RischDE(b, lc(c))` leading-coefficient recursion, book p.212). For the
+primitive monomial `t = log(x)` (`Dt = 1/x ∈ k`, `δ = 0`):
+
+1. **Assembled solver.** `cRischDE` on `Dy + (1/x)y = 2·log(x) + 1` over ℚ(x)(t) — normal denominator →
+   special (trivial) → degree bound → SPDE → §6.6 primitive cancellation — returns `some (ynum, yden)`,
+   and the returned `y = ynum/yden` is verified to **actually solve** the equation by `rdeClearedCheck`
+   (the cleared polynomial identity, not merely pinning the output): the solution is `y = x·log(x)`.
+2. **Base solve.** The eq. 6.23 recursion target `RischDE(1/x, 2)` over `k = ℚ(x)` — a **non-constant**
+   base RDE the constant sub-case cannot handle — is solved by the general `cRischDEBase` to `s = x`
+   (checked by `qeq` of the cleared difference, the lowest-terms numerator of `Ds + (1/x)s − 2`).
+3. **Standalone rational RDE.** `cRationalRDE` on `Ds + (1/x)s = 2` returns `(snum, sden) = (x², x) ≡ x`,
+   verified to solve `Ds + (1/x)s = 2` by clearing denominators
+   (`snum′·sden·x + snum·x − 2·sden·x − snum·sden′·x` reads to `0`, the quotient-rule identity).
+
+This is the deliverable: the **general (non-constant) rational base Risch DE over ℚ(x)** — the whole
+Ch. 6 pipeline re-run at the base level (weak normalizer + normal denominator + degree bound + SPDE +
+PolyRischDE, all over `CPolyG ℚ` with `D = d/dx`) — *computes*, and the §6.6 primitive cancellation case
+drives it to the elementary solution `y = x·log(x)`. -/
+theorem rischDE_baseRecursion_example :
+    (match cRischDE rischDEBaseRecDt 60 rischDEBaseRecFnum rischDEBaseRecFden
+          rischDEBaseRecGnum rischDEBaseRecGden with
+      | some (ynum, yden) =>
+          rdeClearedCheck rischDEBaseRecDt rischDEBaseRecFnum rischDEBaseRecFden
+            rischDEBaseRecGnum rischDEBaseRecGden ynum yden
+      | none => false) = true
+    ∧ (match cRischDEBase 60 (ofNumDen [1] [0, 1] (by decide)) (ofConstNZ 2) with
+        | some s =>
+            -- `Ds + (1/x)·s − 2 = 0`, cleared: numerator of `(qderiv s) + (1/x)·s − 2` reads to `0`.
+            Compute.qeq (Compute.qadd (Compute.qadd (Compute.qderiv s.1)
+                (Compute.qmul ([1], [0, 1]) s.1)) (Compute.qneg ([2], [1]))) Compute.qzero
+        | none => false) = true := by native_decide
+
+#print axioms rischDE_baseRecursion_example
+
+/-- **The standalone rational Risch DE `Ds + (1/x)s = 2` over ℚ(x) computes** (`native_decide`, Bronstein
+§6.6 eq. 6.23 base solve). `cRationalRDE` — the whole Ch. 6 pipeline at the base level (`t = x`, `k = ℚ`,
+`D = d/dx`) — returns `some (snum, sden)`, and `s = snum/sden` is verified to **actually solve**
+`Ds + (1/x)s = 2` by clearing denominators (`Ds = (snum′·sden − snum·sden′)/sden²`; multiplying the
+equation by `sden²·x` gives `(snum′·sden − snum·sden′)·x + snum·sden = 2·sden²·x`). The solution is `s = x`
+(`cRationalRDE` returns the unreduced `(x², x)`). The run exercises the base-level **weak normalizer**
+(`1/x` has residue `1` at `x = 0`, so `q₁ = x`), **normal denominator**, **degree bound**, **SPDE**, and
+the **polynomial integration** branch (`Du = 2x`). -/
+theorem rischDE_rationalRDE_example :
+    (match cRationalRDE 60 [1] [0, 1] [2] [1] with
+      | some (snum, sden) =>
+          let Dsn := Compute.cderiv snum
+          let Dsd := Compute.cderiv sden
+          let x : Compute.CPoly := [0, 1]
+          -- `(Dsn·sden − snum·Dsd)·x + snum·sden − 2·sden²·x = 0`.
+          Compute.cisZero (Compute.csub
+            (Compute.cadd
+              (Compute.cmul (Compute.csub (Compute.cmul Dsn sden) (Compute.cmul snum Dsd)) x)
+              (Compute.cmul snum sden))
+            (Compute.cmul (Compute.cscale 2 (Compute.cmul sden sden)) x))
+      | none => false) = true := by native_decide
+
+#print axioms rischDE_rationalRDE_example
 
 end DeepWiki.SymbolicIntegration
