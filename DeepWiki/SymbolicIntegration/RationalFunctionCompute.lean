@@ -67,6 +67,11 @@ def qderiv (x : QFun) : QFun :=
   let (a, b) := x
   (csub (cmul (cderiv a) b) (cmul a (cderiv b)), cmul b b)
 
+/-- **Decidable equality of rational functions** `a₁/b₁ = a₂/b₂`, by cross-multiplication:
+`true` iff `a₁·b₂ − a₂·b₁ = 0` (for nonzero denominators). -/
+def qeq (x y : QFun) : Bool :=
+  cisZero (csub (cmul x.1 y.2) (cmul y.1 x.2))
+
 /-! ### Field-homomorphism lemmas: `qone`, `qneg`, `qsub`, `qmul`
 
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`.
@@ -140,3 +145,21 @@ theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (
   simp only [toQFun, qderiv, toPoly_csub, toPoly_cmul, toPoly_cderiv, map_sub, map_mul]
   rw [hderiv, pow_two]
   ring
+
+/-- **`qeq` decides rational-function equality**: `qeq x y = true ↔ toQFun x = toQFun y` in
+`RatFunc ℚ` (for nonzero denominators). The cross-multiplication test `a₁·b₂ − a₂·b₁ = 0` is
+equivalent to the field equality `a₁/b₁ = a₂/b₂` once the denominators are units. -/
+theorem qeq_iff (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
+    qeq x y = true ↔ toQFun x = toQFun y := by
+  obtain ⟨a, b⟩ := x
+  obtain ⟨c, d⟩ := y
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
+  have hdm : am (toPoly d) ≠ 0 := am_toPoly_ne_zero hd
+  -- LHS: the cross-multiplication zero test in `ℚ[X]`.
+  rw [qeq, cisZero_iff_toPoly_eq_zero, toPoly_csub, toPoly_cmul, toPoly_cmul, sub_eq_zero]
+  -- RHS: the field equality, cleared to the cross-multiplication.
+  rw [toQFun, toQFun, div_eq_div_iff hbm hdm]
+  -- bridge through `am` injectivity (`map_mul` + injectivity).
+  rw [← map_mul, ← map_mul]
+  exact ⟨fun h => by rw [h], fun h => RatFunc.algebraMap_injective ℚ h⟩
