@@ -947,6 +947,51 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (f
     exact this
   rw [mul_assoc, himg, ← map_mul, ← Polynomial.C_mul, inv_mul_cancel₀ hu, Polynomial.C_1, map_one]
 
+/-- **Coefficient-wise `credR ∘ (· * inv)` is `Φ`-scaling by `φ(toPoly inv)`**: with `Φ =
+Polynomial.mapRingHom φ` and `φ` killing `toPoly R`, mapping every `x`-coefficient `c ↦ credR fuel R (cmul
+c inv)` realizes, under `Φ`, multiplication of `toBPoly q` by the constant `C (φ (toPoly inv))`:
+`Φ (toBPoly (q.map (fun c => credR fuel R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (toBPoly q)`. Per
+coefficient `credR` drops (`map_toPoly_credR`) and `cmul` is `toPoly`-multiplicative; folding over the
+Horner list factors the constant `φ (toPoly inv)` out. -/
+theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ)
+    (R inv : CPoly) (q : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (toBPoly (q.map (fun c => credR fuel R (cmul c inv))))
+      = Polynomial.C (φ (toPoly inv)) * (Polynomial.mapRingHom φ) (toBPoly q) := by
+  induction q with
+  | nil => simp
+  | cons a as ih =>
+    rw [List.map_cons, toBPoly_cons, toBPoly_cons, map_add, map_add, map_mul, map_mul, ih, mul_add]
+    congr 1
+    · rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C,
+        map_toPoly_credR φ fuel R _ hR hφR, toPoly_cmul, map_mul, Polynomial.C_mul, mul_comm]
+    · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
+
+/-- **`bmonicXmodR` is a `Φ`-image unit-multiple** (the mod-`R` monic-normalization unit bridge): for any
+ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, with `Φ = Polynomial.mapRingHom φ`, when the leading-
+`x`-coefficient's mod-`R` gcd reduces to a nonzero constant `C u` (`hg`/`hu` — Exercise 2.7 regularity), the
+`Φ`-image of `bmonicXmodR fuel R p` is the **unit** `φ (toPoly (cinvMod fuel R (blc (bredR fuel R p))))`
+times the `Φ`-image of `toBPoly p`:
+`Φ (toBPoly (bmonicXmodR fuel R p)) = C (φ (toPoly inv)) · Φ (toBPoly p)`, and `φ (toPoly inv)` is a unit in
+`S` (its inverse is `φ (toPoly (blc (bredR fuel R p)))`, by `map_toPoly_cinvMod_mul`). So `bmonicXmodR`
+preserves similarity over the residue ring `S = ℚ[t]/(R)`: the monic-in-`x` normalization is multiplication
+by a residue-ring unit. -/
+theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
+    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
+    (hg : toPoly (cgcdExt fuel (blc (bredR fuel R p)) R).1 = Polynomial.C u)
+    (hpz : ¬ bisZero (bredR fuel R p) = true) :
+    (Polynomial.mapRingHom φ) (toBPoly (bmonicXmodR fuel R p))
+        = Polynomial.C (φ (toPoly (cinvMod fuel R (blc (bredR fuel R p)))))
+          * (Polynomial.mapRingHom φ) (toBPoly p)
+      ∧ φ (toPoly (cinvMod fuel R (blc (bredR fuel R p))))
+          * φ (toPoly (blc (bredR fuel R p))) = 1 := by
+  refine ⟨?_, map_toPoly_cinvMod_mul φ fuel R (blc (bredR fuel R p)) hR hφR hu hg⟩
+  rw [bmonicXmodR]
+  simp only [hpz, Bool.false_eq_true, if_false]
+  rw [toBPoly_bnorm,
+    mapRingHom_toBPoly_map_credR_cmul φ fuel R (cinvMod fuel R (blc (bredR fuel R p)))
+      (bredR fuel R p) hR hφR,
+    mapRingHom_toBPoly_bredR φ fuel R p hR hφR]
+
 /-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
 The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
 engine against the abstract subresultant — no longer just one step:
