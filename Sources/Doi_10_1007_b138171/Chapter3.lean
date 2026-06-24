@@ -5,6 +5,7 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
+import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -98,12 +99,42 @@ abbrev thm_3_2_1_unique := @derivation_ext_fractionRing
 fraction-field existence.) -/
 abbrev thm_3_2_2_poly := @existsUnique_derivation_polynomial
 
--- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):**
---   • **Theorem 3.2.1** (§3.2, p.79), *existence*: a derivation on an integral domain `R` extends
---     to its quotient field (`Δ(a/b) = (b·Da − a·Db)/b²`). [Construct a `Derivation` on
---     `FractionRing R` — not in Mathlib; uniqueness is `thm_3_2_1_unique`.]
---   • **Theorem 3.2.2** (§3.2, p.81), full `F(t)` form (the polynomial-ring case is `thm_3_2_2_poly`;
---     the field `F(t)` version additionally needs the §3.2.1 fraction-field existence).
+/-- **Theorem 3.2.1** (§3.2, p.79), existence (given a compatible structure): a derivation on the
+fraction field extending `D` exists and is unique. -/
+abbrev thm_3_2_1_exists := @existsUnique_derivation_fractionRing
+
+/-- **Theorem 3.2.2** (§3.2, p.81), field uniqueness: the derivation on `F(t)` extending `D` with a
+prescribed `Δt` is unique. -/
+abbrev thm_3_2_2_field_unique := @unique_derivation_rationalFunction
+
+/-- **Theorem 3.2.3** (§3.2, p.83): a derivation extends to a separable algebraic extension `E/F`
+with `Δα = −κ_D(P)(α)/P′(α)` (`P = minpoly`); existence (char `0`, finite-dimensional). -/
+abbrev thm_3_2_3 := @differentialAlgebra_algebraic
+
+/-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: the derivation extension to a separable algebraic
+extension is unique. -/
+abbrev thm_3_2_3_unique := @unique_differentialAlgebra_algebraic
+
+/-- **Theorem 3.2.4(i)** (§3.2, p.85): an `F`-automorphism of a separable algebraic extension
+commutes with `D`. -/
+abbrev thm_3_2_4_i := @algEquiv_comm_deriv
+
+/-- **Theorem 3.2.4(ii)** (§3.2, p.85): the trace commutes with `D` on a finite separable extension. -/
+abbrev thm_3_2_4_ii_trace := @deriv_trace_eq_trace_deriv
+
+/-- **Theorem 3.2.4(ii)** (§3.2, p.85): `Tr(Da/a) = D(N a)/N a` (logarithmic-derivative trace–norm
+relation). -/
+abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
+
+/-- **Corollary 3.2.1** (§3.2, p.85): `D` extends uniquely to each finite intermediate field of a
+separable algebraic extension (and these agree on towers). -/
+abbrev cor_3_2_1 := @existsUnique_differentialAlgebra_intermediateField
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):** the
+-- *unconditional* fraction-field existence of Theorem 3.2.1 / full `F(t)` Theorem 3.2.2 — building a
+-- `Derivation` on `FractionRing R` from scratch (`Δ(a/b) = (b·Da − a·Db)/b²`), which Mathlib lacks; the
+-- uniqueness (`thm_3_2_1_unique`, `thm_3_2_2_field_unique`) and structure-conditioned existence
+-- (`thm_3_2_1_exists`) are done. Theorem 3.2.4(ii) / Corollary 3.2.1 are the finite-extension forms.
 
 /-! ## §3.3 Constants and Extensions -/
 
@@ -427,8 +458,8 @@ book-faithful splitting factorization (`def_3_5_1_book`) — no one-step hypothe
 abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
-§3.2: Thm 3.2.1 existence (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
-  Thm 3.2.4 (automorphism/trace/norm of separable algebraic extension); Cor 3.2.1.
+§3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
+  (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
 §3.3: Cor 3.3.1; Lemma 3.3.3; Lemma 3.3.4 (hard direction `Const_Δ(F(t)) ⊆ Const_D(F)(t)`); Lemma 3.3.6.
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
