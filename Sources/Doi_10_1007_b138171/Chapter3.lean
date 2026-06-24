@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
+import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -126,19 +127,36 @@ Wronskian forces linear dependence of `y₁,…,yₙ` over `F` (with field — n
 coefficients). The constant-coefficient upgrade is the deferred induction. -/
 abbrev lem_3_3_5_converse_field := @wronskian_eq_zero_imp_linearDependent
 
+/-- **Lemma 3.3.5** (§3.3, p.88), FULL converse, general `n` over the constants: `W(y₁,…,yₙ) = 0` iff
+`y₁,…,yₙ` are linearly dependent over `Const_D F` — proved by an algebraic induction dropping a
+normalized kernel coordinate (no `W = y₁ⁿ·W(…)` identity needed). -/
+abbrev lem_3_3_5_iff := @wronskian_eq_zero_iff_linearDependentOverConst
+
+/-- **Lemma 3.3.2(i)** (§3.3, p.86): a new constant algebraic over `F` is algebraic over the old
+constant field `Const_D F`. -/
+abbrev lem_3_3_2_i := @isAlgebraicOverConst_of_deriv_eq_zero
+
+/-- **Lemma 3.3.2(ii)** (§3.3, p.86): an element algebraic and *separable* over `Const_D F` is itself
+a constant. -/
+abbrev lem_3_3_2_ii := @deriv_eq_zero_of_separable_algebraic_const
+
+/-- **Corollary 3.3.2** (§3.3, p.87): linear independence over the constants is preserved by a
+differential extension (the Wronskian commutes with `algebraMap`). -/
+abbrev cor_3_3_2 := @not_linearDependentOverConst_algebraMap
+
+/-- **Lemma 3.3.4** (§3.3, p.87), easy inclusion: `Const_D(F)(t) ⊆ Const_Δ(F(t))` for `t` a constant
+of the extension. -/
+abbrev lem_3_3_4_easy := @subfieldClosure_subset_constants
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work:**
 --   • Theorem 3.2.4 (§3.2, p.85): a field automorphism of a separable algebraic extension commutes
 --     with `D`; trace/norm relations `Tr(Da/a) = D(Tr a)`, etc.
---   • Lemma 3.3.2 / Corollary 3.3.1 (§3.3): new algebraic constants are exactly the elements
---     algebraic over the initial constant field (needs minimal polynomials + `κ_D`).
---   • Corollary 3.3.2, Lemmas 3.3.3, 3.3.4, 3.3.6 (constant-field behaviour under extensions).
---   • **Lemma 3.3.5 converse, general `n`** (`W = 0 ⟹ linearly dependent over constants`) — the
---     induction on `n`. Infrastructure in place: `wronskian_eq_zero_dependent_iterDeriv` (foundation,
---     a kernel vector annihilating all rows), `deriv_dependent_iterDeriv` (the differentiate-row
---     recurrence), and `linearDependent_of_div_deriv_dependent` (the division-reduction inductive
---     step), plus `iterDeriv_mul` (the general Leibniz rule `Dⁿ(ab) = ∑ₖ C(n,k)·Dⁿ⁻ᵏa·Dᵏb`, the
---     algebraic engine of the column reduction). The one remaining piece is the determinant
---     reduction `W(y₁,…,yₙ) = y₁ⁿ·W((y₂/y₁)′,…)` that lets the `(n−1)` induction hypothesis apply.
+--   • Corollary 3.3.1, Lemma 3.3.3 [infra]: need Theorem 3.2.3 (unique derivation extension to a
+--     separable algebraic extension / algebraic closure), not yet in the repo.
+--   • Lemma 3.3.4 hard direction [deferred]: `Const_Δ(F(t)) ⊆ Const_D(F)(t)` (the algebraic/
+--     transcendental case-split + the `u/v` gcd-degree argument over `F[t]`).
+--   • Lemma 3.3.6 [infra]: alg-closed constant field — a system satisfiable by constants in `E` is
+--     satisfiable by constants in `F` (Nullstellensatz transfer + a constant-basis of `F`).
 
 /-! ## §3.4 Monomial Extensions -/
 
@@ -411,8 +429,7 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
 §3.2: Thm 3.2.1 existence (FractionRing derivation); Thm 3.2.2 full `F(t)` form; Thm 3.2.3;
   Thm 3.2.4 (automorphism/trace/norm of separable algebraic extension); Cor 3.2.1.
-§3.3: Lemma 3.3.2 (new algebraic constants); Cor 3.3.1; Cor 3.3.2; Lemma 3.3.3; Lemma 3.3.4;
-  Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
+§3.3: Cor 3.3.1; Lemma 3.3.3; Lemma 3.3.4 (hard direction `Const_Δ(F(t)) ⊆ Const_D(F)(t)`); Lemma 3.3.6.
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
