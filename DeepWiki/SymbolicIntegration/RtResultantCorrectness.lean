@@ -567,4 +567,47 @@ theorem rootMultiplicity_rtResultant_map_ex241 {L : Type*} [Field L] (τ : ℚ �
     simpa using (map_ne_zero_iff τ hτ).mpr (by norm_num : (45796 : ℚ) ≠ 0)
   exact rootMultiplicity_C_mul_pow_of_separable hc hpsep hpβ 3
 
+/-! ### `lrtSubresultant` under an injective base change, and the eval-commute -/
+
+/-- **`lrtSubresultant` commutes with an injective base change** `ι : F →+* G` (lifted to the
+`F[X]`-coefficients by `mapRingHom ι`): `(lrtSubresultant A D j).map (mapRingHom ι) =
+lrtSubresultant (A.map ι) (D.map ι) j`. Injectivity preserves the formal `x`-degrees; `subresultant_map`
+pushes `ι` through the Sylvester submatrix determinants, and `ι` commutes with `derivative`/`C`/`X`. -/
+theorem lrtSubresultant_map_of_injective {F G : Type*} [Field F] [Field G] (ι : F →+* G)
+    (hι : Function.Injective ι) (A D : F[X]) (j : ℕ) :
+    (lrtSubresultant A D j).map (Polynomial.mapRingHom ι) = lrtSubresultant (A.map ι) (D.map ι) j := by
+  rw [lrtSubresultant, lrtSubresultant]
+  have hdeg : (D.map ι).natDegree = D.natDegree := Polynomial.natDegree_map_eq_of_injective hι D
+  have hcomm : (C : G →+* G[X]).comp ι = (Polynomial.mapRingHom ι).comp (C : F →+* F[X]) := by
+    ext k; simp
+  -- rewrite the RHS operands as `(operand over F[X]).map (mapRingHom ι)`
+  have hop1 : (D.map ι).map (C : G →+* G[X])
+      = (D.map (C : F →+* F[X])).map (Polynomial.mapRingHom ι) := by
+    rw [Polynomial.map_map, Polynomial.map_map, hcomm]
+  have hop2 : (A.map ι).map (C : G →+* G[X])
+          - C Polynomial.X * (derivative (D.map ι)).map (C : G →+* G[X])
+      = (A.map (C : F →+* F[X])
+          - C Polynomial.X * (derivative D).map (C : F →+* F[X])).map (Polynomial.mapRingHom ι) := by
+    rw [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_C, Polynomial.coe_mapRingHom,
+      Polynomial.map_X]
+    congr 1
+    · rw [Polynomial.map_map, hcomm, ← Polynomial.map_map]
+    · congr 1
+      rw [Polynomial.map_map, derivative_map, Polynomial.map_map, hcomm]
+  rw [hdeg, hop1, hop2, subresultant_map]
+
+/-- **Eval-after-map commutes with an injective base change**: for `ι : F →+* G` injective,
+`((lrtSubresultant A D j).map (evalRingHom a)).map ι = (lrtSubresultant (A.map ι) (D.map ι) j).map
+(evalRingHom (ι a))`. Combines `lrtSubresultant_map_of_injective` with `map_map` of the two evaluation
+homs (`evalRingHom a` then `ι` vs. `mapRingHom ι` then `evalRingHom (ι a)`). -/
+theorem map_eval_lrtSubresultant_map {F G : Type*} [Field F] [Field G] (ι : F →+* G)
+    (hι : Function.Injective ι) (A D : F[X]) (j : ℕ) (a : F) :
+    ((lrtSubresultant A D j).map (Polynomial.evalRingHom a)).map ι
+      = (lrtSubresultant (A.map ι) (D.map ι) j).map (Polynomial.evalRingHom (ι a)) := by
+  rw [← lrtSubresultant_map_of_injective ι hι, Polynomial.map_map, Polynomial.map_map]
+  congr 1
+  ext q
+  · simp
+  · simp [Polynomial.coe_mapRingHom]
+
 end DeepWiki.SymbolicIntegration
