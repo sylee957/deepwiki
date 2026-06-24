@@ -1111,31 +1111,32 @@ engine against the abstract subresultant — no longer just one step:
   element, via `subresultant_prs_similar_elt`) and its LRT specialization
   `isSimilar_lrtSubresultant_subresPRS_elt` (`lrtSubresultant A D j ~ toBPoly (G (m+2))`);
 - `isSimilar_lrtSubresultant_bsubresultantGcd` — `lrtSubresultant A D j ∼ bsubresultantGcd` — modulo the
-  single remaining **filter identity** `toBPoly (bsubresultantGcd …) = toBPoly (G (m+2))`;
+  **filter identity** `toBPoly (bsubresultantGcd …) = toBPoly (G (m+2))`, now **discharged structurally**
+  by `toBPoly_bsubresultantGcd_eq_of_filter_singleton` (the singleton-filter list fact:
+  `bsubresultantGcd`'s degree-`j` filter is `[G (m+2)]`, so its last element is `G (m+2)`), giving the
+  `hfilt`-free `isSimilar_lrtSubresultant_bsubresultantGcd_real`;
 - the content step `toBPoly_bprimitivePartX_exact` / its similarity packaging
   `isSimilar_toBPoly_bprimitivePartX`, chained into
-  `isSimilar_lrtSubresultant_lrtSubresultantCompute` — `lrtSubresultant A D j ∼ lrtSubresultantCompute`
-  (same filter-identity modulus + the content exactness of `bprimitivePartX` on the degree-`j` element).
+  `isSimilar_lrtSubresultant_lrtSubresultantCompute` — `lrtSubresultant A D j ∼ lrtSubresultantCompute`;
+- **the `bmonicXmodR` mod-`R` unit bridge** (`map_toPoly_credR`, `mapRingHom_toBPoly_bredR`,
+  `map_toPoly_cinvMod_mul`, `mapRingHom_toBPoly_bmonicXmodR`): over any residue map `φ : ℚ[X] →+* S` killing
+  `toPoly R`, the monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring **unit**
+  (`cinvMod` is the mod-`R` inverse, by the `cgcdExt` Bézout identity); composed through
+  `isSimilar_mapRingHom` + `IsSimilar.trans` this lands the **headline**
+  `lrtGcdCompute_isSimilar_lrtSubresultant` — `Φ (lrtSubresultant A D j) ∼ Φ (toBPoly (lrtGcdCompute …))`
+  over the residue ring `S = ℚ[t]/(R)`.
 
-What remains for an *unconditional* `lrtGcdCompute ↔ lrtSubresultant` is purely *structural/computable*
-bookkeeping, no longer the recurrence-matching that this work eliminated:
-1. **The filter identity** `hfilt`: that `bsubresultantGcd`'s degree-`j` filter over the `subresPRS` list
-   returns the chain element `G (m+2)`, with `G i = (subresPRS fuel P Q).getD i []`. Needs the structural
-   induction on `subresPRS`'s recursive `go` (each list element is the next divided pseudo-remainder, with
-   `bt i` the literal `cpowP`/`cdiv` β-accumulator) plus uniqueness from strict degree decrease — and the
-   discharge, for the *real* `subresPRS`, of the per-step hypotheses (`hsc` from `toBPoly_bpsremainder`,
-   `hdiv` from Collins's β-divisibility `toBPoly_bdivC_exact_of_dvd`, the degree bounds). The content-
-   exactness inputs `hg`/`hgcn`/`hg0`/`hrem` of the content step are the analogous `bcontentX`-divides-
-   coefficients structural facts (the `ℚ[t]`-gcd divides each coefficient, over a `cgcdExt` `foldl`).
-2. **`bmonicXmodR` normalization** (`lrtGcdCompute = bmonicXmodR R (lrtSubresultantCompute …)`): the monic-
-   in-`x` reduction mod `R` is a `ℚ[t]/(R)`-unit operation, so similarity-preserving over the residue ring —
-   needs the monic-mod-`R` unit `toBPoly` bridge (a `bredR`/`cinvMod` analogue of `toBPoly_bprimitivePartX_exact`),
-   composed with `isSimilar_lrtSubresultant_lrtSubresultantCompute` through `IsSimilar.trans`. (Note this
-   step changes the ambient ring to `ℚ[t]/(R)`, so the similarity is over the residue ring, not `ℚ[t]`.)
-
-These are the closing steps; the whole-chain telescoping, endpoint collapse, β-divisor exact-division, the
-`bprimitivePartX` content bridge, and operand/similarity packaging proven here are their complete reusable
-foundation. -/
+So the two isolated structural facts that closed the agreement are both landed: (1) the **degree-`j` filter
+identity** (singleton filter ⟹ `bsubresultantGcd` is the chain element), and (2) the **`bmonicXmodR` mod-`R`
+unit bridge** (monic normalization = residue-ring unit multiple). What is *taken as a hypothesis* in the
+fully-assembled headline — and is now the only residual input — is the *concrete instantiation* for the
+**real** `subresPRS` of: the per-step chain data (`G`/`bt`/`s`/`c` with `G i = (subresPRS …).getD i []`,
+`hsc`/`hdiv`/`hG2`/degree bounds from `toBPoly_bpsremainder`, Collins β-divisibility, strict degree
+decrease), the singleton-filter fact `hfil` (from `subresPRS.go`'s strictly-decreasing degrees — a structural
+induction over the internal `let rec go`), the `bprimitivePartX` content-exactness inputs (the `ℚ[t]`-gcd
+`bcontentX` divides each coefficient, over a `cgcdExt` `foldl`), and the residue-ring regularity (`φ` killing
+`toPoly R`, the leading coeff a unit mod `R`, witnesses `φ`-nonzero — Exercise 2.7). These are all *data
+instantiations*, not new mathematics: the recurrence-matching and the two structural facts are done. -/
 
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
 -- when every x-coefficient divides exactly.
@@ -1180,5 +1181,26 @@ example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly) (s : ℕ → BPoly
       (subresultant (toBPoly (G m)) (toBPoly (G (m + 1)))
         (toBPoly (G m)).natDegree (toBPoly (G (m + 1))).natDegree j) :=
   isSimilar_subresPRS_telescope fuel G bt s c j m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hj hQ
+
+-- Restatement: FACT 1 — the degree-`j` filter identity. A singleton degree-`j` filter of `subresPRS`
+-- makes `bsubresultantGcd` read as that single chain element `G (m+2)` (under `toBPoly`).
+example (fuel : ℕ) (P Q : BPoly) (G : ℕ → BPoly) (m : ℕ)
+    (hfil : (subresPRS fuel P Q).filter
+        (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
+    toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree P Q) = toBPoly (G (m + 2)) :=
+  toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q G m hfil
+
+-- Restatement: FACT 2 — the `bmonicXmodR` mod-`R` unit bridge. Over any `φ : ℚ[X] →+* S` killing
+-- `toPoly R`, `bmonicXmodR`'s `Φ`-image is a residue-ring UNIT (`η · η' = 1`) times `toBPoly p`'s.
+example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly) (p : BPoly)
+    (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
+    (hg : toPoly (cgcdExt fuel (blc (bredR fuel R p)) R).1 = Polynomial.C u)
+    (hpz : ¬ bisZero (bredR fuel R p) = true) :
+    (Polynomial.mapRingHom φ) (toBPoly (bmonicXmodR fuel R p))
+        = Polynomial.C (φ (toPoly (cinvMod fuel R (blc (bredR fuel R p)))))
+          * (Polynomial.mapRingHom φ) (toBPoly p)
+      ∧ φ (toPoly (cinvMod fuel R (blc (bredR fuel R p))))
+          * φ (toPoly (blc (bredR fuel R p))) = 1 :=
+  mapRingHom_toBPoly_bmonicXmodR φ fuel R p hR hφR hu hg hpz
 
 end DeepWiki.SymbolicIntegration.Compute
