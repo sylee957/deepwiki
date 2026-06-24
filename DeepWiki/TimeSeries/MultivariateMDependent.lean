@@ -10,7 +10,7 @@ over lags). Here: the cross-covariance of coordinate blocks vanishes beyond the 
 finite-support fact giving summability of the cross-covariances. -/
 
 open MeasureTheory ProbabilityTheory Filter
-open scoped RealInnerProductSpace Matrix
+open scoped RealInnerProductSpace Matrix ENNReal
 
 namespace DeepWiki.TimeSeries
 
@@ -250,5 +250,16 @@ theorem IsStrictlyStationary.mul_shift {X : ℤ → Ω → ℝ} (h : IsStrictlyS
   have hR : (fun ω (i : Fin n) => X (t i + hsh) ω * X (t i + hsh + (k : ℤ)) ω)
       = fun ω (i : Fin n) => X (t i + hsh) ω * X (t i + hsh + (k : ℤ)) ω := rfl
   rw [hL, key 0, hshift, ← key hsh]
+
+/-- **A product of two `L⁴` random variables is `L²`** (Hölder, `1/2 = 1/4 + 1/4`): the lagged products
+`XₛXₜ` of a process with finite fourth moments are square-integrable — the `L²` hypothesis the
+`m`-dependent CLT needs for the sample-autocovariance lag process. -/
+theorem memLp_mul_of_memLp_four {Y Z : Ω → ℝ} (hY : MemLp Y 4 μ) (hZ : MemLp Z 4 μ) :
+    MemLp (fun ω => Y ω * Z ω) 2 μ := by
+  haveI : ENNReal.HolderTriple 4 4 2 := ⟨by
+    rw [← two_mul, show (4 : ℝ≥0∞) = 2 * 2 from by norm_num,
+      ENNReal.mul_inv (Or.inl (by norm_num)) (Or.inr (by norm_num)), ← mul_assoc,
+      ENNReal.mul_inv_cancel (by norm_num) (by simp), one_mul]⟩
+  exact hZ.mul hY
 
 end DeepWiki.TimeSeries
