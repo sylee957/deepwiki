@@ -136,4 +136,38 @@ theorem multivariate_iid_clt {k : ℕ} [IsProbabilityMeasure μ] {Ω' : Type*} [
   rw [hlimeq]
   exact (hlim.congr fun n => (hfn n).symm)
 
+/-- **Cramér–Wold device for convergence to a multivariate Gaussian:** a sequence `Xₙ` of random vectors
+into `EuclideanSpace ℝ (Fin k)` converges in distribution to `multivariateGaussian 0 S` (`S` positive
+semidefinite) as soon as *every* one-dimensional projection converges — `charFun (law ⟪Xₙ, t⟫) 1 →
+charFun (gaussianReal 0 (t ⬝ᵥ S t)) 1` for all `t`. This reduces a multivariate CLT to the univariate CLT
+applied in each direction `t`: `charFun_proj` rewrites the joint characteristic function as a projected
+one, `charFun_multivariateGaussian` identifies the limit, and Lévy's theorem closes it. The lifting engine
+turning the 1-D `m`-dependent / linear-process CLTs into their vector forms (Bartlett's theorem). -/
+theorem tendstoInDistribution_multivariateGaussian_of_tendsto_charFun_proj {k : ℕ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] {X : ℕ → Ω → EuclideanSpace ℝ (Fin k)}
+    {S : Matrix (Fin k) (Fin k) ℝ} (hS : S.PosSemidef) {V : Ω' → EuclideanSpace ℝ (Fin k)}
+    (hV : HasLaw V (multivariateGaussian 0 S) μ') (hmeas : ∀ n, AEMeasurable (X n) μ)
+    (hproj : ∀ t : EuclideanSpace ℝ (Fin k),
+      Tendsto (fun n => charFun (μ.map fun ω => (⟪X n ω, t⟫ : ℝ)) 1) atTop
+        (𝓝 (charFun (gaussianReal 0 (t ⬝ᵥ S *ᵥ t).toNNReal) 1))) :
+    TendstoInDistribution X atTop V (fun _ => μ) μ' := by
+  refine ⟨hmeas, hV.aemeasurable, ?_⟩
+  refine ProbabilityMeasure.tendsto_iff_tendsto_charFun.2 fun t => ?_
+  rw! [hV.map_eq]
+  simp only [ProbabilityMeasure.coe_mk]
+  rw [charFun_multivariateGaussian hS]
+  have hchar : (fun n => charFun (μ.map (X n)) t)
+      = fun n => charFun (μ.map fun ω => (⟪X n ω, t⟫ : ℝ)) 1 :=
+    funext fun n => charFun_proj (hmeas n) t
+  rw [hchar]
+  have hnn : (0 : ℝ) ≤ t ⬝ᵥ S *ᵥ t := by simpa using hS.dotProduct_mulVec_nonneg t
+  have hlim : charFun (gaussianReal 0 (t ⬝ᵥ S *ᵥ t).toNNReal) 1
+      = exp ((⟪t, (0 : EuclideanSpace ℝ (Fin k))⟫ : ℝ) * I - ↑(t ⬝ᵥ S *ᵥ t) / 2) := by
+    rw [charFun_gaussianReal, inner_zero_right]
+    push_cast [Real.coe_toNNReal _ hnn]
+    ring_nf
+  rw [← hlim]
+  exact hproj t
+
 end DeepWiki.TimeSeries
