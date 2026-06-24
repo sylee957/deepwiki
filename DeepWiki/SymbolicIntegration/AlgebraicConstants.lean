@@ -97,6 +97,28 @@ theorem linearDependentOverConst_of_dependent_iterDeriv {n : ℕ} (y c : Fin n �
         rw [Fin.sum_univ_succAbove _ j₀, hderj₀, zero_mul, zero_add] at hrow
         simpa [Fin.val_castSucc] using hrow
 
+/-- **Lemma 3.3.5** (§3.3), full converse, all `n`: a vanishing Wronskian forces the `yⱼ` to be
+linearly dependent *over the constants* `Const_D F` — a nonzero constant tuple `c` with
+`∑ⱼ cⱼ·yⱼ = 0`. (The classical analysis test, proved purely algebraically.) -/
+theorem linearDependentOverConst_of_wronskian_eq_zero {n : ℕ} [NeZero n] (y : Fin n → F)
+    (h : wronskian y = 0) : linearDependentOverConst y := by
+  obtain ⟨c, hcne, hrows⟩ := wronskian_eq_zero_dependent_iterDeriv y h
+  exact linearDependentOverConst_of_dependent_iterDeriv y c hcne hrows
+
+/-- **Lemma 3.3.5** (§3.3), full statement: for `y₁,…,yₙ ∈ F`, the Wronskian vanishes iff the
+`yⱼ` are linearly dependent over the constants `Const_D F`. -/
+theorem wronskian_eq_zero_iff_linearDependentOverConst {n : ℕ} [NeZero n] (y : Fin n → F) :
+    wronskian y = 0 ↔ linearDependentOverConst y := by
+  refine ⟨linearDependentOverConst_of_wronskian_eq_zero y, ?_⟩
+  rintro ⟨c, hc, hcne, hdep⟩
+  exact wronskian_eq_zero_of_linearDependent y c hc hcne hdep
+
+/-- **Lemma 3.3.5** contrapositive: the Wronskian is nonzero iff the `yⱼ` are linearly
+*independent* over the constants. -/
+theorem wronskian_ne_zero_iff_not_linearDependentOverConst {n : ℕ} [NeZero n] (y : Fin n → F) :
+    wronskian y ≠ 0 ↔ ¬ linearDependentOverConst y :=
+  (wronskian_eq_zero_iff_linearDependentOverConst y).not
+
 end Wronskian
 
 end DeepWiki.SymbolicIntegration
