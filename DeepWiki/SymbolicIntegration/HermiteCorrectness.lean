@@ -2705,3 +2705,63 @@ theorem list_sum_am_div_const {α : Type*} (l : List α) (f : α → ℚ[X]) (d 
   | nil => simp
   | cons hd tl ih =>
     rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, map_add, add_div]
+
+/-- **The per-factor `Afinal`** of `hermiteReduce`'s `g`-fold: the residual numerator
+`(hermiteInner fuel Vi Uᵢ (i−1) A qzero).2` left over the radical-reduced denominator after peeling. -/
+def afinalIncr (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) : CPoly :=
+  let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
+  let U := cdiv fuel D Vi_pow
+  (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).2
+
+/-- **The per-factor residual numerator over `D`** `residNumIncr fuel A D (Vi, i) = Afinalᵢ·Vi^{i−1}`:
+the polynomial numerator the factor `(Vi, i)` contributes to the single-fraction-over-`D` residual
+`am (Σᵢ Afinalᵢ·Vi^{i−1})/am D`. -/
+noncomputable def residNumIncr (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) : ℚ[X] :=
+  toPoly (afinalIncr fuel A D Vi) * toPoly Vi.1 ^ (Vi.2 - 1)
+
+open scoped Differential in
+/-- **The total `g`-fold residual as a single fraction over `D`**: under per-factor hypotheses
+(`hstep`, the conclusion of `glocIncr_residual` recast over `D` by `glocResidDen_eq_over_D`) for every
+kept factor `(Vi, i)`, the entire residual of `hermiteReduce`'s `g`-fold is
+`am A/am D − (toQFun g)′ = am R/am D`, where `R = C(1−n)·A + Σ_{kept} residNumIncr` is a single
+polynomial (`n` = #kept). This is the honest single-fraction-over-`D` form of the multi-factor
+interference: the whole fold residual is one polynomial fraction over the global `D`; the remaining
+content (clearing to denominator `Dstar`) is the divisibility `am (D/Dstar) ∣ am R`. -/
+theorem total_fold_residual_over_D (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ))
+    (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+        - (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+      = algebraMap ℚ[X] (RatFunc ℚ)
+          (Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ)) * toPoly A
+            + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
+        / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  set T := am (toPoly A) / am (toPoly D) with hT
+  set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept
+  set n := kept.length with hn
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  have hd : am (toPoly D) ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
+  -- apply `total_fold_residual` with `resid Vi = am (residNumIncr Vi)/am D`.
+  have htot := total_fold_residual fuel A D factors T
+    (fun Vi => am (residNumIncr fuel A D Vi) / am (toPoly D)) hV
+    (fun Vi hViF h2 => hstep Vi hViF h2)
+  rw [← hkept, ← hn] at htot
+  rw [htot]
+  -- the residual sum over the common denominator `am D`.
+  rw [list_sum_am_div_const kept (residNumIncr fuel A D) (am (toPoly D))]
+  -- the `(1 − n)·T` overcounting term as a fraction over `am D`.
+  rw [map_add]
+  -- `am (C(1−n)·A) = (1 − n)·am A` and `n • T = n·am A/am D`.
+  have hCcast : am (Polynomial.C (1 - (n : ℚ))) = 1 - (n : RatFunc ℚ) := by
+    rw [hamdef, ← Polynomial.algebraMap_eq, ← IsScalarTower.algebraMap_apply ℚ ℚ[X] (RatFunc ℚ),
+      map_sub, map_one, map_natCast]
+  have hC : am (Polynomial.C (1 - (n : ℚ)) * toPoly A) = (1 - (n : RatFunc ℚ)) * am (toPoly A) := by
+    rw [map_mul, hCcast]
+  rw [hC, show n • T = (n : RatFunc ℚ) * T from by rw [nsmul_eq_mul], hT]
+  field_simp
+  ring
