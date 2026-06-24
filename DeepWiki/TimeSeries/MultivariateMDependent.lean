@@ -168,4 +168,32 @@ theorem tendstoInDistribution_sampleMean_inner {d m : ℕ} [IsProbabilityMeasure
     (fun t => integral_inner_eq_zero lam (fun i => (hmem t i).integrable (by norm_num))
       fun i => hcenter t i) hG
 
+/-- **The multivariate central limit theorem for `m`-dependent processes** (the vector form of
+Brockwell–Davis Theorem 6.4.2, the Bartlett engine): a strictly-stationary, centered, `L²`, vector
+`m`-dependent process `Y` has normalized partial sums `√n · (n⁻¹ ∑ₜ Yₜ)` converging in distribution to
+`N(0, S)` where `S = longRunCovMatrix Y μ`. Proven by the Cramér–Wold device: each one-dimensional
+projection is governed by the 1-D `m`-dependent CLT (`tendstoInDistribution_sampleMean_inner`), and Lévy's
+theorem + the scaled-Gaussian law + the projection linearity match the per-direction characteristic
+functions. (`PosSemidef` of `S` — the long-run covariance — is taken as a hypothesis.) -/
+theorem IsMDependent.tendstoInDistribution_multivariate {d m : ℕ} [IsProbabilityMeasure μ]
+    {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)} {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] (hmdep : IsMDependent m Y μ) (hstat : IsStrictlyStationary Y μ)
+    (hmeas : ∀ t, Measurable (Y t)) (hmem : ∀ t i, MemLp (fun ω => Y t ω i) 2 μ)
+    (hcenter : ∀ t i, ∫ ω, Y t ω i ∂μ = 0) (hpsd : (longRunCovMatrix Y μ).PosSemidef)
+    {V : Ω' → EuclideanSpace ℝ (Fin d)}
+    (hV : HasLaw V (multivariateGaussian 0 (longRunCovMatrix Y μ)) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => (Real.sqrt n : ℝ) • ((n : ℝ)⁻¹ • ∑ t ∈ Finset.range n, Y (t : ℤ) ω))
+      atTop V (fun _ => μ) μ' := by
+  refine tendstoInDistribution_multivariateGaussian_of_tendsto_charFun_proj hpsd hV
+    (fun n => by fun_prop) fun lam => ?_
+  have hG : HasLaw (id : ℝ → ℝ) (gaussianReal 0 1) (gaussianReal 0 1) :=
+    ⟨aemeasurable_id, Measure.map_id⟩
+  have hpp := tendstoInDistribution_sampleMean_inner hmdep hstat hmeas hmem hcenter hG lam
+  have hlevy := ProbabilityMeasure.tendsto_iff_tendsto_charFun.mp hpp.tendsto 1
+  simp only [ProbabilityMeasure.coe_mk] at hlevy
+  rw [(hasLaw_sqrt_smul_gaussian (v := lam ⬝ᵥ longRunCovMatrix Y μ *ᵥ lam) hG).map_eq] at hlevy
+  simp_rw [inner_smul_sampleMean_eq]
+  exact hlevy
+
 end DeepWiki.TimeSeries
