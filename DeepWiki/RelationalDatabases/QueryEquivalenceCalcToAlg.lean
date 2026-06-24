@@ -129,4 +129,33 @@ theorem restrict_envToTuple_cons {Ω : Finset Att} {Γ : Ctx Att} (hd : Disjoint
   have hne : a.val ∉ Ω := Finset.disjoint_right.mp hd a.property
   simp only [Tuple.restrict, envToTuple, dif_neg hne]
 
+/-- **Well-scoped** condition: every existentially bound scheme is disjoint from its context (the
+freshness the book's renaming `ρ` provides), so the flattened contexts stay clash-free. -/
+def WellScoped : {Γ : Ctx Att} → FOCond ι sch Val Γ → Prop
+  | _, .relA _ _ => True
+  | _, .compA _ _ => True
+  | _, .agreeA _ _ _ => True
+  | _, .neg C => WellScoped C
+  | _, .and C D => WellScoped C ∧ WellScoped D
+  | _, .or C D => WellScoped C ∧ WellScoped D
+  | Γ, .ex Ω C => Disjoint Ω (flattenCtx Γ) ∧ WellScoped C
+
+/-- Split a flat row over the product scheme back into an environment (the inverse of `envToTuple`):
+each variable's tuple is the row restricted to that variable's scheme. -/
+def splitEnv : (Γ : Ctx Att) → Tuple (flattenCtx Γ) Val → Env Val Γ
+  | [], _ => PUnit.unit
+  | _ :: Γ, flat =>
+      (flat.restrict Finset.subset_union_left, splitEnv Γ (flat.restrict Finset.subset_union_right))
+
+/-- `envToTuple` is a left inverse of `splitEnv`: re-gluing a split row recovers it. -/
+theorem envToTuple_splitEnv : (Γ : Ctx Att) → (flat : Tuple (flattenCtx Γ) Val) →
+    envToTuple (splitEnv Γ flat) = flat
+  | [], flat => by funext a; exact absurd a.property (Finset.notMem_empty a.val)
+  | Ω :: Γ, flat => by
+      funext a
+      simp only [splitEnv, envToTuple]
+      by_cases h : a.val ∈ Ω
+      · rw [dif_pos h]; rfl
+      · rw [dif_neg h, envToTuple_splitEnv Γ (flat.restrict Finset.subset_union_right)]; rfl
+
 end DeepWiki
