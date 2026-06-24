@@ -2129,4 +2129,26 @@ theorem hQ_ex241 : ∀ l ≤ 1,
     rw [hdLHS, hRHSdeg, hmuldeg] at hdeg
     omega
 
+/-! ### The nonzero `φ`-images `Φ M_gcd ≠ 0`, `Φ M ≠ 0` (Ex 2.4.1)
+The correct bridge `isSimilar_mapRingHom_of_irreducible` needs the `φ`-images nonzero. The computable LRT
+output `lrtGcdCompute 30 3 cR241 cA241 cD241 = [[0,-4],[-3],[0,2],[1]]` (`lrtGcd_ex241`) is monic in `x`
+(leading coefficient `[1]`), so its `φ`-image's degree-3 `x`-coefficient is `φ 1 = 1 ≠ 0`. From the unit
+relation `Φ M_gcd = C(unit)·Φ M` this also gives `Φ M ≠ 0`. -/
+
+/-- **`Φ (toBPoly (lrtGcdCompute …)) ≠ 0`** (Ex 2.4.1): the `φ`-image of the computable LRT log argument is
+nonzero — its degree-3 `x`-coefficient is `φ241 (toPoly [1]) = φ241 1 = 1 ≠ 0` (using `lrtGcd_ex241`,
+`[[0,-4],[-3],[0,2],[1]]`, leading coefficient `[1]`). -/
+theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
+    (Polynomial.mapRingHom φ241) (toBPoly
+      (lrtGcdCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241)) ≠ 0 := by
+  rw [natDegree_toBPoly_chainG3_ex241]
+  intro h
+  have hcoeff : ((Polynomial.mapRingHom φ241) (toBPoly
+      (lrtGcdCompute 30 3 cR241 cA241 cD241))).coeff 3 = 0 := by rw [h]; simp
+  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, toBPoly_coeff] at hcoeff
+  -- (toBPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
+  rw [show ([[0, -4], [-3], [0, 2], [1]] : BPoly).getD 3 [] = [1] from rfl] at hcoeff
+  rw [show toPoly ([1] : CPoly) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  exact one_ne_zero hcoeff
+
 end DeepWiki.SymbolicIntegration.Compute
