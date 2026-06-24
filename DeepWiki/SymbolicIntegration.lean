@@ -64,3 +64,4 @@ import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
 import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
+import DeepWiki.SymbolicIntegration.ComputableLogPartTower
