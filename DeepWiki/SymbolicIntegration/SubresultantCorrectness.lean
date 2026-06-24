@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputeCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
+import DeepWiki.SymbolicIntegration.Exercise22Compute
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
@@ -2325,5 +2326,167 @@ example
     (by rw [natDegree_toBPoly_chainG3_ex241]; exact hLne)
   rw [natDegree_toBPoly_chainG3_ex241, lrtGcd_ex241] at h
   exact h
+
+/-! ### Exercise 2.2: the LRT subresultant chain at the squarefree index `j = 1` (§2.9, p.72)
+The same closure for **Exercise 2.2** (`A = 8x⁹+…`, `D = x¹⁰−2x⁸−…`, both in `Exercise22Compute`). The
+Rothstein–Trager resultant `R = res_x(D, A − t·D')` is the **degree-10** integer polynomial `cR22`, and
+it is **squarefree** (`ex_2_2_resultant_squarefree`). So *every* residue has multiplicity `1`, the LRT
+subresultant index is `j = 1`, and the per-residue gcd `S₁ = x + c₀(t)` is monic-linear in `x`
+(`ex_2_2_S1_monic_linear`). The subresultant PRS has the **distinct** `x`-degrees `[10,9,…,1,0]` (indices
+`0..10`), so the degree-`1` element is the chain index `m + 2 = 9` (`m = 7`); the regular LRT index is
+`(toBPoly (chainG 60 hP hQ 9)).natDegree = 1`. We discharge every chain-regularity input over `ℚ[t]` by
+`native_decide` (the `[10,…,0]` distinct-degree chain), mirroring Example 2.4.1 at the easier squarefree
+multiplicity `1`. -/
+
+/-- The Exercise 2.2 chain abbreviation: `hP = liftCtoBPoly cD22`, `hQ = bArgAmtD' cA22 cD22`. -/
+private abbrev hP : BPoly := liftCtoBPoly cD22
+private abbrev hQ : BPoly := bArgAmtD' cA22 cD22
+
+/-- **The degree-1 element's `x`-degree is 1**: `(toBPoly (chainG 60 hP hQ 9)).natDegree = 1` (the regular
+LRT index `j = m+2 = 9` ↦ degree `1`, the squarefree per-residue gcd `x + c₀(t)`). Via `bdeg_eq_natDegree`
+and `native_decide` on `bdeg (chainG … 9)`. -/
+theorem natDegree_toBPoly_chainG9_ex22 :
+    (toBPoly (chainG 60 hP hQ 9)).natDegree = 1 := by
+  rw [← bdeg_eq_natDegree]
+  show bdeg (goState 60 (hP, hQ, [-1], bdeg hP - bdeg hQ) 9).1 = 1
+  native_decide
+
+/-- `(toPoly cD22).natDegree = 10`: `D = x¹⁰−2x⁸−…` has degree 10 (via `cdeg_eq_natDegree`). -/
+theorem natDegree_toPoly_cD22 : (toPoly cD22).natDegree = 10 := by
+  rw [← cdeg_eq_natDegree]; decide
+
+/-- **`hd0` for Ex 2.2**: `(toBPoly (chainG 60 hP hQ 0)).natDegree = (toPoly cD22).natDegree` (both 10). -/
+theorem hd0_ex22 :
+    (toBPoly (chainG 60 hP hQ 0)).natDegree = (toPoly cD22).natDegree := by
+  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD22]
+  show bdeg (goState 60 (hP, hQ, [-1], bdeg hP - bdeg hQ) 0).1 = 10
+  native_decide
+
+/-- **`hd1` for Ex 2.2**: `(toBPoly (chainG 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree − 1`
+(both 9). -/
+theorem hd1_ex22 :
+    (toBPoly (chainG 60 hP hQ 1)).natDegree = (toPoly cD22).natDegree - 1 := by
+  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD22]
+  show bdeg (goState 60 (hP, hQ, [-1], bdeg hP - bdeg hQ) 1).1 = 10 - 1
+  native_decide
+
+/-- **Chain nonzero through index 9**: `chainG 0 … chainG 9` are all nonzero (degrees `10,…,1`). -/
+theorem chainG_ne_zero_ex22 :
+    ∀ i ≤ 9, ¬ bisZero (chainG 60 hP hQ i) = true := by
+  simp only [chainG]; native_decide
+
+/-- **`hβcn` for Ex 2.2**: the β-divisors `chainBt 0 … chainBt 7` are nonzero `ℚ[t]` lists. -/
+theorem hβcn_ex22 :
+    ∀ l ≤ 7, cnorm (chainBt 60 hP hQ l) ≠ [] := by
+  intro l hl; interval_cases l <;>
+    · simp only [chainBt]; native_decide
+
+/-- **`hβ0` for Ex 2.2**: the β-divisors `chainBt 0 … chainBt 7` read to nonzero `ℚ[t]` polynomials
+(`toPoly ≠ 0`), via `cnorm_eq_nil_iff`. -/
+theorem hβ0_ex22 :
+    ∀ l ≤ 7, toPoly (chainBt 60 hP hQ l) ≠ 0 := by
+  intro l hl h
+  exact hβcn_ex22 l hl ((cnorm_eq_nil_iff _).mpr h)
+
+/-- **`hdiv` for Ex 2.2** (Collins β-divisibility, concrete): `chainBt l` divides every `x`-coefficient
+of the pseudo-remainder `prem (chainG l) (chainG (l+1))` exactly (`cmod` reads to 0), via
+`cnorm_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
+theorem hdiv_ex22 :
+    ∀ l ≤ 7, ∀ a ∈ bpsremainder 60 (chainG 60 hP hQ l) (chainG 60 hP hQ (l + 1)),
+      toPoly (cmod 60 a (chainBt 60 hP hQ l)) = 0 := by
+  intro l hl a ha
+  rw [← cnorm_eq_nil_iff]
+  revert a ha
+  interval_cases l <;>
+    · simp only [chainBt, chainG]; native_decide
+
+/-- **`hlc` for Ex 2.2**: the leading `x`-coefficient of `chainG (l+1)` (`l ≤ 7`) is nonzero — via
+`toPoly_blc_eq_coeff` + `toPoly_blc_ne_zero` (the element is nonzero). -/
+theorem hlc_ex22 :
+    ∀ l ≤ 7, (toBPoly (chainG 60 hP hQ (l + 1))).coeff
+      (toBPoly (chainG 60 hP hQ (l + 1))).natDegree ≠ 0 := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
+  exact toPoly_blc_ne_zero _ (chainG_ne_zero_ex22 (l + 1) (by omega))
+
+/-- **`hcb` for Ex 2.2**: the `x`-degrees strictly decrease (`chainG (l+2)` below `chainG (l+1)`,
+`l ≤ 7`: `8<9, …, 1<2`), via `bdeg_eq_natDegree`. -/
+theorem hcb_ex22 :
+    ∀ l ≤ 7, (toBPoly (chainG 60 hP hQ (l + 2))).natDegree
+      < (toBPoly (chainG 60 hP hQ (l + 1))).natDegree := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  interval_cases l <;>
+    · simp only [chainG]; native_decide
+
+/-- **`hjlt` for Ex 2.2**: the degree-1 element `chainG 9` is strictly below `chainG (l+2)` for `l<7`
+(`1 < 8,7,…,2`), via `bdeg_eq_natDegree`. -/
+theorem hjlt_ex22 :
+    ∀ l < 7, (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree
+      < (toBPoly (chainG 60 hP hQ (l + 2))).natDegree := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  interval_cases l <;>
+    · simp only [chainG]; native_decide
+
+/-- **`hCne` for Ex 2.2**: the degree-1 chain element `chainG 9` is nonzero (`toBPoly ≠ 0`), via
+`bisZero_iff_toBPoly_eq_zero`. -/
+theorem hCne_ex22 : toBPoly (chainG 60 hP hQ (7 + 2)) ≠ 0 := by
+  rw [Ne, ← bisZero_iff_toBPoly_eq_zero]
+  exact chainG_ne_zero_ex22 9 (by omega)
+
+/-- **The degree-1 filter of `subresPRS` is `[chainG 9]`** (the singleton-filter, by `native_decide`):
+the `[10,9,…,1,0]` chain degrees are all distinct, so the degree-1 nonzero filter of `subresPRS 60 hP hQ`
+is exactly the single element `chainG 9`. Direct `native_decide` (both sides computable). -/
+theorem subresPRS_filter_singleton_ex22 :
+    (subresPRS 60 hP hQ).filter
+        (fun R => decide (bdeg R = (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree ∧ ¬ bisZero R))
+      = [chainG 60 hP hQ (7 + 2)] := by
+  rw [natDegree_toBPoly_chainG9_ex22]
+  show (subresPRS 60 hP hQ).filter (fun R => decide (bdeg R = 1 ∧ ¬ bisZero R))
+      = [(goState 60 (hP, hQ, [-1], bdeg hP - bdeg hQ) (7 + 2)).1]
+  native_decide
+
+/-- **`hfilt` for Ex 2.2**: the degree-1 filter of `bsubresultantGcd 60 1 hP hQ` returns `chainG 9`
+(under `toBPoly`). From the singleton filter `subresPRS_filter_singleton_ex22` via
+`toBPoly_bsubresultantGcd_eq_of_filter_singleton`. -/
+theorem hfilt_ex22 :
+    toBPoly (bsubresultantGcd 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ)
+      = toBPoly (chainG 60 hP hQ (7 + 2)) :=
+  toBPoly_bsubresultantGcd_eq_of_filter_singleton 60 hP hQ (chainG 60 hP hQ) 7
+    subresPRS_filter_singleton_ex22
+
+/-- **`hg` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant is nonzero
+(`¬ cisZero (bcontentX 60 (bsubresultantGcd 60 1 hP hQ))`). -/
+theorem hg_ex22 :
+    ¬ cisZero (bcontentX 60 (bsubresultantGcd 60
+      (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ)) = true := by
+  rw [natDegree_toBPoly_chainG9_ex22]; native_decide
+
+/-- **`hgcn` for Ex 2.2**: the `ℚ[t]`-content of the degree-1 raw subresultant has nonempty `cnorm`. -/
+theorem hgcn_ex22 :
+    cnorm (bcontentX 60 (bsubresultantGcd 60
+      (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ [] := by
+  rw [natDegree_toBPoly_chainG9_ex22]; native_decide
+
+/-- **`hg0` for Ex 2.2**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
+`cnorm_eq_nil_iff`. -/
+theorem hg0_ex22 :
+    toPoly (bcontentX 60 (bsubresultantGcd 60
+      (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ)) ≠ 0 := by
+  intro h; exact hgcn_ex22 ((cnorm_eq_nil_iff _).mpr h)
+
+/-- **`hrem` for Ex 2.2**: the `ℚ[t]`-content divides every `x`-coefficient of the degree-1 raw
+subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
+theorem hrem_ex22 :
+    ∀ a ∈ bnorm (bsubresultantGcd 60
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ),
+      toPoly (cmod 60 a (bcontentX 60 (bsubresultantGcd 60
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ))) = 0 := by
+  intro a ha
+  rw [← cnorm_eq_nil_iff]
+  revert a ha
+  rw [natDegree_toBPoly_chainG9_ex22]
+  native_decide
 
 end DeepWiki.SymbolicIntegration.Compute
