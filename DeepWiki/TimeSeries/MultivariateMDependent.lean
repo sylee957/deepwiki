@@ -44,4 +44,26 @@ theorem summable_covariance_component_of_mDependent {d m : ℕ} [IsFiniteMeasure
     exact covariance_component_eq_zero_of_mDependent h hmem (by omega : k + (m : ℤ) < 0) j i
   · exact covariance_component_eq_zero_of_mDependent h hmem (by omega : (0 : ℤ) + m < k) i j
 
+/-- **Variance identification:** the long-run variance of a projected vector `m`-dependent process is the
+quadratic form of the long-run cross-covariance matrix —
+`∑'ₖ acvf⟪Y,λ⟫(k) = ∑ᵢ ∑ⱼ λᵢ λⱼ (∑'ₖ cov[Yₖⁱ, Y₀ʲ])`. Each lag's autocovariance expands bilinearly
+(`covariance_inner_inner`) and the lag-sum commutes with the finite coordinate sums (`tsum_sum`, justified
+by `summable_covariance_component_of_mDependent`). This is the variance feeding the Cramér–Wold lift: it
+equals `λ ⬝ᵥ S λ` with `Sᵢⱼ = ∑'ₖ cov[Yₖⁱ, Y₀ʲ]`. -/
+theorem tsum_acvfStat_inner_eq {d m : ℕ} [IsFiniteMeasure μ]
+    {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)} (h : IsMDependent m Y μ)
+    (hmem : ∀ t i, MemLp (fun ω => Y t ω i) 2 μ) (lam : EuclideanSpace ℝ (Fin d)) :
+    ∑' k, acvfStat (fun t ω => (⟪Y t ω, lam⟫ : ℝ)) μ k
+      = ∑ i, ∑ j, lam i * lam j * ∑' k, cov[fun ω => Y k ω i, fun ω => Y 0 ω j; μ] := by
+  have hbil : ∀ k, acvfStat (fun t ω => (⟪Y t ω, lam⟫ : ℝ)) μ k
+      = ∑ i, ∑ j, lam i * lam j * cov[fun ω => Y k ω i, fun ω => Y 0 ω j; μ] := fun k => by
+    rw [acvfStat_apply]; exact covariance_inner_inner lam (fun i => hmem k i) fun j => hmem 0 j
+  simp_rw [hbil]
+  rw [Summable.tsum_finsetSum fun i _ => summable_sum fun j _ =>
+    (summable_covariance_component_of_mDependent h hmem i j).mul_left _]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Summable.tsum_finsetSum fun j _ =>
+    (summable_covariance_component_of_mDependent h hmem i j).mul_left _]
+  exact Finset.sum_congr rfl fun j _ => tsum_mul_left
+
 end DeepWiki.TimeSeries
