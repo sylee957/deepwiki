@@ -289,6 +289,24 @@ theorem associated_prod_primeFactors_pow {p : K[X]} (hp : p ≠ 0) :
 
 end GeneralSplitFactor
 
+section GcdDerivAssoc
+variable {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential R]
+
+/-- The gcd-with-derivative is an associate invariant: `Associated p q → gcd(p, Dp) ~ gcd(q, Dq)`.
+(`q = u·p` for a unit `u`; `gcd(u·p, D(u·p)) ~ gcd(u, Du)·gcd(p, Dp)` by the two-factor formula, and
+`gcd(u, Du)` is a unit. This is the bridge from `p` to its prime-power decomposition.) -/
+theorem associated_gcd_deriv_of_associated {p q : R} (h : Associated p q) :
+    Associated (gcd p p′) (gcd q q′) := by
+  obtain ⟨u, rfl⟩ := h
+  have hugcd : IsUnit (gcd p (u : R)) := isUnit_of_dvd_unit (gcd_dvd_right _ _) u.isUnit
+  have hbase := associated_gcd_deriv_mul (a := p) (b := (u : R)) hugcd
+  have huu : IsUnit (gcd (u : R) ((u : R)′)) :=
+    isUnit_of_dvd_unit (gcd_dvd_left _ _) u.isUnit
+  refine (hbase.trans ?_).symm
+  exact (associated_mul_unit_right _ _ huu).symm
+
+end GcdDerivAssoc
+
 section SplitSquarefreeFactor
 variable {K : Type*} [Field K] [Differential K]
 
