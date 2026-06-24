@@ -135,4 +135,23 @@ theorem isAsymptoticallyNormal_inner_of_tendstoInDistribution {k : ℕ} [IsProba
   refine IsAsymptoticallyNormal.of_tendstoInDistribution_gaussianReal hpos (hproj.fun_comp hV) ?_
   simpa [Function.comp_def] using h.continuous_comp (g := fun x => (⟪x, lam⟫ : ℝ)) (by fun_prop)
 
+/-- **Every linear combination of the normalized i.i.d. vector sum is asymptotically normal:** for
+centered i.i.d. `L²` random vectors `Z` with covariance `S`, each projection
+`⟪(√n)⁻¹ ∑ₖ Zₖ, lam⟫` is asymptotically normal `AN(0, lam ⬝ᵥ S lam)` (whenever that variance is positive).
+The multivariate CLT (`multivariate_iid_clt`, with the canonical identity Gaussian witness) fed through the
+marginal-AN bridge — the projection form of the multivariate CLT, the engine for delta-method applications
+such as the sample coefficient of variation. -/
+theorem isAsymptoticallyNormal_inner_iid_clt {k : ℕ} [IsProbabilityMeasure μ]
+    {Z : ℕ → Ω → EuclideanSpace ℝ (Fin k)} {S : Matrix (Fin k) (Fin k) ℝ} (hS : S.PosSemidef)
+    (hZmem : ∀ i, MemLp (Z i) 2 μ) (hindep : iIndepFun Z μ)
+    (hident : ∀ i, IdentDistrib (Z i) (Z 0) μ μ) (hcenter : ∫ ω, Z 0 ω ∂μ = 0)
+    (hcov : ∀ t : EuclideanSpace ℝ (Fin k), ∫ ω, (⟪Z 0 ω, t⟫ : ℝ) ^ 2 ∂μ = t ⬝ᵥ S *ᵥ t)
+    (lam : EuclideanSpace ℝ (Fin k)) (hpos : 0 < lam ⬝ᵥ S *ᵥ lam) :
+    IsAsymptoticallyNormal (fun n ω => (⟪(√n : ℝ)⁻¹ • ∑ k ∈ Finset.range n, Z k ω, lam⟫ : ℝ))
+      (fun _ => 0) (fun _ => Real.sqrt (lam ⬝ᵥ S *ᵥ lam)) μ := by
+  have hV : HasLaw (id : EuclideanSpace ℝ (Fin k) → EuclideanSpace ℝ (Fin k))
+      (multivariateGaussian 0 S) (multivariateGaussian 0 S) := ⟨aemeasurable_id, Measure.map_id⟩
+  exact isAsymptoticallyNormal_inner_of_tendstoInDistribution hS hV
+    (multivariate_iid_clt hS hZmem hindep hident hcenter hcov hV) lam hpos
+
 end DeepWiki.TimeSeries
