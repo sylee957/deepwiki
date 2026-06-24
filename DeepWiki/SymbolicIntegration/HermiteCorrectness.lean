@@ -3088,3 +3088,55 @@ theorem glocIncr_den_isRelPrime (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) (
   obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi
   rw [hm]
   exact hP.pow_right
+
+/-! ### `Q`-regularity: a denominator-coprimality abstraction for the order argument
+
+To prove the interference divisibility `W ∣ R` by a per-factor `Vk`-adic order argument, we track when a
+`RatFunc ℚ` has **no pole at a prime `Q`** — i.e. is representable `am p/am q` with `q` coprime to `Q`.
+This `IsQRegular Q` predicate is closed under `+` (common denominator stays coprime) and under the
+`RatFunc` derivative (the quotient rule squares the denominator, keeping it coprime to `Q`), and the key
+**extraction** lemma reads a divisibility off it: if `am r/am D` is `Q`-regular and `Q^e ∣ D`, then
+`Q^e ∣ r` — the numerator carries the pole order the regular function refuses. -/
+
+/-- **`Q`-regular**: a `RatFunc ℚ` representable `am p/am q` with `q ≠ 0` coprime to `Q` — no pole at
+`Q`. The denominator-coprimality witness driving the per-factor order argument for `W ∣ R`. -/
+def IsQRegular (Q : ℚ[X]) (f : RatFunc ℚ) : Prop :=
+  ∃ p q : ℚ[X], q ≠ 0 ∧ IsRelPrime Q q ∧
+    f = algebraMap ℚ[X] (RatFunc ℚ) p / algebraMap ℚ[X] (RatFunc ℚ) q
+
+/-- `0` is `Q`-regular (denominator `1`). -/
+theorem isQRegular_zero (Q : ℚ[X]) : IsQRegular Q 0 :=
+  ⟨0, 1, one_ne_zero, isRelPrime_one_right, by simp⟩
+
+/-- **`Q`-regular is closed under `+`**: over the common denominator `q₁·q₂` (coprime to `Q` since each
+`qᵢ` is, by `IsRelPrime.mul_right`). The sum of two pole-free-at-`Q` functions is pole-free at `Q`. -/
+theorem IsQRegular.add {Q : ℚ[X]} {f g : RatFunc ℚ} (hf : IsQRegular Q f) (hg : IsQRegular Q g) :
+    IsQRegular Q (f + g) := by
+  obtain ⟨p1, q1, hq1, hQ1, hf⟩ := hf
+  obtain ⟨p2, q2, hq2, hQ2, hg⟩ := hg
+  refine ⟨p1 * q2 + q1 * p2, q1 * q2, mul_ne_zero hq1 hq2, hQ1.mul_right hQ2, ?_⟩
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ)
+  have ha1 : am q1 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq1
+  have ha2 : am q2 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq2
+  rw [hf, hg, map_add, map_mul, map_mul, map_mul]
+  rw [div_add_div _ _ ha1 ha2, mul_comm (am q1) (am p2)]
+
+/-- **Order extraction from `Q`-regularity**: if the fraction `am r/am D` is `Q`-regular, `D ≠ 0`, and
+`Q^e ∣ D`, then `Q^e ∣ r`. Cross-multiplying `r·q = p·D` (the regular representation), `Q^e ∣ D ∣ p·D =
+r·q`; coprimality `IsRelPrime (Q^e) q` then transfers the power onto `r`. The numerator absorbs the pole
+order the `Q`-regular function declines to carry. -/
+theorem dvd_num_of_isQRegular {Q r D : ℚ[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q ^ e ∣ D)
+    (hf : IsQRegular Q (algebraMap ℚ[X] (RatFunc ℚ) r / algebraMap ℚ[X] (RatFunc ℚ) D)) :
+    Q ^ e ∣ r := by
+  obtain ⟨p, q, hq, hQ, heq⟩ := hf
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ)
+  have had : am D ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
+  have haq : am q ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq
+  have hcross : am (r * q) = am (p * D) := by
+    rw [div_eq_div_iff had haq] at heq
+    rw [map_mul, map_mul]
+    linear_combination heq
+  have hpoly : r * q = p * D := hinj hcross
+  exact (hQ.pow_left).dvd_of_dvd_mul_right (by rw [hpoly]; exact hQe.mul_left p)
