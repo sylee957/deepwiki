@@ -1,4 +1,5 @@
 import DeepWiki.RelationalDatabases.RelationalAlgebra
+import DeepWiki.RelationalDatabases.RelationalAlgebraExpr
 
 /-! # SQL (set-operation level)
 The structure of an SQL query (§2.3.1): an elementary query (a `Select … From … Where …` view
@@ -106,5 +107,34 @@ theorem mem_evalElem {Ω₀ Ω : Finset Att} (q : ElemQuery Att Val Ω₀ Ω) (r
   constructor
   · rintro ⟨t, ⟨htr, hc⟩, rfl⟩; exact ⟨t, htr, hc, rfl⟩
   · rintro ⟨t, htr, hc, rfl⟩; exact ⟨t, ⟨htr, hc⟩, rfl⟩
+
+/-! ## Reduction of the relational algebra to SQL (§2.5) -/
+
+variable [DecidableEq Att]
+
+/-- **Reduction of the algebra to SQL** (§2.5): translate an algebra expression to an SQL query —
+the set operations map to SQL `UNION`/`MINUS`, and every base or SPJ subexpression becomes an
+elementary query (here given by the view instance it produces). -/
+def algToSql : {Ω : Finset Att} → AlgExpr Att Val Ω → SqlQuery Att Val Ω
+  | _, .union e e' => .union (algToSql e) (algToSql e')
+  | _, .diff e e' => .minus (algToSql e) (algToSql e')
+  | _, .rel v => .elem v
+  | _, .comp f => .elem {t | f t}
+  | _, .proj h e => .elem (project h (evalAlg e))
+  | _, .sel P e => .elem (select P (evalAlg e))
+  | _, .join e e' => .elem (join (evalAlg e) (evalAlg e'))
+
+/-- The algebra-to-SQL reduction is correct: it preserves the view instance. -/
+theorem evalSql_algToSql : {Ω : Finset Att} → (e : AlgExpr Att Val Ω) →
+    evalSql (algToSql e) = evalAlg e
+  | _, .rel _ => by simp only [algToSql, evalSql_elem, evalAlg_rel]
+  | _, .comp _ => by simp only [algToSql, evalSql_elem, evalAlg_comp]
+  | _, .proj _ _ => by simp only [algToSql, evalSql_elem, evalAlg_proj]
+  | _, .sel _ _ => by simp only [algToSql, evalSql_elem, evalAlg_sel]
+  | _, .join _ _ => by simp only [algToSql, evalSql_elem, evalAlg_join]
+  | _, .union e e' => by
+      rw [algToSql, evalSql_union, evalSql_algToSql e, evalSql_algToSql e', evalAlg_union]
+  | _, .diff e e' => by
+      rw [algToSql, evalSql_minus, evalSql_algToSql e, evalSql_algToSql e', evalAlg_diff]
 
 end DeepWiki

@@ -46,8 +46,11 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   `evalFOExpr_algToFO` (algebra ⊆ calculus) — and the **safety-necessity** result
   `neg_relA_not_isAlgExpressible`: the complement `¬ R(t)` is not algebra-expressible, so the
   converse must restrict to safe formulas.)
-§2.5: the reduction of the relational algebra to SQL [infra].
-§2.6: the reduction of SQL to the tuple calculus [infra].
+§2.5: the reduction of the relational algebra to SQL is DONE (`algToSql` + `evalSql_algToSql`):
+  set operations map to SQL `UNION`/`MINUS`, base/SPJ subexpressions to elementary queries,
+  preserving the view instance.
+§2.6: the reduction of SQL to the tuple calculus [infra: needs SQL's elementary `Where`-condition
+  language translated to first-order conditions].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
 §2.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -245,5 +248,14 @@ abbrev sql_elem_query := @DeepWiki.ElemQuery
 
 /-- **§2.3.2**: the view instance of an elementary query (its reduction to project∘select). -/
 abbrev sql_elem_eval := @DeepWiki.evalElem
+
+/-! ## §2.5 Reduction of the relational algebra to SQL -/
+
+/-- **§2.5**: the reduction translating an algebra expression to an SQL query (set operations to
+`UNION`/`MINUS`, base/SPJ subexpressions to elementary queries). -/
+abbrev reduction_algToSql := @DeepWiki.algToSql
+
+/-- **§2.5**: correctness of the algebra-to-SQL reduction — it preserves the view instance. -/
+abbrev reduction_algToSql_correct := @DeepWiki.evalSql_algToSql
 
 end DeepWiki.Rdb
