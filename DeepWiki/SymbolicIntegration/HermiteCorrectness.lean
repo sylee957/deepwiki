@@ -2964,10 +2964,10 @@ theorem dvd_R_iff_dvd_resNumPrime {R resNum' gden W : ℚ[X]} (hgden : gden ≠ 
     have hg2 : gden * gden ≠ 0 := mul_ne_zero hgden hgden
     exact (mul_dvd_mul_iff_right hg2).mp h
 
-/-! ### Summary: the multi-factor interference invariant, reduced to ONE named divisibility
+/-! ### Summary: the multi-factor interference invariant, fully closed
 
-The multi-factor `hermiteReduce` `g`-fold correctness is now reduced to a **single** polynomial
-divisibility. The chain (all proven except the last):
+The multi-factor `hermiteReduce` `g`-fold correctness is now **fully proven** (no remaining
+divisibility hypothesis). The chain:
 
 * `foldl_cond_eq_foldl_glocList` — the conditional `g`-fold is a plain `qadd`-fold over the kept-factor
   increment list `glocList`.
@@ -2977,27 +2977,30 @@ divisibility. The chain (all proven except the last):
 * `total_fold_residual` / `total_fold_residual_over_D` — the whole fold residual `A/D − g′` is the
   **single** polynomial fraction `am R/am D` with `R = C(1−n)·A + Σᵢ residNumIncrᵢ` (`n = #kept`): the
   exact `(1−n)·T + Σ residᵢ` overcounting skeleton collapsed onto the common denominator `D`.
-* `toPoly_Dstar_dvd_D` (**proven** Yun radical clause) gives `Dstar ∣ D`, i.e. `D = Dstar·W`,
-  `W = D/Dstar`.
 * `am_div_D_eq_div_Dstar` — `am R/am D` clears to `am (R/W)/am Dstar` **iff** `W ∣ R`.
-* `hermiteReduce_residual_correct_multifactor` — assembles the above into
-  `am A/am D = (toQFun g)′ + am (R/W)/am Dstar`, **conditional only on `W ∣ R`**.
+* **The interference divisibility `W ∣ R`** (`W = ∏_{kept} Vk^{ik−1} = D/Dstar`) is **proven** by a
+  per-factor `Vk`-adic order argument:
+  - `IsQRegular Q` — a `RatFunc` with no pole at the prime `Q` (denominator coprime to `Q`); closed
+    under `+`, negation, list-sum, and the `RatFunc` derivative (`IsQRegular.add/.neg/.deriv`,
+    `isQRegular_list_sum`), with `dvd_num_of_isQRegular` reading `Q^e ∣ r` off `am r/am D` `Q`-regular +
+    `Q^e ∣ D`.
+  - `glocIncr_den_eq_pow` ⟹ `glocIncr_toQFun_isQRegular`: each `glocᵢ` has denominator a pure power of
+    `Vi`, so `glocᵢ′` is pole-free at every *other* factor `Vk`.
+  - `deriv_fold_sub_glocIncr_isQRegular`: `g′ − glocₖ′ = Σ_{i≠k} glocᵢ′` is therefore `Vk`-regular, and
+    `dvd_residNum_factor` reads `Vk^{ik−1} ∣ R` from `am (R − residNumIncrₖ)/am D = glocₖ′ − g′` being
+    `Vk`-regular (with `Vk^{ik} ∣ D`) plus `Vk^{ik−1} ∣ residNumIncrₖ`.
+  - `prod_dvd_residNum`: the per-factor bounds `Vk^{ik−1} ∣ R` assemble over the pairwise-coprime kept
+    powers (`list_prod_dvd_of_pairwise`) to the product `W = ∏ Vk^{ik−1} ∣ R`.
+* `hermiteReduce_residual_correct_multifactor` — the wrapper conditional on `W ∣ R`;
+  **`hermiteReduce_residual_correct_uncond'`** — the **fully unconditional** wrapper
+  `am A/am D = (toQFun g)′ + am (R/W)/am Dstar`, discharging `W ∣ R` internally via `prod_dvd_residNum`.
 * `residNum_eq_resNumPrime` + `dvd_R_iff_dvd_resNumPrime` — `R·gden² = resNum'`, so `W ∣ R ⟺
   W·gden² ∣ resNum'` (the algorithm's own cleared-identity cert), confirming consistency.
 
-**THE REMAINING WALL** is the single divisibility
-
-  `W ∣ R`,   `W = D/Dstar`,   `R = C(1−n)·A + Σ_{kept (Vi,i)} Afinalᵢ · Vi^{i−1}`,
-
-equivalently `W·gden² ∣ resNum'`. It is the genuine **multi-factor interference clearing**: each
-`Afinalᵢ` (the leftover numerator of `hermiteInner` over factor `i`) carries high powers of the *other*
-factors in its residual denominator `Uᵢ·Vi = D/Vi^{i−1}`, and only the *sum* `(1−n)·A + Σᵢ Afinalᵢ·Vi^{i−1}`
-cancels those high powers down to the radical `Dstar`. This cancellation is **not** implied by the
-per-factor `hermiteInner_spec_of` specifications alone (which constrain each `Afinalᵢ` only locally); it
-is the global partial-fraction content of Hermite-reduction correctness, decidably true per example
-(`hermite_ex221_Dstar_dvd` + the residual cert) but abstractly open. The single-repeated-factor case
-(`n = 1`, `W = ∏_{k≠i} Vk^{ik−1} = 1`, so `W ∣ R` is trivial) is the proven
-`hermiteReduce_residual_correct_single`. -/
+The earlier worry that this cancellation is "not implied by the per-factor specifications alone" is
+resolved: the order argument needs no per-factor `Afinalᵢ` divisibility — it confines each `Vk`-pole to
+factor `k`'s own residual identity (`glocₖ′`) via the `IsQRegular` localization of the *other* factors'
+derivatives. The single-repeated-factor case (`n = 1`, `W = 1`) is `hermiteReduce_residual_correct_single`. -/
 
 open scoped Differential in
 -- Hermite reduction, multi-factor wrapper (Bronstein §2.2/§2.5): the computable `hermiteReduce`
