@@ -45,4 +45,26 @@ theorem existsUnique_derivation_fractionRing [Differential K] [DifferentialAlgeb
 
 end FractionField
 
+section Transcendental
+variable {F : Type*} [Field F] [Differential F]
+
+omit [Differential F] in
+/-- **Theorem 3.2.2** (§3.2), uniqueness on `F(t)` (`t` transcendental): a derivation `Δ` on the
+rational-function field `K = F(t)` that extends `D` on `F` and sends `t` to a prescribed value
+(via the agreement of `Δ` with another such derivation on `F[t]`) is unique. Reduces the `F(t)`
+uniqueness to the `F[X]`-uniqueness `derivation_polynomial_ext` through the fraction field
+`K = FractionRing F[X]`. -/
+theorem unique_derivation_rationalFunction {K : Type*} [Field K] [Algebra F[X] K]
+    [IsFractionRing F[X] K] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (hC : ∀ c : F, Δ₁ (algebraMap F[X] K (C c)) = Δ₂ (algebraMap F[X] K (C c)))
+    (hX : Δ₁ (algebraMap F[X] K X) = Δ₂ (algebraMap F[X] K X)) : Δ₁ = Δ₂ := by
+  refine derivation_ext_fractionRing (R := F[X]) fun p => ?_
+  induction p using Polynomial.induction_on with
+  | C a => exact hC a
+  | add p q hp hq => rw [map_add, map_add, map_add, hp, hq]
+  | monomial n a ih =>
+    rw [pow_succ, ← mul_assoc, map_mul, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
+
+end Transcendental
+
 end DeepWiki.SymbolicIntegration
