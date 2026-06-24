@@ -2765,3 +2765,29 @@ theorem total_fold_residual_over_D (fuel : ℕ) (A D : CPoly) (factors : List (C
   rw [hC, show n • T = (n : RatFunc ℚ) * T from by rw [nsmul_eq_mul], hT]
   field_simp
   ring
+
+/-! ### Clearing the over-`D` fraction to denominator `Dstar` (the interference divisibility)
+
+`total_fold_residual_over_D` reduces the whole fold residual to `am R/am D`. Since the radical `Dstar`
+divides `D` (`toPoly_Dstar_dvd_D`/the Yun radical clause), write `D = Dstar·W`. Then `am R/am D = am
+(R/W)/am Dstar` **exactly when `W ∣ R`** — the single named interference divisibility. The lemma below
+performs this final cancellation: given `D = Dstar·W` and `W ∣ R`, the over-`D` fraction collapses to a
+polynomial fraction over `Dstar`. -/
+
+/-- **Clearing `am R/am D` to `am (R/W)/am Dstar`** given `D = Dstar·W` and `W ∣ R` (`W = D/Dstar`):
+the over-`D` residual fraction collapses to a fraction over the radical `Dstar`. The single divisibility
+`W ∣ R` is the entire remaining interference-clearing content. -/
+theorem am_div_D_eq_div_Dstar {R D Dstar W : ℚ[X]} (hD : D ≠ 0) (hDstar : Dstar ≠ 0)
+    (hW : D = Dstar * W) (hWR : W ∣ R) :
+    algebraMap ℚ[X] (RatFunc ℚ) R / algebraMap ℚ[X] (RatFunc ℚ) D
+      = algebraMap ℚ[X] (RatFunc ℚ) (R / W) / algebraMap ℚ[X] (RatFunc ℚ) Dstar := by
+  have hinj := RatFunc.algebraMap_injective (K := ℚ)
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  have hW0 : W ≠ 0 := by
+    rintro rfl; rw [mul_zero] at hW; exact hD hW
+  obtain ⟨S, hS⟩ := hWR
+  have hRdivW : R / W = S := by rw [hS, mul_comm, mul_div_cancel_right₀ _ hW0]
+  have hdstar : am Dstar ≠ 0 := (map_ne_zero_iff _ hinj).mpr hDstar
+  have hw : am W ≠ 0 := (map_ne_zero_iff _ hinj).mpr hW0
+  rw [hRdivW, hW, hS, map_mul, map_mul]
+  field_simp
