@@ -692,4 +692,30 @@ theorem mapRingHom_φ241_lrtSubresultant_ex241_ne_zero :
   rw [mapRingHom_φ241_lrtSubresultant_ex241_eq_eval]
   exact lrtSubresultant_map_eval_ex241_ne_zero
 
+open Compute in
+/-- **Example 2.4.1's LRT closure, hypothesis-free** (§2.4, p.48): over the residue ring
+`ℚ[t]/(4t²+1)`, the `φ241`-image of the abstract LRT subresultant `lrtSubresultant (toPoly cA241)
+(toPoly cD241) 3` is `IsSimilar` to the `φ241`-image of the computable LRT log argument
+`x³ + 2t·x² − 3x − 4t` (`= toBPoly [[0,−4],[−3],[0,2],[1]]`, the book's `S(t,x)`). The single hypothesis
+`hLne` of `lrtGcdCompute_ex241_isSimilar_lrtSubresultant` is now discharged by the proven residue
+non-vanishing `mapRingHom_φ241_lrtSubresultant_ex241_ne_zero` (the multiplicity-3 regularity of the LRT
+subresultant at the residue `α = i/2`). So the computable engine's degree-3 output **is** the honest LRT
+subresultant of Example 2.4.1, up to a residue-ring unit — unconditionally. -/
+theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed :
+    IsSimilar ((Polynomial.mapRingHom φ241)
+        (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
+      ((Polynomial.mapRingHom φ241) (toBPoly [[0, -4], [-3], [0, 2], [1]])) := by
+  have h := lrtGcdCompute_ex241_isSimilar_lrtSubresultant
+    (by rw [natDegree_toBPoly_chainG3_ex241]; exact mapRingHom_φ241_lrtSubresultant_ex241_ne_zero)
+  rw [natDegree_toBPoly_chainG3_ex241, lrtGcd_ex241] at h
+  exact h
+
+open Compute in
+-- The Example 2.4.1 LRT log argument is the honest subresultant, unconditionally (book's `x³+2tx²−3x−4t`).
+example :
+    IsSimilar ((Polynomial.mapRingHom φ241)
+        (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
+      ((Polynomial.mapRingHom φ241) (toBPoly [[0, -4], [-3], [0, 2], [1]])) :=
+  lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed
+
 end DeepWiki.SymbolicIntegration
