@@ -39,6 +39,26 @@ theorem kappaD_mul (p q : R[X]) : kappaD R (p * q) = p * kappaD R q + q * kappaD
 
 end KappaD
 
+/-! ## The logarithmic-derivative identity for a finite product (Exercise 3.1) -/
+
+section LogDerivIdentity
+variable {F : Type*} [Field F] [Differential F]
+
+/-- **Exercise 3.1** (§3.3): the logarithmic-derivative identity for a finite product of units with
+integer exponents, `D(∏ᵢ uᵢ^{eᵢ}) / (∏ᵢ uᵢ^{eᵢ}) = ∑ᵢ eᵢ·(Duᵢ/uᵢ)`, i.e.
+`logDeriv (∏ uᵢ^{eᵢ}) = ∑ eᵢ·logDeriv uᵢ`. (The general-product form is `logDeriv_prod_zpow`; this
+restates it in the explicit `D(P)/P` shape of the book.) -/
+theorem logDeriv_prod_zpow_div {ι : Type*} (s : Finset ι) (u : ι → F) (e : ι → ℤ)
+    (h : ∀ i ∈ s, u i ≠ 0) :
+    (∏ i ∈ s, u i ^ e i)′ / (∏ i ∈ s, u i ^ e i)
+      = ∑ i ∈ s, (e i : F) * ((u i)′ / u i) := by
+  have hlhs : Differential.logDeriv (∏ i ∈ s, u i ^ e i)
+      = (∏ i ∈ s, u i ^ e i)′ / (∏ i ∈ s, u i ^ e i) := rfl
+  rw [← hlhs, logDeriv_prod_zpow s u e h]
+  exact Finset.sum_congr rfl fun i _ => by rw [Differential.logDeriv]
+
+end LogDerivIdentity
+
 /-! ## Rao's normal/special polynomials in a simple transcendental extension (§3.4, Exercises 3.7–3.11)
 For a derivation `Δ` on `k(t)` (`t` transcendental) with `Δt = a/b` in lowest terms
 (`gcd(a, b) = 1`, `b ≠ 0`), and `p ∈ k[t]`, the chain rule gives
