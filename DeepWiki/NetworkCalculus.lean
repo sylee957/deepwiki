@@ -280,6 +280,7 @@ import DeepWiki.NetworkCalculus.StmtSmallStep
 import DeepWiki.NetworkCalculus.UnifSmallStep
 import DeepWiki.NetworkCalculus.UnifSimulation
 import DeepWiki.NetworkCalculus.UnifSimulationConverse
+import DeepWiki.NetworkCalculus.BoundedSimulation
 import DeepWiki.NetworkCalculus.ReachableCont
 import DeepWiki.NetworkCalculus.TableauSchema
 import DeepWiki.NetworkCalculus.TableauReadback
