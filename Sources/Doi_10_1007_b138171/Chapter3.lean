@@ -9,6 +9,7 @@ import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
+import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -493,6 +494,11 @@ abbrev ex_3_2_2 := @derivation_fractionRing_unique_of_restrict
 constant. -/
 abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
 
+/-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFast` splits the degree-5
+`p` over ℚ(x)[t] (`Dt = −t²−(3/2x)t+1/(2x)`) into Bronstein's `pₙ` (degree 3) and `pₛ = t²+(1/x)t−(2x−1)/(4x²)`
+(degree 2), by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish (coefficient swell). -/
+abbrev ex_3_5_1 := @splitFactorFast_ex351
+
 /-! ## Chapter 3 Exercises -/
 
 /-- **Exercise 3.1** (Ch 3, p.105): `D(∏ uᵢ^eᵢ)/(∏ uᵢ^eᵢ) = ∑ eᵢ·(Duᵢ/uᵢ)` — the logarithmic
@@ -530,8 +536,8 @@ abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 §3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
   (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
-Examples: Ex 3.5.1, Ex 3.5.2 [deferred: noncomputable symbolic `SplitFactor`/`SplitSquarefreeFactor`
-  over ℚ(x)[t]; they illustrate the proven general `splitFactor_correct_gen`].
+Examples: Ex 3.5.2 [deferred: a computable `SplitSquarefreeFactor` rendering — Ex 3.5.1 now COMPUTES
+  via the fraction-free `cSplitFactorFast` (`ex_3_5_1`), so the same kernel + Yun gives 3.5.2].
 Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
   hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
   [infra/research: multivariate decomposition + Darboux polynomials]; Ex 3.11 general non-squarefree [deferred]. -/
