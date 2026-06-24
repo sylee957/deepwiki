@@ -158,4 +158,12 @@ theorem evalAlg_sqlToAlg : {Ω : Finset Att} → (q : SqlQuery Att Val Ω) →
   | _, .inter a b => by
       rw [sqlToAlg, evalAlg_inter, evalAlg_sqlToAlg a, evalAlg_sqlToAlg b, evalSql_inter]
 
+/-- **Expressive equivalence of the relational algebra and SQL** (§2.5): a view instance is
+expressible by an SQL query iff it is expressible by an algebra expression. -/
+theorem sql_expressible_iff_alg_expressible {Ω : Finset Att} (r : Table Ω Val) :
+    (∃ q : SqlQuery Att Val Ω, evalSql q = r) ↔ (∃ e : AlgExpr Att Val Ω, evalAlg e = r) := by
+  constructor
+  · rintro ⟨q, rfl⟩; exact ⟨sqlToAlg q, evalAlg_sqlToAlg q⟩
+  · rintro ⟨e, rfl⟩; exact ⟨algToSql e, evalSql_algToSql e⟩
+
 end DeepWiki

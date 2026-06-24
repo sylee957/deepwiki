@@ -49,8 +49,10 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
 §2.5: DONE in both directions — `algToSql`/`evalSql_algToSql` (algebra → SQL) and `sqlToAlg`/
   `evalAlg_sqlToAlg` (SQL → algebra), establishing that the relational algebra and SQL have the same
   expressive power (the set-operation/SPJ level; the elementary `Where` internals are abstracted).
-§2.6: the reduction of SQL to the tuple calculus [infra: needs SQL's elementary `Where`-condition
-  language translated to first-order conditions].
+§2.6: the reduction of SQL to the tuple calculus [infra: SQL/algebra here are *closed* (literal
+  tables in `elem`/`AlgExpr.rel`) whereas `algToFO` is over a *db-indexed* algebra (`DbAlgExpr.base
+  i` referencing a database); SQL→calculus needs a db-indexed SQL query type — or a closed↔open
+  bridge — plus the elementary `Where`-condition language as first-order conditions].
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
 §2.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -265,5 +267,8 @@ abbrev reduction_sqlToAlg := @DeepWiki.sqlToAlg
 /-- **§2.5**: correctness of the SQL-to-algebra reduction. With `algToSql`, the relational algebra
 and SQL have the same expressive power. -/
 abbrev reduction_sqlToAlg_correct := @DeepWiki.evalAlg_sqlToAlg
+
+/-- **§2.5** (expressive equivalence): a view instance is SQL-expressible iff algebra-expressible. -/
+abbrev sql_alg_expressive_equiv := @DeepWiki.sql_expressible_iff_alg_expressible
 
 end DeepWiki.Rdb
