@@ -494,6 +494,48 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) 
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
+/-! ### Telescoping the divided one-step similarity along the whole `subresPRS`
+The divided one-step law `subresultant_C_mul_eq_bdivC_of_bpsremainder` relates `Sⱼ(p,q)` to `Sⱼ(q,r)`
+for the *literal* `subresPRS` recurrence `r = bdivC fuel (prem p q) β`. The **multi-step** agreement is its
+telescoping along an entire chain of `BPoly` elements `G : ℕ → BPoly` (where `G i` is the `i`-th element of
+the computable PRS), each consecutive pair `(G i, G (i+1))` satisfying the divided one-step hypotheses with
+its own pseudo-division witnesses `(s i, c i)` and β-divisor `β i`. Packaging the one step as a generic
+`IsSimilar` (over arbitrary `BPoly`s, with a per-index formal-degree function `d : ℕ → ℕ`) and chaining
+through `IsSimilar.trans` lands `IsSimilar (Sⱼ(G 0, G 1)) (Sⱼ(G n, G (n+1)))` for every `n` — the full
+chain agreement, *without* matching the computable `cpowP`/`cdiv` β/ψ accumulators against the abstract
+`subresPRS_beta`/`subresPRS_gamma`: every per-step constant is absorbed by `IsSimilar`. The accumulator
+algebra only governs *which* `BPoly` is `G i` and *which* scalar `β i` divides the pseudo-remainder; those
+enter purely as the per-step hypotheses, discharged once for the real `subresPRS` at the application site. -/
+
+/-- **Generic divided one-step similarity** (the chain link, over arbitrary `BPoly`s): if
+`r = bdivC fuel (bpsremainder fuel p q) β` is the next divided PRS element (β dividing every
+`x`-coefficient of the pseudo-remainder exactly), the pseudo-division witnesses `(s, c)` are nonzero under
+`toPoly`, and the degree side-conditions hold, then the subresultant of `(p, q)` at formal degrees `(n, m)`
+is `ℚ[t]`-similar to that of `(q, r)` at `(m, n')`:
+`IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n'))` (`n' = n` here; the `n'`
+slot is kept explicit so a degree chain can supply `deg (G (i+2))`'s formal padding). The repackaging of
+`subresultant_C_mul_eq_bdivC_of_bpsremainder` into `IsSimilar` — the `(-1)^…`-and-content factors are the
+similarity witnesses. -/
+theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0)
+    (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
+    (hjm : j ≤ m) (hjn : j < n)
+    (hB : (toBPoly q).natDegree ≤ m)
+    (hQ : (toBPoly s).natDegree + m ≤ n) :
+    IsSimilar (subresultant (toBPoly p) (toBPoly q) n m j)
+      (subresultant (toBPoly q) (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j) := by
+  refine ⟨(toPoly c) ^ (m - j),
+    (-1 : ℚ[X]) ^ ((m - j) * (n - j)) * (toPoly β) ^ (m - j),
+    pow_ne_zero _ hc0,
+    mul_ne_zero (pow_ne_zero _ (by norm_num)) (pow_ne_zero _ hβ0), ?_⟩
+  rw [subresultant_C_mul_eq_bdivC_of_bpsremainder fuel p q β n m j s c hsc hβ hdiv hjm hjn hB hQ]
+  simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
+  ring
+
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
 The pieces above now realize **one full divided subresultant-PRS step** of the computable engine against
 the abstract subresultant: the β-divisor exact-division `toBPoly_bdivC_exact`, the divided one-step law
