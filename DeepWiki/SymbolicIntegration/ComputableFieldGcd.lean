@@ -118,4 +118,87 @@ noncomputable instance instCFieldQFunNZ : CField QFunNZ where
   toK_inv := QFunNZ.toQFunNZ_qinvNZ
   isZero_iff := QFunNZ.isZeroNZ_iff
 
+/-! ### Generic formal derivative `cderivG` over a `CField`
+
+`cderivG [a₀, a₁, a₂, …] = [1·a₁, 2·a₂, 3·a₃, …]`: drop the constant coefficient and scale the `k`-th
+remaining coefficient by `k`. The natural-number scaling `k · a` is built from `CField.add` by the
+helper `nsmulG`, whose `toK` is the field `k • _ = (k : K) * _`. The correctness `toPolyG_cderivG`
+realizes `Polynomial.derivative` exactly, mirroring the concrete `toPoly_cderiv`. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Generic `ℕ`-scaling** `nsmulG k a` = `a + a + … + a` (`k` times), built from `CField.add`. The
+coefficient-degree multiplier for the formal derivative; `toK` reads it as `k • _ = (k : K) * _`. -/
+def nsmulG : ℕ → α → α
+  | 0, _ => CField.zero
+  | k + 1, a => CField.add a (nsmulG k a)
+
+/-- `toK (nsmulG k a) = k • toK a` in `K`. -/
+theorem toK_nsmulG (k : ℕ) (a : α) : CField.toK (nsmulG k a) = k • CField.toK a := by
+  induction k with
+  | zero => rw [nsmulG, CField.toK_zero, zero_smul]
+  | succ n ih => rw [nsmulG, CField.toK_add, ih, succ_nsmul']
+
+/-- **Generic formal derivative** `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`: drop the constant
+coefficient, scale the `k`-th remaining coefficient by `k`. -/
+def cderivG : CPolyG α → CPolyG α
+  | [] => []
+  | _ :: as => go 1 as
+where
+  /-- Auxiliary: from degree `k`, emit `nsmulG k a` for each coefficient `a` (the derivative tail). -/
+  go : ℕ → CPolyG α → CPolyG α
+  | _, [] => []
+  | k, a :: as => nsmulG k a :: go (k + 1) as
+
+/-- **`cderivG` realizes the `K[X]` derivative**: `toPolyG (cderivG p) = Polynomial.derivative
+(toPolyG p)`. -/
+theorem toPolyG_cderivG (p : CPolyG α) :
+    toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
+  suffices h : ∀ (as : CPolyG α) (k : ℕ),
+      toPolyG (cderivG.go k as)
+        = (k : (CField.K α)[X]) * toPolyG as + X * Polynomial.derivative (toPolyG as) by
+    cases p with
+    | nil => simp [cderivG]
+    | cons a as =>
+      show toPolyG (cderivG.go 1 as) = Polynomial.derivative (toPolyG (a :: as))
+      rw [h as 1, toPolyG_cons, derivative_add, derivative_C, derivative_mul, derivative_X]
+      push_cast; ring
+  intro as
+  induction as with
+  | nil => intro k; simp [cderivG.go]
+  | cons b bs ih =>
+    intro k
+    show toPolyG (nsmulG k b :: cderivG.go (k + 1) bs) = _
+    rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
+      derivative_X]
+    have hk : Polynomial.C (CField.toK (nsmulG k b)) = (k : (CField.K α)[X]) * Polynomial.C (CField.toK b) := by
+      rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
+    rw [hk]; push_cast; ring
+
+/-! ### Coherence of the generic ops with the concrete `Compute.*` engine at `α = ℚ` -/
+
+/-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
+theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
+  induction k with
+  | zero => show (CField.zero : ℚ) = _; rw [show (CField.zero : ℚ) = 0 from rfl]; simp
+  | succ n ih => rw [nsmulG]; show a + nsmulG n a = _; rw [ih]; push_cast; ring
+
+/-- `cderivG` at `ℚ` is the concrete `cderiv`. -/
+theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cderiv := by
+  have hgo : ∀ (k : ℕ) (as : CPolyG ℚ), cderivG.go k as = Compute.cderiv.go k as := by
+    intro k as
+    induction as generalizing k with
+    | nil => rfl
+    | cons b bs ih =>
+      show nsmulG k b :: cderivG.go (k + 1) bs = ((k : ℚ) * b) :: Compute.cderiv.go (k + 1) bs
+      rw [ih, nsmulG_eq_natCast_mul]
+  funext p
+  cases p with
+  | nil => rfl
+  | cons a as => show cderivG.go 1 as = Compute.cderiv.go 1 as; rw [hgo]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
