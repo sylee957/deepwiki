@@ -37,4 +37,63 @@ theorem toPoly_clagNum (xs : List ℚ) :
       rw [toPoly_cons, toPoly_cons, toPoly_nil, map_neg, map_one]; ring
     rw [this]
 
+/-- **`toPoly` of the `cinterpolate` accumulator fold** is the running sum: folding `cadd acc (f p)`
+over `pts` maps under `toPoly` to `toPoly init + ∑ p, toPoly (f p)`. -/
+theorem toPoly_foldl_cadd (f : ℚ × ℚ → CPoly) (pts : List (ℚ × ℚ)) (init : CPoly) :
+    toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
+      = toPoly init + (pts.map (fun p => toPoly (f p))).sum := by
+  induction pts generalizing init with
+  | nil => simp
+  | cons p ps ih =>
+    rw [List.foldl_cons, ih, toPoly_cadd, List.map_cons, List.sum_cons]
+    ring
+
+/-- The `cinterpolate` denominator fold `∏ acc·(xk − xⱼ)` equals the list product `∏ (xk − xⱼ)`,
+threaded through an arbitrary starting accumulator. -/
+theorem foldl_mul_sub_eq_prod' (xk : ℚ) (others : List ℚ) (init : ℚ) :
+    others.foldl (fun acc xj => acc * (xk - xj)) init
+      = init * (others.map (fun xj => xk - xj)).prod := by
+  induction others generalizing init with
+  | nil => simp
+  | cons x xs ih => rw [List.foldl_cons, ih, List.map_cons, List.prod_cons]; ring
+
+/-- The `cinterpolate` denominator fold `∏ acc·(xk − xⱼ)` equals the list product `∏ (xk − xⱼ)`. -/
+theorem foldl_mul_sub_eq_prod (xk : ℚ) (others : List ℚ) :
+    others.foldl (fun acc xj => acc * (xk - xj)) 1
+      = (others.map (fun xj => xk - xj)).prod := by
+  rw [foldl_mul_sub_eq_prod', one_mul]
+
+/-- The product `∏_{xⱼ ∈ others} (xk − xⱼ)` is nonzero when every `xⱼ ≠ xk`. -/
+theorem prod_sub_ne_zero {xk : ℚ} {others : List ℚ} (hne : ∀ xj ∈ others, xj ≠ xk) :
+    (others.map (fun xj => xk - xj)).prod ≠ 0 := by
+  rw [Ne, List.prod_eq_zero_iff]
+  intro hy
+  rw [List.mem_map] at hy
+  obtain ⟨xj, hxj, hxeq⟩ := hy
+  exact hne xj hxj (sub_eq_zero.mp hxeq).symm
+
+/-- **Eval of a Lagrange term polynomial at a node** `x`: `(C (yk/denom) · ∏(X − C xⱼ)).eval x =
+(yk/denom)·∏(x − xⱼ)`. -/
+theorem eval_term_poly (xk yk x : ℚ) (others : List ℚ) :
+    (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
+        (clagNum others))).eval x
+      = (yk / (others.map (fun xj => xk - xj)).prod)
+        * (others.map (fun xj => x - xj)).prod := by
+  rw [toPoly_cscale, toPoly_clagNum, eval_mul, eval_C, foldl_mul_sub_eq_prod]
+  congr 1
+  rw [eval_list_prod, List.map_map]
+  congr 1
+  apply List.map_congr_left
+  intro xj _
+  simp [Function.comp, eval_sub, eval_X, eval_C]
+
+/-- **Eval of a Lagrange term at its own node**: the `cinterpolate` term for `(xk, yk)`, with
+`others` the abscissas distinct from `xk`, evaluates to `yk` at `xk` (the denominator is the same
+product, and is nonzero since each `xⱼ ≠ xk`). -/
+theorem eval_term_at_self (xk yk : ℚ) (others : List ℚ) (hne : ∀ xj ∈ others, xj ≠ xk) :
+    (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
+        (clagNum others))).eval xk = yk := by
+  rw [eval_term_poly, div_mul_cancel₀]
+  exact prod_sub_ne_zero hne
+
 end DeepWiki.SymbolicIntegration.Compute
