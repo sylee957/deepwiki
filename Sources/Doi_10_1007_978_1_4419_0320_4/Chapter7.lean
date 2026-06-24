@@ -74,9 +74,14 @@ definite — now FORMALIZED (`eq_7_2_3`, the sample analogue of `posSemidef_covM
 central limit theorem** underlying the asymptotic distribution of `γ̂`/`ρ̂` is now FORMALIZED: the
 multivariate `m`-dependent CLT (`IsMDependent.tendstoInDistribution_multivariate`) and, on top of it, the
 sample-autocovariance-vector CLT `tendstoInDistribution_sampleAutocovVec` — `√n (γ̂(0..k) − γ) ⇒ N(0, S)`
-with `S` the long-run covariance matrix of the lag-product process (`longRunCovMatrix`). **Bartlett's
-formula** (Theorems 7.2.1 and 7.2.2) — the *explicit* closed form of `S` (resp. the `ρ̂` covariance) in
-terms of the fourth-order moments / the autocovariance `γ` — is the remaining analytic step. -/
+with `S` the long-run covariance matrix of the lag-product process (`longRunCovMatrix`). On top of it,
+the **asymptotic normality of the sample autocorrelation** (Theorem 7.2.1's distributional content) is now
+FORMALIZED: `tendstoInDistribution_linearCombo_sampleAutocov` (any linear combination
+`√n · ∑ᵢ cᵢ (γ̂(i) − γ(i)) ⇒ ⟪V, c⟫`, the projected vector CLT) and the studentized ratio form
+`tendstoInDistribution_studentized_linearCombo_sampleAutocov` — for `c = eₕ − ρ(h)·e₀` this is
+`√n (ρ̂(h) − ρ(h)) ⇒ N(0, (w ⬝ᵥ S w)/γ(0)²)` (ratio Slutsky on the consistent `γ̂(0) →ᵖ γ(0)`). **Bartlett's
+formula** (Theorems 7.2.1 and 7.2.2) — the *explicit* closed form of `w ⬝ᵥ S w` (the `ρ̂` covariance) in
+terms of the autocovariance `γ` — is the one remaining analytic step (the fourth-cumulant/Isserlis expansion). -/
 
 /-- **§7.2 (eq 7.2.3): the sample covariance matrix `Γ̂ₙ = [γ̂(i − j)]` is non-negative definite** —
 its quadratic form `∑ᵢⱼ aᵢ aⱼ γ̂(|i − j|) ≥ 0` is a sum of squares (`n⁻¹ ∑ₖ (∑ᵢ aᵢ ỹ(k − i))²`). The
@@ -87,11 +92,13 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, the explicit Bartlett covariance formula) [research];
+§7.2: Theorem 7.2.1 (the *explicit* Bartlett covariance formula `w ⬝ᵥ S w` in terms of `γ`) [research];
 Theorem 7.2.2 (Bartlett's formula, general case) [research]
-(The time-series CLT blocker is now RESOLVED: the asymptotic normality `√n (γ̂(0..k) − γ) ⇒ N(0, S)` is
-formalized (`tendstoInDistribution_sampleAutocovVec`, built on the multivariate `m`-dependent CLT). What
-remains for 7.2.1/7.2.2 is the explicit closed form of `S` — Bartlett's `wₕₗ` in fourth-order moments /
-the ACVF — the analytic fourth-cumulant expansion. The estimators eq 7.2.1/7.2.2 and eq 7.2.3 are done.) -/
+(The CLT blocker and the asymptotic NORMALITY of `γ̂`/`ρ̂` are now RESOLVED: `√n (γ̂(0..k) − γ) ⇒ N(0, S)`
+(`tendstoInDistribution_sampleAutocovVec`) and `√n (ρ̂(h) − ρ(h)) ⇒ N(0, (w ⬝ᵥ S w)/γ(0)²)`
+(`tendstoInDistribution_studentized_linearCombo_sampleAutocov`, ratio Slutsky on the consistent `γ̂(0)`),
+both built on the multivariate `m`-dependent CLT. What remains for 7.2.1/7.2.2 is ONLY the explicit closed
+form of the limit covariance `w ⬝ᵥ S w` — Bartlett's `wₕₗ` as a series in the ACVF `γ` — the analytic
+fourth-cumulant/Isserlis expansion. The estimators eq 7.2.1/7.2.2 and eq 7.2.3 are done.) -/
 
 end DeepWiki.Ts
