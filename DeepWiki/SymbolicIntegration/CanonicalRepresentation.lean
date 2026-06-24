@@ -75,4 +75,37 @@ theorem isReduced_zero (v : K[X]) : IsReduced v (0 : RatFunc K) := by
 
 end Classify
 
+section SplitFactor
+variable {K : Type*} [Field K] [Differential K]
+
+open Classical in
+/-- The squarefree special factor extracted at one `SplitFactor` step:
+`S = gcd(p, Dp) / gcd(p, dp/dt)` (`Dt = v`). By Theorem 3.5.1 this is the product of the
+*distinct* special irreducible factors of `p`. -/
+noncomputable def splitFactorStep (v p : K[X]) : K[X] :=
+  gcd p (Differential.implicitDeriv v p) / gcd p (derivative p)
+
+open Classical in
+/-- `SplitFactor` recursion (§3.5, p.100), as a `fuel`-bounded computation. Each step extracts the
+squarefree special factor `S = gcd(p,Dp)/gcd(p,dp/dt)`; if `deg S = 0` the polynomial is normal and
+`(p, 1)` is returned, otherwise recurse on `p/S` and multiply `S` back into the special part. The
+result is `(pₙ, pₛ)`: the normal part and the special part. -/
+noncomputable def splitFactorAux (v : K[X]) : K[X] → ℕ → K[X] × K[X]
+  | p, 0 => (p, 1)
+  | p, (n + 1) =>
+    let S := splitFactorStep v p
+    if S.natDegree = 0 then (p, 1)
+    else
+      let q := splitFactorAux v (p / S) n
+      (q.1, S * q.2)
+
+open Classical in
+/-- **`SplitFactor`** (§3.5, p.100): the splitting of `p` into its normal part `pₙ` and special
+part `pₛ` w.r.t. the monomial derivation `D` (`Dt = v`), with `p = pₙ·pₛ`. Iterates
+`S ← gcd(p, Dp)/gcd(p, dp/dt)` until the remaining factor is normal. -/
+noncomputable def splitFactor (v p : K[X]) : K[X] × K[X] :=
+  splitFactorAux v p p.natDegree
+
+end SplitFactor
+
 end DeepWiki.SymbolicIntegration
