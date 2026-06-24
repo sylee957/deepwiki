@@ -515,7 +515,7 @@ open Classical in
 /-- **Theorem 3.5.1(i)** book-faithful step (`S` constant): if the `SplitFactor` step `S` is constant
 (`deg S = 0`), then `p` is book-normal — every squarefree factor of `p` is normal. (`S ~ ∏_{special}π`
 is a unit, so `p` has no special prime factor; every prime factor is normal.) -/
-theorem isNormalSqfree_of_splitFactorStep_natDegree_zero {p : K[X]} (hp : p ≠ 0)
+theorem isNormalSqfree_of_splitFactorStep_natDegree_zero (v : K[X]) {p : K[X]} (hp : p ≠ 0)
     (hdeg : (splitFactorStep v p).natDegree = 0) :
     @IsNormalSqfree _ _ ⟨Differential.implicitDeriv v⟩ p := by
   letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
@@ -576,6 +576,63 @@ theorem splitFactorStep_dvd (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
       (Finset.mem_of_mem_filter π hπ) (Finset.mem_of_mem_filter ρ hρ) hπρ
   · intro π hπ
     exact dvd_of_mem_normalizedFactors (mem_primeFactors.mp (Finset.mem_of_mem_filter π hπ))
+
+open Classical in
+/-- **`SplitFactor` correctness, book-faithful & UNCONDITIONAL** (§3.5, p.100): for fuel `≥ deg p`
+and `p ≠ 0`, `splitFactorAux v p fuel` returns a *book-faithful* splitting factorization `(pₙ, pₛ)`
+of `p` — `p = pₛ·pₙ`, `pₛ` special, and every squarefree factor of `pₙ` normal (`IsNormalSqfree`).
+No `IsSplitFactorStep` hypothesis: the step facts (`isSpecial_splitFactorStep`, `splitFactorStep_dvd`,
+`isNormalSqfree_of_splitFactorStep_natDegree_zero`) are proved from Theorem 3.5.1(i) for general `p`. -/
+theorem splitFactorAux_isSplittingFactorization' (v : K[X]) :
+    ∀ (fuel : ℕ) (p : K[X]), p ≠ 0 → p.natDegree ≤ fuel →
+      @IsSplittingFactorization' _ _ ⟨Differential.implicitDeriv v⟩ p
+        (splitFactorAux v p fuel).2 (splitFactorAux v p fuel).1 := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro p hp0 hp
+    rw [Nat.le_zero, Polynomial.natDegree_eq_zero] at hp
+    obtain ⟨c, rfl⟩ := hp
+    have hc : c ≠ 0 := fun h => hp0 (by rw [h, map_zero])
+    -- a nonzero constant `C c` is a unit, hence book-normal.
+    have hnorm : IsNormalSqfree (C c) :=
+      (isNormal_of_isUnit (isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc))).isNormalSqfree
+    simp only [splitFactorAux]
+    exact ⟨(one_mul (C c)).symm, isSpecial_one, hnorm⟩
+  | succ n ih =>
+    intro p hp0 hp
+    rw [splitFactorAux]
+    simp only
+    set S := splitFactorStep v p with hS
+    by_cases hdeg : S.natDegree = 0
+    · rw [if_pos hdeg]
+      exact ⟨(one_mul p).symm, isSpecial_one,
+        isNormalSqfree_of_splitFactorStep_natDegree_zero v hp0 hdeg⟩
+    · rw [if_neg hdeg]
+      have hSpos : 0 < S.natDegree := Nat.pos_of_ne_zero hdeg
+      have hSdvd : S ∣ p := splitFactorStep_dvd v hp0
+      have hSspec : IsSpecial S := isSpecial_splitFactorStep v hp0
+      have hSne : S ≠ 0 := fun h => hdeg (by rw [h]; simp)
+      -- degree drop and `p / S ≠ 0`.
+      have hmul : S * (p / S) = p := EuclideanDomain.mul_div_cancel' hSne hSdvd
+      have hpSne : p / S ≠ 0 := fun h => hp0 (by rw [← hmul, h, mul_zero])
+      have hdegsum : S.natDegree + (p / S).natDegree = p.natDegree := by
+        rw [← natDegree_mul hSne hpSne, hmul]
+      have hpS : (p / S).natDegree ≤ n := by omega
+      obtain ⟨heq, hq2spec, hq1norm⟩ := ih (p / S) hpSne hpS
+      refine ⟨?_, hSspec.mul hq2spec, hq1norm⟩
+      rw [mul_assoc, ← heq, hmul]
+
+open Classical in
+/-- **`SplitFactor` correctness, book-faithful & UNCONDITIONAL** (§3.5, p.100): for `p ≠ 0`,
+`splitFactor v p = (pₙ, pₛ)` is a book-faithful splitting factorization — `p = pₛ·pₙ`, `pₛ` special,
+every squarefree factor of `pₙ` normal. This is Theorem 3.5.1(i) for general `p`, with no
+side hypothesis. -/
+theorem splitFactor_isSplittingFactorization' (v p : K[X]) (hp : p ≠ 0) :
+    @IsSplittingFactorization' _ _ ⟨Differential.implicitDeriv v⟩ p
+      (splitFactor v p).2 (splitFactor v p).1 :=
+  splitFactorAux_isSplittingFactorization' v p.natDegree p hp le_rfl
 
 end GeneralSplitFactorStep
 
