@@ -531,4 +531,40 @@ theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
   rw [mul_assoc, mul_assoc, ← mul_add, hbez, ← C_mul]
   norm_num
 
+/-- **`toPoly cR241 = 4t²+1` is separable** over `ℚ` (degree-2, distinct roots `±i/2`): it is
+irreducible over `ℚ` (`irreducible_toPoly_cR241`) and `ℚ` has characteristic zero
+(`Irreducible.separable`). -/
+theorem separable_toPoly_cR241 : (Compute.toPoly Compute.cR241).Separable :=
+  Compute.irreducible_toPoly_cR241.separable
+
+/-! ### The multiplicity-3 nonvanishing of the LRT subresultant at the residue `α = i/2` -/
+
+open scoped Classical in
+/-- **The residue `β` is a multiplicity-3 root of the base-changed `rtResultant`** (Ex 2.4.1): over a
+field `L` with an injective `τ : ℚ →+* L` and `β` a root of `(4t²+1).map τ`, the multiplicity of `β` in
+`rtResultant (cA241.map τ) (cD241.map τ)` is exactly 3. From `rtResultant_map_of_injective` and the honest
+equation `rtResultant_ex241_eq`, `rtResultant (…τ) = C(τ 45796)·((4t²+1).map τ)³`, and `(4t²+1).map τ` is
+separable (so `β` is a simple root), so `rootMultiplicity_C_mul_pow_of_separable` gives `3`. -/
+theorem rootMultiplicity_rtResultant_map_ex241 {L : Type*} [Field L] (τ : ℚ →+* L)
+    (hτ : Function.Injective τ) {β : L}
+    (hβ : ((Compute.toPoly Compute.cR241).map τ).IsRoot β) :
+    Polynomial.rootMultiplicity β
+        (rtResultant ((Compute.toPoly Compute.cA241).map τ) ((Compute.toPoly Compute.cD241).map τ))
+      = 3 := by
+  rw [rtResultant_map_of_injective τ hτ, Compute.rtResultant_ex241_eq]
+  -- `(C 45796·(C4·X²+C1)³).map τ = C (τ 45796) · ((C4·X²+C1).map τ)³`
+  rw [Polynomial.map_mul, Polynomial.map_C, Polynomial.map_pow]
+  set p := (Polynomial.C (4:ℚ) * Polynomial.X ^ 2 + Polynomial.C 1).map τ with hp
+  -- `p = (toPoly cR241).map τ` (both `4t²+1`), so `p` is separable and `β` is a root
+  have hpeq : p = (Compute.toPoly Compute.cR241).map τ := by
+    rw [hp, Compute.toPoly_cR241]
+    simp only [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_pow,
+      Polynomial.map_X, Polynomial.map_ofNat, map_ofNat, map_one]
+    ring
+  have hpsep : p.Separable := by rw [hpeq]; exact separable_toPoly_cR241.map
+  have hpβ : p.IsRoot β := by rw [hpeq]; exact hβ
+  have hc : τ 45796 ≠ 0 := by
+    simpa using (map_ne_zero_iff τ hτ).mpr (by norm_num : (45796 : ℚ) ≠ 0)
+  exact rootMultiplicity_C_mul_pow_of_separable hc hpsep hpβ 3
+
 end DeepWiki.SymbolicIntegration
