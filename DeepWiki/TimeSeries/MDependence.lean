@@ -64,8 +64,9 @@ theorem IsMDependent.comp {V W : Type*} [MeasurableSpace V] [MeasurableSpace W] 
 
 /-- **m-dependence at the singleton level**: if `s + m < t` then `Xₛ` and `Xₜ` are independent
 (the two-point case of `m`-dependence, extracting the values from the singleton blocks). -/
-theorem IsMDependent.indepFun {m : ℕ} {X : ℤ → Ω → ℝ} {μ : Measure Ω} (h : IsMDependent m X μ)
-    {s t : ℤ} (hst : s + (m : ℤ) < t) : IndepFun (X s) (X t) μ := by
+theorem IsMDependent.indepFun {V : Type*} [MeasurableSpace V] {m : ℕ} {X : ℤ → Ω → V}
+    {μ : Measure Ω} (h : IsMDependent m X μ) {s t : ℤ} (hst : s + (m : ℤ) < t) :
+    IndepFun (X s) (X t) μ := by
   have hb := h {s} {t} (fun a ha b hb => by
     rw [Finset.mem_singleton] at ha hb; subst ha; subst hb; exact hst)
   exact hb.comp (measurable_pi_apply ⟨s, Finset.mem_singleton_self s⟩)

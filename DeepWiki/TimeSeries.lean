@@ -25,6 +25,7 @@ import DeepWiki.TimeSeries.MDependence
 import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.IidStrictlyStationary
 import DeepWiki.TimeSeries.MovingAverageMDependent
+import DeepWiki.TimeSeries.MultivariateMDependent
 import DeepWiki.TimeSeries.StochasticOrder
 import DeepWiki.TimeSeries.MultivariateNormal
 import DeepWiki.TimeSeries.KolmogorovApplications
