@@ -300,6 +300,7 @@ import DeepWiki.NetworkCalculus.TransitionEncode
 import DeepWiki.NetworkCalculus.BoundaryEncode
 import DeepWiki.NetworkCalculus.TableauFormula
 import DeepWiki.NetworkCalculus.TableauFormulaEncode
+import DeepWiki.NetworkCalculus.TableauFormulaIff
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
