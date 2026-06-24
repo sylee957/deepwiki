@@ -2791,3 +2791,51 @@ theorem am_div_D_eq_div_Dstar {R D Dstar W : ℚ[X]} (hD : D ≠ 0) (hDstar : Ds
   have hw : am W ≠ 0 := (map_ne_zero_iff _ hinj).mpr hW0
   rw [hRdivW, hW, hS, map_mul, map_mul]
   field_simp
+
+/-! ### The multi-factor wrapper, reduced to ONE interference divisibility
+
+Assembling `total_fold_residual_over_D` (the whole residual as `am R/am D`) with `am_div_D_eq_div_Dstar`
+(the clearing to `Dstar`) gives the residual identity `am A/am D = (toQFun g)′ + am (R/W)/am Dstar` for
+the actual `g`-fold — from the per-factor residual identities (`hstep`, dischargeable by
+`glocIncr_residual`), the **proven** radical clause `Dstar ∣ D` (`toPoly_Dstar_dvd_D`), and the **single
+remaining** interference divisibility `W ∣ R` (`W = D/Dstar`). This is the cleanest multi-factor
+wrapper: everything but `W ∣ R` is proven; that one divisibility is the genuine interference-clearing
+content (decidably true per example, abstractly the open piece). -/
+
+open scoped Differential in
+/-- **Multi-factor `hermiteReduce` wrapper, reduced to the interference divisibility** in `RatFunc ℚ`:
+for the actual `g`-fold `g = (glocList fuel A D factors).foldl qadd qzero`, given the per-factor residual
+identities (`hstep`, the `glocIncr_residual` conclusion over `D`), the radical decomposition
+`D = Dstar·W` (`Dstar ∣ D`, **proven** Yun radical clause), and the **single** interference divisibility
+`W ∣ R` with `R = C(1−n)·A + Σ residNumIncr` and `n = #kept`, the reduction is correct:
+`am A/am D = (toQFun g)′ + am (R/W)/am Dstar`. The residual integrand lives over the squarefree radical
+`Dstar`. Only `W ∣ R` is unproven here — the abstract multi-factor interference-clearing content. -/
+theorem hermiteReduce_residual_correct_multifactor (fuel : ℕ) (A D Dstar W : CPoly)
+    (factors : List (CPoly × ℕ))
+    (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D))
+    (hWdec : toPoly D = toPoly Dstar * toPoly W)
+    (hWR : toPoly W ∣ Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+        * toPoly A
+        + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+                * toPoly A
+              + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
+              / toPoly W)
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  set R := Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ)) * toPoly A
+    + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum with hR
+  have hres := total_fold_residual_over_D fuel A D factors hD hV hstep
+  rw [← hR] at hres
+  -- `A/D − g′ = am R/am D = am (R/W)/am Dstar`.
+  have hclear := am_div_D_eq_div_Dstar (R := R) (D := toPoly D) (Dstar := toPoly Dstar)
+    (W := toPoly W) hD hDstar hWdec hWR
+  linear_combination hres + hclear
