@@ -32,7 +32,8 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
 5. **§6.5–6.6 `PolyRischDE`** — the non-cancellation and cancellation cases that finally solve the
    degree-bounded polynomial equation in `k[t]`.
 
-## What this file delivers (the full non-cancellation pipeline, computable + `native_decide`-validated)
+## What this file delivers (non-cancellation pipeline + §6.6 primitive cancellation, computable +
+`native_decide`-validated)
 
 * **`cWeakNormalizer Dt fuel fnum fden`** (§6.1) — the `WeakNormalizer` algorithm box (book p.183) over
   the tower: split the denominator of `f = fnum/fden` into its normal part `dₙ`, form
@@ -75,9 +76,30 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
   (eq. 6.19) degree-by-degree from the top down — `lc(c) = lc(b)·lc(q)` fixes `q`'s leading monomial,
   subtract `D(·) + b·(·)`, recurse on the lower-degree remainder. Returns `Option (CPolyG QFunNZ)`.
 
+* **`cParametricLogDeriv fuel b`** (§5.12 / §7.3, the `ParametricLogarithmicDerivative` box, book
+  p.176/253) — over the **base field** `k = ℚ(x)`: does `n·b = Dz/z` hold for a nonzero `n ∈ ℤ` and
+  `z ∈ ℚ(x)*` (is `b` a logarithmic derivative of a `ℚ(x)`-radical)? Decides the **constant sub-case**
+  `b ∈ ℚ*` exactly (a nonzero constant is *not* a logarithmic derivative — `Dz/z` is always proper,
+  the §5.12 obstruction; this is the branch §6.6 reaches), returning `false`. The full proper/simple/
+  integer-residue recognizer over ℚ(x) is the documented continuation.
+
+* **`cRischDEBase fuel b c`** (§6.6 eq. 6.23) — the **base Risch DE** `Ds + b·s = c` over `k = ℚ(x)`
+  (`D = d/dx`), the leading-coefficient recursion target of the primitive cancellation case;
+  implemented for the bottoming-out `k`-constant sub-case (`b, c ∈ ℚ`, `s = c/b`).
+
+* **`cPolyRischDECancelPrim Dt fuel b c n`** (§6.6, the `PolyRischDECancelPrim(b, c, D, n)` box, book
+  p.212) — the **primitive cancellation** case (`Dt ∈ k`, `b ∈ k*`): `D` does not raise the
+  `t`-degree, the leading terms of `Dq` and `bq` cancel (so `cPolyRischDENoCancel` cannot proceed), and
+  the solve recurses degree-by-degree into `cRischDEBase` (eq. 6.23 `RischDE(b, lc(c))`) after the
+  §5.12 `b = Dz/z` test (`cParametricLogDeriv`). Returns `Option (CPolyG QFunNZ)`.
+
+* **`cPolyRischDE Dt fuel b c n`** (§6.5 + §6.6) — the **dispatcher**: routes `Dq + b·q = c` to
+  `cPolyRischDENoCancel` (non-cancellation, `deg(b) > max(0, δ−1)`) or `cPolyRischDECancelPrim`
+  (primitive cancellation, `δ = 0`, `b ∈ k*`) by monomial type and `deg(b)` (Lemma 6.5.1).
+
 * **`cRischDE Dt fuel fnum fden gnum gden`** — the **assembled full solver**: chains
   `cRdeNormalDenominator` (§6.2) → `cRdeSpecialDenominator` (§6.2) → `cRdeBoundDegree` (§6.3) →
-  `cSPDE` (§6.4) → `cPolyRischDENoCancel` (§6.5), reconstructing `y = ynum/yden ∈ k(t)` solving
+  `cSPDE` (§6.4) → `cPolyRischDE` (§6.5/§6.6 dispatcher), reconstructing `y = ynum/yden ∈ k(t)` solving
   `Dy + f·y = g`, or `none`. Validated end-to-end on Example 6.5.1 (`rischDE_solve_example`).
 
 ## Validation (`native_decide`)
@@ -106,19 +128,37 @@ output). **Example 6.4.1** (book p.204): `cRischDE` on the original `Dy + (t²+1
 returns `none` — `SPDE` reaches `n = −1 < 0` with `c ≠ 0`, so `∫ e^{tan x}/tan²x dx` is not elementary
 (`rischDE_noSolution_example`).
 
-## What is NOT here (the §6.6 cancellation case, honestly deferred)
+The **§6.6 cancellation primitive case** (`rischDE_cancel_example`) exercises the path
+`cPolyRischDENoCancel` *cannot* handle. For the primitive monomial `t = log(x)` (`Dt = 1/x ∈ k`,
+`δ = 0`), the equation `Dq + 1·q = log(x) + 1/x` (`b = 1 ∈ ℚ*`, `c = t + 1/x`, `deg(c) = 1`) has its
+leading terms of `Dq` and `bq` cancel; `cPolyRischDECancelPrim` rules `b = 1` out as a logarithmic
+derivative (`cParametricLogDeriv = false`), then recurses degree-by-degree into the base RDE over
+`k = ℚ(x)` (`cRischDEBase`: `RischDE(1, 1) = 1`), producing the elementary solution `q = log(x) = t` —
+`native_decide`-verified to *actually solve* `Dq + b·q = c` (cleared difference). The dispatcher
+`cPolyRischDE` is checked to route this same input to the cancellation solver.
 
-This is one major algorithm; the deliverable is the **full non-cancellation pipeline computing over the
-tower** plus validation, not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). What remains
-is the **§6.6 cancellation cases** (`PolyRischDECancel{Prim,Exp}`, book p.211–215): the sub-cases where
-the leading terms of `Dq` and `bq` *do* cancel (`δ ≤ 1`, `b ∈ k*`, `D ≠ d/dt`; or `δ ≥ 2`,
-`deg(b) = δ−1`, `deg(q) = −lc(b)/λ(t)`). These reduce to an **in-field-integration** problem and a
-*recursion to `RischDE` over the coefficient field `k`* (eq. 6.23 `Dy + by = lc(c)`), needing the §5.12
-parametric-logarithmic-derivative / limited-integration subroutine and the `Du/u = b` test — the
-genuine remaining engineering. The cancellation refinements inside
-`cRdeSpecialDenominator`/`cRdeBoundDegree` (also §5.12 / Ch. 7) only *raise* the bound in that same
-cancellation case and are likewise documented but not run; every non-cancellation case (and both
-validation runs) is reproduced exactly. No `sorry`. -/
+## What is NOT here (the rest of §6.6, honestly deferred)
+
+The deliverable is the **full non-cancellation pipeline plus the §6.6 primitive cancellation case
+computing over the tower**, plus validation — not abstract correctness (no `Dy + fy = g ↔ …` theorem is
+proved). What remains of the **§6.6 cancellation cases** (book p.211–215):
+
+* **`PolyRischDECancelExp`** (hyperexponential, `Dt/t ∈ k`, `δ = 1`, book p.213) and
+  **`PolyRischDECancelTan`** (nonlinear / hypertangent `Dt/(t²+1) ∈ k`, `δ = 2`, book p.215): they
+  recurse to a base RDE over `k` or `k(√−1)` / a **`CoupledDESystem`** (Ch. 8) and an in-field
+  integration; not implemented (the dispatcher falls them back to the non-cancellation loop).
+* **The general eq. 6.23 base recursion.** `cRischDEBase` solves the bottoming-out `k`-constant
+  sub-case only; the general *rational Risch DE in `x`* (non-constant `b, c ∈ ℚ(x)`, the whole Ch. 6
+  pipeline re-run with `t = x` the trivial primitive monomial) is the remaining recursion.
+* **The full §5.12 / §7.3 recognizer.** `cParametricLogDeriv` decides the reachable constant
+  obstruction exactly; the proper/simple/integer-residue Rothstein–Trager recognizer over ℚ(x) and the
+  §7.3 unique-`m/n` linear-constraint solve are the documented continuation. The in-field-integration
+  sub-branch of `PolyRischDECancelPrim` (`zc = Dp` test when `b = Dz/z`) is likewise documented.
+
+The cancellation refinements inside `cRdeSpecialDenominator`/`cRdeBoundDegree` (also §5.12 / Ch. 7)
+only *raise* the bound in that same cancellation case and are likewise documented but not run; every
+non-cancellation case, the primitive cancellation case, and all validation runs are reproduced exactly.
+No `sorry`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -627,7 +667,9 @@ Ch. 6, assembled). For `f = fnum/fden`, `g = gnum/gden ∈ k(t) = ℚ(x)(t)` and
 3. **§6.3 degree bound.** `N ← cRdeBoundDegree a b c` bounds `deg_t` of the polynomial unknown.
 4. **§6.4 SPDE.** `cSPDE a b c N` ⇒ `(b̄, c̄, m, α, β)` (`none` ⇒ no solution): the unknown is
    `α·v + β` where `v` solves `Dv + b̄·v = c̄`, `deg(v) ≤ m`.
-5. **§6.5 PolyRischDENoCancel.** `cPolyRischDENoCancel b̄ c̄ m` ⇒ `v` (`none` ⇒ no solution).
+5. **§6.5/§6.6 PolyRischDE.** `cPolyRischDE b̄ c̄ m` ⇒ `v` (`none` ⇒ no solution): the dispatcher
+   chooses the §6.5 non-cancellation solver or the §6.6 primitive cancellation solver by monomial type
+   and `deg(b̄)` (Lemma 6.5.1).
 
 Then the polynomial unknown is `Q = α·v + β`, the §6.2-cleared unknown was `Q·h₁⁻¹`… concretely
 `y = Q / (h₀ · h₁)`: `q = y·h₀` and `r = q·h₁⁻¹ = Q`, so `y = Q·h₁ / h₀`. We return `ynum = Q·h₁`,
@@ -642,7 +684,7 @@ def cRischDE (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden : CPolyG QFu
     match cSPDE Dt fuel a b c (N : ℤ) with
     | none => none
     | some (bbar, cbar, m, α, β) =>
-      match cPolyRischDENoCancel Dt fuel bbar cbar m with
+      match cPolyRischDE Dt fuel bbar cbar m with
       | none => none
       | some v =>
         -- polynomial unknown `Q = α·v + β`; `y = Q·h₁ / h₀`.
