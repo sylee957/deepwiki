@@ -1994,4 +1994,53 @@ theorem hc0_ex241 : ∀ l ≤ 1, toPoly (chainC 30 gP gQ l) ≠ 0 := by
     have hcb := hcb_ex241 l hl
     omega
 
+/-- **The `x`-degree of `chainG (l+1)` is strictly below that of `chainG l`** (Ex 2.4.1, `l ≤ 1`):
+`deg (chainG (l+1)) < deg (chainG l)` (`5<6`, `4<5`), via `bdeg_eq_natDegree`. -/
+theorem natDegree_toBPoly_chainG_strictAnti_ex241 (l : ℕ) (hl : l ≤ 1) :
+    (toBPoly (chainG 30 gP gQ (l + 1))).natDegree < (toBPoly (chainG 30 gP gQ l)).natDegree := by
+  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  interval_cases l <;>
+    · simp only [chainG]; native_decide
+
+/-- **`hQ` for Ex 2.4.1**: the pseudo-division quotient degree bound
+`deg (chainS l) + deg (chainG (l+1)) ≤ deg (chainG l)` (`l ≤ 1`). Degree argument over `(ℚ[X])[X]` on
+`chain_hsc` (now with `hc0_ex241` giving the content nonzero): `C(toPoly cl)·toBPoly(Gl)` has `x`-degree
+`deg (Gl)`; the RHS `toBPoly(sl)·toBPoly(G(l+1)) + toBPoly(prem)` has `x`-degree `deg(sl)+deg(G(l+1))` when
+`sl ≠ 0` (the `prem` term has the strictly-smaller degree `deg (G(l+2))`,
+`natDegree_add_eq_left_of_natDegree_lt`), so `deg(sl)+deg(G(l+1)) = deg(Gl)`; when `sl = 0` it is
+`deg(G(l+1)) < deg(Gl)` (`natDegree_toBPoly_chainG_strictAnti_ex241`). -/
+theorem hQ_ex241 : ∀ l ≤ 1,
+    (toBPoly (chainS 30 gP gQ l)).natDegree + (toBPoly (chainG 30 gP gQ (l + 1))).natDegree
+      ≤ (toBPoly (chainG 30 gP gQ l)).natDegree := by
+  intro l hl
+  have hsc := chain_hsc 30 gP gQ l
+  have hGlne := toBPoly_chainG_ne_zero_ex241 l (by omega)
+  have hG1ne := toBPoly_chainG_ne_zero_ex241 (l + 1) (by omega)
+  have hcl := hc0_ex241 l hl
+  have hpremdeg := natDegree_toBPoly_prem_ex241 l hl
+  have hcb := hcb_ex241 l hl
+  have hstrict := natDegree_toBPoly_chainG_strictAnti_ex241 l hl
+  -- LHS degree = deg(Gl)
+  have hdLHS : (Polynomial.C (toPoly (chainC 30 gP gQ l)) * toBPoly (chainG 30 gP gQ l)).natDegree
+      = (toBPoly (chainG 30 gP gQ l)).natDegree :=
+    Polynomial.natDegree_C_mul hcl
+  by_cases hSne : toBPoly (chainS 30 gP gQ l) = 0
+  · -- chainS l = 0: bound is deg(G(l+1)) < deg(Gl)
+    rw [hSne, Polynomial.natDegree_zero]
+    omega
+  · -- chainS l ≠ 0: RHS top term is sl·G(l+1), degree deg(sl)+deg(G(l+1)) = deg(Gl)
+    have hmuldeg : (toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))).natDegree
+        = (toBPoly (chainS 30 gP gQ l)).natDegree + (toBPoly (chainG 30 gP gQ (l + 1))).natDegree :=
+      Polynomial.natDegree_mul hSne hG1ne
+    have hpremlt : (toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)))).natDegree
+        < (toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))).natDegree := by
+      rw [hmuldeg, hpremdeg]; omega
+    have hRHSdeg : (toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))
+          + toBPoly (bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)))).natDegree
+        = (toBPoly (chainS 30 gP gQ l) * toBPoly (chainG 30 gP gQ (l + 1))).natDegree :=
+      Polynomial.natDegree_add_eq_left_of_natDegree_lt hpremlt
+    have hdeg := congrArg Polynomial.natDegree hsc
+    rw [hdLHS, hRHSdeg, hmuldeg] at hdeg
+    omega
+
 end DeepWiki.SymbolicIntegration.Compute
