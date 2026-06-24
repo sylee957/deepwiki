@@ -346,6 +346,25 @@ def NestedTuple.projTo (X : List Att) (t : NestedTuple Att V) : NestedTuple Att 
 def NestedTuple.dropKeys (X : List Att) (t : NestedTuple Att V) : NestedTuple Att V :=
   t.filter (fun p => decide (p.1 ∉ X))
 
+@[simp] theorem NestedTuple.projTo_append (X : List Att) (t₁ t₂ : NestedTuple Att V) :
+    NestedTuple.projTo X (t₁ ++ t₂) = NestedTuple.projTo X t₁ ++ NestedTuple.projTo X t₂ := by
+  simp [NestedTuple.projTo, List.filter_append]
+
+@[simp] theorem NestedTuple.dropKeys_append (X : List Att) (t₁ t₂ : NestedTuple Att V) :
+    NestedTuple.dropKeys X (t₁ ++ t₂) = NestedTuple.dropKeys X t₁ ++ NestedTuple.dropKeys X t₂ := by
+  simp [NestedTuple.dropKeys, List.filter_append]
+
+@[simp] theorem NestedTuple.dropKeys_singleton_self (B : Att) (v : NestedValue Att V) :
+    NestedTuple.dropKeys [B] [(B, v)] = [] := by simp [NestedTuple.dropKeys]
+
+/-- Dropping `B` fixes a tuple whose attributes avoid `B`. -/
+theorem NestedTuple.dropKeys_singleton_eq_self {B : Att} {t : NestedTuple Att V}
+    (h : ∀ p ∈ t, p.1 ≠ B) : NestedTuple.dropKeys [B] t = t := by
+  rw [NestedTuple.dropKeys, List.filter_eq_self]
+  intro p hp
+  simp only [decide_eq_true_eq, List.mem_singleton]
+  exact h p hp
+
 variable [DecidableEq V]
 
 /-- **Nest** `ν_{X→B}` (§7.2): group the rows of a nested relation by their values *outside* `X`,
