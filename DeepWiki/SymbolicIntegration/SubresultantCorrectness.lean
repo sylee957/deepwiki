@@ -259,4 +259,57 @@ theorem lrtSubresultant_eq_subresultant_toBPoly (A D : CPoly) (j : ℕ) :
           (toPoly D).natDegree ((toPoly D).natDegree - 1) j := by
   rw [lrtSubresultant, toBPoly_liftCtoBPoly, toBPoly_bArgAmtD']
 
+/-! ### The LRT subresultant reduced to the first computable pseudo-remainder
+Combining the operand identification with the one-step subresultant-PRS reduction: the abstract
+`lrtSubresultant A D j` equals — up to the content factor `c^(m−j)` and the swap sign — the abstract
+subresultant of `D` (lifted) against the *first computable pseudo-remainder* `bpsremainder fuel (D lifted)
+(A − t·D')`. This is the entry point of the subresultant chain: the LRT subresultant, one
+pseudo-division step in, is the subresultant of the next PRS pair. -/
+
+/-- **LRT subresultant after one computable pseudo-division step**: with the book's formal degrees
+`n = deg D`, `m = deg D − 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`, and `(s, c)` the
+`toBPoly_bpsremainder` witnesses for the LRT PRS step `prem(D, A−t·D') = bpsremainder fuel P Q` (so
+`C(toPoly c)·P = s·Q + prem`), the abstract `lrtSubresultant A D j` satisfies
+`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · Sⱼ(Q, prem(P,Q); m, n)`
+once `j ≤ deg D − 1`, `j < deg D`, `deg(toBPoly Q) ≤ deg D − 1`, and the quotient-degree bound
+`deg(toBPoly s) + (deg D − 1) ≤ deg D` hold. This is `subresultant_C_mul_eq_rem_of_bpsremainder`
+(with `p = P`, `q = Q`, `n = deg D`, `m = deg D − 1`) transported across
+`lrtSubresultant_eq_subresultant_toBPoly` — the LRT subresultant as one step of the computable PRS. -/
+theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : CPoly) (j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
+        = toBPoly s * toBPoly (bArgAmtD' A D)
+          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+    (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
+    (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    Polynomial.C ((toPoly c) ^ (((toPoly D).natDegree - 1) - j))
+        * lrtSubresultant (toPoly A) (toPoly D) j
+      = (-1 : (ℚ[X])[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
+        * subresultant (toBPoly (bArgAmtD' A D))
+            (toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+            ((toPoly D).natDegree - 1) (toPoly D).natDegree j := by
+  rw [lrtSubresultant_eq_subresultant_toBPoly]
+  exact subresultant_C_mul_eq_rem_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)
+    (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hjm hjn hB hQ
+
+/-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
+The pieces above realize **one** subresultant-PRS step of the computable engine against the abstract
+subresultant, and identify the LRT operands exactly. The **full** agreement
+`toBPoly (bsubresultantGcd fuel j P Q) ∼ lrtSubresultant A D j` (up to a `ℚ[t]` content/unit, then
+`lrtGcdCompute` after `bprimitivePartX`/`bmonicXmodR`) needs, beyond what is proven here, the genuinely
+deep **Collins–Brown chain** formalization, whose missing lemma is precisely:
+
+  `toBPoly_bdivC_exact` — that `bdivC fuel pr beta` realizes **exact** `ℚ[t]`-division, i.e.
+  `Polynomial.C (toPoly beta) * toBPoly (bdivC fuel pr beta) = toBPoly pr` whenever `beta ∣ pr` in
+  `ℚ[t][x]` (the subresultant β-divisor always divides the pseudo-remainder — Collins's theorem).
+
+With that, the `subresPRS` β-accumulation (`subresPRS_beta`/`subresPRS_gamma`,
+`subresultant_prs_defective_eq`/`subresultant_prs_normal_eq` already in `SubresultantPRS`) would let one
+induct `subresultant_C_mul_eq_rem_of_bpsremainder` along the chain and cancel the accumulated content to
+get `ηᵢ = 1` (the subresultant equals the PRS element). That induction over the defective/normal cases
+plus the `bsubresultantGcd` degree filter and the `bprimitivePartX`/`bmonicXmodR` content/monic-normalization
+steps is the multi-hundred-line remainder, left open. The structural one-step engine and operand
+identification proven here are its reusable core. -/
+
 end DeepWiki.SymbolicIntegration.Compute
