@@ -7,6 +7,7 @@ import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
+import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -469,11 +470,46 @@ book-faithful splitting factorization (`def_3_5_1_book`) — no one-step hypothe
 `thm_3_5_1_general`. -/
 abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 
+/-! ## Chapter 3 Exercises -/
+
+/-- **Exercise 3.1** (Ch 3, p.105): `D(∏ uᵢ^eᵢ)/(∏ uᵢ^eᵢ) = ∑ eᵢ·(Duᵢ/uᵢ)` — the logarithmic
+derivative of a power product. -/
+abbrev ex_3_1 := @logDeriv_prod_zpow_div
+
+/-- **Exercise 3.4** (Ch 3, p.105): with `Δt₁ = Δv/v` (`v = (u+i)/(u−i)`) and `Δt₂ = Δu/(1+u²)`, the
+combination `i·t₁ − 2·t₂` is a constant. -/
+abbrev ex_3_4 := @deriv_log_arctan_combination_eq_zero
+
+/-- **Exercise 3.6(a)** (Ch 3, p.105): `κ_D(∑ aᵢ Xⁱ) = ∑ (Daᵢ) Xⁱ` is a derivation on `R[X]`. -/
+noncomputable abbrev ex_3_6a := @kappaD
+
+/-- **Exercise 3.7** (Ch 3, p.105): for `Δt = a/b`, `b·Δp = b·κ_D(p) + a·(dp/dt) ∈ k[t]` for any
+`p`. -/
+abbrev ex_3_7 := @bDeriv_eq
+
+/-- **Exercise 3.8** (Ch 3, p.105): Theorem 3.4.1 holds for Rao's `b·Δ` definition of normal/special —
+e.g. the product of two special polynomials is special (and the rest of the family). -/
+abbrev ex_3_8 := @IsSpecialRao.mul
+
+/-- **Exercise 3.9** (Ch 3, p.105): a squarefree `p = ∏(X−αᵢ)` is normal (Rao) iff `b(α)·Δα ≠ a(α)` at
+every root `α`. -/
+abbrev ex_3_9 := @isNormalRao_prod_X_sub_C_iff
+
+/-- **Exercise 3.10** (Ch 3, p.105): a squarefree `p = ∏(X−αᵢ)` is special (Rao) iff `b(α)·Δα = a(α)`
+at every root `α`. -/
+abbrev ex_3_10 := @isSpecialRao_prod_X_sub_C_iff
+
+/-- **Exercise 3.11** (Ch 3, p.105): a special (Rao) prime `π` is coprime to `b` (so `gcd(p,b)=1` for a
+special `p`). -/
+abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
+
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
 §3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
   (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
-Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
+Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
+  hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
+  [infra/research: multivariate decomposition + Darboux polynomials]; Ex 3.11 general non-squarefree [deferred]. -/
 
 end DeepWiki.Si
