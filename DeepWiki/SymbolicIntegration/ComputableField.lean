@@ -251,6 +251,140 @@ theorem toPolyG_cpowG (p : CPolyG α) (n : ℕ) : toPolyG (cpowG p n) = (toPolyG
   | zero => simp [cpowG, toPolyG_cons, CField.toK_one]
   | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
 
+/-! ### Normalization, degree, leading coefficient — generic correctness -/
+
+/-- `cnormG [] = []`. -/
+@[simp] theorem cnormG_nil : cnormG ([] : CPolyG α) = [] := rfl
+
+/-- `cnormG` on a cons cell, unfolded to its defining `match` (definitional). -/
+theorem cnormG_cons_eq (a : α) (as : CPolyG α) :
+    cnormG (a :: as)
+      = (match cnormG as with | [] => if CField.isZero a then [] else [a] | r => a :: r) := rfl
+
+/-- `cnormG` is **idempotent**: stripping trailing zeros twice is the same as once. -/
+@[simp] theorem cnormG_idem (p : CPolyG α) : cnormG (cnormG p) = cnormG p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [cnormG_cons_eq]
+    cases h : cnormG as with
+    | nil => cases ha : CField.isZero a <;> simp [cnormG_cons_eq, ha]
+    | cons b bs =>
+      rw [h] at ih
+      simp only [cnormG_cons_eq, ih]
+
+/-- **`toPolyG` ignores normalization**: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
+does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
+@[simp] theorem toPolyG_cnormG (p : CPolyG α) : toPolyG (cnormG p) = toPolyG p := by
+  induction p with
+  | nil => rfl
+  | cons a as ih =>
+    rw [cnormG_cons_eq]
+    cases h : cnormG as with
+    | nil =>
+      rw [h] at ih
+      simp only [toPolyG_nil] at ih
+      have has : toPolyG as = 0 := ih.symm
+      cases ha : CField.isZero a with
+      | true =>
+        have ha0 : CField.toK a = 0 := (CField.isZero_iff a).mp ha
+        rw [if_pos rfl, toPolyG_nil, toPolyG_cons, has, mul_zero, add_zero, ha0, map_zero]
+      | false =>
+        rw [if_neg (by simp), toPolyG_cons, toPolyG_nil, mul_zero, add_zero, toPolyG_cons, has,
+          mul_zero, add_zero]
+    | cons b bs =>
+      rw [h] at ih
+      simp only [toPolyG_cons, ih]
+
+/-- **Coefficient read**: the `i`-th coefficient of `toPolyG p` is `toK` of the `i`-th list entry
+(`0` past the end). The Horner bridge realizes the dense coefficient list exactly. -/
+theorem toPolyG_coeff (p : CPolyG α) (i : ℕ) :
+    (toPolyG p).coeff i = CField.toK ((p : List α).getD i CField.zero) := by
+  induction p generalizing i with
+  | nil => simp [CField.toK_zero]
+  | cons a as ih =>
+    rw [toPolyG_cons]
+    cases i with
+    | zero => simp [coeff_C]
+    | succ n => simp [coeff_X_mul, ih]
+
+/-- `cnormG` has **no trailing zero**: `(cnormG p).getLast?` is never a zero coefficient. -/
+theorem cnormG_getLast?_ne_some_zero (p : CPolyG α) :
+    ∀ v, (cnormG p : List α).getLast? = some v → CField.isZero v = false := by
+  induction p with
+  | nil => simp
+  | cons a as ih =>
+    rw [cnormG_cons_eq]
+    cases h : cnormG as with
+    | nil =>
+      cases ha : CField.isZero a with
+      | true => rw [if_pos rfl]; simp
+      | false =>
+        intro v hv
+        rw [if_neg (by simp), List.getLast?_singleton, Option.some.injEq] at hv
+        rwa [← hv]
+    | cons b bs =>
+      rw [h] at ih
+      intro v hv
+      rw [List.getLast?_cons_cons] at hv
+      exact ih v hv
+
+/-- For a normalized nonzero `CPolyG`, the leading coefficient `cleadG` is nonzero (in `K`). -/
+theorem toK_cleadG_ne_zero {p : CPolyG α} (h : cnormG p ≠ []) : CField.toK (cleadG p) ≠ 0 := by
+  rw [cleadG]
+  rcases hl : (cnormG p : List α).getLast? with _ | v
+  · exact absurd (List.getLast?_eq_none_iff.mp hl) h
+  · simp only [Option.getD_some]
+    intro hv
+    have := cnormG_getLast?_ne_some_zero p v hl
+    rw [(CField.isZero_iff v).mpr hv] at this
+    exact absurd this (by simp)
+
+/-- **`cleadG` is the coefficient at the top index**: `toK (cleadG p) = (toPolyG p).coeff (cdegG p)`. -/
+theorem toK_cleadG_eq_coeff (p : CPolyG α) :
+    CField.toK (cleadG p) = (toPolyG p).coeff (cdegG p) := by
+  rw [cleadG, cdegG, ← toPolyG_cnormG, toPolyG_coeff, List.getD_eq_getElem?_getD,
+    ← List.getLast?_eq_getElem?]
+
+/-- **Degree bound**: `natDegree (toPolyG p) ≤ (cnormG p).length − 1`. -/
+theorem natDegree_toPolyG_le (p : CPolyG α) : (toPolyG p).natDegree ≤ (cnormG p : List α).length - 1 := by
+  rw [← toPolyG_cnormG]
+  apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
+  intro m hm
+  rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega), Option.getD_none,
+    CField.toK_zero]
+
+/-- **`cdegG` is the honest `natDegree`**: `cdegG p = (toPolyG p).natDegree`. -/
+theorem cdegG_eq_natDegree (p : CPolyG α) : cdegG p = (toPolyG p).natDegree := by
+  rcases eq_or_ne (cnormG p) [] with h | h
+  · have h0 : toPolyG p = 0 := by rw [← toPolyG_cnormG, h, toPolyG_nil]
+    rw [cdegG, h, h0]; simp
+  · refine le_antisymm ?_ (natDegree_toPolyG_le p)
+    apply Polynomial.le_natDegree_of_ne_zero
+    rw [← toK_cleadG_eq_coeff]
+    exact toK_cleadG_ne_zero h
+
+/-- **`toK (cleadG p)` is the honest `leadingCoeff`**: `toK (cleadG p) = (toPolyG p).leadingCoeff`. -/
+theorem toK_cleadG_eq_leadingCoeff (p : CPolyG α) :
+    CField.toK (cleadG p) = (toPolyG p).leadingCoeff := by
+  rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toK_cleadG_eq_coeff]
+
+/-- `cnormG p = []` iff `toPolyG p = 0` (the list normalizes to empty exactly for the zero
+polynomial). -/
+theorem cnormG_eq_nil_iff (p : CPolyG α) : cnormG p = [] ↔ toPolyG p = 0 := by
+  constructor
+  · intro h; rw [← toPolyG_cnormG, h, toPolyG_nil]
+  · intro h
+    by_contra hne
+    have hcl := toK_cleadG_ne_zero hne
+    rw [toK_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
+    exact hcl rfl
+
+/-- **`cisZeroG` reads as `toPolyG = 0`**: `cisZeroG p = true ↔ toPolyG p = 0`. -/
+theorem cisZeroG_iff (p : CPolyG α) : cisZeroG p = true ↔ toPolyG p = 0 := by
+  rw [cisZeroG, ← cnormG_eq_nil_iff]
+  exact (List.isEmpty_iff (l := (cnormG p : List α)))
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
