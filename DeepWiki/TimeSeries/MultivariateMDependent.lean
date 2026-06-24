@@ -219,4 +219,36 @@ theorem IsMDependent.mul_shift {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDepend
     (ψ := fun g (i : T) => g ⟨(i : ℤ), (hmemT i).1⟩ * g ⟨(i : ℤ) + (k : ℤ), (hmemT i).2⟩)
     (by fun_prop) (by fun_prop)
 
+/-- **The lagged product of a strictly-stationary process is strictly stationary:** if `X` is strictly
+stationary (measurable coords) then `t ↦ Xₜ·Xₜ₊ₖ` is strictly stationary. Each finite joint law of the
+products is a coordinatewise image of a finite joint law of `X` on the doubled index set `{tᵢ, tᵢ+k}`
+(combined via `finSumFinEquiv`), which is shift-invariant. -/
+theorem IsStrictlyStationary.mul_shift {X : ℤ → Ω → ℝ} (h : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (k : ℕ) :
+    IsStrictlyStationary (fun t ω => X t ω * X (t + k) ω) μ := by
+  intro n t hsh
+  set e : Fin n ⊕ Fin n ≃ Fin (n + n) := finSumFinEquiv with he
+  set s : ℤ → Fin (n + n) → ℤ :=
+    fun c j => Sum.elim (fun i => t i + c) (fun i => t i + c + (k : ℤ)) (e.symm j) with hs
+  set φ : (Fin (n + n) → ℝ) → (Fin n → ℝ) := fun g i => g (e (.inl i)) * g (e (.inr i)) with hφ
+  have key : ∀ c : ℤ, (μ.map fun ω (i : Fin n) => X (t i + c) ω * X (t i + c + (k : ℤ)) ω)
+      = (μ.map fun ω j => X (s c j) ω).map φ := fun c => by
+    rw [Measure.map_map (by fun_prop) (by fun_prop)]
+    congr 1
+    funext ω i
+    simp only [hφ, Function.comp_apply, hs, Equiv.symm_apply_apply, Sum.elim_inl, Sum.elim_inr]
+  have hshift : (μ.map fun ω j => X (s 0 j) ω) = μ.map fun ω j => X (s hsh j) ω := by
+    rw [h (n + n) (s 0) hsh]
+    congr 1
+    funext ω j
+    have : s 0 j + hsh = s hsh j := by
+      simp only [hs]
+      rcases e.symm j with i | i <;> (simp only [Sum.elim_inl, Sum.elim_inr]; ring)
+    rw [this]
+  have hL : (fun ω (i : Fin n) => X (t i) ω * X (t i + (k : ℤ)) ω)
+      = fun ω (i : Fin n) => X (t i + 0) ω * X (t i + 0 + (k : ℤ)) ω := by simp
+  have hR : (fun ω (i : Fin n) => X (t i + hsh) ω * X (t i + hsh + (k : ℤ)) ω)
+      = fun ω (i : Fin n) => X (t i + hsh) ω * X (t i + hsh + (k : ℤ)) ω := rfl
+  rw [hL, key 0, hshift, ← key hsh]
+
 end DeepWiki.TimeSeries
