@@ -231,4 +231,64 @@ theorem degree_toPoly_cinterpolate_lt (pts : List (ℚ × ℚ)) (hne : pts ≠ [
     omega
   · rw [Nat.cast_lt]; omega
 
+/-! ### Degree bound for a determinant with column-degree bounds, and for `rtResultant` -/
+
+open Polynomial in
+/-- **`natDegree` of a `ℚ[X]`-matrix determinant** is bounded by the sum of per-column degree
+bounds: if every entry of column `j` has `natDegree ≤ b j`, then `natDegree (det M) ≤ ∑ j, b j`. Each
+`det` term is a product of one entry per column, so its degree is `≤ ∑ b j`. -/
+theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
+    (M : Matrix ι ι ℚ[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
+    (M.det).natDegree ≤ ∑ j, b j := by
+  rw [Matrix.det_apply]
+  refine (Polynomial.natDegree_sum_le _ _).trans ?_
+  rw [Finset.fold_max_le]
+  refine ⟨Nat.zero_le _, ?_⟩
+  intro σ _
+  rw [Function.comp_apply]
+  refine (natDegree_smul_le _ _).trans ?_
+  refine (Polynomial.natDegree_prod_le _ _).trans ?_
+  exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
+
+open Polynomial in
+/-- **Coefficient of the `rtResultant` second polynomial has `t`-degree `≤ 1`**: each `t`-coefficient
+of `A.map C − C X · D'.map C` is `C (A.coeff k) − X · C (D'.coeff k)`, degree `≤ 1` in `t`. -/
+theorem natDegree_coeff_rtResultant_g_le (A D : ℚ[X]) (k : ℕ) :
+    ((A.map (C : ℚ →+* ℚ[X]) - C Polynomial.X * (derivative D).map (C : ℚ →+* ℚ[X])).coeff
+      k).natDegree ≤ 1 := by
+  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
+  refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
+  · rw [Polynomial.natDegree_C]; exact Nat.zero_le 1
+  · refine (Polynomial.natDegree_mul_le (p := (Polynomial.X : ℚ[X]))
+      (q := Polynomial.C ((derivative D).coeff k))).trans ?_
+    rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
+
+open Polynomial in
+/-- **`rtResultant` has degree `≤ deg D` in `t`**: the Sylvester matrix of `D.map C` (constant
+`t`-entries) and `A.map C − C X · D'.map C` (degree-`≤ 1` `t`-entries) has only the `deg D` columns from
+the second polynomial carrying a `t`, so its determinant has `t`-degree `≤ deg D`. The degree side of
+the interpolation uniqueness (`deg D + 1` nodes determine `R(t)`). -/
+theorem natDegree_rtResultant_le (A D : ℚ[X]) :
+    (rtResultant A D).natDegree ≤ D.natDegree := by
+  rw [rtResultant, resultant]
+  -- column-degree bound: first `m = deg D` columns (from `g`) ≤ 1, last `deg D − 1` (from `f`) = 0
+  refine le_trans (natDegree_det_le_sum_col _
+    (fun j => j.addCases (fun _ => 1) (fun _ => 0)) ?_) ?_
+  · -- per-entry bound
+    intro i j
+    rw [Polynomial.sylvester, Matrix.of_apply]
+    refine j.addCases (fun j₁ => ?_) (fun j₁ => ?_)
+    · -- column from the second poly `g`: entry `g.coeff (i − j₁)` or 0, degree ≤ 1
+      simp only [Fin.addCases_left]
+      split_ifs with h
+      · exact natDegree_coeff_rtResultant_g_le A D _
+      · simp
+    · -- column from `f = D.map C`: entry is a constant in `t`, degree 0
+      simp only [Fin.addCases_right]
+      split_ifs with h
+      · rw [Polynomial.coeff_map, Polynomial.natDegree_C]
+      · simp
+  · -- ∑ b j = deg D
+    rw [Fin.sum_univ_add]; simp
+
 end DeepWiki.SymbolicIntegration.Compute
