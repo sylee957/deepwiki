@@ -32,7 +32,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
+open Compute CPolyG
 
 /-! ### The coefficient-ring lift `(ℚ[X])[X] → (RatFunc ℚ)[X]` and `toPolyB`
 `liftRF` is the polynomial ring map induced by the field embedding `algebraMap ℚ[X] (RatFunc ℚ)`
@@ -75,5 +75,189 @@ theorem toPolyB_eq_zero_iff_bisZero (p : BPoly) : toPolyB p = 0 ↔ bisZero p = 
 theorem toPolyB_coeff (p : BPoly) (i : ℕ) :
     (toPolyB p).coeff i = amRF (toPoly (p.getD i [])) := by
   rw [toPolyB, liftRF, Polynomial.coe_mapRingHom, Polynomial.coeff_map, toBPoly_coeff]
+
+/-! ### Step 1 — the `clearDenoms` bridge `ℚ(x)[t] ↔ ℚ[x][t]`
+`clearDenoms p` multiplies the `t`-polynomial `p ∈ ℚ(x)[t]` through by the product of its
+ℚ(x)-coefficient denominators, landing a `BPoly ∈ ℚ[x][t]` whose `i`-th coefficient is
+`numᵢ · ∏_{j≠i} denⱼ`. Read back over the field ℚ(x) (`toPolyB`), this equals `C s · toPolyG p` for the
+**common denominator scalar** `s = ∏_j denⱼ ∈ ℚ(x)` (nonzero, a unit). So the cleared polynomial is, over
+ℚ(x), a unit multiple of `toPolyG p` (`Associated`). -/
+
+/-- A `QFunNZ` coefficient reads as `amRF (num) / amRF (den)` in `RatFunc ℚ`. -/
+theorem toQFunNZ_eq_div (c : QFunNZ) :
+    QFunNZ.toQFunNZ c
+      = amRF (toPoly (CPolyG.qnumCoeff c)) / amRF (toPoly (CPolyG.qdenCoeff c)) := by
+  obtain ⟨⟨a, b⟩, hb⟩ := c; rfl
+
+/-- A `QFunNZ` coefficient's denominator is a nonzero `ℚ[X]` (by subtype membership). -/
+theorem toPoly_qdenCoeff_ne_zero (c : QFunNZ) : toPoly (CPolyG.qdenCoeff c) ≠ 0 := by
+  obtain ⟨⟨a, b⟩, hb⟩ := c; exact hb
+
+/-- **The common-denominator scalar** `commonDen p ∈ ℚ[X]`: the product of all the ℚ[x]-denominators of
+`p`'s ℚ(x)-coefficients, `∏_j toPoly (qdenCoeff (p.get j))`. The (nonzero) ℚ(x)-unit by which
+`clearDenoms` scales `toPolyG p`. -/
+noncomputable def commonDen (p : CPolyG QFunNZ) : ℚ[X] :=
+  ((p.map CPolyG.qdenCoeff).map toPoly).prod
+
+/-- `commonDen p ≠ 0`: a product of nonzero denominators. -/
+theorem commonDen_ne_zero (p : CPolyG QFunNZ) : commonDen p ≠ 0 := by
+  rw [commonDen]
+  refine List.prod_ne_zero ?_
+  intro hmem
+  rw [List.mem_map] at hmem
+  obtain ⟨d, hd, hd0⟩ := hmem
+  rw [List.mem_map] at hd
+  obtain ⟨c, hc, rfl⟩ := hd
+  exact toPoly_qdenCoeff_ne_zero c hd0
+
+/-- `amRF (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
+theorem amRF_commonDen_ne_zero (p : CPolyG QFunNZ) : amRF (commonDen p) ≠ 0 :=
+  (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr (commonDen_ne_zero p)
+
+/-- The list-getElem reading of `clearDenoms p` at an in-range index `i`: the `i`-th cleared coefficient
+is `numᵢ · (∏_{j≠i} denⱼ)`, with the `∏_{j≠i}` the filtered fold over the denominator list. -/
+theorem clearDenoms_getElem (p : CPolyG QFunNZ) (i : ℕ) (hi : i < p.length) :
+    (CPolyG.clearDenoms p)[i]? = some (Compute.cmul (CPolyG.qnumCoeff (p.getD i CField.zero))
+      ((((p.map CPolyG.qdenCoeff).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
+        (fun acc de => Compute.cmul acc de.1) [1])) := by
+  unfold CPolyG.clearDenoms
+  simp only
+  rw [List.getElem?_map, List.getElem?_zipIdx, List.getElem?_eq_getElem hi]
+  simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hi]
+
+/-- `map`-`fst` over a `zipIdx` collapses to the plain `map` (the index is dropped). -/
+theorem map_zipIdx_fst_toPoly (tl : List CPoly) (k : ℕ) :
+    (tl.zipIdx k).map (fun de => toPoly de.1) = tl.map toPoly := by
+  calc (tl.zipIdx k).map (fun de => toPoly de.1)
+      = ((tl.zipIdx k).map Prod.fst).map toPoly := by rw [List.map_map]; rfl
+    _ = tl.map toPoly := by simp
+
+/-- **Filtered-product times removed factor = full product** (`CommMonoid`, via `zipIdx` index bounds):
+the product over `j ≠ i` of `f (ds[j])` times `f (ds[i])` is the whole product, for `i` in range. The
+combinatorial core of the `clearDenoms` per-coefficient identity. -/
+theorem filter_prod_mul {α M : Type*} [CommMonoid M] (f : α → M) (def0 : α) :
+    ∀ (ds : List α) (k i : ℕ), k ≤ i → i < k + ds.length →
+      (((ds.zipIdx k).filter (fun de => decide (de.2 ≠ i))).map (fun de => f de.1)).prod
+        * f (ds.getD (i - k) def0) = (ds.map f).prod := by
+  intro ds
+  induction ds with
+  | nil => intro k i _ hlt; simp at hlt; omega
+  | cons d tl ih =>
+    intro k i hk hlt
+    rw [List.zipIdx_cons, List.filter_cons]
+    rcases Nat.eq_or_lt_of_le hk with hik | hik
+    · subst hik
+      simp only [ne_eq, not_true_eq_false, decide_false, Bool.false_eq_true, if_false]
+      have hkeep : ((tl.zipIdx (k+1)).filter (fun de => decide (de.2 ≠ k))).map (fun de => f de.1)
+          = (tl.zipIdx (k+1)).map (fun de => f de.1) := by
+        congr 1
+        rw [List.filter_eq_self.mpr]
+        intro de hde
+        have hge := List.le_snd_of_mem_zipIdx hde
+        simp only [decide_eq_true_eq, ne_eq]; omega
+      rw [hkeep]
+      calc ((tl.zipIdx (k+1)).map (fun de => f de.1)).prod * f ((d :: tl).getD (k - k) def0)
+          = (tl.map f).prod * f d := by
+            congr 1
+            · calc ((tl.zipIdx (k+1)).map (fun de => f de.1)).prod
+                  = (((tl.zipIdx (k+1)).map Prod.fst).map f).prod := by rw [List.map_map]; rfl
+                _ = (tl.map f).prod := by simp
+            · simp
+        _ = (List.map f (d :: tl)).prod := by rw [List.map_cons, List.prod_cons, mul_comm]
+    · have hne : (k ≠ i) := Nat.ne_of_lt hik
+      simp only [hne, ne_eq, not_false_eq_true, decide_true, if_true]
+      rw [List.map_cons, List.prod_cons]
+      have hsub : i - k = (i - (k+1)) + 1 := by omega
+      rw [hsub, List.getD_cons_succ]
+      have hih := ih (k+1) i (by omega) (by simp at hlt ⊢; omega)
+      rw [List.map_cons, List.prod_cons, ← hih, mul_assoc]
+
+/-- `toPoly` of a `cmul`-fold is `toPoly init` times the product of the `toPoly`-images of the folded
+list (the `ℚ[X]`-product realized by the computable fold). -/
+theorem toPoly_foldl_cmul (init : CPoly) (ds : List (CPoly × ℕ)) :
+    toPoly (ds.foldl (fun acc de => Compute.cmul acc de.1) init)
+      = toPoly init * (ds.map (fun de => toPoly de.1)).prod := by
+  induction ds generalizing init with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.foldl_cons, ih, toPoly_cmul, List.map_cons, List.prod_cons]; ring
+
+/-- `clearDenoms` preserves the `t`-length: `(clearDenoms p).length = p.length`. -/
+theorem clearDenoms_length (p : CPolyG QFunNZ) : (CPolyG.clearDenoms p).length = p.length := by
+  unfold CPolyG.clearDenoms; simp
+
+/-- `toPolyG p` vanishes past the list length (the out-of-range coefficient is `CField.zero = 0`). -/
+theorem toPolyG_coeff_eq_zero_of_length_le (p : CPolyG QFunNZ) {i : ℕ} (hi : p.length ≤ i) :
+    (toPolyG p).coeff i = 0 := by
+  rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none hi]
+  show CFieldSpec.toK (CField.zero : QFunNZ) = 0
+  rw [CFieldSpec.toK_zero]
+
+/-- **Per-coefficient `clearDenoms` identity**: `(toPolyB (clearDenoms p)).coeff i = amRF (commonDen p)
+· (toPolyG p).coeff i` for every `i` — the cleared `i`-th coefficient `amRF (numᵢ · ∏_{j≠i} denⱼ)` equals
+the common denominator scalar `amRF (∏_j denⱼ)` times `amRF numᵢ / amRF denᵢ`. -/
+theorem toPolyB_clearDenoms_coeff (p : CPolyG QFunNZ) (i : ℕ) :
+    (toPolyB (CPolyG.clearDenoms p)).coeff i
+      = amRF (commonDen p) * (toPolyG p).coeff i := by
+  rcases lt_or_ge i p.length with hi | hi
+  · -- in range: use the getElem reading, fold-product, and the filter-product identity
+    rw [toPolyB_coeff, toPolyG_coeff]
+    rw [List.getD_eq_getElem?_getD, clearDenoms_getElem p i hi, Option.getD_some]
+    rw [toPoly_cmul, toPoly_foldl_cmul, show toPoly ([1] : CPoly) = 1 by simp [toPoly_cons],
+      one_mul]
+    set dens := p.map CPolyG.qdenCoeff with hdens
+    -- common denominator = ∏_j toPoly denⱼ
+    have hcd : commonDen p = (dens.map toPoly).prod := by rw [commonDen, hdens]
+    -- the i-th denominator (in range)
+    have hlen : i < dens.length := by rw [hdens, List.length_map]; exact hi
+    have hfilt := filter_prod_mul (toPoly) ([] : CPoly) dens 0 i (Nat.zero_le i)
+      (by simpa using hlen)
+    rw [Nat.sub_zero] at hfilt
+    -- denᵢ as the getD
+    have hdeni : toPoly (dens.getD i []) = toPoly (CPolyG.qdenCoeff (p.getD i CField.zero)) := by
+      congr 1
+      rw [hdens, List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map,
+        List.getElem?_eq_getElem hi]
+      simp
+    -- num/den read of the i-th coefficient
+    have hcoeff : (CFieldSpec.toK (p.getD i CField.zero) : RatFunc ℚ)
+        = amRF (toPoly (CPolyG.qnumCoeff (p.getD i CField.zero)))
+          / amRF (toPoly (CPolyG.qdenCoeff (p.getD i CField.zero))) := by
+      show QFunNZ.toQFunNZ (p.getD i CField.zero) = _
+      rw [toQFunNZ_eq_div]
+    have hden0 : amRF (toPoly (CPolyG.qdenCoeff (p.getD i CField.zero))) ≠ 0 :=
+      amRF_toPoly_ne_zero (toPoly_qdenCoeff_ne_zero _)
+    rw [hcoeff, hcd]
+    -- push amRF through the filtered product and absorb the removed factor via hfilt
+    have hpushP : amRF (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
+        (fun de => toPoly de.1)).prod)
+        * amRF (toPoly (CPolyG.qdenCoeff (p.getD i CField.zero)))
+        = amRF ((dens.map toPoly).prod) := by
+      rw [← map_mul, ← hdeni, hfilt]
+    -- the goal is now `amRF (num * filteredProd) = amRF (∏all) * (amRF num / amRF den)`
+    rw [map_mul, mul_comm (amRF ((dens.map toPoly).prod)) _, div_mul_eq_mul_div, eq_div_iff hden0,
+      mul_assoc, hpushP]
+  · -- out of range: both sides vanish
+    rw [toPolyB_coeff, List.getD_eq_getElem?_getD,
+      List.getElem?_eq_none (by rw [clearDenoms_length]; exact hi), Option.getD_none, toPoly_nil,
+      map_zero, toPolyG_coeff_eq_zero_of_length_le p hi, mul_zero]
+
+/-- **Step 1 — the `clearDenoms` bridge** (exact form): over the field ℚ(x), the cleared polynomial
+`toPolyB (clearDenoms p)` is the common-denominator scalar `C (amRF (commonDen p))` times `toPolyG p`.
+So `clearDenoms` realizes ℚ(x)-multiplication by the (nonzero) product of denominators. -/
+theorem toPolyB_clearDenoms (p : CPolyG QFunNZ) :
+    toPolyB (CPolyG.clearDenoms p) = Polynomial.C (amRF (commonDen p)) * toPolyG p := by
+  ext i
+  rw [toPolyB_clearDenoms_coeff, Polynomial.coeff_C_mul]
+
+/-- **Step 1 — the `clearDenoms` bridge** (`Associated` form): over the field ℚ(x), the cleared
+ℚ[x][t] polynomial and `toPolyG p` are **associates** in `(RatFunc ℚ)[X]` — they differ by the unit
+`C (amRF (commonDen p))` (`amRF (commonDen p)` a nonzero `RatFunc ℚ`). The fraction-clearing is a
+unit-scaling over the field, so it preserves the gcd up to associates. -/
+theorem associated_toPolyB_clearDenoms (p : CPolyG QFunNZ) :
+    Associated (toPolyB (CPolyG.clearDenoms p)) (toPolyG p) := by
+  rw [toPolyB_clearDenoms]
+  exact (associated_unit_mul_left _ _
+    (Polynomial.isUnit_C.mpr (amRF_commonDen_ne_zero p).isUnit))
 
 end DeepWiki.SymbolicIntegration
