@@ -61,6 +61,12 @@ def qpow (x : QFun) : ℕ → QFun
   | 0 => qone
   | n + 1 => qmul x (qpow x n)
 
+/-- **Derivative `d/dx` of a rational function** `D(a/b) = (a'·b − a·b')/b²` (the quotient rule;
+`Dx = 1`), via `cderiv`. -/
+def qderiv (x : QFun) : QFun :=
+  let (a, b) := x
+  (csub (cmul (cderiv a) b) (cmul a (cderiv b)), cmul b b)
+
 /-! ### Field-homomorphism lemmas: `qone`, `qneg`, `qsub`, `qmul`
 
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`.
@@ -114,4 +120,23 @@ theorem toQFun_qpow (x : QFun) (n : ℕ) : toQFun (qpow x n) = (toQFun x) ^ n :=
   | zero => rw [qpow, toQFun_qone, pow_zero]
   | succ n ih => rw [qpow, toQFun_qmul, ih, pow_succ, mul_comm]
 
-end DeepWiki.SymbolicIntegration.Compute
+open scoped Differential in
+/-- **`qderiv` realizes the `d/dx` derivation**: `toQFun (qderiv x) = (toQFun x)′` in `RatFunc ℚ`
+(the `ratFuncDeriv` derivation), provided the denominator is nonzero. The computable quotient rule
+`(a/b)′ = (a'·b − a·b')/b²` realizes the field derivation exactly. -/
+theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (toQFun x)′ := by
+  obtain ⟨a, b⟩ := x
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  have hbm : am (toPoly b) ≠ 0 := am_toPoly_ne_zero hb
+  -- `am`-of-derivative rewrites.
+  have hda : (am (toPoly a))′ = am (derivative (toPoly a)) := ratFuncDeriv_algebraMap (toPoly a)
+  have hdb : (am (toPoly b))′ = am (derivative (toPoly b)) := ratFuncDeriv_algebraMap (toPoly b)
+  -- the quotient rule for `(am a / am b)′`.
+  have hderiv : (am (toPoly a) / am (toPoly b))′
+      = (am (toPoly b) * am (derivative (toPoly a))
+          - am (toPoly a) * am (derivative (toPoly b))) / (am (toPoly b) ^ 2) := by
+    rw [deriv_div, hda, hdb]
+  -- compute `toQFun (qderiv (a,b))`: numerator `cderiv a · b − a · cderiv b`, denom `b · b`.
+  simp only [toQFun, qderiv, toPoly_csub, toPoly_cmul, toPoly_cderiv, map_sub, map_mul]
+  rw [hderiv, pow_two]
+  ring
