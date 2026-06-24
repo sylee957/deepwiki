@@ -129,3 +129,31 @@ theorem tendstoInMeasure_remainder_of_hasFDerivAt {E F : Type*}
   congr 1
   ext ω
   simp only [Set.mem_setOf_eq, Pi.zero_apply, sub_zero, Real.norm_eq_abs, halg ω]
+
+/-- **The multivariate delta method** (Brockwell–Davis Proposition 6.4.3, convergence-in-distribution
+form): if `g` is differentiable at `p` with derivative `D`, `Xₙ → p` in probability, the standardized
+`(Xₙ − p)/cₙ` converges in distribution to `V`, and `‖(Xₙ − p)/cₙ‖` is uniformly tight, then
+`(g(Xₙ) − g(p))/cₙ` converges in distribution to `D V`. The linear part `D((Xₙ − p)/cₙ) ⇒ D V` (continuous
+mapping), the Taylor remainder vanishes in probability, and Slutsky combines them. (Tightness is the only
+hypothesis not yet derivable from `(Xₙ − p)/cₙ ⇒ V` in Mathlib — Prokhorov.) -/
+theorem tendstoInDistribution_smul_comp_of_hasFDerivAt {E F : Type*} [NormedAddCommGroup E]
+    [NormedSpace ℝ E] [MeasurableSpace E] [BorelSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+    [MeasurableSpace F] [BorelSpace F] [SecondCountableTopology F] [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : ℕ → Ω → E}
+    {p : E} {g : E → F} {D : E →L[ℝ] F} {c : ℕ → ℝ} {V : Ω' → E} (hg : HasFDerivAt g D p)
+    (hXp : TendstoInMeasure μ X atTop (fun _ => p))
+    (hconv : TendstoInDistribution (fun n ω => (c n)⁻¹ • (X n ω - p)) atTop V (fun _ => μ) P')
+    (htight : ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, 0 < M ∧ ∀ n,
+      μ {ω | M ≤ |‖(c n)⁻¹ • (X n ω - p)‖|} ≤ ε)
+    (hg' : ∀ n, AEMeasurable (fun ω => (c n)⁻¹ • (g (X n ω) - g p)) μ) :
+    TendstoInDistribution (fun n ω => (c n)⁻¹ • (g (X n ω) - g p)) atTop (fun ω => D (V ω))
+      (fun _ => μ) P' := by
+  have hcomp := hconv.continuous_comp D.continuous
+  simp only [Function.comp_def] at hcomp
+  have heq : (fun n ω => D ((c n)⁻¹ • (X n ω - p))) = fun n ω => (c n)⁻¹ • D (X n ω - p) := by
+    funext n ω; exact D.map_smul _ _
+  rw [heq] at hcomp
+  exact tendstoInDistribution_smul_comp_of_tendstoInMeasure_remainder hcomp
+    (tendstoInMeasure_remainder_of_hasFDerivAt hg hXp htight) hg'
+
+end DeepWiki.TimeSeries
