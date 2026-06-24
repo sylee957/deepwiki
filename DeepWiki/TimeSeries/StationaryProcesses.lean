@@ -64,10 +64,28 @@ structure IsWeaklyStationary (X : ℤ → Ω → ℝ) (μ : Measure Ω) : Prop w
 
 /-- **Definition 1.3.3**: strict stationarity — every finite-dimensional joint
 distribution is shift-invariant: the law of `(X_{t₁}, …, X_{tₖ})` equals the law
-of `(X_{t₁+h}, …, X_{tₖ+h})`. -/
-def IsStrictlyStationary (X : ℤ → Ω → ℝ) (μ : Measure Ω) : Prop :=
+of `(X_{t₁+h}, …, X_{tₖ+h})`. Generic in the value type so vector-valued processes
+(and their measurable projections, via `IsStrictlyStationary.comp`) are covered. -/
+def IsStrictlyStationary {V : Type*} [MeasurableSpace V] (X : ℤ → Ω → V) (μ : Measure Ω) : Prop :=
   ∀ (k : ℕ) (t : Fin k → ℤ) (h : ℤ),
     μ.map (fun ω i => X (t i) ω) = μ.map (fun ω i => X (t i + h) ω)
+
+/-- **Strict stationarity transports through a pointwise measurable map**: if `X` is strictly
+stationary (with measurable coordinates) and `g` is measurable, then `fun t ω ↦ g (X t ω)` is strictly
+stationary — each finite joint law composes with `g` coordinatewise, preserving shift-invariance. So a
+scalar projection `⟪Yₜ, λ⟫` of a strictly stationary vector process is strictly stationary. -/
+theorem IsStrictlyStationary.comp {V W : Type*} [MeasurableSpace V] [MeasurableSpace W]
+    {X : ℤ → Ω → V} {μ : Measure Ω} (h : IsStrictlyStationary X μ) (hXmeas : ∀ t, Measurable (X t))
+    {g : V → W} (hg : Measurable g) : IsStrictlyStationary (fun t ω => g (X t ω)) μ := by
+  intro k t hsh
+  have hmeas : Measurable (fun (v : Fin k → V) (i : Fin k) => g (v i)) := by fun_prop
+  have e1 : (μ.map fun ω (i : Fin k) => g (X (t i) ω))
+      = (μ.map fun ω (i : Fin k) => X (t i) ω).map (fun v i => g (v i)) :=
+    (Measure.map_map hmeas (by fun_prop)).symm
+  have e2 : (μ.map fun ω (i : Fin k) => g (X (t i + hsh) ω))
+      = (μ.map fun ω (i : Fin k) => X (t i + hsh) ω).map (fun v i => g (v i)) :=
+    (Measure.map_map hmeas (by fun_prop)).symm
+  rw [e1, e2, h k t hsh]
 
 /-- The autocovariance of a stationary process as a function of the lag alone:
 `γ_X(h) = Cov(X_{t+h}, Xₜ) = Cov(X_h, X₀)` (Remark 2 after Definition 1.3.2). -/
