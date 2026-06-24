@@ -296,4 +296,38 @@ theorem evalFOExpr_dbSqlToFO (db : (i : ι) → Table (sch i) Val) {Ω : Finset 
     (q : DbSql ι sch Val Ω) : evalFOExpr db (dbSqlToFO q) = evalDbSql db q := by
   rw [dbSqlToFO, evalFOExpr_algToFO, evalDbAlg_dbSqlToAlg]
 
+/-- Reduce a db-indexed algebra expression to a db-indexed SQL query: set operations to
+`UNION`/`MINUS`, every base/SPJ subexpression to an elementary query. -/
+def algToDbSql : {Ω : Finset Att} → DbAlgExpr ι sch Val Ω → DbSql ι sch Val Ω
+  | _, .union e e' => .union (algToDbSql e) (algToDbSql e')
+  | _, .diff e e' => .minus (algToDbSql e) (algToDbSql e')
+  | _, .base i => .elem (.base i)
+  | _, .sel P e => .elem (.sel P e)
+  | _, .proj Ω₁ h e => .elem (.proj Ω₁ h e)
+  | _, .join e e' => .elem (.join e e')
+
+/-- The algebra-to-SQL reduction preserves the view instance. -/
+theorem evalDbSql_algToDbSql (db : (i : ι) → Table (sch i) Val) :
+    {Ω : Finset Att} → (e : DbAlgExpr ι sch Val Ω) → evalDbSql db (algToDbSql e) = evalDbAlg db e
+  | _, .base _ => by simp only [algToDbSql, evalDbSql]
+  | _, .sel _ _ => by simp only [algToDbSql, evalDbSql]
+  | _, .proj _ _ _ => by simp only [algToDbSql, evalDbSql]
+  | _, .join _ _ => by simp only [algToDbSql, evalDbSql]
+  | _, .union e e' => by
+      simp only [algToDbSql, evalDbSql, evalDbAlg, evalDbSql_algToDbSql db e,
+        evalDbSql_algToDbSql db e']
+  | _, .diff e e' => by
+      simp only [algToDbSql, evalDbSql, evalDbAlg, evalDbSql_algToDbSql db e,
+        evalDbSql_algToDbSql db e']
+
+/-- **Expressive equivalence of the db-indexed algebra and SQL**: over any database, a view instance
+is SQL-expressible iff algebra-expressible. With `dbSqlToFO`/`algToFO`, both are subsumed by the
+first-order tuple calculus. -/
+theorem dbSql_expressible_iff_alg_expressible (db : (i : ι) → Table (sch i) Val) {Ω : Finset Att}
+    (r : Table Ω Val) :
+    (∃ q : DbSql ι sch Val Ω, evalDbSql db q = r) ↔ (∃ e : DbAlgExpr ι sch Val Ω, evalDbAlg db e = r) := by
+  constructor
+  · rintro ⟨q, rfl⟩; exact ⟨dbSqlToAlg q, evalDbAlg_dbSqlToAlg db q⟩
+  · rintro ⟨e, rfl⟩; exact ⟨algToDbSql e, evalDbSql_algToDbSql db e⟩
+
 end DeepWiki

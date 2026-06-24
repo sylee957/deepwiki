@@ -235,6 +235,14 @@ abbrev reduction_sqlToCalc := @DeepWiki.dbSqlToFO
 subsumed by the first-order tuple calculus. -/
 abbrev reduction_sqlToCalc_correct := @DeepWiki.evalFOExpr_dbSqlToFO
 
+/-- **§2.6** (converse): db-indexed algebra → SQL reduction (with `dbSqlToAlg`, db-indexed algebra
+and SQL are equivalent in the same world as the calculus reductions). -/
+abbrev reduction_algToDbSql := @DeepWiki.algToDbSql
+
+/-- **§2.6**: over any database, a view instance is db-indexed-SQL-expressible iff algebra-
+expressible; with `dbSqlToFO`/`algToFO` both are subsumed by the tuple calculus. -/
+abbrev db_sql_alg_expressive_equiv := @DeepWiki.dbSql_expressible_iff_alg_expressible
+
 /-! ## §2.3 SQL: Structured Query Language -/
 
 /-- **SQL query** (§2.3.1/§2.3.2, Fig 2.11, p.37): an elementary `Select … From … Where …` query
