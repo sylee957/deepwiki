@@ -709,6 +709,43 @@ hypothesis (the one remaining list-structure fact — see the ceiling note), the
 `IsSimilar (lrtSubresultant A D j) (toBPoly (bsubresultantGcd fuel j P Q))` follows by `Eq ▸` on the
 endpoint similarity. This isolates the residual gap to a *single* purely-structural list identity. -/
 
+/-! #### The degree-`j` filter identity, structurally (discharging `hfilt` for the real `subresPRS`)
+`bsubresultantGcd fuel j P Q` filters the chain `subresPRS fuel P Q` to its degree-`j` nonzero elements
+and takes the **last**. Since the `subresPRS` `x`-degrees strictly decrease, the degree-`j` element is
+**unique**, so the filtered list is a singleton and the last element *is* that one element — the chain's
+degree-`j` element `G (m+2)`. These lemmas turn that uniqueness into the literal filter identity `hfilt`,
+abstracted over the list (so it applies to the real `subresPRS` once the chain element is exhibited at the
+filtered position). -/
+
+/-- **Filter-last is the unique filtered element**: if filtering a list `L` by a predicate yields a
+*singleton* `[w]`, the `getLast?.getD d` read of the filter returns exactly `w`. The list-structure core of
+the degree-`j` filter identity: a singleton filter has its single element as its last. -/
+theorem getLast?_getD_filter_eq_of_singleton {α : Type*} (L : List α) (pred : α → Bool) (w d : α)
+    (hfil : L.filter pred = [w]) :
+    (L.filter pred).getLast?.getD d = w := by
+  rw [hfil, List.getLast?_singleton, Option.getD_some]
+
+/-- **`bsubresultantGcd` reads as the singleton-filtered element**: if the degree-`j` nonzero filter of
+`subresPRS fuel P Q` is a singleton `[w]`, then `bsubresultantGcd fuel j P Q = w`. Unfolds
+`bsubresultantGcd` and applies `getLast?_getD_filter_eq_of_singleton`. -/
+theorem bsubresultantGcd_eq_of_filter_singleton (fuel j : ℕ) (P Q : BPoly) (w : BPoly)
+    (hfil : (subresPRS fuel P Q).filter (fun R => decide (bdeg R = j ∧ ¬ bisZero R)) = [w]) :
+    bsubresultantGcd fuel j P Q = w := by
+  rw [bsubresultantGcd]
+  exact getLast?_getD_filter_eq_of_singleton _ _ w [] hfil
+
+/-- **The degree-`j` filter identity** (the `hfilt` hypothesis, structurally): if the degree-`j` nonzero
+filter of `subresPRS fuel P Q` is the singleton `[G (m+2)]` (the chain element of `x`-degree `j` —
+the unique such element, by strict degree decrease), then `bsubresultantGcd fuel j P Q = G (m+2)`, hence
+`toBPoly (bsubresultantGcd fuel j P Q) = toBPoly (G (m+2))` — the literal `hfilt` of
+`isSimilar_lrtSubresultant_bsubresultantGcd`. So exhibiting the chain's degree-`j` element as the sole
+filtered element discharges `hfilt`. -/
+theorem toBPoly_bsubresultantGcd_eq_of_filter_singleton (fuel : ℕ) (P Q : BPoly) (G : ℕ → BPoly) (m : ℕ)
+    (hfil : (subresPRS fuel P Q).filter
+        (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
+    toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree P Q) = toBPoly (G (m + 2)) := by
+  rw [bsubresultantGcd_eq_of_filter_singleton fuel (toBPoly (G (m + 2))).natDegree P Q (G (m + 2)) hfil]
+
 /-- **`bsubresultantGcd ∼ lrtSubresultant`, modulo the filter identity** (the chain agreement, endpoint
 form): under the LRT-chain endpoint hypotheses (as in `isSimilar_lrtSubresultant_subresPRS_elt`) and the
 **filter identity** `hfilt : toBPoly (bsubresultantGcd fuel (deg (G (m+2))) (G 0) (G 1)) = toBPoly (G (m+2))`
