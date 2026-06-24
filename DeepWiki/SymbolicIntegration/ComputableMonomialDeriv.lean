@@ -109,4 +109,51 @@ noncomputable instance instCDiffFieldSpecQFunNZ : CDiffFieldSpec QFunNZ where
   diffK := inferInstanceAs (Differential (RatFunc ℚ))
   toK_cderiv := QFunNZ.toQFunNZ_qderivNZ
 
+/-! ### The monomial derivation on `CPolyG α` (`Dt` a polynomial in `t`)
+
+For a monomial `t` over the coefficient field with `Dt ∈ k[t]`, the derivation on `k[t]` is
+`D p = κ_D(p) + Dt·(dp/dt)` — coefficientwise `cderiv` plus `(dp/dt)·Dt`. `cmonomialDeriv` realizes
+this over `CPolyG α` (the engine, needing only `[CDiffField α]`), and `toPolyG_cmonomialDeriv` proves
+it equals Mathlib's `Differential.implicitDeriv (toPolyG Dt)` (the correctness, the **key bridge**). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Coefficientwise derivation** `cmapDeriv p = p.map cderiv`: apply `CDiffField.cderiv` to every
+coefficient (the `κ_D` part of the monomial derivation). -/
+def cmapDeriv (p : CPolyG α) : CPolyG α := (p : List α).map CDiffField.cderiv
+
+/-- **Monomial derivation** `cmonomialDeriv Dt p = κ_D(p) + (dp/dt)·Dt`: coefficientwise `cderiv` plus
+the product of the formal `t`-derivative with `Dt`. The derivation on `k[t]` with `Dt` the derivative
+of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
+def cmonomialDeriv (Dt p : CPolyG α) : CPolyG α :=
+  caddG (cmapDeriv p) (cmulG (cderivG p) Dt)
+
+variable [CFieldSpec α] [CDiffFieldSpec α]
+
+/-- **`cmapDeriv` realizes `mapCoeffs`**: `toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p)`
+— the coefficientwise computable derivation realizes Mathlib's polynomial coefficient-map derivation. -/
+theorem toPolyG_cmapDeriv (p : CPolyG α) :
+    toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p) := by
+  induction p with
+  | nil => simp [cmapDeriv]
+  | cons a as ih =>
+    show toPolyG (CDiffField.cderiv a :: cmapDeriv as) = Differential.mapCoeffs (toPolyG (a :: as))
+    rw [toPolyG_cons, ih, toPolyG_cons, map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
+      Derivation.leibniz, Differential.mapCoeffs_X, smul_zero, add_zero, smul_eq_mul]
+
+/-- **`cmonomialDeriv` realizes `implicitDeriv`** — the key Stage-D bridge: the computable monomial
+derivation realizes Mathlib's `Differential.implicitDeriv (toPolyG Dt)` (with `Dt ↦ v = toPolyG Dt`),
+i.e. `toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p)`. -/
+theorem toPolyG_cmonomialDeriv (Dt p : CPolyG α) :
+    toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p) := by
+  rw [cmonomialDeriv, toPolyG_caddG, toPolyG_cmapDeriv, toPolyG_cmulG, toPolyG_cderivG,
+    show Differential.implicitDeriv (toPolyG Dt) (toPolyG p)
+      = Differential.mapCoeffs (toPolyG p) + toPolyG Dt * Polynomial.derivative (toPolyG p) from by
+        simp [Differential.implicitDeriv, derivative']]
+  ring
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
