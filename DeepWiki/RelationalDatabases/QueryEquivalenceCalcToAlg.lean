@@ -102,4 +102,31 @@ def calcToAlg (db : (i : ι) → Table (sch i) Val) :
   | _, .or C D => AlgExpr.union (calcToAlg db C) (calcToAlg db D)
   | _, .ex _ C => AlgExpr.proj Finset.subset_union_right (calcToAlg db C)
 
+/-- Reading a variable equals the flattened row restricted to its scheme (tuple form of the lookup
+bridge). -/
+theorem lookup_eq_restrict {Γ : Ctx Att} {Ω : Finset Att} (hd : CtxDisjoint Γ) (v : Var Γ Ω)
+    (e : Env Val Γ) :
+    lookup v e = (envToTuple e).restrict (scheme_subset_flattenCtx v.scheme_mem) := by
+  funext a
+  exact lookup_eq_envToTuple v hd e a.property _
+
+/-- A scheme disjoint from every context scheme is disjoint from the product scheme. -/
+theorem disjoint_flattenCtx {Ω : Finset Att} : {Γ : Ctx Att} → (∀ Ω' ∈ Γ, Disjoint Ω Ω') →
+    Disjoint Ω (flattenCtx Γ)
+  | [], _ => by simp [flattenCtx]
+  | _ :: _, h => by
+      rw [flattenCtx_cons, Finset.disjoint_union_right]
+      exact ⟨h _ (List.mem_cons.mpr (.inl rfl)),
+        disjoint_flattenCtx fun _ hΩ'' => h _ (List.mem_cons.mpr (.inr hΩ''))⟩
+
+/-- The tail part of a flattened cons-environment is the flattened tail (the head scheme being
+disjoint from the rest). -/
+theorem restrict_envToTuple_cons {Ω : Finset Att} {Γ : Ctx Att} (hd : Disjoint Ω (flattenCtx Γ))
+    (e : Env Val (Ω :: Γ)) :
+    (envToTuple e).restrict Finset.subset_union_right = envToTuple e.2 := by
+  obtain ⟨t, e'⟩ := e
+  funext a
+  have hne : a.val ∉ Ω := Finset.disjoint_right.mp hd a.property
+  simp only [Tuple.restrict, envToTuple, dif_neg hne]
+
 end DeepWiki
