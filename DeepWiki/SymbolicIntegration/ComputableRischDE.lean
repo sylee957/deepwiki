@@ -32,7 +32,7 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
 5. **§6.5–6.6 `PolyRischDE`** — the non-cancellation and cancellation cases that finally solve the
    degree-bounded polynomial equation in `k[t]`.
 
-## What this file delivers (the first two reachable stages, computable + `native_decide`-validated)
+## What this file delivers (the first four reachable stages, computable + `native_decide`-validated)
 
 * **`cWeakNormalizer Dt fuel fnum fden`** (§6.1) — the `WeakNormalizer` algorithm box (book p.183) over
   the tower: split the denominator of `f = fnum/fden` into its normal part `dₙ`, form
@@ -47,6 +47,23 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
   of `f, g`, compute `h = gcd(eₙ, eₙ')/gcd(p, p')` with `p = gcd(dₙ, eₙ)`, and return the reduction
   quadruplet `(a, b, c, h) = (dₙh, dₙhf − dₙ(Dh), dₙh²g, h)` (or **no solution** when `eₙ ∤ dₙh²`).
 
+* **`cRdeSpecialDenominator Dt fuel a b c`** (§6.2, the `RdeSpecialDenom{Exp,Tan}` boxes, book p.190/192)
+  — the *special* part of the denominator. Given `a·Dq + b·q = c` (eq. 6.6) with `a` free of special
+  factors, take the monic special irreducible `p` of the monomial (`cSpecialPoly`: `t²+1` tangent, `t`
+  hyperexponential, `1` primitive), the orders `n_b = ν_p(b)`, `n_c = ν_p(c)`, the lower bound
+  `n = min(0, n_c − min(0, n_b)) ≤ 0` on `ν_p(q)`, and the clearing power `N = max(0, −n_b, n − n_c)`,
+  substitute `q = h·pⁿ` (eq. 6.7) and clear by `p^N`, returning `(a·pᴺ, (b + n·a·Dp/p)·pᴺ, c·p^{N−n},
+  p^{−n})` so that `r = q·p^{−n} ∈ k[t]`. The cancellation refinement `n ← min(n, m)` (the `n_b = 0`
+  branch) needs the parametric-logarithmic-derivative subroutine (Ch. 7) and is documented but not run.
+
+* **`cRdeBoundDegree Dt fuel a b c`** (§6.3, the `RdeBoundDegree{Base,Prim,Exp,NonLinear}` boxes, book
+  p.198–201) — an explicit upper bound `n ∈ ℕ` on `deg_t(q)` for any polynomial solution `q ∈ k[t]` of
+  `a·Dq + b·q = c` (eq. 6.12), case-split by `δ = deg(Dt)`: **nonlinear** `δ ≥ 2`
+  `n = max(0, d_c − max(d_a + δ − 1, d_b))`; **hyperexponential** `δ = 1`
+  `n = max(0, d_c − max(d_b, d_a))`; **primitive** `δ = 0` `max(0, d_c − d_b)` or `max(0, d_c − d_a + 1)`.
+  The cancellation refinements (raising the bound when the leading coefficients are a logarithmic
+  derivative) likewise need the Ch. 7 subroutine and are documented but not run.
+
 ## Validation (`native_decide`)
 
 Bronstein's **Example 6.1.2** (book p.186): `k = ℚ(x)`, `D = d/dx`, `t = tan(x)` (`Dt = 1 + t²`), the
@@ -57,14 +74,24 @@ solving the reduced equation `t·Dq + (t−1)(t²+1)·q = 1` (book eq. 6.5). `na
 output components against these book values (via `cisZeroG` of the cleared difference — `QFunNZ` has no
 `DecidableEq`). `cWeakNormalizer` is checked to return `q = 1` here (`f` is already weakly normalized).
 
+Continuing on the same example, **Example 6.2.2** (book p.192) runs `RdeSpecialDenomTan` on
+`(a, b, c) = (t, (t−1)(t²+1), 1)`: `p = t²+1`, `n_b = 1`, `n_c = 0`, `n = 0`, `N = 0`, returning the
+*unchanged* `(t, (t−1)(t²+1), 1, 1)` (the special part is trivial here, `h = 1`). **Example 6.3.4**
+(book p.202) runs `RdeBoundDegreeNonLinear` on the same `(a, b, c)` with `δ = 2`: `d_a = 1`, `d_b = 3`,
+`d_c = 0`, giving the degree bound `n = 0` (any polynomial solution lies in ℚ(x)). `native_decide` pins
+both (`rischDE_specialDenominator_example`, `rischDE_boundDegree_example`).
+
 ## What is NOT here (the remaining stages, honestly deferred)
 
-This is one major algorithm; the deliverable is the **first two stages computing over the tower** plus
-validation, not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). The remaining stages —
-§6.2 `RdeSpecialDenominator` (the `pⁿ` special-factor clearing, case-split by monomial type),
-§6.3 `RdeBoundDegree`, §6.4 `SPDE`, §6.5–6.6 `PolyRischDE` — require the parametric-logarithmic-
-derivative subroutine (§5.12 / Ch. 7) for the hyperexponential degree bound and the recursive
-polynomial solver; they are the natural continuation. No `sorry`. -/
+This is one major algorithm; the deliverable is the **first four stages computing over the tower** plus
+validation, not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). The cancellation
+refinements inside `cRdeSpecialDenominator`/`cRdeBoundDegree` (the parametric-logarithmic-derivative
+checks, §5.12 / Ch. 7) only *raise* the bound in the cancellation case and are documented but not run;
+the validation case (and every non-cancellation case) is reproduced exactly. The remaining pipeline
+stages — §6.4 `SPDE` (Rothstein's recursive `gcd(a,b)`-peeling reduction of the degree-bounded
+`a·Dq + b·q = c` to one with `a = 1`, Theorem 6.4.1 / eq. 6.16) and §6.5–6.6 `PolyRischDE` (the
+non-cancellation and cancellation cases solving the degree-bounded polynomial equation in `k[t]`) — are
+the natural continuation. No `sorry`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -169,6 +196,120 @@ def cRdeNormalDenominator (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden
     some (a, b, c, h)
   else none
 
+/-! ### `cRdeSpecialDenominator` (Bronstein §6.2, the `RdeSpecialDenom*` algorithm boxes, book p.190/192)
+
+After `cRdeNormalDenominator`, we have `a·Dq + b·q = c` (eq. 6.6) with `a ∈ k[t]` having no special
+factor, `b, c ∈ k⟨t⟩`. The §6.2 special-denominator step clears the *special* part of the denominators
+of `b, c`: it substitutes `q = h·pⁿ` (eq. 6.7) for the monic special irreducible `p` and a lower bound
+`n ≤ 0` on `ν_p(q)`, then multiplies through by `p^N` (`N ≥ 0`) to clear all denominators, returning a
+new polynomial quadruplet `(ā, b̄, c̄, h)` with `ā, b̄, c̄, h ∈ k[t]` such that any `k⟨t⟩`-solution `q` of
+`a·Dq+b·q=c` has `r = q·h ∈ k[t]` solving `ā·Dr + b̄·r = c̄` (eq. 6.7 cleared). -/
+
+/-- **`p`-adic valuation** `cValuation fuel p x = ν_p(x)`: the multiplicity of the monic irreducible
+`p` dividing the polynomial `x` (largest `k` with `pᵏ ∣ x`), found by trial division up to `fuel`. For
+the special-denominator step `ν_p(b)`/`ν_p(c)` are the orders of the special factor `p` (e.g. `t²+1`)
+in the *numerator* polynomials of `b, c`. Returns `0` on the zero polynomial or constant/unit `p`. -/
+def cValuation {α : Type*} [CField α] (fuel : ℕ) (p x : CPolyG α) : ℕ :=
+  let rec go : ℕ → CPolyG α → ℕ
+    | 0, _ => 0
+    | fuel + 1, x =>
+        if cisZeroG x then 0
+        else if cdegG p = 0 then 0
+        else if cdvdG fuel p x then 1 + go fuel (cdivG fuel x p)
+        else 0
+  go fuel x
+
+/-- **Special monic irreducible of the monomial** `cSpecialPoly Dt fuel = p` — the monic special part
+of the monomial derivative `Dt`, i.e. the monic squarefree polynomial whose irreducible factors `p`
+satisfy `p ∣ Dp` (Bronstein §3.4–§6.2). For a **primitive** monomial (`Dt ∈ k`, degree `0`) this is the
+constant `1` (`k⟨t⟩ = k[t]`, no special part to clear); for the **hypertangent** monomial
+`Dt = c·(t²+1)` it is `t²+1` (the only monic special irreducible); for the **hyperexponential** monomial
+`Dt = c·t` it is `t`. Computed as the monic special part of `Dt` via `cSplitFactorFast`. -/
+def cSpecialPoly (Dt : CPolyG QFunNZ) (fuel : ℕ) : CPolyG QFunNZ :=
+  cmonicG (cSplitFactorFast Dt fuel Dt).2
+
+/-- **Computable special-denominator reduction** `cRdeSpecialDenominator Dt fuel a b c` (Bronstein §6.2,
+the `RdeSpecialDenom{Exp,Tan}` boxes, book p.190/192). Given the reduced equation `a·Dq + b·q = c`
+(eq. 6.6) with `a` having no special factor, returns the special-cleared quadruplet `(ā, b̄, c̄, h)`
+(`h = p^{−n}`) so that `r = q·h ∈ k[t]` solves `ā·Dr + b̄·r = c̄` (eq. 6.7 cleared by `p^N`):
+
+1. `p ← cSpecialPoly Dt` (the monic special irreducible: `t²+1` tangent, `t` hyperexponential, `1`
+   primitive — when `p` is constant the special part is trivial, returns `(a, b, c, 1)`).
+2. `n_b ← ν_p(b)`, `n_c ← ν_p(c)`, `n ← min(0, n_c − min(0, n_b))` (so `n ≤ 0`).
+3. *(Cancellation refinement `n ← min(n, m)` in the `n_b = 0` branch needs the parametric-logarithmic-
+   derivative subroutine — Ch. 7; not run here. The validation case has `n_b ≠ 0`, so this branch is
+   inactive and the book's `n` is reproduced exactly.)*
+4. `N ← max(0, −n_b, n − n_c)` (`N ≥ 0`).
+5. `return (a·pᴺ, (b + n·a·Dp/p)·pᴺ, c·p^{N−n}, p^{−n})`.
+
+Encoded with the integer exponents `−n` and `N−n` as `ℕ` (both non-negative since `n ≤ 0 ≤ N`). The
+`b`-component `b + n·a·Dp/p` uses `Dp = cmonomialDeriv Dt p`, exact-divided by `p` (`p ∣ Dp` for a
+special `p`); when `n = 0` the additive term vanishes and `b̄ = b·pᴺ`. -/
+def cRdeSpecialDenominator (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) :
+    CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ :=
+  let p := cSpecialPoly Dt fuel
+  if cdegG p = 0 then (a, b, c, [CField.one])
+  else
+    let nb : ℤ := (cValuation fuel p b : ℤ)
+    let nc : ℤ := (cValuation fuel p c : ℤ)
+    let n : ℤ := min 0 (nc - min 0 nb)
+    let N : ℤ := max (max 0 (-nb)) (n - nc)
+    let Nnat : ℕ := N.toNat
+    let negn : ℕ := (-n).toNat
+    let Nminusn : ℕ := (N - n).toNat
+    let pN := cpowG p Nnat
+    let abar := cmulG a pN
+    -- `b + n·a·Dp/p`: with `n = -negn`, the additive term is `-(negn)·a·(Dp/p)`.
+    let DpOverp := cdivFF fuel (cmonomialDeriv Dt p) p
+    let bterm := cscaleG (ofConstNZ ((-(negn : ℤ) : ℚ))) (cmulG a DpOverp)
+    let bbar := cmulG (caddG b bterm) pN
+    let cbar := cmulG c (cpowG p Nminusn)
+    let h := cpowG p negn
+    (abar, bbar, cbar, h)
+
+/-! ### `cRdeBoundDegree` (Bronstein §6.3, the `RdeBoundDegree*` algorithm boxes, book p.198–201)
+
+After `cRdeSpecialDenominator`, we have `a·Dq + b·q = c` (eq. 6.12) with `a, b, c ∈ k[t]`, and want an
+explicit upper bound `n ∈ ℕ` on `deg_t(q)` for any polynomial solution `q ∈ k[t]`. The bound is
+case-split by monomial type (Lemmas 6.3.1/6.3.3/6.3.4/6.3.5), parameterized by `δ = deg(Dt)` (the
+monomial's `δ(t)`) and `λ = lc(Dt)`. -/
+
+/-- **Computable degree bound** `cRdeBoundDegree Dt fuel a b c = n ∈ ℕ` (Bronstein §6.3, the
+`RdeBoundDegree{Base,Prim,Exp,NonLinear}` boxes, book p.198–201): an upper bound on `deg_t(q)` for any
+polynomial solution `q ∈ k[t]` of `a·Dq + b·q = c` (eq. 6.12). With `d_a = deg(a)`, `d_b = deg(b)`,
+`d_c = deg(c)`, `δ = deg(Dt)`:
+
+* **Nonlinear** (`δ ≥ 2`, e.g. `t = tan` with `Dt = 1+t²`, `δ = 2` — the `RdeBoundDegreeNonLinear`
+  box): `n ← max(0, d_c − max(d_a + δ − 1, d_b))`, with a cancellation refinement when
+  `d_b = d_a + δ − 1`.
+* **Hyperexponential / Louvillian** (`δ = 1`, `Dt/t ∈ k` — `RdeBoundDegreeExp`):
+  `n ← max(0, d_c − max(d_b, d_a))`, with a cancellation refinement when `d_a = d_b`.
+* **Primitive / base** (`δ = 0`, `Dt ∈ k` — `RdeBoundDegreePrim`/`Base`): `n ← max(0, d_c − d_b)` if
+  `d_b > d_a`, else `n ← max(0, d_c − d_a + 1)`, with cancellation refinements.
+
+The **cancellation refinements** (the `if … then n ← max(n, m)` branches) need the parametric-
+logarithmic-derivative / limited-integration subroutine of §5.12 / Ch. 7 to decide whether the relevant
+`−lc(b)/lc(a)` is of the form `m·η + Du/u`; they are documented but not run here (they only ever
+*raise* the bound in the cancellation case, never the non-cancellation case used by the validation).
+The non-cancellation `max(0, …)` formula is reproduced exactly. The non-negative degree differences
+are computed as `ℤ` to avoid `ℕ`-truncation, then clamped at `0` (a degree bound of `0` means `q ∈ k`). -/
+def cRdeBoundDegree (Dt : CPolyG QFunNZ) (_fuel : ℕ) (a b c : CPolyG QFunNZ) : ℕ :=
+  let da : ℤ := (cdegG a : ℤ)
+  let db : ℤ := (cdegG b : ℤ)
+  let dc : ℤ := (cdegG c : ℤ)
+  let δ : ℤ := (cdegG Dt : ℤ)
+  let n : ℤ :=
+    if 2 ≤ δ then
+      -- nonlinear case (`RdeBoundDegreeNonLinear`): `max(0, d_c − max(d_a + δ − 1, d_b))`.
+      max 0 (dc - max (da + δ - 1) db)
+    else if δ = 1 then
+      -- hyperexponential / Louvillian case (`RdeBoundDegreeExp`): `max(0, d_c − max(d_b, d_a))`.
+      max 0 (dc - max db da)
+    else
+      -- primitive / base case (`RdeBoundDegreePrim`/`Base`).
+      if da < db then max 0 (dc - db) else max 0 (dc - da + 1)
+  n.toNat
+
 end CPolyG
 
 /-! ### Validation — Bronstein Example 6.1.2 (book p.186): `t = tan(x)`, `Dt = 1 + t²`, `Dy+(t²+1)y=1/t²`
@@ -215,6 +356,16 @@ def rischDExampleH : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 1]
      ((h : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1))))
 #eval (CPolyG.cWeakNormalizer rischDExampleDt 30 rischDExampleFnum rischDExampleFden : List QFunNZ).map
     (fun z : QFunNZ => Compute.qnorm 30 z.1)
+-- **Sanity prints** (book p.192/202, Examples 6.2.2 + 6.3.4 continuing 6.1.2): `cRdeSpecialDenominator`
+-- on `(a,b,c) = (t, (t−1)(t²+1), 1)` returns `(t, (t−1)(t²+1), 1, 1)` (`p = t²+1`, `n = 0`, `N = 0`,
+-- `ν_p(b) = 1`, `ν_p(c) = 0`), and `cRdeBoundDegree` returns the degree bound `0`.
+#eval (fun (abcd : _ × _ × _ × _) =>
+    (((abcd.1 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1)),
+     ((abcd.2.1 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1)),
+     ((abcd.2.2.1 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1)),
+     ((abcd.2.2.2 : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1))))
+  (CPolyG.cRdeSpecialDenominator rischDExampleDt 30 rischDExampleA rischDExampleB rischDExampleC)
+#eval CPolyG.cRdeBoundDegree rischDExampleDt 30 rischDExampleA rischDExampleB rischDExampleC
 
 /-- **Example 6.1.2 — the first two RDE stages execute over the tower** (`native_decide`, Bronstein §6.1
 + §6.2, book p.183/185/186). For `Dy + (t²+1)y = 1/t²` over ℚ(x)(t), `t = tan(x)`, `Dt = 1+t²`:
@@ -243,5 +394,45 @@ theorem rischDE_normalDenominator_example :
         | none => false) = true := by native_decide
 
 #print axioms rischDE_normalDenominator_example
+
+/-- **Example 6.2.2 — the special-denominator stage executes over the tower** (`native_decide`,
+Bronstein §6.2, the `RdeSpecialDenomTan` box, book p.192). Continuing Example 6.1.2, the reduced
+equation `t·Dq + (t−1)(t²+1)·q = 1` (eq. 6.5) has `a = t`, `b = (t−1)(t²+1)`, `c = 1` over ℚ(x)(t) with
+`t = tan(x)`, `Dt = 1+t²`. The monic special irreducible is `p = t²+1`, and:
+
+* `n_b = ν_{t²+1}(b) = 1`, `n_c = ν_{t²+1}(c) = 0`, so `n = min(0, n_c − min(0, n_b)) = 0`;
+* `n_b ≠ 0`, so `N = max(0, −n_b, n − n_c) = 0`.
+
+Hence `cRdeSpecialDenominator` returns `(ā, b̄, c̄, h) = (t, (t−1)(t²+1), 1, 1)` — the equation is
+unchanged and `h = p⁻ⁿ = 1`, so any solution `q ∈ k⟨t⟩` of (6.5) is already in `k[t]`
+(`k⟨t⟩ ∩ O_{t²+1} = k[t]`). Each of the four components is pinned by `cisZeroG` of its cleared
+difference against the book's values (`ā, b̄, c̄ = a, b, c` and `h = 1`). -/
+theorem rischDE_specialDenominator_example :
+    (match cRdeSpecialDenominator rischDExampleDt 30 rischDExampleA rischDExampleB rischDExampleC with
+      | (abar, bbar, cbar, h) =>
+          cisZeroG (csubG abar rischDExampleA)
+            && cisZeroG (csubG bbar rischDExampleB)
+            && cisZeroG (csubG cbar rischDExampleC)
+            && cisZeroG (csubG h [CField.one])) = true := by native_decide
+
+#print axioms rischDE_specialDenominator_example
+
+/-- **Example 6.3.4 — the degree-bound stage executes over the tower** (`native_decide`, Bronstein §6.3,
+the `RdeBoundDegreeNonLinear` box, book p.202). Continuing Examples 6.1.2 and 6.2.2, the polynomial
+equation `t·Dq + (t−1)(t²+1)·q = 1` (eq. 6.5/6.12) has `a = t`, `b = (t−1)(t²+1)`, `c = 1`, and the
+monomial `t = tan(x)` is **nonlinear** with `δ = deg(Dt) = deg(1+t²) = 2`. Then:
+
+* `d_a = deg(a) = 1`, `d_b = deg(b) = 3`, `d_c = deg(c) = 0`;
+* `n = max(0, d_c − max(d_a + δ − 1, d_b)) = max(0, 0 − max(2, 3)) = max(0, −3) = 0`;
+* `d_b ≠ d_a + δ − 1` (`3 ≠ 2`), so the cancellation branch is inactive.
+
+Hence `cRdeBoundDegree` returns the upper bound `0`: any polynomial solution `q ∈ k[t]` of (6.5) has
+`deg_t(q) ≤ 0`, i.e. `q ∈ ℚ(x)`. This is the deliverable for §6.3 — the degree bound *computes* the
+book's value over the monomial tower ℚ(x)[t]. -/
+theorem rischDE_boundDegree_example :
+    cRdeBoundDegree rischDExampleDt 30 rischDExampleA rischDExampleB rischDExampleC = 0 := by
+  native_decide
+
+#print axioms rischDE_boundDegree_example
 
 end DeepWiki.SymbolicIntegration
