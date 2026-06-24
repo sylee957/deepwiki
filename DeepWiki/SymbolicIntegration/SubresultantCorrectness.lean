@@ -1829,4 +1829,72 @@ theorem hCne_ex241 : toBPoly (chainG 30 gP gQ (1 + 2)) ≠ 0 := by
   rw [Ne, ← bisZero_iff_toBPoly_eq_zero]
   exact chainG_ne_zero_ex241 3 (by omega)
 
+/-- **The degree-3 filter of `subresPRS` is `[chainG 3]`** (the singleton-filter `hfil`, by
+`native_decide`): the `[6,5,4,3,2,1,0]` chain degrees are all distinct, so the degree-3 nonzero filter of
+`subresPRS 30 gP gQ` is exactly the single element `chainG 3`. Direct `native_decide` (no abstract
+`unique_of_strictAnti` argument needed — both sides are computable). -/
+theorem subresPRS_filter_singleton_ex241 :
+    (subresPRS 30 gP gQ).filter
+        (fun R => decide (bdeg R = (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree ∧ ¬ bisZero R))
+      = [chainG 30 gP gQ (1 + 2)] := by
+  rw [natDegree_toBPoly_chainG3_ex241]
+  show (subresPRS 30 gP gQ).filter (fun R => decide (bdeg R = 3 ∧ ¬ bisZero R))
+      = [(goState 30 (gP, gQ, [-1], bdeg gP - bdeg gQ) (1 + 2)).1]
+  native_decide
+
+/-- **`hfilt` for Ex 2.4.1**: the degree-3 filter of `bsubresultantGcd 30 3 gP gQ` returns `chainG 3`
+(under `toBPoly`). From the singleton filter `subresPRS_filter_singleton_ex241` via
+`toBPoly_bsubresultantGcd_eq_of_filter_singleton`. -/
+theorem hfilt_ex241 :
+    toBPoly (bsubresultantGcd 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ)
+      = toBPoly (chainG 30 gP gQ (1 + 2)) :=
+  toBPoly_bsubresultantGcd_eq_of_filter_singleton 30 gP gQ (chainG 30 gP gQ) 1
+    subresPRS_filter_singleton_ex241
+
+/-! ### `bprimitivePartX` content-exactness on the degree-3 element (Ex 2.4.1, `native_decide`)
+The raw degree-3 subresultant `bsubresultantGcd 30 3 gP gQ = S₃ = [[-16,0,792],[0,32,0,-2440],[7,0,-400],
+[0,-14,0,800]]` carries a `ℚ[t]`-content; `bprimitivePartX` strips it. The content `bcontentX` is a
+nonzero `ℚ[t]` polynomial dividing every `x`-coefficient exactly — all decidable `cisZero`/`cmod`-zero
+facts, `native_decide`'d. -/
+
+/-- **`hg` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant is nonzero
+(`¬ cisZero (bcontentX 30 (bsubresultantGcd 30 3 gP gQ))`). -/
+theorem hg_ex241 :
+    ¬ cisZero (bcontentX 30 (bsubresultantGcd 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ)) = true := by
+  rw [natDegree_toBPoly_chainG3_ex241]; native_decide
+
+/-- **`hgcn` for Ex 2.4.1**: the `ℚ[t]`-content of the degree-3 raw subresultant has nonempty `cnorm`. -/
+theorem hgcn_ex241 :
+    cnorm (bcontentX 30 (bsubresultantGcd 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ [] := by
+  rw [natDegree_toBPoly_chainG3_ex241]; native_decide
+
+/-- **`hg0` for Ex 2.4.1**: the `ℚ[t]`-content reads to a nonzero `ℚ[t]` polynomial (`toPoly ≠ 0`), via
+`cnorm_eq_nil_iff`. -/
+theorem hg0_ex241 :
+    toPoly (bcontentX 30 (bsubresultantGcd 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ)) ≠ 0 := by
+  intro h; exact hgcn_ex241 ((cnorm_eq_nil_iff _).mpr h)
+
+/-- **`hrem` for Ex 2.4.1**: the `ℚ[t]`-content divides every `x`-coefficient of the degree-3 raw
+subresultant exactly (`cmod` reads to 0), via `cnorm_eq_nil_iff`. -/
+theorem hrem_ex241 :
+    ∀ a ∈ bnorm (bsubresultantGcd 30
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ),
+      toPoly (cmod 30 a (bcontentX 30 (bsubresultantGcd 30
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ))) = 0 := by
+  intro a ha
+  rw [← cnorm_eq_nil_iff]
+  revert a ha
+  rw [natDegree_toBPoly_chainG3_ex241]
+  native_decide
+
+/-- **`hpz` for Ex 2.4.1**: the mod-`R` reduction of the primitive degree-3 subresultant is nonzero
+(`¬ bisZero (bredR 30 cR241 (lrtSubresultantCompute 30 3 cA241 cD241))`). -/
+theorem hpz_ex241 :
+    ¬ bisZero (bredR 30 cR241 (lrtSubresultantCompute 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) = true := by
+  rw [natDegree_toBPoly_chainG3_ex241]; native_decide
+
 end DeepWiki.SymbolicIntegration.Compute
