@@ -159,19 +159,18 @@ theorem tendstoInDistribution_smul_comp_of_hasFDerivAt {E F : Type*} [NormedAddC
     (tendstoInMeasure_remainder_of_hasFDerivAt hg hXp htight) hg'
 
 /-- **Convergence in distribution to a fixed law gives uniform tightness** (the Prokhorov direction, on a
-finite-dimensional inner-product space): if `(Xₙ − p)/cₙ ⇒ V`, then `‖(Xₙ − p)/cₙ‖` is uniformly tight —
-for every `ε > 0` there is `M > 0` with `μ {‖(Xₙ − p)/cₙ‖ ≥ M} ≤ ε` for all `n`. Via the characteristic-
-function tightness criterion (`isTightMeasureSet_of_tendsto_charFun`, Lévy + `continuous_charFun`) and the
-norm-tail reading `tendsto_measure_norm_gt_of_isTightMeasureSet`. This discharges the tightness hypothesis
-of the multivariate delta method `tendstoInDistribution_smul_comp_of_hasFDerivAt`. -/
+finite-dimensional inner-product space): if `Yₙ ⇒ V`, then `‖Yₙ‖` is uniformly tight — for every `ε > 0`
+there is `M > 0` with `μ {‖Yₙ‖ ≥ M} ≤ ε` for all `n`. Via the characteristic-function tightness criterion
+(`isTightMeasureSet_of_tendsto_charFun`, Lévy + `continuous_charFun`) and the norm-tail reading
+`tendsto_measure_norm_gt_of_isTightMeasureSet`. This discharges the tightness hypothesis of the multivariate
+delta method `tendstoInDistribution_smul_comp_of_hasFDerivAt` (with `Yₙ = (Xₙ − p)/cₙ`) and, via `o_p·O_p`,
+turns a `√n`-rescaled CLT into the consistency `Yₙ/√n →ᵖ 0`. -/
 theorem tight_of_tendstoInDistribution {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E] [IsProbabilityMeasure μ] {Ω' : Type*}
-    [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : ℕ → Ω → E} {p : E}
-    {c : ℕ → ℝ} {V : Ω' → E}
-    (hconv : TendstoInDistribution (fun n ω => (c n)⁻¹ • (X n ω - p)) atTop V (fun _ => μ) P') :
+    [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {Y : ℕ → Ω → E} {V : Ω' → E}
+    (hconv : TendstoInDistribution Y atTop V (fun _ => μ) P') :
     ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, 0 < M ∧ ∀ n,
-      μ {ω | M ≤ |‖(c n)⁻¹ • (X n ω - p)‖|} ≤ ε := by
-  set Y : ℕ → Ω → E := fun n ω => (c n)⁻¹ • (X n ω - p) with hY
+      μ {ω | M ≤ |‖Y n ω‖|} ≤ ε := by
   set ν : ℕ → Measure E := fun n => μ.map (Y n) with hν
   haveI : ∀ n, IsProbabilityMeasure (ν n) := fun n =>
     Measure.isProbabilityMeasure_map (hconv.forall_aemeasurable n)
