@@ -457,4 +457,28 @@ theorem tendstoInMeasure_sampleMean_centered_mul_shift {m : ℕ} {X : ℤ → Ω
   rw [heq]
   exact tendstoInMeasure_mul_zero_of_tight ha htight
 
+/-- **Consistency of the lag-`k` sample product mean** (population mean known): under the hypotheses of
+`tendstoInMeasure_sampleMean_centered_mul_shift`, the (un-centered) estimator `γ̃(k) = n⁻¹ ∑ₜ XₜXₜ₊ₖ`
+converges in probability to `γ = E[XₜXₜ₊ₖ]`. A rearrangement of the centered consistency: for `n ≥ 1`,
+`sampleMean(XₜXₜ₊ₖ) = sampleMean(XₜXₜ₊ₖ − γ) + γ`, so the two sample means differ by the constant `γ`
+(`TendstoInMeasure.congr'` on the norm form). This is the `γ̂(0) →ᵖ γ(0)` denominator for the
+sample-autocorrelation CLT via the ratio Slutsky lemma. -/
+theorem tendstoInMeasure_sampleMean_mul_shift {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : ℝ)
+    (hcenter : ∀ t, ∫ ω, X t ω * X (t + k) ω ∂μ = γ) :
+    TendstoInMeasure μ (fun n ω => sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω)) atTop
+      (fun _ => γ) := by
+  have hc := tendstoInMeasure_sampleMean_centered_mul_shift hmdep hstat hmeas hmem4 k γ hcenter
+  rw [tendstoInMeasure_iff_norm] at hc ⊢
+  intro ε hε
+  refine (hc ε hε).congr' ?_
+  filter_upwards [eventually_ge_atTop 1] with n hn
+  have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (Nat.one_le_iff_ne_zero.mp hn)
+  have hkey : ∀ ω, sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω - γ)
+      = sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω) - γ := fun ω => by
+    simp only [sampleMean, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    rw [mul_sub, ← mul_assoc, inv_mul_cancel₀ hn0, one_mul]
+  simp only [hkey, sub_zero]
+
 end DeepWiki.TimeSeries
