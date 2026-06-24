@@ -70,9 +70,13 @@ noncomputable abbrev eq_7_2_1 := @DeepWiki.TimeSeries.sampleACVF
 noncomputable abbrev eq_7_2_2 := @DeepWiki.TimeSeries.sampleACF
 
 /-! §7.2 continued: the sample covariance matrix `Γ̂ₙ = [γ̂(i − j)]` (7.2.3) is non-negative
-definite — now FORMALIZED (`eq_7_2_3`, the sample analogue of `posSemidef_covMatrix`); the asymptotic
-distribution of `ρ̂` — **Bartlett's formula** (Theorems 7.2.1 and 7.2.2) — is infra-blocked
-(time-series central limit theorem). -/
+definite — now FORMALIZED (`eq_7_2_3`, the sample analogue of `posSemidef_covMatrix`). The **time-series
+central limit theorem** underlying the asymptotic distribution of `γ̂`/`ρ̂` is now FORMALIZED: the
+multivariate `m`-dependent CLT (`IsMDependent.tendstoInDistribution_multivariate`) and, on top of it, the
+sample-autocovariance-vector CLT `tendstoInDistribution_sampleAutocovVec` — `√n (γ̂(0..k) − γ) ⇒ N(0, S)`
+with `S` the long-run covariance matrix of the lag-product process (`longRunCovMatrix`). **Bartlett's
+formula** (Theorems 7.2.1 and 7.2.2) — the *explicit* closed form of `S` (resp. the `ρ̂` covariance) in
+terms of the fourth-order moments / the autocovariance `γ` — is the remaining analytic step. -/
 
 /-- **§7.2 (eq 7.2.3): the sample covariance matrix `Γ̂ₙ = [γ̂(i − j)]` is non-negative definite** —
 its quadratic form `∑ᵢⱼ aᵢ aⱼ γ̂(|i − j|) ≥ 0` is a sum of squares (`n⁻¹ ∑ₖ (∑ᵢ aᵢ ỹ(k − i))²`). The
@@ -83,9 +87,11 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
-§7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, Bartlett's formula) [infra]; Theorem 7.2.2
-(Bartlett's formula, general case) [infra]
-(Dominant blocker: the time-series central limit theorem of §6.4. The estimators eq 7.2.1/7.2.2 and
-the sample-covariance-matrix non-negative-definiteness eq 7.2.3 are done.) -/
+§7.2: Theorem 7.2.1 (asymptotic distribution of `ρ̂`, the explicit Bartlett covariance formula) [research];
+Theorem 7.2.2 (Bartlett's formula, general case) [research]
+(The time-series CLT blocker is now RESOLVED: the asymptotic normality `√n (γ̂(0..k) − γ) ⇒ N(0, S)` is
+formalized (`tendstoInDistribution_sampleAutocovVec`, built on the multivariate `m`-dependent CLT). What
+remains for 7.2.1/7.2.2 is the explicit closed form of `S` — Bartlett's `wₕₗ` in fourth-order moments /
+the ACVF — the analytic fourth-cumulant expansion. The estimators eq 7.2.1/7.2.2 and eq 7.2.3 are done.) -/
 
 end DeepWiki.Ts
