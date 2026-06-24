@@ -3,6 +3,7 @@ import DeepWiki.TimeSeries.SampleMeanVariance
 import DeepWiki.TimeSeries.LinearProcessCLT
 import DeepWiki.TimeSeries.GeneralLinearProcessCLT
 import DeepWiki.TimeSeries.LinearProcessFullCLT
+import DeepWiki.TimeSeries.MultivariateMDependent
 import Sources.Doi_10_1007_978_1_4419_0320_4.Source
 
 /-! # Time Series catalog — Chapter 7: Estimation of the Mean and the Autocovariance Function
@@ -90,6 +91,16 @@ theorem eq_7_2_3 (n : ℕ) (x : ℕ → ℝ) (a : ℕ → ℝ) :
     0 ≤ ∑ i ∈ Finset.range n, ∑ j ∈ Finset.range n,
         a i * a j * (if j ≤ i then sampleACVF n x (i - j) else sampleACVF n x (j - i)) :=
   DeepWiki.TimeSeries.sampleACVF_quadratic_nonneg n x a
+
+/-- **Theorem 7.2.1 (asymptotic normality of the sample autocorrelation), studentized form.** The
+studentized sample-autocovariance linear-combination statistic
+`(√n · ∑ᵢ cᵢ (γ̂(i) − γ(i))) / γ̂(0) ⇒ ⟪V, c⟫ / γ(0)`, with `V ~ N(0, S)` the long-run-covariance
+Gaussian of the lag-product process. For `c = eₕ − ρ(h)·e₀` (`ρ(h) = γ(h)/γ(0)`) this is the sample
+autocorrelation `√n (ρ̂(h) − ρ(h)) ⇒ N(0, (w ⬝ᵥ S w)/γ(0)²)`. The library's
+`tendstoInDistribution_studentized_linearCombo_sampleAutocov` (the linear-combination CLT divided by the
+consistent `γ̂(0) →ᵖ γ(0)` via ratio Slutsky). The *explicit* closed form of the limit covariance
+`w ⬝ᵥ S w` — Bartlett's `wₕₗ` as a series in the ACVF — is the remaining analytic step (NOT YET FORMALIZED). -/
+alias thm_7_2_1_normality := DeepWiki.TimeSeries.tendstoInDistribution_studentized_linearCombo_sampleAutocov
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §7.2: Theorem 7.2.1 (the *explicit* Bartlett covariance formula `w ⬝ᵥ S w` in terms of `γ`) [research];
