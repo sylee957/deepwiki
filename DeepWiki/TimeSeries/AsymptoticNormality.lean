@@ -9,7 +9,7 @@ reference Gaussian variable). The library's `TendstoInDistribution`-form central
 through `IsAsymptoticallyNormal.of_tendstoInDistribution`. -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
-open scoped Matrix
+open scoped Matrix RealInnerProductSpace
 
 namespace DeepWiki.TimeSeries
 
@@ -113,5 +113,26 @@ theorem IsAsymptoticallyNormalVec.add_const {k : ℕ} {X : ℕ → Ω → Fin k 
   have key := (h lam hlam).add_const fun _ => lam ⬝ᵥ d
   simp only [dotProduct_add]
   exact key
+
+/-- **Marginals of an asymptotically-Gaussian vector are asymptotically normal:** if `Xₙ` converges in
+distribution to `V ~ multivariateGaussian 0 S` (`S` positive semidefinite) and a direction `lam` has
+positive variance `lam ⬝ᵥ S lam`, then the scalar projection `⟪Xₙ, lam⟫` is asymptotically normal
+`AN(0, lam ⬝ᵥ S lam)`. The projection `⟪·, lam⟫` is continuous (continuous mapping gives
+`⟪Xₙ, lam⟫ ⇒ ⟪V, lam⟫`) and `⟪V, lam⟫ ~ N(0, lam ⬝ᵥ S lam)` (`map_inner_multivariateGaussian`); the
+non-degenerate-Gaussian bridge then standardizes. The per-direction core of the AN-vec ⟵ multivariate-CLT
+connection. -/
+theorem isAsymptoticallyNormal_inner_of_tendstoInDistribution {k : ℕ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P']
+    {X : ℕ → Ω → EuclideanSpace ℝ (Fin k)} {S : Matrix (Fin k) (Fin k) ℝ} (hS : S.PosSemidef)
+    {V : Ω' → EuclideanSpace ℝ (Fin k)} (hV : HasLaw V (multivariateGaussian 0 S) P')
+    (h : TendstoInDistribution X atTop V (fun _ => μ) P') (lam : EuclideanSpace ℝ (Fin k))
+    (hpos : 0 < lam ⬝ᵥ S *ᵥ lam) :
+    IsAsymptoticallyNormal (fun n ω => (⟪X n ω, lam⟫ : ℝ)) (fun _ => 0)
+      (fun _ => Real.sqrt (lam ⬝ᵥ S *ᵥ lam)) μ := by
+  have hproj : HasLaw (fun x : EuclideanSpace ℝ (Fin k) => (⟪x, lam⟫ : ℝ))
+      (gaussianReal 0 (lam ⬝ᵥ S *ᵥ lam).toNNReal) (multivariateGaussian 0 S) :=
+    ⟨by fun_prop, map_inner_multivariateGaussian hS lam⟩
+  refine IsAsymptoticallyNormal.of_tendstoInDistribution_gaussianReal hpos (hproj.fun_comp hV) ?_
+  simpa [Function.comp_def] using h.continuous_comp (g := fun x => (⟪x, lam⟫ : ℝ)) (by fun_prop)
 
 end DeepWiki.TimeSeries
