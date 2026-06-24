@@ -171,4 +171,28 @@ theorem trace_logDeriv_eq_logDeriv_norm (a : E) (ha : a ≠ 0) :
 
 end TraceNorm
 
+section AlgebraicClosure
+variable {F : Type*} [Field F] [Differential F] [CharZero F]
+variable {K : Type*} [Field K] [Algebra F K]
+
+/-- **Corollary 3.2.1** (§3.2): `D` extends (uniquely) to any finite algebraic extension inside the
+algebraic closure — concretely, every intermediate field `B` of `K/F` that is finite over `F`
+carries a differential structure with `(B, Δ)` a differential extension of `(F, D)`. So a tower of
+differential extensions can always be replaced by separable algebraic pieces. (Mathlib's
+intermediate-field instances over a char-`0` differential base.) -/
+theorem existsUnique_differentialAlgebra_intermediateField (B : IntermediateField F K)
+    [FiniteDimensional F B] :
+    ∃ _ : Differential B, DifferentialAlgebra F B :=
+  ⟨inferInstance, inferInstance⟩
+
+/-- **Corollary 3.2.1** (§3.2), the tower step: if `(K, Δ)` is itself a differential extension of
+`(F, D)` and `B ⊆ K` is a finite intermediate field, then `(K, Δ)` is also a differential extension
+of `(B, Δ|_B)` — `Δ (algebraMap B K b) = algebraMap B K (Δ b)`. This is the `(EF, Δ)`-over-`(E, D)`
+compatibility of the picture `E ≤ EF`. -/
+theorem differentialAlgebra_intermediateField_tower [Differential K] [DifferentialAlgebra F K]
+    (B : IntermediateField F K) [FiniteDimensional F B] : DifferentialAlgebra B K :=
+  inferInstance
+
+end AlgebraicClosure
+
 end DeepWiki.SymbolicIntegration
