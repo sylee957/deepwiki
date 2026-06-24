@@ -54,6 +54,57 @@ theorem implicitDeriv_X_coeff_zero (p : R[X]) :
 
 end PolynomialDerivation
 
+section DifferentialIdealsPolynomial
+variable {K : Type*} [Field K]
+
+/-- The `(deg p)`-fold `d/dX`-derivative of a nonzero `p ∈ K[X]` is the nonzero constant
+`(deg p)! · lc(p)`: above its degree the iterated derivative vanishes (a constant), and its `0`th
+coefficient is `descFactorial (deg p) (deg p) • lc(p) = (deg p)! · lc(p)`. -/
+theorem iterate_derivative_natDegree_eq_C (p : K[X]) :
+    Polynomial.derivative^[p.natDegree] p
+      = Polynomial.C (Nat.factorial p.natDegree • p.leadingCoeff) := by
+  have hle : (Polynomial.derivative^[p.natDegree] p).natDegree ≤ 0 := by
+    simpa using Polynomial.natDegree_iterate_derivative p p.natDegree
+  rw [Polynomial.eq_C_of_natDegree_eq_zero (Nat.le_zero.mp hle)]
+  congr 1
+  rw [Polynomial.coeff_iterate_derivative]
+  simp only [zero_add, Nat.descFactorial_self]
+  rw [Polynomial.coeff_natDegree]
+
+/-- **Example 3.1.2** (§3.1): the only differential ideals of `(K[X], d/dX)` over a
+characteristic-`0` field `K` (in particular `K = ℚ`) are `(0) = ⊥` and `(1) = ⊤`. An ideal `I`
+closed under `d/dX` either is `⊥`, or contains a nonzero `p`, whose `(deg p)`-fold derivative
+`(deg p)! · lc(p)` is a nonzero constant — hence a unit in `I` — forcing `I = ⊤`. -/
+theorem differentialIdeal_eq_bot_or_top [CharZero K] (I : Ideal K[X])
+    (hI : ∀ p ∈ I, Polynomial.derivative p ∈ I) : I = ⊥ ∨ I = ⊤ := by
+  rcases eq_or_ne I ⊥ with h | h
+  · exact Or.inl h
+  · refine Or.inr ?_
+    obtain ⟨p, hpI, hp0⟩ := (Submodule.ne_bot_iff I).mp h
+    have hiter : ∀ k, Polynomial.derivative^[k] p ∈ I := by
+      intro k
+      induction k with
+      | zero => simpa using hpI
+      | succ m ih => rw [Function.iterate_succ_apply']; exact hI _ ih
+    have hmem := hiter p.natDegree
+    rw [iterate_derivative_natDegree_eq_C p] at hmem
+    have hc : (Nat.factorial p.natDegree • p.leadingCoeff) ≠ 0 := by
+      simp only [nsmul_eq_mul, ne_eq, mul_eq_zero, not_or]
+      exact ⟨by exact_mod_cast Nat.factorial_ne_zero _, Polynomial.leadingCoeff_ne_zero.mpr hp0⟩
+    exact Ideal.eq_top_of_isUnit_mem I hmem
+      (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc))
+
+/-- **Example 3.1.2** (§3.1), the trivial direction: `⊥` and `⊤` *are* differential ideals of
+`(K[X], d/dX)` — both are (vacuously / fully) closed under `d/dX`. With
+`differentialIdeal_eq_bot_or_top` this says the differential ideals are *exactly* `{⊥, ⊤}`. -/
+theorem differentialIdeal_bot_and_top :
+    (∀ p ∈ (⊥ : Ideal K[X]), Polynomial.derivative p ∈ (⊥ : Ideal K[X])) ∧
+      (∀ p ∈ (⊤ : Ideal K[X]), Polynomial.derivative p ∈ (⊤ : Ideal K[X])) :=
+  ⟨fun p hp => by rw [Ideal.mem_bot.mp hp, map_zero]; exact Ideal.zero_mem _,
+   fun _ _ => Submodule.mem_top⟩
+
+end DifferentialIdealsPolynomial
+
 section TranscendentalExtension
 variable {R K : Type*} [CommRing R] [IsDomain R] [Field K] [Algebra R K] [IsFractionRing R K]
 
