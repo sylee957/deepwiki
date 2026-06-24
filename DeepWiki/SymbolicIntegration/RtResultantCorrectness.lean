@@ -510,4 +510,25 @@ theorem rootMultiplicity_C_mul_pow_of_separable {F : Type*} [Field F] {c : F} (h
     omega
   rw [hCmult, zero_add, rootMultiplicity_pow hp0, hp1, mul_one]
 
+open scoped Classical in
+/-- **`cD241` is separable** (`x⁶−5x⁴+5x²+4` is squarefree): the computable extended gcd of `D` and
+`D'` is the constant `[4]` (`native_decide`), so the Bézout cofactors scaled by `1/4` witness
+`a·D + b·D' = 1` (`separable_def'`). -/
+theorem separable_toPoly_cD241 : (Compute.toPoly Compute.cD241).Separable := by
+  rw [separable_def']
+  have hbez := Compute.toPoly_cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)
+  rw [Compute.toPoly_cderiv] at hbez
+  have hg : Compute.toPoly (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1
+      = C 4 := by
+    have : (Compute.cgcdExt 30 Compute.cD241 (Compute.cderiv Compute.cD241)).1 = [4] := by
+      native_decide
+    rw [this]; simp [Compute.toPoly_cons, Compute.toPoly_nil]
+  rw [hg] at hbez
+  refine ⟨C (4:ℚ)⁻¹ * Compute.toPoly (Compute.cgcdExt 30 Compute.cD241
+            (Compute.cderiv Compute.cD241)).2.1,
+          C (4:ℚ)⁻¹ * Compute.toPoly (Compute.cgcdExt 30 Compute.cD241
+            (Compute.cderiv Compute.cD241)).2.2, ?_⟩
+  rw [mul_assoc, mul_assoc, ← mul_add, hbez, ← C_mul]
+  norm_num
+
 end DeepWiki.SymbolicIntegration
