@@ -2745,4 +2745,23 @@ theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
     isSimilar_of_unit_mul hunit (by rw [lrtGcdCompute]; exact hbridge)
   exact hLM.trans hMMgcd
 
+/-- **The engine's output is the honest LRT subresultant of Exercise 2.2** (§2.9, p.72), at the index `j`
+spelled `1`: over the residue field `ℚ[t]/(R)` (`R = cmonic cR22` irreducible), the `Φ`-image of the
+abstract `lrtSubresultant (toPoly cA22) (toPoly cD22) 1` is `IsSimilar` to the `Φ`-image of the engine's
+computed log argument `cS1_22 = lrtGcdCompute 60 1 R cA22 cD22 = x + c₀(t)` (`ex_2_2_S1_monic_linear`).
+Restates `lrtGcdCompute_ex22_isSimilar_lrtSubresultant` with the index rewritten `(toBPoly (chainG 60 hP hQ
+9)).natDegree = 1` (`natDegree_toBPoly_chainG9_ex22`). The two hypotheses are the `ℚ`-irreducibility of the
+degree-10 squarefree resultant `R` and the residue non-vanishing of the noncomputable subresultant. -/
+example
+    (hirr : Irreducible (toPoly (cmonic cR22)))
+    (hLne : (Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22))))
+      (lrtSubresultant (toPoly cA22) (toPoly cD22) 1) ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22))))
+        (lrtSubresultant (toPoly cA22) (toPoly cD22) 1))
+      ((Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22)))) (toBPoly cS1_22)) := by
+  have h := lrtGcdCompute_ex22_isSimilar_lrtSubresultant hirr
+    (by rw [natDegree_toBPoly_chainG9_ex22]; exact hLne)
+  rw [natDegree_toBPoly_chainG9_ex22] at h
+  exact h
+
 end DeepWiki.SymbolicIntegration.Compute
