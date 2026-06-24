@@ -9,7 +9,7 @@ over lags). Here: the cross-covariance of coordinate blocks vanishes beyond the 
 finite-support fact giving summability of the cross-covariances. -/
 
 open MeasureTheory ProbabilityTheory
-open scoped RealInnerProductSpace
+open scoped RealInnerProductSpace Matrix
 
 namespace DeepWiki.TimeSeries
 
@@ -65,5 +65,28 @@ theorem tsum_acvfStat_inner_eq {d m : ℕ} [IsFiniteMeasure μ]
   rw [Summable.tsum_finsetSum fun j _ =>
     (summable_covariance_component_of_mDependent h hmem i j).mul_left _]
   exact Finset.sum_congr rfl fun j _ => tsum_mul_left
+
+/-- **A matrix quadratic form as a double sum:** `v ⬝ᵥ S v = ∑ᵢ ∑ⱼ vᵢ vⱼ Sᵢⱼ`. -/
+theorem dotProduct_mulVec_eq_quadratic {d : ℕ} (S : Matrix (Fin d) (Fin d) ℝ) (v : Fin d → ℝ) :
+    v ⬝ᵥ S *ᵥ v = ∑ i, ∑ j, v i * v j * S i j := by
+  rw [Matrix.dot_mulVec_eq_sum_sum, Finset.sum_comm]
+  exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by ring
+
+/-- **The long-run cross-covariance matrix** of a vector process: `Sᵢⱼ = ∑'ₖ cov[Yₖⁱ, Y₀ʲ]`. For a
+vector `m`-dependent process its quadratic forms are the long-run variances of the projections
+(`longRunCovMatrix_quadratic`); it is the covariance matrix of the limiting Gaussian. -/
+noncomputable def longRunCovMatrix {d : ℕ} (Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)) (μ : Measure Ω) :
+    Matrix (Fin d) (Fin d) ℝ :=
+  Matrix.of fun i j => ∑' k, cov[fun ω => Y k ω i, fun ω => Y 0 ω j; μ]
+
+/-- **The quadratic form of the long-run covariance matrix is the long-run variance of the projection:**
+`λ ⬝ᵥ S λ = ∑'ₖ acvf⟪Y,λ⟫(k)` where `S = longRunCovMatrix Y μ`. Combines the matrix quadratic-form
+expansion with the variance identification `tsum_acvfStat_inner_eq`. -/
+theorem longRunCovMatrix_quadratic {d m : ℕ} [IsFiniteMeasure μ]
+    {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)} (h : IsMDependent m Y μ)
+    (hmem : ∀ t i, MemLp (fun ω => Y t ω i) 2 μ) (lam : EuclideanSpace ℝ (Fin d)) :
+    lam ⬝ᵥ longRunCovMatrix Y μ *ᵥ lam = ∑' k, acvfStat (fun t ω => (⟪Y t ω, lam⟫ : ℝ)) μ k := by
+  rw [dotProduct_mulVec_eq_quadratic, tsum_acvfStat_inner_eq h hmem]
+  rfl
 
 end DeepWiki.TimeSeries
