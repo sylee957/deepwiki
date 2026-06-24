@@ -742,6 +742,69 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly) (G
   exact isSimilar_lrtSubresultant_subresPRS_elt fuel A D G bt s c m hG0 hG1 hd0 hd1
     hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
 
+/-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute`
+`toBPoly_bprimitivePartX_exact` says `bprimitivePartX` strips a `ℚ[t]` content factor — a similarity-
+preserving operation. Packaged as `IsSimilar`, it gives `toBPoly p ~ toBPoly (bprimitivePartX fuel p)`.
+Since `lrtSubresultantCompute fuel j A D = bprimitivePartX fuel (bsubresultantGcd fuel j (liftCtoBPoly D)
+(bArgAmtD' A D))`, chaining this through `isSimilar_lrtSubresultant_bsubresultantGcd` (via `IsSimilar.trans`)
+lands `lrtSubresultant A D j ~ toBPoly (lrtSubresultantCompute fuel j A D)` — the abstract LRT subresultant
+similar to the computable *primitive* LRT subresultant, modulo the same single filter identity. -/
+
+/-- **`bprimitivePartX` preserves `ℚ[t]`-similarity**: `toBPoly p` is similar to `toBPoly (bprimitivePartX
+fuel p)` (the stripped content `C(toPoly g)` is the absorbed unit), under the exact-content hypotheses of
+`toBPoly_bprimitivePartX_exact`. -/
+theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
+    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hg0 : toPoly (bcontentX fuel p) ≠ 0)
+    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p)) :=
+  ⟨1, toPoly (bcontentX fuel p), one_ne_zero, hg0, by
+    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact fuel p hg hgcn hrem]⟩
+
+/-- **`lrtSubresultant ∼ lrtSubresultantCompute`, modulo the filter identity** (the chain agreement after
+the content step): under the LRT-chain endpoint hypotheses, the filter identity `hfilt`, and the content-
+exactness of `bprimitivePartX` on the degree-`j` element (`hg`/`hgcn`/`hg0`/`hrem`), the abstract
+`lrtSubresultant A D j` is `ℚ[t]`-similar to the computable **primitive** LRT subresultant
+`lrtSubresultantCompute fuel j (liftCtoBPoly⁻ …)`. Chains `isSimilar_lrtSubresultant_bsubresultantGcd`
+(abstract ∼ raw subresultant) with `isSimilar_toBPoly_bprimitivePartX` (raw ∼ primitive) via
+`IsSimilar.trans`. -/
+theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
+    (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
+    (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
+    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree)
+    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
+      = toBPoly (G (m + 2)))
+    (hg : ¬ cisZero (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) = true)
+    (hgcn : cnorm (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ [])
+    (hg0 : toPoly (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ 0)
+    (hrem : ∀ a ∈ bnorm (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)),
+      toPoly (cmod fuel a
+        (bcontentX fuel (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))) = 0) :
+    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
+      (toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) := by
+  have hraw := isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
+    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt
+  have hprim := isSimilar_toBPoly_bprimitivePartX fuel
+    (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)) hg hgcn hg0 hrem
+  rw [lrtSubresultantCompute, ← hG0, ← hG1]
+  exact hraw.trans hprim
+
 /-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
 The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
 engine against the abstract subresultant — no longer just one step:
@@ -756,8 +819,12 @@ engine against the abstract subresultant — no longer just one step:
 - the endpoint collapse `isSimilar_subresPRS_elt` (`Sⱼ(G 0,G 1) ~ toBPoly (G (m+2))`, the degree-`j`
   element, via `subresultant_prs_similar_elt`) and its LRT specialization
   `isSimilar_lrtSubresultant_subresPRS_elt` (`lrtSubresultant A D j ~ toBPoly (G (m+2))`);
-- and `isSimilar_lrtSubresultant_bsubresultantGcd` — `lrtSubresultant A D j ∼ bsubresultantGcd` — modulo the
-  single remaining **filter identity** `toBPoly (bsubresultantGcd …) = toBPoly (G (m+2))`.
+- `isSimilar_lrtSubresultant_bsubresultantGcd` — `lrtSubresultant A D j ∼ bsubresultantGcd` — modulo the
+  single remaining **filter identity** `toBPoly (bsubresultantGcd …) = toBPoly (G (m+2))`;
+- the content step `toBPoly_bprimitivePartX_exact` / its similarity packaging
+  `isSimilar_toBPoly_bprimitivePartX`, chained into
+  `isSimilar_lrtSubresultant_lrtSubresultantCompute` — `lrtSubresultant A D j ∼ lrtSubresultantCompute`
+  (same filter-identity modulus + the content exactness of `bprimitivePartX` on the degree-`j` element).
 
 What remains for an *unconditional* `lrtGcdCompute ↔ lrtSubresultant` is purely *structural/computable*
 bookkeeping, no longer the recurrence-matching that this work eliminated:
@@ -766,14 +833,18 @@ bookkeeping, no longer the recurrence-matching that this work eliminated:
    induction on `subresPRS`'s recursive `go` (each list element is the next divided pseudo-remainder, with
    `bt i` the literal `cpowP`/`cdiv` β-accumulator) plus uniqueness from strict degree decrease — and the
    discharge, for the *real* `subresPRS`, of the per-step hypotheses (`hsc` from `toBPoly_bpsremainder`,
-   `hdiv` from Collins's β-divisibility `toBPoly_bdivC_exact_of_dvd`, the degree bounds).
-2. **`bprimitivePartX`/`bmonicXmodR` normalization** (`lrtSubresultantCompute`/`lrtGcdCompute`): both are
-   `ℚ[t]`-content/unit operations, so similarity-preserving — needs `toBPoly` bridges
-   `C(content)·toBPoly (bprimitivePartX p) = toBPoly p` and the monic-mod-`R` unit (analogues of
-   `toBPoly_bdivC_exact`), composed with the agreement above through `IsSimilar.trans`.
+   `hdiv` from Collins's β-divisibility `toBPoly_bdivC_exact_of_dvd`, the degree bounds). The content-
+   exactness inputs `hg`/`hgcn`/`hg0`/`hrem` of the content step are the analogous `bcontentX`-divides-
+   coefficients structural facts (the `ℚ[t]`-gcd divides each coefficient, over a `cgcdExt` `foldl`).
+2. **`bmonicXmodR` normalization** (`lrtGcdCompute = bmonicXmodR R (lrtSubresultantCompute …)`): the monic-
+   in-`x` reduction mod `R` is a `ℚ[t]/(R)`-unit operation, so similarity-preserving over the residue ring —
+   needs the monic-mod-`R` unit `toBPoly` bridge (a `bredR`/`cinvMod` analogue of `toBPoly_bprimitivePartX_exact`),
+   composed with `isSimilar_lrtSubresultant_lrtSubresultantCompute` through `IsSimilar.trans`. (Note this
+   step changes the ambient ring to `ℚ[t]/(R)`, so the similarity is over the residue ring, not `ℚ[t]`.)
 
-These are the closing steps; the whole-chain telescoping, endpoint collapse, β-divisor exact-division, and
-operand/similarity packaging proven here are their complete reusable foundation. -/
+These are the closing steps; the whole-chain telescoping, endpoint collapse, β-divisor exact-division, the
+`bprimitivePartX` content bridge, and operand/similarity packaging proven here are their complete reusable
+foundation. -/
 
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
 -- when every x-coefficient divides exactly.
