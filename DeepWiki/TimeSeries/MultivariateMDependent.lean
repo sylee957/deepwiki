@@ -1,6 +1,7 @@
 import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.MultivariateCLT
 import DeepWiki.TimeSeries.MovingAverageMDependent
+import DeepWiki.TimeSeries.MultivariateDelta
 
 /-! # Toward the multivariate m-dependent CLT
 The scalar projections `⟪Yₜ, λ⟫` of a vector `m`-dependent process inherit `m`-dependence
@@ -9,7 +10,7 @@ the quadratic form `λ ⬝ᵥ S λ` of the long-run cross-covariance matrix (`co
 over lags). Here: the cross-covariance of coordinate blocks vanishes beyond the dependence range, the
 finite-support fact giving summability of the cross-covariances. -/
 
-open MeasureTheory ProbabilityTheory Filter
+open MeasureTheory ProbabilityTheory Filter Topology
 open scoped RealInnerProductSpace Matrix ENNReal
 
 namespace DeepWiki.TimeSeries
@@ -424,5 +425,36 @@ theorem tendstoInDistribution_sampleAutocovVec {m : ℕ} {X : ℤ → Ω → ℝ
           (integrable_const (γ i)), integral_const, hcenter t i]
       simp)
     hpsd hV
+
+/-- **Consistency of the (centered) sample autocovariance:** for a strictly-stationary, `m`-dependent `X`
+with finite fourth moments and constant lag-`k` product mean `γ = E[XₜXₜ₊ₖ]`, the centered sample
+autocovariance `n⁻¹ ∑ₜ (XₜXₜ₊ₖ − γ)` converges to `0` in probability. From the scalar Bartlett CLT
+(`√n · sampleMean ⇒ √v·G`, so `√n · sampleMean` is tight, `tight_of_tendstoInDistribution`) and `o_p · O_p`
+(`tendstoInMeasure_mul_zero_of_tight` with `(√n)⁻¹ →ᵖ 0`): `sampleMean = (√n)⁻¹ · (√n · sampleMean) →ᵖ 0`.
+The `γ̂(k) →ᵖ γ(k)` prerequisite for the sample-autocorrelation CLT via the multivariate delta method. -/
+theorem tendstoInMeasure_sampleMean_centered_mul_shift {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : ℝ)
+    (hcenter : ∀ t, ∫ ω, X t ω * X (t + k) ω ∂μ = γ) :
+    TendstoInMeasure μ (fun n ω => sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω - γ)) atTop
+      (fun _ => 0) := by
+  have hG : HasLaw (id : ℝ → ℝ) (gaussianReal 0 1) (gaussianReal 0 1) :=
+    ⟨aemeasurable_id, Measure.map_id⟩
+  have htight := tight_of_tendstoInDistribution
+    (tendstoInDistribution_sampleMean_centered_mul_shift hmdep hstat hmeas hmem4 k γ hcenter hG)
+  simp only [Real.norm_eq_abs, abs_abs] at htight
+  have hsqrt : Tendsto (fun n : ℕ => (Real.sqrt n)⁻¹) atTop (𝓝 0) :=
+    tendsto_inv_atTop_zero.comp (Real.tendsto_sqrt_atTop.comp tendsto_natCast_atTop_atTop)
+  have ha : TendstoInMeasure μ (fun (n : ℕ) (_ : Ω) => (Real.sqrt n)⁻¹) atTop (fun _ => 0) :=
+    tendstoInMeasure_of_tendsto_ae (fun _ => aestronglyMeasurable_const) (ae_of_all _ fun _ => hsqrt)
+  have heq : (fun n ω => sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω - γ))
+      = fun (n : ℕ) ω => (Real.sqrt n)⁻¹ *
+        (Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω - γ)) := by
+    funext n ω
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · simp [hn, sampleMean]
+    · rw [← mul_assoc, inv_mul_cancel₀ (Real.sqrt_ne_zero'.mpr (by exact_mod_cast hn)), one_mul]
+  rw [heq]
+  exact tendstoInMeasure_mul_zero_of_tight ha htight
 
 end DeepWiki.TimeSeries
