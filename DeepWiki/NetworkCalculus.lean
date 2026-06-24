@@ -278,6 +278,7 @@ import DeepWiki.NetworkCalculus.OneHotRegister
 import DeepWiki.NetworkCalculus.TM2Trace
 import DeepWiki.NetworkCalculus.StmtSmallStep
 import DeepWiki.NetworkCalculus.UnifSmallStep
+import DeepWiki.NetworkCalculus.UnifSimulation
 import DeepWiki.NetworkCalculus.TableauSchema
 import DeepWiki.NetworkCalculus.TableauReadback
 import DeepWiki.NetworkCalculus.TableauInit
