@@ -68,4 +68,31 @@ theorem tendstoInMeasure_mul_zero_of_tight {a b : ℕ → Ω → ℝ}
     _ ≤ ε / 2 + ε / 2 := add_le_add (hMb n) hn
     _ = ε := ENNReal.add_halves ε
 
+/-- **Continuous mapping in probability at a constant limit** (general metric codomain): if `fₙ → c` in
+probability and `h` is continuous at `c`, then `h ∘ fₙ → h c` in probability. The vector-domain analogue of
+`tendstoInMeasure_comp_const`. -/
+theorem tendstoInMeasure_comp_continuousAt_const {E' F' : Type*} [PseudoMetricSpace E']
+    [PseudoMetricSpace F'] {f : ℕ → Ω → E'} {d : E'} {h : E' → F'}
+    (hf : TendstoInMeasure μ f atTop (fun _ => d)) (hc : ContinuousAt h d) :
+    TendstoInMeasure μ (fun n ω => h (f n ω)) atTop (fun _ => h d) := by
+  intro ε hε
+  rcases lt_or_ge ε ⊤ with hεlt | hεtop
+  · obtain ⟨δ, hδ, hδh⟩ :=
+      Metric.continuousAt_iff.mp hc ε.toReal (ENNReal.toReal_pos hε.ne' hεlt.ne)
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds
+      (hf (ENNReal.ofReal δ) (ENNReal.ofReal_pos.mpr hδ)) (fun _ => zero_le) (fun n => measure_mono ?_)
+    intro ω hω
+    simp only [Set.mem_setOf_eq, edist_dist] at hω ⊢
+    rw [ENNReal.ofReal_le_ofReal_iff dist_nonneg]
+    by_contra hdd
+    rw [not_le] at hdd
+    have hcontr := hδh hdd
+    rw [← ENNReal.ofReal_toReal hεlt.ne, ENNReal.ofReal_le_ofReal_iff dist_nonneg] at hω
+    linarith
+  · have hεtop' : ε = ⊤ := top_le_iff.mp hεtop
+    have hempty : ∀ n : ℕ, {ω | ε ≤ edist (h (f n ω)) (h d)} = ∅ := fun n => by
+      ext ω; simp [hεtop', top_le_iff, edist_ne_top]
+    simp only [hempty, measure_empty]
+    exact tendsto_const_nhds
+
 end DeepWiki.TimeSeries
