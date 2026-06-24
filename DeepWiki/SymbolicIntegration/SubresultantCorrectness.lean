@@ -2616,4 +2616,133 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 :
     (fun l _ => chain_hG2 60 hP hQ l) hc0_ex22 hβ0_ex22 hlc_ex22 hcb_ex22 hjlt_ex22 hQ_ex22
     hCne_ex22 hfilt_ex22 hg_ex22 hgcn_ex22 hg0_ex22 hrem_ex22
 
+/-! ### The residue ring `ℚ[t]/(R)` for Ex 2.2 and the `bmonicXmodR` unit regularity (`native_decide`)
+The modulus is the monic primitive Rothstein–Trager resultant `R = cmonic cR22` (degree 10, squarefree).
+The `bmonicXmodR` monic-in-`x` normalization needs the leading `x`-coefficient of the mod-`R`-reduced
+primitive subresultant to be a **unit mod `R`**; concretely the extended-Euclidean gcd of that leading
+coefficient with `R` reduces to a nonzero **constant** `u₂₂` (`native_decide`), so it is a unit. -/
+
+/-- **`cnorm (cmonic cR22) ≠ []`** — the modulus `R = cmonic cR22` reads to a nonzero `ℚ[t]` polynomial. -/
+theorem cnorm_cmonic_cR22_ne : cnorm (cmonic cR22) ≠ [] := by native_decide
+
+/-- **The leading-`x`-coefficient mod-`R` gcd is a singleton constant** (Ex 2.2): the extended-Euclidean
+gcd `.1` of the reduced primitive subresultant's leading `x`-coefficient with `R = cmonic cR22` is a
+one-element list `[u₂₂]` (a nonzero constant in `ℚ[t]`), so the leading coefficient is a unit mod `R`.
+The list and its head's nonvanishing are `native_decide` facts. -/
+theorem cgcdExt_blc_bredR_singleton_ex22 :
+    ∃ u : ℚ, u ≠ 0 ∧
+      (cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+        (lrtSubresultantCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
+        (cmonic cR22)).1
+      = [u] := by
+  rw [natDegree_toBPoly_chainG9_ex22]
+  refine ⟨(cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+      (lrtSubresultantCompute 60 1 cA22 cD22))) (cmonic cR22)).1.headI, ?_, ?_⟩
+  · native_decide
+  · native_decide
+
+/-- **`hgu` for Ex 2.2** (`bmonicXmodR` regularity): the leading-`x`-coefficient mod-`R` gcd reads to a
+nonzero constant `C u₂₂` — so the leading coefficient is a unit mod `R = cmonic cR22`. From
+`cgcdExt_blc_bredR_singleton_ex22` (`gcd = [u₂₂]`) and `toPoly [u₂₂] = C u₂₂`. -/
+theorem hgu_ex22 :
+    ∃ u : ℚ, u ≠ 0 ∧
+      toPoly (cgcdExt 60 (blc (bredR 60 (cmonic cR22)
+        (lrtSubresultantCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
+        (cmonic cR22)).1
+      = Polynomial.C u := by
+  obtain ⟨u, hu, hgcd⟩ := cgcdExt_blc_bredR_singleton_ex22
+  exact ⟨u, hu, by rw [hgcd, toPoly_cons, toPoly_nil]; simp⟩
+
+/-- **`hpz` for Ex 2.2**: the mod-`R` reduction of the primitive degree-1 subresultant is nonzero
+(`¬ bisZero (bredR 60 (cmonic cR22) (lrtSubresultantCompute 60 1 cA22 cD22))`). -/
+theorem hpz_ex22 :
+    ¬ bisZero (bredR 60 (cmonic cR22)
+        (lrtSubresultantCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)) = true := by
+  rw [natDegree_toBPoly_chainG9_ex22]; native_decide
+
+/-- **`Φ (toBPoly (lrtGcdCompute …)) ≠ 0`** (Ex 2.2): the `φ`-image of the computable LRT log argument is
+nonzero — its degree-1 `x`-coefficient is `φ (toPoly [1]) = φ 1 = 1 ≠ 0` (the engine's output
+`S₁ = x + c₀(t)` is monic in `x`, leading coefficient `[1]`, `ex_2_2_S1_monic_linear`). Works for any ring
+hom `φ : ℚ[X] →+* S` into a nonzero ring. -/
+theorem mapRingHom_φ_toBPoly_lrtGcdCompute_ne_zero_ex22 {S : Type*} [CommRing S] [Nontrivial S]
+    (φ : ℚ[X] →+* S) :
+    (Polynomial.mapRingHom φ) (toBPoly
+      (lrtGcdCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree (cmonic cR22) cA22 cD22)) ≠ 0 := by
+  rw [natDegree_toBPoly_chainG9_ex22]
+  intro h
+  have hcoeff : ((Polynomial.mapRingHom φ) (toBPoly
+      (lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22))).coeff 1 = 0 := by rw [h]; simp
+  rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, toBPoly_coeff] at hcoeff
+  -- the degree-1 `x`-coefficient of `lrtGcdCompute … = [c₀, [1]]` is `toPoly [1] = 1`, `φ 1 = 1 ≠ 0`
+  rw [show (lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22).getD 1 [] = [1] by native_decide] at hcoeff
+  rw [show toPoly ([1] : CPoly) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  exact one_ne_zero hcoeff
+
+/-! ### Closing Exercise 2.2: the residue ring `ℚ[t]/(R)`, `R = cmonic cR22` irreducible
+`R = cmonic cR22` is a degree-10 **squarefree** polynomial; it is in fact **irreducible over `ℚ`** (it
+is irreducible mod the prime `37` — a single degree-10 factor in `𝔽₃₇[t]` — and irreducibility mod a
+prime not dividing the leading coefficient implies irreducibility over `ℚ`). So `S = AdjoinRoot (toPoly
+(cmonic cR22)) = ℚ[t]/(R)` is a **degree-10 field**, hence a domain, over which the LRT log argument is
+normalized. Because `R` is squarefree, *every* residue has multiplicity `1` — exactly the LRT index
+`j = 1` — so no multiplicity argument beyond the regular-index nonvanishing is needed.
+
+Proving the degree-10 irreducibility *inside Lean* requires a reduction-mod-`p` irreducibility certificate
+(`Monic.irreducible_of_irreducible_map` plus `Irreducible` over `𝔽₃₇[t]` for a degree-10 polynomial), which
+has no `native_decide`-able decision procedure in Mathlib; it is the one mathematics-grade input taken as a
+hypothesis (`hirr`), together with the residue non-vanishing `hLne` (mirroring Example 2.4.1's `hLne`). -/
+
+/-- **Exercise 2.2's LRT closure**, modulo the two mathematics-grade inputs: given that the monic primitive
+Rothstein–Trager resultant `R = cmonic cR22` is **irreducible over `ℚ`** (`hirr` — true; `R` is irreducible
+mod `37`), so `S = ℚ[t]/(R)` is a field, and given the residue non-vanishing `hLne` (`Φ (lrtSubresultant
+A D 1) ≠ 0`, `Φ = mapRingHom (mk R)`), the `Φ`-image of the abstract LRT subresultant
+`lrtSubresultant (toPoly cA22) (toPoly cD22) 1` is `IsSimilar` over `ℚ[t]/(R)` to the `Φ`-image of the
+computable LRT log argument `toBPoly (lrtGcdCompute 60 1 R cA22 cD22) = x + c₀(t)`. So the engine's
+degree-1 squarefree output **is** the honest LRT subresultant of Exercise 2.2, up to a residue-ring unit.
+The hypothesis-free `ℚ[t]`-similarity (`isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22`) is pushed
+through the residue map by the *correct* bridge `isSimilar_mapRingHom_of_irreducible`, then chained with the
+`bmonicXmodR` unit bridge. -/
+theorem lrtGcdCompute_ex22_isSimilar_lrtSubresultant
+    (hirr : Irreducible (toPoly (cmonic cR22)))
+    (hLne : (Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22))))
+      (lrtSubresultant (toPoly cA22) (toPoly cD22)
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree) ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22))))
+        (lrtSubresultant (toPoly cA22) (toPoly cD22)
+          (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree))
+      ((Polynomial.mapRingHom (AdjoinRoot.mk (toPoly (cmonic cR22)))) (toBPoly
+        (lrtGcdCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree (cmonic cR22) cA22 cD22))) := by
+  haveI : Fact (Irreducible (toPoly (cmonic cR22))) := ⟨hirr⟩
+  set φ : ℚ[X] →+* AdjoinRoot (toPoly (cmonic cR22)) := AdjoinRoot.mk (toPoly (cmonic cR22)) with hφ
+  have hφR : φ (toPoly (cmonic cR22)) = 0 := AdjoinRoot.mk_self
+  have hφker : ∀ x, φ x = 0 ↔ toPoly (cmonic cR22) ∣ x := fun x => AdjoinRoot.mk_eq_zero
+  -- Φ L ∼ Φ M via the correct bridge (R irreducible)
+  have hMne : (Polynomial.mapRingHom φ) (toBPoly (lrtSubresultantCompute 60
+      (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)) ≠ 0 := by
+    obtain ⟨u, hu, hgu⟩ := hgu_ex22
+    obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ 60 (cmonic cR22)
+      (lrtSubresultantCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)
+      cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
+    intro h
+    apply mapRingHom_φ_toBPoly_lrtGcdCompute_ne_zero_ex22 φ
+    rw [lrtGcdCompute, hbridge, h, mul_zero]
+  have hLM : IsSimilar
+      ((Polynomial.mapRingHom φ) (lrtSubresultant (toPoly cA22) (toPoly cD22)
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree))
+      ((Polynomial.mapRingHom φ) (toBPoly (lrtSubresultantCompute 60
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22))) :=
+    isSimilar_mapRingHom_of_irreducible (toPoly (cmonic cR22)) hirr φ hφker
+      isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 hLne hMne
+  -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
+  obtain ⟨u, hu, hgu⟩ := hgu_ex22
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ 60 (cmonic cR22)
+    (lrtSubresultantCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)
+    cnorm_cmonic_cR22_ne hφR hu hgu hpz_ex22
+  have hMMgcd : IsSimilar
+      ((Polynomial.mapRingHom φ) (toBPoly (lrtSubresultantCompute 60
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)))
+      ((Polynomial.mapRingHom φ) (toBPoly
+        (lrtGcdCompute 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree (cmonic cR22) cA22 cD22))) :=
+    isSimilar_of_unit_mul hunit (by rw [lrtGcdCompute]; exact hbridge)
+  exact hLM.trans hMMgcd
+
 end DeepWiki.SymbolicIntegration.Compute
