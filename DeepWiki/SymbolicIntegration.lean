@@ -60,3 +60,4 @@ import DeepWiki.SymbolicIntegration.ComputableField
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
+import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
