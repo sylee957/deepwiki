@@ -71,4 +71,35 @@ theorem lookup_eq_envToTuple : {Γ : Ctx Att} → {Ω : Finset Att} → (v : Var
       simp only [lookup, envToTuple, dif_neg hne]
       exact lookup_eq_envToTuple v' (List.pairwise_cons.mp hd).2 e' ha _
 
+/-- A context scheme is a subset of the product scheme. -/
+theorem scheme_subset_flattenCtx {Ω : Finset Att} {Γ : Ctx Att} (hΩ : Ω ∈ Γ) :
+    Ω ⊆ flattenCtx Γ := fun _ ha => mem_flattenCtx_of_mem hΩ ha
+
+/-- The flat-row form of heterogeneous variable agreement on `X`: the row's `Ω`- and `Ω'`-parts
+share every value on a common attribute of `X`. -/
+def flatAgree {S Ω Ω' : Finset Att} (X : Finset Att) (sub₁ : Ω ⊆ S) (sub₂ : Ω' ⊆ S)
+    (flat : Tuple S Val) : Prop :=
+  ∀ a ∈ X, ∀ (h : a ∈ Ω) (h' : a ∈ Ω'), flat ⟨a, sub₁ h⟩ = flat ⟨a, sub₂ h'⟩
+
+variable {ι : Type w} {sch : ι → Finset Att}
+
+/-- **Reduction of the tuple calculus to the algebra** (§2.4): translate a first-order condition to
+an algebra expression over the product scheme. Atoms become computable predicates (`comp`) on the
+flat row; negation is the domain-relative complement (`DOM − ·`); conjunction/disjunction are
+intersection/union; the existential is projection (dropping the bound variable's scheme). The
+correctness holds on a disjoint context (the book's renaming `ρ` is unnecessary there). -/
+def calcToAlg (db : (i : ι) → Table (sch i) Val) :
+    {Γ : Ctx Att} → FOCond ι sch Val Γ → AlgExpr Att Val (flattenCtx Γ)
+  | _, .relA i v =>
+      AlgExpr.comp (fun flat => flat.restrict (scheme_subset_flattenCtx v.scheme_mem) ∈ db i)
+  | _, .compA v P =>
+      AlgExpr.comp (fun flat => P (flat.restrict (scheme_subset_flattenCtx v.scheme_mem)))
+  | _, .agreeA v₁ v₂ X =>
+      AlgExpr.comp (flatAgree X (scheme_subset_flattenCtx v₁.scheme_mem)
+        (scheme_subset_flattenCtx v₂.scheme_mem))
+  | _, .neg C => AlgExpr.diff (AlgExpr.comp (fun _ => True)) (calcToAlg db C)
+  | _, .and C D => (calcToAlg db C).inter (calcToAlg db D)
+  | _, .or C D => AlgExpr.union (calcToAlg db C) (calcToAlg db D)
+  | _, .ex _ C => AlgExpr.proj Finset.subset_union_right (calcToAlg db C)
+
 end DeepWiki
