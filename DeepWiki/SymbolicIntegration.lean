@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.Constants
+import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SubresultantPRS
