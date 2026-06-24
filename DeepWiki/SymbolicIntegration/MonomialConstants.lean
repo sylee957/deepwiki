@@ -15,6 +15,49 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {k : Type*} [Field k] [Differential k]
 
+section Coprime
+variable {R : Type*} [CommRing R] [Differential R]
+
+/-- **Lemma 3.4.5 core** (§3.4, p.96): if `a, b` are coprime and the numerator of `D(a/b)`
+vanishes (`b·Da = a·Db`), then both `a` and `b` are special. From `a ∣ b·Da` (`= a·Db`) and
+`IsCoprime a b` we get `a ∣ Da`; symmetrically `b ∣ Db`. -/
+theorem isSpecial_of_coprime_of_deriv_quotient_num_eq_zero {a b : R} (hco : IsCoprime a b)
+    (h : b * a′ = a * b′) : IsSpecial a ∧ IsSpecial b := by
+  refine ⟨hco.dvd_of_dvd_mul_left ?_, hco.symm.dvd_of_dvd_mul_left ?_⟩
+  · exact ⟨b′, h⟩
+  · exact ⟨a′, h.symm⟩
+
+end Coprime
+
+section FractionConstants
+-- A constant `c = a/b ∈ k(t)` of a differential extension `K` of the differential ring `R = k[t]`.
+-- Instantiated in the monomial case with `R = k[X]`, `Differential R = ⟨implicitDeriv v⟩`,
+-- `K = k(t)` the fraction field. The conclusion `IsSpecial a` is exactly `a ∣ Da` in `k[t]`.
+variable {R K : Type*} [CommRing R] [Differential R] [IsDomain R] [Field K] [Algebra R K]
+  [IsFractionRing R K] [Differential K] [DifferentialAlgebra R K]
+
+omit [IsDomain R] in
+/-- **Lemma 3.4.5** (§3.4, p.96), first part: if `c = a/b ∈ Const_D(k(t))` (i.e. `c′ = 0`) with
+`a, b` coprime and `b ≠ 0`, then both the numerator `a` and the denominator `b` are special in
+`k[t]`. From the quotient rule `0 = Dc = (b·Da − a·Db)/b²` we get `b·Da = a·Db`, and coprimality
+forces `a ∣ Da`, `b ∣ Db` (`isSpecial_of_coprime_of_deriv_quotient_num_eq_zero`). -/
+theorem isSpecial_num_denom_of_const_quotient {a b : R} (hco : IsCoprime a b) (hb : b ≠ 0)
+    (hconst : (algebraMap R K a / algebraMap R K b)′ = 0) :
+    IsSpecial a ∧ IsSpecial b := by
+  have hinj : Function.Injective (algebraMap R K) := IsFractionRing.injective R K
+  have hbK : algebraMap R K b ≠ 0 := fun h => hb (hinj (by rw [h, map_zero]))
+  -- the quotient rule turns `Dc = 0` into `b·Da = a·Db` over `K`
+  have hnum : algebraMap R K (b * a′) = algebraMap R K (a * b′) := by
+    rw [deriv_div, div_eq_zero_iff] at hconst
+    rcases hconst with hz | hz
+    · rw [sub_eq_zero] at hz
+      rw [map_mul, map_mul, ← deriv_algebraMap, ← deriv_algebraMap]
+      exact hz
+    · exact absurd (pow_eq_zero_iff (by norm_num) |>.mp hz) hbK
+  exact isSpecial_of_coprime_of_deriv_quotient_num_eq_zero hco (hinj hnum)
+
+end FractionConstants
+
 section ScalarMonomial
 -- The base case of §3.4: the monomial derivation with `Dt = w ∈ k`, i.e. the implicit derivation
 -- whose `t`-component is the *constant* polynomial `C w`.
