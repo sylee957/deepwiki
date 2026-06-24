@@ -1,6 +1,7 @@
 import Mathlib.Probability.CentralLimitTheorem
 import Mathlib.MeasureTheory.Measure.LevyConvergence
 import Mathlib.Probability.Distributions.Gaussian.Multivariate
+import Mathlib.Probability.Moments.Covariance
 
 /-! # Multivariate central limit theorem (foundation)
 Building the multivariate CLT for iid random vectors via the Cramér–Wold device: the characteristic
@@ -169,6 +170,32 @@ theorem tendstoInDistribution_multivariateGaussian_of_tendsto_charFun_proj {k : 
     ring_nf
   rw [← hlim]
   exact hproj t
+
+/-- **Covariance of projections expands bilinearly:** for random vectors `X`, `Y` into
+`EuclideanSpace ℝ (Fin k)` with `L²` coordinates, `cov[⟪X,λ⟫, ⟪Y,λ⟫] = ∑ᵢ ∑ⱼ λᵢ λⱼ cov[Xⁱ, Yʲ]`. Summed
+over lags this turns the long-run variance of a projected process into the quadratic form `λ ⬝ᵥ S λ` of the
+long-run cross-covariance matrix — the variance identification feeding the Cramér–Wold lift of the 1-D
+`m`-dependent CLT to the multivariate one. -/
+theorem covariance_inner_inner {k : ℕ} [IsFiniteMeasure μ] {X Y : Ω → EuclideanSpace ℝ (Fin k)}
+    (lam : EuclideanSpace ℝ (Fin k)) (hX : ∀ i, MemLp (fun ω => X ω i) 2 μ)
+    (hY : ∀ j, MemLp (fun ω => Y ω j) 2 μ) :
+    cov[fun ω => (⟪X ω, lam⟫ : ℝ), fun ω => (⟪Y ω, lam⟫ : ℝ); μ]
+      = ∑ i, ∑ j, lam i * lam j * cov[fun ω => X ω i, fun ω => Y ω j; μ] := by
+  have hXl : ∀ i, MemLp (fun ω => lam i * X ω i) 2 μ := fun i => (hX i).const_mul (lam i)
+  have hYl : ∀ j, MemLp (fun ω => lam j * Y ω j) 2 μ := fun j => (hY j).const_mul (lam j)
+  have hYsum : MemLp (fun ω => ∑ j, lam j * Y ω j) 2 μ := by
+    have he : (fun ω => ∑ j, lam j * Y ω j) = ∑ j, fun ω => lam j * Y ω j := by
+      funext ω; rw [Finset.sum_apply]
+    rw [he]; exact memLp_finsetSum' Finset.univ fun j _ => hYl j
+  have hinner : ∀ (Z : Ω → EuclideanSpace ℝ (Fin k)) (ω : Ω),
+      (⟪Z ω, lam⟫ : ℝ) = ∑ i, lam i * Z ω i := fun Z ω => by
+    rw [PiLp.inner_apply]; simp [RCLike.inner_apply]
+  simp_rw [hinner]
+  rw [covariance_fun_sum_left hXl hYsum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [covariance_const_mul_left, covariance_fun_sum_right hYl (hX i), Finset.mul_sum]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [covariance_const_mul_right]; ring
 
 /-- **Marginal characteristic function:** the characteristic function of the law of the scalar projection
 `⟪X ·, t⟫` at `s` equals that of the law of `X` at `s • t` — both are `∫ exp(I·s·⟪X ω, t⟫) dμ`. The
