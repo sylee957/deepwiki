@@ -196,4 +196,27 @@ theorem IsMDependent.tendstoInDistribution_multivariate {d m : ℕ} [IsProbabili
   simp_rw [inner_smul_sampleMean_eq]
   exact hlevy
 
+/-- **The lagged product of an `m`-dependent process is `(m+k)`-dependent:** if `X` is `m`-dependent then
+`t ↦ Xₜ · Xₜ₊ₖ` is `(m+k)`-dependent — each `Wₜ` is a measurable function of `X` on the 2-point window
+`{t, t+k}`, and windows `{s, s+k}`, `{t, t+k}` more than `m+k` apart contain `X`-indices more than `m`
+apart, hence independent. The sample-autocovariance lag process `XₜXₜ₊ₖ` whose CLT is Bartlett's theorem. -/
+theorem IsMDependent.mul_shift {m : ℕ} {X : ℤ → Ω → ℝ} (h : IsMDependent m X μ) (k : ℕ) :
+    IsMDependent (m + k) (fun t ω => X t ω * X (t + k) ω) μ := by
+  intro S T hsep
+  set S' : Finset ℤ := S ∪ S.image (· + (k : ℤ)) with hS'
+  set T' : Finset ℤ := T ∪ T.image (· + (k : ℤ)) with hT'
+  have hsep' : ∀ a ∈ S', ∀ b ∈ T', a + (m : ℤ) < b := by
+    intro a ha b hb
+    simp only [hS', hT', Finset.mem_union, Finset.mem_image] at ha hb
+    rcases ha with has | ⟨s, hs, rfl⟩ <;> rcases hb with hbt | ⟨t, ht, rfl⟩ <;>
+      · have := hsep _ ‹_› _ ‹_›; push_cast at this ⊢; omega
+  have hmemS : ∀ i : S, (i : ℤ) ∈ S' ∧ (i : ℤ) + (k : ℤ) ∈ S' := fun i =>
+    ⟨Finset.mem_union_left _ i.2, Finset.mem_union_right _ (Finset.mem_image_of_mem _ i.2)⟩
+  have hmemT : ∀ i : T, (i : ℤ) ∈ T' ∧ (i : ℤ) + (k : ℤ) ∈ T' := fun i =>
+    ⟨Finset.mem_union_left _ i.2, Finset.mem_union_right _ (Finset.mem_image_of_mem _ i.2)⟩
+  exact (h S' T' hsep').comp
+    (φ := fun g (i : S) => g ⟨(i : ℤ), (hmemS i).1⟩ * g ⟨(i : ℤ) + (k : ℤ), (hmemS i).2⟩)
+    (ψ := fun g (i : T) => g ⟨(i : ℤ), (hmemT i).1⟩ * g ⟨(i : ℤ) + (k : ℤ), (hmemT i).2⟩)
+    (by fun_prop) (by fun_prop)
+
 end DeepWiki.TimeSeries
