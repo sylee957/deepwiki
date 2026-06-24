@@ -15,8 +15,9 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **m-dependence** (Definition 6.4.3): the process `X` is `m`-dependent under `μ` if for any two
 finite index sets `S`, `T` with every element of `S` more than `m` before every element of `T`, the
-blocks `(Xₛ)_{s ∈ S}` and `(Xₜ)_{t ∈ T}` are independent. -/
-def IsMDependent (m : ℕ) (X : ℤ → Ω → ℝ) (μ : Measure Ω) : Prop :=
+blocks `(Xₛ)_{s ∈ S}` and `(Xₜ)_{t ∈ T}` are independent. Generic in the value type so vector-valued
+processes (and their scalar projections, via `IsMDependent.comp`) are covered. -/
+def IsMDependent {V : Type*} [MeasurableSpace V] (m : ℕ) (X : ℤ → Ω → V) (μ : Measure Ω) : Prop :=
   ∀ S T : Finset ℤ, (∀ s ∈ S, ∀ t ∈ T, (s : ℤ) + m < t) →
     IndepFun (fun ω (i : S) => X (i : ℤ) ω) (fun ω (i : T) => X (i : ℤ) ω) μ
 
@@ -50,11 +51,13 @@ theorem isMDependent_of_iIndepFun {Z : ℤ → Ω → ℝ} {μ : Measure Ω} (hi
   (isMDependent_zero_of_iIndepFun hindep hmeas).mono (Nat.zero_le m)
 
 /-- **m-dependence transports through a pointwise measurable map**: if `X` is `m`-dependent and
-`g : ℝ → ℝ` is measurable, then the pointwise image `t ↦ g ∘ Xₜ` is `m`-dependent (each block composes
-with `g` coordinatewise, preserving block independence). So `|X|`, `X²`, and centerings `X − c` of an
-`m`-dependent process are again `m`-dependent. -/
-theorem IsMDependent.comp {m : ℕ} {X : ℤ → Ω → ℝ} {μ : Measure Ω} (h : IsMDependent m X μ)
-    {g : ℝ → ℝ} (hg : Measurable g) : IsMDependent m (fun t ω => g (X t ω)) μ := by
+`g` is measurable, then the pointwise image `t ↦ g ∘ Xₜ` is `m`-dependent (each block composes with `g`
+coordinatewise, preserving block independence). So `|X|`, `X²`, and centerings `X − c` of an
+`m`-dependent process are again `m`-dependent; and scalar projections `⟪Yₜ, λ⟫` of a vector `m`-dependent
+process are `m`-dependent (the bridge lifting the 1-D `m`-dependent CLT to the multivariate one). -/
+theorem IsMDependent.comp {V W : Type*} [MeasurableSpace V] [MeasurableSpace W] {m : ℕ}
+    {X : ℤ → Ω → V} {μ : Measure Ω} (h : IsMDependent m X μ) {g : V → W} (hg : Measurable g) :
+    IsMDependent m (fun t ω => g (X t ω)) μ := by
   intro S T hST
   exact (h S T hST).comp (φ := fun v i => g (v i)) (ψ := fun v i => g (v i))
     (measurable_pi_lambda _ fun i => by fun_prop) (measurable_pi_lambda _ fun i => by fun_prop)
