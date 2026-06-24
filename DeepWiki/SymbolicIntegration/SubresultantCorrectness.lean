@@ -779,6 +779,37 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly) (G
   exact isSimilar_lrtSubresultant_subresPRS_elt fuel A D G bt s c m hG0 hG1 hd0 hd1
     hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
 
+/-- **`bsubresultantGcd ∼ lrtSubresultant`, from the singleton filter** (the `hfilt`-free chain agreement):
+the same as `isSimilar_lrtSubresultant_bsubresultantGcd`, but instead of taking the filter identity `hfilt`
+as a hypothesis, it derives it from the **structural** singleton-filter fact `hfil` — that the degree-`j`
+nonzero filter of `subresPRS fuel (G 0) (G 1)` is the singleton `[G (m+2)]` (the chain's degree-`j` element,
+unique by strict degree decrease). So the only list-structure input is `hfil` (the filter is a singleton),
+which `toBPoly_bsubresultantGcd_eq_of_filter_singleton` turns into the `hfilt` the agreement consumes. -/
+theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
+    (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
+    (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
+    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree)
+    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hfil : (subresPRS fuel (G 0) (G 1)).filter
+        (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
+    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
+      (toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) :=
+  isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
+    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
+    (toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel (G 0) (G 1) G m hfil)
+
 /-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute`
 `toBPoly_bprimitivePartX_exact` says `bprimitivePartX` strips a `ℚ[t]` content factor — a similarity-
 preserving operation. Packaged as `IsSimilar`, it gives `toBPoly p ~ toBPoly (bprimitivePartX fuel p)`.
