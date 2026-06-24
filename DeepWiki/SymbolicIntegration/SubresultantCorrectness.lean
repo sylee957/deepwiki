@@ -390,6 +390,23 @@ theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cn
   toBPoly_bdivC_exact fuel p c hc
     (fun a ha => cmod_eq_zero_of_dvd_loc fuel a c hc (hfuel a ha) (hdvd a ha))
 
+/-- **`bprimitivePartX` realizes exact `ℚ[t]`-content division** (the `lrtSubresultantCompute` content
+step): when the `ℚ[t]`-content `g = bcontentX fuel p` is nonzero (`hg`) and divides every `x`-coefficient
+of `bnorm p` exactly (`toPoly (cmod fuel a g) = 0` — true since the content is the `ℚ[t]`-gcd of the
+coefficients), `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p`. So `bprimitivePartX` strips a
+`ℚ[t]` content factor in `x` — a similarity-preserving step (the content `C(toPoly g)` is the absorbed
+unit). Reuses `toBPoly_map_cdiv_exact` over the normalized coefficient list, through `toBPoly_bnorm`. -/
+theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
+    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    Polynomial.C (toPoly (bcontentX fuel p)) * toBPoly (bprimitivePartX fuel p) = toBPoly p := by
+  have hbc : bcontentX fuel (bnorm p) = bcontentX fuel p := by
+    rw [bcontentX, bcontentX, bnorm_idem]
+  rw [bprimitivePartX]
+  simp only [hbc, hg, Bool.false_eq_true, if_false]
+  rw [toBPoly_bnorm, toBPoly_map_cdiv_exact fuel (bnorm p) (bcontentX fuel p) hgcn hrem,
+    toBPoly_bnorm]
+
 /-! ### One *subresultant-PRS* step on the β-divided remainder (the actual `subresPRS` recurrence)
 The raw step `subresultant_C_mul_eq_rem_of_bpsremainder` relates `Sⱼ(p,q)` to `Sⱼ(q, prem(p,q))` against
 the *raw* pseudo-remainder. The actual `subresPRS` recurrence forms the next element as
