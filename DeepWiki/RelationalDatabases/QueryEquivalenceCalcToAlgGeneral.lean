@@ -140,4 +140,36 @@ def calcToAlgTagged (db : (i : ι) → Table (sch i) Val) :
   | _, .or C D => AlgExpr.union (calcToAlgTagged db C) (calcToAlgTagged db D)
   | _, .ex _ C => AlgExpr.proj Finset.subset_union_right (calcToAlgTagged db C)
 
+/-- The head variable's tags lie in the product scheme. -/
+theorem head_tag_mem {a : Att} {Ω : Finset Att} {Γ : Ctx Att} (ha : a ∈ Ω) :
+    (Γ.length, a) ∈ flattenTagged (Ω :: Γ) := by
+  rw [flattenTagged_cons, Finset.mem_union]
+  exact Or.inl (Finset.mem_map.mpr ⟨a, ha, rfl⟩)
+
+/-- Read the head variable's tuple out of a tagged flat row over `flattenTagged (Ω :: Γ)`. -/
+def headRead {Ω : Finset Att} {Γ : Ctx Att} (flat : Tuple (flattenTagged (Ω :: Γ)) Val) :
+    Tuple Ω Val := fun a => flat ⟨(Γ.length, a.val), head_tag_mem a.property⟩
+
+/-- The tail part of a flattened cons-environment is the flattened tail (the head's tags being at
+the top position, the tail's strictly below). -/
+theorem restrict_envToTupleTagged_cons {Ω : Finset Att} {Γ : Ctx Att} (e : Env Val (Ω :: Γ)) :
+    (envToTupleTagged e).restrict Finset.subset_union_right = envToTupleTagged e.2 := by
+  obtain ⟨t, e'⟩ := e
+  funext p
+  have hne : p.val.1 ≠ Γ.length := Nat.ne_of_lt (flattenTagged_lt p.property)
+  simp only [Tuple.restrict, envToTupleTagged, dif_neg hne]
+
+/-- Existential reconstruction: a flat row whose tail part is `envToTupleTagged e` is the flattening
+of `e` extended by the row's head part. -/
+theorem envToTupleTagged_consEnv {Ω : Finset Att} {Γ : Ctx Att}
+    (flat : Tuple (flattenTagged (Ω :: Γ)) Val) (e : Env Val Γ)
+    (he : flat.restrict Finset.subset_union_right = envToTupleTagged e) :
+    envToTupleTagged (consEnv (headRead flat) e) = flat := by
+  funext p
+  by_cases h : p.val.1 = Γ.length
+  · simp only [consEnv, envToTupleTagged, dif_pos h, headRead]
+    exact congrArg flat (Subtype.ext (Prod.ext_iff.mpr ⟨h.symm, rfl⟩))
+  · simp only [consEnv, envToTupleTagged, dif_neg h]
+    rw [← he]; rfl
+
 end DeepWiki
