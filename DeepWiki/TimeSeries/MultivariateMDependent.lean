@@ -107,4 +107,14 @@ theorem hasLaw_sqrt_smul_gaussian {v : ℝ} {Ω' : Type*} [MeasurableSpace Ω'] 
   rw [show (fun ω => Real.sqrt v • G ω) = (Real.sqrt v * ·) ∘ G from rfl,
     ← AEMeasurable.map_map_of_aemeasurable (by fun_prop) hG.aemeasurable, hG.map_eq, hcm]
 
+omit [MeasurableSpace Ω] in
+/-- **The projection of the normalized vector sum is the projected scalar normalized sum:**
+`⟪√n • (n⁻¹ • ∑ₜ Yₜ), λ⟫ = √n · sampleMean n ⟪Y·, λ⟫`. Inner linearity (`real_inner_smul_left`, `sum_inner`)
+turns the projection of the vector statistic into the scalar statistic the 1-D `m`-dependent CLT governs. -/
+theorem inner_smul_sampleMean_eq {d : ℕ} {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)}
+    (lam : EuclideanSpace ℝ (Fin d)) (n : ℕ) (ω : Ω) :
+    (⟪(Real.sqrt n : ℝ) • ((n : ℝ)⁻¹ • ∑ t ∈ Finset.range n, Y (t : ℤ) ω), lam⟫ : ℝ)
+      = Real.sqrt n * sampleMean n (fun s => (⟪Y (s : ℤ) ω, lam⟫ : ℝ)) := by
+  rw [real_inner_smul_left, real_inner_smul_left, sum_inner, sampleMean]
+
 end DeepWiki.TimeSeries
