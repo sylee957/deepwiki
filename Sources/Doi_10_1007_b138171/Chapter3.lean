@@ -8,6 +8,7 @@ import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
+import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -470,6 +471,28 @@ book-faithful splitting factorization (`def_3_5_1_book`) — no one-step hypothe
 `thm_3_5_1_general`. -/
 abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 
+/-! ## Chapter 3 Examples -/
+
+/-- **Example 3.1.2** (§3.1, p.78): the only differential ideals of `(K[X], d/dX)` are `⊥` and `⊤`
+(char `0`). -/
+abbrev ex_3_1_2 := @differentialIdeal_eq_bot_or_top
+
+/-- **Example 3.1.3** (§3.1, p.78): `Δ(monomial n a) = monomial n (Da + n·a)` for `Δ = κ_D + d/dX`;
+the induced derivation on `R[X]/(X) ≃ R` is `D`. -/
+abbrev ex_3_1_3 := @implicitDeriv_X_monomial
+
+/-- **Example 3.2.1** (§3.2, p.82): the only derivation on `ℚ(x)` that vanishes on `ℚ` and sends
+`x ↦ 1` is `d/dx` — a corollary of fraction-field uniqueness. -/
+abbrev ex_3_2_1 := @derivation_fractionRing_unique_of_restrict
+
+/-- **Example 3.2.2** (§3.2, p.82): the only derivation extending `D` with `t` constant is `κ_D` — the
+same fraction-field uniqueness. -/
+abbrev ex_3_2_2 := @derivation_fractionRing_unique_of_restrict
+
+/-- **Example 3.2.3** (§3.2, p.83): an element algebraic over the constants (char `0`) is itself a
+constant. -/
+abbrev ex_3_2_3 := @deriv_eq_zero_of_separable_root_const_coeffs
+
 /-! ## Chapter 3 Exercises -/
 
 /-- **Exercise 3.1** (Ch 3, p.105): `D(∏ uᵢ^eᵢ)/(∏ uᵢ^eᵢ) = ∑ eᵢ·(Duᵢ/uᵢ)` — the logarithmic
@@ -507,7 +530,8 @@ abbrev ex_3_11 := @isCoprime_of_isSpecialRao_prime
 §3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
   (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
 §3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
-Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
+Examples: Ex 3.5.1, Ex 3.5.2 [deferred: noncomputable symbolic `SplitFactor`/`SplitSquarefreeFactor`
+  over ℚ(x)[t]; they illustrate the proven general `splitFactor_correct_gen`].
 Exercises: Ex 3.2 [infra: concrete algebraic differential field ℚ(x,√(2x²)) + constants]; Ex 3.3 [deferred:
   hard algebraic-independence transfer]; Ex 3.5 [infra: `S^irr` set + base-change descent]; Ex 3.6(b),(c)
   [infra/research: multivariate decomposition + Darboux polynomials]; Ex 3.11 general non-squarefree [deferred]. -/
