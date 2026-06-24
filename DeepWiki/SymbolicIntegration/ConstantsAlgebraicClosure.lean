@@ -120,4 +120,57 @@ theorem coeff_deriv_eq_zero_of_coprime_of_relation {u v : F[X]} (hcop : IsCoprim
 
 end RationalExtensionConstants
 
+section AlgebraicallyClosedConstants
+variable {E : Type*} [Field E] [Differential E] [CharZero E]
+
+/-- The constant subfield inherits characteristic `0` from `E` (its subtype injection preserves and
+reflects `natCast`). -/
+instance charZero_constantsSubfield : CharZero (constantsSubfield E) where
+  cast_injective m n h := by
+    have hι := (constantsSubfield E).subtype.injective
+    apply Nat.cast_injective (R := E)
+    have := congrArg (constantsSubfield E).subtype h
+    rwa [map_natCast, map_natCast] at this
+
+/-- **Corollary 3.3.1** (§3.3), the algebraically-closed clause `Const_Δ(E) = C̄` (and the core of
+Lemma 3.3.3): when `E` is an algebraically closed char-`0` differential field, its constant subfield
+`Const_D(E)` is itself algebraically closed. (A monic irreducible polynomial over the constants —
+separable in char `0` — has a root `c ∈ E`; its constant coefficients make `c` a separable algebraic
+constant, so `c′ = 0` by Lemma 3.3.2(ii), i.e. the root already lies in the constant subfield.) -/
+instance isAlgClosed_constantsSubfield [IsAlgClosed E] :
+    IsAlgClosed (constantsSubfield E) := by
+  apply IsAlgClosed.of_exists_root
+  intro p hpmonic hpirr
+  set ι : (constantsSubfield E) →+* E := (constantsSubfield E).subtype with hι
+  set q : E[X] := p.map ι with hqdef
+  -- `q`'s coefficients are constants (they are images of elements of `constantsSubfield E`).
+  have hqconst : ∀ i, (q.coeff i)′ = 0 := by
+    intro i
+    rw [hqdef, Polynomial.coeff_map]
+    exact (p.coeff i).property
+  -- `q ≠ 0` and `deg q ≥ 1`, so it has a root `c ∈ E`.
+  have hq0 : q ≠ 0 := by
+    rw [hqdef, Ne, Polynomial.map_eq_zero_iff ι.injective]; exact hpmonic.ne_zero
+  have hpsep : p.Separable := hpirr.separable
+  have hdegq : q.degree ≠ 0 := by
+    rw [hqdef, Polynomial.degree_map_eq_of_injective ι.injective]
+    exact (Polynomial.degree_pos_of_irreducible hpirr).ne'
+  obtain ⟨c, hc⟩ := IsAlgClosed.exists_root q hdegq
+  -- `q = p.map ι` is separable (char `0` irreducible `p`), so its derivative is nonzero at `c`.
+  have hqsep : q.Separable := hpsep.map
+  have hroot : q.eval c = 0 := hc
+  have hsep : q.derivative.eval c ≠ 0 := by
+    have := hqsep.eval₂_derivative_ne_zero (RingHom.id E) (x := c)
+      (by rwa [Polynomial.eval₂_id])
+    rwa [Polynomial.eval₂_id] at this
+  -- the root is a constant (Lemma 3.3.2(ii)), so it lies in the constant subfield.
+  have hcconst : c′ = 0 := deriv_eq_zero_of_separable_algebraic_const q hqconst hroot hsep
+  refine ⟨⟨c, hcconst⟩, ?_⟩
+  -- `p.eval ⟨c, _⟩ = 0` because `ι` is injective and `ι (p.eval ⟨c,_⟩) = q.eval c = 0`.
+  apply ι.injective
+  rw [map_zero, hι, ← Polynomial.eval₂_at_apply, Polynomial.eval₂_eq_eval_map, ← hqdef]
+  exact hroot
+
+end AlgebraicallyClosedConstants
+
 end DeepWiki.SymbolicIntegration
