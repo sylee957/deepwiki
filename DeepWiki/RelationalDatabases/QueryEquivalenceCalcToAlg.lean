@@ -158,4 +158,20 @@ theorem envToTuple_splitEnv : (Γ : Ctx Att) → (flat : Tuple (flattenCtx Γ) V
       · rw [dif_pos h]; rfl
       · rw [dif_neg h, envToTuple_splitEnv Γ (flat.restrict Finset.subset_union_right)]; rfl
 
+/-- Cons a tuple onto an environment, with the dependent `Env` type pinned (the `Env` def is not
+reducible, so a bare pair does not unify with `Env Val (Ω :: Γ)`). -/
+@[reducible] def consEnv {Ω : Finset Att} {Γ : Ctx Att} (t : Tuple Ω Val) (e : Env Val Γ) :
+    Env Val (Ω :: Γ) := (t, e)
+
+/-- **Existential reconstruction**: a flat row whose tail (the `flattenCtx Γ` part) is `envToTuple e`
+is the flattening of `e` extended by the row's head part. -/
+theorem envToTuple_consEnv {Ω : Finset Att} {Γ : Ctx Att} (flat : Tuple (flattenCtx (Ω :: Γ)) Val)
+    (e : Env Val Γ) (he : flat.restrict Finset.subset_union_right = envToTuple e) :
+    envToTuple (consEnv (flat.restrict Finset.subset_union_left) e) = flat := by
+  funext a
+  by_cases h : a.val ∈ Ω
+  · simp only [envToTuple, dif_pos h, Tuple.restrict]
+  · simp only [envToTuple, dif_neg h]
+    rw [← he]; rfl
+
 end DeepWiki
