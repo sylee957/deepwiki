@@ -117,4 +117,27 @@ theorem inner_smul_sampleMean_eq {d : ℕ} {Y : ℤ → Ω → EuclideanSpace �
       = Real.sqrt n * sampleMean n (fun s => (⟪Y (s : ℤ) ω, lam⟫ : ℝ)) := by
   rw [real_inner_smul_left, real_inner_smul_left, sum_inner, sampleMean]
 
+omit [MeasurableSpace Ω] in
+/-- `⟪X·, λ⟫` as a coordinate sum: `⟪X ω, λ⟫ = ∑ᵢ λᵢ · Xᵢ`. -/
+theorem inner_eq_sum_coord {d : ℕ} (X : Ω → EuclideanSpace ℝ (Fin d)) (lam : EuclideanSpace ℝ (Fin d))
+    (ω : Ω) : (⟪X ω, lam⟫ : ℝ) = ∑ i, lam i * X ω i := by
+  rw [PiLp.inner_apply]; simp [RCLike.inner_apply]
+
+/-- **A projection of an `L²` random vector is `L²`:** if every coordinate `Xᵢ ∈ L²` then `⟪X·, λ⟫ ∈ L²`
+(a finite combination of `L²` coordinates). -/
+theorem memLp_inner {d : ℕ} {X : Ω → EuclideanSpace ℝ (Fin d)} (lam : EuclideanSpace ℝ (Fin d))
+    (hX : ∀ i, MemLp (fun ω => X ω i) 2 μ) : MemLp (fun ω => (⟪X ω, lam⟫ : ℝ)) 2 μ := by
+  have he : (fun ω => (⟪X ω, lam⟫ : ℝ)) = ∑ i, fun ω => lam i * X ω i := by
+    funext ω; rw [inner_eq_sum_coord, Finset.sum_apply]
+  rw [he]; exact memLp_finsetSum' Finset.univ fun i _ => (hX i).const_mul (lam i)
+
+/-- **A projection of a centered random vector is centered:** if every coordinate is integrable with mean
+`0` then `μ[⟪X·, λ⟫] = 0`. -/
+theorem integral_inner_eq_zero {d : ℕ} {X : Ω → EuclideanSpace ℝ (Fin d)}
+    (lam : EuclideanSpace ℝ (Fin d)) (hint : ∀ i, Integrable (fun ω => X ω i) μ)
+    (hc : ∀ i, ∫ ω, X ω i ∂μ = 0) : ∫ ω, (⟪X ω, lam⟫ : ℝ) ∂μ = 0 := by
+  simp_rw [inner_eq_sum_coord]
+  rw [integral_finsetSum _ fun i _ => (hint i).const_mul _]
+  simp [integral_const_mul, hc]
+
 end DeepWiki.TimeSeries
