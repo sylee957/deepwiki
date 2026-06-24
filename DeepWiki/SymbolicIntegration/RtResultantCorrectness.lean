@@ -425,7 +425,7 @@ open Polynomial in
 theorem toPoly_ex241_value :
     toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : CPoly)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
-  simp only [toPoly_cons, toPoly_nil, map_ofNat, map_one, map_zero, C_0]
+  simp only [toPoly_cons, toPoly_nil, map_ofNat, map_one, map_zero]
   ring
 
 open Polynomial in
