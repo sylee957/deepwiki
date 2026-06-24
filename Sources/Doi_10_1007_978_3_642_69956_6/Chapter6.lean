@@ -18,11 +18,11 @@ projection/`selectCertain` rules); the equivalence machinery and the remaining s
   Def 6.2's f-information `X^f = ⋂ f(X)` and β-equivalence `≡_β` / β-representation; Theorem 6.1's
   `≡_P` claim (Codd tables P-represent any X) and Thm 6.2 (`≡_S`); the "correctly evaluates"
   statement of Theorem 6.3 (`Rep(f(T)) ≡_PS f(Rep(T))`); Theorem 6.4 (Codd tables fail `PSU` and
-  `PJ`); Theorem 6.5 (V-tables: `PS⁺UJ`) / Theorem 6.6 (V-tables fail `PS`); and the *join* case of
-  Theorem 6.7 (C-tables: `PSUJ`) — the V-table and C-table *objects* and their representations are
-  formalized (`VTable`/`CTable`, `CTable.rep`), and the projection/selection/union cases of Theorem
-  6.7 are done (`CTable.instAt_proj`/`_selectEq`/`_union`, selection being exact); the join case and
-  the failure theorems 6.4/6.5/6.6 remain [infra/research].
+  `PJ`); Theorem 6.5 (V-tables: `PS⁺UJ`) / Theorem 6.6 (V-tables fail `PS`). **Theorem 6.7 (C-tables
+  support `PSUJ`) is now DONE** — `CTable.instAt_proj`/`_selectEq`/`_union`/`_join`, selection being
+  exact; the V-table/C-table objects and representations are formalized (`VTable`/`CTable`,
+  `CTable.rep`). The remaining §6.1 gaps are the *failure*/capability theorems 6.4 (Codd fail PSU/PJ),
+  6.5 (V-tables PS⁺UJ), 6.6 (V-tables fail PS) [infra/research].
 §6.2: the per-table insertion/deletion/modification and Theorem 6.8 (which update operations are
   feasible for Codd / V / C-tables) [infra: needs the null-table representations].
 §6.3: the fill-in (chase-like) rules, the converse of Theorem 6.9 (no hard violation after
@@ -184,6 +184,11 @@ abbrev thm_6_7_projection := @DeepWiki.CTable.instAt_proj
 /-- **Theorem 6.7** (§6.1), selection case: C-tables evaluate `σ_{A=c}` *exactly* — their defining
 advantage over V-tables (which fail `PS`, Theorem 6.6). -/
 abbrev thm_6_7_selection := @DeepWiki.CTable.instAt_selectEq
+
+/-- **Theorem 6.7** (§6.1), join case: C-tables correctly evaluate the natural join (rows merged
+over `Ω ∪ Ω'` with agreement conditions on the shared attributes). Together with
+`thm_6_7_projection`/`_selection`/`_union`, C-tables support all of `PSUJ`. -/
+abbrev thm_6_7_join := @DeepWiki.CTable.instAt_join
 
 /-! ## §6.2 Conditions on updates (Def 6.3) -/
 
