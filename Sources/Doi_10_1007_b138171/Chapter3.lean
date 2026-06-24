@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
+import DeepWiki.SymbolicIntegration.MonomialConstants
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -291,9 +292,25 @@ abbrev thm_3_4_4_map := @isSpecialFirstKind_map
 monomial derivation along an algebraic scalar tower. -/
 abbrev cor_3_4_1_special := @isSpecial_map_of_isSpecial
 
--- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   Corollary 3.4.1 (beyond the special half `cor_3_4_1_special`); Corollary 3.4.2; Lemma 3.4.5;
---   Lemma 3.4.6 (new constants ⇔ special polynomials).
+/-- **Corollary 3.4.1** (§3.4), normal half: a normal `p ∈ k[t]` stays normal in `E[t]` for an
+algebraic extension `k ⊆ E` (coprimality lifts along the base change). -/
+abbrev cor_3_4_1_normal := @isCoprime_map_implicitDeriv_of_isCoprime
+
+/-- **Corollary 3.4.2(i)** (§3.4), constant-coefficient case: `∏(X − aᵢ)` is special iff it divides
+`Dt`. -/
+abbrev cor_3_4_2_special := @dvd_prod_X_sub_C_implicitDeriv_iff_dvd
+
+/-- **Corollary 3.4.2(ii)** (§3.4), constant-coefficient case: a squarefree `∏(X − aᵢ)` is normal iff
+it is coprime to `Dt`. -/
+abbrev cor_3_4_2_normal := @isCoprime_prod_X_sub_C_implicitDeriv_iff_isCoprime
+
+/-- **Lemma 3.4.5** (§3.4, p.94): if `c ∈ Const(k(t))` then both the numerator and denominator of `c`
+are special; for `c ≠ 0` and `t` nonlinear (`deg Dt ≥ 2`) they additionally have equal degree. -/
+abbrev lem_3_4_5 := @isSpecial_and_natDegree_eq_of_const_quotient_nonlinear
+
+/-- **Lemma 3.4.6** (§3.4, p.96): for `Dt ∈ k` and nonzero `p ∈ k[t]`, `p` is special iff
+`D(p/lc(p)) = 0`. -/
+abbrev lem_3_4_6 := @isSpecial_iff_deriv_normalize_eq_zero
 
 /-! ## §3.5 The Canonical Representation -/
 
@@ -396,7 +413,6 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
   Thm 3.2.4 (automorphism/trace/norm of separable algebraic extension); Cor 3.2.1.
 §3.3: Lemma 3.3.2 (new algebraic constants); Cor 3.3.1; Cor 3.3.2; Lemma 3.3.3; Lemma 3.3.4;
   Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
-§3.4: Lemma 3.4.5; Cor 3.4.1 (beyond the special half); Cor 3.4.2; Lemma 3.4.6.
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
