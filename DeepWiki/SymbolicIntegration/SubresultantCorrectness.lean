@@ -1722,6 +1722,49 @@ theorem φ241_toPoly_cR241 : φ241 (toPoly cR241) = 0 := AdjoinRoot.mk_self
 is exactly the multiples of `toPoly cR241` (`AdjoinRoot.mk_eq_zero`). -/
 theorem φ241_eq_zero_iff (x : ℚ[X]) : φ241 x = 0 ↔ toPoly cR241 ∣ x := AdjoinRoot.mk_eq_zero
 
+/-! ### The `AdjoinRoot.mk ↔ eval-at-root` bridge for `lrtSubresultant`
+The residue map `φ = AdjoinRoot.mk f : K[t] →+* S` (`S = AdjoinRoot f = K[t]/(f)`) is, on a `t`-polynomial
+`p`, the *evaluation* `p(α)` at the root `α = AdjoinRoot.root f` (over the base `algebraMap K S = of f`):
+`mk f p = aeval (root f) p` (`AdjoinRoot.aeval_eq`). Applied **coefficient-wise** through `Polynomial.map`
+to a polynomial-in-`x` over `K[t]`, the lifted map `Φ = mapRingHom φ` therefore sends the LRT subresultant
+`lrtSubresultant A D j` (over `K[t]`, in `x`) to the *base-changed* LRT subresultant over `S`, specialized
+at `α`: `Φ (lrtSubresultant A D j) = (lrtSubresultant (A.map σ) (D.map σ) j).map (evalRingHom α)`, where
+`σ = of f = algebraMap K S` is the constant-coefficient base change and `α = root f = φ X`. This identifies
+the *abstract* residue map with the abstract `lrtSubresultant_eval` machinery — the bridge that transfers
+the proven LRT regularity (`leadingCoeff_lrtSubresultant_eval_ne_zero`) to a `Φ`-nonvanishing fact. -/
+
+/-- **`mapRingHom (mk f)` on `lrtSubresultant` = base-changed `lrtSubresultant` evaluated at the root**:
+for a field `K`, `f : K[X]` (`X = t`), `S = AdjoinRoot f`, `σ = AdjoinRoot.of f = algebraMap K S` the
+base change and `α = AdjoinRoot.root f` the root, the lifted residue map `Φ = Polynomial.mapRingHom (mk f)`
+sends `lrtSubresultant A D j` (over `K[t]`) to `(lrtSubresultant (A.map σ) (D.map σ) j).map (evalRingHom α)`
+over `S`. Pure base-change/specialization identity: `subresultant_map (mk f)` pushes `mk f` through the
+Sylvester determinant, `mk f ∘ C = of f`, `mk f X = root f` (`AdjoinRoot.mk_X`), and `derivative_map`
+commutes derivative with the base change — exactly the shape of `lrtSubresultant_eval` over `S` at `α`. -/
+theorem mapRingHom_mk_lrtSubresultant {K : Type*} [Field K] (f : K[X]) [Fact (Irreducible f)]
+    (A D : K[X]) (j : ℕ) :
+    (Polynomial.mapRingHom (AdjoinRoot.mk f)) (lrtSubresultant A D j)
+      = (lrtSubresultant (A.map (AdjoinRoot.of f)) (D.map (AdjoinRoot.of f)) j).map
+          (Polynomial.evalRingHom (AdjoinRoot.root f)) := by
+  set σ : K →+* AdjoinRoot f := AdjoinRoot.of f with hσ
+  set α : AdjoinRoot f := AdjoinRoot.root f with hα
+  -- `mk f ∘ C = of f = σ` (the base-change embedding of constants).
+  have hmkC : (AdjoinRoot.mk f).comp (C : K →+* K[X]) = σ := by
+    rw [hσ, AdjoinRoot.of]
+  -- the base change `σ = of f` is injective (field hom), so it preserves the `x`-degree parameters.
+  have hσinj : Function.Injective σ := (AdjoinRoot.of f).injective
+  have hdeg : (D.map σ).natDegree = D.natDegree :=
+    Polynomial.natDegree_map_eq_of_injective hσinj D
+  -- LHS: push `mk f` through the subresultant determinant (`subresultant_map`), then through the operands.
+  rw [Polynomial.coe_mapRingHom, lrtSubresultant, ← subresultant_map]
+  -- RHS: specialize the base-changed `lrtSubresultant` at `α` (`lrtSubresultant_eval` shape).
+  rw [lrtSubresultant_eval, hdeg]
+  congr 1
+  · -- `(D.map C).map (mk f) = (D.map σ).map (evalRingHom α … )`-side: both equal `D.map σ`.
+    rw [Polynomial.map_map, hmkC]
+  · -- the second LRT operand matches: `(A.map C − C X·D'.map C).map (mk f) = A.map σ − C α·(D.map σ)'`.
+    rw [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_map, Polynomial.map_map, hmkC,
+      Polynomial.map_C, AdjoinRoot.mk_X, derivative_map]
+
 /-! ### A *correct* residue-map bridge for `IsSimilar` (replacing the over-strong universal `hne`)
 The headline `lrtGcdCompute_isSimilar_lrtSubresultant` pushes a `ℚ[t]`-similarity through `φ` via
 `isSimilar_mapRingHom`, whose hypothesis `hne` quantifies over **all** witness pairs `(a, b)` of the
