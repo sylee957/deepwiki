@@ -408,4 +408,36 @@ theorem toPoly_rtResultantCompute_eq_rtResultant (A D : CPoly) (fuel : ℕ)
     rw [cresultant_sample_eq_eval A D (i : ℚ) hDmonic hAD fuel
       (hfuel i (Finset.mem_range.mpr hi))]
 
+/-! ### Example 2.4.1: the honest `ℚ[t]` Rothstein–Trager resultant `= 45796·(4t²+1)³` -/
+
+open Polynomial in
+/-- **`toPoly cD241` is monic** (`D = x⁶−5x⁴+5x²+4` has leading coefficient 1). -/
+theorem monic_toPoly_cD241 : (toPoly cD241).Monic := by
+  rw [Monic, ← clead_eq_leadingCoeff]; decide
+
+open Polynomial in
+/-- **`deg A < deg D` for Example 2.4.1** (`deg A = 4 < 6 = deg D`). -/
+theorem natDegree_cA241_lt_cD241 : (toPoly cA241).natDegree < (toPoly cD241).natDegree := by
+  rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree]; decide
+
+open Polynomial in
+/-- **The dense `CPoly` `[45796,0,549552,0,2198208,0,2930944]` reads as `45796·(4t²+1)³`** in `ℚ[t]`. -/
+theorem toPoly_ex241_value :
+    toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : CPoly)
+      = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
+  simp only [toPoly_cons, toPoly_nil, map_ofNat, map_one, map_zero, C_0]
+  ring
+
+open Polynomial in
+/-- **Example 2.4.1, the honest `ℚ[t]` Rothstein–Trager resultant** (§2.4, p.48, eq 2.7): the
+*noncomputable* `rtResultant (toPoly cA241) (toPoly cD241)` equals `45796·(4t²+1)³` as an honest
+polynomial in `ℚ[t]`. Routes the `native_decide`-validated computation (`rtResultant_ex241`) through the
+proven agreement `toPoly_rtResultantCompute_eq_rtResultant` (monic `D`, `deg A < deg D`, fuel 30) and the
+closed-form read `toPoly_ex241_value`. This is the honest equation behind the residue multiplicities. -/
+theorem rtResultant_ex241_eq :
+    rtResultant (toPoly cA241) (toPoly cD241)
+      = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
+  rw [← toPoly_rtResultantCompute_eq_rtResultant cA241 cD241 30 monic_toPoly_cD241
+    natDegree_cA241_lt_cD241 (by native_decide), rtResultant_ex241, toPoly_ex241_value]
+
 end DeepWiki.SymbolicIntegration.Compute
