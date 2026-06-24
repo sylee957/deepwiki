@@ -536,6 +536,70 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
+/-- **The combined per-step PRS relation through `toBPoly`** (the bridge into the abstract telescope):
+combining the pseudo-division identity `C(toPoly c)·toBPoly p = toBPoly s·toBPoly q + toBPoly (prem p q)`
+with the β-divisor exact division `toBPoly (prem p q) = C(toPoly β)·toBPoly r`
+(`r = bdivC fuel (prem p q) β`), the computable PRS step reads as the **abstract** Brown–Traub PRS
+relation with constant scalars: `C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly s·toBPoly q`.
+This is the exact `hrel` shape `subresultant_prs_telescope` (`SubresultantPRS`) consumes — so the computable
+chain feeds the abstract telescope verbatim, with `α = toPoly c`, `β = toPoly β`, `Q = toBPoly s`. -/
+theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0) :
+    Polynomial.C (toPoly c) * toBPoly p
+      = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β)
+        + toBPoly q * toBPoly s := by
+  rw [hsc, toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hβ hdiv]; ring
+
+/-! ### The abstract-PRS telescope over the computable chain (the full multi-step agreement)
+With the combined relation `toBPoly_prs_rel` in hand, the computable `subresPRS` chain — realized as an
+abstract sequence `F i := toBPoly (G i)` of `(ℚ[X])[X]` polynomials — satisfies the Brown–Traub PRS
+relation verbatim (constant scalars `α i = toPoly (c i)`, `β i = toPoly (β i)`, quotient
+`Q i = toBPoly (s i)`). So the abstract Fundamental PRS Theorem `subresultant_prs_telescope`
+(`SubresultantPRS`) telescopes the *whole* chain in one shot: `Sⱼ(F 0, F 1) ~ Sⱼ(F m, F (m+1))` at the
+elements' own degrees, for every `m`. This is the multi-step agreement the one-step engine was the link
+for — the `IsSimilar.trans` chaining is performed inside `subresultant_prs_telescope`, so no manual
+accumulator matching is needed: every per-step `α/β` constant is a `toPoly` content factor absorbed by the
+similarity. -/
+
+/-- **Full chain telescope through `toBPoly`** (the multi-step `subresPRS ↔ subresultant` agreement): for a
+computable PRS chain `G : ℕ → BPoly` whose consecutive elements satisfy the divided one-step hypotheses —
+the pseudo-division witnesses `(s l, c l)`, the β-divisors `bt l` dividing every `x`-coefficient of the
+pseudo-remainder (`hsc`, `hβcn`, `hdiv`), the next element `G (l+2) = bdivC fuel (prem (G l) (G (l+1)))
+(bt l)` (`hG2`), and the degree side-conditions on the elements' own `natDegree`s (nonzero leading
+coefficients `hlc`, strict decrease `hcb`, the index bound `hj`, quotient bound `hQ`) — the subresultant of
+`(G 0, G 1)` is `ℚ[t]`-similar to that of `(G m, G (m+1))`:
+`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (Sⱼ(toBPoly (G m), toBPoly (G (m+1))))`. The computable chain
+is fed to the abstract `subresultant_prs_telescope` via the combined relation `toBPoly_prs_rel`; the whole
+`IsSimilar.trans` telescoping happens inside it. -/
+theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (j m : ℕ)
+    (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l < m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l < m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l < m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l < m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hj : ∀ l < m, j < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l < m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree) :
+    IsSimilar
+      (subresultant (toBPoly (G 0)) (toBPoly (G 1))
+        (toBPoly (G 0)).natDegree (toBPoly (G 1)).natDegree j)
+      (subresultant (toBPoly (G m)) (toBPoly (G (m + 1)))
+        (toBPoly (G m)).natDegree (toBPoly (G (m + 1))).natDegree j) :=
+  subresultant_prs_telescope (fun i => toBPoly (G i)) (fun l => toPoly (c l))
+    (fun l => toPoly (bt l)) (fun l => toBPoly (s l)) j m
+    hc0 hβ0 hlc hcb hj hQ
+    (fun l hl => by
+      have hrel := toBPoly_prs_rel fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
+        (hsc l hl) (hβcn l hl) (hdiv l hl)
+      rw [hG2 l hl]; exact hrel)
+
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
 The pieces above now realize **one full divided subresultant-PRS step** of the computable engine against
 the abstract subresultant: the β-divisor exact-division `toBPoly_bdivC_exact`, the divided one-step law
@@ -581,5 +645,25 @@ example (fuel : ℕ) (A D β : CPoly) (j : ℕ) (s : BPoly) (c : CPoly)
         (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
         ((toPoly D).natDegree - 1) (toPoly D).natDegree j) :=
   isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c hsc hβ hdiv hc0 hβ0 hjm hjn hB hQ
+
+-- Restatement: the WHOLE computable PRS chain telescopes — `Sⱼ(G 0, G 1) ~ Sⱼ(G m, G (m+1))` for any `m`.
+example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (j m : ℕ)
+    (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l < m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l < m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l < m, toPoly (c l) ≠ 0) (hβ0 : ∀ l < m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l < m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l < m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hj : ∀ l < m, j < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l < m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree) :
+    IsSimilar
+      (subresultant (toBPoly (G 0)) (toBPoly (G 1))
+        (toBPoly (G 0)).natDegree (toBPoly (G 1)).natDegree j)
+      (subresultant (toBPoly (G m)) (toBPoly (G (m + 1)))
+        (toBPoly (G m)).natDegree (toBPoly (G (m + 1))).natDegree j) :=
+  isSimilar_subresPRS_telescope fuel G bt s c j m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hj hQ
 
 end DeepWiki.SymbolicIntegration.Compute
