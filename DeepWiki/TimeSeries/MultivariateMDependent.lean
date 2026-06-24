@@ -262,4 +262,37 @@ theorem memLp_mul_of_memLp_four {Y Z : Ω → ℝ} (hY : MemLp Y 4 μ) (hZ : Mem
       ENNReal.mul_inv_cancel (by norm_num) (by simp), one_mul]⟩
   exact hZ.mul hY
 
+/-- **Single-lag central limit theorem for the sample autocovariance** (the scalar case of Bartlett's
+theorem): for a strictly-stationary, `m`-dependent process `X` with finite fourth moments and constant
+lag-`k` product mean `γ = E[XₜXₜ₊ₖ]`, the centered sample autocovariance `√n · n⁻¹ ∑ₜ (XₜXₜ₊ₖ − γ)`
+converges in distribution to `√v · G` (`G ~ N(0,1)`, `v` the long-run variance of `XₜXₜ₊ₖ`). The product
+process `XₜXₜ₊ₖ − γ` is `(m+k)`-dependent (`IsMDependent.mul_shift`), strictly stationary
+(`IsStrictlyStationary.mul_shift`), `L²` (`memLp_mul_of_memLp_four`) and centered, so the 1-D `m`-dependent
+CLT applies. (The explicit value of `v` is Bartlett's formula, not expanded here.) -/
+theorem tendstoInDistribution_sampleMean_centered_mul_shift {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+    [IsProbabilityMeasure P'] {G : Ω' → ℝ} (hmdep : IsMDependent m X μ)
+    (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : ℝ)
+    (hcenter : ∀ t, ∫ ω, X t ω * X (t + k) ω ∂μ = γ) (hG : HasLaw G (gaussianReal 0 1) P') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun t => X (t : ℤ) ω * X (t + k) ω - γ))
+      atTop (fun ω' => Real.sqrt (∑' j, acvfStat (fun t ω => X t ω * X (t + k) ω - γ) μ j) • G ω')
+      (fun _ => μ) P' :=
+  IsMDependent.tendstoInDistribution_sqrt_sampleMean
+    (IsMDependent.comp (IsMDependent.mul_shift hmdep k) (g := fun x => x - γ) (by fun_prop))
+    (IsStrictlyStationary.comp (IsStrictlyStationary.mul_shift hstat hmeas k) (fun t => by fun_prop)
+      (g := fun x => x - γ) (by fun_prop))
+    (IsStrictlyStationary.isWeaklyStationary (fun t => by fun_prop)
+      (fun t => (memLp_mul_of_memLp_four (hmem4 t) (hmem4 (t + k))).sub (memLp_const γ))
+      (IsStrictlyStationary.comp (IsStrictlyStationary.mul_shift hstat hmeas k) (fun t => by fun_prop)
+        (g := fun x => x - γ) (by fun_prop)))
+    (fun t => by fun_prop)
+    (fun t => (memLp_mul_of_memLp_four (hmem4 t) (hmem4 (t + k))).sub (memLp_const γ))
+    (fun t => by
+      rw [integral_sub ((memLp_mul_of_memLp_four (hmem4 t) (hmem4 (t + k))).integrable (by norm_num))
+        (integrable_const γ), integral_const, hcenter t]
+      simp)
+    hG
+
 end DeepWiki.TimeSeries
