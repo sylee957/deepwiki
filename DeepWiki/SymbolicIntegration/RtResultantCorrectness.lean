@@ -334,4 +334,78 @@ theorem cresultant_sample_eq_eval (A D : CPoly) (a : ℚ)
     show (toPoly D).coeff (toPoly D).natDegree = (toPoly D).leadingCoeff from rfl,
     hDmonic.leadingCoeff, one_pow, one_mul]
 
+/-! ### The agreement `toPoly (rtResultantCompute …) = rtResultant …` -/
+
+open Polynomial in
+/-- **`rtResultantCompute` realizes `rtResultant`** (monic `D`, `deg A < deg D`, sufficient fuel): the
+computable Rothstein–Trager resultant equals the noncomputable one through the `toPoly` bridge,
+`toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D)`. Both are polynomials of
+degree `≤ deg D` agreeing at the `deg D + 1` integer nodes `0, …, deg D` (point-agreement
+`cresultant_sample_eq_eval`), hence equal by Lagrange uniqueness
+(`Lagrange.eq_of_degrees_lt_of_eval_index_eq`). The fuel hypothesis is the per-sample bound that
+`cresultant_eq` needs at each node. -/
+theorem toPoly_rtResultantCompute_eq_rtResultant (A D : CPoly) (fuel : ℕ)
+    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
+    (hfuel : ∀ k ∈ Finset.range (cdeg D + 1),
+      (cnorm D).length + (cnorm (csub A (cscale (k : ℚ) (cderiv D)))).length + 2 ≤ fuel) :
+    toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D) := by
+  classical
+  -- the abscissa list `xs`, exactly as `rtResultantCompute`'s inner `do`-block builds it
+  set xs : List ℚ := (do let a ← List.range (cdeg D + 1); pure (a : ℚ)) with hxs
+  set pts : List (ℚ × ℚ) :=
+    xs.map (fun k : ℚ => (k, cresultant fuel D (csub A (cscale k (cderiv D))))) with hpts
+  have hcompute : rtResultantCompute fuel A D = cinterpolate pts := rfl
+  -- `xs = (range (n+1)).map (↑·)`, a clean cast-mapped range
+  have hxsmap : xs = (List.range (cdeg D + 1)).map (fun a : ℕ => (a : ℚ)) := by
+    rw [hxs]; exact List.flatMap_pure_eq_map _ _
+  have hfst : pts.map Prod.fst = xs := by
+    rw [hpts, List.map_map, List.map_id'']
+    intro x; rfl
+  have hxsnodup : xs.Nodup := by
+    rw [hxsmap]
+    refine (List.nodup_range (n := cdeg D + 1)).map ?_
+    intro a b h
+    simpa using h
+  have hnodup : (pts.map Prod.fst).Nodup := by rw [hfst]; exact hxsnodup
+  have hne : pts ≠ [] := by
+    rw [hpts, hxsmap]; simp [List.range_succ]
+  have hlen : pts.length = cdeg D + 1 := by
+    rw [hpts, hxsmap]; simp [List.length_map, List.length_range]
+  -- the two polynomials, degree bounds
+  rw [hcompute]
+  symm
+  refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := ℚ) (ι := ℕ)
+    (s := Finset.range (cdeg D + 1)) (v := fun k => (k : ℚ))
+    (f := rtResultant (toPoly A) (toPoly D))
+    (g := toPoly (cinterpolate pts)) ?_ ?_ ?_ ?_
+  · -- `Set.InjOn (Nat.cast) (range (n+1))`
+    intro a _ b _ h
+    simp only at h
+    exact_mod_cast h
+  · -- `degree (rtResultant) < #(range (n+1))`
+    rw [Finset.card_range, Nat.cast_withBot]
+    refine lt_of_le_of_lt (Polynomial.degree_le_natDegree) ?_
+    rw [Nat.cast_withBot, WithBot.coe_lt_coe]
+    have h1 := natDegree_rtResultant_le (toPoly A) (toPoly D)
+    have h2 := cdeg_eq_natDegree D
+    omega
+  · -- `degree (toPoly (cinterpolate pts)) < #(range (n+1))`
+    rw [Finset.card_range, Nat.cast_withBot]
+    have := degree_toPoly_cinterpolate_lt pts hne
+    rw [hlen] at this
+    simpa [Nat.cast_withBot] using this
+  · -- agree at the integer nodes
+    intro i hi
+    rw [Finset.mem_range] at hi
+    -- the node `(↑i, yᵢ) ∈ pts`
+    have hixs : (i : ℚ) ∈ xs := by
+      rw [hxsmap, List.mem_map]; exact ⟨i, List.mem_range.mpr hi, rfl⟩
+    have hmem : ((i : ℚ), cresultant fuel D (csub A (cscale (i : ℚ) (cderiv D)))) ∈ pts := by
+      rw [hpts, List.mem_map]
+      exact ⟨(i : ℚ), hixs, rfl⟩
+    rw [toPoly_cinterpolate_eval pts hnodup hmem]
+    -- `cresultant sample = rtResultant eval` by point-agreement
+    rw [cresultant_sample_eq_eval A D (i : ℚ) hDmonic hAD fuel
+      (hfuel i (Finset.mem_range.mpr hi))]
+
 end DeepWiki.SymbolicIntegration.Compute
