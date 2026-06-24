@@ -873,6 +873,52 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPo
   rw [lrtSubresultantCompute, ← hG0, ← hG1]
   exact hraw.trans hprim
 
+/-! ### The `bmonicXmodR` mod-`R` unit bridge (`lrtSubresultantCompute → lrtGcdCompute`)
+`lrtGcdCompute = bmonicXmodR R (lrtSubresultantCompute …)`: reduce mod `R`, then multiply every
+`x`-coefficient by the mod-`R` inverse of the leading `x`-coefficient (Exercise 2.7's monic-in-`x`
+normalization). This is a **unit** operation in the residue ring `ℚ[t]/(R)`, so it preserves similarity
+*over `ℚ[t]/(R)`*. We model the residue ring by an **arbitrary** ring hom `φ : ℚ[X] →+* S` killing
+`toPoly R` (`hφR : φ (toPoly R) = 0`); the bridge then lands an exact `Φ`-image unit-multiple identity in
+`S[x]` (where `Φ = Polynomial.mapRingHom φ`), which is the residue-ring `IsSimilar` content. Working over a
+generic `φ` (rather than constructing `ℚ[t]/(R)`) keeps the bridge reusable and quotient-construction-free:
+`ℚ[t]/(R)`'s quotient map is one such `φ`. -/
+
+/-- **`credR` agrees mod `R`**: for any ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, the mod-`R` reduction
+`credR fuel R c = cmod fuel c R` has the same `φ`-image as `c`: `φ (toPoly (credR fuel R c)) = φ (toPoly c)`.
+From the Euclidean identity `toPoly c = q·toPoly R + toPoly (cmod fuel c R)` (`toPoly_cdivmod'`), the
+`toPoly R` term maps to `0`. -/
+theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly)
+    (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    φ (toPoly (credR fuel R c)) = φ (toPoly c) := by
+  have hdiv := toPoly_cdivmod' fuel c R hR
+  rw [show (cdivmod fuel c R).1 = cdiv fuel c R from rfl,
+      show (cdivmod fuel c R).2 = cmod fuel c R from rfl] at hdiv
+  rw [credR, hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
+
+/-- **`Φ ∘ toBPoly` ignores a coefficient-wise mod-`R` reduction**: with `Φ = Polynomial.mapRingHom φ` and
+`φ` killing `toPoly R`, mapping every `x`-coefficient of `p` through `credR fuel R` leaves the `Φ`-image of
+`toBPoly` unchanged: `Φ (toBPoly (p.map (credR fuel R))) = Φ (toBPoly p)`. Coefficient-wise
+`map_toPoly_credR`, folded over the `x`-coefficient list through the Horner shape (`Φ` a ring hom). -/
+theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
+    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (toBPoly (p.map (credR fuel R)))
+      = (Polynomial.mapRingHom φ) (toBPoly p) := by
+  induction p with
+  | nil => simp
+  | cons a as ih =>
+    rw [List.map_cons, toBPoly_cons, toBPoly_cons, map_add, map_add, map_mul, map_mul, ih]
+    congr 1
+    rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C, map_toPoly_credR φ fuel R a hR hφR]
+
+/-- **`bredR` is `Φ`-transparent**: with `Φ = Polynomial.mapRingHom φ` and `φ` killing `toPoly R`, the
+mod-`R` reduction `bredR fuel R p` has the same `Φ`-image of `toBPoly` as `p`:
+`Φ (toBPoly (bredR fuel R p)) = Φ (toBPoly p)`. Unfolds `bredR` (`bnorm (p.map (credR fuel R))`) through
+`toBPoly_bnorm` and `mapRingHom_toBPoly_map_credR`. -/
+theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
+    (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
+    (Polynomial.mapRingHom φ) (toBPoly (bredR fuel R p)) = (Polynomial.mapRingHom φ) (toBPoly p) := by
+  rw [bredR, toBPoly_bnorm, mapRingHom_toBPoly_map_credR φ fuel R p hR hφR]
+
 /-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
 The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
 engine against the abstract subresultant — no longer just one step:
