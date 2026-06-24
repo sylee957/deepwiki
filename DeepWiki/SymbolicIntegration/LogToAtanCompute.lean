@@ -48,15 +48,13 @@ def csub (p q : CPoly) : CPoly := cadd p (cneg q)
 specialized at `ℚ` (`CField.mul = (· * ·)`, defeq). -/
 def cscale (c : ℚ) (p : CPoly) : CPoly := CPolyG.cscaleG c p
 
-/-- **Degree shift** `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshift : ℕ → CPoly → CPoly
-  | 0, p => p
-  | n + 1, p => 0 :: cshift n p
+/-- **Degree shift** `cshift k p = x^k · p`: prepend `k` zero coefficients — the generic `cshiftG`
+specialized at `ℚ` (`CField.zero = 0`, defeq). -/
+def cshift : ℕ → CPoly → CPoly := CPolyG.cshiftG
 
-/-- **Polynomial multiplication** of `CPoly`s (schoolbook convolution via `cshift`/`cscale`). -/
-def cmul : CPoly → CPoly → CPoly
-  | [], _ => []
-  | a :: as, q => cadd (cscale a q) (0 :: cmul as q)
+/-- **Polynomial multiplication** of `CPoly`s (schoolbook convolution via `cshift`/`cscale`) — the
+generic `cmulG` specialized at `ℚ`. -/
+def cmul : CPoly → CPoly → CPoly := CPolyG.cmulG
 
 /-- **Leading coefficient** of a `CPoly` (the top nonzero coefficient; `0` for the zero polynomial). -/
 def clead (p : CPoly) : ℚ := (cnorm p).getLast?.getD 0
@@ -204,7 +202,7 @@ theorem toPoly_cscale (c : ℚ) (p : CPoly) : toPoly (cscale c p) = Polynomial.C
 /-- `toPoly` realizes the **degree shift**: `toPoly (cshift k p) = X^k · toPoly p`. -/
 theorem toPoly_cshift (k : ℕ) (p : CPoly) : toPoly (cshift k p) = X ^ k * toPoly p := by
   induction k with
-  | zero => simp [cshift]
+  | zero => simp [cshift, CPolyG.cshiftG]
   | succ n ih =>
     show toPoly (0 :: cshift n p) = X ^ (n + 1) * toPoly p
     rw [toPoly_cons, ih, map_zero]; ring
@@ -213,7 +211,7 @@ theorem toPoly_cshift (k : ℕ) (p : CPoly) : toPoly (cshift k p) = X ^ k * toPo
 multiplication under the Horner bridge. -/
 theorem toPoly_cmul (p q : CPoly) : toPoly (cmul p q) = toPoly p * toPoly q := by
   induction p with
-  | nil => simp [cmul]
+  | nil => simp [cmul, CPolyG.cmulG]
   | cons a as ih =>
     show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
     rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring
