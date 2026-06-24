@@ -2686,3 +2686,22 @@ theorem glocResidDen_eq_over_D (fuel : ℕ) (D : CPoly) (Vi : CPoly) (j : ℕ)
   rw [map_mul, map_pow, hDfact]
   have hVip : am (toPoly Vi) ^ (j + 1) ≠ 0 := pow_ne_zero _ hv
   field_simp
+
+/-! ### The total residual as a single fraction over `D`
+
+The kept-factor residuals all share the global denominator `am D` (`glocResidDen_eq_over_D`), so their
+sum is a single fraction `am (Σᵢ Afinalᵢ·Vi^{i−1})/am D`, and the `(1−n)·T` overcounting term is
+`am (C(1−n)·A)/am D`. Hence the *entire* fold residual is `am R/am D` with the polynomial numerator
+`R = C(1−n)·A + Σᵢ Afinalᵢ·Vi^{i−1}` — the exact single-fraction-over-`D` form. The interference clears
+to denominator `Dstar` precisely when `am (D/Dstar) ∣ am R`, the **named open divisibility** below. -/
+
+/-- **List-sum of common-denominator fractions**: `∑ₖ am (f k)/d = am (∑ₖ f k)/d` in `RatFunc ℚ` (the
+numerators add over the shared denominator `d`). The sum collapses the per-factor residuals onto a
+single fraction over `am D`. -/
+theorem list_sum_am_div_const {α : Type*} (l : List α) (f : α → ℚ[X]) (d : RatFunc ℚ) :
+    (l.map (fun k => algebraMap ℚ[X] (RatFunc ℚ) (f k) / d)).sum
+      = algebraMap ℚ[X] (RatFunc ℚ) ((l.map f).sum) / d := by
+  induction l with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, map_add, add_div]
