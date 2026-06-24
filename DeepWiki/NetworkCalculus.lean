@@ -278,6 +278,7 @@ import DeepWiki.NetworkCalculus.StmtSmallStep
 import DeepWiki.NetworkCalculus.TableauSchema
 import DeepWiki.NetworkCalculus.TableauReadback
 import DeepWiki.NetworkCalculus.TableauInit
+import DeepWiki.NetworkCalculus.TableauCellTransition
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
