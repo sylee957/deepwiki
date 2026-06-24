@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.FieldTheory.RatFunc.Basic
+import Mathlib.RingTheory.Radical.Basic
 
 /-! # The canonical representation (Bronstein §3.5)
 For a monomial extension `(k(t), D)` with `Dt = v ∈ k[t]`, every `f ∈ k(t)` splits *uniquely* as
@@ -265,6 +266,28 @@ theorem isSplitFactorStep_prod_X_sub_C (v : K[X]) (s : Finset K) :
     omega
 
 end SplitFactorSplit
+
+section GeneralSplitFactor
+variable {K : Type*} [Field K] [Differential K]
+
+open UniqueFactorizationMonoid
+
+open Classical in
+omit [Differential K] in
+/-- Prime-power decomposition of a nonzero polynomial: `p ~ ∏_{π ∈ primeFactors p} π^{m_π}`, where
+`m_π = count π (normalizedFactors p)` is the multiplicity. The factors are the *distinct* irreducible
+divisors (over `K`, not over `K̄`), so this is the general-irreducible analogue of the linear-factor
+product `∏(X − a)^{eₐ}`. -/
+theorem associated_prod_primeFactors_pow {p : K[X]} (hp : p ≠ 0) :
+    Associated p (∏ π ∈ primeFactors p, π ^ (normalizedFactors p).count π) := by
+  have h1 : Associated (normalizedFactors p).prod p := prod_normalizedFactors hp
+  rw [Finset.prod_multiset_count] at h1
+  have hpf : primeFactors p = (normalizedFactors p).toFinset := by
+    rw [primeFactors]; congr 1; exact Subsingleton.elim _ _
+  rw [hpf]
+  exact h1.symm
+
+end GeneralSplitFactor
 
 section SplitSquarefreeFactor
 variable {K : Type*} [Field K] [Differential K]
