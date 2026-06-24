@@ -33,11 +33,9 @@ def cnorm : CPoly → CPoly
     | [] => if a = 0 then [] else [a]
     | r => a :: r
 
-/-- **Coefficientwise addition** of two `CPoly`s (the shorter is zero-extended implicitly). -/
-def cadd : CPoly → CPoly → CPoly
-  | [], q => q
-  | p, [] => p
-  | a :: as, b :: bs => (a + b) :: cadd as bs
+/-- **Coefficientwise addition** of two `CPoly`s (the shorter is zero-extended implicitly) — the
+generic `caddG` specialized at `ℚ` (`CField.add = (· + ·)`, defeq). -/
+def cadd : CPoly → CPoly → CPoly := CPolyG.caddG
 
 /-- **Negation** of a `CPoly`, coefficientwise — the generic `cnegG` specialized at `ℚ`
 (`CField.neg = (- ·)`, defeq). -/
@@ -173,13 +171,15 @@ noncomputable def toPoly : CPoly → ℚ[X]
 realizes `ℚ[X]` addition under the Horner bridge. -/
 theorem toPoly_cadd (p q : CPoly) : toPoly (cadd p q) = toPoly p + toPoly q := by
   induction p generalizing q with
-  | nil => simp [cadd]
+  | nil => simp [cadd, CPolyG.caddG]
   | cons a as ih =>
     cases q with
-    | nil => simp [cadd]
+    | nil => simp [cadd, CPolyG.caddG]
     | cons b bs =>
-      simp only [cadd, toPoly_cons, ih bs, map_add]
-      ring
+      show toPoly (CField.add a b :: cadd as bs) = _
+      rw [toPoly_cons, ih bs, toPoly_cons, toPoly_cons]
+      show C (a + b) + _ = _
+      rw [map_add]; ring
 
 /-- `toPoly` commutes with **negation**: `toPoly (cneg p) = − toPoly p`. -/
 theorem toPoly_cneg (p : CPoly) : toPoly (cneg p) = - toPoly p := by
