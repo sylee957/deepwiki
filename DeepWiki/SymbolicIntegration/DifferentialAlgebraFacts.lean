@@ -198,6 +198,51 @@ theorem eval_ne_zero_of_isSpecialRao_prod_X_sub_C {a b : k[X]} (hab : IsCoprime 
   have hdb : (X - C α) ∣ b := dvd_iff_isRoot.mpr hbα
   exact (prime_X_sub_C α).not_unit (hab.isUnit_of_dvd' hda hdb)
 
+/-! ### Exercise 3.8 — Theorem 3.4.1 transfers to Rao's definition
+With `b·Δ = bDerivation a b` installed as the differential structure on `k[t]`, `IsNormalRao`/
+`IsSpecialRao` are *definitionally* `IsNormal`/`IsSpecial`, so every part of Theorem 3.4.1 holds
+verbatim for Rao's normal/special. -/
+
+/-- **Exercise 3.8 / Theorem 3.4.1(ii)** (§3.4): Rao-special polynomials are closed under
+multiplication. -/
+theorem IsSpecialRao.mul {a b p q : k[X]} (hp : IsSpecialRao a b p) (hq : IsSpecialRao a b q) :
+    IsSpecialRao a b (p * q) := by
+  letI : Differential k[X] := bDifferential a b
+  exact IsSpecial.mul (R := k[X]) hp hq
+
+/-- **Exercise 3.8 / Theorem 3.4.1(i)** (§3.4): the product of two coprime Rao-normal polynomials is
+Rao-normal. -/
+theorem IsNormalRao.mul {a b p q : k[X]} (hp : IsNormalRao a b p) (hq : IsNormalRao a b q)
+    (hpq : IsCoprime p q) : IsNormalRao a b (p * q) := by
+  letI : Differential k[X] := bDifferential a b
+  exact IsNormal.mul (R := k[X]) hp hq hpq
+
+/-- **Exercise 3.8 / Theorem 3.4.1(i)** (§3.4): any factor of a Rao-normal polynomial is
+Rao-normal. -/
+theorem IsNormalRao.of_dvd {a b p q : k[X]} (hp : IsNormalRao a b p) (hq : q ∣ p) :
+    IsNormalRao a b q := by
+  letI : Differential k[X] := bDifferential a b
+  exact IsNormal.of_dvd (R := k[X]) hp hq
+
+/-- **Exercise 3.8** (§3.4): a Rao-normal polynomial is squarefree. -/
+theorem IsNormalRao.squarefree {a b p : k[X]} (hp : IsNormalRao a b p) : Squarefree p := by
+  letI : Differential k[X] := bDifferential a b
+  exact IsNormal.squarefree (R := k[X]) hp
+
+/-- **Exercise 3.8 / Theorem 3.4.1(iii)** (§3.4), coprime case: if `p·q` is Rao-special and `p, q`
+are coprime, then `p` is Rao-special. -/
+theorem IsSpecialRao.of_mul_coprime {a b p q : k[X]} (h : IsSpecialRao a b (p * q))
+    (hco : IsCoprime p q) : IsSpecialRao a b p := by
+  letI : Differential k[X] := bDifferential a b
+  exact IsSpecial.of_mul_coprime (R := k[X]) h hco
+
+/-- **Exercise 3.8 / Theorem 3.4.1** (§3.4): a polynomial that is both Rao-normal and Rao-special is
+a unit (the only normal-and-special polynomials are the units of `k`). -/
+theorem isUnit_of_isNormalRao_of_isSpecialRao {a b p : k[X]} (hn : IsNormalRao a b p)
+    (hs : IsSpecialRao a b p) : IsUnit p := by
+  letI : Differential k[X] := bDifferential a b
+  exact isUnit_of_isNormal_of_isSpecial (R := k[X]) hn hs
+
 end Rao
 
 end DeepWiki.SymbolicIntegration
