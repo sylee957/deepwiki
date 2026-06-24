@@ -280,6 +280,35 @@ theorem IsMDependent.window {V : Type*} [MeasurableSpace V] {m : ℕ} {X : ℤ �
     (ψ := fun g (s : T) => f fun i => g ⟨(s : ℤ) + (i : ℕ), hmemW T (s : ℤ) s.2 i⟩)
     (by fun_prop) (by fun_prop)
 
+/-- **A windowed function of a strictly-stationary process is strictly stationary:** if `X` is strictly
+stationary (measurable coords) then `t ↦ f(Xₜ, …, Xₜ₊ₖ)` is strictly stationary. Each finite joint law of
+the windowed values is the coordinatewise image of a finite joint law of `X` on the combined window index
+`Fin n × Fin (k+1)` (via `finProdFinEquiv`), which is shift-invariant. Covers `Yₜ = (XₜXₜ₊ₕ)ₕ`. -/
+theorem IsStrictlyStationary.window {V : Type*} [MeasurableSpace V] {X : ℤ → Ω → ℝ}
+    (h : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t)) (k : ℕ)
+    {f : (Fin (k + 1) → ℝ) → V} (hf : Measurable f) :
+    IsStrictlyStationary (fun t ω => f fun i => X (t + (i : ℕ)) ω) μ := by
+  intro n t hsh
+  set e : Fin n × Fin (k + 1) ≃ Fin (n * (k + 1)) := finProdFinEquiv with he
+  set s : ℤ → Fin (n * (k + 1)) → ℤ :=
+    fun c j => (fun p : Fin n × Fin (k + 1) => t p.1 + c + (p.2 : ℕ)) (e.symm j) with hs
+  set φ : (Fin (n * (k + 1)) → ℝ) → (Fin n → V) := fun g a => f fun i => g (e (a, i)) with hφ
+  have key : ∀ c : ℤ, (μ.map fun ω (a : Fin n) => f fun i => X (t a + c + (i : ℕ)) ω)
+      = (μ.map fun ω j => X (s c j) ω).map φ := fun c => by
+    rw [Measure.map_map (by fun_prop) (by fun_prop)]
+    congr 1
+    funext ω a
+    simp only [hφ, Function.comp_apply, hs, Equiv.symm_apply_apply]
+  have hshift : (μ.map fun ω j => X (s 0 j) ω) = μ.map fun ω j => X (s hsh j) ω := by
+    rw [h (n * (k + 1)) (s 0) hsh]
+    congr 1
+    funext ω j
+    have : s 0 j + hsh = s hsh j := by simp only [hs]; obtain ⟨a, i⟩ := e.symm j; push_cast; ring
+    rw [this]
+  have hL : (fun ω (a : Fin n) => f fun i => X (t a + (i : ℕ)) ω)
+      = fun ω (a : Fin n) => f fun i => X (t a + 0 + (i : ℕ)) ω := by simp
+  rw [hL, key 0, hshift, ← key hsh]
+
 /-- **A product of two `L⁴` random variables is `L²`** (Hölder, `1/2 = 1/4 + 1/4`): the lagged products
 `XₛXₜ` of a process with finite fourth moments are square-integrable — the `L²` hypothesis the
 `m`-dependent CLT needs for the sample-autocovariance lag process. -/
