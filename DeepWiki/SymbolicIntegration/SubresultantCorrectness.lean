@@ -919,6 +919,34 @@ theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) 
     (Polynomial.mapRingHom φ) (toBPoly (bredR fuel R p)) = (Polynomial.mapRingHom φ) (toBPoly p) := by
   rw [bredR, toBPoly_bnorm, mapRingHom_toBPoly_map_credR φ fuel R p hR hφR]
 
+/-- **`cinvMod` is the mod-`R` inverse**: for any ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, when the
+extended-Euclidean gcd `g = (cgcdExt fuel c R).1` reduces to a **nonzero constant** `C u` (`hg`, `u ≠ 0` —
+Exercise 2.7's regularity that the leading `x`-coefficient is a unit mod `R`), the computable inverse
+`cinvMod fuel R c` satisfies `φ (toPoly (cinvMod fuel R c)) · φ (toPoly c) = 1` in `S`. From the Bézout
+identity `toPoly s · toPoly c + toPoly t · toPoly R = toPoly g = C u` (`toPoly_cgcdExt`): applying `φ`
+kills the `toPoly R` term, giving `φ(toPoly s)·φ(toPoly c) = φ(C u)`; scaling by `u⁻¹` (the `cscale (clead
+g)⁻¹` in `cinvMod`, with `clead g = u`) makes the product `1`. -/
+theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly)
+    (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
+    (hg : toPoly (cgcdExt fuel c R).1 = Polynomial.C u) :
+    φ (toPoly (cinvMod fuel R c)) * φ (toPoly c) = 1 := by
+  -- Bézout: toPoly s · toPoly c + toPoly t · toPoly R = toPoly g = C u
+  have hbez := toPoly_cgcdExt fuel c R
+  -- clead g = u (leading coeff of the constant C u)
+  have hlead : clead (cgcdExt fuel c R).1 = u := by
+    rw [clead_eq_leadingCoeff, hg, Polynomial.leadingCoeff_C]
+  -- φ image of the inverse: drop the credR, expand the cscale
+  rw [cinvMod]
+  -- cinvMod fuel R c = credR fuel R (cscale (clead g)⁻¹ s), with s = (cgcdExt fuel c R).2.1
+  rw [map_toPoly_credR φ fuel R _ hR hφR, toPoly_cscale, map_mul, hlead]
+  -- now: φ (C u⁻¹) * φ (toPoly s) * φ (toPoly c) = 1
+  -- from Bézout image: φ(toPoly s)·φ(toPoly c) = φ (C u)
+  have himg : φ (toPoly (cgcdExt fuel c R).2.1) * φ (toPoly c) = φ (Polynomial.C u) := by
+    have := congrArg φ hbez
+    rw [map_add, map_mul, map_mul, hφR, mul_zero, add_zero, hg] at this
+    exact this
+  rw [mul_assoc, himg, ← map_mul, ← Polynomial.C_mul, inv_mul_cancel₀ hu, Polynomial.C_1, map_one]
+
 /-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
 The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
 engine against the abstract subresultant — no longer just one step:
