@@ -330,4 +330,50 @@ theorem dbSql_expressible_iff_alg_expressible (db : (i : ι) → Table (sch i) V
   · rintro ⟨q, rfl⟩; exact ⟨dbSqlToAlg q, evalDbAlg_dbSqlToAlg db q⟩
   · rintro ⟨e, rfl⟩; exact ⟨algToDbSql e, evalDbSql_algToDbSql db e⟩
 
+/-! ## Codd's theorem, expressive-power form (§2.4, the chapter's main result)
+The query *systems* coincide at the level of which database-to-view maps they compute: algebra and
+SQL are equi-expressive, and both are subsumed by the first-order tuple calculus. The reverse
+inclusion (calculus ⊆ algebra) holds only under a *safety* restriction — `neg_relA_not_isAlgExpressible`
+exhibits a calculus query (the complement) expressible by no algebra expression. -/
+
+/-- A database-to-table map is *calculus-expressible*: some single-free-variable first-order condition
+computes it for every database. -/
+def IsCalcExpressible {Ω : Finset Att}
+    (T : ((i : ι) → Table (sch i) Val) → Table Ω Val) : Prop :=
+  ∃ C : FOCond ι sch Val [Ω], ∀ db, T db = evalFOExpr db C
+
+/-- A database-to-table map is *SQL-expressible*: some db-indexed SQL query computes it for every
+database. -/
+def IsSqlExpressible {Ω : Finset Att}
+    (T : ((i : ι) → Table (sch i) Val) → Table Ω Val) : Prop :=
+  ∃ q : DbSql ι sch Val Ω, ∀ db, T db = evalDbSql db q
+
+/-- **Codd's theorem, algebra ⊆ calculus** (§2.4, expressive-power form): every algebra-expressible
+view map is calculus-expressible — the relational algebra is subsumed by the first-order tuple
+calculus. (The converse needs safety: `neg_relA_not_isAlgExpressible`.) -/
+theorem isCalcExpressible_of_isAlgExpressible {Ω : Finset Att}
+    {T : ((i : ι) → Table (sch i) Val) → Table Ω Val} (h : IsAlgExpressible T) :
+    IsCalcExpressible T := by
+  obtain ⟨e, he⟩ := h
+  exact ⟨algToFO e, fun db => (he db).trans (evalFOExpr_algToFO db e).symm⟩
+
+/-- **SQL ⊆ calculus** (§2.6, expressive-power form): every SQL-expressible view map is
+calculus-expressible. -/
+theorem isCalcExpressible_of_isSqlExpressible {Ω : Finset Att}
+    {T : ((i : ι) → Table (sch i) Val) → Table Ω Val} (h : IsSqlExpressible T) :
+    IsCalcExpressible T := by
+  obtain ⟨q, hq⟩ := h
+  exact ⟨dbSqlToFO q, fun db => (hq db).trans (evalFOExpr_dbSqlToFO db q).symm⟩
+
+/-- **Algebra ≡ SQL** (§2.5/§2.6, expressive-power form): a view map is SQL-expressible iff
+algebra-expressible — the two systems compute exactly the same database-to-view maps. -/
+theorem isSqlExpressible_iff_isAlgExpressible {Ω : Finset Att}
+    {T : ((i : ι) → Table (sch i) Val) → Table Ω Val} :
+    IsSqlExpressible T ↔ IsAlgExpressible T := by
+  constructor
+  · rintro ⟨q, hq⟩
+    exact ⟨dbSqlToAlg q, fun db => (hq db).trans (evalDbAlg_dbSqlToAlg db q).symm⟩
+  · rintro ⟨e, he⟩
+    exact ⟨algToDbSql e, fun db => (he db).trans (evalDbSql_algToDbSql db e).symm⟩
+
 end DeepWiki

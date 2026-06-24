@@ -280,6 +280,26 @@ abbrev reduction_algToDbSql := @DeepWiki.algToDbSql
 expressible; with `dbSqlToFO`/`algToFO` both are subsumed by the tuple calculus. -/
 abbrev db_sql_alg_expressive_equiv := @DeepWiki.dbSql_expressible_iff_alg_expressible
 
+/-! ## §2.4 Codd's theorem, expressive-power form (the chapter's main result) -/
+
+/-- **Calculus-expressible** (§2.4): a database-to-view map computed by some first-order condition. -/
+abbrev codd_isCalcExpressible := @DeepWiki.IsCalcExpressible
+
+/-- **SQL-expressible** (§2.6): a database-to-view map computed by some db-indexed SQL query. -/
+abbrev codd_isSqlExpressible := @DeepWiki.IsSqlExpressible
+
+/-- **Codd's theorem, algebra ⊆ calculus** (§2.4, expressive-power form): every algebra-expressible
+view map is calculus-expressible (the converse needs safety, `safety_neg_not_expressible`). -/
+abbrev codd_alg_subset_calc := @DeepWiki.isCalcExpressible_of_isAlgExpressible
+
+/-- **Codd's theorem, SQL ⊆ calculus** (§2.6, expressive-power form): every SQL-expressible view map
+is calculus-expressible. -/
+abbrev codd_sql_subset_calc := @DeepWiki.isCalcExpressible_of_isSqlExpressible
+
+/-- **Codd's theorem, algebra ≡ SQL** (§2.5/§2.6, expressive-power form): a view map is
+SQL-expressible iff algebra-expressible — the two systems compute exactly the same maps. -/
+abbrev codd_alg_equiv_sql := @DeepWiki.isSqlExpressible_iff_isAlgExpressible
+
 /-! ## §2.3 SQL: Structured Query Language -/
 
 /-- **SQL query** (§2.3.1/§2.3.2, Fig 2.11, p.37): an elementary `Select … From … Where …` query
