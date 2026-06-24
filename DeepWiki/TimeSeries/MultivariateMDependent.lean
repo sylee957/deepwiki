@@ -1,5 +1,6 @@
 import DeepWiki.TimeSeries.MDependentCLT
 import DeepWiki.TimeSeries.MultivariateCLT
+import DeepWiki.TimeSeries.MovingAverageMDependent
 
 /-! # Toward the multivariate m-dependent CLT
 The scalar projections `⟪Yₜ, λ⟫` of a vector `m`-dependent process inherit `m`-dependence
@@ -8,7 +9,7 @@ the quadratic form `λ ⬝ᵥ S λ` of the long-run cross-covariance matrix (`co
 over lags). Here: the cross-covariance of coordinate blocks vanishes beyond the dependence range, the
 finite-support fact giving summability of the cross-covariances. -/
 
-open MeasureTheory ProbabilityTheory
+open MeasureTheory ProbabilityTheory Filter
 open scoped RealInnerProductSpace Matrix
 
 namespace DeepWiki.TimeSeries
@@ -139,5 +140,32 @@ theorem integral_inner_eq_zero {d : ℕ} {X : Ω → EuclideanSpace ℝ (Fin d)}
   simp_rw [inner_eq_sum_coord]
   rw [integral_finsetSum _ fun i _ => (hint i).const_mul _]
   simp [integral_const_mul, hc]
+
+/-- **Per-direction central limit theorem for a vector `m`-dependent process:** for each `λ`, the projected
+sample mean `√n · sampleMean ⟪Y·, λ⟫` converges in distribution to `√(λ ⬝ᵥ S λ) · G` (`G ~ N(0,1)`,
+`S = longRunCovMatrix Y μ`). The projection `⟪Y·, λ⟫` inherits `m`-dependence and strict stationarity
+(`IsMDependent.comp`, `IsStrictlyStationary.comp`), is `L²`/centered (`memLp_inner`,
+`integral_inner_eq_zero`), so the 1-D `m`-dependent CLT applies, and the limiting variance is identified by
+`longRunCovMatrix_quadratic`. The per-direction input to the Cramér–Wold device. -/
+theorem tendstoInDistribution_sampleMean_inner {d m : ℕ} [IsProbabilityMeasure μ]
+    {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)} {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+    [IsProbabilityMeasure P'] {G : Ω' → ℝ} (hmdep : IsMDependent m Y μ)
+    (hstat : IsStrictlyStationary Y μ) (hmeas : ∀ t, Measurable (Y t))
+    (hmem : ∀ t i, MemLp (fun ω => Y t ω i) 2 μ) (hcenter : ∀ t i, ∫ ω, Y t ω i ∂μ = 0)
+    (hG : HasLaw G (gaussianReal 0 1) P') (lam : EuclideanSpace ℝ (Fin d)) :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * sampleMean n (fun s => (⟪Y (s : ℤ) ω, lam⟫ : ℝ)))
+      atTop (fun ω' => Real.sqrt (lam ⬝ᵥ longRunCovMatrix Y μ *ᵥ lam) • G ω') (fun _ => μ) P' := by
+  have hlammeas : Measurable (fun v : EuclideanSpace ℝ (Fin d) => (⟪v, lam⟫ : ℝ)) := by fun_prop
+  have hWmeas : ∀ t, Measurable (fun ω => (⟪Y t ω, lam⟫ : ℝ)) := fun t => hlammeas.comp (hmeas t)
+  have hWmem : ∀ t, MemLp (fun ω => (⟪Y t ω, lam⟫ : ℝ)) 2 μ :=
+    fun t => memLp_inner lam fun i => hmem t i
+  rw [longRunCovMatrix_quadratic hmdep hmem lam]
+  exact IsMDependent.tendstoInDistribution_sqrt_sampleMean (hmdep.comp hlammeas)
+    (hstat.comp hmeas hlammeas)
+    (IsStrictlyStationary.isWeaklyStationary hWmeas hWmem (hstat.comp hmeas hlammeas))
+    hWmeas hWmem
+    (fun t => integral_inner_eq_zero lam (fun i => (hmem t i).integrable (by norm_num))
+      fun i => hcenter t i) hG
 
 end DeepWiki.TimeSeries
