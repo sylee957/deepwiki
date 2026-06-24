@@ -6,6 +6,7 @@ import DeepWiki.RelationalDatabases.QueryEquivalence
 import DeepWiki.RelationalDatabases.QueryEquivalenceFO
 import DeepWiki.RelationalDatabases.QueryEquivalenceCodd
 import DeepWiki.RelationalDatabases.QueryEquivalenceCalcToAlg
+import DeepWiki.RelationalDatabases.QueryEquivalenceCalcToAlgGeneral
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -36,13 +37,16 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   condition language (elementary conditions `f(…)`, comparisons, set-comparisons `sθ`, `IN`,
   emptiness `(…)=∅`), multi-relation `From` lists, and the `IN`/`UNION`/`MINUS` generating-part
   reductions (2.3.3/2.3.5) [infra].
-§2.4: the *constructive* converse `calcToAlg` is DONE for the disjoint-context case — `calcToAlg`
-  (FOCond → AlgExpr over the product scheme `flattenCtx`; relA/compA/agreeA → `comp`, ¬ → DOM-relative
-  diff, ∧/∨ → inter/union, ∃ → projection) with correctness `mem_evalAlg_calcToAlg` /
-  `mem_evalFOExpr_calcToAlg` on `WellScoped` conditions over a `CtxDisjoint` context. The remaining
-  gap is only the general (clashing-scheme) case, which needs the renaming `ρ`; the disjoint case
-  stands in for `ρ` (the de Bruijn context is the attribute tagging). So all four Codd reduction
-  directions are now formalized.
+§2.4: the *constructive* converse `calcToAlg` is DONE in **both** the disjoint-context and the
+  general (clashing-scheme) case. Disjoint: `calcToAlg` (FOCond → AlgExpr over the product scheme
+  `flattenCtx`; relA/compA/agreeA → `comp`, ¬ → DOM-relative diff, ∧/∨ → inter/union, ∃ → projection)
+  with correctness `mem_evalAlg_calcToAlg` / `mem_evalFOExpr_calcToAlg` on `WellScoped` conditions
+  over a `CtxDisjoint` context. General (the renaming `ρ`, §2.4.1 Step 2): `calcToAlgTagged` over the
+  **position-tagged** product scheme `flattenTagged` (tag each variable's attributes by its co-depth,
+  so schemes are clash-free by construction and ∃ stays a plain projection — no algebra-side rename),
+  with correctness `mem_evalAlg_calcToAlgTagged` / `mem_evalFOExpr_calcToAlgTagged` that is
+  **unconditional** (no `CtxDisjoint`, no `WellScoped`). So all four Codd reduction directions are
+  formalized, the calculus → algebra leg with no restriction on the condition.
   (Also done: the database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free
   fragment ↔ algebra both directions, the first-order calculus `FOCond`/`evalFO` with de Bruijn
   variables and per-relation schemes, the per-operator reductions, the **full recursive algebra →
@@ -235,6 +239,21 @@ abbrev reduction_fo_calcToAlg_correct := @DeepWiki.mem_evalAlg_calcToAlg
 /-- **§2.4** (single free variable): a tuple is in the calculus view `{t(Ω) | C}` iff its flattened
 environment is in the algebra translation — with `algToFO`, calculus and algebra are equivalent. -/
 abbrev reduction_calcToAlg_expr := @DeepWiki.mem_evalFOExpr_calcToAlg
+
+/-- **§2.4.1, Step 2** (the general renaming `ρ` via position tagging): translate a first-order
+condition to an algebra expression over the *tagged* product scheme `flattenTagged` — clash-free by
+construction (each variable's attributes carry its co-depth), so no disjointness assumption. -/
+abbrev reduction_fo_calcToAlg_tagged := @DeepWiki.calcToAlgTagged
+
+/-- **Codd's theorem, calculus ⊆ algebra, general case** (§2.4): `calcToAlgTagged` is correct for
+*every* first-order condition — unconditional, no `CtxDisjoint`/`WellScoped` — removing the
+disjointness restriction the book lifts with the variable renaming `ρ` (here, co-depth tagging). -/
+abbrev reduction_fo_calcToAlg_general_correct := @DeepWiki.mem_evalAlg_calcToAlgTagged
+
+/-- **§2.4** (general, single free variable): a tuple is in the calculus view `{t(Ω) | C}` of an
+arbitrary condition iff its tagged flattened environment is in the algebra translation — with
+`algToFO`, calculus and algebra are equivalent with no restriction on the condition. -/
+abbrev reduction_calcToAlg_expr_general := @DeepWiki.mem_evalFOExpr_calcToAlgTagged
 
 /-! ## §2.6 Reduction of SQL to the tuple calculus -/
 
