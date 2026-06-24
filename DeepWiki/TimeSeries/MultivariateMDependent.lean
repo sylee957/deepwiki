@@ -565,4 +565,61 @@ theorem tendstoInDistribution_studentized_linearCombo_sampleAutocov {m : ℕ} {X
   simp only [sampleMean]
   exact measurable_const.mul (Finset.measurable_sum _ fun t _ => (hmeas _).mul (hmeas _))
 
+omit [MeasurableSpace Ω] in
+/-- Two-point coefficient collapse: `∑ᵢ (eₕ − ρ·e₀)ᵢ · f i = f h − ρ · f 0` for a real function `f`. -/
+theorem sum_single_pair_mul {k : ℕ} (h : Fin (k + 1)) (ρ : ℝ) (f : Fin (k + 1) → ℝ) :
+    ∑ i, ((EuclideanSpace.single h (1 : ℝ) - ρ • EuclideanSpace.single (0 : Fin (k + 1)) 1 :
+        EuclideanSpace ℝ (Fin (k + 1))) i) * f i = f h - ρ * f 0 := by
+  simp only [PiLp.sub_apply, PiLp.smul_apply, PiLp.single_apply, smul_eq_mul, sub_mul,
+    ite_mul, one_mul, zero_mul, mul_ite, mul_one, mul_zero, Finset.sum_sub_distrib]
+  rw [Finset.sum_ite_eq' Finset.univ h fun i => f i, Finset.sum_ite_eq' Finset.univ 0 fun i => ρ * f i]
+  simp
+
+/-- **Theorem 7.2.1 (asymptotic normality of the sample autocorrelation), literal form.** For a
+strictly-stationary, `m`-dependent `X` with finite 4th moments and constant lag-product means `γ`, the
+studentized sample-autocorrelation statistic
+`√n · (γ̂(h) − ρ(h)·γ̂(0)) / γ̂(0) ⇒ (V_h − ρ(h)·V₀)/γ(0)` where `ρ(h) = γ(h)/γ(0)`,
+`γ̂(i) = n⁻¹∑ₜ XₜXₜ₊ᵢ`, and `V ~ N(0, S)` the long-run-covariance Gaussian — this is `√n(ρ̂(h) − ρ(h))`
+wherever `γ̂(0) ≠ 0`. The `c = eₕ − ρ(h)·e₀` instance of
+`tendstoInDistribution_studentized_linearCombo_sampleAutocov`, with the centered linear-combination
+numerator collapsed (`sum_single_pair_mul`) and the centering constant `γ(h) − ρ(h)γ(0) = 0` removed. -/
+theorem tendstoInDistribution_sampleACF {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ']
+    (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : Fin (k + 1) → ℝ)
+    (hcenter : ∀ (t : ℤ) (i : Fin (k + 1)), ∫ ω, X t ω * X (t + (i : ℕ)) ω ∂μ = γ i)
+    (hpsd : (longRunCovMatrix (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ).PosSemidef)
+    (h : Fin (k + 1)) (hγ0 : γ 0 ≠ 0)
+    {V : Ω' → EuclideanSpace ℝ (Fin (k + 1))}
+    (hV : HasLaw V (multivariateGaussian 0 (longRunCovMatrix
+        (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1)))) μ)) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => Real.sqrt n * (sampleMean n (fun t => X (t : ℤ) ω * X (t + (h : ℕ)) ω)
+          - γ h / γ 0 * sampleMean n (fun t => X (t : ℤ) ω * X (t + ((0 : Fin (k + 1)) : ℕ)) ω))
+        / sampleMean n (fun t => X (t : ℤ) ω * X (t + ((0 : Fin (k + 1)) : ℕ)) ω))
+      atTop (fun ω' => (V ω' h - γ h / γ 0 * V ω' 0) / γ 0) (fun _ => μ) μ' := by
+  have hstud := tendstoInDistribution_studentized_linearCombo_sampleAutocov hmdep hstat hmeas hmem4 k γ
+    hcenter hpsd (EuclideanSpace.single h 1 - (γ h / γ 0) • EuclideanSpace.single 0 1) hγ0 hV
+  refine hstud.congr (fun n => Filter.Eventually.of_forall fun ω => ?_)
+    (Filter.Eventually.of_forall fun ω' => ?_)
+  · -- numerator collapse: ∑ᵢ cᵢ·sampleMean(centered_i) = γ̂(h) − ρ·γ̂(0)
+    congr 2
+    rw [sum_single_pair_mul h (γ h / γ 0)
+      (fun i => sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i))]
+    have hlin : ∀ (i : Fin (k + 1)),
+        sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i)
+          = sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω) - (n : ℝ)⁻¹ * n * γ i := by
+      intro i
+      simp only [sampleMean, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range,
+        nsmul_eq_mul, mul_sub]
+      ring
+    have hρ : γ h / γ 0 * γ 0 = γ h := div_mul_cancel₀ _ hγ0
+    rw [hlin h, hlin 0]
+    linear_combination ((n : ℝ)⁻¹ * (n : ℝ)) * hρ
+  · -- limit: ⟪V, eₕ − ρ·e₀⟫ = V_h − ρ·V₀
+    congr 2
+    simp [inner_sub_right, inner_smul_right, EuclideanSpace.inner_single_right]
+
 end DeepWiki.TimeSeries
