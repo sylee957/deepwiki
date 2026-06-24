@@ -1,5 +1,7 @@
 import DeepWiki.RelationalDatabases.IncompleteInformation
 import DeepWiki.RelationalDatabases.NullValues
+import DeepWiki.RelationalDatabases.ConditionalTables
+import DeepWiki.RelationalDatabases.IncompleteConstraints
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 6: Incomplete Information
@@ -16,14 +18,14 @@ projection/`selectCertain` rules); the equivalence machinery and the remaining s
   Def 6.2's f-information `X^f = ⋂ f(X)` and β-equivalence `≡_β` / β-representation; Theorem 6.1's
   `≡_P` claim (Codd tables P-represent any X) and Thm 6.2 (`≡_S`); the "correctly evaluates"
   statement of Theorem 6.3 (`Rep(f(T)) ≡_PS f(Rep(T))`); Theorem 6.4 (Codd tables fail `PSU` and
-  `PJ`); V-tables and Theorem 6.5 (`PS⁺UJ`) / Theorem 6.6 (V-tables fail `PS`); C-tables and
-  Theorem 6.7 (`PSUJ`) [infra/research].
-§6.2: Def 6.3 (elementary conditions and conditions), the per-table insertion/deletion/
-  modification, and Theorem 6.8 (which update operations are feasible for Codd / V / C-tables)
-  [infra: needs the null-table representations].
-§6.3: Def 6.5 (a permissible table under fds), Def 6.6 (hard vs soft violations of an fd), the
-  fill-in (chase-like) rules, Theorem 6.9 (permissible completion exists iff exhaustive fill-in
-  has no hard violation), Def 6.7 (existence constraints `X ↘ Y`, with fd-like inference rules)
+  `PJ`); Theorem 6.5 (V-tables: `PS⁺UJ`) / Theorem 6.6 (V-tables fail `PS`); Theorem 6.7 (C-tables:
+  `PSUJ`) — the V-table and C-table *objects* and their representations are now formalized
+  (`VTable`/`CTable`, `CTable.rep`), but these *capability* theorems remain [infra/research].
+§6.2: the per-table insertion/deletion/modification and Theorem 6.8 (which update operations are
+  feasible for Codd / V / C-tables) [infra: needs the null-table representations].
+§6.3: the fill-in (chase-like) rules, the converse of Theorem 6.9 (no hard violation after
+  exhaustive fill-in ⟹ a permissible completion exists — needs the fill-in as a terminating
+  function), and Def 6.7 (existence constraints `X ↘ Y`, with fd-like inference rules)
   [infra/research].
 §6.4: relations with no-information nulls (Zaniolo) [research].
 §6.5: the weak instance model [research].
@@ -134,3 +136,71 @@ abbrev definite_row_is_certain := @DeepWiki.mem_infoF_id_coddRep_of_toNull_mem
 
 /-- **§6.1**: a definite table's certain answers are exactly itself. -/
 abbrev certain_answers_definite := @DeepWiki.infoF_id_rep_toNullTable
+
+/-! ## §6.1 V-tables and conditional tables (C-tables) -/
+
+/-- **§6.1 V-table entry** (p.158): a constant value or a marked null (variable). -/
+abbrev v_entry := @DeepWiki.VEntry
+
+/-- **§6.1 V-tuple**: each attribute holds a constant or a variable. -/
+abbrev v_tuple := @DeepWiki.VTuple
+
+/-- **§6.1 naive evaluation** (p.158): apply a valuation to a V-tuple, treating variables as values.-/
+abbrev v_apply := @DeepWiki.applyV
+
+/-- **§6.1 V-table** (Fig 6.2, p.158): a set of V-tuples, evaluated naively. -/
+abbrev v_table := @DeepWiki.VTable
+
+/-- **§6.1**: the relations a V-table represents (naive images under all valuations). -/
+abbrev v_table_rep := @DeepWiki.VTable.rep
+
+/-- **§6.1 C-table** (p.158, Fig 6.3): a V-table with a per-row condition column and a global
+condition — the conditional table. -/
+abbrev c_table := @DeepWiki.CTable
+
+/-- **§6.1**: the relations a C-table represents — its instances under all valuations satisfying the
+global condition, keeping rows whose condition holds. -/
+abbrev c_table_rep := @DeepWiki.CTable.rep
+
+/-- **§6.1**: a C-table's instance under a single valuation. -/
+abbrev c_table_instAt := @DeepWiki.CTable.instAt
+
+/-- **§6.1**: C-tables subsume V-tables — a V-table is the conditionless C-table, with matching
+representation. -/
+abbrev c_table_subsumes_v_table := @DeepWiki.VTable.rep_toCTable
+
+/-- **§6.1** (faithfulness): a constant V-table represents exactly the original relation. -/
+abbrev v_table_definite_faithful := @DeepWiki.Table.rep_toVTable
+
+/-! ## §6.2 Conditions on updates (Def 6.3) -/
+
+/-- **Definition 6.3** (§6.2, p.163), elementary condition: an equality or inequality between two
+entries (variables or constants); also the condition language of a C-table's `con` column. -/
+abbrev def_6_3_elementary_condition := @DeepWiki.ECond
+
+/-- **Definition 6.3** (§6.2, p.163), condition: a conjunction of elementary conditions. -/
+abbrev def_6_3_condition := @DeepWiki.CCond
+
+/-- **Definition 6.3** (§6.2): when a condition holds under a valuation. -/
+abbrev def_6_3_holds := @DeepWiki.CCond.Holds
+
+/-! ## §6.3 Constraints in Incomplete Databases -/
+
+/-- **§6.3**: two V-tuples agree on `X` (identical entries on every attribute of `X`). -/
+abbrev v_agree := @DeepWiki.VAgree
+
+/-- **Definition 6.5** (§6.3, p.168): a V-table is *permissible* under a set of fds when some
+completion (a valuation's image) satisfies them. -/
+abbrev def_6_5_permissible := @DeepWiki.IsPermissible
+
+/-- **Definition 6.6** (§6.3, p.168), hard violation: `X`-agreeing rows carry distinct constants on
+`A` — unrepairable by any valuation. -/
+abbrev def_6_6_hard_violation := @DeepWiki.HardViolation
+
+/-- **Definition 6.6** (§6.3, p.168), soft violation: `X`-agreeing rows differ on `A` but a variable
+is involved — repairable by filling in. -/
+abbrev def_6_6_soft_violation := @DeepWiki.SoftViolation
+
+/-- **Theorem 6.9** (§6.3, p.168, forward direction): a hard violation of a required fd blocks
+permissibility — no completion can satisfy it. -/
+abbrev thm_6_9_hard_violation_blocks := @DeepWiki.not_isPermissible_of_hardViolation
