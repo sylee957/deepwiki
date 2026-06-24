@@ -146,6 +146,72 @@ def Table.toVTable (r : Table Ω Val) : VTable Ω Val Var := Tuple.toV '' r
     rw [applyV_toV]; exact hs
   · intro ht; exact ⟨Tuple.toV t, ⟨t, ht, rfl⟩, by rw [applyV_toV]⟩
 
+/-! ## Relational operators on C-tables (Theorem 6.7: correct evaluation)
+Each operator commutes with `instAt` — its result, evaluated under any valuation, is the operator
+applied to the evaluated input. So C-tables *correctly evaluate* these operators (part of Theorem
+6.7; selection is exact here, the key advantage over V-tables). -/
+
+/-- Naive evaluation commutes with restriction. -/
+theorem applyV_restrict {Ω₁ : Finset Att} (h : Ω₁ ⊆ Ω) (ν : Var → Val) (vt : VTuple Ω Val Var) :
+    applyV ν (vt.restrict h) = (applyV ν vt).restrict h := rfl
+
+/-- **Union of C-tables**: union the conditioned rows (the global conditions conjoined). -/
+def CTable.union (T₁ T₂ : CTable Ω Val Var) : CTable Ω Val Var :=
+  ⟨T₁.rows ∪ T₂.rows, T₁.global ++ T₂.global⟩
+
+/-- C-tables correctly evaluate union: under any valuation, the instance of the union is the union of
+the instances. -/
+theorem CTable.instAt_union (T₁ T₂ : CTable Ω Val Var) (ν : Var → Val) :
+    (T₁.union T₂).instAt ν = T₁.instAt ν ∪ T₂.instAt ν := by
+  ext t
+  constructor
+  · rintro ⟨p, (hp | hp), hc, ht⟩
+    exacts [Or.inl ⟨p, hp, hc, ht⟩, Or.inr ⟨p, hp, hc, ht⟩]
+  · rintro (⟨p, hp, hc, ht⟩ | ⟨p, hp, hc, ht⟩)
+    exacts [⟨p, Or.inl hp, hc, ht⟩, ⟨p, Or.inr hp, hc, ht⟩]
+
+/-- **Projection of a C-table** onto `Ω₁ ⊆ Ω`: restrict each row's V-tuple, keeping its condition. -/
+def CTable.proj {Ω₁ : Finset Att} (h : Ω₁ ⊆ Ω) (T : CTable Ω Val Var) : CTable Ω₁ Val Var :=
+  ⟨(fun p => (p.1.restrict h, p.2)) '' T.rows, T.global⟩
+
+/-- C-tables correctly evaluate projection: the instance of the projection is the projection of the
+instance. -/
+theorem CTable.instAt_proj {Ω₁ : Finset Att} (h : Ω₁ ⊆ Ω) (T : CTable Ω Val Var) (ν : Var → Val) :
+    (T.proj h).instAt ν = project h (T.instAt ν) := by
+  ext s
+  simp only [CTable.mem_instAt, CTable.proj, Set.mem_image, mem_project]
+  constructor
+  · rintro ⟨p, ⟨q, hq, rfl⟩, hc, rfl⟩
+    exact ⟨applyV ν q.1, ⟨q, hq, hc, rfl⟩, (applyV_restrict h ν q.1).symm⟩
+  · rintro ⟨t, ⟨p, hp, hc, rfl⟩, rfl⟩
+    exact ⟨(p.1.restrict h, p.2), ⟨p, hp, rfl⟩, hc, applyV_restrict h ν p.1⟩
+
+/-- **Selection of a C-table** by `A = c`: conjoin the elementary condition `(row's A-entry) = c` to
+each row's condition. Unlike V-tables, C-tables can capture an arbitrary selection *exactly*. -/
+def CTable.selectEq (a : {x : Att // x ∈ Ω}) (c : Val) (T : CTable Ω Val Var) : CTable Ω Val Var :=
+  ⟨(fun p => (p.1, ECond.eq (p.1 a) (Sum.inl c) :: p.2)) '' T.rows, T.global⟩
+
+/-- C-tables correctly *and exactly* evaluate selection: the instance of `σ_{A=c}` is the selection
+of the instance — the defining advantage of C-tables (V-tables fail this, Theorem 6.6). -/
+theorem CTable.instAt_selectEq (a : {x : Att // x ∈ Ω}) (c : Val) (T : CTable Ω Val Var)
+    (ν : Var → Val) :
+    (T.selectEq a c).instAt ν = select (fun t => t a = c) (T.instAt ν) := by
+  ext t
+  simp only [CTable.mem_instAt, CTable.selectEq, Set.mem_image, mem_select]
+  constructor
+  · rintro ⟨p, ⟨q, hq, rfl⟩, hc, rfl⟩
+    rw [CCond.holds_cons] at hc
+    refine ⟨⟨q, hq, hc.2, rfl⟩, ?_⟩
+    have := hc.1
+    rw [ECond.Holds] at this
+    simpa [applyV_apply] using this
+  · rintro ⟨⟨p, hp, hc, rfl⟩, hsel⟩
+    refine ⟨(p.1, ECond.eq (p.1 a) (Sum.inl c) :: p.2), ⟨p, hp, rfl⟩, ?_, rfl⟩
+    rw [CCond.holds_cons]
+    refine ⟨?_, hc⟩
+    rw [ECond.Holds]
+    simpa [applyV_apply] using hsel
+
 /-- A constant V-table represents exactly the original relation (a complete-information table). -/
 theorem Table.rep_toVTable [Nonempty Val] (r : Table Ω Val) :
     (Table.toVTable (Var := Var) r).rep = {r} := by
