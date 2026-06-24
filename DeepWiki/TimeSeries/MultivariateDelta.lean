@@ -196,4 +196,23 @@ theorem tight_of_tendstoInDistribution {E : Type*} [NormedAddCommGroup E] [Inner
           (Set.mem_range_self n)
     _ ≤ ε := hrε.le
 
+/-- **The multivariate delta method** (Brockwell–Davis Proposition 6.4.3, tightness-free form on a
+finite-dimensional inner-product space): if `g` is differentiable at `p` with derivative `D`, `Xₙ → p` in
+probability, and the standardized `(Xₙ − p)/cₙ` converges in distribution to `V`, then
+`(g(Xₙ) − g(p))/cₙ ⇒ D V`. The tightness of `‖(Xₙ − p)/cₙ‖` needed for the Taylor remainder is automatic
+from the convergence (`tight_of_tendstoInDistribution`), so — unlike the general
+`tendstoInDistribution_smul_comp_of_hasFDerivAt` — no tightness hypothesis is required. -/
+theorem multivariateDeltaMethod {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+    [MeasurableSpace F] [BorelSpace F] [SecondCountableTopology F] [IsProbabilityMeasure μ] {Ω' : Type*}
+    [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : ℕ → Ω → E} {p : E} {g : E → F}
+    {D : E →L[ℝ] F} {c : ℕ → ℝ} {V : Ω' → E} (hg : HasFDerivAt g D p)
+    (hXp : TendstoInMeasure μ X atTop (fun _ => p))
+    (hconv : TendstoInDistribution (fun n ω => (c n)⁻¹ • (X n ω - p)) atTop V (fun _ => μ) P')
+    (hg' : ∀ n, AEMeasurable (fun ω => (c n)⁻¹ • (g (X n ω) - g p)) μ) :
+    TendstoInDistribution (fun n ω => (c n)⁻¹ • (g (X n ω) - g p)) atTop (fun ω => D (V ω))
+      (fun _ => μ) P' :=
+  tendstoInDistribution_smul_comp_of_hasFDerivAt hg hXp hconv
+    (tight_of_tendstoInDistribution hconv) hg'
+
 end DeepWiki.TimeSeries
