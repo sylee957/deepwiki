@@ -71,4 +71,110 @@ def cSplitSquarefreeFactorFast (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFu
 
 end CPolyG
 
+/-! ### Sanity: a known squarefree-factored `p = (t−1)²(t−2)` over ℚ(x)[t]
+
+With ℚ-constant coefficients (so the differential `cmonomialDeriv` for the *split* uses `Dt`), the
+squarefree factorization in `t` of `p = (t−1)²(t−2) = t³ − 4t² + 5t − 2` is `p₁ = t−2` (multiplicity
+`1`) and `p₂ = t−1` (multiplicity `2`), i.e. `p = p₁ · p₂²`. `native_decide` over the tower. -/
+
+open CPolyG QFunNZ
+
+/-- `p = (t−1)²(t−2) = t³ − 4t² + 5t − 2` over ℚ(x)[t] (ℚ-constant coefficients). -/
+def sqfreeSanityP : CPolyG QFunNZ := [ofConstNZ (-2), ofConstNZ 5, ofConstNZ (-4), ofConstNZ 1]
+
+/-- **Sanity (Yun factorization)**: the squarefree factorization in `t` of `(t−1)²(t−2)` is two
+factors `[p₁, p₂]` of `t`-degrees `[1, 1]` (multiplicities `1, 2`). -/
+example : (CPolyG.cSqfreeYunFF 8 sqfreeSanityP).map CPolyG.cdegG = [1, 1] := by native_decide
+
+/-- **Sanity (multiplicity-1 factor)**: the first Yun factor of `(t−1)²(t−2)` is monic `t − 2`. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG ((CPolyG.cSqfreeYunFF 8 sqfreeSanityP).headD []))
+      [ofConstNZ (-2), ofConstNZ 1]) = true := by native_decide
+
+/-- **Sanity (multiplicity-2 factor)**: the second Yun factor of `(t−1)²(t−2)` is monic `t − 1`. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG ((CPolyG.cSqfreeYunFF 8 sqfreeSanityP).getD 1 []))
+      [ofConstNZ (-1), ofConstNZ 1]) = true := by native_decide
+
+/-! ### The payoff — Bronstein's Example 3.5.2 computes (`native_decide`)
+
+Same `k = ℚ(x)`, monomial `t` with `Dt = −t² − (3/(2x))t + 1/(2x)`, and the SAME degree-5 `p` as
+Example 3.5.1. Bronstein's worked answer (book p.102):
+
+* squarefree factorization `p = p₁ p₂²` with `p₁` of `t`-degree `3`, `p₂` of `t`-degree `1`
+  (`(p₁,…,pₘ) ← Squarefree(p)`);
+* for `p₁`: `S₁ = gcd(p₁, Dp₁) = t² + (1/x)t − (2x−1)/(4x²)`, `N₁ = p₁/S₁ = 4x²(t−1)`;
+* for `p₂`: `Dp₂ = −xt² − t/2 + 1/2`, `S₂ = gcd(p₂, Dp₂) = 1`, `N₂ = p₂/S₂ = xt − 1`;
+* hence the normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and the special part `pₛ = S₁`.
+
+`cSplitSquarefreeFactorFast` reproduces these: the `N`-factors recombine (by multiplicity `Nᵢ^i`,
+monic) to `pₙ` and the `S`-factors to `pₛ`, checked by `cisZeroG` of the difference over ℚ(x)[t]. -/
+
+/-- Example 3.5.2's expected special part `pₛ = S₁ = t² + (1/x)t − (2x−1)/(4x²)` (book p.102). -/
+def splitSquarefreeFastEx352Ps : CPolyG QFunNZ :=
+  [mkCoeff [1, -2] [0, 0, 4], mkCoeff [1] [0, 1], mkCoeff [1] [1]]
+
+/-- The linear factor `t − 1` over ℚ(x)[t]. -/
+def splitSquarefreeFastEx352Tm1 : CPolyG QFunNZ := [mkCoeff [-1] [1], mkCoeff [1] [1]]
+
+/-- The linear factor `xt − 1` over ℚ(x)[t]. -/
+def splitSquarefreeFastEx352Xtm1 : CPolyG QFunNZ := [mkCoeff [-1] [1], mkCoeff [0, 1] [1]]
+
+/-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), built from its
+factors `4x² · (t−1) · (xt−1)²`. -/
+def splitSquarefreeFastEx352Pn : CPolyG QFunNZ :=
+  CPolyG.cmulG [mkCoeff [0, 0, 4] [1]]
+    (CPolyG.cmulG splitSquarefreeFastEx352Tm1
+      (CPolyG.cmulG splitSquarefreeFastEx352Xtm1 splitSquarefreeFastEx352Xtm1))
+
+/-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i`. -/
+def splitSquarefreeFastRecombine (qs : List (CPolyG QFunNZ)) : CPolyG QFunNZ :=
+  qs.zipIdx.foldl (fun acc (qi, i) => CPolyG.cmulG acc (CPolyG.cpowG qi (i + 1))) [CField.one]
+
+/-- **Example 3.5.2 factor degrees** — `cSplitSquarefreeFactorFast` on the degree-5 `p` returns
+`N`-factor `t`-degrees `[1, 1]` and `S`-factor `t`-degrees `[2, 0]`, matching Bronstein's
+`N₁ = 4x²(t−1)`, `N₂ = xt−1`, `S₁ = t²+(1/x)t−(2x−1)/(4x²)`, `S₂ = 1`. -/
+example :
+    (((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).1).map
+        CPolyG.cdegG,
+     ((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2).map
+        CPolyG.cdegG) = ([1, 1], [2, 0]) := by native_decide
+
+/-- **Example 3.5.2 normal part is the book's `pₙ`** — the `N`-factors recombine (by multiplicity) to
+`4x²(t−1)(xt−1)²` (monic), via `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (splitSquarefreeFastRecombine
+        (CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).1))
+      (CPolyG.cmonicG splitSquarefreeFastEx352Pn)) = true := by native_decide
+
+/-- **Example 3.5.2 special part is the book's `pₛ`** — the `S`-factors recombine (by multiplicity)
+to `t²+(1/x)t−(2x−1)/(4x²)` (monic), via `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (splitSquarefreeFastRecombine
+        (CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2))
+      (CPolyG.cmonicG splitSquarefreeFastEx352Ps)) = true := by native_decide
+
+/-- **Example 3.5.2** (Bronstein §3.5, p.102) COMPUTES: the fraction-free `cSplitSquarefreeFactorFast`
+on the degree-5 `p` over ℚ(x)[t] (monomial `t` with `Dt = −t²−(3/2x)t+1/(2x)`) returns `N`-factor
+`t`-degrees `[1, 1]` and `S`-factor `t`-degrees `[2, 0]`, with the `N`-factors recombining (by
+multiplicity) to Bronstein's normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and the `S`-factors to the
+special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` — all monic-normalized, by `native_decide`. -/
+theorem splitSquarefreeFast_ex352 :
+    (((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).1).map
+        CPolyG.cdegG,
+       ((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2).map
+        CPolyG.cdegG) = ([1, 1], [2, 0])
+    ∧ CPolyG.cisZeroG (CPolyG.csubG
+        (CPolyG.cmonicG (splitSquarefreeFastRecombine
+          (CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).1))
+        (CPolyG.cmonicG splitSquarefreeFastEx352Pn)) = true
+    ∧ CPolyG.cisZeroG (CPolyG.csubG
+        (CPolyG.cmonicG (splitSquarefreeFastRecombine
+          (CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2))
+        (CPolyG.cmonicG splitSquarefreeFastEx352Ps)) = true := by native_decide
+
 end DeepWiki.SymbolicIntegration
