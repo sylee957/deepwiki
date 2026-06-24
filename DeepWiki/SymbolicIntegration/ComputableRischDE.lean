@@ -103,9 +103,16 @@ Bronstein's RDE pipeline (Ch. 6, confirmed section numbers from the 2005 edition
   the solve recurses degree-by-degree into `cRischDEBase` (eq. 6.23 `RischDE(b, lc(c))`) after the
   §5.12 `b = Dz/z` test (`cParametricLogDeriv`). Returns `Option (CPolyG QFunNZ)`.
 
+* **`cPolyRischDECancelExp Dt fuel b c n`** (§6.6, the `PolyRischDECancelExp(b, c, D, n)` box, book
+  p.213) — the **hyperexponential cancellation** case (`Dt/t = η ∈ k`, `δ = 1`, `b ∈ k*`): the leading
+  terms cancel and the solve recurses degree-by-degree into the eq. 6.24 base RDE
+  `RischDE(b + m·η, lc(c))` over ℚ(x) (`cRischDEBase`, with the `m·η` shift `η = cExpEta Dt`). Returns
+  `Option (CPolyG QFunNZ)`.
+
 * **`cPolyRischDE Dt fuel b c n`** (§6.5 + §6.6) — the **dispatcher**: routes `Dq + b·q = c` to
-  `cPolyRischDENoCancel` (non-cancellation, `deg(b) > max(0, δ−1)`) or `cPolyRischDECancelPrim`
-  (primitive cancellation, `δ = 0`, `b ∈ k*`) by monomial type and `deg(b)` (Lemma 6.5.1).
+  `cPolyRischDENoCancel` (non-cancellation, `deg(b) > max(0, δ−1)`), `cPolyRischDECancelPrim` (primitive
+  cancellation, `δ = 0`, `b ∈ k*`), or `cPolyRischDECancelExp` (hyperexponential cancellation, `δ = 1`,
+  `b ∈ k*`) by monomial type and `deg(b)` (Lemma 6.5.1).
 
 * **`cRischDE Dt fuel fnum fden gnum gden`** — the **assembled full solver**: chains
   `cRdeNormalDenominator` (§6.2) → `cRdeSpecialDenominator` (§6.2) → `cRdeBoundDegree` (§6.3) →
@@ -160,12 +167,13 @@ The deliverable is the **full non-cancellation pipeline, the §6.6 primitive can
 general non-constant rational base RDE over ℚ(x)), and a self-contained rational base RDE solver**, plus
 validation — not abstract correctness (no `Dy + fy = g ↔ …` theorem is proved). What remains:
 
-* **`PolyRischDECancelExp`** (hyperexponential, `Dt/t ∈ k`, `δ = 1`, book p.213) and
-  **`PolyRischDECancelTan`** (nonlinear / hypertangent `Dt/(t²+1) ∈ k`, `δ = 2`, book p.215): they
-  recurse to a base RDE over `k` or `k(√−1)` / a **`CoupledDESystem`** (Ch. 8) and an in-field
-  integration; not implemented (the dispatcher falls them back to the non-cancellation loop). The
-  hyperexponential box is the natural next step now that the base RDE is general (`cRationalRDE` is the
-  recursion target); the tangent box is deferred to the Ch. 8 coupled-system layer.
+* **`PolyRischDECancelTan`** (nonlinear / hypertangent `Dt/(t²+1) ∈ k`, `δ = 2`, book p.215): recurses
+  to a base RDE over `k(√−1)` / a **`CoupledDESystem`** (Ch. 8) and an in-field integration; **not
+  implemented** (the dispatcher falls it back to the non-cancellation loop, correct only when it does
+  not actually cancel). Deferred to the Ch. 8 coupled-system layer. *(The hyperexponential
+  `PolyRischDECancelExp`, `δ = 1`, book p.213, **is now implemented** — `cPolyRischDECancelExp`,
+  validated by `rischDE_cancelExp_example` — recursing to the eq. 6.24 base RDE `RischDE(b + m·η, lc(c))`
+  over ℚ(x) via the now-general `cRischDEBase`.)*
 * **The full §5.12 / §7.3 recognizer.** `cParametricLogDeriv` decides the reachable constant
   obstruction exactly; the proper/simple/integer-residue Rothstein–Trager recognizer over ℚ(x) and the
   §7.3 unique-`m/n` linear-constraint solve are the documented continuation. The in-field-integration
@@ -889,6 +897,68 @@ def cPolyRischDECancelPrim (Dt : CPolyG QFunNZ) : ℕ → (b c : CPolyG QFunNZ) 
         | none => none
         | some q => some (caddG stm q)
 
+/-! ### `cPolyRischDECancelExp` (Bronstein §6.6, the `PolyRischDECancelExp(b,c,D,n)` box, book p.213)
+
+The **hyperexponential cancellation case** of `PolyRischDE`: `Dt/t ∈ k` (so `δ(t) = 1`, the monomial is
+`t = exp(∫η)` with `η = Dt/t ∈ k`), `b ∈ k*`, `c ∈ k[t]`, solving `Dq + b·q = c` for `q ∈ k[t]` of degree
+`≤ n`. As in the primitive case the leading terms of `Dq` and `bq` cancel, so the solve proceeds
+degree-by-degree; but now `D(s·tᵐ) = (Ds + m·η·s)·tᵐ` (the `tᵐ` factor contributes `m·η`), so the
+leading-coefficient base RDE (eq. 6.24) is `Ds + (b + m·η)·s = lc(c)` over `k` — the coefficient is shifted
+by `m·η`. The base solve is `cRischDEBase` (now general over ℚ(x)). -/
+
+/-- **Hyperexponential coefficient `η = Dt/t ∈ k`** `cExpEta fuel Dt`: for a hyperexponential monomial
+`Dt = η·t` (`Dt/t ∈ k`, `δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) and read the resulting degree-0
+`t`-polynomial's coefficient `η ∈ ℚ(x)`. For `t = exp(x)` (`Dt = t`), `η = 1`. -/
+def cExpEta (fuel : ℕ) (Dt : CPolyG QFunNZ) : QFunNZ :=
+  cleadG (cdivG fuel Dt (cshiftG 1 [CField.one]))
+
+/-- **Computable Poly-Risch-DE, hyperexponential cancellation case** `cPolyRischDECancelExp Dt fuel b c n`
+(Bronstein §6.6, the `PolyRischDECancelExp(b,c,D,n)` box, book p.213). Given the hyperexponential monomial
+derivation `D` (`η = Dt/t ∈ k = ℚ(x)`, `δ = 1`), `b ∈ k*` (a `QFunNZ`-constant `t`-polynomial of degree 0)
+and `c ∈ k[t]`, with degree bound `n : ℤ`, returns `none` ("no solution of degree `≤ n`") or `some q` with
+`q ∈ k[t]`, `deg(q) ≤ n`, solving `Dq + b·q = c`:
+
+```
+if b = Dz/z + m·η for z ∈ k*, m ∈ ℤ then    (* log-deriv branch, §5.12 — documented continuation *)
+    if c·z·tᵐ = Dp for p ∈ k⟨t⟩, q = p/(z·tᵐ) ∈ k[t], deg(q) ≤ n then return q else "no solution"
+if c = 0 then return 0
+if n < deg(c) then return "no solution"
+q ← 0
+while c ≠ 0 do
+    m ← deg(c)
+    if n < m then return "no solution"
+    s ← RischDE(b + m·η, lc(c))      (* base RDE over k: Ds + (b + m·η)·s = lc(c), eq. 6.24 *)
+    if s = "no solution" then return "no solution"
+    q ← q + s·tᵐ;  n ← m − 1;  c ← c − b·s·tᵐ − D(s·tᵐ)
+return q
+```
+
+`D = cmonomialDeriv Dt`; `η = cExpEta Dt`. The base solve `RischDE(b + m·η, lc(c))` is `cRischDEBase`
+(now **general** over ℚ(x) — the `m·η` shift makes the coefficient genuinely non-constant). The
+logarithmic-derivative branch (`b = Dz/z + m·η`) is the documented continuation (the general
+degree-by-degree recursion is sound without it). The `while` loop is fuel-bounded (`deg(c)` drops each
+pass). -/
+def cPolyRischDECancelExp (Dt : CPolyG QFunNZ) : ℕ → (b c : CPolyG QFunNZ) → (n : ℤ) →
+    Option (CPolyG QFunNZ)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    let b0 : QFunNZ := cleadG b
+    let η : QFunNZ := cExpEta fuel Dt
+    if cisZeroG c then some []
+    else if n < (cdegG c : ℤ) then none
+    else
+      let m : ℕ := cdegG c
+      -- eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)` over `k = ℚ(x)`.
+      let coeff : QFunNZ := CField.add b0 (CField.mul (QFunNZ.ofConstNZ ((m : ℚ))) η)
+      match cRischDEBase fuel coeff (cleadG c) with
+      | none => none
+      | some s =>
+        let stm : CPolyG QFunNZ := cshiftG m [s]               -- `s·tᵐ`
+        let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+        match cPolyRischDECancelExp Dt fuel b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+
 /-! ### `cPolyRischDE` — dispatch non-cancellation vs cancellation (Bronstein §6.5 + §6.6)
 
 After `cSPDE` reduces to `Dq + b·q = c` (eq. 6.19, `a = 1`) with a degree bound `n`, the choice of
@@ -904,9 +974,10 @@ or the §6.6 cancellation solver by the monomial type and `deg(b)` (Lemma 6.5.1)
 
 * If `deg(b) > max(0, δ−1)` (non-cancellation, `δ = deg(Dt)`): `cPolyRischDENoCancel`.
 * Else if `δ = 0` (primitive) and `b ∈ k*` (`deg(b) = 0`): `cPolyRischDECancelPrim` (§6.6 primitive).
-* Else (hyperexponential `δ = 1` / nonlinear `δ ≥ 2` cancellation): the documented continuation
-  (`PolyRischDECancelExp`/`Tan`) — falls back to `cPolyRischDENoCancel` (correct whenever the
-  non-cancellation hypothesis happens to hold; otherwise returns `none`). -/
+* Else if `δ = 1` (hyperexponential) and `b ∈ k*` (`deg(b) = 0`): `cPolyRischDECancelExp` (§6.6 hyperexp).
+* Else (nonlinear / hypertangent `δ ≥ 2` cancellation): the documented continuation
+  (`PolyRischDECancelTan`, needs the Ch. 8 `CoupledDESystem`) — falls back to `cPolyRischDENoCancel`
+  (correct whenever the non-cancellation hypothesis happens to hold; otherwise returns `none`). -/
 def cPolyRischDE (Dt : CPolyG QFunNZ) (fuel : ℕ) (b c : CPolyG QFunNZ) (n : ℤ) :
     Option (CPolyG QFunNZ) :=
   let δ : ℤ := (cdegG Dt : ℤ)
@@ -917,8 +988,11 @@ def cPolyRischDE (Dt : CPolyG QFunNZ) (fuel : ℕ) (b c : CPolyG QFunNZ) (n : �
   else if δ = 0 ∧ db = 0 then
     -- primitive cancellation case (§6.6, `Dt ∈ k`, `b ∈ k*`).
     cPolyRischDECancelPrim Dt fuel b c n
+  else if δ = 1 ∧ db = 0 then
+    -- hyperexponential cancellation case (§6.6, `Dt/t ∈ k`, `b ∈ k*`).
+    cPolyRischDECancelExp Dt fuel b c n
   else
-    -- hyperexponential / nonlinear cancellation (documented continuation); the non-cancellation
+    -- nonlinear / hypertangent cancellation (documented continuation, Ch. 8); the non-cancellation
     -- loop is still correct when it does not actually cancel.
     cPolyRischDENoCancel Dt fuel b c n
 
@@ -1338,5 +1412,67 @@ theorem rischDE_rationalRDE_example :
       | none => false) = true := by native_decide
 
 #print axioms rischDE_rationalRDE_example
+
+/-! ### Validation — the §6.6 HYPEREXPONENTIAL cancellation case fires (`t = exp(x)`, `Dt = t`)
+
+The hyperexponential cancellation case (`Dt/t ∈ k`, `δ = 1`, `b ∈ k*`): like the primitive case the
+leading terms of `Dq` and `bq` cancel, but `D(s·tᵐ) = (Ds + m·η·s)·tᵐ` (`η = Dt/t`), so the eq. 6.24 base
+RDE is `Ds + (b + m·η)·s = lc(c)` — the coefficient is **shifted by `m·η`**, making it genuinely
+non-constant even when `b` is. We use `t = exp(x)` (`Dt = t`, `η = Dt/t = 1`) and
+
+```
+  Dq + (1/x)·q = (2 + x)·exp(x)      (b = 1/x ∈ ℚ(x)*,  c = (2+x)t ∈ ℚ(x)[t],  deg(c) = 1)
+```
+
+whose solution is `q = x·exp(x) = x·t` (indeed `D(x·t) + (1/x)(x·t) = (1+x)t + t = (2+x)t`). The single
+degree step solves the base RDE `RischDE(b + 1·η, lc(c)) = RischDE(1/x + 1, x+2)` over ℚ(x) — a
+**non-constant** base solve (`cRischDEBase` ⇒ `s = x`) — giving the leading monomial `s·t = x·t`, leaving
+remainder `0`. -/
+
+open CPolyG QFunNZ
+
+/-- The hyperexponential monomial derivative `Dt = t` (`t = exp(x)`, `η = Dt/t = 1`); `δ = deg(Dt) = 1`. -/
+def rischDEExpDt : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 1]
+
+/-- The hyperexponential example's coefficient `b = 1/x ∈ ℚ(x)*` (a degree-0 `t`-polynomial). -/
+def rischDEExpB : CPolyG QFunNZ := [ofNumDen [1] [0, 1] (by decide)]
+
+/-- The hyperexponential example's right-hand side `c = (2 + x)·exp(x) = (2 + x)·t` (low→high in `t`:
+constant `0`, then `t`-coefficient `2 + x ∈ ℚ(x)`). -/
+def rischDEExpC : CPolyG QFunNZ := [ofConstNZ 0, ofNumDen [2, 1] [1] (by decide)]
+
+-- **Sanity prints.** `η = Dt/t = 1`; `cPolyRischDECancelExp` returns `q = x·exp(x) = x·t`
+-- (`t`-coeffs `[0, x]`).
+#eval Compute.qnorm 30 (cExpEta 30 rischDEExpDt).1
+#eval (cPolyRischDECancelExp rischDEExpDt 60 rischDEExpB rischDEExpC 5).map
+  (fun q => (q : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 60 z.1))
+
+/-- **The §6.6 hyperexponential cancellation case fires and solves over the tower** (`native_decide`,
+Bronstein §6.6, the `PolyRischDECancelExp(b,c,D,n)` box, book p.213). For the hyperexponential monomial
+`t = exp(x)` (`Dt = t`, `η = Dt/t = 1 ∈ k`, `δ = 1`), the cancellation equation
+`Dq + (1/x)·q = (2 + x)·exp(x)` (`b = 1/x ∈ ℚ(x)*`, `c = (2+x)t`, `deg(c) = 1`) is solved by
+`cPolyRischDECancelExp`, returning some `q` verified to **actually solve** `Dq + b·q = c` by `cisZeroG` of
+the cleared difference `D(q) + b·q − c` (`D = cmonomialDeriv rischDEExpDt`; not merely pinning the output)
+— the solution is `q = x·exp(x)`. The dispatcher `cPolyRischDE` routes this same input to the
+hyperexponential cancellation solver (`deg(b) = 0`, `δ = 1`), producing an equal `q`.
+
+This is the §6.6 hyperexponential deliverable: `PolyRischDECancelExp` — which `cPolyRischDENoCancel` cannot
+handle (the leading terms cancel) — *computes* over the monomial tower ℚ(x)[t], driving the eq. 6.24 base
+Risch DE `RischDE(b + m·η, lc(c)) = RischDE(1/x + 1, x+2)` over `k = ℚ(x)` — a **non-constant** base solve
+the constant sub-case cannot handle (`cRischDEBase` ⇒ `s = x`) — to the elementary solution `q = x·exp(x)`.
+The nonlinear/hypertangent `PolyRischDECancelTan` (needs the Ch. 8 `CoupledDESystem`) is the documented
+continuation. -/
+theorem rischDE_cancelExp_example :
+    (match cPolyRischDECancelExp rischDEExpDt 60 rischDEExpB rischDEExpC 5 with
+      | some q =>
+          cisZeroG (csubG (caddG (cmonomialDeriv rischDEExpDt q) (cmulG rischDEExpB q))
+            rischDEExpC)
+      | none => false) = true
+    ∧ (match cPolyRischDE rischDEExpDt 60 rischDEExpB rischDEExpC 5,
+            cPolyRischDECancelExp rischDEExpDt 60 rischDEExpB rischDEExpC 5 with
+        | some q1, some q2 => cisZeroG (csubG q1 q2)
+        | _, _ => false) = true := by native_decide
+
+#print axioms rischDE_cancelExp_example
 
 end DeepWiki.SymbolicIntegration
