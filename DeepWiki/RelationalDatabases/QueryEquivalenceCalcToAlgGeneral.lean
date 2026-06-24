@@ -84,4 +84,30 @@ def envToTupleTagged : {Γ : Ctx Att} → Env Val Γ → Tuple (flattenTagged Γ
       if h : p.val.1 = 0 then t ⟨p.val.2, mem_flattenTagged_zero p.property h⟩
       else (envToTupleTagged e) ⟨(p.val.1 - 1, p.val.2), mem_flattenTagged_succ p.property h⟩
 
+/-- The de Bruijn depth of a variable — its position tag in the product scheme. -/
+def Var.depth : {Γ : Ctx Att} → {Ω : Finset Att} → Var Γ Ω → ℕ
+  | _, _, .here => 0
+  | _, _, .there v => v.depth + 1
+
+/-- A variable's attribute, tagged with the variable's depth, lies in the tagged product scheme. -/
+theorem tag_mem_flattenTagged : {Γ : Ctx Att} → {Ω : Finset Att} → (v : Var Γ Ω) → {a : Att} →
+    a ∈ Ω → (v.depth, a) ∈ flattenTagged Γ
+  | _, _, .here, a, ha => by
+      rw [flattenTagged_cons, Finset.mem_union]
+      exact Or.inl (Finset.mem_map.mpr ⟨a, ha, rfl⟩)
+  | _, _, .there v, a, ha => by
+      rw [flattenTagged_cons, Finset.mem_union]
+      exact Or.inr (Finset.mem_map.mpr ⟨(v.depth, a), tag_mem_flattenTagged v ha, rfl⟩)
+
+/-- **Tagged lookup bridge**: reading a variable equals the tagged flat row at the variable's
+depth-tags — and (unlike the untagged case) this needs *no* disjointness, since tags are unique. -/
+theorem lookup_eq_envToTupleTagged : {Γ : Ctx Att} → {Ω : Finset Att} → (v : Var Γ Ω) →
+    (e : Env Val Γ) → {a : Att} → (ha : a ∈ Ω) → (hflat : (v.depth, a) ∈ flattenTagged Γ) →
+    lookup v e ⟨a, ha⟩ = envToTupleTagged e ⟨(v.depth, a), hflat⟩
+  | _, _, .here, (_, _), a, ha, _ => by
+      simp only [lookup, envToTupleTagged, Var.depth, dif_pos]
+  | _, _, .there v', (_, e'), a, ha, _ => by
+      simp only [lookup, envToTupleTagged, Var.depth]
+      exact lookup_eq_envToTupleTagged v' e' ha _
+
 end DeepWiki
