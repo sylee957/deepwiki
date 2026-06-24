@@ -15,11 +15,11 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {k : Type*} [Field k] [Differential k]
 
-/-- **Definition 3.4.3** (§3.4, p.98): `u ∈ k` is a *logarithmic derivative of a `k`-radical* if
-`n·u = Dv/v` for some `v ∈ k*` and some nonzero integer `n` — i.e. `u` is, up to an integer scale,
+/-- **Definition 3.4.3** (§3.4, p.98): `u ∈ F` is a *logarithmic derivative of an `F`-radical* if
+`n·u = Dv/v` for some `v ∈ F*` and some nonzero integer `n` — i.e. `u` is, up to an integer scale,
 the logarithmic derivative `logDeriv v = v′/v` of a nonzero element. -/
-def IsLogDerivRadical (u : k) : Prop :=
-  ∃ (v : k) (n : ℤ), v ≠ 0 ∧ n ≠ 0 ∧ (n : k) * u = Differential.logDeriv v
+def IsLogDerivRadical {F : Type*} [Field F] [Differential F] (u : F) : Prop :=
+  ∃ (v : F) (n : ℤ), v ≠ 0 ∧ n ≠ 0 ∧ (n : F) * u = Differential.logDeriv v
 
 /-- Spelled out: `u` is a log-derivative of a radical iff `n·u = v′/v` for some `v ≠ 0`, `n ≠ 0`. -/
 theorem isLogDerivRadical_iff {u : k} :
@@ -131,5 +131,92 @@ theorem isLogDerivRadical_descent [CharZero k]
     mul_ne_zero (Int.natCast_ne_zero.mpr (by omega)) hn, ?_⟩
   rw [Differential.logDeriv, hkey, mul_div_assoc, div_self ha0, mul_one, hnadef]
   push_cast; ring
+
+section FirstKind
+-- `Ω` is a differential extension of `k` containing every root we test against — the algebraic
+-- closure in the book; here it is left as a differential extension parameter.
+variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω]
+
+/-- The *residue* `pα(α)` of the monomial derivation `Dt = v` at a root `α ∈ Ω`. The book's
+`pα = (Dt − Dα)/(t − α) ∈ k(α)[t]` evaluates at its argument to `v'(α)` (it is the derivative of
+`Dt − Dα` at its root `α`), so we take this closed form; `residue_eq_eval_divByMonic` proves the
+agreement with `pα(α)`. -/
+noncomputable def residue (v : k[X]) (α : Ω) : Ω := aeval α (derivative v)
+
+/-- **Definition 3.4.4** (§3.4, p.98): `q ∈ k[t]` is *special of the first kind* (w.r.t. the
+monomial derivation `Dt = v`), tested over the differential extension `Ω`, if `q` is special
+(`q ∣ Dq`) and at every root `α ∈ Ω` of `q` the residue `pα(α) = v'(α)` is not a logarithmic
+derivative of an `Ω`-radical. (By Lemma 3.4.8 testing over `Ω = k̄` is equivalent to testing over
+each `k(α)`.) -/
+def IsSpecialFirstKind (v : k[X]) (q : k[X]) : Prop :=
+  q ∣ Differential.implicitDeriv v q ∧
+    ∀ α : Ω, aeval α q = 0 → ¬ IsLogDerivRadical (residue (Ω := Ω) v α)
+
+variable (Ω) in
+/-- A special-of-the-first-kind polynomial is special (`q ∣ Dq`). -/
+theorem IsSpecialFirstKind.isSpecial {v q : k[X]} (h : IsSpecialFirstKind (Ω := Ω) v q) :
+    q ∣ Differential.implicitDeriv v q := h.1
+
+variable (Ω) in
+/-- **Theorem 3.4.4(i)** (§3.4, p.99): `S₁` is closed under finite products — a finite product of
+special-first-kind polynomials is special of the first kind. Each root of `∏ fᵢ` is a root of some
+`fᵢ` (the value is `∏ fᵢ(α)`, zero in a domain iff a factor vanishes), and specialness multiplies
+(`IsSpecial.prod`). -/
+theorem isSpecialFirstKind_prod {ι : Type*} (s : Finset ι) (v : k[X]) (f : ι → k[X])
+    (hf : ∀ i ∈ s, IsSpecialFirstKind (Ω := Ω) v (f i)) :
+    IsSpecialFirstKind (Ω := Ω) v (∏ i ∈ s, f i) := by
+  letI : Differential k[X] := ⟨Differential.implicitDeriv v⟩
+  refine ⟨IsSpecial.prod s f (fun i hi => (hf i hi).1), ?_⟩
+  intro α hα hlog
+  rw [map_prod] at hα
+  obtain ⟨i, hi, hroot⟩ := Finset.prod_eq_zero_iff.mp hα
+  exact (hf i hi).2 α hroot hlog
+
+variable (Ω) in
+open Classical in
+/-- **Theorem 3.4.4(ii)** (§3.4, p.99): a divisor of a special-first-kind polynomial is special of
+the first kind. Each root of `q ∣ p` is a root of `p`, and a divisor of a special polynomial is
+special (`isSpecial_of_dvd`; char `0` makes every prime-power multiplicity a unit). -/
+theorem isSpecialFirstKind_of_dvd [CharZero k] {v p q : k[X]} (hp0 : p ≠ 0)
+    (hp : IsSpecialFirstKind (Ω := Ω) v p) (hdvd : q ∣ p) :
+    IsSpecialFirstKind (Ω := Ω) v q := by
+  letI : Differential k[X] := ⟨Differential.implicitDeriv v⟩
+  have hmult : ∀ π, Prime π → π ∣ p → IsUnit ((multiplicity π p : k[X])) := by
+    intro π hπ hπp
+    rw [← C_eq_natCast]
+    exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr
+      (Nat.cast_ne_zero.mpr (by have := multiplicity_pos_of_dvd hπp; omega)))
+  refine ⟨isSpecial_of_dvd hp0 hp.1 hmult hdvd, ?_⟩
+  intro α hα hlog
+  have hroot : aeval α p = 0 := by
+    obtain ⟨r, rfl⟩ := hdvd; rw [map_mul, hα, zero_mul]
+  exact hp.2 α hroot hlog
+
+/-- For a polynomial `f` with root `a`, `(f /ₘ (X − a))(a) = f'(a)`: the value of the exact
+quotient at a simple level equals the formal derivative there (`f = (X − a)·g`, so
+`f' = g + (X − a)·g'`, and `(X − a)` vanishes at `a`). -/
+theorem eval_divByMonic_X_sub_C_eq_eval_derivative {A : Type*} [Field A] (f : A[X]) (a : A)
+    (h : f.IsRoot a) : (f /ₘ (X - C a)).eval a = (derivative f).eval a := by
+  set g := f /ₘ (X - C a) with hg
+  have hfac : f = (X - C a) * g := (mul_divByMonic_eq_iff_isRoot.mpr h).symm
+  have hderiv : derivative f = g + (X - C a) * derivative g := by
+    rw [hfac, derivative_mul, derivative_sub, derivative_X, derivative_C, sub_zero, one_mul]
+  rw [hderiv, eval_add, eval_mul, eval_sub, eval_X, eval_C, sub_self, zero_mul, add_zero]
+
+/-- **Definition 3.4.4** faithfulness (§3.4, p.98): at a *special* root `α` (where `v(α) = α′`, so
+`t − α ∣ Dt − Dα` and the book's `pα` is a genuine polynomial), the closed-form `residue v α`
+equals the book's `pα(α) = ((Dt − Dα)/(t − α))(α)`. -/
+theorem residue_eq_eval_divByMonic [DifferentialAlgebra k Ω] (v : k[X]) (α : Ω)
+    (hsp : aeval α v = α′) :
+    residue (Ω := Ω) v α
+      = (Differential.implicitDeriv (v.map (algebraMap k Ω)) (X - C α) /ₘ (X - C α)).eval α := by
+  have hpα : Differential.implicitDeriv (v.map (algebraMap k Ω)) (X - C α)
+      = v.map (algebraMap k Ω) - C α′ := implicitDeriv_X_sub_C _ α
+  have hroot : (v.map (algebraMap k Ω) - C α′).IsRoot α := by
+    rw [IsRoot.def, eval_sub, eval_map, eval_C, ← aeval_def, hsp, sub_self]
+  rw [hpα, eval_divByMonic_X_sub_C_eq_eval_derivative _ α hroot, derivative_sub, derivative_C,
+    sub_zero, residue, derivative_map, eval_map, ← aeval_def]
+
+end FirstKind
 
 end DeepWiki.SymbolicIntegration
