@@ -208,6 +208,51 @@ def cmonicG (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
   if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
 
+/-! ### Generic Euclidean division and extended Euclidean algorithm (engine, `[CField α]`-only)
+
+`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` mirror `Compute.cdivmod`/… over any `[CField α]`
+(ℚ-division `clead p / clead q` becomes `CField.div`); only the engine `[CField α]` operations are
+used, so they reduce (`#eval`/`native_decide`). Their correctness (Euclidean identity, Bézout, gcd
+divisibility) lives downstream in `ComputableFieldGcd` where `[CFieldSpec α]` is in scope. -/
+
+/-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
+remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
+def cdivmodG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
+  | 0, p, _ => ([], cnormG p)
+  | fuel + 1, p, q =>
+    let p := cnormG p
+    let q := cnormG q
+    if cisZeroG q then ([], [])
+    else if (p : List α).length < (q : List α).length then ([], p)
+    else
+      let c := CField.div (cleadG p) (cleadG q)
+      let k := (p : List α).length - (q : List α).length
+      let term := cshiftG k [c]
+      let p' := cnormG (csubG p (cmulG term q))
+      let (quo, rem) := cdivmodG fuel p' q
+      (caddG term quo, rem)
+
+/-- **Quotient** of generic Euclidean division (`cdivmodG`'s first component). -/
+def cdivG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
+
+/-- **Remainder** of generic Euclidean division (`cdivmodG`'s second component). -/
+def cmodG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
+
+/-- **Generic divisibility test** `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
+zero). -/
+def cdvdG (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
+
+/-- **Generic extended Euclidean algorithm** on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
+(g, s, t)` with `s · a + t · b = g` and `g = gcd(a, b)` over `K`. -/
+def cgcdExtG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
+  | 0, a, _ => (cnormG a, [CField.one], [])
+  | fuel + 1, a, b =>
+    if cisZeroG b then (cnormG a, [CField.one], [])
+    else
+      let (q, _) := cdivmodG (fuel + 1) a b
+      let (g, s, t) := cgcdExtG fuel b (cmodG (fuel + 1) a b)
+      (g, t, csubG s (cmulG t q))
+
 /-! ### The generic Horner bridge `toPolyG` and its homomorphism lemmas
 
 From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every correctness lemma reference

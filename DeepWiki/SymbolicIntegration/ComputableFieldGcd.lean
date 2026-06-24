@@ -185,38 +185,12 @@ theorem toPolyG_cderivG (p : CPolyG α) :
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
 
-/-! ### Generic Euclidean division `cdivmodG` over a `CField`
+/-! ### Correctness of the generic Euclidean division `cdivmodG`
 
-`cdivmodG fuel p q = (quotient, remainder)` by fuel-bounded long division over the field `K`, with
+`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` are defined upstream (engine, `[CField α]`-only,
+`GenericPolyEngine`); here we prove their correctness with the bridge `[CFieldSpec α]` in scope:
 `toPolyG p = toPolyG q · toPolyG (cdivG…) + toPolyG (cmodG…)` and a strict normalized-length / degree
-drop. Mirrors `Compute.cdivmod`; the leading-term match `c = clead p / clead q` is `CField.div`. -/
-
-/-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
-remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
-def cdivmodG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
-  | 0, p, _ => ([], cnormG p)
-  | fuel + 1, p, q =>
-    let p := cnormG p
-    let q := cnormG q
-    if cisZeroG q then ([], [])
-    else if (p : List α).length < (q : List α).length then ([], p)
-    else
-      let c := CField.div (cleadG p) (cleadG q)
-      let k := (p : List α).length - (q : List α).length
-      let term := cshiftG k [c]
-      let p' := cnormG (csubG p (cmulG term q))
-      let (quo, rem) := cdivmodG fuel p' q
-      (caddG term quo, rem)
-
-/-- **Quotient** of generic Euclidean division (`cdivmodG`'s first component). -/
-def cdivG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
-
-/-- **Remainder** of generic Euclidean division (`cdivmodG`'s second component). -/
-def cmodG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
-
-/-- **Generic divisibility test** `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
-zero). -/
-def cdvdG (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
+drop. The leading-term match `c = clead p / clead q` is `CField.div`. -/
 
 /-- **Euclidean-division identity through `toPolyG`** (`q` already normalized and nonzero, any fuel):
 `toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
@@ -448,23 +422,13 @@ theorem cmodG_eq_cmod (fuel : ℕ) :
     (cmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmod fuel := by
   funext p q; rw [cmodG, Compute.cmod, cdivmodG_eq_cdivmod]
 
-/-! ### Generic extended Euclidean algorithm `cgcdExtG` over a `CField`
+/-! ### Correctness of the generic extended Euclidean algorithm `cgcdExtG`
 
 `cgcdExtG fuel a b = (g, s, t)` with the Bézout relation `s·a + t·b = g` over `K`, mirroring
-`Compute.cgcdExt`. The two correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and
-`toPolyG_cgcdExtG_dvd` (the gcd divides both inputs, under the termination predicate
-`cgcdTerminatesG`). The inverse-mod `cinvModG c R ≡ c⁻¹ (mod R)` reads off the Bézout cofactor. -/
-
-/-- **Generic extended Euclidean algorithm** on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
-(g, s, t)` with `s · a + t · b = g` and `g = gcd(a, b)` over `K`. -/
-def cgcdExtG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
-  | 0, a, _ => (cnormG a, [CField.one], [])
-  | fuel + 1, a, b =>
-    if cisZeroG b then (cnormG a, [CField.one], [])
-    else
-      let (q, _) := cdivmodG (fuel + 1) a b
-      let (g, s, t) := cgcdExtG fuel b (cmodG (fuel + 1) a b)
-      (g, t, csubG s (cmulG t q))
+`Compute.cgcdExt` (defined upstream in `GenericPolyEngine`, engine `[CField α]`-only). The two
+correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and `toPolyG_cgcdExtG_dvd` (the gcd
+divides both inputs, under the termination predicate `cgcdTerminatesG`). The inverse-mod
+`cinvModG c R ≡ c⁻¹ (mod R)` reads off the Bézout cofactor. -/
 
 /-- **Bézout identity through `toPolyG`** for the generic extended Euclidean algorithm (any fuel):
 with `(g, s, t) = cgcdExtG fuel a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
