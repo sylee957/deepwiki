@@ -1718,4 +1718,115 @@ noncomputable abbrev φ241 : ℚ[X] →+* R241 := AdjoinRoot.mk (toPoly cR241)
 /-- **`φ241` kills `toPoly cR241`**: `φ241 (toPoly cR241) = 0` (`AdjoinRoot.mk_self`). -/
 theorem φ241_toPoly_cR241 : φ241 (toPoly cR241) = 0 := AdjoinRoot.mk_self
 
+/-! ### The decidable chain regularity for Example 2.4.1 (`native_decide`)
+The concrete chain `subresPRS 30 (liftCtoBPoly cD241) (bArgAmtD' cA241 cD241)` has `x`-degrees
+`[6,5,4,3,2,1,0]` (indices 0..6), then index 7 is zero. The book's LRT log argument is the **degree-3**
+element `x³+2tx²−3x−4t` (index 3), so the regular index is `m + 2 = 3`, i.e. `m = 1`. We instantiate the
+headline `lrtGcdCompute_isSimilar_lrtSubresultant` directly at this `m` (the `_concrete` wrapper's
+`chain_hfilt` only extracts the *terminal* chain element, so it would force `j = 0`; instead we discharge
+the singleton-filter `hfilt` at the degree-3 index by `native_decide`, since the `[6,5,4,3,2,1,0]` degrees
+are all distinct ⟹ the degree-3 element is unique). Every `bdeg`/`bisZero`/`cnorm`/`cmod`/`cisZero` fact
+on the chain is a decidable `ℚ`-fact, pinned by `native_decide` (the established `lrtGcd_ex241` pattern;
+`decide` stalls on the GMP-backed `ℚ` arithmetic). `chainG`/`chainBt` unfold to the computable
+`goState`/`goBeta`. Throughout, `fuel = 30`, `P = liftCtoBPoly cD241`, `Q = bArgAmtD' cA241 cD241`. The two
+facts mentioning the `Classical.choose` witnesses `chainC`/`chainS` (the content nonzero `hc0` and
+quotient-degree bound `hQ`) are derived separately (below). -/
+
+/-- The Example 2.4.1 chain abbreviation: `gP = liftCtoBPoly cD241`, `gQ = bArgAmtD' cA241 cD241`. -/
+private abbrev gP : BPoly := liftCtoBPoly cD241
+private abbrev gQ : BPoly := bArgAmtD' cA241 cD241
+
+/-- **The degree-3 element's `x`-degree is 3**: `(toBPoly (chainG 30 gP gQ 3)).natDegree = 3` (the regular
+LRT index `j = m+2 = 3`). Via `bdeg_eq_natDegree` and `native_decide` on `bdeg (chainG … 3)`. -/
+theorem natDegree_toBPoly_chainG3_ex241 :
+    (toBPoly (chainG 30 gP gQ 3)).natDegree = 3 := by
+  rw [← bdeg_eq_natDegree]
+  show bdeg (goState 30 (gP, gQ, [-1], bdeg gP - bdeg gQ) 3).1 = 3
+  native_decide
+
+/-- `(toPoly cD241).natDegree = 6`: `D = x⁶−5x⁴+5x²+4` has degree 6 (via `cdeg_eq_natDegree`). -/
+theorem natDegree_toPoly_cD241 : (toPoly cD241).natDegree = 6 := by
+  rw [← cdeg_eq_natDegree]; native_decide
+
+/-- **`hd0` for Ex 2.4.1**: `(toBPoly (chainG 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree` (both 6). -/
+theorem hd0_ex241 :
+    (toBPoly (chainG 30 gP gQ 0)).natDegree = (toPoly cD241).natDegree := by
+  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD241]
+  show bdeg (goState 30 (gP, gQ, [-1], bdeg gP - bdeg gQ) 0).1 = 6
+  native_decide
+
+/-- **`hd1` for Ex 2.4.1**: `(toBPoly (chainG 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree − 1`
+(5 = 6−1). -/
+theorem hd1_ex241 :
+    (toBPoly (chainG 30 gP gQ 1)).natDegree = (toPoly cD241).natDegree - 1 := by
+  rw [← bdeg_eq_natDegree, natDegree_toPoly_cD241]
+  show bdeg (goState 30 (gP, gQ, [-1], bdeg gP - bdeg gQ) 1).1 = 6 - 1
+  native_decide
+
+/-- **Chain nonzero through index 3**: `chainG 0 … chainG 3` are all nonzero (degrees `6,5,4,3`). -/
+theorem chainG_ne_zero_ex241 :
+    ∀ i ≤ 3, ¬ bisZero (chainG 30 gP gQ i) = true := by
+  simp only [chainG]; native_decide
+
+/-- **`hβcn` for Ex 2.4.1**: the β-divisors `chainBt 0`, `chainBt 1` are nonzero `ℚ[t]` lists
+(`[1]`, `[0,0,36]`). -/
+theorem hβcn_ex241 :
+    ∀ l ≤ 1, cnorm (chainBt 30 gP gQ l) ≠ [] := by
+  intro l hl; interval_cases l <;>
+    · simp only [chainBt]; native_decide
+
+/-- **`hβ0` for Ex 2.4.1**: the β-divisors `chainBt 0`, `chainBt 1` read to nonzero `ℚ[t]` polynomials
+(`toPoly ≠ 0`), via `cnorm_eq_nil_iff`. -/
+theorem hβ0_ex241 :
+    ∀ l ≤ 1, toPoly (chainBt 30 gP gQ l) ≠ 0 := by
+  intro l hl h
+  exact hβcn_ex241 l hl ((cnorm_eq_nil_iff _).mpr h)
+
+/-- **`hdiv` for Ex 2.4.1** (Collins β-divisibility, concrete): `chainBt l` divides every `x`-coefficient
+of the pseudo-remainder `prem (chainG l) (chainG (l+1))` exactly (`cmod` reads to 0), via
+`cnorm_eq_nil_iff`. The decidable per-coefficient `cmod`-zero certificate, `native_decide`'d. -/
+theorem hdiv_ex241 :
+    ∀ l ≤ 1, ∀ a ∈ bpsremainder 30 (chainG 30 gP gQ l) (chainG 30 gP gQ (l + 1)),
+      toPoly (cmod 30 a (chainBt 30 gP gQ l)) = 0 := by
+  intro l hl a ha
+  rw [← cnorm_eq_nil_iff]
+  revert a ha
+  interval_cases l <;>
+    · simp only [chainBt, chainG]; native_decide
+
+/-- **`hlc` for Ex 2.4.1**: the leading `x`-coefficient of `chainG (l+1)` (`l ≤ 1`) is nonzero — via
+`toPoly_blc_eq_coeff` + `toPoly_blc_ne_zero` (the element is nonzero). -/
+theorem hlc_ex241 :
+    ∀ l ≤ 1, (toBPoly (chainG 30 gP gQ (l + 1))).coeff
+      (toBPoly (chainG 30 gP gQ (l + 1))).natDegree ≠ 0 := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
+  exact toPoly_blc_ne_zero _ (chainG_ne_zero_ex241 (l + 1) (by omega))
+
+/-- **`hcb` for Ex 2.4.1**: the `x`-degrees strictly decrease (`chainG (l+2)` below `chainG (l+1)`,
+`l ≤ 1`: `4<5`, `3<4`), via `bdeg_eq_natDegree`. -/
+theorem hcb_ex241 :
+    ∀ l ≤ 1, (toBPoly (chainG 30 gP gQ (l + 2))).natDegree
+      < (toBPoly (chainG 30 gP gQ (l + 1))).natDegree := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  interval_cases l <;>
+    · simp only [chainG]; native_decide
+
+/-- **`hjlt` for Ex 2.4.1**: the degree-3 element `chainG 3` is strictly below `chainG (l+2)` for `l<1`
+(only `l=0`: `3<4`), via `bdeg_eq_natDegree`. -/
+theorem hjlt_ex241 :
+    ∀ l < 1, (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree
+      < (toBPoly (chainG 30 gP gQ (l + 2))).natDegree := by
+  intro l hl
+  rw [← bdeg_eq_natDegree, ← bdeg_eq_natDegree]
+  interval_cases l
+  simp only [chainG]; native_decide
+
+/-- **`hCne` for Ex 2.4.1**: the degree-3 chain element `chainG 3` is nonzero (`toBPoly ≠ 0`), via
+`bisZero_iff_toBPoly_eq_zero`. -/
+theorem hCne_ex241 : toBPoly (chainG 30 gP gQ (1 + 2)) ≠ 0 := by
+  rw [Ne, ← bisZero_iff_toBPoly_eq_zero]
+  exact chainG_ne_zero_ex241 3 (by omega)
+
 end DeepWiki.SymbolicIntegration.Compute
