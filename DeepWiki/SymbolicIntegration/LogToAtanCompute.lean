@@ -39,14 +39,16 @@ def cadd : CPoly → CPoly → CPoly
   | p, [] => p
   | a :: as, b :: bs => (a + b) :: cadd as bs
 
-/-- **Negation** of a `CPoly`, coefficientwise. -/
-def cneg (p : CPoly) : CPoly := p.map (- ·)
+/-- **Negation** of a `CPoly`, coefficientwise — the generic `cnegG` specialized at `ℚ`
+(`CField.neg = (- ·)`, defeq). -/
+def cneg (p : CPoly) : CPoly := CPolyG.cnegG p
 
 /-- **Subtraction** of `CPoly`s, `p − q := p + (−q)`. -/
 def csub (p q : CPoly) : CPoly := cadd p (cneg q)
 
-/-- **Scalar multiplication** of a `CPoly` by `c : ℚ`, coefficientwise. -/
-def cscale (c : ℚ) (p : CPoly) : CPoly := p.map (c * ·)
+/-- **Scalar multiplication** of a `CPoly` by `c : ℚ`, coefficientwise — the generic `cscaleG`
+specialized at `ℚ` (`CField.mul = (· * ·)`, defeq). -/
+def cscale (c : ℚ) (p : CPoly) : CPoly := CPolyG.cscaleG c p
 
 /-- **Degree shift** `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
 def cshift : ℕ → CPoly → CPoly
@@ -182,7 +184,7 @@ theorem toPoly_cadd (p q : CPoly) : toPoly (cadd p q) = toPoly p + toPoly q := b
 /-- `toPoly` commutes with **negation**: `toPoly (cneg p) = − toPoly p`. -/
 theorem toPoly_cneg (p : CPoly) : toPoly (cneg p) = - toPoly p := by
   induction p with
-  | nil => simp [cneg]
+  | nil => simp [cneg, CPolyG.cnegG]
   | cons a as ih =>
     show toPoly (-a :: cneg as) = -toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_neg]; ring
@@ -194,7 +196,7 @@ theorem toPoly_csub (p q : CPoly) : toPoly (csub p q) = toPoly p - toPoly q := b
 /-- `toPoly` realizes **scalar multiplication**: `toPoly (cscale c p) = C c · toPoly p`. -/
 theorem toPoly_cscale (c : ℚ) (p : CPoly) : toPoly (cscale c p) = Polynomial.C c * toPoly p := by
   induction p with
-  | nil => simp [cscale]
+  | nil => simp [cscale, CPolyG.cscaleG]
   | cons a as ih =>
     show toPoly (c * a :: cscale c as) = Polynomial.C c * toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_mul]; ring
