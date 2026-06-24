@@ -76,6 +76,38 @@ theorem isReduced_zero (v : K[X]) : IsReduced v (0 : RatFunc K) := by
 
 end Classify
 
+section BookFaithfulNormal
+variable {R : Type*} [CommRing R] [Differential R]
+
+/-- **Definition 3.5.1** (§3.5), *book-faithful normal part*: `pn` is normal in the book's sense if
+*every squarefree factor of `pn` is normal*. This is strictly weaker than `IsNormal pn` (which forces
+`pn` squarefree): a normal prime power `π²` is book-normal but not `IsNormal`. -/
+def IsNormalSqfree (pn : R) : Prop := ∀ q : R, Squarefree q → q ∣ pn → IsNormal q
+
+/-- **Definition 3.5.1** (§3.5), *book-faithful splitting factorization*: `p = pₛ·pₙ` with `pₛ`
+special and every squarefree factor of `pₙ` normal. Matches Bronstein's Def 3.5.1 exactly (unlike
+the stronger `IsSplittingFactorization`, which demands `pₙ` itself `IsNormal`, hence squarefree). -/
+def IsSplittingFactorization' (p ps pn : R) : Prop :=
+  p = ps * pn ∧ IsSpecial ps ∧ IsNormalSqfree pn
+
+/-- A repo-normal `pn` (`IsNormal`) is book-normal: its squarefree factors are factors of a normal
+polynomial, hence normal (`IsNormal.of_dvd`). -/
+theorem IsNormal.isNormalSqfree {pn : R} (h : IsNormal pn) : IsNormalSqfree pn :=
+  fun _ _ hq => h.of_dvd hq
+
+/-- The stronger (repo) splitting factorization implies the book-faithful one. -/
+theorem IsSplittingFactorization.toPrime {p ps pn : R}
+    (h : IsSplittingFactorization p ps pn) : IsSplittingFactorization' p ps pn :=
+  ⟨h.1, h.2.1, h.2.2.isNormalSqfree⟩
+
+/-- On a *squarefree* `pn` the two normality notions agree: a squarefree polynomial is book-normal
+iff it is `IsNormal` (it is its own squarefree factor). -/
+theorem isNormalSqfree_iff_isNormal_of_squarefree {pn : R} (hsf : Squarefree pn) :
+    IsNormalSqfree pn ↔ IsNormal pn :=
+  ⟨fun h => h pn hsf dvd_rfl, IsNormal.isNormalSqfree⟩
+
+end BookFaithfulNormal
+
 section SplitFactor
 variable {K : Type*} [Field K] [Differential K]
 
