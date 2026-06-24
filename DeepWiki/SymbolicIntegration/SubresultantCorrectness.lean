@@ -143,4 +143,71 @@ theorem length_bnorm_of_ne (p : BPoly) (h : ¬ bisZero p = true) :
 theorem toPoly_blc_eq_leadingCoeff (p : BPoly) : toPoly (blc p) = (toBPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
 
+/-! ### The abstract subresultant under a one-sided constant scaling
+A specialization of `subresultant_C_mul` (`Subresultants`) that scales only the **first** argument: it
+absorbs the `C(toPoly c)` content factor that the computable pseudo-division identity
+(`toBPoly_bpsremainder`) puts on `toBPoly p`, so the subresultant reduction `subresultant_rem` applies
+to `C(toPoly c) · toBPoly p` rather than `toBPoly p` directly. -/
+
+/-- **Subresultant scaled in the first argument only**: `Sⱼ(C c · A, B) = c^(m−j) · Sⱼ(A, B)`
+(`j ≤ m`, `j ≤ n`). The `b = 1` case of `subresultant_C_mul` (`C 1 * B = B`, `1^(n−j) = 1`). -/
+theorem subresultant_C_mul_left {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
+    (hjm : j ≤ m) (hjn : j ≤ n) :
+    subresultant (C c * A) B n m j = C (c ^ (m - j)) * subresultant A B n m j := by
+  have h := subresultant_C_mul c 1 A B n m j hjm hjn
+  rw [map_one, one_mul, one_pow, mul_one] at h
+  rw [h]
+
+/-! ### One subresultant-PRS step of the computable pseudo-remainder
+The structural core: through `toBPoly`, one pseudo-division step of the computable engine
+(`bpsremainder`) realizes the abstract subresultant reduction `subresultant_rem`. With `A = toBPoly p`,
+`B = toBPoly q`, the pseudo-division identity `C(toPoly c) · A = toBPoly s · B + toBPoly prem`
+(`toBPoly_bpsremainder`) plus the one-sided scaling law absorbs the content factor `c^(m−j)` and yields
+`Sⱼ(A, B) · c^(m−j) = ±·Sⱼ(B, prem)` — the equation that, iterated along the chain, is the subresultant
+PRS. The degree side-conditions of `subresultant_rem` (`deg B ≤ m`, `deg(quotient) + m ≤ n`) are taken
+as hypotheses: they hold in the regular subresultant-PRS use (where `deg B = m`, `deg A = n`), and stating
+them keeps this a clean abstract bridge over the already-proven `toBPoly` homomorphism. -/
+
+/-- **One subresultant-PRS step through `toBPoly`** (Bronstein §1.5, Geddes §7.3 Lemma 7.1, realized on
+the computable engine): let `A = toBPoly p`, `B = toBPoly q`, `Rem = toBPoly (bpsremainder fuel p q)`,
+and `(s, c)` the quotient/content witnesses of `toBPoly_bpsremainder` (so `C(toPoly c)·A = toBPoly s·B +
+Rem`). For formal degrees `n, m` with `j ≤ m`, `j < n`, `deg B ≤ m`, and `deg(toBPoly s) + m ≤ n`, the
+abstract subresultant satisfies
+`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)`.
+Pure consequence of `subresultant_C_mul_left` (absorb the content factor) and `subresultant_rem` (the
+division-step reduction). This is the one-step engine of the subresultant chain; iterating it along
+`subresPRS` (with the β-divisor bookkeeping) is the full `lrtGcdCompute ↔ lrtSubresultant` agreement. -/
+theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
+    (hjm : j ≤ m) (hjn : j < n)
+    (hB : (toBPoly q).natDegree ≤ m)
+    (hQ : (toBPoly s).natDegree + m ≤ n) :
+    Polynomial.C ((toPoly c) ^ (m - j)) * subresultant (toBPoly p) (toBPoly q) n m j
+      = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
+        * subresultant (toBPoly q) (toBPoly (bpsremainder fuel p q)) m n j := by
+  rw [← subresultant_C_mul_left (toPoly c) (toBPoly p) (toBPoly q) n m j hjm (le_of_lt hjn)]
+  exact subresultant_rem (Polynomial.C (toPoly c) * toBPoly p) (toBPoly q) (toBPoly s)
+    (toBPoly (bpsremainder fuel p q)) n m j hjm hjn hB hQ (by rw [hsc]; ring)
+
+/-- **One subresultant-PRS step, packaged from `toBPoly_bpsremainder`**: extracting the
+quotient/content witnesses `(s, c)` from `toBPoly_bpsremainder`, there exist a content `c : CPoly` and
+quotient `s : BPoly` realizing the pseudo-division identity, *and* — once the quotient-degree bound
+`deg(toBPoly s) + m ≤ n` is known — the subresultant reduction
+`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)`. So the only remaining
+side-condition is the quotient-degree bound (automatic in the regular subresultant-PRS use). -/
+theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
+    (hjm : j ≤ m) (hjn : j < n) (hB : (toBPoly q).natDegree ≤ m) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (toPoly c) * toBPoly p
+          = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q)
+        ∧ ((toBPoly s).natDegree + m ≤ n →
+          Polynomial.C ((toPoly c) ^ (m - j)) * subresultant (toBPoly p) (toBPoly q) n m j
+            = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
+              * subresultant (toBPoly q) (toBPoly (bpsremainder fuel p q)) m n j) := by
+  obtain ⟨s, c, hsc⟩ := toBPoly_bpsremainder fuel p q
+  exact ⟨s, c, hsc, fun hQs =>
+    subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQs⟩
+
 end DeepWiki.SymbolicIntegration.Compute
