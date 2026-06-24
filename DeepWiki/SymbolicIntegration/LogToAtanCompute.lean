@@ -26,12 +26,9 @@ computable polynomial carrier the `LogToAtan` recursion runs on — the generic 
 abbrev CPoly := CPolyG ℚ
 
 /-- **Normalize** a `CPoly` by stripping trailing (high-degree) zero coefficients, so `cnorm` is a
-canonical form (the zero polynomial becomes `[]`). -/
-def cnorm : CPoly → CPoly
-  | [] => []
-  | a :: as => match cnorm as with
-    | [] => if a = 0 then [] else [a]
-    | r => a :: r
+canonical form (the zero polynomial becomes `[]`) — the generic `cnormG` specialized at `ℚ`
+(`CField.isZero a = decide (a = 0)`, defeq). -/
+def cnorm : CPoly → CPoly := CPolyG.cnormG
 
 /-- **Coefficientwise addition** of two `CPoly`s (the shorter is zero-extended implicitly) — the
 generic `caddG` specialized at `ℚ` (`CField.add = (· + ·)`, defeq). -/

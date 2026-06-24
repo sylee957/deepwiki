@@ -19,10 +19,17 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-- `cnorm [] = []`. -/
 @[simp] theorem cnorm_nil : cnorm ([] : CPoly) = [] := rfl
 
-/-- `cnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
+/-- `cnorm` on a cons cell, unfolded to its defining `match` (`cnorm := cnormG` at `ℚ`, with the
+generic `CField.isZero a = decide (a = 0)` rewritten to `a = 0`). -/
 theorem cnorm_cons_eq (a : ℚ) (as : CPoly) :
     cnorm (a :: as)
-      = (match cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r) := rfl
+      = (match cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r) := by
+  show CPolyG.cnormG (a :: as)
+      = (match CPolyG.cnormG as with | [] => if a = 0 then [] else [a] | r => a :: r)
+  rw [CPolyG.cnormG_cons_eq]
+  cases CPolyG.cnormG as with
+  | nil => show (if (decide (a = 0) = true) then _ else _) = _; by_cases ha : a = 0 <;> simp [ha]
+  | cons b bs => rfl
 
 /-- `cnorm` is **idempotent**: stripping trailing zeros twice is the same as once. -/
 @[simp] theorem cnorm_idem (p : CPoly) : cnorm (cnorm p) = cnorm p := by
