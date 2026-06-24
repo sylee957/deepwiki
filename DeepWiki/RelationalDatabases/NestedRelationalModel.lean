@@ -585,6 +585,22 @@ satisfies the fd `A → D` — the non-nested part functionally determines the n
 example : (nest ["C"] "D" (rel [[("A", atom 1), ("C", atom 2)], [("A", atom 1), ("C", atom 3)],
       [("A", atom 5), ("C", atom 6)]])).SatisfiesFd ["A"] ["D"] := by decide
 
+/-- **Theorem 7.1** (§7.3, general): when the nested attribute `B` is fresh (does not occur in the
+relation), the result of `ν_{X→B}` has rows whose `B`-free part (`dropKeys [B]`) is a *key* — its
+`dropKeys [B]`-projections are pairwise distinct (`Nodup`). Hence the non-nested attributes
+functionally determine the nested attribute `B`. -/
+theorem NestedValue.nest_rest_key {X : List Att} {B : Att} {rows : NestedRel Att V}
+    (hB : ∀ t ∈ rows, ∀ p ∈ t, p.1 ≠ B) :
+    ∃ out : NestedRel Att V, NestedValue.nest X B (.rel rows) = .rel out ∧
+      (out.map (NestedTuple.dropKeys [B])).Nodup := by
+  refine ⟨_, rfl, ?_⟩
+  apply NestedTuple.map_append_dropKeys_nodup
+  · exact List.nodup_dedup _
+  · intro rest hrest p hp
+    rw [List.mem_dedup, List.mem_map] at hrest
+    obtain ⟨t, ht, rfl⟩ := hrest
+    exact hB t ht p (List.mem_of_mem_filter hp)
+
 /-- **Definition 7.10** (§7.3): a nested relation satisfies the multivalued dependency `X ↠ Y` when
 any two rows agreeing on `X` can be "swapped" — there is a row agreeing with the first on `X ∪ Y`
 and with the second outside `X ∪ Y`. Atoms satisfy every mvd vacuously. -/
