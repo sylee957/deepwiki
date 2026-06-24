@@ -220,4 +220,14 @@ theorem mem_evalAlg_calcToAlg (db : (i : ι) → Table (sch i) Val) :
           (mem_evalAlg_calcToAlg db C hd' hw.2 (consEnv t e)).mpr ht,
           restrict_envToTuple_cons hdisj (consEnv t e)⟩
 
+/-- **Codd's theorem, the calculus ⊆ algebra direction** (§2.4), single-free-variable form: a tuple
+is in the view `{t(Ω) | C}` of a well-scoped condition iff its flattened environment is in the
+algebra translation. With `algToFO` (algebra ⊆ calculus), the tuple calculus and the relational
+algebra have the same expressive power (on well-scoped conditions over a disjoint context). -/
+theorem mem_evalFOExpr_calcToAlg (db : (i : ι) → Table (sch i) Val) {Ω : Finset Att}
+    (C : FOCond ι sch Val [Ω]) (hw : WellScoped C) (t : Tuple Ω Val) :
+    t ∈ evalFOExpr db C ↔ envToTuple (consEnv (Γ := ([] : Ctx Att)) t PUnit.unit) ∈ evalAlg (calcToAlg db C) := by
+  simp only [evalFOExpr, Set.mem_setOf_eq]
+  exact (mem_evalAlg_calcToAlg db C (by simp [CtxDisjoint]) hw (consEnv (Γ := ([] : Ctx Att)) t PUnit.unit)).symm
+
 end DeepWiki
