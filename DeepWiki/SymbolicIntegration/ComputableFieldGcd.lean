@@ -437,7 +437,148 @@ theorem cmodG_eq_cmod (fuel : ℕ) :
     (cmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmod fuel := by
   funext p q; rw [cmodG, Compute.cmod, cdivmodG_eq_cdivmod]
 
+/-! ### Generic extended Euclidean algorithm `cgcdExtG` over a `CField`
 
+`cgcdExtG fuel a b = (g, s, t)` with the Bézout relation `s·a + t·b = g` over `K`, mirroring
+`Compute.cgcdExt`. The two correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and
+`toPolyG_cgcdExtG_dvd` (the gcd divides both inputs, under the termination predicate
+`cgcdTerminatesG`). The inverse-mod `cinvModG c R ≡ c⁻¹ (mod R)` reads off the Bézout cofactor. -/
+
+/-- **Generic extended Euclidean algorithm** on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
+(g, s, t)` with `s · a + t · b = g` and `g = gcd(a, b)` over `K`. -/
+def cgcdExtG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
+  | 0, a, _ => (cnormG a, [CField.one], [])
+  | fuel + 1, a, b =>
+    if cisZeroG b then (cnormG a, [CField.one], [])
+    else
+      let (q, _) := cdivmodG (fuel + 1) a b
+      let (g, s, t) := cgcdExtG fuel b (cmodG (fuel + 1) a b)
+      (g, t, csubG s (cmulG t q))
+
+/-- **Bézout identity through `toPolyG`** for the generic extended Euclidean algorithm (any fuel):
+with `(g, s, t) = cgcdExtG fuel a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
+theorem toPolyG_cgcdExtG (fuel : ℕ) (a b : CPolyG α) :
+    toPolyG (cgcdExtG fuel a b).2.1 * toPolyG a + toPolyG (cgcdExtG fuel a b).2.2 * toPolyG b
+      = toPolyG (cgcdExtG fuel a b).1 := by
+  induction fuel generalizing a b with
+  | zero => simp [cgcdExtG, toPolyG_cnormG, toPolyG_cons, CField.toK_one]
+  | succ fuel ih =>
+    rw [cgcdExtG]
+    cases hb : cisZeroG b with
+    | true => simp [toPolyG_cnormG, toPolyG_cons, CField.toK_one]
+    | false =>
+      simp only [Bool.false_eq_true, if_false]
+      rcases hqr : cdivmodG (fuel + 1) a b with ⟨q, r⟩
+      rcases hg : cgcdExtG fuel b (cmodG (fuel + 1) a b) with ⟨g, s, t⟩
+      have hrmod : cmodG (fuel + 1) a b = r := by rw [cmodG, hqr]
+      have hdiv : toPolyG a = toPolyG q * toPolyG b + toPolyG (cmodG (fuel + 1) a b) := by
+        have h := toPolyG_cdivmodG' (fuel + 1) a b
+          (by intro hc; rw [cisZeroG, hc] at hb; simp at hb)
+        rw [hqr] at h; rw [hrmod]; exact h
+      have hih := ih b (cmodG (fuel + 1) a b)
+      rw [hg] at hih
+      simp only [toPolyG_csubG, toPolyG_cmulG]
+      linear_combination hih + toPolyG t * hdiv
+
+/-- **`cgcdExtG`'s gcd is greatest among common divisors**: any `d` dividing both `toPolyG a` and
+`toPolyG b` divides `toPolyG (cgcdExtG fuel a b).1` (immediate from Bézout). Fuel-independent. -/
+theorem toPolyG_dvd_cgcdExtG {d : (CField.K α)[X]} (fuel : ℕ) (a b : CPolyG α)
+    (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
+    d ∣ toPolyG (cgcdExtG fuel a b).1 := by
+  rw [← toPolyG_cgcdExtG fuel a b]
+  exact dvd_add (ha.mul_left _) (hb.mul_left _)
+
+/-- **Termination predicate** for `cgcdExtG`: the remainder sequence reaches `0` within `fuel`. -/
+def cgcdTerminatesG : ℕ → CPolyG α → CPolyG α → Prop
+  | 0, _, b => cisZeroG b = true
+  | fuel + 1, a, b => cisZeroG b = true ∨ cgcdTerminatesG fuel b (cmodG (fuel + 1) a b)
+
+/-- **`cgcdExtG`'s gcd divides both inputs** when the algorithm terminates: under `cgcdTerminatesG`,
+`toPolyG (cgcdExtG fuel a b).1` divides `toPolyG a` and `toPolyG b`. With `toPolyG_dvd_cgcdExtG`
+(greatest) and Bézout this characterizes `g` as an honest gcd of `a, b` in `K[X]`. -/
+theorem toPolyG_cgcdExtG_dvd : ∀ (fuel : ℕ) (a b : CPolyG α), cgcdTerminatesG fuel a b →
+    toPolyG (cgcdExtG fuel a b).1 ∣ toPolyG a ∧ toPolyG (cgcdExtG fuel a b).1 ∣ toPolyG b := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b hterm
+    simp only [cgcdTerminatesG] at hterm
+    rw [cgcdExtG]
+    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hterm
+    exact ⟨by simp [toPolyG_cnormG], by simp [hb0]⟩
+  | succ fuel ih =>
+    intro a b hterm
+    rw [cgcdExtG]
+    cases hb : cisZeroG b with
+    | true =>
+      have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hb
+      exact ⟨by simp [toPolyG_cnormG], by simp [hb0]⟩
+    | false =>
+      simp only [Bool.false_eq_true, if_false]
+      rcases hqr : cdivmodG (fuel + 1) a b with ⟨q, r⟩
+      rcases hg : cgcdExtG fuel b (cmodG (fuel + 1) a b) with ⟨g, s, t⟩
+      have hterm' : cgcdTerminatesG fuel b (cmodG (fuel + 1) a b) := by
+        rw [cgcdTerminatesG] at hterm
+        rcases hterm with h | h
+        · rw [hb] at h; simp at h
+        · exact h
+      obtain ⟨hgb, hgr⟩ := ih b (cmodG (fuel + 1) a b) hterm'
+      rw [hg] at hgb hgr
+      have hrmod : cmodG (fuel + 1) a b = r := by rw [cmodG, hqr]
+      have hdiv : toPolyG a = toPolyG q * toPolyG b + toPolyG (cmodG (fuel + 1) a b) := by
+        have h := toPolyG_cdivmodG' (fuel + 1) a b
+          (by intro hc; rw [cisZeroG, hc] at hb; simp at hb)
+        rw [hqr] at h; rw [hrmod]; exact h
+      refine ⟨?_, hgb⟩
+      rw [hdiv]
+      exact dvd_add (hgb.mul_left _) hgr
+
+/-- **Generic inverse modulo `R`** `cinvModG fuel R c = c⁻¹` in `K[X]/(R)` (assumes `gcd(c, R)` is a
+nonzero constant — `c` a unit mod `R`): from the Bézout relation `s·c + ·R = g` (constant `g`),
+`c⁻¹ ≡ s/g (mod R)`. -/
+def cinvModG (fuel : ℕ) (R c : CPolyG α) : CPolyG α :=
+  let (g, s, _) := cgcdExtG fuel c R
+  cmodG fuel (cscaleG (CField.inv (cleadG g)) s) R
+
+/-- `cgcdExtG` at `ℚ` is the concrete `cgcdExt`. -/
+theorem cgcdExtG_eq_cgcdExt (fuel : ℕ) :
+    (cgcdExtG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) = Compute.cgcdExt fuel := by
+  induction fuel with
+  | zero =>
+    funext a b
+    show ((cnormG a, [CField.one], []) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) = (Compute.cnorm a, [1], [])
+    rw [show (cnormG a : CPolyG ℚ) = Compute.cnorm a from congrFun cnormG_eq_cnorm a]
+    rfl
+  | succ fuel ih =>
+    funext a b
+    by_cases hb : cisZeroG (b : CPolyG ℚ) = true
+    · have hb' : Compute.cisZero b = true := by rw [← cisZeroG_eq_cisZero]; exact hb
+      show (if cisZeroG b then ((cnormG a, [CField.one], []) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
+          else _) = _
+      rw [if_pos hb, Compute.cgcdExt, if_pos hb',
+        show (cnormG a : CPolyG ℚ) = Compute.cnorm a from congrFun cnormG_eq_cnorm a]
+      rfl
+    · have hb' : Compute.cisZero b ≠ true := by rw [← cisZeroG_eq_cisZero]; exact hb
+      -- Pin the concrete divmod, and the generic ones equal it componentwise.
+      rcases hcd : Compute.cdivmod (fuel + 1) a b with ⟨q, r⟩
+      have hdm : (cdivmodG (fuel + 1) a b : CPolyG ℚ × CPolyG ℚ) = (q, r) := by
+        rw [congrFun (congrFun (cdivmodG_eq_cdivmod _) a) b, hcd]
+      have hmod : (cmodG (fuel + 1) a b : CPolyG ℚ) = r := by rw [cmodG, hdm]
+      rcases hgst : Compute.cgcdExt fuel b r with ⟨g, s, t⟩
+      have hge : (cgcdExtG fuel b (cmodG (fuel + 1) a b) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
+          = (g, s, t) := by rw [hmod, congrFun (congrFun (ih) b) r, hgst]
+      -- LHS reduces to (g, t, csubG s (cmulG t q)); RHS via the concrete cgcdExt body.
+      have hlhs : (cgcdExtG (fuel + 1) (a : CPolyG ℚ) b) = (g, t, csubG s (cmulG t q)) := by
+        conv_lhs => rw [cgcdExtG]
+        rw [if_neg hb, hdm, hge]; rfl
+      have hrhs : Compute.cgcdExt (fuel + 1) a b = (g, t, Compute.csub s (Compute.cmul t q)) := by
+        conv_lhs => rw [Compute.cgcdExt]
+        rw [if_neg hb', hcd]
+        show (match Compute.cgcdExt fuel b r with | (g, s, t) => (g, t, Compute.csub s (Compute.cmul t q)))
+          = _
+        rw [hgst]
+      rw [hlhs, hrhs, congrFun (congrFun csubG_eq_csub _) _, congrFun (congrFun cmulG_eq_cmul _) _]
+      rfl
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
