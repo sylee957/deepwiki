@@ -310,6 +310,150 @@ def cRdeBoundDegree (Dt : CPolyG QFunNZ) (_fuel : ℕ) (a b c : CPolyG QFunNZ) :
       if da < db then max 0 (dc - db) else max 0 (dc - da + 1)
   n.toNat
 
+/-! ### `cSPDE` (Bronstein §6.4, Rothstein's `SPDE(a,b,c,D,n)` algorithm box, book p.203)
+
+After `cRdeBoundDegree`, we have `a·Dq + b·q = c` (eq. 6.12) with `a, b, c ∈ k[t]`, `a ≠ 0`, and a
+degree bound `n` on `deg_t(q)`. Rothstein's `SPDE` (Theorem 6.4.1, [83]) recursively peels
+`g = gcd(a, b)` to reduce (6.12) to one with `a = 1` (eq. 6.16 `aDh + (b+Da)h = z − Dr`), returning a
+linear reconstruction `q = α·h + β` from a solution `h` of `Dh + b̄·h = c̄` of degree `≤ m`.
+
+The box's return tuple is `(b̄, c̄, m, α, β)`: any solution `q ∈ k[t]` of `aDq+bq=c` of degree `≤ n`
+has `q = α·h + β` for some solution `h ∈ k[t]` of `Dh + b̄·h = c̄` with `deg(h) ≤ m`; "no solution"
+(encoded `none`) means (6.12) has no solution of degree `≤ n`. The recursion terminates because each
+recursive call has the divided `a/g`, whose degree strictly drops when `deg(a) > 0` (the `a = α`
+constant base case `deg(a) = 0` returns directly). -/
+
+/-- **Computable SPDE** `cSPDE Dt fuel a b c n` (Bronstein §6.4, Rothstein's `SPDE(a,b,c,D,n)` box,
+book p.203). Given the monomial derivation `D` (`= cmonomialDeriv Dt`), `a, b, c ∈ k[t]` with `a ≠ 0`,
+and a degree bound `n : ℤ`, returns either `none` ("no solution": `a·Dq + b·q = c` has no solution
+`q ∈ k[t]` of degree `≤ n`) or `some (b̄, c̄, m, α, β)` such that any such solution is `q = α·h + β`,
+where `h ∈ k[t]` solves `Dh + b̄·h = c̄` with `deg(h) ≤ m`:
+
+1. **if** `n < 0` **then** (`c = 0` ⇒ `(0,0,0,0,0)`, the only solution is `q = 0`; else `none`).
+2. `g ← gcd(a, b)`; **if** `g ∤ c` **then** `none`. Otherwise `a ← a/g`, `b ← b/g`, `c ← c/g`.
+3. **if** `deg(a) = 0` (`a ∈ k*`) **then** `(b/a, c/a, n, 1, 0)` (already `a = 1`, identity recon).
+4. `(r, z) ← ExtendedEuclidean(b, a, c)` (`b·r + a·z = c`, `deg(r) < deg(a)`) — `cdiophantineG b a c`.
+5. `u ← SPDE(a, b + Da, z − Dr, D, n − deg(a))`; **if** `u = none` **then** `none`.
+6. `(b̄, c̄, m, α, β) ← u`; **return** `(b̄, c̄, m, a·α, a·β + r)` (so `q = a·h + r = a·(α s + β) + r`).
+
+The degree bound enters only the `n < 0` short-circuit; `m` is threaded through unchanged once the
+constant-`a` base case fixes it to `n − Σ deg(aᵢ)`. Fuel-bounded recursion (one level per `gcd`-peel). -/
+def cSPDE (Dt : CPolyG QFunNZ) : ℕ → (a b c : CPolyG QFunNZ) → (n : ℤ) →
+    Option (CPolyG QFunNZ × CPolyG QFunNZ × ℤ × CPolyG QFunNZ × CPolyG QFunNZ)
+  | 0, _, _, _, _ => none
+  | fuel + 1, a, b, c, n =>
+    if n < 0 then
+      if cisZeroG c then some ([], [], 0, [], []) else none
+    else
+      let g := cgcdFF fuel a b
+      if cdvdG fuel g c then
+        let a := cdivFF fuel a g
+        let b := cdivFF fuel b g
+        let c := cdivFF fuel c g
+        if cdegG a = 0 then
+          -- `a ∈ k*`: `Dh + (b/a)·h = c/a`; solution `q = h` (`α = 1`, `β = 0`).
+          let ainv := CField.inv (cleadG a)
+          some (cscaleG ainv b, cscaleG ainv c, n, [CField.one], [])
+        else
+          -- `ExtendedEuclidean(b, a, c)`: `b·r + a·z = c`, `deg(r) < deg(a)`.
+          let (r, z) := cdiophantineG fuel b a c
+          let Da := cmonomialDeriv Dt a
+          let Dr := cmonomialDeriv Dt r
+          match cSPDE Dt fuel a (caddG b Da) (csubG z Dr) (n - (cdegG a : ℤ)) with
+          | none => none
+          | some (bbar, cbar, m, α, β) =>
+              -- `q = a·h + r = a·(α s + β) + r`, so `α ← a·α`, `β ← a·β + r`.
+              some (bbar, cbar, m, cmulG a α, caddG (cmulG a β) r)
+      else none
+
+/-! ### `cPolyRischDENoCancel` (Bronstein §6.5, the `PolyRischDENoCancel1` box, book p.208)
+
+After `cSPDE` the equation is `Dq + b·q = c` (eq. 6.19, `a = 1`) with a degree bound `n` on `deg_t(q)`.
+In the **non-cancellation** case — `D = d/dt`, or `deg(b) > max(0, δ(t) − 1)` (Lemma 6.5.1(i)) — the
+leading terms of `Dq` and `bq` don't cancel, so `deg(q) = deg(c) − deg(b)` is forced and `q` is solved
+**degree-by-degree from the top down**: the leading-coefficient equation `lc(c) = lc(b)·lc(q)` fixes
+`q`'s leading monomial `(lc(c)/lc(b))·tᵐ`, subtract `D(·) + b·(·)`, recurse on the lower-degree
+remainder. -/
+
+/-- **Computable Poly-Risch-DE, non-cancellation case** `cPolyRischDENoCancel Dt fuel b c n` (Bronstein
+§6.5, the `PolyRischDENoCancel1(b,c,D,n)` box, book p.208). Solves `Dq + b·q = c` (eq. 6.19) for
+`q ∈ k[t]` with `deg(q) ≤ n` (`n : ℤ`), in the non-cancellation case (`b ≠ 0` and `D = d/dt` or
+`deg(b) > max(0, δ(t) − 1)`). Returns `none` ("no solution of degree `≤ n`") or `some q`:
+
+```
+q ← 0
+while c ≠ 0 do
+    m ← deg(c) − deg(b)
+    if n < 0 or m < 0 or m > n then return "no solution"
+    p ← (lc(c)/lc(b)) tᵐ
+    q ← q + p;  n ← m − 1;  c ← c − Dp − b·p
+return q
+```
+
+`D = cmonomialDeriv Dt`; the loop is fuel-bounded (`deg(c)` strictly drops each pass, so it halts after
+`≤ deg(c)+1` steps). The `tᵐ`-monomial is `cshiftG m [lc(c)/lc(b)]`. When the non-cancellation
+hypothesis fails the leading terms cancel and this routine may wrongly report "no solution"; the
+cancellation case (§6.6) is the separate, deferred subroutine documented in the module docstring. -/
+def cPolyRischDENoCancel (Dt : CPolyG QFunNZ) : ℕ → (b c : CPolyG QFunNZ) → (n : ℤ) →
+    Option (CPolyG QFunNZ)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    if cisZeroG c then some []
+    else
+      let m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ)
+      if n < 0 ∨ m < 0 ∨ m > n then none
+      else
+        let coeff := CField.div (cleadG c) (cleadG b)
+        let p := cshiftG m.toNat [coeff]
+        let c' := csubG (csubG c (cmonomialDeriv Dt p)) (cmulG b p)
+        match cPolyRischDENoCancel Dt fuel b c' (m - 1) with
+        | none => none
+        | some q => some (caddG p q)
+
+/-! ### `cRischDE` — the full Risch differential equation solver over the tower (assembly)
+
+`cRischDE Dt fuel fnum fden gnum gden` threads the five built stages: `cWeakNormalizer` (§6.1),
+`cRdeNormalDenominator` (§6.2), `cRdeSpecialDenominator` (§6.2), `cRdeBoundDegree` (§6.3),
+`cSPDE` (§6.4), `cPolyRischDENoCancel` (§6.5), reconstructing a solution `y = ynum/yden ∈ k(t)` of
+`Dy + f·y = g`, or `none` when no elementary solution exists (in the cases the non-cancellation
+pipeline decides). The cancellation case (§6.6) is the remaining piece (see the module docstring). -/
+
+/-- **Computable Risch differential equation solver** `cRischDE Dt fuel fnum fden gnum gden` (Bronstein
+Ch. 6, assembled). For `f = fnum/fden`, `g = gnum/gden ∈ k(t) = ℚ(x)(t)` and the monomial derivation
+`D` (`= cmonomialDeriv Dt`), returns `some (ynum, yden)` with `y = ynum/yden ∈ k(t)` solving
+`Dy + f·y = g`, or `none` when the pipeline finds no solution. The stages:
+
+1. **§6.2 normal denominator.** `cRdeNormalDenominator` reduces `Dy + fy = g` to `a₀·Dq + b₀·q = c₀`
+   with `q = y·h₀` (`none` ⇒ no solution). *(`f` is assumed weakly normalized — the post-Hermite RDE
+   input; `cWeakNormalizer` returns `q = 1` on such `f`, confirmed by `rischDE_normalDenominator_example`.)*
+2. **§6.2 special denominator.** `cRdeSpecialDenominator a₀ b₀ c₀` ⇒ `(a, b, c, h₁)` with `r = q·h₁⁻¹`
+   *(`h₁ = p^{-n}`)* a polynomial — but the polynomial-stage unknown is `q·h₁` over `k[t]`; here `h₁`
+   is the special clearing factor, so the total denominator gathered is `h₀·h₁`.
+3. **§6.3 degree bound.** `N ← cRdeBoundDegree a b c` bounds `deg_t` of the polynomial unknown.
+4. **§6.4 SPDE.** `cSPDE a b c N` ⇒ `(b̄, c̄, m, α, β)` (`none` ⇒ no solution): the unknown is
+   `α·v + β` where `v` solves `Dv + b̄·v = c̄`, `deg(v) ≤ m`.
+5. **§6.5 PolyRischDENoCancel.** `cPolyRischDENoCancel b̄ c̄ m` ⇒ `v` (`none` ⇒ no solution).
+
+Then the polynomial unknown is `Q = α·v + β`, the §6.2-cleared unknown was `Q·h₁⁻¹`… concretely
+`y = Q / (h₀ · h₁)`: `q = y·h₀` and `r = q·h₁⁻¹ = Q`, so `y = Q·h₁ / h₀`. We return `ynum = Q·h₁`,
+`yden = h₀`. Fuel-bounded throughout. -/
+def cRischDE (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden : CPolyG QFunNZ) :
+    Option (CPolyG QFunNZ × CPolyG QFunNZ) :=
+  match cRdeNormalDenominator Dt fuel fnum fden gnum gden with
+  | none => none
+  | some (a0, b0, c0, h0) =>
+    let (a, b, c, h1) := cRdeSpecialDenominator Dt fuel a0 b0 c0
+    let N := cRdeBoundDegree Dt fuel a b c
+    match cSPDE Dt fuel a b c (N : ℤ) with
+    | none => none
+    | some (bbar, cbar, m, α, β) =>
+      match cPolyRischDENoCancel Dt fuel bbar cbar m with
+      | none => none
+      | some v =>
+        -- polynomial unknown `Q = α·v + β`; `y = Q·h₁ / h₀`.
+        let Q := caddG (cmulG α v) β
+        some (cmulG Q h1, h0)
+
 end CPolyG
 
 /-! ### Validation — Bronstein Example 6.1.2 (book p.186): `t = tan(x)`, `Dt = 1 + t²`, `Dy+(t²+1)y=1/t²`
