@@ -380,6 +380,31 @@ theorem associated_gcd_deriv_special_part {p : K[X]} (hp : p ≠ 0)
 
 end GeneralGcdFormula
 
+section GeneralGcdFormulaCharZero
+variable {K : Type*} [Field K] [CharZero K]
+
+open UniqueFactorizationMonoid
+
+open Classical in
+/-- In characteristic `0`, a positive prime-factor multiplicity is a unit in `K[X]`:
+`(m_π : K[X]) = C (m_π : K)` is a nonzero constant. (Supplies the `hunit` hypothesis of the general
+gcd formula.) -/
+theorem isUnit_natCast_count_primeFactors {p : K[X]} {π : K[X]}
+    (hπ : π ∈ primeFactors p) :
+    IsUnit (((normalizedFactors p).count π : ℕ) : K[X]) := by
+  have hcount : 0 < (normalizedFactors p).count π := Multiset.count_pos.mpr (mem_primeFactors.mp hπ)
+  rw [← map_natCast (C : K →+* K[X])]
+  exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by omega)))
+
+/-- In characteristic `0`, no irreducible polynomial is special under `d/dt`: an irreducible `π` is
+separable, so `gcd(π, dπ/dt) = 1` and `π ∤ dπ/dt`. (The `d/dt`-special filter is empty.) -/
+theorem not_isSpecial_derivative_of_irreducible {π : K[X]} (hπ : Irreducible π) :
+    ¬ π ∣ derivative π := by
+  intro hdvd
+  exact hπ.not_isUnit (hπ.separable.isUnit_of_dvd' dvd_rfl hdvd)
+
+end GeneralGcdFormulaCharZero
+
 section SplitSquarefreeFactor
 variable {K : Type*} [Field K] [Differential K]
 
