@@ -251,6 +251,35 @@ theorem IsStrictlyStationary.mul_shift {X : ℤ → Ω → ℝ} (h : IsStrictlyS
       = fun ω (i : Fin n) => X (t i + hsh) ω * X (t i + hsh + (k : ℤ)) ω := rfl
   rw [hL, key 0, hshift, ← key hsh]
 
+/-- **A windowed function of an `m`-dependent process is `(m+k)`-dependent:** if `X` is `m`-dependent and
+`f` is measurable, then `t ↦ f(Xₜ, …, Xₜ₊ₖ)` is `(m+k)`-dependent — each value depends on `X` only on the
+window `{t, …, t+k}`, and `Y`-blocks more than `m+k` apart have windows whose `X`-indices are more than `m`
+apart (hence independent). Covers the vector autocovariance process `Yₜ = (XₜXₜ₊ₕ)ₕ` (`f w = (w 0 · w h)ₕ`),
+the multivariate input to Bartlett's theorem. -/
+theorem IsMDependent.window {V : Type*} [MeasurableSpace V] {m : ℕ} {X : ℤ → Ω → ℝ}
+    (h : IsMDependent m X μ) (k : ℕ) {f : (Fin (k + 1) → ℝ) → V} (hf : Measurable f) :
+    IsMDependent (m + k) (fun t ω => f fun i => X (t + (i : ℕ)) ω) μ := by
+  intro S T hsep
+  set W : Finset ℤ → Finset ℤ :=
+    fun U => U.biUnion fun s => (Finset.range (k + 1)).image fun (i : ℕ) => s + (i : ℤ) with hW
+  have hmemW : ∀ (U : Finset ℤ) (s : ℤ), s ∈ U → ∀ i : Fin (k + 1), s + (i : ℕ) ∈ W U :=
+    fun U s hs i => by
+      simp only [hW, Finset.mem_biUnion, Finset.mem_image]
+      exact ⟨s, hs, (i : ℕ), Finset.mem_range.mpr i.2, rfl⟩
+  have hsep' : ∀ a ∈ W S, ∀ b ∈ W T, a + (m : ℤ) < b := by
+    intro a ha b hb
+    simp only [hW, Finset.mem_biUnion, Finset.mem_image] at ha hb
+    obtain ⟨s, hs, i, hik, rfl⟩ := ha
+    obtain ⟨t, ht, j, hjk, rfl⟩ := hb
+    have := hsep s hs t ht
+    have hik' := Finset.mem_range.mp hik
+    have hjk' := Finset.mem_range.mp hjk
+    push_cast at this ⊢; omega
+  exact (h (W S) (W T) hsep').comp
+    (φ := fun g (s : S) => f fun i => g ⟨(s : ℤ) + (i : ℕ), hmemW S (s : ℤ) s.2 i⟩)
+    (ψ := fun g (s : T) => f fun i => g ⟨(s : ℤ) + (i : ℕ), hmemW T (s : ℤ) s.2 i⟩)
+    (by fun_prop) (by fun_prop)
+
 /-- **A product of two `L⁴` random variables is `L²`** (Hölder, `1/2 = 1/4 + 1/4`): the lagged products
 `XₛXₜ` of a process with finite fourth moments are square-integrable — the `L²` hypothesis the
 `m`-dependent CLT needs for the sample-autocovariance lag process. -/
