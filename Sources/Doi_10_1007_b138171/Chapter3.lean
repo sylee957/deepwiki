@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.Constants
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
+import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -261,9 +262,38 @@ factors `f i`, `gcd(∏ f i, D ∏ f i) ~ ∏ gcd(f i, D f i)`. (Specializing `f
 applying `lem_3_4_4_pow` to each factor gives the book's `∏ pᵢ^{eᵢ-1} gcd(pᵢ, Dpᵢ)`.) -/
 abbrev lem_3_4_4 := @associated_gcd_deriv_prod
 
+/-- **Definition 3.4.3** (§3.4, p.97): `u ∈ k` is a *logarithmic derivative of a `k`-radical* if
+`n·u = Dv/v` for some `v ∈ k*` and integer `n ≠ 0`. -/
+abbrev def_3_4_3 := @IsLogDerivRadical
+
+/-- **Lemma 3.4.8** (§3.4, p.98): for `E` algebraic over `k` (char `0`), an element of `k` that is
+not a logarithmic derivative of a `k`-radical is not one of an `E`-radical either. -/
+abbrev lem_3_4_8 := @isLogDerivRadical_descent
+
+/-- **Definition 3.4.4** (§3.4, p.98): `q ∈ k[t]` is *special of the first kind* if it is special and
+for every root `α` of `q` in the algebraic closure, `(Dt−Dα)/(t−α)` evaluated at `α` is not a
+logarithmic derivative of a `k(α)`-radical. -/
+abbrev def_3_4_4 := @IsSpecialFirstKind
+
+/-- **Theorem 3.4.4(i)** (§3.4, p.99): a finite product of special-of-the-first-kind polynomials is
+special of the first kind. -/
+abbrev thm_3_4_4_prod := @isSpecialFirstKind_prod
+
+/-- **Theorem 3.4.4(ii)** (§3.4, p.99): any factor of a special-of-the-first-kind polynomial is
+special of the first kind (char `0`). -/
+abbrev thm_3_4_4_dvd := @isSpecialFirstKind_of_dvd
+
+/-- **Theorem 3.4.4(iii)** (§3.4, p.99): special of the first kind is preserved under an algebraic
+extension `k ⊆ E` (`S₁,k[t]:k ⊆ S₁,E[t]:E`). -/
+abbrev thm_3_4_4_map := @isSpecialFirstKind_map
+
+/-- **Corollary 3.4.1** (§3.4), special half: specialness is preserved when base-changing the
+monomial derivation along an algebraic scalar tower. -/
+abbrev cor_3_4_1_special := @isSpecial_map_of_isSpecial
+
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (monomial machinery):**
---   Corollary 3.4.1; Corollary 3.4.2; Lemma 3.4.5; Lemma 3.4.6 (new constants ⇔ special polynomials);
---   Theorem 3.4.4 (special of the first kind under algebraic extension).
+--   Corollary 3.4.1 (beyond the special half `cor_3_4_1_special`); Corollary 3.4.2; Lemma 3.4.5;
+--   Lemma 3.4.6 (new constants ⇔ special polynomials).
 
 /-! ## §3.5 The Canonical Representation -/
 
@@ -366,8 +396,7 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
   Thm 3.2.4 (automorphism/trace/norm of separable algebraic extension); Cor 3.2.1.
 §3.3: Lemma 3.3.2 (new algebraic constants); Cor 3.3.1; Cor 3.3.2; Lemma 3.3.3; Lemma 3.3.4;
   Lemma 3.3.6; Lemma 3.3.5 converse general-`n` over the *constants* (determinant reduction).
-§3.4: Def 3.4.3; Def 3.4.4 (special of the first kind); Lemma 3.4.5; Lemma 3.4.8; Thm 3.4.4
-  (special of the first kind under algebraic extension); Cor 3.4.1.
+§3.4: Lemma 3.4.5; Cor 3.4.1 (beyond the special half); Cor 3.4.2; Lemma 3.4.6.
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
