@@ -3060,3 +3060,31 @@ theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : CPoly) :
     show toPoly (cmul g.2 Vpow) * toPoly V ^ m = toPoly g.2 * toPoly V ^ (m + (j + 1))
     rw [toPoly_cmul, toPoly_hermiteInner_Vpow, pow_add]
     ring
+
+/-- **`glocIncr`'s denominator is a pure power of `Vi`**: there is `m` with
+`toPoly (glocIncr fuel A D Vi).2 = (toPoly Vi.1)^m`. From `hermiteInner_den_eq_pow` at the `qzero`
+seed (denominator `1`). So `glocIncr Vi` (and its derivative) has poles only at `Vi` — regular at every
+other irreducible factor. -/
+theorem glocIncr_den_eq_pow (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) :
+    ∃ m : ℕ, toPoly (glocIncr fuel A D Vi).2 = toPoly Vi.1 ^ m := by
+  obtain ⟨m, hm⟩ := hermiteInner_den_eq_pow fuel Vi.1
+    (cdiv fuel D ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]))
+    (Vi.2 - 1) A qzero
+  refine ⟨m, ?_⟩
+  rw [show (glocIncr fuel A D Vi).2
+      = (hermiteInner fuel Vi.1 (cdiv fuel D
+          ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1])) (Vi.2 - 1) A qzero).1.2 from rfl,
+    hm]
+  simp [qzero, toPoly_cons]
+
+/-- **`glocIncr` is `Vk`-regular for `k ≠ i`**: if `P` is coprime to `Vi`, then `P` does not divide the
+denominator of `glocIncr fuel A D Vi` to any positive power beyond what `P ∣ Vi^m` allows — concretely,
+`IsRelPrime P (toPoly (glocIncr fuel A D Vi).2)` whenever `IsRelPrime P (toPoly Vi.1)`. The denominator
+is `Vi^m` (`glocIncr_den_eq_pow`), coprime to `P`. This is the regularity that localizes `g′`'s pole at
+each `Vk` to the single factor `k`. -/
+theorem glocIncr_den_isRelPrime (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) (P : ℚ[X])
+    (hP : IsRelPrime P (toPoly Vi.1)) :
+    IsRelPrime P (toPoly (glocIncr fuel A D Vi).2) := by
+  obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi
+  rw [hm]
+  exact hP.pow_right
