@@ -172,4 +172,63 @@ theorem envToTupleTagged_consEnv {Ω : Finset Att} {Γ : Ctx Att}
   · simp only [consEnv, envToTupleTagged, dif_neg h]
     rw [← he]; rfl
 
+/-- **Reduction correctness, general case** (§2.4): the flattened environment of a tuple assignment
+satisfies the tagged algebra translation iff the assignment satisfies the first-order condition.
+Unlike the disjoint-context version this is **unconditional** — no `CtxDisjoint`, no `WellScoped`:
+co-depth position-tagging makes variable schemes clash-free by construction and the head variable's
+tags automatically disjoint from the tail's, so the method works for *every* condition. -/
+theorem mem_evalAlg_calcToAlgTagged (db : (i : ι) → Table (sch i) Val) :
+    {Γ : Ctx Att} → (C : FOCond ι sch Val Γ) → (e : Env Val Γ) →
+    (envToTupleTagged e ∈ evalAlg (calcToAlgTagged db C) ↔ evalFO db C e)
+  | _, .relA i v, e => by
+      simp only [calcToAlgTagged, evalAlg_comp, Set.mem_setOf_eq, evalFO, tagRead_envToTupleTagged v e]
+  | _, .compA v P, e => by
+      simp only [calcToAlgTagged, evalAlg_comp, Set.mem_setOf_eq, evalFO, tagRead_envToTupleTagged v e]
+  | _, .agreeA v₁ v₂ X, e => by
+      simp only [calcToAlgTagged, evalAlg_comp, Set.mem_setOf_eq, evalFO]
+      constructor
+      · intro hag a ha h1 h2
+        rw [lookup_eq_envToTupleTagged v₁ e h1 (tag_mem_flattenTagged v₁ h1),
+            lookup_eq_envToTupleTagged v₂ e h2 (tag_mem_flattenTagged v₂ h2)]
+        exact hag a ha h1 h2
+      · intro hag a ha h1 h2
+        rw [← lookup_eq_envToTupleTagged v₁ e h1 (tag_mem_flattenTagged v₁ h1),
+            ← lookup_eq_envToTupleTagged v₂ e h2 (tag_mem_flattenTagged v₂ h2)]
+        exact hag a ha h1 h2
+  | _, .neg C, e => by
+      simp only [calcToAlgTagged, evalAlg_diff, evalAlg_comp, mem_diff, Set.mem_setOf_eq, evalFO,
+        true_and, mem_evalAlg_calcToAlgTagged db C e]
+  | _, .and C D, e => by
+      simp only [calcToAlgTagged, evalAlg_inter, mem_inter, evalFO,
+        mem_evalAlg_calcToAlgTagged db C e, mem_evalAlg_calcToAlgTagged db D e]
+  | _, .or C D, e => by
+      simp only [calcToAlgTagged, evalAlg_union, mem_union, evalFO,
+        mem_evalAlg_calcToAlgTagged db C e, mem_evalAlg_calcToAlgTagged db D e]
+  | _, .ex Ω C, e => by
+      simp only [calcToAlgTagged, evalAlg_proj, mem_project, evalFO]
+      constructor
+      · rintro ⟨flat', hflat', hrestr⟩
+        have key : envToTupleTagged (consEnv (headRead flat') e) = flat' :=
+          envToTupleTagged_consEnv flat' e hrestr
+        have hmem : envToTupleTagged (consEnv (headRead flat') e)
+            ∈ evalAlg (calcToAlgTagged db C) := key.symm ▸ hflat'
+        exact ⟨headRead flat',
+          (mem_evalAlg_calcToAlgTagged db C (consEnv (headRead flat') e)).mp hmem⟩
+      · rintro ⟨t, ht⟩
+        exact ⟨envToTupleTagged (consEnv t e),
+          (mem_evalAlg_calcToAlgTagged db C (consEnv t e)).mpr ht,
+          restrict_envToTupleTagged_cons (consEnv t e)⟩
+
+/-- **Codd's theorem, calculus ⊆ algebra, general single-free-variable form** (§2.4): a tuple is in
+the view `{t(Ω) | C}` of an *arbitrary* first-order condition iff its tagged flattened environment is
+in the algebra translation — no disjointness/well-scoping needed (position tagging is unconditional).
+The algebra translation reads over the position-tagged copy `{(0, a) | a ∈ Ω}` of `Ω`. -/
+theorem mem_evalFOExpr_calcToAlgTagged (db : (i : ι) → Table (sch i) Val) {Ω : Finset Att}
+    (C : FOCond ι sch Val [Ω]) (t : Tuple Ω Val) :
+    t ∈ evalFOExpr db C ↔
+      envToTupleTagged (consEnv (Γ := ([] : Ctx Att)) t PUnit.unit)
+        ∈ evalAlg (calcToAlgTagged db C) := by
+  simp only [evalFOExpr, Set.mem_setOf_eq]
+  exact (mem_evalAlg_calcToAlgTagged db C (consEnv (Γ := ([] : Ctx Att)) t PUnit.unit)).symm
+
 end DeepWiki
