@@ -3180,3 +3180,47 @@ theorem isQRegular_list_sum {α : Type*} {Q : ℚ[X]} (L : List α)
   | cons hd tl ih =>
     rw [List.map_cons, List.sum_cons]
     exact (hreg hd (List.mem_cons_self)).add (ih (fun a ha => hreg a (List.mem_cons_of_mem _ ha)))
+
+open scoped Differential in
+/-- **The interference derivative `g′ − glocₖ′` is `Vk`-regular**: the fold derivative `g′ = Σ_{i∈kept}
+glocᵢ′` minus the `k`-term `glocₖ′` is the sum `Σ_{i∈kept.erase k} glocᵢ′` (`perm_cons_erase`), whose
+every summand is `glocᵢ′` for `i ≠ k` — pole-free at `Vk` by `glocIncr_toQFun_isQRegular` +
+`IsQRegular.deriv`. Hence the whole interference difference has no pole at `Vk`. The structural heart of
+the per-factor order argument: removing factor `k`'s own contribution leaves a `Vk`-regular remainder. -/
+theorem deriv_fold_sub_glocIncr_isQRegular (fuel : ℕ) (A D : CPoly)
+    (factors : List (CPoly × ℕ)) (kelem : CPoly × ℕ)
+    (hkmem : kelem ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)))
+    (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hcop : ∀ Vi ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)), Vi ≠ kelem →
+      IsRelPrime (toPoly kelem.1) (toPoly Vi.1)) :
+    IsQRegular (toPoly kelem.1)
+      ((toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        - (toQFun (glocIncr fuel A D kelem))′) := by
+  classical
+  set kept := factors.filter (fun Vi => decide (2 ≤ Vi.2)) with hkept
+  -- denominators of the increments are nonzero (needed for `deriv_toQFun_foldl_qadd`).
+  have hden : ∀ g ∈ glocList fuel A D factors, toPoly g.2 ≠ 0 := by
+    intro g hg
+    rw [glocList, ← hkept, List.mem_map] at hg
+    obtain ⟨Vi, hViMem, rfl⟩ := hg
+    exact glocIncr_den_ne_zero fuel A D Vi (hV Vi (List.mem_of_mem_filter hViMem))
+  -- `g′ = Σ_{i∈kept} glocᵢ′`.
+  rw [deriv_toQFun_foldl_qadd (glocList fuel A D factors) hden, glocList, ← hkept, List.map_map]
+  set h := (fun g => (toQFun g)′) ∘ glocIncr fuel A D with hh
+  -- `kept` permutes to `kelem :: kept.erase kelem`, so the mapped sum splits off the `k`-term.
+  have hsum : (kept.map h).sum = h kelem + ((kept.erase kelem).map h).sum := by
+    have hp : (kept.map h).Perm ((kelem :: kept.erase kelem).map h) :=
+      (List.perm_cons_erase hkmem).map h
+    rw [hp.sum_eq, List.map_cons, List.sum_cons]
+  rw [hsum, hh]
+  simp only [Function.comp_apply]
+  -- `(glocₖ′ + Σ_{i≠k} glocᵢ′) − glocₖ′ = Σ_{i≠k} glocᵢ′`, which is `Vk`-regular.
+  rw [add_sub_cancel_left]
+  refine isQRegular_list_sum (kept.erase kelem) (fun g => (toQFun (glocIncr fuel A D g))′) ?_
+  intro Vi hVi
+  rw [(hkept ▸ hnd : kept.Nodup).mem_erase_iff] at hVi
+  obtain ⟨hVine, hVimem⟩ := hVi
+  have hVi0 : toPoly Vi.1 ≠ 0 := hV Vi (List.mem_of_mem_filter (hkept ▸ hVimem))
+  exact (glocIncr_toQFun_isQRegular fuel A D Vi hVi0
+    (hcop Vi (hkept ▸ hVimem) hVine)).deriv
