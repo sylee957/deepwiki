@@ -3163,3 +3163,20 @@ theorem glocIncr_toQFun_isQRegular (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ
   obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi
   refine ⟨toPoly (glocIncr fuel A D Vi).1, toPoly Vi.1 ^ m, pow_ne_zero m hV, hQ.pow_right, ?_⟩
   rw [toQFun, hm]
+
+/-- **`Q`-regular is closed under negation**: `−f = am(−p)/am q`, same `Q`-coprime denominator. -/
+theorem IsQRegular.neg {Q : ℚ[X]} {f : RatFunc ℚ} (hf : IsQRegular Q f) : IsQRegular Q (-f) := by
+  obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
+  exact ⟨-p, q, hq, hQ, by rw [hfeq, map_neg, neg_div]⟩
+
+/-- **A `List`-sum of `Q`-regular summands is `Q`-regular**: by induction, folding `IsQRegular.add`
+from `isQRegular_zero`. The interference sum over the *other* factors (each `glocᵢ′`, `i≠k`, pole-free at
+`Vk`) is itself pole-free at `Vk`. -/
+theorem isQRegular_list_sum {α : Type*} {Q : ℚ[X]} (L : List α)
+    (f : α → RatFunc ℚ) (hreg : ∀ a ∈ L, IsQRegular Q (f a)) :
+    IsQRegular Q (L.map f).sum := by
+  induction L with
+  | nil => simpa using isQRegular_zero Q
+  | cons hd tl ih =>
+    rw [List.map_cons, List.sum_cons]
+    exact (hreg hd (List.mem_cons_self)).add (ih (fun a ha => hreg a (List.mem_cons_of_mem _ ha)))
