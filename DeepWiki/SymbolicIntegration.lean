@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
