@@ -2839,3 +2839,47 @@ theorem hermiteReduce_residual_correct_multifactor (fuel : ℕ) (A D Dstar W : C
   have hclear := am_div_D_eq_div_Dstar (R := R) (D := toPoly D) (Dstar := toPoly Dstar)
     (W := toPoly W) hD hDstar hWdec hWR
   linear_combination hres + hclear
+
+/-! ### Discharging the per-factor `hstep` from the computable certificates
+
+`glocIncr_residual` gives the per-factor identity over `glocResidDen`; `glocResidDen_eq_over_D` recasts
+it over the global `D` numerator `residNumIncr`. Combined, one kept factor `(Vi, j+2)` satisfies the
+`hstep` shape `total_fold_residual_over_D`/`hermiteReduce_residual_correct_multifactor` consume, from:
+the factor's nonzero/`cnorm` conditions, its Bézout side conditions (`cgcdExt` of `U·Vi'` and `Vi` a
+nonzero constant — the coprimality `Vi ⊥ U·Vi'`), and the reconciliation `am D = am U·am Vi^{i}`. -/
+
+open scoped Differential in
+/-- **One kept-factor `hstep` from the per-factor data**: for `(Vi, j+2)` with `Uᵢ = D/Vi^{j+2}`,
+nonzero/`cnorm` conditions, the `hermiteInner` Bézout side conditions (`hg`/`hgc`), and the
+reconciliation `hDrec : am D = am Uᵢ·am Vi^{j+2}` (the exactness `Vi^{j+2} ∣ D`), the increment satisfies
+`(toQFun (glocIncr fuel A D (Vi, j+2)))′ = am A/am D − am (residNumIncr fuel A D (Vi, j+2))/am D`. The
+`hstep` per-factor input to the multi-factor wrapper, discharged for one factor from `glocIncr_residual`
++ `glocResidDen_eq_over_D`. -/
+theorem glocIncr_hstep (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ) (hD : toPoly D ≠ 0)
+    (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
+    (hV : toPoly Vi ≠ 0) (hq : cnorm Vi ≠ [])
+    (hg : toPoly (cgcdExt fuel (cmul (cdiv fuel D
+        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1
+      = Polynomial.C (clead (cgcdExt fuel (cmul (cdiv fuel D
+          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1))
+    (hgc : clead (cgcdExt fuel (cmul (cdiv fuel D
+        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1 ≠ 0)
+    (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D
+          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
+        * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vi) ^ (j + 2)) :
+    (toQFun (glocIncr fuel A D (Vi, j + 2)))′
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+        - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D (Vi, j + 2))
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
+  rw [glocIncr_residual fuel A D Vi j hU hV hq hg hgc hDrec]
+  -- recast the `glocResidDen` fraction over the global `D` numerator `residNumIncr`.
+  rw [glocResidDen_eq_over_D fuel D Vi j
+    (hermiteInner fuel Vi (cdiv fuel D
+      ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2
+    hD hV hU hDrec]
+  -- `residNumIncr (Vi, j+2) = afinalIncr·Vi^{(j+2)-1} = Afinal·Vi^{j+1}`.
+  rw [show residNumIncr fuel A D (Vi, j + 2)
+      = toPoly (hermiteInner fuel Vi (cdiv fuel D
+          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2
+        * toPoly Vi ^ (j + 1) from rfl]
