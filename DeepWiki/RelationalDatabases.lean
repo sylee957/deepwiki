@@ -14,6 +14,7 @@ import DeepWiki.RelationalDatabases.NormalForms
 import DeepWiki.RelationalDatabases.HorizontalDecompositions
 import DeepWiki.RelationalDatabases.IncompleteInformation
 import DeepWiki.RelationalDatabases.NullValues
+import DeepWiki.RelationalDatabases.ConditionalTables
 import DeepWiki.RelationalDatabases.NestedRelationalModel
 import DeepWiki.RelationalDatabases.UpdatesTransactions
 import DeepWiki.RelationalDatabases.QueryEquivalence
