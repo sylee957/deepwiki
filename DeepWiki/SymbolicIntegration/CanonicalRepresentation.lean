@@ -307,6 +307,49 @@ theorem associated_gcd_deriv_of_associated {p q : R} (h : Associated p q) :
 
 end GcdDerivAssoc
 
+section GeneralGcdFormula
+variable {K : Type*} [Field K] [Differential K[X]]
+
+open UniqueFactorizationMonoid
+
+open Classical in
+/-- **Lemma 3.4.4** (§3.4, p.94) over *arbitrary irreducibles* (not just linear factors): for
+`p ≠ 0` with every prime-factor multiplicity `m_π` a unit (characteristic `0`), the gcd with the
+derivative factors as `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_π gcd(π, Dπ)` — the multiplicity defect times
+the per-prime gcds. Proof: bridge `p` to its prime-power decomposition (`associated_gcd_deriv_of_…`),
+split over the pairwise-coprime prime powers (`associated_gcd_deriv_prod`), and compute each power
+(`associated_gcd_deriv_pow`). -/
+theorem associated_gcd_deriv_prod_primeFactors {p : K[X]} (hp : p ≠ 0)
+    (hunit : ∀ π ∈ primeFactors p, IsUnit (((normalizedFactors p).count π : ℕ) : K[X])) :
+    Associated (gcd p p′)
+      ((∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1))
+        * ∏ π ∈ primeFactors p, gcd π π′) := by
+  set m : K[X] → ℕ := fun π => (normalizedFactors p).count π with hm
+  -- bridge `gcd p (Dp)` to the decomposition.
+  have hbridge := associated_gcd_deriv_of_associated (associated_prod_primeFactors_pow hp)
+  refine hbridge.trans ?_
+  -- pairwise coprimality of distinct prime powers.
+  have hco : ∀ π ∈ primeFactors p, ∀ ρ ∈ primeFactors p, π ≠ ρ →
+      IsUnit (gcd (π ^ m π) (ρ ^ m ρ)) := by
+    intro π hπ ρ hρ hπρ
+    refine gcd_isUnit_iff_isRelPrime.mpr ?_
+    exact ((pairwise_primeFactors_isRelPrime (a := p)) hπ hρ hπρ).pow
+  -- split over the prime powers, then compute each power.
+  refine (associated_gcd_deriv_prod (primeFactors p) (fun π => π ^ m π) hco).trans ?_
+  have heach : Associated (∏ π ∈ primeFactors p, gcd (π ^ m π) ((π ^ m π)′))
+      (∏ π ∈ primeFactors p, π ^ (m π - 1) * gcd π π′) := by
+    refine Associated.prod (primeFactors p) _ _ (fun π hπ => ?_)
+    rcases Nat.eq_zero_or_pos (m π) with hm0 | hmpos
+    · exfalso
+      have hmem : π ∈ normalizedFactors p := mem_primeFactors.mp hπ
+      have hcount : 0 < (normalizedFactors p).count π := Multiset.count_pos.mpr hmem
+      simp only [hm] at hm0; omega
+    · exact associated_gcd_deriv_pow hmpos (hunit π hπ)
+  refine heach.trans ?_
+  rw [Finset.prod_mul_distrib]
+
+end GeneralGcdFormula
+
 section SplitSquarefreeFactor
 variable {K : Type*} [Field K] [Differential K]
 
