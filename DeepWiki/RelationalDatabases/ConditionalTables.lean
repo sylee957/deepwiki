@@ -221,4 +221,105 @@ theorem Table.rep_toVTable [Nonempty Val] (r : Table Ω Val) :
   · rintro ⟨ν, hν⟩; rw [applyV_image_toVTable] at hν; exact hν.symm
   · rintro rfl; exact ⟨fun _ => Classical.arbitrary Val, applyV_image_toVTable _ _⟩
 
+/-! ## Join of C-tables (Theorem 6.7, join case)
+The join merges every pair of rows over `Ω ∪ Ω'`, conjoining equality conditions that force the two
+rows to agree on the shared attributes `Ω ∩ Ω'` (the rest of `con` carried along). -/
+
+section Join
+
+variable [DecidableEq Att] {Ω Ω' : Finset Att}
+
+/-- A condition holds on `F ++ G` iff it holds on each part. -/
+@[simp] theorem CCond.holds_append (ν : Var → Val) (F G : CCond Val Var) :
+    CCond.Holds ν (F ++ G) ↔ CCond.Holds ν F ∧ CCond.Holds ν G := by
+  simp only [CCond.Holds, List.mem_append]
+  constructor
+  · intro h; exact ⟨fun c hc => h c (Or.inl hc), fun c hc => h c (Or.inr hc)⟩
+  · rintro ⟨h1, h2⟩ c (hc | hc)
+    exacts [h1 c hc, h2 c hc]
+
+/-- Merge two V-tuples into one over the union, taking the left row's entry on shared attributes. -/
+def mergeV (vt₁ : VTuple Ω Val Var) (vt₂ : VTuple Ω' Val Var) : VTuple (Ω ∪ Ω') Val Var :=
+  fun a => if h : a.val ∈ Ω then vt₁ ⟨a.val, h⟩
+           else vt₂ ⟨a.val, (Finset.mem_union.mp a.property).resolve_left h⟩
+
+/-- The left restriction of a merged row's completion is the left row's completion. -/
+theorem applyV_mergeV_left (ν : Var → Val) (vt₁ : VTuple Ω Val Var) (vt₂ : VTuple Ω' Val Var) :
+    (applyV ν (mergeV vt₁ vt₂)).restrict Finset.subset_union_left = applyV ν vt₁ := by
+  funext a; simp only [Tuple.restrict, applyV_apply, mergeV, dif_pos a.property]
+
+/-- The join condition forcing two rows to agree on the shared attributes. -/
+noncomputable def joinCond (vt₁ : VTuple Ω Val Var) (vt₂ : VTuple Ω' Val Var) : CCond Val Var :=
+  (Ω ∩ Ω').attach.toList.map (fun a =>
+    ECond.eq (vt₁ ⟨a.val, (Finset.mem_inter.mp a.property).1⟩)
+             (vt₂ ⟨a.val, (Finset.mem_inter.mp a.property).2⟩))
+
+/-- The join condition holds under `ν` iff the two completions agree on the shared attributes. -/
+theorem joinCond_holds_iff (vt₁ : VTuple Ω Val Var) (vt₂ : VTuple Ω' Val Var) (ν : Var → Val) :
+    CCond.Holds ν (joinCond vt₁ vt₂) ↔
+      ∀ a : {x : Att // x ∈ Ω ∩ Ω'},
+        evalEntry ν (vt₁ ⟨a.val, (Finset.mem_inter.mp a.property).1⟩)
+          = evalEntry ν (vt₂ ⟨a.val, (Finset.mem_inter.mp a.property).2⟩) := by
+  rw [CCond.Holds, joinCond]
+  constructor
+  · intro h a
+    exact h _ (List.mem_map.mpr ⟨a, Finset.mem_toList.mpr (Finset.mem_attach _ a), rfl⟩)
+  · rintro h c hc
+    obtain ⟨a, -, rfl⟩ := List.mem_map.mp hc
+    exact h a
+
+/-- The right restriction of a merged row's completion is the right row's completion, provided the
+two rows agree on the shared attributes under `ν`. -/
+theorem applyV_mergeV_right (ν : Var → Val) (vt₁ : VTuple Ω Val Var) (vt₂ : VTuple Ω' Val Var)
+    (hag : CCond.Holds ν (joinCond vt₁ vt₂)) :
+    (applyV ν (mergeV vt₁ vt₂)).restrict Finset.subset_union_right = applyV ν vt₂ := by
+  rw [joinCond_holds_iff] at hag
+  funext a
+  simp only [Tuple.restrict, applyV_apply, mergeV]
+  by_cases h : a.val ∈ Ω
+  · rw [dif_pos h]
+    exact hag ⟨a.val, Finset.mem_inter.mpr ⟨h, a.property⟩⟩
+  · rw [dif_neg h]
+
+/-- **Join of C-tables** over `Ω ∪ Ω'`: merge each pair of rows, conjoining the agreement condition
+on the shared attributes with the two rows' conditions. -/
+noncomputable def CTable.join (T₁ : CTable Ω Val Var) (T₂ : CTable Ω' Val Var) :
+    CTable (Ω ∪ Ω') Val Var :=
+  ⟨{p | ∃ q₁ ∈ T₁.rows, ∃ q₂ ∈ T₂.rows,
+      p = (mergeV q₁.1 q₂.1, joinCond q₁.1 q₂.1 ++ q₁.2 ++ q₂.2)}, T₁.global ++ T₂.global⟩
+
+/-- **Theorem 6.7**, join case: C-tables correctly evaluate the natural join — the instance of the
+join is the join of the instances. -/
+theorem CTable.instAt_join (T₁ : CTable Ω Val Var) (T₂ : CTable Ω' Val Var) (ν : Var → Val) :
+    (T₁.join T₂).instAt ν = _root_.DeepWiki.join (T₁.instAt ν) (T₂.instAt ν) := by
+  ext t
+  simp only [CTable.mem_instAt, CTable.join, Set.mem_setOf_eq, mem_join]
+  constructor
+  · rintro ⟨p, ⟨q₁, hq₁, q₂, hq₂, rfl⟩, hc, rfl⟩
+    rw [CCond.holds_append, CCond.holds_append] at hc
+    obtain ⟨⟨hjc, hF₁⟩, hF₂⟩ := hc
+    refine ⟨?_, ?_⟩
+    · rw [applyV_mergeV_left]; exact ⟨q₁, hq₁, hF₁, rfl⟩
+    · rw [applyV_mergeV_right ν q₁.1 q₂.1 hjc]; exact ⟨q₂, hq₂, hF₂, rfl⟩
+  · rintro ⟨⟨q₁, hq₁, hF₁, hl⟩, ⟨q₂, hq₂, hF₂, hr⟩⟩
+    have hag : CCond.Holds ν (joinCond q₁.1 q₂.1) := by
+      rw [joinCond_holds_iff]
+      intro a
+      have h₁ := congrFun hl ⟨a.val, (Finset.mem_inter.mp a.property).1⟩
+      have h₂ := congrFun hr ⟨a.val, (Finset.mem_inter.mp a.property).2⟩
+      simp only [Tuple.restrict, applyV_apply] at h₁ h₂
+      rw [h₁, h₂]
+    refine ⟨(mergeV q₁.1 q₂.1, joinCond q₁.1 q₂.1 ++ q₁.2 ++ q₂.2),
+      ⟨q₁, hq₁, q₂, hq₂, rfl⟩, ?_, ?_⟩
+    · rw [CCond.holds_append, CCond.holds_append]; exact ⟨⟨hag, hF₁⟩, hF₂⟩
+    · funext a
+      by_cases h : a.val ∈ Ω
+      · have := congrFun hl ⟨a.val, h⟩
+        simpa [Tuple.restrict, applyV_apply, mergeV, dif_pos h] using this
+      · have h' : a.val ∈ Ω' := (Finset.mem_union.mp a.property).resolve_left h
+        have := congrFun hr ⟨a.val, h'⟩
+        simpa [Tuple.restrict, applyV_apply, mergeV, dif_neg h] using this
+
+end Join
+
 end DeepWiki
