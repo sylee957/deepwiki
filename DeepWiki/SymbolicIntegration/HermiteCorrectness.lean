@@ -3418,3 +3418,36 @@ theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPoly)
   have hclear := am_div_D_eq_div_Dstar (R := R) (D := toPoly D) (Dstar := toPoly Dstar)
     (W := W) hD hDstar hWdec hWR
   linear_combination hres + hclear
+
+open scoped Differential in
+-- Hermite reduction, multi-factor, UNCONDITIONAL (Bronstein §2.2/§2.5): the computable `hermiteReduce`
+-- `g`-fold integrates the rational part `g`, leaving a residual `(R/W)/Dstar` over the **squarefree
+-- radical** `Dstar` — with NO interference-divisibility hypothesis (`W ∣ R` discharged internally). The
+-- per-factor data alone (residual identities, pairwise-coprime kept factors, `Vk^{ik} ∣ D`, the radical
+-- decomposition `D = Dstar·W`, `W = ∏ Vk^{ik−1}`) suffices.
+example (fuel : ℕ) (A D Dstar : CPoly) (factors : List (CPoly × ℕ))
+    (W : ℚ[X]) (hWeq : W = ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
+        (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).prod)
+    (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
+    (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D))
+    (hpw : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Pairwise
+      (fun a b => IsRelPrime (toPoly a.1) (toPoly b.1)))
+    (hpow : ∀ Vi ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)),
+      toPoly Vi.1 ^ Vi.2 ∣ toPoly D)
+    (hWdec : toPoly D = toPoly Dstar * W) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+                * toPoly A
+              + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
+              / W)
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
+  hermiteReduce_residual_correct_uncond' fuel A D Dstar factors W hWeq hD hDstar hnd hV hstep
+    hpw hpow hWdec
