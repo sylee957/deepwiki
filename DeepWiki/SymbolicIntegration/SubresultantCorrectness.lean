@@ -1128,15 +1128,20 @@ engine against the abstract subresultant — no longer just one step:
 
 So the two isolated structural facts that closed the agreement are both landed: (1) the **degree-`j` filter
 identity** (singleton filter ⟹ `bsubresultantGcd` is the chain element), and (2) the **`bmonicXmodR` mod-`R`
-unit bridge** (monic normalization = residue-ring unit multiple). What is *taken as a hypothesis* in the
-fully-assembled headline — and is now the only residual input — is the *concrete instantiation* for the
-**real** `subresPRS` of: the per-step chain data (`G`/`bt`/`s`/`c` with `G i = (subresPRS …).getD i []`,
-`hsc`/`hdiv`/`hG2`/degree bounds from `toBPoly_bpsremainder`, Collins β-divisibility, strict degree
-decrease), the singleton-filter fact `hfil` (from `subresPRS.go`'s strictly-decreasing degrees — a structural
-induction over the internal `let rec go`), the `bprimitivePartX` content-exactness inputs (the `ℚ[t]`-gcd
-`bcontentX` divides each coefficient, over a `cgcdExt` `foldl`), and the residue-ring regularity (`φ` killing
-`toPoly R`, the leading coeff a unit mod `R`, witnesses `φ`-nonzero — Exercise 2.7). These are all *data
-instantiations*, not new mathematics: the recurrence-matching and the two structural facts are done. -/
+unit bridge** (monic normalization = residue-ring unit multiple). The remaining **data-instantiation** for
+the **real** `subresPRS` is **also now done** (see the `goState` section below): the internal
+`let rec subresPRS.go` is mirrored by the top-level state machine `goState`, whose chain element
+`chainG`, β-divisor `chainBt`, and `Classical.choose` pseudo-division witnesses `chainS`/`chainC`
+discharge the abstract `G`/`bt`/`s`/`c`; `hsc` is `chain_hsc` (the `toBPoly_bpsremainder` spec), `hG2` is
+`chain_hG2` (definitional via `goState_fst_add_two`), `hG0`/`hG1` are `chainG_zero`/`chainG_one`, and the
+singleton-filter `hfilt` is `chain_hfilt` (`subresPRS_eq_range` + `filter_range_unique` +
+`unique_of_strictAnti` — the strict-`bdeg`-decrease uniqueness, no `let rec` induction needed thanks to
+`go.eq_2`). The fully-instantiated `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` quantifies over **no**
+abstract chain: only the genuine *mathematics-grade* regularity remains as hypotheses — Collins
+β-divisibility (`hdiv`), the chain nonzero/degree side-conditions, the `bprimitivePartX` content-exactness
+(`bcontentX` divides each coefficient), and the Exercise 2.7 residue-ring regularity (`φ` killing
+`toPoly R`, the leading coeff a unit mod `R`, witnesses `φ`-nonzero). No recurrence-matching or
+list/`let rec` plumbing is left. -/
 
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
 -- when every x-coefficient divides exactly.
