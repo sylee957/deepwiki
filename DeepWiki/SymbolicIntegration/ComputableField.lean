@@ -21,12 +21,15 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The `CField` typeclass
 
-`CField α` packages computable field operations on `α` together with an injective bridge `toK : α → K`
-into a genuine Mathlib `Field K` that intertwines them. The `isZero` predicate is the computable zero
-test, certified by `isZero_iff` against `toK a = 0`. `sub`/`div` are derived (default-field-defined). -/
+`CField α` packages computable field operations on `α` together with a field-homomorphism bridge
+`toK : α → K` into a genuine Mathlib `Field K` that intertwines them. The `isZero` predicate is the
+computable zero test, certified by `isZero_iff` against `toK a = 0`. `sub`/`div` are derived
+(default-field-defined). `toK` need NOT be injective — the engine operates on representations and tests
+`K`-equality through `isZero`, so multiple representations of one field element are fine (e.g. unreduced
+rational functions). -/
 
-/-- **Computable field**: a type `α` of computable field elements with an injective field-homomorphism
-bridge `toK : α → K` into a Mathlib `Field K` intertwining `zero`/`one`/`add`/`mul`/`neg`/`inv`, plus a
+/-- **Computable field**: a type `α` of computable field elements with a field-homomorphism bridge
+`toK : α → K` into a Mathlib `Field K` intertwining `zero`/`one`/`add`/`mul`/`neg`/`inv`, plus a
 certified computable zero test `isZero`. The base of the differential-field tower the Risch algorithm
 runs the polynomial engine over. -/
 class CField (α : Type*) where
@@ -62,8 +65,6 @@ class CField (α : Type*) where
   toK_neg : ∀ a, toK (neg a) = - toK a
   /-- `toK` intertwines `inv` with `⁻¹`. -/
   toK_inv : ∀ a, toK (inv a) = (toK a)⁻¹
-  /-- `toK` is injective (the computable carrier faithfully represents `K`'s reachable elements). -/
-  toK_injective : Function.Injective toK
   /-- `isZero a` is `true` iff `toK a = 0`. -/
   isZero_iff : ∀ a, isZero a = true ↔ toK a = 0
 
@@ -111,7 +112,6 @@ instance : CField ℚ where
   toK_mul _ _ := rfl
   toK_neg _ := rfl
   toK_inv _ := rfl
-  toK_injective := fun _ _ h => h
   isZero_iff a := by simp [id]
 
 /-! ### Generic polynomial engine `CPolyG α := List α`
@@ -461,14 +461,12 @@ unconditional ones (`qone`/`qneg`/`qmul`/`qinv`/`qdiv`) hold on all of `QFun`, w
 nonzero subtype** `QFunNZ` clears those side-conditions: `qadd`/`qsub` of two den-nonzero pairs again
 has nonzero denominator, so the laws become unconditional there.
 
-The single **genuine blocker** for a `CField QFun`/`CField QFunNZ` instance is `toK_injective`:
 `toQFun` is *not* injective on unreduced pairs (`(1,[1,1])` and `(2,[2,2])` — i.e. `1/(x+1)` and
-`2/(2x+2)` — are distinct pairs with equal image, as are `qzero = (0,1)` and `(0,7)`). Faithful
-injectivity needs a **canonical lowest-terms, monic-denominator normal form** with a *uniqueness*
-theorem `toQFun x = toQFun y → qnorm x = qnorm y` — not yet proven (the `qnorm` reduction exists,
-`toQFun_qnorm` shows it is value-preserving, but lowest-terms uniqueness is the missing fact). That
-canonical-form uniqueness is the precise Stage-B deliverable; until then the `CField QFun` instance is
-deferred. The homomorphism laws below land as the proven core. -/
+`2/(2x+2)` — are distinct pairs with equal image, as are `qzero = (0,1)` and `(0,7)`). This is HARMLESS:
+`CField` does not require `toK` injective — the engine works on representations and tests `K`-equality
+through `isZero`, so `CField QFunNZ` lands with `isZero := cisZero ∘ num` (certified by the
+numerator-zero criterion) without any lowest-terms-uniqueness theorem. The homomorphism laws below are
+the proven core that instance is built from. -/
 
 /-- **Denominator-nonzero rational functions**: the subtype of `QFun` whose denominator is a nonzero
 polynomial. On it the `toQFun_*` homomorphism laws hold *unconditionally* (the den-≠-0 side-conditions
