@@ -29,11 +29,12 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   `Cond.atom` skeleton, semantics, the generating part 2.2.3/2.2.5 and views 2.2.4 are done)
   and the `DOM(Aᵢ)`-ranging existential of the book's view-instance definition [infra: concrete
   atoms + per-attribute domains].
-§2.3: the SQL elementary query `Select … From … Where …` internals — attribute lists, relation
-  lists, conditions (elementary conditions `f(…)`, comparisons, set-comparisons `sθ`, `IN`,
-  emptiness `(…)=∅`), and the generating-part reductions for `IN`/`UNION`/`MINUS` to the
-  generating part (2.3.3/2.3.5) [infra: the elementary query reduces to the algebra; the query
-  set-operation level and `INTERSECTION = α MINUS (α MINUS β)` are done].
+§2.3: the elementary query's SPJ core (`ElemQuery` = project∘select over the `From` relation, with
+  `evalElem`/`mem_evalElem` reducing it to the algebra) and the query set-operation level
+  (`INTERSECTION = α MINUS (α MINUS β)`, UNION/INTER laws) are done. Remaining: the full `Where`
+  condition language (elementary conditions `f(…)`, comparisons, set-comparisons `sθ`, `IN`,
+  emptiness `(…)=∅`), multi-relation `From` lists, and the `IN`/`UNION`/`MINUS` generating-part
+  reductions (2.3.3/2.3.5) [infra].
 §2.4: the *constructive* converse — a recursive `calcToAlg` translating each *safe* first-order
   condition to an algebra expression [research: needs the renaming operator `ρ` (itself §2.1
   `[infra]`) to compile the de Bruijn context into a product scheme without attribute clashes].
@@ -237,5 +238,12 @@ abbrev sql_inter_comm := @DeepWiki.evalSql_inter_comm
 
 /-- **§2.3** SQL `α MINUS α = ∅` (view-instance level). -/
 abbrev sql_minus_self := @DeepWiki.evalSql_minus_self
+
+/-- **Elementary query** (§2.3.2, p.37): `Select Ω From r Where cond` — the SPJ core, a projection
+of a selection over the input relation. -/
+abbrev sql_elem_query := @DeepWiki.ElemQuery
+
+/-- **§2.3.2**: the view instance of an elementary query (its reduction to project∘select). -/
+abbrev sql_elem_eval := @DeepWiki.evalElem
 
 end DeepWiki.Rdb

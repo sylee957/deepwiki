@@ -79,4 +79,32 @@ theorem evalSql_minus_self {Ω : Finset Att} (a : SqlQuery Att Val Ω) :
     evalSql (SqlQuery.minus a a) = (∅ : Table Ω Val) := by
   simp only [evalSql_minus, diff]; ext x; simp
 
+/-! ## The elementary query (§2.3.2): `Select … From … Where …` -/
+
+/-- An *elementary SQL query* `Select Ω From r Where cond` (§2.3.2): over an input relation on
+`Ω₀` (the `From` clause — itself possibly a join), keep the rows satisfying `cond` (the `Where`
+clause) and project onto the output attributes `Ω ⊆ Ω₀` (the `Select` clause). -/
+structure ElemQuery (Att : Type u) (Val : Type v) (Ω₀ Ω : Finset Att) where
+  /-- The `Where` condition on input rows. -/
+  cond : Tuple Ω₀ Val → Prop
+  /-- The `Select` projection: the output attributes are among the input attributes. -/
+  sub : Ω ⊆ Ω₀
+
+/-- The view instance of an elementary query over an input table — projection of the selection. -/
+def evalElem {Ω₀ Ω : Finset Att} (q : ElemQuery Att Val Ω₀ Ω) (r : Table Ω₀ Val) : Table Ω Val :=
+  project q.sub (select q.cond r)
+
+/-- An elementary query is exactly a projection of a selection (its reduction to the algebra). -/
+theorem evalElem_eq {Ω₀ Ω : Finset Att} (q : ElemQuery Att Val Ω₀ Ω) (r : Table Ω₀ Val) :
+    evalElem q r = project q.sub (select q.cond r) := rfl
+
+/-- A tuple is in the elementary query's result iff it is the projection of an input row satisfying
+the condition. -/
+theorem mem_evalElem {Ω₀ Ω : Finset Att} (q : ElemQuery Att Val Ω₀ Ω) (r : Table Ω₀ Val)
+    (s : Tuple Ω Val) : s ∈ evalElem q r ↔ ∃ t ∈ r, q.cond t ∧ t.restrict q.sub = s := by
+  simp only [evalElem, mem_project, mem_select]
+  constructor
+  · rintro ⟨t, ⟨htr, hc⟩, rfl⟩; exact ⟨t, htr, hc, rfl⟩
+  · rintro ⟨t, htr, hc, rfl⟩; exact ⟨t, ⟨htr, hc⟩, rfl⟩
+
 end DeepWiki
