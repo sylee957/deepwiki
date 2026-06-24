@@ -291,4 +291,47 @@ theorem natDegree_rtResultant_le (A D : ℚ[X]) :
   · -- ∑ b j = deg D
     rw [Fin.sum_univ_add]; simp
 
+/-! ### Point-agreement: `cresultant` sample = `rtResultant` specialization -/
+
+open Polynomial in
+/-- **`toPoly` of the sample second polynomial**: `toPoly (A − a·D') = toPoly A − C a · derivative (toPoly D)`
+where `D' = cderiv D` (the computable derivative realizes `ℚ[X]` derivative). -/
+theorem toPoly_sample (A D : CPoly) (a : ℚ) :
+    toPoly (csub A (cscale a (cderiv D)))
+      = toPoly A - Polynomial.C a * derivative (toPoly D) := by
+  rw [toPoly_csub, toPoly_cscale, toPoly_cderiv]
+
+open Polynomial in
+/-- **Point-agreement** (monic `D`): the computable resultant sample `cresultant fuel D (A − a·D')`
+equals the specialization of the noncomputable Rothstein–Trager resultant at `a`,
+`(rtResultant (toPoly A) (toPoly D)).eval a`. The two formal degrees `(deg D, deg D − 1)` (used by
+`rtResultant`) and `(cdeg D, cdeg (A − a·D'))` (used by `cresultant`) are reconciled by
+`resultant_add_right_deg`; the augmentation factor `lc(D)^k = 1` since `D` is monic. -/
+theorem cresultant_sample_eq_eval (A D : CPoly) (a : ℚ)
+    (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
+    (fuel : ℕ)
+    (hfuel : (cnorm D).length + (cnorm (csub A (cscale a (cderiv D)))).length + 2 ≤ fuel) :
+    cresultant fuel D (csub A (cscale a (cderiv D)))
+      = (rtResultant (toPoly A) (toPoly D)).eval a := by
+  set Aa := csub A (cscale a (cderiv D)) with hAa
+  have hDpos : 0 < (toPoly D).natDegree := lt_of_le_of_lt (Nat.zero_le _) hAD
+  -- `toPoly Aa = toPoly A − C a · D'`
+  have htAa : toPoly Aa = toPoly A - Polynomial.C a * derivative (toPoly D) := toPoly_sample A D a
+  -- actual degree bound: `deg Aa ≤ deg D − 1`
+  have hAadeg : (toPoly Aa).natDegree ≤ (toPoly D).natDegree - 1 := by
+    rw [htAa]
+    refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
+    · omega
+    · refine (natDegree_C_mul_le _ _).trans ?_
+      exact (natDegree_derivative_le (toPoly D)).trans (by omega)
+  rw [cresultant_eq fuel D Aa hfuel, rtResultant_eval, cdeg_eq_natDegree D, cdeg_eq_natDegree Aa,
+    ← htAa]
+  -- reconcile formal degree `deg D − 1` to actual `deg Aa` via `resultant_add_right_deg` (lc D = 1)
+  obtain ⟨k, hk⟩ : ∃ k, (toPoly D).natDegree - 1 = (toPoly Aa).natDegree + k :=
+    ⟨(toPoly D).natDegree - 1 - (toPoly Aa).natDegree, by omega⟩
+  rw [hk, Polynomial.resultant_add_right_deg (toPoly D) (toPoly Aa) (toPoly D).natDegree
+    (toPoly Aa).natDegree k le_rfl,
+    show (toPoly D).coeff (toPoly D).natDegree = (toPoly D).leadingCoeff from rfl,
+    hDmonic.leadingCoeff, one_pow, one_mul]
+
 end DeepWiki.SymbolicIntegration.Compute
