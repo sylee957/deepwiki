@@ -204,4 +204,19 @@ example :
       (CPolyG.cmonicG (CPolyG.cSplitFactorFast splitFastExample351Dt 8 splitFastExample351P).2)
       (CPolyG.cmonicG splitFastExample351Ps)) = true := by native_decide
 
+/-- **Example 3.5.1** (Bronstein §3.5, p.101) COMPUTES: the fraction-free `cSplitFactorFast` on the
+degree-5 `p` over ℚ(x)[t] (monomial `t` with `Dt = −t²−(3/2x)t+1/(2x)`) returns Bronstein's normal part
+`pₙ = 4x⁴t³−4x³(x+2)t²+4x²(2x+1)t−4x²` (degree 3) and special part `pₛ = t²+(1/x)t−(2x−1)/(4x²)`
+(degree 2), monic-normalized — by `native_decide`, where the naive ℚ(x)-Euclidean kernel did not
+finish in budget. -/
+theorem splitFactorFast_ex351 :
+    (CPolyG.cdegG (CPolyG.cSplitFactorFast splitFastExample351Dt 8 splitFastExample351P).1,
+       CPolyG.cdegG (CPolyG.cSplitFactorFast splitFastExample351Dt 8 splitFastExample351P).2) = (3, 2)
+    ∧ CPolyG.cisZeroG (CPolyG.csubG
+        (CPolyG.cmonicG (CPolyG.cSplitFactorFast splitFastExample351Dt 8 splitFastExample351P).1)
+        (CPolyG.cmonicG splitFastExample351Pn)) = true
+    ∧ CPolyG.cisZeroG (CPolyG.csubG
+        (CPolyG.cmonicG (CPolyG.cSplitFactorFast splitFastExample351Dt 8 splitFastExample351P).2)
+        (CPolyG.cmonicG splitFastExample351Ps)) = true := by native_decide
+
 end DeepWiki.SymbolicIntegration
