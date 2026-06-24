@@ -293,23 +293,108 @@ theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : CPoly) 
   exact subresultant_C_mul_eq_rem_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)
     (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hjm hjn hB hQ
 
+/-! ### `bdivC` realizes exact `ℚ[t]`-division (the β-divisor exact-division core)
+`bdivC fuel p c` divides every `x`-coefficient of `p` by the `ℚ[t]` scalar `c` (via the per-`CPoly`
+Euclidean quotient `cdiv`). In the subresultant PRS the β-divisor `c = βᵢ` always *divides* the
+pseudo-remainder (Collins's theorem), so this scalar division is **exact**: `C(toPoly c) · toBPoly
+(bdivC fuel p c) = toBPoly p`. The honest content is per-`x`-coefficient — the `CPoly` exact-division
+bridge (the `toPoly_cdivmod'` Euclidean identity with a zero remainder), folded over the
+`x`-coefficient list through `toBPoly`. We state it from the directly-checkable `cmod`-zero certificate
+and give the `ℚ[t]` divisibility wrapper. -/
+
+/-- **`CPoly` exact-division bridge**: if the remainder `cmod fuel a c` reads to `0` in `ℚ[X]`, then
+`cdiv` realizes honest division `toPoly a = toPoly (cdiv fuel a c) · toPoly c`. From the
+Euclidean-division identity `toPoly_cdivmod'` with a zero remainder (needs `cnorm c ≠ []`). (Local copy
+of the `HermiteCorrectness` bridge, kept here to avoid the Hermite import.) -/
+theorem toPoly_cdiv_of_cmod_zero_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
+    (hrem : toPoly (cmod fuel a c) = 0) :
+    toPoly a = toPoly (cdiv fuel a c) * toPoly c := by
+  have h := toPoly_cdivmod' fuel a c hc
+  rw [show (cdivmod fuel a c).1 = cdiv fuel a c from rfl,
+      show (cdivmod fuel a c).2 = cmod fuel a c from rfl, hrem, add_zero] at h
+  exact h
+
+/-- **Divisibility ⟹ exact remainder** (`CPoly`): if `toPoly c ∣ toPoly a` in `ℚ[X]` (with `c ≠ 0` and
+enough fuel), the computable remainder reads to `0`. The remainder has degree `< deg c` (`cmod_length_lt`)
+yet is divisible by `c`, hence vanishes. (Local copy of the `HermiteCorrectness` bridge.) -/
+theorem cmod_eq_zero_of_dvd_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
+    (hfuel : (cnorm a).length ≤ fuel) (hdvd : toPoly c ∣ toPoly a) :
+    toPoly (cmod fuel a c) = 0 := by
+  have hc0 : toPoly c ≠ 0 := fun h => hc ((cnorm_eq_nil_iff c).mpr h)
+  have hdiv := toPoly_cdivmod' fuel a c hc
+  rw [show (cdivmod fuel a c).1 = cdiv fuel a c from rfl,
+      show (cdivmod fuel a c).2 = cmod fuel a c from rfl] at hdiv
+  have hqr : toPoly c ∣ toPoly (cmod fuel a c) := by
+    have hd2 : toPoly c ∣ toPoly (cdiv fuel a c) * toPoly c := Dvd.intro_left _ rfl
+    have hsub : toPoly (cmod fuel a c) = toPoly a - toPoly (cdiv fuel a c) * toPoly c := by
+      rw [hdiv]; ring
+    rw [hsub]; exact dvd_sub hdvd hd2
+  have hlen : (cnorm (cmod fuel a c)).length < (cnorm c).length := cmod_length_lt fuel a c hc hfuel
+  by_contra hne
+  have hrne : toPoly (cmod fuel a c) ≠ 0 := hne
+  have hdeg : (toPoly c).degree ≤ (toPoly (cmod fuel a c)).degree :=
+    Polynomial.degree_le_of_dvd hqr hrne
+  have e1 : (cnorm (cmod fuel a c)).length = (toPoly (cmod fuel a c)).natDegree + 1 :=
+    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
+  have e2 : (cnorm c).length = (toPoly c).natDegree + 1 := length_cnorm_of_ne c hc
+  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hc0, Nat.cast_le] at hdeg
+  omega
+
+/-- **`toBPoly` of a coefficient-wise exact division**: if dividing every `x`-coefficient `a` of `p`
+by the `ℚ[t]` scalar `c` is exact (`toPoly (cmod fuel a c) = 0`, i.e. `toPoly c ∣ toPoly a`), then
+`C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p` — the scalar `C(toPoly c)` factors back out
+of the divided `x`-coefficient list. Per-coefficient `toPoly_cdiv_of_cmod_zero_loc`, folded over the
+list through the `toBPoly` Horner shape. -/
+theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+    (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
+    Polynomial.C (toPoly c) * toBPoly (p.map (fun a => cdiv fuel a c)) = toBPoly p := by
+  induction p with
+  | nil => simp
+  | cons a as ih =>
+    have has := ih (fun b hb => hrem b (by simp [hb]))
+    have ha : toPoly a = toPoly (cdiv fuel a c) * toPoly c :=
+      toPoly_cdiv_of_cmod_zero_loc fuel a c hc (hrem a (by simp))
+    rw [List.map_cons, toBPoly_cons, toBPoly_cons]
+    rw [ha, map_mul]
+    linear_combination Polynomial.X * has
+
+/-- **`bdivC` realizes exact `ℚ[t]`-division** (Collins's β-divisor division, the chain-content core):
+when dividing every `x`-coefficient of `p` by `c` is exact (`toPoly (cmod fuel a c) = 0` for each
+`x`-coefficient `a` — the β-divisor always divides the pseudo-remainder over `ℚ[t]`),
+`C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. So `bdivC` is honest exact scalar division in `x`,
+the step that strips the pseudo-remainder `lc`-power inflation in `subresPRS`. -/
+theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+    (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
+    Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p := by
+  rw [bdivC, toBPoly_bnorm]
+  exact toBPoly_map_cdiv_exact fuel p c hc hrem
+
+/-- **`bdivC` exact-division from `ℚ[t]` divisibility** (the form the subresultant chain feeds): if the
+`ℚ[t]` scalar `c` divides every `x`-coefficient of `p` in `ℚ[t]` (`toPoly c ∣ toPoly a`, with enough
+fuel), then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. Converts the per-coefficient
+divisibility certificate (Collins: βᵢ ∣ each coefficient of the pseudo-remainder) into the exact
+scalar division via `cmod_eq_zero_of_dvd`. -/
+theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+    (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
+    Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
+  toBPoly_bdivC_exact fuel p c hc
+    (fun a ha => cmod_eq_zero_of_dvd_loc fuel a c hc (hfuel a ha) (hdvd a ha))
+
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
 The pieces above realize **one** subresultant-PRS step of the computable engine against the abstract
-subresultant, and identify the LRT operands exactly. The **full** agreement
-`toBPoly (bsubresultantGcd fuel j P Q) ∼ lrtSubresultant A D j` (up to a `ℚ[t]` content/unit, then
-`lrtGcdCompute` after `bprimitivePartX`/`bmonicXmodR`) needs, beyond what is proven here, the genuinely
-deep **Collins–Brown chain** formalization, whose missing lemma is precisely:
-
-  `toBPoly_bdivC_exact` — that `bdivC fuel pr beta` realizes **exact** `ℚ[t]`-division, i.e.
-  `Polynomial.C (toPoly beta) * toBPoly (bdivC fuel pr beta) = toBPoly pr` whenever `beta ∣ pr` in
-  `ℚ[t][x]` (the subresultant β-divisor always divides the pseudo-remainder — Collins's theorem).
-
-With that, the `subresPRS` β-accumulation (`subresPRS_beta`/`subresPRS_gamma`,
-`subresultant_prs_defective_eq`/`subresultant_prs_normal_eq` already in `SubresultantPRS`) would let one
-induct `subresultant_C_mul_eq_rem_of_bpsremainder` along the chain and cancel the accumulated content to
-get `ηᵢ = 1` (the subresultant equals the PRS element). That induction over the defective/normal cases
-plus the `bsubresultantGcd` degree filter and the `bprimitivePartX`/`bmonicXmodR` content/monic-normalization
-steps is the multi-hundred-line remainder, left open. The structural one-step engine and operand
-identification proven here are its reusable core. -/
+subresultant, identify the LRT operands exactly, and (now) prove the β-divisor exact-division
+`toBPoly_bdivC_exact`. The **full** agreement `toBPoly (bsubresultantGcd fuel j P Q) ∼ lrtSubresultant
+A D j` (up to a `ℚ[t]` content/unit, then `lrtGcdCompute` after `bprimitivePartX`/`bmonicXmodR`) still
+needs the genuinely deep **Collins–Brown chain induction**: with `toBPoly_bdivC_exact` in hand one can
+identify each `subresPRS` element `Rᵢ₊₂ = bdivC fuel (prem Rᵢ Rᵢ₊₁) βᵢ` with the abstract subresultant
+through `subresultant_C_mul_eq_rem_of_bpsremainder` (the one PRS step) — but the remaining work is to
+match the *computable* β/ψ accumulation (`subresPRS`'s `cpowP`/`cdiv` ladder) against the abstract
+`subresPRS_beta`/`subresPRS_gamma` (`SubresultantPRS`), induct along the chain with the
+defective/normal collapse (`subresultant_prs_defective_eq`/`subresultant_prs_normal_eq`) to cancel the
+accumulated content (`ηᵢ = 1`), and finally absorb the `bsubresultantGcd` degree filter and the
+`bprimitivePartX`/`bmonicXmodR` content/monic-normalization. That multi-step induction (matching two
+independently-defined coefficient recurrences and the per-coefficient divisibility side-conditions of
+`toBPoly_bdivC_exact_of_dvd`) is the remaining work; the one-step engine, operand identification, and
+the exact-division core proven here are its reusable foundation. -/
 
 end DeepWiki.SymbolicIntegration.Compute
