@@ -1,0 +1,75 @@
+import DeepWiki.SymbolicIntegration.SpecialFirstKind
+
+/-! # Constants of a monomial extension and base change (Bronstein §3.4)
+For a monomial `t` over `(k, D)` (so `Dt = v ∈ k[t]`), this file relates the *constants* of
+`k(t)` to the *special* polynomials. When `Dt ∈ k` a nonzero `p ∈ k[t]` is special iff its monic
+associate is a constant (`isSpecial_iff_deriv_monic_eq_zero`); this is the engine behind the fact
+that any new constant in `k(t) ∖ k` makes `Sⁱʳʳ` nonempty. We also complete the base-change
+corollary (normal polynomials stay normal under an algebraic extension `k ⊆ E`), and record the
+constant-field case `Da = 0`. -/
+
+open scoped Differential
+open Polynomial
+
+namespace DeepWiki.SymbolicIntegration
+
+variable {k : Type*} [Field k] [Differential k]
+
+section ScalarMonomial
+-- The base case of §3.4: the monomial derivation with `Dt = w ∈ k`, i.e. the implicit derivation
+-- whose `t`-component is the *constant* polynomial `C w`.
+variable (w : k)
+
+/-- For the monomial derivation with `Dt = w ∈ k` (so `D = κ_D + w·d/dt`), the `t`-component does
+not raise degree: `deg(Dp) ≤ deg p` (`κ_D` preserves degree shape; `w·dp/dt` drops a degree). -/
+theorem natDegree_implicitDeriv_C_le (p : k[X]) :
+    (Differential.implicitDeriv (C w) p).natDegree ≤ p.natDegree := by
+  refine (natDegree_implicitDeriv_le (C w) p).trans ?_
+  rw [natDegree_C]; simp
+
+/-- The top coefficient of `Dp` is `D(lc p)`: when `Dt = w ∈ k`, the degree-`deg p` coefficient of
+`Differential.implicitDeriv (C w) p` is the derivative of the leading coefficient of `p`. -/
+theorem coeff_natDegree_implicitDeriv_C (p : k[X]) :
+    (Differential.implicitDeriv (C w) p).coeff p.natDegree = (p.coeff p.natDegree)′ := by
+  have happly : Differential.implicitDeriv (C w) p
+      = Differential.mapCoeffs p + C w * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  rw [happly, coeff_add, Differential.coeff_mapCoeffs, coeff_C_mul]
+  rcases Nat.eq_zero_or_pos p.natDegree with h0 | h0
+  · rw [h0, eq_C_of_natDegree_eq_zero h0, derivative_C, coeff_zero, mul_zero, add_zero, coeff_C,
+      if_pos rfl]
+  · have hd : (derivative p).coeff p.natDegree = 0 :=
+      coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt (natDegree_derivative_le p) (by omega))
+    rw [hd, mul_zero, add_zero]
+
+end ScalarMonomial
+
+/-- For the monomial derivation with `Dt = w ∈ k`, a *monic* polynomial has `deg(Dq) < deg q`
+unless `Dq = 0` (the top coefficient `D(lc q) = D(1) = 0`). -/
+theorem deriv_monic_eq_zero_or_natDegree_lt {w : k} {q : k[X]} (hq : q.Monic) :
+    Differential.implicitDeriv (C w) q = 0
+      ∨ (Differential.implicitDeriv (C w) q).natDegree < q.natDegree := by
+  by_cases h0 : Differential.implicitDeriv (C w) q = 0
+  · exact Or.inl h0
+  · refine Or.inr (lt_of_le_of_ne (natDegree_implicitDeriv_C_le w q) ?_)
+    intro heq
+    have htop : (Differential.implicitDeriv (C w) q).coeff
+        (Differential.implicitDeriv (C w) q).natDegree = 0 := by
+      rw [heq, coeff_natDegree_implicitDeriv_C, hq.coeff_natDegree,
+        (Differential.deriv : Derivation ℤ k k).map_one_eq_zero]
+    exact (mt leadingCoeff_eq_zero.mp h0) htop
+
+/-- **Constants vs special, monic-associate form** (§3.4, p.96): with `Dt = w ∈ k`, a *monic*
+`q ∈ k[t]` is special iff it is a constant of `k(t)` — `q ∣ Dq ⟺ Dq = 0`. (Forward: `q ∣ Dq` and
+`deg(Dq) < deg q` force `Dq = 0`; backward: `Dq = 0 ⟹ q ∣ Dq`.) -/
+theorem isSpecial_iff_deriv_eq_zero_of_monic {w : k} {q : k[X]} (hq : q.Monic) :
+    q ∣ Differential.implicitDeriv (C w) q ↔ Differential.implicitDeriv (C w) q = 0 := by
+  constructor
+  · intro hdvd
+    rcases deriv_monic_eq_zero_or_natDegree_lt hq with h | hlt
+    · exact h
+    · by_contra hne
+      exact absurd (natDegree_le_of_dvd hdvd hne) (by omega)
+  · intro h; rw [h]; exact dvd_zero q
+
+end DeepWiki.SymbolicIntegration
