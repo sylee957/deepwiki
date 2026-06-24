@@ -5,6 +5,7 @@ import DeepWiki.RelationalDatabases.Sql
 import DeepWiki.RelationalDatabases.QueryEquivalence
 import DeepWiki.RelationalDatabases.QueryEquivalenceFO
 import DeepWiki.RelationalDatabases.QueryEquivalenceCodd
+import DeepWiki.RelationalDatabases.QueryEquivalenceCalcToAlg
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 
 /-! # Relational Database Model catalog — Chapter 2: Query Systems
@@ -35,10 +36,14 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
   condition language (elementary conditions `f(…)`, comparisons, set-comparisons `sθ`, `IN`,
   emptiness `(…)=∅`), multi-relation `From` lists, and the `IN`/`UNION`/`MINUS` generating-part
   reductions (2.3.3/2.3.5) [infra].
-§2.4: the *constructive* converse — a recursive `calcToAlg` translating each *safe* first-order
-  condition to an algebra expression [research: needs the renaming operator `ρ` (itself §2.1
-  `[infra]`) to compile the de Bruijn context into a product scheme without attribute clashes].
-  (Done: the database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free
+§2.4: the *constructive* converse `calcToAlg` is DONE for the disjoint-context case — `calcToAlg`
+  (FOCond → AlgExpr over the product scheme `flattenCtx`; relA/compA/agreeA → `comp`, ¬ → DOM-relative
+  diff, ∧/∨ → inter/union, ∃ → projection) with correctness `mem_evalAlg_calcToAlg` /
+  `mem_evalFOExpr_calcToAlg` on `WellScoped` conditions over a `CtxDisjoint` context. The remaining
+  gap is only the general (clashing-scheme) case, which needs the renaming `ρ`; the disjoint case
+  stands in for `ρ` (the de Bruijn context is the attribute tagging). So all four Codd reduction
+  directions are now formalized.
+  (Also done: the database-relation calculus foundation `QCond`/`evalQCond`, the quantifier-free
   fragment ↔ algebra both directions, the first-order calculus `FOCond`/`evalFO` with de Bruijn
   variables and per-relation schemes, the per-operator reductions, the **full recursive algebra →
   calculus translation** — weakening `FOCond.wk`/`evalFO_wk` via order-preserving embeddings
@@ -217,6 +222,19 @@ abbrev safety_isAlgExpressible := @DeepWiki.IsAlgExpressible
 database ⟹ complement is `univ` but every algebra expression is empty), so the calculus → algebra
 reduction cannot be total — it must restrict to safe formulas. -/
 abbrev safety_neg_not_expressible := @DeepWiki.neg_relA_not_isAlgExpressible
+
+/-- **§2.4** (the constructive converse, full first-order): translate a first-order condition to an
+algebra expression over the product scheme `flattenCtx` of its context. -/
+abbrev reduction_fo_calcToAlg := @DeepWiki.calcToAlg
+
+/-- **Codd's theorem, calculus ⊆ algebra** (§2.4, full first-order): `calcToAlg` is correct on a
+well-scoped condition over a disjoint context — the flattened environment is in the algebra
+translation iff the condition holds. -/
+abbrev reduction_fo_calcToAlg_correct := @DeepWiki.mem_evalAlg_calcToAlg
+
+/-- **§2.4** (single free variable): a tuple is in the calculus view `{t(Ω) | C}` iff its flattened
+environment is in the algebra translation — with `algToFO`, calculus and algebra are equivalent. -/
+abbrev reduction_calcToAlg_expr := @DeepWiki.mem_evalFOExpr_calcToAlg
 
 /-! ## §2.6 Reduction of SQL to the tuple calculus -/
 
