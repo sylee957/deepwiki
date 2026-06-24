@@ -296,6 +296,7 @@ import DeepWiki.NetworkCalculus.MultiStepDecode
 import DeepWiki.NetworkCalculus.CombinedInit
 import DeepWiki.NetworkCalculus.CombinedAccept
 import DeepWiki.NetworkCalculus.SpaceBound
+import DeepWiki.NetworkCalculus.TransitionEncode
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
