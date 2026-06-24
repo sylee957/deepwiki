@@ -992,6 +992,110 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
       (bredR fuel R p) hR hφR,
     mapRingHom_toBPoly_bredR φ fuel R p hR hφR]
 
+/-! ### The full `lrtGcdCompute ↔ lrtSubresultant` agreement over the residue ring `ℚ[t]/(R)`
+Chaining the `ℚ[t]`-similarity `lrtSubresultant ∼ lrtSubresultantCompute`
+(`isSimilar_lrtSubresultant_lrtSubresultantCompute`) — pushed through the residue map `φ : ℚ[X] →+* S` —
+with the `bmonicXmodR` unit bridge (`mapRingHom_toBPoly_bmonicXmodR`: `lrtGcdCompute`'s `Φ`-image is a
+residue-ring unit times `lrtSubresultantCompute`'s) lands the headline: over the residue ring `S = ℚ[t]/(R)`,
+the abstract `lrtSubresultant` is `IsSimilar` to the computable `lrtGcdCompute`. The push-through needs the
+content witnesses to stay nonzero mod `R` (Ex 2.7 regularity), taken as `φ`-nonzero hypotheses. -/
+
+/-- **`IsSimilar` pushes through a ring hom keeping the witnesses nonzero**: a `ℚ[t]`-similarity
+`IsSimilar A B` whose witnesses `a, b` map to *nonzero* `φ a, φ b` in `S` gives a residue-ring similarity of
+the `Φ`-images, `IsSimilar (Φ A) (Φ B)` (`Φ = Polynomial.mapRingHom φ`). The witnesses are `φ a, φ b`; the
+defining equation maps over since `Φ ∘ C = C ∘ φ`. -/
+theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B : (ℚ[X])[X]}
+    (h : IsSimilar A B) (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 → Polynomial.C a * A = Polynomial.C b * B
+      → φ a ≠ 0 ∧ φ b ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  obtain ⟨hφa, hφb⟩ := hne a b ha hb hab
+  refine ⟨φ a, φ b, hφa, hφb, ?_⟩
+  have hcong := congrArg (Polynomial.map φ) hab
+  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
+  simpa only [Polynomial.coe_mapRingHom] using hcong
+
+/-- **A residue-ring unit multiple is `IsSimilar`**: if `Φ B = C η · Φ A` with `η` a unit in `S`
+(`η · η' = 1`), then `IsSimilar (Φ A) (Φ B)` over `S` (witnesses `η` and `1`; `η ≠ 0` since it is a unit in
+a — necessarily nontrivial — ring). The `bmonicXmodR` unit-multiple identity packaged as a similarity. -/
+theorem isSimilar_of_unit_mul {S : Type*} [CommRing S] [Nontrivial S] {A B : S[X]} {η η' : S}
+    (hη : η * η' = 1) (hAB : B = Polynomial.C η * A) :
+    IsSimilar A B := by
+  have hηne : η ≠ 0 := by
+    rintro rfl
+    rw [zero_mul] at hη
+    exact one_ne_zero hη.symm
+  exact ⟨η, 1, hηne, one_ne_zero, by rw [hAB, map_one, one_mul]⟩
+
+/-- **The full `lrtGcdCompute ↔ lrtSubresultant` agreement, over the residue ring `ℚ[t]/(R)`** (the
+headline): for a residue map `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain LRT hypotheses
+(as in `isSimilar_lrtSubresultant_lrtSubresultantCompute`), the `bmonicXmodR` regularity (the leading
+`x`-coefficient's mod-`R` gcd reduces to a nonzero constant `C u`; the reduced primitive part is nonzero),
+and the content witnesses staying `φ`-nonzero (Ex 2.7 regularity `hne`), the `Φ`-image of the abstract
+`lrtSubresultant` is `IsSimilar` to the `Φ`-image of the computable `lrtGcdCompute` over `S = ℚ[t]/(R)`:
+`IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. Chains
+`isSimilar_lrtSubresultant_lrtSubresultantCompute` (mapped through `φ` by `isSimilar_mapRingHom`) with the
+`bmonicXmodR` unit bridge `mapRingHom_toBPoly_bmonicXmodR` (packaged by `isSimilar_of_unit_mul`) via
+`IsSimilar.trans`. This is the computable LRT log argument validated against the noncomputable subresultant,
+up to a residue-ring unit — the closing step of the agreement. -/
+theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDomain S] (φ : ℚ[X] →+* S)
+    (fuel : ℕ) (R A D : CPoly) (G : ℕ → BPoly) (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
+    (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
+    (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
+    (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
+    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree)
+    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
+      = toBPoly (G (m + 2)))
+    (hg : ¬ cisZero (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) = true)
+    (hgcn : cnorm (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ [])
+    (hg0 : toPoly (bcontentX fuel
+        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ 0)
+    (hrem : ∀ a ∈ bnorm (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)),
+      toPoly (cmod fuel a
+        (bcontentX fuel (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))) = 0)
+    (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
+        Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree
+          = Polynomial.C b * toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)
+        → φ a ≠ 0 ∧ φ b ≠ 0)
+    {u : ℚ} (hu : u ≠ 0)
+    (hgu : toPoly (cgcdExt fuel
+        (blc (bredR fuel R (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D))) R).1
+      = Polynomial.C u)
+    (hpz : ¬ bisZero (bredR fuel R
+        (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) = true) :
+    IsSimilar ((Polynomial.mapRingHom φ)
+        (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree))
+      ((Polynomial.mapRingHom φ) (toBPoly
+        (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D))) := by
+  -- abstract ℚ[t]-similarity, mapped through φ to the residue ring
+  have habs := isSimilar_lrtSubresultant_lrtSubresultantCompute fuel A D G bt s c m hG0 hG1 hd0 hd1
+    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hg hgcn hg0 hrem
+  have hmap := isSimilar_mapRingHom φ habs hne
+  -- the bmonicXmodR unit bridge: lrtGcdCompute = bmonicXmodR R lrtSubresultantCompute
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ fuel R
+    (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D) hRcn hφR hu hgu hpz
+  have hsimUnit := isSimilar_of_unit_mul
+    (A := (Polynomial.mapRingHom φ) (toBPoly
+      (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)))
+    (B := (Polynomial.mapRingHom φ) (toBPoly
+      (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D)))
+    hunit (by rw [lrtGcdCompute]; exact hbridge)
+  exact hmap.trans hsimUnit
+
 /-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
 The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
 engine against the abstract subresultant — no longer just one step:
