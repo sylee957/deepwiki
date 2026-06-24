@@ -8,6 +8,7 @@ dependence over the *constants* — is proved by induction on the number of func
 the classical analytic argument purely algebraically. -/
 
 open scoped Differential
+open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -152,5 +153,22 @@ theorem not_linearDependentOverConst_algebraMap {n : ℕ} [NeZero n] (y : Fin n 
   exact fun hcontra => h ((map_eq_zero (algebraMap F E)).mp hcontra)
 
 end Extension
+
+section SeparableAlgebraic
+variable {E : Type*} [Field E] [Differential E]
+
+/-- **Lemma 3.3.2(ii)** (§3.3): a separable algebraic element over the constants is a constant.
+If `c ∈ E` is a root of a polynomial `p` with constant coefficients (algebraic over the
+constants) and `p` is separable at `c` (`p'(c) ≠ 0`, the separability witness), then `c′ = 0`.
+From the chain rule `Δ(p(c)) = p'(c)·Δc` (the `κ_D(p)` term drops as `p`'s coefficients are
+constants), and `p(c) = 0`, so `p'(c)·Δc = 0`, forcing `Δc = 0`. -/
+theorem deriv_eq_zero_of_separable_algebraic_const {c : E} (p : E[X])
+    (hp : ∀ i, (p.coeff i)′ = 0) (hroot : p.eval c = 0) (hsep : p.derivative.eval c ≠ 0) :
+    c′ = 0 := by
+  have hchain : (p.eval c)′ = p.derivative.eval c * c′ := deriv_eval_of_const_coeffs p c hp
+  rw [hroot, map_zero] at hchain
+  exact (mul_eq_zero.mp hchain.symm).resolve_left hsep
+
+end SeparableAlgebraic
 
 end DeepWiki.SymbolicIntegration
