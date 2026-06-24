@@ -1473,4 +1473,56 @@ theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N
       exact unique_of_strictAnti (fun i => bdeg (G i)) N hstrict i (by omega) hqi.1
   rw [hfilt, List.map_singleton]
 
+/-! #### Concrete chain data from `subresPRS` (discharging `G`/`bt`/`s`/`c`, `hsc`, `hG2`, `hfilt`)
+The chain element `chainG`, β-divisor `chainBt`, and pseudo-division witnesses `chainS`/`chainC` are now
+*defined* (computable projections of `goState`, and `Classical.choose` of `toBPoly_bpsremainder` for the
+existential quotient/content). The per-step pseudo-division identity `hsc` and divided recurrence `hG2`
+hold for them automatically; combined with `subresPRS_filter_singleton` this discharges `hfilt`. -/
+
+/-- **The concrete `subresPRS` chain element** `chainG fuel P Q i := (goState fuel (P,Q,[-1],…) i).1` —
+the `i`-th element of `subresPRS fuel P Q`, as a function `ℕ → BPoly`. -/
+noncomputable def chainG (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
+  (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1
+
+/-- **The concrete `subresPRS` β-divisor** `chainBt fuel P Q l := goBeta …` at the `l`-th state — the
+exact `ℚ[t]`-divisor `βₗ` of the `subresPRS` divided step `Rₗ₊₂ = prem(Rₗ,Rₗ₊₁)/βₗ`. -/
+noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly :=
+  goBeta fuel (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).1
+    (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.1
+    (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.2
+
+/-- **The concrete pseudo-division quotient** `chainS fuel P Q l`: the `Classical.choose` quotient of the
+pseudo-division identity `toBPoly_bpsremainder` for the chain pair `(chainG l, chainG (l+1))`. -/
+noncomputable def chainS (fuel : ℕ) (P Q : BPoly) (l : ℕ) : BPoly :=
+  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose
+
+/-- **The concrete pseudo-division content** `chainC fuel P Q l`: the `Classical.choose` content `c ∈ ℚ[t]`
+of the pseudo-division identity for the chain pair `(chainG l, chainG (l+1))`. -/
+noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly :=
+  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose
+
+/-- **`chainG 0 = P`**: the chain's first element is the first `subresPRS` argument. -/
+@[simp] theorem chainG_zero (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 0 = P := rfl
+
+/-- **`chainG 1 = Q`**: the chain's second element is the second `subresPRS` argument. -/
+@[simp] theorem chainG_one (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 1 = Q := by
+  rw [chainG, goState_succ_fst]; rfl
+
+/-- **`hsc` for the concrete chain**: the pseudo-division identity holds for `chainS`/`chainC` by the very
+`Classical.choose` spec of `toBPoly_bpsremainder`. -/
+theorem chain_hsc (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
+    Polynomial.C (toPoly (chainC fuel P Q l)) * toBPoly (chainG fuel P Q l)
+      = toBPoly (chainS fuel P Q l) * toBPoly (chainG fuel P Q (l + 1))
+        + toBPoly (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))) :=
+  (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose_spec
+
+/-- **`hG2` for the concrete chain**: the divided-PRS recurrence `chainG (l+2) =
+bdivC fuel (prem (chainG l) (chainG (l+1))) (chainBt l)` holds definitionally via `goState_fst_add_two`. -/
+theorem chain_hG2 (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
+    chainG fuel P Q (l + 2)
+      = bdivC fuel (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1)))
+          (chainBt fuel P Q l) := by
+  rw [chainG, goState_fst_add_two, chainBt]
+  rfl
+
 end DeepWiki.SymbolicIntegration.Compute
