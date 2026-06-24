@@ -72,6 +72,19 @@ def qderiv (x : QFun) : QFun :=
 def qeq (x y : QFun) : Bool :=
   cisZero (csub (cmul x.1 y.2) (cmul y.1 x.2))
 
+/-- **Lowest-terms reduction** `qnorm fuel (a, b) = (a/q, b/q)` scaled so the denominator is monic,
+where `q = gcd(a, b)` (`cgcdExt`): divide numerator and denominator by their gcd, then scale both by
+`(lead of b/q)⁻¹` so the reduced denominator is `cmonic`. The zero fraction stays `qzero`. -/
+def qnorm (fuel : ℕ) (x : QFun) : QFun :=
+  let (a, b) := x
+  if cisZero a then qzero
+  else
+    let q := (cgcdExt fuel a b).1
+    let a' := cdiv fuel a q
+    let b' := cdiv fuel b q
+    let s := (clead b')⁻¹
+    (cscale s a', cscale s b')
+
 /-! ### Field-homomorphism lemmas: `qone`, `qneg`, `qsub`, `qmul`
 
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`.
@@ -163,3 +176,62 @@ theorem qeq_iff (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
   -- bridge through `am` injectivity (`map_mul` + injectivity).
   rw [← map_mul, ← map_mul]
   exact ⟨fun h => by rw [h], fun h => RatFunc.algebraMap_injective ℚ h⟩
+
+/-- `am (C s) = algebraMap ℚ (RatFunc ℚ) s` is nonzero for `s ≠ 0` (the constant `C s` embeds to a
+nonzero field element). -/
+theorem am_C_ne_zero {s : ℚ} (hs : s ≠ 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (Polynomial.C s) ≠ 0 :=
+  (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr (Polynomial.C_ne_zero.mpr hs)
+
+/-- **Scaling numerator and denominator by a nonzero constant preserves the value**:
+`toQFun (cscale s a, cscale s b) = toQFun (a, b)` for `s ≠ 0` (the `C s` factors cancel in the
+field `RatFunc ℚ`). -/
+theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : CPoly) :
+    toQFun (cscale s a, cscale s b) = toQFun (a, b) := by
+  simp only [toQFun, toPoly_cscale, map_mul]
+  rw [mul_div_mul_left _ _ (am_C_ne_zero hs)]
+
+/-- **Dividing numerator and denominator by an exact common divisor preserves the value**: if `q`
+divides both `a` and `b` exactly (the remainders `cmod fuel a q` and `cmod fuel b q` read to `0`) and
+`q ≠ 0`, then `toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b)`. -/
+theorem toQFun_cdiv_cdiv (fuel : ℕ) (a b q : CPoly) (hq : cnorm q ≠ [])
+    (hra : toPoly (cmod fuel a q) = 0) (hrb : toPoly (cmod fuel b q) = 0) :
+    toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b) := by
+  set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hqm : am (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
+  -- exact divisions: `toPoly a = toPoly (cdiv a q)·toPoly q`, same for `b`.
+  have ha := toPoly_cdiv_of_cmod_zero fuel a q hq hra
+  have hbe := toPoly_cdiv_of_cmod_zero fuel b q hq hrb
+  simp only [toQFun]
+  rw [ha, hbe, map_mul, map_mul, mul_div_mul_right _ _ hqm]
+
+/-- **`qnorm` preserves the value**: `toQFun (qnorm fuel x) = toQFun x` in `RatFunc ℚ`. The
+lowest-terms reduction divides numerator and denominator by their gcd (exact division, certificates
+`hra`/`hrb`) and scales both by the same nonzero constant `(clead (b/q))⁻¹` to make the denominator
+monic — neither changes the fraction's value. Hypotheses: `b ≠ 0`, the gcd `q ≠ 0`, the two
+exact-division certificates, and the reduced denominator `b/q ≠ 0` (so the monic-scaling constant is
+nonzero). -/
+theorem toQFun_qnorm (fuel : ℕ) (x : QFun) (hb : toPoly x.2 ≠ 0)
+    (hq : cnorm (cgcdExt fuel x.1 x.2).1 ≠ [])
+    (hra : toPoly (cmod fuel x.1 (cgcdExt fuel x.1 x.2).1) = 0)
+    (hrb : toPoly (cmod fuel x.2 (cgcdExt fuel x.1 x.2).1) = 0)
+    (hbq : cnorm (cdiv fuel x.2 (cgcdExt fuel x.1 x.2).1) ≠ []) :
+    toQFun (qnorm fuel x) = toQFun x := by
+  obtain ⟨a, b⟩ := x
+  simp only at hb hq hra hrb hbq
+  rw [qnorm]
+  by_cases ha : cisZero a = true
+  · -- numerator zero: `qnorm = qzero`, and `toQFun (0/b) = 0 = toQFun qzero`.
+    have ha0 : toPoly a = 0 := (cisZero_iff_toPoly_eq_zero a).mp ha
+    simp only [ha, if_true]
+    rw [toQFun_qzero, toQFun, ha0, map_zero, zero_div]
+  · -- general case: divide by gcd, then scale by `(clead (b/q))⁻¹`.
+    rw [if_neg ha]
+    have hbq0 : toPoly (cdiv fuel b (cgcdExt fuel a b).1) ≠ 0 :=
+      fun h => hbq ((cnorm_eq_nil_iff _).mpr h)
+    have hs : (clead (cdiv fuel b (cgcdExt fuel a b).1))⁻¹ ≠ 0 :=
+      inv_ne_zero (clead_ne_zero hbq)
+    rw [toQFun_cscale_cscale _ hs, toQFun_cdiv_cdiv fuel a b _ hq hra hrb]
+
+end DeepWiki.SymbolicIntegration.Compute
