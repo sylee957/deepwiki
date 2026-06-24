@@ -14,7 +14,8 @@ the multiplicity until only squarefree denominators remain. We `native_decide`-v
 `∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x`: we pin the computed output and the correctness
 identity `g' + B/D* = A/D` (cleared of denominators) by `native_decide` (kernel `decide` stalls on
 GMP-backed `ℚ`). A `ratIntegrate` wires `hermiteReduce` into `lrtLogPart` for the full
-`∫A/D = rational part + log part`. Agreement with the noncomputable `hermiteReducePower` is deferred. -/
+`∫A/D = rational part + log part`. Correctness against the noncomputable Hermite theory is **proven**
+in `HermiteCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -180,17 +181,18 @@ def ratIntegrate (fuel : ℕ) (A D : CPoly) : QFun × List (CPoly × BPoly) :=
 -- `x`. Prints the full integral data `((gnum, gden), logpart)`.
 #eval ratIntegrate 40 cA221 cD221
 
-/-! ### Agreement with the noncomputable `hermiteReducePower` — DEFERRED
-Under the `toPoly` bridge, the computable `hermiteReduce` should agree (as rational functions) with the
-noncomputable `hermiteReducePower`/`hermiteReduce_full` of `RationalIntegrationAlgorithms`: both return
-`(g, B, Dstar)` with `∫A/D = g + ∫B/Dstar` and `Dstar` squarefree, the rational part `g` unique up to an
-additive constant absorbed into the log part. Proving this requires aligning `cdiophantine`'s Bézout
-cofactors with `diophantineSolveReduced` (agreement up to the `gcd`-normalizing unit, which cancels in
-the fraction `B/Vʲ`), matching `csqfreeFactor` to Mathlib's squarefree factorization, and reconciling
-the per-factor quadratic loop with `hermiteReducePower`'s prime-power recursion. The validated
+/-! ### Correctness against the noncomputable Hermite theory — PROVEN in `HermiteCorrectness`
+Under the `toPoly` bridge, the computable `hermiteReduce` produces a valid Hermite reduction on **all**
+inputs: `hermiteReduce_residual_correct_uncond'` (with `hermiteInner_spec` for the inner step) certifies
+the residual identity `g' + B/Dstar = A/D` as rational functions, with the rational part `g` unique up
+to an additive constant absorbed into the log part. Every piece the algorithm relies on is in place:
+`toPoly_cdiophantine_eq` aligns `cdiophantine`'s Bézout cofactors with `diophantineSolveReduced` (the
+`gcd`-normalizing unit cancels in the fraction `B/Vʲ`); `csqfreeFactor_squarefree`,
+`csqfreeFactor_pairwise_isRelPrime`, and `csqfreeFactor_factor_assoc` match `csqfreeFactor` to the
+abstract Yun/Musser squarefree factorization; and `total_fold_residual_over_D` sums the per-factor
+multi-fold residual (the interference `W ∣ R` discharged via the `IsQRegular` localization). The
 `native_decide` computation on Example 2.2.1 (`hermite_ex221_residual`, `hermite_ex221_cleared_identity`)
-— the *correctness identity* `g' + B/Dstar = A/D` certified directly — is the primary deliverable; this
-agreement is the stretch and is left for a follow-up. -/
+remains as a concrete witness. -/
 
 end Compute
 

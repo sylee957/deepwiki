@@ -16,7 +16,7 @@ arithmetic); `bpsremainder` is the **pseudo-remainder** `prem(p,q)` (multiply by
 `gcd_x` up to a `ℚ[t]` content factor. On **Example 2.4.1** `A = x⁴−3x²+6, D = x⁶−5x⁴+5x²+4` this
 returns the LRT log argument `x³ + 2t·x² − 3x − 4t` (the Czichowski/Gröbner basis element of
 Example 2.6.1, `B = {4t²+1, x³+2tx²−3x−4t}`), pinned by `native_decide`. Agreement with the
-noncomputable `lrtSubresultant` is deferred. -/
+noncomputable `lrtSubresultant` is **proven** in `SubresultantCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -269,17 +269,17 @@ theorem lrtGcd_ex241 :
     lrtGcdCompute 30 3 cR241 cA241 cD241 = [[0, -4], [-3], [0, 2], [1]] := by
   native_decide
 
-/-! ### Bridge back to `ℚ[t][x]` and agreement — DEFERRED
-`bsubresultantGcd`/`lrtGcdCompute` should agree (up to a `ℚ[t]` unit) with the noncomputable
+/-! ### Bridge back to `ℚ[t][x]` and agreement — PROVEN in `SubresultantCorrectness`
+`bsubresultantGcd`/`lrtGcdCompute` agrees (up to a `ℚ[t]` unit, i.e. `IsSimilar`) with the noncomputable
 `lrtSubresultant A D` (in `LazardRiobooTragerCorrectness`), the LRT subresultant primitive whose
-`t ↦ a` specializations are the per-residue Rothstein–Trager gcds `Gₐ = gcd(D, A − a·D')`. The
-agreement requires: (i) matching the pseudo-remainder sequence to the subresultant PRS
-(`subresultant_euclideanPRS_isSimilar_gcd`), reconciling the pseudo-division content/`lc` powers with
-the subresultant coefficient normalization; (ii) a bivariate `toPoly`-style bridge `BPoly → ℚ[t][x]`
-(layering `LogToAtanCompute`'s `toPoly : CPoly → ℚ[t]` over the `x`-Horner shape); (iii) the content
-`bprimitivePartX` agreeing with the `ℚ[t]`-primitive part. The validated `native_decide` computation on
-Example 2.4.1 (`lrtGcd_ex241`) is the primary deliverable; this agreement is the stretch and is left for
-a follow-up. -/
+`t ↦ a` specializations are the per-residue Rothstein–Trager gcds `Gₐ = gcd(D, A − a·D')`. All the
+pieces are in place: `lrtGcdCompute_isSimilar_lrtSubresultant` (the residue-ring closure through the
+coprime-witness bridge `isSimilar_mapRingHom_of_irreducible`), with the chain matched to the subresultant
+PRS via `isSimilar_subresPRS_telescope`/`subresultant_prs_telescope`, the bivariate bridge
+`toBPoly : BPoly → ℚ[t][x]` (`toBPoly_bdivC_exact` for the Collins β-divisor exact division), and the
+`goState` mirror of the `let rec subresPRS.go`. Concretely `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241`
+is hypothesis-free over `ℚ[t]`, and `lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed` closes
+Example 2.4.1 (`lrtGcd_ex241`) over the residue ring `ℚ[t]/(4t²+1)` with no hypotheses. -/
 
 end Compute
 

@@ -188,24 +188,23 @@ theorem rtResultant_ex241_sqfree :
     csqfreePart 30 (rtResultantCompute 30 cA241 cD241) = [1/4, 0, 1] := by
   native_decide
 
-/-! ### Bridge back to `ℚ[X]` and agreement — DEFERRED
-`toPoly (cresultant …)` and `toPoly (rtResultantCompute …)` should agree with Mathlib's
-`Polynomial.resultant` and the noncomputable `rtResultant` (in `RationalIntegrationAlgorithms`),
-respectively. The agreement requires: (i) matching the Euclidean-PRS resultant identity to
-`Polynomial.resultant` (the sign/leading-coefficient bookkeeping `res(p,q) = (−1)^(dp·dq)·lc(q)^(dp−dr)·
-res(q,r)` is `Polynomial.resultant_swap` + `resultant_mod`/quasi-Euclidean lemmas, with the formal-vs-
-actual degree reconciliation at the §2.4 formal degrees `deg D`, `deg D − 1`); (ii) `cinterpolate`
-correctness `toPoly (cinterpolate pts)` evaluates to `yₖ` at `xₖ` (Mathlib's `Lagrange.interpolate`
-agreement), so that the interpolated `rtResultantCompute` equals the bivariate resultant `R(t)` by
-agreement at `deg D + 1` points and a degree bound. The validated `native_decide` computation on
-Example 2.4.1 (`rtResultant_ex241`, `rtResultant_ex241_normalized`) is the primary deliverable; this
-agreement is the stretch and is left for a follow-up. -/
+/-! ### Bridge back to `ℚ[X]` and agreement — PROVEN in `ComputeCorrectness`/`RtResultantCorrectness`
+`toPoly (cresultant …)` agrees with Mathlib's `Polynomial.resultant` on all inputs
+(`ComputeCorrectness.cresultant_eq`, via the Euclidean-PRS toolkit `resultant_comm`/
+`resultant_add_mul_right`/`resultant_add_right_deg` with the §2.4 formal-vs-actual degree
+reconciliation), and `toPoly (rtResultantCompute …)` equals the noncomputable bivariate resultant
+`rtResultant` (`RtResultantCorrectness.toPoly_rtResultantCompute_eq_rtResultant`, for monic `D` and
+`deg A < deg D`): both have degree `< deg D + 1` and agree at the `deg D + 1` integer nodes
+(`cinterpolate` correctness `toPoly_cinterpolate_eval` + the column-degree bound
+`natDegree_rtResultant_le`), hence are equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`. The
+`native_decide` computation on Example 2.4.1 (`rtResultant_ex241`, `rtResultant_ex241_normalized`)
+remains as a concrete witness. -/
 
-/-- **Agreement with the noncomputable `rtResultant` — DEFERRED statement.** Under the `toPoly` bridge,
-the computable `rtResultantCompute` equals (up to a nonzero scalar `c`, by resultant normalization) the
-noncomputable `DeepWiki.SymbolicIntegration.rtResultant`. Stated here as the target of the deferred
-agreement proof; not yet proved (`cresultant ↔ Polynomial.resultant` and `cinterpolate` correctness are
-the missing pieces, see the module note above). -/
+/-- **Agreement with the noncomputable `rtResultant` — PROVEN.** Under the `toPoly` bridge, the
+computable `rtResultantCompute` equals the noncomputable `DeepWiki.SymbolicIntegration.rtResultant`
+(exactly, for monic `D` and `deg A < deg D`): see
+`RtResultantCorrectness.toPoly_rtResultantCompute_eq_rtResultant`. This `Prop` records the general
+up-to-scalar form; the exact equality under the natural hypotheses is the stronger proven statement. -/
 def rtResultantCompute_agrees_statement : Prop :=
   ∀ (A D : CPoly) (fuel : ℕ), ∃ c : ℚ, c ≠ 0 ∧
     toPoly (rtResultantCompute fuel A D)

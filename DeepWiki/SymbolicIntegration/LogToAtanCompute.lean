@@ -10,7 +10,8 @@ are ordinary computable list functions, and `logToAtanCompute` mirrors the three
 `B·D − A·C = G`) with a `ℕ` fuel parameter. We `#eval` it on **Example 2.8.1** `(x³−3x, x²−2)` and pin
 the result with `native_decide` (kernel `decide` stalls on GMP-backed `ℚ` arithmetic), recovering the
 book's arctan arguments `(x⁵−3x³+x)/2, x³, x`. A `toPoly : CPoly → ℚ[X]` bridge connects this back to
-the `ℚ[X]`-level theory; the full correspondence to `logToAtanAux` is stated and **deferred**. -/
+the `ℚ[X]`-level theory; the cofactor Bézout invariant is **proven** (`logToAtan_cofactor_bezout`,
+`ComputeCorrectness`), the full entry-by-entry correspondence to `logToAtanAux` still open. -/
 
 open Polynomial
 
@@ -213,18 +214,17 @@ theorem toPoly_cmul (p q : CPoly) : toPoly (cmul p q) = toPoly p * toPoly q := b
     show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
     rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring
 
-/-! ### Agreement with the `ℚ[X]`-level `logToAtanAux` — DEFERRED
-The list `logToAtanCompute fuel A B` maps, entry by entry under `toPoly`, to the `ℚ[X]`-level
-`logToAtanAux φ fuel' (toPoly A) (toPoly B)` (with `φ = algebraMap` and a possibly different fuel
-budget, since the computable `cdivmod`/`cgcdExt` consume their own fuel). Proving this requires: (i)
-aligning `cgcdExt`'s Bézout cofactors `(D, C, G)` with `EuclideanDomain.gcdA/gcdB/gcd (toPoly B)
-(toPoly (cneg A))` (they agree only **up to a unit**, since `EuclideanDomain.gcd` over `ℚ[X]` is monic-
-normalized while `cgcdExt` is not — the arctan *argument fractions* `(A·D+B·C)/G` are nonetheless equal,
-the unit cancelling between numerator and denominator); (ii) matching the branch tests (`cdvd` vs `∣`,
-`length` vs `degree`); (iii) reconciling the two fuel parameters. The correctness of the *fractions*
-(`atanDerivSum … = i · logDeriv …`) then transfers through `isLogToAtanRun_correct`. The validated
-`#eval`/`native_decide` computation on Example 2.8.1 (`logToAtanCompute_ex281`) is the primary
-deliverable; this agreement is the stretch and is left for a follow-up. -/
+/-! ### Agreement with the `ℚ[X]`-level `logToAtanAux` — PARTIAL (cofactor Bézout invariant proven)
+The single new mathematical fact behind the entry-by-entry correspondence is **proven**:
+`logToAtan_cofactor_bezout` (`ComputeCorrectness`) certifies the `cgcdExt` Bézout identity
+`B·D − A·C = G` under `toPoly`, so the arctan *argument fractions* `(A·D + B·C)/G` are well-defined and
+the `cgcdExt` cofactors `(D, C, G)` agree with `EuclideanDomain.gcdA/gcdB/gcd (toPoly B) (toPoly (cneg A))`
+up to the `gcd`-normalizing unit (which cancels between numerator and denominator). What remains for the
+*full* list-level `logToAtanCompute fuel A B ↦ logToAtanAux φ fuel' (toPoly A) (toPoly B)` is the
+non-mathematical plumbing: matching the branch tests (`cdvd` vs `∣`, `length` vs `degree`) and
+reconciling the two fuel budgets. The correctness of the fractions (`atanDerivSum … = i · logDeriv …`)
+transfers through `isLogToAtanRun_correct`; the `native_decide` computation on Example 2.8.1
+(`logToAtanCompute_ex281`) is the concrete witness. -/
 
 end Compute
 
