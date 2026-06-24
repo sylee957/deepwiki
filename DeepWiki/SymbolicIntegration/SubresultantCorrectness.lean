@@ -600,6 +600,88 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
         (hsc l hl) (hβcn l hl) (hdiv l hl)
       rw [hG2 l hl]; exact hrel)
 
+/-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element
+`isSimilar_subresPRS_telescope` lands the chain *endpoint* `Sⱼ(G m, G (m+1))`. At the **regular index**
+`j = deg (toBPoly (G (m+2)))` — the degree of the next PRS element — the abstract Fundamental PRS Theorem
+`subresultant_prs_similar_elt` collapses the endpoint subresultant all the way to that element
+`toBPoly (G (m+2))` itself (the telescope's `IsSimilar.trans` plus the regular-index remainder step). So
+`Sⱼ(toBPoly (G 0), toBPoly (G 1)) ~ toBPoly (G (m+2))` — the subresultant of the first pair is similar to
+the degree-`j` chain element, which is exactly what the computable `bsubresultantGcd` filters out. -/
+
+/-- **`Sⱼ` similar to the degree-`j` `subresPRS` element** (the endpoint of the chain agreement, regular
+index): with the per-step divided-PRS hypotheses on the chain `G` (as in `isSimilar_subresPRS_telescope`,
+now over `l ≤ m`), the index `j = deg (toBPoly (G (m+2)))` strictly below every earlier element
+(`hjlt`), and `toBPoly (G (m+2)) ≠ 0` (`hCne`), the subresultant of `(G 0, G 1)` at that index is
+`ℚ[t]`-similar to the element `toBPoly (G (m+2))`:
+`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (toBPoly (G (m+2)))`. The `toBPoly` instance of
+`subresultant_prs_similar_elt`, fed the combined relation `toBPoly_prs_rel` at each step. -/
+theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree)
+    (hCne : toBPoly (G (m + 2)) ≠ 0) :
+    IsSimilar
+      (subresultant (toBPoly (G 0)) (toBPoly (G 1))
+        (toBPoly (G 0)).natDegree (toBPoly (G 1)).natDegree (toBPoly (G (m + 2))).natDegree)
+      (toBPoly (G (m + 2))) :=
+  subresultant_prs_similar_elt (fun i => toBPoly (G i)) (fun l => toPoly (c l))
+    (fun l => toPoly (bt l)) (fun l => toBPoly (s l)) m
+    hc0 hβ0 hlc hcb hjlt hQ
+    (fun l hl => by
+      have hrel := toBPoly_prs_rel fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
+        (hsc l hl) (hβcn l hl) (hdiv l hl)
+      rw [hG2 l hl]; exact hrel)
+    hCne
+
+/-! ### LRT endpoint: `lrtSubresultant` similar to the degree-`j` `subresPRS` element
+Specializing `isSimilar_subresPRS_elt` to the LRT chain — `G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`
+(the operands of `lrtSubresultant`, via `lrtSubresultant_eq_subresultant_toBPoly`) — and using that
+`toBPoly (liftCtoBPoly D)` has `x`-degree `deg D` and `toBPoly (bArgAmtD' A D)` has `x`-degree `deg D − 1`
+(the regular LRT case, taken as hypotheses), the **abstract** `lrtSubresultant A D j` at the index
+`j = deg (toBPoly (G (m+2)))` is `ℚ[t]`-similar to the degree-`j` computable PRS element. This is the
+endpoint of the LRT chain agreement: the noncomputable LRT subresultant matches the computable engine's
+degree-`j` subresultant-PRS element up to a `ℚ[t]` content/unit. -/
+
+/-- **`lrtSubresultant` similar to the degree-`j` LRT `subresPRS` element** (the LRT chain endpoint): for
+the LRT chain `G` with `G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`, formal-degree agreement
+`hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree`,
+`hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree − 1` (the regular case), and the per-step divided
+hypotheses, the abstract `lrtSubresultant A D (deg (toBPoly (G (m+2))))` is similar to `toBPoly (G (m+2))`:
+`IsSimilar (lrtSubresultant A D (deg (G (m+2)))) (toBPoly (G (m+2)))`. Transports `isSimilar_subresPRS_elt`
+across `lrtSubresultant_eq_subresultant_toBPoly` (with the two formal-degree rewrites). -/
+theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
+    (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
+    (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
+    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
+        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
+    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
+    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
+    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
+    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
+    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
+    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
+    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
+    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+      ≤ (toBPoly (G l)).natDegree)
+    (hCne : toBPoly (G (m + 2)) ≠ 0) :
+    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
+      (toBPoly (G (m + 2))) := by
+  have hend := isSimilar_subresPRS_elt fuel G bt s c m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
+  rw [hd0, hd1] at hend
+  rw [lrtSubresultant_eq_subresultant_toBPoly, ← hG0, ← hG1]
+  exact hend
+
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
 The pieces above now realize **one full divided subresultant-PRS step** of the computable engine against
 the abstract subresultant: the β-divisor exact-division `toBPoly_bdivC_exact`, the divided one-step law
