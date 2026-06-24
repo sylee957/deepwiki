@@ -1897,4 +1897,29 @@ theorem hpz_ex241 :
       (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) = true := by
   rw [natDegree_toBPoly_chainG3_ex241]; native_decide
 
+/-! ### The Exercise 2.7 residue-ring unit regularity (Ex 2.4.1, `native_decide`)
+The `bmonicXmodR` monic-in-`x` normalization needs the leading `x`-coefficient of the mod-`R`-reduced
+primitive subresultant to be a **unit mod `R = 4t²+1`**. Concretely its leading coefficient is `(107/8)·t`,
+whose extended-Euclidean gcd with `4t²+1` reduces to the constant `1` — so it is a unit, with `u = 1`. The
+gcd `.1` literally evaluates to `[1]` (`native_decide`), and `toPoly [1] = C 1`. -/
+
+/-- **The leading-`x`-coefficient mod-`R` gcd is `[1]`** (Ex 2.4.1): the extended-Euclidean gcd of the
+reduced primitive subresultant's leading `x`-coefficient (`(107/8)·t`) with `R = 4t²+1` is the constant
+`1` (the leading coefficient is a unit mod `R`). `native_decide`. -/
+theorem cgcdExt_blc_bredR_ex241 :
+    (cgcdExt 30 (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1 = [1] := by
+  rw [natDegree_toBPoly_chainG3_ex241]; native_decide
+
+/-- **`hgu` for Ex 2.4.1** (Exercise 2.7 regularity, `u = 1`): the leading-`x`-coefficient mod-`R` gcd
+reduces to the nonzero constant `C 1` — so the leading coefficient is a unit mod `R = 4t²+1`. From
+`cgcdExt_blc_bredR_ex241` (`gcd = [1]`) and `toPoly [1] = C 1`. -/
+theorem hgu_ex241 :
+    toPoly (cgcdExt 30 (blc (bredR 30 cR241 (lrtSubresultantCompute 30
+      (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241))) cR241).1
+      = Polynomial.C (1 : ℚ) := by
+  rw [cgcdExt_blc_bredR_ex241]
+  show toPoly [(1 : ℚ)] = _
+  rw [toPoly_cons, toPoly_nil]; simp
+
 end DeepWiki.SymbolicIntegration.Compute
