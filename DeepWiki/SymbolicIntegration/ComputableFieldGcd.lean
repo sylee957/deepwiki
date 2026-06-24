@@ -96,11 +96,12 @@ theorem isZeroNZ_iff (x : QFunNZ) : isZeroNZ x = true ↔ toQFunNZ x = 0 := by
 
 end QFunNZ
 
-/-- **`CField QFunNZ`**: the denominator-nonzero rational functions ℚ(x) as a computable field over
-`K = RatFunc ℚ` with `toK = toQFunNZ`. The first non-trivial `CField` instance — its `isZero` is the
-numerator zero test (no `toK`-injectivity / lowest-terms normal form needed), validating the dropped-
-injectivity design of `CField`. -/
-noncomputable instance instCFieldQFunNZ : CField QFunNZ where
+/-- **`CField QFunNZ`**: the denominator-nonzero rational functions ℚ(x) as a *computable* field. Its
+operations `qzeroNZ`/`qoneNZ`/`qaddNZ`/`qmulNZ`/`qnegNZ`/`qinvNZ` and zero test `isZeroNZ` are honest
+list computations, so the instance is **computable** — the generic engine (`caddG`/`cmulG`/`cgcdExtG`/…)
+reduces over `CPolyG QFunNZ` (`#eval`/`native_decide`). The field bridge lives in the companion
+`CFieldSpec QFunNZ`. -/
+instance instCFieldQFunNZ : CField QFunNZ where
   zero := QFunNZ.qzeroNZ
   one := QFunNZ.qoneNZ
   add := QFunNZ.qaddNZ
@@ -108,6 +109,12 @@ noncomputable instance instCFieldQFunNZ : CField QFunNZ where
   neg := QFunNZ.qnegNZ
   inv := QFunNZ.qinvNZ
   isZero := QFunNZ.isZeroNZ
+
+/-- **`CFieldSpec QFunNZ`**: the field-homomorphism bridge for `CField QFunNZ`, over `K = RatFunc ℚ`
+with `toK = toQFunNZ`. The first non-trivial `CFieldSpec` instance — its `isZero` is the numerator zero
+test (no `toK`-injectivity / lowest-terms normal form needed), validating the dropped-injectivity
+design. Noncomputable (it routes through `RatFunc`), but only the *correctness* layer depends on it. -/
+noncomputable instance instCFieldSpecQFunNZ : CFieldSpec QFunNZ where
   K := RatFunc ℚ
   toK := QFunNZ.toQFunNZ
   toK_zero := QFunNZ.toQFunNZ_qzeroNZ
@@ -128,6 +135,7 @@ realizes `Polynomial.derivative` exactly, mirroring the concrete `toPoly_cderiv`
 namespace CPolyG
 
 variable {α : Type*} [CField α]
+variable [CFieldSpec α]
 
 /-- **Generic `ℕ`-scaling** `nsmulG k a` = `a + a + … + a` (`k` times), built from `CField.add`. The
 coefficient-degree multiplier for the formal derivative; `toK` reads it as `k • _ = (k : K) * _`. -/
@@ -136,10 +144,10 @@ def nsmulG : ℕ → α → α
   | k + 1, a => CField.add a (nsmulG k a)
 
 /-- `toK (nsmulG k a) = k • toK a` in `K`. -/
-theorem toK_nsmulG (k : ℕ) (a : α) : CField.toK (nsmulG k a) = k • CField.toK a := by
+theorem toK_nsmulG (k : ℕ) (a : α) : CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
   induction k with
-  | zero => rw [nsmulG, CField.toK_zero, zero_smul]
-  | succ n ih => rw [nsmulG, CField.toK_add, ih, succ_nsmul']
+  | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
+  | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
 
 /-- **Generic formal derivative** `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`: drop the constant
 coefficient, scale the `k`-th remaining coefficient by `k`. -/
@@ -158,7 +166,7 @@ theorem toPolyG_cderivG (p : CPolyG α) :
     toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
   suffices h : ∀ (as : CPolyG α) (k : ℕ),
       toPolyG (cderivG.go k as)
-        = (k : (CField.K α)[X]) * toPolyG as + X * Polynomial.derivative (toPolyG as) by
+        = (k : (CFieldSpec.K α)[X]) * toPolyG as + X * Polynomial.derivative (toPolyG as) by
     cases p with
     | nil => simp [cderivG]
     | cons a as =>
@@ -173,7 +181,7 @@ theorem toPolyG_cderivG (p : CPolyG α) :
     show toPolyG (nsmulG k b :: cderivG.go (k + 1) bs) = _
     rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
       derivative_X]
-    have hk : Polynomial.C (CField.toK (nsmulG k b)) = (k : (CField.K α)[X]) * Polynomial.C (CField.toK b) := by
+    have hk : Polynomial.C (CFieldSpec.toK (nsmulG k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
 
@@ -236,6 +244,7 @@ theorem toPolyG_cdivmodG (fuel : ℕ) (p q : CPolyG α) (hqn : cnormG q = q) (hq
       simp only [toPolyG_caddG, toPolyG_cnormG, toPolyG_csubG, toPolyG_cmulG] at hih ⊢
       linear_combination hih
 
+omit [CFieldSpec α] in
 /-- `cdivmodG` **normalizes its divisor**: `cdivmodG fuel p q = cdivmodG fuel p (cnormG q)`. -/
 theorem cdivmodG_cnormG_right (fuel : ℕ) (p q : CPolyG α) :
     cdivmodG fuel p q = cdivmodG fuel p (cnormG q) := by
@@ -260,7 +269,7 @@ theorem cdvdG_iff (fuel : ℕ) (q p : CPolyG α) :
 
 The remainder loop strictly shortens the normalized list (`stepG_length_lt`), so `cmodG fuel p q`
 is properly reduced (`cmodG_length_lt`). The single-step degree drop is a field fact about
-`(CField.K α)[X]` (`degreeG_reduce_step_lt`), proven exactly as the concrete `degree_reduce_step_lt`. -/
+`(CFieldSpec.K α)[X]` (`degreeG_reduce_step_lt`), proven exactly as the concrete `degree_reduce_step_lt`. -/
 
 /-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
 theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
@@ -270,9 +279,9 @@ theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
   have hlen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr h
   omega
 
-/-- **One Euclidean-division step strictly drops the degree** in `(CField.K α)[X]`: subtracting the
+/-- **One Euclidean-division step strictly drops the degree** in `(CFieldSpec.K α)[X]`: subtracting the
 leading-term-matching multiple `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
-theorem degreeG_reduce_step_lt {P Q : (CField.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     (hpq : Q.natDegree ≤ P.natDegree) :
     (P - C (P.leadingCoeff / Q.leadingCoeff)
         * X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
@@ -280,7 +289,7 @@ theorem degreeG_reduce_step_lt {P Q : (CField.K α)[X]} (hP : P ≠ 0) (hQ : Q �
   have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
   have hc0 : P.leadingCoeff / Q.leadingCoeff ≠ 0 := div_ne_zero hPlc hQlc
   have hCc : (C (P.leadingCoeff / Q.leadingCoeff)) ≠ 0 := by rwa [Ne, Polynomial.C_eq_zero]
-  have hXk : (X ^ (P.natDegree - Q.natDegree) : (CField.K α)[X]) ≠ 0 :=
+  have hXk : (X ^ (P.natDegree - Q.natDegree) : (CFieldSpec.K α)[X]) ≠ 0 :=
     pow_ne_zero _ Polynomial.X_ne_zero
   set T := C (P.leadingCoeff / Q.leadingCoeff) * X ^ (P.natDegree - Q.natDegree) * Q with hT
   have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCc hXk) hQ
@@ -295,14 +304,17 @@ theorem degreeG_reduce_step_lt {P Q : (CField.K α)[X]} (hP : P ≠ 0) (hQ : Q �
     (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
     hTlc.symm
 
+omit [CFieldSpec α] in
 /-- `cleadG` is invariant under `cnormG`: `cleadG (cnormG p) = cleadG p`. -/
 theorem cleadG_cnormG (p : CPolyG α) : cleadG (cnormG p) = cleadG p := by
   simp only [cleadG, cnormG_idem]
 
+omit [CFieldSpec α] in
 /-- `cisZeroG` is invariant under `cnormG`. -/
 theorem cisZeroG_cnormG (q : CPolyG α) : cisZeroG (cnormG q) = cisZeroG q := by
   simp only [cisZeroG, cnormG_idem]
 
+omit [CFieldSpec α] in
 /-- `cdegG` is invariant under `cnormG`. -/
 theorem cdegG_cnormG (p : CPolyG α) : cdegG (cnormG p) = cdegG p := by
   simp only [cdegG, cnormG_idem]
@@ -321,9 +333,9 @@ theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q 
   have hk : (cnormG p : List α).length - (cnormG q : List α).length
       = (toPolyG p).natDegree - (toPolyG q).natDegree := by
     rw [length_cnormG_of_ne p hp, length_cnormG_of_ne q hq]; omega
-  have hc : CField.toK (CField.div (cleadG p) (cleadG q))
+  have hc : CFieldSpec.toK (CField.div (cleadG p) (cleadG q))
       = (toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff := by
-    rw [CField.toK_div, toK_cleadG_eq_leadingCoeff, toK_cleadG_eq_leadingCoeff]
+    rw [CFieldSpec.toK_div, toK_cleadG_eq_leadingCoeff, toK_cleadG_eq_leadingCoeff]
   set step := csubG (cnormG p)
     (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
       [CField.div (cleadG p) (cleadG q)]) (cnormG q))
@@ -461,11 +473,11 @@ theorem toPolyG_cgcdExtG (fuel : ℕ) (a b : CPolyG α) :
     toPolyG (cgcdExtG fuel a b).2.1 * toPolyG a + toPolyG (cgcdExtG fuel a b).2.2 * toPolyG b
       = toPolyG (cgcdExtG fuel a b).1 := by
   induction fuel generalizing a b with
-  | zero => simp [cgcdExtG, toPolyG_cnormG, toPolyG_cons, CField.toK_one]
+  | zero => simp [cgcdExtG, toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one]
   | succ fuel ih =>
     rw [cgcdExtG]
     cases hb : cisZeroG b with
-    | true => simp [toPolyG_cnormG, toPolyG_cons, CField.toK_one]
+    | true => simp [toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one]
     | false =>
       simp only [Bool.false_eq_true, if_false]
       rcases hqr : cdivmodG (fuel + 1) a b with ⟨q, r⟩
@@ -482,7 +494,7 @@ theorem toPolyG_cgcdExtG (fuel : ℕ) (a b : CPolyG α) :
 
 /-- **`cgcdExtG`'s gcd is greatest among common divisors**: any `d` dividing both `toPolyG a` and
 `toPolyG b` divides `toPolyG (cgcdExtG fuel a b).1` (immediate from Bézout). Fuel-independent. -/
-theorem toPolyG_dvd_cgcdExtG {d : (CField.K α)[X]} (fuel : ℕ) (a b : CPolyG α)
+theorem toPolyG_dvd_cgcdExtG {d : (CFieldSpec.K α)[X]} (fuel : ℕ) (a b : CPolyG α)
     (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
     d ∣ toPolyG (cgcdExtG fuel a b).1 := by
   rw [← toPolyG_cgcdExtG fuel a b]
@@ -601,5 +613,39 @@ theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cder
   | cons a as => show cderivG.go 1 as = Compute.cderiv.go 1 as; rw [hgo]
 
 end CPolyG
+
+/-! ### The engine **computes** over the tower (`CField QFunNZ` is computable)
+
+These checks are the whole point of splitting `CField` from `CFieldSpec`: the generic engine routed
+through `CField QFunNZ` *reduces* in the kernel / native compiler, with no dependence on the
+noncomputable `CFieldSpec QFunNZ`. A pre-split `CField QFunNZ` (carrying the `RatFunc`-valued `toK`) was
+noncomputable, so these `decide`/`native_decide` checks all failed with "depends on a noncomputable
+definition". -/
+
+/-- The scalar op reduces: `1 + 1 ≠ 0` in `QFunNZ` (numerator normalizes to `[2]`, nonempty). -/
+example : CField.isZero (CField.add (CField.one : QFunNZ) CField.one) = false := by native_decide
+
+/-- `0 = 0` in `QFunNZ`: the scalar zero test reduces. -/
+example : CField.isZero (CField.zero : QFunNZ) = true := by native_decide
+
+/-- `1 ≠ 0` in `QFunNZ`. -/
+example : CField.isZero (CField.one : QFunNZ) = false := by native_decide
+
+/-- The polynomial **product** reduces over `CPolyG QFunNZ`: `(1 + x)·(1 + x) = 1 + 2x + x²` is a
+degree-2 (length-3) normalized list — `native_decide` executes the whole `cmulG` over the tower. -/
+example :
+    (CPolyG.cnormG (CPolyG.cmulG [(CField.one : QFunNZ), CField.one] [CField.one, CField.one])
+      : List QFunNZ).length = 3 := by native_decide
+
+/-- The polynomial product is **nonzero** over `CPolyG QFunNZ` (the engine's `cisZeroG` reduces). -/
+example :
+    CPolyG.cisZeroG (CPolyG.cmulG [(CField.one : QFunNZ), CField.one] [CField.one, CField.one])
+      = false := by native_decide
+
+/-- The **extended Euclidean** algorithm reduces over `CPolyG QFunNZ`: `gcd(x, x) = x` is nonzero, so
+its `cisZeroG` is `false` — `cgcdExtG` executes end to end over the tower. -/
+example :
+    CPolyG.cisZeroG (CPolyG.cgcdExtG 8 [(CField.zero : QFunNZ), CField.one]
+      [(CField.zero : QFunNZ), CField.one]).1 = false := by native_decide
 
 end DeepWiki.SymbolicIntegration
