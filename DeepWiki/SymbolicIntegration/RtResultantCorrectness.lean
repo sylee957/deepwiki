@@ -441,3 +441,42 @@ theorem rtResultant_ex241_eq :
     natDegree_cA241_lt_cD241 (by native_decide), rtResultant_ex241, toPoly_ex241_value]
 
 end DeepWiki.SymbolicIntegration.Compute
+
+namespace DeepWiki.SymbolicIntegration
+
+open Polynomial
+
+/-! ### `rtResultant` under an injective base change -/
+
+/-- **`rtResultant` commutes with an injective base change** `σ : K →+* L`:
+`rtResultant (A.map σ) (D.map σ) = (rtResultant A D).map σ`. The injectivity preserves the formal
+`x`-degrees `(deg D, deg D − 1)` (`natDegree_map_eq_of_injective`); `resultant_map_map` then pushes `σ`
+through the Sylvester determinant, and `σ` commutes with `derivative`/`C`/`X`. -/
+theorem rtResultant_map_of_injective {K L : Type*} [Field K] [Field L] (σ : K →+* L)
+    (hσ : Function.Injective σ) (A D : K[X]) :
+    rtResultant (A.map σ) (D.map σ) = (rtResultant A D).map σ := by
+  rw [rtResultant, rtResultant]
+  have hdeg : (D.map σ).natDegree = D.natDegree := Polynomial.natDegree_map_eq_of_injective hσ D
+  -- rewrite each operand of the LHS resultant as `(operand over K[X]).map (mapRingHom σ)`
+  -- the key commuting square `C ∘ σ = mapRingHom σ ∘ C`
+  have hcomm : (C : L →+* L[X]).comp σ = (Polynomial.mapRingHom σ).comp (C : K →+* K[X]) := by
+    ext k; simp
+  have hop1 : (D.map σ).map (C : L →+* L[X])
+      = (D.map (C : K →+* K[X])).map (Polynomial.mapRingHom σ) := by
+    rw [Polynomial.map_map, Polynomial.map_map, hcomm]
+  have hop2 : (A.map σ).map (C : L →+* L[X])
+        - C Polynomial.X * (derivative (D.map σ)).map (C : L →+* L[X])
+      = ((A.map (C : K →+* K[X])
+          - C Polynomial.X * (derivative D).map (C : K →+* K[X]))).map
+            (Polynomial.mapRingHom σ) := by
+    rw [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_map, Polynomial.map_C,
+      Polynomial.coe_mapRingHom, Polynomial.map_map, derivative_map, Polynomial.map_map,
+      Polynomial.map_map, hcomm]
+    simp
+  rw [hdeg, hop1, hop2]
+  rw [Polynomial.resultant_map_map (f := D.map (C : K →+* K[X]))
+    (g := A.map (C : K →+* K[X]) - C Polynomial.X * (derivative D).map (C : K →+* K[X]))
+    (Polynomial.mapRingHom σ) (m := D.natDegree) (n := D.natDegree - 1)]
+  rw [Polynomial.coe_mapRingHom]
+
+end DeepWiki.SymbolicIntegration
