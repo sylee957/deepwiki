@@ -39,6 +39,7 @@ import DeepWiki.SymbolicIntegration.RtResultantCompute
 import DeepWiki.SymbolicIntegration.SubresultantCompute
 import DeepWiki.SymbolicIntegration.Exercise22Compute
 import DeepWiki.SymbolicIntegration.HermiteCompute
+import DeepWiki.SymbolicIntegration.RationalFunctionCompute
 import DeepWiki.SymbolicIntegration.Exercise23Compute
 import DeepWiki.SymbolicIntegration.Exercise25Compute
 import DeepWiki.SymbolicIntegration.ComputeCorrectness
