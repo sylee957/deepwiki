@@ -146,8 +146,10 @@ same arithmetic as the concrete `CPoly = List ℚ`, with `ℚ` operations replac
 `neg`/`isZero`. The generic Horner bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` embeds via `toK`
 (so it additionally needs `[CFieldSpec α]`). -/
 
-/-- **Generic dense coefficient list** over a computable field `α` (index = degree, low to high). -/
-def CPolyG (α : Type*) := List α
+/-- **Generic dense coefficient list** over a computable field `α` (index = degree, low to high).
+A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
+ℚ-specialization `CPoly := CPolyG ℚ` stays defeq to `List ℚ`. -/
+abbrev CPolyG (α : Type*) := List α
 
 namespace CPolyG
 

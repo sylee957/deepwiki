@@ -422,7 +422,6 @@ theorem cdivmodG_eq_cdivmod (fuel : ℕ) :
     show (([], cnormG p) : CPolyG ℚ × CPolyG ℚ) = ([], Compute.cnorm p)
     have : (cnormG p : CPolyG ℚ) = Compute.cnorm p := congrFun cnormG_eq_cnorm p
     rw [this]
-    rfl
   | succ fuel ih =>
     funext p q
     show (let p := cnormG p; let q := cnormG q;
@@ -582,7 +581,7 @@ theorem cgcdExtG_eq_cgcdExt (fuel : ℕ) :
       -- LHS reduces to (g, t, csubG s (cmulG t q)); RHS via the concrete cgcdExt body.
       have hlhs : (cgcdExtG (fuel + 1) (a : CPolyG ℚ) b) = (g, t, csubG s (cmulG t q)) := by
         conv_lhs => rw [cgcdExtG]
-        rw [if_neg hb, hdm, hge]; rfl
+        rw [if_neg hb, hdm, hge]
       have hrhs : Compute.cgcdExt (fuel + 1) a b = (g, t, Compute.csub s (Compute.cmul t q)) := by
         conv_lhs => rw [Compute.cgcdExt]
         rw [if_neg hb', hcd]
@@ -590,7 +589,6 @@ theorem cgcdExtG_eq_cgcdExt (fuel : ℕ) :
           = _
         rw [hgst]
       rw [hlhs, hrhs, congrFun (congrFun csubG_eq_csub _) _, congrFun (congrFun cmulG_eq_cmul _) _]
-      rfl
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by

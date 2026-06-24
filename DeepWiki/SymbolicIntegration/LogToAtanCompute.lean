@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
+import DeepWiki.SymbolicIntegration.GenericPolyEngine
 
 /-! # Computable `LogToAtan` over `ℚ` (Bronstein §2.8, Example 2.8.1, p.63–64)
 Mathlib's `ℚ[X]` arithmetic is **noncomputable** (`Polynomial` wraps `Finsupp`/`AddMonoidAlgebra`,
@@ -19,9 +20,10 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-- **Dense coefficient list** over `ℚ` (index = degree, low to high): `CPoly := List ℚ` is the
-computable polynomial carrier the `LogToAtan` recursion runs on. -/
-abbrev CPoly := List ℚ
+/-- **Dense coefficient list** over `ℚ` (index = degree, low to high): `CPoly := CPolyG ℚ` is the
+computable polynomial carrier the `LogToAtan` recursion runs on — the generic `CPolyG` engine
+(`GenericPolyEngine`) specialized at the computable field `ℚ` (defeq to `List ℚ`). -/
+abbrev CPoly := CPolyG ℚ
 
 /-- **Normalize** a `CPoly` by stripping trailing (high-degree) zero coefficients, so `cnorm` is a
 canonical form (the zero polynomial becomes `[]`). -/
