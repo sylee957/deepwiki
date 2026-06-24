@@ -364,6 +364,20 @@ theorem associated_prod_gcd_deriv_primeFactors {p : K[X]} :
   · rw [if_neg h]
     exact associated_one_iff_isUnit.mpr (hirr.isUnit_gcd_iff.mpr (h : ¬ π ∣ π′))
 
+open Classical in
+/-- **Theorem 3.5.1** (§3.5, p.99) general gcd formula over arbitrary irreducibles: for `p ≠ 0` with
+every multiplicity a unit (char `0`), `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_{π special} π` — the
+multiplicity defect times the squarefree product of the *special* prime factors. Combines the
+prime-power gcd split (`associated_gcd_deriv_prod_primeFactors`) with the per-prime collapse
+(`associated_prod_gcd_deriv_primeFactors`). -/
+theorem associated_gcd_deriv_special_part {p : K[X]} (hp : p ≠ 0)
+    (hunit : ∀ π ∈ primeFactors p, IsUnit (((normalizedFactors p).count π : ℕ) : K[X])) :
+    Associated (gcd p p′)
+      ((∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1))
+        * ∏ π ∈ (primeFactors p).filter (fun π => @IsSpecial _ _ ⟨(Differential.deriv : _)⟩ π), π) :=
+  (associated_gcd_deriv_prod_primeFactors hp hunit).trans
+    (Associated.mul_left _ associated_prod_gcd_deriv_primeFactors)
+
 end GeneralGcdFormula
 
 section SplitSquarefreeFactor
