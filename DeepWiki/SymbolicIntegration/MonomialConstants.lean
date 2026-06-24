@@ -111,4 +111,48 @@ theorem isCoprime_map_implicitDeriv_of_isCoprime {v p : k[X]}
 
 end AlgebraicExtension
 
+section ConstantField
+-- The case `Da = 0` for all `a ∈ k` (the base is its own constant field). Here `Hₜ = Dt = v`,
+-- and the special/normal root tests `v(a) = a′` / `v(a) ≠ a′` collapse to `v(a) = 0` / `v(a) ≠ 0`.
+variable {K : Type*} [Field K] [Differential K]
+
+/-- **Corollary 3.4.2(i)** (§3.4, p.95), linear (monic-irreducible) case: when `Da = 0` for all
+`a ∈ k`, the monic irreducible `X − a` is special w.r.t. the monomial derivation (`Dt = v = Hₜ`)
+iff `(X − a) ∣ Hₜ` — i.e. `a` is a root of `v`. (The special-root test `v(a) = a′` becomes
+`v(a) = 0` since `a′ = 0`.) -/
+theorem dvd_X_sub_C_implicitDeriv_iff_dvd (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X]) (a : K) :
+    (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ (X - C a) ∣ v := by
+  rw [dvd_X_sub_C_implicitDeriv_iff, hconst a, dvd_iff_isRoot, IsRoot.def, eq_comm]
+
+/-- **Corollary 3.4.2(i)** (§3.4, p.95), squarefree form: when `Da = 0` for all `a ∈ k`, the
+squarefree `∏_{a∈s}(X − a)` is special w.r.t. the monomial derivation iff it divides `Hₜ = v` —
+every root of `p` is a root of `v` (the special-root test `v(a) = a′` collapses to `v(a) = 0`). -/
+theorem dvd_prod_X_sub_C_implicitDeriv_iff_dvd (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X])
+    (s : Finset K) :
+    (∏ a ∈ s, (X - C a)) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a))
+      ↔ (∏ a ∈ s, (X - C a)) ∣ v := by
+  rw [dvd_prod_X_sub_C_implicitDeriv_iff]
+  constructor
+  · intro h
+    refine Finset.prod_dvd_of_coprime (fun a _ b _ hab => isCoprime_X_sub_C_iff.mpr
+      (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)) (fun a ha => ?_)
+    rw [dvd_iff_isRoot, IsRoot.def, h a ha, hconst a]
+  · intro h a ha
+    rw [hconst a]
+    exact (dvd_iff_isRoot.mp ((Finset.dvd_prod_of_mem _ ha).trans h))
+
+/-- **Corollary 3.4.2(ii)** (§3.4, p.95): when `Da = 0` for all `a ∈ k`, a squarefree
+`∏_{a∈s}(X − a)` is normal w.r.t. the monomial derivation iff it is coprime to `Hₜ = v` —
+`gcd(p, Hₜ) = 1` (the normal-root test `v(a) ≠ a′` collapses to `v(a) ≠ 0`, i.e. no root of `p` is
+a root of `v`). -/
+theorem isCoprime_prod_X_sub_C_implicitDeriv_iff_isCoprime (hconst : ∀ a : K, (a : K)′ = 0)
+    (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a)))
+      ↔ IsCoprime (∏ a ∈ s, (X - C a)) v := by
+  rw [isCoprime_prod_X_sub_C_implicitDeriv_iff, IsCoprime.prod_left_iff]
+  refine forall₂_congr (fun a ha => ?_)
+  rw [isCoprime_X_sub_C_iff, hconst a, ne_comm]
+
+end ConstantField
+
 end DeepWiki.SymbolicIntegration
