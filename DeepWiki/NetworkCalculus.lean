@@ -288,6 +288,7 @@ import DeepWiki.NetworkCalculus.TableauStateTransition
 import DeepWiki.NetworkCalculus.CombinedTableau
 import DeepWiki.NetworkCalculus.ContTransition
 import DeepWiki.NetworkCalculus.StateTransitionAssembly
+import DeepWiki.NetworkCalculus.CellTransitionAssembly
 import DeepWiki.NetworkCalculus.CookLevin
 import DeepWiki.NetworkCalculus.ThreeSatReduction
 import DeepWiki.NetworkCalculus.ThreeDMReduction
