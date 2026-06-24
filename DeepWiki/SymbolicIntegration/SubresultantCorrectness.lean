@@ -2174,4 +2174,89 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     (fun l _ => chain_hG2 30 gP gQ l) hc0_ex241 hβ0_ex241 hlc_ex241 hcb_ex241 hjlt_ex241 hQ_ex241
     hCne_ex241 hfilt_ex241 hg_ex241 hgcn_ex241 hg0_ex241 hrem_ex241
 
+/-! ### The headline closure: `Φ (lrtSubresultant) ∼ Φ (toBPoly lrtGcdCompute)` over `ℚ[t]/(4t²+1)`
+Pushing the `ℚ[t]`-similarity `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241` through the residue
+map `φ241` via the *correct* bridge `isSimilar_mapRingHom_of_irreducible` (`4t²+1` irreducible), and chaining
+the `bmonicXmodR` unit bridge (`mapRingHom_toBPoly_bmonicXmodR`, `u = 1`), lands the residue-ring similarity
+between the abstract `lrtSubresultant` and the computable `lrtGcdCompute` for Example 2.4.1.
+
+The **only** remaining hypothesis is `Φ (lrtSubresultant …) ≠ 0` — the nonvanishing of the residue
+specialization of the (noncomputable) subresultant. It is genuinely mathematics-grade: it equals
+`(4t²+1) ∤ content(lrtSubresultant A D 3)`, a fact about the `ℚ[t]`-content of the noncomputable subresultant
+that cannot be reduced to `native_decide` (the abstract `subresultant` determinant is noncomputable in Lean).
+Every *other* hypothesis — including the over-strong universal `hne` of the original
+`lrtGcdCompute_isSimilar_lrtSubresultant`, which is **unsatisfiable** (it demands `φ a ≠ 0` for witness pairs
+scalable by `4t²+1` ∈ ker φ) — is **discharged**: the correct bridge replaces `hne` entirely, `hc0`/`hQ` are
+the derived `hc0_ex241`/`hQ_ex241`, and the residue-ring/content/monic facts are `native_decide`. -/
+
+/-- **`Φ (lrtSubresultantCompute) ≠ 0`** (Ex 2.4.1): the `φ241`-image of the computable *primitive* LRT
+subresultant is nonzero. From `Φ (toBPoly lrtGcdCompute) ≠ 0` and the `bmonicXmodR` unit relation
+`Φ (toBPoly lrtGcdCompute) = C(φ inv)·Φ (toBPoly lrtSubrCompute)`. -/
+theorem mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero :
+    (Polynomial.mapRingHom φ241) (toBPoly
+      (lrtSubresultantCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) ≠ 0 := by
+  obtain ⟨hbridge, _⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 30 cR241
+    (lrtSubresultantCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)
+    (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
+  intro h
+  apply mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero
+  rw [lrtGcdCompute, hbridge, h, mul_zero]
+
+/-- **The closed residue-ring agreement for Example 2.4.1**: over the residue field
+`R241 = ℚ[t]/(4t²+1) = AdjoinRoot (toPoly cR241)`, the `φ241`-image of the abstract LRT subresultant
+`lrtSubresultant (toPoly cA241) (toPoly cD241) 3` is `IsSimilar` to the `φ241`-image of the computable LRT
+log argument `toBPoly (lrtGcdCompute 30 3 cR241 cA241 cD241)` — i.e. the engine's degree-3 output **is** the
+honest LRT subresultant of Example 2.4.1, up to a residue-ring unit. Everything is discharged except the
+single hypothesis `hLne` that the residue specialization of the (noncomputable) subresultant is nonzero
+(`(4t²+1) ∤ content(lrtSubresultant)`, mathematics-grade). The `ℚ[t]`-similarity
+(`isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241`, hypothesis-free) is pushed through `φ241` by the
+*correct* bridge `isSimilar_mapRingHom_of_irreducible` (replacing the unsatisfiable universal `hne`), then
+chained with the `bmonicXmodR` unit bridge. -/
+theorem lrtGcdCompute_ex241_isSimilar_lrtSubresultant
+    (hLne : (Polynomial.mapRingHom φ241)
+      (lrtSubresultant (toPoly cA241) (toPoly cD241)
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree) ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ241)
+        (lrtSubresultant (toPoly cA241) (toPoly cD241)
+          (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree))
+      ((Polynomial.mapRingHom φ241) (toBPoly
+        (lrtGcdCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) := by
+  -- Φ L ∼ Φ M via the correct bridge (4t²+1 irreducible)
+  have hLM : IsSimilar
+      ((Polynomial.mapRingHom φ241) (lrtSubresultant (toPoly cA241) (toPoly cD241)
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree))
+      ((Polynomial.mapRingHom φ241) (toBPoly (lrtSubresultantCompute 30
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241))) :=
+    isSimilar_mapRingHom_of_irreducible (toPoly cR241) irreducible_toPoly_cR241 φ241
+      φ241_eq_zero_iff isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241
+      hLne mapRingHom_φ241_toBPoly_lrtSubresultantCompute_ne_zero
+  -- Φ M ∼ Φ M_gcd via the bmonicXmodR unit bridge
+  obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ241 30 cR241
+    (lrtSubresultantCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)
+    (by decide) φ241_toPoly_cR241 (u := 1) one_ne_zero hgu_ex241 hpz_ex241
+  have hMMgcd : IsSimilar
+      ((Polynomial.mapRingHom φ241) (toBPoly (lrtSubresultantCompute 30
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)))
+      ((Polynomial.mapRingHom φ241) (toBPoly
+        (lrtGcdCompute 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cR241 cA241 cD241))) :=
+    isSimilar_of_unit_mul hunit (by rw [lrtGcdCompute]; exact hbridge)
+  exact hLM.trans hMMgcd
+
+/-- **The engine's output is the honest LRT subresultant of Example 2.4.1**: the `φ241`-image of the
+computed log argument `x³ + 2t·x² − 3x − 4t` (`= lrtGcdCompute 30 3 cR241 cA241 cD241`, by `lrtGcd_ex241`)
+is `IsSimilar` over `ℚ[t]/(4t²+1)` to the `φ241`-image of the abstract `lrtSubresultant`. Restates
+`lrtGcdCompute_ex241_isSimilar_lrtSubresultant` with the computed value `[[0,-4],[-3],[0,2],[1]]` substituted
+(via `lrtGcd_ex241`) — the book's `S(t,x) = x³+2tx²−3x−4t`. The single hypothesis is the residue
+nonvanishing of the noncomputable subresultant. -/
+example
+    (hLne : (Polynomial.mapRingHom φ241)
+      (lrtSubresultant (toPoly cA241) (toPoly cD241) 3) ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ241)
+        (lrtSubresultant (toPoly cA241) (toPoly cD241) 3))
+      ((Polynomial.mapRingHom φ241) (toBPoly [[0, -4], [-3], [0, 2], [1]])) := by
+  have h := lrtGcdCompute_ex241_isSimilar_lrtSubresultant
+    (by rw [natDegree_toBPoly_chainG3_ex241]; exact hLne)
+  rw [natDegree_toBPoly_chainG3_ex241, lrtGcd_ex241] at h
+  exact h
+
 end DeepWiki.SymbolicIntegration.Compute
