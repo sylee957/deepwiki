@@ -3363,3 +3363,58 @@ theorem prod_dvd_residNum (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × �
     exact (hkept ▸ hpw : kept.Pairwise _).forall hkelem hVi (Ne.symm hne)
   exact dvd_residNum_factor fuel A D factors kelem hkelem hnd hD hV hstep hcop
     (hpow kelem hkelem)
+
+/-! ### The fully unconditional multi-factor `hermiteReduce` wrapper
+
+With `W ∣ R` now *proven* (`prod_dvd_residNum`), the multi-factor wrapper
+(`hermiteReduce_residual_correct_multifactor`) becomes fully unconditional. Taking the radical
+decomposition `D = Dstar·W` with `W = ∏_{kept} Vk^{ik−1}` (the cofactor `D/Dstar`) and the per-factor
+hypotheses (residual identities, pairwise coprimality, `Vk^{ik} ∣ D`), the `g`-fold residual identity
+`am A/am D = (toQFun g)′ + am (R/W)/am Dstar` holds **with no remaining divisibility assumption** — the
+integrand lives over the squarefree radical `Dstar`. This closes the multi-factor interference. -/
+
+open scoped Differential in
+/-- **Fully unconditional multi-factor `hermiteReduce` wrapper** in `RatFunc ℚ`: with `W =
+∏_{kept} Vk^{ik−1}` the radical cofactor (`hWdec : am D = am Dstar · am W`), the per-factor residual
+identities (`hstep`), pairwise-coprime kept factors (`hpw`), distinct kept factors (`hnd`), and
+`Vk^{ik} ∣ D` for each kept factor (`hpow`), the `g`-fold residual is correct:
+`am A/am D = (toQFun g)′ + am (R/W)/am Dstar` — **no `W ∣ R` hypothesis**, the interference divisibility
+is discharged internally by `prod_dvd_residNum`. The residual integrand lives over the squarefree radical
+`Dstar`. The unconditional multi-factor Hermite reduction (Bronstein §2.2/§2.5). -/
+theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPoly)
+    (factors : List (CPoly × ℕ))
+    (W : ℚ[X]) (hWeq : W = ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
+        (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).prod)
+    (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
+    (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
+    (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
+    (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
+      (toQFun (glocIncr fuel A D Vi))′
+        = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+          - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D Vi)
+            / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D))
+    (hpw : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Pairwise
+      (fun a b => IsRelPrime (toPoly a.1) (toPoly b.1)))
+    (hpow : ∀ Vi ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)),
+      toPoly Vi.1 ^ Vi.2 ∣ toPoly D)
+    (hWdec : toPoly D = toPoly Dstar * W) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
+      = (toQFun ((glocList fuel A D factors).foldl qadd qzero))′
+        + algebraMap ℚ[X] (RatFunc ℚ)
+            ((Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ))
+                * toPoly A
+              + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum)
+              / W)
+          / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  set R := Polynomial.C (1 - ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).length : ℚ)) * toPoly A
+    + ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (residNumIncr fuel A D)).sum with hR
+  -- the whole-fold residual `am A/am D − g′ = am R/am D`.
+  have hres := total_fold_residual_over_D fuel A D factors hD hV hstep
+  rw [← hR] at hres
+  -- the interference divisibility `W ∣ R`, now proven.
+  have hWR : W ∣ R := by
+    rw [hWeq]; exact prod_dvd_residNum fuel A D factors hnd hD hV hstep hpw hpow
+  -- clear `am R/am D` to `am (R/W)/am Dstar`.
+  have hclear := am_div_D_eq_div_Dstar (R := R) (D := toPoly D) (Dstar := toPoly Dstar)
+    (W := W) hD hDstar hWdec hWR
+  linear_combination hres + hclear
