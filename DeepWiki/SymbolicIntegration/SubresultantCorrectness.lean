@@ -1325,4 +1325,101 @@ theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
     simp only at h
     rw [h, goState_succ_fst]
 
+/-- **`go` stops at a zero element**: if the current element `s.2.1` is zero, `go fuel fo …` is `[]` (the
+nonzero-prefix recursion terminates). -/
+theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz : bisZero s.2.1 = true) :
+    subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2 = [] := by
+  cases fo with
+  | zero => rw [subresPRS.go.eq_1]
+  | succ f' =>
+    obtain ⟨Ri_1, Ri, psi, dp⟩ := s
+    rw [subresPRS.go.eq_2]
+    simp only at hz
+    simp only [hz, if_true]
+
+/-- **Full `go` list as a `range`-map**: when the chain elements stay nonzero through index `k` and the
+next is zero (and fuel suffices), `go fuel fo …` is *exactly* `[s.2.1, …, (goState fuel s k).2.1]` =
+`(List.range (k+1)).map (fun i => (goState fuel s i).2.1)`. Induction peeling one `go_step_state`,
+`go_zero` at the terminal step. -/
+theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
+    (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true)
+    (hz : bisZero (goState fuel s (k + 1)).2.1 = true) :
+    subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2
+      = (List.range (k + 1)).map (fun i => (goState fuel s i).2.1) := by
+  induction k generalizing s fo with
+  | zero =>
+    obtain ⟨f', rfl⟩ : ∃ f', fo = f' + 1 := ⟨fo - 1, by omega⟩
+    rw [go_step_state fuel f' s (hnz 0 (by omega)),
+      go_zero fuel f' (goStep fuel s) hz]
+    rfl
+  | succ n ih =>
+    obtain ⟨f', rfl⟩ : ∃ f', fo = f' + 1 := ⟨fo - 1, by omega⟩
+    rw [go_step_state fuel f' s (hnz 0 (by omega)),
+      ih (goStep fuel s) f' (by omega)
+        (fun i hi => by rw [goState_goStep]; exact hnz (i + 1) (by omega))
+        (by rw [goState_goStep]; exact hz)]
+    conv_rhs => rw [List.range_succ_eq_map, List.map_cons, List.map_map]
+    congr 1
+    apply List.map_congr_left
+    intro i _
+    simp only [Function.comp_apply]
+    rw [goState_goStep]
+
+/-- **Filter of `List.range n` with a unique satisfier is a singleton**: if `q N = true`, `N < n`, and
+`N` is the *only* index below `n` with `q i = true`, then `(List.range n).filter q = [N]`. (`range` is
+nodup, so the filtered list is nodup with every element `= N`, hence `[N]`.) -/
+theorem filter_range_unique {n N : ℕ} (q : ℕ → Bool) (hN : N < n) (hqN : q N = true)
+    (huniq : ∀ i, i < n → q i = true → i = N) :
+    (List.range n).filter q = [N] := by
+  have hnodup : (List.range n).Nodup := List.nodup_range
+  have hfnodup : ((List.range n).filter q).Nodup := hnodup.filter q
+  have hmem : N ∈ (List.range n).filter q := by
+    rw [List.mem_filter, List.mem_range]; exact ⟨hN, hqN⟩
+  have hall : ∀ x ∈ (List.range n).filter q, x = N := by
+    intro x hx
+    rw [List.mem_filter, List.mem_range] at hx
+    exact huniq x hx.1 hx.2
+  cases hl : (List.range n).filter q with
+  | nil => rw [hl] at hmem; simp at hmem
+  | cons a as =>
+    rw [hl] at hall hmem hfnodup
+    have ha : a = N := hall a (by simp)
+    have has : as = [] := by
+      cases as with
+      | nil => rfl
+      | cons b bs =>
+        exfalso
+        have hb : b = N := hall b (by simp)
+        rw [ha, hb] at hfnodup
+        simp at hfnodup
+    rw [ha, has]
+
+/-- **Full `subresPRS` list as a `range`-map of the chain `G i := (goState fuel s₀ i).1`**: with
+`s₀ = (P, Q, [-1], bdeg P − bdeg Q)`, when the chain elements `G 0, …, G N` are all nonzero, `G (N+1)`
+is zero, and `N+1 < fuel`, the list `subresPRS fuel P Q` is exactly `[G 0, …, G N] =
+(List.range (N+1)).map G`. Prepends `G 0 = P` to `go_eq_range` (the `go` list is the chain from `G 1`),
+shifting `(goState …).2.1` to `(goState … (·+1)).1` via `goState_succ_fst`. -/
+theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
+    (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
+    (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true) :
+    subresPRS fuel P Q
+      = (List.range (N + 1)).map (fun i => (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1) := by
+  set s0 : BPoly × BPoly × CPoly × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+  rw [subresPRS.eq_def]
+  cases N with
+  | zero =>
+    have hQz : bisZero s0.2.1 = true := by
+      have := hzN; rw [goState_succ_fst] at this; exact this
+    rw [go_zero fuel fuel s0 hQz]
+    show [P] = [(goState fuel s0 0).1]
+    rfl
+  | succ n =>
+    rw [go_eq_range fuel s0 n fuel (by omega)
+      (fun i hi => by rw [← goState_succ_fst]; exact hnz (i + 1) (by omega))
+      (by rw [← goState_succ_fst]; exact hzN)]
+    conv_rhs => rw [List.range_succ_eq_map, List.map_cons, List.map_map]
+    refine congrArg (P :: ·) (List.map_congr_left ?_)
+    intro i _
+    simp only [Function.comp_apply, goState_succ_fst]
+
 end DeepWiki.SymbolicIntegration.Compute
