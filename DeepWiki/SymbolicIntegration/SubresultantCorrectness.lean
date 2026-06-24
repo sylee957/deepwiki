@@ -158,6 +158,16 @@ theorem subresultant_C_mul_left {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n
   rw [map_one, one_mul, one_pow, mul_one] at h
   rw [h]
 
+/-- **Subresultant scaled in the second argument only**: `Sⱼ(A, C c · B) = c^(n−j) · Sⱼ(A, B)`
+(`j ≤ m`, `j ≤ n`). The `a = 1` case of `subresultant_C_mul` — the mirror of `subresultant_C_mul_left`,
+absorbing the `C(toPoly β)` content the β-divisor `bdivC` carries on the *next* PRS element. -/
+theorem subresultant_C_mul_right {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
+    (hjm : j ≤ m) (hjn : j ≤ n) :
+    subresultant A (C c * B) n m j = C (c ^ (n - j)) * subresultant A B n m j := by
+  have h := subresultant_C_mul 1 c A B n m j hjm hjn
+  rw [map_one, one_mul, one_pow, one_mul] at h
+  rw [h]
+
 /-! ### One subresultant-PRS step of the computable pseudo-remainder
 The structural core: through `toBPoly`, one pseudo-division step of the computable engine
 (`bpsremainder`) realizes the abstract subresultant reduction `subresultant_rem`. With `A = toBPoly p`,
@@ -373,12 +383,48 @@ theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c �
 `ℚ[t]` scalar `c` divides every `x`-coefficient of `p` in `ℚ[t]` (`toPoly c ∣ toPoly a`, with enough
 fuel), then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. Converts the per-coefficient
 divisibility certificate (Collins: βᵢ ∣ each coefficient of the pseudo-remainder) into the exact
-scalar division via `cmod_eq_zero_of_dvd`. -/
+scalar division via `cmod_eq_zero_of_dvd_loc`. -/
 theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
     (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc
     (fun a ha => cmod_eq_zero_of_dvd_loc fuel a c hc (hfuel a ha) (hdvd a ha))
+
+/-! ### One *subresultant-PRS* step on the β-divided remainder (the actual `subresPRS` recurrence)
+The raw step `subresultant_C_mul_eq_rem_of_bpsremainder` relates `Sⱼ(p,q)` to `Sⱼ(q, prem(p,q))` against
+the *raw* pseudo-remainder. The actual `subresPRS` recurrence forms the next element as
+`r = bdivC fuel (prem p q) β` — the β-divided pseudo-remainder (exact `ℚ[t]`-division stripping the
+`lc`-power inflation). Folding in the β-divisor exact-division `toBPoly_bdivC_exact`, the relation reads
+directly on the divided element `r`, the form the chain induction telescopes. -/
+
+/-- **One subresultant-PRS step on the β-divided remainder** (the literal `subresPRS` recurrence step):
+with `A = toBPoly p`, `B = toBPoly q`, and `r = bdivC fuel (bpsremainder fuel p q) β` the next PRS
+element (so `toPoly β` divides every `x`-coefficient of `bpsremainder fuel p q` exactly), the
+pseudo-division content factor `(s, c)` and the β-content combine to
+`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`.
+Composes `subresultant_C_mul_eq_rem_of_bpsremainder` (the raw step) with the β-divisor exact-division
+`toBPoly_bdivC_exact` (restoring `toBPoly (bpsremainder…) = C(toPoly β)·toBPoly r`) and the
+second-argument scaling `subresultant_C_mul_right`. This is the literal one-step law of `subresPRS`. -/
+theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0)
+    (hjm : j ≤ m) (hjn : j < n)
+    (hB : (toBPoly q).natDegree ≤ m)
+    (hQ : (toBPoly s).natDegree + m ≤ n) :
+    Polynomial.C ((toPoly c) ^ (m - j)) * subresultant (toBPoly p) (toBPoly q) n m j
+      = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
+        * (Polynomial.C ((toPoly β) ^ (m - j))
+          * subresultant (toBPoly q) (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j) := by
+  have hstep := subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQ
+  have hexact : toBPoly (bpsremainder fuel p q)
+      = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β) :=
+    (toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hβ hdiv).symm
+  rw [hstep, hexact,
+    subresultant_C_mul_right (toPoly β) (toBPoly q)
+      (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
 
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
 The pieces above realize **one** subresultant-PRS step of the computable engine against the abstract
