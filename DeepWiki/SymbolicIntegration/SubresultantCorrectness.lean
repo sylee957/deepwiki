@@ -1422,4 +1422,55 @@ theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < f
     intro i _
     simp only [Function.comp_apply, goState_succ_fst]
 
+/-- **Strict degree decrease ⟹ unique degree-`N` index**: if `f (i+1) < f i` for all `i < N`, then `N`
+is the *only* index `i ≤ N` with `f i = f N`. The arithmetic core of the singleton-filter uniqueness:
+strict decrease of the `bdeg` chain makes the degree-`N` element unique. -/
+theorem unique_of_strictAnti (f : ℕ → ℕ) (N : ℕ) (hstrict : ∀ i < N, f (i + 1) < f i) :
+    ∀ i ≤ N, f i = f N → i = N := by
+  have mono : ∀ j ≤ N, ∀ i < j, f j < f i := by
+    intro j hj
+    induction j with
+    | zero => intro i hi; omega
+    | succ n ih =>
+      intro i hi
+      have hstep : f (n + 1) < f n := hstrict n (by omega)
+      rcases Nat.lt_or_ge i n with hlt | hge
+      · have := ih (by omega) i hlt; omega
+      · have : i = n := by omega
+        subst this; omega
+  intro i hi heq
+  by_contra hne
+  have hiN : i < N := lt_of_le_of_ne hi hne
+  have := mono N (le_refl N) i hiN
+  omega
+
+/-- **The degree-`N` filter of `subresPRS` is the singleton `[G N]`** (the structural `hfil`, discharged):
+with `s₀ = (P, Q, [-1], bdeg P − bdeg Q)` and the chain `G i := (goState fuel s₀ i).1`, when the elements
+`G 0, …, G N` are nonzero (`hnz`), `G (N+1)` is zero (`hzN`), the `bdeg` chain strictly decreases
+(`hstrict`), and `N+1 < fuel`, the degree-`bdeg (G N)` nonzero filter of `subresPRS fuel P Q` is exactly
+`[G N]`. The full-list `subresPRS_eq_range` pushed through `List.filter_map` and `filter_range_unique`
+(uniqueness via `unique_of_strictAnti`). -/
+theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
+    (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
+    (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true)
+    (hstrict : ∀ i < N, bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (i + 1)).1
+        < bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1) :
+    (subresPRS fuel P Q).filter
+        (fun R => decide (bdeg R = bdeg (goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1
+          ∧ ¬ bisZero R))
+      = [(goState fuel (P, Q, [-1], bdeg P - bdeg Q) N).1] := by
+  set s0 : BPoly × BPoly × CPoly × ℕ := (P, Q, [-1], bdeg P - bdeg Q) with hs0
+  set G := fun i => (goState fuel s0 i).1 with hG
+  rw [subresPRS_eq_range fuel P Q N hfo hnz hzN, List.filter_map]
+  have hfilt : (List.range (N + 1)).filter
+      ((fun R => decide (bdeg R = bdeg (G N) ∧ ¬ bisZero R)) ∘ G) = [N] := by
+    apply filter_range_unique
+    · omega
+    · simp only [Function.comp_apply, decide_eq_true_eq, true_and]
+      exact hnz N (le_refl N)
+    · intro i hi hqi
+      simp only [Function.comp_apply, decide_eq_true_eq] at hqi
+      exact unique_of_strictAnti (fun i => bdeg (G i)) N hstrict i (by omega) hqi.1
+  rw [hfilt, List.map_singleton]
+
 end DeepWiki.SymbolicIntegration.Compute
