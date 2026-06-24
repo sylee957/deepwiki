@@ -160,7 +160,7 @@ theorem envToTuple_splitEnv : (Γ : Ctx Att) → (flat : Tuple (flattenCtx Γ) V
 
 /-- Cons a tuple onto an environment, with the dependent `Env` type pinned (the `Env` def is not
 reducible, so a bare pair does not unify with `Env Val (Ω :: Γ)`). -/
-@[reducible] def consEnv {Ω : Finset Att} {Γ : Ctx Att} (t : Tuple Ω Val) (e : Env Val Γ) :
+def consEnv {Ω : Finset Att} {Γ : Ctx Att} (t : Tuple Ω Val) (e : Env Val Γ) :
     Env Val (Ω :: Γ) := (t, e)
 
 /-- **Existential reconstruction**: a flat row whose tail (the `flattenCtx Γ` part) is `envToTuple e`
@@ -170,8 +170,54 @@ theorem envToTuple_consEnv {Ω : Finset Att} {Γ : Ctx Att} (flat : Tuple (flatt
     envToTuple (consEnv (flat.restrict Finset.subset_union_left) e) = flat := by
   funext a
   by_cases h : a.val ∈ Ω
-  · simp only [envToTuple, dif_pos h, Tuple.restrict]
-  · simp only [envToTuple, dif_neg h]
+  · simp only [consEnv, envToTuple, dif_pos h, Tuple.restrict]
+  · simp only [consEnv, envToTuple, dif_neg h]
     rw [← he]; rfl
+
+/-- **Reduction of the tuple calculus to the algebra — correctness** (§2.4): over a disjoint context
+and for a well-scoped condition, the flattened environment satisfies the algebra translation exactly
+when the condition holds. Atoms go through the lookup bridge; negation is the domain-relative
+complement; the existential is projection (with the environment reconstructed from the flat row). -/
+theorem mem_evalAlg_calcToAlg (db : (i : ι) → Table (sch i) Val) :
+    {Γ : Ctx Att} → (C : FOCond ι sch Val Γ) → CtxDisjoint Γ → WellScoped C →
+    (e : Env Val Γ) → (envToTuple e ∈ evalAlg (calcToAlg db C) ↔ evalFO db C e)
+  | _, .relA i v, hd, _, e => by
+      simp only [calcToAlg, evalAlg_comp, Set.mem_setOf_eq, evalFO, lookup_eq_restrict hd v e]
+  | _, .compA v P, hd, _, e => by
+      simp only [calcToAlg, evalAlg_comp, Set.mem_setOf_eq, evalFO, lookup_eq_restrict hd v e]
+  | _, .agreeA v₁ v₂ X, hd, _, e => by
+      simp only [calcToAlg, evalAlg_comp, Set.mem_setOf_eq, evalFO]
+      constructor
+      · intro _ a _ h1 h2
+        rw [lookup_eq_envToTuple v₁ hd e h1 (scheme_subset_flattenCtx v₁.scheme_mem h1),
+            lookup_eq_envToTuple v₂ hd e h2 (scheme_subset_flattenCtx v₂.scheme_mem h2)]
+      · intro _ a _ h1 h2
+        rfl
+  | _, .neg C, hd, hw, e => by
+      simp only [calcToAlg, evalAlg_diff, evalAlg_comp, mem_diff, Set.mem_setOf_eq, evalFO,
+        true_and, mem_evalAlg_calcToAlg db C hd hw e]
+  | _, .and C D, hd, hw, e => by
+      simp only [calcToAlg, evalAlg_inter, mem_inter, evalFO,
+        mem_evalAlg_calcToAlg db C hd hw.1 e, mem_evalAlg_calcToAlg db D hd hw.2 e]
+  | _, .or C D, hd, hw, e => by
+      simp only [calcToAlg, evalAlg_union, mem_union, evalFO,
+        mem_evalAlg_calcToAlg db C hd hw.1 e, mem_evalAlg_calcToAlg db D hd hw.2 e]
+  | Γ, .ex Ω C, hd, hw, e => by
+      have hdisj : Disjoint Ω (flattenCtx Γ) := hw.1
+      have hd' : CtxDisjoint (Ω :: Γ) := List.pairwise_cons.mpr
+        ⟨fun _ hΩ' => Finset.disjoint_of_subset_right (scheme_subset_flattenCtx hΩ') hdisj, hd⟩
+      simp only [calcToAlg, evalAlg_proj, mem_project, evalFO]
+      constructor
+      · rintro ⟨flat', hflat', hrestr⟩
+        have key : envToTuple (consEnv (flat'.restrict Finset.subset_union_left) e) = flat' :=
+          envToTuple_consEnv flat' e hrestr
+        have hmem : envToTuple (consEnv (flat'.restrict Finset.subset_union_left) e)
+            ∈ evalAlg (calcToAlg db C) := key.symm ▸ hflat'
+        exact ⟨flat'.restrict Finset.subset_union_left,
+          (mem_evalAlg_calcToAlg db C hd' hw.2 _).mp hmem⟩
+      · rintro ⟨t, ht⟩
+        exact ⟨envToTuple (consEnv t e),
+          (mem_evalAlg_calcToAlg db C hd' hw.2 (consEnv t e)).mpr ht,
+          restrict_envToTuple_cons hdisj (consEnv t e)⟩
 
 end DeepWiki
