@@ -1203,4 +1203,71 @@ example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly) 
           * φ (toPoly (blc (bredR fuel R p))) = 1 :=
   mapRingHom_toBPoly_bmonicXmodR φ fuel R p hR hφR hu hg hpz
 
+/-! ### Instantiating the abstract chain from the concrete `subresPRS.go` (data plumbing)
+The headline `lrtGcdCompute_isSimilar_lrtSubresultant` quantifies over an abstract chain `G : ℕ → BPoly`
+with per-step witnesses `bt`/`s`/`c` and side-conditions. To instantiate it from the **real**
+`subresPRS fuel P Q`, we mirror the internal `let rec subresPRS.go` as a top-level **state machine**
+`goState`: its state `(Ri₋₁, Ri, ψ, δ)` carries everything one `go`-step needs, and one application of
+`goStep` reproduces the `go` recurrence (`Riₙ₊₁ = bdivC fuel (prem Ri₋₁ Ri) βᵢ`, `βᵢ = goBeta …`). The
+chain element `G i := (goState … i).1` and the β-divisor `bt i := goBeta …` are then *computable*
+projections of the state, and the divided-step recurrence `hG2` holds **definitionally** — no list
+reasoning. The `go`-list bridge (`go_state_getD`) connects this state machine back to the literal
+`subresPRS` list for the singleton-filter fact `hfil`. -/
+
+/-- **ψ-accumulator update of one `subresPRS.go` step**: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when
+`δ = 0`), the exact-over-`ℚ[t]` subresultant ψ recurrence carried by `go`. -/
+def goPsi' (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly) (dp : ℕ) : CPoly :=
+  if dp = 0 then psi else cdiv fuel (cpowP (cneg (blc Ri_1)) dp) (cpowP psi (dp - 1))
+
+/-- **β-divisor of one `subresPRS.go` step**: `β = −lc(Ri₋₁) · ψ'^δ` (`ψ'` from `goPsi'`), the exact
+`ℚ[t]`-divisor stripping the pseudo-remainder `lc`-power inflation in the subresultant PRS. -/
+def goBeta (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly) (dp : ℕ) : CPoly :=
+  cmul (cneg (blc Ri_1)) (cpowP (goPsi' fuel Ri_1 psi dp) dp)
+
+/-- **One `subresPRS.go` step on the state** `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
+`Ri₊₁ = bdivC fuel (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁` —
+the top-level mirror of the internal `let rec subresPRS.go` recurrence. -/
+def goStep (fuel : ℕ) : BPoly × BPoly × CPoly × ℕ → BPoly × BPoly × CPoly × ℕ
+  | (Ri_1, Ri, psi, dp) =>
+    let psi' := goPsi' fuel Ri_1 psi dp
+    let beta := goBeta fuel Ri_1 psi dp
+    let Ri1 := bdivC fuel (bpsremainder fuel Ri_1 Ri) beta
+    (Ri, Ri1, psi', bdeg Ri - bdeg Ri1)
+
+/-- **The `subresPRS.go` state at index `i`** `goState fuel s₀ i = goStepⁱ s₀`: the `go`-recurrence state
+after `i` steps from the initial state `s₀ = (P, Q, [-1], bdeg P − bdeg Q)`. The chain element is the
+first component, the next chain element the second. -/
+def goState (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) : ℕ → BPoly × BPoly × CPoly × ℕ
+  | 0 => s0
+  | i + 1 => goStep fuel (goState fuel s0 i)
+
+/-- **`goState` commutes with one step**: `goState fuel (goStep fuel s₀) k = goState fuel s₀ (k+1)`. -/
+theorem goState_goStep (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (k : ℕ) :
+    goState fuel (goStep fuel s0) k = goState fuel s0 (k + 1) := by
+  induction k generalizing s0 with
+  | zero => rfl
+  | succ n ih => rw [goState, goState, ih]
+
+/-- **The next chain element is the second state component**: `(goState fuel s₀ (l+1)).1 =
+(goState fuel s₀ l).2.1` — `go` shifts the pair `(Ri₋₁, Ri)` to `(Ri, Ri₊₁)`, so element `l+1` is the
+second slot of state `l`. -/
+theorem goState_succ_fst (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (l : ℕ) :
+    (goState fuel s0 (l + 1)).1 = (goState fuel s0 l).2.1 := by
+  show (goStep fuel (goState fuel s0 l)).1 = _
+  rw [goStep]
+
+/-- **The divided-PRS recurrence `hG2` holds definitionally for `goState`**: with `G i := (goState fuel s₀
+i).1` and the β-divisor `bt l := goBeta fuel (G l) ψₗ δₗ` (the ψ/δ of state `l`), the chain element
+`G (l+2)` is exactly `bdivC fuel (bpsremainder fuel (G l) (G (l+1))) (bt l)` — the literal `subresPRS`
+divided-step recurrence, by definition of `goStep`. This discharges `hG2` for the concrete chain with no
+list reasoning. -/
+theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (l : ℕ) :
+    (goState fuel s0 (l + 2)).1
+      = bdivC fuel (bpsremainder fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
+          (goBeta fuel (goState fuel s0 l).1 (goState fuel s0 l).2.2.1 (goState fuel s0 l).2.2.2) := by
+  rw [goState_succ_fst fuel s0 (l + 1)]
+  show (goStep fuel (goState fuel s0 l)).2.1 = _
+  rw [goStep]
+  rw [goState_succ_fst fuel s0 l]
+
 end DeepWiki.SymbolicIntegration.Compute
