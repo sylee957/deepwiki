@@ -58,4 +58,25 @@ theorem evalSql_inter_eq_minus {Ω : Finset Att} (a b : SqlQuery Att Val Ω) :
   simp only [evalSql_inter, evalSql_minus]
   exact inter_eq_diff_diff _ _
 
+/-- `UNION` is commutative (at the view-instance level). -/
+theorem evalSql_union_comm {Ω : Finset Att} (a b : SqlQuery Att Val Ω) :
+    evalSql (SqlQuery.union a b) = evalSql (SqlQuery.union b a) := by
+  simp only [evalSql_union]; exact union_comm _ _
+
+/-- `UNION` is associative (at the view-instance level). -/
+theorem evalSql_union_assoc {Ω : Finset Att} (a b c : SqlQuery Att Val Ω) :
+    evalSql (SqlQuery.union (SqlQuery.union a b) c)
+      = evalSql (SqlQuery.union a (SqlQuery.union b c)) := by
+  simp only [evalSql_union]; exact union_assoc _ _ _
+
+/-- `INTERSECTION` is commutative (at the view-instance level). -/
+theorem evalSql_inter_comm {Ω : Finset Att} (a b : SqlQuery Att Val Ω) :
+    evalSql (SqlQuery.inter a b) = evalSql (SqlQuery.inter b a) := by
+  simp only [evalSql_inter]; exact Set.inter_comm _ _
+
+/-- Differencing the same query yields the empty view instance: `α MINUS α = ∅`. -/
+theorem evalSql_minus_self {Ω : Finset Att} (a : SqlQuery Att Val Ω) :
+    evalSql (SqlQuery.minus a a) = (∅ : Table Ω Val) := by
+  simp only [evalSql_minus, diff]; ext x; simp
+
 end DeepWiki

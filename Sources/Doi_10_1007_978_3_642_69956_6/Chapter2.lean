@@ -226,4 +226,16 @@ abbrev sql_view_instance := @DeepWiki.evalSql
 denotes the same table as `α MINUS (α MINUS β)`. -/
 abbrev sql_inter_from_minus := @DeepWiki.evalSql_inter_eq_minus
 
+/-- **§2.3** SQL `UNION` is commutative (view-instance level). -/
+abbrev sql_union_comm := @DeepWiki.evalSql_union_comm
+
+/-- **§2.3** SQL `UNION` is associative (view-instance level). -/
+abbrev sql_union_assoc := @DeepWiki.evalSql_union_assoc
+
+/-- **§2.3** SQL `INTERSECTION` is commutative (view-instance level). -/
+abbrev sql_inter_comm := @DeepWiki.evalSql_inter_comm
+
+/-- **§2.3** SQL `α MINUS α = ∅` (view-instance level). -/
+abbrev sql_minus_self := @DeepWiki.evalSql_minus_self
+
 end DeepWiki.Rdb
