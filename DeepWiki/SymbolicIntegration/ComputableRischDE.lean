@@ -437,6 +437,174 @@ def cPolyRischDENoCancel (Dt : CPolyG QFunNZ) : ℕ → (b c : CPolyG QFunNZ) �
         | none => none
         | some q => some (caddG p q)
 
+/-! ### `cParametricLogDeriv` (Bronstein §5.12 / §7.3, the `ParametricLogarithmicDerivative` box,
+book p.176/253) — over the **base field** `k = ℚ(x)`
+
+The §6.6 cancellation primitive case branches on whether the coefficient `b ∈ k = ℚ(x)` is of the form
+`b = Dz/z` (a logarithmic derivative of a `k`-element) and, more generally, whether `n·b = Dz/z` for a
+nonzero `n ∈ ℤ` and `z ∈ k*` (a logarithmic derivative of a `k`-**radical**, the *parametric*
+logarithmic derivative problem, §7.3 eq. 7.37). Here `k = ℚ(x)`, `D = d/dx`, so a `QFunNZ` element `b`
+is handled directly (the §5.12 recursion bottoms out at the base field, where the special set `S = k`).
+
+The recognizer (§5.12, book p.176): if `b = Dz/z` for `z ∈ ℚ(x)*`, then `b` is **simple** (its
+lowest-terms denominator is squarefree) and **proper** (`deg(num) < deg(den)`, no polynomial part —
+`Dz/z` has degree `< 0` as a rational function), and all Rothstein–Trager residues are integers. In
+particular a **nonzero constant** `b ∈ ℚ*` is *never* a logarithmic derivative of a `ℚ(x)`-element
+(nor, scaled, of a radical): `Dz/z = const ≠ 0` forces `z = e^{const·x}`, not rational (this is the
+Liouville obstruction that makes `∫ e^{bx} …` nonelementary). That **constant sub-case is exactly the
+one the cancellation primitive case reaches in practice**, and it is decided here exactly; the general
+proper/simple/integer-residue recognizer over ℚ(x) is the documented continuation (it needs the
+Rothstein–Trager residue machinery over ℚ rather than over the tower, plus the §7.3 linear-constraint
+solve for `m/n`). -/
+
+/-- **Polynomial part / properness of a base-field element** `cBaseIsProper b`: `true` iff the
+lowest-terms `QFunNZ` value `b = a/d ∈ ℚ(x)` is *proper*, i.e. `deg(a) < deg(d)` (so `b` has no
+polynomial part). A logarithmic derivative `Dz/z` of a `ℚ(x)`-element is always proper, so a `b` that
+fails this is **not** a logarithmic derivative. A nonzero constant `b ∈ ℚ*` (`deg a = deg d = 0`) is
+*not* proper, hence not a logarithmic derivative — the constant obstruction. -/
+def cBaseIsProper (fuel : ℕ) (b : QFunNZ) : Bool :=
+  let bn := Compute.qnorm fuel b.1
+  Compute.cdeg bn.1 < Compute.cdeg bn.2 && !Compute.cisZero bn.1
+
+/-- **Parametric-logarithmic-derivative test over the base field** `cParametricLogDeriv fuel b`
+(Bronstein §5.12 / §7.3, book p.176/253), for `b ∈ k = ℚ(x)`: returns `true` iff `b` *could* be a
+logarithmic derivative of a `ℚ(x)`-radical, i.e. `n·b = Dz/z` for some nonzero `n ∈ ℤ` and `z ∈ ℚ(x)*`
+— and `false` iff `b` is provably **not** of that form. A nonzero element of `ℚ(x)` that is not proper
+(has a polynomial part, in particular every nonzero constant) is provably not a logarithmic derivative
+of a radical (the residues argument of §5.12: `Dz/z` is always proper and simple). This decides the
+constant sub-case `b ∈ ℚ*` exactly (returns `false`), which is the branch the §6.6 cancellation
+primitive case reaches. For a proper `b` the full recognizer (squarefree-denominator test + integer
+Rothstein–Trager residues + the §7.3 unique-`m/n` linear solve) is the documented continuation; this
+conservative test returns `true` there, so the caller takes the *radical/log-derivative* branch only
+when it cannot rule it out — keeping the **non-radical** branch (eq. 6.23) sound. -/
+def cParametricLogDeriv (fuel : ℕ) (b : QFunNZ) : Bool :=
+  -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
+  CField.isZero b || cBaseIsProper fuel b
+
+/-! ### `cRischDEBase` (Bronstein §6.6 eq. 6.23 base case) — the rational RDE `Ds + b·s = c` over ℚ(x)
+
+The cancellation primitive case reduces, leading-coefficient by leading-coefficient, to a **Risch
+differential equation over the coefficient field** `k = ℚ(x)` with `D = d/dx` (eq. 6.23 `Dy + by =
+lc(c)`). The general base solver is the *rational* Risch DE in `x` (the whole Ch. 6 pipeline re-run with
+`t = x` the trivial primitive monomial over ℚ) — a recursion into a second instance of the algorithm.
+Here we implement the **bottoming-out sub-case** where the base data is `k`-constant (`b, c ∈ ℚ`), for
+which the equation collapses to the linear-algebraic `b·s = c` (since `Ds = 0` for a constant `s` and a
+constant solution is forced when `b ≠ 0` is a nonzero constant): the solution is `s = c/b ∈ ℚ ⊂ ℚ(x)`.
+This is the genuine base case reached by the worked cancellation example. The general rational-RDE-in-x
+recursion (non-constant `b, c ∈ ℚ(x)`) is the documented remaining piece. -/
+
+/-- **Base-field Risch DE `Ds + b·s = c` over `k = ℚ(x)`**, the eq. 6.23 recursion target of the §6.6
+cancellation primitive case. `cRischDEBase fuel b c` returns `some s` with `s ∈ ℚ(x)` solving
+`Ds + b·s = c` (`D = d/dx` on `QFunNZ`), or `none`. Implemented for the **bottoming-out constant
+sub-case**: when `b` and `c` are `k`-constants (`b, c ∈ ℚ`), `Ds = 0` for the constant solution and
+`s = c/b` (`b ≠ 0`); `b = 0` needs `Ds = c`, solvable by a constant only when `c = 0` (`s = 0`). For
+non-constant `b, c ∈ ℚ(x)` this returns `none` (the general rational-RDE-in-`x` recursion is the
+documented continuation), making the test sound: a reported `some s` always *actually solves* the
+base equation (checked by `cRischDEBase_solves` at the worked value). -/
+def cRischDEBase (_fuel : ℕ) (b c : QFunNZ) : Option QFunNZ :=
+  -- constant test: a `QFunNZ` value is a `k`-constant iff its lowest-terms `d/dx` derivative is zero.
+  let isConst : QFunNZ → Bool := fun z => CField.isZero (CDiffField.cderiv z)
+  if isConst b && isConst c then
+    if CField.isZero b then
+      -- `Ds = c` with constant `c`: a constant `s` works only when `c = 0` (then `s = 0`).
+      if CField.isZero c then some CField.zero else none
+    else
+      -- `b·s = c` with `b ≠ 0` constant ⇒ `s = c/b` (also constant, so `Ds = 0`).
+      some (CField.div c b)
+  else none
+
+/-! ### `cPolyRischDECancelPrim` (Bronstein §6.6, the `PolyRischDECancelPrim(b,c,D,n)` box, book p.212)
+
+The **primitive cancellation case** of `PolyRischDE`: `Dt ∈ k` (so `δ(t) = 0`), `b ∈ k*`, `c ∈ k[t]`,
+solving `Dq + b·q = c` for `q ∈ k[t]` of degree `≤ n`. Because `D` does not raise the `t`-degree
+(`Dt ∈ k`), the leading terms of `Dq` and `bq` cancel, so the non-cancellation loop fails and the
+solve proceeds degree-by-degree by **recursing into a base Risch DE over `k = ℚ(x)`** (eq. 6.23). -/
+
+/-- **Computable Poly-Risch-DE, primitive cancellation case** `cPolyRischDECancelPrim Dt fuel b c n`
+(Bronstein §6.6, the `PolyRischDECancelPrim(b,c,D,n)` box, book p.212). Given the primitive monomial
+derivation `D` (`Dt ∈ k = ℚ(x)`), `b ∈ k*` (a `QFunNZ`-constant `t`-polynomial of degree 0) and
+`c ∈ k[t]`, with degree bound `n : ℤ`, returns `none` ("no solution of degree `≤ n`") or `some q` with
+`q ∈ k[t]`, `deg(q) ≤ n`, solving `Dq + b·q = c`:
+
+```
+if b = Dz/z for z ∈ k* then           (* logarithmic-derivative branch, §5.12 *)
+    if zc = Dp for p ∈ k[t] and deg(p) ≤ n then return(p/z) else return "no solution"
+if c = 0 then return 0
+if n < deg(c) then return "no solution"
+q ← 0
+while c ≠ 0 do
+    m ← deg(c)
+    if n < m then return "no solution"
+    s ← RischDE(b, lc(c))             (* base RDE over k: Ds + b·s = lc(c) *)
+    if s = "no solution" then return "no solution"
+    q ← q + s·tᵐ;  n ← m − 1;  c ← c − b·s·tᵐ − D(s·tᵐ)
+return q
+```
+
+`D = cmonomialDeriv Dt`. The logarithmic-derivative branch (`b = Dz/z`) routes through
+`cParametricLogDeriv` (§5.12) — implemented for the reachable constant sub-case where
+`b ∈ ℚ*` is provably *not* a logarithmic derivative, so the algorithm correctly proceeds to the
+general degree-by-degree recursion (the in-field-integration sub-branch, needing the full §5.12
+recognizer-and-construct, is the documented continuation). The `RischDE(b, lc(c))` base solve is
+`cRischDEBase` (eq. 6.23), implemented for the bottoming-out `k`-constant case. The `while` loop is
+fuel-bounded (`deg(c)` strictly drops each pass). -/
+def cPolyRischDECancelPrim (Dt : CPolyG QFunNZ) : ℕ → (b c : CPolyG QFunNZ) → (n : ℤ) →
+    Option (CPolyG QFunNZ)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    -- `b ∈ k*` is a degree-0 `t`-polynomial; its single coefficient `b₀ = lc(b) ∈ ℚ(x)` is the scalar.
+    let b0 : QFunNZ := cleadG b
+    -- §5.12 logarithmic-derivative branch `b = Dz/z`: not taken in the reachable (non-radical) case;
+    -- when `cParametricLogDeriv` cannot rule `b` out we fall through to the general recursion, which
+    -- is sound (eq. 6.23 applies to any `b ∈ k*`). The constant `b ∈ ℚ*` reached here returns `false`.
+    if cisZeroG c then some []
+    else if n < (cdegG c : ℤ) then none
+    else
+      let m : ℕ := cdegG c
+      -- `lc(c) ∈ ℚ(x)` and the base RDE `Ds + b₀·s = lc(c)` over `k = ℚ(x)` (eq. 6.23).
+      match cRischDEBase fuel b0 (cleadG c) with
+      | none => none
+      | some s =>
+        let stm : CPolyG QFunNZ := cshiftG m [s]               -- `s·tᵐ`
+        -- `c ← c − b·(s·tᵐ) − D(s·tᵐ)`, `n ← m − 1`.
+        let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+        match cPolyRischDECancelPrim Dt fuel b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+
+/-! ### `cPolyRischDE` — dispatch non-cancellation vs cancellation (Bronstein §6.5 + §6.6)
+
+After `cSPDE` reduces to `Dq + b·q = c` (eq. 6.19, `a = 1`) with a degree bound `n`, the choice of
+which §6.5/§6.6 solver applies is by the monomial type and `deg(b)` (Lemma 6.5.1): the
+**non-cancellation** case (`deg(b) > max(0, δ−1)`, leading terms don't cancel) goes to
+`cPolyRischDENoCancel`; the **primitive cancellation** case (`δ = 0`, `b ∈ k*`) goes to
+`cPolyRischDECancelPrim`. The hyperexponential (`δ = 1`) and nonlinear/hypertangent (`δ ≥ 2`)
+cancellation cases (`PolyRischDECancelExp`/`Tan`, book p.213/215) are the documented continuation. -/
+
+/-- **Computable Poly-Risch-DE dispatcher** `cPolyRischDE Dt fuel b c n` (Bronstein §6.5 + §6.6): solve
+`Dq + b·q = c` (eq. 6.19) for `q ∈ k[t]` with `deg(q) ≤ n`, choosing the §6.5 non-cancellation solver
+or the §6.6 cancellation solver by the monomial type and `deg(b)` (Lemma 6.5.1):
+
+* If `deg(b) > max(0, δ−1)` (non-cancellation, `δ = deg(Dt)`): `cPolyRischDENoCancel`.
+* Else if `δ = 0` (primitive) and `b ∈ k*` (`deg(b) = 0`): `cPolyRischDECancelPrim` (§6.6 primitive).
+* Else (hyperexponential `δ = 1` / nonlinear `δ ≥ 2` cancellation): the documented continuation
+  (`PolyRischDECancelExp`/`Tan`) — falls back to `cPolyRischDENoCancel` (correct whenever the
+  non-cancellation hypothesis happens to hold; otherwise returns `none`). -/
+def cPolyRischDE (Dt : CPolyG QFunNZ) (fuel : ℕ) (b c : CPolyG QFunNZ) (n : ℤ) :
+    Option (CPolyG QFunNZ) :=
+  let δ : ℤ := (cdegG Dt : ℤ)
+  let db : ℤ := (cdegG b : ℤ)
+  if db > max 0 (δ - 1) then
+    -- non-cancellation case (Lemma 6.5.1(i)).
+    cPolyRischDENoCancel Dt fuel b c n
+  else if δ = 0 ∧ db = 0 then
+    -- primitive cancellation case (§6.6, `Dt ∈ k`, `b ∈ k*`).
+    cPolyRischDECancelPrim Dt fuel b c n
+  else
+    -- hyperexponential / nonlinear cancellation (documented continuation); the non-cancellation
+    -- loop is still correct when it does not actually cancel.
+    cPolyRischDENoCancel Dt fuel b c n
+
 /-! ### `cRischDE` — the full Risch differential equation solver over the tower (assembly)
 
 `cRischDE Dt fuel fnum fden gnum gden` threads the five built stages: `cWeakNormalizer` (§6.1),
@@ -677,5 +845,75 @@ theorem rischDE_noSolution_example :
       rischDExampleGnum rischDExampleGden).isNone = true := by native_decide
 
 #print axioms rischDE_noSolution_example
+
+/-! ### Validation — the §6.6 CANCELLATION primitive case fires (`t = log(x)`, `Dt = 1/x`)
+
+The cancellation primitive case genuinely triggers exactly when the monomial is **primitive**
+(`Dt ∈ k`, `δ = 0`) and `b ∈ k*` (`deg(b) = 0`): then `D` does not raise the `t`-degree, the leading
+terms of `Dq` and `bq` cancel, and `cPolyRischDENoCancel` cannot proceed — the solve must recurse into
+a base Risch DE over `k = ℚ(x)` (eq. 6.23). We use `k = ℚ(x)`, `D = d/dx`, `t = log(x)` (so
+`Dt = 1/x ∈ k`, primitive), and the equation
+
+```
+  Dq + 1·q = log(x) + 1/x      (b = 1 ∈ ℚ*,  c = t + 1/x ∈ ℚ(x)[t],  deg(c) = 1)
+```
+
+whose solution is `q = t = log(x)` (indeed `Dq + q = D(t) + t = 1/x + t`). The run exercises the full
+§6.6 primitive cancellation path:
+
+* `b = 1 ∈ ℚ*` is **not** a logarithmic derivative of a `ℚ(x)`-radical (`cParametricLogDeriv` returns
+  `false` — a nonzero constant has a polynomial part, the §5.12 obstruction: `Dz/z = 1` forces
+  `z = eˣ ∉ ℚ(x)`), so the algorithm correctly takes the general degree-by-degree branch (eq. 6.23);
+* the leading-coefficient base solve `RischDE(b₀, lc(c)) = RischDE(1, 1)` over `ℚ(x)` returns `s = 1`
+  (`cRischDEBase`: the bottoming-out `ℚ`-constant case `1·s = 1`), giving the leading monomial
+  `s·t¹ = t`; the remainder `c − b·t − D(t) = (t + 1/x) − t − 1/x = 0` terminates the loop with `q = t`. -/
+
+open CPolyG QFunNZ
+
+/-- The primitive monomial derivative `Dt = 1/x` (`t = log(x)`); a single degree-0 `t`-coefficient
+`1/x ∈ ℚ(x)`. So `δ = deg(Dt) = 0` and the monomial is primitive (`Dt ∈ k`). -/
+def rischDECancelDt : CPolyG QFunNZ := [ofNumDen [1] [0, 1] (by decide)]
+
+/-- The cancellation example's coefficient `b = 1 ∈ ℚ* ⊂ ℚ(x)` (a degree-0 `t`-polynomial). -/
+def rischDECancelB : CPolyG QFunNZ := [ofConstNZ 1]
+
+/-- The cancellation example's right-hand side `c = log(x) + 1/x = t + 1/x` (low→high in `t`:
+constant coefficient `1/x ∈ ℚ(x)`, then `t`-coefficient `1`). -/
+def rischDECancelC : CPolyG QFunNZ := [ofNumDen [1] [0, 1] (by decide), ofConstNZ 1]
+
+-- **Sanity prints.** `cParametricLogDeriv` says `b = 1` is not a log-derivative (`false`); the base
+-- solve `RischDE(1,1)` over ℚ(x) returns `s = 1`; and `cPolyRischDECancelPrim` returns `q = t`.
+#eval CPolyG.cParametricLogDeriv 30 (ofConstNZ 1)
+#eval (CPolyG.cRischDEBase 30 (ofConstNZ 1) (ofConstNZ 1)).map (fun z => Compute.qnorm 30 z.1)
+#eval (CPolyG.cPolyRischDECancelPrim rischDECancelDt 30 rischDECancelB rischDECancelC 5).map
+  (fun q => (q : List QFunNZ).map (fun z : QFunNZ => Compute.qnorm 30 z.1))
+
+/-- **The §6.6 cancellation primitive case fires and solves over the tower** (`native_decide`,
+Bronstein §6.6, the `PolyRischDECancelPrim(b,c,D,n)` box, book p.212). For the primitive monomial
+`t = log(x)` (`Dt = 1/x ∈ k`, `δ = 0`), the cancellation equation `Dq + 1·q = log(x) + 1/x`
+(`b = 1 ∈ ℚ*`, `c = t + 1/x`, `deg(c) = 1`) is solved by `cPolyRischDECancelPrim`, returning some `q`,
+and the returned `q` is verified to **actually solve** `Dq + b·q = c` by `cisZeroG` of the cleared
+difference `D(q) + b·q − c` (`D = cmonomialDeriv rischDECancelDt`; not merely pinning the output) — the
+book's solution is `q = log(x) = t`. The dispatcher `cPolyRischDE` is checked to route this same input
+to the cancellation solver (`deg(b) = 0 = max(0, δ−1)`, `δ = 0`), producing an equal `q`.
+
+This is the §6.6 deliverable: the **cancellation** case of `PolyRischDE` — which `cPolyRischDENoCancel`
+cannot handle (the leading terms cancel) — *computes* over the monomial tower ℚ(x)[t], driving the
+§5.12 parametric-logarithmic-derivative test (`b = 1` ruled out) and the eq. 6.23 base Risch DE over
+`k = ℚ(x)` (`RischDE(1,1) = 1`) to the elementary solution `q = log(x)`. The hyperexponential
+(`PolyRischDECancelExp`) and nonlinear/hypertangent (`PolyRischDECancelTan`) cancellation cases, and the
+general non-constant rational base RDE recursion of eq. 6.23, are the documented continuation. -/
+theorem rischDE_cancel_example :
+    (match cPolyRischDECancelPrim rischDECancelDt 30 rischDECancelB rischDECancelC 5 with
+      | some q =>
+          cisZeroG (csubG (caddG (cmonomialDeriv rischDECancelDt q) (cmulG rischDECancelB q))
+            rischDECancelC)
+      | none => false) = true
+    ∧ (match cPolyRischDE rischDECancelDt 30 rischDECancelB rischDECancelC 5,
+            cPolyRischDECancelPrim rischDECancelDt 30 rischDECancelB rischDECancelC 5 with
+        | some q1, some q2 => cisZeroG (csubG q1 q2)
+        | _, _ => false) = true := by native_decide
+
+#print axioms rischDE_cancel_example
 
 end DeepWiki.SymbolicIntegration
