@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
+import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -179,15 +180,26 @@ abbrev cor_3_3_2 := @not_linearDependentOverConst_algebraMap
 of the extension. -/
 abbrev lem_3_3_4_easy := @subfieldClosure_subset_constants
 
--- **Deferred — `DeepWiki.SymbolicIntegration` library work:**
---   • Theorem 3.2.4 (§3.2, p.85): a field automorphism of a separable algebraic extension commutes
---     with `D`; trace/norm relations `Tr(Da/a) = D(Tr a)`, etc.
---   • Corollary 3.3.1, Lemma 3.3.3 [infra]: need Theorem 3.2.3 (unique derivation extension to a
---     separable algebraic extension / algebraic closure), not yet in the repo.
---   • Lemma 3.3.4 hard direction [deferred]: `Const_Δ(F(t)) ⊆ Const_D(F)(t)` (the algebraic/
---     transcendental case-split + the `u/v` gcd-degree argument over `F[t]`).
---   • Lemma 3.3.6 [infra]: alg-closed constant field — a system satisfiable by constants in `E` is
---     satisfiable by constants in `F` (Nullstellensatz transfer + a constant-basis of `F`).
+/-- **Corollary 3.3.1** (§3.3, p.86): a constant of a separable algebraic extension is the root of a
+separable constant-coefficient polynomial — `Const_Δ(E)` is the algebraic closure of `Const_D(F)`. -/
+abbrev cor_3_3_1 := @deriv_eq_zero_iff_isAlgebraicOverConst_separable
+
+/-- **Lemma 3.3.3** (§3.3, p.87): the constant field of an algebraically closed differential field is
+itself algebraically closed (char `0`). -/
+abbrev lem_3_3_3 := @isAlgClosed_constantsSubfield
+
+/-- **Lemma 3.3.4** (§3.3, p.87), hard direction core: if `c = u/v` (`u, v` coprime) is a constant of
+`F(t)` then `u, v` have constant coefficients — giving `Const_Δ(F(t)) ⊆ Const_D(F)(t)`. -/
+abbrev lem_3_3_4_hard := @mapCoeffs_eq_zero_of_coprime_of_relation
+
+/-- **Lemma 3.3.6** (§3.3, p.88), post-reduction core: over an algebraically closed constant field, a
+constant-coefficient polynomial system solved by an extension-constant point is solved by a
+base-constant point (multivariate Nullstellensatz transfer). -/
+abbrev lem_3_3_6 := @exists_const_point_of_exists_extension_point
+
+-- **Deferred — `DeepWiki.SymbolicIntegration` library work:** Lemma 3.3.6 *front reduction* — using a
+-- `Const_D(F)`-basis of `F` to rewrite `F[X]`-coefficient systems as constant-coefficient ones (the
+-- `C[X] ⊗_C F` free-module step); the downstream Nullstellensatz core is `lem_3_3_6`.
 
 /-! ## §3.4 Monomial Extensions -/
 
@@ -460,7 +472,7 @@ abbrev splitFactor_correct_gen := @splitFactor_isSplittingFactorizationGen
 /- ## NOT YET FORMALIZED (chapter summary — audit 2026-06-21; subtractive, delete each when done)
 §3.2: Thm 3.2.1 *unconditional* fraction-field existence; Thm 3.2.2 full `F(t)` existence with `Δt=w`
   (both need a from-scratch `FractionRing` derivation Mathlib lacks; uniqueness + conditioned existence done).
-§3.3: Cor 3.3.1; Lemma 3.3.3; Lemma 3.3.4 (hard direction `Const_Δ(F(t)) ⊆ Const_D(F)(t)`); Lemma 3.3.6.
+§3.3: Lemma 3.3.6 front reduction (the `C`-basis `C[X] ⊗_C F` step; the Nullstellensatz core `lem_3_3_6` is done).
 Examples: Ex 3.1.2; Ex 3.1.3; Ex 3.2.1; Ex 3.2.2; Ex 3.2.3; Ex 3.5.1; Ex 3.5.2.
 Exercises: Ex 3.1; Ex 3.2; Ex 3.3; Ex 3.4; Ex 3.6; Ex 3.7; Ex 3.8; Ex 3.9; Ex 3.10; Ex 3.11. -/
 
