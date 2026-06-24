@@ -177,7 +177,267 @@ theorem toPolyG_cderivG (p : CPolyG α) :
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
 
+/-! ### Generic Euclidean division `cdivmodG` over a `CField`
+
+`cdivmodG fuel p q = (quotient, remainder)` by fuel-bounded long division over the field `K`, with
+`toPolyG p = toPolyG q · toPolyG (cdivG…) + toPolyG (cmodG…)` and a strict normalized-length / degree
+drop. Mirrors `Compute.cdivmod`; the leading-term match `c = clead p / clead q` is `CField.div`. -/
+
+/-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
+remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
+def cdivmodG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
+  | 0, p, _ => ([], cnormG p)
+  | fuel + 1, p, q =>
+    let p := cnormG p
+    let q := cnormG q
+    if cisZeroG q then ([], [])
+    else if (p : List α).length < (q : List α).length then ([], p)
+    else
+      let c := CField.div (cleadG p) (cleadG q)
+      let k := (p : List α).length - (q : List α).length
+      let term := cshiftG k [c]
+      let p' := cnormG (csubG p (cmulG term q))
+      let (quo, rem) := cdivmodG fuel p' q
+      (caddG term quo, rem)
+
+/-- **Quotient** of generic Euclidean division (`cdivmodG`'s first component). -/
+def cdivG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
+
+/-- **Remainder** of generic Euclidean division (`cdivmodG`'s second component). -/
+def cmodG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
+
+/-- **Generic divisibility test** `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
+zero). -/
+def cdvdG (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
+
+/-- **Euclidean-division identity through `toPolyG`** (`q` already normalized and nonzero, any fuel):
+`toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
+theorem toPolyG_cdivmodG (fuel : ℕ) (p q : CPolyG α) (hqn : cnormG q = q) (hq0 : q ≠ []) :
+    toPolyG p
+      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 := by
+  induction fuel generalizing p with
+  | zero => simp [cdivmodG, toPolyG_cnormG]
+  | succ fuel ih =>
+    have hcz : cisZeroG q = false := by
+      rw [cisZeroG, hqn]; exact List.isEmpty_eq_false_iff.mpr hq0
+    rw [cdivmodG]
+    simp only [hqn, hcz, Bool.false_eq_true, if_false]
+    by_cases hlen : (cnormG p : List α).length < (q : List α).length
+    · simp [hlen, toPolyG_cnormG]
+    · simp only [hlen, if_false]
+      rcases hqr : cdivmodG fuel (cnormG (csubG (cnormG p)
+          (cmulG (cshiftG ((cnormG p : List α).length - (q : List α).length)
+            [CField.div (cleadG (cnormG p)) (cleadG q)]) q))) q
+        with ⟨quo, rem⟩
+      have hih := ih (cnormG (csubG (cnormG p)
+          (cmulG (cshiftG ((cnormG p : List α).length - (q : List α).length)
+            [CField.div (cleadG (cnormG p)) (cleadG q)]) q)))
+      rw [hqr] at hih
+      simp only [toPolyG_caddG, toPolyG_cnormG, toPolyG_csubG, toPolyG_cmulG] at hih ⊢
+      linear_combination hih
+
+/-- `cdivmodG` **normalizes its divisor**: `cdivmodG fuel p q = cdivmodG fuel p (cnormG q)`. -/
+theorem cdivmodG_cnormG_right (fuel : ℕ) (p q : CPolyG α) :
+    cdivmodG fuel p q = cdivmodG fuel p (cnormG q) := by
+  cases fuel with
+  | zero => rfl
+  | succ fuel => simp only [cdivmodG, cnormG_idem]
+
+/-- **Euclidean-division identity through `toPolyG`** for an arbitrary nonzero divisor (`cnormG q ≠ []`,
+any fuel): `toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
+theorem toPolyG_cdivmodG' (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
+    toPolyG p
+      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 := by
+  rw [cdivmodG_cnormG_right]
+  simpa [toPolyG_cnormG] using toPolyG_cdivmodG fuel p (cnormG q) (cnormG_idem q) hq0
+
+/-- **`cdvdG` reads as remainder-zero**: `cdvdG fuel q p = true ↔ toPolyG (cmodG fuel p q) = 0`. -/
+theorem cdvdG_iff (fuel : ℕ) (q p : CPolyG α) :
+    cdvdG fuel q p = true ↔ toPolyG (cmodG fuel p q) = 0 := by
+  rw [cdvdG, cisZeroG_iff]
+
+/-! #### Degree-drop / termination for `cdivmodG`
+
+The remainder loop strictly shortens the normalized list (`stepG_length_lt`), so `cmodG fuel p q`
+is properly reduced (`cmodG_length_lt`). The single-step degree drop is a field fact about
+`(CField.K α)[X]` (`degreeG_reduce_step_lt`), proven exactly as the concrete `degree_reduce_step_lt`. -/
+
+/-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
+theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
+    (cnormG p : List α).length = (toPolyG p).natDegree + 1 := by
+  have hd := cdegG_eq_natDegree p
+  rw [cdegG] at hd
+  have hlen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr h
+  omega
+
+/-- **One Euclidean-division step strictly drops the degree** in `(CField.K α)[X]`: subtracting the
+leading-term-matching multiple `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
+theorem degreeG_reduce_step_lt {P Q : (CField.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+    (hpq : Q.natDegree ≤ P.natDegree) :
+    (P - C (P.leadingCoeff / Q.leadingCoeff)
+        * X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
+  have hQlc : Q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hQ
+  have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
+  have hc0 : P.leadingCoeff / Q.leadingCoeff ≠ 0 := div_ne_zero hPlc hQlc
+  have hCc : (C (P.leadingCoeff / Q.leadingCoeff)) ≠ 0 := by rwa [Ne, Polynomial.C_eq_zero]
+  have hXk : (X ^ (P.natDegree - Q.natDegree) : (CField.K α)[X]) ≠ 0 :=
+    pow_ne_zero _ Polynomial.X_ne_zero
+  set T := C (P.leadingCoeff / Q.leadingCoeff) * X ^ (P.natDegree - Q.natDegree) * Q with hT
+  have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCc hXk) hQ
+  have hTnd : T.natDegree = P.natDegree := by
+    rw [hT, Polynomial.natDegree_mul (mul_ne_zero hCc hXk) hQ,
+      Polynomial.natDegree_mul hCc hXk, Polynomial.natDegree_C, Polynomial.natDegree_X_pow]
+    omega
+  have hTlc : T.leadingCoeff = P.leadingCoeff := by
+    rw [hT, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+      Polynomial.leadingCoeff_X_pow, mul_one, div_mul_cancel₀ _ hQlc]
+  exact Polynomial.degree_sub_lt
+    (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
+    hTlc.symm
+
+/-- `cleadG` is invariant under `cnormG`: `cleadG (cnormG p) = cleadG p`. -/
+theorem cleadG_cnormG (p : CPolyG α) : cleadG (cnormG p) = cleadG p := by
+  simp only [cleadG, cnormG_idem]
+
+/-- `cisZeroG` is invariant under `cnormG`. -/
+theorem cisZeroG_cnormG (q : CPolyG α) : cisZeroG (cnormG q) = cisZeroG q := by
+  simp only [cisZeroG, cnormG_idem]
+
+/-- `cdegG` is invariant under `cnormG`. -/
+theorem cdegG_cnormG (p : CPolyG α) : cdegG (cnormG p) = cdegG p := by
+  simp only [cdegG, cnormG_idem]
+
+/-- **One `cdivmodG` step strictly shortens the normalized list** (the termination measure): the
+remainder-loop replacement `cnormG (p − (lcP/lcQ)·xᵏ·q)` has strictly smaller normalized length than
+`p`. -/
+theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
+    (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
+    (cnormG (csubG (cnormG p)
+        (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+          [CField.div (cleadG p) (cleadG q)])
+          (cnormG q))) : List α).length < (cnormG p : List α).length := by
+  have hP : toPolyG p ≠ 0 := fun h => hp ((cnormG_eq_nil_iff p).mpr h)
+  have hQ : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
+  have hk : (cnormG p : List α).length - (cnormG q : List α).length
+      = (toPolyG p).natDegree - (toPolyG q).natDegree := by
+    rw [length_cnormG_of_ne p hp, length_cnormG_of_ne q hq]; omega
+  have hc : CField.toK (CField.div (cleadG p) (cleadG q))
+      = (toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff := by
+    rw [CField.toK_div, toK_cleadG_eq_leadingCoeff, toK_cleadG_eq_leadingCoeff]
+  set step := csubG (cnormG p)
+    (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+      [CField.div (cleadG p) (cleadG q)]) (cnormG q))
+    with hstepdef
+  have hstep : toPolyG step
+      = toPolyG p - C ((toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff)
+          * X ^ ((toPolyG p).natDegree - (toPolyG q).natDegree) * toPolyG q := by
+    rw [hstepdef, toPolyG_csubG, toPolyG_cnormG, toPolyG_cmulG, toPolyG_cshiftG, toPolyG_cnormG, hk]
+    simp only [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, hc]
+    ring
+  have hpq' : (toPolyG q).natDegree ≤ (toPolyG p).natDegree := by
+    have e1 := length_cnormG_of_ne p hp
+    have e2 := length_cnormG_of_ne q hq
+    omega
+  have hdeg : (toPolyG step).degree < (toPolyG p).degree := by
+    rw [hstep]; exact degreeG_reduce_step_lt hP hQ hpq'
+  by_cases hs0 : toPolyG step = 0
+  · rw [(cnormG_eq_nil_iff _).mpr hs0, List.length_nil]
+    exact List.length_pos_iff.mpr hp
+  · have hne : cnormG step ≠ [] := fun h => hs0 ((cnormG_eq_nil_iff _).mp h)
+    have hlt := Polynomial.natDegree_lt_natDegree hs0 hdeg
+    rw [length_cnormG_of_ne _ hne, length_cnormG_of_ne p hp]
+    omega
+
+/-- **Generic remainder degree bound**: with enough fuel and a nonzero divisor, `cmodG fuel p q` has
+strictly smaller normalized length than `q` — the Euclidean remainder is properly reduced. -/
+theorem cmodG_length_lt (fuel : ℕ) (p q : CPolyG α) (hq : cnormG q ≠ [])
+    (hfuel : (cnormG p : List α).length ≤ fuel) :
+    (cnormG (cmodG fuel p q) : List α).length < (cnormG q : List α).length := by
+  induction fuel generalizing p with
+  | zero =>
+    have hp0 : cnormG p = [] := List.length_eq_zero_iff.mp (by omega)
+    have h2 : cmodG 0 p q = [] := by simp [cmodG, cdivmodG, hp0]
+    rw [h2]; simpa using List.length_pos_iff.mpr hq
+  | succ fuel ih =>
+    have hcz : cisZeroG (cnormG q) = false := by
+      rw [cisZeroG_cnormG, cisZeroG]; exact List.isEmpty_eq_false_iff.mpr hq
+    by_cases hlen : (cnormG p : List α).length < (cnormG q : List α).length
+    · have h2 : cmodG (fuel + 1) p q = cnormG p := by
+        rw [cmodG, cdivmodG]
+        simp only [hcz, Bool.false_eq_true, if_false, if_pos hlen]
+      rw [h2, cnormG_idem]; exact hlen
+    · have hp : cnormG p ≠ [] := by
+        rintro h
+        rw [h, List.length_nil] at hlen
+        exact hlen (List.length_pos_iff.mpr hq)
+      have hstep := stepG_length_lt p q hp hq (by omega)
+      have key : cmodG (fuel + 1) p q
+          = cmodG fuel (cnormG (csubG (cnormG p)
+              (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+                [CField.div (cleadG p) (cleadG q)])
+                (cnormG q)))) q := by
+        rw [cmodG, cdivmodG]
+        simp only [hcz, Bool.false_eq_true, if_false, if_neg hlen, cleadG_cnormG, cmodG,
+          ← cdivmodG_cnormG_right]
+      rw [key]
+      apply ih
+      rw [cnormG_idem]
+      omega
+
 /-! ### Coherence of the generic ops with the concrete `Compute.*` engine at `α = ℚ` -/
+
+/-- `csubG` at `ℚ` is the concrete `csub`. -/
+theorem csubG_eq_csub : (csubG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.csub := by
+  funext p q
+  rw [csubG, Compute.csub, cnegG_eq_cneg, congrFun (congrFun caddG_eq_cadd _) _]
+
+/-- `cleadG` at `ℚ` is the concrete `clead`. -/
+theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
+  funext p
+  rw [cleadG, Compute.clead, cnormG_eq_cnorm]
+  rfl
+
+/-- `CField.div` at `ℚ` is ordinary division. -/
+theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
+  rw [CField.div]; show a * b⁻¹ = a / b; rw [div_eq_mul_inv]
+
+/-- `cdivmodG` at `ℚ` is the concrete `cdivmod`. -/
+theorem cdivmodG_eq_cdivmod (fuel : ℕ) :
+    (cdivmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ × CPolyG ℚ) = Compute.cdivmod fuel := by
+  induction fuel with
+  | zero =>
+    funext p q
+    show (([], cnormG p) : CPolyG ℚ × CPolyG ℚ) = ([], Compute.cnorm p)
+    have : (cnormG p : CPolyG ℚ) = Compute.cnorm p := congrFun cnormG_eq_cnorm p
+    rw [this]
+    rfl
+  | succ fuel ih =>
+    funext p q
+    show (let p := cnormG p; let q := cnormG q;
+        if cisZeroG q then ([], [])
+        else if (p : List ℚ).length < (q : List ℚ).length then ([], p)
+        else
+          let c := CField.div (cleadG p) (cleadG q)
+          let k := (p : List ℚ).length - (q : List ℚ).length
+          let term := cshiftG k [c]
+          let p' := cnormG (csubG p (cmulG term q))
+          let (quo, rem) := cdivmodG fuel p' q
+          (caddG term quo, rem)) = _
+    rw [Compute.cdivmod]
+    simp only [cnormG_eq_cnorm, cisZeroG_eq_cisZero, cleadG_eq_clead, div_eq_div_rat,
+      cshiftG_eq_cshift, cmulG_eq_cmul, csubG_eq_csub, congrFun (congrFun caddG_eq_cadd _) _, ih]
+
+/-- `cdivG` at `ℚ` is the concrete `cdiv`. -/
+theorem cdivG_eq_cdiv (fuel : ℕ) :
+    (cdivG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cdiv fuel := by
+  funext p q; rw [cdivG, Compute.cdiv, cdivmodG_eq_cdivmod]
+
+/-- `cmodG` at `ℚ` is the concrete `cmod`. -/
+theorem cmodG_eq_cmod (fuel : ℕ) :
+    (cmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmod fuel := by
+  funext p q; rw [cmodG, Compute.cmod, cdivmodG_eq_cdivmod]
+
+
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
