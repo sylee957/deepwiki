@@ -89,4 +89,22 @@ theorem longRunCovMatrix_quadratic {d m : ℕ} [IsFiniteMeasure μ]
   rw [dotProduct_mulVec_eq_quadratic, tsum_acvfStat_inner_eq h hmem]
   rfl
 
+/-- **Scaling a standard normal:** if `G ~ N(0,1)` then `√v · G ~ N(0, v)` (as `gaussianReal 0 v.toNNReal`),
+for **any** real `v` — since `(√v)² = max v 0 = (v.toNNReal : ℝ)` the identity needs no sign hypothesis.
+The limit law of the 1-D `m`-dependent CLT's `√(∑'acvf) • G` is thus `N(0, ∑'acvf)`. -/
+theorem hasLaw_sqrt_smul_gaussian {v : ℝ} {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'}
+    {G : Ω' → ℝ} (hG : HasLaw G (gaussianReal 0 1) P') :
+    HasLaw (fun ω => Real.sqrt v • G ω) (gaussianReal 0 v.toNNReal) P' := by
+  refine ⟨by fun_prop, ?_⟩
+  have hcm : (gaussianReal (0 : ℝ) 1).map (Real.sqrt v * ·) = gaussianReal 0 v.toNNReal := by
+    rw [gaussianReal_map_const_mul, mul_zero, mul_one]
+    congr 1
+    apply NNReal.coe_injective
+    rw [NNReal.coe_mk, Real.coe_toNNReal']
+    rcases le_or_gt 0 v with hv | hv
+    · rw [Real.sq_sqrt hv, max_eq_left hv]
+    · rw [Real.sqrt_eq_zero_of_nonpos hv.le]; simp [max_eq_right hv.le]
+  rw [show (fun ω => Real.sqrt v • G ω) = (Real.sqrt v * ·) ∘ G from rfl,
+    ← AEMeasurable.map_map_of_aemeasurable (by fun_prop) hG.aemeasurable, hG.map_eq, hcm]
+
 end DeepWiki.TimeSeries
