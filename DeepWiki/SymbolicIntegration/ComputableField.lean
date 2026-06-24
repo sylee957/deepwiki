@@ -114,4 +114,143 @@ instance : CField ℚ where
   toK_injective := fun _ _ h => h
   isZero_iff a := by simp [id]
 
+/-! ### Generic polynomial engine `CPolyG α := List α`
+
+Over any `[CField α]` the dense-coefficient list `CPolyG α` (index = degree, low to high) carries the
+same arithmetic as the concrete `CPoly = List ℚ`, with `ℚ` operations replaced by `CField.add`/`mul`/
+`neg`/`isZero`. The generic Horner bridge `toPolyG : CPolyG α → (CField.K α)[X]` embeds via `toK`. -/
+
+/-- **Generic dense coefficient list** over a computable field `α` (index = degree, low to high). -/
+def CPolyG (α : Type*) := List α
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Normalize** a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
+so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
+def cnormG : CPolyG α → CPolyG α
+  | [] => []
+  | a :: as => match cnormG as with
+    | [] => if CField.isZero a then [] else [a]
+    | r => a :: r
+
+/-- **Coefficientwise addition** of two `CPolyG`s (the shorter is zero-extended implicitly). -/
+def caddG : CPolyG α → CPolyG α → CPolyG α
+  | [], q => q
+  | p, [] => p
+  | a :: as, b :: bs => CField.add a b :: caddG as bs
+
+/-- **Negation** of a `CPolyG`, coefficientwise. -/
+def cnegG (p : CPolyG α) : CPolyG α := (p : List α).map CField.neg
+
+/-- **Subtraction** of `CPolyG`s, `p − q := p + (−q)`. -/
+def csubG (p q : CPolyG α) : CPolyG α := caddG p (cnegG q)
+
+/-- **Scalar multiplication** of a `CPolyG` by `c : α`, coefficientwise. -/
+def cscaleG (c : α) (p : CPolyG α) : CPolyG α := (p : List α).map (CField.mul c)
+
+/-- **Degree shift** `cshiftG k p = x^k · p`: prepend `k` zero coefficients. -/
+def cshiftG : ℕ → CPolyG α → CPolyG α
+  | 0, p => p
+  | n + 1, p => CField.zero :: cshiftG n p
+
+/-- **Polynomial multiplication** of `CPolyG`s (schoolbook convolution via `cshiftG`/`cscaleG`). -/
+def cmulG : CPolyG α → CPolyG α → CPolyG α
+  | [], _ => []
+  | a :: as, q => caddG (cscaleG a q) (CField.zero :: cmulG as q)
+
+/-- **Power** of a `CPolyG` by `ℕ`-recursion (`[1]` at `0`). -/
+def cpowG (p : CPolyG α) : ℕ → CPolyG α
+  | 0 => [CField.one]
+  | n + 1 => cmulG p (cpowG p n)
+
+/-- **Leading coefficient** of a `CPolyG` (top nonzero coefficient; `zero` for the zero polynomial). -/
+def cleadG (p : CPolyG α) : α := ((cnormG p : List α).getLast?.getD CField.zero)
+
+/-- **Degree** of a `CPolyG` as a `ℕ`: `(length of normalized p) − 1`, with `cdegG 0 = 0`. -/
+def cdegG (p : CPolyG α) : ℕ := (cnormG p : List α).length - 1
+
+/-- **Zero test** for a `CPolyG`: `true` iff it normalizes to `[]`. -/
+def cisZeroG (p : CPolyG α) : Bool := (cnormG p : List α).isEmpty
+
+/-- **Make a `CPolyG` monic** (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
+stays `[]`. -/
+def cmonicG (p : CPolyG α) : CPolyG α :=
+  let p := cnormG p
+  if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
+
+/-! ### The generic Horner bridge `toPolyG` and its homomorphism lemmas -/
+
+/-- **Generic bridge to `(CField.K α)[X]`**: `toPolyG p` reads a `CPolyG` coefficient list (index =
+degree, low to high) as a `Polynomial (CField.K α)` in **Horner form** `p₀ + x·(p₁ + x·(p₂ + …))`,
+each coefficient embedded via `toK`. -/
+noncomputable def toPolyG : CPolyG α → (CField.K α)[X]
+  | [] => 0
+  | a :: p => Polynomial.C (CField.toK a) + X * toPolyG p
+
+/-- `toPolyG [] = 0`: the empty coefficient list is the zero polynomial. -/
+@[simp] theorem toPolyG_nil : toPolyG ([] : CPolyG α) = 0 := rfl
+
+/-- `toPolyG`'s leading recursion (Horner): `toPolyG (a :: p) = C (toK a) + X · toPolyG p`. -/
+@[simp] theorem toPolyG_cons (a : α) (p : CPolyG α) :
+    toPolyG (a :: p) = Polynomial.C (CField.toK a) + X * toPolyG p := rfl
+
+/-- `toPolyG` is **additive**: `caddG` realizes `(CField.K α)[X]` addition under the Horner bridge. -/
+theorem toPolyG_caddG (p q : CPolyG α) : toPolyG (caddG p q) = toPolyG p + toPolyG q := by
+  induction p generalizing q with
+  | nil => simp [caddG]
+  | cons a as ih =>
+    cases q with
+    | nil => simp [caddG]
+    | cons b bs =>
+      simp only [caddG, toPolyG_cons, ih bs, CField.toK_add, map_add]
+      ring
+
+/-- `toPolyG` commutes with **negation**: `toPolyG (cnegG p) = − toPolyG p`. -/
+theorem toPolyG_cnegG (p : CPolyG α) : toPolyG (cnegG p) = - toPolyG p := by
+  induction p with
+  | nil => simp [cnegG]
+  | cons a as ih =>
+    show toPolyG (CField.neg a :: cnegG as) = -toPolyG (a :: as)
+    rw [toPolyG_cons, toPolyG_cons, ih, CField.toK_neg, map_neg]; ring
+
+/-- `toPolyG` realizes **subtraction**: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
+theorem toPolyG_csubG (p q : CPolyG α) : toPolyG (csubG p q) = toPolyG p - toPolyG q := by
+  rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
+
+/-- `toPolyG` realizes **scalar multiplication**: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
+theorem toPolyG_cscaleG (c : α) (p : CPolyG α) :
+    toPolyG (cscaleG c p) = Polynomial.C (CField.toK c) * toPolyG p := by
+  induction p with
+  | nil => simp [cscaleG]
+  | cons a as ih =>
+    show toPolyG (CField.mul c a :: cscaleG c as) = Polynomial.C (CField.toK c) * toPolyG (a :: as)
+    rw [toPolyG_cons, toPolyG_cons, ih, CField.toK_mul, map_mul]; ring
+
+/-- `toPolyG` realizes the **degree shift**: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
+theorem toPolyG_cshiftG (k : ℕ) (p : CPolyG α) : toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
+  induction k with
+  | zero => simp [cshiftG]
+  | succ n ih =>
+    show toPolyG (CField.zero :: cshiftG n p) = X ^ (n + 1) * toPolyG p
+    rw [toPolyG_cons, ih, CField.toK_zero, map_zero]; ring
+
+/-- `toPolyG` is **multiplicative**: `cmulG` realizes `(CField.K α)[X]` multiplication. -/
+theorem toPolyG_cmulG (p q : CPolyG α) : toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
+  induction p with
+  | nil => simp [cmulG]
+  | cons a as ih =>
+    show toPolyG (caddG (cscaleG a q) (CField.zero :: cmulG as q)) = toPolyG (a :: as) * toPolyG q
+    rw [toPolyG_caddG, toPolyG_cscaleG, toPolyG_cons, toPolyG_cons, ih, CField.toK_zero,
+      map_zero]; ring
+
+/-- `toPolyG` realizes the **`ℕ`-power**: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
+theorem toPolyG_cpowG (p : CPolyG α) (n : ℕ) : toPolyG (cpowG p n) = (toPolyG p) ^ n := by
+  induction n with
+  | zero => simp [cpowG, toPolyG_cons, CField.toK_one]
+  | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
