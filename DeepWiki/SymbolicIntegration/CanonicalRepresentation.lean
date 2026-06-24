@@ -348,6 +348,22 @@ theorem associated_gcd_deriv_prod_primeFactors {p : K[X]} (hp : p ≠ 0)
   refine heach.trans ?_
   rw [Finset.prod_mul_distrib]
 
+open Classical in
+/-- Per-prime gcd collapse: `∏_π gcd(π, Dπ) ~ ∏_{π special} π` over the prime factors of `p`. Each
+prime `π` is irreducible, so `gcd(π, Dπ)` is either a unit (when `π ∤ Dπ`, i.e. `π` normal) or
+`~ π` (when `π ∣ Dπ`, i.e. `π` special); the unit factors drop out. -/
+theorem associated_prod_gcd_deriv_primeFactors {p : K[X]} :
+    Associated (∏ π ∈ primeFactors p, gcd π π′)
+      (∏ π ∈ (primeFactors p).filter (fun π => @IsSpecial _ _ ⟨(Differential.deriv : _)⟩ π), π) := by
+  rw [Finset.prod_filter]
+  refine Associated.prod (primeFactors p) _ _ (fun π hπ => ?_)
+  have hirr : Irreducible π := irreducible_of_normalized_factor π (mem_primeFactors.mp hπ)
+  by_cases h : @IsSpecial _ _ ⟨(Differential.deriv : _)⟩ π
+  · rw [if_pos h]
+    exact (associated_gcd_left_iff.mpr (h : π ∣ π′)).symm
+  · rw [if_neg h]
+    exact associated_one_iff_isUnit.mpr (hirr.isUnit_gcd_iff.mpr (h : ¬ π ∣ π′))
+
 end GeneralGcdFormula
 
 section SplitSquarefreeFactor
