@@ -95,4 +95,37 @@ theorem tendstoInMeasure_comp_continuousAt_const {E' F' : Type*} [PseudoMetricSp
     simp only [hempty, measure_empty]
     exact tendsto_const_nhds
 
-end DeepWiki.TimeSeries
+/-- **The delta-method Taylor remainder vanishes in probability**: if `g` is differentiable at `p` with
+derivative `D`, `Xₙ → p` in probability, and the standardized `‖(Xₙ − p)/cₙ‖` is uniformly tight, then the
+remainder `(g(Xₙ) − g(p) − D(Xₙ − p))/cₙ → 0` in probability. Indeed `‖remainder‖ = ψ(Xₙ)·‖(Xₙ − p)/cₙ‖`
+with `ψ(x) = ‖x − p‖⁻¹·‖g x − g p − D(x − p)‖ →ᵖ 0` (differentiability) and `‖(Xₙ − p)/cₙ‖` tight, so the
+`o_p · O_p` product vanishes. -/
+theorem tendstoInMeasure_remainder_of_hasFDerivAt {E F : Type*}
+    [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F] [NormedSpace ℝ F]
+    {X : ℕ → Ω → E} {p : E} {g : E → F} {D : E →L[ℝ] F} {c : ℕ → ℝ}
+    (hg : HasFDerivAt g D p) (hXp : TendstoInMeasure μ X atTop (fun _ => p))
+    (htight : ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, 0 < M ∧ ∀ n,
+      μ {ω | M ≤ |‖(c n)⁻¹ • (X n ω - p)‖|} ≤ ε) :
+    TendstoInMeasure μ (fun n ω => (c n)⁻¹ • (g (X n ω) - g p - D (X n ω - p))) atTop 0 := by
+  set ψ : E → ℝ := fun x => ‖x - p‖⁻¹ * ‖g x - g p - D (x - p)‖ with hψdef
+  have hψp : ψ p = 0 := by simp [hψdef]
+  have hψcont : ContinuousAt ψ p := by
+    rw [ContinuousAt, hψp]; exact hasFDerivAt_iff_tendsto.mp hg
+  have hψX : TendstoInMeasure μ (fun n ω => ψ (X n ω)) atTop (fun _ => (0 : ℝ)) := by
+    have h := tendstoInMeasure_comp_continuousAt_const hXp hψcont
+    rwa [hψp] at h
+  have hprod := tendstoInMeasure_mul_zero_of_tight hψX htight
+  rw [tendstoInMeasure_iff_norm] at hprod ⊢
+  intro ε hε
+  refine (hprod ε hε).congr fun n => ?_
+  have halg : ∀ ω, ‖(c n)⁻¹ • (g (X n ω) - g p - D (X n ω - p))‖
+      = |ψ (X n ω) * ‖(c n)⁻¹ • (X n ω - p)‖| := fun ω => by
+    by_cases hd : X n ω = p
+    · simp [hd, hψdef]
+    · have hdne : ‖X n ω - p‖ ≠ 0 := norm_ne_zero_iff.mpr (sub_ne_zero.mpr hd)
+      simp only [hψdef, norm_smul]
+      rw [abs_of_nonneg (by positivity)]
+      field_simp
+  congr 1
+  ext ω
+  simp only [Set.mem_setOf_eq, Pi.zero_apply, sub_zero, Real.norm_eq_abs, halg ω]
