@@ -236,4 +236,64 @@ theorem neg_relA_not_isAlgExpressible [DecidableEq Att] [Nonempty Val] (i : ι) 
   rw [h] at hne
   exact Set.not_nonempty_empty hne
 
+/-! ## SQL over a database and its reduction to the calculus (§2.6) -/
+
+/-- A *database-indexed SQL query*: an elementary query (a `Select/From/Where` SPJ query given as a
+db-indexed algebra expression — faithful to SQL's `FROM` naming database relations) combined by
+`UNION`/`MINUS`/`INTERSECTION`. -/
+inductive DbSql (ι : Type w) (sch : ι → Finset Att) (Val : Type v) [DecidableEq Att] :
+    Finset Att → Type (max (max u v) w) where
+  /-- An elementary query, given by a db-indexed algebra (SPJ) expression. -/
+  | elem {Ω : Finset Att} (e : DbAlgExpr ι sch Val Ω) : DbSql ι sch Val Ω
+  /-- `α UNION β`. -/
+  | union {Ω : Finset Att} (a b : DbSql ι sch Val Ω) : DbSql ι sch Val Ω
+  /-- `α MINUS β`. -/
+  | minus {Ω : Finset Att} (a b : DbSql ι sch Val Ω) : DbSql ι sch Val Ω
+  /-- `α INTERSECTION β`. -/
+  | inter {Ω : Finset Att} (a b : DbSql ι sch Val Ω) : DbSql ι sch Val Ω
+
+variable [DecidableEq Att]
+
+/-- The table denoted by a db-indexed SQL query. -/
+def evalDbSql (db : (i : ι) → Table (sch i) Val) :
+    {Ω : Finset Att} → DbSql ι sch Val Ω → Table Ω Val
+  | _, .elem e => evalDbAlg db e
+  | _, .union a b => union (evalDbSql db a) (evalDbSql db b)
+  | _, .minus a b => diff (evalDbSql db a) (evalDbSql db b)
+  | _, .inter a b => inter (evalDbSql db a) (evalDbSql db b)
+
+/-- Reduce a db-indexed SQL query to the db-indexed algebra (set operations to union/difference,
+`INTERSECTION` via the generating part `e − (e − e')`). -/
+def dbSqlToAlg : {Ω : Finset Att} → DbSql ι sch Val Ω → DbAlgExpr ι sch Val Ω
+  | _, .elem e => e
+  | _, .union a b => .union (dbSqlToAlg a) (dbSqlToAlg b)
+  | _, .minus a b => .diff (dbSqlToAlg a) (dbSqlToAlg b)
+  | _, .inter a b => .diff (dbSqlToAlg a) (.diff (dbSqlToAlg a) (dbSqlToAlg b))
+
+/-- The SQL-to-algebra reduction preserves the view instance. -/
+theorem evalDbAlg_dbSqlToAlg (db : (i : ι) → Table (sch i) Val) :
+    {Ω : Finset Att} → (q : DbSql ι sch Val Ω) → evalDbAlg db (dbSqlToAlg q) = evalDbSql db q
+  | _, .elem _ => by simp only [dbSqlToAlg, evalDbSql]
+  | _, .union a b => by
+      simp only [dbSqlToAlg, evalDbSql, evalDbAlg, evalDbAlg_dbSqlToAlg db a,
+        evalDbAlg_dbSqlToAlg db b]
+  | _, .minus a b => by
+      simp only [dbSqlToAlg, evalDbSql, evalDbAlg, evalDbAlg_dbSqlToAlg db a,
+        evalDbAlg_dbSqlToAlg db b]
+  | _, .inter a b => by
+      simp only [dbSqlToAlg, evalDbSql, evalDbAlg, evalDbAlg_dbSqlToAlg db a,
+        evalDbAlg_dbSqlToAlg db b]
+      exact (inter_eq_diff_diff _ _).symm
+
+/-- **Reduction of (db-indexed) SQL to the tuple calculus** (§2.6): an SQL query translates to a
+single-free-variable first-order condition, via the algebra and `algToFO`. -/
+def dbSqlToFO {Ω : Finset Att} (q : DbSql ι sch Val Ω) : FOCond ι sch Val [Ω] :=
+  algToFO (dbSqlToAlg q)
+
+/-- **Codd's theorem, the SQL ⊆ calculus direction** (§2.6): every db-indexed SQL query denotes the
+same table as its first-order translation — SQL is subsumed by the first-order tuple calculus. -/
+theorem evalFOExpr_dbSqlToFO (db : (i : ι) → Table (sch i) Val) {Ω : Finset Att}
+    (q : DbSql ι sch Val Ω) : evalFOExpr db (dbSqlToFO q) = evalDbSql db q := by
+  rw [dbSqlToFO, evalFOExpr_algToFO, evalDbAlg_dbSqlToAlg]
+
 end DeepWiki

@@ -49,10 +49,11 @@ lemmas (not operational semantics); they need syntax/semantics layers not yet pr
 §2.5: DONE in both directions — `algToSql`/`evalSql_algToSql` (algebra → SQL) and `sqlToAlg`/
   `evalAlg_sqlToAlg` (SQL → algebra), establishing that the relational algebra and SQL have the same
   expressive power (the set-operation/SPJ level; the elementary `Where` internals are abstracted).
-§2.6: the reduction of SQL to the tuple calculus [infra: SQL/algebra here are *closed* (literal
-  tables in `elem`/`AlgExpr.rel`) whereas `algToFO` is over a *db-indexed* algebra (`DbAlgExpr.base
-  i` referencing a database); SQL→calculus needs a db-indexed SQL query type — or a closed↔open
-  bridge — plus the elementary `Where`-condition language as first-order conditions].
+§2.6: the reduction of SQL to the tuple calculus is DONE — `DbSql` (a db-indexed SQL query, `FROM`
+  naming database relations via `DbAlgExpr.base`) reduces via `dbSqlToAlg` to the algebra and thence,
+  by `dbSqlToFO = algToFO ∘ dbSqlToAlg`, to a first-order condition (`evalFOExpr_dbSqlToFO`: SQL ⊆
+  calculus). [The closed `SqlQuery`/`AlgExpr` of §2.3/§2.5 stays at the set-op/SPJ level; the
+  elementary `Where`-condition language as first-order conditions is the remaining refinement.]
 Expressive equivalence of the three systems (Codd's theorem, the chapter's main result) [research].
 §2.7: Exercises [deferred: not yet transcribed]. -/
 
@@ -216,6 +217,23 @@ abbrev safety_isAlgExpressible := @DeepWiki.IsAlgExpressible
 database ⟹ complement is `univ` but every algebra expression is empty), so the calculus → algebra
 reduction cannot be total — it must restrict to safe formulas. -/
 abbrev safety_neg_not_expressible := @DeepWiki.neg_relA_not_isAlgExpressible
+
+/-! ## §2.6 Reduction of SQL to the tuple calculus -/
+
+/-- **Database-indexed SQL query** (§2.6): elementary db-indexed algebra (SPJ) queries combined by
+`UNION`/`MINUS`/`INTERSECTION` — `FROM` names database relations (`DbAlgExpr.base`). -/
+abbrev db_sql_query := @DeepWiki.DbSql
+
+/-- **§2.6**: the view instance of a db-indexed SQL query. -/
+abbrev db_sql_eval := @DeepWiki.evalDbSql
+
+/-- **§2.6**: reduction of a db-indexed SQL query to a first-order condition (`algToFO ∘
+dbSqlToAlg`). -/
+abbrev reduction_sqlToCalc := @DeepWiki.dbSqlToFO
+
+/-- **Codd's theorem, SQL ⊆ calculus** (§2.6): `evalFOExpr (dbSqlToFO q) = evalDbSql q` — SQL is
+subsumed by the first-order tuple calculus. -/
+abbrev reduction_sqlToCalc_correct := @DeepWiki.evalFOExpr_dbSqlToFO
 
 /-! ## §2.3 SQL: Structured Query Language -/
 
