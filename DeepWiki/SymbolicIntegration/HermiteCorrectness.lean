@@ -2449,3 +2449,64 @@ example :
   exact hermiteReduce_residual_correct_of_radical 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
     [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hfuelD hermite_ex221_Dstar_dvd hWgd
 
+/-! ### The multi-factor `g`-fold interference invariant: toward an unconditional wrapper
+
+`hermiteReduce`'s rational part is the *conditional* fold
+`g = factors.foldl (fun gAcc (Vi,i) => if i ≤ 1 then gAcc else qadd gAcc glocᵢ) qzero`, where each kept
+factor `(Vi, i)` (multiplicity `i ≥ 2`) contributes `glocᵢ = (hermiteInner fuel Vi Uᵢ (i−1) A qzero).1`
+with `Uᵢ = D/Vi^i`. To run the `foldl_residual_eq` skeleton on it, the conditional fold is first
+re-expressed as a plain `qadd`-fold over the *list of increments* `glocList` (one `glocᵢ` per kept
+factor); then each increment's derivative reduces the **same** global `T = A/D` (via
+`hermiteInner_spec_of` and the reconciliation `am Uᵢ·am Vi^i = am D`), so `foldl_residual_eq` expresses
+the total residual as `(1−n)·T + Σᵢ residᵢ` — the overcounting skeleton. -/
+
+/-- **The per-factor `gloc` increment** of `hermiteReduce`'s `g`-fold: for a kept factor `(Vi, i)`
+(`i ≥ 2`), `glocIncr fuel A D (Vi, i) = (hermiteInner fuel Vi (D/Vi^i) (i−1) A qzero).1`, the rational
+part `hermiteInner` peels from the global `A/D` against this factor. -/
+def glocIncr (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) : QFun :=
+  let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
+  let U := cdiv fuel D Vi_pow
+  (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).1
+
+/-- **The list of `gloc` increments** for the kept factors (`i ≥ 2`) of `hermiteReduce`'s `g`-fold:
+`glocList fuel A D factors` drops the simple factors (`i ≤ 1`) and maps each repeated factor to its
+`glocIncr`. The plain increment list over which the conditional fold becomes a `qadd`-fold. -/
+def glocList (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ)) : List QFun :=
+  (factors.filter (fun Vi => decide (2 ≤ Vi.2))).map (glocIncr fuel A D)
+
+/-- **The conditional `g`-fold is the plain `qadd`-fold over the increment list**: the
+`hermiteReduce` accumulation `factors.foldl (fun gAcc (Vi,i) => if i ≤ 1 then gAcc else qadd gAcc glocᵢ)
+init` equals `(glocList fuel A D factors).foldl qadd init`. The `if i ≤ 1` drop is the `filter (2 ≤ i)`;
+each kept step is a `qadd` of the matching `glocIncr`. -/
+theorem foldl_cond_eq_foldl_glocList (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ))
+    (init : QFun) :
+    factors.foldl
+        (fun (gAcc : QFun) (Vi : CPoly × ℕ) =>
+          if Vi.2 ≤ 1 then gAcc
+          else
+            let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
+            let U := cdiv fuel D Vi_pow
+            let gloc := (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).1
+            qadd gAcc gloc)
+        init
+      = (glocList fuel A D factors).foldl qadd init := by
+  induction factors generalizing init with
+  | nil => simp [glocList]
+  | cons hd tl ih =>
+    rw [List.foldl_cons, glocList, List.filter_cons]
+    by_cases hhd : 2 ≤ hd.2
+    · simp only [decide_eq_true_eq.mpr hhd, if_true, List.map_cons, List.foldl_cons]
+      have hcond : ¬ hd.2 ≤ 1 := by omega
+      rw [if_neg hcond]
+      have := ih (qadd init (glocIncr fuel A D hd))
+      rw [glocList] at this
+      rw [show (hermiteInner fuel hd.1 (cdiv fuel D
+            ((List.range hd.2).foldl (fun acc _ => cmul acc hd.1) [1])) (hd.2 - 1) A qzero).1
+          = glocIncr fuel A D hd from rfl]
+      exact this
+    · have hcond : hd.2 ≤ 1 := by omega
+      rw [if_neg (by simpa using hhd : ¬ (decide (2 ≤ hd.2) = true)), if_pos hcond]
+      have := ih init
+      rw [glocList] at this
+      exact this
+
