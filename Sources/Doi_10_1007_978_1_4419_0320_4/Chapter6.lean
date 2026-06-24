@@ -137,19 +137,19 @@ then `B Xₙ` is `AN(B aₙ, B Sₙ Bᵀ)` for any matrix `B`. The library's
 alias prop_6_4_2 := DeepWiki.TimeSeries.IsAsymptoticallyNormalVec.matrix_mulVec
 
 /-- **§6.4 Proposition 6.4.3 — the multivariate delta method** (convergence-in-distribution form): if `g`
-is differentiable at `p` with derivative `D`, `Xₙ → p` in probability, the standardized `(Xₙ − p)/cₙ`
-converges in distribution to `V`, and `‖(Xₙ − p)/cₙ‖` is uniformly tight, then `(g(Xₙ) − g(p))/cₙ ⇒ D V`.
-The library's `tendstoInDistribution_smul_comp_of_hasFDerivAt`: continuous mapping of the linear part, the
-Taylor remainder vanishing in probability, and Slutsky. Tightness is taken as a hypothesis — it is the one
-ingredient (Prokhorov: a convergent-in-distribution sequence is tight) Mathlib does not yet supply. -/
-alias prop_6_4_3 := DeepWiki.TimeSeries.tendstoInDistribution_smul_comp_of_hasFDerivAt
+is differentiable at `p` with derivative `D`, `Xₙ → p` in probability, and the standardized `(Xₙ − p)/cₙ`
+converges in distribution to `V`, then `(g(Xₙ) − g(p))/cₙ ⇒ D V`. The library's `multivariateDeltaMethod`:
+continuous mapping of the linear part, the Taylor remainder vanishing in probability, and Slutsky — with
+the required tightness of `‖(Xₙ − p)/cₙ‖` *derived* from the convergence (`tight_of_tendstoInDistribution`,
+the Prokhorov direction via the characteristic-function tightness criterion), so no tightness hypothesis. -/
+alias prop_6_4_3 := DeepWiki.TimeSeries.multivariateDeltaMethod
 
 /-! ## NOT YET FORMALIZED (audit 2026-06-21; subtractive — delete each item once it is formalized)
 §6.4: Example 6.4.2 (the sample coefficient of variation `s_n / X̄_n` is asymptotically normal) [deferred]
 (The §6.4 large-sample core is done: the `m`-dependent CLT `thm_6_4_2`/`thm_6_4_2_i`, the linear-process
 CLT `clt_linearProcess`, the 1-D delta method `prop_6_4_1`, MA m-dependence `example_6_4_3`, the MA CLT
 for i.i.d. noise `example_6_4_4`, the vector-AN framework `def_6_4_2`/`prop_6_4_2`, and the multivariate
-delta method `prop_6_4_3` (modulo tightness, which is the Mathlib-missing Prokhorov direction). Remaining:
-the Example 6.4.2 sample-coefficient-of-variation delta-method application.) -/
+delta method `prop_6_4_3` (tightness-free — the Prokhorov direction is internalized). Remaining: the
+Example 6.4.2 sample-coefficient-of-variation delta-method application.) -/
 
 end DeepWiki.Ts
