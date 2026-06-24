@@ -161,6 +161,43 @@ theorem isSpecialRao_prod_X_sub_C_iff (a b : k[X]) (s : Finset k) :
     exact IsSpecial.prod s (fun α => X - C α)
       (fun α hα => (hbridge _).mp ((isSpecialRao_X_sub_C_iff a b α).mpr (h α hα)))
 
+/-- **Exercise 3.11** (§3.4), prime case: if `Δt = a/b` is in lowest terms (`gcd(a, b) = 1`) and a
+prime (irreducible) `π ∈ k[t]` is *special* (`π ∣ b·Δπ`), then `gcd(π, b) = 1`. Suppose `π ∣ b`;
+then from `π ∣ b·κ_D(π) + a·(dπ/dt)` and `π ∣ b·κ_D(π)` we get `π ∣ a·(dπ/dt)`. Primality forces
+`π ∣ a` (impossible: `π ∣ gcd(a, b) = 1`) or `π ∣ dπ/dt` (impossible: an irreducible over a char-`0`
+field is separable, so coprime to its derivative). -/
+theorem isCoprime_of_isSpecialRao_prime [CharZero k] {a b π : k[X]} (hab : IsCoprime a b)
+    (hπ : Prime π) (hsp : IsSpecialRao a b π) : IsCoprime π b := by
+  rw [(hπ.irreducible).coprime_iff_not_dvd]
+  intro hdvd
+  -- `π ∣ a·(dπ/dt)`
+  have hbκ : π ∣ b * kappaD k π := hdvd.mul_right _
+  have hsum : π ∣ b * kappaD k π + a * derivative π := by
+    rw [← bDeriv_eq]; exact hsp
+  have hadπ : π ∣ a * derivative π := (dvd_add_right hbκ).mp hsum
+  rcases hπ.dvd_or_dvd hadπ with hda | hdπ'
+  · -- `π ∣ a` and `π ∣ b` contradict `gcd(a,b)=1`
+    exact hπ.not_unit (hab.isUnit_of_dvd' hda hdvd)
+  · -- `π ∣ dπ/dt` contradicts separability of the irreducible `π`
+    have hsep : IsCoprime π (derivative π) := (separable_def π).mp (hπ.irreducible).separable
+    exact hπ.not_unit (hsep.isUnit_of_dvd' dvd_rfl hdπ')
+
+/-- **Exercise 3.11** (§3.4), squarefree case: if `Δt = a/b` is in lowest terms and a *special*
+squarefree `p ∈ k[t]` is written as the product `∏_{α∈s}(t − α)` of its distinct linear factors,
+then `gcd(p, b) = 1` — equivalently `b.eval α ≠ 0` at every root `α`. Each `t − α` is special
+(`isSpecialRao_X_sub_C_iff`), so `a(α) = b(α)·α′`; if `b(α) = 0` then `a(α) = 0` too, contradicting
+`gcd(a, b) = 1` (both would vanish at `α`, so `t − α ∣ gcd(a, b)`). -/
+theorem eval_ne_zero_of_isSpecialRao_prod_X_sub_C {a b : k[X]} (hab : IsCoprime a b)
+    {s : Finset k} (hsp : IsSpecialRao a b (∏ α ∈ s, (X - C α))) :
+    ∀ α ∈ s, b.eval α ≠ 0 := by
+  intro α hα hbα
+  have hroot : a.eval α = b.eval α * α′ := (isSpecialRao_prod_X_sub_C_iff a b s).mp hsp α hα
+  rw [hbα, zero_mul] at hroot
+  -- both `a` and `b` vanish at `α`, so `t − α ∣ gcd(a, b)`, contradicting coprimality.
+  have hda : (X - C α) ∣ a := dvd_iff_isRoot.mpr hroot
+  have hdb : (X - C α) ∣ b := dvd_iff_isRoot.mpr hbα
+  exact (prime_X_sub_C α).not_unit (hab.isUnit_of_dvd' hda hdb)
+
 end Rao
 
 end DeepWiki.SymbolicIntegration
