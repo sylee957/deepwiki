@@ -2947,3 +2947,19 @@ theorem residNum_eq_resNumPrime (fuel : ℕ) (A D gnum gden : CPoly) (factors : 
   apply hinj
   rw [map_mul, map_mul]
   exact hRgd
+
+/-- **`W ∣ R ⟺ W·gden² ∣ resNum'`** (cancel the common `gden²`): with `R·gden² = resNum'`
+(`residNum_eq_resNumPrime`) and `gden ≠ 0`, the interference divisibility `W ∣ R` is *equivalent* to the
+algorithm's cleared-identity divisibility `W·gden² ∣ resNum'`. So the abstract interference wall is
+exactly the divisibility the existing radical wrapper (`hermiteReduce_residual_correct_of_radical`) and
+per-example `native_decide` certs consume — confirming the reduction is consistent and the wall is the
+single remaining piece. -/
+theorem dvd_R_iff_dvd_resNumPrime {R resNum' gden W : ℚ[X]} (hgden : gden ≠ 0)
+    (hRel : R * (gden * gden) = resNum') :
+    W ∣ R ↔ W * (gden * gden) ∣ resNum' := by
+  rw [← hRel]
+  constructor
+  · intro h; exact mul_dvd_mul h dvd_rfl
+  · intro h
+    have hg2 : gden * gden ≠ 0 := mul_ne_zero hgden hgden
+    exact (mul_dvd_mul_iff_right hg2).mp h
