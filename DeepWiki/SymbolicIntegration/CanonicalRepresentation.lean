@@ -181,4 +181,89 @@ theorem splitFactor_isSplittingFactorization (v p : K[X])
 
 end SplitFactor
 
+section SplitFactorSplit
+variable {K : Type*} [Field K] [CharZero K] [Differential K]
+
+open Classical in
+/-- For a fully-split `q = ∏_{a∈s}(X − a)^{eₐ}` (each `eₐ ≥ 1`, char `0`), the `SplitFactor` step
+`S = gcd(q,Dq)/gcd(q,dq/dt)` is the squarefree special part — `S ~ ∏_{a : v(a)=a′}(X − a)`. By the
+gcd formula `gcd(q,Dq) ~ gcd(q,dq/dt)·∏_{special}(X − a)` the division is exact and yields the
+special factor. -/
+theorem splitFactorStep_prod_X_sub_C_pow_associated (v : K[X]) (s : Finset K) (e : K → ℕ)
+    (he : ∀ a ∈ s, 1 ≤ e a) :
+    Associated (splitFactorStep v (∏ a ∈ s, (X - C a) ^ e a))
+      (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) := by
+  set q := ∏ a ∈ s, (X - C a) ^ e a with hq
+  have hform := gcd_implicitDeriv_associated_gcd_derivative_mul_special v s e he
+  rw [← hq] at hform
+  have hgne : gcd q (derivative q) ≠ 0 := by
+    refine fun h => ?_
+    have hq0 : q = 0 := eq_zero_of_zero_dvd (h ▸ gcd_dvd_left q (derivative q))
+    rw [hq, Finset.prod_eq_zero_iff] at hq0
+    obtain ⟨a, _, ha⟩ := hq0
+    exact (pow_ne_zero _ (X_sub_C_ne_zero a)) ha
+  -- `gcd(q,dq/dt) ∣ gcd(q,Dq)` from the associated product formula.
+  have hdvd : gcd q (derivative q) ∣ gcd q (Differential.implicitDeriv v q) :=
+    (dvd_mul_right _ _).trans hform.symm.dvd
+  rw [splitFactorStep]
+  -- divide both sides of the associated formula by `gcd(q,dq/dt)`.
+  exact (associated_div_iff hgne hdvd).mpr hform
+
+open Classical in
+/-- For a squarefree fully-split `q = ∏_{a∈s}(X − a)`, the `SplitFactor` step `S` is the special
+part `∏_{a : v(a)=a′}(X − a)`; specializes `splitFactorStep_prod_X_sub_C_pow_associated` at `eₐ=1`. -/
+theorem splitFactorStep_prod_X_sub_C_associated (v : K[X]) (s : Finset K) :
+    Associated (splitFactorStep v (∏ a ∈ s, (X - C a)))
+      (∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a)) := by
+  have h := splitFactorStep_prod_X_sub_C_pow_associated v s (fun _ => 1) (fun _ _ => le_rfl)
+  simpa using h
+
+open Classical in
+/-- The `SplitFactor` one-step property `IsSplitFactorStep` holds for every squarefree fully-split
+`q = ∏_{a∈s}(X − a)`: the step `S` is the special factor `∏_{special}(X − a)`, which (when
+non-constant) is a special divisor of `q` with strictly smaller-degree quotient, and (when constant)
+`q` is normal (no special roots). This discharges the hypothesis of `splitFactor` correctness on
+squarefree split inputs. -/
+theorem isSplitFactorStep_prod_X_sub_C (v : K[X]) (s : Finset K) :
+    IsSplitFactorStep v (∏ a ∈ s, (X - C a)) := by
+  letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
+  set q := ∏ a ∈ s, (X - C a) with hq
+  set sp := ∏ a ∈ s.filter (fun a => v.eval a = a′), (X - C a) with hsp
+  have hassoc : Associated (splitFactorStep v q) sp := splitFactorStep_prod_X_sub_C_associated v s
+  have hqne : q ≠ 0 := by
+    rw [hq, Finset.prod_ne_zero_iff]; exact fun a _ => X_sub_C_ne_zero a
+  -- `q` factors as `sp · (normal part)`.
+  have hsplit := splittingFactorization_prod_X_sub_C v s
+  rw [← hq, ← hsp] at hsplit
+  obtain ⟨hqeq, hspspec, hnpnorm⟩ := hsplit
+  set np := ∏ a ∈ s.filter (fun a => ¬ v.eval a = a′), (X - C a) with hnp
+  have hspne : sp ≠ 0 := by
+    rw [hsp, Finset.prod_ne_zero_iff]; exact fun a _ => X_sub_C_ne_zero a
+  refine ⟨fun hdeg0 => ?_, fun hpos => ?_⟩
+  · -- `S` constant ⟹ `sp` constant (associated) ⟹ `sp` is a unit ⟹ `q ~ np` normal.
+    have hSne0 : splitFactorStep v q ≠ 0 := fun h => hspne (hassoc.eq_zero_iff.mp h)
+    have hspdeg : sp.natDegree = 0 :=
+      Nat.le_zero.mp (hdeg0 ▸ natDegree_le_of_dvd hassoc.symm.dvd hSne0)
+    have hspc0 : sp.coeff 0 ≠ 0 := fun h => hspne (by rw [eq_C_of_natDegree_eq_zero hspdeg, h, map_zero])
+    have hspu : IsUnit sp := by
+      rw [eq_C_of_natDegree_eq_zero hspdeg]; exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr hspc0)
+    have hnormal : IsNormal np := (isCoprime_prod_X_sub_C_implicitDeriv_iff v _).mpr
+      (fun a ha => (Finset.mem_filter.mp ha).2)
+    rw [hqeq]; exact (IsNormal.unit_mul_iff hspu np).mpr hnormal
+  · -- `S` non-constant ⟹ `S ∣ q`, `IsSpecial S`, and degree of `q/S` drops.
+    have hspdvdq : sp ∣ q := hqeq ▸ dvd_mul_right sp np
+    have hSdvd : splitFactorStep v q ∣ q := hassoc.dvd.trans hspdvdq
+    have hSspec : IsSpecial (splitFactorStep v q) := IsSpecial.of_associated hassoc.symm hspspec
+    have hSne : splitFactorStep v q ≠ 0 := fun h => by rw [h] at hpos; simp at hpos
+    refine ⟨hSdvd, ?_, hSspec⟩
+    -- degree drop: `(q/S).natDegree + S.natDegree = q.natDegree`.
+    have hmul : splitFactorStep v q * (q / splitFactorStep v q) = q :=
+      EuclideanDomain.mul_div_cancel' hSne hSdvd
+    have hdeg : (splitFactorStep v q).natDegree + (q / splitFactorStep v q).natDegree
+        = q.natDegree := by
+      rw [← natDegree_mul hSne (fun h => hqne (by rw [← hmul, h, mul_zero])), hmul]
+    omega
+
+end SplitFactorSplit
+
 end DeepWiki.SymbolicIntegration
