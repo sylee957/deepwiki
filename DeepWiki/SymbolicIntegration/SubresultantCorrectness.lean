@@ -426,21 +426,118 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
     subresultant_C_mul_right (toPoly β) (toBPoly q)
       (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
 
+/-- **LRT subresultant after one β-divided PRS step** (the literal first chain step of
+`lrtSubresultantCompute`/`subresPRS` on the LRT operands): with the book's formal degrees `n = deg D`,
+`m = deg D − 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`, `(s, c)` the `toBPoly_bpsremainder` witnesses
+and `R₃ = bdivC fuel (bpsremainder fuel P Q) β` the next `subresPRS` element (β dividing every
+`x`-coefficient of the pseudo-remainder), the abstract `lrtSubresultant A D j` satisfies
+`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`.
+This is `subresultant_C_mul_eq_bdivC_of_bpsremainder` (with `p = P`, `q = Q`) transported across
+`lrtSubresultant_eq_subresultant_toBPoly` — the LRT subresultant as one *divided* step of `subresPRS`,
+the chain-recurrence entry point whose iterate is the full `lrtGcdCompute ↔ lrtSubresultant` agreement. -/
+theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
+        = toBPoly s * toBPoly (bArgAmtD' A D)
+          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (cmod fuel a β) = 0)
+    (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
+    (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    Polynomial.C ((toPoly c) ^ (((toPoly D).natDegree - 1) - j))
+        * lrtSubresultant (toPoly A) (toPoly D) j
+      = (-1 : (ℚ[X])[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
+        * (Polynomial.C ((toPoly β) ^ (((toPoly D).natDegree - 1) - j))
+          * subresultant (toBPoly (bArgAmtD' A D))
+              (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+              ((toPoly D).natDegree - 1) (toPoly D).natDegree j) := by
+  rw [lrtSubresultant_eq_subresultant_toBPoly]
+  exact subresultant_C_mul_eq_bdivC_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D) β
+    (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hβ hdiv hjm hjn hB hQ
+
+/-! ### The one-step PRS reduction as a `ℚ[t]`-similarity (the "up to content/unit" form)
+The `C(...)` content factors of the one-divided-step law are all `C`-of-constants in `ℚ[t] = ℚ[X]`, so —
+when those factors are nonzero — the law reads as a `ℚ[t]`-**similarity** `IsSimilar` (Bronstein §1.5's
+"similar" relation, `PseudoDivision`): the LRT subresultant is similar over `ℚ[t]` to the abstract
+subresultant of the next divided PRS pair. This is the exact sense in which the chain agreement holds
+"up to a `ℚ[t]` content/unit", at the one-step level. -/
+
+/-- **One divided PRS step as a `ℚ[t]`-similarity**: under the β-divided step hypotheses, with the
+content factors nonzero (`toPoly c ≠ 0`, `toPoly β ≠ 0`), the LRT subresultant is *similar over `ℚ[t]`*
+to the abstract subresultant of the next divided PRS pair `(Q, R₃)`:
+`IsSimilar (lrtSubresultant A D j) (Sⱼ(Q, bdivC … prem; m, n))`. Packages
+`lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder` as the similarity witnesses
+`(toPoly c)^(m−j)` and `(-1)^((m−j)(n−j))·(toPoly β)^(m−j)` (the `(-1)^…` absorbed into the `C`-constant).
+This is the "up to `ℚ[t]` content/unit" chain agreement at one divided step. -/
+theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
+    (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
+        = toBPoly s * toBPoly (bArgAmtD' A D)
+          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (cmod fuel a β) = 0)
+    (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
+    (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
+    (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) j)
+      (subresultant (toBPoly (bArgAmtD' A D))
+        (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+        ((toPoly D).natDegree - 1) (toPoly D).natDegree j) := by
+  refine ⟨(toPoly c) ^ (((toPoly D).natDegree - 1) - j),
+    (-1 : ℚ[X]) ^ ((((toPoly D).natDegree - 1) - j) * ((toPoly D).natDegree - j))
+      * (toPoly β) ^ (((toPoly D).natDegree - 1) - j),
+    pow_ne_zero _ hc0,
+    mul_ne_zero (pow_ne_zero _ (by norm_num)) (pow_ne_zero _ hβ0), ?_⟩
+  rw [lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder fuel A D β j s c hsc hβ hdiv hjm hjn hB hQ]
+  simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
+  ring
+
 /-! ### The honest ceiling: the full `bsubresultantGcd ↔ lrtSubresultant` chain agreement
-The pieces above realize **one** subresultant-PRS step of the computable engine against the abstract
-subresultant, identify the LRT operands exactly, and (now) prove the β-divisor exact-division
-`toBPoly_bdivC_exact`. The **full** agreement `toBPoly (bsubresultantGcd fuel j P Q) ∼ lrtSubresultant
-A D j` (up to a `ℚ[t]` content/unit, then `lrtGcdCompute` after `bprimitivePartX`/`bmonicXmodR`) still
-needs the genuinely deep **Collins–Brown chain induction**: with `toBPoly_bdivC_exact` in hand one can
-identify each `subresPRS` element `Rᵢ₊₂ = bdivC fuel (prem Rᵢ Rᵢ₊₁) βᵢ` with the abstract subresultant
-through `subresultant_C_mul_eq_rem_of_bpsremainder` (the one PRS step) — but the remaining work is to
-match the *computable* β/ψ accumulation (`subresPRS`'s `cpowP`/`cdiv` ladder) against the abstract
-`subresPRS_beta`/`subresPRS_gamma` (`SubresultantPRS`), induct along the chain with the
-defective/normal collapse (`subresultant_prs_defective_eq`/`subresultant_prs_normal_eq`) to cancel the
-accumulated content (`ηᵢ = 1`), and finally absorb the `bsubresultantGcd` degree filter and the
-`bprimitivePartX`/`bmonicXmodR` content/monic-normalization. That multi-step induction (matching two
-independently-defined coefficient recurrences and the per-coefficient divisibility side-conditions of
-`toBPoly_bdivC_exact_of_dvd`) is the remaining work; the one-step engine, operand identification, and
-the exact-division core proven here are its reusable foundation. -/
+The pieces above now realize **one full divided subresultant-PRS step** of the computable engine against
+the abstract subresultant: the β-divisor exact-division `toBPoly_bdivC_exact`, the divided one-step law
+`subresultant_C_mul_eq_bdivC_of_bpsremainder`, its LRT-operand transport
+`lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder`, and the `ℚ[t]`-**similarity** packaging
+`isSimilar_lrtSubresultant_subresultant_bdivC` — i.e. `lrtSubresultant A D j ~ Sⱼ(Q, R₃)` (over `ℚ[t]`,
+up to a content/unit) for the *actual* `subresPRS` recurrence `R₃ = bdivC fuel (prem P Q) β`. The
+**full** agreement `toBPoly (bsubresultantGcd fuel j P Q) ∼ lrtSubresultant A D j` (then `lrtGcdCompute`
+after `bprimitivePartX`/`bmonicXmodR`) still needs the genuinely deep **Collins–Brown chain induction**:
+*iterating* the one divided step `isSimilar_lrtSubresultant_subresultant_bdivC` along the whole
+`subresPRS` (via `IsSimilar.trans`) to the terminating element at `x`-degree `j`, which requires matching
+the *computable* β/ψ accumulation (`subresPRS`'s `cpowP`/`cdiv` ladder) against the abstract
+`subresPRS_beta`/`subresPRS_gamma` (`SubresultantPRS`) and discharging, at each step, the
+quotient-degree bound `hQ`, the operand-degree bounds, and the per-coefficient β-divisibility
+side-conditions of `toBPoly_bdivC_exact_of_dvd` (Collins's theorem that βᵢ divides the pseudo-remainder).
+The defective/normal collapse (`subresultant_prs_defective_eq`/`subresultant_prs_normal_eq`) then forces
+`ηᵢ = 1` at the regular indices, and finally the `bsubresultantGcd` degree filter and the
+`bprimitivePartX`/`bmonicXmodR` content/monic-normalization land `lrtGcdCompute`. That multi-step
+telescoping induction (matching two independently-defined coefficient recurrences with all the
+per-step side-conditions) is the remaining work; the divided one-step engine, operand identification,
+β-divisor exact-division, and similarity packaging proven here are its complete reusable foundation. -/
+
+-- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
+-- when every x-coefficient divides exactly.
+example (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+    (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
+    Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
+  toBPoly_bdivC_exact fuel p c hc hrem
+
+-- Restatement: the LRT subresultant is ℚ[t]-similar to the next divided PRS pair's subresultant.
+example (fuel : ℕ) (A D β : CPoly) (j : ℕ) (s : BPoly) (c : CPoly)
+    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
+        = toBPoly s * toBPoly (bArgAmtD' A D)
+          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
+    (hβ : cnorm β ≠ [])
+    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (cmod fuel a β) = 0)
+    (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
+    (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
+    (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
+    (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
+    IsSimilar (lrtSubresultant (toPoly A) (toPoly D) j)
+      (subresultant (toBPoly (bArgAmtD' A D))
+        (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
+        ((toPoly D).natDegree - 1) (toPoly D).natDegree j) :=
+  isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c hsc hβ hdiv hc0 hβ0 hjm hjn hB hQ
 
 end DeepWiki.SymbolicIntegration.Compute
