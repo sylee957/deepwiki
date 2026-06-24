@@ -92,4 +92,23 @@ theorem isSpecial_iff_deriv_normalize_eq_zero {w : k} {p : k[X]} (hp : p ≠ 0) 
   rw [← isSpecial_iff_deriv_eq_zero_of_monic hmonic]
   exact ⟨fun h => IsSpecial.of_associated hassoc h, fun h => IsSpecial.of_associated hassoc.symm h⟩
 
+section AlgebraicExtension
+-- `E` an algebraic differential extension of `k`. The *special half* of base change
+-- (`isSpecial_map_of_isSpecial`) lives in `SpecialFirstKind`; here is the *normal half*.
+variable {E : Type*} [Field E] [Differential E] [Algebra k E] [DifferentialAlgebra k E]
+
+/-- **Corollary 3.4.1** (§3.4, p.95), normal half: a normal polynomial stays normal after an
+algebraic base change — `IsCoprime p (Dp)` in `k[t]` gives `IsCoprime (p.map) (D(p.map))` in `E[t]`
+(coprimality lifts along the ring hom `map`, and `D` commutes with `map` via `implicitDeriv_map`).
+Combined with `isSpecial_map_of_isSpecial`, normal and special polynomials remain such over `E`. -/
+theorem isCoprime_map_implicitDeriv_of_isCoprime {v p : k[X]}
+    (hp : IsCoprime p (Differential.implicitDeriv v p)) :
+    IsCoprime (p.map (algebraMap k E))
+      (Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E))) := by
+  rw [← implicitDeriv_map]
+  have := hp.map (Polynomial.mapRingHom (algebraMap k E))
+  simpa only [coe_mapRingHom] using this
+
+end AlgebraicExtension
+
 end DeepWiki.SymbolicIntegration
