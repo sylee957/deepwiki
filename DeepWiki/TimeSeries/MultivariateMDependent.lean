@@ -533,4 +533,36 @@ theorem tendstoInDistribution_linearCombo_sampleAutocov {m : ℕ} {X : ℤ → �
   exact hcomp.congr (fun n => Filter.Eventually.of_forall fun ω => inner_sampleAutocovVec_eq k γ c n ω)
     (Filter.Eventually.of_forall fun ω' => rfl)
 
+/-- **CLT for the studentized linear combinations of sample autocovariances** (the ratio form of
+Bartlett's theorem): `(√n · ∑ᵢ cᵢ · n⁻¹∑ₜ(XₜXₜ₊ᵢ − γᵢ)) / (n⁻¹∑ₜ Xₜ²) ⇒ ⟪V, c⟫ / γ(0)`. The
+linear-combination CLT (`tendstoInDistribution_linearCombo_sampleAutocov`) divided by the consistent
+lag-`0` sample variance `γ̃(0) →ᵖ γ(0)` (`tendstoInMeasure_sampleMean_mul_shift`) via the ratio
+Slutsky lemma. Specializing `c = eₕ − ρ(h)·e₀` (with `ρ(h) = γ(h)/γ(0)`) makes the numerator
+`√n(γ̂(h) − ρ(h)γ̂(0))` and the statistic `√n(ρ̂(h) − ρ(h))`, with limit
+`⟪V, w⟫/γ(0) ~ N(0, (w ⬝ᵥ S w)/γ(0)²)` — Theorem 7.2.1's asymptotic normality of the sample ACF. -/
+theorem tendstoInDistribution_studentized_linearCombo_sampleAutocov {m : ℕ} {X : ℤ → Ω → ℝ}
+    [IsProbabilityMeasure μ] {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+    [IsProbabilityMeasure μ'] (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ)
+    (hmeas : ∀ t, Measurable (X t)) (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : Fin (k + 1) → ℝ)
+    (hcenter : ∀ (t : ℤ) (i : Fin (k + 1)), ∫ ω, X t ω * X (t + (i : ℕ)) ω ∂μ = γ i)
+    (hpsd : (longRunCovMatrix (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ).PosSemidef)
+    (c : EuclideanSpace ℝ (Fin (k + 1))) (hγ0 : γ 0 ≠ 0)
+    {V : Ω' → EuclideanSpace ℝ (Fin (k + 1))}
+    (hV : HasLaw V (multivariateGaussian 0 (longRunCovMatrix
+        (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1)))) μ)) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => (Real.sqrt n * ∑ i, c i *
+          sampleMean n (fun t => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i))
+        / sampleMean n (fun t => X (t : ℤ) ω * X (t + ((0 : Fin (k + 1)) : ℕ)) ω))
+      atTop (fun ω' => (⟪V ω', c⟫ : ℝ) / γ 0) (fun _ => μ) μ' := by
+  refine tendstoInDistribution_div_of_tendstoInMeasure_const hγ0
+    (tendstoInDistribution_linearCombo_sampleAutocov hmdep hstat hmeas hmem4 k γ hcenter hpsd c hV)
+    (tendstoInMeasure_sampleMean_mul_shift hmdep hstat hmeas hmem4 ((0 : Fin (k + 1)) : ℕ) (γ 0)
+      (fun t => hcenter t 0)) (fun n => ?_)
+  refine Measurable.aemeasurable ?_
+  simp only [sampleMean]
+  exact measurable_const.mul (Finset.measurable_sum _ fun t _ => (hmeas _).mul (hmeas _))
+
 end DeepWiki.TimeSeries
