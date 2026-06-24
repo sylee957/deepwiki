@@ -29,4 +29,19 @@ theorem covariance_component_eq_zero_of_mDependent {d m : ℕ} [IsFiniteMeasure 
   rw [covariance_comm]
   exact (hindep.comp hjmeas himeas).covariance_eq_zero (hmem s j) (hmem t i)
 
+/-- **The cross-covariances of a vector `m`-dependent process are summable over lags:** each
+`k ↦ cov[Yₖⁱ, Y₀ʲ]` has finite support (it vanishes for `|k| > m` by
+`covariance_component_eq_zero_of_mDependent`), hence is summable. The long-run cross-covariance
+`Sᵢⱼ = ∑'ₖ cov[Yₖⁱ, Y₀ʲ]` is therefore well-defined — the entries of the limiting covariance matrix. -/
+theorem summable_covariance_component_of_mDependent {d m : ℕ} [IsFiniteMeasure μ]
+    {Y : ℤ → Ω → EuclideanSpace ℝ (Fin d)} (h : IsMDependent m Y μ)
+    (hmem : ∀ t i, MemLp (fun ω => Y t ω i) 2 μ) (i j : Fin d) :
+    Summable fun k => cov[fun ω => Y k ω i, fun ω => Y 0 ω j; μ] := by
+  refine summable_of_ne_finset_zero (s := Finset.Icc (-(m : ℤ)) m) fun k hk => ?_
+  rw [Finset.mem_Icc, not_and_or, not_le, not_le] at hk
+  rcases hk with hlt | hgt
+  · rw [covariance_comm]
+    exact covariance_component_eq_zero_of_mDependent h hmem (by omega : k + (m : ℤ) < 0) j i
+  · exact covariance_component_eq_zero_of_mDependent h hmem (by omega : (0 : ℤ) + m < k) i j
+
 end DeepWiki.TimeSeries
