@@ -104,4 +104,40 @@ theorem lookup_eq_envToTupleTagged : {Γ : Ctx Att} → {Ω : Finset Att} → (v
       simp only [lookup, envToTupleTagged, Var.cotag, dif_neg hne]
       exact lookup_eq_envToTupleTagged v' e' ha _
 
+/-- Read a variable's tuple out of a tagged flat row (at the variable's co-depth tags). -/
+def tagRead {Γ : Ctx Att} {Ω : Finset Att} (v : Var Γ Ω) (flat : Tuple (flattenTagged Γ) Val) :
+    Tuple Ω Val := fun a => flat ⟨(v.cotag, a.val), tag_mem_flattenTagged v a.property⟩
+
+/-- Reading a variable out of the flattened environment is the variable's tuple. -/
+theorem tagRead_envToTupleTagged {Γ : Ctx Att} {Ω : Finset Att} (v : Var Γ Ω) (e : Env Val Γ) :
+    tagRead v (envToTupleTagged e) = lookup v e := by
+  funext a
+  exact (lookup_eq_envToTupleTagged v e a.property _).symm
+
+/-- The flat-row equality a tagged agreement atom asserts: the rows at the two variables' co-depth
+tags coincide on every common attribute of `X` (a genuine cross-tag equality, not vacuous). -/
+def tagAgree {Γ : Ctx Att} {Ω Ω' : Finset Att} (X : Finset Att) (v₁ : Var Γ Ω) (v₂ : Var Γ Ω')
+    (flat : Tuple (flattenTagged Γ) Val) : Prop :=
+  ∀ a ∈ X, ∀ (h : a ∈ Ω) (h' : a ∈ Ω'),
+    flat ⟨(v₁.cotag, a), tag_mem_flattenTagged v₁ h⟩
+      = flat ⟨(v₂.cotag, a), tag_mem_flattenTagged v₂ h'⟩
+
+variable {ι : Type w} {sch : ι → Finset Att}
+
+/-- **Reduction of the tuple calculus to the algebra, general case** (§2.4): translate a first-order
+condition to an algebra expression over the *tagged* product scheme — clash-free without any
+disjointness assumption. Atoms read variables out of the tagged row (`tagRead`); an agreement atom
+is a genuine cross-tag equality; negation is the domain-relative complement; the existential is a
+plain projection (dropping the head variable's tags — co-depth tagging leaves the tail unchanged, so
+no renaming is needed). -/
+def calcToAlgTagged (db : (i : ι) → Table (sch i) Val) :
+    {Γ : Ctx Att} → FOCond ι sch Val Γ → AlgExpr (TagAtt Att) Val (flattenTagged Γ)
+  | _, .relA i v => AlgExpr.comp (fun flat => tagRead v flat ∈ db i)
+  | _, .compA v P => AlgExpr.comp (fun flat => P (tagRead v flat))
+  | _, .agreeA v₁ v₂ X => AlgExpr.comp (tagAgree X v₁ v₂)
+  | _, .neg C => AlgExpr.diff (AlgExpr.comp (fun _ => True)) (calcToAlgTagged db C)
+  | _, .and C D => (calcToAlgTagged db C).inter (calcToAlgTagged db D)
+  | _, .or C D => AlgExpr.union (calcToAlgTagged db C) (calcToAlgTagged db D)
+  | _, .ex _ C => AlgExpr.proj Finset.subset_union_right (calcToAlgTagged db C)
+
 end DeepWiki
