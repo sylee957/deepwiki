@@ -1,5 +1,7 @@
 import DeepWiki.TimeSeries.AsymptoticNormality
 import Mathlib.Analysis.Calculus.FDeriv.Basic
+import Mathlib.MeasureTheory.Measure.TightNormed
+import Mathlib.MeasureTheory.Measure.CharacteristicFunction.TaylorExpansion
 
 /-! # The multivariate delta method (Brockwell–Davis Proposition 6.4.3) — assembly
 The delta method `(g(Xₙ) − g(p))/cₙ ⇒ D·V` splits as `D((Xₙ − p)/cₙ) + Rₙ` where `Rₙ` is the Taylor
@@ -155,5 +157,43 @@ theorem tendstoInDistribution_smul_comp_of_hasFDerivAt {E F : Type*} [NormedAddC
   rw [heq] at hcomp
   exact tendstoInDistribution_smul_comp_of_tendstoInMeasure_remainder hcomp
     (tendstoInMeasure_remainder_of_hasFDerivAt hg hXp htight) hg'
+
+/-- **Convergence in distribution to a fixed law gives uniform tightness** (the Prokhorov direction, on a
+finite-dimensional inner-product space): if `(Xₙ − p)/cₙ ⇒ V`, then `‖(Xₙ − p)/cₙ‖` is uniformly tight —
+for every `ε > 0` there is `M > 0` with `μ {‖(Xₙ − p)/cₙ‖ ≥ M} ≤ ε` for all `n`. Via the characteristic-
+function tightness criterion (`isTightMeasureSet_of_tendsto_charFun`, Lévy + `continuous_charFun`) and the
+norm-tail reading `tendsto_measure_norm_gt_of_isTightMeasureSet`. This discharges the tightness hypothesis
+of the multivariate delta method `tendstoInDistribution_smul_comp_of_hasFDerivAt`. -/
+theorem tight_of_tendstoInDistribution {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E] [IsProbabilityMeasure μ] {Ω' : Type*}
+    [MeasurableSpace Ω'] {P' : Measure Ω'} [IsProbabilityMeasure P'] {X : ℕ → Ω → E} {p : E}
+    {c : ℕ → ℝ} {V : Ω' → E}
+    (hconv : TendstoInDistribution (fun n ω => (c n)⁻¹ • (X n ω - p)) atTop V (fun _ => μ) P') :
+    ∀ ε : ℝ≥0∞, 0 < ε → ∃ M : ℝ, 0 < M ∧ ∀ n,
+      μ {ω | M ≤ |‖(c n)⁻¹ • (X n ω - p)‖|} ≤ ε := by
+  set Y : ℕ → Ω → E := fun n ω => (c n)⁻¹ • (X n ω - p) with hY
+  set ν : ℕ → Measure E := fun n => μ.map (Y n) with hν
+  haveI : ∀ n, IsProbabilityMeasure (ν n) := fun n =>
+    Measure.isProbabilityMeasure_map (hconv.forall_aemeasurable n)
+  have hchar : ∀ t, Tendsto (fun n => charFun (ν n) t) atTop (𝓝 (charFun (P'.map V) t)) := fun t =>
+    ProbabilityMeasure.tendsto_iff_tendsto_charFun.mp hconv.tendsto t
+  have htight : IsTightMeasureSet (Set.range ν) :=
+    isTightMeasureSet_of_tendsto_charFun continuous_charFun.continuousAt hchar
+  have hnorm := tendsto_measure_norm_gt_of_isTightMeasureSet htight
+  intro ε hε
+  obtain ⟨r, hrε, hr0⟩ :=
+    ((hnorm.eventually (gt_mem_nhds hε)).and (eventually_gt_atTop 0)).exists
+  refine ⟨r + 1, by linarith, fun n => ?_⟩
+  have hmeas : MeasurableSet {x : E | r < ‖x‖} := measurableSet_lt measurable_const measurable_norm
+  calc μ {ω | r + 1 ≤ |‖Y n ω‖|}
+      ≤ ν n {x : E | r < ‖x‖} := by
+        rw [hν, Measure.map_apply_of_aemeasurable (hconv.forall_aemeasurable n) hmeas]
+        refine measure_mono fun ω hω => ?_
+        simp only [Set.mem_setOf_eq, abs_of_nonneg (norm_nonneg _)] at hω
+        exact Set.mem_preimage.mpr (by simp only [Set.mem_setOf_eq]; linarith)
+    _ ≤ ⨆ ν' ∈ Set.range ν, ν' {x : E | r < ‖x‖} :=
+        le_iSup₂ (f := fun ν' (_ : ν' ∈ Set.range ν) => ν' {x : E | r < ‖x‖}) (ν n)
+          (Set.mem_range_self n)
+    _ ≤ ε := hrε.le
 
 end DeepWiki.TimeSeries
