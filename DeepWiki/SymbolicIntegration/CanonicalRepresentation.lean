@@ -405,6 +405,58 @@ theorem not_isSpecial_derivative_of_irreducible {π : K[X]} (hπ : Irreducible �
 
 end GeneralGcdFormulaCharZero
 
+section GeneralSplitFactorStep
+variable {K : Type*} [Field K] [CharZero K] [Differential K]
+
+open UniqueFactorizationMonoid
+
+open Classical in
+/-- **Theorem 3.5.1(i)** (§3.5, p.99) for *general* `p` (char `0`): the `SplitFactor` step
+`S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dt = v`) is associated to the squarefree product of the *special*
+prime factors of `p` — `S ~ ∏_{π : π ∣ Dπ} π`. The numerator carries `(∏π^{m−1})·∏_{special}π` and
+the denominator the bare multiplicity defect `∏π^{m−1}` (no `d/dt`-special factor in char `0`), so
+the quotient is exactly the special part. This is the general-irreducible analogue of
+`splitFactorStep_prod_X_sub_C_pow_associated` and makes the step correct for *every* polynomial. -/
+theorem splitFactorStep_associated_prod_special (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
+    Associated (splitFactorStep v p)
+      (∏ π ∈ (primeFactors p).filter
+        (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π) := by
+  have hunit := fun π (hπ : π ∈ primeFactors p) => isUnit_natCast_count_primeFactors hπ
+  -- numerator: gcd(p, Dp) under D = implicitDeriv v.
+  have hnum : Associated (gcd p (Differential.implicitDeriv v p))
+      ((∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1))
+        * ∏ π ∈ (primeFactors p).filter
+            (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π) :=
+    @associated_gcd_deriv_special_part K _ ⟨Differential.implicitDeriv v⟩ p hp hunit
+  -- denominator: gcd(p, dp/dt) under D = derivative; the special filter is empty.
+  letI : Differential K[X] := ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩
+  have hfilt : (primeFactors p).filter
+      (fun π => @IsSpecial _ _ ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩ π) = ∅ := by
+    rw [Finset.filter_eq_empty_iff]
+    intro π hπ
+    have hirr : Irreducible π := irreducible_of_normalized_factor π (mem_primeFactors.mp hπ)
+    exact not_isSpecial_derivative_of_irreducible hirr
+  have hden : Associated (gcd p (derivative p))
+      (∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1)) := by
+    have h := @associated_gcd_deriv_special_part K _
+      ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩ p hp hunit
+    rw [hfilt, Finset.prod_empty, mul_one] at h
+    -- under this instance, `p′ = derivative p`.
+    exact h
+  set defect := ∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1) with hdefect
+  set special := ∏ π ∈ (primeFactors p).filter
+    (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π with hspecial
+  -- `gcd(p, dp/dt) ≠ 0` and `gcd(p, dp/dt) ∣ gcd(p, Dp)`.
+  have hYne : gcd p (derivative p) ≠ 0 := fun h => hp (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+  have hYdvdX : gcd p (derivative p) ∣ gcd p (Differential.implicitDeriv v p) := by
+    refine (hden.dvd).trans ?_
+    exact (dvd_mul_right defect special).trans hnum.symm.dvd
+  rw [splitFactorStep, associated_div_iff hYne hYdvdX]
+  -- `gcd(p, Dp) ~ defect·special ~ gcd(p, dp/dt)·special`.
+  exact hnum.trans (hden.symm.mul_right special)
+
+end GeneralSplitFactorStep
+
 section SplitSquarefreeFactor
 variable {K : Type*} [Field K] [Differential K]
 
