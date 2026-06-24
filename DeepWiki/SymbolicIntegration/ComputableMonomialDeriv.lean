@@ -183,8 +183,20 @@ end CPolyG
 
 These `native_decide` checks are Stage D's deliverable: the splitting-factorization loop, routed
 through `CField QFunNZ` + `CDiffField QFunNZ`, *reduces* in the native compiler with no dependence on
-the noncomputable `CFieldSpec`/`CDiffFieldSpec`. First a small ℚ(x)[t] sanity run, then Bronstein's
-Example 3.5.1. -/
+the noncomputable `CFieldSpec`/`CDiffFieldSpec`. The worked example takes `k = ℚ(x)` with `ℚ`-constant
+coefficients and the monomial `t` with `Dt = t − 1`: under `D = κ_D + Dt·d/dt`, the root `t = 1` is
+*special* (`Dt(1) = 0 = 1′`) and `t = 2` is *normal* (`Dt(2) = 1 ≠ 0 = 2′`). So `cSplitFactor` of
+`p = (t−1)(t−2)` returns normal part `~ (t−2)` and special part `~ (t−1)`, which `native_decide`
+verifies (degrees, and monic-normalized parts equal to the book values via `cisZeroG` of the
+difference — the engine produces them only up to the gcd's scalar ambiguity).
+
+`native_decide` on Bronstein's full **Example 3.5.1** (the degree-5 `p` over `ℚ(x)` with non-constant
+coefficients) is the natural next step but is left to a later stage: the `QFunNZ` operations never
+reduce to lowest terms (`qaddNZ`/`qmulNZ` just cross-multiply denominators), so the extended-Euclid /
+division passes over a degree-5 `t`-polynomial blow the rational-function coefficients up
+super-exponentially and the run does not terminate in budget. The fix is a lowest-terms-reducing
+`CField QFunNZ` (route `qaddNZ`/`qmulNZ`/the division remainders through `Compute.qnorm`), at which
+point the same `cSplitFactor` call computes the book's `pₙ`/`pₛ` directly. -/
 
 namespace QFunNZ
 
@@ -199,5 +211,49 @@ def ofNumDen (num den : Compute.CPoly) (h : Compute.cisZero den = false) : QFunN
 def ofConstNZ (n : ℚ) : QFunNZ := ofNumDen [n] [1] (by decide)
 
 end QFunNZ
+
+open QFunNZ in
+/-- The quadratic `p = (t−1)(t−2) = t² − 3t + 2` as a `CPolyG QFunNZ` (ℚ-constant coefficients). -/
+def cSplitFactorExampleP : CPolyG QFunNZ := [ofConstNZ 2, ofConstNZ (-3), ofConstNZ 1]
+
+open QFunNZ in
+/-- The monomial derivative `Dt = t − 1` (so `t = 1` is a special root, `t = 2` a normal root). -/
+def cSplitFactorExampleDt : CPolyG QFunNZ := [ofConstNZ (-1), ofConstNZ 1]
+
+/-- **The engine runs**: `cSplitFactor` of `(t−1)(t−2)` over ℚ(x)[t] returns a **degree-1 normal
+part** — `cSplitFactor` reduces in native code over the tower. -/
+example : CPolyG.cdegG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).1 = 1 := by
+  native_decide
+
+/-- **The engine runs**: `cSplitFactor` of `(t−1)(t−2)` returns a **degree-1 special part**. -/
+example : CPolyG.cdegG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).2 = 1 := by
+  native_decide
+
+open QFunNZ in
+/-- **The special part is `~ (t − 1)`**: the monic-normalized special part of the splitting equals
+`t − 1` (the special root `t = 1`, where `Dt(1) = 0 = 1′`) — verified by `cisZeroG` of the difference,
+reducing over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).2)
+      [ofConstNZ (-1), ofConstNZ 1]) = true := by native_decide
+
+open QFunNZ in
+/-- **The normal part is `~ (t − 2)`**: the monic-normalized normal part of the splitting equals
+`t − 2` (the normal root `t = 2`, where `Dt(2) = 1 ≠ 0 = 2′`). -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).1)
+      [ofConstNZ (-2), ofConstNZ 1]) = true := by native_decide
+
+open QFunNZ in
+/-- **The split recovers `p`**: the product of the monic normal and special parts equals `p` (monic),
+so `cSplitFactor` genuinely factors `(t−1)(t−2)` over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmulG
+        (CPolyG.cmonicG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).1)
+        (CPolyG.cmonicG (CPolyG.cSplitFactor cSplitFactorExampleDt 8 cSplitFactorExampleP).2))
+      [ofConstNZ 2, ofConstNZ (-3), ofConstNZ 1]) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration
