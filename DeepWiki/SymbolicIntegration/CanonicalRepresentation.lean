@@ -355,4 +355,57 @@ theorem splitSquarefreeFactor_prod_X_sub_C (v : K[X]) (s : Finset K) :
 
 end SplitSquarefreeFactorSplit
 
+section CanonicalRep
+variable {K : Type*} [Field K] [Differential K]
+
+/-- The Bézout split underlying `ExtendedEuclidean(dₙ, dₛ, r)`: for coprime `dₙ, dₛ` and any `r`,
+returns `(b, c)` with `b·dₙ + c·dₙ`… given a Bézout identity `u·dₙ + w·dₛ = 1`, reduce `u·r` mod
+`dₛ` to keep `deg b < deg dₛ`. (`b = (u·r) %ₘ dₛ`, `c = w·r + (u·r /ₘ dₛ)·dₙ`.) -/
+noncomputable def extendedEuclideanSplit (dn ds r u w : K[X]) : K[X] × K[X] :=
+  ((u * r) %ₘ ds, w * r + (u * r /ₘ ds) * dn)
+
+omit [Differential K] in
+/-- The Bézout split solves `b·dₙ + c·dₛ = r` whenever `u·dₙ + w·dₛ = 1`. -/
+theorem extendedEuclideanSplit_spec (dn ds r u w : K[X])
+    (hbez : u * dn + w * ds = 1) :
+    (extendedEuclideanSplit dn ds r u w).1 * dn
+        + (extendedEuclideanSplit dn ds r u w).2 * ds = r := by
+  simp only [extendedEuclideanSplit]
+  have hmod : (u * r) %ₘ ds = u * r - ds * (u * r /ₘ ds) := by
+    have := modByMonic_add_div (u * r) ds
+    linear_combination this
+  rw [hmod]
+  have hr : (u * dn + w * ds) * r = r := by rw [hbez, one_mul]
+  linear_combination hr
+
+omit [Differential K] in
+/-- The `b` part of the Bézout split has degree `< deg dₛ` (`b = (u·r) %ₘ dₛ`, a remainder modulo
+the monic `dₛ`). -/
+theorem extendedEuclideanSplit_degree_lt (dn ds r u w : K[X]) (hds : ds.Monic) :
+    (extendedEuclideanSplit dn ds r u w).1.degree < ds.degree := by
+  simp only [extendedEuclideanSplit]
+  exact degree_modByMonic_lt (u * r) hds
+
+open Classical in
+/-- **`CanonicalRepresentation`** (§3.5, p.103) of `f ∈ k(t)`: with `d = denom f` (monic) and
+`a = num f`, polynomial-divide `a = q·d + r` (`q = a /ₘ d`, `r = a %ₘ d`), split the denominator
+`(dₙ, dₛ) = splitFactor v d`, run extended Euclid on `(dₙ, dₛ, r)` (Bézout `u·dₙ + w·dₛ = 1` from
+`gcdA/gcdB`) to get `(b, c)`, and return `(q, b/dₛ, c/dₙ)` — polynomial part, reduced part, simple
+part. -/
+noncomputable def canonicalRepresentation (v : K[X]) (f : RatFunc K) :
+    K[X] × RatFunc K × RatFunc K :=
+  let a := f.num
+  let d := f.denom
+  let q := a /ₘ d
+  let r := a %ₘ d
+  let dn := (splitFactor v d).1
+  let ds := (splitFactor v d).2
+  let u := EuclideanDomain.gcdA dn ds
+  let w := EuclideanDomain.gcdB dn ds
+  let bc := extendedEuclideanSplit dn ds r u w
+  (q, algebraMap K[X] (RatFunc K) bc.1 / algebraMap K[X] (RatFunc K) ds,
+      algebraMap K[X] (RatFunc K) bc.2 / algebraMap K[X] (RatFunc K) dn)
+
+end CanonicalRep
+
 end DeepWiki.SymbolicIntegration
