@@ -391,4 +391,38 @@ theorem isStrictlyStationary_vecAutocov {X : ℤ → Ω → ℝ} (hstat : IsStri
     (f := fun w => (WithLp.toLp 2 fun i => w 0 * w i - γ i : EuclideanSpace ℝ (Fin (k + 1))))
     (by fun_prop)
 
+/-- **The multivariate central limit theorem for the sample autocovariances** (the vector form of
+Bartlett's theorem): for a strictly-stationary, `m`-dependent process `X` with finite fourth moments and
+constant lag-`h` product means `γₕ = E[XₜXₜ₊ₕ]`, the centered sample autocovariance vector
+`√n · n⁻¹ ∑ₜ (XₜXₜ₊ₕ − γₕ)_{h≤k}` converges in distribution to `N(0, S)` where `S` is the long-run
+covariance matrix of the lag-product process. Applies the multivariate `m`-dependent CLT to the vector
+autocovariance process (`isMDependent_vecAutocov`, `isStrictlyStationary_vecAutocov`, with `L²` coordinates
+from `memLp_mul_of_memLp_four` and centering from `hcenter`). `PosSemidef` of `S` is a hypothesis; its
+explicit value is Bartlett's formula. -/
+theorem tendstoInDistribution_sampleAutocovVec {m : ℕ} {X : ℤ → Ω → ℝ} [IsProbabilityMeasure μ]
+    {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'} [IsProbabilityMeasure μ']
+    (hmdep : IsMDependent m X μ) (hstat : IsStrictlyStationary X μ) (hmeas : ∀ t, Measurable (X t))
+    (hmem4 : ∀ t, MemLp (X t) 4 μ) (k : ℕ) (γ : Fin (k + 1) → ℝ)
+    (hcenter : ∀ (t : ℤ) (i : Fin (k + 1)), ∫ ω, X t ω * X (t + (i : ℕ)) ω ∂μ = γ i)
+    (hpsd : (longRunCovMatrix (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+        EuclideanSpace ℝ (Fin (k + 1)))) μ).PosSemidef)
+    {V : Ω' → EuclideanSpace ℝ (Fin (k + 1))}
+    (hV : HasLaw V (multivariateGaussian 0 (longRunCovMatrix
+        (fun t ω => (WithLp.toLp 2 fun i => X t ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1)))) μ)) μ') :
+    TendstoInDistribution
+      (fun (n : ℕ) ω => (Real.sqrt n : ℝ) • ((n : ℝ)⁻¹ • ∑ t ∈ Finset.range n,
+        (WithLp.toLp 2 fun i => X (t : ℤ) ω * X (t + (i : ℕ)) ω - γ i :
+          EuclideanSpace ℝ (Fin (k + 1))))) atTop V (fun _ => μ) μ' :=
+  IsMDependent.tendstoInDistribution_multivariate (isMDependent_vecAutocov hmdep k γ)
+    (isStrictlyStationary_vecAutocov hstat hmeas k γ) (by fun_prop)
+    (fun t i => (memLp_mul_of_memLp_four (hmem4 t) (hmem4 (t + (i : ℕ)))).sub (memLp_const (γ i)))
+    (fun t i => by
+      show ∫ ω, (X t ω * X (t + (i : ℕ)) ω - γ i) ∂μ = 0
+      rw [integral_sub
+          ((memLp_mul_of_memLp_four (hmem4 t) (hmem4 (t + (i : ℕ)))).integrable (by norm_num))
+          (integrable_const (γ i)), integral_const, hcenter t i]
+      simp)
+    hpsd hV
+
 end DeepWiki.TimeSeries
