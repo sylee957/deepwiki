@@ -20,4 +20,5 @@ import DeepWiki.RelationalDatabases.QueryEquivalence
 import DeepWiki.RelationalDatabases.QueryEquivalenceFO
 import DeepWiki.RelationalDatabases.QueryEquivalenceCodd
 import DeepWiki.RelationalDatabases.QueryEquivalenceCalcToAlg
+import DeepWiki.RelationalDatabases.QueryEquivalenceCalcToAlgGeneral
 import DeepWiki.RelationalDatabases.ExampleDatabases
