@@ -158,6 +158,22 @@ theorem envToTuple_splitEnv : (Γ : Ctx Att) → (flat : Tuple (flattenCtx Γ) V
       · rw [dif_pos h]; rfl
       · rw [dif_neg h, envToTuple_splitEnv Γ (flat.restrict Finset.subset_union_right)]; rfl
 
+/-- `splitEnv` is a right inverse of `envToTuple` on a disjoint context: splitting a flattened
+environment recovers it. With `envToTuple_splitEnv`, the flattening is a bijection. -/
+theorem splitEnv_envToTuple : (Γ : Ctx Att) → CtxDisjoint Γ → (e : Env Val Γ) →
+    splitEnv Γ (envToTuple e) = e
+  | [], _, _ => rfl
+  | Ω :: Γ, hd, e => by
+      obtain ⟨t, e'⟩ := e
+      have hdisj : Disjoint Ω (flattenCtx Γ) :=
+        disjoint_flattenCtx fun _ h => (List.pairwise_cons.mp hd).1 _ h
+      simp only [splitEnv]
+      refine Prod.ext ?_ ?_
+      · funext a
+        simp only [Tuple.restrict, envToTuple, dif_pos a.property]
+      · rw [restrict_envToTuple_cons hdisj (t, e')]
+        exact splitEnv_envToTuple Γ (List.pairwise_cons.mp hd).2 e'
+
 /-- Cons a tuple onto an environment, with the dependent `Env` type pinned (the `Env` def is not
 reducible, so a bare pair does not unify with `Env Val (Ω :: Γ)`). -/
 def consEnv {Ω : Finset Att} {Γ : Ctx Att} (t : Tuple Ω Val) (e : Env Val Γ) :
