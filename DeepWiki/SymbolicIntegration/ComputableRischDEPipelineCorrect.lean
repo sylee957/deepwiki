@@ -195,4 +195,109 @@ example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R)
 
 #print axioms rdeNormalDenominator_glue
 
+/-! ### §6.2 normal denominator — the engine-level cleared lifting through `toPolyG`
+
+`rdeNormalDenominator_glue` instantiated at the concrete `cRdeNormalDenominator` outputs read through
+`toPolyG`, with `D = cmonomialDeriv Dt = implicitDeriv (toPolyG Dt)`. The factorization `A = DN·H`
+(`a = dₙ·h`) is *definitional* (`toPolyG_cmulG`); the two exact-division certificates are discharged
+from `toPolyG_cdivFF_exact` given the §6.2 divisibilities (`fden ∣ dₙh·fnum − dₙ·Dh·fden`,
+`gden ∣ dₙh²·gnum` — the latter is the `eₙ ∣ dₙh²` branch the recursion already takes), supplied here as
+the `∣`-hypotheses the validation pins. The nonzero normal part `dₙ ≠ 0` is the remaining input. -/
+
+/-- **The §6.2 normal-denominator cleared lifting through `toPolyG`**: writing
+`dₙ = (cSplitFactorFast Dt fuel fden).1` for the normal part of `fden`, if
+`cRdeNormalDenominator Dt fuel fnum fden gnum gden = some (a, b, c, h)`, the normal part is nonzero
+(`toPolyG dₙ ≠ 0`), the two `cdivFF`-clearings are exact (`toPolyG fden ∣ …`, `toPolyG gden ∣ …` with
+the fuel bounds), and a polynomial `Q` solves the reduced `a·D(Q) + b·Q = c`
+(`D = implicitDeriv (toPolyG Dt)`), then `y = Q/h` solves `D(y) + f·y = g` in the cleared form
+`gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²` over `(RatFunc ℚ)[X]`. The engine instance
+of `rdeNormalDenominator_glue` (`A = DN·H` definitional, the `B/C` certificates via
+`toPolyG_cdivFF_exact`). -/
+theorem cRdeNormalDenominator_cleared_lift (Dt : CPolyG QFunNZ) (fuel : ℕ)
+    (fnum fden gnum gden a b c h Q : CPolyG QFunNZ)
+    (hres : cRdeNormalDenominator Dt fuel fnum fden gnum gden = some (a, b, c, h))
+    (hdn : toPolyG (cSplitFactorFast Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) h) gnum) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) h) gnum))
+    (hred : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
+      = toPolyG c) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) * toPolyG h
+            - toPolyG Q * Differential.implicitDeriv (toPolyG Dt) (toPolyG h))
+        + toPolyG gden * toPolyG fnum * toPolyG Q * toPolyG h
+      = toPolyG gnum * toPolyG fden * toPolyG h ^ 2 := by
+  -- abbreviation for the normal part
+  set dn := (cSplitFactorFast Dt fuel fden).1 with hdndef
+  -- the numerator polynomials the `cdivFF` clears (in terms of the theorem's `h`)
+  set bNum := csubG (cmulG (cmulG dn h) fnum) (cmulG (cmulG dn (cmonomialDeriv Dt h)) fden) with hbNum
+  set cNum := cmulG (cmulG (cmulG dn h) h) gnum with hcNum
+  -- extract the engine's four components from the `some` branch
+  rw [cRdeNormalDenominator] at hres
+  split at hres
+  · -- the `cdvdG` branch: read off the engine's four components
+    rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hres
+    obtain ⟨ha, hb, hc, hh⟩ := hres
+    -- the engine's internal `h` (the long `cdivFF …` expression) equals the theorem's `h`;
+    -- rewrite it in the `a, b, c` component equalities so they use the theorem's `h`
+    rw [hh] at ha hb hc
+    -- factorization `A = DN·H`
+    have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
+    -- `B·FDEN = A·FNUM − DN·D(h)·FDEN` via `toPolyG_cdivFF_exact` and the engine `b = bNum/fden`
+    have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
+      rw [← hb]; exact (toPolyG_cdivFF_exact fuel bNum fden hfden0 hfbB hdvdB).symm
+    have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
+        toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
+    -- `C·GDEN = DN·H²·GNUM` via `toPolyG_cdivFF_exact` and the engine `c = cNum/gden`
+    have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
+      rw [← hc]; exact (toPolyG_cdivFF_exact fuel cNum gden hgden0 hfbC hdvdC).symm
+    have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
+    -- the two glue certificates, in the exact shape `rdeNormalDenominator_glue` wants
+    have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hBexact]; exact hBeq
+    have hCcert : toPolyG c * toPolyG gden = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hCexact]; exact hCeq
+    -- apply the glue
+    have hglue := rdeNormalDenominator_glue (Differential.implicitDeriv (toPolyG Dt))
+      (toPolyG dn) (toPolyG h) (toPolyG fnum) (toPolyG fden) (toPolyG gnum) (toPolyG gden)
+      (toPolyG a) (toPolyG b) (toPolyG c) (toPolyG Q) hdn hA hBcert hCcert hred
+    linear_combination hglue
+  · -- the `else` branch is `none`, contradicting `none = some`
+    exact absurd hres (by simp)
+
+-- The engine §6.2 normal-denominator lift: a reduced solution `Q` makes `y = Q/h` solve `D(y)+f·y=g`.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden a b c h Q : CPolyG QFunNZ)
+    (hres : cRdeNormalDenominator Dt fuel fnum fden gnum gden = some (a, b, c, h))
+    (hdn : toPolyG (cSplitFactorFast Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) h) gnum) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFast Dt fuel fden).1 h) h) gnum))
+    (hred : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
+      = toPolyG c) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) * toPolyG h
+            - toPolyG Q * Differential.implicitDeriv (toPolyG Dt) (toPolyG h))
+        + toPolyG gden * toPolyG fnum * toPolyG Q * toPolyG h
+      = toPolyG gnum * toPolyG fden * toPolyG h ^ 2 :=
+  cRdeNormalDenominator_cleared_lift Dt fuel fnum fden gnum gden a b c h Q hres hdn hfden0 hgden0
+    hfbB hdvdB hfbC hdvdC hred
+
+#print axioms cRdeNormalDenominator_cleared_lift
+
 end DeepWiki.SymbolicIntegration
