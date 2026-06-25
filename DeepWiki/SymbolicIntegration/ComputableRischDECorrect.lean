@@ -214,7 +214,53 @@ theorem spde_const_base {K : Type*} [Field K] (D : Derivation ℤ K[X] K[X])
     _ = (Polynomial.C a0 * Polynomial.C a0⁻¹) * c := by ring
     _ = c := by rw [hinv, one_mul]
 
+/-! ### §6.4 — the one-peel `cSPDE` cleared lifting through `toPolyG` (engine-level)
+
+The abstract `spde_step_glue` instantiated at `D = implicitDeriv (toPolyG Dt)` over `(RatFunc ℚ)[X]`,
+with the engine's concrete reduction quantities read through `toPolyG`. One `cSPDE` recursion peel takes
+the divided `(ad, bd, cd) = (a/g, b/g, c/g)` (`g = gcd(a,b)`), solves the Bézout `bd·r + ad·z = cd` by
+`cdiophantineG bd ad cd = (r, z)`, and recurses on `(ad, bd + D(ad), z − D(r))`. Given the **Bézout
+certificate** (`toPolyG bd · toPolyG r + toPolyG ad · toPolyG z = toPolyG cd`, discharged from
+`toPolyG_cdiophantineG` exactly as the Hermite inner loop) and a solution `h` of the reduced equation,
+the reconstruction `q = ad·h + r` solves `ad·D(q) + bd·q = cd`. This is the `cSPDE` peel's cleared
+identity, gated only on the Bézout certificate the validation pins — the §6.4 analogue of the Hermite
+`cHermiteReduceTower_cleared_identity`. -/
+
+/-- **One `cSPDE` peel's cleared lifting** through `toPolyG`, at `D = cmonomialDeriv Dt =
+implicitDeriv (toPolyG Dt)`. Write `Dpoly = implicitDeriv (toPolyG Dt)`. Given the divided coefficients
+`ad, bd, cd : CPolyG QFunNZ`, the Bézout cofactors `r, z` with the **certificate**
+`toPolyG bd · toPolyG r + toPolyG ad · toPolyG z = toPolyG cd` (the `cdiophantineG bd ad cd` output
+relation), and any `h` solving the **reduced** equation
+`toPolyG ad · Dpoly(toPolyG h) + (toPolyG bd + Dpoly(toPolyG ad))·toPolyG h = toPolyG z − Dpoly(toPolyG r)`,
+the reconstruction `q = cmulG ad h + r` (`= ad·h + r`) solves the divided equation
+`toPolyG ad · Dpoly(toPolyG q) + toPolyG bd · toPolyG q = toPolyG cd` over `(RatFunc ℚ)[X]`. The engine
+instance of `spde_step_glue`; the `cmonomialDeriv`/`caddG`/`cmulG` outputs read through the `toPolyG`
+homomorphism. -/
+theorem cSPDE_peel_cleared (Dt ad bd cd r z h : CPolyG QFunNZ)
+    (hbez : toPolyG bd * toPolyG r + toPolyG ad * toPolyG z = toPolyG cd)
+    (hred : toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG h)
+        + (toPolyG bd + Differential.implicitDeriv (toPolyG Dt) (toPolyG ad)) * toPolyG h
+      = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r)) :
+    toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG ad h) r))
+        + toPolyG bd * toPolyG (caddG (cmulG ad h) r)
+      = toPolyG cd := by
+  rw [toPolyG_caddG, toPolyG_cmulG]
+  exact spde_step_glue (Differential.implicitDeriv (toPolyG Dt))
+    (toPolyG ad) (toPolyG bd) (toPolyG cd) (toPolyG r) (toPolyG z) (toPolyG h) hbez hred
+
+-- One `cSPDE` peel: `q = ad·h + r` solves `ad·D(q) + bd·q = cd` given the Bézout + reduced-solution witnesses.
+example (Dt ad bd cd r z h : CPolyG QFunNZ)
+    (hbez : toPolyG bd * toPolyG r + toPolyG ad * toPolyG z = toPolyG cd)
+    (hred : toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG h)
+        + (toPolyG bd + Differential.implicitDeriv (toPolyG Dt) (toPolyG ad)) * toPolyG h
+      = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r)) :
+    toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG ad h) r))
+        + toPolyG bd * toPolyG (caddG (cmulG ad h) r)
+      = toPolyG cd :=
+  cSPDE_peel_cleared Dt ad bd cd r z h hbez hred
+
 #print axioms spde_step_glue
 #print axioms spde_const_base
+#print axioms cSPDE_peel_cleared
 
 end DeepWiki.SymbolicIntegration
