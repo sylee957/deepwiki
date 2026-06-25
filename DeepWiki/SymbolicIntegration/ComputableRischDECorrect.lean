@@ -151,4 +151,70 @@ theorem cPolyRischDENoCancel_cisZeroG_cleared (Dt b c : CPolyG QFunNZ) (fuel : �
 #print axioms cPolyRischDENoCancel_cleared_identity
 #print axioms cPolyRischDENoCancel_cisZeroG_cleared
 
+/-! ### §6.4 — the Rothstein `SPDE` step gluing (Bronstein Theorem 6.4.1, the algebraic core)
+
+`cSPDE` reduces `a·D(q) + b·q = c` (with `a ⊥ b` after the `gcd`-peel) by solving the Bézout
+`b·r + a·z = c` (`deg(r) < deg(a)`) and recursing on `a·D(h) + (b + D(a))·h = z − D(r)`, reconstructing
+`q = a·h + r`. The gluing identity — that this reconstruction *solves* the original divided equation —
+is pure `Derivation`-algebra: `D(a·h + r) = D(a)·h + a·D(h) + D(r)` (Leibniz), so
+`a·D(a·h + r) + b·(a·h + r) = a·(a·D(h) + (b+D(a))·h) + a·D(r) + b·r = a·(z − D(r)) + a·D(r) + b·r =
+a·z + b·r = c`. Stated abstractly for any `Derivation` over a commutative ring, so it applies verbatim to
+`implicitDeriv (toPolyG Dt)` on `(RatFunc ℚ)[X]`. This is the §6.4 analogue of `hermiteTower_cleared_of_exact`:
+the algebraic heart, gated on the two certificates (Bézout + the reduced solution) the `native_decide`
+validation produces along the recursion. -/
+
+/-- **The Rothstein `SPDE`-step gluing identity** (commutative-ring `Derivation` algebra): with `D` a
+derivation, divided coefficients `a, b, c`, a Bézout witness `b·r + a·z = c`, and a solution `h` of the
+*reduced* equation `a·D(h) + (b + D(a))·h = z − D(r)`, the reconstruction `q = a·h + r` solves the
+original divided equation `a·D(q) + b·q = c`. Pure `Derivation.leibniz` + `ring`; the algebraic core of
+one `cSPDE` peel (Bronstein Theorem 6.4.1). -/
+theorem spde_step_glue {R : Type*} [CommRing R] (D : Derivation ℤ R R)
+    (a b c r z h : R)
+    (hbez : b * r + a * z = c)
+    (hred : a * D h + (b + D a) * h = z - D r) :
+    a * D (a * h + r) + b * (a * h + r) = c := by
+  have hD : D (a * h + r) = a * D h + D a * h + D r := by
+    rw [map_add, Derivation.leibniz]; simp only [smul_eq_mul]; ring
+  rw [hD]
+  -- `a·(a·Dh + Da·h + Dr) + b·(a·h + r) = a·(a·Dh + (b+Da)·h) + a·Dr + b·r`
+  have : a * (a * D h + D a * h + D r) + b * (a * h + r)
+      = a * (a * D h + (b + D a) * h) + (a * D r + b * r) := by ring
+  rw [this, hred]
+  linear_combination hbez
+
+-- The `SPDE`-step reconstruction `q = a·h + r` solves `a·D(q) + b·q = c` given the Bézout + reduced witness.
+example {R : Type*} [CommRing R] (D : Derivation ℤ R R) (a b c r z h : R)
+    (hbez : b * r + a * z = c) (hred : a * D h + (b + D a) * h = z - D r) :
+    a * D (a * h + r) + b * (a * h + r) = c :=
+  spde_step_glue D a b c r z h hbez hred
+
+/-! ### §6.4 — the constant-`a` base-case lifting (unconditional)
+
+When `cSPDE` reaches `deg(a) = 0` (`a ∈ k*`) it returns `(b/lc(a), c/lc(a), n, [1], [])`: the reduced
+equation is `D(h) + (b/lc(a))·h = c/lc(a)` and the reconstruction is `q = α·h + β = 1·h + 0 = h`. So a
+solution `h` of the reduced equation, scaled back by `lc(a)` (a nonzero constant since `a ∈ k*`), solves
+`a·D(h) + b·h = c` directly — `lc(a)·D(h) + lc(a)·(b/lc(a))·h = lc(a)·(c/lc(a))`. The lifting is the
+trivial scaling identity, stated abstractly. -/
+
+/-- **The constant-`a` base-case scaling identity** (commutative-ring): if `a₀ ≠ 0` is a nonzero scalar
+and `h` solves the reduced `D(h) + (a₀⁻¹·b)·h = a₀⁻¹·c`, then `h` solves `a₀·D(h) + b·h = c` (multiply
+through by `a₀`). The `deg(a) = 0` base case of `cSPDE`, where `α = 1`, `β = 0` (`q = h`). -/
+theorem spde_const_base {K : Type*} [Field K] (D : Derivation ℤ K[X] K[X])
+    (a0 : K) (b c h : K[X]) (ha0 : a0 ≠ 0)
+    (hred : D h + (Polynomial.C a0⁻¹ * b) * h = Polynomial.C a0⁻¹ * c) :
+    Polynomial.C a0 * D h + b * h = c := by
+  have key : Polynomial.C a0 * (D h + (Polynomial.C a0⁻¹ * b) * h)
+      = Polynomial.C a0 * (Polynomial.C a0⁻¹ * c) := by rw [hred]
+  have hinv : Polynomial.C a0 * Polynomial.C a0⁻¹ = 1 := by
+    rw [← Polynomial.C_mul, mul_inv_cancel₀ ha0, Polynomial.C_1]
+  calc Polynomial.C a0 * D h + b * h
+      = Polynomial.C a0 * (D h + (Polynomial.C a0⁻¹ * b) * h)
+          - (Polynomial.C a0 * Polynomial.C a0⁻¹ - 1) * (b * h) := by ring
+    _ = Polynomial.C a0 * (Polynomial.C a0⁻¹ * c) - (1 - 1) * (b * h) := by rw [key, hinv]
+    _ = (Polynomial.C a0 * Polynomial.C a0⁻¹) * c := by ring
+    _ = c := by rw [hinv, one_mul]
+
+#print axioms spde_step_glue
+#print axioms spde_const_base
+
 end DeepWiki.SymbolicIntegration
