@@ -745,4 +745,37 @@ theorem associated_toPolyG_cgcdFF_of_inputs (fuel : ℕ) (p q : CPolyG QFunNZ)
     Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
   associated_toPolyG_cgcdFF fuel p q (primPRSRegular_of_inputs _ _ _ hin)
 
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- Clause (iii) crux discharged: under the content `cgcd`-fold preconditions, the content divides every
+-- `x`-coefficient exactly — the `hrem` hypothesis is a theorem, not an assumption.
+example (fuel : ℕ) (p : BPoly)
+    (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hfuel : ∀ a ∈ bnorm p, (cnorm a).length ≤ fuel)
+    (hterm : ContentFoldTerminates fuel [] (bnorm p)) :
+    ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0 :=
+  hrem_bcontentX fuel p hgcn hfuel hterm
+
+-- Clause (ii) discharged: off a nonzero divisor the pseudo-division multiplier is a ℚ(x)-unit.
+example (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = true) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (amRF (toPoly c)) * toPolyB p
+        = toPolyB s * toPolyB q + toPolyB (bpsremainder fuel p q)
+        ∧ amRF (toPoly c) ≠ 0 :=
+  toPolyB_bpsremainder_ne_zero fuel p q hq
+
+-- The `PrimPRSRegular` gate is fully discharged from the algorithmic-input bundle `PrimPRSInputs`.
+example (fuel : ℕ) (P Q : BPoly) (hin : PrimPRSInputs fuel P Q) : PrimPRSRegular fuel P Q :=
+  primPRSRegular_of_inputs fuel P Q hin
+
+-- The headline: `cgcdFF` computes the ℚ(x)[t] polynomial gcd, gated only on `PrimPRSInputs`.
+example (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hin : PrimPRSInputs fuel
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFF_of_inputs fuel p q hin
+
 end DeepWiki.SymbolicIntegration
