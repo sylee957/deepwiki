@@ -852,6 +852,81 @@ theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
       * toGBPolyG (gbprimitivePartCore fuel cgcdB p)
   ring
 
+/-! ### The content-gcd divides every coefficient — from `cgcdB`'s gcd-correctness (the tower link)
+The content `gbcontentCore cgcdB p` folds the content-gcd `cgcdB` over the `t`-coefficients. When `cgcdB`
+computes the gcd up to associates in `R = β[s]` (`CgcdBCorrect` — on a real run this is the
+gcd-correctness of `cgcdFFRawCore` at level `β`, the tower induction hypothesis), the running fold
+**divides each coefficient** in `R`. This is the divisibility clause (iii) needs, now reduced to the
+level-`β` gcd-correctness. Generic mirror of `ComputableGcdCorrect.toPoly_foldl_cgcdExt_dvd`. -/
+
+/-- **The content-gcd `cgcdB` is gcd-correct** `CgcdBCorrect cgcdB`: for all `a b ∈ β[s]`,
+`toPolyG (cgcdB a b)` is `Associated` to `gcd (toPolyG a) (toPolyG b)` in `R = (CFieldSpec.K β)[X]`. On a
+real tower run this is supplied by `associated_toPolyG_cgcdFFRawCore` at level `β` (the recursion). -/
+def CgcdBCorrect {β : Type*} [CField β] [CFieldSpec β] (cgcdB : CPolyG β → CPolyG β → CPolyG β) : Prop :=
+  ∀ a b : CPolyG β, Associated (CPolyG.toPolyG (cgcdB a b))
+    (gcd (CPolyG.toPolyG a) (CPolyG.toPolyG b))
+
+variable {β : Type*} [CField β] [CFieldSpec β]
+
+/-- **The content `cgcdB`-fold divides each input** (over `R = β[s]`): for the running content
+`g = l.foldl (fun g c => cgcdB g c) acc`, under `CgcdBCorrect cgcdB`, `toPolyG g` divides `toPolyG acc`
+and `toPolyG a` for every `a ∈ l`. Each step's gcd (up to associates) divides the previous accumulator
+and the new coefficient; divisibility transports through the fold. Generic mirror of
+`ComputableGcdCorrect.toPoly_foldl_cgcdExt_dvd`. -/
+theorem toPolyG_foldl_cgcdB_dvd (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) :
+    ∀ (acc : CPolyG β) (l : List (CPolyG β)),
+      CPolyG.toPolyG (l.foldl (fun g c => cgcdB g c) acc) ∣ CPolyG.toPolyG acc ∧
+        ∀ a ∈ l, CPolyG.toPolyG (l.foldl (fun g c => cgcdB g c) acc) ∣ CPolyG.toPolyG a := by
+  intro acc l
+  induction l generalizing acc with
+  | nil => exact ⟨dvd_refl _, by simp⟩
+  | cons c l ih =>
+    set g₁ := cgcdB acc c with hg₁
+    -- the step gcd divides the previous accumulator and the new coefficient (up to associates)
+    have hcorr1 := hcorr acc c
+    have hg₁acc : CPolyG.toPolyG g₁ ∣ CPolyG.toPolyG acc :=
+      hcorr1.dvd.trans (gcd_dvd_left _ _)
+    have hg₁c : CPolyG.toPolyG g₁ ∣ CPolyG.toPolyG c :=
+      hcorr1.dvd.trans (gcd_dvd_right _ _)
+    obtain ⟨hfg₁, hfmem⟩ := ih g₁
+    have hfold : (c :: l).foldl (fun g c => cgcdB g c) acc
+        = l.foldl (fun g c => cgcdB g c) g₁ := by rw [List.foldl_cons]
+    rw [hfold]
+    refine ⟨hfg₁.trans hg₁acc, ?_⟩
+    intro a ha
+    rcases List.mem_cons.mp ha with rfl | hl
+    · exact hfg₁.trans hg₁c
+    · exact hfmem a hl
+
+/-- **The content divides each `t`-coefficient** of `gbnormCore p` (over `R = β[s]`): under
+`CgcdBCorrect cgcdB`, `toPolyG (gbcontentCore cgcdB p) ∣ toPolyG a` for every `a ∈ gbnormCore p`. The
+`[]`-seeded specialization of `toPolyG_foldl_cgcdB_dvd`. This is the content-divides hypothesis clause
+(iii) needs, supplied entirely by the level-`β` gcd-correctness. -/
+theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : CPolyG β → CPolyG β → CPolyG β)
+    (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β) :
+    ∀ a ∈ GBPolyCore.gbnormCore p, CPolyG.toPolyG (GBPolyCore.gbcontentCore cgcdB p) ∣ CPolyG.toPolyG a := by
+  have hbc : GBPolyCore.gbcontentCore cgcdB p
+      = (GBPolyCore.gbnormCore p).foldl (fun g c => cgcdB g c) [] := rfl
+  rw [hbc]
+  exact (toPolyG_foldl_cgcdB_dvd cgcdB hcorr [] (GBPolyCore.gbnormCore p)).2
+
+/-- **Clause (iii) discharged from `cgcdB`-correctness alone** (the tower-induction packaging): under
+`CgcdBCorrect cgcdB` (the level-`β` gcd-correctness), content-nonzero, and a per-coefficient fuel bound,
+`gbprimitivePartCore fuel cgcdB p` is a β(s)-unit scaling (`Associated (toGBPolyG (gbprimitivePartCore
+fuel cgcdB p)) (toGBPolyG p)`) — the content-divides hypotheses of
+`associated_toGBPolyG_gbprimitivePartCore` are now *theorems* via `toPolyG_gbcontentCore_dvd_mem`. So
+clause (iii) of `CPrimPRSGenRegular` needs only the recursion's gcd-correctness plus transparent
+algorithmics, no separate content assumption. -/
+theorem associated_toGBPolyG_gbprimitivePartCore_of_correct (fuel : ℕ)
+    (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
+    (hg : ¬ CPolyG.cisZeroG (GBPolyCore.gbcontentCore cgcdB p) = true)
+    (hgcn : CPolyG.cnormG (GBPolyCore.gbcontentCore cgcdB p) ≠ [])
+    (hg0 : CPolyG.toPolyG (GBPolyCore.gbcontentCore cgcdB p) ≠ 0)
+    (hfuel : ∀ a ∈ GBPolyCore.gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
+    Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p) :=
+  associated_toGBPolyG_gbprimitivePartCore fuel cgcdB p hg hgcn hg0 hfuel
+    (toPolyG_gbcontentCore_dvd_mem cgcdB hcorr p)
+
 /-! ### Step 3 — the recursive `cgcdFFRawCore` capstone (the deliverable)
 `cgcdFFRawCore fuel p q = liftGBPolyCoreG (cprimPRSgcdGenCore (cgcdFFRawCore β) fuel P Q)` with `(P, Q)`
 the `gbdegCore`-ordered pair of `cclearDenomsCoreG p`, `cclearDenomsCoreG q`. Reading the result through
