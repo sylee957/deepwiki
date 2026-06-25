@@ -92,4 +92,42 @@ def cSplitFactorFastG (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPol
 
 end CPolyG
 
+/-! ### Generic Yun squarefree factorization in `t` (the formal derivative)
+
+`cSqfreeYunFFG` is the `[CField α]`-generic mirror of `cSqfreeYunFF`: Yun's squarefree factorization in
+`t` using the *formal* derivative `dp/dt = cderivG` (NOT the differential `D`), with the generic monic
+gcd `cgcdMonicG` everywhere. Returns the position-indexed list `[p₁, …, pₘ]` (`pᵢ` the monic squarefree
+part of multiplicity `i`), so `p` is associate to `∏ᵢ pᵢ^i`. This is what `cHermiteReduceTowerG` factors
+the denominator with. It needs only `[CField α]` (the formal derivative `cderivG` is field-only). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- Yun's main loop (generic): from `(b, d, i)` emit `pᵢ = cgcdMonicG b d` (monic), recurse on
+`bᵢ₊₁ = b/pᵢ`, `dᵢ₊₁ = d/pᵢ − bᵢ₊₁'` (the formal `'`). Stops when `b` is constant. The generic mirror
+of `cSqfreeYunFFgo` with `cgcdMonicG` for `cgcdFF`. -/
+def cSqfreeYunFFGgo (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
+  | 0, _, _ => []
+  | fo + 1, b, d =>
+    if cdegG b = 0 then []
+    else
+      let p := cmonicG (cgcdMonicG fuel b d)
+      let b' := cdivG fuel b p
+      let d' := csubG (cdivG fuel d p) (cderivG b')
+      p :: cSqfreeYunFFGgo fuel fo b' d'
+
+/-- **Generic Yun squarefree factorization in `t`** `cSqfreeYunFFG fuel p = [p₁, …, pₘ]`: the
+purely-algebraic squarefree factorization in `t` (the formal derivative `dp/dt = cderivG`), with the
+generic monic gcd `cgcdMonicG` for `cgcdFF`. With `g = cgcdMonicG p (cderivG p)`, `b₁ = p/g`,
+`d₁ = p'/g − b₁'`, the recurrence `pᵢ = cgcdMonicG bᵢ dᵢ` peels the monic squarefree part of
+multiplicity `i`. `p` is associate to `∏ᵢ pᵢ^i`. `[CField α]`-generic — runs at any tower level. -/
+def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
+  let g := cgcdMonicG fuel p (cderivG p)
+  let b1 := cdivG fuel p g
+  let d1 := csubG (cdivG fuel (cderivG p) g) (cderivG b1)
+  cSqfreeYunFFGgo fuel fuel b1 d1
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
