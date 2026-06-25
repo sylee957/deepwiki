@@ -322,4 +322,29 @@ theorem cLogPartWf_logResidueSum_eq_div (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.
 -- The fuel-free §5.6 log-part residue-sum headline carries only the standard axioms.
 #print axioms cLogPartWf_logResidueSum_eq_div
 
+/-! ### `native_decide` smoke test for the fuel-free RT trio (Bronstein Example 5.6.2, `t = log x`)
+
+Re-runs `logPartTower_example` over the noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)), now **fuel-free**:
+the residue resultant `R(z)` (its monic part the book's `z³ − xz² − z/4 + x/4`) and the two log-argument
+gcds `t ± x` at the rational residues `c = ±1/2`, all without fuel at runtime (the RT trio carries no fuel
+and no noncomputable bridge into the compiled body). Reuses the §5.6 example data of
+`ComputableLogPartTower`. -/
+
+open CPolyG QFunNZ in
+/-- **The fuel-free §5.6 RT log part executes over the tower** (`native_decide`, Bronstein Example 5.6.2):
+for `f = (2t²−t−x²)/(t³−x²t)`, `t = log x`, `Dt = 1/x`, the fuel-free residue resultant
+`cResidueResultantTowerWf`'s monic part equals the book's `z³ − xz² − z/4 + x/4`, and the fuel-free log
+arguments `cLogArgTowerWf … (±1/2) = t ± x` — the whole §5.6 residue-criterion log part now *computes*
+fuel-free over the monomial tower ℚ(x)[t]. The fuel-free companion of `logPartTower_example`. -/
+theorem logPartTowerWf_example :
+    cisZeroG (csubG
+        (cmonicG (cResidueResultantTowerWf logPartExampleDt logPartExampleA logPartExampleD))
+        logPartExampleResMonic) = true
+    ∧ cisZeroG (csubG (cLogArgTowerWf logPartExampleDt logPartExampleA logPartExampleD (1/2))
+        logPartExampleArgPlus) = true
+    ∧ cisZeroG (csubG (cLogArgTowerWf logPartExampleDt logPartExampleA logPartExampleD (-1/2))
+        logPartExampleArgMinus) = true := by native_decide
+
+#print axioms logPartTowerWf_example
+
 end DeepWiki.SymbolicIntegration
