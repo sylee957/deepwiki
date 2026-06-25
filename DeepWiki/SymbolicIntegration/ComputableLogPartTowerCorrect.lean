@@ -162,6 +162,25 @@ theorem extendDeriv_sum_const_logDerivOf_mk {ι : Type*} (s : Finset ι) (c g : 
   rw [extendDeriv_sum_const_logDerivOf δ s c g hc L hL]
   exact Finset.sum_congr rfl fun i _ => by rw [RatFunc.mk_eq_div]
 
+/-- **The §5.6 integral identity, reduced to the residue match** (`D(∑ aᵢ·log gᵢ) = a/d`): for
+δ-constant residue coefficients `cᵢ`, log arguments `gᵢ` modeled by `L` (per-factor log-derivative
+`hL`), and the **residue-match hypothesis** `hmatch` that the residue sum `∑ᵢ cᵢ·(δ gᵢ)/gᵢ` equals the
+integrand `f`, the logarithmic part `∑ᵢ algMap(cᵢ)·log gᵢ` differentiates back to `f` under
+`extendDeriv δ`. This is the *complete* §5.6 integral identity once `hmatch` is supplied; the
+differential spine (`extendDeriv_sum_const_logDerivOf`) is proved here, and `hmatch` is the single
+deferred ingredient — the splitting-field residue match (the tower analogue of §2's partial fraction
+`ratFunc_eq_sum_residue_div`), where the residues `cᵢ` and factors `gᵢ` come from the residue
+resultant `cResidueResultantTower` and `cLogArgTower`. For `δ = derivative`, `hmatch` is exactly §2's
+`ratFunc_eq_sum_residue_gcd`/`ratFunc_eq_sum_residue_div`, so the identity is then unconditional. -/
+theorem extendDeriv_logPart_eq_of_residue_match {ι : Type*} (s : Finset ι) (c g : ι → K[X])
+    (f : RatFunc K) (hc : ∀ i ∈ s, δ (c i) = 0) (L : ι → RatFunc K)
+    (hL : ∀ i ∈ s, extendDeriv δ (L i)
+      = algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i))
+    (hmatch : ∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i)
+        * (algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) = f) :
+    extendDeriv δ (∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i) * L i) = f := by
+  rw [extendDeriv_sum_const_logDerivOf δ s c g hc L hL, hmatch]
+
 end Generic
 
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
@@ -275,6 +294,27 @@ theorem towerLogPart_sum_const_logDerivOf (Dt : CPolyG QFunNZ) {ι : Type*} (s :
   rw [Derivation.leibniz, towerFractionFieldDeriv_algebraMap, hc i hi, map_zero, smul_zero,
     add_zero, smul_eq_mul, hL i hi]
 
+/-- **The §5.6 integral identity on the tower, reduced to the residue match**
+(`D(∑ aᵢ·log gᵢ) = f`): on the genuine tower fraction field `RatFunc (RatFunc ℚ)`, given δ-constant
+residue coefficients `cᵢ`, log arguments `gᵢ` modeled by `L`, and the **residue-match hypothesis**
+`hmatch : ∑ᵢ cᵢ·(Δ gᵢ)/gᵢ = f`, the logarithmic part differentiates back to `f` under
+`towerFractionFieldDeriv Dt`. The complete §5.6 integral identity on the tower modulo `hmatch` (the
+deferred splitting-field residue match), with the residues/arguments those of
+`cResidueResultantTower`/`cLogArgTower`. -/
+theorem towerLogPart_eq_of_residue_match (Dt : CPolyG QFunNZ) {ι : Type*} (s : Finset ι)
+    (c g : ι → (CFieldSpec.K QFunNZ)[X]) (f : RatFunc (CFieldSpec.K QFunNZ))
+    (hc : ∀ i ∈ s, Differential.implicitDeriv (toPolyG Dt) (c i) = 0)
+    (L : ι → RatFunc (CFieldSpec.K QFunNZ))
+    (hL : ∀ i ∈ s, towerFractionFieldDeriv Dt (L i)
+      = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Differential.implicitDeriv (toPolyG Dt) (g i))
+          / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (g i))
+    (hmatch : ∑ i ∈ s, algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (c i)
+        * (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Differential.implicitDeriv (toPolyG Dt) (g i))
+            / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (g i)) = f) :
+    towerFractionFieldDeriv Dt (∑ i ∈ s, algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (c i) * L i)
+      = f := by
+  rw [towerLogPart_sum_const_logDerivOf Dt s c g hc L hL, hmatch]
+
 /-- Headline restatement: the §5.6 per-factor log-derivative on the genuine tower carrier. -/
 example (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
     towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g)
@@ -282,11 +322,23 @@ example (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
       = RatFunc.mk (Differential.implicitDeriv (toPolyG Dt) g) g :=
   towerLogPart_logDerivOf Dt g
 
+open scoped Classical in
+/-- Headline restatement: the §5.6 residue criterion `roots(gcd(d, a−c·Dd)) = residue-c roots of d`,
+with the seed `Dd` arbitrary (so it covers the monomial seed `Δd` of `cLogArgTower`). -/
+example {F : Type*} [Field F] (a d Dd : F[X]) (c α : F) (hα : Dd.eval α ≠ 0) :
+    (gcd d (a - C c * Dd)).IsRoot α ↔ (d.IsRoot α ∧ a.eval α / Dd.eval α = c) :=
+  isRoot_gcd_iff_residue_seed a d Dd c α hα
+
+#print axioms residue_eq_iff_isRoot_sub_seed
+#print axioms isRoot_gcd_iff_residue_seed
+#print axioms deriv_eval_at_simple_root
 #print axioms extendDeriv_logDerivOf
 #print axioms extendDeriv_sum_const_logDerivOf
 #print axioms extendDeriv_sum_const_logDerivOf_mk
 #print axioms extendDeriv_derivativeDerivation_apply
+#print axioms extendDeriv_logPart_eq_of_residue_match
 #print axioms towerLogPart_logDerivOf
 #print axioms towerLogPart_sum_const_logDerivOf
+#print axioms towerLogPart_eq_of_residue_match
 
 end DeepWiki.SymbolicIntegration
