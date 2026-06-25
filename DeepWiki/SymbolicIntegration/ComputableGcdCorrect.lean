@@ -756,6 +756,59 @@ theorem ContentRegularNode.of_ne_bisZero_lengths (P : BPoly) (hP : ¬ bisZero P 
   ContentRegularNode.of_ne_bisZero P hP (fun a ha => le_of_lt (hfuel a ha))
     (ContentFoldTerminates_of_fuel 30 [] (bnorm P) (by simp) hfuel)
 
+/-! ### Discharging clause (i) — the PRS run terminates within fuel
+The primitive-PRS recursion `primPRSgcd fuel P Q → primPRSgcd fuel (bnorm Q) r`, `r = bprimitivePartX 30
+(bpsremainder 60 P Q)`, drops the `t`-degree `bdeg` each step: the pseudo-remainder `bpsremainder` has
+`bdeg < bdeg Q` (`deg prem < deg q`) and taking the primitive part `bprimitivePartX` does not raise the
+`t`-degree. So clause (i)'s `bisZero` reaching holds once `fuel ≥ bdeg Q + 1`. The pseudo-step degree drop
+is the integral-domain analogue of `degree_reduce_step_lt` (multiply by `lc(q)` instead of dividing). -/
+
+/-- **One pseudo-division step strictly drops the `t`-degree** (over the domain `ℚ[X]`): the
+leading-term-cancelling replacement `C lc(Q)·P − C lc(P)·X^(degP−degQ)·Q` has degree `< deg P`. The
+integral-domain pseudo-remainder analogue of `degree_reduce_step_lt`: `C lc(Q)·P` has leading coefficient
+`lc(Q)·lc(P)` at degree `deg P` (using `lc(Q) ≠ 0` and that `ℚ[X]` is a domain), and `C lc(P)·X^k·Q`
+matches it, so the top cancels. -/
+theorem bdegree_reduce_step_lt {P Q : (ℚ[X])[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
+    (hpq : Q.natDegree ≤ P.natDegree) :
+    (Polynomial.C Q.leadingCoeff * P
+        - Polynomial.C P.leadingCoeff
+          * Polynomial.X ^ (P.natDegree - Q.natDegree) * Q).degree < P.degree := by
+  have hQlc : Q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hQ
+  have hPlc : P.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hP
+  have hCQc : (Polynomial.C Q.leadingCoeff : (ℚ[X])[X]) ≠ 0 := by
+    rwa [Ne, Polynomial.C_eq_zero]
+  have hCPc : (Polynomial.C P.leadingCoeff : (ℚ[X])[X]) ≠ 0 := by
+    rwa [Ne, Polynomial.C_eq_zero]
+  have hXk : (Polynomial.X ^ (P.natDegree - Q.natDegree) : (ℚ[X])[X]) ≠ 0 :=
+    pow_ne_zero _ Polynomial.X_ne_zero
+  -- left term `S = C lc(Q)·P`: same degree as `P`, leading coeff `lc(Q)·lc(P)`
+  set S := Polynomial.C Q.leadingCoeff * P with hS
+  have hS0 : S ≠ 0 := mul_ne_zero hCQc hP
+  have hSnd : S.natDegree = P.natDegree := by
+    rw [hS, Polynomial.natDegree_C_mul hQlc]
+  have hSlc : S.leadingCoeff = Q.leadingCoeff * P.leadingCoeff := by
+    rw [hS, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C]
+  -- right term `T = C lc(P)·X^k·Q`: degree `k + deg Q = deg P`, leading coeff `lc(P)·lc(Q)`
+  set T := Polynomial.C P.leadingCoeff * Polynomial.X ^ (P.natDegree - Q.natDegree) * Q with hT
+  have hT0 : T ≠ 0 := mul_ne_zero (mul_ne_zero hCPc hXk) hQ
+  have hTnd : T.natDegree = P.natDegree := by
+    rw [hT, Polynomial.natDegree_mul (mul_ne_zero hCPc hXk) hQ,
+      Polynomial.natDegree_mul hCPc hXk, Polynomial.natDegree_C, Polynomial.natDegree_X_pow]
+    omega
+  have hTlc : T.leadingCoeff = P.leadingCoeff * Q.leadingCoeff := by
+    rw [hT, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+      Polynomial.leadingCoeff_X_pow, mul_one]
+  -- both have the same leading term, so the difference drops degree
+  rw [show Polynomial.C Q.leadingCoeff * P
+      - Polynomial.C P.leadingCoeff * Polynomial.X ^ (P.natDegree - Q.natDegree) * Q
+      = S - T by rw [hS, hT]]
+  have hSP : S.degree = P.degree := by
+    rw [Polynomial.degree_eq_natDegree hS0, Polynomial.degree_eq_natDegree hP, hSnd]
+  rw [← hSP]
+  refine Polynomial.degree_sub_lt ?_ hS0 ?_
+  · rw [Polynomial.degree_eq_natDegree hS0, Polynomial.degree_eq_natDegree hT0, hSnd, hTnd]
+  · rw [hSlc, hTlc, mul_comm]
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
