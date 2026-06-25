@@ -29,7 +29,18 @@ certificate (the remainder `cmodG fuel (resNum·Dstar) resDen` reads to `0`) giv
 follows by `ring`. This mirrors §2's `hermiteReduce_residual_correct` (the rational Hermite residual,
 recovered by exact division) and §3.5's `toPolyG_cdivFF_exact` step style: the identity is gated only on
 the exact-division certificate of the single `cdivG` call, exactly the polynomial cleared identity
-`resNum·Dstar = hNum·resDen` that the `native_decide` evidence pins. -/
+`resNum·Dstar = hNum·resDen` that the `native_decide` evidence pins.
+
+Toward the inner loop: `toPolyG_cdiophantineG` proves the generic Bézout solver `cdiophantineG` correct,
+and `toPolyG_cHermiteReduceTowerInner_bezout` discharges the inner loop's per-step relation
+`b·(u·D(v)) + c·v = −a/(j+1)` (the computable analogue of §2's `hermiteInner_bezout_of`). **Remaining
+gap** — the full inner-loop *invariant* `a/(u·v^(j+1)) = D(b/v^j) + a'/(u·v^j)` (the `j`-fold gluing,
+the analogue of §2's `hermiteInner_spec`): unlike §2's plain `d/dx` on `RatFunc ℚ`, the tower derivation
+`D = implicitDeriv (toPolyG Dt) = κ_D + Dt·d/dt` is **not** the standard `RatFunc` `d/dt`, so the loop
+invariant in its natural form needs a `Differential (RatFunc (RatFunc ℚ))` realizing `implicitDeriv` on
+the fraction field (with its quotient rule) — infrastructure not yet built. The cleared-polynomial
+headline here deliberately sidesteps that fraction-field derivation; closing the gap is the
+`implicitDeriv`-fraction-field-derivation construction left to a later stage. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -123,6 +134,53 @@ example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (p q rhs : CPolyG 
         + toPolyG (cdiophantineG fuel p q rhs).2 * toPolyG q
       = toPolyG rhs :=
   toPolyG_cdiophantineG fuel p q rhs hq hg hgc
+
+/-! ### The inner-loop per-step Bézout relation
+The inner Hermite loop `cHermiteReduceTowerInner` solves, at counter `j+1` with numerator `a`,
+`b·(u·D(v)) + c·v = −a/(j+1)` via `cdiophantineG` (`p = u·D(v)`, `q = v`, `rhs = −a/(j+1)`, the natural
+`j+1` formed by `cnatCastG`). Discharging this per-step relation through `toPolyG_cdiophantineG` is the
+computable analogue of §2's `hermiteInner_bezout_of` — the certificate any inner-loop invariant rests on.
+The `cnatCastG`-to-field bridge `toK_cnatCastG` makes the `−1/(j+1)` scaling explicit over the field. -/
+
+/-- **`cnatCastG` realizes the field natural cast**: `toK (cnatCastG k) = (k : CFieldSpec.K α)` — the
+computable `1 + 1 + … + 1` (`k` times) reads as the field natural number `k`. By induction on `k`,
+each `CField.add CField.one` step `toK_add`/`toK_one`/`toK_zero`. -/
+theorem toK_cnatCastG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) :
+    CFieldSpec.toK (CPolyG.cnatCastG (α := α) k) = (k : CFieldSpec.K α) := by
+  induction k with
+  | zero => simp [CPolyG.cnatCastG, CFieldSpec.toK_zero]
+  | succ n ih =>
+    show CFieldSpec.toK (CField.add CField.one (CPolyG.cnatCastG n)) = _
+    rw [CFieldSpec.toK_add, CFieldSpec.toK_one, ih]; push_cast; ring
+
+/-- **The inner-loop per-step Bézout relation** through `toPolyG`: at counter `j+1` with numerator `a`,
+the inner loop's `cdiophantineG fuel (u·D(v)) v (−a/(j+1)) = (b, c)` solves `b·(u·D(v)) + c·v = −a/(j+1)`
+over ℚ(x)[t], provided `gcd(u·D(v), v)` is a nonzero constant (the coprimality `v ⊥ u·v'` that holds for
+`v` squarefree and coprime to `u`). The polynomial form: `toPolyG b · toPolyG (u·D(v)) + toPolyG c ·
+toPolyG v = C ((j+1)⁻¹) · (−toPolyG a)`, with `D = cmonomialDeriv Dt`. The computable analogue of
+`hermiteInner_bezout_of`, discharged from `toPolyG_cdiophantineG`. -/
+theorem toPolyG_cHermiteReduceTowerInner_bezout (Dt : CPolyG QFunNZ) (fuel : ℕ) (v u a : CPolyG QFunNZ)
+    (j : ℕ)
+    (hq : cnormG v ≠ [])
+    (hg : toPolyG (cgcdExtG fuel (cmulG u (cmonomialDeriv Dt v)) v).1
+      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel (cmulG u (cmonomialDeriv Dt v)) v).1)))
+    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel (cmulG u (cmonomialDeriv Dt v)) v).1) ≠ 0) :
+    let rhs := cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a
+    let bc := cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v rhs
+    toPolyG bc.1 * (toPolyG u * toPolyG (cmonomialDeriv Dt v)) + toPolyG bc.2 * toPolyG v
+      = Polynomial.C (((j : RatFunc ℚ) + 1)⁻¹) * (- toPolyG a) := by
+  intro rhs bc
+  -- the generic Bézout solver discharges `b·(u·Dv) + c·v = rhs`
+  have hbez := toPolyG_cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v rhs hq hg hgc
+  rw [toPolyG_cmulG] at hbez
+  -- read `rhs = −(1/(j+1))·a` over the field
+  have hrhs : toPolyG rhs = Polynomial.C (((j : RatFunc ℚ) + 1)⁻¹) * (- toPolyG a) := by
+    show toPolyG (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a) = _
+    rw [toPolyG_cscaleG, CFieldSpec.toK_neg, CFieldSpec.toK_inv, toK_cnatCastG]
+    have hcast : ((j + 1 : ℕ) : CFieldSpec.K QFunNZ) = (j : RatFunc ℚ) + 1 := by push_cast; ring
+    rw [hcast, map_neg, neg_mul, mul_neg]
+  rw [hrhs] at hbez
+  exact hbez
 
 /-! ### The headline — the cleared Hermite identity for ALL inputs
 Combining the exact-division witness with the cleared-identity algebra. The output of
@@ -249,5 +307,6 @@ theorem cHermiteReduceTower_cisZeroG_cleared (Dt : CPolyG QFunNZ) (fuel : ℕ) (
     hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
 
 #print axioms toPolyG_cdiophantineG
+#print axioms toPolyG_cHermiteReduceTowerInner_bezout
 #print axioms cHermiteReduceTower_cleared_identity
 #print axioms cHermiteReduceTower_cisZeroG_cleared
