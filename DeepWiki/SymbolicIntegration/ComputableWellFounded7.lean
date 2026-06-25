@@ -586,6 +586,57 @@ def cRischDEWf (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
 
 end CPolyG
 
+/-! ### Bridge of `cRischDEWf` to the fuel'd `cRischDE` (composition, transparent stage gates)
+
+`cRischDEWf` is a pure **composition** of the §6.2-6.5 stages. Its bridge substitutes the per-stage
+fuel-free-equals-fuel'd facts. We state these transparently — the §6.2 stages' agreement
+(`cRdeNormalDenominatorWf = cRdeNormalDenominator fuel`, `cRdeSpecialDenominatorWf = cRdeSpecialDenominator
+fuel`) as whole-stage hypotheses the caller discharges, the §6.4 `cSPDEWf` and §6.5 `cPolyRischDENoCancelWf`
+through their own bridges (`cSPDEWf_eq`, `cPolyRischDENoCancelWf_eq`), and `cRdeBoundDegree` already
+fuel-free. The non-cancellation regime is encoded by the §6.5 polynomial stage being
+`cPolyRischDENoCancel` (`cRischDE`'s dispatcher routes here when `deg(b̄) > max(0, δ−1)`), supplied as the
+dispatch-agreement hypothesis. The fuel bounds live in the hypotheses; `cRischDEWf` carries none. -/
+
+namespace CPolyG
+
+/-- **Bridge — `cRischDEWf` equals `cRischDE` at sufficient fuel on a non-cancellation run** (transparent
+composition). From the §6.2 stage agreements (`hnorm`: the normal denominator; `hspec`: the special
+denominator), the §6.4 SPDE bridge (`hspde`: `cSPDEWf = cSPDE fuel` on the special-denominator output at the
+§6.3 bound), and the §6.6/§6.5 dispatch + polynomial-stage agreement (`hpoly`: the dispatcher
+`cPolyRischDE fuel` equals `cPolyRischDENoCancel fuel`, and `cPolyRischDENoCancelWf = cPolyRischDENoCancel
+fuel`, on the SPDE output) — `cRischDEWf Dt fnum fden gnum gden = cRischDE Dt fuel fnum fden gnum gden`.
+A pure composition rewrite: rewrite each stage to its fuel'd form and the two drivers collapse. -/
+theorem cRischDEWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden : CPolyG QFunNZ)
+    (hnorm : cRdeNormalDenominatorWf Dt fnum fden gnum gden
+      = CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden)
+    (hspec : ∀ a0 b0 c0, cRdeSpecialDenominatorWf Dt a0 b0 c0
+      = CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0)
+    (hbound : ∀ a b c, cRdeBoundDegree Dt 0 a b c = CPolyG.cRdeBoundDegree Dt fuel a b c)
+    (hspde : ∀ a b c n, cSPDEWf Dt a b c n = CPolyG.cSPDE Dt fuel a b c n)
+    (hdispatch : ∀ bbar cbar (m : ℤ),
+      CPolyG.cPolyRischDE Dt fuel bbar cbar m = CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m)
+    (hpoly : ∀ bbar cbar (m : ℤ),
+      cPolyRischDENoCancelWf Dt bbar cbar m = CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m) :
+    cRischDEWf Dt fnum fden gnum gden = CPolyG.cRischDE Dt fuel fnum fden gnum gden := by
+  rw [cRischDEWf, CPolyG.cRischDE, hnorm]
+  -- destructure the (now fuel'd) normal-denominator result
+  rcases hn : CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden with _ | ⟨a0, b0, c0, h0⟩
+  · rfl
+  · simp only []
+    -- rewrite the special denominator, degree bound, SPDE, and the polynomial dispatch
+    rw [hspec a0 b0 c0]
+    -- the special-denominator output's components; `cRischDE` destructures via `let (a,b,c,h1) := …`
+    rcases hs : CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0 with ⟨a, b, c, h1⟩
+    simp only [hbound a b c, hspde a b c (CPolyG.cRdeBoundDegree Dt fuel a b c : ℤ)]
+    rcases hsp : CPolyG.cSPDE Dt fuel a b c (CPolyG.cRdeBoundDegree Dt fuel a b c : ℤ) with
+      _ | ⟨bbar, cbar, m, α, β⟩
+    · rfl
+    · -- the outer `match some (…)` reduces; both inner stages become `cPolyRischDENoCancel fuel …`
+      simp only [hpoly bbar cbar m, hdispatch bbar cbar m]
+      rcases hpr : CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m with _ | v <;> rfl
+
+end CPolyG
+
 /-! ### `native_decide` — the fuel-free Risch DE solver on Bronstein Examples 6.5.1 + 6.4.1
 
 Re-runs `rischDE_solve_example` (`y = t + x`) and `rischDE_noSolution_example` (`none`) over the
