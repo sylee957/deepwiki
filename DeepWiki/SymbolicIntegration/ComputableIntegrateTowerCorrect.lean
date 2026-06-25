@@ -147,4 +147,173 @@ theorem checkIdentityG_fold_eq (Dt : CPolyG QFunNZ) :
       ring
     rw [hstep]; ring
 
+/-! ### The `checkIdentityG` ⇔ field-identity bridge
+
+`checkIdentityG Dt res anum aden = true` is (via `cisZeroG_iff`) the cleared polynomial identity
+`(GP·LD + LN·GD²)·AD = AN·(GD²·LD)` over `(RatFunc ℚ)[X]`, where `GP = toPolyG gprimeNum`,
+`(LN, LD) = fold-result`, etc. Dividing through the nonzero `GD²·LD·AD` and reading `D(gnum/gden) =
+GP/GD²` (quotient rule) and `LN/LD = logResidueSumG` (the fold bridge), this is exactly the field
+identity `D(gnum/gden) + logResidueSumG = anum/aden`. Both directions transport **verbatim** from the
+QFunNZ `checkIdentity_of_field_identity` / `field_identity_of_checkIdentity` — only the residue spelling
+(`cscaleG cv.1`, `C (toK cv.1)`) and result type (`IntegralResultG`) differ; the gcd never enters. -/
+
+/-- **Field identity ⟹ `checkIdentityG = true`** (the generic mirror of `checkIdentity_of_field_identity`):
+if the field-level antiderivative identity `towerFractionFieldDeriv Dt (towerAlg gnum / towerAlg gden) +
+logResidueSumG Dt res.logs = towerAlg anum / towerAlg aden` holds over the tower fraction field, with
+`res.rational = (gnum, gden)`, the denominators `gden, aden` nonzero, and every log argument `vᵢ` nonzero,
+then `checkIdentityG Dt res anum aden = true`. The clearing converts the field fraction identity back to
+the cleared `cisZeroG` polynomial identity the generic checker runs. -/
+theorem checkIdentityG_of_field_identity (Dt : CPolyG QFunNZ) (res : IntegralResultG QFunNZ)
+    (anum aden : CPolyG QFunNZ)
+    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG aden ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
+    (hfield : towerFractionFieldDeriv Dt (towerAlg (toPolyG res.rational.1) / towerAlg (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = towerAlg (toPolyG anum) / towerAlg (toPolyG aden)) :
+    CPolyG.checkIdentityG Dt res anum aden = true := by
+  -- names matching `checkIdentityG`
+  set gnum := res.rational.1 with hgnum
+  set gden := res.rational.2 with hgdenE
+  set gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
+    with hgp
+  set gden2 := cmulG gden gden with hgden2
+  -- the fold result `(Lnum, Lden)`
+  set folded := res.logs.foldl
+    (fun (acc : CPolyG QFunNZ × CPolyG QFunNZ) (cv : QFunNZ × CPolyG QFunNZ) =>
+      let c := cv.1
+      let v := cv.2
+      let Dv := cmonomialDeriv Dt v
+      let termNum := cscaleG c Dv
+      (caddG (cmulG acc.1 v) (cmulG termNum acc.2), cmulG acc.2 v))
+    ([CField.zero], [CField.one]) with hfolded
+  -- the fold computes `logResidueSumG` over the field, with nonzero `Lden`
+  have hseedden : toPolyG ([CField.one] : CPolyG QFunNZ) ≠ 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero]; exact one_ne_zero
+  obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CField.zero] [CField.one]
+    hseedden hlogs
+  rw [← hfolded] at hLden_ne hLfield
+  -- the seed fraction `0/1 = 0`
+  have hseed0 : towerAlg (toPolyG ([CField.zero] : CPolyG QFunNZ))
+      / towerAlg (toPolyG ([CField.one] : CPolyG QFunNZ)) = 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero, map_zero,
+      zero_div]
+  rw [hseed0, zero_add] at hLfield
+  -- abbreviations over the field
+  set GP := towerAlg (toPolyG gprimeNum) with hGP
+  set LN := towerAlg (toPolyG folded.1) with hLN
+  set LD := towerAlg (toPolyG folded.2) with hLD
+  set AN := towerAlg (toPolyG anum) with hAN
+  set AD := towerAlg (toPolyG aden) with hAD
+  set GD := towerAlg (toPolyG gden) with hGD
+  -- nonzero readings
+  have hGDne : GD ≠ 0 := by rw [hGD]; exact towerAlg_ne_zero hgden
+  have hLDne : LD ≠ 0 := by rw [hLD]; exact towerAlg_ne_zero hLden_ne
+  have hADne : AD ≠ 0 := by rw [hAD]; exact towerAlg_ne_zero haden
+  -- `D(gnum/gden) = GP/GD²` (quotient rule); `logResidueSumG = LN/LD` (fold bridge)
+  have hquot : towerFractionFieldDeriv Dt (towerAlg (toPolyG gnum) / towerAlg (toPolyG gden))
+      = GP / GD ^ 2 := by
+    rw [towerFractionFieldDeriv_div, hGP, hgp, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG,
+      toPolyG_cmonomialDeriv, toPolyG_cmonomialDeriv, map_sub, map_mul, map_mul, hGD]
+  have hLfield' : logResidueSumG Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
+  -- the field identity, rewritten with the readings: `GP/GD² + LN/LD = AN/AD`
+  rw [hquot, hLfield'] at hfield
+  -- the cleared polynomial equation `(GP·LD + LN·GD²)·AD = AN·(GD²·LD)`
+  have hclear : (GP * LD + LN * (GD * GD)) * AD = AN * (GD * GD * LD) := by
+    have hh := hfield
+    field_simp at hh
+    linear_combination hh
+  -- unfold `checkIdentityG` to its `cisZeroG` and convert to the cleared `toPolyG` polynomial equation
+  show CPolyG.checkIdentityG Dt res anum aden = true
+  rw [CPolyG.checkIdentityG]
+  simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded]
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero, toPolyG_cmulG, toPolyG_cmulG, toPolyG_caddG,
+    toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+  -- lift the cleared polynomial equation into the tower fraction field (towerAlg injective)
+  rw [← (RatFunc.algebraMap_injective (CFieldSpec.K QFunNZ)).eq_iff]
+  simp only [map_mul, map_add, hgden2, toPolyG_cmulG]
+  -- the goal is now the cleared field equation, matching `hclear` term-by-term
+  rw [← hGP, ← hLN, ← hLD, ← hAN, ← hAD, ← hGD]
+  linear_combination hclear
+
+/-- **`checkIdentityG = true ⟹ field identity`** (the converse bridge, the generic mirror of
+`field_identity_of_checkIdentity`): if the generic cleared antiderivative check
+`checkIdentityG Dt res anum aden = true` holds, with the denominators `gden = res.rational.2`, `aden`
+nonzero and every log argument `vᵢ` nonzero, then the field-level antiderivative identity
+`towerFractionFieldDeriv Dt (towerAlg gnum / towerAlg gden) + logResidueSumG Dt res.logs =
+towerAlg anum / towerAlg aden` holds over `RatFunc (RatFunc ℚ)`. Runs the forward clearing backwards:
+`cisZeroG_iff` turns the check into the cleared polynomial identity, the injective `towerAlg` lifts it,
+and dividing by the nonzero `GD²·LD·AD` with `GP/GD² = D(g)` and `LN/LD = logResidueSumG` recovers the
+field identity. The generic engine's `D(∫f) = f`, in field form, gated only on `checkIdentityG = true`. -/
+theorem field_identity_of_checkIdentityG (Dt : CPolyG QFunNZ) (res : IntegralResultG QFunNZ)
+    (anum aden : CPolyG QFunNZ)
+    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG aden ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt res anum aden = true) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG res.rational.1) / towerAlg (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = towerAlg (toPolyG anum) / towerAlg (toPolyG aden) := by
+  -- names matching `checkIdentityG`
+  set gnum := res.rational.1 with hgnum
+  set gden := res.rational.2 with hgdenE
+  set gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
+    with hgp
+  set gden2 := cmulG gden gden with hgden2
+  -- the fold result `(Lnum, Lden)`
+  set folded := res.logs.foldl
+    (fun (acc : CPolyG QFunNZ × CPolyG QFunNZ) (cv : QFunNZ × CPolyG QFunNZ) =>
+      let c := cv.1
+      let v := cv.2
+      let Dv := cmonomialDeriv Dt v
+      let termNum := cscaleG c Dv
+      (caddG (cmulG acc.1 v) (cmulG termNum acc.2), cmulG acc.2 v))
+    ([CField.zero], [CField.one]) with hfolded
+  -- the fold computes `logResidueSumG` over the field, with nonzero `Lden`
+  have hseedden : toPolyG ([CField.one] : CPolyG QFunNZ) ≠ 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero]; exact one_ne_zero
+  obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CField.zero] [CField.one]
+    hseedden hlogs
+  rw [← hfolded] at hLden_ne hLfield
+  -- the seed fraction `0/1 = 0`
+  have hseed0 : towerAlg (toPolyG ([CField.zero] : CPolyG QFunNZ))
+      / towerAlg (toPolyG ([CField.one] : CPolyG QFunNZ)) = 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero, map_zero,
+      zero_div]
+  rw [hseed0, zero_add] at hLfield
+  -- abbreviations over the field
+  set GP := towerAlg (toPolyG gprimeNum) with hGP
+  set LN := towerAlg (toPolyG folded.1) with hLN
+  set LD := towerAlg (toPolyG folded.2) with hLD
+  set AN := towerAlg (toPolyG anum) with hAN
+  set AD := towerAlg (toPolyG aden) with hAD
+  set GD := towerAlg (toPolyG gden) with hGD
+  -- nonzero readings
+  have hGDne : GD ≠ 0 := by rw [hGD]; exact towerAlg_ne_zero hgden
+  have hLDne : LD ≠ 0 := by rw [hLD]; exact towerAlg_ne_zero hLden_ne
+  have hADne : AD ≠ 0 := by rw [hAD]; exact towerAlg_ne_zero haden
+  -- `D(gnum/gden) = GP/GD²` (quotient rule); `logResidueSumG = LN/LD` (fold bridge)
+  have hquot : towerFractionFieldDeriv Dt (towerAlg (toPolyG gnum) / towerAlg (toPolyG gden))
+      = GP / GD ^ 2 := by
+    rw [towerFractionFieldDeriv_div, hGP, hgp, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG,
+      toPolyG_cmonomialDeriv, toPolyG_cmonomialDeriv, map_sub, map_mul, map_mul, hGD]
+  have hLfield' : logResidueSumG Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
+  -- ── the converse direction: extract the cleared polynomial identity from `checkIdentityG = true` ──
+  rw [CPolyG.checkIdentityG] at hcheck
+  simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded] at hcheck
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero, toPolyG_cmulG, toPolyG_cmulG, toPolyG_caddG,
+    toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG] at hcheck
+  -- lift the cleared polynomial equation into the tower fraction field (towerAlg injective)
+  rw [← (RatFunc.algebraMap_injective (CFieldSpec.K QFunNZ)).eq_iff] at hcheck
+  simp only [map_mul, map_add, hgden2, toPolyG_cmulG] at hcheck
+  -- now `hcheck` is the cleared field equation `(GP·LD + LN·GD²)·AD = AN·(GD²·LD)` (over the field)
+  rw [← hGP, ← hLN, ← hLD, ← hAN, ← hAD, ← hGD] at hcheck
+  -- divide through the nonzero `GD²·LD·AD` to land the field fraction identity `GP/GD² + LN/LD = AN/AD`
+  have hfield : GP / GD ^ 2 + LN / LD = AN / AD := by
+    rw [div_add_div _ _ (pow_ne_zero 2 hGDne) hLDne,
+      div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hGDne) hLDne) hADne]
+    ring_nf
+    ring_nf at hcheck
+    linear_combination hcheck
+  -- assemble: rewrite the field readings back into the goal
+  rw [hquot, hLfield', hfield]
+
 end DeepWiki.SymbolicIntegration
