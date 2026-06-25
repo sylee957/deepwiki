@@ -497,4 +497,162 @@ theorem associated_toPolyG_cgcdFF (fuel : ℕ) (p q : CPolyG QFunNZ)
   · simp only [if_neg hlt] at hreg ⊢
     exact key _ _ hreg hbridge
 
+/-! ### Discharging the per-step regularity — content-exactness via the `cgcd`-fold
+The `PrimPRSRegular` gate bundles three clauses per step; this section discharges the algorithmically
+nontrivial one, **clause (iii) content-exactness** `hrem`, from the proven `cgcd` Bézout/divides theory.
+`bcontentX fuel p` folds `cgcdExt fuel` over the `x`-coefficient list of `bnorm p`, so the running gcd
+**divides each coefficient** (the divides-down direction of `cgcdExt`, `toPoly_cgcdExt_dvd`, threaded
+through the fold). A coefficient divisible by the content has zero `cmod` (`cmod_eq_zero_of_dvd_loc`),
+which is exactly `hrem`. The only residual inputs are the genuine algorithmic preconditions: each
+`cgcdExt` in the fold terminates within fuel, and the fold fuel bounds each coefficient's length. -/
+
+/-- **Per-step termination of the content `cgcd`-fold** `ContentFoldTerminates fuel acc l`: every
+`cgcdExt fuel` Euclidean step in the left fold `l.foldl (fun g c => (cgcdExt fuel g c).1) acc` reaches a
+zero remainder within fuel (the same `cgcdTerminates` precondition the gcd-divides direction needs, here
+threaded along the running accumulator). The genuine algorithmic precondition of the content fold. -/
+def ContentFoldTerminates (fuel : ℕ) : CPoly → List CPoly → Prop
+  | _, [] => True
+  | acc, c :: l =>
+    Compute.cgcdTerminates fuel acc c ∧
+      ContentFoldTerminates fuel (Compute.cgcdExt fuel acc c).1 l
+
+/-- **The content `cgcd`-fold divides each input** (over ℚ[x]): for the running gcd
+`g = l.foldl (fun g c => (cgcdExt fuel g c).1) acc`, under per-step termination, `toPoly g` divides
+`toPoly acc` and `toPoly a` for every `a ∈ l`. The divides-down direction of `cgcdExt`
+(`toPoly_cgcdExt_dvd`) carried along the fold: each step's gcd divides the previous accumulator and the
+new coefficient, and divisibility transports through the remaining fold. -/
+theorem toPoly_foldl_cgcdExt_dvd (fuel : ℕ) :
+    ∀ (acc : CPoly) (l : List CPoly), ContentFoldTerminates fuel acc l →
+      toPoly (l.foldl (fun g c => (Compute.cgcdExt fuel g c).1) acc) ∣ toPoly acc ∧
+        ∀ a ∈ l, toPoly (l.foldl (fun g c => (Compute.cgcdExt fuel g c).1) acc) ∣ toPoly a := by
+  intro acc l
+  induction l generalizing acc with
+  | nil => intro _; exact ⟨dvd_refl _, by simp⟩
+  | cons c l ih =>
+    intro hterm
+    obtain ⟨hstep, hrest⟩ := hterm
+    set g₁ := (Compute.cgcdExt fuel acc c).1 with hg₁
+    -- the step gcd divides the previous accumulator and the new coefficient
+    obtain ⟨hg₁acc, hg₁c⟩ := Compute.toPoly_cgcdExt_dvd fuel acc c hstep
+    rw [← hg₁] at hg₁acc hg₁c
+    -- the remaining fold (from g₁) divides g₁ and each later coefficient
+    obtain ⟨hfg₁, hfmem⟩ := ih g₁ hrest
+    have hfold : (c :: l).foldl (fun g c => (Compute.cgcdExt fuel g c).1) acc
+        = l.foldl (fun g c => (Compute.cgcdExt fuel g c).1) g₁ := by
+      rw [List.foldl_cons]
+    rw [hfold]
+    refine ⟨hfg₁.trans hg₁acc, ?_⟩
+    intro a ha
+    rcases List.mem_cons.mp ha with rfl | hl
+    · exact hfg₁.trans hg₁c
+    · exact hfmem a hl
+
+/-- **The content divides each `x`-coefficient** of `bnorm p` (over ℚ[x]): under per-step termination of
+the content `cgcd`-fold, `toPoly (bcontentX fuel p) ∣ toPoly a` for every `a ∈ bnorm p`. The
+specialization of `toPoly_foldl_cgcdExt_dvd` to the `[]`-seeded `bcontentX` fold over the coefficient
+list of `bnorm p`. -/
+theorem toPoly_bcontentX_dvd_mem (fuel : ℕ) (p : BPoly)
+    (hterm : ContentFoldTerminates fuel [] (bnorm p)) :
+    ∀ a ∈ bnorm p, toPoly (bcontentX fuel p) ∣ toPoly a := by
+  have hbc : bcontentX fuel p = (bnorm p).foldl (fun g c => (Compute.cgcdExt fuel g c).1) [] := rfl
+  rw [hbc]
+  exact (toPoly_foldl_cgcdExt_dvd fuel [] (bnorm p) hterm).2
+
+/-- **Clause (iii) discharged — content-exactness `hrem`**: under per-step termination of the content
+`cgcd`-fold and fuel sufficient for each coefficient length, the content `bcontentX fuel p` divides every
+`x`-coefficient of `bnorm p` *exactly* (`toPoly (cmod fuel a (bcontentX fuel p)) = 0`). Combines
+`toPoly_bcontentX_dvd_mem` (the content divides each coefficient) with `cmod_eq_zero_of_dvd_loc` (a
+divisible coefficient has zero computable remainder). This is the crux `hrem` hypothesis of
+`associated_toPolyB_bprimitivePartX`, now a theorem on real runs rather than an assumption. -/
+theorem hrem_bcontentX (fuel : ℕ) (p : BPoly)
+    (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hfuel : ∀ a ∈ bnorm p, (cnorm a).length ≤ fuel)
+    (hterm : ContentFoldTerminates fuel [] (bnorm p)) :
+    ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0 := by
+  intro a ha
+  exact Compute.cmod_eq_zero_of_dvd_loc fuel a (bcontentX fuel p) hgcn (hfuel a ha)
+    (toPoly_bcontentX_dvd_mem fuel p hterm a ha)
+
+/-- **`bprimitivePartX` is a ℚ(x)-unit scaling under the algorithmic preconditions** (clause (iii),
+self-contained): with the content nonzero (`hg`/`hgcn`/`hg0`), per-step termination of the content
+`cgcd`-fold, and fuel sufficient for each coefficient length, `bprimitivePartX fuel p` is `Associated`
+to `p` over ℚ(x). Discharges the `hrem` hypothesis of `associated_toPolyB_bprimitivePartX` via
+`hrem_bcontentX`, so content stripping is proven a unit scaling on real runs (no `hrem` assumption). -/
+theorem associated_toPolyB_bprimitivePartX_of_term (fuel : ℕ) (p : BPoly)
+    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hg0 : toPoly (bcontentX fuel p) ≠ 0)
+    (hfuel : ∀ a ∈ bnorm p, (cnorm a).length ≤ fuel)
+    (hterm : ContentFoldTerminates fuel [] (bnorm p)) :
+    Associated (toPolyB (bprimitivePartX fuel p)) (toPolyB p) :=
+  associated_toPolyB_bprimitivePartX fuel p hg hgcn hg0
+    (hrem_bcontentX fuel p hgcn hfuel hterm)
+
+/-! ### Discharging clause (ii) — nonzero pseudo-division multiplier
+The pseudo-division witness existence is the unconditional `toPolyB_bpsremainder`; clause (ii) additionally
+needs the multiplier `amRF (toPoly c)` to be a ℚ(x)-unit (`≠ 0`). The strengthened pseudo-division
+identity returns `toPoly c ≠ 0` from a nonzero divisor (the multiplier is a product of leading
+`x`-coefficients of the fixed divisor `q`, each nonzero off `bisZero q`), which the field embedding `amRF`
+preserves. -/
+
+/-- `bisZero (bnorm q) = bisZero q` (`bnorm` is idempotent, `bisZero p = (bnorm p == [])`). -/
+theorem bisZero_bnorm (q : BPoly) : bisZero (bnorm q) = bisZero q := by
+  simp only [bisZero, bnorm_idem]
+
+/-- **Strengthened pseudo-division identity through `toBPoly`** (nonzero multiplier): for a nonzero
+divisor `q` (`¬ bisZero q`), there are `s, c` with `C (toPoly c) · toBPoly p = toBPoly s · toBPoly q +
+toBPoly (bpsremainder fuel p q)` *and* `toPoly c ≠ 0`. Mirrors `Compute.toBPoly_bpsremainder` (the divisor
+`q` is fixed through the recursion), tracking that the multiplier `c` is a product of `blc (bnorm q)`
+factors and `[1]`, each with nonzero `toPoly` off a zero divisor (`toPoly_blc_ne_zero`). -/
+theorem toBPoly_bpsremainder_ne_zero (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = true) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (toPoly c) * toBPoly p
+        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q)
+        ∧ toPoly c ≠ 0 := by
+  have hblc : toPoly (blc (bnorm q)) ≠ 0 :=
+    toPoly_blc_ne_zero (bnorm q) (by rw [bisZero_bnorm]; exact hq)
+  induction fuel generalizing p with
+  | zero =>
+    exact ⟨[], [1], by simp [bpsremainder, toBPoly_bnorm, toPoly_cons], by simp [toPoly_cons]⟩
+  | succ fuel ih =>
+    simp only [bpsremainder]
+    split_ifs with hqz hlen
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons], by simp [toPoly_cons]⟩
+    · exact ⟨[], [1], by simp [toBPoly_bnorm, toPoly_cons], by simp [toPoly_cons]⟩
+    · obtain ⟨s', c', hsc, hc'0⟩ := ih (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+        (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+      have hp' : toBPoly (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+          (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q)))))
+          = Polynomial.C (toPoly (blc (bnorm q))) * toBPoly p
+            - Polynomial.C (toPoly (blc (bnorm p)))
+              * Polynomial.X ^ ((bnorm p).length - (bnorm q).length) * toBPoly q := by
+        rw [toBPoly_bnorm, toBPoly_bsub, toBPoly_bscaleC, toBPoly_bscaleC, toBPoly_bshift,
+          toBPoly_bnorm, toBPoly_bnorm]
+        ring
+      rw [hp', bpsremainder_bnorm_right] at hsc
+      refine ⟨badd s' (bscaleC (cmul c' (blc (bnorm p)))
+          (bshift ((bnorm p).length - (bnorm q).length) [[1]])),
+          cmul c' (blc (bnorm q)), ?_, ?_⟩
+      · rw [toBPoly_badd, toBPoly_bscaleC, toBPoly_bshift, toBPoly_one, toPoly_cmul, map_mul,
+          toPoly_cmul, map_mul]
+        linear_combination hsc
+      · rw [toPoly_cmul]
+        exact mul_ne_zero hc'0 hblc
+
+/-- **Clause (ii) discharged — nonzero-multiplier pseudo-division witness**: for a nonzero divisor `q`
+(`¬ bisZero q`), `bpsremainder` lifts to a ℚ(x)[t] Euclidean relation with the multiplier a ℚ(x)-unit —
+there are `s, c` with `C (amRF (toPoly c)) · toPolyB p = toPolyB s · toPolyB q + toPolyB (bpsremainder
+fuel p q)` *and* `amRF (toPoly c) ≠ 0`. Strengthens `toPolyB_bpsremainder` (which drops the `≠ 0`) by the
+`toBPoly_bpsremainder_ne_zero` certificate; the multiplier `lc(q)^k` is nonzero off a zero divisor. -/
+theorem toPolyB_bpsremainder_ne_zero (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = true) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (amRF (toPoly c)) * toPolyB p
+        = toPolyB s * toPolyB q + toPolyB (bpsremainder fuel p q)
+        ∧ amRF (toPoly c) ≠ 0 := by
+  obtain ⟨s, c, hsc, hc0⟩ := toBPoly_bpsremainder_ne_zero fuel p q hq
+  refine ⟨s, c, ?_, amRF_toPoly_ne_zero hc0⟩
+  have hl := congrArg liftRF hsc
+  simp only [map_add, map_mul] at hl
+  rw [liftRF_C] at hl
+  simpa [toPolyB] using hl
+
 end DeepWiki.SymbolicIntegration
