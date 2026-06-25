@@ -1,7 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableRischDE
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
