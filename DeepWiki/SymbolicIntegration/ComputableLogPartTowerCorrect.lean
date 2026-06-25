@@ -317,6 +317,39 @@ theorem sum_residue_grouped_logDeriv_eq_div (A : K[X]) (s : Finset K) (hA : A.de
   rw [sum_logDeriv_prod_X_sub_C δ (s.filter (fun α => res α = c)), Finset.mul_sum]
   exact Finset.sum_congr rfl fun α hα => by rw [(Finset.mem_filter.mp hα).2]
 
+open scoped Classical in
+/-- **The §5.6 integral identity, unconditional in the primitive case** (`D(∑ c·log gᶜ) = a/d`, the
+discharged Rothstein–Trager headline): for `A` of degree `< #s` over the split squarefree
+`d = nodal s id = ∏_{α∈s}(X−α)`, with a base derivation `δ` whose action on each linear factor is a
+*constant* `δ(X − Cα) = C (b α)`, `b α ≠ 0` (the primitive condition `δt ∈ k`) and whose residues
+`c ∈ s.image res` are δ-constants (`δ (C c) = 0`), the logarithmic part `∑_c algMap(C c)·log gᶜ` —
+with `gᶜ = ∏_{α: res α = c}(X−α)` the Rothstein–Trager log argument and each `log gᶜ` modeled by `L c`
+with the per-factor log-derivative `hL` — differentiates back to the integrand `A/d` under
+`extendDeriv δ`, **with no residue-match hypothesis**: the residue match is supplied internally by
+`sum_residue_grouped_logDeriv_eq_div`. This is `extendDeriv_logPart_eq_of_residue_match` with the
+deferred `hmatch` discharged. -/
+theorem extendDeriv_logPart_eq_div (A : K[X]) (s : Finset K) (hA : A.degree < s.card)
+    (b : K → K) (hb : ∀ α ∈ s, δ (X - C α) = C (b α)) (hb0 : ∀ α ∈ s, b α ≠ 0)
+    (hc : ∀ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α), δ (C c) = 0)
+    (L : K → RatFunc K)
+    (hL : ∀ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α),
+      extendDeriv δ (L c)
+        = algebraMap K[X] (RatFunc K)
+              (δ (∏ α ∈ s.filter
+                    (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+            / algebraMap K[X] (RatFunc K)
+              (∏ α ∈ s.filter
+                    (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α))) :
+    extendDeriv δ (∑ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α),
+        algebraMap K[X] (RatFunc K) (C c) * L c)
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) :=
+  extendDeriv_logPart_eq_of_residue_match δ
+    (s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α))
+    (fun c => C c)
+    (fun c => ∏ α ∈ s.filter
+        (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α))
+    _ hc L hL (sum_residue_grouped_logDeriv_eq_div δ A s hA b hb hb0)
+
 end ResidueMatch
 
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
