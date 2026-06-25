@@ -744,6 +744,18 @@ theorem ContentRegularNode.of_ne_bisZero (P : BPoly) (hP : ¬ bisZero P = true)
     exact (cnorm_eq_nil_iff _).mp this
   exact hP (bisZero_of_toPoly_bcontentX_eq_zero 30 P hterm h0)
 
+/-- **Node content-regularity from a nonzero polynomial with a strict length bound** (the fully
+algorithmic entry): for a nonzero `P` (`¬ bisZero P`) whose every `x`-coefficient has normalized length
+*strictly* below fuel `30`, `ContentRegularNode P` holds — the content `cgcd`-fold termination
+`ContentFoldTerminates 30 [] (bnorm P)` is **discharged** by `ContentFoldTerminates_of_fuel` from the same
+length bound (the `[]`-accumulator has length `0 < 30`), not assumed. So a real PRS node supplies its full
+content regularity from just nonzeroness and a transparent degree bound `deg_x < 30`. -/
+theorem ContentRegularNode.of_ne_bisZero_lengths (P : BPoly) (hP : ¬ bisZero P = true)
+    (hfuel : ∀ a ∈ bnorm P, (cnorm a).length < 30) :
+    ContentRegularNode P :=
+  ContentRegularNode.of_ne_bisZero P hP (fun a ha => le_of_lt (hfuel a ha))
+    (ContentFoldTerminates_of_fuel 30 [] (bnorm P) (by simp) hfuel)
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
