@@ -165,4 +165,42 @@ def cprimPRSgcdGen (cgcdB : CPolyG B → CPolyG B → CPolyG B) : ℕ → GBPoly
       let r := GBPoly.gbprimitivePart 30 cgcdB (GBPoly.gbpsremainder 60 P Q)
       cprimPRSgcdGen cgcdB fuel Q r
 
+/-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPoly β` (`β(s)[t] ↔ (β[s])[t]`)
+
+For the tower level `α = QFunNZG β = Frac(CPolyG β = β[s])`, a `t`-polynomial over `α` is a `CPolyG α`
+whose coefficients are `QFunNZG β` fractions (numerator/denominator pairs in `CPolyG β`). `cclearDenomsG`
+multiplies through by the product of the coefficient denominators, landing in `GBPoly β = (β[s])[t]`
+(each `t`-coefficient a `CPolyG β = β[s]`) — the generic mirror of `CPolyG.clearDenoms`. The embed-back
+`liftGBPolyG` re-reads a `GBPoly β` coefficient `c : CPolyG β` as the fraction `c/1 ∈ QFunNZG β`. -/
+
+namespace CPolyG
+
+variable {β : Type*} [CField β] [CFieldDomain β]
+
+/-- The numerator `CPolyG β` of a `QFunNZG β` coefficient. -/
+def qnumCoeffG (c : QFunNZG β) : CPolyG β := c.1.1
+
+/-- The denominator `CPolyG β` of a `QFunNZG β` coefficient. -/
+def qdenCoeffG (c : QFunNZG β) : CPolyG β := c.1.2
+
+/-- **Clear denominators** `cclearDenomsG p ∈ GBPoly β` (`= (β[s])[t]`): multiply the `t`-polynomial `p`
+over `α = QFunNZG β` through by the product of its coefficient denominators, so coefficient `i` becomes
+`numᵢ · ∏_{j≠i} denⱼ ∈ CPolyG β = β[s]`. Carries `p` from `β(s)[t]` to `(β[s])[t]` up to the (cleared)
+common-denominator unit. The generic mirror of `CPolyG.clearDenoms`. -/
+def cclearDenomsG (p : CPolyG (QFunNZG β)) : GBPoly β :=
+  let cs : List (QFunNZG β) := p
+  let dens : List (CPolyG β) := cs.map qdenCoeffG
+  cs.zipIdx.map (fun (ci, i) =>
+    let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
+      (fun acc (d, _) => CPolyG.cmulG acc d) [CField.one]
+    CPolyG.cmulG (qnumCoeffG ci) prodOthers)
+
+/-- **Lift back** `liftGBPolyG p ∈ CPolyG (QFunNZG β)`: read each `CPolyG β = β[s]` coefficient `c` of a
+`GBPoly β` as the `QFunNZG β` fraction `c/1` (numerator `c`, denominator `[1]`). The generic mirror of
+`CPolyG.liftBPolyToQFunNZ`. -/
+def liftGBPolyG (p : GBPoly β) : CPolyG (QFunNZG β) :=
+  p.map (fun c => (⟨(c, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩ : QFunNZG β))
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
