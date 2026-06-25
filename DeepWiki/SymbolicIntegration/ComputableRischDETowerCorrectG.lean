@@ -379,4 +379,359 @@ theorem cSPDEGCleared_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) :
           linear_combination hbez
       · rw [if_neg (by simpa using hdvd : ¬ cdvdG fuel g c = true)] at hin ⊢; trivial
 
+/-! ### §6.5 — the generic non-cancellation cleared identity `D(q) + b·q = c` (any tower level)
+
+`cPolyRischDENoCancelG` has **no gcd** anywhere (only `cdegG`/`cleadG`/`cmonomialDeriv`/`cshiftG`/`csub/mul/
+addG`), so its cleared-identity proof transports verbatim with the carrier generic. Carrier-generic mirror of
+`cPolyRischDENoCancelG_cleared_identity`. -/
+
+/-- **`cPolyRischDENoCancelG` satisfies the cleared RDE identity `D(q) + b·q = c`** (generic, all inputs)
+over `(CFieldSpec.K α)[X]`, whenever the non-cancellation solve **succeeds**. If `cPolyRischDENoCancelG Dt
+fuel b c n = some q` then `implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q = toPolyG c`.
+Carrier-generic mirror of `cPolyRischDENoCancelG_cleared_identity` (the loop body has no gcd). -/
+theorem cPolyRischDENoCancelG_cleared_identity_gen (Dt b : CPolyG α) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : CPolyG α),
+      cPolyRischDENoCancelG Dt fuel b c n = some q →
+        Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q = toPolyG c := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n q hq
+    rw [cPolyRischDENoCancelG] at hq
+    exact absurd hq (by simp)
+  | succ fuel ih =>
+    intro c n q hq
+    rw [cPolyRischDENoCancelG] at hq
+    by_cases hc : cisZeroG c = true
+    · rw [if_pos hc, Option.some.injEq] at hq
+      subst hq
+      have hc0 : toPolyG c = 0 := (cisZeroG_iff c).mp hc
+      rw [toPolyG_nil, map_zero, mul_zero, add_zero, hc0]
+    · rw [if_neg hc] at hq
+      set m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ) with hm
+      by_cases hguard : n < 0 ∨ m < 0 ∨ m > n
+      · rw [if_pos hguard] at hq
+        exact absurd hq (by simp)
+      · rw [if_neg hguard] at hq
+        simp only at hq
+        set coeff := CField.div (cleadG c) (cleadG b) with hcoeff
+        set p := cshiftG m.toNat [coeff] with hp
+        set c' := csubG (csubG c (cmonomialDeriv Dt p)) (cmulG b p) with hc'
+        rcases hrec : cPolyRischDENoCancelG Dt fuel b c' (m - 1) with _ | qrec
+        · rw [hrec] at hq; exact absurd hq (by simp)
+        · rw [hrec, Option.some.injEq] at hq
+          have ihrec := ih c' (m - 1) qrec hrec
+          subst hq
+          rw [toPolyG_caddG, map_add, mul_add]
+          have hc'eq : toPolyG c' = toPolyG c
+              - Differential.implicitDeriv (toPolyG Dt) (toPolyG p) - toPolyG b * toPolyG p := by
+            rw [hc', toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG]
+          rw [hc'eq] at ihrec
+          linear_combination ihrec
+
+/-! ### §6.4-§6.5 — the generic polynomial-stage spine under transparent inputs (any tower level) -/
+
+/-- **The generic §6.4 `cSPDEG` cleared lifting under transparent inputs**: `cSPDEG_cleared_lifting_gen` with
+its `cSPDEGClearedGen` gate discharged by `cSPDEGCleared_of_inputs_gen`. Carrier-generic. -/
+theorem cSPDEG_cleared_lifting_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (n : ℤ) (bbar cbar : CPolyG α) (m : ℤ) (α' β : CPolyG α)
+    (hspde : cSPDEG Dt fuel a b c n = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c n) (h : CPolyG α)
+    (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
+      = toPolyG cbar) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' h) β)
+      = toPolyG c :=
+  cSPDEG_cleared_lifting_gen Dt fuel a b c n bbar cbar m α' β hspde
+    (cSPDEGCleared_of_inputs_gen Dt fuel a b c n hin) h hh
+
+/-- **The generic §6.4-§6.5 polynomial-stage spine under transparent inputs**: if `cSPDEG Dt fuel a b c n =
+some (b̄, c̄, m, α', β)` (under transparent `CSPDEGClearedInputsGen`) and `cPolyRischDENoCancelG Dt fuel b̄ c̄
+m = some v`, then `q = α'·v + β` solves the original `a·D(q) + b·q = c` over `(CFieldSpec.K α)[X]`.
+Carrier-generic mirror of `cSPDEG_polyRischDENoCancel_cleared_of_inputs`. -/
+theorem cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (n : ℤ) (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hspde : cSPDEG Dt fuel a b c n = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c n)
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' v) β)
+      = toPolyG c :=
+  cSPDEG_cleared_lifting_of_inputs_gen Dt fuel a b c n bbar cbar m α' β hspde hin v
+    (cPolyRischDENoCancelG_cleared_identity_gen Dt bbar fuel cbar m v hpoly)
+
+/-- **The generic §6.4-§6.5 spine instantiated at the §6.3 degree bound** (carrier-generic): the spine holds
+for every `n`, in particular at `n = cRdeBoundDegreeG Dt fuel a b c`. Carrier-generic mirror of
+`cSPDEG_polyRischDENoCancel_cleared_at_boundDegree`. -/
+theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen [CFracGcdCore α] (Dt : CPolyG α)
+    (fuel : ℕ) (a b c : CPolyG α) (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hspde : cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ) = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' v) β)
+      = toPolyG c :=
+  cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen Dt fuel a b c
+    (cRdeBoundDegreeG Dt fuel a b c : ℤ) bbar cbar m α' β v hspde hin hpoly
+
+/-! ### §6.2 — the generic normal-denominator cleared lifting and special-denominator primitive case -/
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Generic exact-division reorientation** `toPolyG (cdivG fuel p q) · toPolyG q = toPolyG p` from `toPolyG
+q ∣ toPolyG p` (nonzero divisor, fuel bound). Carrier-generic mirror of `toPolyG_cdivG_exact_mul`
+(reorienting the already-generic `toPolyG_cdivG_exact`). -/
+theorem toPolyG_cdivG_exact_mul_gen [CFracGcdCore α] (fuel : ℕ) (p q : CPolyG α)
+    (hq0 : cnormG q ≠ []) (hfuel : (cnormG p : List α).length ≤ fuel)
+    (hQdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p :=
+  toPolyG_cdivG_exact fuel p q hq0 hfuel hQdvd
+
+/-- **The §6.2 generic normal-denominator cleared lifting through `toPolyG`** (carrier-generic): writing
+`dₙ = (cSplitFactorFastG Dt fuel fden).1`, if `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a, b,
+c, h)`, the normal part is nonzero, the two `cdivG`-clearings are exact, and a polynomial `Q` solves the
+reduced `a·D(Q) + b·Q = c`, then `y = Q/h` solves the cleared `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h =
+gnum·fden·h²` over `(CFieldSpec.K α)[X]`. Carrier-generic mirror of `cRdeNormalDenominatorG_cleared_lift`
+(`rdeNormalDenominator_glue` is engine-agnostic, the `B/C` certificates via `toPolyG_cdivG_exact_mul_gen`). -/
+theorem cRdeNormalDenominatorG_cleared_lift_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a b c h Q : CPolyG α)
+    (hres : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a, b, c, h))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum))
+    (hred : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
+      = toPolyG c) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) * toPolyG h
+            - toPolyG Q * Differential.implicitDeriv (toPolyG Dt) (toPolyG h))
+        + toPolyG gden * toPolyG fnum * toPolyG Q * toPolyG h
+      = toPolyG gnum * toPolyG fden * toPolyG h ^ 2 := by
+  set dn := (cSplitFactorFastG Dt fuel fden).1 with hdndef
+  set bNum := csubG (cmulG (cmulG dn h) fnum) (cmulG (cmulG dn (cmonomialDeriv Dt h)) fden) with hbNum
+  set cNum := cmulG (cmulG (cmulG dn h) h) gnum with hcNum
+  rw [cRdeNormalDenominatorG] at hres
+  split at hres
+  · rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hres
+    obtain ⟨ha, hb, hc, hh⟩ := hres
+    rw [hh] at ha hb hc
+    have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
+    have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
+      rw [← hb]; exact toPolyG_cdivG_exact_mul_gen fuel bNum fden hfden0 hfbB hdvdB
+    have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
+        toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
+    have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
+      rw [← hc]; exact toPolyG_cdivG_exact_mul_gen fuel cNum gden hgden0 hfbC hdvdC
+    have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
+    have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hBexact]; exact hBeq
+    have hCcert : toPolyG c * toPolyG gden = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hCexact]; exact hCeq
+    have hglue := rdeNormalDenominator_glue (Differential.implicitDeriv (toPolyG Dt))
+      (toPolyG dn) (toPolyG h) (toPolyG fnum) (toPolyG fden) (toPolyG gnum) (toPolyG gden)
+      (toPolyG a) (toPolyG b) (toPolyG c) (toPolyG Q) hdn hA hBcert hCcert hred
+    linear_combination hglue
+  · exact absurd hres (by simp)
+
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+/-- **The generic special-denominator stage is the identity in the primitive regime** (carrier-generic): when
+the monic special irreducible `p = cSpecialPolyG Dt fuel` is constant (`cdegG p = 0`), `cRdeSpecialDenominatorG
+Dt fuel a b c = (a, b, c, [CField.one])`. Carrier-generic mirror of `cRdeSpecialDenominatorG_primitive_eq`. -/
+theorem cRdeSpecialDenominatorG_primitive_eq_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt fuel) = 0) :
+    cRdeSpecialDenominatorG Dt fuel a b c = (a, b, c, [CField.one]) := by
+  rw [cRdeSpecialDenominatorG]
+  simp only [hp, if_pos]
+
+/-! ### ★ THE CAPSTONE — the generic RDE oracle `cRischDEG` returns a cleared solution (primitive regime) -/
+
+/-- **★ The composed generic §6 RDE pipeline correctness (primitive regime, carrier-generic)**: with the
+primitive special regime (`cdegG (cSpecialPolyG Dt fuel) = 0`), and the pipeline's intermediate `some`-results
+(§6.2 normal denominator, §6.4 SPDE under transparent `CSPDEGClearedInputsGen`, §6.5 non-cancellation),
+together with the §6.2 normal-denominator certificates, the reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0`
+(exactly what `cRischDEG` returns in the primitive regime) satisfies the cleared Risch-DE identity
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²` over `(CFieldSpec.K α)[X]`.
+Carrier-generic mirror of `cRischDEG_rdeCleared`. -/
+theorem cRischDEG_rdeCleared_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt fuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let Q := caddG (cmulG α' v) β
+    let ynum := cmulG Q [CField.one]
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  intro Q ynum yden
+  have hspecial := cRdeSpecialDenominatorG_primitive_eq_gen Dt fuel a0 b0 c0 hprim
+  rw [hspecial] at hspde hin
+  simp only at hspde hin
+  have hred : toPolyG a0 * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b0 * toPolyG Q
+      = toPolyG c0 :=
+    cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen Dt fuel a0 b0 c0 bbar cbar m α' β v hspde hin hpoly
+  have hynum : toPolyG ynum = toPolyG Q := by
+    show toPolyG (cmulG Q [CField.one]) = toPolyG Q
+    have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [toPolyG_cmulG, hone, mul_one]
+  have hlift := cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 Q
+    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hred
+  show toPolyG gden * toPolyG fden
+      * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG h0
+          - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG h0))
+      + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG h0
+    = toPolyG gnum * toPolyG fden * toPolyG h0 ^ 2
+  rw [hynum]
+  exact hlift
+
+/-! ### ★ The `α = QFunNZG ℚ` instantiations — the §6 RDE cleared identities, `cgcdFF`-free
+
+Instantiating the carrier-generic chain at `α = QFunNZG ℚ` (via `instCFracGcdCoreQFunNZG`/the chunk-1
+`instCDiffFieldSpecQFunNZG`). At this carrier `CFracGcdCore.cgcdFFCore` is the recursive tower gcd bottoming at
+`cgcdWf` over ℚ — **never `cgcdFF`** — so the discharge route is `associated_toPolyG_cgcdFFCore`, NOT
+`cgcdFF`. These are the deliverables: the §6.4 SPDE certificate discharge and the ★ capstone RDE cleared
+identity at the generic ℚ(x) carrier. -/
+
+/-- **★ `cSPDEGCleared` discharged from transparent inputs at `α = QFunNZG ℚ`** (`cgcdFF`-free): the §6.4 SPDE
+per-level certificate `cSPDEGClearedGen` discharged from the transparent `CSPDEGClearedInputsGen` at the
+generic ℚ(x) carrier. The gcd obligation `Associated (toPolyG g) (gcd …)` (a clause of
+`CSPDEGClearedInputsGen`) is the generic gcd correctness `associated_toPolyG_cgcdFFCore` at `QFunNZG ℚ` — NOT
+`cgcdFF`. The `QFunNZG ℚ` instance of `cSPDEGCleared_of_inputs_gen`; mirror of `cSPDEGCleared_of_inputs`. -/
+theorem cSPDECleared_of_inputs_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+    (a b c : CPolyG (QFunNZG ℚ)) (n : ℤ)
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c n) :
+    cSPDEGClearedGen Dt fuel a b c n :=
+  cSPDEGCleared_of_inputs_gen Dt fuel a b c n hin
+
+/-- **★ THE CAPSTONE at `α = QFunNZG ℚ`** (`cgcdFF`-free): the generic §6 RDE oracle `cRischDEG`'s cleared
+identity `Dy + f·y = g` at the generic ℚ(x) = `QFunNZG ℚ` carrier, in the primitive regime. The returned
+`y = (α'·v + β)·[1] / h0` solves the cleared Risch-DE identity over `(RatFunc ℚ)[X] = (CFieldSpec.K (QFunNZG
+ℚ))[X]`. Every gcd inside the §6.4/§6.2 stages is the recursive tower `cgcdFFCore` (bottoming at `cgcdWf` over
+ℚ); the single gcd-correctness obligation is discharged through `associated_toPolyG_cgcdFFCore`, NOT `cgcdFF`.
+The `QFunNZG ℚ` instance of `cRischDEG_rdeCleared_gen`; the deliverable — §6 RDE correctness re-founded at the
+generic ℚ(x) carrier. -/
+theorem cRischDEG_rdeCleared_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG (QFunNZG ℚ))
+    (bbar cbar : CPolyG (QFunNZG ℚ)) (m : ℤ) (α' β v : CPolyG (QFunNZG ℚ))
+    (hprim : cdegG (cSpecialPolyG Dt fuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List (QFunNZG ℚ)).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List (QFunNZG ℚ)).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let Q := caddG (cmulG α' v) β
+    let ynum := cmulG Q [CField.one]
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- The §6.4 SPDE certificate discharged from transparent inputs at `α = QFunNZG ℚ` (`cgcdFF`-free).
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a b c : CPolyG (QFunNZG ℚ)) (n : ℤ)
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c n) :
+    cSPDEGClearedGen Dt fuel a b c n :=
+  cSPDECleared_of_inputs_qfunNZG Dt fuel a b c n hin
+
+-- ★ THE CAPSTONE at `α = QFunNZG ℚ`: `cRischDEG`'s returned `y = (Q·1)/h0` solves `D(y)+f·y=g`
+-- (cleared, primitive regime), threaded through the GENERIC gcd correctness (NO `cgcdFF`).
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG (QFunNZG ℚ))
+    (bbar cbar : CPolyG (QFunNZG ℚ)) (m : ℤ) (α' β v : CPolyG (QFunNZG ℚ))
+    (hprim : cdegG (cSpecialPolyG Dt fuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List (QFunNZG ℚ)).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List (QFunNZG ℚ)).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let Q := caddG (cmulG α' v) β
+    let ynum := cmulG Q [CField.one]
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_qfunNZG Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
+/-! ### Axiom audit (the `QFunNZG ℚ` §6 RDE correctness rests only on the standard kernel axioms) -/
+
+#print axioms cSPDECleared_of_inputs_qfunNZG
+#print axioms cRischDEG_rdeCleared_qfunNZG
+
 end DeepWiki.SymbolicIntegration
