@@ -72,6 +72,58 @@ theorem toPolyG_cdivG_exact_mul (fuel : ℕ) (p q : CPolyG QFunNZ)
   rw [show cdivG fuel p q = CPolyG.cdivFF fuel p q from rfl]
   exact (toPolyG_cdivFF_exact fuel p q hq0 hfuel hQdvd).symm
 
+/-! ### The generic Bézout/Diophantine solver correctness over ℚ(x)[t]
+`cdiophantineG fuel p q rhs = (b, c)` (`ComputableHermiteTower`) is the generic mirror of §2's
+`cdiophantine`: from `cgcdExtG p q = (g, s, t)` with `s·p + t·q = g`, rescale `(s,t)` by `rhs/g` and
+reduce the first cofactor mod `q`. When `gcd(p, q)` is a nonzero constant (the coprimality the inner
+Hermite loop guarantees — `v` squarefree, `v ⊥ u·v'`), it solves `b·p + c·q = rhs` over ℚ(x)[t]. The
+generic analogue of `toPoly_cdiophantine`, the Bézout step the inner-loop invariant rests on. -/
+
+/-- **Generic Bézout/Diophantine solver correctness through `toPolyG`** over ℚ(x)[t]: when `gcd(p, q)` is
+a nonzero constant (`toPolyG (cgcdExtG fuel p q).1 = C (leadingCoeff)` with that leading coefficient
+nonzero), `cdiophantineG fuel p q rhs = (b, c)` solves `b·p + c·q = rhs`:
+`toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs` in `(RatFunc ℚ)[X]`. The generic mirror of
+`toPoly_cdiophantine`; validates the inner Hermite loop's Bézout step on all inputs. -/
+theorem toPolyG_cdiophantineG {α : Type*} [CField α] [CFieldSpec α]
+    (fuel : ℕ) (p q rhs : CPolyG α) (hq : cnormG q ≠ [])
+    (hg : toPolyG (cgcdExtG fuel p q).1
+      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1)))
+    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1) ≠ 0) :
+    toPolyG (cdiophantineG fuel p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineG fuel p q rhs).2 * toPolyG q
+      = toPolyG rhs := by
+  rcases hgst : cgcdExtG fuel p q with ⟨g, s, t⟩
+  rw [hgst] at hg hgc
+  -- the Bézout relation `s·p + t·q = g`
+  have hbez : toPolyG s * toPolyG p + toPolyG t * toPolyG q = toPolyG g := by
+    have h := toPolyG_cgcdExtG fuel p q; rw [hgst] at h; exact h
+  -- the leading coefficient inverse reads as the field inverse via `toK_inv`
+  have hginv : CFieldSpec.toK (CField.inv (cleadG g)) = (CFieldSpec.toK (cleadG g))⁻¹ :=
+    CFieldSpec.toK_inv (cleadG g)
+  simp only [cdiophantineG, hgst]
+  rcases hqB : cdivmodG fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q with ⟨quo, B⟩
+  -- the Euclidean division identity for the rescaled `S`
+  have hdiv : toPolyG (cscaleG (CField.inv (cleadG g)) (cmulG rhs s))
+      = toPolyG quo * toPolyG q + toPolyG B := by
+    have h := toPolyG_cdivmodG' fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q hq
+    rw [hqB] at h; exact h
+  simp only [toPolyG_cnormG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cscaleG, hginv] at hdiv ⊢
+  -- `(clead g)⁻¹ · g = 1` (the constant gcd is a unit)
+  have hinv : Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG g = 1 := by
+    rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
+  linear_combination (-toPolyG p) * hdiv
+    + (Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG rhs) * hbez + toPolyG rhs * hinv
+
+-- The generic Bézout solver `cdiophantineG` solves `b·p + c·q = rhs` over ℚ(x)[t] for a constant gcd.
+example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (p q rhs : CPolyG α) (hq : cnormG q ≠ [])
+    (hg : toPolyG (cgcdExtG fuel p q).1
+      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1)))
+    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1) ≠ 0) :
+    toPolyG (cdiophantineG fuel p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineG fuel p q rhs).2 * toPolyG q
+      = toPolyG rhs :=
+  toPolyG_cdiophantineG fuel p q rhs hq hg hgc
+
 /-! ### The headline — the cleared Hermite identity for ALL inputs
 Combining the exact-division witness with the cleared-identity algebra. The output of
 `cHermiteReduceTower` is `((gnum, gden), (hNum, Dstar))`; with `D = cmonomialDeriv Dt`,
@@ -196,5 +248,6 @@ theorem cHermiteReduceTower_cisZeroG_cleared (Dt : CPolyG QFunNZ) (fuel : ℕ) (
   exact cHermiteReduceTower_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum resNum resDen
     hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
 
+#print axioms toPolyG_cdiophantineG
 #print axioms cHermiteReduceTower_cleared_identity
 #print axioms cHermiteReduceTower_cisZeroG_cleared
