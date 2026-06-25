@@ -259,8 +259,194 @@ example (Dt ad bd cd r z h : CPolyG QFunNZ)
       = toPolyG cd :=
   cSPDE_peel_cleared Dt ad bd cd r z h hbez hred
 
+/-! ### §6.4 — the FULL recursive `cSPDE` cleared lifting (the whole `gcd`-peel chain)
+
+The capstone of §6.4: thread `cSPDE_peel_cleared` / `spde_const_base` through the entire `gcd`-peel
+recursion. The recursion's per-level certificates — that `g = gcd(a,b)` exact-divides `a, b, c` (so the
+divided `ad, bd, cd` recover `a, b, c`) and that `cdiophantineG bd ad cd = (r, z)` solves the Bézout
+`bd·r + ad·z = cd` — are bundled into a recursively-defined predicate `cSPDECleared` mirroring `cSPDE`'s
+own `match` structure, so the lifting is a clean fuel induction. With `cSPDECleared` in force,
+`cSPDE Dt fuel a b c n = some (b̄, c̄, m, α, β)` guarantees: **any** `h` solving the reduced
+`D(h) + b̄·h = c̄` makes `q = α·h + β` solve the divided equation `ad·D(q) + bd·q = cd` (top-level
+`ad = a/g`, `bd = b/g`, `cd = c/g`), hence — multiplying by `g`, since `g ∣ c` — the original
+`a·D(q) + b·q = c`. -/
+
+/-- **Per-level certificate predicate for `cSPDE`** `cSPDECleared Dt fuel a b c n`: the recursively
+bundled `toPolyG`-level facts that the `gcd`-peel divisions are exact and the Bézout solve is correct,
+matching `cSPDE`'s own recursion. At each non-base level (`n ≥ 0`, `g ∣ c`, `deg(a/g) > 0`) it asserts
+`toPolyG (a/g)·toPolyG g = toPolyG a` (and `b`, `c`), and the Bézout
+`toPolyG bd·toPolyG r + toPolyG ad·toPolyG z = toPolyG cd`, then recurses on the reduced equation. The
+base cases (`n < 0`, or `deg(a/g) = 0`) need only the `a/b/c`-division witnesses. Designed so that
+`cSPDE = some (...)` together with `cSPDECleared` discharges the full lifting by induction. -/
+def cSPDECleared (Dt : CPolyG QFunNZ) : ℕ → (a b c : CPolyG QFunNZ) → (n : ℤ) → Prop
+  | 0, _, _, _, _ => True
+  | fuel + 1, a, b, c, n =>
+    if n < 0 then True
+    else
+      let g := cgcdFF fuel a b
+      if cdvdG fuel g c then
+        let ad := cdivFF fuel a g
+        let bd := cdivFF fuel b g
+        let cd := cdivFF fuel c g
+        -- the three exact-division witnesses (so `toPolyG` of divided · gcd = original)
+        (toPolyG ad * toPolyG g = toPolyG a) ∧ (toPolyG bd * toPolyG g = toPolyG b)
+          ∧ (toPolyG cd * toPolyG g = toPolyG c)
+          -- `a` (hence the divided `ad`) is nonzero (the SPDE input invariant `a ≠ 0`)
+          ∧ (toPolyG ad ≠ 0)
+          ∧ (if cdegG ad = 0 then True
+             else
+               let rz := cdiophantineG fuel bd ad cd
+               -- the Bézout certificate `bd·r + ad·z = cd`
+               (toPolyG bd * toPolyG rz.1 + toPolyG ad * toPolyG rz.2 = toPolyG cd)
+                 ∧ cSPDECleared Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
+                     (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ)))
+      else True
+
+/-- **The full recursive `cSPDE` cleared lifting**: under the certificate predicate `cSPDECleared`, if
+`cSPDE Dt fuel a b c n = some (b̄, c̄, m, α, β)` then for every `h` solving the reduced
+`D(h) + b̄·h = c̄` (`D = implicitDeriv (toPolyG Dt)`), the reconstruction `q = α·h + β` solves the
+**original** equation `a·D(q) + b·q = c` over `(RatFunc ℚ)[X]`. The §6.4 capstone — `spde_step_glue`
+threaded through the whole `gcd`-peel by induction on `fuel`. Each level's certificate (`cSPDECleared`)
+supplies the exact-division witnesses `(a/g)·g = a`, …, the nonzero-leading `a/g ≠ 0`, and the Bézout
+`bd·r + ad·z = cd`, so the constant base case multiplies the divided identity back by `toPolyG g`
+(recovering `a·D(q)+b·q=c` since `g ∣ a,b,c`) and the recursion peel applies `spde_step_glue` to the IH's
+reduced solution. The all-inputs, axiom-clean (no `native_decide`) §6.4 reduction correctness. -/
+theorem cSPDE_cleared_lifting (Dt : CPolyG QFunNZ) :
+    ∀ (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ) (bbar cbar : CPolyG QFunNZ) (m : ℤ)
+      (α β : CPolyG QFunNZ),
+      cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β) →
+      cSPDECleared Dt fuel a b c n →
+      ∀ h : CPolyG QFunNZ,
+        Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h = toPolyG cbar →
+        toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α h) β))
+            + toPolyG b * toPolyG (caddG (cmulG α h) β)
+          = toPolyG c := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b c n bbar cbar m α β hspde _ h _
+    rw [cSPDE] at hspde
+    exact absurd hspde (by simp)
+  | succ fuel ih =>
+    intro a b c n bbar cbar m α β hspde hcert h hh
+    rw [cSPDE] at hspde
+    by_cases hn : n < 0
+    · -- base case `n < 0`: `c = 0` ⇒ `(b̄,c̄,m,α,β) = ([],[],0,[],[])`, `q = 0`, divided = original
+      rw [if_pos hn] at hspde
+      by_cases hc0 : cisZeroG c = true
+      · rw [if_pos hc0, Option.some.injEq] at hspde
+        simp only [Prod.mk.injEq] at hspde
+        obtain ⟨_hbbar, _hcbar, _, hα, hβ⟩ := hspde
+        -- `q = α·h + β = 0·h + 0 = 0`, and `c = 0`
+        subst hα; subst hβ
+        have hcc : toPolyG c = 0 := (cisZeroG_iff c).mp hc0
+        rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, zero_mul, add_zero, map_zero, mul_zero,
+          mul_zero, add_zero, hcc]
+      · rw [if_neg hc0] at hspde
+        exact absurd hspde (by simp)
+    · -- recursion / constant-base
+      rw [if_neg hn] at hspde
+      -- unfold the certificate
+      rw [cSPDECleared] at hcert
+      simp only [if_neg hn] at hcert
+      set g := cgcdFF fuel a b with hg
+      by_cases hdvd : cdvdG fuel g c = true
+      · rw [if_pos hdvd] at hspde hcert
+        set ad := cdivFF fuel a g with had
+        set bd := cdivFF fuel b g with hbd
+        set cd := cdivFF fuel c g with hcd
+        obtain ⟨hdiva, hdivb, hdivc, hadne, hcertrest⟩ := hcert
+        by_cases hdeg : cdegG ad = 0
+        · -- constant-`a` base case: `cSPDE` returns `(ainv·bd, ainv·cd, n, [1], [])`, `q = h`
+          rw [if_pos hdeg, Option.some.injEq] at hspde
+          simp only [Prod.mk.injEq] at hspde
+          obtain ⟨hbbar, hcbar, _, hα, hβ⟩ := hspde
+          -- `α = [1]`, `β = []`, so `q = 1·h + 0 = h`
+          subst hα; subst hβ
+          rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, add_zero]
+          have hone : toPolyG ([CField.one] : CPolyG QFunNZ) = 1 := by
+            rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+          rw [hone, one_mul]
+          -- the constant scalar `a0 = lc(ad) = leadingCoeff(toPolyG ad) ≠ 0`
+          set a0 : RatFunc ℚ := CFieldSpec.toK (cleadG ad) with ha0def
+          have ha0ne : a0 ≠ 0 := by
+            rw [ha0def, toK_cleadG_eq_leadingCoeff]
+            exact Polynomial.leadingCoeff_ne_zero.mpr hadne
+          -- `toPolyG ad = C a0` (degree 0 ⇒ constant polynomial)
+          have hadC : toPolyG ad = Polynomial.C a0 := by
+            have hnd : (toPolyG ad).natDegree = 0 := by rw [← cdegG_eq_natDegree, hdeg]
+            rw [ha0def, toK_cleadG_eq_leadingCoeff, Polynomial.leadingCoeff, hnd]
+            conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hnd]
+          -- read `hh` as the reduced equation `D(h) + (C a0⁻¹·bd)·h = C a0⁻¹·cd`
+          rw [← hbbar, ← hcbar, toPolyG_cscaleG, toPolyG_cscaleG, CFieldSpec.toK_inv,
+            ← ha0def] at hh
+          -- the divided identity `ad·D(h) + bd·h = cd` from `spde_const_base`
+          have hdivided : toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG h)
+              + toPolyG bd * toPolyG h = toPolyG cd := by
+            rw [hadC]
+            exact spde_const_base (Differential.implicitDeriv (toPolyG Dt)) a0 (toPolyG bd) (toPolyG cd)
+              (toPolyG h) ha0ne hh
+          -- multiply by `toPolyG g`: `a·D(h) + b·h = g·(ad·D(h) + bd·h) = g·cd = c`
+          rw [← hdiva, ← hdivb, ← hdivc]
+          linear_combination toPolyG g * hdivided
+        · -- recursion peel: `q = ad·h' + r`, `h'` from the recursive solve
+          rw [if_neg hdeg] at hspde
+          rw [if_neg hdeg] at hcertrest
+          -- destructure the Bézout cofactors `(r, z) = cdiophantineG bd ad cd`
+          rcases hrz : cdiophantineG fuel bd ad cd with ⟨r, z⟩
+          rw [hrz] at hspde hcertrest
+          simp only at hspde hcertrest
+          obtain ⟨hbez', hcertrec⟩ := hcertrest
+          rcases hrec : cSPDE Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
+            (csubG z (cmonomialDeriv Dt r)) (n - (cdegG ad : ℤ))
+            with _ | ⟨bbar', cbar', m', α', β'⟩
+          · rw [hrec] at hspde; exact absurd hspde (by simp)
+          · rw [hrec, Option.some.injEq] at hspde
+            simp only [Prod.mk.injEq] at hspde
+            obtain ⟨hbbar, hcbar, _hm, hα, hβ⟩ := hspde
+            -- `α = ad·α'`, `β = ad·β' + r`, `bbar = bbar'`, `cbar = cbar'`
+            rw [← hbbar] at hh; rw [← hcbar] at hh
+            -- IH gives the recursive call's ORIGINAL equation
+            --   `ad·D(h') + (bd + D(ad))·h' = z − D(r)`,  `h' = α'·h + β'`
+            have hihrec := ih ad (caddG bd (cmonomialDeriv Dt ad))
+              (csubG z (cmonomialDeriv Dt r)) (n - (cdegG ad : ℤ))
+              bbar' cbar' m' α' β' hrec hcertrec h hh
+            -- expand `hihrec` into the `cSPDE_peel_cleared`-`hred` shape, with `h' = α'·h + β'`
+            have hred : toPolyG ad
+                  * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β'))
+                + (toPolyG bd + Differential.implicitDeriv (toPolyG Dt) (toPolyG ad))
+                    * toPolyG (caddG (cmulG α' h) β')
+                = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r) := by
+              simp only [toPolyG_caddG, toPolyG_cmonomialDeriv, toPolyG_csubG] at hihrec ⊢
+              linear_combination hihrec
+            subst hα; subst hβ
+            -- divided peel identity from `cSPDE_peel_cleared` (reconstruction `ad·(α'·h + β') + r`)
+            have hpeel := cSPDE_peel_cleared Dt ad bd cd r z (caddG (cmulG α' h) β') hbez' hred
+            -- the goal's `q = (ad·α')·h + (ad·β' + r)` equals `ad·(α'·h+β') + r` as a polynomial
+            have hqeq : toPolyG (caddG (cmulG (cmulG ad α') h) (caddG (cmulG ad β') r))
+                = toPolyG (caddG (cmulG ad (caddG (cmulG α' h) β')) r) := by
+              simp only [toPolyG_caddG, toPolyG_cmulG]; ring
+            -- rewrite the goal's `q`-image to the peel shape, then multiply the peel by `g`
+            rw [hqeq, ← hdiva, ← hdivb, ← hdivc]
+            linear_combination toPolyG g * hpeel
+      · rw [if_neg hdvd] at hspde
+        exact absurd hspde (by simp)
+
+-- Full recursive `cSPDE` lifting: under `cSPDECleared`, a reduced solution lifts to the original eqn.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
+    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β : CPolyG QFunNZ)
+    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
+    (hcert : cSPDECleared Dt fuel a b c n) (h : CPolyG QFunNZ)
+    (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
+      = toPolyG cbar) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α h) β))
+        + toPolyG b * toPolyG (caddG (cmulG α h) β)
+      = toPolyG c :=
+  cSPDE_cleared_lifting Dt fuel a b c n bbar cbar m α β hspde hcert h hh
+
 #print axioms spde_step_glue
 #print axioms spde_const_base
 #print axioms cSPDE_peel_cleared
+#print axioms cSPDE_cleared_lifting
 
 end DeepWiki.SymbolicIntegration
