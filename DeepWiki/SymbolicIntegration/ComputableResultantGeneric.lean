@@ -489,19 +489,21 @@ variable {K : Type*} [Field K]
 
 /-- **Seed-generic abstract Rothstein–Trager resultant** `R(z) = res_t(D, A − z·Dd) ∈ K[z]`: `D, A, Dd`
 lifted to `(K[z])[t]` (coefficients embedded by `C : K → K[z]`, the parameter `z` becoming the constant
-`C X`), the resultant eliminating `t`. Formal `t`-degrees `(deg D, deg D − 1)` (the book's layout). The
-seed-generic analogue of `rtResultant` (which fixes `Dd = derivative D`). -/
+`C X`), the resultant eliminating `t`. Formal `t`-degrees `(deg D, deg D)` — the §5.6 monomial seed `Δd`
+has the *same* `t`-degree as `D` (`mapCoeffs d` preserves degree), unlike the d/dx seed `derivative D`
+(degree `deg D − 1`), so the second formal degree is `deg D` here. The seed-generic analogue of
+`rtResultant`. -/
 noncomputable def rtResultantSeed (A D Dd : K[X]) : K[X] :=
   Polynomial.resultant (D.map (C : K →+* K[X]))
     (A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X]))
-    D.natDegree (D.natDegree - 1)
+    D.natDegree D.natDegree
 
 /-- **Specialization of `rtResultantSeed`**: evaluating `R(z)` at `z = c` recovers the parameter
-resultant `res_t(D, A − c·Dd)` (same formal `t`-degrees `(deg D, deg D − 1)`). The seed-generic analogue
+resultant `res_t(D, A − c·Dd)` (same formal `t`-degrees `(deg D, deg D)`). The seed-generic analogue
 of `rtResultant_eval`. -/
 theorem rtResultantSeed_eval (A D Dd : K[X]) (c : K) :
     (rtResultantSeed A D Dd).eval c
-      = Polynomial.resultant D (A - C c * Dd) D.natDegree (D.natDegree - 1) := by
+      = Polynomial.resultant D (A - C c * Dd) D.natDegree D.natDegree := by
   have hcomp : (Polynomial.evalRingHom c).comp (C : K →+* K[X]) = RingHom.id K := by
     ext k; simp
   show Polynomial.evalRingHom c (rtResultantSeed A D Dd) = _
@@ -516,7 +518,115 @@ theorem rtResultantSeed_eval (A D Dd : K[X]) (c : K) :
 resultant `res_t(D, A − c·Dd)`. -/
 example (A D Dd : K[X]) (c : K) :
     (rtResultantSeed A D Dd).eval c
-      = Polynomial.resultant D (A - C c * Dd) D.natDegree (D.natDegree - 1) :=
+      = Polynomial.resultant D (A - C c * Dd) D.natDegree D.natDegree :=
   rtResultantSeed_eval A D Dd c
+
+open Polynomial in
+/-- **`natDegree` of a `K[X]`-matrix determinant** is bounded by the sum of per-column degree bounds:
+if every entry of column `j` has `natDegree ≤ b j`, then `natDegree (det M) ≤ ∑ j, b j`. The `K`-generic
+analogue of `natDegree_det_le_sum_col`. -/
+theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
+    (M : Matrix ι ι K[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
+    (M.det).natDegree ≤ ∑ j, b j := by
+  rw [Matrix.det_apply]
+  refine (Polynomial.natDegree_sum_le _ _).trans ?_
+  rw [Finset.fold_max_le]
+  refine ⟨Nat.zero_le _, ?_⟩
+  intro σ _
+  rw [Function.comp_apply]
+  refine (natDegree_smul_le _ _).trans ?_
+  refine (Polynomial.natDegree_prod_le _ _).trans ?_
+  exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
+
+open Polynomial in
+/-- **The `t`-coefficients of `rtResultantSeed`'s second polynomial have `z`-degree `≤ 1`**: each
+`t`-coefficient of `A.map C − C z · Dd.map C` is `C (A.coeff k) − z · C (Dd.coeff k)`, degree `≤ 1`. -/
+theorem natDegree_coeff_rtResultantSeed_g_le (A Dd : K[X]) (k : ℕ) :
+    ((A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
+  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
+  refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
+  · rw [Polynomial.natDegree_C]; exact Nat.zero_le 1
+  · refine (Polynomial.natDegree_mul_le (p := (Polynomial.X : K[X]))
+      (q := Polynomial.C (Dd.coeff k))).trans ?_
+    rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
+
+open Polynomial in
+/-- **`rtResultantSeed` has degree `≤ deg D` in `z`**: the Sylvester matrix of `D.map C` (constant
+`z`-entries) and `A.map C − C z · Dd.map C` (degree-`≤ 1` `z`-entries) has only the `deg D` columns from
+the second polynomial carrying a `z`, so its determinant has `z`-degree `≤ deg D`. The degree side of the
+interpolation uniqueness (`deg D + 1` nodes determine `R(z)`). The seed-generic analogue of
+`natDegree_rtResultant_le`. -/
+theorem natDegree_rtResultantSeed_le (A D Dd : K[X]) :
+    (rtResultantSeed A D Dd).natDegree ≤ D.natDegree := by
+  rw [rtResultantSeed, resultant]
+  refine le_trans (natDegree_det_le_sum_col _
+    (fun j => j.addCases (fun _ => 1) (fun _ => 0)) ?_) ?_
+  · intro i j
+    rw [Polynomial.sylvester, Matrix.of_apply]
+    refine j.addCases (fun j₁ => ?_) (fun j₁ => ?_)
+    · simp only [Fin.addCases_left]
+      split_ifs with h
+      · exact natDegree_coeff_rtResultantSeed_g_le A Dd _
+      · simp
+    · simp only [Fin.addCases_right]
+      split_ifs with h
+      · rw [Polynomial.coeff_map, Polynomial.natDegree_C]
+      · simp
+  · rw [Fin.sum_univ_add]
+    simp only [Fin.addCases_left, Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul,
+      mul_one]
+    rw [Finset.sum_eq_zero (fun i _ => by rw [Fin.addCases_right])]
+    omega
+
+/-! ### The §5.6 residue resultant `cResidueResultantTower` realizes `rtResultantSeed`
+
+Composing the generic resultant correctness (step 1) with the interpolation correctness (step 2): the
+computable `cResidueResultantTower Dt fuel a d` (built by evaluation + Lagrange interpolation over the
+tower `ℚ(x)[z]`) reads under `toPolyG` as the abstract seed-generic RT-resultant `rtResultantSeed
+(toPolyG a) (toPolyG d) (Δd)`, with `Δd = implicitDeriv (toPolyG Dt) (toPolyG d)` the monomial seed.
+Both are `K[z]`-polynomials of degree `≤ deg d` agreeing at the `deg d + 1` rational nodes `0, …, deg d`,
+hence equal by Lagrange uniqueness. -/
+
+namespace CPolyG
+
+open QFunNZ
+
+/-- **`cAmcDd` reads as `A − C c · Δd`** under `toPolyG`: the §5.6 sampled second polynomial realizes
+the abstract `a − z·Δd` (with `Δd = implicitDeriv (toPolyG Dt) (toPolyG d)`). -/
+theorem toPolyG_cAmcDd (Dt a d : CPolyG QFunNZ) (c : QFunNZ) :
+    toPolyG (cAmcDd Dt a d c)
+      = toPolyG a - Polynomial.C (CFieldSpec.toK c)
+          * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by
+  rw [cAmcDd, cDd, toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmonomialDeriv]
+
+/-- **Node-agreement** (monic `toPolyG d`): the §5.6 resultant sample `cresultantG fuel d
+(cAmcDd Dt a d (ofConstNZ k))` reads under `toK` as the specialization of the abstract seed-generic
+RT-resultant `rtResultantSeed (toPolyG a)(toPolyG d)(Δd)` at `toK(ofConstNZ k)`. The §5.6 analogue of
+`cresultant_sample_eq_eval`: the formal degrees `(cdegG d, cdegG amc)` (used by `cresultantG`) and
+`(deg d, deg d)` (used by `rtResultantSeed`) are reconciled by `resultant_add_right_deg`; the
+augmentation factor `lc(d)^k = 1` since `toPolyG d` is monic. Needs `deg amc ≤ deg d`. -/
+theorem cresultantG_sample_eq_eval (Dt a d : CPolyG QFunNZ) (k : ℚ)
+    (hdmonic : (toPolyG d).Monic)
+    (hamc : (toPolyG (cAmcDd Dt a d (ofConstNZ k))).natDegree ≤ (toPolyG d).natDegree)
+    (fuel : ℕ)
+    (hfuel : (cnormG d : List QFunNZ).length
+      + (cnormG (cAmcDd Dt a d (ofConstNZ k)) : List QFunNZ).length + 2 ≤ fuel) :
+    CFieldSpec.toK (cresultantG fuel d (cAmcDd Dt a d (ofConstNZ k)))
+      = (rtResultantSeed (toPolyG a) (toPolyG d)
+          (Differential.implicitDeriv (toPolyG Dt) (toPolyG d))).eval
+            (CFieldSpec.toK (ofConstNZ k)) := by
+  set amc := cAmcDd Dt a d (ofConstNZ k) with hamcdef
+  rw [toPolyG_cresultantG fuel d amc hfuel, cdegG_eq_natDegree d, cdegG_eq_natDegree amc,
+    rtResultantSeed_eval, ← toPolyG_cAmcDd Dt a d (ofConstNZ k)]
+  -- reconcile the RHS's second formal degree `deg d` down to actual `deg amc` (the LHS's slot)
+  obtain ⟨j, hj⟩ : ∃ j, (toPolyG d).natDegree = (toPolyG amc).natDegree + j :=
+    ⟨(toPolyG d).natDegree - (toPolyG amc).natDegree, by omega⟩
+  conv_rhs => rw [show (toPolyG d).natDegree = (toPolyG amc).natDegree + j from hj]
+  rw [Polynomial.resultant_add_right_deg (toPolyG d) (toPolyG amc) ((toPolyG amc).natDegree + j)
+    (toPolyG amc).natDegree j le_rfl, ← hj,
+    show (toPolyG d).coeff (toPolyG d).natDegree = (toPolyG d).leadingCoeff from rfl,
+    hdmonic.leadingCoeff, one_pow, one_mul]
+
+end CPolyG
 
 end DeepWiki.SymbolicIntegration
