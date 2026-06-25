@@ -251,6 +251,35 @@ theorem sum_residue_seed_logDeriv_eq_div (A : K[X]) (s : Finset K) (hA : A.degre
   rw [hb α hα, ← mul_div_assoc, ← map_mul, ← C_mul,
     residue_seed_mul_eq_residue_derivative δ A s hα (hb α hα) (hb0 α hα)]
 
+omit [Algebra ℚ K] in
+/-- **Log-derivative of a product of linear factors** (as a ratio of `δ`-images): for a finite set `t`
+of *distinct* points, `algMap(δ(∏_{α∈t}(X−Cα)))/algMap(∏_{α∈t}(X−Cα)) = ∑_{α∈t} algMap(δ(X−Cα))/algMap(X−Cα)`
+— the log-derivative of a product is the sum of log-derivatives. The bridge between a grouped
+Rothstein–Trager argument `gᵢ = ∏_{res=cᵢ}(X−α)` and the per-root residue sum. Proved by
+`Finset.cons_induction`, the base `Derivation.leibniz` rule, and that each `X − Cα` (and the product)
+is nonzero. -/
+theorem sum_logDeriv_prod_X_sub_C (t : Finset K) :
+    algebraMap K[X] (RatFunc K) (δ (∏ α ∈ t, (X - C α)))
+        / algebraMap K[X] (RatFunc K) (∏ α ∈ t, (X - C α))
+      = ∑ α ∈ t, algebraMap K[X] (RatFunc K) (δ (X - C α))
+          / algebraMap K[X] (RatFunc K) (X - C α) := by
+  classical
+  induction t using Finset.cons_induction with
+  | empty => simp
+  | cons a t ha ih =>
+    have hinj := RatFunc.algebraMap_injective K
+    -- abbreviations: `P = ∏_{α∈t}(X−Cα)`, both `X−Ca` and `P` are nonzero in `RatFunc K`
+    set P : K[X] := ∏ α ∈ t, (X - C α) with hP
+    have hP0 : P ≠ 0 := Finset.prod_ne_zero_iff.mpr fun α _ => X_sub_C_ne_zero α
+    have haP : algebraMap K[X] (RatFunc K) (X - C a) ≠ 0 :=
+      (map_ne_zero_iff _ hinj).mpr (X_sub_C_ne_zero a)
+    have hPP : algebraMap K[X] (RatFunc K) P ≠ 0 := (map_ne_zero_iff _ hinj).mpr hP0
+    -- expand `δ((X−Ca)·P) = δ(X−Ca)·P + (X−Ca)·δP` (Leibniz on the base derivation), push through algMap
+    rw [Finset.prod_cons, Finset.sum_cons, ← ih, ← hP, Derivation.leibniz, smul_eq_mul,
+      smul_eq_mul, map_add, map_mul, map_mul, map_mul]
+    field_simp
+    ring
+
 end ResidueMatch
 
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
