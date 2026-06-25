@@ -276,4 +276,159 @@ theorem toPolyG_cextendedEuclideanSplit (fuel : ℕ) (dn ds r u w : CPolyG α)
   rw [show cmulG u r = ur from rfl] at hkey ⊢
   rw [hkey, hbez, one_mul]
 
+/-! ### Target 2 (the capstone) — `canonicalRepresentationFast` reconstructs `f`
+
+`canonicalRepresentationFast Dt fuel a d = (q, (b, dₛ), (c, dₙ))` with `(q, r) = cdivmodG a d`,
+`(dₙ, dₛ) = cSplitFactorFast Dt fuel d`, `(u, w) = cbezoutOne dₙ dₛ`, `(b, c) =
+cextendedEuclideanSplit dₙ dₛ r u w`. We prove the abstract reconstruction over `RatFunc ℚ`:
+`(q : ℚ(x)(t)) + b/dₛ + c/dₙ = a/d`, mirroring `canonicalRepresentation_add_eq`. -/
+
+/-- **The abstract canonical field identity** over ℚ(x)(t): from the division `a = q·d + r`, the
+denominator split `d = dₛ·dₙ`, and the Bézout split `b·dₙ + c·dₛ = r`, the three pieces recombine to
+`a/d` — `q + b/dₛ + c/dₙ = a/d`. The field-arithmetic core, independent of the computable engine. -/
+theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c : K[X])
+    (hd : d ≠ 0) (hdn : dn ≠ 0) (hds : ds ≠ 0)
+    (hadiv : a = q * d + r) (hsplit : d = ds * dn) (hbcr : b * dn + c * ds = r) :
+    (algebraMap K[X] (RatFunc K) q)
+        + algebraMap K[X] (RatFunc K) b / algebraMap K[X] (RatFunc K) ds
+        + algebraMap K[X] (RatFunc K) c / algebraMap K[X] (RatFunc K) dn
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) d := by
+  set A := algebraMap K[X] (RatFunc K) with hA
+  have hAd : A d ≠ 0 := RatFunc.algebraMap_ne_zero hd
+  have hAdn : A dn ≠ 0 := RatFunc.algebraMap_ne_zero hdn
+  have hAds : A ds ≠ 0 := RatFunc.algebraMap_ne_zero hds
+  have hAa : A a = A q * (A ds * A dn) + (A b * A dn + A c * A ds) := by
+    rw [hadiv, hsplit, ← hbcr]; push_cast [hA]; ring
+  rw [show A d = A ds * A dn by rw [hsplit, map_mul]]
+  rw [eq_div_iff (mul_ne_zero hAds hAdn), hAa]
+  field_simp
+  ring
+
+/-- **Per-run regularity bundle** `CCanonicalRepFastRegular Dt fuel a d`: the transparent per-node
+preconditions for `canonicalRepresentationFast` to reconstruct `f = a/d` — the denominator split
+`cSplitFactorFast Dt fuel d` is a regular run (`CSplitFactorFastRegular`), fuel exceeds the
+denominator `t`-degree, and the Bézout gcd of the split parts is a nonzero constant (the coprime
+case). The dividend `d` and both split parts are taken nonzero. -/
+structure CCanonicalRepFastRegular (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) : Prop where
+  /-- `d` is nonzero. -/
+  hd : toPolyG d ≠ 0
+  /-- fuel exceeds the denominator `t`-degree (so `cSplitFactorFast`/`cdivmodG` are reduced). -/
+  hdeg : (toPolyG d).natDegree ≤ fuel
+  /-- the denominator split is a regular `cSplitFactorFast` run. -/
+  hsplitreg : CSplitFactorFastRegular Dt fuel d
+  /-- the Bézout gcd of the split parts `(dₙ, dₛ)` is a **constant** (coprime case). -/
+  hgdeg : (toPolyG (cgcdExtG fuel (cSplitFactorFast Dt fuel d).1
+    (cSplitFactorFast Dt fuel d).2).1).natDegree = 0
+  /-- the Bézout gcd is nonzero. -/
+  hgne : toPolyG (cgcdExtG fuel (cSplitFactorFast Dt fuel d).1
+    (cSplitFactorFast Dt fuel d).2).1 ≠ 0
+
+open RatFunc in
+/-- **`canonicalRepresentationFast` reconstructs `f`** (the §3.5 capstone), abstract correctness over
+ℚ(x)(t): with the output `(q, (b, dₛ), (c, dₙ)) = canonicalRepresentationFast Dt fuel a d`, the three
+pieces recombine to `f = a/d` — `(q : ℚ(x)(t)) + b/dₛ + c/dₙ = a/d`. Via the denominator split
+(`cSplitFactorFast` correctness, `d = dₛ·dₙ`), the Euclidean division (`a = q·d + r`), the Bézout
+cofactors (`cbezoutOne`, `u·dₙ + w·dₛ = 1`), and the Bézout split (`cextendedEuclideanSplit`,
+`b·dₙ + c·dₛ = r`), assembled by `canonicalRepFast_field_identity`. Mirrors the abstract
+`canonicalRepresentation_add_eq`. -/
+theorem canonicalRepFast_reconstructs (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hreg : CCanonicalRepFastRegular Dt fuel a d) :
+    (let res := CPolyG.canonicalRepresentationFast Dt fuel a d
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG q))
+          + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG b)
+              / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG ds)
+          + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG c)
+              / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG dn)
+        = algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG a)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG d)) := by
+  haveI : CharZero (CFieldSpec.K QFunNZ) := inferInstanceAs (CharZero (RatFunc ℚ))
+  obtain ⟨hd, hdeg, hsplitreg, hgdeg, hgne⟩ := hreg
+  -- names matching the `let`-bindings of `canonicalRepresentationFast`.
+  set qr := cdivmodG fuel a d with hqr
+  set dnds := cSplitFactorFast Dt fuel d with hdnds
+  set dn := dnds.1 with hdn
+  set ds := dnds.2 with hds
+  set q := qr.1 with hq
+  set r := qr.2 with hr
+  set uw := CPolyG.cbezoutOne fuel dn ds with huw
+  set u := uw.1 with hu
+  set w := uw.2 with hw
+  set bc := CPolyG.cextendedEuclideanSplit fuel dn ds r u w with hbc
+  set b := bc.1 with hb
+  set c := bc.2 with hc
+  -- 1. the denominator split `toPolyG d = toPolyG ds · toPolyG dn`.
+  have hsplit := cSplitFactorFast_isSplittingFactorizationGen Dt fuel d hd hdeg hsplitreg
+  have hsplit_eq : toPolyG d = toPolyG ds * toPolyG dn := hsplit.1
+  -- both split parts nonzero.
+  have hdn_ne : toPolyG dn ≠ 0 := by
+    intro h0; exact hd (by rw [hsplit_eq, h0, mul_zero])
+  have hds_ne : toPolyG ds ≠ 0 := by
+    intro h0; exact hd (by rw [hsplit_eq, h0, zero_mul])
+  -- 2. the Euclidean division `toPolyG a = toPolyG q · toPolyG d + toPolyG r`.
+  have hdcn : cnormG d ≠ [] := fun h => hd ((cnormG_eq_nil_iff d).mp h)
+  have hadiv : toPolyG a = toPolyG q * toPolyG d + toPolyG r :=
+    toPolyG_cdivmodG' fuel a d hdcn
+  -- 3. the Bézout cofactors `u·dn + w·ds = 1` (gcd of `(dn, ds)` a nonzero constant).
+  have hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1 := by
+    have := toPolyG_cbezoutOne fuel dn ds hgdeg hgne
+    rw [← hu, ← hw] at this; exact this
+  -- 4. the Bézout split `b·dn + c·ds = r`.
+  have hds0 : cnormG ds ≠ [] := fun h => hds_ne ((cnormG_eq_nil_iff ds).mp h)
+  have hbcr : toPolyG b * toPolyG dn + toPolyG c * toPolyG ds = toPolyG r := by
+    have := toPolyG_cextendedEuclideanSplit fuel dn ds r u w hds0 hbez
+    rw [← hb, ← hc] at this; exact this
+  -- assemble the field identity.
+  show (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG q))
+      + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG b)
+          / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG ds)
+      + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG c)
+          / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG dn)
+    = algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG a)
+        / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG d)
+  exact canonicalRepFast_field_identity (toPolyG a) (toPolyG d) (toPolyG q) (toPolyG r)
+    (toPolyG dn) (toPolyG ds) (toPolyG b) (toPolyG c) hd hdn_ne hds_ne hadiv hsplit_eq hbcr
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- The Bézout cofactors solve `u·a + w·b = 1` (coprime case: gcd `g` a nonzero constant).
+example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b : CPolyG α)
+    (hgdeg : (toPolyG (cgcdExtG fuel a b).1).natDegree = 0)
+    (hgne : toPolyG (cgcdExtG fuel a b).1 ≠ 0) :
+    toPolyG (CPolyG.cbezoutOne fuel a b).1 * toPolyG a
+        + toPolyG (CPolyG.cbezoutOne fuel a b).2 * toPolyG b = 1 :=
+  toPolyG_cbezoutOne fuel a b hgdeg hgne
+
+-- The Bézout split solves `b·dₙ + c·dₛ = r` given a Bézout pair `u·dₙ + w·dₛ = 1`.
+example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (dn ds r u w : CPolyG α)
+    (hds0 : cnormG ds ≠ [])
+    (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1) :
+    toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).1 * toPolyG dn
+        + toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).2 * toPolyG ds
+      = toPolyG r :=
+  toPolyG_cextendedEuclideanSplit fuel dn ds r u w hds0 hbez
+
+-- The headline (target 2 capstone): `canonicalRepresentationFast Dt fuel a d = (q, (b, dₛ), (c, dₙ))`,
+-- read over ℚ(x)(t) = `RatFunc (RatFunc ℚ)`, reconstructs `f = a/d` — `q + b/dₛ + c/dₙ = a/d` — under
+-- the transparent per-node regularity preconditions a real run satisfies.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hreg : CCanonicalRepFastRegular Dt fuel a d) :
+    (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+          (toPolyG (CPolyG.canonicalRepresentationFast Dt fuel a d).1))
+        + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFast Dt fuel a d).2.1.1)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFast Dt fuel a d).2.1.2)
+        + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFast Dt fuel a d).2.2.1)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFast Dt fuel a d).2.2.2)
+      = algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG a)
+          / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG d) :=
+  canonicalRepFast_reconstructs Dt fuel a d hreg
+
 end DeepWiki.SymbolicIntegration
