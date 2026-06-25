@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
+import DeepWiki.SymbolicIntegration.ComputableIntegrate
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.LinearAlgebra.Lagrange
 
@@ -748,6 +749,83 @@ example (Dt a d : CPolyG QFunNZ) (fuel : ℕ) (hdmonic : (toPolyG d).Monic)
           (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) :=
   toPolyG_cResidueResultantTower Dt a d fuel hdmonic hamc hfuel
 
+/-! ### Step 4: discharging the residue-set enumeration `hkeysImage`/`hkeysNodup`
+
+The concrete `cRationalResidues Dt fuel a d cands` keeps a candidate `c ∈ cands` iff
+`cevalG R (ofConstNZ c) = 0` (`R = cResidueResultantTower`), i.e. iff `R(toK(ofConstNZ c)) = 0` in `K`.
+By step 3 `R` reads as `rtResultantSeed`, so `R(toK(ofConstNZ c)) = res_t(d, a − c·Δd)` (the parameter
+resultant), and by Mathlib's `resultant_eq_zero_iff` + the split squarefree `toPolyG d = nodal s id`
+this vanishes exactly when `c` is a residue of some root `α ∈ s`. Composing this per-candidate criterion
+gives the residue-set match `hkeysImage`/`hkeysNodup` — provided the candidate list `cands` is
+**complete** (contains every rational residue) and **nodup** under `toK ∘ ofConstNZ`. -/
+
+section CEvalBridge
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- **`cevalG` realizes polynomial evaluation under `toK`**: `toK (cevalG p c) = (toPolyG p).eval
+(toK c)`. The Horner evaluation in `α` agrees with the abstract `K`-evaluation through the bridge. -/
+theorem toK_cevalG (p : CPolyG α) (c : α) :
+    CFieldSpec.toK (cevalG p c) = (toPolyG p).eval (CFieldSpec.toK c) := by
+  rw [cevalG]
+  induction p with
+  | nil => simp [CFieldSpec.toK_zero]
+  | cons a' as ih =>
+    rw [List.foldr_cons, CFieldSpec.toK_add, CFieldSpec.toK_mul, ih, toPolyG_cons, eval_add,
+      eval_C, eval_mul, eval_X]
+
+end CEvalBridge
+
 end CPolyG
+
+/-! ### The resultant-vanishing residue criterion over a split squarefree denominator
+
+For `d = nodal s id` (split squarefree, monic) over a field `K` and a seed `Dd` nonzero at every root,
+the parameter resultant `res_t(d, a − c·Dd)` (with formal degrees `(deg d, deg d)`) vanishes exactly
+when some root `α ∈ s` has residue `a(α)/Dd(α) = c`. This is the base-field analogue of
+`residue_iff_resultant_eq_zero` (which needs `IsAlgClosed`): here the roots already live in `K` because
+`d` splits over `s`. The bridge from the §5.6 residue resultant (via step 3) to the residue set. -/
+
+open scoped Classical in
+/-- **Resultant-vanishing residue criterion** (split squarefree, base field): for `d = nodal s id` and a
+seed `Dd` with `Dd(α) ≠ 0` at each `α ∈ s`, given `deg(a − C c·Dd) ≤ deg d`, the resultant
+`res_t(d, a − C c·Dd)` (formal degrees `(deg d, deg d)`) is `0` iff some root `α ∈ s` has residue
+`a(α)/Dd(α) = c`. Reduces the `(deg d, deg d)` resultant to the default-degree one (monic `d`), turns
+`resultant = 0` into non-coprimality (`resultant_eq_zero_iff`), and—since `d` splits over `s`—into a
+common root `α ∈ s` of `d` and `a − C c·Dd`, which the §5.6 residue criterion
+`residue_eq_iff_isRoot_sub_seed` reads as the residue equation. -/
+theorem resultant_split_eq_zero_iff_residue {K : Type*} [Field K] (s : Finset K) (a Dd : K[X])
+    (hDd : ∀ α ∈ s, Dd.eval α ≠ 0) (c : K)
+    (hEdeg : (a - C c * Dd).natDegree ≤ (Lagrange.nodal s id).natDegree) :
+    Polynomial.resultant (Lagrange.nodal s id) (a - C c * Dd)
+        (Lagrange.nodal s id).natDegree (Lagrange.nodal s id).natDegree = 0
+      ↔ ∃ α ∈ s, a.eval α / Dd.eval α = c := by
+  classical
+  set d := Lagrange.nodal s id with hd
+  set E := a - C c * Dd with hE
+  have hd0 : d ≠ 0 := hd ▸ Lagrange.nodal_ne_zero
+  have hdmonic : d.Monic := hd ▸ Lagrange.nodal_monic
+  have hdprod : d = ∏ α ∈ s, (X - C α) := by simp [hd, Lagrange.nodal_eq, id]
+  have hdroots : d.roots = s.val := by rw [hdprod, roots_prod_X_sub_C]
+  -- reduce the `(deg d, deg d)` resultant to the default-degree resultant (monic `d`, `deg E ≤ deg d`)
+  have hred : Polynomial.resultant d E d.natDegree d.natDegree = Polynomial.resultant d E := by
+    obtain ⟨j, hj⟩ : ∃ j, d.natDegree = E.natDegree + j :=
+      ⟨d.natDegree - E.natDegree, by omega⟩
+    conv_lhs => rw [show d.natDegree = E.natDegree + j from hj]
+    rw [Polynomial.resultant_add_right_deg d E (E.natDegree + j) E.natDegree j le_rfl, ← hj,
+      show d.coeff d.natDegree = d.leadingCoeff from rfl, hdmonic.leadingCoeff, one_pow, one_mul]
+  rw [hred, Polynomial.resultant_eq_zero_iff, and_iff_right (Or.inl hd0)]
+  -- the §5.6 residue criterion at a root (inline): `a(α)/Dd(α) = c ↔ (a − C c·Dd).IsRoot α`
+  have hrescrit : ∀ α ∈ s, (a.eval α / Dd.eval α = c ↔ E.IsRoot α) := by
+    intro α hαs
+    rw [hE, IsRoot.def, eval_sub, eval_mul, eval_C, sub_eq_zero, div_eq_iff (hDd α hαs)]
+  -- `IsCoprime d E ↔ ∀ α ∈ s, ¬ E.IsRoot α` (split `d`, each factor `X − α` prime in the PID `K[X]`)
+  have hcopiff : IsCoprime d E ↔ ∀ α ∈ s, a.eval α / Dd.eval α ≠ c := by
+    rw [hdprod, IsCoprime.prod_left_iff]
+    refine forall_congr' fun α => ?_
+    refine imp_congr_right fun hαs => ?_
+    rw [(prime_X_sub_C α).coprime_iff_not_dvd, dvd_iff_isRoot, ← hrescrit α hαs]
+  rw [not_iff_comm, hcopiff, not_exists]
+  simp only [not_and, ne_eq]
 
 end DeepWiki.SymbolicIntegration
