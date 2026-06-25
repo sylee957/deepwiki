@@ -361,3 +361,108 @@ theorem checkIdentity_of_field_identity (Dt : CPolyG QFunNZ) (res : IntegralResu
   -- the goal is now the cleared field equation, matching `hclear` term-by-term
   rw [← hGP, ← hLN, ← hLD, ← hAN, ← hAD, ← hGD]
   linear_combination hclear
+
+/-! ### The composed field-level capstone — `D(g) + ∑ᵢ cᵢ·(Δvᵢ)/vᵢ = f`
+
+In the **primitive regime** (`Dt ∈ k`), with the special part absent (`fₛ = 0`) and the polynomial
+remainder vanishing (`prem = 0`, the `if cisZeroG prem` branch), the assembled `cIntegrate` output
+`g + ∑ᵢ cᵢ·log(vᵢ)` differentiates back to `f = a/d` over the tower fraction field. The composition:
+the Hermite field identity `D(gₕ) + hₛ = fₙ`, the primitive-poly field identity `D(pq) = fₚ`, the
+canonical reconstruction `fₚ + fₙ = f` (`fₛ = 0`), and the **log-part residue match**
+`hLog : logResidueSum Dt logs = hₛ` (the §5.6 Rothstein–Trager identity for the concrete `cLogPart`
+output — proved abstractly in the primitive regime by `towerLogPart_eq_div_of_const_seed`; matching it
+to the concrete residues is the documented bridge gap). -/
+
+/-- **The composed field-level antiderivative identity** `D(g) + ∑ᵢ cᵢ·(Δvᵢ)/vᵢ = a/d` (the headline,
+field form). In the primitive regime (`prem = 0`), writing `cn/dn = fₙ` the normal part and
+`gₕ = nrm.rational.1/nrm.rational.2` the Hermite rational part of `fₙ`, `hₛ = hNum/hDen` its simple
+residual, `pq` the integrated polynomial part of `fₚ`, the assembled rational part
+`g = (nrm.rational.1 + pq·gden_H)/gden_H` and the log residue sum satisfy
+`towerFractionFieldDeriv Dt g + logResidueSum Dt nrm.logs = towerAlg(a)/towerAlg(d)`. Composes the proven
+field identities for Hermite (`cHermiteReduceTower_field_identity`, the exact-division/nonzero-divisor
+preconditions `hHermite*`), the primitive polynomial part (`cPrimitivePolyIntegrate_field_identity` with
+`prem = 0`), the canonical reconstruction (`canonicalRepFast_reconstructs`, special part `fₛ = 0` via
+`hfs0`), and the **log-part residue match** `hLog`. -/
+theorem cIntegrate_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (cands : List ℚ)
+    -- canonical-split names
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    -- Hermite on the normal part `cn/dn`
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    -- the integrated polynomial part of `fp`
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hprem0 : toPolyG prem = 0)
+    -- the residue-grouped logs of the simple residual `hNum/hDen`
+    (logs : List (ℚ × CPolyG QFunNZ))
+    (_hlogsdef : logs = cLogPart Dt fuel hNum hDen cands)
+    -- the assembled rational part `g = gnum/gden`
+    (gnum gden : CPolyG QFunNZ)
+    (hgnum : gnum = caddG (cmulG gnumH [CField.one]) (cmulG pq gdenH))
+    (hgden : gden = gdenH)
+    -- regularity: canonical-rep reconstructs, Hermite cleared, all denominators nonzero, fₛ = 0
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    -- the §5.6 log-part residue match for the concrete logs (primitive regime; documented bridge gap)
+    (hLog : logResidueSum Dt logs = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG gnum) / towerAlg (toPolyG gden))
+        + logResidueSum Dt logs
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) := by
+  -- 1. canonical reconstruction `fp + b/ds + cn/dn = a/d`, with `fₛ = b/ds = 0`
+  have hrecon := canonicalRepFast_reconstructs Dt fuel a d hcanreg
+  simp only [hcanon] at hrecon
+  -- `towerAlg = algebraMap (CFieldSpec.K QFunNZ)[X] …` is the same map `hrecon` uses; `fₛ = b/ds = 0`
+  rw [show (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG b))
+        / (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG ds))
+      = towerAlg (toPolyG b) / towerAlg (toPolyG ds) from rfl, hfs0, add_zero] at hrecon
+  -- 2. Hermite field identity `D(gₕ) + hₛ = cn/dn`
+  have hHerm := cHermiteReduceTower_field_identity Dt fuel cn dn gnumH gdenH hDen gprimeNum resNum
+    resDen hNum (by rw [hHermite]) (by rw [hHermite]) (by rw [hHermite]) hgprimeE hresNum hresDen
+    hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne
+  -- 3. primitive-poly field identity `D(pq) + prem = fp`, with `prem = 0`
+  have hPoly := cPrimitivePolyIntegrate_field_identity Dt fuel fp
+  rw [hpoly] at hPoly
+  simp only [hprem0, map_zero, add_zero] at hPoly
+  -- the combined rational part `g = gₕ + pq` over the field
+  have hgsplit : towerAlg (toPolyG gnum) / towerAlg (toPolyG gden)
+      = towerAlg (toPolyG gnumH) / towerAlg (toPolyG gdenH)
+        + towerAlg (toPolyG pq) := by
+    rw [hgnum, hgden, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul]
+    have hone : toPolyG ([CField.one] : CPolyG QFunNZ) = 1 := by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [hone, map_one, mul_one]
+    have hAgdenH : towerAlg (toPolyG gdenH) ≠ 0 := towerAlg_ne_zero hgdenHne
+    field_simp
+  -- the derivative splits by additivity
+  rw [hgsplit, map_add]
+  -- assemble: `(D(gₕ) + D(pq)) + logResidueSum = D(gₕ) + hₛ + D(pq)` and chase the identities
+  rw [hLog]
+  -- now: `D(gₕ) + D(pq) + hₛ = a/d`
+  -- from Hermite: `D(gₕ) + hₛ = cn/dn`; from poly: `D(pq) = fp`; from canon: `fp + cn/dn = a/d`
+  have hgoal : towerFractionFieldDeriv Dt (towerAlg (toPolyG gnumH) / towerAlg (toPolyG gdenH))
+        + towerFractionFieldDeriv Dt (towerAlg (toPolyG pq))
+        + towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) := by
+    rw [hPoly]
+    -- `D(gₕ) + fp + hₛ = (D(gₕ) + hₛ) + fp = cn/dn + fp = a/d`
+    rw [show towerFractionFieldDeriv Dt (towerAlg (toPolyG gnumH) / towerAlg (toPolyG gdenH))
+          + towerAlg (toPolyG fp) + towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)
+        = (towerFractionFieldDeriv Dt (towerAlg (toPolyG gnumH) / towerAlg (toPolyG gdenH))
+            + towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)) + towerAlg (toPolyG fp) by ring]
+    rw [hHerm]
+    -- `cn/dn + fp = a/d`, from the canonical reconstruction `fp + cn/dn = a/d`
+    rw [add_comm]
+    exact hrecon
+  exact hgoal
