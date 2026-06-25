@@ -26,34 +26,52 @@ hold, proven by clean fuel induction.
   of the `implicitDeriv` derivation: each pass peels `p = (lc(c)/lc(b))·tᵐ`, recurses on
   `c' = c − D(p) − b·p`, and glues `D(p+q) + b·(p+q) = D(p) + b·p + (D(q) + b·q) = D(p)+b·p+c' = c`.
 
-* **§6.4 `cSPDE` cleared reduction** (`cSPDE_cleared_reduction`): the Rothstein `gcd(a,b)`-peel reduces
-  `a·D(q) + b·q = c` to a smaller `D(h) + b̄·h = c̄`. We prove the **lifting** direction the pipeline
-  uses: from the returned `(b̄, c̄, m, α, β)`, *any* `h` solving the reduced `D(h) + b̄·h = c̄` yields
-  `q = α·h + β` solving the **original `a/g`-divided** equation `ā·D(q) + b̄'·q = c̄'`, where
-  `(ā, b̄', c̄') = (a/g, b/g, c/g)` for `g = gcd(a,b)` — the cleared identity at each peel level, threaded
-  by fuel induction. (The cleared statement is for the gcd-divided equation; the original
-  `a·D(q)+b·q = c` follows by multiplying through by `g` when `g ∣ c`, the box's `cdvdG g c` test.)
+* **§6.4 `cSPDE` step algebra** (`spde_step_glue`, `spde_const_base`, `cSPDE_peel_cleared`): the
+  Rothstein peel's correctness core as pure `Derivation` algebra — given the Bézout `b·r + a·z = c` and a
+  solution `h` of the reduced `a·D(h) + (b + D(a))·h = z − D(r)`, the reconstruction `q = a·h + r` solves
+  `a·D(q) + b·q = c` (Leibniz + `ring`), plus the `deg(a) = 0` scaling base case; `cSPDE_peel_cleared`
+  instantiates this at `implicitDeriv (toPolyG Dt)` over `(RatFunc ℚ)[X]`.
+
+* **§6.4 FULL recursive `cSPDE` lifting** (`cSPDE_cleared_lifting`): the whole `gcd`-peel chain. Under a
+  recursively-bundled certificate predicate `cSPDECleared` (the exact-division witnesses `(a/g)·g = a` …,
+  `a/g ≠ 0`, and the Bézout, at every recursion level), `cSPDE Dt fuel a b c n = some (b̄, c̄, m, α, β)`
+  guarantees: *any* `h` solving the reduced `D(h) + b̄·h = c̄` makes `q = α·h + β` solve the **original**
+  equation `a·D(q) + b·q = c`. Proved by fuel induction (constant base via `spde_const_base` then
+  multiply-back-by-`g`; recursion peel via `cSPDE_peel_cleared` on the IH's reduced solution). The
+  invariant is stated on the original (not divided) equation, so the IH directly supplies each peel's
+  reduced equation.
+
+* **§6.4 + §6.5 composition** (`cSPDE_polyRischDENoCancel_cleared`): the polynomial-stage spine — feeding
+  the §6.5 non-cancellation output `v` (which satisfies the reduced `D(v) + b̄·v = c̄`) as the `h` of the
+  §6.4 lifting, the reconstruction `q = α·v + β` solves the original `a·D(q) + b·q = c`. The
+  `cSPDE → cPolyRischDE` core that `cRischDE` runs after the §6.2/§6.3 denominator/degree stages.
 
 ## The remaining gap (honestly documented)
 
-The §6.3 degree bound is a *bound* (an `ℕ`), not an identity — it constrains *which* `q` can solve, not
-the cleared form, so it enters only as a hypothesis at the §6.4/§6.5 boundary (the degree-`≤ n`
-short-circuits), never as an algebraic identity to discharge. The §6.2 special-denominator and
-normal-denominator transforms replace the unknown by `q = h/denom` (eq. 6.7 substitution `q = h·pⁿ`), so
-they change the equation **by the denominator** `p^N`: their cleared form is `(a·pᴺ)·D(r) + (…)·r =
-c·p^{…}` reading the *cleared* numerator equation, which the engine produces as genuine `CPolyG QFunNZ`
-polynomials. Stating those two reductions' cleared identities is **algebraically** within the
-cleared-polynomial technique (no fraction-field derivation needed: `Dp/p` is exact-divided since `p ∣ Dp`
-for a special `p`, exactly as Hermite's residual `hNum` is exact-divided), but the §6.2 `b`-component
-`dₙh·f − dₙ·Dh` mixes the *rational* `f = fnum/fden` with the polynomial `Dh`, so its cleared identity is a
-**fraction-cleared** identity over `fden` (the `cdivFF … fden` exact division), needing the same
-exact-division-certificate hypothesis shape as `cHermiteReduceTower_cleared_identity`. The genuinely
-*missing* infrastructure for an unconditional full-pipeline `cRischDE_cleared` is a
+The §6.4 lifting is gated on the certificate predicate `cSPDECleared`, which bundles the per-level
+exact-division and Bézout `toPolyG`-facts the `native_decide` validation pins; discharging those
+certificates *unconditionally* (proving `gcd(a,b)` exact-divides `a, b, c` and that the divided
+`gcd(bd, ad)` is constant so `cdiophantineG` solves the Bézout — both via `toPolyG_cgcdExtG_dvd` /
+`toPolyG_cdiophantineG` + a `gcd`-coprimality argument over `K[X]`) is the natural next refinement,
+analogous to how `cHermiteReduceTower_cleared_identity` carries its exact-division certificate.
+
+Above §6.4: the **§6.3 degree bound** is a *bound* (an `ℕ`), not an identity — it constrains *which* `q`
+can solve, not the cleared form, so it enters only as the degree-`≤ n` short-circuit hypothesis at the
+§6.4/§6.5 boundary, never as an algebraic identity to discharge. The **§6.2 special-denominator and
+normal-denominator transforms** replace the unknown by `q = h/denom` (eq. 6.7 substitution `q = h·pⁿ`),
+changing the equation **by the denominator** `p^N`: their cleared form `(a·pᴺ)·D(r) + (…)·r = c·p^{…}` is
+the *cleared* numerator equation, which the engine produces as genuine `CPolyG QFunNZ` polynomials.
+Stating those is **algebraically** within the cleared-polynomial technique (no fraction-field derivation:
+`Dp/p` is exact-divided since `p ∣ Dp` for a special `p`, exactly as Hermite's `hNum`), but the §6.2
+`b`-component `dₙh·f − dₙ·Dh` mixes the *rational* `f = fnum/fden` with the polynomial `Dh`, so its
+cleared identity is a **fraction-cleared** identity over `fden` (the `cdivFF … fden` exact division),
+needing the same exact-division-certificate hypothesis shape as `cHermiteReduceTower_cleared_identity`.
+The genuinely *missing* infrastructure for an unconditional full-pipeline `cRischDE_cleared` is a
 `Differential (RatFunc (RatFunc ℚ))` realizing `implicitDeriv` on the fraction field (the repo's
 `ratFuncDeriv` is `d/dx` only) — needed only where a stage's invariant is naturally stated on the
 *fraction field* `k(t)` rather than the cleared *polynomial* numerator equation, i.e. the §6.1 weak
-normalizer's residue argument and the rational `b`-component. The two polynomial-stage leaves (§6.5, §6.4)
-delivered here sidestep that entirely. -/
+normalizer's residue argument and the rational `b`-component. The polynomial-stage spine (§6.5, the full
+§6.4 recursion, and their composition) delivered here sidesteps that entirely. -/
 
 open Polynomial Classical
 
