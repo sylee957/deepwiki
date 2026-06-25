@@ -495,4 +495,88 @@ def cIntegrateG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α
 
 end CPolyG
 
+/-! ### ★★ The STRETCH validation: a FULL elementary tower integral at LEVEL 2 (`native_decide`)
+
+Bronstein's Example 5.6.2 construction lifted to **tower level 2**. Over `CPolyG Lvl2 =
+ℚ(x)(t₁)[t₂]` the monomial `t₂` is independent (`Dt₂ = 1`), and the simple integrand
+`f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over ℚ(x)(t₁)(t₂) has the **known elementary
+antiderivative** `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt₂ = 1`, the integrand is
+`f = (1/2)/(t₂+1) − (1/2)/(t₂−1)`, assembled as a single fraction `a/d` with `d = (t₂+1)(t₂−1) =
+t₂² − 1`. The residues of `R(z) = res_t(d, a − z·Dd)` are `±1/2` with log arguments `t₂ ± 1`.
+
+The generic tower integrator `cIntegrateG` (canonical split + Hermite rational part + Rothstein–Trager
+residue logs) runs over `CPolyG Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
+candidate set, logs `t₂ ± 1`. The headline check is the **antiderivative identity** `D(∫f) = f`
+(`checkIdentityG`, cleared of denominators, by `cisZeroG`) — the whole elementary tower integral
+executing and differentiating back to `f`, at level 2. All coefficients are ℚ-constants lifted into
+`Lvl2` (via `cratCastG`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. -/
+
+open CPolyG
+
+/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
+def towerIntLvl2Dt : CPolyG Lvl2 := [CField.one]
+
+/-- Level-2 log argument `v₊ = t₂ + 1` over `CPolyG Lvl2` (low→high in `t₂`). -/
+def towerIntLvl2VPlus : CPolyG Lvl2 := [CField.one, CField.one]
+
+/-- Level-2 log argument `v₋ = t₂ − 1` over `CPolyG Lvl2`. -/
+def towerIntLvl2VMinus : CPolyG Lvl2 := [CField.neg CField.one, CField.one]
+
+/-- Level-2 scalar `1/2 ∈ Lvl2` (the residue coefficient), via the generic `cratCastG`. -/
+def towerIntLvl2Half : Lvl2 := cratCastG (1/2)
+
+/-- The level-2 integrand numerator `a = (1/2)·D(v₊)·v₋ − (1/2)·D(v₋)·v₊` over `CPolyG Lvl2`, so
+`a/d = (1/2)·D(v₊)/v₊ − (1/2)·D(v₋)/v₋` with `d = v₊·v₋`. Its elementary antiderivative is
+`(1/2)log(v₊) − (1/2)log(v₋)`. -/
+def towerIntLvl2Num : CPolyG Lvl2 :=
+  csubG
+    (cscaleG towerIntLvl2Half
+      (cmulG (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VPlus) towerIntLvl2VMinus))
+    (cscaleG towerIntLvl2Half
+      (cmulG (cmonomialDeriv towerIntLvl2Dt towerIntLvl2VMinus) towerIntLvl2VPlus))
+
+/-- The level-2 integrand denominator `d = v₊·v₋ = (t₂+1)(t₂−1) = t₂² − 1` over `CPolyG Lvl2`. -/
+def towerIntLvl2Den : CPolyG Lvl2 := cmulG towerIntLvl2VPlus towerIntLvl2VMinus
+
+/-- The level-2 residue candidate set `{1/2, −1/2, 1, −1, 0}` as `Lvl2` constants (the residues `±1/2`
+are inside; the rest are rejected by `R(c) ≠ 0`). -/
+def towerIntLvl2Cands : List Lvl2 :=
+  [cratCastG (1/2), cratCastG (-1/2), cratCastG 1, cratCastG (-1), cratCastG 0]
+
+/-- **The recovered level-2 logarithmic part has length 2** (`native_decide`): the residue scan over
+`ℚ(x)(t₁)[t₂]` finds exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`), so the capstone's
+`logs` list has length `2`, matching the Rothstein–Trager construction at tower level 2. -/
+theorem towerIntLvl2_logs_length :
+    (CPolyG.cIntegrateReducedG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
+      towerIntLvl2Cands).logs.length = 2 := by native_decide
+
+/-- **★★ A FULL elementary tower integral at LEVEL 2, and `D(∫f) = f`** (`native_decide`, the stretch
+deliverable). For the simple element `f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over
+ℚ(x)(t₁)(t₂) (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower **level 2**, `Dt₂ = 1`), whose elementary
+antiderivative is `(1/2)log(t₂+1) − (1/2)log(t₂−1)`, the assembled generic tower integrator
+`cIntegrateReducedG` — canonical split, Hermite rational part, Rothstein–Trager residue logarithms —
+returns an `IntegralResultG` whose **antiderivative identity** `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds
+**exactly**, checked cleared of denominators by `checkIdentityG` (`cisZeroG` of the cleared difference
+over ℚ(x)(t₁)[t₂]). This is the stretch: the WHOLE elementary tower integral — rational part *and*
+logarithmic part — *computes* over the monomial tower ℚ(x)(t₁)[t₂] at level 2, and the returned
+`g + ∑ cᵢ·log(vᵢ)` genuinely differentiates back to `f`. -/
+theorem towerIntLvl2_fullIntegral :
+    CPolyG.checkIdentityG towerIntLvl2Dt
+      (CPolyG.cIntegrateReducedG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
+        towerIntLvl2Cands)
+      towerIntLvl2Num towerIntLvl2Den = true := by native_decide
+
+/-- **The full `cIntegrateG` driver runs end-to-end at level 2 and `D(∫f) = f`** (`native_decide`): on
+the same level-2 simple integrand (a pure normal element, so `fₚ = fₛ = 0`), the assembled top-level
+`cIntegrateG` — canonical split + reduced capstone — returns `some res`, and `res` satisfies the
+antiderivative identity `D(res) = f` over ℚ(x)(t₁)[t₂]. This pins the assembled tower driver at level 2,
+not just the reduced core. -/
+theorem towerIntLvl2_driver :
+    (match CPolyG.cIntegrateG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
+        towerIntLvl2Cands with
+      | some res => CPolyG.checkIdentityG towerIntLvl2Dt res towerIntLvl2Num towerIntLvl2Den
+      | none => false) = true := by native_decide
+
+#print axioms towerIntLvl2_fullIntegral
+
 end DeepWiki.SymbolicIntegration
