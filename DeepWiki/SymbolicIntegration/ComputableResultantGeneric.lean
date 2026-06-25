@@ -1085,4 +1085,14 @@ example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C
     hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hlognz s hden hAh hb0 hDd hadeg hδdeg hamc hfuelR
     hcompl hdistinct hreg
 
+-- Axiom audits for the headline deliverables (`[propext, Classical.choice, Quot.sound]` — no
+-- `native_decide`, no `sorryAx`).
+#print axioms CPolyG.toPolyG_cresultantG
+#print axioms CPolyG.eval_toPolyG_cinterpolateG
+#print axioms CPolyG.toPolyG_cResidueResultantTower
+#print axioms resultant_split_eq_zero_iff_residue
+#print axioms CPolyG.cisZeroG_cevalG_cResidueResultantTower_iff
+#print axioms CPolyG.cLogPart_keys_image
+#print axioms cIntegrate_checkIdentity_uncond
+
 end DeepWiki.SymbolicIntegration
