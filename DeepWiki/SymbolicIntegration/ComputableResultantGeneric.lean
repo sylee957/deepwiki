@@ -476,4 +476,47 @@ example (pts : List (α × α)) (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)
 
 end CPolyG
 
+/-! ### The seed-generic abstract Rothstein–Trager resultant `R(z) = res_t(d, a − z·Dd)`
+
+The §5.6 residue construction uses the **monomial seed** `Dd = Δd` rather than `derivative d`, so the
+abstract bivariate resultant `R(z) = res_t(d, a − z·Dd) ∈ K[z]` needs to be seed-generic (the
+`RationalIntegrationAlgorithms.rtResultant` fixes `Dd = derivative d`). `rtResultantSeed A D Dd` lifts
+`D, A, Dd` to `(K[z])[t]` (constant `z = C z`) and eliminates `t`; `rtResultantSeed_eval` recovers the
+parameter resultant `res_t(d, a − c·Dd)` at `z = c` (same formal `t`-degrees). The polynomial structure
+the §5.6 residue resultant `cResidueResultantTower` realizes. -/
+
+variable {K : Type*} [Field K]
+
+/-- **Seed-generic abstract Rothstein–Trager resultant** `R(z) = res_t(D, A − z·Dd) ∈ K[z]`: `D, A, Dd`
+lifted to `(K[z])[t]` (coefficients embedded by `C : K → K[z]`, the parameter `z` becoming the constant
+`C X`), the resultant eliminating `t`. Formal `t`-degrees `(deg D, deg D − 1)` (the book's layout). The
+seed-generic analogue of `rtResultant` (which fixes `Dd = derivative D`). -/
+noncomputable def rtResultantSeed (A D Dd : K[X]) : K[X] :=
+  Polynomial.resultant (D.map (C : K →+* K[X]))
+    (A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X]))
+    D.natDegree (D.natDegree - 1)
+
+/-- **Specialization of `rtResultantSeed`**: evaluating `R(z)` at `z = c` recovers the parameter
+resultant `res_t(D, A − c·Dd)` (same formal `t`-degrees `(deg D, deg D − 1)`). The seed-generic analogue
+of `rtResultant_eval`. -/
+theorem rtResultantSeed_eval (A D Dd : K[X]) (c : K) :
+    (rtResultantSeed A D Dd).eval c
+      = Polynomial.resultant D (A - C c * Dd) D.natDegree (D.natDegree - 1) := by
+  have hcomp : (Polynomial.evalRingHom c).comp (C : K →+* K[X]) = RingHom.id K := by
+    ext k; simp
+  show Polynomial.evalRingHom c (rtResultantSeed A D Dd) = _
+  rw [rtResultantSeed, ← Polynomial.resultant_map_map]
+  congr 1
+  · rw [Polynomial.map_map, hcomp, Polynomial.map_id]
+  · simp only [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_map, Polynomial.map_C, hcomp,
+      Polynomial.map_id]
+    simp
+
+/-- Restatement: the seed-generic abstract RT-resultant specializes at `z = c` to the parameter
+resultant `res_t(D, A − c·Dd)`. -/
+example (A D Dd : K[X]) (c : K) :
+    (rtResultantSeed A D Dd).eval c
+      = Polynomial.resultant D (A - C c * Dd) D.natDegree (D.natDegree - 1) :=
+  rtResultantSeed_eval A D Dd c
+
 end DeepWiki.SymbolicIntegration
