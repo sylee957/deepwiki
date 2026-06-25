@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
-import DeepWiki.SymbolicIntegration.ComputableHyperexpBoundary
 
 /-! # The hyperexponential normal part via residual feedback (Bronstein §5.9)
 `ComputableHyperexpSpecial` closed the §5.10 **special** part of a hyperexponential integral
