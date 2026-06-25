@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
 
@@ -13,12 +14,17 @@ integration (§5.8) — are now rendered as **computable** algorithms over the m
 example. The chapter rests on Chapters 3–4 (differential/monomial extensions, the order function and
 the Rothstein–Trager resultant) and is the heart of the book.
 
-**Computable-vs-abstract.** Each algorithm below is a computable function over `CPolyG QFunNZ`
-(= ℚ(x)[t]) validated by `native_decide` on the book's example (the cleared reduction identity
-`D(g) + h = f` etc.); the *abstract* correctness theorems (that `g` is the integral's rational part,
-Theorems 5.3.1/5.4.1/5.6.1/5.8.1) are **NOT** proved. Liouville's theorem (§5.5), the full
-hyperexponential case (§5.9), the hypertangent case (§5.10), and the structural §5.7/§5.11/§5.12
-theory remain unformalized.
+**Computable-vs-abstract.** Each algorithm below is a computable function validated by `native_decide`
+on the book's example (the cleared reduction identity `D(g) + h = f` etc.); the *abstract* correctness
+theorems (that `g` is the integral's rational part, Theorems 5.3.1/5.4.1/5.6.1/5.8.1) are **NOT**
+proved. Liouville's theorem (§5.5), the full hyperexponential case (§5.9), the hypertangent case
+(§5.10), and the structural §5.7/§5.11/§5.12 theory remain unformalized.
+
+**Carrier: the generic ℚ(x).** The §5.3 Hermite and §5.6 residue-criterion reductions are aliased to the
+canonical **generic** engine at `α = QFunNZG ℚ` (the recursive `Frac(ℚ[x])`, every instance bottoming at
+ℚ with no hand-built piece), the same carrier as the §6 RDE pipeline. The §5.4 polynomial reduction and
+§5.8 primitive integration have **no `…G` variant** and stay on the `QFunNZ`-specific decls (so they
+still block deleting the QFunNZ engine).
 
 ## NOT YET FORMALIZED (audit 2026-06-24)
 §5.1 Elementary and Liouvillian Extensions: Def 5.1.1 (elementary/primitive/hyperexponential
@@ -52,19 +58,52 @@ open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPolyG
 
 namespace DeepWiki.Si
 
+/-! ### Generic-carrier input builders (catalog-local)
+
+The §5 smoke examples over the generic ℚ(x) = `QFunNZG ℚ` carrier read their ℚ(x) coefficients as
+num/den lists over `CPolyG ℚ = List ℚ`. These builders mirror `QFunNZ.ofConstNZ`/`ofNumDen` one tower
+level down (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not book
+items. -/
+
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (denominator `[1]` nonzero, by
+`cisZeroG_one_singleton`, so it holds under a parametric definition). -/
+def constG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
+
+/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element, with `den ≠ 0` discharged by `native_decide`. -/
+def fracG (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+  ⟨(num, den), h⟩
+
+/-- The variable `x ∈ ℚ(x)` as `QFunNZG ℚ` (numerator `[0,1]`, denominator `[1]`). -/
+def xG : QFunNZG ℚ := fracG [0, 1] [1]
+
 /-! ## §5.3 The Hermite Reduction (transcendental) — computable + validated -/
 
 /-- **Algorithm `HermiteReduce`** (§5.3, p.139, quadratic version): the computable transcendental
 Hermite reduction `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden), (h_num, h_den))` (the canonical
-generic engine, here at `α = QFunNZ = ℚ(x)`) over the tower ℚ(x)[t], rewriting the normal part
-`f = a/d` as `D(g) + h` with `h_den` squarefree, for the monomial derivation `D = κ_D + Dt·d/dt`.
+generic engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower ℚ(x)[t], rewriting the normal
+part `f = a/d` as `D(g) + h` with `h_den` squarefree, for the monomial derivation `D = κ_D + Dt·d/dt`.
 Computable + `native_decide`-validated; abstract correctness (Thm 5.3.1) deferred. -/
-noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerG (α := QFunNZ)
+noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerG (α := QFunNZG ℚ)
 
-/-- **Example 5.3.1** (§5.3, p.139): `cHermiteReduceTower` on `f = 1/t²` (`Dt = t²+1`, `t = tan x`)
-satisfies the Hermite identity `D(g) + h = f` over ℚ(x)[t] (cleared form, `native_decide`); the
-multiplicity-`2` factor `t` is lowered to the squarefree residual denominator `t`. -/
-abbrev ex_5_3_1 := @hermiteTower_example
+/-- **Example 5.3.1** (§5.3, p.139): `cHermiteReduceTowerG` on `f = 1/t²` (`Dt = t²+1`, `t = tan x`)
+satisfies the Hermite identity `D(g) + h = f` over the generic ℚ(x)[t] (cleared form, `native_decide`);
+the multiplicity-`2` factor `t` is lowered to the squarefree residual denominator `t`. -/
+theorem ex_5_3_1 :
+    (let Dt : CPolyG (QFunNZG ℚ) := [constG 1, constG 0, constG 1]      -- `Dt = t²+1`
+     let a : CPolyG (QFunNZG ℚ) := [constG 1]                           -- `a = 1`
+     let d : CPolyG (QFunNZG ℚ) := [constG 0, constG 0, constG 1]       -- `d = t²`
+     let res := CPolyG.cHermiteReduceTowerG Dt 12 a d
+     let gnum := res.1.1; let gden := res.1.2
+     let hNum := res.2.1; let hDen := res.2.2
+     let Dgnum := CPolyG.cmonomialDeriv Dt gnum
+     let Dgden := CPolyG.cmonomialDeriv Dt gden
+     let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
+     let gden2 := CPolyG.cmulG gden gden
+     -- `D(g) + h − f = 0` ⟺ `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`
+     let lhs := CPolyG.cmulG
+       (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) d
+     let rhs := CPolyG.cmulG a (CPolyG.cmulG gden2 hDen)
+     CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
 
 /-! ## §5.4 The Polynomial Reduction — computable + validated -/
 
@@ -72,7 +111,8 @@ abbrev ex_5_3_1 := @hermiteTower_example
 `cPolyReduceTower Dt fuel p = (q, r)` for a nonlinear monomial `t` (`δ(t) = deg(Dt) ≥ 2`), splitting
 `p ∈ k[t]` as `p = D(q) + r` with `deg(r) < δ(t)` by peeling the leading term whose monomial
 derivative cancels the top. Computable (generic over `[CField α] [CDiffField α]`) +
-`native_decide`-validated (Thm 5.4.1); abstract correctness deferred. -/
+`native_decide`-validated (Thm 5.4.1); abstract correctness deferred. *(No `…G`-suffixed mirror exists
+yet, so this stays on the `QFunNZ`-specific decl — a remaining QFunNZ-engine deletion blocker.)* -/
 noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower
 
 /-- **Example 5.4.1** (§5.4, p.141): `cPolyReduceTower` reduces `p = t³` (`Dt = t²+1`, `t = tan x`,
@@ -84,22 +124,35 @@ abbrev ex_5_4_1 := @polyReduceTower_example
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the residue resultant: the computable
 `cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd) ∈ ℚ(x)[z]` (the canonical generic
-engine, here at `α = QFunNZ = ℚ(x)`) over the tower, by the evaluation + Lagrange-interpolation
-template, whose roots are the residues of the logarithmic part of `∫ a/d`. Computable +
+engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower, by the evaluation + Lagrange-
+interpolation template, whose roots are the residues of the logarithmic part of `∫ a/d`. Computable +
 `native_decide`-validated; abstract correctness (Thm 5.6.1) deferred. -/
-noncomputable abbrev alg_5_6_residueResultant := cResidueResultantTowerG (α := QFunNZ)
+noncomputable abbrev alg_5_6_residueResultant := cResidueResultantTowerG (α := QFunNZG ℚ)
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the log argument: the computable
-`cLogArgTower Dt fuel a d c = gcd_t(d, a − c·Dd) ∈ ℚ(x)[t]` over the tower — the polynomial inside
-`log` for a residue `c`, so `∑_c c·log(cLogArgTower … c)` is the logarithmic part of `∫ a/d`.
-Computable + `native_decide`-validated; abstract correctness deferred. -/
-noncomputable abbrev alg_5_6_logArg := @cLogArgTower
+`cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd) ∈ ℚ(x)[t]` (the generic engine at the generic ℚ(x) =
+`QFunNZG ℚ`) over the tower — the polynomial inside `log` for a residue `c`, so
+`∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. Computable +
+`native_decide`-validated; abstract correctness deferred. -/
+noncomputable abbrev alg_5_6_logArg := cLogArgTowerG (α := QFunNZG ℚ)
 
 /-- **Example 5.6.2** (§5.6, p.151–152): for `∫ (2t²−t−x²)/(t³−x²t) dx`, `t = log x`, `Dt = 1/x`, the
-residue resultant `cResidueResultantTower` has monic part `z³−xz²−z/4+x/4` (the book's `r` up to a
-ℚ(x) scalar) and the log arguments `cLogArgTower … (±1/2) = t ± x` (the residues `±1/2`), all checked
-over ℚ(x)[t] (`native_decide`). -/
-abbrev ex_5_6_2 := @logPartTower_example
+residue resultant `cResidueResultantTowerG` has monic part `z³−xz²−z/4+x/4` (the book's `r` up to a
+ℚ(x) scalar) and the log arguments `cLogArgTowerG … (±1/2) = t ± x` (the residues `±1/2`), all checked
+over the generic ℚ(x)[t] (`native_decide`). -/
+theorem ex_5_6_2 :
+    (let Dt : CPolyG (QFunNZG ℚ) := [fracG [1] [0, 1]]                       -- `Dt = 1/x`
+     let a : CPolyG (QFunNZG ℚ) := [fracG [0, 0, -1] [1], constG (-1), constG 2]  -- `a = 2t²−t−x²`
+     let d : CPolyG (QFunNZG ℚ) := [constG 0, fracG [0, 0, -1] [1], constG 0, constG 1]  -- `d = t³−x²t`
+     let resMonic : CPolyG (QFunNZG ℚ) :=                                    -- `z³−xz²−z/4+x/4`
+       [fracG [0, 1] [4], constG (-1/4), fracG [0, -1] [1], constG 1]
+     let argPlus : CPolyG (QFunNZG ℚ) := [fracG [0, 1] [1], constG 1]        -- `t + x`
+     let argMinus : CPolyG (QFunNZG ℚ) := [fracG [0, -1] [1], constG 1]      -- `t − x`
+     CPolyG.cisZeroG (CPolyG.csubG
+         (CPolyG.cmonicG (CPolyG.cResidueResultantTowerG Dt 30 a d)) resMonic)
+     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt 30 a d (constG (1/2))) argPlus)
+     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt 30 a d (constG (-1/2))) argMinus))
+    := by native_decide
 
 /-! ## §5.8 The Primitive Case — computable + validated (constant-coefficient sub-case) -/
 
@@ -108,7 +161,8 @@ abbrev ex_5_6_2 := @logPartTower_example
 e.g. `t = log x`), integrating `p = ∑ aᵢtⁱ` top-down in the constant-coefficient sub-case (`b = 0`,
 `c = aₘ/((m+1)·Dt)`) so `D(q) + rem = p`. The full `LimitedIntegrate` solve for the coefficient
 antiderivatives is the deferred Chapter-7 oracle. Computable + `native_decide`-validated; abstract
-correctness (Thm 5.8.1) deferred. -/
+correctness (Thm 5.8.1) deferred. *(No `…G`-suffixed mirror exists yet, so this stays on the
+`QFunNZ`-specific decl — a remaining QFunNZ-engine deletion blocker.)* -/
 noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate
 
 /-- **Example (§5.8, p.158)**, primitive case: `cPrimitivePolyIntegrate` on `p = (log x)²/x = (1/x)·t²`
