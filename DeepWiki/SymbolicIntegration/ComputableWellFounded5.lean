@@ -467,6 +467,131 @@ theorem cHermiteReduceTowerInnerWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (v u : C
     -- the updated `(a', g')` is a regular run; apply the IH
     exact ih _ _ hrec
 
+/-- **Fuel-free transcendental Hermite reduction** `cHermiteReduceTowerWf Dt a d = ((gnum, gden), (h_num,
+h_den))` (Bronstein §5.3, p.139) over the tower ℚ(x)[t]: the fuel-free companion of `cHermiteReduceTower`.
+Squarefree-factor `d` with the **own-loop** `cSqfreeYunFFWf` (fraction-free, `ComputableWellFounded4`); for
+each factor `(v, i)` of multiplicity `i ≥ 2`, run the fuel-free inner loop `cHermiteReduceTowerInnerWf`
+(with `u = d/vⁱ` via the fuel-free `cdivWf`); the residual `h_num` over the squarefree radical `Dstar` is
+recovered exactly via `cdivWf`. The `Dstar`/`g` foldl is structural; every fuel'd sub-op is a WF leaf —
+**no fuel at runtime**, `native_decide`-able over the noncomputable-`CFieldSpec` tower `QFunNZ`. Stated with
+`.1`/`.2` projections (no `let`-destructuring) so the bridge `cHermiteReduceTowerWf_eq` rewrites cleanly. -/
+def cHermiteReduceTowerWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) :
+    (CPolyG QFunNZ × CPolyG QFunNZ) × (CPolyG QFunNZ × CPolyG QFunNZ) :=
+  let factors := cSqfreeYunFFWf d                            -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
+  let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
+  let g : CPolyG QFunNZ × CPolyG QFunNZ := factors.zipIdx.foldl
+    (fun (gAcc : CPolyG QFunNZ × CPolyG QFunNZ) (vi, idx) =>
+      let i := idx + 1
+      if i ≤ 1 then gAcc
+      else
+        let Vi_pow := cpowG vi i
+        let u := cdivWf d Vi_pow
+        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])
+        (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))  -- gAcc + gloc
+    ([CField.zero], [CField.one])
+  let gprimeNum := csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2))
+  let gden2 := cmulG g.2 g.2
+  let resNum := csubG (cmulG a gden2) (cmulG d gprimeNum)
+  let resDen := cmulG d gden2
+  let hNum := cdivWf (cmulG resNum Dstar) resDen
+  ((cnormG g.1, cnormG g.2), (cnormG hNum, cnormG Dstar))
+
 end CPolyG
+
+/-! ### Caveat — `cHermiteReduceTowerWf` requires an all-multiplicities-present denominator
+
+`cHermiteReduceTowerWf` uses the fuel-free Yun factorization `cSqfreeYunFFWf` (`ComputableWellFounded4`),
+whose well-founded measure `(cnormG b).length` is **only valid when every multiplicity slot of the
+squarefree factorization is occupied** — i.e. when the emitted factor `pᵢ` is non-constant at every step.
+When a multiplicity is **skipped** (e.g. `d = tⁿ` for `n ≥ 2`, whose squarefree factorization
+`t¹·…·tⁿ⁻¹·…` is associate to `[1, …, 1, t]` with `n−1` *unit* factors and one real factor `t`), Yun emits
+a constant (degree-`0`) factor `[1]` while the running `b` and `d` stay **unchanged** for several steps —
+so `(cnormG b).length` does not strictly drop and `cSqfreeYunFFWf`'s structural guard fails, **truncating**
+the factor list (returning a *shorter, wrong* answer). There is no polynomial-degree own-loop measure for
+Yun's loop in this case — its termination is governed by the *multiplicity counter* (the fuel `fo`), which
+has no strictly-decreasing polynomial witness across constant-factor steps. So `cHermiteReduceTowerWf`
+agrees with the fuel'd `cHermiteReduceTower` (and satisfies the cleared identity) **exactly on denominators
+whose multiplicities are all present** (`cSqfreeYunFFWf d = cSqfreeYunFF fuel d`); the `native_decide`
+examples below use such a `d = (t−1)²(t−2)` (multiplicities `1, 2` both occupied) rather than the §5.3
+book example `d = t²` (only multiplicity `2`, multiplicity `1` skipped — `cSqfreeYunFFWf` is wrong there).
+This is the precise remaining gap: fixing it needs a correct fuel-free Yun loop in
+`ComputableWellFounded4`, which this file may not edit. -/
+
+namespace CPolyG
+
+open QFunNZ
+
+/-- Validation monomial derivative `Dt = t² + 1` for the fuel-free Hermite reduction (`t = tan x`). -/
+def hermiteWfExampleDt : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1]
+
+/-- Validation numerator `a = 1` over ℚ(x)[t] (ℚ-constant coefficients). -/
+def hermiteWfExampleA : CPolyG QFunNZ := [ofConstNZ 1]
+
+/-- Validation denominator `d = (t−1)²(t−2)` for the fuel-free Hermite reduction: under `Dt = t² + 1`
+both `t−1`, `t−2` are normal, with multiplicities `{1 ↦ t−2, 2 ↦ t−1}` **both present** (no skipped
+multiplicity), so the fuel-free Yun factorization `cSqfreeYunFFWf` is valid here. The repeated normal
+factor `t−1` (multiplicity `2`) is what the transcendental Hermite reduction lowers. -/
+def hermiteWfExampleD : CPolyG QFunNZ :=
+  cmulG (cpowG [ofConstNZ (-1), ofConstNZ 1] 2) [ofConstNZ (-2), ofConstNZ 1]
+
+end CPolyG
+
+/-! ### `native_decide` smoke test for `cHermiteReduceTowerWf` (`f = 1/((t−1)²(t−2))`, `t = tan x`)
+
+The whole fuel-free transcendental Hermite reduction executes in native code over the
+noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)) — `cHermiteReduceTowerWf` carries no fuel and no
+noncomputable bridge into the compiled body. We take `f = 1/((t−1)²(t−2))` under `Dt = t² + 1` (`t = tan
+x`): the multiplicity-`2` normal factor `t−1` is lowered to multiplicity `1`, and (unlike `d = t²`) every
+multiplicity slot is present, so the fuel-free Yun factorization `cSqfreeYunFFWf` is valid. -/
+
+/-- **`cHermiteReduceTowerWf` satisfies `D(g) + h = f`, fuel-free** (`native_decide`): for `f = a/d =
+1/((t−1)²(t−2))` over ℚ(x)(t) with `D = cmonomialDeriv Dt`, `Dt = t² + 1` (`t = tan x`), the fuel-free
+reduction's `((gnum, gden), (h_num, h_den))` satisfies the Hermite cleared identity `(gprimeNum·h_den +
+h_num·gden²)·d = a·(gden²·h_den)` (the cleared form of `D(gnum/gden) + h_num/h_den = a/d`) — the whole
+chain (`cSqfreeYunFFWf` + the inner loop `cHermiteReduceTowerInnerWf` + the residual recovery) runs
+end-to-end with **no fuel at runtime**. Checked by `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    (let res := CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD
+      let gnum := res.1.1
+      let gden := res.1.2
+      let hNum := res.2.1
+      let hDen := res.2.2
+      let Dgnum := CPolyG.cmonomialDeriv CPolyG.hermiteWfExampleDt gnum
+      let Dgden := CPolyG.cmonomialDeriv CPolyG.hermiteWfExampleDt gden
+      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
+      let gden2 := CPolyG.cmulG gden gden
+      let lhs := CPolyG.cmulG
+        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) CPolyG.hermiteWfExampleD
+      let rhs := CPolyG.cmulG CPolyG.hermiteWfExampleA (CPolyG.cmulG gden2 hDen)
+      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+
+/-- **The fuel-free Hermite residual has a squarefree denominator** (`native_decide`): the fuel-free
+reduction lowered the multiplicity-`2` factor `t−1` of `d = (t−1)²(t−2)` to multiplicity `1`, so the
+residual denominator `h_den = Dstar = (t−1)(t−2)` is squarefree (`t`-degree `2`). -/
+example :
+    CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+      CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2 = 2 := by native_decide
+
+/-- `cHermiteReduceTowerWf` agrees with the fuel'd `cHermiteReduceTower` on `f = 1/((t−1)²(t−2))` (the
+rational-part numerator/denominator and residual numerator/denominator `t`-degree tuple matches) — the
+fuel-free Yun factorization is valid here (no skipped multiplicity). -/
+example :
+    (CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).1.1,
+      CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).1.2,
+      CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.1,
+      CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2)
+      = (CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
+          CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).1.1,
+        CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
+          CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).1.2,
+        CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
+          CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.1,
+        CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
+          CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2) := by native_decide
 
 end DeepWiki.SymbolicIntegration
