@@ -600,6 +600,40 @@ theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
       rw [cnorm_idem]
       omega
 
+/-- **Euclidean-gcd descent terminates for sufficient fuel** (the `cgcdTerminates` discharge): when
+`fuel` bounds the first argument's normalized length (`(cnorm a).length ≤ fuel`) and *strictly* bounds
+the second's (`(cnorm b).length < fuel`), the `cgcdExt` remainder descent reaches a zero remainder within
+`fuel`. By induction on `fuel`: each step replaces `(a, b)` by `(b, cmod (fuel+1) a b)`, and
+`cmod_length_lt` shortens the remainder strictly below `(cnorm b).length`, so the strict bound on the
+second slot is preserved (the new first slot inherits the old strict bound, the new second slot a fresh
+strict one). The asymmetric strict-on-`b` invariant is what makes the descent close. -/
+theorem cgcdTerminates_of_fuel :
+    ∀ (fuel : ℕ) (a b : CPoly), (cnorm a).length ≤ fuel → (cnorm b).length < fuel →
+      cgcdTerminates fuel a b := by
+  intro fuel
+  induction fuel with
+  | zero => intro _ _ _ hb; omega
+  | succ fuel ih =>
+    intro a b ha hb
+    rw [cgcdTerminates]
+    by_cases hbz : cisZero b = true
+    · exact Or.inl hbz
+    · refine Or.inr ?_
+      have hbne : cnorm b ≠ [] := by simpa [cisZero] using hbz
+      -- the remainder strictly shortens below `(cnorm b).length`
+      have hlt : (cnorm (cmod (fuel + 1) a b)).length < (cnorm b).length :=
+        cmod_length_lt (fuel + 1) a b hbne ha
+      -- new pair `(b, cmod …)`: first slot `≤ fuel`, second slot `< fuel`
+      exact ih b (cmod (fuel + 1) a b) (by omega) (by omega)
+
+/-- **Euclidean-gcd descent terminates for fuel above the larger input length** (the symmetric entry):
+if `fuel` strictly bounds both normalized argument lengths, `cgcdTerminates fuel a b` holds — the
+`(cnorm a).length ≤ fuel` precondition of `cgcdTerminates_of_fuel` follows from the strict bound. -/
+theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : CPoly)
+    (ha : (cnorm a).length < fuel) (hb : (cnorm b).length < fuel) :
+    cgcdTerminates fuel a b :=
+  cgcdTerminates_of_fuel fuel a b (le_of_lt ha) hb
+
 /-- **Quotient degree**: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
 `natDegree (cdiv …) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
 Supplies `resultant_add_mul_right`'s degree side-condition. -/
