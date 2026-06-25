@@ -307,4 +307,184 @@ def cRationalRDEWf (bnum bden cnum cden : CPolyG ℚ) : Option (CPolyG ℚ × CP
 
 end CPolyG
 
+/-! ### Tower composition — the fuel-free base RDE over ℚ(x) `cRischDEBaseWf`
+
+`cRischDEBase b c` (the eq. 6.23 recursion target) is the `k`-constant fast path plus the general routing
+through `cRationalRDE` (over the **different** carrier `CPolyG ℚ`). The fuel-free companion substitutes
+`cRationalRDEWf`; it is **not recursive** (the base ℚ-pipeline lives over `CPolyG ℚ`, so there is no mutual
+recursion with the tower cancellation loops that call it) — a plain composition, **no fuel at runtime**. -/
+
+namespace CPolyG
+
+/-- **Fuel-free base-field Risch DE `Ds + b·s = c` over `k = ℚ(x)`** `cRischDEBaseWf b c` (Bronstein §6.6
+eq. 6.23, the recursion target of the §6.6 cancellation cases): the fuel-free companion of `cRischDEBase`.
+Returns `some s` (`s ∈ ℚ(x)` solving `Ds + b·s = c`, `D = d/dx`) or `none`. The `k`-constant fast path
+(`b, c ∈ ℚ`: `s = c/b`, `b ≠ 0`; `s = 0` if `b = c = 0`) plus the **general** non-constant solve routing
+`b = bnum/bden`, `c = cnum/cden ∈ ℚ(x)` through the fuel-free `cRationalRDEWf` (the whole base ℚ-pipeline),
+lifting the returned `(snum, sden)` back to `QFunNZ`. **No fuel at runtime**; not recursive (the base
+ℚ-pipeline is over `CPolyG ℚ`). Agrees with `cRischDEBase` whenever `cRationalRDEWf` agrees with the fuel'd
+`cRationalRDE` (`cRischDEBaseWf_eq`). -/
+def cRischDEBaseWf (b c : QFunNZ) : Option QFunNZ :=
+  let isConst : QFunNZ → Bool := fun z => CField.isZero (CDiffField.cderiv z)
+  if isConst b && isConst c then
+    if CField.isZero b then
+      if CField.isZero c then some CField.zero else none
+    else
+      some (CField.div c b)
+  else
+    match cRationalRDEWf b.1.1 b.1.2 c.1.1 c.1.2 with
+    | none => none
+    | some (snum, sden) =>
+      if h : Compute.cisZero sden = false then some (QFunNZ.ofNumDen snum sden h) else none
+
+/-! ### Tower own-loop — the fuel-free primitive cancellation Poly-Risch-DE `cPolyRischDECancelPrimWf`
+
+The §6.6 tower primitive cancellation (`Dt ∈ k`, `δ = 0`, `b ∈ k*`): the leading terms of `Dq` and `bq`
+cancel, so the solve recurses degree-by-degree into the base RDE `cRischDEBaseWf b₀ (lc(c))` over `k = ℚ(x)`
+(eq. 6.23). The leading monomial `s·tᵐ` (`m = deg(c)`, `D = cmonomialDeriv Dt`) cancels `c`'s top, so
+`(cnormG c).length` strictly drops; well-founded recursion on it, structural runtime guard. -/
+
+/-- **Fuel-free primitive cancellation Poly-Risch-DE** (Bronstein §6.6, `PolyRischDECancelPrim(b,c,D,n)`,
+book p.212) `cPolyRischDECancelPrimWf Dt b c n`: the fuel-free companion of `cPolyRischDECancelPrim`.
+`Dt ∈ k = ℚ(x)`, `b ∈ k*` (degree-0 `t`-polynomial, scalar `b₀ = lc(b)`), `c ∈ k[t]`, degree bound `n : ℤ`;
+solves `Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the base RDE
+`cRischDEBaseWf b₀ (lc(c))` (`= RischDE(b₀, lc(c))` over `k = ℚ(x)`, eq. 6.23), leading monomial `s·tᵐ`,
+remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)` (`D = cmonomialDeriv Dt`). Returns `none` ("no solution of degree
+`≤ n`") or `some q`. True well-founded recursion on `(cnormG c).length` — **no fuel at runtime**; the
+recursion is taken only under the structural guard `(cnormG c').length < (cnormG c).length` (the leading
+monomial cancels `c`'s top), so `decreasing_by` is `assumption`. The §5.12 logarithmic-derivative branch
+is the documented continuation (the general degree-by-degree recursion is sound without it). Agrees with
+`cPolyRischDECancelPrim` on a real run (`cPolyRischDECancelPrimWf_eq`). `native_decide`-able. -/
+def cPolyRischDECancelPrimWf (Dt : CPolyG QFunNZ) (b c : CPolyG QFunNZ) (n : ℤ) :
+    Option (CPolyG QFunNZ) :=
+  let b0 : QFunNZ := cleadG b
+  if cisZeroG c then some []
+  else if n < (cdegG c : ℤ) then none
+  else
+    let m : ℕ := cdegG c
+    match cRischDEBaseWf b0 (cleadG c) with
+    | none => none
+    | some s =>
+      let stm : CPolyG QFunNZ := cshiftG m [s]
+      let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+      if (cnormG c' : List QFunNZ).length < (cnormG c : List QFunNZ).length then
+        match cPolyRischDECancelPrimWf Dt b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+      else none   -- unreachable on a real run (the leading monomial cancels, degree drops)
+termination_by (cnormG c).length
+decreasing_by assumption
+
+/-! ### Tower leaf — the fuel-free hyperexponential coefficient `cExpEtaWf`
+
+`cExpEta fuel Dt = lc(Dt / t)` (`η = Dt/t ∈ k`) uses the fuel'd `cdivG`; the fuel-free companion
+substitutes the generic `cdivWf`. -/
+
+/-- **Fuel-free hyperexponential coefficient `η = Dt/t ∈ k`** `cExpEtaWf Dt`: the fuel-free companion of
+`cExpEta`. For a hyperexponential monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) with
+the generic fuel-free `cdivWf` and read the degree-0 coefficient `η ∈ ℚ(x)`. For `t = exp(x)` (`Dt = t`),
+`η = 1`. **No fuel at runtime**. -/
+def cExpEtaWf (Dt : CPolyG QFunNZ) : QFunNZ :=
+  cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
+
+/-! ### Tower own-loop — the fuel-free hyperexponential cancellation Poly-Risch-DE `cPolyRischDECancelExpWf`
+
+The §6.6 tower hyperexponential cancellation (`Dt/t = η ∈ k`, `δ = 1`, `b ∈ k*`): as in the primitive case
+the leading terms cancel, but `D(s·tᵐ) = (Ds + m·η·s)·tᵐ`, so the eq. 6.24 base RDE is
+`RischDE(b + m·η, lc(c))` (coefficient shifted by `m·η`, `η = cExpEtaWf Dt`). Same own-loop on
+`(cnormG c).length`, structural runtime guard, recursing into `cRischDEBaseWf`. -/
+
+/-- **Fuel-free hyperexponential cancellation Poly-Risch-DE** (Bronstein §6.6, `PolyRischDECancelExp(b,c,D,n)`,
+book p.213) `cPolyRischDECancelExpWf Dt b c n`: the fuel-free companion of `cPolyRischDECancelExp`.
+`Dt/t = η ∈ k = ℚ(x)` (`δ = 1`), `b ∈ k*` (scalar `b₀ = lc(b)`), `c ∈ k[t]`, degree bound `n : ℤ`; solves
+`Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the eq. 6.24 base RDE
+`cRischDEBaseWf (b₀ + m·η) (lc(c))` over `k = ℚ(x)` (the `m·η` shift makes the coefficient genuinely
+non-constant, `η = cExpEtaWf Dt`), leading monomial `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`
+(`D = cmonomialDeriv Dt`). Returns `none` or `some q`. True well-founded recursion on `(cnormG c).length`
+— **no fuel at runtime**; the structural guard `(cnormG c').length < (cnormG c).length` is `decreasing_by
+:= assumption`. The §5.12 log-derivative branch is the documented continuation. Agrees with
+`cPolyRischDECancelExp` on a real run (`cPolyRischDECancelExpWf_eq`). `native_decide`-able. -/
+def cPolyRischDECancelExpWf (Dt : CPolyG QFunNZ) (b c : CPolyG QFunNZ) (n : ℤ) :
+    Option (CPolyG QFunNZ) :=
+  let b0 : QFunNZ := cleadG b
+  let η : QFunNZ := cExpEtaWf Dt
+  if cisZeroG c then some []
+  else if n < (cdegG c : ℤ) then none
+  else
+    let m : ℕ := cdegG c
+    let coeff : QFunNZ := CField.add b0 (CField.mul (QFunNZ.ofConstNZ ((m : ℚ))) η)
+    match cRischDEBaseWf coeff (cleadG c) with
+    | none => none
+    | some s =>
+      let stm : CPolyG QFunNZ := cshiftG m [s]
+      let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+      if (cnormG c' : List QFunNZ).length < (cnormG c : List QFunNZ).length then
+        match cPolyRischDECancelExpWf Dt b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+      else none   -- unreachable on a real run (the leading monomial cancels, degree drops)
+termination_by (cnormG c).length
+decreasing_by assumption
+
+/-! ### Tower dispatcher — the fuel-free Poly-Risch-DE dispatcher `cPolyRischDEWf`
+
+`cPolyRischDE` routes `Dq + b·q = c` (eq. 6.19) by monomial type and `deg(b)` (Lemma 6.5.1): the
+non-cancellation case (`deg(b) > max(0, δ−1)`) to `cPolyRischDENoCancel`, primitive cancellation (`δ = 0`,
+`b ∈ k*`) to `cPolyRischDECancelPrim`, hyperexponential cancellation (`δ = 1`, `b ∈ k*`) to
+`cPolyRischDECancelExp`, else the non-cancellation fallback. The fuel-free dispatcher substitutes the
+fuel-free own-loops. -/
+
+/-- **Fuel-free Poly-Risch-DE dispatcher** (Bronstein §6.5 + §6.6) `cPolyRischDEWf Dt b c n`: the fuel-free
+companion of `cPolyRischDE`. Routes `Dq + b·q = c` by the monomial type and `deg(b)` (Lemma 6.5.1): the
+non-cancellation case (`deg(b) > max(0, δ−1)`, `δ = deg(Dt)`) to the fuel-free `cPolyRischDENoCancelWf`,
+primitive cancellation (`δ = 0`, `b ∈ k*`) to `cPolyRischDECancelPrimWf`, hyperexponential cancellation
+(`δ = 1`, `b ∈ k*`) to `cPolyRischDECancelExpWf`, else the non-cancellation fallback. **No fuel at runtime**
+— the §6.6 cancellation regimes now run fuel-free. -/
+def cPolyRischDEWf (Dt : CPolyG QFunNZ) (b c : CPolyG QFunNZ) (n : ℤ) : Option (CPolyG QFunNZ) :=
+  let δ : ℤ := (cdegG Dt : ℤ)
+  let db : ℤ := (cdegG b : ℤ)
+  if db > max 0 (δ - 1) then
+    cPolyRischDENoCancelWf Dt b c n
+  else if δ = 0 ∧ db = 0 then
+    cPolyRischDECancelPrimWf Dt b c n
+  else if δ = 1 ∧ db = 0 then
+    cPolyRischDECancelExpWf Dt b c n
+  else
+    cPolyRischDENoCancelWf Dt b c n
+
+/-! ### The GOAL — the fuel-free full Risch DE solver `cRischDEWfFull` (all regimes)
+
+`cRischDEWf` (WF7) handled only the non-cancellation regime (its §6.5 polynomial stage hard-wired to
+`cPolyRischDENoCancelWf`). `cRischDEWfFull` re-points the polynomial stage to the **dispatcher**
+`cPolyRischDEWf`, so the §6.6 cancellation regimes (primitive, hyperexponential) now run fuel-free too —
+the whole §6 RDE pipeline is fuel-free in **every** regime. -/
+
+/-- **The fuel-free full Risch differential equation solver** `cRischDEWfFull Dt fnum fden gnum gden`
+(Bronstein Ch. 6, the goal, **all regimes**): the fuel-free companion of `cRischDE`. For `f = fnum/fden`,
+`g = gnum/gden ∈ ℚ(x)(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns `some (ynum, yden)`
+with `y = ynum/yden` solving `Dy + f·y = g`, or `none`. Identical assembly to `cRischDE` — normal
+denominator → special denominator → degree bound → SPDE → polynomial **dispatcher** — with every fuel'd
+sub-op replaced by its fuel-free companion (`cRdeNormalDenominatorWf`, `cRdeSpecialDenominatorWf`,
+`cRdeBoundDegree`, `cSPDEWf`, and the dispatcher `cPolyRischDEWf` routing the §6.5 non-cancellation /
+§6.6 primitive / §6.6 hyperexponential cancellation own-loops). **No fuel at runtime in any regime**;
+`native_decide`-able over the noncomputable-`CFieldSpec` tower `QFunNZ`. Extends `cRischDEWf` (WF7, which
+covered only non-cancellation) to the full §6.6 cancellation dispatch. -/
+def cRischDEWfFull (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
+    Option (CPolyG QFunNZ × CPolyG QFunNZ) :=
+  match cRdeNormalDenominatorWf Dt fnum fden gnum gden with
+  | none => none
+  | some (a0, b0, c0, h0) =>
+    let (a, b, c, h1) := cRdeSpecialDenominatorWf Dt a0 b0 c0
+    let N := cRdeBoundDegree Dt 0 a b c
+    match cSPDEWf Dt a b c (N : ℤ) with
+    | none => none
+    | some (bbar, cbar, _m, α, β) =>
+      match cPolyRischDEWf Dt bbar cbar _m with
+      | none => none
+      | some v =>
+        let Q := caddG (cmulG α v) β
+        some (cmulG Q h1, h0)
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
