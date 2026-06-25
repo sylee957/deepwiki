@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
+import DeepWiki.SymbolicIntegration.ComputableResidueBridge
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.LinearAlgebra.Lagrange
 
@@ -948,5 +949,140 @@ theorem cLogPart_keys_image (Dt a d : CPolyG QFunNZ) (fuel : ℕ) (cands : List 
       c).mpr ⟨α, hαs, hceq⟩
 
 end CPolyG
+
+/-! ### The `hkeys`-free capstone — `D(cIntegrate f) = f` with the residue-set gap discharged
+
+Feeding the residue-set discharge (`cLogPart_keys_image`/`cLogPart_keys_nodup`) into
+`cIntegrate_checkIdentity_of_residueData` (`ComputableResidueBridge`) removes its last *opaque*
+mathematical inputs `hkeysImage`/`hkeysNodup` (the residue-set enumeration), replacing them with the
+**transparent, inspectable** candidate-list facts `hcompl` (completeness) and `hdistinct` (`toK`-distinct
+residue-passing candidates) plus the transparent degree side-conditions. The headline `D(cIntegrate f) =
+f` for all primitive-regime inputs, now gated only on the primitive split-squarefree regime and
+inspectable, concrete preconditions — no opaque `hLog` *and* no opaque residue-set enumeration. -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- **The `hkeys`-free `cIntegrate` capstone** (`D(cIntegrate f) = f`, primitive regime, residue-set
+*enumeration* discharged): `cIntegrate_checkIdentity_of_residueData` with its opaque residue-set inputs
+`hkeysImage`/`hkeysNodup` **discharged** by `cLogPart_keys_image`/`cLogPart_keys_nodup` — replaced by the
+transparent candidate-completeness `hcompl` (every residue value `res α`, `α ∈ s`, is some
+`toK(ofConstNZ c)`, `c ∈ cands`), the candidate `toK`-distinctness `hdistinct`, and the degree
+side-conditions `hadeg`/`hδdeg`/`hamc`/`hfuelR`. The lone remaining inputs are the primitive
+split-squarefree regime data and these inspectable, concrete candidate/degree preconditions — no opaque
+`hLog` and no opaque residue-set enumeration black box. -/
+theorem cIntegrate_checkIdentity_uncond (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    -- the §5.6 primitive split-squarefree regime + transparent residue-enumeration data
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hAh : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hadeg : (toPolyG hNum).natDegree ≤ (toPolyG hDen).natDegree)
+    (hδdeg : (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).natDegree
+      ≤ (toPolyG hDen).natDegree)
+    (hamc : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (toPolyG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG hDen).natDegree)
+    (hfuelR : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (cnormG hDen : List QFunNZ).length
+        + (cnormG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel)
+    (hcompl : ∀ α ∈ s, ∃ c ∈ cands, (toPolyG hNum).eval α
+        / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+          = CFieldSpec.toK (ofConstNZ c))
+    (hdistinct : (cands.filter (fun c =>
+        cisZeroG [cevalG (cResidueResultantTower Dt fuel hNum hDen) (ofConstNZ c)])).map
+        (fun c => CFieldSpec.toK (ofConstNZ c)) |>.Nodup)
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    ∃ res : IntegralResult, cIntegrate Dt fuel a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true := by
+  classical
+  refine cIntegrate_checkIdentity_of_residueData Dt htop fuel a d cands fp b ds cn dn hcanon
+    gnumH gdenH hNum hDen hHermite pq prem hpoly hpremZero hcanreg hfs0 gprimeNum resNum resDen
+    hgprimeE hresNum hresDen hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hlognz s hden hAh hb0 hDd
+    ?_ ?_ hreg
+  · -- `hkeysNodup` from candidate `toK`-distinctness
+    exact cLogPart_keys_nodup Dt hNum hDen fuel cands hdistinct
+  · -- `hkeysImage` from the residue-set discharge (the residue function uses `nodal s id = toPolyG hDen`)
+    rw [← hden]
+    exact cLogPart_keys_image Dt hNum hDen fuel cands s hden hDd hadeg hδdeg hamc hfuelR hcompl
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- Restatement: the `hkeys`-free `cIntegrate` capstone — `D(cIntegrate f) = f` in the primitive
+split-squarefree regime, with the residue-set enumeration discharged to candidate completeness +
+distinctness (no opaque `hLog`, no opaque `hkeysImage`/`hkeysNodup`). -/
+example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C w₀) (fuel : ℕ)
+    (a d : CPolyG QFunNZ) (cands : List ℚ) (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ) (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true) (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen) (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hAh : (toPolyG hNum).degree < s.card) (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hadeg : (toPolyG hNum).natDegree ≤ (toPolyG hDen).natDegree)
+    (hδdeg : (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).natDegree
+      ≤ (toPolyG hDen).natDegree)
+    (hamc : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (toPolyG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG hDen).natDegree)
+    (hfuelR : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (cnormG hDen : List QFunNZ).length
+        + (cnormG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel)
+    (hcompl : ∀ α ∈ s, ∃ c ∈ cands, (toPolyG hNum).eval α
+        / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+          = CFieldSpec.toK (ofConstNZ c))
+    (hdistinct : (cands.filter (fun c =>
+        cisZeroG [cevalG (cResidueResultantTower Dt fuel hNum hDen) (ofConstNZ c)])).map
+        (fun c => CFieldSpec.toK (ofConstNZ c)) |>.Nodup)
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    ∃ res : IntegralResult, cIntegrate Dt fuel a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true :=
+  cIntegrate_checkIdentity_uncond Dt htop fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum hDen
+    hHermite pq prem hpoly hpremZero hcanreg hfs0 gprimeNum resNum resDen hgprimeE hresNum hresDen
+    hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hlognz s hden hAh hb0 hDd hadeg hδdeg hamc hfuelR
+    hcompl hdistinct hreg
 
 end DeepWiki.SymbolicIntegration
