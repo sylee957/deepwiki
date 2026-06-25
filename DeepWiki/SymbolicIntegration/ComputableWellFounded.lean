@@ -69,6 +69,34 @@ def cmodWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).2
 /-- **Fuel-free quotient** of generic Euclidean division (`cdivmodWf`'s first component). -/
 def cdivWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).1
 
+/-! ### Step B — fuel-free extended Euclidean algorithm `cgcdWf`
+
+`cgcdWf a b = (g, s, t)` with `s·a + t·b = g`, `g = gcd(a,b)` over `K`. True well-founded recursion on
+`(cnormG b).length` — no fuel at runtime. Mirrors `cgcdExtG`'s body with `cdivWf`/`cmodWf`; the
+recursion `cgcdWf b (cmodWf a b)` is taken only under the *structural guard*
+`(cnormG (cmodWf a b)).length < (cnormG b).length`, so the def stays `[CField α]`-only. Over a genuine
+field the remainder always shortens (`cmodG_length_lt`), so the guard never fails and `cgcdWf` agrees
+with `cgcdExtG` (`cgcdWf_eq`). -/
+
+/-- **Fuel-free extended Euclidean algorithm** on `CPolyG`s, `[CField α]`-only: `cgcdWf a b = (g, s, t)`
+with the Bézout relation `s·a + t·b = g` and `g = gcd(a, b)` over `K`. Well-founded on
+`(cnormG b).length` with the structural guard `(cnormG (cmodWf a b)).length < (cnormG b).length`; no
+fuel at runtime. `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZ`). -/
+def cgcdWf (a b : CPolyG α) : CPolyG α × CPolyG α × CPolyG α :=
+  if cisZeroG b then (cnormG a, [CField.one], [])
+  else
+    let q := cdivWf a b
+    let r := cmodWf a b
+    if (cnormG r : List α).length < (cnormG b : List α).length then
+      let (g, s, t) := cgcdWf b r
+      (g, t, csubG s (cmulG t q))
+    else (cnormG a, [CField.one], [])   -- unreachable over a genuine field (`cmodG_length_lt`)
+termination_by (cnormG b).length
+decreasing_by assumption
+
+/-- **Fuel-free gcd** (`cgcdWf`'s first component). -/
+def cgcdWfGcd (a b : CPolyG α) : CPolyG α := (cgcdWf a b).1
+
 /-! ### Bridge to the fuel'd `cdivmodG` and transported correctness
 
 Over a genuine field (`[CFieldSpec α]`) the leading term always cancels, so `cdivmodWf`'s structural
@@ -175,6 +203,119 @@ theorem toPolyG_cmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
     toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) := by
   rw [cdivWf, cmodWf]; exact toPolyG_cdivmodWf p q hq0
 
+/-! ### Bridge of `cgcdWf` to the fuel'd `cgcdExtG`, and transported correctness
+
+`cgcdWf_eq_of_fuel` is the gcd analogue of `cdivmodWf_eq_of_fuel`: over `[CFieldSpec α]` the remainder
+descent always strictly shortens (`cmodG_length_lt`), so `cgcdWf`'s structural guard never fails and
+`cgcdWf` coincides with `cgcdExtG fuel` whenever `fuel` covers the descent (`(cnormG a).length ≤ fuel`
+and `(cnormG b).length < fuel`, the `cgcdTerminates_of_fuel` accounting). Bézout and gcd-divisibility
+then transport **unconditionally** (`cgcdWf` always terminates: no `cgcdTerminatesG` survives). -/
+
+/-- `cdivWf`/`cmodWf` agree with the fuel'd `cdivG`/`cmodG` at any sufficient fuel. -/
+theorem cmodWf_eq_cmodG_succ (fuel : ℕ) (a b : CPolyG α)
+    (hfuel : (cnormG a : List α).length ≤ fuel + 1) :
+    cmodWf a b = cmodG (fuel + 1) a b := by
+  rw [cmodWf, cmodG, cdivmodWf_eq_of_fuel (fuel + 1) a b hfuel]
+
+/-- `cdivWf` agrees with the fuel'd `cdivG` (= `(cdivmodG …).1`) at any sufficient fuel. -/
+theorem cdivWf_eq_cdivmodG_succ (fuel : ℕ) (a b : CPolyG α)
+    (hfuel : (cnormG a : List α).length ≤ fuel + 1) :
+    cdivWf a b = (cdivmodG (fuel + 1) a b).1 := by
+  rw [cdivWf, cdivmodWf_eq_of_fuel (fuel + 1) a b hfuel]
+
+/-- **The remainder strictly shortens** below `(cnormG b).length` for a nonzero divisor: discharges
+`cgcdWf`'s structural guard, so over a genuine field the recursing branch is always taken. -/
+theorem cmodWf_length_lt (a b : CPolyG α) (hb : cnormG b ≠ []) :
+    (cnormG (cmodWf a b) : List α).length < (cnormG b : List α).length := by
+  rw [cmodWf_eq_cmodG_succ ((cnormG a : List α).length) a b (by omega)]
+  exact cmodG_length_lt _ a b hb (by omega)
+
+/-- **Generic `cgcdExtG` descent terminates for sufficient fuel** (the generic analogue of
+`cgcdTerminates_of_fuel`): if `fuel` bounds `(cnormG a).length` and *strictly* bounds
+`(cnormG b).length`, the remainder descent reaches a zero remainder within `fuel`. Each step replaces
+`(a, b)` by `(b, cmodG (fuel+1) a b)` and `cmodG_length_lt` shortens the remainder strictly below
+`(cnormG b).length`, preserving the asymmetric strict bound. -/
+theorem cgcdTerminatesG_of_fuel : ∀ (fuel : ℕ) (a b : CPolyG α),
+    (cnormG a : List α).length ≤ fuel → (cnormG b : List α).length < fuel →
+      cgcdTerminatesG fuel a b := by
+  intro fuel
+  induction fuel with
+  | zero => intro _ _ _ hb; omega
+  | succ fuel ih =>
+    intro a b ha hb
+    rw [cgcdTerminatesG]
+    by_cases hbz : cisZeroG b = true
+    · exact Or.inl hbz
+    · refine Or.inr ?_
+      have hbne : cnormG b ≠ [] := by
+        rw [cisZeroG] at hbz; simpa using List.isEmpty_eq_false_iff.mp (by simpa using hbz)
+      have hlt : (cnormG (cmodG (fuel + 1) a b) : List α).length < (cnormG b : List α).length :=
+        cmodG_length_lt (fuel + 1) a b hbne ha
+      exact ih b (cmodG (fuel + 1) a b) (by omega) (by omega)
+
+/-- **Bridge — `cgcdWf` equals `cgcdExtG` at any sufficient fuel.** With `(cnormG a).length ≤ fuel`
+and `(cnormG b).length < fuel`, `cgcdWf a b = cgcdExtG fuel a b`. The bounds appear only here; `cgcdWf`
+carries no fuel. By strong induction on `fuel`, preserving the asymmetric `< fuel`-on-`b` invariant
+exactly as `cgcdTerminates_of_fuel`. -/
+theorem cgcdWf_eq_of_fuel : ∀ (fuel : ℕ) (a b : CPolyG α),
+    (cnormG a : List α).length ≤ fuel → (cnormG b : List α).length < fuel →
+      cgcdWf a b = cgcdExtG fuel a b := by
+  intro fuel
+  induction fuel using Nat.strong_induction_on with
+  | _ fuel ihf =>
+    intro a b ha hb
+    cases fuel with
+    | zero => omega
+    | succ fuel =>
+      rw [cgcdWf.eq_def, cgcdExtG]
+      by_cases hbz : cisZeroG b = true
+      · simp only [hbz, if_true]
+      · have hbz' : cisZeroG b = false := by simpa using hbz
+        have hbne : cnormG b ≠ [] := by
+          rw [cisZeroG] at hbz'; simpa using List.isEmpty_eq_false_iff.mp hbz'
+        have hdec := cmodWf_length_lt a b hbne
+        -- the divmod cofactor and remainder match the fuel'd versions
+        have hmod : cmodWf a b = cmodG (fuel + 1) a b := cmodWf_eq_cmodG_succ fuel a b ha
+        have hdiv : cdivWf a b = (cdivmodG (fuel + 1) a b).1 :=
+          cdivWf_eq_cdivmodG_succ fuel a b ha
+        -- recurse: new first slot ≤ fuel, new second slot < fuel
+        have ha' : (cnormG b : List α).length ≤ fuel := by omega
+        have hb' : (cnormG (cmodWf a b) : List α).length < fuel := by omega
+        have ihstep := ihf fuel (by omega) b (cmodWf a b) ha' hb'
+        rw [hmod] at ihstep hdec
+        simp only [hbz', Bool.false_eq_true, if_false, hmod, if_pos hdec, hdiv, ihstep]
+
+/-- **Bridge at the self-sufficient fuel**: `cgcdWf a b = cgcdExtG (max+1) a b` with
+`max = (cnormG a).length + (cnormG b).length`. -/
+theorem cgcdWf_eq (a b : CPolyG α) :
+    cgcdWf a b
+      = cgcdExtG ((cnormG a : List α).length + (cnormG b : List α).length + 1) a b :=
+  cgcdWf_eq_of_fuel _ a b (by omega) (by omega)
+
+/-- **Bézout identity through `toPolyG`** for the fuel-free `cgcdWf` (no fuel hypothesis): with
+`(g, s, t) = cgcdWf a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
+theorem toPolyG_cgcdWf (a b : CPolyG α) :
+    toPolyG (cgcdWf a b).2.1 * toPolyG a + toPolyG (cgcdWf a b).2.2 * toPolyG b
+      = toPolyG (cgcdWf a b).1 := by
+  rw [cgcdWf_eq]; exact toPolyG_cgcdExtG _ a b
+
+/-- **`cgcdWf`'s gcd is greatest among common divisors** (no fuel hypothesis): any `d` dividing both
+`toPolyG a` and `toPolyG b` divides `toPolyG (cgcdWf a b).1`. Immediate from Bézout. -/
+theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPolyG α)
+    (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
+    d ∣ toPolyG (cgcdWf a b).1 := by
+  rw [cgcdWf_eq]; exact toPolyG_dvd_cgcdExtG _ a b ha hb
+
+/-- **`cgcdWf`'s gcd divides both inputs — UNCONDITIONALLY** (the WF def always terminates, so no
+`cgcdTerminatesG` hypothesis is needed): `toPolyG (cgcdWf a b).1` divides `toPolyG a` and `toPolyG b`.
+With `toPolyG_dvd_cgcdWf` and Bézout this characterizes `g` as an honest gcd in `K[X]`. -/
+theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
+    toPolyG (cgcdWf a b).1 ∣ toPolyG a ∧ toPolyG (cgcdWf a b).1 ∣ toPolyG b := by
+  rw [cgcdWf_eq]
+  refine toPolyG_cgcdExtG_dvd _ a b ?_
+  -- the chosen fuel covers the descent, so `cgcdTerminatesG` holds (via the concrete generic bound)
+  exact cgcdTerminatesG_of_fuel _ a b (by omega) (by omega)
+
 /-! ### `native_decide` smoke tests — the WF def reduces in compiled code
 
 `cdivmodWf` is `[CField α]`-only, so these reduce over both `ℚ` and the *noncomputable*-`CFieldSpec`
@@ -189,6 +330,16 @@ example : (CPolyG.cdivmodWf [(1 : ℚ), 0, 1] [(1 : ℚ), 1]).2 = [2] := by nati
 example :
     ((CPolyG.cdivmodWf [(CField.one : QFunNZ), CField.zero, CField.one]
       [CField.one, CField.one]).2 : List QFunNZ).length = 1 := by native_decide
+
+/-- `cgcdWf` over `ℚ`: `gcd(x² − 1, x − 1)` is degree-1 (a `x − 1` associate, normalized length 2). -/
+example :
+    ((CPolyG.cgcdWf [(-1 : ℚ), 0, 1] [(-1 : ℚ), 1]).1 : List ℚ).length = 2 := by native_decide
+
+/-- `cgcdWf` over the ℚ(x) tower `QFunNZ`: the whole extended-Euclid loop executes in native code —
+`gcd(x² − 1, x − 1)` is a nonzero (length ≥ 1) polynomial. -/
+example :
+    0 < ((CPolyG.cgcdWf [(CField.neg CField.one : QFunNZ), CField.zero, CField.one]
+      [CField.neg CField.one, CField.one]).1 : List QFunNZ).length := by native_decide
 
 end CPolyG
 
