@@ -212,4 +212,39 @@ decreasing_by assumption
 
 end CPolyG
 
+/-! ### Bridge of `cSplitFactorFastWf` to the fuel'd `cSplitFactorFast`, and transported correctness
+
+Under a regular run (`CSplitFactorFastRegular`, the same gate `cSplitFactorFast_isSplittingFactorizationGen`
+carries) the step `cstepWf` matches `cstep` and the non-constant special factor strictly drops the degree,
+so `cSplitFactorFastWf`'s structural guard never fails and it coincides with `cSplitFactorFast fuel`. The
+fuel bounds live only in the bridge proof; the runtime `cSplitFactorFastWf` carries no fuel. The
+book-faithful splitting-factorization correctness is then transported, fuel-free. -/
+
+/-- **`cgcdFFWf` equals the fuel'd `cgcdFF` from a `CgcdFFNodeReg` bundle** — the wrapper of
+`cgcdFFWf_eq_of_fuel` with its `hfuel`/`hdeg` taken from the bundle and the `≤ 60` bound read off
+`PrimPRSNodeRegular.head` (mirrors `associated_toPolyG_cgcdFF_node`). -/
+theorem cgcdFFWf_eq_node (fuel : ℕ) (p q : CPolyG QFunNZ) (hreg : CgcdFFNodeReg fuel p q) :
+    CPolyG.cgcdFFWf p q = CPolyG.cgcdFF fuel p q := by
+  obtain ⟨hfuel, hdeg, hnode⟩ := hreg
+  have hP60 : (Compute.bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms q else CPolyG.clearDenoms p)).length ≤ 60 := by
+    have := (hnode.head fuel _ _).2.2
+    rwa [Compute.bnorm_idem] at this
+  exact CPolyG.cgcdFFWf_eq_of_fuel fuel p q hfuel hdeg hP60
+
+/-- **The fuel-free step matches the fuel'd step** `cstepWf Dt p = cstep Dt (fuel+1) p`, under a regular
+step (`CStepRegular Dt (fuel+1) p`). Both `cgcdFF` calls are bridged by `cgcdFFWf_eq_node`, and the exact
+division `cdivFFWf = cdivFF (fuel+1)` by `cdivFFWf_eq_of_fuel` with the numerator-gcd length bound from
+`CStepRegular`'s third clause. -/
+theorem cstepWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ)
+    (hreg : CStepRegular Dt (fuel + 1) p) :
+    CPolyG.cstepWf Dt p = cstep Dt (fuel + 1) p := by
+  obtain ⟨hregN, hregD, hfuelN⟩ := hreg
+  rw [CPolyG.cstepWf, cstep]
+  -- the two cgcdFF calls
+  rw [cgcdFFWf_eq_node (fuel + 1) p (cmonomialDeriv Dt p) hregN,
+    cgcdFFWf_eq_node (fuel + 1) p (cderivG p) hregD]
+  -- the exact division: the numerator gcd's normalized length is bounded by `fuel+1`
+  rw [CPolyG.cdivFFWf_eq_of_fuel (fuel + 1) _ _ hfuelN]
+
 end DeepWiki.SymbolicIntegration
