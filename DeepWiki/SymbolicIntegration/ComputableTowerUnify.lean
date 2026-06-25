@@ -1,143 +1,22 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerReduce
 import DeepWiki.SymbolicIntegration.ComputableWellFounded
 
-/-! # Unifying the generic tower engine with the level-1 QFunNZ engine
+/-! # Generic monic-gcd correctness + the `canonicalRepresentationFastG` reconstruction probe
 
-This file is the FOUNDATION + a MECHANICALNESS PROBE for collapsing the two parallel
-symbolic-integration engines into one. The two engines are:
+Foundation lemmas for the generic tower engine's abstract correctness, over `[CField α] [CFieldSpec α]`:
 
-* the **level-1 QFunNZ engine** (`cIntegrate`/`cRischDE`/`cgcdFF`/…) — specialized to the carrier
-  `QFunNZ = ℚ(x)`, abstractly **proven** and fuel-free;
-* the **generic tower engine** (`cIntegrateG`/`cRischDEG`/`cgcdMonicG`/… over `[CField α]`) —
-  `native_decide`-validated only.
-
-The end goal is to *replace* the base algorithms by the generic ones with the rigor preserved. The
-safe path is to first lift the generic engine to the QFunNZ engine's rigor, then collapse. This file
-takes the first steps and measures whether the full collapse is mechanical:
-
-1. **`instance : CRischField QFunNZ`** — the missing typeclass instance so the generic engine runs at
-   `α = QFunNZ` (the level-1 carrier of the old engine). Its base RDE is the existing `cRischDEBase`
-   (the §6.6 base solve over ℚ(x), `D = d/dx`), whose signature `QFunNZ → QFunNZ → Option QFunNZ`
-   matches `crischDESolve` exactly.
-2. **The "generic subsumes base" headline**: `cIntegrateG` *at* `α = QFunNZ` reproduces the level-1
-   `cIntegrate` worked integral (Bronstein Example 5.6.2, `t = log x`) on the *same* literal inputs —
-   the generic driver lands an antiderivative satisfying `D(∫f) = f` (`checkIdentityG`).
-3. **Generic gcd correctness + fuel-free** (the proven foundation): `associated_toPolyG_cgcdMonicG`
-   (the generic monic gcd is the polynomial gcd up to associates) from the generic `cgcdExtG` Bézout /
-   divides theory; plus a fuel-free `cgcdMonicGWf` bridged to `cgcdMonicG` at sufficient fuel.
-4. **The probe**: the generic analog of a high-level QFunNZ correctness lemma, with a precise readout
-   of how mechanical the transport was.
-
-Nothing here modifies or weakens the existing QFunNZ engine — it is purely additive. -/
+1. **Generic gcd correctness + fuel-free**: `associated_toPolyG_cgcdMonicG` (the generic monic gcd is
+   the polynomial gcd up to associates) from the generic `cgcdExtG` Bézout / divides theory; plus a
+   fuel-free `cgcdMonicGWf` bridged to `cgcdMonicG` at sufficient fuel.
+2. **The reconstruction probe** `canonicalRepresentationFastG_reconstructs`: the §3.5 capstone's
+   reconstruction `toPolyG d = toPolyG dₛ·dₙ ⇒ …`, modulo the denominator split (the abstract
+   correctness of that split is filled at `α = QFunNZ` in `ComputableSplitFactorTowerCorrect`). -/
 
 open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
-
-/-! ### Task 1 — `CRischField QFunNZ`: running the generic engine at the level-1 carrier
-
-The generic tower engine's RDE solver `cRischDEG` recurses, at every step, into the typeclass method
-`CRischField.crischDESolve : α → α → Option α` (solving `Dy + f·y = g` over `α` with `α`'s own
-derivation). To run the generic engine at `α = QFunNZ = ℚ(x)` (the level-1 carrier of the *old*
-engine) we must supply `CRischField QFunNZ`. The other instances the generic algorithms need —
-`CField QFunNZ`, `CFieldSpec QFunNZ`, `CDiffField QFunNZ`, and `CFieldDomain QFunNZ` (the last via the
-global `[CFieldSpec α] → CFieldDomain α`) — all already resolve (verified by `#synth` below).
-
-The RDE over ℚ(x) (`D = d/dx`) is *exactly* the existing level-1 base solver `cRischDEBase`
-(`ComputableRischDE`, §6.6 eq. 6.23): `cRischDEBase fuel b c : Option QFunNZ` returns `some s` with
-`Ds + b·s = c` (`D = d/dx` on `QFunNZ`, the `CDiffField QFunNZ` derivation `qderivNZ`), or `none`. Its
-signature `QFunNZ → QFunNZ → Option QFunNZ` matches `crischDESolve` after fixing the fuel — so we wrap
-it directly, no re-implementation. -/
-
-/-- **The fixed fuel budget** for the `CRischField QFunNZ` base solve (the class method `crischDESolve`
-carries no fuel argument). Matches `towerRischDEFuel`; generous for the small-degree validations. -/
-def qfunNZRischDEFuel : ℕ := 60
-
-/-- **★ `CRischField QFunNZ`** — the RDE over `QFunNZ = ℚ(x)` (`D = d/dx`), wrapping the existing level-1
-base solver `cRischDEBase` (Bronstein §6.6 eq. 6.23). This is the missing instance that lets the
-*generic* tower engine (`cRischDEG`/`cIntegrateG`/…) run at `α = QFunNZ`, i.e. on top of the old
-engine's level-1 carrier. `crischDESolve f g = cRischDEBase fuel f g` solves `Dy + f·y = g` for
-`y ∈ ℚ(x)`. Because `cRischDEBase` routes general non-constant inputs through the whole base ℚ-pipeline
-`cRationalRDE` (over `CPolyG ℚ`, monomial `x`), this realizes the same level-1 RDE the QFunNZ engine
-uses — now exposed to the generic driver via the typeclass. -/
-instance instCRischFieldQFunNZ : CRischField QFunNZ where
-  crischDESolve f g := CPolyG.cRischDEBase qfunNZRischDEFuel f g
-
-/-- **All generic-engine instances resolve at `QFunNZ`** (the Task 1 readout): the generic algorithms
-`cgcdMonicG`/`cRischDEG`/`cIntegrateG`/… need `CField`, `CFieldSpec`, `CDiffField`, `CFieldDomain`, and
-`CRischField` — every one is provided at `α = QFunNZ`. (`CFieldDomain QFunNZ` comes from the global
-`[CFieldSpec α] → CFieldDomain α` instance `instCFieldDomainOfCFieldSpec`; `CRischField QFunNZ` is
-`instCRischFieldQFunNZ` above.) We pin them by name rather than `inferInstance` — `CFieldSpec`'s `Type*`
-field (`K`) makes term-mode `inferInstance` fragile while `#synth`/by-name resolution succeeds; this is
-the explicit witness that the whole stack is present. -/
-theorem qfunNZ_resolves_all_generic_instances :
-    Nonempty (CField QFunNZ) ∧ Nonempty (CFieldSpec.{0, 0} QFunNZ) ∧ Nonempty (CDiffField QFunNZ) ∧
-      Nonempty (CFieldDomain QFunNZ) ∧ Nonempty (CRischField QFunNZ) :=
-  ⟨⟨instCFieldQFunNZ⟩, ⟨instCFieldSpecQFunNZ⟩, ⟨instCDiffFieldQFunNZ⟩,
-    ⟨instCFieldDomainOfCFieldSpec⟩, ⟨instCRischFieldQFunNZ⟩⟩
-
-/-! ### ★ Task 2 — THE HEADLINE: `cIntegrateG` at `α = QFunNZ` reproduces the level-1 `cIntegrate`
-
-The demonstration that the generic engine **structurally subsumes** the QFunNZ one. We take the level-1
-worked integral — Bronstein **Example 5.6.2**, `t = log x`, `Dt = 1/x`, the transcendental integrand
-`f = (1/2)·D(t+x)/(t+x) − (1/2)·D(t−x)/(t−x) ∈ ℚ(x)(log x)` with elementary antiderivative
-`(1/2)log(t+x) − (1/2)log(t−x)` — and feed the **same literal inputs** (`integrateExampleDt`,
-`integrateExampleNum`, `integrateExampleDen`, all `CPolyG QFunNZ`) to the **generic** driver
-`cIntegrateG` *at* `α = QFunNZ`. It lands the same antiderivative: `checkIdentityG` certifies
-`D(∫f) = f`, and the logarithmic part has the same length 2 (the two rational-residue logs `t ± x`).
-
-The candidate residue set must be lifted from `List ℚ` (the level-1 `cIntegrate` shape) to `List QFunNZ`
-(the generic `cIntegrateG` shape) — the *only* adaptation; the rationals embed via `ofConstNZ`. -/
-
-/-- The level-1 residue candidates `{1/2, −1/2, 1, −1, 0}` (`integrateExampleCands`) lifted to `QFunNZ`
-constants, the candidate set for the generic driver `cIntegrateG` (which scans over `List α`, not
-`List ℚ`). The only input adaptation needed to run the level-1 Example 5.6.2 through the generic
-engine. -/
-def integrateExampleCandsG : List QFunNZ :=
-  [QFunNZ.ofConstNZ (1/2), QFunNZ.ofConstNZ (-1/2), QFunNZ.ofConstNZ 1, QFunNZ.ofConstNZ (-1),
-    QFunNZ.ofConstNZ 0]
-
-/-- **★ The generic driver subsumes the level-1 integral** (`native_decide`): the generic
-`cIntegrateG` *at* `α = QFunNZ`, on the *same* literal Example 5.6.2 inputs the level-1 `cIntegrate`
-uses (`integrateExampleDt/Num/Den`), returns `some res` whose antiderivative identity `D(res) = f`
-holds — `checkIdentityG` true, cleared of denominators over ℚ(x)[t]. The generic engine *computes the
-same elementary antiderivative* over the level-1 carrier ℚ(x) that the specialized engine does. -/
-theorem cIntegrateG_at_qfunNZ_reproduces_integrate_example :
-    (match CPolyG.cIntegrateG integrateExampleDt 30 integrateExampleNum integrateExampleDen
-        integrateExampleCandsG with
-      | some res => CPolyG.checkIdentityG integrateExampleDt res
-          integrateExampleNum integrateExampleDen
-      | none => false) = true := by native_decide
-
-/-- **The generic driver recovers the same two logarithms** (`native_decide`): like the level-1
-`integrate_example_logs_length`, the generic `cIntegrateG` at `α = QFunNZ` returns a `logs` list of
-length `2` — the rational-residue logs `t + x` and `t − x` of the Rothstein–Trager construction (the
-`±1/2`-residue part). Same logarithmic structure as the specialized engine. -/
-theorem cIntegrateG_at_qfunNZ_logs_length :
-    (match CPolyG.cIntegrateG integrateExampleDt 30 integrateExampleNum integrateExampleDen
-        integrateExampleCandsG with
-      | some res => res.logs.length
-      | none => 0) = 2 := by native_decide
-
-/-- **Both engines agree on Example 5.6.2** (`native_decide`): the level-1 `cIntegrate` *and* the
-generic `cIntegrateG` (at `α = QFunNZ`) each return a result satisfying its own antiderivative-identity
-check on the same inputs — `integrate_example_driver` for the specialized engine and
-`cIntegrateG_at_qfunNZ_reproduces_integrate_example` for the generic, conjoined. The explicit
-"generic ⊇ base" statement: where the base engine integrates, the generic engine integrates the same
-thing. -/
-theorem both_engines_integrate_example_agree :
-    ((match CPolyG.cIntegrate integrateExampleDt 30 integrateExampleNum integrateExampleDen
-        integrateExampleCands with
-      | some res => IntegralResult.checkIdentity integrateExampleDt res
-          integrateExampleNum integrateExampleDen
-      | none => false)
-    && (match CPolyG.cIntegrateG integrateExampleDt 30 integrateExampleNum integrateExampleDen
-        integrateExampleCandsG with
-      | some res => CPolyG.checkIdentityG integrateExampleDt res
-          integrateExampleNum integrateExampleDen
-      | none => false)) = true := by native_decide
 
 /-! ### Task 3 — generic monic-gcd correctness `associated_toPolyG_cgcdMonicG`
 
