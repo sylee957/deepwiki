@@ -1,6 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
-import DeepWiki.SymbolicIntegration.ComputableLogPartTower
+import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
@@ -110,13 +109,22 @@ theorem ex_5_3_1 :
 `p ∈ k[t]` as `p = D(q) + r` with `deg(r) < δ(t)` by peeling the leading term whose monomial
 derivative cancels the top. Computable (generic over `[CField α] [CDiffField α]`) +
 `native_decide`-validated (Thm 5.4.1); abstract correctness deferred. *(Already a generic decl — no
-`…G`-suffixed mirror is needed; instantiate at `QFunNZG ℚ` like the rest of the engine.)* -/
-noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower
+`…G`-suffixed mirror is needed; here pinned at the generic ℚ(x) = `QFunNZG ℚ` like the rest of the
+engine.)* -/
+noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower (QFunNZG ℚ)
 
 /-- **Example 5.4.1** (§5.4, p.141): `cPolyReduceTower` reduces `p = t³` (`Dt = t²+1`, `t = tan x`,
-`δ = 2`) to `(q, r) = ((1/2)t², −t)` satisfying `D(q) + r = p` with `deg(r) = 1 < δ` over ℚ(x)[t]
-(`native_decide`). -/
-abbrev ex_5_4_1 := @polyReduceTower_example
+`δ = 2`) to `(q, r) = ((1/2)t², −t)` satisfying the §5.4 reduction identity `D(q) + r = p` with the
+remainder `t`-degree `deg(r) = 1 < δ = 2` over the generic ℚ(x)[t] (`native_decide`). -/
+theorem ex_5_4_1 :
+    (let Dt : CPolyG (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]       -- `Dt = t²+1`
+     let p : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 0, qConst5 1]  -- `p = t³`
+     let res := CPolyG.cPolyReduceTower Dt 8 p
+     let q := res.1; let r := res.2
+     let Dq := CPolyG.cmonomialDeriv Dt q
+     -- `D(q) + r − p = 0` and the reduced remainder has `t`-degree `1 < δ(t) = 2`
+     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.caddG Dq r) p) = true
+       ∧ CPolyG.cdegG r = 1) := by native_decide
 
 /-! ## §5.6 The Residue Criterion — computable + validated -/
 
@@ -160,12 +168,19 @@ e.g. `t = log x`), integrating `p = ∑ aᵢtⁱ` top-down in the constant-coeff
 `c = aₘ/((m+1)·Dt)`) so `D(q) + rem = p`. The full `LimitedIntegrate` solve for the coefficient
 antiderivatives is the deferred Chapter-7 oracle. Computable + `native_decide`-validated; abstract
 correctness (Thm 5.8.1) deferred. *(Already a generic `[CField α] [CDiffField α]` decl — no
-`…G`-suffixed mirror is needed; instantiate at `QFunNZG ℚ` like the rest of the engine.)* -/
-noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate
+`…G`-suffixed mirror is needed; here pinned at the generic ℚ(x) = `QFunNZG ℚ` like the rest of the
+engine.)* -/
+noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate (QFunNZG ℚ)
 
 /-- **Example (§5.8, p.158)**, primitive case: `cPrimitivePolyIntegrate` on `p = (log x)²/x = (1/x)·t²`
-(`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over
-ℚ(x)[t] (`native_decide`) — i.e. `∫ (log x)²/x dx = (log x)³/3`. -/
-abbrev ex_5_8_primitive := @primitivePolyIntegrate_example
+(`t = log x`, `Dt = 1/x`) returns `q = (1/3)t³` with `rem = 0`, satisfying `D(q) + rem = p` over the
+generic ℚ(x)[t] (`native_decide`) — i.e. `∫ (log x)²/x dx = (log x)³/3`. -/
+theorem ex_5_8_primitive :
+    (let Dt : CPolyG (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
+     let p : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qFrac5 [1] [0, 1]]  -- `p = (1/x)·t²`
+     let res := CPolyG.cPrimitivePolyIntegrate Dt 8 p
+     let q := res.1; let rem := res.2
+     let Dq := CPolyG.cmonomialDeriv Dt q
+     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.caddG Dq rem) p)) = true := by native_decide
 
 end DeepWiki.Si
