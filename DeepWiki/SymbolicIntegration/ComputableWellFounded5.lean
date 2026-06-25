@@ -320,4 +320,61 @@ example :
           primitivePolyIntegrateExampleP).2)) := by
   native_decide
 
+/-! ### Target 3 — the fuel-free transcendental Hermite reduction `cHermiteReduceTowerWf` (§5.3)
+
+Unlike Targets 1–2, the transcendental Hermite reduction `cHermiteReduceTower` (§5.3) is **not** an
+own-loop: it is a `foldl` over the squarefree factor list `cSqfreeYunFF d` whose inner `j`-loop
+`cHermiteReduceTowerInner` recurses on a *downward structural counter* `j` (no fuel measure of its own).
+The fuel feeds only (i) the squarefree factorization `cSqfreeYunFF` (replaced by the own-loop
+`cSqfreeYunFFWf` of `ComputableWellFounded4`), (ii) the Bézout solver `cdiophantineG` (`cgcdExtG` /
+`cdivmodG`, replaced by the fuel-free `cgcdWf`/`cdivmodWf`), and (iii) the exact divisions `cdivG`
+(replaced by `cdivWf`). So the fuel-free companion threads the fuel-free leaves through the structural
+foldl + downward `j`-recursion — `cmonomialDeriv` already carries no fuel. The bridge to the fuel'd
+version then transports `cHermiteReduceTower_cleared_identity` unchanged. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Fuel-free generic Diophantine/Bézout solver** `cdiophantineGWf p q rhs = (b, c)` solving
+`b·p + c·q = rhs` with `deg b < deg q`, for **coprime** `p, q`: the fuel-free companion of `cdiophantineG`.
+From the **fuel-free** extended Euclid `cgcdWf p q = (g, s, t)` with `s·p + t·q = g` (a nonzero constant),
+rescale `(s,t)` by `rhs/g`, reduce the first cofactor mod `q` (`S = quo·q + b`, via the **fuel-free**
+`cdivmodWf`), and absorb `quo·p` into the second (`c = T + quo·p`) — **no fuel at runtime**. Generic over
+`[CField α]`. -/
+def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
+  let (g, s, t) := cgcdWf p q
+  let ginv := CField.inv (cleadG g)
+  let S := cscaleG ginv (cmulG rhs s)
+  let T := cscaleG ginv (cmulG rhs t)
+  let (quo, b) := cdivmodWf S q
+  let c := caddG T (cmulG quo p)
+  (cnormG b, cnormG c)
+
+variable [CFieldSpec α]
+
+omit [CDiffField α] in
+/-- **Bridge — `cdiophantineGWf` equals the fuel'd `cdiophantineG` at any sufficient fuel.** With
+`(cnormG p).length ≤ fuel`, `(cnormG q).length < fuel` (for the extended-Euclid descent `cgcdWf`), and the
+rescaled-reduced dividend `S = cscaleG (cleadG (cgcdWf p q).1)⁻¹ (cmulG rhs (cgcdWf p q).2.1)` short enough
+(`(cnormG S).length ≤ fuel`, for the `cdivmodWf`), `cdiophantineGWf p q rhs = cdiophantineG fuel p q rhs`.
+The bounds live only here; `cdiophantineGWf` carries no fuel. The extended Euclid is bridged by
+`cgcdWf_eq_of_fuel` and the mod-reduction by `cdivmodWf_eq_of_fuel`. -/
+theorem cdiophantineGWf_eq_of_fuel (fuel : ℕ) (p q rhs : CPolyG α)
+    (hp : (cnormG p : List α).length ≤ fuel) (hq : (cnormG q : List α).length < fuel)
+    (hS : (cnormG (cscaleG (CField.inv (cleadG (cgcdWf p q).1))
+        (cmulG rhs (cgcdWf p q).2.1)) : List α).length ≤ fuel) :
+    cdiophantineGWf p q rhs = CPolyG.cdiophantineG fuel p q rhs := by
+  rw [cdiophantineGWf, CPolyG.cdiophantineG, cgcdWf_eq_of_fuel fuel p q hp hq]
+  -- carry the `hS` dividend bound to the fuel'd cofactors, then destructure the gcd triple so the
+  -- `match`-bound `S` becomes concrete and the mod-reduction bridge `cdivmodWf S q = cdivmodG fuel S q`
+  -- applies
+  rw [cgcdWf_eq_of_fuel fuel p q hp hq] at hS
+  rcases hgcd : cgcdExtG fuel p q with ⟨g, s, t⟩
+  rw [hgcd] at hS
+  simp only at hS ⊢
+  rw [cdivmodWf_eq_of_fuel fuel _ q hS]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
