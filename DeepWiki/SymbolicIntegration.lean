@@ -101,3 +101,4 @@ import DeepWiki.SymbolicIntegration.ComputableWellFounded9
 import DeepWiki.SymbolicIntegration.ComputableWellFounded10
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
+import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
