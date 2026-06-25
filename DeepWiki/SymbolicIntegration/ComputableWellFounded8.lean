@@ -139,6 +139,128 @@ def cPolyRischDECancelPrimQWf (b c : CPolyG ℚ) (n : ℤ) : Option (CPolyG ℚ)
 termination_by (cnormG c).length
 decreasing_by assumption
 
+end CPolyG
+
+/-! ### Bridge of `cPolyRischDENoCancelQWf` to the fuel'd `cPolyRischDENoCancelQ`
+
+`cPolyRischDENoCancelQ` uses **no** fuel-bearing sub-ops (only `cderivQ`/`cmulG`/`csubG`/`cshiftG`/
+arithmetic); it recurses on `fuel` purely as a counter. So the bridge needs only that the structural guard
+fires on a real non-cancellation run; the inductive gate `CPolyRischNoCancelQReg fuel b c n` (nodes
+concluding at fuel `fuel + 1`) carries that as a step budget mirroring `cPolyRischDENoCancelQ`'s recursion.
+The base analogue of WF7's `CPolyRischNoCancelReg`/`cPolyRischDENoCancelWf_eq`. -/
+
+/-- **Per-run base non-cancellation-loop regularity** `CPolyRischNoCancelQReg b c n` (nodes conclude at
+fuel `fuel + 1`): mirrors the `cPolyRischDENoCancelQ` recursion. `baseZero` (`c = 0`) and `baseGuard`
+(`n < 0 ∨ m < 0 ∨ m > n`) are terminal; `step` requires the WF guard fires (the peeled leading term drops
+the normalized length, `c' = c − Dp − b·p`, `p = (lc(c)/lc(b))·xᵐ`, `m = deg(c) − deg(b)`, `D = cderivQ`)
+and the same holds recursively on `c'` at `m − 1`. -/
+inductive CPolyRischNoCancelQReg (b : CPolyG ℚ) : ℕ → CPolyG ℚ → ℤ → Prop
+  /-- terminal: `c = 0`, returns `[]`. -/
+  | baseZero {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : cisZeroG c = true) :
+      CPolyRischNoCancelQReg b (fuel + 1) c n
+  /-- terminal: the degree guard fails (`n < 0 ∨ m < 0 ∨ m > n`), returns `none`. -/
+  | baseGuard {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hg : n < 0 ∨ (cdegG c : ℤ) - (cdegG b : ℤ) < 0 ∨ (cdegG c : ℤ) - (cdegG b : ℤ) > n) :
+      CPolyRischNoCancelQReg b (fuel + 1) c n
+  /-- recursive: peel the leading monomial, the WF guard fires, recurse on `c'` within budget. -/
+  | step {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hg : ¬ (n < 0 ∨ (cdegG c : ℤ) - (cdegG b : ℤ) < 0 ∨ (cdegG c : ℤ) - (cdegG b : ℤ) > n))
+      (hguard : (cnormG (csubG (csubG c (cderivQ (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+            [CField.div (cleadG c) (cleadG b)]))) (cmulG b (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+            [CField.div (cleadG c) (cleadG b)]))) : List ℚ).length < (cnormG c : List ℚ).length)
+      (hrec : CPolyRischNoCancelQReg b fuel
+        (csubG (csubG c (cderivQ (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+            [CField.div (cleadG c) (cleadG b)]))) (cmulG b (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+            [CField.div (cleadG c) (cleadG b)])))
+        (((cdegG c : ℤ) - (cdegG b : ℤ)) - 1)) :
+      CPolyRischNoCancelQReg b (fuel + 1) c n
+
+namespace CPolyG
+
+/-- **Bridge — `cPolyRischDENoCancelQWf` equals the fuel'd `cPolyRischDENoCancelQ` on a regular run.**
+Under `CPolyRischNoCancelQReg b (fuel + 1) c n`, `cPolyRischDENoCancelQWf b c n = cPolyRischDENoCancelQ
+(fuel + 1) b c n`. The gate lives only here; the WF own-loop carries no fuel. By induction on the gate. -/
+theorem cPolyRischDENoCancelQWf_eq (b : CPolyG ℚ) :
+    ∀ (fuel : ℕ) (c : CPolyG ℚ) (n : ℤ), CPolyRischNoCancelQReg b fuel c n →
+      cPolyRischDENoCancelQWf b c n = CPolyG.cPolyRischDENoCancelQ fuel b c n := by
+  intro fuel c n hreg
+  induction hreg with
+  | @baseZero fuel c n hc =>
+    rw [cPolyRischDENoCancelQWf.eq_def, if_pos hc, CPolyG.cPolyRischDENoCancelQ, if_pos hc]
+  | @baseGuard fuel c n hc hg =>
+    rw [cPolyRischDENoCancelQWf.eq_def, if_neg hc, CPolyG.cPolyRischDENoCancelQ, if_neg hc]
+    simp only [if_pos hg]
+  | @step fuel c n hc hg hguard hrec ih =>
+    rw [cPolyRischDENoCancelQWf.eq_def, if_neg hc, CPolyG.cPolyRischDENoCancelQ, if_neg hc]
+    simp only [if_neg hg, if_pos hguard, ih]
+    rfl
+
+end CPolyG
+
+/-! ### Bridge of `cPolyRischDECancelPrimQWf` to the fuel'd `cPolyRischDECancelPrimQ`
+
+`cPolyRischDECancelPrimQ` uses **no** fuel-bearing sub-ops (only `cleadG`/`cderivQ`/`cmulG`/`csubG`/
+`cshiftG`/`cRischDEConst`, all fuel-free); it recurses on `fuel` purely as a counter. The gate
+`CPolyRischCancelPrimQReg fuel b c n` (nodes concluding at fuel `fuel + 1`) mirrors the recursion with a
+step budget. The `step` node carries the base solve `cRischDEConst (lc(b)) (lc(c)) = some s` and the WF
+guard (`c' = c − b·(s·xᵐ) − D(s·xᵐ)`, `m = deg(c)`) firing, recursively on `c'` at `m − 1`. -/
+
+/-- **Per-run base primitive-cancellation-loop regularity** `CPolyRischCancelPrimQReg b c n` (nodes
+conclude at fuel `fuel + 1`): mirrors the `cPolyRischDECancelPrimQ` recursion. `baseZero` (`c = 0`) and
+`baseDeg` (`n < deg(c)`) are terminal; `baseNoSol` (the constant base solve `cRischDEConst (lc b)(lc c)`
+returns `none`) is terminal; `step` carries `cRischDEConst (lc b)(lc c) = some s`, the WF guard firing
+(`c' = c − b·(s·xᵐ) − D(s·xᵐ)`, `m = deg(c)`, `D = cderivQ`), and the same recursively on `c'` at `m − 1`. -/
+inductive CPolyRischCancelPrimQReg (b : CPolyG ℚ) : ℕ → CPolyG ℚ → ℤ → Prop
+  /-- terminal: `c = 0`, returns `[]`. -/
+  | baseZero {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : cisZeroG c = true) :
+      CPolyRischCancelPrimQReg b (fuel + 1) c n
+  /-- terminal: `n < deg(c)`, returns `none`. -/
+  | baseDeg {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : n < (cdegG c : ℤ)) : CPolyRischCancelPrimQReg b (fuel + 1) c n
+  /-- terminal: the constant base solve `cRischDEConst (lc b)(lc c)` returns `none`. -/
+  | baseNoSol {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ)) (hs : cRischDEConst (cleadG b) (cleadG c) = none) :
+      CPolyRischCancelPrimQReg b (fuel + 1) c n
+  /-- recursive: the base solve gives `s`, the WF guard fires, recurse on `c'` within budget. -/
+  | step {fuel : ℕ} {c : CPolyG ℚ} {n : ℤ} {s : ℚ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ)) (hs : cRischDEConst (cleadG b) (cleadG c) = some s)
+      (hguard : (cnormG (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
+            (cderivQ (cshiftG (cdegG c) [s]))) : List ℚ).length < (cnormG c : List ℚ).length)
+      (hrec : CPolyRischCancelPrimQReg b fuel
+        (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cderivQ (cshiftG (cdegG c) [s])))
+        ((cdegG c : ℤ) - 1)) :
+      CPolyRischCancelPrimQReg b (fuel + 1) c n
+
+namespace CPolyG
+
+/-- **Bridge — `cPolyRischDECancelPrimQWf` equals the fuel'd `cPolyRischDECancelPrimQ` on a regular run.**
+Under `CPolyRischCancelPrimQReg b (fuel + 1) c n`, `cPolyRischDECancelPrimQWf b c n =
+cPolyRischDECancelPrimQ (fuel + 1) b c n`. The gate lives only here; the WF own-loop carries no fuel. By
+induction on the gate. -/
+theorem cPolyRischDECancelPrimQWf_eq (b : CPolyG ℚ) :
+    ∀ (fuel : ℕ) (c : CPolyG ℚ) (n : ℤ), CPolyRischCancelPrimQReg b fuel c n →
+      cPolyRischDECancelPrimQWf b c n = CPolyG.cPolyRischDECancelPrimQ fuel b c n := by
+  intro fuel c n hreg
+  induction hreg with
+  | @baseZero fuel c n hc =>
+    rw [cPolyRischDECancelPrimQWf.eq_def, if_pos hc, CPolyG.cPolyRischDECancelPrimQ, if_pos hc]
+  | @baseDeg fuel c n hc hn =>
+    rw [cPolyRischDECancelPrimQWf.eq_def, if_neg hc, if_pos hn,
+      CPolyG.cPolyRischDECancelPrimQ, if_neg hc, if_pos hn]
+  | @baseNoSol fuel c n hc hn hs =>
+    rw [cPolyRischDECancelPrimQWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelPrimQ, if_neg hc, if_neg hn]
+    simp only [hs]
+  | @step fuel c n s hc hn hs hguard hrec ih =>
+    rw [cPolyRischDECancelPrimQWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelPrimQ, if_neg hc, if_neg hn]
+    simp only [hs, if_pos hguard, ih]
+    rfl
+
+end CPolyG
+
+namespace CPolyG
+
 /-! ### Base own-loop 3 — the fuel-free Rothstein SPDE over ℚ `cSPDEQWf` (own-loop on `(n+1).toNat`)
 
 The base (`α = ℚ`, `D = cderivQ = d/dx`) analogue of the WF7 tower own-loop `cSPDEWf`: peel `g = gcd(a, b)`
