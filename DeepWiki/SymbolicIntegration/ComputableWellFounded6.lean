@@ -613,4 +613,61 @@ example (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) (res : Int
 -- The fuel-free self-validating integrator's headline carries only the standard axioms.
 #print axioms cIntegrateCheckedWf_correct
 
+/-! ### `native_decide` — the fuel-free integrator on Bronstein's Example 5.6.2 (`t = log x`)
+
+Re-runs `integrate_example`/`integrate_example_driver`/`cIntegrateChecked` over the noncomputable-`CFieldSpec`
+tower `QFunNZ` (ℚ(x)), now **fuel-free** end-to-end. The validated transcendental integrand is
+`f = (1/2)·D(t+x)/(t+x) − (1/2)·D(t−x)/(t−x)` over ℚ(x)(log x) (`Dt = 1/x`), whose elementary antiderivative
+is `(1/2)log(t+x) − (1/2)log(t−x)`. The fuel-free `cIntegrateReducedWf`/`cIntegrateWf` recover it (Hermite
+`g = 0`, rational residues `±1/2`), and the antiderivative identity `D(∫f) = f` holds — checked, cleared of
+denominators, by `IntegralResult.checkIdentity`. Reuses the §5.6 example data of `ComputableIntegrate`. -/
+
+open CPolyG QFunNZ in
+/-- **The fuel-free reduced capstone integrates the transcendental integrand, `D(∫f) = f`** (`native_decide`,
+Bronstein Example 5.6.2, `t = log x`): `cIntegrateReducedWf` returns an `IntegralResult` whose antiderivative
+identity holds exactly — the fuel-free analog of `integrate_example`, the whole RT log part end-to-end with
+**no fuel at runtime**. -/
+theorem integrateReducedWf_example :
+    IntegralResult.checkIdentity integrateExampleDt
+      (cIntegrateReducedWf integrateExampleDt integrateExampleNum integrateExampleDen
+        integrateExampleCands)
+      integrateExampleNum integrateExampleDen = true := by native_decide
+
+open CPolyG QFunNZ in
+/-- **The fuel-free top-level `cIntegrateWf` runs end-to-end and `D(∫f) = f`** (`native_decide`, the goal on
+Example 5.6.2): on the transcendental integrand (a pure simple/normal element, `fₚ = fₛ = 0`), the
+fuel-free `cIntegrateWf` — canonical split + reduced capstone + (empty) polynomial part — returns `some res`
+satisfying the antiderivative identity `D(res) = f`. The fuel-free analog of `integrate_example_driver`;
+pins the assembled fuel-free driver, **no fuel at runtime**. -/
+theorem integrateWf_example_driver :
+    (match cIntegrateWf integrateExampleDt integrateExampleNum integrateExampleDen
+        integrateExampleCands with
+      | some res => IntegralResult.checkIdentity integrateExampleDt res
+          integrateExampleNum integrateExampleDen
+      | none => false) = true := by native_decide
+
+open CPolyG QFunNZ in
+/-- **The fuel-free self-validating `cIntegrateCheckedWf` returns `some` on the genuine integral**
+(`native_decide`, Example 5.6.2): on the transcendental integrand with a true elementary antiderivative, the
+checked wrapper's guard `checkIdentity` fires `true`, so `cIntegrateCheckedWf … = some res` — it accepts the
+correct answer (cf. `cIntegrateCheckedWf_correct`, which then certifies `D(res) = f`). **No fuel at
+runtime**. -/
+theorem integrateCheckedWf_example_isSome :
+    (cIntegrateCheckedWf integrateExampleDt integrateExampleNum integrateExampleDen
+      integrateExampleCands).isSome = true := by native_decide
+
+open CPolyG QFunNZ in
+/-- **`cIntegrateWf` agrees with the fuel'd `cIntegrate`** on Example 5.6.2 (`native_decide`): both return
+`some res` passing `checkIdentity`, so the fuel-free driver matches the fuel'd one on the book example. -/
+theorem integrateWf_eq_fueled_example :
+    (match cIntegrateWf integrateExampleDt integrateExampleNum integrateExampleDen
+        integrateExampleCands,
+        cIntegrate integrateExampleDt 30 integrateExampleNum integrateExampleDen integrateExampleCands with
+      | some r1, some r2 =>
+          IntegralResult.checkIdentity integrateExampleDt r1 integrateExampleNum integrateExampleDen
+          && IntegralResult.checkIdentity integrateExampleDt r2 integrateExampleNum integrateExampleDen
+      | _, _ => false) = true := by native_decide
+
+#print axioms integrateWf_example_driver
+
 end DeepWiki.SymbolicIntegration
