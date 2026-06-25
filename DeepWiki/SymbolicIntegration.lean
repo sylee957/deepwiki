@@ -73,6 +73,7 @@ import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTowerCorrect
 import DeepWiki.SymbolicIntegration.ComputableRischDE
 import DeepWiki.SymbolicIntegration.ComputableRischDECorrect
+import DeepWiki.SymbolicIntegration.ComputableRischDESPDECorrect
 import DeepWiki.SymbolicIntegration.ComputableParametric
 import DeepWiki.SymbolicIntegration.ComputableStructure
 import DeepWiki.SymbolicIntegration.ComputableCoupledDE
