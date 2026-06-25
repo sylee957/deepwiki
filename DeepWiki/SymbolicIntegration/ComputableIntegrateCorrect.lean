@@ -81,12 +81,78 @@ theorem towerFractionFieldDeriv_div (Dt : CPolyG QFunNZ) (gnum gden : (CFieldSpe
   rw [← RatFunc.mk_eq_div, towerFractionFieldDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul,
     map_pow]
 
-/-! ### The rational part — field-level Hermite + primitive-poly reconstruction
+/-! ### The Hermite reduction as a field identity `D(g) + hₛ = fₙ`
 
-`cIntegrate`'s rational output is `g = gnum/gden` with `gnum = (nrm.rational.1·1) + (pq·nrm.rational.2)`,
-`gden = nrm.rational.2` — combining the Hermite rational part `nrm.rational = (gnum_H, gden_H)` of the
-normal part with the primitive polynomial quotient `pq` over the common denominator `gden_H`. Its
-derivative reconstructs `fₚ + (fₙ − hₛ)`: the polynomial part `fₚ` plus the Hermite-integrated piece of
-the normal part. -/
+The proven `cHermiteReduceTower_cleared_identity` is the cleared polynomial identity
+`(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` (with `P = Δgnum·gden − gnum·Δgden`). Dividing through the
+nonzero `gden²·Dstar·d` lands the field identity `D(gnum/gden) + hNum/Dstar = a/d` over the tower fraction
+field. The clearing step is generic ring algebra over the field. -/
 
-end DeepWiki.SymbolicIntegration
+/-- **Field clearing of the Hermite cleared identity** (generic field): from the polynomial cleared
+identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with `gden, Dstar, d ≠ 0` (read into the fraction
+field via the injective `algebraMap`), the field fraction identity `P/gden² + hNum/Dstar = a/d` holds.
+Pure field-arithmetic clearing (`field_simp` + `linear_combination` of the polynomial witness). -/
+theorem hermite_field_div_of_cleared {K : Type*} [Field K] (P Dstar gden hNum d a : K[X])
+    (hden : gden ≠ 0) (hDstar : Dstar ≠ 0) (hd : d ≠ 0)
+    (hcleared : (P * Dstar + hNum * (gden * gden)) * d = a * ((gden * gden) * Dstar)) :
+    (algebraMap K[X] (RatFunc K) P) / (algebraMap K[X] (RatFunc K) gden) ^ 2
+        + (algebraMap K[X] (RatFunc K) hNum) / (algebraMap K[X] (RatFunc K) Dstar)
+      = (algebraMap K[X] (RatFunc K) a) / (algebraMap K[X] (RatFunc K) d) := by
+  set A := algebraMap K[X] (RatFunc K) with hA
+  have hAd : A d ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hd
+  have hAden : A gden ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hden
+  have hADstar : A Dstar ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hDstar
+  have hcl : (A P * A Dstar + A hNum * (A gden * A gden)) * A d
+      = A a * (A gden * A gden * A Dstar) := by
+    have := congrArg A hcleared
+    simpa only [map_mul, map_add] using this
+  rw [div_add_div _ _ (pow_ne_zero 2 hAden) hADstar, div_eq_div_iff
+    (mul_ne_zero (pow_ne_zero 2 hAden) hADstar) hAd]
+  ring_nf
+  ring_nf at hcl
+  linear_combination hcl
+
+/-- **The Hermite reduction as a field identity** `D(gₕ) + hₛ = fₙ` over the tower fraction field
+`RatFunc (RatFunc ℚ)`: writing `((gnum, gden), (hNum, Dstar)) = cHermiteReduceTower Dt fuel a d`, the
+rational part `gₕ = towerAlg(gnum)/towerAlg(gden)` and the simple residual `hₛ = towerAlg(hNum)/towerAlg(Dstar)`
+satisfy `towerFractionFieldDeriv Dt gₕ + hₛ = towerAlg(a)/towerAlg(d)`. Composes the proven cleared
+polynomial identity `cHermiteReduceTower_cleared_identity` with the field clearing
+`hermite_field_div_of_cleared` and the quotient rule `towerFractionFieldDeriv_div`. Gated on the same
+transparent exact-division/nonzero-divisor/fuel preconditions the proven cleared identity carries, plus
+nonzero `gden, Dstar, d`. -/
+theorem cHermiteReduceTower_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (gnumR gdenR DstarR gprimeNum resNum resDen hNumR : CPolyG QFunNZ)
+    (hgnum : gnumR = (cHermiteReduceTower Dt fuel a d).1.1)
+    (hgden : gdenR = (cHermiteReduceTower Dt fuel a d).1.2)
+    (hDstar : DstarR = (cHermiteReduceTower Dt fuel a d).2.2)
+    (hgprime : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumR) gdenR) (cmulG gnumR (cmonomialDeriv Dt gdenR)))
+    (hresNum : resNum = csubG (cmulG a (cmulG gdenR gdenR)) (cmulG d gprimeNum))
+    (hresDen : resDen = cmulG d (cmulG gdenR gdenR))
+    (hhNum : hNumR = cdivG fuel (cmulG resNum DstarR) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuel : (cnormG (cmulG resNum DstarR) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum DstarR))
+    (hgdenne : toPolyG gdenR ≠ 0) (hDstarne : toPolyG DstarR ≠ 0) (hdne : toPolyG d ≠ 0) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG gnumR) / towerAlg (toPolyG gdenR))
+        + towerAlg (toPolyG hNumR) / towerAlg (toPolyG DstarR)
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) := by
+  -- the proven cleared polynomial identity over `(RatFunc ℚ)[X]`
+  have hcleared := cHermiteReduceTower_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum
+    resNum resDen hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
+  -- the quotient-rule numerator `P = Δgnum·gden − gnum·Δgden`, with `Δ = implicitDeriv (toPolyG Dt)`
+  rw [towerFractionFieldDeriv_div]
+  set P : (CFieldSpec.K QFunNZ)[X] :=
+    Differential.implicitDeriv (toPolyG Dt) (toPolyG gnumR) * toPolyG gdenR
+      - toPolyG gnumR * Differential.implicitDeriv (toPolyG Dt) (toPolyG gdenR) with hP
+  -- the cleared polynomial identity in `Δ`-form, matching `P`
+  have hcleared' : (P * toPolyG DstarR + toPolyG hNumR * (toPolyG gdenR * toPolyG gdenR)) * toPolyG d
+      = toPolyG a * (toPolyG gdenR * toPolyG gdenR * toPolyG DstarR) := by
+    rw [hP, ← toPolyG_cmonomialDeriv, ← toPolyG_cmonomialDeriv]
+    linear_combination hcleared
+  rw [show towerAlg (Differential.implicitDeriv (toPolyG Dt) (toPolyG gnumR)) * towerAlg (toPolyG gdenR)
+        - towerAlg (toPolyG gnumR) * towerAlg (Differential.implicitDeriv (toPolyG Dt) (toPolyG gdenR))
+      = towerAlg P by rw [hP, map_sub, map_mul, map_mul]]
+  exact hermite_field_div_of_cleared P (toPolyG DstarR) (toPolyG gdenR) (toPolyG hNumR) (toPolyG d)
+    (toPolyG a) hgdenne hDstarne hdne hcleared'
+
