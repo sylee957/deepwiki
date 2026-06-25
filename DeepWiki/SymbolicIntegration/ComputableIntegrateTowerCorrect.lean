@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrect
 import DeepWiki.SymbolicIntegration.ComputableIntegrateCorrect
-import DeepWiki.SymbolicIntegration.ComputableIntegrateChecked
 
 /-! # Abstract correctness of the GENERIC tower integrator `cIntegrateG` at the level-1 carrier ℚ(x)
 The generic tower engine's top-level driver `cIntegrateG` (`ComputableTowerIntegrate`) assembles the

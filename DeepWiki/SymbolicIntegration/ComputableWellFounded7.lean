@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableWellFounded6
+import DeepWiki.SymbolicIntegration.ComputableWellFounded5
 import DeepWiki.SymbolicIntegration.ComputableRischDE
 import DeepWiki.SymbolicIntegration.ComputableRischDECorrect
 import DeepWiki.SymbolicIntegration.ComputableRischDESPDECorrect
