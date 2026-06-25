@@ -83,4 +83,5 @@ import DeepWiki.SymbolicIntegration.ComputableCoupledDE
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
 import DeepWiki.SymbolicIntegration.ComputableIntegrateCorrect
 import DeepWiki.SymbolicIntegration.ComputableResidueBridge
+import DeepWiki.SymbolicIntegration.ComputableResultantGeneric
 import DeepWiki.SymbolicIntegration.ComputableParallel
