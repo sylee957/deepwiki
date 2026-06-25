@@ -412,4 +412,51 @@ theorem gBenchFFGcd_size_flat :
     gGcdSizeRaw (gBenchFFGcd 1) = 36 ∧ gGcdSizeRaw (gBenchFFGcd 2) = 36
     ∧ gGcdSizeRaw (gBenchFFGcd 3) = 36 := by native_decide
 
+/-! ### ★★ STRETCH — the recursive tower instance computes a LEVEL-2 fraction-free gcd
+
+`α = QFunNZG (QFunNZG ℚ) = Lvl2 ≅ ℚ(x)(t₁)`, so the gcd is over `Lvl2[t₂] = ℚ(x)(t₁)[t₂]` (tower level
+2). The recursive `instCFracGcdQFunNZG` at `β = QFunNZG ℚ` clears denominators into the GCD-domain
+`CPolyG (QFunNZG ℚ) = ℚ(x)(t₁)[s]` and runs `cprimPRSgcdGen` with the content-gcd `cgcdFFRawGen` at level
+`QFunNZG ℚ` — which itself (the level-1 instance) clears denominators over `ℚ[x]` and runs the primitive
+PRS, bottoming at the raw Euclidean gcd over `ℚ`. So the level-2 gcd recurses ℚ(x)(t₁)[t₂] →
+ℚ(x)(t₁)[s] → ℚ[x] → ℚ, exactly the `CRischField` tower shape. Everything is `[CField …]`-computable with
+`Prop`-erased subtype proofs, so it `native_decide`s — no noncomputable `CFieldSpec` leak. -/
+
+open BenchG in
+/-- The level-2 monomial `t₂` lifted as a constant `ℚ(x)(t₁)`-coefficient is built from `Lvl2` scalars.
+`lvl2One = (1 : Lvl2)` and `lvl2Zero = (0 : Lvl2)` are the scalar unit/zero of ℚ(x)(t₁) for assembling
+`t₂`-polynomials over the depth-2 tower. -/
+def lvl2One : Lvl2 := CField.one
+
+/-- The `Lvl2` (ℚ(x)(t₁)) scalar `t₁ = s/1` — numerator the monomial `[0, 1] ∈ (QFunNZG ℚ)[s]`,
+denominator `[1]`. A genuine non-constant level-2 scalar for building level-2 gcd inputs. -/
+def lvl2T1scalar : Lvl2 :=
+  ⟨([(CField.zero : QFunNZG ℚ), CField.one], [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
+
+/-- A `t₂`-polynomial `(t₂ − t₁)·(t₂ + 1) = t₂² + (1 − t₁)·t₂ − t₁` over `Lvl2 = ℚ(x)(t₁)` (low→high in
+`t₂`), built as a product of two linear factors — a degree-2 level-2 dividend with a genuine `ℚ(x)(t₁)`
+coefficient (`t₁`). -/
+def lvl2P : CPolyG Lvl2 :=
+  CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [lvl2One, lvl2One]
+
+/-- A `t₂`-polynomial `(t₂ − t₁)·(t₂ − 1) = t₂² − (1 + t₁)·t₂ + t₁` over `Lvl2` sharing the factor
+`(t₂ − t₁)` with `lvl2P`, so `gcd(lvl2P, lvl2Q) ~ (t₂ − t₁)` (degree 1). -/
+def lvl2Q : CPolyG Lvl2 :=
+  CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [CField.neg lvl2One, lvl2One]
+
+/-- **★★ The recursive tower instance reduces at LEVEL 2** (`native_decide`, the stretch smoke test):
+the generic fraction-free `cgcdFFGen` over `Lvl2 = ℚ(x)(t₁)` runs end to end on `lvl2P, lvl2Q` over
+`Lvl2[t₂] = ℚ(x)(t₁)[t₂]` and returns a **nonzero** gcd (`cisZeroG` of the result is `false`). The
+level-2 call recurses ℚ(x)(t₁)[t₂] → ℚ(x)(t₁)[s] → ℚ[x] → ℚ through the nested `cgcdFFRawGen` instances —
+the depth-2 tower fraction-free gcd genuinely executes in the native compiler. -/
+theorem lvl2_cgcdFFGen_reduces :
+    CPolyG.cisZeroG (CFracGcd.cgcdFFGen 60 lvl2P lvl2Q) = false := by native_decide
+
+/-- **★★ The level-2 fraction-free gcd has the right DEGREE** (`native_decide`): `cgcdFFGen` over
+`Lvl2 = ℚ(x)(t₁)` of `lvl2P = (t₂−t₁)(t₂+1)` and `lvl2Q = (t₂−t₁)(t₂−1)` is **degree 1** in `t₂` — the
+shared factor `(t₂ − t₁)`. So the recursive tower gcd computes the correct answer over ℚ(x)(t₁)[t₂], not
+just a nonzero value. -/
+theorem lvl2_cgcdFFGen_deg_one :
+    CPolyG.cdegG (CFracGcd.cgcdFFGen 60 lvl2P lvl2Q) = 1 := by native_decide
+
 end DeepWiki.SymbolicIntegration
