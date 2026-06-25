@@ -1000,6 +1000,113 @@ theorem associated_toPolyG_cgcdFF_of_inputs (fuel : ℕ) (p q : CPolyG QFunNZ)
     Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
   associated_toPolyG_cgcdFF fuel p q (primPRSRegular_of_inputs _ _ _ hin)
 
+/-! ### Discharging clause (i) run-termination — `PrimPRSInputs` from transparent degree bounds
+The `bisZero`-reaching disjunction of `PrimPRSInputs` (clause (i)) is now an automatic consequence of a
+fuel exceeding the divisor's `t`-degree, via the strict per-step decrease `primPRSstep_length_lt`. The
+genuinely run-specific data that *remains* is the per-node coefficient bound (`deg_x < 30`) and the
+pseudo-remainder degree bound (`deg_t ≤ 60`); we package these as `PrimPRSNodeRegular` and discharge
+`PrimPRSInputs` from them with **no explicit termination assumption** — termination is `fuel ≥ deg Q`. -/
+
+/-- **Per-node run bounds** `PrimPRSNodeRegular P Q`: the genuinely run-specific algorithmic data at a PRS
+node — `P` is nonzero with every `x`-coefficient of `t`-length `< 30` (so its content regularity is
+automatic, `ContentRegularNode.of_ne_bisZero_lengths`), its `t`-degree fits the pseudo-remainder fuel
+(`(bnorm P).length ≤ 60`), and (off a nonzero divisor) the next node `bprimitivePartX 30 (bpsremainder 60
+P Q)` satisfies the same recursively, terminating once `bisZero Q`. No `ContentFoldTerminates` /
+`bisZero`-reaching clause: those are discharged from these length bounds + `primPRSstep_length_lt`. -/
+def PrimPRSNodeRegular : ℕ → BPoly → BPoly → Prop
+  | 0, P, _ =>
+    ¬ bisZero (bnorm P) = true ∧ (∀ a ∈ bnorm (bnorm P), (cnorm a).length < 30)
+      ∧ (bnorm (bnorm P)).length ≤ 60
+  | fuel + 1, P, Q =>
+    (¬ bisZero (bnorm P) = true ∧ (∀ a ∈ bnorm (bnorm P), (cnorm a).length < 30)
+        ∧ (bnorm (bnorm P)).length ≤ 60) ∧
+      (bisZero (bnorm Q) = true ∨
+        ((bnorm Q).length ≤ (bnorm P).length →
+          ContentRegularNode (bpsremainder 60 (bnorm P) (bnorm Q)) ∧
+            PrimPRSNodeRegular fuel (bnorm Q)
+              (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q)))))
+
+/-- The head per-node bounds of `PrimPRSNodeRegular fuel P Q` (extracted uniformly over the fuel): `P`
+nonzero with `deg_x < 30` per coefficient and `deg_t ≤ 60`. -/
+theorem PrimPRSNodeRegular.head (fuel : ℕ) (P Q : BPoly) (h : PrimPRSNodeRegular fuel P Q) :
+    ¬ bisZero (bnorm P) = true ∧ (∀ a ∈ bnorm (bnorm P), (cnorm a).length < 30)
+      ∧ (bnorm (bnorm P)).length ≤ 60 := by
+  cases fuel with
+  | zero => exact h
+  | succ fuel => exact h.1
+
+/-- The content regularity of node `P` from its head bounds: `ContentRegularNode P` (the node-`bnorm`-free
+form `PrimPRSInputs` consumes), from `PrimPRSNodeRegular.head`. -/
+theorem PrimPRSNodeRegular.contentRegular (fuel : ℕ) (P Q : BPoly)
+    (h : PrimPRSNodeRegular fuel P Q) : ContentRegularNode P := by
+  obtain ⟨hne, hlen, _⟩ := h.head fuel P Q
+  have hcn := ContentRegularNode.of_ne_bisZero_lengths P
+    (by rw [← bisZero_bnorm]; exact hne)
+    (by intro a ha; exact hlen a (by rw [bnorm_idem]; exact ha))
+  exact hcn
+
+/-- **Run-termination + content-regularity ⇒ `PrimPRSInputs`** (clause (i) discharged from a degree
+bound): if the fuel exceeds the divisor's normalized `t`-length (`(bnorm Q).length ≤ fuel`) and the
+per-node bounds `PrimPRSNodeRegular P Q` hold with `deg Q ≤ deg P`, then `PrimPRSInputs fuel P Q`. By
+induction on `fuel`: the terminal `bisZero Q` branch closes immediately; otherwise the strict decrease
+`primPRSstep_length_lt` shrinks `(bnorm Q').length < (bnorm Q).length ≤ fuel`, so the recursive call has
+fuel to spare, and `ContentRegularNode.of_ne_bisZero_lengths` supplies each node's content regularity from
+its `deg_x < 30` bound. So `PrimPRSInputs`'s run-termination is automatic, not assumed. -/
+theorem primPRSInputs_of_nodeRegular :
+    ∀ (fuel : ℕ) (P Q : BPoly), (bnorm Q).length ≤ fuel →
+      (bnorm Q).length ≤ (bnorm P).length →
+      PrimPRSNodeRegular fuel P Q → PrimPRSInputs fuel P Q := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro P Q hfuel _ hnode
+    have hQnil : bnorm Q = [] := List.length_eq_zero_iff.mp (by omega)
+    have hQz : bisZero Q = true := by rw [bisZero, beq_iff_eq]; exact hQnil
+    rw [PrimPRSInputs]
+    exact ⟨hQz, hnode.contentRegular 0 P Q⟩
+  | succ fuel ih =>
+    intro P Q hfuel hdeg hnode
+    obtain ⟨_, hPlen, hPdeg⟩ := hnode.head (fuel + 1) P Q
+    rw [PrimPRSNodeRegular] at hnode
+    have hQbranch := hnode.2
+    rw [PrimPRSInputs]
+    by_cases hQz : bisZero (bnorm Q) = true
+    · -- terminal: `Q = 0`
+      have hcn : ContentRegularNode (bnorm P) :=
+        ContentRegularNode.of_ne_bisZero_lengths (bnorm P) hnode.1.1 hPlen
+      exact Or.inl ⟨hQz, hcn⟩
+    · -- recursive step
+      have hnode' := (Or.resolve_left hQbranch hQz) hdeg
+      refine Or.inr ⟨hQz, hnode'.1, ?_⟩
+      -- recurse on the strictly smaller node, with enough fuel
+      have hstep : (bnorm (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q)))).length
+          < (bnorm Q).length :=
+        primPRSstep_length_lt P Q hQz (by simpa [bnorm_idem] using hPdeg)
+      refine ih (bnorm Q) (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q)))
+        (by omega) ?_ hnode'.2
+      · rw [bnorm_idem]; omega
+
+/-- **`cgcdFF` correct from per-node degree bounds** (clause (i) run-termination discharged): over ℚ(x),
+`cgcdFF fuel p q` computes the polynomial gcd, gated on `PrimPRSNodeRegular` of the `bdeg`-ordered cleared
+pair plus `fuel ≥ deg` and `deg Q ≤ deg P` — **no explicit `bisZero`-reaching / `ContentFoldTerminates`
+assumption**, only the transparent per-node degree bounds (`deg_x < 30`, `deg_t ≤ 60`) a real run meets.
+Composes `primPRSInputs_of_nodeRegular` into `associated_toPolyG_cgcdFF_of_inputs`. -/
+theorem associated_toPolyG_cgcdFF_of_nodeRegular (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hfuel : (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length ≤ fuel)
+    (hdeg : (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length
+      ≤ (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)).length)
+    (hnode : PrimPRSNodeRegular fuel
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFF_of_inputs fuel p q
+    (primPRSInputs_of_nodeRegular fuel _ _ hfuel hdeg hnode)
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- Clause (iii) crux discharged: under the content `cgcd`-fold preconditions, the content divides every
@@ -1040,5 +1147,30 @@ example (fuel : ℕ) (p q : CPolyG QFunNZ)
         then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
     Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
   associated_toPolyG_cgcdFF_of_inputs fuel p q hin
+
+-- Engine-level: the `cgcdTerminates` fuel-termination side condition holds for sufficient fuel — the
+-- Euclidean-gcd descent reaches a zero remainder once `fuel` bounds the input lengths.
+example (fuel : ℕ) (a b : CPoly) (ha : (cnorm a).length ≤ fuel) (hb : (cnorm b).length < fuel) :
+    Compute.cgcdTerminates fuel a b :=
+  Compute.cgcdTerminates_of_fuel fuel a b ha hb
+
+-- Run-termination (clause i) discharged: `cgcdFF` correctness needs **no** `bisZero`-reaching /
+-- `ContentFoldTerminates` assumption — only the transparent per-node degree bounds `PrimPRSNodeRegular`
+-- (`deg_x < 30`, `deg_t ≤ 60`) plus `fuel ≥ deg` and `deg Q ≤ deg P`, which the strict per-step `bdeg`
+-- decrease turns into automatic termination.
+example (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hfuel : (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length ≤ fuel)
+    (hdeg : (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length
+      ≤ (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)).length)
+    (hnode : PrimPRSNodeRegular fuel
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFF_of_nodeRegular fuel p q hfuel hdeg hnode
 
 end DeepWiki.SymbolicIntegration
