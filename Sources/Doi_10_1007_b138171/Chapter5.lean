@@ -22,9 +22,10 @@ proved. Liouville's theorem (§5.5), the full hyperexponential case (§5.9), the
 
 **Carrier: the generic ℚ(x).** The §5.3 Hermite and §5.6 residue-criterion reductions are aliased to the
 canonical **generic** engine at `α = QFunNZG ℚ` (the recursive `Frac(ℚ[x])`, every instance bottoming at
-ℚ with no hand-built piece), the same carrier as the §6 RDE pipeline. The §5.4 polynomial reduction and
-§5.8 primitive integration have **no `…G` variant** and stay on the `QFunNZ`-specific decls (so they
-still block deleting the QFunNZ engine).
+ℚ with no hand-built piece), the same carrier as the §6 RDE pipeline. The §5.4 polynomial reduction
+(`cPolyReduceTower`) and §5.8 primitive integration (`cPrimitivePolyIntegrate`) are already
+`[CField α] [CDiffField α]`-**generic** decls (no separate `…G` rename needed), aliased at the generic
+level and instantiable at `QFunNZG ℚ` like the rest of the engine.
 
 ## NOT YET FORMALIZED (audit 2026-06-24)
 §5.1 Elementary and Liouvillian Extensions: Def 5.1.1 (elementary/primitive/hyperexponential
@@ -108,8 +109,8 @@ theorem ex_5_3_1 :
 `cPolyReduceTower Dt fuel p = (q, r)` for a nonlinear monomial `t` (`δ(t) = deg(Dt) ≥ 2`), splitting
 `p ∈ k[t]` as `p = D(q) + r` with `deg(r) < δ(t)` by peeling the leading term whose monomial
 derivative cancels the top. Computable (generic over `[CField α] [CDiffField α]`) +
-`native_decide`-validated (Thm 5.4.1); abstract correctness deferred. *(No `…G`-suffixed mirror exists
-yet, so this stays on the `QFunNZ`-specific decl — a remaining QFunNZ-engine deletion blocker.)* -/
+`native_decide`-validated (Thm 5.4.1); abstract correctness deferred. *(Already a generic decl — no
+`…G`-suffixed mirror is needed; instantiate at `QFunNZG ℚ` like the rest of the engine.)* -/
 noncomputable abbrev alg_5_4_polynomialReduce := @cPolyReduceTower
 
 /-- **Example 5.4.1** (§5.4, p.141): `cPolyReduceTower` reduces `p = t³` (`Dt = t²+1`, `t = tan x`,
@@ -158,8 +159,8 @@ theorem ex_5_6_2 :
 e.g. `t = log x`), integrating `p = ∑ aᵢtⁱ` top-down in the constant-coefficient sub-case (`b = 0`,
 `c = aₘ/((m+1)·Dt)`) so `D(q) + rem = p`. The full `LimitedIntegrate` solve for the coefficient
 antiderivatives is the deferred Chapter-7 oracle. Computable + `native_decide`-validated; abstract
-correctness (Thm 5.8.1) deferred. *(No `…G`-suffixed mirror exists yet, so this stays on the
-`QFunNZ`-specific decl — a remaining QFunNZ-engine deletion blocker.)* -/
+correctness (Thm 5.8.1) deferred. *(Already a generic `[CField α] [CDiffField α]` decl — no
+`…G`-suffixed mirror is needed; instantiate at `QFunNZG ℚ` like the rest of the engine.)* -/
 noncomputable abbrev alg_5_8_primitivePolyIntegrate := @cPrimitivePolyIntegrate
 
 /-- **Example (§5.8, p.158)**, primitive case: `cPrimitivePolyIntegrate` on `p = (log x)²/x = (1/x)·t²`
