@@ -188,6 +188,43 @@ theorem sum_residue_seed_logDeriv_eq_div_add_residual (A : K[X]) (s : Finset K) 
     rw [← map_sum (C : K →+* K[X]), ← C_mul, mul_comm]
   rw [hproper, hconst, add_comm]
 
+omit [Algebra ℚ K] in
+open scoped Classical in
+/-- **The hyperexponential residue match with explicit residual** (the Rothstein–Trager **grouped** form):
+the residue-grouped sum (over the distinct residues `c ∈ s.image res`, with log argument
+`gᶜ = ∏_{res α = c}(X − α)`) **exceeds** the integrand `A/d` by the same explicit constant residual
+`C(η·∑ res α)`:
+`∑_c algMap(C c)·(algMap(δ gᶜ)/algMap gᶜ) = algMap A/algMap d + algMap(C(η·∑ res α))`. The grouped analogue of
+`sum_residue_seed_logDeriv_eq_div_add_residual`: each `δ gᶜ/gᶜ` is the fiber's per-root sum
+(`sum_logDeriv_prod_X_sub_C`), the fiberwise regrouping (`Finset.sum_fiberwise_of_maps_to`) recovers the
+per-root residue sum, which is `A/d + R`. This is exactly the residue sum the engine's `logResidueSum`
+computes (cf. `logResidueSum_eq_grouped`); for `η = 0` it is the proven `sum_residue_grouped_logDeriv_eq_div`. -/
+theorem sum_residue_grouped_logDeriv_eq_div_add_residual (A : K[X]) (s : Finset K)
+    (hA : A.degree < s.card) (η : K) (γ : K → K) (hδ : ∀ α ∈ s, δ (X - C α) = C η * X + C (γ α))
+    (hb0 : ∀ α ∈ s, η * α + γ α ≠ 0) :
+    ∑ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α),
+        algebraMap K[X] (RatFunc K) (C c)
+          * (algebraMap K[X] (RatFunc K)
+                (δ (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+              / algebraMap K[X] (RatFunc K)
+                (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+        + algebraMap K[X] (RatFunc K)
+            (C (η * ∑ α ∈ s, A.eval α / (δ (Lagrange.nodal s id)).eval α)) := by
+  classical
+  set res : K → K := fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α with hres
+  rw [← sum_residue_seed_logDeriv_eq_div_add_residual δ A s hA η γ hδ hb0,
+    ← Finset.sum_fiberwise_of_maps_to (g := res) (t := s.image res)
+      (fun α hα => Finset.mem_image_of_mem _ hα)
+      (f := fun α => algebraMap K[X] (RatFunc K) (C (res α))
+        * (algebraMap K[X] (RatFunc K) (δ (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α)))]
+  refine Finset.sum_congr rfl fun c _ => ?_
+  rw [sum_logDeriv_prod_X_sub_C δ (s.filter (fun α => res α = c)), Finset.mul_sum]
+  exact Finset.sum_congr rfl fun α hα => by rw [(Finset.mem_filter.mp hα).2]
+
 /-- **The hyperexponential integral identity with explicit residual** (`D(∑ aᵢ·log gᵢ) = a/d + R`, the
 headline): over a split squarefree `d = nodal s id`, with a base derivation `δ` of **hyperexponential**
 type — `δ(X − Cα) = C η·X + C(γ α)` (degree-≤1, the X-coefficient `η = δX` uniform), `b α = η·α + γ α ≠ 0`
