@@ -44,45 +44,61 @@ open Compute CPolyG
 
 namespace CPolyG
 
-/-! ### Target A — the fuel-free Yun squarefree factorization `cSqfreeYunFFWf` (own-loop)
+/-! ### Target A — the fuel-free Yun squarefree factorization `cSqfreeYunFFWf` (structural-counter loop)
 
 `cSqfreeYunFFgo fuel fo b d` (`ComputableSplitSquarefree`) is Yun's main loop: stop when `b` is constant
 (`cdegG b = 0`), else emit `p = cmonicG (cgcdFF fuel b d)`, recurse on `b' = b/p`, `d' = d/p − b'`. The
-running poly is `b`, whose normalized list length `(cnormG b).length` strictly drops when the loop
-continues (the emitted `p` is non-constant — multiplicity `≥ 1` — so `b/p` has strictly smaller
-`t`-degree). The fuel-free companion runs the **own-loop** by well-founded recursion on `(cnormG b).length`
-with the structural runtime guard `(cnormG b').length < (cnormG b).length`, computing each `p`/`b'`/`d'`
-with the fuel-free leaves `cgcdFFWf`/`cdivWf`. -/
+loop counts down on the **outer multiplicity counter** `fo`, **not** on a polynomial degree: at a *skipped*
+multiplicity (e.g. `d = tⁿ`, whose squarefree factorization is `[1, …, 1, t]` with `n−1` *unit* factors)
+the emitted `p` is the constant `[1]` and the running `b` and `d` are **unchanged** for several steps —
+so there is no strictly-decreasing polynomial witness, and a degree-guarded well-founded loop would
+**stop early** and return a *wrong* (truncated) factorization (e.g. `t² → [1]` instead of `[1, t]`).
 
-/-- **Fuel-free Yun main loop** (fraction-free) `cSqfreeYunFFgoWf b d`: the fuel-free companion of
-`cSqfreeYunFFgo`. Stops when `b` is constant (`cdegG b = 0`), else emits `p = cmonicG (cgcdFFWf b d)`,
-recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'`. True well-founded recursion on `(cnormG b).length`
-— **no fuel at runtime**; the recursion is taken only under the structural guard `(cnormG b').length <
-(cnormG b).length`, so `decreasing_by` is `assumption`. Over a real run the guard never fails (the emitted
-`p` is non-constant, so `b/p` drops the `t`-degree), so `cSqfreeYunFFgoWf` agrees with `cSqfreeYunFFgo`
-(`cSqfreeYunFFgoWf_eq`). -/
-def cSqfreeYunFFgoWf (b d : CPolyG QFunNZ) : List (CPolyG QFunNZ) :=
-  if cdegG b = 0 then []
-  else
-    let p := cmonicG (cgcdFFWf b d)
-    let b' := cdivWf b p
-    let d' := csubG (cdivWf d p) (cderivG b')
-    if (cnormG b' : List QFunNZ).length < (cnormG b : List QFunNZ).length then
-      p :: cSqfreeYunFFgoWf b' d'
-    else [p]   -- unreachable on a real run (the non-constant `p` drops the `t`-degree)
-termination_by (cnormG b).length
-decreasing_by assumption
+The honest fuel-free companion therefore keeps the genuine termination measure — the multiplicity counter
+— but computes a **sufficient bound for it once, internally, from the input** (`yunBound`), so the caller
+still passes **no fuel**. The loop `cSqfreeYunFFgoWf fo b d` recurses *structurally* on `fo` (so
+`decreasing_by` is automatic), threading the fuel-free leaves `cgcdFFWf`/`cdivWf` for each `p`/`b'`/`d'`;
+the entry `cSqfreeYunFFWf p` instantiates `fo := yunBound p` (`= (cnormG p).length`, which bounds the max
+multiplicity `≤ deg p` with slack, and also every intermediate `t`-length for the inner gcds/divisions). -/
+
+/-- **Sufficient internal multiplicity-counter bound** `yunBound p := (cnormG p).length`: a provably
+sufficient outer Yun counter for `cSqfreeYunFFgoWf` on `p`. Yun's outer loop runs one step per
+multiplicity slot, and the max multiplicity of the squarefree factorization of `p` is `≤ deg p =
+(cnormG p).length − 1 < (cnormG p).length`, so `(cnormG p).length` outer steps suffice; it also bounds
+every intermediate `t`-length (all running polys have `t`-degree `≤ deg p`), hence the inner fraction-free
+gcds/exact divisions. Computed once from the input, so the caller passes **no fuel**. -/
+def yunBound (p : CPolyG QFunNZ) : ℕ := (cnormG p : List QFunNZ).length
+
+/-- **Fuel-free Yun main loop** (fraction-free) `cSqfreeYunFFgoWf fo b d`: the fuel-free companion of
+`cSqfreeYunFFgo`, recursing **structurally on the outer multiplicity counter** `fo` (so `decreasing_by`
+is automatic and the loop never stops early — unlike a degree-guarded loop, which truncates at skipped
+multiplicities). Stops when `b` is constant (`cdegG b = 0`) or the counter is exhausted, else emits
+`p = cmonicG (cgcdFFWf b d)`, recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'` with `fo` decremented.
+The inner gcd/division leaves are the fuel-free `cgcdFFWf`/`cdivWf` — **no fuel at runtime**; the counter
+`fo` is supplied once by the entry `cSqfreeYunFFWf` as `yunBound`. Agrees with `cSqfreeYunFFgo` at the same
+counter `fo` (`cSqfreeYunFFgoWf_eq`). -/
+def cSqfreeYunFFgoWf : ℕ → CPolyG QFunNZ → CPolyG QFunNZ → List (CPolyG QFunNZ)
+  | 0, _, _ => []
+  | fo + 1, b, d =>
+    if cdegG b = 0 then []
+    else
+      let p := cmonicG (cgcdFFWf b d)
+      let b' := cdivWf b p
+      let d' := csubG (cdivWf d p) (cderivG b')
+      p :: cSqfreeYunFFgoWf fo b' d'
 
 /-- **Fuel-free Yun squarefree factorization over ℚ(x)[t]** `cSqfreeYunFFWf p = [p₁, p₂, …, pₘ]`: the
 fuel-free companion of `cSqfreeYunFF`. With `g = cgcdFFWf p (cderivG p)`, `b₁ = cdivWf p g`, `d₁ = cderivG
-p/g − b₁'`, runs the fuel-free Yun loop `cSqfreeYunFFgoWf b₁ d₁`. `p` is associate to `∏ᵢ pᵢ^i`. Every gcd
-is the fuel-free fraction-free `cgcdFFWf`, every exact division the fuel-free `cdivWf` — **no fuel at
-runtime**, `native_decide`-able over the noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)). -/
+p/g − b₁'`, runs the fuel-free Yun loop `cSqfreeYunFFgoWf (yunBound p) b₁ d₁` — the outer counter is the
+internally-computed `yunBound p`, so the caller passes **no fuel**. `p` is associate to `∏ᵢ pᵢ^i`. Every
+gcd is the fuel-free fraction-free `cgcdFFWf`, every exact division the fuel-free `cdivWf` — **no fuel at
+runtime**, `native_decide`-able over the noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)). Correct even at
+skipped multiplicities (`t² ↦ [1, t]`), where a degree-guarded loop would truncate. -/
 def cSqfreeYunFFWf (p : CPolyG QFunNZ) : List (CPolyG QFunNZ) :=
   let g := cgcdFFWf p (cderivG p)
   let b1 := cdivWf p g
   let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
-  cSqfreeYunFFgoWf b1 d1
+  cSqfreeYunFFgoWf (yunBound p) b1 d1
 
 end CPolyG
 
@@ -90,13 +106,14 @@ end CPolyG
 
 `cSqfreeYunFFgo fuel fo b d`/`cSqfreeYunFF fuel p` call `cgcdFF fuel`/`cdivG fuel` for the per-step
 gcd/divisions, with the outer Yun counter `fo` budgeting the multiplicities. The fuel-free companions
-substitute the WF leaves `cgcdFFWf`/`cdivWf`. The bridge needs, at each Yun step, that those WF leaves
-match `cgcdFF fuel`/`cdivG fuel` (a `CSqfreeYunStepReg fuel b d` node bundle — the `cgcdFF fuel b d` call
-is node-regular and the dividend lengths are bounded by `fuel` for the exact divisions), and that the
-running poly strictly drops (the structural guard, from the non-constant emitted `p`). These hold along a
-real Yun descent; the bundle `CSqfreeYunGoRegular fo fuel b d` packages them, recursing on the outer Yun
-counter `fo` exactly as `cSqfreeYunFFgo` (so the regularity is a plain structural recursion, no
-well-founded measure). -/
+substitute the WF leaves `cgcdFFWf`/`cdivWf` and recurse on the same outer counter `fo` (`yunBound` at the
+entry). The bridge needs, at each Yun step, that those WF leaves match `cgcdFF fuel`/`cdivG fuel` (a
+`CSqfreeYunStepReg fuel b d` node bundle — the `cgcdFF fuel b d` call is node-regular and the dividend
+lengths are bounded by `fuel` for the exact divisions). These hold along a real Yun descent; the bundle
+`CSqfreeYunGoRegular fuel n b d` packages them with a **step budget** `n` (the number of remaining outer
+Yun steps before the running poly is constant), recursing on `n` exactly as `cSqfreeYunFFgo` recurses on
+`fo` — so the regularity is a plain structural recursion, no well-founded degree measure (which Yun's loop
+genuinely lacks across skipped multiplicities). -/
 
 /-- **Per-Yun-step node-regularity bundle** `CSqfreeYunStepReg fuel b d`: the transparent preconditions for
 one Yun step's fuel-free leaves to match the fuel'd ops at the global step fuel `fuel` — the gcd call
@@ -111,69 +128,105 @@ structure CSqfreeYunStepReg (fuel : ℕ) (b d : CPolyG QFunNZ) : Prop where
   /-- the auxiliary dividend `d` is short enough for its exact division to be reduced. -/
   hdlen : (cnormG d : List QFunNZ).length ≤ fuel
 
-/-- **Per-run Yun-loop regularity bundle** `CSqfreeYunGoRegular fuel b d`: mirrors the `cSqfreeYunFFgo`
-recursion as an inductive predicate — `stop` at a constant running poly `b` (`cdegG b = 0`, the loop ends),
-or `step` when the step is node-regular (`CSqfreeYunStepReg fuel b d`), the running poly strictly drops,
-and the same holds recursively on the quotient `b' = cdivWf b (cmonicG (cgcdFF fuel b d))` and the updated
-`d'`. The transparent per-node preconditions a real Yun run on a squarefree-decomposable input satisfies. -/
-inductive CSqfreeYunGoRegular (fuel : ℕ) : CPolyG QFunNZ → CPolyG QFunNZ → Prop
-  /-- terminal node: the running poly `b` is constant, the loop stops. -/
-  | stop {b d : CPolyG QFunNZ} (hdeg : cdegG b = 0) : CSqfreeYunGoRegular fuel b d
-  /-- recursive node: the step is node-regular, the running poly strictly drops, recurse on the quotient. -/
-  | step {b d : CPolyG QFunNZ} (hstep : CSqfreeYunStepReg fuel b d)
-      (hguard : (cnormG (CPolyG.cdivWf b (cmonicG (CPolyG.cgcdFF fuel b d))) : List QFunNZ).length
-        < (cnormG b : List QFunNZ).length)
-      (hrec : CSqfreeYunGoRegular fuel (CPolyG.cdivWf b (cmonicG (CPolyG.cgcdFF fuel b d)))
+/-- **Per-run Yun-loop regularity bundle** `CSqfreeYunGoRegular fuel n b d`: mirrors the `cSqfreeYunFFgo`
+recursion as an inductive predicate **with a step budget** `n` — `stop` (any budget) at a constant running
+poly `b` (`cdegG b = 0`, the loop ends), or `step` (budget `n+1`) when the step is node-regular
+(`CSqfreeYunStepReg fuel b d`) and the same holds recursively on the quotient `b' = cdivWf b (cmonicG
+(cgcdFF fuel b d))` and the updated `d'` within budget `n`. So `CSqfreeYunGoRegular fuel n b d` certifies
+that the regular Yun run from `(b, d)` reaches a constant within `n` outer steps — the genuine termination
+witness (the *multiplicity counter*), since at skipped multiplicities the running poly does **not** drop in
+degree. Unlike a degree guard, this is sound at skipped multiplicities (`t² ↦ [1, t]`). -/
+inductive CSqfreeYunGoRegular (fuel : ℕ) : ℕ → CPolyG QFunNZ → CPolyG QFunNZ → Prop
+  /-- terminal node: the running poly `b` is constant, the loop stops (any remaining budget). -/
+  | stop {n : ℕ} {b d : CPolyG QFunNZ} (hdeg : cdegG b = 0) : CSqfreeYunGoRegular fuel n b d
+  /-- recursive node: `b` is non-constant, the step is node-regular, recurse on the quotient within
+  budget `n`. -/
+  | step {n : ℕ} {b d : CPolyG QFunNZ} (hne : cdegG b ≠ 0) (hstep : CSqfreeYunStepReg fuel b d)
+      (hrec : CSqfreeYunGoRegular fuel n (CPolyG.cdivWf b (cmonicG (CPolyG.cgcdFF fuel b d)))
         (csubG (CPolyG.cdivWf d (cmonicG (CPolyG.cgcdFF fuel b d)))
           (cderivG (CPolyG.cdivWf b (cmonicG (CPolyG.cgcdFF fuel b d)))))) :
-      CSqfreeYunGoRegular fuel b d
+      CSqfreeYunGoRegular fuel (n + 1) b d
 
 namespace CPolyG
 
-/-- **Bridge — `cSqfreeYunFFgoWf` equals `cSqfreeYunFFgo` at any sufficient outer fuel.** For an outer Yun
-counter `fo` *strictly* exceeding the running poly's `t`-length (`(cnormG b).length < fo`) and a regular
-Yun run (`CSqfreeYunGoRegular fuel b d`), `cSqfreeYunFFgoWf b d = cSqfreeYunFFgo fuel fo b d`. The fuel
-bounds live only here; `cSqfreeYunFFgoWf` carries none. By induction on the outer counter `fo`, mirroring
-`cSplitFactorFastWf_eq`: at a constant `b` both stop; else the step's WF leaves match the fuel'd ops
-(`cgcdFFWf_eq_node`, `cdivWf_eq_cdivmodG_succ`), the structural guard holds, and the *strict* `< fo` keeps
-the recursion strictly above the fuel-exhaustion base case (`fo = 0` is vacuous, `(cnormG b).length < 0`).
-The IH applies to the quotient `b'` (its strictly smaller length keeps `< fo` after one decrement). -/
-theorem cSqfreeYunFFgoWf_eq : ∀ (fo fuel : ℕ) (b d : CPolyG QFunNZ),
-    (cnormG b : List QFunNZ).length < fo → CSqfreeYunGoRegular fuel b d →
-      cSqfreeYunFFgoWf b d = cSqfreeYunFFgo fuel fo b d := by
-  intro fo
-  induction fo with
-  | zero =>
-    -- vacuous: `(cnormG b).length < 0` is impossible
-    intro _ b _ hlen _
-    exact absurd hlen (Nat.not_lt_zero _)
-  | succ fo ih =>
-    intro fuel b d hlen hreg
-    rw [cSqfreeYunFFgoWf.eq_def, cSqfreeYunFFgo]
-    by_cases hdeg : cdegG b = 0
-    · -- constant running poly: both return `[]`
-      simp only [if_pos hdeg]
-    · -- recursive step: extract the per-step regularity
-      rcases hreg with hc | ⟨hstep, hguardReg, hrecReg⟩
-      · exact absurd hc hdeg
+/-- **Bridge — `cSqfreeYunFFgoWf` equals `cSqfreeYunFFgo` at the same outer counter.** For any outer Yun
+counter `fo` at least the step budget `n` of a regular run (`n ≤ fo`, `CSqfreeYunGoRegular fuel n b d`),
+`cSqfreeYunFFgoWf fo b d = cSqfreeYunFFgo fuel fo b d`. The fuel bounds live only here; `cSqfreeYunFFgoWf`
+carries none. By induction on the regularity predicate (its step budget is the genuine termination witness,
+the multiplicity counter — not a polynomial degree), generalizing `fo`: at a constant `b` both stop; else
+(budget `≥ 1`, so `fo ≥ 1`) the step's WF leaves match the fuel'd ops (`cgcdFFWf_eq_node`,
+`cdivmodWf_eq_of_fuel`), and the IH applies to the quotient with `n ≤ fo − 1`. -/
+theorem cSqfreeYunFFgoWf_eq (fuel : ℕ) : ∀ (n : ℕ) (b d : CPolyG QFunNZ),
+    CSqfreeYunGoRegular fuel n b d → ∀ (fo : ℕ), n ≤ fo →
+      cSqfreeYunFFgoWf fo b d = cSqfreeYunFFgo fuel fo b d := by
+  intro n b d hreg
+  induction hreg with
+  | @stop n b d hdeg =>
+    -- constant running poly: both stop (either `fo = 0` or the `cdegG b = 0` branch)
+    intro fo _
+    cases fo with
+    | zero => rfl
+    | succ fo => rw [cSqfreeYunFFgoWf, cSqfreeYunFFgo, if_pos hdeg, if_pos hdeg]
+  | @step n b d hne hstep hrec ih =>
+    intro fo hfo
+    -- budget `n + 1 ≤ fo`, so `fo = fo' + 1`
+    cases fo with
+    | zero => exact absurd hfo (Nat.not_succ_le_zero n)
+    | succ fo =>
       obtain ⟨hgcd, hblen, hdlen⟩ := hstep
+      rw [cSqfreeYunFFgoWf, cSqfreeYunFFgo, if_neg hne, if_neg hne]
       -- the gcd's WF leaf matches the fuel'd `cgcdFF`
       have hgeq : cgcdFFWf b d = CPolyG.cgcdFF fuel b d := cgcdFFWf_eq_node fuel b d hgcd
-      -- abbreviate the emitted factor (the fuel'd `cgcdFF`-shape, which the WF guard/rec already use)
       set p := cmonicG (CPolyG.cgcdFF fuel b d) with hp
       -- the running and auxiliary quotients' WF leaves match the fuel'd `cdivG`
       have hbq : cdivWf b p = CPolyG.cdivG fuel b p := by
         rw [cdivWf, cdivmodWf_eq_of_fuel fuel b p hblen, cdivG]
       have hdq : cdivWf d p = CPolyG.cdivG fuel d p := by
         rw [cdivWf, cdivmodWf_eq_of_fuel fuel d p hdlen, cdivG]
-      -- the WF loop's `cmonicG (cgcdFFWf b d)` is the fuel'd `p`; rewrite both sides into `cdivWf`/`p` form
-      simp only [if_neg hdeg, hgeq, ← hp, ← hbq, ← hdq]
-      -- the structural guard holds (running poly strictly drops); `hguardReg` already in `cdivWf b p` form
-      rw [if_pos hguardReg]
-      -- apply the IH on the quotient (length strictly drops, so `< fo` after the decrement)
-      have hlen' : (cnormG (CPolyG.cdivWf b p) : List QFunNZ).length < fo := by omega
-      rw [ih fuel (CPolyG.cdivWf b p)
-        (csubG (CPolyG.cdivWf d p) (cderivG (CPolyG.cdivWf b p))) hlen' hrecReg]
+      simp only [hgeq, ← hp, ← hbq, ← hdq]
+      -- the IH applies to the quotient within budget `n ≤ fo`
+      rw [ih fo (Nat.le_of_succ_le_succ hfo)]
+
+/-- **Saturation of the fuel'd Yun loop above its step budget.** For a regular run
+(`CSqfreeYunGoRegular fuel n b d`) and any two outer counters `fo₁, fo₂` both at least the step budget `n`,
+`cSqfreeYunFFgo fuel fo₁ b d = cSqfreeYunFFgo fuel fo₂ b d` — once the run reaches a constant within the
+budget, extra outer counter is unused. By induction on the regularity predicate, generalizing both
+counters; the entry bridge uses it to reconcile the internal `yunBound` counter with the downstream `fuel`. -/
+theorem cSqfreeYunFFgo_saturate (fuel : ℕ) : ∀ (n : ℕ) (b d : CPolyG QFunNZ),
+    CSqfreeYunGoRegular fuel n b d → ∀ (fo₁ fo₂ : ℕ), n ≤ fo₁ → n ≤ fo₂ →
+      cSqfreeYunFFgo fuel fo₁ b d = cSqfreeYunFFgo fuel fo₂ b d := by
+  intro n b d hreg
+  induction hreg with
+  | @stop n b d hdeg =>
+    intro fo₁ fo₂ _ _
+    cases fo₁ with
+    | zero =>
+      cases fo₂ with
+      | zero => rfl
+      | succ fo₂ => rw [cSqfreeYunFFgo, cSqfreeYunFFgo, if_pos hdeg]
+    | succ fo₁ =>
+      cases fo₂ with
+      | zero => rw [cSqfreeYunFFgo, cSqfreeYunFFgo, if_pos hdeg]
+      | succ fo₂ => rw [cSqfreeYunFFgo, cSqfreeYunFFgo, if_pos hdeg, if_pos hdeg]
+  | @step n b d hne hstep hrec ih =>
+    intro fo₁ fo₂ hfo₁ hfo₂
+    cases fo₁ with
+    | zero => exact absurd hfo₁ (Nat.not_succ_le_zero n)
+    | succ fo₁ =>
+      cases fo₂ with
+      | zero => exact absurd hfo₂ (Nat.not_succ_le_zero n)
+      | succ fo₂ =>
+        obtain ⟨_, hblen, hdlen⟩ := hstep
+        -- both loop bodies use the fuel'd `cdivG`; the IH/predicate use `cdivWf`, equal under the bounds
+        have hbq : cdivWf b (cmonicG (CPolyG.cgcdFF fuel b d))
+            = CPolyG.cdivG fuel b (cmonicG (CPolyG.cgcdFF fuel b d)) := by
+          rw [cdivWf, cdivmodWf_eq_of_fuel fuel b _ hblen, cdivG]
+        have hdq : cdivWf d (cmonicG (CPolyG.cgcdFF fuel b d))
+            = CPolyG.cdivG fuel d (cmonicG (CPolyG.cgcdFF fuel b d)) := by
+          rw [cdivWf, cdivmodWf_eq_of_fuel fuel d _ hdlen, cdivG]
+        rw [cSqfreeYunFFgo, cSqfreeYunFFgo, if_neg hne, if_neg hne]
+        simp only []   -- zeta-reduce the `let p/b'/d'` bindings so the `cdivG fuel …` heads are exposed
+        rw [← hbq, ← hdq, ih fo₁ fo₂ (Nat.le_of_succ_le_succ hfo₁) (Nat.le_of_succ_le_succ hfo₂)]
 
 end CPolyG
 
@@ -181,17 +234,20 @@ end CPolyG
 
 `cSqfreeYunFF fuel p` runs the preamble `g = cgcdFF fuel p (cderivG p)`, `b₁ = cdivG fuel p g`, `d₁ =
 cderivG p/g − b₁'`, then `cSqfreeYunFFgo fuel fuel b₁ d₁`. The fuel-free `cSqfreeYunFFWf p` substitutes
-`cgcdFFWf`/`cdivWf` in the preamble and the fuel-free loop. The entry bundle `CSqfreeYunRegular fuel p`
-covers the preamble's node-regularity (the `cgcdFF p (cderivG p)` call and the two `cdivG` lengths) plus
-the loop run-regularity `CSqfreeYunGoRegular fuel b₁ d₁`. The bridge feeds the loop bridge with the
-self-sufficient outer fuel `fo = fuel` (strict, since `(cnormG b₁).length < fuel`). -/
+`cgcdFFWf`/`cdivWf` in the preamble and runs the structural-counter loop at `fo = yunBound p`. The entry
+bundle `CSqfreeYunRegular fuel p` covers the preamble's node-regularity (the `cgcdFF p (cderivG p)` call
+and the two `cdivG` lengths) plus the loop run-regularity with a **step budget** `n`
+(`CSqfreeYunGoRegular fuel n b₁ d₁`) bounded both by the downstream `fuel` and by the internal
+`yunBound p`. The bridge runs the loop bridge at the internal counter `fo = yunBound p`, then *saturates*
+the fuel'd loop from `yunBound p` up to `fuel` (both at least the budget `n`). -/
 
 /-- **Per-run Yun entry regularity bundle** `CSqfreeYunRegular fuel p`: the preamble node-regularity for
 `cSqfreeYunFFWf p` to match `cSqfreeYunFF fuel p` — the gcd call `cgcdFF fuel p (cderivG p)` is node-regular,
 the two preamble divisions `cdivG fuel p g` / `cdivG fuel (cderivG p) g` are reduced (`(cnormG p).length ≤
-fuel`, `(cnormG (cderivG p)).length ≤ fuel`), the running list `b₁ = cdivG fuel p g` is strictly shorter
-than the outer fuel (`(cnormG b₁).length < fuel`), and the resulting loop is a regular run
-(`CSqfreeYunGoRegular fuel b₁ d₁`). -/
+fuel`, `(cnormG (cderivG p)).length ≤ fuel`), and the loop on `(b₁, d₁)` is a regular run within a step
+budget `nbudget` (the max multiplicity) that is at most both the downstream `fuel` (`hnfuel`) and the
+internal counter `yunBound p` (`hnbound`). The budget is the genuine termination witness; both counters
+exceed it on a real run. -/
 structure CSqfreeYunRegular (fuel : ℕ) (p : CPolyG QFunNZ) : Prop where
   /-- the preamble gcd `cgcdFF fuel p (cderivG p)` is node-regular. -/
   hgcd : CgcdFFNodeReg fuel p (cderivG p)
@@ -199,23 +255,25 @@ structure CSqfreeYunRegular (fuel : ℕ) (p : CPolyG QFunNZ) : Prop where
   hplen : (cnormG p : List QFunNZ).length ≤ fuel
   /-- `cderivG p` is short enough for the auxiliary division `cdivG fuel (cderivG p) g` to be reduced. -/
   hdplen : (cnormG (cderivG p) : List QFunNZ).length ≤ fuel
-  /-- the running list `b₁ = cdivG fuel p g` is strictly shorter than the outer fuel. -/
-  hb1len : (cnormG (CPolyG.cdivWf p (cgcdFFWf p (cderivG p))) : List QFunNZ).length < fuel
-  /-- the loop on `(b₁, d₁)` is a regular run. -/
-  hloop : CSqfreeYunGoRegular fuel (CPolyG.cdivWf p (cgcdFFWf p (cderivG p)))
-    (csubG (CPolyG.cdivWf (cderivG p) (cgcdFFWf p (cderivG p)))
-      (cderivG (CPolyG.cdivWf p (cgcdFFWf p (cderivG p)))))
+  /-- the loop on `(b₁, d₁)` is a regular run within some step budget `n` (the max multiplicity, the
+  genuine termination witness) that is at most both the downstream `fuel` and the internal counter
+  `yunBound p`; both counters exceed it on a real run. -/
+  hloop : ∃ n : ℕ, n ≤ fuel ∧ n ≤ CPolyG.yunBound p ∧
+    CSqfreeYunGoRegular fuel n (CPolyG.cdivWf p (cgcdFFWf p (cderivG p)))
+      (csubG (CPolyG.cdivWf (cderivG p) (cgcdFFWf p (cderivG p)))
+        (cderivG (CPolyG.cdivWf p (cgcdFFWf p (cderivG p)))))
 
 namespace CPolyG
 
 /-- **Bridge — `cSqfreeYunFFWf` equals `cSqfreeYunFF` at any sufficient fuel.** Under a regular Yun run
 (`CSqfreeYunRegular fuel p`), `cSqfreeYunFFWf p = cSqfreeYunFF fuel p`. The fuel bounds live only here;
 `cSqfreeYunFFWf` carries none. The preamble's WF leaves (`cgcdFFWf`/`cdivWf`) match the fuel'd ops
-(`cgcdFFWf_eq_node`, `cdivmodWf_eq_of_fuel`), and the loop bridge `cSqfreeYunFFgoWf_eq` runs at the
-self-sufficient outer fuel `fo = fuel`. -/
+(`cgcdFFWf_eq_node`, `cdivmodWf_eq_of_fuel`); the loop bridge `cSqfreeYunFFgoWf_eq` runs at the internal
+counter `fo = yunBound p` (budget `≤ yunBound p`), and the fuel'd loop saturates from `yunBound p` to the
+downstream `fuel` (`cSqfreeYunFFgo_saturate`, both counters `≥` the budget). -/
 theorem cSqfreeYunFFWf_eq (fuel : ℕ) (p : CPolyG QFunNZ) (hreg : CSqfreeYunRegular fuel p) :
     cSqfreeYunFFWf p = CPolyG.cSqfreeYunFF fuel p := by
-  obtain ⟨hgcd, hplen, hdplen, hb1len, hloop⟩ := hreg
+  obtain ⟨hgcd, hplen, hdplen, nbudget, hnfuel, hnbound, hloop⟩ := hreg
   rw [cSqfreeYunFFWf, CPolyG.cSqfreeYunFF]
   -- the preamble gcd `g` matches
   have hgeq : cgcdFFWf p (cderivG p) = CPolyG.cgcdFF fuel p (cderivG p) :=
@@ -226,13 +284,18 @@ theorem cSqfreeYunFFWf_eq (fuel : ℕ) (p : CPolyG QFunNZ) (hreg : CSqfreeYunReg
     rw [cdivWf, cdivmodWf_eq_of_fuel fuel p g hplen, cdivG]
   have hdivdpq : cdivWf (cderivG p) g = CPolyG.cdivG fuel (cderivG p) g := by
     rw [cdivWf, cdivmodWf_eq_of_fuel fuel (cderivG p) g hdplen, cdivG]
-  -- rewrite the WF entry into the fuel'd `(b₁, d₁)`
+  -- rewrite the WF entry into the fuel'd `(b₁, d₁)` preamble
   rw [hgeq]
-  -- the loop bridge at the self-sufficient outer fuel `fo = fuel`
-  have hb1len' : (cnormG (cdivWf p g) : List QFunNZ).length < fuel := by rw [hgeq] at hb1len; exact hb1len
   rw [hgeq] at hloop
-  rw [cSqfreeYunFFgoWf_eq fuel fuel (cdivWf p g)
-    (csubG (cdivWf (cderivG p) g) (cderivG (cdivWf p g))) hb1len' hloop, hb1q, hdivdpq]
+  -- the WF loop bridge at the internal counter `fo = yunBound p`
+  rw [cSqfreeYunFFgoWf_eq fuel nbudget (cdivWf p g)
+    (csubG (cdivWf (cderivG p) g) (cderivG (cdivWf p g))) hloop (yunBound p) hnbound,
+    hb1q, hdivdpq]
+  -- the fuel'd loop saturates from `yunBound p` up to the downstream `fuel`
+  rw [hb1q, hdivdpq] at hloop
+  rw [cSqfreeYunFFgo_saturate fuel nbudget (CPolyG.cdivG fuel p g)
+    (csubG (CPolyG.cdivG fuel (cderivG p) g) (cderivG (CPolyG.cdivG fuel p g))) hloop
+    (yunBound p) fuel hnbound hnfuel]
 
 end CPolyG
 
@@ -267,6 +330,34 @@ degree-5 `p` returns the squarefree factorization `p = p₁ p₂²` with `t`-deg
 runs end-to-end with **no fuel at runtime**. -/
 example :
     (CPolyG.cSqfreeYunFFWf splitFastExample351P).map CPolyG.cdegG = [3, 1] := by native_decide
+
+/-- The monomial `t²` over ℚ(x)[t] (ℚ-constant coefficients): the *skipped-multiplicity* witness whose
+squarefree factorization is `[1, t]` (multiplicity `1` absent, multiplicity `2` present). -/
+def sqfreeYunTsq : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 0, ofConstNZ 1]
+
+/-- The monomial `t³` over ℚ(x)[t] (ℚ-constant coefficients): the `3,3,2,1`-measure witness whose
+squarefree factorization is `[1, 1, t]` (multiplicities `1, 2` absent, multiplicity `3` present). -/
+def sqfreeYunTcube : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 0, ofConstNZ 0, ofConstNZ 1]
+
+/-- **★ Bug-fix verification (skipped multiplicity)**: `cSqfreeYunFFWf t² = [1, t]`, i.e. its factor
+`t`-degree list is `[0, 1]` — multiplicity `1` is the unit `[1]` (degree `0`) and multiplicity `2` is the
+real factor `t` (degree `1`). The earlier degree-guarded loop stopped early here and returned the WRONG
+`[1]` (degree list `[0]`); the structural-multiplicity-counter loop now factors correctly. -/
+example : (CPolyG.cSqfreeYunFFWf CPolyG.sqfreeYunTsq).map CPolyG.cdegG = [0, 1] := by native_decide
+
+/-- **★ Bug-fix verification (`t³`, the `3,3,2,1`-measure case)**: `cSqfreeYunFFWf t³ = [1, 1, t]`, factor
+`t`-degree list `[0, 0, 1]` — multiplicities `1, 2` are units `[1]`, multiplicity `3` is `t`. The running
+poly's normalized-list-length measure stalls (`3, 3, 2, 1`) across the two skipped multiplicities, so a
+pure-degree well-founded loop cannot terminate correctly; the multiplicity counter does. -/
+example : (CPolyG.cSqfreeYunFFWf CPolyG.sqfreeYunTcube).map CPolyG.cdegG = [0, 0, 1] := by native_decide
+
+/-- The skipped-multiplicity factorization `t²` recombines to the input: `1¹ · t² = t²` (monic), via
+`cisZeroG` of the difference over ℚ(x)[t] — the fuel-free Yun factors are genuinely correct, not merely the
+right length. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (splitSquarefreeFastRecombine (CPolyG.cSqfreeYunFFWf CPolyG.sqfreeYunTsq))
+      CPolyG.sqfreeYunTsq) = true := by native_decide
 
 end CPolyG
 
@@ -433,6 +524,29 @@ example :
           CPolyG.cdegG,
          ((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2).map
           CPolyG.cdegG) := by native_decide
+
+open QFunNZ in
+/-- Monomial derivative `Dt = t² + 1` (`t = tan x`) for the skipped-multiplicity split smoke test. -/
+def sqfreeSplitTanDt : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1]
+
+/-- **★ Bug-fix verification (skipped-multiplicity split)** — `cSplitSquarefreeFactorFastWf` on `d = t²`
+(only multiplicity `2` present) under `Dt = t² + 1` returns `N`-factor `t`-degrees `[0, 1]` and `S`-factor
+`t`-degrees `[0, 0]`: the multiplicity-`1` slot is the unit pair `(1, 1)` and the multiplicity-`2` factor
+`t` is fully normal (`S = gcd(t, t²+1) = 1`, `N = t`). The earlier degree-guarded Yun truncated `t²`, so
+this composition was wrong; it now runs correctly with **no fuel at runtime**. -/
+example :
+    (((CPolyG.cSplitSquarefreeFactorFastWf CPolyG.sqfreeSplitTanDt CPolyG.sqfreeYunTsq).1).map
+        CPolyG.cdegG,
+     ((CPolyG.cSplitSquarefreeFactorFastWf CPolyG.sqfreeSplitTanDt CPolyG.sqfreeYunTsq).2).map
+        CPolyG.cdegG) = ([0, 1], [0, 0]) := by native_decide
+
+/-- The skipped-multiplicity normal part recombines (by multiplicity) to `d = t²` (monic): `1¹ · t² = t²`,
+so `d` is entirely normal under `Dt = t² + 1`, via `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (splitSquarefreeFastRecombine
+        (CPolyG.cSplitSquarefreeFactorFastWf CPolyG.sqfreeSplitTanDt CPolyG.sqfreeYunTsq).1))
+      (CPolyG.cmonicG CPolyG.sqfreeYunTsq)) = true := by native_decide
 
 end CPolyG
 
