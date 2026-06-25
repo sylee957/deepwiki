@@ -29,7 +29,8 @@ whole §3.5 splitting-factorization layer) into the §5 *integration* own-loops 
   `cHermiteReduceTower` (§5.3, p.139). This is **not** an own-loop: it is a `foldl` over the squarefree
   factor list `cSqfreeYunFF` whose inner `j`-loop `cHermiteReduceTowerInner` recurses on a *downward
   structural counter* `j` (no fuel measure). The fuel feeds only (i) the squarefree factorization
-  `cSqfreeYunFF` — replaced by the own-loop `cSqfreeYunFFWf` of `ComputableWellFounded4` — and (ii) the
+  `cSqfreeYunFF` — replaced by the structural-counter loop `cSqfreeYunFFWf` of `ComputableWellFounded4`
+  (correct at skipped multiplicities) — and (ii) the
   Bézout solver `cdiophantineG` / the exact divisions `cdivG`, replaced by the fuel-free leaves
   `cdiophantineGWf` (over `cgcdWf`/`cdivmodWf`) and `cdivWf`. So the fuel-free companion threads the
   fuel-free leaves through the structural foldl + downward `j`-recursion — **no own-loop measure of its
@@ -498,24 +499,18 @@ def cHermiteReduceTowerWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) :
 
 end CPolyG
 
-/-! ### Caveat — `cHermiteReduceTowerWf` requires an all-multiplicities-present denominator
+/-! ### `cHermiteReduceTowerWf` now handles skipped-multiplicity denominators
 
-`cHermiteReduceTowerWf` uses the fuel-free Yun factorization `cSqfreeYunFFWf` (`ComputableWellFounded4`),
-whose well-founded measure `(cnormG b).length` is **only valid when every multiplicity slot of the
-squarefree factorization is occupied** — i.e. when the emitted factor `pᵢ` is non-constant at every step.
-When a multiplicity is **skipped** (e.g. `d = tⁿ` for `n ≥ 2`, whose squarefree factorization
-`t¹·…·tⁿ⁻¹·…` is associate to `[1, …, 1, t]` with `n−1` *unit* factors and one real factor `t`), Yun emits
-a constant (degree-`0`) factor `[1]` while the running `b` and `d` stay **unchanged** for several steps —
-so `(cnormG b).length` does not strictly drop and `cSqfreeYunFFWf`'s structural guard fails, **truncating**
-the factor list (returning a *shorter, wrong* answer). There is no polynomial-degree own-loop measure for
-Yun's loop in this case — its termination is governed by the *multiplicity counter* (the fuel `fo`), which
-has no strictly-decreasing polynomial witness across constant-factor steps. So `cHermiteReduceTowerWf`
-agrees with the fuel'd `cHermiteReduceTower` (and satisfies the cleared identity) **exactly on denominators
-whose multiplicities are all present** (`cSqfreeYunFFWf d = cSqfreeYunFF fuel d`); the `native_decide`
-examples below use such a `d = (t−1)²(t−2)` (multiplicities `1, 2` both occupied) rather than the §5.3
-book example `d = t²` (only multiplicity `2`, multiplicity `1` skipped — `cSqfreeYunFFWf` is wrong there).
-This is the precise remaining gap: fixing it needs a correct fuel-free Yun loop in
-`ComputableWellFounded4`, which this file may not edit. -/
+`cHermiteReduceTowerWf` uses the fuel-free Yun factorization `cSqfreeYunFFWf` (`ComputableWellFounded4`).
+That op formerly carried a degree-guarded well-founded loop that **truncated** at skipped multiplicities
+(e.g. `d = tⁿ`, whose squarefree factorization is associate to `[1, …, 1, t]` with `n−1` *unit* factors):
+the running `b`/`d` stay fixed across the constant-factor steps, so `(cnormG b).length` does not drop and
+the guard stopped early. That bug is now **fixed** — `cSqfreeYunFFWf` recurses on the genuine termination
+witness (the multiplicity counter, bounded once by `yunBound`), so `cSqfreeYunFFWf d = cSqfreeYunFF fuel d`
+holds for **all** denominators (under the standard Yun fuel-regularity gate). Consequently the
+squarefree-agreement caveat is gone: the bridge below discharges it (`cSqfreeYunFFWf_eq`), and the §5.3
+book example `d = t²` — which this file previously had to *avoid* — now computes the cleared identity (see
+the `native_decide` examples). -/
 
 namespace CPolyG
 
@@ -528,11 +523,16 @@ def hermiteWfExampleDt : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1
 def hermiteWfExampleA : CPolyG QFunNZ := [ofConstNZ 1]
 
 /-- Validation denominator `d = (t−1)²(t−2)` for the fuel-free Hermite reduction: under `Dt = t² + 1`
-both `t−1`, `t−2` are normal, with multiplicities `{1 ↦ t−2, 2 ↦ t−1}` **both present** (no skipped
-multiplicity), so the fuel-free Yun factorization `cSqfreeYunFFWf` is valid here. The repeated normal
-factor `t−1` (multiplicity `2`) is what the transcendental Hermite reduction lowers. -/
+both `t−1`, `t−2` are normal, with multiplicities `{1 ↦ t−2, 2 ↦ t−1}`; the repeated normal factor `t−1`
+(multiplicity `2`) is what the transcendental Hermite reduction lowers. -/
 def hermiteWfExampleD : CPolyG QFunNZ :=
   cmulG (cpowG [ofConstNZ (-1), ofConstNZ 1] 2) [ofConstNZ (-2), ofConstNZ 1]
+
+/-- **Book §5.3 skipped-multiplicity denominator** `d = t²` for the fuel-free Hermite reduction (`f = 1/t²`
+under `Dt = t² + 1`, `t = tan x`): only multiplicity `2` is present (multiplicity `1` is the skipped unit
+slot). This is the case the degree-guarded Yun loop truncated; with the fixed `cSqfreeYunFFWf` the cleared
+identity now computes. -/
+def hermiteWfTsqD : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 0, ofConstNZ 1]
 
 end CPolyG
 
@@ -541,8 +541,8 @@ end CPolyG
 The whole fuel-free transcendental Hermite reduction executes in native code over the
 noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)) — `cHermiteReduceTowerWf` carries no fuel and no
 noncomputable bridge into the compiled body. We take `f = 1/((t−1)²(t−2))` under `Dt = t² + 1` (`t = tan
-x`): the multiplicity-`2` normal factor `t−1` is lowered to multiplicity `1`, and (unlike `d = t²`) every
-multiplicity slot is present, so the fuel-free Yun factorization `cSqfreeYunFFWf` is valid. -/
+x`): the multiplicity-`2` normal factor `t−1` is lowered to multiplicity `1`. The fixed fuel-free Yun
+factorization `cSqfreeYunFFWf` now also handles the §5.3 skipped-multiplicity book example `d = t²`. -/
 
 /-- **`cHermiteReduceTowerWf` satisfies `D(g) + h = f`, fuel-free** (`native_decide`): for `f = a/d =
 1/((t−1)²(t−2))` over ℚ(x)(t) with `D = cmonomialDeriv Dt`, `Dt = t² + 1` (`t = tan x`), the fuel-free
@@ -573,6 +573,27 @@ example :
     CPolyG.cdegG (CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
       CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2 = 2 := by native_decide
 
+/-- **★ Bug-fix verification — §5.3 skipped-multiplicity `d = t²`** (`native_decide`): for `f = a/d = 1/t²`
+over ℚ(x)(t) with `Dt = t² + 1` (`t = tan x`), the fuel-free Hermite reduction's `((gnum, gden), (h_num,
+h_den))` satisfies the cleared identity `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`. This is the
+book §5.3 case the degree-guarded Yun loop truncated (multiplicity `1` skipped), which the §5 run had to
+AVOID; with the fixed `cSqfreeYunFFWf` the whole chain now runs end-to-end with **no fuel at runtime**. -/
+example :
+    (let res := CPolyG.cHermiteReduceTowerWf CPolyG.hermiteWfExampleDt
+        CPolyG.hermiteWfExampleA CPolyG.hermiteWfTsqD
+      let gnum := res.1.1
+      let gden := res.1.2
+      let hNum := res.2.1
+      let hDen := res.2.2
+      let Dgnum := CPolyG.cmonomialDeriv CPolyG.hermiteWfExampleDt gnum
+      let Dgden := CPolyG.cmonomialDeriv CPolyG.hermiteWfExampleDt gden
+      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
+      let gden2 := CPolyG.cmulG gden gden
+      let lhs := CPolyG.cmulG
+        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) CPolyG.hermiteWfTsqD
+      let rhs := CPolyG.cmulG CPolyG.hermiteWfExampleA (CPolyG.cmulG gden2 hDen)
+      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+
 /-- `cHermiteReduceTowerWf` agrees with the fuel'd `cHermiteReduceTower` on `f = 1/((t−1)²(t−2))` (the
 rational-part numerator/denominator and residual numerator/denominator `t`-degree tuple matches) — the
 fuel-free Yun factorization is valid here (no skipped multiplicity). -/
@@ -594,32 +615,35 @@ example :
         CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
           CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2) := by native_decide
 
-/-! ### Conditional bridge of `cHermiteReduceTowerWf` to the fuel'd `cHermiteReduceTower`, and transport
+/-! ### Bridge of `cHermiteReduceTowerWf` to the fuel'd `cHermiteReduceTower`, and transport
 
 The fuel-free Hermite reduction differs from the fuel'd one only in the threaded leaves; the `Dstar`/`g`
-folds run over the *same* factor list once `cSqfreeYunFFWf d = cSqfreeYunFF fuel d` (the squarefree
-agreement — valid for all-multiplicities-present `d`, see the caveat). Each `g`-fold step's per-factor
-inner-loop call `cHermiteReduceTowerInnerWf Dt vi u (i−1) a init` depends only on `(vi, i)` (the global
-numerator `a`, **not** the accumulator `gAcc`), so the two fold step functions agree element-by-element
-once each per-factor `cdivWf = cdivG fuel` (the `u = d/vⁱ` quotient) and `cHermiteReduceTowerInnerWf =
-cHermiteReduceTowerInner` (`CHermiteInnerRegular`) hold. Bundling those per-factor agreements as a single
-hypothesis `hstep` (one equation of the fold step functions on the shared list) collapses the folds; the
-residual `cdivWf = cdivG fuel` then matches. The transport of `cHermiteReduceTower_cleared_identity` follows
-by rewriting through the bridge equation. -/
+folds run over the *same* factor list since `cSqfreeYunFFWf d = cSqfreeYunFF fuel d` — the squarefree
+agreement, now **unconditional** (the fixed `cSqfreeYunFFWf` of `ComputableWellFounded4` matches the fuel'd
+Yun on *all* denominators), discharged here from the standard Yun fuel-regularity gate `CSqfreeYunRegular`
+via `cSqfreeYunFFWf_eq`. Each `g`-fold step's per-factor inner-loop call `cHermiteReduceTowerInnerWf Dt vi u
+(i−1) a init` depends only on `(vi, i)` (the global numerator `a`, **not** the accumulator `gAcc`), so the
+two fold step functions agree element-by-element once each per-factor `cdivWf = cdivG fuel` (the `u = d/vⁱ`
+quotient) and `cHermiteReduceTowerInnerWf = cHermiteReduceTowerInner` (`CHermiteInnerRegular`) hold. Bundling
+those per-factor agreements as a single hypothesis `hstep` (one equation of the fold step functions on the
+shared list) collapses the folds; the residual `cdivWf = cdivG fuel` then matches. The transport of
+`cHermiteReduceTower_cleared_identity` follows by rewriting through the bridge equation. -/
 
 namespace CPolyG
 
-/-- **Bridge — `cHermiteReduceTowerWf` equals `cHermiteReduceTower` from a fold-step agreement.** Given the
-squarefree agreement `cSqfreeYunFFWf d = cSqfreeYunFF fuel d` (`hsqfree`), the equality of the two `g`-fold
+/-- **Bridge — `cHermiteReduceTowerWf` equals `cHermiteReduceTower` from a fold-step agreement.** Under the
+standard Yun fuel-regularity gate (`hyun : CSqfreeYunRegular fuel d`, from which the squarefree agreement
+`cSqfreeYunFFWf d = cSqfreeYunFF fuel d` is now discharged **unconditionally** — the fixed `cSqfreeYunFFWf`
+matches the fuel'd Yun on *all* `d`, no all-multiplicities-present caveat), the equality of the two `g`-fold
 step functions on the shared factor list (`hstep` — the per-factor `cdivWf`/inner-loop agreements packaged
 as one function equation; each holds under the WF-leaf bounds and `CHermiteInnerRegular`), and the residual
 exact-division agreement `cdivWf (resNum·Dstar) resDen = cdivG fuel (resNum·Dstar) resDen` (`hres`, the
 length bound), `cHermiteReduceTowerWf Dt a d = cHermiteReduceTower Dt fuel a d`. The fuel bounds live only in
-the hypotheses; `cHermiteReduceTowerWf` carries none. (The hypotheses `hstep`/`hres` are exactly what the
-`native_decide` evidence validates concretely; proving them unconditionally needs a correct fuel-free Yun in
-`ComputableWellFounded4`, which this file may not edit — see the caveat.) -/
+the hypotheses; `cHermiteReduceTowerWf` carries none. (The hypotheses `hstep`/`hres` are the standard
+fuel-leaf agreements every WF bridge carries — the inner-loop `CHermiteInnerRegular` and the residual
+division length bound — which the `native_decide` evidence validates concretely.) -/
 theorem cHermiteReduceTowerWf_eq_of_steps (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
-    (hsqfree : cSqfreeYunFFWf d = CPolyG.cSqfreeYunFF fuel d)
+    (hyun : CSqfreeYunRegular fuel d)
     (hstep : (fun (gAcc : CPolyG QFunNZ × CPolyG QFunNZ) (p : CPolyG QFunNZ × ℕ) =>
         let i := p.2 + 1
         if i ≤ 1 then gAcc
@@ -644,6 +668,8 @@ theorem cHermiteReduceTowerWf_eq_of_steps (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d
           ((CPolyG.cSqfreeYunFF fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]))
           (cmulG d (cmulG g.2 g.2))) :
     cHermiteReduceTowerWf Dt a d = CPolyG.cHermiteReduceTower Dt fuel a d := by
+  -- the squarefree agreement is now unconditional: discharge it from the Yun fuel-regularity gate
+  have hsqfree : cSqfreeYunFFWf d = CPolyG.cSqfreeYunFF fuel d := cSqfreeYunFFWf_eq fuel d hyun
   rw [cHermiteReduceTowerWf, CPolyG.cHermiteReduceTower]
   -- the squarefree factor lists agree, so `factors` and `Dstar` and the `g`-fold input coincide
   simp only [hsqfree, hstep]
