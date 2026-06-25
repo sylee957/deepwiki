@@ -156,6 +156,46 @@ def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
   let (b, c) := cextendedEuclideanSplit fuel dn ds r u w
   (q, (b, ds), (c, dn))
 
+/-! ### Generic transcendental Hermite reduction over the tower (§5.3) — the RATIONAL PART
+
+`cHermiteReduceTowerG` is the `[CField α] [CDiffField α]`-generic mirror of `cHermiteReduceTower`:
+Bronstein's `HermiteReduce(f, D)` (§5.3, quadratic version) rewrites the normal part `fₙ = a/d` of an
+element of a monomial extension as `D(g) + h` with `h`'s denominator squarefree — `g` is the integral's
+**rational part**. The squarefree factorization uses the generic `cSqfreeYunFFG`; the inner Bézout loop
+reuses the already-generic `cHermiteReduceTowerInner`/`cdiophantineG`. The monomial derivation `D =
+cmonomialDeriv Dt` needs `[CDiffField α]`. -/
+
+/-- **Generic transcendental Hermite reduction** `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden),
+(h_num, h_den))` (Bronstein §5.3, p.139) over the tower: input `f = a/d` reduced/normal (`d` monic,
+squarefree-factorable, `deg a < deg d`), output the rational part `g = gnum/gden` (already integrated)
+and the residual `h = h_num/h_den` with `h_den` squarefree, satisfying `D(g) + h = a/d` for the monomial
+derivation `D = cmonomialDeriv Dt`. The generic mirror of `cHermiteReduceTower`: squarefree-factor `d`
+with the generic `cSqfreeYunFFG`; for each factor `(v, i)` of multiplicity `i ≥ 2`, run the already-
+generic `cHermiteReduceTowerInner`; recover `h_num` over the squarefree radical `Dstar = ∏ᵢ vᵢ` exactly
+from `a/d = D(g) + h_num/Dstar`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
+    (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+  let factors := cSqfreeYunFFG fuel d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
+  let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
+  let g : CPolyG α × CPolyG α := factors.zipIdx.foldl
+    (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      let i := idx + 1
+      if i ≤ 1 then gAcc
+      else
+        let Vi_pow := cpowG vi i
+        let u := cdivG fuel d Vi_pow
+        let (gloc, _) := cHermiteReduceTowerInner Dt fuel vi u (i - 1) a ([CField.zero], [CField.one])
+        (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))  -- gAcc + gloc
+    ([CField.zero], [CField.one])
+  let (gnum, gden) := g
+  -- residual numerator `h_num` over `Dstar`, from `a/d − D(g) = h_num/Dstar`:
+  let gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
+  let gden2 := cmulG gden gden
+  let resNum := csubG (cmulG a gden2) (cmulG d gprimeNum)
+  let resDen := cmulG d gden2
+  let hNum := cdivG fuel (cmulG resNum Dstar) resDen
+  ((cnormG gnum, cnormG gden), (cnormG hNum, cnormG Dstar))
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
