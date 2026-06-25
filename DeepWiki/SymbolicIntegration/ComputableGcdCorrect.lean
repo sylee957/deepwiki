@@ -920,6 +920,24 @@ theorem bprimitivePartX_length_le (fuel : ℕ) (r : BPoly) :
           bnorm_length_le _
       _ = (bnorm r).length := by rw [List.length_map]
 
+/-- **One primitive-PRS step strictly drops the `t`-degree** (the run-termination measure at the `BPoly`
+level): for a nonzero divisor `Q` (`¬ bisZero (bnorm Q)`) with `deg Q ≤ deg P` and the pseudo-remainder
+fuel bounding `deg P` (`(bnorm P).length ≤ 60`), the next PRS node
+`r = bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q))` has `(bnorm r).length < (bnorm Q).length`.
+Combines `bprimitivePartX_length_le` (primitive part doesn't raise degree) with `bpsremainder_length_lt`
+(pseudo-remainder strictly below the divisor). This is the strict decrease that bounds the PRS depth. -/
+theorem primPRSstep_length_lt (P Q : BPoly) (hQ : ¬ bisZero (bnorm Q) = true)
+    (hfuel : (bnorm (bnorm P)).length ≤ 60) :
+    (bnorm (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q)))).length
+      < (bnorm Q).length := by
+  have hstep : (bnorm (bpsremainder 60 (bnorm P) (bnorm Q))).length < (bnorm (bnorm Q)).length :=
+    bpsremainder_length_lt 60 (bnorm P) (bnorm Q) hQ hfuel
+  rw [bnorm_idem] at hstep
+  calc (bnorm (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q)))).length
+      ≤ (bnorm (bpsremainder 60 (bnorm P) (bnorm Q))).length :=
+        bprimitivePartX_length_le 30 _
+    _ < (bnorm Q).length := hstep
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
