@@ -383,5 +383,104 @@ theorem cSPDEWf_eq (Dt : CPolyG QFunNZ) :
 
 end CPolyG
 
+/-! ### Target 3 — the fuel-free §6.1-6.3 stages (`cValuationWf`, `cRdeSpecialDenominatorWf`,
+`cRdeNormalDenominatorWf`)
+
+`cRdeBoundDegree` is **already fuel-free** (it ignores its fuel argument — only `cdegG`/arithmetic), so it
+needs no companion. The other two §6.1-6.3 stages are **compositions** of the §3.5 leaves: substitute the
+fuel-free `cgcdFFWf`/`cdivFFWf`/`cdvdGWf`/`cSplitFactorFastWf` and (for the special-denominator's `ν_p`
+valuation) the own-loop `cValuationWf`. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- **Fuel-free `p`-adic valuation** `cValuationWf p x = ν_p(x)`: the fuel-free companion of `cValuation`,
+the multiplicity of the monic irreducible `p` dividing `x` (largest `k` with `pᵏ ∣ x`), by trial division.
+Stops at a constant/unit `p` (`cdegG p = 0`), the zero polynomial, or a non-dividing step, else recurses on
+`x/p` (the **fuel-free** `cdivWf`) and adds one. True well-founded recursion on `(cnormG x).length` — **no
+fuel at runtime**; the recursion is taken only under the structural guard `(cnormG (x/p)).length <
+(cnormG x).length`, so `decreasing_by` is `assumption`. The exact division `p ∣ x` with non-constant `p`
+drops the `t`-degree on a real run, so the guard never fails and it agrees with `cValuation`. -/
+def cValuationWf (p x : CPolyG α) : ℕ :=
+  if cisZeroG x then 0
+  else if cdegG p = 0 then 0
+  else if cdvdGWf p x then
+    let xq := cdivWf x p
+    if (cnormG xq : List α).length < (cnormG x : List α).length then
+      1 + cValuationWf p xq
+    else 0   -- unreachable on a real run (non-constant `p ∣ x` drops the degree)
+  else 0
+termination_by (cnormG x).length
+decreasing_by assumption
+
+end CPolyG
+
+/-! ### Fuel-free §6.2 special- and normal-denominator stages
+
+Both are pure compositions of the §3.5 leaves. The special-denominator `cRdeSpecialDenominatorWf` mirrors
+`cRdeSpecialDenominator` with `cSpecialPolyWf` (over `cSplitFactorFastWf`), `cValuationWf`, and `cdivFFWf`;
+the normal-denominator `cRdeNormalDenominatorWf` mirrors `cRdeNormalDenominator` with `cSplitFactorFastWf`,
+`cgcdFFWf`, `cdivFFWf`, `cdvdGWf`. -/
+
+namespace CPolyG
+
+/-- **Fuel-free special monic irreducible of the monomial** `cSpecialPolyWf Dt = p`: the fuel-free
+companion of `cSpecialPoly`, the monic special part of `Dt` via the fuel-free splitting-factorization
+`cSplitFactorFastWf` — **no fuel at runtime**. -/
+def cSpecialPolyWf (Dt : CPolyG QFunNZ) : CPolyG QFunNZ :=
+  cmonicG (cSplitFactorFastWf Dt Dt).2
+
+/-- **Fuel-free special-denominator reduction** `cRdeSpecialDenominatorWf Dt a b c` (Bronstein §6.2, the
+`RdeSpecialDenom{Exp,Tan}` boxes): the fuel-free companion of `cRdeSpecialDenominator`. Identical assembly —
+the monic special irreducible `p = cSpecialPolyWf Dt`, the orders `n_b = ν_p(b)`, `n_c = ν_p(c)` (fuel-free
+`cValuationWf`), the lower bound `n` and clearing power `N`, the substitution `q = h·pⁿ` cleared by `p^N` —
+but every fuel'd sub-op replaced by its fuel-free companion (`cSplitFactorFastWf`, `cValuationWf`,
+`cdivFFWf`). Returns `(ā, b̄, c̄, h)`. **No fuel at runtime**; `native_decide`-able over `QFunNZ`. -/
+def cRdeSpecialDenominatorWf (Dt : CPolyG QFunNZ) (a b c : CPolyG QFunNZ) :
+    CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ :=
+  let p := cSpecialPolyWf Dt
+  if cdegG p = 0 then (a, b, c, [CField.one])
+  else
+    let nb : ℤ := (cValuationWf p b : ℤ)
+    let nc : ℤ := (cValuationWf p c : ℤ)
+    let n : ℤ := min 0 (nc - min 0 nb)
+    let N : ℤ := max (max 0 (-nb)) (n - nc)
+    let Nnat : ℕ := N.toNat
+    let negn : ℕ := (-n).toNat
+    let Nminusn : ℕ := (N - n).toNat
+    let pN := cpowG p Nnat
+    let abar := cmulG a pN
+    let DpOverp := cdivFFWf (cmonomialDeriv Dt p) p
+    let bterm := cscaleG (ofConstNZ ((-(negn : ℤ) : ℚ))) (cmulG a DpOverp)
+    let bbar := cmulG (caddG b bterm) pN
+    let cbar := cmulG c (cpowG p Nminusn)
+    let h := cpowG p negn
+    (abar, bbar, cbar, h)
+
+/-- **Fuel-free normal-denominator reduction** `cRdeNormalDenominatorWf Dt fnum fden gnum gden` (Bronstein
+§6.2 / Corollary 6.1.1): the fuel-free companion of `cRdeNormalDenominator`. Identical assembly — the
+normal parts `dₙ, eₙ` of the denominators (fuel-free `cSplitFactorFastWf`), `p = gcd(dₙ, eₙ)`,
+`h = gcd(eₙ, eₙ')/gcd(p, p')`, the `eₙ ∣ dₙh²` test, and the quadruplet `(dₙh, dₙhf − dₙDh, dₙh²g, h)` — but
+every fuel'd sub-op replaced by its fuel-free companion (`cSplitFactorFastWf`, `cgcdFFWf`, `cdivFFWf`,
+`cdvdGWf`). Returns `none` ("no solution") or `some (a, b, c, h)`. **No fuel at runtime**;
+`native_decide`-able over `QFunNZ`. -/
+def cRdeNormalDenominatorWf (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
+    Option (CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ × CPolyG QFunNZ) :=
+  let dn := (cSplitFactorFastWf Dt fden).1
+  let en := (cSplitFactorFastWf Dt gden).1
+  let p := cgcdFFWf dn en
+  let h := cdivFFWf (cgcdFFWf en (cderivG en)) (cgcdFFWf p (cderivG p))
+  let dnh2 := cmulG (cmulG dn h) h
+  if cdvdGWf en dnh2 then
+    let a := cmulG dn h
+    let Dh := cmonomialDeriv Dt h
+    let b := cdivFFWf (csubG (cmulG a fnum) (cmulG (cmulG dn Dh) fden)) fden
+    let c := cdivFFWf (cmulG dnh2 gnum) gden
+    some (a, b, c, h)
+  else none
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
 
