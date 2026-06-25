@@ -121,7 +121,7 @@ def lvl2T1 : Lvl2 :=
 derivation) applied to the level-2 scalar `t₁` is `1`, since `t₁` is the independent monomial with `Dt₁ =
 1`. Tested by `isZeroNZG` of `D(t₁) − 1`: the derivation engine `native_decide`s over ℚ(x)(t₁). THE
 LEVEL-2 DERIVATION COMPUTES. -/
-example :
+theorem lvl2_deriv_t1_eq_one :
     CField.isZero
       (CField.sub (CDiffField.cderiv lvl2T1) (CField.one : Lvl2)) = true := by native_decide
 
@@ -154,7 +154,7 @@ def lvl2TwoT2 : CPolyG Lvl2 := [CField.zero, CField.add CField.one CField.one]
 ℚ(x)(t₁)-coefficient derivation `towerDerivQFunNZG [1]`) computes the derivative of `t₂²` to `2·t₂`,
 verified by `cisZeroG` of the difference. The whole derivation engine `native_decide`s at **tower level
 2**. THE LEVEL-2 MONOMIAL DERIVATION COMPUTES. -/
-example :
+theorem lvl2_monomialDeriv_t2sq_eq_two_t2 :
     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
   native_decide
 
@@ -180,5 +180,62 @@ example :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1])
       [lvl2T1, (CField.one : Lvl2)]) = true := by native_decide
+
+/-! ### Stretch: the abstract bridge `toQFunNZG (towerDerivQFunNZG Dt x) = extendDeriv …`
+
+The computable `towerDerivQFunNZG Dt` realizes the abstract `extendDeriv (implicitDeriv (toPolyG Dt))`
+on `RatFunc (CFieldSpec.K α)` through the bridge `toQFunNZG` — generalizing `towerFractionFieldDeriv`'s
+level-1 agreement (over the single base `implicitDeriv (toPolyG Dt)` on `(RatFunc ℚ)[X]`) to an
+**arbitrary** base field `α` with its `[CDiffFieldSpec α]` derivation. The proof: read `toQFunNZG x` as
+`RatFunc.mk (toPolyG n) (toPolyG d)`, apply the quotient rule `extendDeriv_mk`, and identify the
+numerator/denominator via `toPolyG_cmonomialDeriv` (`toPolyG (cmonomialDeriv Dt p) = implicitDeriv
+(toPolyG Dt) (toPolyG p)`) and the engine homomorphism lemmas (`toPolyG_csubG`/`toPolyG_cmulG`). -/
+
+namespace QFunNZG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α] [CFieldDomain α]
+variable [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The abstract bridge** — `towerDerivQFunNZG Dt` realizes `extendDeriv (implicitDeriv (toPolyG
+Dt))` through `toQFunNZG`: `toQFunNZG (towerDerivQFunNZG Dt x) = extendDeriv (implicitDeriv (toPolyG Dt))
+(toQFunNZG x)` in `RatFunc (CFieldSpec.K α)`. The generic-tower generalization of
+`towerFractionFieldDeriv`'s level-1 agreement to an arbitrary base derivation; certifies the computable
+quotient-rule derivation against Mathlib's abstract fraction-field derivation. -/
+theorem toQFunNZG_towerDerivQFunNZG (Dt : CPolyG α) (x : QFunNZG α) :
+    toQFunNZG (towerDerivQFunNZG Dt x)
+      = extendDeriv (Differential.implicitDeriv (CPolyG.toPolyG Dt)) (toQFunNZG x) := by
+  obtain ⟨⟨n, d⟩, hd⟩ := x
+  -- read `toQFunNZG x` as `RatFunc.mk (toPolyG n) (toPolyG d)`, apply the quotient rule `extendDeriv_mk`.
+  have hxmk : toQFunNZG (⟨(n, d), hd⟩ : QFunNZG α)
+      = RatFunc.mk (CPolyG.toPolyG n) (CPolyG.toPolyG d) := by
+    rw [toQFunNZG, RatFunc.mk_eq_div]
+  rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]
+  -- the LHS numerator/denominator, read through `toPolyG`, with `toPolyG_cmonomialDeriv` identifying
+  -- the computable monomial derivation as `implicitDeriv (toPolyG Dt)`.
+  show amG α (CPolyG.toPolyG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmonomialDeriv Dt n) d) (CPolyG.cmulG n (CPolyG.cmonomialDeriv Dt d))))
+      / amG α (CPolyG.toPolyG (CPolyG.cmulG d d)) = _
+  rw [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG,
+    CPolyG.toPolyG_cmonomialDeriv, CPolyG.toPolyG_cmonomialDeriv, map_sub, map_mul, map_mul, map_mul,
+    pow_two]
+
+end QFunNZG
+
+/-! ### The construction's axioms
+The two headline level-2 results carry the native-compiler axiom from `native_decide` (plus the
+standard `[propext, Classical.choice, Quot.sound]`); the abstract bridge is axiom-clean modulo the
+standard three. -/
+
+-- The headline level-2 scalar derivation `D(t₁) = 1` (`native_decide`):
+-- `[propext, Classical.choice, Quot.sound, lvl2T1._native…, lvl2_deriv_t1_eq_one._native…]`.
+#print axioms lvl2_deriv_t1_eq_one
+
+-- The headline level-2 monomial derivation `D(t₂²) = 2·t₂` (`native_decide`):
+-- `[propext, Classical.choice, Quot.sound, lvl2_monomialDeriv_t2sq_eq_two_t2._native…]`.
+#print axioms lvl2_monomialDeriv_t2sq_eq_two_t2
+
+-- The abstract bridge (computable tower derivation vs `extendDeriv`):
+-- `[propext, Classical.choice, Quot.sound]` (no native axiom — it is a proof, not a computation).
+#print axioms QFunNZG.toQFunNZG_towerDerivQFunNZG
 
 end DeepWiki.SymbolicIntegration
