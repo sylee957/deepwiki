@@ -90,4 +90,48 @@ theorem cSPDE_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG QFunNZ) (f
   cSPDE_polyRischDENoCancel_cleared_of_inputs Dt fuel a b c
     (cRdeBoundDegree Dt fuel a b c : ℤ) bbar cbar m α β v hspde hin hpoly
 
+/-! ### §6.2 special denominator — the primitive regime is the identity transform
+
+`cRdeSpecialDenominator Dt fuel a b c` clears the *special* part of the denominator by substituting
+`q = h·pⁿ` for the monic special irreducible `p = cSpecialPoly Dt`. In the **primitive** regime
+`Dt ∈ k` (the case the deliverable targets), the monomial has no special part — `cSpecialPoly Dt` is a
+constant (`cdegG = 0`, `k⟨t⟩ = k[t]`) — so the routine short-circuits to the **identity** transform
+`(a, b, c, [1])`: the reduced equation is unchanged and the gathered special factor `h₁ = 1`. -/
+
+/-- **The special-denominator stage is the identity in the primitive regime**: when the monic special
+irreducible `p = cSpecialPoly Dt fuel` is a constant (`cdegG p = 0`, i.e. `Dt ∈ k` primitive — no
+special part to clear), `cRdeSpecialDenominator Dt fuel a b c = (a, b, c, [CField.one])`. The
+short-circuit branch of `cRdeSpecialDenominator`. -/
+theorem cRdeSpecialDenominator_primitive_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ)
+    (hp : cdegG (cSpecialPoly Dt fuel) = 0) :
+    cRdeSpecialDenominator Dt fuel a b c = (a, b, c, [CField.one]) := by
+  rw [cRdeSpecialDenominator]
+  simp only [hp, if_pos]
+
+/-- **The primitive special-denominator lift**: in the primitive regime (`cdegG (cSpecialPoly Dt) = 0`),
+if a polynomial `Q` solves the *output* equation `ā·D(Q) + b̄·Q = c̄` of `cRdeSpecialDenominator`
+(where `(ā, b̄, c̄, h₁) = cRdeSpecialDenominator Dt fuel a b c`), then it solves the *input* equation
+`a·D(Q) + b·Q = c` — because the transform is the identity (`ā = a`, `b̄ = b`, `c̄ = c`) and the
+special factor `h₁ = [1]`. Over `(RatFunc ℚ)[X]`, `D = implicitDeriv (toPolyG Dt)`. -/
+theorem cRdeSpecialDenominator_primitive_lift (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c Q : CPolyG QFunNZ)
+    (hp : cdegG (cSpecialPoly Dt fuel) = 0)
+    (hQ : toPolyG (cRdeSpecialDenominator Dt fuel a b c).1
+          * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q)
+        + toPolyG (cRdeSpecialDenominator Dt fuel a b c).2.1 * toPolyG Q
+      = toPolyG (cRdeSpecialDenominator Dt fuel a b c).2.2.1) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
+      = toPolyG c := by
+  rw [cRdeSpecialDenominator_primitive_eq Dt fuel a b c hp] at hQ
+  exact hQ
+
+-- The primitive special-denominator stage leaves the equation unchanged and `h₁ = 1`.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ)
+    (hp : cdegG (cSpecialPoly Dt fuel) = 0) :
+    cRdeSpecialDenominator Dt fuel a b c = (a, b, c, [CField.one]) :=
+  cRdeSpecialDenominator_primitive_eq Dt fuel a b c hp
+
+#print axioms cSPDE_polyRischDENoCancel_cleared_at_boundDegree
+#print axioms cRdeSpecialDenominator_primitive_eq
+#print axioms cRdeSpecialDenominator_primitive_lift
+
 end DeepWiki.SymbolicIntegration
