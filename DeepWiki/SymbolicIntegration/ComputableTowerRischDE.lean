@@ -310,4 +310,186 @@ def cPolyRischDENoCancelG (Dt : CPolyG α) : ℕ → (b c : CPolyG α) → (n : 
 
 end CPolyG
 
+/-! ### The generic §6.6 primitive cancellation PolyRischDE over the tower
+
+`cPolyRischDECancelPrimG` mirrors `cPolyRischDECancelPrim`: the primitive cancellation case (`Dt ∈ α`,
+`b ∈ α*`), where `D` does not raise the `t`-degree so the leading terms cancel and the solve recurses
+degree-by-degree into the **base RDE over the coefficient field `α`** — `CRischField.crischDESolve b₀
+(lc c)` (eq. 6.23 `RischDE(b, lc(c))`). This is exactly where the typeclass-carried recursion ties: the
+base solve is no longer the `QFunNZ`-bound `cRischDEBase` but the generic `crischDESolve`. The §5.12
+logarithmic-derivative branch (the `b = Dz/z` optimization) is the documented continuation, exactly as in
+`cPolyRischDECancelPrim` (the general degree-by-degree recursion is sound without it). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+
+/-- **Generic Poly-Risch-DE, primitive cancellation case** `cPolyRischDECancelPrimG Dt fuel b c n`
+(Bronstein §6.6, book p.212), the `[CRischField α]`-generic mirror of `cPolyRischDECancelPrim`. Given the
+primitive monomial derivation `D` (`Dt ∈ α`), `b ∈ α*` (a degree-0 `t`-polynomial) and `c ∈ α[t]`, with
+degree bound `n`, returns `none` ("no solution of degree `≤ n`") or `some q` with `q ∈ α[t]`,
+`deg(q) ≤ n`, solving `Dq + b·q = c`, solving degree-by-degree: at degree `m = deg(c)`, the base RDE
+`Ds + b₀·s = lc(c)` over `α` (`CRischField.crischDESolve b₀ (lc c)`, eq. 6.23) fixes the next coefficient,
+then `c ← c − b·s·tᵐ − D(s·tᵐ)`, recurse. Fuel-bounded (`deg(c)` drops each pass). -/
+def cPolyRischDECancelPrimG (Dt : CPolyG α) : ℕ → (b c : CPolyG α) → (n : ℤ) →
+    Option (CPolyG α)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    let b0 : α := cleadG b
+    if cisZeroG c then some []
+    else if n < (cdegG c : ℤ) then none
+    else
+      let m : ℕ := cdegG c
+      match CRischField.crischDESolve b0 (cleadG c) with
+      | none => none
+      | some s =>
+        let stm : CPolyG α := cshiftG m [s]               -- `s·tᵐ`
+        let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+        match cPolyRischDECancelPrimG Dt fuel b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+
+/-! ### The generic §6.6 hyperexponential cancellation PolyRischDE over the tower
+
+`cPolyRischDECancelExpG` mirrors `cPolyRischDECancelExp`: the hyperexponential case (`Dt/t = η ∈ α`,
+`δ = 1`, `b ∈ α*`). The leading terms cancel and the solve recurses degree-by-degree into the **eq. 6.24
+base RDE** `Ds + (b + m·η)·s = lc(c)` over `α` — the coefficient shifted by `m·η` (the `tᵐ` factor's
+contribution `D(s·tᵐ) = (Ds + m·η·s)·tᵐ`). The shift `η = cExpEtaG Dt` makes the base coefficient
+genuinely non-constant, so the base solve `crischDESolve` does real work. -/
+
+/-- **Generic hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaG fuel Dt`: for a hyperexponential
+monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) and read the resulting degree-0
+`t`-polynomial's coefficient `η ∈ α`. Generic mirror of `cExpEta`. -/
+def cExpEtaG (fuel : ℕ) (Dt : CPolyG α) : α :=
+  cleadG (cdivG fuel Dt (cshiftG 1 [CField.one]))
+
+/-- **Generic Poly-Risch-DE, hyperexponential cancellation case** `cPolyRischDECancelExpG Dt fuel b c n`
+(Bronstein §6.6, book p.213), the `[CRischField α]`-generic mirror of `cPolyRischDECancelExp`. Given the
+hyperexponential monomial derivation `D` (`η = Dt/t ∈ α`, `δ = 1`), `b ∈ α*` and `c ∈ α[t]`, with degree
+bound `n`, returns `none` or `some q` solving `Dq + b·q = c`, degree-by-degree: at degree `m = deg(c)`,
+the eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)` over `α`
+(`CRischField.crischDESolve (b₀ + m·η) (lc c)`) fixes the next coefficient, then `c ← c − b·s·tᵐ −
+D(s·tᵐ)`, recurse. `η = cExpEtaG Dt`; `m·η` via `cnatCastG m`. Fuel-bounded. -/
+def cPolyRischDECancelExpG (Dt : CPolyG α) : ℕ → (b c : CPolyG α) → (n : ℤ) →
+    Option (CPolyG α)
+  | 0, _, _, _ => none
+  | fuel + 1, b, c, n =>
+    let b0 : α := cleadG b
+    let η : α := cExpEtaG fuel Dt
+    if cisZeroG c then some []
+    else if n < (cdegG c : ℤ) then none
+    else
+      let m : ℕ := cdegG c
+      -- eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)` over `α`.
+      let coeff : α := CField.add b0 (CField.mul (cnatCastG m) η)
+      match CRischField.crischDESolve coeff (cleadG c) with
+      | none => none
+      | some s =>
+        let stm : CPolyG α := cshiftG m [s]               -- `s·tᵐ`
+        let c' := csubG (csubG c (cmulG b stm)) (cmonomialDeriv Dt stm)
+        match cPolyRischDECancelExpG Dt fuel b c' ((m : ℤ) - 1) with
+        | none => none
+        | some q => some (caddG stm q)
+
+/-! ### The generic §6.5+§6.6 PolyRischDE dispatcher over the tower
+
+`cPolyRischDEG` mirrors `cPolyRischDE` (Lemma 6.5.1 dispatch). Routes by `δ = deg(Dt)` and `deg(b)` to
+the non-cancellation solver, the primitive cancellation solver, or the hyperexponential cancellation
+solver. The hypertangent (`δ ≥ 2`) cancellation falls back to the non-cancellation loop (correct
+whenever it does not actually cancel), exactly as in `cPolyRischDE`. -/
+
+/-- **Generic Poly-Risch-DE dispatcher** `cPolyRischDEG Dt fuel b c n` (Bronstein §6.5 + §6.6), the
+`[CRischField α]`-generic mirror of `cPolyRischDE`. Solves `Dq + b·q = c` for `q ∈ α[t]`, `deg(q) ≤ n`,
+routing by monomial type and `deg(b)` (Lemma 6.5.1): `deg(b) > max(0, δ−1)` ⇒ non-cancellation
+(`cPolyRischDENoCancelG`); `δ = 0, deg(b) = 0` ⇒ primitive cancellation (`cPolyRischDECancelPrimG`);
+`δ = 1, deg(b) = 0` ⇒ hyperexponential cancellation (`cPolyRischDECancelExpG`); else (hypertangent `δ ≥ 2`
+cancellation, the documented Ch. 8 continuation) ⇒ falls back to the non-cancellation loop. -/
+def cPolyRischDEG (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ) :
+    Option (CPolyG α) :=
+  let δ : ℤ := (cdegG Dt : ℤ)
+  let db : ℤ := (cdegG b : ℤ)
+  if db > max 0 (δ - 1) then
+    cPolyRischDENoCancelG Dt fuel b c n
+  else if δ = 0 ∧ db = 0 then
+    cPolyRischDECancelPrimG Dt fuel b c n
+  else if δ = 1 ∧ db = 0 then
+    cPolyRischDECancelExpG Dt fuel b c n
+  else
+    cPolyRischDENoCancelG Dt fuel b c n
+
+/-! ### The assembled generic Risch-DE solver `cRischDEG` over the tower
+
+`cRischDEG` threads the generic stages, the mechanical generalization of `cRischDE`. For
+`f = fnum/fden`, `g = gnum/gden ∈ α(t)` it returns `some (ynum, yden)` with `y = ynum/yden` solving
+`Dy + f·y = g`, or `none`. The base solve inside the cancellation cases is the typeclass `crischDESolve`,
+so a *level-`n+1`* call of `cRischDEG` recurses into the *level-`n`* `crischDESolve`. -/
+
+/-- **The generic Risch differential equation solver** `cRischDEG Dt fuel fnum fden gnum gden` (Bronstein
+Ch. 6, assembled), the `[CField α] [CDiffField α] [CRischField α]`-generic mirror of `cRischDE`. For
+`f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns
+`some (ynum, yden)` with `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: §6.2 normal
+denominator (`cRdeNormalDenominatorG`) → §6.2 special denominator (`cRdeSpecialDenominatorG`) → §6.3
+degree bound (`cRdeBoundDegreeG`) → §6.4 SPDE (`cSPDEG`) → §6.5/§6.6 PolyRischDE dispatch
+(`cPolyRischDEG`), with the polynomial unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The
+cancellation cases recurse into `CRischField.crischDESolve` over `α` — at level `n+1` this is the level-`n`
+oracle. (`f` is assumed weakly normalized — the post-Hermite RDE input; `cWeakNormalizerG` returns `q = 1`
+on such `f`.) -/
+def cRischDEG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α) :
+    Option (CPolyG α × CPolyG α) :=
+  match cRdeNormalDenominatorG Dt fuel fnum fden gnum gden with
+  | none => none
+  | some (a0, b0, c0, h0) =>
+    let (a, b, c, h1) := cRdeSpecialDenominatorG Dt fuel a0 b0 c0
+    let N := cRdeBoundDegreeG Dt fuel a b c
+    match cSPDEG Dt fuel a b c (N : ℤ) with
+    | none => none
+    | some (bbar, cbar, m, α', β) =>
+      match cPolyRischDEG Dt fuel bbar cbar m with
+      | none => none
+      | some v =>
+        let Q := caddG (cmulG α' v) β
+        some (cmulG Q h1, h0)
+
+end CPolyG
+
+/-! ### ★ The recursive instance `CRischField (QFunNZG β)` — the tower recursion tie
+
+The RDE over the field `β(s) = QFunNZG β` is solved by running the generic §6 pipeline `cRischDEG` over
+`CPolyG β = β[s]` with the new monomial `s` (`Ds = [1]`, the canonical iterating choice, exactly as the
+derivation `CDiffField (QFunNZG β)` uses `towerDerivQFunNZG [1]`), recursing into `[CRischField β]` for
+the base solve inside the cancellation cases. **This is where the recursion lives**: a level-`n+1` solve
+runs the §6 pipeline at level `n` and recurses to the level-`n` `crischDESolve`, bottoming at
+`CRischField ℚ`. So `CRischField (QFunNZG ℚ)` is the RDE over ℚ(x), `CRischField (QFunNZG (QFunNZG ℚ))`
+the RDE over ℚ(x)(t₁), … — uniformly, no special-cased `cRationalRDE`.
+
+The instance is `[CField β] [CDiffField β] [CFieldDomain β] [CRischField β]`-built: `CFieldDomain β`
+supplies the `CField`/`CDiffField (QFunNZG β)` instances, `CRischField β` the recursive base solve. It is
+**computable** (everything routes through the engine; the subtype proofs are `Prop`-erased), so the tower
+`crischDESolve` reduces in the native compiler. There is no resolution loop — `CRischField (QFunNZG β)`
+requires `CRischField β`, strictly one level down. -/
+
+section
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CRischField β]
+
+/-- **The fixed fuel budget** for the recursive tower RDE solve (the class method carries no fuel
+argument). Generous enough for the small-degree level-2 validations; deeper/larger problems take a larger
+constant. -/
+def towerRischDEFuel : ℕ := 60
+
+/-- **★ `CRischField (QFunNZG β)`** — the RDE over `β(s) = QFunNZG β`, **built by running `cRischDEG` over
+`CPolyG β = β[s]`** with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for the base solve. This
+ties the tower recursion: solving an RDE at level `n+1` runs the full §6 pipeline at level `n` and
+recurses into the level-`n` `crischDESolve`, bottoming at `CRischField ℚ`. Read `f, g ∈ QFunNZG β` as
+num/den pairs over `β[s]` (`f.1.1, f.1.2, g.1.1, g.1.2`), run `cRischDEG [1] fuel …`, and lift the
+returned `(ynum, yden)` back to `QFunNZG β` (guarding the denominator-nonzero membership with the
+`cisZeroG` test). Computable (`Prop`-erased subtype proofs), so the tower oracle `native_decide`s. -/
+instance instCRischFieldQFunNZG : CRischField (QFunNZG β) where
+  crischDESolve f g :=
+    match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
+    | none => none
+    | some (ynum, yden) =>
+      if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+
+end
+
 end DeepWiki.SymbolicIntegration
