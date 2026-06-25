@@ -889,6 +889,37 @@ theorem bpsremainder_length_lt (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = t
       rw [bnorm_idem]
       omega
 
+/-- **`bnorm` never lengthens** (structural, fuel-free): `(bnorm l).length ≤ l.length` — normalization
+only strips trailing zero `x`-coefficients. By list induction following `bnorm`'s recursion. -/
+theorem bnorm_length_le : ∀ l : BPoly, (bnorm l).length ≤ l.length := by
+  intro l
+  induction l with
+  | nil => simp [bnorm]
+  | cons a as ih =>
+    rw [bnorm]
+    cases h : bnorm as with
+    | nil =>
+      cases hc : cisZero (cnorm a) <;> simp
+    | cons b bs =>
+      simp only [List.length_cons]
+      rw [h, List.length_cons] at ih
+      omega
+
+/-- **Taking the primitive part never raises the `t`-degree** (structural, fuel-free):
+`(bnorm (bprimitivePartX fuel r)).length ≤ (bnorm r).length`. `bprimitivePartX` either returns `bnorm r`
+or `bnorm ((bnorm r).map …)`; mapping preserves the list length and `bnorm` only shortens
+(`bnorm_length_le`). So in `bdeg` terms `bdeg (bprimitivePartX fuel r) ≤ bdeg r`. -/
+theorem bprimitivePartX_length_le (fuel : ℕ) (r : BPoly) :
+    (bnorm (bprimitivePartX fuel r)).length ≤ (bnorm r).length := by
+  rw [bprimitivePartX]
+  by_cases hg : cisZero (bcontentX fuel (bnorm r)) = true
+  · simp only [hg, if_true, bnorm_idem, le_refl]
+  · simp only [hg, Bool.false_eq_true, if_false, bnorm_idem]
+    calc (bnorm ((bnorm r).map (fun c => cdiv fuel c (bcontentX fuel (bnorm r))))).length
+        ≤ ((bnorm r).map (fun c => cdiv fuel c (bcontentX fuel (bnorm r)))).length :=
+          bnorm_length_le _
+      _ = (bnorm r).length := by rw [List.length_map]
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
