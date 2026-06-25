@@ -87,4 +87,5 @@ import DeepWiki.SymbolicIntegration.ComputableResidueBridge
 import DeepWiki.SymbolicIntegration.ComputableResultantGeneric
 import DeepWiki.SymbolicIntegration.ComputableHyperexpBoundary
 import DeepWiki.SymbolicIntegration.ComputableHyperexpIntegral
+import DeepWiki.SymbolicIntegration.ComputableHyperexpIntegralConcrete
 import DeepWiki.SymbolicIntegration.ComputableParallel
