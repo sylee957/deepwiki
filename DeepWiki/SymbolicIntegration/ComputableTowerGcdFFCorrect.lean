@@ -227,8 +227,10 @@ theorem gbnormCore_cons_eq (a : CPolyG β) (as : GBPolyCore β) :
           | r => CPolyG.cnormG a :: r) := rfl
 
 omit [CFieldSpec β] in
-/-- `gbnormCore` is **idempotent**. -/
-@[simp] theorem gbnormCore_idem (p : GBPolyCore β) : gbnormCore (gbnormCore p) = gbnormCore p := by
+/-- `gbnormCore` is **idempotent**. (Named `gbnormCore_idemp` to avoid clashing with the identical
+`@[simp]` `GBPolyCore.gbnormCore_idem` defined downstream in `ComputableTowerWellFounded`, which this file
+sits upstream of and so cannot import — the lemma's natural home is `ComputableTowerGcdFFCore`.) -/
+@[simp] theorem gbnormCore_idemp (p : GBPolyCore β) : gbnormCore (gbnormCore p) = gbnormCore p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -548,7 +550,7 @@ coefficient ring `CPolyG β = β[s]`, stripping the content each step. Over the 
 step preserves the gcd up to associates: the pseudo-remainder is a Euclidean step up to a β(s)-unit (the
 pseudo-division multiplier), and the content-strip `gbprimitivePartCore` divides out a β[s]-content that
 is a β(s)-unit. The content/multiplier nonvanishing and the content-strip-is-unit facts enter as explicit
-hypotheses (a `CPrimPRSGenRegular`-style bundle) — they hold on real PRS runs; this is the same gating as
+hypotheses (a `CPrimPRSGenAssocReg`-style bundle) — they hold on real PRS runs; this is the same gating as
 `ComputableGcdCorrect.associated_toPolyB_primPRSgcd` (gated on `PrimPRSRegular`). -/
 
 namespace GBPolyCore
@@ -562,7 +564,7 @@ theorem gbpsremainderCore_gbnormCore_right (fuel : ℕ) (p q : GBPolyCore β) :
     gbpsremainderCore fuel p q = gbpsremainderCore fuel p (gbnormCore q) := by
   cases fuel with
   | zero => rfl
-  | succ fuel => simp only [gbpsremainderCore, gbnormCore_idem]
+  | succ fuel => simp only [gbpsremainderCore, gbnormCore_idemp]
 
 /-- `toGBCoeffPoly [[CField.one]] = 1`: the `GBPolyCore` constant `1` (`[1] ∈ β[s]` as the single
 `t`-coefficient). -/
@@ -655,7 +657,7 @@ Over the field β(s) = `RatFunc (CFieldSpec.K β)`, each `cprimPRSgcdGenCore` st
 `gcd (toGBPolyG ·) (toGBPolyG ·)` up to associates: a pseudo-remainder step is a Euclidean step up to a
 β(s)-unit content factor (the pseudo-division multiplier), and `gbprimitivePartCore` divides out a
 β[s]-content that is a β(s)-unit. The content/multiplier nonvanishing and the content-strip-is-unit facts
-enter as explicit hypotheses (the `CPrimPRSGenRegular` bundle) — these hold for real PRS runs; proving
+enter as explicit hypotheses (the `CPrimPRSGenAssocReg` bundle) — these hold for real PRS runs; proving
 them unconditionally is the content-gcd theory left to the call site (and is the TOWER INDUCTION: the
 content-strip-is-unit at level `β` follows from the gcd-correctness of `cgcdB = cgcdFFRawCore` at level
 `β`). This is the same gating shape as `ComputableGcdCorrect.PrimPRSRegular`. -/
@@ -666,7 +668,7 @@ theorem associated_gcd_right_gbpolyG {A B B' : (RatFunc (CFieldSpec.K β))[X]} (
     Associated (gcd A B) (gcd A B') :=
   associated_gcd_right_field h
 
-/-- **Per-run regularity of the primitive PRS** `CPrimPRSGenRegular cgcdB fuel P Q`: the inductive
+/-- **Per-run regularity of the primitive PRS** `CPrimPRSGenAssocReg cgcdB fuel P Q`: the inductive
 predicate collecting exactly what the `gcd` invariant of each `cprimPRSgcdGenCore` step needs — (i) the
 recursion reaches `gbisZeroCore Q = true` (termination), and at every non-terminal step (with `Pn =
 gbnormCore P`, `Qn = gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore 30 cgcdB
@@ -675,7 +677,7 @@ toGBPolyG Qn + toGBPolyG prem` and the multiplier `amG (toPolyG c)` a β(s)-unit
 `gbprimitivePartCore` is a β(s)-unit scaling (`Associated (toGBPolyG r) (toGBPolyG prem)`). These hold for
 honest PRS runs; proving them unconditionally is the content-gcd theory deferred to the call site. The
 generic mirror of `ComputableGcdCorrect.PrimPRSRegular`. -/
-def CPrimPRSGenRegular (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
+def CPrimPRSGenAssocReg (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, Q =>
     gbisZeroCore Q = true ∧
@@ -695,20 +697,20 @@ def CPrimPRSGenRegular (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
           (toGBPolyG (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
               (GBPolyCore.gbnormCore Q))) ∧
-        CPrimPRSGenRegular cgcdB fuel (GBPolyCore.gbnormCore Q)
+        CPrimPRSGenAssocReg cgcdB fuel (GBPolyCore.gbnormCore Q)
           (GBPolyCore.gbprimitivePartCore 30 cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
 omit [CFieldDomain β] in
 /-- **Step 2 — the primitive-PRS gcd invariant** (the crux): for a regular run
-(`CPrimPRSGenRegular cgcdB fuel P Q`), the last nonzero primitive remainder
+(`CPrimPRSGenAssocReg cgcdB fuel P Q`), the last nonzero primitive remainder
 `cprimPRSgcdGenCore cgcdB fuel P Q` is, over the field β(s), **associated to the polynomial gcd** of the
 inputs: `Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q))` in
 `(RatFunc (CFieldSpec.K β))[X]`. The classic Euclidean invariant `gcd(P,Q) ~ gcd(Q, prem(P,Q))` carried
 along the primitive PRS, bottoming at `gcd(P, 0) ~ P`. Generic mirror of
 `associated_toPolyB_primPRSgcd`. -/
 theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
-    ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
+    ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenAssocReg cgcdB fuel P Q →
       Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q))
         (gcd (toGBPolyG P) (toGBPolyG Q)) := by
   intro fuel
@@ -732,7 +734,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
     simp only
     by_cases hQ : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true
     · rw [if_pos hQ]
-      rw [CPrimPRSGenRegular] at hreg
+      rw [CPrimPRSGenAssocReg] at hreg
       rcases hreg with ⟨_, hprim⟩ | ⟨hne, _⟩
       · have hQ0 : toGBPolyG Q = 0 := by
           rw [← toGBPolyG_gbnormCore]; exact (toGBPolyG_eq_zero_iff_gbisZeroCore _).mpr hQ
@@ -740,7 +742,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
         exact hprim.trans (gcd_zero_right' (toGBPolyG P)).symm
       · exact absurd hQ hne
     · rw [if_neg hQ]
-      rw [CPrimPRSGenRegular] at hreg
+      rw [CPrimPRSGenAssocReg] at hreg
       rcases hreg with ⟨h, _⟩ | ⟨_, ⟨s, c, hrel, hc0⟩, hassoc, hrec⟩
       · exact absurd h hQ
       set Pn := GBPolyCore.gbnormCore P with hPn
@@ -777,7 +779,7 @@ omit [CFieldSpec β] in
 `gbcontentCore cgcdB (gbnormCore p) = gbcontentCore cgcdB p`. -/
 theorem gbcontentCore_gbnormCore (cgcdB : CPolyG β → CPolyG β → CPolyG β) (p : GBPolyCore β) :
     gbcontentCore cgcdB (gbnormCore p) = gbcontentCore cgcdB p := by
-  rw [gbcontentCore, gbcontentCore, gbnormCore_idem]
+  rw [gbcontentCore, gbcontentCore, gbnormCore_idemp]
 
 /-- **`toGBCoeffPoly` of a coefficient-wise exact division**: if dividing every `t`-coefficient `a` of `p`
 by the `β[s]` content `g` is exact (`toPolyG g ∣ toPolyG a`, fuel-bounded), then
@@ -915,7 +917,7 @@ theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : CPolyG β → CPolyG β → CPoly
 `gbprimitivePartCore fuel cgcdB p` is a β(s)-unit scaling (`Associated (toGBPolyG (gbprimitivePartCore
 fuel cgcdB p)) (toGBPolyG p)`) — the content-divides hypotheses of
 `associated_toGBPolyG_gbprimitivePartCore` are now *theorems* via `toPolyG_gbcontentCore_dvd_mem`. So
-clause (iii) of `CPrimPRSGenRegular` needs only the recursion's gcd-correctness plus transparent
+clause (iii) of `CPrimPRSGenAssocReg` needs only the recursion's gcd-correctness plus transparent
 algorithmics, no separate content assumption. -/
 theorem associated_toGBPolyG_gbprimitivePartCore_of_correct (fuel : ℕ)
     (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
@@ -944,12 +946,12 @@ run): over the field β(s) = `RatFunc (CFieldSpec.K β)`, the raw fraction-free 
 `cgcdFFRawCore fuel p q` (`instCFracGcdCoreQFunNZG`, with content-gcd `CFracGcdCore.cgcdFFRawCore` at
 level `β`) computes the polynomial gcd of the inputs — `toPolyG (cgcdFFRawCore fuel p q)` is `Associated`
 to `gcd (toPolyG p) (toPolyG q)` in `(CFieldSpec.K (QFunNZG β))[X] = (RatFunc (CFieldSpec.K β))[X]`. The
-`CPrimPRSGenRegular` hypothesis is on the `gbdegCore`-ordered cleared pair (the same ordering the instance
+`CPrimPRSGenAssocReg` hypothesis is on the `gbdegCore`-ordered cleared pair (the same ordering the instance
 uses) with content-gcd `CFracGcdCore.cgcdFFRawCore fuel`; it captures the per-step content-exactness of
 the primitive PRS, which on real runs follows from the gcd-correctness of `cgcdFFRawCore` at level `β`
 (the tower induction). Generic mirror of `associated_toPolyG_cgcdFF`. -/
 theorem associated_toPolyG_cgcdFFRawCore (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore fuel) fuel
+    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
       (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
           < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
         then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
@@ -959,7 +961,7 @@ theorem associated_toPolyG_cgcdFFRawCore (fuel : ℕ) (p q : CPolyG (QFunNZG β)
     Associated (toPolyG (CFracGcdCore.cgcdFFRawCore fuel p q))
       (gcd (toPolyG p) (toPolyG q)) := by
   -- the engine output, with the cleared pair lifted back through liftGBPolyCoreG
-  have key : ∀ P Q : GBPolyCore β, CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q →
+  have key : ∀ P Q : GBPolyCore β, CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q →
       Associated (gcd (toGBPolyG P) (toGBPolyG Q)) (gcd (toPolyG p) (toPolyG q)) →
       Associated (toPolyG (CPolyG.liftGBPolyCoreG
           (cprimPRSgcdGenCore (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q)))
@@ -993,7 +995,7 @@ polynomial gcd up to associates — composing the raw correctness `associated_to
 the monic unit-scaling `associated_toPolyG_cmonicG`. So the generic flat gcd the engine actually calls
 (`cgcdFFCore`) is the abstract gcd up to associates, with NO `cgcdFF` bridge. -/
 theorem associated_toPolyG_cgcdFFCore (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore fuel) fuel
+    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
       (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
           < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
         then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
@@ -1019,7 +1021,7 @@ example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b : CPolyG α)
 -- The crux: under a regular PRS run, the generic primitive PRS computes the gcd up to associates over
 -- β(s) = RatFunc (CFieldSpec.K β).
 example (cgcdB : CPolyG β → CPolyG β → CPolyG β) (fuel : ℕ) (P Q : GBPolyCore β)
-    (hreg : CPrimPRSGenRegular cgcdB fuel P Q) :
+    (hreg : CPrimPRSGenAssocReg cgcdB fuel P Q) :
     Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q)) :=
   associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
 
@@ -1028,9 +1030,9 @@ variable [CFracGcdCore β]
 
 -- THE DELIVERABLE: the recursive tower fraction-free gcd `cgcdFFRawCore` computes the polynomial gcd of
 -- the inputs up to associates over β(s)[t] = (CFieldSpec.K (QFunNZG β))[X], under the per-step
--- `CPrimPRSGenRegular` bundle a real run satisfies.
+-- `CPrimPRSGenAssocReg` bundle a real run satisfies.
 example (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore fuel) fuel
+    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
       (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
           < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
         then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
