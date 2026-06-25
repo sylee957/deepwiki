@@ -22,11 +22,23 @@ proved `gcd(D, A − a·D') = ∏_{res(α)=a}(X−α)` for `D' = derivative D`. 
   concrete→abstract correspondence (the split squarefree `toPolyG hDen = nodal s id`, the list-of-residues
   ↔ `s.image res` match, the per-log-argument `toPolyG vᵢ = gcd(...)` match, and the constant-seed
   primitive regime) as transparent hypotheses, the concrete `logResidueSum` equals the integrand `hNum/hDen`
-  by feeding the abstract `towerLogPart_eq_div_of_const_seed`. The remaining gap to a fully self-contained
-  discharge is the **residue-set correspondence** itself (that `cRationalResidues`/`cgcdFF` produce exactly
-  `s.image res`/`gcd(...)`) — which needs the generic `cresultantG`/`cinterpolateG` abstract correctness
-  (the §2 `cresultant_eq`/`toPoly_cinterpolate_eval` template, generalized off the concrete ℚ carrier to
-  `CFieldSpec`), not yet built. The reduction here isolates exactly that gap as the `hresidueData` bundle. -/
+  by feeding the abstract `towerLogPart_eq_div_of_const_seed`.
+* **The per-log-argument match closed** (`cLogArgTower_toPolyG_eq_prod`, with `monic_toPolyG_cmonicG`):
+  each concrete log argument `cgcdFF fuel hDen (hNum − c·Δd)` reads *exactly* as the abstract product
+  `∏_{res α = c}(X−α)` — via `cgcdFF` correctness (`associated_toPolyG_cgcdFF_of_inputs`), the seed-generic
+  gcd-product, and the monic upgrade `eq_of_monic_of_associated`. So the `harg` ingredient is discharged
+  from the concrete `cgcdFF` regularity (no longer a hypothesis).
+* **`hLog` discharged + the `hLog`-free capstone** (`cLogPart_logResidueSum_eq_div`,
+  `cIntegrate_checkIdentity_of_residueData`): the §5.6 log-part residue identity for the concrete
+  `cLogPart`, and the headline `D(cIntegrate f) = f` (all primitive-regime inputs) with the opaque `hLog`
+  **replaced** by the transparent residue-set data.
+
+The **remaining gap** is exactly the residue-set *enumeration* — that `cRationalResidues`/the residue
+resultant produce exactly `s.image res` (and nodup), i.e. `hkeysImage`/`hkeysNodup`. Closing that needs
+the generic `cResidueResultantTower` root correspondence (`cresultantG`/`cinterpolateG` abstract
+correctness, the §2 `cresultant_eq`/`toPoly_cinterpolate_eval` template generalized off the concrete ℚ
+carrier to `CFieldSpec`), not yet built; it is now an *explicit, concrete* hypothesis rather than the
+field-level black box `hLog`. -/
 
 open Polynomial
 
@@ -350,5 +362,158 @@ example (Dt : CPolyG QFunNZ) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ)
 #print axioms monic_toPolyG_cmonicG
 #print axioms monic_toPolyG_cmonicG_of_ne
 #print axioms cLogArgTower_toPolyG_eq_prod
+
+/-! ### `hLog` discharged on `cLogPart` — the `harg` hypothesis closed concretely
+
+For the *actual* `cLogPart Dt fuel hNum hDen cands` list, every entry `(c, v)` has
+`v = cLogArgTower Dt fuel hNum hDen c`, so the `harg` hypothesis of `logResidueSum_eq_div_of_residueData`
+is exactly `cLogArgTower_toPolyG_eq_prod` per residue. This discharges `hLog` for `cLogPart` from: the
+split squarefree primitive regime, the residue-set enumeration data (`hkeysNodup`/`hkeysImage`, the
+remaining gap), and the per-residue `cgcdFF` regularity. -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- **`hLog` discharged for the concrete `cLogPart`**: in the primitive regime `toPolyG Dt = C w₀` with
+the split squarefree `toPolyG hDen = nodal s id` (`deg(toPolyG hNum) < #s`, normality `w₀ − α′ ≠ 0`,
+seed `Δd` nonzero at roots), the residue-set enumeration data (`hkeysNodup`/`hkeysImage`), and per-residue
+`cgcdFF` regularity (`hreg`), the concrete §5.6 residue sum
+`logResidueSum Dt (cLogPart Dt fuel hNum hDen cands)` equals the integrand `hNum/hDen` — the `hLog`
+hypothesis of `cIntegrate_checkIdentity`/`cIntegrate_field_identity`, now discharged. Composes
+`logResidueSum_eq_div_of_residueData` with `cLogArgTower_toPolyG_eq_prod` (the `harg` closure, applied to
+each `cLogPart` entry `v = cLogArgTower … c`). The lone remaining inputs are the residue-set
+correspondence `hkeysImage`/`hkeysNodup` (the generic `cResidueResultantTower` root match, the documented
+gap) and the transparent `cgcdFF`/primitive-regime preconditions. -/
+theorem cLogPart_logResidueSum_eq_div (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ) (cands : List ℚ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hkeysNodup : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    logResidueSum Dt (cLogPart Dt fuel hNum hDen cands)
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) := by
+  classical
+  refine logResidueSum_eq_div_of_residueData Dt htop hNum hDen (cLogPart Dt fuel hNum hDen cands) s
+    hden hA hb0 hkeysNodup hkeysImage ?_
+  -- `harg` for each entry of `cLogPart`: `cv.2 = cLogArgTower … cv.1`, closed by `cLogArgTower_toPolyG_eq_prod`
+  intro cv hcv
+  -- unpack the membership in `cLogPart = (cRationalResidues …).map (fun c => (c, cLogArgTower … c))`
+  rw [cLogPart, List.mem_map] at hcv
+  obtain ⟨c, hc, rfl⟩ := hcv
+  -- now `cv = (c, cLogArgTower Dt fuel hNum hDen c)`, so `harg` is exactly the product identity
+  simp only [← hden]
+  exact cLogArgTower_toPolyG_eq_prod Dt fuel hNum hDen s hden hDd c (hreg c hc)
+
+#print axioms cLogPart_logResidueSum_eq_div
+
+/-! ### The `hLog`-free capstone — `D(cIntegrate f) = f` gated on the residue-set data
+
+Feeding `cLogPart_logResidueSum_eq_div` (the discharged `hLog`) into `cIntegrate_checkIdentity`
+(`ComputableIntegrateCorrect`) removes the opaque field-equation hypothesis `hLog`, replacing it with the
+**transparent residue-set correspondence** (the split squarefree primitive regime + the residue-set
+enumeration data + `cgcdFF` regularity). The headline `D(cIntegrate f) = f` for all primitive-regime
+inputs, now gated only on inspectable, concrete preconditions. -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- **The `hLog`-free `cIntegrate` capstone** (`D(cIntegrate f) = f`, primitive regime, residue-set
+gated): the all-inputs `cIntegrate_checkIdentity` with its abstract `hLog` hypothesis **discharged** —
+`cIntegrate Dt fuel a d cands = some res` and `IntegralResult.checkIdentity Dt res a d = true`, gated on
+the transparent regularity/exact-division/fuel preconditions of `cIntegrate_checkIdentity` **plus** the
+primitive split-squarefree residue-set data (`htop`, `hden`, `hAh`, `hb0`, `hDd`, the residue-set
+enumeration `hkeysNodup`/`hkeysImage`, and per-residue `cgcdFF` regularity `hreg`) — no opaque `hLog`.
+Composes `cLogPart_logResidueSum_eq_div` (the discharged log-part residue identity for the concrete
+`cLogPart`) into `cIntegrate_checkIdentity`. The lone remaining mathematical input is the residue-set
+correspondence `hkeysImage`/`hkeysNodup` (the §5.6 generic `cResidueResultantTower` root match, the
+documented gap), now an *explicit, concrete* hypothesis rather than a field-level black box. -/
+theorem cIntegrate_checkIdentity_of_residueData (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    -- the §5.6 residue-set correspondence (replacing `hLog`): split squarefree primitive regime + data
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hAh : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hkeysNodup : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    ∃ res : IntegralResult, cIntegrate Dt fuel a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true :=
+  cIntegrate_checkIdentity Dt fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum hDen hHermite pq
+    prem hpoly hpremZero hcanreg hfs0 gprimeNum resNum resDen hgprimeE hresNum hresDen hhNumE hq0
+    hfuelH hdvd hgdenHne hHDenne hdnne hlognz
+    (cLogPart_logResidueSum_eq_div Dt htop fuel hNum hDen cands s hden hAh hb0 hDd hkeysNodup
+      hkeysImage hreg)
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+-- The discharged `hLog` (headline restatement): the concrete §5.6 residue sum over `cLogPart` equals the
+-- integrand `hNum/hDen` over the tower fraction field, in the primitive split-squarefree regime, given the
+-- residue-set enumeration data and `cgcdFF` regularity — the exact `hLog` hypothesis of the capstone, now
+-- a theorem (gated on the transparent residue-set correspondence, no opaque field black box).
+example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C w₀) (fuel : ℕ)
+    (hNum hDen : CPolyG QFunNZ) (cands : List ℚ) (s : Finset (CFieldSpec.K QFunNZ))
+    (hden : toPolyG hDen = Lagrange.nodal s id) (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hkeysNodup : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : ((cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    logResidueSum Dt (cLogPart Dt fuel hNum hDen cands)
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) :=
+  cLogPart_logResidueSum_eq_div Dt htop fuel hNum hDen cands s hden hA hb0 hDd hkeysNodup hkeysImage hreg
+
+#print axioms cIntegrate_checkIdentity_of_residueData
 
 end DeepWiki.SymbolicIntegration
