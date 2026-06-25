@@ -195,6 +195,57 @@ example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List �
       = towerAlg (toPolyG a) / towerAlg (toPolyG d) :=
   cIntegrateChecked_correct Dt fuel a d cands res hsome hgden hdne hlogs
 
+/-! ### The checked wrapper avoids the hyperexponential bug — a concrete witness (`native_decide`)
+
+A concrete **hyperexponential** input (`Dt = t`, `t = exp`, so `Dt ∉ k`) on which the raw engine
+`cIntegrate` returns an **incorrect** `some res` (its `D(res) ≠ f` because of the §5.9 residual `R`), yet
+the checked wrapper `cIntegrateChecked` returns `none` — the bug is caught and discarded. The integrand is
+`f = 1/(t² − x²)` (a pure-simple proper fraction, so `cIntegrate`'s `fₚ = 0` gate fires `some`); the two
+residues at `t = ±x` do **not** cancel under the hyperexponential seed, so the engine's residue sum
+overshoots by `R ≠ 0` and the honest checker `IntegralResult.checkIdentity` returns `false`. The two
+`native_decide`s below witness exactly this — the only `native_decide`s in the file (the headline
+`cIntegrateChecked_correct` is axiom-clean). -/
+
+namespace CPolyG
+
+/-- A hyperexponential monomial derivative `Dt = t` (`t = exp`, so `Dt ∉ k`): the `t¹`-coefficient is `1`. -/
+def hyperexpDt : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 1]
+
+/-- The denominator `d = t² − x²` of the pure-simple hyperexponential witness integrand `1/(t² − x²)`
+(`= (t + x)(t − x)`, split with non-cancelling residues at `t = ±x`). -/
+def hyperexpDen : CPolyG QFunNZ :=
+  cmulG [ofNumDen [0, 1] [1] (by decide), ofConstNZ 1] [ofNumDen [0, -1] [1] (by decide), ofConstNZ 1]
+
+/-- The numerator `a = 1` of the witness integrand `f = 1/(t² − x²)` (degree `0 < 2` in `t`, a proper
+fraction, so `cIntegrate`'s polynomial part is empty and it returns `some`). -/
+def hyperexpNum : CPolyG QFunNZ := [ofConstNZ 1]
+
+/-- **The raw engine `cIntegrate` returns an INCORRECT `some res`** on the hyperexponential witness
+(`native_decide`): `cIntegrate hyperexpDt … = some res`, yet `IntegralResult.checkIdentity … res … =
+false` — `D(res) ≠ f`, the §5.9 residual bug. The honest checker rejects the engine's own answer. -/
+theorem cIntegrate_hyperexp_checkIdentity_false :
+    (match cIntegrate hyperexpDt 30 hyperexpNum hyperexpDen [1, -1, 1/2, -1/2, 0, 2, -2] with
+      | some res => IntegralResult.checkIdentity hyperexpDt res hyperexpNum hyperexpDen
+      | none => true) = false := by native_decide
+
+/-- **The checked wrapper AVOIDS the bug** (`native_decide`): on the same hyperexponential witness where
+the raw `cIntegrate` returns an incorrect `some res`, `cIntegrateChecked` returns `none` — by the
+`checkIdentity` guard it discards the wrong answer rather than emit it. The wrapper never returns a wrong
+answer; on this out-of-scope input it returns `none`. -/
+theorem cIntegrateChecked_hyperexp_none :
+    cIntegrateChecked hyperexpDt 30 hyperexpNum hyperexpDen [1, -1, 1/2, -1/2, 0, 2, -2] = none := by
+  native_decide
+
+end CPolyG
+
+-- The bug-avoidance witness: the raw engine emits an incorrect `some res` on a hyperexponential input,
+-- but `cIntegrateChecked` returns `none`. (`native_decide` — the only one in this file.)
+example :
+    cIntegrateChecked CPolyG.hyperexpDt 30 CPolyG.hyperexpNum CPolyG.hyperexpDen
+      [1, -1, 1/2, -1/2, 0, 2, -2] = none :=
+  CPolyG.cIntegrateChecked_hyperexp_none
+
 #print axioms cIntegrateChecked_correct
+#print axioms cIntegrateChecked_hyperexp_none
 
 end DeepWiki.SymbolicIntegration
