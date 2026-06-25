@@ -295,8 +295,42 @@ theorem swellProd_value_preserved :
       (by native_decide))
     (by native_decide) (by native_decide)
 
+/-! #### `qreduceG` preserves the zero test — the bake-into-ops safety fact
+
+Every tower `native_decide` reads the field zero test `CField.isZero = isZeroNZG`, certified
+*value-faithful* by `isZeroNZG_iff`. Since `qreduceG` preserves the field value
+(`toQFunNZG_qreduceG`), it preserves `isZeroNZG`: a reduced fraction tests zero exactly when the
+original does. This is the load-bearing fact for the **bake-into-`qaddNZG`/`qmulNZG` assessment** — any
+test of the form `CField.isZero (… add/mul …) = true/false` is unaffected by inserting `qreduceG` into the
+ops (the value, hence the zero test, is unchanged); only a test pinning a *literal* fraction
+representation could shift, and the tower suite pins outer `CPolyG`-list lengths (degree in the new
+monomial), not the inner coefficient-fraction lists `qreduceG` touches. -/
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- **`qreduceG` preserves the zero test** (`isZeroNZG (qreduceG fuel x) = isZeroNZG x`), under the same
+gcd-termination + fuel preconditions as `toQFunNZG_qreduceG`: the reduced fraction is zero in
+`RatFunc (CFieldSpec.K α)` exactly when the original is (`isZeroNZG_iff` both ways, bridged by the
+value-preservation `toQFunNZG_qreduceG`). This is the bake-safety fact: every tower `CField.isZero` check
+reads `isZeroNZG`, so inserting `qreduceG` into `qaddNZG`/`qmulNZG` cannot flip any such check. -/
+theorem isZeroNZG_qreduceG (fuel : ℕ) (x : QFunNZG α)
+    (hterm : CPolyG.cgcdTerminatesG fuel x.1.1 x.1.2)
+    (hfn : (CPolyG.cnormG x.1.1 : List α).length ≤ fuel)
+    (hfd : (CPolyG.cnormG x.1.2 : List α).length ≤ fuel) :
+    isZeroNZG (qreduceG fuel x) = isZeroNZG x := by
+  have hval : toQFunNZG (qreduceG fuel x) = toQFunNZG x := toQFunNZG_qreduceG fuel x hterm hfn hfd
+  have h1 := isZeroNZG_iff (qreduceG fuel x)
+  have h2 := isZeroNZG_iff x
+  rw [hval] at h1
+  -- both Bools test the same proposition `toQFunNZG x = 0`, so they are equal
+  by_cases hz : toQFunNZG x = 0
+  · rw [h1.mpr hz, h2.mpr hz]
+  · rw [Bool.eq_false_iff.mpr (fun h => hz (h1.mp h)),
+      Bool.eq_false_iff.mpr (fun h => hz (h2.mp h))]
+
 #print axioms toQFunNZG_qreduceG
 #print axioms swellProd_value_preserved
+#print axioms isZeroNZG_qreduceG
 
 end QFunNZG
 
