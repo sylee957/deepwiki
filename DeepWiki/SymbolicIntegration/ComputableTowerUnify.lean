@@ -211,4 +211,111 @@ theorem cgcdMonicGWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
     cgcdMonicGWf p q = CPolyG.cgcdMonicG fuel p q := by
   rw [cgcdMonicGWf, CPolyG.cgcdMonicG, CPolyG.cgcdWf_eq_of_fuel fuel p q hp hq]
 
+/-! ### ★ Task 4 — THE PROBE: transporting a high-level QFunNZ correctness lemma to the generic engine
+
+The key deliverable: measure how mechanical the transport of a *high-level* correctness proof is, to
+gauge whether the full collapse (~12 correctness/fuel-free files) is mechanical or research.
+
+We pick `canonicalRepFast_reconstructs` (`ComputableCanonicalRepCorrect`): the §3.5 capstone correctness
+that the canonical-representation split `canonicalRepresentationFast Dt fuel a d = (q, (b, dₛ), (c, dₙ))`
+recombines to `f = a/d`, i.e. `q + b/dₛ + c/dₙ = a/d` in `RatFunc (CFieldSpec.K QFunNZ)`. Its generic
+analog is `canonicalRepresentationFastG_reconstructs` over `[CField α] [CFieldSpec α]`.
+
+**Transport readout.** The two definitions are structurally identical — `canonicalRepresentationFastG`
+is `canonicalRepresentationFast` with `cSplitFactorFast → cSplitFactorFastG`, every other step
+(`cdivmodG`, `cbezoutOne`, `cextendedEuclideanSplit`) *already generic*. The QFunNZ proof decomposes as
+(1) the denominator split `toPolyG d = toPolyG dₛ · toPolyG dₙ`, (2) the Euclidean division, (3) the
+Bézout cofactors, (4) the Bézout split, assembled by the field identity. Of these, **(2), (3), (4), and
+the assembly already use only generic lemmas** — `toPolyG_cdivmodG'`, `toPolyG_cbezoutOne`,
+`toPolyG_cextendedEuclideanSplit` (all stated over `[CField α] [CFieldSpec α]`), and
+`canonicalRepFast_field_identity` (over any `[Field K]`). The *only* QFunNZ-specific step is (1), which
+the QFunNZ proof discharges via `cSplitFactorFast_isSplittingFactorizationGen` — and `cSplitFactorFastG`
+has **no** abstract correctness lemma yet (only a `native_decide` validator `towerCanRepLvl2_recombines`).
+
+So we state the generic reconstruction **modulo** the split fact (taking `toPolyG d = toPolyG dₛ·dₙ` as a
+hypothesis — *exactly* what the QFunNZ split-correctness provides), and the entire rest of the proof
+transports **verbatim** by the `QFunNZ → α` substitution. This pins the precise single ingredient the
+full collapse needs: generify `cSplitFactorFast_isSplittingFactorizationGen` to `cSplitFactorFastG`. -/
+
+variable {α : Type*}
+
+open RatFunc in
+/-- **★ THE PROBE — `canonicalRepresentationFastG` reconstructs `f`, generic over `[CField α]
+[CDiffField α] [CFieldSpec α]`**, modulo the denominator split. With the generic output
+`(q, (b, dₛ), (c, dₙ)) = canonicalRepresentationFastG Dt fuel a d`, *given* the split factorization
+`toPolyG d = toPolyG dₛ · toPolyG dₙ` (the one ingredient `cSplitFactorFastG` does not yet prove
+abstractly — `cSplitFactorFast_isSplittingFactorizationGen`'s generic analog), the Bézout-gcd-constant
+witness, and `d ≠ 0` with enough fuel, the three pieces recombine to `f = a/d` in
+`RatFunc (CFieldSpec.K α)`. The proof is the `QFunNZ → α` transport of `canonicalRepFast_reconstructs`,
+*verbatim* — every helper (`toPolyG_cdivmodG'`, `toPolyG_cbezoutOne`,
+`toPolyG_cextendedEuclideanSplit`, `canonicalRepFast_field_identity`) is already generic. **The probe
+result**: high-level reconstruction proofs transport mechanically once the split-factor correctness is
+generified. -/
+theorem canonicalRepresentationFastG_reconstructs [CField α] [CDiffField α] [CFieldSpec α]
+    (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+    (hd : toPolyG d ≠ 0)
+    (hsplit_eq : toPolyG (cSplitFactorFastG Dt fuel d).2 ≠ 0 →
+      toPolyG (cSplitFactorFastG Dt fuel d).1 ≠ 0 →
+      toPolyG d = toPolyG (cSplitFactorFastG Dt fuel d).2 * toPolyG (cSplitFactorFastG Dt fuel d).1)
+    (hsplit_dn_ne : toPolyG (cSplitFactorFastG Dt fuel d).1 ≠ 0)
+    (hsplit_ds_ne : toPolyG (cSplitFactorFastG Dt fuel d).2 ≠ 0)
+    (hgdeg : (toPolyG (cgcdExtG fuel (cSplitFactorFastG Dt fuel d).1
+      (cSplitFactorFastG Dt fuel d).2).1).natDegree = 0)
+    (hgne : toPolyG (cgcdExtG fuel (cSplitFactorFastG Dt fuel d).1
+      (cSplitFactorFastG Dt fuel d).2).1 ≠ 0) :
+    (let res := CPolyG.canonicalRepresentationFastG Dt fuel a d
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      (algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG q))
+          + algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG b)
+              / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG ds)
+          + algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG c)
+              / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG dn)
+        = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG a)
+            / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG d)) := by
+  -- names matching the `let`-bindings of `canonicalRepresentationFastG` (the generic def, identical
+  -- shape to `canonicalRepresentationFast` modulo `cSplitFactorFastG`).
+  set qr := cdivmodG fuel a d with hqr
+  set dnds := cSplitFactorFastG Dt fuel d with hdnds
+  set dn := dnds.1 with hdn
+  set ds := dnds.2 with hds
+  set q := qr.1 with hq
+  set r := qr.2 with hr
+  set uw := CPolyG.cbezoutOne fuel dn ds with huw
+  set u := uw.1 with hu
+  set w := uw.2 with hw
+  set bc := CPolyG.cextendedEuclideanSplit fuel dn ds r u w with hbc
+  set b := bc.1 with hb
+  set c := bc.2 with hc
+  -- 1. the denominator split `toPolyG d = toPolyG ds · toPolyG dn` (the HYPOTHESIS standing in for the
+  --    missing generic `cSplitFactorFastG` correctness).
+  have hsplit_eq' : toPolyG d = toPolyG ds * toPolyG dn := hsplit_eq hsplit_ds_ne hsplit_dn_ne
+  -- 2. the Euclidean division `toPolyG a = toPolyG q · toPolyG d + toPolyG r` (generic).
+  have hdcn : cnormG d ≠ [] := fun h => hd ((cnormG_eq_nil_iff d).mp h)
+  have hadiv : toPolyG a = toPolyG q * toPolyG d + toPolyG r :=
+    toPolyG_cdivmodG' fuel a d hdcn
+  -- 3. the Bézout cofactors `u·dn + w·ds = 1` (generic).
+  have hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1 := by
+    have := toPolyG_cbezoutOne fuel dn ds hgdeg hgne
+    rw [← hu, ← hw] at this; exact this
+  -- 4. the Bézout split `b·dn + c·ds = r` (generic).
+  have hds0 : cnormG ds ≠ [] := fun h => hsplit_ds_ne ((cnormG_eq_nil_iff ds).mp h)
+  have hbcr : toPolyG b * toPolyG dn + toPolyG c * toPolyG ds = toPolyG r := by
+    have := toPolyG_cextendedEuclideanSplit fuel dn ds r u w hds0 hbez
+    rw [← hb, ← hc] at this; exact this
+  -- assemble the field identity (generic over any `[Field K]`).
+  show (algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG q))
+      + algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG b)
+          / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG ds)
+      + algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG c)
+          / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG dn)
+    = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG a)
+        / algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (toPolyG d)
+  exact canonicalRepFast_field_identity (toPolyG a) (toPolyG d) (toPolyG q) (toPolyG r)
+    (toPolyG dn) (toPolyG ds) (toPolyG b) (toPolyG c) hd hsplit_dn_ne hsplit_ds_ne hadiv
+    hsplit_eq' hbcr
+
 end DeepWiki.SymbolicIntegration
