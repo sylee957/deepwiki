@@ -281,4 +281,16 @@ example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (p : K[X]) :
     extendDeriv d (algebraMap K[X] (RatFunc K) p) = algebraMap K[X] (RatFunc K) (d p) :=
   extendDeriv_algebraMap d p
 
+/-- Headline restatement (Leibniz): `extendDeriv d` is a derivation, so `(x·y)' = x'·y + x·y'`. -/
+example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (x y : RatFunc K) :
+    extendDeriv d (x * y) = extendDeriv d x * y + x * extendDeriv d y := by
+  simp only [extendDeriv_apply]; exact extendDerivFun_mul d x y
+
+/-- Headline restatement (§5.6 Rothstein–Trager log-derivative building block): the log-derivative of
+`g` under `extendDeriv d` is `(d g)/g`. -/
+example [Algebra ℚ K] (d : Derivation ℤ K[X] K[X]) (g : K[X]) :
+    extendDeriv d (algebraMap K[X] (RatFunc K) g) / algebraMap K[X] (RatFunc K) g
+      = RatFunc.mk (d g) g :=
+  extendDeriv_logDeriv_mk d g
+
 end DeepWiki.SymbolicIntegration
