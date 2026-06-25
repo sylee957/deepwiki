@@ -469,6 +469,22 @@ def cPolyRischDEQWf (b c : CPolyG ℚ) (n : ℤ) : Option (CPolyG ℚ) :=
   else if (cdegG b : ℤ) > 0 then cPolyRischDENoCancelQWf b c n
   else cPolyRischDECancelPrimQWf b c n
 
+/-- **Bridge — `cPolyRischDEQWf` equals the fuel'd `cPolyRischDEQ` on a regular run** (composition). The
+two dispatchers differ only in which own-loop the non-`b=0` branches call; given the own-loop agreements
+(`hnocancel`: the non-cancellation loop; `hcancel`: the primitive cancellation loop), they agree
+(`cIntegratePolyQ` is identical, fuel-free). A pure case-split rewrite. -/
+theorem cPolyRischDEQWf_eq (fuel : ℕ) (b c : CPolyG ℚ) (n : ℤ)
+    (hnocancel : cPolyRischDENoCancelQWf b c n = CPolyG.cPolyRischDENoCancelQ fuel b c n)
+    (hcancel : cPolyRischDECancelPrimQWf b c n = CPolyG.cPolyRischDECancelPrimQ fuel b c n) :
+    cPolyRischDEQWf b c n = CPolyG.cPolyRischDEQ fuel b c n := by
+  rw [cPolyRischDEQWf, CPolyG.cPolyRischDEQ]
+  by_cases hb : cisZeroG b = true
+  · simp only [hb, if_true]
+  · simp only [hb, Bool.false_eq_true, if_false]
+    by_cases hdb : (cdegG b : ℤ) > 0
+    · simp only [hdb, if_true, hnocancel]
+    · simp only [hdb, if_false, hcancel]
+
 /-! ### Base composition — the fuel-free residue resultant + weak normalizer over ℚ
 
 `cResidueResultantQ` builds `r(z) = res_x(a − z·d′, d)` by evaluation + interpolation (`cresultantG` at
@@ -690,6 +706,145 @@ def cPolyRischDECancelExpWf (Dt : CPolyG QFunNZ) (b c : CPolyG QFunNZ) (n : ℤ)
       else none   -- unreachable on a real run (the leading monomial cancels, degree drops)
 termination_by (cnormG c).length
 decreasing_by assumption
+
+end CPolyG
+
+/-! ### Bridges of the tower §6.6 cancellation own-loops to their fuel'd versions
+
+`cPolyRischDECancelPrim`/`Exp` recurse into `cRischDEBase` (over the **different** carrier `CPolyG ℚ`,
+no fuel-bearing tower sub-op aside from `cmonomialDeriv`/`cExpEta`, which carry no fuel); they recurse on
+`fuel` purely as a counter. The gates `CPolyRischCancelPrimReg`/`CPolyRischCancelExpReg` (nodes concluding
+at fuel `fuel + 1`) mirror the recursions with a step budget, the `step` node carrying the base solve
+`cRischDEBaseWf … = cRischDEBase fuel … = some s` and the WF guard firing. -/
+
+/-- **Per-run tower primitive-cancellation-loop regularity** `CPolyRischCancelPrimReg Dt b c n` (nodes
+conclude at fuel `fuel + 1`): mirrors the `cPolyRischDECancelPrim` recursion. `baseZero`/`baseDeg` terminal
+on `c = 0`/`n < deg(c)`; `baseNoSol` terminal when the base solve returns `none`; `step` carries the base
+solve `cRischDEBaseWf (lc b)(lc c) = cRischDEBase fuel (lc b)(lc c) = some s` (the WF op equals the fuel'd
+op *and* both yield `s`), the WF guard firing (`c' = c − b·(s·tᵐ) − D(s·tᵐ)`, `m = deg(c)`,
+`D = cmonomialDeriv Dt`), and the same recursively on `c'` at `m − 1`. -/
+inductive CPolyRischCancelPrimReg (Dt : CPolyG QFunNZ) (b : CPolyG QFunNZ) :
+    ℕ → CPolyG QFunNZ → ℤ → Prop
+  /-- terminal: `c = 0`, returns `[]`. -/
+  | baseZero {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : cisZeroG c = true) :
+      CPolyRischCancelPrimReg Dt b (fuel + 1) c n
+  /-- terminal: `n < deg(c)`, returns `none`. -/
+  | baseDeg {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : n < (cdegG c : ℤ)) : CPolyRischCancelPrimReg Dt b (fuel + 1) c n
+  /-- terminal: the base solve returns `none` (both the WF and the fuel'd `cRischDEBase fuel`). -/
+  | baseNoSol {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ))
+      (hsWf : CPolyG.cRischDEBaseWf (cleadG b) (cleadG c) = none)
+      (hsFuel : CPolyG.cRischDEBase fuel (cleadG b) (cleadG c) = none) :
+      CPolyRischCancelPrimReg Dt b (fuel + 1) c n
+  /-- recursive: the base solve gives `s` (WF = fuel'd), the WF guard fires, recurse on `c'`. -/
+  | step {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} {s : QFunNZ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ))
+      (hsWf : CPolyG.cRischDEBaseWf (cleadG b) (cleadG c) = some s)
+      (hsFuel : CPolyG.cRischDEBase fuel (cleadG b) (cleadG c) = some s)
+      (hguard : (cnormG (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
+            (cmonomialDeriv Dt (cshiftG (cdegG c) [s]))) : List QFunNZ).length
+          < (cnormG c : List QFunNZ).length)
+      (hrec : CPolyRischCancelPrimReg Dt b fuel
+        (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+        ((cdegG c : ℤ) - 1)) :
+      CPolyRischCancelPrimReg Dt b (fuel + 1) c n
+
+namespace CPolyG
+
+/-- **Bridge — `cPolyRischDECancelPrimWf` equals the fuel'd `cPolyRischDECancelPrim` on a regular run.**
+Under `CPolyRischCancelPrimReg Dt b (fuel + 1) c n`, `cPolyRischDECancelPrimWf Dt b c n =
+cPolyRischDECancelPrim Dt (fuel + 1) b c n`. The gate (carrying the base-solve agreement
+`cRischDEBaseWf = cRischDEBase fuel` at each step) lives only here; the WF own-loop carries no fuel. By
+induction on the gate. -/
+theorem cPolyRischDECancelPrimWf_eq (Dt : CPolyG QFunNZ) (b : CPolyG QFunNZ) :
+    ∀ (fuel : ℕ) (c : CPolyG QFunNZ) (n : ℤ), CPolyRischCancelPrimReg Dt b fuel c n →
+      cPolyRischDECancelPrimWf Dt b c n = CPolyG.cPolyRischDECancelPrim Dt fuel b c n := by
+  intro fuel c n hreg
+  induction hreg with
+  | @baseZero fuel c n hc =>
+    rw [cPolyRischDECancelPrimWf.eq_def, if_pos hc, CPolyG.cPolyRischDECancelPrim, if_pos hc]
+  | @baseDeg fuel c n hc hn =>
+    rw [cPolyRischDECancelPrimWf.eq_def, if_neg hc, if_pos hn,
+      CPolyG.cPolyRischDECancelPrim, if_neg hc, if_pos hn]
+  | @baseNoSol fuel c n hc hn hsWf hsFuel =>
+    rw [cPolyRischDECancelPrimWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelPrim, if_neg hc, if_neg hn]
+    simp only [hsWf, hsFuel]
+  | @step fuel c n s hc hn hsWf hsFuel hguard hrec ih =>
+    rw [cPolyRischDECancelPrimWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelPrim, if_neg hc, if_neg hn]
+    simp only [hsWf, hsFuel, if_pos hguard, ih]
+    rfl
+
+end CPolyG
+
+/-- **Per-run tower hyperexponential-cancellation-loop regularity** `CPolyRischCancelExpReg Dt b c n`
+(nodes conclude at fuel `fuel + 1`): mirrors the `cPolyRischDECancelExp` recursion. As the primitive case
+but the base solve uses the `m·η` shifted coefficient `b₀ + m·η` (`η = cExpEtaWf Dt = cExpEta fuel Dt`,
+both fuel-free reads), and the gate carries `cExpEtaWf Dt = cExpEta fuel Dt` (`hη`) so the fuel-free and
+fuel'd coefficients coincide. `step` carries the base solve at the shifted coefficient (WF = fuel'd = some
+`s`) and the WF guard firing. -/
+inductive CPolyRischCancelExpReg (Dt : CPolyG QFunNZ) (b : CPolyG QFunNZ) :
+    ℕ → CPolyG QFunNZ → ℤ → Prop
+  /-- terminal: `c = 0`, returns `[]`. -/
+  | baseZero {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : cisZeroG c = true) :
+      CPolyRischCancelExpReg Dt b (fuel + 1) c n
+  /-- terminal: `n < deg(c)`, returns `none`. -/
+  | baseDeg {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : n < (cdegG c : ℤ)) : CPolyRischCancelExpReg Dt b (fuel + 1) c n
+  /-- terminal: the base solve at the `m·η`-shifted coefficient returns `none` (`η` reads agree). -/
+  | baseNoSol {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ)) (hη : cExpEtaWf Dt = CPolyG.cExpEta fuel Dt)
+      (hsWf : CPolyG.cRischDEBaseWf (CField.add (cleadG b)
+          (CField.mul (QFunNZ.ofConstNZ ((cdegG c : ℚ))) (cExpEtaWf Dt))) (cleadG c) = none)
+      (hsFuel : CPolyG.cRischDEBase fuel (CField.add (cleadG b)
+          (CField.mul (QFunNZ.ofConstNZ ((cdegG c : ℚ))) (CPolyG.cExpEta fuel Dt))) (cleadG c) = none) :
+      CPolyRischCancelExpReg Dt b (fuel + 1) c n
+  /-- recursive: the base solve at the shifted coefficient gives `s` (WF = fuel'd), guard fires. -/
+  | step {fuel : ℕ} {c : CPolyG QFunNZ} {n : ℤ} {s : QFunNZ} (hc : ¬ cisZeroG c = true)
+      (hn : ¬ n < (cdegG c : ℤ)) (hη : cExpEtaWf Dt = CPolyG.cExpEta fuel Dt)
+      (hsWf : CPolyG.cRischDEBaseWf (CField.add (cleadG b)
+          (CField.mul (QFunNZ.ofConstNZ ((cdegG c : ℚ))) (cExpEtaWf Dt))) (cleadG c) = some s)
+      (hsFuel : CPolyG.cRischDEBase fuel (CField.add (cleadG b)
+          (CField.mul (QFunNZ.ofConstNZ ((cdegG c : ℚ))) (CPolyG.cExpEta fuel Dt))) (cleadG c) = some s)
+      (hguard : (cnormG (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
+            (cmonomialDeriv Dt (cshiftG (cdegG c) [s]))) : List QFunNZ).length
+          < (cnormG c : List QFunNZ).length)
+      (hrec : CPolyRischCancelExpReg Dt b fuel
+        (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+        ((cdegG c : ℤ) - 1)) :
+      CPolyRischCancelExpReg Dt b (fuel + 1) c n
+
+namespace CPolyG
+
+/-- **Bridge — `cPolyRischDECancelExpWf` equals the fuel'd `cPolyRischDECancelExp` on a regular run.**
+Under `CPolyRischCancelExpReg Dt b (fuel + 1) c n`, `cPolyRischDECancelExpWf Dt b c n =
+cPolyRischDECancelExp Dt (fuel + 1) b c n`. The gate (carrying `cExpEtaWf = cExpEta fuel` and the
+shifted-coefficient base-solve agreement at each step) lives only here. By induction on the gate. -/
+theorem cPolyRischDECancelExpWf_eq (Dt : CPolyG QFunNZ) (b : CPolyG QFunNZ) :
+    ∀ (fuel : ℕ) (c : CPolyG QFunNZ) (n : ℤ), CPolyRischCancelExpReg Dt b fuel c n →
+      cPolyRischDECancelExpWf Dt b c n = CPolyG.cPolyRischDECancelExp Dt fuel b c n := by
+  intro fuel c n hreg
+  induction hreg with
+  | @baseZero fuel c n hc =>
+    rw [cPolyRischDECancelExpWf.eq_def, if_pos hc, CPolyG.cPolyRischDECancelExp, if_pos hc]
+  | @baseDeg fuel c n hc hn =>
+    rw [cPolyRischDECancelExpWf.eq_def, if_neg hc, if_pos hn,
+      CPolyG.cPolyRischDECancelExp, if_neg hc, if_pos hn]
+  | @baseNoSol fuel c n hc hn hη hsWf hsFuel =>
+    rw [cPolyRischDECancelExpWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelExp, if_neg hc, if_neg hn]
+    simp only [hsWf, hsFuel]
+  | @step fuel c n s hc hn hη hsWf hsFuel hguard hrec ih =>
+    rw [cPolyRischDECancelExpWf.eq_def, if_neg hc, if_neg hn,
+      CPolyG.cPolyRischDECancelExp, if_neg hc, if_neg hn]
+    simp only [hsWf, hsFuel, if_pos hguard, ih]
+    rfl
+
+end CPolyG
+
+namespace CPolyG
 
 /-! ### Tower dispatcher — the fuel-free Poly-Risch-DE dispatcher `cPolyRischDEWf`
 
