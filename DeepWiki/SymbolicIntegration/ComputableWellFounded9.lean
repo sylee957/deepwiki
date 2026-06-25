@@ -28,9 +28,13 @@ site `go (ncols + rows.length + 1) 0 …`, not threaded in); fuel survives only 
   out at exactly one fuel-bearing op: the Yun squarefree factorization `cSquarefreeFactorsQ` (over the
   **generic `CPolyG ℚ`** division layer `cgcdExtG`/`cdivG`, whose fuel-free leaves `cgcdWf`/`cdivWf` already
   exist). So §10 is **converted by substitution**: the Yun own-loop `cSquarefreeFactorsQWf` (true WF
-  recursion on the peel counter, structural guard), then the compositions `cParallelAnsatzQWf`/
-  `cParallelSystemQWf`/`cParallelIntegrateWf` substitute it. The eq. 10.6 solve `cConstSolveAnyQ` is
-  fuel-free already; the §10 cleared-identity examples transport.
+  recursion on a structural multiplicity counter, internally bounded — like `cSqfreeYunFFgoWf`), then the
+  compositions `cParallelAnsatzQWf`/`cParallelSystemQWf`/`cParallelIntegrateWf` substitute it. The eq. 10.6
+  solve `cConstSolveAnyQ` is fuel-free already; all four §10.3 cleared-identity examples transport. *(A
+  runtime equality bridge to the fuel'd `cSquarefreeFactorsQ` is not provided: its inner Yun loop is an
+  internal `let rec go` — not a separate top-level `def` like WF4's `cSqfreeYunFFgo` — so it has no clean
+  equation lemmas to bridge through. The fuel-free §10 integrator is validated by `native_decide` on the
+  worked examples, each confirming `D(∫f) = f` via the cleared identity `cParallelCheckQ`.)*
 
 * **§9 `cLogIsNewMonomial`/`cExpIsNewMonomial`/`cLogRelationCoeffs`** and **§7 `cParamLogDeriv`** — fuel
   threads through the **`Compute.*` (`CPoly = CPolyG ℚ`) division layer** `Compute.qnorm`/`Compute.cdiv`/
@@ -430,6 +434,32 @@ def cLogRelationCoeffsWf (logDerivs : List QFunNZ) (w : QFunNZ) : Option (List �
     let wc := rel.getD m 0
     some ((List.range m).map (fun j => - (rel.getD j 0) / wc))
 
+/-- **Bridge — `cLogIsNewMonomialWf` equals `cLogIsNewMonomial` given the data agreement** (transparent
+composition). When the fuel-free dependence data matches the fuel'd one (`hdata : cLinearDepDataWf logDerivs
+w = cLinearDepData fuel logDerivs w`, from the `qnormWf`/`cLcmQWf` leaf bridges over the generators), the
+structure decision agrees, since the downstream `cNullspaceBasisQ` is fuel-free. A pure rewrite. -/
+theorem cLogIsNewMonomialWf_eq (fuel : ℕ) (logDerivs : List QFunNZ) (w : QFunNZ)
+    (hdata : cLinearDepDataWf logDerivs w = CPolyG.cLinearDepData fuel logDerivs w) :
+    cLogIsNewMonomialWf logDerivs w = CPolyG.cLogIsNewMonomial fuel logDerivs w := by
+  rw [cLogIsNewMonomialWf, CPolyG.cLogIsNewMonomial, hdata]
+
+/-- **Bridge — `cExpIsNewMonomialWf` equals `cExpIsNewMonomial` given the data agreement** (transparent
+composition): immediate from `cLogIsNewMonomialWf_eq` (the exponential decision is the log decision applied
+to `Db`). -/
+theorem cExpIsNewMonomialWf_eq (fuel : ℕ) (logDerivs : List QFunNZ) (b : QFunNZ)
+    (hdata : cLinearDepDataWf logDerivs b = CPolyG.cLinearDepData fuel logDerivs b) :
+    cExpIsNewMonomialWf logDerivs b = CPolyG.cExpIsNewMonomial fuel logDerivs b :=
+  cLogIsNewMonomialWf_eq fuel logDerivs b hdata
+
+/-- **Bridge — `cLogRelationCoeffsWf` equals `cLogRelationCoeffs` given the data agreement** (transparent
+composition). With `hdata : cLinearDepDataWf logDerivs w = cLinearDepData fuel logDerivs w`, the kernel basis
+and the extracted relation coefficients coincide (`cNullspaceBasisQ` fuel-free). A pure rewrite. -/
+theorem cLogRelationCoeffsWf_eq (fuel : ℕ) (logDerivs : List QFunNZ) (w : QFunNZ)
+    (hdata : cLinearDepDataWf logDerivs w = CPolyG.cLinearDepData fuel logDerivs w) :
+    cLogRelationCoeffsWf logDerivs w = CPolyG.cLogRelationCoeffs fuel logDerivs w := by
+  rw [cLogRelationCoeffsWf, CPolyG.cLogRelationCoeffs, hdata]
+  rfl
+
 end CPolyG
 
 /-! #### `native_decide` — the fuel-free §9 structure decisions on Bronstein's Corollary 9.3.1 examples
@@ -584,6 +614,34 @@ def cLimitedIntegrateWf (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ
   let gdens := fden :: logDerivs.map Prod.snd
   cParamRischDEWf gnums gdens
 
+/-- **Bridge — `cParamRischDEWf` equals `cParamRischDE` given the constraint-matrix agreement** (transparent
+composition). When the fuel-free linear constraints match the fuel'd ones (`hM : (cLinearConstraintsQWf
+gnums gdens).2 = (cLinearConstraintsQ fuel gnums gdens).2`, from the `cLcmQWf`/`cdivWf`/`cdivmodWf` leaf
+bridges), the parametric-RDE kernel basis agrees, since the downstream `cNullspaceBasisQ` is fuel-free. A
+pure rewrite. -/
+theorem cParamRischDEWf_eq (fuel : ℕ) (gnums gdens : List (CPolyG ℚ))
+    (hM : (cLinearConstraintsQWf gnums gdens).2 = (CPolyG.cLinearConstraintsQ fuel gnums gdens).2) :
+    cParamRischDEWf gnums gdens = CPolyG.cParamRischDE fuel gnums gdens := by
+  rw [cParamRischDEWf, CPolyG.cParamRischDE]
+  -- both destructure `let (_qs, M) := …`; only the `.2` (the matrix `M`) is consumed by `cNullspaceBasisQ`
+  show cNullspaceBasisQ (cLinearConstraintsQWf gnums gdens).2 gnums.length
+    = cNullspaceBasisQ (CPolyG.cLinearConstraintsQ fuel gnums gdens).2 gnums.length
+  rw [hM]
+
+/-- **Bridge — `cLimitedIntegrateWf` equals `cLimitedIntegrate` given the constraint-matrix agreement on the
+limited-integration generators** (transparent composition). The two build the **same** generator list `[f,
+Dw₁/w₁, …]` (the `Dwᵢ/wᵢ` arithmetic is fuel-free), so under the `cParamRischDEWf_eq` agreement `hpr` on
+those generators (the shared `logDerivs` pair-list) they coincide. A pure rewrite. -/
+theorem cLimitedIntegrateWf_eq (fuel : ℕ) (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ))
+    (hpr : letI logDerivs : List (CPolyG ℚ × CPolyG ℚ) :=
+        (List.zip wnums wdens).map (fun (wn, wd) =>
+          (csubG (cmulG (cderivQ wn) wd) (cmulG wn (cderivQ wd)), cmulG wn wd))
+      cParamRischDEWf (fnum :: logDerivs.map Prod.fst) (fden :: logDerivs.map Prod.snd)
+      = CPolyG.cParamRischDE fuel (fnum :: logDerivs.map Prod.fst) (fden :: logDerivs.map Prod.snd)) :
+    cLimitedIntegrateWf fnum fden wnums wdens = CPolyG.cLimitedIntegrate fuel fnum fden wnums wdens := by
+  rw [cLimitedIntegrateWf, CPolyG.cLimitedIntegrate]
+  exact hpr
+
 end CPolyG
 
 /-! #### `native_decide` — the fuel-free §7 pipeline on Bronstein's Examples 7.3.2/7.1.1/§7.2
@@ -650,5 +708,9 @@ theorem limitedIntegrateWf_example :
   native_decide
 
 #print axioms limitedIntegrateWf_example
+
+-- The §7/§9 transparent-composition bridges carry only the standard axioms.
+#print axioms CPolyG.cParamRischDEWf_eq
+#print axioms CPolyG.cLogIsNewMonomialWf_eq
 
 end DeepWiki.SymbolicIntegration
