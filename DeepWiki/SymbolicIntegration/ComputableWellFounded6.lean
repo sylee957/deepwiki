@@ -462,4 +462,76 @@ theorem cPrimitivePolyIntegrateWf_eq (Dt : CPolyG α) :
 
 end CPolyG
 
+/-! ### Target TOP.2 — the fuel-free top-level integrator `cIntegrateWf` (the goal)
+
+`cIntegrate Dt fuel a d cands` (Bronstein Ch. 5, assembled) splits `f = fₚ + fₛ + fₙ`
+(`canonicalRepresentationFast`), integrates the simple normal part via `cIntegrateReduced`, integrates the
+polynomial part via `cPrimitivePolyIntegrate`, and returns `some` (combining the rational parts) when the
+polynomial remainder vanishes, else `none`. A pure **composition** — no new recursion. The fuel-free
+companion `cIntegrateWf` substitutes the three now-fuel-free sub-ops: `canonicalRepresentationFastWf`
+(`ComputableWellFounded4`), `cPrimitivePolyIntegrateWf` (`ComputableWellFounded5`), and `cIntegrateReducedWf`. -/
+
+namespace CPolyG
+
+/-- **The fuel-free top-level transcendental Risch integrator** `cIntegrateWf Dt a d cands` (Bronstein Ch.
+5, the goal): the fuel-free companion of `cIntegrate`, integrating `f = a/d ∈ ℚ(x)(t)` over the monomial
+derivation `D = cmonomialDeriv Dt`, returning `some ⟨(gnum, gden), [(cᵢ, vᵢ)]⟩` with `∫ f = gnum/gden + ∑ᵢ
+cᵢ·log(vᵢ)`, or `none` if `∫ f` is **not elementary**. Identical assembly to `cIntegrate` — canonical split
++ reduced capstone + primitive polynomial part — but with every fuel'd sub-op replaced by its fuel-free
+companion: `canonicalRepresentationFastWf`, `cIntegrateReducedWf`, `cPrimitivePolyIntegrateWf`. A pure
+composition, **no fuel at runtime**; `native_decide`-able over the noncomputable-`CFieldSpec` tower `QFunNZ`.
+Stated with `.1`/`.2` projections so the bridge `cIntegrateWf_eq` rewrites cleanly. -/
+def cIntegrateWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) :
+    Option IntegralResult :=
+  let split := canonicalRepresentationFastWf Dt a d
+  let cn := split.2.2.1
+  let dn := split.2.2.2
+  let fp := split.1
+  -- (2) simple normal part `fₙ = cn/dn`.
+  let nrm := cIntegrateReducedWf Dt cn dn cands
+  -- (3) polynomial part `fₚ = fp`: primitive constant-coefficient integration.
+  let pr := cPrimitivePolyIntegrateWf Dt fp
+  if cisZeroG pr.2 then
+    let gnum := caddG (cmulG nrm.rational.1 [CField.one]) (cmulG pr.1 nrm.rational.2)
+    let gden := nrm.rational.2
+    some ⟨(gnum, gden), nrm.logs⟩
+  else
+    none
+
+end CPolyG
+
+/-! ### Bridge of `cIntegrateWf` to the fuel'd `cIntegrate`, threading the sub-bridges
+
+`cIntegrateWf = cIntegrate fuel` under the three sub-bridges: the canonical split
+(`canonicalRepresentationFastWf_eq`, the `CCanonicalRepFastWfRegular` gate), the reduced capstone
+(`cIntegrateReducedWf_eq`), and the primitive polynomial part (`cPrimitivePolyIntegrateWf_eq`, the
+`CPrimIntRegular` gate). Since the assembly is a pure composition, rewriting each sub-result collapses the
+two drivers. The fuel bounds live only in the bridge hypotheses; `cIntegrateWf` carries none. -/
+
+namespace CPolyG
+
+/-- **Bridge — `cIntegrateWf` equals `cIntegrate` at any sufficient fuel.** From the two sub-bridges that
+the canonical split (`canonicalRepresentationFastWf_eq`) feeds — the reduced capstone `hred` on the
+resulting normal part `(cn, dn)` and the primitive polynomial part `hpoly : cPrimitivePolyIntegrateWf Dt fp
+= cPrimitivePolyIntegrate Dt fuel fp` on the resulting polynomial part `fp`, both already carrying the
+fuel'd `canonicalRepresentationFast Dt fuel a d` on the right — `cIntegrateWf Dt a d cands = cIntegrate Dt
+fuel a d cands`. The fuel bounds live only in the hypotheses; `cIntegrateWf` carries none. A pure
+composition rewrite: `hred`/`hpoly` carry the entire LHS into fuel'd form, and the RHS's
+`match (fp,(_b,_ds),cn,dn) := …` collapses to the `.1`/`.2.2.1`/`.2.2.2` projections by `Prod.eta`. -/
+theorem cIntegrateWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (hred : cIntegrateReducedWf Dt (canonicalRepresentationFastWf Dt a d).2.2.1
+        (canonicalRepresentationFastWf Dt a d).2.2.2 cands
+      = CPolyG.cIntegrateReduced Dt fuel (CPolyG.canonicalRepresentationFast Dt fuel a d).2.2.1
+          (CPolyG.canonicalRepresentationFast Dt fuel a d).2.2.2 cands)
+    (hpoly : cPrimitivePolyIntegrateWf Dt (canonicalRepresentationFastWf Dt a d).1
+      = CPolyG.cPrimitivePolyIntegrate Dt fuel (CPolyG.canonicalRepresentationFast Dt fuel a d).1) :
+    cIntegrateWf Dt a d cands = CPolyG.cIntegrate Dt fuel a d cands := by
+  rw [cIntegrateWf, CPolyG.cIntegrate]
+  -- rewrite the reduced and polynomial sub-results; after these the LHS is entirely in fuel'd form and
+  -- the RHS's `match (fp,(_b,_ds),cn,dn) := canonicalRepresentationFast fuel a d` collapses to the `.1`/
+  -- `.2.2.1`/`.2.2.2` projections (`Prod.eta` defeq), closing the goal by the trailing `rfl`.
+  rw [hred, hpoly]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
