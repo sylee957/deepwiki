@@ -270,4 +270,170 @@ example :
 
 end CPolyG
 
+/-! ### Target B — the fuel-free `SplitSquarefreeFactor` `cSplitSquarefreeFactorFastWf`
+
+`cSplitSquarefreeFactorFast Dt fuel p` (Bronstein §3.5, p.102) composes `cSqfreeYunFF` with a per-factor
+split: `(p₁,…,pₘ) ← cSqfreeYunFF p`, then for each `pᵢ` the special part `Sᵢ = cgcdFF pᵢ (cmonomialDeriv
+Dt pᵢ)` and the normal part `Nᵢ = pᵢ/Sᵢ`. The fuel-free companion substitutes `cSqfreeYunFFWf` (Target A)
+and the fuel-free leaves `cgcdFFWf`/`cdivWf` for the per-factor work; the outer `.map` is structural
+(fuel-free already). The per-Yun-factor split correctness `cSqfreeFactor_isSplittingFactorizationGen`
+(`ComputableCanonicalRepCorrect`) applies to each output factor unchanged (the WF `(Nᵢ, Sᵢ)` reads through
+`toPolyG` as `csqfreeNormal`/`csqfreeSpecial` exactly, since `cdivWf = cdivG` and `cgcdFFWf = cgcdFF`). -/
+
+namespace CPolyG
+
+/-- **Fuel-free per-Yun-factor split step** `csqfreeSplitStepWf Dt pi = (Nᵢ, Sᵢ)`: the special part
+`Sᵢ = cgcdFFWf pi (cmonomialDeriv Dt pi)` (via the DIFFERENTIAL `cmonomialDeriv`) and the normal part
+`Nᵢ = cdivWf pi Sᵢ`, both fuel-free. The fuel-free companion of one `cSplitSquarefreeFactorFast` map step. -/
+def csqfreeSplitStepWf (Dt : CPolyG QFunNZ) (pi : CPolyG QFunNZ) : CPolyG QFunNZ × CPolyG QFunNZ :=
+  let Si := cgcdFFWf pi (cmonomialDeriv Dt pi)
+  let Ni := cdivWf pi Si
+  (Ni, Si)
+
+/-- **Fuel-free `SplitSquarefreeFactor`** (Bronstein §3.5, p.102) `cSplitSquarefreeFactorFastWf Dt p =
+((N₁,…,Nₘ), (S₁,…,Sₘ))`: the fuel-free companion of `cSplitSquarefreeFactorFast`. First `(p₁,…,pₘ) ←
+cSqfreeYunFFWf p` (fuel-free Yun squarefree factorization); then per factor the fuel-free split step
+`csqfreeSplitStepWf`. The outer `.map` is structural — **no fuel at runtime**, `native_decide`-able over
+the noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)). -/
+def cSplitSquarefreeFactorFastWf (Dt : CPolyG QFunNZ) (p : CPolyG QFunNZ) :
+    List (CPolyG QFunNZ) × List (CPolyG QFunNZ) :=
+  let ps := cSqfreeYunFFWf p
+  let parts := ps.map (csqfreeSplitStepWf Dt)
+  (parts.map Prod.fst, parts.map Prod.snd)
+
+/-- **The fuel-free per-factor split step matches the fuel'd one** `csqfreeSplitStepWf Dt pi = (csqfreeNormal
+Dt fuel pi, csqfreeSpecial Dt fuel pi)`, under a per-factor split-regular node (`CSqfreeFactorRegular Dt
+fuel pi`): the special `cgcdFFWf` matches `cgcdFF fuel` (`cgcdFFWf_eq_node`) and the normal `cdivWf` matches
+`cdivG fuel` (`cdivmodWf_eq_of_fuel` with the dividend length bound). -/
+theorem csqfreeSplitStepWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (pi : CPolyG QFunNZ)
+    (hreg : CSqfreeFactorRegular Dt fuel pi) :
+    csqfreeSplitStepWf Dt pi = (csqfreeNormal Dt fuel pi, csqfreeSpecial Dt fuel pi) := by
+  obtain ⟨hgcdreg, hfuel⟩ := hreg
+  rw [csqfreeSplitStepWf]
+  -- the special part
+  have hSeq : cgcdFFWf pi (cmonomialDeriv Dt pi) = csqfreeSpecial Dt fuel pi :=
+    cgcdFFWf_eq_node fuel pi (cmonomialDeriv Dt pi) hgcdreg
+  -- the normal part: `cdivWf pi Si = cdivG fuel pi Si`
+  rw [hSeq]
+  have hNeq : cdivWf pi (csqfreeSpecial Dt fuel pi)
+      = CPolyG.cdivG fuel pi (csqfreeSpecial Dt fuel pi) := by
+    rw [cdivWf, cdivmodWf_eq_of_fuel fuel pi (csqfreeSpecial Dt fuel pi) hfuel, cdivG]
+  rw [hNeq]
+
+end CPolyG
+
+/-- **Bridge — `cSplitSquarefreeFactorFastWf` equals `cSplitSquarefreeFactorFast` at any sufficient fuel.**
+Under a regular Yun entry (`CSqfreeYunRegular fuel p`) and per-factor split-regularity of every Yun factor
+(`∀ pi ∈ cSqfreeYunFFWf p, CSqfreeFactorRegular Dt fuel pi`), `cSplitSquarefreeFactorFastWf Dt p =
+cSplitSquarefreeFactorFast Dt fuel p`. The fuel bounds live only here; the WF op carries none. The Yun list
+matches (Target A `cSqfreeYunFFWf_eq`) and each per-factor split step matches (`csqfreeSplitStepWf_eq`),
+folded over the `.map`. -/
+theorem cSplitSquarefreeFactorFastWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ)
+    (hyun : CSqfreeYunRegular fuel p)
+    (hfac : ∀ pi ∈ CPolyG.cSqfreeYunFFWf p, CSqfreeFactorRegular Dt fuel pi) :
+    CPolyG.cSplitSquarefreeFactorFastWf Dt p = CPolyG.cSplitSquarefreeFactorFast Dt fuel p := by
+  rw [CPolyG.cSplitSquarefreeFactorFastWf, CPolyG.cSplitSquarefreeFactorFast]
+  -- the Yun lists match (Target A)
+  have hyuneq : CPolyG.cSqfreeYunFFWf p = CPolyG.cSqfreeYunFF fuel p :=
+    CPolyG.cSqfreeYunFFWf_eq fuel p hyun
+  -- the per-factor split maps agree element-wise on the (shared) Yun list
+  have hmapeq : (CPolyG.cSqfreeYunFFWf p).map (CPolyG.csqfreeSplitStepWf Dt)
+      = (CPolyG.cSqfreeYunFF fuel p).map (fun pi =>
+          let Si := CPolyG.cgcdFF fuel pi (cmonomialDeriv Dt pi)
+          let Ni := CPolyG.cdivG fuel pi Si
+          (Ni, Si)) := by
+    rw [hyuneq]
+    refine List.map_congr_left (fun pi hpi => ?_)
+    -- `pi` lies in the WF Yun list (= the fuel'd one), so it is split-regular
+    have hpireg : CSqfreeFactorRegular Dt fuel pi := hfac pi (by rw [hyuneq]; exact hpi)
+    have := CPolyG.csqfreeSplitStepWf_eq Dt fuel pi hpireg
+    rw [this]
+  rw [hmapeq]
+
+-- The fuel-free `SplitSquarefreeFactor` bridge carries only the standard axioms (no `native` axiom).
+#print axioms cSplitSquarefreeFactorFastWf_eq
+
+/-! ### Per-Yun-factor splitting-factorization correctness of `cSplitSquarefreeFactorFastWf`
+
+For a **squarefree** Yun factor `pᵢ`, the fuel-free per-factor split `csqfreeSplitStepWf Dt pᵢ = (Nᵢ, Sᵢ)`
+is a book-faithful splitting factorization `IsSplittingFactorizationGen (toPolyG pᵢ) (toPolyG Sᵢ) (toPolyG
+Nᵢ)` — directly from `cSqfreeFactor_isSplittingFactorizationGen` (`ComputableCanonicalRepCorrect`), since
+`csqfreeSplitStepWf` reads through `toPolyG` as `(csqfreeNormal, csqfreeSpecial)` (`csqfreeSplitStepWf_eq`),
+fuel-free. -/
+
+/-- **The fuel-free per-Yun-factor split is a book-faithful splitting factorization** over ℚ(x): for a
+**squarefree** `toPolyG pᵢ ≠ 0` and a split-regular factor (`CSqfreeFactorRegular`), the fuel-free
+`(Nᵢ, Sᵢ) = csqfreeSplitStepWf Dt pᵢ` satisfies `IsSplittingFactorizationGen (toPolyG pᵢ) (toPolyG Sᵢ)
+(toPolyG Nᵢ)` w.r.t. the monomial derivation `D` (`Dt = toPolyG Dt`). Transported from
+`cSqfreeFactor_isSplittingFactorizationGen` through `csqfreeSplitStepWf_eq`; the WF version only removes the
+fuel from the runtime. -/
+theorem csqfreeSplitStepWf_isSplittingFactorizationGen (Dt : CPolyG QFunNZ) (fuel : ℕ) (pi : CPolyG QFunNZ)
+    (hp : toPolyG pi ≠ 0) (hsf : Squarefree (toPolyG pi)) (hreg : CSqfreeFactorRegular Dt fuel pi) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+      (toPolyG pi)
+      (toPolyG (CPolyG.csqfreeSplitStepWf Dt pi).2)
+      (toPolyG (CPolyG.csqfreeSplitStepWf Dt pi).1) := by
+  rw [CPolyG.csqfreeSplitStepWf_eq Dt fuel pi hreg]
+  exact cSqfreeFactor_isSplittingFactorizationGen Dt fuel pi hp hsf hreg
+
+#print axioms csqfreeSplitStepWf_isSplittingFactorizationGen
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- The headline (Target B): for one **squarefree** Yun factor `pᵢ`, the fuel-free split
+-- `csqfreeSplitStepWf Dt pᵢ = (Nᵢ, Sᵢ)`, read over ℚ(x) = `RatFunc ℚ`, returns a book-faithful splitting
+-- factorization of `toPolyG pᵢ` — `pᵢ = Sᵢ·Nᵢ`, `Sᵢ` special, every squarefree factor of `Nᵢ` normal —
+-- under the same per-node preconditions a real run satisfies, **with no fuel at runtime**.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (pi : CPolyG QFunNZ) (hp : toPolyG pi ≠ 0)
+    (hsf : Squarefree (toPolyG pi)) (hreg : CSqfreeFactorRegular Dt fuel pi) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+      (toPolyG pi)
+      (toPolyG (CPolyG.csqfreeSplitStepWf Dt pi).2)
+      (toPolyG (CPolyG.csqfreeSplitStepWf Dt pi).1) :=
+  csqfreeSplitStepWf_isSplittingFactorizationGen Dt fuel pi hp hsf hreg
+
+/-! ### `native_decide` smoke tests for `cSplitSquarefreeFactorFastWf` (Bronstein Example 3.5.2) -/
+
+namespace CPolyG
+
+/-- **Example 3.5.2 factor degrees, fuel-free** — `cSplitSquarefreeFactorFastWf` on the degree-5 `p`
+returns `N`-factor `t`-degrees `[1, 1]` and `S`-factor `t`-degrees `[2, 0]`, matching Bronstein's
+`N₁ = 4x²(t−1)`, `N₂ = xt−1`, `S₁ = t²+(1/x)t−(2x−1)/(4x²)`, `S₂ = 1` — the whole composition runs with
+**no fuel at runtime**. -/
+example :
+    (((CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).1).map
+        CPolyG.cdegG,
+     ((CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).2).map
+        CPolyG.cdegG) = ([1, 1], [2, 0]) := by native_decide
+
+/-- **Example 3.5.2 normal part is the book's `pₙ`, fuel-free** — the `N`-factors recombine (by
+multiplicity) to `4x²(t−1)(xt−1)²` (monic), via `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (splitSquarefreeFastRecombine
+        (CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).1))
+      (CPolyG.cmonicG splitSquarefreeFastEx352Pn)) = true := by native_decide
+
+/-- **Example 3.5.2 special part is the book's `pₛ`, fuel-free** — the `S`-factors recombine (by
+multiplicity) to `t²+(1/x)t−(2x−1)/(4x²)` (monic), via `cisZeroG` of the difference over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (splitSquarefreeFastRecombine
+        (CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).2))
+      (CPolyG.cmonicG splitSquarefreeFastEx352Ps)) = true := by native_decide
+
+/-- `cSplitSquarefreeFactorFastWf` agrees with the fuel'd `cSplitSquarefreeFactorFast` on Example 3.5.2's
+`p` (the `N`/`S` factor-degree lists match). -/
+example :
+    (((CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).1).map
+        CPolyG.cdegG,
+     ((CPolyG.cSplitSquarefreeFactorFastWf splitFastExample351Dt splitFastExample351P).2).map
+        CPolyG.cdegG)
+      = (((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).1).map
+          CPolyG.cdegG,
+         ((CPolyG.cSplitSquarefreeFactorFast splitFastExample351Dt 8 splitFastExample351P).2).map
+          CPolyG.cdegG) := by native_decide
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
