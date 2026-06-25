@@ -516,6 +516,32 @@ def ContentFoldTerminates (fuel : ℕ) : CPoly → List CPoly → Prop
     Compute.cgcdTerminates fuel acc c ∧
       ContentFoldTerminates fuel (Compute.cgcdExt fuel acc c).1 l
 
+/-- **The content `cgcd`-fold terminates for sufficient fuel** (the `ContentFoldTerminates` discharge):
+if `fuel` strictly bounds the accumulator length (`(cnorm acc).length < fuel`) and every coefficient
+length (`∀ c ∈ l, (cnorm c).length < fuel`), every `cgcdExt fuel` step in the fold reaches a zero
+remainder within fuel. By list induction: each step's `cgcdTerminates fuel acc c` is
+`cgcdTerminates_of_fuel` (accumulator `≤ fuel`, coefficient `< fuel`), and the new accumulator
+`(cgcdExt fuel acc c).1` stays strictly under `fuel` by `cgcdExt_fst_length_le` (bounded by
+`max (cnorm acc).length (cnorm c).length < fuel`), preserving the invariant for the tail. -/
+theorem ContentFoldTerminates_of_fuel (fuel : ℕ) :
+    ∀ (acc : CPoly) (l : List CPoly), (cnorm acc).length < fuel →
+      (∀ c ∈ l, (cnorm c).length < fuel) → ContentFoldTerminates fuel acc l := by
+  intro acc l
+  induction l generalizing acc with
+  | nil => intro _ _; exact trivial
+  | cons c l ih =>
+    intro hacc hcoeff
+    have hc : (cnorm c).length < fuel := hcoeff c (List.mem_cons_self ..)
+    refine ⟨?_, ?_⟩
+    · exact Compute.cgcdTerminates_of_fuel fuel acc c (le_of_lt hacc) hc
+    · -- the new accumulator stays strictly under fuel
+      have hlen : (cnorm (Compute.cgcdExt fuel acc c).1).length
+          ≤ max (cnorm acc).length (cnorm c).length :=
+        Compute.cgcdExt_fst_length_le fuel acc c
+      have hacc' : (cnorm (Compute.cgcdExt fuel acc c).1).length < fuel :=
+        lt_of_le_of_lt hlen (max_lt hacc hc)
+      exact ih _ hacc' (fun a ha => hcoeff a (List.mem_cons_of_mem c ha))
+
 /-- **The content `cgcd`-fold divides each input** (over ℚ[x]): for the running gcd
 `g = l.foldl (fun g c => (cgcdExt fuel g c).1) acc`, under per-step termination, `toPoly g` divides
 `toPoly acc` and `toPoly a` for every `a ∈ l`. The divides-down direction of `cgcdExt`
