@@ -306,6 +306,149 @@ def cSPDEQWf (a b c : CPolyG ℚ) (n : ℤ) :
 termination_by (n + 1).toNat
 decreasing_by assumption
 
+end CPolyG
+
+/-! ### Bridge of `cSPDEQWf` to the fuel'd `cSPDEQ`
+
+The WF `cSPDEQWf` recurses on `(n + 1).toNat`; the fuel'd `cSPDEQ` on `fuel`. At a non-base node,
+`cSPDEQ (fuel + 1)` computes its `gcd`/divisions/Bézout with the **predecessor** fuel `fuel` (its body
+peels one fuel), so the fuel-free leaves must match the fuel'd ops at fuel `fuel`. The bundle
+`CSPDEQStepReg fuel a b c` carries the per-step length preconditions for that match (`cgcdWf` needs
+`(cnormG a).length ≤ fuel`, `(cnormG b).length < fuel`; each division and the Bézout descent their own
+bounds), and the inductive `CSPDEQReg fuel a b c n` (nodes concluding at `fuel + 1`) mirrors the recursion
+with a step budget. The base analogue of WF7's `CSPDEWfStepReg`/`CSPDEWfReg`/`cSPDEWf_eq` over `[CFieldSpec
+ℚ]` (`cgcdExtG`-based gcd, not `cgcdFF`). -/
+
+/-- **Per-SPDE-step node-regularity bundle over ℚ** `CSPDEQStepReg fuel a b c`: the length preconditions
+for one SPDE peel's fuel-free leaves to match the fuel'd ops at sub-op fuel `fuel` (used by `cSPDEQ
+(fuel + 1)`). With `g = (cgcdExtG fuel a b).1`, the extended Euclid descends on `b` (`hagcd`/`hbgcd`); the
+divisibility-test dividend `c` and the three divisions `a/g, b/g, c/g` are short enough; and (for the
+Bézout `cdiophantineGWf bd ad cd`) the divisor `ad`, dividend `bd`, and rescaled dividend `S` are short
+enough. -/
+structure CSPDEQStepReg (fuel : ℕ) (a b c : CPolyG ℚ) : Prop where
+  /-- `a` is short enough for the extended-Euclid `cgcdWf a b` (`(cnormG a).length ≤ fuel`). -/
+  hagcd : (cnormG a : List ℚ).length ≤ fuel
+  /-- `b` is strictly short enough for the extended-Euclid descent (`(cnormG b).length < fuel`). -/
+  hbgcd : (cnormG b : List ℚ).length < fuel
+  /-- the divisibility-test dividend `c` is reduced (for `cdvdGWf g c = cdvdG fuel g c`). -/
+  hclen : (cnormG c : List ℚ).length ≤ fuel
+  /-- `a` is short enough for its exact division `a/g`. -/
+  halen : (cnormG a : List ℚ).length ≤ fuel
+  /-- `b` is short enough for its exact division `b/g`. -/
+  hblen : (cnormG b : List ℚ).length ≤ fuel
+  /-- the divided divisor `ad = a/g` is strictly short enough for the Bézout extended-Euclid descent. -/
+  hadlen : (cnormG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) : List ℚ).length < fuel
+  /-- the divided dividend `bd = b/g` is short enough for the Bézout extended-Euclid `cgcdWf bd ad`. -/
+  hbdlen : (cnormG (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1)) : List ℚ).length ≤ fuel
+  /-- the rescaled Bézout dividend `S` is short enough for the `cdivmodWf` mod-reduction. -/
+  hSlen : (cnormG (cscaleG (CField.inv (cleadG
+      (cgcdWf (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+        (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))).1))
+      (cmulG (CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1))
+        (cgcdWf (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+          (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))).2.1)) : List ℚ).length ≤ fuel
+
+/-- **Per-run SPDE-loop regularity bundle over ℚ** `CSPDEQReg fuel a b c n` (nodes concluding at fuel
+`fuel + 1`): mirrors the `cSPDEQ (fuel + 1)` recursion with a step budget. `baseNeg` (`n < 0`),
+`baseNonDvd` (`g ∤ c`), `baseConst` (`deg(a/g) = 0`) are terminal; `step` (`n ≥ 0`, `g ∣ c`,
+`deg(a/g) ≠ 0`) requires the step is node-regular (`CSPDEQStepReg fuel a b c`) and the same recursively on
+the divided `(ad, bd + D ad, z − D r)` at `n − deg(ad)` (gate fuel `fuel`). -/
+inductive CSPDEQReg : ℕ → CPolyG ℚ → CPolyG ℚ → CPolyG ℚ → ℤ → Prop
+  /-- terminal: `n < 0` (the `c = 0`/`c ≠ 0` short-circuit). -/
+  | baseNeg {fuel : ℕ} {a b c : CPolyG ℚ} {n : ℤ} (hn : n < 0) :
+      CSPDEQReg (fuel + 1) a b c n
+  /-- terminal: `n ≥ 0`, `g ∤ c` (no solution). -/
+  | baseNonDvd {fuel : ℕ} {a b c : CPolyG ℚ} {n : ℤ} (hn : ¬ n < 0)
+      (hdvd : ¬ cdvdGWf ((CPolyG.cgcdExtG fuel a b).1) c = true) (hstep : CSPDEQStepReg fuel a b c) :
+      CSPDEQReg (fuel + 1) a b c n
+  /-- terminal: `n ≥ 0`, `g ∣ c`, `deg(a/g) = 0` (constant base case, identity reconstruction). -/
+  | baseConst {fuel : ℕ} {a b c : CPolyG ℚ} {n : ℤ} (hn : ¬ n < 0)
+      (hdvd : cdvdGWf ((CPolyG.cgcdExtG fuel a b).1) c = true)
+      (hdeg : cdegG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) = 0)
+      (hstep : CSPDEQStepReg fuel a b c) :
+      CSPDEQReg (fuel + 1) a b c n
+  /-- recursive: `n ≥ 0`, `g ∣ c`, `deg(a/g) ≠ 0`; recurse on the divided equation (gate fuel `fuel`). -/
+  | step {fuel : ℕ} {a b c : CPolyG ℚ} {n : ℤ} (hn : ¬ n < 0)
+      (hdvd : cdvdGWf ((CPolyG.cgcdExtG fuel a b).1) c = true)
+      (hdeg : cdegG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) ≠ 0)
+      (hstep : CSPDEQStepReg fuel a b c)
+      (hrec : CSPDEQReg fuel (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))
+        (caddG (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+          (cderivQ (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))))
+        (csubG (CPolyG.cdiophantineG fuel (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+            (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))
+            (CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1))).2
+          (cderivQ (CPolyG.cdiophantineG fuel (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+            (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))
+            (CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1))).1))
+        (n - (cdegG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) : ℤ))) :
+      CSPDEQReg (fuel + 1) a b c n
+
+namespace CPolyG
+
+/-- **The per-SPDE-step fuel-free leaves match the fuel'd ops over ℚ** at sub-op fuel `fuel`, under a
+regular step (`CSPDEQStepReg fuel a b c`): the gcd `(cgcdWf a b).1 = (cgcdExtG fuel a b).1`, the
+divisibility test `cdvdGWf`, and the three exact divisions `cdivWf = cdivG fuel` — the conjunction the
+bridge consumes. -/
+theorem cSPDEQWf_step_leaves (fuel : ℕ) (a b c : CPolyG ℚ) (hstep : CSPDEQStepReg fuel a b c) :
+    (cgcdWf a b).1 = (CPolyG.cgcdExtG fuel a b).1
+    ∧ cdvdGWf ((CPolyG.cgcdExtG fuel a b).1) c = CPolyG.cdvdG fuel ((CPolyG.cgcdExtG fuel a b).1) c
+    ∧ cdivWf a ((CPolyG.cgcdExtG fuel a b).1) = CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)
+    ∧ cdivWf b ((CPolyG.cgcdExtG fuel a b).1) = CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1)
+    ∧ cdivWf c ((CPolyG.cgcdExtG fuel a b).1) = CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1) := by
+  obtain ⟨hagcd, hbgcd, hclen, halen, hblen, _, _, _⟩ := hstep
+  have hgeq : (cgcdWf a b).1 = (CPolyG.cgcdExtG fuel a b).1 := by
+    rw [cgcdWf_eq_of_fuel fuel a b hagcd hbgcd]
+  refine ⟨hgeq, cdvdGWf_eq_of_fuel fuel _ c hclen, ?_, ?_, ?_⟩
+  · rw [cdivWf, cdivmodWf_eq_of_fuel fuel a _ halen, cdivG]
+  · rw [cdivWf, cdivmodWf_eq_of_fuel fuel b _ hblen, cdivG]
+  · rw [cdivWf, cdivmodWf_eq_of_fuel fuel c _ hclen, cdivG]
+
+/-- **Bridge — `cSPDEQWf` equals the fuel'd `cSPDEQ` on a regular run.** Under `CSPDEQReg (fuel + 1) a b c
+n`, `cSPDEQWf a b c n = cSPDEQ (fuel + 1) a b c n`. The fuel bounds live only in the gate; the WF own-loop
+carries none. By induction on the `CSPDEQReg` derivation, exactly as WF7's `cSPDEWf_eq` (the Bézout
+cofactors agree by `cdiophantineGWf_eq_of_fuel`, the WF guard fires since `n` drops by `deg(ad) ≥ 1`). -/
+theorem cSPDEQWf_eq :
+    ∀ (fuel : ℕ) (a b c : CPolyG ℚ) (n : ℤ), CSPDEQReg fuel a b c n →
+      cSPDEQWf a b c n = CPolyG.cSPDEQ fuel a b c n := by
+  intro fuel a b c n hreg
+  induction hreg with
+  | @baseNeg fuel a b c n hn =>
+    rw [cSPDEQWf.eq_def, if_pos hn, CPolyG.cSPDEQ, if_pos hn]
+  | @baseNonDvd fuel a b c n hn hdvd hstep =>
+    obtain ⟨hgeq, hdvdeq, _, _, _⟩ := cSPDEQWf_step_leaves fuel a b c hstep
+    rw [hdvdeq] at hdvd
+    rw [cSPDEQWf.eq_def, if_neg hn, CPolyG.cSPDEQ, if_neg hn]
+    simp only [hgeq, hdvdeq, if_neg hdvd]
+  | @baseConst fuel a b c n hn hdvd hdeg hstep =>
+    obtain ⟨hgeq, hdvdeq, haeq, hbeq, hceq⟩ := cSPDEQWf_step_leaves fuel a b c hstep
+    rw [hdvdeq] at hdvd
+    rw [cSPDEQWf.eq_def, if_neg hn, CPolyG.cSPDEQ, if_neg hn]
+    simp only [hgeq, hdvdeq, haeq, hbeq, hceq, if_pos hdvd, if_pos hdeg]
+  | @step fuel a b c n hn hdvd hdeg hstep hrec ih =>
+    obtain ⟨hgeq, hdvdeq, haeq, hbeq, hceq⟩ := cSPDEQWf_step_leaves fuel a b c hstep
+    rw [hdvdeq] at hdvd
+    have hdioeq : cdiophantineGWf (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+        (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))
+        (CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1))
+      = CPolyG.cdiophantineG fuel (CPolyG.cdivG fuel b ((CPolyG.cgcdExtG fuel a b).1))
+        (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1))
+        (CPolyG.cdivG fuel c ((CPolyG.cgcdExtG fuel a b).1)) :=
+      cdiophantineGWf_eq_of_fuel fuel _ _ _ hstep.hbdlen hstep.hadlen hstep.hSlen
+    have hguard : (n - (cdegG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) : ℤ)
+        + 1).toNat < (n + 1).toNat := by
+      have hn0 : 0 ≤ n := not_lt.mp hn
+      have hd1 : 1 ≤ (cdegG (CPolyG.cdivG fuel a ((CPolyG.cgcdExtG fuel a b).1)) : ℤ) := by
+        exact_mod_cast Nat.one_le_iff_ne_zero.mpr hdeg
+      omega
+    rw [cSPDEQWf.eq_def, if_neg hn, CPolyG.cSPDEQ, if_neg hn]
+    simp only [hgeq, hdvdeq, haeq, hbeq, hceq, hdioeq, if_pos hdvd, if_neg hdeg, if_pos hguard, ih]
+    rfl
+
+end CPolyG
+
+namespace CPolyG
+
 /-! ### Base composition — the fuel-free Poly-Risch-DE dispatcher over ℚ `cPolyRischDEQWf`
 
 `cPolyRischDEQ` routes `Dq + b·q = c` (`δ = 0`) to polynomial integration (`b = 0`), the non-cancellation
