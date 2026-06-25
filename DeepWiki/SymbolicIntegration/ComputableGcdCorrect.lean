@@ -260,4 +260,166 @@ theorem associated_toPolyB_clearDenoms (p : CPolyG QFunNZ) :
   exact (associated_unit_mul_left _ _
     (Polynomial.isUnit_C.mpr (amRF_commonDen_ne_zero p).isUnit))
 
+/-! ### Step 2 — the primitive-PRS gcd invariant over ℚ(x)
+Over the field ℚ(x) = `RatFunc ℚ`, each `primPRSgcd` step preserves `gcd (toPolyB ·) (toPolyB ·)` up to
+associates: a pseudo-remainder step is a Euclidean step up to a ℚ(x)-unit content factor (the
+pseudo-division multiplier), and `bprimitivePartX` divides out a ℚ[x]-content that is a ℚ(x)-unit. The
+content/multiplier nonvanishing and the exact-division facts enter as explicit hypotheses (they hold for
+real PRS runs; proving them unconditionally is the content-gcd theory left to the call site). -/
+
+/-- `liftRF (C c) = C (amRF c)`: the lift sends a constant ℚ[x]-coefficient to its ℚ(x) embedding. -/
+theorem liftRF_C (c : ℚ[X]) : liftRF (Polynomial.C c) = Polynomial.C (amRF c) := by
+  simp [liftRF, Polynomial.coe_mapRingHom, Polynomial.map_C]
+
+/-- **gcd is invariant under an associated right argument** in `(RatFunc ℚ)[X]`. -/
+theorem associated_gcd_right {A B B' : (RatFunc ℚ)[X]} (h : Associated B B') :
+    Associated (gcd A B) (gcd A B') := by
+  apply associated_of_dvd_dvd
+  · exact dvd_gcd (gcd_dvd_left A B) ((gcd_dvd_right A B).trans h.dvd)
+  · exact dvd_gcd (gcd_dvd_left A B') ((gcd_dvd_right A B').trans h.symm.dvd)
+
+/-- **The Euclidean-step gcd invariant** in `(RatFunc ℚ)[X]`: if `cu` is a unit and
+`cu · A = R + S · B` (a pseudo-division step up to the unit content `cu`), then `gcd A B` and `gcd B R`
+are associates — the classic invariant `gcd(A,B) = gcd(B, A mod B)` over the field. -/
+theorem associated_gcd_euclid_step {A B R S cu : (RatFunc ℚ)[X]} (hu : IsUnit cu)
+    (hrel : cu * A = R + S * B) : Associated (gcd A B) (gcd B R) := by
+  apply associated_of_dvd_dvd
+  · apply dvd_gcd (gcd_dvd_right A B)
+    have h1 : gcd A B ∣ cu * A - S * B :=
+      dvd_sub ((gcd_dvd_left A B).mul_left cu) ((gcd_dvd_right A B).mul_left S)
+    have hR : cu * A - S * B = R := by rw [hrel]; ring
+    rwa [hR] at h1
+  · apply dvd_gcd _ (gcd_dvd_left B R)
+    have hcuA : gcd B R ∣ cu * A := by
+      rw [hrel]; exact dvd_add (gcd_dvd_right B R) ((gcd_dvd_left B R).mul_left S)
+    exact (IsUnit.dvd_mul_left hu).mp hcuA
+
+/-- **`bpsremainder` lifts to a ℚ(x)[t] Euclidean relation**: there is a quotient `s` and a multiplier
+`c ∈ ℚ[x]` with `C (amRF (toPoly c)) · toPolyB p = toPolyB s · toPolyB q + toPolyB (bpsremainder fuel p
+q)` in `(RatFunc ℚ)[X]` — the lift of `toBPoly_bpsremainder` through the field embedding. -/
+theorem toPolyB_bpsremainder (fuel : ℕ) (p q : BPoly) :
+    ∃ (s : BPoly) (c : CPoly),
+      Polynomial.C (amRF (toPoly c)) * toPolyB p
+        = toPolyB s * toPolyB q + toPolyB (bpsremainder fuel p q) := by
+  obtain ⟨s, c, hsc⟩ := Compute.toBPoly_bpsremainder fuel p q
+  refine ⟨s, c, ?_⟩
+  have hl := congrArg liftRF hsc
+  simp only [map_add, map_mul] at hl
+  rw [liftRF_C] at hl
+  simpa [toPolyB] using hl
+
+/-- **`bprimitivePartX` lifts to a ℚ(x)-unit scaling**: when the ℚ[x]-content `g = bcontentX fuel p` is
+nonzero and divides every `x`-coefficient exactly, `C (amRF (toPoly g)) · toPolyB (bprimitivePartX fuel
+p) = toPolyB p` — the lift of `toBPoly_bprimitivePartX_exact`. -/
+theorem toPolyB_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
+    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    Polynomial.C (amRF (toPoly (bcontentX fuel p))) * toPolyB (bprimitivePartX fuel p)
+      = toPolyB p := by
+  have hb := Compute.toBPoly_bprimitivePartX_exact fuel p hg hgcn hrem
+  have hl := congrArg liftRF hb
+  simp only [map_mul] at hl
+  rw [liftRF_C] at hl
+  simpa [toPolyB] using hl
+
+/-- **`bprimitivePartX` is associated to its input over ℚ(x)**: under the content-exact hypotheses (and
+`toPoly g ≠ 0`), `Associated (toPolyB (bprimitivePartX fuel p)) (toPolyB p)` — stripping the ℚ[x]-content
+is a ℚ(x)-unit scaling, preserving the gcd up to associates. -/
+theorem associated_toPolyB_bprimitivePartX (fuel : ℕ) (p : BPoly)
+    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
+    (hg0 : toPoly (bcontentX fuel p) ≠ 0)
+    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    Associated (toPolyB (bprimitivePartX fuel p)) (toPolyB p) := by
+  refine ⟨(Polynomial.isUnit_C.mpr (amRF_toPoly_ne_zero hg0).isUnit).unit, ?_⟩
+  rw [← toPolyB_bprimitivePartX_exact fuel p hg hgcn hrem]
+  show toPolyB (bprimitivePartX fuel p) * Polynomial.C (amRF (toPoly (bcontentX fuel p)))
+      = Polynomial.C (amRF (toPoly (bcontentX fuel p))) * toPolyB (bprimitivePartX fuel p)
+  ring
+
+/-- **Per-run regularity of the primitive PRS** `PrimPRSRegular fuel P Q`: the inductive predicate
+collecting exactly what the `gcd` invariant of each `primPRSgcd` step needs — (i) the recursion reaches
+`bisZero Q = true` (termination), and at every non-terminal step, with `Pn = bnorm P`, `Qn = bnorm Q`,
+`prem = bpsremainder 60 Pn Qn`, `r = bprimitivePartX 30 prem`: (ii) a pseudo-division witness `(s, c)`
+with `C(amRF(toPoly c))·toPolyB Pn = toPolyB s·toPolyB Qn + toPolyB prem` and the multiplier
+`amRF(toPoly c)` a ℚ(x)-unit (`≠ 0`), and (iii) `bprimitivePartX` is a ℚ(x)-unit scaling
+(`Associated (toPolyB r) (toPolyB prem)`). These hold for honest PRS runs (positive-degree remainder
+chain over ℚ(x), nonzero pseudo-division multipliers, primitive-part content a unit); proving them
+unconditionally is the content-gcd theory deferred to the call site. -/
+def PrimPRSRegular : ℕ → BPoly → BPoly → Prop
+  | 0, P, Q =>
+    bisZero Q = true ∧ Associated (toPolyB (bprimitivePartX 30 P)) (toPolyB P)
+  | fuel + 1, P, Q =>
+    (bisZero (bnorm Q) = true ∧
+      Associated (toPolyB (bprimitivePartX 30 (bnorm P))) (toPolyB P)) ∨
+      (¬ bisZero (bnorm Q) = true ∧
+        (∃ (s : BPoly) (c : CPoly),
+          Polynomial.C (amRF (toPoly c)) * toPolyB (bnorm P)
+            = toPolyB s * toPolyB (bnorm Q)
+              + toPolyB (bpsremainder 60 (bnorm P) (bnorm Q))
+          ∧ amRF (toPoly c) ≠ 0) ∧
+        Associated (toPolyB (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q))))
+          (toPolyB (bpsremainder 60 (bnorm P) (bnorm Q))) ∧
+        PrimPRSRegular fuel (bnorm Q)
+          (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q))))
+
+/-- **Step 2 — the primitive-PRS gcd invariant** (the crux): for a regular run
+(`PrimPRSRegular fuel P Q`), the last nonzero primitive remainder `primPRSgcd fuel P Q` is, over the
+field ℚ(x), **associated to the polynomial gcd** of the inputs:
+`Associated (toPolyB (primPRSgcd fuel P Q)) (gcd (toPolyB P) (toPolyB Q))` in `(RatFunc ℚ)[X]`. The
+classic Euclidean invariant `gcd(P,Q) ~ gcd(Q, prem(P,Q))` (each step a ℚ(x)-unit-scaled Euclidean step),
+carried along the primitive PRS and bottoming out at `gcd(P, 0) ~ P` when the chain terminates. -/
+theorem associated_toPolyB_primPRSgcd :
+    ∀ (fuel : ℕ) (P Q : BPoly), PrimPRSRegular fuel P Q →
+      Associated (toPolyB (CPolyG.primPRSgcd fuel P Q)) (gcd (toPolyB P) (toPolyB Q)) := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro P Q hreg
+    obtain ⟨hQ, hprim⟩ := hreg
+    -- termination: Q = 0, result = bprimitivePartX 30 P
+    have hQ0 : toPolyB Q = 0 := (toPolyB_eq_zero_iff_bisZero Q).mpr hQ
+    show Associated (toPolyB (bprimitivePartX 30 P)) (gcd (toPolyB P) (toPolyB Q))
+    rw [hQ0]
+    exact hprim.trans (gcd_zero_right' (toPolyB P)).symm
+  | succ fuel ih =>
+    intro P Q hreg
+    show Associated (toPolyB (
+        let P := bnorm P; let Q := bnorm Q;
+        if bisZero Q then bprimitivePartX 30 P
+        else primPRSgcd fuel Q (bprimitivePartX 30 (bpsremainder 60 P Q))))
+      (gcd (toPolyB P) (toPolyB Q))
+    simp only
+    by_cases hQ : bisZero (bnorm Q) = true
+    · rw [if_pos hQ]
+      rw [PrimPRSRegular] at hreg
+      rcases hreg with ⟨_, hprim⟩ | ⟨hne, _⟩
+      · have hQ0 : toPolyB Q = 0 := by
+          rw [← toPolyB_bnorm]; exact (toPolyB_eq_zero_iff_bisZero _).mpr hQ
+        rw [hQ0]
+        exact hprim.trans (gcd_zero_right' (toPolyB P)).symm
+      · exact absurd hQ hne
+    · rw [if_neg hQ]
+      rw [PrimPRSRegular] at hreg
+      rcases hreg with ⟨h, _⟩ | ⟨_, ⟨s, c, hrel, hc0⟩, hassoc, hrec⟩
+      · exact absurd h hQ
+      -- the step: gcd(P,Q) ~ gcd(Q, r), then recurse
+      set Pn := bnorm P with hPn
+      set Qn := bnorm Q with hQn
+      set prem := bpsremainder 60 Pn Qn with hprem
+      set r := bprimitivePartX 30 prem with hr
+      have hih := ih Qn r hrec
+      -- gcd(toPolyB Pn, toPolyB Qn) ~ gcd(toPolyB Qn, toPolyB r)
+      have hstep : Associated (gcd (toPolyB Pn) (toPolyB Qn)) (gcd (toPolyB Qn) (toPolyB r)) := by
+        have heuc : Associated (gcd (toPolyB Pn) (toPolyB Qn))
+            (gcd (toPolyB Qn) (toPolyB prem)) :=
+          associated_gcd_euclid_step (A := toPolyB Pn) (B := toPolyB Qn) (R := toPolyB prem)
+            (S := toPolyB s) (Polynomial.isUnit_C.mpr hc0.isUnit)
+            (by linear_combination hrel)
+        exact heuc.trans (associated_gcd_right hassoc.symm)
+      -- assemble: result = primPRSgcd fuel Qn r ~ gcd(toPolyB Qn)(toPolyB r) ~ gcd(toPolyB Pn)(toPolyB Qn)
+      --   and gcd(toPolyB Pn)(toPolyB Qn) = gcd(toPolyB P)(toPolyB Q) since toPolyB bnorm = toPolyB
+      rw [show toPolyB P = toPolyB Pn by rw [hPn, toPolyB_bnorm],
+        show toPolyB Q = toPolyB Qn by rw [hQn, toPolyB_bnorm]]
+      exact hih.trans hstep.symm
+
 end DeepWiki.SymbolicIntegration
