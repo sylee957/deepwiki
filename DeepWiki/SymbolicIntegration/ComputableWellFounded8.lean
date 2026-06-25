@@ -872,6 +872,27 @@ def cPolyRischDEWf (Dt : CPolyG QFunNZ) (b c : CPolyG QFunNZ) (n : ℤ) : Option
   else
     cPolyRischDENoCancelWf Dt b c n
 
+/-- **Bridge — `cPolyRischDEWf` equals the fuel'd `cPolyRischDE` on a regular run** (composition). The two
+dispatchers share the same case-split on `deg(b)` vs `max(0, δ−1)` and the monomial type; given the
+per-branch own-loop agreements (`hnocancel`: the non-cancellation loop; `hprim`: the primitive
+cancellation loop; `hexp`: the hyperexponential cancellation loop), they agree. A pure case-split
+rewrite. -/
+theorem cPolyRischDEWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (b c : CPolyG QFunNZ) (n : ℤ)
+    (hnocancel : cPolyRischDENoCancelWf Dt b c n = CPolyG.cPolyRischDENoCancel Dt fuel b c n)
+    (hprim : cPolyRischDECancelPrimWf Dt b c n = CPolyG.cPolyRischDECancelPrim Dt fuel b c n)
+    (hexp : cPolyRischDECancelExpWf Dt b c n = CPolyG.cPolyRischDECancelExp Dt fuel b c n) :
+    cPolyRischDEWf Dt b c n = CPolyG.cPolyRischDE Dt fuel b c n := by
+  rw [cPolyRischDEWf, CPolyG.cPolyRischDE]
+  by_cases h1 : (cdegG b : ℤ) > max 0 ((cdegG Dt : ℤ) - 1)
+  · rw [if_pos h1, if_pos h1, hnocancel]
+  · rw [if_neg h1, if_neg h1]
+    by_cases h2 : (cdegG Dt : ℤ) = 0 ∧ (cdegG b : ℤ) = 0
+    · rw [if_pos h2, if_pos h2, hprim]
+    · rw [if_neg h2, if_neg h2]
+      by_cases h3 : (cdegG Dt : ℤ) = 1 ∧ (cdegG b : ℤ) = 0
+      · rw [if_pos h3, if_pos h3, hexp]
+      · rw [if_neg h3, if_neg h3, hnocancel]
+
 /-! ### The GOAL — the fuel-free full Risch DE solver `cRischDEWfFull` (all regimes)
 
 `cRischDEWf` (WF7) handled only the non-cancellation regime (its §6.5 polynomial stage hard-wired to
@@ -904,6 +925,37 @@ def cRischDEWfFull (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
       | some v =>
         let Q := caddG (cmulG α v) β
         some (cmulG Q h1, h0)
+
+/-- **Bridge — `cRischDEWfFull` equals `cRischDE` at sufficient fuel on any regular run** (transparent
+composition, **all regimes**). From the §6.2 stage agreements (`hnorm`: the normal denominator; `hspec`:
+the special denominator), the §6.3 degree bound (`cRdeBoundDegree` already fuel-free, `hbound`), the §6.4
+SPDE bridge (`hspde`), and the §6.5/§6.6 polynomial **dispatcher** agreement (`hpoly`: `cPolyRischDEWf =
+cPolyRischDE fuel` on the SPDE output) — `cRischDEWfFull Dt fnum fden gnum gden = cRischDE Dt fuel fnum fden
+gnum gden`. Unlike WF7's `cRischDEWf_eq` (non-cancellation only, with a hard-wired noncancel-dispatch
+hypothesis), this routes through the full dispatcher, so it covers the §6.6 cancellation regimes too. A
+pure composition rewrite: rewrite each stage to its fuel'd form and the two drivers collapse. -/
+theorem cRischDEWfFull_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden : CPolyG QFunNZ)
+    (hnorm : cRdeNormalDenominatorWf Dt fnum fden gnum gden
+      = CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden)
+    (hspec : ∀ a0 b0 c0, cRdeSpecialDenominatorWf Dt a0 b0 c0
+      = CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0)
+    (hbound : ∀ a b c, cRdeBoundDegree Dt 0 a b c = CPolyG.cRdeBoundDegree Dt fuel a b c)
+    (hspde : ∀ a b c n, cSPDEWf Dt a b c n = CPolyG.cSPDE Dt fuel a b c n)
+    (hpoly : ∀ bbar cbar (m : ℤ),
+      cPolyRischDEWf Dt bbar cbar m = CPolyG.cPolyRischDE Dt fuel bbar cbar m) :
+    cRischDEWfFull Dt fnum fden gnum gden = CPolyG.cRischDE Dt fuel fnum fden gnum gden := by
+  rw [cRischDEWfFull, CPolyG.cRischDE, hnorm]
+  rcases hn : CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden with _ | ⟨a0, b0, c0, h0⟩
+  · rfl
+  · simp only []
+    rw [hspec a0 b0 c0]
+    rcases hs : CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0 with ⟨a, b, c, h1⟩
+    simp only [hbound a b c, hspde a b c (CPolyG.cRdeBoundDegree Dt fuel a b c : ℤ)]
+    rcases hsp : CPolyG.cSPDE Dt fuel a b c (CPolyG.cRdeBoundDegree Dt fuel a b c : ℤ) with
+      _ | ⟨bbar, cbar, m, α, β⟩
+    · rfl
+    · simp only [hpoly bbar cbar m]
+      rcases hpr : CPolyG.cPolyRischDE Dt fuel bbar cbar m with _ | v <;> rfl
 
 end CPolyG
 
