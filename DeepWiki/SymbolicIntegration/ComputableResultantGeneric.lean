@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
+import Mathlib.LinearAlgebra.Lagrange
 
 /-! # Generic abstract correctness of the resultant/interpolation engine over `CFieldSpec`
 
@@ -626,6 +627,126 @@ theorem cresultantG_sample_eq_eval (Dt a d : CPolyG QFunNZ) (k : ℚ)
     (toPolyG amc).natDegree j le_rfl, ← hj,
     show (toPolyG d).coeff (toPolyG d).natDegree = (toPolyG d).leadingCoeff from rfl,
     hdmonic.leadingCoeff, one_pow, one_mul]
+
+/-- The tower fraction field's `Algebra ℚ` (matching the keystone instances in
+`ComputableIntegrateCorrect`/`towerLogPart_*`), so `algebraMap ℚ (CFieldSpec.K QFunNZ)` resolves. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K QFunNZ) :=
+  inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+/-- **`toK (ofConstNZ n)` is the constant rational function `n`**: the tower bridge sends the rational
+constant `ofConstNZ n` to `algebraMap ℚ (RatFunc ℚ) n` (the composite `ℚ → ℚ[x] → ℚ(x)`). -/
+theorem toK_ofConstNZ (n : ℚ) :
+    CFieldSpec.toK (ofConstNZ n) = algebraMap ℚ (CFieldSpec.K QFunNZ) n := by
+  show toQFunNZ (ofConstNZ n) = _
+  rw [toQFunNZ, ofConstNZ, ofNumDen, Compute.toQFun]
+  have h1 : Compute.toPoly ([n] : Compute.CPoly) = Polynomial.C n := by
+    rw [Compute.toPoly_cons, Compute.toPoly_nil]; simp
+  have h2 : Compute.toPoly ([1] : Compute.CPoly) = 1 := by
+    rw [Compute.toPoly_cons, Compute.toPoly_nil]; simp
+  rw [h1, h2, map_one, div_one]
+  show (algebraMap ℚ[X] (RatFunc ℚ)) (Polynomial.C n) = algebraMap ℚ (RatFunc ℚ) n
+  rw [IsScalarTower.algebraMap_eq ℚ ℚ[X] (RatFunc ℚ), RingHom.comp_apply, Polynomial.algebraMap_eq]
+
+/-- **`toK ∘ ofConstNZ` is injective**: distinct rational constants have distinct tower images
+(`algebraMap ℚ (RatFunc ℚ)` is injective). -/
+theorem toK_ofConstNZ_injective :
+    Function.Injective (fun n : ℚ => CFieldSpec.toK (ofConstNZ n)) := by
+  intro x y hxy
+  simp only [toK_ofConstNZ] at hxy
+  exact FaithfulSMul.algebraMap_injective ℚ (CFieldSpec.K QFunNZ) hxy
+
+open scoped Classical in
+/-- **The §5.6 residue resultant realizes the seed-generic abstract RT-resultant** (the polynomial match,
+combining steps 1–3): for monic `toPolyG d` with `deg(a − k·Δd) ≤ deg d` at each integer node and
+sufficient fuel, the computable `cResidueResultantTower Dt fuel a d` reads under `toPolyG` as the abstract
+`rtResultantSeed (toPolyG a)(toPolyG d)(Δd)`, `Δd = implicitDeriv (toPolyG Dt)(toPolyG d)`. Both are
+`K[z]`-polynomials of degree `≤ deg d` agreeing at the `deg d + 1` rational nodes `0, …, deg d`
+(`cresultantG_sample_eq_eval`), hence equal by Lagrange uniqueness
+(`Lagrange.eq_of_degrees_lt_of_eval_index_eq`). -/
+theorem toPolyG_cResidueResultantTower (Dt a d : CPolyG QFunNZ) (fuel : ℕ)
+    (hdmonic : (toPolyG d).Monic)
+    (hamc : ∀ k ∈ Finset.range (cdegG d + 1),
+      (toPolyG (cAmcDd Dt a d (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG d).natDegree)
+    (hfuel : ∀ k ∈ Finset.range (cdegG d + 1),
+      (cnormG d : List QFunNZ).length
+        + (cnormG (cAmcDd Dt a d (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel) :
+    toPolyG (cResidueResultantTower Dt fuel a d)
+      = rtResultantSeed (toPolyG a) (toPolyG d)
+          (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) := by
+  classical
+  -- the abscissa list `zs`, exactly as `cResidueResultantTower`'s inner `do`-block builds it
+  set zs : List ℚ := (do let k ← List.range (cdegG d + 1); pure (k : ℚ)) with hzs
+  -- the node points, exactly as `cResidueResultantTower` builds them
+  set pts : List (QFunNZ × QFunNZ) := zs.map (fun k : ℚ =>
+    (ofConstNZ k, cresultantG fuel d (cAmcDd Dt a d (ofConstNZ k)))) with hpts
+  have hcompute : cResidueResultantTower Dt fuel a d = cinterpolateG pts := rfl
+  -- `zs = (range (n+1)).map (↑·)`, a clean cast-mapped range
+  have hzsmap : zs = (List.range (cdegG d + 1)).map (fun k : ℕ => (k : ℚ)) := by
+    rw [hzs]; exact List.flatMap_pure_eq_map _ _
+  have hzsnodup : zs.Nodup := by
+    rw [hzsmap]
+    exact (List.nodup_range (n := cdegG d + 1)).map (fun a' b' h => by exact_mod_cast h)
+  have hfst : pts.map (fun p => CFieldSpec.toK p.1)
+      = zs.map (fun k : ℚ => CFieldSpec.toK (ofConstNZ k)) := by
+    rw [hpts, List.map_map]; rfl
+  have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
+    rw [hfst]
+    exact hzsnodup.map toK_ofConstNZ_injective
+  have hne : pts ≠ [] := by rw [hpts, hzsmap]; simp [List.range_succ]
+  have hlen : pts.length = cdegG d + 1 := by
+    rw [hpts, List.length_map, hzsmap, List.length_map, List.length_range]
+  -- `#zs.toFinset = cdegG d + 1` (zs nodup)
+  have hcard : zs.toFinset.card = cdegG d + 1 := by
+    rw [List.toFinset_card_of_nodup hzsnodup, hzsmap, List.length_map, List.length_range]
+  rw [hcompute]
+  symm
+  refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K QFunNZ) (ι := ℚ)
+    (s := zs.toFinset) (v := fun k => CFieldSpec.toK (ofConstNZ k))
+    (f := rtResultantSeed (toPolyG a) (toPolyG d)
+      (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)))
+    (g := toPolyG (cinterpolateG pts)) ?_ ?_ ?_ ?_
+  · -- `Set.InjOn` of the node map on `zs.toFinset`
+    intro a' _ b' _ h
+    exact toK_ofConstNZ_injective h
+  · -- `degree (rtResultantSeed) < #zs.toFinset`
+    rw [hcard, Nat.cast_withBot]
+    refine lt_of_le_of_lt (Polynomial.degree_le_natDegree) ?_
+    rw [Nat.cast_withBot, WithBot.coe_lt_coe]
+    have h1 := natDegree_rtResultantSeed_le (toPolyG a) (toPolyG d)
+      (Differential.implicitDeriv (toPolyG Dt) (toPolyG d))
+    have h2 := cdegG_eq_natDegree d
+    omega
+  · -- `degree (toPolyG (cinterpolateG pts)) < #zs.toFinset`
+    rw [hcard, Nat.cast_withBot]
+    have := degree_toPolyG_cinterpolateG_lt pts hne
+    rw [hlen] at this
+    simpa [Nat.cast_withBot] using this
+  · -- agree at the nodes `i ∈ zs.toFinset`, i.e. `i = (k : ℚ)` for some `k ∈ range (n+1)`
+    intro i hi
+    rw [List.mem_toFinset, hzsmap, List.mem_map] at hi
+    obtain ⟨k, hk, rfl⟩ := hi
+    rw [List.mem_range] at hk
+    have hmem : (ofConstNZ (k : ℚ), cresultantG fuel d (cAmcDd Dt a d (ofConstNZ (k : ℚ)))) ∈ pts := by
+      rw [hpts, hzsmap, List.mem_map]
+      exact ⟨(k : ℚ), List.mem_map.mpr ⟨k, List.mem_range.mpr hk, rfl⟩, rfl⟩
+    rw [eval_toPolyG_cinterpolateG pts hnodup hmem]
+    -- the sample equals the abstract eval
+    exact (cresultantG_sample_eq_eval Dt a d (k : ℚ) hdmonic
+      (hamc k (Finset.mem_range.mpr hk)) fuel (hfuel k (Finset.mem_range.mpr hk))).symm
+
+open scoped Classical in
+/-- Restatement: the §5.6 computable residue resultant `cResidueResultantTower` reads under `toPolyG` as
+the abstract seed-generic Rothstein–Trager resultant `rtResultantSeed`. -/
+example (Dt a d : CPolyG QFunNZ) (fuel : ℕ) (hdmonic : (toPolyG d).Monic)
+    (hamc : ∀ k ∈ Finset.range (cdegG d + 1),
+      (toPolyG (cAmcDd Dt a d (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG d).natDegree)
+    (hfuel : ∀ k ∈ Finset.range (cdegG d + 1),
+      (cnormG d : List QFunNZ).length
+        + (cnormG (cAmcDd Dt a d (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel) :
+    toPolyG (cResidueResultantTower Dt fuel a d)
+      = rtResultantSeed (toPolyG a) (toPolyG d)
+          (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) :=
+  toPolyG_cResidueResultantTower Dt a d fuel hdmonic hamc hfuel
 
 end CPolyG
 
