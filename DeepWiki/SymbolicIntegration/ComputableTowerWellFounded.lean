@@ -3,6 +3,8 @@ import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableWellFounded
 import DeepWiki.SymbolicIntegration.ComputableWellFounded2
 import DeepWiki.SymbolicIntegration.ComputableWellFounded3
+import DeepWiki.SymbolicIntegration.ComputableWellFounded4
+import DeepWiki.SymbolicIntegration.ComputableWellFounded5
 
 /-! # Fuel-free (well-founded) GENERIC tower integration engine
 
@@ -244,6 +246,211 @@ fuel-free integration pipeline instantiate at `α = QFunNZ` — the level-1 vali
 instance instCFracGcdCoreWfQFunNZ : CFracGcdCoreWf QFunNZ where
   cgcdFFRawCoreWf p q := CPolyG.cgcdFFWf p q
 
+/-! ## Part 2 — the integration pipeline's two remaining fuel-recursive bottoms
+
+Besides the fraction-free gcd (Part 1), the generic integration pipeline recurses in exactly two more
+places: the §3.5 split loop `cSplitFactorFastG` (`t`-degree drop) and Yun's main loop `cSqfreeYunFFGgo`
+(multiplicity counter). Both get fuel-free companions here, generic and `[CField α]`-only on the
+fuel-free fragment, replaying the `cSplitFactorFastWf` / `cSqfreeYunFFgoWf` patterns. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+
+/-- **The fuel-free generic `SplitFactor` step** `cstepGWf Dt p = cdivWf (cgcdFFCoreWf p (cmonomialDeriv Dt
+p)) (cgcdFFCoreWf p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)` computed
+with the fuel-free fraction-free gcd `cgcdFFCoreWf` and the fuel-free generic exact division `cdivWf`. The
+generic fuel-free companion of `cSplitFactorFastG`'s inline step. -/
+def cstepGWf (Dt : CPolyG α) (p : CPolyG α) : CPolyG α :=
+  cdivWf (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
+    (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p))
+
+/-- **Generic fuel-free splitting-factorization loop** (Bronstein §3.5) `cSplitFactorFastGWf Dt p =
+(pₙ, pₛ)`: the generic, fuel-free companion of `cSplitFactorFastG`. One step extracts `S = cstepGWf Dt p`;
+a constant `S` (`cdegG S = 0`) ⇒ `p` is normal, else recurse on the exact quotient `p/S = cdivWf p S` and
+accumulate `S` into the special part. True well-founded recursion on `(cnormG p).length` — **no fuel at
+runtime**; the recursion is taken only under the structural guard `(cnormG (cdivWf p S)).length <
+(cnormG p).length`, so `decreasing_by` is `assumption`. Over a real run the guard never fails (the
+non-constant special factor strictly drops the `t`-degree), so `cSplitFactorFastGWf` agrees with
+`cSplitFactorFastG`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic — runs at any tower level. -/
+def cSplitFactorFastGWf (Dt : CPolyG α) (p : CPolyG α) : CPolyG α × CPolyG α :=
+  let S := cstepGWf Dt p
+  if cdegG S = 0 then (p, [CField.one])
+  else
+    let pq := cdivWf p S
+    if (cnormG pq : List α).length < (cnormG p : List α).length then
+      let (qn, qs) := cSplitFactorFastGWf Dt pq
+      (qn, cmulG S qs)
+    else (p, [CField.one])   -- unreachable on a real run (the special factor drops the degree)
+termination_by (cnormG p).length
+decreasing_by assumption
+
+end CPolyG
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CFracGcdCoreWf α]
+
+/-- **Generic fuel-free Yun main loop** (fraction-free) `cSqfreeYunFFGgoWf fo b d`: the generic, fuel-free
+companion of `cSqfreeYunFFGgo`, recursing **structurally on the outer multiplicity counter** `fo` (so
+`decreasing_by` is automatic and the loop never stops early — unlike a degree-guarded loop, which truncates
+at skipped multiplicities). Stops when `b` is constant (`cdegG b = 0`) or the counter is exhausted, else
+emits `p = cmonicG (cgcdFFCoreWf b d)`, recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'` with `fo`
+decremented. The inner gcd/division leaves are the fuel-free `cgcdFFCoreWf`/`cdivWf` — **no fuel at
+runtime**; the counter `fo` is supplied once by the entry `cSqfreeYunFFGWf` as `cyunBoundG`. Agrees with
+`cSqfreeYunFFGgo` at the same counter `fo`. `[CField α] [CFracGcdCoreWf α]`-generic. -/
+def cSqfreeYunFFGgoWf : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
+  | 0, _, _ => []
+  | fo + 1, b, d =>
+    if cdegG b = 0 then []
+    else
+      let p := cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d)
+      let b' := cdivWf b p
+      let d' := csubG (cdivWf d p) (cderivG b')
+      p :: cSqfreeYunFFGgoWf fo b' d'
+
+/-- **Sufficient internal multiplicity-counter bound** `cyunBoundG p := (cnormG p).length`: a provably
+sufficient outer Yun counter for `cSqfreeYunFFGgoWf` on `p` (Yun's outer loop runs one step per
+multiplicity slot, the max multiplicity is `≤ deg p < (cnormG p).length`). Computed once from the input, so
+the caller passes **no fuel**. The generic analogue of `yunBound`. -/
+def cyunBoundG (p : CPolyG α) : ℕ := (cnormG p : List α).length
+
+/-- **Generic fuel-free Yun squarefree factorization in `t`** `cSqfreeYunFFGWf p = [p₁, …, pₘ]`: the
+generic, fuel-free companion of `cSqfreeYunFFG`. With `g = cgcdFFCoreWf p (cderivG p)`, `b₁ = cdivWf p g`,
+`d₁ = cderivG p/g − b₁'`, runs the fuel-free Yun loop `cSqfreeYunFFGgoWf (cyunBoundG p) b₁ d₁` — the outer
+counter is the internally-computed `cyunBoundG p`, so the caller passes **no fuel**. `p` is associate to
+`∏ᵢ pᵢ^i`; every gcd is the fuel-free `cgcdFFCoreWf`, every exact division the fuel-free `cdivWf` — **no
+fuel at runtime**. Correct even at skipped multiplicities. `[CField α] [CFracGcdCoreWf α]`-generic. -/
+def cSqfreeYunFFGWf (p : CPolyG α) : List (CPolyG α) :=
+  let g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
+  let b1 := cdivWf p g
+  let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
+  cSqfreeYunFFGgoWf (cyunBoundG p) b1 d1
+
+end CPolyG
+
+/-! ## Part 3 — the flat-composition pipeline (fuel-free leaf substitution)
+
+Everything past the three recursive bottoms is a flat composition over fuel'd leaves. The fuel-free
+companions substitute the fuel-free leaves — the generic ones reused verbatim (`cbezoutOneWf`,
+`cextendedEuclideanSplitWf`, `cdiophantineGWf`, `cHermiteReduceTowerInnerWf`, `cPrimitivePolyIntegrateWf`,
+`cdivWf`, the §5.6 `cresultantWf`/`cinterpolateG`/`cHornerG`) and the new ones from Parts 1–2 (`cgcdFFCoreWf`,
+`cSplitFactorFastGWf`, `cSqfreeYunFFGWf`). Each `…GWf` mirrors its `…G` original op-for-op with the fuel
+dropped — a pure composition, no new recursion. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+
+/-- **Generic fuel-free `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower:
+`canonicalRepresentationFastGWf Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
+The generic fuel-free companion of `canonicalRepresentationFastG`: divide `a = q·d + r` (`cdivmodWf`); split
+the denominator `d = dₛ·dₙ` (`cSplitFactorFastGWf`); Bézout-split `r` over the coprime `(dₙ, dₛ)`
+(`cextendedEuclideanSplitWf` with `cbezoutOneWf`, the already-generic fuel-free helpers). Every sub-op is a
+WF leaf — **no fuel at runtime**. Stated with `.1`/`.2` projections so the bridge rewrites cleanly. -/
+def canonicalRepresentationFastGWf (Dt : CPolyG α) (a d : CPolyG α) :
+    CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+  let qr := cdivmodWf a d
+  let dnds := cSplitFactorFastGWf Dt d
+  let uw := cbezoutOneWf dnds.1 dnds.2
+  let bc := cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2
+  (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
+
+/-- **Generic fuel-free transcendental Hermite reduction** `cHermiteReduceTowerGWf Dt a d = ((gnum, gden),
+(h_num, h_den))` (Bronstein §5.3, p.139) over the tower: the generic fuel-free companion of
+`cHermiteReduceTowerG`. Squarefree-factor `d` with the fuel-free `cSqfreeYunFFGWf`; for each factor `(v, i)`
+of multiplicity `i ≥ 2`, run the (already-generic) fuel-free inner loop `cHermiteReduceTowerInnerWf` (with
+`u = d/vⁱ` via the fuel-free `cdivWf`); recover `h_num` over the squarefree radical `Dstar` via `cdivWf`.
+The `Dstar`/`g` foldl is structural; every fuel'd sub-op is a WF leaf — **no fuel at runtime**. Stated with
+`.1`/`.2` projections so the bridge rewrites cleanly. -/
+def cHermiteReduceTowerGWf (Dt : CPolyG α) (a d : CPolyG α) :
+    (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+  let factors := cSqfreeYunFFGWf d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
+  let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
+  let g : CPolyG α × CPolyG α := factors.zipIdx.foldl
+    (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+      let i := idx + 1
+      if i ≤ 1 then gAcc
+      else
+        let Vi_pow := cpowG vi i
+        let u := cdivWf d Vi_pow
+        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])
+        (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))  -- gAcc + gloc
+    ([CField.zero], [CField.one])
+  let gprimeNum := csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2))
+  let gden2 := cmulG g.2 g.2
+  let resNum := csubG (cmulG a gden2) (cmulG d gprimeNum)
+  let resDen := cmulG d gden2
+  let hNum := cdivWf (cmulG resNum Dstar) resDen
+  ((cnormG g.1, cnormG g.2), (cnormG hNum, cnormG Dstar))
+
+/-! ### The generic fuel-free §5.6 logarithmic part (Rothstein–Trager)
+
+`cResidueResultantTowerGWf`/`cLogArgTowerGWf`/`cRationalResiduesGWf`/`cLogPartGWf` mirror the generic fuel'd
+`cResidueResultantTowerG`/etc., taking the residue candidates **as `α` elements** (the generic form), with
+the §5.6 leaves made fuel-free: the residue resultant samples through the (already-generic) fuel-free
+resultant `cresultantWf`, the log argument is the fuel-free `cgcdFFCoreWf`. The `z`-node list, `cinterpolateG`,
+the residue `filter`, and the `cHornerG` root test are all structural. -/
+
+/-- **Generic fuel-free residue resultant** `cResidueResultantTowerGWf Dt a d = R(z) = res_t(d, a − z·Dd)`,
+the generic fuel-free companion of `cResidueResultantTowerG`. Sample `R(zₖ) = res_t(d, a − zₖ·Dd)` at the
+natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`) with the **fuel-free** Euclidean-PRS resultant
+`cresultantWf`, then Lagrange-interpolate (`cinterpolateG`). The node list and interpolation are structural —
+**no fuel at runtime**. -/
+def cResidueResultantTowerGWf (Dt : CPolyG α) (a d : CPolyG α) : CPolyG α :=
+  let n := cdegG d
+  let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
+    let zk : α := cnatCastG k
+    (zk, cresultantWf d (cAmcDdG Dt a d zk)))
+  cinterpolateG pts
+
+/-- **Generic fuel-free log argument** `cLogArgTowerGWf Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`,
+the generic fuel-free companion of `cLogArgTowerG`: the **fuel-free** fraction-free gcd `cgcdFFCoreWf` of `d`
+and `a − c·Dd`. **No fuel at runtime**. -/
+def cLogArgTowerGWf (Dt : CPolyG α) (a d : CPolyG α) (c : α) : CPolyG α :=
+  CFracGcdCoreWf.cgcdFFCoreWf d (cAmcDdG Dt a d c)
+
+/-- **Generic fuel-free rational/field residues** `cRationalResiduesGWf Dt a d cands`: keep the candidates
+`c ∈ cands : List α` that are roots of the **fuel-free** residue resultant `R(z) = cResidueResultantTowerGWf
+Dt a d`, i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`). A structural `filter`, the residue
+resultant fuel-free — **no fuel at runtime**. -/
+def cRationalResiduesGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List α :=
+  let R := cResidueResultantTowerGWf Dt a d
+  cands.filter (fun c => CField.isZero (cHornerG R c))
+
+/-- **Generic fuel-free logarithmic part** `cLogPartGWf Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈
+residues]`: pair each residue `c : α` (from `cRationalResiduesGWf`) with its fuel-free log argument
+`cLogArgTowerGWf Dt a d c`. A structural composition of the fuel-free §5.6 pieces — **no fuel at runtime**. -/
+def cLogPartGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
+  (cRationalResiduesGWf Dt a d cands).map (fun c => (c, cLogArgTowerGWf Dt a d c))
+
+/-- **The generic fuel-free reduced-case integration capstone** `cIntegrateReducedGWf Dt a d cands`: for
+`f = a/d` reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTowerGWf`) to the rational
+part `g = gnum/gden` and the simple residual `h = h_num/h_den`, then take the residue log part of `h`
+(`cLogPartGWf`, residues drawn from `cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden),
+[(c, v)]⟩`. The generic fuel-free companion of `cIntegrateReducedG` — **no fuel at runtime**. -/
+def cIntegrateReducedGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+    IntegralResultG α :=
+  let H := cHermiteReduceTowerGWf Dt a d
+  let logs := cLogPartGWf Dt H.2.1 H.2.2 cands
+  ⟨(H.1.1, H.1.2), logs⟩
+
+/-- **★ THE HEADLINE — the generic fuel-free tower integral** `cIntegrateGWf Dt a d cands` (Bronstein Ch. 5,
+the reduced-case driver over the tower): the generic, fuel-free companion of `cIntegrateG`. Integrate
+`f = a/d ∈ α(t)` over `D = cmonomialDeriv Dt`, returning `some ⟨(gnum, gden), [(cᵢ, vᵢ)]⟩` with `∫ f =
+gnum/gden + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. Steps: (1) `canonicalRepresentationFastGWf` splits `f = fₚ + fₛ + fₙ`;
+(2) the simple normal part `fₙ = cn/dn` is integrated by `cIntegrateReducedGWf`; (3) if `fₚ` and the special
+part `b/dₛ` both vanish, return the simple-part integral, else `none`. A pure composition over the fuel-free
+pipeline — **no fuel at runtime**; `native_decide`-able over the noncomputable tower.
+`[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic — runs at any tower level. -/
+def cIntegrateGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let nrm := cIntegrateReducedGWf Dt cn dn cands
+  if cisZeroG fp && cisZeroG b then some nrm else none
+
+end CPolyG
+
 /-! ### `native_decide` smoke tests for the fuel-free fraction-free gcd `cgcdFFCoreWf`
 
 The whole fuel-free fraction-free gcd executes in native code over the generic tower carriers — every
@@ -267,5 +474,45 @@ example :
         [(ofConstNZ (-1)), ofConstNZ 1])
       (CFracGcdCore.cgcdFFCore 4 [(ofConstNZ (-1)), ofConstNZ 0, ofConstNZ 1]
         [(ofConstNZ (-1)), ofConstNZ 1])) = true := by native_decide
+
+/-! ### ★ THE HEADLINE `native_decide` validation — a FULL elementary tower integral, FUEL-FREE, at LEVEL 2
+
+Bronstein's Example 5.6.2 lifted to **tower level 2** (`CPolyG Lvl2 = ℚ(x)(t₁)[t₂]`, `Dt₂ = 1`), now run by
+the **fuel-free** generic integrator. The simple integrand `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` (assembled as
+`a/d`, `d = t₂² − 1`) has elementary antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`; the residues `±1/2`
+have log arguments `t₂ ± 1`. The whole fuel-free generic tower integrator — canonical split + Hermite
+rational part + Rothstein–Trager residue logs, with **no fuel at runtime** — computes over the tower at
+level 2 and the returned `g + ∑ cᵢ·log(vᵢ)` genuinely differentiates back to `f`. Reuses the level-2 example
+data of `ComputableTowerIntegrate`. -/
+
+/-- **The fuel-free recovered level-2 logarithmic part has length 2** (`native_decide`): the residue scan
+over `ℚ(x)(t₁)[t₂]` finds exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`) — the fuel-free
+`cIntegrateReducedGWf` capstone's `logs` list has length `2`. -/
+example :
+    (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+      towerIntLvl2Cands).logs.length = 2 := by native_decide
+
+/-- **★ A FULL elementary tower integral at LEVEL 2, FUEL-FREE, and `D(∫f) = f`** (`native_decide`, the
+headline deliverable). For `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` over ℚ(x)(t₁)(t₂) (tower **level 2**), the
+fuel-free generic capstone `cIntegrateReducedGWf` — canonical split, Hermite rational part, Rothstein–Trager
+residue logarithms, **no fuel at runtime** — returns an `IntegralResultG` whose antiderivative identity
+`D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly (`checkIdentityG`, cleared by `cisZeroG`). The WHOLE
+fuel-free elementary tower integral computes at level 2 and differentiates back to `f`. -/
+example :
+    CPolyG.checkIdentityG towerIntLvl2Dt
+      (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+        towerIntLvl2Cands)
+      towerIntLvl2Num towerIntLvl2Den = true := by native_decide
+
+/-- **★ The full fuel-free `cIntegrateGWf` driver runs end-to-end at level 2 and `D(∫f) = f`**
+(`native_decide`): on the same level-2 simple integrand (a pure normal element, `fₚ = fₛ = 0`), the
+assembled fuel-free top-level `cIntegrateGWf` — canonical split + reduced capstone, **no fuel at runtime** —
+returns `some res`, and `res` satisfies the antiderivative identity `D(res) = f` over ℚ(x)(t₁)[t₂]. This is
+the headline: the assembled GENERIC FUEL-FREE tower integral driver computes at level 2. -/
+example :
+    (match CPolyG.cIntegrateGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+        towerIntLvl2Cands with
+      | some res => CPolyG.checkIdentityG towerIntLvl2Dt res towerIntLvl2Num towerIntLvl2Den
+      | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration
