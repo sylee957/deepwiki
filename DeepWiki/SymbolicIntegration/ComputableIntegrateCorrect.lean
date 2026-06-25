@@ -466,3 +466,148 @@ theorem cIntegrate_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPoly
     rw [add_comm]
     exact hrecon
   exact hgoal
+
+/-! ### The headline — `D(cIntegrate f) = f` for ALL primitive-regime inputs (engine `checkIdentity` form)
+
+The all-inputs generalization of `integrate_example`'s `native_decide` check. In the primitive regime
+(`prem = 0`, special part `fₛ = 0`), the assembled top-level driver `cIntegrate` returns
+`some res`, and `res` satisfies the engine's cleared antiderivative identity
+`IntegralResult.checkIdentity Dt res a d = true` — i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` cleared of
+denominators, for *every* input (gated on the transparent regularity/exact-division/fuel preconditions and
+the §5.6 log-part residue match). The composition of `cIntegrate_field_identity` (the field-level identity)
+through `checkIdentity_of_field_identity` (the field ⟹ engine bridge). -/
+
+/-- **`cIntegrate` returns `some res` with `D(res) = f`** for ALL inputs in the primitive regime (the
+all-inputs generalization of `integrate_example`). Under the `if cisZeroG prem` branch
+(`hpremZero : cisZeroG (cPrimitivePolyIntegrate Dt fuel fp).2 = true`, the polynomial remainder vanishes),
+`cIntegrate Dt fuel a d cands = some res` with `res.rational = (gnum, gden)`, `res.logs = the rational-residue
+logs`, and the engine's cleared antiderivative identity `IntegralResult.checkIdentity Dt res a d = true`
+holds — gated on: the canonical-rep regularity (`hcanreg`), the Hermite exact-division/nonzero-divisor/fuel
+preconditions, the absent special part (`hfs0 : fₛ = 0`), all denominators nonzero, and the **§5.6 log-part
+residue match** `hLog` (the documented bridge gap, discharged abstractly in the primitive regime by
+`towerLogPart_eq_div_of_const_seed`). Composes `cIntegrate_field_identity` ⟹ `checkIdentity_of_field_identity`. -/
+theorem cIntegrate_checkIdentity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (cands : List ℚ)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    -- every log argument `vᵢ` of the rational-residue logs is nonzero (each is `gcd_t(hDen, …) ∣ hDen ≠ 0`)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    (hLog : logResidueSum Dt (cLogPart Dt fuel hNum hDen cands)
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)) :
+    ∃ res : IntegralResult, cIntegrate Dt fuel a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true := by
+  -- the assembled rational numerator/denominator (the driver's `cisZeroG prem` branch output)
+  set gnum := caddG (cmulG gnumH [CField.one]) (cmulG pq gdenH) with hgnumE
+  -- the result the driver returns in the `cisZeroG prem` branch
+  refine ⟨⟨(gnum, gdenH), cLogPart Dt fuel hNum hDen cands⟩, ?_, ?_⟩
+  · -- `cIntegrate ... = some res`: unfold the driver, using the `prem = 0` branch
+    rw [cIntegrate]
+    simp only [hcanon]
+    -- `nrm = cIntegrateReduced ... cn dn cands` has rational part `(gnumH, gdenH)` and logs `cLogPart …`
+    have hnrm : cIntegrateReduced Dt fuel cn dn cands
+        = ⟨(gnumH, gdenH), cLogPart Dt fuel hNum hDen cands⟩ := by
+      rw [cIntegrateReduced]; simp only [hHermite]
+    simp only [hnrm, hpoly, hpremZero, if_true, hgnumE]
+  · -- the cleared antiderivative identity, via the field-level capstone + the field ⟹ engine bridge
+    have hprem0 : toPolyG prem = 0 := (cisZeroG_iff prem).mp hpremZero
+    have hfield := cIntegrate_field_identity Dt fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum
+      hDen hHermite pq prem hpoly hprem0 (cLogPart Dt fuel hNum hDen cands) rfl gnum gdenH hgnumE
+      rfl hcanreg hfs0 gprimeNum resNum resDen hgprimeE hresNum hresDen hhNumE hq0 hfuelH hdvd
+      hgdenHne hHDenne hdnne hLog
+    -- `d` nonzero from regularity
+    have hdne : toPolyG d ≠ 0 := hcanreg.hd
+    exact checkIdentity_of_field_identity Dt ⟨(gnum, gdenH), cLogPart Dt fuel hNum hDen cands⟩ a d
+      hgdenHne hdne hlognz hfield
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- The HEADLINE (engine form): the all-inputs generalization of `integrate_example`'s `native_decide`
+-- `checkIdentity`. In the primitive regime (`prem = 0`, special part `fₛ = 0`), the assembled top-level
+-- `cIntegrate` returns `some res`, and `res` satisfies the engine's cleared antiderivative identity
+-- `D(res) = f` — for EVERY input — gated only on the transparent regularity/exact-division/fuel
+-- preconditions and the §5.6 log-part residue match `hLog`.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    (hLog : logResidueSum Dt (cLogPart Dt fuel hNum hDen cands)
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)) :
+    ∃ res : IntegralResult, cIntegrate Dt fuel a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true :=
+  cIntegrate_checkIdentity Dt fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum hDen hHermite pq
+    prem hpoly hpremZero hcanreg hfs0 gprimeNum resNum resDen hgprimeE hresNum hresDen hhNumE hq0
+    hfuelH hdvd hgdenHne hHDenne hdnne hlognz hLog
+
+-- The HEADLINE (field form): `D(g + ∑ᵢ cᵢ·log vᵢ) = f` over the genuine tower fraction field
+-- `RatFunc (RatFunc ℚ)` — the residue sum `∑ᵢ cᵢ·(Δvᵢ)/vᵢ` (the symbolic derivative of the logs) added
+-- to the quotient-rule derivative of the rational part `g` recovers `f = a/d` exactly.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (fp b ds cn dn gnumH gdenH hNum hDen pq prem : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem)) (hprem0 : toPolyG prem = 0)
+    (logs : List (ℚ × CPolyG QFunNZ)) (hlogsdef : logs = cLogPart Dt fuel hNum hDen cands)
+    (gnum gden : CPolyG QFunNZ)
+    (hgnum : gnum = caddG (cmulG gnumH [CField.one]) (cmulG pq gdenH)) (hgden : gden = gdenH)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hLog : logResidueSum Dt logs = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG gnum) / towerAlg (toPolyG gden))
+        + logResidueSum Dt logs
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) :=
+  cIntegrate_field_identity Dt fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum hDen hHermite pq
+    prem hpoly hprem0 logs hlogsdef gnum gden hgnum hgden hcanreg hfs0 gprimeNum resNum resDen
+    hgprimeE hresNum hresDen hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hLog
+
+#print axioms cHermiteReduceTower_field_identity
+#print axioms cPrimitivePolyIntegrate_field_identity
+#print axioms checkIdentity_fold_eq
+#print axioms checkIdentity_of_field_identity
+#print axioms cIntegrate_field_identity
+#print axioms cIntegrate_checkIdentity
+
+end DeepWiki.SymbolicIntegration
