@@ -62,6 +62,7 @@ import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
 import DeepWiki.SymbolicIntegration.ComputableGcdCorrect
+import DeepWiki.SymbolicIntegration.ComputableSplitFactorCorrect
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
 import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGcdCorrect
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
 /-! # Abstract correctness of the fraction-free `splitFactor` over ℚ(x)[t] — Bronstein §3.5
 The fraction-free splitting-factorization loop `cSplitFactorFast Dt fuel p` (`ComputableSplitFactorFast`)
@@ -94,3 +95,39 @@ theorem toPolyG_cdivFF_exact (fuel : ℕ) (p q : CPolyG QFunNZ)
   have hrem0 : toPolyG (cmodG fuel p q) = 0 :=
     eq_zero_of_dvd_of_degree_lt hrdvd hrdeg
   rw [hid, hrem0, add_zero]
+
+/-! ### Step 1.5 — `gcd(p, dp/dt) ∣ gcd(p, Dp)` (the denominator gcd divides the numerator gcd)
+The `SplitFactor` step `S = gcd(p, Dp)/gcd(p, dp/dt)` is an **exact** quotient: over a char-`0` field, the
+`d/dt`-derivative gcd `gcd(p, dp/dt)` divides the monomial-derivation gcd `gcd(p, Dp)`. This is the
+divisibility certificate that the cleared step-division is exact (and so its computable analogue's
+remainder vanishes). Reconstructed from the char-`0` gcd formula
+`associated_gcd_deriv_special_part` (numerator `~ defect·special`, denominator `~ defect`). -/
+
+open UniqueFactorizationMonoid Classical in
+/-- **The denominator gcd divides the numerator gcd** (char `0`): `gcd(p, dp/dt) ∣ gcd(p, Dp)` for the
+monomial derivation `D = implicitDeriv v`. Both gcds carry the multiplicity defect `∏ π^{m−1}`; the
+numerator additionally carries the special product `∏_{special} π`, while the `d/dt`-special filter is
+empty in char `0`, so the denominator is exactly the defect — which divides the numerator. The
+divisibility that makes the `SplitFactor` step quotient exact. -/
+theorem gcd_derivative_dvd_gcd_implicitDeriv {K : Type*} [Field K] [CharZero K] [Differential K]
+    (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
+    gcd p (derivative p) ∣ gcd p (Differential.implicitDeriv v p) := by
+  have hunit := fun π (hπ : π ∈ primeFactors p) => isUnit_natCast_count_primeFactors hπ
+  have hnum : Associated (gcd p (Differential.implicitDeriv v p))
+      ((∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1))
+        * ∏ π ∈ (primeFactors p).filter
+            (fun π => @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ π), π) :=
+    @associated_gcd_deriv_special_part K _ ⟨Differential.implicitDeriv v⟩ p hp hunit
+  have hfilt : (primeFactors p).filter
+      (fun π => @IsSpecial _ _ ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩ π) = ∅ := by
+    rw [Finset.filter_eq_empty_iff]
+    intro π hπ
+    exact not_isSpecial_derivative_of_irreducible
+      (irreducible_of_normalized_factor π (mem_primeFactors.mp hπ))
+  have hden : Associated (gcd p (derivative p))
+      (∏ π ∈ primeFactors p, π ^ ((normalizedFactors p).count π - 1)) := by
+    have h := @associated_gcd_deriv_special_part K _
+      ⟨(Polynomial.derivative' (R := K)).restrictScalars ℤ⟩ p hp hunit
+    rwa [hfilt, Finset.prod_empty, mul_one] at h
+  refine hden.dvd.trans ?_
+  exact (dvd_mul_right _ _).trans hnum.symm.dvd
