@@ -634,6 +634,85 @@ theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : CPoly)
     cgcdTerminates fuel a b :=
   cgcdTerminates_of_fuel fuel a b (le_of_lt ha) hb
 
+/-- **The Euclidean remainder never exceeds the dividend's length** (unconditional, any fuel):
+`(cnorm (cmod fuel a b)).length ≤ (cnorm a).length`. By induction on `fuel`: the base/`cisZero`/`deg a <
+deg b` branches return `[]` or `cnorm a`; the reducing branch replaces `a` by the strictly shorter
+`step = a − (lcA/lcB)·xᵏ·b` (`step_length_lt`), and the IH bounds the rest by `(cnorm step).length ≤
+(cnorm a).length`. The fuel-free companion to `cmod_length_lt` (which needs fuel for the *strict*
+sub-`b` bound). -/
+theorem cmod_length_le_left :
+    ∀ (fuel : ℕ) (a b : CPoly), (cnorm (cmod fuel a b)).length ≤ (cnorm a).length := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b
+    have : cmod 0 a b = cnorm a := by simp [cmod, cdivmod]
+    rw [this, cnorm_idem]
+  | succ fuel ih =>
+    intro a b
+    by_cases hbz : cisZero (cnorm b) = true
+    · have h2 : cmod (fuel + 1) a b = [] := by
+        rw [cmod, cdivmod]; simp only [hbz, if_true]
+      rw [h2]; simp
+    · by_cases hlen : (cnorm a).length < (cnorm b).length
+      · have h2 : cmod (fuel + 1) a b = cnorm a := by
+          rw [cmod, cdivmod]
+          simp only [hbz, Bool.false_eq_true, if_false, if_pos hlen]
+        rw [h2, cnorm_idem]
+      · have hbne : cnorm b ≠ [] := by simpa [cisZero_cnorm, cisZero] using hbz
+        have hane : cnorm a ≠ [] := by
+          rintro h; rw [h, List.length_nil] at hlen
+          exact hlen (List.length_pos_iff.mpr hbne)
+        have hstep := step_length_lt a b hane hbne (by omega)
+        have key : cmod (fuel + 1) a b
+            = cmod fuel (cnorm (csub (cnorm a)
+                (cmul (cshift ((cnorm a).length - (cnorm b).length) [clead a / clead b])
+                  (cnorm b)))) b := by
+          rw [cmod, cdivmod]
+          simp only [hbz, Bool.false_eq_true, if_false, if_neg hlen, clead_cnorm, cmod,
+            ← cdivmod_cnorm_right]
+        rw [key]
+        refine (ih _ b).trans ?_
+        rw [cnorm_idem]; omega
+
+/-- **`cgcdExt`'s gcd is no longer than its larger input** (the fold accumulator stays bounded,
+unconditional): `(cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length`. By
+induction on `fuel`: the base/`cisZero` branches return `cnorm a`; the recursive branch returns the gcd
+of `(b, cmod (fuel+1) a b)`, whose length is `≤ max (cnorm b).length (cnorm (cmod …)).length` by IH, and
+the remainder is no longer than `b` (`cmod_length_le_left`, applied to the divisor as dividend after the
+swap — here `cmod`'s dividend is the previous `a` but the recursion's first slot `b` dominates). Keeps
+the content-fold accumulator length under control so the per-step `cgcdTerminates` precondition stays
+dischargeable; no fuel hypothesis is needed because the output is always one of the (bounded) iterates. -/
+theorem cgcdExt_fst_length_le :
+    ∀ (fuel : ℕ) (a b : CPoly),
+      (cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b
+    rw [cgcdExt]
+    simp [cnorm_idem]
+  | succ fuel ih =>
+    intro a b
+    rw [cgcdExt]
+    by_cases hbz : cisZero b = true
+    · simp only [hbz, if_true, cnorm_idem]
+      exact le_max_left _ _
+    · simp only [hbz, Bool.false_eq_true, if_false]
+      rcases hqr : cdivmod (fuel + 1) a b with ⟨q, r⟩
+      have hr : r = cmod (fuel + 1) a b := by rw [cmod, hqr]
+      -- the remainder is bounded by the dividend `a`
+      have hra : (cnorm r).length ≤ (cnorm a).length := by
+        rw [hr]; exact cmod_length_le_left (fuel + 1) a b
+      have hih := ih b r
+      rcases hg : cgcdExt fuel b r with ⟨g, s, t⟩
+      rw [hg] at hih
+      simp only at hih ⊢
+      calc (cnorm g).length ≤ max (cnorm b).length (cnorm r).length := hih
+        _ ≤ max (cnorm a).length (cnorm b).length := by
+          rw [max_le_iff]
+          exact ⟨le_max_right _ _, le_trans hra (le_max_left _ _)⟩
+
 /-- **Quotient degree**: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
 `natDegree (cdiv …) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
 Supplies `resultant_add_mul_right`'s degree side-condition. -/
