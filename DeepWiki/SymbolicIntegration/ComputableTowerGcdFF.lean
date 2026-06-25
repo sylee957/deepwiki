@@ -580,4 +580,30 @@ recursive fraction-free `benchFFGcd2` (`82 → 103`, `benchFFGcd2_lt_benchExtGcd
 theorem benchExtGcd2_size_swells : gcdSize2 (benchExtGcd2 1) < gcdSize2 (benchExtGcd2 2) := by
   native_decide
 
+/-! ### Axioms and the precise remaining gap
+
+The deliverable witnesses are `native_decide`-validated (`propext, Classical.choice, Quot.sound` + the
+`native_decide` axiom), like the rest of the tower engine — abstract `Associated`-correctness of the
+generic FF gcd is the documented next step (mirror `ComputableGcdCorrect`'s
+`associated_toPolyB_bprimitivePartX` proof for `Compute.BPoly`, transported to `GBPoly`).
+
+**The precise remaining gap (level-2 flatness).** The generic FF gcd is **perfectly flat at level 1**
+(size `36`, `gBenchFFGcd_size_flat`) and **far better than Euclidean at level 2** (`103` vs `2.6·10¹¹`,
+`benchFFGcd2_lt_benchExtGcd2`), but its level-2 size is `82 → 103 → 3659` over degrees 3/4/5 — NOT
+constant. The growth is intrinsic to the **plain primitive PRS**: stripping the `β[s]`-*content* each step
+bounds the common-factor swell (which is what kills naive Euclid), but the *coprime* coefficient **degree**
+in the inner `ℚ(x)` direction still grows through the pseudo-division `lc`-power multiplications (exactly
+the caveat the bench docstring records for `cgcdNormGcd`). The cure is the **subresultant PRS**
+(Collins–Brown, already implemented over `Compute.BPoly` as `SubresultantCompute.subresPRS` with the exact
+Collins β-divisor division `bdivC`): swapping `cprimPRSgcdGen`'s primitive-PRS body for the subresultant
+recurrence — generalized off `Compute.BPoly` to `GBPoly B` the same way these `gb*` ops were — would bound
+the coefficient degree and flatten level 2. That generalization is the documented next step; the
+fraction-free strategy itself (clear-denominators + content-strip + the `CFracGcd` tower recursion) is in
+place and validated. -/
+
+#print axioms gBenchFFGcd_agrees_cgcdFF
+#print axioms gBenchFFGcd_size_flat
+#print axioms lvl2_cgcdFFGen_deg_one
+#print axioms benchFFGcd2_lt_benchExtGcd2
+
 end DeepWiki.SymbolicIntegration
