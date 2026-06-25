@@ -220,7 +220,135 @@ example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C
     logResidueSum Dt logs = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) :=
   logResidueSum_eq_div_of_residueData Dt htop hNum hDen logs s hden hA hb0 hkeysNodup hkeysImage harg
 
+/-! ### Closing the per-log-argument match `harg` — `toPolyG (cLogArgTower …) = ∏(X−α)`
+
+The `harg` hypothesis of `logResidueSum_eq_div_of_residueData` asks each concrete log argument
+`v = cLogArgTower Dt fuel hNum hDen c = cgcdFF fuel hDen (hNum − c·Δd)` to read as the abstract
+Rothstein–Trager factor `∏_{res α = c}(X−α)`. The concrete `cgcdFF` is `Associated` to the abstract
+`gcd(toPolyG hDen, …)` (`associated_toPolyG_cgcdFF_of_inputs`), the abstract gcd factors as the product
+(`gcd_nodal_eq_prod_residue_seed`), and both sides are **monic** (`cgcdFF` ends in `cmonicG`; a product of
+`X − Cα` is monic), so `Associated` upgrades to **equality** (`eq_of_monic_of_associated`). This discharges
+`harg` from the concrete `cgcdFF` regularity, leaving only the residue-set enumeration (`hkeysImage`/
+`hkeysNodup`) — the generic `cResidueResultantTower` root-finding correspondence — as the remaining gap. -/
+
+open DeepWiki.SymbolicIntegration.Compute in
+/-- **`cmonicG` produces a monic image** (over `RatFunc ℚ`): for `p` with `toPolyG p ≠ 0`, the monic
+normalization `cmonicG p` reads as the monic polynomial `C((toPolyG p).leadingCoeff⁻¹)·toPolyG p`. The
+`cgcdFF` output is `cmonicG`-normalized, so its `toPolyG` is monic — half of the `Associated ⟹ equal`
+upgrade. -/
+theorem monic_toPolyG_cmonicG (p : CPolyG QFunNZ) (hp : toPolyG p ≠ 0) :
+    (toPolyG (CPolyG.cmonicG p)).Monic := by
+  have hcz : CPolyG.cisZeroG (CPolyG.cnormG p) = false := by
+    rw [Bool.eq_false_iff]; intro h
+    exact hp ((toPolyG_cnormG p) ▸ (cisZeroG_iff (CPolyG.cnormG p)).mp h)
+  have hmon : CPolyG.cmonicG p = cscaleG (CField.inv (cleadG (CPolyG.cnormG p))) (CPolyG.cnormG p) := by
+    rw [CPolyG.cmonicG]; simp only [hcz, Bool.false_eq_true, if_false]
+  rw [hmon, toPolyG_cscaleG, toPolyG_cnormG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff,
+    toPolyG_cnormG, Polynomial.Monic.def, Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C,
+    inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
+
+/-- **`cmonicG` output is monic whenever nonzero**: if the monic normalization reads as a *nonzero*
+polynomial `toPolyG (cmonicG p) ≠ 0`, it is monic. (`cmonicG` of a `toPolyG`-zero input is `[]` with
+`toPolyG = 0`, so nonzero forces the nonzero branch.) The convenient form when nonzero-ness comes from an
+`Associated` to a nonzero target. -/
+theorem monic_toPolyG_cmonicG_of_ne (p : CPolyG QFunNZ) (hp : toPolyG (CPolyG.cmonicG p) ≠ 0) :
+    (toPolyG (CPolyG.cmonicG p)).Monic := by
+  refine monic_toPolyG_cmonicG p (fun h => hp ?_)
+  rw [CPolyG.cmonicG]
+  have hcz : CPolyG.cisZeroG (CPolyG.cnormG p) = true :=
+    (cisZeroG_iff (CPolyG.cnormG p)).mpr ((toPolyG_cnormG p).trans h)
+  simp only [hcz, if_true, toPolyG_nil]
+
+open scoped Classical in
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+/-- **The concrete log argument reads as the Rothstein–Trager product** (`harg` closed): in the
+primitive split regime `toPolyG hDen = Lagrange.nodal s id` with the monomial seed `Δd` nonzero at every
+root, the concrete `cLogArgTower Dt fuel hNum hDen c = cgcdFF fuel hDen (hNum − c·Δd)` reads as the
+abstract factor `∏_{α: A(α)/Δd(α) = toK(ofConstNZ c)}(X−α)` (`A = toPolyG hNum`). Composes the `cgcdFF`
+correctness `associated_toPolyG_cgcdFF_of_inputs` (Associated to `gcd(toPolyG hDen, toPolyG(hNum − c·Δd))`),
+the seed-generic gcd-product `gcd_nodal_eq_prod_residue_seed`, and the monic upgrade
+`eq_of_monic_of_associated` (`cgcdFF` monic via `monic_toPolyG_cmonicG`, the product monic via
+`monic_prod_of_monic`/`monic_X_sub_C`). This discharges each `harg` term from the concrete `cgcdFF`
+regularity hypothesis. -/
+theorem cLogArgTower_toPolyG_eq_prod (Dt : CPolyG QFunNZ) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0) (c : ℚ)
+    (hreg : PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    toPolyG (cLogArgTower Dt fuel hNum hDen c)
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+              = CFieldSpec.toK (ofConstNZ c)), (X - C α) := by
+  classical
+  -- the `cAmcDd` reads as `A − C c · Δd` over the field
+  have hamc : toPolyG (cAmcDd Dt hNum hDen (ofConstNZ c))
+      = toPolyG hNum - Polynomial.C (CFieldSpec.toK (ofConstNZ c))
+          * Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen) := by
+    rw [cAmcDd, cDd, toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmonomialDeriv]
+  -- the abstract gcd factors as the product (seed-generic Czichowski identity)
+  have hgcd : gcd (toPolyG hDen) (toPolyG (cAmcDd Dt hNum hDen (ofConstNZ c)))
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+              = CFieldSpec.toK (ofConstNZ c)), (X - C α) := by
+    rw [hamc, hden] at *
+    exact gcd_nodal_eq_prod_residue_seed s (toPolyG hNum)
+      (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)) hDd
+      (CFieldSpec.toK (ofConstNZ c))
+  -- the product `∏(X−α)` is monic
+  have hprodmonic : (∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+        / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+          = CFieldSpec.toK (ofConstNZ c)), (X - C α)).Monic :=
+    monic_prod_of_monic _ _ fun α _ => monic_X_sub_C α
+  -- `cLogArgTower` is `cgcdFF`, `Associated` to the abstract gcd, hence to the product
+  have hassoc : Associated (toPolyG (cLogArgTower Dt fuel hNum hDen c))
+      (∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+              = CFieldSpec.toK (ofConstNZ c)), (X - C α)) := by
+    rw [cLogArgTower, ← hgcd]
+    exact associated_toPolyG_cgcdFF_of_inputs fuel hDen (cAmcDd Dt hNum hDen (ofConstNZ c)) hreg
+  -- `cLogArgTower` is nonzero (Associated to the nonzero product `∏(X−α)`)
+  have hne : toPolyG (cLogArgTower Dt fuel hNum hDen c) ≠ 0 :=
+    (hassoc.symm.ne_zero_iff).mp hprodmonic.ne_zero
+  -- `cgcdFF` ends in `cmonicG`, so its nonzero `toPolyG` is monic; upgrade `Associated` to equality
+  have hgcdmonic : (toPolyG (cLogArgTower Dt fuel hNum hDen c)).Monic := by
+    have hne' := hne
+    rw [cLogArgTower, cgcdFF] at hne' ⊢
+    generalize (if Compute.bdeg (clearDenoms hDen)
+        < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+      then (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)), clearDenoms hDen)
+      else (clearDenoms hDen, clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) = PQ at hne' ⊢
+    obtain ⟨P, Q⟩ := PQ
+    exact monic_toPolyG_cmonicG_of_ne _ hne'
+  exact eq_of_monic_of_associated hgcdmonic hprodmonic hassoc
+
+open scoped Classical Differential in
+/-- Restatement: the concrete §5.6 log argument `cLogArgTower Dt fuel hNum hDen c` reads as the abstract
+Rothstein–Trager product `∏_{res α = c}(X−α)` over the split squarefree denominator. -/
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0) (c : ℚ)
+    (hreg : PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    toPolyG (cLogArgTower Dt fuel hNum hDen c)
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+              = CFieldSpec.toK (ofConstNZ c)), (X - C α) :=
+  cLogArgTower_toPolyG_eq_prod Dt fuel hNum hDen s hden hDd c hreg
+
 #print axioms logResidueSum_eq_grouped
 #print axioms logResidueSum_eq_div_of_residueData
+#print axioms monic_toPolyG_cmonicG
+#print axioms monic_toPolyG_cmonicG_of_ne
+#print axioms cLogArgTower_toPolyG_eq_prod
 
 end DeepWiki.SymbolicIntegration
