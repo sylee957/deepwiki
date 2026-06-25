@@ -70,6 +70,53 @@ theorem extendDeriv_algebraMap_of_deriv_eq_zero {c : K[X]} (hc : δ c = 0) :
     extendDeriv δ (algebraMap K[X] (RatFunc K) c) = 0 := by
   rw [extendDeriv_algebraMap, hc, map_zero]
 
+/-- **Constant-multiple rule** for `extendDeriv δ`: if `δ c = 0` (a residue coefficient is a
+δ-constant), then `extendDeriv δ (algMap c · y) = algMap c · extendDeriv δ y` — the residue scalar
+passes through the derivation. From the Leibniz rule with the constant factor annihilated. -/
+theorem extendDeriv_const_mul {c : K[X]} (hc : δ c = 0) (y : RatFunc K) :
+    extendDeriv δ (algebraMap K[X] (RatFunc K) c * y)
+      = algebraMap K[X] (RatFunc K) c * extendDeriv δ y := by
+  rw [Derivation.leibniz, extendDeriv_algebraMap_of_deriv_eq_zero δ hc, smul_zero, add_zero,
+    smul_eq_mul]
+
+/-! ### Generic log-sum Leibniz reduction (the differential half of the integral identity)
+
+The §2 `deriv_sum_residue_log` template, generalized to `extendDeriv δ`: modeling each `log gᵢ` by an
+abstract `L i` whose log-derivative is `(δ gᵢ)/gᵢ`, the derivative of `∑ᵢ cᵢ·log gᵢ` (δ-constant
+coefficients `cᵢ`) is the residue sum `∑ᵢ cᵢ·(δ gᵢ)/gᵢ`. -/
+
+/-- **Log-sum Leibniz reduction** (the §5.6 differential identity, all inputs): for δ-constant residue
+coefficients `c i` (`δ (c i) = 0`) and an abstract `log` model `L` with
+`extendDeriv δ (L i) = algMap (δ (g i)) / algMap (g i)` (the §5.6 per-factor log-derivative
+`extendDeriv_logDerivOf`), the derivative of the logarithmic part `∑ᵢ algMap(cᵢ)·L i` is the residue
+sum `∑ᵢ algMap(cᵢ)·algMap(δ gᵢ)/algMap(gᵢ)`. This is `D(∑ aᵢ log gᵢ) = ∑ aᵢ·(Δgᵢ)/gᵢ`, the exact
+analogue of §2's `deriv_sum_residue_log` over the tower derivation `extendDeriv δ`; it reduces the
+integral identity to matching the residue sum against the integrand `a/d` (the deferred
+splitting-field step). -/
+theorem extendDeriv_sum_const_logDerivOf {ι : Type*} (s : Finset ι) (c g : ι → K[X])
+    (hc : ∀ i ∈ s, δ (c i) = 0) (L : ι → RatFunc K)
+    (hL : ∀ i ∈ s, extendDeriv δ (L i)
+      = algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) :
+    extendDeriv δ (∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i) * L i)
+      = ∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i)
+          * (algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) := by
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  rw [extendDeriv_const_mul δ (hc i hi), hL i hi]
+
+/-- **Log-sum Leibniz reduction, `RatFunc.mk` form**: the same as `extendDeriv_sum_const_logDerivOf`
+but with each residue term written as the rational function `RatFunc.mk (δ gᵢ) gᵢ = (δ gᵢ)/gᵢ` (the
+form delivered by the keystone `extendDeriv_logDeriv_mk`), so the right side is literally
+`∑ᵢ algMap(cᵢ)·mk (δ gᵢ) gᵢ` — the §5.6 residue sum exactly as `cLogArgTower` produces its factors. -/
+theorem extendDeriv_sum_const_logDerivOf_mk {ι : Type*} (s : Finset ι) (c g : ι → K[X])
+    (hc : ∀ i ∈ s, δ (c i) = 0) (L : ι → RatFunc K)
+    (hL : ∀ i ∈ s, extendDeriv δ (L i)
+      = algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) :
+    extendDeriv δ (∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i) * L i)
+      = ∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i) * RatFunc.mk (δ (g i)) (g i) := by
+  rw [extendDeriv_sum_const_logDerivOf δ s c g hc L hL]
+  exact Finset.sum_congr rfl fun i _ => by rw [RatFunc.mk_eq_div]
+
 end Generic
 
 end DeepWiki.SymbolicIntegration
