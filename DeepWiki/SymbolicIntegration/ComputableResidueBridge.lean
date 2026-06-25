@@ -168,4 +168,59 @@ theorem logResidueSum_eq_grouped (Dt : CPolyG QFunNZ) (hNum : CPolyG QFunNZ)
   rw [hlistsum, ← hkeysImage]
   exact (List.sum_toFinset F hkeysNodup).symm
 
+open scoped Classical Differential in
+/-- **The abstract `hLog` discharge** (`logResidueSum Dt logs = hNum/hDen`, primitive regime): in the
+primitive regime `toPolyG Dt = C w₀` (`Dt ∈ k = ℚ(x)`), if the concrete denominator splits as
+`toPolyG hDen = Lagrange.nodal s id` over `RatFunc ℚ` (the split squarefree primitive simple element),
+the numerator degree is `< #s`, the normality `w₀ − α′ ≠ 0` holds at each root, and the concrete log
+list `logs` corresponds to the distinct-residue data (`hkeysNodup`/`hkeysImage`/`harg`, the residue-set
+match), then the concrete residue sum `logResidueSum Dt logs` equals the integrand
+`towerAlg(toPolyG hNum)/towerAlg(toPolyG hDen)`. Composes the list→Finset reindexing
+`logResidueSum_eq_grouped` with the proven abstract residue match `sum_residue_grouped_logDeriv_eq_div`
+(specialized to `δ = implicitDeriv (toPolyG Dt)`, primitive constancy `δ(X − Cα) = C(w₀ − α′)` via
+`implicitDeriv_X_sub_C`). This is exactly the `hLog` hypothesis of `cIntegrate_field_identity` /
+`cIntegrate_checkIdentity`, discharged given the residue-set correspondence. -/
+theorem logResidueSum_eq_div_of_residueData (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (hNum hDen : CPolyG QFunNZ)
+    (logs : List (ℚ × CPolyG QFunNZ)) (s : Finset (CFieldSpec.K QFunNZ))
+    (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hkeysNodup : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (harg : ∀ cv ∈ logs, toPolyG cv.2
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α
+              = CFieldSpec.toK (ofConstNZ cv.1)), (X - C α)) :
+    logResidueSum Dt logs = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) := by
+  classical
+  rw [logResidueSum_eq_grouped Dt hNum logs s hkeysNodup hkeysImage harg, hden]
+  -- the abstract residue match with the primitive constant seed `b α = w₀ − α′`
+  exact sum_residue_grouped_logDeriv_eq_div (Differential.implicitDeriv (toPolyG Dt))
+    (toPolyG hNum) s hA (fun α => w₀ - α′)
+    (fun α _ => by rw [implicitDeriv_X_sub_C, htop, ← C_sub]) hb0
+
+open scoped Classical Differential in
+/-- Restatement: the abstract `hLog` discharge — the concrete §5.6 residue sum equals the integrand in
+the primitive regime, given the residue-set correspondence. -/
+example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C w₀)
+    (hNum hDen : CPolyG QFunNZ) (logs : List (ℚ × CPolyG QFunNZ)) (s : Finset (CFieldSpec.K QFunNZ))
+    (hden : toPolyG hDen = Lagrange.nodal s id) (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hkeysNodup : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (harg : ∀ cv ∈ logs, toPolyG cv.2
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α
+              = CFieldSpec.toK (ofConstNZ cv.1)), (X - C α)) :
+    logResidueSum Dt logs = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) :=
+  logResidueSum_eq_div_of_residueData Dt htop hNum hDen logs s hden hA hb0 hkeysNodup hkeysImage harg
+
+#print axioms logResidueSum_eq_grouped
+#print axioms logResidueSum_eq_div_of_residueData
+
 end DeepWiki.SymbolicIntegration
