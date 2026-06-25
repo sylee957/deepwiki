@@ -789,4 +789,47 @@ theorem associated_toPolyG_cgcdFFCore (fuel : ℕ) (p q : CPolyG (QFunNZG β))
 
 end
 
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- The base case: the raw generic Euclidean gcd computes the abstract gcd up to associates (under
+-- termination), over ANY tower level — the bottom of the tower (α = ℚ, cgcdFFRawCore = (cgcdExtG _).1)
+-- and the content-gcd at any level both read through this.
+example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b : CPolyG α)
+    (hterm : cgcdTerminatesG fuel a b) :
+    Associated (toPolyG (cgcdExtG fuel a b).1) (gcd (toPolyG a) (toPolyG b)) :=
+  associated_toPolyG_cgcdExtG fuel a b hterm
+
+-- The crux: under a regular PRS run, the generic primitive PRS computes the gcd up to associates over
+-- β(s) = RatFunc (CFieldSpec.K β).
+example (cgcdB : CPolyG β → CPolyG β → CPolyG β) (fuel : ℕ) (P Q : GBPolyCore β)
+    (hreg : CPrimPRSGenRegular cgcdB fuel P Q) :
+    Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q)) :=
+  associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
+
+section
+variable [CFracGcdCore β]
+
+-- THE DELIVERABLE: the recursive tower fraction-free gcd `cgcdFFRawCore` computes the polynomial gcd of
+-- the inputs up to associates over β(s)[t] = (CFieldSpec.K (QFunNZG β))[X], under the per-step
+-- `CPrimPRSGenRegular` bundle a real run satisfies.
+example (fuel : ℕ) (p q : CPolyG (QFunNZG β))
+    (hreg : CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore fuel) fuel
+      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
+          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
+        then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
+      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
+          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
+        then CPolyG.cclearDenomsCoreG p else CPolyG.cclearDenomsCoreG q)) :
+    Associated (toPolyG (CFracGcdCore.cgcdFFRawCore fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFFRawCore fuel p q hreg
+
+end
+
+/-! ### Axioms — the gcd-correctness is `native_decide`-free and `sorry`-free -/
+
+#print axioms associated_toPolyG_cgcdExtG
+#print axioms associated_toGBPolyG_cprimPRSgcdGenCore
+#print axioms associated_toPolyG_cgcdFFRawCore
+#print axioms associated_toPolyG_cgcdFFCore
+
 end DeepWiki.SymbolicIntegration
