@@ -203,4 +203,56 @@ def liftGBPolyG (p : GBPoly β) : CPolyG (QFunNZG β) :=
 
 end CPolyG
 
+/-! ### `class CFracGcd α` — the recursive fraction-free gcd over `α[t]`
+
+The recursion that ties the tower, mirroring `CRischField` / `instCRischFieldQFunNZG` exactly:
+* **`class CFracGcd α`** (one method `cgcdFFGen : ℕ → CPolyG α → CPolyG α → CPolyG α`, the fraction-free,
+  monic-normalized gcd over `α[t]`).
+* **Base `instance CFracGcd ℚ`** — the bottom. A `t`-polynomial over `ℚ` is `ℚ[t]`; `ℚ` is a field, so the
+  content is trivial and the fraction-free gcd is the monic Euclidean gcd `cgcdMonicG`.
+* **Recursive `instance CFracGcd (QFunNZG β) [CFracGcd β]`** — clear denominators of both inputs into
+  `GBPoly β = (β[s])[t]`, run `cprimPRSgcdGen` with the content-gcd `cgcdB :=` the level-`β` `cgcdFFGen`
+  (recursing one level down, over `CPolyG β = β[s]`), lift back, monic-normalize. Bottoms at `CFracGcd ℚ`.
+
+This is `cgcdFF`'s strategy generalized off the concrete `ℚ(x)` carrier: the Euclidean work stays
+**fraction-free** in the GCD-domain `CPolyG β`, so the coefficients do not swell the way `cgcdExtG` over
+the fraction field `β(s)` does. -/
+
+/-- **Recursive fraction-free gcd over a tower level**: one method `cgcdFFGen fuel p q` = the
+fraction-free, monic-normalized gcd of `p, q ∈ CPolyG α = α[t]`. At the bottom (`α = ℚ`) it is the monic
+Euclidean gcd (trivial content over a field); at `α = QFunNZG β` it clears denominators into the
+GCD-domain `β[s]` and runs the primitive PRS, using the level-`β` `cgcdFFGen` as the content-gcd. The
+fraction-free mirror of `CRischField` — the recursion bottoms at `CFracGcd ℚ`. -/
+class CFracGcd (α : Type*) [CField α] where
+  /-- The fraction-free, monic-normalized gcd over `α[t]`. -/
+  cgcdFFGen : ℕ → CPolyG α → CPolyG α → CPolyG α
+
+/-- **Base `CFracGcd ℚ`** — the bottom of the tower. A `t`-polynomial over `ℚ` is `ℚ[t]`; since `ℚ` is a
+field the `ℚ`-content is a unit, so the fraction-free gcd is just the monic Euclidean gcd
+`CPolyG.cgcdMonicG` over `ℚ[t]`. The recursion's base case (`cgcdExtG`/`cmonicG`, small Euclid — no
+swell at the constant field). -/
+instance instCFracGcdQ : CFracGcd ℚ where
+  cgcdFFGen fuel p q := CPolyG.cgcdMonicG fuel p q
+
+section
+variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcd β]
+
+/-- **★ `CFracGcd (QFunNZG β)`** — the fraction-free gcd over `β(s)[t]`, **built by running
+`cprimPRSgcdGen` over the GCD-domain `CPolyG β = β[s]`** with the level-`β` `cgcdFFGen` as the content-gcd.
+This ties the tower recursion: clear denominators of both inputs into `GBPoly β = (β[s])[t]`, order them by
+`t`-degree (the PRS needs the larger first), run the primitive PRS (gcd up to `β[s]`-content) with
+`cgcdB := CFracGcd.cgcdFFGen` recursing one level down, lift the result back to `β(s)[t]` and
+monic-normalize. The Euclidean work is fraction-free in the GCD-domain `β[s]`, avoiding the `β(s)`-
+coefficient swell of `cgcdExtG`. Computable (`Prop`-erased subtype proofs), so it `native_decide`s;
+recurses strictly one level down, bottoming at `CFracGcd ℚ`. The fraction-free mirror of
+`instCRischFieldQFunNZG`. -/
+instance instCFracGcdQFunNZG : CFracGcd (QFunNZG β) where
+  cgcdFFGen fuel p q :=
+    let P := CPolyG.cclearDenomsG p
+    let Q := CPolyG.cclearDenomsG q
+    let (P, Q) := if GBPoly.gbdeg P < GBPoly.gbdeg Q then (Q, P) else (P, Q)
+    CPolyG.cmonicG (CPolyG.liftGBPolyG (cprimPRSgcdGen (CFracGcd.cgcdFFGen fuel) fuel P Q))
+
+end
+
 end DeepWiki.SymbolicIntegration
