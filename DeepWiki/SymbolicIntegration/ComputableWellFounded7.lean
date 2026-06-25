@@ -524,5 +524,44 @@ def cRischDEWf (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
 
 end CPolyG
 
+/-! ### `native_decide` — the fuel-free Risch DE solver on Bronstein Examples 6.5.1 + 6.4.1
+
+Re-runs `rischDE_solve_example` (`y = t + x`) and `rischDE_noSolution_example` (`none`) over the
+noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)), now **fuel-free** end-to-end: the whole §6 RDE pipeline
+(normal denominator → special denominator → degree bound → SPDE → §6.5 non-cancellation) computes with **no
+fuel at runtime** (the WF stages carry no fuel and no noncomputable bridge into the compiled body). Reuses
+the Example 6.1.2/6.5.1 data of `ComputableRischDE`. -/
+
+open CPolyG QFunNZ in
+/-- **Example 6.5.1 — the fuel-free Risch DE solver runs end-to-end over the tower** (`native_decide`,
+Bronstein Ch. 6, book p.208). For `Dy + (t²+1)y = t³ + (x+1)t² + t + (x+2)` over `ℚ(x)(t)`, `t = tan(x)`,
+`Dt = 1+t²`, the fuel-free `cRischDEWf` — `cRdeNormalDenominatorWf` → `cRdeSpecialDenominatorWf` →
+`cRdeBoundDegree` → `cSPDEWf` → `cPolyRischDENoCancelWf` — returns `some (ynum, yden)`, and the returned
+`y = ynum/yden` is verified to **actually solve** `Dy + f·y = g` by `rdeClearedCheck` (the cleared
+polynomial identity, not merely pinning the output): the book's solution is `y = t + x`. The fuel-free
+companion of `rischDE_solve_example`, the complete non-cancellation RDE pipeline computing an elementary
+solution over ℚ(x)[t] with **no fuel at runtime**. -/
+theorem rischDEWf_solve_example :
+    (match cRischDEWf rischDExampleDt rischDExampleFnum rischDExampleFden
+          rischDExampleG651num rischDExampleFden with
+      | some (ynum, yden) =>
+          rdeClearedCheck rischDExampleDt rischDExampleFnum rischDExampleFden
+            rischDExampleG651num rischDExampleFden ynum yden
+      | none => false) = true := by native_decide
+
+#print axioms rischDEWf_solve_example
+
+open CPolyG QFunNZ in
+/-- **Example 6.4.1 — the fuel-free RDE solver correctly reports NO solution** (`native_decide`, Bronstein
+§6.4, book p.204). The equation `Dy + (t²+1)y = 1/t²` (eq. 6.4, from `∫ e^{tan x}/tan²x dx`) has **no**
+solution `y ∈ k(t)`: the fuel-free `cSPDEWf` reaches `n = −1 < 0` with `c ≠ 0`, so `cRischDEWf` returns
+`none`, matching the book — the integral is not elementary. The fuel-free companion of
+`rischDE_noSolution_example`. -/
+theorem rischDEWf_noSolution_example :
+    (cRischDEWf rischDExampleDt rischDExampleFnum rischDExampleFden
+      rischDExampleGnum rischDExampleGden).isNone = true := by native_decide
+
+#print axioms rischDEWf_noSolution_example
+
 end DeepWiki.SymbolicIntegration
 
