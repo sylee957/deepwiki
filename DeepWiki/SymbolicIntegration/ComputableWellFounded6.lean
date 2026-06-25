@@ -219,4 +219,107 @@ end CPolyG
 -- The fuel-free §5.6 log-argument headline carries only the standard axioms.
 #print axioms CPolyG.toPolyG_cLogArgTowerWf_eq_prod
 
+/-! ### Target RT.3 — the fuel-free logarithmic part `cLogPartWf` (§5.6)
+
+`cLogPart Dt fuel a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ rational residues]` is a **composition**: the
+rational residues `cRationalResidues` (a structural `filter` of `cands` by `R(c) = 0`,
+`R = cResidueResultantTower`) then a structural map of `cLogArgTower`. The fuel-free companion substitutes
+the fuel-free residue resultant `cResidueResultantTowerWf` (into the filter) and the fuel-free log argument
+`cLogArgTowerWf` (into the map). -/
+
+namespace CPolyG
+
+/-- **Fuel-free rational residues** `cRationalResiduesWf Dt a d cands`: the fuel-free companion of
+`cRationalResidues` — keep the candidates `c ∈ cands` that are roots of the **fuel-free** residue resultant
+`R(z) = cResidueResultantTowerWf Dt a d`, i.e. `R(c) = 0` in ℚ(x) (tested by `cisZeroG [cevalG R
+(ofConstNZ c)]`). A structural `filter`, the residue resultant fuel-free — **no fuel at runtime**. -/
+def cRationalResiduesWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) : List ℚ :=
+  let R := cResidueResultantTowerWf Dt a d
+  cands.filter (fun c => cisZeroG [cevalG R (ofConstNZ c)])
+
+/-- **Fuel-free logarithmic part** `cLogPartWf Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ rational
+residues]`: the fuel-free companion of `cLogPart` — pair each rational residue `c` (from the fuel-free
+`cRationalResiduesWf`) with its fuel-free log argument `cLogArgTowerWf Dt a d c`. A structural composition
+of the fuel-free §5.6 pieces — **no fuel at runtime**; `native_decide`-able over the tower `QFunNZ`. -/
+def cLogPartWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) :
+    List (ℚ × CPolyG QFunNZ) :=
+  (cRationalResiduesWf Dt a d cands).map (fun c => (c, cLogArgTowerWf Dt a d c))
+
+end CPolyG
+
+/-! ### Bridge of `cLogPartWf` to the fuel'd `cLogPart`, and transport
+
+The fuel'd `cLogPart = (cRationalResidues …).map (fun c => (c, cLogArgTower … c))`. Under the residue-resultant
+bridge (`cResidueResultantTowerWf = cResidueResultantTower fuel`, so the filter predicates coincide and
+`cRationalResiduesWf = cRationalResidues fuel`) and the per-residue log-argument bridge
+(`cLogArgTowerWf … c = cLogArgTower fuel … c` for each kept residue), the two lists coincide. The
+`logResidueSum` transport `cLogPart_logResidueSum_eq_div` then carries over. -/
+
+namespace CPolyG
+
+/-- **Bridge — `cRationalResiduesWf` equals `cRationalResidues` at any sufficient fuel.** When the
+fuel-free residue resultant agrees with the fuel'd one (`hR : cResidueResultantTowerWf Dt a d =
+cResidueResultantTower Dt fuel a d`, from the per-node `cResidueResultantTowerWf_eq` bound), the filter
+predicates coincide, so `cRationalResiduesWf Dt a d cands = cRationalResidues Dt fuel a d cands`. -/
+theorem cRationalResiduesWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (hR : cResidueResultantTowerWf Dt a d = CPolyG.cResidueResultantTower Dt fuel a d) :
+    cRationalResiduesWf Dt a d cands = CPolyG.cRationalResidues Dt fuel a d cands := by
+  rw [cRationalResiduesWf, CPolyG.cRationalResidues, hR]
+
+/-- **Bridge — `cLogPartWf` equals `cLogPart` at any sufficient fuel.** From the residue-resultant bridge
+`hR` (so the rational-residue lists coincide, `cRationalResiduesWf_eq`) and the per-residue log-argument
+bridge `hLogArg` (`cLogArgTowerWf … c = cLogArgTower fuel … c` for every kept residue `c`),
+`cLogPartWf Dt a d cands = cLogPart Dt fuel a d cands`. The fuel bounds live only in `hR`/`hLogArg`;
+`cLogPartWf` carries none. -/
+theorem cLogPartWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (hR : cResidueResultantTowerWf Dt a d = CPolyG.cResidueResultantTower Dt fuel a d)
+    (hLogArg : ∀ c ∈ cRationalResiduesWf Dt a d cands,
+      cLogArgTowerWf Dt a d c = CPolyG.cLogArgTower Dt fuel a d c) :
+    cLogPartWf Dt a d cands = CPolyG.cLogPart Dt fuel a d cands := by
+  rw [cLogPartWf, CPolyG.cLogPart, ← cRationalResiduesWf_eq Dt fuel a d cands hR]
+  -- map over the same residue list; the per-entry pair agrees by `hLogArg`
+  apply List.map_congr_left
+  intro c hc
+  rw [hLogArg c hc]
+
+end CPolyG
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- **`cLogPartWf` realizes the integrand `hNum/hDen` as its residue sum** (transported, fuel-free): in the
+primitive split-squarefree regime, the fuel-free logarithmic part's residue sum equals the integrand over
+the tower fraction field, `logResidueSum Dt (cLogPartWf Dt hNum hDen cands) = hNum/hDen`. The fuel-free
+companion of `cLogPart_logResidueSum_eq_div`, transported through the bridge `cLogPartWf_eq` (the
+residue-resultant + per-residue log-argument fuel agreements `hR`/`hLogArg`). -/
+theorem cLogPartWf_logResidueSum_eq_div (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ) (cands : List ℚ)
+    (hR : cResidueResultantTowerWf Dt hNum hDen = CPolyG.cResidueResultantTower Dt fuel hNum hDen)
+    (hLogArg : ∀ c ∈ cRationalResiduesWf Dt hNum hDen cands,
+      cLogArgTowerWf Dt hNum hDen c = CPolyG.cLogArgTower Dt fuel hNum hDen c)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hkeysNodup : ((CPolyG.cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : ((CPolyG.cLogPart Dt fuel hNum hDen cands).map
+        (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (hreg : ∀ c ∈ CPolyG.cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    logResidueSum Dt (cLogPartWf Dt hNum hDen cands)
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) := by
+  rw [cLogPartWf_eq Dt fuel hNum hDen cands hR hLogArg]
+  exact cLogPart_logResidueSum_eq_div Dt htop fuel hNum hDen cands s hden hA hb0 hDd hkeysNodup
+    hkeysImage hreg
+
+-- The fuel-free §5.6 log-part residue-sum headline carries only the standard axioms.
+#print axioms cLogPartWf_logResidueSum_eq_div
+
 end DeepWiki.SymbolicIntegration
