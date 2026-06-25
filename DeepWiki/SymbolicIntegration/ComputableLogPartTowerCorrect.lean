@@ -183,6 +183,50 @@ theorem extendDeriv_logPart_eq_of_residue_match {ι : Type*} (s : Finset ι) (c 
 
 end Generic
 
+/-! ### The residue match in the primitive (`δt ∈ k`) case (discharging `hmatch`)
+
+The residue sum `∑ᵢ cᵢ·(δ gᵢ)/gᵢ` equals the integrand `a/d` **only when** `δ` sends each linear
+factor `X − α` (over the splitting field) to a *constant* — equivalently `δX = δt` is a constant of
+`t`, the **primitive/Liouvillian monomial condition** `Dt ∈ k`. This is exactly Bronstein's §5.6
+regime (Example 5.6.2 has `Dt = 1/x ∈ k = ℚ(x)`): then `δ(X − Cα) = C(b α)` is a genuine constant, so
+`cᵢ·(δ gᵢ)/gᵢ` is *proper* and the §2 partial fraction `ratFunc_eq_sum_residue_div` applies after the
+per-root scalar identity `res(α)·b α = A(α)/d'(α)` (from `deriv_eval_at_simple_root` +
+`eval_derivative_X_sub_C_mul`). For a *non-constant* `δt` (e.g. `δt = t`, the hyperexponential case)
+the residue sum exceeds `a/d` by a nonzero **polynomial part**, so the unqualified `hmatch` is **false**
+there — the constancy hypothesis `hb` below is the precise dividing line. -/
+
+section ResidueMatch
+open Polynomial
+variable {K : Type*} [Field K] [Algebra ℚ K] (δ : Derivation ℤ K[X] K[X])
+
+omit [Algebra ℚ K] in
+/-- **The per-root scalar identity** (steps 3+4 of the residue match): at a simple root `α` of
+`d = nodal s id`, if the monomial derivation sends the linear factor to the *constant* `δ(X − Cα) = C b`
+with `b ≠ 0` (the primitive condition `δt ∈ k`, normality), then the §5.6 residue `A(α)/(δ d)(α)` scaled
+by `b` equals the §2 d/dx residue `A(α)/d'(α)`: `(A(α)/(δ d)(α))·b = A(α)/d'(α)`. From
+`deriv_eval_at_simple_root` (`(δ d)(α) = (δ(X−Cα))(α)·E(α)`) and `eval_derivative_X_sub_C_mul`
+(`E(α) = d'(α)`), so `(δ d)(α) = b·d'(α)` and the `b` cancels. -/
+theorem residue_seed_mul_eq_residue_derivative (A : K[X]) (s : Finset K) {α b : K} (hα : α ∈ s)
+    (hb : δ (X - C α) = C b) (hb0 : b ≠ 0) :
+    A.eval α / (δ (Lagrange.nodal s id)).eval α * b
+      = A.eval α / eval α (derivative (Lagrange.nodal s id)) := by
+  classical
+  set d := Lagrange.nodal s id with hd
+  -- `d = (X − α)·E` where `E = d / (X − α) = ∏_{j≠α}(X − j)`
+  have hdvd : (X - C α) ∣ d := by
+    rw [hd, Lagrange.nodal_eq]; exact Finset.dvd_prod_of_mem _ hα
+  set E := d / (X - C α) with hE
+  have hfac : d = (X - C α) * E := (EuclideanDomain.mul_div_cancel' (X_sub_C_ne_zero α) hdvd).symm
+  -- `(δ d)(α) = b·E(α)` via the simple-root bridge `deriv_eval_at_simple_root` and `hb`
+  have hδd : (δ d).eval α = b * E.eval α := by
+    rw [hfac, deriv_eval_at_simple_root δ E α, hb, eval_C]
+  -- `d'(α) = E(α)` (the d/dx residue denominator)
+  have hd' : eval α (derivative d) = E.eval α := by rw [hfac, eval_derivative_X_sub_C_mul]
+  rw [hδd, hd']
+  field_simp
+
+end ResidueMatch
+
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
 Taking the base derivation `δ = derivative'` (Mathlib's `Polynomial.derivative` as a `Derivation`),
 `extendDeriv derivative'` is the d/dx derivation on `RatFunc K` — equal to the repo's `ratFuncDeriv`
