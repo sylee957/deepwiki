@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDE
+import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 6: The Risch Differential Equation
@@ -119,11 +120,12 @@ routing `Dq + b·q = c` to the non-cancellation solver or the primitive/hyperexp
 solvers by monomial type and `deg(b)` (Lemma 6.5.1). -/
 noncomputable abbrev alg_6_5_polyRischDE := @cPolyRischDE
 
-/-- **The full Risch DE solver**: the computable `cRischDE Dt fuel fnum fden gnum gden` over the tower,
-chaining normal denominator (§6.2) → special denominator (§6.2) → degree bound (§6.3) → SPDE (§6.4) →
-PolyRischDE (§6.5/§6.6), reconstructing `y` solving `Dy + f·y = g`, or `none`. Validated end-to-end on
-Ex 6.5.1 / 6.4.1; abstract correctness deferred. -/
-noncomputable abbrev alg_6_rischDE := @cRischDE
+/-- **The full Risch DE solver**: the computable `cRischDEG Dt fuel fnum fden gnum gden` (the canonical
+generic engine, here at `α = QFunNZ = ℚ(x)`) over the tower, chaining normal denominator (§6.2) →
+special denominator (§6.2) → degree bound (§6.3) → SPDE (§6.4) → PolyRischDE (§6.5/§6.6), reconstructing
+`y` solving `Dy + f·y = g`, or `none`. The generic mirror has its own cleared-identity correctness
+`cRischDEG_rdeCleared`; validated end-to-end on Ex 6.5.1 / 6.4.1. -/
+noncomputable abbrev alg_6_rischDE := cRischDEG (α := QFunNZ)
 
 /-- **Example 6.5.1** (§6.5, p.208): the full `cRischDE` solves `Dy + (t²+1)y = t³+(x+1)t²+t+(x+2)`
 (`t = tan x`) end-to-end, returning `y = t + x`, verified to *actually solve* the equation by the
