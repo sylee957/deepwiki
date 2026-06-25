@@ -222,3 +222,162 @@ theorem associated_toPolyG_cstep (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG Q
   have hmul : Associated (toPolyG (cstep Dt fuel p) * toPolyG Dn) (splitFactorStep v P * gD) := by
     rw [← hexact, hstepmul]; exact aN
   exact Associated.of_mul_right hmul aD hDn0
+
+/-! ### Step 3 — the loop output is a book-faithful splitting factorization
+By induction on fuel mirroring `splitFactorAux_isSplittingFactorizationGen`. At each non-terminal node
+the computable `S = cstep` divides `toPolyG p` exactly (the abstract step divides, transported through
+`associated_toPolyG_cstep`), exact division keeps the product invariant
+`toPolyG p = toPolyG S · toPolyG (p/S)`, and the abstract step facts pushed across the association supply
+`IsSpecial`/`IsNormalSqfree`. The terminal `cdegG S = 0` node is `IsNormalSqfree` from
+`isNormalSqfree_of_splitFactorStep_natDegree_zero`. -/
+
+/-- **Recursive loop-regularity bundle** `CSplitFactorFastRegular Dt fuel p`: mirrors the
+`cSplitFactorFast` recursion — at each node the step is regular (`CStepRegular`) and the dividend `t`-list
+is short enough that exact division `cdivFF (fuel+1) p S` is fully reduced
+(`(cnormG p).length ≤ fuel + 1`); if the step is non-constant, the same holds recursively on `p/S`. The
+transparent per-node preconditions a real `cSplitFactorFast` run on a fully-split input satisfies. -/
+def CSplitFactorFastRegular (Dt : CPolyG QFunNZ) : ℕ → CPolyG QFunNZ → Prop
+  | 0, _ => True
+  | fuel + 1, p =>
+    CStepRegular Dt (fuel + 1) p ∧
+      (cnormG p : List QFunNZ).length ≤ fuel + 1 ∧
+      (cdegG (cstep Dt (fuel + 1) p) = 0 ∨
+        CSplitFactorFastRegular Dt fuel
+          (CPolyG.cdivFF (fuel + 1) p (cstep Dt (fuel + 1) p)))
+
+/-- `toPolyG [CField.one] = 1`: the computable unit reads as the polynomial `1`. -/
+theorem toPolyG_cone : toPolyG ([CField.one] : CPolyG QFunNZ) = 1 := by
+  rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+
+/-- **`IsNormalSqfree` is an associate invariant**: `Associated p q → IsNormalSqfree p → IsNormalSqfree q`
+(over a `CommRing` with a `Differential`). Divisibility into `p` and into `q` agree up to the unit, so the
+squarefree factors coincide. -/
+theorem isNormalSqfree_of_associated {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : Associated p q) (hp : IsNormalSqfree p) : IsNormalSqfree q :=
+  fun r hsf hrq => hp r hsf (hrq.trans h.symm.dvd)
+
+/-- **`natDegree` is associate-invariant**: `Associated a b → a.natDegree = b.natDegree` in `K[X]`. -/
+theorem natDegree_eq_of_associated {K : Type*} [Field K] {a b : K[X]} (h : Associated a b) :
+    a.natDegree = b.natDegree :=
+  Polynomial.natDegree_eq_of_degree_eq (Polynomial.degree_eq_degree_of_associated h)
+
+open Classical in
+/-- **Step 3 — the loop output is a book-faithful splitting factorization** (the assembly): for
+`toPolyG p ≠ 0`, fuel exceeding the `t`-degree (`(toPolyG p).natDegree ≤ fuel`), and a regular run
+(`CSplitFactorFastRegular`), the loop output `(pₙ, pₛ) = cSplitFactorFast Dt fuel p`, read through
+`toPolyG` over the field ℚ(x) = `RatFunc ℚ`, satisfies `IsSplittingFactorizationGen (toPolyG p)
+(toPolyG pₛ) (toPolyG pₙ)` w.r.t. the monomial derivation `D` (`Dt = toPolyG Dt`) — `toPolyG p =
+toPolyG pₛ · toPolyG pₙ`, `pₛ` special, every squarefree factor of `pₙ` normal. -/
+theorem cSplitFactorFast_isSplittingFactorizationGen :
+    ∀ (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ), toPolyG p ≠ 0 →
+      (toPolyG p).natDegree ≤ fuel →
+      CSplitFactorFastRegular Dt fuel p →
+      @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+        (toPolyG p)
+        (toPolyG (CPolyG.cSplitFactorFast Dt fuel p).2)
+        (toPolyG (CPolyG.cSplitFactorFast Dt fuel p).1) := by
+  intro Dt fuel
+  haveI : CharZero (CFieldSpec.K QFunNZ) := inferInstanceAs (CharZero (RatFunc ℚ))
+  letI : Differential (CFieldSpec.K QFunNZ)[X] := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+  induction fuel with
+  | zero =>
+    intro p hp hdegp _
+    -- fuel 0 ⇒ p constant; cSplitFactorFast 0 p = (p, [one]); a constant is normal-sqfree
+    have hpdeg0 : (toPolyG p).natDegree = 0 := Nat.le_zero.mp hdegp
+    show IsSplittingFactorizationGen (toPolyG p) (toPolyG ([CField.one] : CPolyG QFunNZ)) (toPolyG p)
+    refine ⟨by rw [toPolyG_cone, one_mul], by rw [toPolyG_cone]; exact isSpecial_one, ?_⟩
+    -- `toPolyG p` is a nonzero constant, hence a unit, hence normal-sqfree
+    have hunit : IsUnit (toPolyG p) := Polynomial.isUnit_iff_degree_eq_zero.mpr
+      (by rw [Polynomial.degree_eq_natDegree hp, hpdeg0]; rfl)
+    exact (isNormal_of_isUnit hunit).isNormalSqfree
+  | succ fuel ih =>
+    intro p hp hdegp hreg
+    obtain ⟨hstepreg, hpfuel, hbranch⟩ := hreg
+    set S := cstep Dt (fuel + 1) p with hSdef
+    -- abstract the (giant) computable `toPolyG S` behind an OPAQUE variable `T` (`clear_value`), so the
+    -- `Associated` projections below never `whnf` the `cstep`/`cdivFF` term; bridge via `hT`.
+    have haS0 : Associated (toPolyG S) (splitFactorStep (toPolyG Dt) (toPolyG p)) :=
+      associated_toPolyG_cstep Dt (fuel + 1) p hp hstepreg
+    have hcdeg0 : cdegG S = (toPolyG S).natDegree := cdegG_eq_natDegree S
+    have hScn0 : (toPolyG S = 0) ↔ (cnormG S = []) := (cnormG_eq_nil_iff S).symm
+    obtain ⟨T, hT⟩ : ∃ T, toPolyG S = T := ⟨toPolyG S, rfl⟩
+    rw [hT] at haS0 hcdeg0 hScn0
+    have haS : Associated T (splitFactorStep (toPolyG Dt) (toPolyG p)) := haS0
+    -- the abstract step is nonzero, so `T ≠ 0`
+    have hstepne : splitFactorStep (toPolyG Dt) (toPolyG p) ≠ 0 := by
+      have hdvd := splitFactorStep_dvd (toPolyG Dt) hp
+      intro h0
+      exact hp (eq_zero_of_zero_dvd (h0 ▸ hdvd))
+    have hSne : T ≠ 0 := fun h => hstepne (eq_zero_of_zero_dvd (h ▸ haS.dvd))
+    -- `natDegree T = natDegree (abstract step)` (associate-invariant)
+    have hSnd : T.natDegree = (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree :=
+      natDegree_eq_of_associated haS
+    -- the computable loop step matches `S`
+    have hloop : CPolyG.cSplitFactorFast Dt (fuel + 1) p
+        = (if cdegG S = 0 then (p, [CField.one])
+           else ((CPolyG.cSplitFactorFast Dt fuel (CPolyG.cdivFF (fuel + 1) p S)).1,
+                 cmulG S (CPolyG.cSplitFactorFast Dt fuel (CPolyG.cdivFF (fuel + 1) p S)).2)) := by
+      conv_lhs => rw [CPolyG.cSplitFactorFast]
+      rfl
+    -- `cdegG S = T.natDegree` (S nonzero, so length ≥ 1)
+    have hcdeg : cdegG S = T.natDegree := hcdeg0
+    by_cases hdeg : cdegG S = 0
+    · -- terminal: (p, [one]); p is normal-sqfree (the abstract step is constant)
+      rw [hloop, if_pos hdeg]
+      have hSdeg0 : (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree = 0 := by
+        rw [← hSnd, ← hcdeg]; exact hdeg
+      show IsSplittingFactorizationGen (toPolyG p) (toPolyG ([CField.one] : CPolyG QFunNZ)) (toPolyG p)
+      refine ⟨by rw [toPolyG_cone, one_mul], by rw [toPolyG_cone]; exact isSpecial_one, ?_⟩
+      exact isNormalSqfree_of_splitFactorStep_natDegree_zero (toPolyG Dt) hp hSdeg0
+    · -- recursive step
+      rw [hloop, if_neg hdeg]
+      -- the abstract step divides `p`, so `toPolyG S ∣ toPolyG p`; `S` special, non-constant
+      have hSpos : 0 < (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree := by
+        rw [← hSnd, ← hcdeg]; exact Nat.pos_of_ne_zero hdeg
+      have hSdvd : T ∣ toPolyG p :=
+        haS.dvd.trans (splitFactorStep_dvd (toPolyG Dt) hp)
+      have hSspec : @IsSpecial _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩ T :=
+        IsSpecial.of_associated haS.symm (isSpecial_splitFactorStep (toPolyG Dt) hp)
+      -- exact division: `toPolyG p = toPolyG (cdivFF p S) · T`
+      have hScn : cnormG S ≠ [] := fun h => hSne (hScn0.mpr h)
+      have hexact : toPolyG p = toPolyG (CPolyG.cdivFF (fuel + 1) p S) * T := by
+        have h := toPolyG_cdivFF_exact (fuel + 1) p S hScn hpfuel (hT ▸ hSdvd)
+        rwa [hT] at h
+      -- the quotient `p/S` is nonzero with strictly smaller degree, so fuel suffices
+      have hqne : toPolyG (CPolyG.cdivFF (fuel + 1) p S) ≠ 0 := by
+        intro h0; rw [h0, zero_mul] at hexact; exact hp hexact
+      have hqdeg : (toPolyG (CPolyG.cdivFF (fuel + 1) p S)).natDegree ≤ fuel := by
+        have hdegdrop : (toPolyG (CPolyG.cdivFF (fuel + 1) p S)).natDegree + T.natDegree
+            = (toPolyG p).natDegree := by
+          rw [hexact, Polynomial.natDegree_mul hqne hSne]
+        have hSposc : 0 < T.natDegree := by rw [hSnd]; exact hSpos
+        omega
+      -- the recursive regularity branch (non-terminal: `cdegG S ≠ 0`)
+      have hrecreg : CSplitFactorFastRegular Dt fuel
+          (CPolyG.cdivFF (fuel + 1) p (cstep Dt (fuel + 1) p)) :=
+        hbranch.resolve_left hdeg
+      -- apply the IH on the quotient
+      rw [← hSdef] at hrecreg
+      have hih := ih (CPolyG.cdivFF (fuel + 1) p S) hqne hqdeg hrecreg
+      obtain ⟨heq, hq2spec, hq1norm⟩ := hih
+      -- assemble: special = S · qs, normal = qn, with the product invariant
+      refine ⟨?_, ?_, hq1norm⟩
+      · -- `toPolyG p = toPolyG (cmulG S qs) · toPolyG qn`
+        rw [toPolyG_cmulG, hT, mul_assoc, ← heq, mul_comm, hexact, mul_comm]
+      · -- `S · qs` special
+        rw [toPolyG_cmulG, hT]
+        exact hSspec.mul hq2spec
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- The headline: the fraction-free `cSplitFactorFast` loop, read over ℚ(x) = `RatFunc ℚ`, returns a
+-- book-faithful splitting factorization of `toPolyG p` w.r.t. the monomial derivation `Dt = toPolyG Dt`
+-- — `toPolyG p = toPolyG pₛ · toPolyG pₙ`, `pₛ` special, every squarefree factor of `pₙ` normal — under
+-- the transparent per-node degree/fuel preconditions a real run satisfies.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ) (hp : toPolyG p ≠ 0)
+    (hdegp : (toPolyG p).natDegree ≤ fuel) (hreg : CSplitFactorFastRegular Dt fuel p) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+      (toPolyG p)
+      (toPolyG (CPolyG.cSplitFactorFast Dt fuel p).2)
+      (toPolyG (CPolyG.cSplitFactorFast Dt fuel p).1) :=
+  cSplitFactorFast_isSplittingFactorizationGen Dt fuel p hp hdegp hreg
