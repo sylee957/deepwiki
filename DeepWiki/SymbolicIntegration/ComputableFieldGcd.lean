@@ -628,4 +628,28 @@ theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p :
       (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
         (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
 
+/-- **Field clearing of the Hermite cleared identity** (generic field): from the polynomial cleared
+identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with `gden, Dstar, d ≠ 0` (read into the fraction
+field via the injective `algebraMap`), the field fraction identity `P/gden² + hNum/Dstar = a/d` holds.
+Pure field-arithmetic clearing (`field_simp` + `linear_combination` of the polynomial witness). -/
+theorem hermite_field_div_of_cleared {K : Type*} [Field K] (P Dstar gden hNum d a : K[X])
+    (hden : gden ≠ 0) (hDstar : Dstar ≠ 0) (hd : d ≠ 0)
+    (hcleared : (P * Dstar + hNum * (gden * gden)) * d = a * ((gden * gden) * Dstar)) :
+    (algebraMap K[X] (RatFunc K) P) / (algebraMap K[X] (RatFunc K) gden) ^ 2
+        + (algebraMap K[X] (RatFunc K) hNum) / (algebraMap K[X] (RatFunc K) Dstar)
+      = (algebraMap K[X] (RatFunc K) a) / (algebraMap K[X] (RatFunc K) d) := by
+  set A := algebraMap K[X] (RatFunc K) with hA
+  have hAd : A d ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hd
+  have hAden : A gden ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hden
+  have hADstar : A Dstar ≠ 0 := (map_ne_zero_iff _ (RatFunc.algebraMap_injective _)).mpr hDstar
+  have hcl : (A P * A Dstar + A hNum * (A gden * A gden)) * A d
+      = A a * (A gden * A gden * A Dstar) := by
+    have := congrArg A hcleared
+    simpa only [map_mul, map_add] using this
+  rw [div_add_div _ _ (pow_ne_zero 2 hAden) hADstar, div_eq_div_iff
+    (mul_ne_zero (pow_ne_zero 2 hAden) hADstar) hAd]
+  ring_nf
+  ring_nf at hcl
+  linear_combination hcl
+
 end DeepWiki.SymbolicIntegration
