@@ -5,6 +5,7 @@ import DeepWiki.SymbolicIntegration.ComputableWellFounded2
 import DeepWiki.SymbolicIntegration.ComputableWellFounded3
 import DeepWiki.SymbolicIntegration.ComputableWellFounded4
 import DeepWiki.SymbolicIntegration.ComputableWellFounded5
+import DeepWiki.SymbolicIntegration.ComputableWellFounded7
 
 /-! # Fuel-free (well-founded) GENERIC tower integration engine
 
@@ -779,10 +780,6 @@ top driver `cRischDEG` is a flat composition over these — the documented conti
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
-
-/-- **Generic fuel-free divisibility test** `cdvdGWf q p := cisZeroG (cmodWf p q)`: `true` iff `q ∣ p` over
-`α[t]`, via the fuel-free remainder `cmodWf`. The fuel-free companion of `cdvdG` — **no fuel at runtime**. -/
-def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
 
 /-- **Generic fuel-free non-cancellation Poly-Risch-DE** (Bronstein §6.5, book p.208)
 `cPolyRischDENoCancelGWf Dt b c n`: the generic, fuel-free companion of `cPolyRischDENoCancelG`. Solves
