@@ -43,7 +43,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open Compute CPolyG QFunNZ
 
 /-- The engine carrier `CFieldSpec.K QFunNZ` is `RatFunc ℚ`, a `ℚ`-algebra. Re-declared as a local
 instance (matching the keystone's) so this file synthesizes the **same** `Algebra ℚ` as
@@ -156,3 +156,120 @@ theorem cHermiteReduceTower_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a 
   exact hermite_field_div_of_cleared P (toPolyG DstarR) (toPolyG gdenR) (toPolyG hNumR) (toPolyG d)
     (toPolyG a) hgdenne hDstarne hdne hcleared'
 
+/-! ### The polynomial part — field-level primitive-poly reconstruction `D(pq) + prem = fₚ`
+
+`cPrimitivePolyIntegrate Dt fuel fp = (pq, prem)` reconstructs the polynomial part `fₚ` exactly:
+`Δ(pq) + prem = fp` (the proven `cPrimitivePolyIntegrate_cleared_identity`). At the field level, every
+term is a polynomial image (denominator `1`), so the identity reads
+`towerFractionFieldDeriv Dt (towerAlg pq) + towerAlg prem = towerAlg fp` via the keystone's
+`towerFractionFieldDeriv_algebraMap` (the tower derivation extends the monomial derivation on polynomial
+images). -/
+
+/-- **The primitive polynomial integration as a field identity** `D(pq) + prem = fₚ` over the tower
+fraction field: with `(pq, prem) = cPrimitivePolyIntegrate Dt fuel fp`,
+`towerFractionFieldDeriv Dt (towerAlg (toPolyG pq)) + towerAlg (toPolyG prem) = towerAlg (toPolyG fp)`.
+Composes the proven cleared polynomial identity `cPrimitivePolyIntegrate_cleared_identity` with
+`towerFractionFieldDeriv_algebraMap`; gated on no preconditions. -/
+theorem cPrimitivePolyIntegrate_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (fp : CPolyG QFunNZ) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG (cPrimitivePolyIntegrate Dt fuel fp).1))
+        + towerAlg (toPolyG (cPrimitivePolyIntegrate Dt fuel fp).2)
+      = towerAlg (toPolyG fp) := by
+  rw [towerFractionFieldDeriv_algebraMap, ← map_add]
+  exact congrArg towerAlg (cPrimitivePolyIntegrate_cleared_identity Dt fuel fp)
+
+/-! ### The logarithmic part — the residue sum `∑ᵢ cᵢ·(Δvᵢ)/vᵢ` as a field element
+
+`checkIdentity` differentiates the logarithmic part `∑ᵢ cᵢ·log(vᵢ)` symbolically to the **residue sum**
+`∑ᵢ cᵢ·(Δvᵢ)/vᵢ` (the log-derivative `D(log v) = (Δv)/v`), accumulated as a single fraction `(Lnum, Lden)`
+over `∏ᵢ vᵢ` by the `foldl`. We give the residue sum as a genuine field element `logResidueSum` over
+`RatFunc (RatFunc ℚ)` and prove the fold computes it (the field reading of `(Lnum, Lden)`), so the
+field-level identity `D(g) + logResidueSum = f` is the all-inputs generalization of `checkIdentity`'s
+cleared `cisZeroG`. -/
+
+/-- **The logarithmic-part residue sum** `logResidueSum Dt logs = ∑_{(c,v)∈logs} C(toK(ofConstNZ c))·(Δv)/v`
+over the tower fraction field `RatFunc (RatFunc ℚ)`, with `Δ = implicitDeriv (toPolyG Dt)` (so `Δv =
+toPolyG (cmonomialDeriv Dt v)`). This is the symbolic derivative of `∑ᵢ cᵢ·log(vᵢ)` — exactly the residue
+sum `checkIdentity` clears against `f`. -/
+noncomputable def logResidueSum (Dt : CPolyG QFunNZ) (logs : List (ℚ × CPolyG QFunNZ)) :
+    RatFunc (CFieldSpec.K QFunNZ) :=
+  (logs.map (fun cv =>
+    towerAlg (Polynomial.C (CFieldSpec.toK (ofConstNZ cv.1)))
+      * (towerAlg (toPolyG (cmonomialDeriv Dt cv.2)) / towerAlg (toPolyG cv.2)))).sum
+
+/-- `logResidueSum` of the empty list is `0`. -/
+@[simp] theorem logResidueSum_nil (Dt : CPolyG QFunNZ) : logResidueSum Dt [] = 0 := rfl
+
+/-- `logResidueSum` peels the head: `logResidueSum Dt ((c,v) :: rest) = C(toK(ofConstNZ c))·(Δv)/v
++ logResidueSum Dt rest`. -/
+theorem logResidueSum_cons (Dt : CPolyG QFunNZ) (cv : ℚ × CPolyG QFunNZ)
+    (rest : List (ℚ × CPolyG QFunNZ)) :
+    logResidueSum Dt (cv :: rest)
+      = towerAlg (Polynomial.C (CFieldSpec.toK (ofConstNZ cv.1)))
+          * (towerAlg (toPolyG (cmonomialDeriv Dt cv.2)) / towerAlg (toPolyG cv.2))
+        + logResidueSum Dt rest := by
+  simp only [logResidueSum, List.map_cons, List.sum_cons]
+
+/-! ### The `checkIdentity` fold computes the residue sum
+
+`checkIdentity`'s `foldl` accumulates the residue sum `∑ cᵢ·(Δvᵢ)/vᵢ` as one fraction `(Lnum, Lden)` over
+`∏ᵢ vᵢ`, starting at `([0], [1])` and combining `acc.1/acc.2 + (c·Δv)/v = (acc.1·v + c·Δv·acc.2)/(acc.2·v)`.
+Reading through `towerAlg` over the field, the fold's running fraction is the partial `logResidueSum` plus
+the seed; with all `vᵢ` nonzero the seed contributes `0`, so the final `Lnum/Lden = logResidueSum`. -/
+
+/-- **The `checkIdentity` fold computes the residue sum** (field reading): folding from a seed
+`(snum, sden)` (with `sden ≠ 0` as a polynomial) over a log list whose every argument `v` is nonzero,
+the running fraction `towerAlg(Lnum)/towerAlg(Lden)` equals the seed fraction plus `logResidueSum`, and
+the running denominator `Lden = sden·∏ᵢ vᵢ` stays nonzero. By induction on the list. -/
+theorem checkIdentity_fold_eq (Dt : CPolyG QFunNZ) :
+    ∀ (logs : List (ℚ × CPolyG QFunNZ)) (snum sden : CPolyG QFunNZ),
+      toPolyG sden ≠ 0 →
+      (∀ cv ∈ logs, toPolyG cv.2 ≠ 0) →
+      let res := logs.foldl
+        (fun (acc : CPolyG QFunNZ × CPolyG QFunNZ) (cv : ℚ × CPolyG QFunNZ) =>
+          let c := cv.1
+          let v := cv.2
+          let Dv := cmonomialDeriv Dt v
+          let termNum := cscaleG (ofConstNZ c) Dv
+          (caddG (cmulG acc.1 v) (cmulG termNum acc.2), cmulG acc.2 v))
+        (snum, sden)
+      toPolyG res.2 ≠ 0 ∧
+        towerAlg (toPolyG res.1) / towerAlg (toPolyG res.2)
+          = towerAlg (toPolyG snum) / towerAlg (toPolyG sden) + logResidueSum Dt logs := by
+  intro logs
+  induction logs with
+  | nil =>
+    intro snum sden hsden _
+    refine ⟨hsden, ?_⟩
+    simp only [logResidueSum_nil, add_zero, List.foldl_nil]
+  | cons cv rest ih =>
+    intro snum sden hsden hv
+    -- the head argument `v` is nonzero
+    have hvne : toPolyG cv.2 ≠ 0 := hv cv List.mem_cons_self
+    -- one fold step: new accumulator
+    set newnum := caddG (cmulG snum cv.2) (cmulG (cscaleG (ofConstNZ cv.1) (cmonomialDeriv Dt cv.2)) sden)
+      with hnewnum
+    set newden := cmulG sden cv.2 with hnewden
+    have hnewden_ne : toPolyG newden ≠ 0 := by
+      rw [hnewden, toPolyG_cmulG]; exact mul_ne_zero hsden hvne
+    -- the IH applied to the rest with the new seed
+    have hrest : ∀ cv' ∈ rest, toPolyG cv'.2 ≠ 0 := fun cv' hcv' => hv cv' (List.mem_cons_of_mem _ hcv')
+    obtain ⟨hden, heq⟩ := ih newnum newden hnewden_ne hrest
+    refine ⟨?_, ?_⟩
+    · -- the running denominator after the head step is `(newnum, newden)`
+      simp only [List.foldl_cons]
+      exact hden
+    simp only [List.foldl_cons]
+    rw [heq, logResidueSum_cons]
+    -- the field algebra: `snum/sden + C(c)·(Δv)/v = newnum/newden`
+    have hAsden : towerAlg (toPolyG sden) ≠ 0 := towerAlg_ne_zero hsden
+    have hAv : towerAlg (toPolyG cv.2) ≠ 0 := towerAlg_ne_zero hvne
+    have hstep : towerAlg (toPolyG newnum) / towerAlg (toPolyG newden)
+        = towerAlg (toPolyG snum) / towerAlg (toPolyG sden)
+          + towerAlg (Polynomial.C (CFieldSpec.toK (ofConstNZ cv.1)))
+              * (towerAlg (toPolyG (cmonomialDeriv Dt cv.2)) / towerAlg (toPolyG cv.2)) := by
+      rw [hnewnum, hnewden, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cscaleG,
+        toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+      field_simp
+      simp only [map_mul]
+      ring
+    rw [hstep]; ring
