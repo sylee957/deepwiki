@@ -670,4 +670,83 @@ theorem integrateWf_eq_fueled_example :
 
 #print axioms integrateWf_example_driver
 
+/-! ### Transport of the all-inputs `D(cIntegrateWf f) = f` to the raw fuel-free integrator (primitive regime)
+
+For the **raw** (unchecked) fuel-free `cIntegrateWf`, the all-inputs antiderivative correctness in the
+primitive split-squarefree regime — `cIntegrate_checkIdentity_uncond` — transports through the bridge
+`cIntegrateWf_eq`: under the same transparent regularity/exact-division/fuel + residue-set data the fuel'd
+headline carries, *plus* the bridge equation `hbridge : cIntegrateWf Dt a d cands = cIntegrate Dt fuel a d
+cands` (assembled from the three sub-bridges), `cIntegrateWf Dt a d cands = some res` with
+`IntegralResult.checkIdentity Dt res a d = true`. Rewriting `hbridge` reduces it to the fuel'd headline. -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+open scoped Classical Differential in
+/-- **`cIntegrateWf` returns `some res` with `D(res) = f`** for ALL inputs in the primitive regime,
+**fuel-free** (transported): the fuel-free companion of `cIntegrate_checkIdentity_uncond`. Under the bridge
+`hbridge : cIntegrateWf Dt a d cands = cIntegrate Dt fuel a d cands` and the same hypotheses the fuel'd
+headline carries (canonical-rep regularity, Hermite exact-division/nonzero-divisor/fuel preconditions,
+absent special part `hfs0 : fₛ = 0`, all denominators nonzero, the §5.6 split-squarefree residue-set
+data + per-residue `cgcdFF` regularity), `cIntegrateWf Dt a d cands = some res` and the engine's cleared
+antiderivative identity `IntegralResult.checkIdentity Dt res a d = true` holds — i.e. `D(g) + ∑ᵢ
+cᵢ·(D(vᵢ)/vᵢ) = f` cleared of denominators. Rewrites `hbridge` to the fuel'd `cIntegrate` and applies
+`cIntegrate_checkIdentity_uncond`. -/
+theorem cIntegrateWf_checkIdentity_uncond (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (hbridge : CPolyG.cIntegrateWf Dt a d cands = CPolyG.cIntegrate Dt fuel a d cands)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (gnumH gdenH hNum hDen : CPolyG QFunNZ)
+    (hHermite : cHermiteReduceTower Dt fuel cn dn = ((gnumH, gdenH), (hNum, hDen)))
+    (pq prem : CPolyG QFunNZ)
+    (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hpremZero : cisZeroG prem = true)
+    (hcanreg : CCanonicalRepFastRegular Dt fuel a d)
+    (hfs0 : towerAlg (toPolyG b) / towerAlg (toPolyG ds) = 0)
+    (gprimeNum resNum resDen : CPolyG QFunNZ)
+    (hgprimeE : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumH) gdenH) (cmulG gnumH (cmonomialDeriv Dt gdenH)))
+    (hresNum : resNum = csubG (cmulG cn (cmulG gdenH gdenH)) (cmulG dn gprimeNum))
+    (hresDen : resDen = cmulG dn (cmulG gdenH gdenH))
+    (hhNumE : hNum = cdivG fuel (cmulG resNum hDen) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuelH : (cnormG (cmulG resNum hDen) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum hDen))
+    (hgdenHne : toPolyG gdenH ≠ 0) (hHDenne : toPolyG hDen ≠ 0) (hdnne : toPolyG dn ≠ 0)
+    (hlognz : ∀ cv ∈ cLogPart Dt fuel hNum hDen cands, toPolyG cv.2 ≠ 0)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hAh : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0)
+    (hadeg : (toPolyG hNum).natDegree ≤ (toPolyG hDen).natDegree)
+    (hδdeg : (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).natDegree
+      ≤ (toPolyG hDen).natDegree)
+    (hamc : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (toPolyG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG hDen).natDegree)
+    (hfuelR : ∀ k ∈ Finset.range (cdegG hDen + 1),
+      (cnormG hDen : List QFunNZ).length
+        + (cnormG (cAmcDd Dt hNum hDen (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel)
+    (hcompl : ∀ α ∈ s, ∃ c ∈ cands, (toPolyG hNum).eval α
+        / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+          = CFieldSpec.toK (ofConstNZ c))
+    (hdistinct : (cands.filter (fun c =>
+        cisZeroG [cevalG (cResidueResultantTower Dt fuel hNum hDen) (ofConstNZ c)])).map
+        (fun c => CFieldSpec.toK (ofConstNZ c)) |>.Nodup)
+    (hreg : ∀ c ∈ cRationalResidues Dt fuel hNum hDen cands, PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    ∃ res : IntegralResult, CPolyG.cIntegrateWf Dt a d cands = some res
+      ∧ IntegralResult.checkIdentity Dt res a d = true := by
+  rw [hbridge]
+  exact cIntegrate_checkIdentity_uncond Dt htop fuel a d cands fp b ds cn dn hcanon gnumH gdenH hNum
+    hDen hHermite pq prem hpoly hpremZero hcanreg hfs0 gprimeNum resNum resDen hgprimeE hresNum
+    hresDen hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hlognz s hden hAh hb0 hDd hadeg hδdeg hamc
+    hfuelR hcompl hdistinct hreg
+
+-- The fuel-free raw-integrator antiderivative-correctness headline carries only the standard axioms.
+#print axioms cIntegrateWf_checkIdentity_uncond
+
 end DeepWiki.SymbolicIntegration
