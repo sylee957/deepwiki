@@ -557,6 +557,170 @@ theorem cIntegrateGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands 
 
 end CPolyG
 
+/-! ## Part 5 — bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
+
+The two recursive bottoms get bridges to their fuel'd `…G` originals. As with the `QFunNZ` arc
+(`cSqfreeYunFFgoWf_eq`, `cSplitFactorFastWf_eq`), the bridges carry `[CFieldSpec α]` (the fuel'd-leaf
+agreements `cdivmodWf_eq_of_fuel` / `cgcdWf_eq_of_fuel` need a genuine field) — but the **defs** stay
+`[CField α]`-only. The per-node `cgcdFFCoreWf = cgcdFFCore fuel` agreement (which itself threads
+`cprimPRSgcdGenCoreWf_eq` through every tower level) is taken as a per-node hypothesis in the regularity
+gate, exactly the `CgcdFFNodeReg` role in the QFunNZ version. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CFracGcdCore α] [CFracGcdCoreWf α] [CFieldSpec α]
+
+/-- **Per-run generic Yun-loop regularity** `CSqfreeYunGoGenRegular fuel n b d`: mirrors the
+`cSqfreeYunFFGgo` recursion as an inductive predicate **with a step budget** `n` (the multiplicity counter,
+the genuine termination witness — sound at skipped multiplicities). `stop` (any budget) at a constant
+running poly `b` (`cdegG b = 0`), or `step` (budget `n+1`) when the per-step fuel-free leaves match the
+fuel'd ops — the gcd `cgcdFFCoreWf b d = cgcdFFCore fuel b d` (`hgcd`, the `CgcdFFNodeReg` role) and the two
+exact divisions `cdivWf b p`/`cdivWf d p` are reduced (`(cnormG b).length ≤ fuel`, `(cnormG d).length ≤
+fuel`) — and the same holds recursively on the quotient within budget `n`. -/
+inductive CSqfreeYunGoGenRegular (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → Prop
+  /-- terminal node: the running poly `b` is constant, the loop stops (any remaining budget). -/
+  | stop {n : ℕ} {b d : CPolyG α} (hdeg : cdegG b = 0) : CSqfreeYunGoGenRegular fuel n b d
+  /-- recursive node: `b` non-constant, the per-step leaves match the fuel'd ops, recurse within budget. -/
+  | step {n : ℕ} {b d : CPolyG α} (hne : cdegG b ≠ 0)
+      (hgcd : CFracGcdCoreWf.cgcdFFCoreWf b d = CFracGcdCore.cgcdFFCore fuel b d)
+      (hblen : (cnormG b : List α).length ≤ fuel) (hdlen : (cnormG d : List α).length ≤ fuel)
+      (hrec : CSqfreeYunGoGenRegular fuel n (cdivWf b (cmonicG (CFracGcdCore.cgcdFFCore fuel b d)))
+        (csubG (cdivWf d (cmonicG (CFracGcdCore.cgcdFFCore fuel b d)))
+          (cderivG (cdivWf b (cmonicG (CFracGcdCore.cgcdFFCore fuel b d)))))) :
+      CSqfreeYunGoGenRegular fuel (n + 1) b d
+
+/-- **Bridge — `cSqfreeYunFFGgoWf` equals `cSqfreeYunFFGgo` at the same outer counter.** For any outer Yun
+counter `fo` at least the step budget `n` of a regular run (`n ≤ fo`, `CSqfreeYunGoGenRegular fuel n b d`),
+`cSqfreeYunFFGgoWf fo b d = cSqfreeYunFFGgo fuel fo b d`. The fuel bounds live only here; `cSqfreeYunFFGgoWf`
+carries none. By induction on the regularity predicate (the step budget is the genuine termination witness,
+the multiplicity counter), generalizing `fo`: at a constant `b` both stop; else the step's WF leaves match
+the fuel'd ops (`hgcd`, `cdivmodWf_eq_of_fuel`), and the IH applies within budget `n ≤ fo − 1`. -/
+theorem cSqfreeYunFFGgoWf_eq (fuel : ℕ) : ∀ (n : ℕ) (b d : CPolyG α),
+    CSqfreeYunGoGenRegular fuel n b d → ∀ (fo : ℕ), n ≤ fo →
+      cSqfreeYunFFGgoWf fo b d = cSqfreeYunFFGgo fuel fo b d := by
+  intro n b d hreg
+  induction hreg with
+  | @stop n b d hdeg =>
+    intro fo _
+    cases fo with
+    | zero => rfl
+    | succ fo => rw [cSqfreeYunFFGgoWf, cSqfreeYunFFGgo, if_pos hdeg, if_pos hdeg]
+  | @step n b d hne hgcd hblen hdlen hrec ih =>
+    intro fo hfo
+    cases fo with
+    | zero => exact absurd hfo (Nat.not_succ_le_zero n)
+    | succ fo =>
+      rw [cSqfreeYunFFGgoWf, cSqfreeYunFFGgo, if_neg hne, if_neg hne]
+      set p := cmonicG (CFracGcdCore.cgcdFFCore fuel b d) with hp
+      have hbq : cdivWf b p = CPolyG.cdivG fuel b p := by
+        rw [cdivWf, cdivmodWf_eq_of_fuel fuel b p hblen, cdivG]
+      have hdq : cdivWf d p = CPolyG.cdivG fuel d p := by
+        rw [cdivWf, cdivmodWf_eq_of_fuel fuel d p hdlen, cdivG]
+      simp only [hgcd, ← hp, ← hbq, ← hdq]
+      rw [ih fo (Nat.le_of_succ_le_succ hfo)]
+
+end CPolyG
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α] [CFieldSpec α]
+
+/-- **The generic fuel-free step matches the generic fuel'd step** `cstepGWf Dt p = S` where
+`S = cdivG (fuel+1) (cgcdFFCore (fuel+1) p (cmonomialDeriv Dt p)) (cgcdFFCore (fuel+1) p (cderivG p))` (the
+inline `cSplitFactorFastG` step), under the per-step agreements: both `cgcdFFCore` calls bridged
+(`hgcdN`/`hgcdD`) and the exact division's numerator gcd short enough for `cdivWf = cdivG (fuel+1)`
+(`hnlen`). The generic analogue of `cstepWf_eq`. -/
+theorem cstepGWf_eq (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
+    (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
+      = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+    (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
+      = CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
+    (hnlen : (cnormG (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p)) : List α).length
+      ≤ fuel + 1) :
+    cstepGWf Dt p
+      = cdivG (fuel + 1) (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+          (CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p)) := by
+  rw [cstepGWf, hgcdN, hgcdD, cdivWf, cdivmodWf_eq_of_fuel (fuel + 1) _ _ hnlen, cdivG]
+
+/-- **Per-run generic split-factor regularity** `CSplitFactorGenRegular Dt fuel p`: mirrors the
+`cSplitFactorFastG` `fuel`-recursion as an inductive predicate. Every node carries the step agreement
+(`hgcdN`/`hgcdD`/`hnlen`, so `cstepGWf Dt p` matches the fuel'd inline `S = cdivG (cgcdFFCore p Dp)
+(cgcdFFCore p dp)`, via `cstepGWf_eq`); `stop` then ends at a constant step (`cdegG S = 0`, any fuel), and
+`step` (fuel `n+1`) continues at a non-constant step whose exact quotient `p/S = cdivWf p S` is reduced
+(`(cnormG p).length ≤ fuel+1`) and strictly drops the normalized length (`(cnormG (cdivWf p S)).length <
+(cnormG p).length` — the WF guard), with the same holding recursively on `p/S`. The transparent per-node
+preconditions a real split run satisfies. -/
+inductive CSplitFactorGenRegular (Dt : CPolyG α) : ℕ → CPolyG α → Prop
+  /-- terminal node: the special-factor step `S` (matched to the fuel'd inline by `hgcd*`) is constant. -/
+  | stop {fuel : ℕ} {p : CPolyG α}
+      (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
+        = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+      (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
+        = CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
+      (hnlen : (cnormG (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p)) : List α).length
+        ≤ fuel + 1)
+      (hdeg : cdegG (cstepGWf Dt p) = 0) : CSplitFactorGenRegular Dt (fuel + 1) p
+  /-- recursive node: the step `S` (matched to the fuel'd inline) is non-constant; recurse on `p/S`. -/
+  | step {fuel : ℕ} {p : CPolyG α}
+      (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
+        = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+      (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
+        = CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
+      (hnlen : (cnormG (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p)) : List α).length
+        ≤ fuel + 1)
+      (hdeg : cdegG (cstepGWf Dt p) ≠ 0) (hplen : (cnormG p : List α).length ≤ fuel + 1)
+      (hguard : (cnormG (cdivWf p (cstepGWf Dt p)) : List α).length < (cnormG p : List α).length)
+      (hrec : CSplitFactorGenRegular Dt fuel (cdivWf p (cstepGWf Dt p))) :
+      CSplitFactorGenRegular Dt (fuel + 1) p
+
+/-- **The fuel'd `cSplitFactorFastG (fuel+1)` loop step shape**, with its inline special factor abstracted as
+`cstepGWf Dt p` (under the step agreements, `cstepGWf_eq`): the fuel'd loop body is the `if cdegG S = 0`
+branch on `S = cstepGWf Dt p`, recursing on `cdivG (fuel+1) p S`. Folds the fuel'd inline
+`cdivG … (cgcdFFCore …) (cgcdFFCore …)` back to `cstepGWf` for a clean case split. -/
+theorem cSplitFactorFastG_succ_shape (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
+    (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
+      = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+    (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
+      = CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
+    (hnlen : (cnormG (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p)) : List α).length
+      ≤ fuel + 1) :
+    cSplitFactorFastG Dt (fuel + 1) p
+      = (if cdegG (cstepGWf Dt p) = 0 then (p, [CField.one])
+         else ((cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p (cstepGWf Dt p))).1,
+               cmulG (cstepGWf Dt p) (cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p (cstepGWf Dt p))).2)) := by
+  have hstep : cstepGWf Dt p
+      = cdivG (fuel + 1) (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+          (CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p)) := cstepGWf_eq Dt fuel p hgcdN hgcdD hnlen
+  conv_lhs => rw [cSplitFactorFastG]
+  rw [hstep]
+
+/-- **Bridge — `cSplitFactorFastGWf` equals `cSplitFactorFastG` on a regular run.** Under
+`CSplitFactorGenRegular Dt fuel p` (the per-step degree-drop + leaf agreements a real split run meets, with
+sufficient fuel), `cSplitFactorFastGWf Dt p = cSplitFactorFastG Dt fuel p`. The fuel regularity lives only
+here; the WF loop carries none. By induction on the `CSplitFactorGenRegular` derivation: each node abstracts
+the fuel'd inline `S` as `cstepGWf` (`cSplitFactorFastG_succ_shape`); at `stop` both return `(p, [one])`; at
+`step` the WF guard fires (`hguard`, the quotient bridged by `cdivmodWf_eq_of_fuel`) and the fuel'd version
+descends. -/
+theorem cSplitFactorFastGWf_eq (Dt : CPolyG α) :
+    ∀ (fuel : ℕ) (p : CPolyG α), CSplitFactorGenRegular Dt fuel p →
+      cSplitFactorFastGWf Dt p = cSplitFactorFastG Dt fuel p := by
+  intro fuel p hreg
+  induction hreg with
+  | @stop fuel p hgcdN hgcdD hnlen hdeg =>
+    rw [cSplitFactorFastGWf.eq_def, if_pos hdeg,
+      cSplitFactorFastG_succ_shape Dt fuel p hgcdN hgcdD hnlen, if_pos hdeg]
+  | @step fuel p hgcdN hgcdD hnlen hdeg hplen hguard hrec ih =>
+    rw [cSplitFactorFastGWf.eq_def, cSplitFactorFastG_succ_shape Dt fuel p hgcdN hgcdD hnlen,
+      if_neg hdeg, if_pos hguard]
+    -- LHS now `match cSplitFactorFastGWf (cdivWf p S) with …`; apply IH first (while still `cdivWf`)
+    rw [ih]
+    -- the WF quotient `cdivWf p S` matches the fuel'd `cdivG (fuel+1) p S`
+    have hdiv : cdivWf p (cstepGWf Dt p) = cdivG (fuel + 1) p (cstepGWf Dt p) := by
+      rw [cdivWf, cdivmodWf_eq_of_fuel (fuel + 1) p (cstepGWf Dt p) hplen, cdivG]
+    rw [hdiv, if_neg hdeg]
+
+end CPolyG
+
 /-! ### ★ THE HEADLINE `native_decide` validation — a FULL elementary tower integral, FUEL-FREE, at LEVEL 2
 
 Bronstein's Example 5.6.2 lifted to **tower level 2** (`CPolyG Lvl2 = ℚ(x)(t₁)[t₂]`, `Dt₂ = 1`), now run by
