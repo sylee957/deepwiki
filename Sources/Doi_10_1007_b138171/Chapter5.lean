@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
+import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 5: Integration of Transcendental Functions
@@ -54,11 +55,11 @@ namespace DeepWiki.Si
 /-! ## §5.3 The Hermite Reduction (transcendental) — computable + validated -/
 
 /-- **Algorithm `HermiteReduce`** (§5.3, p.139, quadratic version): the computable transcendental
-Hermite reduction `cHermiteReduceTower Dt fuel a d = ((gnum, gden), (h_num, h_den))` over the tower
-ℚ(x)[t], rewriting the normal part `f = a/d` as `D(g) + h` with `h_den` squarefree, for the monomial
-derivation `D = κ_D + Dt·d/dt`. Computable + `native_decide`-validated; abstract correctness (Thm
-5.3.1) deferred. -/
-noncomputable abbrev alg_5_3_hermiteReduce := @cHermiteReduceTower
+Hermite reduction `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden), (h_num, h_den))` (the canonical
+generic engine, here at `α = QFunNZ = ℚ(x)`) over the tower ℚ(x)[t], rewriting the normal part
+`f = a/d` as `D(g) + h` with `h_den` squarefree, for the monomial derivation `D = κ_D + Dt·d/dt`.
+Computable + `native_decide`-validated; abstract correctness (Thm 5.3.1) deferred. -/
+noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerG (α := QFunNZ)
 
 /-- **Example 5.3.1** (§5.3, p.139): `cHermiteReduceTower` on `f = 1/t²` (`Dt = t²+1`, `t = tan x`)
 satisfies the Hermite identity `D(g) + h = f` over ℚ(x)[t] (cleared form, `native_decide`); the
@@ -82,10 +83,11 @@ abbrev ex_5_4_1 := @polyReduceTower_example
 /-! ## §5.6 The Residue Criterion — computable + validated -/
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the residue resultant: the computable
-`cResidueResultantTower Dt fuel a d = R(z) = res_t(d, a − z·Dd) ∈ ℚ(x)[z]` over the tower, by the
-evaluation + Lagrange-interpolation template, whose roots are the residues of the logarithmic part of
-`∫ a/d`. Computable + `native_decide`-validated; abstract correctness (Thm 5.6.1) deferred. -/
-noncomputable abbrev alg_5_6_residueResultant := @cResidueResultantTower
+`cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd) ∈ ℚ(x)[z]` (the canonical generic
+engine, here at `α = QFunNZ = ℚ(x)`) over the tower, by the evaluation + Lagrange-interpolation
+template, whose roots are the residues of the logarithmic part of `∫ a/d`. Computable +
+`native_decide`-validated; abstract correctness (Thm 5.6.1) deferred. -/
+noncomputable abbrev alg_5_6_residueResultant := cResidueResultantTowerG (α := QFunNZ)
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the log argument: the computable
 `cLogArgTower Dt fuel a d c = gcd_t(d, a − c·Dd) ∈ ℚ(x)[t]` over the tower — the polynomial inside
