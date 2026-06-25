@@ -610,4 +610,22 @@ example :
     CPolyG.cisZeroG (CPolyG.cgcdExtG 8 [(CField.zero : QFunNZ), CField.one]
       [(CField.zero : QFunNZ), CField.one]).1 = false := by native_decide
 
+open CPolyG in
+/-- **Monic-normalization is a unit-scaling**: over a field, `cmonicG p` differs from `p` (read by
+`toPolyG`) by the unit `C ((cleadG)⁻¹)`, so they are associates in `K[X]`. -/
+theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    Associated (toPolyG (CPolyG.cmonicG p)) (toPolyG p) := by
+  rw [CPolyG.cmonicG]
+  split_ifs with h
+  · rw [toPolyG_nil]
+    have hz : toPolyG p = 0 := (cisZeroG_iff p).mp (by rwa [cisZeroG_cnormG] at h)
+    rw [hz]
+  · rw [toPolyG_cscaleG, toPolyG_cnormG]
+    have hne : cnormG (cnormG p) ≠ [] := by
+      rw [cnormG_idem]; intro he
+      exact h (by rw [cisZeroG_cnormG, cisZeroG_iff, ← toPolyG_cnormG, he, toPolyG_nil])
+    exact associated_unit_mul_left _ _
+      (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
+        (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
+
 end DeepWiki.SymbolicIntegration
