@@ -375,6 +375,98 @@ theorem cdiophantineGWf_eq_of_fuel (fuel : ℕ) (p q rhs : CPolyG α)
   simp only at hS ⊢
   rw [cdivmodWf_eq_of_fuel fuel _ q hS]
 
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Fuel-free inner Hermite loop** over a squarefree factor `v` (multiplicity `i`, `u = d/vⁱ`), driven
+by the downward counter `j` (§5.3, quadratic version, p.139): the fuel-free companion of
+`cHermiteReduceTowerInner`. Each step solves `b·(u·Dv) + c·v = −a/j` with the **fuel-free** Bézout solver
+`cdiophantineGWf` (`Dv = cmonomialDeriv Dt v` the *monomial* derivation), accumulates the rational summand
+`b/vʲ` into `g`, and updates `a ← −j·c − u·Db`. The recursion is **structural** on `j` (no fuel measure —
+`cmonomialDeriv` carries no fuel, the Bézout solve is fuel-free), so **no fuel at runtime**. -/
+def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
+    ℕ → CPolyG α → CPolyG α × CPolyG α → (CPolyG α × CPolyG α) × CPolyG α
+  | 0, a, g => (g, a)
+  | j + 1, a, g =>
+    let jval : α := cnatCastG (j + 1)                                 -- `j` as a field element
+    let Dv := cmonomialDeriv Dt v
+    let p := cmulG u Dv
+    let rhs := cscaleG (CField.neg (CField.inv jval)) a               -- `−a/j`
+    let (b, c) := cdiophantineGWf p v rhs
+    let Vpow := cpowG v (j + 1)
+    let g' := (caddG (cmulG g.1 Vpow) (cmulG b g.2), cmulG g.2 Vpow)  -- `g + b/Vʲ` (cross-multiplied)
+    let a' := csubG (cscaleG (CField.neg jval) c) (cmulG u (cmonomialDeriv Dt b))  -- `−j·c − u·Db`
+    cHermiteReduceTowerInnerWf Dt v u j a' g'
+
+end CPolyG
+
+/-! ### Bridge of the fuel-free inner loop to the fuel'd `cHermiteReduceTowerInner`
+
+The inner loop is structural on `j`, but each step's Bézout solve `cdiophantineGWf (u·Dv) v (−a/j)` must
+match the fuel'd `cdiophantineG fuel (u·Dv) v (−a/j)` — and `a` (hence the rescaled dividend `S`) changes
+each step, so the per-step `cdiophantineGWf_eq_of_fuel` hypotheses form a *run-regularity* inductive
+predicate `CHermiteInnerRegular fuel v u`, mirroring the `j`-recursion of `cHermiteReduceTowerInner`. -/
+
+/-- **Per-run inner-Hermite-loop regularity bundle** `CHermiteInnerRegular fuel v u`: mirrors the
+`cHermiteReduceTowerInner` `j`-recursion as an inductive predicate — `stop` at `j = 0` (the loop ends), or
+`step` when the per-step Bézout solve `cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v (−a/(j+1))` matches
+the fuel'd `cdiophantineG fuel` (the three `cdiophantineGWf_eq_of_fuel` length bounds at this step), and the
+same holds recursively on the updated `(a', g')`. The transparent per-node preconditions a real inner-loop
+run satisfies. -/
+inductive CHermiteInnerRegular (Dt : CPolyG QFunNZ) (fuel : ℕ) (v u : CPolyG QFunNZ) :
+    ℕ → CPolyG QFunNZ → (CPolyG QFunNZ × CPolyG QFunNZ) → Prop
+  /-- terminal node: `j = 0`, the inner loop stops. -/
+  | stop {a : CPolyG QFunNZ} {g : CPolyG QFunNZ × CPolyG QFunNZ} : CHermiteInnerRegular Dt fuel v u 0 a g
+  /-- recursive node: the per-step Bézout solve matches the fuel'd one, recurse on `(a', g')`. -/
+  | step {j : ℕ} {a : CPolyG QFunNZ} {g : CPolyG QFunNZ × CPolyG QFunNZ}
+      (hp : (cnormG (cmulG u (cmonomialDeriv Dt v)) : List QFunNZ).length ≤ fuel)
+      (hq : (cnormG v : List QFunNZ).length < fuel)
+      (hS : (cnormG (cscaleG (CField.inv (cleadG
+          (cgcdWf (cmulG u (cmonomialDeriv Dt v)) v).1))
+          (cmulG (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1))))
+            a) (cgcdWf (cmulG u (cmonomialDeriv Dt v)) v).2.1)) : List QFunNZ).length ≤ fuel)
+      (hrec : CHermiteInnerRegular Dt fuel v u j
+        (csubG (cscaleG (CField.neg (cnatCastG (j + 1)))
+            (CPolyG.cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v
+              (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a)).2)
+          (cmulG u (cmonomialDeriv Dt
+            (CPolyG.cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v
+              (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a)).1)))
+        (caddG (cmulG g.1 (cpowG v (j + 1)))
+            (cmulG (CPolyG.cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v
+              (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a)).1 g.2),
+          cmulG g.2 (cpowG v (j + 1)))) :
+      CHermiteInnerRegular Dt fuel v u (j + 1) a g
+
+namespace CPolyG
+
+/-- **Bridge — the fuel-free inner Hermite loop equals the fuel'd one.** Under a regular inner run
+(`CHermiteInnerRegular Dt fuel v u j a g`), `cHermiteReduceTowerInnerWf Dt v u j a g =
+cHermiteReduceTowerInner Dt fuel v u j a g`. The fuel bounds live only here; the WF inner loop carries
+none. By structural induction on `j`: at `j = 0` both return `(g, a)`; else the per-step Bézout solve
+matches (`cdiophantineGWf_eq_of_fuel`), and the IH applies to the updated `(a', g')`. -/
+theorem cHermiteReduceTowerInnerWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (v u : CPolyG QFunNZ) :
+    ∀ (j : ℕ) (a : CPolyG QFunNZ) (g : CPolyG QFunNZ × CPolyG QFunNZ),
+      CHermiteInnerRegular Dt fuel v u j a g →
+      cHermiteReduceTowerInnerWf Dt v u j a g = cHermiteReduceTowerInner Dt fuel v u j a g := by
+  intro j
+  induction j with
+  | zero =>
+    intro a g _
+    rfl
+  | succ j ih =>
+    intro a g hreg
+    rcases hreg with _ | ⟨hp, hq, hS, hrec⟩
+    rw [cHermiteReduceTowerInnerWf, cHermiteReduceTowerInner]
+    -- the per-step Bézout solve matches the fuel'd one
+    have hbez : cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+          (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a)
+        = CPolyG.cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v
+          (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a) :=
+      cdiophantineGWf_eq_of_fuel fuel _ _ _ hp hq hS
+    simp only [hbez]
+    -- the updated `(a', g')` is a regular run; apply the IH
+    exact ih _ _ hrec
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
