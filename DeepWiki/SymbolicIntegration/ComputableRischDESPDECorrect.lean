@@ -102,4 +102,48 @@ theorem toK_cleadG_cgcdExtG_ne_zero_of_divided (fuel : ℕ) (a b ad bd g : CPoly
   rw [toK_cleadG_eq_leadingCoeff]
   exact Polynomial.leadingCoeff_ne_zero.mpr hunit.ne_zero
 
+/-! ### Divisibility from the `cdvdG` branch and the exact-division witnesses
+The recursion already branches on `cdvdG fuel g c = true`; `dvd_of_cdvdG` reads that as the honest
+`toPolyG g ∣ toPolyG c` (zero remainder + the Euclidean identity). The three exact-division witnesses
+the certificate needs then come from `toPolyG_cdivFF_exact` under the divisibilities from `g ~ gcd`
+(for `a, b`) and the branch (for `c`). -/
+
+/-- **`cdvdG = true` reads as honest divisibility**: `cdvdG fuel g c = true` and `cnormG g ≠ []` give
+`toPolyG g ∣ toPolyG c` (the zero remainder in the Euclidean identity `c = quo·g + rem`). -/
+theorem dvd_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (g c : CPolyG α)
+    (hg0 : cnormG g ≠ []) (hdvd : cdvdG fuel g c = true) :
+    toPolyG g ∣ toPolyG c := by
+  have hrem0 : toPolyG (cmodG fuel c g) = 0 := (cdvdG_iff fuel g c).mp hdvd
+  have hid := toPolyG_cdivmodG' fuel c g hg0
+  rw [show (cdivmodG fuel c g).2 = cmodG fuel c g from rfl, hrem0, add_zero] at hid
+  rw [hid]
+  exact Dvd.intro_left _ rfl
+
+/-- **The `a`-exact-division witness** `toPolyG (cdivFF fuel a g) · toPolyG g = toPolyG a` from
+`g ~ gcd(a, b)` (`g ∣ a`), `g ≠ 0`, and the fuel bound. The first `cSPDECleared` clause. -/
+theorem cdivFF_a_exact_of_gcd (fuel : ℕ) (a b g : CPolyG QFunNZ)
+    (hg0 : cnormG g ≠ []) (hfuel : (cnormG a : List QFunNZ).length ≤ fuel)
+    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
+    toPolyG (cdivFF fuel a g) * toPolyG g = toPolyG a := by
+  have hgdvd : toPolyG g ∣ toPolyG a := hgassoc.dvd.trans (gcd_dvd_left _ _)
+  exact (toPolyG_cdivFF_exact fuel a g hg0 hfuel hgdvd).symm
+
+/-- **The `b`-exact-division witness** `toPolyG (cdivFF fuel b g) · toPolyG g = toPolyG b` from
+`g ~ gcd(a, b)` (`g ∣ b`). The second `cSPDECleared` clause. -/
+theorem cdivFF_b_exact_of_gcd (fuel : ℕ) (a b g : CPolyG QFunNZ)
+    (hg0 : cnormG g ≠ []) (hfuel : (cnormG b : List QFunNZ).length ≤ fuel)
+    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
+    toPolyG (cdivFF fuel b g) * toPolyG g = toPolyG b := by
+  have hgdvd : toPolyG g ∣ toPolyG b := hgassoc.dvd.trans (gcd_dvd_right _ _)
+  exact (toPolyG_cdivFF_exact fuel b g hg0 hfuel hgdvd).symm
+
+/-- **The `c`-exact-division witness** `toPolyG (cdivFF fuel c g) · toPolyG g = toPolyG c` from the
+`cdvdG fuel g c = true` branch (`g ∣ c`). The third `cSPDECleared` clause. -/
+theorem cdivFF_c_exact_of_cdvdG (fuel : ℕ) (c g : CPolyG QFunNZ)
+    (hg0 : cnormG g ≠ []) (hfuel : (cnormG c : List QFunNZ).length ≤ fuel)
+    (hdvd : cdvdG fuel g c = true) :
+    toPolyG (cdivFF fuel c g) * toPolyG g = toPolyG c := by
+  have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdG fuel g c hg0 hdvd
+  exact (toPolyG_cdivFF_exact fuel c g hg0 hfuel hgdvd).symm
+
 end DeepWiki.SymbolicIntegration
