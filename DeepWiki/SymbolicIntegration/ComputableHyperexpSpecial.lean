@@ -237,4 +237,82 @@ theorem hyperexpInv_landsSpecialPart :
 
 #print axioms hyperexpInv_landsSpecialPart
 
+/-! ### ★★ STRETCH 1: `∫(exp + 1/exp) = exp − 1/exp` — poly + special mix (`native_decide`)
+
+A Laurent polynomial with BOTH a polynomial part and a special part. Over `ℚ(x)[t]` (`t = exp`, `Dt = t`),
+`f = t + t⁻¹` has `fₚ = t` (positive Laurent coefficient `a₁ = 1`) and `fₛ = t⁻¹` (negative `a₋₁ = 1`).
+The §5.10 driver solves two base RDEs: `∫ t` needs `Dq₁ + (1·η)·q₁ = 1` (`q₁ = 1`, since `D(1) + 1 = 1`),
+`∫ t⁻¹` needs `Dq₋₁ + (−1)·q₋₁ = 1` (`q₋₁ = −1`). So `∫(t + t⁻¹) = q₁·t + q₋₁·t⁻¹ = t − t⁻¹` — and indeed
+`D(t − t⁻¹) = η·t − (−η·t⁻¹) ... = t + t⁻¹`. Assembled as `f = (t²+1)/t`: `a = [1, 0, 1]`, `d = [0, 1]`. -/
+
+/-- The integrand numerator `a = t² + 1` for `f = (t²+1)/t = t + 1/t = exp + 1/exp` over `CPolyG Lvl1`. -/
+def hyperexpPolySpecA : CPolyG Lvl1 := [CField.one, CField.zero, CField.one]
+
+/-- The integrand denominator `d = t` for `f = (t²+1)/t` over `CPolyG Lvl1`. -/
+def hyperexpPolySpecD : CPolyG Lvl1 := [CField.zero, CField.one]
+
+/-- **★★ The §5.10 driver lands `∫(exp + 1/exp) = exp − 1/exp`, and `D(∫f) = f`** (`native_decide`, the
+stretch). On `f = t + t⁻¹` over `ℚ(x)[t]` (`t = exp`, `Dt = η·t`, `η = 1`) — a Laurent polynomial with a
+**polynomial part `t` AND a special part `t⁻¹`** — the §5.10 driver `cIntegrateHyperexpG` integrates each
+term through its own base RDE (`q₁ = 1` for `∫ t`, `q₋₁ = −1` for `∫ t⁻¹`), recombining to `t − t⁻¹`, and
+`res` satisfies the antiderivative identity `D(res) = f` (`checkIdentityG`, over ℚ(x)[t]). The
+polynomial-AND-special Laurent integration computes and differentiates back to `f`. -/
+theorem hyperexpPolySpec_lands :
+    (match CPolyG.cIntegrateHyperexpG hyperexpDt 20 hyperexpPolySpecA hyperexpPolySpecD
+        hyperexpInvCands with
+      | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
+      | none => false) = true := by native_decide
+
+/-! ### ★★ STRETCH 2: a special + NORMAL mix — the §5.10 special part lands; the normal LOG part is the §5.9 frontier
+
+A natural next mix is a special part PLUS a *normal* part that contributes a logarithm, e.g.
+`f = t⁻¹ + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = t`): split `fₛ = 1/t` (special: `t` is the
+hyperexponential special factor) and `fₙ = 1/(t−1)` (normal: `gcd(t−1, Dt) = gcd(t−1, t) = 1`). The §5.10
+driver lands the special part `−1/t` correctly. But the **normal log part** is NOT yet correct for a
+hyperexponential monomial: `cIntegrateReducedG`'s Rothstein–Trager step returns `1·log(t−1)`, whose
+derivative is `D(t−1)/(t−1) = t/(t−1)` (since `D(t−1) = Dt = t`, *not* `1`) — overshooting the intended
+`1/(t−1)` by the hyperexponential residual `R = η·∑res ∈ k` (here `R = 1`). This is **exactly the §5.9
+hyperexponential log-part frontier** analyzed in `ComputableHyperexpBoundary.lean` (`logResidueSum = hₛ +
+R`): the residual `R` must be fed back as a base RDE, which the reduced normal-part integrator does not yet
+do. So `cIntegrateHyperexpG` *runs* on this input and lands the special part, but the normal-log identity
+fails — a **separate, orthogonal** unsolved frontier from the §5.10 special part this file closes.
+
+We record the precise behavior as a `native_decide` fact: the driver returns `some` (it does not crash),
+and the §5.10 special-part Laurent integration alone is exact, while the full-`f` identity is held back by
+the normal-log residual. The clean special+normal hyperexponential integral awaits the §5.9 residual
+feedback (the `HyperexponentialReduce` loop), the documented continuation. -/
+
+/-- The integrand numerator `a = 2t − 1` for `f = (2t−1)/(t²−t) = 1/t + 1/(t−1)` over `CPolyG Lvl1`. -/
+def hyperexpSpecNormA : CPolyG Lvl1 := [CField.neg CField.one, CField.add CField.one CField.one]
+
+/-- The integrand denominator `d = t² − t = t(t−1)` for `f = (2t−1)/(t²−t)` over `CPolyG Lvl1`. -/
+def hyperexpSpecNormD : CPolyG Lvl1 := [CField.zero, CField.neg CField.one, CField.one]
+
+/-- The residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for the special+normal mix. -/
+def hyperexpSpecNormCands : List Lvl1 := [CField.zero, CField.one, CField.neg CField.one]
+
+/-- **The §5.10 driver RUNS on a special+normal hyperexponential integrand** (`native_decide`): on
+`f = t⁻¹ + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = η·t`) the full driver `cIntegrateHyperexpG` returns
+`some` — the canonical split, the §5.10 Laurent special-part integration, the normal-part `cIntegrateReducedG`,
+and the recombination all execute. (The returned result is *not* a correct antiderivative of all of `f`:
+its normal log part `log(t−1)` overshoots `1/(t−1)` by the §5.9 hyperexponential residual `R = 1`, the
+documented frontier — `checkIdentityG` would fail on the full `f`. The §5.10 special part itself is
+exact.) -/
+theorem hyperexpSpecNorm_runs :
+    (CPolyG.cIntegrateHyperexpG hyperexpDt 24 hyperexpSpecNormA hyperexpSpecNormD
+      hyperexpSpecNormCands).isSome = true := by native_decide
+
+/-- **The §5.10 special part of the special+normal integrand integrates exactly** (`native_decide`): the
+special part of `f = t⁻¹ + 1/(t−1)` is `1/t`, whose §5.10 Laurent integral over `ℚ(x)[t]`
+(`cIntegrateHyperexpG` applied to the special-only integrand `a = 1`, `d = t`) is `−1/t`, satisfying
+`D(−1/t) = 1/t` (`checkIdentityG`). This isolates the part the §5.10 engine is responsible for and shows
+it is correct — the special-part residue of the larger mix is fully handled; only the *normal* log part
+is the §5.9 frontier. -/
+theorem hyperexpSpecNorm_specialPart_exact :
+    (match CPolyG.cIntegrateHyperexpG hyperexpDt 20 hyperexpInvA hyperexpInvD hyperexpInvCands with
+      | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
+      | none => false) = true := by native_decide
+
+#print axioms hyperexpSpecNorm_runs
+
 end DeepWiki.SymbolicIntegration
