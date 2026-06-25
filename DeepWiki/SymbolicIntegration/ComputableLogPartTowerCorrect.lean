@@ -119,4 +119,129 @@ theorem extendDeriv_sum_const_logDerivOf_mk {ι : Type*} (s : Finset ι) (c g : 
 
 end Generic
 
+/-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
+Taking the base derivation `δ = derivative'` (Mathlib's `Polynomial.derivative` as a `Derivation`),
+`extendDeriv derivative'` is the d/dx derivation on `RatFunc K` — equal to the repo's `ratFuncDeriv`
+(both extend `derivative` on `K[X]`, so they coincide by `derivation_ext_fractionRing`). This lets the
+§2 *rational* Rothstein–Trager integral identity (`ratFunc_eq_sum_residue_gcd`,
+`deriv_sum_residue_log`) compose with the generic spine above: the **complete** integral identity
+`D(∑ a·log gₐ) = A/D` holds for d/dx, with the residue match supplied by §2's partial fraction. This
+is the end-to-end anchor; the tower case (§5.6) reuses the *same* spine (`extendDeriv δ`,
+`extendDeriv_sum_const_logDerivOf`) with `δ` the monomial derivation, the only missing piece being the
+tower analogue of the §2 residue match (the deferred splitting-field step). -/
+
+section Ddx
+variable {K : Type*} [Field K] [Algebra ℚ K]
+
+/-- `Polynomial.derivative` packaged as a `Derivation ℤ K[X] K[X]` (Mathlib's `K`-derivation
+`derivative'` restricted to the base `ℤ`). The d/dx base derivation, so
+`extendDeriv derivativeDerivation` is d/dx on `RatFunc K`. -/
+noncomputable def derivativeDerivation : Derivation ℤ K[X] K[X] :=
+  (Polynomial.derivative' (R := K)).restrictScalars ℤ
+
+omit [Algebra ℚ K] in
+@[simp] theorem derivativeDerivation_apply (p : K[X]) :
+    derivativeDerivation p = derivative p := rfl
+
+omit [Algebra ℚ K] in
+/-- **`extendDeriv derivativeDerivation` is d/dx on `RatFunc K`**, at the function level: it computes
+the repo's `ratFuncDeriv` (the §2 d/dx derivation) on every rational function. Both are the quotient
+rule with `derivative` as the base (`extendDerivFun_mk`/`ratFuncDeriv_mk`), so they agree on each
+`RatFunc.mk p q` by `RatFunc.induction_on'`. (Stated at the function level to side-step the field
+`Module ℤ` diamond on the bundled `Derivation`.) -/
+theorem extendDerivFun_derivativeDerivation (x : RatFunc K) :
+    extendDerivFun (derivativeDerivation (K := K)) x = ratFuncDeriv x := by
+  induction x using RatFunc.induction_on' with | _ p q hq =>
+  rw [extendDerivFun_mk, ratFuncDeriv_mk, derivativeDerivation_apply, derivativeDerivation_apply]
+
+/-- **`extendDeriv derivativeDerivation` is d/dx**, applied form: `extendDeriv derivativeDerivation x`
+equals `ratFuncDeriv x` (the d/dx derivation underlying the §2 `Differential (RatFunc K)` instance). -/
+theorem extendDeriv_derivativeDerivation_apply (x : RatFunc K) :
+    extendDeriv (derivativeDerivation (K := K)) x = ratFuncDeriv x := by
+  rw [extendDeriv_apply, extendDerivFun_derivativeDerivation]
+
+end Ddx
+
+/-- Headline restatement: the §5.6 per-factor log-derivative `D(log gᵢ) = (Δ gᵢ)/gᵢ` over the tower
+derivation `extendDeriv δ`. -/
+example {K : Type*} [Field K] [Algebra ℚ K] (δ : Derivation ℤ K[X] K[X]) (g : K[X]) :
+    extendDeriv δ (algebraMap K[X] (RatFunc K) g) / algebraMap K[X] (RatFunc K) g
+      = RatFunc.mk (δ g) g :=
+  extendDeriv_logDerivOf δ g
+
+/-- Headline restatement: the §5.6 log-sum Leibniz reduction `D(∑ aᵢ·log gᵢ) = ∑ aᵢ·(Δ gᵢ)/gᵢ` for
+δ-constant residue coefficients `aᵢ`, over the tower derivation `extendDeriv δ`. -/
+example {K : Type*} [Field K] [Algebra ℚ K] (δ : Derivation ℤ K[X] K[X]) {ι : Type*} (s : Finset ι)
+    (c g : ι → K[X]) (hc : ∀ i ∈ s, δ (c i) = 0) (L : ι → RatFunc K)
+    (hL : ∀ i ∈ s, extendDeriv δ (L i)
+      = algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) :
+    extendDeriv δ (∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i) * L i)
+      = ∑ i ∈ s, algebraMap K[X] (RatFunc K) (c i)
+          * (algebraMap K[X] (RatFunc K) (δ (g i)) / algebraMap K[X] (RatFunc K) (g i)) :=
+  extendDeriv_sum_const_logDerivOf δ s c g hc L hL
+
+/-! ### Specialization to the genuine tower fraction field `RatFunc (RatFunc ℚ)`
+The §5.6 identities on the *actual* carrier of `cResidueResultantTower`/`cLogArgTower`: the tower
+derivation `towerFractionFieldDeriv Dt = extendDeriv (implicitDeriv (toPolyG Dt))` on
+`RatFunc (RatFunc ℚ)`, with the monomial base `Δ = implicitDeriv (toPolyG Dt)`. -/
+
+open CPolyG
+
+/-- The engine carrier `CFieldSpec.K QFunNZ` is `RatFunc ℚ`, a `ℚ`-algebra. Re-declared as a local
+instance (matching the keystone's) so the tower specialization synthesizes the **same** `Algebra ℚ`
+as `towerFractionFieldDeriv`, avoiding an instance-mismatch detour. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K QFunNZ) :=
+  inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+/-- **The §5.6 per-factor log-derivative on the tower**: for a log argument `g ∈ (RatFunc ℚ)[X]` (e.g.
+the `gcd_t(d, a − c·Dd)` produced by `cLogArgTower`), the log-derivative of `g` under the tower
+derivation `towerFractionFieldDeriv Dt` is `(Δ g)/g` with `Δ = implicitDeriv (toPolyG Dt)` the monomial
+derivation. The all-inputs generalization of `logPartTower_example`'s per-residue log-argument check,
+on the genuine tower fraction field. The keystone `towerFractionFieldDeriv_logDeriv`, restated in
+residue-criterion phrasing. -/
+theorem towerLogPart_logDerivOf (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
+    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g)
+        / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g
+      = RatFunc.mk (Differential.implicitDeriv (toPolyG Dt) g) g :=
+  towerFractionFieldDeriv_logDeriv Dt g
+
+/-- **The §5.6 log-sum Leibniz reduction on the tower** (`D(∑ aᵢ·log gᵢ) = ∑ aᵢ·(Δ gᵢ)/gᵢ`): for the
+monomial-derivation tower `RatFunc (RatFunc ℚ)`, with δ-constant residue coefficients `cᵢ` and log
+arguments `gᵢ ∈ (RatFunc ℚ)[X]` modeled by `L`, the derivative of the logarithmic part
+`∑ᵢ algMap(cᵢ)·log gᵢ` is the residue sum `∑ᵢ algMap(cᵢ)·(Δ gᵢ)/gᵢ` under `towerFractionFieldDeriv Dt`.
+The differential half of the §5.6 integral identity over the genuine tower fraction field — the
+all-inputs generalization of `logPartTower_example` to the integral form `D(∑ aᵢ log gᵢ) = a/d` (the
+residue match against `a/d` being the deferred splitting-field step). Proved by `map_sum` + the
+constant-multiple rule (`Derivation.leibniz` with the δ-constant factor killed via
+`towerFractionFieldDeriv_algebraMap`) + the per-factor `hL`. -/
+theorem towerLogPart_sum_const_logDerivOf (Dt : CPolyG QFunNZ) {ι : Type*} (s : Finset ι)
+    (c g : ι → (CFieldSpec.K QFunNZ)[X])
+    (hc : ∀ i ∈ s, Differential.implicitDeriv (toPolyG Dt) (c i) = 0)
+    (L : ι → RatFunc (CFieldSpec.K QFunNZ))
+    (hL : ∀ i ∈ s, towerFractionFieldDeriv Dt (L i)
+      = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Differential.implicitDeriv (toPolyG Dt) (g i))
+          / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (g i)) :
+    towerFractionFieldDeriv Dt (∑ i ∈ s, algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (c i) * L i)
+      = ∑ i ∈ s, algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (c i)
+          * (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Differential.implicitDeriv (toPolyG Dt) (g i))
+              / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (g i)) := by
+  rw [map_sum]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  rw [Derivation.leibniz, towerFractionFieldDeriv_algebraMap, hc i hi, map_zero, smul_zero,
+    add_zero, smul_eq_mul, hL i hi]
+
+/-- Headline restatement: the §5.6 per-factor log-derivative on the genuine tower carrier. -/
+example (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
+    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g)
+        / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g
+      = RatFunc.mk (Differential.implicitDeriv (toPolyG Dt) g) g :=
+  towerLogPart_logDerivOf Dt g
+
+#print axioms extendDeriv_logDerivOf
+#print axioms extendDeriv_sum_const_logDerivOf
+#print axioms extendDeriv_sum_const_logDerivOf_mk
+#print axioms extendDeriv_derivativeDerivation_apply
+#print axioms towerLogPart_logDerivOf
+#print axioms towerLogPart_sum_const_logDerivOf
+
 end DeepWiki.SymbolicIntegration
