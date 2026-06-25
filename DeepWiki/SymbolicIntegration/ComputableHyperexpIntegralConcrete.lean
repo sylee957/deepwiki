@@ -182,6 +182,25 @@ theorem ratFunc_elementary_integrable {K : Type*} [Field K] [CharZero K] {ι : T
                         (X - C α))) :=
   integrateRationalFunction_logForm s sset e he hne hdisj A
 
+/-- **A polynomial residual has an explicit base antiderivative** (the concrete pure-rational witness):
+when the residual `r₀ = algMap P` is the image of a polynomial `P ∈ ℚ[x]` (the residues vanish — `r₀` has
+no poles, the simplest pure-rational regime), the §2 `polyIntegral P` gives an explicit base
+antiderivative `g₀ = algMap (polyIntegral P) ∈ ℚ(x)`: `ratFuncDeriv g₀ = r₀`. From
+`ratFuncDeriv_algebraMap` (`d/dx` commutes with `algMap`) and `polyIntegral_derivative`
+(`d/dx (∫P dx) = P`). So `hbase` is dischargeable **with a concrete, computed `g₀`** for a polynomial
+residual — no existential, no logs. -/
+theorem ratFuncDeriv_polyIntegral_algebraMap {K : Type*} [Field K] [CharZero K] (P : K[X]) :
+    ratFuncDeriv (algebraMap K[X] (RatFunc K) (polyIntegral P)) = algebraMap K[X] (RatFunc K) P := by
+  rw [ratFuncDeriv_algebraMap, polyIntegral_derivative]
+
+/-- **A polynomial residual is dischargeable by a base antiderivative** (existence form): every
+polynomial-image residual `r₀ = algMap P` has a base `d/dx`-antiderivative `g₀ ∈ ℚ(x)` with
+`ratFuncDeriv g₀ = r₀` (witness `g₀ = algMap (polyIntegral P)`,
+`ratFuncDeriv_polyIntegral_algebraMap`). -/
+theorem exists_ratFuncDeriv_eq_of_algebraMap {K : Type*} [Field K] [CharZero K] (P : K[X]) :
+    ∃ g₀ : RatFunc K, ratFuncDeriv g₀ = algebraMap K[X] (RatFunc K) P :=
+  ⟨algebraMap K[X] (RatFunc K) (polyIntegral P), ratFuncDeriv_polyIntegral_algebraMap P⟩
+
 end Liouville
 
 /-! ### The `Core`-level `hbase`-free §5.9 simple integral over the base monomial derivation
@@ -255,6 +274,8 @@ end CoreConcrete
 #print axioms CPolyG.implicitDeriv_C_of_ratFuncDeriv
 #print axioms CPolyG.towerLogResidueSum_sub_ratPart_eq_div_of_residueData
 #print axioms ratFunc_elementary_integrable
+#print axioms ratFuncDeriv_polyIntegral_algebraMap
+#print axioms exists_ratFuncDeriv_eq_of_algebraMap
 #print axioms extendDeriv_logPart_sub_ratPart_eq_div
 
 end DeepWiki.SymbolicIntegration
