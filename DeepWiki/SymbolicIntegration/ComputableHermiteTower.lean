@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
 import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
+import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 
 /-! # Computable transcendental Hermite reduction over the tower ℚ(x)[t] (Bronstein §5.3)
 Bronstein's `HermiteReduce(f, D)` (§5.3, p.139, quadratic version) rewrites the *normal* part
@@ -39,35 +40,6 @@ open Compute
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
-
-/-- **Natural number as a field element** `cnatCastG k = 1 + 1 + … + 1` (`k` times), built only from
-`CField.add`/`CField.one`. Needs only `[CField α]`, so it reduces (`native_decide`); used to form the
-`−a/j` scaling in the Hermite inner loop. (`ComputableFieldGcd.nsmulG` carries a `[CFieldSpec α]`
-binder and so does not reduce in the bridge-free engine context.) -/
-def cnatCastG : ℕ → α
-  | 0 => CField.zero
-  | k + 1 => CField.add CField.one (cnatCastG k)
-
-/-! ### The generic Bézout/Diophantine solver over ℚ(x)[t]
-
-`cdiophantineG fuel p q rhs = (b, c)` solving `b·p + c·q = rhs` with `deg b < deg q`, for coprime
-`p, q` (so `gcd(p,q)` is a nonzero constant). The generic mirror of `Compute.cdiophantine`
-(`HermiteCompute`): from `cgcdExtG p q = (g, s, t)` with `s·p + t·q = g` (constant), scale `(s,t)` by
-`rhs/g`, then reduce the first cofactor mod `q` and absorb the quotient into the second. This is the
-`ExtendedEuclidean(p, q, rhs)` step of Bronstein's §5.3 `HermiteReduce`. -/
-
-/-- **Generic Diophantine/Bézout solver** `cdiophantineG fuel p q rhs = (b, c)` solving
-`b·p + c·q = rhs` with `deg b < deg q`, for **coprime** `p, q`. From `cgcdExtG p q = (g, s, t)` with
-`s·p + t·q = g` (a nonzero constant), rescale `(s,t)` by `rhs/g`, reduce the first cofactor mod `q`
-(`S = quo·q + b`), and absorb `quo·p` into the second (`c = T + quo·p`). Generic over `[CField α]`. -/
-def cdiophantineG (fuel : ℕ) (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
-  let (g, s, t) := cgcdExtG fuel p q
-  let ginv := CField.inv (cleadG g)
-  let S := cscaleG ginv (cmulG rhs s)
-  let T := cscaleG ginv (cmulG rhs t)
-  let (quo, b) := cdivmodG fuel S q
-  let c := caddG T (cmulG quo p)
-  (cnormG b, cnormG c)
 
 /-! ### The inner Hermite loop over one squarefree factor (the monomial derivation `D`)
 
