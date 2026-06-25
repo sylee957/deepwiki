@@ -171,4 +171,45 @@ example :
 
 end CPolyG
 
+/-! ### Target B — the fuel-free splitting-factorization loop `cSplitFactorFastWf`
+
+`cSplitFactorFast Dt fuel p = (pₙ, pₛ)` (Bronstein §3.5) peels a special factor
+`S = gcd(p, Dp)/gcd(p, dp/dt)` each step and recurses on `p/S`. The recursion measure is the normalized
+`t`-list length `(cnormG p).length`: when the loop continues (`cdegG S ≠ 0`), the special factor `S` is
+non-constant and divides `p` exactly, so the quotient `p/S` has strictly smaller `t`-degree, hence strictly
+shorter normalized list. The fuel-free companion `cSplitFactorFastWf` runs the **own-loop** by well-founded
+recursion on `(cnormG p).length`, with the structural runtime guard `(cnormG (p/S)).length <
+(cnormG p).length`, so `decreasing_by` is `assumption` and no fuel is computed or passed at runtime. The
+fuel-free leaves `cgcdFFWf`/`cdivFFWf` (Target A) compute the step `S` and the quotient. -/
+
+namespace CPolyG
+
+/-- **The fuel-free `SplitFactor` step** `cstepWf Dt p = cdivFFWf (cgcdFFWf p (cmonomialDeriv Dt p))
+(cgcdFFWf p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)` computed with the
+fuel-free fraction-free gcd and fuel-free exact Euclidean division (the fuel-free companion of `cstep`). -/
+def cstepWf (Dt : CPolyG QFunNZ) (p : CPolyG QFunNZ) : CPolyG QFunNZ :=
+  cdivFFWf (cgcdFFWf p (cmonomialDeriv Dt p)) (cgcdFFWf p (cderivG p))
+
+/-- **Fuel-free splitting-factorization loop** (Bronstein §3.5) `cSplitFactorFastWf Dt p = (pₙ, pₛ)`: the
+fuel-free companion of `cSplitFactorFast`. One step extracts `S = cstepWf Dt p`; a constant `S` (`cdegG S =
+0`) ⇒ `p` is normal, else recurse on the exact quotient `p/S = cdivFFWf p S` and accumulate `S` into the
+special part. True well-founded recursion on `(cnormG p).length` — **no fuel at runtime**. The recursion is
+taken only under the structural guard `(cnormG (cdivFFWf p S)).length < (cnormG p).length`, so
+`decreasing_by` is `assumption`. Over a real run the guard never fails (the non-constant special factor
+strictly drops the `t`-degree), so `cSplitFactorFastWf` agrees with `cSplitFactorFast`
+(`cSplitFactorFastWf_eq`). -/
+def cSplitFactorFastWf (Dt : CPolyG QFunNZ) (p : CPolyG QFunNZ) : CPolyG QFunNZ × CPolyG QFunNZ :=
+  let S := cstepWf Dt p
+  if cdegG S = 0 then (p, [CField.one])
+  else
+    let pq := cdivFFWf p S
+    if (cnormG pq : List QFunNZ).length < (cnormG p : List QFunNZ).length then
+      let (qn, qs) := cSplitFactorFastWf Dt pq
+      (qn, cmulG S qs)
+    else (p, [CField.one])   -- unreachable on a real run (the special factor drops the degree)
+termination_by (cnormG p).length
+decreasing_by assumption
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
