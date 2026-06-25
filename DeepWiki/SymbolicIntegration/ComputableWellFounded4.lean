@@ -436,4 +436,248 @@ example :
 
 end CPolyG
 
+/-! ### Target C — the fuel-free canonical representation `canonicalRepresentationFastWf`
+
+`canonicalRepresentationFast Dt fuel a d` (Bronstein §3.5, p.103) — the §3.5 capstone `cIntegrate`
+consumes — composes the Euclidean division `cdivmodG fuel a d`, the denominator split `cSplitFactorFast Dt
+fuel d`, the Bézout cofactors `cbezoutOne fuel dₙ dₛ` (via `cgcdExtG fuel`), and the Bézout split
+`cextendedEuclideanSplit fuel dₙ dₛ r u w` (via `cdivmodG fuel`). The fuel-free companion substitutes the
+WF leaves throughout: `cdivmodWf`, `cSplitFactorFastWf` (Target B of `ComputableWellFounded3`), the
+fuel-free Bézout helpers `cbezoutOneWf`/`cextendedEuclideanSplitWf` (via the fuel-free extended-Euclid
+`cgcdWf`). Every sub-op is a WF leaf, so the capstone is **fuel-free end-to-end**. The abstract
+reconstruction `canonicalRepFast_reconstructs` (`ComputableCanonicalRepCorrect`) transports through the
+bridge. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Fuel-free Bézout cofactors** `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`: the
+fuel-free companion of `cbezoutOne`. Runs the **fuel-free** extended-Euclid `cgcdWf` to get `(g, s, t)` with
+`s·a + t·b = g` (a nonzero constant, since `a, b` coprime), then rescales by `g⁻¹` — **no fuel at runtime**. -/
+def cbezoutOneWf (a b : CPolyG α) : CPolyG α × CPolyG α :=
+  let (g, s, t) := cgcdWf a b
+  let ginv := CField.inv (cleadG g)
+  (cscaleG ginv s, cscaleG ginv t)
+
+/-- **Fuel-free Bézout split** `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)`: the fuel-free companion of
+`cextendedEuclideanSplit`. With a Bézout pair `u·dₙ + w·dₛ = 1`, returns `b = (u·r) mod dₛ` and `c = w·r +
+(u·r div dₛ)·dₙ` via the **fuel-free** `cdivmodWf` — **no fuel at runtime**. -/
+def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α :=
+  let ur := cmulG u r
+  let (quo, rem) := cdivmodWf ur ds
+  (rem, caddG (cmulG w r) (cmulG quo dn))
+
+variable [CFieldSpec α]
+
+/-- **`cbezoutOneWf` equals the fuel'd `cbezoutOne` at any sufficient fuel** — with `(cnormG a).length ≤
+fuel` and `(cnormG b).length < fuel`, `cbezoutOneWf a b = cbezoutOne fuel a b`, since the only fuel'd
+sub-op `cgcdExtG` is bridged by `cgcdWf_eq_of_fuel`. -/
+theorem cbezoutOneWf_eq_of_fuel (fuel : ℕ) (a b : CPolyG α)
+    (ha : (cnormG a : List α).length ≤ fuel) (hb : (cnormG b : List α).length < fuel) :
+    cbezoutOneWf a b = CPolyG.cbezoutOne fuel a b := by
+  rw [cbezoutOneWf, CPolyG.cbezoutOne, cgcdWf_eq_of_fuel fuel a b ha hb]
+
+/-- **`cextendedEuclideanSplitWf` equals the fuel'd `cextendedEuclideanSplit` at any sufficient fuel** —
+with `(cnormG (cmulG u r)).length ≤ fuel`, `cextendedEuclideanSplitWf dn ds r u w = cextendedEuclideanSplit
+fuel dn ds r u w`, since the only fuel'd sub-op `cdivmodG` is bridged by `cdivmodWf_eq_of_fuel`. -/
+theorem cextendedEuclideanSplitWf_eq_of_fuel (fuel : ℕ) (dn ds r u w : CPolyG α)
+    (hur : (cnormG (cmulG u r) : List α).length ≤ fuel) :
+    cextendedEuclideanSplitWf dn ds r u w = CPolyG.cextendedEuclideanSplit fuel dn ds r u w := by
+  rw [cextendedEuclideanSplitWf, CPolyG.cextendedEuclideanSplit,
+    cdivmodWf_eq_of_fuel fuel (cmulG u r) ds hur]
+
+end CPolyG
+
+namespace CPolyG
+
+/-- **Fuel-free `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower ℚ(x)[t] — the §3.5
+capstone `cIntegrate` consumes — `canonicalRepresentationFastWf Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c,
+dₙ))` for `f = a/d` (`d` monic). The fuel-free companion of `canonicalRepresentationFast`: divide
+`a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFastWf`, fraction-free);
+Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf` with `cbezoutOneWf`). Every sub-op
+is a WF leaf — **no fuel at runtime**, `native_decide`-able over the tower `QFunNZ`. Stated with `.1`/`.2`
+projections (no `let`-destructuring) so the bridge `canonicalRepresentationFastWf_eq` rewrites cleanly. -/
+def canonicalRepresentationFastWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) :
+    CPolyG QFunNZ × (CPolyG QFunNZ × CPolyG QFunNZ) × (CPolyG QFunNZ × CPolyG QFunNZ) :=
+  let qr := cdivmodWf a d
+  let dnds := cSplitFactorFastWf Dt d
+  let uw := cbezoutOneWf dnds.1 dnds.2
+  let bc := cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2
+  (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
+
+end CPolyG
+
+/-! ### Bridge of `canonicalRepresentationFastWf` to `canonicalRepresentationFast`, and transported reconstruction
+
+The bridge substitutes each WF leaf for the fuel'd op: `cdivmodWf = cdivmodG fuel` (length bound),
+`cSplitFactorFastWf = cSplitFactorFast fuel` (the WF3 bridge `cSplitFactorFastWf_eq`, *strict* `< fuel`),
+`cbezoutOneWf = cbezoutOne fuel` (`cgcdWf` descent bounds), and `cextendedEuclideanSplitWf =
+cextendedEuclideanSplit fuel` (the `u·r` length bound). The Wf-run bundle `CCanonicalRepFastWfRegular`
+extends the abstract `CCanonicalRepFastRegular` (the gate `canonicalRepFast_reconstructs` carries) with the
+transparent WF-leaf length bounds a real run meets. The reconstruction headline then transports
+unconditionally over the bridge. -/
+
+/-- **Per-run Wf bundle** `CCanonicalRepFastWfRegular Dt fuel a d`: the abstract reconstruction gate
+`CCanonicalRepFastRegular` plus the transparent WF-leaf length bounds for `canonicalRepresentationFastWf` to
+match `canonicalRepresentationFast fuel` — the dividend `a` is short enough for `cdivmodWf` (`(cnormG
+a).length ≤ fuel`), fuel *strictly* exceeds the denominator `t`-degree (`(toPolyG d).natDegree < fuel`, the
+`cSplitFactorFastWf_eq` strict bound), the split parts are short enough for `cgcdWf`'s descent
+(`(cnormG dₙ).length ≤ fuel`, `(cnormG dₛ).length < fuel`), and the Bézout product `u·r` is short enough for
+`cdivmodWf` (`(cnormG (cmulG u r)).length ≤ fuel`, with `(u, w) = cbezoutOneWf dₙ dₛ`, `r` the division
+remainder). -/
+structure CCanonicalRepFastWfRegular (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) : Prop where
+  /-- the abstract reconstruction gate. -/
+  habs : CCanonicalRepFastRegular Dt fuel a d
+  /-- `a` is short enough for the Euclidean division `cdivmodWf a d` to be reduced. -/
+  halen : (cnormG a : List QFunNZ).length ≤ fuel
+  /-- fuel strictly exceeds the denominator `t`-degree (the `cSplitFactorFastWf_eq` strict bound). -/
+  hdstrict : (toPolyG d).natDegree < fuel
+  /-- the split normal part `dₙ` is short enough for `cgcdWf`'s descent. -/
+  hdnlen : (cnormG (cSplitFactorFastWf Dt d).1 : List QFunNZ).length ≤ fuel
+  /-- the split special part `dₛ` is *strictly* short enough for `cgcdWf`'s descent. -/
+  hdslen : (cnormG (cSplitFactorFastWf Dt d).2 : List QFunNZ).length < fuel
+  /-- the Bézout product `u·r` is short enough for the Bézout split's `cdivmodWf`. -/
+  hurlen : (cnormG (cmulG (cbezoutOneWf (cSplitFactorFastWf Dt d).1 (cSplitFactorFastWf Dt d).2).1
+    (cdivmodWf a d).2) : List QFunNZ).length ≤ fuel
+
+namespace CPolyG
+
+/-- **Bridge — `canonicalRepresentationFastWf` equals `canonicalRepresentationFast` at any sufficient
+fuel.** Under a regular Wf run (`CCanonicalRepFastWfRegular Dt fuel a d`), `canonicalRepresentationFastWf Dt
+a d = canonicalRepresentationFast Dt fuel a d`. The fuel bounds live only here; the WF capstone carries
+none. Each WF leaf is bridged: `cdivmodWf` (`cdivmodWf_eq_of_fuel`), `cSplitFactorFastWf`
+(`cSplitFactorFastWf_eq`), `cbezoutOneWf` (`cbezoutOneWf_eq_of_fuel`), `cextendedEuclideanSplitWf`
+(`cextendedEuclideanSplitWf_eq_of_fuel`). -/
+theorem canonicalRepresentationFastWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hreg : CCanonicalRepFastWfRegular Dt fuel a d) :
+    canonicalRepresentationFastWf Dt a d = CPolyG.canonicalRepresentationFast Dt fuel a d := by
+  obtain ⟨habs, halen, hdstrict, hdnlen, hdslen, hurlen⟩ := hreg
+  obtain ⟨hd, _, hsplitreg, _, _⟩ := habs
+  -- the four WF-leaf bridges, each at the concrete fuel'd sub-results
+  have hdiv : cdivmodWf a d = CPolyG.cdivmodG fuel a d := cdivmodWf_eq_of_fuel fuel a d halen
+  have hsplit : cSplitFactorFastWf Dt d = CPolyG.cSplitFactorFast Dt fuel d :=
+    cSplitFactorFastWf_eq Dt fuel d hd hdstrict hsplitreg
+  have hbez : cbezoutOneWf (CPolyG.cSplitFactorFast Dt fuel d).1 (CPolyG.cSplitFactorFast Dt fuel d).2
+      = CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+          (CPolyG.cSplitFactorFast Dt fuel d).2 :=
+    cbezoutOneWf_eq_of_fuel fuel _ _ (hsplit ▸ hdnlen) (hsplit ▸ hdslen)
+  have hsplitSplit : cextendedEuclideanSplitWf (CPolyG.cSplitFactorFast Dt fuel d).1
+        (CPolyG.cSplitFactorFast Dt fuel d).2 (CPolyG.cdivmodG fuel a d).2
+        (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+          (CPolyG.cSplitFactorFast Dt fuel d).2).1
+        (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+          (CPolyG.cSplitFactorFast Dt fuel d).2).2
+      = CPolyG.cextendedEuclideanSplit fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+          (CPolyG.cSplitFactorFast Dt fuel d).2 (CPolyG.cdivmodG fuel a d).2
+          (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+            (CPolyG.cSplitFactorFast Dt fuel d).2).1
+          (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFast Dt fuel d).1
+            (CPolyG.cSplitFactorFast Dt fuel d).2).2 :=
+    cextendedEuclideanSplitWf_eq_of_fuel fuel _ _ _ _ _
+      (by
+        -- `hurlen` is in WF-leaf form; carry it to the fuel'd `cbezoutOne`/`cdivmodG` form
+        rw [hdiv] at hurlen; rw [hsplit] at hurlen; rw [hbez] at hurlen; exact hurlen)
+  -- unfold MY def and rewrite every WF leaf to its fuel'd value (so MY side is pure fuel'd-op form)
+  rw [canonicalRepresentationFastWf, hdiv, hsplit, hbez, hsplitSplit]
+  -- now MY side is the fuel'd ops in `.1`/`.2` projection form; the fuel'd def's `let (q,r) := …`
+  -- matches collapse to the same projection form (`Prod.eta`), so `rw` closes the goal by `rfl`.
+  rw [CPolyG.canonicalRepresentationFast]
+
+end CPolyG
+
+open RatFunc in
+/-- **`canonicalRepresentationFastWf` reconstructs `f`** (the §3.5 capstone, fuel-free), abstract
+correctness over ℚ(x)(t): with the output `(q, (b, dₛ), (c, dₙ)) = canonicalRepresentationFastWf Dt a d`,
+the three pieces recombine to `f = a/d` — `(q : ℚ(x)(t)) + b/dₛ + c/dₙ = a/d`. The same
+`CCanonicalRepFastRegular` reconstruction gate the fuel'd `canonicalRepFast_reconstructs` carries (here
+carried inside the Wf bundle `CCanonicalRepFastWfRegular`); the WF bridge `canonicalRepresentationFastWf_eq`
+only removes the explicit `fuel` from the runtime. This is the §3.5 layer's payoff: the fuel-free capstone
+`cIntegrate` consumes genuinely reconstructs `f`. -/
+theorem canonicalRepFastWf_reconstructs (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hreg : CCanonicalRepFastWfRegular Dt fuel a d) :
+    (let res := CPolyG.canonicalRepresentationFastWf Dt a d
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG q))
+          + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG b)
+              / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG ds)
+          + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG c)
+              / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG dn)
+        = algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG a)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG d)) := by
+  simp only [canonicalRepresentationFastWf_eq Dt fuel a d hreg]
+  exact canonicalRepFast_reconstructs Dt fuel a d hreg.habs
+
+-- The fuel-free §3.5 capstone reconstruction headline (`CCanonicalRepFastRegular`-gated, as the fuel'd
+-- version) carries only the standard axioms (no `native` axiom).
+#print axioms canonicalRepFastWf_reconstructs
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- The headline (Target C, the payoff): `canonicalRepresentationFastWf Dt a d = (q, (b, dₛ), (c, dₙ))`,
+-- read over ℚ(x)(t) = `RatFunc (RatFunc ℚ)`, reconstructs `f = a/d` — `q + b/dₛ + c/dₙ = a/d` — under the
+-- transparent per-node Wf regularity a real run satisfies, **with no fuel at runtime**.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hreg : CCanonicalRepFastWfRegular Dt fuel a d) :
+    (algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+          (toPolyG (CPolyG.canonicalRepresentationFastWf Dt a d).1))
+        + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFastWf Dt a d).2.1.1)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFastWf Dt a d).2.1.2)
+        + algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFastWf Dt a d).2.2.1)
+            / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ))
+              (toPolyG (CPolyG.canonicalRepresentationFastWf Dt a d).2.2.2)
+      = algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG a)
+          / algebraMap (RatFunc ℚ)[X] (RatFunc (RatFunc ℚ)) (toPolyG d) :=
+  canonicalRepFastWf_reconstructs Dt fuel a d hreg
+
+/-! ### `native_decide` smoke test for `canonicalRepresentationFastWf`
+
+The whole fuel-free canonical-representation capstone executes in native code over the
+noncomputable-`CFieldSpec` tower `QFunNZ` (ℚ(x)) — `canonicalRepresentationFastWf` carries no fuel and no
+noncomputable bridge into the compiled body. Re-runs the engine's `f = t³/((t−1)(t−2))` validation. -/
+
+namespace CPolyG
+
+open QFunNZ
+
+/-- **`canonicalRepresentationFastWf` recombines to `f`, fuel-free** (`native_decide`): for `f =
+t³/((t−1)(t−2))` over ℚ(x)(t) with `Dt = t − 1`, the computed parts `(q, (b, dₛ), (c, dₙ))` satisfy the
+canonical identity `q + b/dₛ + c/dₙ = a/d` — checked, after clearing denominators, as
+`(q·dₛ·dₙ + b·dₙ + c·dₛ)·d = a·(dₛ·dₙ)` via `cisZeroG` of the difference over ℚ(x)[t]. The whole fuel-free
+§3.5 capstone runs end-to-end with **no fuel at runtime**. -/
+example :
+    (let res := CPolyG.canonicalRepresentationFastWf canonicalRepFastExampleDt
+        canonicalRepFastExampleA canonicalRepFastExampleD
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      let dsdn := CPolyG.cmulG ds dn
+      let num := CPolyG.caddG (CPolyG.caddG (CPolyG.cmulG q dsdn) (CPolyG.cmulG b dn))
+        (CPolyG.cmulG c ds)
+      CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmulG num canonicalRepFastExampleD)
+        (CPolyG.cmulG canonicalRepFastExampleA dsdn))) = true := by native_decide
+
+/-- `canonicalRepresentationFastWf` agrees with the fuel'd `canonicalRepresentationFast` on the validation
+`f` (the reduced-part denominator `dₛ` and simple-part denominator `dₙ` degree lists match). -/
+example :
+    ((CPolyG.cdegG (CPolyG.canonicalRepresentationFastWf canonicalRepFastExampleDt
+        canonicalRepFastExampleA canonicalRepFastExampleD).2.1.2,
+      CPolyG.cdegG (CPolyG.canonicalRepresentationFastWf canonicalRepFastExampleDt
+        canonicalRepFastExampleA canonicalRepFastExampleD).2.2.2))
+      = ((CPolyG.cdegG (CPolyG.canonicalRepresentationFast canonicalRepFastExampleDt 8
+          canonicalRepFastExampleA canonicalRepFastExampleD).2.1.2,
+        CPolyG.cdegG (CPolyG.canonicalRepresentationFast canonicalRepFastExampleDt 8
+          canonicalRepFastExampleA canonicalRepFastExampleD).2.2.2)) := by native_decide
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
