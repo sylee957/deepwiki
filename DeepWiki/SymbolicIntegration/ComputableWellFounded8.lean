@@ -487,4 +487,111 @@ def cRischDEWfFull (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
 
 end CPolyG
 
+/-! ### `native_decide` — the fuel-free §6.6 cancellation regimes on Bronstein's worked examples
+
+The §6.6 cancellation deliverables, re-run **fuel-free**: the fuel-free own-loops compute the same
+elementary solutions as the fuel'd versions, each verified by `native_decide` to *actually solve* the
+equation (the cleared difference reads to `0`, not merely pinning the output). These exercise the base
+ℚ-pipeline (`cRationalRDEWf`) the non-cancellation Examples 6.5.1/6.4.1 do not. Reuses the example data of
+`ComputableRischDE`. -/
+
+open CPolyG QFunNZ in
+/-- **Example §6.6 primitive cancellation — fuel-free** (`native_decide`, Bronstein §6.6,
+`PolyRischDECancelPrim`, book p.212). For the primitive monomial `t = log(x)` (`Dt = 1/x ∈ k`, `δ = 0`),
+the cancellation equation `Dq + 1·q = log(x) + 1/x` (`b = 1 ∈ ℚ*`, `c = t + 1/x`, `deg(c) = 1`) is solved
+**fuel-free** by `cPolyRischDECancelPrimWf`, returning some `q` verified to **actually solve** `Dq + b·q = c`
+by `cisZeroG` of the cleared difference `D(q) + b·q − c` (`D = cmonomialDeriv rischDECancelDt`) — the book's
+solution `q = log(x) = t`. The fuel-free dispatcher `cPolyRischDEWf` routes this same input to the
+cancellation solver (`deg(b) = 0 = max(0, δ−1)`, `δ = 0`), producing an equal `q`. The fuel-free companion
+of `rischDE_cancel_example`: the §6.6 primitive cancellation case — driving the eq. 6.23 base Risch DE over
+`k = ℚ(x)` (`RischDE(1,1) = 1` via the now-fuel-free `cRischDEBaseWf`) — computes with **no fuel at
+runtime**. -/
+theorem rischDEWf_cancel_example :
+    (match cPolyRischDECancelPrimWf rischDECancelDt rischDECancelB rischDECancelC 5 with
+      | some q =>
+          cisZeroG (csubG (caddG (cmonomialDeriv rischDECancelDt q) (cmulG rischDECancelB q))
+            rischDECancelC)
+      | none => false) = true
+    ∧ (match cPolyRischDEWf rischDECancelDt rischDECancelB rischDECancelC 5,
+            cPolyRischDECancelPrimWf rischDECancelDt rischDECancelB rischDECancelC 5 with
+        | some q1, some q2 => cisZeroG (csubG q1 q2)
+        | _, _ => false) = true := by native_decide
+
+#print axioms rischDEWf_cancel_example
+
+open CPolyG QFunNZ in
+/-- **Example §6.6 non-constant base recursion — fuel-free** (`native_decide`, Bronstein §6.6 eq. 6.23,
+book p.212). For the primitive monomial `t = log(x)` (`Dt = 1/x ∈ k`, `δ = 0`), the assembled fuel-free
+solver `cRischDEWfFull` on `Dy + (1/x)y = 2·log(x) + 1` over ℚ(x)(t) — normal denominator → special
+(trivial) → degree bound → SPDE → §6.6 primitive cancellation, the cancellation peeling the leading
+monomial via the **non-constant** base RDE `RischDE(1/x, 2)` over `k = ℚ(x)` (the whole **fuel-free** base
+ℚ-pipeline `cRationalRDEWf`, `s = x`) — returns `some (ynum, yden)` verified to **actually solve** the
+equation by `rdeClearedCheck` (the cleared polynomial identity): the solution `y = x·log(x)`. The standalone
+fuel-free base solve `cRischDEBaseWf (1/x) 2 = x` is verified to solve `Ds + (1/x)s = 2` (cleared
+difference). The fuel-free companion of `rischDE_baseRecursion_example`: the **general (non-constant)
+rational base Risch DE over ℚ(x)** computes fuel-free, and the §6.6 primitive cancellation drives it to
+`y = x·log(x)` with **no fuel at runtime**. -/
+theorem rischDEWf_baseRecursion_example :
+    (match cRischDEWfFull rischDEBaseRecDt rischDEBaseRecFnum rischDEBaseRecFden
+          rischDEBaseRecGnum rischDEBaseRecGden with
+      | some (ynum, yden) =>
+          rdeClearedCheck rischDEBaseRecDt rischDEBaseRecFnum rischDEBaseRecFden
+            rischDEBaseRecGnum rischDEBaseRecGden ynum yden
+      | none => false) = true
+    ∧ (match cRischDEBaseWf (ofNumDen [1] [0, 1] (by decide)) (ofConstNZ 2) with
+        | some s =>
+            Compute.qeq (Compute.qadd (Compute.qadd (Compute.qderiv s.1)
+                (Compute.qmul ([1], [0, 1]) s.1)) (Compute.qneg ([2], [1]))) Compute.qzero
+        | none => false) = true := by native_decide
+
+#print axioms rischDEWf_baseRecursion_example
+
+open CPolyG QFunNZ in
+/-- **The standalone rational Risch DE `Ds + (1/x)s = 2` over ℚ(x) computes fuel-free** (`native_decide`,
+Bronstein §6.6 eq. 6.23 base solve). The fuel-free `cRationalRDEWf` — the whole Ch. 6 pipeline at the base
+level (`t = x`, `k = ℚ`, `D = d/dx`, **no fuel at runtime**) — returns `some (snum, sden)`, and `s =
+snum/sden` is verified to **actually solve** `Ds + (1/x)s = 2` by clearing denominators (the quotient-rule
+identity reads to `0`). The solution `s = x` (returned unreduced `(x², x)`). The fuel-free companion of
+`rischDE_rationalRDE_example`: exercises the base-level **weak normalizer** (`1/x` residue `1` at `x = 0`,
+`q₁ = x`), **normal denominator**, **degree bound**, **SPDE**, and **polynomial integration** (`Du = 2x`),
+all fuel-free. -/
+theorem rischDEWf_rationalRDE_example :
+    (match cRationalRDEWf [1] [0, 1] [2] [1] with
+      | some (snum, sden) =>
+          let Dsn := Compute.cderiv snum
+          let Dsd := Compute.cderiv sden
+          let x : Compute.CPoly := [0, 1]
+          Compute.cisZero (Compute.csub
+            (Compute.cadd
+              (Compute.cmul (Compute.csub (Compute.cmul Dsn sden) (Compute.cmul snum Dsd)) x)
+              (Compute.cmul snum sden))
+            (Compute.cmul (Compute.cscale 2 (Compute.cmul sden sden)) x))
+      | none => false) = true := by native_decide
+
+#print axioms rischDEWf_rationalRDE_example
+
+open CPolyG QFunNZ in
+/-- **Example §6.6 hyperexponential cancellation — fuel-free** (`native_decide`, Bronstein §6.6,
+`PolyRischDECancelExp`, book p.213). For the hyperexponential monomial `t = exp(x)` (`Dt = t`, `η = Dt/t =
+1 ∈ k`, `δ = 1`), the cancellation equation `Dq + (1/x)·q = (2 + x)·exp(x)` (`b = 1/x ∈ ℚ(x)*`,
+`c = (2+x)t`, `deg(c) = 1`) is solved **fuel-free** by `cPolyRischDECancelExpWf`, returning some `q` verified
+to **actually solve** `Dq + b·q = c` by `cisZeroG` of the cleared difference `D(q) + b·q − c`
+(`D = cmonomialDeriv rischDEExpDt`) — the solution `q = x·exp(x)`. The fuel-free dispatcher `cPolyRischDEWf`
+routes this same input to the hyperexponential cancellation solver (`deg(b) = 0`, `δ = 1`), producing an
+equal `q`. The fuel-free companion of `rischDE_cancelExp_example`: `PolyRischDECancelExp` — driving the
+eq. 6.24 base Risch DE `RischDE(1/x + 1, x+2)` over `k = ℚ(x)` (a **non-constant** base solve via the
+now-fuel-free `cRischDEBaseWf`, `s = x`) — computes with **no fuel at runtime**. -/
+theorem rischDEWf_cancelExp_example :
+    (match cPolyRischDECancelExpWf rischDEExpDt rischDEExpB rischDEExpC 5 with
+      | some q =>
+          cisZeroG (csubG (caddG (cmonomialDeriv rischDEExpDt q) (cmulG rischDEExpB q))
+            rischDEExpC)
+      | none => false) = true
+    ∧ (match cPolyRischDEWf rischDEExpDt rischDEExpB rischDEExpC 5,
+            cPolyRischDECancelExpWf rischDEExpDt rischDEExpB rischDEExpC 5 with
+        | some q1, some q2 => cisZeroG (csubG q1 q2)
+        | _, _ => false) = true := by native_decide
+
+#print axioms rischDEWf_cancelExp_example
+
 end DeepWiki.SymbolicIntegration
