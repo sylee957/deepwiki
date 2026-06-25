@@ -103,3 +103,4 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
