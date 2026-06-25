@@ -751,14 +751,19 @@ example :
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
 
 /-- **★ The full fuel-free `cIntegrateGWf` driver runs end-to-end at level 2 and `D(∫f) = f`**
-(`native_decide`): on the same level-2 simple integrand (a pure normal element, `fₚ = fₛ = 0`), the
-assembled fuel-free top-level `cIntegrateGWf` — canonical split + reduced capstone, **no fuel at runtime** —
-returns `some res`, and `res` satisfies the antiderivative identity `D(res) = f` over ℚ(x)(t₁)[t₂]. This is
-the headline: the assembled GENERIC FUEL-FREE tower integral driver computes at level 2. -/
-example :
+(`native_decide`, the headline deliverable): on the same level-2 simple integrand (a pure normal element,
+`fₚ = fₛ = 0`), the assembled fuel-free top-level `cIntegrateGWf` — canonical split + reduced capstone,
+**no fuel at runtime** — returns `some res`, and `res` satisfies the antiderivative identity `D(res) = f`
+over ℚ(x)(t₁)[t₂]. The assembled GENERIC FUEL-FREE tower integral driver computes at level 2. -/
+theorem towerIntLvl2_driverGWf :
     (match CPolyG.cIntegrateGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands with
       | some res => CPolyG.checkIdentityG towerIntLvl2Dt res towerIntLvl2Num towerIntLvl2Den
       | none => false) = true := by native_decide
+
+-- The headline fuel-free integration-driver bridge carries only the standard axioms (no `native` axiom);
+-- the `native_decide` example `towerIntLvl2_driverGWf` carries `Lean.ofReduceBool` separately.
+#print axioms CPolyG.cIntegrateGWf_eq
+#print axioms towerIntLvl2_driverGWf
 
 end DeepWiki.SymbolicIntegration
