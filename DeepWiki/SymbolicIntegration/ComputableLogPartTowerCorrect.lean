@@ -48,6 +48,51 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
+/-! ### The §5.6 residue criterion with a general derivation seed `Dd` (the RT structure)
+`Residues.lean` proves the §2 residue criterion with the *d/dx* derivative `derivative D` as the seed.
+The §5.6 residue construction (`cResidueResultantTower`/`cLogArgTower`) uses instead the **monomial
+derivative** `Dd = Δd` (`= implicitDeriv Dt d`). These lemmas restate the residue criterion with `Dd`
+an *arbitrary* polynomial seed (the §2 proofs used `derivative D` only as an opaque polynomial), so
+they apply verbatim to the §5.6 seed: the residue `a(α)/Dd(α)` equals `c` iff `α` is a root of
+`a − c·Dd`, and the roots of `gcd(d, a − c·Dd)` are exactly the residue-`c` roots of `d`. This is the
+polynomial-level structure underlying `cLogArgTower … c = gcd_t(d, a − c·Dd)`. -/
+
+section ResidueCriterion
+variable {F : Type*} [Field F]
+
+/-- **§5.6 residue criterion at a simple root** (seed `Dd` arbitrary): at a root `α` of `d` with
+`Dd(α) ≠ 0`, the residue `a(α)/Dd(α)` equals `c` iff `α` is a root of `a − c·Dd`. Generalizes
+`residue_eq_iff_isRoot_sub` (which fixes `Dd = derivative d`) to the §5.6 monomial seed
+`Dd = Δd`. -/
+theorem residue_eq_iff_isRoot_sub_seed (a Dd : F[X]) (c α : F) (hα : Dd.eval α ≠ 0) :
+    a.eval α / Dd.eval α = c ↔ (a - C c * Dd).IsRoot α := by
+  rw [IsRoot.def, div_eq_iff hα, eval_sub, eval_mul, eval_C, sub_eq_zero]
+
+open scoped Classical in
+/-- **§5.6 residue criterion, the gcd characterization** (seed `Dd` arbitrary): the roots of
+`gcd(d, a − c·Dd)` are exactly the roots `α` of `d` whose residue `a(α)/Dd(α)` is `c`. Generalizes
+`isRoot_gcd_iff_residue` to the §5.6 monomial seed; this is the polynomial structure realized by
+`cLogArgTower … c = gcd_t(d, a − c·Dd)`. -/
+theorem isRoot_gcd_iff_residue_seed (a d Dd : F[X]) (c α : F) (hα : Dd.eval α ≠ 0) :
+    (gcd d (a - C c * Dd)).IsRoot α ↔ (d.IsRoot α ∧ a.eval α / Dd.eval α = c) := by
+  rw [← dvd_iff_isRoot, dvd_gcd_iff, dvd_iff_isRoot, dvd_iff_isRoot,
+    residue_eq_iff_isRoot_sub_seed a Dd c α hα]
+
+/-- **The monomial-seed residue denominator at a simple root** (the §5.6 ↔ §2 bridge): for a base
+derivation `δ` and `d = (X − α)·E`, the §5.6 residue denominator `(δ d)(α)` factors as
+`(δ(X − α)).eval(α) · E(α)`. Since `E(α) = d'(α)` (the d/dx residue denominator,
+`eval_derivative_X_sub_C_mul`), this is `(δ d)(α) = (δ(X − α)).eval(α) · d'(α)`: the §5.6 residue
+`a(α)/(δ d)(α)` and the §2 d/dx residue `a(α)/d'(α)` differ by the factor `(δ(X − α)).eval(α)`,
+the eval of the local log-derivative numerator. Pinpoints exactly where the splitting-field residue
+match must account for the monomial derivation (the deferred step). For `δ = derivative` this factor is
+`1` (`δ(X − α) = 1`), recovering §2. -/
+theorem deriv_eval_at_simple_root (δ : Derivation ℤ F[X] F[X]) (E : F[X]) (α : F) :
+    (δ ((X - C α) * E)).eval α = (δ (X - C α)).eval α * E.eval α := by
+  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, eval_add, eval_mul, eval_mul, eval_sub, eval_X,
+    eval_C, sub_self, zero_mul, zero_add, mul_comm]
+
+end ResidueCriterion
+
 /-! ### Per-factor logarithmic-derivative identity (generic base derivation) -/
 
 section Generic
