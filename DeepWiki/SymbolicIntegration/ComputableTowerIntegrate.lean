@@ -1,7 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
-import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
