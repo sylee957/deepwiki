@@ -95,4 +95,77 @@ example (s : Finset K) (A Dd : K[X]) (hDd : ∀ α ∈ s, Dd.eval α ≠ 0) (c :
 
 #print axioms gcd_nodal_eq_prod_residue_seed
 
+/-! ### The abstract `hLog` reduction — the concrete residue sum equals the integrand `A/d`
+
+`logResidueSum Dt logs` (`ComputableIntegrateCorrect`) is the `List.sum`
+`∑_{(c,v)∈logs} towerAlg(C(toK(ofConstNZ c)))·(Δv)/v` over the concrete log list. The §5.6 abstract
+residue match `sum_residue_grouped_logDeriv_eq_div` (`ComputableLogPartTowerCorrect`) gives the
+`Finset.sum` over distinct residues `∑_{c∈s.image res} algMap(C c)·(δgᶜ)/gᶜ = algMap A/algMap d`. The
+reduction below converts the concrete `List.sum` to the abstract `Finset.sum` and discharges it,
+**given the structural correspondence** between the two indexings as transparent hypotheses (the
+documented residue-set match): the concrete denominator splits as `toPolyG hDen = nodal s id` over
+`RatFunc ℚ` (the primitive split squarefree), the residue list's values `toK(ofConstNZ c)` enumerate
+the distinct residues `s.image res` without repetition, and each concrete log argument
+`toPolyG v = gᶜ`. -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ
+
+open scoped Classical in
+/-- **The concrete `logResidueSum` equals the abstract residue-grouped sum** (the list→Finset
+reindexing): writing `K := CFieldSpec.K QFunNZ = RatFunc ℚ`, `δ := implicitDeriv (toPolyG Dt)`,
+`A := toPolyG hNum`, `d := Lagrange.nodal s id`, and `res α := A(α)/(δ d)(α)`, suppose the concrete log
+list `logs` corresponds to the distinct-residue Finset data via an injective-on-`logs.map Prod.fst` tag
+map `e c := CFieldSpec.toK (ofConstNZ c)` whose image is exactly `s.image res` and which is nodup on the
+list keys, and each concrete log argument reads as the abstract Rothstein–Trager factor
+`toPolyG v = ∏_{res α = e c}(X−α)`. Then `logResidueSum Dt logs` equals the abstract grouped sum
+`∑_{c∈s.image res} towerAlg(C c)·(towerAlg(δ gᶜ)/towerAlg(gᶜ))`. The `List.sum`↔`Finset.sum` bridge of
+the residue match. -/
+theorem logResidueSum_eq_grouped (Dt : CPolyG QFunNZ) (hNum : CPolyG QFunNZ)
+    (logs : List (ℚ × CPolyG QFunNZ)) (s : Finset (CFieldSpec.K QFunNZ))
+    (hkeysNodup : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (harg : ∀ cv ∈ logs, toPolyG cv.2
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α
+              = CFieldSpec.toK (ofConstNZ cv.1)), (X - C α)) :
+    logResidueSum Dt logs
+      = ∑ c ∈ s.image (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+          towerAlg (Polynomial.C c)
+            * (towerAlg (Differential.implicitDeriv (toPolyG Dt)
+                  (∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+                      / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                    (X - C α)))
+                / towerAlg (∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+                      / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                    (X - C α))) := by
+  classical
+  set A := toPolyG hNum with hA
+  set δ := Differential.implicitDeriv (toPolyG Dt) with hδ
+  set d := Lagrange.nodal s id with hd
+  set res : CFieldSpec.K QFunNZ → CFieldSpec.K QFunNZ := fun α => A.eval α / (δ d).eval α with hres
+  set e : ℚ × CPolyG QFunNZ → CFieldSpec.K QFunNZ := fun cv => CFieldSpec.toK (ofConstNZ cv.1) with he
+  -- the abstract grouped term at a residue value `c`
+  set F : CFieldSpec.K QFunNZ → RatFunc (CFieldSpec.K QFunNZ) := fun c =>
+    towerAlg (Polynomial.C c)
+      * (towerAlg (δ (∏ α ∈ s.filter (fun α => res α = c), (X - C α)))
+          / towerAlg (∏ α ∈ s.filter (fun α => res α = c), (X - C α))) with hF
+  -- rewrite `logResidueSum` (a `List.sum`) as a sum of `F (e cv)` over the list, via `harg`
+  have hterm : ∀ cv ∈ logs,
+      towerAlg (Polynomial.C (CFieldSpec.toK (ofConstNZ cv.1)))
+          * (towerAlg (toPolyG (cmonomialDeriv Dt cv.2)) / towerAlg (toPolyG cv.2))
+        = F (e cv) := by
+    intro cv hcv
+    rw [hF, he, toPolyG_cmonomialDeriv, harg cv hcv]
+  -- the list sum of `F ∘ e` over `logs` equals the list sum of `F` over the residue-value keys
+  have hlistsum : logResidueSum Dt logs = ((logs.map e).map F).sum := by
+    rw [logResidueSum, List.map_map]
+    refine congrArg List.sum (List.map_congr_left ?_)
+    intro cv hcv; simpa using hterm cv hcv
+  -- the Finset sum over `s.image res = (logs.map e).toFinset`, folded back into the residue-value list
+  rw [hlistsum, ← hkeysImage]
+  exact (List.sum_toFinset F hkeysNodup).symm
+
 end DeepWiki.SymbolicIntegration
