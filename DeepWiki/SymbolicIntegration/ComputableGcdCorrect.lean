@@ -809,6 +809,47 @@ theorem bdegree_reduce_step_lt {P Q : (ℚ[X])[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
   · rw [Polynomial.degree_eq_natDegree hS0, Polynomial.degree_eq_natDegree hT0, hSnd, hTnd]
   · rw [hSlc, hTlc, mul_comm]
 
+/-- **One `bpsremainder` step strictly shortens the normalized `t`-list** (the run-termination measure):
+the pseudo-division replacement `bnorm (lc(q)·p − lc(p)·xᵏ·q)` (the exact `BPoly` term `bpsremainder`
+subtracts, `k = deg p − deg q`) has strictly smaller normalized length than `p`. The `BPoly` analogue of
+`step_length_lt`, transporting `bdegree_reduce_step_lt` through `toBPoly`. -/
+theorem bstep_length_lt (p q : BPoly) (hp : ¬ bisZero p = true) (hq : ¬ bisZero q = true)
+    (hpq : (bnorm q).length ≤ (bnorm p).length) :
+    (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+        (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q))))).length
+      < (bnorm p).length := by
+  have hP : toBPoly p ≠ 0 := fun h => hp ((bisZero_iff_toBPoly_eq_zero p).mpr h)
+  have hQ : toBPoly q ≠ 0 := fun h => hq ((bisZero_iff_toBPoly_eq_zero q).mpr h)
+  have hk : (bnorm p).length - (bnorm q).length
+      = (toBPoly p).natDegree - (toBPoly q).natDegree := by
+    rw [length_bnorm_of_ne p hp, length_bnorm_of_ne q hq]; omega
+  set step := bsub (bscaleC (blc (bnorm q)) (bnorm p))
+    (bscaleC (blc (bnorm p)) (bshift ((bnorm p).length - (bnorm q).length) (bnorm q))) with hstepdef
+  have hstep : toBPoly step
+      = Polynomial.C (toBPoly q).leadingCoeff * toBPoly p
+        - Polynomial.C (toBPoly p).leadingCoeff
+          * Polynomial.X ^ ((toBPoly p).natDegree - (toBPoly q).natDegree) * toBPoly q := by
+    rw [hstepdef, toBPoly_bsub, toBPoly_bscaleC, toBPoly_bscaleC, toBPoly_bshift, toBPoly_bnorm,
+      toBPoly_bnorm, toPoly_blc_eq_leadingCoeff, toPoly_blc_eq_leadingCoeff, toBPoly_bnorm,
+      toBPoly_bnorm, hk]
+    ring
+  have hpq' : (toBPoly q).natDegree ≤ (toBPoly p).natDegree := by
+    have e1 := length_bnorm_of_ne p hp
+    have e2 := length_bnorm_of_ne q hq
+    omega
+  have hdeg : (toBPoly step).degree < (toBPoly p).degree := by
+    rw [hstep]; exact bdegree_reduce_step_lt hP hQ hpq'
+  by_cases hs0 : toBPoly step = 0
+  · have hsz : bisZero step = true := (bisZero_iff_toBPoly_eq_zero step).mpr hs0
+    have hsnil : bnorm step = [] := by rw [bisZero, beq_iff_eq] at hsz; exact hsz
+    rw [hsnil, List.length_nil]
+    have hbp : bnorm p ≠ [] := fun hb => hp (by rw [bisZero, beq_iff_eq, hb])
+    exact List.length_pos_iff.mpr hbp
+  · have hne : ¬ bisZero step = true := fun h => hs0 ((bisZero_iff_toBPoly_eq_zero step).mp h)
+    have hlt := Polynomial.natDegree_lt_natDegree hs0 hdeg
+    rw [length_bnorm_of_ne _ hne, length_bnorm_of_ne p hp]
+    omega
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
