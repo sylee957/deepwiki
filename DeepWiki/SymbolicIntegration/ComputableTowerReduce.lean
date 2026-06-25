@@ -380,13 +380,21 @@ end CPolyG
 
 /-! ### STRETCH demo: the reduction wrapper computes the non-constant-residual integral (`native_decide`)
 
-We run the reduction wrapper on `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` over `ℚ(x)[t]` (`t = exp(x²)`,
-`η = 2x` non-constant) — the genuinely **non-constant-η** hyperexponential normal integral from
-`ComputableHyperexpNormal` — and certify `D(∫f) = f` via `checkIdentityG`. The base residual here is the
-elementary `R = 2x` (the residue is the δ-constant `1`, so `R = η·1 = 2x` reduced); the wrapper produces
-the identical correct answer `log(t−1) − x²`, confirming it is a sound drop-in for the §5.9 integrator on a
-non-constant-η monomial. (The strictly-unreduced `2x/2x` residue is non-δ-constant ⇒ non-elementary; see
-the assessment in the module docstring.) -/
+We first re-run the reduction wrapper on `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` over `ℚ(x)[t]`
+(`t = exp(x²)`, `η = 2x` non-constant) — the genuinely **non-constant-η** hyperexponential normal integral
+from `ComputableHyperexpNormal` — and certify `D(∫f) = f` via `checkIdentityG`. There the residual `R = 2x`
+is already stored reduced (`(2x)/1`, the residue being the δ-constant `1`), so the wrapper produces the
+identical correct answer `log(t−1) − x²`: a sound drop-in.
+
+**★ The decisive choke/unblock.** We then exhibit the EXACT representational frontier the module docstring
+flags: a residual that is the value `1` but stored **unreduced** as `(2x)/(2x)` (built by `qmulNZG (2x/1)
+(1/2x)`, so num and den both length 2). On this unreduced residual `crischDESolve 0 R` **chokes** — its
+weak-normalizer trips on the spurious `2x` denominator and returns `none` (`Rstuck_unreduced_chokes`). But
+`crischDESolve 0 (qreduceG R)` — after the gcd-cancel collapses `(2x)/(2x)` to `1/1` — **solves**,
+recovering `∫1 = x` (`Rstuck_reduced_solves`). So the choke is **purely representational** (the value is the
+elementary δ-constant `1`, not a non-elementary residue), and `qreduceG` genuinely unblocks it. This is the
+non-constant-R unblock the task targets: `qreduceG` on the residual turns a `crischDESolve` `none` into a
+correct `some`. -/
 
 namespace QFunNZG
 
@@ -408,6 +416,52 @@ theorem nVarNorm_reduced_landsNormalPart :
       | none => false) = true := by native_decide
 
 #print axioms nVarNorm_reduced_landsNormalPart
+
+/-! #### The decisive choke/unblock: an unreduced residual `crischDESolve` can't solve until `qreduceG`
+
+`Rstuck` is the value `1 ∈ ℚ(x)` stored **unreduced** as the fraction `(2x)/(2x)` — built by
+`qmulNZG (2x/1) (1/2x)`, exactly the `2x/2x` shape the §5.9 frontier flags. `crischDESolve 0 Rstuck` chokes
+(`none`) on the spurious `2x` denominator; `crischDESolve 0 (qreduceG Rstuck)` solves it. This is the
+concrete non-constant-R unblock — value-preserving (`qreduceG` keeps `Rstuck = 1`), and it converts a
+`none` into a correct `some` (`y = x`). -/
+
+/-- The residual `1 ∈ ℚ(x)` stored **unreduced** as `(2x)/(2x)`: `qmulNZG (2x/1) (1/(2x))`, with numerator
+`2x·1` and denominator `1·2x` (both length-2 lists, the swollen `2x/2x` shape) yet the value `1`. The exact
+representational frontier `ComputableHyperexpNormal` describes. -/
+def Rstuck : QFunNZG ℚ :=
+  qmulNZG nLvl1TwoX ⟨([CField.one], [(0 : ℚ), (2 : ℚ)]), by native_decide⟩
+
+/-- **`Rstuck` is the value `1`** (`native_decide`): the unreduced `(2x)/(2x)` equals `1 ∈ ℚ(x)`
+(`isZero (Rstuck − 1) = true`). So it is a genuine elementary δ-constant residue — the choke below is
+representational, not non-elementarity. -/
+theorem Rstuck_eq_one : CField.isZero (CField.sub Rstuck (CField.one : QFunNZG ℚ)) = true := by
+  native_decide
+
+/-- **`Rstuck`'s stored denominator is swollen (length 2)** (`native_decide`): the unreduced `(2x)/(2x)` has
+a length-2 denominator `2x`, not the reduced `1`. This `2x` is the spurious denominator that chokes
+`crischDESolve`. -/
+theorem Rstuck_den_swollen : (CPolyG.cnormG Rstuck.1.2 : List ℚ).length = 2 := by native_decide
+
+/-- **★ The unreduced residual chokes `crischDESolve`** (`native_decide`, the choke): `crischDESolve 0
+Rstuck` over `k = ℚ(x)` returns **`none`** — even though `Rstuck = 1` (`Rstuck_eq_one`), the weak-
+normalizer/normal-denominator stages trip on the spurious `2x` denominator of the unreduced `(2x)/(2x)`.
+This is the §5.9 hyperexponential frontier the module docstring flags, reproduced concretely. -/
+theorem Rstuck_unreduced_chokes :
+    CRischField.crischDESolve (CField.zero : QFunNZG ℚ) Rstuck = none := by native_decide
+
+/-- **★ `qreduceG` unblocks the residual: `crischDESolve` then solves, recovering `∫1 = x`**
+(`native_decide`, the UNBLOCK). After `qreduceG 8 Rstuck` cancels `(2x)/(2x)` to `1/1`,
+`crischDESolve 0 (qreduceG 8 Rstuck)` over `ℚ(x)` returns **`some y`** with `y = x` (the base integral
+`∫1 = x`). So the gcd-cancel layer turns the choke (`Rstuck_unreduced_chokes`, `none`) into a correct
+`some` — the non-constant-R hyperexp residual unblock, value-preserving (`Rstuck = 1`, so `∫1 = x`). **This
+is the stretch deliverable: a residual that currently chokes `crischDESolve` computes once reduced.** -/
+theorem Rstuck_reduced_solves :
+    (match CRischField.crischDESolve (CField.zero : QFunNZG ℚ) (qreduceG 8 Rstuck) with
+      | some y => CField.isZero (CField.sub y nLvl1X)
+      | none => false) = true := by native_decide
+
+#print axioms Rstuck_unreduced_chokes
+#print axioms Rstuck_reduced_solves
 
 end QFunNZG
 
