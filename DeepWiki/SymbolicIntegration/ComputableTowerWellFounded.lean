@@ -475,6 +475,88 @@ example :
       (CFracGcdCore.cgcdFFCore 4 [(ofConstNZ (-1)), ofConstNZ 0, ofConstNZ 1]
         [(ofConstNZ (-1)), ofConstNZ 1])) = true := by native_decide
 
+/-! ## Part 4 — bridges of the flat-composition pipeline to the fuel'd `…G` originals
+
+Each flat-composition `…GWf` op mirrors its `…G` original with the fuel dropped, so its bridge to the fuel'd
+version is a pure rewrite that threads the per-leaf sub-agreements (every fuel'd sub-op replaced by its
+fuel-free companion at sufficient fuel). Following the established pattern (`cIntegrateReducedWf_eq`,
+`cIntegrateWf_eq`, `cLogPartWf_eq`), the sub-agreements are taken as **hypotheses** — the fuel bounds they
+carry live only there; the runtime `…GWf` carries none. The recursive-bottom agreements
+(`cSplitFactorFastGWf`/`cSqfreeYunFFGgoWf`/`cgcdFFCoreWf`) feed in through their own regularity gates. -/
+
+namespace CPolyG
+
+section
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Bridge — `cRationalResiduesGWf` equals `cRationalResiduesG` at any sufficient fuel.** When the
+fuel-free residue resultant agrees with the fuel'd one (`hR : cResidueResultantTowerGWf Dt a d =
+cResidueResultantTowerG Dt fuel a d`), the `cHornerG`-root filter predicates coincide, so
+`cRationalResiduesGWf Dt a d cands = cRationalResiduesG Dt fuel a d cands`. -/
+theorem cRationalResiduesGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (hR : cResidueResultantTowerGWf Dt a d = cResidueResultantTowerG Dt fuel a d) :
+    cRationalResiduesGWf Dt a d cands = cRationalResiduesG Dt fuel a d cands := by
+  rw [cRationalResiduesGWf, cRationalResiduesG, hR]
+
+end
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α]
+
+/-- **Bridge — `cLogPartGWf` equals `cLogPartG` at any sufficient fuel.** From the residue-resultant bridge
+`hR` (so the rational-residue lists coincide, `cRationalResiduesGWf_eq`) and the per-residue log-argument
+bridge `hLogArg` (`cLogArgTowerGWf … c = cLogArgTowerG fuel … c` for every kept residue `c`),
+`cLogPartGWf Dt a d cands = cLogPartG Dt fuel a d cands`. The fuel bounds live only in `hR`/`hLogArg`. -/
+theorem cLogPartGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (hR : cResidueResultantTowerGWf Dt a d = cResidueResultantTowerG Dt fuel a d)
+    (hLogArg : ∀ c ∈ cRationalResiduesGWf Dt a d cands,
+      cLogArgTowerGWf Dt a d c = cLogArgTowerG Dt fuel a d c) :
+    cLogPartGWf Dt a d cands = cLogPartG Dt fuel a d cands := by
+  rw [cLogPartGWf, cLogPartG, ← cRationalResiduesGWf_eq Dt fuel a d cands hR]
+  apply List.map_congr_left
+  intro c hc
+  rw [hLogArg c hc]
+
+/-- **Bridge — `cIntegrateReducedGWf` equals `cIntegrateReducedG` at any sufficient fuel.** From the Hermite
+bridge `hHermite : cHermiteReduceTowerGWf Dt a d = cHermiteReduceTowerG Dt fuel a d` and the log-part bridge
+`hLog` on the resulting simple residual, `cIntegrateReducedGWf Dt a d cands = cIntegrateReducedG Dt fuel a d
+cands`. The fuel bounds live only in `hHermite`/`hLog`. -/
+theorem cIntegrateReducedGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (hHermite : cHermiteReduceTowerGWf Dt a d = cHermiteReduceTowerG Dt fuel a d)
+    (hLog : cLogPartGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 cands
+      = cLogPartG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
+          (cHermiteReduceTowerG Dt fuel a d).2.2 cands) :
+    cIntegrateReducedGWf Dt a d cands = cIntegrateReducedG Dt fuel a d cands := by
+  rw [cIntegrateReducedGWf, cIntegrateReducedG, hLog, hHermite]
+
+/-- **★ Bridge — the headline `cIntegrateGWf` equals `cIntegrateG` at any sufficient fuel.** From the two
+sub-bridges that the canonical split (`hcanon : canonicalRepresentationFastGWf Dt a d =
+canonicalRepresentationFastG Dt fuel a d`) feeds — the reduced capstone `hred` on the resulting normal part
+`(cn, dn)` — `cIntegrateGWf Dt a d cands = cIntegrateG Dt fuel a d cands`. The fuel bounds live only in the
+hypotheses; the headline `cIntegrateGWf` carries none. A pure composition rewrite. -/
+theorem cIntegrateGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (hcanon : canonicalRepresentationFastGWf Dt a d = canonicalRepresentationFastG Dt fuel a d)
+    (hred : cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands
+      = cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
+          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands) :
+    cIntegrateGWf Dt a d cands = cIntegrateG Dt fuel a d cands := by
+  rw [cIntegrateGWf, cIntegrateG]
+  -- both sides `match (canonical split) with | (fp,(b,_ds),cn,dn) => …`; the split agrees by `hcanon`,
+  -- and the reduced capstone on the destructured `(cn, dn)` agrees by `hred` (its projections are
+  -- exactly the match's `cn`/`dn`). Rewrite `hred` (a projection identity) then collapse via `hcanon`.
+  simp only [hcanon] at hred ⊢
+  -- after `hcanon` both `match`es are on `canonicalRepresentationFastG fuel a d`; reduce to projections
+  rw [show (canonicalRepresentationFastG Dt fuel a d)
+      = ((canonicalRepresentationFastG Dt fuel a d).1,
+         ((canonicalRepresentationFastG Dt fuel a d).2.1.1,
+          (canonicalRepresentationFastG Dt fuel a d).2.1.2),
+         ((canonicalRepresentationFastG Dt fuel a d).2.2.1,
+          (canonicalRepresentationFastG Dt fuel a d).2.2.2)) from rfl]
+  simp only []
+  rw [hred]
+
+end CPolyG
+
 /-! ### ★ THE HEADLINE `native_decide` validation — a FULL elementary tower integral, FUEL-FREE, at LEVEL 2
 
 Bronstein's Example 5.6.2 lifted to **tower level 2** (`CPolyG Lvl2 = ℚ(x)(t₁)[t₂]`, `Dt₂ = 1`), now run by
