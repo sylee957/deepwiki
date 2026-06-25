@@ -655,4 +655,94 @@ theorem toPolyB_bpsremainder_ne_zero (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero
   rw [liftRF_C] at hl
   simpa [toPolyB] using hl
 
+/-! ### Assembling `PrimPRSRegular` from the genuine algorithmic inputs
+The three per-step clauses now reduce to a single bundle of *algorithmic* preconditions at each PRS node:
+the content of that node is nonzero, the content `cgcd`-fold terminates, and the fuel bounds the
+coefficient lengths — plus the run *terminates within fuel* (the recursion reaches `bisZero Q`). These are
+exactly the conditions a real PRS run satisfies; bundling them recursively (`PrimPRSInputs`, mirroring the
+`PrimPRSRegular` recursion) and discharging clauses (ii)/(iii) from §content-exactness/§nonzero-multiplier
+gives `PrimPRSRegular` with no leftover content-gcd assumptions. -/
+
+/-- **Node content-regularity** `ContentRegularNode P`: the algorithmic preconditions for
+`bprimitivePartX 30` (the per-node content strip) to be a proven ℚ(x)-unit scaling on `P` — the content
+`bcontentX 30 P` is nonzero, its `cgcd`-fold terminates, and fuel `30` bounds each `x`-coefficient length.
+The nonzero forms `hgcn`/`hg0` follow from `¬ cisZero` (`cisZero g = (cnorm g == [])`). -/
+def ContentRegularNode (P : BPoly) : Prop :=
+  ¬ cisZero (bcontentX 30 P) = true ∧
+    (∀ a ∈ bnorm P, (cnorm a).length ≤ 30) ∧
+    ContentFoldTerminates 30 [] (bnorm P)
+
+/-- From `ContentRegularNode P`, `bprimitivePartX 30 P` is `Associated` to `P` over ℚ(x) — the discharge
+of clauses (iii)'s terminal/step content scaling, packaging `associated_toPolyB_bprimitivePartX_of_term`
+with the `cnorm ≠ []` / `toPoly ≠ 0` forms derived from `¬ cisZero`. -/
+theorem ContentRegularNode.associated (P : BPoly) (h : ContentRegularNode P) :
+    Associated (toPolyB (bprimitivePartX 30 P)) (toPolyB P) := by
+  obtain ⟨hg, hfuel, hterm⟩ := h
+  have hgcn : cnorm (bcontentX 30 P) ≠ [] := by
+    intro he; exact hg (by simp [cisZero, he])
+  have hg0 : toPoly (bcontentX 30 P) ≠ 0 := fun he => hgcn ((cnorm_eq_nil_iff _).mpr he)
+  exact associated_toPolyB_bprimitivePartX_of_term 30 P hg hgcn hg0 hfuel hterm
+
+/-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
+preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
+and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
+clause (ii) (nonzero pseudo-division multiplier) free off a nonzero divisor. Mirrors the `PrimPRSRegular`
+recursion; `PrimPRSInputs → PrimPRSRegular` is `primPRSRegular_of_inputs`. -/
+def PrimPRSInputs : ℕ → BPoly → BPoly → Prop
+  | 0, P, Q => bisZero Q = true ∧ ContentRegularNode P
+  | fuel + 1, P, Q =>
+    (bisZero (bnorm Q) = true ∧ ContentRegularNode (bnorm P)) ∨
+      (¬ bisZero (bnorm Q) = true ∧
+        ContentRegularNode (bpsremainder 60 (bnorm P) (bnorm Q)) ∧
+        PrimPRSInputs fuel (bnorm Q)
+          (bprimitivePartX 30 (bpsremainder 60 (bnorm P) (bnorm Q))))
+
+/-- **`PrimPRSInputs` ⇒ `PrimPRSRegular`** (the assembly): the genuine algorithmic preconditions of a
+real primitive-PRS run discharge all three clauses of `PrimPRSRegular`. Clause (i) termination is the
+`bisZero` reaching carried by `PrimPRSInputs`; clause (iii) content-exactness is `ContentRegularNode`'s
+ℚ(x)-unit scaling; clause (ii) the nonzero-multiplier pseudo-division witness off a nonzero divisor
+(`toPolyB_bpsremainder_ne_zero`). With this, `associated_toPolyB_primPRSgcd` / `associated_toPolyG_cgcdFF`
+need only `PrimPRSInputs` — no leftover content-gcd assumption. -/
+theorem primPRSRegular_of_inputs :
+    ∀ (fuel : ℕ) (P Q : BPoly), PrimPRSInputs fuel P Q → PrimPRSRegular fuel P Q := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro P Q hin
+    obtain ⟨hQ, hcn⟩ := hin
+    exact ⟨hQ, hcn.associated P⟩
+  | succ fuel ih =>
+    intro P Q hin
+    rw [PrimPRSInputs] at hin
+    rw [PrimPRSRegular]
+    rcases hin with ⟨hQ, hcn⟩ | ⟨hne, hcn, hrec⟩
+    · exact Or.inl ⟨hQ, by have := hcn.associated (bnorm P); rwa [toPolyB_bnorm] at this⟩
+    · refine Or.inr ⟨hne, ?_, ?_, ih _ _ hrec⟩
+      · exact toPolyB_bpsremainder_ne_zero 60 (bnorm P) (bnorm Q) hne
+      · exact hcn.associated (bpsremainder 60 (bnorm P) (bnorm Q))
+
+/-- **The primitive-PRS gcd invariant from algorithmic inputs**: under `PrimPRSInputs` (no content-gcd
+assumption), `primPRSgcd fuel P Q` is `Associated` over ℚ(x) to `gcd (toPolyB P) (toPolyB Q)`. The
+`PrimPRSRegular`-gated `associated_toPolyB_primPRSgcd` with the gate discharged by
+`primPRSRegular_of_inputs`. -/
+theorem associated_toPolyB_primPRSgcd_of_inputs (fuel : ℕ) (P Q : BPoly)
+    (hin : PrimPRSInputs fuel P Q) :
+    Associated (toPolyB (CPolyG.primPRSgcd fuel P Q)) (gcd (toPolyB P) (toPolyB Q)) :=
+  associated_toPolyB_primPRSgcd fuel P Q (primPRSRegular_of_inputs fuel P Q hin)
+
+/-- **Abstract correctness of `cgcdFF` from algorithmic inputs** (the unconditional headline, modulo the
+genuine PRS-run preconditions): over the field ℚ(x), `cgcdFF fuel p q` computes the polynomial gcd of the
+inputs, gated only on `PrimPRSInputs` of the `bdeg`-ordered cleared pair — the run-termination + per-node
+content-regularity + fuel-sufficiency bundle every real run satisfies, with **no leftover content-gcd or
+multiplier assumption** (clauses ii/iii are now theorems). This is `associated_toPolyG_cgcdFF` with its
+`PrimPRSRegular` gate discharged by `primPRSRegular_of_inputs`. -/
+theorem associated_toPolyG_cgcdFF_of_inputs (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hin : PrimPRSInputs fuel
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFF fuel p q (primPRSRegular_of_inputs _ _ _ hin)
+
 end DeepWiki.SymbolicIntegration
