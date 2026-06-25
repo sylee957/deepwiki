@@ -316,4 +316,101 @@ theorem field_identity_of_checkIdentityG (Dt : CPolyG QFunNZ) (res : IntegralRes
   -- assemble: rewrite the field readings back into the goal
   rw [hquot, hLfield', hfield]
 
+/-! ### The generic Hermite reduction as a field identity `D(g) + hₛ = fₙ`
+
+`cHermiteReduceTowerG Dt fuel a d = ((gnum, gden), (hNum, Dstar))` reconstructs the normal part `fₙ = a/d`
+as `D(g) + hₛ` with `g = gnum/gden` the rational part and `hₛ = hNum/Dstar` the simple residual. Its
+internal component relations (`gprimeNum`, `resNum`, `resDen`, `hNum = (resNum·Dstar)/resDen`) are
+**identical** to the QFunNZ `cHermiteReduceTower`'s — so the cleared identity proof of
+`cHermiteReduceTower_cleared_identity` transports verbatim (it only uses those relations and the
+exact-division certificate, never the squarefree-factorization's gcd). We assemble the field identity
+through the already-generic field-clearing `hermite_field_div_of_cleared` and the quotient rule
+`towerFractionFieldDeriv_div`, exactly as `cHermiteReduceTower_field_identity`. -/
+
+/-- **The generic Hermite cleared identity** over ℚ(x) (all inputs, under the exact-division certificate):
+for components `((gnumR, gdenR), (_, DstarR)) = cHermiteReduceTowerG Dt fuel a d` and the engine's internal
+`gprimeNum = D(gnumR)·gdenR − gnumR·D(gdenR)`, `resNum = a·gdenR² − d·gprimeNum`, `resDen = d·gdenR²`,
+`hNumR = (resNum·DstarR)/resDen` (`D = cmonomialDeriv Dt`), under the exact-division certificate
+(`resDen ∣ resNum·DstarR`, nonzero divisor, fuel), the cleared identity `(gprimeNum·DstarR + hNumR·gdenR²)·d
+= a·(gdenR²·DstarR)` holds in `(RatFunc ℚ)[X]`. The generic mirror of `cHermiteReduceTower_cleared_identity`
+— the proof is the same `toPolyG` ring algebra (`hermiteTower_cleared_of_exact` + `toPolyG_cdivG_exact_mul`),
+the component relations being identical to the QFunNZ engine's. -/
+theorem cHermiteReduceTowerG_cleared_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (gnumR gdenR DstarR gprimeNum resNum resDen hNumR : CPolyG QFunNZ)
+    (_hgnum : gnumR = (cHermiteReduceTowerG Dt fuel a d).1.1)
+    (_hgden : gdenR = (cHermiteReduceTowerG Dt fuel a d).1.2)
+    (_hDstar : DstarR = (cHermiteReduceTowerG Dt fuel a d).2.2)
+    (hgprime : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumR) gdenR) (cmulG gnumR (cmonomialDeriv Dt gdenR)))
+    (hresNum : resNum = csubG (cmulG a (cmulG gdenR gdenR)) (cmulG d gprimeNum))
+    (hresDen : resDen = cmulG d (cmulG gdenR gdenR))
+    (hhNum : hNumR = cdivG fuel (cmulG resNum DstarR) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuel : (cnormG (cmulG resNum DstarR) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum DstarR)) :
+    ((toPolyG (cmonomialDeriv Dt gnumR) * toPolyG gdenR
+        - toPolyG gnumR * toPolyG (cmonomialDeriv Dt gdenR)) * toPolyG DstarR
+        + toPolyG hNumR * (toPolyG gdenR * toPolyG gdenR)) * toPolyG d
+      = toPolyG a * ((toPolyG gdenR * toPolyG gdenR) * toPolyG DstarR) := by
+  -- the exact-division witness `toPolyG hNumR · toPolyG resDen = toPolyG (resNum·Dstar)`
+  have hwit0 : toPolyG hNumR * toPolyG resDen = toPolyG (cmulG resNum DstarR) := by
+    rw [hhNum]; exact toPolyG_cdivG_exact_mul fuel (cmulG resNum DstarR) resDen hq0 hfuel hdvd
+  have hgp : toPolyG gprimeNum
+      = toPolyG (cmonomialDeriv Dt gnumR) * toPolyG gdenR
+          - toPolyG gnumR * toPolyG (cmonomialDeriv Dt gdenR) := by
+    rw [hgprime, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG]
+  have hwit : toPolyG hNumR * (toPolyG d * (toPolyG gdenR * toPolyG gdenR))
+      = (toPolyG a * (toPolyG gdenR * toPolyG gdenR)
+          - toPolyG d * toPolyG gprimeNum) * toPolyG DstarR := by
+    have hlhs : toPolyG resDen = toPolyG d * (toPolyG gdenR * toPolyG gdenR) := by
+      rw [hresDen, toPolyG_cmulG, toPolyG_cmulG]
+    have hrhs : toPolyG (cmulG resNum DstarR)
+        = (toPolyG a * (toPolyG gdenR * toPolyG gdenR) - toPolyG d * toPolyG gprimeNum)
+            * toPolyG DstarR := by
+      rw [hresNum, toPolyG_cmulG, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+    rw [← hlhs, hwit0, hrhs]
+  rw [hgp] at hwit
+  linear_combination hwit
+
+/-- **The generic Hermite reduction as a field identity** `D(gₕ) + hₛ = fₙ` over the tower fraction field
+`RatFunc (RatFunc ℚ)`: writing `((gnum, gden), (hNum, Dstar)) = cHermiteReduceTowerG Dt fuel a d`, the
+rational part `gₕ = towerAlg(gnum)/towerAlg(gden)` and the simple residual `hₛ = towerAlg(hNum)/towerAlg(Dstar)`
+satisfy `towerFractionFieldDeriv Dt gₕ + hₛ = towerAlg(a)/towerAlg(d)`. Composes the generic cleared identity
+`cHermiteReduceTowerG_cleared_identity` with the (already-generic) field clearing
+`hermite_field_div_of_cleared` and the quotient rule `towerFractionFieldDeriv_div`. The generic mirror of
+`cHermiteReduceTower_field_identity`, gated on the same transparent exact-division/nonzero-divisor/fuel
+preconditions plus nonzero `gden, Dstar, d`. -/
+theorem cHermiteReduceTowerG_field_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (gnumR gdenR DstarR gprimeNum resNum resDen hNumR : CPolyG QFunNZ)
+    (hgnum : gnumR = (cHermiteReduceTowerG Dt fuel a d).1.1)
+    (hgden : gdenR = (cHermiteReduceTowerG Dt fuel a d).1.2)
+    (hDstar : DstarR = (cHermiteReduceTowerG Dt fuel a d).2.2)
+    (hgprime : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumR) gdenR) (cmulG gnumR (cmonomialDeriv Dt gdenR)))
+    (hresNum : resNum = csubG (cmulG a (cmulG gdenR gdenR)) (cmulG d gprimeNum))
+    (hresDen : resDen = cmulG d (cmulG gdenR gdenR))
+    (hhNum : hNumR = cdivG fuel (cmulG resNum DstarR) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuel : (cnormG (cmulG resNum DstarR) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum DstarR))
+    (hgdenne : toPolyG gdenR ≠ 0) (hDstarne : toPolyG DstarR ≠ 0) (hdne : toPolyG d ≠ 0) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG gnumR) / towerAlg (toPolyG gdenR))
+        + towerAlg (toPolyG hNumR) / towerAlg (toPolyG DstarR)
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) := by
+  have hcleared := cHermiteReduceTowerG_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum
+    resNum resDen hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
+  rw [towerFractionFieldDeriv_div]
+  set P : (CFieldSpec.K QFunNZ)[X] :=
+    Differential.implicitDeriv (toPolyG Dt) (toPolyG gnumR) * toPolyG gdenR
+      - toPolyG gnumR * Differential.implicitDeriv (toPolyG Dt) (toPolyG gdenR) with hP
+  have hcleared' : (P * toPolyG DstarR + toPolyG hNumR * (toPolyG gdenR * toPolyG gdenR)) * toPolyG d
+      = toPolyG a * (toPolyG gdenR * toPolyG gdenR * toPolyG DstarR) := by
+    rw [hP, ← toPolyG_cmonomialDeriv, ← toPolyG_cmonomialDeriv]
+    linear_combination hcleared
+  rw [show towerAlg (Differential.implicitDeriv (toPolyG Dt) (toPolyG gnumR)) * towerAlg (toPolyG gdenR)
+        - towerAlg (toPolyG gnumR) * towerAlg (Differential.implicitDeriv (toPolyG Dt) (toPolyG gdenR))
+      = towerAlg P by rw [hP, map_sub, map_mul, map_mul]]
+  exact hermite_field_div_of_cleared P (toPolyG DstarR) (toPolyG gdenR) (toPolyG hNumR) (toPolyG d)
+    (toPolyG a) hgdenne hDstarne hdne hcleared'
+
 end DeepWiki.SymbolicIntegration
