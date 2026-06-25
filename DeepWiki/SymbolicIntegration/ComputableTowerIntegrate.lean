@@ -318,4 +318,99 @@ theorem towerCanRepLvl2_recombines :
 
 #print axioms towerCanRepLvl2_recombines
 
+/-! ## STRETCH — the logarithmic part (Rothstein–Trager §5.6) and the tower integral `cIntegrateG`
+
+The rational part (Hermite) is done. The remaining piece of the elementary integral `∫ f = g + ∑ᵢ
+cᵢ·log(vᵢ)` is the **logarithmic part**: the Rothstein–Trager residue criterion (§5.6). For a simple
+`h = a/d` (`d` squarefree), `∫ h = ∑_{R(c)=0} c·log(gcd_t(d, a − c·Dd))` with `R(z) = res_t(d, a − z·Dd)`
+the residue resultant.
+
+The generic engine pieces `cevalG`/`cresultantG`/`cinterpolateG` are *already* `[CField α]`-generic. The
+ONLY `QFunNZ`-specific barrier beyond `cgcdFF` is the embedding `ℚ → α` (`ofConstNZ`): the residue
+resultant samples `z` at the natural nodes `0, 1, …, n`, and a residue is a field constant. We lift the
+nodes through the existing `cnatCastG : ℕ → α` (`[CField α]`-only), and take the residue **candidates as
+`α` elements** (the natural generic form) — so the whole log part generalizes. `cratCastG` additionally
+gives the `ℚ → α` embedding for convenience. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Rational into a `CField`** `cratCastG q = (sign · cnatCastG |num|) / cnatCastG den`: embed `q ∈ ℚ`
+into any `[CField α]` via the numerator/denominator natural casts (`cnatCastG`) and a sign, all from
+`CField` ops. The generic `ℚ → α` constant embedding (the generic `ofConstNZ` at the scalar level). -/
+def cratCastG (q : ℚ) : α :=
+  let n : α := cnatCastG q.num.natAbs
+  let nsigned : α := if q.num < 0 then CField.neg n else n
+  CField.mul nsigned (CField.inv (cnatCastG q.den))
+
+/-- **Generic Horner evaluation** `cHornerG p c = p(c) ∈ α`: evaluate the dense coefficient list `p`
+(index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `cevalG`
+(`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
+residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
+def cHornerG (p : CPolyG α) (c : α) : α :=
+  (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
+
+end CPolyG
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-! ### The generic residue resultant `R(z) = res_t(d, a − z·Dd)` and the log argument
+
+`cResidueResultantTowerG` mirrors `cResidueResultantTower`: sample `R(zₖ) = res_t(d, a − zₖ·Dd)` at the
+natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`, the generic node lift replacing `ofConstNZ (k : ℚ)`)
+and Lagrange-interpolate (`cinterpolateG`). `cLogArgTowerG` is `gcd_t(d, a − c·Dd)` (`cgcdMonicG` for
+`cgcdFF`) for a residue `c : α`. Both reuse the already-generic `cresultantG`/`cmonomialDeriv`. -/
+
+/-- **Generic `a − c·Dd`** `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
+the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
+def cAmcDdG (Dt a d : CPolyG α) (c : α) : CPolyG α :=
+  csubG a (cscaleG c (cmonomialDeriv Dt d))
+
+/-- **Generic residue resultant** `cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd)`,
+returned as a `CPolyG α` whose variable is the residue indeterminate `z` (Bronstein §5.6). Sample
+`R(zₖ) = res_t(d, a − zₖ·Dd)` (`cresultantG`) at the natural nodes `zₖ = cnatCastG k` for
+`k = 0, …, deg_t d` (the generic node lift, replacing `ofConstNZ (k : ℚ)`), then Lagrange-interpolate
+(`cinterpolateG`). `deg_z R ≤ deg_t d`, so `deg_t d + 1` nodes are exact. `[CField α] [CDiffField α]`-
+generic — runs at any tower level. -/
+def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CPolyG α :=
+  let n := cdegG d
+  let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
+    let zk : α := cnatCastG k
+    (zk, cresultantG fuel d (cAmcDdG Dt a d zk)))
+  cinterpolateG pts
+
+/-- **Generic log argument** `cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`
+(Bronstein §5.6, the `g_i` inside `log`): the generic monic-in-`t` gcd (`cgcdMonicG`) of `d` and
+`a − c·Dd`. Together with the residues `c` (roots of `cResidueResultantTowerG`),
+`∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. -/
+def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPolyG α :=
+  cgcdMonicG fuel d (cAmcDdG Dt a d c)
+
+/-! ### The generic rational-residue scan and logarithmic part
+
+`cRationalResiduesG`/`cLogPartG` mirror `cRationalResidues`/`cLogPart`, but take the residue candidates
+**as `α` elements** `cands : List α` (the generic form — a residue is a field constant). Keep those `c`
+with `R(c) = 0` (`cHornerG R c`, `[CField α]`-generic Horner), and pair each with its log argument. -/
+
+/-- **Generic rational/field residues** `cRationalResiduesG Dt fuel a d cands`: from the candidate list
+`cands : List α`, keep those `c` that are roots of the residue resultant `R(z) =
+cResidueResultantTowerG Dt fuel a d`, i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`, the
+generic Horner evaluation). The residues of the simple element `a/d` whose logarithmic part is
+`∑ c·log(cLogArgTowerG … c)`. -/
+def cRationalResiduesG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) : List α :=
+  let R := cResidueResultantTowerG Dt fuel a d
+  cands.filter (fun c => CField.isZero (cHornerG R c))
+
+/-- **Generic logarithmic part** `cLogPartG Dt fuel a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈
+residues]`: pair each residue `c : α` (from `cRationalResiduesG`) with its log argument
+`cLogArgTowerG Dt fuel a d c`, so `∑ (c, v) ∈ cLogPartG, c·log(v)` is the residue logarithmic part of
+`∫ a/d`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+def cLogPartG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
+  (cRationalResiduesG Dt fuel a d cands).map (fun c => (c, cLogArgTowerG Dt fuel a d c))
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
