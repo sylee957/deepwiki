@@ -422,4 +422,79 @@ theorem associated_toPolyB_primPRSgcd :
         show toPolyB Q = toPolyB Qn by rw [hQn, toPolyB_bnorm]]
       exact hih.trans hstep.symm
 
+/-! ### Step 3 — the `cgcdFF` capstone
+`cgcdFF p q = cmonicG (liftBPolyToQFunNZ (primPRSgcd fuel P Q))` with `(P, Q)` the `bdeg`-ordered pair
+of `clearDenoms p`, `clearDenoms q`. Reading the result through `toPolyG`, the lift-back is exact, the
+monic-normalization is a unit-scaling, and the primitive-PRS invariant (step 2) plus the `clearDenoms`
+bridge (step 1) combine — over the field ℚ(x) — to the polynomial gcd of the inputs. -/
+
+/-- **The lift-back bridge** `toPolyG (liftBPolyToQFunNZ b) = toPolyB b`: reading a `BPoly` (ℚ[x][t])
+coefficientwise as `c/1 ∈ ℚ(x)` (`liftBPolyToQFunNZ`) and then through `toPolyG` gives the SAME ℚ(x)[t]
+polynomial as the coefficient-ring embedding `toPolyB` — both send the `i`-th coefficient to
+`amRF (toPoly bᵢ)`. -/
+theorem toPolyG_liftBPolyToQFunNZ (b : BPoly) :
+    toPolyG (CPolyG.liftBPolyToQFunNZ b) = toPolyB b := by
+  apply Polynomial.ext
+  intro i
+  rw [toPolyG_coeff, toPolyB_coeff, CPolyG.liftBPolyToQFunNZ,
+    List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map]
+  cases h : b[i]? with
+  | none => simp [CFieldSpec.toK_zero, Compute.toPoly_nil]
+  | some c =>
+    simp only [Option.map_some, Option.getD_some]
+    show QFunNZ.toQFunNZ _ = amRF (toPoly c)
+    rw [toQFunNZ_eq_div]
+    have h1 : Compute.toPoly [1] = 1 := by simp [Compute.toPoly_cons, Compute.toPoly_nil]
+    show amRF (toPoly c) / amRF (Compute.toPoly [1]) = amRF (toPoly c)
+    rw [h1, map_one, div_one]
+
+/-- **Monic-normalization is a unit-scaling**: over a field, `cmonicG p` differs from `p` (read by
+`toPolyG`) by the unit `C ((cleadG)⁻¹)`, so they are associates in `K[X]`. -/
+theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    Associated (toPolyG (CPolyG.cmonicG p)) (toPolyG p) := by
+  rw [CPolyG.cmonicG]
+  split_ifs with h
+  · rw [toPolyG_nil]
+    have hz : toPolyG p = 0 := (cisZeroG_iff p).mp (by rwa [cisZeroG_cnormG] at h)
+    rw [hz]
+  · rw [toPolyG_cscaleG, toPolyG_cnormG]
+    have hne : cnormG (cnormG p) ≠ [] := by
+      rw [cnormG_idem]; intro he
+      exact h (by rw [cisZeroG_cnormG, cisZeroG_iff, ← toPolyG_cnormG, he, toPolyG_nil])
+    exact associated_unit_mul_left _ _
+      (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
+        (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
+
+/-- **Step 3 — abstract correctness of `cgcdFF`** (under a regular run): over the field ℚ(x) =
+`RatFunc ℚ`, the fraction-free monic gcd `cgcdFF fuel p q` computes the polynomial gcd of the inputs —
+`toPolyG (cgcdFF fuel p q)` is `Associated` to `gcd (toPolyG p) (toPolyG q)` in `(RatFunc ℚ)[X]`. The
+`PrimPRSRegular` hypothesis is on the `bdeg`-ordered cleared pair (the same ordering `cgcdFF` uses); it
+captures the per-step content-exactness of the primitive PRS, which holds on real runs (validated
+pointwise by `native_decide`, Example 3.5.1). -/
+theorem associated_toPolyG_cgcdFF (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hreg : PrimPRSRegular fuel
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+      (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+        then CPolyG.clearDenoms p else CPolyG.clearDenoms q)) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) := by
+  have key : ∀ P Q : BPoly, PrimPRSRegular fuel P Q →
+      Associated (gcd (toPolyB P) (toPolyB Q)) (gcd (toPolyG p) (toPolyG q)) →
+      Associated (toPolyG (CPolyG.cmonicG (CPolyG.liftBPolyToQFunNZ (CPolyG.primPRSgcd fuel P Q))))
+        (gcd (toPolyG p) (toPolyG q)) := by
+    intro P Q hr hgcd
+    refine (associated_toPolyG_cmonicG _).trans ?_
+    rw [toPolyG_liftBPolyToQFunNZ]
+    exact (associated_toPolyB_primPRSgcd fuel P Q hr).trans hgcd
+  have hbridge : Associated (gcd (toPolyB (CPolyG.clearDenoms p)) (toPolyB (CPolyG.clearDenoms q)))
+      (gcd (toPolyG p) (toPolyG q)) :=
+    (associated_toPolyB_clearDenoms p).gcd (associated_toPolyB_clearDenoms q)
+  rw [CPolyG.cgcdFF]
+  by_cases hlt : Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+  · simp only [if_pos hlt] at hreg ⊢
+    refine key _ _ hreg ?_
+    rw [gcd_comm]; exact hbridge
+  · simp only [if_neg hlt] at hreg ⊢
+    exact key _ _ hreg hbridge
+
 end DeepWiki.SymbolicIntegration
