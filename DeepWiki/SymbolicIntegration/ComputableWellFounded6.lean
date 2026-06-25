@@ -157,6 +157,66 @@ fuel at runtime**; `native_decide`-able over the tower `QFunNZ`. -/
 def cLogArgTowerWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (c : ℚ) : CPolyG QFunNZ :=
   cgcdFFWf d (cAmcDd Dt a d (ofConstNZ c))
 
+/-- **Bridge — `cLogArgTowerWf` equals `cLogArgTower` at any sufficient fuel.** With the WF-leaf
+`cgcdFFWf_eq_of_fuel` bounds on the `bdeg`-ordered cleared pair of `d`, `a − c·Dd` (the divisor cleared
+poly's `t`-length `≤ fuel`, the degree ordering, the larger cleared poly's `t`-length `≤ 60`),
+`cLogArgTowerWf Dt a d c = cLogArgTower Dt fuel a d c`. The fuel bounds live only here; `cLogArgTowerWf`
+carries none. Directly the gcd bridge `cgcdFFWf_eq_of_fuel d (a − c·Dd)`. -/
+theorem cLogArgTowerWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (c : ℚ)
+    (hflen : (Compute.bnorm (if Compute.bdeg (clearDenoms d)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt a d (ofConstNZ c)))
+        then clearDenoms d else clearDenoms (cAmcDd Dt a d (ofConstNZ c)))).length ≤ fuel)
+    (hfdeg : (Compute.bnorm (if Compute.bdeg (clearDenoms d)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt a d (ofConstNZ c)))
+        then clearDenoms d else clearDenoms (cAmcDd Dt a d (ofConstNZ c)))).length
+      ≤ (Compute.bnorm (if Compute.bdeg (clearDenoms d)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt a d (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt a d (ofConstNZ c)) else clearDenoms d)).length)
+    (hf60 : (Compute.bnorm (if Compute.bdeg (clearDenoms d)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt a d (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt a d (ofConstNZ c)) else clearDenoms d)).length ≤ 60) :
+    cLogArgTowerWf Dt a d c = CPolyG.cLogArgTower Dt fuel a d c := by
+  rw [cLogArgTowerWf, CPolyG.cLogArgTower]
+  exact cgcdFFWf_eq_of_fuel fuel d (cAmcDd Dt a d (ofConstNZ c)) hflen hfdeg hf60
+
+open scoped Classical Differential in
+/-- **`cLogArgTowerWf` realizes the abstract RT product** (transported, fuel-free): for the split
+squarefree denominator `toPolyG hDen = nodal s id` and a residue `c`, the fuel-free log argument reads
+under `toPolyG` as the Rothstein–Trager product `∏_{res α = c}(X − α)`. The fuel-free companion of
+`cLogArgTower_toPolyG_eq_prod`, transported through the bridge `cLogArgTowerWf_eq` (its `cgcdFFWf` bounds)
+and the same per-residue `cgcdFF` regularity `hreg`. -/
+theorem toPolyG_cLogArgTowerWf_eq_prod (Dt : CPolyG QFunNZ) (fuel : ℕ) (hNum hDen : CPolyG QFunNZ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α ≠ 0) (c : ℚ)
+    (hflen : (Compute.bnorm (if Compute.bdeg (clearDenoms hDen)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))).length ≤ fuel)
+    (hfdeg : (Compute.bnorm (if Compute.bdeg (clearDenoms hDen)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))).length
+      ≤ (Compute.bnorm (if Compute.bdeg (clearDenoms hDen)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)).length)
+    (hf60 : (Compute.bnorm (if Compute.bdeg (clearDenoms hDen)
+          < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)).length ≤ 60)
+    (hreg : PrimPRSInputs fuel
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)) else clearDenoms hDen)
+      (if Compute.bdeg (clearDenoms hDen)
+            < Compute.bdeg (clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))
+        then clearDenoms hDen else clearDenoms (cAmcDd Dt hNum hDen (ofConstNZ c)))) :
+    toPolyG (cLogArgTowerWf Dt hNum hDen c)
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (toPolyG hDen)).eval α
+              = CFieldSpec.toK (ofConstNZ c)), (X - C α) := by
+  rw [cLogArgTowerWf_eq Dt fuel hNum hDen c hflen hfdeg hf60]
+  exact cLogArgTower_toPolyG_eq_prod Dt fuel hNum hDen s hden hDd c hreg
+
 end CPolyG
+
+-- The fuel-free §5.6 log-argument headline carries only the standard axioms.
+#print axioms CPolyG.toPolyG_cLogArgTowerWf_eq_prod
 
 end DeepWiki.SymbolicIntegration
