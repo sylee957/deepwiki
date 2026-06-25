@@ -875,6 +875,78 @@ theorem cisZeroG_cevalG_cResidueResultantTower_iff (Dt a d : CPolyG QFunNZ) (fue
   rw [hden, resultant_split_eq_zero_iff_residue s (toPolyG a) δ hDd
     (CFieldSpec.toK (ofConstNZ c)) hEdeg]
 
+/-! ### Discharging `hkeysImage`/`hkeysNodup` — the residue-set enumeration
+
+The `cLogPart Dt fuel a d cands` keys are exactly `cRationalResidues = cands.filter (residue test)`, and
+by the per-candidate criterion a candidate passes the test iff it is a residue. So the keys' `toK`-images
+are exactly `{toK(ofConstNZ c) | c ∈ cands, c a residue}`. Equating this with `s.image res`
+(`hkeysImage`) and proving it nodup (`hkeysNodup`) requires two transparent facts about the candidate
+list: it is **complete** (every residue value `res α`, `α ∈ s`, is `toK(ofConstNZ c)` for some `c ∈ cands`)
+and **`toK`-distinct** (the residue-passing candidates have distinct `toK ∘ ofConstNZ` images). These are
+exactly the residue-enumeration preconditions the §5.6 capstone needs. -/
+
+open scoped Classical Differential in
+/-- **`hkeysNodup` discharged**: if the residue-passing candidates have distinct `toK ∘ ofConstNZ`
+images, the `cLogPart` keys are nodup under `toK ∘ ofConstNZ`. (Immediate from `cLogPart`'s keys being
+`cRationalResidues` and the candidate-distinctness hypothesis.) -/
+theorem cLogPart_keys_nodup (Dt a d : CPolyG QFunNZ) (fuel : ℕ) (cands : List ℚ)
+    (hdistinct : (cands.filter (fun c =>
+        cisZeroG [cevalG (cResidueResultantTower Dt fuel a d) (ofConstNZ c)])).map
+        (fun c => CFieldSpec.toK (ofConstNZ c)) |>.Nodup) :
+    ((cLogPart Dt fuel a d cands).map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup := by
+  rw [cLogPart, cRationalResidues, List.map_map]
+  exact hdistinct
+
+open scoped Classical Differential in
+/-- **`hkeysImage` discharged** (the residue-set enumeration, composing step 4b): in the split squarefree
+primitive regime, if the candidate list `cands` is **complete** — every residue value `res α` (`α ∈ s`)
+equals `toK(ofConstNZ c)` for some `c ∈ cands` — then the `toK`-images of the `cLogPart` keys are exactly
+the distinct-residue set `s.image res`. Each `cLogPart` key is a residue (per-candidate criterion
+`cisZeroG_cevalG_cResidueResultantTower_iff`), and conversely each residue is reached by a candidate
+(completeness). This is exactly the `hkeysImage` hypothesis of the §5.6 capstone
+`cIntegrate_checkIdentity_of_residueData`. -/
+theorem cLogPart_keys_image (Dt a d : CPolyG QFunNZ) (fuel : ℕ) (cands : List ℚ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG d = Lagrange.nodal s id)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α ≠ 0)
+    (hadeg : (toPolyG a).natDegree ≤ (toPolyG d).natDegree)
+    (hδdeg : (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).natDegree
+      ≤ (toPolyG d).natDegree)
+    (hamc : ∀ k ∈ Finset.range (cdegG d + 1),
+      (toPolyG (cAmcDd Dt a d (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG d).natDegree)
+    (hfuel : ∀ k ∈ Finset.range (cdegG d + 1),
+      (cnormG d : List QFunNZ).length
+        + (cnormG (cAmcDd Dt a d (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel)
+    (hcompl : ∀ α ∈ s, ∃ c ∈ cands, (toPolyG a).eval α
+        / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α
+          = CFieldSpec.toK (ofConstNZ c)) :
+    ((cLogPart Dt fuel a d cands).map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG a).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α) := by
+  classical
+  set res : CFieldSpec.K QFunNZ → CFieldSpec.K QFunNZ := fun α => (toPolyG a).eval α
+    / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α with hres
+  -- the key-image set is `{toK(ofConstNZ c) | c ∈ cands ∧ test c}`
+  rw [cLogPart, cRationalResidues, List.map_map]
+  ext v
+  rw [List.mem_toFinset, List.mem_map, Finset.mem_image]
+  constructor
+  · rintro ⟨c, hc, rfl⟩
+    rw [List.mem_filter] at hc
+    obtain ⟨_, htest⟩ := hc
+    -- `c` passes the test ⟹ `c` is a residue
+    obtain ⟨α, hαs, hαres⟩ := (cisZeroG_cevalG_cResidueResultantTower_iff Dt a d fuel s hden hDd
+      hadeg hδdeg hamc hfuel c).mp htest
+    exact ⟨α, hαs, hαres⟩
+  · rintro ⟨α, hαs, rfl⟩
+    -- a residue `res α` is reached by some complete candidate `c`, which then passes the test
+    obtain ⟨c, hcc, hceq⟩ := hcompl α hαs
+    refine ⟨c, ?_, hceq.symm⟩
+    rw [List.mem_filter]
+    refine ⟨hcc, ?_⟩
+    -- `c` is a residue (`res α = toK(ofConstNZ c)`), so it passes the test
+    exact (cisZeroG_cevalG_cResidueResultantTower_iff Dt a d fuel s hden hDd hadeg hδdeg hamc hfuel
+      c).mpr ⟨α, hαs, hceq⟩
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
