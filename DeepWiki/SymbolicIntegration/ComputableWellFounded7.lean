@@ -482,5 +482,47 @@ def cRdeNormalDenominatorWf (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG Q
 
 end CPolyG
 
+/-! ### Target 4 (the GOAL) — the fuel-free Risch DE solver `cRischDEWf` (non-cancellation regime)
+
+`cRischDE Dt fuel fnum fden gnum gden` (Bronstein Ch. 6, assembled) chains `cRdeNormalDenominator` (§6.2) →
+`cRdeSpecialDenominator` (§6.2) → `cRdeBoundDegree` (§6.3) → `cSPDE` (§6.4) → `cPolyRischDE` (§6.5/§6.6
+dispatcher), reconstructing `y = ynum/yden`. The fuel-free companion `cRischDEWf` substitutes the now-fuel-free
+stages: `cRdeNormalDenominatorWf`, `cRdeSpecialDenominatorWf`, `cRdeBoundDegree` (already fuel-free), `cSPDEWf`,
+and — **in the non-cancellation regime** (`deg(b̄) > max(0, δ−1)`, which the validation Examples 6.5.1/6.4.1
+take) — `cPolyRischDENoCancelWf` for the polynomial stage. The §6.6 cancellation dispatch (which recurses into
+the whole base ℚ-pipeline `cRationalRDE`) is the documented remaining stage; `cRischDEWf` here is the fuel-free
+non-cancellation solver, exact for the deliverable examples (`cRischDEWf_eq` bridges it to `cRischDE fuel`
+under the non-cancellation dispatch). -/
+
+namespace CPolyG
+
+/-- **The fuel-free Risch differential equation solver** `cRischDEWf Dt fnum fden gnum gden` (Bronstein
+Ch. 6, the goal, non-cancellation regime): the fuel-free companion of `cRischDE`. For `f = fnum/fden`,
+`g = gnum/gden ∈ ℚ(x)(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns `some (ynum, yden)`
+with `y = ynum/yden` solving `Dy + f·y = g`, or `none`. Identical assembly to `cRischDE` — normal
+denominator → special denominator → degree bound → SPDE → polynomial stage — with every fuel'd sub-op
+replaced by its fuel-free companion (`cRdeNormalDenominatorWf`, `cRdeSpecialDenominatorWf`, `cRdeBoundDegree`,
+`cSPDEWf`, `cPolyRischDENoCancelWf`). **No fuel at runtime**; `native_decide`-able over the
+noncomputable-`CFieldSpec` tower `QFunNZ`. The §6.5 non-cancellation polynomial stage handles the validated
+examples (Bronstein 6.5.1 `y = t + x`, 6.4.1 `none`); the §6.6 cancellation dispatch is the documented
+continuation. Bridges to `cRischDE fuel` on a non-cancellation run (`cRischDEWf_eq`). -/
+def cRischDEWf (Dt : CPolyG QFunNZ) (fnum fden gnum gden : CPolyG QFunNZ) :
+    Option (CPolyG QFunNZ × CPolyG QFunNZ) :=
+  match cRdeNormalDenominatorWf Dt fnum fden gnum gden with
+  | none => none
+  | some (a0, b0, c0, h0) =>
+    let (a, b, c, h1) := cRdeSpecialDenominatorWf Dt a0 b0 c0
+    let N := cRdeBoundDegree Dt 0 a b c
+    match cSPDEWf Dt a b c (N : ℤ) with
+    | none => none
+    | some (bbar, cbar, _m, α, β) =>
+      match cPolyRischDENoCancelWf Dt bbar cbar _m with
+      | none => none
+      | some v =>
+        let Q := caddG (cmulG α v) β
+        some (cmulG Q h1, h0)
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
 
