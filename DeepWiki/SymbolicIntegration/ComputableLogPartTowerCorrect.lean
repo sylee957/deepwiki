@@ -280,6 +280,43 @@ theorem sum_logDeriv_prod_X_sub_C (t : Finset K) :
     field_simp
     ring
 
+omit [Algebra ℚ K] in
+open scoped Classical in
+/-- **The §5.6 grouped residue match** (the discharged `hmatch`, the Rothstein–Trager headline form):
+for `A` of degree `< #s` over the split squarefree `d = nodal s id = ∏_{α∈s}(X−α)`, and a base
+derivation `δ` sending each linear factor to a *constant* `δ(X − Cα) = C (b α)` with `b α ≠ 0` (the
+primitive condition `δt ∈ k`), the **residue-grouped** sum equals the integrand:
+`∑_{c ∈ residues} algMap(C c)·(algMap(δ gᶜ)/algMap(gᶜ)) = algMap(A)/algMap(d)`, where `c` ranges over
+the distinct residues `s.image res` (`res α = A(α)/(δ d)(α)`) and `gᶜ = ∏_{α: res α = c}(X−α)` is the
+Rothstein–Trager log argument. This is exactly the `hmatch` of `extendDeriv_logPart_eq_of_residue_match`
+with `c = C c` and `g = gᶜ`. Assembled from `sum_logDeriv_prod_X_sub_C` (each `δ gᶜ/gᶜ` is the per-root
+sum), the fiberwise regrouping `Finset.sum_fiberwise_of_maps_to`, and `sum_residue_seed_logDeriv_eq_div`.
+The §5.6 analogue of §2's `ratFunc_eq_sum_residue_gcd`. -/
+theorem sum_residue_grouped_logDeriv_eq_div (A : K[X]) (s : Finset K) (hA : A.degree < s.card)
+    (b : K → K) (hb : ∀ α ∈ s, δ (X - C α) = C (b α)) (hb0 : ∀ α ∈ s, b α ≠ 0) :
+    ∑ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α),
+        algebraMap K[X] (RatFunc K) (C c)
+          * (algebraMap K[X] (RatFunc K)
+                (δ (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+              / algebraMap K[X] (RatFunc K)
+                (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  classical
+  set res : K → K := fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α with hres
+  -- the residue match over individual roots is the target after regrouping
+  rw [← sum_residue_seed_logDeriv_eq_div δ A s hA b hb hb0,
+    ← Finset.sum_fiberwise_of_maps_to (g := res) (t := s.image res)
+      (fun α hα => Finset.mem_image_of_mem _ hα)
+      (f := fun α => algebraMap K[X] (RatFunc K) (C (res α))
+        * (algebraMap K[X] (RatFunc K) (δ (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α)))]
+  -- per residue value `c`: the product log-derivative splits into the fiber's per-root sum
+  refine Finset.sum_congr rfl fun c _ => ?_
+  rw [sum_logDeriv_prod_X_sub_C δ (s.filter (fun α => res α = c)), Finset.mul_sum]
+  exact Finset.sum_congr rfl fun α hα => by rw [(Finset.mem_filter.mp hα).2]
+
 end ResidueMatch
 
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
