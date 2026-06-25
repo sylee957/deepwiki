@@ -588,4 +588,103 @@ theorem towerRde_constBase :
 #print axioms towerRdeLvl2_solves_Dy_eq_one
 #print axioms towerRdeLvl2_solves_Dy_plus_y_eq_t1_plus_one
 
+/-! ## STRETCH — the full poly/special integration driver `cIntegrateGFull` (Bronstein §5.4)
+
+The reduced driver `cIntegrateG` (`ComputableTowerIntegrate`) returns `none` whenever the **polynomial
+part** `fₚ` or the **special part** `b/dₛ` of `f = a/d` is nonzero — it only does the simple normal part
+(Hermite + residue logs). With the recursive RDE oracle now in hand we can dispatch the **polynomial
+part**: for a primitive monomial (`Dt ∈ α`), `∫ fₚ` is the `b = 0` Risch-DE `Dq = fₚ` over `α[t]`, solved
+by `cPolyRischDEG Dt fuel 0 fₚ (deg fₚ + 1)` (Bronstein §5.4 `IntegratePolynomial`, primitive case — the
+degree-by-degree antiderivative). `cIntegrateGFull` adds this on top of `cIntegrateG`: split `f`, solve
+the polynomial part by the oracle, integrate the normal part by `cIntegrateReducedG`, **combine the two
+rational parts** `qₚ + gₙ/gₙd`, and require the special part to vanish (special-part integration over a
+primitive extension is degenerate — `dₛ = 1` — so this loses nothing in the primitive case; the genuine
+hyperexp/hypertangent special part is the documented continuation). This uses the new
+`CRischField`/`cPolyRischDEG`, so it lands the integrals the reduced driver could not. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+
+/-- **The full poly/special tower integral** `cIntegrateGFull Dt fuel a d cands` (Bronstein Ch. 5,
+extending the reduced `cIntegrateG` with the polynomial part). Integrate `f = a/d ∈ α(t)` over
+`D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or
+`none`. Steps: (1) `canonicalRepresentationFastG` splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`; (2) the polynomial
+part `fₚ` is integrated by the **RDE oracle** — `cPolyRischDEG Dt fuel 0 fₚ (deg fₚ + 1)` solves the
+`b = 0` equation `Dqₚ = fₚ` (primitive case); (3) the simple normal part `cₙ/dₙ` by `cIntegrateReducedG`
+(Hermite + residue logs); (4) combine the rational parts `qₚ + gₙ/gₙd = (qₚ·gₙd + gₙ)/gₙd`; require the
+special part `b` to vanish (else `none`, the documented continuation). `[CField α] [CDiffField α]
+[CRischField α]`-generic — runs at any tower level. Lands the polynomial-part integrals on which the
+reduced `cIntegrateG` returns `none`. -/
+def cIntegrateGFull (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
+  if cisZeroG b then
+    -- normal part: rational `gₙ/gₙd` + logs.
+    let nrm := cIntegrateReducedG Dt fuel cn dn cands
+    let (gnum, gden) := nrm.rational
+    if cisZeroG fp then
+      some nrm
+    else
+      -- polynomial part: solve `Dqₚ = fₚ` by the `b = 0` RDE oracle (primitive case).
+      match cPolyRischDEG Dt fuel [] fp ((cdegG fp : ℤ) + 1) with
+      | none => none
+      | some qp =>
+        -- combine `qₚ + gₙ/gₙd = (qₚ·gₙd + gₙ)/gₙd`.
+        let num := caddG (cmulG qp gden) gnum
+        some ⟨(num, gden), nrm.logs⟩
+  else none
+
+end CPolyG
+
+/-! ### ★★ STRETCH validation: a polynomial-part tower integral at LEVEL 2 (`native_decide`)
+
+The reduced `cIntegrateG` returns `none` on `f = t₂` over `ℚ(x)(t₁)[t₂]` (its polynomial part `fₚ = t₂`
+is nonzero). The full driver `cIntegrateGFull` lands it: `∫ t₂ = (1/2)t₂²` (the RDE oracle solves
+`Dqₚ = t₂` → `qₚ = (1/2)t₂²`, since `D(t₂) = Dt₂ = 1` for the independent monomial `Dt₂ = [1]`), with no
+logarithmic part. We pin both: `cIntegrateG` is `none` here, and `cIntegrateGFull` returns a result whose
+antiderivative identity `D(∫f) = f` holds (`checkIdentityG`, cleared of denominators). The whole driver —
+canonical split, the new polynomial-part RDE solve, recombination — *computes* over `ℚ(x)(t₁)[t₂]` at
+level 2. -/
+
+open CPolyG
+
+/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent,
+primitive). -/
+def towerFullLvl2Dt : CPolyG Lvl2 := [CField.one]
+
+/-- The level-2 integrand `f = t₂` over `CPolyG Lvl2` — a pure polynomial part (numerator `t₂`,
+denominator `1`), on which the reduced `cIntegrateG` returns `none`. -/
+def towerFullLvl2A : CPolyG Lvl2 := [CField.zero, CField.one]
+
+/-- The level-2 integrand denominator `d = 1` over `CPolyG Lvl2`. -/
+def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
+
+/-- The level-2 residue candidate set (empty rationals — `f = t₂` has no logarithmic part). -/
+def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
+
+/-- **The reduced driver `cIntegrateG` returns `none` on `f = t₂`** (`native_decide`): its polynomial part
+`fₚ = t₂` is nonzero, so the conservative reduced-case driver cannot dispose of it — exactly the gap the
+full driver closes. -/
+theorem towerFullLvl2_reduced_none :
+    (CPolyG.cIntegrateG towerFullLvl2Dt 20 towerFullLvl2A towerFullLvl2D
+      towerFullLvl2Cands).isNone = true := by native_decide
+
+/-- **★★ The full driver `cIntegrateGFull` lands `∫ t₂ = (1/2)t₂²` at LEVEL 2, and `D(∫f) = f`**
+(`native_decide`, the stretch deliverable). On the level-2 integrand `f = t₂` over `ℚ(x)(t₁)[t₂]`
+(`= CPolyG (QFunNZG (QFunNZG ℚ))`, `Dt₂ = 1`) — a **pure polynomial part** that the reduced `cIntegrateG`
+returns `none` on — the full driver `cIntegrateGFull` (canonical split + the new RDE-oracle polynomial-part
+solve `Dqₚ = t₂` + recombination) returns `some res`, and `res` satisfies the antiderivative identity
+`D(res) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` (`checkIdentityG`, cleared of denominators over ℚ(x)(t₁)[t₂]). The
+returned rational part is `(1/2)t₂²` with no logs. **This is the stretch: the polynomial-part integration
+driver — built on the recursive RDE oracle — computes over the monomial tower at level 2 and
+differentiates back to `f`.** -/
+theorem towerFullLvl2_landsPolynomialPart :
+    (match CPolyG.cIntegrateGFull towerFullLvl2Dt 20 towerFullLvl2A towerFullLvl2D
+        towerFullLvl2Cands with
+      | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
+      | none => false) = true := by native_decide
+
+#print axioms towerFullLvl2_landsPolynomialPart
+
 end DeepWiki.SymbolicIntegration
