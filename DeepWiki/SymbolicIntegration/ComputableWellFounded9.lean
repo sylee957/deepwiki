@@ -360,4 +360,123 @@ end CPolyG
 #print axioms Compute.qnormWf_eq_of_fuel
 #print axioms CPolyG.cLcmQWf_eq_of_fuel
 
+/-! ### §9 — `cLogIsNewMonomialWf`/`cExpIsNewMonomialWf`/`cLogRelationCoeffsWf`: structure decisions
+
+The §9 Risch structure decisions thread fuel only through the ℚ-linear-dependence engine `cLinearDepData`,
+which bottoms out at `Compute.qnorm`/`cLcmQ`/`Compute.cdiv` (all now with fuel-free leaves); the
+ℚ-nullspace solver `cNullspaceBasisQ` is already fuel-free. So §9 is a **composition**: substitute
+`qnormWf`/`cLcmQWf`/`cdivWf` into the cleared-coefficient + dependence assembly, then the decisions reuse
+`cNullspaceBasisQ` verbatim. -/
+
+namespace CPolyG
+
+/-- **Fuel-free cleared numerator coefficients** `cClearedNumCoeffsWf d w = (a·(d/b))`: the fuel-free
+companion of `cClearedNumCoeffs`. With `w` in lowest terms `(a, b) = qnormWf w` (fuel-free), `w·d = a·(d/b)`
+as a polynomial (`b ∣ d`), the division `d/b` via the **generic fuel-free** `cdivWf`. **No fuel at
+runtime**. -/
+def cClearedNumCoeffsWf (d : Compute.CPoly) (w : QFunNZ) : Compute.CPoly :=
+  let wn := Compute.qnormWf w.1
+  Compute.cmul wn.1 (cdivWf d wn.2)
+
+/-- **Fuel-free ℚ-linear span / dependence engine** `cLinearDepDataWf ws w = (matrix, m)`: the fuel-free
+companion of `cLinearDepData`. Clears `ws ++ [w]` to the common denominator `d = lcm(denominators)` (the
+fuel-free `qnormWf`/`cLcmQWf`), assembles the coefficient matrix `M` (row `i` = `[coeff(wⱼ·d, xⁱ)]ⱼ`, `w`
+last) via the fuel-free `cClearedNumCoeffsWf`, and returns `(M, |ws|)`. A ℚ-relation `Σ rⱼwⱼ + r·w = 0` is a
+nullspace vector of `M`. **No fuel at runtime**. -/
+def cLinearDepDataWf (ws : List QFunNZ) (w : QFunNZ) :
+    List (List ℚ) × ℕ :=
+  let all := ws ++ [w]
+  let dens := all.map (fun u => (Compute.qnormWf u.1).2)
+  let d := dens.foldl (fun acc den => cLcmQWf acc den) [(1 : ℚ)]
+  let cols : List Compute.CPoly := all.map (fun u => cClearedNumCoeffsWf d u)
+  let nrows := (cols.map Compute.cdeg).foldl Nat.max 0 + 1
+  let M : List (List ℚ) :=
+    (List.range nrows).map (fun i =>
+      cols.map (fun c => (Compute.cnorm c).getD i 0))
+  (M, ws.length)
+
+/-- **Fuel-free new-logarithm structure decision** `cLogIsNewMonomialWf logDerivs w` (Bronstein §9.3,
+Corollary 9.3.1(i), eq. 9.8): the fuel-free companion of `cLogIsNewMonomial`. Returns `true` iff `log(u)`
+(logarithmic derivative `w = Du/u`) is a **new transcendental monomial** over `C(x)(log u₁,…)` — i.e. no
+`rᵢ ∈ ℚ` with `Du/u = Σ rᵢ(Duᵢ/uᵢ)` — decided by the **fuel-free** dependence data `cLinearDepDataWf` and
+the fuel-free ℚ-nullspace solver `cNullspaceBasisQ`. **No fuel at runtime**. -/
+def cLogIsNewMonomialWf (logDerivs : List QFunNZ) (w : QFunNZ) : Bool :=
+  let (M, m) := cLinearDepDataWf logDerivs w
+  let basis := cNullspaceBasisQ M (m + 1)
+  !(basis.any (fun rel => rel.getD m 0 ≠ 0))
+
+/-- **Fuel-free new-exponential structure decision** `cExpIsNewMonomialWf logDerivs b` (Bronstein §9.3,
+Corollary 9.3.1(ii), eq. 9.9): the fuel-free companion of `cExpIsNewMonomial`, the *same* ℚ-linear-
+dependence test as the logarithm case applied to the exponent derivative `b = Db`. **No fuel at runtime**. -/
+def cExpIsNewMonomialWf (logDerivs : List QFunNZ) (b : QFunNZ) : Bool :=
+  cLogIsNewMonomialWf logDerivs b
+
+/-- **Fuel-free membership form** `cLogRelationExistsWf logDerivs w = !cLogIsNewMonomialWf …`: `true` iff
+`w = Du/u` **is** a ℚ-linear combination of the existing logarithmic derivatives (so `log(u)` is
+*dependent*). The fuel-free companion of `cLogRelationExists`. -/
+def cLogRelationExistsWf (logDerivs : List QFunNZ) (w : QFunNZ) : Bool :=
+  !cLogIsNewMonomialWf logDerivs w
+
+/-- **Fuel-free ℚ-relation coefficients** `cLogRelationCoeffsWf logDerivs w`: the fuel-free companion of
+`cLogRelationCoeffs` — when a relation exists with a nonzero `w`-coordinate, returns `some [r₁,…,rₘ]` with
+`Du/u = Σ rᵢ(Duᵢ/uᵢ)` (normalizing the `w`-column to `−1`), via the fuel-free `cLinearDepDataWf`/
+`cNullspaceBasisQ`; else `none`. **No fuel at runtime**. -/
+def cLogRelationCoeffsWf (logDerivs : List QFunNZ) (w : QFunNZ) : Option (List ℚ) :=
+  let (M, m) := cLinearDepDataWf logDerivs w
+  let basis := cNullspaceBasisQ M (m + 1)
+  match basis.find? (fun rel => rel.getD m 0 ≠ 0) with
+  | none => none
+  | some rel =>
+    let wc := rel.getD m 0
+    some ((List.range m).map (fun j => - (rel.getD j 0) / wc))
+
+end CPolyG
+
+/-! #### `native_decide` — the fuel-free §9 structure decisions on Bronstein's Corollary 9.3.1 examples
+
+Re-runs `structureTheorem_example`/`expStructureTheorem_example`/`multiStructureTheorem_example` over
+`k = ℚ(x)`, now fuel-free: `log(x²) = 2 log(x)` dependent (relation `[2]`), `log(x+1)` new; the exponential
+analogue; and the 2-generator tower `C(x)(log x, log(x+1))` with `log(x²+x) = log x + log(x+1)` (relation
+`[1,1]`). Each detected relation is verified against the rational-function identity by `structRelationCheck`. -/
+
+open CPolyG
+
+/-- **The fuel-free §9 logarithmic structure decision computes** (`native_decide`, Bronstein Corollary
+9.3.1(i)): `log(x²)` is dependent on `log(x)` (relation `[2]`, verified by `structRelationCheck`), and
+`log(x+1)` is a new transcendental monomial. The fuel-free companion of `structureTheorem_example`. -/
+theorem structureTheoremWf_example :
+    ((cLogIsNewMonomialWf [structLogDerivX] structLogDerivX2 == false)
+     && (match cLogRelationCoeffsWf [structLogDerivX] structLogDerivX2 with
+         | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
+         | none => false)
+     && (cLogIsNewMonomialWf [structLogDerivX] structLogDerivX1 == true)) = true := by
+  native_decide
+
+/-- **The fuel-free §9 exponential structure decision computes** (`native_decide`, Bronstein Corollary
+9.3.1(ii)): `exp(b)` with `Db = 2/x` is not new (relation `[2]`), with `Db = 1/(x+1)` is new. The fuel-free
+companion of `expStructureTheorem_example`. -/
+theorem expStructureTheoremWf_example :
+    ((cExpIsNewMonomialWf [structLogDerivX] structLogDerivX2 == false)
+     && (match cLogRelationCoeffsWf [structLogDerivX] structLogDerivX2 with
+         | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
+         | none => false)
+     && (cExpIsNewMonomialWf [structLogDerivX] structLogDerivX1 == true)) = true := by
+  native_decide
+
+/-- **The fuel-free §9 multi-monomial structure decision computes** (`native_decide`, Bronstein Corollary
+9.3.1): over the 2-generator tower `C(x)(log x, log(x+1))`, `log(x²+x) = log x + log(x+1)` is dependent
+(relation `[1,1]`, verified), and the two generators are mutually independent. The fuel-free companion of
+`multiStructureTheorem_example`. -/
+theorem multiStructureTheoremWf_example :
+    ((cLogIsNewMonomialWf [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
+     && (match cLogRelationCoeffsWf [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
+         | some rs => structRelationCheck [structLogDerivX, structLogDerivX1] structLogDerivX2pX rs
+                        && (rs == [1, 1])
+         | none => false)
+     && (cLogIsNewMonomialWf [structLogDerivX1] structLogDerivX == true)
+     && (cLogIsNewMonomialWf [structLogDerivX] structLogDerivX1 == true)) = true := by
+  native_decide
+
+#print axioms multiStructureTheoremWf_example
+
 end DeepWiki.SymbolicIntegration
