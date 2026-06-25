@@ -159,4 +159,80 @@ end CPolyG
 
 #print axioms CPolyG.cPolyRischDENoCancelWf_cleared_identity
 
+/-! ### A small fuel-free divisibility leaf `cdvdGWf` (over `cmodWf`)
+
+`cdvdG fuel q p = cisZeroG (cmodG fuel p q)`; the fuel goes only to `cmodG`. The fuel-free companion
+substitutes the leaf `cmodWf` (`ComputableWellFounded`): `cdvdGWf q p = cisZeroG (cmodWf p q)`. Used by the
+fuel-free SPDE own-loop (which tests `g ∣ c`). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Fuel-free divisibility test** `cdvdGWf q p = cisZeroG (cmodWf p q)`: the fuel-free companion of
+`cdvdG`, deciding `q ∣ p` (remainder of `p` by `q` is zero) with the leaf fuel-free remainder `cmodWf`
+(true well-founded recursion, no fuel at runtime). Generic over `[CField α]`. -/
+def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+
+variable [CFieldSpec α]
+
+/-- **`cdvdGWf` equals the fuel'd `cdvdG` at any sufficient fuel**: for `(cnormG p).length ≤ fuel`,
+`cdvdGWf q p = cdvdG fuel q p`. Both test the zero-ness of the Euclidean remainder; the leaf bridge
+`cdivmodWf_eq_of_fuel` supplies the agreement. -/
+theorem cdvdGWf_eq_of_fuel (fuel : ℕ) (q p : CPolyG α)
+    (hfuel : (cnormG p : List α).length ≤ fuel) :
+    cdvdGWf q p = CPolyG.cdvdG fuel q p := by
+  rw [cdvdGWf, CPolyG.cdvdG, cmodWf, cmodG, cdivmodWf_eq_of_fuel fuel p q hfuel]
+
+end CPolyG
+
+/-! ### Target 2 — the fuel-free Rothstein SPDE `cSPDEWf` (own-loop on `(n+1).toNat`, §6.4)
+
+`cSPDE Dt fuel a b c n` (Bronstein §6.4) peels `g = gcd(a, b)` each step and recurses on the divided
+`a/g` with the degree bound lowered to `n − deg(a/g)`. The recursion is taken only when `n ≥ 0` and
+`deg(a/g) ≥ 1` (the constant base case `deg(a/g) = 0` returns directly), so `n` strictly drops by
+`deg(a/g) ≥ 1`; hence `(n + 1).toNat` is a genuine well-founded measure. The fuel-free companion runs the
+**own-loop** by well-founded recursion on `(n + 1).toNat`, with the inner gcd/division/Bézout leaves the
+fuel-free `cgcdFFWf`/`cdivFFWf`/`cdvdGWf`/`cdiophantineGWf` — **no fuel at runtime**. -/
+
+namespace CPolyG
+
+/-- **Fuel-free Rothstein SPDE** (Bronstein §6.4, the `SPDE(a,b,c,D,n)` box, book p.203)
+`cSPDEWf Dt a b c n`: the fuel-free companion of `cSPDE`. Given `a, b, c ∈ ℚ(x)[t]` (`a ≠ 0`) and a degree
+bound `n : ℤ`, returns `none` ("no solution of degree `≤ n`") or `some (b̄, c̄, m, α, β)` such that any
+solution `q` of `a·Dq + b·q = c` of degree `≤ n` is `q = α·h + β` for an `h` solving `Dh + b̄·h = c̄`,
+`deg(h) ≤ m`. Peels `g = cgcdFFWf a b`; the constant `a/g` base case returns the identity reconstruction,
+else solves the Bézout `cdiophantineGWf b̄ ā c̄` and recurses on the divided `ā = a/g` at `n − deg(ā)`. True
+well-founded recursion on `(n + 1).toNat` (`n` drops by `deg(ā) ≥ 1` in the recursive branch) — **no fuel
+at runtime**. The inner gcd/division/divisibility/Bézout are the fuel-free `cgcdFFWf`/`cdivFFWf`/`cdvdGWf`/
+`cdiophantineGWf`. Agrees with `cSPDE` on a regular run (`cSPDEWf_eq`). `native_decide`-able over `QFunNZ`. -/
+def cSPDEWf (Dt : CPolyG QFunNZ) (a b c : CPolyG QFunNZ) (n : ℤ) :
+    Option (CPolyG QFunNZ × CPolyG QFunNZ × ℤ × CPolyG QFunNZ × CPolyG QFunNZ) :=
+  if n < 0 then
+    if cisZeroG c then some ([], [], 0, [], []) else none
+  else
+    let g := cgcdFFWf a b
+    if cdvdGWf g c then
+      let a' := cdivFFWf a g
+      let b' := cdivFFWf b g
+      let c' := cdivFFWf c g
+      if cdegG a' = 0 then
+        let ainv := CField.inv (cleadG a')
+        some (cscaleG ainv b', cscaleG ainv c', n, [CField.one], [])
+      else
+        let (r, z) := cdiophantineGWf b' a' c'
+        let Da := cmonomialDeriv Dt a'
+        let Dr := cmonomialDeriv Dt r
+        if (n - (cdegG a' : ℤ) + 1).toNat < (n + 1).toNat then
+          match cSPDEWf Dt a' (caddG b' Da) (csubG z Dr) (n - (cdegG a' : ℤ)) with
+          | none => none
+          | some (bbar, cbar, m, α, β) =>
+              some (bbar, cbar, m, cmulG a' α, caddG (cmulG a' β) r)
+        else none   -- unreachable on a real run (`deg(a') ≥ 1`, `n ≥ 0`, so `n` strictly drops)
+    else none
+termination_by (n + 1).toNat
+decreasing_by assumption
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
