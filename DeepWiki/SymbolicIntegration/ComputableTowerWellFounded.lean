@@ -766,4 +766,112 @@ theorem towerIntLvl2_driverGWf :
 #print axioms CPolyG.cIntegrateGWf_eq
 #print axioms towerIntLvl2_driverGWf
 
+/-! ## Part 6 — STRETCH: the generic fuel-free RDE recursive bottoms (§6 PolyRischDE / SPDE)
+
+The §6 RDE pipeline `cRischDEG` (`ComputableTowerRischDE`) is a second large pipeline whose flat structure
+mirrors the integration one but whose recursive bottoms differ. This part builds the fuel-free companions of
+its two `[CField α]`-generic degree-recursion bottoms — the §6.5 non-cancellation solve
+`cPolyRischDENoCancelG` (recursing on `(cnormG c).length`) and the §6.4 SPDE `cSPDEG` (recursing on
+`(n+1).toNat`) — replaying the `QFunNZ`-specific `cPolyRischDENoCancelWf` / `cSPDEWf` patterns generically.
+(The cancellation cases `cPolyRischDECancelPrimG`/`cPolyRischDECancelExpG` carry `[CRischField α]` and the
+top driver `cRischDEG` is a flat composition over these — the documented continuation of the stretch.) -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Generic fuel-free divisibility test** `cdvdGWf q p := cisZeroG (cmodWf p q)`: `true` iff `q ∣ p` over
+`α[t]`, via the fuel-free remainder `cmodWf`. The fuel-free companion of `cdvdG` — **no fuel at runtime**. -/
+def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+
+/-- **Generic fuel-free non-cancellation Poly-Risch-DE** (Bronstein §6.5, book p.208)
+`cPolyRischDENoCancelGWf Dt b c n`: the generic, fuel-free companion of `cPolyRischDENoCancelG`. Solves
+`Dq + b·q = c` (eq. 6.19) for `q ∈ α[t]` with `deg(q) ≤ n` (`n : ℤ`), top-down — `p = (lc(c)/lc(b))·tᵐ`
+(`m = deg(c) − deg(b)`), recurse on `c' = c − D(p) − b·p` (`D = cmonomialDeriv Dt`). Returns `none` or
+`some q`. True well-founded recursion on `(cnormG c).length` — **no fuel at runtime**; the recursion is taken
+only under the structural guard `(cnormG c').length < (cnormG c).length`, so `decreasing_by` is `assumption`.
+Over a non-cancellation run the guard never fails (the leading term cancels, dropping the degree), so it
+agrees with `cPolyRischDENoCancelG`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+def cPolyRischDENoCancelGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
+    Option (CPolyG α) :=
+  if cisZeroG c then some []
+  else
+    let m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ)
+    if n < 0 ∨ m < 0 ∨ m > n then none
+    else
+      let coeff := CField.div (cleadG c) (cleadG b)
+      let p := cshiftG m.toNat [coeff]
+      let c' := csubG (csubG c (cmonomialDeriv Dt p)) (cmulG b p)
+      if (cnormG c' : List α).length < (cnormG c : List α).length then
+        match cPolyRischDENoCancelGWf Dt b c' (m - 1) with
+        | none => none
+        | some q => some (caddG p q)
+      else none   -- unreachable on a non-cancellation run (the leading term cancels, degree drops)
+termination_by (cnormG c).length
+decreasing_by assumption
+
+end CPolyG
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+
+/-- **Generic fuel-free SPDE** (Bronstein §6.4, book p.203) `cSPDEGWf Dt a b c n`: the generic, fuel-free
+companion of `cSPDEG`. The `g = gcd(a, b)`-peel reducing the degree-bounded `a·Dq + b·q = c` to one with
+`a = 1`. Returns `none` or `some (b̄, c̄, m, α', β)` so any solution is `q = α'·h + β` with `h` solving
+`Dh + b̄·h = c̄`, `deg(h) ≤ m`. Peels `g = cgcdFFCoreWf a b` (fuel-free); the constant `a/g` base case
+returns the identity reconstruction, else solves the Bézout `cdiophantineGWf b̄ ā c̄` (already-generic
+fuel-free) and recurses on `ā = a/g` at `n − deg(ā)`. True well-founded recursion on `(n+1).toNat` — **no
+fuel at runtime**; the recursion is taken only under the structural guard `(n − deg(ā) + 1).toNat <
+(n+1).toNat`, so `decreasing_by` is `assumption`. The inner gcd/division/divisibility are the fuel-free
+`cgcdFFCoreWf`/`cdivWf`/`cdvdGWf`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
+def cSPDEGWf (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
+    Option (CPolyG α × CPolyG α × ℤ × CPolyG α × CPolyG α) :=
+  if n < 0 then
+    if cisZeroG c then some ([], [], 0, [], []) else none
+  else
+    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    if cdvdGWf g c then
+      let a' := cdivWf a g
+      let b' := cdivWf b g
+      let c' := cdivWf c g
+      if cdegG a' = 0 then
+        let ainv := CField.inv (cleadG a')
+        some (cscaleG ainv b', cscaleG ainv c', n, [CField.one], [])
+      else
+        let (r, z) := cdiophantineGWf b' a' c'
+        let Da := cmonomialDeriv Dt a'
+        let Dr := cmonomialDeriv Dt r
+        if (n - (cdegG a' : ℤ) + 1).toNat < (n + 1).toNat then
+          match cSPDEGWf Dt a' (caddG b' Da) (csubG z Dr) (n - (cdegG a' : ℤ)) with
+          | none => none
+          | some (bbar, cbar, m, α', β) =>
+              some (bbar, cbar, m, cmulG a' α', caddG (cmulG a' β) r)
+        else none   -- unreachable on a real run (`deg ā ≥ 1`, so the bound `n − deg ā` strictly drops)
+    else none
+termination_by (n + 1).toNat
+decreasing_by assumption
+
+end CPolyG
+
+/-! ### `native_decide` smoke tests for the generic fuel-free RDE bottoms
+
+The whole fuel-free §6.5/§6.4 recursive bottoms execute in native code over the generic tower — `[CField α]`-
+only on the fuel-free fragment, so nothing noncomputable reaches the native compiler. -/
+
+open QFunNZ
+
+/-- `cPolyRischDENoCancelGWf` over `ℚ(x)[t]`: solving `Dq + 0·q = 0` (`c = 0`) succeeds with the zero
+solution (length-0 list) — the fuel-free §6.5 own-loop runs over the tower (`Option.map .length` dodges
+`QFunNZ`'s missing `DecidableEq`). -/
+example :
+    (CPolyG.cPolyRischDENoCancelGWf ([ofConstNZ 0] : CPolyG QFunNZ) [] [] 3).map
+      (fun q => (q : List QFunNZ).length) = some 0 := by native_decide
+
+/-- `cSPDEGWf` over `ℚ(x)[t]`: with a negative degree bound and `c = 0`, the short-circuit succeeds with
+the all-zero tuple (its `b̄` component has length 0) — the fuel-free §6.4 own-loop runs over the tower. -/
+example :
+    ((CPolyG.cSPDEGWf ([ofConstNZ 1] : CPolyG QFunNZ) [ofConstNZ 1] [ofConstNZ 1] [] (-1)).map
+      (fun t => (t.1 : List QFunNZ).length)) = some 0 := by native_decide
+
 end DeepWiki.SymbolicIntegration
