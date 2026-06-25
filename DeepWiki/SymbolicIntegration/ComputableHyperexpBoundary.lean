@@ -274,3 +274,99 @@ theorem extendDeriv_logPart_eq_div_of_eta_zero (A : K[X]) (s : Finset K) (hA : A
   rw [h, zero_mul, C_0, map_zero, add_zero]
 
 end Residual
+
+/-! ### The engine behavior on hyperexponential input — `logResidueSum = hₛ + R` (the key finding)
+
+The engine `cIntegrate`/`cLogPart`/`cResidueResultantTower` is **derivation-generic**: it runs `cmonomialDeriv
+Dt` for *any* `Dt`, so on hyperexponential input (`toPolyG Dt = C η·X + C w₀`, `η ≠ 0`, e.g. `Dt = η·t`,
+`t = exp`) it still produces a residue/log-part result. But that result is **wrong**: the engine's
+log-derivative sum `logResidueSum Dt logs` equals the simple residual `hₛ = hNum/hDen` **plus the explicit
+residual** `R = C(η·∑ res α)`, not `hₛ`. So `D(cIntegrate f) = f + R ≠ f` and the honest checker
+`IntegralResult.checkIdentity` returns `false` — the engine returns an *incorrect* `some res` (it does not
+return `none`, since for a pure simple input `fₚ = 0` ⟹ `prem = 0`, the only gate of `cIntegrate`). The
+hyperexponential analogue of the primitive `logResidueSum_eq_div_of_residueData` (`R = 0`). -/
+
+namespace CPolyG
+
+open scoped Differential
+open QFunNZ
+
+/-- The tower fraction field's `Algebra ℚ` (matching the keystone instances), so `algebraMap ℚ
+(CFieldSpec.K QFunNZ)` resolves uniformly with the proven RT spine. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K QFunNZ) :=
+  inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+open DeepWiki.SymbolicIntegration in
+open scoped Classical in
+/-- **The hyperexponential residual over the tower** `towerHyperexpResidual Dt hNum hDen s = C(η·∑ res α)`:
+the explicit `R ∈ k = ℚ(x)` (read into the tower field via `towerAlg`) by which the engine's
+`logResidueSum` overshoots the simple residual `hₛ`, with `η = w₀` the `X`-coefficient of `toPolyG Dt` and
+`res α = hNum(α)/(Δ hDen)(α)` the §5.6 residues over the splitting set `s`. A constant of `t` (degree 0 in
+`t`), hence itself rational in `x`. -/
+noncomputable def towerHyperexpResidual (Dt hNum : CPolyG QFunNZ) (η : CFieldSpec.K QFunNZ)
+    (s : Finset (CFieldSpec.K QFunNZ)) : RatFunc (CFieldSpec.K QFunNZ) :=
+  towerAlg (Polynomial.C (η * ∑ α ∈ s, (toPolyG hNum).eval α
+    / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+
+open DeepWiki.SymbolicIntegration in
+open scoped Classical Differential in
+/-- **The engine's `logResidueSum` overshoots by the explicit residual `R`** (the hyperexponential analogue
+of `logResidueSum_eq_div_of_residueData`, the key engine-behavior finding): for a **hyperexponential**
+monomial `toPolyG Dt = C η·X + C w₀` (`η ≠ 0`, `Dt ∉ k`, e.g. `Dt = η·t`, `t = exp`), with the concrete
+denominator split `toPolyG hDen = nodal s id`, `deg hNum < #s`, the seed normality `η·α + w₀ − α′ ≠ 0` at
+each root, and the concrete log list corresponding to the distinct-residue data
+(`hkeysNodup`/`hkeysImage`/`harg`), the engine's concrete residue sum equals the simple residual **plus the
+explicit residual**:
+`logResidueSum Dt logs = towerAlg(hNum)/towerAlg(hDen) + towerHyperexpResidual Dt hNum η s`.
+Composes the list→Finset reindexing `logResidueSum_eq_grouped` with the grouped hyperexponential residue
+identity `sum_residue_grouped_logDeriv_eq_div_add_residual` (seed `δ(X − Cα) = C η·X + C(w₀ − α′)` via
+`implicitDeriv_X_sub_C`). For `η = 0` (primitive) the residual vanishes and this is
+`logResidueSum_eq_div_of_residueData`. **This is why `IntegralResult.checkIdentity` fails on
+hyperexponential input** — the engine's `D(res) = f + R ≠ f`. -/
+theorem towerLogResidueSum_eq_div_add_residual_of_residueData (Dt : CPolyG QFunNZ)
+    {η w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C η * X + C w₀)
+    (hNum hDen : CPolyG QFunNZ) (logs : List (ℚ × CPolyG QFunNZ))
+    (s : Finset (CFieldSpec.K QFunNZ))
+    (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card)
+    (hb0 : ∀ α ∈ s, η * α + (w₀ - α′) ≠ 0)
+    (hkeysNodup : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (harg : ∀ cv ∈ logs, toPolyG cv.2
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α
+              = CFieldSpec.toK (ofConstNZ cv.1)), (X - C α)) :
+    logResidueSum Dt logs
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen)
+        + towerHyperexpResidual Dt hNum η s := by
+  classical
+  rw [logResidueSum_eq_grouped Dt hNum logs s hkeysNodup hkeysImage harg, hden, towerHyperexpResidual]
+  -- the grouped hyperexponential residue match with seed `δ(X − Cα) = C η·X + C(w₀ − α′)`
+  exact sum_residue_grouped_logDeriv_eq_div_add_residual (Differential.implicitDeriv (toPolyG Dt))
+    (toPolyG hNum) s hA η (fun α => w₀ - α′)
+    (fun α _ => by rw [implicitDeriv_X_sub_C, htop, C_sub, add_sub_assoc]) hb0
+
+open DeepWiki.SymbolicIntegration in
+open scoped Classical Differential in
+/-- Restatement: the engine's hyperexponential `logResidueSum` overshoots the simple residual by the
+explicit residual `R = C(η·∑ res)` — the citable engine-behavior finding. -/
+example (Dt : CPolyG QFunNZ) {η w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C η * X + C w₀)
+    (hNum hDen : CPolyG QFunNZ) (logs : List (ℚ × CPolyG QFunNZ))
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card) (hb0 : ∀ α ∈ s, η * α + (w₀ - α′) ≠ 0)
+    (hkeysNodup : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).Nodup)
+    (hkeysImage : (logs.map (fun cv => CFieldSpec.toK (ofConstNZ cv.1))).toFinset
+      = s.image (fun α => (toPolyG hNum).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α))
+    (harg : ∀ cv ∈ logs, toPolyG cv.2
+      = ∏ α ∈ s.filter (fun α => (toPolyG hNum).eval α
+            / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α
+              = CFieldSpec.toK (ofConstNZ cv.1)), (X - C α)) :
+    logResidueSum Dt logs
+      = towerAlg (toPolyG hNum) / towerAlg (toPolyG hDen) + towerHyperexpResidual Dt hNum η s :=
+  towerLogResidueSum_eq_div_add_residual_of_residueData Dt htop hNum hDen logs s hden hA hb0
+    hkeysNodup hkeysImage harg
+
+end CPolyG
